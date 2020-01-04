@@ -73,53 +73,51 @@ func CheckStruct(object interface{}, rules interface{}, msgs ...CustomMsg) *Erro
 		params[field.Name()] = field.Value()
 	}
 	// 首先, 按照属性循环一遍将struct的属性、数值、tag解析
-	for nameOrTag, field := range structs.MapField(object, structTagPriority, true) {
+	// It here must use structs.TagFields not structs.MapField to ensure error sequence.
+	for _, field := range structs.TagFields(object, structTagPriority, true) {
 		fieldName := field.Name()
-		// MapField返回map[name/tag]*Field，当nameOrTag != fieldName时，nameOrTag为tag
-		if nameOrTag != fieldName {
-			// sequence tag == struct tag, 这里的name为别名
-			name, rule, msg := parseSequenceTag(nameOrTag)
-			if len(name) == 0 {
-				name = fieldName
+		// sequence tag == struct tag, 这里的name为别名
+		name, rule, msg := parseSequenceTag(field.Tag)
+		if len(name) == 0 {
+			name = fieldName
+		} else {
+			fieldAliases[fieldName] = name
+		}
+		// params参数使用别名**扩容**(而不仅仅使用别名)，仅用于验证使用
+		if _, ok := params[name]; !ok {
+			params[name] = field.Value()
+		}
+		// 校验规则
+		if _, ok := checkRules[name]; !ok {
+			if _, ok := checkRules[fieldName]; ok {
+				// tag中存在别名，且rules传入的参数中使用了属性命名时，进行规则替换，并删除该属性的规则
+				checkRules[name] = checkRules[fieldName]
+				delete(checkRules, fieldName)
 			} else {
-				fieldAliases[fieldName] = name
+				checkRules[name] = rule
 			}
-			// params参数使用别名**扩容**(而不仅仅使用别名)，仅用于验证使用
-			if _, ok := params[name]; !ok {
-				params[name] = field.Value()
-			}
-			// 校验规则
-			if _, ok := checkRules[name]; !ok {
-				if _, ok := checkRules[fieldName]; ok {
-					// tag中存在别名，且rules传入的参数中使用了属性命名时，进行规则替换，并删除该属性的规则
-					checkRules[name] = checkRules[fieldName]
-					delete(checkRules, fieldName)
-				} else {
-					checkRules[name] = rule
+			errorRules = append(errorRules, name+"@"+rule)
+		} else {
+			// 传递的rules规则会覆盖struct tag的规则
+			continue
+		}
+		// 错误提示
+		if len(msg) > 0 {
+			ruleArray := strings.Split(rule, "|")
+			msgArray := strings.Split(msg, "|")
+			for k, v := range ruleArray {
+				// 如果msg条数比rule少，那么多余的rule使用默认的错误信息
+				if len(msgArray) <= k {
+					continue
 				}
-				errorRules = append(errorRules, name+"@"+rule)
-			} else {
-				// 传递的rules规则会覆盖struct tag的规则
-				continue
-			}
-			// 错误提示
-			if len(msg) > 0 {
-				ruleArray := strings.Split(rule, "|")
-				msgArray := strings.Split(msg, "|")
-				for k, v := range ruleArray {
-					// 如果msg条数比rule少，那么多余的rule使用默认的错误信息
-					if len(msgArray) <= k {
-						continue
-					}
-					if len(msgArray[k]) == 0 {
-						continue
-					}
-					array := strings.Split(v, ":")
-					if _, ok := customMsgs[name]; !ok {
-						customMsgs[name] = make(map[string]string)
-					}
-					customMsgs[name].(map[string]string)[strings.TrimSpace(array[0])] = strings.TrimSpace(msgArray[k])
+				if len(msgArray[k]) == 0 {
+					continue
 				}
+				array := strings.Split(v, ":")
+				if _, ok := customMsgs[name]; !ok {
+					customMsgs[name] = make(map[string]string)
+				}
+				customMsgs[name].(map[string]string)[strings.TrimSpace(array[0])] = strings.TrimSpace(msgArray[k])
 			}
 		}
 	}

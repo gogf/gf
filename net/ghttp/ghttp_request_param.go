@@ -13,11 +13,13 @@ import (
 	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/encoding/gurl"
 	"github.com/gogf/gf/encoding/gxml"
+	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/gvalid"
 	"io/ioutil"
 	"mime/multipart"
+	"strings"
 )
 
 var (
@@ -210,6 +212,8 @@ func (r *Request) parseBody() {
 
 // parseForm parses the request form for HTTP method PUT, POST, PATCH.
 // The form data is pared into r.formMap.
+//
+// Note that if the form was parsed firstly, the request body would be cleared and empty.
 func (r *Request) parseForm() {
 	if r.parsedForm {
 		return
@@ -232,6 +236,15 @@ func (r *Request) parseForm() {
 			// Re-parse the form data using united parsing way.
 			params := ""
 			for name, values := range r.PostForm {
+				// Invalid parameter name.
+				if !gregex.IsMatchString(`^[\w\[\]]+$`, name) {
+					if len(r.PostForm) == 1 {
+						// It might be JSON/XML content.
+						r.bodyContent = gconv.UnsafeStrToBytes(name + strings.Join(values, " "))
+					}
+					params = ""
+					break
+				}
 				if len(values) == 1 {
 					if len(params) > 0 {
 						params += "&"
@@ -257,7 +270,8 @@ func (r *Request) parseForm() {
 			if r.formMap, err = gstr.Parse(params); err != nil {
 				panic(err)
 			}
-		} else {
+		}
+		if r.formMap == nil {
 			r.parseBody()
 			if len(r.bodyMap) > 0 {
 				r.formMap = r.bodyMap

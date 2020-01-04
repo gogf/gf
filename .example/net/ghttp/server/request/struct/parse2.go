@@ -27,6 +27,7 @@ func main() {
 				Error: err.Error(),
 			})
 		}
+		// ...
 		r.Response.WriteJsonExit(RegisterRes{
 			Data: req,
 		})
