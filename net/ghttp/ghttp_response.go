@@ -128,7 +128,7 @@ func (r *Response) ClearBuffer() {
 	r.buffer.Reset()
 }
 
-// Output outputs the buffer content to the client.
+// Output outputs the buffer content to the client and clears the buffer.
 func (r *Response) Output() {
 	if r.Server.config.ServerAgent != "" {
 		r.Header().Set("Server", r.Server.config.ServerAgent)

@@ -12,6 +12,7 @@ import (
 	"github.com/gogf/gf/util/gconv"
 	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -169,11 +170,31 @@ func Test_Func(t *testing.T) {
 		gtest.Assert(err != nil, false)
 		gtest.Assert(result, `GF;gf`)
 
-		str = `{{"Go\nFrame" | nl2br}}`
-		view := gview.New()
-		result, err = view.ParseContent(str)
-		gtest.Assert(err != nil, false)
+		str = `{{concat "I" "Love" "GoFrame"}}`
+		result, err = gview.ParseContent(str, nil)
+		gtest.Assert(err, nil)
+		gtest.Assert(result, `ILoveGoFrame`)
+	})
+}
+
+func Test_FuncNl2Br(t *testing.T) {
+	gtest.Case(t, func() {
+		str := `{{"Go\nFrame" | nl2br}}`
+		result, err := gview.ParseContent(str, nil)
+		gtest.Assert(err, nil)
 		gtest.Assert(result, `Go<br>Frame`)
+	})
+	gtest.Case(t, func() {
+		s := ""
+		for i := 0; i < 3000; i++ {
+			s += "Go\nFrame\n中文"
+		}
+		str := `{{.content | nl2br}}`
+		result, err := gview.ParseContent(str, g.Map{
+			"content": s,
+		})
+		gtest.Assert(err, nil)
+		gtest.Assert(result, strings.Replace(s, "\n", "<br>", -1))
 	})
 }
 
