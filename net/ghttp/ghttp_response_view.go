@@ -93,6 +93,7 @@ func (r *Response) buildInVars(params ...map[string]interface{}) map[string]inte
 	}
 	vars["Form"] = r.Request.GetFormMap()
 	vars["Query"] = r.Request.GetQueryMap()
+	vars["Request"] = r.Request.GetMap()
 	vars["Cookie"] = r.Request.Cookie.Map()
 	vars["Session"] = r.Request.Session.Map()
 	return vars

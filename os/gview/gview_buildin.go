@@ -138,7 +138,7 @@ func (view *View) funcDate(format interface{}, timestamp ...interface{}) string 
 		t = gconv.Int64(timestamp[0])
 	}
 	if t == 0 {
-		t = gtime.Millisecond()
+		t = gtime.Timestamp()
 	}
 	return gtime.NewFromTimeStamp(t).Format(gconv.String(format))
 }
@@ -148,14 +148,23 @@ func (view *View) funcCompare(value1, value2 interface{}) int {
 	return strings.Compare(gconv.String(value1), gconv.String(value2))
 }
 
-// SubStr implements build-in template function: substr
+// funcSubStr implements build-in template function: substr
 func (view *View) funcSubStr(start, end, str interface{}) string {
 	return gstr.SubStr(gconv.String(str), gconv.Int(start), gconv.Int(end))
 }
 
-// StrLimit implements build-in template function: strlimit
+// funcStrLimit implements build-in template function: strlimit
 func (view *View) funcStrLimit(length, suffix, str interface{}) string {
 	return gstr.StrLimit(gconv.String(str), gconv.Int(length), gconv.String(suffix))
+}
+
+// funcConcat implements build-in template function: concat
+func (view *View) funcConcat(str ...interface{}) string {
+	var s string
+	for _, v := range str {
+		s += gconv.String(v)
+	}
+	return s
 }
 
 // funcReplace implements build-in template function: replace

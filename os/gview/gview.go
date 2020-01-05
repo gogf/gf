@@ -138,6 +138,7 @@ func New(path ...string) *View {
 	view.BindFunc("date", view.funcDate)
 	view.BindFunc("substr", view.funcSubStr)
 	view.BindFunc("strlimit", view.funcStrLimit)
+	view.BindFunc("concat", view.funcConcat)
 	view.BindFunc("replace", view.funcReplace)
 	view.BindFunc("compare", view.funcCompare)
 	view.BindFunc("hidestr", view.funcHideStr)
