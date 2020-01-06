@@ -34,12 +34,12 @@ func (db *dbMysql) Open(config *ConfigNode) (*sql.DB, error) {
 	}
 }
 
-// 获得关键字操作符
+// getChars returns the quote chars for field.
 func (db *dbMysql) getChars() (charLeft string, charRight string) {
 	return "`", "`"
 }
 
-// 在执行sql之前对sql进行进一步处理
+// handleSqlBeforeExec handles the sql before posts it to database.
 func (db *dbMysql) handleSqlBeforeExec(query string) string {
 	return query
 }

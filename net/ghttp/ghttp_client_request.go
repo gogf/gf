@@ -206,7 +206,11 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (*ClientResp
 	if len(data) > 0 {
 		param = BuildParams(data[0])
 	}
-	if strings.EqualFold("GET", method) && param != "" {
+	// If the <param> is like: a=b&c=d... pattern, it then will be parsed as a query string
+	// appending to the url.
+	if param != "" &&
+		strings.EqualFold("GET", method) &&
+		gregex.IsMatchString(`^[\w\[\]]+=.+`, param) {
 		if gstr.Contains(url, "?") {
 			url += "&" + param
 		} else {
