@@ -426,7 +426,7 @@ func Test_DB_GetCount(t *testing.T) {
 	gtest.Case(t, func() {
 		count, err := db.GetCount(fmt.Sprintf("SELECT * FROM %s", table))
 		gtest.Assert(err, nil)
-		gtest.Assert(count, INIT_DATA_SIZE)
+		gtest.Assert(count, SIZE)
 	})
 }
 
@@ -475,7 +475,7 @@ func Test_DB_GetStructs(t *testing.T) {
 		var users []User
 		err := db.GetStructs(&users, fmt.Sprintf("SELECT * FROM %s WHERE id>?", table), 1)
 		gtest.Assert(err, nil)
-		gtest.Assert(len(users), INIT_DATA_SIZE-1)
+		gtest.Assert(len(users), SIZE-1)
 		gtest.Assert(users[0].Id, 2)
 		gtest.Assert(users[1].Id, 3)
 		gtest.Assert(users[2].Id, 4)
@@ -495,7 +495,7 @@ func Test_DB_GetStructs(t *testing.T) {
 		var users []User
 		err := db.GetStructs(&users, fmt.Sprintf("SELECT * FROM %s WHERE id>?", table), 1)
 		gtest.Assert(err, nil)
-		gtest.Assert(len(users), INIT_DATA_SIZE-1)
+		gtest.Assert(len(users), SIZE-1)
 		gtest.Assert(users[0].Id, 2)
 		gtest.Assert(users[1].Id, 3)
 		gtest.Assert(users[2].Id, 4)
@@ -546,7 +546,7 @@ func Test_DB_GetScan(t *testing.T) {
 		var users []User
 		err := db.GetScan(&users, fmt.Sprintf("SELECT * FROM %s WHERE id>?", table), 1)
 		gtest.Assert(err, nil)
-		gtest.Assert(len(users), INIT_DATA_SIZE-1)
+		gtest.Assert(len(users), SIZE-1)
 		gtest.Assert(users[0].Id, 2)
 		gtest.Assert(users[1].Id, 3)
 		gtest.Assert(users[2].Id, 4)
@@ -566,7 +566,7 @@ func Test_DB_GetScan(t *testing.T) {
 		var users []User
 		err := db.GetScan(&users, fmt.Sprintf("SELECT * FROM %s WHERE id>?", table), 1)
 		gtest.Assert(err, nil)
-		gtest.Assert(len(users), INIT_DATA_SIZE-1)
+		gtest.Assert(len(users), SIZE-1)
 		gtest.Assert(users[0].Id, 2)
 		gtest.Assert(users[1].Id, 3)
 		gtest.Assert(users[2].Id, 4)
@@ -583,7 +583,7 @@ func Test_DB_Delete(t *testing.T) {
 		result, err := db.Delete(table, nil)
 		gtest.Assert(err, nil)
 		n, _ := result.RowsAffected()
-		gtest.Assert(n, INIT_DATA_SIZE)
+		gtest.Assert(n, SIZE)
 	})
 }
 
@@ -1138,7 +1138,7 @@ func Test_DB_Prefix(t *testing.T) {
 
 	gtest.Case(t, func() {
 		array := garray.New(true)
-		for i := 1; i <= INIT_DATA_SIZE; i++ {
+		for i := 1; i <= SIZE; i++ {
 			array.Append(g.Map{
 				"id":          i,
 				"passport":    fmt.Sprintf(`user_%d`, i),
@@ -1153,7 +1153,7 @@ func Test_DB_Prefix(t *testing.T) {
 
 		n, e := result.RowsAffected()
 		gtest.Assert(e, nil)
-		gtest.Assert(n, INIT_DATA_SIZE)
+		gtest.Assert(n, SIZE)
 	})
 
 }
