@@ -45,9 +45,9 @@ func (bs *dbBase) doQuery(link dbLink, query string, args ...interface{}) (rows 
 	query, args = formatQuery(query, args)
 	query = bs.db.handleSqlBeforeExec(query)
 	if bs.db.getDebug() {
-		mTime1 := gtime.TimestampMicro()
+		mTime1 := gtime.TimestampMilli()
 		rows, err = link.Query(query, args...)
-		mTime2 := gtime.TimestampMicro()
+		mTime2 := gtime.TimestampMilli()
 		s := &Sql{
 			Sql:    query,
 			Args:   args,
