@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/text/gregex"
+	"github.com/gogf/gf/text/gstr"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -204,6 +205,14 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (*ClientResp
 	param := ""
 	if len(data) > 0 {
 		param = BuildParams(data[0])
+	}
+	if strings.EqualFold("GET", method) && param != "" {
+		if gstr.Contains(url, "?") {
+			url += "&" + param
+		} else {
+			url += "?" + param
+		}
+		param = ""
 	}
 	req, err := http.NewRequest(strings.ToUpper(method), url, bytes.NewReader([]byte(param)))
 	if err != nil {
