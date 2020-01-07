@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/container/gmap"
+	"github.com/gogf/gf/os/gtime"
 	"reflect"
 	"time"
 
@@ -22,28 +23,30 @@ import (
 
 // Model is the DAO for ORM.
 type Model struct {
-	db            DB             // Underlying DB interface.
-	tx            *TX            // Underlying TX interface.
-	linkType      int            // Mark for operation on master or slave.
-	tablesInit    string         // Table names when model initialization.
-	tables        string         // Operation table names, which can be more than one table names and aliases, like: "user", "user u", "user u, user_detail ud".
-	fields        string         // Operation fields, multiple fields joined using char ','.
-	fieldsEx      string         // Excluded operation fields, multiple fields joined using char ','.
-	whereArgs     []interface{}  // Arguments for where operation.
-	whereHolder   []*whereHolder // Condition strings for where operation.
-	groupBy       string         // Used for "group by" statement.
-	orderBy       string         // Used for "order by" statement.
-	start         int            // Used for "select ... start, limit ..." statement.
-	limit         int            // Used for "select ... start, limit ..." statement.
-	option        int            // Option for extra operation features.
-	offset        int            // Offset statement for some databases grammar.
-	data          interface{}    // Data for operation, which can be type of map/[]map/struct/*struct/string, etc.
-	batch         int            // Batch number for batch Insert/Replace/Save operations.
-	filter        bool           // Filter data and where key-value pairs according to the fields of the table.
-	cacheEnabled  bool           // Enable sql result cache feature.
-	cacheDuration time.Duration  // Cache TTL duration.
-	cacheName     string         // Cache name for custom operation.
-	safe          bool           // If true, it clones and returns a new model object whenever operation done; or else it changes the attribute of current model.
+	autoFillCreatedAt bool
+	autoFillUpdatedAt bool
+	db                DB             // Underlying DB interface.
+	tx                *TX            // Underlying TX interface.
+	linkType          int            // Mark for operation on master or slave.
+	tablesInit        string         // Table names when model initialization.
+	tables            string         // Operation table names, which can be more than one table names and aliases, like: "user", "user u", "user u, user_detail ud".
+	fields            string         // Operation fields, multiple fields joined using char ','.
+	fieldsEx          string         // Excluded operation fields, multiple fields joined using char ','.
+	whereArgs         []interface{}  // Arguments for where operation.
+	whereHolder       []*whereHolder // Condition strings for where operation.
+	groupBy           string         // Used for "group by" statement.
+	orderBy           string         // Used for "order by" statement.
+	start             int            // Used for "select ... start, limit ..." statement.
+	limit             int            // Used for "select ... start, limit ..." statement.
+	option            int            // Option for extra operation features.
+	offset            int            // Offset statement for some databases grammar.
+	data              interface{}    // Data for operation, which can be type of map/[]map/struct/*struct/string, etc.
+	batch             int            // Batch number for batch Insert/Replace/Save operations.
+	filter            bool           // Filter data and where key-value pairs according to the fields of the table.
+	cacheEnabled      bool           // Enable sql result cache feature.
+	cacheDuration     time.Duration  // Cache TTL duration.
+	cacheName         string         // Cache name for custom operation.
+	safe              bool           // If true, it clones and returns a new model object whenever operation done; or else it changes the attribute of current model.
 }
 
 // whereHolder is the holder for where condition preparing.
@@ -193,6 +196,26 @@ func (m *Model) getModel() *Model {
 	} else {
 		return m.Clone()
 	}
+}
+func (m *Model) AutoFillCreatedAt() *Model {
+	model := m.getModel()
+	model.autoFillCreatedAt = true
+	return model
+}
+func (m *Model) CancelAutoFileCreatedAt() *Model {
+	model := m.getModel()
+	model.autoFillCreatedAt = false
+	return model
+}
+func (m *Model) AutoFillUpdatedAt() *Model {
+	model := m.getModel()
+	model.autoFillUpdatedAt = true
+	return model
+}
+func (m *Model) CancelAutoFileUpdatedAt() *Model {
+	model := m.getModel()
+	model.autoFillUpdatedAt = false
+	return model
 }
 
 // LeftJoin does "LEFT JOIN ... ON ..." statement on the model.
@@ -963,6 +986,23 @@ func (m *Model) doFilterDataMapForInsertOrUpdate(data Map, allowOmitEmpty bool) 
 		for _, v := range gstr.SplitAndTrim(m.fieldsEx, ",") {
 			delete(data, v)
 		}
+	}
+	//自动填充时间
+	var (
+		createdAt int
+		updatedAt int
+	)
+	if _, ok := data["created_at"]; ok {
+		createdAt = gconv.Int(data["created_at"])
+	}
+	if m.db.GetAutoFillCreatedAt() && gconv.Int(createdAt) == 0 {
+		data["created_at"] = gtime.Now().Unix()
+	}
+	if _, ok := data["updated_at"]; ok {
+		createdAt = gconv.Int(data["updated_at"])
+	}
+	if m.db.GetAutoFillUpdatedAt() && gconv.Int(updatedAt) == 0 {
+		data["updated_at"] = gtime.Now().Unix()
 	}
 	return data
 }

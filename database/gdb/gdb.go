@@ -51,7 +51,12 @@ type DB interface {
 	GetStruct(objPointer interface{}, query string, args ...interface{}) error
 	GetStructs(objPointerSlice interface{}, query string, args ...interface{}) error
 	GetScan(objPointer interface{}, query string, args ...interface{}) error
-
+	GetAutoFillCreatedAt() bool
+	GetAutoFillUpdatedAt() bool
+	SetAutoFillCreatedAt()
+	SetAutoFillUpdatedAt()
+	UnsetAutoFillUpdatedAt()
+	UnsetAutoFillCreatedAt()
 	// Master/Slave support.
 	Master() (*sql.DB, error)
 	Slave() (*sql.DB, error)
@@ -113,17 +118,19 @@ type dbLink interface {
 
 // 数据库链接对象
 type dbBase struct {
-	db               DB                           // 数据库对象
-	group            string                       // 配置分组名称
-	debug            *gtype.Bool                  // (默认关闭)是否开启调试模式，当开启时会启用一些调试特性
-	cache            *gcache.Cache                // 数据库缓存，包括底层连接池对象缓存及查询缓存；需要注意的是，事务查询不支持查询缓存
-	schema           *gtype.String                // 手动切换的数据库名称
-	prefix           string                       // 表名前缀
-	tables           map[string]map[string]string // 数据库表结构
-	logger           *glog.Logger                 // 日志管理对象
-	maxIdleConnCount int                          // 连接池最大限制的连接数
-	maxOpenConnCount int                          // 连接池最大打开的连接数
-	maxConnLifetime  time.Duration                // 连接对象可重复使用的时间长度
+	db                DB                           // 数据库对象
+	group             string                       // 配置分组名称
+	debug             *gtype.Bool                  // (默认关闭)是否开启调试模式，当开启时会启用一些调试特性
+	cache             *gcache.Cache                // 数据库缓存，包括底层连接池对象缓存及查询缓存；需要注意的是，事务查询不支持查询缓存
+	schema            *gtype.String                // 手动切换的数据库名称
+	prefix            string                       // 表名前缀
+	tables            map[string]map[string]string // 数据库表结构
+	logger            *glog.Logger                 // 日志管理对象
+	maxIdleConnCount  int                          // 连接池最大限制的连接数
+	maxOpenConnCount  int                          // 连接池最大打开的连接数
+	maxConnLifetime   time.Duration                // 连接对象可重复使用的时间长度
+	autoFillCreatedAt bool                         // 自动填充创建时间
+	autoFillUpdatedAt bool                         // 自动填充更新时间
 }
 
 // 执行的SQL对象
@@ -310,6 +317,36 @@ func getConfigNodeByWeight(cg ConfigGroup) *ConfigNode {
 		}
 	}
 	return nil
+}
+// 设置开启自动填充创建时间
+// .ex g.DB().SetAutoFillCreatedAt()
+func (bs *dbBase) SetAutoFillCreatedAt() {
+	bs.autoFillCreatedAt = true
+}
+// 获取是否开启了自动填充创建时间功能
+// .ex g.DB().GetAutoFillCreatedAt()
+func (bs *dbBase) GetAutoFillCreatedAt() bool {
+	return bs.autoFillCreatedAt
+}
+// 设置开启自动填充创建时间
+// .ex g.DB().SetAutoFillUpdatedAt()
+func (bs *dbBase) SetAutoFillUpdatedAt() {
+	bs.autoFillUpdatedAt = true
+}
+// 获取是否开启了自动填更新时间功能
+// .ex g.DB().GetAutoFillUpdatedAt()
+func (bs *dbBase) GetAutoFillUpdatedAt() bool {
+	return bs.autoFillUpdatedAt
+}
+// 取消自动填充创建时间功能
+// .ex g.DB().GetAutoFillUpdatedAt()
+func (bs *dbBase) UnsetAutoFillCreatedAt() {
+	bs.autoFillCreatedAt = false
+}
+// 取消自动填充更新时间功能
+// .ex g.DB().UnsetAutoFillUpdatedAt()
+func (bs *dbBase) UnsetAutoFillUpdatedAt() {
+	bs.autoFillUpdatedAt = false
 }
 
 // 获得底层数据库链接对象
