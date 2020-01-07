@@ -40,54 +40,58 @@ func (db *dbPgsql) Open(config *ConfigNode) (*sql.DB, error) {
 	}
 }
 
-func (db *dbPgsql) setSchema(sqlDb *sql.DB, schema string) error {
-	_, err := sqlDb.Exec("SET search_path TO " + schema)
-	return err
-}
-
 func (db *dbPgsql) getChars() (charLeft string, charRight string) {
 	return "\"", "\""
 }
 
-func (db *dbPgsql) handleSqlBeforeExec(query string) string {
+func (db *dbPgsql) handleSqlBeforeExec(sql string) string {
 	index := 0
-	query, _ = gregex.ReplaceStringFunc("\\?", query, func(s string) string {
+	sql, _ = gregex.ReplaceStringFunc("\\?", sql, func(s string) string {
 		index++
 		return fmt.Sprintf("$%d", index)
 	})
-	query, _ = gregex.ReplaceString(` LIMIT (\d+),\s*(\d+)`, ` LIMIT $1 OFFSET $2`, query)
-	return query
+	sql, _ = gregex.ReplaceString(` LIMIT (\d+),\s*(\d+)`, ` LIMIT $1 OFFSET $2`, sql)
+	return sql
 }
 
-// 返回当前数据库所有的数据表名称
 // TODO
-func (db *dbPgsql) Tables() (tables []string, err error) {
+func (db *dbPgsql) Tables(schema ...string) (tables []string, err error) {
 	return
 }
 
-// 获得指定表表的数据结构，构造成map哈希表返回，其中键名为表字段名称，键值为字段数据结构.
-func (db *dbPgsql) TableFields(table string) (fields map[string]*TableField, err error) {
+func (db *dbPgsql) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
 	table, _ = gregex.ReplaceString("\"", "", table)
-	v := db.cache.GetOrSetFunc("pgsql_table_fields_"+table, func() interface{} {
-		result := (Result)(nil)
-		result, err = db.GetAll(fmt.Sprintf(`
-		SELECT a.attname AS field, t.typname AS type FROM pg_class c, pg_attribute a 
-        LEFT OUTER JOIN pg_description b ON a.attrelid=b.objoid AND a.attnum = b.objsubid,pg_type t
-        WHERE c.relname = '%s' and a.attnum > 0 and a.attrelid = c.oid and a.atttypid = t.oid ORDER BY a.attnum`, strings.ToLower(table)))
-		if err != nil {
-			return nil
-		}
-
-		fields = make(map[string]*TableField)
-		for i, m := range result {
-			fields[m["field"].String()] = &TableField{
-				Index: i,
-				Name:  m["field"].String(),
-				Type:  m["type"].String(),
+	checkSchema := db.schema.Val()
+	if len(schema) > 0 && schema[0] != "" {
+		checkSchema = schema[0]
+	}
+	v := db.cache.GetOrSetFunc(
+		fmt.Sprintf(`pgsql_table_fields_%s_%s`, table, checkSchema), func() interface{} {
+			var result Result
+			var link *sql.DB
+			link, err = db.getSlave(checkSchema)
+			if err != nil {
+				return nil
 			}
-		}
-		return fields
-	}, 0)
+			result, err = db.doGetAll(link, fmt.Sprintf(`
+			SELECT a.attname AS field, t.typname AS type FROM pg_class c, pg_attribute a 
+	        LEFT OUTER JOIN pg_description b ON a.attrelid=b.objoid AND a.attnum = b.objsubid,pg_type t
+	        WHERE c.relname = '%s' and a.attnum > 0 and a.attrelid = c.oid and a.atttypid = t.oid 
+			ORDER BY a.attnum`, strings.ToLower(table)))
+			if err != nil {
+				return nil
+			}
+
+			fields = make(map[string]*TableField)
+			for i, m := range result {
+				fields[m["field"].String()] = &TableField{
+					Index: i,
+					Name:  m["field"].String(),
+					Type:  m["type"].String(),
+				}
+			}
+			return fields
+		}, 0)
 	if err == nil {
 		fields = v.(map[string]*TableField)
 	}

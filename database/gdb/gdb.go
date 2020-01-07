@@ -86,54 +86,54 @@ type DB interface {
 	SetMaxIdleConnCount(n int)
 	SetMaxOpenConnCount(n int)
 	SetMaxConnLifetime(d time.Duration)
-	Tables() (tables []string, err error)
-	TableFields(table string) (map[string]*TableField, error)
+	Tables(schema ...string) (tables []string, err error)
+	TableFields(table string, schema ...string) (map[string]*TableField, error)
 
 	// Internal methods.
 	getCache() *gcache.Cache
 	getChars() (charLeft string, charRight string)
 	getDebug() bool
 	getPrefix() string
+	getMaster(schema ...string) (*sql.DB, error)
+	getSlave(schema ...string) (*sql.DB, error)
 	quoteWord(s string) string
 	quoteString(s string) string
 	handleTableName(table string) string
-	doSetSchema(sqlDb *sql.DB, schema string) error
-	filterFields(table string, data map[string]interface{}) map[string]interface{}
+	filterFields(schema, table string, data map[string]interface{}) map[string]interface{}
 	convertValue(fieldValue []byte, fieldType string) interface{}
 	rowsToResult(rows *sql.Rows) (Result, error)
 	handleSqlBeforeExec(sql string) string
 }
 
-// 执行底层数据库操作的核心接口
+// dbLink is a common database function wrapper interface for internal usage.
 type dbLink interface {
 	Query(query string, args ...interface{}) (*sql.Rows, error)
 	Exec(sql string, args ...interface{}) (sql.Result, error)
 	Prepare(sql string) (*sql.Stmt, error)
 }
 
-// 数据库链接对象
+// dbBase is the base struct for database management.
 type dbBase struct {
-	db               DB                           // 数据库对象
-	group            string                       // 配置分组名称
-	debug            *gtype.Bool                  // (默认关闭)是否开启调试模式，当开启时会启用一些调试特性
-	cache            *gcache.Cache                // 数据库缓存，包括底层连接池对象缓存及查询缓存；需要注意的是，事务查询不支持查询缓存
-	schema           *gtype.String                // 手动切换的数据库名称
-	prefix           string                       // 表名前缀
-	tables           map[string]map[string]string // 数据库表结构
-	logger           *glog.Logger                 // 日志管理对象
-	maxIdleConnCount int                          // 连接池最大限制的连接数
-	maxOpenConnCount int                          // 连接池最大打开的连接数
-	maxConnLifetime  time.Duration                // 连接对象可重复使用的时间长度
+	db               DB            // DB interface object.
+	group            string        // Configuration group name.
+	debug            *gtype.Bool   // Enable debug mode for the database.
+	cache            *gcache.Cache // Cache manager.
+	schema           *gtype.String // Custom schema for this object.
+	prefix           string        // Table prefix.
+	logger           *glog.Logger  // Logger.
+	maxIdleConnCount int           // Max idle connection count.
+	maxOpenConnCount int           // Max open connection count.
+	maxConnLifetime  time.Duration // Max TTL for a connection.
 }
 
-// 执行的SQL对象
+// Sql is the sql recording struct.
 type Sql struct {
-	Sql    string        // SQL语句(可能带有预处理占位符)
-	Args   []interface{} // 预处理参数值列表
-	Format string        // 格式化后的SQL语句（仅供参考）
-	Error  error         // 执行结果(nil为成功)
-	Start  int64         // 执行开始时间(毫秒)
-	End    int64         // 执行结束时间(毫秒)
+	Sql    string        // SQL string(may contain reserved char '?').
+	Args   []interface{} // Arguments for this sql.
+	Format string        // Formatted sql which contains arguments in the sql.
+	Error  error         // Execution result.
+	Start  int64         // Start execution timestamp in milliseconds.
+	End    int64         // End execution timestamp in milliseconds.
 }
 
 // 表字段结构信息
@@ -312,25 +312,36 @@ func getConfigNodeByWeight(cg ConfigGroup) *ConfigNode {
 	return nil
 }
 
-// 获得底层数据库链接对象
-func (bs *dbBase) getSqlDb(master bool) (sqlDb *sql.DB, err error) {
-	// 负载均衡
+// getSqlDb retrieves and returns a underlying database connection object.
+// The parameter <master> specifies whether retrieves master node connection if
+// master-slave nodes are configured.
+func (bs *dbBase) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error) {
+	// Load balance.
 	node, err := getConfigNodeByGroup(bs.group, master)
 	if err != nil {
 		return nil, err
 	}
-	// 默认值设定
+	// Default value checks.
 	if node.Charset == "" {
 		node.Charset = "utf8"
 	}
-	// 缓存连接对象(该对象其实是一个连接池对象)
+	// Changes the schema.
+	nodeSchema := bs.schema.Val()
+	if len(schema) > 0 && schema[0] != "" {
+		nodeSchema = schema[0]
+	}
+	if nodeSchema != "" {
+		// Value copy.
+		n := *node
+		n.Name = nodeSchema
+		node = &n
+	}
+	// Cache the underlying connection object by node.
 	v := bs.cache.GetOrSetFuncLock(node.String(), func() interface{} {
 		sqlDb, err = bs.db.Open(node)
 		if err != nil {
 			return nil
 		}
-		// 接口对象可能会覆盖这些连接参数，所以这里优先判断有误设置连接池属性。
-		// 若无设置则使用配置节点的连接池参数
 		if bs.maxIdleConnCount > 0 {
 			sqlDb.SetMaxIdleConns(bs.maxIdleConnCount)
 		} else if node.MaxIdleConnCount > 0 {
@@ -353,30 +364,41 @@ func (bs *dbBase) getSqlDb(master bool) (sqlDb *sql.DB, err error) {
 	if v != nil && sqlDb == nil {
 		sqlDb = v.(*sql.DB)
 	}
-	// 是否开启调试模式
 	if node.Debug {
 		bs.db.SetDebug(node.Debug)
-	}
-	// 是否手动选择数据库
-	if v := bs.schema.Val(); v != "" {
-		if e := bs.db.doSetSchema(sqlDb, v); e != nil {
-			err = e
-		}
 	}
 	return
 }
 
-// 切换当前数据库对象操作的数据库。
+// SetSchema changes the schema for this database connection object.
+// Importantly note that when schema configuration changed for the database,
+// it affects all operations on the database object in the future.
 func (bs *dbBase) SetSchema(schema string) {
 	bs.schema.Set(schema)
 }
 
-// 创建底层数据库master链接对象。
+// Master creates and returns a connection from master node if master-slave configured.
+// It returns the default connection if master-slave not configured.
 func (bs *dbBase) Master() (*sql.DB, error) {
-	return bs.getSqlDb(true)
+	return bs.getSqlDb(true, bs.schema.Val())
 }
 
-// 创建底层数据库slave链接对象。
+// Slave creates and returns a connection from slave node if master-slave configured.
+// It returns the default connection if master-slave not configured.
 func (bs *dbBase) Slave() (*sql.DB, error) {
-	return bs.getSqlDb(false)
+	return bs.getSqlDb(false, bs.schema.Val())
+}
+
+// getMaster acts like function Master but with additional <schema> parameter specifying
+// the schema for the connection. It is defined for internal usage.
+// Also see Master.
+func (bs *dbBase) getMaster(schema ...string) (*sql.DB, error) {
+	return bs.getSqlDb(true, schema...)
+}
+
+// getSlave acts like function Slave but with additional <schema> parameter specifying
+// the schema for the connection. It is defined for internal usage.
+// Also see Slave.
+func (bs *dbBase) getSlave(schema ...string) (*sql.DB, error) {
+	return bs.getSqlDb(false, schema...)
 }

@@ -24,6 +24,7 @@ import (
 type Model struct {
 	db            DB             // Underlying DB interface.
 	tx            *TX            // Underlying TX interface.
+	schema        string         // Custom database schema.
 	linkType      int            // Mark for operation on master or slave.
 	tablesInit    string         // Table names when model initialization.
 	tables        string         // Operation table names, which can be more than one table names and aliases, like: "user", "user u", "user u, user_detail ud".
@@ -134,6 +135,13 @@ func (m *Model) DB(db DB) *Model {
 func (m *Model) TX(tx *TX) *Model {
 	model := m.getModel()
 	model.tx = tx
+	return model
+}
+
+// Schema sets the schema for current operation.
+func (m *Model) Schema(schema string) *Model {
+	model := m.getModel()
+	model.schema = schema
 	return model
 }
 
@@ -507,7 +515,7 @@ func (m *Model) Insert(data ...interface{}) (result sql.Result, err error) {
 			batch = m.batch
 		}
 		return m.db.doBatchInsert(
-			m.getLink(),
+			m.getLink(true),
 			m.tables,
 			m.filterDataForInsertOrUpdate(list),
 			gINSERT_OPTION_DEFAULT,
@@ -516,7 +524,7 @@ func (m *Model) Insert(data ...interface{}) (result sql.Result, err error) {
 	} else if data, ok := m.data.(Map); ok {
 		// Single insert.
 		return m.db.doInsert(
-			m.getLink(),
+			m.getLink(true),
 			m.tables,
 			m.filterDataForInsertOrUpdate(data),
 			gINSERT_OPTION_DEFAULT,
@@ -547,7 +555,7 @@ func (m *Model) Replace(data ...interface{}) (result sql.Result, err error) {
 			batch = m.batch
 		}
 		return m.db.doBatchInsert(
-			m.getLink(),
+			m.getLink(true),
 			m.tables,
 			m.filterDataForInsertOrUpdate(list),
 			gINSERT_OPTION_REPLACE,
@@ -556,7 +564,7 @@ func (m *Model) Replace(data ...interface{}) (result sql.Result, err error) {
 	} else if data, ok := m.data.(Map); ok {
 		// Single insert.
 		return m.db.doInsert(
-			m.getLink(),
+			m.getLink(true),
 			m.tables,
 			m.filterDataForInsertOrUpdate(data),
 			gINSERT_OPTION_REPLACE,
@@ -590,7 +598,7 @@ func (m *Model) Save(data ...interface{}) (result sql.Result, err error) {
 			batch = m.batch
 		}
 		return m.db.doBatchInsert(
-			m.getLink(),
+			m.getLink(true),
 			m.tables,
 			m.filterDataForInsertOrUpdate(list),
 			gINSERT_OPTION_SAVE,
@@ -599,7 +607,7 @@ func (m *Model) Save(data ...interface{}) (result sql.Result, err error) {
 	} else if data, ok := m.data.(Map); ok {
 		// Single save.
 		return m.db.doInsert(
-			m.getLink(),
+			m.getLink(true),
 			m.tables,
 			m.filterDataForInsertOrUpdate(data),
 			gINSERT_OPTION_SAVE,
@@ -633,7 +641,7 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 	}
 	condition, conditionArgs := m.formatCondition(false)
 	return m.db.doUpdate(
-		m.getLink(),
+		m.getLink(true),
 		m.tables,
 		m.filterDataForInsertOrUpdate(m.data),
 		condition,
@@ -654,7 +662,7 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 		}
 	}()
 	condition, conditionArgs := m.formatCondition(false)
-	return m.db.doDelete(m.getLink(), m.tables, condition, conditionArgs...)
+	return m.db.doDelete(m.getLink(true), m.tables, condition, conditionArgs...)
 }
 
 // Select is alias of Model.All.
@@ -941,7 +949,7 @@ func (m *Model) filterDataForInsertOrUpdate(data interface{}) interface{} {
 // Note that, it does not filter list item, which is also type of map, for "omit empty" feature.
 func (m *Model) doFilterDataMapForInsertOrUpdate(data Map, allowOmitEmpty bool) Map {
 	if m.filter {
-		data = m.db.filterFields(m.tables, data)
+		data = m.db.filterFields(m.schema, m.tables, data)
 	}
 	// Remove key-value pairs of which the value is empty.
 	if allowOmitEmpty && m.option&OPTION_OMITEMPTY > 0 {
@@ -968,16 +976,25 @@ func (m *Model) doFilterDataMapForInsertOrUpdate(data Map, allowOmitEmpty bool) 
 }
 
 // getLink returns the underlying database link object with configured <linkType> attribute.
-func (m *Model) getLink() dbLink {
+// The parameter <master> specifies whether using the master node if master-slave configured.
+func (m *Model) getLink(master bool) dbLink {
 	if m.tx != nil {
 		return m.tx.tx
 	}
-	switch m.linkType {
+	linkType := m.linkType
+	if linkType == 0 {
+		if master {
+			linkType = gLINK_TYPE_MASTER
+		} else {
+			linkType = gLINK_TYPE_SLAVE
+		}
+	}
+	switch linkType {
 	case gLINK_TYPE_MASTER:
-		link, _ := m.db.Master()
+		link, _ := m.db.getMaster(m.schema)
 		return link
 	case gLINK_TYPE_SLAVE:
-		link, _ := m.db.Slave()
+		link, _ := m.db.getSlave(m.schema)
 		return link
 	}
 	return nil
@@ -996,7 +1013,7 @@ func (m *Model) getAll(query string, args ...interface{}) (result Result, err er
 			return v.(Result), nil
 		}
 	}
-	result, err = m.db.doGetAll(m.getLink(), query, args...)
+	result, err = m.db.doGetAll(m.getLink(false), query, args...)
 	// Cache the result.
 	if len(cacheKey) > 0 && err == nil {
 		if m.cacheDuration < 0 {

@@ -1643,7 +1643,7 @@ func Test_Model_FieldsEx(t *testing.T) {
 
 func Test_Model_Prefix(t *testing.T) {
 	db := dbPrefix
-	table := fmt.Sprintf(`%s_%d`, TABLE, gtime.Nanosecond())
+	table := fmt.Sprintf(`%s_%d`, TABLE, gtime.TimestampNano())
 	createInitTableWithDb(db, PREFIX1+table)
 	defer dropTable(PREFIX1 + table)
 	// Select.
@@ -1669,5 +1669,84 @@ func Test_Model_Prefix(t *testing.T) {
 		gtest.Assert(len(r), 2)
 		gtest.Assert(r[0]["id"], "1")
 		gtest.Assert(r[1]["id"], "2")
+	})
+}
+
+func Test_Model_Schema(t *testing.T) {
+	//db.SetDebug(true)
+
+	db.SetSchema(SCHEMA1)
+	table := fmt.Sprintf(`%s_%s`, TABLE, gtime.TimestampNanoStr())
+	createInitTableWithDb(db, table)
+	db.SetSchema(SCHEMA2)
+	createInitTableWithDb(db, table)
+	defer func() {
+		db.SetSchema(SCHEMA1)
+		dropTableWithDb(db, table)
+		db.SetSchema(SCHEMA2)
+		dropTableWithDb(db, table)
+
+		db.SetSchema(SCHEMA1)
+	}()
+	// Method.
+	gtest.Case(t, func() {
+		db.SetSchema(SCHEMA1)
+		r, err := db.Table(table).Update(g.Map{"nickname": "name_100"}, "id=1")
+		gtest.Assert(err, nil)
+		n, _ := r.RowsAffected()
+		gtest.Assert(n, 1)
+
+		v, err := db.Table(table).Value("nickname", "id=1")
+		gtest.Assert(err, nil)
+		gtest.Assert(v.String(), "name_100")
+
+		db.SetSchema(SCHEMA2)
+		v, err = db.Table(table).Value("nickname", "id=1")
+		gtest.Assert(err, nil)
+		gtest.Assert(v.String(), "name_1")
+	})
+	// Model.
+	gtest.Case(t, func() {
+		v, err := db.Table(table).Schema(SCHEMA1).Value("nickname", "id=2")
+		gtest.Assert(err, nil)
+		gtest.Assert(v.String(), "name_2")
+
+		r, err := db.Table(table).Schema(SCHEMA1).Update(g.Map{"nickname": "name_200"}, "id=2")
+		gtest.Assert(err, nil)
+		n, _ := r.RowsAffected()
+		gtest.Assert(n, 1)
+
+		v, err = db.Table(table).Schema(SCHEMA1).Value("nickname", "id=2")
+		gtest.Assert(err, nil)
+		gtest.Assert(v.String(), "name_200")
+
+		v, err = db.Table(table).Schema(SCHEMA2).Value("nickname", "id=2")
+		gtest.Assert(err, nil)
+		gtest.Assert(v.String(), "name_2")
+
+		v, err = db.Table(table).Schema(SCHEMA1).Value("nickname", "id=2")
+		gtest.Assert(err, nil)
+		gtest.Assert(v.String(), "name_200")
+	})
+	// Model.
+	gtest.Case(t, func() {
+		i := 1000
+		_, err := db.Table(table).Schema(SCHEMA1).Filter().Insert(g.Map{
+			"id":               i,
+			"passport":         fmt.Sprintf(`user_%d`, i),
+			"password":         fmt.Sprintf(`pass_%d`, i),
+			"nickname":         fmt.Sprintf(`name_%d`, i),
+			"create_time":      gtime.NewFromStr("2018-10-24 10:00:00").String(),
+			"none-exist-field": 1,
+		})
+		gtest.Assert(err, nil)
+
+		v, err := db.Table(table).Schema(SCHEMA1).Value("nickname", "id=?", i)
+		gtest.Assert(err, nil)
+		gtest.Assert(v.String(), "name_1000")
+
+		v, err = db.Table(table).Schema(SCHEMA2).Value("nickname", "id=?", i)
+		gtest.Assert(err, nil)
+		gtest.Assert(v.String(), "")
 	})
 }
