@@ -22,7 +22,6 @@ import (
 	"github.com/gogf/gf/text/gregex"
 )
 
-// 数据库链接对象
 type dbOracle struct {
 	*dbBase
 }
@@ -32,7 +31,6 @@ const (
 	tableAlias2 = "GFORM2"
 )
 
-// 创建SQL操作对象
 func (db *dbOracle) Open(config *ConfigNode) (*sql.DB, error) {
 	var source string
 	if config.LinkInfo != "" {
@@ -47,36 +45,28 @@ func (db *dbOracle) Open(config *ConfigNode) (*sql.DB, error) {
 	}
 }
 
-// 获得关键字操作符
 func (db *dbOracle) getChars() (charLeft string, charRight string) {
 	return "\"", "\""
 }
 
-// 在执行sql之前对sql进行进一步处理
 func (db *dbOracle) handleSqlBeforeExec(query string) string {
 	index := 0
 	str, _ := gregex.ReplaceStringFunc("\\?", query, func(s string) string {
 		index++
 		return fmt.Sprintf(":%d", index)
 	})
-
 	str, _ = gregex.ReplaceString("\"", "", str)
-
 	return db.parseSql(str)
 }
 
-//由于ORACLE中对LIMIT和批量插入的语法与MYSQL不一致，所以这里需要对LIMIT和批量插入做语法上的转换
 func (db *dbOracle) parseSql(sql string) string {
-	//下面的正则表达式匹配出SELECT和INSERT的关键字后分别做不同的处理，如有LIMIT则将LIMIT的关键字也匹配出
 	patten := `^\s*(?i)(SELECT)|(LIMIT\s*(\d+)\s*,\s*(\d+))`
 	if gregex.IsMatchString(patten, sql) == false {
-		//fmt.Println("not matched..")
 		return sql
 	}
 
 	res, err := gregex.MatchAllString(patten, sql)
 	if err != nil {
-		//fmt.Println("MatchString error.", err)
 		return ""
 	}
 
@@ -87,12 +77,12 @@ func (db *dbOracle) parseSql(sql string) string {
 	index++
 	switch keyword {
 	case "SELECT":
-		//不含LIMIT关键字则不处理
+		// 不含LIMIT关键字则不处理
 		if len(res) < 2 || (strings.HasPrefix(res[index][0], "LIMIT") == false && strings.HasPrefix(res[index][0], "limit") == false) {
 			break
 		}
 
-		//取limit前面的字符串
+		// 取limit前面的字符串
 		if gregex.IsMatchString("((?i)SELECT)(.+)((?i)LIMIT)", sql) == false {
 			break
 		}
@@ -102,7 +92,7 @@ func (db *dbOracle) parseSql(sql string) string {
 			break
 		}
 
-		//取limit后面的取值范围
+		// 取limit后面的取值范围
 		first, limit := 0, 0
 		for i := 1; i < len(res[index]); i++ {
 			if len(strings.TrimSpace(res[index][i])) == 0 {
@@ -122,38 +112,39 @@ func (db *dbOracle) parseSql(sql string) string {
 	return sql
 }
 
-// 返回当前数据库所有的数据表名称
 // TODO
-func (db *dbOracle) Tables() (tables []string, err error) {
+func (db *dbOracle) Tables(schema ...string) (tables []string, err error) {
 	return
 }
 
-// 获得指定表表的数据结构，构造成map哈希表返回，其中键名为表字段名称，键值为字段数据结构.
-func (db *dbOracle) TableFields(table string) (fields map[string]*TableField, err error) {
-	// 缓存不存在时会查询数据表结构，缓存后不过期，直至程序重启(重新部署)
-	v := db.cache.GetOrSetFunc("oracle_table_fields_"+table, func() interface{} {
-		result := (Result)(nil)
-		result, err = db.GetAll(fmt.Sprintf(`
-		SELECT COLUMN_NAME AS FIELD, CASE DATA_TYPE 
-		    WHEN 'NUMBER' THEN DATA_TYPE||'('||DATA_PRECISION||','||DATA_SCALE||')' 
-			WHEN 'FLOAT' THEN DATA_TYPE||'('||DATA_PRECISION||','||DATA_SCALE||')' 
-			ELSE DATA_TYPE||'('||DATA_LENGTH||')' END AS TYPE  
-		FROM USER_TAB_COLUMNS WHERE TABLE_NAME = '%s' ORDER BY COLUMN_ID`, strings.ToUpper(table)))
-		if err != nil {
-			return nil
-		}
-
-		fields = make(map[string]*TableField)
-		for i, m := range result {
-			// ORACLE返回的值默认都是大写的，需要转为小写
-			fields[strings.ToLower(m["FIELD"].String())] = &TableField{
-				Index: i,
-				Name:  strings.ToLower(m["FIELD"].String()),
-				Type:  strings.ToLower(m["TYPE"].String()),
+func (db *dbOracle) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
+	checkSchema := db.schema.Val()
+	if len(schema) > 0 && schema[0] != "" {
+		checkSchema = schema[0]
+	}
+	v := db.cache.GetOrSetFunc(
+		fmt.Sprintf(`oracle_table_fields_%s_%s`, table, checkSchema),
+		func() interface{} {
+			result := (Result)(nil)
+			result, err = db.GetAll(fmt.Sprintf(`
+			SELECT COLUMN_NAME AS FIELD, CASE DATA_TYPE 
+			    WHEN 'NUMBER' THEN DATA_TYPE||'('||DATA_PRECISION||','||DATA_SCALE||')' 
+				WHEN 'FLOAT' THEN DATA_TYPE||'('||DATA_PRECISION||','||DATA_SCALE||')' 
+				ELSE DATA_TYPE||'('||DATA_LENGTH||')' END AS TYPE  
+			FROM USER_TAB_COLUMNS WHERE TABLE_NAME = '%s' ORDER BY COLUMN_ID`, strings.ToUpper(table)))
+			if err != nil {
+				return nil
 			}
-		}
-		return fields
-	}, 0)
+			fields = make(map[string]*TableField)
+			for i, m := range result {
+				fields[strings.ToLower(m["FIELD"].String())] = &TableField{
+					Index: i,
+					Name:  strings.ToLower(m["FIELD"].String()),
+					Type:  strings.ToLower(m["TYPE"].String()),
+				}
+			}
+			return fields
+		}, 0)
 	if err == nil {
 		fields = v.(map[string]*TableField)
 	}

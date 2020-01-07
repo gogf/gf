@@ -1,16 +1,14 @@
 package main
 
-import (
-	"fmt"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/gview"
-)
+import "fmt"
 
 func main() {
-	s, err := gview.ParseContent(`{{.a}}`, g.Map{
-		"a": 1,
-		"b": 1,
-	})
-	fmt.Println(err)
-	fmt.Println(s)
+	type User struct {
+		Id int
+	}
+	u1 := &User{1}
+	u2 := *u1
+	u2.Id = 2
+	fmt.Println(u1)
+	fmt.Println(u2)
 }

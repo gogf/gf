@@ -629,9 +629,3 @@ func (bs *dbBase) printSql(v *Sql) {
 		bs.logger.StackWithFilter(gPATH_FILTER_KEY).Debug(s)
 	}
 }
-
-// 动态切换数据库
-func (bs *dbBase) doSetSchema(sqlDb *sql.DB, schema string) error {
-	_, err := sqlDb.Exec("USE " + schema)
-	return err
-}
