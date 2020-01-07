@@ -131,7 +131,7 @@ func Test_Model_Batch(t *testing.T) {
 		defer dropTable(table)
 		result, err := db.Table(table).All()
 		gtest.Assert(err, nil)
-		gtest.Assert(len(result), INIT_DATA_SIZE)
+		gtest.Assert(len(result), SIZE)
 		for _, v := range result {
 			v["nickname"].Set(v["nickname"].String() + v["id"].String())
 		}
@@ -139,7 +139,7 @@ func Test_Model_Batch(t *testing.T) {
 		gtest.Assert(e, nil)
 		n, e := r.RowsAffected()
 		gtest.Assert(e, nil)
-		gtest.Assert(n, INIT_DATA_SIZE*2)
+		gtest.Assert(n, SIZE*2)
 	})
 
 	// batch replace
@@ -148,7 +148,7 @@ func Test_Model_Batch(t *testing.T) {
 		defer dropTable(table)
 		result, err := db.Table(table).All()
 		gtest.Assert(err, nil)
-		gtest.Assert(len(result), INIT_DATA_SIZE)
+		gtest.Assert(len(result), SIZE)
 		for _, v := range result {
 			v["nickname"].Set(v["nickname"].String() + v["id"].String())
 		}
@@ -156,7 +156,7 @@ func Test_Model_Batch(t *testing.T) {
 		gtest.Assert(e, nil)
 		n, e := r.RowsAffected()
 		gtest.Assert(e, nil)
-		gtest.Assert(n, INIT_DATA_SIZE*2)
+		gtest.Assert(n, SIZE*2)
 	})
 }
 
@@ -362,7 +362,7 @@ func Test_Model_All(t *testing.T) {
 	gtest.Case(t, func() {
 		result, err := db.Table(table).All()
 		gtest.Assert(err, nil)
-		gtest.Assert(len(result), INIT_DATA_SIZE)
+		gtest.Assert(len(result), SIZE)
 	})
 	gtest.Case(t, func() {
 		result, err := db.Table(table).Where("id<0").All()
@@ -400,7 +400,7 @@ func Test_Model_FindAll(t *testing.T) {
 	gtest.Case(t, func() {
 		result, err := db.Table(table).FindAll()
 		gtest.Assert(err, nil)
-		gtest.Assert(len(result), INIT_DATA_SIZE)
+		gtest.Assert(len(result), SIZE)
 	})
 	gtest.Case(t, func() {
 		result, err := db.Table(table).Where("id<0").FindAll()
@@ -512,7 +512,7 @@ func Test_Model_Count(t *testing.T) {
 	gtest.Case(t, func() {
 		count, err := db.Table(table).Count()
 		gtest.Assert(err, nil)
-		gtest.Assert(count, INIT_DATA_SIZE)
+		gtest.Assert(count, SIZE)
 	})
 }
 
@@ -532,7 +532,7 @@ func Test_Model_FindCount(t *testing.T) {
 	gtest.Case(t, func() {
 		count, err := db.Table(table).FindCount()
 		gtest.Assert(err, nil)
-		gtest.Assert(count, INIT_DATA_SIZE)
+		gtest.Assert(count, SIZE)
 	})
 }
 
@@ -542,7 +542,7 @@ func Test_Model_Select(t *testing.T) {
 	gtest.Case(t, func() {
 		result, err := db.Table(table).Select()
 		gtest.Assert(err, nil)
-		gtest.Assert(len(result), INIT_DATA_SIZE)
+		gtest.Assert(len(result), SIZE)
 	})
 }
 
@@ -641,7 +641,7 @@ func Test_Model_Structs(t *testing.T) {
 		if err != nil {
 			gtest.Error(err)
 		}
-		gtest.Assert(len(users), INIT_DATA_SIZE)
+		gtest.Assert(len(users), SIZE)
 		gtest.Assert(users[0].Id, 1)
 		gtest.Assert(users[1].Id, 2)
 		gtest.Assert(users[2].Id, 3)
@@ -664,7 +664,7 @@ func Test_Model_Structs(t *testing.T) {
 		if err != nil {
 			gtest.Error(err)
 		}
-		gtest.Assert(len(users), INIT_DATA_SIZE)
+		gtest.Assert(len(users), SIZE)
 		gtest.Assert(users[0].Id, 1)
 		gtest.Assert(users[1].Id, 2)
 		gtest.Assert(users[2].Id, 3)
@@ -687,7 +687,7 @@ func Test_Model_Structs(t *testing.T) {
 		if err != nil {
 			gtest.Error(err)
 		}
-		gtest.Assert(len(users), INIT_DATA_SIZE)
+		gtest.Assert(len(users), SIZE)
 		gtest.Assert(users[0].Id, 1)
 		gtest.Assert(users[1].Id, 2)
 		gtest.Assert(users[2].Id, 3)
@@ -754,7 +754,7 @@ func Test_Model_Scan(t *testing.T) {
 		var users []User
 		err := db.Table(table).Order("id asc").Scan(&users)
 		gtest.Assert(err, nil)
-		gtest.Assert(len(users), INIT_DATA_SIZE)
+		gtest.Assert(len(users), SIZE)
 		gtest.Assert(users[0].Id, 1)
 		gtest.Assert(users[1].Id, 2)
 		gtest.Assert(users[2].Id, 3)
@@ -774,7 +774,7 @@ func Test_Model_Scan(t *testing.T) {
 		var users []*User
 		err := db.Table(table).Order("id asc").Scan(&users)
 		gtest.Assert(err, nil)
-		gtest.Assert(len(users), INIT_DATA_SIZE)
+		gtest.Assert(len(users), SIZE)
 		gtest.Assert(users[0].Id, 1)
 		gtest.Assert(users[1].Id, 2)
 		gtest.Assert(users[2].Id, 3)
@@ -808,8 +808,8 @@ func Test_Model_OrderBy(t *testing.T) {
 	gtest.Case(t, func() {
 		result, err := db.Table(table).Order("id DESC").Select()
 		gtest.Assert(err, nil)
-		gtest.Assert(len(result), INIT_DATA_SIZE)
-		gtest.Assert(result[0]["nickname"].String(), fmt.Sprintf("name_%d", INIT_DATA_SIZE))
+		gtest.Assert(len(result), SIZE)
+		gtest.Assert(result[0]["nickname"].String(), fmt.Sprintf("name_%d", SIZE))
 	})
 }
 
@@ -820,7 +820,7 @@ func Test_Model_GroupBy(t *testing.T) {
 	gtest.Case(t, func() {
 		result, err := db.Table(table).GroupBy("id").Select()
 		gtest.Assert(err, nil)
-		gtest.Assert(len(result), INIT_DATA_SIZE)
+		gtest.Assert(len(result), SIZE)
 		gtest.Assert(result[0]["nickname"].String(), "name_1")
 	})
 }
@@ -1342,7 +1342,7 @@ func Test_Model_Delete(t *testing.T) {
 		result, err := db.Table(table).Delete()
 		gtest.Assert(err, nil)
 		n, _ := result.RowsAffected()
-		gtest.Assert(n, INIT_DATA_SIZE-2)
+		gtest.Assert(n, SIZE-2)
 	})
 }
 
@@ -1487,15 +1487,15 @@ func Test_Model_Option_Map(t *testing.T) {
 		_, err = db.Table(table).Option(gdb.OPTION_OMITEMPTY).Data(g.Map{"nickname": ""}).Where("id", 2).Update()
 		gtest.AssertNE(err, nil)
 
-		r, err = db.Table(table).OptionOmitEmpty().Data(g.Map{"nickname": "", "password": "123"}).Where("id", 3).Update()
+		r, err = db.Table(table).OmitEmpty().Data(g.Map{"nickname": "", "password": "123"}).Where("id", 3).Update()
 		gtest.Assert(err, nil)
 		n, _ = r.RowsAffected()
 		gtest.Assert(n, 1)
 
-		_, err = db.Table(table).OptionOmitEmpty().Fields("nickname").Data(g.Map{"nickname": "", "password": "123"}).Where("id", 4).Update()
+		_, err = db.Table(table).OmitEmpty().Fields("nickname").Data(g.Map{"nickname": "", "password": "123"}).Where("id", 4).Update()
 		gtest.AssertNE(err, nil)
 
-		r, err = db.Table(table).OptionOmitEmpty().
+		r, err = db.Table(table).OmitEmpty().
 			Fields("password").Data(g.Map{
 			"nickname": "",
 			"passport": "123",
@@ -1551,7 +1551,7 @@ func Test_Model_Option_List(t *testing.T) {
 	gtest.Case(t, func() {
 		table := createTable()
 		defer dropTable(table)
-		r, err := db.Table(table).OptionOmitEmpty().Fields("id, password").Data(g.List{
+		r, err := db.Table(table).OmitEmpty().Fields("id, password").Data(g.List{
 			g.Map{
 				"id":       1,
 				"passport": "1",
@@ -1569,7 +1569,6 @@ func Test_Model_Option_List(t *testing.T) {
 		n, _ := r.RowsAffected()
 		gtest.Assert(n, 2)
 		list, err := db.Table(table).Order("id asc").All()
-		g.Dump(list)
 		gtest.Assert(err, nil)
 		gtest.Assert(len(list), 2)
 		gtest.Assert(list[0]["id"].String(), "1")
@@ -1589,15 +1588,15 @@ func Test_Model_Option_Where(t *testing.T) {
 	gtest.Case(t, func() {
 		table := createInitTable()
 		defer dropTable(table)
-		r, err := db.Table(table).OptionOmitEmpty().Data("nickname", 1).Where(g.Map{"id": 0, "passport": ""}).Update()
+		r, err := db.Table(table).OmitEmpty().Data("nickname", 1).Where(g.Map{"id": 0, "passport": ""}).Update()
 		gtest.Assert(err, nil)
 		n, _ := r.RowsAffected()
-		gtest.Assert(n, INIT_DATA_SIZE)
+		gtest.Assert(n, SIZE)
 	})
 	gtest.Case(t, func() {
 		table := createInitTable()
 		defer dropTable(table)
-		r, err := db.Table(table).OptionOmitEmpty().Data("nickname", 1).Where(g.Map{"id": 1, "passport": ""}).Update()
+		r, err := db.Table(table).OmitEmpty().Data("nickname", 1).Where(g.Map{"id": 1, "passport": ""}).Update()
 		gtest.Assert(err, nil)
 		n, _ := r.RowsAffected()
 		gtest.Assert(n, 1)

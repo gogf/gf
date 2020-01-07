@@ -26,13 +26,26 @@ type apiMapStrAny interface {
 // If <value> is a struct/*struct object, the second parameter <tags> specifies the most priority
 // tags that will be detected, otherwise it detects the tags in order of: gconv, json, and then the field name.
 func Map(value interface{}, tags ...string) map[string]interface{} {
+	return doMapConvert(value, false, tags...)
+}
+
+// MapDeep does Map function recursively, which means if the attribute of <value>
+// is also a struct/*struct, calls Map function on this attribute converting it to
+// a map[string]interface{} type variable.
+// Also see Map.
+func MapDeep(value interface{}, tags ...string) map[string]interface{} {
+	return doMapConvert(value, true, tags...)
+}
+
+// doMapConvert implements the map converting.
+func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]interface{} {
 	if value == nil {
 		return nil
 	}
 	if r, ok := value.(map[string]interface{}); ok {
 		return r
 	} else {
-		// Only assert the common combination of types, and finally it uses reflection.
+		// Assert the common combination of types, and finally it uses reflection.
 		m := make(map[string]interface{})
 		switch value.(type) {
 		case map[interface{}]interface{}:
@@ -91,7 +104,7 @@ func Map(value interface{}, tags ...string) map[string]interface{} {
 			for k, v := range value.(map[uint]string) {
 				m[String(k)] = v
 			}
-		// Not a common type, use reflection
+		// Not a common type, then use reflection.
 		default:
 			rv := reflect.ValueOf(value)
 			kind := rv.Kind()
@@ -121,14 +134,19 @@ func Map(value interface{}, tags ...string) map[string]interface{} {
 				default:
 					tagArray = append(tags, structTagPriority...)
 				}
+				var rtField reflect.StructField
+				var rvField reflect.Value
+				var rvKind reflect.Kind
 				for i := 0; i < rv.NumField(); i++ {
+					rtField = rt.Field(i)
+					rvField = rv.Field(i)
 					// Only convert the public attributes.
-					fieldName := rt.Field(i).Name
+					fieldName := rtField.Name
 					if !utilstr.IsLetterUpper(fieldName[0]) {
 						continue
 					}
 					name = ""
-					fieldTag := rt.Field(i).Tag
+					fieldTag := rtField.Tag
 					for _, tag := range tagArray {
 						if name = fieldTag.Get(tag); name != "" {
 							break
@@ -146,7 +164,7 @@ func Map(value interface{}, tags ...string) map[string]interface{} {
 						if len(array) > 1 {
 							switch strings.TrimSpace(array[1]) {
 							case "omitempty":
-								if empty.IsEmpty(rv.Field(i).Interface()) {
+								if empty.IsEmpty(rvField.Interface()) {
 									continue
 								} else {
 									name = strings.TrimSpace(array[0])
@@ -156,7 +174,22 @@ func Map(value interface{}, tags ...string) map[string]interface{} {
 							}
 						}
 					}
-					m[name] = rv.Field(i).Interface()
+					if recursive {
+						rvKind = rvField.Kind()
+						if rvKind == reflect.Ptr {
+							rvField = rvField.Elem()
+							rvKind = rvField.Kind()
+						}
+						if rvKind == reflect.Struct {
+							for k, v := range doMapConvert(rvField.Interface(), recursive, tags...) {
+								m[k] = v
+							}
+						} else {
+							m[name] = rvField.Interface()
+						}
+					} else {
+						m[name] = rvField.Interface()
+					}
 				}
 			default:
 				return nil
@@ -164,30 +197,6 @@ func Map(value interface{}, tags ...string) map[string]interface{} {
 		}
 		return m
 	}
-}
-
-// MapDeep does Map function recursively, which means if the attribute of <value>
-// is also a struct/*struct, calls Map function on this attribute converting it to
-// a map[string]interface{} type variable.
-// Also see Map.
-func MapDeep(value interface{}, tags ...string) map[string]interface{} {
-	data := Map(value, tags...)
-	for key, value := range data {
-		rv := reflect.ValueOf(value)
-		kind := rv.Kind()
-		if kind == reflect.Ptr {
-			rv = rv.Elem()
-			kind = rv.Kind()
-		}
-		switch kind {
-		case reflect.Struct:
-			delete(data, key)
-			for k, v := range MapDeep(value, tags...) {
-				data[k] = v
-			}
-		}
-	}
-	return data
 }
 
 // MapStrStr converts <value> to map[string]string.

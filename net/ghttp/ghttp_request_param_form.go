@@ -14,7 +14,7 @@ import (
 
 // SetForm sets custom form value with key-value pair.
 func (r *Request) SetForm(key string, value interface{}) {
-	r.ParseForm()
+	r.parseForm()
 	if r.formMap == nil {
 		r.formMap = make(map[string]interface{})
 	}
@@ -25,7 +25,7 @@ func (r *Request) SetForm(key string, value interface{}) {
 // It returns <def> if <key> does not exist in the form.
 // It returns nil if <def> is not passed.
 func (r *Request) GetForm(key string, def ...interface{}) interface{} {
-	r.ParseForm()
+	r.parseForm()
 	if len(r.formMap) > 0 {
 		if v, ok := r.formMap[key]; ok {
 			return v
@@ -105,7 +105,7 @@ func (r *Request) GetFormInterfaces(key string, def ...interface{}) []interface{
 // The parameter <kvMap> specifies the keys retrieving from client parameters,
 // the associated values are the default values if the client does not pass.
 func (r *Request) GetFormMap(kvMap ...map[string]interface{}) map[string]interface{} {
-	r.ParseForm()
+	r.parseForm()
 	if len(kvMap) > 0 && kvMap[0] != nil {
 		if len(r.formMap) == 0 {
 			return kvMap[0]
@@ -158,7 +158,7 @@ func (r *Request) GetFormMapStrVar(kvMap ...map[string]interface{}) map[string]*
 // given struct object. Note that the parameter <pointer> is a pointer to the struct object.
 // The optional parameter <mapping> is used to specify the key to attribute mapping.
 func (r *Request) GetFormStruct(pointer interface{}, mapping ...map[string]string) error {
-	r.ParseForm()
+	r.parseForm()
 	tagMap := structs.TagMapName(pointer, paramTagPriority, true)
 	if len(mapping) > 0 {
 		for k, v := range mapping[0] {

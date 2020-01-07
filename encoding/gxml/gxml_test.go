@@ -80,7 +80,7 @@ func Test_XmlToJson(t *testing.T) {
 	}
 }
 
-func Test_Decode(t *testing.T) {
+func Test_Decode1(t *testing.T) {
 	for _, v := range testData {
 		srcXml, dstXml := buildXml(v.otherEncoding, v.utf8)
 		if len(srcXml) == 0 && len(dstXml) == 0 {
@@ -104,6 +104,32 @@ func Test_Decode(t *testing.T) {
 			}
 		}
 	}
+}
+
+func Test_Decode2(t *testing.T) {
+	gtest.Case(t, func() {
+		content := `
+<?xml version="1.0" encoding="UTF-8"?><doc><username>johngcn</username><password1>123456</password1><password2>123456</password2></doc>
+`
+		m, err := gxml.Decode([]byte(content))
+		gtest.Assert(err, nil)
+		gtest.Assert(m["doc"].(map[string]interface{})["username"], "johngcn")
+		gtest.Assert(m["doc"].(map[string]interface{})["password1"], "123456")
+		gtest.Assert(m["doc"].(map[string]interface{})["password2"], "123456")
+	})
+}
+
+func Test_DecodeWitoutRoot(t *testing.T) {
+	gtest.Case(t, func() {
+		content := `
+<?xml version="1.0" encoding="UTF-8"?><doc><username>johngcn</username><password1>123456</password1><password2>123456</password2></doc>
+`
+		m, err := gxml.DecodeWithoutRoot([]byte(content))
+		gtest.Assert(err, nil)
+		gtest.Assert(m["username"], "johngcn")
+		gtest.Assert(m["password1"], "123456")
+		gtest.Assert(m["password2"], "123456")
+	})
 }
 
 func Test_Encode(t *testing.T) {

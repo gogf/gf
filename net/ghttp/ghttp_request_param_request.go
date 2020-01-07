@@ -26,7 +26,7 @@ func (r *Request) GetRequest(key string, def ...interface{}) interface{} {
 		value = r.GetForm(key)
 	}
 	if value == nil {
-		r.ParseBody()
+		r.parseBody()
 		if len(r.bodyMap) > 0 {
 			value = r.bodyMap[key]
 		}
@@ -168,9 +168,9 @@ func (r *Request) GetRequestInterfaces(key string, def ...interface{}) []interfa
 // Note that if there're multiple parameters with the same name, the parameters are retrieved and overwrote
 // in order of priority: router < query < body < form < custom.
 func (r *Request) GetRequestMap(kvMap ...map[string]interface{}) map[string]interface{} {
-	r.ParseQuery()
-	r.ParseForm()
-	r.ParseBody()
+	r.parseQuery()
+	r.parseForm()
+	r.parseBody()
 	var ok, filter bool
 	var length int
 	if len(kvMap) > 0 && kvMap[0] != nil {

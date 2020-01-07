@@ -8,8 +8,8 @@ package ghttp
 
 // Get is a convenience method for sending GET request.
 // NOTE that remembers CLOSING the response object when it'll never be used.
-func Get(url string) (*ClientResponse, error) {
-	return DoRequest("GET", url)
+func Get(url string, data ...interface{}) (*ClientResponse, error) {
+	return DoRequest("GET", url, data...)
 }
 
 // Put is a convenience method for sending PUT request.

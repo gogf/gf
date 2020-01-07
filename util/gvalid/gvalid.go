@@ -62,9 +62,10 @@ regex                格式：regex:pattern                         说明：参
 // 自定义错误信息: map[键名] => 字符串|map[规则]错误信息
 type CustomMsg = map[string]interface{}
 
-// 解析单条sequence tag，格式: [数值键名/别名@]校验规则[#错误提示]，
-// 其中校验规则如果有多个那么以"|"符号分隔，错误提示同理。
+// 解析单条sequence tag，格式: [alias@]rule[...#msg...]
 func parseSequenceTag(tag string) (name, rule, msg string) {
+	// Complete sequence tag.
+	// Eg: required|length:2,20|password3|same:password1#||密码强度不足|两次密码不一致
 	match, _ := gregex.MatchString(`\s*((\w+)\s*@){0,1}\s*([^#]+)\s*(#\s*(.*)){0,1}\s*`, tag)
 	return strings.TrimSpace(match[2]), strings.TrimSpace(match[3]), strings.TrimSpace(match[5])
 }

@@ -15,7 +15,6 @@ import (
 )
 
 func Test_Check(t *testing.T) {
-
 	gtest.Case(t, func() {
 		rule := "abc:6,16"
 		val1 := 0
@@ -238,7 +237,7 @@ func Test_Phone(t *testing.T) {
 		err2 := gvalid.Check("13619908979", "phone", nil)
 		err3 := gvalid.Check("16719908979", "phone", nil)
 		err4 := gvalid.Check("19719908989", "phone", nil)
-		gtest.AssertNE(err1, nil)
+		gtest.AssertNE(err1.String(), nil)
 		gtest.Assert(err2, nil)
 		gtest.Assert(err3, nil)
 		gtest.Assert(err4, nil)
