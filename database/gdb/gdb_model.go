@@ -23,8 +23,6 @@ import (
 
 // Model is the DAO for ORM.
 type Model struct {
-	autoFillCreatedAt bool
-	autoFillUpdatedAt bool
 	db                DB             // Underlying DB interface.
 	tx                *TX            // Underlying TX interface.
 	linkType          int            // Mark for operation on master or slave.
@@ -197,27 +195,6 @@ func (m *Model) getModel() *Model {
 		return m.Clone()
 	}
 }
-func (m *Model) AutoFillCreatedAt() *Model {
-	model := m.getModel()
-	model.autoFillCreatedAt = true
-	return model
-}
-func (m *Model) CancelAutoFileCreatedAt() *Model {
-	model := m.getModel()
-	model.autoFillCreatedAt = false
-	return model
-}
-func (m *Model) AutoFillUpdatedAt() *Model {
-	model := m.getModel()
-	model.autoFillUpdatedAt = true
-	return model
-}
-func (m *Model) CancelAutoFileUpdatedAt() *Model {
-	model := m.getModel()
-	model.autoFillUpdatedAt = false
-	return model
-}
-
 // LeftJoin does "LEFT JOIN ... ON ..." statement on the model.
 func (m *Model) LeftJoin(table string, on string) *Model {
 	model := m.getModel()
