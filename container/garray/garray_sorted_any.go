@@ -9,6 +9,7 @@ package garray
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gutil"
 	"math"
@@ -29,7 +30,7 @@ type SortedArray struct {
 }
 
 // NewSortedArray creates and returns an empty sorted array.
-// The parameter <safe> used to specify whether using array in concurrent-safety, which is false in default.
+// The parameter <safe> is used to specify whether using array in concurrent-safety, which is false in default.
 // The parameter <comparator> used to compare values to sort in array,
 // if it returns value < 0, means v1 < v2;
 // if it returns value = 0, means v1 = v2;
@@ -39,7 +40,7 @@ func NewSortedArray(comparator func(a, b interface{}) int, safe ...bool) *Sorted
 }
 
 // NewSortedArraySize create and returns an sorted array with given size and cap.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewSortedArraySize(cap int, comparator func(a, b interface{}) int, safe ...bool) *SortedArray {
 	return &SortedArray{
@@ -50,8 +51,23 @@ func NewSortedArraySize(cap int, comparator func(a, b interface{}) int, safe ...
 	}
 }
 
+// NewSortedArrayRange creates and returns a array by a range from <start> to <end>
+// with step value <step>.
+func NewSortedArrayRange(start, end, step int, comparator func(a, b interface{}) int, safe ...bool) *SortedArray {
+	if step == 0 {
+		panic(fmt.Sprintf(`invalid step value: %d`, step))
+	}
+	slice := make([]interface{}, (end-start+1)/step)
+	index := 0
+	for i := start; i <= end; i += step {
+		slice[index] = i
+		index++
+	}
+	return NewSortedArrayFrom(slice, comparator, safe...)
+}
+
 // NewSortedArrayFrom creates and returns an sorted array with given slice <array>.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewSortedArrayFrom(array []interface{}, comparator func(a, b interface{}) int, safe ...bool) *SortedArray {
 	a := NewSortedArraySize(0, comparator, safe...)
@@ -63,7 +79,7 @@ func NewSortedArrayFrom(array []interface{}, comparator func(a, b interface{}) i
 }
 
 // NewSortedArrayFromCopy creates and returns an sorted array from a copy of given slice <array>.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewSortedArrayFromCopy(array []interface{}, comparator func(a, b interface{}) int, safe ...bool) *SortedArray {
 	newArray := make([]interface{}, len(array))
@@ -552,6 +568,35 @@ func (a *SortedArray) CountValues() map[interface{}]int {
 		m[v]++
 	}
 	return m
+}
+
+// Iterator is alias of IteratorAsc.
+func (a *SortedArray) Iterator(f func(k int, v interface{}) bool) {
+	a.IteratorAsc(f)
+}
+
+// IteratorAsc iterates the array in ascending order with given callback function <f>.
+// If <f> returns true, then it continues iterating; or false to stop.
+func (a *SortedArray) IteratorAsc(f func(k int, v interface{}) bool) {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	for k, v := range a.array {
+		if !f(k, v) {
+			break
+		}
+	}
+}
+
+// IteratorDesc iterates the array in descending order with given callback function <f>.
+// If <f> returns true, then it continues iterating; or false to stop.
+func (a *SortedArray) IteratorDesc(f func(k int, v interface{}) bool) {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	for i := len(a.array) - 1; i >= 0; i-- {
+		if !f(i, a.array[i]) {
+			break
+		}
+	}
 }
 
 // String returns current array as a string, which implements like json.Marshal does.

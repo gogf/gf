@@ -55,10 +55,10 @@ func (c *Cookie) init() {
 		c.domain = c.request.Server.GetCookieDomain()
 		c.maxage = c.request.Server.GetCookieMaxAge()
 		c.response = c.request.Response
-		// 如果没有设置COOKIE有效域名，那么设置HOST为默认有效域名
-		if c.domain == "" {
-			c.domain = c.request.GetHost()
-		}
+		// DO NOT ADD ANY DEFAULT COOKIE DOMAIN!
+		//if c.domain == "" {
+		//	c.domain = c.request.GetHost()
+		//}
 		for _, v := range c.request.Cookies() {
 			c.data[v.Name] = CookieItem{
 				v.Value, v.Domain, v.Path, int64(v.Expires.Second()), v.HttpOnly,

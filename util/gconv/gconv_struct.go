@@ -10,10 +10,17 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"regexp"
 	"strings"
 
 	"github.com/gogf/gf/internal/structs"
 	"github.com/gogf/gf/internal/utilstr"
+)
+
+var (
+	// replaceCharReg is the regular expression object for replacing chars
+	// in map keys and attribute names.
+	replaceCharReg, _ = regexp.Compile(`[\-\.\_\s]+`)
 )
 
 // Struct maps the params key-value pairs to the corresponding struct object's properties.
@@ -35,6 +42,7 @@ func Struct(params interface{}, pointer interface{}, mapping ...map[string]strin
 	if pointer == nil {
 		return errors.New("object pointer cannot be nil")
 	}
+	// paramsMap is the map[string]interface{} type variable for params.
 	paramsMap := Map(params)
 	if paramsMap == nil {
 		return fmt.Errorf("invalid params: %v", params)
@@ -45,7 +53,7 @@ func Struct(params interface{}, pointer interface{}, mapping ...map[string]strin
 	if !ok {
 		rv := reflect.ValueOf(pointer)
 		if kind := rv.Kind(); kind != reflect.Ptr {
-			return fmt.Errorf("object pointer should be type of: %v", kind)
+			return fmt.Errorf("object pointer should be type of '*struct', but got '%v'", kind)
 		}
 		// Using IsNil on reflect.Ptr variable is OK.
 		if !rv.IsValid() || rv.IsNil() {
@@ -53,7 +61,7 @@ func Struct(params interface{}, pointer interface{}, mapping ...map[string]strin
 		}
 		elem = rv.Elem()
 	}
-	// Auto create struct object.
+	// It automatically creates struct object if necessary.
 	// For example, if <pointer> is **User, then <elem> is *User, which is a pointer to User.
 	if elem.Type().Kind() == reflect.Ptr && (!elem.IsValid() || elem.IsNil()) {
 		e := reflect.New(elem.Type().Elem()).Elem()
@@ -61,13 +69,14 @@ func Struct(params interface{}, pointer interface{}, mapping ...map[string]strin
 		elem = e
 	}
 	// It only performs one converting to the same attribute.
-	// doneMap is used to check repeated converting.
-	doneMap := make(map[string]bool)
+	// doneMap is used to check repeated converting, its key is the attribute name of the struct.
+	doneMap := make(map[string]struct{})
 	// It first checks the passed mapping rules.
 	if len(mapping) > 0 && len(mapping[0]) > 0 {
 		for mapK, mapV := range mapping[0] {
+			// mapV is the the attribute name of the struct.
 			if v, ok := paramsMap[mapK]; ok {
-				doneMap[mapV] = true
+				doneMap[mapV] = struct{}{}
 				if err := bindVarToStructAttr(elem, mapV, v); err != nil {
 					return err
 				}
@@ -77,65 +86,67 @@ func Struct(params interface{}, pointer interface{}, mapping ...map[string]strin
 	// It secondly checks the tags of attributes.
 	tagMap := structs.TagMapName(pointer, structTagPriority, true)
 	for tagK, tagV := range tagMap {
+		// tagV is the the attribute name of the struct.
 		if _, ok := doneMap[tagV]; ok {
 			continue
 		}
 		if v, ok := paramsMap[tagK]; ok {
-			doneMap[tagV] = true
+			doneMap[tagV] = struct{}{}
 			if err := bindVarToStructAttr(elem, tagV, v); err != nil {
 				return err
 			}
 		}
 	}
 	// It finally do the converting with default rules.
-	attrMap := make(map[string]struct{})
+	// The key of the map is the attribute name of the struct,
+	// and the value is its replaced name for later comparison to improve performance.
+	attrMap := make(map[string]string)
 	elemType := elem.Type()
+	tempName := ""
 	for i := 0; i < elem.NumField(); i++ {
 		// Only do converting to public attributes.
 		if !utilstr.IsLetterUpper(elemType.Field(i).Name[0]) {
 			continue
 		}
-		attrMap[elemType.Field(i).Name] = struct{}{}
+		tempName = elemType.Field(i).Name
+		attrMap[tempName] = replaceCharReg.ReplaceAllString(tempName, "")
 	}
 	if len(attrMap) == 0 {
 		return nil
 	}
+	var attrName, checkName string
 	for mapK, mapV := range paramsMap {
-		name := ""
-		for _, checkName := range []string{
-			utilstr.UcFirst(mapK),
-			utilstr.ReplaceByMap(mapK, map[string]string{
-				"_": "",
-				"-": "",
-				" ": "",
-			})} {
-			if _, ok := doneMap[checkName]; ok {
-				continue
-			}
-			if _, ok := tagMap[checkName]; ok {
-				continue
-			}
-			// Loop to find the matched attribute name.
-			for value, _ := range attrMap {
-				if strings.EqualFold(checkName, value) {
-					name = value
-					break
-				}
-				if strings.EqualFold(checkName, strings.Replace(value, "_", "", -1)) {
-					name = value
-					break
-				}
-			}
-			doneMap[checkName] = true
-			if name != "" {
+		attrName = ""
+		checkName = replaceCharReg.ReplaceAllString(mapK, "")
+		// Loop to find the matched attribute name with or without
+		// string cases and chars like '-'/'_'/'.'/' '.
+		for attrK, attrV := range attrMap {
+			// Eg:
+			// UserName  eq user_name
+			// User-Name eq username
+			// username  eq userName
+			// etc.
+			if strings.EqualFold(checkName, attrV) {
+				attrName = attrK
 				break
 			}
 		}
+		// If the attribute name is already checked converting, then skip it.
+		if attrName != "" {
+			if _, ok := doneMap[attrName]; ok {
+				continue
+			}
+			if _, ok := tagMap[attrName]; ok {
+				continue
+			}
+		}
 		// No matching, give up this attribute converting.
-		if name == "" {
+		if attrName == "" {
 			continue
 		}
-		if err := bindVarToStructAttr(elem, name, mapV); err != nil {
+		// Mark it done.
+		doneMap[attrName] = struct{}{}
+		if err := bindVarToStructAttr(elem, attrName, mapV); err != nil {
 			return err
 		}
 	}
@@ -145,6 +156,9 @@ func Struct(params interface{}, pointer interface{}, mapping ...map[string]strin
 // StructDeep do Struct function recursively.
 // See Struct.
 func StructDeep(params interface{}, pointer interface{}, mapping ...map[string]string) error {
+	if params == nil {
+		return nil
+	}
 	if err := Struct(params, pointer, mapping...); err != nil {
 		return err
 	} else {
@@ -232,14 +246,12 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}) er
 		}
 
 	// 属性为数组类型
-	case reflect.Slice:
-		fallthrough
-	case reflect.Array:
+	case reflect.Slice, reflect.Array:
 		a := reflect.Value{}
 		v := reflect.ValueOf(value)
 		if v.Kind() == reflect.Slice || v.Kind() == reflect.Array {
+			a = reflect.MakeSlice(structFieldValue.Type(), v.Len(), v.Len())
 			if v.Len() > 0 {
-				a = reflect.MakeSlice(structFieldValue.Type(), v.Len(), v.Len())
 				t := a.Index(0).Type()
 				for i := 0; i < v.Len(); i++ {
 					if t.Kind() == reflect.Ptr {

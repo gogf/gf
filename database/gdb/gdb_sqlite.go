@@ -3,6 +3,10 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
+//
+// Note:
+// 1. It needs manually import: _ "github.com/mattn/go-sqlite3"
+// 2. It does not support Save/Replace features.
 
 package gdb
 
@@ -10,13 +14,6 @@ import (
 	"database/sql"
 )
 
-// 使用时需要import:
-// _ "github.com/mattn/go-sqlite3"
-
-// Sqlite接口对象
-// @author wxkj<wxscz@qq.com>
-
-// 数据库链接对象
 type dbSqlite struct {
 	*dbBase
 }
@@ -35,14 +32,13 @@ func (db *dbSqlite) Open(config *ConfigNode) (*sql.DB, error) {
 	}
 }
 
-// 获得关键字操作符
 func (db *dbSqlite) getChars() (charLeft string, charRight string) {
 	return "`", "`"
 }
 
 // 返回当前数据库所有的数据表名称
 // TODO
-func (bs *dbSqlite) Tables() (tables []string, err error) {
+func (db *dbSqlite) Tables() (tables []string, err error) {
 	return
 }
 

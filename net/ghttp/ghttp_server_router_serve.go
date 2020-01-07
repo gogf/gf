@@ -30,9 +30,8 @@ func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*handlerParsedI
 		if parsedItems != nil {
 			return &handlerCacheItem{parsedItems, hasHook, hasServe}
 		}
-		//intlog.Printf("cannot find HTTP handler for: %s, %s, %s", r.Method, r.URL.Path, r.GetHost())
 		return nil
-	}, s.config.RouterCacheExpire*1000)
+	}, gROUTE_CACHE_DURATION)
 	if value != nil {
 		item := value.(*handlerCacheItem)
 		return item.parsedItems, item.hasHook, item.hasServe
@@ -65,10 +64,13 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 		if !ok {
 			continue
 		}
-		//gutil.Dump(p)
 		// 多层链表(每个节点都有一个*list链表)的目的是当叶子节点未有任何规则匹配时，让父级模糊匹配规则继续处理
 		lists := make([]*glist.List, 0, 16)
 		for k, v := range array {
+			// In case of double '/' URI, eg: /user//index
+			if v == "" {
+				continue
+			}
 			if _, ok := p.(map[string]interface{})["*list"]; ok {
 				lists = append(lists, p.(map[string]interface{})["*list"].(*glist.List))
 			}
@@ -109,9 +111,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 				// 服务路由函数只能添加一次，将重复判断放在这里提高检索效率
 				if hasServe {
 					switch item.itemType {
-					case gHANDLER_TYPE_HANDLER,
-						gHANDLER_TYPE_OBJECT,
-						gHANDLER_TYPE_CONTROLLER:
+					case gHANDLER_TYPE_HANDLER, gHANDLER_TYPE_OBJECT, gHANDLER_TYPE_CONTROLLER:
 						continue
 					}
 				}
@@ -120,7 +120,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 					// 注意当不带任何动态路由规则时，len(match) == 1
 					if match, err := gregex.MatchString(item.router.RegRule, path); err == nil && len(match) > 0 {
 						parsedItem := &handlerParsedItem{item, nil}
-						// 如果需要query匹配，那么需要重新正则解析URL
+						// 如果需要路由规则中带有URI名称匹配，那么需要重新正则解析URL
 						if len(item.router.RegNames) > 0 {
 							if len(match) > len(item.router.RegNames) {
 								parsedItem.values = make(map[string]string)

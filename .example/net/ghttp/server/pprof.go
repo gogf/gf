@@ -6,7 +6,7 @@ import (
 
 func main() {
 	s := ghttp.GetServer()
-	s.EnablePprof()
+	s.EnablePProf()
 	s.BindHandler("/", func(r *ghttp.Request) {
 		r.Response.Writeln("哈喽世界！")
 	})

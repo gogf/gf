@@ -73,28 +73,28 @@ func Test_NewFromTimeStamp(t *testing.T) {
 func Test_Time_Second(t *testing.T) {
 	gtest.Case(t, func() {
 		timeTemp := gtime.Now()
-		gtest.Assert(timeTemp.Second(), timeTemp.Time.Unix())
+		gtest.Assert(timeTemp.Second(), timeTemp.Time.Second())
 	})
 }
 
 func Test_Time_Nanosecond(t *testing.T) {
 	gtest.Case(t, func() {
 		timeTemp := gtime.Now()
-		gtest.Assert(timeTemp.Nanosecond(), timeTemp.Time.UnixNano())
+		gtest.Assert(timeTemp.Nanosecond(), timeTemp.Time.Nanosecond())
 	})
 }
 
 func Test_Time_Microsecond(t *testing.T) {
 	gtest.Case(t, func() {
 		timeTemp := gtime.Now()
-		gtest.Assert(timeTemp.Microsecond(), timeTemp.Time.UnixNano()/1e3)
+		gtest.Assert(timeTemp.Microsecond(), timeTemp.Time.Nanosecond()/1e3)
 	})
 }
 
 func Test_Time_Millisecond(t *testing.T) {
 	gtest.Case(t, func() {
 		timeTemp := gtime.Now()
-		gtest.Assert(timeTemp.Millisecond(), timeTemp.Time.UnixNano()/1e6)
+		gtest.Assert(timeTemp.Millisecond(), timeTemp.Time.Nanosecond()/1e6)
 	})
 }
 

@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/gogf/gf/database/gdb"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/glog"
@@ -23,7 +21,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	db.SetDebug(true)
+	//db.SetDebug(false)
 
 	glog.SetPath("/tmp")
 
@@ -36,7 +34,4 @@ func main() {
 
 	db.Table("user").Data(g.Map{"name": "smith"}).Where("uid=?", 1).Save()
 
-	db.PrintQueriedSqls()
-
-	fmt.Println(db.GetLastSql())
 }

@@ -63,20 +63,22 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 	handler.itemId = handlerIdGenerator.Add(1)
 	domain, method, uri, err := s.parsePattern(pattern)
 	if err != nil {
-		glog.Error("invalid pattern:", pattern, err)
+		glog.Fatal("invalid pattern:", pattern, err)
 		return
 	}
 	if len(uri) == 0 || uri[0] != '/' {
-		glog.Error("invalid pattern:", pattern, "URI should lead with '/'")
+		glog.Fatal("invalid pattern:", pattern, "URI should lead with '/'")
 		return
 	}
 	// 注册地址记录及重复注册判断
 	regKey := s.handlerKey(handler.hookName, method, uri, domain)
-	switch handler.itemType {
-	case gHANDLER_TYPE_HANDLER, gHANDLER_TYPE_OBJECT, gHANDLER_TYPE_CONTROLLER:
-		if item, ok := s.routesMap[regKey]; ok {
-			glog.Errorf(`duplicated route registry "%s", already registered at %s`, pattern, item[0].file)
-			return
+	if !s.config.RouteOverWrite {
+		switch handler.itemType {
+		case gHANDLER_TYPE_HANDLER, gHANDLER_TYPE_OBJECT, gHANDLER_TYPE_CONTROLLER:
+			if item, ok := s.routesMap[regKey]; ok {
+				glog.Fatalf(`duplicated route registry "%s", already registered at %s`, pattern, item[0].file)
+				return
+			}
 		}
 	}
 	// 注册的路由信息对象
@@ -236,6 +238,23 @@ func (s *Server) compareRouterPriority(newItem *handlerItem, oldItem *handlerIte
 		return false
 	}
 
+	/** 比较路由规则长度，越长的规则优先级越高，模糊/命名规则不算长度 **/
+
+	// 例如：/admin-goods-{page} 比 /admin-{page} 优先级高
+	var uriNew, uriOld string
+	uriNew, _ = gregex.ReplaceString(`\{[^/]+\}`, "", newItem.router.Uri)
+	uriNew, _ = gregex.ReplaceString(`:[^/]+`, "", uriNew)
+	uriNew, _ = gregex.ReplaceString(`\*[^/]+`, "", uriNew)
+	uriOld, _ = gregex.ReplaceString(`\{[^/]+\}`, "", oldItem.router.Uri)
+	uriOld, _ = gregex.ReplaceString(`:[^/]+`, "", uriOld)
+	uriOld, _ = gregex.ReplaceString(`\*[^/]+`, "", uriOld)
+	if len(uriNew) > len(uriOld) {
+		return true
+	}
+	if len(uriNew) < len(uriOld) {
+		return false
+	}
+
 	/* 模糊规则数量相等，后续不用再判断*规则的数量比较了 */
 
 	// 比较HTTP METHOD，更精准的优先级更高
@@ -246,7 +265,14 @@ func (s *Server) compareRouterPriority(newItem *handlerItem, oldItem *handlerIte
 		return true
 	}
 
-	// 最后新的规则比旧的规则优先级低
+	// 如果是服务路由，那么新的规则比旧的规则优先级高(路由覆盖)
+	if newItem.itemType == gHANDLER_TYPE_HANDLER ||
+		newItem.itemType == gHANDLER_TYPE_OBJECT ||
+		newItem.itemType == gHANDLER_TYPE_CONTROLLER {
+		return true
+	}
+
+	// 如果是其他路由(HOOK/中间件)，那么新的规则比旧的规则优先级低，使得注册相同路由则顺序执行
 	return false
 }
 

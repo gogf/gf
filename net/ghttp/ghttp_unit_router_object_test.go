@@ -44,7 +44,7 @@ func Test_Router_Object1(t *testing.T) {
 	s.BindObject("/", new(Object))
 	s.BindObject("/{.struct}/{.method}", new(Object))
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
@@ -74,7 +74,7 @@ func Test_Router_Object2(t *testing.T) {
 	s := g.Server(p)
 	s.BindObject("/object", new(Object), "Show, Info")
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
@@ -100,7 +100,7 @@ func Test_Router_ObjectMethod(t *testing.T) {
 	s := g.Server(p)
 	s.BindObjectMethod("/object-info", new(Object), "Info")
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 

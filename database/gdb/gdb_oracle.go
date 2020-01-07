@@ -3,10 +3,11 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
-// 说明：
-//    1.需要导入oracle驱动： github.com/mattn/go-oci8
-//    2.不支持save/replace方法，可以调用这2个方法估计会报错，还没测试过,(应该是可以通过oracle的merge来实现这2个功能的，还没仔细研究)
-//    3.不支持LastInsertId方法
+//
+// Note:
+// 1. It needs manually import: _ "github.com/mattn/go-oci8"
+// 2. It does not support Save/Replace features.
+// 3. It does not support LastInsertId.
 
 package gdb
 
@@ -123,7 +124,7 @@ func (db *dbOracle) parseSql(sql string) string {
 
 // 返回当前数据库所有的数据表名称
 // TODO
-func (bs *dbOracle) Tables() (tables []string, err error) {
+func (db *dbOracle) Tables() (tables []string, err error) {
 	return
 }
 

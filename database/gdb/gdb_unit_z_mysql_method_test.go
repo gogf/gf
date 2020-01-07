@@ -8,6 +8,7 @@ package gdb_test
 
 import (
 	"fmt"
+	"github.com/gogf/gf/container/garray"
 	"testing"
 	"time"
 
@@ -251,17 +252,20 @@ func Test_DB_BatchInsert(t *testing.T) {
 		gtest.Assert(n, 1)
 	})
 
+}
+
+func Test_DB_BatchInsert_Struct(t *testing.T) {
 	// batch insert struct
 	gtest.Case(t, func() {
 		table := createTable()
 		defer dropTable(table)
 
 		type User struct {
-			Id         int         `gconv:"id"`
-			Passport   string      `gconv:"passport"`
-			Password   string      `gconv:"password"`
-			NickName   string      `gconv:"nickname"`
-			CreateTime *gtime.Time `gconv:"create_time"`
+			Id         int         `c:"id"`
+			Passport   string      `c:"passport"`
+			Password   string      `c:"password"`
+			NickName   string      `c:"nickname"`
+			CreateTime *gtime.Time `c:"create_time"`
 		}
 		user := &User{
 			Id:         1,
@@ -275,7 +279,6 @@ func Test_DB_BatchInsert(t *testing.T) {
 		n, _ := result.RowsAffected()
 		gtest.Assert(n, 1)
 	})
-
 }
 
 func Test_DB_Save(t *testing.T) {
@@ -423,7 +426,7 @@ func Test_DB_GetCount(t *testing.T) {
 	gtest.Case(t, func() {
 		count, err := db.GetCount(fmt.Sprintf("SELECT * FROM %s", table))
 		gtest.Assert(err, nil)
-		gtest.Assert(count, INIT_DATA_SIZE)
+		gtest.Assert(count, SIZE)
 	})
 }
 
@@ -472,7 +475,7 @@ func Test_DB_GetStructs(t *testing.T) {
 		var users []User
 		err := db.GetStructs(&users, fmt.Sprintf("SELECT * FROM %s WHERE id>?", table), 1)
 		gtest.Assert(err, nil)
-		gtest.Assert(len(users), INIT_DATA_SIZE-1)
+		gtest.Assert(len(users), SIZE-1)
 		gtest.Assert(users[0].Id, 2)
 		gtest.Assert(users[1].Id, 3)
 		gtest.Assert(users[2].Id, 4)
@@ -492,7 +495,7 @@ func Test_DB_GetStructs(t *testing.T) {
 		var users []User
 		err := db.GetStructs(&users, fmt.Sprintf("SELECT * FROM %s WHERE id>?", table), 1)
 		gtest.Assert(err, nil)
-		gtest.Assert(len(users), INIT_DATA_SIZE-1)
+		gtest.Assert(len(users), SIZE-1)
 		gtest.Assert(users[0].Id, 2)
 		gtest.Assert(users[1].Id, 3)
 		gtest.Assert(users[2].Id, 4)
@@ -543,7 +546,7 @@ func Test_DB_GetScan(t *testing.T) {
 		var users []User
 		err := db.GetScan(&users, fmt.Sprintf("SELECT * FROM %s WHERE id>?", table), 1)
 		gtest.Assert(err, nil)
-		gtest.Assert(len(users), INIT_DATA_SIZE-1)
+		gtest.Assert(len(users), SIZE-1)
 		gtest.Assert(users[0].Id, 2)
 		gtest.Assert(users[1].Id, 3)
 		gtest.Assert(users[2].Id, 4)
@@ -563,7 +566,7 @@ func Test_DB_GetScan(t *testing.T) {
 		var users []User
 		err := db.GetScan(&users, fmt.Sprintf("SELECT * FROM %s WHERE id>?", table), 1)
 		gtest.Assert(err, nil)
-		gtest.Assert(len(users), INIT_DATA_SIZE-1)
+		gtest.Assert(len(users), SIZE-1)
 		gtest.Assert(users[0].Id, 2)
 		gtest.Assert(users[1].Id, 3)
 		gtest.Assert(users[2].Id, 4)
@@ -580,7 +583,7 @@ func Test_DB_Delete(t *testing.T) {
 		result, err := db.Delete(table, nil)
 		gtest.Assert(err, nil)
 		n, _ := result.RowsAffected()
-		gtest.Assert(n, INIT_DATA_SIZE)
+		gtest.Assert(n, SIZE)
 	})
 }
 
@@ -1050,6 +1053,109 @@ func Test_DB_TableField(t *testing.T) {
 	}
 
 	gtest.Assert(result[0], data)
+}
+
+func Test_DB_Prefix(t *testing.T) {
+	db := dbPrefix
+	name := fmt.Sprintf(`%s_%d`, TABLE, gtime.TimestampNano())
+	table := PREFIX1 + name
+	createTableWithDb(db, table)
+	defer dropTable(table)
+
+	gtest.Case(t, func() {
+		id := 10000
+		result, err := db.Insert(name, g.Map{
+			"id":          id,
+			"passport":    fmt.Sprintf(`user_%d`, id),
+			"password":    fmt.Sprintf(`pass_%d`, id),
+			"nickname":    fmt.Sprintf(`name_%d`, id),
+			"create_time": gtime.NewFromStr("2018-10-24 10:00:00").String(),
+		})
+		gtest.Assert(err, nil)
+
+		n, e := result.RowsAffected()
+		gtest.Assert(e, nil)
+		gtest.Assert(n, 1)
+	})
+
+	gtest.Case(t, func() {
+		id := 10000
+		result, err := db.Replace(name, g.Map{
+			"id":          id,
+			"passport":    fmt.Sprintf(`user_%d`, id),
+			"password":    fmt.Sprintf(`pass_%d`, id),
+			"nickname":    fmt.Sprintf(`name_%d`, id),
+			"create_time": gtime.NewFromStr("2018-10-24 10:00:01").String(),
+		})
+		gtest.Assert(err, nil)
+
+		n, e := result.RowsAffected()
+		gtest.Assert(e, nil)
+		gtest.Assert(n, 2)
+	})
+
+	gtest.Case(t, func() {
+		id := 10000
+		result, err := db.Save(name, g.Map{
+			"id":          id,
+			"passport":    fmt.Sprintf(`user_%d`, id),
+			"password":    fmt.Sprintf(`pass_%d`, id),
+			"nickname":    fmt.Sprintf(`name_%d`, id),
+			"create_time": gtime.NewFromStr("2018-10-24 10:00:02").String(),
+		})
+		gtest.Assert(err, nil)
+
+		n, e := result.RowsAffected()
+		gtest.Assert(e, nil)
+		gtest.Assert(n, 2)
+	})
+
+	gtest.Case(t, func() {
+		id := 10000
+		result, err := db.Update(name, g.Map{
+			"id":          id,
+			"passport":    fmt.Sprintf(`user_%d`, id),
+			"password":    fmt.Sprintf(`pass_%d`, id),
+			"nickname":    fmt.Sprintf(`name_%d`, id),
+			"create_time": gtime.NewFromStr("2018-10-24 10:00:03").String(),
+		}, "id=?", id)
+		gtest.Assert(err, nil)
+
+		n, e := result.RowsAffected()
+		gtest.Assert(e, nil)
+		gtest.Assert(n, 1)
+	})
+
+	gtest.Case(t, func() {
+		id := 10000
+		result, err := db.Delete(name, "id=?", id)
+		gtest.Assert(err, nil)
+
+		n, e := result.RowsAffected()
+		gtest.Assert(e, nil)
+		gtest.Assert(n, 1)
+	})
+
+	gtest.Case(t, func() {
+		array := garray.New(true)
+		for i := 1; i <= SIZE; i++ {
+			array.Append(g.Map{
+				"id":          i,
+				"passport":    fmt.Sprintf(`user_%d`, i),
+				"password":    fmt.Sprintf(`pass_%d`, i),
+				"nickname":    fmt.Sprintf(`name_%d`, i),
+				"create_time": gtime.NewFromStr("2018-10-24 10:00:00").String(),
+			})
+		}
+
+		result, err := db.BatchInsert(name, array.Slice())
+		gtest.Assert(err, nil)
+
+		n, e := result.RowsAffected()
+		gtest.Assert(e, nil)
+		gtest.Assert(n, SIZE)
+	})
+
 }
 
 func Test_Model_InnerJoin(t *testing.T) {

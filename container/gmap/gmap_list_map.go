@@ -31,7 +31,7 @@ type gListMapNode struct {
 
 // NewListMap returns an empty link map.
 // ListMap is backed by a hash table to store values and doubly-linked list to store ordering.
-// The parameter <safe> used to specify whether using map in concurrent-safety,
+// The parameter <safe> is used to specify whether using map in concurrent-safety,
 // which is false in default.
 func NewListMap(safe ...bool) *ListMap {
 	return &ListMap{
@@ -92,7 +92,22 @@ func (m *ListMap) Clear() {
 	m.mu.Unlock()
 }
 
-// Map returns a copy of the data of the map.
+// Replace the data of the map with given <data>.
+func (m *ListMap) Replace(data map[interface{}]interface{}) {
+	m.mu.Lock()
+	m.data = make(map[interface{}]*glist.Element)
+	m.list = glist.New()
+	for key, value := range data {
+		if e, ok := m.data[key]; !ok {
+			m.data[key] = m.list.PushBack(&gListMapNode{key, value})
+		} else {
+			e.Value = &gListMapNode{key, value}
+		}
+	}
+	m.mu.Unlock()
+}
+
+// Map returns a copy of the underlying data of the map.
 func (m *ListMap) Map() map[interface{}]interface{} {
 	m.mu.RLock()
 	node := (*gListMapNode)(nil)
@@ -106,7 +121,7 @@ func (m *ListMap) Map() map[interface{}]interface{} {
 	return data
 }
 
-// MapStrAny returns a copy of the data of the map as map[string]interface{}.
+// MapStrAny returns a copy of the underlying data of the map as map[string]interface{}.
 func (m *ListMap) MapStrAny() map[string]interface{} {
 	m.mu.RLock()
 	node := (*gListMapNode)(nil)
@@ -253,7 +268,7 @@ func (m *ListMap) doSetWithLockCheck(key interface{}, value interface{}) interfa
 }
 
 // GetOrSet returns the value by key,
-// or set value with given <value> if not exist and returns this value.
+// or sets value with given <value> if it does not exist and then returns this value.
 func (m *ListMap) GetOrSet(key interface{}, value interface{}) interface{} {
 	if v, ok := m.Search(key); !ok {
 		return m.doSetWithLockCheck(key, value)
@@ -263,8 +278,8 @@ func (m *ListMap) GetOrSet(key interface{}, value interface{}) interface{} {
 }
 
 // GetOrSetFunc returns the value by key,
-// or sets value with return value of callback function <f> if not exist
-// and returns this value.
+// or sets value with returned value of callback function <f> if it does not exist
+// and then returns this value.
 func (m *ListMap) GetOrSetFunc(key interface{}, f func() interface{}) interface{} {
 	if v, ok := m.Search(key); !ok {
 		return m.doSetWithLockCheck(key, f())
@@ -274,8 +289,8 @@ func (m *ListMap) GetOrSetFunc(key interface{}, f func() interface{}) interface{
 }
 
 // GetOrSetFuncLock returns the value by key,
-// or sets value with return value of callback function <f> if not exist
-// and returns this value.
+// or sets value with returned value of callback function <f> if it does not exist
+// and then returns this value.
 //
 // GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function <f>
 // with mutex.Lock of the map.
@@ -311,7 +326,7 @@ func (m *ListMap) GetVarOrSetFuncLock(key interface{}, f func() interface{}) *gv
 	return gvar.New(m.GetOrSetFuncLock(key, f))
 }
 
-// SetIfNotExist sets <value> to the map if the <key> does not exist, then return true.
+// SetIfNotExist sets <value> to the map if the <key> does not exist, and then returns true.
 // It returns false if <key> exists, and <value> would be ignored.
 func (m *ListMap) SetIfNotExist(key interface{}, value interface{}) bool {
 	if !m.Contains(key) {
@@ -321,7 +336,7 @@ func (m *ListMap) SetIfNotExist(key interface{}, value interface{}) bool {
 	return false
 }
 
-// SetIfNotExistFunc sets value with return value of callback function <f>, then return true.
+// SetIfNotExistFunc sets value with return value of callback function <f>, and then returns true.
 // It returns false if <key> exists, and <value> would be ignored.
 func (m *ListMap) SetIfNotExistFunc(key interface{}, f func() interface{}) bool {
 	if !m.Contains(key) {
@@ -331,7 +346,7 @@ func (m *ListMap) SetIfNotExistFunc(key interface{}, f func() interface{}) bool 
 	return false
 }
 
-// SetIfNotExistFuncLock sets value with return value of callback function <f>, then return true.
+// SetIfNotExistFuncLock sets value with return value of callback function <f>, and then returns true.
 // It returns false if <key> exists, and <value> would be ignored.
 //
 // SetIfNotExistFuncLock differs with SetIfNotExistFunc function is that

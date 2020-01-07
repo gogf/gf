@@ -8,8 +8,10 @@ package glog
 
 import (
 	"errors"
+	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/util/gutil"
 	"io"
 	"strings"
 )
@@ -25,13 +27,13 @@ type Config struct {
 	StSkip      int       // Skip count for stack.
 	StStatus    int       // Stack status(1: enabled - default; 0: disabled)
 	StFilter    string    // Stack string filter.
-	HeaderPrint bool      // Print header or not(true in default).
-	StdoutPrint bool      // Output to stdout or not(true in default).
+	HeaderPrint bool      `c:"header"` // Print header or not(true in default).
+	StdoutPrint bool      `c:"stdout"` // Output to stdout or not(true in default).
 }
 
 // DefaultConfig returns the default configuration for logger.
 func DefaultConfig() Config {
-	return Config{
+	c := Config{
 		File:        gDEFAULT_FILE_FORMAT,
 		Flags:       F_TIME_STD,
 		Level:       LEVEL_ALL,
@@ -39,22 +41,49 @@ func DefaultConfig() Config {
 		HeaderPrint: true,
 		StdoutPrint: true,
 	}
+	if !defaultDebug {
+		c.Level = c.Level & ^LEVEL_DEBU
+	}
+	return c
 }
 
 // SetConfig set configurations for the logger.
-func (l *Logger) SetConfig(config Config) {
+func (l *Logger) SetConfig(config Config) error {
 	l.config = config
+	// Necessary validation.
+	if config.Path != "" {
+		if err := l.SetPath(config.Path); err != nil {
+			intlog.Error(err)
+			return err
+		}
+	}
+	intlog.Print(l.config)
+	return nil
 }
 
 // SetConfigWithMap set configurations with map for the logger.
 func (l *Logger) SetConfigWithMap(m map[string]interface{}) error {
-	config := Config{}
+	if m == nil || len(m) == 0 {
+		return errors.New("configuration cannot be empty")
+	}
+	// Change string configuration to int value for level.
+	levelKey, levelValue := gutil.MapPossibleItemByKey(m, "level")
+	if levelValue != nil {
+		switch gconv.String(levelValue) {
+		case "all":
+			m[levelKey] = LEVEL_ALL
+		case "dev":
+			m[levelKey] = LEVEL_DEV
+		case "prod":
+			m[levelKey] = LEVEL_PROD
+		}
+	}
+	config := DefaultConfig()
 	err := gconv.Struct(m, &config)
 	if err != nil {
 		return err
 	}
-	l.SetConfig(config)
-	return nil
+	return l.SetConfig(config)
 }
 
 // SetLevel sets the logging level.
@@ -132,7 +161,7 @@ func (l *Logger) GetWriter() io.Writer {
 // SetPath sets the directory path for file logging.
 func (l *Logger) SetPath(path string) error {
 	if path == "" {
-		return errors.New("path is empty")
+		return errors.New("logging path is empty")
 	}
 	if !gfile.Exists(path) {
 		if err := gfile.Mkdir(path); err != nil {

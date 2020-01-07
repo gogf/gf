@@ -7,6 +7,8 @@
 package gredis_test
 
 import (
+	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/util/guuid"
 	"testing"
 	"time"
 
@@ -221,5 +223,31 @@ func Test_Bool(t *testing.T) {
 		r, err = redis.DoVar("GET", "key-false")
 		gtest.Assert(err, nil)
 		gtest.Assert(r.Bool(), false)
+	})
+}
+
+func Test_Int(t *testing.T) {
+	gtest.Case(t, func() {
+		redis := gredis.New(config)
+		key := guuid.New()
+		_, err := redis.Do("SET", key, 1)
+		gtest.Assert(err, nil)
+
+		r, err := redis.DoVar("GET", key)
+		gtest.Assert(err, nil)
+		gtest.Assert(r.Int(), 1)
+	})
+}
+
+func Test_HSet(t *testing.T) {
+	gtest.Case(t, func() {
+		redis := gredis.New(config)
+		key := guuid.New()
+		_, err := redis.Do("HSET", key, "name", "john")
+		gtest.Assert(err, nil)
+
+		r, err := redis.DoVar("HGETALL", key)
+		gtest.Assert(err, nil)
+		gtest.Assert(r.Strings(), g.ArrayStr{"name", "john"})
 	})
 }

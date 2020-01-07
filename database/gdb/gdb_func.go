@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/internal/empty"
 	"github.com/gogf/gf/os/gtime"
 	"reflect"
+	"regexp"
 	"strings"
 	"time"
 
@@ -24,17 +25,17 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
-// Type assert api for String.
+// apiString is the type assert api for String.
 type apiString interface {
 	String() string
 }
 
-// Type assert api for Iterator.
+// apiIterator is the type assert api for Iterator.
 type apiIterator interface {
 	Iterator(f func(key, value interface{}) bool)
 }
 
-// Type assert api for Interfaces.
+// apiInterfacesis the type assert api for Interfaces.
 type apiInterfaces interface {
 	Interfaces() []interface{}
 }
@@ -45,21 +46,122 @@ const (
 	ORM_TAG_FOR_PRIMARY = "primary"
 )
 
-// 获得struct对象对应的where查询条件
+var (
+	// quoteWordReg is the regular expression object for a word check.
+	quoteWordReg = regexp.MustCompile(`^[a-zA-Z0-9\-_]+$`)
+)
+
+// handleTableName adds prefix string and quote chars for the table. It handles table string like:
+// "user", "user u", "user,user_detail", "user u, user_detail ut", "user as u, user_detail as ut".
+//
+// Note that, this will automatically checks the table prefix whether already added, if true it does
+// nothing to the table name, or else adds the prefix to the table name.
+func doHandleTableName(table, prefix, charLeft, charRight string) string {
+	array1 := gstr.SplitAndTrim(table, ",")
+	for k1, v1 := range array1 {
+		array2 := gstr.SplitAndTrim(v1, " ")
+		// Trim the security chars.
+		array2[0] = gstr.TrimLeftStr(array2[0], charLeft)
+		array2[0] = gstr.TrimRightStr(array2[0], charRight)
+		// If the table name already has the prefix, skips the prefix adding.
+		if len(array2[0]) <= len(prefix) || array2[0][:len(prefix)] != prefix {
+			array2[0] = prefix + array2[0]
+		}
+		// Add the security chars.
+		array2[0] = doQuoteWord(array2[0], charLeft, charRight)
+		array1[k1] = gstr.Join(array2, " ")
+	}
+	return gstr.Join(array1, ",")
+}
+
+// doQuoteWord checks given string <s> a word, if true quotes it with <charLeft> and <charRight>
+// and returns the quoted string; or else returns <s> without any change.
+func doQuoteWord(s, charLeft, charRight string) string {
+	if quoteWordReg.MatchString(s) && !gstr.ContainsAny(s, charLeft+charRight) {
+		return charLeft + s + charRight
+	}
+	return s
+}
+
+// doQuoteString quotes string with quote chars. It handles strings like:
+// "user", "user u", "user,user_detail", "user u, user_detail ut", "u.id asc".
+func doQuoteString(s, charLeft, charRight string) string {
+	array1 := gstr.SplitAndTrim(s, ",")
+	for k1, v1 := range array1 {
+		array2 := gstr.SplitAndTrim(v1, " ")
+		array3 := gstr.SplitAndTrim(array2[0], ".")
+		if len(array3) == 1 {
+			array3[0] = doQuoteWord(array3[0], charLeft, charRight)
+		} else if len(array3) == 2 {
+			array3[1] = doQuoteWord(array3[1], charLeft, charRight)
+		}
+		array2[0] = gstr.Join(array3, ".")
+		array1[k1] = gstr.Join(array2, " ")
+	}
+	return gstr.Join(array1, ",")
+}
+
+// GetWhereConditionOfStruct returns the where condition sql and arguments by given struct pointer.
+// This function automatically retrieves primary or unique field and its attribute value as condition.
 func GetWhereConditionOfStruct(pointer interface{}) (where string, args []interface{}) {
 	array := ([]string)(nil)
-	for tag, field := range structs.TagMapField(pointer, []string{ORM_TAG_FOR_STRUCT}, true) {
-		array = strings.Split(tag, ",")
+	for _, field := range structs.TagFields(pointer, []string{ORM_TAG_FOR_STRUCT}, true) {
+		array = strings.Split(field.Tag, ",")
 		if len(array) > 1 && gstr.InArray([]string{ORM_TAG_FOR_UNIQUE, ORM_TAG_FOR_PRIMARY}, array[1]) {
 			return array[0], []interface{}{field.Value()}
 		}
 		if len(where) > 0 {
 			where += " "
 		}
-		where += tag + "=?"
+		where += field.Tag + "=?"
 		args = append(args, field.Value())
 	}
 	return
+}
+
+// GetPrimaryKey retrieves and returns primary key field name from given struct.
+func GetPrimaryKey(pointer interface{}) string {
+	array := ([]string)(nil)
+	for _, field := range structs.TagFields(pointer, []string{ORM_TAG_FOR_STRUCT}, true) {
+		array = strings.Split(field.Tag, ",")
+		if len(array) > 1 && array[1] == ORM_TAG_FOR_PRIMARY {
+			return array[0]
+		}
+	}
+	return ""
+}
+
+// GetPrimaryKeyCondition returns a new where condition by primary field name.
+// The optional parameter <where> is like follows:
+// 123, []int{1, 2, 3}, "john", []string{"john", "smith"}
+// g.Map{"id": g.Slice{1,2,3}}, g.Map{"id": 1, "name": "john"}, etc.
+//
+// Note that it returns the given <where> parameter directly if there's the <primary> is empty.
+func GetPrimaryKeyCondition(primary string, where ...interface{}) (newWhereCondition []interface{}) {
+	if len(where) == 0 {
+		return nil
+	}
+	if primary == "" {
+		return where
+	}
+	if len(where) == 1 {
+		rv := reflect.ValueOf(where[0])
+		kind := rv.Kind()
+		if kind == reflect.Ptr {
+			rv = rv.Elem()
+			kind = rv.Kind()
+		}
+		switch kind {
+		case reflect.Map, reflect.Struct:
+			break
+
+		default:
+			return []interface{}{map[string]interface{}{
+				primary: where[0],
+			}}
+		}
+	}
+	return where
 }
 
 // 获得orm标签与属性的映射关系
@@ -113,7 +215,6 @@ func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool) (
 			})
 			break
 		}
-		// TODO garray support.
 		for key, value := range varToMapDeep(where) {
 			if omitEmpty && empty.IsEmpty(value) {
 				continue
@@ -135,7 +236,7 @@ func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool) (
 		if gstr.Pos(newWhere, "?") == -1 {
 			if lastOperatorReg.MatchString(newWhere) {
 				newWhere += "?"
-			} else if wordReg.MatchString(newWhere) {
+			} else if quoteWordReg.MatchString(newWhere) {
 				newWhere += "=?"
 			}
 		}
@@ -261,10 +362,8 @@ func handlerSliceArguments(query string, args []interface{}) (newQuery string, n
 			switch kind {
 			// '?'占位符支持slice类型, 这里会将slice参数拆散，并更新原有占位符'?'为多个'?'，使用','符号连接。
 			case reflect.Slice, reflect.Array:
-				if rv.Len() == 0 {
-					continue
-				}
-				// 不拆分[]byte类型
+				// 不拆分[]byte类型(当做字符串处理)
+				// Eg: table.Where("name = ?", []byte("john"))
 				if _, ok := arg.([]byte); ok {
 					newArgs = append(newArgs, arg)
 					continue
@@ -274,6 +373,7 @@ func handlerSliceArguments(query string, args []interface{}) (newQuery string, n
 				}
 				// 如果参数直接传递slice，并且占位符数量与slice长度相等，
 				// 那么不用替换扩展占位符数量，直接使用该slice作为查询参数
+				// Eg: db.Query("SELECT ?+?", g.Slice{1, 2})
 				if len(args) == 1 && gstr.Count(newQuery, "?") == rv.Len() {
 					break
 				}

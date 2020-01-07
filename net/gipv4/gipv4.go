@@ -153,7 +153,7 @@ func IntranetIPArray() (ips []string, err error) {
 				continue
 			}
 			ipStr := ip.String()
-			if ipStr != "127.0.0.1" && IsIntranet(ipStr) {
+			if IsIntranet(ipStr) {
 				ips = append(ips, ipStr)
 			}
 		}

@@ -21,7 +21,8 @@ import (
 )
 
 const (
-	gSINGLE_RULE_PATTERN = `^([\w-]+):{0,1}(.*)` // 单条规则匹配正则
+	// 单条规则匹配正则
+	gSINGLE_RULE_PATTERN = `^([\w-]+):{0,1}(.*)`
 )
 
 var (
@@ -66,6 +67,7 @@ var (
 		"password3":            {},
 		"postcode":             {},
 		"id-number":            {},
+		"luhn":                 {},
 		"qq":                   {},
 		"ip":                   {},
 		"ipv4":                 {},
@@ -112,6 +114,9 @@ var (
 //
 // 3. params参数为联合校验参数，支持任意的map/struct/*struct类型，对于需要联合校验的规则有效，如：required-*、same、different；
 func Check(value interface{}, rules string, msgs interface{}, params ...interface{}) *Error {
+	if rules == "" {
+		return nil
+	}
 	// 内部会将参数全部转换为字符串类型进行校验
 	val := strings.TrimSpace(gconv.String(value))
 	data := make(map[string]string)
@@ -315,7 +320,11 @@ func Check(value interface{}, rules string, msgs interface{}, params ...interfac
 		   (^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$)|(^[1-9]\d{5}\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}$)
 		*/
 		case "id-number":
-			match = gregex.IsMatchString(`(^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$)|(^[1-9]\d{5}\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}$)`, val)
+			match = checkIDNumber(val)
+
+		// LUHN规则(银行卡号验证规则)
+		case "luhn":
+			match = checkLuHn(val)
 
 		// 通用帐号规则(字母开头，只能包含字母、数字和下划线，长度在6~18之间)
 		case "passport":
@@ -649,4 +658,51 @@ func checkSize(value, ruleKey, ruleVal string, customMsgMap map[string]string) s
 		}
 	}
 	return msg
+}
+
+// 身份证号验证
+func checkIDNumber(value string) bool {
+	value = strings.ToUpper(strings.TrimSpace(value))
+	// 18位长检测
+	if len(value) != 18 {
+		return false
+	}
+	// 加权因子
+	weightFactor := [...]int{7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2}
+	// 校验码
+	checkCode := [...]byte{'1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2'}
+	last := value[17]
+	num := 0
+	for i := 0; i < 17; i++ {
+		tmp, err := strconv.Atoi(string(value[i]))
+		if err != nil {
+			return false
+		}
+		num = num + tmp*weightFactor[i]
+	}
+	resisue := num % 11
+	if checkCode[resisue] != last {
+		return false
+	}
+
+	return gregex.IsMatchString(`(^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$)|(^[1-9]\d{5}\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}$)`, value)
+}
+
+// LuHn算法验证(银行卡号校验算法)
+func checkLuHn(value string) bool {
+	var sum = 0
+	var nDigits = len(value)
+	var parity = nDigits % 2
+
+	for i := 0; i < nDigits; i++ {
+		var digit = int(value[i] - 48)
+		if i%2 == parity {
+			digit *= 2
+			if digit > 9 {
+				digit -= 9
+			}
+		}
+		sum += digit
+	}
+	return sum%10 == 0
 }

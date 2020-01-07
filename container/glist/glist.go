@@ -36,7 +36,7 @@ func New(safe ...bool) *List {
 }
 
 // NewFrom creates and returns a list from a copy of given slice <array>.
-// The parameter <safe> used to specify whether using list in concurrent-safety,
+// The parameter <safe> is used to specify whether using list in concurrent-safety,
 // which is false in default.
 func NewFrom(array []interface{}, safe ...bool) *List {
 	l := list.New()
@@ -364,6 +364,7 @@ func (l *List) Iterator(f func(e *Element) bool) {
 // If <f> returns true, then it continues iterating; or false to stop.
 func (l *List) IteratorAsc(f func(e *Element) bool) {
 	l.mu.RLock()
+	defer l.mu.RUnlock()
 	length := l.list.Len()
 	if length > 0 {
 		for i, e := 0, l.list.Front(); i < length; i, e = i+1, e.Next() {
@@ -372,13 +373,13 @@ func (l *List) IteratorAsc(f func(e *Element) bool) {
 			}
 		}
 	}
-	l.mu.RUnlock()
 }
 
 // IteratorDesc iterates the list in descending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
 func (l *List) IteratorDesc(f func(e *Element) bool) {
 	l.mu.RLock()
+	defer l.mu.RUnlock()
 	length := l.list.Len()
 	if length > 0 {
 		for i, e := 0, l.list.Back(); i < length; i, e = i+1, e.Prev() {
@@ -387,7 +388,6 @@ func (l *List) IteratorDesc(f func(e *Element) bool) {
 			}
 		}
 	}
-	l.mu.RUnlock()
 }
 
 // Join joins list elements with a string <glue>.

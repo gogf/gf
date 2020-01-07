@@ -9,7 +9,12 @@
 
 English | [简体中文](README_ZH.MD)
 
-`GF(GoFrame)` is a modular, full-featured and production-ready application development framework of golang. Providing a series of core components and dozens of practical modules, such as: memcache, configure, validator, logging, array/queue/set/map containers, timer/timing tasks, file/memory lock, object pool, database ORM, etc. Supporting web server integrated with router, cookie, session, middleware, logger, template, https, hooks, rewrites and many more features.
+`GF(GoFrame)` is a modular, full-featured and production-ready application development framework of golang. 
+Providing a series of core components and dozens of practical modules, 
+such as: memcache, configure, validator, logging, array/queue/set/map containers, 
+timer/timing tasks, file/memory lock, object pool, database ORM, etc. 
+Supporting web server integrated with router, cookie, session, middleware, logger, 
+template, https, hooks, rewrites and many more features.
 
 
 # Installation

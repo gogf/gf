@@ -7,18 +7,18 @@ import (
 
 func main() {
 	type Ids struct {
-		Id  int `json:"id"`
-		Uid int `json:"uid"`
+		Id  int `c:"id"`
+		Uid int `c:"uid"`
 	}
 	type Base struct {
 		Ids
-		CreateTime string `json:"create_time"`
+		CreateTime string `c:"create_time"`
 	}
 	type User struct {
 		Base
-		Passport string `json:"passport"`
-		Password string `json:"password"`
-		Nickname string `json:"nickname"`
+		Passport string `c:"passport"`
+		Password string `c:"password"`
+		Nickname string `c:"nickname"`
 	}
 	user := new(User)
 	user.Id = 1
@@ -27,5 +27,6 @@ func main() {
 	user.Passport = "johng"
 	user.Password = "123456"
 	user.CreateTime = "2019"
+	g.Dump(gconv.Map(user))
 	g.Dump(gconv.MapDeep(user))
 }

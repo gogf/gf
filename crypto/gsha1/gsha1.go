@@ -37,3 +37,13 @@ func EncryptFile(path string) (encrypt string, err error) {
 	}
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
+
+// MustEncryptFile encrypts file content of <path> using SHA1 algorithms.
+// It panics if any error occurs.
+func MustEncryptFile(path string) string {
+	result, err := EncryptFile(path)
+	if err != nil {
+		panic(err)
+	}
+	return result
+}

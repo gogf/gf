@@ -296,13 +296,31 @@ func (c *Config) GetFileName() string {
 	return c.name.Val()
 }
 
-// getJson returns a *gjson.Json object for the specified <file> content.
-// It would print error if file reading fails.
-// If any error occurs, it return nil.
-func (c *Config) getJson(file ...string) *gjson.Json {
-	name := c.name.Val()
-	if len(file) > 0 {
+// Available checks and returns whether configuration of given <file> is available.
+func (c *Config) Available(file ...string) bool {
+	var name string
+	if len(file) > 0 && file[0] != "" {
 		name = file[0]
+	} else {
+		name = c.name.Val()
+	}
+	if c.FilePath(name) != "" {
+		return true
+	}
+	if GetContent(name) != "" {
+		return true
+	}
+	return false
+}
+
+// getJson returns a *gjson.Json object for the specified <file> content.
+// It would print error if file reading fails. It return nil if any error occurs.
+func (c *Config) getJson(file ...string) *gjson.Json {
+	var name string
+	if len(file) > 0 && file[0] != "" {
+		name = file[0]
+	} else {
+		name = c.name.Val()
 	}
 	r := c.jsons.GetOrSetFuncLock(name, func() interface{} {
 		content := ""

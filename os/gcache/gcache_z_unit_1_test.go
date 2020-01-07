@@ -42,7 +42,7 @@ func TestCache_Set(t *testing.T) {
 func TestCache_Set_Expire(t *testing.T) {
 	gtest.Case(t, func() {
 		cache := gcache.New()
-		cache.Set(2, 22, 100)
+		cache.Set(2, 22, 100*time.Millisecond)
 		gtest.Assert(cache.Get(2), 22)
 		time.Sleep(200 * time.Millisecond)
 		gtest.Assert(cache.Get(2), nil)

@@ -9,6 +9,7 @@ package garray
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/gogf/gf/text/gstr"
 	"math"
 	"sort"
@@ -24,7 +25,7 @@ type Array struct {
 }
 
 // New creates and returns an empty array.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func New(safe ...bool) *Array {
 	return NewArraySize(0, 0, safe...)
@@ -36,13 +37,28 @@ func NewArray(safe ...bool) *Array {
 }
 
 // NewArraySize create and returns an array with given size and cap.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewArraySize(size int, cap int, safe ...bool) *Array {
 	return &Array{
 		mu:    rwmutex.New(safe...),
 		array: make([]interface{}, size, cap),
 	}
+}
+
+// NewArrayRange creates and returns a array by a range from <start> to <end>
+// with step value <step>.
+func NewArrayRange(start, end, step int, safe ...bool) *Array {
+	if step == 0 {
+		panic(fmt.Sprintf(`invalid step value: %d`, step))
+	}
+	slice := make([]interface{}, (end-start+1)/step)
+	index := 0
+	for i := start; i <= end; i += step {
+		slice[index] = i
+		index++
+	}
+	return NewArrayFrom(slice, safe...)
 }
 
 // See NewArrayFrom.
@@ -56,7 +72,7 @@ func NewFromCopy(array []interface{}, safe ...bool) *Array {
 }
 
 // NewArrayFrom creates and returns an array with given slice <array>.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewArrayFrom(array []interface{}, safe ...bool) *Array {
 	return &Array{
@@ -66,7 +82,7 @@ func NewArrayFrom(array []interface{}, safe ...bool) *Array {
 }
 
 // NewArrayFromCopy creates and returns an array from a copy of given slice <array>.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewArrayFromCopy(array []interface{}, safe ...bool) *Array {
 	newArray := make([]interface{}, len(array))
@@ -607,6 +623,35 @@ func (a *Array) CountValues() map[interface{}]int {
 		m[v]++
 	}
 	return m
+}
+
+// Iterator is alias of IteratorAsc.
+func (a *Array) Iterator(f func(k int, v interface{}) bool) {
+	a.IteratorAsc(f)
+}
+
+// IteratorAsc iterates the array in ascending order with given callback function <f>.
+// If <f> returns true, then it continues iterating; or false to stop.
+func (a *Array) IteratorAsc(f func(k int, v interface{}) bool) {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	for k, v := range a.array {
+		if !f(k, v) {
+			break
+		}
+	}
+}
+
+// IteratorDesc iterates the array in descending order with given callback function <f>.
+// If <f> returns true, then it continues iterating; or false to stop.
+func (a *Array) IteratorDesc(f func(k int, v interface{}) bool) {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	for i := len(a.array) - 1; i >= 0; i-- {
+		if !f(i, a.array[i]) {
+			break
+		}
+	}
 }
 
 // String returns current array as a string, which implements like json.Marshal does.

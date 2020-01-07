@@ -9,6 +9,7 @@ package glog
 import (
 	"bytes"
 	"fmt"
+	"github.com/gogf/gf/internal/intlog"
 	"io"
 	"os"
 	"strings"
@@ -65,11 +66,11 @@ func (l *Logger) Clone() *Logger {
 // It returns nil if file logging is disabled, or file opening fails.
 func (l *Logger) getFilePointer() *gfpool.File {
 	if path := l.config.Path; path != "" {
-		// Content containing "{}" in the file name is formatted using gtime
+		// Content containing "{}" in the file name is formatted using gtime.
 		file, _ := gregex.ReplaceStringFunc(`{.+?}`, l.config.File, func(s string) string {
 			return gtime.Now().Format(strings.Trim(s, "{}"))
 		})
-		// Create path if it does not exist。
+		// Create path if it does not exist.
 		if !gfile.Exists(path) {
 			if err := gfile.Mkdir(path); err != nil {
 				fmt.Fprintln(os.Stderr, fmt.Sprintf(`[glog] mkdir "%s" failed: %s`, path, err.Error()))
@@ -158,9 +159,12 @@ func (l *Logger) print(std io.Writer, lead string, value ...interface{}) {
 	}
 	buffer.WriteString(valueStr + "\n")
 	if l.config.Flags&F_ASYNC > 0 {
-		asyncPool.Add(func() {
+		err := asyncPool.Add(func() {
 			l.printToWriter(std, buffer)
 		})
+		if err != nil {
+			intlog.Error(err)
+		}
 	} else {
 		l.printToWriter(std, buffer)
 	}

@@ -4,13 +4,12 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package gins_test
+package gins
 
 import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/frame/gins"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/test/gtest"
 )
@@ -26,8 +25,7 @@ test = "v=2"
         host     = "127.0.0.1"
         port     = "3306"
         user     = "root"
-        pass     = ""
-        # pass     = "12345678"
+        pass     = "12345678"
         name     = "test"
         type     = "mysql"
         role     = "master"
@@ -37,8 +35,7 @@ test = "v=2"
         host     = "127.0.0.1"
         port     = "3306"
         user     = "root"
-        pass     = ""
-        # pass     = "12345678"
+        pass     = "12345678"
         name     = "test"
         type     = "mysql"
         role     = "master"
@@ -47,22 +44,22 @@ test = "v=2"
 # Redis数据库配置
 [redis]
     default = "127.0.0.1:6379,0"
-    cache = "127.0.0.1:6379,1"
+    cache   = "127.0.0.1:6379,1"
 `
 	path := "config.toml"
 	err := gfile.PutContents(path, config)
 	gtest.Assert(err, nil)
 	defer gfile.Remove(path)
-	defer gins.Config().Clear()
+	defer Config().Clear()
 
 	// for gfsnotify callbacks to refresh cache of config file
 	time.Sleep(500 * time.Millisecond)
 
 	gtest.Case(t, func() {
-		//fmt.Println("gins Test_Database", gins.Config().Get("test"))
+		//fmt.Println("gins Test_Database", Config().Get("test"))
 
-		dbDefault := gins.Database()
-		dbTest := gins.Database("test")
+		dbDefault := Database()
+		dbTest := Database("test")
 		gtest.AssertNE(dbDefault, nil)
 		gtest.AssertNE(dbTest, nil)
 

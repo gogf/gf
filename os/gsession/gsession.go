@@ -8,11 +8,16 @@
 package gsession
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/util/grand"
+)
+
+var (
+	ErrorDisabled = errors.New("this feature is disabled in this storage")
 )
 
 // NewSessionId creates and returns a new and unique session id string,

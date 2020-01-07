@@ -53,7 +53,7 @@ func NewServer(address string, handler func(*Conn), name ...string) *Server {
 		address: address,
 		handler: handler,
 	}
-	if len(name) > 0 {
+	if len(name) > 0 && name[0] != "" {
 		serverMapping.Set(name[0], s)
 	}
 	return s

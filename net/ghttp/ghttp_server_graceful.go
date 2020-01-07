@@ -11,14 +11,12 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/os/gproc"
 	"log"
 	"net"
 	"net/http"
 	"os"
-	"time"
-
-	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/os/gproc"
 )
 
 // 优雅的Web Server对象封装
@@ -54,7 +52,7 @@ func (s *Server) newHttpServer(itemFunc string) *http.Server {
 		WriteTimeout:   s.config.WriteTimeout,
 		IdleTimeout:    s.config.IdleTimeout,
 		MaxHeaderBytes: s.config.MaxHeaderBytes,
-		ErrorLog:       log.New(&errorLogger{logger: s.logger}, "", 0),
+		ErrorLog:       log.New(&errorLogger{logger: s.config.Logger}, "", 0),
 	}
 	server.SetKeepAlivesEnabled(s.config.KeepAlive)
 	return server
@@ -91,11 +89,13 @@ func (s *gracefulServer) setFd(fd int) {
 // 执行HTTPS监听
 func (s *gracefulServer) ListenAndServeTLS(certFile, keyFile string, tlsConfig ...*tls.Config) error {
 	itemFunc := s.httpServer.Addr
-	config := (*tls.Config)(nil)
-	if len(tlsConfig) > 0 {
+	var config *tls.Config
+	if len(tlsConfig) > 0 && tlsConfig[0] != nil {
 		config = tlsConfig[0]
 	} else if s.httpServer.TLSConfig != nil {
-		*config = *s.httpServer.TLSConfig
+		config = s.httpServer.TLSConfig
+	} else {
+		config = &tls.Config{}
 	}
 	if config.NextProtos == nil {
 		config.NextProtos = []string{"http/1.1"}
@@ -152,22 +152,12 @@ func (s *gracefulServer) getNetListener(itemFunc string) (net.Listener, error) {
 			return nil, err
 		}
 	} else {
-		// 如果监听失败，1秒后重试，最多重试3次
-		for i := 0; i < 3; i++ {
-			ln, err = net.Listen("tcp", itemFunc)
-			if err != nil {
-				err = fmt.Errorf("%d: net.Listen error: %v", gproc.Pid(), err)
-				time.Sleep(time.Second)
-			} else {
-				err = nil
-				break
-			}
-		}
+		ln, err = net.Listen("tcp", itemFunc)
 		if err != nil {
-			return nil, err
+			err = fmt.Errorf("%d: net.Listen error: %v", gproc.Pid(), err)
 		}
 	}
-	return ln, nil
+	return ln, err
 }
 
 // 执行请求优雅关闭

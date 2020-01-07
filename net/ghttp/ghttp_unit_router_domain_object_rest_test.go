@@ -60,7 +60,7 @@ func Test_Router_DomainObjectRest(t *testing.T) {
 	d := s.Domain("localhost, local")
 	d.BindObjectRest("/", new(DomainObjectRest))
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 

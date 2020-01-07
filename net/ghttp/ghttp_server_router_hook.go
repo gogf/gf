@@ -7,16 +7,15 @@
 package ghttp
 
 import (
+	"github.com/gogf/gf/debug/gdebug"
 	"net/http"
-	"reflect"
-	"runtime"
 )
 
 // 绑定指定的hook回调函数, pattern参数同BindHandler，支持命名路由；hook参数的值由ghttp server设定，参数不区分大小写
 func (s *Server) BindHookHandler(pattern string, hook string, handler HandlerFunc) {
 	s.setHandler(pattern, &handlerItem{
 		itemType: gHANDLER_TYPE_HOOK,
-		itemName: runtime.FuncForPC(reflect.ValueOf(handler).Pointer()).Name(),
+		itemName: gdebug.FuncPath(handler),
 		itemFunc: handler,
 		hookName: hook,
 	})
@@ -35,22 +34,9 @@ func (s *Server) callHookHandler(hook string, r *Request) {
 	hookItems := r.getHookHandlers(hook)
 	if len(hookItems) > 0 {
 		// 备份原有的router变量
-		oldRouterVars := r.routerMap
+		oldRouterMap := r.routerMap
 		for _, item := range hookItems {
-			// hook方法不能更改serve方法的路由参数，其匹配的路由参数只能自己使用，
-			// 且在多个hook方法之间不能共享路由参数，单可以使用匹配的serve方法路由参数。
-			// 当前回调函数的路由参数只在当前回调函数下有效。
-			r.routerMap = make(map[string]interface{})
-			if len(oldRouterVars) > 0 {
-				for k, v := range oldRouterVars {
-					r.routerMap[k] = v
-				}
-			}
-			if len(item.values) > 0 {
-				for k, v := range item.values {
-					r.routerMap[k] = v
-				}
-			}
+			r.routerMap = item.values
 			// 不使用hook的router对象，保留路由注册服务的router对象，不能覆盖
 			// r.Router = item.handler.router
 			if err := s.niceCallHookHandler(item.handler.itemFunc, r); err != nil {
@@ -68,7 +54,7 @@ func (s *Server) callHookHandler(hook string, r *Request) {
 			}
 		}
 		// 恢复原有的router变量
-		r.routerMap = oldRouterVars
+		r.routerMap = oldRouterMap
 	}
 }
 

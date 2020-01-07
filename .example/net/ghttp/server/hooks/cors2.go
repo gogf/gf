@@ -11,8 +11,8 @@ func Order(r *ghttp.Request) {
 
 func main() {
 	s := g.Server()
-	s.Group("/api.v1", func(g *ghttp.RouterGroup) {
-		g.Hook("/*any", ghttp.HOOK_BEFORE_SERVE, func(r *ghttp.Request) {
+	s.Group("/api.v1", func(group *ghttp.RouterGroup) {
+		group.Hook("/*any", ghttp.HOOK_BEFORE_SERVE, func(r *ghttp.Request) {
 			r.Response.CORSDefault()
 		})
 		g.GET("/order", Order)

@@ -22,8 +22,8 @@ type AnyAnyMap struct {
 	data map[interface{}]interface{}
 }
 
-// NewAnyAnyMap returns an empty hash map.
-// The parameter <safe> used to specify whether using map in concurrent-safety,
+// NewAnyAnyMap creates and returns an empty hash map.
+// The parameter <safe> is used to specify whether using map in concurrent-safety,
 // which is false in default.
 func NewAnyAnyMap(safe ...bool) *AnyAnyMap {
 	return &AnyAnyMap{
@@ -32,7 +32,7 @@ func NewAnyAnyMap(safe ...bool) *AnyAnyMap {
 	}
 }
 
-// NewAnyAnyMapFrom returns a hash map from given map <data>.
+// NewAnyAnyMapFrom creates and returns a hash map from given map <data>.
 // Note that, the param <data> map will be set as the underlying data map(no deep copy),
 // there might be some concurrent-safe issues when changing the map outside.
 func NewAnyAnyMapFrom(data map[interface{}]interface{}, safe ...bool) *AnyAnyMap {
@@ -75,7 +75,7 @@ func (m *AnyAnyMap) Map() map[interface{}]interface{} {
 	return data
 }
 
-// MapCopy returns a copy of the data of the hash map.
+// MapCopy returns a copy of the underlying data of the hash map.
 func (m *AnyAnyMap) MapCopy() map[interface{}]interface{} {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -86,7 +86,7 @@ func (m *AnyAnyMap) MapCopy() map[interface{}]interface{} {
 	return data
 }
 
-// MapStrAny returns a copy of the data of the map as map[string]interface{}.
+// MapStrAny returns a copy of the underlying data of the map as map[string]interface{}.
 func (m *AnyAnyMap) MapStrAny() map[string]interface{} {
 	m.mu.RLock()
 	data := make(map[string]interface{}, len(m.data))
@@ -201,7 +201,7 @@ func (m *AnyAnyMap) doSetWithLockCheck(key interface{}, value interface{}) inter
 }
 
 // GetOrSet returns the value by key,
-// or set value with given <value> if not exist and returns this value.
+// or sets value with given <value> if it does not exist and then returns this value.
 func (m *AnyAnyMap) GetOrSet(key interface{}, value interface{}) interface{} {
 	if v, ok := m.Search(key); !ok {
 		return m.doSetWithLockCheck(key, value)
@@ -211,8 +211,8 @@ func (m *AnyAnyMap) GetOrSet(key interface{}, value interface{}) interface{} {
 }
 
 // GetOrSetFunc returns the value by key,
-// or sets value with return value of callback function <f> if not exist
-// and returns this value.
+// or sets value with returned value of callback function <f> if it does not exist
+// and then returns this value.
 func (m *AnyAnyMap) GetOrSetFunc(key interface{}, f func() interface{}) interface{} {
 	if v, ok := m.Search(key); !ok {
 		return m.doSetWithLockCheck(key, f())
@@ -222,8 +222,8 @@ func (m *AnyAnyMap) GetOrSetFunc(key interface{}, f func() interface{}) interfac
 }
 
 // GetOrSetFuncLock returns the value by key,
-// or sets value with return value of callback function <f> if not exist
-// and returns this value.
+// or sets value with returned value of callback function <f> if it does not exist
+// and then returns this value.
 //
 // GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function <f>
 // with mutex.Lock of the hash map.
@@ -259,7 +259,7 @@ func (m *AnyAnyMap) GetVarOrSetFuncLock(key interface{}, f func() interface{}) *
 	return gvar.New(m.GetOrSetFuncLock(key, f))
 }
 
-// SetIfNotExist sets <value> to the map if the <key> does not exist, then return true.
+// SetIfNotExist sets <value> to the map if the <key> does not exist, and then returns true.
 // It returns false if <key> exists, and <value> would be ignored.
 func (m *AnyAnyMap) SetIfNotExist(key interface{}, value interface{}) bool {
 	if !m.Contains(key) {
@@ -269,7 +269,7 @@ func (m *AnyAnyMap) SetIfNotExist(key interface{}, value interface{}) bool {
 	return false
 }
 
-// SetIfNotExistFunc sets value with return value of callback function <f>, then return true.
+// SetIfNotExistFunc sets value with return value of callback function <f>, and then returns true.
 // It returns false if <key> exists, and <value> would be ignored.
 func (m *AnyAnyMap) SetIfNotExistFunc(key interface{}, f func() interface{}) bool {
 	if !m.Contains(key) {
@@ -279,7 +279,7 @@ func (m *AnyAnyMap) SetIfNotExistFunc(key interface{}, f func() interface{}) boo
 	return false
 }
 
-// SetIfNotExistFuncLock sets value with return value of callback function <f>, then return true.
+// SetIfNotExistFuncLock sets value with return value of callback function <f>, and then returns true.
 // It returns false if <key> exists, and <value> would be ignored.
 //
 // SetIfNotExistFuncLock differs with SetIfNotExistFunc function is that
@@ -365,6 +365,13 @@ func (m *AnyAnyMap) IsEmpty() bool {
 func (m *AnyAnyMap) Clear() {
 	m.mu.Lock()
 	m.data = make(map[interface{}]interface{})
+	m.mu.Unlock()
+}
+
+// Replace the data of the map with given <data>.
+func (m *AnyAnyMap) Replace(data map[interface{}]interface{}) {
+	m.mu.Lock()
+	m.data = data
 	m.mu.Unlock()
 }
 

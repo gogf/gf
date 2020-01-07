@@ -113,6 +113,44 @@ func Test_Map_StructWithJsonTag(t *testing.T) {
 	})
 }
 
+func Test_Map_StructWithCTag(t *testing.T) {
+	gtest.Case(t, func() {
+		type User struct {
+			Uid      int
+			Name     string
+			SiteUrl  string `c:"-"`
+			NickName string `c:"nickname, omitempty"`
+			Pass1    string `c:"password1"`
+			Pass2    string `c:"password2"`
+		}
+		user1 := User{
+			Uid:     100,
+			Name:    "john",
+			SiteUrl: "https://goframe.org",
+			Pass1:   "123",
+			Pass2:   "456",
+		}
+		user2 := &user1
+		map1 := gconv.Map(user1)
+		map2 := gconv.Map(user2)
+		gtest.Assert(map1["Uid"], 100)
+		gtest.Assert(map1["Name"], "john")
+		gtest.Assert(map1["SiteUrl"], nil)
+		gtest.Assert(map1["NickName"], nil)
+		gtest.Assert(map1["nickname"], nil)
+		gtest.Assert(map1["password1"], "123")
+		gtest.Assert(map1["password2"], "456")
+
+		gtest.Assert(map2["Uid"], 100)
+		gtest.Assert(map2["Name"], "john")
+		gtest.Assert(map2["SiteUrl"], nil)
+		gtest.Assert(map2["NickName"], nil)
+		gtest.Assert(map2["nickname"], nil)
+		gtest.Assert(map2["password1"], "123")
+		gtest.Assert(map2["password2"], "456")
+	})
+}
+
 func Test_Map_PrivateAttribute(t *testing.T) {
 	type User struct {
 		Id   int
@@ -126,18 +164,18 @@ func Test_Map_PrivateAttribute(t *testing.T) {
 
 func Test_Map_StructInherit(t *testing.T) {
 	type Ids struct {
-		Id  int `json:"id"`
-		Uid int `json:"uid"`
+		Id  int `c:"id"`
+		Uid int `c:"uid"`
 	}
 	type Base struct {
 		Ids
-		CreateTime string `json:"create_time"`
+		CreateTime string `c:"create_time"`
 	}
 	type User struct {
 		Base
-		Passport string `json:"passport"`
-		Password string `json:"password"`
-		Nickname string `json:"nickname"`
+		Passport string `c:"passport"`
+		Password string `c:"password"`
+		Nickname string `c:"nickname"`
 	}
 	gtest.Case(t, func() {
 		user := new(User)

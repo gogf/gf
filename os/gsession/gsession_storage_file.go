@@ -8,7 +8,8 @@ package gsession
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
+	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/internal/intlog"
 	"os"
 	"time"
@@ -21,8 +22,6 @@ import (
 	"github.com/gogf/gf/encoding/gbinary"
 
 	"github.com/gogf/gf/os/gtime"
-
-	"github.com/gogf/gf/os/glog"
 
 	"github.com/gogf/gf/os/gfile"
 )
@@ -39,8 +38,7 @@ var (
 	DefaultStorageFilePath          = gfile.Join(gfile.TempDir(), "gsessions")
 	DefaultStorageFileCryptoKey     = []byte("Session storage file crypto key!")
 	DefaultStorageFileCryptoEnabled = false
-	DefaultStorageFileLoopInterval  = time.Minute
-	ErrorDisabled                   = errors.New("this feature is disabled in this storage")
+	DefaultStorageFileLoopInterval  = 10 * time.Second
 )
 
 func init() {
@@ -56,15 +54,15 @@ func NewStorageFile(path ...string) *StorageFile {
 	if len(path) > 0 && path[0] != "" {
 		storagePath, _ = gfile.Search(path[0])
 		if storagePath == "" {
-			glog.Panicf("'%s' does not exist", path[0])
+			panic(fmt.Sprintf(fmt.Sprintf("'%s' does not exist", path[0])))
 		}
 		if !gfile.IsWritable(storagePath) {
-			glog.Panicf("'%s' is not writable", path[0])
+			panic(fmt.Sprintf("'%s' is not writable", path[0]))
 		}
 	}
 	if storagePath != "" {
 		if err := gfile.Mkdir(storagePath); err != nil {
-			glog.Panicf("mkdir '%s' failed: %v", path[0], err)
+			panic(fmt.Sprintf("mkdir '%s' failed: %v", path[0], err))
 		}
 	}
 	s := &StorageFile{
@@ -151,39 +149,51 @@ func (s *StorageFile) RemoveAll(id string) error {
 	return ErrorDisabled
 }
 
-// GetSession returns the session data as map for given session id.
-// The parameter <ttl> specifies the TTL for this session.
-// It returns nil if the TTL is exceeded.
-func (s *StorageFile) GetSession(id string, ttl time.Duration) map[string]interface{} {
+// GetSession returns the session data as *gmap.StrAnyMap for given session id from storage.
+//
+// The parameter <ttl> specifies the TTL for this session, and it returns nil if the TTL is exceeded.
+// The parameter <data> is the current old session data stored in memory,
+// and for some storage it might be nil if memory storage is disabled.
+//
+// This function is called ever when session starts.
+func (s *StorageFile) GetSession(id string, ttl time.Duration, data *gmap.StrAnyMap) (*gmap.StrAnyMap, error) {
+	if data != nil {
+		return data, nil
+	}
+	intlog.Printf("StorageFile.GetSession: %s, %v", id, ttl)
 	path := s.sessionFilePath(id)
-	data := gfile.GetBytes(path)
-	if len(data) > 8 {
-		timestampMilli := gbinary.DecodeToInt64(data[:8])
+	content := gfile.GetBytes(path)
+	if len(content) > 8 {
+		timestampMilli := gbinary.DecodeToInt64(content[:8])
 		if timestampMilli+ttl.Nanoseconds()/1e6 < gtime.Millisecond() {
-			return nil
+			return nil, nil
 		}
 		var err error
-		content := data[8:]
+		content = content[8:]
 		// Decrypt with AES.
 		if s.cryptoEnabled {
-			content, err = gaes.Decrypt(data[8:], DefaultStorageFileCryptoKey)
+			content, err = gaes.Decrypt(content, DefaultStorageFileCryptoKey)
 			if err != nil {
-				return nil
+				return nil, err
 			}
 		}
 		var m map[string]interface{}
 		if err = json.Unmarshal(content, &m); err != nil {
-			return nil
+			return nil, err
 		}
-		return m
+		if m == nil {
+			return nil, nil
+		}
+		return gmap.NewStrAnyMapFrom(m, true), nil
 	}
-	return nil
+	return nil, nil
 }
 
 // SetSession updates the data map for specified session id.
 // This function is called ever after session, which is changed dirty, is closed.
 // This copy all session data map from memory to storage.
-func (s *StorageFile) SetSession(id string, data map[string]interface{}, ttl time.Duration) error {
+func (s *StorageFile) SetSession(id string, data *gmap.StrAnyMap, ttl time.Duration) error {
+	intlog.Printf("StorageFile.SetSession: %s, %v, %v", id, data, ttl)
 	path := s.sessionFilePath(id)
 	content, err := json.Marshal(data)
 	if err != nil {
@@ -214,6 +224,7 @@ func (s *StorageFile) SetSession(id string, data map[string]interface{}, ttl tim
 // This function is called ever after session, which is not dirty, is closed.
 // It just adds the session id to the async handling queue.
 func (s *StorageFile) UpdateTTL(id string, ttl time.Duration) error {
+	intlog.Printf("StorageFile.UpdateTTL: %s, %v", id, ttl)
 	if ttl >= DefaultStorageRedisLoopInterval {
 		s.updatingIdSet.Add(id)
 	}
@@ -222,7 +233,7 @@ func (s *StorageFile) UpdateTTL(id string, ttl time.Duration) error {
 
 // doUpdateTTL updates the TTL for session id.
 func (s *StorageFile) doUpdateTTL(id string) error {
-	intlog.Printf("update StorageFile TTL for session id: %s", id)
+	intlog.Printf("StorageFile.doUpdateTTL: %s", id)
 	path := s.sessionFilePath(id)
 	file, err := gfile.OpenWithFlag(path, os.O_WRONLY)
 	if err != nil {

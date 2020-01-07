@@ -23,7 +23,7 @@ type StrAnyMap struct {
 }
 
 // NewStrAnyMap returns an empty StrAnyMap object.
-// The parameter <safe> used to specify whether using map in concurrent-safety,
+// The parameter <safe> is used to specify whether using map in concurrent-safety,
 // which is false in default.
 func NewStrAnyMap(safe ...bool) *StrAnyMap {
 	return &StrAnyMap{
@@ -32,7 +32,7 @@ func NewStrAnyMap(safe ...bool) *StrAnyMap {
 	}
 }
 
-// NewStrAnyMapFrom returns a hash map from given map <data>.
+// NewStrAnyMapFrom creates and returns a hash map from given map <data>.
 // Note that, the param <data> map will be set as the underlying data map(no deep copy),
 // there might be some concurrent-safe issues when changing the map outside.
 func NewStrAnyMapFrom(data map[string]interface{}, safe ...bool) *StrAnyMap {
@@ -75,12 +75,12 @@ func (m *StrAnyMap) Map() map[string]interface{} {
 	return data
 }
 
-// MapStrAny returns a copy of the data of the map as map[string]interface{}.
+// MapStrAny returns a copy of the underlying data of the map as map[string]interface{}.
 func (m *StrAnyMap) MapStrAny() map[string]interface{} {
 	return m.Map()
 }
 
-// MapCopy returns a copy of the data of the hash map.
+// MapCopy returns a copy of the underlying data of the hash map.
 func (m *StrAnyMap) MapCopy() map[string]interface{} {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -195,7 +195,7 @@ func (m *StrAnyMap) doSetWithLockCheck(key string, value interface{}) interface{
 }
 
 // GetOrSet returns the value by key,
-// or set value with given <value> if not exist and returns this value.
+// or sets value with given <value> if it does not exist and then returns this value.
 func (m *StrAnyMap) GetOrSet(key string, value interface{}) interface{} {
 	if v, ok := m.Search(key); !ok {
 		return m.doSetWithLockCheck(key, value)
@@ -205,8 +205,8 @@ func (m *StrAnyMap) GetOrSet(key string, value interface{}) interface{} {
 }
 
 // GetOrSetFunc returns the value by key,
-// or sets value with return value of callback function <f> if not exist
-// and returns this value.
+// or sets value with returned value of callback function <f> if it does not exist
+// and then returns this value.
 func (m *StrAnyMap) GetOrSetFunc(key string, f func() interface{}) interface{} {
 	if v, ok := m.Search(key); !ok {
 		return m.doSetWithLockCheck(key, f())
@@ -216,8 +216,8 @@ func (m *StrAnyMap) GetOrSetFunc(key string, f func() interface{}) interface{} {
 }
 
 // GetOrSetFuncLock returns the value by key,
-// or sets value with return value of callback function <f> if not exist
-// and returns this value.
+// or sets value with returned value of callback function <f> if it does not exist
+// and then returns this value.
 //
 // GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function <f>
 // with mutex.Lock of the hash map.
@@ -253,7 +253,7 @@ func (m *StrAnyMap) GetVarOrSetFuncLock(key string, f func() interface{}) *gvar.
 	return gvar.New(m.GetOrSetFuncLock(key, f))
 }
 
-// SetIfNotExist sets <value> to the map if the <key> does not exist, then return true.
+// SetIfNotExist sets <value> to the map if the <key> does not exist, and then returns true.
 // It returns false if <key> exists, and <value> would be ignored.
 func (m *StrAnyMap) SetIfNotExist(key string, value interface{}) bool {
 	if !m.Contains(key) {
@@ -263,7 +263,7 @@ func (m *StrAnyMap) SetIfNotExist(key string, value interface{}) bool {
 	return false
 }
 
-// SetIfNotExistFunc sets value with return value of callback function <f>, then return true.
+// SetIfNotExistFunc sets value with return value of callback function <f>, and then returns true.
 // It returns false if <key> exists, and <value> would be ignored.
 func (m *StrAnyMap) SetIfNotExistFunc(key string, f func() interface{}) bool {
 	if !m.Contains(key) {
@@ -273,7 +273,7 @@ func (m *StrAnyMap) SetIfNotExistFunc(key string, f func() interface{}) bool {
 	return false
 }
 
-// SetIfNotExistFuncLock sets value with return value of callback function <f>, then return true.
+// SetIfNotExistFuncLock sets value with return value of callback function <f>, and then returns true.
 // It returns false if <key> exists, and <value> would be ignored.
 //
 // SetIfNotExistFuncLock differs with SetIfNotExistFunc function is that
@@ -359,6 +359,13 @@ func (m *StrAnyMap) IsEmpty() bool {
 func (m *StrAnyMap) Clear() {
 	m.mu.Lock()
 	m.data = make(map[string]interface{})
+	m.mu.Unlock()
+}
+
+// Replace the data of the map with given <data>.
+func (m *StrAnyMap) Replace(data map[string]interface{}) {
+	m.mu.Lock()
+	m.data = data
 	m.mu.Unlock()
 }
 

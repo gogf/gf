@@ -1,0 +1,8 @@
+
+
+[viewer]
+    defaultFile = "test.html"
+    delimiters  = ["{", "}"]
+    [viewer.data]
+        name = "test"
+

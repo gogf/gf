@@ -12,9 +12,9 @@ func MiddlewareCORS(r *ghttp.Request) {
 
 func main() {
 	s := g.Server()
-	s.Group("/api.v2", func(g *ghttp.RouterGroup) {
-		g.Middleware(MiddlewareCORS)
-		g.ALL("/user/list", func(r *ghttp.Request) {
+	s.Group("/api.v2", func(group *ghttp.RouterGroup) {
+		group.Middleware(MiddlewareCORS)
+		group.ALL("/user/list", func(r *ghttp.Request) {
 			r.Response.Write("list")
 		})
 	})

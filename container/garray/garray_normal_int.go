@@ -9,6 +9,7 @@ package garray
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"math"
 	"sort"
 
@@ -23,14 +24,14 @@ type IntArray struct {
 }
 
 // NewIntArray creates and returns an empty array.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewIntArray(safe ...bool) *IntArray {
 	return NewIntArraySize(0, 0, safe...)
 }
 
 // NewIntArraySize create and returns an array with given size and cap.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewIntArraySize(size int, cap int, safe ...bool) *IntArray {
 	return &IntArray{
@@ -39,8 +40,23 @@ func NewIntArraySize(size int, cap int, safe ...bool) *IntArray {
 	}
 }
 
+// NewIntArrayRange creates and returns a array by a range from <start> to <end>
+// with step value <step>.
+func NewIntArrayRange(start, end, step int, safe ...bool) *IntArray {
+	if step == 0 {
+		panic(fmt.Sprintf(`invalid step value: %d`, step))
+	}
+	slice := make([]int, (end-start+1)/step)
+	index := 0
+	for i := start; i <= end; i += step {
+		slice[index] = i
+		index++
+	}
+	return NewIntArrayFrom(slice, safe...)
+}
+
 // NewIntArrayFrom creates and returns an array with given slice <array>.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewIntArrayFrom(array []int, safe ...bool) *IntArray {
 	return &IntArray{
@@ -50,7 +66,7 @@ func NewIntArrayFrom(array []int, safe ...bool) *IntArray {
 }
 
 // NewIntArrayFromCopy creates and returns an array from a copy of given slice <array>.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewIntArrayFromCopy(array []int, safe ...bool) *IntArray {
 	newArray := make([]int, len(array))
@@ -619,6 +635,35 @@ func (a *IntArray) CountValues() map[int]int {
 		m[v]++
 	}
 	return m
+}
+
+// Iterator is alias of IteratorAsc.
+func (a *IntArray) Iterator(f func(k int, v int) bool) {
+	a.IteratorAsc(f)
+}
+
+// IteratorAsc iterates the array in ascending order with given callback function <f>.
+// If <f> returns true, then it continues iterating; or false to stop.
+func (a *IntArray) IteratorAsc(f func(k int, v int) bool) {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	for k, v := range a.array {
+		if !f(k, v) {
+			break
+		}
+	}
+}
+
+// IteratorDesc iterates the array in descending order with given callback function <f>.
+// If <f> returns true, then it continues iterating; or false to stop.
+func (a *IntArray) IteratorDesc(f func(k int, v int) bool) {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	for i := len(a.array) - 1; i >= 0; i-- {
+		if !f(i, a.array[i]) {
+			break
+		}
+	}
 }
 
 // String returns current array as a string, which implements like json.Marshal does.

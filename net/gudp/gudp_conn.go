@@ -154,7 +154,7 @@ func (c *Conn) Recv(length int, retry ...Retry) ([]byte, error) {
 				if retry[0].Interval == 0 {
 					retry[0].Interval = gDEFAULT_RETRY_INTERVAL
 				}
-				time.Sleep(time.Duration(retry[0].Interval) * time.Millisecond)
+				time.Sleep(retry[0].Interval)
 				continue
 			}
 			break

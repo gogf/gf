@@ -24,10 +24,11 @@ import (
 
 // Parser for arguments.
 type Parser struct {
+	strict           bool              // Whether stops parsing and returns error if invalid option passed.
 	parsedArgs       []string          // As name described.
 	parsedOptions    map[string]string // As name described.
 	passedOptions    map[string]bool   // User passed supported options.
-	supportedOptions map[string]bool   // Option [option name : need argument]
+	supportedOptions map[string]bool   // Option [option name : need argument].
 	commandFuncMap   map[string]func() // Command function map for function handler.
 }
 
@@ -35,16 +36,25 @@ type Parser struct {
 //
 // Note that the parameter <supportedOptions> is as [option name: need argument], which means
 // the value item of <supportedOptions> indicates whether corresponding option name needs argument or not.
-func Parse(supportedOptions map[string]bool) (*Parser, error) {
-	return ParseWithArgs(os.Args, supportedOptions)
+//
+// The optional parameter <strict> specifies whether stops parsing and returns error if invalid option passed.
+func Parse(supportedOptions map[string]bool, strict ...bool) (*Parser, error) {
+	return ParseWithArgs(os.Args, supportedOptions, strict...)
 }
 
 // ParseWithArgs creates and returns a new Parser with given arguments and supported options.
 //
 // Note that the parameter <supportedOptions> is as [option name: need argument], which means
 // the value item of <supportedOptions> indicates whether corresponding option name needs argument or not.
-func ParseWithArgs(args []string, supportedOptions map[string]bool) (*Parser, error) {
+//
+// The optional parameter <strict> specifies whether stops parsing and returns error if invalid option passed.
+func ParseWithArgs(args []string, supportedOptions map[string]bool, strict ...bool) (*Parser, error) {
+	strictParsing := true
+	if len(strict) > 0 {
+		strictParsing = strict[0]
+	}
 	parser := &Parser{
+		strict:           strictParsing,
 		parsedArgs:       make([]string, 0),
 		parsedOptions:    make(map[string]string),
 		passedOptions:    supportedOptions,
@@ -98,7 +108,7 @@ func ParseWithArgs(args []string, supportedOptions map[string]bool) (*Parser, er
 	return parser, nil
 }
 
-// parseMultiOption parses options to multiple valid options.
+// parseMultiOption parses option to multiple valid options like: --dav.
 // It returns nil if given option is not multi-option.
 func (p *Parser) parseMultiOption(option string) []string {
 	for i := 1; i <= len(option); i++ {
@@ -126,6 +136,9 @@ func (p *Parser) parseOption(argument string) string {
 }
 
 func (p *Parser) isOptionValid(name string) bool {
+	if !p.strict {
+		return true
+	}
 	_, ok := p.supportedOptions[name]
 	return ok
 }
@@ -137,7 +150,7 @@ func (p *Parser) isOptionNeedArgument(name string) bool {
 // setOptionValue sets the option value for name and according alias.
 func (p *Parser) setOptionValue(name, value string) {
 	for optionName, _ := range p.passedOptions {
-		array := gstr.SplitAndTrimSpace(optionName, ",")
+		array := gstr.SplitAndTrim(optionName, ",")
 		for _, v := range array {
 			if strings.EqualFold(v, name) {
 				for _, v := range array {
