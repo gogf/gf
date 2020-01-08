@@ -15,6 +15,9 @@ import (
 
 // ScanDir returns all sub-files with absolute paths of given <path>,
 // It scans directory recursively if given parameter <recursive> is true.
+//
+// The pattern parameter <pattern> supports multiple file name patterns,
+// using the ',' symbol to separate multiple patterns.
 func ScanDir(path string, pattern string, recursive ...bool) ([]string, error) {
 	isRecursive := false
 	if len(recursive) > 0 {
@@ -32,6 +35,9 @@ func ScanDir(path string, pattern string, recursive ...bool) ([]string, error) {
 
 // ScanDirFile returns all sub-files with absolute paths of given <path>,
 // It scans directory recursively if given parameter <recursive> is true.
+//
+// The pattern parameter <pattern> supports multiple file name patterns,
+// using the ',' symbol to separate multiple patterns.
 //
 // Note that it returns only files, exclusive of directories.
 func ScanDirFile(path string, pattern string, recursive ...bool) ([]string, error) {
