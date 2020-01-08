@@ -124,6 +124,16 @@ func (tx *TX) From(tables string) *Model {
 	return tx.Table(tables)
 }
 
+// As sets an alias name for current table.
+func (m *Model) As(as string) *Model {
+	if m.tables != "" {
+		model := m.getModel()
+		model.tables = gstr.TrimRight(model.tables) + " AS " + as
+		return model
+	}
+	return m
+}
+
 // DB sets/changes the db object for current operation.
 func (m *Model) DB(db DB) *Model {
 	model := m.getModel()

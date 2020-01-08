@@ -52,7 +52,7 @@ var (
 )
 
 // handleTableName adds prefix string and quote chars for the table. It handles table string like:
-// "user", "user u", "user,user_detail", "user u, user_detail ut", "user as u, user_detail as ut".
+// "user", "user u", "user,user_detail", "user u, user_detail ut", "user as u, user_detail as ut", "user.user u".
 //
 // Note that, this will automatically checks the table prefix whether already added, if true it does
 // nothing to the table name, or else adds the prefix to the table name.
@@ -68,7 +68,7 @@ func doHandleTableName(table, prefix, charLeft, charRight string) string {
 			array2[0] = prefix + array2[0]
 		}
 		// Add the security chars.
-		array2[0] = doQuoteWord(array2[0], charLeft, charRight)
+		array2[0] = doQuoteString(array2[0], charLeft, charRight)
 		array1[k1] = gstr.Join(array2, " ")
 	}
 	return gstr.Join(array1, ",")
@@ -84,7 +84,8 @@ func doQuoteWord(s, charLeft, charRight string) string {
 }
 
 // doQuoteString quotes string with quote chars. It handles strings like:
-// "user", "user u", "user,user_detail", "user u, user_detail ut", "u.id asc".
+// "user", "user u", "user,user_detail", "user u, user_detail ut",
+// "user.user u, user.user_detail ut", "u.id asc".
 func doQuoteString(s, charLeft, charRight string) string {
 	array1 := gstr.SplitAndTrim(s, ",")
 	for k1, v1 := range array1 {
@@ -93,6 +94,7 @@ func doQuoteString(s, charLeft, charRight string) string {
 		if len(array3) == 1 {
 			array3[0] = doQuoteWord(array3[0], charLeft, charRight)
 		} else if len(array3) == 2 {
+			array3[0] = doQuoteWord(array3[0], charLeft, charRight)
 			array3[1] = doQuoteWord(array3[1], charLeft, charRight)
 		}
 		array2[0] = gstr.Join(array3, ".")
@@ -236,7 +238,7 @@ func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool) (
 		if gstr.Pos(newWhere, "?") == -1 {
 			if lastOperatorReg.MatchString(newWhere) {
 				newWhere += "?"
-			} else if quoteWordReg.MatchString(newWhere) {
+			} else if gregex.IsMatchString(`^[\w\.\-]+$`, newWhere) {
 				newWhere += "=?"
 			}
 		}
