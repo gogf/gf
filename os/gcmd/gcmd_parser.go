@@ -49,7 +49,7 @@ func Parse(supportedOptions map[string]bool, strict ...bool) (*Parser, error) {
 //
 // The optional parameter <strict> specifies whether stops parsing and returns error if invalid option passed.
 func ParseWithArgs(args []string, supportedOptions map[string]bool, strict ...bool) (*Parser, error) {
-	strictParsing := true
+	strictParsing := false
 	if len(strict) > 0 {
 		strictParsing = strict[0]
 	}
@@ -95,7 +95,7 @@ func ParseWithArgs(args []string, supportedOptions map[string]bool, strict ...bo
 						}
 						i++
 						continue
-					} else {
+					} else if parser.strict {
 						return nil, errors.New(fmt.Sprintf(`invalid option '%s'`, args[i]))
 					}
 				}
