@@ -32,12 +32,13 @@ func Test_Func_doQuoteString(t *testing.T) {
 	gtest.Case(t, func() {
 		// "user", "user u", "user,user_detail", "user u, user_detail ut", "u.id asc".
 		array := map[string]string{
-			"user":                   "`user`",
-			"user u":                 "`user` u",
-			"user,user_detail":       "`user`,`user_detail`",
-			"user u, user_detail ut": "`user` u,`user_detail` ut",
-			"u.id asc":               "u.`id` asc",
-			"u.id asc, ut.uid desc":  "u.`id` asc,ut.`uid` desc",
+			"user":                             "`user`",
+			"user u":                           "`user` u",
+			"user,user_detail":                 "`user`,`user_detail`",
+			"user u, user_detail ut":           "`user` u,`user_detail` ut",
+			"u.id asc":                         "`u`.`id` asc",
+			"u.id asc, ut.uid desc":            "`u`.`id` asc,`ut`.`uid` desc",
+			"user.user u, user.user_detail ut": "`user`.`user` u,`user`.`user_detail` ut",
 		}
 		for k, v := range array {
 			gtest.Assert(doQuoteString(k, "`", "`"), v)

@@ -1670,6 +1670,13 @@ func Test_Model_Prefix(t *testing.T) {
 		gtest.Assert(r[0]["id"], "1")
 		gtest.Assert(r[1]["id"], "2")
 	})
+	gtest.Case(t, func() {
+		r, err := db.Table(table).As("u1").LeftJoin(table+" as u2", "u2.id=u1.id").Where("u1.id in (?)", g.Slice{1, 2}).Order("u1.id asc").All()
+		gtest.Assert(err, nil)
+		gtest.Assert(len(r), 2)
+		gtest.Assert(r[0]["id"], "1")
+		gtest.Assert(r[1]["id"], "2")
+	})
 }
 
 func Test_Model_Schema(t *testing.T) {
