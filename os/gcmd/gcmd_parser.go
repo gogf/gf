@@ -136,9 +136,6 @@ func (p *Parser) parseOption(argument string) string {
 }
 
 func (p *Parser) isOptionValid(name string) bool {
-	if !p.strict {
-		return true
-	}
 	_, ok := p.supportedOptions[name]
 	return ok
 }
