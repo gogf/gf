@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	g.Dump(gfile.ScanDirFile("/Users/john/Temp/test", "*", true))
+	g.Dump(gfile.ScanDirFile("/Users/john/Temp/test", "Dockerfile", true))
 	//if err := gfile.ReplaceDir("gf-empty", "app", "/Users/john/Temp/test", "*.*", true); err != nil {
 	//	glog.Fatal("content replacing failed,", err.Error())
 	//}
