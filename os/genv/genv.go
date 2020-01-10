@@ -60,7 +60,14 @@ func Build(m map[string]string) []string {
 	return array
 }
 
-// Remove deletes a single environment variable.
-func Remove(key string) error {
-	return os.Unsetenv(key)
+// Remove deletes one or more environment variables.
+func Remove(key ...string) error {
+	var err error
+	for _, v := range key {
+		err = os.Unsetenv(v)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

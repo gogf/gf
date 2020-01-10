@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 )
 
@@ -115,7 +116,9 @@ func (p *Process) Kill() error {
 		if p.Manager != nil {
 			p.Manager.processes.Remove(p.Pid())
 		}
-		p.Process.Release()
+		if runtime.GOOS != "windows" {
+			p.Process.Release()
+		}
 		p.Process.Wait()
 		return nil
 	} else {
