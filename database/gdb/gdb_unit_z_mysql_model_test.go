@@ -1679,7 +1679,7 @@ func Test_Model_Prefix(t *testing.T) {
 	})
 }
 
-func Test_Model_Schema(t *testing.T) {
+func Test_Model_Schema1(t *testing.T) {
 	//db.SetDebug(true)
 
 	db.SetSchema(SCHEMA1)
@@ -1753,6 +1753,68 @@ func Test_Model_Schema(t *testing.T) {
 		gtest.Assert(v.String(), "name_1000")
 
 		v, err = db.Table(table).Schema(SCHEMA2).Value("nickname", "id=?", i)
+		gtest.Assert(err, nil)
+		gtest.Assert(v.String(), "")
+	})
+}
+
+func Test_Model_Schema2(t *testing.T) {
+	//db.SetDebug(true)
+
+	db.SetSchema(SCHEMA1)
+	table := fmt.Sprintf(`%s_%s`, TABLE, gtime.TimestampNanoStr())
+	createInitTableWithDb(db, table)
+	db.SetSchema(SCHEMA2)
+	createInitTableWithDb(db, table)
+	defer func() {
+		db.SetSchema(SCHEMA1)
+		dropTableWithDb(db, table)
+		db.SetSchema(SCHEMA2)
+		dropTableWithDb(db, table)
+
+		db.SetSchema(SCHEMA1)
+	}()
+	// Schema.
+	gtest.Case(t, func() {
+		v, err := db.Schema(SCHEMA1).Table(table).Value("nickname", "id=2")
+		gtest.Assert(err, nil)
+		gtest.Assert(v.String(), "name_2")
+
+		r, err := db.Schema(SCHEMA1).Table(table).Update(g.Map{"nickname": "name_200"}, "id=2")
+		gtest.Assert(err, nil)
+		n, _ := r.RowsAffected()
+		gtest.Assert(n, 1)
+
+		v, err = db.Schema(SCHEMA1).Table(table).Value("nickname", "id=2")
+		gtest.Assert(err, nil)
+		gtest.Assert(v.String(), "name_200")
+
+		v, err = db.Schema(SCHEMA2).Table(table).Value("nickname", "id=2")
+		gtest.Assert(err, nil)
+		gtest.Assert(v.String(), "name_2")
+
+		v, err = db.Schema(SCHEMA1).Table(table).Value("nickname", "id=2")
+		gtest.Assert(err, nil)
+		gtest.Assert(v.String(), "name_200")
+	})
+	// Schema.
+	gtest.Case(t, func() {
+		i := 1000
+		_, err := db.Schema(SCHEMA1).Table(table).Filter().Insert(g.Map{
+			"id":               i,
+			"passport":         fmt.Sprintf(`user_%d`, i),
+			"password":         fmt.Sprintf(`pass_%d`, i),
+			"nickname":         fmt.Sprintf(`name_%d`, i),
+			"create_time":      gtime.NewFromStr("2018-10-24 10:00:00").String(),
+			"none-exist-field": 1,
+		})
+		gtest.Assert(err, nil)
+
+		v, err := db.Schema(SCHEMA1).Table(table).Value("nickname", "id=?", i)
+		gtest.Assert(err, nil)
+		gtest.Assert(v.String(), "name_1000")
+
+		v, err = db.Schema(SCHEMA2).Table(table).Value("nickname", "id=?", i)
 		gtest.Assert(err, nil)
 		gtest.Assert(v.String(), "")
 	})
