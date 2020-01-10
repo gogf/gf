@@ -9,6 +9,7 @@ package gproc
 
 import (
 	"bytes"
+	"github.com/gogf/gf/os/genv"
 	"github.com/gogf/gf/text/gstr"
 	"io"
 	"os"
