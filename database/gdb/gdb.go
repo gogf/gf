@@ -77,6 +77,7 @@ type DB interface {
 	// Create model.
 	From(tables string) *Model
 	Table(tables string) *Model
+	Schema(schema string) *Schema
 
 	// Configuration methods.
 	SetDebug(debug bool)

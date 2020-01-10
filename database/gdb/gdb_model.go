@@ -64,7 +64,7 @@ const (
 	OPTION_ALLOWEMPTY
 )
 
-// Table creates and returns a new ORM model.
+// Table creates and returns a new ORM model from given schema.
 // The parameter <tables> can be more than one table names, like :
 // "user", "user u", "user, user_detail", "user u, user_detail ud"
 func (bs *dbBase) Table(table string) *Model {
@@ -83,15 +83,15 @@ func (bs *dbBase) Table(table string) *Model {
 
 // Model is alias of dbBase.Table.
 // See dbBase.Table.
-func (bs *dbBase) Model(tables string) *Model {
-	return bs.db.Table(tables)
+func (bs *dbBase) Model(table string) *Model {
+	return bs.db.Table(table)
 }
 
 // From is alias of dbBase.Table.
 // See dbBase.Table.
 // Deprecated.
-func (bs *dbBase) From(tables string) *Model {
-	return bs.db.Table(tables)
+func (bs *dbBase) From(table string) *Model {
+	return bs.db.Table(table)
 }
 
 // Table acts like dbBase.Table except it operates on transaction.
@@ -113,15 +113,15 @@ func (tx *TX) Table(table string) *Model {
 
 // Model is alias of tx.Table.
 // See tx.Table.
-func (tx *TX) Model(tables string) *Model {
-	return tx.Table(tables)
+func (tx *TX) Model(table string) *Model {
+	return tx.Table(table)
 }
 
 // From is alias of tx.Table.
 // See tx.Table.
 // Deprecated.
-func (tx *TX) From(tables string) *Model {
-	return tx.Table(tables)
+func (tx *TX) From(table string) *Model {
+	return tx.Table(table)
 }
 
 // As sets an alias name for current table.
@@ -409,6 +409,9 @@ func (m *Model) Offset(offset int) *Model {
 // Note that, it differs that the Limit function start from 0 for "LIMIT" statement.
 func (m *Model) Page(page, limit int) *Model {
 	model := m.getModel()
+	if page <= 0 {
+		page = 1
+	}
 	model.start = (page - 1) * limit
 	model.limit = limit
 	return model
