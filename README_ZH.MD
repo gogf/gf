@@ -51,27 +51,6 @@ golang版本 >= 1.11
 
 接口文档：[https://godoc.org/github.com/gogf/gf](https://godoc.org/github.com/gogf/gf)
 
-# 使用
-```go
-package main
-
-import (
-    "github.com/gogf/gf/frame/g"
-    "github.com/gogf/gf/net/ghttp"
-)
-
-func main() {
-    s := g.Server()
-    s.BindHandler("/", func(r *ghttp.Request) {
-        r.Response.Write("Hello World")
-    })
-    s.Run()
-}
-```
-
-[更多..](https://goframe.org/start/index)
-
-
 # 协议
 
 `GF` 使用非常友好的 [MIT](LICENSE) 开源协议进行发布，永久`100%`开源免费。

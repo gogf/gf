@@ -16,6 +16,8 @@ import (
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
+
+	htmltpl "html/template"
 )
 
 // funcDump implements build-in template function: dump
@@ -85,7 +87,8 @@ func (view *View) funcGe(value, other interface{}) bool {
 }
 
 // funcInclude implements build-in template function: include
-func (view *View) funcInclude(file interface{}, data ...map[string]interface{}) string {
+// Note that configuration AutoEncode does not affect the output of this function.
+func (view *View) funcInclude(file interface{}, data ...map[string]interface{}) htmltpl.HTML {
 	var m map[string]interface{} = nil
 	if len(data) > 0 {
 		m = data[0]
@@ -97,9 +100,9 @@ func (view *View) funcInclude(file interface{}, data ...map[string]interface{}) 
 	// It will search the file internally.
 	content, err := view.Parse(path, m)
 	if err != nil {
-		return err.Error()
+		return htmltpl.HTML(err.Error())
 	}
-	return content
+	return htmltpl.HTML(content)
 }
 
 // funcText implements build-in template function: text
