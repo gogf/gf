@@ -41,27 +41,6 @@ golang version >= 1.10
 <img src="https://goframe.org/images/arch.png?v=10"/>
 </div>
 
-# Quick Start
-
-```go
-package main
-
-import (
-    "github.com/gogf/gf/frame/g"
-    "github.com/gogf/gf/net/ghttp"
-)
-
-func main() {
-    s := g.Server()
-    s.BindHandler("/", func(r *ghttp.Request) {
-        r.Response.Write("Hello World")
-    })
-    s.Run()
-}
-```
-
-[More Features...](https://goframe.org/start/index)
-
 
 # License
 
