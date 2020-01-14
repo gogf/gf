@@ -38,7 +38,7 @@ func New() *Resource {
 // Add unpacks and adds the <content> into current resource object.
 // The unnecessary parameter <prefix> indicates the prefix
 // for each file storing into current resource object.
-func (r *Resource) Add(content []byte, prefix ...string) error {
+func (r *Resource) Add(content string, prefix ...string) error {
 	files, err := UnpackContent(content)
 	if err != nil {
 		return err
@@ -62,7 +62,7 @@ func (r *Resource) Load(path string, prefix ...string) error {
 	if err != nil {
 		return err
 	}
-	return r.Add(gfile.GetBytes(realPath), prefix...)
+	return r.Add(gfile.GetContents(realPath), prefix...)
 }
 
 // Get returns the file with given path.

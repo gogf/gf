@@ -47,6 +47,14 @@ func Test_NewFromStrFormat(t *testing.T) {
 			t.Error("test fail")
 		}
 	})
+
+	gtest.Case(t, func() {
+		t1 := gtime.NewFromStrFormat("2019/2/1", "Y/n/j")
+		gtest.Assert(t1.Format("Y-m-d"), "2019-02-01")
+
+		t2 := gtime.NewFromStrFormat("2019/10/12", "Y/n/j")
+		gtest.Assert(t2.Format("Y-m-d"), "2019-10-12")
+	})
 }
 
 func Test_NewFromStrLayout(t *testing.T) {

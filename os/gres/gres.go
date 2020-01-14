@@ -20,7 +20,7 @@ var (
 // Add unpacks and adds the <content> into the default resource object.
 // The unnecessary parameter <prefix> indicates the prefix
 // for each file storing into current resource object.
-func Add(content []byte, prefix ...string) error {
+func Add(content string, prefix ...string) error {
 	return defaultResource.Add(content, prefix...)
 }
 
