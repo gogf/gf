@@ -171,7 +171,7 @@ func (p *Parser) GetOpt(name string, def ...string) string {
 }
 
 // GetOptVar returns the option value named <name> as *gvar.Var.
-func (p *Parser) GetOptVar(name string, def ...string) *gvar.Var {
+func (p *Parser) GetOptVar(name string, def ...interface{}) *gvar.Var {
 	return gvar.New(p.GetOpt(name, def...))
 }
 
