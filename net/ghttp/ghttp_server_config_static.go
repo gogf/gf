@@ -20,28 +20,31 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
-// 静态文件目录映射关系对象
+// staticPathItem is the item struct for static path configuration.
 type staticPathItem struct {
-	prefix string // 映射的URI前缀
-	path   string // 静态文件目录绝对路径
+	prefix string // The router URI.
+	path   string // The static path.
 }
 
-// 设置http server参数 - IndexFiles，默认展示文件，如：index.html, index.htm
+// SetIndexFiles sets the index files fro server.
 func (s *Server) SetIndexFiles(index []string) {
 	s.config.IndexFiles = index
 }
 
-// 允许展示访问目录的文件列表
+// SetIndexFolder enables/disables listing the sub-files if requesting a directory.
 func (s *Server) SetIndexFolder(enabled bool) {
 	s.config.IndexFolder = enabled
 }
 
-// 是否开启/关闭静态文件服务，当关闭时仅提供动态接口服务，路由性能会得到一定提升
+// SetFileServerEnabled enables/disables the static file service.
+// It's the main switch for the static file service. When static file service configuration
+// functions like SetServerRoot, AddSearchPath and AddStaticPath are called, this configuration
+// is automatically enabled.
 func (s *Server) SetFileServerEnabled(enabled bool) {
 	s.config.FileServerEnabled = enabled
 }
 
-// 设置http server参数 - ServerRoot
+// SetServerRoot sets the document root for static service.
 func (s *Server) SetServerRoot(root string) {
 	realPath := root
 	if !gres.Contains(realPath) {
@@ -56,7 +59,7 @@ func (s *Server) SetServerRoot(root string) {
 	s.config.FileServerEnabled = true
 }
 
-// 添加静态文件搜索**目录**，必须给定目录的绝对路径
+// AddSearchPath add searching directory path for static file service.
 func (s *Server) AddSearchPath(path string) {
 	realPath := path
 	if !gres.Contains(realPath) {
@@ -70,7 +73,7 @@ func (s *Server) AddSearchPath(path string) {
 	s.config.FileServerEnabled = true
 }
 
-// 添加URI与静态**目录**的映射
+// AddStaticPath sets the uri to static directory path mapping for static file service.
 func (s *Server) AddStaticPath(prefix string, path string) {
 	realPath := path
 	if !gres.Contains(realPath) {

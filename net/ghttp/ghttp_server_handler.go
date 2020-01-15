@@ -24,11 +24,11 @@ import (
 	"github.com/gogf/gf/os/gtime"
 )
 
-// 服务静态文件信息
+// staticServeFile is the file struct for static service.
 type staticServeFile struct {
-	file *gres.File // 资源文件
-	path string     // 文件路径
-	dir  bool       // 是否目录
+	file *gres.File // Resource file object.
+	path string     // File path.
+	dir  bool       // Is directory.
 }
 
 // 默认HTTP Server处理入口，http包底层默认使用了gorutine异步处理请求，所以这里不再异步执行
@@ -172,7 +172,8 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// 查找静态文件的绝对路径
+// searchStaticFile searches the file with given URI.
+// It returns a file struct specifying the file information.
 func (s *Server) searchStaticFile(uri string) *staticServeFile {
 	var file *gres.File
 	var path string
@@ -185,7 +186,6 @@ func (s *Server) searchStaticFile(uri string) *staticServeFile {
 				if len(uri) > len(item.prefix) && uri[len(item.prefix)] != '/' {
 					continue
 				}
-				// Firstly searching resource manager.
 				file = gres.GetWithIndex(item.path+uri[len(item.prefix):], s.config.IndexFiles)
 				if file != nil {
 					return &staticServeFile{
@@ -193,7 +193,6 @@ func (s *Server) searchStaticFile(uri string) *staticServeFile {
 						dir:  file.FileInfo().IsDir(),
 					}
 				}
-				// Secondly searching the file system.
 				path, dir = gspath.Search(item.path, uri[len(item.prefix):], s.config.IndexFiles...)
 				if path != "" {
 					return &staticServeFile{
@@ -205,10 +204,9 @@ func (s *Server) searchStaticFile(uri string) *staticServeFile {
 			}
 		}
 	}
-	// 其次查找root和search path
+	// Secondly search the root and searching paths.
 	if len(s.config.SearchPaths) > 0 {
 		for _, p := range s.config.SearchPaths {
-			// 优先检索资源管理器
 			file = gres.GetWithIndex(p+uri, s.config.IndexFiles)
 			if file != nil {
 				return &staticServeFile{
@@ -216,7 +214,6 @@ func (s *Server) searchStaticFile(uri string) *staticServeFile {
 					dir:  file.FileInfo().IsDir(),
 				}
 			}
-			// 其次检索文件系统
 			if path, dir = gspath.Search(p, uri, s.config.IndexFiles...); path != "" {
 				return &staticServeFile{
 					path: path,
@@ -225,7 +222,7 @@ func (s *Server) searchStaticFile(uri string) *staticServeFile {
 			}
 		}
 	}
-	// 最后通过资源对象+URI进行文件检索
+	// Lastly search the resource manager.
 	if len(s.config.StaticPaths) == 0 && len(s.config.SearchPaths) == 0 {
 		if file = gres.GetWithIndex(uri, s.config.IndexFiles); file != nil {
 			return &staticServeFile{
