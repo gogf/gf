@@ -844,16 +844,12 @@ func (m *Model) Count(where ...interface{}) (int, error) {
 	if len(where) > 0 {
 		return m.Where(where[0], where[1:]...).Count()
 	}
-	defer func(fields string) {
-		m.fields = fields
-	}(m.fields)
-	if m.fields == "" || m.fields == "*" {
-		m.fields = "COUNT(1)"
-	} else {
-		m.fields = fmt.Sprintf(`COUNT(%s)`, m.fields)
+	countFields := "COUNT(1)"
+	if m.fields != "" && m.fields != "*" {
+		countFields = fmt.Sprintf(`COUNT(%s)`, m.fields)
 	}
 	condition, conditionArgs := m.formatCondition(false)
-	s := fmt.Sprintf("SELECT %s FROM %s %s", m.fields, m.tables, condition)
+	s := fmt.Sprintf("SELECT %s FROM %s %s", countFields, m.tables, condition)
 	if len(m.groupBy) > 0 {
 		s = fmt.Sprintf("SELECT COUNT(1) FROM (%s) count_alias", s)
 	}
