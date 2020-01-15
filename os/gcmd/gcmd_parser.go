@@ -172,7 +172,13 @@ func (p *Parser) GetOpt(name string, def ...string) string {
 
 // GetOptVar returns the option value named <name> as *gvar.Var.
 func (p *Parser) GetOptVar(name string, def ...interface{}) *gvar.Var {
-	return gvar.New(p.GetOpt(name, def...))
+	if p.ContainsOpt(name) {
+		return gvar.New(p.GetOpt(name))
+	}
+	if len(def) > 0 {
+		return gvar.New(def[0])
+	}
+	return gvar.New(nil)
 }
 
 // GetOptAll returns all parsed options.
@@ -181,7 +187,7 @@ func (p *Parser) GetOptAll() map[string]string {
 }
 
 // ContainsOpt checks whether option named <name> exist in the arguments.
-func (p *Parser) ContainsOpt(name string, def ...string) bool {
+func (p *Parser) ContainsOpt(name string) bool {
 	_, ok := p.parsedOptions[name]
 	return ok
 }
