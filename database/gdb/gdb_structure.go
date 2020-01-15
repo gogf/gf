@@ -86,11 +86,19 @@ func (bs *dbBase) convertValue(fieldValue []byte, fieldType string) interface{} 
 			return gconv.Int(string(fieldValue))
 
 		case strings.Contains(t, "time"):
-			t, _ := gtime.StrToTime(string(fieldValue))
+			s := string(fieldValue)
+			t, err := gtime.StrToTime(s)
+			if err != nil {
+				return s
+			}
 			return t.String()
 
 		case strings.Contains(t, "date"):
-			t, _ := gtime.StrToTime(string(fieldValue))
+			s := string(fieldValue)
+			t, err := gtime.StrToTime(s)
+			if err != nil {
+				return s
+			}
 			return t.Format("Y-m-d")
 
 		default:

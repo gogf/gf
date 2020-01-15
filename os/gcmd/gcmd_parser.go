@@ -77,7 +77,7 @@ func ParseWithArgs(args []string, supportedOptions map[string]bool, strict ...bo
 			} else {
 				if parser.isOptionValid(option) {
 					if parser.isOptionNeedArgument(option) {
-						if i+1 < len(args) {
+						if i < len(args)-1 {
 							parser.setOptionValue(option, args[i+1])
 							i += 2
 							continue
