@@ -1,5 +1,7 @@
 # GoFrame
 
+![logo](https://docs.google.com/drawings/d/e/2PACX-1vQ3RAYKT1bpO9iqowJlZsK0BPdgjXVjNUFvMgfOF7_Wc3Rvn7xrv31y8r0IzKe6_1VFZbdlU46E0nVZ/pub?w=300&h=300) 
+
 [![Go Doc](https://godoc.org/github.com/gogf/gf?status.svg)](https://godoc.org/github.com/gogf/gf/g#pkg-subdirectories)
 [![Build Status](https://travis-ci.org/gogf/gf.svg?branch=master)](https://travis-ci.org/gogf/gf)
 [![Go Report](https://goreportcard.com/badge/github.com/gogf/gf?v=1)](https://goreportcard.com/report/github.com/gogf/gf)
