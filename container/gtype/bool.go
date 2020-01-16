@@ -57,7 +57,7 @@ func (v *Bool) Val() bool {
 }
 
 // Cas executes the compare-and-swap operation for value.
-func (v *Bool) Cas(old, new bool) bool {
+func (v *Bool) Cas(old, new bool) (swapped bool) {
 	var oldInt32, newInt32 int32
 	if old {
 		oldInt32 = 1

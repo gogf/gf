@@ -62,7 +62,7 @@ func (v *Float64) Add(delta float64) (new float64) {
 }
 
 // Cas executes the compare-and-swap operation for value.
-func (v *Float64) Cas(old, new float64) bool {
+func (v *Float64) Cas(old, new float64) (swapped bool) {
 	return atomic.CompareAndSwapUint64(&v.value, math.Float64bits(old), math.Float64bits(new))
 }
 
