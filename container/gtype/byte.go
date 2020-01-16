@@ -49,7 +49,7 @@ func (v *Byte) Add(delta byte) (new byte) {
 }
 
 // Cas executes the compare-and-swap operation for value.
-func (v *Byte) Cas(old, new byte) bool {
+func (v *Byte) Cas(old, new byte) (swapped bool) {
 	return atomic.CompareAndSwapInt32(&v.value, int32(old), int32(new))
 }
 

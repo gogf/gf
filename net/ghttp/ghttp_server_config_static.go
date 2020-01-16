@@ -26,9 +26,14 @@ type staticPathItem struct {
 	path   string // The static path.
 }
 
-// SetIndexFiles sets the index files fro server.
-func (s *Server) SetIndexFiles(index []string) {
-	s.config.IndexFiles = index
+// SetIndexFiles sets the index files for server.
+func (s *Server) SetIndexFiles(indexFiles []string) {
+	s.config.IndexFiles = indexFiles
+}
+
+// GetIndexFiles retrieves and returns the index files from server.
+func (s *Server) GetIndexFiles() []string {
+	return s.config.IndexFiles
 }
 
 // SetIndexFolder enables/disables listing the sub-files if requesting a directory.

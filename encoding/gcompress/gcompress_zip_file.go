@@ -72,11 +72,11 @@ func doZipPathWriter(path string, zipWriter *zip.Writer, prefix ...string) error
 		headerPrefix = prefix[0]
 	}
 	headerPrefix = strings.TrimRight(headerPrefix, "\\/")
-	if gfile.IsDir(path) {
-		if len(headerPrefix) > 0 {
-			headerPrefix += "/"
-		}
-		headerPrefix = headerPrefix + gfile.Basename(path)
+	if len(headerPrefix) > 0 && gfile.IsDir(path) {
+		headerPrefix += "/"
+	}
+	if headerPrefix == "" {
+		headerPrefix = gfile.Basename(path)
 	}
 	headerPrefix = strings.Replace(headerPrefix, "//", "/", -1)
 	for _, file := range files {

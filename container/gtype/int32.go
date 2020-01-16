@@ -49,7 +49,7 @@ func (v *Int32) Add(delta int32) (new int32) {
 }
 
 // Cas executes the compare-and-swap operation for value.
-func (v *Int32) Cas(old, new int32) bool {
+func (v *Int32) Cas(old, new int32) (swapped bool) {
 	return atomic.CompareAndSwapInt32(&v.value, old, new)
 }
 
