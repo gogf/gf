@@ -8,6 +8,7 @@ package ghttp
 
 import (
 	"fmt"
+	"github.com/gogf/gf/os/gres"
 	"github.com/gogf/gf/os/gview"
 	"net/http"
 	"strings"
@@ -29,6 +30,7 @@ type Request struct {
 	EnterTime       int64                  // Request starting time in microseconds.
 	LeaveTime       int64                  // Request ending time in microseconds.
 	Middleware      *Middleware            // The middleware manager.
+	StaticFile      *StaticFile            // Static file object when static file serving.
 	handlers        []*handlerParsedItem   // All matched handlers containing handler, hook and middleware for this request .
 	hasHookHandler  bool                   // A bool marking whether there's hook handler in the handlers for performance purpose.
 	hasServeHandler bool                   // A bool marking whether there's serving handler in the handlers for performance purpose.
@@ -50,13 +52,20 @@ type Request struct {
 	viewParams      gview.Params           // Custom template view variables for this response.
 }
 
+// StaticFile is the file struct for static file service.
+type StaticFile struct {
+	File  *gres.File // Resource file object.
+	Path  string     // File path.
+	IsDir bool       // Is directory.
+}
+
 // newRequest creates and returns a new request object.
 func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 	request := &Request{
 		Server:    s,
 		Request:   r,
 		Response:  newResponse(s, w),
-		EnterTime: gtime.Microsecond(),
+		EnterTime: gtime.TimestampMicro(),
 	}
 	request.Cookie = GetCookie(request)
 	request.Session = s.sessionManager.New(request.GetSessionId())
