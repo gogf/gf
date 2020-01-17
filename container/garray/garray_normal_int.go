@@ -179,6 +179,9 @@ func (a *IntArray) InsertAfter(index int, value int) *IntArray {
 func (a *IntArray) Remove(index int) int {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	if index < 0 || index >= len(a.array) {
+		return 0
+	}
 	// Determine array boundaries when deleting to improve deletion efficiency.
 	if index == 0 {
 		value := a.array[0]
@@ -195,6 +198,16 @@ func (a *IntArray) Remove(index int) int {
 	value := a.array[index]
 	a.array = append(a.array[:index], a.array[index+1:]...)
 	return value
+}
+
+// RemoveValue removes an item by value.
+// It returns true if value is found in the array, or else false if not found.
+func (a *IntArray) RemoveValue(value int) bool {
+	if i := a.Search(value); i != -1 {
+		a.Remove(i)
+		return true
+	}
+	return false
 }
 
 // PushLeft pushes one or multiple items to the beginning of array.
@@ -430,9 +443,6 @@ func (a *IntArray) Contains(value int) bool {
 // Search searches array by <value>, returns the index of <value>,
 // or returns -1 if not exists.
 func (a *IntArray) Search(value int) int {
-	if len(a.array) == 0 {
-		return -1
-	}
 	a.mu.RLock()
 	result := -1
 	for index, v := range a.array {
@@ -442,7 +452,6 @@ func (a *IntArray) Search(value int) int {
 		}
 	}
 	a.mu.RUnlock()
-
 	return result
 }
 

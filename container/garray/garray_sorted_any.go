@@ -160,6 +160,9 @@ func (a *SortedArray) Get(index int) interface{} {
 func (a *SortedArray) Remove(index int) interface{} {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	if index < 0 || index >= len(a.array) {
+		return nil
+	}
 	// Determine array boundaries when deleting to improve deletion efficiency.
 	if index == 0 {
 		value := a.array[0]
@@ -176,6 +179,16 @@ func (a *SortedArray) Remove(index int) interface{} {
 	value := a.array[index]
 	a.array = append(a.array[:index], a.array[index+1:]...)
 	return value
+}
+
+// RemoveValue removes an item by value.
+// It returns true if value is found in the array, or else false if not found.
+func (a *SortedArray) RemoveValue(value interface{}) bool {
+	if i := a.Search(value); i != -1 {
+		a.Remove(i)
+		return true
+	}
+	return false
 }
 
 // PopLeft pops and returns an item from the beginning of array.

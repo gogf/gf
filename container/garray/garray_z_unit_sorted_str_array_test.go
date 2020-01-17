@@ -77,6 +77,10 @@ func TestSortedStrArray_Remove(t *testing.T) {
 	gtest.Case(t, func() {
 		a1 := []string{"a", "d", "c", "b"}
 		array1 := garray.NewSortedStrArrayFrom(a1)
+
+		gtest.Assert(array1.Remove(-1), "")
+		gtest.Assert(array1.Remove(100000), "")
+
 		gtest.Assert(array1.Remove(2), "c")
 		gtest.Assert(array1.Get(2), "d")
 		gtest.Assert(array1.Len(), 3)
@@ -521,5 +525,17 @@ func TestSortedStrArray_Iterator(t *testing.T) {
 			return false
 		})
 		gtest.Assert(index, 1)
+	})
+}
+
+func TestSortedStrArray_RemoveValue(t *testing.T) {
+	slice := g.SliceStr{"a", "b", "d", "c"}
+	array := garray.NewSortedStrArrayFrom(slice)
+	gtest.Case(t, func() {
+		gtest.Assert(array.RemoveValue("e"), false)
+		gtest.Assert(array.RemoveValue("b"), true)
+		gtest.Assert(array.RemoveValue("a"), true)
+		gtest.Assert(array.RemoveValue("c"), true)
+		gtest.Assert(array.RemoveValue("f"), false)
 	})
 }

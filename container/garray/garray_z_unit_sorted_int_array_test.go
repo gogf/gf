@@ -78,6 +78,10 @@ func TestSortedIntArray_Remove(t *testing.T) {
 	gtest.Case(t, func() {
 		a1 := []int{1, 3, 5, 0}
 		array1 := garray.NewSortedIntArrayFrom(a1)
+
+		gtest.Assert(array1.Remove(-1), 0)
+		gtest.Assert(array1.Remove(100000), 0)
+
 		i1 := array1.Remove(2)
 		gtest.Assert(i1, 3)
 		gtest.Assert(array1.Search(5), 2)
@@ -511,5 +515,18 @@ func TestSortedIntArray_Iterator(t *testing.T) {
 			return false
 		})
 		gtest.Assert(index, 1)
+	})
+}
+
+func TestSortedIntArray_RemoveValue(t *testing.T) {
+	slice := g.SliceInt{10, 20, 30, 40}
+	array := garray.NewSortedIntArrayFrom(slice)
+	gtest.Case(t, func() {
+		gtest.Assert(array.RemoveValue(99), false)
+		gtest.Assert(array.RemoveValue(20), true)
+		gtest.Assert(array.RemoveValue(10), true)
+		gtest.Assert(array.RemoveValue(20), false)
+		gtest.Assert(array.RemoveValue(88), false)
+		gtest.Assert(array.Len(), 2)
 	})
 }
