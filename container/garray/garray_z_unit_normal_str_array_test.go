@@ -34,6 +34,8 @@ func Test_StrArray_Basic(t *testing.T) {
 		gtest.Assert(array.Search("100"), 0)
 		gtest.Assert(array.Contains("100"), true)
 		gtest.Assert(array.Remove(0), 100)
+		gtest.Assert(array.Remove(-1), "")
+		gtest.Assert(array.Remove(100000), "")
 		gtest.Assert(array.Contains("100"), false)
 		array.Append("4")
 		gtest.Assert(array.Len(), 4)
@@ -533,5 +535,17 @@ func TestStrArray_Iterator(t *testing.T) {
 			return false
 		})
 		gtest.Assert(index, 1)
+	})
+}
+
+func TestStrArray_RemoveValue(t *testing.T) {
+	slice := g.SliceStr{"a", "b", "d", "c"}
+	array := garray.NewStrArrayFrom(slice)
+	gtest.Case(t, func() {
+		gtest.Assert(array.RemoveValue("e"), false)
+		gtest.Assert(array.RemoveValue("b"), true)
+		gtest.Assert(array.RemoveValue("a"), true)
+		gtest.Assert(array.RemoveValue("c"), true)
+		gtest.Assert(array.RemoveValue("f"), false)
 	})
 }

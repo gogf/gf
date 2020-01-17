@@ -176,6 +176,9 @@ func (a *Array) InsertAfter(index int, value interface{}) *Array {
 func (a *Array) Remove(index int) interface{} {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	if index < 0 || index >= len(a.array) {
+		return nil
+	}
 	// Determine array boundaries when deleting to improve deletion efficiency。
 	if index == 0 {
 		value := a.array[0]
@@ -192,6 +195,16 @@ func (a *Array) Remove(index int) interface{} {
 	value := a.array[index]
 	a.array = append(a.array[:index], a.array[index+1:]...)
 	return value
+}
+
+// RemoveValue removes an item by value.
+// It returns true if value is found in the array, or else false if not found.
+func (a *Array) RemoveValue(value interface{}) bool {
+	if i := a.Search(value); i != -1 {
+		a.Remove(i)
+		return true
+	}
+	return false
 }
 
 // PushLeft pushes one or multiple items to the beginning of array.
@@ -418,9 +431,6 @@ func (a *Array) Contains(value interface{}) bool {
 // Search searches array by <value>, returns the index of <value>,
 // or returns -1 if not exists.
 func (a *Array) Search(value interface{}) int {
-	if len(a.array) == 0 {
-		return -1
-	}
 	a.mu.RLock()
 	result := -1
 	for index, v := range a.array {
@@ -430,7 +440,20 @@ func (a *Array) Search(value interface{}) int {
 		}
 	}
 	a.mu.RUnlock()
+	return result
+}
 
+func (a *Array) doSearch(value interface{}) int {
+	if len(a.array) == 0 {
+		return -1
+	}
+	result := -1
+	for index, v := range a.array {
+		if v == value {
+			result = index
+			break
+		}
+	}
 	return result
 }
 
