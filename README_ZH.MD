@@ -57,7 +57,7 @@ golang版本 >= 1.11
 
 # 贡献
 
-感谢所有参与`GoFrame`开发的贡献者。 [[Contributors](https://github.com/gogf/gf/graphs/contributors)].
+感谢所有参与`GoFrame`开发的贡献者。 [[贡献者列表](https://github.com/gogf/gf/graphs/contributors)].
 <a href="https://github.com/gogf/gf/graphs/contributors"><img src="https://opencollective.com/goframe/contributors.svg?width=890&button=false" /></a>
 
 
