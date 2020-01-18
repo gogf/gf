@@ -189,6 +189,11 @@ func SearchBinary(file string) string {
 	if gfile.Exists(file) {
 		return file
 	}
+	return SearchBinaryPath(file)
+}
+
+// SearchBinaryPath searches the binary <file> in PATH environment.
+func SearchBinaryPath(file string) string {
 	array := ([]string)(nil)
 	switch runtime.GOOS {
 	case "windows":
