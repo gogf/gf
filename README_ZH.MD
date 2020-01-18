@@ -55,6 +55,12 @@ golang版本 >= 1.11
 
 `GF` 使用非常友好的 [MIT](LICENSE) 开源协议进行发布，永久`100%`开源免费。
 
+# 贡献
+
+感谢所有参与`GoFrame`开发的贡献者。 [[Contributors](https://github.com/gogf/gf/graphs/contributors)].
+<a href="https://github.com/gogf/gf/graphs/contributors"><img src="https://opencollective.com/goframe/contributors.svg?width=890&button=false" /></a>
+
+
 # 捐赠
 
 如果您喜欢`GF`，要不[给开发者来杯咖啡吧](DONATOR.MD)！

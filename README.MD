@@ -46,6 +46,10 @@ golang version >= 1.10
 
 `GF` is licensed under the [MIT License](LICENSE), 100% free and open-source, forever.
 
+# Contributors
+This project exists thanks to all the people who contribute. [[Contributors](https://github.com/gogf/gf/graphs/contributors)].
+<a href="https://github.com/gogf/gf/graphs/contributors"><img src="https://opencollective.com/goframe/contributors.svg?width=890&button=false" /></a>
+
 # Donators
 
 We currently accept donation by Alipay/WechatPay, please note your github/gitee account in your payment bill. If you like `GF`, why not [buy developer a cup of coffee](DONATOR.MD)?
