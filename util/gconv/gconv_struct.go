@@ -253,7 +253,8 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}) (e
 		if err := Struct(value, structFieldValue); err != nil {
 			structFieldValue.Set(reflect.ValueOf(value))
 		}
-
+	// Note that the slice element might be type of struct,
+	// so it uses Struct function doing the converting internally.
 	case reflect.Slice, reflect.Array:
 		a := reflect.Value{}
 		v := reflect.ValueOf(value)
