@@ -93,7 +93,7 @@ func Test_Conn(t *testing.T) {
 		conn := redis.Conn()
 		defer conn.Close()
 
-		key := gconv.String(gtime.Nanosecond())
+		key := gconv.String(gtime.TimestampNano())
 		value := []byte("v")
 		r, err := conn.Do("SET", key, value)
 		gtest.Assert(err, nil)

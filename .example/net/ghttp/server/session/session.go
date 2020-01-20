@@ -10,7 +10,7 @@ func main() {
 	s := g.Server()
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		g.GET("/set", func(r *ghttp.Request) {
-			r.Session.Set("time", gtime.Second())
+			r.Session.Set("time", gtime.Timestamp())
 			r.Response.Write("ok")
 		})
 		g.GET("/get", func(r *ghttp.Request) {

@@ -24,7 +24,7 @@ func Test_GEnv_All(t *testing.T) {
 
 func Test_GEnv_Map(t *testing.T) {
 	gtest.Case(t, func() {
-		value := gconv.String(gtime.Nanosecond())
+		value := gconv.String(gtime.TimestampNano())
 		key := "TEST_ENV_" + value
 		err := os.Setenv(key, "TEST")
 		gtest.Assert(err, nil)
@@ -34,7 +34,7 @@ func Test_GEnv_Map(t *testing.T) {
 
 func Test_GEnv_Get(t *testing.T) {
 	gtest.Case(t, func() {
-		value := gconv.String(gtime.Nanosecond())
+		value := gconv.String(gtime.TimestampNano())
 		key := "TEST_ENV_" + value
 		err := os.Setenv(key, "TEST")
 		gtest.Assert(err, nil)
@@ -44,7 +44,7 @@ func Test_GEnv_Get(t *testing.T) {
 
 func Test_GEnv_Contains(t *testing.T) {
 	gtest.Case(t, func() {
-		value := gconv.String(gtime.Nanosecond())
+		value := gconv.String(gtime.TimestampNano())
 		key := "TEST_ENV_" + value
 		err := os.Setenv(key, "TEST")
 		gtest.Assert(err, nil)
@@ -55,7 +55,7 @@ func Test_GEnv_Contains(t *testing.T) {
 
 func Test_GEnv_Set(t *testing.T) {
 	gtest.Case(t, func() {
-		value := gconv.String(gtime.Nanosecond())
+		value := gconv.String(gtime.TimestampNano())
 		key := "TEST_ENV_" + value
 		err := genv.Set(key, "TEST")
 		gtest.Assert(err, nil)
@@ -76,7 +76,7 @@ func Test_GEnv_Build(t *testing.T) {
 
 func Test_GEnv_Remove(t *testing.T) {
 	gtest.Case(t, func() {
-		value := gconv.String(gtime.Nanosecond())
+		value := gconv.String(gtime.TimestampNano())
 		key := "TEST_ENV_" + value
 		err := os.Setenv(key, "TEST")
 		gtest.Assert(err, nil)

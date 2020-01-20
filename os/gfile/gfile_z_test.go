@@ -34,7 +34,7 @@ func Test_IsDir(t *testing.T) {
 
 func Test_IsEmpty(t *testing.T) {
 	gtest.Case(t, func() {
-		path := "/testdir_" + gconv.String(gtime.Nanosecond())
+		path := "/testdir_" + gconv.String(gtime.TimestampNano())
 		createDir(path)
 		defer delTestFiles(path)
 
@@ -42,14 +42,14 @@ func Test_IsEmpty(t *testing.T) {
 		gtest.Assert(gfile.IsEmpty(testpath()+path+gfile.Separator+"test.txt"), true)
 	})
 	gtest.Case(t, func() {
-		path := "/testfile_" + gconv.String(gtime.Nanosecond())
+		path := "/testfile_" + gconv.String(gtime.TimestampNano())
 		createTestFile(path, "")
 		defer delTestFiles(path)
 
 		gtest.Assert(gfile.IsEmpty(testpath()+path), true)
 	})
 	gtest.Case(t, func() {
-		path := "/testfile_" + gconv.String(gtime.Nanosecond())
+		path := "/testfile_" + gconv.String(gtime.TimestampNano())
 		createTestFile(path, "1")
 		defer delTestFiles(path)
 

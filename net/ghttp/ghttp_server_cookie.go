@@ -101,7 +101,7 @@ func (c *Cookie) SetCookie(key, value, domain, path string, maxAge time.Duration
 		isHttpOnly = httpOnly[0]
 	}
 	c.data[key] = CookieItem{
-		value, domain, path, gtime.Second() + int64(maxAge.Seconds()), isHttpOnly,
+		value, domain, path, gtime.Timestamp() + int64(maxAge.Seconds()), isHttpOnly,
 	}
 }
 

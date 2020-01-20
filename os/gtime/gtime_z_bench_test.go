@@ -14,25 +14,25 @@ import (
 
 func Benchmark_Second(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		gtime.Second()
+		gtime.Timestamp()
 	}
 }
 
 func Benchmark_Millisecond(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		gtime.Millisecond()
+		gtime.TimestampMilli()
 	}
 }
 
 func Benchmark_Microsecond(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		gtime.Microsecond()
+		gtime.TimestampMicro()
 	}
 }
 
 func Benchmark_Nanosecond(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		gtime.Nanosecond()
+		gtime.TimestampNano()
 	}
 }
 

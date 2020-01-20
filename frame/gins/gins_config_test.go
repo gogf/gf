@@ -112,7 +112,7 @@ test = "v=1"
 
 	// absolute path
 	gtest.Case(t, func() {
-		path := fmt.Sprintf(`%s/%d`, gfile.TempDir(), gtime.Nanosecond())
+		path := fmt.Sprintf(`%s/%d`, gfile.TempDir(), gtime.TimestampNano())
 		file := fmt.Sprintf(`%s/%s`, path, "config.toml")
 		err := gfile.PutContents(file, config)
 		gtest.Assert(err, nil)
@@ -126,7 +126,7 @@ test = "v=1"
 	time.Sleep(500 * time.Millisecond)
 
 	gtest.Case(t, func() {
-		path := fmt.Sprintf(`%s/%d/config`, gfile.TempDir(), gtime.Nanosecond())
+		path := fmt.Sprintf(`%s/%d/config`, gfile.TempDir(), gtime.TimestampNano())
 		file := fmt.Sprintf(`%s/%s`, path, "config.toml")
 		err := gfile.PutContents(file, config)
 		gtest.Assert(err, nil)
@@ -140,7 +140,7 @@ test = "v=1"
 	time.Sleep(500 * time.Millisecond)
 
 	gtest.Case(t, func() {
-		path := fmt.Sprintf(`%s/%d`, gfile.TempDir(), gtime.Nanosecond())
+		path := fmt.Sprintf(`%s/%d`, gfile.TempDir(), gtime.TimestampNano())
 		file := fmt.Sprintf(`%s/%s`, path, "test.toml")
 		err := gfile.PutContents(file, config)
 		gtest.Assert(err, nil)
@@ -155,7 +155,7 @@ test = "v=1"
 	time.Sleep(500 * time.Millisecond)
 
 	gtest.Case(t, func() {
-		path := fmt.Sprintf(`%s/%d/config`, gfile.TempDir(), gtime.Nanosecond())
+		path := fmt.Sprintf(`%s/%d/config`, gfile.TempDir(), gtime.TimestampNano())
 		file := fmt.Sprintf(`%s/%s`, path, "test.toml")
 		err := gfile.PutContents(file, config)
 		gtest.Assert(err, nil)
