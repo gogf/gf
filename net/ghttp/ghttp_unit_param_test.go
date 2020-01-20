@@ -228,7 +228,7 @@ func Test_Params_Basic(t *testing.T) {
 			r.Response.Write(m["name"])
 			return
 		}
-		if m := r.GetPostMap(); len(m) > 0 {
+		if m := r.GetMap(); len(m) > 0 {
 			r.Response.Write(m["name"])
 			return
 		}
@@ -247,20 +247,20 @@ func Test_Params_Basic(t *testing.T) {
 	s.BindHandler("/struct", func(r *ghttp.Request) {
 		if m := r.GetQueryMap(); len(m) > 0 {
 			user := new(User)
-			r.GetQueryToStruct(user)
+			r.GetQueryStruct(user)
 			r.Response.Write(user.Id, user.Name, user.Pass1, user.Pass2)
 			return
 		}
-		if m := r.GetPostMap(); len(m) > 0 {
+		if m := r.GetMap(); len(m) > 0 {
 			user := new(User)
-			r.GetPostToStruct(user)
+			r.GetStruct(user)
 			r.Response.Write(user.Id, user.Name, user.Pass1, user.Pass2)
 			return
 		}
 	})
 	s.BindHandler("/struct-with-nil", func(r *ghttp.Request) {
 		user := (*User)(nil)
-		err := r.GetPostToStruct(&user)
+		err := r.GetStruct(&user)
 		r.Response.Write(err)
 	})
 	s.BindHandler("/struct-with-base", func(r *ghttp.Request) {
@@ -278,11 +278,11 @@ func Test_Params_Basic(t *testing.T) {
 			Name string
 			Pass Base
 		}
-		if m := r.GetPostMap(); len(m) > 0 {
+		if m := r.GetMap(); len(m) > 0 {
 			user1 := new(UserWithBase1)
 			user2 := new(UserWithBase2)
-			r.GetToStruct(user1)
-			r.GetToStruct(user2)
+			r.GetStruct(user1)
+			r.GetStruct(user2)
 			r.Response.Write(user1.Id, user1.Name, user1.Pass1, user1.Pass2)
 			r.Response.Write(user2.Id, user2.Name, user2.Pass.Pass1, user2.Pass.Pass2)
 		}
