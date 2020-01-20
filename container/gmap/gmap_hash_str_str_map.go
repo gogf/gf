@@ -9,6 +9,7 @@ package gmap
 
 import (
 	"encoding/json"
+	"github.com/gogf/gf/util/gconv"
 
 	"github.com/gogf/gf/internal/empty"
 
@@ -411,4 +412,15 @@ func (m *StrStrMap) UnmarshalJSON(b []byte) error {
 		return err
 	}
 	return nil
+}
+
+// UnmarshalValue is an interface implement which sets any type of value for map.
+func (m *StrStrMap) UnmarshalValue(value interface{}) (err error) {
+	if m.mu == nil {
+		m.mu = rwmutex.New()
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.data = gconv.MapStrStr(value)
+	return
 }

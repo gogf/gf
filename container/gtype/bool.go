@@ -90,3 +90,9 @@ func (v *Bool) UnmarshalJSON(b []byte) error {
 	v.Set(gconv.Bool(bytes.Trim(b, `"`)))
 	return nil
 }
+
+// UnmarshalValue is an interface implement which sets any type of value for <v>.
+func (v *Bool) UnmarshalValue(value interface{}) error {
+	v.Set(gconv.Bool(value))
+	return nil
+}

@@ -148,3 +148,39 @@ func Test_TreeMap_Json(t *testing.T) {
 		gtest.Assert(m.Get("k2"), data["k2"])
 	})
 }
+
+func TestTreeMap_UnmarshalValue(t *testing.T) {
+	type T struct {
+		Name string
+		Map  *gmap.TreeMap
+	}
+	// JSON
+	gtest.Case(t, func() {
+		var t *T
+		err := gconv.Struct(map[string]interface{}{
+			"name": "john",
+			"map":  []byte(`{"k1":"v1","k2":"v2"}`),
+		}, &t)
+		gtest.Assert(err, nil)
+		gtest.Assert(t.Name, "john")
+		gtest.Assert(t.Map.Size(), 2)
+		gtest.Assert(t.Map.Get("k1"), "v1")
+		gtest.Assert(t.Map.Get("k2"), "v2")
+	})
+	// Map
+	gtest.Case(t, func() {
+		var t *T
+		err := gconv.Struct(map[string]interface{}{
+			"name": "john",
+			"map": g.Map{
+				"k1": "v1",
+				"k2": "v2",
+			},
+		}, &t)
+		gtest.Assert(err, nil)
+		gtest.Assert(t.Name, "john")
+		gtest.Assert(t.Map.Size(), 2)
+		gtest.Assert(t.Map.Get("k1"), "v1")
+		gtest.Assert(t.Map.Get("k2"), "v2")
+	})
+}

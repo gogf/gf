@@ -417,3 +417,24 @@ func (set *StrSet) UnmarshalJSON(b []byte) error {
 	}
 	return nil
 }
+
+// UnmarshalValue is an interface implement which sets any type of value for set.
+func (set *StrSet) UnmarshalValue(value interface{}) (err error) {
+	if set.mu == nil {
+		set.mu = rwmutex.New()
+		set.data = make(map[string]struct{})
+	}
+	set.mu.Lock()
+	defer set.mu.Unlock()
+	var array []string
+	switch value.(type) {
+	case string, []byte:
+		err = json.Unmarshal(gconv.Bytes(value), &array)
+	default:
+		array = gconv.SliceStr(value)
+	}
+	for _, v := range array {
+		set.data[v] = struct{}{}
+	}
+	return
+}

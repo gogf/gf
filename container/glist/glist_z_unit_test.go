@@ -632,3 +632,32 @@ func TestList_Json(t *testing.T) {
 		gtest.Assert(l.FrontAll(), a)
 	})
 }
+
+func TestList_UnmarshalValue(t *testing.T) {
+	type T struct {
+		Name string
+		List *List
+	}
+	// JSON
+	gtest.Case(t, func() {
+		var t *T
+		err := gconv.Struct(map[string]interface{}{
+			"name": "john",
+			"list": []byte(`[1,2,3]`),
+		}, &t)
+		gtest.Assert(err, nil)
+		gtest.Assert(t.Name, "john")
+		gtest.Assert(t.List.FrontAll(), []interface{}{1, 2, 3})
+	})
+	// Map
+	gtest.Case(t, func() {
+		var t *T
+		err := gconv.Struct(map[string]interface{}{
+			"name": "john",
+			"list": []interface{}{1, 2, 3},
+		}, &t)
+		gtest.Assert(err, nil)
+		gtest.Assert(t.Name, "john")
+		gtest.Assert(t.List.FrontAll(), []interface{}{1, 2, 3})
+	})
+}

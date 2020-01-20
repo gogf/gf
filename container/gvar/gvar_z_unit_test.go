@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
+	"github.com/gogf/gf/util/gconv"
 	"math"
 	"testing"
 	"time"
@@ -376,5 +377,22 @@ func Test_Json(t *testing.T) {
 		err = json.Unmarshal(b, &v)
 		gtest.Assert(err, nil)
 		gtest.Assert(v.String(), s)
+	})
+}
+
+func Test_UnmarshalValue(t *testing.T) {
+	type T struct {
+		Name string
+		Var  *gvar.Var
+	}
+	gtest.Case(t, func() {
+		var t *T
+		err := gconv.Struct(map[string]interface{}{
+			"name": "john",
+			"var":  "v",
+		}, &t)
+		gtest.Assert(err, nil)
+		gtest.Assert(t.Name, "john")
+		gtest.Assert(t.Var.String(), "v")
 	})
 }

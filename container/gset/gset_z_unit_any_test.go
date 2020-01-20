@@ -10,6 +10,8 @@ package gset_test
 
 import (
 	"encoding/json"
+	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/util/gconv"
 	"strings"
 
 	"github.com/gogf/gf/container/garray"
@@ -359,5 +361,42 @@ func TestSet_AddIfNotExistFunc(t *testing.T) {
 		})
 		gtest.Assert(s.Contains(3), true)
 		gtest.Assert(s.Contains(4), false)
+	})
+}
+
+func TestSet_UnmarshalValue(t *testing.T) {
+	type T struct {
+		Name string
+		Set  *gset.Set
+	}
+	// JSON
+	gtest.Case(t, func() {
+		var t *T
+		err := gconv.Struct(g.Map{
+			"name": "john",
+			"set":  []byte(`["k1","k2","k3"]`),
+		}, &t)
+		gtest.Assert(err, nil)
+		gtest.Assert(t.Name, "john")
+		gtest.Assert(t.Set.Size(), 3)
+		gtest.Assert(t.Set.Contains("k1"), true)
+		gtest.Assert(t.Set.Contains("k2"), true)
+		gtest.Assert(t.Set.Contains("k3"), true)
+		gtest.Assert(t.Set.Contains("k4"), false)
+	})
+	// Map
+	gtest.Case(t, func() {
+		var t *T
+		err := gconv.Struct(g.Map{
+			"name": "john",
+			"set":  g.Slice{"k1", "k2", "k3"},
+		}, &t)
+		gtest.Assert(err, nil)
+		gtest.Assert(t.Name, "john")
+		gtest.Assert(t.Set.Size(), 3)
+		gtest.Assert(t.Set.Contains("k1"), true)
+		gtest.Assert(t.Set.Contains("k2"), true)
+		gtest.Assert(t.Set.Contains("k3"), true)
+		gtest.Assert(t.Set.Contains("k4"), false)
 	})
 }

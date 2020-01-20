@@ -68,3 +68,9 @@ func (v *Int) UnmarshalJSON(b []byte) error {
 	v.Set(gconv.Int(gconv.UnsafeBytesToStr(b)))
 	return nil
 }
+
+// UnmarshalValue is an interface implement which sets any type of value for <v>.
+func (v *Int) UnmarshalValue(value interface{}) error {
+	v.Set(gconv.Int(value))
+	return nil
+}

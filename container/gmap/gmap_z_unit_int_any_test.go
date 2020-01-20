@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/util/gconv"
 	"testing"
 
 	"github.com/gogf/gf/container/gmap"
@@ -255,5 +256,41 @@ func Test_IntAnyMap_Pops(t *testing.T) {
 
 		gtest.Assert(kArray.Unique().Len(), 3)
 		gtest.Assert(vArray.Unique().Len(), 3)
+	})
+}
+
+func TestIntAnyMap_UnmarshalValue(t *testing.T) {
+	type T struct {
+		Name string
+		Map  *gmap.IntAnyMap
+	}
+	// JSON
+	gtest.Case(t, func() {
+		var t *T
+		err := gconv.Struct(map[string]interface{}{
+			"name": "john",
+			"map":  []byte(`{"1":"v1","2":"v2"}`),
+		}, &t)
+		gtest.Assert(err, nil)
+		gtest.Assert(t.Name, "john")
+		gtest.Assert(t.Map.Size(), 2)
+		gtest.Assert(t.Map.Get(1), "v1")
+		gtest.Assert(t.Map.Get(2), "v2")
+	})
+	// Map
+	gtest.Case(t, func() {
+		var t *T
+		err := gconv.Struct(map[string]interface{}{
+			"name": "john",
+			"map": g.MapIntAny{
+				1: "v1",
+				2: "v2",
+			},
+		}, &t)
+		gtest.Assert(err, nil)
+		gtest.Assert(t.Name, "john")
+		gtest.Assert(t.Map.Size(), 2)
+		gtest.Assert(t.Map.Get(1), "v1")
+		gtest.Assert(t.Map.Get(2), "v2")
 	})
 }

@@ -275,3 +275,39 @@ func Test_AnyAnyMap_Pops(t *testing.T) {
 		gtest.Assert(vArray.Unique().Len(), 3)
 	})
 }
+
+func TestAnyAnyMap_UnmarshalValue(t *testing.T) {
+	type T struct {
+		Name string
+		Map  *gmap.Map
+	}
+	// JSON
+	gtest.Case(t, func() {
+		var t *T
+		err := gconv.Struct(map[string]interface{}{
+			"name": "john",
+			"map":  []byte(`{"k1":"v1","k2":"v2"}`),
+		}, &t)
+		gtest.Assert(err, nil)
+		gtest.Assert(t.Name, "john")
+		gtest.Assert(t.Map.Size(), 2)
+		gtest.Assert(t.Map.Get("k1"), "v1")
+		gtest.Assert(t.Map.Get("k2"), "v2")
+	})
+	// Map
+	gtest.Case(t, func() {
+		var t *T
+		err := gconv.Struct(map[string]interface{}{
+			"name": "john",
+			"map": g.Map{
+				"k1": "v1",
+				"k2": "v2",
+			},
+		}, &t)
+		gtest.Assert(err, nil)
+		gtest.Assert(t.Name, "john")
+		gtest.Assert(t.Map.Size(), 2)
+		gtest.Assert(t.Map.Get("k1"), "v1")
+		gtest.Assert(t.Map.Get("k2"), "v2")
+	})
+}

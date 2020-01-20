@@ -491,3 +491,22 @@ func (m *ListMap) UnmarshalJSON(b []byte) error {
 	}
 	return nil
 }
+
+// UnmarshalValue is an interface implement which sets any type of value for map.
+func (m *ListMap) UnmarshalValue(value interface{}) (err error) {
+	if m.mu == nil {
+		m.mu = rwmutex.New()
+		m.data = make(map[interface{}]*glist.Element)
+		m.list = glist.New()
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for k, v := range gconv.Map(value) {
+		if e, ok := m.data[k]; !ok {
+			m.data[k] = m.list.PushBack(&gListMapNode{k, v})
+		} else {
+			e.Value = &gListMapNode{k, v}
+		}
+	}
+	return
+}

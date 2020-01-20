@@ -719,3 +719,19 @@ func (a *Array) UnmarshalJSON(b []byte) error {
 	}
 	return nil
 }
+
+// UnmarshalValue is an interface implement which sets any type of value for array.
+func (a *Array) UnmarshalValue(value interface{}) error {
+	if a.mu == nil {
+		a.mu = rwmutex.New()
+	}
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	switch value.(type) {
+	case string, []byte:
+		return json.Unmarshal(gconv.Bytes(value), &a.array)
+	default:
+		a.array = gconv.SliceAny(value)
+	}
+	return nil
+}

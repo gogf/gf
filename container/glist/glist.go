@@ -438,3 +438,22 @@ func (l *List) UnmarshalJSON(b []byte) error {
 	l.PushBacks(array)
 	return nil
 }
+
+// UnmarshalValue is an interface implement which sets any type of value for list.
+func (l *List) UnmarshalValue(value interface{}) (err error) {
+	if l.mu == nil {
+		l.mu = rwmutex.New()
+		l.list = list.New()
+	}
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	var array []interface{}
+	switch value.(type) {
+	case string, []byte:
+		err = json.Unmarshal(gconv.Bytes(value), &array)
+	default:
+		array = gconv.SliceAny(value)
+	}
+	l.PushBacks(array)
+	return err
+}

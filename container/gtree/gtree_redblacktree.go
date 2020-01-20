@@ -942,3 +942,17 @@ func (tree *RedBlackTree) UnmarshalJSON(b []byte) error {
 	}
 	return nil
 }
+
+// UnmarshalValue is an interface implement which sets any type of value for map.
+func (tree *RedBlackTree) UnmarshalValue(value interface{}) (err error) {
+	if tree.mu == nil {
+		tree.mu = rwmutex.New()
+		tree.comparator = gutil.ComparatorString
+	}
+	tree.mu.Lock()
+	defer tree.mu.Unlock()
+	for k, v := range gconv.Map(value) {
+		tree.doSet(k, v)
+	}
+	return
+}

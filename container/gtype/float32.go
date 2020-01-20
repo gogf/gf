@@ -81,3 +81,9 @@ func (v *Float32) UnmarshalJSON(b []byte) error {
 	v.Set(gconv.Float32(gconv.UnsafeBytesToStr(b)))
 	return nil
 }
+
+// UnmarshalValue is an interface implement which sets any type of value for <v>.
+func (v *Float32) UnmarshalValue(value interface{}) error {
+	v.Set(gconv.Float32(value))
+	return nil
+}

@@ -7,6 +7,7 @@
 package gconv
 
 import (
+	"encoding/json"
 	"errors"
 	"reflect"
 	"strings"
@@ -47,61 +48,69 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 	} else {
 		// Assert the common combination of types, and finally it uses reflection.
 		m := make(map[string]interface{})
-		switch value.(type) {
+		switch r := value.(type) {
+		case string:
+			if len(r) > 0 && r[0] == '{' && r[len(r)-1] == '}' {
+				json.Unmarshal([]byte(r), &m)
+			}
+		case []byte:
+			if len(r) > 0 && r[0] == '{' && r[len(r)-1] == '}' {
+				json.Unmarshal(r, &m)
+			}
 		case map[interface{}]interface{}:
-			for k, v := range value.(map[interface{}]interface{}) {
+			for k, v := range r {
 				m[String(k)] = v
 			}
 		case map[interface{}]string:
-			for k, v := range value.(map[interface{}]string) {
+			for k, v := range r {
 				m[String(k)] = v
 			}
 		case map[interface{}]int:
-			for k, v := range value.(map[interface{}]int) {
+			for k, v := range r {
 				m[String(k)] = v
 			}
 		case map[interface{}]uint:
-			for k, v := range value.(map[interface{}]uint) {
+			for k, v := range r {
 				m[String(k)] = v
 			}
 		case map[interface{}]float32:
-			for k, v := range value.(map[interface{}]float32) {
+			for k, v := range r {
 				m[String(k)] = v
 			}
 		case map[interface{}]float64:
-			for k, v := range value.(map[interface{}]float64) {
+			for k, v := range r {
 				m[String(k)] = v
 			}
 		case map[string]bool:
-			for k, v := range value.(map[string]bool) {
+			for k, v := range r {
 				m[k] = v
 			}
 		case map[string]int:
-			for k, v := range value.(map[string]int) {
+			for k, v := range r {
 				m[k] = v
 			}
 		case map[string]uint:
-			for k, v := range value.(map[string]uint) {
+			for k, v := range r {
 				m[k] = v
 			}
 		case map[string]float32:
-			for k, v := range value.(map[string]float32) {
+			for k, v := range r {
 				m[k] = v
 			}
 		case map[string]float64:
-			for k, v := range value.(map[string]float64) {
+			for k, v := range r {
 				m[k] = v
 			}
 		case map[int]interface{}:
-			for k, v := range value.(map[int]interface{}) {
+			for k, v := range r {
 				m[String(k)] = v
 			}
 		case map[int]string:
-			for k, v := range value.(map[int]string) {
+			for k, v := range r {
 				m[String(k)] = v
 			}
 		case map[uint]string:
-			for k, v := range value.(map[uint]string) {
+			for k, v := range r {
 				m[String(k)] = v
 			}
 		// Not a common type, then use reflection.
