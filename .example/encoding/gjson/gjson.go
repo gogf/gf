@@ -100,53 +100,53 @@ func testConvert() {
 func testSplitChar() {
 	var v interface{}
 	j := gjson.New(nil)
-	t1 := gtime.Nanosecond()
+	t1 := gtime.TimestampNano()
 	j.Set("a.b.c.d.e.f.g.h.i.j.k", 1)
-	t2 := gtime.Nanosecond()
+	t2 := gtime.TimestampNano()
 	fmt.Println(t2 - t1)
 
-	t5 := gtime.Nanosecond()
+	t5 := gtime.TimestampNano()
 	v = j.Get("a.b.c.d.e.f.g.h.i.j.k")
-	t6 := gtime.Nanosecond()
+	t6 := gtime.TimestampNano()
 	fmt.Println(v)
 	fmt.Println(t6 - t5)
 
 	j.SetSplitChar('#')
 
-	t7 := gtime.Nanosecond()
+	t7 := gtime.TimestampNano()
 	v = j.Get("a#b#c#d#e#f#g#h#i#j#k")
-	t8 := gtime.Nanosecond()
+	t8 := gtime.TimestampNano()
 	fmt.Println(v)
 	fmt.Println(t8 - t7)
 }
 
 func testViolenceCheck() {
 	j := gjson.New(nil)
-	t1 := gtime.Nanosecond()
+	t1 := gtime.TimestampNano()
 	j.Set("a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a", 1)
-	t2 := gtime.Nanosecond()
+	t2 := gtime.TimestampNano()
 	fmt.Println(t2 - t1)
 
-	t3 := gtime.Nanosecond()
+	t3 := gtime.TimestampNano()
 	j.Set("a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a", 1)
-	t4 := gtime.Nanosecond()
+	t4 := gtime.TimestampNano()
 	fmt.Println(t4 - t3)
 
-	t5 := gtime.Nanosecond()
+	t5 := gtime.TimestampNano()
 	j.Get("a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a")
-	t6 := gtime.Nanosecond()
+	t6 := gtime.TimestampNano()
 	fmt.Println(t6 - t5)
 
 	j.SetViolenceCheck(false)
 
-	t7 := gtime.Nanosecond()
+	t7 := gtime.TimestampNano()
 	j.Set("a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a", 1)
-	t8 := gtime.Nanosecond()
+	t8 := gtime.TimestampNano()
 	fmt.Println(t8 - t7)
 
-	t9 := gtime.Nanosecond()
+	t9 := gtime.TimestampNano()
 	j.Get("a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a")
-	t10 := gtime.Nanosecond()
+	t10 := gtime.TimestampNano()
 	fmt.Println(t10 - t9)
 }
 

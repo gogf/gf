@@ -23,7 +23,7 @@ func Test_SetTimeZone(t *testing.T) {
 
 func Test_Nanosecond(t *testing.T) {
 	gtest.Case(t, func() {
-		nanos := gtime.Nanosecond()
+		nanos := gtime.TimestampNano()
 		timeTemp := time.Unix(0, nanos)
 		gtest.Assert(nanos, timeTemp.UnixNano())
 	})
@@ -31,7 +31,7 @@ func Test_Nanosecond(t *testing.T) {
 
 func Test_Microsecond(t *testing.T) {
 	gtest.Case(t, func() {
-		micros := gtime.Microsecond()
+		micros := gtime.TimestampMicro()
 		timeTemp := time.Unix(0, micros*1e3)
 		gtest.Assert(micros, timeTemp.UnixNano()/1e3)
 	})
@@ -39,7 +39,7 @@ func Test_Microsecond(t *testing.T) {
 
 func Test_Millisecond(t *testing.T) {
 	gtest.Case(t, func() {
-		millis := gtime.Millisecond()
+		millis := gtime.TimestampMilli()
 		timeTemp := time.Unix(0, millis*1e6)
 		gtest.Assert(millis, timeTemp.UnixNano()/1e6)
 	})
@@ -47,7 +47,7 @@ func Test_Millisecond(t *testing.T) {
 
 func Test_Second(t *testing.T) {
 	gtest.Case(t, func() {
-		s := gtime.Second()
+		s := gtime.Timestamp()
 		timeTemp := time.Unix(s, 0)
 		gtest.Assert(s, timeTemp.Unix())
 	})

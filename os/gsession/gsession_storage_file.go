@@ -165,7 +165,7 @@ func (s *StorageFile) GetSession(id string, ttl time.Duration, data *gmap.StrAny
 	content := gfile.GetBytes(path)
 	if len(content) > 8 {
 		timestampMilli := gbinary.DecodeToInt64(content[:8])
-		if timestampMilli+ttl.Nanoseconds()/1e6 < gtime.Millisecond() {
+		if timestampMilli+ttl.Nanoseconds()/1e6 < gtime.TimestampMilli() {
 			return nil, nil
 		}
 		var err error
@@ -211,7 +211,7 @@ func (s *StorageFile) SetSession(id string, data *gmap.StrAnyMap, ttl time.Durat
 		return err
 	}
 	defer file.Close()
-	if _, err = file.Write(gbinary.EncodeInt64(gtime.Millisecond())); err != nil {
+	if _, err = file.Write(gbinary.EncodeInt64(gtime.TimestampMilli())); err != nil {
 		return err
 	}
 	if _, err = file.Write(content); err != nil {
@@ -239,7 +239,7 @@ func (s *StorageFile) doUpdateTTL(id string) error {
 	if err != nil {
 		return err
 	}
-	if _, err = file.WriteAt(gbinary.EncodeInt64(gtime.Millisecond()), 0); err != nil {
+	if _, err = file.WriteAt(gbinary.EncodeInt64(gtime.TimestampMilli()), 0); err != nil {
 		return err
 	}
 	return file.Close()

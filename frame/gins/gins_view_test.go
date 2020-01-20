@@ -35,7 +35,7 @@ func Test_View(t *testing.T) {
 		gtest.Assert(b, "中国人")
 	})
 	gtest.Case(t, func() {
-		path := fmt.Sprintf(`%s/%d`, gfile.TempDir(), gtime.Nanosecond())
+		path := fmt.Sprintf(`%s/%d`, gfile.TempDir(), gtime.TimestampNano())
 		tpl := fmt.Sprintf(`%s/%s`, path, "t.tpl")
 		err := gfile.PutContents(tpl, `{{"我是中国人" | substr 2 -1}}`)
 		gtest.Assert(err, nil)

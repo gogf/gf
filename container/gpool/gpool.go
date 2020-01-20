@@ -71,7 +71,7 @@ func (p *Pool) Put(value interface{}) {
 	if p.Expire == 0 {
 		item.expire = 0
 	} else {
-		item.expire = gtime.Millisecond() + p.Expire
+		item.expire = gtime.TimestampMilli() + p.Expire
 	}
 	p.list.PushBack(item)
 }
@@ -86,7 +86,7 @@ func (p *Pool) Get() (interface{}, error) {
 	for !p.closed.Val() {
 		if r := p.list.PopFront(); r != nil {
 			f := r.(*poolItem)
-			if f.expire == 0 || f.expire > gtime.Millisecond() {
+			if f.expire == 0 || f.expire > gtime.TimestampMilli() {
 				return f.value, nil
 			}
 		} else {
@@ -130,7 +130,7 @@ func (p *Pool) checkExpire() {
 		// TODO Do not use Pop and Push mechanism, which is not graceful.
 		if r := p.list.PopFront(); r != nil {
 			item := r.(*poolItem)
-			if item.expire == 0 || item.expire > gtime.Millisecond() {
+			if item.expire == 0 || item.expire > gtime.TimestampMilli() {
 				p.list.PushFront(item)
 				break
 			}

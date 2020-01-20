@@ -281,7 +281,7 @@ func Test_HotReload(t *testing.T) {
 		dirPath := gfile.Join(
 			gfile.TempDir(),
 			"testdata",
-			"template-"+gconv.String(gtime.Nanosecond()),
+			"template-"+gconv.String(gtime.TimestampNano()),
 		)
 		defer gfile.Remove(dirPath)
 		filePath := gfile.Join(dirPath, "test.html")
