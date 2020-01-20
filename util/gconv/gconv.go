@@ -378,20 +378,36 @@ func Int64(i interface{}) int64 {
 		return gbinary.DecodeToInt64(value)
 	default:
 		s := String(value)
+		isMinus := false
+		if s[0] == '-' {
+			isMinus = true
+			s = s[1:]
+		} else if s[0] == '+' {
+			s = s[1:]
+		}
 		// Hexadecimal
 		if len(s) > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X') {
 			if v, e := strconv.ParseInt(s[2:], 16, 64); e == nil {
+				if isMinus {
+					return -v
+				}
 				return v
 			}
 		}
 		// Octal
 		if len(s) > 1 && s[0] == '0' {
 			if v, e := strconv.ParseInt(s[1:], 8, 64); e == nil {
+				if isMinus {
+					return -v
+				}
 				return v
 			}
 		}
 		// Decimal
 		if v, e := strconv.ParseInt(s, 10, 64); e == nil {
+			if isMinus {
+				return -v
+			}
 			return v
 		}
 		// Float64

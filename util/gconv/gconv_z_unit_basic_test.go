@@ -34,4 +34,9 @@ func Test_Basic(t *testing.T) {
 		gtest.AssertEQ(gconv.String(f32), "123.456")
 		gtest.AssertEQ(gconv.String(i64), "1552578474888")
 	})
+
+	gtest.Case(t, func() {
+		s := "-0xFF"
+		gtest.Assert(gconv.Int(s), int64(-0xFF))
+	})
 }
