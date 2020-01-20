@@ -13,6 +13,10 @@ type TokenRequest struct {
 }
 
 func main() {
+	s := "123456"
+	fmt.Println(s[0:2])
+	fmt.Println(s[1:3])
+	return
 	//	s := `
 	//{
 	//  "policy": {"name":"john"},
