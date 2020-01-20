@@ -30,11 +30,6 @@ type Json struct {
 	vc bool         // Violence Check(false in default), which is used to access data when the hierarchical data key contains separator char.
 }
 
-// MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (j *Json) MarshalJSON() ([]byte, error) {
-	return j.ToJson()
-}
-
 // setValue sets <value> to <j> by <pattern>.
 // Note:
 // 1. If value is nil and removed is true, means deleting this value;

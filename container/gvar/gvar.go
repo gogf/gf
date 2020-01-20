@@ -335,3 +335,9 @@ func (v *Var) UnmarshalJSON(b []byte) error {
 	v.Set(i)
 	return nil
 }
+
+// UnmarshalValue is an interface implement which sets any type of value for Var.
+func (v *Var) UnmarshalValue(value interface{}) error {
+	v.Set(value)
+	return nil
+}

@@ -436,3 +436,17 @@ func (m *AnyAnyMap) UnmarshalJSON(b []byte) error {
 	}
 	return nil
 }
+
+// UnmarshalValue is an interface implement which sets any type of value for map.
+func (m *AnyAnyMap) UnmarshalValue(value interface{}) (err error) {
+	if m.mu == nil {
+		m.mu = rwmutex.New()
+		m.data = make(map[interface{}]interface{})
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for k, v := range gconv.Map(value) {
+		m.data[k] = v
+	}
+	return
+}
