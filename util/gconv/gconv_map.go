@@ -51,11 +51,19 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 		switch r := value.(type) {
 		case string:
 			if len(r) > 0 && r[0] == '{' && r[len(r)-1] == '}' {
-				json.Unmarshal([]byte(r), &m)
+				if err := json.Unmarshal([]byte(r), &m); err != nil {
+					return nil
+				}
+			} else {
+				return nil
 			}
 		case []byte:
 			if len(r) > 0 && r[0] == '{' && r[len(r)-1] == '}' {
-				json.Unmarshal(r, &m)
+				if err := json.Unmarshal(r, &m); err != nil {
+					return nil
+				}
+			} else {
+				return nil
 			}
 		case map[interface{}]interface{}:
 			for k, v := range r {

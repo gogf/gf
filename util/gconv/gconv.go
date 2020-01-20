@@ -379,11 +379,13 @@ func Int64(i interface{}) int64 {
 	default:
 		s := String(value)
 		isMinus := false
-		if s[0] == '-' {
-			isMinus = true
-			s = s[1:]
-		} else if s[0] == '+' {
-			s = s[1:]
+		if len(s) > 0 {
+			if s[0] == '-' {
+				isMinus = true
+				s = s[1:]
+			} else if s[0] == '+' {
+				s = s[1:]
+			}
 		}
 		// Hexadecimal
 		if len(s) > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X') {
