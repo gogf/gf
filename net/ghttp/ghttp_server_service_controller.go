@@ -59,7 +59,7 @@ func (s *Server) doBindController(pattern string, controller Controller, method 
 		pattern = s.serveHandlerKey("", path, domain)
 	}
 	// 遍历控制器，获取方法列表，并构造成uri
-	m := make(handlerMap)
+	m := make(map[string]*handlerItem)
 	v := reflect.ValueOf(controller)
 	t := v.Type()
 	pkgPath := t.Elem().PkgPath()
@@ -124,7 +124,7 @@ func (s *Server) doBindController(pattern string, controller Controller, method 
 }
 
 func (s *Server) doBindControllerMethod(pattern string, controller Controller, method string, middleware []HandlerFunc) {
-	m := make(handlerMap)
+	m := make(map[string]*handlerItem)
 	v := reflect.ValueOf(controller)
 	t := v.Type()
 	structName := t.Elem().Name()
@@ -160,7 +160,7 @@ func (s *Server) doBindControllerMethod(pattern string, controller Controller, m
 
 func (s *Server) doBindControllerRest(pattern string, controller Controller, middleware []HandlerFunc) {
 	// 遍历控制器，获取方法列表，并构造成uri
-	m := make(handlerMap)
+	m := make(map[string]*handlerItem)
 	v := reflect.ValueOf(controller)
 	t := v.Type()
 	pkgPath := t.Elem().PkgPath()

@@ -8,15 +8,15 @@ package ghttp
 
 // Plugin is the interface for server plugin.
 type Plugin interface {
-	Install(s *Server) error
-	Remove() error
+	Name() string            // Name returns the name of the plugin.
+	Author() string          // Author returns the author of the plugin.
+	Version() string         // Version returns the version of the plugin.
+	Description() string     // Description returns the description of the plugin.
+	Install(s *Server) error // Install installs the plugin before server starts.
+	Remove() error           // Remove removes the plugin.
 }
 
-// Plugin adds plugin for server.
+// Plugin adds plugin to server.
 func (s *Server) Plugin(plugin ...Plugin) {
-	for _, p := range plugin {
-		if err := p.Install(s); err != nil {
-			s.Logger().Fatal(err)
-		}
-	}
+	s.plugins = append(s.plugins, plugin...)
 }
