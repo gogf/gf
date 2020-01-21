@@ -56,7 +56,7 @@ func (s *Server) doBindObject(pattern string, object interface{}, method string,
 	if strings.EqualFold(method, gDEFAULT_METHOD) {
 		pattern = s.serveHandlerKey("", path, domain)
 	}
-	m := make(handlerMap)
+	m := make(map[string]*handlerItem)
 	v := reflect.ValueOf(object)
 	t := v.Type()
 	initFunc := (func(*Request))(nil)
@@ -128,7 +128,7 @@ func (s *Server) doBindObject(pattern string, object interface{}, method string,
 // 绑定对象到URI请求处理中，会自动识别方法名称，并附加到对应的URI地址后面，
 // 第三个参数method仅支持一个方法注册，不支持多个，并且区分大小写。
 func (s *Server) doBindObjectMethod(pattern string, object interface{}, method string, middleware []HandlerFunc) {
-	m := make(handlerMap)
+	m := make(map[string]*handlerItem)
 	v := reflect.ValueOf(object)
 	t := v.Type()
 	structName := t.Elem().Name()
@@ -172,7 +172,7 @@ func (s *Server) doBindObjectMethod(pattern string, object interface{}, method s
 }
 
 func (s *Server) doBindObjectRest(pattern string, object interface{}, middleware []HandlerFunc) {
-	m := make(handlerMap)
+	m := make(map[string]*handlerItem)
 	v := reflect.ValueOf(object)
 	t := v.Type()
 	initFunc := (func(*Request))(nil)

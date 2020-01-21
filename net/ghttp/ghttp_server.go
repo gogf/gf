@@ -36,84 +36,83 @@ import (
 )
 
 type (
-	// Server结构体
+	// Server wraps the http.Server and provides more feature.
 	Server struct {
-		name             string                           // 服务名称
-		config           ServerConfig                     // 配置对象
-		servers          []*gracefulServer                // 底层http.Server列表
-		serverCount      *gtype.Int                       // 底层http.Server数量
-		closeChan        chan struct{}                    // 用以关闭事件通知的通道
-		servedCount      *gtype.Int                       // 已经服务的请求数(4-8字节，不考虑溢出情况)，同时作为请求ID
-		serveTree        map[string]interface{}           // 所有注册的服务回调函数(路由表，树型结构，哈希表+链表优先级匹配)
-		serveCache       *gcache.Cache                    // 服务注册路由内存缓存
-		routesMap        map[string][]registeredRouteItem // 已经注册的路由及对应的注册方法文件地址(用以路由重复注册判断)
-		statusHandlerMap map[string]HandlerFunc           // 不同状态码下的注册处理方法(例如404状态时的处理方法)
-		sessionManager   *gsession.Manager                // Session管理器
+		name             string                           // Unique name for instance management.
+		config           ServerConfig                     // Configuration.
+		plugins          []Plugin                         // Plugin array.
+		servers          []*gracefulServer                // Underlying http.Server array.
+		serverCount      *gtype.Int                       // Underlying http.Server count.
+		closeChan        chan struct{}                    // Used for underlying server closing event notification.
+		serveTree        map[string]interface{}           // The route map tree.
+		serveCache       *gcache.Cache                    // Server cache for internal usage.
+		routesMap        map[string][]registeredRouteItem // Route map mainly for route dumps and repeated route checks.
+		statusHandlerMap map[string]HandlerFunc           // Custom status handler map.
+		sessionManager   *gsession.Manager                // Session manager.
 	}
 
-	// 路由对象
+	// Router object.
 	Router struct {
-		Uri      string   // 注册时的pattern - uri
-		Method   string   // 注册时的pattern - method
-		Domain   string   // 注册时的pattern - domain
-		RegRule  string   // 路由规则解析后对应的正则表达式
-		RegNames []string // 路由规则解析后对应的变量名称数组
-		Priority int      // 优先级，用于链表排序，值越大优先级越高
+		Uri      string   // URI.
+		Method   string   // HTTP method
+		Domain   string   // Bound domain.
+		RegRule  string   // Parsed regular expression for route matching.
+		RegNames []string // Parsed router parameter names.
+		Priority int      // Just for reference.
 	}
 
-	// Router item just for dumping.
+	// Router item just for route dumps.
 	RouterItem struct {
-		Server           string
-		Address          string
-		Domain           string
-		Type             int
-		Middleware       string
-		Method           string
-		Route            string
-		Priority         int
-		IsServiceHandler bool
-		handler          *handlerItem
+		Server           string       // Server name.
+		Address          string       // Listening address.
+		Domain           string       // Bound domain.
+		Type             int          // Router type.
+		Middleware       string       // Bound middleware.
+		Method           string       // Handler method name.
+		Route            string       // Route URI.
+		Priority         int          // Just for reference.
+		IsServiceHandler bool         // Is service handler.
+		handler          *handlerItem // The handler.
 	}
 
-	// 路由函数注册信息
+	// handlerItem is the registered handler for route handling,
+	// including middleware and hook functions.
 	handlerItem struct {
-		itemId     int                // 用于标识该注册函数的唯一性ID
-		itemName   string             // 注册的函数名称信息(用于路由信息打印)
-		itemType   int                // 注册函数类型(对象/函数/控制器/中间件/钩子函数)
-		itemFunc   HandlerFunc        // 函数内存地址(与以上两个参数二选一)
-		initFunc   HandlerFunc        // 初始化请求回调函数(对象注册方式下有效)
-		shutFunc   HandlerFunc        // 完成请求回调函数(对象注册方式下有效)
-		middleware []HandlerFunc      // 绑定的中间件列表
-		ctrlInfo   *handlerController // 控制器服务函数反射信息
-		hookName   string             // 钩子类型名称(注册函数类型为钩子函数下有效)
-		router     *Router            // 注册时绑定的路由对象
+		itemId     int                // Unique ID mark.
+		itemName   string             // Handler name, which is automatically retrieved from runtime stack when registered.
+		itemType   int                // Handler type: object/handler/controller/middleware/hook.
+		itemFunc   HandlerFunc        // Handler address.
+		initFunc   HandlerFunc        // Initialization function when request enters the object(only available for object register type).
+		shutFunc   HandlerFunc        // Shutdown function when request leaves out the object(only available for object register type).
+		middleware []HandlerFunc      // Bound middleware array.
+		ctrlInfo   *handlerController // Controller information for reflect usage.
+		hookName   string             // Hook type name.
+		router     *Router            // Router object.
 	}
 
-	// 根据特定URL.Path解析后的路由检索结果项
+	// handlerParsedItem is the item parsed from URL.Path.
 	handlerParsedItem struct {
-		handler *handlerItem      // 路由注册项
-		values  map[string]string // 特定URL.Path的Router解析参数
+		handler *handlerItem      // Handler information.
+		values  map[string]string // Router values parsed from URL.Path.
 	}
 
-	// 控制器服务函数反射信息
+	// handlerController is the controller information used for reflect.
 	handlerController struct {
-		name    string       // 方法名称
-		reflect reflect.Type // 控制器类型
+		name    string       // Handler method name.
+		reflect reflect.Type // Reflect type of the controller.
 	}
 
-	// 已注册的路由项
+	// registeredRouteItem stores the information of the router and is used for route map.
 	registeredRouteItem struct {
-		file    string       // 文件路径及行数地址
-		handler *handlerItem // 路由注册项
+		file    string       // Source file path and its line number.
+		handler *handlerItem // Handler object.
 	}
 
-	// pattern与回调函数的绑定map
-	handlerMap = map[string]*handlerItem
-
-	// HTTP注册函数
+	// Request handler function.
 	HandlerFunc = func(r *Request)
 
-	// 文件描述符map
+	// Listening file descriptor mapping.
+	// The key is either "http" or "https" and the value is its FD.
 	listenerFdMap = map[string]string
 )
 
@@ -140,34 +139,39 @@ const (
 )
 
 var (
-	// 所有支持的HTTP Method Map(初始化时自动填充),
-	// 用于快速检索需要
+	// methodsMap stores all supported HTTP method,
+	// it is used for quick HTTP method searching using map.
 	methodsMap = make(map[string]struct{})
 
-	// WebServer表，用以存储和检索名称与Server对象之间的关联关系
+	// serverMapping stores more than one server instances.
+	// The key is the name of the server, and the value is its instance.
 	serverMapping = gmap.NewStrAnyMap(true)
 
-	// 正常运行的WebServer数量，如果没有运行、失败或者全部退出，那么该值为0
+	// serverRunning marks the running server count.
+	// If there no successful server running or all servers shutdown, this value is 0.
 	serverRunning = gtype.NewInt()
 
-	// WebSocket默认配置
+	// wsUpgrader is the default up-grader configuration for websocket.
 	wsUpgrader = websocket.Upgrader{
-		// 默认允许WebSocket请求跨域，权限控制可以由业务层自己负责，灵活度更高
+		// It does not check the origin in default, the application can do it itself.
 		CheckOrigin: func(r *http.Request) bool {
 			return true
 		},
 	}
-	// WebServer已完成服务事件通道，当有事件时表示服务完成，当前进程退出
+	// allDoneChan is the event for all server have done its serving and exit.
+	// It is used for process blocking purpose.
 	allDoneChan = make(chan struct{}, 1000)
 
-	// 用于服务进程初始化，只能初始化一次，采用“懒初始化”(在server运行时才初始化)
+	// serverProcessInited is used for lazy initialization for server.
+	// The process can only be initialized once.
 	serverProcessInited = gtype.NewBool()
 
-	// 是否开启WebServer平滑重启特性, 会开启额外的本地端口监听，用于进程管理通信(默认开启)
+	// gracefulEnabled is used for graceful restarting feature, which is true in default.
 	gracefulEnabled = true
 )
 
 func init() {
+	// Initialize the methods map.
 	for _, v := range strings.Split(HTTP_METHODS, ",") {
 		methodsMap[v] = struct{}{}
 	}
@@ -231,6 +235,7 @@ func GetServer(name ...interface{}) *Server {
 	c := defaultServerConfig
 	s := &Server{
 		name:             serverName,
+		plugins:          make([]Plugin, 0),
 		servers:          make([]*gracefulServer, 0),
 		closeChan:        make(chan struct{}, 10000),
 		serverCount:      gtype.NewInt(),
@@ -238,7 +243,6 @@ func GetServer(name ...interface{}) *Server {
 		serveTree:        make(map[string]interface{}),
 		serveCache:       gcache.New(),
 		routesMap:        make(map[string][]registeredRouteItem),
-		servedCount:      gtype.NewInt(),
 	}
 	// 初始化时使用默认配置
 	if err := s.SetConfig(c); err != nil {
@@ -301,6 +305,13 @@ func (s *Server) Start() error {
 	// Default HTTP handler.
 	if s.config.Handler == nil {
 		s.config.Handler = http.HandlerFunc(s.defaultHandler)
+	}
+
+	// Install external plugins.
+	for _, p := range s.plugins {
+		if err := p.Install(s); err != nil {
+			s.Logger().Fatal(err)
+		}
 	}
 
 	// Start the HTTP server.
