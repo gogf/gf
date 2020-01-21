@@ -12,7 +12,6 @@ import (
 
 	"github.com/gogf/gf/text/gstr"
 
-	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/util/gconv"
 )
 
@@ -139,7 +138,7 @@ func (g *RouterGroup) Bind(items []GroupItem) *RouterGroup {
 	group := g.Clone()
 	for _, item := range items {
 		if len(item) < 3 {
-			glog.Fatalf("invalid router item: %s", item)
+			g.server.Logger().Fatalf("invalid router item: %s", item)
 		}
 		bindType := gstr.ToUpper(gconv.String(item[0]))
 		switch bindType {
@@ -259,7 +258,7 @@ func (g *RouterGroup) doBind(bindType string, pattern string, object interface{}
 	if len(prefix) > 0 {
 		domain, method, path, err := g.server.parsePattern(pattern)
 		if err != nil {
-			glog.Fatalf("invalid pattern: %s", pattern)
+			g.server.Logger().Fatalf("invalid pattern: %s", pattern)
 		}
 		// If there'a already a domain, unset the domain field in the pattern.
 		if g.domain != nil {
@@ -338,7 +337,7 @@ func (g *RouterGroup) doBind(bindType string, pattern string, object interface{}
 				g.domain.BindHookHandler(pattern, extras[0], h)
 			}
 		} else {
-			glog.Fatalf("invalid hook handler for pattern:%s", pattern)
+			g.server.Logger().Fatalf("invalid hook handler for pattern:%s", pattern)
 		}
 	}
 	return g

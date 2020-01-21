@@ -9,11 +9,17 @@ package ghttp
 import (
 	"fmt"
 	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/os/glog"
 )
 
 const (
 	gPATH_FILTER_KEY = "github.com/gogf/gf/"
 )
+
+// Logger returns the logger of the server.
+func (s *Server) Logger() *glog.Logger {
+	return s.config.Logger
+}
 
 // 处理服务错误信息，主要是panic，http请求的status由access log进行管理
 func (s *Server) handleAccessLog(r *Request) {
@@ -24,7 +30,7 @@ func (s *Server) handleAccessLog(r *Request) {
 	if r.TLS != nil {
 		scheme = "https"
 	}
-	s.config.Logger.File(s.config.AccessLogPattern).
+	s.Logger().File(s.config.AccessLogPattern).
 		Stdout(s.config.LogStdout).
 		Printf(
 			`%d "%s %s %s %s %s" %.3f, %s, "%s", "%s"`,
@@ -60,7 +66,7 @@ func (s *Server) handleErrorLog(err error, r *Request) {
 			Error(content)
 		return
 	}
-	s.config.Logger.File(s.config.AccessLogPattern).
+	s.Logger().File(s.config.AccessLogPattern).
 		Stack(s.config.ErrorStack).
 		StackWithFilter(gPATH_FILTER_KEY).
 		Stdout(s.config.LogStdout).

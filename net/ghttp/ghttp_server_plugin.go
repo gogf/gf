@@ -6,8 +6,6 @@
 
 package ghttp
 
-import "github.com/gogf/gf/os/glog"
-
 // Plugin is the interface for server plugin.
 type Plugin interface {
 	Install(s *Server) error
@@ -18,7 +16,7 @@ type Plugin interface {
 func (s *Server) Plugin(plugin ...Plugin) {
 	for _, p := range plugin {
 		if err := p.Install(s); err != nil {
-			glog.Fatal(err)
+			s.Logger().Fatal(err)
 		}
 	}
 }
