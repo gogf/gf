@@ -54,7 +54,7 @@ func NewStorageFile(path ...string) *StorageFile {
 	if len(path) > 0 && path[0] != "" {
 		storagePath, _ = gfile.Search(path[0])
 		if storagePath == "" {
-			panic(fmt.Sprintf(fmt.Sprintf("'%s' does not exist", path[0])))
+			panic(fmt.Sprintf("'%s' does not exist", path[0]))
 		}
 		if !gfile.IsWritable(storagePath) {
 			panic(fmt.Sprintf("'%s' is not writable", path[0]))
