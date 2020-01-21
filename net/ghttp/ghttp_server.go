@@ -313,6 +313,8 @@ func (s *Server) Start() error {
 			s.Logger().Fatal(err)
 		}
 	}
+	// Check the group routes again.
+	s.handlePreBindItems()
 
 	// Start the HTTP server.
 	reloaded := false
