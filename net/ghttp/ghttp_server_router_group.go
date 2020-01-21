@@ -45,6 +45,9 @@ var (
 
 // handlePreBindItems is called when server starts, which does really route registering to the server.
 func (s *Server) handlePreBindItems() {
+	if len(preBindItems) == 0 {
+		return
+	}
 	for _, item := range preBindItems {
 		// Handle the items of current server.
 		if item.group.server != nil && item.group.server != s {
@@ -55,6 +58,7 @@ func (s *Server) handlePreBindItems() {
 		}
 		item.group.doBind(item.bindType, item.pattern, item.object, item.params...)
 	}
+	preBindItems = preBindItems[:0]
 }
 
 // Group creates and returns a RouterGroup object.
