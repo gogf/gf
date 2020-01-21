@@ -15,7 +15,6 @@ import (
 	"github.com/gogf/gf/debug/gdebug"
 
 	"github.com/gogf/gf/container/glist"
-	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/text/gstr"
 )
@@ -63,11 +62,11 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 	handler.itemId = handlerIdGenerator.Add(1)
 	domain, method, uri, err := s.parsePattern(pattern)
 	if err != nil {
-		glog.Fatal("invalid pattern:", pattern, err)
+		s.Logger().Fatal("invalid pattern:", pattern, err)
 		return
 	}
 	if len(uri) == 0 || uri[0] != '/' {
-		glog.Fatal("invalid pattern:", pattern, "URI should lead with '/'")
+		s.Logger().Fatal("invalid pattern:", pattern, "URI should lead with '/'")
 		return
 	}
 	// 注册地址记录及重复注册判断
@@ -76,7 +75,7 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 		switch handler.itemType {
 		case gHANDLER_TYPE_HANDLER, gHANDLER_TYPE_OBJECT, gHANDLER_TYPE_CONTROLLER:
 			if item, ok := s.routesMap[regKey]; ok {
-				glog.Fatalf(`duplicated route registry "%s", already registered at %s`, pattern, item[0].file)
+				s.Logger().Fatalf(`duplicated route registry "%s", already registered at %s`, pattern, item[0].file)
 				return
 			}
 		}

@@ -434,13 +434,13 @@ func (s *Server) GetRouterArray() []RouterItem {
 // Run starts server listening in blocking way.
 func (s *Server) Run() {
 	if err := s.Start(); err != nil {
-		glog.Fatal(err)
+		s.Logger().Fatal(err)
 	}
 
 	// Blocking using channel.
 	<-s.closeChan
 
-	glog.Printf("[ghttp] %d: all servers shutdown", gproc.Pid())
+	s.Logger().Printf("[ghttp] %d: all servers shutdown", gproc.Pid())
 }
 
 // Wait blocks to wait for all servers done.
@@ -542,7 +542,7 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 			}
 			// 如果非关闭错误，那么提示报错，否则认为是正常的服务关闭操作
 			if err != nil && !strings.EqualFold(http.ErrServerClosed.Error(), err.Error()) {
-				glog.Fatal(err)
+				s.Logger().Fatal(err)
 			}
 			// 如果所有异步的http.Server都已经停止，那么WebServer就可以退出了
 			if s.serverCount.Add(-1) < 1 {

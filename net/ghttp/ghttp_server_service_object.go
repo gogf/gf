@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/text/gstr"
 )
@@ -51,7 +50,7 @@ func (s *Server) doBindObject(pattern string, object interface{}, method string,
 	// 当pattern中的method为all时，去掉该method，以便于后续方法判断
 	domain, method, path, err := s.parsePattern(pattern)
 	if err != nil {
-		glog.Fatal(err)
+		s.Logger().Fatal(err)
 		return
 	}
 	if strings.EqualFold(method, gDEFAULT_METHOD) {
@@ -87,11 +86,11 @@ func (s *Server) doBindObject(pattern string, object interface{}, method string,
 		if !ok {
 			if len(methodMap) > 0 {
 				// 指定的方法名称注册，那么需要使用错误提示
-				glog.Errorf(`invalid route method: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" is required for object registry`,
+				s.Logger().Errorf(`invalid route method: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" is required for object registry`,
 					pkgPath, objName, methodName, v.Method(i).Type().String())
 			} else {
 				// 否则只是Debug提示
-				glog.Debugf(`ignore route method: %s.%s.%s defined as "%s", no match "func(*ghttp.Request)"`,
+				s.Logger().Debugf(`ignore route method: %s.%s.%s defined as "%s", no match "func(*ghttp.Request)"`,
 					pkgPath, objName, methodName, v.Method(i).Type().String())
 			}
 			continue
@@ -136,7 +135,7 @@ func (s *Server) doBindObjectMethod(pattern string, object interface{}, method s
 	methodName := strings.TrimSpace(method)
 	methodValue := v.MethodByName(methodName)
 	if !methodValue.IsValid() {
-		glog.Fatal("invalid method name: " + methodName)
+		s.Logger().Fatal("invalid method name: " + methodName)
 		return
 	}
 	initFunc := (func(*Request))(nil)
@@ -155,7 +154,7 @@ func (s *Server) doBindObjectMethod(pattern string, object interface{}, method s
 	}
 	itemFunc, ok := methodValue.Interface().(func(*Request))
 	if !ok {
-		glog.Errorf(`invalid route method: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" is required for object registry`,
+		s.Logger().Errorf(`invalid route method: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" is required for object registry`,
 			pkgPath, objName, methodName, methodValue.Type().String())
 		return
 	}
@@ -198,7 +197,7 @@ func (s *Server) doBindObjectRest(pattern string, object interface{}, middleware
 		}
 		itemFunc, ok := v.Method(i).Interface().(func(*Request))
 		if !ok {
-			glog.Errorf(`invalid route method: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" is required for object registry`,
+			s.Logger().Errorf(`invalid route method: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" is required for object registry`,
 				pkgPath, objName, methodName, v.Method(i).Type().String())
 			continue
 		}

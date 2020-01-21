@@ -47,6 +47,13 @@ func DefaultLogger() *Logger {
 	return logger
 }
 
+// SetDefaultLogger sets the default logger for package glog.
+// Note that there might be concurrent safety issue if calls this function
+// in different goroutines.
+func SetDefaultLogger(l *Logger) {
+	logger = l
+}
+
 // SetPath sets the directory path for file logging.
 func SetPath(path string) error {
 	return logger.SetPath(path)

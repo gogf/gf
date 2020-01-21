@@ -16,7 +16,6 @@ import (
 
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/util/gconv"
 )
 
@@ -54,12 +53,12 @@ func (s *Server) SetServerRoot(root string) {
 	realPath := root
 	if !gres.Contains(realPath) {
 		if p, err := gfile.Search(root); err != nil {
-			glog.Fatal(fmt.Sprintf(`[ghttp] SetServerRoot failed: %v`, err))
+			s.Logger().Fatal(fmt.Sprintf(`[ghttp] SetServerRoot failed: %v`, err))
 		} else {
 			realPath = p
 		}
 	}
-	glog.Debug("[ghttp] SetServerRoot path:", realPath)
+	s.Logger().Debug("[ghttp] SetServerRoot path:", realPath)
 	s.config.SearchPaths = []string{strings.TrimRight(realPath, gfile.Separator)}
 	s.config.FileServerEnabled = true
 }
@@ -69,7 +68,7 @@ func (s *Server) AddSearchPath(path string) {
 	realPath := path
 	if !gres.Contains(realPath) {
 		if p, err := gfile.Search(path); err != nil {
-			glog.Fatal(fmt.Sprintf(`[ghttp] AddSearchPath failed: %v`, err))
+			s.Logger().Fatal(fmt.Sprintf(`[ghttp] AddSearchPath failed: %v`, err))
 		} else {
 			realPath = p
 		}
@@ -83,7 +82,7 @@ func (s *Server) AddStaticPath(prefix string, path string) {
 	realPath := path
 	if !gres.Contains(realPath) {
 		if p, err := gfile.Search(path); err != nil {
-			glog.Fatal(fmt.Sprintf(`[ghttp] AddStaticPath failed: %v`, err))
+			s.Logger().Fatal(fmt.Sprintf(`[ghttp] AddStaticPath failed: %v`, err))
 		} else {
 			realPath = p
 		}
