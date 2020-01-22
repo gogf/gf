@@ -404,6 +404,31 @@ func Test_Params_Basic(t *testing.T) {
 	})
 }
 
+func Test_Params_SupportChars(t *testing.T) {
+	p := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/form-value", func(r *ghttp.Request) {
+		r.Response.Write(r.GetQuery("test-value"))
+	})
+	s.BindHandler("/form-array", func(r *ghttp.Request) {
+		r.Response.Write(r.GetQuery("test-array"))
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.Case(t, func() {
+		prefix := fmt.Sprintf("http://127.0.0.1:%d", p)
+		client := ghttp.NewClient()
+		client.SetPrefix(prefix)
+
+		gtest.Assert(client.PostContent("/form-value", "test-value=100"), "100")
+		gtest.Assert(client.PostContent("/form-array", "test-array[]=1&test-array[]=2"), `["1","2"]`)
+	})
+}
+
 func Test_Params_Priority(t *testing.T) {
 	p := ports.PopRand()
 	s := g.Server(p)
