@@ -210,6 +210,9 @@ func StructDeep(params interface{}, pointer interface{}, mapping ...map[string]s
 
 // bindVarToStructAttr sets value to struct object attribute by name.
 func bindVarToStructAttr(elem reflect.Value, name string, value interface{}) (err error) {
+	if value == nil {
+		return nil
+	}
 	structFieldValue := elem.FieldByName(name)
 	if !structFieldValue.IsValid() {
 		return nil
