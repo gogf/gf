@@ -237,7 +237,8 @@ func (r *Request) parseForm() {
 			params := ""
 			for name, values := range r.PostForm {
 				// Invalid parameter name.
-				if !gregex.IsMatchString(`^[\w\[\]]+$`, name) {
+				// Only allow chars of: '\w', '[', ']', '-'.
+				if !gregex.IsMatchString(`^[\w\-\[\]]+$`, name) {
 					if len(r.PostForm) == 1 {
 						// It might be JSON/XML content.
 						r.bodyContent = gconv.UnsafeStrToBytes(name + strings.Join(values, " "))
