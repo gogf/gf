@@ -7,6 +7,7 @@
 package glog
 
 import (
+	"context"
 	"io"
 )
 
@@ -89,4 +90,10 @@ func Line(long ...bool) *Logger {
 // which enables/disables async logging output feature.
 func Async(enabled ...bool) *Logger {
 	return logger.Async(enabled...)
+}
+
+// Ctx set log context for print context value
+// only valid for the current object
+func Ctx(ctx context.Context, keys ...string) *Logger {
+	return logger.Ctx(ctx, keys...)
 }

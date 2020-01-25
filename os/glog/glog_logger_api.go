@@ -11,6 +11,13 @@ import (
 	"os"
 )
 
+// AppendCtxKeys add keys for print context value
+func (l *Logger) AppendCtxKeys(keys ...string) {
+	for _, key := range keys {
+		l.ctxKeys[key] = struct{}{}
+	}
+}
+
 // Print prints <v> with newline using fmt.Sprintln.
 // The parameter <v> can be multiple variables.
 func (l *Logger) Print(v ...interface{}) {

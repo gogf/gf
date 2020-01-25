@@ -7,6 +7,7 @@
 package glog
 
 import (
+	"context"
 	"github.com/gogf/gf/test/gtest"
 	"testing"
 )
@@ -26,4 +27,15 @@ func Test_SetConfigWithMap(t *testing.T) {
 		gtest.Assert(l.config.Level, m["level"])
 		gtest.Assert(l.config.StdoutPrint, m["stdout"])
 	})
+}
+
+func TestContextLog(t *testing.T) {
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, "name", "test")
+	ctx = context.WithValue(ctx, "age", 18)
+
+	Ctx(ctx, "age", "name").Println("Hello gf")
+
+	log := New()
+	log.Ctx(ctx, "name").Println("Hello gf")
 }

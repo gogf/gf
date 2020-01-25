@@ -8,6 +8,7 @@ package glog
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"github.com/gogf/gf/internal/intlog"
 	"io"
@@ -25,8 +26,10 @@ import (
 )
 
 type Logger struct {
-	parent *Logger // Parent logger.
-	config Config  // Logger configuration.
+	ctx     context.Context
+	ctxKeys map[string]struct{}
+	parent  *Logger // Parent logger.
+	config  Config  // Logger configuration.
 }
 
 const (
@@ -50,7 +53,8 @@ const (
 // New creates and returns a custom logger.
 func New() *Logger {
 	return &Logger{
-		config: DefaultConfig(),
+		config:  DefaultConfig(),
+		ctxKeys: make(map[string]struct{}),
 	}
 }
 
@@ -157,7 +161,23 @@ func (l *Logger) print(std io.Writer, lead string, value ...interface{}) {
 			valueStr = tempStr
 		}
 	}
-	buffer.WriteString(valueStr + "\n")
+	buffer.WriteString(valueStr)
+
+	if l.ctx != nil {
+		var ctxStr string
+		for key := range l.ctxKeys {
+			ctxValue := l.ctx.Value(key)
+			if ctxValue != nil {
+				ctxStr += fmt.Sprintf("%s: %+v ", key, ctxValue)
+			}
+		}
+
+		if ctxStr != "" {
+			buffer.WriteString(fmt.Sprintf(" context: {%s}", strings.TrimRight(ctxStr, " ")))
+		}
+	}
+	buffer.WriteString(" \n")
+
 	if l.config.Flags&F_ASYNC > 0 {
 		err := asyncPool.Add(func() {
 			l.printToWriter(std, buffer)

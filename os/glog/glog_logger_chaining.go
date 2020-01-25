@@ -7,6 +7,7 @@
 package glog
 
 import (
+	"context"
 	"io"
 
 	"github.com/gogf/gf/os/gfile"
@@ -197,6 +198,22 @@ func (l *Logger) Async(enabled ...bool) *Logger {
 		logger.SetAsync(false)
 	} else {
 		logger.SetAsync(true)
+	}
+	return logger
+}
+
+// Ctx set log context for print context value
+// only valid for the current object
+func (l *Logger) Ctx(ctx context.Context, keys ...string) *Logger {
+	logger := (*Logger)(nil)
+	if l.parent == nil {
+		logger = l.Clone()
+	} else {
+		logger = l
+	}
+	logger.ctx = ctx
+	if len(keys) > 0 {
+		logger.AppendCtxKeys(keys...)
 	}
 	return logger
 }
