@@ -43,8 +43,8 @@ func Test_Types(t *testing.T) {
 			"binary":  []byte("abcdefgh"),
 			"date":    "2018-10-24",
 			"time":    "10:00:01",
-			"decimal": 123.456,
-			"double":  123.456,
+			"decimal": -123.456,
+			"double":  -123.456,
 			"bit":     2,
 			"tinyint": true,
 			"bool":    false,
@@ -61,7 +61,7 @@ func Test_Types(t *testing.T) {
 		gtest.Assert(one["binary"].String(), data["binary"])
 		gtest.Assert(one["date"].String(), data["date"])
 		gtest.Assert(one["time"].String(), data["time"])
-		gtest.Assert(one["decimal"].String(), 123.46)
+		gtest.Assert(one["decimal"].String(), -123.46)
 		gtest.Assert(one["double"].String(), data["double"])
 		gtest.Assert(one["bit"].Int(), data["bit"])
 		gtest.Assert(one["tinyint"].Bool(), data["tinyint"])
