@@ -94,6 +94,14 @@ func Test_Format(t *testing.T) {
 	})
 }
 
+func Test_Format_ZeroString(t *testing.T) {
+	gtest.Case(t, func() {
+		timeTemp, err := gtime.StrToTime("0000-00-00 00:00:00")
+		gtest.AssertNE(err, nil)
+		gtest.Assert(timeTemp.String(), "")
+	})
+}
+
 func Test_FormatTo(t *testing.T) {
 	gtest.Case(t, func() {
 		timeTemp := gtime.Now()
