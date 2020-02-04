@@ -91,9 +91,18 @@ func Unpack(path string) ([]*File, error) {
 
 // UnpackContent unpacks the content to []*File.
 func UnpackContent(content string) ([]*File, error) {
-	data, err := gcompress.UnGzip(hexStrToBytes(content))
-	if err != nil {
-		return nil, err
+	var data []byte
+	var err error
+	if isHexStr(content) {
+		data, err = gcompress.UnGzip(hexStrToBytes(content))
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		data, err = gcompress.UnGzip(gconv.UnsafeStrToBytes(content))
+		if err != nil {
+			return nil, err
+		}
 	}
 	reader, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
 	if err != nil {
@@ -104,6 +113,21 @@ func UnpackContent(content string) ([]*File, error) {
 		array[i] = &File{file: file}
 	}
 	return array, nil
+}
+
+// isHexStr checks and returns whether given content <s> is hex string.
+// It returns true if <s> is hex string, or false if not.
+func isHexStr(s string) bool {
+	var r bool
+	for i := 0; i < len(s); i++ {
+		r = (s[i] >= '0' && s[i] <= '9') ||
+			(s[i] >= 'a' && s[i] <= 'f') ||
+			(s[i] >= 'A' && s[i] <= 'F')
+		if !r {
+			return false
+		}
+	}
+	return true
 }
 
 // bytesToHexString converts binary content to hex string content.

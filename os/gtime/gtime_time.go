@@ -71,11 +71,18 @@ func NewFromTimeStamp(timestamp int64) *Time {
 	if timestamp == 0 {
 		return &Time{}
 	}
-	for timestamp < 1e18 {
-		timestamp *= 10
+	var sec, nano int64
+	if timestamp > 1e9 {
+		for timestamp < 1e18 {
+			timestamp *= 10
+		}
+		sec = timestamp / 1e9
+		nano = timestamp % 1e9
+	} else {
+		sec = timestamp
 	}
 	return &Time{
-		time.Unix(timestamp/1e9, timestamp%1e9),
+		time.Unix(sec, nano),
 	}
 }
 
