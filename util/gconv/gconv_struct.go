@@ -223,7 +223,11 @@ func bindVarToStructAttr(elem reflect.Value, name string, value interface{}) (er
 			err = bindVarToReflectValue(structFieldValue, value)
 		}
 	}()
-	structFieldValue.Set(reflect.ValueOf(Convert(value, structFieldValue.Type().String())))
+	if value == nil {
+		structFieldValue.Set(reflect.Zero(structFieldValue.Type()))
+	} else {
+		structFieldValue.Set(reflect.ValueOf(Convert(value, structFieldValue.Type().String())))
+	}
 	return nil
 }
 
@@ -242,7 +246,11 @@ func bindVarToStructByIndex(elem reflect.Value, index int, value interface{}) (e
 			err = bindVarToReflectValue(structFieldValue, value)
 		}
 	}()
-	structFieldValue.Set(reflect.ValueOf(Convert(value, structFieldValue.Type().String())))
+	if value == nil {
+		structFieldValue.Set(reflect.Zero(structFieldValue.Type()))
+	} else {
+		structFieldValue.Set(reflect.ValueOf(Convert(value, structFieldValue.Type().String())))
+	}
 	return nil
 }
 

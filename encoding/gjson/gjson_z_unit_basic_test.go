@@ -462,3 +462,39 @@ func Test_IsNil(t *testing.T) {
 		gtest.Assert(j.IsNil(), true)
 	})
 }
+
+func Test_ToStructDeep(t *testing.T) {
+	gtest.Case(t, func() {
+		type Item struct {
+			Title string `json:"title"`
+			Key   string `json:"key"`
+		}
+
+		type M struct {
+			Id    string                 `json:"id"`
+			Me    map[string]interface{} `json:"me"`
+			Txt   string                 `json:"txt"`
+			Items []*Item                `json:"items"`
+		}
+
+		txt := `{
+		  "id":"88888",
+		  "me":{"name":"mikey","day":"20009"},
+		  "txt":"hello",
+		  "items":null
+		 }`
+
+		j, err := gjson.LoadContent(txt)
+		gtest.Assert(err, nil)
+		gtest.Assert(j.GetString("me.name"), "mikey")
+		gtest.Assert(j.GetString("items"), "")
+		gtest.Assert(j.GetBool("items"), false)
+		gtest.Assert(j.GetArray("items"), nil)
+		m := new(M)
+		err = j.ToStructDeep(m)
+		gtest.Assert(err, nil)
+		gtest.AssertNE(m.Me, nil)
+		gtest.Assert(m.Me["day"], "20009")
+		gtest.Assert(m.Items, nil)
+	})
+}

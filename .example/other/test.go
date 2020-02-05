@@ -2,14 +2,35 @@ package main
 
 import (
 	"fmt"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/encoding/gjson"
 )
 
 func main() {
-	t1 := gconv.Convert(1989, "Time")
-	t2 := gconv.Time("2033-01-11 04:00:00 +0800 CST")
-	fmt.Println(gtime.Timestamp())
-	fmt.Println(t1)
-	fmt.Println(t2)
+
+	type Item struct {
+		Title string `json:"title"`
+		Key   string `json:"key"`
+	}
+
+	type M struct {
+		Id    string                 `json:"id"`
+		Me    map[string]interface{} `json:"me"`
+		Txt   string                 `json:"txt"`
+		Items []*Item                `json:"items"`
+	}
+
+	txt := `{
+  "id":"88888",
+  "me":{"name":"mikey","day":"20009"},
+  "txt":"hello",
+  "items":null
+ }`
+
+	json, _ := gjson.LoadContent(txt)
+	fmt.Println(json)
+	m := new(M)
+	e := json.ToStructDeep(m)
+	fmt.Println(e)
+	fmt.Println(m)
+
 }
