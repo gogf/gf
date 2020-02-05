@@ -9,6 +9,7 @@ package gconv
 import (
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/internal/empty"
 	"reflect"
 	"regexp"
 	"strings"
@@ -223,7 +224,7 @@ func bindVarToStructAttr(elem reflect.Value, name string, value interface{}) (er
 			err = bindVarToReflectValue(structFieldValue, value)
 		}
 	}()
-	if value == nil {
+	if empty.IsNil(value) {
 		structFieldValue.Set(reflect.Zero(structFieldValue.Type()))
 	} else {
 		structFieldValue.Set(reflect.ValueOf(Convert(value, structFieldValue.Type().String())))
@@ -246,7 +247,7 @@ func bindVarToStructByIndex(elem reflect.Value, index int, value interface{}) (e
 			err = bindVarToReflectValue(structFieldValue, value)
 		}
 	}()
-	if value == nil {
+	if empty.IsNil(value) {
 		structFieldValue.Set(reflect.Zero(structFieldValue.Type()))
 	} else {
 		structFieldValue.Set(reflect.ValueOf(Convert(value, structFieldValue.Type().String())))
