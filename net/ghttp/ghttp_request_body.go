@@ -14,7 +14,7 @@ import (
 // bodyReadCloser implements the io.ReadCloser interface
 // which is used for reading request body content multiple times.
 type BodyReadCloser struct {
-	*bytes.Buffer
+	*bytes.Reader
 }
 
 // RefillBody refills the request body object after read all of its content.
@@ -24,7 +24,7 @@ func (r *Request) RefillBody() {
 		r.bodyContent, _ = ioutil.ReadAll(r.Body)
 	}
 	r.Body = &BodyReadCloser{
-		bytes.NewBuffer(r.bodyContent),
+		bytes.NewReader(r.bodyContent),
 	}
 }
 
