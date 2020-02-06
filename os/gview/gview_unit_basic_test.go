@@ -332,4 +332,15 @@ func Test_XSS(t *testing.T) {
 		gtest.Assert(err, nil)
 		gtest.Assert(r, ghtml.Entities(s))
 	})
+	// Tag "if".
+	gtest.Case(t, func() {
+		v := gview.New()
+		v.SetAutoEncode(true)
+		s := "<br>"
+		r, err := v.ParseContent("{{if eq 1 1}}{{.v}}{{end}}", g.Map{
+			"v": s,
+		})
+		gtest.Assert(err, nil)
+		gtest.Assert(r, ghtml.Entities(s))
+	})
 }
