@@ -71,6 +71,7 @@ func (r *Request) GetRawString() string {
 func (r *Request) GetBody() []byte {
 	if r.bodyContent == nil {
 		r.bodyContent, _ = ioutil.ReadAll(r.Body)
+		r.RefillBody()
 	}
 	return r.bodyContent
 }
