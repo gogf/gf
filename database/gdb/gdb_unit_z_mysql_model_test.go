@@ -409,6 +409,36 @@ func Test_Model_FindAll(t *testing.T) {
 	})
 }
 
+func Test_Model_FindAll_GTime(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.Case(t, func() {
+		result, err := db.Table(table).FindAll("create_time < ?", gtime.NewFromStr("2000-01-01 00:00:00"))
+		gtest.Assert(err, nil)
+		gtest.Assert(len(result), 0)
+	})
+	gtest.Case(t, func() {
+		result, err := db.Table(table).FindAll("create_time > ?", gtime.NewFromStr("2000-01-01 00:00:00"))
+		gtest.Assert(err, nil)
+		gtest.Assert(len(result), SIZE)
+	})
+
+	gtest.Case(t, func() {
+		v := g.NewVar("2000-01-01 00:00:00")
+		result, err := db.Table(table).FindAll("create_time < ?", v)
+		gtest.Assert(err, nil)
+		gtest.Assert(len(result), 0)
+	})
+
+	gtest.Case(t, func() {
+		v := g.NewVar("2000-01-01 00:00:00")
+		result, err := db.Table(table).FindAll("create_time > ?", v)
+		gtest.Assert(err, nil)
+		gtest.Assert(len(result), SIZE)
+	})
+}
+
 func Test_Model_One(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
