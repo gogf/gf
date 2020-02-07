@@ -396,6 +396,15 @@ func handlerSliceArguments(query string, args []interface{}) (newQuery string, n
 					}
 					return s
 				})
+
+			// Special struct handling.
+			case reflect.Struct:
+				if v, ok := arg.(apiString); ok {
+					newArgs = append(newArgs, v.String())
+				} else {
+					newArgs = append(newArgs, arg)
+				}
+
 			default:
 				newArgs = append(newArgs, arg)
 			}
