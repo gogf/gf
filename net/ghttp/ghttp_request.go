@@ -65,7 +65,7 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 		Server:    s,
 		Request:   r,
 		Response:  newResponse(s, w),
-		EnterTime: gtime.TimestampMicro(),
+		EnterTime: gtime.TimestampMilli(),
 	}
 	request.Cookie = GetCookie(request)
 	request.Session = s.sessionManager.New(request.GetSessionId())

@@ -166,8 +166,8 @@ var (
 	// The process can only be initialized once.
 	serverProcessInited = gtype.NewBool()
 
-	// gracefulEnabled is used for graceful restarting feature, which is true in default.
-	gracefulEnabled = true
+	// gracefulEnabled is used for graceful restarting feature, which is false in default.
+	gracefulEnabled = false
 )
 
 func init() {

@@ -58,7 +58,7 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 
 	defer func() {
 		// 设置请求完成时间
-		request.LeaveTime = gtime.TimestampMicro()
+		request.LeaveTime = gtime.TimestampMilli()
 		// error log
 		if request.error != nil {
 			s.handleErrorLog(request.error, request)
