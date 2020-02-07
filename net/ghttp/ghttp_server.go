@@ -166,7 +166,7 @@ var (
 	// The process can only be initialized once.
 	serverProcessInited = gtype.NewBool()
 
-	// gracefulEnabled is used for graceful restarting feature, which is false in default.
+	// gracefulEnabled is used for graceful reload feature, which is false in default.
 	gracefulEnabled = false
 )
 

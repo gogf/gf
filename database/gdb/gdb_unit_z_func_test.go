@@ -39,6 +39,8 @@ func Test_Func_doQuoteString(t *testing.T) {
 			"u.id asc":                         "`u`.`id` asc",
 			"u.id asc, ut.uid desc":            "`u`.`id` asc,`ut`.`uid` desc",
 			"user.user u, user.user_detail ut": "`user`.`user` u,`user`.`user_detail` ut",
+			// mssql global schema access with double dots.
+			"user..user u, user.user_detail ut": "`user`..`user` u,`user`.`user_detail` ut",
 		}
 		for k, v := range array {
 			gtest.Assert(doQuoteString(k, "`", "`"), v)
@@ -56,6 +58,9 @@ func Test_Func_addTablePrefix(t *testing.T) {
 			"user,user_detail":             "`user`,`user_detail`",
 			"user u, user_detail ut":       "`user` u,`user_detail` ut",
 			"user as u, user_detail as ut": "`user` as u,`user_detail` as ut",
+			"UserCenter.user as u, UserCenter.user_detail as ut": "`UserCenter`.`user` as u,`UserCenter`.`user_detail` as ut",
+			// mssql global schema access with double dots.
+			"UserCenter..user as u, user_detail as ut": "`UserCenter`..`user` as u,`user_detail` as ut",
 		}
 		for k, v := range array {
 			gtest.Assert(doHandleTableName(k, prefix, "`", "`"), v)
@@ -70,6 +75,9 @@ func Test_Func_addTablePrefix(t *testing.T) {
 			"user,user_detail":             "`gf_user`,`gf_user_detail`",
 			"user u, user_detail ut":       "`gf_user` u,`gf_user_detail` ut",
 			"user as u, user_detail as ut": "`gf_user` as u,`gf_user_detail` as ut",
+			"UserCenter.user as u, UserCenter.user_detail as ut": "`UserCenter`.`gf_user` as u,`UserCenter`.`gf_user_detail` as ut",
+			// mssql global schema access with double dots.
+			"UserCenter..user as u, user_detail as ut": "`UserCenter`..`gf_user` as u,`gf_user_detail` as ut",
 		}
 		for k, v := range array {
 			gtest.Assert(doHandleTableName(k, prefix, "`", "`"), v)
