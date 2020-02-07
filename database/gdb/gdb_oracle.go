@@ -249,7 +249,7 @@ func (db *dbOracle) doInsert(link dbLink, table string, data interface{}, option
 		if (option == gINSERT_OPTION_REPLACE || option == gINSERT_OPTION_SAVE) && indexExists {
 			fields = append(fields, tableAlias1+"."+charL+k+charR)
 			values = append(values, tableAlias2+"."+charL+k+charR)
-			params = append(params, convertParam(v))
+			params = append(params, v)
 
 			subSqlStr = append(subSqlStr, fmt.Sprintf("%s?%s %s", charL, charR, k))
 
@@ -262,7 +262,7 @@ func (db *dbOracle) doInsert(link dbLink, table string, data interface{}, option
 		} else {
 			fields = append(fields, charL+k+charR)
 			values = append(values, "?")
-			params = append(params, convertParam(v))
+			params = append(params, v)
 		}
 	}
 
@@ -379,7 +379,7 @@ func (db *dbOracle) doBatchInsert(link dbLink, table string, list interface{}, o
 	intoStr := make([]string, 0) //组装into语句
 	for i := 0; i < len(listMap); i++ {
 		for _, k := range keys {
-			params = append(params, convertParam(listMap[i][k]))
+			params = append(params, listMap[i][k])
 		}
 		values = append(values, valueHolderStr)
 

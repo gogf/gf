@@ -183,12 +183,14 @@ func GetOrmMappingOfStruct(pointer interface{}) map[string]string {
 	return mapping
 }
 
-// 格式化SQL语句.
+// formatQuery formats the query string and its arguments before executing.
+// The internal handleArguments function might be called twice during the SQL procedure,
+// but do not worry about it, it's safe and efficient.
 func formatQuery(query string, args []interface{}) (newQuery string, newArgs []interface{}) {
-	return handlerSliceArguments(query, args)
+	return handleArguments(query, args)
 }
 
-// 格式化Where查询条件。
+// formatWhere formats where statement and its arguments.
 // TODO []interface{} type support for parameter <where> does not completed yet.
 func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool) (newWhere string, newArgs []interface{}) {
 	buffer := bytes.NewBuffer(nil)
@@ -251,7 +253,7 @@ func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool) (
 			}
 		}
 	}
-	return handlerSliceArguments(newWhere, newArgs)
+	return handleArguments(newWhere, newArgs)
 }
 
 // formatWhereInterfaces formats <where> as []interface{}.
@@ -280,7 +282,9 @@ func formatWhereKeyValue(db DB, buffer *bytes.Buffer, newArgs []interface{}, key
 	if buffer.Len() > 0 {
 		buffer.WriteString(" AND ")
 	}
-	// 支持slice键值/属性，如果只有一个?占位符号，那么作为IN查询，否则打散作为多个查询参数
+	// If the value is type of slice, and there's only one '?' holder in
+	// the key string, it automatically adds '?' holder chars according to its arguments count
+	// and converts it to "IN" statement.
 	rv := reflect.ValueOf(value)
 	switch rv.Kind() {
 	case reflect.Slice, reflect.Array:
@@ -293,14 +297,13 @@ func formatWhereKeyValue(db DB, buffer *bytes.Buffer, newArgs []interface{}, key
 			newArgs = append(newArgs, value)
 		} else {
 			buffer.WriteString(key)
-			// 如果键名/属性名称中带有多个?占位符号，那么将参数打散
 			newArgs = append(newArgs, gconv.Interfaces(value)...)
 		}
 	default:
 		if value == nil {
 			buffer.WriteString(key)
 		} else {
-			// 支持key带操作符号，注意like也算是操作符号
+			// It also supports "LIKE" statement, which we considers it an operator.
 			key = gstr.Trim(key)
 			if gstr.Pos(key, "?") == -1 {
 				like := " like"
@@ -320,8 +323,7 @@ func formatWhereKeyValue(db DB, buffer *bytes.Buffer, newArgs []interface{}, key
 	return newArgs
 }
 
-// 将对象转换为map，如果对象带有继承对象，那么执行递归转换。
-// 该方法用于将变量传递给数据库执行之前。
+// varToMapDeep converts struct object to map type recursively.
 func varToMapDeep(obj interface{}) map[string]interface{} {
 	data := gconv.Map(obj, ORM_TAG_FOR_STRUCT)
 	for key, value := range data {
@@ -333,14 +335,14 @@ func varToMapDeep(obj interface{}) map[string]interface{} {
 		}
 		switch kind {
 		case reflect.Struct:
-			// 底层数据库引擎支持 time.Time/*time.Time 类型
+			// The underlying driver supports time.Time/*time.Time types.
 			if _, ok := value.(time.Time); ok {
 				continue
 			}
 			if _, ok := value.(*time.Time); ok {
 				continue
 			}
-			// 如果执行String方法，那么执行字符串转换
+			// Use string conversion in default.
 			if s, ok := value.(apiString); ok {
 				data[key] = s.String()
 				continue
@@ -354,13 +356,11 @@ func varToMapDeep(obj interface{}) map[string]interface{} {
 	return data
 }
 
-// 处理预处理占位符与slice类型的参数。
-// 需要注意的是，
-// 如果是链式操作，在条件参数中也会调用该方法处理查询参数，
-// 如果是方法参数，在sql提交执行之前也会再次调用该方法处理查询语句和参数。
-func handlerSliceArguments(query string, args []interface{}) (newQuery string, newArgs []interface{}) {
+// handleArguments is a nice function which handles the query and its arguments before committing to
+// underlying driver.
+func handleArguments(query string, args []interface{}) (newQuery string, newArgs []interface{}) {
 	newQuery = query
-	// 查询条件参数处理，主要处理slice参数类型
+	// Handles the slice arguments.
 	if len(args) > 0 {
 		for index, arg := range args {
 			rv := reflect.ValueOf(arg)
@@ -370,9 +370,8 @@ func handlerSliceArguments(query string, args []interface{}) (newQuery string, n
 				kind = rv.Kind()
 			}
 			switch kind {
-			// '?'占位符支持slice类型, 这里会将slice参数拆散，并更新原有占位符'?'为多个'?'，使用','符号连接。
 			case reflect.Slice, reflect.Array:
-				// 不拆分[]byte类型(当做字符串处理)
+				// It does not split the type of []byte.
 				// Eg: table.Where("name = ?", []byte("john"))
 				if _, ok := arg.([]byte); ok {
 					newArgs = append(newArgs, arg)
@@ -381,13 +380,13 @@ func handlerSliceArguments(query string, args []interface{}) (newQuery string, n
 				for i := 0; i < rv.Len(); i++ {
 					newArgs = append(newArgs, rv.Index(i).Interface())
 				}
-				// 如果参数直接传递slice，并且占位符数量与slice长度相等，
-				// 那么不用替换扩展占位符数量，直接使用该slice作为查询参数
+				// It the '?' holder count equals the length of the slice,
+				// it does not implement the arguments splitting logic.
 				// Eg: db.Query("SELECT ?+?", g.Slice{1, 2})
 				if len(args) == 1 && gstr.Count(newQuery, "?") == rv.Len() {
 					break
 				}
-				// counter用于匹配该参数的位置(与index对应)
+				// counter is used to finding the inserting position for the '?' holder.
 				counter := 0
 				newQuery, _ = gregex.ReplaceStringFunc(`\?`, newQuery, func(s string) string {
 					counter++
@@ -399,11 +398,22 @@ func handlerSliceArguments(query string, args []interface{}) (newQuery string, n
 
 			// Special struct handling.
 			case reflect.Struct:
+				// The underlying driver supports time.Time/*time.Time types.
+				if _, ok := arg.(time.Time); ok {
+					newArgs = append(newArgs, arg)
+					continue
+				}
+				if _, ok := arg.(*time.Time); ok {
+					newArgs = append(newArgs, arg)
+					continue
+				}
+				// It converts the struct to string in default
+				// if it implements the String interface.
 				if v, ok := arg.(apiString); ok {
 					newArgs = append(newArgs, v.String())
-				} else {
-					newArgs = append(newArgs, arg)
+					continue
 				}
+				newArgs = append(newArgs, arg)
 
 			default:
 				newArgs = append(newArgs, arg)
@@ -413,36 +423,7 @@ func handlerSliceArguments(query string, args []interface{}) (newQuery string, n
 	return
 }
 
-// 将预处理参数转换为底层数据库引擎支持的格式。
-// 主要是判断参数是否为复杂数据类型，如果是，那么转换为基础类型。
-func convertParam(value interface{}) interface{} {
-	rv := reflect.ValueOf(value)
-	kind := rv.Kind()
-	if kind == reflect.Ptr {
-		rv = rv.Elem()
-		kind = rv.Kind()
-	}
-	switch kind {
-	case reflect.Struct:
-		// 底层数据库引擎支持 time.Time/*time.Time 类型
-		if v, ok := value.(time.Time); ok {
-			if v.IsZero() {
-				return "null"
-			}
-			return value
-		}
-		if v, ok := value.(*time.Time); ok {
-			if v.IsZero() {
-				return ""
-			}
-			return value
-		}
-		return gconv.String(value)
-	}
-	return value
-}
-
-// 格式化错误信息
+// formatError customizes and returns the SQL error.
 func formatError(err error, query string, args ...interface{}) error {
 	if err != nil && err != sql.ErrNoRows {
 		return errors.New(fmt.Sprintf("%s, %s\n", err.Error(), bindArgsToQuery(query, args)))
@@ -450,7 +431,7 @@ func formatError(err error, query string, args ...interface{}) error {
 	return err
 }
 
-// 根据insert选项获得操作名称
+// getInsertOperationByOption returns proper insert option with given parameter <option>.
 func getInsertOperationByOption(option int) string {
 	operator := "INSERT"
 	switch option {
@@ -463,7 +444,8 @@ func getInsertOperationByOption(option int) string {
 	return operator
 }
 
-// 将参数绑定到SQL语句中，仅用于调试打印。
+// bindArgsToQuery binds the arguments to the query string and returns a complete
+// sql string, just for debugging.
 func bindArgsToQuery(query string, args []interface{}) string {
 	index := -1
 	newQuery, _ := gregex.ReplaceStringFunc(`\?`, query, func(s string) string {
@@ -497,7 +479,8 @@ func bindArgsToQuery(query string, args []interface{}) string {
 	return newQuery
 }
 
-// 使用递归的方式将map键值对映射到struct对象上，注意参数<pointer>是一个指向struct的指针。
+// mapToStruct maps the <data> to given struct.
+// Note that the given parameter <pointer> should be a pointer to s struct.
 func mapToStruct(data map[string]interface{}, pointer interface{}) error {
 	return gconv.StructDeep(data, pointer, GetOrmMappingOfStruct(pointer))
 }
