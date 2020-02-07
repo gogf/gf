@@ -314,7 +314,7 @@ func (bs *dbBase) doInsert(link dbLink, table string, data interface{}, option i
 	for k, v := range dataMap {
 		fields = append(fields, charL+k+charR)
 		values = append(values, "?")
-		params = append(params, convertParam(v))
+		params = append(params, v)
 	}
 	operation := getInsertOperationByOption(option)
 	updateStr := ""
@@ -435,7 +435,7 @@ func (bs *dbBase) doBatchInsert(link dbLink, table string, list interface{}, opt
 		// Note that the map type is unordered,
 		// so it should use slice+key to retrieve the value.
 		for _, k := range keys {
-			params = append(params, convertParam(listMap[i][k]))
+			params = append(params, listMap[i][k])
 		}
 		values = append(values, valueHolderStr)
 		if len(values) == batchNum || (i == listMapLen-1 && len(values) > 0) {
@@ -495,7 +495,7 @@ func (bs *dbBase) doUpdate(link dbLink, table string, data interface{}, conditio
 		var fields []string
 		for k, v := range varToMapDeep(data) {
 			fields = append(fields, bs.db.quoteWord(k)+"=?")
-			params = append(params, convertParam(v))
+			params = append(params, v)
 		}
 		updates = strings.Join(fields, ",")
 	default:
