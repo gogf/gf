@@ -57,16 +57,21 @@ var (
 // Note that, this will automatically checks the table prefix whether already added, if true it does
 // nothing to the table name, or else adds the prefix to the table name.
 func doHandleTableName(table, prefix, charLeft, charRight string) string {
+	index := 0
 	array1 := gstr.SplitAndTrim(table, ",")
 	for k1, v1 := range array1 {
 		array2 := gstr.SplitAndTrim(v1, " ")
 		// Trim the security chars.
 		array2[0] = gstr.TrimLeftStr(array2[0], charLeft)
 		array2[0] = gstr.TrimRightStr(array2[0], charRight)
+		// Check whether it has database name.
+		array3 := gstr.Split(gstr.Trim(array2[0]), ".")
+		index = len(array3) - 1
 		// If the table name already has the prefix, skips the prefix adding.
-		if len(array2[0]) <= len(prefix) || array2[0][:len(prefix)] != prefix {
-			array2[0] = prefix + array2[0]
+		if len(array3[index]) <= len(prefix) || array3[index][:len(prefix)] != prefix {
+			array3[index] = prefix + array3[index]
 		}
+		array2[0] = gstr.Join(array3, ".")
 		// Add the security chars.
 		array2[0] = doQuoteString(array2[0], charLeft, charRight)
 		array1[k1] = gstr.Join(array2, " ")
@@ -90,12 +95,15 @@ func doQuoteString(s, charLeft, charRight string) string {
 	array1 := gstr.SplitAndTrim(s, ",")
 	for k1, v1 := range array1 {
 		array2 := gstr.SplitAndTrim(v1, " ")
-		array3 := gstr.SplitAndTrim(array2[0], ".")
+		array3 := gstr.Split(gstr.Trim(array2[0]), ".")
 		if len(array3) == 1 {
 			array3[0] = doQuoteWord(array3[0], charLeft, charRight)
-		} else if len(array3) == 2 {
+		} else if len(array3) >= 2 {
 			array3[0] = doQuoteWord(array3[0], charLeft, charRight)
-			array3[1] = doQuoteWord(array3[1], charLeft, charRight)
+			// Note:
+			// mysql: u.uid
+			// mssql double dots: Database..Table
+			array3[len(array3)-1] = doQuoteWord(array3[len(array3)-1], charLeft, charRight)
 		}
 		array2[0] = gstr.Join(array3, ".")
 		array1[k1] = gstr.Join(array2, " ")
