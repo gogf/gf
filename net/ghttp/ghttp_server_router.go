@@ -142,7 +142,8 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 		pushed := false
 		for e := l.Front(); e != nil; e = e.Next() {
 			item = e.Value.(*handlerItem)
-			// 判断优先级，决定当前注册项的插入顺序
+			// Checks the priority whether inserting the route item before current item,
+			// which means it has more higher priority.
 			if s.compareRouterPriority(handler, item) {
 				l.InsertBefore(e, handler)
 				pushed = true
@@ -150,19 +151,28 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 			}
 		}
 	end:
+		// Just push back in default.
 		if !pushed {
 			l.PushBack(handler)
 		}
 	}
-	//gutil.Dump(s.serveTree)
+	// Initialize the route map item.
 	if _, ok := s.routesMap[regKey]; !ok {
 		s.routesMap[regKey] = make([]registeredRouteItem, 0)
 	}
 	_, file, line := gdebug.CallerWithFilter(gFILTER_KEY)
-	s.routesMap[regKey] = append(s.routesMap[regKey], registeredRouteItem{
+	routeItem := registeredRouteItem{
 		file:    fmt.Sprintf(`%s:%d`, file, line),
 		handler: handler,
-	})
+	}
+	switch handler.itemType {
+	case gHANDLER_TYPE_HANDLER, gHANDLER_TYPE_OBJECT, gHANDLER_TYPE_CONTROLLER:
+		// Overwrite the route.
+		s.routesMap[regKey] = []registeredRouteItem{routeItem}
+	default:
+		// Append the route.
+		s.routesMap[regKey] = append(s.routesMap[regKey], routeItem)
+	}
 }
 
 // 对比两个handlerItem的优先级，需要非常注意的是，注意新老对比项的参数先后顺序。
