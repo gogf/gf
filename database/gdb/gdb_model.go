@@ -261,10 +261,10 @@ func (m *Model) FieldsEx(fields string) *Model {
 	return model
 }
 
-// Option sets the extra operation option for the model.
+// Option adds extra operation option for the model.
 func (m *Model) Option(option int) *Model {
 	model := m.getModel()
-	model.option = option
+	model.option = model.option | option
 	return model
 }
 
@@ -509,6 +509,18 @@ func (m *Model) Data(data ...interface{}) *Model {
 // The optional parameter <data> is the same as the parameter of Model.Data function,
 // see Model.Data.
 func (m *Model) Insert(data ...interface{}) (result sql.Result, err error) {
+	return m.doInsertWithOption(gINSERT_OPTION_DEFAULT, data...)
+}
+
+// InsertIgnore does "INSERT IGNORE INTO ..." statement for the model.
+// The optional parameter <data> is the same as the parameter of Model.Data function,
+// see Model.Data.
+func (m *Model) InsertIgnore(data ...interface{}) (result sql.Result, err error) {
+	return m.doInsertWithOption(gINSERT_OPTION_IGNORE, data...)
+}
+
+// doInsertWithOption inserts data with option parameter.
+func (m *Model) doInsertWithOption(option int, data ...interface{}) (result sql.Result, err error) {
 	if len(data) > 0 {
 		return m.Data(data...).Insert()
 	}
@@ -520,7 +532,6 @@ func (m *Model) Insert(data ...interface{}) (result sql.Result, err error) {
 	if m.data == nil {
 		return nil, errors.New("inserting into table with empty data")
 	}
-
 	if list, ok := m.data.(List); ok {
 		// Batch insert.
 		batch := 10
@@ -531,7 +542,7 @@ func (m *Model) Insert(data ...interface{}) (result sql.Result, err error) {
 			m.getLink(true),
 			m.tables,
 			m.filterDataForInsertOrUpdate(list),
-			gINSERT_OPTION_DEFAULT,
+			option,
 			batch,
 		)
 	} else if data, ok := m.data.(Map); ok {
@@ -540,7 +551,7 @@ func (m *Model) Insert(data ...interface{}) (result sql.Result, err error) {
 			m.getLink(true),
 			m.tables,
 			m.filterDataForInsertOrUpdate(data),
-			gINSERT_OPTION_DEFAULT,
+			option,
 		)
 	}
 	return nil, errors.New("inserting into table with invalid data type")

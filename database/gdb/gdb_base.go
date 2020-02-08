@@ -27,11 +27,13 @@ const (
 )
 
 var (
-	// lastOperatorReg is the regular expression object for a string which has operator at its tail.
+	// lastOperatorReg is the regular expression object for a string
+	// which has operator at its tail.
 	lastOperatorReg = regexp.MustCompile(`[<>=]+\s*$`)
 )
 
-// 数据库sql查询操作，主要执行查询
+// Query commits one query SQL to underlying driver and returns the execution result.
+// It is most commonly used for data querying.
 func (bs *dbBase) Query(query string, args ...interface{}) (rows *sql.Rows, err error) {
 	link, err := bs.db.Slave()
 	if err != nil {
@@ -40,7 +42,8 @@ func (bs *dbBase) Query(query string, args ...interface{}) (rows *sql.Rows, err 
 	return bs.db.doQuery(link, query, args...)
 }
 
-// 数据库sql查询操作，主要执行查询
+// doQuery commits the query string and its arguments to underlying driver
+// through given link object and returns the execution result.
 func (bs *dbBase) doQuery(link dbLink, query string, args ...interface{}) (rows *sql.Rows, err error) {
 	query, args = formatQuery(query, args)
 	query = bs.db.handleSqlBeforeExec(query)
@@ -68,7 +71,8 @@ func (bs *dbBase) doQuery(link dbLink, query string, args ...interface{}) (rows 
 	return nil, err
 }
 
-// 执行一条sql，并返回执行情况，主要用于非查询操作
+// Exec commits one query SQL to underlying driver and returns the execution result.
+// It is most commonly used for data inserting and updating.
 func (bs *dbBase) Exec(query string, args ...interface{}) (result sql.Result, err error) {
 	link, err := bs.db.Master()
 	if err != nil {
@@ -77,7 +81,8 @@ func (bs *dbBase) Exec(query string, args ...interface{}) (result sql.Result, er
 	return bs.db.doExec(link, query, args...)
 }
 
-// 执行一条sql，并返回执行情况，主要用于非查询操作
+// doExec commits the query string and its arguments to underlying driver
+// through given link object and returns the execution result.
 func (bs *dbBase) doExec(link dbLink, query string, args ...interface{}) (result sql.Result, err error) {
 	query, args = formatQuery(query, args)
 	query = bs.db.handleSqlBeforeExec(query)
@@ -100,7 +105,14 @@ func (bs *dbBase) doExec(link dbLink, query string, args ...interface{}) (result
 	return result, formatError(err, query, args...)
 }
 
-// SQL预处理，执行完成后调用返回值sql.Stmt.Exec完成sql操作; 默认执行在Slave上, 通过第二个参数指定执行在Master上
+// Prepare creates a prepared statement for later queries or executions.
+// Multiple queries or executions may be run concurrently from the
+// returned statement.
+// The caller must call the statement's Close method
+// when the statement is no longer needed.
+//
+// The parameter <execOnMaster> specifies whether executing the sql on master node,
+// or else it executes the sql on slave node if master-slave configured.
 func (bs *dbBase) Prepare(query string, execOnMaster ...bool) (*sql.Stmt, error) {
 	err := (error)(nil)
 	link := (dbLink)(nil)
@@ -116,17 +128,17 @@ func (bs *dbBase) Prepare(query string, execOnMaster ...bool) (*sql.Stmt, error)
 	return bs.db.doPrepare(link, query)
 }
 
-// SQL预处理，执行完成后调用返回值sql.Stmt.Exec完成sql操作
+// doPrepare calls prepare function on given link object and returns the statement object.
 func (bs *dbBase) doPrepare(link dbLink, query string) (*sql.Stmt, error) {
 	return link.Prepare(query)
 }
 
-// 数据库查询，获取查询结果集，以列表结构返回
+// GetAll queries and returns data records from database.
 func (bs *dbBase) GetAll(query string, args ...interface{}) (Result, error) {
 	return bs.db.doGetAll(nil, query, args...)
 }
 
-// 数据库查询，获取查询结果集，以列表结构返回，给定连接对象
+// doGetAll queries and returns data records from database.
 func (bs *dbBase) doGetAll(link dbLink, query string, args ...interface{}) (result Result, err error) {
 	if link == nil {
 		link, err = bs.db.Slave()
@@ -142,7 +154,7 @@ func (bs *dbBase) doGetAll(link dbLink, query string, args ...interface{}) (resu
 	return bs.db.rowsToResult(rows)
 }
 
-// 数据库查询，获取查询结果记录，以关联数组结构返回
+// GetOne queries and returns one record from database.
 func (bs *dbBase) GetOne(query string, args ...interface{}) (Record, error) {
 	list, err := bs.GetAll(query, args...)
 	if err != nil {
@@ -154,7 +166,8 @@ func (bs *dbBase) GetOne(query string, args ...interface{}) (Record, error) {
 	return nil, nil
 }
 
-// 数据库查询，查询单条记录，自动映射数据到给定的struct对象中
+// GetStruct queries one record from database and converts it to given struct.
+// The parameter <pointer> should be a pointer to struct.
 func (bs *dbBase) GetStruct(pointer interface{}, query string, args ...interface{}) error {
 	one, err := bs.GetOne(query, args...)
 	if err != nil {
@@ -166,7 +179,8 @@ func (bs *dbBase) GetStruct(pointer interface{}, query string, args ...interface
 	return one.Struct(pointer)
 }
 
-// 数据库查询，查询多条记录，并自动转换为指定的slice对象, 如: []struct/[]*struct。
+// GetStructs queries records from database and converts them to given struct.
+// The parameter <pointer> should be type of struct slice: []struct/[]*struct.
 func (bs *dbBase) GetStructs(pointer interface{}, query string, args ...interface{}) error {
 	all, err := bs.GetAll(query, args...)
 	if err != nil {
@@ -178,9 +192,10 @@ func (bs *dbBase) GetStructs(pointer interface{}, query string, args ...interfac
 	return all.Structs(pointer)
 }
 
-// 将结果转换为指定的struct/*struct/[]struct/[]*struct,
-// 参数应该为指针类型，否则返回失败。
-// 该方法自动识别参数类型，调用Struct/Structs方法。
+// GetScan queries one or more records from database and converts them to given struct.
+// If parameter <pointer> is type of struct pointer, it calls GetStruct internally for
+// the conversion. If parameter <pointer> is type of slice, it calls GetStructs internally
+// for conversion.
 func (bs *dbBase) GetScan(pointer interface{}, query string, args ...interface{}) error {
 	t := reflect.TypeOf(pointer)
 	k := t.Kind()
@@ -197,7 +212,9 @@ func (bs *dbBase) GetScan(pointer interface{}, query string, args ...interface{}
 	return fmt.Errorf("element type should be type of struct/slice, unsupported: %v", k)
 }
 
-// 数据库查询，获取查询字段值
+// GetValue queries and returns the field value from database.
+// The sql should queries only one field from database, or else it returns only one
+// field of the result.
 func (bs *dbBase) GetValue(query string, args ...interface{}) (Value, error) {
 	one, err := bs.GetOne(query, args...)
 	if err != nil {
@@ -209,8 +226,10 @@ func (bs *dbBase) GetValue(query string, args ...interface{}) (Value, error) {
 	return nil, nil
 }
 
-// 数据库查询，获取查询数量
+// GetCount queries and returns the count from database.
 func (bs *dbBase) GetCount(query string, args ...interface{}) (int, error) {
+	// If the query fields do not contains function "COUNT",
+	// it replaces the query string and adds the "COUNT" function to the fields.
 	if !gregex.IsMatchString(`(?i)SELECT\s+COUNT\(.+\)\s+FROM`, query) {
 		query, _ = gregex.ReplaceString(`(?i)(SELECT)\s+(.+)\s+(FROM)`, `$1 COUNT($2) $3`, query)
 	}
@@ -262,6 +281,10 @@ func (bs *dbBase) Begin() (*TX, error) {
 // 当为slice(例如[]map/[]struct/[]*struct)类型时，batch参数生效，并自动切换为批量操作。
 func (bs *dbBase) Insert(table string, data interface{}, batch ...int) (sql.Result, error) {
 	return bs.db.doInsert(nil, table, data, gINSERT_OPTION_DEFAULT, batch...)
+}
+
+func (bs *dbBase) InsertIgnore(table string, data interface{}, batch ...int) (sql.Result, error) {
+	return bs.db.doInsert(nil, table, data, gINSERT_OPTION_IGNORE, batch...)
 }
 
 // CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条。

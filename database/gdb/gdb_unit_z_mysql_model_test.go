@@ -95,6 +95,33 @@ func Test_Model_Insert(t *testing.T) {
 
 }
 
+func Test_Model_InsertIgnore(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	gtest.Case(t, func() {
+		_, err := db.Table(table).Filter().Data(g.Map{
+			"id":          1,
+			"uid":         1,
+			"passport":    "t1",
+			"password":    "25d55ad283aa400af464c76d713c07ad",
+			"nickname":    "name_1",
+			"create_time": gtime.Now().String(),
+		}).Insert()
+		gtest.AssertNE(err, nil)
+	})
+	gtest.Case(t, func() {
+		_, err := db.Table(table).Filter().Data(g.Map{
+			"id":          1,
+			"uid":         1,
+			"passport":    "t1",
+			"password":    "25d55ad283aa400af464c76d713c07ad",
+			"nickname":    "name_1",
+			"create_time": gtime.Now().String(),
+		}).InsertIgnore()
+		gtest.Assert(err, nil)
+	})
+}
+
 func Test_Model_Batch(t *testing.T) {
 	// bacth insert
 	gtest.Case(t, func() {

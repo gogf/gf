@@ -64,6 +64,7 @@ type DB interface {
 	Begin() (*TX, error)
 
 	Insert(table string, data interface{}, batch ...int) (sql.Result, error)
+	InsertIgnore(table string, data interface{}, batch ...int) (sql.Result, error)
 	Replace(table string, data interface{}, batch ...int) (sql.Result, error)
 	Save(table string, data interface{}, batch ...int) (sql.Result, error)
 
@@ -137,31 +138,32 @@ type Sql struct {
 	End    int64         // End execution timestamp in milliseconds.
 }
 
-// 表字段结构信息
+// TableField is the struct for table field.
 type TableField struct {
-	Index   int         // 用于字段排序(因为map类型是无序的)
-	Name    string      // 字段名称
-	Type    string      // 字段类型
-	Null    bool        // 是否可为null
-	Key     string      // 索引信息
-	Default interface{} // 默认值
-	Extra   string      // 其他信息
-	Comment string      // 字段描述
+	Index   int         // For ordering purpose as map is unordered.
+	Name    string      // Field name.
+	Type    string      // Field type.
+	Null    bool        // Field can be null or not.
+	Key     string      // The index information(empty if it's not a index).
+	Default interface{} // Default value for the field.
+	Extra   string      // Extra information.
+	Comment string      // Comment.
 }
 
-// 返回数据表记录值
+// Value is the field value type.
 type Value = *gvar.Var
 
-// 返回数据表记录Map
+// Record is the row record of the table.
 type Record map[string]Value
 
-// 返回数据表记录List
+// Result is the row record array.
 type Result []Record
 
-// 关联数组，绑定一条数据表记录(使用别名)
+// Map is alias of map[string]interface{},
+// which is the most common usage map type.
 type Map = map[string]interface{}
 
-// 关联数组列表(索引从0开始的数组)，绑定多条记录(使用别名)
+// List is type of map array.
 type List = []Map
 
 const (
@@ -244,10 +246,14 @@ func Instance(name ...string) (db DB, err error) {
 	return
 }
 
-// 获取指定数据库角色的一个配置项，内部根据权重计算负载均衡
+// getConfigNodeByGroup calculates and returns a configuration node of given group.
+// It calculates the value internally using weight algorithm for load balance.
+//
+// The parameter <master> specifies whether retrieving a master node, or else a slave node
+// if master-slave configured.
 func getConfigNodeByGroup(group string, master bool) (*ConfigNode, error) {
 	if list, ok := configs.config[group]; ok {
-		// 将master, slave集群列表拆分出来
+		// Separates master and slave configuration nodes array.
 		masterList := make(ConfigGroup, 0)
 		slaveList := make(ConfigGroup, 0)
 		for i := 0; i < len(list); i++ {
@@ -273,12 +279,12 @@ func getConfigNodeByGroup(group string, master bool) (*ConfigNode, error) {
 	}
 }
 
-// 按照负载均衡算法(优先级配置)从数据库集群中选择一个配置节点出来使用
-// 算法说明举例，
-// 1、假如2个节点的priority都是1，那么随机大小范围为[0, 199]；
-// 2、那么节点1的权重范围为[0, 99]，节点2的权重范围为[100, 199]，比例为1:1；
-// 3、假如计算出的随机数为99;
-// 4、那么选择的配置为节点1;
+// getConfigNodeByWeight calculates the configuration weights and randomly returns a node.
+//
+// Calculation algorithm brief:
+// 1. If we have 2 nodes, and their weights are both 1, then the weight range is [0, 199];
+// 2. Node1 weight range is [0, 99], and node2 weight range is [100, 199], ratio is 1:1;
+// 3. If the random number is 99, it then chooses and returns node1;
 func getConfigNodeByWeight(cg ConfigGroup) *ConfigNode {
 	if len(cg) < 2 {
 		return &cg[0]
@@ -287,18 +293,16 @@ func getConfigNodeByWeight(cg ConfigGroup) *ConfigNode {
 	for i := 0; i < len(cg); i++ {
 		total += cg[i].Weight * 100
 	}
-	// 如果total为0表示所有连接都没有配置priority属性，那么默认都是1
+	// If total is 0 means all of the nodes have no weight attribute configured.
+	// It then defaults each node's weight attribute to 1.
 	if total == 0 {
 		for i := 0; i < len(cg); i++ {
 			cg[i].Weight = 1
 			total += cg[i].Weight * 100
 		}
 	}
-	// 不能取到末尾的边界点
-	r := grand.N(0, total)
-	if r > 0 {
-		r -= 1
-	}
+	// Exclude the right border value.
+	r := grand.N(0, total-1)
 	min := 0
 	max := 0
 	for i := 0; i < len(cg); i++ {
