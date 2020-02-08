@@ -25,7 +25,8 @@ type apiMapStrAny interface {
 // map/struct/*struct type, then the conversion will fail and returns nil.
 //
 // If <value> is a struct/*struct object, the second parameter <tags> specifies the most priority
-// tags that will be detected, otherwise it detects the tags in order of: gconv, json, and then the field name.
+// tags that will be detected, otherwise it detects the tags in order of:
+// gconv, json, field name.
 func Map(value interface{}, tags ...string) map[string]interface{} {
 	return doMapConvert(value, false, tags...)
 }
