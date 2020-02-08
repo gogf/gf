@@ -2,35 +2,27 @@ package main
 
 import (
 	"fmt"
-	"github.com/gogf/gf/encoding/gjson"
+	"github.com/gogf/gf/encoding/gparser"
 )
 
+type User struct {
+	Name string `xml:"name" json:"name"`
+	Age  int    `xml:"bb" json:"dd" gconv:"aa"`
+	Addr string `xml:"cc"`
+}
+
 func main() {
-
-	type Item struct {
-		Title string `json:"title"`
-		Key   string `json:"key"`
+	user := User{
+		Name: "sss",
+		Age:  22,
+		Addr: "kaldsj",
 	}
 
-	type M struct {
-		Id    string                 `json:"id"`
-		Me    map[string]interface{} `json:"me"`
-		Txt   string                 `json:"txt"`
-		Items []*Item                `json:"items"`
+	xmlStr, err := gparser.VarToXmlIndent(user, "user")
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
 
-	txt := `{
-  "id":"88888",
-  "me":{"name":"mikey","day":"20009"},
-  "txt":"hello",
-  "items":null
- }`
-
-	json, _ := gjson.LoadContent(txt)
-	fmt.Println(json)
-	m := new(M)
-	e := json.ToStructDeep(m)
-	fmt.Println(e)
-	fmt.Println(m)
-
+	fmt.Println(string(xmlStr))
 }

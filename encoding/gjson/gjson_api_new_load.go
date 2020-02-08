@@ -27,9 +27,21 @@ import (
 
 // New creates a Json object with any variable type of <data>, but <data> should be a map or slice
 // for data access reason, or it will make no sense.
-// The <safe> param specifies whether using this Json object in concurrent-safe context, which is
+//
+// The parameter <safe> specifies whether using this Json object in concurrent-safe context, which is
 // false in default.
 func New(data interface{}, safe ...bool) *Json {
+	return NewWithTag(data, "json", safe...)
+}
+
+// NewWithTag creates a Json object with any variable type of <data>, but <data> should be a map or slice
+// for data access reason, or it will make no sense.
+//
+// The parameter <tags> specifies priority tags for struct conversion to map, multiple tags joined with char ','.
+//
+// The parameter <safe> specifies whether using this Json object in concurrent-safe context, which is
+// false in default.
+func NewWithTag(data interface{}, tags string, safe ...bool) *Json {
 	j := (*Json)(nil)
 	switch data.(type) {
 	case string, []byte:
@@ -61,7 +73,7 @@ func New(data interface{}, safe ...bool) *Json {
 		case reflect.Map, reflect.Struct:
 			i := interface{}(nil)
 			// Note that it uses MapDeep function implementing the converting.
-			i = gconv.MapDeep(data, "json")
+			i = gconv.MapDeep(data, tags)
 			j = &Json{
 				p:  &i,
 				c:  byte(gDEFAULT_SPLIT_CHAR),
