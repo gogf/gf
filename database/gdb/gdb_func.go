@@ -433,13 +433,14 @@ func formatError(err error, query string, args ...interface{}) error {
 
 // getInsertOperationByOption returns proper insert option with given parameter <option>.
 func getInsertOperationByOption(option int) string {
-	operator := "INSERT"
+	var operator string
 	switch option {
 	case gINSERT_OPTION_REPLACE:
 		operator = "REPLACE"
-	case gINSERT_OPTION_SAVE:
 	case gINSERT_OPTION_IGNORE:
 		operator = "INSERT IGNORE"
+	default:
+		operator = "INSERT"
 	}
 	return operator
 }

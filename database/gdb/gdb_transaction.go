@@ -137,6 +137,10 @@ func (tx *TX) Insert(table string, data interface{}, batch ...int) (sql.Result, 
 	return tx.db.doInsert(tx.tx, table, data, gINSERT_OPTION_DEFAULT, batch...)
 }
 
+func (tx *TX) InsertIgnore(table string, data interface{}, batch ...int) (sql.Result, error) {
+	return tx.db.doInsert(tx.tx, table, data, gINSERT_OPTION_IGNORE, batch...)
+}
+
 // CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条
 func (tx *TX) Replace(table string, data interface{}, batch ...int) (sql.Result, error) {
 	return tx.db.doInsert(tx.tx, table, data, gINSERT_OPTION_REPLACE, batch...)
