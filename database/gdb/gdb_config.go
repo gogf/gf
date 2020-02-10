@@ -15,48 +15,48 @@ import (
 )
 
 const (
-	DEFAULT_GROUP_NAME = "default" // 默认配置名称
+	DEFAULT_GROUP_NAME = "default" // Default group name.
 )
 
-// 数据库分组配置
+// Config is the configuration management object.
 type Config map[string]ConfigGroup
 
-// 数据库集群配置
+// ConfigGroup is a slice of configuration node for specified named group.
 type ConfigGroup []ConfigNode
 
-// 数据库单项配置
+// ConfigNode is configuration for one node.
 type ConfigNode struct {
-	Host             string        // 地址
-	Port             string        // 端口
-	User             string        // 账号
-	Pass             string        // 密码
-	Name             string        // 数据库名称
-	Type             string        // 数据库类型：mysql, sqlite, mssql, pgsql, oracle
-	Role             string        // (可选，默认为master)数据库的角色，用于主从操作分离，至少需要有一个master，参数值：master, slave
-	Debug            bool          // (可选)开启调试模式
-	Prefix           string        // (可选)表名前缀
-	Weight           int           // (可选)用于负载均衡的权重计算，当集群中只有一个节点时，权重没有任何意义
-	Charset          string        // (可选，默认为 utf8)编码，默认为 utf8
-	LinkInfo         string        // (可选)自定义链接信息，当该字段被设置值时，以上链接字段(Host,Port,User,Pass,Name)将失效(该字段是一个扩展功能)
-	MaxIdleConnCount int           // (可选)连接池最大限制的连接数
-	MaxOpenConnCount int           // (可选)连接池最大打开的连接数
-	MaxConnLifetime  time.Duration // (可选)连接对象可重复使用的时间长度
+	Host             string        // Host of server, ip or domain like: 127.0.0.1, localhost
+	Port             string        // Port, it's commonly 3306.
+	User             string        // Authentication username.
+	Pass             string        // Authentication password.
+	Name             string        // Default used database name.
+	Type             string        // Database type: mysql, sqlite, mssql, pgsql, oracle.
+	Role             string        // (Optional, "master" in default) Node role, used for master-slave mode: master, slave.
+	Debug            bool          // (Optional) Debug mode enables debug information logging and output.
+	Prefix           string        // (Optional) Table prefix.
+	Weight           int           // (Optional) Weight for load balance calculating, it's useless if there's just one node.
+	Charset          string        // (Optional, "utf8mb4" in default) Custom charset when operating on database.
+	LinkInfo         string        // (Optional) Custom link information, when it is used, configuration Host/Port/User/Pass/Name are ignored.
+	MaxIdleConnCount int           // (Optional) Max idle connection configuration for underlying connection pool.
+	MaxOpenConnCount int           // (Optional) Max open connection configuration for underlying connection pool.
+	MaxConnLifetime  time.Duration // (Optional) Max connection TTL configuration for underlying connection pool.
 }
 
-// 数据库配置包内对象
+// configs is internal used configuration object.
 var configs struct {
-	sync.RWMutex        // 并发安全互斥锁
-	config       Config // 数据库分组配置
-	defaultGroup string // 默认数据库分组名称
+	sync.RWMutex
+	config Config // All configurations.
+	group  string // Default configuration group.
 }
 
-// 包初始化
 func init() {
 	configs.config = make(Config)
-	configs.defaultGroup = DEFAULT_GROUP_NAME
+	configs.group = DEFAULT_GROUP_NAME
 }
 
-// 设置当前应用的数据库配置信息，进行全局数据库配置覆盖操作
+// SetConfig sets the global configuration for package.
+// It will overwrite the old configuration of package.
 func SetConfig(config Config) {
 	defer instances.Clear()
 	configs.Lock()
@@ -64,7 +64,7 @@ func SetConfig(config Config) {
 	configs.config = config
 }
 
-// 按照配置分组设置数据库服务器集群配置
+// SetConfigGroup sets the configuration for given group.
 func SetConfigGroup(group string, nodes ConfigGroup) {
 	defer instances.Clear()
 	configs.Lock()
@@ -72,7 +72,7 @@ func SetConfigGroup(group string, nodes ConfigGroup) {
 	configs.config[group] = nodes
 }
 
-// 按照配置分组添加一台数据库服务器配置
+// AddConfigNode adds one node configuration to configuration of given group.
 func AddConfigNode(group string, node ConfigNode) {
 	defer instances.Clear()
 	configs.Lock()
@@ -80,66 +80,66 @@ func AddConfigNode(group string, node ConfigNode) {
 	configs.config[group] = append(configs.config[group], node)
 }
 
-// 添加默认链接的一台数据库服务器配置
+// AddDefaultConfigNode adds one node configuration to configuration of default group.
 func AddDefaultConfigNode(node ConfigNode) {
 	AddConfigNode(DEFAULT_GROUP_NAME, node)
 }
 
-// 添加默认链接的数据库服务器集群配置
+// AddDefaultConfigGroup adds multiple node configurations to configuration of default group.
 func AddDefaultConfigGroup(nodes ConfigGroup) {
 	SetConfigGroup(DEFAULT_GROUP_NAME, nodes)
 }
 
-// 添加一台数据库服务器配置
+// GetConfig retrieves and returns the configuration of given group.
 func GetConfig(group string) ConfigGroup {
 	configs.RLock()
 	defer configs.RUnlock()
 	return configs.config[group]
 }
 
-// 设置默认链接的数据库链接配置项(默认是 default)
+// SetDefaultGroup sets the group name for default configuration.
 func SetDefaultGroup(name string) {
 	defer instances.Clear()
 	configs.Lock()
 	defer configs.Unlock()
-	configs.defaultGroup = name
+	configs.group = name
 }
 
-// 获取默认链接的数据库链接配置项(默认是 default)
+// GetDefaultGroup returns the { name of default configuration.
 func GetDefaultGroup() string {
 	defer instances.Clear()
 	configs.RLock()
 	defer configs.RUnlock()
-	return configs.defaultGroup
+	return configs.group
 }
 
-// 设置数据库的日志管理对象
+// SetLogger sets the logger for orm.
 func (bs *dbBase) SetLogger(logger *glog.Logger) {
 	bs.logger = logger
 }
 
-// 获得数据库Logger对象
+// GetLogger returns the logger of the orm.
 func (bs *dbBase) GetLogger() *glog.Logger {
 	return bs.logger
 }
 
-// 设置数据库连接池中空闲链接的大小
+// SetMaxIdleConnCount sets the max idle connection count for underlying connection pool.
 func (bs *dbBase) SetMaxIdleConnCount(n int) {
 	bs.maxIdleConnCount = n
 }
 
-// 设置数据库连接池最大打开的链接数量
+// SetMaxOpenConnCount sets the max open connection count for underlying connection pool.
 func (bs *dbBase) SetMaxOpenConnCount(n int) {
 	bs.maxOpenConnCount = n
 }
 
-// 设置数据库连接可重复利用的时间，超过该时间则被关闭废弃
-// 如果 d <= 0 表示该链接会一直重复利用
+// SetMaxConnLifetime sets the connection TTL for underlying connection pool.
+// If parameter <d> <= 0, it means the connection never expires.
 func (bs *dbBase) SetMaxConnLifetime(d time.Duration) {
 	bs.maxConnLifetime = d
 }
 
-// 节点配置转换为字符串
+// String returns the node as string.
 func (node *ConfigNode) String() string {
 	if node.LinkInfo != "" {
 		return node.LinkInfo
@@ -148,11 +148,13 @@ func (node *ConfigNode) String() string {
 		`%s@%s:%s,%s,%s,%s,%s,%v,%d-%d-%d`,
 		node.User, node.Host, node.Port,
 		node.Name, node.Type, node.Role, node.Charset, node.Debug,
-		node.MaxIdleConnCount, node.MaxOpenConnCount, node.MaxConnLifetime,
+		node.MaxIdleConnCount,
+		node.MaxOpenConnCount,
+		node.MaxConnLifetime,
 	)
 }
 
-// 是否开启调试服务
+// SetDebug enables/disables the debug mode.
 func (bs *dbBase) SetDebug(debug bool) {
 	if bs.debug.Val() == debug {
 		return
@@ -160,7 +162,7 @@ func (bs *dbBase) SetDebug(debug bool) {
 	bs.debug.Set(debug)
 }
 
-// 获取是否开启调试服务
+// getDebug returns the debug value.
 func (bs *dbBase) getDebug() bool {
 	return bs.debug.Val()
 }

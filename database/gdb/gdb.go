@@ -184,7 +184,7 @@ var (
 // The parameter <name> specifies the configuration group name,
 // which is DEFAULT_GROUP_NAME in default.
 func New(name ...string) (db DB, err error) {
-	group := configs.defaultGroup
+	group := configs.group
 	if len(name) > 0 && name[0] != "" {
 		group = name[0]
 	}
@@ -232,7 +232,7 @@ func New(name ...string) (db DB, err error) {
 // The parameter <name> specifies the configuration group name,
 // which is DEFAULT_GROUP_NAME in default.
 func Instance(name ...string) (db DB, err error) {
-	group := configs.defaultGroup
+	group := configs.group
 	if len(name) > 0 && name[0] != "" {
 		group = name[0]
 	}

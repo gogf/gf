@@ -11,7 +11,7 @@ import (
 	"io/ioutil"
 )
 
-// bodyReadCloser implements the io.ReadCloser interface
+// BodyReadCloser implements the io.ReadCloser interface
 // which is used for reading request body content multiple times.
 type BodyReadCloser struct {
 	*bytes.Reader

@@ -174,15 +174,6 @@ func GetPrimaryKeyCondition(primary string, where ...interface{}) (newWhereCondi
 	return where
 }
 
-// 获得orm标签与属性的映射关系
-func GetOrmMappingOfStruct(pointer interface{}) map[string]string {
-	mapping := make(map[string]string)
-	for tag, attr := range structs.TagMapName(pointer, []string{ORM_TAG_FOR_STRUCT}, true) {
-		mapping[strings.Split(tag, ",")[0]] = attr
-	}
-	return mapping
-}
-
 // formatQuery formats the query string and its arguments before executing.
 // The internal handleArguments function might be called twice during the SQL procedure,
 // but do not worry about it, it's safe and efficient.
@@ -483,5 +474,10 @@ func bindArgsToQuery(query string, args []interface{}) string {
 // mapToStruct maps the <data> to given struct.
 // Note that the given parameter <pointer> should be a pointer to s struct.
 func mapToStruct(data map[string]interface{}, pointer interface{}) error {
-	return gconv.StructDeep(data, pointer, GetOrmMappingOfStruct(pointer))
+	// It retrieves and returns the mapping between orm tag and the struct attribute name.
+	mapping := make(map[string]string)
+	for tag, attr := range structs.TagMapName(pointer, []string{ORM_TAG_FOR_STRUCT}, true) {
+		mapping[strings.Split(tag, ",")[0]] = attr
+	}
+	return gconv.StructDeep(data, pointer, mapping)
 }

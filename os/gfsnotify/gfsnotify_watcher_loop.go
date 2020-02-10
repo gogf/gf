@@ -22,7 +22,6 @@ func (w *Watcher) startWatchLoop() {
 
 			// Event listening.
 			case ev := <-w.watcher.Events:
-				//intlog.Print(ev.String())
 				// Filter the repeated event in custom duration.
 				w.cache.SetIfNotExist(ev.String(), func() interface{} {
 					w.events.Push(&Event{
@@ -32,7 +31,7 @@ func (w *Watcher) startWatchLoop() {
 						Watcher: w,
 					})
 					return struct{}{}
-				}, REPEAT_EVENT_FILTER_DURATION)
+				}, repeatEventFilterDuration)
 
 			case err := <-w.watcher.Errors:
 				intlog.Error(err)
@@ -148,7 +147,7 @@ func (w *Watcher) startEventLoop() {
 						defer func() {
 							if err := recover(); err != nil {
 								switch err {
-								case gFSNOTIFY_EVENT_EXIT:
+								case callbackExitEventPanicStr:
 									w.RemoveCallback(callback.Id)
 								default:
 									panic(err)
