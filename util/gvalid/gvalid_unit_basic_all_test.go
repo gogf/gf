@@ -833,6 +833,21 @@ func Test_In(t *testing.T) {
 
 func Test_NotIn(t *testing.T) {
 	gtest.Case(t, func() {
+		rule := "not-in:100"
+		val1 := ""
+		val2 := "1"
+		val3 := "100"
+		val4 := "200"
+		err1 := gvalid.Check(val1, rule, nil)
+		err2 := gvalid.Check(val2, rule, nil)
+		err3 := gvalid.Check(val3, rule, nil)
+		err4 := gvalid.Check(val4, rule, nil)
+		gtest.Assert(err1, nil)
+		gtest.Assert(err2, nil)
+		gtest.AssertNE(err3, nil)
+		gtest.Assert(err4, nil)
+	})
+	gtest.Case(t, func() {
 		rule := "not-in:100,200"
 		val1 := ""
 		val2 := "1"

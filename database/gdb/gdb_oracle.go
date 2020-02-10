@@ -151,7 +151,6 @@ func (db *dbOracle) TableFields(table string, schema ...string) (fields map[stri
 	return
 }
 
-//查询表的主键及唯一索引并存入缓存中
 func (db *dbOracle) getTableUniqueIndex(table string) (fields map[string]map[string]string, err error) {
 	table = strings.ToUpper(table)
 	v := db.cache.GetOrSetFunc("table_unique_index_"+table, func() interface{} {
@@ -164,7 +163,6 @@ func (db *dbOracle) getTableUniqueIndex(table string) (fields map[string]map[str
 		if err != nil {
 			return nil
 		}
-
 		fields := make(map[string]map[string]string)
 		for _, v := range res {
 			mm := make(map[string]string)
@@ -179,23 +177,11 @@ func (db *dbOracle) getTableUniqueIndex(table string) (fields map[string]map[str
 	return
 }
 
-// 支持insert、replace, save， ignore操作。
-// 0: insert:  仅仅执行写入操作，如果存在冲突的主键或者唯一索引，那么报错返回;
-// 1: replace: 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条;
-// 2: save:    如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据;
-// 3: ignore:  如果数据存在(主键或者唯一索引)，那么什么也不做,需ORACLE 11G以上版本
-//
-// 注意：对于replace/save/ignore操作只支持表中存在一个唯一索引或主键的情况，
-// 如存在多个唯一索引或主键有可能会执行失败，因为这3种类型的操作需指定唯一索引，没有唯一索引情况下统一执行insert
-//
-// 参数data支持map/struct/*struct/slice类型，
-// 当为slice(例如[]map/[]struct/[]*struct)类型时，batch参数生效，并自动切换为批量操作。
 func (db *dbOracle) doInsert(link dbLink, table string, data interface{}, option int, batch ...int) (result sql.Result, err error) {
 	var fields []string
 	var values []string
 	var params []interface{}
 	var dataMap Map
-	// 使用反射判断data数据类型，如果为slice类型，那么自动转为批量操作
 	rv := reflect.ValueOf(data)
 	kind := rv.Kind()
 	if kind == reflect.Ptr {
@@ -245,7 +231,7 @@ func (db *dbOracle) doInsert(link dbLink, table string, data interface{}, option
 	for k, v := range dataMap {
 		k = strings.ToUpper(k)
 
-		//操作类型为REPLACE/SAVE时且存在唯一索引才使用merge，否则使用insert
+		// 操作类型为REPLACE/SAVE时且存在唯一索引才使用merge，否则使用insert
 		if (option == gINSERT_OPTION_REPLACE || option == gINSERT_OPTION_SAVE) && indexExists {
 			fields = append(fields, tableAlias1+"."+charL+k+charR)
 			values = append(values, tableAlias2+"."+charL+k+charR)
@@ -277,23 +263,31 @@ func (db *dbOracle) doInsert(link dbLink, table string, data interface{}, option
 		case gINSERT_OPTION_REPLACE:
 			fallthrough
 		case gINSERT_OPTION_SAVE:
-			tmp := fmt.Sprintf("MERGE INTO %s %s USING(SELECT %s FROM DUAL) %s ON(%s) WHEN MATCHED THEN UPDATE SET %s WHEN NOT MATCHED THEN INSERT (%s) VALUES(%s)",
+			tmp := fmt.Sprintf(
+				"MERGE INTO %s %s USING(SELECT %s FROM DUAL) %s ON(%s) WHEN MATCHED THEN UPDATE SET %s WHEN NOT MATCHED THEN INSERT (%s) VALUES(%s)",
 				table, tableAlias1, strings.Join(subSqlStr, ","), tableAlias2,
-				strings.Join(onStr, "AND"), strings.Join(updateStr, ","), strings.Join(fields, ","), strings.Join(values, ","))
+				strings.Join(onStr, "AND"), strings.Join(updateStr, ","), strings.Join(fields, ","), strings.Join(values, ","),
+			)
 			return db.db.doExec(link, tmp, params...)
 		case gINSERT_OPTION_IGNORE:
 			return db.db.doExec(link,
-				fmt.Sprintf("INSERT /*+ IGNORE_ROW_ON_DUPKEY_INDEX(%s(%s)) */ INTO %s(%s) VALUES(%s)",
-					table, strings.Join(indexs, ","), table, strings.Join(fields, ","), strings.Join(values, ",")),
+				fmt.Sprintf(
+					"INSERT /*+ IGNORE_ROW_ON_DUPKEY_INDEX(%s(%s)) */ INTO %s(%s) VALUES(%s)",
+					table, strings.Join(indexs, ","), table, strings.Join(fields, ","), strings.Join(values, ","),
+				),
 				params...)
 		}
 	}
 
-	return db.db.doExec(link, fmt.Sprintf("INSERT INTO %s(%s) VALUES(%s)",
-		table, strings.Join(fields, ","), strings.Join(values, ",")), params...)
+	return db.db.doExec(
+		link,
+		fmt.Sprintf(
+			"INSERT INTO %s(%s) VALUES(%s)",
+			table, strings.Join(fields, ","), strings.Join(values, ","),
+		),
+		params...)
 }
 
-// 批量写入数据, 参数list支持slice类型，例如: []map/[]struct/[]*struct。
 func (db *dbOracle) doBatchInsert(link dbLink, table string, list interface{}, option int, batch ...int) (result sql.Result, err error) {
 	var keys []string
 	var values []string

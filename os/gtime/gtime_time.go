@@ -28,7 +28,7 @@ func New(t ...time.Time) *Time {
 	}
 }
 
-// Now returns a time object for now.
+// Now creates and returns a time object of now.
 func Now() *Time {
 	return &Time{
 		time.Now(),
@@ -50,7 +50,8 @@ func NewFromStr(str string) *Time {
 	return nil
 }
 
-// NewFromStrFormat creates and returns a Time object with given string and custom format like: Y-m-d H:i:s.
+// NewFromStrFormat creates and returns a Time object with given string and
+// custom format like: Y-m-d H:i:s.
 func NewFromStrFormat(str string, format string) *Time {
 	if t, err := StrToTimeFormat(str, format); err == nil {
 		return t
@@ -58,7 +59,8 @@ func NewFromStrFormat(str string, format string) *Time {
 	return nil
 }
 
-// NewFromStrLayout creates and returns a Time object with given string and stdlib layout like: 2006-01-02 15:04:05.
+// NewFromStrLayout creates and returns a Time object with given string and
+// stdlib layout like: 2006-01-02 15:04:05.
 func NewFromStrLayout(str string, layout string) *Time {
 	if t, err := StrToTimeLayout(str, layout); err == nil {
 		return t
@@ -66,7 +68,8 @@ func NewFromStrLayout(str string, layout string) *Time {
 	return nil
 }
 
-// NewFromTimeStamp creates and returns a Time object with given timestamp, which can be in seconds to nanoseconds.
+// NewFromTimeStamp creates and returns a Time object with given timestamp,
+// which can be in seconds to nanoseconds.
 func NewFromTimeStamp(timestamp int64) *Time {
 	if timestamp == 0 {
 		return &Time{}

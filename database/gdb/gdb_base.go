@@ -192,7 +192,9 @@ func (bs *dbBase) GetStructs(pointer interface{}, query string, args ...interfac
 	return all.Structs(pointer)
 }
 
-// GetScan queries one or more records from database and converts them to given struct.
+// GetScan queries one or more records from database and converts them to given struct or
+// struct array.
+//
 // If parameter <pointer> is type of struct pointer, it calls GetStruct internally for
 // the conversion. If parameter <pointer> is type of slice, it calls GetStructs internally
 // for conversion.
@@ -240,7 +242,7 @@ func (bs *dbBase) GetCount(query string, args ...interface{}) (int, error) {
 	return value.Int(), nil
 }
 
-// ping一下，判断或保持数据库链接(master)
+// PingMaster pings the master node to check authentication or keeps the connection alive.
 func (bs *dbBase) PingMaster() error {
 	if master, err := bs.db.Master(); err != nil {
 		return err
@@ -249,7 +251,7 @@ func (bs *dbBase) PingMaster() error {
 	}
 }
 
-// ping一下，判断或保持数据库链接(slave)
+// PingSlave pings the slave node to check authentication or keeps the connection alive.
 func (bs *dbBase) PingSlave() error {
 	if slave, err := bs.db.Slave(); err != nil {
 		return err
@@ -258,8 +260,10 @@ func (bs *dbBase) PingSlave() error {
 	}
 }
 
-// 事务操作，开启，会返回一个底层的事务操作对象链接如需要嵌套事务，那么可以使用该对象，否则请忽略
-// 只有在tx.Commit/tx.Rollback时，链接会自动Close
+// Begin starts and returns the transaction object.
+// You should call Commit or Rollback functions of the transaction object
+// if you no longer use the transaction. Commit or Rollback functions will also
+// close the transaction automatically.
 func (bs *dbBase) Begin() (*TX, error) {
 	if master, err := bs.db.Master(); err != nil {
 		return nil, err
@@ -276,46 +280,76 @@ func (bs *dbBase) Begin() (*TX, error) {
 	}
 }
 
-// CURD操作:单条数据写入, 仅仅执行写入操作，如果存在冲突的主键或者唯一索引，那么报错返回。
-// 参数data支持map/struct/*struct/slice类型，
-// 当为slice(例如[]map/[]struct/[]*struct)类型时，batch参数生效，并自动切换为批量操作。
+// Insert does "INSERT INTO ..." statement for the table.
+// If there's already one unique record of the data in the table, it returns error.
+//
+// The parameter <data> can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
+// Eg:
+// Data(g.Map{"uid": 10000, "name":"john"})
+// Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
+//
+// The parameter <batch> specifies the batch operation count when given data is slice.
 func (bs *dbBase) Insert(table string, data interface{}, batch ...int) (sql.Result, error) {
 	return bs.db.doInsert(nil, table, data, gINSERT_OPTION_DEFAULT, batch...)
 }
 
+// InsertIgnore does "INSERT IGNORE INTO ..." statement for the table.
+// If there's already one unique record of the data in the table, it ignores the inserting.
+//
+// The parameter <data> can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
+// Eg:
+// Data(g.Map{"uid": 10000, "name":"john"})
+// Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
+//
+// The parameter <batch> specifies the batch operation count when given data is slice.
 func (bs *dbBase) InsertIgnore(table string, data interface{}, batch ...int) (sql.Result, error) {
 	return bs.db.doInsert(nil, table, data, gINSERT_OPTION_IGNORE, batch...)
 }
 
-// CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条。
-// 参数data支持map/struct/*struct/slice类型，
-// 当为slice(例如[]map/[]struct/[]*struct)类型时，batch参数生效，并自动切换为批量操作。
+// Replace does "REPLACE INTO ..." statement for the table.
+// If there's already one unique record of the data in the table, it deletes the record
+// and inserts a new one.
+//
+// The parameter <data> can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
+// Eg:
+// Data(g.Map{"uid": 10000, "name":"john"})
+// Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
+//
+// The parameter <data> can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
+// If given data is type of slice, it then does batch replacing, and the optional parameter
+// <batch> specifies the batch operation count.
 func (bs *dbBase) Replace(table string, data interface{}, batch ...int) (sql.Result, error) {
 	return bs.db.doInsert(nil, table, data, gINSERT_OPTION_REPLACE, batch...)
 }
 
-// CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据。
-// 参数data支持map/struct/*struct/slice类型，
-// 当为slice(例如[]map/[]struct/[]*struct)类型时，batch参数生效，并自动切换为批量操作。
+// Save does "INSERT INTO ... ON DUPLICATE KEY UPDATE..." statement for the table.
+// It updates the record if there's primary or unique index in the saving data,
+// or else it inserts a new record into the table.
+//
+// The parameter <data> can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
+// Eg:
+// Data(g.Map{"uid": 10000, "name":"john"})
+// Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
+//
+// If given data is type of slice, it then does batch saving, and the optional parameter
+// <batch> specifies the batch operation count.
 func (bs *dbBase) Save(table string, data interface{}, batch ...int) (sql.Result, error) {
 	return bs.db.doInsert(nil, table, data, gINSERT_OPTION_SAVE, batch...)
 }
 
-// 支持insert、replace, save， ignore操作。
-// 0: insert:  仅仅执行写入操作，如果存在冲突的主键或者唯一索引，那么报错返回;
-// 1: replace: 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条;
-// 2: save:    如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据;
-// 3: ignore:  如果数据存在(主键或者唯一索引)，那么什么也不做;
+// doInsert inserts or updates data for given table.
 //
-// 参数data支持map/struct/*struct/slice类型，
-// 当为slice(例如[]map/[]struct/[]*struct)类型时，batch参数生效，并自动切换为批量操作。
+// The parameter <option> values are as follows:
+// 0: insert:  just insert, if there's unique/primary key in the data, it returns error;
+// 1: replace: if there's unique/primary key in the data, it deletes it from table and inserts a new one;
+// 2: save:    if there's unique/primary key in the data, it updates it or else inserts a new one;
+// 3: ignore:  if there's unique/primary key in the data, it ignores the inserting;
 func (bs *dbBase) doInsert(link dbLink, table string, data interface{}, option int, batch ...int) (result sql.Result, err error) {
 	var fields []string
 	var values []string
 	var params []interface{}
 	var dataMap Map
 	table = bs.db.handleTableName(table)
-	// 使用反射判断data数据类型，如果为slice类型，那么自动转为批量操作
 	rv := reflect.ValueOf(data)
 	kind := rv.Kind()
 	if kind == reflect.Ptr {
@@ -364,22 +398,31 @@ func (bs *dbBase) doInsert(link dbLink, table string, data interface{}, option i
 		params...)
 }
 
-// CURD操作:批量数据指定批次量写入
+// BatchInsert batch inserts data.
+// The parameter <list> must be type of slice of map or struct.
 func (bs *dbBase) BatchInsert(table string, list interface{}, batch ...int) (sql.Result, error) {
 	return bs.db.doBatchInsert(nil, table, list, gINSERT_OPTION_DEFAULT, batch...)
 }
 
-// CURD操作:批量数据指定批次量写入, 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条
+// BatchInsert batch inserts data with ignore option.
+// The parameter <list> must be type of slice of map or struct.
+func (bs *dbBase) BatchInsertIgnore(table string, list interface{}, batch ...int) (sql.Result, error) {
+	return bs.db.doBatchInsert(nil, table, list, gINSERT_OPTION_IGNORE, batch...)
+}
+
+// BatchReplace batch replaces data.
+// The parameter <list> must be type of slice of map or struct.
 func (bs *dbBase) BatchReplace(table string, list interface{}, batch ...int) (sql.Result, error) {
 	return bs.db.doBatchInsert(nil, table, list, gINSERT_OPTION_REPLACE, batch...)
 }
 
-// CURD操作:批量数据指定批次量写入, 如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据
+// BatchSave batch replaces data.
+// The parameter <list> must be type of slice of map or struct.
 func (bs *dbBase) BatchSave(table string, list interface{}, batch ...int) (sql.Result, error) {
 	return bs.db.doBatchInsert(nil, table, list, gINSERT_OPTION_SAVE, batch...)
 }
 
-// 批量写入数据, 参数list支持slice类型，例如: []map/[]struct/[]*struct。
+// doBatchInsert batch inserts/replaces/saves data.
 func (bs *dbBase) doBatchInsert(link dbLink, table string, list interface{}, option int, batch ...int) (result sql.Result, err error) {
 	var keys, values []string
 	var params []interface{}
@@ -448,7 +491,6 @@ func (bs *dbBase) doBatchInsert(link dbLink, table string, list interface{}, opt
 		}
 		updateStr = fmt.Sprintf("ON DUPLICATE KEY UPDATE %s", updateStr)
 	}
-	// 构造批量写入数据格式(注意map的遍历是无序的)
 	batchNum := gDEFAULT_BATCH_NUM
 	if len(batch) > 0 && batch[0] > 0 {
 		batchNum = batch[0]
@@ -490,8 +532,20 @@ func (bs *dbBase) doBatchInsert(link dbLink, table string, list interface{}, opt
 	return batchResult, nil
 }
 
-// CURD操作:数据更新，统一采用sql预处理。
-// data参数支持string/map/struct/*struct类型。
+// Update does "UPDATE ... " statement for the table.
+//
+// The parameter <data> can be type of string/map/gmap/struct/*struct, etc.
+// Eg: "uid=10000", "uid", 10000, g.Map{"uid": 10000, "name":"john"}
+//
+// The parameter <condition> can be type of string/map/gmap/slice/struct/*struct, etc.
+// It is commonly used with parameter <args>.
+// Eg:
+// "uid=10000",
+// "uid", 10000
+// "money>? AND name like ?", 99999, "vip_%"
+// "status IN (?)", g.Slice{1,2,3}
+// "age IN(?,?)", 18, 50
+// User{ Id : 1, UserName : "john"}
 func (bs *dbBase) Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error) {
 	newWhere, newArgs := formatWhere(bs.db, condition, args, false)
 	if newWhere != "" {
@@ -500,12 +554,11 @@ func (bs *dbBase) Update(table string, data interface{}, condition interface{}, 
 	return bs.db.doUpdate(nil, table, data, newWhere, newArgs...)
 }
 
-// CURD操作:数据更新，统一采用sql预处理。
-// data参数支持string/map/struct/*struct类型类型。
+// doUpdate does "UPDATE ... " statement for the table.
+// Also see Update.
 func (bs *dbBase) doUpdate(link dbLink, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) {
 	table = bs.db.handleTableName(table)
 	updates := ""
-	// 使用反射进行类型判断
 	rv := reflect.ValueOf(data)
 	kind := rv.Kind()
 	if kind == reflect.Ptr {
@@ -539,7 +592,17 @@ func (bs *dbBase) doUpdate(link dbLink, table string, data interface{}, conditio
 	return bs.db.doExec(link, fmt.Sprintf("UPDATE %s SET %s%s", table, updates, condition), args...)
 }
 
-// CURD操作:删除数据
+// Delete does "DELETE FROM ... " statement for the table.
+//
+// The parameter <condition> can be type of string/map/gmap/slice/struct/*struct, etc.
+// It is commonly used with parameter <args>.
+// Eg:
+// "uid=10000",
+// "uid", 10000
+// "money>? AND name like ?", 99999, "vip_%"
+// "status IN (?)", g.Slice{1,2,3}
+// "age IN(?,?)", 18, 50
+// User{ Id : 1, UserName : "john"}
 func (bs *dbBase) Delete(table string, condition interface{}, args ...interface{}) (result sql.Result, err error) {
 	newWhere, newArgs := formatWhere(bs.db, condition, args, false)
 	if newWhere != "" {
@@ -548,7 +611,8 @@ func (bs *dbBase) Delete(table string, condition interface{}, args ...interface{
 	return bs.db.doDelete(nil, table, newWhere, newArgs...)
 }
 
-// CURD操作:删除数据
+// doDelete does "DELETE FROM ... " statement for the table.
+// Also see Delete.
 func (bs *dbBase) doDelete(link dbLink, table string, condition string, args ...interface{}) (result sql.Result, err error) {
 	if link == nil {
 		if link, err = bs.db.Master(); err != nil {
@@ -559,36 +623,35 @@ func (bs *dbBase) doDelete(link dbLink, table string, condition string, args ...
 	return bs.db.doExec(link, fmt.Sprintf("DELETE FROM %s%s", table, condition), args...)
 }
 
-// 获得缓存对象
+// getCache returns the internal cache object.
 func (bs *dbBase) getCache() *gcache.Cache {
 	return bs.cache
 }
 
-// 获得表名前缀
+// getPrefix returns the table prefix string configured.
 func (bs *dbBase) getPrefix() string {
 	return bs.prefix
 }
 
-// 将数据查询的列表数据*sql.Rows转换为Result类型
+// rowsToResult converts underlying data record type sql.Rows to Result type.
 func (bs *dbBase) rowsToResult(rows *sql.Rows) (Result, error) {
 	if !rows.Next() {
 		return nil, nil
 	}
-	// 列信息列表, 名称与类型
-	columnTypes, err := rows.ColumnTypes()
+	// Column names and types.
+	columns, err := rows.ColumnTypes()
 	if err != nil {
 		return nil, err
 	}
-	types := make([]string, len(columnTypes))
-	columns := make([]string, len(columnTypes))
-	for k, v := range columnTypes {
-		types[k] = v.DatabaseTypeName()
-		columns[k] = v.Name()
+	columnTypes := make([]string, len(columns))
+	columnNames := make([]string, len(columns))
+	for k, v := range columns {
+		columnTypes[k] = v.DatabaseTypeName()
+		columnNames[k] = v.Name()
 	}
-	// 返回结构组装
-	values := make([]sql.RawBytes, len(columns))
-	scanArgs := make([]interface{}, len(values))
+	values := make([]sql.RawBytes, len(columnNames))
 	records := make(Result, 0)
+	scanArgs := make([]interface{}, len(values))
 	for i := range values {
 		scanArgs[i] = &values[i]
 	}
@@ -596,17 +659,19 @@ func (bs *dbBase) rowsToResult(rows *sql.Rows) (Result, error) {
 		if err := rows.Scan(scanArgs...); err != nil {
 			return records, err
 		}
+		// Creates a new row object.
 		row := make(Record)
-		// 注意col字段是一个[]byte类型(slice类型本身是一个引用类型)，
-		// 多个记录循环时该变量指向的是同一个内存地址
-		for i, column := range values {
-			if column == nil {
-				row[columns[i]] = gvar.New(nil)
+		// Note that the internal looping variable <value> is type of []byte,
+		// which points to the same memory address. So it should do a copy.
+		for i, value := range values {
+			if value == nil {
+				row[columnNames[i]] = gvar.New(nil)
 			} else {
-				// 由于 sql.RawBytes 是slice类型, 这里必须使用值复制
-				v := make([]byte, len(column))
-				copy(v, column)
-				row[columns[i]] = gvar.New(bs.db.convertValue(v, types[i]))
+				// As sql.RawBytes is type of slice,
+				// it should do a copy of it.
+				v := make([]byte, len(value))
+				copy(v, value)
+				row[columnNames[i]] = gvar.New(bs.db.convertValue(v, columnTypes[i]))
 			}
 		}
 		records = append(records, row)
@@ -642,7 +707,8 @@ func (bs *dbBase) quoteString(s string) string {
 	return doQuoteString(s, charLeft, charRight)
 }
 
-// 打印SQL对象(仅在debug=true时有效)
+// printSql outputs the sql object to logger.
+// It is enabled when configuration "debug" is true.
 func (bs *dbBase) printSql(v *Sql) {
 	s := fmt.Sprintf("[%d ms] %s", v.End-v.Start, v.Format)
 	if v.Error != nil {
