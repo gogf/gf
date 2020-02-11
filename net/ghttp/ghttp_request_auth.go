@@ -14,7 +14,7 @@ import (
 	"github.com/gogf/gf/encoding/gbase64"
 )
 
-// 设置Basic Auth校验提示
+// setBasicAuth sets the http basic authentication tips.
 func (r *Request) setBasicAuth(tips ...string) {
 	realm := ""
 	if len(tips) > 0 && tips[0] != "" {
@@ -26,8 +26,9 @@ func (r *Request) setBasicAuth(tips ...string) {
 	r.Response.WriteHeader(http.StatusUnauthorized)
 }
 
-// 设置HTTP基础账号密码认证，如果用户没有提交账号密码，那么提示用户输出信息。
-// 验证成功之后返回true，否则返回false。
+// BasicAuth enables the http basic authentication feature with given passport and password
+// and asks client for authentication. It returns true if authentication success, else returns
+// false if failure.
 func (r *Request) BasicAuth(user, pass string, tips ...string) bool {
 	auth := r.Header.Get("Authorization")
 	if auth == "" {
