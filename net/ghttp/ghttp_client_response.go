@@ -7,18 +7,19 @@
 package ghttp
 
 import (
+	"github.com/gogf/gf/util/gconv"
 	"io/ioutil"
 	"net/http"
 	"time"
 )
 
-// 客户端请求结果对象
+// ClientResponse is the struct for client request response.
 type ClientResponse struct {
 	*http.Response
 	cookies map[string]string
 }
 
-// 获得返回的指定COOKIE值
+// GetCookie retrieves and returns the cookie value of specified <key>.
 func (r *ClientResponse) GetCookie(key string) string {
 	if len(r.cookies) == 0 {
 		now := time.Now()
@@ -32,7 +33,7 @@ func (r *ClientResponse) GetCookie(key string) string {
 	return r.cookies[key]
 }
 
-// 获取返回的数据(二进制).
+// ReadAll retrieves and returns the response content as []byte.
 func (r *ClientResponse) ReadAll() []byte {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -41,12 +42,12 @@ func (r *ClientResponse) ReadAll() []byte {
 	return body
 }
 
-// 获取返回的数据(字符串).
+// ReadAllString retrieves and returns the response content as string.
 func (r *ClientResponse) ReadAllString() string {
-	return string(r.ReadAll())
+	return gconv.UnsafeBytesToStr(r.ReadAll())
 }
 
-// 关闭返回的HTTP链接
+// Close closes the response when it will never be used.
 func (r *ClientResponse) Close() error {
 	r.Response.Close = true
 	return r.Body.Close()
