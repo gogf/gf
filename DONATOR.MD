@@ -42,6 +42,7 @@ We currently accept donation by Alipay/WechatPay, please note your github/gitee 
 |张炳贤|wechat+qq|￥600.00| 
 |[王哈哈](https://gitee.com/develop1024)|wechat|￥6.66| 希望gf越来越好
 |夕景|alipay+qq|￥9.96+3.57| 
+|struggler|alipay|￥18.80| 
 
 
 <img src="https://goframe.org/images/donate.png"/>
