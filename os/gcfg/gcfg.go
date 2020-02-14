@@ -11,6 +11,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/text/gstr"
 
 	"github.com/gogf/gf/os/gres"
 
@@ -93,6 +94,7 @@ func (c *Config) filePath(file ...string) (path string) {
 			c.paths.RLockFunc(func(array []string) {
 				index := 1
 				for _, v := range array {
+					v = gstr.TrimRight(v, `\/`)
 					buffer.WriteString(fmt.Sprintf("\n%d. %s", index, v))
 					index++
 					buffer.WriteString(fmt.Sprintf("\n%d. %s", index, v+gfile.Separator+"config"))
@@ -274,6 +276,7 @@ func (c *Config) FilePath(file ...string) (path string) {
 	// Searching the file system.
 	c.paths.RLockFunc(func(array []string) {
 		for _, prefix := range array {
+			prefix = gstr.TrimRight(prefix, `\/`)
 			if path, _ = gspath.Search(prefix, name); path != "" {
 				return
 			}

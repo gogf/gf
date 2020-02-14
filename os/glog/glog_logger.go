@@ -24,6 +24,7 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
+// Logger is the struct for logging management.
 type Logger struct {
 	parent *Logger // Parent logger.
 	config Config  // Logger configuration.
