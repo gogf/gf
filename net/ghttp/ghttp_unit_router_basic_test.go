@@ -50,7 +50,7 @@ func Test_Router_Basic(t *testing.T) {
 	})
 }
 
-// 测试HTTP Method注册.
+// HTTP method register.
 func Test_Router_Method(t *testing.T) {
 	p := ports.PopRand()
 	s := g.Server(p)
@@ -92,7 +92,32 @@ func Test_Router_Method(t *testing.T) {
 	})
 }
 
-// 测试状态返回.
+// Extra char '/' of the router.
+func Test_Router_ExtraChar(t *testing.T) {
+	p := ports.PopRand()
+	s := g.Server(p)
+	s.Group("/api", func(group *ghttp.RouterGroup) {
+		group.GET("/test", func(r *ghttp.Request) {
+			r.Response.Write("test")
+		})
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.Case(t, func() {
+		client := ghttp.NewClient()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+
+		gtest.Assert(client.GetContent("/api/test"), "test")
+		gtest.Assert(client.GetContent("/api/test/"), "test")
+		gtest.Assert(client.GetContent("/api/test//"), "test")
+	})
+}
+
+// Custom status handler.
 func Test_Router_Status(t *testing.T) {
 	p := ports.PopRand()
 	s := g.Server(p)
@@ -145,7 +170,6 @@ func Test_Router_Status(t *testing.T) {
 	})
 }
 
-// 自定义状态码处理.
 func Test_Router_CustomStatusHandler(t *testing.T) {
 	p := ports.PopRand()
 	s := g.Server(p)
@@ -174,7 +198,7 @@ func Test_Router_CustomStatusHandler(t *testing.T) {
 	})
 }
 
-// 测试不存在的路由.
+// 404 not found router.
 func Test_Router_404(t *testing.T) {
 	p := ports.PopRand()
 	s := g.Server(p)
