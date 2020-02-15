@@ -9,13 +9,12 @@
 
 English | [简体中文](README_ZH.MD)
 
-`GF(GoFrame)` is a modular, full-featured and production-ready application development framework of golang. 
-Providing a series of core components and dozens of practical modules, 
+`GF(GoFrame)` is a modular, full-featured and production-ready application development framework of golang,
+providing a series of core components and dozens of practical modules, 
 such as: memcache, configure, validator, logging, array/queue/set/map containers, 
-timer/timing tasks, file/memory lock, object pool, database ORM, etc. 
-Supporting web server integrated with router, cookie, session, middleware, logger, 
+timer/timing tasks, file/memory lock, object pool, database ORM, etc,
+supporting web server integrated with router, cookie, session, middleware, logger, 
 template, https, hooks, rewrites and many more features.
-
 
 # Installation
 ```
@@ -35,6 +34,13 @@ golang version >= 1.10
 
 * [APIDoc](https://godoc.org/github.com/gogf/gf)
 * [中文文档](https://goframe.org)
+
+# Discussion
+- QQ Group：[116707870](//shang.qq.com/wpa/qunwpa?idkey=195f91eceeb5d7fa76009b7cd5a4641f70bf4897b7f5a520635eb26ff17adfe7)
+- WX Group：Add friend`389961817` in wechat, commenting `GF`
+- Issues：https://github.com/gogf/gf/issues
+
+> It's recommended learning `GoFrame` through its awesome source codes and API reference.
 
 # Architecture
 <div align=center>
@@ -60,7 +66,7 @@ We currently accept donation by Alipay/WechatPay, please note your github/gitee 
 
 <!--
 # Sponsor
-We appreciate any kind of sponsorship for `GF` development. If you've got some interested, please contact john@goframe.org.
+We appreciate any kind of sponsorship for `GF` development. If you've got some interesting, please contact john@goframe.org.
 -->
 
 
