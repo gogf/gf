@@ -14,7 +14,7 @@ import (
 
 // Time is a wrapper for time.Time for additional features.
 type Time struct {
-	time.Time
+	TimeWrapper
 }
 
 // New creates and returns a Time object with given time.Time object.
@@ -24,21 +24,21 @@ func New(t ...time.Time) *Time {
 		return NewFromTime(t[0])
 	}
 	return &Time{
-		time.Time{},
+		TimeWrapper{time.Time{}},
 	}
 }
 
 // Now creates and returns a time object of now.
 func Now() *Time {
 	return &Time{
-		time.Now(),
+		TimeWrapper{time.Now()},
 	}
 }
 
 // NewFromTime creates and returns a Time object with given time.Time object.
 func NewFromTime(t time.Time) *Time {
 	return &Time{
-		t,
+		TimeWrapper{t},
 	}
 }
 
@@ -85,7 +85,7 @@ func NewFromTimeStamp(timestamp int64) *Time {
 		sec = timestamp
 	}
 	return &Time{
-		time.Unix(sec, nano),
+		TimeWrapper{time.Unix(sec, nano)},
 	}
 }
 
@@ -157,13 +157,23 @@ func (t *Time) Nanosecond() int {
 	return t.Time.Nanosecond()
 }
 
-// String returns current time object as string.
 func (t *Time) String() string {
 	if t == nil {
 		return ""
 	}
+	if t.IsZero() {
+		return ""
+	}
 	return t.Format("Y-m-d H:i:s")
 }
+
+// String returns current time object as string.
+//func (t Time) String() string {
+//	if t.IsZero() {
+//		return ""
+//	}
+//	return t.Format("Y-m-d H:i:s")
+//}
 
 // Clone returns a new Time object which is a clone of current time object.
 func (t *Time) Clone() *Time {

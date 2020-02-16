@@ -7,6 +7,7 @@
 package gtime_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -30,6 +31,10 @@ func Test_Nil(t *testing.T) {
 		var t *gtime.Time
 		gtest.Assert(t.String(), "")
 	})
+	gtest.Case(t, func() {
+		var t gtime.Time
+		gtest.Assert(t.String(), "")
+	})
 }
 
 func Test_NewFromStr(t *testing.T) {
@@ -48,9 +53,11 @@ func Test_String(t *testing.T) {
 	gtest.Case(t, func() {
 		t1 := gtime.NewFromStr("2006-01-02 15:04:05")
 		gtest.Assert(t1.String(), "2006-01-02 15:04:05")
+		gtest.Assert(fmt.Sprintf("%s", t1), "2006-01-02 15:04:05")
 
 		t2 := *t1
 		gtest.Assert(t2.String(), "2006-01-02 15:04:05")
+		gtest.Assert(fmt.Sprintf("%s", t2), "{2006-01-02 15:04:05}")
 	})
 }
 
