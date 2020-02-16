@@ -596,7 +596,7 @@ func Test_Middleware_CORSAndAuth(t *testing.T) {
 	s := g.Server(p)
 	s.Group("/api.v2", func(group *ghttp.RouterGroup) {
 		group.Middleware(MiddlewareAuth, MiddlewareCORS)
-		group.ALL("/user/list", func(r *ghttp.Request) {
+		group.POST("/user/list", func(r *ghttp.Request) {
 			r.Response.Write("list")
 		})
 	})
@@ -608,11 +608,21 @@ func Test_Middleware_CORSAndAuth(t *testing.T) {
 	gtest.Case(t, func() {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-
+		// Common Checks.
 		gtest.Assert(client.GetContent("/"), "Not Found")
 		gtest.Assert(client.GetContent("/api.v2"), "Not Found")
-		gtest.Assert(client.GetContent("/api.v2/user/list"), "Forbidden")
-		gtest.Assert(client.GetContent("/api.v2/user/list", "token=123456"), "list")
+		// Auth Checks.
+		gtest.Assert(client.PostContent("/api.v2/user/list"), "Forbidden")
+		gtest.Assert(client.PostContent("/api.v2/user/list", "token=123456"), "list")
+		// CORS Checks.
+		resp, err := client.Post("/api.v2/user/list", "token=123456")
+		gtest.Assert(err, nil)
+		gtest.Assert(len(resp.Header["Access-Control-Allow-Headers"]), 1)
+		gtest.Assert(resp.Header["Access-Control-Allow-Headers"][0], "Origin,Content-Type,Accept,User-Agent,Cookie,Authorization,X-Auth-Token,X-Requested-With")
+		gtest.Assert(resp.Header["Access-Control-Allow-Methods"][0], "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE")
+		gtest.Assert(resp.Header["Access-Control-Allow-Origin"][0], "*")
+		gtest.Assert(resp.Header["Access-Control-Max-Age"][0], "3628800")
+		resp.Close()
 	})
 }
 
