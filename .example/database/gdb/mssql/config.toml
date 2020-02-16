@@ -1,8 +1,3 @@
 
 [database]
-    type = "mssql"
-    host = "127.0.0.1"
-    port = "1451"
-    user = "sa"
-    pass = "eno@123"
-    name = "frpc"
+    linkinfo = "sqlserver://test:test1@122.152.202.91:1433?database=test"
