@@ -73,7 +73,7 @@ func NewStorageFile(path ...string) *StorageFile {
 	}
 	// Batch updates the TTL for session ids timely.
 	gtimer.AddSingleton(DefaultStorageFileLoopInterval, func() {
-		intlog.Print("StorageFile.timer start")
+		//intlog.Print("StorageFile.timer start")
 		var id string
 		var err error
 		for {
@@ -84,7 +84,7 @@ func NewStorageFile(path ...string) *StorageFile {
 				intlog.Error(err)
 			}
 		}
-		intlog.Print("StorageFile.timer end")
+		//intlog.Print("StorageFile.timer end")
 	})
 	return s
 }
