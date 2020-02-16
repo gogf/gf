@@ -8,6 +8,7 @@
 package ghttp
 
 import (
+	"net/http"
 	"net/url"
 
 	"github.com/gogf/gf/text/gstr"
@@ -68,6 +69,13 @@ func (r *Response) CORS(options CORSOptions) {
 	}
 	if options.AllowHeaders != "" {
 		r.Header().Set("Access-Control-Allow-Headers", options.AllowHeaders)
+	}
+	// No continue service handling if it's OPTIONS request.
+	if gstr.Equal(r.Request.Method, "OPTIONS") {
+		if r.Status == 0 {
+			r.Status = http.StatusOK
+		}
+		r.Request.ExitAll()
 	}
 }
 
