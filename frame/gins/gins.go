@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/net/ghttp"
+	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gutil"
 
 	"github.com/gogf/gf/os/gfile"
@@ -255,8 +256,8 @@ func parseDBConfigNode(value interface{}) *gdb.ConfigNode {
 	if node.LinkInfo != "" && node.Type == "" {
 		match, _ := gregex.MatchString(`([a-z]+):(.+)`, node.LinkInfo)
 		if len(match) == 3 {
-			node.Type = match[1]
-			node.LinkInfo = match[2]
+			node.Type = gstr.Trim(match[1])
+			node.LinkInfo = gstr.Trim(match[2])
 		}
 	}
 	return node
