@@ -637,7 +637,7 @@ func Test_Convert_All(t *testing.T) {
 		gtest.AssertEQ(gconv.Convert("1989-01-02", "Time", "Y-m-d"), gconv.Time("1989-01-02", "Y-m-d"))
 		gtest.AssertEQ(gconv.Convert(1989, "Time"), gconv.Time("1970-01-01 08:33:09 +0800 CST"))
 		gtest.AssertEQ(gconv.Convert(gtime.Now(), "gtime.Time", 1), nil)
-		gtest.AssertEQ(gconv.Convert(1989, "gtime.Time"), gtime.Time{gconv.Time("1970-01-01 08:33:09 +0800 CST")})
+		gtest.AssertEQ(gconv.Convert(1989, "gtime.Time"), *gconv.GTime("1970-01-01 08:33:09 +0800 CST"))
 		gtest.AssertEQ(gconv.Convert(gtime.Now(), "*gtime.Time", 1), nil)
 		gtest.AssertEQ(gconv.Convert(gtime.Now(), "GTime", 1), nil)
 		gtest.AssertEQ(gconv.Convert(1989, "*gtime.Time"), gconv.GTime(1989))

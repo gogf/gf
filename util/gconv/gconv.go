@@ -201,8 +201,18 @@ func String(i interface{}) string {
 		return value
 	case []byte:
 		return string(value)
+	case time.Time:
+		if value.IsZero() {
+			return ""
+		}
+		return value.String()
 	case *time.Time:
 		if value == nil {
+			return ""
+		}
+		return value.String()
+	case gtime.Time:
+		if value.IsZero() {
 			return ""
 		}
 		return value.String()

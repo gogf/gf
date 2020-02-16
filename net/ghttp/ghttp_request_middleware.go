@@ -38,10 +38,11 @@ func (m *Middleware) Next() {
 			m.handlerIndex++
 			continue
 		}
-		// Router values switching.
-		m.request.routerMap = item.values
 		// Current router switching.
 		m.request.Router = item.handler.router
+
+		// Router values switching.
+		m.request.routerMap = item.values
 
 		gutil.TryCatch(func() {
 			// Execute bound middleware array of the item if it's not empty.
