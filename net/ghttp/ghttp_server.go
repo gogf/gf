@@ -11,6 +11,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/debug/gdebug"
+	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/util/gutil"
 	"net/http"
 	"os"
 	"reflect"
@@ -338,7 +340,10 @@ func (s *Server) Start() error {
 			}
 		})
 	}
-
+	if intlog.IsInGFDevelop() {
+		intlog.Print("server configuration:")
+		gutil.Dump(s.config)
+	}
 	s.dumpRouterMap()
 	return nil
 }

@@ -139,6 +139,13 @@ func (s *Server) SetConfig(c ServerConfig) error {
 	if c.ServerRoot != "" {
 		s.SetServerRoot(c.ServerRoot)
 	}
+	if len(c.SearchPaths) > 0 {
+		paths := c.SearchPaths
+		c.SearchPaths = []string{}
+		for _, v := range paths {
+			s.AddSearchPath(v)
+		}
+	}
 	// HTTPS.
 	if c.TLSConfig == nil && c.HTTPSCertPath != "" {
 		s.EnableHTTPS(c.HTTPSCertPath, c.HTTPSKeyPath)
