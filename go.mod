@@ -5,6 +5,7 @@ go 1.11
 require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/clbanning/mxj v1.8.4
+	github.com/denisenkom/go-mssqldb v0.0.0-20200206145737-bbfc9a55622e // indirect
 	github.com/fatih/structs v1.1.0
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/gf-third/mysql v1.4.2
