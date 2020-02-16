@@ -44,6 +44,16 @@ func Test_NewFromStr(t *testing.T) {
 	})
 }
 
+func Test_String(t *testing.T) {
+	gtest.Case(t, func() {
+		t1 := gtime.NewFromStr("2006-01-02 15:04:05")
+		gtest.Assert(t1.String(), "2006-01-02 15:04:05")
+
+		t2 := *t1
+		gtest.Assert(t2.String(), "2006-01-02 15:04:05")
+	})
+}
+
 func Test_NewFromStrFormat(t *testing.T) {
 	gtest.Case(t, func() {
 		timeTemp := gtime.NewFromStrFormat("2006-01-02 15:04:05", "Y-m-d H:i:s")
