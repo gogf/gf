@@ -25,6 +25,13 @@ func Test_New(t *testing.T) {
 	})
 }
 
+func Test_Nil(t *testing.T) {
+	gtest.Case(t, func() {
+		var t *gtime.Time
+		gtest.Assert(t.String(), "")
+	})
+}
+
 func Test_NewFromStr(t *testing.T) {
 	gtest.Case(t, func() {
 		timeTemp := gtime.NewFromStr("2006-01-02 15:04:05")

@@ -17,4 +17,5 @@ require (
 	github.com/olekukonko/tablewriter v0.0.1
 	golang.org/x/sys v0.0.0-20191204072324-ce4227a45e2e // indirect
 	golang.org/x/text v0.3.2
+	google.golang.org/appengine v1.6.5 // indirect
 )
