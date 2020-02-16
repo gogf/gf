@@ -13,7 +13,7 @@ import (
 	"testing"
 )
 
-func Test_Json(t *testing.T) {
+func Test_Json_Pointer(t *testing.T) {
 	// Marshal
 	gtest.Case(t, func() {
 		type T struct {
@@ -54,4 +54,40 @@ func Test_Json(t *testing.T) {
 		gtest.Assert(err, nil)
 		gtest.Assert(t.String(), "2006-01-02 15:04:05")
 	})
+}
+
+func Test_Json_Struct(t *testing.T) {
+	// Marshal
+	gtest.Case(t, func() {
+		type T struct {
+			Time gtime.Time
+		}
+		t := new(T)
+		s := "2006-01-02 15:04:05"
+		t.Time = *gtime.NewFromStr(s)
+		j, err := json.Marshal(t)
+		gtest.Assert(err, nil)
+		gtest.Assert(j, `{"Time":"2006-01-02 15:04:05"}`)
+	})
+	// Marshal nil
+	gtest.Case(t, func() {
+		type T struct {
+			Time gtime.Time
+		}
+		t := new(T)
+		j, err := json.Marshal(t)
+		gtest.Assert(err, nil)
+		gtest.Assert(j, `{"Time":""}`)
+	})
+	// Marshal nil omitempty
+	gtest.Case(t, func() {
+		type T struct {
+			Time gtime.Time `json:"time,omitempty"`
+		}
+		t := new(T)
+		j, err := json.Marshal(t)
+		gtest.Assert(err, nil)
+		gtest.Assert(j, `{"time":""}`)
+	})
+
 }
