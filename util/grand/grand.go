@@ -7,9 +7,15 @@
 // Package grand provides high performance random string generation functionality.
 package grand
 
+import (
+	"unsafe"
+)
+
 var (
-	letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-	digits  = []rune("0123456789")
+	letters    = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" // 52
+	symbols    = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"                   // 32
+	digits     = "0123456789"                                           // 10
+	characters = letters + digits + symbols                             // 94
 )
 
 // Meet randomly calculate whether the given probability <num>/<total> is met.
@@ -22,7 +28,7 @@ func MeetProb(prob float32) bool {
 	return Intn(1e7) < int(prob*1e7)
 }
 
-// N returns a random int between min and max - [min, max].
+// N returns a random int between min and max: [min, max].
 // The <min> and <max> also support negative numbers.
 func N(min, max int) int {
 	if min >= max {
@@ -45,31 +51,57 @@ func N(min, max int) int {
 	return 0
 }
 
-// Str returns a random string which contains digits and letters, and its length is <n>.
-func Str(n int) string {
-	b := make([]rune, n)
+// S returns a random string which contains digits and letters, and its length is <n>.
+// The optional parameter <symbols> specifies whether the result could contain symbols,
+// which is false in default.
+func S(n int, symbols ...bool) string {
+	b := make([]byte, n)
 	for i := range b {
-		b[i] = letters[Intn(62)]
+		if len(symbols) > 0 && symbols[0] {
+			b[i] = characters[Intn(94)]
+		} else {
+			b[i] = characters[Intn(62)]
+		}
+	}
+	return *(*string)(unsafe.Pointer(&b))
+}
+
+// Str randomly picks and returns <n> count of chars from given string <s>.
+// It also supports unicode string like Chinese/Russian/Japanese, etc.
+func Str(s string, n int) string {
+	b := make([]rune, n)
+	runes := []rune(s)
+	for i := range b {
+		b[i] = runes[Intn(len(runes))]
 	}
 	return string(b)
 }
 
 // Digits returns a random string which contains only digits, and its length is <n>.
 func Digits(n int) string {
-	b := make([]rune, n)
+	b := make([]byte, n)
 	for i := range b {
 		b[i] = digits[Intn(10)]
 	}
-	return string(b)
+	return *(*string)(unsafe.Pointer(&b))
 }
 
 // Letters returns a random string which contains only letters, and its length is <n>.
 func Letters(n int) string {
-	b := make([]rune, n)
+	b := make([]byte, n)
 	for i := range b {
 		b[i] = letters[Intn(52)]
 	}
-	return string(b)
+	return *(*string)(unsafe.Pointer(&b))
+}
+
+// Symbols returns a random string which contains only symbols, and its length is <n>.
+func Symbols(n int) string {
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = symbols[Intn(52)]
+	}
+	return *(*string)(unsafe.Pointer(&b))
 }
 
 // Perm returns, as a slice of n int numbers, a pseudo-random permutation of the integers [0,n).

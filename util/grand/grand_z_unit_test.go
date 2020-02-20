@@ -9,6 +9,7 @@
 package grand_test
 
 import (
+	"github.com/gogf/gf/text/gstr"
 	"testing"
 
 	"github.com/gogf/gf/test/gtest"
@@ -92,15 +93,39 @@ func Test_Rand(t *testing.T) {
 func Test_Str(t *testing.T) {
 	gtest.Case(t, func() {
 		for i := 0; i < 100; i++ {
-			gtest.Assert(len(grand.Str(5)), 5)
+			gtest.Assert(len(grand.S(5)), 5)
+		}
+	})
+}
+
+func Test_RandS(t *testing.T) {
+	gtest.Case(t, func() {
+		for i := 0; i < 100; i++ {
+			gtest.Assert(len(grand.S(5)), 5)
+		}
+	})
+	gtest.Case(t, func() {
+		for i := 0; i < 100; i++ {
+			gtest.Assert(len(grand.S(5, true)), 5)
 		}
 	})
 }
 
 func Test_RandStr(t *testing.T) {
+	str := "我爱GoFrame"
 	gtest.Case(t, func() {
-		for i := 0; i < 100; i++ {
-			gtest.Assert(len(grand.Str(5)), 5)
+		for i := 0; i < 10; i++ {
+			s := grand.Str(str, 100000)
+			gtest.Assert(gstr.Contains(s, "我"), true)
+			gtest.Assert(gstr.Contains(s, "爱"), true)
+			gtest.Assert(gstr.Contains(s, "G"), true)
+			gtest.Assert(gstr.Contains(s, "o"), true)
+			gtest.Assert(gstr.Contains(s, "F"), true)
+			gtest.Assert(gstr.Contains(s, "r"), true)
+			gtest.Assert(gstr.Contains(s, "a"), true)
+			gtest.Assert(gstr.Contains(s, "m"), true)
+			gtest.Assert(gstr.Contains(s, "e"), true)
+			gtest.Assert(gstr.Contains(s, "w"), false)
 		}
 	})
 }
