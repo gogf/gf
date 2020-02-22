@@ -656,3 +656,24 @@ func (a *SortedIntArray) UnmarshalValue(value interface{}) (err error) {
 	}
 	return err
 }
+
+// FilterEmpty removes all zero value of the array.
+func (a *SortedIntArray) FilterEmpty() *SortedIntArray {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for i := 0; i < len(a.array); {
+		if a.array[i] == 0 {
+			a.array = append(a.array[:i], a.array[i+1:]...)
+		} else {
+			break
+		}
+	}
+	for i := len(a.array) - 1; i >= 0; {
+		if a.array[i] == 0 {
+			a.array = append(a.array[:i], a.array[i+1:]...)
+		} else {
+			break
+		}
+	}
+	return a
+}

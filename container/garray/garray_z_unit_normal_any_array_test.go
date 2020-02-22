@@ -540,3 +540,26 @@ func TestArray_UnmarshalValue(t *testing.T) {
 		gtest.Assert(t.Array.Slice(), g.Slice{1, 2, 3})
 	})
 }
+
+func TestArray_FilterNil(t *testing.T) {
+	gtest.Case(t, func() {
+		values := g.Slice{0, 1, 2, 3, 4, "", g.Slice{}}
+		array := garray.NewArrayFromCopy(values)
+		gtest.Assert(array.FilterNil().Slice(), values)
+	})
+	gtest.Case(t, func() {
+		array := garray.NewArrayFromCopy(g.Slice{nil, 1, 2, 3, 4, nil})
+		gtest.Assert(array.FilterNil(), g.Slice{1, 2, 3, 4})
+	})
+}
+
+func TestArray_FilterEmpty(t *testing.T) {
+	gtest.Case(t, func() {
+		array := garray.NewArrayFrom(g.Slice{0, 1, 2, 3, 4, "", g.Slice{}})
+		gtest.Assert(array.FilterEmpty(), g.Slice{1, 2, 3, 4})
+	})
+	gtest.Case(t, func() {
+		array := garray.NewArrayFrom(g.Slice{1, 2, 3, 4})
+		gtest.Assert(array.FilterEmpty(), g.Slice{1, 2, 3, 4})
+	})
+}

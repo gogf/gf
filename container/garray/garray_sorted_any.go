@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/gogf/gf/internal/empty"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gutil"
 	"math"
@@ -685,4 +686,47 @@ func (a *SortedArray) UnmarshalValue(value interface{}) (err error) {
 		})
 	}
 	return err
+}
+
+// FilterNil removes all nil value of the array.
+func (a *SortedArray) FilterNil() *SortedArray {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for i := 0; i < len(a.array); {
+		if empty.IsNil(a.array[i]) {
+			a.array = append(a.array[:i], a.array[i+1:]...)
+		} else {
+			break
+		}
+	}
+	for i := len(a.array) - 1; i >= 0; {
+		if empty.IsNil(a.array[i]) {
+			a.array = append(a.array[:i], a.array[i+1:]...)
+		} else {
+			break
+		}
+	}
+	return a
+}
+
+// FilterEmpty removes all empty value of the array.
+// Values like: 0, nil, false, "", len(slice/map/chan) == 0 are considered empty.
+func (a *SortedArray) FilterEmpty() *SortedArray {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for i := 0; i < len(a.array); {
+		if empty.IsEmpty(a.array[i]) {
+			a.array = append(a.array[:i], a.array[i+1:]...)
+		} else {
+			break
+		}
+	}
+	for i := len(a.array) - 1; i >= 0; {
+		if empty.IsEmpty(a.array[i]) {
+			a.array = append(a.array[:i], a.array[i+1:]...)
+		} else {
+			break
+		}
+	}
+	return a
 }

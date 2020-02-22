@@ -16,7 +16,7 @@ import (
 	"github.com/gogf/gf/internal/utilstr"
 )
 
-// apiMapStrAny is the interface support for package gmap.
+// apiMapStrAny is the interface support for converting struct parameter to map.
 type apiMapStrAny interface {
 	MapStrAny() map[string]interface{}
 }
@@ -138,6 +138,7 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 					m[String(k.Interface())] = rv.MapIndex(k).Interface()
 				}
 			case reflect.Struct:
+				// Map converting interface check.
 				if v, ok := value.(apiMapStrAny); ok {
 					return v.MapStrAny()
 				}

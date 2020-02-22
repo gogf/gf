@@ -652,3 +652,24 @@ func (a *SortedStrArray) UnmarshalValue(value interface{}) (err error) {
 	}
 	return err
 }
+
+// FilterEmpty removes all empty string value of the array.
+func (a *SortedStrArray) FilterEmpty() *SortedStrArray {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for i := 0; i < len(a.array); {
+		if a.array[i] == "" {
+			a.array = append(a.array[:i], a.array[i+1:]...)
+		} else {
+			break
+		}
+	}
+	for i := len(a.array) - 1; i >= 0; {
+		if a.array[i] == "" {
+			a.array = append(a.array[:i], a.array[i+1:]...)
+		} else {
+			break
+		}
+	}
+	return a
+}

@@ -35,7 +35,7 @@ type apiIterator interface {
 	Iterator(f func(key, value interface{}) bool)
 }
 
-// apiInterfacesis the type assert api for Interfaces.
+// apiInterfaces is the type assert api for Interfaces.
 type apiInterfaces interface {
 	Interfaces() []interface{}
 }

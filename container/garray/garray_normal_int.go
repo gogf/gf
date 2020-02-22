@@ -716,3 +716,17 @@ func (a *IntArray) UnmarshalValue(value interface{}) error {
 	}
 	return nil
 }
+
+// FilterEmpty removes all zero value of the array.
+func (a *IntArray) FilterEmpty() *IntArray {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for i := 0; i < len(a.array); {
+		if a.array[i] == 0 {
+			a.array = append(a.array[:i], a.array[i+1:]...)
+		} else {
+			i++
+		}
+	}
+	return a
+}
