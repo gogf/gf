@@ -47,6 +47,10 @@ We currently accept donation by Alipay/WechatPay, please note your github/gitee 
 |*铁|wechat|￥0.01| 
 |C*e|wechat|￥66.66| GF越来越好，棒👍！
 |(佚名)|wechat|￥6.66| (名字打不出来，也没备注，捐赠时间2020-02-21 14:24:34)
+|[王飞](https://gitee.com/wang_2018)|gitee|￥20.00| 感谢您的开源项目！
+|[Zeroing-ZY](https://gitee.com/yunjieg)|gitee|￥20.00| 感谢您的开源项目！
+|[katydid酱](https://gitee.com/katydid2005)|gitee|￥50.00| 感谢您的开源项目！框架给予了很大的帮助！谢谢大佬！
+|[李海峰](https://gitee.com/dlhf)|gitee|￥10.00| 希望GF越来越好，框架很牛逼！
 
 
 <img src="https://goframe.org/images/donate.png"/>

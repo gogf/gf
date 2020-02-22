@@ -9,12 +9,13 @@
 
 English | [简体中文](README_ZH.MD)
 
-`GF(GoFrame)` is a modular, full-featured and production-ready application development framework of golang,
+`GF(GoFrame)` is a modular, loose-coupled, full-featured and production-ready application development framework of golang,
 providing a series of core components and dozens of practical modules, 
 such as: memcache, configure, validator, logging, array/queue/set/map containers, 
 timer/timing tasks, file/memory lock, object pool, database ORM, etc,
 supporting web server integrated with router, cookie, session, middleware, logger, 
 template, https, hooks, rewrites and many more features.
+
 
 # Installation
 ```
@@ -37,7 +38,7 @@ golang version >= 1.10
 
 # Discussion
 - QQ Group：[116707870](//shang.qq.com/wpa/qunwpa?idkey=195f91eceeb5d7fa76009b7cd5a4641f70bf4897b7f5a520635eb26ff17adfe7)
-- WX Group：Add friend`389961817` in wechat, commenting `GF`
+- WX Group：Add friend`389961817` in WeChat, commenting `GF`
 - Issues：https://github.com/gogf/gf/issues
 
 > It's recommended learning `GoFrame` through its awesome source codes and API reference.
@@ -60,14 +61,16 @@ This project exists thanks to all the people who contribute. [[Contributors](htt
 
 We currently accept donation by Alipay/WechatPay, please note your github/gitee account in your payment bill. If you like `GF`, why not [buy developer a cup of coffee](DONATOR.MD)?
 
+# Sponsors
+We appreciate any kind of sponsorship for `GF` development. If you've got some interesting, please contact WeChat `389961817` / Email `john@goframe.org`.
+
+
 # Thanks
 <a href="https://www.jetbrains.com/?from=GoFrame"><img src="https://goframe.org/images/jetbrains.png" width="100" alt="JetBrains"/></a>
 
 
-<!--
-# Sponsor
-We appreciate any kind of sponsorship for `GF` development. If you've got some interesting, please contact john@goframe.org.
--->
+
+
 
 
 
