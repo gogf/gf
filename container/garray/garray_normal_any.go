@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/gogf/gf/internal/empty"
 	"github.com/gogf/gf/text/gstr"
 	"math"
 	"sort"
@@ -734,4 +735,33 @@ func (a *Array) UnmarshalValue(value interface{}) error {
 		a.array = gconv.SliceAny(value)
 	}
 	return nil
+}
+
+// FilterNil removes all nil value of the array.
+func (a *Array) FilterNil() *Array {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for i := 0; i < len(a.array); {
+		if empty.IsNil(a.array[i]) {
+			a.array = append(a.array[:i], a.array[i+1:]...)
+		} else {
+			i++
+		}
+	}
+	return a
+}
+
+// FilterEmpty removes all empty value of the array.
+// Values like: 0, nil, false, "", len(slice/map/chan) == 0 are considered empty.
+func (a *Array) FilterEmpty() *Array {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for i := 0; i < len(a.array); {
+		if empty.IsEmpty(a.array[i]) {
+			a.array = append(a.array[:i], a.array[i+1:]...)
+		} else {
+			i++
+		}
+	}
+	return a
 }

@@ -716,3 +716,17 @@ func (a *StrArray) UnmarshalValue(value interface{}) error {
 	}
 	return nil
 }
+
+// FilterEmpty removes all empty string value of the array.
+func (a *StrArray) FilterEmpty() *StrArray {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for i := 0; i < len(a.array); {
+		if a.array[i] == "" {
+			a.array = append(a.array[:i], a.array[i+1:]...)
+		} else {
+			i++
+		}
+	}
+	return a
+}

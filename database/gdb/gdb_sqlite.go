@@ -12,6 +12,7 @@ package gdb
 
 import (
 	"database/sql"
+	"github.com/gogf/gf/text/gstr"
 )
 
 type dbSqlite struct {
@@ -43,6 +44,10 @@ func (db *dbSqlite) Tables(schema ...string) (tables []string, err error) {
 
 // TODO
 func (db *dbSqlite) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
+	table = gstr.Trim(table)
+	if gstr.Contains(table, " ") {
+		panic("function TableFields supports only single table operations")
+	}
 	return
 }
 

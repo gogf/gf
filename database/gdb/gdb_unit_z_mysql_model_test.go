@@ -1698,6 +1698,26 @@ func Test_Model_FieldsEx(t *testing.T) {
 	})
 }
 
+func Test_Model_FieldsStr(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.Case(t, func() {
+		gtest.Assert(db.Table(table).FieldsStr(), "id,passport,password,nickname,create_time")
+		gtest.Assert(db.Table(table).FieldsStr("a."), "a.id,a.passport,a.password,a.nickname,a.create_time")
+	})
+}
+
+func Test_Model_FieldsExStr(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.Case(t, func() {
+		gtest.Assert(db.Table(table).FieldsExStr("create_time,nickname"), "id,passport,password")
+		gtest.Assert(db.Table(table).FieldsExStr("create_time,nickname", "a."), "a.id,a.passport,a.password")
+	})
+}
+
 func Test_Model_Prefix(t *testing.T) {
 	db := dbPrefix
 	table := fmt.Sprintf(`%s_%d`, TABLE, gtime.TimestampNano())

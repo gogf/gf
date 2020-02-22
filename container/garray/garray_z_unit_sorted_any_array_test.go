@@ -678,3 +678,26 @@ func TestSortedArray_UnmarshalValue(t *testing.T) {
 		gtest.Assert(t.Array.Slice(), g.Slice{1, 2, 3})
 	})
 }
+
+func TestSortedArray_FilterNil(t *testing.T) {
+	gtest.Case(t, func() {
+		values := g.Slice{0, 1, 2, 3, 4, "", g.Slice{}}
+		array := garray.NewSortedArrayFromCopy(values, gutil.ComparatorInt)
+		gtest.Assert(array.FilterNil().Slice(), g.Slice{0, "", g.Slice{}, 1, 2, 3, 4})
+	})
+	gtest.Case(t, func() {
+		array := garray.NewSortedArrayFromCopy(g.Slice{nil, 1, 2, 3, 4, nil}, gutil.ComparatorInt)
+		gtest.Assert(array.FilterNil(), g.Slice{1, 2, 3, 4})
+	})
+}
+
+func TestSortedArray_FilterEmpty(t *testing.T) {
+	gtest.Case(t, func() {
+		array := garray.NewSortedArrayFrom(g.Slice{0, 1, 2, 3, 4, "", g.Slice{}}, gutil.ComparatorInt)
+		gtest.Assert(array.FilterEmpty(), g.Slice{1, 2, 3, 4})
+	})
+	gtest.Case(t, func() {
+		array := garray.NewSortedArrayFrom(g.Slice{1, 2, 3, 4}, gutil.ComparatorInt)
+		gtest.Assert(array.FilterEmpty(), g.Slice{1, 2, 3, 4})
+	})
+}

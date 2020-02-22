@@ -559,3 +559,14 @@ func TestSortedIntArray_UnmarshalValue(t *testing.T) {
 		gtest.Assert(t.Array.Slice(), g.Slice{1, 2, 3})
 	})
 }
+
+func TestSortedIntArray_FilterEmpty(t *testing.T) {
+	gtest.Case(t, func() {
+		array := garray.NewSortedIntArrayFrom(g.SliceInt{0, 1, 2, 3, 4, 0})
+		gtest.Assert(array.FilterEmpty(), g.SliceInt{1, 2, 3, 4})
+	})
+	gtest.Case(t, func() {
+		array := garray.NewSortedIntArrayFrom(g.SliceInt{1, 2, 3, 4})
+		gtest.Assert(array.FilterEmpty(), g.SliceInt{1, 2, 3, 4})
+	})
+}

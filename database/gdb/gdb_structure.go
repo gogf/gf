@@ -141,11 +141,16 @@ func (bs *dbBase) Tables(schema ...string) (tables []string, err error) {
 }
 
 // TableFields retrieves and returns the fields of given table.
+//
 // Note that it returns a map containing the field name and its corresponding fields.
 // As a map is unsorted, the TableField struct has a "Index" field marks its sequence in the fields.
 //
 // It's using cache feature to enhance the performance, which is never expired util the process restarts.
 func (bs *dbBase) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
+	table = gstr.Trim(table)
+	if gstr.Contains(table, " ") {
+		panic("function TableFields supports only single table operations")
+	}
 	checkSchema := bs.schema.Val()
 	if len(schema) > 0 && schema[0] != "" {
 		checkSchema = schema[0]

@@ -15,6 +15,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/text/gstr"
 	"reflect"
 	"strconv"
 	"strings"
@@ -118,6 +119,10 @@ func (db *dbOracle) Tables(schema ...string) (tables []string, err error) {
 }
 
 func (db *dbOracle) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
+	table = gstr.Trim(table)
+	if gstr.Contains(table, " ") {
+		panic("function TableFields supports only single table operations")
+	}
 	checkSchema := db.schema.Val()
 	if len(schema) > 0 && schema[0] != "" {
 		checkSchema = schema[0]
