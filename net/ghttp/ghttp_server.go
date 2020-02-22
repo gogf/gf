@@ -340,7 +340,7 @@ func (s *Server) Start() error {
 			}
 		})
 	}
-	if intlog.IsInGFDevelop() {
+	if intlog.IsGFDebug() {
 		intlog.Print("server configuration:")
 		gutil.Dump(s.config)
 	}
