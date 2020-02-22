@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/i18n/gi18n"
+	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/os/gres"
@@ -29,6 +30,7 @@ type Config struct {
 
 // SetConfig sets the configuration for view.
 func (view *View) SetConfig(config Config) error {
+	intlog.Printf("%+v", config)
 	var err error
 	if len(config.Paths) > 0 {
 		for _, v := range config.Paths {
