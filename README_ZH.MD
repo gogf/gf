@@ -18,9 +18,9 @@
 # 特点
 * 模块化、松耦合设计；
 * 模块丰富，开箱即用；
-* 简便易用、易于维护；
-* 社区活跃、大牛谦逊低调脾气好；
-* 高代码质量、单元测试覆盖率；
+* 简便易用，易于维护；
+* 社区活跃，大牛谦逊低调脾气好；
+* 高代码质量、高单元测试覆盖率；
 * 详尽的开发文档及示例；
 * 完善的本地中文化支持；
 * 更适合企业及团队使用；
@@ -61,7 +61,7 @@ golang版本 >= 1.11
 - WX交流群：微信添加`389961817`备注`GF`
 - 主库ISSUE：https://github.com/gogf/gf/issues
 
-> 中文文档适合入门，建议通过阅读`Gorame`的源码以及API文档深度学习`GoFrame`。
+> 建议通过阅读`Gorame`的源码以及API文档深度学习`GoFrame`，了解更多的精妙设计。
 
 # 协议
 
@@ -77,6 +77,10 @@ golang版本 >= 1.11
 
 如果您喜欢`GF`，要不[给开发者来杯咖啡吧](DONATOR.MD)！
 请在捐赠时备注您的`github`/`gitee`账号名称。
+
+# 赞助
+
+赞助支持`GF`框架的快速研发，如果您感兴趣，请联系 微信 `389961817` / 邮件 `john@goframe.org`。
 
 # 感谢
 <a href="https://www.jetbrains.com/?from=GoFrame"><img src="https://goframe.org/images/jetbrains.png" width="100" alt="JetBrains"/></a>
