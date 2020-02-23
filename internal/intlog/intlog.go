@@ -42,7 +42,7 @@ func Print(v ...interface{}) {
 	if !isGFDebug {
 		return
 	}
-	fmt.Println(append([]interface{}{now(), "[INTE]", file()}, v...)...)
+	fmt.Println(append([]interface{}{now(), "[GF]", file()}, v...)...)
 }
 
 // Printf prints <v> with format <format> using fmt.Printf.
@@ -51,7 +51,7 @@ func Printf(format string, v ...interface{}) {
 	if !isGFDebug {
 		return
 	}
-	fmt.Printf(now()+" [INTE] "+file()+" "+format+"\n", v...)
+	fmt.Printf(now()+" [GF] "+file()+" "+format+"\n", v...)
 }
 
 // Error prints <v> with newline using fmt.Println.
@@ -60,7 +60,7 @@ func Error(v ...interface{}) {
 	if !isGFDebug {
 		return
 	}
-	array := append([]interface{}{now(), "[INTE]", file()}, v...)
+	array := append([]interface{}{now(), "[GF]", file()}, v...)
 	array = append(array, "\n"+gdebug.StackWithFilter(gFILTER_KEY))
 	fmt.Println(array...)
 }
@@ -71,7 +71,7 @@ func Errorf(format string, v ...interface{}) {
 		return
 	}
 	fmt.Printf(
-		now()+" [INTE] "+file()+" "+format+"\n%s\n",
+		now()+" [GF] "+file()+" "+format+"\n%s\n",
 		append(v, gdebug.StackWithFilter(gFILTER_KEY))...,
 	)
 }
