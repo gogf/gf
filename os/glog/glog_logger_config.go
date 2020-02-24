@@ -57,7 +57,7 @@ func (l *Logger) SetConfig(config Config) error {
 			return err
 		}
 	}
-	intlog.Print(l.config)
+	intlog.Printf("SetConfig: %+v", l.config)
 	return nil
 }
 

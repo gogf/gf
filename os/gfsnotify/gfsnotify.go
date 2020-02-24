@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/container/gset"
+	"github.com/gogf/gf/internal/intlog"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
@@ -94,6 +95,7 @@ func New() (*Watcher, error) {
 	if watcher, err := fsnotify.NewWatcher(); err == nil {
 		w.watcher = watcher
 	} else {
+		intlog.Printf("New watcher failed: %v", err)
 		return nil, err
 	}
 	w.startWatchLoop()

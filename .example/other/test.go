@@ -1,13 +1,9 @@
 package main
 
 import (
-	"fmt"
-	"github.com/gogf/gf/util/grand"
+	"github.com/gogf/gf/frame/g"
 )
 
 func main() {
-	s := "我爱GoFrame"
-	for i := 0; i <= 10; i++ {
-		fmt.Println(grand.Str(s, 10))
-	}
+	g.Cfg().Dump()
 }

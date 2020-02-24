@@ -43,6 +43,8 @@ func (w *Watcher) AddOnce(name, path string, callbackFunc func(event *Event), re
 				if fileIsDir(subPath) {
 					if err := w.watcher.Add(subPath); err != nil {
 						intlog.Error(err)
+					} else {
+						intlog.Printf("watcher adds monitor for: %s", subPath)
 					}
 				}
 			}
@@ -85,6 +87,8 @@ func (w *Watcher) addWithCallbackFunc(name, path string, callbackFunc func(event
 	// Add the path to underlying monitor.
 	if err := w.watcher.Add(path); err != nil {
 		intlog.Error(err)
+	} else {
+		intlog.Printf("watcher adds monitor for: %s", path)
 	}
 	// Add the callback to global callback map.
 	callbackIdMap.Set(callback.Id, callback)

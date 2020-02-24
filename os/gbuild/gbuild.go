@@ -30,6 +30,9 @@ func init() {
 		}
 		builtInVarMap["gfVersion"] = gf.VERSION
 		builtInVarMap["goVersion"] = runtime.Version()
+		intlog.Printf("build variables: %+v", builtInVarMap)
+	} else {
+		intlog.Print("no build variables")
 	}
 }
 

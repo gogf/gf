@@ -14,6 +14,7 @@ package gdb
 import (
 	"database/sql"
 	"fmt"
+	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/text/gstr"
 	"strconv"
 	"strings"
@@ -35,6 +36,7 @@ func (db *dbMssql) Open(config *ConfigNode) (*sql.DB, error) {
 			config.User, config.Pass, config.Host, config.Port, config.Name,
 		)
 	}
+	intlog.Printf("Open: %s", source)
 	if db, err := sql.Open("sqlserver", source); err == nil {
 		return db, nil
 	} else {
