@@ -30,7 +30,6 @@ type Config struct {
 
 // SetConfig sets the configuration for view.
 func (view *View) SetConfig(config Config) error {
-	intlog.Printf("%+v", config)
 	var err error
 	if len(config.Paths) > 0 {
 		for _, v := range config.Paths {
@@ -52,6 +51,8 @@ func (view *View) SetConfig(config Config) error {
 	// Clear global template object cache.
 	// It's just cache, do not hesitate clearing it.
 	templates.Clear()
+
+	intlog.Printf("SetConfig: %+v", view.config)
 	return nil
 }
 

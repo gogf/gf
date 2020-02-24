@@ -100,6 +100,8 @@ func (w *Watcher) startEventLoop() {
 						// We need no worry about the repeat adding.
 						if err := w.watcher.Add(event.Path); err != nil {
 							intlog.Error(err)
+						} else {
+							intlog.Printf("fake remove event, watcher re-adds monitor for: %s", event.Path)
 						}
 						// Change the event to RENAME, which means it renames itself to its origin name.
 						event.Op = RENAME
@@ -114,6 +116,8 @@ func (w *Watcher) startEventLoop() {
 						// We need no worry about the repeat adding.
 						if err := w.watcher.Add(event.Path); err != nil {
 							intlog.Error(err)
+						} else {
+							intlog.Printf("fake rename event, watcher re-adds monitor for: %s", event.Path)
 						}
 						// Change the event to CHMOD.
 						event.Op = CHMOD
@@ -130,6 +134,8 @@ func (w *Watcher) startEventLoop() {
 							if fileIsDir(subPath) {
 								if err := w.watcher.Add(subPath); err != nil {
 									intlog.Error(err)
+								} else {
+									intlog.Printf("folder creation event, watcher adds monitor for: %s", subPath)
 								}
 							}
 						}
@@ -137,6 +143,8 @@ func (w *Watcher) startEventLoop() {
 						// If it's a file, it directly adds it to monitor.
 						if err := w.watcher.Add(event.Path); err != nil {
 							intlog.Error(err)
+						} else {
+							intlog.Printf("file creation event, watcher adds monitor for: %s", event.Path)
 						}
 					}
 

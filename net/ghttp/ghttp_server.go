@@ -11,8 +11,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/debug/gdebug"
-	"github.com/gogf/gf/internal/intlog"
-	"github.com/gogf/gf/util/gutil"
 	"net/http"
 	"os"
 	"reflect"
@@ -339,10 +337,6 @@ func (s *Server) Start() error {
 				//glog.Error("[ghttp] server error in process communication:", err)
 			}
 		})
-	}
-	if intlog.IsGFDebug() {
-		intlog.Print("server configuration:")
-		gutil.Dump(s.config)
 	}
 	s.dumpRouterMap()
 	return nil

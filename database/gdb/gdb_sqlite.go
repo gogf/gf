@@ -12,6 +12,7 @@ package gdb
 
 import (
 	"database/sql"
+	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/text/gstr"
 )
 
@@ -26,6 +27,7 @@ func (db *dbSqlite) Open(config *ConfigNode) (*sql.DB, error) {
 	} else {
 		source = config.Name
 	}
+	intlog.Printf("Open: %s", source)
 	if db, err := sql.Open("sqlite3", source); err == nil {
 		return db, nil
 	} else {

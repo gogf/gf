@@ -6,7 +6,10 @@
 
 package gcfg
 
-import "github.com/gogf/gf/container/gmap"
+import (
+	"github.com/gogf/gf/container/gmap"
+	"github.com/gogf/gf/internal/intlog"
+)
 
 var (
 	// Customized configuration content.
@@ -41,9 +44,9 @@ func GetContent(file ...string) string {
 	return configs.Get(name)
 }
 
-// RemoveConfig removes the global configuration with specified <file>.
+// RemoveContent removes the global configuration with specified <file>.
 // If <name> is not passed, it removes configuration of the default group name.
-func RemoveConfig(file ...string) {
+func RemoveContent(file ...string) {
 	name := DEFAULT_CONFIG_FILE
 	if len(file) > 0 {
 		name = file[0]
@@ -57,6 +60,8 @@ func RemoveConfig(file ...string) {
 			configs.Remove(name)
 		}
 	})
+
+	intlog.Printf(`RemoveContent: %s`, name)
 }
 
 // ClearContent removes all global configuration contents.
@@ -68,4 +73,6 @@ func ClearContent() {
 			v.(*Config).jsons.Clear()
 		}
 	})
+
+	intlog.Print(`RemoveConfig`)
 }

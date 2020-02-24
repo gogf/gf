@@ -428,7 +428,7 @@ func TestCfg_Config(t *testing.T) {
 		gtest.Assert(gcfg.GetContent("config.yml"), "gf")
 		gcfg.SetContent("gf1", "config.yml")
 		gtest.Assert(gcfg.GetContent("config.yml"), "gf1")
-		gcfg.RemoveConfig("config.yml")
+		gcfg.RemoveContent("config.yml")
 		gcfg.ClearContent()
 		gtest.Assert(gcfg.GetContent("name"), "")
 	})

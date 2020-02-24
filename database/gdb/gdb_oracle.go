@@ -15,6 +15,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/text/gstr"
 	"reflect"
 	"strconv"
@@ -39,6 +40,7 @@ func (db *dbOracle) Open(config *ConfigNode) (*sql.DB, error) {
 	} else {
 		source = fmt.Sprintf("%s/%s@%s", config.User, config.Pass, config.Name)
 	}
+	intlog.Printf("Open: %s", source)
 	if db, err := sql.Open("oci8", source); err == nil {
 		return db, nil
 	} else {

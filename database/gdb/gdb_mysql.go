@@ -9,6 +9,7 @@ package gdb
 import (
 	"database/sql"
 	"fmt"
+	"github.com/gogf/gf/internal/intlog"
 
 	_ "github.com/gf-third/mysql"
 )
@@ -28,6 +29,7 @@ func (db *dbMysql) Open(config *ConfigNode) (*sql.DB, error) {
 			config.User, config.Pass, config.Host, config.Port, config.Name, config.Charset,
 		)
 	}
+	intlog.Printf("Open: %s", source)
 	if db, err := sql.Open("gf-mysql", source); err == nil {
 		return db, nil
 	} else {

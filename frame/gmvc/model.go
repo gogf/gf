@@ -7,5 +7,4 @@
 package gmvc
 
 // Model is the base struct for model.
-type Model struct {
-}
+type Model struct{}

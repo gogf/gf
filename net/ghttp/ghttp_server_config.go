@@ -9,6 +9,7 @@ package ghttp
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/gogf/gf/internal/intlog"
 	"net/http"
 	"strconv"
 	"time"
@@ -151,6 +152,8 @@ func (s *Server) SetConfig(c ServerConfig) error {
 		s.EnableHTTPS(c.HTTPSCertPath, c.HTTPSKeyPath)
 	}
 	SetGraceful(c.Graceful)
+
+	intlog.Printf("SetConfig: %+v", s.config)
 	return nil
 }
 
