@@ -23,10 +23,10 @@ type UploadFile struct {
 	*multipart.FileHeader
 }
 
-// UploadFiles is array type of *UploadFile.
+// UploadFiles is array type for *UploadFile.
 type UploadFiles []*UploadFile
 
-// Save saves the uploading file to specified path.
+// Save saves the single uploading file to specified path.
 // The parameter path can be either a directory or a file path. If <path> is a directory,
 // it saves the uploading file to the directory using its original name. If <path> is a
 // file path, it saves the uploading file to the file path.
@@ -67,7 +67,7 @@ func (f *UploadFile) Save(path string, randomlyRename ...bool) error {
 	return nil
 }
 
-// Save saves all the uploading files to specified directory path.
+// Save saves all uploading files to specified directory path.
 //
 // The parameter <dirPath> should be a directory path or it returns error.
 //
