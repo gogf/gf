@@ -180,6 +180,34 @@ func TestIntArray_Chunk(t *testing.T) {
 		gtest.Assert(chunks[2], []int{5})
 		gtest.Assert(array1.Chunk(0), nil)
 	})
+	gtest.Case(t, func() {
+		a1 := []int{1, 2, 3, 4, 5}
+		array1 := garray.NewIntArrayFrom(a1)
+		chunks := array1.Chunk(3)
+		gtest.Assert(len(chunks), 2)
+		gtest.Assert(chunks[0], []int{1, 2, 3})
+		gtest.Assert(chunks[1], []int{4, 5})
+		gtest.Assert(array1.Chunk(0), nil)
+	})
+	gtest.Case(t, func() {
+		a1 := []int{1, 2, 3, 4, 5, 6}
+		array1 := garray.NewIntArrayFrom(a1)
+		chunks := array1.Chunk(2)
+		gtest.Assert(len(chunks), 3)
+		gtest.Assert(chunks[0], []int{1, 2})
+		gtest.Assert(chunks[1], []int{3, 4})
+		gtest.Assert(chunks[2], []int{5, 6})
+		gtest.Assert(array1.Chunk(0), nil)
+	})
+	gtest.Case(t, func() {
+		a1 := []int{1, 2, 3, 4, 5, 6}
+		array1 := garray.NewIntArrayFrom(a1)
+		chunks := array1.Chunk(3)
+		gtest.Assert(len(chunks), 2)
+		gtest.Assert(chunks[0], []int{1, 2, 3})
+		gtest.Assert(chunks[1], []int{4, 5, 6})
+		gtest.Assert(array1.Chunk(0), nil)
+	})
 }
 
 func TestIntArray_Pad(t *testing.T) {
