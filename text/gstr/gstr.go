@@ -293,19 +293,14 @@ func Fields(str string) []string {
 	return strings.Fields(str)
 }
 
-// Contains reports whether <substr> is within <str>, case-sensitively.
-func Contains(str, substr string) bool {
-	return strings.Contains(str, substr)
+// HasPrefix tests whether the string s begins with prefix.
+func HasPrefix(s, prefix string) bool {
+	return strings.HasPrefix(s, prefix)
 }
 
-// ContainsI reports whether substr is within str, case-insensitively.
-func ContainsI(str, substr string) bool {
-	return PosI(str, substr) != -1
-}
-
-// ContainsAny reports whether any Unicode code points in <chars> are within <s>.
-func ContainsAny(s, chars string) bool {
-	return strings.ContainsAny(s, chars)
+// HasSuffix tests whether the string s ends with suffix.
+func HasSuffix(s, suffix string) bool {
+	return strings.HasSuffix(s, suffix)
 }
 
 // CountWords returns information about words' count used in a string.
