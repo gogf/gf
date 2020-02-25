@@ -154,6 +154,22 @@ func Test_StrLimit(t *testing.T) {
 	})
 }
 
+func Test_HasPrefix(t *testing.T) {
+	gtest.Case(t, func() {
+		gtest.Assert(gstr.HasPrefix("我爱GoFrame", "我爱"), true)
+		gtest.Assert(gstr.HasPrefix("en我爱GoFrame", "我爱"), false)
+		gtest.Assert(gstr.HasPrefix("en我爱GoFrame", "en"), true)
+	})
+}
+
+func Test_HasSuffix(t *testing.T) {
+	gtest.Case(t, func() {
+		gtest.Assert(gstr.HasSuffix("我爱GoFrame", "GoFrame"), true)
+		gtest.Assert(gstr.HasSuffix("en我爱GoFrame", "a"), false)
+		gtest.Assert(gstr.HasSuffix("GoFrame很棒", "棒"), true)
+	})
+}
+
 func Test_Reverse(t *testing.T) {
 	gtest.Case(t, func() {
 		gtest.Assert(gstr.Reverse("我爱123"), "321爱我")
