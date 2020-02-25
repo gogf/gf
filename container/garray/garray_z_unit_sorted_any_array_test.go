@@ -326,6 +326,34 @@ func TestSortedArray_Chunk(t *testing.T) {
 		i1 = array1.Chunk(0)
 		gtest.Assert(len(i1), 0)
 	})
+	gtest.Case(t, func() {
+		a1 := []interface{}{1, 2, 3, 4, 5}
+		array1 := garray.NewSortedArrayFrom(a1, gutil.ComparatorInt)
+		chunks := array1.Chunk(3)
+		gtest.Assert(len(chunks), 2)
+		gtest.Assert(chunks[0], []interface{}{1, 2, 3})
+		gtest.Assert(chunks[1], []interface{}{4, 5})
+		gtest.Assert(array1.Chunk(0), nil)
+	})
+	gtest.Case(t, func() {
+		a1 := []interface{}{1, 2, 3, 4, 5, 6}
+		array1 := garray.NewSortedArrayFrom(a1, gutil.ComparatorInt)
+		chunks := array1.Chunk(2)
+		gtest.Assert(len(chunks), 3)
+		gtest.Assert(chunks[0], []interface{}{1, 2})
+		gtest.Assert(chunks[1], []interface{}{3, 4})
+		gtest.Assert(chunks[2], []interface{}{5, 6})
+		gtest.Assert(array1.Chunk(0), nil)
+	})
+	gtest.Case(t, func() {
+		a1 := []interface{}{1, 2, 3, 4, 5, 6}
+		array1 := garray.NewSortedArrayFrom(a1, gutil.ComparatorInt)
+		chunks := array1.Chunk(3)
+		gtest.Assert(len(chunks), 2)
+		gtest.Assert(chunks[0], []interface{}{1, 2, 3})
+		gtest.Assert(chunks[1], []interface{}{4, 5, 6})
+		gtest.Assert(array1.Chunk(0), nil)
+	})
 }
 
 func TestSortedArray_SubSlice(t *testing.T) {

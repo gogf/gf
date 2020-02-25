@@ -334,6 +334,34 @@ func TestSortedStrArray_Chunk(t *testing.T) {
 		gtest.Assert(array2[1], []string{"c", "d"})
 		gtest.Assert(array1.Chunk(0), nil)
 	})
+	gtest.Case(t, func() {
+		a1 := []string{"1", "2", "3", "4", "5"}
+		array1 := garray.NewSortedStrArrayFrom(a1)
+		chunks := array1.Chunk(3)
+		gtest.Assert(len(chunks), 2)
+		gtest.Assert(chunks[0], []string{"1", "2", "3"})
+		gtest.Assert(chunks[1], []string{"4", "5"})
+		gtest.Assert(array1.Chunk(0), nil)
+	})
+	gtest.Case(t, func() {
+		a1 := []string{"1", "2", "3", "4", "5", "6"}
+		array1 := garray.NewSortedStrArrayFrom(a1)
+		chunks := array1.Chunk(2)
+		gtest.Assert(len(chunks), 3)
+		gtest.Assert(chunks[0], []string{"1", "2"})
+		gtest.Assert(chunks[1], []string{"3", "4"})
+		gtest.Assert(chunks[2], []string{"5", "6"})
+		gtest.Assert(array1.Chunk(0), nil)
+	})
+	gtest.Case(t, func() {
+		a1 := []string{"1", "2", "3", "4", "5", "6"}
+		array1 := garray.NewSortedStrArrayFrom(a1)
+		chunks := array1.Chunk(3)
+		gtest.Assert(len(chunks), 2)
+		gtest.Assert(chunks[0], []string{"1", "2", "3"})
+		gtest.Assert(chunks[1], []string{"4", "5", "6"})
+		gtest.Assert(array1.Chunk(0), nil)
+	})
 }
 
 func TestSortedStrArray_SetUnique(t *testing.T) {
