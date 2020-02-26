@@ -172,7 +172,7 @@ const (
 	gINSERT_OPTION_SAVE         = 2
 	gINSERT_OPTION_IGNORE       = 3
 	gDEFAULT_BATCH_NUM          = 10 // Per count for batch insert/replace/save
-	gDEFAULT_CONN_MAX_LIFE_TIME = 30 // Max life time for per connection in pool.
+	gDEFAULT_CONN_MAX_LIFE_TIME = 30 // Max life time for per connection in pool in seconds.
 )
 
 var (
@@ -197,12 +197,13 @@ func New(name ...string) (db DB, err error) {
 	if _, ok := configs.config[group]; ok {
 		if node, err := getConfigNodeByGroup(group, true); err == nil {
 			base := &dbBase{
-				group:           group,
-				debug:           gtype.NewBool(),
-				cache:           gcache.New(),
-				schema:          gtype.NewString(),
-				logger:          glog.New(),
-				prefix:          node.Prefix,
+				group:  group,
+				debug:  gtype.NewBool(),
+				cache:  gcache.New(),
+				schema: gtype.NewString(),
+				logger: glog.New(),
+				prefix: node.Prefix,
+				// Default max connection life time if user does not configure.
 				maxConnLifetime: gDEFAULT_CONN_MAX_LIFE_TIME,
 			}
 			switch node.Type {
@@ -246,8 +247,8 @@ func Instance(name ...string) (db DB, err error) {
 	return
 }
 
-// getConfigNodeByGroup calculates and returns a configuration node of given group.
-// It calculates the value internally using weight algorithm for load balance.
+// getConfigNodeByGroup calculates and returns a configuration node of given group. It
+// calculates the value internally using weight algorithm for load balance.
 //
 // The parameter <master> specifies whether retrieving a master node, or else a slave node
 // if master-slave configured.
