@@ -14,18 +14,6 @@ import (
 	"github.com/gogf/gf/os/grpool"
 )
 
-const (
-	LEVEL_ALL  = LEVEL_DEBU | LEVEL_INFO | LEVEL_NOTI | LEVEL_WARN | LEVEL_ERRO | LEVEL_CRIT
-	LEVEL_DEV  = LEVEL_ALL
-	LEVEL_PROD = LEVEL_WARN | LEVEL_ERRO | LEVEL_CRIT
-	LEVEL_DEBU = 1 << iota
-	LEVEL_INFO
-	LEVEL_NOTI
-	LEVEL_WARN
-	LEVEL_ERRO
-	LEVEL_CRIT
-)
-
 var (
 	// Default logger object, for package method usage
 	logger = New()

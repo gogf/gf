@@ -55,6 +55,13 @@ func New() *Logger {
 	}
 }
 
+// NewWithWriter creates and returns a custom logger with io.Writer.
+func NewWithWriter(writer io.Writer) *Logger {
+	l := New()
+	l.SetWriter(writer)
+	return l
+}
+
 // Clone returns a new logger, which is the clone the current logger.
 func (l *Logger) Clone() *Logger {
 	logger := Logger{}
