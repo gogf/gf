@@ -13,7 +13,7 @@ branches:
   - staging
 
 env:
-- GF_DEV=1 GO111MODULE=on
+- GF_DEBUG=1 GO111MODULE=on
 
 services:
 - mysql
