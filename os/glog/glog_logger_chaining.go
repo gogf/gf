@@ -27,6 +27,8 @@ func (l *Logger) To(writer io.Writer) *Logger {
 
 // Path is a chaining function,
 // which sets the directory path to <path> for current logging content output.
+//
+// Note that the parameter <path> is a directory path, not a file path.
 func (l *Logger) Path(path string) *Logger {
 	logger := (*Logger)(nil)
 	if l.parent == nil {

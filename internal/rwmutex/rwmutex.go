@@ -28,28 +28,37 @@ func New(safe ...bool) *RWMutex {
 	return mu
 }
 
+// IsSafe checks and returns whether current mutex is in concurrent-safe usage.
 func (mu *RWMutex) IsSafe() bool {
 	return mu.safe
 }
 
+// Lock locks mutex for writing.
+// It does nothing if it is not in concurrent-safe usage.
 func (mu *RWMutex) Lock() {
 	if mu.safe {
 		mu.RWMutex.Lock()
 	}
 }
 
+// Unlock unlocks mutex for writing.
+// It does nothing if it is not in concurrent-safe usage.
 func (mu *RWMutex) Unlock() {
 	if mu.safe {
 		mu.RWMutex.Unlock()
 	}
 }
 
+// RLock locks mutex for reading.
+// It does nothing if it is not in concurrent-safe usage.
 func (mu *RWMutex) RLock() {
 	if mu.safe {
 		mu.RWMutex.RLock()
 	}
 }
 
+// RUnlock unlocks mutex for reading.
+// It does nothing if it is not in concurrent-safe usage.
 func (mu *RWMutex) RUnlock() {
 	if mu.safe {
 		mu.RWMutex.RUnlock()

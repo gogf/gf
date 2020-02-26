@@ -13,9 +13,12 @@ import (
 	"math"
 )
 
-// 针对基本类型进行二进制打包，支持的基本数据类型包括:
-// int/8/16/32/64、uint/8/16/32/64、float32/64、bool、string、[]byte。
-// 其他未知类型使用 fmt.Sprintf("%v", value) 转换为字符串之后处理。
+// LeEncode encodes one or multiple <values> into bytes using LittleEndian.
+// It uses type asserting checking the type of each value of <values> and internally
+// calls corresponding converting function do the bytes converting.
+//
+// It supports common variable type asserting, and finally it uses fmt.Sprintf converting
+// value to string and then to bytes.
 func LeEncode(values ...interface{}) []byte {
 	buf := new(bytes.Buffer)
 	for i := 0; i < len(values); i++ {
