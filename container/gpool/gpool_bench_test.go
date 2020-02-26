@@ -36,7 +36,7 @@ func BenchmarkSyncPoolPut(b *testing.B) {
 	}
 }
 
-func BenchmarkGpoolGet(b *testing.B) {
+func BenchmarkSyncPoolGet(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		syncp.Get()
 	}
