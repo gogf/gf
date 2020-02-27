@@ -53,20 +53,21 @@ func (s *Server) handleErrorLog(err error, r *Request) {
 	if r.TLS != nil {
 		scheme = "https"
 	}
-	content := fmt.Sprintf(`%d, "%s %s %s %s %s" %.3f, %s, "%s", "%s"`,
+	content := fmt.Sprintf(
+		`%d, "%s %s %s %s %s" %.3f, %s, "%s", "%s"`,
 		r.Response.Status, r.Method, scheme, r.Host, r.URL.String(), r.Proto,
 		float64(r.LeaveTime-r.EnterTime)/1000,
 		r.GetClientIp(), r.Referer(), r.UserAgent(),
 	)
 	if stack := gerror.Stack(err); stack != "" {
 		content += "\nStack:\n" + stack
-		s.config.Logger.File(s.config.AccessLogPattern).
+		s.config.Logger.File(s.config.ErrorLogPattern).
 			Stack(false).
 			Stdout(s.config.LogStdout).
 			Error(content)
 		return
 	}
-	s.Logger().File(s.config.AccessLogPattern).
+	s.Logger().File(s.config.ErrorLogPattern).
 		Stack(s.config.ErrorStack).
 		StackWithFilter(gPATH_FILTER_KEY).
 		Stdout(s.config.LogStdout).

@@ -25,14 +25,12 @@ func MiddlewareCORS(r *ghttp.Request) {
 
 func MiddlewareLog(r *ghttp.Request) {
 	r.Middleware.Next()
-	glog.Println(r.Response.Status, r.URL.Path)
+	g.Log().Println(r.Response.Status, r.URL.Path)
 }
 
 func main() {
 	s := g.Server()
-	s.Group("/", func(group *ghttp.RouterGroup) {
-		group.Middleware(MiddlewareLog)
-	})
+	s.Use(MiddlewareLog)
 	s.Group("/api.v2", func(group *ghttp.RouterGroup) {
 		group.Middleware(MiddlewareAuth, MiddlewareCORS)
 		group.ALL("/user/list", func(r *ghttp.Request) {
