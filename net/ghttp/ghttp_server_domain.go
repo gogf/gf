@@ -147,3 +147,7 @@ func (d *Domain) BindMiddlewareDefault(handlers ...HandlerFunc) {
 		d.s.BindMiddleware(gDEFAULT_MIDDLEWARE_PATTERN+"@"+domain, handlers...)
 	}
 }
+
+func (d *Domain) Use(handlers ...HandlerFunc) {
+	d.BindMiddlewareDefault(handlers...)
+}

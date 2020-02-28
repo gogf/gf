@@ -19,7 +19,7 @@ func MiddlewareAuth(r *ghttp.Request) {
 func main() {
 	s := g.Server()
 	s.Group("/admin", func(group *ghttp.RouterGroup) {
-		g.MiddlewarePattern("/*action", func(r *ghttp.Request) {
+		group.Middleware(func(r *ghttp.Request) {
 			if action := r.GetRouterString("action"); action != "" {
 				switch action {
 				case "login":
