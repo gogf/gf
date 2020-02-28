@@ -1,18 +1,37 @@
 package main
 
 import (
-	"fmt"
-	"github.com/gogf/gf/os/glog"
+	"net/http"
+
+	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/net/ghttp"
 )
 
+func MiddlewareAuth(r *ghttp.Request) {
+	token := r.Get("token")
+	if token == "123456" {
+		r.Response.Writeln("auth")
+		r.Middleware.Next()
+	} else {
+		r.Response.WriteStatus(http.StatusForbidden)
+	}
+}
+
+func MiddlewareCORS(r *ghttp.Request) {
+	r.Response.Writeln("cors")
+	r.Response.CORSDefault()
+	r.Middleware.Next()
+}
+
 func main() {
-	fmt.Println(glog.LEVEL_ALL)
-	fmt.Println(glog.LEVEL_DEV)
-	fmt.Println(glog.LEVEL_PROD)
-	fmt.Println(glog.LEVEL_DEBU)
-	fmt.Println(glog.LEVEL_INFO)
-	fmt.Println(glog.LEVEL_NOTI)
-	fmt.Println(glog.LEVEL_WARN)
-	fmt.Println(glog.LEVEL_ERRO)
-	fmt.Println(glog.LEVEL_CRIT)
+	s := g.Server()
+	s.Use(MiddlewareCORS)
+	s.Group("/api.v2", func(group *ghttp.RouterGroup) {
+		group.Middleware(MiddlewareAuth)
+		group.ALL("/user/list", func(r *ghttp.Request) {
+			r.Response.Writeln("list")
+		})
+	})
+	s.SetPort(8199)
+	s.Run()
 }
