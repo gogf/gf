@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/test/gtest"
 )
 
-func Test_Load_JSON(t *testing.T) {
+func Test_Load_JSON1(t *testing.T) {
 	data := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]}`)
 	// JSON
 	gtest.Case(t, func() {
@@ -35,6 +35,19 @@ func Test_Load_JSON(t *testing.T) {
 		j, err := gjson.Load(path)
 		gtest.Assert(err, nil)
 		gtest.Assert(j.Get("n"), "123456789")
+		gtest.Assert(j.Get("m"), g.Map{"k": "v"})
+		gtest.Assert(j.Get("m.k"), "v")
+		gtest.Assert(j.Get("a"), g.Slice{1, 2, 3})
+		gtest.Assert(j.Get("a.1"), 2)
+	})
+}
+
+func Test_Load_JSON2(t *testing.T) {
+	data := []byte(`{"n":123456789000000000000, "m":{"k":"v"}, "a":[1,2,3]}`)
+	gtest.Case(t, func() {
+		j, err := gjson.LoadContent(data)
+		gtest.Assert(err, nil)
+		gtest.Assert(j.Get("n"), "123456789000000000000")
 		gtest.Assert(j.Get("m"), g.Map{"k": "v"})
 		gtest.Assert(j.Get("m.k"), "v")
 		gtest.Assert(j.Get("a"), g.Slice{1, 2, 3})

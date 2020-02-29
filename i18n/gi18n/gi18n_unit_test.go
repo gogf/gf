@@ -123,7 +123,7 @@ func Test_Instance(t *testing.T) {
 	})
 
 	gtest.Case(t, func() {
-		m := gi18n.Instance(gconv.String(gtime.Nanosecond()))
+		m := gi18n.Instance(gconv.String(gtime.TimestampNano()))
 		gtest.Assert(m.T("{#hello}{#world}"), "{#hello}{#world}")
 	})
 }

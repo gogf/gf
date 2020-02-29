@@ -25,12 +25,23 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
-// New creates a Json object with any variable type of <data>,
-// but <data> should be a map or slice for data access reason,
-// or it will make no sense.
-// The <unsafe> param specifies whether using this Json object
-// in un-concurrent-safe context, which is false in default.
+// New creates a Json object with any variable type of <data>, but <data> should be a map or slice
+// for data access reason, or it will make no sense.
+//
+// The parameter <safe> specifies whether using this Json object in concurrent-safe context, which is
+// false in default.
 func New(data interface{}, safe ...bool) *Json {
+	return NewWithTag(data, "json", safe...)
+}
+
+// NewWithTag creates a Json object with any variable type of <data>, but <data> should be a map or slice
+// for data access reason, or it will make no sense.
+//
+// The parameter <tags> specifies priority tags for struct conversion to map, multiple tags joined with char ','.
+//
+// The parameter <safe> specifies whether using this Json object in concurrent-safe context, which is
+// false in default.
+func NewWithTag(data interface{}, tags string, safe ...bool) *Json {
 	j := (*Json)(nil)
 	switch data.(type) {
 	case string, []byte:
@@ -61,7 +72,8 @@ func New(data interface{}, safe ...bool) *Json {
 			}
 		case reflect.Map, reflect.Struct:
 			i := interface{}(nil)
-			i = gconv.Map(data, "json")
+			// Note that it uses MapDeep function implementing the converting.
+			i = gconv.MapDeep(data, tags)
 			j = &Json{
 				p:  &i,
 				c:  byte(gDEFAULT_SPLIT_CHAR),
@@ -103,7 +115,10 @@ func Decode(data interface{}) (interface{}, error) {
 // The <v> should be a pointer type.
 func DecodeTo(data interface{}, v interface{}) error {
 	decoder := json.NewDecoder(bytes.NewReader(gconv.Bytes(data)))
-	decoder.UseNumber()
+	// Do not use number, it converts float64 to json.Number type,
+	// which actually a string type. It causes converting issue for other data formats,
+	// for example: yaml.
+	//decoder.UseNumber()
 	return decoder.Decode(v)
 }
 
@@ -184,7 +199,10 @@ func doLoadContent(dataType string, data []byte, safe ...bool) (*Json, error) {
 		return nil, err
 	}
 	decoder := json.NewDecoder(bytes.NewReader(data))
-	decoder.UseNumber()
+	// Do not use number, it converts float64 to json.Number type,
+	// which actually a string type. It causes converting issue for other data formats,
+	// for example: yaml.
+	//decoder.UseNumber()
 	if err := decoder.Decode(&result); err != nil {
 		return nil, err
 	}

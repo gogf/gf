@@ -7,7 +7,9 @@ func main() {
 	s := g.Server()
 	s.SetIndexFolder(true)
 	s.SetServerRoot("/Users/john/Downloads")
-	s.AddSearchPath("/Users/john/Documents")
+	//s.AddSearchPath("/Users/john/Documents")
+	s.SetErrorLogEnabled(true)
+	s.SetAccessLogEnabled(true)
 	s.SetPort(8199)
 	s.Run()
 }

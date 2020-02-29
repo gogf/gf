@@ -6,7 +6,7 @@
 
 // Package gbinary provides useful API for handling binary/bytes data.
 //
-// 注意gbinary模块默认使用LittleEndian进行编码。
+// Note that package gbinary encodes the data using LittleEndian in default.
 package gbinary
 
 func Encode(values ...interface{}) []byte {

@@ -17,8 +17,8 @@ func main() {
 	}
 
 	user := new(User)
-	scores := map[string]interface{}{
-		"Scores": map[string]interface{}{
+	scores := g.Map{
+		"Scores": g.Map{
 			"Name":   "john",
 			"Result": 100,
 		},

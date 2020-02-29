@@ -17,7 +17,51 @@ import (
 	"github.com/gogf/gf/test/gtest"
 )
 
-func Test_Params_Json(t *testing.T) {
+func Test_Params_Json_Request(t *testing.T) {
+	type User struct {
+		Id    int
+		Name  string
+		Time  *time.Time
+		Pass1 string `p:"password1"`
+		Pass2 string `p:"password2" v:"required|length:2,20|password3|same:password1#||密码强度不足|两次密码不一致"`
+	}
+	p := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/get", func(r *ghttp.Request) {
+		r.Response.WriteExit(r.Get("id"), r.Get("name"))
+	})
+	s.BindHandler("/map", func(r *ghttp.Request) {
+		if m := r.GetMap(); len(m) > 0 {
+			r.Response.WriteExit(m["id"], m["name"], m["password1"], m["password2"])
+		}
+	})
+	s.BindHandler("/parse", func(r *ghttp.Request) {
+		if m := r.GetMap(); len(m) > 0 {
+			var user *User
+			if err := r.Parse(&user); err != nil {
+				r.Response.WriteExit(err)
+			}
+			r.Response.WriteExit(user.Id, user.Name, user.Pass1, user.Pass2)
+		}
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.Case(t, func() {
+		client := ghttp.NewClient()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+
+		gtest.Assert(client.GetContent("/get", `{"id":1,"name":"john","password1":"123Abc!@#","password2":"123Abc!@#"}`), `1john`)
+		gtest.Assert(client.GetContent("/map", `{"id":1,"name":"john","password1":"123Abc!@#","password2":"123Abc!@#"}`), `1john123Abc!@#123Abc!@#`)
+		gtest.Assert(client.PostContent("/parse", `{"id":1,"name":"john","password1":"123Abc!@#","password2":"123Abc!@#"}`), `1john123Abc!@#123Abc!@#`)
+		gtest.Assert(client.PostContent("/parse", `{"id":1,"name":"john","password1":"123Abc!@#","password2":"123"}`), `密码强度不足; 两次密码不一致`)
+	})
+}
+
+func Test_Params_Json_Response(t *testing.T) {
 	type User struct {
 		Uid      int
 		Name     string
@@ -90,12 +134,11 @@ func Test_Params_Json(t *testing.T) {
 		r.Response.WriteJson(responseJson)
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
-	// 等待启动完成
-	time.Sleep(200 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 	gtest.Case(t, func() {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))

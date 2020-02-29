@@ -44,6 +44,13 @@ func (c *Config) GetMap(pattern string, def ...interface{}) map[string]interface
 	return nil
 }
 
+func (c *Config) GetMapStrStr(pattern string, def ...interface{}) map[string]string {
+	if j := c.getJson(); j != nil {
+		return j.GetMapStrStr(pattern, def...)
+	}
+	return nil
+}
+
 func (c *Config) GetArray(pattern string, def ...interface{}) []interface{} {
 	if j := c.getJson(); j != nil {
 		return j.GetArray(pattern, def...)

@@ -8,7 +8,7 @@ package gdb
 
 import "database/sql"
 
-// 批量执行的结果对象
+// batchSqlResult is execution result for batch operations.
 type batchSqlResult struct {
 	rowsAffected int64
 	lastResult   sql.Result

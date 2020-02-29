@@ -19,10 +19,10 @@ const (
 	gDEFAULT_SERVER = "default"
 )
 
-// UDP server.
+// Server is the UDP server.
 type Server struct {
 	conn    *Conn       // UDP server connection object.
-	address string      // Listening address.
+	address string      // UDP server listening address.
 	handler func(*Conn) // Handler for UDP connection.
 }
 
@@ -53,7 +53,7 @@ func NewServer(address string, handler func(*Conn), name ...string) *Server {
 		address: address,
 		handler: handler,
 	}
-	if len(name) > 0 {
+	if len(name) > 0 && name[0] != "" {
 		serverMapping.Set(name[0], s)
 	}
 	return s

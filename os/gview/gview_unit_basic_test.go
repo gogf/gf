@@ -7,9 +7,14 @@
 package gview_test
 
 import (
+	"github.com/gogf/gf/encoding/ghtml"
+	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/util/gconv"
 	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gfile"
@@ -140,6 +145,11 @@ func Test_Func(t *testing.T) {
 		gtest.Assert(err != nil, false)
 		gtest.Assert(result, `我是...`)
 
+		str = `{{"I'm中国人" | replace "I'm" "我是"}}`
+		result, err = gview.ParseContent(str, nil)
+		gtest.Assert(err != nil, false)
+		gtest.Assert(result, `我是中国人`)
+
 		str = `{{compare "A" "B"}};{{compare "1" "2"}};{{compare 2 1}};{{compare 1 1}}`
 		result, err = gview.ParseContent(str, nil)
 		gtest.Assert(err != nil, false)
@@ -160,11 +170,31 @@ func Test_Func(t *testing.T) {
 		gtest.Assert(err != nil, false)
 		gtest.Assert(result, `GF;gf`)
 
-		str = `{{"Go\nFrame" | nl2br}}`
-		view := gview.New()
-		result, err = view.ParseContent(str)
-		gtest.Assert(err != nil, false)
+		str = `{{concat "I" "Love" "GoFrame"}}`
+		result, err = gview.ParseContent(str, nil)
+		gtest.Assert(err, nil)
+		gtest.Assert(result, `ILoveGoFrame`)
+	})
+}
+
+func Test_FuncNl2Br(t *testing.T) {
+	gtest.Case(t, func() {
+		str := `{{"Go\nFrame" | nl2br}}`
+		result, err := gview.ParseContent(str, nil)
+		gtest.Assert(err, nil)
 		gtest.Assert(result, `Go<br>Frame`)
+	})
+	gtest.Case(t, func() {
+		s := ""
+		for i := 0; i < 3000; i++ {
+			s += "Go\nFrame\n中文"
+		}
+		str := `{{.content | nl2br}}`
+		result, err := gview.ParseContent(str, g.Map{
+			"content": s,
+		})
+		gtest.Assert(err, nil)
+		gtest.Assert(result, strings.Replace(s, "\n", "<br>", -1))
 	})
 }
 
@@ -243,5 +273,74 @@ func Test_ParseContent(t *testing.T) {
 		result, err := view.ParseContent(str, g.Map{"name": func() {}})
 		gtest.Assert(err != nil, true)
 		gtest.Assert(result, ``)
+	})
+}
+
+func Test_HotReload(t *testing.T) {
+	gtest.Case(t, func() {
+		dirPath := gfile.Join(
+			gfile.TempDir(),
+			"testdata",
+			"template-"+gconv.String(gtime.TimestampNano()),
+		)
+		defer gfile.Remove(dirPath)
+		filePath := gfile.Join(dirPath, "test.html")
+
+		// Initialize data.
+		err := gfile.PutContents(filePath, "test:{{.var}}")
+		gtest.Assert(err, nil)
+
+		view := gview.New(dirPath)
+
+		time.Sleep(100 * time.Millisecond)
+		result, err := view.Parse("test.html", g.Map{
+			"var": "1",
+		})
+		gtest.Assert(err, nil)
+		gtest.Assert(result, `test:1`)
+
+		// Update data.
+		err = gfile.PutContents(filePath, "test2:{{.var}}")
+		gtest.Assert(err, nil)
+
+		time.Sleep(100 * time.Millisecond)
+		result, err = view.Parse("test.html", g.Map{
+			"var": "2",
+		})
+		gtest.Assert(err, nil)
+		gtest.Assert(result, `test2:2`)
+	})
+}
+
+func Test_XSS(t *testing.T) {
+	gtest.Case(t, func() {
+		v := gview.New()
+		s := "<br>"
+		r, err := v.ParseContent("{{.v}}", g.Map{
+			"v": s,
+		})
+		gtest.Assert(err, nil)
+		gtest.Assert(r, s)
+	})
+	gtest.Case(t, func() {
+		v := gview.New()
+		v.SetAutoEncode(true)
+		s := "<br>"
+		r, err := v.ParseContent("{{.v}}", g.Map{
+			"v": s,
+		})
+		gtest.Assert(err, nil)
+		gtest.Assert(r, ghtml.Entities(s))
+	})
+	// Tag "if".
+	gtest.Case(t, func() {
+		v := gview.New()
+		v.SetAutoEncode(true)
+		s := "<br>"
+		r, err := v.ParseContent("{{if eq 1 1}}{{.v}}{{end}}", g.Map{
+			"v": s,
+		})
+		gtest.Assert(err, nil)
+		gtest.Assert(r, ghtml.Entities(s))
 	})
 }

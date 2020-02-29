@@ -1,13 +1,11 @@
 package main
 
 import (
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/text/gregex"
+	"fmt"
+	"github.com/gogf/gf/net/ghttp"
 )
 
 func main() {
-	s := `-abc`
-	m, err := gregex.MatchString(`^\-{1,2}a={0,1}(.*)`, s)
-	g.Dump(err)
-	g.Dump(m)
+	r := ghttp.PostContent("http://127.0.0.1:8199/test", `<doc><id>1</id><name>john</name><password1>123Abc!@#</password1><password2>123Abc!@#</password2></doc>`)
+	fmt.Println(r)
 }

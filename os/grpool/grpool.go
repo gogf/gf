@@ -64,13 +64,16 @@ func (p *Pool) Add(f func()) error {
 		return errors.New("pool closed")
 	}
 	p.list.PushFront(f)
+	// Check whether fork new goroutine or not.
 	var n int
 	for {
 		n = p.count.Val()
 		if p.limit != -1 && n >= p.limit {
+			// No need fork new goroutine.
 			return nil
 		}
 		if p.count.Cas(n, n+1) {
+			// Use CAS to guarantee atomicity.
 			break
 		}
 	}
@@ -80,7 +83,7 @@ func (p *Pool) Add(f func()) error {
 
 // Cap returns the capacity of the pool.
 // This capacity is defined when pool is created.
-// If it returns -1 means no limit.
+// It returns -1 if there's no limit.
 func (p *Pool) Cap() int {
 	return p.limit
 }
@@ -91,15 +94,18 @@ func (p *Pool) Size() int {
 }
 
 // Jobs returns current job count of the pool.
+// Note that, it does not return worker/goroutine count but the job/task count.
 func (p *Pool) Jobs() int {
 	return p.list.Size()
 }
 
-// fork creates a new goroutine pool.
+// fork creates a new goroutine worker.
+// Note that the worker dies if the job function panics.
 func (p *Pool) fork() {
 	go func() {
 		defer p.count.Add(-1)
-		job := (interface{})(nil)
+
+		var job interface{}
 		for !p.closed.Val() {
 			if job = p.list.PopBack(); job != nil {
 				job.(func())()

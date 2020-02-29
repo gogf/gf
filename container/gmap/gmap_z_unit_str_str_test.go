@@ -8,7 +8,9 @@ package gmap_test
 
 import (
 	"encoding/json"
+	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/util/gconv"
 	"testing"
 
 	"github.com/gogf/gf/container/gmap"
@@ -213,5 +215,94 @@ func Test_StrStrMap_Json(t *testing.T) {
 		gtest.Assert(err, nil)
 		gtest.Assert(m.Get("k1"), data["k1"])
 		gtest.Assert(m.Get("k2"), data["k2"])
+	})
+}
+
+func Test_StrStrMap_Pop(t *testing.T) {
+	gtest.Case(t, func() {
+		m := gmap.NewStrStrMapFrom(g.MapStrStr{
+			"k1": "v1",
+			"k2": "v2",
+		})
+		gtest.Assert(m.Size(), 2)
+
+		k1, v1 := m.Pop()
+		gtest.AssertIN(k1, g.Slice{"k1", "k2"})
+		gtest.AssertIN(v1, g.Slice{"v1", "v2"})
+		gtest.Assert(m.Size(), 1)
+		k2, v2 := m.Pop()
+		gtest.AssertIN(k2, g.Slice{"k1", "k2"})
+		gtest.AssertIN(v2, g.Slice{"v1", "v2"})
+		gtest.Assert(m.Size(), 0)
+
+		gtest.AssertNE(k1, k2)
+		gtest.AssertNE(v1, v2)
+	})
+}
+
+func Test_StrStrMap_Pops(t *testing.T) {
+	gtest.Case(t, func() {
+		m := gmap.NewStrStrMapFrom(g.MapStrStr{
+			"k1": "v1",
+			"k2": "v2",
+			"k3": "v3",
+		})
+		gtest.Assert(m.Size(), 3)
+
+		kArray := garray.New()
+		vArray := garray.New()
+		for k, v := range m.Pops(1) {
+			gtest.AssertIN(k, g.Slice{"k1", "k2", "k3"})
+			gtest.AssertIN(v, g.Slice{"v1", "v2", "v3"})
+			kArray.Append(k)
+			vArray.Append(v)
+		}
+		gtest.Assert(m.Size(), 2)
+		for k, v := range m.Pops(2) {
+			gtest.AssertIN(k, g.Slice{"k1", "k2", "k3"})
+			gtest.AssertIN(v, g.Slice{"v1", "v2", "v3"})
+			kArray.Append(k)
+			vArray.Append(v)
+		}
+		gtest.Assert(m.Size(), 0)
+
+		gtest.Assert(kArray.Unique().Len(), 3)
+		gtest.Assert(vArray.Unique().Len(), 3)
+	})
+}
+
+func TestStrStrMap_UnmarshalValue(t *testing.T) {
+	type T struct {
+		Name string
+		Map  *gmap.StrStrMap
+	}
+	// JSON
+	gtest.Case(t, func() {
+		var t *T
+		err := gconv.Struct(map[string]interface{}{
+			"name": "john",
+			"map":  []byte(`{"k1":"v1","k2":"v2"}`),
+		}, &t)
+		gtest.Assert(err, nil)
+		gtest.Assert(t.Name, "john")
+		gtest.Assert(t.Map.Size(), 2)
+		gtest.Assert(t.Map.Get("k1"), "v1")
+		gtest.Assert(t.Map.Get("k2"), "v2")
+	})
+	// Map
+	gtest.Case(t, func() {
+		var t *T
+		err := gconv.Struct(map[string]interface{}{
+			"name": "john",
+			"map": g.Map{
+				"k1": "v1",
+				"k2": "v2",
+			},
+		}, &t)
+		gtest.Assert(err, nil)
+		gtest.Assert(t.Name, "john")
+		gtest.Assert(t.Map.Size(), 2)
+		gtest.Assert(t.Map.Get("k1"), "v1")
+		gtest.Assert(t.Map.Get("k2"), "v2")
 	})
 }

@@ -8,15 +8,12 @@
 package gdb
 
 import (
-	"bytes"
 	"database/sql"
 	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
 	"strings"
-
-	"github.com/gogf/gf/text/gstr"
 
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/os/gcache"
@@ -26,69 +23,17 @@ import (
 )
 
 const (
-	gDEFAULT_DEBUG_SQL_LENGTH = 1000
-	gPATH_FILTER_KEY          = "/database/gdb/gdb"
+	gPATH_FILTER_KEY = "/database/gdb/gdb"
 )
 
 var (
-	wordReg         = regexp.MustCompile(`^[a-zA-Z0-9\-_]+$`)
+	// lastOperatorReg is the regular expression object for a string
+	// which has operator at its tail.
 	lastOperatorReg = regexp.MustCompile(`[<>=]+\s*$`)
 )
 
-// 获取最近一条执行的sql
-func (bs *dbBase) GetLastSql() *Sql {
-	if bs.sqls == nil {
-		return nil
-	}
-	if v := bs.sqls.Val(); v != nil {
-		return v.(*Sql)
-	}
-	return nil
-}
-
-// 获取已经执行的SQL列表(仅在debug=true时有效)
-func (bs *dbBase) GetQueriedSqls() []*Sql {
-	if bs.sqls == nil {
-		return nil
-	}
-	sqls := make([]*Sql, 0)
-	bs.sqls.Prev()
-	bs.sqls.RLockIteratorPrev(func(value interface{}) bool {
-		if value == nil {
-			return false
-		}
-		sqls = append(sqls, value.(*Sql))
-		return true
-	})
-	return sqls
-}
-
-// 打印已经执行的SQL列表(仅在debug=true时有效)
-func (bs *dbBase) PrintQueriedSqls() {
-	sqlSlice := bs.GetQueriedSqls()
-	for k, v := range sqlSlice {
-		fmt.Println(len(sqlSlice)-k, ":")
-		fmt.Println("    Sql  :", v.Sql)
-		fmt.Println("    Args :", v.Args)
-		fmt.Println("    Error:", v.Error)
-		fmt.Println("    Start:", gtime.NewFromTimeStamp(v.Start).Format("Y-m-d H:i:s.u"))
-		fmt.Println("    End  :", gtime.NewFromTimeStamp(v.End).Format("Y-m-d H:i:s.u"))
-		fmt.Println("    Cost :", v.End-v.Start, "ms")
-	}
-}
-
-// 打印SQL对象(仅在debug=true时有效)
-func (bs *dbBase) printSql(v *Sql) {
-	s := fmt.Sprintf("[%d ms] %s", v.End-v.Start, bindArgsToQuery(v.Sql, v.Args))
-	if v.Error != nil {
-		s += "\nError: " + v.Error.Error()
-		bs.logger.StackWithFilter(gPATH_FILTER_KEY).Error(s)
-	} else {
-		bs.logger.Debug(s)
-	}
-}
-
-// 数据库sql查询操作，主要执行查询
+// Query commits one query SQL to underlying driver and returns the execution result.
+// It is most commonly used for data querying.
 func (bs *dbBase) Query(query string, args ...interface{}) (rows *sql.Rows, err error) {
 	link, err := bs.db.Slave()
 	if err != nil {
@@ -97,22 +42,23 @@ func (bs *dbBase) Query(query string, args ...interface{}) (rows *sql.Rows, err 
 	return bs.db.doQuery(link, query, args...)
 }
 
-// 数据库sql查询操作，主要执行查询
+// doQuery commits the query string and its arguments to underlying driver
+// through given link object and returns the execution result.
 func (bs *dbBase) doQuery(link dbLink, query string, args ...interface{}) (rows *sql.Rows, err error) {
 	query, args = formatQuery(query, args)
 	query = bs.db.handleSqlBeforeExec(query)
 	if bs.db.getDebug() {
-		mTime1 := gtime.Millisecond()
+		mTime1 := gtime.TimestampMilli()
 		rows, err = link.Query(query, args...)
-		mTime2 := gtime.Millisecond()
+		mTime2 := gtime.TimestampMilli()
 		s := &Sql{
-			Sql:   query,
-			Args:  args,
-			Error: err,
-			Start: mTime1,
-			End:   mTime2,
+			Sql:    query,
+			Args:   args,
+			Format: bindArgsToQuery(query, args),
+			Error:  err,
+			Start:  mTime1,
+			End:    mTime2,
 		}
-		bs.sqls.Put(s)
 		bs.printSql(s)
 	} else {
 		rows, err = link.Query(query, args...)
@@ -125,7 +71,8 @@ func (bs *dbBase) doQuery(link dbLink, query string, args ...interface{}) (rows 
 	return nil, err
 }
 
-// 执行一条sql，并返回执行情况，主要用于非查询操作
+// Exec commits one query SQL to underlying driver and returns the execution result.
+// It is most commonly used for data inserting and updating.
 func (bs *dbBase) Exec(query string, args ...interface{}) (result sql.Result, err error) {
 	link, err := bs.db.Master()
 	if err != nil {
@@ -134,22 +81,23 @@ func (bs *dbBase) Exec(query string, args ...interface{}) (result sql.Result, er
 	return bs.db.doExec(link, query, args...)
 }
 
-// 执行一条sql，并返回执行情况，主要用于非查询操作
+// doExec commits the query string and its arguments to underlying driver
+// through given link object and returns the execution result.
 func (bs *dbBase) doExec(link dbLink, query string, args ...interface{}) (result sql.Result, err error) {
 	query, args = formatQuery(query, args)
 	query = bs.db.handleSqlBeforeExec(query)
 	if bs.db.getDebug() {
-		mTime1 := gtime.Millisecond()
+		mTime1 := gtime.TimestampMilli()
 		result, err = link.Exec(query, args...)
-		mTime2 := gtime.Millisecond()
+		mTime2 := gtime.TimestampMilli()
 		s := &Sql{
-			Sql:   query,
-			Args:  args,
-			Error: err,
-			Start: mTime1,
-			End:   mTime2,
+			Sql:    query,
+			Args:   args,
+			Format: bindArgsToQuery(query, args),
+			Error:  err,
+			Start:  mTime1,
+			End:    mTime2,
 		}
-		bs.sqls.Put(s)
 		bs.printSql(s)
 	} else {
 		result, err = link.Exec(query, args...)
@@ -157,7 +105,14 @@ func (bs *dbBase) doExec(link dbLink, query string, args ...interface{}) (result
 	return result, formatError(err, query, args...)
 }
 
-// SQL预处理，执行完成后调用返回值sql.Stmt.Exec完成sql操作; 默认执行在Slave上, 通过第二个参数指定执行在Master上
+// Prepare creates a prepared statement for later queries or executions.
+// Multiple queries or executions may be run concurrently from the
+// returned statement.
+// The caller must call the statement's Close method
+// when the statement is no longer needed.
+//
+// The parameter <execOnMaster> specifies whether executing the sql on master node,
+// or else it executes the sql on slave node if master-slave configured.
 func (bs *dbBase) Prepare(query string, execOnMaster ...bool) (*sql.Stmt, error) {
 	err := (error)(nil)
 	link := (dbLink)(nil)
@@ -173,17 +128,17 @@ func (bs *dbBase) Prepare(query string, execOnMaster ...bool) (*sql.Stmt, error)
 	return bs.db.doPrepare(link, query)
 }
 
-// SQL预处理，执行完成后调用返回值sql.Stmt.Exec完成sql操作
+// doPrepare calls prepare function on given link object and returns the statement object.
 func (bs *dbBase) doPrepare(link dbLink, query string) (*sql.Stmt, error) {
 	return link.Prepare(query)
 }
 
-// 数据库查询，获取查询结果集，以列表结构返回
+// GetAll queries and returns data records from database.
 func (bs *dbBase) GetAll(query string, args ...interface{}) (Result, error) {
 	return bs.db.doGetAll(nil, query, args...)
 }
 
-// 数据库查询，获取查询结果集，以列表结构返回，给定连接对象
+// doGetAll queries and returns data records from database.
 func (bs *dbBase) doGetAll(link dbLink, query string, args ...interface{}) (result Result, err error) {
 	if link == nil {
 		link, err = bs.db.Slave()
@@ -199,7 +154,7 @@ func (bs *dbBase) doGetAll(link dbLink, query string, args ...interface{}) (resu
 	return bs.db.rowsToResult(rows)
 }
 
-// 数据库查询，获取查询结果记录，以关联数组结构返回
+// GetOne queries and returns one record from database.
 func (bs *dbBase) GetOne(query string, args ...interface{}) (Record, error) {
 	list, err := bs.GetAll(query, args...)
 	if err != nil {
@@ -211,27 +166,38 @@ func (bs *dbBase) GetOne(query string, args ...interface{}) (Record, error) {
 	return nil, nil
 }
 
-// 数据库查询，查询单条记录，自动映射数据到给定的struct对象中
+// GetStruct queries one record from database and converts it to given struct.
+// The parameter <pointer> should be a pointer to struct.
 func (bs *dbBase) GetStruct(pointer interface{}, query string, args ...interface{}) error {
 	one, err := bs.GetOne(query, args...)
 	if err != nil {
 		return err
 	}
+	if len(one) == 0 {
+		return sql.ErrNoRows
+	}
 	return one.Struct(pointer)
 }
 
-// 数据库查询，查询多条记录，并自动转换为指定的slice对象, 如: []struct/[]*struct。
+// GetStructs queries records from database and converts them to given struct.
+// The parameter <pointer> should be type of struct slice: []struct/[]*struct.
 func (bs *dbBase) GetStructs(pointer interface{}, query string, args ...interface{}) error {
 	all, err := bs.GetAll(query, args...)
 	if err != nil {
 		return err
 	}
+	if len(all) == 0 {
+		return sql.ErrNoRows
+	}
 	return all.Structs(pointer)
 }
 
-// 将结果转换为指定的struct/*struct/[]struct/[]*struct,
-// 参数应该为指针类型，否则返回失败。
-// 该方法自动识别参数类型，调用Struct/Structs方法。
+// GetScan queries one or more records from database and converts them to given struct or
+// struct array.
+//
+// If parameter <pointer> is type of struct pointer, it calls GetStruct internally for
+// the conversion. If parameter <pointer> is type of slice, it calls GetStructs internally
+// for conversion.
 func (bs *dbBase) GetScan(pointer interface{}, query string, args ...interface{}) error {
 	t := reflect.TypeOf(pointer)
 	k := t.Kind()
@@ -248,7 +214,9 @@ func (bs *dbBase) GetScan(pointer interface{}, query string, args ...interface{}
 	return fmt.Errorf("element type should be type of struct/slice, unsupported: %v", k)
 }
 
-// 数据库查询，获取查询字段值
+// GetValue queries and returns the field value from database.
+// The sql should queries only one field from database, or else it returns only one
+// field of the result.
 func (bs *dbBase) GetValue(query string, args ...interface{}) (Value, error) {
 	one, err := bs.GetOne(query, args...)
 	if err != nil {
@@ -260,8 +228,10 @@ func (bs *dbBase) GetValue(query string, args ...interface{}) (Value, error) {
 	return nil, nil
 }
 
-// 数据库查询，获取查询数量
+// GetCount queries and returns the count from database.
 func (bs *dbBase) GetCount(query string, args ...interface{}) (int, error) {
+	// If the query fields do not contains function "COUNT",
+	// it replaces the query string and adds the "COUNT" function to the fields.
 	if !gregex.IsMatchString(`(?i)SELECT\s+COUNT\(.+\)\s+FROM`, query) {
 		query, _ = gregex.ReplaceString(`(?i)(SELECT)\s+(.+)\s+(FROM)`, `$1 COUNT($2) $3`, query)
 	}
@@ -272,7 +242,7 @@ func (bs *dbBase) GetCount(query string, args ...interface{}) (int, error) {
 	return value.Int(), nil
 }
 
-// ping一下，判断或保持数据库链接(master)
+// PingMaster pings the master node to check authentication or keeps the connection alive.
 func (bs *dbBase) PingMaster() error {
 	if master, err := bs.db.Master(); err != nil {
 		return err
@@ -281,7 +251,7 @@ func (bs *dbBase) PingMaster() error {
 	}
 }
 
-// ping一下，判断或保持数据库链接(slave)
+// PingSlave pings the slave node to check authentication or keeps the connection alive.
 func (bs *dbBase) PingSlave() error {
 	if slave, err := bs.db.Slave(); err != nil {
 		return err
@@ -290,8 +260,10 @@ func (bs *dbBase) PingSlave() error {
 	}
 }
 
-// 事务操作，开启，会返回一个底层的事务操作对象链接如需要嵌套事务，那么可以使用该对象，否则请忽略
-// 只有在tx.Commit/tx.Rollback时，链接会自动Close
+// Begin starts and returns the transaction object.
+// You should call Commit or Rollback functions of the transaction object
+// if you no longer use the transaction. Commit or Rollback functions will also
+// close the transaction automatically.
 func (bs *dbBase) Begin() (*TX, error) {
 	if master, err := bs.db.Master(); err != nil {
 		return nil, err
@@ -308,42 +280,76 @@ func (bs *dbBase) Begin() (*TX, error) {
 	}
 }
 
-// CURD操作:单条数据写入, 仅仅执行写入操作，如果存在冲突的主键或者唯一索引，那么报错返回。
-// 参数data支持map/struct/*struct/slice类型，
-// 当为slice(例如[]map/[]struct/[]*struct)类型时，batch参数生效，并自动切换为批量操作。
+// Insert does "INSERT INTO ..." statement for the table.
+// If there's already one unique record of the data in the table, it returns error.
+//
+// The parameter <data> can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
+// Eg:
+// Data(g.Map{"uid": 10000, "name":"john"})
+// Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
+//
+// The parameter <batch> specifies the batch operation count when given data is slice.
 func (bs *dbBase) Insert(table string, data interface{}, batch ...int) (sql.Result, error) {
 	return bs.db.doInsert(nil, table, data, gINSERT_OPTION_DEFAULT, batch...)
 }
 
-// CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条。
-// 参数data支持map/struct/*struct/slice类型，
-// 当为slice(例如[]map/[]struct/[]*struct)类型时，batch参数生效，并自动切换为批量操作。
+// InsertIgnore does "INSERT IGNORE INTO ..." statement for the table.
+// If there's already one unique record of the data in the table, it ignores the inserting.
+//
+// The parameter <data> can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
+// Eg:
+// Data(g.Map{"uid": 10000, "name":"john"})
+// Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
+//
+// The parameter <batch> specifies the batch operation count when given data is slice.
+func (bs *dbBase) InsertIgnore(table string, data interface{}, batch ...int) (sql.Result, error) {
+	return bs.db.doInsert(nil, table, data, gINSERT_OPTION_IGNORE, batch...)
+}
+
+// Replace does "REPLACE INTO ..." statement for the table.
+// If there's already one unique record of the data in the table, it deletes the record
+// and inserts a new one.
+//
+// The parameter <data> can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
+// Eg:
+// Data(g.Map{"uid": 10000, "name":"john"})
+// Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
+//
+// The parameter <data> can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
+// If given data is type of slice, it then does batch replacing, and the optional parameter
+// <batch> specifies the batch operation count.
 func (bs *dbBase) Replace(table string, data interface{}, batch ...int) (sql.Result, error) {
 	return bs.db.doInsert(nil, table, data, gINSERT_OPTION_REPLACE, batch...)
 }
 
-// CURD操作:单条数据写入, 如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据。
-// 参数data支持map/struct/*struct/slice类型，
-// 当为slice(例如[]map/[]struct/[]*struct)类型时，batch参数生效，并自动切换为批量操作。
+// Save does "INSERT INTO ... ON DUPLICATE KEY UPDATE..." statement for the table.
+// It updates the record if there's primary or unique index in the saving data,
+// or else it inserts a new record into the table.
+//
+// The parameter <data> can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
+// Eg:
+// Data(g.Map{"uid": 10000, "name":"john"})
+// Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
+//
+// If given data is type of slice, it then does batch saving, and the optional parameter
+// <batch> specifies the batch operation count.
 func (bs *dbBase) Save(table string, data interface{}, batch ...int) (sql.Result, error) {
 	return bs.db.doInsert(nil, table, data, gINSERT_OPTION_SAVE, batch...)
 }
 
-// 支持insert、replace, save， ignore操作。
-// 0: insert:  仅仅执行写入操作，如果存在冲突的主键或者唯一索引，那么报错返回;
-// 1: replace: 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条;
-// 2: save:    如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据;
-// 3: ignore:  如果数据存在(主键或者唯一索引)，那么什么也不做;
+// doInsert inserts or updates data for given table.
 //
-// 参数data支持map/struct/*struct/slice类型，
-// 当为slice(例如[]map/[]struct/[]*struct)类型时，batch参数生效，并自动切换为批量操作。
+// The parameter <option> values are as follows:
+// 0: insert:  just insert, if there's unique/primary key in the data, it returns error;
+// 1: replace: if there's unique/primary key in the data, it deletes it from table and inserts a new one;
+// 2: save:    if there's unique/primary key in the data, it updates it or else inserts a new one;
+// 3: ignore:  if there's unique/primary key in the data, it ignores the inserting;
 func (bs *dbBase) doInsert(link dbLink, table string, data interface{}, option int, batch ...int) (result sql.Result, err error) {
 	var fields []string
 	var values []string
 	var params []interface{}
 	var dataMap Map
-	table = bs.db.quoteWord(table)
-	// 使用反射判断data数据类型，如果为slice类型，那么自动转为批量操作
+	table = bs.db.handleTableName(table)
 	rv := reflect.ValueOf(data)
 	kind := rv.Kind()
 	if kind == reflect.Ptr {
@@ -354,7 +360,7 @@ func (bs *dbBase) doInsert(link dbLink, table string, data interface{}, option i
 	case reflect.Slice, reflect.Array:
 		return bs.db.doBatchInsert(link, table, data, option, batch...)
 	case reflect.Map, reflect.Struct:
-		dataMap = structToMap(data)
+		dataMap = varToMapDeep(data)
 	default:
 		return result, errors.New(fmt.Sprint("unsupported data type:", kind))
 	}
@@ -365,7 +371,7 @@ func (bs *dbBase) doInsert(link dbLink, table string, data interface{}, option i
 	for k, v := range dataMap {
 		fields = append(fields, charL+k+charR)
 		values = append(values, "?")
-		params = append(params, convertParam(v))
+		params = append(params, v)
 	}
 	operation := getInsertOperationByOption(option)
 	updateStr := ""
@@ -392,26 +398,35 @@ func (bs *dbBase) doInsert(link dbLink, table string, data interface{}, option i
 		params...)
 }
 
-// CURD操作:批量数据指定批次量写入
+// BatchInsert batch inserts data.
+// The parameter <list> must be type of slice of map or struct.
 func (bs *dbBase) BatchInsert(table string, list interface{}, batch ...int) (sql.Result, error) {
 	return bs.db.doBatchInsert(nil, table, list, gINSERT_OPTION_DEFAULT, batch...)
 }
 
-// CURD操作:批量数据指定批次量写入, 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条
+// BatchInsert batch inserts data with ignore option.
+// The parameter <list> must be type of slice of map or struct.
+func (bs *dbBase) BatchInsertIgnore(table string, list interface{}, batch ...int) (sql.Result, error) {
+	return bs.db.doBatchInsert(nil, table, list, gINSERT_OPTION_IGNORE, batch...)
+}
+
+// BatchReplace batch replaces data.
+// The parameter <list> must be type of slice of map or struct.
 func (bs *dbBase) BatchReplace(table string, list interface{}, batch ...int) (sql.Result, error) {
 	return bs.db.doBatchInsert(nil, table, list, gINSERT_OPTION_REPLACE, batch...)
 }
 
-// CURD操作:批量数据指定批次量写入, 如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据
+// BatchSave batch replaces data.
+// The parameter <list> must be type of slice of map or struct.
 func (bs *dbBase) BatchSave(table string, list interface{}, batch ...int) (sql.Result, error) {
 	return bs.db.doBatchInsert(nil, table, list, gINSERT_OPTION_SAVE, batch...)
 }
 
-// 批量写入数据, 参数list支持slice类型，例如: []map/[]struct/[]*struct。
+// doBatchInsert batch inserts/replaces/saves data.
 func (bs *dbBase) doBatchInsert(link dbLink, table string, list interface{}, option int, batch ...int) (result sql.Result, err error) {
 	var keys, values []string
 	var params []interface{}
-	table = bs.db.quoteWord(table)
+	table = bs.db.handleTableName(table)
 	listMap := (List)(nil)
 	switch v := list.(type) {
 	case Result:
@@ -434,10 +449,10 @@ func (bs *dbBase) doBatchInsert(link dbLink, table string, list interface{}, opt
 		case reflect.Slice, reflect.Array:
 			listMap = make(List, rv.Len())
 			for i := 0; i < rv.Len(); i++ {
-				listMap[i] = structToMap(rv.Index(i).Interface())
+				listMap[i] = varToMapDeep(rv.Index(i).Interface())
 			}
 		case reflect.Map, reflect.Struct:
-			listMap = List{structToMap(list)}
+			listMap = List{varToMapDeep(list)}
 		default:
 			return result, errors.New(fmt.Sprint("unsupported list type:", kind))
 		}
@@ -476,7 +491,6 @@ func (bs *dbBase) doBatchInsert(link dbLink, table string, list interface{}, opt
 		}
 		updateStr = fmt.Sprintf("ON DUPLICATE KEY UPDATE %s", updateStr)
 	}
-	// 构造批量写入数据格式(注意map的遍历是无序的)
 	batchNum := gDEFAULT_BATCH_NUM
 	if len(batch) > 0 && batch[0] > 0 {
 		batchNum = batch[0]
@@ -486,7 +500,7 @@ func (bs *dbBase) doBatchInsert(link dbLink, table string, list interface{}, opt
 		// Note that the map type is unordered,
 		// so it should use slice+key to retrieve the value.
 		for _, k := range keys {
-			params = append(params, convertParam(listMap[i][k]))
+			params = append(params, listMap[i][k])
 		}
 		values = append(values, valueHolderStr)
 		if len(values) == batchNum || (i == listMapLen-1 && len(values) > 0) {
@@ -518,22 +532,33 @@ func (bs *dbBase) doBatchInsert(link dbLink, table string, list interface{}, opt
 	return batchResult, nil
 }
 
-// CURD操作:数据更新，统一采用sql预处理。
-// data参数支持string/map/struct/*struct类型。
+// Update does "UPDATE ... " statement for the table.
+//
+// The parameter <data> can be type of string/map/gmap/struct/*struct, etc.
+// Eg: "uid=10000", "uid", 10000, g.Map{"uid": 10000, "name":"john"}
+//
+// The parameter <condition> can be type of string/map/gmap/slice/struct/*struct, etc.
+// It is commonly used with parameter <args>.
+// Eg:
+// "uid=10000",
+// "uid", 10000
+// "money>? AND name like ?", 99999, "vip_%"
+// "status IN (?)", g.Slice{1,2,3}
+// "age IN(?,?)", 18, 50
+// User{ Id : 1, UserName : "john"}
 func (bs *dbBase) Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error) {
-	newWhere, newArgs := bs.db.formatWhere(condition, args)
+	newWhere, newArgs := formatWhere(bs.db, condition, args, false)
 	if newWhere != "" {
 		newWhere = " WHERE " + newWhere
 	}
 	return bs.db.doUpdate(nil, table, data, newWhere, newArgs...)
 }
 
-// CURD操作:数据更新，统一采用sql预处理。
-// data参数支持string/map/struct/*struct类型类型。
+// doUpdate does "UPDATE ... " statement for the table.
+// Also see Update.
 func (bs *dbBase) doUpdate(link dbLink, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) {
-	table = bs.db.quoteWord(table)
+	table = bs.db.handleTableName(table)
 	updates := ""
-	// 使用反射进行类型判断
 	rv := reflect.ValueOf(data)
 	kind := rv.Kind()
 	if kind == reflect.Ptr {
@@ -542,13 +567,11 @@ func (bs *dbBase) doUpdate(link dbLink, table string, data interface{}, conditio
 	}
 	params := []interface{}(nil)
 	switch kind {
-	case reflect.Map:
-		fallthrough
-	case reflect.Struct:
+	case reflect.Map, reflect.Struct:
 		var fields []string
-		for k, v := range structToMap(data) {
+		for k, v := range varToMapDeep(data) {
 			fields = append(fields, bs.db.quoteWord(k)+"=?")
-			params = append(params, convertParam(v))
+			params = append(params, v)
 		}
 		updates = strings.Join(fields, ",")
 	default:
@@ -569,51 +592,66 @@ func (bs *dbBase) doUpdate(link dbLink, table string, data interface{}, conditio
 	return bs.db.doExec(link, fmt.Sprintf("UPDATE %s SET %s%s", table, updates, condition), args...)
 }
 
-// CURD操作:删除数据
+// Delete does "DELETE FROM ... " statement for the table.
+//
+// The parameter <condition> can be type of string/map/gmap/slice/struct/*struct, etc.
+// It is commonly used with parameter <args>.
+// Eg:
+// "uid=10000",
+// "uid", 10000
+// "money>? AND name like ?", 99999, "vip_%"
+// "status IN (?)", g.Slice{1,2,3}
+// "age IN(?,?)", 18, 50
+// User{ Id : 1, UserName : "john"}
 func (bs *dbBase) Delete(table string, condition interface{}, args ...interface{}) (result sql.Result, err error) {
-	newWhere, newArgs := bs.db.formatWhere(condition, args)
+	newWhere, newArgs := formatWhere(bs.db, condition, args, false)
 	if newWhere != "" {
 		newWhere = " WHERE " + newWhere
 	}
 	return bs.db.doDelete(nil, table, newWhere, newArgs...)
 }
 
-// CURD操作:删除数据
+// doDelete does "DELETE FROM ... " statement for the table.
+// Also see Delete.
 func (bs *dbBase) doDelete(link dbLink, table string, condition string, args ...interface{}) (result sql.Result, err error) {
 	if link == nil {
 		if link, err = bs.db.Master(); err != nil {
 			return nil, err
 		}
 	}
-	table = bs.db.quoteWord(table)
+	table = bs.db.handleTableName(table)
 	return bs.db.doExec(link, fmt.Sprintf("DELETE FROM %s%s", table, condition), args...)
 }
 
-// 获得缓存对象
+// getCache returns the internal cache object.
 func (bs *dbBase) getCache() *gcache.Cache {
 	return bs.cache
 }
 
-// 将数据查询的列表数据*sql.Rows转换为Result类型
+// getPrefix returns the table prefix string configured.
+func (bs *dbBase) getPrefix() string {
+	return bs.prefix
+}
+
+// rowsToResult converts underlying data record type sql.Rows to Result type.
 func (bs *dbBase) rowsToResult(rows *sql.Rows) (Result, error) {
 	if !rows.Next() {
-		return nil, sql.ErrNoRows
+		return nil, nil
 	}
-	// 列信息列表, 名称与类型
-	columnTypes, err := rows.ColumnTypes()
+	// Column names and types.
+	columns, err := rows.ColumnTypes()
 	if err != nil {
 		return nil, err
 	}
-	types := make([]string, len(columnTypes))
-	columns := make([]string, len(columnTypes))
-	for k, v := range columnTypes {
-		types[k] = v.DatabaseTypeName()
-		columns[k] = v.Name()
+	columnTypes := make([]string, len(columns))
+	columnNames := make([]string, len(columns))
+	for k, v := range columns {
+		columnTypes[k] = v.DatabaseTypeName()
+		columnNames[k] = v.Name()
 	}
-	// 返回结构组装
-	values := make([]sql.RawBytes, len(columns))
-	scanArgs := make([]interface{}, len(values))
+	values := make([]sql.RawBytes, len(columnNames))
 	records := make(Result, 0)
+	scanArgs := make([]interface{}, len(values))
 	for i := range values {
 		scanArgs[i] = &values[i]
 	}
@@ -621,18 +659,19 @@ func (bs *dbBase) rowsToResult(rows *sql.Rows) (Result, error) {
 		if err := rows.Scan(scanArgs...); err != nil {
 			return records, err
 		}
+		// Creates a new row object.
 		row := make(Record)
-		// 注意col字段是一个[]byte类型(slice类型本身是一个引用类型)，
-		// 多个记录循环时该变量指向的是同一个内存地址
-		for i, column := range values {
-			if column == nil {
-				row[columns[i]] = gvar.New(nil)
+		// Note that the internal looping variable <value> is type of []byte,
+		// which points to the same memory address. So it should do a copy.
+		for i, value := range values {
+			if value == nil {
+				row[columnNames[i]] = gvar.New(nil)
 			} else {
-				// 由于 sql.RawBytes 是slice类型, 这里必须使用值复制
-				v := make([]byte, len(column))
-				copy(v, column)
-				//fmt.Println(columns[i], types[i], string(v), v, bs.db.convertValue(v, types[i]))
-				row[columns[i]] = gvar.New(bs.db.convertValue(v, types[i]))
+				// As sql.RawBytes is type of slice,
+				// it should do a copy of it.
+				v := make([]byte, len(value))
+				copy(v, value)
+				row[columnNames[i]] = gvar.New(bs.db.convertValue(v, columnTypes[i]))
 			}
 		}
 		records = append(records, row)
@@ -643,99 +682,39 @@ func (bs *dbBase) rowsToResult(rows *sql.Rows) (Result, error) {
 	return records, nil
 }
 
-// 格式化Where查询条件。
-func (bs *dbBase) formatWhere(where interface{}, args []interface{}) (newWhere string, newArgs []interface{}) {
-	// 条件字符串处理
-	buffer := bytes.NewBuffer(nil)
-	// 使用反射进行类型判断
-	rv := reflect.ValueOf(where)
-	kind := rv.Kind()
-	if kind == reflect.Ptr {
-		rv = rv.Elem()
-		kind = rv.Kind()
-	}
-	switch kind {
-	// map/struct类型
-	case reflect.Map:
-		fallthrough
-	case reflect.Struct:
-		for key, value := range structToMap(where) {
-			// 字段安全符号判断
-			key = bs.db.quoteWord(key)
-			if buffer.Len() > 0 {
-				buffer.WriteString(" AND ")
-			}
-			// 支持slice键值/属性，如果只有一个?占位符号，那么作为IN查询，否则打散作为多个查询参数
-			rv := reflect.ValueOf(value)
-			switch rv.Kind() {
-			case reflect.Slice:
-				fallthrough
-			case reflect.Array:
-				count := gstr.Count(key, "?")
-				if count == 0 {
-					buffer.WriteString(key + " IN(?)")
-					newArgs = append(newArgs, value)
-				} else if count != rv.Len() {
-					buffer.WriteString(key)
-					newArgs = append(newArgs, value)
-				} else {
-					buffer.WriteString(key)
-					// 如果键名/属性名称中带有多个?占位符号，那么将参数打散
-					newArgs = append(newArgs, gconv.Interfaces(value)...)
-				}
-			default:
-				if value == nil {
-					buffer.WriteString(key)
-				} else {
-					// 支持key带操作符号
-					if gstr.Pos(key, "?") == -1 {
-						if gstr.Pos(key, "<") == -1 && gstr.Pos(key, ">") == -1 && gstr.Pos(key, "=") == -1 {
-							buffer.WriteString(key + "=?")
-						} else {
-							buffer.WriteString(key + "?")
-						}
-					} else {
-						buffer.WriteString(key)
-					}
-					newArgs = append(newArgs, value)
-				}
-			}
-		}
-
-	default:
-		buffer.WriteString(gconv.String(where))
-	}
-	// 没有任何条件查询参数，直接返回
-	if buffer.Len() == 0 {
-		return "", args
-	}
-	newArgs = append(newArgs, args...)
-	newWhere = buffer.String()
-	if len(newArgs) > 0 {
-		// 支持例如 Where/And/Or("uid", 1) , Where/And/Or("uid>=", 1) 这种格式
-		if gstr.Pos(newWhere, "?") == -1 {
-			if lastOperatorReg.MatchString(newWhere) {
-				newWhere += "?"
-			} else if wordReg.MatchString(newWhere) {
-				newWhere += "=?"
-			}
-		}
-	}
-	return handlerSliceArguments(newWhere, newArgs)
+// handleTableName adds prefix string and quote chars for the table. It handles table string like:
+// "user", "user u", "user,user_detail", "user u, user_detail ut", "user as u, user_detail as ut".
+//
+// Note that, this will automatically checks the table prefix whether already added, if true it does
+// nothing to the table name, or else adds the prefix to the table name.
+func (bs *dbBase) handleTableName(table string) string {
+	charLeft, charRight := bs.db.getChars()
+	prefix := bs.db.getPrefix()
+	return doHandleTableName(table, prefix, charLeft, charRight)
 }
 
-// 使用关键字操作符转义给定字符串。
-// 如果给定的字符串不为单词，那么不转义，直接返回该字符串。
+// quoteWord checks given string <s> a word, if true quotes it with security chars of the database
+// and returns the quoted string; or else return <s> without any change.
 func (bs *dbBase) quoteWord(s string) string {
 	charLeft, charRight := bs.db.getChars()
-	if wordReg.MatchString(s) && !gstr.ContainsAny(s, charLeft+charRight) {
-		return charLeft + s + charRight
-	}
-	return s
+	return doQuoteWord(s, charLeft, charRight)
 }
 
-// 动态切换数据库
-func (bs *dbBase) setSchema(sqlDb *sql.DB, schema string) error {
-	_, err := sqlDb.Exec("USE " + schema)
-	return err
+// quoteString quotes string with quote chars. Strings like:
+// "user", "user u", "user,user_detail", "user u, user_detail ut", "u.id asc".
+func (bs *dbBase) quoteString(s string) string {
+	charLeft, charRight := bs.db.getChars()
+	return doQuoteString(s, charLeft, charRight)
+}
+
+// printSql outputs the sql object to logger.
+// It is enabled when configuration "debug" is true.
+func (bs *dbBase) printSql(v *Sql) {
+	s := fmt.Sprintf("[%d ms] %s", v.End-v.Start, v.Format)
+	if v.Error != nil {
+		s += "\nError: " + v.Error.Error()
+		bs.logger.StackWithFilter(gPATH_FILTER_KEY).Error(s)
+	} else {
+		bs.logger.StackWithFilter(gPATH_FILTER_KEY).Debug(s)
+	}
 }

@@ -112,6 +112,11 @@ func (e *Error) String() string {
 	return strings.Join(e.Strings(), "; ")
 }
 
+// Error implements interface of error.Error.
+func (e *Error) Error() string {
+	return e.String()
+}
+
 // 只返回错误信息，构造成字符串数组返回
 func (e *Error) Strings() (errs []string) {
 	errs = make([]string, 0)

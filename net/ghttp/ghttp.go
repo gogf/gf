@@ -8,5 +8,7 @@
 package ghttp
 
 var (
+	// paramTagPriority is the priority tag array for request parameter
+	// to struct field mapping.
 	paramTagPriority = []string{"param", "params", "p"}
 )

@@ -5,16 +5,18 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package gmode provides release mode management for project.
+//
+// It uses string to mark the mode instead of integer, which is easy for configuration.
 package gmode
 
 import "github.com/gogf/gf/os/gfile"
 
 const (
-	NOT_SET = 0
-	DEVELOP = 1
-	TESTING = 2
-	STAGING = 3
-	PRODUCT = 4
+	NOT_SET = "not-set"
+	DEVELOP = "develop"
+	TESTING = "testing"
+	STAGING = "staging"
+	PRODUCT = "product"
 )
 
 var (
@@ -22,7 +24,7 @@ var (
 )
 
 // Set sets the mode for current application.
-func Set(mode int) {
+func Set(mode string) {
 	currentMode = mode
 }
 
@@ -47,7 +49,7 @@ func SetProduct() {
 }
 
 // Mode returns current application mode set.
-func Mode() int {
+func Mode() string {
 	// If current mode is not set, do this auto check.
 	if currentMode == NOT_SET {
 		if gfile.MainPkgPath() != "" {

@@ -10,9 +10,11 @@ package gconv
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gogf/gf/os/gtime"
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gogf/gf/encoding/gbinary"
 )
@@ -46,7 +48,7 @@ var (
 )
 
 // Convert converts the variable <i> to the type <t>, the type <t> is specified by string.
-// The unnecessary parameter <params> is used for additional parameter passing.
+// The optional parameter <params> is used for additional parameter passing.
 func Convert(i interface{}, t string, params ...interface{}) interface{} {
 	switch t {
 	case "int":
@@ -81,6 +83,20 @@ func Convert(i interface{}, t string, params ...interface{}) interface{} {
 		return Bytes(i)
 	case "[]int":
 		return Ints(i)
+	case "[]int32":
+		return Int32s(i)
+	case "[]int64":
+		return Int64s(i)
+	case "[]uint":
+		return Uints(i)
+	case "[]uint32":
+		return Uint32s(i)
+	case "[]uint64":
+		return Uint64s(i)
+	case "[]float32":
+		return Float32s(i)
+	case "[]float64":
+		return Float64s(i)
 	case "[]string":
 		return Strings(i)
 
@@ -149,6 +165,7 @@ func Runes(i interface{}) []rune {
 }
 
 // String converts <i> to string.
+// It's most common used converting function.
 func String(i interface{}) string {
 	if i == nil {
 		return ""
@@ -184,9 +201,31 @@ func String(i interface{}) string {
 		return value
 	case []byte:
 		return string(value)
-	case []rune:
-		return string(value)
+	case time.Time:
+		if value.IsZero() {
+			return ""
+		}
+		return value.String()
+	case *time.Time:
+		if value == nil {
+			return ""
+		}
+		return value.String()
+	case gtime.Time:
+		if value.IsZero() {
+			return ""
+		}
+		return value.String()
+	case *gtime.Time:
+		if value == nil {
+			return ""
+		}
+		return value.String()
 	default:
+		// Empty checks.
+		if value == nil {
+			return ""
+		}
 		if f, ok := value.(apiString); ok {
 			// If the variable implements the String() interface,
 			// then use that interface to perform the conversion
@@ -196,6 +235,24 @@ func String(i interface{}) string {
 			// then use that interface to perform the conversion
 			return f.Error()
 		} else {
+			// Reflect checks.
+			rv := reflect.ValueOf(value)
+			kind := rv.Kind()
+			switch kind {
+			case reflect.Chan,
+				reflect.Map,
+				reflect.Slice,
+				reflect.Func,
+				reflect.Ptr,
+				reflect.Interface,
+				reflect.UnsafePointer:
+				if rv.IsNil() {
+					return ""
+				}
+			}
+			if kind == reflect.Ptr {
+				return String(rv.Elem().Interface())
+			}
 			// Finally we use json.Marshal to convert.
 			if jsonContent, err := json.Marshal(value); err != nil {
 				return fmt.Sprint(value)
@@ -331,20 +388,38 @@ func Int64(i interface{}) int64 {
 		return gbinary.DecodeToInt64(value)
 	default:
 		s := String(value)
+		isMinus := false
+		if len(s) > 0 {
+			if s[0] == '-' {
+				isMinus = true
+				s = s[1:]
+			} else if s[0] == '+' {
+				s = s[1:]
+			}
+		}
 		// Hexadecimal
 		if len(s) > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X') {
 			if v, e := strconv.ParseInt(s[2:], 16, 64); e == nil {
+				if isMinus {
+					return -v
+				}
 				return v
 			}
 		}
 		// Octal
 		if len(s) > 1 && s[0] == '0' {
 			if v, e := strconv.ParseInt(s[1:], 8, 64); e == nil {
+				if isMinus {
+					return -v
+				}
 				return v
 			}
 		}
 		// Decimal
 		if v, e := strconv.ParseInt(s, 10, 64); e == nil {
+			if isMinus {
+				return -v
+			}
 			return v
 		}
 		// Float64

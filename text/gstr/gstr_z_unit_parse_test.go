@@ -9,6 +9,7 @@
 package gstr_test
 
 import (
+	"net/url"
 	"testing"
 
 	"github.com/gogf/gf/frame/g"
@@ -18,6 +19,17 @@ import (
 
 func Test_Parse(t *testing.T) {
 	gtest.Case(t, func() {
+		// url
+		gtest.Case(t, func() {
+			s := "goframe.org/index?name=john&score=100"
+			u, err := url.Parse(s)
+			gtest.Assert(err, nil)
+			m, err := gstr.Parse(u.RawQuery)
+			gtest.Assert(err, nil)
+			gtest.Assert(m["name"], "john")
+			gtest.Assert(m["score"], "100")
+		})
+
 		// name overwrite
 		m, err := gstr.Parse("a=1&a=2")
 		gtest.Assert(err, nil)

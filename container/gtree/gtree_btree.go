@@ -41,7 +41,7 @@ type BTreeEntry struct {
 }
 
 // NewBTree instantiates a B-tree with <m> (maximum number of children) and a custom key comparator.
-// The parameter <safe> used to specify whether using tree in concurrent-safety,
+// The parameter <safe> is used to specify whether using tree in concurrent-safety,
 // which is false in default.
 // Note that the <m> must be greater or equal than 3, or else it panics.
 func NewBTree(m int, comparator func(v1, v2 interface{}) int, safe ...bool) *BTree {
@@ -56,7 +56,7 @@ func NewBTree(m int, comparator func(v1, v2 interface{}) int, safe ...bool) *BTr
 }
 
 // NewBTreeFrom instantiates a B-tree with <m> (maximum number of children), a custom key comparator and data map.
-// The parameter <safe> used to specify whether using tree in concurrent-safety,
+// The parameter <safe> is used to specify whether using tree in concurrent-safety,
 // which is false in default.
 func NewBTreeFrom(m int, comparator func(v1, v2 interface{}) int, data map[interface{}]interface{}, safe ...bool) *BTree {
 	tree := NewBTree(m, comparator, safe...)
@@ -128,12 +128,14 @@ func (tree *BTree) doSetWithLockCheck(key interface{}, value interface{}) interf
 	if f, ok := value.(func() interface{}); ok {
 		value = f()
 	}
-	tree.doSet(key, value)
+	if value != nil {
+		tree.doSet(key, value)
+	}
 	return value
 }
 
 // GetOrSet returns the value by key,
-// or set value with given <value> if not exist and returns this value.
+// or sets value with given <value> if it does not exist and then returns this value.
 func (tree *BTree) GetOrSet(key interface{}, value interface{}) interface{} {
 	if v, ok := tree.Search(key); !ok {
 		return tree.doSetWithLockCheck(key, value)
@@ -143,8 +145,8 @@ func (tree *BTree) GetOrSet(key interface{}, value interface{}) interface{} {
 }
 
 // GetOrSetFunc returns the value by key,
-// or sets value with return value of callback function <f> if not exist
-// and returns this value.
+// or sets value with returned value of callback function <f> if it does not exist
+// and then returns this value.
 func (tree *BTree) GetOrSetFunc(key interface{}, f func() interface{}) interface{} {
 	if v, ok := tree.Search(key); !ok {
 		return tree.doSetWithLockCheck(key, f())
@@ -154,8 +156,8 @@ func (tree *BTree) GetOrSetFunc(key interface{}, f func() interface{}) interface
 }
 
 // GetOrSetFuncLock returns the value by key,
-// or sets value with return value of callback function <f> if not exist
-// and returns this value.
+// or sets value with returned value of callback function <f> if it does not exist
+// and then returns this value.
 //
 // GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function <f>
 // with mutex.Lock of the hash map.
@@ -191,7 +193,7 @@ func (tree *BTree) GetVarOrSetFuncLock(key interface{}, f func() interface{}) *g
 	return gvar.New(tree.GetOrSetFuncLock(key, f))
 }
 
-// SetIfNotExist sets <value> to the map if the <key> does not exist, then return true.
+// SetIfNotExist sets <value> to the map if the <key> does not exist, and then returns true.
 // It returns false if <key> exists, and <value> would be ignored.
 func (tree *BTree) SetIfNotExist(key interface{}, value interface{}) bool {
 	if !tree.Contains(key) {
@@ -201,7 +203,7 @@ func (tree *BTree) SetIfNotExist(key interface{}, value interface{}) bool {
 	return false
 }
 
-// SetIfNotExistFunc sets value with return value of callback function <f>, then return true.
+// SetIfNotExistFunc sets value with return value of callback function <f>, and then returns true.
 // It returns false if <key> exists, and <value> would be ignored.
 func (tree *BTree) SetIfNotExistFunc(key interface{}, f func() interface{}) bool {
 	if !tree.Contains(key) {
@@ -211,7 +213,7 @@ func (tree *BTree) SetIfNotExistFunc(key interface{}, f func() interface{}) bool
 	return false
 }
 
-// SetIfNotExistFuncLock sets value with return value of callback function <f>, then return true.
+// SetIfNotExistFuncLock sets value with return value of callback function <f>, and then returns true.
 // It returns false if <key> exists, and <value> would be ignored.
 //
 // SetIfNotExistFuncLock differs with SetIfNotExistFunc function is that
@@ -320,6 +322,17 @@ func (tree *BTree) Clear() {
 	defer tree.mu.Unlock()
 	tree.root = nil
 	tree.size = 0
+}
+
+// Replace the data of the tree with given <data>.
+func (tree *BTree) Replace(data map[interface{}]interface{}) {
+	tree.mu.Lock()
+	defer tree.mu.Unlock()
+	tree.root = nil
+	tree.size = 0
+	for k, v := range data {
+		tree.doSet(k, v)
+	}
 }
 
 // Height returns the height of the tree.

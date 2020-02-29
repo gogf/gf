@@ -10,6 +10,8 @@ package gset_test
 
 import (
 	"encoding/json"
+	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/util/gconv"
 	"strings"
 	"testing"
 
@@ -223,11 +225,36 @@ func TestIntSet_Sum(t *testing.T) {
 
 func TestIntSet_Pop(t *testing.T) {
 	gtest.Case(t, func() {
-		s1 := gset.NewIntSet()
-		s1.Add(4).Add(2).Add(3)
-		gtest.AssertIN(s1.Pop(), []int{4, 2, 3})
-		gtest.AssertIN(s1.Pop(), []int{4, 2, 3})
-		gtest.Assert(s1.Size(), 3)
+		s := gset.NewIntSet()
+		s.Add(4).Add(2).Add(3)
+		gtest.Assert(s.Size(), 3)
+		gtest.AssertIN(s.Pop(), []int{4, 2, 3})
+		gtest.AssertIN(s.Pop(), []int{4, 2, 3})
+		gtest.Assert(s.Size(), 1)
+	})
+}
+
+func TestIntSet_Pops(t *testing.T) {
+	gtest.Case(t, func() {
+		s := gset.NewIntSet()
+		s.Add(1).Add(4).Add(2).Add(3)
+		gtest.Assert(s.Size(), 4)
+		gtest.Assert(s.Pops(0), nil)
+		gtest.AssertIN(s.Pops(1), []int{1, 4, 2, 3})
+		gtest.Assert(s.Size(), 3)
+		a := s.Pops(2)
+		gtest.Assert(len(a), 2)
+		gtest.AssertIN(a, []int{1, 4, 2, 3})
+		gtest.Assert(s.Size(), 1)
+	})
+
+	gtest.Case(t, func() {
+		s := gset.NewIntSet(true)
+		a := []int{1, 2, 3, 4}
+		s.Add(a...)
+		gtest.Assert(s.Size(), 4)
+		gtest.Assert(s.Pops(-2), nil)
+		gtest.AssertIN(s.Pops(-1), a)
 	})
 }
 
@@ -257,5 +284,82 @@ func TestIntSet_Json(t *testing.T) {
 		gtest.Assert(a2.Contains(3), true)
 		gtest.Assert(a2.Contains(4), true)
 		gtest.Assert(a2.Contains(5), false)
+	})
+}
+
+func TestIntSet_AddIfNotExistFunc(t *testing.T) {
+	gtest.Case(t, func() {
+		s := gset.NewIntSet(true)
+		s.Add(1)
+		gtest.Assert(s.Contains(1), true)
+		gtest.Assert(s.Contains(2), false)
+
+		s.AddIfNotExistFunc(2, func() int {
+			return 3
+		})
+		gtest.Assert(s.Contains(2), false)
+		gtest.Assert(s.Contains(3), true)
+
+		s.AddIfNotExistFunc(3, func() int {
+			return 4
+		})
+		gtest.Assert(s.Contains(3), true)
+		gtest.Assert(s.Contains(4), false)
+	})
+
+	gtest.Case(t, func() {
+		s := gset.NewIntSet(true)
+		s.Add(1)
+		gtest.Assert(s.Contains(1), true)
+		gtest.Assert(s.Contains(2), false)
+
+		s.AddIfNotExistFuncLock(2, func() int {
+			return 3
+		})
+		gtest.Assert(s.Contains(2), false)
+		gtest.Assert(s.Contains(3), true)
+
+		s.AddIfNotExistFuncLock(3, func() int {
+			return 4
+		})
+		gtest.Assert(s.Contains(3), true)
+		gtest.Assert(s.Contains(4), false)
+	})
+}
+
+func TestIntSet_UnmarshalValue(t *testing.T) {
+	type T struct {
+		Name string
+		Set  *gset.IntSet
+	}
+	// JSON
+	gtest.Case(t, func() {
+		var t *T
+		err := gconv.Struct(g.Map{
+			"name": "john",
+			"set":  []byte(`[1,2,3]`),
+		}, &t)
+		gtest.Assert(err, nil)
+		gtest.Assert(t.Name, "john")
+		gtest.Assert(t.Set.Size(), 3)
+		gtest.Assert(t.Set.Contains(1), true)
+		gtest.Assert(t.Set.Contains(2), true)
+		gtest.Assert(t.Set.Contains(3), true)
+		gtest.Assert(t.Set.Contains(4), false)
+	})
+	// Map
+	gtest.Case(t, func() {
+		var t *T
+		err := gconv.Struct(g.Map{
+			"name": "john",
+			"set":  g.Slice{1, 2, 3},
+		}, &t)
+		gtest.Assert(err, nil)
+		gtest.Assert(t.Name, "john")
+		gtest.Assert(t.Set.Size(), 3)
+		gtest.Assert(t.Set.Contains(1), true)
+		gtest.Assert(t.Set.Contains(2), true)
+		gtest.Assert(t.Set.Contains(3), true)
+		gtest.Assert(t.Set.Contains(4), false)
 	})
 }

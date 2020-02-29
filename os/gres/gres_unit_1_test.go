@@ -7,6 +7,7 @@
 package gres_test
 
 import (
+	"github.com/gogf/gf/os/gtime"
 	"strings"
 	"testing"
 
@@ -17,13 +18,42 @@ import (
 	"github.com/gogf/gf/test/gtest"
 )
 
-func Test_Pack(t *testing.T) {
+func Test_PackToGoFile(t *testing.T) {
 	gtest.Case(t, func() {
 		srcPath := gdebug.CallerDirectory() + "/testdata/files"
 		goFilePath := gdebug.CallerDirectory() + "/testdata/testdata.go"
 		pkgName := "testdata"
 		err := gres.PackToGoFile(srcPath, goFilePath, pkgName)
 		gtest.Assert(err, nil)
+	})
+}
+
+func Test_Pack(t *testing.T) {
+	gtest.Case(t, func() {
+		srcPath := gdebug.CallerDirectory() + "/testdata/files"
+		data, err := gres.Pack(srcPath)
+		gtest.Assert(err, nil)
+
+		r := gres.New()
+		err = r.Add(string(data))
+		gtest.Assert(err, nil)
+		gtest.Assert(r.Contains("files"), true)
+	})
+}
+
+func Test_PackToFile(t *testing.T) {
+	gtest.Case(t, func() {
+		srcPath := gdebug.CallerDirectory() + "/testdata/files"
+		dstPath := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
+		err := gres.PackToFile(srcPath, dstPath)
+		gtest.Assert(err, nil)
+
+		defer gfile.Remove(dstPath)
+
+		r := gres.New()
+		err = r.Load(dstPath)
+		gtest.Assert(err, nil)
+		gtest.Assert(r.Contains("files"), true)
 	})
 }
 

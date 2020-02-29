@@ -9,6 +9,8 @@ package garray
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"github.com/gogf/gf/internal/empty"
 	"github.com/gogf/gf/text/gstr"
 	"math"
 	"sort"
@@ -24,7 +26,7 @@ type Array struct {
 }
 
 // New creates and returns an empty array.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func New(safe ...bool) *Array {
 	return NewArraySize(0, 0, safe...)
@@ -36,13 +38,28 @@ func NewArray(safe ...bool) *Array {
 }
 
 // NewArraySize create and returns an array with given size and cap.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewArraySize(size int, cap int, safe ...bool) *Array {
 	return &Array{
 		mu:    rwmutex.New(safe...),
 		array: make([]interface{}, size, cap),
 	}
+}
+
+// NewArrayRange creates and returns a array by a range from <start> to <end>
+// with step value <step>.
+func NewArrayRange(start, end, step int, safe ...bool) *Array {
+	if step == 0 {
+		panic(fmt.Sprintf(`invalid step value: %d`, step))
+	}
+	slice := make([]interface{}, (end-start+1)/step)
+	index := 0
+	for i := start; i <= end; i += step {
+		slice[index] = i
+		index++
+	}
+	return NewArrayFrom(slice, safe...)
 }
 
 // See NewArrayFrom.
@@ -56,7 +73,7 @@ func NewFromCopy(array []interface{}, safe ...bool) *Array {
 }
 
 // NewArrayFrom creates and returns an array with given slice <array>.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewArrayFrom(array []interface{}, safe ...bool) *Array {
 	return &Array{
@@ -66,7 +83,7 @@ func NewArrayFrom(array []interface{}, safe ...bool) *Array {
 }
 
 // NewArrayFromCopy creates and returns an array from a copy of given slice <array>.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewArrayFromCopy(array []interface{}, safe ...bool) *Array {
 	newArray := make([]interface{}, len(array))
@@ -160,6 +177,9 @@ func (a *Array) InsertAfter(index int, value interface{}) *Array {
 func (a *Array) Remove(index int) interface{} {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	if index < 0 || index >= len(a.array) {
+		return nil
+	}
 	// Determine array boundaries when deleting to improve deletion efficiency。
 	if index == 0 {
 		value := a.array[0]
@@ -176,6 +196,16 @@ func (a *Array) Remove(index int) interface{} {
 	value := a.array[index]
 	a.array = append(a.array[:index], a.array[index+1:]...)
 	return value
+}
+
+// RemoveValue removes an item by value.
+// It returns true if value is found in the array, or else false if not found.
+func (a *Array) RemoveValue(value interface{}) bool {
+	if i := a.Search(value); i != -1 {
+		a.Remove(i)
+		return true
+	}
+	return false
 }
 
 // PushLeft pushes one or multiple items to the beginning of array.
@@ -370,6 +400,11 @@ func (a *Array) Slice() []interface{} {
 	}
 }
 
+// Interfaces returns current array as []interface{}.
+func (a *Array) Interfaces() []interface{} {
+	return a.Slice()
+}
+
 // Clone returns a new array, which is a copy of current array.
 func (a *Array) Clone() (newArray *Array) {
 	a.mu.RLock()
@@ -397,9 +432,6 @@ func (a *Array) Contains(value interface{}) bool {
 // Search searches array by <value>, returns the index of <value>,
 // or returns -1 if not exists.
 func (a *Array) Search(value interface{}) int {
-	if len(a.array) == 0 {
-		return -1
-	}
 	a.mu.RLock()
 	result := -1
 	for index, v := range a.array {
@@ -409,7 +441,20 @@ func (a *Array) Search(value interface{}) int {
 		}
 	}
 	a.mu.RUnlock()
+	return result
+}
 
+func (a *Array) doSearch(value interface{}) int {
+	if len(a.array) == 0 {
+		return -1
+	}
+	result := -1
+	for index, v := range a.array {
+		if v == value {
+			result = index
+			break
+		}
+	}
 	return result
 }
 
@@ -584,14 +629,8 @@ func (a *Array) Join(glue string) string {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	buffer := bytes.NewBuffer(nil)
-	s := ""
 	for k, v := range a.array {
-		s = gconv.String(v)
-		if gstr.IsNumeric(s) {
-			buffer.WriteString(s)
-		} else {
-			buffer.WriteString(`"` + gstr.QuoteMeta(s, `"\`) + `"`)
-		}
+		buffer.WriteString(gconv.String(v))
 		if k != len(a.array)-1 {
 			buffer.WriteString(glue)
 		}
@@ -610,9 +649,55 @@ func (a *Array) CountValues() map[interface{}]int {
 	return m
 }
 
-// String returns current array as a string.
+// Iterator is alias of IteratorAsc.
+func (a *Array) Iterator(f func(k int, v interface{}) bool) {
+	a.IteratorAsc(f)
+}
+
+// IteratorAsc iterates the array in ascending order with given callback function <f>.
+// If <f> returns true, then it continues iterating; or false to stop.
+func (a *Array) IteratorAsc(f func(k int, v interface{}) bool) {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	for k, v := range a.array {
+		if !f(k, v) {
+			break
+		}
+	}
+}
+
+// IteratorDesc iterates the array in descending order with given callback function <f>.
+// If <f> returns true, then it continues iterating; or false to stop.
+func (a *Array) IteratorDesc(f func(k int, v interface{}) bool) {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	for i := len(a.array) - 1; i >= 0; i-- {
+		if !f(i, a.array[i]) {
+			break
+		}
+	}
+}
+
+// String returns current array as a string, which implements like json.Marshal does.
 func (a *Array) String() string {
-	return "[" + a.Join(",") + "]"
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	buffer := bytes.NewBuffer(nil)
+	buffer.WriteByte('[')
+	s := ""
+	for k, v := range a.array {
+		s = gconv.String(v)
+		if gstr.IsNumeric(s) {
+			buffer.WriteString(s)
+		} else {
+			buffer.WriteString(`"` + gstr.QuoteMeta(s, `"\`) + `"`)
+		}
+		if k != len(a.array)-1 {
+			buffer.WriteByte(',')
+		}
+	}
+	buffer.WriteByte(']')
+	return buffer.String()
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
@@ -634,4 +719,49 @@ func (a *Array) UnmarshalJSON(b []byte) error {
 		return err
 	}
 	return nil
+}
+
+// UnmarshalValue is an interface implement which sets any type of value for array.
+func (a *Array) UnmarshalValue(value interface{}) error {
+	if a.mu == nil {
+		a.mu = rwmutex.New()
+	}
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	switch value.(type) {
+	case string, []byte:
+		return json.Unmarshal(gconv.Bytes(value), &a.array)
+	default:
+		a.array = gconv.SliceAny(value)
+	}
+	return nil
+}
+
+// FilterNil removes all nil value of the array.
+func (a *Array) FilterNil() *Array {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for i := 0; i < len(a.array); {
+		if empty.IsNil(a.array[i]) {
+			a.array = append(a.array[:i], a.array[i+1:]...)
+		} else {
+			i++
+		}
+	}
+	return a
+}
+
+// FilterEmpty removes all empty value of the array.
+// Values like: 0, nil, false, "", len(slice/map/chan) == 0 are considered empty.
+func (a *Array) FilterEmpty() *Array {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for i := 0; i < len(a.array); {
+		if empty.IsEmpty(a.array[i]) {
+			a.array = append(a.array[:i], a.array[i+1:]...)
+		} else {
+			i++
+		}
+	}
+	return a
 }

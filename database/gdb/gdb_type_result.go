@@ -14,19 +14,19 @@ import (
 	"github.com/gogf/gf/encoding/gparser"
 )
 
-// 将结果集转换为JSON字符串
+// Json converts <r> to JSON format content.
 func (r Result) Json() string {
 	content, _ := gparser.VarToJson(r.List())
 	return string(content)
 }
 
-// 将结果集转换为XML字符串
+// Xml converts <r> to XML format content.
 func (r Result) Xml(rootTag ...string) string {
 	content, _ := gparser.VarToXml(r.List(), rootTag...)
 	return string(content)
 }
 
-// 将结果集转换为List类型返回，便于json处理
+// List converts <r> to a List.
 func (r Result) List() List {
 	l := make(List, len(r))
 	for k, v := range r {
@@ -35,7 +35,7 @@ func (r Result) List() List {
 	return l
 }
 
-// 将结果列表按照指定的字段值做map[string]Map
+// MapKeyStr converts <r> to a map[string]Map of which key is specified by <key>.
 func (r Result) MapKeyStr(key string) map[string]Map {
 	m := make(map[string]Map)
 	for _, item := range r {
@@ -46,7 +46,7 @@ func (r Result) MapKeyStr(key string) map[string]Map {
 	return m
 }
 
-// 将结果列表按照指定的字段值做map[int]Map
+// MapKeyInt converts <r> to a map[int]Map of which key is specified by <key>.
 func (r Result) MapKeyInt(key string) map[int]Map {
 	m := make(map[int]Map)
 	for _, item := range r {
@@ -57,7 +57,7 @@ func (r Result) MapKeyInt(key string) map[int]Map {
 	return m
 }
 
-// 将结果列表按照指定的字段值做map[uint]Map
+// MapKeyUint converts <r> to a map[uint]Map of which key is specified by <key>.
 func (r Result) MapKeyUint(key string) map[uint]Map {
 	m := make(map[uint]Map)
 	for _, item := range r {
@@ -68,7 +68,7 @@ func (r Result) MapKeyUint(key string) map[uint]Map {
 	return m
 }
 
-// 将结果列表按照指定的字段值做map[string]Record
+// RecordKeyInt converts <r> to a map[int]Record of which key is specified by <key>.
 func (r Result) RecordKeyStr(key string) map[string]Record {
 	m := make(map[string]Record)
 	for _, item := range r {
@@ -79,7 +79,7 @@ func (r Result) RecordKeyStr(key string) map[string]Record {
 	return m
 }
 
-// 将结果列表按照指定的字段值做map[int]Record
+// RecordKeyInt converts <r> to a map[int]Record of which key is specified by <key>.
 func (r Result) RecordKeyInt(key string) map[int]Record {
 	m := make(map[int]Record)
 	for _, item := range r {
@@ -90,7 +90,7 @@ func (r Result) RecordKeyInt(key string) map[int]Record {
 	return m
 }
 
-// 将结果列表按照指定的字段值做map[uint]Record
+// RecordKeyUint converts <r> to a map[uint]Record of which key is specified by <key>.
 func (r Result) RecordKeyUint(key string) map[uint]Record {
 	m := make(map[uint]Record)
 	for _, item := range r {
@@ -101,7 +101,8 @@ func (r Result) RecordKeyUint(key string) map[uint]Record {
 	return m
 }
 
-// 将结果列表转换为指定对象的slice。
+// Structs converts <r> to struct slice.
+// Note that the parameter <pointer> should be type of *[]struct/*[]*struct.
 func (r Result) Structs(pointer interface{}) (err error) {
 	l := len(r)
 	if l == 0 {
@@ -130,4 +131,9 @@ func (r Result) Structs(pointer interface{}) (err error) {
 	}
 	reflect.ValueOf(pointer).Elem().Set(array)
 	return nil
+}
+
+// IsEmpty checks and returns whether <r> is empty.
+func (r Result) IsEmpty() bool {
+	return len(r) == 0
 }

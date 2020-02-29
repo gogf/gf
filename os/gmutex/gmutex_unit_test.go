@@ -244,7 +244,7 @@ func Test_Mutex_TryRLockFunc(t *testing.T) {
 		go func() {
 			mu.LockFunc(func() {
 				array.Append(1)
-				time.Sleep(300 * time.Millisecond)
+				time.Sleep(500 * time.Millisecond)
 			})
 		}()
 		go func() {
@@ -255,15 +255,17 @@ func Test_Mutex_TryRLockFunc(t *testing.T) {
 		}()
 		for index := 0; index < 1000; index++ {
 			go func() {
-				time.Sleep(400 * time.Millisecond)
+				time.Sleep(1000 * time.Millisecond)
 				mu.TryRLockFunc(func() {
 					array.Append(1)
 				})
 			}()
 		}
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(50 * time.Millisecond)
 		gtest.Assert(array.Len(), 1)
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(150 * time.Millisecond)
+		gtest.Assert(array.Len(), 1)
+		time.Sleep(600 * time.Millisecond)
 		gtest.Assert(array.Len(), 1)
 		time.Sleep(600 * time.Millisecond)
 		gtest.Assert(array.Len(), 1001)

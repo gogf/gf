@@ -186,7 +186,7 @@ func SubStr(str string, start int, length ...int) (substr string) {
 // then the <suffix> will be appended to the result string.
 func StrLimit(str string, length int, suffix ...string) string {
 	rs := []rune(str)
-	if len(str) < length {
+	if len(rs) < length {
 		return str
 	}
 	addStr := "..."
@@ -293,19 +293,14 @@ func Fields(str string) []string {
 	return strings.Fields(str)
 }
 
-// Contains reports whether <substr> is within <str>, case-sensitively.
-func Contains(str, substr string) bool {
-	return strings.Contains(str, substr)
+// HasPrefix tests whether the string s begins with prefix.
+func HasPrefix(s, prefix string) bool {
+	return strings.HasPrefix(s, prefix)
 }
 
-// ContainsI reports whether substr is within str, case-insensitively.
-func ContainsI(str, substr string) bool {
-	return PosI(str, substr) != -1
-}
-
-// ContainsAny reports whether any Unicode code points in <chars> are within <s>.
-func ContainsAny(s, chars string) bool {
-	return strings.ContainsAny(s, chars)
+// HasSuffix tests whether the string s ends with suffix.
+func HasSuffix(s, suffix string) bool {
+	return strings.HasSuffix(s, suffix)
 }
 
 // CountWords returns information about words' count used in a string.
@@ -443,13 +438,14 @@ func Split(str, delimiter string) []string {
 }
 
 // SplitAndTrim splits string <str> by a string <delimiter> to an array,
-// and calls Trim to every element of this array.
-func SplitAndTrim(str, delimiter, cut string) []string {
-	array := strings.Split(str, delimiter)
-	for k, v := range array {
-		v = strings.Trim(v, cut)
+// and calls Trim to every element of this array. It ignores the elements
+// which are empty after Trim.
+func SplitAndTrim(str, delimiter string, characterMask ...string) []string {
+	array := make([]string, 0)
+	for _, v := range strings.Split(str, delimiter) {
+		v = Trim(v, characterMask...)
 		if v != "" {
-			array[k] = strings.Trim(v, cut)
+			array = append(array, v)
 		}
 	}
 	return array
@@ -457,12 +453,13 @@ func SplitAndTrim(str, delimiter, cut string) []string {
 
 // SplitAndTrimSpace splits string <str> by a string <delimiter> to an array,
 // and calls TrimSpace to every element of this array.
+// Deprecated.
 func SplitAndTrimSpace(str, delimiter string) []string {
-	array := strings.Split(str, delimiter)
-	for k, v := range array {
+	array := make([]string, 0)
+	for _, v := range strings.Split(str, delimiter) {
 		v = strings.TrimSpace(v)
 		if v != "" {
-			array[k] = v
+			array = append(array, v)
 		}
 	}
 	return array

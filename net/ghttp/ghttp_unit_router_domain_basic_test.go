@@ -4,11 +4,11 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// 基本路由功能以及优先级测试
 package ghttp_test
 
 import (
 	"fmt"
+	"github.com/gogf/gf/internal/intlog"
 	"testing"
 	"time"
 
@@ -17,7 +17,6 @@ import (
 	"github.com/gogf/gf/test/gtest"
 )
 
-// 基本路由功能测试
 func Test_Router_DomainBasic(t *testing.T) {
 	p := ports.PopRand()
 	s := g.Server(p)
@@ -38,12 +37,11 @@ func Test_Router_DomainBasic(t *testing.T) {
 		r.Response.Write(r.Get("field"))
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
-	// 等待启动完成
-	time.Sleep(200 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 	gtest.Case(t, func() {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
@@ -70,7 +68,6 @@ func Test_Router_DomainBasic(t *testing.T) {
 	})
 }
 
-// 测试HTTP Method注册.
 func Test_Router_DomainMethod(t *testing.T) {
 	p := ports.PopRand()
 	s := g.Server(p)
@@ -82,12 +79,11 @@ func Test_Router_DomainMethod(t *testing.T) {
 
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
-	// 等待启动完成
-	time.Sleep(200 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 	gtest.Case(t, func() {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
@@ -164,7 +160,6 @@ func Test_Router_DomainMethod(t *testing.T) {
 	})
 }
 
-// 测试状态返回.
 func Test_Router_DomainStatus(t *testing.T) {
 	p := ports.PopRand()
 	s := g.Server(p)
@@ -182,12 +177,11 @@ func Test_Router_DomainStatus(t *testing.T) {
 		r.Response.WriteStatus(500)
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
-	// 等待启动完成
-	time.Sleep(200 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 	gtest.Case(t, func() {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
@@ -262,7 +256,6 @@ func Test_Router_DomainStatus(t *testing.T) {
 	})
 }
 
-// 自定义状态码处理.
 func Test_Router_DomainCustomStatusHandler(t *testing.T) {
 	p := ports.PopRand()
 	s := g.Server(p)
@@ -274,12 +267,11 @@ func Test_Router_DomainCustomStatusHandler(t *testing.T) {
 		r.Response.Write("404 page")
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
-	// 等待启动完成
-	time.Sleep(200 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 	gtest.Case(t, func() {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
@@ -303,7 +295,6 @@ func Test_Router_DomainCustomStatusHandler(t *testing.T) {
 	})
 }
 
-// 测试不存在的路由.
 func Test_Router_Domain404(t *testing.T) {
 	p := ports.PopRand()
 	s := g.Server(p)
@@ -312,12 +303,11 @@ func Test_Router_Domain404(t *testing.T) {
 		r.Response.Write("hello")
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
-	// 等待启动完成
-	time.Sleep(200 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 	gtest.Case(t, func() {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
@@ -335,5 +325,52 @@ func Test_Router_Domain404(t *testing.T) {
 		client.SetPrefix(fmt.Sprintf("http://local:%d", p))
 
 		gtest.Assert(client.GetContent("/"), "hello")
+	})
+}
+
+func Test_Router_DomainGroup(t *testing.T) {
+	p := ports.PopRand()
+	s := g.Server(p)
+	d := s.Domain("localhost, local")
+	d.Group("/", func(group *ghttp.RouterGroup) {
+		group.Group("/app", func(gApp *ghttp.RouterGroup) {
+			gApp.GET("/{table}/list/{page}.html", func(r *ghttp.Request) {
+				intlog.Print("/{table}/list/{page}.html")
+				r.Response.Write(r.Get("table"), "&", r.Get("page"))
+			})
+			gApp.GET("/order/info/{order_id}", func(r *ghttp.Request) {
+				intlog.Print("/order/info/{order_id}")
+				r.Response.Write(r.Get("order_id"))
+			})
+			gApp.DELETE("/comment/{id}", func(r *ghttp.Request) {
+				intlog.Print("/comment/{id}")
+				r.Response.Write(r.Get("id"))
+			})
+		})
+	})
+	s.SetPort(p)
+	//s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.Case(t, func() {
+		client1 := ghttp.NewClient()
+		client1.SetPrefix(fmt.Sprintf("http://local:%d", p))
+
+		client2 := ghttp.NewClient()
+		client2.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+
+		gtest.Assert(client1.GetContent("/app/t/list/2.html"), "t&2")
+		gtest.Assert(client2.GetContent("/app/t/list/2.html"), "Not Found")
+
+		gtest.Assert(client1.GetContent("/app/order/info/2"), "2")
+		gtest.Assert(client2.GetContent("/app/order/info/2"), "Not Found")
+
+		gtest.Assert(client1.GetContent("/app/comment/20"), "Not Found")
+		gtest.Assert(client2.GetContent("/app/comment/20"), "Not Found")
+
+		gtest.Assert(client1.DeleteContent("/app/comment/20"), "20")
+		gtest.Assert(client2.DeleteContent("/app/comment/20"), "Not Found")
 	})
 }

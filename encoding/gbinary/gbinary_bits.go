@@ -46,7 +46,7 @@ func EncodeBitsToBytes(bits []Bit) []byte {
 
 // 解析为int
 func DecodeBits(bits []Bit) int {
-	v := int(0)
+	v := 0
 	for _, i := range bits {
 		v = v<<1 | int(i)
 	}

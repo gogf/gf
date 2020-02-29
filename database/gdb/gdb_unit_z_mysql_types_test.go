@@ -24,6 +24,7 @@ func Test_Types(t *testing.T) {
         %s blob NOT NULL,
         %s binary(8) NOT NULL,
         %s date NOT NULL,
+        %s time NOT NULL,
         %s decimal(5,2) NOT NULL,
         %s double NOT NULL,
         %s bit(2) NOT NULL,
@@ -31,7 +32,8 @@ func Test_Types(t *testing.T) {
         %s bool NOT NULL,
         PRIMARY KEY (id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-    `, "`blob`", "`binary`", "`date`", "`decimal`", "`double`", "`bit`", "`tinyint`", "`bool`")); err != nil {
+    `, "`blob`", "`binary`", "`date`", "`time`",
+			"`decimal`", "`double`", "`bit`", "`tinyint`", "`bool`")); err != nil {
 			gtest.Error(err)
 		}
 		defer dropTable("types")
@@ -40,8 +42,9 @@ func Test_Types(t *testing.T) {
 			"blob":    "i love gf",
 			"binary":  []byte("abcdefgh"),
 			"date":    "2018-10-24",
-			"decimal": 123.456,
-			"double":  123.456,
+			"time":    "10:00:01",
+			"decimal": -123.456,
+			"double":  -123.456,
 			"bit":     2,
 			"tinyint": true,
 			"bool":    false,
@@ -57,7 +60,8 @@ func Test_Types(t *testing.T) {
 		gtest.Assert(one["blob"].String(), data["blob"])
 		gtest.Assert(one["binary"].String(), data["binary"])
 		gtest.Assert(one["date"].String(), data["date"])
-		gtest.Assert(one["decimal"].String(), 123.46)
+		gtest.Assert(one["time"].String(), data["time"])
+		gtest.Assert(one["decimal"].String(), -123.46)
 		gtest.Assert(one["double"].String(), data["double"])
 		gtest.Assert(one["bit"].Int(), data["bit"])
 		gtest.Assert(one["tinyint"].Bool(), data["tinyint"])

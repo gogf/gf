@@ -78,12 +78,22 @@ func (j *Json) GetVars(pattern string, def ...interface{}) []*gvar.Var {
 	return gvar.New(j.Get(pattern, def...)).Vars()
 }
 
-// GetMap gets the value by specified <pattern>,
+// GetMap retrieves the value by specified <pattern>,
 // and converts it to map[string]interface{}.
 func (j *Json) GetMap(pattern string, def ...interface{}) map[string]interface{} {
 	result := j.Get(pattern, def...)
 	if result != nil {
 		return gconv.Map(result)
+	}
+	return nil
+}
+
+// GetMapStrStr retrieves the value by specified <pattern>,
+// and converts it to map[string]string.
+func (j *Json) GetMapStrStr(pattern string, def ...interface{}) map[string]string {
+	result := j.Get(pattern, def...)
+	if result != nil {
+		return gconv.MapStrStr(result)
 	}
 	return nil
 }

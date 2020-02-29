@@ -233,15 +233,7 @@ func (v *Var) Map(tags ...string) map[string]interface{} {
 
 // MapStrStr converts <v> to map[string]string.
 func (v *Var) MapStrStr(tags ...string) map[string]string {
-	m := v.Map(tags...)
-	if len(m) > 0 {
-		vMap := make(map[string]string)
-		for k, v := range m {
-			vMap[k] = gconv.String(v)
-		}
-		return vMap
-	}
-	return nil
+	return gconv.MapStrStr(v.Val(), tags...)
 }
 
 // MapStrVar converts <v> to map[string]*Var.
@@ -264,15 +256,7 @@ func (v *Var) MapDeep(tags ...string) map[string]interface{} {
 
 // MapDeep converts <v> to map[string]string recursively.
 func (v *Var) MapStrStrDeep(tags ...string) map[string]string {
-	m := v.MapDeep(tags...)
-	if len(m) > 0 {
-		vMap := make(map[string]string)
-		for k, v := range m {
-			vMap[k] = gconv.String(v)
-		}
-		return vMap
-	}
-	return nil
+	return gconv.MapStrStrDeep(v.Val(), tags...)
 }
 
 // MapStrVarDeep converts <v> to map[string]*Var recursively.
@@ -349,5 +333,11 @@ func (v *Var) UnmarshalJSON(b []byte) error {
 		return err
 	}
 	v.Set(i)
+	return nil
+}
+
+// UnmarshalValue is an interface implement which sets any type of value for Var.
+func (v *Var) UnmarshalValue(value interface{}) error {
+	v.Set(value)
 	return nil
 }

@@ -15,7 +15,6 @@ import (
 )
 
 func Test_Check(t *testing.T) {
-
 	gtest.Case(t, func() {
 		rule := "abc:6,16"
 		val1 := 0
@@ -238,7 +237,7 @@ func Test_Phone(t *testing.T) {
 		err2 := gvalid.Check("13619908979", "phone", nil)
 		err3 := gvalid.Check("16719908979", "phone", nil)
 		err4 := gvalid.Check("19719908989", "phone", nil)
-		gtest.AssertNE(err1, nil)
+		gtest.AssertNE(err1.String(), nil)
 		gtest.Assert(err2, nil)
 		gtest.Assert(err3, nil)
 		gtest.Assert(err4, nil)
@@ -389,9 +388,21 @@ func Test_IDNumber(t *testing.T) {
 		err5 := gvalid.Check(val5, rule, nil)
 		gtest.AssertNE(err1, nil)
 		gtest.AssertNE(err2, nil)
-		gtest.Assert(err3, nil)
-		gtest.Assert(err4, nil)
+		gtest.AssertNE(err3, nil)
+		gtest.AssertNE(err4, nil)
 		gtest.Assert(err5, nil)
+	})
+}
+
+func Test_LuHn(t *testing.T) {
+	gtest.Case(t, func() {
+		rule := "luhn"
+		val1 := "6230514630000424470"
+		val2 := "6230514630000424473"
+		err1 := gvalid.Check(val1, rule, nil)
+		err2 := gvalid.Check(val2, rule, nil)
+		gtest.AssertNE(err1, nil)
+		gtest.Assert(err2, nil)
 	})
 }
 
@@ -821,6 +832,21 @@ func Test_In(t *testing.T) {
 }
 
 func Test_NotIn(t *testing.T) {
+	gtest.Case(t, func() {
+		rule := "not-in:100"
+		val1 := ""
+		val2 := "1"
+		val3 := "100"
+		val4 := "200"
+		err1 := gvalid.Check(val1, rule, nil)
+		err2 := gvalid.Check(val2, rule, nil)
+		err3 := gvalid.Check(val3, rule, nil)
+		err4 := gvalid.Check(val4, rule, nil)
+		gtest.Assert(err1, nil)
+		gtest.Assert(err2, nil)
+		gtest.AssertNE(err3, nil)
+		gtest.Assert(err4, nil)
+	})
 	gtest.Case(t, func() {
 		rule := "not-in:100,200"
 		val1 := ""

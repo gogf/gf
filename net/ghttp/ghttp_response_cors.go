@@ -8,12 +8,14 @@
 package ghttp
 
 import (
+	"net/http"
 	"net/url"
 
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
 )
 
+// CORSOptions is the options for CORS feature.
 // See https://www.w3.org/TR/cors/ .
 type CORSOptions struct {
 	AllowDomain      []string // Used for allowing requests from custom domains
@@ -68,9 +70,16 @@ func (r *Response) CORS(options CORSOptions) {
 	if options.AllowHeaders != "" {
 		r.Header().Set("Access-Control-Allow-Headers", options.AllowHeaders)
 	}
+	// No continue service handling if it's OPTIONS request.
+	if gstr.Equal(r.Request.Method, "OPTIONS") {
+		if r.Status == 0 {
+			r.Status = http.StatusOK
+		}
+		r.Request.ExitAll()
+	}
 }
 
-// CORSAllowed checks whether the current request origin is allowed CORS.
+// CORSAllowed checks whether the current request origin is allowed cross-domain.
 func (r *Response) CORSAllowedOrigin(options CORSOptions) bool {
 	if options.AllowDomain == nil {
 		return true

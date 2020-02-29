@@ -8,8 +8,8 @@ package glog
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
+	"github.com/gogf/gf/internal/intlog"
 	"io"
 	"os"
 	"strings"
@@ -24,19 +24,10 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
+// Logger is the struct for logging management.
 type Logger struct {
-	parent      *Logger   // Parent logger.
-	writer      io.Writer // Customized io.Writer.
-	flags       int       // Extra flags for logging output features.
-	path        string    // Logging directory path.
-	file        string    // Format for logging file.
-	level       int       // Output level.
-	prefix      string    // Prefix string for every logging content.
-	stSkip      int       // Skip count for stack.
-	stStatus    int       // Stack status(1: enabled - default; 0: disabled)
-	stFilter    string    // Stack string filter.
-	headerPrint bool      // Print header or not(true in default).
-	stdoutPrint bool      // Output to stdout or not(true in default).
+	parent *Logger // Parent logger.
+	config Config  // Logger configuration.
 }
 
 const (
@@ -59,15 +50,16 @@ const (
 
 // New creates and returns a custom logger.
 func New() *Logger {
-	logger := &Logger{
-		file:        gDEFAULT_FILE_FORMAT,
-		flags:       F_TIME_STD,
-		level:       LEVEL_ALL,
-		stStatus:    1,
-		headerPrint: true,
-		stdoutPrint: true,
+	return &Logger{
+		config: DefaultConfig(),
 	}
-	return logger
+}
+
+// NewWithWriter creates and returns a custom logger with io.Writer.
+func NewWithWriter(writer io.Writer) *Logger {
+	l := New()
+	l.SetWriter(writer)
+	return l
 }
 
 // Clone returns a new logger, which is the clone the current logger.
@@ -78,87 +70,15 @@ func (l *Logger) Clone() *Logger {
 	return &logger
 }
 
-// SetLevel sets the logging level.
-func (l *Logger) SetLevel(level int) {
-	l.level = level
-}
-
-// GetLevel returns the logging level value.
-func (l *Logger) GetLevel() int {
-	return l.level
-}
-
-// SetDebug enables/disables the debug level for logger.
-// The debug level is enabled in default.
-func (l *Logger) SetDebug(debug bool) {
-	if debug {
-		l.level = l.level | LEVEL_DEBU
-	} else {
-		l.level = l.level & ^LEVEL_DEBU
-	}
-}
-
-// SetAsync enables/disables async logging output feature.
-func (l *Logger) SetAsync(enabled bool) {
-	if enabled {
-		l.flags = l.flags | F_ASYNC
-	} else {
-		l.flags = l.flags & ^F_ASYNC
-	}
-}
-
-// SetFlags sets extra flags for logging output features.
-func (l *Logger) SetFlags(flags int) {
-	l.flags = flags
-}
-
-// GetFlags returns the flags of logger.
-func (l *Logger) GetFlags() int {
-	return l.flags
-}
-
-// SetStack enables/disables the stack feature in failure logging outputs.
-func (l *Logger) SetStack(enabled bool) {
-	if enabled {
-		l.stStatus = 1
-	} else {
-		l.stStatus = 0
-	}
-}
-
-// SetStackSkip sets the stack offset from the end point.
-func (l *Logger) SetStackSkip(skip int) {
-	l.stSkip = skip
-}
-
-// SetStackFilter sets the stack filter from the end point.
-func (l *Logger) SetStackFilter(filter string) {
-	l.stFilter = filter
-}
-
-// SetWriter sets the customized logging <writer> for logging.
-// The <writer> object should implements the io.Writer interface.
-// Developer can use customized logging <writer> to redirect logging output to another service,
-// eg: kafka, mysql, mongodb, etc.
-func (l *Logger) SetWriter(writer io.Writer) {
-	l.writer = writer
-}
-
-// GetWriter returns the customized writer object, which implements the io.Writer interface.
-// It returns nil if no writer previously set.
-func (l *Logger) GetWriter() io.Writer {
-	return l.writer
-}
-
 // getFilePointer returns the file pinter for file logging.
 // It returns nil if file logging is disabled, or file opening fails.
 func (l *Logger) getFilePointer() *gfpool.File {
-	if path := l.path; path != "" {
-		// Content containing "{}" in the file name is formatted using gtime
-		file, _ := gregex.ReplaceStringFunc(`{.+?}`, l.file, func(s string) string {
+	if path := l.config.Path; path != "" {
+		// Content containing "{}" in the file name is formatted using gtime.
+		file, _ := gregex.ReplaceStringFunc(`{.+?}`, l.config.File, func(s string) string {
 			return gtime.Now().Format(strings.Trim(s, "{}"))
 		})
-		// Create path if it does not exist。
+		// Create path if it does not exist.
 		if !gfile.Exists(path) {
 			if err := gfile.Mkdir(path); err != nil {
 				fmt.Fprintln(os.Stderr, fmt.Sprintf(`[glog] mkdir "%s" failed: %s`, path, err.Error()))
@@ -178,63 +98,19 @@ func (l *Logger) getFilePointer() *gfpool.File {
 	return nil
 }
 
-// SetPath sets the directory path for file logging.
-func (l *Logger) SetPath(path string) error {
-	if path == "" {
-		return errors.New("path is empty")
-	}
-	if !gfile.Exists(path) {
-		if err := gfile.Mkdir(path); err != nil {
-			//fmt.Fprintln(os.Stderr, fmt.Sprintf(`[glog] mkdir "%s" failed: %s`, path, err.Error()))
-			return err
-		}
-	}
-	l.path = strings.TrimRight(path, gfile.Separator)
-	return nil
-}
-
-// GetPath returns the logging directory path for file logging.
-// It returns empty string if no directory path set.
-func (l *Logger) GetPath() string {
-	return l.path
-}
-
-// SetFile sets the file name <pattern> for file logging.
-// Datetime pattern can be used in <pattern>, eg: access-{Ymd}.log.
-// The default file name pattern is: Y-m-d.log, eg: 2018-01-01.log
-func (l *Logger) SetFile(pattern string) {
-	l.file = pattern
-}
-
-// SetStdoutPrint sets whether output the logging contents to stdout, which is true in default.
-func (l *Logger) SetStdoutPrint(enabled bool) {
-	l.stdoutPrint = enabled
-}
-
-// SetHeaderPrint sets whether output header of the logging contents, which is true in default.
-func (l *Logger) SetHeaderPrint(enabled bool) {
-	l.headerPrint = enabled
-}
-
-// SetPrefix sets prefix string for every logging content.
-// Prefix is part of header, which means if header output is shut, no prefix will be output.
-func (l *Logger) SetPrefix(prefix string) {
-	l.prefix = prefix
-}
-
 // print prints <s> to defined writer, logging file or passed <std>.
 func (l *Logger) print(std io.Writer, lead string, value ...interface{}) {
 	buffer := bytes.NewBuffer(nil)
-	if l.headerPrint {
+	if l.config.HeaderPrint {
 		// Time.
 		timeFormat := ""
-		if l.flags&F_TIME_DATE > 0 {
+		if l.config.Flags&F_TIME_DATE > 0 {
 			timeFormat += "2006-01-02 "
 		}
-		if l.flags&F_TIME_TIME > 0 {
+		if l.config.Flags&F_TIME_TIME > 0 {
 			timeFormat += "15:04:05 "
 		}
-		if l.flags&F_TIME_MILLI > 0 {
+		if l.config.Flags&F_TIME_MILLI > 0 {
 			timeFormat += "15:04:05.000 "
 		}
 		if len(timeFormat) > 0 {
@@ -249,20 +125,20 @@ func (l *Logger) print(std io.Writer, lead string, value ...interface{}) {
 		}
 		// Caller path.
 		callerPath := ""
-		if l.flags&F_FILE_LONG > 0 {
-			_, path, line := gdebug.CallerWithFilter(gPATH_FILTER_KEY, l.stSkip)
+		if l.config.Flags&F_FILE_LONG > 0 {
+			_, path, line := gdebug.CallerWithFilter(gPATH_FILTER_KEY, l.config.StSkip)
 			callerPath = fmt.Sprintf(`%s:%d: `, path, line)
 		}
-		if l.flags&F_FILE_SHORT > 0 {
-			_, path, line := gdebug.CallerWithFilter(gPATH_FILTER_KEY, l.stSkip)
+		if l.config.Flags&F_FILE_SHORT > 0 {
+			_, path, line := gdebug.CallerWithFilter(gPATH_FILTER_KEY, l.config.StSkip)
 			callerPath = fmt.Sprintf(`%s:%d: `, gfile.Basename(path), line)
 		}
 		if len(callerPath) > 0 {
 			buffer.WriteString(callerPath)
 		}
 		// Prefix.
-		if len(l.prefix) > 0 {
-			buffer.WriteString(l.prefix + " ")
+		if len(l.config.Prefix) > 0 {
+			buffer.WriteString(l.config.Prefix + " ")
 		}
 	}
 	// Convert value to string.
@@ -290,10 +166,13 @@ func (l *Logger) print(std io.Writer, lead string, value ...interface{}) {
 		}
 	}
 	buffer.WriteString(valueStr + "\n")
-	if l.flags&F_ASYNC > 0 {
-		asyncPool.Add(func() {
+	if l.config.Flags&F_ASYNC > 0 {
+		err := asyncPool.Add(func() {
 			l.printToWriter(std, buffer)
 		})
+		if err != nil {
+			intlog.Error(err)
+		}
 	} else {
 		l.printToWriter(std, buffer)
 	}
@@ -301,7 +180,7 @@ func (l *Logger) print(std io.Writer, lead string, value ...interface{}) {
 
 // printToWriter writes buffer to writer.
 func (l *Logger) printToWriter(std io.Writer, buffer *bytes.Buffer) {
-	if l.writer == nil {
+	if l.config.Writer == nil {
 		if f := l.getFilePointer(); f != nil {
 			defer f.Close()
 			if _, err := io.WriteString(f, buffer.String()); err != nil {
@@ -309,13 +188,13 @@ func (l *Logger) printToWriter(std io.Writer, buffer *bytes.Buffer) {
 			}
 		}
 		// Allow output to stdout?
-		if l.stdoutPrint {
+		if l.config.StdoutPrint {
 			if _, err := std.Write(buffer.Bytes()); err != nil {
 				fmt.Fprintln(os.Stderr, err.Error())
 			}
 		}
 	} else {
-		if _, err := l.writer.Write(buffer.Bytes()); err != nil {
+		if _, err := l.config.Writer.Write(buffer.Bytes()); err != nil {
 			fmt.Fprintln(os.Stderr, err.Error())
 		}
 	}
@@ -328,7 +207,7 @@ func (l *Logger) printStd(lead string, value ...interface{}) {
 
 // printStd prints content <s> with stack check.
 func (l *Logger) printErr(lead string, value ...interface{}) {
-	if l.stStatus == 1 {
+	if l.config.StStatus == 1 {
 		if s := l.GetStack(); s != "" {
 			value = append(value, "\nStack:\n"+s)
 		}
@@ -355,13 +234,13 @@ func (l *Logger) PrintStack(skip ...int) {
 // GetStack returns the caller stack content,
 // the optional parameter <skip> specify the skipped stack offset from the end point.
 func (l *Logger) GetStack(skip ...int) string {
-	stackSkip := l.stSkip
+	stackSkip := l.config.StSkip
 	if len(skip) > 0 {
 		stackSkip += skip[0]
 	}
 	filters := []string{gPATH_FILTER_KEY}
-	if l.stFilter != "" {
-		filters = append(filters, l.stFilter)
+	if l.config.StFilter != "" {
+		filters = append(filters, l.config.StFilter)
 	}
 	return gdebug.StackWithFilters(filters, stackSkip)
 }
