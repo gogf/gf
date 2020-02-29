@@ -12,6 +12,7 @@ import (
 	"sync/atomic"
 )
 
+// Bool is a struct for concurrent-safe operation for type bool.
 type Bool struct {
 	value int32
 }
@@ -21,7 +22,7 @@ var (
 	bytesFalse = []byte("false")
 )
 
-// NewBool returns a concurrent-safe object for bool type,
+// NewBool creates and returns a concurrent-safe object for bool type,
 // with given initial value <value>.
 func NewBool(value ...bool) *Bool {
 	t := &Bool{}
@@ -50,13 +51,13 @@ func (v *Bool) Set(value bool) (old bool) {
 	return
 }
 
-// Val atomically loads t.valueue.
+// Val atomically loads and returns t.valueue.
 func (v *Bool) Val() bool {
 	return atomic.LoadInt32(&v.value) > 0
 }
 
 // Cas executes the compare-and-swap operation for value.
-func (v *Bool) Cas(old, new bool) bool {
+func (v *Bool) Cas(old, new bool) (swapped bool) {
 	var oldInt32, newInt32 int32
 	if old {
 		oldInt32 = 1
@@ -87,5 +88,11 @@ func (v *Bool) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (v *Bool) UnmarshalJSON(b []byte) error {
 	v.Set(gconv.Bool(bytes.Trim(b, `"`)))
+	return nil
+}
+
+// UnmarshalValue is an interface implement which sets any type of value for <v>.
+func (v *Bool) UnmarshalValue(value interface{}) error {
+	v.Set(gconv.Bool(value))
 	return nil
 }

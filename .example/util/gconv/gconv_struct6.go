@@ -17,13 +17,13 @@ func main() {
 	}
 
 	user := new(User)
-	scores := map[string]interface{}{
-		"Scores": []interface{}{
-			map[string]interface{}{
+	scores := g.Map{
+		"Scores": g.Slice{
+			g.Map{
 				"Name":   "john",
 				"Result": 100,
 			},
-			map[string]interface{}{
+			g.Map{
 				"Name":   "smith",
 				"Result": 60,
 			},

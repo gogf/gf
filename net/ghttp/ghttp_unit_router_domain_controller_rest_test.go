@@ -65,12 +65,11 @@ func Test_Router_DomainControllerRest(t *testing.T) {
 	d := s.Domain("localhost, local")
 	d.BindControllerRest("/", new(DomainControllerRest))
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
-	// 等待启动完成
-	time.Sleep(200 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 	gtest.Case(t, func() {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))

@@ -569,6 +569,36 @@ func Test_Struct_Interface(t *testing.T) {
 	})
 }
 
+func Test_Struct_NilAttribute(t *testing.T) {
+	gtest.Case(t, func() {
+		type Item struct {
+			Title string `json:"title"`
+			Key   string `json:"key"`
+		}
+
+		type M struct {
+			Id    string                 `json:"id"`
+			Me    map[string]interface{} `json:"me"`
+			Txt   string                 `json:"txt"`
+			Items []*Item                `json:"items"`
+		}
+		m := new(M)
+		err := gconv.Struct(g.Map{
+			"id": "88888",
+			"me": g.Map{
+				"name": "mikey",
+				"day":  "20009",
+			},
+			"txt":   "hello",
+			"items": nil,
+		}, m)
+		gtest.Assert(err, nil)
+		gtest.AssertNE(m.Me, nil)
+		gtest.Assert(m.Me["day"], "20009")
+		gtest.Assert(m.Items, nil)
+	})
+}
+
 func Test_Struct_Complex(t *testing.T) {
 	gtest.Case(t, func() {
 		type ApplyReportDetail struct {

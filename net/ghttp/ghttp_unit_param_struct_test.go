@@ -22,42 +22,58 @@ func Test_Params_Struct(t *testing.T) {
 	type User struct {
 		Id    int
 		Name  string
-		Pass1 string `params:"password1"`
-		Pass2 string `params:"password2" gvalid:"passwd1 @required|length:2,20|password3#||密码强度不足"`
+		Time  *time.Time
+		Pass1 string `p:"password1"`
+		Pass2 string `p:"password2" v:"passwd1 @required|length:2,20|password3#||密码强度不足"`
 	}
 	p := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/struct1", func(r *ghttp.Request) {
 		if m := r.GetMap(); len(m) > 0 {
 			user := new(User)
-			r.GetToStruct(user)
-			r.Response.Write(user.Id, user.Name, user.Pass1, user.Pass2)
+			if err := r.GetStruct(user); err != nil {
+				r.Response.WriteExit(err)
+			}
+			r.Response.WriteExit(user.Id, user.Name, user.Pass1, user.Pass2)
 		}
 	})
 	s.BindHandler("/struct2", func(r *ghttp.Request) {
 		if m := r.GetMap(); len(m) > 0 {
 			user := (*User)(nil)
-			r.GetToStruct(&user)
+			if err := r.GetStruct(&user); err != nil {
+				r.Response.WriteExit(err)
+			}
 			if user != nil {
-				r.Response.Write(user.Id, user.Name, user.Pass1, user.Pass2)
+				r.Response.WriteExit(user.Id, user.Name, user.Pass1, user.Pass2)
 			}
 		}
 	})
 	s.BindHandler("/struct-valid", func(r *ghttp.Request) {
 		if m := r.GetMap(); len(m) > 0 {
 			user := new(User)
-			r.GetToStruct(user)
-			err := gvalid.CheckStruct(user, nil)
-			r.Response.Write(err.Maps())
+			if err := r.GetStruct(user); err != nil {
+				r.Response.WriteExit(err)
+			}
+			if err := gvalid.CheckStruct(user, nil); err != nil {
+				r.Response.WriteExit(err)
+			}
+		}
+	})
+	s.BindHandler("/parse", func(r *ghttp.Request) {
+		if m := r.GetMap(); len(m) > 0 {
+			var user *User
+			if err := r.Parse(&user); err != nil {
+				r.Response.WriteExit(err)
+			}
+			r.Response.WriteExit(user.Id, user.Name, user.Pass1, user.Pass2)
 		}
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
-	// 等待启动完成
-	time.Sleep(200 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 	gtest.Case(t, func() {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
@@ -65,6 +81,10 @@ func Test_Params_Struct(t *testing.T) {
 		gtest.Assert(client.PostContent("/struct1", `id=1&name=john&password1=123&password2=456`), `1john123456`)
 		gtest.Assert(client.PostContent("/struct2", `id=1&name=john&password1=123&password2=456`), `1john123456`)
 		gtest.Assert(client.PostContent("/struct2", ``), ``)
-		gtest.Assert(client.PostContent("/struct-valid", `id=1&name=john&password1=123&password2=0`), `{"passwd1":{"length":"字段长度为2到20个字符","password3":"密码强度不足"}}`)
+		gtest.Assert(client.PostContent("/struct-valid", `id=1&name=john&password1=123&password2=0`), `字段长度为2到20个字符; 密码强度不足`)
+		gtest.Assert(client.PostContent("/parse", `id=1&name=john&password1=123&password2=0`), `字段长度为2到20个字符; 密码强度不足`)
+		gtest.Assert(client.GetContent("/parse", `id=1&name=john&password1=123&password2=456`), `密码强度不足`)
+		gtest.Assert(client.GetContent("/parse", `id=1&name=john&password1=123Abc!@#&password2=123Abc!@#`), `1john123Abc!@#123Abc!@#`)
+		gtest.Assert(client.PostContent("/parse", `{"id":1,"name":"john","password1":"123Abc!@#","password2":"123Abc!@#"}`), `1john123Abc!@#123Abc!@#`)
 	})
 }

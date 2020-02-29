@@ -36,7 +36,7 @@ func init() {
 					bufferChan <- binary.LittleEndian.Uint32(buffer[i : i+4])
 					i++
 				}
-				// Reuse the rand buffers.
+				// Reuse the rand buffer.
 				for i := 0; i < n; i++ {
 					step = int(buffer[0]) % 10
 					if step != 0 {

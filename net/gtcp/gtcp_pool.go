@@ -11,59 +11,54 @@ import (
 
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/container/gpool"
-	"github.com/gogf/gf/errors/gerror"
 )
 
-// 链接池链接对象
+// PoolConn is a connection with pool feature for TCP.
+// Note that it is NOT a pool or connection manager,
+// it is just a TCP connection object.
 type PoolConn struct {
-	*Conn              // 继承底层链接接口对象
-	pool   *gpool.Pool // 对应的链接池对象
-	status int         // 当前对象的状态，主要用于失败重连判断
+	*Conn              // Underlying connection object.
+	pool   *gpool.Pool // Connection pool, which is not a really connection pool, but a connection reusable pool.
+	status int         // Status of current connection, which is used to mark this connection usable or not.
 }
 
 const (
-	gDEFAULT_POOL_EXPIRE = 60000 // (毫秒)默认链接对象过期时间
-	gCONN_STATUS_UNKNOWN = 0     // 未知，表示未经过连通性操作;
-	gCONN_STATUS_ACTIVE  = 1     // 正常，表示已经经过连通性操作
-	gCONN_STATUS_ERROR   = 2     // 错误，表示该接口操作产生了错误，不应当被循环使用了
-
+	gDEFAULT_POOL_EXPIRE = 10000 // (Millisecond) Default TTL for connection in the pool.
+	gCONN_STATUS_UNKNOWN = 0     // Means it is unknown it's connective or not.
+	gCONN_STATUS_ACTIVE  = 1     // Means it is now connective.
+	gCONN_STATUS_ERROR   = 2     // Means it should be closed and removed from pool.
 )
 
 var (
-	// 连接池对象map，键名为地址端口，键值为对应的连接池对象
-	pools = gmap.NewStrAnyMap(true)
+	// addressPoolMap is a mapping for address to its pool object.
+	addressPoolMap = gmap.NewStrAnyMap(true)
 )
 
-// 创建TCP链接池对象
-func NewPoolConn(addr string, timeout ...int) (*PoolConn, error) {
-	var pool *gpool.Pool
-	if v := pools.Get(addr); v == nil {
-		pools.LockFunc(func(m map[string]interface{}) {
-			if v, ok := m[addr]; ok {
-				pool = v.(*gpool.Pool)
+// NewPoolConn creates and returns a connection with pool feature.
+func NewPoolConn(addr string, timeout ...time.Duration) (*PoolConn, error) {
+	v := addressPoolMap.GetOrSetFuncLock(addr, func() interface{} {
+		var pool *gpool.Pool
+		pool = gpool.New(gDEFAULT_POOL_EXPIRE, func() (interface{}, error) {
+			if conn, err := NewConn(addr, timeout...); err == nil {
+				return &PoolConn{conn, pool, gCONN_STATUS_ACTIVE}, nil
 			} else {
-				pool = gpool.New(gDEFAULT_POOL_EXPIRE, func() (interface{}, error) {
-					if conn, err := NewConn(addr, timeout...); err == nil {
-						return &PoolConn{conn, pool, gCONN_STATUS_ACTIVE}, nil
-					} else {
-						return nil, err
-					}
-				})
-				m[addr] = pool
+				return nil, err
 			}
 		})
-	} else {
-		pool = v.(*gpool.Pool)
-	}
-
-	if v, err := pool.Get(); err == nil {
+		return pool
+	})
+	if v, err := v.(*gpool.Pool).Get(); err == nil {
 		return v.(*PoolConn), nil
 	} else {
 		return nil, err
 	}
 }
 
-// (方法覆盖)覆盖底层接口对象的Close方法
+// Close puts back the connection to the pool if it's active,
+// or closes the connection if it's not active.
+//
+// Note that, if <c> calls Close function closing itself, <c> can not
+// be used again.
 func (c *PoolConn) Close() error {
 	if c.pool != nil && c.status == gCONN_STATUS_ACTIVE {
 		c.status = gCONN_STATUS_UNKNOWN
@@ -74,13 +69,14 @@ func (c *PoolConn) Close() error {
 	return nil
 }
 
-// (方法覆盖)发送数据
+// Send writes data to the connection. It retrieves a new connection from its pool if it fails
+// writing data.
 func (c *PoolConn) Send(data []byte, retry ...Retry) error {
-	var err error
-	if err = c.Conn.Send(data, retry...); err != nil && c.status == gCONN_STATUS_UNKNOWN {
-		if v, e := c.pool.NewFunc(); e == nil {
+	err := c.Conn.Send(data, retry...)
+	if err != nil && c.status == gCONN_STATUS_UNKNOWN {
+		if v, e := c.pool.Get(); e == nil {
 			c.Conn = v.(*PoolConn).Conn
-			err = c.Conn.Send(data, retry...)
+			err = c.Send(data, retry...)
 		} else {
 			err = e
 		}
@@ -93,7 +89,7 @@ func (c *PoolConn) Send(data []byte, retry ...Retry) error {
 	return err
 }
 
-// (方法覆盖)接收数据
+// Recv receives data from the connection.
 func (c *PoolConn) Recv(length int, retry ...Retry) ([]byte, error) {
 	data, err := c.Conn.Recv(length, retry...)
 	if err != nil {
@@ -104,7 +100,8 @@ func (c *PoolConn) Recv(length int, retry ...Retry) ([]byte, error) {
 	return data, err
 }
 
-// (方法覆盖)按行读取数据，阻塞读取，直到完成一行读取位置(末尾以'\n'结尾，返回数据不包含换行符)
+// RecvLine reads data from the connection until reads char '\n'.
+// Note that the returned result does not contain the last char '\n'.
 func (c *PoolConn) RecvLine(retry ...Retry) ([]byte, error) {
 	data, err := c.Conn.RecvLine(retry...)
 	if err != nil {
@@ -115,31 +112,39 @@ func (c *PoolConn) RecvLine(retry ...Retry) ([]byte, error) {
 	return data, err
 }
 
-// (方法覆盖)带超时时间的数据获取
+// RecvTil reads data from the connection until reads bytes <til>.
+// Note that the returned result contains the last bytes <til>.
+func (c *PoolConn) RecvTil(til []byte, retry ...Retry) ([]byte, error) {
+	data, err := c.Conn.RecvTil(til, retry...)
+	if err != nil {
+		c.status = gCONN_STATUS_ERROR
+	} else {
+		c.status = gCONN_STATUS_ACTIVE
+	}
+	return data, err
+}
+
+// RecvWithTimeout reads data from the connection with timeout.
 func (c *PoolConn) RecvWithTimeout(length int, timeout time.Duration, retry ...Retry) (data []byte, err error) {
 	if err := c.SetRecvDeadline(time.Now().Add(timeout)); err != nil {
 		return nil, err
 	}
-	defer func() {
-		err = gerror.Wrap(c.SetRecvDeadline(time.Time{}), "SetRecvDeadline error")
-	}()
+	defer c.SetRecvDeadline(time.Time{})
 	data, err = c.Recv(length, retry...)
 	return
 }
 
-// (方法覆盖)带超时时间的数据发送
+// SendWithTimeout writes data to the connection with timeout.
 func (c *PoolConn) SendWithTimeout(data []byte, timeout time.Duration, retry ...Retry) (err error) {
 	if err := c.SetSendDeadline(time.Now().Add(timeout)); err != nil {
 		return err
 	}
-	defer func() {
-		err = gerror.Wrap(c.SetSendDeadline(time.Time{}), "SetSendDeadline error")
-	}()
+	defer c.SetSendDeadline(time.Time{})
 	err = c.Send(data, retry...)
 	return
 }
 
-// (方法覆盖)发送数据并等待接收返回数据
+// SendRecv writes data to the connection and blocks reading response.
 func (c *PoolConn) SendRecv(data []byte, receive int, retry ...Retry) ([]byte, error) {
 	if err := c.Send(data, retry...); err == nil {
 		return c.Recv(receive, retry...)
@@ -148,7 +153,7 @@ func (c *PoolConn) SendRecv(data []byte, receive int, retry ...Retry) ([]byte, e
 	}
 }
 
-// (方法覆盖)发送数据并等待接收返回数据(带返回超时等待时间)
+// SendRecvWithTimeout writes data to the connection and reads response with timeout.
 func (c *PoolConn) SendRecvWithTimeout(data []byte, receive int, timeout time.Duration, retry ...Retry) ([]byte, error) {
 	if err := c.Send(data, retry...); err == nil {
 		return c.RecvWithTimeout(receive, timeout, retry...)

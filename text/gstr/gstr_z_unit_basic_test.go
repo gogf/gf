@@ -154,6 +154,22 @@ func Test_StrLimit(t *testing.T) {
 	})
 }
 
+func Test_HasPrefix(t *testing.T) {
+	gtest.Case(t, func() {
+		gtest.Assert(gstr.HasPrefix("我爱GoFrame", "我爱"), true)
+		gtest.Assert(gstr.HasPrefix("en我爱GoFrame", "我爱"), false)
+		gtest.Assert(gstr.HasPrefix("en我爱GoFrame", "en"), true)
+	})
+}
+
+func Test_HasSuffix(t *testing.T) {
+	gtest.Case(t, func() {
+		gtest.Assert(gstr.HasSuffix("我爱GoFrame", "GoFrame"), true)
+		gtest.Assert(gstr.HasSuffix("en我爱GoFrame", "a"), false)
+		gtest.Assert(gstr.HasSuffix("GoFrame很棒", "棒"), true)
+	})
+}
+
 func Test_Reverse(t *testing.T) {
 	gtest.Case(t, func() {
 		gtest.Assert(gstr.Reverse("我爱123"), "321爱我")
@@ -173,6 +189,22 @@ func Test_ChunkSplit(t *testing.T) {
 		gtest.Assert(gstr.ChunkSplit("1234", 1, "#"), "1#2#3#4#")
 		gtest.Assert(gstr.ChunkSplit("我爱123", 1, "#"), "我#爱#1#2#3#")
 		gtest.Assert(gstr.ChunkSplit("1234", 1, ""), "1\r\n2\r\n3\r\n4\r\n")
+	})
+}
+
+func Test_SplitAndTrim(t *testing.T) {
+	gtest.Case(t, func() {
+		s := `
+
+010    
+
+020  
+
+`
+		a := gstr.SplitAndTrim(s, "\n", "0")
+		gtest.Assert(len(a), 2)
+		gtest.Assert(a[0], "1")
+		gtest.Assert(a[1], "2")
 	})
 }
 

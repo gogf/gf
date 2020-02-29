@@ -4,93 +4,136 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// HTTP客户端请求.
-
 package ghttp
 
 import (
+	"crypto/tls"
+	"net/http"
 	"strings"
 	"time"
 
 	"github.com/gogf/gf/text/gregex"
 )
 
-// 是否模拟浏览器模式(自动保存提交COOKIE)
-func (c *Client) SetBrowserMode(enabled bool) {
+// Client is the HTTP client for HTTP request management.
+type Client struct {
+	http.Client                     // Underlying HTTP Client.
+	header        map[string]string // Custom header map.
+	cookies       map[string]string // Custom cookie map.
+	prefix        string            // Prefix for request.
+	authUser      string            // HTTP basic authentication: user.
+	authPass      string            // HTTP basic authentication: pass.
+	browserMode   bool              // Whether auto saving and sending cookie content.
+	retryCount    int               // Retry count when request fails.
+	retryInterval int               // Retry interval when request fails.
+}
+
+// NewClient creates and returns a new HTTP client object.
+func NewClient() *Client {
+	return &Client{
+		Client: http.Client{
+			Transport: &http.Transport{
+				// No validation for https certification of the server.
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: true,
+				},
+				DisableKeepAlives: true,
+			},
+		},
+		header:  make(map[string]string),
+		cookies: make(map[string]string),
+	}
+}
+
+// Clone clones current client and returns a new one.
+func (c *Client) Clone() *Client {
+	newClient := NewClient()
+	*newClient = *c
+	newClient.header = make(map[string]string)
+	newClient.cookies = make(map[string]string)
+	for k, v := range c.header {
+		newClient.header[k] = v
+	}
+	for k, v := range c.cookies {
+		newClient.cookies[k] = v
+	}
+	return newClient
+}
+
+// SetBrowserMode enables browser mode of the client.
+// When browser mode is enabled, it automatically saves and sends cookie content
+// from and to server.
+func (c *Client) SetBrowserMode(enabled bool) *Client {
 	c.browserMode = enabled
+	return c
 }
 
-// 设置HTTP Header
-func (c *Client) SetHeader(key, value string) {
+// SetHeader sets a custom HTTP header pair for the client.
+func (c *Client) SetHeader(key, value string) *Client {
 	c.header[key] = value
+	return c
 }
 
-// 通过字符串设置HTTP Header
-func (c *Client) SetHeaderRaw(header string) {
+// SetHeaderMap sets custom HTTP headers with map.
+func (c *Client) SetHeaderMap(m map[string]string) *Client {
+	for k, v := range m {
+		c.header[k] = v
+	}
+	return c
+}
+
+// SetContentType sets HTTP content type for the client.
+func (c *Client) SetContentType(contentType string) *Client {
+	c.header["Content-Type"] = contentType
+	return c
+}
+
+// SetHeaderRaw sets custom HTTP header using raw string.
+func (c *Client) SetHeaderRaw(header string) *Client {
 	for _, line := range strings.Split(strings.TrimSpace(header), "\n") {
 		array, _ := gregex.MatchString(`^([\w\-]+):\s*(.+)`, line)
 		if len(array) >= 3 {
 			c.header[array[1]] = array[2]
 		}
 	}
+	return c
 }
 
-// 设置COOKIE
-func (c *Client) SetCookie(key, value string) {
+// SetCookie sets a cookie pair for the client.
+func (c *Client) SetCookie(key, value string) *Client {
 	c.cookies[key] = value
+	return c
 }
 
-// 使用Map设置COOKIE
-func (c *Client) SetCookieMap(cookieMap map[string]string) {
-	for k, v := range cookieMap {
+// SetCookieMap sets cookie items with map.
+func (c *Client) SetCookieMap(m map[string]string) *Client {
+	for k, v := range m {
 		c.cookies[k] = v
 	}
+	return c
 }
 
-// 设置请求的URL前缀
-func (c *Client) SetPrefix(prefix string) {
+// SetPrefix sets the request server URL prefix.
+func (c *Client) SetPrefix(prefix string) *Client {
 	c.prefix = prefix
-}
-
-// 设置请求过期时间
-func (c *Client) SetTimeOut(t time.Duration) {
-	c.Timeout = t
-}
-
-// 设置HTTP访问账号密码
-func (c *Client) SetBasicAuth(user, pass string) {
-	c.authUser = user
-	c.authPass = pass
-}
-
-// 设置失败重试次数及间隔，失败仅针对网络请求失败情况。
-// 重试间隔时间单位为秒。
-func (c *Client) SetRetry(retryCount int, retryInterval int) {
-	c.retryCount = retryCount
-	c.retryInterval = retryInterval
-}
-
-// 链式操作, See SetBrowserMode
-func (c *Client) BrowserMode(enabled bool) *Client {
-	c.browserMode = enabled
 	return c
 }
 
-// 链式操作, See SetTimeOut
-func (c *Client) TimeOut(t time.Duration) *Client {
+// SetTimeOut sets the request timeout for the client.
+func (c *Client) SetTimeOut(t time.Duration) *Client {
 	c.Timeout = t
 	return c
 }
 
-// 链式操作, See SetBasicAuth
-func (c *Client) BasicAuth(user, pass string) *Client {
+// SetBasicAuth sets HTTP basic authentication information for the client.
+func (c *Client) SetBasicAuth(user, pass string) *Client {
 	c.authUser = user
 	c.authPass = pass
 	return c
 }
 
-// 链式操作, See SetRetry
-func (c *Client) Retry(retryCount int, retryInterval int) *Client {
+// SetRetry sets retry count and interval.
+func (c *Client) SetRetry(retryCount int, retryInterval int) *Client {
 	c.retryCount = retryCount
 	c.retryInterval = retryInterval
 	return c

@@ -10,9 +10,6 @@ package gfile
 import (
 	"bytes"
 	"errors"
-	"fmt"
-	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"os/user"
@@ -36,7 +33,15 @@ var (
 	// The absolute file path for main package.
 	// It can be only checked and set once.
 	mainPkgPath = gtype.NewString()
+	// Temporary directory of system.
+	tempDir = "/tmp"
 )
+
+func init() {
+	if !Exists(tempDir) {
+		tempDir = os.TempDir()
+	}
+}
 
 // Mkdir creates directories recursively with given <path>.
 // The parameter <path> is suggested to be absolute path.
@@ -93,7 +98,7 @@ func Join(paths ...string) string {
 
 // Exists checks whether given <path> exist.
 func Exists(path string) bool {
-	if _, err := os.Stat(path); !os.IsNotExist(err) {
+	if stat, err := os.Stat(path); stat != nil && !os.IsNotExist(err) {
 		return true
 	}
 	return false
@@ -112,6 +117,12 @@ func IsDir(path string) bool {
 func Pwd() string {
 	path, _ := os.Getwd()
 	return path
+}
+
+// Chdir changes the current working directory to the named directory.
+// If there is an error, it will be of type *PathError.
+func Chdir(dir string) error {
+	return os.Chdir(dir)
 }
 
 // IsFile checks whether given <path> a file, which means it's not a directory.
@@ -146,112 +157,8 @@ func Rename(src string, dst string) error {
 	return Move(src, dst)
 }
 
-// Copy file/directory from <src> to <dst>.
-//
-// If <src> is file, it calls CopyFile to implements copy feature,
-// or else it calls CopyDir.
-func Copy(src string, dst string) error {
-	if IsFile(src) {
-		return CopyFile(src, dst)
-	}
-	return CopyDir(src, dst)
-}
-
-// CopyFile copies the contents of the file named src to the file named
-// by dst. The file will be created if it does not already exist. If the
-// destination file exists, all it's contents will be replaced by the contents
-// of the source file. The file mode will be copied from the source and
-// the copied data is synced/flushed to stable storage.
-// Thanks: https://gist.github.com/r0l1/92462b38df26839a3ca324697c8cba04
-func CopyFile(src, dst string) (err error) {
-	in, err := os.Open(src)
-	if err != nil {
-		return
-	}
-	defer func() {
-		if e := in.Close(); e != nil {
-			err = e
-		}
-	}()
-	out, err := os.Create(dst)
-	if err != nil {
-		return
-	}
-	defer func() {
-		if e := out.Close(); e != nil {
-			err = e
-		}
-	}()
-	_, err = io.Copy(out, in)
-	if err != nil {
-		return
-	}
-	err = out.Sync()
-	if err != nil {
-		return
-	}
-	si, err := os.Stat(src)
-	if err != nil {
-		return
-	}
-	err = os.Chmod(dst, si.Mode())
-	if err != nil {
-		return
-	}
-	return
-}
-
-// CopyDir recursively copies a directory tree, attempting to preserve permissions.
-// Source directory must exist, destination directory must *not* exist.
-// Symlinks are ignored and skipped.
-func CopyDir(src string, dst string) (err error) {
-	src = filepath.Clean(src)
-	dst = filepath.Clean(dst)
-	si, err := os.Stat(src)
-	if err != nil {
-		return err
-	}
-	if !si.IsDir() {
-		return fmt.Errorf("source is not a directory")
-	}
-	_, err = os.Stat(dst)
-	if err != nil && !os.IsNotExist(err) {
-		return
-	}
-	if err == nil {
-		return fmt.Errorf("destination already exists")
-	}
-	err = os.MkdirAll(dst, si.Mode())
-	if err != nil {
-		return
-	}
-	entries, err := ioutil.ReadDir(src)
-	if err != nil {
-		return
-	}
-	for _, entry := range entries {
-		srcPath := filepath.Join(src, entry.Name())
-		dstPath := filepath.Join(dst, entry.Name())
-		if entry.IsDir() {
-			err = CopyDir(srcPath, dstPath)
-			if err != nil {
-				return
-			}
-		} else {
-			// Skip symlinks.
-			if entry.Mode()&os.ModeSymlink != 0 {
-				continue
-			}
-			err = CopyFile(srcPath, dstPath)
-			if err != nil {
-				return
-			}
-		}
-	}
-	return
-}
-
 // DirNames returns sub-file names of given directory <path>.
+// Note that the returned names are NOT absolute paths.
 func DirNames(path string) ([]string, error) {
 	f, err := os.Open(path)
 	if err != nil {
@@ -307,7 +214,7 @@ func IsReadable(path string) bool {
 
 // IsWritable checks whether given <path> is writable.
 //
-// @TODO improve performance; use golang.org/x/sys to cross-plat-form
+// TODO improve performance; use golang.org/x/sys to cross-plat-form
 func IsWritable(path string) bool {
 	result := true
 	if IsDir(path) {
@@ -504,5 +411,5 @@ func homeWindows() (string, error) {
 
 // See os.TempDir().
 func TempDir() string {
-	return os.TempDir()
+	return tempDir
 }

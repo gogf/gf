@@ -25,14 +25,14 @@ type StrArray struct {
 }
 
 // NewStrArray creates and returns an empty array.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewStrArray(safe ...bool) *StrArray {
 	return NewStrArraySize(0, 0, safe...)
 }
 
 // NewStrArraySize create and returns an array with given size and cap.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewStrArraySize(size int, cap int, safe ...bool) *StrArray {
 	return &StrArray{
@@ -42,7 +42,7 @@ func NewStrArraySize(size int, cap int, safe ...bool) *StrArray {
 }
 
 // NewStrArrayFrom creates and returns an array with given slice <array>.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewStrArrayFrom(array []string, safe ...bool) *StrArray {
 	return &StrArray{
@@ -52,7 +52,7 @@ func NewStrArrayFrom(array []string, safe ...bool) *StrArray {
 }
 
 // NewStrArrayFromCopy creates and returns an array from a copy of given slice <array>.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewStrArrayFromCopy(array []string, safe ...bool) *StrArray {
 	newArray := make([]string, len(array))
@@ -165,6 +165,9 @@ func (a *StrArray) InsertAfter(index int, value string) *StrArray {
 func (a *StrArray) Remove(index int) string {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	if index < 0 || index >= len(a.array) {
+		return ""
+	}
 	// Determine array boundaries when deleting to improve deletion efficiency。
 	if index == 0 {
 		value := a.array[0]
@@ -181,6 +184,16 @@ func (a *StrArray) Remove(index int) string {
 	value := a.array[index]
 	a.array = append(a.array[:index], a.array[index+1:]...)
 	return value
+}
+
+// RemoveValue removes an item by value.
+// It returns true if value is found in the array, or else false if not found.
+func (a *StrArray) RemoveValue(value string) bool {
+	if i := a.Search(value); i != -1 {
+		a.Remove(i)
+		return true
+	}
+	return false
 }
 
 // PushLeft pushes one or multiple items to the beginning of array.
@@ -374,6 +387,17 @@ func (a *StrArray) Slice() []string {
 		copy(array, a.array)
 	} else {
 		array = a.array
+	}
+	return array
+}
+
+// Interfaces returns current array as []interface{}.
+func (a *StrArray) Interfaces() []interface{} {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	array := make([]interface{}, len(a.array))
+	for k, v := range a.array {
+		array[k] = v
 	}
 	return array
 }
@@ -592,7 +616,7 @@ func (a *StrArray) Join(glue string) string {
 	defer a.mu.RUnlock()
 	buffer := bytes.NewBuffer(nil)
 	for k, v := range a.array {
-		buffer.WriteString(`"` + gstr.QuoteMeta(v, `"\`) + `"`)
+		buffer.WriteString(v)
 		if k != len(a.array)-1 {
 			buffer.WriteString(glue)
 		}
@@ -611,9 +635,49 @@ func (a *StrArray) CountValues() map[string]int {
 	return m
 }
 
-// String returns current array as a string.
+// Iterator is alias of IteratorAsc.
+func (a *StrArray) Iterator(f func(k int, v string) bool) {
+	a.IteratorAsc(f)
+}
+
+// IteratorAsc iterates the array in ascending order with given callback function <f>.
+// If <f> returns true, then it continues iterating; or false to stop.
+func (a *StrArray) IteratorAsc(f func(k int, v string) bool) {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	for k, v := range a.array {
+		if !f(k, v) {
+			break
+		}
+	}
+}
+
+// IteratorDesc iterates the array in descending order with given callback function <f>.
+// If <f> returns true, then it continues iterating; or false to stop.
+func (a *StrArray) IteratorDesc(f func(k int, v string) bool) {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	for i := len(a.array) - 1; i >= 0; i-- {
+		if !f(i, a.array[i]) {
+			break
+		}
+	}
+}
+
+// String returns current array as a string, which implements like json.Marshal does.
 func (a *StrArray) String() string {
-	return "[" + a.Join(",") + "]"
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	buffer := bytes.NewBuffer(nil)
+	buffer.WriteByte('[')
+	for k, v := range a.array {
+		buffer.WriteString(`"` + gstr.QuoteMeta(v, `"\`) + `"`)
+		if k != len(a.array)-1 {
+			buffer.WriteByte(',')
+		}
+	}
+	buffer.WriteByte(']')
+	return buffer.String()
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
@@ -635,4 +699,34 @@ func (a *StrArray) UnmarshalJSON(b []byte) error {
 		return err
 	}
 	return nil
+}
+
+// UnmarshalValue is an interface implement which sets any type of value for array.
+func (a *StrArray) UnmarshalValue(value interface{}) error {
+	if a.mu == nil {
+		a.mu = rwmutex.New()
+	}
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	switch value.(type) {
+	case string, []byte:
+		return json.Unmarshal(gconv.Bytes(value), &a.array)
+	default:
+		a.array = gconv.SliceStr(value)
+	}
+	return nil
+}
+
+// FilterEmpty removes all empty string value of the array.
+func (a *StrArray) FilterEmpty() *StrArray {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for i := 0; i < len(a.array); {
+		if a.array[i] == "" {
+			a.array = append(a.array[:i], a.array[i+1:]...)
+		} else {
+			i++
+		}
+	}
+	return a
 }

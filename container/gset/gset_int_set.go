@@ -20,7 +20,7 @@ type IntSet struct {
 }
 
 // New create and returns a new set, which contains un-repeated items.
-// The parameter <unsafe> used to specify whether using set in un-concurrent-safety,
+// The parameter <safe> is used to specify whether using set in concurrent-safety,
 // which is false in default.
 func NewIntSet(safe ...bool) *IntSet {
 	return &IntSet{
@@ -62,6 +62,48 @@ func (set *IntSet) Add(item ...int) *IntSet {
 	}
 	set.mu.Unlock()
 	return set
+}
+
+// AddIfNotExistFunc adds the returned value of callback function <f> to the set
+// if <item> does not exit in the set.
+func (set *IntSet) AddIfNotExistFunc(item int, f func() int) *IntSet {
+	if !set.Contains(item) {
+		set.doAddWithLockCheck(item, f())
+	}
+	return set
+}
+
+// AddIfNotExistFuncLock adds the returned value of callback function <f> to the set
+// if <item> does not exit in the set.
+//
+// Note that the callback function <f> is executed in the mutex.Lock of the set.
+func (set *IntSet) AddIfNotExistFuncLock(item int, f func() int) *IntSet {
+	if !set.Contains(item) {
+		set.doAddWithLockCheck(item, f)
+	}
+	return set
+}
+
+// doAddWithLockCheck checks whether item exists with mutex.Lock,
+// if not exists, it adds item to the set or else just returns the existing value.
+//
+// If <value> is type of <func() interface {}>,
+// it will be executed with mutex.Lock of the set,
+// and its return value will be added to the set.
+//
+// It returns item successfully added..
+func (set *IntSet) doAddWithLockCheck(item int, value interface{}) int {
+	set.mu.Lock()
+	defer set.mu.Unlock()
+	if _, ok := set.data[item]; !ok && value != nil {
+		if f, ok := value.(func() int); ok {
+			item = f()
+		} else {
+			item = value.(int)
+		}
+	}
+	set.data[item] = struct{}{}
+	return item
 }
 
 // Contains checks whether the set contains <item>.
@@ -126,7 +168,7 @@ func (set *IntSet) Join(glue string) string {
 	return buffer.String()
 }
 
-// String returns items as a string, which are joined by char ','.
+// String returns items as a string, which implements like json.Marshal does.
 func (set *IntSet) String() string {
 	return "[" + set.Join(",") + "]"
 }
@@ -304,24 +346,30 @@ func (set *IntSet) Sum() (sum int) {
 
 // Pops randomly pops an item from set.
 func (set *IntSet) Pop() int {
-	set.mu.RLock()
-	defer set.mu.RUnlock()
+	set.mu.Lock()
+	defer set.mu.Unlock()
 	for k, _ := range set.data {
+		delete(set.data, k)
 		return k
 	}
 	return 0
 }
 
 // Pops randomly pops <size> items from set.
+// It returns all items if size == -1.
 func (set *IntSet) Pops(size int) []int {
-	set.mu.RLock()
-	defer set.mu.RUnlock()
-	if size > len(set.data) {
+	set.mu.Lock()
+	defer set.mu.Unlock()
+	if size > len(set.data) || size == -1 {
 		size = len(set.data)
+	}
+	if size <= 0 {
+		return nil
 	}
 	index := 0
 	array := make([]int, size)
 	for k, _ := range set.data {
+		delete(set.data, k)
 		array[index] = k
 		index++
 		if index == size {
@@ -352,4 +400,25 @@ func (set *IntSet) UnmarshalJSON(b []byte) error {
 		set.data[v] = struct{}{}
 	}
 	return nil
+}
+
+// UnmarshalValue is an interface implement which sets any type of value for set.
+func (set *IntSet) UnmarshalValue(value interface{}) (err error) {
+	if set.mu == nil {
+		set.mu = rwmutex.New()
+		set.data = make(map[int]struct{})
+	}
+	set.mu.Lock()
+	defer set.mu.Unlock()
+	var array []int
+	switch value.(type) {
+	case string, []byte:
+		err = json.Unmarshal(gconv.Bytes(value), &array)
+	default:
+		array = gconv.SliceInt(value)
+	}
+	for _, v := range array {
+		set.data[v] = struct{}{}
+	}
+	return
 }

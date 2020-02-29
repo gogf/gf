@@ -12,11 +12,12 @@ import (
 	"sync/atomic"
 )
 
+// Int64 is a struct for concurrent-safe operation for type int64.
 type Int64 struct {
 	value int64
 }
 
-// NewInt64 returns a concurrent-safe object for int64 type,
+// NewInt64 creates and returns a concurrent-safe object for int64 type,
 // with given initial value <value>.
 func NewInt64(value ...int64) *Int64 {
 	if len(value) > 0 {
@@ -37,7 +38,7 @@ func (v *Int64) Set(value int64) (old int64) {
 	return atomic.SwapInt64(&v.value, value)
 }
 
-// Val atomically loads t.value.
+// Val atomically loads and returns t.value.
 func (v *Int64) Val() int64 {
 	return atomic.LoadInt64(&v.value)
 }
@@ -48,7 +49,7 @@ func (v *Int64) Add(delta int64) (new int64) {
 }
 
 // Cas executes the compare-and-swap operation for value.
-func (v *Int64) Cas(old, new int64) bool {
+func (v *Int64) Cas(old, new int64) (swapped bool) {
 	return atomic.CompareAndSwapInt64(&v.value, old, new)
 }
 
@@ -65,5 +66,11 @@ func (v *Int64) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (v *Int64) UnmarshalJSON(b []byte) error {
 	v.Set(gconv.Int64(gconv.UnsafeBytesToStr(b)))
+	return nil
+}
+
+// UnmarshalValue is an interface implement which sets any type of value for <v>.
+func (v *Int64) UnmarshalValue(value interface{}) error {
+	v.Set(gconv.Int64(value))
 	return nil
 }

@@ -108,11 +108,11 @@ func Test_Router_GroupRest(t *testing.T) {
 	g.REST("/{.struct}/{.method}", ctl)
 	g.REST("/{.struct}/{.method}", obj)
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
-	time.Sleep(200 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 	gtest.Case(t, func() {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))

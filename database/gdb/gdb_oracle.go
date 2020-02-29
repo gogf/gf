@@ -3,10 +3,11 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
-// 说明：
-//    1.需要导入oracle驱动： github.com/mattn/go-oci8
-//    2.不支持save/replace方法，可以调用这2个方法估计会报错，还没测试过,(应该是可以通过oracle的merge来实现这2个功能的，还没仔细研究)
-//    3.不支持LastInsertId方法
+//
+// Note:
+// 1. It needs manually import: _ "github.com/mattn/go-oci8"
+// 2. It does not support Save/Replace features.
+// 3. It does not support LastInsertId.
 
 package gdb
 
@@ -14,6 +15,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/text/gstr"
 	"reflect"
 	"strconv"
 	"strings"
@@ -21,7 +24,6 @@ import (
 	"github.com/gogf/gf/text/gregex"
 )
 
-// 数据库链接对象
 type dbOracle struct {
 	*dbBase
 }
@@ -31,7 +33,7 @@ const (
 	tableAlias2 = "GFORM2"
 )
 
-// 创建SQL操作对象
+// Open creates and returns a underlying sql.DB object for oracle.
 func (db *dbOracle) Open(config *ConfigNode) (*sql.DB, error) {
 	var source string
 	if config.LinkInfo != "" {
@@ -39,6 +41,7 @@ func (db *dbOracle) Open(config *ConfigNode) (*sql.DB, error) {
 	} else {
 		source = fmt.Sprintf("%s/%s@%s", config.User, config.Pass, config.Name)
 	}
+	intlog.Printf("Open: %s", source)
 	if db, err := sql.Open("oci8", source); err == nil {
 		return db, nil
 	} else {
@@ -46,36 +49,31 @@ func (db *dbOracle) Open(config *ConfigNode) (*sql.DB, error) {
 	}
 }
 
-// 获得关键字操作符
+// getChars returns the security char for this type of database.
 func (db *dbOracle) getChars() (charLeft string, charRight string) {
 	return "\"", "\""
 }
 
-// 在执行sql之前对sql进行进一步处理
+// handleSqlBeforeExec deals with the sql string before commits it to underlying sql driver.
 func (db *dbOracle) handleSqlBeforeExec(query string) string {
-	index := 0
+	var index int
+	// Convert place holder char '?' to string ":x".
 	str, _ := gregex.ReplaceStringFunc("\\?", query, func(s string) string {
 		index++
 		return fmt.Sprintf(":%d", index)
 	})
-
 	str, _ = gregex.ReplaceString("\"", "", str)
-
 	return db.parseSql(str)
 }
 
-//由于ORACLE中对LIMIT和批量插入的语法与MYSQL不一致，所以这里需要对LIMIT和批量插入做语法上的转换
 func (db *dbOracle) parseSql(sql string) string {
-	//下面的正则表达式匹配出SELECT和INSERT的关键字后分别做不同的处理，如有LIMIT则将LIMIT的关键字也匹配出
 	patten := `^\s*(?i)(SELECT)|(LIMIT\s*(\d+)\s*,\s*(\d+))`
 	if gregex.IsMatchString(patten, sql) == false {
-		//fmt.Println("not matched..")
 		return sql
 	}
 
 	res, err := gregex.MatchAllString(patten, sql)
 	if err != nil {
-		//fmt.Println("MatchString error.", err)
 		return ""
 	}
 
@@ -86,12 +84,12 @@ func (db *dbOracle) parseSql(sql string) string {
 	index++
 	switch keyword {
 	case "SELECT":
-		//不含LIMIT关键字则不处理
+		// 不含LIMIT关键字则不处理
 		if len(res) < 2 || (strings.HasPrefix(res[index][0], "LIMIT") == false && strings.HasPrefix(res[index][0], "limit") == false) {
 			break
 		}
 
-		//取limit前面的字符串
+		// 取limit前面的字符串
 		if gregex.IsMatchString("((?i)SELECT)(.+)((?i)LIMIT)", sql) == false {
 			break
 		}
@@ -101,7 +99,7 @@ func (db *dbOracle) parseSql(sql string) string {
 			break
 		}
 
-		//取limit后面的取值范围
+		// 取limit后面的取值范围
 		first, limit := 0, 0
 		for i := 1; i < len(res[index]); i++ {
 			if len(strings.TrimSpace(res[index][i])) == 0 {
@@ -115,51 +113,60 @@ func (db *dbOracle) parseSql(sql string) string {
 			}
 		}
 
-		//也可以使用between,据说这种写法的性能会比between好点,里层SQL中的ROWNUM_ >= limit可以缩小查询后的数据集规模
-		sql = fmt.Sprintf("SELECT * FROM (SELECT GFORM.*, ROWNUM ROWNUM_ FROM (%s %s) GFORM WHERE ROWNUM <= %d) WHERE ROWNUM_ >= %d", queryExpr[1], queryExpr[2], limit, first)
+		// 也可以使用between,据说这种写法的性能会比between好点,里层SQL中的ROWNUM_ >= limit可以缩小查询后的数据集规模
+		sql = fmt.Sprintf(
+			"SELECT * FROM (SELECT GFORM.*, ROWNUM ROWNUM_ FROM (%s %s) GFORM WHERE ROWNUM <= %d) WHERE ROWNUM_ >= %d",
+			queryExpr[1], queryExpr[2], limit, first,
+		)
 	}
 	return sql
 }
 
-// 返回当前数据库所有的数据表名称
+// Tables retrieves and returns the tables of current schema.
 // TODO
-func (bs *dbOracle) Tables() (tables []string, err error) {
+func (db *dbOracle) Tables(schema ...string) (tables []string, err error) {
 	return
 }
 
-// 获得指定表表的数据结构，构造成map哈希表返回，其中键名为表字段名称，键值为字段数据结构.
-func (db *dbOracle) TableFields(table string) (fields map[string]*TableField, err error) {
-	// 缓存不存在时会查询数据表结构，缓存后不过期，直至程序重启(重新部署)
-	v := db.cache.GetOrSetFunc("oracle_table_fields_"+table, func() interface{} {
-		result := (Result)(nil)
-		result, err = db.GetAll(fmt.Sprintf(`
-		SELECT COLUMN_NAME AS FIELD, CASE DATA_TYPE 
-		    WHEN 'NUMBER' THEN DATA_TYPE||'('||DATA_PRECISION||','||DATA_SCALE||')' 
-			WHEN 'FLOAT' THEN DATA_TYPE||'('||DATA_PRECISION||','||DATA_SCALE||')' 
-			ELSE DATA_TYPE||'('||DATA_LENGTH||')' END AS TYPE  
-		FROM USER_TAB_COLUMNS WHERE TABLE_NAME = '%s' ORDER BY COLUMN_ID`, strings.ToUpper(table)))
-		if err != nil {
-			return nil
-		}
-
-		fields = make(map[string]*TableField)
-		for i, m := range result {
-			// ORACLE返回的值默认都是大写的，需要转为小写
-			fields[strings.ToLower(m["FIELD"].String())] = &TableField{
-				Index: i,
-				Name:  strings.ToLower(m["FIELD"].String()),
-				Type:  strings.ToLower(m["TYPE"].String()),
+// TableFields retrieves and returns the fields information of specified table of current schema.
+func (db *dbOracle) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
+	table = gstr.Trim(table)
+	if gstr.Contains(table, " ") {
+		panic("function TableFields supports only single table operations")
+	}
+	checkSchema := db.schema.Val()
+	if len(schema) > 0 && schema[0] != "" {
+		checkSchema = schema[0]
+	}
+	v := db.cache.GetOrSetFunc(
+		fmt.Sprintf(`oracle_table_fields_%s_%s`, table, checkSchema),
+		func() interface{} {
+			result := (Result)(nil)
+			result, err = db.GetAll(fmt.Sprintf(`
+			SELECT COLUMN_NAME AS FIELD, CASE DATA_TYPE 
+			    WHEN 'NUMBER' THEN DATA_TYPE||'('||DATA_PRECISION||','||DATA_SCALE||')' 
+				WHEN 'FLOAT' THEN DATA_TYPE||'('||DATA_PRECISION||','||DATA_SCALE||')' 
+				ELSE DATA_TYPE||'('||DATA_LENGTH||')' END AS TYPE  
+			FROM USER_TAB_COLUMNS WHERE TABLE_NAME = '%s' ORDER BY COLUMN_ID`, strings.ToUpper(table)))
+			if err != nil {
+				return nil
 			}
-		}
-		return fields
-	}, 0)
+			fields = make(map[string]*TableField)
+			for i, m := range result {
+				fields[strings.ToLower(m["FIELD"].String())] = &TableField{
+					Index: i,
+					Name:  strings.ToLower(m["FIELD"].String()),
+					Type:  strings.ToLower(m["TYPE"].String()),
+				}
+			}
+			return fields
+		}, 0)
 	if err == nil {
 		fields = v.(map[string]*TableField)
 	}
 	return
 }
 
-//查询表的主键及唯一索引并存入缓存中
 func (db *dbOracle) getTableUniqueIndex(table string) (fields map[string]map[string]string, err error) {
 	table = strings.ToUpper(table)
 	v := db.cache.GetOrSetFunc("table_unique_index_"+table, func() interface{} {
@@ -172,7 +179,6 @@ func (db *dbOracle) getTableUniqueIndex(table string) (fields map[string]map[str
 		if err != nil {
 			return nil
 		}
-
 		fields := make(map[string]map[string]string)
 		for _, v := range res {
 			mm := make(map[string]string)
@@ -187,23 +193,11 @@ func (db *dbOracle) getTableUniqueIndex(table string) (fields map[string]map[str
 	return
 }
 
-// 支持insert、replace, save， ignore操作。
-// 0: insert:  仅仅执行写入操作，如果存在冲突的主键或者唯一索引，那么报错返回;
-// 1: replace: 如果数据存在(主键或者唯一索引)，那么删除后重新写入一条;
-// 2: save:    如果数据存在(主键或者唯一索引)，那么更新，否则写入一条新数据;
-// 3: ignore:  如果数据存在(主键或者唯一索引)，那么什么也不做,需ORACLE 11G以上版本
-//
-// 注意：对于replace/save/ignore操作只支持表中存在一个唯一索引或主键的情况，
-// 如存在多个唯一索引或主键有可能会执行失败，因为这3种类型的操作需指定唯一索引，没有唯一索引情况下统一执行insert
-//
-// 参数data支持map/struct/*struct/slice类型，
-// 当为slice(例如[]map/[]struct/[]*struct)类型时，batch参数生效，并自动切换为批量操作。
 func (db *dbOracle) doInsert(link dbLink, table string, data interface{}, option int, batch ...int) (result sql.Result, err error) {
 	var fields []string
 	var values []string
 	var params []interface{}
 	var dataMap Map
-	// 使用反射判断data数据类型，如果为slice类型，那么自动转为批量操作
 	rv := reflect.ValueOf(data)
 	kind := rv.Kind()
 	if kind == reflect.Ptr {
@@ -218,7 +212,7 @@ func (db *dbOracle) doInsert(link dbLink, table string, data interface{}, option
 	case reflect.Map:
 		fallthrough
 	case reflect.Struct:
-		dataMap = structToMap(data)
+		dataMap = varToMapDeep(data)
 	default:
 		return result, errors.New(fmt.Sprint("unsupported data type:", kind))
 	}
@@ -253,11 +247,11 @@ func (db *dbOracle) doInsert(link dbLink, table string, data interface{}, option
 	for k, v := range dataMap {
 		k = strings.ToUpper(k)
 
-		//操作类型为REPLACE/SAVE时且存在唯一索引才使用merge，否则使用insert
+		// 操作类型为REPLACE/SAVE时且存在唯一索引才使用merge，否则使用insert
 		if (option == gINSERT_OPTION_REPLACE || option == gINSERT_OPTION_SAVE) && indexExists {
 			fields = append(fields, tableAlias1+"."+charL+k+charR)
 			values = append(values, tableAlias2+"."+charL+k+charR)
-			params = append(params, convertParam(v))
+			params = append(params, v)
 
 			subSqlStr = append(subSqlStr, fmt.Sprintf("%s?%s %s", charL, charR, k))
 
@@ -270,7 +264,7 @@ func (db *dbOracle) doInsert(link dbLink, table string, data interface{}, option
 		} else {
 			fields = append(fields, charL+k+charR)
 			values = append(values, "?")
-			params = append(params, convertParam(v))
+			params = append(params, v)
 		}
 	}
 
@@ -285,23 +279,31 @@ func (db *dbOracle) doInsert(link dbLink, table string, data interface{}, option
 		case gINSERT_OPTION_REPLACE:
 			fallthrough
 		case gINSERT_OPTION_SAVE:
-			tmp := fmt.Sprintf("MERGE INTO %s %s USING(SELECT %s FROM DUAL) %s ON(%s) WHEN MATCHED THEN UPDATE SET %s WHEN NOT MATCHED THEN INSERT (%s) VALUES(%s)",
+			tmp := fmt.Sprintf(
+				"MERGE INTO %s %s USING(SELECT %s FROM DUAL) %s ON(%s) WHEN MATCHED THEN UPDATE SET %s WHEN NOT MATCHED THEN INSERT (%s) VALUES(%s)",
 				table, tableAlias1, strings.Join(subSqlStr, ","), tableAlias2,
-				strings.Join(onStr, "AND"), strings.Join(updateStr, ","), strings.Join(fields, ","), strings.Join(values, ","))
+				strings.Join(onStr, "AND"), strings.Join(updateStr, ","), strings.Join(fields, ","), strings.Join(values, ","),
+			)
 			return db.db.doExec(link, tmp, params...)
 		case gINSERT_OPTION_IGNORE:
 			return db.db.doExec(link,
-				fmt.Sprintf("INSERT /*+ IGNORE_ROW_ON_DUPKEY_INDEX(%s(%s)) */ INTO %s(%s) VALUES(%s)",
-					table, strings.Join(indexs, ","), table, strings.Join(fields, ","), strings.Join(values, ",")),
+				fmt.Sprintf(
+					"INSERT /*+ IGNORE_ROW_ON_DUPKEY_INDEX(%s(%s)) */ INTO %s(%s) VALUES(%s)",
+					table, strings.Join(indexs, ","), table, strings.Join(fields, ","), strings.Join(values, ","),
+				),
 				params...)
 		}
 	}
 
-	return db.db.doExec(link, fmt.Sprintf("INSERT INTO %s(%s) VALUES(%s)",
-		table, strings.Join(fields, ","), strings.Join(values, ",")), params...)
+	return db.db.doExec(
+		link,
+		fmt.Sprintf(
+			"INSERT INTO %s(%s) VALUES(%s)",
+			table, strings.Join(fields, ","), strings.Join(values, ","),
+		),
+		params...)
 }
 
-// 批量写入数据, 参数list支持slice类型，例如: []map/[]struct/[]*struct。
 func (db *dbOracle) doBatchInsert(link dbLink, table string, list interface{}, option int, batch ...int) (result sql.Result, err error) {
 	var keys []string
 	var values []string
@@ -330,12 +332,12 @@ func (db *dbOracle) doBatchInsert(link dbLink, table string, list interface{}, o
 		case reflect.Array:
 			listMap = make(List, rv.Len())
 			for i := 0; i < rv.Len(); i++ {
-				listMap[i] = structToMap(rv.Index(i).Interface())
+				listMap[i] = varToMapDeep(rv.Index(i).Interface())
 			}
 		case reflect.Map:
 			fallthrough
 		case reflect.Struct:
-			listMap = List{Map(structToMap(list))}
+			listMap = List{Map(varToMapDeep(list))}
 		default:
 			return result, errors.New(fmt.Sprint("unsupported list type:", kind))
 		}
@@ -387,7 +389,7 @@ func (db *dbOracle) doBatchInsert(link dbLink, table string, list interface{}, o
 	intoStr := make([]string, 0) //组装into语句
 	for i := 0; i < len(listMap); i++ {
 		for _, k := range keys {
-			params = append(params, convertParam(listMap[i][k]))
+			params = append(params, listMap[i][k])
 		}
 		values = append(values, valueHolderStr)
 

@@ -37,12 +37,11 @@ func Test_WebSocket(t *testing.T) {
 		}
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
-	// 等待启动完成
-	time.Sleep(200 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 	gtest.Case(t, func() {
 		conn, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf("ws://127.0.0.1:%d/ws", p), nil)
 		gtest.Assert(err, nil)

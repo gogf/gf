@@ -70,3 +70,23 @@ func IsEmpty(value interface{}) bool {
 	}
 	return false
 }
+
+// IsNil checks whether given <value> is nil.
+// Note that it might use reflect feature which affects performance a little bit.
+func IsNil(value interface{}) bool {
+	if value == nil {
+		return true
+	}
+	rv := reflect.ValueOf(value)
+	switch rv.Kind() {
+	case reflect.Chan,
+		reflect.Map,
+		reflect.Slice,
+		reflect.Func,
+		reflect.Ptr,
+		reflect.Interface,
+		reflect.UnsafePointer:
+		return rv.IsNil()
+	}
+	return false
+}

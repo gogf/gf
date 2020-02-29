@@ -27,12 +27,15 @@ func Test_StrArray_Basic(t *testing.T) {
 		array2 := garray.NewStrArrayFrom(expect, true)
 		array3 := garray.NewStrArrayFrom([]string{})
 		gtest.Assert(array.Slice(), expect)
+		gtest.Assert(array.Interfaces(), expect)
 		array.Set(0, "100")
 		gtest.Assert(array.Get(0), 100)
 		gtest.Assert(array.Get(1), 1)
 		gtest.Assert(array.Search("100"), 0)
 		gtest.Assert(array.Contains("100"), true)
 		gtest.Assert(array.Remove(0), 100)
+		gtest.Assert(array.Remove(-1), "")
+		gtest.Assert(array.Remove(100000), "")
 		gtest.Assert(array.Contains("100"), false)
 		array.Append("4")
 		gtest.Assert(array.Len(), 4)
@@ -176,6 +179,34 @@ func TestStrArray_Chunk(t *testing.T) {
 		gtest.Assert(chunks[2], []string{"5"})
 		gtest.Assert(len(array1.Chunk(0)), 0)
 	})
+	gtest.Case(t, func() {
+		a1 := []string{"1", "2", "3", "4", "5"}
+		array1 := garray.NewStrArrayFrom(a1)
+		chunks := array1.Chunk(3)
+		gtest.Assert(len(chunks), 2)
+		gtest.Assert(chunks[0], []string{"1", "2", "3"})
+		gtest.Assert(chunks[1], []string{"4", "5"})
+		gtest.Assert(array1.Chunk(0), nil)
+	})
+	gtest.Case(t, func() {
+		a1 := []string{"1", "2", "3", "4", "5", "6"}
+		array1 := garray.NewStrArrayFrom(a1)
+		chunks := array1.Chunk(2)
+		gtest.Assert(len(chunks), 3)
+		gtest.Assert(chunks[0], []string{"1", "2"})
+		gtest.Assert(chunks[1], []string{"3", "4"})
+		gtest.Assert(chunks[2], []string{"5", "6"})
+		gtest.Assert(array1.Chunk(0), nil)
+	})
+	gtest.Case(t, func() {
+		a1 := []string{"1", "2", "3", "4", "5", "6"}
+		array1 := garray.NewStrArrayFrom(a1)
+		chunks := array1.Chunk(3)
+		gtest.Assert(len(chunks), 2)
+		gtest.Assert(chunks[0], []string{"1", "2", "3"})
+		gtest.Assert(chunks[1], []string{"4", "5", "6"})
+		gtest.Assert(array1.Chunk(0), nil)
+	})
 }
 
 func TestStrArray_Pad(t *testing.T) {
@@ -248,12 +279,12 @@ func TestStrArray_Join(t *testing.T) {
 	gtest.Case(t, func() {
 		a1 := []string{"0", "1", "2", "3", "4", "5", "6"}
 		array1 := garray.NewStrArrayFrom(a1)
-		gtest.Assert(array1.Join("."), `"0"."1"."2"."3"."4"."5"."6"`)
+		gtest.Assert(array1.Join("."), `0.1.2.3.4.5.6`)
 	})
 	gtest.Case(t, func() {
 		a1 := []string{"0", "1", `"a"`, `\a`}
 		array1 := garray.NewStrArrayFrom(a1)
-		gtest.Assert(array1.Join("."), `"0"."1"."\"a\""."\\a"`)
+		gtest.Assert(array1.Join("."), `0.1."a".\a`)
 	})
 }
 
@@ -485,5 +516,104 @@ func TestStrArray_Json(t *testing.T) {
 		gtest.Assert(err, nil)
 		gtest.Assert(user.Name, data["Name"])
 		gtest.Assert(user.Scores, data["Scores"])
+	})
+}
+
+func TestStrArray_Iterator(t *testing.T) {
+	slice := g.SliceStr{"a", "b", "d", "c"}
+	array := garray.NewStrArrayFrom(slice)
+	gtest.Case(t, func() {
+		array.Iterator(func(k int, v string) bool {
+			gtest.Assert(v, slice[k])
+			return true
+		})
+	})
+	gtest.Case(t, func() {
+		array.IteratorAsc(func(k int, v string) bool {
+			gtest.Assert(v, slice[k])
+			return true
+		})
+	})
+	gtest.Case(t, func() {
+		array.IteratorDesc(func(k int, v string) bool {
+			gtest.Assert(v, slice[k])
+			return true
+		})
+	})
+	gtest.Case(t, func() {
+		index := 0
+		array.Iterator(func(k int, v string) bool {
+			index++
+			return false
+		})
+		gtest.Assert(index, 1)
+	})
+	gtest.Case(t, func() {
+		index := 0
+		array.IteratorAsc(func(k int, v string) bool {
+			index++
+			return false
+		})
+		gtest.Assert(index, 1)
+	})
+	gtest.Case(t, func() {
+		index := 0
+		array.IteratorDesc(func(k int, v string) bool {
+			index++
+			return false
+		})
+		gtest.Assert(index, 1)
+	})
+}
+
+func TestStrArray_RemoveValue(t *testing.T) {
+	slice := g.SliceStr{"a", "b", "d", "c"}
+	array := garray.NewStrArrayFrom(slice)
+	gtest.Case(t, func() {
+		gtest.Assert(array.RemoveValue("e"), false)
+		gtest.Assert(array.RemoveValue("b"), true)
+		gtest.Assert(array.RemoveValue("a"), true)
+		gtest.Assert(array.RemoveValue("c"), true)
+		gtest.Assert(array.RemoveValue("f"), false)
+	})
+}
+
+func TestStrArray_UnmarshalValue(t *testing.T) {
+	type T struct {
+		Name  string
+		Array *garray.StrArray
+	}
+	// JSON
+	gtest.Case(t, func() {
+		var t *T
+		err := gconv.Struct(g.Map{
+			"name":  "john",
+			"array": []byte(`["1","2","3"]`),
+		}, &t)
+		gtest.Assert(err, nil)
+		gtest.Assert(t.Name, "john")
+		gtest.Assert(t.Array.Slice(), g.SliceStr{"1", "2", "3"})
+	})
+	// Map
+	gtest.Case(t, func() {
+		var t *T
+		err := gconv.Struct(g.Map{
+			"name":  "john",
+			"array": g.SliceStr{"1", "2", "3"},
+		}, &t)
+		gtest.Assert(err, nil)
+		gtest.Assert(t.Name, "john")
+		gtest.Assert(t.Array.Slice(), g.SliceStr{"1", "2", "3"})
+	})
+}
+
+func TestStrArray_FilterEmpty(t *testing.T) {
+	gtest.Case(t, func() {
+		array := garray.NewStrArrayFrom(g.SliceStr{"", "1", "2", "0"})
+		gtest.Assert(array.FilterEmpty(), g.SliceStr{"1", "2", "0"})
+	})
+	gtest.Case(t, func() {
+		array := garray.NewStrArrayFrom(g.SliceStr{"1", "2"})
+		gtest.Assert(array.FilterEmpty(), g.SliceStr{"1", "2"})
 	})
 }

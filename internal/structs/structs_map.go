@@ -12,7 +12,9 @@ import (
 	"github.com/fatih/structs"
 )
 
-// MapField retrieves struct field as map[name/tag]*Field from <pointer>, and returns it.
+// MapField retrieves struct field as map[name/tag]*Field from <pointer>, and returns the map.
+//
+// The parameter <priority> specifies the priority tag array for retrieving from high to low.
 //
 // The parameter <recursive> specifies whether retrieving the struct field recursively.
 //
@@ -33,7 +35,10 @@ func MapField(pointer interface{}, priority []string, recursive bool) map[string
 		if name[0] < byte('A') || name[0] > byte('Z') {
 			continue
 		}
-		fieldMap[name] = field
+		fieldMap[name] = &Field{
+			Field: field,
+			Tag:   tag,
+		}
 		tag = ""
 		for _, p := range priority {
 			tag = field.Tag(p)
@@ -42,7 +47,10 @@ func MapField(pointer interface{}, priority []string, recursive bool) map[string
 			}
 		}
 		if tag != "" {
-			fieldMap[tag] = field
+			fieldMap[tag] = &Field{
+				Field: field,
+				Tag:   tag,
+			}
 		}
 		if recursive {
 			rv := reflect.ValueOf(field.Value())

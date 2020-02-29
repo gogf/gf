@@ -25,17 +25,15 @@ func MiddlewareCORS(r *ghttp.Request) {
 
 func MiddlewareLog(r *ghttp.Request) {
 	r.Middleware.Next()
-	glog.Println(r.Response.Status, r.URL.Path)
+	g.Log().Println(r.Response.Status, r.URL.Path)
 }
 
 func main() {
 	s := g.Server()
-	s.Group("/", func(g *ghttp.RouterGroup) {
-		g.Middleware(MiddlewareLog)
-	})
-	s.Group("/api.v2", func(g *ghttp.RouterGroup) {
-		g.Middleware(MiddlewareAuth, MiddlewareCORS)
-		g.ALL("/user/list", func(r *ghttp.Request) {
+	s.Use(MiddlewareLog)
+	s.Group("/api.v2", func(group *ghttp.RouterGroup) {
+		group.Middleware(MiddlewareAuth, MiddlewareCORS)
+		group.ALL("/user/list", func(r *ghttp.Request) {
 			panic("custom error")
 		})
 	})

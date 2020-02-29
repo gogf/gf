@@ -10,8 +10,6 @@ import (
 	"io"
 	"net"
 	"time"
-
-	"github.com/gogf/gf/errors/gerror"
 )
 
 // Conn handles the UDP connection.
@@ -156,7 +154,7 @@ func (c *Conn) Recv(length int, retry ...Retry) ([]byte, error) {
 				if retry[0].Interval == 0 {
 					retry[0].Interval = gDEFAULT_RETRY_INTERVAL
 				}
-				time.Sleep(time.Duration(retry[0].Interval) * time.Millisecond)
+				time.Sleep(retry[0].Interval)
 				continue
 			}
 			break
@@ -183,9 +181,7 @@ func (c *Conn) RecvWithTimeout(length int, timeout time.Duration, retry ...Retry
 	if err := c.SetRecvDeadline(time.Now().Add(timeout)); err != nil {
 		return nil, err
 	}
-	defer func() {
-		err = gerror.Wrap(c.SetRecvDeadline(time.Time{}), "SetRecvDeadline error")
-	}()
+	defer c.SetRecvDeadline(time.Time{})
 	data, err = c.Recv(length, retry...)
 	return
 }
@@ -195,9 +191,7 @@ func (c *Conn) SendWithTimeout(data []byte, timeout time.Duration, retry ...Retr
 	if err := c.SetSendDeadline(time.Now().Add(timeout)); err != nil {
 		return err
 	}
-	defer func() {
-		err = gerror.Wrap(c.SetSendDeadline(time.Time{}), "SetSendDeadline error")
-	}()
+	defer c.SetSendDeadline(time.Time{})
 	err = c.Send(data, retry...)
 	return
 }

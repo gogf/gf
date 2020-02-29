@@ -14,32 +14,32 @@ import (
 	"github.com/gogf/gf/os/grpool"
 )
 
-const (
-	LEVEL_ALL  = LEVEL_DEBU | LEVEL_INFO | LEVEL_NOTI | LEVEL_WARN | LEVEL_ERRO | LEVEL_CRIT
-	LEVEL_DEV  = LEVEL_ALL
-	LEVEL_PROD = LEVEL_WARN | LEVEL_ERRO | LEVEL_CRIT
-	LEVEL_DEBU = 1 << iota
-	LEVEL_INFO
-	LEVEL_NOTI
-	LEVEL_WARN
-	LEVEL_ERRO
-	LEVEL_CRIT
-)
-
 var (
 	// Default logger object, for package method usage
 	logger = New()
 	// Goroutine pool for async logging output.
+	// It uses only one asynchronize worker to ensure log sequence.
 	asyncPool = grpool.New(1)
+	// defaultDebug enables debug level or not in default,
+	// which can be configured using command option or system environment.
+	defaultDebug = true
 )
 
 func init() {
-	SetDebug(cmdenv.Get("gf.glog.debug", true).Bool())
+	defaultDebug = cmdenv.Get("gf.glog.debug", true).Bool()
+	SetDebug(defaultDebug)
 }
 
 // Default returns the default logger.
-func Default() *Logger {
+func DefaultLogger() *Logger {
 	return logger
+}
+
+// SetDefaultLogger sets the default logger for package glog.
+// Note that there might be concurrent safety issue if calls this function
+// in different goroutines.
+func SetDefaultLogger(l *Logger) {
+	logger = l
 }
 
 // SetPath sets the directory path for file logging.

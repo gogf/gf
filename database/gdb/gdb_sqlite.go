@@ -3,24 +3,24 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
+//
+// Note:
+// 1. It needs manually import: _ "github.com/mattn/go-sqlite3"
+// 2. It does not support Save/Replace features.
 
 package gdb
 
 import (
 	"database/sql"
+	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/text/gstr"
 )
 
-// 使用时需要import:
-// _ "github.com/mattn/go-sqlite3"
-
-// Sqlite接口对象
-// @author wxkj<wxscz@qq.com>
-
-// 数据库链接对象
 type dbSqlite struct {
 	*dbBase
 }
 
+// Open creates and returns a underlying sql.DB object for sqlite.
 func (db *dbSqlite) Open(config *ConfigNode) (*sql.DB, error) {
 	var source string
 	if config.LinkInfo != "" {
@@ -28,6 +28,7 @@ func (db *dbSqlite) Open(config *ConfigNode) (*sql.DB, error) {
 	} else {
 		source = config.Name
 	}
+	intlog.Printf("Open: %s", source)
 	if db, err := sql.Open("sqlite3", source); err == nil {
 		return db, nil
 	} else {
@@ -35,26 +36,30 @@ func (db *dbSqlite) Open(config *ConfigNode) (*sql.DB, error) {
 	}
 }
 
-// 获得关键字操作符
+// getChars returns the security char for this type of database.
 func (db *dbSqlite) getChars() (charLeft string, charRight string) {
 	return "`", "`"
 }
 
-// 返回当前数据库所有的数据表名称
+// Tables retrieves and returns the tables of current schema.
 // TODO
-func (bs *dbSqlite) Tables() (tables []string, err error) {
+func (db *dbSqlite) Tables(schema ...string) (tables []string, err error) {
 	return
 }
 
-// 获得指定表表的数据结构，构造成map哈希表返回，其中键名为表字段名称，键值为字段数据结构.
+// TableFields retrieves and returns the fields information of specified table of current schema.
 // TODO
-func (db *dbSqlite) TableFields(table string) (fields map[string]*TableField, err error) {
+func (db *dbSqlite) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
+	table = gstr.Trim(table)
+	if gstr.Contains(table, " ") {
+		panic("function TableFields supports only single table operations")
+	}
 	return
 }
 
-// 在执行sql之前对sql进行进一步处理。
+// handleSqlBeforeExec deals with the sql string before commits it to underlying sql driver.
 // @todo 需要增加对Save方法的支持，可使用正则来实现替换，
 // @todo 将ON DUPLICATE KEY UPDATE触发器修改为两条SQL语句(INSERT OR IGNORE & UPDATE)
-func (db *dbSqlite) handleSqlBeforeExec(query string) string {
-	return query
+func (db *dbSqlite) handleSqlBeforeExec(sql string) string {
+	return sql
 }

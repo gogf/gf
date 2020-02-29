@@ -8,38 +8,33 @@ package ghttp
 
 import (
 	"bytes"
-	"reflect"
-	"runtime"
+	"github.com/gogf/gf/debug/gdebug"
 	"strings"
 
-	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/text/gstr"
 )
 
 // 注意该方法是直接绑定函数的内存地址，执行的时候直接执行该方法，不会存在初始化新的控制器逻辑
 func (s *Server) BindHandler(pattern string, handler HandlerFunc) {
-	s.bindHandlerItem(pattern, &handlerItem{
-		itemName: runtime.FuncForPC(reflect.ValueOf(handler).Pointer()).Name(),
-		itemType: gHANDLER_TYPE_HANDLER,
-		itemFunc: handler,
-	})
+	s.doBindHandler(pattern, handler, nil)
 }
 
 // 绑定URI到操作函数/方法
 // pattern的格式形如：/user/list, put:/user, delete:/user, post:/user@johng.cn
 // 支持RESTful的请求格式，具体业务逻辑由绑定的处理方法来执行
-func (s *Server) bindHandlerItem(pattern string, item *handlerItem) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error("server handlers cannot be changed while running")
-		return
-	}
-	s.setHandler(pattern, item)
+func (s *Server) doBindHandler(pattern string, handler HandlerFunc, middleware []HandlerFunc) {
+	s.setHandler(pattern, &handlerItem{
+		itemName:   gdebug.FuncPath(handler),
+		itemType:   gHANDLER_TYPE_HANDLER,
+		itemFunc:   handler,
+		middleware: middleware,
+	})
 }
 
-// 通过映射数组绑定URI到操作函数/方法
-func (s *Server) bindHandlerByMap(m handlerMap) {
+// 通过映射map绑定URI到操作函数/方法
+func (s *Server) bindHandlerByMap(m map[string]*handlerItem) {
 	for p, h := range m {
-		s.bindHandlerItem(p, h)
+		s.setHandler(p, h)
 	}
 }
 
@@ -48,8 +43,8 @@ func (s *Server) bindHandlerByMap(m handlerMap) {
 // 规则2：pattern中的URI包含{.method}关键字，则替换该关键字为方法名称；
 // 规则2：如果不满足规则1，那么直接将防发明附加到pattern中的URI后面；
 func (s *Server) mergeBuildInNameToPattern(pattern string, structName, methodName string, allowAppend bool) string {
-	structName = s.nameToUrlPart(structName)
-	methodName = s.nameToUrlPart(methodName)
+	structName = s.nameToUri(structName)
+	methodName = s.nameToUri(methodName)
 	pattern = strings.Replace(pattern, "{.struct}", structName, -1)
 	if strings.Index(pattern, "{.method}") != -1 {
 		return strings.Replace(pattern, "{.method}", methodName, -1)
@@ -75,7 +70,7 @@ func (s *Server) mergeBuildInNameToPattern(pattern string, structName, methodNam
 // 规则1: 不处理名称，以原有名称构建成URI
 // 规则2: 仅转为小写，单词间不使用连接符号
 // 规则3: 采用驼峰命名方式
-func (s *Server) nameToUrlPart(name string) string {
+func (s *Server) nameToUri(name string) string {
 	switch s.config.NameToUriType {
 	case URI_TYPE_FULLNAME:
 		return name

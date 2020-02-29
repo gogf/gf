@@ -10,55 +10,70 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/container/garray"
+	"github.com/gogf/gf/container/gmap"
 	"reflect"
-	"strings"
+	"time"
 
 	"github.com/gogf/gf/container/gset"
 	"github.com/gogf/gf/text/gstr"
 
-	"github.com/gogf/gf/container/gmap"
-
 	"github.com/gogf/gf/util/gconv"
 )
 
-// 数据库链式操作模型对象
+// Model is the DAO for ORM.
 type Model struct {
-	db           DB            // 数据库操作对象
-	tx           *TX           // 数据库事务对象
-	linkType     int           // 连接对象类型(用于主从集群时开发者自定义操作对象)
-	tablesInit   string        // 初始化Model时的表名称(可以是多个)
-	tables       string        // 数据库操作表
-	fields       string        // 操作字段
-	where        string        // 操作条件
-	whereArgs    []interface{} // 操作条件参数
-	groupBy      string        // 分组语句
-	orderBy      string        // 排序语句
-	start        int           // 分页开始
-	limit        int           // 分页条数
-	option       int           // 操作选项
-	offset       int           // 查询偏移量(OFFSET语法)
-	data         interface{}   // 操作数据(注意仅支持Map/List/string类型)
-	batch        int           // 批量操作条数
-	filter       bool          // 是否按照表字段过滤data参数
-	cacheEnabled bool          // 当前SQL操作是否开启查询缓存功能
-	cacheTime    int           // 查询缓存时间
-	cacheName    string        // 查询缓存名称
-	safe         bool          // 当前模型是否安全模式（默认非安全表示链式操作直接修改当前模型属性；否则每一次链式操作都是返回新的模型对象）
+	db            DB             // Underlying DB interface.
+	tx            *TX            // Underlying TX interface.
+	schema        string         // Custom database schema.
+	linkType      int            // Mark for operation on master or slave.
+	tablesInit    string         // Table names when model initialization.
+	tables        string         // Operation table names, which can be more than one table names and aliases, like: "user", "user u", "user u, user_detail ud".
+	fields        string         // Operation fields, multiple fields joined using char ','.
+	fieldsEx      string         // Excluded operation fields, multiple fields joined using char ','.
+	whereArgs     []interface{}  // Arguments for where operation.
+	whereHolder   []*whereHolder // Condition strings for where operation.
+	groupBy       string         // Used for "group by" statement.
+	orderBy       string         // Used for "order by" statement.
+	start         int            // Used for "select ... start, limit ..." statement.
+	limit         int            // Used for "select ... start, limit ..." statement.
+	option        int            // Option for extra operation features.
+	offset        int            // Offset statement for some databases grammar.
+	data          interface{}    // Data for operation, which can be type of map/[]map/struct/*struct/string, etc.
+	batch         int            // Batch number for batch Insert/Replace/Save operations.
+	filter        bool           // Filter data and where key-value pairs according to the fields of the table.
+	cacheEnabled  bool           // Enable sql result cache feature.
+	cacheDuration time.Duration  // Cache TTL duration.
+	cacheName     string         // Cache name for custom operation.
+	safe          bool           // If true, it clones and returns a new model object whenever operation done; or else it changes the attribute of current model.
+}
+
+// whereHolder is the holder for where condition preparing.
+type whereHolder struct {
+	operator int           // Operator for this holder.
+	where    interface{}   // Where parameter.
+	args     []interface{} // Arguments for where parameter.
 }
 
 const (
-	gLINK_TYPE_MASTER = 1
-	gLINK_TYPE_SLAVE  = 2
-	OPTION_OMITEMPTY  = 1 << iota
+	gLINK_TYPE_MASTER   = 1
+	gLINK_TYPE_SLAVE    = 2
+	gWHERE_HOLDER_WHERE = 1
+	gWHERE_HOLDER_AND   = 2
+	gWHERE_HOLDER_OR    = 3
+	OPTION_OMITEMPTY    = 1 << iota
 	OPTION_ALLOWEMPTY
 )
 
-// 链式操作，数据表字段，可支持多个表，以半角逗号连接
-func (bs *dbBase) Table(tables string) *Model {
+// Table creates and returns a new ORM model from given schema.
+// The parameter <tables> can be more than one table names, like :
+// "user", "user u", "user, user_detail", "user u, user_detail ud"
+func (bs *dbBase) Table(table string) *Model {
+	table = bs.db.handleTableName(table)
 	return &Model{
 		db:         bs.db,
-		tablesInit: tables,
-		tables:     bs.db.quoteWord(tables),
+		tablesInit: table,
+		tables:     table,
 		fields:     "*",
 		start:      -1,
 		offset:     -1,
@@ -67,18 +82,28 @@ func (bs *dbBase) Table(tables string) *Model {
 	}
 }
 
-// 链式操作，数据表字段，可支持多个表，以半角逗号连接
-func (bs *dbBase) From(tables string) *Model {
-	return bs.db.Table(tables)
+// Model is alias of dbBase.Table.
+// See dbBase.Table.
+func (bs *dbBase) Model(table string) *Model {
+	return bs.db.Table(table)
 }
 
-// (事务)链式操作，数据表字段，可支持多个表，以半角逗号连接
-func (tx *TX) Table(tables string) *Model {
+// From is alias of dbBase.Table.
+// See dbBase.Table.
+// Deprecated.
+func (bs *dbBase) From(table string) *Model {
+	return bs.db.Table(table)
+}
+
+// Table acts like dbBase.Table except it operates on transaction.
+// See dbBase.Table.
+func (tx *TX) Table(table string) *Model {
+	table = tx.db.handleTableName(table)
 	return &Model{
 		db:         tx.db,
 		tx:         tx,
-		tablesInit: tables,
-		tables:     tx.db.quoteWord(tables),
+		tablesInit: table,
+		tables:     table,
 		fields:     "*",
 		start:      -1,
 		offset:     -1,
@@ -87,166 +112,328 @@ func (tx *TX) Table(tables string) *Model {
 	}
 }
 
-// (事务)链式操作，数据表字段，可支持多个表，以半角逗号连接
-func (tx *TX) From(tables string) *Model {
-	return tx.Table(tables)
+// Model is alias of tx.Table.
+// See tx.Table.
+func (tx *TX) Model(table string) *Model {
+	return tx.Table(table)
 }
 
-// 克隆一个当前对象
-func (md *Model) Clone() *Model {
-	newModel := (*Model)(nil)
-	if md.tx != nil {
-		newModel = md.tx.Table(md.tablesInit)
-	} else {
-		newModel = md.db.Table(md.tablesInit)
+// From is alias of tx.Table.
+// See tx.Table.
+// Deprecated.
+func (tx *TX) From(table string) *Model {
+	return tx.Table(table)
+}
+
+// As sets an alias name for current table.
+func (m *Model) As(as string) *Model {
+	if m.tables != "" {
+		model := m.getModel()
+		model.tables = gstr.TrimRight(model.tables) + " AS " + as
+		return model
 	}
-	*newModel = *md
+	return m
+}
+
+// DB sets/changes the db object for current operation.
+func (m *Model) DB(db DB) *Model {
+	model := m.getModel()
+	model.db = db
+	return model
+}
+
+// TX sets/changes the transaction for current operation.
+func (m *Model) TX(tx *TX) *Model {
+	model := m.getModel()
+	model.tx = tx
+	return model
+}
+
+// Schema sets the schema for current operation.
+func (m *Model) Schema(schema string) *Model {
+	model := m.getModel()
+	model.schema = schema
+	return model
+}
+
+// Clone creates and returns a new model which is a clone of current model.
+// Note that it uses deep-copy for the clone.
+func (m *Model) Clone() *Model {
+	newModel := (*Model)(nil)
+	if m.tx != nil {
+		newModel = m.tx.Table(m.tablesInit)
+	} else {
+		newModel = m.db.Table(m.tablesInit)
+	}
+	*newModel = *m
+	// Deep copy slice attributes.
+	if n := len(m.whereArgs); n > 0 {
+		newModel.whereArgs = make([]interface{}, n)
+		copy(newModel.whereArgs, m.whereArgs)
+	}
+	if n := len(m.whereHolder); n > 0 {
+		newModel.whereHolder = make([]*whereHolder, n)
+		copy(newModel.whereHolder, m.whereHolder)
+	}
 	return newModel
 }
 
-// 设置本次链式操作在主节点上
-func (md *Model) Master() *Model {
-	model := md.getModel()
+// Master marks the following operation on master node.
+func (m *Model) Master() *Model {
+	model := m.getModel()
 	model.linkType = gLINK_TYPE_MASTER
 	return model
 }
 
-// 设置本次链式操作在从节点上
-func (md *Model) Slave() *Model {
-	model := md.getModel()
+// Slave marks the following operation on slave node.
+// Note that it makes sense only if there's any slave node configured.
+func (m *Model) Slave() *Model {
+	model := m.getModel()
 	model.linkType = gLINK_TYPE_SLAVE
 	return model
 }
 
-// 标识当前对象运行安全模式(可被修改)。
-// 1. 默认情况下，模型对象的对象属性无法被修改，
-// 每一次链式操作都是克隆一个新的模型对象，这样所有的操作都不会污染模型对象。
-// 但是链式操作如果需要分开执行，那么需要将新的克隆对象赋值给旧的模型对象继续操作。
-// 2. 当标识模型对象为可修改，那么在当前模型对象的所有链式操作均会影响下一次的链式操作，
-// 即使是链式操作分开执行。
-// 3. 大部分ORM框架默认模型对象是可修改的，但是GF框架的ORM提供给开发者更灵活，更安全的链式操作选项。
-func (md *Model) Safe(safe ...bool) *Model {
+// Safe marks this model safe or unsafe. If safe is true, it clones and returns a new model object
+// whenever the operation done, or else it changes the attribute of current model.
+func (m *Model) Safe(safe ...bool) *Model {
 	if len(safe) > 0 {
-		md.safe = safe[0]
+		m.safe = safe[0]
 	} else {
-		md.safe = true
+		m.safe = true
 	}
-	return md
+	return m
 }
 
-// 返回操作的模型对象，可能是当前对象，也可能是新的克隆对象，根据alterable决定。
-func (md *Model) getModel() *Model {
-	if !md.safe {
-		return md
+// getModel creates and returns a cloned model of current model if <safe> is true, or else it returns
+// the current model.
+func (m *Model) getModel() *Model {
+	if !m.safe {
+		return m
 	} else {
-		return md.Clone()
+		return m.Clone()
 	}
 }
 
-// 链式操作，左联表
-func (md *Model) LeftJoin(joinTable string, on string) *Model {
-	model := md.getModel()
-	model.tables += fmt.Sprintf(" LEFT JOIN %s ON (%s)", joinTable, on)
+// LeftJoin does "LEFT JOIN ... ON ..." statement on the model.
+func (m *Model) LeftJoin(table string, on string) *Model {
+	model := m.getModel()
+	model.tables += fmt.Sprintf(" LEFT JOIN %s ON (%s)", m.db.handleTableName(table), on)
 	return model
 }
 
-// 链式操作，右联表
-func (md *Model) RightJoin(joinTable string, on string) *Model {
-	model := md.getModel()
-	model.tables += fmt.Sprintf(" RIGHT JOIN %s ON (%s)", joinTable, on)
+// RightJoin does "RIGHT JOIN ... ON ..." statement on the model.
+func (m *Model) RightJoin(table string, on string) *Model {
+	model := m.getModel()
+	model.tables += fmt.Sprintf(" RIGHT JOIN %s ON (%s)", m.db.handleTableName(table), on)
 	return model
 }
 
-// 链式操作，内联表
-func (md *Model) InnerJoin(joinTable string, on string) *Model {
-	model := md.getModel()
-	model.tables += fmt.Sprintf(" INNER JOIN %s ON (%s)", joinTable, on)
+// InnerJoin does "INNER JOIN ... ON ..." statement on the model.
+func (m *Model) InnerJoin(table string, on string) *Model {
+	model := m.getModel()
+	model.tables += fmt.Sprintf(" INNER JOIN %s ON (%s)", m.db.handleTableName(table), on)
 	return model
 }
 
-// 链式操作，查询字段
-func (md *Model) Fields(fields string) *Model {
-	model := md.getModel()
+// Fields sets the operation fields of the model, multiple fields joined using char ','.
+func (m *Model) Fields(fields string) *Model {
+	model := m.getModel()
 	model.fields = fields
 	return model
 }
 
-// 链式操作，选项设置
-func (md *Model) Option(option int) *Model {
-	model := md.getModel()
-	model.option = option
+// FieldsEx sets the excluded operation fields of the model, multiple fields joined using char ','.
+func (m *Model) FieldsEx(fields string) *Model {
+	if gstr.Contains(m.tables, " ") {
+		panic("function FieldsEx supports only single table operations")
+	}
+	model := m.getModel()
+	model.fieldsEx = fields
+	fieldsExSet := gset.NewStrSetFrom(gstr.SplitAndTrim(fields, ","))
+	if m, err := m.db.TableFields(m.tables); err == nil {
+		model.fields = ""
+		for k, _ := range m {
+			if fieldsExSet.Contains(k) {
+				continue
+			}
+			if len(model.fields) > 0 {
+				model.fields += ","
+			}
+			model.fields += k
+		}
+	}
 	return model
 }
 
-// 链式操作，过滤字段
-func (md *Model) Filter() *Model {
-	model := md.getModel()
+// FieldsStr retrieves and returns all fields from the table, joined with char ','.
+// The optional parameter <prefix> specifies the prefix for each field, eg: FieldsStr("u.").
+func (m *Model) FieldsStr(prefix ...string) string {
+	prefixStr := ""
+	if len(prefix) > 0 {
+		prefixStr = prefix[0]
+	}
+	if m, err := m.db.TableFields(m.tables); err == nil {
+		fieldsArray := garray.NewStrArraySize(len(m), len(m))
+		for _, field := range m {
+			fieldsArray.Set(field.Index, prefixStr+field.Name)
+		}
+		return fieldsArray.Join(",")
+	}
+	return ""
+}
+
+// FieldsExStr retrieves and returns fields which are not in parameter <fields> from the table,
+// joined with char ','.
+// The parameter <fields> specifies the fields that are excluded.
+// The optional parameter <prefix> specifies the prefix for each field, eg: FieldsExStr("id", "u.").
+func (m *Model) FieldsExStr(fields string, prefix ...string) string {
+	prefixStr := ""
+	if len(prefix) > 0 {
+		prefixStr = prefix[0]
+	}
+	if m, err := m.db.TableFields(m.tables); err == nil {
+		fieldsArray := garray.NewStrArraySize(len(m), len(m))
+		fieldsExSet := gset.NewStrSetFrom(gstr.SplitAndTrim(fields, ","))
+		for _, field := range m {
+			if fieldsExSet.Contains(field.Name) {
+				continue
+			}
+			fieldsArray.Set(field.Index, prefixStr+field.Name)
+		}
+		fieldsArray.FilterEmpty()
+		return fieldsArray.Join(",")
+	}
+	return ""
+}
+
+// Option adds extra operation option for the model.
+func (m *Model) Option(option int) *Model {
+	model := m.getModel()
+	model.option = model.option | option
+	return model
+}
+
+// OptionOmitEmpty sets OPTION_OMITEMPTY option for the model, which automatically filers
+// the data and where attributes for empty values.
+// Deprecated, use OmitEmpty instead.
+func (m *Model) OptionOmitEmpty() *Model {
+	return m.Option(OPTION_OMITEMPTY)
+}
+
+// OmitEmpty sets OPTION_OMITEMPTY option for the model, which automatically filers
+// the data and where attributes for empty values.
+func (m *Model) OmitEmpty() *Model {
+	return m.Option(OPTION_OMITEMPTY)
+}
+
+// Filter marks filtering the fields which does not exist in the fields of the operated table.
+func (m *Model) Filter() *Model {
+	if gstr.Contains(m.tables, " ") {
+		panic("function Filter supports only single table operations")
+	}
+	model := m.getModel()
 	model.filter = true
 	return model
 }
 
-// 链式操作，condition，支持string & gdb.Map.
-// 注意，多个Where调用时，会自动转换为And条件调用。
-func (md *Model) Where(where interface{}, args ...interface{}) *Model {
-	model := md.getModel()
-	if model.where != "" {
-		return md.And(where, args...)
+// Where sets the condition statement for the model. The parameter <where> can be type of
+// string/map/gmap/slice/struct/*struct, etc. Note that, if it's called more than one times,
+// multiple conditions will be joined into where statement using "AND".
+// Eg:
+// Where("uid=10000")
+// Where("uid", 10000)
+// Where("money>? AND name like ?", 99999, "vip_%")
+// Where("uid", 1).Where("name", "john")
+// Where("status IN (?)", g.Slice{1,2,3})
+// Where("age IN(?,?)", 18, 50)
+// Where(User{ Id : 1, UserName : "john"})
+func (m *Model) Where(where interface{}, args ...interface{}) *Model {
+	model := m.getModel()
+	if model.whereHolder == nil {
+		model.whereHolder = make([]*whereHolder, 0)
 	}
-	newWhere, newArgs := md.db.formatWhere(where, args)
-	model.where = newWhere
-	model.whereArgs = newArgs
+	model.whereHolder = append(model.whereHolder, &whereHolder{
+		operator: gWHERE_HOLDER_WHERE,
+		where:    where,
+		args:     args,
+	})
 	return model
 }
 
-// 链式操作，添加AND条件到Where中
-func (md *Model) And(where interface{}, args ...interface{}) *Model {
-	model := md.getModel()
-	newWhere, newArgs := md.db.formatWhere(where, args)
-	if len(model.where) > 0 && model.where[0] == '(' {
-		model.where = fmt.Sprintf(`%s AND (%s)`, model.where, newWhere)
-	} else {
-		model.where = fmt.Sprintf(`(%s) AND (%s)`, model.where, newWhere)
+// WherePri does the same logic as Model.Where except that if the parameter <where>
+// is a single condition like int/string/float/slice, it treats the condition as the primary
+// key value. That is, if primary key is "id" and given <where> parameter as "123", the
+// WherePri function treats it as "id=123", but Model.Where treats it as string "123".
+func (m *Model) WherePri(where interface{}, args ...interface{}) *Model {
+	if len(args) > 0 {
+		return m.Where(where, args...)
 	}
-	model.whereArgs = append(model.whereArgs, newArgs...)
-	return model
+	newWhere := GetPrimaryKeyCondition(m.getPrimaryKey(), where)
+	return m.Where(newWhere[0], newWhere[1:]...)
 }
 
-// 链式操作，添加OR条件到Where中
-func (md *Model) Or(where interface{}, args ...interface{}) *Model {
-	model := md.getModel()
-	newWhere, newArgs := md.db.formatWhere(where, args)
-	if len(model.where) > 0 && model.where[0] == '(' {
-		model.where = fmt.Sprintf(`%s OR (%s)`, model.where, newWhere)
-	} else {
-		model.where = fmt.Sprintf(`(%s) OR (%s)`, model.where, newWhere)
+// And adds "AND" condition to the where statement.
+func (m *Model) And(where interface{}, args ...interface{}) *Model {
+	model := m.getModel()
+	if model.whereHolder == nil {
+		model.whereHolder = make([]*whereHolder, 0)
 	}
-	model.whereArgs = append(model.whereArgs, newArgs...)
+	model.whereHolder = append(model.whereHolder, &whereHolder{
+		operator: gWHERE_HOLDER_AND,
+		where:    where,
+		args:     args,
+	})
 	return model
 }
 
-// 链式操作，group by
-func (md *Model) GroupBy(groupBy string) *Model {
-	model := md.getModel()
-	model.groupBy = groupBy
+// Or adds "OR" condition to the where statement.
+func (m *Model) Or(where interface{}, args ...interface{}) *Model {
+	model := m.getModel()
+	if model.whereHolder == nil {
+		model.whereHolder = make([]*whereHolder, 0)
+	}
+	model.whereHolder = append(model.whereHolder, &whereHolder{
+		operator: gWHERE_HOLDER_OR,
+		where:    where,
+		args:     args,
+	})
 	return model
 }
 
-// 链式操作，order by
-func (md *Model) OrderBy(orderBy string) *Model {
-	model := md.getModel()
-	array := strings.Split(orderBy, " ")
-	array[0] = md.db.quoteWord(array[0])
-	model.orderBy = strings.Join(array, " ")
+// Group sets the "GROUP BY" statement for the model.
+func (m *Model) Group(groupBy string) *Model {
+	model := m.getModel()
+	model.groupBy = m.db.quoteString(groupBy)
 	return model
 }
 
-// 链式操作，limit。
-//
-// 如果给定一个参数，那么生成的SQL为：LIMIT limit[0]
-//
-// 如果给定两个参数，那么生成的SQL为：LIMIT limit[0], limit[1]
-func (md *Model) Limit(limit ...int) *Model {
-	model := md.getModel()
+// GroupBy is alias of Model.Group.
+// See Model.Group.
+// Deprecated.
+func (m *Model) GroupBy(groupBy string) *Model {
+	return m.Group(groupBy)
+}
+
+// Order sets the "ORDER BY" statement for the model.
+func (m *Model) Order(orderBy string) *Model {
+	model := m.getModel()
+	model.orderBy = m.db.quoteString(orderBy)
+	return model
+}
+
+// OrderBy is alias of Model.Order.
+// See Model.Order.
+// Deprecated.
+func (m *Model) OrderBy(orderBy string) *Model {
+	return m.Order(orderBy)
+}
+
+// Limit sets the "LIMIT" statement for the model.
+// The parameter <limit> can be either one or two number, if passed two number is passed,
+// it then sets "LIMIT limit[0],limit[1]" statement for the model, or else it sets "LIMIT limit[0]"
+// statement.
+func (m *Model) Limit(limit ...int) *Model {
+	model := m.getModel()
 	switch len(limit) {
 	case 1:
 		model.limit = limit[0]
@@ -257,50 +444,75 @@ func (md *Model) Limit(limit ...int) *Model {
 	return model
 }
 
-// 链式操作，OFFSET语法（部分数据库支持）。
-// 注意：可以使用Limit方法调用替换该方法特性，底层不同数据库将会自动替换LIMIT语法为OFFSET语法。
-func (md *Model) Offset(offset int) *Model {
-	model := md.getModel()
+// Offset sets the "OFFSET" statement for the model.
+// It only makes sense for some databases like SQLServer, PostgreSQL, etc.
+func (m *Model) Offset(offset int) *Model {
+	model := m.getModel()
 	model.offset = offset
 	return model
 }
 
-// 链式操作，翻页，注意分页页码从1开始，而Limit方法从0开始。
-func (md *Model) ForPage(page, limit int) *Model {
-	model := md.getModel()
+// Page sets the paging number for the model.
+// The parameter <page> is started from 1 for paging.
+// Note that, it differs that the Limit function start from 0 for "LIMIT" statement.
+func (m *Model) Page(page, limit int) *Model {
+	model := m.getModel()
+	if page <= 0 {
+		page = 1
+	}
 	model.start = (page - 1) * limit
 	model.limit = limit
 	return model
 }
 
-// 设置批处理的大小
-func (md *Model) Batch(batch int) *Model {
-	model := md.getModel()
+// ForPage is alias of Model.Page.
+// See Model.Page.
+// Deprecated.
+func (m *Model) ForPage(page, limit int) *Model {
+	return m.Page(page, limit)
+}
+
+// Batch sets the batch operation number for the model.
+func (m *Model) Batch(batch int) *Model {
+	model := m.getModel()
 	model.batch = batch
 	return model
 }
 
-// 查询缓存/清除缓存操作，需要注意的是，事务查询不支持缓存。
-// 当time < 0时表示清除缓存， time=0时表示不过期, time > 0时表示过期时间，time过期时间单位：秒；
-// name表示自定义的缓存名称，便于业务层精准定位缓存项(如果业务层需要手动清理时，必须指定缓存名称)，
-// 例如：查询缓存时设置名称，清理缓存时可以给定清理的缓存名称进行精准清理。
-func (md *Model) Cache(time int, name ...string) *Model {
-	model := md.getModel()
-	model.cacheTime = time
+// Cache sets the cache feature for the model. It caches the result of the sql, which means
+// if there's another same sql request, it just reads and returns the result from cache, it
+// but not committed and executed into the database.
+//
+// If the parameter <duration> < 0, which means it clear the cache with given <name>.
+// If the parameter <duration> = 0, which means it never expires.
+// If the parameter <duration> > 0, which means it expires after <duration>.
+//
+// The optional parameter <name> is used to bind a name to the cache, which means you can later
+// control the cache like changing the <duration> or clearing the cache with specified <name>.
+//
+// Note that, the cache feature is disabled if the model is operating on a transaction.
+func (m *Model) Cache(duration time.Duration, name ...string) *Model {
+	model := m.getModel()
+	model.cacheDuration = duration
 	if len(name) > 0 {
 		model.cacheName = name[0]
 	}
-	// 查询缓存特性不支持事务操作
+	// It does not support cache on transaction.
 	if model.tx == nil {
 		model.cacheEnabled = true
 	}
 	return model
 }
 
-// 链式操作，操作数据项，参数data类型支持 string/map/slice/struct/*struct ,
-// 也可以是：key,value,key,value,...。
-func (md *Model) Data(data ...interface{}) *Model {
-	model := md.getModel()
+// Data sets the operation data for the model.
+// The parameter <data> can be type of string/map/gmap/slice/struct/*struct, etc.
+// Eg:
+// Data("uid=10000")
+// Data("uid", 10000)
+// Data(g.Map{"uid": 10000, "name":"john"})
+// Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
+func (m *Model) Data(data ...interface{}) *Model {
+	model := m.getModel()
 	if len(data) > 1 {
 		m := make(map[string]interface{})
 		for i := 0; i < len(data); i += 2 {
@@ -328,11 +540,11 @@ func (md *Model) Data(data ...interface{}) *Model {
 			case reflect.Slice, reflect.Array:
 				list := make(List, rv.Len())
 				for i := 0; i < rv.Len(); i++ {
-					list[i] = structToMap(rv.Index(i).Interface())
+					list[i] = varToMapDeep(rv.Index(i).Interface())
 				}
 				model.data = list
 			case reflect.Map, reflect.Struct:
-				model.data = structToMap(data[0])
+				model.data = varToMapDeep(data[0])
 			default:
 				model.data = data[0]
 			}
@@ -341,207 +553,248 @@ func (md *Model) Data(data ...interface{}) *Model {
 	return model
 }
 
-// filterDataForInsertOrUpdate does filter feature with data for inserting/updating operations.
-// Note that, it does not filter list item, which is also type of map, for "omit empty" feature.
-func (md *Model) filterDataForInsertOrUpdate(data interface{}) interface{} {
-	if list, ok := md.data.(List); ok {
-		for k, m := range list {
-			list[k] = md.doFilterDataMapForInsertOrUpdate(m, false)
-		}
-		return list
-	} else if m, ok := md.data.(Map); ok {
-		return md.doFilterDataMapForInsertOrUpdate(m, true)
-	}
-	return nil
+// Insert does "INSERT INTO ..." statement for the model.
+// The optional parameter <data> is the same as the parameter of Model.Data function,
+// see Model.Data.
+func (m *Model) Insert(data ...interface{}) (result sql.Result, err error) {
+	return m.doInsertWithOption(gINSERT_OPTION_DEFAULT, data...)
 }
 
-// doFilterDataMapForInsertOrUpdate does the filter features for map.
-// Note that, it does not filter list item, which is also type of map, for "omit empty" feature.
-func (md *Model) doFilterDataMapForInsertOrUpdate(data Map, allowOmitEmpty bool) Map {
-	if md.filter {
-		data = md.db.filterFields(md.tables, data)
-	}
-	if allowOmitEmpty && md.option&OPTION_OMITEMPTY > 0 {
-		m := gmap.NewStrAnyMapFrom(data)
-		m.FilterEmpty()
-		data = m.Map()
-	}
-	if len(md.fields) > 0 && md.fields != "*" {
-		set := gset.NewStrSet()
-		for _, v := range gstr.SplitAndTrimSpace(md.fields, ",") {
-			set.Add(v)
-		}
-		for k, _ := range data {
-			if !set.Contains(k) {
-				delete(data, k)
-			}
-		}
-	}
-	return data
+// InsertIgnore does "INSERT IGNORE INTO ..." statement for the model.
+// The optional parameter <data> is the same as the parameter of Model.Data function,
+// see Model.Data.
+func (m *Model) InsertIgnore(data ...interface{}) (result sql.Result, err error) {
+	return m.doInsertWithOption(gINSERT_OPTION_IGNORE, data...)
 }
 
-// 链式操作， CURD - Insert/BatchInsert。
-// 根据Data方法传递的参数类型决定该操作是单条操作还是批量操作，
-// 如果Data方法传递的是slice类型，那么为批量操作。
-func (md *Model) Insert() (result sql.Result, err error) {
+// doInsertWithOption inserts data with option parameter.
+func (m *Model) doInsertWithOption(option int, data ...interface{}) (result sql.Result, err error) {
+	if len(data) > 0 {
+		return m.Data(data...).Insert()
+	}
 	defer func() {
 		if err == nil {
-			md.checkAndRemoveCache()
+			m.checkAndRemoveCache()
 		}
 	}()
-	if md.data == nil {
+	if m.data == nil {
 		return nil, errors.New("inserting into table with empty data")
 	}
-	// 批量操作
-	if list, ok := md.data.(List); ok {
+	if list, ok := m.data.(List); ok {
+		// Batch insert.
 		batch := 10
-		if md.batch > 0 {
-			batch = md.batch
+		if m.batch > 0 {
+			batch = m.batch
 		}
-		return md.db.doBatchInsert(
-			md.getLink(),
-			md.tables,
-			md.filterDataForInsertOrUpdate(list),
-			gINSERT_OPTION_DEFAULT,
+		return m.db.doBatchInsert(
+			m.getLink(true),
+			m.tables,
+			m.filterDataForInsertOrUpdate(list),
+			option,
 			batch,
 		)
-	} else if data, ok := md.data.(Map); ok {
-		return md.db.doInsert(
-			md.getLink(),
-			md.tables,
-			md.filterDataForInsertOrUpdate(data),
-			gINSERT_OPTION_DEFAULT,
+	} else if data, ok := m.data.(Map); ok {
+		// Single insert.
+		return m.db.doInsert(
+			m.getLink(true),
+			m.tables,
+			m.filterDataForInsertOrUpdate(data),
+			option,
 		)
 	}
 	return nil, errors.New("inserting into table with invalid data type")
 }
 
-// 链式操作， CURD - Replace/BatchReplace。
-// 根据Data方法传递的参数类型决定该操作是单条操作还是批量操作，
-// 如果Data方法传递的是slice类型，那么为批量操作。
-func (md *Model) Replace() (result sql.Result, err error) {
+// Replace does "REPLACE INTO ..." statement for the model.
+// The optional parameter <data> is the same as the parameter of Model.Data function,
+// see Model.Data.
+func (m *Model) Replace(data ...interface{}) (result sql.Result, err error) {
+	if len(data) > 0 {
+		return m.Data(data...).Replace()
+	}
 	defer func() {
 		if err == nil {
-			md.checkAndRemoveCache()
+			m.checkAndRemoveCache()
 		}
 	}()
-	if md.data == nil {
+	if m.data == nil {
 		return nil, errors.New("replacing into table with empty data")
 	}
-	// 批量操作
-	if list, ok := md.data.(List); ok {
+	if list, ok := m.data.(List); ok {
+		// Batch replace.
 		batch := 10
-		if md.batch > 0 {
-			batch = md.batch
+		if m.batch > 0 {
+			batch = m.batch
 		}
-		return md.db.doBatchInsert(
-			md.getLink(),
-			md.tables,
-			md.filterDataForInsertOrUpdate(list),
+		return m.db.doBatchInsert(
+			m.getLink(true),
+			m.tables,
+			m.filterDataForInsertOrUpdate(list),
 			gINSERT_OPTION_REPLACE,
 			batch,
 		)
-	} else if data, ok := md.data.(Map); ok {
-		return md.db.doInsert(
-			md.getLink(),
-			md.tables,
-			md.filterDataForInsertOrUpdate(data),
+	} else if data, ok := m.data.(Map); ok {
+		// Single insert.
+		return m.db.doInsert(
+			m.getLink(true),
+			m.tables,
+			m.filterDataForInsertOrUpdate(data),
 			gINSERT_OPTION_REPLACE,
 		)
 	}
 	return nil, errors.New("replacing into table with invalid data type")
 }
 
-// 链式操作， CURD - Save/BatchSave。
-// 根据Data方法传递的参数类型决定该操作是单条操作还是批量操作，
-// 如果Data方法传递的是slice类型，那么为批量操作。
-func (md *Model) Save() (result sql.Result, err error) {
+// Save does "INSERT INTO ... ON DUPLICATE KEY UPDATE..." statement for the model.
+// The optional parameter <data> is the same as the parameter of Model.Data function,
+// see Model.Data.
+//
+// It updates the record if there's primary or unique index in the saving data,
+// or else it inserts a new record into the table.
+func (m *Model) Save(data ...interface{}) (result sql.Result, err error) {
+	if len(data) > 0 {
+		return m.Data(data...).Save()
+	}
 	defer func() {
 		if err == nil {
-			md.checkAndRemoveCache()
+			m.checkAndRemoveCache()
 		}
 	}()
-	if md.data == nil {
-		return nil, errors.New("replacing into table with empty data")
+	if m.data == nil {
+		return nil, errors.New("saving into table with empty data")
 	}
-	// 批量操作
-	if list, ok := md.data.(List); ok {
+	if list, ok := m.data.(List); ok {
+		// Batch save.
 		batch := gDEFAULT_BATCH_NUM
-		if md.batch > 0 {
-			batch = md.batch
+		if m.batch > 0 {
+			batch = m.batch
 		}
-		return md.db.doBatchInsert(
-			md.getLink(),
-			md.tables,
-			md.filterDataForInsertOrUpdate(list),
+		return m.db.doBatchInsert(
+			m.getLink(true),
+			m.tables,
+			m.filterDataForInsertOrUpdate(list),
 			gINSERT_OPTION_SAVE,
 			batch,
 		)
-	} else if data, ok := md.data.(Map); ok {
-		return md.db.doInsert(
-			md.getLink(),
-			md.tables,
-			md.filterDataForInsertOrUpdate(data),
+	} else if data, ok := m.data.(Map); ok {
+		// Single save.
+		return m.db.doInsert(
+			m.getLink(true),
+			m.tables,
+			m.filterDataForInsertOrUpdate(data),
 			gINSERT_OPTION_SAVE,
 		)
 	}
 	return nil, errors.New("saving into table with invalid data type")
 }
 
-// 链式操作， CURD - Update
-func (md *Model) Update() (result sql.Result, err error) {
+// Update does "UPDATE ... " statement for the model.
+//
+// If the optional parameter <dataAndWhere> is given, the dataAndWhere[0] is the updated data field,
+// and dataAndWhere[1:] is treated as where condition fields.
+// Also see Model.Data and Model.Where functions.
+func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err error) {
+	if len(dataAndWhere) > 0 {
+		if len(dataAndWhere) > 2 {
+			return m.Data(dataAndWhere[0]).Where(dataAndWhere[1], dataAndWhere[2:]...).Update()
+		} else if len(dataAndWhere) == 2 {
+			return m.Data(dataAndWhere[0]).Where(dataAndWhere[1]).Update()
+		} else {
+			return m.Data(dataAndWhere[0]).Update()
+		}
+	}
 	defer func() {
 		if err == nil {
-			md.checkAndRemoveCache()
+			m.checkAndRemoveCache()
 		}
 	}()
-	if md.data == nil {
+	if m.data == nil {
 		return nil, errors.New("updating table with empty data")
 	}
-	return md.db.doUpdate(
-		md.getLink(),
-		md.tables,
-		md.filterDataForInsertOrUpdate(md.data),
-		md.getConditionSql(),
-		md.whereArgs...,
+	condition, conditionArgs := m.formatCondition(false)
+	return m.db.doUpdate(
+		m.getLink(true),
+		m.tables,
+		m.filterDataForInsertOrUpdate(m.data),
+		condition,
+		conditionArgs...,
 	)
 }
 
-// 链式操作， CURD - Delete
-func (md *Model) Delete() (result sql.Result, err error) {
+// Delete does "DELETE FROM ... " statement for the model.
+// The optional parameter <where> is the same as the parameter of Model.Where function,
+// see Model.Where.
+func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
+	if len(where) > 0 {
+		return m.Where(where[0], where[1:]...).Delete()
+	}
 	defer func() {
 		if err == nil {
-			md.checkAndRemoveCache()
+			m.checkAndRemoveCache()
 		}
 	}()
-	return md.db.doDelete(md.getLink(), md.tables, md.getConditionSql(), md.whereArgs...)
+	condition, conditionArgs := m.formatCondition(false)
+	return m.db.doDelete(m.getLink(true), m.tables, condition, conditionArgs...)
 }
 
-// 链式操作，select
-func (md *Model) Select() (Result, error) {
-	return md.All()
+// Select is alias of Model.All.
+// See Model.All.
+// Deprecated.
+func (m *Model) Select(where ...interface{}) (Result, error) {
+	return m.All(where...)
 }
 
-// 链式操作，查询所有记录
-func (md *Model) All() (Result, error) {
-	return md.getAll(fmt.Sprintf("SELECT %s FROM %s%s", md.fields, md.tables, md.getConditionSql()), md.whereArgs...)
+// All does "SELECT FROM ..." statement for the model.
+// It retrieves the records from table and returns the result as slice type.
+// It returns nil if there's no record retrieved with the given conditions from table.
+//
+// The optional parameter <where> is the same as the parameter of Model.Where function,
+// see Model.Where.
+func (m *Model) All(where ...interface{}) (Result, error) {
+	if len(where) > 0 {
+		return m.Where(where[0], where[1:]...).All()
+	}
+	condition, conditionArgs := m.formatCondition(false)
+	return m.getAll(fmt.Sprintf("SELECT %s FROM %s%s", m.fields, m.tables, condition), conditionArgs...)
 }
 
-// 链式操作，查询单条记录
-func (md *Model) One() (Record, error) {
-	list, err := md.All()
+// One retrieves one record from table and returns the result as map type.
+// It returns nil if there's no record retrieved with the given conditions from table.
+//
+// The optional parameter <where> is the same as the parameter of Model.Where function,
+// see Model.Where.
+func (m *Model) One(where ...interface{}) (Record, error) {
+	if len(where) > 0 {
+		return m.Where(where[0], where[1:]...).One()
+	}
+	condition, conditionArgs := m.formatCondition(true)
+	all, err := m.getAll(fmt.Sprintf("SELECT %s FROM %s%s", m.fields, m.tables, condition), conditionArgs...)
 	if err != nil {
 		return nil, err
 	}
-	if len(list) > 0 {
-		return list[0], nil
+	if len(all) > 0 {
+		return all[0], nil
 	}
 	return nil, nil
 }
 
-// 链式操作，查询字段值
-func (md *Model) Value() (Value, error) {
-	one, err := md.One()
+// Value retrieves a specified record value from table and returns the result as interface type.
+// It returns nil if there's no record found with the given conditions from table.
+//
+// If the optional parameter <fieldsAndWhere> is given, the fieldsAndWhere[0] is the selected fields
+// and fieldsAndWhere[1:] is treated as where condition fields.
+// Also see Model.Fields and Model.Where functions.
+func (m *Model) Value(fieldsAndWhere ...interface{}) (Value, error) {
+	if len(fieldsAndWhere) > 0 {
+		if len(fieldsAndWhere) > 2 {
+			return m.Fields(gconv.String(fieldsAndWhere[0])).Where(fieldsAndWhere[1], fieldsAndWhere[2:]...).Value()
+		} else if len(fieldsAndWhere) == 2 {
+			return m.Fields(gconv.String(fieldsAndWhere[0])).Where(fieldsAndWhere[1]).Value()
+		} else {
+			return m.Fields(gconv.String(fieldsAndWhere[0])).Value()
+		}
+	}
+	one, err := m.One()
 	if err != nil {
 		return nil, err
 	}
@@ -551,28 +804,83 @@ func (md *Model) Value() (Value, error) {
 	return nil, nil
 }
 
-// 链式操作，查询单条记录，并自动转换为struct对象, 参数必须为对象的指针，不能为空指针。
-func (md *Model) Struct(pointer interface{}) error {
-	one, err := md.One()
+// Struct retrieves one record from table and converts it into given struct.
+// The parameter <pointer> should be type of *struct/**struct. If type **struct is given,
+// it can create the struct internally during converting.
+//
+// The optional parameter <where> is the same as the parameter of Model.Where function,
+// see Model.Where.
+//
+// Note that it returns sql.ErrNoRows if there's no record retrieved with the given conditions
+// from table.
+//
+// Eg:
+// user := new(User)
+// err  := db.Table("user").Where("id", 1).Struct(user)
+//
+// user := (*User)(nil)
+// err  := db.Table("user").Where("id", 1).Struct(&user)
+func (m *Model) Struct(pointer interface{}, where ...interface{}) error {
+	one, err := m.One(where...)
 	if err != nil {
 		return err
+	}
+	if len(one) == 0 {
+		return sql.ErrNoRows
 	}
 	return one.Struct(pointer)
 }
 
-// 链式操作，查询多条记录，并自动转换为指定的slice对象, 如: []struct/[]*struct。
-func (md *Model) Structs(pointer interface{}) error {
-	r, err := md.All()
+// Structs retrieves records from table and converts them into given struct slice.
+// The parameter <pointer> should be type of *[]struct/*[]*struct. It can create and fill the struct
+// slice internally during converting.
+//
+// The optional parameter <where> is the same as the parameter of Model.Where function,
+// see Model.Where.
+//
+// Note that it returns sql.ErrNoRows if there's no record retrieved with the given conditions
+// from table.
+//
+// Eg:
+// users := ([]User)(nil)
+// err := db.Table("user").Structs(&users)
+//
+// users := ([]*User)(nil)
+// err := db.Table("user").Structs(&users)
+func (m *Model) Structs(pointer interface{}, where ...interface{}) error {
+	all, err := m.All(where...)
 	if err != nil {
 		return err
 	}
-	return r.Structs(pointer)
+	if len(all) == 0 {
+		return sql.ErrNoRows
+	}
+	return all.Structs(pointer)
 }
 
-// 链式操作，将结果转换为指定的struct/*struct/[]struct/[]*struct,
-// 参数应该为指针类型，否则返回失败。
-// 该方法自动识别参数类型，调用Struct/Structs方法。
-func (md *Model) Scan(pointer interface{}) error {
+// Scan automatically calls Struct or Structs function according to the type of parameter <pointer>.
+// It calls function Struct if <pointer> is type of *struct/**struct.
+// It calls function Structs if <pointer> is type of *[]struct/*[]*struct.
+//
+// The optional parameter <where> is the same as the parameter of Model.Where function,
+// see Model.Where.
+//
+// Note that it returns sql.ErrNoRows if there's no record retrieved with the given conditions
+// from table.
+//
+// Eg:
+// user := new(User)
+// err  := db.Table("user").Where("id", 1).Struct(user)
+//
+// user := (*User)(nil)
+// err  := db.Table("user").Where("id", 1).Struct(&user)
+//
+// users := ([]User)(nil)
+// err := db.Table("user").Structs(&users)
+//
+// users := ([]*User)(nil)
+// err := db.Table("user").Structs(&users)
+func (m *Model) Scan(pointer interface{}, where ...interface{}) error {
 	t := reflect.TypeOf(pointer)
 	k := t.Kind()
 	if k != reflect.Ptr {
@@ -581,29 +889,30 @@ func (md *Model) Scan(pointer interface{}) error {
 	switch t.Elem().Kind() {
 	case reflect.Array:
 	case reflect.Slice:
-		return md.Structs(pointer)
+		return m.Structs(pointer, where...)
 	default:
-		return md.Struct(pointer)
+		return m.Struct(pointer, where...)
 	}
 	return nil
 }
 
-// 链式操作，查询数量，fields可以为空，也可以自定义查询字段，
-// 当给定自定义查询字段时，该字段必须为数量结果，否则会引起歧义，使用如：md.Fields("COUNT(id)")
-func (md *Model) Count() (int, error) {
-	defer func(fields string) {
-		md.fields = fields
-	}(md.fields)
-	if md.fields == "" || md.fields == "*" {
-		md.fields = "COUNT(1)"
-	} else {
-		md.fields = fmt.Sprintf(`COUNT(%s)`, md.fields)
+// Count does "SELECT COUNT(x) FROM ..." statement for the model.
+// The optional parameter <where> is the same as the parameter of Model.Where function,
+// see Model.Where.
+func (m *Model) Count(where ...interface{}) (int, error) {
+	if len(where) > 0 {
+		return m.Where(where[0], where[1:]...).Count()
 	}
-	s := fmt.Sprintf("SELECT %s FROM %s %s", md.fields, md.tables, md.getConditionSql())
-	if len(md.groupBy) > 0 {
+	countFields := "COUNT(1)"
+	if m.fields != "" && m.fields != "*" {
+		countFields = fmt.Sprintf(`COUNT(%s)`, m.fields)
+	}
+	condition, conditionArgs := m.formatCondition(false)
+	s := fmt.Sprintf("SELECT %s FROM %s %s", countFields, m.tables, condition)
+	if len(m.groupBy) > 0 {
 		s = fmt.Sprintf("SELECT COUNT(1) FROM (%s) count_alias", s)
 	}
-	list, err := md.getAll(s, md.whereArgs...)
+	list, err := m.getAll(s, conditionArgs...)
 	if err != nil {
 		return 0, err
 	}
@@ -615,85 +924,63 @@ func (md *Model) Count() (int, error) {
 	return 0, nil
 }
 
-// 获得操作的连接对象
-func (md *Model) getLink() dbLink {
-	if md.tx != nil {
-		return md.tx.tx
+// FindOne retrieves and returns a single Record by Model.WherePri and Model.One.
+// Also see Model.WherePri and Model.One.
+func (m *Model) FindOne(where ...interface{}) (Record, error) {
+	if len(where) > 0 {
+		return m.WherePri(where[0], where[1:]...).One()
 	}
-	switch md.linkType {
-	case gLINK_TYPE_MASTER:
-		link, _ := md.db.Master()
-		return link
-	case gLINK_TYPE_SLAVE:
-		link, _ := md.db.Slave()
-		return link
-	}
-	return nil
+	return m.One()
 }
 
-// 查询操作，对底层SQL操作的封装
-func (md *Model) getAll(query string, args ...interface{}) (result Result, err error) {
-	cacheKey := ""
-	// 查询缓存查询处理
-	if md.cacheEnabled {
-		cacheKey = md.cacheName
-		if len(cacheKey) == 0 {
-			cacheKey = query + "/" + gconv.String(args)
-		}
-		if v := md.db.getCache().Get(cacheKey); v != nil {
-			return v.(Result), nil
-		}
+// FindAll retrieves and returns Result by by Model.WherePri and Model.All.
+// Also see Model.WherePri and Model.All.
+func (m *Model) FindAll(where ...interface{}) (Result, error) {
+	if len(where) > 0 {
+		return m.WherePri(where[0], where[1:]...).All()
 	}
-	result, err = md.db.doGetAll(md.getLink(), query, args...)
-	// 查询缓存保存处理
-	if len(cacheKey) > 0 && err == nil {
-		if md.cacheTime < 0 {
-			md.db.getCache().Remove(cacheKey)
-		} else {
-			md.db.getCache().Set(cacheKey, result, md.cacheTime*1000)
-		}
-	}
-	return result, err
+	return m.All()
 }
 
-// 检查是否需要查询查询缓存
-func (md *Model) checkAndRemoveCache() {
-	if md.cacheEnabled && md.cacheTime < 0 && len(md.cacheName) > 0 {
-		md.db.getCache().Remove(md.cacheName)
+// FindValue retrieves and returns single field value by Model.WherePri and Model.Value.
+// Also see Model.WherePri and Model.Value.
+func (m *Model) FindValue(fieldsAndWhere ...interface{}) (Value, error) {
+	if len(fieldsAndWhere) >= 2 {
+		return m.WherePri(fieldsAndWhere[1], fieldsAndWhere[2:]...).Fields(gconv.String(fieldsAndWhere[0])).Value()
 	}
+	if len(fieldsAndWhere) == 1 {
+		return m.Fields(gconv.String(fieldsAndWhere[0])).Value()
+	}
+	return m.Value()
 }
 
-// 格式化当前输入参数，返回SQL条件语句（不带参数）
-func (md *Model) getConditionSql() string {
-	s := ""
-	if md.where != "" {
-		s += " WHERE " + md.where
+// FindCount retrieves and returns the record number by Model.WherePri and Model.Count.
+// Also see Model.WherePri and Model.Count.
+func (m *Model) FindCount(where ...interface{}) (int, error) {
+	if len(where) > 0 {
+		return m.WherePri(where[0], where[1:]...).Count()
 	}
-	if md.groupBy != "" {
-		s += " GROUP BY " + md.groupBy
-	}
-	if md.orderBy != "" {
-		s += " ORDER BY " + md.orderBy
-	}
-	if md.limit != 0 {
-		if md.start >= 0 {
-			s += fmt.Sprintf(" LIMIT %d,%d", md.start, md.limit)
-		} else {
-			s += fmt.Sprintf(" LIMIT %d", md.limit)
-		}
-	}
-	if md.offset >= 0 {
-		s += fmt.Sprintf(" OFFSET %d", md.offset)
-	}
-	return s
+	return m.Count()
 }
 
-// 组块结果集。
-func (md *Model) Chunk(limit int, callback func(result Result, err error) bool) {
-	page := 1
-	model := md
+// FindScan retrieves and returns the record/records by Model.WherePri and Model.Scan.
+// Also see Model.WherePri and Model.Scan.
+func (m *Model) FindScan(pointer interface{}, where ...interface{}) error {
+	if len(where) > 0 {
+		return m.WherePri(where[0], where[1:]...).Scan(pointer)
+	}
+	return m.Scan(pointer)
+}
+
+// Chunk iterates the table with given size and callback function.
+func (m *Model) Chunk(limit int, callback func(result Result, err error) bool) {
+	page := m.start
+	if page == 0 {
+		page = 1
+	}
+	model := m
 	for {
-		model = model.ForPage(page, limit)
+		model = model.Page(page, limit)
 		data, err := model.All()
 		if err != nil {
 			callback(nil, err)
@@ -710,4 +997,190 @@ func (md *Model) Chunk(limit int, callback func(result Result, err error) bool) 
 		}
 		page++
 	}
+}
+
+// filterDataForInsertOrUpdate does filter feature with data for inserting/updating operations.
+// Note that, it does not filter list item, which is also type of map, for "omit empty" feature.
+func (m *Model) filterDataForInsertOrUpdate(data interface{}) interface{} {
+	if list, ok := m.data.(List); ok {
+		for k, item := range list {
+			list[k] = m.doFilterDataMapForInsertOrUpdate(item, false)
+		}
+		return list
+	} else if item, ok := m.data.(Map); ok {
+		return m.doFilterDataMapForInsertOrUpdate(item, true)
+	}
+	return data
+}
+
+// doFilterDataMapForInsertOrUpdate does the filter features for map.
+// Note that, it does not filter list item, which is also type of map, for "omit empty" feature.
+func (m *Model) doFilterDataMapForInsertOrUpdate(data Map, allowOmitEmpty bool) Map {
+	if m.filter {
+		data = m.db.filterFields(m.schema, m.tables, data)
+	}
+	// Remove key-value pairs of which the value is empty.
+	if allowOmitEmpty && m.option&OPTION_OMITEMPTY > 0 {
+		m := gmap.NewStrAnyMapFrom(data)
+		m.FilterEmpty()
+		data = m.Map()
+	}
+
+	if len(m.fields) > 0 && m.fields != "*" {
+		// Keep specified fields.
+		set := gset.NewStrSetFrom(gstr.SplitAndTrim(m.fields, ","))
+		for k := range data {
+			if !set.Contains(k) {
+				delete(data, k)
+			}
+		}
+	} else if len(m.fieldsEx) > 0 {
+		// Filter specified fields.
+		for _, v := range gstr.SplitAndTrim(m.fieldsEx, ",") {
+			delete(data, v)
+		}
+	}
+	return data
+}
+
+// getLink returns the underlying database link object with configured <linkType> attribute.
+// The parameter <master> specifies whether using the master node if master-slave configured.
+func (m *Model) getLink(master bool) dbLink {
+	if m.tx != nil {
+		return m.tx.tx
+	}
+	linkType := m.linkType
+	if linkType == 0 {
+		if master {
+			linkType = gLINK_TYPE_MASTER
+		} else {
+			linkType = gLINK_TYPE_SLAVE
+		}
+	}
+	switch linkType {
+	case gLINK_TYPE_MASTER:
+		link, _ := m.db.getMaster(m.schema)
+		return link
+	case gLINK_TYPE_SLAVE:
+		link, _ := m.db.getSlave(m.schema)
+		return link
+	}
+	return nil
+}
+
+// getAll does the query from database.
+func (m *Model) getAll(query string, args ...interface{}) (result Result, err error) {
+	cacheKey := ""
+	// Retrieve from cache.
+	if m.cacheEnabled {
+		cacheKey = m.cacheName
+		if len(cacheKey) == 0 {
+			cacheKey = query + "/" + gconv.String(args)
+		}
+		if v := m.db.getCache().Get(cacheKey); v != nil {
+			return v.(Result), nil
+		}
+	}
+	result, err = m.db.doGetAll(m.getLink(false), query, args...)
+	// Cache the result.
+	if len(cacheKey) > 0 && err == nil {
+		if m.cacheDuration < 0 {
+			m.db.getCache().Remove(cacheKey)
+		} else {
+			m.db.getCache().Set(cacheKey, result, m.cacheDuration)
+		}
+	}
+	return result, err
+}
+
+// getPrimaryKey retrieves and returns the primary key name of the model table.
+// It parses m.tables to retrieve the primary table name, supporting m.tables like:
+// "user", "user u", "user as u, user_detail as ud".
+func (m *Model) getPrimaryKey() string {
+	table := gstr.SplitAndTrim(m.tables, " ")[0]
+	tableFields, err := m.db.TableFields(table)
+	if err != nil {
+		return ""
+	}
+	for name, field := range tableFields {
+		if gstr.ContainsI(field.Key, "pri") {
+			return name
+		}
+	}
+	return ""
+}
+
+// checkAndRemoveCache checks and remove the cache if necessary.
+func (m *Model) checkAndRemoveCache() {
+	if m.cacheEnabled && m.cacheDuration < 0 && len(m.cacheName) > 0 {
+		m.db.getCache().Remove(m.cacheName)
+	}
+}
+
+// formatCondition formats where arguments of the model and returns a new condition sql and its arguments.
+// Note that this function does not change any attribute value of the <m>.
+//
+// The parameter <limit> specifies whether limits querying only one record if m.limit is not set.
+func (m *Model) formatCondition(limit bool) (condition string, conditionArgs []interface{}) {
+	var where string
+	if len(m.whereHolder) > 0 {
+		for _, v := range m.whereHolder {
+			switch v.operator {
+			case gWHERE_HOLDER_WHERE:
+				if where == "" {
+					newWhere, newArgs := formatWhere(m.db, v.where, v.args, m.option&OPTION_OMITEMPTY > 0)
+					if len(newWhere) > 0 {
+						where = newWhere
+						conditionArgs = newArgs
+					}
+					continue
+				}
+				fallthrough
+
+			case gWHERE_HOLDER_AND:
+				newWhere, newArgs := formatWhere(m.db, v.where, v.args, m.option&OPTION_OMITEMPTY > 0)
+				if len(newWhere) > 0 {
+					if where[0] == '(' {
+						where = fmt.Sprintf(`%s AND (%s)`, where, newWhere)
+					} else {
+						where = fmt.Sprintf(`(%s) AND (%s)`, where, newWhere)
+					}
+					conditionArgs = append(conditionArgs, newArgs...)
+				}
+
+			case gWHERE_HOLDER_OR:
+				newWhere, newArgs := formatWhere(m.db, v.where, v.args, m.option&OPTION_OMITEMPTY > 0)
+				if len(newWhere) > 0 {
+					if where[0] == '(' {
+						where = fmt.Sprintf(`%s OR (%s)`, where, newWhere)
+					} else {
+						where = fmt.Sprintf(`(%s) OR (%s)`, where, newWhere)
+					}
+					conditionArgs = append(conditionArgs, newArgs...)
+				}
+			}
+		}
+	}
+	if where != "" {
+		condition += " WHERE " + where
+	}
+	if m.groupBy != "" {
+		condition += " GROUP BY " + m.groupBy
+	}
+	if m.orderBy != "" {
+		condition += " ORDER BY " + m.orderBy
+	}
+	if m.limit != 0 {
+		if m.start >= 0 {
+			condition += fmt.Sprintf(" LIMIT %d,%d", m.start, m.limit)
+		} else {
+			condition += fmt.Sprintf(" LIMIT %d", m.limit)
+		}
+	} else if limit {
+		condition += " LIMIT 1"
+	}
+	if m.offset >= 0 {
+		condition += fmt.Sprintf(" OFFSET %d", m.offset)
+	}
+	return
 }

@@ -117,6 +117,9 @@ func TestSortedArray_Remove(t *testing.T) {
 		gtest.Assert(array1.Len(), 3)
 		gtest.Assert(array1.Contains("b"), false)
 
+		gtest.Assert(array1.Remove(-1), nil)
+		gtest.Assert(array1.Remove(100000), nil)
+
 		i2 := array1.Remove(0)
 		gtest.Assert(gconv.String(i2), "a")
 		gtest.Assert(array1.Len(), 2)
@@ -323,6 +326,34 @@ func TestSortedArray_Chunk(t *testing.T) {
 		i1 = array1.Chunk(0)
 		gtest.Assert(len(i1), 0)
 	})
+	gtest.Case(t, func() {
+		a1 := []interface{}{1, 2, 3, 4, 5}
+		array1 := garray.NewSortedArrayFrom(a1, gutil.ComparatorInt)
+		chunks := array1.Chunk(3)
+		gtest.Assert(len(chunks), 2)
+		gtest.Assert(chunks[0], []interface{}{1, 2, 3})
+		gtest.Assert(chunks[1], []interface{}{4, 5})
+		gtest.Assert(array1.Chunk(0), nil)
+	})
+	gtest.Case(t, func() {
+		a1 := []interface{}{1, 2, 3, 4, 5, 6}
+		array1 := garray.NewSortedArrayFrom(a1, gutil.ComparatorInt)
+		chunks := array1.Chunk(2)
+		gtest.Assert(len(chunks), 3)
+		gtest.Assert(chunks[0], []interface{}{1, 2})
+		gtest.Assert(chunks[1], []interface{}{3, 4})
+		gtest.Assert(chunks[2], []interface{}{5, 6})
+		gtest.Assert(array1.Chunk(0), nil)
+	})
+	gtest.Case(t, func() {
+		a1 := []interface{}{1, 2, 3, 4, 5, 6}
+		array1 := garray.NewSortedArrayFrom(a1, gutil.ComparatorInt)
+		chunks := array1.Chunk(3)
+		gtest.Assert(len(chunks), 2)
+		gtest.Assert(chunks[0], []interface{}{1, 2, 3})
+		gtest.Assert(chunks[1], []interface{}{4, 5, 6})
+		gtest.Assert(array1.Chunk(0), nil)
+	})
 }
 
 func TestSortedArray_SubSlice(t *testing.T) {
@@ -394,14 +425,14 @@ func TestSortedArray_Join(t *testing.T) {
 			return strings.Compare(gconv.String(v1), gconv.String(v2))
 		}
 		array1 := garray.NewSortedArrayFrom(a1, func1)
-		gtest.Assert(array1.Join(","), `"a","c","d"`)
-		gtest.Assert(array1.Join("."), `"a"."c"."d"`)
+		gtest.Assert(array1.Join(","), `a,c,d`)
+		gtest.Assert(array1.Join("."), `a.c.d`)
 	})
 
 	gtest.Case(t, func() {
 		a1 := []interface{}{0, 1, `"a"`, `\a`}
 		array1 := garray.NewSortedArrayFrom(a1, gutil.ComparatorString)
-		gtest.Assert(array1.Join("."), `"\"a\"".0.1."\\a"`)
+		gtest.Assert(array1.Join("."), `"a".0.1.\a`)
 	})
 }
 
@@ -561,6 +592,7 @@ func TestSortedArray_Json(t *testing.T) {
 		err := json.Unmarshal(b2, &a3)
 		gtest.Assert(err, nil)
 		gtest.Assert(a3.Slice(), s1)
+		gtest.Assert(a3.Interfaces(), s1)
 	})
 
 	gtest.Case(t, func() {
@@ -584,5 +616,116 @@ func TestSortedArray_Json(t *testing.T) {
 		gtest.AssertIN(user.Scores.PopLeft(), data["Scores"])
 		gtest.AssertIN(user.Scores.PopLeft(), data["Scores"])
 		gtest.AssertIN(user.Scores.PopLeft(), data["Scores"])
+	})
+}
+
+func TestSortedArray_Iterator(t *testing.T) {
+	slice := g.Slice{"a", "b", "d", "c"}
+	array := garray.NewSortedArrayFrom(slice, gutil.ComparatorString)
+	gtest.Case(t, func() {
+		array.Iterator(func(k int, v interface{}) bool {
+			gtest.Assert(v, slice[k])
+			return true
+		})
+	})
+	gtest.Case(t, func() {
+		array.IteratorAsc(func(k int, v interface{}) bool {
+			gtest.Assert(v, slice[k])
+			return true
+		})
+	})
+	gtest.Case(t, func() {
+		array.IteratorDesc(func(k int, v interface{}) bool {
+			gtest.Assert(v, slice[k])
+			return true
+		})
+	})
+	gtest.Case(t, func() {
+		index := 0
+		array.Iterator(func(k int, v interface{}) bool {
+			index++
+			return false
+		})
+		gtest.Assert(index, 1)
+	})
+	gtest.Case(t, func() {
+		index := 0
+		array.IteratorAsc(func(k int, v interface{}) bool {
+			index++
+			return false
+		})
+		gtest.Assert(index, 1)
+	})
+	gtest.Case(t, func() {
+		index := 0
+		array.IteratorDesc(func(k int, v interface{}) bool {
+			index++
+			return false
+		})
+		gtest.Assert(index, 1)
+	})
+}
+
+func TestSortedArray_RemoveValue(t *testing.T) {
+	slice := g.Slice{"a", "b", "d", "c"}
+	array := garray.NewSortedArrayFrom(slice, gutil.ComparatorString)
+	gtest.Case(t, func() {
+		gtest.Assert(array.RemoveValue("e"), false)
+		gtest.Assert(array.RemoveValue("b"), true)
+		gtest.Assert(array.RemoveValue("a"), true)
+		gtest.Assert(array.RemoveValue("c"), true)
+		gtest.Assert(array.RemoveValue("f"), false)
+	})
+}
+
+func TestSortedArray_UnmarshalValue(t *testing.T) {
+	type T struct {
+		Name  string
+		Array *garray.SortedArray
+	}
+	// JSON
+	gtest.Case(t, func() {
+		var t *T
+		err := gconv.Struct(g.Map{
+			"name":  "john",
+			"array": []byte(`[2,3,1]`),
+		}, &t)
+		gtest.Assert(err, nil)
+		gtest.Assert(t.Name, "john")
+		gtest.Assert(t.Array.Slice(), g.Slice{1, 2, 3})
+	})
+	// Map
+	gtest.Case(t, func() {
+		var t *T
+		err := gconv.Struct(g.Map{
+			"name":  "john",
+			"array": g.Slice{2, 3, 1},
+		}, &t)
+		gtest.Assert(err, nil)
+		gtest.Assert(t.Name, "john")
+		gtest.Assert(t.Array.Slice(), g.Slice{1, 2, 3})
+	})
+}
+
+func TestSortedArray_FilterNil(t *testing.T) {
+	gtest.Case(t, func() {
+		values := g.Slice{0, 1, 2, 3, 4, "", g.Slice{}}
+		array := garray.NewSortedArrayFromCopy(values, gutil.ComparatorInt)
+		gtest.Assert(array.FilterNil().Slice(), g.Slice{0, "", g.Slice{}, 1, 2, 3, 4})
+	})
+	gtest.Case(t, func() {
+		array := garray.NewSortedArrayFromCopy(g.Slice{nil, 1, 2, 3, 4, nil}, gutil.ComparatorInt)
+		gtest.Assert(array.FilterNil(), g.Slice{1, 2, 3, 4})
+	})
+}
+
+func TestSortedArray_FilterEmpty(t *testing.T) {
+	gtest.Case(t, func() {
+		array := garray.NewSortedArrayFrom(g.Slice{0, 1, 2, 3, 4, "", g.Slice{}}, gutil.ComparatorInt)
+		gtest.Assert(array.FilterEmpty(), g.Slice{1, 2, 3, 4})
+	})
+	gtest.Case(t, func() {
+		array := garray.NewSortedArrayFrom(g.Slice{1, 2, 3, 4}, gutil.ComparatorInt)
+		gtest.Assert(array.FilterEmpty(), g.Slice{1, 2, 3, 4})
 	})
 }

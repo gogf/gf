@@ -10,6 +10,8 @@ package gset_test
 
 import (
 	"encoding/json"
+	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/util/gconv"
 	"strings"
 	"testing"
 
@@ -207,8 +209,8 @@ func TestStrSet_Join(t *testing.T) {
 		s1 := gset.NewStrSet()
 		s1.Add("a").Add(`"b"`).Add(`\c`)
 		str1 := s1.Join(",")
-		gtest.Assert(strings.Contains(str1, `\"b\"`), true)
-		gtest.Assert(strings.Contains(str1, `\\c`), true)
+		gtest.Assert(strings.Contains(str1, `"b"`), true)
+		gtest.Assert(strings.Contains(str1, `\c`), true)
 		gtest.Assert(strings.Contains(str1, `a`), true)
 	})
 }
@@ -259,20 +261,36 @@ func TestStrSet_Remove(t *testing.T) {
 
 func TestStrSet_Pop(t *testing.T) {
 	gtest.Case(t, func() {
-		s1 := gset.NewStrSetFrom([]string{"a", "b", "c"}, true)
-		str1 := s1.Pop()
-		gtest.Assert(strings.Contains("a,b,c", str1), true)
+		a := []string{"a", "b", "c", "d"}
+		s := gset.NewStrSetFrom(a, true)
+		gtest.Assert(s.Size(), 4)
+		gtest.AssertIN(s.Pop(), a)
+		gtest.Assert(s.Size(), 3)
+		gtest.AssertIN(s.Pop(), a)
+		gtest.Assert(s.Size(), 2)
 	})
 }
 
 func TestStrSet_Pops(t *testing.T) {
 	gtest.Case(t, func() {
-		s1 := gset.NewStrSetFrom([]string{"a", "b", "c"}, true)
-		strs1 := s1.Pops(2)
-		gtest.AssertIN(strs1, []string{"a", "b", "c"})
-		gtest.Assert(len(strs1), 2)
-		str2 := s1.Pops(7)
-		gtest.AssertIN(str2, []string{"a", "b", "c"})
+		a := []string{"a", "b", "c", "d"}
+		s := gset.NewStrSetFrom(a, true)
+		array := s.Pops(2)
+		gtest.Assert(len(array), 2)
+		gtest.Assert(s.Size(), 2)
+		gtest.AssertIN(array, a)
+		gtest.Assert(s.Pops(0), nil)
+		gtest.AssertIN(s.Pops(2), a)
+		gtest.Assert(s.Size(), 0)
+	})
+
+	gtest.Case(t, func() {
+		s := gset.NewStrSet(true)
+		a := []string{"1", "2", "3", "4"}
+		s.Add(a...)
+		gtest.Assert(s.Size(), 4)
+		gtest.Assert(s.Pops(-2), nil)
+		gtest.AssertIN(s.Pops(-1), a)
 	})
 }
 
@@ -302,5 +320,82 @@ func TestStrSet_Json(t *testing.T) {
 		gtest.Assert(a3.Contains("c"), true)
 		gtest.Assert(a3.Contains("d"), true)
 		gtest.Assert(a3.Contains("e"), false)
+	})
+}
+
+func TestStrSet_AddIfNotExistFunc(t *testing.T) {
+	gtest.Case(t, func() {
+		s := gset.NewStrSet(true)
+		s.Add("1")
+		gtest.Assert(s.Contains("1"), true)
+		gtest.Assert(s.Contains("2"), false)
+
+		s.AddIfNotExistFunc("2", func() string {
+			return "3"
+		})
+		gtest.Assert(s.Contains("2"), false)
+		gtest.Assert(s.Contains("3"), true)
+
+		s.AddIfNotExistFunc("3", func() string {
+			return "4"
+		})
+		gtest.Assert(s.Contains("3"), true)
+		gtest.Assert(s.Contains("4"), false)
+	})
+
+	gtest.Case(t, func() {
+		s := gset.NewStrSet(true)
+		s.Add("1")
+		gtest.Assert(s.Contains("1"), true)
+		gtest.Assert(s.Contains("2"), false)
+
+		s.AddIfNotExistFuncLock("2", func() string {
+			return "3"
+		})
+		gtest.Assert(s.Contains("2"), false)
+		gtest.Assert(s.Contains("3"), true)
+
+		s.AddIfNotExistFuncLock("3", func() string {
+			return "4"
+		})
+		gtest.Assert(s.Contains("3"), true)
+		gtest.Assert(s.Contains("4"), false)
+	})
+}
+
+func TestStrSet_UnmarshalValue(t *testing.T) {
+	type T struct {
+		Name string
+		Set  *gset.StrSet
+	}
+	// JSON
+	gtest.Case(t, func() {
+		var t *T
+		err := gconv.Struct(g.Map{
+			"name": "john",
+			"set":  []byte(`["1","2","3"]`),
+		}, &t)
+		gtest.Assert(err, nil)
+		gtest.Assert(t.Name, "john")
+		gtest.Assert(t.Set.Size(), 3)
+		gtest.Assert(t.Set.Contains("1"), true)
+		gtest.Assert(t.Set.Contains("2"), true)
+		gtest.Assert(t.Set.Contains("3"), true)
+		gtest.Assert(t.Set.Contains("4"), false)
+	})
+	// Map
+	gtest.Case(t, func() {
+		var t *T
+		err := gconv.Struct(g.Map{
+			"name": "john",
+			"set":  g.SliceStr{"1", "2", "3"},
+		}, &t)
+		gtest.Assert(err, nil)
+		gtest.Assert(t.Name, "john")
+		gtest.Assert(t.Set.Size(), 3)
+		gtest.Assert(t.Set.Contains("1"), true)
+		gtest.Assert(t.Set.Contains("2"), true)
+		gtest.Assert(t.Set.Contains("3"), true)
+		gtest.Assert(t.Set.Contains("4"), false)
 	})
 }

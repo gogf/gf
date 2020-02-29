@@ -13,15 +13,12 @@ import (
 	"io"
 	"net"
 	"time"
-
-	"github.com/gogf/gf/errors/gerror"
 )
 
 // TCP connection object.
 type Conn struct {
 	net.Conn                     // Underlying TCP connection object.
 	reader         *bufio.Reader // Buffer reader for connection.
-	buffer         []byte        // Buffer object.
 	recvDeadline   time.Time     // Timeout point for reading.
 	sendDeadline   time.Time     // Timeout point for writing.
 	recvBufferWait time.Duration // Interval duration for reading buffer.
@@ -33,7 +30,7 @@ const (
 )
 
 // NewConn creates and returns a new connection with given address.
-func NewConn(addr string, timeout ...int) (*Conn, error) {
+func NewConn(addr string, timeout ...time.Duration) (*Conn, error) {
 	if conn, err := NewNetConn(addr, timeout...); err == nil {
 		return NewConnByNetConn(conn), nil
 	} else {
@@ -89,7 +86,7 @@ func (c *Conn) Send(data []byte, retry ...Retry) error {
 				if retry[0].Interval == 0 {
 					retry[0].Interval = gDEFAULT_RETRY_INTERVAL
 				}
-				time.Sleep(time.Duration(retry[0].Interval) * time.Millisecond)
+				time.Sleep(retry[0].Interval)
 			}
 		} else {
 			return nil
@@ -97,13 +94,14 @@ func (c *Conn) Send(data []byte, retry ...Retry) error {
 	}
 }
 
-// Recv receives data from remote address.
+// Recv receives data from the connection.
 //
 // Note that,
-// 1. If length = 0, it means it receives the data from current buffer and returns immediately.
-// 2. If length < 0, it means it receives all data from buffer and returns if it waits til no data from connection.
+// 1. If length = 0, which means it receives the data from current buffer and returns immediately.
+// 2. If length < 0, which means it receives all data from buffer and returns if it waits til no data from connection.
 //    Developers should notice the package parsing yourself if you decide receiving all data from buffer.
-// 3. If length > 0, it means it blocks reading data from connection until length size was received.
+// 3. If length > 0, which means it blocks reading data from connection until length size was received.
+//    It is the most commonly used length value for data receiving.
 func (c *Conn) Recv(length int, retry ...Retry) ([]byte, error) {
 	var err error       // Reading error.
 	var size int        // Reading size.
@@ -166,7 +164,7 @@ func (c *Conn) Recv(length int, retry ...Retry) ([]byte, error) {
 				if retry[0].Interval == 0 {
 					retry[0].Interval = gDEFAULT_RETRY_INTERVAL
 				}
-				time.Sleep(time.Duration(retry[0].Interval) * time.Millisecond)
+				time.Sleep(retry[0].Interval)
 				continue
 			}
 			break
@@ -179,8 +177,8 @@ func (c *Conn) Recv(length int, retry ...Retry) ([]byte, error) {
 	return buffer[:index], err
 }
 
-// RecvLine reads data from connection until reads char '\n'.
-// Note that the returned result does not contain char '\n'.
+// RecvLine reads data from the connection until reads char '\n'.
+// Note that the returned result does not contain the last char '\n'.
 func (c *Conn) RecvLine(retry ...Retry) ([]byte, error) {
 	var err error
 	var buffer []byte
@@ -188,58 +186,80 @@ func (c *Conn) RecvLine(retry ...Retry) ([]byte, error) {
 	for {
 		buffer, err = c.Recv(1, retry...)
 		if len(buffer) > 0 {
-			data = append(data, buffer...)
 			if buffer[0] == '\n' {
+				data = append(data, buffer[:len(buffer)-1]...)
 				break
+			} else {
+				data = append(data, buffer...)
 			}
 		}
 		if err != nil {
 			break
 		}
 	}
-	if len(data) > 0 {
-		data = bytes.TrimRight(data, "\n\r")
+	return data, err
+}
+
+// RecvTil reads data from the connection until reads bytes <til>.
+// Note that the returned result contains the last bytes <til>.
+func (c *Conn) RecvTil(til []byte, retry ...Retry) ([]byte, error) {
+	var err error
+	var buffer []byte
+	data := make([]byte, 0)
+	length := len(til)
+	for {
+		buffer, err = c.Recv(1, retry...)
+		if len(buffer) > 0 {
+			if length > 0 &&
+				len(data) >= length-1 &&
+				buffer[0] == til[length-1] &&
+				bytes.EqualFold(data[len(data)-length+1:], til[:length-1]) {
+				data = append(data, buffer...)
+				break
+			} else {
+				data = append(data, buffer...)
+			}
+		}
+		if err != nil {
+			break
+		}
 	}
 	return data, err
 }
 
-// RecvWithTimeout reads data from connection with timeout.
+// RecvWithTimeout reads data from the connection with timeout.
 func (c *Conn) RecvWithTimeout(length int, timeout time.Duration, retry ...Retry) (data []byte, err error) {
 	if err := c.SetRecvDeadline(time.Now().Add(timeout)); err != nil {
 		return nil, err
 	}
-	defer func() {
-		err = gerror.Wrap(c.SetRecvDeadline(time.Time{}), "SetRecvDeadline error")
-	}()
+	defer c.SetRecvDeadline(time.Time{})
 	data, err = c.Recv(length, retry...)
 	return
 }
 
-// SendWithTimeout writes data to connection with timeout.
+// SendWithTimeout writes data to the connection with timeout.
 func (c *Conn) SendWithTimeout(data []byte, timeout time.Duration, retry ...Retry) (err error) {
 	if err := c.SetSendDeadline(time.Now().Add(timeout)); err != nil {
 		return err
 	}
-	defer func() {
-		err = gerror.Wrap(c.SetSendDeadline(time.Time{}), "SetSendDeadline error")
-	}()
+	defer c.SetSendDeadline(time.Time{})
 	err = c.Send(data, retry...)
 	return
 }
 
-// SendRecv writes data to connection and blocks reading response.
-func (c *Conn) SendRecv(data []byte, receive int, retry ...Retry) ([]byte, error) {
+// SendRecv writes data to the connection and blocks reading response.
+func (c *Conn) SendRecv(data []byte, length int, retry ...Retry) ([]byte, error) {
 	if err := c.Send(data, retry...); err == nil {
-		return c.Recv(receive, retry...)
+		return c.Recv(length, retry...)
 	} else {
 		return nil, err
 	}
 }
 
-// SendRecvWithTimeout writes data to connection and reads response with timeout.
-func (c *Conn) SendRecvWithTimeout(data []byte, receive int, timeout time.Duration, retry ...Retry) ([]byte, error) {
+// SendRecvWithTimeout writes data to the connection and reads response with timeout.
+func (c *Conn) SendRecvWithTimeout(data []byte, length int, timeout time.Duration, retry ...Retry) ([]byte, error) {
 	if err := c.Send(data, retry...); err == nil {
-		return c.RecvWithTimeout(receive, timeout, retry...)
+		return c.RecvWithTimeout(length, timeout, retry...)
 	} else {
 		return nil, err
 	}

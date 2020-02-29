@@ -7,9 +7,12 @@
 package gfile
 
 import (
+	"bufio"
 	"io"
 	"io/ioutil"
 	"os"
+
+	"github.com/gogf/gf/util/gconv"
 )
 
 var (
@@ -20,7 +23,7 @@ var (
 // GetContents returns the file content of <path> as string.
 // It returns en empty string if it fails reading.
 func GetContents(path string) string {
-	return string(GetBytes(path))
+	return gconv.UnsafeBytesToStr(GetBytes(path))
 }
 
 // GetBytes returns the file content of <path> as []byte.
@@ -157,6 +160,38 @@ func GetBytesByTwoOffsetsByPath(path string, start int64, end int64) []byte {
 	if f, err := OpenWithFlagPerm(path, os.O_RDONLY, DefaultPerm); err == nil {
 		defer f.Close()
 		return GetBytesByTwoOffsets(f, start, end)
+	}
+	return nil
+}
+
+// ReadLines reads file content line by line, which is passed to the callback function <callback> as string.
+// It matches each line of text, separated by chars '\r' or '\n', stripped any trailing end-of-line marker.
+//
+// Note that the parameter passed to callback function might be an empty value, and the last non-empty line
+// will be passed to callback function <callback> even if it has no newline marker.
+func ReadLines(file string, callback func(text string)) error {
+	cb := func(bytes []byte) {
+		callback(gconv.UnsafeBytesToStr(bytes))
+	}
+	return ReadByteLines(file, cb)
+}
+
+// ReadByteLines reads file content line by line, which is passed to the callback function <callback> as []byte.
+// It matches each line of text, separated by chars '\r' or '\n', stripped any trailing end-of-line marker.
+//
+// Note that the parameter passed to callback function might be an empty value, and the last non-empty line
+// will be passed to callback function <callback> even if it has no newline marker.
+func ReadByteLines(file string, callback func(bytes []byte)) error {
+	f, err := os.Open(file)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+
+	for scanner.Scan() {
+		callback(scanner.Bytes())
 	}
 	return nil
 }

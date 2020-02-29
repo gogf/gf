@@ -49,9 +49,15 @@ func TryCatch(try func(), catch ...func(exception interface{})) {
 	gutil.TryCatch(try, catch...)
 }
 
-// IsEmpty checks given value empty or not.
-// It returns false if value is: integer(0), bool(false), slice/map(len=0), nil;
-// or else true.
+// IsNil checks whether given <value> is nil.
+// Note that it might use reflect feature which affects performance a little bit.
+func IsNil(value interface{}) bool {
+	return empty.IsNil(value)
+}
+
+// IsEmpty checks whether given <value> empty.
+// It returns true if <value> is in: 0, nil, false, "", len(slice/map/chan) == 0.
+// Or else it returns true.
 func IsEmpty(value interface{}) bool {
 	return empty.IsEmpty(value)
 }

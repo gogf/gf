@@ -1,0 +1,14 @@
+
+
+[viewer]
+    [viewer.test1]
+        defaultFile = "test1.html"
+        delimiters  = ["${", "}"]
+        [viewer.test1.data]
+            name = "test1"
+    [viewer.test2]
+        defaultFile = "test2.html"
+        delimiters  = ["#{", "}"]
+        [viewer.test2.data]
+            name = "test2"
+

@@ -87,7 +87,15 @@ var (
 )
 
 // SetTimeZone sets the time zone for current whole process.
-// The parameter <zone> is an area string specifying corresponding time zone, eg: Asia/Shanghai.
+// The parameter <zone> is an area string specifying corresponding time zone,
+// eg: Asia/Shanghai.
+//
+// Note that the time zone database needed by LoadLocation may not be
+// present on all systems, especially non-Unix systems.
+// LoadLocation looks in the directory or uncompressed zip file
+// named by the ZONEINFO environment variable, if any, then looks in
+// known installation locations on Unix systems,
+// and finally looks in $GOROOT/lib/time/zoneinfo.zip.
 func SetTimeZone(zone string) error {
 	location, err := time.LoadLocation(zone)
 	if err == nil {
@@ -96,24 +104,72 @@ func SetTimeZone(zone string) error {
 	return err
 }
 
-// Nanosecond returns the timestamp in nanoseconds.
-func Nanosecond() int64 {
-	return time.Now().UnixNano()
+// Timestamp retrieves and returns the timestamp in seconds.
+func Timestamp() int64 {
+	return Now().Timestamp()
 }
 
-// Microsecond returns the timestamp in microseconds.
-func Microsecond() int64 {
-	return time.Now().UnixNano() / 1e3
+// TimestampMilli retrieves and returns the timestamp in milliseconds.
+func TimestampMilli() int64 {
+	return Now().TimestampMilli()
 }
 
-// Millisecond returns the timestamp in milliseconds.
-func Millisecond() int64 {
-	return time.Now().UnixNano() / 1e6
+// TimestampMicro retrieves and returns the timestamp in microseconds.
+func TimestampMicro() int64 {
+	return Now().TimestampMicro()
+}
+
+// TimestampNano retrieves and returns the timestamp in nanoseconds.
+func TimestampNano() int64 {
+	return Now().TimestampNano()
+}
+
+// TimestampStr is a convenience method which retrieves and returns
+// the timestamp in seconds as string.
+func TimestampStr() string {
+	return Now().TimestampStr()
+}
+
+// TimestampMilliStr is a convenience method which retrieves and returns
+// the timestamp in milliseconds as string.
+func TimestampMilliStr() string {
+	return Now().TimestampMilliStr()
+}
+
+// TimestampMicroStr is a convenience method which retrieves and returns
+// the timestamp in microseconds as string.
+func TimestampMicroStr() string {
+	return Now().TimestampMicroStr()
+}
+
+// TimestampNanoStr is a convenience method which retrieves and returns
+// the timestamp in nanoseconds as string.
+func TimestampNanoStr() string {
+	return Now().TimestampNanoStr()
 }
 
 // Second returns the timestamp in seconds.
+// Deprecated, use Timestamp instead.
 func Second() int64 {
-	return time.Now().Unix()
+	return Timestamp()
+}
+
+// Millisecond returns the timestamp in milliseconds.
+// Deprecated, use TimestampMilli instead.
+func Millisecond() int64 {
+	return TimestampMilli()
+}
+
+// Microsecond returns the timestamp in microseconds.
+// Deprecated, use TimestampMicro instead.
+func Microsecond() int64 {
+	return TimestampMicro()
+}
+
+// Nanosecond returns the timestamp in nanoseconds.
+// Deprecated, use TimestampNano instead.
+func Nanosecond() int64 {
+	return TimestampNano()
 }
 
 // Date returns current date in string like "2006-01-02".
@@ -259,6 +315,9 @@ func StrToTime(str string, format ...string) (*Time, error) {
 				}
 			}
 		}
+	}
+	if year <= 0 || month <= 0 || day <= 0 || hour < 0 || min < 0 || sec < 0 || nsec < 0 {
+		return nil, errors.New("invalid time string:" + str)
 	}
 	// It finally converts all time to UTC time zone.
 	return NewFromTime(time.Date(year, time.Month(month), day, hour, min, sec, nsec, local)), nil

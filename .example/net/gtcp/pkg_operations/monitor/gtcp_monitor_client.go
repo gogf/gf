@@ -27,7 +27,7 @@ func main() {
 		},
 		MemUsed:  15560320,
 		MemTotal: 16333788,
-		Time:     int(gtime.Second()),
+		Time:     int(gtime.Timestamp()),
 	})
 	if err != nil {
 		panic(err)

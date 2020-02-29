@@ -13,7 +13,7 @@ import "fmt"
 func Scan(info ...interface{}) string {
 	var s string
 	fmt.Print(info...)
-	fmt.Scan(&s)
+	fmt.Scanln(&s)
 	return s
 }
 
@@ -21,6 +21,6 @@ func Scan(info ...interface{}) string {
 func Scanf(format string, info ...interface{}) string {
 	var s string
 	fmt.Printf(format, info...)
-	fmt.Scan(&s)
+	fmt.Scanln(&s)
 	return s
 }

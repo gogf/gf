@@ -46,4 +46,33 @@ func Test_I18n(t *testing.T) {
 		gtest.Assert(err, nil)
 		gtest.Assert(result3, expect3)
 	})
+	gtest.Case(t, func() {
+		content := `{{.name}} says "{#hello}{#world}!"`
+		expect1 := `john says "你好世界!"`
+		expect2 := `john says "こんにちは世界!"`
+		expect3 := `john says "{#hello}{#world}!"`
+
+		g.I18n().SetPath(gdebug.CallerDirectory() + gfile.Separator + "testdata" + gfile.Separator + "i18n")
+
+		result1, err := g.View().ParseContent(content, g.Map{
+			"name":         "john",
+			"I18nLanguage": "zh-CN",
+		})
+		gtest.Assert(err, nil)
+		gtest.Assert(result1, expect1)
+
+		result2, err := g.View().ParseContent(content, g.Map{
+			"name":         "john",
+			"I18nLanguage": "ja",
+		})
+		gtest.Assert(err, nil)
+		gtest.Assert(result2, expect2)
+
+		result3, err := g.View().ParseContent(content, g.Map{
+			"name":         "john",
+			"I18nLanguage": "none",
+		})
+		gtest.Assert(err, nil)
+		gtest.Assert(result3, expect3)
+	})
 }

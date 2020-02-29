@@ -13,11 +13,12 @@ import (
 	"sync/atomic"
 )
 
+// Bytes is a struct for concurrent-safe operation for type []byte.
 type Bytes struct {
 	value atomic.Value
 }
 
-// NewBytes returns a concurrent-safe object for []byte type,
+// NewBytes creates and returns a concurrent-safe object for []byte type,
 // with given initial value <value>.
 func NewBytes(value ...[]byte) *Bytes {
 	t := &Bytes{}
@@ -40,7 +41,7 @@ func (v *Bytes) Set(value []byte) (old []byte) {
 	return
 }
 
-// Val atomically loads t.value.
+// Val atomically loads and returns t.value.
 func (v *Bytes) Val() []byte {
 	if s := v.value.Load(); s != nil {
 		return s.([]byte)
@@ -69,5 +70,11 @@ func (v *Bytes) UnmarshalJSON(b []byte) error {
 		return nil
 	}
 	v.Set(src[:n])
+	return nil
+}
+
+// UnmarshalValue is an interface implement which sets any type of value for <v>.
+func (v *Bytes) UnmarshalValue(value interface{}) error {
+	v.Set(gconv.Bytes(value))
 	return nil
 }

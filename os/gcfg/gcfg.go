@@ -11,6 +11,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/text/gstr"
 
 	"github.com/gogf/gf/os/gres"
 
@@ -93,6 +94,7 @@ func (c *Config) filePath(file ...string) (path string) {
 			c.paths.RLockFunc(func(array []string) {
 				index := 1
 				for _, v := range array {
+					v = gstr.TrimRight(v, `\/`)
 					buffer.WriteString(fmt.Sprintf("\n%d. %s", index, v))
 					index++
 					buffer.WriteString(fmt.Sprintf("\n%d. %s", index, v+gfile.Separator+"config"))
@@ -252,16 +254,29 @@ func (c *Config) FilePath(file ...string) (path string) {
 	if len(file) > 0 {
 		name = file[0]
 	}
-	c.paths.RLockFunc(func(array []string) {
-		for _, prefix := range array {
-			// Firstly checking the resource manager.
-			for _, v := range resourceTryFiles {
-				if file := gres.Get(prefix + v + name); file != nil {
-					path = file.Name()
-					return
+	// Searching resource manager.
+	if !gres.IsEmpty() {
+		for _, v := range resourceTryFiles {
+			if file := gres.Get(v + name); file != nil {
+				path = file.Name()
+				return
+			}
+		}
+		c.paths.RLockFunc(func(array []string) {
+			for _, prefix := range array {
+				for _, v := range resourceTryFiles {
+					if file := gres.Get(prefix + v + name); file != nil {
+						path = file.Name()
+						return
+					}
 				}
 			}
-			// Secondly checking the file system.
+		})
+	}
+	// Searching the file system.
+	c.paths.RLockFunc(func(array []string) {
+		for _, prefix := range array {
+			prefix = gstr.TrimRight(prefix, `\/`)
 			if path, _ = gspath.Search(prefix, name); path != "" {
 				return
 			}
@@ -270,15 +285,6 @@ func (c *Config) FilePath(file ...string) (path string) {
 			}
 		}
 	})
-	// Checking the configuration file in default paths.
-	if path == "" && !gres.IsEmpty() {
-		for _, v := range resourceTryFiles {
-			if file := gres.Get(v + name); file != nil {
-				path = file.Name()
-				return
-			}
-		}
-	}
 	return
 }
 
@@ -293,13 +299,31 @@ func (c *Config) GetFileName() string {
 	return c.name.Val()
 }
 
-// getJson returns a *gjson.Json object for the specified <file> content.
-// It would print error if file reading fails.
-// If any error occurs, it return nil.
-func (c *Config) getJson(file ...string) *gjson.Json {
-	name := c.name.Val()
-	if len(file) > 0 {
+// Available checks and returns whether configuration of given <file> is available.
+func (c *Config) Available(file ...string) bool {
+	var name string
+	if len(file) > 0 && file[0] != "" {
 		name = file[0]
+	} else {
+		name = c.name.Val()
+	}
+	if c.FilePath(name) != "" {
+		return true
+	}
+	if GetContent(name) != "" {
+		return true
+	}
+	return false
+}
+
+// getJson returns a *gjson.Json object for the specified <file> content.
+// It would print error if file reading fails. It return nil if any error occurs.
+func (c *Config) getJson(file ...string) *gjson.Json {
+	var name string
+	if len(file) > 0 && file[0] != "" {
+		name = file[0]
+	} else {
+		name = c.name.Val()
 	}
 	r := c.jsons.GetOrSetFuncLock(name, func() interface{} {
 		content := ""

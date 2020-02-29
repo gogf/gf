@@ -26,6 +26,7 @@ func TestNewSortedIntArrayFrom(t *testing.T) {
 		array1 := garray.NewSortedIntArrayFrom(a1, true)
 		gtest.Assert(array1.Join("."), "0.1.2.3.4.5.6")
 		gtest.Assert(array1.Slice(), a1)
+		gtest.Assert(array1.Interfaces(), a1)
 	})
 }
 
@@ -77,6 +78,10 @@ func TestSortedIntArray_Remove(t *testing.T) {
 	gtest.Case(t, func() {
 		a1 := []int{1, 3, 5, 0}
 		array1 := garray.NewSortedIntArrayFrom(a1)
+
+		gtest.Assert(array1.Remove(-1), 0)
+		gtest.Assert(array1.Remove(100000), 0)
+
 		i1 := array1.Remove(2)
 		gtest.Assert(i1, 3)
 		gtest.Assert(array1.Search(5), 2)
@@ -262,6 +267,34 @@ func TestSortedIntArray_Chunk(t *testing.T) {
 		gtest.Assert(ns1[0], []int{1, 2})
 		gtest.Assert(ns1[2], []int{5})
 		gtest.Assert(len(ns2), 0)
+	})
+	gtest.Case(t, func() {
+		a1 := []int{1, 2, 3, 4, 5}
+		array1 := garray.NewSortedIntArrayFrom(a1)
+		chunks := array1.Chunk(3)
+		gtest.Assert(len(chunks), 2)
+		gtest.Assert(chunks[0], []int{1, 2, 3})
+		gtest.Assert(chunks[1], []int{4, 5})
+		gtest.Assert(array1.Chunk(0), nil)
+	})
+	gtest.Case(t, func() {
+		a1 := []int{1, 2, 3, 4, 5, 6}
+		array1 := garray.NewSortedIntArrayFrom(a1)
+		chunks := array1.Chunk(2)
+		gtest.Assert(len(chunks), 3)
+		gtest.Assert(chunks[0], []int{1, 2})
+		gtest.Assert(chunks[1], []int{3, 4})
+		gtest.Assert(chunks[2], []int{5, 6})
+		gtest.Assert(array1.Chunk(0), nil)
+	})
+	gtest.Case(t, func() {
+		a1 := []int{1, 2, 3, 4, 5, 6}
+		array1 := garray.NewSortedIntArrayFrom(a1)
+		chunks := array1.Chunk(3)
+		gtest.Assert(len(chunks), 2)
+		gtest.Assert(chunks[0], []int{1, 2, 3})
+		gtest.Assert(chunks[1], []int{4, 5, 6})
+		gtest.Assert(array1.Chunk(0), nil)
 	})
 }
 
@@ -463,5 +496,105 @@ func TestSortedIntArray_Json(t *testing.T) {
 		gtest.Assert(err, nil)
 		gtest.Assert(user.Name, data["Name"])
 		gtest.Assert(user.Scores, []int{98, 99, 100})
+	})
+}
+
+func TestSortedIntArray_Iterator(t *testing.T) {
+	slice := g.SliceInt{10, 20, 30, 40}
+	array := garray.NewSortedIntArrayFrom(slice)
+	gtest.Case(t, func() {
+		array.Iterator(func(k int, v int) bool {
+			gtest.Assert(v, slice[k])
+			return true
+		})
+	})
+	gtest.Case(t, func() {
+		array.IteratorAsc(func(k int, v int) bool {
+			gtest.Assert(v, slice[k])
+			return true
+		})
+	})
+	gtest.Case(t, func() {
+		array.IteratorDesc(func(k int, v int) bool {
+			gtest.Assert(v, slice[k])
+			return true
+		})
+	})
+	gtest.Case(t, func() {
+		index := 0
+		array.Iterator(func(k int, v int) bool {
+			index++
+			return false
+		})
+		gtest.Assert(index, 1)
+	})
+	gtest.Case(t, func() {
+		index := 0
+		array.IteratorAsc(func(k int, v int) bool {
+			index++
+			return false
+		})
+		gtest.Assert(index, 1)
+	})
+	gtest.Case(t, func() {
+		index := 0
+		array.IteratorDesc(func(k int, v int) bool {
+			index++
+			return false
+		})
+		gtest.Assert(index, 1)
+	})
+}
+
+func TestSortedIntArray_RemoveValue(t *testing.T) {
+	slice := g.SliceInt{10, 20, 30, 40}
+	array := garray.NewSortedIntArrayFrom(slice)
+	gtest.Case(t, func() {
+		gtest.Assert(array.RemoveValue(99), false)
+		gtest.Assert(array.RemoveValue(20), true)
+		gtest.Assert(array.RemoveValue(10), true)
+		gtest.Assert(array.RemoveValue(20), false)
+		gtest.Assert(array.RemoveValue(88), false)
+		gtest.Assert(array.Len(), 2)
+	})
+}
+
+func TestSortedIntArray_UnmarshalValue(t *testing.T) {
+	type T struct {
+		Name  string
+		Array *garray.SortedIntArray
+	}
+	// JSON
+	gtest.Case(t, func() {
+		var t *T
+		err := gconv.Struct(g.Map{
+			"name":  "john",
+			"array": []byte(`[2,3,1]`),
+		}, &t)
+		gtest.Assert(err, nil)
+		gtest.Assert(t.Name, "john")
+		gtest.Assert(t.Array.Slice(), g.Slice{1, 2, 3})
+	})
+	// Map
+	gtest.Case(t, func() {
+		var t *T
+		err := gconv.Struct(g.Map{
+			"name":  "john",
+			"array": g.Slice{2, 3, 1},
+		}, &t)
+		gtest.Assert(err, nil)
+		gtest.Assert(t.Name, "john")
+		gtest.Assert(t.Array.Slice(), g.Slice{1, 2, 3})
+	})
+}
+
+func TestSortedIntArray_FilterEmpty(t *testing.T) {
+	gtest.Case(t, func() {
+		array := garray.NewSortedIntArrayFrom(g.SliceInt{0, 1, 2, 3, 4, 0})
+		gtest.Assert(array.FilterEmpty(), g.SliceInt{1, 2, 3, 4})
+	})
+	gtest.Case(t, func() {
+		array := garray.NewSortedIntArrayFrom(g.SliceInt{1, 2, 3, 4})
+		gtest.Assert(array.FilterEmpty(), g.SliceInt{1, 2, 3, 4})
 	})
 }

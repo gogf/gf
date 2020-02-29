@@ -9,6 +9,7 @@ package gi18n
 import (
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/internal/intlog"
 	"strings"
 	"sync"
 
@@ -34,6 +35,7 @@ type Manager struct {
 	options Options                      // configuration options.
 }
 
+// Options is used for i18n object configuration.
 type Options struct {
 	Path       string   // I18n files storage path.
 	Language   string   // Local language.
@@ -41,6 +43,7 @@ type Options struct {
 }
 
 var (
+	// defaultDelimiters defines the key variable delimiters.
 	defaultDelimiters = []string{"{#", "}"}
 )
 
@@ -55,7 +58,7 @@ func New(options ...Options) *Manager {
 	if len(opts.Delimiters) == 0 {
 		opts.Delimiters = defaultDelimiters
 	}
-	return &Manager{
+	m := &Manager{
 		options: opts,
 		pattern: fmt.Sprintf(
 			`%s(\w+)%s`,
@@ -63,6 +66,8 @@ func New(options ...Options) *Manager {
 			gregex.Quote(opts.Delimiters[1]),
 		),
 	}
+	intlog.Printf(`New: %+v`, m)
+	return m
 }
 
 // DefaultOptions returns the default options for i18n manager.
@@ -93,17 +98,20 @@ func (m *Manager) SetPath(path string) error {
 		}
 		m.options.Path = realPath
 	}
+	intlog.Printf(`SetPath: %s`, m.options.Path)
 	return nil
 }
 
 // SetLanguage sets the language for translator.
 func (m *Manager) SetLanguage(language string) {
 	m.options.Language = language
+	intlog.Printf(`SetLanguage: %s`, m.options.Language)
 }
 
 // SetDelimiters sets the delimiters for translator.
 func (m *Manager) SetDelimiters(left, right string) {
 	m.pattern = fmt.Sprintf(`%s(\w+)%s`, gregex.Quote(left), gregex.Quote(right))
+	intlog.Printf(`SetDelimiters: %v`, m.pattern)
 }
 
 // T is alias of Translate.
@@ -117,12 +125,13 @@ func (m *Manager) Translate(content string, language ...string) string {
 	m.init()
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	var data map[string]string
-	if len(language) > 0 {
-		data = m.data[language[0]]
+	transLang := m.options.Language
+	if len(language) > 0 && language[0] != "" {
+		transLang = language[0]
 	} else {
-		data = m.data[m.options.Language]
+		transLang = m.options.Language
 	}
+	data := m.data[transLang]
 	if data == nil {
 		return content
 	}
@@ -137,9 +146,12 @@ func (m *Manager) Translate(content string, language ...string) string {
 		}
 		return match[0]
 	})
+	intlog.Printf(`Translate for language: %s`, transLang)
 	return result
 }
 
+// init initializes the manager for lazy initialization design.
+// The i18n manager is only initialized once.
 func (m *Manager) init() {
 	m.mu.RLock()
 	if m.data != nil {

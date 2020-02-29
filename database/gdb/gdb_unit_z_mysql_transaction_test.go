@@ -225,7 +225,7 @@ func Test_TX_BatchReplace(t *testing.T) {
 		if n, err := db.Table(table).Count(); err != nil {
 			gtest.Error(err)
 		} else {
-			gtest.Assert(n, INIT_DATA_SIZE)
+			gtest.Assert(n, SIZE)
 		}
 		if value, err := db.Table(table).Fields("password").Where("id", 2).Value(); err != nil {
 			gtest.Error(err)
@@ -262,7 +262,7 @@ func Test_TX_BatchSave(t *testing.T) {
 		if n, err := db.Table(table).Count(); err != nil {
 			gtest.Error(err)
 		} else {
-			gtest.Assert(n, INIT_DATA_SIZE)
+			gtest.Assert(n, SIZE)
 		}
 
 		if value, err := db.Table(table).Fields("password").Where("id", 4).Value(); err != nil {
@@ -437,7 +437,7 @@ func Test_TX_GetCount(t *testing.T) {
 		if count, err := tx.GetCount("SELECT * FROM " + table); err != nil {
 			gtest.Error(err)
 		} else {
-			gtest.Assert(count, INIT_DATA_SIZE)
+			gtest.Assert(count, SIZE)
 		}
 		if err := tx.Commit(); err != nil {
 			gtest.Error(err)
@@ -515,7 +515,7 @@ func Test_TX_GetStructs(t *testing.T) {
 		if err := tx.GetStructs(&users, fmt.Sprintf("SELECT * FROM %s WHERE id>=?", table), 1); err != nil {
 			gtest.Error(err)
 		}
-		gtest.Assert(len(users), INIT_DATA_SIZE)
+		gtest.Assert(len(users), SIZE)
 		gtest.Assert(users[0].Id, 1)
 		gtest.Assert(users[1].Id, 2)
 		gtest.Assert(users[2].Id, 3)
@@ -544,7 +544,7 @@ func Test_TX_GetStructs(t *testing.T) {
 		if err := tx.GetStructs(&users, fmt.Sprintf("SELECT * FROM %s WHERE id>=?", table), 1); err != nil {
 			gtest.Error(err)
 		}
-		gtest.Assert(len(users), INIT_DATA_SIZE)
+		gtest.Assert(len(users), SIZE)
 		gtest.Assert(users[0].Id, 1)
 		gtest.Assert(users[1].Id, 2)
 		gtest.Assert(users[2].Id, 3)
@@ -623,7 +623,7 @@ func Test_TX_GetScan(t *testing.T) {
 		if err := tx.GetScan(&users, fmt.Sprintf("SELECT * FROM %s WHERE id>=?", table), 1); err != nil {
 			gtest.Error(err)
 		}
-		gtest.Assert(len(users), INIT_DATA_SIZE)
+		gtest.Assert(len(users), SIZE)
 		gtest.Assert(users[0].Id, 1)
 		gtest.Assert(users[1].Id, 2)
 		gtest.Assert(users[2].Id, 3)
@@ -652,7 +652,7 @@ func Test_TX_GetScan(t *testing.T) {
 		if err := tx.GetScan(&users, fmt.Sprintf("SELECT * FROM %s WHERE id>=?", table), 1); err != nil {
 			gtest.Error(err)
 		}
-		gtest.Assert(len(users), INIT_DATA_SIZE)
+		gtest.Assert(len(users), SIZE)
 		gtest.Assert(users[0].Id, 1)
 		gtest.Assert(users[1].Id, 2)
 		gtest.Assert(users[2].Id, 3)
@@ -667,10 +667,10 @@ func Test_TX_GetScan(t *testing.T) {
 }
 
 func Test_TX_Delete(t *testing.T) {
-	table := createInitTable()
-	defer dropTable(table)
 
 	gtest.Case(t, func() {
+		table := createInitTable()
+		defer dropTable(table)
 		tx, err := db.Begin()
 		if err != nil {
 			gtest.Error(err)
@@ -685,6 +685,32 @@ func Test_TX_Delete(t *testing.T) {
 			gtest.Error(err)
 		} else {
 			gtest.Assert(n, 0)
+		}
+	})
+
+	gtest.Case(t, func() {
+		table := createInitTable()
+		defer dropTable(table)
+		tx, err := db.Begin()
+		if err != nil {
+			gtest.Error(err)
+		}
+		if _, err := tx.Delete(table, nil); err != nil {
+			gtest.Error(err)
+		}
+		if n, err := tx.Table(table).Count(); err != nil {
+			gtest.Error(err)
+		} else {
+			gtest.Assert(n, 0)
+		}
+		if err := tx.Rollback(); err != nil {
+			gtest.Error(err)
+		}
+		if n, err := db.Table(table).Count(); err != nil {
+			gtest.Error(err)
+		} else {
+			gtest.Assert(n, SIZE)
+			gtest.AssertNE(n, 0)
 		}
 	})
 

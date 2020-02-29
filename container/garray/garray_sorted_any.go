@@ -9,6 +9,8 @@ package garray
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"github.com/gogf/gf/internal/empty"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gutil"
 	"math"
@@ -29,7 +31,7 @@ type SortedArray struct {
 }
 
 // NewSortedArray creates and returns an empty sorted array.
-// The parameter <safe> used to specify whether using array in concurrent-safety, which is false in default.
+// The parameter <safe> is used to specify whether using array in concurrent-safety, which is false in default.
 // The parameter <comparator> used to compare values to sort in array,
 // if it returns value < 0, means v1 < v2;
 // if it returns value = 0, means v1 = v2;
@@ -39,7 +41,7 @@ func NewSortedArray(comparator func(a, b interface{}) int, safe ...bool) *Sorted
 }
 
 // NewSortedArraySize create and returns an sorted array with given size and cap.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewSortedArraySize(cap int, comparator func(a, b interface{}) int, safe ...bool) *SortedArray {
 	return &SortedArray{
@@ -50,8 +52,23 @@ func NewSortedArraySize(cap int, comparator func(a, b interface{}) int, safe ...
 	}
 }
 
+// NewSortedArrayRange creates and returns a array by a range from <start> to <end>
+// with step value <step>.
+func NewSortedArrayRange(start, end, step int, comparator func(a, b interface{}) int, safe ...bool) *SortedArray {
+	if step == 0 {
+		panic(fmt.Sprintf(`invalid step value: %d`, step))
+	}
+	slice := make([]interface{}, (end-start+1)/step)
+	index := 0
+	for i := start; i <= end; i += step {
+		slice[index] = i
+		index++
+	}
+	return NewSortedArrayFrom(slice, comparator, safe...)
+}
+
 // NewSortedArrayFrom creates and returns an sorted array with given slice <array>.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewSortedArrayFrom(array []interface{}, comparator func(a, b interface{}) int, safe ...bool) *SortedArray {
 	a := NewSortedArraySize(0, comparator, safe...)
@@ -63,7 +80,7 @@ func NewSortedArrayFrom(array []interface{}, comparator func(a, b interface{}) i
 }
 
 // NewSortedArrayFromCopy creates and returns an sorted array from a copy of given slice <array>.
-// The parameter <safe> used to specify whether using array in concurrent-safety,
+// The parameter <safe> is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewSortedArrayFromCopy(array []interface{}, comparator func(a, b interface{}) int, safe ...bool) *SortedArray {
 	newArray := make([]interface{}, len(array))
@@ -144,6 +161,9 @@ func (a *SortedArray) Get(index int) interface{} {
 func (a *SortedArray) Remove(index int) interface{} {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	if index < 0 || index >= len(a.array) {
+		return nil
+	}
 	// Determine array boundaries when deleting to improve deletion efficiency.
 	if index == 0 {
 		value := a.array[0]
@@ -160,6 +180,16 @@ func (a *SortedArray) Remove(index int) interface{} {
 	value := a.array[index]
 	a.array = append(a.array[:index], a.array[index+1:]...)
 	return value
+}
+
+// RemoveValue removes an item by value.
+// It returns true if value is found in the array, or else false if not found.
+func (a *SortedArray) RemoveValue(value interface{}) bool {
+	if i := a.Search(value); i != -1 {
+		a.Remove(i)
+		return true
+	}
+	return false
 }
 
 // PopLeft pops and returns an item from the beginning of array.
@@ -340,6 +370,11 @@ func (a *SortedArray) Slice() []interface{} {
 		array = a.array
 	}
 	return array
+}
+
+// Interfaces returns current array as []interface{}.
+func (a *SortedArray) Interfaces() []interface{} {
+	return a.Slice()
 }
 
 // Contains checks whether a value exists in the array.
@@ -529,14 +564,8 @@ func (a *SortedArray) Join(glue string) string {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	buffer := bytes.NewBuffer(nil)
-	s := ""
 	for k, v := range a.array {
-		s = gconv.String(v)
-		if gstr.IsNumeric(s) {
-			buffer.WriteString(s)
-		} else {
-			buffer.WriteString(`"` + gstr.QuoteMeta(s, `"\`) + `"`)
-		}
+		buffer.WriteString(gconv.String(v))
 		if k != len(a.array)-1 {
 			buffer.WriteString(glue)
 		}
@@ -555,9 +584,55 @@ func (a *SortedArray) CountValues() map[interface{}]int {
 	return m
 }
 
-// String returns current array as a string.
+// Iterator is alias of IteratorAsc.
+func (a *SortedArray) Iterator(f func(k int, v interface{}) bool) {
+	a.IteratorAsc(f)
+}
+
+// IteratorAsc iterates the array in ascending order with given callback function <f>.
+// If <f> returns true, then it continues iterating; or false to stop.
+func (a *SortedArray) IteratorAsc(f func(k int, v interface{}) bool) {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	for k, v := range a.array {
+		if !f(k, v) {
+			break
+		}
+	}
+}
+
+// IteratorDesc iterates the array in descending order with given callback function <f>.
+// If <f> returns true, then it continues iterating; or false to stop.
+func (a *SortedArray) IteratorDesc(f func(k int, v interface{}) bool) {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	for i := len(a.array) - 1; i >= 0; i-- {
+		if !f(i, a.array[i]) {
+			break
+		}
+	}
+}
+
+// String returns current array as a string, which implements like json.Marshal does.
 func (a *SortedArray) String() string {
-	return "[" + a.Join(",") + "]"
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	buffer := bytes.NewBuffer(nil)
+	buffer.WriteByte('[')
+	s := ""
+	for k, v := range a.array {
+		s = gconv.String(v)
+		if gstr.IsNumeric(s) {
+			buffer.WriteString(s)
+		} else {
+			buffer.WriteString(`"` + gstr.QuoteMeta(s, `"\`) + `"`)
+		}
+		if k != len(a.array)-1 {
+			buffer.WriteByte(',')
+		}
+	}
+	buffer.WriteByte(']')
+	return buffer.String()
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
@@ -581,10 +656,77 @@ func (a *SortedArray) UnmarshalJSON(b []byte) error {
 	if err := json.Unmarshal(b, &a.array); err != nil {
 		return err
 	}
-	if a.comparator != nil {
+	if a.comparator != nil && a.array != nil {
 		sort.Slice(a.array, func(i, j int) bool {
 			return a.comparator(a.array[i], a.array[j]) < 0
 		})
 	}
 	return nil
+}
+
+// UnmarshalValue is an interface implement which sets any type of value for array.
+func (a *SortedArray) UnmarshalValue(value interface{}) (err error) {
+	if a.mu == nil {
+		a.mu = rwmutex.New()
+		a.unique = gtype.NewBool()
+		// Note that the comparator is string comparator in default.
+		a.comparator = gutil.ComparatorString
+	}
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	switch value.(type) {
+	case string, []byte:
+		err = json.Unmarshal(gconv.Bytes(value), &a.array)
+	default:
+		a.array = gconv.SliceAny(value)
+	}
+	if a.comparator != nil && a.array != nil {
+		sort.Slice(a.array, func(i, j int) bool {
+			return a.comparator(a.array[i], a.array[j]) < 0
+		})
+	}
+	return err
+}
+
+// FilterNil removes all nil value of the array.
+func (a *SortedArray) FilterNil() *SortedArray {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for i := 0; i < len(a.array); {
+		if empty.IsNil(a.array[i]) {
+			a.array = append(a.array[:i], a.array[i+1:]...)
+		} else {
+			break
+		}
+	}
+	for i := len(a.array) - 1; i >= 0; {
+		if empty.IsNil(a.array[i]) {
+			a.array = append(a.array[:i], a.array[i+1:]...)
+		} else {
+			break
+		}
+	}
+	return a
+}
+
+// FilterEmpty removes all empty value of the array.
+// Values like: 0, nil, false, "", len(slice/map/chan) == 0 are considered empty.
+func (a *SortedArray) FilterEmpty() *SortedArray {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for i := 0; i < len(a.array); {
+		if empty.IsEmpty(a.array[i]) {
+			a.array = append(a.array[:i], a.array[i+1:]...)
+		} else {
+			break
+		}
+	}
+	for i := len(a.array) - 1; i >= 0; {
+		if empty.IsEmpty(a.array[i]) {
+			a.array = append(a.array[:i], a.array[i+1:]...)
+		} else {
+			break
+		}
+	}
+	return a
 }

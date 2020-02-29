@@ -7,6 +7,7 @@
 package gtime_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -25,6 +26,17 @@ func Test_New(t *testing.T) {
 	})
 }
 
+func Test_Nil(t *testing.T) {
+	gtest.Case(t, func() {
+		var t *gtime.Time
+		gtest.Assert(t.String(), "")
+	})
+	gtest.Case(t, func() {
+		var t gtime.Time
+		gtest.Assert(t.String(), "")
+	})
+}
+
 func Test_NewFromStr(t *testing.T) {
 	gtest.Case(t, func() {
 		timeTemp := gtime.NewFromStr("2006-01-02 15:04:05")
@@ -37,6 +49,18 @@ func Test_NewFromStr(t *testing.T) {
 	})
 }
 
+func Test_String(t *testing.T) {
+	gtest.Case(t, func() {
+		t1 := gtime.NewFromStr("2006-01-02 15:04:05")
+		gtest.Assert(t1.String(), "2006-01-02 15:04:05")
+		gtest.Assert(fmt.Sprintf("%s", t1), "2006-01-02 15:04:05")
+
+		t2 := *t1
+		gtest.Assert(t2.String(), "2006-01-02 15:04:05")
+		gtest.Assert(fmt.Sprintf("%s", t2), "{2006-01-02 15:04:05}")
+	})
+}
+
 func Test_NewFromStrFormat(t *testing.T) {
 	gtest.Case(t, func() {
 		timeTemp := gtime.NewFromStrFormat("2006-01-02 15:04:05", "Y-m-d H:i:s")
@@ -46,6 +70,14 @@ func Test_NewFromStrFormat(t *testing.T) {
 		if timeTemp1 != nil {
 			t.Error("test fail")
 		}
+	})
+
+	gtest.Case(t, func() {
+		t1 := gtime.NewFromStrFormat("2019/2/1", "Y/n/j")
+		gtest.Assert(t1.Format("Y-m-d"), "2019-02-01")
+
+		t2 := gtime.NewFromStrFormat("2019/10/12", "Y/n/j")
+		gtest.Assert(t2.Format("Y-m-d"), "2019-10-12")
 	})
 }
 
@@ -73,28 +105,28 @@ func Test_NewFromTimeStamp(t *testing.T) {
 func Test_Time_Second(t *testing.T) {
 	gtest.Case(t, func() {
 		timeTemp := gtime.Now()
-		gtest.Assert(timeTemp.Second(), timeTemp.Time.Unix())
+		gtest.Assert(timeTemp.Second(), timeTemp.Time.Second())
 	})
 }
 
 func Test_Time_Nanosecond(t *testing.T) {
 	gtest.Case(t, func() {
 		timeTemp := gtime.Now()
-		gtest.Assert(timeTemp.Nanosecond(), timeTemp.Time.UnixNano())
+		gtest.Assert(timeTemp.Nanosecond(), timeTemp.Time.Nanosecond())
 	})
 }
 
 func Test_Time_Microsecond(t *testing.T) {
 	gtest.Case(t, func() {
 		timeTemp := gtime.Now()
-		gtest.Assert(timeTemp.Microsecond(), timeTemp.Time.UnixNano()/1e3)
+		gtest.Assert(timeTemp.Microsecond(), timeTemp.Time.Nanosecond()/1e3)
 	})
 }
 
 func Test_Time_Millisecond(t *testing.T) {
 	gtest.Case(t, func() {
 		timeTemp := gtime.Now()
-		gtest.Assert(timeTemp.Millisecond(), timeTemp.Time.UnixNano()/1e6)
+		gtest.Assert(timeTemp.Millisecond(), timeTemp.Time.Nanosecond()/1e6)
 	})
 }
 

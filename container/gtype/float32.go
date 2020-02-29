@@ -14,11 +14,12 @@ import (
 	"unsafe"
 )
 
+// Float32 is a struct for concurrent-safe operation for type float32.
 type Float32 struct {
 	value uint32
 }
 
-// NewFloat32 returns a concurrent-safe object for float32 type,
+// NewFloat32 creates and returns a concurrent-safe object for float32 type,
 // with given initial value <value>.
 func NewFloat32(value ...float32) *Float32 {
 	if len(value) > 0 {
@@ -39,7 +40,7 @@ func (v *Float32) Set(value float32) (old float32) {
 	return math.Float32frombits(atomic.SwapUint32(&v.value, math.Float32bits(value)))
 }
 
-// Val atomically loads t.value.
+// Val atomically loads and returns t.value.
 func (v *Float32) Val() float32 {
 	return math.Float32frombits(atomic.LoadUint32(&v.value))
 }
@@ -61,7 +62,7 @@ func (v *Float32) Add(delta float32) (new float32) {
 }
 
 // Cas executes the compare-and-swap operation for value.
-func (v *Float32) Cas(old, new float32) bool {
+func (v *Float32) Cas(old, new float32) (swapped bool) {
 	return atomic.CompareAndSwapUint32(&v.value, math.Float32bits(old), math.Float32bits(new))
 }
 
@@ -78,5 +79,11 @@ func (v *Float32) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (v *Float32) UnmarshalJSON(b []byte) error {
 	v.Set(gconv.Float32(gconv.UnsafeBytesToStr(b)))
+	return nil
+}
+
+// UnmarshalValue is an interface implement which sets any type of value for <v>.
+func (v *Float32) UnmarshalValue(value interface{}) error {
+	v.Set(gconv.Float32(value))
 	return nil
 }

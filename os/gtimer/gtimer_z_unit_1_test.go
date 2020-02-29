@@ -229,7 +229,7 @@ func TestTimer_AddLeveledEntry1(t *testing.T) {
 		timer := New()
 		array := garray.New(true)
 		//glog.Println("start")
-		timer.DelayAdd(1000*time.Millisecond, 1001*time.Millisecond, func() {
+		timer.DelayAdd(1000*time.Millisecond, 1000*time.Millisecond, func() {
 			//glog.Println("add")
 			array.Append(1)
 		})

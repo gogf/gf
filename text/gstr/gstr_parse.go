@@ -24,6 +24,9 @@ import (
 // a .[[b=c            -> map[a___[b:c]
 //
 func Parse(s string) (result map[string]interface{}, err error) {
+	if s == "" {
+		return nil, nil
+	}
 	result = make(map[string]interface{})
 	parts := strings.Split(s, "&")
 	for _, part := range parts {

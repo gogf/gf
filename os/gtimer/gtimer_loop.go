@@ -12,7 +12,7 @@ import (
 	"github.com/gogf/gf/container/glist"
 )
 
-// 开始循环
+// start starts the ticker using a standalone goroutine.
 func (w *wheel) start() {
 	go func() {
 		ticker := time.NewTicker(time.Duration(w.intervalMs) * time.Millisecond)
@@ -34,7 +34,10 @@ func (w *wheel) start() {
 	}()
 }
 
-// 执行时间轮刻度逻辑
+// proceed checks and rolls on the job.
+// If a timing job is time for running, it runs in an asynchronous goroutine,
+// or else it removes from current slot and re-installs the job to another wheel and slot
+// according to its leftover interval in milliseconds.
 func (w *wheel) proceed() {
 	n := w.ticks.Add(1)
 	l := w.slots[int(n%w.number)]
@@ -49,10 +52,10 @@ func (w *wheel) proceed() {
 				} else {
 					entry = v.(*Entry)
 				}
-				// 是否满足运行条件
+				// Checks whether the time for running.
 				runnable, addable := entry.check(nowTicks, nowMs)
 				if runnable {
-					// 异步执行运行
+					// Just run it in another goroutine.
 					go func(entry *Entry) {
 						defer func() {
 							if err := recover(); err != nil {
@@ -69,7 +72,7 @@ func (w *wheel) proceed() {
 						entry.job()
 					}(entry)
 				}
-				// 是否继续添运行, 滚动任务
+				// If rolls on the job.
 				if addable {
 					entry.wheel.timer.doAddEntryByParent(entry.rawIntervalMs, entry)
 				}
