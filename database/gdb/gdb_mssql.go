@@ -26,6 +26,7 @@ type dbMssql struct {
 	*dbBase
 }
 
+// Open creates and returns a underlying sql.DB object for mssql.
 func (db *dbMssql) Open(config *ConfigNode) (*sql.DB, error) {
 	source := ""
 	if config.LinkInfo != "" {
@@ -44,12 +45,15 @@ func (db *dbMssql) Open(config *ConfigNode) (*sql.DB, error) {
 	}
 }
 
+// getChars returns the security char for this type of database.
 func (db *dbMssql) getChars() (charLeft string, charRight string) {
 	return "\"", "\""
 }
 
+// handleSqlBeforeExec deals with the sql string before commits it to underlying sql driver.
 func (db *dbMssql) handleSqlBeforeExec(query string) string {
-	index := 0
+	var index int
+	// Convert place holder char '?' to string "@px".
 	str, _ := gregex.ReplaceStringFunc("\\?", query, func(s string) string {
 		index++
 		return fmt.Sprintf("@p%d", index)
@@ -95,20 +99,26 @@ func (db *dbMssql) parseSql(sql string) string {
 		if haveOrder {
 			// 取order by 前面的字符串
 			queryExpr, _ := gregex.MatchString("((?i)SELECT)(.+)((?i)ORDER BY)", sql)
-			if len(queryExpr) != 4 || strings.EqualFold(queryExpr[1], "SELECT") == false || strings.EqualFold(queryExpr[3], "ORDER BY") == false {
+			if len(queryExpr) != 4 ||
+				strings.EqualFold(queryExpr[1], "SELECT") == false ||
+				strings.EqualFold(queryExpr[3], "ORDER BY") == false {
 				break
 			}
 			selectStr = queryExpr[2]
 
 			// 取order by表达式的值
 			orderExpr, _ := gregex.MatchString("((?i)ORDER BY)(.+)((?i)LIMIT)", sql)
-			if len(orderExpr) != 4 || strings.EqualFold(orderExpr[1], "ORDER BY") == false || strings.EqualFold(orderExpr[3], "LIMIT") == false {
+			if len(orderExpr) != 4 ||
+				strings.EqualFold(orderExpr[1], "ORDER BY") == false ||
+				strings.EqualFold(orderExpr[3], "LIMIT") == false {
 				break
 			}
 			orderStr = orderExpr[2]
 		} else {
 			queryExpr, _ := gregex.MatchString("((?i)SELECT)(.+)((?i)LIMIT)", sql)
-			if len(queryExpr) != 4 || strings.EqualFold(queryExpr[1], "SELECT") == false || strings.EqualFold(queryExpr[3], "LIMIT") == false {
+			if len(queryExpr) != 4 ||
+				strings.EqualFold(queryExpr[1], "SELECT") == false ||
+				strings.EqualFold(queryExpr[3], "LIMIT") == false {
 				break
 			}
 			selectStr = queryExpr[2]
@@ -121,7 +131,8 @@ func (db *dbMssql) parseSql(sql string) string {
 				continue
 			}
 
-			if strings.HasPrefix(res[index][i], "LIMIT") || strings.HasPrefix(res[index][i], "limit") {
+			if strings.HasPrefix(res[index][i], "LIMIT") ||
+				strings.HasPrefix(res[index][i], "limit") {
 				first, _ = strconv.Atoi(res[index][i+1])
 				limit, _ = strconv.Atoi(res[index][i+2])
 				break
@@ -151,11 +162,13 @@ func (db *dbMssql) parseSql(sql string) string {
 	return sql
 }
 
+// Tables retrieves and returns the tables of current schema.
 // TODO
 func (db *dbMssql) Tables(schema ...string) (tables []string, err error) {
 	return
 }
 
+// TableFields retrieves and returns the fields information of specified table of current schema.
 func (db *dbMssql) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
 	table = gstr.Trim(table)
 	if gstr.Contains(table, " ") {

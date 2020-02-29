@@ -440,34 +440,35 @@ func getInsertOperationByOption(option int) string {
 // sql string, just for debugging.
 func bindArgsToQuery(query string, args []interface{}) string {
 	index := -1
-	newQuery, _ := gregex.ReplaceStringFunc(`\?`, query, func(s string) string {
-		index++
-		if len(args) > index {
-			if args[index] == nil {
-				return "null"
-			}
-			rv := reflect.ValueOf(args[index])
-			kind := rv.Kind()
-			if kind == reflect.Ptr {
-				if rv.IsNil() || !rv.IsValid() {
+	newQuery, _ := gregex.ReplaceStringFunc(
+		`(\?|:\d+|\$\d+|@p\d+)`, query, func(s string) string {
+			index++
+			if len(args) > index {
+				if args[index] == nil {
 					return "null"
 				}
-				rv = rv.Elem()
-				kind = rv.Kind()
-			}
-			switch kind {
-			case reflect.String, reflect.Map, reflect.Slice, reflect.Array:
-				return `'` + gstr.QuoteMeta(gconv.String(args[index]), `'`) + `'`
-			case reflect.Struct:
-				if t, ok := args[index].(time.Time); ok {
-					return `'` + gtime.NewFromTime(t).String() + `'`
+				rv := reflect.ValueOf(args[index])
+				kind := rv.Kind()
+				if kind == reflect.Ptr {
+					if rv.IsNil() || !rv.IsValid() {
+						return "null"
+					}
+					rv = rv.Elem()
+					kind = rv.Kind()
 				}
-				return `'` + gstr.QuoteMeta(gconv.String(args[index]), `'`) + `'`
+				switch kind {
+				case reflect.String, reflect.Map, reflect.Slice, reflect.Array:
+					return `'` + gstr.QuoteMeta(gconv.String(args[index]), `'`) + `'`
+				case reflect.Struct:
+					if t, ok := args[index].(time.Time); ok {
+						return `'` + gtime.NewFromTime(t).String() + `'`
+					}
+					return `'` + gstr.QuoteMeta(gconv.String(args[index]), `'`) + `'`
+				}
+				return gconv.String(args[index])
 			}
-			return gconv.String(args[index])
-		}
-		return s
-	})
+			return s
+		})
 	return newQuery
 }
 

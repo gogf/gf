@@ -25,6 +25,7 @@ type dbPgsql struct {
 	*dbBase
 }
 
+// Open creates and returns a underlying sql.DB object for pgsql.
 func (db *dbPgsql) Open(config *ConfigNode) (*sql.DB, error) {
 	var source string
 	if config.LinkInfo != "" {
@@ -43,12 +44,15 @@ func (db *dbPgsql) Open(config *ConfigNode) (*sql.DB, error) {
 	}
 }
 
+// getChars returns the security char for this type of database.
 func (db *dbPgsql) getChars() (charLeft string, charRight string) {
 	return "\"", "\""
 }
 
+// handleSqlBeforeExec deals with the sql string before commits it to underlying sql driver.
 func (db *dbPgsql) handleSqlBeforeExec(sql string) string {
-	index := 0
+	var index int
+	// Convert place holder char '?' to string "$x".
 	sql, _ = gregex.ReplaceStringFunc("\\?", sql, func(s string) string {
 		index++
 		return fmt.Sprintf("$%d", index)
@@ -57,11 +61,13 @@ func (db *dbPgsql) handleSqlBeforeExec(sql string) string {
 	return sql
 }
 
+// Tables retrieves and returns the tables of current schema.
 // TODO
 func (db *dbPgsql) Tables(schema ...string) (tables []string, err error) {
 	return
 }
 
+// TableFields retrieves and returns the fields information of specified table of current schema.
 func (db *dbPgsql) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
 	table = gstr.Trim(table)
 	if gstr.Contains(table, " ") {
