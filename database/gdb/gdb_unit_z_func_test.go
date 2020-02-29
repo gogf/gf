@@ -11,6 +11,33 @@ import (
 	"testing"
 )
 
+func Test_Func_bindArgsToQuery(t *testing.T) {
+	// mysql
+	gtest.Case(t, func() {
+		var s string
+		s = bindArgsToQuery("select * from table where id>=? and sex=?", []interface{}{100, 1})
+		gtest.Assert(s, "select * from table where id>=100 and sex=1")
+	})
+	// mssql
+	gtest.Case(t, func() {
+		var s string
+		s = bindArgsToQuery("select * from table where id>=@p1 and sex=@p2", []interface{}{100, 1})
+		gtest.Assert(s, "select * from table where id>=100 and sex=1")
+	})
+	// pgsql
+	gtest.Case(t, func() {
+		var s string
+		s = bindArgsToQuery("select * from table where id>=$1 and sex=$2", []interface{}{100, 1})
+		gtest.Assert(s, "select * from table where id>=100 and sex=1")
+	})
+	// oracle
+	gtest.Case(t, func() {
+		var s string
+		s = bindArgsToQuery("select * from table where id>=:1 and sex=:2", []interface{}{100, 1})
+		gtest.Assert(s, "select * from table where id>=100 and sex=1")
+	})
+}
+
 func Test_Func_doQuoteWord(t *testing.T) {
 	gtest.Case(t, func() {
 		array := map[string]string{

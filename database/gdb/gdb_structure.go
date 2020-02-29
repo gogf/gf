@@ -7,8 +7,6 @@
 package gdb
 
 import (
-	"database/sql"
-	"fmt"
 	"strings"
 
 	"github.com/gogf/gf/text/gstr"
@@ -119,75 +117,4 @@ func (bs *dbBase) filterFields(schema, table string, data map[string]interface{}
 		}
 	}
 	return newDataMap
-}
-
-// Tables returns the table name array of current schema.
-func (bs *dbBase) Tables(schema ...string) (tables []string, err error) {
-	var result Result
-	link, err := bs.db.getSlave(schema...)
-	if err != nil {
-		return nil, err
-	}
-	result, err = bs.db.doGetAll(link, `SHOW TABLES`)
-	if err != nil {
-		return
-	}
-	for _, m := range result {
-		for _, v := range m {
-			tables = append(tables, v.String())
-		}
-	}
-	return
-}
-
-// TableFields retrieves and returns the fields of given table.
-//
-// Note that it returns a map containing the field name and its corresponding fields.
-// As a map is unsorted, the TableField struct has a "Index" field marks its sequence in the fields.
-//
-// It's using cache feature to enhance the performance, which is never expired util the process restarts.
-func (bs *dbBase) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
-	table = gstr.Trim(table)
-	if gstr.Contains(table, " ") {
-		panic("function TableFields supports only single table operations")
-	}
-	checkSchema := bs.schema.Val()
-	if len(schema) > 0 && schema[0] != "" {
-		checkSchema = schema[0]
-	}
-	v := bs.cache.GetOrSetFunc(
-		fmt.Sprintf(`mysql_table_fields_%s_%s`, table, checkSchema),
-		func() interface{} {
-			var result Result
-			var link *sql.DB
-			link, err = bs.db.getSlave(checkSchema)
-			if err != nil {
-				return nil
-			}
-			result, err = bs.doGetAll(
-				link,
-				fmt.Sprintf(`SHOW FULL COLUMNS FROM %s`, bs.db.quoteWord(table)),
-			)
-			if err != nil {
-				return nil
-			}
-			fields = make(map[string]*TableField)
-			for i, m := range result {
-				fields[m["Field"].String()] = &TableField{
-					Index:   i,
-					Name:    m["Field"].String(),
-					Type:    m["Type"].String(),
-					Null:    m["Null"].Bool(),
-					Key:     m["Key"].String(),
-					Default: m["Default"].Val(),
-					Extra:   m["Extra"].String(),
-					Comment: m["Comment"].String(),
-				}
-			}
-			return fields
-		}, 0)
-	if err == nil {
-		fields = v.(map[string]*TableField)
-	}
-	return
 }

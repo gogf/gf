@@ -33,6 +33,7 @@ const (
 	tableAlias2 = "GFORM2"
 )
 
+// Open creates and returns a underlying sql.DB object for oracle.
 func (db *dbOracle) Open(config *ConfigNode) (*sql.DB, error) {
 	var source string
 	if config.LinkInfo != "" {
@@ -48,12 +49,15 @@ func (db *dbOracle) Open(config *ConfigNode) (*sql.DB, error) {
 	}
 }
 
+// getChars returns the security char for this type of database.
 func (db *dbOracle) getChars() (charLeft string, charRight string) {
 	return "\"", "\""
 }
 
+// handleSqlBeforeExec deals with the sql string before commits it to underlying sql driver.
 func (db *dbOracle) handleSqlBeforeExec(query string) string {
-	index := 0
+	var index int
+	// Convert place holder char '?' to string ":x".
 	str, _ := gregex.ReplaceStringFunc("\\?", query, func(s string) string {
 		index++
 		return fmt.Sprintf(":%d", index)
@@ -109,17 +113,22 @@ func (db *dbOracle) parseSql(sql string) string {
 			}
 		}
 
-		//也可以使用between,据说这种写法的性能会比between好点,里层SQL中的ROWNUM_ >= limit可以缩小查询后的数据集规模
-		sql = fmt.Sprintf("SELECT * FROM (SELECT GFORM.*, ROWNUM ROWNUM_ FROM (%s %s) GFORM WHERE ROWNUM <= %d) WHERE ROWNUM_ >= %d", queryExpr[1], queryExpr[2], limit, first)
+		// 也可以使用between,据说这种写法的性能会比between好点,里层SQL中的ROWNUM_ >= limit可以缩小查询后的数据集规模
+		sql = fmt.Sprintf(
+			"SELECT * FROM (SELECT GFORM.*, ROWNUM ROWNUM_ FROM (%s %s) GFORM WHERE ROWNUM <= %d) WHERE ROWNUM_ >= %d",
+			queryExpr[1], queryExpr[2], limit, first,
+		)
 	}
 	return sql
 }
 
+// Tables retrieves and returns the tables of current schema.
 // TODO
 func (db *dbOracle) Tables(schema ...string) (tables []string, err error) {
 	return
 }
 
+// TableFields retrieves and returns the fields information of specified table of current schema.
 func (db *dbOracle) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
 	table = gstr.Trim(table)
 	if gstr.Contains(table, " ") {
