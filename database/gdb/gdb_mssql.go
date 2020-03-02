@@ -163,8 +163,22 @@ func (db *dbMssql) parseSql(sql string) string {
 }
 
 // Tables retrieves and returns the tables of current schema.
-// TODO
 func (db *dbMssql) Tables(schema ...string) (tables []string, err error) {
+	var result Result
+	link, err := db.getSlave(schema...)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err = db.doGetAll(link, `SELECT NAME FROM SYSOBJECTS WHERE XTYPE='U' AND STATUS >= 0 ORDER BY NAME`)
+	if err != nil {
+		return
+	}
+	for _, m := range result {
+		for _, v := range m {
+			tables = append(tables, strings.ToLower(v.String()))
+		}
+	}
 	return
 }
 
