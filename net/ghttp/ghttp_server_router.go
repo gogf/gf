@@ -93,7 +93,7 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 		Method:   strings.ToUpper(method),
 		Priority: strings.Count(uri[1:], "/"),
 	}
-	handler.router.RegRule, handler.router.RegNames = s.patternToRegRule(uri)
+	handler.router.RegRule, handler.router.RegNames = s.patternToRegular(uri)
 
 	if _, ok := s.serveTree[domain]; !ok {
 		s.serveTree[domain] = make(map[string]interface{})
@@ -195,31 +195,34 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 		// Append the route.
 		s.routesMap[routerKey] = append(s.routesMap[routerKey], routeItem)
 	}
-	//gutil.Dump(s.serveTree)
 }
 
-// 对比两个handlerItem的优先级，需要非常注意的是，注意新老对比项的参数先后顺序。
-// 返回值true表示newItem优先级比oldItem高，会被添加链表中oldRouter的前面；否则后面。
-// 优先级比较规则：
-// 1、中间件优先级最高，按照添加顺序优先级执行；
-// 2、其他路由注册类型，层级越深优先级越高(对比/数量)；
-// 3、模糊规则优先级：{xxx} > :xxx > *xxx；
+// compareRouterPriority compares the priority between <newItem> and <oldItem>. It returns true
+// if <newItem>'s priority is higher than <oldItem>, else it returns false. The higher priority
+// item will be insert into the router list before the other one.
+//
+// Comparison rules:
+// 1. The middleware has the most high priority.
+// 2. URI: The deeper the higher (simply check the count of char '/' in the URI).
+// 3. Route type: {xxx} > :xxx > *xxx.
 func (s *Server) compareRouterPriority(newItem *handlerItem, oldItem *handlerItem) bool {
-	// 中间件优先级最高，按照添加顺序优先级执行
+	// If they're all type of middleware, the priority is according their registered sequence.
 	if newItem.itemType == gHANDLER_TYPE_MIDDLEWARE && oldItem.itemType == gHANDLER_TYPE_MIDDLEWARE {
 		return false
 	}
+	// The middleware has the most high priority.
 	if newItem.itemType == gHANDLER_TYPE_MIDDLEWARE && oldItem.itemType != gHANDLER_TYPE_MIDDLEWARE {
 		return true
 	}
-	// 优先比较层级，层级越深优先级越高
+	// URI: The deeper the higher (simply check the count of char '/' in the URI).
 	if newItem.router.Priority > oldItem.router.Priority {
 		return true
 	}
 	if newItem.router.Priority < oldItem.router.Priority {
 		return false
 	}
-	// 精准匹配比模糊匹配规则优先级高，例如：/name/act 比 /{name}/:act 优先级高
+	// Route type: {xxx} > :xxx > *xxx.
+	// Eg: /name/act > /{name}/:act
 	var fuzzyCountFieldNew, fuzzyCountFieldOld int
 	var fuzzyCountNameNew, fuzzyCountNameOld int
 	var fuzzyCountAnyNew, fuzzyCountAnyOld int
@@ -253,16 +256,16 @@ func (s *Server) compareRouterPriority(newItem *handlerItem, oldItem *handlerIte
 		return false
 	}
 
-	/** 如果模糊规则数量相等，那么执行分别的数量判断 **/
+	// If the counts of their fuzzy rules equal.
 
-	// 例如：/name/{act} 比 /name/:act 优先级高
+	// Eg: /name/{act} > /name/:act
 	if fuzzyCountFieldNew > fuzzyCountFieldOld {
 		return true
 	}
 	if fuzzyCountFieldNew < fuzzyCountFieldOld {
 		return false
 	}
-	// 例如: /name/:act 比 /name/*act 优先级高
+	// Eg: /name/:act > /name/*act
 	if fuzzyCountNameNew > fuzzyCountNameOld {
 		return true
 	}
@@ -270,9 +273,10 @@ func (s *Server) compareRouterPriority(newItem *handlerItem, oldItem *handlerIte
 		return false
 	}
 
-	/** 比较路由规则长度，越长的规则优先级越高，模糊/命名规则不算长度 **/
+	// It then compares the length of their URI,
+	// but the fuzzy and named parts of the URI are not calculated to the result.
 
-	// 例如：/admin-goods-{page} 比 /admin-{page} 优先级高
+	// Eg: /admin-goods-{page} > /admin-{page}
 	var uriNew, uriOld string
 	uriNew, _ = gregex.ReplaceString(`\{[^/]+\}`, "", newItem.router.Uri)
 	uriNew, _ = gregex.ReplaceString(`:[^/]+`, "", uriNew)
@@ -287,9 +291,8 @@ func (s *Server) compareRouterPriority(newItem *handlerItem, oldItem *handlerIte
 		return false
 	}
 
-	/* 模糊规则数量相等，后续不用再判断*规则的数量比较了 */
-
-	// 比较HTTP METHOD，更精准的优先级更高
+	// It then compares the accuracy of their http method,
+	// the more accurate the more priority.
 	if newItem.router.Method != gDEFAULT_METHOD {
 		return true
 	}
@@ -297,23 +300,25 @@ func (s *Server) compareRouterPriority(newItem *handlerItem, oldItem *handlerIte
 		return true
 	}
 
-	// 如果是服务路由，那么新的规则比旧的规则优先级高(路由覆盖)
+	// If they have different router type,
+	// the new router item has more priority than the other one.
 	if newItem.itemType == gHANDLER_TYPE_HANDLER ||
 		newItem.itemType == gHANDLER_TYPE_OBJECT ||
 		newItem.itemType == gHANDLER_TYPE_CONTROLLER {
 		return true
 	}
 
-	// 如果是其他路由(HOOK/中间件)，那么新的规则比旧的规则优先级低，使得注册相同路由则顺序执行
+	// Other situations, like HOOK items,
+	// the old router item has more priority than the other one.
 	return false
 }
 
-// 将pattern（不带method和domain）解析成正则表达式匹配以及对应的query字符串
-func (s *Server) patternToRegRule(rule string) (regrule string, names []string) {
+// patternToRegular converts route rule to according regular expression.
+func (s *Server) patternToRegular(rule string) (regular string, names []string) {
 	if len(rule) < 2 {
 		return rule, nil
 	}
-	regrule = "^"
+	regular = "^"
 	array := strings.Split(rule[1:], "/")
 	for _, v := range array {
 		if len(v) == 0 {
@@ -322,17 +327,17 @@ func (s *Server) patternToRegRule(rule string) (regrule string, names []string) 
 		switch v[0] {
 		case ':':
 			if len(v) > 1 {
-				regrule += `/([^/]+)`
+				regular += `/([^/]+)`
 				names = append(names, v[1:])
 			} else {
-				regrule += `/[^/]+`
+				regular += `/[^/]+`
 			}
 		case '*':
 			if len(v) > 1 {
-				regrule += `/{0,1}(.*)`
+				regular += `/{0,1}(.*)`
 				names = append(names, v[1:])
 			} else {
-				regrule += `/{0,1}.*`
+				regular += `/{0,1}.*`
 			}
 		default:
 			// Special chars replacement.
@@ -346,12 +351,12 @@ func (s *Server) patternToRegRule(rule string) (regrule string, names []string) 
 				return `([^/]+)`
 			})
 			if strings.EqualFold(s, v) {
-				regrule += "/" + v
+				regular += "/" + v
 			} else {
-				regrule += "/" + s
+				regular += "/" + s
 			}
 		}
 	}
-	regrule += `$`
+	regular += `$`
 	return
 }
