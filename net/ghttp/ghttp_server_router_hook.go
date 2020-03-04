@@ -66,8 +66,3 @@ func (s *Server) niceCallHookHandler(f HandlerFunc, r *Request) (err interface{}
 	f(r)
 	return
 }
-
-// 生成hook key，如果是hook key，那么使用'%'符号分隔
-func (s *Server) handlerKey(hook, method, path, domain string) string {
-	return hook + "%" + s.serveHandlerKey(method, path, domain)
-}

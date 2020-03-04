@@ -8,12 +8,12 @@ package ghttp
 
 import (
 	"errors"
+	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/util/grand"
 	"io"
 	"mime/multipart"
-	"os"
 	"strconv"
 	"strings"
 )
@@ -45,22 +45,21 @@ func (f *UploadFile) Save(path string, randomlyRename ...bool) error {
 	}
 	defer file.Close()
 
-	var newFile *os.File
+	filePath := path
 	if gfile.IsDir(path) {
 		filename := gfile.Basename(f.Filename)
 		if len(randomlyRename) > 0 && randomlyRename[0] {
 			filename = strings.ToLower(strconv.FormatInt(gtime.TimestampNano(), 36) + grand.S(6))
 			filename = filename + gfile.Ext(f.Filename)
 		}
-		newFile, err = gfile.Create(gfile.Join(path, filename))
-	} else {
-		newFile, err = gfile.Create(path)
+		filePath = gfile.Join(path, filename)
 	}
+	newFile, err := gfile.Create(filePath)
 	if err != nil {
 		return err
 	}
 	defer newFile.Close()
-
+	intlog.Printf(`save upload file: %s`, filePath)
 	if _, err := io.Copy(newFile, file); err != nil {
 		return err
 	}

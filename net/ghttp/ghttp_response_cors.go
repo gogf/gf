@@ -27,6 +27,20 @@ type CORSOptions struct {
 	AllowHeaders     string   // Access-Control-Allow-Headers
 }
 
+var (
+	// defaultAllowHeaders is the default allowed headers for CORS.
+	// It's defined as map for better header key searching performance.
+	defaultAllowHeaders = map[string]struct{}{
+		"Origin":           {},
+		"Accept":           {},
+		"Cookie":           {},
+		"Authorization":    {},
+		"X-Auth-Token":     {},
+		"X-Requested-With": {},
+		"Content-Type":     {},
+	}
+)
+
 // DefaultCORSOptions returns the default CORS options,
 // which allows any cross-domain request.
 func (r *Response) DefaultCORSOptions() CORSOptions {
@@ -34,9 +48,24 @@ func (r *Response) DefaultCORSOptions() CORSOptions {
 		AllowOrigin:      "*",
 		AllowMethods:     HTTP_METHODS,
 		AllowCredentials: "true",
-		AllowHeaders:     "Origin,Content-Type,Accept,User-Agent,Cookie,Authorization,X-Auth-Token,X-Requested-With",
 		MaxAge:           3628800,
 	}
+	// Allow all client's custom headers in default.
+	if headers := r.Request.Header.Get("Access-Control-Request-Headers"); headers != "" {
+		array := gstr.SplitAndTrim(headers, ",")
+		for _, header := range array {
+			if _, ok := defaultAllowHeaders[header]; !ok {
+				options.AllowHeaders += header + ","
+			}
+		}
+		for header, _ := range defaultAllowHeaders {
+			if len(options.AllowHeaders) > 0 {
+				options.AllowHeaders += ","
+			}
+			options.AllowHeaders += header
+		}
+	}
+	// Allow all anywhere origin in default.
 	if origin := r.Request.Header.Get("Origin"); origin != "" {
 		options.AllowOrigin = origin
 	} else if referer := r.Request.Referer(); referer != "" {

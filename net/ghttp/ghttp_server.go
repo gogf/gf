@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/debug/gdebug"
+	"github.com/gogf/gf/internal/intlog"
 	"net/http"
 	"os"
 	"reflect"
@@ -78,7 +79,6 @@ type (
 	// handlerItem is the registered handler for route handling,
 	// including middleware and hook functions.
 	handlerItem struct {
-		itemId     int                // Unique ID mark.
 		itemName   string             // Handler name, which is automatically retrieved from runtime stack when registered.
 		itemType   int                // Handler type: object/handler/controller/middleware/hook.
 		itemFunc   HandlerFunc        // Handler address.
@@ -143,7 +143,7 @@ var (
 	// it is used for quick HTTP method searching using map.
 	methodsMap = make(map[string]struct{})
 
-	// serverMapping stores more than one server instances.
+	// serverMapping stores more than one server instances for current process.
 	// The key is the name of the server, and the value is its instance.
 	serverMapping = gmap.NewStrAnyMap(true)
 
@@ -444,14 +444,20 @@ func (s *Server) GetRouterArray() []RouterItem {
 }
 
 // Run starts server listening in blocking way.
+// It's commonly used for single server situation.
 func (s *Server) Run() {
 	if err := s.Start(); err != nil {
 		s.Logger().Fatal(err)
 	}
-
 	// Blocking using channel.
 	<-s.closeChan
-
+	// Remove plugins.
+	if len(s.plugins) > 0 {
+		for _, p := range s.plugins {
+			intlog.Printf(`remove plugin: %s`, p.Name())
+			p.Remove()
+		}
+	}
 	s.Logger().Printf("[ghttp] %d: all servers shutdown", gproc.Pid())
 }
 
@@ -459,7 +465,17 @@ func (s *Server) Run() {
 // It's commonly used in multiple servers situation.
 func Wait() {
 	<-allDoneChan
-
+	// Remove plugins.
+	serverMapping.Iterator(func(k string, v interface{}) bool {
+		s := v.(*Server)
+		if len(s.plugins) > 0 {
+			for _, p := range s.plugins {
+				intlog.Printf(`remove plugin: %s`, p.Name())
+				p.Remove()
+			}
+		}
+		return true
+	})
 	glog.Printf("[ghttp] %d: all servers shutdown", gproc.Pid())
 }
 

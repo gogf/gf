@@ -9,7 +9,7 @@ package ghttp
 import (
 	"errors"
 	"fmt"
-	"github.com/gogf/gf/container/gtype"
+	"github.com/gogf/gf/util/gutil"
 	"strings"
 
 	"github.com/gogf/gf/debug/gdebug"
@@ -23,12 +23,12 @@ const (
 	gFILTER_KEY = "/net/ghttp/ghttp"
 )
 
-var (
-	// 用于服务函数的ID生成变量
-	handlerIdGenerator = gtype.NewInt()
-)
+// handlerKey creates and returns an unique router key for given parameters.
+func (s *Server) handlerKey(hook, method, path, domain string) string {
+	return hook + "%" + s.serveHandlerKey(method, path, domain)
+}
 
-// 解析pattern
+// parsePattern parses the given pattern to domain, method and path variable.
 func (s *Server) parsePattern(pattern string) (domain, method, path string, err error) {
 	path = strings.TrimSpace(pattern)
 	domain = gDEFAULT_DOMAIN
@@ -48,18 +48,17 @@ func (s *Server) parsePattern(pattern string) (domain, method, path string, err 
 	if path == "" {
 		err = errors.New("invalid pattern: URI should not be empty")
 	}
-	// 去掉末尾的"/"符号，与路由匹配时处理一致
 	if path != "/" {
 		path = strings.TrimRight(path, "/")
 	}
 	return
 }
 
-// 路由注册处理方法。
-// 非叶节点为哈希表检索节点，按照URI注册的层级进行高效检索，直至到叶子链表节点；
-// 叶子节点是链表，按照优先级进行排序，优先级高的排前面，按照遍历检索，按照哈希表层级检索后的叶子链表数据量不会很大，所以效率比较高；
+// setHandler creates router item with given handler and pattern and registers the handler to the router tree.
+// The router tree can be treated as a multilayer hash table, please refer to the comment in following codes.
+// This function is called during server starts up, which cares little about the performance. What really cares
+// is the well designed router storage structure for router searching when the request is under serving.
 func (s *Server) setHandler(pattern string, handler *handlerItem) {
-	handler.itemId = handlerIdGenerator.Add(1)
 	domain, method, uri, err := s.parsePattern(pattern)
 	if err != nil {
 		s.Logger().Fatal("invalid pattern:", pattern, err)
@@ -69,7 +68,8 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 		s.Logger().Fatal("invalid pattern:", pattern, "URI should lead with '/'")
 		return
 	}
-	// 注册地址记录及重复注册判断
+
+	// Repeated router checks, this feature can be disabled by server configuration.
 	regKey := s.handlerKey(handler.hookName, method, uri, domain)
 	if !s.config.RouteOverWrite {
 		switch handler.itemType {
@@ -80,11 +80,11 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 			}
 		}
 	}
-	// 注册的路由信息对象
+	// Create a new router by given parameter.
 	handler.router = &Router{
 		Uri:      uri,
 		Domain:   domain,
-		Method:   method,
+		Method:   strings.ToUpper(method),
 		Priority: strings.Count(uri[1:], "/"),
 	}
 	handler.router.RegRule, handler.router.RegNames = s.patternToRegRule(uri)
@@ -92,7 +92,8 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 	if _, ok := s.serveTree[domain]; !ok {
 		s.serveTree[domain] = make(map[string]interface{})
 	}
-	// 当前节点的规则链表
+	// List array, very important for router register.
+	// There may be multiple lists adding into this array when searching from root to leaf.
 	lists := make([]*glist.List, 0)
 	array := ([]string)(nil)
 	if strings.EqualFold("/", uri) {
@@ -100,9 +101,57 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 	} else {
 		array = strings.Split(uri[1:], "/")
 	}
-	// 键名"*fuzz"代表当前节点为模糊匹配节点，该节点也会有一个*list链表；
-	// 键名"*list"代表链表，叶子节点和模糊匹配节点都有该属性，优先级越高越排前；
+	// Multilayer hash table:
+	// 1. Each node of the table is separated by URI path which is split by char '/'.
+	// 2. The key "*fuzz" specifies this node is a fuzzy node, which has no certain name.
+	// 3. The key "*list" is the list item of the node, MOST OF THE NODES HAVE THIS ITEM,
+	//    especially the fuzzy node. NOTE THAT the fuzzy node must have the "*list" item,
+	//    and the leaf node also has "*list" item. If the node is not a fuzzy node either
+	//    a leaf, it neither has "*list" item.
+	// 2. The "*list" item is a list containing registered router items ordered by their
+	//    priorities from high to low.
+	// 3. There may be repeated router items in the router lists. The lists' priorities
+	//    from root to leaf are from low to high.
 	p := s.serveTree[domain]
+	for i, part := range array {
+		// Ignore empty URI part, like: /user//index
+		if part == "" {
+			continue
+		}
+		// Check if it's a fuzzy node.
+		if gregex.IsMatchString(`^[:\*]|\{[\w\.\-]+\}|\*`, part) {
+			part = "*fuzz"
+			// If it's a fuzzy node, it creates a "*list" item - which is a list - in the hash map.
+			// All the sub router items from this fuzzy node will also be added to its "*list" item.
+			if v, ok := p.(map[string]interface{})["*list"]; !ok {
+				newListForFuzzy := glist.New()
+				p.(map[string]interface{})["*list"] = newListForFuzzy
+				lists = append(lists, newListForFuzzy)
+			} else {
+				lists = append(lists, v.(*glist.List))
+			}
+		}
+		// Make a new bucket for current node.
+		if _, ok := p.(map[string]interface{})[part]; !ok {
+			p.(map[string]interface{})[part] = make(map[string]interface{})
+		}
+		// Loop to next bucket.
+		p = p.(map[string]interface{})[part]
+		// The leaf is a hash map and must have an item named "*list", which contains the router item.
+		// The leaf can be furthermore extended by adding more ket-value pairs into its map.
+		// Note that the `v != "*fuzz"` comparison is required as the list might be added in the former
+		// fuzzy checks.
+		if i == len(array)-1 && part != "*fuzz" {
+			if v, ok := p.(map[string]interface{})["*list"]; !ok {
+				list := glist.New()
+				p.(map[string]interface{})["*list"] = list
+				lists = append(lists, list)
+			} else {
+				lists = append(lists, v.(*glist.List))
+			}
+		}
+	}
+
 	for k, v := range array {
 		if len(v) == 0 {
 			continue
@@ -135,8 +184,8 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 		}
 	}
 
-	// 上面循环后得到的lists是该路由规则一路匹配下来相关的模糊匹配链表(注意不是这棵树所有的链表)。
-	// 下面从头开始遍历每个节点的模糊匹配链表，将该路由项插入进去(按照优先级高的放在lists链表的前面)
+	// It iterates the list array of <lists>, compares priorities and inserts the new router item in
+	// the proper position of each list. The priority of the list is ordered from high to low.
 	item := (*handlerItem)(nil)
 	for _, l := range lists {
 		pushed := false
@@ -173,6 +222,7 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 		// Append the route.
 		s.routesMap[regKey] = append(s.routesMap[regKey], routeItem)
 	}
+	gutil.Dump(s.serveTree)
 }
 
 // 对比两个handlerItem的优先级，需要非常注意的是，注意新老对比项的参数先后顺序。
@@ -312,7 +362,7 @@ func (s *Server) patternToRegRule(rule string) (regrule string, names []string) 
 				regrule += `/{0,1}.*`
 			}
 		default:
-			// 特殊字符替换
+			// Special chars replacement.
 			v = gstr.ReplaceByMap(v, map[string]string{
 				`.`: `\.`,
 				`+`: `\+`,
