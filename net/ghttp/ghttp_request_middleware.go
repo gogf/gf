@@ -123,6 +123,7 @@ func (m *Middleware) Next() {
 		}, func(exception interface{}) {
 			m.request.error = gerror.Newf("%v", exception)
 			m.request.Response.WriteStatus(http.StatusInternalServerError, exception)
+			loop = false
 		})
 	}
 	// Check the http status code after all handler and middleware done.
