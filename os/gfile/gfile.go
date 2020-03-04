@@ -10,6 +10,7 @@ package gfile
 import (
 	"bytes"
 	"errors"
+	"github.com/gogf/gf/text/gstr"
 	"os"
 	"os/exec"
 	"os/user"
@@ -58,7 +59,9 @@ func Mkdir(path string) error {
 func Create(path string) (*os.File, error) {
 	dir := Dir(path)
 	if !Exists(dir) {
-		Mkdir(dir)
+		if err := Mkdir(dir); err != nil {
+			return nil, err
+		}
 	}
 	return os.Create(path)
 }
@@ -93,7 +96,14 @@ func OpenWithFlagPerm(path string, flag int, perm os.FileMode) (*os.File, error)
 
 // Join joins string array paths with file separator of current system.
 func Join(paths ...string) string {
-	return strings.Join(paths, Separator)
+	var s string
+	for _, path := range paths {
+		if s != "" {
+			s += Separator
+		}
+		s += gstr.TrimRight(path, Separator)
+	}
+	return s
 }
 
 // Exists checks whether given <path> exist.

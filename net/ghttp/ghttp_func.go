@@ -50,9 +50,7 @@ func niceCallFunc(f func()) {
 	defer func() {
 		if err := recover(); err != nil {
 			switch err {
-			case gEXCEPTION_EXIT:
-				fallthrough
-			case gEXCEPTION_EXIT_ALL:
+			case gEXCEPTION_EXIT, gEXCEPTION_EXIT_ALL:
 				return
 			default:
 				panic(err)

@@ -46,14 +46,6 @@ func (c *ControllerRest) Delete() {
 	c.Response.Write("Controller Delete")
 }
 
-func (c *ControllerRest) Patch() {
-	c.Response.Write("Controller Patch")
-}
-
-func (c *ControllerRest) Options() {
-	c.Response.Write("Controller Options")
-}
-
 func (c *ControllerRest) Head() {
 	c.Response.Header().Set("head-ok", "1")
 }
@@ -78,8 +70,6 @@ func Test_Router_ControllerRest(t *testing.T) {
 		gtest.Assert(client.PutContent("/"), "1Controller Put2")
 		gtest.Assert(client.PostContent("/"), "1Controller Post2")
 		gtest.Assert(client.DeleteContent("/"), "1Controller Delete2")
-		gtest.Assert(client.PatchContent("/"), "1Controller Patch2")
-		gtest.Assert(client.OptionsContent("/"), "1Controller Options2")
 		resp1, err := client.Head("/")
 		if err == nil {
 			defer resp1.Close()
@@ -91,8 +81,6 @@ func Test_Router_ControllerRest(t *testing.T) {
 		gtest.Assert(client.PutContent("/controller-rest/put"), "1Controller Put2")
 		gtest.Assert(client.PostContent("/controller-rest/post"), "1Controller Post2")
 		gtest.Assert(client.DeleteContent("/controller-rest/delete"), "1Controller Delete2")
-		gtest.Assert(client.PatchContent("/controller-rest/patch"), "1Controller Patch2")
-		gtest.Assert(client.OptionsContent("/controller-rest/options"), "1Controller Options2")
 		resp2, err := client.Head("/controller-rest/head")
 		if err == nil {
 			defer resp2.Close()
