@@ -50,7 +50,6 @@ func Test_Router_Hook_Fuzzy_Router(t *testing.T) {
 	pattern1 := "/:name/info"
 	s.BindHookHandlerByMap(pattern1, map[string]ghttp.HandlerFunc{
 		ghttp.HOOK_BEFORE_SERVE: func(r *ghttp.Request) {
-			fmt.Println("called")
 			r.SetParam("uid", i)
 			i++
 		},
@@ -59,17 +58,17 @@ func Test_Router_Hook_Fuzzy_Router(t *testing.T) {
 		r.Response.Write(r.Get("uid"))
 	})
 
-	//pattern2 := "/{object}/list/{page}.java"
-	//s.BindHookHandlerByMap(pattern2, map[string]ghttp.HandlerFunc{
-	//	ghttp.HOOK_BEFORE_OUTPUT: func(r *ghttp.Request) {
-	//		r.Response.SetBuffer([]byte(
-	//			fmt.Sprint(r.Get("object"), "&", r.Get("page"), "&", i),
-	//		))
-	//	},
-	//})
-	//s.BindHandler(pattern2, func(r *ghttp.Request) {
-	//	r.Response.Write(r.Router.Uri)
-	//})
+	pattern2 := "/{object}/list/{page}.java"
+	s.BindHookHandlerByMap(pattern2, map[string]ghttp.HandlerFunc{
+		ghttp.HOOK_BEFORE_OUTPUT: func(r *ghttp.Request) {
+			r.Response.SetBuffer([]byte(
+				fmt.Sprint(r.Get("object"), "&", r.Get("page"), "&", i),
+			))
+		},
+	})
+	s.BindHandler(pattern2, func(r *ghttp.Request) {
+		r.Response.Write(r.Router.Uri)
+	})
 	s.SetPort(p)
 	//s.SetDumpRouterMap(false)
 	s.Start()

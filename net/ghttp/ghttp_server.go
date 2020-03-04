@@ -79,6 +79,7 @@ type (
 	// handlerItem is the registered handler for route handling,
 	// including middleware and hook functions.
 	handlerItem struct {
+		itemId     int                // Unique handler item id mark.
 		itemName   string             // Handler name, which is automatically retrieved from runtime stack when registered.
 		itemType   int                // Handler type: object/handler/controller/middleware/hook.
 		itemFunc   HandlerFunc        // Handler address.

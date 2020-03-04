@@ -8,11 +8,10 @@
 package ghttp
 
 import (
-	"net/http"
-	"net/url"
-
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
+	"net/http"
+	"net/url"
 )
 
 // CORSOptions is the options for CORS feature.
@@ -29,17 +28,17 @@ type CORSOptions struct {
 
 var (
 	// defaultAllowHeaders is the default allowed headers for CORS.
-	// It's defined as map for better header key searching performance.
-	defaultAllowHeaders = map[string]struct{}{
-		"Origin":           {},
-		"Accept":           {},
-		"Cookie":           {},
-		"Authorization":    {},
-		"X-Auth-Token":     {},
-		"X-Requested-With": {},
-		"Content-Type":     {},
-	}
+	// It's defined another map for better header key searching performance.
+	defaultAllowHeaders    = "Origin,Content-Type,Accept,User-Agent,Cookie,Authorization,X-Auth-Token,X-Requested-With"
+	defaultAllowHeadersMap = make(map[string]struct{})
 )
+
+func init() {
+	array := gstr.SplitAndTrim(defaultAllowHeaders, ",")
+	for _, header := range array {
+		defaultAllowHeadersMap[header] = struct{}{}
+	}
+}
 
 // DefaultCORSOptions returns the default CORS options,
 // which allows any cross-domain request.
@@ -48,21 +47,16 @@ func (r *Response) DefaultCORSOptions() CORSOptions {
 		AllowOrigin:      "*",
 		AllowMethods:     HTTP_METHODS,
 		AllowCredentials: "true",
+		AllowHeaders:     defaultAllowHeaders,
 		MaxAge:           3628800,
 	}
 	// Allow all client's custom headers in default.
 	if headers := r.Request.Header.Get("Access-Control-Request-Headers"); headers != "" {
 		array := gstr.SplitAndTrim(headers, ",")
 		for _, header := range array {
-			if _, ok := defaultAllowHeaders[header]; !ok {
+			if _, ok := defaultAllowHeadersMap[header]; !ok {
 				options.AllowHeaders += header + ","
 			}
-		}
-		for header, _ := range defaultAllowHeaders {
-			if len(options.AllowHeaders) > 0 {
-				options.AllowHeaders += ","
-			}
-			options.AllowHeaders += header
 		}
 	}
 	// Allow all anywhere origin in default.
@@ -101,8 +95,25 @@ func (r *Response) CORS(options CORSOptions) {
 	}
 	// No continue service handling if it's OPTIONS request.
 	if gstr.Equal(r.Request.Method, "OPTIONS") {
+		// Request method's handler searching.
+		// It here uses Server.routesMap attribute enhancing the searching performance.
+		if method := r.Request.Header.Get("Access-Control-Request-Method"); method != "" {
+			routerKey := ""
+			for _, domain := range []string{gDEFAULT_DOMAIN, r.Request.GetHost()} {
+				for _, v := range []string{gDEFAULT_METHOD, method} {
+					routerKey = r.Server.handlerKey("", v, r.Request.URL.Path, domain)
+					if r.Server.routesMap[routerKey] != nil {
+						if r.Status == 0 {
+							r.Status = http.StatusOK
+						}
+						r.Request.ExitAll()
+					}
+				}
+			}
+		}
+		// Cannot find the request handler.
 		if r.Status == 0 {
-			r.Status = http.StatusOK
+			r.Status = http.StatusNotFound
 		}
 		r.Request.ExitAll()
 	}

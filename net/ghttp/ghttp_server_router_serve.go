@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/text/gregex"
 )
 
-// handlerCacheItem is a item for router cache.
+// handlerCacheItem is an item for router searching cache.
 type handlerCacheItem struct {
 	parsedItems []*handlerParsedItem
 	hasHook     bool
@@ -24,8 +24,17 @@ type handlerCacheItem struct {
 
 // getHandlersWithCache searches the router item with cache feature for given request.
 func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*handlerParsedItem, hasHook, hasServe bool) {
-	value := s.serveCache.GetOrSetFunc(s.serveHandlerKey(r.Method, r.URL.Path, r.GetHost()), func() interface{} {
-		parsedItems, hasHook, hasServe = s.searchHandlers(r.Method, r.URL.Path, r.GetHost())
+	method := r.Method
+	// Special http method OPTIONS handling.
+	// It searches the handler with the request method instead of OPTIONS method.
+	if method == "OPTIONS" {
+		if v := r.Request.Header.Get("Access-Control-Request-Method"); v != "" {
+			method = v
+		}
+	}
+	// Search and cache the router handlers.
+	value := s.serveCache.GetOrSetFunc(s.serveHandlerKey(method, r.URL.Path, r.GetHost()), func() interface{} {
+		parsedItems, hasHook, hasServe = s.searchHandlers(method, r.URL.Path, r.GetHost())
 		if parsedItems != nil {
 			return &handlerCacheItem{parsedItems, hasHook, hasServe}
 		}
@@ -44,11 +53,6 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 	if len(path) == 0 {
 		return nil, false, false
 	}
-	// Default domain has the most priority when iteration.
-	domains := []string{gDEFAULT_DOMAIN}
-	if !strings.EqualFold(gDEFAULT_DOMAIN, domain) {
-		domains = append(domains, domain)
-	}
 	// Split the URL.path to separate parts.
 	var array []string
 	if strings.EqualFold("/", path) {
@@ -58,11 +62,14 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 	}
 	parsedItemList := glist.New()
 	lastMiddlewareElem := (*glist.Element)(nil)
-	for _, domain := range domains {
+	repeatHandlerCheckMap := make(map[int]struct{}, 16)
+	// Default domain has the most priority when iteration.
+	for _, domain := range []string{gDEFAULT_DOMAIN, domain} {
 		p, ok := s.serveTree[domain]
 		if !ok {
 			continue
 		}
+		// Make a list array with capacity of 16.
 		lists := make([]*glist.List, 0, 16)
 		for i, part := range array {
 			// In case of double '/' URI, eg: /user//index
@@ -72,8 +79,8 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 			if v, ok := p.(map[string]interface{})["*list"]; ok {
 				lists = append(lists, v.(*glist.List))
 			}
-			if _, ok := p.(map[string]interface{})[part]; ok {
-				p = p.(map[string]interface{})[part]
+			if v, ok := p.(map[string]interface{})[part]; ok {
+				p = v
 				if i == len(array)-1 {
 					if v, ok := p.(map[string]interface{})["*list"]; ok {
 						lists = append(lists, v.(*glist.List))
@@ -100,6 +107,12 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 		for i := len(lists) - 1; i >= 0; i-- {
 			for e := lists[i].Front(); e != nil; e = e.Next() {
 				item := e.Value.(*handlerItem)
+				// 主要是用于路由注册函数的重复添加判断(特别是中间件和钩子函数)
+				if _, ok := repeatHandlerCheckMap[item.itemId]; ok {
+					continue
+				} else {
+					repeatHandlerCheckMap[item.itemId] = struct{}{}
+				}
 				// 服务路由函数只能添加一次，将重复判断放在这里提高检索效率
 				if hasServe {
 					switch item.itemType {

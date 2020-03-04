@@ -9,7 +9,7 @@ package ghttp
 import (
 	"errors"
 	"fmt"
-	"github.com/gogf/gf/util/gutil"
+	"github.com/gogf/gf/container/gtype"
 	"strings"
 
 	"github.com/gogf/gf/debug/gdebug"
@@ -21,6 +21,11 @@ import (
 
 const (
 	gFILTER_KEY = "/net/ghttp/ghttp"
+)
+
+var (
+	// handlerIdGenerator is handler item id generator.
+	handlerIdGenerator = gtype.NewInt()
 )
 
 // handlerKey creates and returns an unique router key for given parameters.
@@ -59,6 +64,7 @@ func (s *Server) parsePattern(pattern string) (domain, method, path string, err 
 // This function is called during server starts up, which cares little about the performance. What really cares
 // is the well designed router storage structure for router searching when the request is under serving.
 func (s *Server) setHandler(pattern string, handler *handlerItem) {
+	handler.itemId = handlerIdGenerator.Add(1)
 	domain, method, uri, err := s.parsePattern(pattern)
 	if err != nil {
 		s.Logger().Fatal("invalid pattern:", pattern, err)
@@ -70,11 +76,11 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 	}
 
 	// Repeated router checks, this feature can be disabled by server configuration.
-	regKey := s.handlerKey(handler.hookName, method, uri, domain)
+	routerKey := s.handlerKey(handler.hookName, method, uri, domain)
 	if !s.config.RouteOverWrite {
 		switch handler.itemType {
 		case gHANDLER_TYPE_HANDLER, gHANDLER_TYPE_OBJECT, gHANDLER_TYPE_CONTROLLER:
-			if item, ok := s.routesMap[regKey]; ok {
+			if item, ok := s.routesMap[routerKey]; ok {
 				s.Logger().Fatalf(`duplicated route registry "%s", already registered at %s`, pattern, item[0].file)
 				return
 			}
@@ -143,47 +149,14 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 		// fuzzy checks.
 		if i == len(array)-1 && part != "*fuzz" {
 			if v, ok := p.(map[string]interface{})["*list"]; !ok {
-				list := glist.New()
-				p.(map[string]interface{})["*list"] = list
-				lists = append(lists, list)
+				leafList := glist.New()
+				p.(map[string]interface{})["*list"] = leafList
+				lists = append(lists, leafList)
 			} else {
 				lists = append(lists, v.(*glist.List))
 			}
 		}
 	}
-
-	for k, v := range array {
-		if len(v) == 0 {
-			continue
-		}
-		// 判断是否模糊匹配规则
-		if gregex.IsMatchString(`^[:\*]|\{[\w\.\-]+\}|\*`, v) {
-			v = "*fuzz"
-			// 由于是模糊规则，因此这里会有一个*list，用以将后续的路由规则加进来，
-			// 检索会从叶子节点的链表往根节点按照优先级进行检索
-			if v, ok := p.(map[string]interface{})["*list"]; !ok {
-				p.(map[string]interface{})["*list"] = glist.New()
-				lists = append(lists, p.(map[string]interface{})["*list"].(*glist.List))
-			} else {
-				lists = append(lists, v.(*glist.List))
-			}
-		}
-		// 属性层级数据写入
-		if _, ok := p.(map[string]interface{})[v]; !ok {
-			p.(map[string]interface{})[v] = make(map[string]interface{})
-		}
-		p = p.(map[string]interface{})[v]
-		// 到达叶子节点，往list中增加匹配规则(条件 v != "*fuzz" 是因为模糊节点的话在前面已经添加了*list链表)
-		if k == len(array)-1 && v != "*fuzz" {
-			if v, ok := p.(map[string]interface{})["*list"]; !ok {
-				p.(map[string]interface{})["*list"] = glist.New()
-				lists = append(lists, p.(map[string]interface{})["*list"].(*glist.List))
-			} else {
-				lists = append(lists, v.(*glist.List))
-			}
-		}
-	}
-
 	// It iterates the list array of <lists>, compares priorities and inserts the new router item in
 	// the proper position of each list. The priority of the list is ordered from high to low.
 	item := (*handlerItem)(nil)
@@ -206,8 +179,8 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 		}
 	}
 	// Initialize the route map item.
-	if _, ok := s.routesMap[regKey]; !ok {
-		s.routesMap[regKey] = make([]registeredRouteItem, 0)
+	if _, ok := s.routesMap[routerKey]; !ok {
+		s.routesMap[routerKey] = make([]registeredRouteItem, 0)
 	}
 	_, file, line := gdebug.CallerWithFilter(gFILTER_KEY)
 	routeItem := registeredRouteItem{
@@ -217,12 +190,12 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 	switch handler.itemType {
 	case gHANDLER_TYPE_HANDLER, gHANDLER_TYPE_OBJECT, gHANDLER_TYPE_CONTROLLER:
 		// Overwrite the route.
-		s.routesMap[regKey] = []registeredRouteItem{routeItem}
+		s.routesMap[routerKey] = []registeredRouteItem{routeItem}
 	default:
 		// Append the route.
-		s.routesMap[regKey] = append(s.routesMap[regKey], routeItem)
+		s.routesMap[routerKey] = append(s.routesMap[routerKey], routeItem)
 	}
-	gutil.Dump(s.serveTree)
+	//gutil.Dump(s.serveTree)
 }
 
 // 对比两个handlerItem的优先级，需要非常注意的是，注意新老对比项的参数先后顺序。
