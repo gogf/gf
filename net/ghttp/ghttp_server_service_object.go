@@ -39,7 +39,7 @@ func (s *Server) BindObjectRest(pattern string, object interface{}) {
 }
 
 func (s *Server) doBindObject(pattern string, object interface{}, method string, middleware []HandlerFunc) {
-	// Convert input method to map for convenience and high performance searching.
+	// Convert input method to map for convenience and high performance searching purpose.
 	var methodMap map[string]bool
 	if len(method) > 0 {
 		methodMap = make(map[string]bool)
@@ -86,12 +86,16 @@ func (s *Server) doBindObject(pattern string, object interface{}, method string,
 		if !ok {
 			if len(methodMap) > 0 {
 				// 指定的方法名称注册，那么需要使用错误提示
-				s.Logger().Errorf(`invalid route method: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" is required for object registry`,
-					pkgPath, objName, methodName, v.Method(i).Type().String())
+				s.Logger().Errorf(
+					`invalid route method: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" is required for object registry`,
+					pkgPath, objName, methodName, v.Method(i).Type().String(),
+				)
 			} else {
 				// 否则只是Debug提示
-				s.Logger().Debugf(`ignore route method: %s.%s.%s defined as "%s", no match "func(*ghttp.Request)"`,
-					pkgPath, objName, methodName, v.Method(i).Type().String())
+				s.Logger().Debugf(
+					`ignore route method: %s.%s.%s defined as "%s", no match "func(*ghttp.Request)"`,
+					pkgPath, objName, methodName, v.Method(i).Type().String(),
+				)
 			}
 			continue
 		}
