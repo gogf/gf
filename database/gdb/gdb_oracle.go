@@ -123,8 +123,18 @@ func (db *dbOracle) parseSql(sql string) string {
 }
 
 // Tables retrieves and returns the tables of current schema.
-// TODO
 func (db *dbOracle) Tables(schema ...string) (tables []string, err error) {
+	var result Result
+
+	result, err = db.doGetAll(nil, "SELECT TABLE_NAME FROM USER_TABLES ORDER BY TABLE_NAME")
+	if err != nil {
+		return
+	}
+	for _, m := range result {
+		for _, v := range m {
+			tables = append(tables, strings.ToLower(v.String()))
+		}
+	}
 	return
 }
 
