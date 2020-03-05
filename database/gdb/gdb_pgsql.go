@@ -62,8 +62,26 @@ func (db *dbPgsql) handleSqlBeforeExec(sql string) string {
 }
 
 // Tables retrieves and returns the tables of current schema.
-// TODO
 func (db *dbPgsql) Tables(schema ...string) (tables []string, err error) {
+	var result Result
+	link, err := db.getSlave(schema...)
+	if err != nil {
+		return nil, err
+	}
+
+	query := "SELECT TABLENAME FROM PG_TABLES WHERE SCHEMANAME = 'public' ORDER BY TABLENAME"
+	if len(schema) > 0 && schema[0] != "" {
+		query = fmt.Sprintf("SELECT TABLENAME FROM PG_TABLES WHERE SCHEMANAME = '%s' ORDER BY TABLENAME", schema[0])
+	}
+	result, err = db.doGetAll(link, query)
+	if err != nil {
+		return
+	}
+	for _, m := range result {
+		for _, v := range m {
+			tables = append(tables, v.String())
+		}
+	}
 	return
 }
 
