@@ -28,8 +28,10 @@ var (
 	handlerIdGenerator = gtype.NewInt()
 )
 
-// handlerKey creates and returns an unique router key for given parameters.
-func (s *Server) handlerKey(hook, method, path, domain string) string {
+// routerMapKey creates and returns an unique router key for given parameters.
+// This key is used for Server.routerMap attribute, which is mainly for checks for
+// repeated router registering.
+func (s *Server) routerMapKey(hook, method, path, domain string) string {
 	return hook + "%" + s.serveHandlerKey(method, path, domain)
 }
 
@@ -76,7 +78,7 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 	}
 
 	// Repeated router checks, this feature can be disabled by server configuration.
-	routerKey := s.handlerKey(handler.hookName, method, uri, domain)
+	routerKey := s.routerMapKey(handler.hookName, method, uri, domain)
 	if !s.config.RouteOverWrite {
 		switch handler.itemType {
 		case gHANDLER_TYPE_HANDLER, gHANDLER_TYPE_OBJECT, gHANDLER_TYPE_CONTROLLER:
@@ -98,7 +100,7 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 	if _, ok := s.serveTree[domain]; !ok {
 		s.serveTree[domain] = make(map[string]interface{})
 	}
-	// List array, very important for router register.
+	// List array, very important for router registering.
 	// There may be multiple lists adding into this array when searching from root to leaf.
 	lists := make([]*glist.List, 0)
 	array := ([]string)(nil)
