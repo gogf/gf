@@ -13,7 +13,7 @@ import (
 	"github.com/gogf/gf/test/gtest"
 )
 
-func TestZlib(t *testing.T) {
+func Test_Zlib_UnZlib(t *testing.T) {
 	gtest.Case(t, func() {
 		src := "hello, world\n"
 		dst := []byte{120, 156, 202, 72, 205, 201, 201, 215, 81, 40, 207, 47, 202, 73, 225, 2, 4, 0, 0, 255, 255, 33, 231, 4, 147}
@@ -31,30 +31,4 @@ func TestZlib(t *testing.T) {
 		data, _ = gcompress.UnZlib(dst[1:])
 		gtest.Assert(data, nil)
 	})
-
-}
-
-func TestGzip(t *testing.T) {
-	src := "Hello World!!"
-
-	gzip := []byte{
-		0x1f, 0x8b, 0x08, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0xff,
-		0xf2, 0x48, 0xcd, 0xc9, 0xc9,
-		0x57, 0x08, 0xcf, 0x2f, 0xca,
-		0x49, 0x51, 0x54, 0x04, 0x04,
-		0x00, 0x00, 0xff, 0xff, 0x9d,
-		0x24, 0xa8, 0xd1, 0x0d, 0x00,
-		0x00, 0x00,
-	}
-
-	arr := []byte(src)
-	data, _ := gcompress.Gzip(arr)
-	gtest.Assert(data, gzip)
-
-	data, _ = gcompress.UnGzip(gzip)
-	gtest.Assert(data, arr)
-
-	data, _ = gcompress.UnGzip(gzip[1:])
-	gtest.Assert(data, nil)
 }

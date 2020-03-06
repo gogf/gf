@@ -9,6 +9,7 @@ package gcompress
 import (
 	"archive/zip"
 	"bytes"
+	"github.com/gogf/gf/internal/intlog"
 	"io"
 	"os"
 	"path/filepath"
@@ -32,7 +33,15 @@ func ZipPath(paths, dest string, prefix ...string) error {
 		return err
 	}
 	defer writer.Close()
-	return ZipPathWriter(paths, writer, prefix...)
+	zipWriter := zip.NewWriter(writer)
+	defer zipWriter.Close()
+	for _, path := range strings.Split(paths, ",") {
+		path = strings.TrimSpace(path)
+		if err := doZipPathWriter(path, gfile.RealPath(dest), zipWriter, prefix...); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // ZipPathWriter compresses <paths> to <writer> using zip compressing algorithm.
@@ -45,17 +54,21 @@ func ZipPathWriter(paths string, writer io.Writer, prefix ...string) error {
 	defer zipWriter.Close()
 	for _, path := range strings.Split(paths, ",") {
 		path = strings.TrimSpace(path)
-		if err := doZipPathWriter(path, zipWriter, prefix...); err != nil {
+		if err := doZipPathWriter(path, "", zipWriter, prefix...); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func doZipPathWriter(path string, zipWriter *zip.Writer, prefix ...string) error {
+// doZipPathWriter compresses the file of given <path> and writes the content to <zipWriter>.
+// The parameter <exclude> specifies the exclusive file path that is not compressed to <zipWriter>,
+// commonly the destination zip file path.
+// The unnecessary parameter <prefix> indicates the path prefix for zip file.
+func doZipPathWriter(path string, exclude string, zipWriter *zip.Writer, prefix ...string) error {
 	var err error
 	var files []string
-	realPath, err := gfile.Search(path)
+	path, err = gfile.Search(path)
 	if err != nil {
 		return err
 	}
@@ -80,7 +93,11 @@ func doZipPathWriter(path string, zipWriter *zip.Writer, prefix ...string) error
 	}
 	headerPrefix = strings.Replace(headerPrefix, "//", "/", -1)
 	for _, file := range files {
-		err := zipFile(file, headerPrefix+gfile.Dir(file[len(realPath):]), zipWriter)
+		if exclude == file {
+			intlog.Printf(`exclude file path: %s`, file)
+			continue
+		}
+		err := zipFile(file, headerPrefix+gfile.Dir(file[len(path):]), zipWriter)
 		if err != nil {
 			return err
 		}
@@ -101,10 +118,10 @@ func doZipPathWriter(path string, zipWriter *zip.Writer, prefix ...string) error
 }
 
 // UnZipFile decompresses <archive> to <dest> using zip compressing algorithm.
-// The parameter <path> specifies the unzipped path of <archive>,
+// The optional parameter <path> specifies the unzipped path of <archive>,
 // which can be used to specify part of the archive file to unzip.
 //
-// Note thate the parameter <dest> should be a directory.
+// Note that the parameter <dest> should be a directory.
 func UnZipFile(archive, dest string, path ...string) error {
 	readerCloser, err := zip.OpenReader(archive)
 	if err != nil {
@@ -118,7 +135,7 @@ func UnZipFile(archive, dest string, path ...string) error {
 // The parameter <path> specifies the unzipped path of <archive>,
 // which can be used to specify part of the archive file to unzip.
 //
-// Note thate the parameter <dest> should be a directory.
+// Note that the parameter <dest> should be a directory.
 func UnZipContent(data []byte, dest string, path ...string) error {
 	reader, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
 	if err != nil {
@@ -178,6 +195,8 @@ func unZipFileWithReader(reader *zip.Reader, dest string, path ...string) error 
 	return nil
 }
 
+// zipFile compresses the file of given <path> and writes the content to <zw>.
+// The parameter <prefix> indicates the path prefix for zip file.
 func zipFile(path string, prefix string, zw *zip.Writer) error {
 	file, err := os.Open(path)
 	if err != nil {
