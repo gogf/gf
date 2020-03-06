@@ -324,6 +324,36 @@ func Test_Struct_Attr_Struct_Slice_Ptr(t *testing.T) {
 	})
 }
 
+func Test_Struct_Attr_CustomType1(t *testing.T) {
+	type MyInt int
+	type User struct {
+		Id   MyInt
+		Name string
+	}
+	gtest.Case(t, func() {
+		user := new(User)
+		err := gconv.Struct(g.Map{"id": 1, "name": "john"}, user)
+		gtest.Assert(err, nil)
+		gtest.Assert(user.Id, 1)
+		gtest.Assert(user.Name, "john")
+	})
+}
+
+func Test_Struct_Attr_CustomType2(t *testing.T) {
+	type MyInt int
+	type User struct {
+		Id   []MyInt
+		Name string
+	}
+	gtest.Case(t, func() {
+		user := new(User)
+		err := gconv.Struct(g.Map{"id": g.Slice{1, 2}, "name": "john"}, user)
+		gtest.Assert(err, nil)
+		gtest.Assert(user.Id, g.Slice{1, 2})
+		gtest.Assert(user.Name, "john")
+	})
+}
+
 func Test_Struct_PrivateAttribute(t *testing.T) {
 	type User struct {
 		Id   int
