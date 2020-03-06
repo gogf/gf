@@ -176,7 +176,7 @@ func (db *dbMssql) Tables(schema ...string) (tables []string, err error) {
 	}
 	for _, m := range result {
 		for _, v := range m {
-			tables = append(tables, strings.ToLower(v.String()))
+			tables = append(tables, v.String())
 		}
 	}
 	return

@@ -34,6 +34,11 @@ type Page struct {
 	AjaxActionName string // Ajax function name. Ajax is enabled if this attribute is not empty.
 }
 
+const (
+	PAGE_NAME         = "page"    // PAGE_NAME defines the default page name.
+	PAGE_PLACE_HOLDER = "{.page}" // PAGE_PLACE_HOLDER defines the place holder for the url template.
+)
+
 // New creates and returns a pagination manager.
 // Note that the parameter <urlTemplate> specifies the URL producing template, like:
 // /user/list/{.page}, /user/list/{.page}.html, /user/list?page={.page}&type=1, etc.
@@ -201,7 +206,7 @@ func (p *Page) GetContent(mode int) string {
 // Note that the UrlTemplate attribute can be either an URL or a URI string with "{.page}"
 // place holder specifying the page number position.
 func (p *Page) GetUrl(page int) string {
-	return gstr.Replace(p.UrlTemplate, "{.page}", gconv.String(page))
+	return gstr.Replace(p.UrlTemplate, PAGE_PLACE_HOLDER, gconv.String(page))
 }
 
 // GetLink returns the HTML link tag <a> content for given page number.

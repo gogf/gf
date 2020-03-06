@@ -123,16 +123,16 @@ func (db *dbOracle) parseSql(sql string) string {
 }
 
 // Tables retrieves and returns the tables of current schema.
+// Note that it ignores the parameter <schema> in oracle database, as it is not necessary.
 func (db *dbOracle) Tables(schema ...string) (tables []string, err error) {
 	var result Result
-
 	result, err = db.doGetAll(nil, "SELECT TABLE_NAME FROM USER_TABLES ORDER BY TABLE_NAME")
 	if err != nil {
 		return
 	}
 	for _, m := range result {
 		for _, v := range m {
-			tables = append(tables, strings.ToLower(v.String()))
+			tables = append(tables, v.String())
 		}
 	}
 	return
