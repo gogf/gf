@@ -48,7 +48,8 @@ var (
 )
 
 // Convert converts the variable <i> to the type <t>, the type <t> is specified by string.
-// The optional parameter <params> is used for additional parameter passing.
+// The optional parameter <params> is used for additional necessary parameter for this conversion.
+// It supports common types conversion as its conversion based on type name string.
 func Convert(i interface{}, t string, params ...interface{}) interface{} {
 	switch t {
 	case "int":
@@ -121,6 +122,7 @@ func Convert(i interface{}, t string, params ...interface{}) interface{} {
 	case "Duration", "time.Duration":
 		return Duration(i)
 	default:
+
 		return i
 	}
 }
