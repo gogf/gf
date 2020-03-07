@@ -34,14 +34,14 @@ type DB interface {
 	Prepare(sql string, execOnMaster ...bool) (*sql.Stmt, error)
 
 	// Internal APIs for CURD, which can be overwrote for custom CURD implements.
-	doQuery(link dbLink, query string, args ...interface{}) (rows *sql.Rows, err error)
-	doGetAll(link dbLink, query string, args ...interface{}) (result Result, err error)
-	doExec(link dbLink, query string, args ...interface{}) (result sql.Result, err error)
-	doPrepare(link dbLink, query string) (*sql.Stmt, error)
-	doInsert(link dbLink, table string, data interface{}, option int, batch ...int) (result sql.Result, err error)
-	doBatchInsert(link dbLink, table string, list interface{}, option int, batch ...int) (result sql.Result, err error)
-	doUpdate(link dbLink, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error)
-	doDelete(link dbLink, table string, condition string, args ...interface{}) (result sql.Result, err error)
+	DoQuery(link dbLink, query string, args ...interface{}) (rows *sql.Rows, err error)
+	DoGetAll(link dbLink, query string, args ...interface{}) (result Result, err error)
+	DoExec(link dbLink, query string, args ...interface{}) (result sql.Result, err error)
+	DoPrepare(link dbLink, query string) (*sql.Stmt, error)
+	DoInsert(link dbLink, table string, data interface{}, option int, batch ...int) (result sql.Result, err error)
+	DoBatchInsert(link dbLink, table string, list interface{}, option int, batch ...int) (result sql.Result, err error)
+	DoUpdate(link dbLink, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error)
+	DoDelete(link dbLink, table string, condition string, args ...interface{}) (result sql.Result, err error)
 
 	// Query APIs for convenience purpose.
 	GetAll(query string, args ...interface{}) (Result, error)
@@ -52,11 +52,11 @@ type DB interface {
 	GetStructs(objPointerSlice interface{}, query string, args ...interface{}) error
 	GetScan(objPointer interface{}, query string, args ...interface{}) error
 
-	// Master/Slave support.
+	// Master/Slave specification support.
 	Master() (*sql.DB, error)
 	Slave() (*sql.DB, error)
 
-	// Ping.
+	// Ping-Pong.
 	PingMaster() error
 	PingSlave() error
 
@@ -75,48 +75,44 @@ type DB interface {
 	Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error)
 	Delete(table string, condition interface{}, args ...interface{}) (sql.Result, error)
 
-	// Create model.
+	// Model creation.
 	From(tables string) *Model
 	Table(tables string) *Model
 	Schema(schema string) *Schema
 
 	// Configuration methods.
+	GetCache() *gcache.Cache
 	SetDebug(debug bool)
+	GetDebug() bool
 	SetSchema(schema string)
+	GetSchema() string
+	GetPrefix() string
 	SetLogger(logger *glog.Logger)
 	GetLogger() *glog.Logger
 	SetMaxIdleConnCount(n int)
 	SetMaxOpenConnCount(n int)
 	SetMaxConnLifetime(d time.Duration)
+
+	// Utility methods.
+	GetChars() (charLeft string, charRight string)
+	GetMaster(schema ...string) (*sql.DB, error)
+	GetSlave(schema ...string) (*sql.DB, error)
+	QuoteWord(s string) string
+	QuoteString(s string) string
+	HandleSqlBeforeExec(sql string) string
 	Tables(schema ...string) (tables []string, err error)
 	TableFields(table string, schema ...string) (map[string]*TableField, error)
 
 	// Internal methods.
-	getCache() *gcache.Cache
-	getChars() (charLeft string, charRight string)
-	getDebug() bool
-	getPrefix() string
-	getMaster(schema ...string) (*sql.DB, error)
-	getSlave(schema ...string) (*sql.DB, error)
-	quoteWord(s string) string
-	quoteString(s string) string
 	handleTableName(table string) string
 	filterFields(schema, table string, data map[string]interface{}) map[string]interface{}
 	convertValue(fieldValue []byte, fieldType string) interface{}
 	rowsToResult(rows *sql.Rows) (Result, error)
-	handleSqlBeforeExec(sql string) string
 }
 
-// dbLink is a common database function wrapper interface for internal usage.
-type dbLink interface {
-	Query(query string, args ...interface{}) (*sql.Rows, error)
-	Exec(sql string, args ...interface{}) (sql.Result, error)
-	Prepare(sql string) (*sql.Stmt, error)
-}
-
-// dbBase is the base struct for database management.
-type dbBase struct {
-	db               DB            // DB interface object.
+// Core is the base struct for database management.
+type Core struct {
+	DB               DB            // DB interface object.
 	group            string        // Configuration group name.
 	debug            *gtype.Bool   // Enable debug mode for the database.
 	cache            *gcache.Cache // Cache manager.
@@ -126,6 +122,11 @@ type dbBase struct {
 	maxIdleConnCount int           // Max idle connection count.
 	maxOpenConnCount int           // Max open connection count.
 	maxConnLifetime  time.Duration // Max TTL for a connection.
+}
+
+// Driver is the interface for integrating sql drivers into package gdb.
+type Driver interface {
+	New(core *Core, node *ConfigNode) (DB, error)
 }
 
 // Sql is the sql recording struct.
@@ -148,6 +149,13 @@ type TableField struct {
 	Default interface{} // Default value for the field.
 	Extra   string      // Extra information.
 	Comment string      // Comment.
+}
+
+// dbLink is a common database function wrapper interface for internal usage.
+type dbLink interface {
+	Query(query string, args ...interface{}) (*sql.Rows, error)
+	Exec(sql string, args ...interface{}) (sql.Result, error)
+	Prepare(sql string) (*sql.Stmt, error)
 }
 
 // Value is the field value type.
@@ -176,9 +184,22 @@ const (
 )
 
 var (
-	// Instance map.
+	// instances is the management map for instances.
 	instances = gmap.NewStrAnyMap(true)
+	// driverMap manages all custom registered driver.
+	driverMap = map[string]Driver{
+		"mysql":  &DriverMysql{},
+		"mssql":  &DriverMssql{},
+		"oracle": &DriverOracle{},
+		"sqlite": &DriverSqlite{},
+	}
 )
+
+// Register registers custom database driver to gdb.
+func Register(name string, driver Driver) error {
+	driverMap[name] = driver
+	return nil
+}
 
 // New creates and returns an ORM object with global configurations.
 // The parameter <name> specifies the configuration group name,
@@ -196,31 +217,24 @@ func New(name ...string) (db DB, err error) {
 	}
 	if _, ok := configs.config[group]; ok {
 		if node, err := getConfigNodeByGroup(group, true); err == nil {
-			base := &dbBase{
-				group:  group,
-				debug:  gtype.NewBool(),
-				cache:  gcache.New(),
-				schema: gtype.NewString(),
-				logger: glog.New(),
-				prefix: node.Prefix,
-				// Default max connection life time if user does not configure.
-				maxConnLifetime: gDEFAULT_CONN_MAX_LIFE_TIME,
+			c := &Core{
+				group:           group,
+				debug:           gtype.NewBool(),
+				cache:           gcache.New(),
+				schema:          gtype.NewString(),
+				logger:          glog.New(),
+				prefix:          node.Prefix,
+				maxConnLifetime: gDEFAULT_CONN_MAX_LIFE_TIME, // Default max connection life time if user does not configure.
 			}
-			switch node.Type {
-			case "mysql":
-				base.db = &dbMysql{dbBase: base}
-			case "pgsql":
-				base.db = &dbPgsql{dbBase: base}
-			case "mssql":
-				base.db = &dbMssql{dbBase: base}
-			case "sqlite":
-				base.db = &dbSqlite{dbBase: base}
-			case "oracle":
-				base.db = &dbOracle{dbBase: base}
-			default:
+			if v, ok := driverMap[node.Type]; ok {
+				c.DB, err = v.New(c, node)
+				if err != nil {
+					return nil, err
+				}
+				return c.DB, nil
+			} else {
 				return nil, errors.New(fmt.Sprintf(`unsupported database type "%s"`, node.Type))
 			}
-			return base.db, nil
 		} else {
 			return nil, err
 		}
@@ -321,9 +335,9 @@ func getConfigNodeByWeight(cg ConfigGroup) *ConfigNode {
 // getSqlDb retrieves and returns a underlying database connection object.
 // The parameter <master> specifies whether retrieves master node connection if
 // master-slave nodes are configured.
-func (bs *dbBase) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error) {
+func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error) {
 	// Load balance.
-	node, err := getConfigNodeByGroup(bs.group, master)
+	node, err := getConfigNodeByGroup(c.group, master)
 	if err != nil {
 		return nil, err
 	}
@@ -332,7 +346,7 @@ func (bs *dbBase) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err er
 		node.Charset = "utf8"
 	}
 	// Changes the schema.
-	nodeSchema := bs.schema.Val()
+	nodeSchema := c.schema.Val()
 	if len(schema) > 0 && schema[0] != "" {
 		nodeSchema = schema[0]
 	}
@@ -343,25 +357,25 @@ func (bs *dbBase) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err er
 		node = &n
 	}
 	// Cache the underlying connection object by node.
-	v := bs.cache.GetOrSetFuncLock(node.String(), func() interface{} {
-		sqlDb, err = bs.db.Open(node)
+	v := c.cache.GetOrSetFuncLock(node.String(), func() interface{} {
+		sqlDb, err = c.DB.Open(node)
 		if err != nil {
 			return nil
 		}
-		if bs.maxIdleConnCount > 0 {
-			sqlDb.SetMaxIdleConns(bs.maxIdleConnCount)
+		if c.maxIdleConnCount > 0 {
+			sqlDb.SetMaxIdleConns(c.maxIdleConnCount)
 		} else if node.MaxIdleConnCount > 0 {
 			sqlDb.SetMaxIdleConns(node.MaxIdleConnCount)
 		}
 
-		if bs.maxOpenConnCount > 0 {
-			sqlDb.SetMaxOpenConns(bs.maxOpenConnCount)
+		if c.maxOpenConnCount > 0 {
+			sqlDb.SetMaxOpenConns(c.maxOpenConnCount)
 		} else if node.MaxOpenConnCount > 0 {
 			sqlDb.SetMaxOpenConns(node.MaxOpenConnCount)
 		}
 
-		if bs.maxConnLifetime > 0 {
-			sqlDb.SetConnMaxLifetime(bs.maxConnLifetime * time.Second)
+		if c.maxConnLifetime > 0 {
+			sqlDb.SetConnMaxLifetime(c.maxConnLifetime * time.Second)
 		} else if node.MaxConnLifetime > 0 {
 			sqlDb.SetConnMaxLifetime(node.MaxConnLifetime * time.Second)
 		}
@@ -371,40 +385,7 @@ func (bs *dbBase) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err er
 		sqlDb = v.(*sql.DB)
 	}
 	if node.Debug {
-		bs.db.SetDebug(node.Debug)
+		c.DB.SetDebug(node.Debug)
 	}
 	return
-}
-
-// SetSchema changes the schema for this database connection object.
-// Importantly note that when schema configuration changed for the database,
-// it affects all operations on the database object in the future.
-func (bs *dbBase) SetSchema(schema string) {
-	bs.schema.Set(schema)
-}
-
-// Master creates and returns a connection from master node if master-slave configured.
-// It returns the default connection if master-slave not configured.
-func (bs *dbBase) Master() (*sql.DB, error) {
-	return bs.getSqlDb(true, bs.schema.Val())
-}
-
-// Slave creates and returns a connection from slave node if master-slave configured.
-// It returns the default connection if master-slave not configured.
-func (bs *dbBase) Slave() (*sql.DB, error) {
-	return bs.getSqlDb(false, bs.schema.Val())
-}
-
-// getMaster acts like function Master but with additional <schema> parameter specifying
-// the schema for the connection. It is defined for internal usage.
-// Also see Master.
-func (bs *dbBase) getMaster(schema ...string) (*sql.DB, error) {
-	return bs.getSqlDb(true, schema...)
-}
-
-// getSlave acts like function Slave but with additional <schema> parameter specifying
-// the schema for the connection. It is defined for internal usage.
-// Also see Slave.
-func (bs *dbBase) getSlave(schema ...string) (*sql.DB, error) {
-	return bs.getSqlDb(false, schema...)
 }

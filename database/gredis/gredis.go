@@ -54,9 +54,9 @@ type PoolStats struct {
 }
 
 const (
-	gDEFAULT_POOL_IDLE_TIMEOUT  = 60 * time.Second
+	gDEFAULT_POOL_IDLE_TIMEOUT  = 30 * time.Second
 	gDEFAULT_POOL_CONN_TIMEOUT  = 10 * time.Second
-	gDEFAULT_POOL_MAX_LIFE_TIME = 60 * time.Second
+	gDEFAULT_POOL_MAX_LIFE_TIME = 30 * time.Second
 )
 
 var (
@@ -80,6 +80,7 @@ func New(config Config) *Redis {
 		config: config,
 		pool: pools.GetOrSetFuncLock(fmt.Sprintf("%v", config), func() interface{} {
 			return &redis.Pool{
+				Wait:            true,
 				IdleTimeout:     config.IdleTimeout,
 				MaxActive:       config.MaxActive,
 				MaxIdle:         config.MaxIdle,

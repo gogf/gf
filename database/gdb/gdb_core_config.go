@@ -8,6 +8,7 @@ package gdb
 
 import (
 	"fmt"
+	"github.com/gogf/gf/os/gcache"
 	"sync"
 	"time"
 
@@ -114,29 +115,29 @@ func GetDefaultGroup() string {
 }
 
 // SetLogger sets the logger for orm.
-func (bs *dbBase) SetLogger(logger *glog.Logger) {
-	bs.logger = logger
+func (c *Core) SetLogger(logger *glog.Logger) {
+	c.logger = logger
 }
 
 // GetLogger returns the logger of the orm.
-func (bs *dbBase) GetLogger() *glog.Logger {
-	return bs.logger
+func (c *Core) GetLogger() *glog.Logger {
+	return c.logger
 }
 
 // SetMaxIdleConnCount sets the max idle connection count for underlying connection pool.
-func (bs *dbBase) SetMaxIdleConnCount(n int) {
-	bs.maxIdleConnCount = n
+func (c *Core) SetMaxIdleConnCount(n int) {
+	c.maxIdleConnCount = n
 }
 
 // SetMaxOpenConnCount sets the max open connection count for underlying connection pool.
-func (bs *dbBase) SetMaxOpenConnCount(n int) {
-	bs.maxOpenConnCount = n
+func (c *Core) SetMaxOpenConnCount(n int) {
+	c.maxOpenConnCount = n
 }
 
 // SetMaxConnLifetime sets the connection TTL for underlying connection pool.
 // If parameter <d> <= 0, it means the connection never expires.
-func (bs *dbBase) SetMaxConnLifetime(d time.Duration) {
-	bs.maxConnLifetime = d
+func (c *Core) SetMaxConnLifetime(d time.Duration) {
+	c.maxConnLifetime = d
 }
 
 // String returns the node as string.
@@ -155,14 +156,36 @@ func (node *ConfigNode) String() string {
 }
 
 // SetDebug enables/disables the debug mode.
-func (bs *dbBase) SetDebug(debug bool) {
-	if bs.debug.Val() == debug {
+func (c *Core) SetDebug(debug bool) {
+	if c.debug.Val() == debug {
 		return
 	}
-	bs.debug.Set(debug)
+	c.debug.Set(debug)
 }
 
-// getDebug returns the debug value.
-func (bs *dbBase) getDebug() bool {
-	return bs.debug.Val()
+// GetDebug returns the debug value.
+func (c *Core) GetDebug() bool {
+	return c.debug.Val()
+}
+
+// GetCache returns the internal cache object.
+func (c *Core) GetCache() *gcache.Cache {
+	return c.cache
+}
+
+// GetPrefix returns the table prefix string configured.
+func (c *Core) GetPrefix() string {
+	return c.prefix
+}
+
+// SetSchema changes the schema for this database connection object.
+// Importantly note that when schema configuration changed for the database,
+// it affects all operations on the database object in the future.
+func (c *Core) SetSchema(schema string) {
+	c.schema.Set(schema)
+}
+
+// GetSchema returns the schema configured.
+func (c *Core) GetSchema() string {
+	return c.schema.Val()
 }

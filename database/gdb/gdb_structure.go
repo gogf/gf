@@ -21,7 +21,7 @@ import (
 
 // convertValue automatically checks and converts field value from database type
 // to golang variable type.
-func (bs *dbBase) convertValue(fieldValue []byte, fieldType string) interface{} {
+func (c *Core) convertValue(fieldValue []byte, fieldType string) interface{} {
 	t, _ := gregex.ReplaceString(`\(.+\)`, "", fieldType)
 	t = strings.ToLower(t)
 	switch t {
@@ -106,10 +106,10 @@ func (bs *dbBase) convertValue(fieldValue []byte, fieldType string) interface{} 
 }
 
 // filterFields removes all key-value pairs which are not the field of given table.
-func (bs *dbBase) filterFields(schema, table string, data map[string]interface{}) map[string]interface{} {
+func (c *Core) filterFields(schema, table string, data map[string]interface{}) map[string]interface{} {
 	// It must use data copy here to avoid its changing the origin data map.
 	newDataMap := make(map[string]interface{}, len(data))
-	if fields, err := bs.db.TableFields(table, schema); err == nil {
+	if fields, err := c.DB.TableFields(table, schema); err == nil {
 		for k, v := range data {
 			if _, ok := fields[k]; ok {
 				newDataMap[k] = v
