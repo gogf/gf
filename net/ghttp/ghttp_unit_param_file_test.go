@@ -22,9 +22,6 @@ import (
 
 func Test_Params_File_Single(t *testing.T) {
 	dstDirPath := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
-	err := gfile.Mkdir(dstDirPath)
-	gtest.Assert(err, nil)
-
 	p := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/upload/single", func(r *ghttp.Request) {
@@ -77,11 +74,45 @@ func Test_Params_File_Single(t *testing.T) {
 	})
 }
 
+func Test_Params_File_CustomName(t *testing.T) {
+	dstDirPath := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
+	p := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/upload/single", func(r *ghttp.Request) {
+		file := r.GetUploadFile("file")
+		if file == nil {
+			r.Response.WriteExit("upload file cannot be empty")
+		}
+		file.Filename = "my.txt"
+		if name, err := file.Save(dstDirPath, r.GetBool("randomlyRename")); err == nil {
+			r.Response.WriteExit(name)
+		}
+		r.Response.WriteExit("upload failed")
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+	time.Sleep(100 * time.Millisecond)
+	gtest.Case(t, func() {
+		client := ghttp.NewClient()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+
+		srcPath := gfile.Join(gdebug.CallerDirectory(), "testdata", "upload", "file1.txt")
+		dstPath := gfile.Join(dstDirPath, "my.txt")
+		content := client.PostContent("/upload/single", g.Map{
+			"file": "@file:" + srcPath,
+		})
+		gtest.AssertNE(content, "")
+		gtest.AssertNE(content, "upload file cannot be empty")
+		gtest.AssertNE(content, "upload failed")
+		gtest.Assert(content, "my.txt")
+		gtest.Assert(gfile.GetContents(dstPath), gfile.GetContents(srcPath))
+	})
+}
+
 func Test_Params_File_Batch(t *testing.T) {
 	dstDirPath := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
-	err := gfile.Mkdir(dstDirPath)
-	gtest.Assert(err, nil)
-
 	p := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/upload/batch", func(r *ghttp.Request) {
@@ -89,7 +120,6 @@ func Test_Params_File_Batch(t *testing.T) {
 		if files == nil {
 			r.Response.WriteExit("upload file cannot be empty")
 		}
-
 		if names, err := files.Save(dstDirPath, r.GetBool("randomlyRename")); err == nil {
 			r.Response.WriteExit(gstr.Join(names, ","))
 		}

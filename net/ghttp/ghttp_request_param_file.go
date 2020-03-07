@@ -26,34 +26,38 @@ type UploadFile struct {
 // UploadFiles is array type for *UploadFile.
 type UploadFiles []*UploadFile
 
-// Save saves the single uploading file to specified path and returns the saved file name.
-// The parameter path can be either a directory or a file path. If <path> is a directory,
-// it saves the uploading file to the directory using its original name. If <path> is a
-// file path, it saves the uploading file to the file path.
+// Save saves the single uploading file to directory path and returns the saved file name.
+//
+// The parameter <dirPath> should be a directory path or it returns error.
 //
 // The parameter <randomlyRename> specifies whether randomly renames the file name, which
 // make sense if the <path> is a directory.
 //
 // Note that it will overwrite the target file if there's already a same name file exist.
-func (f *UploadFile) Save(path string, randomlyRename ...bool) (filename string, err error) {
+func (f *UploadFile) Save(dirPath string, randomlyRename ...bool) (filename string, err error) {
 	if f == nil {
 		return
 	}
+	if !gfile.Exists(dirPath) {
+		if err = gfile.Mkdir(dirPath); err != nil {
+			return
+		}
+	} else if !gfile.IsDir(dirPath) {
+		return "", errors.New(`parameter "dirPath" should be a directory path`)
+	}
+
 	file, err := f.Open()
 	if err != nil {
 		return "", err
 	}
 	defer file.Close()
 
-	filePath := path
-	if gfile.IsDir(path) {
-		name := gfile.Basename(f.Filename)
-		if len(randomlyRename) > 0 && randomlyRename[0] {
-			name = strings.ToLower(strconv.FormatInt(gtime.TimestampNano(), 36) + grand.S(6))
-			name = name + gfile.Ext(f.Filename)
-		}
-		filePath = gfile.Join(path, name)
+	name := gfile.Basename(f.Filename)
+	if len(randomlyRename) > 0 && randomlyRename[0] {
+		name = strings.ToLower(strconv.FormatInt(gtime.TimestampNano(), 36) + grand.S(6))
+		name = name + gfile.Ext(f.Filename)
 	}
+	filePath := gfile.Join(dirPath, name)
 	newFile, err := gfile.Create(filePath)
 	if err != nil {
 		return "", err
@@ -74,13 +78,6 @@ func (f *UploadFile) Save(path string, randomlyRename ...bool) (filename string,
 func (fs UploadFiles) Save(dirPath string, randomlyRename ...bool) (filenames []string, err error) {
 	if len(fs) == 0 {
 		return nil, nil
-	}
-	if !gfile.Exists(dirPath) {
-		if err = gfile.Mkdir(dirPath); err != nil {
-			return
-		}
-	} else if !gfile.IsDir(dirPath) {
-		return nil, errors.New(`parameter "dirPath" should be a directory path`)
 	}
 	for _, f := range fs {
 		if filename, err := f.Save(dirPath, randomlyRename...); err != nil {
