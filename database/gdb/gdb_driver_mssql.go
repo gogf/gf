@@ -5,7 +5,7 @@
 // You can obtain one at https://github.com/gogf/gf.
 //
 // Note:
-// 1. It needs manually import: _ "github.com/lib/pq"
+// 1. It needs manually import: _ "github.com/denisenkom/go-mssqldb"
 // 2. It does not support Save/Replace features.
 // 3. It does not support LastInsertId.
 
@@ -22,12 +22,20 @@ import (
 	"github.com/gogf/gf/text/gregex"
 )
 
-type dbMssql struct {
-	*dbBase
+// DriverMssql is the driver for SQL server database.
+type DriverMssql struct {
+	*Core
+}
+
+// New creates and returns a database object for SQL server.
+func (d *DriverMssql) New(core *Core, node *ConfigNode) (DB, error) {
+	return &DriverMssql{
+		Core: core,
+	}, nil
 }
 
 // Open creates and returns a underlying sql.DB object for mssql.
-func (db *dbMssql) Open(config *ConfigNode) (*sql.DB, error) {
+func (d *DriverMssql) Open(config *ConfigNode) (*sql.DB, error) {
 	source := ""
 	if config.LinkInfo != "" {
 		source = config.LinkInfo
@@ -45,13 +53,13 @@ func (db *dbMssql) Open(config *ConfigNode) (*sql.DB, error) {
 	}
 }
 
-// getChars returns the security char for this type of database.
-func (db *dbMssql) getChars() (charLeft string, charRight string) {
+// GetChars returns the security char for this type of database.
+func (d *DriverMssql) GetChars() (charLeft string, charRight string) {
 	return "\"", "\""
 }
 
-// handleSqlBeforeExec deals with the sql string before commits it to underlying sql driver.
-func (db *dbMssql) handleSqlBeforeExec(query string) string {
+// HandleSqlBeforeExec deals with the sql string before commits it to underlying sql driver.
+func (d *DriverMssql) HandleSqlBeforeExec(query string) string {
 	var index int
 	// Convert place holder char '?' to string "@px".
 	str, _ := gregex.ReplaceStringFunc("\\?", query, func(s string) string {
@@ -59,10 +67,10 @@ func (db *dbMssql) handleSqlBeforeExec(query string) string {
 		return fmt.Sprintf("@p%d", index)
 	})
 	str, _ = gregex.ReplaceString("\"", "", str)
-	return db.parseSql(str)
+	return d.parseSql(str)
 }
 
-func (db *dbMssql) parseSql(sql string) string {
+func (d *DriverMssql) parseSql(sql string) string {
 	// SELECT * FROM USER WHERE ID=1 LIMIT 1
 	if m, _ := gregex.MatchString(`^SELECT(.+)LIMIT 1$`, sql); len(m) > 1 {
 		return fmt.Sprintf(`SELECT TOP 1 %s`, m[1])
@@ -163,14 +171,14 @@ func (db *dbMssql) parseSql(sql string) string {
 }
 
 // Tables retrieves and returns the tables of current schema.
-func (db *dbMssql) Tables(schema ...string) (tables []string, err error) {
+func (d *DriverMssql) Tables(schema ...string) (tables []string, err error) {
 	var result Result
-	link, err := db.getSlave(schema...)
+	link, err := d.DB.GetSlave(schema...)
 	if err != nil {
 		return nil, err
 	}
 
-	result, err = db.doGetAll(link, `SELECT NAME FROM SYSOBJECTS WHERE XTYPE='U' AND STATUS >= 0 ORDER BY NAME`)
+	result, err = d.DB.DoGetAll(link, `SELECT NAME FROM SYSOBJECTS WHERE XTYPE='U' AND STATUS >= 0 ORDER BY NAME`)
 	if err != nil {
 		return
 	}
@@ -183,24 +191,24 @@ func (db *dbMssql) Tables(schema ...string) (tables []string, err error) {
 }
 
 // TableFields retrieves and returns the fields information of specified table of current schema.
-func (db *dbMssql) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
+func (d *DriverMssql) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
 	table = gstr.Trim(table)
 	if gstr.Contains(table, " ") {
 		panic("function TableFields supports only single table operations")
 	}
-	checkSchema := db.schema.Val()
+	checkSchema := d.DB.GetSchema()
 	if len(schema) > 0 && schema[0] != "" {
 		checkSchema = schema[0]
 	}
-	v := db.cache.GetOrSetFunc(
+	v := d.DB.GetCache().GetOrSetFunc(
 		fmt.Sprintf(`mssql_table_fields_%s_%s`, table, checkSchema), func() interface{} {
 			var result Result
 			var link *sql.DB
-			link, err = db.getSlave(checkSchema)
+			link, err = d.DB.GetSlave(checkSchema)
 			if err != nil {
 				return nil
 			}
-			result, err = db.doGetAll(link, fmt.Sprintf(`
+			result, err = d.DB.DoGetAll(link, fmt.Sprintf(`
 			SELECT c.name as FIELD, CASE t.name 
 				WHEN 'numeric' THEN t.name + '(' + convert(varchar(20),c.xprec) + ',' + convert(varchar(20),c.xscale) + ')' 
 				WHEN 'char' THEN t.name + '(' + convert(varchar(20),c.length)+ ')'

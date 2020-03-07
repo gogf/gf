@@ -16,12 +16,20 @@ import (
 	"github.com/gogf/gf/text/gstr"
 )
 
-type dbSqlite struct {
-	*dbBase
+// DriverSqlite is the driver for sqlite database.
+type DriverSqlite struct {
+	*Core
+}
+
+// New creates and returns a database object for sqlite.
+func (d *DriverSqlite) New(core *Core, node *ConfigNode) (DB, error) {
+	return &DriverSqlite{
+		Core: core,
+	}, nil
 }
 
 // Open creates and returns a underlying sql.DB object for sqlite.
-func (db *dbSqlite) Open(config *ConfigNode) (*sql.DB, error) {
+func (d *DriverSqlite) Open(config *ConfigNode) (*sql.DB, error) {
 	var source string
 	if config.LinkInfo != "" {
 		source = config.LinkInfo
@@ -36,20 +44,20 @@ func (db *dbSqlite) Open(config *ConfigNode) (*sql.DB, error) {
 	}
 }
 
-// getChars returns the security char for this type of database.
-func (db *dbSqlite) getChars() (charLeft string, charRight string) {
+// GetChars returns the security char for this type of database.
+func (d *DriverSqlite) GetChars() (charLeft string, charRight string) {
 	return "`", "`"
 }
 
 // Tables retrieves and returns the tables of current schema.
 // TODO
-func (db *dbSqlite) Tables(schema ...string) (tables []string, err error) {
+func (d *DriverSqlite) Tables(schema ...string) (tables []string, err error) {
 	return
 }
 
 // TableFields retrieves and returns the fields information of specified table of current schema.
 // TODO
-func (db *dbSqlite) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
+func (d *DriverSqlite) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
 	table = gstr.Trim(table)
 	if gstr.Contains(table, " ") {
 		panic("function TableFields supports only single table operations")
@@ -57,9 +65,9 @@ func (db *dbSqlite) TableFields(table string, schema ...string) (fields map[stri
 	return
 }
 
-// handleSqlBeforeExec deals with the sql string before commits it to underlying sql driver.
+// HandleSqlBeforeExec deals with the sql string before commits it to underlying sql driver.
 // @todo 需要增加对Save方法的支持，可使用正则来实现替换，
 // @todo 将ON DUPLICATE KEY UPDATE触发器修改为两条SQL语句(INSERT OR IGNORE & UPDATE)
-func (db *dbSqlite) handleSqlBeforeExec(sql string) string {
+func (d *DriverSqlite) HandleSqlBeforeExec(sql string) string {
 	return sql
 }

@@ -11,11 +11,11 @@ func main() {
 	// 开启调试模式，以便于记录所有执行的SQL
 	db.SetDebug(true)
 
-	r, e := db.Table("test").OrderBy("id asc").All()
+	r, e := db.Table("test").Order("id asc").All()
 	if e != nil {
-		panic(e)
+		fmt.Println(e)
 	}
 	if r != nil {
-		fmt.Println(r.ToList())
+		fmt.Println(r.List())
 	}
 }

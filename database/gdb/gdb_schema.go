@@ -14,9 +14,9 @@ type Schema struct {
 }
 
 // Schema creates and returns a schema.
-func (bs *dbBase) Schema(schema string) *Schema {
+func (c *Core) Schema(schema string) *Schema {
 	return &Schema{
-		db:     bs.db,
+		db:     c.DB,
 		schema: schema,
 	}
 }
@@ -44,8 +44,8 @@ func (s *Schema) Table(table string) *Model {
 	return m
 }
 
-// Model is alias of dbBase.Table.
-// See dbBase.Table.
+// Model is alias of Core.Table.
+// See Core.Table.
 func (s *Schema) Model(table string) *Model {
 	return s.Table(table)
 }

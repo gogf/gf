@@ -269,7 +269,7 @@ func formatWhereInterfaces(db DB, where []interface{}, buffer *bytes.Buffer, new
 
 // formatWhereKeyValue handles each key-value pair of the parameter map.
 func formatWhereKeyValue(db DB, buffer *bytes.Buffer, newArgs []interface{}, key string, value interface{}) []interface{} {
-	key = db.quoteWord(key)
+	key = db.QuoteWord(key)
 	if buffer.Len() > 0 {
 		buffer.WriteString(" AND ")
 	}
