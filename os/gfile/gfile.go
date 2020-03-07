@@ -31,16 +31,31 @@ const (
 var (
 	// Default perm for file opening.
 	DefaultPerm = os.FileMode(0666)
+
 	// The absolute file path for main package.
 	// It can be only checked and set once.
 	mainPkgPath = gtype.NewString()
+
+	// selfPath is the current running binary path.
+	// As it is most commonly used, it is so defined as an internal package variable.
+	selfPath = ""
+
 	// Temporary directory of system.
 	tempDir = "/tmp"
 )
 
 func init() {
+	// Initialize internal package variable: tempDir.
 	if !Exists(tempDir) {
 		tempDir = os.TempDir()
+	}
+	// Initialize internal package variable: selfPath.
+	selfPath, _ := exec.LookPath(os.Args[0])
+	if selfPath != "" {
+		selfPath, _ = filepath.Abs(selfPath)
+	}
+	if selfPath == "" {
+		selfPath, _ = filepath.Abs(os.Args[0])
 	}
 }
 
@@ -66,17 +81,20 @@ func Create(path string) (*os.File, error) {
 	return os.Create(path)
 }
 
-// Open opens file/directory readonly.
+// Open opens file/directory READONLY.
 func Open(path string) (*os.File, error) {
 	return os.Open(path)
 }
 
-// OpenFile opens file/directory with given <flag> and <perm>.
+// OpenFile opens file/directory with custom <flag> and <perm>.
+// The parameter <flag> is like: O_RDONLY, O_RDWR, O_RDWR|O_CREATE|O_TRUNC, etc.
 func OpenFile(path string, flag int, perm os.FileMode) (*os.File, error) {
 	return os.OpenFile(path, flag, perm)
 }
 
-// OpenWithFlag opens file/directory with default perm and given <flag>.
+// OpenWithFlag opens file/directory with default perm and custom <flag>.
+// The default <perm> is 0666.
+// The parameter <flag> is like: O_RDONLY, O_RDWR, O_RDWR|O_CREATE|O_TRUNC, etc.
 func OpenWithFlag(path string, flag int) (*os.File, error) {
 	f, err := os.OpenFile(path, flag, DefaultPerm)
 	if err != nil {
@@ -85,9 +103,11 @@ func OpenWithFlag(path string, flag int) (*os.File, error) {
 	return f, nil
 }
 
-// OpenWithFlagPerm opens file/directory with given <flag> and <perm>.
+// OpenWithFlagPerm opens file/directory with custom <flag> and <perm>.
+// The parameter <flag> is like: O_RDONLY, O_RDWR, O_RDWR|O_CREATE|O_TRUNC, etc.
+// The parameter <perm> is like: 0600, 0666, 0777, etc.
 func OpenWithFlagPerm(path string, flag int, perm os.FileMode) (*os.File, error) {
-	f, err := os.OpenFile(path, flag, os.FileMode(perm))
+	f, err := os.OpenFile(path, flag, perm)
 	if err != nil {
 		return nil, err
 	}
@@ -208,6 +228,7 @@ func Glob(pattern string, onlyNames ...bool) ([]string, error) {
 // Remove deletes all file/directory with <path> parameter.
 // If parameter <path> is directory, it deletes it recursively.
 func Remove(path string) error {
+	//intlog.Print(`Remove:`, path)
 	return os.RemoveAll(path)
 }
 
@@ -278,17 +299,7 @@ func RealPath(path string) string {
 
 // SelfPath returns absolute file path of current running process(binary).
 func SelfPath() string {
-	path, _ := exec.LookPath(os.Args[0])
-	if path != "" {
-		path, _ = filepath.Abs(path)
-		if path != "" {
-			return path
-		}
-	}
-	if path == "" {
-		path, _ = filepath.Abs(os.Args[0])
-	}
-	return path
+	return selfPath
 }
 
 // SelfName returns file name of current running process(binary).
