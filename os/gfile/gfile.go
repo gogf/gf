@@ -50,7 +50,7 @@ func init() {
 		tempDir = os.TempDir()
 	}
 	// Initialize internal package variable: selfPath.
-	selfPath, _ := exec.LookPath(os.Args[0])
+	selfPath, _ = exec.LookPath(os.Args[0])
 	if selfPath != "" {
 		selfPath, _ = filepath.Abs(selfPath)
 	}
