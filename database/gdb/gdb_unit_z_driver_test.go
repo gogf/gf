@@ -48,7 +48,7 @@ func (d *MyDriver) HandleSqlBeforeExec(sql string) string {
 
 func init() {
 	// It here registers my custom driver in package initialization function "init".
-	// You can later using this type in the configuration.
+	// You can later use this type in the database configuration.
 	gdb.Register(customDriverName, &MyDriver{})
 }
 
