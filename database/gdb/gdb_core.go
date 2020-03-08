@@ -699,6 +699,15 @@ func (c *Core) rowsToResult(rows *sql.Rows) (Result, error) {
 	return records, nil
 }
 
+// MarshalJSON implements the interface MarshalJSON for json.Marshal.
+// It just returns the pointer address.
+//
+// Note that this interface implements mainly for workaround for a json infinite loop bug
+// of Golang version < v1.14.
+func (c *Core) MarshalJSON() ([]byte, error) {
+	return []byte(fmt.Sprintf(`%+v`, c)), nil
+}
+
 // writeSqlToLogger outputs the sql object to logger.
 // It is enabled when configuration "debug" is true.
 func (c *Core) writeSqlToLogger(v *Sql) {
