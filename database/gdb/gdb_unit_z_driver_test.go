@@ -15,13 +15,18 @@ import (
 )
 
 // MyDriver is a custom database driver, which is used for testing only.
+// For simplifying the unit testing case purpose, MyDriver struct inherits the mysql driver
+// gdb.DriverMysql and overwrites its function HandleSqlBeforeExec.
+// So if there's any sql execution, it goes through MyDriver.HandleSqlBeforeExec firstly and
+// then gdb.DriverMysql.HandleSqlBeforeExec.
+// You can call it sql "HOOK" or "HiJack" as your will.
 type MyDriver struct {
 	*gdb.DriverMysql
 }
 
 var (
 	customDriverName = "MyDriver"
-	lastSqlString    = gtype.NewString() // For unit testing only.
+	latestSqlString  = gtype.NewString() // For simplifying unit testing only.
 )
 
 // New creates and returns a database object for mysql.
@@ -37,11 +42,13 @@ func (d *MyDriver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
 // HandleSqlBeforeExec handles the sql before posts it to database.
 // It here overwrites the same method of gdb.DriverMysql and makes some custom changes.
 func (d *MyDriver) HandleSqlBeforeExec(sql string) string {
-	lastSqlString.Set(sql)
+	latestSqlString.Set(sql)
 	return d.DriverMysql.HandleSqlBeforeExec(sql)
 }
 
 func init() {
+	// It here registers my custom driver in package initialization function "init".
+	// You can later using this type in the configuration.
 	gdb.Register(customDriverName, &MyDriver{})
 }
 
@@ -56,10 +63,10 @@ func Test_Custom_Driver(t *testing.T) {
 		Role:    "master",
 		Charset: "utf8",
 	})
-	gtest.Assert(lastSqlString.Val(), "")
+	gtest.Assert(latestSqlString.Val(), "")
 	sqlString := "select 10000"
 	value, err := g.DB("driver-test").GetValue(sqlString)
 	gtest.Assert(err, nil)
 	gtest.Assert(value, 10000)
-	gtest.Assert(lastSqlString.Val(), sqlString)
+	gtest.Assert(latestSqlString.Val(), sqlString)
 }
