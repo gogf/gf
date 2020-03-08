@@ -12,8 +12,6 @@ import (
 	"github.com/gogf/gf/database/gdb"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/text/gstr"
-
-	_ "github.com/gf-third/mysql"
 )
 
 type MyDriver struct {
@@ -32,7 +30,7 @@ func (d *MyDriver) Open(config *gdb.ConfigNode) (*sql.DB, error) {
 		)
 	}
 	intlog.Printf("Open: %s", source)
-	if db, err := sql.Open("gf-mysql", source); err == nil {
+	if db, err := sql.Open("mysql", source); err == nil {
 		return db, nil
 	} else {
 		return nil, err

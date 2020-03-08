@@ -69,7 +69,7 @@ const (
 // The parameter <tables> can be more than one table names, like :
 // "user", "user u", "user, user_detail", "user u, user_detail ud"
 func (c *Core) Table(table string) *Model {
-	table = c.DB.handleTableName(table)
+	table = c.DB.QuotePrefixTableName(table)
 	return &Model{
 		db:         c.DB,
 		tablesInit: table,
@@ -98,7 +98,7 @@ func (c *Core) From(table string) *Model {
 // Table acts like Core.Table except it operates on transaction.
 // See Core.Table.
 func (tx *TX) Table(table string) *Model {
-	table = tx.db.handleTableName(table)
+	table = tx.db.QuotePrefixTableName(table)
 	return &Model{
 		db:         tx.db,
 		tx:         tx,
@@ -217,21 +217,21 @@ func (m *Model) getModel() *Model {
 // LeftJoin does "LEFT JOIN ... ON ..." statement on the model.
 func (m *Model) LeftJoin(table string, on string) *Model {
 	model := m.getModel()
-	model.tables += fmt.Sprintf(" LEFT JOIN %s ON (%s)", m.db.handleTableName(table), on)
+	model.tables += fmt.Sprintf(" LEFT JOIN %s ON (%s)", m.db.QuotePrefixTableName(table), on)
 	return model
 }
 
 // RightJoin does "RIGHT JOIN ... ON ..." statement on the model.
 func (m *Model) RightJoin(table string, on string) *Model {
 	model := m.getModel()
-	model.tables += fmt.Sprintf(" RIGHT JOIN %s ON (%s)", m.db.handleTableName(table), on)
+	model.tables += fmt.Sprintf(" RIGHT JOIN %s ON (%s)", m.db.QuotePrefixTableName(table), on)
 	return model
 }
 
 // InnerJoin does "INNER JOIN ... ON ..." statement on the model.
 func (m *Model) InnerJoin(table string, on string) *Model {
 	model := m.getModel()
-	model.tables += fmt.Sprintf(" INNER JOIN %s ON (%s)", m.db.handleTableName(table), on)
+	model.tables += fmt.Sprintf(" INNER JOIN %s ON (%s)", m.db.QuotePrefixTableName(table), on)
 	return model
 }
 
@@ -540,11 +540,11 @@ func (m *Model) Data(data ...interface{}) *Model {
 			case reflect.Slice, reflect.Array:
 				list := make(List, rv.Len())
 				for i := 0; i < rv.Len(); i++ {
-					list[i] = varToMapDeep(rv.Index(i).Interface())
+					list[i] = DataToMapDeep(rv.Index(i).Interface())
 				}
 				model.data = list
 			case reflect.Map, reflect.Struct:
-				model.data = varToMapDeep(data[0])
+				model.data = DataToMapDeep(data[0])
 			default:
 				model.data = data[0]
 			}

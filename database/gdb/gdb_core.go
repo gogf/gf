@@ -70,7 +70,7 @@ func (c *Core) DoQuery(link dbLink, query string, args ...interface{}) (rows *sq
 			Start:  mTime1,
 			End:    mTime2,
 		}
-		c.printSql(s)
+		c.writeSqlToLogger(s)
 	} else {
 		rows, err = link.Query(query, args...)
 	}
@@ -109,7 +109,7 @@ func (c *Core) DoExec(link dbLink, query string, args ...interface{}) (result sq
 			Start:  mTime1,
 			End:    mTime2,
 		}
-		c.printSql(s)
+		c.writeSqlToLogger(s)
 	} else {
 		result, err = link.Exec(query, args...)
 	}
@@ -350,6 +350,11 @@ func (c *Core) Save(table string, data interface{}, batch ...int) (sql.Result, e
 
 // doInsert inserts or updates data for given table.
 //
+// The parameter <data> can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
+// Eg:
+// Data(g.Map{"uid": 10000, "name":"john"})
+// Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
+//
 // The parameter <option> values are as follows:
 // 0: insert:  just insert, if there's unique/primary key in the data, it returns error;
 // 1: replace: if there's unique/primary key in the data, it deletes it from table and inserts a new one;
@@ -360,20 +365,20 @@ func (c *Core) DoInsert(link dbLink, table string, data interface{}, option int,
 	var values []string
 	var params []interface{}
 	var dataMap Map
-	table = c.DB.handleTableName(table)
-	rv := reflect.ValueOf(data)
-	kind := rv.Kind()
-	if kind == reflect.Ptr {
-		rv = rv.Elem()
-		kind = rv.Kind()
+	table = c.DB.QuotePrefixTableName(table)
+	reflectValue := reflect.ValueOf(data)
+	reflectKind := reflectValue.Kind()
+	if reflectKind == reflect.Ptr {
+		reflectValue = reflectValue.Elem()
+		reflectKind = reflectValue.Kind()
 	}
-	switch kind {
+	switch reflectKind {
 	case reflect.Slice, reflect.Array:
 		return c.DB.DoBatchInsert(link, table, data, option, batch...)
 	case reflect.Map, reflect.Struct:
-		dataMap = varToMapDeep(data)
+		dataMap = DataToMapDeep(data)
 	default:
-		return result, errors.New(fmt.Sprint("unsupported data type:", kind))
+		return result, errors.New(fmt.Sprint("unsupported data type:", reflectKind))
 	}
 	if len(dataMap) == 0 {
 		return nil, errors.New("data cannot be empty")
@@ -384,14 +389,15 @@ func (c *Core) DoInsert(link dbLink, table string, data interface{}, option int,
 		values = append(values, "?")
 		params = append(params, v)
 	}
-	operation := getInsertOperationByOption(option)
+	operation := GetInsertOperationByOption(option)
 	updateStr := ""
 	if option == gINSERT_OPTION_SAVE {
 		for k, _ := range dataMap {
 			if len(updateStr) > 0 {
 				updateStr += ","
 			}
-			updateStr += fmt.Sprintf("%s%s%s=VALUES(%s%s%s)",
+			updateStr += fmt.Sprintf(
+				"%s%s%s=VALUES(%s%s%s)",
 				charL, k, charR,
 				charL, k, charR,
 			)
@@ -403,10 +409,15 @@ func (c *Core) DoInsert(link dbLink, table string, data interface{}, option int,
 			return nil, err
 		}
 	}
-	return c.DB.DoExec(link, fmt.Sprintf("%s INTO %s(%s) VALUES(%s) %s",
-		operation, table, strings.Join(fields, ","),
-		strings.Join(values, ","), updateStr),
-		params...)
+	return c.DB.DoExec(
+		link,
+		fmt.Sprintf(
+			"%s INTO %s(%s) VALUES(%s) %s",
+			operation, table, strings.Join(fields, ","),
+			strings.Join(values, ","), updateStr,
+		),
+		params...,
+	)
 }
 
 // BatchInsert batch inserts data.
@@ -437,7 +448,7 @@ func (c *Core) BatchSave(table string, list interface{}, batch ...int) (sql.Resu
 func (c *Core) DoBatchInsert(link dbLink, table string, list interface{}, option int, batch ...int) (result sql.Result, err error) {
 	var keys, values []string
 	var params []interface{}
-	table = c.DB.handleTableName(table)
+	table = c.DB.QuotePrefixTableName(table)
 	listMap := (List)(nil)
 	switch v := list.(type) {
 	case Result:
@@ -460,10 +471,10 @@ func (c *Core) DoBatchInsert(link dbLink, table string, list interface{}, option
 		case reflect.Slice, reflect.Array:
 			listMap = make(List, rv.Len())
 			for i := 0; i < rv.Len(); i++ {
-				listMap[i] = varToMapDeep(rv.Index(i).Interface())
+				listMap[i] = DataToMapDeep(rv.Index(i).Interface())
 			}
 		case reflect.Map, reflect.Struct:
-			listMap = List{varToMapDeep(list)}
+			listMap = List{DataToMapDeep(list)}
 		default:
 			return result, errors.New(fmt.Sprint("unsupported list type:", kind))
 		}
@@ -482,20 +493,21 @@ func (c *Core) DoBatchInsert(link dbLink, table string, list interface{}, option
 		keys = append(keys, k)
 		holders = append(holders, "?")
 	}
-	// Prepare the result pointer.
+	// Prepare the batch result pointer.
 	batchResult := new(batchSqlResult)
 	charL, charR := c.DB.GetChars()
 	keysStr := charL + strings.Join(keys, charR+","+charL) + charR
 	valueHolderStr := "(" + strings.Join(holders, ",") + ")"
 
-	operation := getInsertOperationByOption(option)
+	operation := GetInsertOperationByOption(option)
 	updateStr := ""
 	if option == gINSERT_OPTION_SAVE {
 		for _, k := range keys {
 			if len(updateStr) > 0 {
 				updateStr += ","
 			}
-			updateStr += fmt.Sprintf("%s%s%s=VALUES(%s%s%s)",
+			updateStr += fmt.Sprintf(
+				"%s%s%s=VALUES(%s%s%s)",
 				charL, k, charR,
 				charL, k, charR,
 			)
@@ -568,7 +580,7 @@ func (c *Core) Update(table string, data interface{}, condition interface{}, arg
 // doUpdate does "UPDATE ... " statement for the table.
 // Also see Update.
 func (c *Core) DoUpdate(link dbLink, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) {
-	table = c.DB.handleTableName(table)
+	table = c.DB.QuotePrefixTableName(table)
 	updates := ""
 	rv := reflect.ValueOf(data)
 	kind := rv.Kind()
@@ -580,7 +592,7 @@ func (c *Core) DoUpdate(link dbLink, table string, data interface{}, condition s
 	switch kind {
 	case reflect.Map, reflect.Struct:
 		var fields []string
-		for k, v := range varToMapDeep(data) {
+		for k, v := range DataToMapDeep(data) {
 			fields = append(fields, c.DB.QuoteWord(k)+"=?")
 			params = append(params, v)
 		}
@@ -600,7 +612,11 @@ func (c *Core) DoUpdate(link dbLink, table string, data interface{}, condition s
 			return nil, err
 		}
 	}
-	return c.DB.DoExec(link, fmt.Sprintf("UPDATE %s SET %s%s", table, updates, condition), args...)
+	return c.DB.DoExec(
+		link,
+		fmt.Sprintf("UPDATE %s SET %s%s", table, updates, condition),
+		args...,
+	)
 }
 
 // Delete does "DELETE FROM ... " statement for the table.
@@ -630,7 +646,7 @@ func (c *Core) DoDelete(link dbLink, table string, condition string, args ...int
 			return nil, err
 		}
 	}
-	table = c.DB.handleTableName(table)
+	table = c.DB.QuotePrefixTableName(table)
 	return c.DB.DoExec(link, fmt.Sprintf("DELETE FROM %s%s", table, condition), args...)
 }
 
@@ -683,20 +699,9 @@ func (c *Core) rowsToResult(rows *sql.Rows) (Result, error) {
 	return records, nil
 }
 
-// handleTableName adds prefix string and quote chars for the table. It handles table string like:
-// "user", "user u", "user,user_detail", "user u, user_detail ut", "user as u, user_detail as ut".
-//
-// Note that, this will automatically checks the table prefix whether already added, if true it does
-// nothing to the table name, or else adds the prefix to the table name.
-func (c *Core) handleTableName(table string) string {
-	charLeft, charRight := c.DB.GetChars()
-	prefix := c.DB.GetPrefix()
-	return doHandleTableName(table, prefix, charLeft, charRight)
-}
-
-// printSql outputs the sql object to logger.
+// writeSqlToLogger outputs the sql object to logger.
 // It is enabled when configuration "debug" is true.
-func (c *Core) printSql(v *Sql) {
+func (c *Core) writeSqlToLogger(v *Sql) {
 	s := fmt.Sprintf("[%d ms] %s", v.End-v.Start, v.Format)
 	if v.Error != nil {
 		s += "\nError: " + v.Error.Error()
