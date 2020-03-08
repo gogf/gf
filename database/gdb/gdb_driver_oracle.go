@@ -35,6 +35,7 @@ const (
 )
 
 // New creates and returns a database object for oracle.
+// It implements the interface of gdb.Driver for extra database driver installation.
 func (d *DriverOracle) New(core *Core, node *ConfigNode) (DB, error) {
 	return &DriverOracle{
 		Core: core,
@@ -131,6 +132,7 @@ func (d *DriverOracle) parseSql(sql string) string {
 }
 
 // Tables retrieves and returns the tables of current schema.
+// It's mainly used in cli tool chain for automatically generating the models.
 // Note that it ignores the parameter <schema> in oracle database, as it is not necessary.
 func (d *DriverOracle) Tables(schema ...string) (tables []string, err error) {
 	var result Result
@@ -230,7 +232,7 @@ func (d *DriverOracle) DoInsert(link dbLink, table string, data interface{}, opt
 	case reflect.Map:
 		fallthrough
 	case reflect.Struct:
-		dataMap = varToMapDeep(data)
+		dataMap = DataToMapDeep(data)
 	default:
 		return result, errors.New(fmt.Sprint("unsupported data type:", kind))
 	}
@@ -350,12 +352,12 @@ func (d *DriverOracle) DoBatchInsert(link dbLink, table string, list interface{}
 		case reflect.Array:
 			listMap = make(List, rv.Len())
 			for i := 0; i < rv.Len(); i++ {
-				listMap[i] = varToMapDeep(rv.Index(i).Interface())
+				listMap[i] = DataToMapDeep(rv.Index(i).Interface())
 			}
 		case reflect.Map:
 			fallthrough
 		case reflect.Struct:
-			listMap = List{Map(varToMapDeep(list))}
+			listMap = List{Map(DataToMapDeep(list))}
 		default:
 			return result, errors.New(fmt.Sprint("unsupported list type:", kind))
 		}

@@ -27,6 +27,7 @@ type DriverPgsql struct {
 }
 
 // New creates and returns a database object for postgresql.
+// It implements the interface of gdb.Driver for extra database driver installation.
 func (d *DriverPgsql) New(core *Core, node *ConfigNode) (DB, error) {
 	return &DriverPgsql{
 		Core: core,
@@ -70,6 +71,7 @@ func (d *DriverPgsql) HandleSqlBeforeExec(sql string) string {
 }
 
 // Tables retrieves and returns the tables of current schema.
+// It's mainly used in cli tool chain for automatically generating the models.
 func (d *DriverPgsql) Tables(schema ...string) (tables []string, err error) {
 	var result Result
 	link, err := d.DB.GetSlave(schema...)

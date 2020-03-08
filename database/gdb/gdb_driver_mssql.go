@@ -28,6 +28,7 @@ type DriverMssql struct {
 }
 
 // New creates and returns a database object for SQL server.
+// It implements the interface of gdb.Driver for extra database driver installation.
 func (d *DriverMssql) New(core *Core, node *ConfigNode) (DB, error) {
 	return &DriverMssql{
 		Core: core,
@@ -171,6 +172,7 @@ func (d *DriverMssql) parseSql(sql string) string {
 }
 
 // Tables retrieves and returns the tables of current schema.
+// It's mainly used in cli tool chain for automatically generating the models.
 func (d *DriverMssql) Tables(schema ...string) (tables []string, err error) {
 	var result Result
 	link, err := d.DB.GetSlave(schema...)

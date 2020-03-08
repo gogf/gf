@@ -22,6 +22,7 @@ type DriverSqlite struct {
 }
 
 // New creates and returns a database object for sqlite.
+// It implements the interface of gdb.Driver for extra database driver installation.
 func (d *DriverSqlite) New(core *Core, node *ConfigNode) (DB, error) {
 	return &DriverSqlite{
 		Core: core,
@@ -50,6 +51,7 @@ func (d *DriverSqlite) GetChars() (charLeft string, charRight string) {
 }
 
 // Tables retrieves and returns the tables of current schema.
+// It's mainly used in cli tool chain for automatically generating the models.
 // TODO
 func (d *DriverSqlite) Tables(schema ...string) (tables []string, err error) {
 	return

@@ -104,7 +104,7 @@ type DB interface {
 	TableFields(table string, schema ...string) (map[string]*TableField, error)
 
 	// Internal methods.
-	handleTableName(table string) string
+	QuotePrefixTableName(table string) string
 	filterFields(schema, table string, data map[string]interface{}) map[string]interface{}
 	convertValue(fieldValue []byte, fieldType string) interface{}
 	rowsToResult(rows *sql.Rows) (Result, error)
@@ -126,6 +126,7 @@ type Core struct {
 
 // Driver is the interface for integrating sql drivers into package gdb.
 type Driver interface {
+	// New creates and returns a database object for specified database server.
 	New(core *Core, node *ConfigNode) (DB, error)
 }
 
