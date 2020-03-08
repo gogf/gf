@@ -157,6 +157,7 @@ func (t *Time) Nanosecond() int {
 	return t.Time.Nanosecond()
 }
 
+// String returns current time object as string.
 func (t *Time) String() string {
 	if t == nil {
 		return ""
@@ -166,14 +167,6 @@ func (t *Time) String() string {
 	}
 	return t.Format("Y-m-d H:i:s")
 }
-
-// String returns current time object as string.
-//func (t Time) String() string {
-//	if t.IsZero() {
-//		return ""
-//	}
-//	return t.Format("Y-m-d H:i:s")
-//}
 
 // Clone returns a new Time object which is a clone of current time object.
 func (t *Time) Clone() *Time {
