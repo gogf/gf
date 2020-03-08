@@ -380,9 +380,9 @@ func ParseTimeFromContent(content string, format ...string) *Time {
 
 // FuncCost calculates the cost time of function <f> in nanoseconds.
 func FuncCost(f func()) int64 {
-	t := Nanosecond()
+	t := TimestampNano()
 	f()
-	return Nanosecond() - t
+	return TimestampNano() - t
 }
 
 // isNumeric checks whether given <s> is a number.

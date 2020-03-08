@@ -2,24 +2,16 @@ package main
 
 import (
 	"fmt"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/os/gtime"
+	"time"
 )
 
-type MyInt int
-
-//func (i *MyInt) UnmarshalValue(interface{}) error {
-//	*i = 10
-//	return nil
-//}
 func main() {
-	type User struct {
-		Id MyInt
-	}
-	user := new(User)
-	err := gconv.Struct(g.Map{
-		"id": 1,
-	}, user)
-	fmt.Println(err)
-	fmt.Println(user)
+	start1 := time.Now()
+	end1 := start1.AddDate(0, 0, -7)
+	fmt.Println(start1, end1)
+
+	start2 := gtime.Now()
+	end2 := start2.AddDate(0, 0, -7)
+	fmt.Println(start2, end2)
 }
