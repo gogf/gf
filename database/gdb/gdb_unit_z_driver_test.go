@@ -7,8 +7,6 @@
 package gdb_test
 
 import (
-	"database/sql"
-	"fmt"
 	"github.com/gogf/gf/container/gtype"
 	"github.com/gogf/gf/database/gdb"
 	"github.com/gogf/gf/frame/g"
@@ -18,54 +16,33 @@ import (
 
 // MyDriver is a custom database driver, which is used for testing only.
 type MyDriver struct {
-	*gdb.Core
+	*gdb.DriverMysql
 }
 
 var (
-	myCustomDriverName = "mydriver"
-	lastSqlString      = gtype.NewString() // For unit testing only.
+	customDriverName = "MyDriver"
+	lastSqlString    = gtype.NewString() // For unit testing only.
 )
 
 // New creates and returns a database object for mysql.
 // It implements the interface of gdb.Driver for extra database driver installation.
 func (d *MyDriver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
 	return &MyDriver{
-		Core: core,
+		&gdb.DriverMysql{
+			Core: core,
+		},
 	}, nil
 }
 
-// Open creates and returns a underlying sql.DB object for mysql.
-func (d *MyDriver) Open(config *gdb.ConfigNode) (*sql.DB, error) {
-	var source string
-	if config.LinkInfo != "" {
-		source = config.LinkInfo
-	} else {
-		source = fmt.Sprintf(
-			"%s:%s@tcp(%s:%s)/%s?charset=%s&multiStatements=true&parseTime=true&loc=Local",
-			config.User, config.Pass, config.Host, config.Port, config.Name, config.Charset,
-		)
-	}
-	// It uses mysql driver as underlying sql driver.
-	if db, err := sql.Open("mysql", source); err == nil {
-		return db, nil
-	} else {
-		return nil, err
-	}
-}
-
-// GetChars returns the security char for this type of database.
-func (d *MyDriver) GetChars() (charLeft string, charRight string) {
-	return "`", "`"
-}
-
 // HandleSqlBeforeExec handles the sql before posts it to database.
+// It here overwrites the same method of gdb.DriverMysql and makes some custom changes.
 func (d *MyDriver) HandleSqlBeforeExec(sql string) string {
 	lastSqlString.Set(sql)
-	return sql
+	return d.DriverMysql.HandleSqlBeforeExec(sql)
 }
 
 func init() {
-	gdb.Register(myCustomDriverName, &MyDriver{})
+	gdb.Register(customDriverName, &MyDriver{})
 }
 
 func Test_Custom_Driver(t *testing.T) {
@@ -75,7 +52,7 @@ func Test_Custom_Driver(t *testing.T) {
 		User:    "root",
 		Pass:    "12345678",
 		Name:    "test",
-		Type:    myCustomDriverName,
+		Type:    customDriverName,
 		Role:    "master",
 		Charset: "utf8",
 	})
