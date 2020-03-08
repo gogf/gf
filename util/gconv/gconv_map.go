@@ -40,6 +40,7 @@ func MapDeep(value interface{}, tags ...string) map[string]interface{} {
 }
 
 // doMapConvert implements the map converting.
+// It automatically checks and converts json string to map if <value> is string/[]byte.
 func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]interface{} {
 	if value == nil {
 		return nil
@@ -122,7 +123,7 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 			for k, v := range r {
 				m[String(k)] = v
 			}
-		// Not a common type, then use reflection.
+		// Not a common type, it then uses reflection for conversion.
 		default:
 			rv := reflect.ValueOf(value)
 			kind := rv.Kind()
@@ -132,6 +133,20 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 				kind = rv.Kind()
 			}
 			switch kind {
+			// If <value> is type of array, it converts the value of even number index as its key and
+			// the value of odd number index as its corresponding value.
+			// Eg:
+			// []string{"k1","v1","k2","v2"} => map[string]interface{}{"k1":"v1", "k2":"v2"}
+			// []string{"k1","v1","k2"} => map[string]interface{}{"k1":"v1", "k2":nil}
+			case reflect.Slice, reflect.Array:
+				length := rv.Len()
+				for i := 0; i < length; i += 2 {
+					if i+1 < length {
+						m[String(rv.Index(i).Interface())] = rv.Index(i + 1).Interface()
+					} else {
+						m[String(rv.Index(i).Interface())] = nil
+					}
+				}
 			case reflect.Map:
 				ks := rv.MapKeys()
 				for _, k := range ks {
