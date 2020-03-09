@@ -2,16 +2,15 @@ package main
 
 import (
 	"fmt"
-	"github.com/gogf/gf/os/gtime"
-	"time"
+	"github.com/gogf/gf/text/gregex"
 )
 
 func main() {
-	start1 := time.Now()
-	end1 := start1.AddDate(0, 0, -7)
-	fmt.Println(start1, end1)
-
-	start2 := gtime.Now()
-	end2 := start2.AddDate(0, 0, -7)
-	fmt.Println(start2, end2)
+	data := "@var(.prefix)您收到的验证码为：@var(.code)，请在@var(.expire)内完成验证"
+	result, err := gregex.ReplaceStringFuncMatch(`(@var\(\.\w+\))`, data, func(match []string) string {
+		fmt.Println(match)
+		return "#"
+	})
+	fmt.Println(err)
+	fmt.Println(result)
 }
