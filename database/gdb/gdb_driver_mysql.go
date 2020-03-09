@@ -12,15 +12,24 @@ import (
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/text/gstr"
 
-	_ "github.com/gf-third/mysql"
+	_ "github.com/go-sql-driver/mysql"
 )
 
-type dbMysql struct {
-	*dbBase
+// DriverMysql is the driver for mysql database.
+type DriverMysql struct {
+	*Core
+}
+
+// New creates and returns a database object for mysql.
+// It implements the interface of gdb.Driver for extra database driver installation.
+func (d *DriverMysql) New(core *Core, node *ConfigNode) (DB, error) {
+	return &DriverMysql{
+		Core: core,
+	}, nil
 }
 
 // Open creates and returns a underlying sql.DB object for mysql.
-func (db *dbMysql) Open(config *ConfigNode) (*sql.DB, error) {
+func (d *DriverMysql) Open(config *ConfigNode) (*sql.DB, error) {
 	var source string
 	if config.LinkInfo != "" {
 		source = config.LinkInfo
@@ -31,31 +40,32 @@ func (db *dbMysql) Open(config *ConfigNode) (*sql.DB, error) {
 		)
 	}
 	intlog.Printf("Open: %s", source)
-	if db, err := sql.Open("gf-mysql", source); err == nil {
+	if db, err := sql.Open("mysql", source); err == nil {
 		return db, nil
 	} else {
 		return nil, err
 	}
 }
 
-// getChars returns the security char for this type of database.
-func (db *dbMysql) getChars() (charLeft string, charRight string) {
+// GetChars returns the security char for this type of database.
+func (d *DriverMysql) GetChars() (charLeft string, charRight string) {
 	return "`", "`"
 }
 
-// handleSqlBeforeExec handles the sql before posts it to database.
-func (db *dbMysql) handleSqlBeforeExec(sql string) string {
-	return sql
+// HandleSqlBeforeCommit handles the sql before posts it to database.
+func (d *DriverMysql) HandleSqlBeforeCommit(link Link, sql string, args []interface{}) (string, []interface{}) {
+	return sql, args
 }
 
 // Tables retrieves and returns the tables of current schema.
-func (bs *dbBase) Tables(schema ...string) (tables []string, err error) {
+// It's mainly used in cli tool chain for automatically generating the models.
+func (d *DriverMysql) Tables(schema ...string) (tables []string, err error) {
 	var result Result
-	link, err := bs.db.getSlave(schema...)
+	link, err := d.DB.GetSlave(schema...)
 	if err != nil {
 		return nil, err
 	}
-	result, err = bs.db.doGetAll(link, `SHOW TABLES`)
+	result, err = d.DB.DoGetAll(link, `SHOW TABLES`)
 	if err != nil {
 		return
 	}
@@ -73,27 +83,27 @@ func (bs *dbBase) Tables(schema ...string) (tables []string, err error) {
 // As a map is unsorted, the TableField struct has a "Index" field marks its sequence in the fields.
 //
 // It's using cache feature to enhance the performance, which is never expired util the process restarts.
-func (bs *dbBase) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
+func (d *DriverMysql) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
 	table = gstr.Trim(table)
 	if gstr.Contains(table, " ") {
 		panic("function TableFields supports only single table operations")
 	}
-	checkSchema := bs.schema.Val()
+	checkSchema := d.schema.Val()
 	if len(schema) > 0 && schema[0] != "" {
 		checkSchema = schema[0]
 	}
-	v := bs.cache.GetOrSetFunc(
+	v := d.cache.GetOrSetFunc(
 		fmt.Sprintf(`mysql_table_fields_%s_%s`, table, checkSchema),
 		func() interface{} {
 			var result Result
 			var link *sql.DB
-			link, err = bs.db.getSlave(checkSchema)
+			link, err = d.DB.GetSlave(checkSchema)
 			if err != nil {
 				return nil
 			}
-			result, err = bs.doGetAll(
+			result, err = d.DB.DoGetAll(
 				link,
-				fmt.Sprintf(`SHOW FULL COLUMNS FROM %s`, bs.db.quoteWord(table)),
+				fmt.Sprintf(`SHOW FULL COLUMNS FROM %s`, d.DB.QuoteWord(table)),
 			)
 			if err != nil {
 				return nil

@@ -9,292 +9,217 @@ package gpage
 
 import (
 	"fmt"
-	"math"
-	url2 "net/url"
-	"strings"
-
-	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
+	"math"
 )
 
-// 分页对象
+// Page is the pagination implementer.
+// All the attributes are public, you can change them when necessary.
 type Page struct {
-	Url            *url2.URL     // 当前页面的URL对象
-	Router         *ghttp.Router // 当前页面的路由对象(与gf框架耦合，在静态分页下有效)
-	UrlTemplate    string        // URL生成规则，内部可使用{.page}变量指定页码
-	TotalSize      int           // 总共数据条数
-	TotalPage      int           // 总页数
-	CurrentPage    int           // 当前页码
-	PageName       string        // 分页参数名称(GET参数)
-	NextPageTag    string        // 下一页标签
-	PrevPageTag    string        // 上一页标签
-	FirstPageTag   string        // 首页标签
-	LastPageTag    string        // 尾页标签
-	PrevBar        string        // 上一分页条
-	NextBar        string        // 下一分页条
-	PageBarNum     int           // 控制分页条的数量
-	AjaxActionName string        // AJAX方法名，当该属性有值时，表示使用AJAX分页
+	TotalSize      int    // Total size.
+	TotalPage      int    // Total page, which is automatically calculated.
+	CurrentPage    int    // Current page number >= 1.
+	UrlTemplate    string // Custom url template for page url producing.
+	LinkStyle      string // CSS style name for HTML link tag <a>.
+	SpanStyle      string // CSS style name for HTML span tag <span>, which is used for first, current and last page tag.
+	SelectStyle    string // CSS style name for HTML select tag <select>.
+	NextPageTag    string // Tag name for next p.
+	PrevPageTag    string // Tag name for prev p.
+	FirstPageTag   string // Tag name for first p.
+	LastPageTag    string // Tag name for last p.
+	PrevBarTag     string // Tag string for prev bar.
+	NextBarTag     string // Tag string for next bar.
+	PageBarNum     int    // Page bar number for displaying.
+	AjaxActionName string // Ajax function name. Ajax is enabled if this attribute is not empty.
 }
 
-// 创建一个分页对象，输入参数分别为：
-// 总数量、每页数量、当前页码、当前的URL(URI+QUERY)、(可选)路由规则(例如: /user/list/:page、/order/list/*page、/order/list/{page}.html)
-func New(TotalSize, perPage int, CurrentPage interface{}, url string, router ...*ghttp.Router) *Page {
-	u, _ := url2.Parse(url)
-	page := &Page{
-		PageName:     "page",
+const (
+	PAGE_NAME         = "page"    // PAGE_NAME defines the default page name.
+	PAGE_PLACE_HOLDER = "{.page}" // PAGE_PLACE_HOLDER defines the place holder for the url template.
+)
+
+// New creates and returns a pagination manager.
+// Note that the parameter <urlTemplate> specifies the URL producing template, like:
+// /user/list/{.page}, /user/list/{.page}.html, /user/list?page={.page}&type=1, etc.
+// The build-in variable in <urlTemplate> "{.page}" specifies the page number, which will be replaced by certain
+// page number when producing.
+func New(totalSize, pageSize, currentPage int, urlTemplate string) *Page {
+	p := &Page{
+		LinkStyle:    "GPageLink",
+		SpanStyle:    "GPageSpan",
+		SelectStyle:  "GPageSelect",
 		PrevPageTag:  "<",
 		NextPageTag:  ">",
 		FirstPageTag: "|<",
 		LastPageTag:  ">|",
-		PrevBar:      "<<",
-		NextBar:      ">>",
-		TotalSize:    TotalSize,
-		TotalPage:    int(math.Ceil(float64(TotalSize) / float64(perPage))),
-		CurrentPage:  1,
+		PrevBarTag:   "<<",
+		NextBarTag:   ">>",
+		TotalSize:    totalSize,
+		TotalPage:    int(math.Ceil(float64(totalSize) / float64(pageSize))),
+		CurrentPage:  currentPage,
 		PageBarNum:   10,
-		Url:          u,
+		UrlTemplate:  urlTemplate,
 	}
-	curPage := gconv.Int(CurrentPage)
-	if curPage > 0 {
-		page.CurrentPage = curPage
+	if currentPage == 0 {
+		p.CurrentPage = 1
 	}
-	if len(router) > 0 {
-		page.Router = router[0]
-	}
-	return page
+	return p
 }
 
-// 启用AJAX分页
-func (page *Page) EnableAjax(actionName string) {
-	page.AjaxActionName = actionName
+// NextPage returns the HTML content for the next page.
+func (p *Page) NextPage() string {
+	if p.CurrentPage < p.TotalPage {
+		return p.GetLink(p.CurrentPage+1, p.NextPageTag, "")
+	}
+	return fmt.Sprintf(`<span class="%s">%s</span>`, p.SpanStyle, p.NextPageTag)
 }
 
-// 设置URL生成规则模板，模板中可使用{.page}变量指定页码位置
-func (page *Page) SetUrlTemplate(template string) {
-	page.UrlTemplate = template
+// PrevPage returns the HTML content for the previous page.
+func (p *Page) PrevPage() string {
+	if p.CurrentPage > 1 {
+		return p.GetLink(p.CurrentPage-1, p.PrevPageTag, "")
+	}
+	return fmt.Sprintf(`<span class="%s">%s</span>`, p.SpanStyle, p.PrevPageTag)
 }
 
-// 获取显示"下一页"的内容.
-func (page *Page) NextPage(styles ...string) string {
-	var curStyle, style string
-	if len(styles) > 0 {
-		curStyle = styles[0]
+// FirstPage returns the HTML content for the first page.
+func (p *Page) FirstPage() string {
+	if p.CurrentPage == 1 {
+		return fmt.Sprintf(`<span class="%s">%s</span>`, p.SpanStyle, p.FirstPageTag)
 	}
-	if len(styles) > 1 {
-		style = styles[0]
-	}
-	if page.CurrentPage < page.TotalPage {
-		return page.GetLink(page.GetUrl(page.CurrentPage+1), page.NextPageTag, "下一页", style)
-	}
-	return fmt.Sprintf(`<span class="%s">%s</span>`, curStyle, page.NextPageTag)
+	return p.GetLink(1, p.FirstPageTag, "")
 }
 
-// 获取显示“上一页”的内容
-func (page *Page) PrevPage(styles ...string) string {
-	var curStyle, style string
-	if len(styles) > 0 {
-		curStyle = styles[0]
+// LastPage returns the HTML content for the last page.
+func (p *Page) LastPage() string {
+	if p.CurrentPage == p.TotalPage {
+		return fmt.Sprintf(`<span class="%s">%s</span>`, p.SpanStyle, p.LastPageTag)
 	}
-	if len(styles) > 1 {
-		style = styles[0]
-	}
-	if page.CurrentPage > 1 {
-		return page.GetLink(page.GetUrl(page.CurrentPage-1), page.PrevPageTag, "上一页", style)
-	}
-	return fmt.Sprintf(`<span class="%s">%s</span>`, curStyle, page.PrevPageTag)
+	return p.GetLink(p.TotalPage, p.LastPageTag, "")
 }
 
-// 获取显示“首页”的代码
-func (page *Page) FirstPage(styles ...string) string {
-	var curStyle, style string
-	if len(styles) > 0 {
-		curStyle = styles[0]
+// PageBar returns the HTML page bar content with link and span tags.
+func (p *Page) PageBar() string {
+	plus := int(math.Ceil(float64(p.PageBarNum / 2)))
+	if p.PageBarNum-plus+p.CurrentPage > p.TotalPage {
+		plus = p.PageBarNum - p.TotalPage + p.CurrentPage
 	}
-	if len(styles) > 1 {
-		style = styles[0]
-	}
-	if page.CurrentPage == 1 {
-		return fmt.Sprintf(`<span class="%s">%s</span>`, curStyle, page.FirstPageTag)
-	}
-	return page.GetLink(page.GetUrl(1), page.FirstPageTag, "第一页", style)
-}
-
-// 获取显示“尾页”的内容
-func (page *Page) LastPage(styles ...string) string {
-	var curStyle, style string
-	if len(styles) > 0 {
-		curStyle = styles[0]
-	}
-	if len(styles) > 1 {
-		style = styles[0]
-	}
-	if page.CurrentPage == page.TotalPage {
-		return fmt.Sprintf(`<span class="%s">%s</span>`, curStyle, page.LastPageTag)
-	}
-	return page.GetLink(page.GetUrl(page.TotalPage), page.LastPageTag, "最后页", style)
-}
-
-// 获得分页条列表内容
-func (page *Page) PageBar(styles ...string) string {
-	var curStyle, style string
-	if len(styles) > 0 {
-		curStyle = styles[0]
-	}
-	if len(styles) > 1 {
-		style = styles[0]
-	}
-	plus := int(math.Ceil(float64(page.PageBarNum / 2)))
-	if page.PageBarNum-plus+page.CurrentPage > page.TotalPage {
-		plus = page.PageBarNum - page.TotalPage + page.CurrentPage
-	}
-	begin := page.CurrentPage - plus + 1
+	begin := p.CurrentPage - plus + 1
 	if begin < 1 {
 		begin = 1
 	}
-	ret := ""
-	for i := begin; i < begin+page.PageBarNum; i++ {
-		if i <= page.TotalPage {
-			if i != page.CurrentPage {
-				ret += page.GetLink(page.GetUrl(i), gconv.String(i), style, "")
+	barContent := ""
+	for i := begin; i < begin+p.PageBarNum; i++ {
+		if i <= p.TotalPage {
+			if i != p.CurrentPage {
+				barText := gconv.String(i)
+				barContent += p.GetLink(i, barText, barText)
 			} else {
-				ret += fmt.Sprintf(`<span class="%s">%d</span>`, curStyle, i)
+				barContent += fmt.Sprintf(`<span class="%s">%d</span>`, p.SpanStyle, i)
 			}
 		} else {
 			break
 		}
 	}
-	return ret
+	return barContent
 }
 
-// 获取基于select标签的显示跳转按钮的代码
-func (page *Page) SelectBar() string {
-	ret := `<select name="gpage_select" onchange="window.location.href=this.value">`
-	for i := 1; i <= page.TotalPage; i++ {
-		if i == page.CurrentPage {
-			ret += fmt.Sprintf(`<option value="%s" selected>%d</option>`, page.GetUrl(i), i)
+// SelectBar returns the select HTML content for pagination.
+func (p *Page) SelectBar() string {
+	barContent := fmt.Sprintf(`<select name="%s" onchange="window.location.href=this.value">`, p.SelectStyle)
+	for i := 1; i <= p.TotalPage; i++ {
+		if i == p.CurrentPage {
+			barContent += fmt.Sprintf(`<option value="%s" selected>%d</option>`, p.GetUrl(i), i)
 		} else {
-			ret += fmt.Sprintf(`<option value="%s">%d</option>`, page.GetUrl(i), i)
+			barContent += fmt.Sprintf(`<option value="%s">%d</option>`, p.GetUrl(i), i)
 		}
 	}
-	ret += "</select>"
-	return ret
+	barContent += "</select>"
+	return barContent
 }
 
-// 预定义的分页显示风格内容
-func (page *Page) GetContent(mode int) string {
+// GetContent returns the page content for predefined mode.
+// These predefined contents are mainly for chinese localization purpose. You can defines your own
+// page function retrieving the page content according to the implementation of this function.
+func (p *Page) GetContent(mode int) string {
 	switch mode {
 	case 1:
-		page.NextPageTag = "下一页"
-		page.PrevPageTag = "上一页"
+		p.NextPageTag = "下一页"
+		p.PrevPageTag = "上一页"
 		return fmt.Sprintf(
 			`%s <span class="current">%d</span> %s`,
-			page.PrevPage(),
-			page.CurrentPage,
-			page.NextPage(),
+			p.PrevPage(),
+			p.CurrentPage,
+			p.NextPage(),
 		)
 
 	case 2:
-		page.NextPageTag = "下一页>>"
-		page.PrevPageTag = "<<上一页"
-		page.FirstPageTag = "首页"
-		page.LastPageTag = "尾页"
+		p.NextPageTag = "下一页>>"
+		p.PrevPageTag = "<<上一页"
+		p.FirstPageTag = "首页"
+		p.LastPageTag = "尾页"
 		return fmt.Sprintf(
 			`%s%s<span class="current">[第%d页]</span>%s%s第%s页`,
-			page.FirstPage(),
-			page.PrevPage(),
-			page.CurrentPage,
-			page.NextPage(),
-			page.LastPage(),
-			page.SelectBar(),
+			p.FirstPage(),
+			p.PrevPage(),
+			p.CurrentPage,
+			p.NextPage(),
+			p.LastPage(),
+			p.SelectBar(),
 		)
 
 	case 3:
-		page.NextPageTag = "下一页"
-		page.PrevPageTag = "上一页"
-		page.FirstPageTag = "首页"
-		page.LastPageTag = "尾页"
-		pageStr := page.FirstPage()
-		pageStr += page.PrevPage()
-		pageStr += page.PageBar("current")
-		pageStr += page.NextPage()
-		pageStr += page.LastPage()
+		p.NextPageTag = "下一页"
+		p.PrevPageTag = "上一页"
+		p.FirstPageTag = "首页"
+		p.LastPageTag = "尾页"
+		pageStr := p.FirstPage()
+		pageStr += p.PrevPage()
+		pageStr += p.PageBar()
+		pageStr += p.NextPage()
+		pageStr += p.LastPage()
 		pageStr += fmt.Sprintf(
 			`<span>当前页%d/%d</span> <span>共%d条</span>`,
-			page.CurrentPage,
-			page.TotalPage,
-			page.TotalSize,
+			p.CurrentPage,
+			p.TotalPage,
+			p.TotalSize,
 		)
 		return pageStr
 
 	case 4:
-		page.NextPageTag = "下一页"
-		page.PrevPageTag = "上一页"
-		page.FirstPageTag = "首页"
-		page.LastPageTag = "尾页"
-		pageStr := page.FirstPage()
-		pageStr += page.PrevPage()
-		pageStr += page.PageBar("current")
-		pageStr += page.NextPage()
-		pageStr += page.LastPage()
+		p.NextPageTag = "下一页"
+		p.PrevPageTag = "上一页"
+		p.FirstPageTag = "首页"
+		p.LastPageTag = "尾页"
+		pageStr := p.FirstPage()
+		pageStr += p.PrevPage()
+		pageStr += p.PageBar()
+		pageStr += p.NextPage()
+		pageStr += p.LastPage()
 		return pageStr
 	}
 	return ""
 }
 
-// 为指定的页面返回地址值
-func (page *Page) GetUrl(pageNo int) string {
-	// 复制一个URL对象
-	url := *page.Url
-	if len(page.UrlTemplate) == 0 && page.Router != nil {
-		page.UrlTemplate = page.makeUrlTemplate(url.Path, page.Router)
-	}
-	if len(page.UrlTemplate) > 0 {
-		// 指定URL生成模板
-		url.Path = gstr.Replace(page.UrlTemplate, "{.page}", gconv.String(pageNo))
-		return url.String()
-	}
-
-	values := page.Url.Query()
-	values.Set(page.PageName, gconv.String(pageNo))
-	url.RawQuery = values.Encode()
-	return url.String()
+// GetUrl parses the UrlTemplate with given page number and returns the URL string.
+// Note that the UrlTemplate attribute can be either an URL or a URI string with "{.page}"
+// place holder specifying the page number position.
+func (p *Page) GetUrl(page int) string {
+	return gstr.Replace(p.UrlTemplate, PAGE_PLACE_HOLDER, gconv.String(page))
 }
 
-// 根据当前URL以及注册路由信息计算出对应的URL模板
-func (page *Page) makeUrlTemplate(url string, router *ghttp.Router) (tpl string) {
-	if page.Router != nil && len(router.RegNames) > 0 {
-		if match, err := gregex.MatchString(router.RegRule, url); err == nil && len(match) > 0 {
-			if len(match) > len(router.RegNames) {
-				tpl = router.Uri
-				hasPageName := false
-				for i, name := range router.RegNames {
-					rule := fmt.Sprintf(`[:\*]%s|\{%s\}`, name, name)
-					if !hasPageName && strings.Compare(name, page.PageName) == 0 {
-						hasPageName = true
-						tpl, _ = gregex.ReplaceString(rule, `{.page}`, tpl)
-					} else {
-						tpl, _ = gregex.ReplaceString(rule, match[i+1], tpl)
-					}
-				}
-				if !hasPageName {
-					tpl = ""
-				}
-			}
-		}
-	}
-	return
-}
-
-// 获取链接地址
-func (page *Page) GetLink(url, text, title, style string) string {
-	if len(style) > 0 {
-		style = fmt.Sprintf(`class="%s" `, style)
-	}
-	if len(page.AjaxActionName) > 0 {
-		return fmt.Sprintf(`<a %shref='#' onclick="%s('%s')">%s</a>`, style, page.AjaxActionName, url, text)
+// GetLink returns the HTML link tag <a> content for given page number.
+func (p *Page) GetLink(page int, text, title string) string {
+	if len(p.AjaxActionName) > 0 {
+		return fmt.Sprintf(
+			`<a class="%s" href="javascript:%s('%s')" title="%s">%s</a>`,
+			p.LinkStyle, p.AjaxActionName, p.GetUrl(page), title, text,
+		)
 	} else {
-		return fmt.Sprintf(`<a %shref="%s" title="%s">%s</a>`, style, url, title, text)
+		return fmt.Sprintf(
+			`<a class="%s" href="%s" title="%s">%s</a>`,
+			p.LinkStyle, p.GetUrl(page), title, text,
+		)
 	}
 }

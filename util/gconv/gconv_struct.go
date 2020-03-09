@@ -242,6 +242,7 @@ func bindVarToStructByIndex(elem reflect.Value, index int, value interface{}) (e
 	if !structFieldValue.CanSet() {
 		return nil
 	}
+	// If any panic, it secondly uses reflect conversion and assignment.
 	defer func() {
 		if recover() != nil {
 			err = bindVarToReflectValue(structFieldValue, value)
@@ -250,6 +251,7 @@ func bindVarToStructByIndex(elem reflect.Value, index int, value interface{}) (e
 	if empty.IsNil(value) {
 		structFieldValue.Set(reflect.Zero(structFieldValue.Type()))
 	} else {
+		// It firstly simply assigns the value to the attribute.
 		structFieldValue.Set(reflect.ValueOf(Convert(value, structFieldValue.Type().String())))
 	}
 	return nil
@@ -260,7 +262,8 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}) (e
 	switch structFieldValue.Kind() {
 	case reflect.Struct:
 		if err := Struct(value, structFieldValue); err != nil {
-			structFieldValue.Set(reflect.ValueOf(value))
+			// Note there's reflect conversion mechanism here.
+			structFieldValue.Set(reflect.ValueOf(value).Convert(structFieldValue.Type()))
 		}
 	// Note that the slice element might be type of struct,
 	// so it uses Struct function doing the converting internally.
@@ -275,13 +278,15 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}) (e
 					if t.Kind() == reflect.Ptr {
 						e := reflect.New(t.Elem()).Elem()
 						if err := Struct(v.Index(i).Interface(), e); err != nil {
-							e.Set(reflect.ValueOf(v.Index(i).Interface()))
+							// Note there's reflect conversion mechanism here.
+							e.Set(reflect.ValueOf(v.Index(i).Interface()).Convert(t))
 						}
 						a.Index(i).Set(e.Addr())
 					} else {
 						e := reflect.New(t).Elem()
 						if err := Struct(v.Index(i).Interface(), e); err != nil {
-							e.Set(reflect.ValueOf(v.Index(i).Interface()))
+							// Note there's reflect conversion mechanism here.
+							e.Set(reflect.ValueOf(v.Index(i).Interface()).Convert(t))
 						}
 						a.Index(i).Set(e)
 					}
@@ -293,13 +298,15 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}) (e
 			if t.Kind() == reflect.Ptr {
 				e := reflect.New(t.Elem()).Elem()
 				if err := Struct(value, e); err != nil {
-					e.Set(reflect.ValueOf(value))
+					// Note there's reflect conversion mechanism here.
+					e.Set(reflect.ValueOf(value).Convert(t))
 				}
 				a.Index(0).Set(e.Addr())
 			} else {
 				e := reflect.New(t).Elem()
 				if err := Struct(value, e); err != nil {
-					e.Set(reflect.ValueOf(value))
+					// Note there's reflect conversion mechanism here.
+					e.Set(reflect.ValueOf(value).Convert(t))
 				}
 				a.Index(0).Set(e)
 			}
@@ -311,34 +318,40 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}) (e
 		// Assign value with interface Set.
 		// Note that only pointer can implement interface Set.
 		if v, ok := item.Interface().(apiUnmarshalValue); ok {
-			v.UnmarshalValue(value)
+			err = v.UnmarshalValue(value)
 			structFieldValue.Set(item)
-			return nil
+			return err
 		}
 		elem := item.Elem()
 		if err = bindVarToReflectValue(elem, value); err == nil {
 			structFieldValue.Set(elem.Addr())
 		}
 
+	// It mainly and specially handles the interface of nil value.
 	case reflect.Interface:
 		if value == nil {
+			// Specially.
 			structFieldValue.Set(reflect.ValueOf((*interface{})(nil)))
 		} else {
-			structFieldValue.Set(reflect.ValueOf(value))
+			// Note there's reflect conversion mechanism here.
+			structFieldValue.Set(reflect.ValueOf(value).Convert(structFieldValue.Type()))
 		}
 
 	default:
 		defer func() {
 			if e := recover(); e != nil {
 				err = errors.New(
-					fmt.Sprintf(`cannot convert "%d" to type "%s"`,
+					fmt.Sprintf(`cannot convert value "%d" to type "%s"`,
 						value,
 						structFieldValue.Type().String(),
 					),
 				)
 			}
 		}()
-		structFieldValue.Set(reflect.ValueOf(value))
+		// It here uses reflect converting <value> to type of the attribute and assigns
+		// the result value to the attribute. It might fail and panic if the usual Go
+		// conversion rules do not allow conversion.
+		structFieldValue.Set(reflect.ValueOf(value).Convert(structFieldValue.Type()))
 	}
 	return nil
 }

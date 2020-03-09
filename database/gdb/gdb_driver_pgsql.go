@@ -21,12 +21,21 @@ import (
 	"github.com/gogf/gf/text/gregex"
 )
 
-type dbPgsql struct {
-	*dbBase
+// DriverPgsql is the driver for postgresql database.
+type DriverPgsql struct {
+	*Core
+}
+
+// New creates and returns a database object for postgresql.
+// It implements the interface of gdb.Driver for extra database driver installation.
+func (d *DriverPgsql) New(core *Core, node *ConfigNode) (DB, error) {
+	return &DriverPgsql{
+		Core: core,
+	}, nil
 }
 
 // Open creates and returns a underlying sql.DB object for pgsql.
-func (db *dbPgsql) Open(config *ConfigNode) (*sql.DB, error) {
+func (d *DriverPgsql) Open(config *ConfigNode) (*sql.DB, error) {
 	var source string
 	if config.LinkInfo != "" {
 		source = config.LinkInfo
@@ -44,13 +53,13 @@ func (db *dbPgsql) Open(config *ConfigNode) (*sql.DB, error) {
 	}
 }
 
-// getChars returns the security char for this type of database.
-func (db *dbPgsql) getChars() (charLeft string, charRight string) {
+// GetChars returns the security char for this type of database.
+func (d *DriverPgsql) GetChars() (charLeft string, charRight string) {
 	return "\"", "\""
 }
 
-// handleSqlBeforeExec deals with the sql string before commits it to underlying sql driver.
-func (db *dbPgsql) handleSqlBeforeExec(sql string) string {
+// HandleSqlBeforeCommit deals with the sql string before commits it to underlying sql driver.
+func (d *DriverPgsql) HandleSqlBeforeCommit(link Link, sql string, args []interface{}) (string, []interface{}) {
 	var index int
 	// Convert place holder char '?' to string "$x".
 	sql, _ = gregex.ReplaceStringFunc("\\?", sql, func(s string) string {
@@ -58,13 +67,14 @@ func (db *dbPgsql) handleSqlBeforeExec(sql string) string {
 		return fmt.Sprintf("$%d", index)
 	})
 	sql, _ = gregex.ReplaceString(` LIMIT (\d+),\s*(\d+)`, ` LIMIT $1 OFFSET $2`, sql)
-	return sql
+	return sql, args
 }
 
 // Tables retrieves and returns the tables of current schema.
-func (db *dbPgsql) Tables(schema ...string) (tables []string, err error) {
+// It's mainly used in cli tool chain for automatically generating the models.
+func (d *DriverPgsql) Tables(schema ...string) (tables []string, err error) {
 	var result Result
-	link, err := db.getSlave(schema...)
+	link, err := d.DB.GetSlave(schema...)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +83,7 @@ func (db *dbPgsql) Tables(schema ...string) (tables []string, err error) {
 	if len(schema) > 0 && schema[0] != "" {
 		query = fmt.Sprintf("SELECT TABLENAME FROM PG_TABLES WHERE SCHEMANAME = '%s' ORDER BY TABLENAME", schema[0])
 	}
-	result, err = db.doGetAll(link, query)
+	result, err = d.DB.DoGetAll(link, query)
 	if err != nil {
 		return
 	}
@@ -86,25 +96,25 @@ func (db *dbPgsql) Tables(schema ...string) (tables []string, err error) {
 }
 
 // TableFields retrieves and returns the fields information of specified table of current schema.
-func (db *dbPgsql) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
+func (d *DriverPgsql) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
 	table = gstr.Trim(table)
 	if gstr.Contains(table, " ") {
 		panic("function TableFields supports only single table operations")
 	}
 	table, _ = gregex.ReplaceString("\"", "", table)
-	checkSchema := db.schema.Val()
+	checkSchema := d.DB.GetSchema()
 	if len(schema) > 0 && schema[0] != "" {
 		checkSchema = schema[0]
 	}
-	v := db.cache.GetOrSetFunc(
+	v := d.DB.GetCache().GetOrSetFunc(
 		fmt.Sprintf(`pgsql_table_fields_%s_%s`, table, checkSchema), func() interface{} {
 			var result Result
 			var link *sql.DB
-			link, err = db.getSlave(checkSchema)
+			link, err = d.DB.GetSlave(checkSchema)
 			if err != nil {
 				return nil
 			}
-			result, err = db.doGetAll(link, fmt.Sprintf(`
+			result, err = d.DB.DoGetAll(link, fmt.Sprintf(`
 			SELECT a.attname AS field, t.typname AS type FROM pg_class c, pg_attribute a 
 	        LEFT OUTER JOIN pg_description b ON a.attrelid=b.objoid AND a.attnum = b.objsubid,pg_type t
 	        WHERE c.relname = '%s' and a.attnum > 0 and a.attrelid = c.oid and a.atttypid = t.oid 

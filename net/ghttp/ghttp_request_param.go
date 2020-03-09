@@ -9,6 +9,7 @@ package ghttp
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/encoding/gurl"
@@ -301,6 +302,20 @@ func (r *Request) GetMultipartFiles(name string) []*multipart.FileHeader {
 	// Support "name[]" as array parameter.
 	if v := form.File[name+"[]"]; len(v) > 0 {
 		return v
+	}
+	// Support "name[0]","name[1]","name[2]", etc. as array parameter.
+	key := ""
+	files := make([]*multipart.FileHeader, 0)
+	for i := 0; ; i++ {
+		key = fmt.Sprintf(`%s[%d]`, name, i)
+		if v := form.File[key]; len(v) > 0 {
+			files = append(files, v[0])
+		} else {
+			break
+		}
+	}
+	if len(files) > 0 {
+		return files
 	}
 	return nil
 }

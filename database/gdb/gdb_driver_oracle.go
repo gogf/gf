@@ -24,8 +24,9 @@ import (
 	"github.com/gogf/gf/text/gregex"
 )
 
-type dbOracle struct {
-	*dbBase
+// DriverOracle is the driver for oracle database.
+type DriverOracle struct {
+	*Core
 }
 
 const (
@@ -33,8 +34,16 @@ const (
 	tableAlias2 = "GFORM2"
 )
 
+// New creates and returns a database object for oracle.
+// It implements the interface of gdb.Driver for extra database driver installation.
+func (d *DriverOracle) New(core *Core, node *ConfigNode) (DB, error) {
+	return &DriverOracle{
+		Core: core,
+	}, nil
+}
+
 // Open creates and returns a underlying sql.DB object for oracle.
-func (db *dbOracle) Open(config *ConfigNode) (*sql.DB, error) {
+func (d *DriverOracle) Open(config *ConfigNode) (*sql.DB, error) {
 	var source string
 	if config.LinkInfo != "" {
 		source = config.LinkInfo
@@ -49,13 +58,13 @@ func (db *dbOracle) Open(config *ConfigNode) (*sql.DB, error) {
 	}
 }
 
-// getChars returns the security char for this type of database.
-func (db *dbOracle) getChars() (charLeft string, charRight string) {
+// GetChars returns the security char for this type of database.
+func (d *DriverOracle) GetChars() (charLeft string, charRight string) {
 	return "\"", "\""
 }
 
-// handleSqlBeforeExec deals with the sql string before commits it to underlying sql driver.
-func (db *dbOracle) handleSqlBeforeExec(query string) string {
+// HandleSqlBeforeCommit deals with the sql string before commits it to underlying sql driver.
+func (d *DriverOracle) HandleSqlBeforeCommit(link Link, query string, args []interface{}) (string, []interface{}) {
 	var index int
 	// Convert place holder char '?' to string ":x".
 	str, _ := gregex.ReplaceStringFunc("\\?", query, func(s string) string {
@@ -63,10 +72,10 @@ func (db *dbOracle) handleSqlBeforeExec(query string) string {
 		return fmt.Sprintf(":%d", index)
 	})
 	str, _ = gregex.ReplaceString("\"", "", str)
-	return db.parseSql(str)
+	return d.parseSql(str), args
 }
 
-func (db *dbOracle) parseSql(sql string) string {
+func (d *DriverOracle) parseSql(sql string) string {
 	patten := `^\s*(?i)(SELECT)|(LIMIT\s*(\d+)\s*,\s*(\d+))`
 	if gregex.IsMatchString(patten, sql) == false {
 		return sql
@@ -123,36 +132,37 @@ func (db *dbOracle) parseSql(sql string) string {
 }
 
 // Tables retrieves and returns the tables of current schema.
-func (db *dbOracle) Tables(schema ...string) (tables []string, err error) {
+// It's mainly used in cli tool chain for automatically generating the models.
+// Note that it ignores the parameter <schema> in oracle database, as it is not necessary.
+func (d *DriverOracle) Tables(schema ...string) (tables []string, err error) {
 	var result Result
-
-	result, err = db.doGetAll(nil, "SELECT TABLE_NAME FROM USER_TABLES ORDER BY TABLE_NAME")
+	result, err = d.DB.DoGetAll(nil, "SELECT TABLE_NAME FROM USER_TABLES ORDER BY TABLE_NAME")
 	if err != nil {
 		return
 	}
 	for _, m := range result {
 		for _, v := range m {
-			tables = append(tables, strings.ToLower(v.String()))
+			tables = append(tables, v.String())
 		}
 	}
 	return
 }
 
 // TableFields retrieves and returns the fields information of specified table of current schema.
-func (db *dbOracle) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
+func (d *DriverOracle) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
 	table = gstr.Trim(table)
 	if gstr.Contains(table, " ") {
 		panic("function TableFields supports only single table operations")
 	}
-	checkSchema := db.schema.Val()
+	checkSchema := d.DB.GetSchema()
 	if len(schema) > 0 && schema[0] != "" {
 		checkSchema = schema[0]
 	}
-	v := db.cache.GetOrSetFunc(
+	v := d.DB.GetCache().GetOrSetFunc(
 		fmt.Sprintf(`oracle_table_fields_%s_%s`, table, checkSchema),
 		func() interface{} {
 			result := (Result)(nil)
-			result, err = db.GetAll(fmt.Sprintf(`
+			result, err = d.DB.GetAll(fmt.Sprintf(`
 			SELECT COLUMN_NAME AS FIELD, CASE DATA_TYPE 
 			    WHEN 'NUMBER' THEN DATA_TYPE||'('||DATA_PRECISION||','||DATA_SCALE||')' 
 				WHEN 'FLOAT' THEN DATA_TYPE||'('||DATA_PRECISION||','||DATA_SCALE||')' 
@@ -177,11 +187,11 @@ func (db *dbOracle) TableFields(table string, schema ...string) (fields map[stri
 	return
 }
 
-func (db *dbOracle) getTableUniqueIndex(table string) (fields map[string]map[string]string, err error) {
+func (d *DriverOracle) getTableUniqueIndex(table string) (fields map[string]map[string]string, err error) {
 	table = strings.ToUpper(table)
-	v := db.cache.GetOrSetFunc("table_unique_index_"+table, func() interface{} {
+	v := d.DB.GetCache().GetOrSetFunc("table_unique_index_"+table, func() interface{} {
 		res := (Result)(nil)
-		res, err = db.GetAll(fmt.Sprintf(`
+		res, err = d.DB.GetAll(fmt.Sprintf(`
 		SELECT INDEX_NAME,COLUMN_NAME,CHAR_LENGTH FROM USER_IND_COLUMNS 
 		WHERE TABLE_NAME = '%s' 
 		AND INDEX_NAME IN(SELECT INDEX_NAME FROM USER_INDEXES WHERE TABLE_NAME='%s' AND UNIQUENESS='UNIQUE') 
@@ -203,7 +213,7 @@ func (db *dbOracle) getTableUniqueIndex(table string) (fields map[string]map[str
 	return
 }
 
-func (db *dbOracle) doInsert(link dbLink, table string, data interface{}, option int, batch ...int) (result sql.Result, err error) {
+func (d *DriverOracle) DoInsert(link Link, table string, data interface{}, option int, batch ...int) (result sql.Result, err error) {
 	var fields []string
 	var values []string
 	var params []interface{}
@@ -218,11 +228,11 @@ func (db *dbOracle) doInsert(link dbLink, table string, data interface{}, option
 	case reflect.Slice:
 		fallthrough
 	case reflect.Array:
-		return db.db.doBatchInsert(link, table, data, option, batch...)
+		return d.DB.DoBatchInsert(link, table, data, option, batch...)
 	case reflect.Map:
 		fallthrough
 	case reflect.Struct:
-		dataMap = varToMapDeep(data)
+		dataMap = DataToMapDeep(data)
 	default:
 		return result, errors.New(fmt.Sprint("unsupported data type:", kind))
 	}
@@ -231,7 +241,7 @@ func (db *dbOracle) doInsert(link dbLink, table string, data interface{}, option
 	indexMap := make(map[string]string)
 	indexExists := false
 	if option != gINSERT_OPTION_DEFAULT {
-		index, err := db.getTableUniqueIndex(table)
+		index, err := d.getTableUniqueIndex(table)
 		if err != nil {
 			return nil, err
 		}
@@ -253,7 +263,7 @@ func (db *dbOracle) doInsert(link dbLink, table string, data interface{}, option
 	onStr := make([]string, 0)
 	updateStr := make([]string, 0)
 
-	charL, charR := db.db.getChars()
+	charL, charR := d.DB.GetChars()
 	for k, v := range dataMap {
 		k = strings.ToUpper(k)
 
@@ -279,7 +289,7 @@ func (db *dbOracle) doInsert(link dbLink, table string, data interface{}, option
 	}
 
 	if link == nil {
-		if link, err = db.db.Master(); err != nil {
+		if link, err = d.DB.Master(); err != nil {
 			return nil, err
 		}
 	}
@@ -294,9 +304,9 @@ func (db *dbOracle) doInsert(link dbLink, table string, data interface{}, option
 				table, tableAlias1, strings.Join(subSqlStr, ","), tableAlias2,
 				strings.Join(onStr, "AND"), strings.Join(updateStr, ","), strings.Join(fields, ","), strings.Join(values, ","),
 			)
-			return db.db.doExec(link, tmp, params...)
+			return d.DB.DoExec(link, tmp, params...)
 		case gINSERT_OPTION_IGNORE:
-			return db.db.doExec(link,
+			return d.DB.DoExec(link,
 				fmt.Sprintf(
 					"INSERT /*+ IGNORE_ROW_ON_DUPKEY_INDEX(%s(%s)) */ INTO %s(%s) VALUES(%s)",
 					table, strings.Join(indexs, ","), table, strings.Join(fields, ","), strings.Join(values, ","),
@@ -305,7 +315,7 @@ func (db *dbOracle) doInsert(link dbLink, table string, data interface{}, option
 		}
 	}
 
-	return db.db.doExec(
+	return d.DB.DoExec(
 		link,
 		fmt.Sprintf(
 			"INSERT INTO %s(%s) VALUES(%s)",
@@ -314,7 +324,7 @@ func (db *dbOracle) doInsert(link dbLink, table string, data interface{}, option
 		params...)
 }
 
-func (db *dbOracle) doBatchInsert(link dbLink, table string, list interface{}, option int, batch ...int) (result sql.Result, err error) {
+func (d *DriverOracle) DoBatchInsert(link Link, table string, list interface{}, option int, batch ...int) (result sql.Result, err error) {
 	var keys []string
 	var values []string
 	var params []interface{}
@@ -342,12 +352,12 @@ func (db *dbOracle) doBatchInsert(link dbLink, table string, list interface{}, o
 		case reflect.Array:
 			listMap = make(List, rv.Len())
 			for i := 0; i < rv.Len(); i++ {
-				listMap[i] = varToMapDeep(rv.Index(i).Interface())
+				listMap[i] = DataToMapDeep(rv.Index(i).Interface())
 			}
 		case reflect.Map:
 			fallthrough
 		case reflect.Struct:
-			listMap = List{Map(varToMapDeep(list))}
+			listMap = List{Map(DataToMapDeep(list))}
 		default:
 			return result, errors.New(fmt.Sprint("unsupported list type:", kind))
 		}
@@ -357,7 +367,7 @@ func (db *dbOracle) doBatchInsert(link dbLink, table string, list interface{}, o
 		return result, errors.New("empty data list")
 	}
 	if link == nil {
-		if link, err = db.db.Master(); err != nil {
+		if link, err = d.DB.Master(); err != nil {
 			return
 		}
 	}
@@ -368,14 +378,14 @@ func (db *dbOracle) doBatchInsert(link dbLink, table string, list interface{}, o
 		holders = append(holders, "?")
 	}
 	batchResult := new(batchSqlResult)
-	charL, charR := db.db.getChars()
+	charL, charR := d.DB.GetChars()
 	keyStr := charL + strings.Join(keys, charL+","+charR) + charR
 	valueHolderStr := strings.Join(holders, ",")
 
 	// 当操作类型非insert时调用单笔的insert功能
 	if option != gINSERT_OPTION_DEFAULT {
 		for _, v := range listMap {
-			r, err := db.doInsert(link, table, v, option, 1)
+			r, err := d.DB.DoInsert(link, table, v, option, 1)
 			if err != nil {
 				return r, err
 			}
@@ -402,10 +412,9 @@ func (db *dbOracle) doBatchInsert(link dbLink, table string, list interface{}, o
 			params = append(params, listMap[i][k])
 		}
 		values = append(values, valueHolderStr)
-
 		intoStr = append(intoStr, fmt.Sprintf(" INTO %s(%s) VALUES(%s) ", table, keyStr, valueHolderStr))
 		if len(intoStr) == batchNum {
-			r, err := db.db.doExec(link, fmt.Sprintf("INSERT ALL   %s SELECT * FROM DUAL", strings.Join(intoStr, " ")), params...)
+			r, err := d.DB.DoExec(link, fmt.Sprintf("INSERT ALL %s SELECT * FROM DUAL", strings.Join(intoStr, " ")), params...)
 			if err != nil {
 				return r, err
 			}
@@ -421,7 +430,7 @@ func (db *dbOracle) doBatchInsert(link dbLink, table string, list interface{}, o
 	}
 	// 处理最后不构成指定批量的数据
 	if len(intoStr) > 0 {
-		r, err := db.db.doExec(link, fmt.Sprintf("INSERT ALL   %s SELECT * FROM DUAL", strings.Join(intoStr, " ")), params...)
+		r, err := d.DB.DoExec(link, fmt.Sprintf("INSERT ALL %s SELECT * FROM DUAL", strings.Join(intoStr, " ")), params...)
 		if err != nil {
 			return r, err
 		}

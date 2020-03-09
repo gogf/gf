@@ -681,6 +681,28 @@ func Test_Model_Struct(t *testing.T) {
 	})
 }
 
+func Test_Model_Struct_CustomType(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	type MyInt int
+
+	gtest.Case(t, func() {
+		type User struct {
+			Id         MyInt
+			Passport   string
+			Password   string
+			NickName   string
+			CreateTime gtime.Time
+		}
+		user := new(User)
+		err := db.Table(table).Where("id=1").Struct(user)
+		gtest.Assert(err, nil)
+		gtest.Assert(user.NickName, "name_1")
+		gtest.Assert(user.CreateTime.String(), "2018-10-24 10:00:00")
+	})
+}
+
 func Test_Model_Structs(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)

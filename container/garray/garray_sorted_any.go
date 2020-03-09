@@ -439,6 +439,9 @@ func (a *SortedArray) SetUnique(unique bool) *SortedArray {
 func (a *SortedArray) Unique() *SortedArray {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	if len(a.array) == 0 {
+		return a
+	}
 	i := 0
 	for {
 		if i == len(a.array)-1 {

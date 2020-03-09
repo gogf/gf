@@ -465,16 +465,16 @@ func SplitAndTrimSpace(str, delimiter string) []string {
 	return array
 }
 
-// Join concatenates the elements of a to create a single string. The separator string
-// sep is placed between elements in the resulting string.
+// Join concatenates the elements of <array> to create a single string. The separator string
+// <sep> is placed between elements in the resulting string.
 func Join(array []string, sep string) string {
 	return strings.Join(array, sep)
 }
 
-// JoinAny concatenates the elements of a to create a single string. The separator string
-// sep is placed between elements in the resulting string.
+// JoinAny concatenates the elements of <array> to create a single string. The separator string
+// <sep> is placed between elements in the resulting string.
 //
-// The parameter <array> can be any type of slice.
+// The parameter <array> can be any type of slice, which be converted to string array.
 func JoinAny(array interface{}, sep string) string {
 	return strings.Join(gconv.Strings(array), sep)
 }

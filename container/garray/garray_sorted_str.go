@@ -414,6 +414,10 @@ func (a *SortedStrArray) SetUnique(unique bool) *SortedStrArray {
 // Unique uniques the array, clear repeated items.
 func (a *SortedStrArray) Unique() *SortedStrArray {
 	a.mu.Lock()
+	defer a.mu.Unlock()
+	if len(a.array) == 0 {
+		return a
+	}
 	i := 0
 	for {
 		if i == len(a.array)-1 {
@@ -425,7 +429,6 @@ func (a *SortedStrArray) Unique() *SortedStrArray {
 			i++
 		}
 	}
-	a.mu.Unlock()
 	return a
 }
 

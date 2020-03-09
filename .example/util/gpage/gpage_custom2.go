@@ -15,7 +15,7 @@ func pageContent(page *gpage.Page) string {
 	page.LastPageTag = "LastPage"
 	pageStr := page.FirstPage()
 	pageStr += page.PrevPage()
-	pageStr += page.PageBar("current-page")
+	pageStr += page.PageBar()
 	pageStr += page.NextPage()
 	pageStr += page.LastPage()
 	return pageStr
@@ -24,7 +24,7 @@ func pageContent(page *gpage.Page) string {
 func main() {
 	s := ghttp.GetServer()
 	s.BindHandler("/page/custom2/*page", func(r *ghttp.Request) {
-		page := gpage.New(100, 10, r.Get("page"), r.URL.String(), r.Router)
+		page := r.GetPage(100, 10)
 		buffer, _ := gview.ParseContent(`
         <html>
             <head>

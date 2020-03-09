@@ -24,11 +24,18 @@ const (
 )
 
 var (
-	// 用于服务函数的ID生成变量
+	// handlerIdGenerator is handler item id generator.
 	handlerIdGenerator = gtype.NewInt()
 )
 
-// 解析pattern
+// routerMapKey creates and returns an unique router key for given parameters.
+// This key is used for Server.routerMap attribute, which is mainly for checks for
+// repeated router registering.
+func (s *Server) routerMapKey(hook, method, path, domain string) string {
+	return hook + "%" + s.serveHandlerKey(method, path, domain)
+}
+
+// parsePattern parses the given pattern to domain, method and path variable.
 func (s *Server) parsePattern(pattern string) (domain, method, path string, err error) {
 	path = strings.TrimSpace(pattern)
 	domain = gDEFAULT_DOMAIN
@@ -48,16 +55,16 @@ func (s *Server) parsePattern(pattern string) (domain, method, path string, err 
 	if path == "" {
 		err = errors.New("invalid pattern: URI should not be empty")
 	}
-	// 去掉末尾的"/"符号，与路由匹配时处理一致
 	if path != "/" {
 		path = strings.TrimRight(path, "/")
 	}
 	return
 }
 
-// 路由注册处理方法。
-// 非叶节点为哈希表检索节点，按照URI注册的层级进行高效检索，直至到叶子链表节点；
-// 叶子节点是链表，按照优先级进行排序，优先级高的排前面，按照遍历检索，按照哈希表层级检索后的叶子链表数据量不会很大，所以效率比较高；
+// setHandler creates router item with given handler and pattern and registers the handler to the router tree.
+// The router tree can be treated as a multilayer hash table, please refer to the comment in following codes.
+// This function is called during server starts up, which cares little about the performance. What really cares
+// is the well designed router storage structure for router searching when the request is under serving.
 func (s *Server) setHandler(pattern string, handler *handlerItem) {
 	handler.itemId = handlerIdGenerator.Add(1)
 	domain, method, uri, err := s.parsePattern(pattern)
@@ -69,30 +76,32 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 		s.Logger().Fatal("invalid pattern:", pattern, "URI should lead with '/'")
 		return
 	}
-	// 注册地址记录及重复注册判断
-	regKey := s.handlerKey(handler.hookName, method, uri, domain)
+
+	// Repeated router checks, this feature can be disabled by server configuration.
+	routerKey := s.routerMapKey(handler.hookName, method, uri, domain)
 	if !s.config.RouteOverWrite {
 		switch handler.itemType {
 		case gHANDLER_TYPE_HANDLER, gHANDLER_TYPE_OBJECT, gHANDLER_TYPE_CONTROLLER:
-			if item, ok := s.routesMap[regKey]; ok {
+			if item, ok := s.routesMap[routerKey]; ok {
 				s.Logger().Fatalf(`duplicated route registry "%s", already registered at %s`, pattern, item[0].file)
 				return
 			}
 		}
 	}
-	// 注册的路由信息对象
+	// Create a new router by given parameter.
 	handler.router = &Router{
 		Uri:      uri,
 		Domain:   domain,
-		Method:   method,
+		Method:   strings.ToUpper(method),
 		Priority: strings.Count(uri[1:], "/"),
 	}
-	handler.router.RegRule, handler.router.RegNames = s.patternToRegRule(uri)
+	handler.router.RegRule, handler.router.RegNames = s.patternToRegular(uri)
 
 	if _, ok := s.serveTree[domain]; !ok {
 		s.serveTree[domain] = make(map[string]interface{})
 	}
-	// 当前节点的规则链表
+	// List array, very important for router registering.
+	// There may be multiple lists adding into this array when searching from root to leaf.
 	lists := make([]*glist.List, 0)
 	array := ([]string)(nil)
 	if strings.EqualFold("/", uri) {
@@ -100,43 +109,58 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 	} else {
 		array = strings.Split(uri[1:], "/")
 	}
-	// 键名"*fuzz"代表当前节点为模糊匹配节点，该节点也会有一个*list链表；
-	// 键名"*list"代表链表，叶子节点和模糊匹配节点都有该属性，优先级越高越排前；
+	// Multilayer hash table:
+	// 1. Each node of the table is separated by URI path which is split by char '/'.
+	// 2. The key "*fuzz" specifies this node is a fuzzy node, which has no certain name.
+	// 3. The key "*list" is the list item of the node, MOST OF THE NODES HAVE THIS ITEM,
+	//    especially the fuzzy node. NOTE THAT the fuzzy node must have the "*list" item,
+	//    and the leaf node also has "*list" item. If the node is not a fuzzy node either
+	//    a leaf, it neither has "*list" item.
+	// 2. The "*list" item is a list containing registered router items ordered by their
+	//    priorities from high to low.
+	// 3. There may be repeated router items in the router lists. The lists' priorities
+	//    from root to leaf are from low to high.
 	p := s.serveTree[domain]
-	for k, v := range array {
-		if len(v) == 0 {
+	for i, part := range array {
+		// Ignore empty URI part, like: /user//index
+		if part == "" {
 			continue
 		}
-		// 判断是否模糊匹配规则
-		if gregex.IsMatchString(`^[:\*]|\{[\w\.\-]+\}|\*`, v) {
-			v = "*fuzz"
-			// 由于是模糊规则，因此这里会有一个*list，用以将后续的路由规则加进来，
-			// 检索会从叶子节点的链表往根节点按照优先级进行检索
+		// Check if it's a fuzzy node.
+		if gregex.IsMatchString(`^[:\*]|\{[\w\.\-]+\}|\*`, part) {
+			part = "*fuzz"
+			// If it's a fuzzy node, it creates a "*list" item - which is a list - in the hash map.
+			// All the sub router items from this fuzzy node will also be added to its "*list" item.
 			if v, ok := p.(map[string]interface{})["*list"]; !ok {
-				p.(map[string]interface{})["*list"] = glist.New()
-				lists = append(lists, p.(map[string]interface{})["*list"].(*glist.List))
+				newListForFuzzy := glist.New()
+				p.(map[string]interface{})["*list"] = newListForFuzzy
+				lists = append(lists, newListForFuzzy)
 			} else {
 				lists = append(lists, v.(*glist.List))
 			}
 		}
-		// 属性层级数据写入
-		if _, ok := p.(map[string]interface{})[v]; !ok {
-			p.(map[string]interface{})[v] = make(map[string]interface{})
+		// Make a new bucket for current node.
+		if _, ok := p.(map[string]interface{})[part]; !ok {
+			p.(map[string]interface{})[part] = make(map[string]interface{})
 		}
-		p = p.(map[string]interface{})[v]
-		// 到达叶子节点，往list中增加匹配规则(条件 v != "*fuzz" 是因为模糊节点的话在前面已经添加了*list链表)
-		if k == len(array)-1 && v != "*fuzz" {
+		// Loop to next bucket.
+		p = p.(map[string]interface{})[part]
+		// The leaf is a hash map and must have an item named "*list", which contains the router item.
+		// The leaf can be furthermore extended by adding more ket-value pairs into its map.
+		// Note that the `v != "*fuzz"` comparison is required as the list might be added in the former
+		// fuzzy checks.
+		if i == len(array)-1 && part != "*fuzz" {
 			if v, ok := p.(map[string]interface{})["*list"]; !ok {
-				p.(map[string]interface{})["*list"] = glist.New()
-				lists = append(lists, p.(map[string]interface{})["*list"].(*glist.List))
+				leafList := glist.New()
+				p.(map[string]interface{})["*list"] = leafList
+				lists = append(lists, leafList)
 			} else {
 				lists = append(lists, v.(*glist.List))
 			}
 		}
 	}
-
-	// 上面循环后得到的lists是该路由规则一路匹配下来相关的模糊匹配链表(注意不是这棵树所有的链表)。
-	// 下面从头开始遍历每个节点的模糊匹配链表，将该路由项插入进去(按照优先级高的放在lists链表的前面)
+	// It iterates the list array of <lists>, compares priorities and inserts the new router item in
+	// the proper position of each list. The priority of the list is ordered from high to low.
 	item := (*handlerItem)(nil)
 	for _, l := range lists {
 		pushed := false
@@ -157,8 +181,8 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 		}
 	}
 	// Initialize the route map item.
-	if _, ok := s.routesMap[regKey]; !ok {
-		s.routesMap[regKey] = make([]registeredRouteItem, 0)
+	if _, ok := s.routesMap[routerKey]; !ok {
+		s.routesMap[routerKey] = make([]registeredRouteItem, 0)
 	}
 	_, file, line := gdebug.CallerWithFilter(gFILTER_KEY)
 	routeItem := registeredRouteItem{
@@ -168,35 +192,39 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 	switch handler.itemType {
 	case gHANDLER_TYPE_HANDLER, gHANDLER_TYPE_OBJECT, gHANDLER_TYPE_CONTROLLER:
 		// Overwrite the route.
-		s.routesMap[regKey] = []registeredRouteItem{routeItem}
+		s.routesMap[routerKey] = []registeredRouteItem{routeItem}
 	default:
 		// Append the route.
-		s.routesMap[regKey] = append(s.routesMap[regKey], routeItem)
+		s.routesMap[routerKey] = append(s.routesMap[routerKey], routeItem)
 	}
 }
 
-// 对比两个handlerItem的优先级，需要非常注意的是，注意新老对比项的参数先后顺序。
-// 返回值true表示newItem优先级比oldItem高，会被添加链表中oldRouter的前面；否则后面。
-// 优先级比较规则：
-// 1、中间件优先级最高，按照添加顺序优先级执行；
-// 2、其他路由注册类型，层级越深优先级越高(对比/数量)；
-// 3、模糊规则优先级：{xxx} > :xxx > *xxx；
+// compareRouterPriority compares the priority between <newItem> and <oldItem>. It returns true
+// if <newItem>'s priority is higher than <oldItem>, else it returns false. The higher priority
+// item will be insert into the router list before the other one.
+//
+// Comparison rules:
+// 1. The middleware has the most high priority.
+// 2. URI: The deeper the higher (simply check the count of char '/' in the URI).
+// 3. Route type: {xxx} > :xxx > *xxx.
 func (s *Server) compareRouterPriority(newItem *handlerItem, oldItem *handlerItem) bool {
-	// 中间件优先级最高，按照添加顺序优先级执行
+	// If they're all type of middleware, the priority is according their registered sequence.
 	if newItem.itemType == gHANDLER_TYPE_MIDDLEWARE && oldItem.itemType == gHANDLER_TYPE_MIDDLEWARE {
 		return false
 	}
+	// The middleware has the most high priority.
 	if newItem.itemType == gHANDLER_TYPE_MIDDLEWARE && oldItem.itemType != gHANDLER_TYPE_MIDDLEWARE {
 		return true
 	}
-	// 优先比较层级，层级越深优先级越高
+	// URI: The deeper the higher (simply check the count of char '/' in the URI).
 	if newItem.router.Priority > oldItem.router.Priority {
 		return true
 	}
 	if newItem.router.Priority < oldItem.router.Priority {
 		return false
 	}
-	// 精准匹配比模糊匹配规则优先级高，例如：/name/act 比 /{name}/:act 优先级高
+	// Route type: {xxx} > :xxx > *xxx.
+	// Eg: /name/act > /{name}/:act
 	var fuzzyCountFieldNew, fuzzyCountFieldOld int
 	var fuzzyCountNameNew, fuzzyCountNameOld int
 	var fuzzyCountAnyNew, fuzzyCountAnyOld int
@@ -230,16 +258,16 @@ func (s *Server) compareRouterPriority(newItem *handlerItem, oldItem *handlerIte
 		return false
 	}
 
-	/** 如果模糊规则数量相等，那么执行分别的数量判断 **/
+	// If the counts of their fuzzy rules equal.
 
-	// 例如：/name/{act} 比 /name/:act 优先级高
+	// Eg: /name/{act} > /name/:act
 	if fuzzyCountFieldNew > fuzzyCountFieldOld {
 		return true
 	}
 	if fuzzyCountFieldNew < fuzzyCountFieldOld {
 		return false
 	}
-	// 例如: /name/:act 比 /name/*act 优先级高
+	// Eg: /name/:act > /name/*act
 	if fuzzyCountNameNew > fuzzyCountNameOld {
 		return true
 	}
@@ -247,9 +275,10 @@ func (s *Server) compareRouterPriority(newItem *handlerItem, oldItem *handlerIte
 		return false
 	}
 
-	/** 比较路由规则长度，越长的规则优先级越高，模糊/命名规则不算长度 **/
+	// It then compares the length of their URI,
+	// but the fuzzy and named parts of the URI are not calculated to the result.
 
-	// 例如：/admin-goods-{page} 比 /admin-{page} 优先级高
+	// Eg: /admin-goods-{page} > /admin-{page}
 	var uriNew, uriOld string
 	uriNew, _ = gregex.ReplaceString(`\{[^/]+\}`, "", newItem.router.Uri)
 	uriNew, _ = gregex.ReplaceString(`:[^/]+`, "", uriNew)
@@ -264,9 +293,8 @@ func (s *Server) compareRouterPriority(newItem *handlerItem, oldItem *handlerIte
 		return false
 	}
 
-	/* 模糊规则数量相等，后续不用再判断*规则的数量比较了 */
-
-	// 比较HTTP METHOD，更精准的优先级更高
+	// It then compares the accuracy of their http method,
+	// the more accurate the more priority.
 	if newItem.router.Method != gDEFAULT_METHOD {
 		return true
 	}
@@ -274,23 +302,25 @@ func (s *Server) compareRouterPriority(newItem *handlerItem, oldItem *handlerIte
 		return true
 	}
 
-	// 如果是服务路由，那么新的规则比旧的规则优先级高(路由覆盖)
+	// If they have different router type,
+	// the new router item has more priority than the other one.
 	if newItem.itemType == gHANDLER_TYPE_HANDLER ||
 		newItem.itemType == gHANDLER_TYPE_OBJECT ||
 		newItem.itemType == gHANDLER_TYPE_CONTROLLER {
 		return true
 	}
 
-	// 如果是其他路由(HOOK/中间件)，那么新的规则比旧的规则优先级低，使得注册相同路由则顺序执行
+	// Other situations, like HOOK items,
+	// the old router item has more priority than the other one.
 	return false
 }
 
-// 将pattern（不带method和domain）解析成正则表达式匹配以及对应的query字符串
-func (s *Server) patternToRegRule(rule string) (regrule string, names []string) {
+// patternToRegular converts route rule to according regular expression.
+func (s *Server) patternToRegular(rule string) (regular string, names []string) {
 	if len(rule) < 2 {
 		return rule, nil
 	}
-	regrule = "^"
+	regular = "^"
 	array := strings.Split(rule[1:], "/")
 	for _, v := range array {
 		if len(v) == 0 {
@@ -299,20 +329,20 @@ func (s *Server) patternToRegRule(rule string) (regrule string, names []string) 
 		switch v[0] {
 		case ':':
 			if len(v) > 1 {
-				regrule += `/([^/]+)`
+				regular += `/([^/]+)`
 				names = append(names, v[1:])
 			} else {
-				regrule += `/[^/]+`
+				regular += `/[^/]+`
 			}
 		case '*':
 			if len(v) > 1 {
-				regrule += `/{0,1}(.*)`
+				regular += `/{0,1}(.*)`
 				names = append(names, v[1:])
 			} else {
-				regrule += `/{0,1}.*`
+				regular += `/{0,1}.*`
 			}
 		default:
-			// 特殊字符替换
+			// Special chars replacement.
 			v = gstr.ReplaceByMap(v, map[string]string{
 				`.`: `\.`,
 				`+`: `\+`,
@@ -323,12 +353,12 @@ func (s *Server) patternToRegRule(rule string) (regrule string, names []string) 
 				return `([^/]+)`
 			})
 			if strings.EqualFold(s, v) {
-				regrule += "/" + v
+				regular += "/" + v
 			} else {
-				regrule += "/" + s
+				regular += "/" + s
 			}
 		}
 	}
-	regrule += `$`
+	regular += `$`
 	return
 }
