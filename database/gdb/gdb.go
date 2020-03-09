@@ -196,6 +196,7 @@ var (
 	driverMap = map[string]Driver{
 		"mysql":  &DriverMysql{},
 		"mssql":  &DriverMssql{},
+		"pgsql":  &DriverPgsql{},
 		"oracle": &DriverOracle{},
 		"sqlite": &DriverSqlite{},
 	}
