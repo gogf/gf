@@ -59,7 +59,7 @@ func (d *DriverPgsql) GetChars() (charLeft string, charRight string) {
 }
 
 // HandleSqlBeforeExec deals with the sql string before commits it to underlying sql driver.
-func (d *DriverPgsql) HandleSqlBeforeExec(sql string) string {
+func (d *DriverPgsql) HandleSqlBeforeExec(link Link, sql string, args []interface{}) (string, []interface{}) {
 	var index int
 	// Convert place holder char '?' to string "$x".
 	sql, _ = gregex.ReplaceStringFunc("\\?", sql, func(s string) string {
@@ -67,7 +67,7 @@ func (d *DriverPgsql) HandleSqlBeforeExec(sql string) string {
 		return fmt.Sprintf("$%d", index)
 	})
 	sql, _ = gregex.ReplaceString(` LIMIT (\d+),\s*(\d+)`, ` LIMIT $1 OFFSET $2`, sql)
-	return sql
+	return sql, args
 }
 
 // Tables retrieves and returns the tables of current schema.

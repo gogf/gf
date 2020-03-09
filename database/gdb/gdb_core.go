@@ -55,9 +55,9 @@ func (c *Core) Query(query string, args ...interface{}) (rows *sql.Rows, err err
 
 // doQuery commits the query string and its arguments to underlying driver
 // through given link object and returns the execution result.
-func (c *Core) DoQuery(link dbLink, query string, args ...interface{}) (rows *sql.Rows, err error) {
+func (c *Core) DoQuery(link Link, query string, args ...interface{}) (rows *sql.Rows, err error) {
 	query, args = formatQuery(query, args)
-	query = c.DB.HandleSqlBeforeExec(query)
+	query, args = c.DB.HandleSqlBeforeExec(link, query, args)
 	if c.DB.GetDebug() {
 		mTime1 := gtime.TimestampMilli()
 		rows, err = link.Query(query, args...)
@@ -94,9 +94,9 @@ func (c *Core) Exec(query string, args ...interface{}) (result sql.Result, err e
 
 // doExec commits the query string and its arguments to underlying driver
 // through given link object and returns the execution result.
-func (c *Core) DoExec(link dbLink, query string, args ...interface{}) (result sql.Result, err error) {
+func (c *Core) DoExec(link Link, query string, args ...interface{}) (result sql.Result, err error) {
 	query, args = formatQuery(query, args)
-	query = c.DB.HandleSqlBeforeExec(query)
+	query, args = c.DB.HandleSqlBeforeExec(link, query, args)
 	if c.DB.GetDebug() {
 		mTime1 := gtime.TimestampMilli()
 		result, err = link.Exec(query, args...)
@@ -126,7 +126,7 @@ func (c *Core) DoExec(link dbLink, query string, args ...interface{}) (result sq
 // or else it executes the sql on slave node if master-slave configured.
 func (c *Core) Prepare(query string, execOnMaster ...bool) (*sql.Stmt, error) {
 	err := (error)(nil)
-	link := (dbLink)(nil)
+	link := (Link)(nil)
 	if len(execOnMaster) > 0 && execOnMaster[0] {
 		if link, err = c.DB.Master(); err != nil {
 			return nil, err
@@ -140,7 +140,7 @@ func (c *Core) Prepare(query string, execOnMaster ...bool) (*sql.Stmt, error) {
 }
 
 // doPrepare calls prepare function on given link object and returns the statement object.
-func (c *Core) DoPrepare(link dbLink, query string) (*sql.Stmt, error) {
+func (c *Core) DoPrepare(link Link, query string) (*sql.Stmt, error) {
 	return link.Prepare(query)
 }
 
@@ -150,7 +150,7 @@ func (c *Core) GetAll(query string, args ...interface{}) (Result, error) {
 }
 
 // doGetAll queries and returns data records from database.
-func (c *Core) DoGetAll(link dbLink, query string, args ...interface{}) (result Result, err error) {
+func (c *Core) DoGetAll(link Link, query string, args ...interface{}) (result Result, err error) {
 	if link == nil {
 		link, err = c.DB.Slave()
 		if err != nil {
@@ -360,7 +360,7 @@ func (c *Core) Save(table string, data interface{}, batch ...int) (sql.Result, e
 // 1: replace: if there's unique/primary key in the data, it deletes it from table and inserts a new one;
 // 2: save:    if there's unique/primary key in the data, it updates it or else inserts a new one;
 // 3: ignore:  if there's unique/primary key in the data, it ignores the inserting;
-func (c *Core) DoInsert(link dbLink, table string, data interface{}, option int, batch ...int) (result sql.Result, err error) {
+func (c *Core) DoInsert(link Link, table string, data interface{}, option int, batch ...int) (result sql.Result, err error) {
 	var fields []string
 	var values []string
 	var params []interface{}
@@ -445,7 +445,7 @@ func (c *Core) BatchSave(table string, list interface{}, batch ...int) (sql.Resu
 }
 
 // doBatchInsert batch inserts/replaces/saves data.
-func (c *Core) DoBatchInsert(link dbLink, table string, list interface{}, option int, batch ...int) (result sql.Result, err error) {
+func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option int, batch ...int) (result sql.Result, err error) {
 	var keys, values []string
 	var params []interface{}
 	table = c.DB.QuotePrefixTableName(table)
@@ -579,7 +579,7 @@ func (c *Core) Update(table string, data interface{}, condition interface{}, arg
 
 // doUpdate does "UPDATE ... " statement for the table.
 // Also see Update.
-func (c *Core) DoUpdate(link dbLink, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) {
+func (c *Core) DoUpdate(link Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) {
 	table = c.DB.QuotePrefixTableName(table)
 	updates := ""
 	rv := reflect.ValueOf(data)
@@ -640,7 +640,7 @@ func (c *Core) Delete(table string, condition interface{}, args ...interface{}) 
 
 // doDelete does "DELETE FROM ... " statement for the table.
 // Also see Delete.
-func (c *Core) DoDelete(link dbLink, table string, condition string, args ...interface{}) (result sql.Result, err error) {
+func (c *Core) DoDelete(link Link, table string, condition string, args ...interface{}) (result sql.Result, err error) {
 	if link == nil {
 		if link, err = c.DB.Master(); err != nil {
 			return nil, err

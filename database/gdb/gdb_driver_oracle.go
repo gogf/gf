@@ -64,7 +64,7 @@ func (d *DriverOracle) GetChars() (charLeft string, charRight string) {
 }
 
 // HandleSqlBeforeExec deals with the sql string before commits it to underlying sql driver.
-func (d *DriverOracle) HandleSqlBeforeExec(query string) string {
+func (d *DriverOracle) HandleSqlBeforeExec(link Link, query string, args []interface{}) (string, []interface{}) {
 	var index int
 	// Convert place holder char '?' to string ":x".
 	str, _ := gregex.ReplaceStringFunc("\\?", query, func(s string) string {
@@ -72,7 +72,7 @@ func (d *DriverOracle) HandleSqlBeforeExec(query string) string {
 		return fmt.Sprintf(":%d", index)
 	})
 	str, _ = gregex.ReplaceString("\"", "", str)
-	return d.parseSql(str)
+	return d.parseSql(str), args
 }
 
 func (d *DriverOracle) parseSql(sql string) string {
@@ -213,7 +213,7 @@ func (d *DriverOracle) getTableUniqueIndex(table string) (fields map[string]map[
 	return
 }
 
-func (d *DriverOracle) DoInsert(link dbLink, table string, data interface{}, option int, batch ...int) (result sql.Result, err error) {
+func (d *DriverOracle) DoInsert(link Link, table string, data interface{}, option int, batch ...int) (result sql.Result, err error) {
 	var fields []string
 	var values []string
 	var params []interface{}
@@ -324,7 +324,7 @@ func (d *DriverOracle) DoInsert(link dbLink, table string, data interface{}, opt
 		params...)
 }
 
-func (d *DriverOracle) DoBatchInsert(link dbLink, table string, list interface{}, option int, batch ...int) (result sql.Result, err error) {
+func (d *DriverOracle) DoBatchInsert(link Link, table string, list interface{}, option int, batch ...int) (result sql.Result, err error) {
 	var keys []string
 	var values []string
 	var params []interface{}
