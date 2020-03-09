@@ -57,7 +57,7 @@ func (c *Core) Query(query string, args ...interface{}) (rows *sql.Rows, err err
 // through given link object and returns the execution result.
 func (c *Core) DoQuery(link Link, query string, args ...interface{}) (rows *sql.Rows, err error) {
 	query, args = formatQuery(query, args)
-	query, args = c.DB.HandleSqlBeforeExec(link, query, args)
+	query, args = c.DB.HandleSqlBeforeCommit(link, query, args)
 	if c.DB.GetDebug() {
 		mTime1 := gtime.TimestampMilli()
 		rows, err = link.Query(query, args...)
@@ -96,7 +96,7 @@ func (c *Core) Exec(query string, args ...interface{}) (result sql.Result, err e
 // through given link object and returns the execution result.
 func (c *Core) DoExec(link Link, query string, args ...interface{}) (result sql.Result, err error) {
 	query, args = formatQuery(query, args)
-	query, args = c.DB.HandleSqlBeforeExec(link, query, args)
+	query, args = c.DB.HandleSqlBeforeCommit(link, query, args)
 	if c.DB.GetDebug() {
 		mTime1 := gtime.TimestampMilli()
 		result, err = link.Exec(query, args...)

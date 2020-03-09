@@ -52,8 +52,8 @@ func (d *DriverMysql) GetChars() (charLeft string, charRight string) {
 	return "`", "`"
 }
 
-// HandleSqlBeforeExec handles the sql before posts it to database.
-func (d *DriverMysql) HandleSqlBeforeExec(link Link, sql string, args []interface{}) (string, []interface{}) {
+// HandleSqlBeforeCommit handles the sql before posts it to database.
+func (d *DriverMysql) HandleSqlBeforeCommit(link Link, sql string, args []interface{}) (string, []interface{}) {
 	return sql, args
 }
 
