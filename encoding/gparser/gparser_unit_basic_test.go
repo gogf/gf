@@ -95,7 +95,7 @@ func Test_GetVar(t *testing.T) {
 		gtest.Assert(j.GetVar("m").Map(), g.Map{"k": "v"})
 		gtest.Assert(j.GetVar("a").Interfaces(), g.Slice{1, 2, 3})
 		gtest.Assert(j.GetVar("a").Slice(), g.Slice{1, 2, 3})
-		gtest.Assert(j.GetVar("a").Array(), g.Slice{1, 2, 3})
+		gtest.Assert(j.GetMap("a"), g.Map{"1": "2", "3": nil})
 	})
 }
 
