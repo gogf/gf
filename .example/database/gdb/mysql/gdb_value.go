@@ -9,5 +9,4 @@ func main() {
 	db.SetDebug(true)
 
 	db.Table("user").Fields("DISTINCT id,nickname").Filter().All()
-
 }

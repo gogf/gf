@@ -68,10 +68,10 @@ const (
 // Table creates and returns a new ORM model from given schema.
 // The parameter <tables> can be more than one table names, like :
 // "user", "user u", "user, user_detail", "user u, user_detail ud"
-func (bs *dbBase) Table(table string) *Model {
-	table = bs.db.handleTableName(table)
+func (c *Core) Table(table string) *Model {
+	table = c.DB.QuotePrefixTableName(table)
 	return &Model{
-		db:         bs.db,
+		db:         c.DB,
 		tablesInit: table,
 		tables:     table,
 		fields:     "*",
@@ -82,23 +82,23 @@ func (bs *dbBase) Table(table string) *Model {
 	}
 }
 
-// Model is alias of dbBase.Table.
-// See dbBase.Table.
-func (bs *dbBase) Model(table string) *Model {
-	return bs.db.Table(table)
+// Model is alias of Core.Table.
+// See Core.Table.
+func (c *Core) Model(table string) *Model {
+	return c.DB.Table(table)
 }
 
-// From is alias of dbBase.Table.
-// See dbBase.Table.
+// From is alias of Core.Table.
+// See Core.Table.
 // Deprecated.
-func (bs *dbBase) From(table string) *Model {
-	return bs.db.Table(table)
+func (c *Core) From(table string) *Model {
+	return c.DB.Table(table)
 }
 
-// Table acts like dbBase.Table except it operates on transaction.
-// See dbBase.Table.
+// Table acts like Core.Table except it operates on transaction.
+// See Core.Table.
 func (tx *TX) Table(table string) *Model {
-	table = tx.db.handleTableName(table)
+	table = tx.db.QuotePrefixTableName(table)
 	return &Model{
 		db:         tx.db,
 		tx:         tx,
@@ -217,21 +217,21 @@ func (m *Model) getModel() *Model {
 // LeftJoin does "LEFT JOIN ... ON ..." statement on the model.
 func (m *Model) LeftJoin(table string, on string) *Model {
 	model := m.getModel()
-	model.tables += fmt.Sprintf(" LEFT JOIN %s ON (%s)", m.db.handleTableName(table), on)
+	model.tables += fmt.Sprintf(" LEFT JOIN %s ON (%s)", m.db.QuotePrefixTableName(table), on)
 	return model
 }
 
 // RightJoin does "RIGHT JOIN ... ON ..." statement on the model.
 func (m *Model) RightJoin(table string, on string) *Model {
 	model := m.getModel()
-	model.tables += fmt.Sprintf(" RIGHT JOIN %s ON (%s)", m.db.handleTableName(table), on)
+	model.tables += fmt.Sprintf(" RIGHT JOIN %s ON (%s)", m.db.QuotePrefixTableName(table), on)
 	return model
 }
 
 // InnerJoin does "INNER JOIN ... ON ..." statement on the model.
 func (m *Model) InnerJoin(table string, on string) *Model {
 	model := m.getModel()
-	model.tables += fmt.Sprintf(" INNER JOIN %s ON (%s)", m.db.handleTableName(table), on)
+	model.tables += fmt.Sprintf(" INNER JOIN %s ON (%s)", m.db.QuotePrefixTableName(table), on)
 	return model
 }
 
@@ -403,7 +403,7 @@ func (m *Model) Or(where interface{}, args ...interface{}) *Model {
 // Group sets the "GROUP BY" statement for the model.
 func (m *Model) Group(groupBy string) *Model {
 	model := m.getModel()
-	model.groupBy = m.db.quoteString(groupBy)
+	model.groupBy = m.db.QuoteString(groupBy)
 	return model
 }
 
@@ -417,7 +417,7 @@ func (m *Model) GroupBy(groupBy string) *Model {
 // Order sets the "ORDER BY" statement for the model.
 func (m *Model) Order(orderBy string) *Model {
 	model := m.getModel()
-	model.orderBy = m.db.quoteString(orderBy)
+	model.orderBy = m.db.QuoteString(orderBy)
 	return model
 }
 
@@ -540,11 +540,11 @@ func (m *Model) Data(data ...interface{}) *Model {
 			case reflect.Slice, reflect.Array:
 				list := make(List, rv.Len())
 				for i := 0; i < rv.Len(); i++ {
-					list[i] = varToMapDeep(rv.Index(i).Interface())
+					list[i] = DataToMapDeep(rv.Index(i).Interface())
 				}
 				model.data = list
 			case reflect.Map, reflect.Struct:
-				model.data = varToMapDeep(data[0])
+				model.data = DataToMapDeep(data[0])
 			default:
 				model.data = data[0]
 			}
@@ -586,7 +586,7 @@ func (m *Model) doInsertWithOption(option int, data ...interface{}) (result sql.
 		if m.batch > 0 {
 			batch = m.batch
 		}
-		return m.db.doBatchInsert(
+		return m.db.DoBatchInsert(
 			m.getLink(true),
 			m.tables,
 			m.filterDataForInsertOrUpdate(list),
@@ -595,7 +595,7 @@ func (m *Model) doInsertWithOption(option int, data ...interface{}) (result sql.
 		)
 	} else if data, ok := m.data.(Map); ok {
 		// Single insert.
-		return m.db.doInsert(
+		return m.db.DoInsert(
 			m.getLink(true),
 			m.tables,
 			m.filterDataForInsertOrUpdate(data),
@@ -626,7 +626,7 @@ func (m *Model) Replace(data ...interface{}) (result sql.Result, err error) {
 		if m.batch > 0 {
 			batch = m.batch
 		}
-		return m.db.doBatchInsert(
+		return m.db.DoBatchInsert(
 			m.getLink(true),
 			m.tables,
 			m.filterDataForInsertOrUpdate(list),
@@ -635,7 +635,7 @@ func (m *Model) Replace(data ...interface{}) (result sql.Result, err error) {
 		)
 	} else if data, ok := m.data.(Map); ok {
 		// Single insert.
-		return m.db.doInsert(
+		return m.db.DoInsert(
 			m.getLink(true),
 			m.tables,
 			m.filterDataForInsertOrUpdate(data),
@@ -669,7 +669,7 @@ func (m *Model) Save(data ...interface{}) (result sql.Result, err error) {
 		if m.batch > 0 {
 			batch = m.batch
 		}
-		return m.db.doBatchInsert(
+		return m.db.DoBatchInsert(
 			m.getLink(true),
 			m.tables,
 			m.filterDataForInsertOrUpdate(list),
@@ -678,7 +678,7 @@ func (m *Model) Save(data ...interface{}) (result sql.Result, err error) {
 		)
 	} else if data, ok := m.data.(Map); ok {
 		// Single save.
-		return m.db.doInsert(
+		return m.db.DoInsert(
 			m.getLink(true),
 			m.tables,
 			m.filterDataForInsertOrUpdate(data),
@@ -712,7 +712,7 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 		return nil, errors.New("updating table with empty data")
 	}
 	condition, conditionArgs := m.formatCondition(false)
-	return m.db.doUpdate(
+	return m.db.DoUpdate(
 		m.getLink(true),
 		m.tables,
 		m.filterDataForInsertOrUpdate(m.data),
@@ -734,7 +734,7 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 		}
 	}()
 	condition, conditionArgs := m.formatCondition(false)
-	return m.db.doDelete(m.getLink(true), m.tables, condition, conditionArgs...)
+	return m.db.DoDelete(m.getLink(true), m.tables, condition, conditionArgs...)
 }
 
 // Select is alias of Model.All.
@@ -1045,7 +1045,7 @@ func (m *Model) doFilterDataMapForInsertOrUpdate(data Map, allowOmitEmpty bool) 
 
 // getLink returns the underlying database link object with configured <linkType> attribute.
 // The parameter <master> specifies whether using the master node if master-slave configured.
-func (m *Model) getLink(master bool) dbLink {
+func (m *Model) getLink(master bool) Link {
 	if m.tx != nil {
 		return m.tx.tx
 	}
@@ -1059,10 +1059,16 @@ func (m *Model) getLink(master bool) dbLink {
 	}
 	switch linkType {
 	case gLINK_TYPE_MASTER:
-		link, _ := m.db.getMaster(m.schema)
+		link, err := m.db.GetMaster(m.schema)
+		if err != nil {
+			panic(err)
+		}
 		return link
 	case gLINK_TYPE_SLAVE:
-		link, _ := m.db.getSlave(m.schema)
+		link, err := m.db.GetSlave(m.schema)
+		if err != nil {
+			panic(err)
+		}
 		return link
 	}
 	return nil
@@ -1077,17 +1083,17 @@ func (m *Model) getAll(query string, args ...interface{}) (result Result, err er
 		if len(cacheKey) == 0 {
 			cacheKey = query + "/" + gconv.String(args)
 		}
-		if v := m.db.getCache().Get(cacheKey); v != nil {
+		if v := m.db.GetCache().Get(cacheKey); v != nil {
 			return v.(Result), nil
 		}
 	}
-	result, err = m.db.doGetAll(m.getLink(false), query, args...)
+	result, err = m.db.DoGetAll(m.getLink(false), query, args...)
 	// Cache the result.
 	if len(cacheKey) > 0 && err == nil {
 		if m.cacheDuration < 0 {
-			m.db.getCache().Remove(cacheKey)
+			m.db.GetCache().Remove(cacheKey)
 		} else {
-			m.db.getCache().Set(cacheKey, result, m.cacheDuration)
+			m.db.GetCache().Set(cacheKey, result, m.cacheDuration)
 		}
 	}
 	return result, err
@@ -1113,7 +1119,7 @@ func (m *Model) getPrimaryKey() string {
 // checkAndRemoveCache checks and remove the cache if necessary.
 func (m *Model) checkAndRemoveCache() {
 	if m.cacheEnabled && m.cacheDuration < 0 && len(m.cacheName) > 0 {
-		m.db.getCache().Remove(m.cacheName)
+		m.db.GetCache().Remove(m.cacheName)
 	}
 }
 

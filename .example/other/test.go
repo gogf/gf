@@ -1,37 +1,16 @@
 package main
 
 import (
-	"net/http"
-
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
+	"fmt"
+	"github.com/gogf/gf/text/gregex"
 )
 
-func MiddlewareAuth(r *ghttp.Request) {
-	token := r.Get("token")
-	if token == "123456" {
-		r.Response.Writeln("auth")
-		r.Middleware.Next()
-	} else {
-		r.Response.WriteStatus(http.StatusForbidden)
-	}
-}
-
-func MiddlewareCORS(r *ghttp.Request) {
-	r.Response.Writeln("cors")
-	r.Response.CORSDefault()
-	r.Middleware.Next()
-}
-
 func main() {
-	s := g.Server()
-	s.Use(MiddlewareCORS)
-	s.Group("/api.v2", func(group *ghttp.RouterGroup) {
-		group.Middleware(MiddlewareAuth)
-		group.ALL("/user/list", func(r *ghttp.Request) {
-			r.Response.Writeln("list")
-		})
+	data := "@var(.prefix)您收到的验证码为：@var(.code)，请在@var(.expire)内完成验证"
+	result, err := gregex.ReplaceStringFuncMatch(`(@var\(\.\w+\))`, data, func(match []string) string {
+		fmt.Println(match)
+		return "#"
 	})
-	s.SetPort(8199)
-	s.Run()
+	fmt.Println(err)
+	fmt.Println(result)
 }

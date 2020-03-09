@@ -15,7 +15,7 @@ We currently accept donation by Alipay/WechatPay, please note your github/gitee 
 |[zhuhuan12](https://gitee.com/zhuhuan12)|gitee|￥50.00 |
 |[zfan_codes](https://gitee.com/zfan_codes)|gitee|￥10.00 |
 |[arden](https://github.com/arden)|alipay|￥10.00 |
-|[macnie](https://www.macnie.com)|wechat|￥100.00 |
+|[macnie](https://www.macnie.com)|wechat|￥110.00 |
 |lah|wechat|￥100.00 |
 |x*z|wechat|￥20.00 |
 |潘兄|wechat|￥100.00 |

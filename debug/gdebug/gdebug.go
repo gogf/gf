@@ -10,6 +10,9 @@ package gdebug
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"os/exec"
 	"path/filepath"
 	"reflect"
 	"runtime"
@@ -19,7 +22,6 @@ import (
 	"github.com/gogf/gf/encoding/ghash"
 
 	"github.com/gogf/gf/crypto/gmd5"
-	"github.com/gogf/gf/os/gfile"
 )
 
 const (
@@ -31,11 +33,20 @@ var (
 	goRootForFilter  = runtime.GOROOT() // goRootForFilter is used for stack filtering purpose.
 	binaryVersion    = ""               // The version of current running binary(uint64 hex).
 	binaryVersionMd5 = ""               // The version of current running binary(MD5).
+	selfPath         = ""               // Current running binary absolute path.
 )
 
 func init() {
 	if goRootForFilter != "" {
 		goRootForFilter = strings.Replace(goRootForFilter, "\\", "/", -1)
+	}
+	// Initialize internal package variable: selfPath.
+	selfPath, _ := exec.LookPath(os.Args[0])
+	if selfPath != "" {
+		selfPath, _ = filepath.Abs(selfPath)
+	}
+	if selfPath == "" {
+		selfPath, _ = filepath.Abs(os.Args[0])
 	}
 }
 
@@ -43,8 +54,9 @@ func init() {
 // It uses ghash.BKDRHash+BASE36 algorithm to calculate the unique version of the binary.
 func BinVersion() string {
 	if binaryVersion == "" {
+		binaryContent, _ := ioutil.ReadFile(selfPath)
 		binaryVersion = strconv.FormatInt(
-			int64(ghash.BKDRHash(gfile.GetBytes(gfile.SelfPath()))),
+			int64(ghash.BKDRHash(binaryContent)),
 			36,
 		)
 	}
@@ -55,7 +67,7 @@ func BinVersion() string {
 // It uses MD5 algorithm to calculate the unique version of the binary.
 func BinVersionMd5() string {
 	if binaryVersionMd5 == "" {
-		binaryVersionMd5, _ = gmd5.EncryptFile(gfile.SelfPath())
+		binaryVersionMd5, _ = gmd5.EncryptFile(selfPath)
 	}
 	return binaryVersionMd5
 }

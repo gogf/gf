@@ -429,6 +429,10 @@ func (a *SortedIntArray) SetUnique(unique bool) *SortedIntArray {
 // Unique uniques the array, clear repeated items.
 func (a *SortedIntArray) Unique() *SortedIntArray {
 	a.mu.Lock()
+	defer a.mu.Unlock()
+	if len(a.array) == 0 {
+		return a
+	}
 	i := 0
 	for {
 		if i == len(a.array)-1 {
@@ -440,7 +444,6 @@ func (a *SortedIntArray) Unique() *SortedIntArray {
 			i++
 		}
 	}
-	a.mu.Unlock()
 	return a
 }
 

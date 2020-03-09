@@ -51,7 +51,54 @@ var (
 	quoteWordReg = regexp.MustCompile(`^[a-zA-Z0-9\-_]+$`)
 )
 
-// handleTableName adds prefix string and quote chars for the table. It handles table string like:
+// GetInsertOperationByOption returns proper insert option with given parameter <option>.
+func GetInsertOperationByOption(option int) string {
+	var operator string
+	switch option {
+	case gINSERT_OPTION_REPLACE:
+		operator = "REPLACE"
+	case gINSERT_OPTION_IGNORE:
+		operator = "INSERT IGNORE"
+	default:
+		operator = "INSERT"
+	}
+	return operator
+}
+
+// DataToMapDeep converts struct object to map type recursively.
+func DataToMapDeep(obj interface{}) map[string]interface{} {
+	data := gconv.Map(obj, ORM_TAG_FOR_STRUCT)
+	for key, value := range data {
+		rv := reflect.ValueOf(value)
+		kind := rv.Kind()
+		if kind == reflect.Ptr {
+			rv = rv.Elem()
+			kind = rv.Kind()
+		}
+		switch kind {
+		case reflect.Struct:
+			// The underlying driver supports time.Time/*time.Time types.
+			if _, ok := value.(time.Time); ok {
+				continue
+			}
+			if _, ok := value.(*time.Time); ok {
+				continue
+			}
+			// Use string conversion in default.
+			if s, ok := value.(apiString); ok {
+				data[key] = s.String()
+				continue
+			}
+			delete(data, key)
+			for k, v := range DataToMapDeep(value) {
+				data[k] = v
+			}
+		}
+	}
+	return data
+}
+
+// QuotePrefixTableName adds prefix string and quote chars for the table. It handles table string like:
 // "user", "user u", "user,user_detail", "user u, user_detail ut", "user as u, user_detail as ut", "user.user u".
 //
 // Note that, this will automatically checks the table prefix whether already added, if true it does
@@ -196,7 +243,7 @@ func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool) (
 		newArgs = formatWhereInterfaces(db, gconv.Interfaces(where), buffer, newArgs)
 
 	case reflect.Map:
-		for key, value := range varToMapDeep(where) {
+		for key, value := range DataToMapDeep(where) {
 			if omitEmpty && empty.IsEmpty(value) {
 				continue
 			}
@@ -218,7 +265,7 @@ func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool) (
 			})
 			break
 		}
-		for key, value := range varToMapDeep(where) {
+		for key, value := range DataToMapDeep(where) {
 			if omitEmpty && empty.IsEmpty(value) {
 				continue
 			}
@@ -269,7 +316,7 @@ func formatWhereInterfaces(db DB, where []interface{}, buffer *bytes.Buffer, new
 
 // formatWhereKeyValue handles each key-value pair of the parameter map.
 func formatWhereKeyValue(db DB, buffer *bytes.Buffer, newArgs []interface{}, key string, value interface{}) []interface{} {
-	key = db.quoteWord(key)
+	key = db.QuoteWord(key)
 	if buffer.Len() > 0 {
 		buffer.WriteString(" AND ")
 	}
@@ -312,39 +359,6 @@ func formatWhereKeyValue(db DB, buffer *bytes.Buffer, newArgs []interface{}, key
 		}
 	}
 	return newArgs
-}
-
-// varToMapDeep converts struct object to map type recursively.
-func varToMapDeep(obj interface{}) map[string]interface{} {
-	data := gconv.Map(obj, ORM_TAG_FOR_STRUCT)
-	for key, value := range data {
-		rv := reflect.ValueOf(value)
-		kind := rv.Kind()
-		if kind == reflect.Ptr {
-			rv = rv.Elem()
-			kind = rv.Kind()
-		}
-		switch kind {
-		case reflect.Struct:
-			// The underlying driver supports time.Time/*time.Time types.
-			if _, ok := value.(time.Time); ok {
-				continue
-			}
-			if _, ok := value.(*time.Time); ok {
-				continue
-			}
-			// Use string conversion in default.
-			if s, ok := value.(apiString); ok {
-				data[key] = s.String()
-				continue
-			}
-			delete(data, key)
-			for k, v := range varToMapDeep(value) {
-				data[k] = v
-			}
-		}
-	}
-	return data
 }
 
 // handleArguments is a nice function which handles the query and its arguments before committing to
@@ -420,20 +434,6 @@ func formatError(err error, query string, args ...interface{}) error {
 		return errors.New(fmt.Sprintf("%s, %s\n", err.Error(), bindArgsToQuery(query, args)))
 	}
 	return err
-}
-
-// getInsertOperationByOption returns proper insert option with given parameter <option>.
-func getInsertOperationByOption(option int) string {
-	var operator string
-	switch option {
-	case gINSERT_OPTION_REPLACE:
-		operator = "REPLACE"
-	case gINSERT_OPTION_IGNORE:
-		operator = "INSERT IGNORE"
-	default:
-		operator = "INSERT"
-	}
-	return operator
 }
 
 // bindArgsToQuery binds the arguments to the query string and returns a complete

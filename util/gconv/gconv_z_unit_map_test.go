@@ -37,6 +37,23 @@ func Test_Map_Basic(t *testing.T) {
 	})
 }
 
+func Test_Map_Slice(t *testing.T) {
+	gtest.Case(t, func() {
+		slice1 := g.Slice{"1", "2", "3", "4"}
+		slice2 := g.Slice{"1", "2", "3"}
+		slice3 := g.Slice{}
+		gtest.Assert(gconv.Map(slice1), g.Map{
+			"1": "2",
+			"3": "4",
+		})
+		gtest.Assert(gconv.Map(slice2), g.Map{
+			"1": "2",
+			"3": nil,
+		})
+		gtest.Assert(gconv.Map(slice3), g.Map{})
+	})
+}
+
 func Test_Map_StructWithGconvTag(t *testing.T) {
 	gtest.Case(t, func() {
 		type User struct {

@@ -594,8 +594,9 @@ func MiddlewareCORS(r *ghttp.Request) {
 func Test_Middleware_CORSAndAuth(t *testing.T) {
 	p := ports.PopRand()
 	s := g.Server(p)
+	s.Use(MiddlewareCORS)
 	s.Group("/api.v2", func(group *ghttp.RouterGroup) {
-		group.Middleware(MiddlewareAuth, MiddlewareCORS)
+		group.Middleware(MiddlewareAuth)
 		group.POST("/user/list", func(r *ghttp.Request) {
 			r.Response.Write("list")
 		})
@@ -678,5 +679,37 @@ func Test_Middleware_Scope(t *testing.T) {
 		gtest.Assert(client.GetContent("/scope1"), "a1b")
 		gtest.Assert(client.GetContent("/scope2"), "ac2db")
 		gtest.Assert(client.GetContent("/scope3"), "ae3fb")
+	})
+}
+
+func Test_Middleware_Panic(t *testing.T) {
+	p := ports.PopRand()
+	s := g.Server(p)
+	i := 0
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Group("/", func(group *ghttp.RouterGroup) {
+			group.Middleware(func(r *ghttp.Request) {
+				i++
+				panic("error")
+				r.Middleware.Next()
+			}, func(r *ghttp.Request) {
+				i++
+				r.Middleware.Next()
+			})
+			group.ALL("/", func(r *ghttp.Request) {
+				r.Response.Write(i)
+			})
+		})
+	})
+	s.SetPort(p)
+	//s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+	time.Sleep(100 * time.Millisecond)
+	gtest.Case(t, func() {
+		client := ghttp.NewClient()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+
+		gtest.Assert(client.GetContent("/"), "error")
 	})
 }

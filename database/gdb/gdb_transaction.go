@@ -32,15 +32,15 @@ func (tx *TX) Rollback() error {
 }
 
 // Query does query operation on transaction.
-// See dbBase.Query.
+// See Core.Query.
 func (tx *TX) Query(query string, args ...interface{}) (rows *sql.Rows, err error) {
-	return tx.db.doQuery(tx.tx, query, args...)
+	return tx.db.DoQuery(tx.tx, query, args...)
 }
 
 // Exec does none query operation on transaction.
-// See dbBase.Exec.
+// See Core.Exec.
 func (tx *TX) Exec(query string, args ...interface{}) (sql.Result, error) {
-	return tx.db.doExec(tx.tx, query, args...)
+	return tx.db.DoExec(tx.tx, query, args...)
 }
 
 // Prepare creates a prepared statement for later queries or executions.
@@ -49,7 +49,7 @@ func (tx *TX) Exec(query string, args ...interface{}) (sql.Result, error) {
 // The caller must call the statement's Close method
 // when the statement is no longer needed.
 func (tx *TX) Prepare(query string) (*sql.Stmt, error) {
-	return tx.db.doPrepare(tx.tx, query)
+	return tx.db.DoPrepare(tx.tx, query)
 }
 
 // GetAll queries and returns data records from database.
@@ -154,7 +154,7 @@ func (tx *TX) GetCount(query string, args ...interface{}) (int, error) {
 //
 // The parameter <batch> specifies the batch operation count when given data is slice.
 func (tx *TX) Insert(table string, data interface{}, batch ...int) (sql.Result, error) {
-	return tx.db.doInsert(tx.tx, table, data, gINSERT_OPTION_DEFAULT, batch...)
+	return tx.db.DoInsert(tx.tx, table, data, gINSERT_OPTION_DEFAULT, batch...)
 }
 
 // InsertIgnore does "INSERT IGNORE INTO ..." statement for the table.
@@ -167,7 +167,7 @@ func (tx *TX) Insert(table string, data interface{}, batch ...int) (sql.Result, 
 //
 // The parameter <batch> specifies the batch operation count when given data is slice.
 func (tx *TX) InsertIgnore(table string, data interface{}, batch ...int) (sql.Result, error) {
-	return tx.db.doInsert(tx.tx, table, data, gINSERT_OPTION_IGNORE, batch...)
+	return tx.db.DoInsert(tx.tx, table, data, gINSERT_OPTION_IGNORE, batch...)
 }
 
 // Replace does "REPLACE INTO ..." statement for the table.
@@ -183,7 +183,7 @@ func (tx *TX) InsertIgnore(table string, data interface{}, batch ...int) (sql.Re
 // If given data is type of slice, it then does batch replacing, and the optional parameter
 // <batch> specifies the batch operation count.
 func (tx *TX) Replace(table string, data interface{}, batch ...int) (sql.Result, error) {
-	return tx.db.doInsert(tx.tx, table, data, gINSERT_OPTION_REPLACE, batch...)
+	return tx.db.DoInsert(tx.tx, table, data, gINSERT_OPTION_REPLACE, batch...)
 }
 
 // Save does "INSERT INTO ... ON DUPLICATE KEY UPDATE..." statement for the table.
@@ -198,31 +198,31 @@ func (tx *TX) Replace(table string, data interface{}, batch ...int) (sql.Result,
 // If given data is type of slice, it then does batch saving, and the optional parameter
 // <batch> specifies the batch operation count.
 func (tx *TX) Save(table string, data interface{}, batch ...int) (sql.Result, error) {
-	return tx.db.doInsert(tx.tx, table, data, gINSERT_OPTION_SAVE, batch...)
+	return tx.db.DoInsert(tx.tx, table, data, gINSERT_OPTION_SAVE, batch...)
 }
 
 // BatchInsert batch inserts data.
 // The parameter <list> must be type of slice of map or struct.
 func (tx *TX) BatchInsert(table string, list interface{}, batch ...int) (sql.Result, error) {
-	return tx.db.doBatchInsert(tx.tx, table, list, gINSERT_OPTION_DEFAULT, batch...)
+	return tx.db.DoBatchInsert(tx.tx, table, list, gINSERT_OPTION_DEFAULT, batch...)
 }
 
 // BatchInsert batch inserts data with ignore option.
 // The parameter <list> must be type of slice of map or struct.
 func (tx *TX) BatchInsertIgnore(table string, list interface{}, batch ...int) (sql.Result, error) {
-	return tx.db.doBatchInsert(tx.tx, table, list, gINSERT_OPTION_IGNORE, batch...)
+	return tx.db.DoBatchInsert(tx.tx, table, list, gINSERT_OPTION_IGNORE, batch...)
 }
 
 // BatchReplace batch replaces data.
 // The parameter <list> must be type of slice of map or struct.
 func (tx *TX) BatchReplace(table string, list interface{}, batch ...int) (sql.Result, error) {
-	return tx.db.doBatchInsert(tx.tx, table, list, gINSERT_OPTION_REPLACE, batch...)
+	return tx.db.DoBatchInsert(tx.tx, table, list, gINSERT_OPTION_REPLACE, batch...)
 }
 
 // BatchSave batch replaces data.
 // The parameter <list> must be type of slice of map or struct.
 func (tx *TX) BatchSave(table string, list interface{}, batch ...int) (sql.Result, error) {
-	return tx.db.doBatchInsert(tx.tx, table, list, gINSERT_OPTION_SAVE, batch...)
+	return tx.db.DoBatchInsert(tx.tx, table, list, gINSERT_OPTION_SAVE, batch...)
 }
 
 // Update does "UPDATE ... " statement for the table.
@@ -244,7 +244,7 @@ func (tx *TX) Update(table string, data interface{}, condition interface{}, args
 	if newWhere != "" {
 		newWhere = " WHERE " + newWhere
 	}
-	return tx.db.doUpdate(tx.tx, table, data, newWhere, newArgs...)
+	return tx.db.DoUpdate(tx.tx, table, data, newWhere, newArgs...)
 }
 
 // Delete does "DELETE FROM ... " statement for the table.
@@ -263,5 +263,5 @@ func (tx *TX) Delete(table string, condition interface{}, args ...interface{}) (
 	if newWhere != "" {
 		newWhere = " WHERE " + newWhere
 	}
-	return tx.db.doDelete(tx.tx, table, newWhere, newArgs...)
+	return tx.db.DoDelete(tx.tx, table, newWhere, newArgs...)
 }
