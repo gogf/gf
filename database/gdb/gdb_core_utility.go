@@ -59,9 +59,9 @@ func (c *Core) GetChars() (charLeft string, charRight string) {
 	return "", ""
 }
 
-// HandleSqlBeforeExec handles the sql before posts it to database.
+// HandleSqlBeforeCommit handles the sql before posts it to database.
 // It does nothing in default.
-func (c *Core) HandleSqlBeforeExec(sql string) string {
+func (c *Core) HandleSqlBeforeCommit(sql string) string {
 	return sql
 }
 

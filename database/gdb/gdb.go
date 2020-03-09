@@ -103,11 +103,11 @@ type DB interface {
 	Tables(schema ...string) (tables []string, err error)
 	TableFields(table string, schema ...string) (map[string]*TableField, error)
 
-	// HandleSqlBeforeExec is a hook function, which deals with the sql string before
+	// HandleSqlBeforeCommit is a hook function, which deals with the sql string before
 	// it's committed to underlying driver. The parameter <link> specifies the current
 	// database connection operation object. You can modify the sql string <query> and its
 	// arguments <args> as you wish before they're committed to driver.
-	HandleSqlBeforeExec(link Link, query string, args []interface{}) (string, []interface{})
+	HandleSqlBeforeCommit(link Link, query string, args []interface{}) (string, []interface{})
 
 	// Internal methods.
 	filterFields(schema, table string, data map[string]interface{}) map[string]interface{}

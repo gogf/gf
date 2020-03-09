@@ -63,8 +63,8 @@ func (d *DriverOracle) GetChars() (charLeft string, charRight string) {
 	return "\"", "\""
 }
 
-// HandleSqlBeforeExec deals with the sql string before commits it to underlying sql driver.
-func (d *DriverOracle) HandleSqlBeforeExec(link Link, query string, args []interface{}) (string, []interface{}) {
+// HandleSqlBeforeCommit deals with the sql string before commits it to underlying sql driver.
+func (d *DriverOracle) HandleSqlBeforeCommit(link Link, query string, args []interface{}) (string, []interface{}) {
 	var index int
 	// Convert place holder char '?' to string ":x".
 	str, _ := gregex.ReplaceStringFunc("\\?", query, func(s string) string {

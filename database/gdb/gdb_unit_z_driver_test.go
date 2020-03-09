@@ -16,9 +16,9 @@ import (
 
 // MyDriver is a custom database driver, which is used for testing only.
 // For simplifying the unit testing case purpose, MyDriver struct inherits the mysql driver
-// gdb.DriverMysql and overwrites its function HandleSqlBeforeExec.
-// So if there's any sql execution, it goes through MyDriver.HandleSqlBeforeExec firstly and
-// then gdb.DriverMysql.HandleSqlBeforeExec.
+// gdb.DriverMysql and overwrites its function HandleSqlBeforeCommit.
+// So if there's any sql execution, it goes through MyDriver.HandleSqlBeforeCommit firstly and
+// then gdb.DriverMysql.HandleSqlBeforeCommit.
 // You can call it sql "HOOK" or "HiJack" as your will.
 type MyDriver struct {
 	*gdb.DriverMysql
@@ -39,11 +39,11 @@ func (d *MyDriver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
 	}, nil
 }
 
-// HandleSqlBeforeExec handles the sql before posts it to database.
+// HandleSqlBeforeCommit handles the sql before posts it to database.
 // It here overwrites the same method of gdb.DriverMysql and makes some custom changes.
-func (d *MyDriver) HandleSqlBeforeExec(link gdb.Link, sql string, args []interface{}) (string, []interface{}) {
+func (d *MyDriver) HandleSqlBeforeCommit(link gdb.Link, sql string, args []interface{}) (string, []interface{}) {
 	latestSqlString.Set(sql)
-	return d.DriverMysql.HandleSqlBeforeExec(link, sql, args)
+	return d.DriverMysql.HandleSqlBeforeCommit(link, sql, args)
 }
 
 func init() {
