@@ -41,9 +41,9 @@ func (d *MyDriver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
 
 // HandleSqlBeforeExec handles the sql before posts it to database.
 // It here overwrites the same method of gdb.DriverMysql and makes some custom changes.
-func (d *MyDriver) HandleSqlBeforeExec(sql string) string {
+func (d *MyDriver) HandleSqlBeforeExec(link gdb.Link, sql string, args []interface{}) (string, []interface{}) {
 	latestSqlString.Set(sql)
-	return d.DriverMysql.HandleSqlBeforeExec(sql)
+	return d.DriverMysql.HandleSqlBeforeExec(link, sql, args)
 }
 
 func init() {
@@ -63,10 +63,12 @@ func Test_Custom_Driver(t *testing.T) {
 		Role:    "master",
 		Charset: "utf8",
 	})
-	gtest.Assert(latestSqlString.Val(), "")
-	sqlString := "select 10000"
-	value, err := g.DB("driver-test").GetValue(sqlString)
-	gtest.Assert(err, nil)
-	gtest.Assert(value, 10000)
-	gtest.Assert(latestSqlString.Val(), sqlString)
+	gtest.Case(t, func() {
+		gtest.Assert(latestSqlString.Val(), "")
+		sqlString := "select 10000"
+		value, err := g.DB("driver-test").GetValue(sqlString)
+		gtest.Assert(err, nil)
+		gtest.Assert(value, 10000)
+		gtest.Assert(latestSqlString.Val(), sqlString)
+	})
 }

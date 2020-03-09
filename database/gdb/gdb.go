@@ -22,7 +22,7 @@ import (
 	"github.com/gogf/gf/util/grand"
 )
 
-// DB is the interface for ORM operations.
+// DB defines the interfaces for ORM operations.
 type DB interface {
 	// Open creates a raw connection object for database with given node configuration.
 	// Note that it is not recommended using the this function manually.
@@ -34,14 +34,14 @@ type DB interface {
 	Prepare(sql string, execOnMaster ...bool) (*sql.Stmt, error)
 
 	// Internal APIs for CURD, which can be overwrote for custom CURD implements.
-	DoQuery(link dbLink, query string, args ...interface{}) (rows *sql.Rows, err error)
-	DoGetAll(link dbLink, query string, args ...interface{}) (result Result, err error)
-	DoExec(link dbLink, query string, args ...interface{}) (result sql.Result, err error)
-	DoPrepare(link dbLink, query string) (*sql.Stmt, error)
-	DoInsert(link dbLink, table string, data interface{}, option int, batch ...int) (result sql.Result, err error)
-	DoBatchInsert(link dbLink, table string, list interface{}, option int, batch ...int) (result sql.Result, err error)
-	DoUpdate(link dbLink, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error)
-	DoDelete(link dbLink, table string, condition string, args ...interface{}) (result sql.Result, err error)
+	DoQuery(link Link, query string, args ...interface{}) (rows *sql.Rows, err error)
+	DoGetAll(link Link, query string, args ...interface{}) (result Result, err error)
+	DoExec(link Link, query string, args ...interface{}) (result sql.Result, err error)
+	DoPrepare(link Link, query string) (*sql.Stmt, error)
+	DoInsert(link Link, table string, data interface{}, option int, batch ...int) (result sql.Result, err error)
+	DoBatchInsert(link Link, table string, list interface{}, option int, batch ...int) (result sql.Result, err error)
+	DoUpdate(link Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error)
+	DoDelete(link Link, table string, condition string, args ...interface{}) (result sql.Result, err error)
 
 	// Query APIs for convenience purpose.
 	GetAll(query string, args ...interface{}) (Result, error)
@@ -99,12 +99,17 @@ type DB interface {
 	GetSlave(schema ...string) (*sql.DB, error)
 	QuoteWord(s string) string
 	QuoteString(s string) string
-	HandleSqlBeforeExec(sql string) string
+	QuotePrefixTableName(table string) string
 	Tables(schema ...string) (tables []string, err error)
 	TableFields(table string, schema ...string) (map[string]*TableField, error)
 
+	// HandleSqlBeforeExec is a hook function, which deals with the sql string before
+	// it's committed to underlying driver. The parameter <link> specifies the current
+	// database connection operation object. You can modify the sql string <query> and its
+	// arguments <args> as you wish before they're committed to driver.
+	HandleSqlBeforeExec(link Link, query string, args []interface{}) (string, []interface{})
+
 	// Internal methods.
-	QuotePrefixTableName(table string) string
 	filterFields(schema, table string, data map[string]interface{}) map[string]interface{}
 	convertValue(fieldValue []byte, fieldType string) interface{}
 	rowsToResult(rows *sql.Rows) (Result, error)
@@ -152,8 +157,8 @@ type TableField struct {
 	Comment string      // Comment.
 }
 
-// dbLink is a common database function wrapper interface for internal usage.
-type dbLink interface {
+// Link is a common database function wrapper interface.
+type Link interface {
 	Query(query string, args ...interface{}) (*sql.Rows, error)
 	Exec(sql string, args ...interface{}) (sql.Result, error)
 	Prepare(sql string) (*sql.Stmt, error)

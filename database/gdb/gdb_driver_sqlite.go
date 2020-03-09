@@ -50,6 +50,13 @@ func (d *DriverSqlite) GetChars() (charLeft string, charRight string) {
 	return "`", "`"
 }
 
+// HandleSqlBeforeExec deals with the sql string before commits it to underlying sql driver.
+// @todo 需要增加对Save方法的支持，可使用正则来实现替换，
+// @todo 将ON DUPLICATE KEY UPDATE触发器修改为两条SQL语句(INSERT OR IGNORE & UPDATE)
+func (d *DriverSqlite) HandleSqlBeforeExec(link Link, sql string, args []interface{}) (string, []interface{}) {
+	return sql, args
+}
+
 // Tables retrieves and returns the tables of current schema.
 // It's mainly used in cli tool chain for automatically generating the models.
 // TODO
@@ -65,11 +72,4 @@ func (d *DriverSqlite) TableFields(table string, schema ...string) (fields map[s
 		panic("function TableFields supports only single table operations")
 	}
 	return
-}
-
-// HandleSqlBeforeExec deals with the sql string before commits it to underlying sql driver.
-// @todo 需要增加对Save方法的支持，可使用正则来实现替换，
-// @todo 将ON DUPLICATE KEY UPDATE触发器修改为两条SQL语句(INSERT OR IGNORE & UPDATE)
-func (d *DriverSqlite) HandleSqlBeforeExec(sql string) string {
-	return sql
 }

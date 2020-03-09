@@ -53,8 +53,8 @@ func (d *DriverMysql) GetChars() (charLeft string, charRight string) {
 }
 
 // HandleSqlBeforeExec handles the sql before posts it to database.
-func (d *DriverMysql) HandleSqlBeforeExec(sql string) string {
-	return sql
+func (d *DriverMysql) HandleSqlBeforeExec(link Link, sql string, args []interface{}) (string, []interface{}) {
+	return sql, args
 }
 
 // Tables retrieves and returns the tables of current schema.

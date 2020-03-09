@@ -1045,7 +1045,7 @@ func (m *Model) doFilterDataMapForInsertOrUpdate(data Map, allowOmitEmpty bool) 
 
 // getLink returns the underlying database link object with configured <linkType> attribute.
 // The parameter <master> specifies whether using the master node if master-slave configured.
-func (m *Model) getLink(master bool) dbLink {
+func (m *Model) getLink(master bool) Link {
 	if m.tx != nil {
 		return m.tx.tx
 	}
