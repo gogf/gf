@@ -29,7 +29,7 @@ func Database(name ...string) gdb.DB {
 		group = name[0]
 	}
 	instanceKey := fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_DATABASE, group)
-	db := instances.GetOrSetFunc(instanceKey, func() interface{} {
+	db := instances.GetOrSetFuncLock(instanceKey, func() interface{} {
 		// Configuration already exists.
 		if gdb.GetConfig(group) != nil {
 			db, err := gdb.Instance(group)
@@ -72,7 +72,6 @@ func Database(name ...string) gdb.DB {
 				gdb.SetConfigGroup(gdb.DEFAULT_GROUP_NAME, cg)
 			}
 		}
-		addConfigMonitor(instanceKey, config)
 
 		if db, err := gdb.New(name...); err == nil {
 			// Initialize logger for ORM.

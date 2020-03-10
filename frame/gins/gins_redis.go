@@ -24,7 +24,7 @@ func Redis(name ...string) *gredis.Redis {
 		group = name[0]
 	}
 	instanceKey := fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_REDIS, group)
-	result := instances.GetOrSetFunc(instanceKey, func() interface{} {
+	result := instances.GetOrSetFuncLock(instanceKey, func() interface{} {
 		// If already configured, it returns the redis instance.
 		if _, ok := gredis.GetConfig(group); ok {
 			return gredis.Instance(group)
@@ -36,7 +36,6 @@ func Redis(name ...string) *gredis.Redis {
 				if err != nil {
 					panic(err)
 				}
-				addConfigMonitor(instanceKey, config)
 				return gredis.New(redisConfig)
 			} else {
 				panic(fmt.Sprintf(`configuration for redis not found for group "%s"`, group))

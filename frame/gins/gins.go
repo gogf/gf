@@ -8,12 +8,7 @@
 package gins
 
 import (
-	"github.com/gogf/gf/internal/intlog"
-	"github.com/gogf/gf/os/gfile"
-
 	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/os/gcfg"
-	"github.com/gogf/gf/os/gfsnotify"
 )
 
 var (
@@ -58,16 +53,4 @@ func GetOrSetFuncLock(name string, f func() interface{}) interface{} {
 // It returns false if <name> exists, and <instance> would be ignored.
 func SetIfNotExist(name string, instance interface{}) bool {
 	return instances.SetIfNotExist(name, instance)
-}
-
-// addConfigMonitor adds fsnotify monitor for configuration file if it exists.
-func addConfigMonitor(key string, config *gcfg.Config) {
-	if path := config.FilePath(); path != "" && gfile.Exists(path) {
-		_, err := gfsnotify.Add(path, func(event *gfsnotify.Event) {
-			instances.Remove(key)
-		})
-		if err != nil {
-			intlog.Error(err)
-		}
-	}
 }
