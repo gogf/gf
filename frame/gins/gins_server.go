@@ -18,7 +18,7 @@ const (
 // Server returns an instance of http server with specified name.
 func Server(name ...interface{}) *ghttp.Server {
 	instanceKey := fmt.Sprintf("%s.%v", gFRAME_CORE_COMPONENT_NAME_SERVER, name)
-	return instances.GetOrSetFunc(instanceKey, func() interface{} {
+	return instances.GetOrSetFuncLock(instanceKey, func() interface{} {
 		s := ghttp.GetServer(name...)
 		// To avoid file no found error while it's not necessary.
 		if Config().Available() {
@@ -36,7 +36,7 @@ func Server(name ...interface{}) *ghttp.Server {
 			}
 			// As it might use template feature,
 			// it initialize the view instance as well.
-			View()
+			_ = getViewInstance()
 		}
 		return s
 	}).(*ghttp.Server)
