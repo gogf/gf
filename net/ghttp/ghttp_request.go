@@ -7,8 +7,8 @@
 package ghttp
 
 import (
+	"context"
 	"fmt"
-	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/os/gres"
 	"github.com/gogf/gf/os/gview"
 	"net/http"
@@ -32,7 +32,7 @@ type Request struct {
 	LeaveTime       int64                  // Request ending time in microseconds.
 	Middleware      *Middleware            // The middleware manager.
 	StaticFile      *StaticFile            // Static file object when static file serving.
-	Context         *gmap.StrAnyMap        // Custom context map for internal usage purpose.
+	Context         context.Context        // Custom context map for internal usage purpose.
 	handlers        []*handlerParsedItem   // All matched handlers containing handler, hook and middleware for this request .
 	hasHookHandler  bool                   // A bool marking whether there's hook handler in the handlers for performance purpose.
 	hasServeHandler bool                   // A bool marking whether there's serving handler in the handlers for performance purpose.
@@ -68,7 +68,7 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 		Request:   r,
 		Response:  newResponse(s, w),
 		EnterTime: gtime.TimestampMilli(),
-		Context:   gmap.NewStrAnyMap(),
+		Context:   r.Context(),
 	}
 	request.Cookie = GetCookie(request)
 	request.Session = s.sessionManager.New(request.GetSessionId())
