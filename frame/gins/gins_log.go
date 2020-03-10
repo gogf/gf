@@ -24,7 +24,7 @@ func Log(name ...string) *glog.Logger {
 		instanceName = name[0]
 	}
 	instanceKey := fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_LOGGER, instanceName)
-	return instances.GetOrSetFuncLock(instanceKey, func() interface{} {
+	return instances.GetOrSetFunc(instanceKey, func() interface{} {
 		logger := glog.Instance(instanceName)
 		// To avoid file no found error while it's not necessary.
 		if Config().Available() {

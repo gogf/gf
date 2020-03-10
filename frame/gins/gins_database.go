@@ -29,7 +29,7 @@ func Database(name ...string) gdb.DB {
 		group = name[0]
 	}
 	instanceKey := fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_DATABASE, group)
-	db := instances.GetOrSetFuncLock(instanceKey, func() interface{} {
+	db := instances.GetOrSetFunc(instanceKey, func() interface{} {
 		// Configuration already exists.
 		if gdb.GetConfig(group) != nil {
 			db, err := gdb.Instance(group)

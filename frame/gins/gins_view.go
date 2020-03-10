@@ -24,7 +24,7 @@ func View(name ...string) *gview.View {
 		instanceName = name[0]
 	}
 	instanceKey := fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_VIEWER, instanceName)
-	return instances.GetOrSetFuncLock(instanceKey, func() interface{} {
+	return instances.GetOrSetFunc(instanceKey, func() interface{} {
 		view := gview.Instance(instanceName)
 		// To avoid file no found error while it's not necessary.
 		if Config().Available() {
