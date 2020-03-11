@@ -23,7 +23,7 @@ type Conn struct {
 
 const (
 	gDEFAULT_RETRY_INTERVAL   = 100 * time.Millisecond // Retry interval.
-	gDEFAULT_READ_BUFFER_SIZE = 64                     // (KB)Buffer size.
+	gDEFAULT_READ_BUFFER_SIZE = 64                     // (Byte)Buffer size.
 	gRECV_ALL_WAIT_TIMEOUT    = time.Millisecond       // Default interval for reading buffer.
 )
 
