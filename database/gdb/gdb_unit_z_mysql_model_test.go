@@ -539,6 +539,12 @@ func Test_Model_Array(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.Case(t, func() {
+		all, err := db.Table(table).Where("id", g.Slice{1, 2, 3}).All()
+		gtest.Assert(err, nil)
+		gtest.Assert(all.Array("id"), g.Slice{1, 2, 3})
+		gtest.Assert(all.Array("nickname"), g.Slice{"name_1", "name_2", "name_3"})
+	})
+	gtest.Case(t, func() {
 		array, err := db.Table(table).Fields("nickname").Where("id", g.Slice{1, 2, 3}).Array()
 		gtest.Assert(err, nil)
 		gtest.Assert(array, g.Slice{"name_1", "name_2", "name_3"})
