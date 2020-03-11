@@ -83,8 +83,8 @@ func (c *Conn) Send(data []byte, retry ...Retry) (err error) {
 }
 
 // Recv receives data from remote address.
-// The parameter <buffer> is used for customizing the receiving buffer size. The default
-// buffer size is 1024 byte.
+// The parameter <buffer> is used for customizing the receiving buffer size. If <buffer> <= 0,
+// it uses the default buffer size, which is 1024 byte.
 //
 // There's package border in UDP protocol, we can receive a complete package if specified
 // buffer size is big enough. VERY NOTE that we should receive the complete package in once
