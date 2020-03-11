@@ -41,10 +41,10 @@ type Config struct {
 	Port            int
 	Db              int
 	Pass            string        // Password for AUTH.
-	MaxIdle         int           // Maximum number of connections allowed to be idle (default is 0 means no idle connection)
-	MaxActive       int           // Maximum number of connections limit (default is 0 means no limit)
-	IdleTimeout     time.Duration // Maximum idle time for connection (default is 60 seconds, not allowed to be set to 0)
-	MaxConnLifetime time.Duration // Maximum lifetime of the connection (default is 60 seconds, not allowed to be set to 0)
+	MaxIdle         int           // Maximum number of connections allowed to be idle (default is 10)
+	MaxActive       int           // Maximum number of connections limit (default is 0 means no limit).
+	IdleTimeout     time.Duration // Maximum idle time for connection (default is 10 seconds, not allowed to be set to 0)
+	MaxConnLifetime time.Duration // Maximum lifetime of the connection (default is 30 seconds, not allowed to be set to 0)
 	ConnectTimeout  time.Duration // Dial connection timeout.
 }
 
@@ -54,8 +54,9 @@ type PoolStats struct {
 }
 
 const (
-	gDEFAULT_POOL_IDLE_TIMEOUT  = 30 * time.Second
+	gDEFAULT_POOL_IDLE_TIMEOUT  = 10 * time.Second
 	gDEFAULT_POOL_CONN_TIMEOUT  = 10 * time.Second
+	gDEFAULT_POOL_MAX_IDLE      = 10
 	gDEFAULT_POOL_MAX_LIFE_TIME = 30 * time.Second
 )
 
@@ -67,6 +68,12 @@ var (
 // New creates a redis client object with given configuration.
 // Redis client maintains a connection pool automatically.
 func New(config Config) *Redis {
+	// The MaxIdle is the most important attribute of the connection pool.
+	// Only if this attribute is set, the created connections from client
+	// can not exceed the limit of the server.
+	if config.MaxIdle == 0 {
+		config.MaxIdle = gDEFAULT_POOL_MAX_IDLE
+	}
 	if config.IdleTimeout == 0 {
 		config.IdleTimeout = gDEFAULT_POOL_IDLE_TIMEOUT
 	}
@@ -132,7 +139,8 @@ func NewFromStr(str string) (*Redis, error) {
 // It is not necessary to call Close manually.
 func (r *Redis) Close() error {
 	if r.group != "" {
-		// If it is an instance object, it needs to remove it from the instance Map.
+		// If it is an instance object,
+		// it needs to remove it from the instance Map.
 		instances.Remove(r.group)
 	}
 	pools.Remove(fmt.Sprintf("%v", r.config))
@@ -151,22 +159,31 @@ func (r *Redis) GetConn() *Conn {
 	return r.Conn()
 }
 
-// SetMaxIdle sets the MaxIdle attribute of the connection pool.
+// SetMaxIdle sets the maximum number of idle connections in the pool.
 func (r *Redis) SetMaxIdle(value int) {
 	r.pool.MaxIdle = value
 }
 
-// SetMaxActive sets the MaxActive attribute of the connection pool.
+// SetMaxActive sets the maximum number of connections allocated by the pool at a given time.
+// When zero, there is no limit on the number of connections in the pool.
+//
+// Note that if the pool is at the MaxActive limit, then all the operations will wait for
+// a connection to be returned to the pool before returning.
 func (r *Redis) SetMaxActive(value int) {
 	r.pool.MaxActive = value
 }
 
 // SetIdleTimeout sets the IdleTimeout attribute of the connection pool.
+// It closes connections after remaining idle for this duration. If the value
+// is zero, then idle connections are not closed. Applications should set
+// the timeout to a value less than the server's timeout.
 func (r *Redis) SetIdleTimeout(value time.Duration) {
 	r.pool.IdleTimeout = value
 }
 
 // SetMaxConnLifetime sets the MaxConnLifetime attribute of the connection pool.
+// It closes connections older than this duration. If the value is zero, then
+// the pool does not close connections based on age.
 func (r *Redis) SetMaxConnLifetime(value time.Duration) {
 	r.pool.MaxConnLifetime = value
 }
