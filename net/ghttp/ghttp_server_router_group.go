@@ -293,9 +293,17 @@ func (g *RouterGroup) doBind(bindType string, pattern string, object interface{}
 		} else if g.isController(object) {
 			if len(extras) > 0 {
 				if g.server != nil {
-					g.server.doBindControllerMethod(pattern, object.(Controller), extras[0], g.middleware)
+					if gstr.Contains(extras[0], ",") {
+						g.server.doBindController(pattern, object.(Controller), extras[0], g.middleware)
+					} else {
+						g.server.doBindControllerMethod(pattern, object.(Controller), extras[0], g.middleware)
+					}
 				} else {
-					g.domain.doBindControllerMethod(pattern, object.(Controller), extras[0], g.middleware)
+					if gstr.Contains(extras[0], ",") {
+						g.domain.doBindController(pattern, object.(Controller), extras[0], g.middleware)
+					} else {
+						g.domain.doBindControllerMethod(pattern, object.(Controller), extras[0], g.middleware)
+					}
 				}
 			} else {
 				if g.server != nil {

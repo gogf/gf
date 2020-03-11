@@ -4,7 +4,6 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// 分组路由测试
 package ghttp_test
 
 import (
@@ -118,7 +117,7 @@ func Test_Router_GroupBasic1(t *testing.T) {
 	})
 }
 
-func Test_Router_Basic2(t *testing.T) {
+func Test_Router_GroupBasic2(t *testing.T) {
 	p := ports.PopRand()
 	s := g.Server(p)
 	obj := new(GroupObject)
@@ -189,5 +188,29 @@ func Test_Router_GroupBuildInVar(t *testing.T) {
 
 		gtest.Assert(client.DeleteContent("/ThisDoesNotExist"), "Not Found")
 		gtest.Assert(client.DeleteContent("/api/ThisDoesNotExist"), "Not Found")
+	})
+}
+
+func Test_Router_Group_Mthods(t *testing.T) {
+	p := ports.PopRand()
+	s := g.Server(p)
+	obj := new(GroupObject)
+	ctl := new(GroupController)
+	group := s.Group("/")
+	group.ALL("/obj", obj, "Show, Delete")
+	group.ALL("/ctl", ctl, "Show, Post")
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.Case(t, func() {
+		client := ghttp.NewClient()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		gtest.Assert(client.GetContent("/ctl/show"), "1Controller Show2")
+		gtest.Assert(client.GetContent("/ctl/post"), "1Controller Post2")
+		gtest.Assert(client.GetContent("/obj/show"), "1Object Show2")
+		gtest.Assert(client.GetContent("/obj/delete"), "1Object Delete2")
 	})
 }
