@@ -307,9 +307,17 @@ func (g *RouterGroup) doBind(bindType string, pattern string, object interface{}
 		} else {
 			if len(extras) > 0 {
 				if g.server != nil {
-					g.server.doBindObjectMethod(pattern, object, extras[0], g.middleware)
+					if gstr.Contains(extras[0], ",") {
+						g.server.doBindObject(pattern, object, extras[0], g.middleware)
+					} else {
+						g.server.doBindObjectMethod(pattern, object, extras[0], g.middleware)
+					}
 				} else {
-					g.domain.doBindObjectMethod(pattern, object, extras[0], g.middleware)
+					if gstr.Contains(extras[0], ",") {
+						g.domain.doBindObject(pattern, object, extras[0], g.middleware)
+					} else {
+						g.domain.doBindObjectMethod(pattern, object, extras[0], g.middleware)
+					}
 				}
 			} else {
 				if g.server != nil {
