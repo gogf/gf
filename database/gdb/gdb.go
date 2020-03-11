@@ -47,6 +47,7 @@ type DB interface {
 	GetAll(query string, args ...interface{}) (Result, error)
 	GetOne(query string, args ...interface{}) (Record, error)
 	GetValue(query string, args ...interface{}) (Value, error)
+	GetArray(query string, args ...interface{}) ([]Value, error)
 	GetCount(query string, args ...interface{}) (int, error)
 	GetStruct(objPointer interface{}, query string, args ...interface{}) error
 	GetStructs(objPointerSlice interface{}, query string, args ...interface{}) error

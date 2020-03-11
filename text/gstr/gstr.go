@@ -16,7 +16,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/gogf/gf/internal/utilstr"
+	"github.com/gogf/gf/internal/utils"
 
 	"github.com/gogf/gf/util/gconv"
 
@@ -98,7 +98,7 @@ func ReplaceIByArray(origin string, array []string) string {
 // ReplaceByMap returns a copy of <origin>,
 // which is replaced by a map in unordered way, case-sensitively.
 func ReplaceByMap(origin string, replaces map[string]string) string {
-	return utilstr.ReplaceByMap(origin, replaces)
+	return utils.ReplaceByMap(origin, replaces)
 }
 
 // ReplaceIByMap returns a copy of <origin>,
@@ -122,7 +122,7 @@ func ToUpper(s string) string {
 
 // UcFirst returns a copy of the string s with the first letter mapped to its upper case.
 func UcFirst(s string) string {
-	return utilstr.UcFirst(s)
+	return utils.UcFirst(s)
 }
 
 // LcFirst returns a copy of the string s with the first letter mapped to its lower case.
@@ -143,17 +143,17 @@ func UcWords(str string) string {
 
 // IsLetterLower tests whether the given byte b is in lower case.
 func IsLetterLower(b byte) bool {
-	return utilstr.IsLetterLower(b)
+	return utils.IsLetterLower(b)
 }
 
 // IsLetterUpper tests whether the given byte b is in upper case.
 func IsLetterUpper(b byte) bool {
-	return utilstr.IsLetterUpper(b)
+	return utils.IsLetterUpper(b)
 }
 
 // IsNumeric tests whether the given string s is numeric.
 func IsNumeric(s string) bool {
-	return utilstr.IsNumeric(s)
+	return utils.IsNumeric(s)
 }
 
 // SubStr returns a portion of string <str> specified by the <start> and <length> parameters.

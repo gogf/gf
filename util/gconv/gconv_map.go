@@ -13,7 +13,7 @@ import (
 	"strings"
 
 	"github.com/gogf/gf/internal/empty"
-	"github.com/gogf/gf/internal/utilstr"
+	"github.com/gogf/gf/internal/utils"
 )
 
 // apiMapStrAny is the interface support for converting struct parameter to map.
@@ -176,7 +176,7 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 					rvField = rv.Field(i)
 					// Only convert the public attributes.
 					fieldName := rtField.Name
-					if !utilstr.IsLetterUpper(fieldName[0]) {
+					if !utils.IsLetterUpper(fieldName[0]) {
 						continue
 					}
 					name = ""

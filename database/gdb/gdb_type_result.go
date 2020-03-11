@@ -28,11 +28,33 @@ func (r Result) Xml(rootTag ...string) string {
 
 // List converts <r> to a List.
 func (r Result) List() List {
-	l := make(List, len(r))
+	list := make(List, len(r))
 	for k, v := range r {
-		l[k] = v.Map()
+		list[k] = v.Map()
 	}
-	return l
+	return list
+}
+
+// Array retrieves and returns specified column values as slice.
+// The parameter <field> is optional is the column field is only one.
+func (r Result) Array(field ...string) []Value {
+	array := make([]Value, len(r))
+	if len(r) == 0 {
+		return array
+	}
+	key := ""
+	if len(field) > 0 && field[0] != "" {
+		key = field[0]
+	} else {
+		for k, _ := range r[0] {
+			key = k
+			break
+		}
+	}
+	for k, v := range r {
+		array[k] = v[key]
+	}
+	return array
 }
 
 // MapKeyStr converts <r> to a map[string]Map of which key is specified by <key>.
