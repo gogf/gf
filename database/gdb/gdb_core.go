@@ -177,6 +177,16 @@ func (c *Core) GetOne(query string, args ...interface{}) (Record, error) {
 	return nil, nil
 }
 
+// GetArray queries and returns data values as slice from database.
+// Note that if there're multiple columns in the result, it returns just one column values randomly.
+func (c *Core) GetArray(query string, args ...interface{}) ([]Value, error) {
+	all, err := c.DB.DoGetAll(nil, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	return all.Array(), nil
+}
+
 // GetStruct queries one record from database and converts it to given struct.
 // The parameter <pointer> should be a pointer to struct.
 func (c *Core) GetStruct(pointer interface{}, query string, args ...interface{}) error {

@@ -15,7 +15,7 @@ import (
 	"strings"
 
 	"github.com/gogf/gf/internal/structs"
-	"github.com/gogf/gf/internal/utilstr"
+	"github.com/gogf/gf/internal/utils"
 )
 
 // apiUnmarshalValue is the interface for custom defined types customizing value assignment.
@@ -122,7 +122,7 @@ func Struct(params interface{}, pointer interface{}, mapping ...map[string]strin
 	tempName := ""
 	for i := 0; i < elem.NumField(); i++ {
 		// Only do converting to public attributes.
-		if !utilstr.IsLetterUpper(elemType.Field(i).Name[0]) {
+		if !utils.IsLetterUpper(elemType.Field(i).Name[0]) {
 			continue
 		}
 		tempName = elemType.Field(i).Name
@@ -193,7 +193,7 @@ func StructDeep(params interface{}, pointer interface{}, mapping ...map[string]s
 			rt := rv.Type()
 			for i := 0; i < rv.NumField(); i++ {
 				// Only do converting to public attributes.
-				if !utilstr.IsLetterUpper(rt.Field(i).Name[0]) {
+				if !utils.IsLetterUpper(rt.Field(i).Name[0]) {
 					continue
 				}
 				trv := rv.Field(i)

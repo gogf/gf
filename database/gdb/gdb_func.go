@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/internal/empty"
+	"github.com/gogf/gf/internal/utils"
 	"github.com/gogf/gf/os/gtime"
 	"reflect"
 	"regexp"
@@ -282,12 +283,18 @@ func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool) (
 	newArgs = append(newArgs, args...)
 	newWhere = buffer.String()
 	if len(newArgs) > 0 {
-		// It supports formats like: Where/And/Or("uid", 1) , Where/And/Or("uid>=", 1)
 		if gstr.Pos(newWhere, "?") == -1 {
 			if lastOperatorReg.MatchString(newWhere) {
+				// Eg: Where/And/Or("uid>=", 1)
 				newWhere += "?"
 			} else if gregex.IsMatchString(`^[\w\.\-]+$`, newWhere) {
-				newWhere += "=?"
+				if len(newArgs) == 1 && utils.IsArray(newArgs[0]) {
+					// Eg: Where("id", []int{1,2,3})
+					newWhere += " IN (?)"
+				} else {
+					// Eg: Where/And/Or("uid", 1)
+					newWhere += "=?"
+				}
 			}
 		}
 	}

@@ -534,6 +534,32 @@ func Test_Model_Value(t *testing.T) {
 	})
 }
 
+func Test_Model_Array(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.Case(t, func() {
+		array, err := db.Table(table).Fields("nickname").Where("id", g.Slice{1, 2, 3}).Array()
+		gtest.Assert(err, nil)
+		gtest.Assert(array, g.Slice{"name_1", "name_2", "name_3"})
+	})
+	gtest.Case(t, func() {
+		array, err := db.Table(table).Array("nickname", "id", g.Slice{1, 2, 3})
+		gtest.Assert(err, nil)
+		gtest.Assert(array, g.Slice{"name_1", "name_2", "name_3"})
+	})
+	gtest.Case(t, func() {
+		array, err := db.Table(table).FindArray("nickname", "id", g.Slice{1, 2, 3})
+		gtest.Assert(err, nil)
+		gtest.Assert(array, g.Slice{"name_1", "name_2", "name_3"})
+	})
+	gtest.Case(t, func() {
+		array, err := db.Table(table).FindArray("nickname", g.Slice{1, 2, 3})
+		gtest.Assert(err, nil)
+		gtest.Assert(array, g.Slice{"name_1", "name_2", "name_3"})
+	})
+}
+
 func Test_Model_FindValue(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
