@@ -28,7 +28,7 @@ func Test_Basic(t *testing.T) {
 				}
 			}
 			if err != nil {
-				glog.Error(err)
+				break
 			}
 		}
 	})
@@ -69,5 +69,38 @@ func Test_Basic(t *testing.T) {
 			gtest.Assert(err, nil)
 			gtest.Assert(string(result), fmt.Sprintf(`> %d`, i))
 		}
+	})
+}
+
+// If the read buffer size is less than the sent package size,
+// the rest data would be dropped.
+func Test_Buffer(t *testing.T) {
+	p := ports.PopRand()
+	s := gudp.NewServer(fmt.Sprintf("127.0.0.1:%d", p), func(conn *gudp.Conn) {
+		defer conn.Close()
+		for {
+			data, err := conn.Recv(1)
+			if len(data) > 0 {
+				if err := conn.Send(data); err != nil {
+					glog.Error(err)
+				}
+			}
+			if err != nil {
+				break
+			}
+		}
+	})
+	go s.Run()
+	defer s.Close()
+	time.Sleep(100 * time.Millisecond)
+	gtest.Case(t, func() {
+		result, err := gudp.SendRecv(fmt.Sprintf("127.0.0.1:%d", p), []byte("123"), -1)
+		gtest.Assert(err, nil)
+		gtest.Assert(string(result), "1")
+	})
+	gtest.Case(t, func() {
+		result, err := gudp.SendRecv(fmt.Sprintf("127.0.0.1:%d", p), []byte("456"), -1)
+		gtest.Assert(err, nil)
+		gtest.Assert(string(result), "4")
 	})
 }
