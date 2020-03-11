@@ -63,8 +63,12 @@ func (d *DriverSqlite) HandleSqlBeforeCommit(link Link, sql string, args []inter
 // It's mainly used in cli tool chain for automatically generating the models.
 func (d *DriverSqlite) Tables(schema ...string) (tables []string, err error) {
 	var result Result
+	link, err := d.DB.GetSlave(schema...)
+	if err != nil {
+		return nil, err
+	}
 
-	result, err = d.DB.DoGetAll(nil, `SELECT NAME FROM SQLITE_MASTER WHERE TYPE='table' ORDER BY NAME`)
+	result, err = d.DB.DoGetAll(link, `SELECT NAME FROM SQLITE_MASTER WHERE TYPE='table' ORDER BY NAME`)
 	if err != nil {
 		return
 	}
@@ -90,8 +94,12 @@ func (d *DriverSqlite) TableFields(table string, schema ...string) (fields map[s
 	v := d.DB.GetCache().GetOrSetFunc(
 		fmt.Sprintf(`sqlite_table_fields_%s_%s`, table, checkSchema), func() interface{} {
 			var result Result
-
-			result, err = d.DB.DoGetAll(nil, fmt.Sprintf(`PRAGMA TABLE_INFO(%s)`, table))
+			var link *sql.DB
+			link, err = d.DB.GetSlave(checkSchema)
+			if err != nil {
+				return nil
+			}
+			result, err = d.DB.DoGetAll(link, fmt.Sprintf(`PRAGMA TABLE_INFO(%s)`, table))
 			if err != nil {
 				return nil
 			}
