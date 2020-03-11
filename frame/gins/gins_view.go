@@ -39,7 +39,7 @@ func getViewInstance(name ...string) *gview.View {
 	if Config().Available() {
 		var m map[string]interface{}
 		// It firstly searches the configuration of the instance name.
-		if m = Config().GetMap(fmt.Sprintf(`%s.%s`, gVIEWER_NODE_NAME, name)); m == nil {
+		if m = Config().GetMap(fmt.Sprintf(`%s.%s`, gVIEWER_NODE_NAME, instanceName)); m == nil {
 			// If the configuration for the instance does not exist,
 			// it uses the default view configuration.
 			m = Config().GetMap(gVIEWER_NODE_NAME)
