@@ -82,7 +82,7 @@ func (c *Conn) Send(data []byte, retry ...Retry) (err error) {
 	}
 }
 
-// Recv receives data from remote address.
+// Recv receives and returns data from remote address.
 // The parameter <buffer> is used for customizing the receiving buffer size. If <buffer> <= 0,
 // it uses the default buffer size, which is 1024 byte.
 //
