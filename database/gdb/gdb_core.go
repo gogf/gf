@@ -504,7 +504,7 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 		holders = append(holders, "?")
 	}
 	// Prepare the batch result pointer.
-	batchResult := new(batchSqlResult)
+	batchResult := new(SqlResult)
 	charL, charR := c.DB.GetChars()
 	keysStr := charL + strings.Join(keys, charR+","+charL) + charR
 	valueHolderStr := "(" + strings.Join(holders, ",") + ")"
@@ -555,8 +555,8 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 			if n, err := r.RowsAffected(); err != nil {
 				return r, err
 			} else {
-				batchResult.lastResult = r
-				batchResult.rowsAffected += n
+				batchResult.result = r
+				batchResult.affected += n
 			}
 			params = params[:0]
 			values = values[:0]

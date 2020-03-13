@@ -364,7 +364,7 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 		n.Name = nodeSchema
 		node = &n
 	}
-	// Cache the underlying connection object by node.
+	// Cache the underlying connection pool object by node.
 	v := c.cache.GetOrSetFuncLock(node.String(), func() interface{} {
 		sqlDb, err = c.DB.Open(node)
 		if err != nil {

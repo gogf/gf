@@ -51,7 +51,12 @@ func IsEmpty(value interface{}) bool {
 		return len(value) == 0
 	default:
 		// Finally using reflect.
-		rv := reflect.ValueOf(value)
+		var rv reflect.Value
+		if v, ok := value.(reflect.Value); ok {
+			rv = v
+		} else {
+			rv = reflect.ValueOf(value)
+		}
 		switch rv.Kind() {
 		case reflect.Chan,
 			reflect.Map,
@@ -77,7 +82,12 @@ func IsNil(value interface{}) bool {
 	if value == nil {
 		return true
 	}
-	rv := reflect.ValueOf(value)
+	var rv reflect.Value
+	if v, ok := value.(reflect.Value); ok {
+		rv = v
+	} else {
+		rv = reflect.ValueOf(value)
+	}
 	switch rv.Kind() {
 	case reflect.Chan,
 		reflect.Map,
