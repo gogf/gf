@@ -936,6 +936,18 @@ func Test_Model_GroupBy(t *testing.T) {
 	})
 }
 
+func Test_Model_Data(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.Case(t, func() {
+		result, err := db.Table(table).Data("nickname=?", "test").Where("id=?", 3).Update()
+		gtest.Assert(err, nil)
+		n, _ := result.RowsAffected()
+		gtest.Assert(n, 1)
+	})
+}
+
 func Test_Model_Where(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
@@ -1179,6 +1191,44 @@ func Test_Model_Where(t *testing.T) {
 	})
 }
 
+func Test_Model_Where_ISNULL_1(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.Case(t, func() {
+		//db.SetDebug(true)
+		result, err := db.Table(table).Data("nickname", nil).Where("id", 2).Update()
+		gtest.Assert(err, nil)
+		n, _ := result.RowsAffected()
+		gtest.Assert(n, 1)
+
+		one, err := db.Table(table).Where("nickname", nil).One()
+		gtest.Assert(err, nil)
+		gtest.Assert(one.IsEmpty(), false)
+		gtest.Assert(one["id"], 2)
+	})
+}
+
+func Test_Model_Where_ISNULL_2(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	// complicated one.
+	gtest.Case(t, func() {
+		//db.SetDebug(true)
+		conditions := g.Map{
+			"nickname like ?":    "%name%",
+			"id between ? and ?": g.Slice{1, 3},
+			"id > 0":             nil,
+			"create_time > 0":    nil,
+			"id":                 g.Slice{1, 2, 3},
+		}
+		result, err := db.Table(table).WherePri(conditions).Order("id asc").All()
+		gtest.Assert(err, nil)
+		gtest.Assert(len(result), 3)
+		gtest.Assert(result[0]["id"].Int(), 1)
+	})
+}
 func Test_Model_WherePri(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)

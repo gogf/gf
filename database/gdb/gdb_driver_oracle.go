@@ -377,7 +377,7 @@ func (d *DriverOracle) DoBatchInsert(link Link, table string, list interface{}, 
 		keys = append(keys, k)
 		holders = append(holders, "?")
 	}
-	batchResult := new(batchSqlResult)
+	batchResult := new(SqlResult)
 	charL, charR := d.DB.GetChars()
 	keyStr := charL + strings.Join(keys, charL+","+charR) + charR
 	valueHolderStr := strings.Join(holders, ",")
@@ -393,8 +393,8 @@ func (d *DriverOracle) DoBatchInsert(link Link, table string, list interface{}, 
 			if n, err := r.RowsAffected(); err != nil {
 				return r, err
 			} else {
-				batchResult.lastResult = r
-				batchResult.rowsAffected += n
+				batchResult.result = r
+				batchResult.affected += n
 			}
 		}
 		return batchResult, nil
@@ -421,8 +421,8 @@ func (d *DriverOracle) DoBatchInsert(link Link, table string, list interface{}, 
 			if n, err := r.RowsAffected(); err != nil {
 				return r, err
 			} else {
-				batchResult.lastResult = r
-				batchResult.rowsAffected += n
+				batchResult.result = r
+				batchResult.affected += n
 			}
 			params = params[:0]
 			intoStr = intoStr[:0]
@@ -437,8 +437,8 @@ func (d *DriverOracle) DoBatchInsert(link Link, table string, list interface{}, 
 		if n, err := r.RowsAffected(); err != nil {
 			return r, err
 		} else {
-			batchResult.lastResult = r
-			batchResult.rowsAffected += n
+			batchResult.result = r
+			batchResult.affected += n
 		}
 	}
 	return batchResult, nil
