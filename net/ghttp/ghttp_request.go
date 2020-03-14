@@ -23,23 +23,23 @@ import (
 // Request is the context object for a request.
 type Request struct {
 	*http.Request
-	Server          *Server                // Parent server.
+	Server          *Server                // Server.
 	Cookie          *Cookie                // Cookie.
 	Session         *gsession.Session      // Session.
 	Response        *Response              // Corresponding Response of this request.
-	Router          *Router                // Matched Router for this request. Note that it's only available in HTTP handler, not in HOOK or MiddleWare.
+	Router          *Router                // Matched Router for this request. Note that it's not available in HOOK handler.
 	EnterTime       int64                  // Request starting time in microseconds.
 	LeaveTime       int64                  // Request ending time in microseconds.
-	Middleware      *Middleware            // The middleware manager.
-	StaticFile      *StaticFile            // Static file object when static file serving.
-	Context         context.Context        // Custom context map for internal usage purpose.
-	handlers        []*handlerParsedItem   // All matched handlers containing handler, hook and middleware for this request .
+	Middleware      *Middleware            // Middleware manager.
+	StaticFile      *StaticFile            // Static file object for static file serving.
+	Context         context.Context        // Custom context for internal usage purpose.
+	handlers        []*handlerParsedItem   // All matched handlers containing handler, hook and middleware for this request.
 	hasHookHandler  bool                   // A bool marking whether there's hook handler in the handlers for performance purpose.
 	hasServeHandler bool                   // A bool marking whether there's serving handler in the handlers for performance purpose.
 	parsedQuery     bool                   // A bool marking whether the GET parameters parsed.
 	parsedBody      bool                   // A bool marking whether the request body parsed.
 	parsedForm      bool                   // A bool marking whether request Form parsed for HTTP method PUT, POST, PATCH.
-	paramsMap       map[string]interface{} // Custom parameters.
+	paramsMap       map[string]interface{} // Custom parameters map.
 	routerMap       map[string]string      // Router parameters map, which might be nil if there're no router parameters.
 	queryMap        map[string]interface{} // Query parameters map, which is nil if there's no query string.
 	formMap         map[string]interface{} // Form parameters map, which is nil if there's no form data from client.

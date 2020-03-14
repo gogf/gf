@@ -11,7 +11,7 @@ import (
 
 func main() {
 	// 创建对象复用池，对象过期时间为3000毫秒，并给定创建及销毁方法
-	p := gpool.New(3000, func() (interface{}, error) {
+	p := gpool.New(3000*time.Millisecond, func() (interface{}, error) {
 		return gtcp.NewConn("www.baidu.com:80")
 	}, func(i interface{}) {
 		glog.Println("expired")
