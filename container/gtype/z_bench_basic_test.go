@@ -157,6 +157,12 @@ func BenchmarkBool_Val(b *testing.B) {
 	}
 }
 
+func BenchmarkBool_Cas(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		bl.Cas(false, true)
+	}
+}
+
 func BenchmarkString_Set(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		str.Set(strconv.Itoa(i))

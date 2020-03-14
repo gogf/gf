@@ -34,7 +34,7 @@ const (
 	gDEFAULT_FILE_FORMAT     = `{Y-m-d}.log`
 	gDEFAULT_FILE_POOL_FLAGS = os.O_CREATE | os.O_WRONLY | os.O_APPEND
 	gDEFAULT_FPOOL_PERM      = os.FileMode(0666)
-	gDEFAULT_FPOOL_EXPIRE    = 60000
+	gDEFAULT_FPOOL_EXPIRE    = time.Minute
 	gPATH_FILTER_KEY         = "/os/glog/glog"
 )
 
