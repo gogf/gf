@@ -17,7 +17,6 @@ import (
 
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/container/gtype"
 	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/internal/cmdenv"
 	"github.com/gogf/gf/os/gfile"
@@ -33,10 +32,10 @@ const (
 
 // Configuration struct.
 type Config struct {
-	name  *gtype.String    // Default configuration file name.
+	name  string           // Default configuration file name.
 	paths *garray.StrArray // Searching path array.
 	jsons *gmap.StrAnyMap  // The pared JSON objects for configuration files.
-	vc    *gtype.Bool      // Whether do violence check in value index searching. It affects the performance when set true(false in default).
+	vc    bool             // Whether do violence check in value index searching. It affects the performance when set true(false in default).
 }
 
 var (
@@ -51,10 +50,9 @@ func New(file ...string) *Config {
 		name = file[0]
 	}
 	c := &Config{
-		name:  gtype.NewString(name),
+		name:  name,
 		paths: garray.NewStrArray(true),
 		jsons: gmap.NewStrAnyMap(true),
-		vc:    gtype.NewBool(),
 	}
 	// Customized dir path from env/cmd.
 	if envPath := cmdenv.Get("gf.gcfg.path").String(); envPath != "" {
@@ -82,7 +80,7 @@ func New(file ...string) *Config {
 
 // filePath returns the absolute configuration file path for the given filename by <file>.
 func (c *Config) filePath(file ...string) (path string) {
-	name := c.name.Val()
+	name := c.name
 	if len(file) > 0 {
 		name = file[0]
 	}
@@ -182,7 +180,7 @@ func (c *Config) SetPath(path string) error {
 // and it is not recommended to allow separators in the key names.
 // It is best to avoid this on the application side.
 func (c *Config) SetViolenceCheck(check bool) {
-	c.vc.Set(check)
+	c.vc = check
 	c.Clear()
 }
 
@@ -250,7 +248,7 @@ func (c *Config) AddPath(path string) error {
 // If the specified configuration file does not exist,
 // an empty string is returned.
 func (c *Config) FilePath(file ...string) (path string) {
-	name := c.name.Val()
+	name := c.name
 	if len(file) > 0 {
 		name = file[0]
 	}
@@ -290,13 +288,13 @@ func (c *Config) FilePath(file ...string) (path string) {
 
 // SetFileName sets the default configuration file name.
 func (c *Config) SetFileName(name string) *Config {
-	c.name.Set(name)
+	c.name = name
 	return c
 }
 
 // GetFileName returns the default configuration file name.
 func (c *Config) GetFileName() string {
-	return c.name.Val()
+	return c.name
 }
 
 // Available checks and returns whether configuration of given <file> is available.
@@ -305,7 +303,7 @@ func (c *Config) Available(file ...string) bool {
 	if len(file) > 0 && file[0] != "" {
 		name = file[0]
 	} else {
-		name = c.name.Val()
+		name = c.name
 	}
 	if c.FilePath(name) != "" {
 		return true
@@ -323,7 +321,7 @@ func (c *Config) getJson(file ...string) *gjson.Json {
 	if len(file) > 0 && file[0] != "" {
 		name = file[0]
 	} else {
-		name = c.name.Val()
+		name = c.name
 	}
 	r := c.jsons.GetOrSetFuncLock(name, func() interface{} {
 		content := ""
@@ -340,7 +338,7 @@ func (c *Config) getJson(file ...string) *gjson.Json {
 			}
 		}
 		if j, err := gjson.LoadContent(content, true); err == nil {
-			j.SetViolenceCheck(c.vc.Val())
+			j.SetViolenceCheck(c.vc)
 			// Add monitor for this configuration file,
 			// any changes of this file will refresh its cache in Config object.
 			if filePath != "" && !gres.Contains(filePath) {

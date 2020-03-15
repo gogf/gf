@@ -9,6 +9,7 @@
 package gcfg_test
 
 import (
+	"github.com/gogf/gf/debug/gdebug"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -419,6 +420,14 @@ func TestCfg_Get(t *testing.T) {
 func TestCfg_Instance(t *testing.T) {
 	gtest.Case(t, func() {
 		gtest.Assert(gcfg.Instance("gf") != nil, true)
+	})
+	gtest.Case(t, func() {
+		pwd := gfile.Pwd()
+		gfile.Chdir(gfile.Join(gdebug.CallerDirectory(), "testdata"))
+		defer gfile.Chdir(pwd)
+		gtest.Assert(gcfg.Instance("c1") != nil, true)
+		gtest.Assert(gcfg.Instance("c1").Get("my-config"), "1")
+		gtest.Assert(gcfg.Instance("folder1/c1").Get("my-config"), "2")
 	})
 }
 
