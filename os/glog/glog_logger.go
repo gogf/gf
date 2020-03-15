@@ -10,9 +10,11 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/os/gtimer"
 	"io"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gogf/gf/debug/gdebug"
@@ -26,8 +28,9 @@ import (
 
 // Logger is the struct for logging management.
 type Logger struct {
-	parent *Logger // Parent logger.
-	config Config  // Logger configuration.
+	mu     sync.Mutex // Mutex is not for common logging, but for file rotation feature.
+	parent *Logger    // Parent logger.
+	config Config     // Logger configuration.
 }
 
 const (
@@ -50,9 +53,11 @@ const (
 
 // New creates and returns a custom logger.
 func New() *Logger {
-	return &Logger{
+	logger := &Logger{
 		config: DefaultConfig(),
 	}
+	gtimer.AddOnce(time.Second, logger.rotateChecks)
+	return logger
 }
 
 // NewWithWriter creates and returns a custom logger with io.Writer.
@@ -63,6 +68,7 @@ func NewWithWriter(writer io.Writer) *Logger {
 }
 
 // Clone returns a new logger, which is the clone the current logger.
+// It's commonly used for chaining operations.
 func (l *Logger) Clone() *Logger {
 	logger := Logger{}
 	logger = *l
@@ -74,10 +80,6 @@ func (l *Logger) Clone() *Logger {
 // It returns nil if file logging is disabled, or file opening fails.
 func (l *Logger) getFilePointer() *gfpool.File {
 	if path := l.config.Path; path != "" {
-		// Content containing "{}" in the file name is formatted using gtime.
-		file, _ := gregex.ReplaceStringFunc(`{.+?}`, l.config.File, func(s string) string {
-			return gtime.Now().Format(strings.Trim(s, "{}"))
-		})
 		// Create path if it does not exist.
 		if !gfile.Exists(path) {
 			if err := gfile.Mkdir(path); err != nil {
@@ -86,7 +88,7 @@ func (l *Logger) getFilePointer() *gfpool.File {
 			}
 		}
 		if fp, err := gfpool.Open(
-			path+gfile.Separator+file,
+			l.getFilePath(),
 			gDEFAULT_FILE_POOL_FLAGS,
 			gDEFAULT_FPOOL_PERM,
 			gDEFAULT_FPOOL_EXPIRE); err == nil {
@@ -96,6 +98,15 @@ func (l *Logger) getFilePointer() *gfpool.File {
 		}
 	}
 	return nil
+}
+
+// getFilePath returns the logging file path.
+func (l *Logger) getFilePath() string {
+	// Content containing "{}" in the file name is formatted using gtime.
+	file, _ := gregex.ReplaceStringFunc(`{.+?}`, l.config.File, func(s string) string {
+		return gtime.Now().Format(strings.Trim(s, "{}"))
+	})
+	return gfile.Join(l.config.Path, file)
 }
 
 // print prints <s> to defined writer, logging file or passed <std>.
@@ -183,6 +194,18 @@ func (l *Logger) printToWriter(std io.Writer, buffer *bytes.Buffer) {
 	if l.config.Writer == nil {
 		if f := l.getFilePointer(); f != nil {
 			defer f.Close()
+			// Rotation file size checks.
+			if l.config.RotateSize > 0 {
+				state, err := f.Stat()
+				if err != nil {
+					panic(err)
+				}
+				if state.Size() > l.config.RotateSize {
+					l.rotateFile()
+					l.printToWriter(std, buffer)
+					return
+				}
+			}
 			if _, err := io.WriteString(f, buffer.String()); err != nil {
 				fmt.Fprintln(os.Stderr, err.Error())
 			}
