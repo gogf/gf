@@ -62,6 +62,7 @@ func init() {
 	} else {
 		db = r
 	}
+	db.SetDebug(true)
 	schemaTemplate := "CREATE DATABASE IF NOT EXISTS `%s` CHARACTER SET UTF8"
 	if _, err := db.Exec(fmt.Sprintf(schemaTemplate, SCHEMA1)); err != nil {
 		gtest.Error(err)

@@ -25,5 +25,5 @@ func MTimeMillisecond(path string) int64 {
 	if e != nil {
 		return 0
 	}
-	return int64(s.ModTime().Nanosecond() / 1000000)
+	return s.ModTime().UnixNano() / 1000000
 }

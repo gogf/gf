@@ -721,7 +721,7 @@ func (c *Core) MarshalJSON() ([]byte, error) {
 // writeSqlToLogger outputs the sql object to logger.
 // It is enabled when configuration "debug" is true.
 func (c *Core) writeSqlToLogger(v *Sql) {
-	s := fmt.Sprintf("[%d ms] %s", v.End-v.Start, v.Format)
+	s := fmt.Sprintf("[%3d ms] %s", v.End-v.Start, v.Format)
 	if v.Error != nil {
 		s += "\nError: " + v.Error.Error()
 		c.logger.StackWithFilter(gPATH_FILTER_KEY).Error(s)
