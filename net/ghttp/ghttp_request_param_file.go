@@ -36,7 +36,7 @@ type UploadFiles []*UploadFile
 // Note that it will overwrite the target file if there's already a same name file exist.
 func (f *UploadFile) Save(dirPath string, randomlyRename ...bool) (filename string, err error) {
 	if f == nil {
-		return
+		return "", errors.New("file is empty, maybe you retrieve it from invalid field name or form enctype")
 	}
 	if !gfile.Exists(dirPath) {
 		if err = gfile.Mkdir(dirPath); err != nil {
@@ -77,7 +77,7 @@ func (f *UploadFile) Save(dirPath string, randomlyRename ...bool) (filename stri
 // The parameter <randomlyRename> specifies whether randomly renames all the file names.
 func (fs UploadFiles) Save(dirPath string, randomlyRename ...bool) (filenames []string, err error) {
 	if len(fs) == 0 {
-		return nil, nil
+		return nil, errors.New("file array is empty, maybe you retrieve it from invalid field name or form enctype")
 	}
 	for _, f := range fs {
 		if filename, err := f.Save(dirPath, randomlyRename...); err != nil {
