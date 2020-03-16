@@ -141,7 +141,7 @@ func (l *Logger) rotateChecks() {
 		// Expiration checks.
 		if l.config.RotateExpire > 0 {
 			nowTimestampMilli := gtime.TimestampMilli()
-			// As for Golang version <= 1.13, there's no method Milliseconds for time.Duration.
+			// As for Golang version < 1.13, there's no method Milliseconds for time.Duration.
 			// So we need calculate the milliseconds using its nanoseconds value.
 			expireMillisecond := l.config.RotateExpire.Nanoseconds() / 1000000
 			for _, array := range backupFilesMap {
