@@ -7,12 +7,14 @@
 // Package gspath implements file index and search for folders.
 //
 // It searches file internally with high performance in order by the directory adding sequence.
-// Note that: If caching feature enabled, there would be a searching delay after adding/deleting files.
+// Note that:
+// If caching feature enabled, there would be a searching delay after adding/deleting files.
 package gspath
 
 import (
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/internal/intlog"
 	"os"
 	"sort"
 	"strings"
@@ -50,7 +52,7 @@ func New(path string, cache bool) *SPath {
 	}
 	if len(path) > 0 {
 		if _, err := sp.Add(path); err != nil {
-			//fmt.Errorf(err.Error())
+			intlog.Print(err)
 		}
 	}
 	return sp
@@ -111,6 +113,7 @@ func (sp *SPath) Set(path string) (realPath string, err error) {
 				sp.removeMonitorByPath(v)
 			}
 		}
+		intlog.Print("paths clear:", sp.paths)
 		sp.paths.Clear()
 		if sp.cache != nil {
 			sp.cache.Clear()
