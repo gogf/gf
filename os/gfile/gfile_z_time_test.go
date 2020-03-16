@@ -48,7 +48,10 @@ func Test_MTimeMillisecond(t *testing.T) {
 		gtest.Assert(err, nil)
 
 		time.Sleep(time.Millisecond * 100)
-		gtest.AssertGE(gfile.MTimeMillisecond(testpath()+file1), fileobj.ModTime().UnixNano()/1000000)
+		gtest.AssertGE(
+			gfile.MTimeMillisecond(testpath()+file1),
+			fileobj.ModTime().UnixNano()/1000000,
+		)
 		gtest.Assert(gfile.MTimeMillisecond(""), 0)
 	})
 }
