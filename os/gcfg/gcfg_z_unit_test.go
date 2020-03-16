@@ -440,7 +440,7 @@ func TestCfg_Instance(t *testing.T) {
 	})
 	gtest.Case(t, func() {
 		pwd := gfile.Pwd()
-		gfile.Chdir(gfile.Join(gdebug.CallerDirectory(), "testdata"))
+		gfile.Chdir(gfile.Join(gdebug.TestDataPath()))
 		defer gfile.Chdir(pwd)
 		gtest.Assert(gcfg.Instance("c1") != nil, true)
 		gtest.Assert(gcfg.Instance("c1").Get("my-config"), "1")

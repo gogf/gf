@@ -43,7 +43,7 @@ func Test_Gzip_UnGzip(t *testing.T) {
 }
 
 func Test_Gzip_UnGzip_File(t *testing.T) {
-	srcPath := gfile.Join(gdebug.CallerDirectory(), "testdata", "gzip", "file.txt")
+	srcPath := gfile.Join(gdebug.TestDataPath(), "gzip", "file.txt")
 	dstPath1 := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr(), "gzip.zip")
 	dstPath2 := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr(), "file.txt")
 
