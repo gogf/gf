@@ -82,7 +82,7 @@ func (p *Pool) Put(value interface{}) error {
 	if p.TTL == 0 {
 		item.expire = 0
 	} else {
-		// As for Golang version <= 1.13, there's no method Milliseconds for time.Duration.
+		// As for Golang version < 1.13, there's no method Milliseconds for time.Duration.
 		// So we need calculate the milliseconds using its nanoseconds value.
 		item.expire = gtime.TimestampMilli() + p.TTL.Nanoseconds()/1000000
 	}
