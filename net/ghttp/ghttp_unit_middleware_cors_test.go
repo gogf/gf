@@ -40,6 +40,7 @@ func Test_Middleware_CORS(t *testing.T) {
 		resp, err := client.Get("/api.v2/user/list")
 		gtest.Assert(err, nil)
 		gtest.Assert(len(resp.Header["Access-Control-Allow-Headers"]), 0)
+		gtest.Assert(resp.StatusCode, 404)
 		resp.Close()
 
 		// POST request matches the route and CORS middleware.
@@ -61,6 +62,7 @@ func Test_Middleware_CORS(t *testing.T) {
 		gtest.Assert(err, nil)
 		gtest.Assert(len(resp.Header["Access-Control-Allow-Headers"]), 0)
 		gtest.Assert(resp.ReadAllString(), "Not Found")
+		gtest.Assert(resp.StatusCode, 404)
 		resp.Close()
 	})
 	// OPTIONS POST
@@ -71,6 +73,7 @@ func Test_Middleware_CORS(t *testing.T) {
 		resp, err := client.Options("/api.v2/user/list")
 		gtest.Assert(err, nil)
 		gtest.Assert(len(resp.Header["Access-Control-Allow-Headers"]), 1)
+		gtest.Assert(resp.StatusCode, 200)
 		resp.Close()
 	})
 }

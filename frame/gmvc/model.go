@@ -8,9 +8,7 @@ package gmvc
 
 import "github.com/gogf/gf/database/gdb"
 
-// M is alias for Model,
-// just for short write purpose.
-type M = Model
-
-// Model is alias for *gdb.Model.
-type Model = *gdb.Model
+type (
+	M     = Model      // M is alias for Model, just for short write purpose.
+	Model = *gdb.Model // Model is alias for *gdb.Model.
+)
