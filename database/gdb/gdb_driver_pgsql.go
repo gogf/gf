@@ -66,7 +66,7 @@ func (d *DriverPgsql) HandleSqlBeforeCommit(link Link, sql string, args []interf
 		index++
 		return fmt.Sprintf("$%d", index)
 	})
-	sql, _ = gregex.ReplaceString(` LIMIT (\d+),\s*(\d+)`, ` LIMIT $1 OFFSET $2`, sql)
+	sql, _ = gregex.ReplaceString(` LIMIT (\d+),\s*(\d+)`, ` LIMIT $2 OFFSET $1`, sql)
 	return sql, args
 }
 
