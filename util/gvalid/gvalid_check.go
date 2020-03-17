@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/encoding/gjson"
@@ -78,6 +79,9 @@ var (
 		"length":               {},
 		"min-length":           {},
 		"max-length":           {},
+		"cn-length":               {},
+		"cn-min-length":           {},
+		"cn-max-length":           {},
 		"between":              {},
 		"min":                  {},
 		"max":                  {},
@@ -188,6 +192,17 @@ func Check(value interface{}, rules string, msgs interface{}, params ...interfac
 			fallthrough
 		case "max-length":
 			if msg := checkLength(val, ruleKey, ruleVal, customMsgMap); msg != "" {
+				errorMsgs[ruleKey] = msg
+			} else {
+				match = true
+			}
+		// 中英文混合长度判断
+		case "cn-length":
+			fallthrough
+		case "cn-min-length":
+			fallthrough
+		case "cn-max-length":
+			if msg := checkCnLength(val, ruleKey, ruleVal, customMsgMap); msg != "" {
 				errorMsgs[ruleKey] = msg
 			} else {
 				match = true
@@ -522,7 +537,69 @@ func checkRequired(value, ruleKey, ruleVal string, params map[string]string) boo
 		return true
 	}
 }
+// 对中英文混合字段值长度进行检测
+func checkCnLength(value, ruleKey, ruleVal string, customMsgMap map[string]string) string {
+	msg := ""
+	strLen := utf8.RuneCountInString(value)
+	switch ruleKey {
+	// 长度范围
+	case "cn-length":
+		array := strings.Split(ruleVal, ",")
+		min := 0
+		max := 0
+		if len(array) > 0 {
+			if v, err := strconv.Atoi(strings.TrimSpace(array[0])); err == nil {
+				min = v
+			}
+		}
+		if len(array) > 1 {
+			if v, err := strconv.Atoi(strings.TrimSpace(array[1])); err == nil {
+				max = v
+			}
+		}
+		if strLen < min || strLen > max {
+			if v, ok := customMsgMap[ruleKey]; !ok {
+				msg = errorMsgMap.Get(ruleKey)
+			} else {
+				msg = v
+			}
+			msg = strings.Replace(msg, ":min", strconv.Itoa(min), -1)
+			msg = strings.Replace(msg, ":max", strconv.Itoa(max), -1)
+			return msg
+		}
 
+	// 最小长度
+	case "cn-min-length":
+		if min, err := strconv.Atoi(ruleVal); err == nil {
+			if strLen < min {
+				if v, ok := customMsgMap[ruleKey]; !ok {
+					msg = errorMsgMap.Get(ruleKey)
+				} else {
+					msg = v
+				}
+				msg = strings.Replace(msg, ":min", strconv.Itoa(min), -1)
+			}
+		} else {
+			msg = "校验参数[" + ruleVal + "]应当为整数类型"
+		}
+
+	// 最大长度
+	case "cn-max-length":
+		if max, err := strconv.Atoi(ruleVal); err == nil {
+			if strLen > max {
+				if v, ok := customMsgMap[ruleKey]; !ok {
+					msg = errorMsgMap.Get(ruleKey)
+				} else {
+					msg = v
+				}
+				msg = strings.Replace(msg, ":max", strconv.Itoa(max), -1)
+			}
+		} else {
+			msg = "校验参数[" + ruleVal + "]应当为整数类型"
+		}
+	}
+	return msg
+}
 // 对字段值长度进行检测
 func checkLength(value, ruleKey, ruleVal string, customMsgMap map[string]string) string {
 	msg := ""
