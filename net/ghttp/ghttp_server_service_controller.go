@@ -24,12 +24,12 @@ func (s *Server) BindController(pattern string, controller Controller, method ..
 	if len(method) > 0 {
 		bindMethod = method[0]
 	}
-	s.doBindController(pattern, controller, bindMethod, nil)
+	s.doBindController(pattern, controller, bindMethod, nil, "")
 }
 
 // 绑定路由到指定的方法执行, 第三个参数method仅支持一个方法注册，不支持多个，并且区分大小写。
 func (s *Server) BindControllerMethod(pattern string, controller Controller, method string) {
-	s.doBindControllerMethod(pattern, controller, method, nil)
+	s.doBindControllerMethod(pattern, controller, method, nil, "")
 }
 
 // 绑定控制器(RESTFul)，控制器需要实现gmvc.Controller接口
@@ -37,10 +37,13 @@ func (s *Server) BindControllerMethod(pattern string, controller Controller, met
 // 因此只会绑定HTTP Method对应的方法，其他方法不会自动注册绑定
 // 这种方式绑定的控制器每一次请求都会初始化一个新的控制器对象进行处理，对应不同的请求会话
 func (s *Server) BindControllerRest(pattern string, controller Controller) {
-	s.doBindControllerRest(pattern, controller, nil)
+	s.doBindControllerRest(pattern, controller, nil, "")
 }
 
-func (s *Server) doBindController(pattern string, controller Controller, method string, middleware []HandlerFunc) {
+func (s *Server) doBindController(
+	pattern string, controller Controller, method string,
+	middleware []HandlerFunc, source string,
+) {
 	// Convert input method to map for convenience and high performance searching.
 	var methodMap map[string]bool
 	if len(method) > 0 {
@@ -98,6 +101,7 @@ func (s *Server) doBindController(pattern string, controller Controller, method 
 				reflect: v.Elem().Type(),
 			},
 			middleware: middleware,
+			source:     source,
 		}
 		// 如果方法中带有Index方法，那么额外自动增加一个路由规则匹配主URI，
 		// 例如: pattern为/user, 那么会同时注册/user及/user/index，
@@ -117,13 +121,20 @@ func (s *Server) doBindController(pattern string, controller Controller, method 
 					reflect: v.Elem().Type(),
 				},
 				middleware: middleware,
+				source:     source,
 			}
 		}
 	}
 	s.bindHandlerByMap(m)
 }
 
-func (s *Server) doBindControllerMethod(pattern string, controller Controller, method string, middleware []HandlerFunc) {
+func (s *Server) doBindControllerMethod(
+	pattern string,
+	controller Controller,
+	method string,
+	middleware []HandlerFunc,
+	source string,
+) {
 	m := make(map[string]*handlerItem)
 	v := reflect.ValueOf(controller)
 	t := v.Type()
@@ -141,8 +152,10 @@ func (s *Server) doBindControllerMethod(pattern string, controller Controller, m
 		ctlName = fmt.Sprintf(`(%s)`, ctlName)
 	}
 	if _, ok := methodValue.Interface().(func()); !ok {
-		s.Logger().Errorf(`invalid route method: %s.%s.%s defined as "%s", but "func()" is required for controller registry`,
-			pkgPath, ctlName, methodName, methodValue.Type().String())
+		s.Logger().Errorf(
+			`invalid route method: %s.%s.%s defined as "%s", but "func()" is required for controller registry`,
+			pkgPath, ctlName, methodName, methodValue.Type().String(),
+		)
 		return
 	}
 	key := s.mergeBuildInNameToPattern(pattern, structName, methodName, false)
@@ -154,11 +167,15 @@ func (s *Server) doBindControllerMethod(pattern string, controller Controller, m
 			reflect: v.Elem().Type(),
 		},
 		middleware: middleware,
+		source:     source,
 	}
 	s.bindHandlerByMap(m)
 }
 
-func (s *Server) doBindControllerRest(pattern string, controller Controller, middleware []HandlerFunc) {
+func (s *Server) doBindControllerRest(
+	pattern string, controller Controller,
+	middleware []HandlerFunc, source string,
+) {
 	// 遍历控制器，获取方法列表，并构造成uri
 	m := make(map[string]*handlerItem)
 	v := reflect.ValueOf(controller)
@@ -177,8 +194,10 @@ func (s *Server) doBindControllerRest(pattern string, controller Controller, mid
 			ctlName = fmt.Sprintf(`(%s)`, ctlName)
 		}
 		if _, ok := v.Method(i).Interface().(func()); !ok {
-			s.Logger().Errorf(`invalid route method: %s.%s.%s defined as "%s", but "func()" is required for controller registry`,
-				pkgPath, ctlName, methodName, v.Method(i).Type().String())
+			s.Logger().Errorf(
+				`invalid route method: %s.%s.%s defined as "%s", but "func()" is required for controller registry`,
+				pkgPath, ctlName, methodName, v.Method(i).Type().String(),
+			)
 			return
 		}
 		key := s.mergeBuildInNameToPattern(methodName+":"+pattern, structName, methodName, false)
@@ -190,6 +209,7 @@ func (s *Server) doBindControllerRest(pattern string, controller Controller, mid
 				reflect: v.Elem().Type(),
 			},
 			middleware: middleware,
+			source:     source,
 		}
 	}
 	s.bindHandlerByMap(m)

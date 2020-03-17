@@ -1,16 +1,35 @@
 package main
 
 import (
-	"fmt"
-	"github.com/gogf/gf/text/gregex"
+	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/os/gtimer"
+	"time"
 )
 
+func GetList() {
+START:
+	for {
+		res, err := g.Redis().DoVar("RPOP", "mill")
+		if err != nil {
+			glog.Debug("Rpop:", err)
+			break
+		}
+		glog.Debug(res)
+		if res.IsEmpty() {
+			glog.Debug("nil")
+			continue START
+		}
+		interval := 50 * time.Second
+		gtimer.AddOnce(interval, func() {
+			glog.Debug("end------:", res, gtime.Now().Format("Y-m-d H:i:s"))
+		})
+	}
+}
+
 func main() {
-	data := "@var(.prefix)您收到的验证码为：@var(.code)，请在@var(.expire)内完成验证"
-	result, err := gregex.ReplaceStringFuncMatch(`(@var\(\.\w+\))`, data, func(match []string) string {
-		fmt.Println(match)
-		return "#"
-	})
-	fmt.Println(err)
-	fmt.Println(result)
+	g.Redis().SetMaxActive(2)
+	//g.Redis().SetMaxIdle(100)
+	GetList()
 }

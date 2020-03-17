@@ -89,6 +89,7 @@ type (
 		ctrlInfo   *handlerController // Controller information for reflect usage.
 		hookName   string             // Hook type name.
 		router     *Router            // Router object.
+		source     string             // Source file path:line when registering.
 	}
 
 	// handlerParsedItem is the item parsed from URL.Path.
@@ -105,7 +106,7 @@ type (
 
 	// registeredRouteItem stores the information of the router and is used for route map.
 	registeredRouteItem struct {
-		file    string       // Source file path and its line number.
+		source  string       // Source file path and its line number.
 		handler *handlerItem // Handler object.
 	}
 

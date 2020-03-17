@@ -94,7 +94,7 @@ func (c *Conn) Send(data []byte, retry ...Retry) error {
 	}
 }
 
-// Recv receives data from the connection.
+// Recv receives and returns data from the connection.
 //
 // Note that,
 // 1. If length = 0, which means it receives the data from current buffer and returns immediately.

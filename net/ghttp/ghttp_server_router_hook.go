@@ -13,11 +13,16 @@ import (
 
 // 绑定指定的hook回调函数, pattern参数同BindHandler，支持命名路由；hook参数的值由ghttp server设定，参数不区分大小写
 func (s *Server) BindHookHandler(pattern string, hook string, handler HandlerFunc) {
+	s.doBindHookHandler(pattern, hook, handler, "")
+}
+
+func (s *Server) doBindHookHandler(pattern string, hook string, handler HandlerFunc, source string) {
 	s.setHandler(pattern, &handlerItem{
 		itemType: gHANDLER_TYPE_HOOK,
 		itemName: gdebug.FuncPath(handler),
 		itemFunc: handler,
 		hookName: hook,
+		source:   source,
 	})
 }
 

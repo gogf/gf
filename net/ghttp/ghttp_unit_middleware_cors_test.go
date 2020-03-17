@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-func Test_Middleware_CORS(t *testing.T) {
+func Test_Middleware_CORS1(t *testing.T) {
 	p := ports.PopRand()
 	s := g.Server(p)
 	s.Group("/api.v2", func(group *ghttp.RouterGroup) {
@@ -40,6 +40,7 @@ func Test_Middleware_CORS(t *testing.T) {
 		resp, err := client.Get("/api.v2/user/list")
 		gtest.Assert(err, nil)
 		gtest.Assert(len(resp.Header["Access-Control-Allow-Headers"]), 0)
+		gtest.Assert(resp.StatusCode, 404)
 		resp.Close()
 
 		// POST request matches the route and CORS middleware.
@@ -61,6 +62,7 @@ func Test_Middleware_CORS(t *testing.T) {
 		gtest.Assert(err, nil)
 		gtest.Assert(len(resp.Header["Access-Control-Allow-Headers"]), 0)
 		gtest.Assert(resp.ReadAllString(), "Not Found")
+		gtest.Assert(resp.StatusCode, 404)
 		resp.Close()
 	})
 	// OPTIONS POST
@@ -71,6 +73,73 @@ func Test_Middleware_CORS(t *testing.T) {
 		resp, err := client.Options("/api.v2/user/list")
 		gtest.Assert(err, nil)
 		gtest.Assert(len(resp.Header["Access-Control-Allow-Headers"]), 1)
+		gtest.Assert(resp.StatusCode, 200)
+		resp.Close()
+	})
+}
+
+func Test_Middleware_CORS2(t *testing.T) {
+	p := ports.PopRand()
+	s := g.Server(p)
+	s.Group("/api.v2", func(group *ghttp.RouterGroup) {
+		group.Middleware(MiddlewareCORS)
+		group.GET("/user/list/{type}", func(r *ghttp.Request) {
+			r.Response.Write(r.Get("type"))
+		})
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+	time.Sleep(100 * time.Millisecond)
+	gtest.Case(t, func() {
+		client := ghttp.NewClient()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		// Common Checks.
+		gtest.Assert(client.GetContent("/"), "Not Found")
+		gtest.Assert(client.GetContent("/api.v2"), "Not Found")
+		// Get request.
+		resp, err := client.Get("/api.v2/user/list/1")
+		gtest.Assert(err, nil)
+		gtest.Assert(len(resp.Header["Access-Control-Allow-Headers"]), 1)
+		gtest.Assert(resp.Header["Access-Control-Allow-Headers"][0], "Origin,Content-Type,Accept,User-Agent,Cookie,Authorization,X-Auth-Token,X-Requested-With")
+		gtest.Assert(resp.Header["Access-Control-Allow-Methods"][0], "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE")
+		gtest.Assert(resp.Header["Access-Control-Allow-Origin"][0], "*")
+		gtest.Assert(resp.Header["Access-Control-Max-Age"][0], "3628800")
+		gtest.Assert(resp.ReadAllString(), "1")
+		resp.Close()
+	})
+	// OPTIONS GET None.
+	gtest.Case(t, func() {
+		client := ghttp.NewClient()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetHeader("Access-Control-Request-Method", "GET")
+		resp, err := client.Options("/api.v2/user")
+		gtest.Assert(err, nil)
+		gtest.Assert(len(resp.Header["Access-Control-Allow-Headers"]), 0)
+		gtest.Assert(resp.StatusCode, 404)
+		resp.Close()
+	})
+	// OPTIONS GET
+	gtest.Case(t, func() {
+		client := ghttp.NewClient()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetHeader("Access-Control-Request-Method", "GET")
+		resp, err := client.Options("/api.v2/user/list/1")
+		gtest.Assert(err, nil)
+		gtest.Assert(len(resp.Header["Access-Control-Allow-Headers"]), 1)
+		gtest.Assert(resp.StatusCode, 200)
+		resp.Close()
+	})
+	// OPTIONS POST
+	gtest.Case(t, func() {
+		client := ghttp.NewClient()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		client.SetHeader("Access-Control-Request-Method", "POST")
+		resp, err := client.Options("/api.v2/user/list/1")
+		gtest.Assert(err, nil)
+		gtest.Assert(len(resp.Header["Access-Control-Allow-Headers"]), 0)
+		gtest.Assert(resp.StatusCode, 404)
 		resp.Close()
 	})
 }

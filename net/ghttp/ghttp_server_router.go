@@ -67,6 +67,10 @@ func (s *Server) parsePattern(pattern string) (domain, method, path string, err 
 // is the well designed router storage structure for router searching when the request is under serving.
 func (s *Server) setHandler(pattern string, handler *handlerItem) {
 	handler.itemId = handlerIdGenerator.Add(1)
+	if handler.source == "" {
+		_, file, line := gdebug.CallerWithFilter(gFILTER_KEY)
+		handler.source = fmt.Sprintf(`%s:%d`, file, line)
+	}
 	domain, method, uri, err := s.parsePattern(pattern)
 	if err != nil {
 		s.Logger().Fatal("invalid pattern:", pattern, err)
@@ -83,7 +87,10 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 		switch handler.itemType {
 		case gHANDLER_TYPE_HANDLER, gHANDLER_TYPE_OBJECT, gHANDLER_TYPE_CONTROLLER:
 			if item, ok := s.routesMap[routerKey]; ok {
-				s.Logger().Fatalf(`duplicated route registry "%s", already registered at %s`, pattern, item[0].file)
+				s.Logger().Fatalf(
+					`duplicated route registry "%s" at %s , already registered at %s`,
+					pattern, handler.source, item[0].source,
+				)
 				return
 			}
 		}
@@ -184,9 +191,9 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 	if _, ok := s.routesMap[routerKey]; !ok {
 		s.routesMap[routerKey] = make([]registeredRouteItem, 0)
 	}
-	_, file, line := gdebug.CallerWithFilter(gFILTER_KEY)
+
 	routeItem := registeredRouteItem{
-		file:    fmt.Sprintf(`%s:%d`, file, line),
+		source:  handler.source,
 		handler: handler,
 	}
 	switch handler.itemType {

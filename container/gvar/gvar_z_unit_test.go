@@ -334,6 +334,15 @@ func Test_Struct(t *testing.T) {
 
 		gtest.Assert(testObj.Test, Kv["Test"])
 	})
+	gtest.Case(t, func() {
+		type StTest struct {
+			Test int8
+		}
+		o := &StTest{}
+		v := gvar.New(g.Slice{"Test", "-25"})
+		v.Struct(o)
+		gtest.Assert(o.Test, -25)
+	})
 }
 
 func Test_Json(t *testing.T) {

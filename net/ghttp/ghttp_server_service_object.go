@@ -23,22 +23,25 @@ func (s *Server) BindObject(pattern string, object interface{}, method ...string
 	if len(method) > 0 {
 		bindMethod = method[0]
 	}
-	s.doBindObject(pattern, object, bindMethod, nil)
+	s.doBindObject(pattern, object, bindMethod, nil, "")
 }
 
 // 绑定对象到URI请求处理中，会自动识别方法名称，并附加到对应的URI地址后面，
 // 第三个参数method仅支持一个方法注册，不支持多个，并且区分大小写。
 func (s *Server) BindObjectMethod(pattern string, object interface{}, method string) {
-	s.doBindObjectMethod(pattern, object, method, nil)
+	s.doBindObjectMethod(pattern, object, method, nil, "")
 }
 
 // 绑定对象到URI请求处理中，会自动识别方法名称，并附加到对应的URI地址后面,
 // 需要注意对象方法的定义必须按照 ghttp.HandlerFunc 来定义
 func (s *Server) BindObjectRest(pattern string, object interface{}) {
-	s.doBindObjectRest(pattern, object, nil)
+	s.doBindObjectRest(pattern, object, nil, "")
 }
 
-func (s *Server) doBindObject(pattern string, object interface{}, method string, middleware []HandlerFunc) {
+func (s *Server) doBindObject(
+	pattern string, object interface{}, method string,
+	middleware []HandlerFunc, source string,
+) {
 	// Convert input method to map for convenience and high performance searching purpose.
 	var methodMap map[string]bool
 	if len(method) > 0 {
@@ -107,6 +110,7 @@ func (s *Server) doBindObject(pattern string, object interface{}, method string,
 			initFunc:   initFunc,
 			shutFunc:   shutFunc,
 			middleware: middleware,
+			source:     source,
 		}
 		// 如果方法中带有Index方法，那么额外自动增加一个路由规则匹配主URI。
 		// 注意，当pattern带有内置变量时，不会自动加该路由。
@@ -123,6 +127,7 @@ func (s *Server) doBindObject(pattern string, object interface{}, method string,
 				initFunc:   initFunc,
 				shutFunc:   shutFunc,
 				middleware: middleware,
+				source:     source,
 			}
 		}
 	}
@@ -131,7 +136,10 @@ func (s *Server) doBindObject(pattern string, object interface{}, method string,
 
 // 绑定对象到URI请求处理中，会自动识别方法名称，并附加到对应的URI地址后面，
 // 第三个参数method仅支持一个方法注册，不支持多个，并且区分大小写。
-func (s *Server) doBindObjectMethod(pattern string, object interface{}, method string, middleware []HandlerFunc) {
+func (s *Server) doBindObjectMethod(
+	pattern string, object interface{}, method string,
+	middleware []HandlerFunc, source string,
+) {
 	m := make(map[string]*handlerItem)
 	v := reflect.ValueOf(object)
 	t := v.Type()
@@ -170,12 +178,16 @@ func (s *Server) doBindObjectMethod(pattern string, object interface{}, method s
 		initFunc:   initFunc,
 		shutFunc:   shutFunc,
 		middleware: middleware,
+		source:     source,
 	}
 
 	s.bindHandlerByMap(m)
 }
 
-func (s *Server) doBindObjectRest(pattern string, object interface{}, middleware []HandlerFunc) {
+func (s *Server) doBindObjectRest(
+	pattern string, object interface{},
+	middleware []HandlerFunc, source string,
+) {
 	m := make(map[string]*handlerItem)
 	v := reflect.ValueOf(object)
 	t := v.Type()
@@ -213,6 +225,7 @@ func (s *Server) doBindObjectRest(pattern string, object interface{}, middleware
 			initFunc:   initFunc,
 			shutFunc:   shutFunc,
 			middleware: middleware,
+			source:     source,
 		}
 	}
 	s.bindHandlerByMap(m)

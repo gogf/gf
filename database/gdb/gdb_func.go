@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/internal/empty"
+	"github.com/gogf/gf/internal/utils"
 	"github.com/gogf/gf/os/gtime"
 	"reflect"
 	"regexp"
@@ -282,12 +283,25 @@ func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool) (
 	newArgs = append(newArgs, args...)
 	newWhere = buffer.String()
 	if len(newArgs) > 0 {
-		// It supports formats like: Where/And/Or("uid", 1) , Where/And/Or("uid>=", 1)
 		if gstr.Pos(newWhere, "?") == -1 {
 			if lastOperatorReg.MatchString(newWhere) {
+				// Eg: Where/And/Or("uid>=", 1)
 				newWhere += "?"
 			} else if gregex.IsMatchString(`^[\w\.\-]+$`, newWhere) {
-				newWhere += "=?"
+				newWhere = db.QuoteString(newWhere)
+				if len(newArgs) > 0 {
+					if utils.IsArray(newArgs[0]) {
+						// Eg: Where("id", []int{1,2,3})
+						newWhere += " IN (?)"
+					} else if empty.IsNil(newArgs[0]) {
+						// Eg: Where("id", nil)
+						newWhere += " IS NULL"
+						newArgs = nil
+					} else {
+						// Eg: Where/And/Or("uid", 1)
+						newWhere += "=?"
+					}
+				}
 			}
 		}
 	}
@@ -316,7 +330,7 @@ func formatWhereInterfaces(db DB, where []interface{}, buffer *bytes.Buffer, new
 
 // formatWhereKeyValue handles each key-value pair of the parameter map.
 func formatWhereKeyValue(db DB, buffer *bytes.Buffer, newArgs []interface{}, key string, value interface{}) []interface{} {
-	key = db.QuoteWord(key)
+	quotedKey := db.QuoteWord(key)
 	if buffer.Len() > 0 {
 		buffer.WriteString(" AND ")
 	}
@@ -324,36 +338,43 @@ func formatWhereKeyValue(db DB, buffer *bytes.Buffer, newArgs []interface{}, key
 	// the key string, it automatically adds '?' holder chars according to its arguments count
 	// and converts it to "IN" statement.
 	rv := reflect.ValueOf(value)
-	switch rv.Kind() {
+	kind := rv.Kind()
+	switch kind {
 	case reflect.Slice, reflect.Array:
-		count := gstr.Count(key, "?")
+		count := gstr.Count(quotedKey, "?")
 		if count == 0 {
-			buffer.WriteString(key + " IN(?)")
+			buffer.WriteString(quotedKey + " IN(?)")
 			newArgs = append(newArgs, value)
 		} else if count != rv.Len() {
-			buffer.WriteString(key)
+			buffer.WriteString(quotedKey)
 			newArgs = append(newArgs, value)
 		} else {
-			buffer.WriteString(key)
+			buffer.WriteString(quotedKey)
 			newArgs = append(newArgs, gconv.Interfaces(value)...)
 		}
 	default:
-		if value == nil {
-			buffer.WriteString(key)
+		if value == nil || empty.IsNil(rv) {
+			if gregex.IsMatchString(`^[\w\.\-]+$`, key) {
+				// The key is a single field name.
+				buffer.WriteString(quotedKey + " IS NULL")
+			} else {
+				// The key may have operation chars.
+				buffer.WriteString(quotedKey)
+			}
 		} else {
 			// It also supports "LIKE" statement, which we considers it an operator.
-			key = gstr.Trim(key)
-			if gstr.Pos(key, "?") == -1 {
+			quotedKey = gstr.Trim(quotedKey)
+			if gstr.Pos(quotedKey, "?") == -1 {
 				like := " like"
-				if len(key) > len(like) && gstr.Equal(key[len(key)-len(like):], like) {
-					buffer.WriteString(key + " ?")
-				} else if lastOperatorReg.MatchString(key) {
-					buffer.WriteString(key + " ?")
+				if len(quotedKey) > len(like) && gstr.Equal(quotedKey[len(quotedKey)-len(like):], like) {
+					buffer.WriteString(quotedKey + " ?")
+				} else if lastOperatorReg.MatchString(quotedKey) {
+					buffer.WriteString(quotedKey + " ?")
 				} else {
-					buffer.WriteString(key + "=?")
+					buffer.WriteString(quotedKey + "=?")
 				}
 			} else {
-				buffer.WriteString(key)
+				buffer.WriteString(quotedKey)
 			}
 			newArgs = append(newArgs, value)
 		}

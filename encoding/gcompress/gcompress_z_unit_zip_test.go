@@ -20,8 +20,8 @@ import (
 func Test_ZipPath(t *testing.T) {
 	// file
 	gtest.Case(t, func() {
-		srcPath := gfile.Join(gdebug.CallerDirectory(), "testdata", "zip", "path1", "1.txt")
-		dstPath := gfile.Join(gdebug.CallerDirectory(), "testdata", "zip", "zip.zip")
+		srcPath := gfile.Join(gdebug.TestDataPath(), "zip", "path1", "1.txt")
+		dstPath := gfile.Join(gdebug.TestDataPath(), "zip", "zip.zip")
 
 		gtest.Assert(gfile.Exists(dstPath), false)
 		err := gcompress.ZipPath(srcPath, dstPath)
@@ -44,8 +44,8 @@ func Test_ZipPath(t *testing.T) {
 	})
 	// directory
 	gtest.Case(t, func() {
-		srcPath := gfile.Join(gdebug.CallerDirectory(), "testdata", "zip")
-		dstPath := gfile.Join(gdebug.CallerDirectory(), "testdata", "zip", "zip.zip")
+		srcPath := gfile.Join(gdebug.TestDataPath(), "zip")
+		dstPath := gfile.Join(gdebug.TestDataPath(), "zip", "zip.zip")
 
 		pwd := gfile.Pwd()
 		err := gfile.Chdir(srcPath)
@@ -77,10 +77,10 @@ func Test_ZipPath(t *testing.T) {
 	})
 	// multiple paths joined using char ','
 	gtest.Case(t, func() {
-		srcPath := gfile.Join(gdebug.CallerDirectory(), "testdata", "zip")
-		srcPath1 := gfile.Join(gdebug.CallerDirectory(), "testdata", "zip", "path1")
-		srcPath2 := gfile.Join(gdebug.CallerDirectory(), "testdata", "zip", "path2")
-		dstPath := gfile.Join(gdebug.CallerDirectory(), "testdata", "zip", "zip.zip")
+		srcPath := gfile.Join(gdebug.TestDataPath(), "zip")
+		srcPath1 := gfile.Join(gdebug.TestDataPath(), "zip", "path1")
+		srcPath2 := gfile.Join(gdebug.TestDataPath(), "zip", "path2")
+		dstPath := gfile.Join(gdebug.TestDataPath(), "zip", "zip.zip")
 
 		pwd := gfile.Pwd()
 		err := gfile.Chdir(srcPath)
@@ -116,9 +116,9 @@ func Test_ZipPath(t *testing.T) {
 
 func Test_ZipPathWriter(t *testing.T) {
 	gtest.Case(t, func() {
-		srcPath := gfile.Join(gdebug.CallerDirectory(), "testdata", "zip")
-		srcPath1 := gfile.Join(gdebug.CallerDirectory(), "testdata", "zip", "path1")
-		srcPath2 := gfile.Join(gdebug.CallerDirectory(), "testdata", "zip", "path2")
+		srcPath := gfile.Join(gdebug.TestDataPath(), "zip")
+		srcPath1 := gfile.Join(gdebug.TestDataPath(), "zip", "path1")
+		srcPath2 := gfile.Join(gdebug.TestDataPath(), "zip", "path2")
 
 		pwd := gfile.Pwd()
 		err := gfile.Chdir(srcPath)

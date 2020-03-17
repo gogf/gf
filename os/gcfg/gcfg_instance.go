@@ -7,6 +7,7 @@
 package gcfg
 
 import (
+	"fmt"
 	"github.com/gogf/gf/container/gmap"
 )
 
@@ -16,18 +17,25 @@ const (
 )
 
 var (
-	// Instances map.
+	// Instances map containing configuration instances.
 	instances = gmap.NewStrAnyMap(true)
 )
 
 // Instance returns an instance of Config with default settings.
-// The parameter <name> is the name for the instance.
+// The parameter <name> is the name for the instance. But very note that, if the file "name.toml"
+// exists in the configuration directory, it then sets it as the default configuration file. The
+// toml file type is the default configuration file type.
 func Instance(name ...string) *Config {
 	key := DEFAULT_NAME
 	if len(name) > 0 && name[0] != "" {
 		key = name[0]
 	}
 	return instances.GetOrSetFuncLock(key, func() interface{} {
-		return New()
+		c := New()
+		file := fmt.Sprintf(`%s.toml`, key)
+		if c.Available(file) {
+			c.SetFileName(file)
+		}
+		return c
 	}).(*Config)
 }

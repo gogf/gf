@@ -4,8 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package utilstr provides some string functions for internal usage.
-package utilstr
+package utils
 
 import "strings"
 

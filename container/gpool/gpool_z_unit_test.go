@@ -62,7 +62,7 @@ func Test_Gpool(t *testing.T) {
 	gtest.Case(t, func() {
 		//
 		//expire > 0
-		p2 := gpool.New(2000, nil, ef)
+		p2 := gpool.New(2*time.Second, nil, ef)
 		for index := 0; index < 10; index++ {
 			p2.Put(index)
 		}

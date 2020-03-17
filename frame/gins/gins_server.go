@@ -34,6 +34,9 @@ func Server(name ...interface{}) *ghttp.Server {
 					panic(err)
 				}
 			}
+			// As it might use template feature,
+			// it initialize the view instance as well.
+			_ = getViewInstance()
 		}
 		return s
 	}).(*ghttp.Server)

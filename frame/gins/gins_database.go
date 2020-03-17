@@ -72,7 +72,6 @@ func Database(name ...string) gdb.DB {
 				gdb.SetConfigGroup(gdb.DEFAULT_GROUP_NAME, cg)
 			}
 		}
-		addConfigMonitor(instanceKey, config)
 
 		if db, err := gdb.New(name...); err == nil {
 			// Initialize logger for ORM.
