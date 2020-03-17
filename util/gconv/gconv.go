@@ -8,11 +8,9 @@
 package gconv
 
 import (
-	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"github.com/gogf/gf/os/gtime"
-	"net"
 	"reflect"
 	"strconv"
 	"strings"
@@ -167,23 +165,6 @@ func Runes(i interface{}) []rune {
 	}
 	return []rune(String(i))
 }
-// convert ip to long, ex ip 106.8.36.164 to 1778918564
-func Ip2long(ipStr string) uint32 {
-	ip := net.ParseIP(ipStr)
-	if ip == nil {
-		return 0
-	}
-	ip = ip.To4()
-	return binary.BigEndian.Uint32(ip)
-}
-// convert long to ip string, ex int 1778918564 to ip 106.8.36.164
-func Long2ip(ipLong uint32) string {
-	ipByte := make([]byte, 4)
-	binary.BigEndian.PutUint32(ipByte, ipLong)
-	ip := net.IP(ipByte)
-	return ip.String()
-}
-
 
 // String converts <i> to string.
 // It's most common used converting function.
