@@ -15,7 +15,6 @@ import (
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/grand"
 	"io"
 	"io/ioutil"
@@ -24,7 +23,7 @@ import (
 	"strings"
 )
 
-type GetExtractorFn func(filed interface{}) FileExtractor
+type GetExtractorFn func(r *Request, field string) UploadFiles
 type FileExtractor interface {
 	GetFile() io.ReadCloser
 	GetName() string
@@ -41,8 +40,13 @@ type base64Extractor struct {
 	Content string
 }
 
-func NewBase64Extractor(field interface{}) FileExtractor {
-	return base64Extractor{Content: gconv.String(field)}
+func Base64Extractor(r *Request, field string) UploadFiles {
+	var fields = r.GetStrings(field)
+	var list = make(UploadFiles, len(fields))
+	for k, v := range fields {
+		list[k] = &UploadFile{base64Extractor{v}}
+	}
+	return list
 }
 
 func (b base64Extractor) Size() int64 {
@@ -75,9 +79,13 @@ func GetFileExt(r io.Reader) (string, error) {
 	return reader.Extension(), nil
 }
 
-func NewMultipartExtractor(field interface{}) FileExtractor {
-	file := field.(*multipart.FileHeader)
-	return multipartExtractor{file}
+func MultipartExtractor(r *Request, field string) UploadFiles {
+	var fields = r.GetMultipartFiles(field)
+	var list = make(UploadFiles, len(fields))
+	for k, v := range fields {
+		list[k] = &UploadFile{multipartExtractor{v}}
+	}
+	return list
 }
 
 type multipartExtractor struct {
@@ -173,7 +181,7 @@ func (fs UploadFiles) Save(dirPath string, randomlyRename ...bool) (filenames []
 //
 // Note that the <name> is the file field name of the multipart form from client.
 func (r *Request) GetUploadFile(name string, fn ...GetExtractorFn) *UploadFile {
-	uploadFiles := r.GetUploadFiles(name)
+	uploadFiles := r.GetUploadFiles(name, fn...)
 	if len(uploadFiles) > 0 {
 		return uploadFiles[0]
 	}
@@ -186,19 +194,10 @@ func (r *Request) GetUploadFile(name string, fn ...GetExtractorFn) *UploadFile {
 //
 // Note that the <name> is the file field name of the multipart form from client.
 func (r *Request) GetUploadFiles(name string, fn ...GetExtractorFn) UploadFiles {
-	var fun GetExtractorFn = NewMultipartExtractor
+	var fun GetExtractorFn = MultipartExtractor
 	if len(fn) > 0 {
 		fun = fn[0]
 	}
-	multipartFiles := r.GetMultipartFiles(name)
-	if len(multipartFiles) > 0 {
-		uploadFiles := make(UploadFiles, len(multipartFiles))
-		for k, v := range multipartFiles {
-			uploadFiles[k] = &UploadFile{
-				fun(v),
-			}
-		}
-		return uploadFiles
-	}
-	return nil
+	uploadFiles := fun(r, name)
+	return uploadFiles
 }
