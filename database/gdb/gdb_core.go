@@ -177,6 +177,16 @@ func (c *Core) GetOne(query string, args ...interface{}) (Record, error) {
 	return nil, nil
 }
 
+// GetArray queries and returns data values as slice from database.
+// Note that if there're multiple columns in the result, it returns just one column values randomly.
+func (c *Core) GetArray(query string, args ...interface{}) ([]Value, error) {
+	all, err := c.DB.DoGetAll(nil, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	return all.Array(), nil
+}
+
 // GetStruct queries one record from database and converts it to given struct.
 // The parameter <pointer> should be a pointer to struct.
 func (c *Core) GetStruct(pointer interface{}, query string, args ...interface{}) error {
@@ -494,7 +504,7 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 		holders = append(holders, "?")
 	}
 	// Prepare the batch result pointer.
-	batchResult := new(batchSqlResult)
+	batchResult := new(SqlResult)
 	charL, charR := c.DB.GetChars()
 	keysStr := charL + strings.Join(keys, charR+","+charL) + charR
 	valueHolderStr := "(" + strings.Join(holders, ",") + ")"
@@ -545,8 +555,8 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 			if n, err := r.RowsAffected(); err != nil {
 				return r, err
 			} else {
-				batchResult.lastResult = r
-				batchResult.rowsAffected += n
+				batchResult.result = r
+				batchResult.affected += n
 			}
 			params = params[:0]
 			values = values[:0]
@@ -711,7 +721,7 @@ func (c *Core) MarshalJSON() ([]byte, error) {
 // writeSqlToLogger outputs the sql object to logger.
 // It is enabled when configuration "debug" is true.
 func (c *Core) writeSqlToLogger(v *Sql) {
-	s := fmt.Sprintf("[%d ms] %s", v.End-v.Start, v.Format)
+	s := fmt.Sprintf("[%3d ms] %s", v.End-v.Start, v.Format)
 	if v.Error != nil {
 		s += "\nError: " + v.Error.Error()
 		c.logger.StackWithFilter(gPATH_FILTER_KEY).Error(s)

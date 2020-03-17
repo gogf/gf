@@ -7,10 +7,6 @@
 package gvalid
 
 import (
-	"regexp"
-	"strconv"
-	"strings"
-
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/net/gipv4"
@@ -18,6 +14,9 @@ import (
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/util/gconv"
+	"regexp"
+	"strconv"
+	"strings"
 )
 
 const (
@@ -192,7 +191,6 @@ func Check(value interface{}, rules string, msgs interface{}, params ...interfac
 			} else {
 				match = true
 			}
-
 		// 大小范围
 		case "min":
 			fallthrough
@@ -522,10 +520,11 @@ func checkRequired(value, ruleKey, ruleVal string, params map[string]string) boo
 		return true
 	}
 }
-
 // 对字段值长度进行检测
 func checkLength(value, ruleKey, ruleVal string, customMsgMap map[string]string) string {
 	msg := ""
+	runeArray := gconv.Runes(value)
+	valueLen := len(runeArray)
 	switch ruleKey {
 	// 长度范围
 	case "length":
@@ -542,7 +541,7 @@ func checkLength(value, ruleKey, ruleVal string, customMsgMap map[string]string)
 				max = v
 			}
 		}
-		if len(value) < min || len(value) > max {
+		if valueLen < min || valueLen > max {
 			if v, ok := customMsgMap[ruleKey]; !ok {
 				msg = errorMsgMap.Get(ruleKey)
 			} else {
@@ -556,7 +555,7 @@ func checkLength(value, ruleKey, ruleVal string, customMsgMap map[string]string)
 	// 最小长度
 	case "min-length":
 		if min, err := strconv.Atoi(ruleVal); err == nil {
-			if len(value) < min {
+			if valueLen < min {
 				if v, ok := customMsgMap[ruleKey]; !ok {
 					msg = errorMsgMap.Get(ruleKey)
 				} else {
@@ -571,7 +570,7 @@ func checkLength(value, ruleKey, ruleVal string, customMsgMap map[string]string)
 	// 最大长度
 	case "max-length":
 		if max, err := strconv.Atoi(ruleVal); err == nil {
-			if len(value) > max {
+			if valueLen > max {
 				if v, ok := customMsgMap[ruleKey]; !ok {
 					msg = errorMsgMap.Get(ruleKey)
 				} else {

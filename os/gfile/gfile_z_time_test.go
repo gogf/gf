@@ -9,6 +9,7 @@ package gfile_test
 import (
 	"os"
 	"testing"
+	"time"
 
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/test/gtest"
@@ -18,7 +19,7 @@ func Test_MTime(t *testing.T) {
 	gtest.Case(t, func() {
 
 		var (
-			file1   string = "/testfile_t1.txt"
+			file1   = "/testfile_t1.txt"
 			err     error
 			fileobj os.FileInfo
 		)
@@ -36,7 +37,7 @@ func Test_MTime(t *testing.T) {
 func Test_MTimeMillisecond(t *testing.T) {
 	gtest.Case(t, func() {
 		var (
-			file1   string = "/testfile_t1.txt"
+			file1   = "/testfile_t1.txt"
 			err     error
 			fileobj os.FileInfo
 		)
@@ -46,7 +47,11 @@ func Test_MTimeMillisecond(t *testing.T) {
 		fileobj, err = os.Stat(testpath() + file1)
 		gtest.Assert(err, nil)
 
-		gtest.AssertGE(gfile.MTimeMillisecond(testpath()+file1), fileobj.ModTime().Nanosecond()/1000000)
+		time.Sleep(time.Millisecond * 100)
+		gtest.AssertGE(
+			gfile.MTimeMillisecond(testpath()+file1),
+			fileobj.ModTime().UnixNano()/1000000,
+		)
 		gtest.Assert(gfile.MTimeMillisecond(""), 0)
 	})
 }

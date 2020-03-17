@@ -47,6 +47,7 @@ type DB interface {
 	GetAll(query string, args ...interface{}) (Result, error)
 	GetOne(query string, args ...interface{}) (Record, error)
 	GetValue(query string, args ...interface{}) (Value, error)
+	GetArray(query string, args ...interface{}) ([]Value, error)
 	GetCount(query string, args ...interface{}) (int, error)
 	GetStruct(objPointer interface{}, query string, args ...interface{}) error
 	GetStructs(objPointerSlice interface{}, query string, args ...interface{}) error
@@ -181,12 +182,13 @@ type Map = map[string]interface{}
 type List = []Map
 
 const (
-	gINSERT_OPTION_DEFAULT      = 0
-	gINSERT_OPTION_REPLACE      = 1
-	gINSERT_OPTION_SAVE         = 2
-	gINSERT_OPTION_IGNORE       = 3
-	gDEFAULT_BATCH_NUM          = 10 // Per count for batch insert/replace/save
-	gDEFAULT_CONN_MAX_LIFE_TIME = 30 // Max life time for per connection in pool in seconds.
+	gINSERT_OPTION_DEFAULT       = 0
+	gINSERT_OPTION_REPLACE       = 1
+	gINSERT_OPTION_SAVE          = 2
+	gINSERT_OPTION_IGNORE        = 3
+	gDEFAULT_BATCH_NUM           = 10 // Per count for batch insert/replace/save
+	gDEFAULT_CONN_MAX_IDLE_COUNT = 10 // Max idle connection count in pool.
+	gDEFAULT_CONN_MAX_LIFE_TIME  = 30 // Max life time for per connection in pool in seconds.
 )
 
 var (
@@ -225,13 +227,14 @@ func New(name ...string) (db DB, err error) {
 	if _, ok := configs.config[group]; ok {
 		if node, err := getConfigNodeByGroup(group, true); err == nil {
 			c := &Core{
-				group:           group,
-				debug:           gtype.NewBool(),
-				cache:           gcache.New(),
-				schema:          gtype.NewString(),
-				logger:          glog.New(),
-				prefix:          node.Prefix,
-				maxConnLifetime: gDEFAULT_CONN_MAX_LIFE_TIME, // Default max connection life time if user does not configure.
+				group:            group,
+				debug:            gtype.NewBool(),
+				cache:            gcache.New(),
+				schema:           gtype.NewString(),
+				logger:           glog.New(),
+				prefix:           node.Prefix,
+				maxIdleConnCount: gDEFAULT_CONN_MAX_IDLE_COUNT,
+				maxConnLifetime:  gDEFAULT_CONN_MAX_LIFE_TIME, // Default max connection life time if user does not configure.
 			}
 			if v, ok := driverMap[node.Type]; ok {
 				c.DB, err = v.New(c, node)
@@ -363,7 +366,7 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 		n.Name = nodeSchema
 		node = &n
 	}
-	// Cache the underlying connection object by node.
+	// Cache the underlying connection pool object by node.
 	v := c.cache.GetOrSetFuncLock(node.String(), func() interface{} {
 		sqlDb, err = c.DB.Open(node)
 		if err != nil {

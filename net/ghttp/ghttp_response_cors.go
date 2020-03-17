@@ -94,28 +94,13 @@ func (r *Response) CORS(options CORSOptions) {
 		r.Header().Set("Access-Control-Allow-Headers", options.AllowHeaders)
 	}
 	// No continue service handling if it's OPTIONS request.
+	// Note that there's special checks in previous router searching,
+	// so if it goes to here it means there's already serving handler exist.
 	if gstr.Equal(r.Request.Method, "OPTIONS") {
-		// Request method handler searching.
-		// It here simply uses Server.routesMap attribute enhancing the searching performance.
-		if method := r.Request.Header.Get("Access-Control-Request-Method"); method != "" {
-			routerKey := ""
-			for _, domain := range []string{gDEFAULT_DOMAIN, r.Request.GetHost()} {
-				for _, v := range []string{gDEFAULT_METHOD, method} {
-					routerKey = r.Server.routerMapKey("", v, r.Request.URL.Path, domain)
-					if r.Server.routesMap[routerKey] != nil {
-						if r.Status == 0 {
-							r.Status = http.StatusOK
-						}
-						// No continue serving.
-						r.Request.ExitAll()
-					}
-				}
-			}
-		}
-		// Cannot find the request serving handler, it then responses 404.
 		if r.Status == 0 {
-			r.Status = http.StatusNotFound
+			r.Status = http.StatusOK
 		}
+		// No continue serving.
 		r.Request.ExitAll()
 	}
 }

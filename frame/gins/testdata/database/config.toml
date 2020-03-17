@@ -1,0 +1,29 @@
+# 模板引擎目录
+viewpath = "/home/www/templates/"
+test = "v=2"
+# MySQL数据库配置
+[database]
+    [[database.default]]
+        host     = "127.0.0.1"
+        port     = "3306"
+        user     = "root"
+        pass     = "12345678"
+        name     = "test"
+        type     = "mysql"
+        role     = "master"
+		weight   = "1"
+        charset  = "utf8"
+    [[database.test]]
+        host     = "127.0.0.1"
+        port     = "3306"
+        user     = "root"
+        pass     = "12345678"
+        name     = "test"
+        type     = "mysql"
+        role     = "master"
+		weight   = "1"
+        charset  = "utf8"
+# Redis数据库配置
+[redis]
+    default = "127.0.0.1:6379,0"
+    cache   = "127.0.0.1:6379,1"

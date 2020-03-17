@@ -36,7 +36,6 @@ func Redis(name ...string) *gredis.Redis {
 				if err != nil {
 					panic(err)
 				}
-				addConfigMonitor(instanceKey, config)
 				return gredis.New(redisConfig)
 			} else {
 				panic(fmt.Sprintf(`configuration for redis not found for group "%s"`, group))

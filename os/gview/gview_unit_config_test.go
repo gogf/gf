@@ -18,7 +18,7 @@ import (
 func Test_Config(t *testing.T) {
 	gtest.Case(t, func() {
 		config := gview.Config{
-			Paths: []string{gfile.Join(gdebug.CallerDirectory(), "testdata", "config")},
+			Paths: []string{gfile.Join(gdebug.TestDataPath(), "config")},
 			Data: g.Map{
 				"name": "gf",
 			},
@@ -45,7 +45,7 @@ func Test_ConfigWithMap(t *testing.T) {
 	gtest.Case(t, func() {
 		view := gview.New()
 		err := view.SetConfigWithMap(g.Map{
-			"Paths":       []string{gfile.Join(gdebug.CallerDirectory(), "testdata", "config")},
+			"Paths":       []string{gfile.Join(gdebug.TestDataPath(), "config")},
 			"DefaultFile": "test.html",
 			"Delimiters":  []string{"${", "}"},
 			"Data": g.Map{

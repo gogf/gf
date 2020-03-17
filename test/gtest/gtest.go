@@ -132,16 +132,20 @@ func AssertGE(value, expect interface{}) {
 		passed = gconv.String(value) >= gconv.String(expect)
 
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		passed = gconv.Int(value) >= gconv.Int(expect)
+		passed = gconv.Int64(value) >= gconv.Int64(expect)
 
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		passed = gconv.Uint(value) >= gconv.Uint(expect)
+		passed = gconv.Uint64(value) >= gconv.Uint64(expect)
 
 	case reflect.Float32, reflect.Float64:
 		passed = gconv.Float64(value) >= gconv.Float64(expect)
 	}
 	if !passed {
-		panic(fmt.Sprintf(`[ASSERT] EXPECT %v >= %v`, value, expect))
+		panic(fmt.Sprintf(
+			`[ASSERT] EXPECT %v(%v) >= %v(%v)`,
+			value, reflect.ValueOf(value).Kind(),
+			expect, reflect.ValueOf(expect).Kind(),
+		))
 	}
 }
 

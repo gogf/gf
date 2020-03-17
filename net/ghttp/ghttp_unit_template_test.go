@@ -24,7 +24,7 @@ import (
 
 func Test_Template_Layout1(t *testing.T) {
 	gtest.Case(t, func() {
-		v := gview.New(gfile.Join(gdebug.CallerDirectory(), "testdata", "template", "layout1"))
+		v := gview.New(gfile.Join(gdebug.TestDataPath(), "template", "layout1"))
 		p := ports.PopRand()
 		s := g.Server(p)
 		s.SetView(v)
@@ -54,7 +54,7 @@ func Test_Template_Layout1(t *testing.T) {
 
 func Test_Template_Layout2(t *testing.T) {
 	gtest.Case(t, func() {
-		v := gview.New(gfile.Join(gdebug.CallerDirectory(), "testdata", "template", "layout2"))
+		v := gview.New(gfile.Join(gdebug.TestDataPath(), "template", "layout2"))
 		p := ports.PopRand()
 		s := g.Server(p)
 		s.SetView(v)

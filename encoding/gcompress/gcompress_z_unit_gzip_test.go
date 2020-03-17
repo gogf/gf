@@ -7,6 +7,9 @@
 package gcompress_test
 
 import (
+	"github.com/gogf/gf/debug/gdebug"
+	"github.com/gogf/gf/os/gfile"
+	"github.com/gogf/gf/os/gtime"
 	"testing"
 
 	"github.com/gogf/gf/encoding/gcompress"
@@ -26,14 +29,37 @@ func Test_Gzip_UnGzip(t *testing.T) {
 		0x24, 0xa8, 0xd1, 0x0d, 0x00,
 		0x00, 0x00,
 	}
+	gtest.Case(t, func() {
+		arr := []byte(src)
+		data, _ := gcompress.Gzip(arr)
+		gtest.Assert(data, gzip)
 
-	arr := []byte(src)
-	data, _ := gcompress.Gzip(arr)
-	gtest.Assert(data, gzip)
+		data, _ = gcompress.UnGzip(gzip)
+		gtest.Assert(data, arr)
 
-	data, _ = gcompress.UnGzip(gzip)
-	gtest.Assert(data, arr)
+		data, _ = gcompress.UnGzip(gzip[1:])
+		gtest.Assert(data, nil)
+	})
+}
 
-	data, _ = gcompress.UnGzip(gzip[1:])
-	gtest.Assert(data, nil)
+func Test_Gzip_UnGzip_File(t *testing.T) {
+	srcPath := gfile.Join(gdebug.TestDataPath(), "gzip", "file.txt")
+	dstPath1 := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr(), "gzip.zip")
+	dstPath2 := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr(), "file.txt")
+
+	// Compress.
+	gtest.Case(t, func() {
+		err := gcompress.GzipFile(srcPath, dstPath1, 9)
+		gtest.Assert(err, nil)
+		defer gfile.Remove(dstPath1)
+		gtest.Assert(gfile.Exists(dstPath1), true)
+
+		// Decompress.
+		err = gcompress.UnGzipFile(dstPath1, dstPath2)
+		gtest.Assert(err, nil)
+		defer gfile.Remove(dstPath2)
+		gtest.Assert(gfile.Exists(dstPath2), true)
+
+		gtest.Assert(gfile.GetContents(srcPath), gfile.GetContents(dstPath2))
+	})
 }

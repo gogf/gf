@@ -9,7 +9,8 @@
 package gcfg_test
 
 import (
-	"io/ioutil"
+	"github.com/gogf/gf/debug/gdebug"
+	"github.com/gogf/gf/os/gtime"
 	"os"
 	"testing"
 
@@ -39,9 +40,7 @@ array = [1,2,3]
 		path := gcfg.DEFAULT_CONFIG_FILE
 		err := gfile.PutContents(path, config)
 		gtest.Assert(err, nil)
-		defer func() {
-			_ = gfile.Remove(path)
-		}()
+		defer gfile.Remove(path)
 
 		c := gcfg.New()
 		gtest.Assert(c.Get("v1"), 1)
@@ -309,9 +308,8 @@ func TestCfg_New(t *testing.T) {
 
 		configPath := gfile.Pwd() + gfile.Separator + "config"
 		_ = gfile.Mkdir(configPath)
-		defer func() {
-			_ = gfile.Remove(configPath)
-		}()
+		defer gfile.Remove(configPath)
+
 		c = gcfg.New("config.yml")
 		gtest.Assert(c.Get("name"), nil)
 
@@ -363,12 +361,21 @@ func TestCfg_FilePath(t *testing.T) {
 
 func TestCfg_Get(t *testing.T) {
 	gtest.Case(t, func() {
-		configPath := gfile.Pwd() + gfile.Separator + "config"
-		_ = gfile.Mkdir(configPath)
-		defer func() {
-			_ = gfile.Remove(configPath)
-		}()
-		_ = ioutil.WriteFile(configPath+gfile.Separator+"config.yml", []byte("wrong config"), 0644)
+		var err error
+		configPath := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
+		err = gfile.Mkdir(configPath)
+		gtest.Assert(err, nil)
+		defer gfile.Remove(configPath)
+
+		defer gfile.Chdir(gfile.Pwd())
+		err = gfile.Chdir(configPath)
+		gtest.Assert(err, nil)
+
+		err = gfile.PutContents(
+			gfile.Join(configPath, "config.yml"),
+			"wrong config",
+		)
+		gtest.Assert(err, nil)
 		c := gcfg.New("config.yml")
 		gtest.Assert(c.Get("name"), nil)
 		gtest.Assert(c.GetVar("name").Val(), nil)
@@ -403,13 +410,24 @@ func TestCfg_Get(t *testing.T) {
 
 		c.Clear()
 
-		arr, _ := gjson.Encode(g.Map{"name": "gf", "time": "2019-06-12", "person": g.Map{"name": "gf"}, "floats": g.Slice{1, 2, 3}})
-		_ = ioutil.WriteFile(configPath+gfile.Separator+"config.yml", arr, 0644)
+		arr, _ := gjson.Encode(
+			g.Map{
+				"name":   "gf",
+				"time":   "2019-06-12",
+				"person": g.Map{"name": "gf"},
+				"floats": g.Slice{1, 2, 3},
+			},
+		)
+		err = gfile.PutBytes(
+			gfile.Join(configPath, "config.yml"),
+			arr,
+		)
+		gtest.Assert(err, nil)
 		gtest.Assert(c.GetTime("time").Format("2006-01-02"), "2019-06-12")
 		gtest.Assert(c.GetGTime("time").Format("Y-m-d"), "2019-06-12")
 		gtest.Assert(c.GetDuration("time").String(), "0s")
-		//t.Log(c.GetString("person"))
-		err := c.GetStruct("person", &name)
+
+		err = c.GetStruct("person", &name)
 		gtest.Assert(err, nil)
 		gtest.Assert(name.Name, "gf")
 		gtest.Assert(c.GetFloats("floats") == nil, false)
@@ -419,6 +437,14 @@ func TestCfg_Get(t *testing.T) {
 func TestCfg_Instance(t *testing.T) {
 	gtest.Case(t, func() {
 		gtest.Assert(gcfg.Instance("gf") != nil, true)
+	})
+	gtest.Case(t, func() {
+		pwd := gfile.Pwd()
+		gfile.Chdir(gfile.Join(gdebug.TestDataPath()))
+		defer gfile.Chdir(pwd)
+		gtest.Assert(gcfg.Instance("c1") != nil, true)
+		gtest.Assert(gcfg.Instance("c1").Get("my-config"), "1")
+		gtest.Assert(gcfg.Instance("folder1/c1").Get("my-config"), "2")
 	})
 }
 

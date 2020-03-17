@@ -79,12 +79,12 @@ func TestOpenExpire(t *testing.T) {
 	testFile := start("TestOpenExpire.txt")
 
 	gtest.Case(t, func() {
-		f, err := gfpool.Open(testFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0666, 100)
+		f, err := gfpool.Open(testFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0666, 100*time.Millisecond)
 		gtest.AssertEQ(err, nil)
 		f.Close()
 
 		time.Sleep(150 * time.Millisecond)
-		f2, err1 := gfpool.Open(testFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0666, 100)
+		f2, err1 := gfpool.Open(testFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0666, 100*time.Millisecond)
 		gtest.AssertEQ(err1, nil)
 		//gtest.AssertNE(f, f2)
 		f2.Close()
