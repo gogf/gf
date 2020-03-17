@@ -63,9 +63,11 @@ We currently accept donation by Alipay/WechatPay, please note your github/gitee 
 |[seny0929](https://gitee.com/seny0929)|wechat|￥99.90| 
 |*华|wechat|￥6.66| 感谢郭强的热心
 |[Playhi](https://github.com/Playhi)|alipay|￥10.00| 
-|北京京纬互动科技有限公司|alipay|￥200.00| 
+|北京京纬互动科技|alipay|￥200.00| 
 |米司特包|wechat|￥99.99| 
 |金毛|alipay|￥100.00| 
+|1*1x|wechat|￥100.00| 
+|[ywanbing](https://github.com/ywanbing)|wechat|￥66.66| 
 
 
 <img src="https://goframe.org/images/donate.png"/>
