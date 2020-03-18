@@ -25,9 +25,9 @@ import (
 
 type GetExtractorFn func(r *Request, field string) UploadFiles
 type FileExtractor interface {
-	GetFile() io.ReadCloser
-	GetName() string
-	GetExt() string
+	File() io.ReadCloser
+	Name() string
+	Ext() string
 	Size() int64
 }
 
@@ -53,19 +53,19 @@ func (b base64Extractor) Size() int64 {
 	return int64(len(b.Content))
 }
 
-func (b base64Extractor) GetFile() io.ReadCloser {
+func (b base64Extractor) File() io.ReadCloser {
 	i := gstr.PosI(b.Content, "base64,")
 	s := gstr.SubStr(b.Content, i+len("base64,"))
 	bs, _ := gbase64.DecodeString(s)
 	return ioutil.NopCloser(bytes.NewReader(bs))
 }
 
-func (b base64Extractor) GetName() string {
+func (b base64Extractor) Name() string {
 	return strings.ToLower(strconv.FormatInt(gtime.TimestampNano(), 36) + grand.S(6))
 }
 
-func (b base64Extractor) GetExt() string {
-	ext, err := GetFileExt(b.GetFile())
+func (b base64Extractor) Ext() string {
+	ext, err := GetFileExt(b.File())
 	if err != nil {
 		return ""
 	}
@@ -96,7 +96,7 @@ func (m multipartExtractor) Size() int64 {
 	return m.FileHeader.Size
 }
 
-func (m multipartExtractor) GetFile() io.ReadCloser {
+func (m multipartExtractor) File() io.ReadCloser {
 	file, err := m.FileHeader.Open()
 	if err != nil {
 		return ioutil.NopCloser(bytes.NewReader(nil))
@@ -104,11 +104,11 @@ func (m multipartExtractor) GetFile() io.ReadCloser {
 	return file
 }
 
-func (m multipartExtractor) GetName() string {
+func (m multipartExtractor) Name() string {
 	return gfile.Basename(m.Filename)
 }
 
-func (m multipartExtractor) GetExt() string {
+func (m multipartExtractor) Ext() string {
 	return gfile.Ext(m.Filename)
 }
 
@@ -125,7 +125,7 @@ type UploadFiles []*UploadFile
 // Note that it will overwrite the target file if there's already a same name file exist.
 func (f *UploadFile) Save(dirPath string, randomlyRename ...bool) (filename string, err error) {
 	if f == nil {
-		return
+		return "", errors.New("file is empty, maybe you retrieve it from invalid field name or form enctype")
 	}
 	if !gfile.Exists(dirPath) {
 		if err = gfile.Mkdir(dirPath); err != nil {
@@ -135,13 +135,13 @@ func (f *UploadFile) Save(dirPath string, randomlyRename ...bool) (filename stri
 		return "", errors.New(`parameter "dirPath" should be a directory path`)
 	}
 
-	file := f.GetFile()
+	file := f.File()
 	defer file.Close()
 
-	name := gfile.Basename(f.GetName())
+	name := gfile.Basename(f.Name())
 	if len(randomlyRename) > 0 && randomlyRename[0] {
 		name = strings.ToLower(strconv.FormatInt(gtime.TimestampNano(), 36) + grand.S(6))
-		name = name + f.GetExt()
+		name = name + f.Ext()
 	}
 	filePath := gfile.Join(dirPath, name)
 	newFile, err := gfile.Create(filePath)
@@ -163,7 +163,7 @@ func (f *UploadFile) Save(dirPath string, randomlyRename ...bool) (filename stri
 // The parameter <randomlyRename> specifies whether randomly renames all the file names.
 func (fs UploadFiles) Save(dirPath string, randomlyRename ...bool) (filenames []string, err error) {
 	if len(fs) == 0 {
-		return nil, nil
+		return nil, errors.New("file array is empty, maybe you retrieve it from invalid field name or form enctype")
 	}
 	for _, f := range fs {
 		if filename, err := f.Save(dirPath, randomlyRename...); err != nil {
