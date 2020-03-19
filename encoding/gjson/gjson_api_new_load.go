@@ -72,8 +72,9 @@ func NewWithTag(data interface{}, tags string, safe ...bool) *Json {
 			}
 		case reflect.Map, reflect.Struct:
 			i := interface{}(nil)
-			// Note that it uses MapDeep function implementing the converting.
-			i = gconv.MapDeep(data, tags)
+			// Note that it uses Map function implementing the converting.
+			// Note that it here should not use MapDeep function if you really know what it means.
+			i = gconv.Map(data, tags)
 			j = &Json{
 				p:  &i,
 				c:  byte(gDEFAULT_SPLIT_CHAR),

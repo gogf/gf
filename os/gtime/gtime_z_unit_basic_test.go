@@ -15,77 +15,77 @@ import (
 )
 
 func Test_SetTimeZone(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		gtime.SetTimeZone("Asia/Shanghai")
-		gtest.Assert(time.Local.String(), "Asia/Shanghai")
+		t.Assert(time.Local.String(), "Asia/Shanghai")
 	})
 }
 
 func Test_Nanosecond(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		nanos := gtime.TimestampNano()
 		timeTemp := time.Unix(0, nanos)
-		gtest.Assert(nanos, timeTemp.UnixNano())
+		t.Assert(nanos, timeTemp.UnixNano())
 	})
 }
 
 func Test_Microsecond(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		micros := gtime.TimestampMicro()
 		timeTemp := time.Unix(0, micros*1e3)
-		gtest.Assert(micros, timeTemp.UnixNano()/1e3)
+		t.Assert(micros, timeTemp.UnixNano()/1e3)
 	})
 }
 
 func Test_Millisecond(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		millis := gtime.TimestampMilli()
 		timeTemp := time.Unix(0, millis*1e6)
-		gtest.Assert(millis, timeTemp.UnixNano()/1e6)
+		t.Assert(millis, timeTemp.UnixNano()/1e6)
 	})
 }
 
 func Test_Second(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		s := gtime.Timestamp()
 		timeTemp := time.Unix(s, 0)
-		gtest.Assert(s, timeTemp.Unix())
+		t.Assert(s, timeTemp.Unix())
 	})
 }
 
 func Test_Date(t *testing.T) {
-	gtest.Case(t, func() {
-		gtest.Assert(gtime.Date(), time.Now().Format("2006-01-02"))
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gtime.Date(), time.Now().Format("2006-01-02"))
 	})
 }
 
 func Test_Datetime(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		datetime := gtime.Datetime()
 		timeTemp, err := gtime.StrToTime(datetime, "Y-m-d H:i:s")
 		if err != nil {
 			t.Error("test fail")
 		}
-		gtest.Assert(datetime, timeTemp.Time.Format("2006-01-02 15:04:05"))
+		t.Assert(datetime, timeTemp.Time.Format("2006-01-02 15:04:05"))
 	})
 }
 
 func Test_ISO8601(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		iso8601 := gtime.ISO8601()
-		gtest.Assert(iso8601, gtime.Now().Format("c"))
+		t.Assert(iso8601, gtime.Now().Format("c"))
 	})
 }
 
 func Test_RFC822(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		rfc822 := gtime.RFC822()
-		gtest.Assert(rfc822, gtime.Now().Format("r"))
+		t.Assert(rfc822, gtime.Now().Format("r"))
 	})
 }
 
 func Test_StrToTime(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		//正常日期列表
 		//正则的原因，日期"06.01.02"，"2006.01"，"2006..01"无法覆盖gtime.go的百分百
 		var testDatetimes = []string{
@@ -108,7 +108,7 @@ func Test_StrToTime(t *testing.T) {
 			if err != nil {
 				t.Error("test fail")
 			}
-			gtest.Assert(timeTemp.Time.Format("2006-01-02 15:04:05"), "2006-01-02 15:04:05")
+			t.Assert(timeTemp.Time.Format("2006-01-02 15:04:05"), "2006-01-02 15:04:05")
 		}
 
 		//正常日期列表，时间00:00:00
@@ -123,7 +123,7 @@ func Test_StrToTime(t *testing.T) {
 			if err != nil {
 				t.Error("test fail")
 			}
-			gtest.Assert(timeTemp.Time.Format("2006-01-02 15:04:05"), "2006-01-02 00:00:00")
+			t.Assert(timeTemp.Time.Format("2006-01-02 15:04:05"), "2006-01-02 00:00:00")
 		}
 
 		//测试格式化formatToStdLayout
@@ -148,7 +148,7 @@ func Test_StrToTime(t *testing.T) {
 			if err != nil {
 				t.Error("test fail")
 			}
-			gtest.Assert(timeTemp.Time.Format("2006-01-02 15:04:05.000"), "2007-01-02 15:04:05.000")
+			t.Assert(timeTemp.Time.Format("2006-01-02 15:04:05.000"), "2007-01-02 15:04:05.000")
 		}
 
 		//异常日期列表
@@ -174,7 +174,7 @@ func Test_StrToTime(t *testing.T) {
 }
 
 func Test_ConvertZone(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		//现行时间
 		nowUTC := time.Now().UTC()
 		testZone := "America/Los_Angeles"
@@ -191,12 +191,12 @@ func Test_ConvertZone(t *testing.T) {
 		t2, err := time.ParseInLocation("2006-01-02 15:04:05", laStr, loc)
 
 		//判断是否与现行时间匹配
-		gtest.Assert(t2.UTC().Unix(), nowUTC.Unix())
+		t.Assert(t2.UTC().Unix(), nowUTC.Unix())
 
 	})
 
 	//test err
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		//现行时间
 		nowUTC := time.Now().UTC()
 		//t.Log(nowUTC.Unix())
@@ -221,21 +221,21 @@ func Test_ConvertZone(t *testing.T) {
 }
 
 func Test_StrToTimeFormat(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 
 	})
 }
 
 func Test_ParseTimeFromContent(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.ParseTimeFromContent("我是中文2006-01-02 15:04:05我也是中文", "Y-m-d H:i:s")
-		gtest.Assert(timeTemp.Time.Format("2006-01-02 15:04:05"), "2006-01-02 15:04:05")
+		t.Assert(timeTemp.Time.Format("2006-01-02 15:04:05"), "2006-01-02 15:04:05")
 
 		timeTemp1 := gtime.ParseTimeFromContent("我是中文2006-01-02 15:04:05我也是中文")
-		gtest.Assert(timeTemp1.Time.Format("2006-01-02 15:04:05"), "2006-01-02 15:04:05")
+		t.Assert(timeTemp1.Time.Format("2006-01-02 15:04:05"), "2006-01-02 15:04:05")
 
 		timeTemp2 := gtime.ParseTimeFromContent("我是中文02.jan.2006 15:04:05我也是中文")
-		gtest.Assert(timeTemp2.Time.Format("2006-01-02 15:04:05"), "2006-01-02 15:04:05")
+		t.Assert(timeTemp2.Time.Format("2006-01-02 15:04:05"), "2006-01-02 15:04:05")
 
 		//test err
 		timeTempErr := gtime.ParseTimeFromContent("我是中文", "Y-m-d H:i:s")
@@ -246,7 +246,7 @@ func Test_ParseTimeFromContent(t *testing.T) {
 }
 
 func Test_FuncCost(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		gtime.FuncCost(func() {
 
 		})

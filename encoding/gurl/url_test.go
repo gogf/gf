@@ -18,28 +18,28 @@ var urlEncode string = `https%3A%2F%2Fgolang.org%2Fx%2Fcrypto%3Fgo-get%3D1+%2B`
 var rawUrlEncode string = `https%3A%2F%2Fgolang.org%2Fx%2Fcrypto%3Fgo-get%3D1%20%2B`
 
 func TestEncodeAndDecode(t *testing.T) {
-	gtest.Case(t, func() {
-		gtest.Assert(gurl.Encode(urlStr), urlEncode)
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gurl.Encode(urlStr), urlEncode)
 
 		res, err := gurl.Decode(urlEncode)
 		if err != nil {
 			t.Errorf("decode failed. %v", err)
 			return
 		}
-		gtest.Assert(res, urlStr)
+		t.Assert(res, urlStr)
 	})
 }
 
 func TestRowEncodeAndDecode(t *testing.T) {
-	gtest.Case(t, func() {
-		gtest.Assert(gurl.RawEncode(urlStr), rawUrlEncode)
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gurl.RawEncode(urlStr), rawUrlEncode)
 
 		res, err := gurl.RawDecode(rawUrlEncode)
 		if err != nil {
 			t.Errorf("decode failed. %v", err)
 			return
 		}
-		gtest.Assert(res, urlStr)
+		t.Assert(res, urlStr)
 	})
 }
 
@@ -51,7 +51,7 @@ func TestBuildQuery(t *testing.T) {
 	}
 	expect := "a=a2&a=a1&b=b2&b=b1&c=c1&c=c2"
 
-	gtest.Assert(gurl.BuildQuery(src), expect)
+	t.Assert(gurl.BuildQuery(src), expect)
 }
 
 func TestParseURL(t *testing.T) {
@@ -67,7 +67,7 @@ func TestParseURL(t *testing.T) {
 		"fragment": "anchor",
 	}
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		component := 0
 		for k, v := range []string{"all", "scheme", "host", "port", "user", "pass", "path", "query", "fragment"} {
 			if v == "all" {
@@ -83,9 +83,9 @@ func TestParseURL(t *testing.T) {
 			}
 
 			if v == "all" {
-				gtest.Assert(res, expect)
+				t.Assert(res, expect)
 			} else {
-				gtest.Assert(res[v], expect[v])
+				t.Assert(res[v], expect[v])
 			}
 
 		}

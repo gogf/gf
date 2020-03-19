@@ -34,7 +34,7 @@ dd = 11
 `
 
 func TestEncode(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		m := make(map[string]string)
 		m["toml"] = tomlStr
 		res, err := gtoml.Encode(m)
@@ -49,10 +49,10 @@ func TestEncode(t *testing.T) {
 			return
 		}
 
-		gtest.Assert(p.GetString("toml"), tomlStr)
+		t.Assert(p.GetString("toml"), tomlStr)
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		_, err := gtoml.Encode(tomlErr)
 		if err == nil {
 			t.Errorf("encode should be failed. %v", err)
@@ -62,7 +62,7 @@ func TestEncode(t *testing.T) {
 }
 
 func TestDecode(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		m := make(map[string]string)
 		m["toml"] = tomlStr
 		res, err := gtoml.Encode(m)
@@ -77,7 +77,7 @@ func TestDecode(t *testing.T) {
 			return
 		}
 
-		gtest.Assert(decodeStr.(map[string]interface{})["toml"], tomlStr)
+		t.Assert(decodeStr.(map[string]interface{})["toml"], tomlStr)
 
 		decodeStr1 := make(map[string]interface{})
 		err = gtoml.DecodeTo(res, &decodeStr1)
@@ -85,10 +85,10 @@ func TestDecode(t *testing.T) {
 			t.Errorf("decodeTo failed. %v", err)
 			return
 		}
-		gtest.Assert(decodeStr1["toml"], tomlStr)
+		t.Assert(decodeStr1["toml"], tomlStr)
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		_, err := gtoml.Decode([]byte(tomlErr))
 		if err == nil {
 			t.Errorf("decode failed. %v", err)
@@ -105,7 +105,7 @@ func TestDecode(t *testing.T) {
 }
 
 func TestToJson(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		m := make(map[string]string)
 		m["toml"] = tomlStr
 		res, err := gtoml.Encode(m)
@@ -130,10 +130,10 @@ func TestToJson(t *testing.T) {
 			t.Errorf("parser ToJson failed. %v", err)
 			return
 		}
-		gtest.Assert(jsonToml, expectJson)
+		t.Assert(jsonToml, expectJson)
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		_, err := gtoml.ToJson([]byte(tomlErr))
 		if err == nil {
 			t.Errorf("ToJson failed. %v", err)

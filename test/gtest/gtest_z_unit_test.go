@@ -12,11 +12,20 @@ import (
 	"github.com/gogf/gf/test/gtest"
 )
 
+func TestC(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(1, 1)
+		t.AssertNE(1, 0)
+		t.AssertEQ(float32(123.456), float32(123.456))
+		t.AssertEQ(float64(123.456), float64(123.456))
+	})
+}
+
 func TestCase(t *testing.T) {
-	gtest.Case(t, func() {
-		gtest.Assert(1, 1)
-		gtest.AssertNE(1, 0)
-		gtest.AssertEQ(float32(123.456), float32(123.456))
-		gtest.AssertEQ(float64(123.456), float64(123.456))
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(1, 1)
+		t.AssertNE(1, 0)
+		t.AssertEQ(float32(123.456), float32(123.456))
+		t.AssertEQ(float64(123.456), float64(123.456))
 	})
 }

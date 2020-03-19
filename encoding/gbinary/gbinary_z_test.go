@@ -56,47 +56,47 @@ func Test_EncodeAndDecode(t *testing.T) {
 		//t.Logf("%s:%v, encoded:%v\n", k, v, ve)
 		switch v.(type) {
 		case int:
-			gtest.Assert(gbinary.DecodeToInt(ve), v)
-			gtest.Assert(gbinary.DecodeToInt(ve1), v)
+			t.Assert(gbinary.DecodeToInt(ve), v)
+			t.Assert(gbinary.DecodeToInt(ve1), v)
 		case int8:
-			gtest.Assert(gbinary.DecodeToInt8(ve), v)
-			gtest.Assert(gbinary.DecodeToInt8(ve1), v)
+			t.Assert(gbinary.DecodeToInt8(ve), v)
+			t.Assert(gbinary.DecodeToInt8(ve1), v)
 		case int16:
-			gtest.Assert(gbinary.DecodeToInt16(ve), v)
-			gtest.Assert(gbinary.DecodeToInt16(ve1), v)
+			t.Assert(gbinary.DecodeToInt16(ve), v)
+			t.Assert(gbinary.DecodeToInt16(ve1), v)
 		case int32:
-			gtest.Assert(gbinary.DecodeToInt32(ve), v)
-			gtest.Assert(gbinary.DecodeToInt32(ve1), v)
+			t.Assert(gbinary.DecodeToInt32(ve), v)
+			t.Assert(gbinary.DecodeToInt32(ve1), v)
 		case int64:
-			gtest.Assert(gbinary.DecodeToInt64(ve), v)
-			gtest.Assert(gbinary.DecodeToInt64(ve1), v)
+			t.Assert(gbinary.DecodeToInt64(ve), v)
+			t.Assert(gbinary.DecodeToInt64(ve1), v)
 		case uint:
-			gtest.Assert(gbinary.DecodeToUint(ve), v)
-			gtest.Assert(gbinary.DecodeToUint(ve1), v)
+			t.Assert(gbinary.DecodeToUint(ve), v)
+			t.Assert(gbinary.DecodeToUint(ve1), v)
 		case uint8:
-			gtest.Assert(gbinary.DecodeToUint8(ve), v)
-			gtest.Assert(gbinary.DecodeToUint8(ve1), v)
+			t.Assert(gbinary.DecodeToUint8(ve), v)
+			t.Assert(gbinary.DecodeToUint8(ve1), v)
 		case uint16:
-			gtest.Assert(gbinary.DecodeToUint16(ve1), v)
-			gtest.Assert(gbinary.DecodeToUint16(ve), v)
+			t.Assert(gbinary.DecodeToUint16(ve1), v)
+			t.Assert(gbinary.DecodeToUint16(ve), v)
 		case uint32:
-			gtest.Assert(gbinary.DecodeToUint32(ve1), v)
-			gtest.Assert(gbinary.DecodeToUint32(ve), v)
+			t.Assert(gbinary.DecodeToUint32(ve1), v)
+			t.Assert(gbinary.DecodeToUint32(ve), v)
 		case uint64:
-			gtest.Assert(gbinary.DecodeToUint64(ve), v)
-			gtest.Assert(gbinary.DecodeToUint64(ve1), v)
+			t.Assert(gbinary.DecodeToUint64(ve), v)
+			t.Assert(gbinary.DecodeToUint64(ve1), v)
 		case bool:
-			gtest.Assert(gbinary.DecodeToBool(ve), v)
-			gtest.Assert(gbinary.DecodeToBool(ve1), v)
+			t.Assert(gbinary.DecodeToBool(ve), v)
+			t.Assert(gbinary.DecodeToBool(ve1), v)
 		case string:
-			gtest.Assert(gbinary.DecodeToString(ve), v)
-			gtest.Assert(gbinary.DecodeToString(ve1), v)
+			t.Assert(gbinary.DecodeToString(ve), v)
+			t.Assert(gbinary.DecodeToString(ve1), v)
 		case float32:
-			gtest.Assert(gbinary.DecodeToFloat32(ve), v)
-			gtest.Assert(gbinary.DecodeToFloat32(ve1), v)
+			t.Assert(gbinary.DecodeToFloat32(ve), v)
+			t.Assert(gbinary.DecodeToFloat32(ve1), v)
 		case float64:
-			gtest.Assert(gbinary.DecodeToFloat64(ve), v)
-			gtest.Assert(gbinary.DecodeToFloat64(ve1), v)
+			t.Assert(gbinary.DecodeToFloat64(ve), v)
+			t.Assert(gbinary.DecodeToFloat64(ve1), v)
 		default:
 			if v == nil {
 				continue
@@ -106,7 +106,7 @@ func Test_EncodeAndDecode(t *testing.T) {
 			if err != nil {
 				t.Errorf("test data: %s, %v, error:%v", k, v, err)
 			}
-			gtest.Assert(res, v)
+			t.Assert(res, v)
 		}
 	}
 }
@@ -115,7 +115,7 @@ func Test_EncodeStruct(t *testing.T) {
 	user := User{"wenzi1", 999, "www.baidu.com"}
 	ve := gbinary.Encode(user)
 	s := gbinary.DecodeToString(ve)
-	gtest.Assert(string(s), s)
+	t.Assert(string(s), s)
 }
 
 func Test_Bits(t *testing.T) {
@@ -123,10 +123,10 @@ func Test_Bits(t *testing.T) {
 		bits := make([]gbinary.Bit, 0)
 		res := gbinary.EncodeBits(bits, testBitData[i], 64)
 
-		gtest.Assert(gbinary.DecodeBits(res), testBitData[i])
-		gtest.Assert(gbinary.DecodeBitsToUint(res), uint(testBitData[i]))
+		t.Assert(gbinary.DecodeBits(res), testBitData[i])
+		t.Assert(gbinary.DecodeBitsToUint(res), uint(testBitData[i]))
 
-		gtest.Assert(gbinary.DecodeBytesToBits(gbinary.EncodeBitsToBytes(res)), res)
+		t.Assert(gbinary.DecodeBytesToBits(gbinary.EncodeBitsToBytes(res)), res)
 	}
 
 }

@@ -408,17 +408,17 @@ func TestList_PushBacks(t *testing.T) {
 }
 
 func TestList_PopBacks(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		l := New()
 		a1 := []interface{}{1, 2, 3, 4}
 		a2 := []interface{}{"a", "c", "b", "e"}
 		l.PushFronts(a1)
 		i1 := l.PopBacks(2)
-		gtest.Assert(i1, []interface{}{1, 2})
+		t.Assert(i1, []interface{}{1, 2})
 
 		l.PushBacks(a2) //4.3,a,c,b,e
 		i1 = l.PopBacks(3)
-		gtest.Assert(i1, []interface{}{"e", "b", "c"})
+		t.Assert(i1, []interface{}{"e", "b", "c"})
 	})
 }
 
@@ -427,8 +427,8 @@ func TestList_PopFronts(t *testing.T) {
 	a1 := []interface{}{1, 2, 3, 4}
 	l.PushFronts(a1)
 	i1 := l.PopFronts(2)
-	gtest.Assert(i1, []interface{}{4, 3})
-	gtest.Assert(l.Len(), 2)
+	t.Assert(i1, []interface{}{4, 3})
+	t.Assert(l.Len(), 2)
 }
 
 func TestList_PopBackAll(t *testing.T) {
@@ -436,8 +436,8 @@ func TestList_PopBackAll(t *testing.T) {
 	a1 := []interface{}{1, 2, 3, 4}
 	l.PushFronts(a1)
 	i1 := l.PopBackAll()
-	gtest.Assert(i1, []interface{}{1, 2, 3, 4})
-	gtest.Assert(l.Len(), 0)
+	t.Assert(i1, []interface{}{1, 2, 3, 4})
+	t.Assert(l.Len(), 0)
 
 }
 
@@ -446,8 +446,8 @@ func TestList_PopFrontAll(t *testing.T) {
 	a1 := []interface{}{1, 2, 3, 4}
 	l.PushFronts(a1)
 	i1 := l.PopFrontAll()
-	gtest.Assert(i1, []interface{}{4, 3, 2, 1})
-	gtest.Assert(l.Len(), 0)
+	t.Assert(i1, []interface{}{4, 3, 2, 1})
+	t.Assert(l.Len(), 0)
 }
 
 func TestList_FrontAll(t *testing.T) {
@@ -455,8 +455,8 @@ func TestList_FrontAll(t *testing.T) {
 	a1 := []interface{}{1, 2, 3, 4}
 	l.PushFronts(a1)
 	i1 := l.FrontAll()
-	gtest.Assert(i1, []interface{}{4, 3, 2, 1})
-	gtest.Assert(l.Len(), 4)
+	t.Assert(i1, []interface{}{4, 3, 2, 1})
+	t.Assert(l.Len(), 4)
 }
 
 func TestList_BackAll(t *testing.T) {
@@ -464,8 +464,8 @@ func TestList_BackAll(t *testing.T) {
 	a1 := []interface{}{1, 2, 3, 4}
 	l.PushFronts(a1)
 	i1 := l.BackAll()
-	gtest.Assert(i1, []interface{}{1, 2, 3, 4})
-	gtest.Assert(l.Len(), 4)
+	t.Assert(i1, []interface{}{1, 2, 3, 4})
+	t.Assert(l.Len(), 4)
 }
 
 func TestList_FrontValue(t *testing.T) {
@@ -474,11 +474,11 @@ func TestList_FrontValue(t *testing.T) {
 	a1 := []interface{}{1, 2, 3, 4}
 	l.PushFronts(a1)
 	i1 := l.FrontValue()
-	gtest.Assert(gconv.Int(i1), 4)
-	gtest.Assert(l.Len(), 4)
+	t.Assert(gconv.Int(i1), 4)
+	t.Assert(l.Len(), 4)
 
 	i1 = l2.FrontValue()
-	gtest.Assert(i1, nil)
+	t.Assert(i1, nil)
 }
 
 func TestList_BackValue(t *testing.T) {
@@ -487,11 +487,11 @@ func TestList_BackValue(t *testing.T) {
 	a1 := []interface{}{1, 2, 3, 4}
 	l.PushFronts(a1)
 	i1 := l.BackValue()
-	gtest.Assert(gconv.Int(i1), 1)
-	gtest.Assert(l.Len(), 4)
+	t.Assert(gconv.Int(i1), 1)
+	t.Assert(l.Len(), 4)
 
 	i1 = l2.FrontValue()
-	gtest.Assert(i1, nil)
+	t.Assert(i1, nil)
 
 }
 
@@ -500,17 +500,17 @@ func TestList_Back(t *testing.T) {
 	a1 := []interface{}{1, 2, 3, 4}
 	l.PushFronts(a1)
 	e1 := l.Back()
-	gtest.Assert(e1.Value, 1)
-	gtest.Assert(l.Len(), 4)
+	t.Assert(e1.Value, 1)
+	t.Assert(l.Len(), 4)
 }
 
 func TestList_Size(t *testing.T) {
 	l := New()
 	a1 := []interface{}{1, 2, 3, 4}
 	l.PushFronts(a1)
-	gtest.Assert(l.Size(), 4)
+	t.Assert(l.Size(), 4)
 	l.PopFront()
-	gtest.Assert(l.Size(), 3)
+	t.Assert(l.Size(), 3)
 }
 
 func TestList_Removes(t *testing.T) {
@@ -519,11 +519,11 @@ func TestList_Removes(t *testing.T) {
 	l.PushFronts(a1)
 	e1 := l.Back()
 	l.Removes([]*Element{e1})
-	gtest.Assert(l.Len(), 3)
+	t.Assert(l.Len(), 3)
 
 	e2 := l.Back()
 	l.Removes([]*Element{e2})
-	gtest.Assert(l.Len(), 2)
+	t.Assert(l.Len(), 2)
 	checkList(t, l, []interface{}{4, 3})
 
 }
@@ -533,7 +533,7 @@ func TestList_Clear(t *testing.T) {
 	a1 := []interface{}{1, 2, 3, 4}
 	l.PushFronts(a1)
 	l.Clear()
-	gtest.Assert(l.Len(), 0)
+	t.Assert(l.Len(), 0)
 }
 
 func TestList_IteratorAsc(t *testing.T) {
@@ -564,7 +564,7 @@ func TestList_IteratorDesc(t *testing.T) {
 		return false
 	}
 	l.IteratorDesc(fun1)
-	gtest.Assert(l.Len(), 4)
+	t.Assert(l.Len(), 4)
 	checkList(t, l, []interface{}{4, 3, 2, 1})
 }
 
@@ -585,51 +585,51 @@ func TestList_Iterator(t *testing.T) {
 }
 
 func TestList_Join(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		l := NewFrom([]interface{}{1, 2, "a", `"b"`, `\c`})
-		gtest.Assert(l.Join(","), `1,2,"a","\"b\"","\\c"`)
-		gtest.Assert(l.Join("."), `1.2."a"."\"b\""."\\c"`)
+		t.Assert(l.Join(","), `1,2,"a","\"b\"","\\c"`)
+		t.Assert(l.Join("."), `1.2."a"."\"b\""."\\c"`)
 	})
 }
 
 func TestList_String(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		l := NewFrom([]interface{}{1, 2, "a", `"b"`, `\c`})
-		gtest.Assert(l.String(), `[1,2,"a","\"b\"","\\c"]`)
+		t.Assert(l.String(), `[1,2,"a","\"b\"","\\c"]`)
 	})
 }
 
 func TestList_Json(t *testing.T) {
 	// Marshal
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		a := []interface{}{"a", "b", "c"}
 		l := New()
 		l.PushBacks(a)
 		b1, err1 := json.Marshal(l)
 		b2, err2 := json.Marshal(a)
-		gtest.Assert(err1, err2)
-		gtest.Assert(b1, b2)
+		t.Assert(err1, err2)
+		t.Assert(b1, b2)
 	})
 	// Unmarshal
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		a := []interface{}{"a", "b", "c"}
 		l := New()
 		b, err := json.Marshal(a)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		err = json.Unmarshal(b, l)
-		gtest.Assert(err, nil)
-		gtest.Assert(l.FrontAll(), a)
+		t.Assert(err, nil)
+		t.Assert(l.FrontAll(), a)
 	})
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var l List
 		a := []interface{}{"a", "b", "c"}
 		b, err := json.Marshal(a)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		err = json.Unmarshal(b, &l)
-		gtest.Assert(err, nil)
-		gtest.Assert(l.FrontAll(), a)
+		t.Assert(err, nil)
+		t.Assert(l.FrontAll(), a)
 	})
 }
 
@@ -639,25 +639,25 @@ func TestList_UnmarshalValue(t *testing.T) {
 		List *List
 	}
 	// JSON
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var t *T
 		err := gconv.Struct(map[string]interface{}{
 			"name": "john",
 			"list": []byte(`[1,2,3]`),
 		}, &t)
-		gtest.Assert(err, nil)
-		gtest.Assert(t.Name, "john")
-		gtest.Assert(t.List.FrontAll(), []interface{}{1, 2, 3})
+		t.Assert(err, nil)
+		t.Assert(t.Name, "john")
+		t.Assert(t.List.FrontAll(), []interface{}{1, 2, 3})
 	})
 	// Map
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var t *T
 		err := gconv.Struct(map[string]interface{}{
 			"name": "john",
 			"list": []interface{}{1, 2, 3},
 		}, &t)
-		gtest.Assert(err, nil)
-		gtest.Assert(t.Name, "john")
-		gtest.Assert(t.List.FrontAll(), []interface{}{1, 2, 3})
+		t.Assert(err, nil)
+		t.Assert(t.Name, "john")
+		t.Assert(t.List.FrontAll(), []interface{}{1, 2, 3})
 	})
 }

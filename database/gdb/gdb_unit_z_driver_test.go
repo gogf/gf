@@ -63,12 +63,12 @@ func Test_Custom_Driver(t *testing.T) {
 		Role:    "master",
 		Charset: "utf8",
 	})
-	gtest.Case(t, func() {
-		gtest.Assert(latestSqlString.Val(), "")
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(latestSqlString.Val(), "")
 		sqlString := "select 10000"
 		value, err := g.DB("driver-test").GetValue(sqlString)
-		gtest.Assert(err, nil)
-		gtest.Assert(value, 10000)
-		gtest.Assert(latestSqlString.Val(), sqlString)
+		t.Assert(err, nil)
+		t.Assert(value, 10000)
+		t.Assert(latestSqlString.Val(), sqlString)
 	})
 }

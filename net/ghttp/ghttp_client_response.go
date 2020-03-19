@@ -19,10 +19,11 @@ type ClientResponse struct {
 	cookies map[string]string
 }
 
-// GetCookie retrieves and returns the cookie value of specified <key>.
-func (r *ClientResponse) GetCookie(key string) string {
-	if len(r.cookies) == 0 {
+// initCookie initializes the cookie map attribute of ClientResponse.
+func (r *ClientResponse) initCookie() {
+	if r.cookies == nil {
 		now := time.Now()
+		r.cookies = make(map[string]string)
 		for _, v := range r.Cookies() {
 			if v.Expires.UnixNano() < now.UnixNano() {
 				continue
@@ -30,7 +31,22 @@ func (r *ClientResponse) GetCookie(key string) string {
 			r.cookies[v.Name] = v.Value
 		}
 	}
+}
+
+// GetCookie retrieves and returns the cookie value of specified <key>.
+func (r *ClientResponse) GetCookie(key string) string {
+	r.initCookie()
 	return r.cookies[key]
+}
+
+// GetCookieMap retrieves and returns a copy of current cookie values map.
+func (r *ClientResponse) GetCookieMap() map[string]string {
+	r.initCookie()
+	m := make(map[string]string, len(r.cookies))
+	for k, v := range r.cookies {
+		m[k] = v
+	}
+	return m
 }
 
 // ReadAll retrieves and returns the response content as []byte.

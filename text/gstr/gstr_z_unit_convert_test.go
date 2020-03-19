@@ -16,7 +16,7 @@ import (
 )
 
 func Test_OctStr(t *testing.T) {
-	gtest.Case(t, func() {
-		gtest.Assert(gstr.OctStr(`\346\200\241`), "怡")
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.OctStr(`\346\200\241`), "怡")
 	})
 }

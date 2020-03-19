@@ -15,14 +15,14 @@ import (
 func TestOpen(t *testing.T) {
 	testFile := start("TestOpen.txt")
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		f, err := gfpool.Open(testFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0666)
-		gtest.AssertEQ(err, nil)
+		t.AssertEQ(err, nil)
 		f.Close()
 
 		f2, err1 := gfpool.Open(testFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0666)
-		gtest.AssertEQ(err1, nil)
-		gtest.AssertEQ(f, f2)
+		t.AssertEQ(err1, nil)
+		t.AssertEQ(f, f2)
 		f2.Close()
 	})
 
@@ -31,46 +31,46 @@ func TestOpen(t *testing.T) {
 
 // TestOpenErr test open file error
 func TestOpenErr(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		testErrFile := "errorPath"
 		_, err := gfpool.Open(testErrFile, os.O_RDWR, 0666)
-		gtest.AssertNE(err, nil)
+		t.AssertNE(err, nil)
 
 		// delete file error
 		testFile := start("TestOpenDeleteErr.txt")
 		pool := gfpool.New(testFile, os.O_RDWR, 0666)
 		_, err1 := pool.File()
-		gtest.AssertEQ(err1, nil)
+		t.AssertEQ(err1, nil)
 		stop(testFile)
 		_, err1 = pool.File()
-		gtest.AssertNE(err1, nil)
+		t.AssertNE(err1, nil)
 
 		// append mode delete file error and create again
 		testFile = start("TestOpenCreateErr.txt")
 		pool = gfpool.New(testFile, os.O_CREATE, 0666)
 		_, err1 = pool.File()
-		gtest.AssertEQ(err1, nil)
+		t.AssertEQ(err1, nil)
 		stop(testFile)
 		_, err1 = pool.File()
-		gtest.AssertEQ(err1, nil)
+		t.AssertEQ(err1, nil)
 
 		// append mode delete file error
 		testFile = start("TestOpenAppendErr.txt")
 		pool = gfpool.New(testFile, os.O_APPEND, 0666)
 		_, err1 = pool.File()
-		gtest.AssertEQ(err1, nil)
+		t.AssertEQ(err1, nil)
 		stop(testFile)
 		_, err1 = pool.File()
-		gtest.AssertNE(err1, nil)
+		t.AssertNE(err1, nil)
 
 		// trunc mode delete file error
 		testFile = start("TestOpenTruncErr.txt")
 		pool = gfpool.New(testFile, os.O_TRUNC, 0666)
 		_, err1 = pool.File()
-		gtest.AssertEQ(err1, nil)
+		t.AssertEQ(err1, nil)
 		stop(testFile)
 		_, err1 = pool.File()
-		gtest.AssertNE(err1, nil)
+		t.AssertNE(err1, nil)
 	})
 }
 
@@ -78,15 +78,15 @@ func TestOpenErr(t *testing.T) {
 func TestOpenExpire(t *testing.T) {
 	testFile := start("TestOpenExpire.txt")
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		f, err := gfpool.Open(testFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0666, 100*time.Millisecond)
-		gtest.AssertEQ(err, nil)
+		t.AssertEQ(err, nil)
 		f.Close()
 
 		time.Sleep(150 * time.Millisecond)
 		f2, err1 := gfpool.Open(testFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0666, 100*time.Millisecond)
-		gtest.AssertEQ(err1, nil)
-		//gtest.AssertNE(f, f2)
+		t.AssertEQ(err1, nil)
+		//t.AssertNE(f, f2)
 		f2.Close()
 	})
 
@@ -97,16 +97,16 @@ func TestOpenExpire(t *testing.T) {
 func TestNewPool(t *testing.T) {
 	testFile := start("TestNewPool.txt")
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		f, err := gfpool.Open(testFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0666)
-		gtest.AssertEQ(err, nil)
+		t.AssertEQ(err, nil)
 		f.Close()
 
 		pool := gfpool.New(testFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0666)
 		f2, err1 := pool.File()
 		// pool not equal
-		gtest.AssertEQ(err1, nil)
-		//gtest.AssertNE(f, f2)
+		t.AssertEQ(err1, nil)
+		//t.AssertNE(f, f2)
 		f2.Close()
 
 		pool.Close()

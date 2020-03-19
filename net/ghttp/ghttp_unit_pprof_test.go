@@ -19,7 +19,7 @@ import (
 )
 
 func TestServer_EnablePProf(t *testing.T) {
-	Case(t, func() {
+	C(t, func(t *T) {
 		p := ports.PopRand()
 		s := g.Server(p)
 		s.EnablePProf("/pprof")

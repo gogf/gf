@@ -22,56 +22,56 @@ import (
 )
 
 func Test_DB_Ping(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		err1 := db.PingMaster()
 		err2 := db.PingSlave()
-		gtest.Assert(err1, nil)
-		gtest.Assert(err2, nil)
+		t.Assert(err1, nil)
+		t.Assert(err2, nil)
 	})
 }
 
 func Test_DB_Query(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Query("SELECT ?", 1)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		_, err = db.Query("SELECT ?+?", 1, 2)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		_, err = db.Query("SELECT ?+?", g.Slice{1, 2})
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		_, err = db.Query("ERROR")
-		gtest.AssertNE(err, nil)
+		t.AssertNE(err, nil)
 	})
 
 }
 
 func Test_DB_Exec(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Exec("SELECT ?", 1)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		_, err = db.Exec("ERROR")
-		gtest.AssertNE(err, nil)
+		t.AssertNE(err, nil)
 	})
 
 }
 
 func Test_DB_Prepare(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		st, err := db.Prepare("SELECT 100")
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		rows, err := st.Query()
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		array, err := rows.Columns()
-		gtest.Assert(err, nil)
-		gtest.Assert(array[0], "100")
+		t.Assert(err, nil)
+		t.Assert(array[0], "100")
 
 		err = rows.Close()
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 	})
 }
 
@@ -79,7 +79,7 @@ func Test_DB_Insert(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Insert(table, g.Map{
 			"id":          1,
 			"passport":    "t1",
@@ -87,7 +87,7 @@ func Test_DB_Insert(t *testing.T) {
 			"nickname":    "T1",
 			"create_time": gtime.Now().String(),
 		})
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		// normal map
 		result, err := db.Insert(table, g.Map{
@@ -97,9 +97,9 @@ func Test_DB_Insert(t *testing.T) {
 			"nickname":    "name_2",
 			"create_time": gtime.Now().String(),
 		})
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 		n, _ := result.RowsAffected()
-		gtest.Assert(n, 1)
+		t.Assert(n, 1)
 
 		// struct
 		type User struct {
@@ -117,18 +117,18 @@ func Test_DB_Insert(t *testing.T) {
 			Nickname:   "name_3",
 			CreateTime: timeStr,
 		})
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 		n, _ = result.RowsAffected()
-		gtest.Assert(n, 1)
+		t.Assert(n, 1)
 
 		one, err := db.Table(table).Where("id", 3).One()
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
-		gtest.Assert(one["id"].Int(), 3)
-		gtest.Assert(one["passport"].String(), "user_3")
-		gtest.Assert(one["password"].String(), "25d55ad283aa400af464c76d713c07ad")
-		gtest.Assert(one["nickname"].String(), "name_3")
-		gtest.Assert(one["create_time"].GTime().String(), timeStr)
+		t.Assert(one["id"].Int(), 3)
+		t.Assert(one["passport"].String(), "user_3")
+		t.Assert(one["password"].String(), "25d55ad283aa400af464c76d713c07ad")
+		t.Assert(one["nickname"].String(), "name_3")
+		t.Assert(one["create_time"].GTime().String(), timeStr)
 
 		// *struct
 		timeStr = gtime.Now().String()
@@ -139,17 +139,17 @@ func Test_DB_Insert(t *testing.T) {
 			Nickname:   "name_4",
 			CreateTime: timeStr,
 		})
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 		n, _ = result.RowsAffected()
-		gtest.Assert(n, 1)
+		t.Assert(n, 1)
 
 		one, err = db.Table(table).Where("id", 4).One()
-		gtest.Assert(err, nil)
-		gtest.Assert(one["id"].Int(), 4)
-		gtest.Assert(one["passport"].String(), "t4")
-		gtest.Assert(one["password"].String(), "25d55ad283aa400af464c76d713c07ad")
-		gtest.Assert(one["nickname"].String(), "name_4")
-		gtest.Assert(one["create_time"].GTime().String(), timeStr)
+		t.Assert(err, nil)
+		t.Assert(one["id"].Int(), 4)
+		t.Assert(one["passport"].String(), "t4")
+		t.Assert(one["password"].String(), "25d55ad283aa400af464c76d713c07ad")
+		t.Assert(one["nickname"].String(), "name_4")
+		t.Assert(one["create_time"].GTime().String(), timeStr)
 
 		// batch with Insert
 		timeStr = gtime.Now().String()
@@ -169,24 +169,24 @@ func Test_DB_Insert(t *testing.T) {
 				"create_time": timeStr,
 			},
 		})
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 		n, _ = r.RowsAffected()
-		gtest.Assert(n, 2)
+		t.Assert(n, 2)
 
 		one, err = db.Table(table).Where("id", 200).One()
-		gtest.Assert(err, nil)
-		gtest.Assert(one["id"].Int(), 200)
-		gtest.Assert(one["passport"].String(), "t200")
-		gtest.Assert(one["password"].String(), "25d55ad283aa400af464c76d71qw07ad")
-		gtest.Assert(one["nickname"].String(), "T200")
-		gtest.Assert(one["create_time"].GTime().String(), timeStr)
+		t.Assert(err, nil)
+		t.Assert(one["id"].Int(), 200)
+		t.Assert(one["passport"].String(), "t200")
+		t.Assert(one["password"].String(), "25d55ad283aa400af464c76d71qw07ad")
+		t.Assert(one["nickname"].String(), "T200")
+		t.Assert(one["create_time"].GTime().String(), timeStr)
 	})
 }
 
 func Test_DB_InsertIgnore(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Insert(table, g.Map{
 			"id":          1,
 			"passport":    "t1",
@@ -194,9 +194,9 @@ func Test_DB_InsertIgnore(t *testing.T) {
 			"nickname":    "T1",
 			"create_time": gtime.Now().String(),
 		})
-		gtest.AssertNE(err, nil)
+		t.AssertNE(err, nil)
 	})
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		_, err := db.InsertIgnore(table, g.Map{
 			"id":          1,
 			"passport":    "t1",
@@ -204,12 +204,12 @@ func Test_DB_InsertIgnore(t *testing.T) {
 			"nickname":    "T1",
 			"create_time": gtime.Now().String(),
 		})
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 	})
 }
 
 func Test_DB_BatchInsert(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		table := createTable()
 		defer dropTable(table)
 		r, err := db.BatchInsert(table, g.List{
@@ -228,15 +228,15 @@ func Test_DB_BatchInsert(t *testing.T) {
 				"create_time": gtime.Now().String(),
 			},
 		}, 1)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 		n, _ := r.RowsAffected()
-		gtest.Assert(n, 2)
+		t.Assert(n, 2)
 
 		n, _ = r.LastInsertId()
-		gtest.Assert(n, 3)
+		t.Assert(n, 3)
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		table := createTable()
 		defer dropTable(table)
 		// []interface{}
@@ -256,13 +256,13 @@ func Test_DB_BatchInsert(t *testing.T) {
 				"create_time": gtime.Now().String(),
 			},
 		}, 1)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 		n, _ := r.RowsAffected()
-		gtest.Assert(n, 2)
+		t.Assert(n, 2)
 	})
 
 	// batch insert map
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		table := createTable()
 		defer dropTable(table)
 		result, err := db.BatchInsert(table, g.Map{
@@ -272,16 +272,16 @@ func Test_DB_BatchInsert(t *testing.T) {
 			"nickname":    "T1",
 			"create_time": gtime.Now().String(),
 		})
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 		n, _ := result.RowsAffected()
-		gtest.Assert(n, 1)
+		t.Assert(n, 1)
 	})
 
 }
 
 func Test_DB_BatchInsert_Struct(t *testing.T) {
 	// batch insert struct
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		table := createTable()
 		defer dropTable(table)
 
@@ -300,9 +300,9 @@ func Test_DB_BatchInsert_Struct(t *testing.T) {
 			CreateTime: gtime.Now(),
 		}
 		result, err := db.BatchInsert(table, user)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 		n, _ := result.RowsAffected()
-		gtest.Assert(n, 1)
+		t.Assert(n, 1)
 	})
 }
 
@@ -310,7 +310,7 @@ func Test_DB_Save(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		timeStr := gtime.Now().String()
 		_, err := db.Save(table, g.Map{
 			"id":          1,
@@ -319,15 +319,15 @@ func Test_DB_Save(t *testing.T) {
 			"nickname":    "T11",
 			"create_time": timeStr,
 		})
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		one, err := db.Table(table).Where("id", 1).One()
-		gtest.Assert(err, nil)
-		gtest.Assert(one["id"].Int(), 1)
-		gtest.Assert(one["passport"].String(), "t1")
-		gtest.Assert(one["password"].String(), "25d55ad283aa400af464c76d713c07ad")
-		gtest.Assert(one["nickname"].String(), "T11")
-		gtest.Assert(one["create_time"].GTime().String(), timeStr)
+		t.Assert(err, nil)
+		t.Assert(one["id"].Int(), 1)
+		t.Assert(one["passport"].String(), "t1")
+		t.Assert(one["password"].String(), "25d55ad283aa400af464c76d713c07ad")
+		t.Assert(one["nickname"].String(), "T11")
+		t.Assert(one["create_time"].GTime().String(), timeStr)
 	})
 }
 
@@ -335,7 +335,7 @@ func Test_DB_Replace(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		timeStr := gtime.Now().String()
 		_, err := db.Replace(table, g.Map{
 			"id":          1,
@@ -344,15 +344,15 @@ func Test_DB_Replace(t *testing.T) {
 			"nickname":    "T11",
 			"create_time": timeStr,
 		})
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		one, err := db.Table(table).Where("id", 1).One()
-		gtest.Assert(err, nil)
-		gtest.Assert(one["id"].Int(), 1)
-		gtest.Assert(one["passport"].String(), "t1")
-		gtest.Assert(one["password"].String(), "25d55ad283aa400af464c76d713c07ad")
-		gtest.Assert(one["nickname"].String(), "T11")
-		gtest.Assert(one["create_time"].GTime().String(), timeStr)
+		t.Assert(err, nil)
+		t.Assert(one["id"].Int(), 1)
+		t.Assert(one["passport"].String(), "t1")
+		t.Assert(one["password"].String(), "25d55ad283aa400af464c76d713c07ad")
+		t.Assert(one["nickname"].String(), "T11")
+		t.Assert(one["create_time"].GTime().String(), timeStr)
 	})
 }
 
@@ -360,18 +360,18 @@ func Test_DB_Update(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Update(table, "password='987654321'", "id=3")
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 		n, _ := result.RowsAffected()
-		gtest.Assert(n, 1)
+		t.Assert(n, 1)
 
 		one, err := db.Table(table).Where("id", 3).One()
-		gtest.Assert(err, nil)
-		gtest.Assert(one["id"].Int(), 3)
-		gtest.Assert(one["passport"].String(), "user_3")
-		gtest.Assert(one["password"].String(), "987654321")
-		gtest.Assert(one["nickname"].String(), "name_3")
+		t.Assert(err, nil)
+		t.Assert(one["id"].Int(), 3)
+		t.Assert(one["passport"].String(), "user_3")
+		t.Assert(one["password"].String(), "987654321")
+		t.Assert(one["nickname"].String(), "name_3")
 	})
 }
 
@@ -379,86 +379,86 @@ func Test_DB_GetAll(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		result, err := db.GetAll(fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 1)
-		gtest.Assert(err, nil)
-		gtest.Assert(len(result), 1)
-		gtest.Assert(result[0]["id"].Int(), 1)
+		t.Assert(err, nil)
+		t.Assert(len(result), 1)
+		t.Assert(result[0]["id"].Int(), 1)
 	})
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		result, err := db.GetAll(fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), g.Slice{1})
-		gtest.Assert(err, nil)
-		gtest.Assert(len(result), 1)
-		gtest.Assert(result[0]["id"].Int(), 1)
+		t.Assert(err, nil)
+		t.Assert(len(result), 1)
+		t.Assert(result[0]["id"].Int(), 1)
 	})
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		result, err := db.GetAll(fmt.Sprintf("SELECT * FROM %s WHERE id in(?)", table), g.Slice{1, 2, 3})
-		gtest.Assert(err, nil)
-		gtest.Assert(len(result), 3)
-		gtest.Assert(result[0]["id"].Int(), 1)
-		gtest.Assert(result[1]["id"].Int(), 2)
-		gtest.Assert(result[2]["id"].Int(), 3)
+		t.Assert(err, nil)
+		t.Assert(len(result), 3)
+		t.Assert(result[0]["id"].Int(), 1)
+		t.Assert(result[1]["id"].Int(), 2)
+		t.Assert(result[2]["id"].Int(), 3)
 	})
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		result, err := db.GetAll(fmt.Sprintf("SELECT * FROM %s WHERE id in(?,?,?)", table), g.Slice{1, 2, 3})
-		gtest.Assert(err, nil)
-		gtest.Assert(len(result), 3)
-		gtest.Assert(result[0]["id"].Int(), 1)
-		gtest.Assert(result[1]["id"].Int(), 2)
-		gtest.Assert(result[2]["id"].Int(), 3)
+		t.Assert(err, nil)
+		t.Assert(len(result), 3)
+		t.Assert(result[0]["id"].Int(), 1)
+		t.Assert(result[1]["id"].Int(), 2)
+		t.Assert(result[2]["id"].Int(), 3)
 	})
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		result, err := db.GetAll(fmt.Sprintf("SELECT * FROM %s WHERE id in(?,?,?)", table), g.Slice{1, 2, 3}...)
-		gtest.Assert(err, nil)
-		gtest.Assert(len(result), 3)
-		gtest.Assert(result[0]["id"].Int(), 1)
-		gtest.Assert(result[1]["id"].Int(), 2)
-		gtest.Assert(result[2]["id"].Int(), 3)
+		t.Assert(err, nil)
+		t.Assert(len(result), 3)
+		t.Assert(result[0]["id"].Int(), 1)
+		t.Assert(result[1]["id"].Int(), 2)
+		t.Assert(result[2]["id"].Int(), 3)
 	})
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		result, err := db.GetAll(fmt.Sprintf("SELECT * FROM %s WHERE id>=? AND id <=?", table), g.Slice{1, 3})
-		gtest.Assert(err, nil)
-		gtest.Assert(len(result), 3)
-		gtest.Assert(result[0]["id"].Int(), 1)
-		gtest.Assert(result[1]["id"].Int(), 2)
-		gtest.Assert(result[2]["id"].Int(), 3)
+		t.Assert(err, nil)
+		t.Assert(len(result), 3)
+		t.Assert(result[0]["id"].Int(), 1)
+		t.Assert(result[1]["id"].Int(), 2)
+		t.Assert(result[2]["id"].Int(), 3)
 	})
 }
 
 func Test_DB_GetOne(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		record, err := db.GetOne(fmt.Sprintf("SELECT * FROM %s WHERE passport=?", table), "user_1")
-		gtest.Assert(err, nil)
-		gtest.Assert(record["nickname"].String(), "name_1")
+		t.Assert(err, nil)
+		t.Assert(record["nickname"].String(), "name_1")
 	})
 }
 
 func Test_DB_GetValue(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		value, err := db.GetValue(fmt.Sprintf("SELECT id FROM %s WHERE passport=?", table), "user_3")
-		gtest.Assert(err, nil)
-		gtest.Assert(value.Int(), 3)
+		t.Assert(err, nil)
+		t.Assert(value.Int(), 3)
 	})
 }
 
 func Test_DB_GetCount(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		count, err := db.GetCount(fmt.Sprintf("SELECT * FROM %s", table))
-		gtest.Assert(err, nil)
-		gtest.Assert(count, SIZE)
+		t.Assert(err, nil)
+		t.Assert(count, SIZE)
 	})
 }
 
 func Test_DB_GetStruct(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Id         int
 			Passport   string
@@ -468,10 +468,10 @@ func Test_DB_GetStruct(t *testing.T) {
 		}
 		user := new(User)
 		err := db.GetStruct(user, fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 3)
-		gtest.Assert(err, nil)
-		gtest.Assert(user.NickName, "name_3")
+		t.Assert(err, nil)
+		t.Assert(user.NickName, "name_3")
 	})
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Id         int
 			Passport   string
@@ -481,15 +481,15 @@ func Test_DB_GetStruct(t *testing.T) {
 		}
 		user := new(User)
 		err := db.GetStruct(user, fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 3)
-		gtest.Assert(err, nil)
-		gtest.Assert(user.NickName, "name_3")
+		t.Assert(err, nil)
+		t.Assert(user.NickName, "name_3")
 	})
 }
 
 func Test_DB_GetStructs(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Id         int
 			Passport   string
@@ -499,17 +499,17 @@ func Test_DB_GetStructs(t *testing.T) {
 		}
 		var users []User
 		err := db.GetStructs(&users, fmt.Sprintf("SELECT * FROM %s WHERE id>?", table), 1)
-		gtest.Assert(err, nil)
-		gtest.Assert(len(users), SIZE-1)
-		gtest.Assert(users[0].Id, 2)
-		gtest.Assert(users[1].Id, 3)
-		gtest.Assert(users[2].Id, 4)
-		gtest.Assert(users[0].NickName, "name_2")
-		gtest.Assert(users[1].NickName, "name_3")
-		gtest.Assert(users[2].NickName, "name_4")
+		t.Assert(err, nil)
+		t.Assert(len(users), SIZE-1)
+		t.Assert(users[0].Id, 2)
+		t.Assert(users[1].Id, 3)
+		t.Assert(users[2].Id, 4)
+		t.Assert(users[0].NickName, "name_2")
+		t.Assert(users[1].NickName, "name_3")
+		t.Assert(users[2].NickName, "name_4")
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Id         int
 			Passport   string
@@ -519,21 +519,21 @@ func Test_DB_GetStructs(t *testing.T) {
 		}
 		var users []User
 		err := db.GetStructs(&users, fmt.Sprintf("SELECT * FROM %s WHERE id>?", table), 1)
-		gtest.Assert(err, nil)
-		gtest.Assert(len(users), SIZE-1)
-		gtest.Assert(users[0].Id, 2)
-		gtest.Assert(users[1].Id, 3)
-		gtest.Assert(users[2].Id, 4)
-		gtest.Assert(users[0].NickName, "name_2")
-		gtest.Assert(users[1].NickName, "name_3")
-		gtest.Assert(users[2].NickName, "name_4")
+		t.Assert(err, nil)
+		t.Assert(len(users), SIZE-1)
+		t.Assert(users[0].Id, 2)
+		t.Assert(users[1].Id, 3)
+		t.Assert(users[2].Id, 4)
+		t.Assert(users[0].NickName, "name_2")
+		t.Assert(users[1].NickName, "name_3")
+		t.Assert(users[2].NickName, "name_4")
 	})
 }
 
 func Test_DB_GetScan(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Id         int
 			Passport   string
@@ -543,10 +543,10 @@ func Test_DB_GetScan(t *testing.T) {
 		}
 		user := new(User)
 		err := db.GetScan(user, fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 3)
-		gtest.Assert(err, nil)
-		gtest.Assert(user.NickName, "name_3")
+		t.Assert(err, nil)
+		t.Assert(user.NickName, "name_3")
 	})
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Id         int
 			Passport   string
@@ -556,11 +556,11 @@ func Test_DB_GetScan(t *testing.T) {
 		}
 		user := new(User)
 		err := db.GetScan(user, fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 3)
-		gtest.Assert(err, nil)
-		gtest.Assert(user.NickName, "name_3")
+		t.Assert(err, nil)
+		t.Assert(user.NickName, "name_3")
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Id         int
 			Passport   string
@@ -570,17 +570,17 @@ func Test_DB_GetScan(t *testing.T) {
 		}
 		var users []User
 		err := db.GetScan(&users, fmt.Sprintf("SELECT * FROM %s WHERE id>?", table), 1)
-		gtest.Assert(err, nil)
-		gtest.Assert(len(users), SIZE-1)
-		gtest.Assert(users[0].Id, 2)
-		gtest.Assert(users[1].Id, 3)
-		gtest.Assert(users[2].Id, 4)
-		gtest.Assert(users[0].NickName, "name_2")
-		gtest.Assert(users[1].NickName, "name_3")
-		gtest.Assert(users[2].NickName, "name_4")
+		t.Assert(err, nil)
+		t.Assert(len(users), SIZE-1)
+		t.Assert(users[0].Id, 2)
+		t.Assert(users[1].Id, 3)
+		t.Assert(users[2].Id, 4)
+		t.Assert(users[0].NickName, "name_2")
+		t.Assert(users[1].NickName, "name_3")
+		t.Assert(users[2].NickName, "name_4")
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Id         int
 			Passport   string
@@ -590,25 +590,25 @@ func Test_DB_GetScan(t *testing.T) {
 		}
 		var users []User
 		err := db.GetScan(&users, fmt.Sprintf("SELECT * FROM %s WHERE id>?", table), 1)
-		gtest.Assert(err, nil)
-		gtest.Assert(len(users), SIZE-1)
-		gtest.Assert(users[0].Id, 2)
-		gtest.Assert(users[1].Id, 3)
-		gtest.Assert(users[2].Id, 4)
-		gtest.Assert(users[0].NickName, "name_2")
-		gtest.Assert(users[1].NickName, "name_3")
-		gtest.Assert(users[2].NickName, "name_4")
+		t.Assert(err, nil)
+		t.Assert(len(users), SIZE-1)
+		t.Assert(users[0].Id, 2)
+		t.Assert(users[1].Id, 3)
+		t.Assert(users[2].Id, 4)
+		t.Assert(users[0].NickName, "name_2")
+		t.Assert(users[1].NickName, "name_3")
+		t.Assert(users[2].NickName, "name_4")
 	})
 }
 
 func Test_DB_Delete(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Delete(table, nil)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 		n, _ := result.RowsAffected()
-		gtest.Assert(n, SIZE)
+		t.Assert(n, SIZE)
 	})
 }
 
@@ -616,7 +616,7 @@ func Test_DB_Time(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Insert(table, g.Map{
 			"id":          200,
 			"passport":    "t200",
@@ -628,13 +628,13 @@ func Test_DB_Time(t *testing.T) {
 			gtest.Error(err)
 		}
 		n, _ := result.RowsAffected()
-		gtest.Assert(n, 1)
+		t.Assert(n, 1)
 		value, err := db.GetValue(fmt.Sprintf("select `passport` from `%s` where id=?", table), 200)
-		gtest.Assert(err, nil)
-		gtest.Assert(value.String(), "t200")
+		t.Assert(err, nil)
+		t.Assert(value.String(), "t200")
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		t := time.Now()
 		result, err := db.Insert(table, g.Map{
 			"id":          300,
@@ -647,17 +647,17 @@ func Test_DB_Time(t *testing.T) {
 			gtest.Error(err)
 		}
 		n, _ := result.RowsAffected()
-		gtest.Assert(n, 1)
+		t.Assert(n, 1)
 		value, err := db.GetValue(fmt.Sprintf("select `passport` from `%s` where id=?", table), 300)
-		gtest.Assert(err, nil)
-		gtest.Assert(value.String(), "t300")
+		t.Assert(err, nil)
+		t.Assert(value.String(), "t300")
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Delete(table, nil)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 		n, _ := result.RowsAffected()
-		gtest.Assert(n, 2)
+		t.Assert(n, 2)
 	})
 }
 
@@ -666,9 +666,9 @@ func Test_DB_ToJson(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	_, err := db.Update(table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
-	gtest.Assert(err, nil)
+	t.Assert(err, nil)
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Table(table).Fields("*").Where("id =? ", 1).Select()
 		if err != nil {
 			gtest.Fatal(err)
@@ -685,7 +685,7 @@ func Test_DB_ToJson(t *testing.T) {
 		users := make([]User, 0)
 
 		err = result.Structs(users)
-		gtest.AssertNE(err, nil)
+		t.AssertNE(err, nil)
 
 		err = result.Structs(&users)
 		if err != nil {
@@ -698,18 +698,18 @@ func Test_DB_ToJson(t *testing.T) {
 			gtest.Fatal(err)
 		}
 
-		gtest.Assert(users[0].Id, resultJson.GetInt("0.id"))
-		gtest.Assert(users[0].Passport, resultJson.GetString("0.passport"))
-		gtest.Assert(users[0].Password, resultJson.GetString("0.password"))
-		gtest.Assert(users[0].NickName, resultJson.GetString("0.nickname"))
-		gtest.Assert(users[0].CreateTime, resultJson.GetString("0.create_time"))
+		t.Assert(users[0].Id, resultJson.GetInt("0.id"))
+		t.Assert(users[0].Passport, resultJson.GetString("0.passport"))
+		t.Assert(users[0].Password, resultJson.GetString("0.password"))
+		t.Assert(users[0].NickName, resultJson.GetString("0.nickname"))
+		t.Assert(users[0].CreateTime, resultJson.GetString("0.create_time"))
 
 		result = nil
 		err = result.Structs(&users)
-		gtest.AssertNE(err, nil)
+		t.AssertNE(err, nil)
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Table(table).Fields("*").Where("id =? ", 1).One()
 		if err != nil {
 			gtest.Fatal(err)
@@ -732,7 +732,7 @@ func Test_DB_ToJson(t *testing.T) {
 
 		result = nil
 		err = result.Struct(&users)
-		gtest.AssertNE(err, nil)
+		t.AssertNE(err, nil)
 	})
 }
 
@@ -741,9 +741,9 @@ func Test_DB_ToXml(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	_, err := db.Update(table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
-	gtest.Assert(err, nil)
+	t.Assert(err, nil)
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		record, err := db.Table(table).Fields("*").Where("id = ?", 1).One()
 		if err != nil {
 			gtest.Fatal(err)
@@ -770,31 +770,31 @@ func Test_DB_ToXml(t *testing.T) {
 
 		resultXml := result["doc"].(map[string]interface{})
 		if v, ok := resultXml["id"]; ok {
-			gtest.Assert(user.Id, v)
+			t.Assert(user.Id, v)
 		} else {
 			gtest.Fatal("FAIL")
 		}
 
 		if v, ok := resultXml["passport"]; ok {
-			gtest.Assert(user.Passport, v)
+			t.Assert(user.Passport, v)
 		} else {
 			gtest.Fatal("FAIL")
 		}
 
 		if v, ok := resultXml["password"]; ok {
-			gtest.Assert(user.Password, v)
+			t.Assert(user.Password, v)
 		} else {
 			gtest.Fatal("FAIL")
 		}
 
 		if v, ok := resultXml["nickname"]; ok {
-			gtest.Assert(user.NickName, v)
+			t.Assert(user.NickName, v)
 		} else {
 			gtest.Fatal("FAIL")
 		}
 
 		if v, ok := resultXml["create_time"]; ok {
-			gtest.Assert(user.CreateTime, v)
+			t.Assert(user.CreateTime, v)
 		} else {
 			gtest.Fatal("FAIL")
 		}
@@ -807,8 +807,8 @@ func Test_DB_ToStringMap(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	_, err := db.Update(table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
-	gtest.Assert(err, nil)
-	gtest.Case(t, func() {
+	t.Assert(err, nil)
+	gtest.C(t, func(t *gtest.T) {
 		id := "1"
 		result, err := db.Table(table).Fields("*").Where("id = ?", 1).Select()
 		if err != nil {
@@ -830,11 +830,11 @@ func Test_DB_ToStringMap(t *testing.T) {
 		}
 
 		resultStringMap := result.MapKeyStr("id")
-		gtest.Assert(t_users[0].Id, resultStringMap[id]["id"])
-		gtest.Assert(t_users[0].Passport, resultStringMap[id]["passport"])
-		gtest.Assert(t_users[0].Password, resultStringMap[id]["password"])
-		gtest.Assert(t_users[0].NickName, resultStringMap[id]["nickname"])
-		gtest.Assert(t_users[0].CreateTime, resultStringMap[id]["create_time"])
+		t.Assert(t_users[0].Id, resultStringMap[id]["id"])
+		t.Assert(t_users[0].Passport, resultStringMap[id]["passport"])
+		t.Assert(t_users[0].Password, resultStringMap[id]["password"])
+		t.Assert(t_users[0].NickName, resultStringMap[id]["nickname"])
+		t.Assert(t_users[0].CreateTime, resultStringMap[id]["create_time"])
 	})
 }
 
@@ -843,9 +843,9 @@ func Test_DB_ToIntMap(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	_, err := db.Update(table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
-	gtest.Assert(err, nil)
+	t.Assert(err, nil)
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		id := 1
 		result, err := db.Table(table).Fields("*").Where("id = ?", id).Select()
 		if err != nil {
@@ -867,11 +867,11 @@ func Test_DB_ToIntMap(t *testing.T) {
 		}
 
 		resultIntMap := result.MapKeyInt("id")
-		gtest.Assert(t_users[0].Id, resultIntMap[id]["id"])
-		gtest.Assert(t_users[0].Passport, resultIntMap[id]["passport"])
-		gtest.Assert(t_users[0].Password, resultIntMap[id]["password"])
-		gtest.Assert(t_users[0].NickName, resultIntMap[id]["nickname"])
-		gtest.Assert(t_users[0].CreateTime, resultIntMap[id]["create_time"])
+		t.Assert(t_users[0].Id, resultIntMap[id]["id"])
+		t.Assert(t_users[0].Passport, resultIntMap[id]["passport"])
+		t.Assert(t_users[0].Password, resultIntMap[id]["password"])
+		t.Assert(t_users[0].NickName, resultIntMap[id]["nickname"])
+		t.Assert(t_users[0].CreateTime, resultIntMap[id]["create_time"])
 	})
 }
 
@@ -880,9 +880,9 @@ func Test_DB_ToUintMap(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	_, err := db.Update(table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
-	gtest.Assert(err, nil)
+	t.Assert(err, nil)
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		id := 1
 		result, err := db.Table(table).Fields("*").Where("id = ?", id).Select()
 		if err != nil {
@@ -904,11 +904,11 @@ func Test_DB_ToUintMap(t *testing.T) {
 		}
 
 		resultUintMap := result.MapKeyUint("id")
-		gtest.Assert(t_users[0].Id, resultUintMap[uint(id)]["id"])
-		gtest.Assert(t_users[0].Passport, resultUintMap[uint(id)]["passport"])
-		gtest.Assert(t_users[0].Password, resultUintMap[uint(id)]["password"])
-		gtest.Assert(t_users[0].NickName, resultUintMap[uint(id)]["nickname"])
-		gtest.Assert(t_users[0].CreateTime, resultUintMap[uint(id)]["create_time"])
+		t.Assert(t_users[0].Id, resultUintMap[uint(id)]["id"])
+		t.Assert(t_users[0].Passport, resultUintMap[uint(id)]["passport"])
+		t.Assert(t_users[0].Password, resultUintMap[uint(id)]["password"])
+		t.Assert(t_users[0].NickName, resultUintMap[uint(id)]["nickname"])
+		t.Assert(t_users[0].CreateTime, resultUintMap[uint(id)]["create_time"])
 
 	})
 }
@@ -918,9 +918,9 @@ func Test_DB_ToStringRecord(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	_, err := db.Update(table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
-	gtest.Assert(err, nil)
+	t.Assert(err, nil)
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		id := 1
 		ids := "1"
 		result, err := db.Table(table).Fields("*").Where("id = ?", id).Select()
@@ -943,11 +943,11 @@ func Test_DB_ToStringRecord(t *testing.T) {
 		}
 
 		resultStringRecord := result.RecordKeyStr("id")
-		gtest.Assert(t_users[0].Id, resultStringRecord[ids]["id"].Int())
-		gtest.Assert(t_users[0].Passport, resultStringRecord[ids]["passport"].String())
-		gtest.Assert(t_users[0].Password, resultStringRecord[ids]["password"].String())
-		gtest.Assert(t_users[0].NickName, resultStringRecord[ids]["nickname"].String())
-		gtest.Assert(t_users[0].CreateTime, resultStringRecord[ids]["create_time"].String())
+		t.Assert(t_users[0].Id, resultStringRecord[ids]["id"].Int())
+		t.Assert(t_users[0].Passport, resultStringRecord[ids]["passport"].String())
+		t.Assert(t_users[0].Password, resultStringRecord[ids]["password"].String())
+		t.Assert(t_users[0].NickName, resultStringRecord[ids]["nickname"].String())
+		t.Assert(t_users[0].CreateTime, resultStringRecord[ids]["create_time"].String())
 
 	})
 }
@@ -957,9 +957,9 @@ func Test_DB_ToIntRecord(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	_, err := db.Update(table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
-	gtest.Assert(err, nil)
+	t.Assert(err, nil)
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		id := 1
 		result, err := db.Table(table).Fields("*").Where("id = ?", id).Select()
 		if err != nil {
@@ -981,11 +981,11 @@ func Test_DB_ToIntRecord(t *testing.T) {
 		}
 
 		resultIntRecord := result.RecordKeyInt("id")
-		gtest.Assert(t_users[0].Id, resultIntRecord[id]["id"].Int())
-		gtest.Assert(t_users[0].Passport, resultIntRecord[id]["passport"].String())
-		gtest.Assert(t_users[0].Password, resultIntRecord[id]["password"].String())
-		gtest.Assert(t_users[0].NickName, resultIntRecord[id]["nickname"].String())
-		gtest.Assert(t_users[0].CreateTime, resultIntRecord[id]["create_time"].String())
+		t.Assert(t_users[0].Id, resultIntRecord[id]["id"].Int())
+		t.Assert(t_users[0].Passport, resultIntRecord[id]["passport"].String())
+		t.Assert(t_users[0].Password, resultIntRecord[id]["password"].String())
+		t.Assert(t_users[0].NickName, resultIntRecord[id]["nickname"].String())
+		t.Assert(t_users[0].CreateTime, resultIntRecord[id]["create_time"].String())
 
 	})
 }
@@ -995,9 +995,9 @@ func Test_DB_ToUintRecord(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	_, err := db.Update(table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
-	gtest.Assert(err, nil)
+	t.Assert(err, nil)
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		id := 1
 		result, err := db.Table(table).Fields("*").Where("id = ?", id).Select()
 		if err != nil {
@@ -1019,11 +1019,11 @@ func Test_DB_ToUintRecord(t *testing.T) {
 		}
 
 		resultUintRecord := result.RecordKeyUint("id")
-		gtest.Assert(t_users[0].Id, resultUintRecord[uint(id)]["id"].Int())
-		gtest.Assert(t_users[0].Passport, resultUintRecord[uint(id)]["passport"].String())
-		gtest.Assert(t_users[0].Password, resultUintRecord[uint(id)]["password"].String())
-		gtest.Assert(t_users[0].NickName, resultUintRecord[uint(id)]["nickname"].String())
-		gtest.Assert(t_users[0].CreateTime, resultUintRecord[uint(id)]["create_time"].String())
+		t.Assert(t_users[0].Id, resultUintRecord[uint(id)]["id"].Int())
+		t.Assert(t_users[0].Passport, resultUintRecord[uint(id)]["passport"].String())
+		t.Assert(t_users[0].Password, resultUintRecord[uint(id)]["password"].String())
+		t.Assert(t_users[0].NickName, resultUintRecord[uint(id)]["nickname"].String())
+		t.Assert(t_users[0].CreateTime, resultUintRecord[uint(id)]["create_time"].String())
 	})
 }
 
@@ -1069,7 +1069,7 @@ func Test_DB_TableField(t *testing.T) {
 	if err != nil {
 		gtest.Fatal(err)
 	} else {
-		gtest.Assert(n, 1)
+		t.Assert(n, 1)
 	}
 
 	result, err := db.Table(name).Fields("*").Where("field_int = ?", 2).Select()
@@ -1077,7 +1077,7 @@ func Test_DB_TableField(t *testing.T) {
 		gtest.Fatal(err)
 	}
 
-	gtest.Assert(result[0], data)
+	t.Assert(result[0], data)
 }
 
 func Test_DB_Prefix(t *testing.T) {
@@ -1087,7 +1087,7 @@ func Test_DB_Prefix(t *testing.T) {
 	createTableWithDb(db, table)
 	defer dropTable(table)
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		id := 10000
 		result, err := db.Insert(name, g.Map{
 			"id":          id,
@@ -1096,14 +1096,14 @@ func Test_DB_Prefix(t *testing.T) {
 			"nickname":    fmt.Sprintf(`name_%d`, id),
 			"create_time": gtime.NewFromStr("2018-10-24 10:00:00").String(),
 		})
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		n, e := result.RowsAffected()
-		gtest.Assert(e, nil)
-		gtest.Assert(n, 1)
+		t.Assert(e, nil)
+		t.Assert(n, 1)
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		id := 10000
 		result, err := db.Replace(name, g.Map{
 			"id":          id,
@@ -1112,14 +1112,14 @@ func Test_DB_Prefix(t *testing.T) {
 			"nickname":    fmt.Sprintf(`name_%d`, id),
 			"create_time": gtime.NewFromStr("2018-10-24 10:00:01").String(),
 		})
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		n, e := result.RowsAffected()
-		gtest.Assert(e, nil)
-		gtest.Assert(n, 2)
+		t.Assert(e, nil)
+		t.Assert(n, 2)
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		id := 10000
 		result, err := db.Save(name, g.Map{
 			"id":          id,
@@ -1128,14 +1128,14 @@ func Test_DB_Prefix(t *testing.T) {
 			"nickname":    fmt.Sprintf(`name_%d`, id),
 			"create_time": gtime.NewFromStr("2018-10-24 10:00:02").String(),
 		})
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		n, e := result.RowsAffected()
-		gtest.Assert(e, nil)
-		gtest.Assert(n, 2)
+		t.Assert(e, nil)
+		t.Assert(n, 2)
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		id := 10000
 		result, err := db.Update(name, g.Map{
 			"id":          id,
@@ -1144,24 +1144,24 @@ func Test_DB_Prefix(t *testing.T) {
 			"nickname":    fmt.Sprintf(`name_%d`, id),
 			"create_time": gtime.NewFromStr("2018-10-24 10:00:03").String(),
 		}, "id=?", id)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		n, e := result.RowsAffected()
-		gtest.Assert(e, nil)
-		gtest.Assert(n, 1)
+		t.Assert(e, nil)
+		t.Assert(n, 1)
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		id := 10000
 		result, err := db.Delete(name, "id=?", id)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		n, e := result.RowsAffected()
-		gtest.Assert(e, nil)
-		gtest.Assert(n, 1)
+		t.Assert(e, nil)
+		t.Assert(n, 1)
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		array := garray.New(true)
 		for i := 1; i <= SIZE; i++ {
 			array.Append(g.Map{
@@ -1174,17 +1174,17 @@ func Test_DB_Prefix(t *testing.T) {
 		}
 
 		result, err := db.BatchInsert(name, array.Slice())
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		n, e := result.RowsAffected()
-		gtest.Assert(e, nil)
-		gtest.Assert(n, SIZE)
+		t.Assert(e, nil)
+		t.Assert(n, SIZE)
 	})
 
 }
 
 func Test_Model_InnerJoin(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		table1 := createInitTable("user1")
 		table2 := createInitTable("user2")
 
@@ -1201,26 +1201,26 @@ func Test_Model_InnerJoin(t *testing.T) {
 			gtest.Fatal(err)
 		}
 
-		gtest.Assert(n, 5)
+		t.Assert(n, 5)
 
 		result, err := db.Table(table1+" u1").InnerJoin(table2+" u2", "u1.id = u2.id").OrderBy("u1.id").Select()
 		if err != nil {
 			gtest.Fatal(err)
 		}
 
-		gtest.Assert(len(result), 5)
+		t.Assert(len(result), 5)
 
 		result, err = db.Table(table1+" u1").InnerJoin(table2+" u2", "u1.id = u2.id").Where("u1.id > ?", 1).OrderBy("u1.id").Select()
 		if err != nil {
 			gtest.Fatal(err)
 		}
 
-		gtest.Assert(len(result), 4)
+		t.Assert(len(result), 4)
 	})
 }
 
 func Test_Model_LeftJoin(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		table1 := createInitTable("user1")
 		table2 := createInitTable("user2")
 
@@ -1236,7 +1236,7 @@ func Test_Model_LeftJoin(t *testing.T) {
 		if err != nil {
 			gtest.Fatal(err)
 		} else {
-			gtest.Assert(n, 7)
+			t.Assert(n, 7)
 		}
 
 		result, err := db.Table(table1+" u1").LeftJoin(table2+" u2", "u1.id = u2.id").Select()
@@ -1244,19 +1244,19 @@ func Test_Model_LeftJoin(t *testing.T) {
 			gtest.Fatal(err)
 		}
 
-		gtest.Assert(len(result), 10)
+		t.Assert(len(result), 10)
 
 		result, err = db.Table(table1+" u1").LeftJoin(table2+" u2", "u1.id = u2.id").Where("u1.id > ? ", 2).Select()
 		if err != nil {
 			gtest.Fatal(err)
 		}
 
-		gtest.Assert(len(result), 8)
+		t.Assert(len(result), 8)
 	})
 }
 
 func Test_Model_RightJoin(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		table1 := createInitTable("user1")
 		table2 := createInitTable("user2")
 
@@ -1273,18 +1273,18 @@ func Test_Model_RightJoin(t *testing.T) {
 			gtest.Fatal(err)
 		}
 
-		gtest.Assert(n, 7)
+		t.Assert(n, 7)
 
 		result, err := db.Table(table1+" u1").RightJoin(table2+" u2", "u1.id = u2.id").Select()
 		if err != nil {
 			gtest.Fatal(err)
 		}
-		gtest.Assert(len(result), 10)
+		t.Assert(len(result), 10)
 
 		result, err = db.Table(table1+" u1").RightJoin(table2+" u2", "u1.id = u2.id").Where("u1.id > 2").Select()
 		if err != nil {
 			gtest.Fatal(err)
 		}
-		gtest.Assert(len(result), 1)
+		t.Assert(len(result), 1)
 	})
 }

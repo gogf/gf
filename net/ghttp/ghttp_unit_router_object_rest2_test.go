@@ -52,13 +52,13 @@ func Test_Router_ObjectRest_Id(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/object/99"), "1Object Get992")
-		gtest.Assert(client.PutContent("/object/99"), "1Object Put992")
-		gtest.Assert(client.PostContent("/object/99"), "1Object Post992")
-		gtest.Assert(client.DeleteContent("/object/99"), "1Object Delete992")
+		t.Assert(client.GetContent("/object/99"), "1Object Get992")
+		t.Assert(client.PutContent("/object/99"), "1Object Put992")
+		t.Assert(client.PostContent("/object/99"), "1Object Post992")
+		t.Assert(client.DeleteContent("/object/99"), "1Object Delete992")
 	})
 }

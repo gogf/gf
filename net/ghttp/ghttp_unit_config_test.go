@@ -19,7 +19,7 @@ import (
 )
 
 func Test_ConfigFromMap(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		m := g.Map{
 			"address":         ":8199",
 			"readTimeout":     "60s",
@@ -28,19 +28,19 @@ func Test_ConfigFromMap(t *testing.T) {
 			"cookieMaxAge":    "1y",
 		}
 		config, err := ghttp.ConfigFromMap(m)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 		d1, _ := time.ParseDuration(gconv.String(m["readTimeout"]))
 		d2, _ := time.ParseDuration(gconv.String(m["cookieMaxAge"]))
-		gtest.Assert(config.Address, m["address"])
-		gtest.Assert(config.ReadTimeout, d1)
-		gtest.Assert(config.CookieMaxAge, d2)
-		gtest.Assert(config.IndexFiles, m["indexFiles"])
-		gtest.Assert(config.ErrorLogEnabled, m["errorLogEnabled"])
+		t.Assert(config.Address, m["address"])
+		t.Assert(config.ReadTimeout, d1)
+		t.Assert(config.CookieMaxAge, d2)
+		t.Assert(config.IndexFiles, m["indexFiles"])
+		t.Assert(config.ErrorLogEnabled, m["errorLogEnabled"])
 	})
 }
 
 func Test_SetConfigWithMap(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		m := g.Map{
 			"Address": ":8199",
 			//"ServerRoot":       "/var/www/MyServerRoot",
@@ -55,6 +55,6 @@ func Test_SetConfigWithMap(t *testing.T) {
 		}
 		s := g.Server()
 		err := s.SetConfigWithMap(m)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 	})
 }

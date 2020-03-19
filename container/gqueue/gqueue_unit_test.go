@@ -23,8 +23,8 @@ func TestQueue_Len(t *testing.T) {
 		for i := 0; i < max; i++ {
 			q1.Push(i)
 		}
-		gtest.Assert(q1.Len(), max)
-		gtest.Assert(q1.Size(), max)
+		t.Assert(q1.Len(), max)
+		t.Assert(q1.Size(), max)
 	}
 }
 
@@ -33,8 +33,8 @@ func TestQueue_Basic(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		q.Push(i)
 	}
-	gtest.Assert(q.Pop(), 0)
-	gtest.Assert(q.Pop(), 1)
+	t.Assert(q.Pop(), 0)
+	t.Assert(q.Pop(), 1)
 }
 
 func TestQueue_Pop(t *testing.T) {
@@ -44,7 +44,7 @@ func TestQueue_Pop(t *testing.T) {
 	q1.Push(3)
 	q1.Push(4)
 	i1 := q1.Pop()
-	gtest.Assert(i1, 1)
+	t.Assert(i1, 1)
 }
 
 func TestQueue_Close(t *testing.T) {
@@ -52,6 +52,6 @@ func TestQueue_Close(t *testing.T) {
 	q1.Push(1)
 	q1.Push(2)
 	time.Sleep(time.Millisecond)
-	gtest.Assert(q1.Len(), 2)
+	t.Assert(q1.Len(), 2)
 	q1.Close()
 }
