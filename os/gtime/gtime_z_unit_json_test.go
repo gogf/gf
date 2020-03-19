@@ -19,10 +19,10 @@ func Test_Json_Pointer(t *testing.T) {
 		type T struct {
 			Time *gtime.Time
 		}
-		t := new(T)
+		t1 := new(T)
 		s := "2006-01-02 15:04:05"
-		t.Time = gtime.NewFromStr(s)
-		j, err := json.Marshal(t)
+		t1.Time = gtime.NewFromStr(s)
+		j, err := json.Marshal(t1)
 		t.Assert(err, nil)
 		t.Assert(j, `{"Time":"2006-01-02 15:04:05"}`)
 	})
@@ -31,8 +31,8 @@ func Test_Json_Pointer(t *testing.T) {
 		type T struct {
 			Time *gtime.Time
 		}
-		t := new(T)
-		j, err := json.Marshal(t)
+		t1 := new(T)
+		j, err := json.Marshal(t1)
 		t.Assert(err, nil)
 		t.Assert(j, `{"Time":null}`)
 	})
@@ -41,18 +41,18 @@ func Test_Json_Pointer(t *testing.T) {
 		type T struct {
 			Time *gtime.Time `json:"time,omitempty"`
 		}
-		t := new(T)
-		j, err := json.Marshal(t)
+		t1 := new(T)
+		j, err := json.Marshal(t1)
 		t.Assert(err, nil)
 		t.Assert(j, `{}`)
 	})
 	// Unmarshal
 	gtest.C(t, func(t *gtest.T) {
-		var t gtime.Time
+		var t1 gtime.Time
 		s := []byte(`"2006-01-02 15:04:05"`)
-		err := json.Unmarshal(s, &t)
+		err := json.Unmarshal(s, &t1)
 		t.Assert(err, nil)
-		t.Assert(t.String(), "2006-01-02 15:04:05")
+		t.Assert(t1.String(), "2006-01-02 15:04:05")
 	})
 }
 
@@ -62,10 +62,10 @@ func Test_Json_Struct(t *testing.T) {
 		type T struct {
 			Time gtime.Time
 		}
-		t := new(T)
+		t1 := new(T)
 		s := "2006-01-02 15:04:05"
-		t.Time = *gtime.NewFromStr(s)
-		j, err := json.Marshal(t)
+		t1.Time = *gtime.NewFromStr(s)
+		j, err := json.Marshal(t1)
 		t.Assert(err, nil)
 		t.Assert(j, `{"Time":"2006-01-02 15:04:05"}`)
 	})
@@ -74,8 +74,8 @@ func Test_Json_Struct(t *testing.T) {
 		type T struct {
 			Time gtime.Time
 		}
-		t := new(T)
-		j, err := json.Marshal(t)
+		t1 := new(T)
+		j, err := json.Marshal(t1)
 		t.Assert(err, nil)
 		t.Assert(j, `{"Time":""}`)
 	})
@@ -84,8 +84,8 @@ func Test_Json_Struct(t *testing.T) {
 		type T struct {
 			Time gtime.Time `json:"time,omitempty"`
 		}
-		t := new(T)
-		j, err := json.Marshal(t)
+		t1 := new(T)
+		j, err := json.Marshal(t1)
 		t.Assert(err, nil)
 		t.Assert(j, `{"time":""}`)
 	})

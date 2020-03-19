@@ -18,20 +18,18 @@ import (
 )
 
 func Test_Parse(t *testing.T) {
+	// url
 	gtest.C(t, func(t *gtest.T) {
-		// url
-		gtest.C(t, func(t *gtest.T) {
-			s := "goframe.org/index?name=john&score=100"
-			u, err := url.Parse(s)
-			t.Assert(err, nil)
-			m, err := gstr.Parse(u.RawQuery)
-			t.Assert(err, nil)
-			t.Assert(m["name"], "john")
-			t.Assert(m["score"], "100")
-		})
+		s := "goframe.org/index?name=john&score=100"
+		u, err := url.Parse(s)
+		t.Assert(err, nil)
+		m, err := gstr.Parse(u.RawQuery)
+		t.Assert(err, nil)
+		t.Assert(m["name"], "john")
+		t.Assert(m["score"], "100")
 
 		// name overwrite
-		m, err := gstr.Parse("a=1&a=2")
+		m, err = gstr.Parse("a=1&a=2")
 		t.Assert(err, nil)
 		t.Assert(m, g.Map{
 			"a": 2,

@@ -61,123 +61,137 @@ func Test_IntStrMap_Basic(t *testing.T) {
 	})
 }
 func Test_IntStrMap_Set_Fun(t *testing.T) {
-	m := gmap.NewIntStrMap()
+	gtest.C(t, func(t *gtest.T) {
+		m := gmap.NewIntStrMap()
+		m.GetOrSetFunc(1, getStr)
+		m.GetOrSetFuncLock(2, getStr)
+		t.Assert(m.Get(1), "z")
+		t.Assert(m.Get(2), "z")
+		t.Assert(m.SetIfNotExistFunc(1, getStr), false)
+		t.Assert(m.SetIfNotExistFunc(3, getStr), true)
 
-	m.GetOrSetFunc(1, getStr)
-	m.GetOrSetFuncLock(2, getStr)
-	t.Assert(m.Get(1), "z")
-	t.Assert(m.Get(2), "z")
-	t.Assert(m.SetIfNotExistFunc(1, getStr), false)
-	t.Assert(m.SetIfNotExistFunc(3, getStr), true)
-
-	t.Assert(m.SetIfNotExistFuncLock(2, getStr), false)
-	t.Assert(m.SetIfNotExistFuncLock(4, getStr), true)
-
+		t.Assert(m.SetIfNotExistFuncLock(2, getStr), false)
+		t.Assert(m.SetIfNotExistFuncLock(4, getStr), true)
+	})
 }
 
 func Test_IntStrMap_Batch(t *testing.T) {
-	m := gmap.NewIntStrMap()
-
-	m.Sets(map[int]string{1: "a", 2: "b", 3: "c"})
-	t.Assert(m.Map(), map[int]string{1: "a", 2: "b", 3: "c"})
-	m.Removes([]int{1, 2})
-	t.Assert(m.Map(), map[int]interface{}{3: "c"})
+	gtest.C(t, func(t *gtest.T) {
+		m := gmap.NewIntStrMap()
+		m.Sets(map[int]string{1: "a", 2: "b", 3: "c"})
+		t.Assert(m.Map(), map[int]string{1: "a", 2: "b", 3: "c"})
+		m.Removes([]int{1, 2})
+		t.Assert(m.Map(), map[int]interface{}{3: "c"})
+	})
 }
 func Test_IntStrMap_Iterator(t *testing.T) {
-	expect := map[int]string{1: "a", 2: "b"}
-	m := gmap.NewIntStrMapFrom(expect)
-	m.Iterator(func(k int, v string) bool {
-		t.Assert(expect[k], v)
-		return true
+	gtest.C(t, func(t *gtest.T) {
+		expect := map[int]string{1: "a", 2: "b"}
+		m := gmap.NewIntStrMapFrom(expect)
+		m.Iterator(func(k int, v string) bool {
+			t.Assert(expect[k], v)
+			return true
+		})
+		// 断言返回值对遍历控制
+		i := 0
+		j := 0
+		m.Iterator(func(k int, v string) bool {
+			i++
+			return true
+		})
+		m.Iterator(func(k int, v string) bool {
+			j++
+			return false
+		})
+		t.Assert(i, 2)
+		t.Assert(j, 1)
 	})
-	// 断言返回值对遍历控制
-	i := 0
-	j := 0
-	m.Iterator(func(k int, v string) bool {
-		i++
-		return true
-	})
-	m.Iterator(func(k int, v string) bool {
-		j++
-		return false
-	})
-	t.Assert(i, 2)
-	t.Assert(j, 1)
 }
 
 func Test_IntStrMap_Lock(t *testing.T) {
-
-	expect := map[int]string{1: "a", 2: "b", 3: "c"}
-	m := gmap.NewIntStrMapFrom(expect)
-	m.LockFunc(func(m map[int]string) {
-		t.Assert(m, expect)
+	gtest.C(t, func(t *gtest.T) {
+		expect := map[int]string{1: "a", 2: "b", 3: "c"}
+		m := gmap.NewIntStrMapFrom(expect)
+		m.LockFunc(func(m map[int]string) {
+			t.Assert(m, expect)
+		})
+		m.RLockFunc(func(m map[int]string) {
+			t.Assert(m, expect)
+		})
 	})
-	m.RLockFunc(func(m map[int]string) {
-		t.Assert(m, expect)
-	})
-
 }
+
 func Test_IntStrMap_Clone(t *testing.T) {
-	//clone 方法是深克隆
-	m := gmap.NewIntStrMapFrom(map[int]string{1: "a", 2: "b", 3: "c"})
+	gtest.C(t, func(t *gtest.T) {
+		//clone 方法是深克隆
+		m := gmap.NewIntStrMapFrom(map[int]string{1: "a", 2: "b", 3: "c"})
 
-	m_clone := m.Clone()
-	m.Remove(1)
-	//修改原 map,clone 后的 map 不影响
-	t.AssertIN(1, m_clone.Keys())
+		m_clone := m.Clone()
+		m.Remove(1)
+		//修改原 map,clone 后的 map 不影响
+		t.AssertIN(1, m_clone.Keys())
 
-	m_clone.Remove(2)
-	//修改clone map,原 map 不影响
-	t.AssertIN(2, m.Keys())
+		m_clone.Remove(2)
+		//修改clone map,原 map 不影响
+		t.AssertIN(2, m.Keys())
+	})
 }
 func Test_IntStrMap_Merge(t *testing.T) {
-	m1 := gmap.NewIntStrMap()
-	m2 := gmap.NewIntStrMap()
-	m1.Set(1, "a")
-	m2.Set(2, "b")
-	m1.Merge(m2)
-	t.Assert(m1.Map(), map[int]string{1: "a", 2: "b"})
+	gtest.C(t, func(t *gtest.T) {
+		m1 := gmap.NewIntStrMap()
+		m2 := gmap.NewIntStrMap()
+		m1.Set(1, "a")
+		m2.Set(2, "b")
+		m1.Merge(m2)
+		t.Assert(m1.Map(), map[int]string{1: "a", 2: "b"})
+	})
 }
 
 func Test_IntStrMap_Map(t *testing.T) {
-	m := gmap.NewIntStrMap()
-	m.Set(1, "0")
-	m.Set(2, "2")
-	t.Assert(m.Get(1), "0")
-	t.Assert(m.Get(2), "2")
-	data := m.Map()
-	t.Assert(data[1], "0")
-	t.Assert(data[2], "2")
-	data[3] = "3"
-	t.Assert(m.Get(3), "3")
-	m.Set(4, "4")
-	t.Assert(data[4], "4")
+	gtest.C(t, func(t *gtest.T) {
+		m := gmap.NewIntStrMap()
+		m.Set(1, "0")
+		m.Set(2, "2")
+		t.Assert(m.Get(1), "0")
+		t.Assert(m.Get(2), "2")
+		data := m.Map()
+		t.Assert(data[1], "0")
+		t.Assert(data[2], "2")
+		data[3] = "3"
+		t.Assert(m.Get(3), "3")
+		m.Set(4, "4")
+		t.Assert(data[4], "4")
+	})
 }
 
 func Test_IntStrMap_MapCopy(t *testing.T) {
-	m := gmap.NewIntStrMap()
-	m.Set(1, "0")
-	m.Set(2, "2")
-	t.Assert(m.Get(1), "0")
-	t.Assert(m.Get(2), "2")
-	data := m.MapCopy()
-	t.Assert(data[1], "0")
-	t.Assert(data[2], "2")
-	data[3] = "3"
-	t.Assert(m.Get(3), "")
-	m.Set(4, "4")
-	t.Assert(data[4], "")
+	gtest.C(t, func(t *gtest.T) {
+		m := gmap.NewIntStrMap()
+		m.Set(1, "0")
+		m.Set(2, "2")
+		t.Assert(m.Get(1), "0")
+		t.Assert(m.Get(2), "2")
+		data := m.MapCopy()
+		t.Assert(data[1], "0")
+		t.Assert(data[2], "2")
+		data[3] = "3"
+		t.Assert(m.Get(3), "")
+		m.Set(4, "4")
+		t.Assert(data[4], "")
+	})
 }
 
 func Test_IntStrMap_FilterEmpty(t *testing.T) {
-	m := gmap.NewIntStrMap()
-	m.Set(1, "")
-	m.Set(2, "2")
-	t.Assert(m.Size(), 2)
-	t.Assert(m.Get(2), "2")
-	m.FilterEmpty()
-	t.Assert(m.Size(), 1)
-	t.Assert(m.Get(2), "2")
+	gtest.C(t, func(t *gtest.T) {
+		m := gmap.NewIntStrMap()
+		m.Set(1, "")
+		m.Set(2, "2")
+		t.Assert(m.Size(), 2)
+		t.Assert(m.Get(2), "2")
+		m.FilterEmpty()
+		t.Assert(m.Size(), 1)
+		t.Assert(m.Get(2), "2")
+	})
 }
 
 func Test_IntStrMap_Json(t *testing.T) {
@@ -264,37 +278,37 @@ func Test_IntStrMap_Pops(t *testing.T) {
 }
 
 func TestIntStrMap_UnmarshalValue(t *testing.T) {
-	type T struct {
+	type V struct {
 		Name string
 		Map  *gmap.IntStrMap
 	}
 	// JSON
 	gtest.C(t, func(t *gtest.T) {
-		var t *T
+		var v *V
 		err := gconv.Struct(map[string]interface{}{
 			"name": "john",
 			"map":  []byte(`{"1":"v1","2":"v2"}`),
-		}, &t)
+		}, &v)
 		t.Assert(err, nil)
-		t.Assert(t.Name, "john")
-		t.Assert(t.Map.Size(), 2)
-		t.Assert(t.Map.Get(1), "v1")
-		t.Assert(t.Map.Get(2), "v2")
+		t.Assert(v.Name, "john")
+		t.Assert(v.Map.Size(), 2)
+		t.Assert(v.Map.Get(1), "v1")
+		t.Assert(v.Map.Get(2), "v2")
 	})
 	// Map
 	gtest.C(t, func(t *gtest.T) {
-		var t *T
+		var v *V
 		err := gconv.Struct(map[string]interface{}{
 			"name": "john",
 			"map": g.MapIntAny{
 				1: "v1",
 				2: "v2",
 			},
-		}, &t)
+		}, &v)
 		t.Assert(err, nil)
-		t.Assert(t.Name, "john")
-		t.Assert(t.Map.Size(), 2)
-		t.Assert(t.Map.Get(1), "v1")
-		t.Assert(t.Map.Get(2), "v2")
+		t.Assert(v.Name, "john")
+		t.Assert(v.Map.Size(), 2)
+		t.Assert(v.Map.Get(1), "v1")
+		t.Assert(v.Map.Get(2), "v2")
 	})
 }

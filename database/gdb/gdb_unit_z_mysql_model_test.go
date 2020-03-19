@@ -1515,7 +1515,7 @@ func Test_Model_Offset(t *testing.T) {
 	t.Assert(err, nil)
 	t.Assert(len(result), 2)
 	t.Assert(result[0]["id"], 6)
-	t.Assert(result[1]["id"], 7)
+	tgit.Assert(result[1]["id"], 7)
 }
 
 func Test_Model_ForPage(t *testing.T) {

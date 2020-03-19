@@ -51,9 +51,9 @@ func Test_WebSocket(t *testing.T) {
 		err = conn.WriteMessage(websocket.TextMessage, msg)
 		t.Assert(err, nil)
 
-		t, data, err := conn.ReadMessage()
+		mt, data, err := conn.ReadMessage()
 		t.Assert(err, nil)
-		t.Assert(t, websocket.TextMessage)
+		t.Assert(mt, websocket.TextMessage)
 		t.Assert(data, msg)
 	})
 }

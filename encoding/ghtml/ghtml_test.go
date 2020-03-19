@@ -13,21 +13,27 @@ import (
 )
 
 func TestStripTags(t *testing.T) {
-	src := `<p>Test paragraph.</p><!-- Comment -->  <a href="#fragment">Other text</a>`
-	dst := `Test paragraph.  Other text`
-	t.Assert(ghtml.StripTags(src), dst)
+	gtest.C(t, func(t *gtest.T) {
+		src := `<p>Test paragraph.</p><!-- Comment -->  <a href="#fragment">Other text</a>`
+		dst := `Test paragraph.  Other text`
+		t.Assert(ghtml.StripTags(src), dst)
+	})
 }
 
 func TestEntities(t *testing.T) {
-	src := `A 'quote' "is" <b>bold</b>`
-	dst := `A &#39;quote&#39; &#34;is&#34; &lt;b&gt;bold&lt;/b&gt;`
-	t.Assert(ghtml.Entities(src), dst)
-	t.Assert(ghtml.EntitiesDecode(dst), src)
+	gtest.C(t, func(t *gtest.T) {
+		src := `A 'quote' "is" <b>bold</b>`
+		dst := `A &#39;quote&#39; &#34;is&#34; &lt;b&gt;bold&lt;/b&gt;`
+		t.Assert(ghtml.Entities(src), dst)
+		t.Assert(ghtml.EntitiesDecode(dst), src)
+	})
 }
 
 func TestSpecialChars(t *testing.T) {
-	src := `A 'quote' "is" <b>bold</b>`
-	dst := `A &#39;quote&#39; &#34;is&#34; &lt;b&gt;bold&lt;/b&gt;`
-	t.Assert(ghtml.SpecialChars(src), dst)
-	t.Assert(ghtml.SpecialCharsDecode(dst), src)
+	gtest.C(t, func(t *gtest.T) {
+		src := `A 'quote' "is" <b>bold</b>`
+		dst := `A &#39;quote&#39; &#34;is&#34; &lt;b&gt;bold&lt;/b&gt;`
+		t.Assert(ghtml.SpecialChars(src), dst)
+		t.Assert(ghtml.SpecialCharsDecode(dst), src)
+	})
 }

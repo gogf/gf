@@ -195,11 +195,11 @@ func createInitTableWithDb(db gdb.DB, table ...string) (name string) {
 	}
 
 	result, err := db.BatchInsert(name, array.Slice())
-	t.Assert(err, nil)
+	gtest.Assert(err, nil)
 
 	n, e := result.RowsAffected()
-	t.Assert(e, nil)
-	t.Assert(n, SIZE)
+	gtest.Assert(e, nil)
+	gtest.Assert(n, SIZE)
 	return
 }
 

@@ -31,28 +31,28 @@ func TestJson_UnmarshalJSON(t *testing.T) {
 }
 
 func TestJson_UnmarshalValue(t *testing.T) {
-	type T struct {
+	type Var struct {
 		Name string
 		Json *gjson.Json
 	}
 	// JSON
 	gtest.C(t, func(t *gtest.T) {
-		var t *T
+		var v *Var
 		err := gconv.Struct(g.Map{
 			"name": "john",
 			"json": []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]}`),
-		}, &t)
+		}, &v)
 		t.Assert(err, nil)
-		t.Assert(t.Name, "john")
-		t.Assert(t.Json.Get("n"), "123456789")
-		t.Assert(t.Json.Get("m"), g.Map{"k": "v"})
-		t.Assert(t.Json.Get("m.k"), "v")
-		t.Assert(t.Json.Get("a"), g.Slice{1, 2, 3})
-		t.Assert(t.Json.Get("a.1"), 2)
+		t.Assert(v.Name, "john")
+		t.Assert(v.Json.Get("n"), "123456789")
+		t.Assert(v.Json.Get("m"), g.Map{"k": "v"})
+		t.Assert(v.Json.Get("m.k"), "v")
+		t.Assert(v.Json.Get("a"), g.Slice{1, 2, 3})
+		t.Assert(v.Json.Get("a.1"), 2)
 	})
 	// Map
 	gtest.C(t, func(t *gtest.T) {
-		var t *T
+		var v *Var
 		err := gconv.Struct(g.Map{
 			"name": "john",
 			"json": g.Map{
@@ -60,13 +60,13 @@ func TestJson_UnmarshalValue(t *testing.T) {
 				"m": g.Map{"k": "v"},
 				"a": g.Slice{1, 2, 3},
 			},
-		}, &t)
+		}, &v)
 		t.Assert(err, nil)
-		t.Assert(t.Name, "john")
-		t.Assert(t.Json.Get("n"), "123456789")
-		t.Assert(t.Json.Get("m"), g.Map{"k": "v"})
-		t.Assert(t.Json.Get("m.k"), "v")
-		t.Assert(t.Json.Get("a"), g.Slice{1, 2, 3})
-		t.Assert(t.Json.Get("a.1"), 2)
+		t.Assert(v.Name, "john")
+		t.Assert(v.Json.Get("n"), "123456789")
+		t.Assert(v.Json.Get("m"), g.Map{"k": "v"})
+		t.Assert(v.Json.Get("m.k"), "v")
+		t.Assert(v.Json.Get("a"), g.Slice{1, 2, 3})
+		t.Assert(v.Json.Get("a.1"), 2)
 	})
 }

@@ -364,38 +364,38 @@ func TestStrSet_AddIfNotExistFunc(t *testing.T) {
 }
 
 func TestStrSet_UnmarshalValue(t *testing.T) {
-	type T struct {
+	type V struct {
 		Name string
 		Set  *gset.StrSet
 	}
 	// JSON
 	gtest.C(t, func(t *gtest.T) {
-		var t *T
+		var v *V
 		err := gconv.Struct(g.Map{
 			"name": "john",
 			"set":  []byte(`["1","2","3"]`),
-		}, &t)
+		}, &v)
 		t.Assert(err, nil)
-		t.Assert(t.Name, "john")
-		t.Assert(t.Set.Size(), 3)
-		t.Assert(t.Set.Contains("1"), true)
-		t.Assert(t.Set.Contains("2"), true)
-		t.Assert(t.Set.Contains("3"), true)
-		t.Assert(t.Set.Contains("4"), false)
+		t.Assert(v.Name, "john")
+		t.Assert(v.Set.Size(), 3)
+		t.Assert(v.Set.Contains("1"), true)
+		t.Assert(v.Set.Contains("2"), true)
+		t.Assert(v.Set.Contains("3"), true)
+		t.Assert(v.Set.Contains("4"), false)
 	})
 	// Map
 	gtest.C(t, func(t *gtest.T) {
-		var t *T
+		var v *V
 		err := gconv.Struct(g.Map{
 			"name": "john",
 			"set":  g.SliceStr{"1", "2", "3"},
-		}, &t)
+		}, &v)
 		t.Assert(err, nil)
-		t.Assert(t.Name, "john")
-		t.Assert(t.Set.Size(), 3)
-		t.Assert(t.Set.Contains("1"), true)
-		t.Assert(t.Set.Contains("2"), true)
-		t.Assert(t.Set.Contains("3"), true)
-		t.Assert(t.Set.Contains("4"), false)
+		t.Assert(v.Name, "john")
+		t.Assert(v.Set.Size(), 3)
+		t.Assert(v.Set.Contains("1"), true)
+		t.Assert(v.Set.Contains("2"), true)
+		t.Assert(v.Set.Contains("3"), true)
+		t.Assert(v.Set.Contains("4"), false)
 	})
 }

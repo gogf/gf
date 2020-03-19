@@ -28,12 +28,12 @@ func Test_New(t *testing.T) {
 
 func Test_Nil(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var t *gtime.Time
-		t.Assert(t.String(), "")
+		var t1 *gtime.Time
+		t.Assert(t1.String(), "")
 	})
 	gtest.C(t, func(t *gtest.T) {
-		var t gtime.Time
-		t.Assert(t.String(), "")
+		var t1 gtime.Time
+		t.Assert(t1.String(), "")
 	})
 }
 
