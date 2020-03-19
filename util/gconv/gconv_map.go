@@ -215,9 +215,8 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 							rvKind = rvField.Kind()
 						}
 						if rvKind == reflect.Struct {
-							for k, v := range doMapConvert(rvField.Interface(), recursive, tags...) {
-								m[k] = v
-							}
+							tmp:= doMapConvert(rvField.Interface(), recursive, tags...)
+							m[name] = tmp
 						} else {
 							m[name] = rvField.Interface()
 						}
