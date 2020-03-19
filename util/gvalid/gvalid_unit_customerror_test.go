@@ -15,23 +15,27 @@ import (
 )
 
 func Test_Map(t *testing.T) {
-	rule := "ipv4"
-	val := "0.0.0"
-	msg := map[string]string{
-		"ipv4": "IPv4地址格式不正确",
-	}
+	gtest.C(t, func(t *gtest.T) {
+		rule := "ipv4"
+		val := "0.0.0"
+		msg := map[string]string{
+			"ipv4": "IPv4地址格式不正确",
+		}
 
-	err := gvalid.Check(val, rule, nil)
-	t.Assert(err.Map(), msg)
+		err := gvalid.Check(val, rule, nil)
+		t.Assert(err.Map(), msg)
+	})
 }
 
 func Test_FirstString(t *testing.T) {
-	rule := "ipv4"
-	val := "0.0.0"
+	gtest.C(t, func(t *gtest.T) {
+		rule := "ipv4"
+		val := "0.0.0"
 
-	err := gvalid.Check(val, rule, nil)
-	n := err.FirstString()
-	t.Assert(n, "IPv4地址格式不正确")
+		err := gvalid.Check(val, rule, nil)
+		n := err.FirstString()
+		t.Assert(n, "IPv4地址格式不正确")
+	})
 }
 
 func Test_SetDefaultErrorMsgs(t *testing.T) {

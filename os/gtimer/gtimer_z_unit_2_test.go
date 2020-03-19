@@ -18,60 +18,68 @@ import (
 )
 
 func TestEntry_Start_Stop_Close(t *testing.T) {
-	timer := New()
-	array := garray.New(true)
-	entry := timer.Add(200*time.Millisecond, func() {
-		array.Append(1)
-	})
-	time.Sleep(250 * time.Millisecond)
-	t.Assert(array.Len(), 1)
-	entry.Stop()
-	time.Sleep(250 * time.Millisecond)
-	t.Assert(array.Len(), 1)
-	entry.Start()
-	time.Sleep(250 * time.Millisecond)
-	t.Assert(array.Len(), 2)
-	entry.Close()
-	time.Sleep(250 * time.Millisecond)
-	t.Assert(array.Len(), 2)
+	gtest.C(t, func(t *gtest.T) {
+		timer := New()
+		array := garray.New(true)
+		entry := timer.Add(200*time.Millisecond, func() {
+			array.Append(1)
+		})
+		time.Sleep(250 * time.Millisecond)
+		t.Assert(array.Len(), 1)
+		entry.Stop()
+		time.Sleep(250 * time.Millisecond)
+		t.Assert(array.Len(), 1)
+		entry.Start()
+		time.Sleep(250 * time.Millisecond)
+		t.Assert(array.Len(), 2)
+		entry.Close()
+		time.Sleep(250 * time.Millisecond)
+		t.Assert(array.Len(), 2)
 
-	t.Assert(entry.Status(), gtimer.STATUS_CLOSED)
+		t.Assert(entry.Status(), gtimer.STATUS_CLOSED)
+	})
 }
 
 func TestEntry_Singleton(t *testing.T) {
-	timer := New()
-	array := garray.New(true)
-	entry := timer.Add(200*time.Millisecond, func() {
-		array.Append(1)
-		time.Sleep(10 * time.Second)
-	})
-	t.Assert(entry.IsSingleton(), false)
-	entry.SetSingleton(true)
-	t.Assert(entry.IsSingleton(), true)
-	time.Sleep(250 * time.Millisecond)
-	t.Assert(array.Len(), 1)
+	gtest.C(t, func(t *gtest.T) {
+		timer := New()
+		array := garray.New(true)
+		entry := timer.Add(200*time.Millisecond, func() {
+			array.Append(1)
+			time.Sleep(10 * time.Second)
+		})
+		t.Assert(entry.IsSingleton(), false)
+		entry.SetSingleton(true)
+		t.Assert(entry.IsSingleton(), true)
+		time.Sleep(250 * time.Millisecond)
+		t.Assert(array.Len(), 1)
 
-	time.Sleep(250 * time.Millisecond)
-	t.Assert(array.Len(), 1)
+		time.Sleep(250 * time.Millisecond)
+		t.Assert(array.Len(), 1)
+	})
 }
 
 func TestEntry_SetTimes(t *testing.T) {
-	timer := New()
-	array := garray.New(true)
-	entry := timer.Add(200*time.Millisecond, func() {
-		array.Append(1)
+	gtest.C(t, func(t *gtest.T) {
+		timer := New()
+		array := garray.New(true)
+		entry := timer.Add(200*time.Millisecond, func() {
+			array.Append(1)
+		})
+		entry.SetTimes(2)
+		time.Sleep(1200 * time.Millisecond)
+		t.Assert(array.Len(), 2)
 	})
-	entry.SetTimes(2)
-	time.Sleep(1200 * time.Millisecond)
-	t.Assert(array.Len(), 2)
 }
 
 func TestEntry_Run(t *testing.T) {
-	timer := New()
-	array := garray.New(true)
-	entry := timer.Add(1000*time.Millisecond, func() {
-		array.Append(1)
+	gtest.C(t, func(t *gtest.T) {
+		timer := New()
+		array := garray.New(true)
+		entry := timer.Add(1000*time.Millisecond, func() {
+			array.Append(1)
+		})
+		entry.Run()
+		t.Assert(array.Len(), 1)
 	})
-	entry.Run()
-	t.Assert(array.Len(), 1)
 }

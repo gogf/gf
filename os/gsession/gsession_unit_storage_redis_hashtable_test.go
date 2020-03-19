@@ -18,7 +18,9 @@ import (
 
 func Test_StorageRedisHashTable(t *testing.T) {
 	redis, err := gredis.NewFromStr("127.0.0.1:6379,0")
-	t.Assert(err, nil)
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(err, nil)
+	})
 
 	storage := gsession.NewStorageRedisHashTable(redis)
 	manager := gsession.New(time.Second, storage)
@@ -78,7 +80,9 @@ func Test_StorageRedisHashTable(t *testing.T) {
 
 func Test_StorageRedisHashTablePrefix(t *testing.T) {
 	redis, err := gredis.NewFromStr("127.0.0.1:6379,0")
-	t.Assert(err, nil)
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(err, nil)
+	})
 
 	prefix := "s_"
 	storage := gsession.NewStorageRedisHashTable(redis, prefix)

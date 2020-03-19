@@ -579,31 +579,31 @@ func TestStrArray_RemoveValue(t *testing.T) {
 }
 
 func TestStrArray_UnmarshalValue(t *testing.T) {
-	type T struct {
+	type Var struct {
 		Name  string
 		Array *garray.StrArray
 	}
 	// JSON
 	gtest.C(t, func(t *gtest.T) {
-		var t *T
+		var v *Var
 		err := gconv.Struct(g.Map{
 			"name":  "john",
 			"array": []byte(`["1","2","3"]`),
-		}, &t)
+		}, &v)
 		t.Assert(err, nil)
-		t.Assert(t.Name, "john")
-		t.Assert(t.Array.Slice(), g.SliceStr{"1", "2", "3"})
+		t.Assert(v.Name, "john")
+		t.Assert(v.Array.Slice(), g.SliceStr{"1", "2", "3"})
 	})
 	// Map
 	gtest.C(t, func(t *gtest.T) {
-		var t *T
+		var v *Var
 		err := gconv.Struct(g.Map{
 			"name":  "john",
 			"array": g.SliceStr{"1", "2", "3"},
-		}, &t)
+		}, &v)
 		t.Assert(err, nil)
-		t.Assert(t.Name, "john")
-		t.Assert(t.Array.Slice(), g.SliceStr{"1", "2", "3"})
+		t.Assert(v.Name, "john")
+		t.Assert(v.Array.Slice(), g.SliceStr{"1", "2", "3"})
 	})
 }
 

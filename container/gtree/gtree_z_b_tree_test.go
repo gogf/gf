@@ -94,11 +94,13 @@ func Test_BTree_Get_Set_Var(t *testing.T) {
 }
 
 func Test_BTree_Batch(t *testing.T) {
-	m := gtree.NewBTree(3, gutil.ComparatorString)
-	m.Sets(map[interface{}]interface{}{1: 1, "key1": "val1", "key2": "val2", "key3": "val3"})
-	t.Assert(m.Map(), map[interface{}]interface{}{1: 1, "key1": "val1", "key2": "val2", "key3": "val3"})
-	m.Removes([]interface{}{"key1", 1})
-	t.Assert(m.Map(), map[interface{}]interface{}{"key2": "val2", "key3": "val3"})
+	gtest.C(t, func(t *gtest.T) {
+		m := gtree.NewBTree(3, gutil.ComparatorString)
+		m.Sets(map[interface{}]interface{}{1: 1, "key1": "val1", "key2": "val2", "key3": "val3"})
+		t.Assert(m.Map(), map[interface{}]interface{}{1: 1, "key1": "val1", "key2": "val2", "key3": "val3"})
+		m.Removes([]interface{}{"key1", 1})
+		t.Assert(m.Map(), map[interface{}]interface{}{"key2": "val2", "key3": "val3"})
+	})
 }
 
 func Test_BTree_Iterator(t *testing.T) {
@@ -109,18 +111,21 @@ func Test_BTree_Iterator(t *testing.T) {
 	expect := map[interface{}]interface{}{"key4": "val4", 1: 1, "key1": "val1", "key2": "val2", "key3": "val3"}
 
 	m := gtree.NewBTreeFrom(3, gutil.ComparatorString, expect)
-	m.Iterator(func(k interface{}, v interface{}) bool {
-		t.Assert(k, keys[index])
-		index++
-		t.Assert(expect[k], v)
-		return true
-	})
 
-	m.IteratorDesc(func(k interface{}, v interface{}) bool {
-		index--
-		t.Assert(k, keys[index])
-		t.Assert(expect[k], v)
-		return true
+	gtest.C(t, func(t *gtest.T) {
+		m.Iterator(func(k interface{}, v interface{}) bool {
+			t.Assert(k, keys[index])
+			index++
+			t.Assert(expect[k], v)
+			return true
+		})
+
+		m.IteratorDesc(func(k interface{}, v interface{}) bool {
+			index--
+			t.Assert(k, keys[index])
+			t.Assert(expect[k], v)
+			return true
+		})
 	})
 
 	m.Print()
@@ -191,16 +196,18 @@ func Test_BTree_IteratorFrom(t *testing.T) {
 }
 
 func Test_BTree_Clone(t *testing.T) {
-	//clone 方法是深克隆
-	m := gtree.NewBTreeFrom(3, gutil.ComparatorString, map[interface{}]interface{}{1: 1, "key1": "val1"})
-	m_clone := m.Clone()
-	m.Remove(1)
-	//修改原 map,clone 后的 map 不影响
-	t.AssertIN(1, m_clone.Keys())
+	gtest.C(t, func(t *gtest.T) {
+		//clone 方法是深克隆
+		m := gtree.NewBTreeFrom(3, gutil.ComparatorString, map[interface{}]interface{}{1: 1, "key1": "val1"})
+		m_clone := m.Clone()
+		m.Remove(1)
+		//修改原 map,clone 后的 map 不影响
+		t.AssertIN(1, m_clone.Keys())
 
-	m_clone.Remove("key1")
-	//修改clone map,原 map 不影响
-	t.AssertIN("key1", m.Keys())
+		m_clone.Remove("key1")
+		//修改clone map,原 map 不影响
+		t.AssertIN("key1", m.Keys())
+	})
 }
 
 func Test_BTree_LRNode(t *testing.T) {

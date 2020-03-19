@@ -16,12 +16,12 @@ import (
 
 func Test_Interface(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		t := Temp{Name: "gf", Age: 18}
-		t1 := Temp{Name: "gf", Age: 19}
-		i := gtype.New(t)
+		t1 := Temp{Name: "gf", Age: 18}
+		t2 := Temp{Name: "gf", Age: 19}
+		i := gtype.New(t1)
 		iClone := i.Clone()
-		t.AssertEQ(iClone.Set(t1), t)
-		t.AssertEQ(iClone.Val().(Temp), t1)
+		t.AssertEQ(iClone.Set(t2), t1)
+		t.AssertEQ(iClone.Val().(Temp), t2)
 
 		//空参测试
 		i1 := gtype.New()
@@ -47,18 +47,18 @@ func Test_Interface_JSON(t *testing.T) {
 }
 
 func Test_Interface_UnmarshalValue(t *testing.T) {
-	type T struct {
+	type Var struct {
 		Name string
 		Var  *gtype.Interface
 	}
 	gtest.C(t, func(t *gtest.T) {
-		var t *T
+		var v *Var
 		err := gconv.Struct(map[string]interface{}{
 			"name": "john",
 			"var":  "123",
-		}, &t)
+		}, &v)
 		t.Assert(err, nil)
-		t.Assert(t.Name, "john")
-		t.Assert(t.Var.Val(), "123")
+		t.Assert(v.Name, "john")
+		t.Assert(v.Var.Val(), "123")
 	})
 }

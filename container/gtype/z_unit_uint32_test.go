@@ -57,18 +57,18 @@ func Test_Uint32_JSON(t *testing.T) {
 }
 
 func Test_Uint32_UnmarshalValue(t *testing.T) {
-	type T struct {
+	type V struct {
 		Name string
 		Var  *gtype.Uint32
 	}
 	gtest.C(t, func(t *gtest.T) {
-		var t *T
+		var v *V
 		err := gconv.Struct(map[string]interface{}{
 			"name": "john",
 			"var":  "123",
-		}, &t)
+		}, &v)
 		t.Assert(err, nil)
-		t.Assert(t.Name, "john")
-		t.Assert(t.Var.Val(), "123")
+		t.Assert(v.Name, "john")
+		t.Assert(v.Var.Val(), "123")
 	})
 }

@@ -57,18 +57,18 @@ func Test_Int_JSON(t *testing.T) {
 }
 
 func Test_Int_UnmarshalValue(t *testing.T) {
-	type T struct {
+	type Var struct {
 		Name string
 		Var  *gtype.Int
 	}
 	gtest.C(t, func(t *gtest.T) {
-		var t *T
+		var v *Var
 		err := gconv.Struct(map[string]interface{}{
 			"name": "john",
 			"var":  "123",
-		}, &t)
+		}, &v)
 		t.Assert(err, nil)
-		t.Assert(t.Name, "john")
-		t.Assert(t.Var.Val(), "123")
+		t.Assert(v.Name, "john")
+		t.Assert(v.Var.Val(), "123")
 	})
 }

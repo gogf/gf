@@ -28,48 +28,48 @@ import (
 
 func Test_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		t := gi18n.New(gi18n.Options{
+		i18n := gi18n.New(gi18n.Options{
 			Path: gdebug.CallerDirectory() + gfile.Separator + "testdata" + gfile.Separator + "i18n",
 		})
-		t.SetLanguage("none")
-		t.Assert(t.T("{#hello}{#world}"), "{#hello}{#world}")
+		i18n.SetLanguage("none")
+		t.Assert(i18n.T("{#hello}{#world}"), "{#hello}{#world}")
 
-		t.SetLanguage("ja")
-		t.Assert(t.T("{#hello}{#world}"), "こんにちは世界")
+		i18n.SetLanguage("ja")
+		t.Assert(i18n.T("{#hello}{#world}"), "こんにちは世界")
 
-		t.SetLanguage("zh-CN")
-		t.Assert(t.T("{#hello}{#world}"), "你好世界")
-		t.SetDelimiters("{$", "}")
-		t.Assert(t.T("{#hello}{#world}"), "{#hello}{#world}")
-		t.Assert(t.T("{$hello}{$world}"), "你好世界")
+		i18n.SetLanguage("zh-CN")
+		t.Assert(i18n.T("{#hello}{#world}"), "你好世界")
+		i18n.SetDelimiters("{$", "}")
+		t.Assert(i18n.T("{#hello}{#world}"), "{#hello}{#world}")
+		t.Assert(i18n.T("{$hello}{$world}"), "你好世界")
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		t := gi18n.New(gi18n.Options{
+		i18n := gi18n.New(gi18n.Options{
 			Path: gdebug.CallerDirectory() + gfile.Separator + "testdata" + gfile.Separator + "i18n-file",
 		})
-		t.SetLanguage("none")
-		t.Assert(t.T("{#hello}{#world}"), "{#hello}{#world}")
+		i18n.SetLanguage("none")
+		t.Assert(i18n.T("{#hello}{#world}"), "{#hello}{#world}")
 
-		t.SetLanguage("ja")
-		t.Assert(t.T("{#hello}{#world}"), "こんにちは世界")
+		i18n.SetLanguage("ja")
+		t.Assert(i18n.T("{#hello}{#world}"), "こんにちは世界")
 
-		t.SetLanguage("zh-CN")
-		t.Assert(t.T("{#hello}{#world}"), "你好世界")
+		i18n.SetLanguage("zh-CN")
+		t.Assert(i18n.T("{#hello}{#world}"), "你好世界")
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		t := gi18n.New(gi18n.Options{
+		i18n := gi18n.New(gi18n.Options{
 			Path: gdebug.CallerDirectory() + gfile.Separator + "testdata" + gfile.Separator + "i18n-dir",
 		})
-		t.SetLanguage("none")
-		t.Assert(t.T("{#hello}{#world}"), "{#hello}{#world}")
+		i18n.SetLanguage("none")
+		t.Assert(i18n.T("{#hello}{#world}"), "{#hello}{#world}")
 
-		t.SetLanguage("ja")
-		t.Assert(t.T("{#hello}{#world}"), "こんにちは世界")
+		i18n.SetLanguage("ja")
+		t.Assert(i18n.T("{#hello}{#world}"), "こんにちは世界")
 
-		t.SetLanguage("zh-CN")
-		t.Assert(t.T("{#hello}{#world}"), "你好世界")
+		i18n.SetLanguage("zh-CN")
+		t.Assert(i18n.T("{#hello}{#world}"), "你好世界")
 	})
 }
 

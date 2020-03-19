@@ -635,13 +635,13 @@ func Test_DB_Time(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		t := time.Now()
+		t1 := time.Now()
 		result, err := db.Insert(table, g.Map{
 			"id":          300,
 			"passport":    "t300",
 			"password":    "123456",
 			"nickname":    "T300",
-			"create_time": &t,
+			"create_time": &t1,
 		})
 		if err != nil {
 			gtest.Error(err)
@@ -662,11 +662,10 @@ func Test_DB_Time(t *testing.T) {
 }
 
 func Test_DB_ToJson(t *testing.T) {
-
 	table := createInitTable()
 	defer dropTable(table)
 	_, err := db.Update(table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
-	t.Assert(err, nil)
+	gtest.Assert(err, nil)
 
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Table(table).Fields("*").Where("id =? ", 1).Select()
@@ -737,11 +736,10 @@ func Test_DB_ToJson(t *testing.T) {
 }
 
 func Test_DB_ToXml(t *testing.T) {
-
 	table := createInitTable()
 	defer dropTable(table)
 	_, err := db.Update(table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
-	t.Assert(err, nil)
+	gtest.Assert(err, nil)
 
 	gtest.C(t, func(t *gtest.T) {
 		record, err := db.Table(table).Fields("*").Where("id = ?", 1).One()
@@ -807,7 +805,7 @@ func Test_DB_ToStringMap(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	_, err := db.Update(table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
-	t.Assert(err, nil)
+	gtest.Assert(err, nil)
 	gtest.C(t, func(t *gtest.T) {
 		id := "1"
 		result, err := db.Table(table).Fields("*").Where("id = ?", 1).Select()
@@ -843,7 +841,7 @@ func Test_DB_ToIntMap(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	_, err := db.Update(table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
-	t.Assert(err, nil)
+	gtest.Assert(err, nil)
 
 	gtest.C(t, func(t *gtest.T) {
 		id := 1
@@ -876,11 +874,10 @@ func Test_DB_ToIntMap(t *testing.T) {
 }
 
 func Test_DB_ToUintMap(t *testing.T) {
-
 	table := createInitTable()
 	defer dropTable(table)
 	_, err := db.Update(table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
-	t.Assert(err, nil)
+	gtest.Assert(err, nil)
 
 	gtest.C(t, func(t *gtest.T) {
 		id := 1
@@ -914,11 +911,10 @@ func Test_DB_ToUintMap(t *testing.T) {
 }
 
 func Test_DB_ToStringRecord(t *testing.T) {
-
 	table := createInitTable()
 	defer dropTable(table)
 	_, err := db.Update(table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
-	t.Assert(err, nil)
+	gtest.Assert(err, nil)
 
 	gtest.C(t, func(t *gtest.T) {
 		id := 1
@@ -953,11 +949,10 @@ func Test_DB_ToStringRecord(t *testing.T) {
 }
 
 func Test_DB_ToIntRecord(t *testing.T) {
-
 	table := createInitTable()
 	defer dropTable(table)
 	_, err := db.Update(table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
-	t.Assert(err, nil)
+	gtest.Assert(err, nil)
 
 	gtest.C(t, func(t *gtest.T) {
 		id := 1
@@ -991,11 +986,10 @@ func Test_DB_ToIntRecord(t *testing.T) {
 }
 
 func Test_DB_ToUintRecord(t *testing.T) {
-
 	table := createInitTable()
 	defer dropTable(table)
 	_, err := db.Update(table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
-	t.Assert(err, nil)
+	gtest.Assert(err, nil)
 
 	gtest.C(t, func(t *gtest.T) {
 		id := 1
@@ -1030,7 +1024,6 @@ func Test_DB_ToUintRecord(t *testing.T) {
 func Test_DB_TableField(t *testing.T) {
 	name := "field_test"
 	dropTable(name)
-
 	defer dropTable(name)
 	_, err := db.Exec(fmt.Sprintf(`
 		CREATE TABLE %s (
@@ -1069,7 +1062,7 @@ func Test_DB_TableField(t *testing.T) {
 	if err != nil {
 		gtest.Fatal(err)
 	} else {
-		t.Assert(n, 1)
+		gtest.Assert(n, 1)
 	}
 
 	result, err := db.Table(name).Fields("*").Where("field_int = ?", 2).Select()
@@ -1077,7 +1070,7 @@ func Test_DB_TableField(t *testing.T) {
 		gtest.Fatal(err)
 	}
 
-	t.Assert(result[0], data)
+	gtest.Assert(result[0], data)
 }
 
 func Test_DB_Prefix(t *testing.T) {

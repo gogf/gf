@@ -20,18 +20,20 @@ import (
 func Test_Redis(t *testing.T) {
 	redisContent := gfile.GetContents(gfile.Join(gdebug.TestDataPath(), "redis", "config.toml"))
 
-	var err error
-	dirPath := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
-	err = gfile.Mkdir(dirPath)
-	t.Assert(err, nil)
-	defer gfile.Remove(dirPath)
+	gtest.C(t, func(t *gtest.T) {
+		var err error
+		dirPath := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
+		err = gfile.Mkdir(dirPath)
+		t.Assert(err, nil)
+		defer gfile.Remove(dirPath)
 
-	name := "config.toml"
-	err = gfile.PutContents(gfile.Join(dirPath, name), redisContent)
-	t.Assert(err, nil)
+		name := "config.toml"
+		err = gfile.PutContents(gfile.Join(dirPath, name), redisContent)
+		t.Assert(err, nil)
 
-	err = gins.Config().AddPath(dirPath)
-	t.Assert(err, nil)
+		err = gins.Config().AddPath(dirPath)
+		t.Assert(err, nil)
+	})
 
 	defer gins.Config().Clear()
 

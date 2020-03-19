@@ -18,23 +18,22 @@ import (
 
 func TestCron_Entry_Operations(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-
-		gtest.C(t, func(t *gtest.T) {
-			cron := gcron.New()
-			array := garray.New(true)
-			cron.DelayAddTimes(500*time.Millisecond, "* * * * * *", 2, func() {
-				glog.Println("add times")
-				array.Append(1)
-			})
-			t.Assert(cron.Size(), 0)
-			time.Sleep(800 * time.Millisecond)
-			t.Assert(array.Len(), 0)
-			t.Assert(cron.Size(), 1)
-			time.Sleep(3000 * time.Millisecond)
-			t.Assert(array.Len(), 2)
-			t.Assert(cron.Size(), 0)
+		cron := gcron.New()
+		array := garray.New(true)
+		cron.DelayAddTimes(500*time.Millisecond, "* * * * * *", 2, func() {
+			glog.Println("add times")
+			array.Append(1)
 		})
+		t.Assert(cron.Size(), 0)
+		time.Sleep(800 * time.Millisecond)
+		t.Assert(array.Len(), 0)
+		t.Assert(cron.Size(), 1)
+		time.Sleep(3000 * time.Millisecond)
+		t.Assert(array.Len(), 2)
+		t.Assert(cron.Size(), 0)
+	})
 
+	gtest.C(t, func(t *gtest.T) {
 		cron := gcron.New()
 		array := garray.New(true)
 		entry, err1 := cron.Add("* * * * * *", func() {

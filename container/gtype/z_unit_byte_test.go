@@ -60,18 +60,18 @@ func Test_Byte_JSON(t *testing.T) {
 }
 
 func Test_Byte_UnmarshalValue(t *testing.T) {
-	type T struct {
+	type Var struct {
 		Name string
 		Var  *gtype.Byte
 	}
 	gtest.C(t, func(t *gtest.T) {
-		var t *T
+		var v *Var
 		err := gconv.Struct(map[string]interface{}{
 			"name": "john",
 			"var":  "2",
-		}, &t)
+		}, &v)
 		t.Assert(err, nil)
-		t.Assert(t.Name, "john")
-		t.Assert(t.Var.Val(), "2")
+		t.Assert(v.Name, "john")
+		t.Assert(v.Var.Val(), "2")
 	})
 }

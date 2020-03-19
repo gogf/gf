@@ -20,18 +20,20 @@ import (
 func Test_Database(t *testing.T) {
 	databaseContent := gfile.GetContents(gfile.Join(gdebug.TestDataPath(), "database", "config.toml"))
 
-	var err error
-	dirPath := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
-	err = gfile.Mkdir(dirPath)
-	t.Assert(err, nil)
-	defer gfile.Remove(dirPath)
+	gtest.C(t, func(t *gtest.T) {
+		var err error
+		dirPath := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
+		err = gfile.Mkdir(dirPath)
+		t.Assert(err, nil)
+		defer gfile.Remove(dirPath)
 
-	name := "config.toml"
-	err = gfile.PutContents(gfile.Join(dirPath, name), databaseContent)
-	t.Assert(err, nil)
+		name := "config.toml"
+		err = gfile.PutContents(gfile.Join(dirPath, name), databaseContent)
+		t.Assert(err, nil)
 
-	err = gins.Config().AddPath(dirPath)
-	t.Assert(err, nil)
+		err = gins.Config().AddPath(dirPath)
+		t.Assert(err, nil)
+	})
 
 	defer gins.Config().Clear()
 

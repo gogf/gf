@@ -47,18 +47,18 @@ func Test_Float32_JSON(t *testing.T) {
 }
 
 func Test_Float32_UnmarshalValue(t *testing.T) {
-	type T struct {
+	type Var struct {
 		Name string
 		Var  *gtype.Float32
 	}
 	gtest.C(t, func(t *gtest.T) {
-		var t *T
+		var v *Var
 		err := gconv.Struct(map[string]interface{}{
 			"name": "john",
 			"var":  "123.456",
-		}, &t)
+		}, &v)
 		t.Assert(err, nil)
-		t.Assert(t.Name, "john")
-		t.Assert(t.Var.Val(), "123.456")
+		t.Assert(v.Name, "john")
+		t.Assert(v.Var.Val(), "123.456")
 	})
 }

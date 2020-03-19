@@ -98,28 +98,28 @@ func Test_Bool_JSON(t *testing.T) {
 }
 
 func Test_Bool_UnmarshalValue(t *testing.T) {
-	type T struct {
+	type Var struct {
 		Name string
 		Var  *gtype.Bool
 	}
 	gtest.C(t, func(t *gtest.T) {
-		var t *T
+		var v *Var
 		err := gconv.Struct(map[string]interface{}{
 			"name": "john",
 			"var":  "true",
-		}, &t)
+		}, &v)
 		t.Assert(err, nil)
-		t.Assert(t.Name, "john")
-		t.Assert(t.Var.Val(), true)
+		t.Assert(v.Name, "john")
+		t.Assert(v.Var.Val(), true)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		var t *T
+		var v *Var
 		err := gconv.Struct(map[string]interface{}{
 			"name": "john",
 			"var":  "false",
-		}, &t)
+		}, &v)
 		t.Assert(err, nil)
-		t.Assert(t.Name, "john")
-		t.Assert(t.Var.Val(), false)
+		t.Assert(v.Name, "john")
+		t.Assert(v.Var.Val(), false)
 	})
 }

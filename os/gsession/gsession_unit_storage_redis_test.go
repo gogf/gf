@@ -18,7 +18,7 @@ import (
 
 func Test_StorageRedis(t *testing.T) {
 	redis, err := gredis.NewFromStr("127.0.0.1:6379,0")
-	t.Assert(err, nil)
+	gtest.Assert(err, nil)
 
 	storage := gsession.NewStorageRedis(redis)
 	manager := gsession.New(time.Second, storage)
@@ -79,7 +79,7 @@ func Test_StorageRedis(t *testing.T) {
 
 func Test_StorageRedisPrefix(t *testing.T) {
 	redis, err := gredis.NewFromStr("127.0.0.1:6379,0")
-	t.Assert(err, nil)
+	gtest.Assert(err, nil)
 
 	prefix := "s_"
 	storage := gsession.NewStorageRedis(redis, prefix)

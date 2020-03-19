@@ -12,7 +12,7 @@ import (
 
 // T is the testing unit case management object.
 type T struct {
-	T *testing.T
+	*testing.T
 }
 
 // Assert checks <value> and <expect> EQUAL.
