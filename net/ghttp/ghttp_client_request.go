@@ -24,8 +24,8 @@ import (
 
 // Get send GET request and returns the response object.
 // Note that the response object MUST be closed if it'll be never used.
-func (c *Client) Get(url string) (*ClientResponse, error) {
-	return c.DoRequest("GET", url)
+func (c *Client) Get(url string, data ...interface{}) (*ClientResponse, error) {
+	return c.DoRequest("GET", url, data...)
 }
 
 // Put send PUT request and returns the response object.
