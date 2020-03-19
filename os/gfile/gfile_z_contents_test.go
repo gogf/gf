@@ -60,7 +60,7 @@ func testpath() string {
 }
 
 func Test_GetContents(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 
 		var (
 			filepaths string = "/testfile_t1.txt"
@@ -68,14 +68,14 @@ func Test_GetContents(t *testing.T) {
 		createTestFile(filepaths, "my name is jroam")
 		defer delTestFiles(filepaths)
 
-		gtest.Assert(gfile.GetContents(testpath()+filepaths), "my name is jroam")
-		gtest.Assert(gfile.GetContents(""), "")
+		t.Assert(gfile.GetContents(testpath()+filepaths), "my name is jroam")
+		t.Assert(gfile.GetContents(""), "")
 
 	})
 }
 
 func Test_GetBinContents(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
 			filepaths1  string = "/testfile_t1.txt"                 // 文件存在时
 			filepaths2  string = testpath() + "/testfile_t1_no.txt" // 文件不存在时
@@ -85,19 +85,19 @@ func Test_GetBinContents(t *testing.T) {
 		createTestFile(filepaths1, str1)
 		defer delTestFiles(filepaths1)
 		readcontent = gfile.GetBytes(testpath() + filepaths1)
-		gtest.Assert(readcontent, []byte(str1))
+		t.Assert(readcontent, []byte(str1))
 
 		readcontent = gfile.GetBytes(filepaths2)
-		gtest.Assert(string(readcontent), "")
+		t.Assert(string(readcontent), "")
 
-		gtest.Assert(string(gfile.GetBytes(filepaths2)), "")
+		t.Assert(string(gfile.GetBytes(filepaths2)), "")
 
 	})
 }
 
 // 截断文件为指定的大小
 func Test_Truncate(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
 			filepaths1 string = "/testfile_GetContentsyyui.txt" //文件存在时
 			err        error
@@ -106,25 +106,25 @@ func Test_Truncate(t *testing.T) {
 		createTestFile(filepaths1, "abcdefghijkmln")
 		defer delTestFiles(filepaths1)
 		err = gfile.Truncate(testpath()+filepaths1, 10)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		//=========================检查修改文后的大小，是否与期望一致
 		files, err = os.Open(testpath() + filepaths1)
 		defer files.Close()
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 		fileinfo, err2 := files.Stat()
-		gtest.Assert(err2, nil)
-		gtest.Assert(fileinfo.Size(), 10)
+		t.Assert(err2, nil)
+		t.Assert(fileinfo.Size(), 10)
 
 		//====测试当为空时，是否报错
 		err = gfile.Truncate("", 10)
-		gtest.AssertNE(err, nil)
+		t.AssertNE(err, nil)
 
 	})
 }
 
 func Test_PutContents(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
 			filepaths   string = "/testfile_PutContents.txt"
 			err         error
@@ -134,21 +134,21 @@ func Test_PutContents(t *testing.T) {
 		defer delTestFiles(filepaths)
 
 		err = gfile.PutContents(testpath()+filepaths, "test!")
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		//==================判断是否真正写入
 		readcontent, err = ioutil.ReadFile(testpath() + filepaths)
-		gtest.Assert(err, nil)
-		gtest.Assert(string(readcontent), "test!")
+		t.Assert(err, nil)
+		t.Assert(string(readcontent), "test!")
 
 		err = gfile.PutContents("", "test!")
-		gtest.AssertNE(err, nil)
+		t.AssertNE(err, nil)
 
 	})
 }
 
 func Test_PutContentsAppend(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
 			filepaths   string = "/testfile_PutContents.txt"
 			err         error
@@ -158,22 +158,22 @@ func Test_PutContentsAppend(t *testing.T) {
 		createTestFile(filepaths, "a")
 		defer delTestFiles(filepaths)
 		err = gfile.PutContentsAppend(testpath()+filepaths, "hello")
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		//==================判断是否真正写入
 		readcontent, err = ioutil.ReadFile(testpath() + filepaths)
-		gtest.Assert(err, nil)
-		gtest.Assert(string(readcontent), "ahello")
+		t.Assert(err, nil)
+		t.Assert(string(readcontent), "ahello")
 
 		err = gfile.PutContentsAppend("", "hello")
-		gtest.AssertNE(err, nil)
+		t.AssertNE(err, nil)
 
 	})
 
 }
 
 func Test_PutBinContents(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
 			filepaths   string = "/testfile_PutContents.txt"
 			err         error
@@ -183,21 +183,21 @@ func Test_PutBinContents(t *testing.T) {
 		defer delTestFiles(filepaths)
 
 		err = gfile.PutBytes(testpath()+filepaths, []byte("test!!"))
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		// 判断是否真正写入
 		readcontent, err = ioutil.ReadFile(testpath() + filepaths)
-		gtest.Assert(err, nil)
-		gtest.Assert(string(readcontent), "test!!")
+		t.Assert(err, nil)
+		t.Assert(string(readcontent), "test!!")
 
 		err = gfile.PutBytes("", []byte("test!!"))
-		gtest.AssertNE(err, nil)
+		t.AssertNE(err, nil)
 
 	})
 }
 
 func Test_PutBinContentsAppend(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
 			filepaths   string = "/testfile_PutContents.txt" //原文件内容: yy
 			err         error
@@ -206,21 +206,21 @@ func Test_PutBinContentsAppend(t *testing.T) {
 		createTestFile(filepaths, "test!!")
 		defer delTestFiles(filepaths)
 		err = gfile.PutBytesAppend(testpath()+filepaths, []byte("word"))
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		// 判断是否真正写入
 		readcontent, err = ioutil.ReadFile(testpath() + filepaths)
-		gtest.Assert(err, nil)
-		gtest.Assert(string(readcontent), "test!!word")
+		t.Assert(err, nil)
+		t.Assert(string(readcontent), "test!!word")
 
 		err = gfile.PutBytesAppend("", []byte("word"))
-		gtest.AssertNE(err, nil)
+		t.AssertNE(err, nil)
 
 	})
 }
 
 func Test_GetBinContentsByTwoOffsetsByPath(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
 			filepaths   string = "/testfile_GetContents.txt" // 文件内容: abcdefghijk
 			readcontent []byte
@@ -230,17 +230,17 @@ func Test_GetBinContentsByTwoOffsetsByPath(t *testing.T) {
 		defer delTestFiles(filepaths)
 		readcontent = gfile.GetBytesByTwoOffsetsByPath(testpath()+filepaths, 2, 5)
 
-		gtest.Assert(string(readcontent), "cde")
+		t.Assert(string(readcontent), "cde")
 
 		readcontent = gfile.GetBytesByTwoOffsetsByPath("", 2, 5)
-		gtest.Assert(len(readcontent), 0)
+		t.Assert(len(readcontent), 0)
 
 	})
 
 }
 
 func Test_GetNextCharOffsetByPath(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
 			filepaths  string = "/testfile_GetContents.txt" // 文件内容: abcdefghijk
 			localindex int64
@@ -248,48 +248,48 @@ func Test_GetNextCharOffsetByPath(t *testing.T) {
 		createTestFile(filepaths, "abcdefghijk")
 		defer delTestFiles(filepaths)
 		localindex = gfile.GetNextCharOffsetByPath(testpath()+filepaths, 'd', 1)
-		gtest.Assert(localindex, 3)
+		t.Assert(localindex, 3)
 
 		localindex = gfile.GetNextCharOffsetByPath("", 'd', 1)
-		gtest.Assert(localindex, -1)
+		t.Assert(localindex, -1)
 
 	})
 }
 
 func Test_GetNextCharOffset(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
 			localindex int64
 		)
 		reader := strings.NewReader("helloword")
 
 		localindex = gfile.GetNextCharOffset(reader, 'w', 1)
-		gtest.Assert(localindex, 5)
+		t.Assert(localindex, 5)
 
 		localindex = gfile.GetNextCharOffset(reader, 'j', 1)
-		gtest.Assert(localindex, -1)
+		t.Assert(localindex, -1)
 
 	})
 }
 
 func Test_GetBinContentsByTwoOffsets(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
 			reads []byte
 		)
 		reader := strings.NewReader("helloword")
 
 		reads = gfile.GetBytesByTwoOffsets(reader, 1, 3)
-		gtest.Assert(string(reads), "el")
+		t.Assert(string(reads), "el")
 
 		reads = gfile.GetBytesByTwoOffsets(reader, 10, 30)
-		gtest.Assert(string(reads), "")
+		t.Assert(string(reads), "")
 
 	})
 }
 
 func Test_GetBinContentsTilChar(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
 			reads  []byte
 			indexs int64
@@ -297,16 +297,16 @@ func Test_GetBinContentsTilChar(t *testing.T) {
 		reader := strings.NewReader("helloword")
 
 		reads, _ = gfile.GetBytesTilChar(reader, 'w', 2)
-		gtest.Assert(string(reads), "llow")
+		t.Assert(string(reads), "llow")
 
 		_, indexs = gfile.GetBytesTilChar(reader, 'w', 20)
-		gtest.Assert(indexs, -1)
+		t.Assert(indexs, -1)
 
 	})
 }
 
 func Test_GetBinContentsTilCharByPath(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
 			reads     []byte
 			indexs    int64
@@ -317,27 +317,27 @@ func Test_GetBinContentsTilCharByPath(t *testing.T) {
 		defer delTestFiles(filepaths)
 
 		reads, _ = gfile.GetBytesTilCharByPath(testpath()+filepaths, 'c', 2)
-		gtest.Assert(string(reads), "c")
+		t.Assert(string(reads), "c")
 
 		reads, _ = gfile.GetBytesTilCharByPath(testpath()+filepaths, 'y', 1)
-		gtest.Assert(string(reads), "")
+		t.Assert(string(reads), "")
 
 		_, indexs = gfile.GetBytesTilCharByPath(testpath()+filepaths, 'x', 1)
-		gtest.Assert(indexs, -1)
+		t.Assert(indexs, -1)
 
 	})
 }
 
 func Test_Home(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
 			reads string
 			err   error
 		)
 
 		reads, err = gfile.Home()
-		gtest.Assert(err, nil)
-		gtest.AssertNE(reads, "")
+		t.Assert(err, nil)
+		t.AssertNE(reads, "")
 
 	})
 }

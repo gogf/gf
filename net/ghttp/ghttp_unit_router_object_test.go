@@ -49,23 +49,23 @@ func Test_Router_Object1(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "1Object Index2")
-		gtest.Assert(client.GetContent("/init"), "Not Found")
-		gtest.Assert(client.GetContent("/shut"), "Not Found")
-		gtest.Assert(client.GetContent("/index"), "1Object Index2")
-		gtest.Assert(client.GetContent("/show"), "1Object Show2")
+		t.Assert(client.GetContent("/"), "1Object Index2")
+		t.Assert(client.GetContent("/init"), "Not Found")
+		t.Assert(client.GetContent("/shut"), "Not Found")
+		t.Assert(client.GetContent("/index"), "1Object Index2")
+		t.Assert(client.GetContent("/show"), "1Object Show2")
 
-		gtest.Assert(client.GetContent("/object"), "Not Found")
-		gtest.Assert(client.GetContent("/object/init"), "Not Found")
-		gtest.Assert(client.GetContent("/object/shut"), "Not Found")
-		gtest.Assert(client.GetContent("/object/index"), "1Object Index2")
-		gtest.Assert(client.GetContent("/object/show"), "1Object Show2")
+		t.Assert(client.GetContent("/object"), "Not Found")
+		t.Assert(client.GetContent("/object/init"), "Not Found")
+		t.Assert(client.GetContent("/object/shut"), "Not Found")
+		t.Assert(client.GetContent("/object/index"), "1Object Index2")
+		t.Assert(client.GetContent("/object/show"), "1Object Show2")
 
-		gtest.Assert(client.GetContent("/none-exist"), "Not Found")
+		t.Assert(client.GetContent("/none-exist"), "Not Found")
 	})
 }
 
@@ -79,19 +79,19 @@ func Test_Router_Object2(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "Not Found")
-		gtest.Assert(client.GetContent("/object"), "Not Found")
-		gtest.Assert(client.GetContent("/object/init"), "Not Found")
-		gtest.Assert(client.GetContent("/object/shut"), "Not Found")
-		gtest.Assert(client.GetContent("/object/index"), "Not Found")
-		gtest.Assert(client.GetContent("/object/show"), "1Object Show2")
-		gtest.Assert(client.GetContent("/object/info"), "1Object Info2")
+		t.Assert(client.GetContent("/"), "Not Found")
+		t.Assert(client.GetContent("/object"), "Not Found")
+		t.Assert(client.GetContent("/object/init"), "Not Found")
+		t.Assert(client.GetContent("/object/shut"), "Not Found")
+		t.Assert(client.GetContent("/object/index"), "Not Found")
+		t.Assert(client.GetContent("/object/show"), "1Object Show2")
+		t.Assert(client.GetContent("/object/info"), "1Object Info2")
 
-		gtest.Assert(client.GetContent("/none-exist"), "Not Found")
+		t.Assert(client.GetContent("/none-exist"), "Not Found")
 	})
 }
 
@@ -105,19 +105,19 @@ func Test_Router_ObjectMethod(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "Not Found")
-		gtest.Assert(client.GetContent("/object"), "Not Found")
-		gtest.Assert(client.GetContent("/object/init"), "Not Found")
-		gtest.Assert(client.GetContent("/object/shut"), "Not Found")
-		gtest.Assert(client.GetContent("/object/index"), "Not Found")
-		gtest.Assert(client.GetContent("/object/show"), "Not Found")
-		gtest.Assert(client.GetContent("/object/info"), "Not Found")
-		gtest.Assert(client.GetContent("/object-info"), "1Object Info2")
+		t.Assert(client.GetContent("/"), "Not Found")
+		t.Assert(client.GetContent("/object"), "Not Found")
+		t.Assert(client.GetContent("/object/init"), "Not Found")
+		t.Assert(client.GetContent("/object/shut"), "Not Found")
+		t.Assert(client.GetContent("/object/index"), "Not Found")
+		t.Assert(client.GetContent("/object/show"), "Not Found")
+		t.Assert(client.GetContent("/object/info"), "Not Found")
+		t.Assert(client.GetContent("/object-info"), "1Object Info2")
 
-		gtest.Assert(client.GetContent("/none-exist"), "Not Found")
+		t.Assert(client.GetContent("/none-exist"), "Not Found")
 	})
 }

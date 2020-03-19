@@ -23,7 +23,7 @@ import (
 )
 
 func Test_Template_Layout1(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		v := gview.New(gfile.Join(gdebug.TestDataPath(), "template", "layout1"))
 		p := ports.PopRand()
 		s := g.Server(p)
@@ -32,11 +32,11 @@ func Test_Template_Layout1(t *testing.T) {
 			err := r.Response.WriteTpl("layout.html", g.Map{
 				"mainTpl": "main/main1.html",
 			})
-			gtest.Assert(err, nil)
+			t.Assert(err, nil)
 		})
 		s.BindHandler("/nil", func(r *ghttp.Request) {
 			err := r.Response.WriteTpl("layout.html", nil)
-			gtest.Assert(err, nil)
+			t.Assert(err, nil)
 		})
 		s.SetDumpRouterMap(false)
 		s.SetPort(p)
@@ -46,14 +46,14 @@ func Test_Template_Layout1(t *testing.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "Not Found")
-		gtest.Assert(client.GetContent("/layout"), "123")
-		gtest.Assert(client.GetContent("/nil"), "123")
+		t.Assert(client.GetContent("/"), "Not Found")
+		t.Assert(client.GetContent("/layout"), "123")
+		t.Assert(client.GetContent("/nil"), "123")
 	})
 }
 
 func Test_Template_Layout2(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		v := gview.New(gfile.Join(gdebug.TestDataPath(), "template", "layout2"))
 		p := ports.PopRand()
 		s := g.Server(p)
@@ -62,17 +62,17 @@ func Test_Template_Layout2(t *testing.T) {
 			err := r.Response.WriteTpl("layout.html", g.Map{
 				"mainTpl": "main/main1.html",
 			})
-			gtest.Assert(err, nil)
+			t.Assert(err, nil)
 		})
 		s.BindHandler("/main2", func(r *ghttp.Request) {
 			err := r.Response.WriteTpl("layout.html", g.Map{
 				"mainTpl": "main/main2.html",
 			})
-			gtest.Assert(err, nil)
+			t.Assert(err, nil)
 		})
 		s.BindHandler("/nil", func(r *ghttp.Request) {
 			err := r.Response.WriteTpl("layout.html", nil)
-			gtest.Assert(err, nil)
+			t.Assert(err, nil)
 		})
 		s.SetDumpRouterMap(false)
 		s.SetPort(p)
@@ -82,15 +82,15 @@ func Test_Template_Layout2(t *testing.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "Not Found")
-		gtest.Assert(client.GetContent("/main1"), "a1b")
-		gtest.Assert(client.GetContent("/main2"), "a2b")
-		gtest.Assert(client.GetContent("/nil"), "ab")
+		t.Assert(client.GetContent("/"), "Not Found")
+		t.Assert(client.GetContent("/main1"), "a1b")
+		t.Assert(client.GetContent("/main2"), "a2b")
+		t.Assert(client.GetContent("/nil"), "ab")
 	})
 }
 
 func Test_Template_XSS(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		v := gview.New()
 		v.SetAutoEncode(true)
 		c := "<br>"
@@ -101,7 +101,7 @@ func Test_Template_XSS(t *testing.T) {
 			err := r.Response.WriteTplContent("{{if eq 1 1}}{{.v}}{{end}}", g.Map{
 				"v": c,
 			})
-			gtest.Assert(err, nil)
+			t.Assert(err, nil)
 		})
 		s.SetDumpRouterMap(false)
 		s.SetPort(p)
@@ -111,6 +111,6 @@ func Test_Template_XSS(t *testing.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/"), ghtml.Entities(c))
+		t.Assert(client.GetContent("/"), ghtml.Entities(c))
 	})
 }

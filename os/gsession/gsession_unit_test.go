@@ -13,10 +13,10 @@ import (
 )
 
 func Test_NewSessionId(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		id1 := NewSessionId()
 		id2 := NewSessionId()
-		gtest.AssertNE(id1, id2)
-		gtest.Assert(len(id1), 18)
+		t.AssertNE(id1, id2)
+		t.Assert(len(id1), 18)
 	})
 }

@@ -15,7 +15,7 @@ import (
 
 func Test_Json_Pointer(t *testing.T) {
 	// Marshal
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type T struct {
 			Time *gtime.Time
 		}
@@ -23,42 +23,42 @@ func Test_Json_Pointer(t *testing.T) {
 		s := "2006-01-02 15:04:05"
 		t.Time = gtime.NewFromStr(s)
 		j, err := json.Marshal(t)
-		gtest.Assert(err, nil)
-		gtest.Assert(j, `{"Time":"2006-01-02 15:04:05"}`)
+		t.Assert(err, nil)
+		t.Assert(j, `{"Time":"2006-01-02 15:04:05"}`)
 	})
 	// Marshal nil
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type T struct {
 			Time *gtime.Time
 		}
 		t := new(T)
 		j, err := json.Marshal(t)
-		gtest.Assert(err, nil)
-		gtest.Assert(j, `{"Time":null}`)
+		t.Assert(err, nil)
+		t.Assert(j, `{"Time":null}`)
 	})
 	// Marshal nil omitempty
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type T struct {
 			Time *gtime.Time `json:"time,omitempty"`
 		}
 		t := new(T)
 		j, err := json.Marshal(t)
-		gtest.Assert(err, nil)
-		gtest.Assert(j, `{}`)
+		t.Assert(err, nil)
+		t.Assert(j, `{}`)
 	})
 	// Unmarshal
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var t gtime.Time
 		s := []byte(`"2006-01-02 15:04:05"`)
 		err := json.Unmarshal(s, &t)
-		gtest.Assert(err, nil)
-		gtest.Assert(t.String(), "2006-01-02 15:04:05")
+		t.Assert(err, nil)
+		t.Assert(t.String(), "2006-01-02 15:04:05")
 	})
 }
 
 func Test_Json_Struct(t *testing.T) {
 	// Marshal
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type T struct {
 			Time gtime.Time
 		}
@@ -66,28 +66,28 @@ func Test_Json_Struct(t *testing.T) {
 		s := "2006-01-02 15:04:05"
 		t.Time = *gtime.NewFromStr(s)
 		j, err := json.Marshal(t)
-		gtest.Assert(err, nil)
-		gtest.Assert(j, `{"Time":"2006-01-02 15:04:05"}`)
+		t.Assert(err, nil)
+		t.Assert(j, `{"Time":"2006-01-02 15:04:05"}`)
 	})
 	// Marshal nil
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type T struct {
 			Time gtime.Time
 		}
 		t := new(T)
 		j, err := json.Marshal(t)
-		gtest.Assert(err, nil)
-		gtest.Assert(j, `{"Time":""}`)
+		t.Assert(err, nil)
+		t.Assert(j, `{"Time":""}`)
 	})
 	// Marshal nil omitempty
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type T struct {
 			Time gtime.Time `json:"time,omitempty"`
 		}
 		t := new(T)
 		j, err := json.Marshal(t)
-		gtest.Assert(err, nil)
-		gtest.Assert(j, `{"time":""}`)
+		t.Assert(err, nil)
+		t.Assert(j, `{"time":""}`)
 	})
 
 }

@@ -14,7 +14,7 @@ import (
 )
 
 func Test_ToStruct1(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type BaseInfoItem struct {
 			IdCardNumber        string `db:"id_card_number" json:"idCardNumber" field:"id_card_number"`
 			IsHouseholder       bool   `db:"is_householder" json:"isHouseholder" field:"is_householder"`
@@ -88,15 +88,15 @@ func Test_ToStruct1(t *testing.T) {
 }`
 		data := new(UserCollectionAddReq)
 		j, err := gjson.LoadJson(jsonContent)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 		err = j.ToStruct(data)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 		g.Dump(data)
 	})
 }
 
 func Test_ToStructDeep(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type Item struct {
 			Title string `json:"title"`
 			Key   string `json:"key"`
@@ -117,16 +117,16 @@ func Test_ToStructDeep(t *testing.T) {
 		 }`
 
 		j, err := gjson.LoadContent(txt)
-		gtest.Assert(err, nil)
-		gtest.Assert(j.GetString("me.name"), "mikey")
-		gtest.Assert(j.GetString("items"), "")
-		gtest.Assert(j.GetBool("items"), false)
-		gtest.Assert(j.GetArray("items"), nil)
+		t.Assert(err, nil)
+		t.Assert(j.GetString("me.name"), "mikey")
+		t.Assert(j.GetString("items"), "")
+		t.Assert(j.GetBool("items"), false)
+		t.Assert(j.GetArray("items"), nil)
 		m := new(M)
 		err = j.ToStructDeep(m)
-		gtest.Assert(err, nil)
-		gtest.AssertNE(m.Me, nil)
-		gtest.Assert(m.Me["day"], "20009")
-		gtest.Assert(m.Items, nil)
+		t.Assert(err, nil)
+		t.AssertNE(m.Me, nil)
+		t.Assert(m.Me["day"], "20009")
+		t.Assert(m.Items, nil)
 	})
 }

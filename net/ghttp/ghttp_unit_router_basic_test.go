@@ -40,13 +40,13 @@ func Test_Router_Basic(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		gtest.Assert(client.GetContent("/john"), "")
-		gtest.Assert(client.GetContent("/john/update"), "john")
-		gtest.Assert(client.GetContent("/john/edit"), "edit")
-		gtest.Assert(client.GetContent("/user/list/100.html"), "100")
+		t.Assert(client.GetContent("/john"), "")
+		t.Assert(client.GetContent("/john/update"), "john")
+		t.Assert(client.GetContent("/john/edit"), "edit")
+		t.Assert(client.GetContent("/user/list/100.html"), "100")
 	})
 }
 
@@ -66,29 +66,29 @@ func Test_Router_Method(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		resp1, err := client.Get("/get")
 		defer resp1.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp1.StatusCode, 200)
+		t.Assert(err, nil)
+		t.Assert(resp1.StatusCode, 200)
 
 		resp2, err := client.Post("/get")
 		defer resp2.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp2.StatusCode, 404)
+		t.Assert(err, nil)
+		t.Assert(resp2.StatusCode, 404)
 
 		resp3, err := client.Get("/post")
 		defer resp3.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp3.StatusCode, 404)
+		t.Assert(err, nil)
+		t.Assert(resp3.StatusCode, 404)
 
 		resp4, err := client.Post("/post")
 		defer resp4.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp4.StatusCode, 200)
+		t.Assert(err, nil)
+		t.Assert(resp4.StatusCode, 200)
 	})
 }
 
@@ -107,13 +107,13 @@ func Test_Router_ExtraChar(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/api/test"), "test")
-		gtest.Assert(client.GetContent("/api/test/"), "test")
-		gtest.Assert(client.GetContent("/api/test//"), "test")
+		t.Assert(client.GetContent("/api/test"), "test")
+		t.Assert(client.GetContent("/api/test/"), "test")
+		t.Assert(client.GetContent("/api/test//"), "test")
 	})
 }
 
@@ -139,34 +139,34 @@ func Test_Router_Status(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		resp1, err := client.Get("/200")
 		defer resp1.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp1.StatusCode, 200)
+		t.Assert(err, nil)
+		t.Assert(resp1.StatusCode, 200)
 
 		resp2, err := client.Get("/300")
 		defer resp2.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp2.StatusCode, 300)
+		t.Assert(err, nil)
+		t.Assert(resp2.StatusCode, 300)
 
 		resp3, err := client.Get("/400")
 		defer resp3.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp3.StatusCode, 400)
+		t.Assert(err, nil)
+		t.Assert(resp3.StatusCode, 400)
 
 		resp4, err := client.Get("/500")
 		defer resp4.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp4.StatusCode, 500)
+		t.Assert(err, nil)
+		t.Assert(resp4.StatusCode, 500)
 
 		resp5, err := client.Get("/404")
 		defer resp5.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp5.StatusCode, 404)
+		t.Assert(err, nil)
+		t.Assert(resp5.StatusCode, 404)
 	})
 }
 
@@ -185,16 +185,16 @@ func Test_Router_CustomStatusHandler(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "hello")
+		t.Assert(client.GetContent("/"), "hello")
 		resp, err := client.Get("/ThisDoesNotExist")
 		defer resp.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp.StatusCode, 404)
-		gtest.Assert(resp.ReadAllString(), "404 page")
+		t.Assert(err, nil)
+		t.Assert(resp.StatusCode, 404)
+		t.Assert(resp.ReadAllString(), "404 page")
 	})
 }
 
@@ -211,15 +211,15 @@ func Test_Router_404(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "hello")
+		t.Assert(client.GetContent("/"), "hello")
 		resp, err := client.Get("/ThisDoesNotExist")
 		defer resp.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp.StatusCode, 404)
+		t.Assert(err, nil)
+		t.Assert(resp.StatusCode, 404)
 	})
 }
 
@@ -244,13 +244,13 @@ func Test_Router_Priority(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/admin"), "admin")
-		gtest.Assert(client.GetContent("/admin-1"), "admin-{page}")
-		gtest.Assert(client.GetContent("/admin-goods"), "admin-goods")
-		gtest.Assert(client.GetContent("/admin-goods-2"), "admin-goods-{page}")
+		t.Assert(client.GetContent("/admin"), "admin")
+		t.Assert(client.GetContent("/admin-1"), "admin-{page}")
+		t.Assert(client.GetContent("/admin-goods"), "admin-goods")
+		t.Assert(client.GetContent("/admin-goods-2"), "admin-goods-{page}")
 	})
 }

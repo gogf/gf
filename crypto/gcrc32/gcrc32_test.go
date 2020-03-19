@@ -17,17 +17,17 @@ import (
 )
 
 func TestEncrypt(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		s := "pibigstar"
 		result := 693191136
 		encrypt1 := gcrc32.Encrypt(s)
 		encrypt2 := gcrc32.Encrypt([]byte(s))
-		gtest.AssertEQ(int(encrypt1), result)
-		gtest.AssertEQ(int(encrypt2), result)
+		t.AssertEQ(int(encrypt1), result)
+		t.AssertEQ(int(encrypt2), result)
 
 		strmd5, _ := gmd5.Encrypt(s)
 		test1 := gcrc32.Encrypt(strmd5)
 		test2 := gcrc32.Encrypt([]byte(strmd5))
-		gtest.AssertEQ(test2, test1)
+		t.AssertEQ(test2, test1)
 	})
 }

@@ -34,12 +34,12 @@ func Test_Router_Hook_Basic(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "123")
-		gtest.Assert(client.GetContent("/test/test"), "1test23")
+		t.Assert(client.GetContent("/"), "123")
+		t.Assert(client.GetContent("/test/test"), "1test23")
 	})
 }
 
@@ -75,15 +75,15 @@ func Test_Router_Hook_Fuzzy_Router(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/john"), "Not Found")
-		gtest.Assert(client.GetContent("/john/info"), "1000")
-		gtest.Assert(client.GetContent("/john/info"), "1001")
-		gtest.Assert(client.GetContent("/john/list/1.java"), "john&1&1002")
-		gtest.Assert(client.GetContent("/john/list/2.java"), "john&2&1002")
+		t.Assert(client.GetContent("/john"), "Not Found")
+		t.Assert(client.GetContent("/john/info"), "1000")
+		t.Assert(client.GetContent("/john/info"), "1001")
+		t.Assert(client.GetContent("/john/list/1.java"), "john&1&1002")
+		t.Assert(client.GetContent("/john/list/2.java"), "john&2&1002")
 	})
 }
 
@@ -115,14 +115,14 @@ func Test_Router_Hook_Priority(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "Not Found")
-		gtest.Assert(client.GetContent("/priority/show"), "312show")
-		gtest.Assert(client.GetContent("/priority/any/any"), "2")
-		gtest.Assert(client.GetContent("/priority/name"), "12")
+		t.Assert(client.GetContent("/"), "Not Found")
+		t.Assert(client.GetContent("/priority/show"), "312show")
+		t.Assert(client.GetContent("/priority/any/any"), "2")
+		t.Assert(client.GetContent("/priority/name"), "12")
 	})
 }
 
@@ -149,11 +149,11 @@ func Test_Router_Hook_Multi(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "Not Found")
-		gtest.Assert(client.GetContent("/multi-hook"), "12show")
+		t.Assert(client.GetContent("/"), "Not Found")
+		t.Assert(client.GetContent("/multi-hook"), "12show")
 	})
 }

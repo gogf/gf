@@ -18,7 +18,7 @@ import (
 )
 
 func Test_Struct_Basic1(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Uid      int
 			Name     string
@@ -40,7 +40,7 @@ func Test_Struct_Basic1(t *testing.T) {
 		if err := gconv.Struct(params1, user); err != nil {
 			gtest.Error(err)
 		}
-		gtest.Assert(user, &User{
+		t.Assert(user, &User{
 			Uid:      1,
 			Name:     "john",
 			Site_Url: "https://goframe.org",
@@ -62,7 +62,7 @@ func Test_Struct_Basic1(t *testing.T) {
 		if err := gconv.Struct(params2, user); err != nil {
 			gtest.Error(err)
 		}
-		gtest.Assert(user, &User{
+		t.Assert(user, &User{
 			Uid:      2,
 			Name:     "smith",
 			Site_Url: "https://goframe.org",
@@ -75,7 +75,7 @@ func Test_Struct_Basic1(t *testing.T) {
 
 // 使用默认映射规则绑定属性值到对象
 func Test_Struct_Basic2(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Uid     int
 			Name    string
@@ -94,7 +94,7 @@ func Test_Struct_Basic2(t *testing.T) {
 		if err := gconv.Struct(params, user); err != nil {
 			gtest.Error(err)
 		}
-		gtest.Assert(user, &User{
+		t.Assert(user, &User{
 			Uid:     1,
 			Name:    "john",
 			SiteUrl: "https://goframe.org",
@@ -106,7 +106,7 @@ func Test_Struct_Basic2(t *testing.T) {
 
 // 带有指针的基础类型属性
 func Test_Struct_Basic3(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Uid  int
 			Name *string
@@ -119,14 +119,14 @@ func Test_Struct_Basic3(t *testing.T) {
 		if err := gconv.Struct(params, user); err != nil {
 			gtest.Error(err)
 		}
-		gtest.Assert(user.Uid, 1)
-		gtest.Assert(*user.Name, "john")
+		t.Assert(user.Uid, 1)
+		t.Assert(*user.Name, "john")
 	})
 }
 
 // slice类型属性的赋值
 func Test_Struct_Attr_Slice(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Scores []int
 		}
@@ -135,7 +135,7 @@ func Test_Struct_Attr_Slice(t *testing.T) {
 		if err := gconv.Struct(g.Map{"Scores": scores}, user); err != nil {
 			gtest.Error(err)
 		} else {
-			gtest.Assert(user, &User{
+			t.Assert(user, &User{
 				Scores: []int{99, 100, 60, 140},
 			})
 		}
@@ -144,7 +144,7 @@ func Test_Struct_Attr_Slice(t *testing.T) {
 
 // 属性为struct对象
 func Test_Struct_Attr_Struct(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type Score struct {
 			Name   string
 			Result int
@@ -165,7 +165,7 @@ func Test_Struct_Attr_Struct(t *testing.T) {
 		if err := gconv.Struct(scores, user); err != nil {
 			gtest.Error(err)
 		} else {
-			gtest.Assert(user, &User{
+			t.Assert(user, &User{
 				Scores: Score{
 					Name:   "john",
 					Result: 100,
@@ -177,7 +177,7 @@ func Test_Struct_Attr_Struct(t *testing.T) {
 
 // 属性为struct对象指针
 func Test_Struct_Attr_Struct_Ptr(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type Score struct {
 			Name   string
 			Result int
@@ -198,7 +198,7 @@ func Test_Struct_Attr_Struct_Ptr(t *testing.T) {
 		if err := gconv.Struct(scores, user); err != nil {
 			gtest.Error(err)
 		} else {
-			gtest.Assert(user.Scores, &Score{
+			t.Assert(user.Scores, &Score{
 				Name:   "john",
 				Result: 100,
 			})
@@ -208,7 +208,7 @@ func Test_Struct_Attr_Struct_Ptr(t *testing.T) {
 
 // 属性为struct对象slice
 func Test_Struct_Attr_Struct_Slice1(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type Score struct {
 			Name   string
 			Result int
@@ -229,7 +229,7 @@ func Test_Struct_Attr_Struct_Slice1(t *testing.T) {
 		if err := gconv.Struct(scores, user); err != nil {
 			gtest.Error(err)
 		} else {
-			gtest.Assert(user.Scores, []Score{
+			t.Assert(user.Scores, []Score{
 				{
 					Name:   "john",
 					Result: 100,
@@ -241,7 +241,7 @@ func Test_Struct_Attr_Struct_Slice1(t *testing.T) {
 
 // 属性为struct对象slice
 func Test_Struct_Attr_Struct_Slice2(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type Score struct {
 			Name   string
 			Result int
@@ -268,7 +268,7 @@ func Test_Struct_Attr_Struct_Slice2(t *testing.T) {
 		if err := gconv.Struct(scores, user); err != nil {
 			gtest.Error(err)
 		} else {
-			gtest.Assert(user.Scores, []Score{
+			t.Assert(user.Scores, []Score{
 				{
 					Name:   "john",
 					Result: 100,
@@ -284,7 +284,7 @@ func Test_Struct_Attr_Struct_Slice2(t *testing.T) {
 
 // 属性为struct对象slice ptr
 func Test_Struct_Attr_Struct_Slice_Ptr(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type Score struct {
 			Name   string
 			Result int
@@ -311,12 +311,12 @@ func Test_Struct_Attr_Struct_Slice_Ptr(t *testing.T) {
 		if err := gconv.Struct(scores, user); err != nil {
 			gtest.Error(err)
 		} else {
-			gtest.Assert(len(user.Scores), 2)
-			gtest.Assert(user.Scores[0], &Score{
+			t.Assert(len(user.Scores), 2)
+			t.Assert(user.Scores[0], &Score{
 				Name:   "john",
 				Result: 100,
 			})
-			gtest.Assert(user.Scores[1], &Score{
+			t.Assert(user.Scores[1], &Score{
 				Name:   "smith",
 				Result: 60,
 			})
@@ -330,12 +330,12 @@ func Test_Struct_Attr_CustomType1(t *testing.T) {
 		Id   MyInt
 		Name string
 	}
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		user := new(User)
 		err := gconv.Struct(g.Map{"id": 1, "name": "john"}, user)
-		gtest.Assert(err, nil)
-		gtest.Assert(user.Id, 1)
-		gtest.Assert(user.Name, "john")
+		t.Assert(err, nil)
+		t.Assert(user.Id, 1)
+		t.Assert(user.Name, "john")
 	})
 }
 
@@ -345,12 +345,12 @@ func Test_Struct_Attr_CustomType2(t *testing.T) {
 		Id   []MyInt
 		Name string
 	}
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		user := new(User)
 		err := gconv.Struct(g.Map{"id": g.Slice{1, 2}, "name": "john"}, user)
-		gtest.Assert(err, nil)
-		gtest.Assert(user.Id, g.Slice{1, 2})
-		gtest.Assert(user.Name, "john")
+		t.Assert(err, nil)
+		t.Assert(user.Id, g.Slice{1, 2})
+		t.Assert(user.Name, "john")
 	})
 }
 
@@ -359,12 +359,12 @@ func Test_Struct_PrivateAttribute(t *testing.T) {
 		Id   int
 		name string
 	}
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		user := new(User)
 		err := gconv.Struct(g.Map{"id": 1, "name": "john"}, user)
-		gtest.Assert(err, nil)
-		gtest.Assert(user.Id, 1)
-		gtest.Assert(user.name, "")
+		t.Assert(err, nil)
+		t.Assert(user.Id, 1)
+		t.Assert(user.name, "")
 	})
 }
 
@@ -377,7 +377,7 @@ func Test_StructDeep1(t *testing.T) {
 		Name string
 		Base
 	}
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		user := new(User)
 		params := g.Map{
 			"id":   1,
@@ -385,13 +385,13 @@ func Test_StructDeep1(t *testing.T) {
 			"age":  18,
 		}
 		err := gconv.Struct(params, user)
-		gtest.Assert(err, nil)
-		gtest.Assert(user.Id, params["id"])
-		gtest.Assert(user.Name, params["name"])
-		gtest.Assert(user.Age, 0)
+		t.Assert(err, nil)
+		t.Assert(user.Id, params["id"])
+		t.Assert(user.Name, params["name"])
+		t.Assert(user.Age, 0)
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		user := new(User)
 		params := g.Map{
 			"id":   1,
@@ -399,10 +399,10 @@ func Test_StructDeep1(t *testing.T) {
 			"age":  18,
 		}
 		err := gconv.StructDeep(params, user)
-		gtest.Assert(err, nil)
-		gtest.Assert(user.Id, params["id"])
-		gtest.Assert(user.Name, params["name"])
-		gtest.Assert(user.Age, params["age"])
+		t.Assert(err, nil)
+		t.Assert(user.Id, params["id"])
+		t.Assert(user.Name, params["name"])
+		t.Assert(user.Age, params["age"])
 	})
 }
 
@@ -424,35 +424,35 @@ func Test_StructDeep2(t *testing.T) {
 		"uid":  10,
 		"name": "john",
 	}
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		user := new(User)
 		err := gconv.Struct(params, user)
-		gtest.Assert(err, nil)
-		gtest.Assert(user.Id, 0)
-		gtest.Assert(user.Uid, 0)
-		gtest.Assert(user.Name, "john")
+		t.Assert(err, nil)
+		t.Assert(user.Id, 0)
+		t.Assert(user.Uid, 0)
+		t.Assert(user.Name, "john")
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		user := new(User)
 		err := gconv.StructDeep(params, user)
-		gtest.Assert(err, nil)
-		gtest.Assert(user.Id, 1)
-		gtest.Assert(user.Uid, 10)
-		gtest.Assert(user.Name, "john")
+		t.Assert(err, nil)
+		t.Assert(user.Id, 1)
+		t.Assert(user.Uid, 10)
+		t.Assert(user.Name, "john")
 	})
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		user := (*User)(nil)
 		err := gconv.StructDeep(params, &user)
-		gtest.Assert(err, nil)
-		gtest.Assert(user.Id, 1)
-		gtest.Assert(user.Uid, 10)
-		gtest.Assert(user.Name, "john")
+		t.Assert(err, nil)
+		t.Assert(user.Id, 1)
+		t.Assert(user.Uid, 10)
+		t.Assert(user.Name, "john")
 	})
 }
 
 func Test_StructDeep3(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type Ids struct {
 			Id  int `json:"id"`
 			Uid int `json:"uid"`
@@ -477,16 +477,16 @@ func Test_StructDeep3(t *testing.T) {
 		}
 		user := new(User)
 		err := gconv.StructDeep(data, user)
-		gtest.Assert(err, nil)
-		gtest.Assert(user.Id, 100)
-		gtest.Assert(user.Uid, 101)
-		gtest.Assert(user.Nickname, "T1")
-		gtest.Assert(user.CreateTime, "2019")
+		t.Assert(err, nil)
+		t.Assert(user.Id, 100)
+		t.Assert(user.Uid, 101)
+		t.Assert(user.Nickname, "T1")
+		t.Assert(user.CreateTime, "2019")
 	})
 }
 
 func Test_Struct_Time(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			CreateTime time.Time
 		}
@@ -495,10 +495,10 @@ func Test_Struct_Time(t *testing.T) {
 		gconv.Struct(g.Map{
 			"create_time": now,
 		}, user)
-		gtest.Assert(user.CreateTime.UTC().String(), now.UTC().String())
+		t.Assert(user.CreateTime.UTC().String(), now.UTC().String())
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			CreateTime *time.Time
 		}
@@ -507,10 +507,10 @@ func Test_Struct_Time(t *testing.T) {
 		gconv.Struct(g.Map{
 			"create_time": &now,
 		}, user)
-		gtest.Assert(user.CreateTime.UTC().String(), now.UTC().String())
+		t.Assert(user.CreateTime.UTC().String(), now.UTC().String())
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			CreateTime *gtime.Time
 		}
@@ -519,10 +519,10 @@ func Test_Struct_Time(t *testing.T) {
 		gconv.Struct(g.Map{
 			"create_time": &now,
 		}, user)
-		gtest.Assert(user.CreateTime.Time.UTC().String(), now.UTC().String())
+		t.Assert(user.CreateTime.Time.UTC().String(), now.UTC().String())
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			CreateTime gtime.Time
 		}
@@ -531,10 +531,10 @@ func Test_Struct_Time(t *testing.T) {
 		gconv.Struct(g.Map{
 			"create_time": &now,
 		}, user)
-		gtest.Assert(user.CreateTime.Time.UTC().String(), now.UTC().String())
+		t.Assert(user.CreateTime.Time.UTC().String(), now.UTC().String())
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			CreateTime gtime.Time
 		}
@@ -543,13 +543,13 @@ func Test_Struct_Time(t *testing.T) {
 		gconv.Struct(g.Map{
 			"create_time": now,
 		}, user)
-		gtest.Assert(user.CreateTime.Time.UTC().String(), now.UTC().String())
+		t.Assert(user.CreateTime.Time.UTC().String(), now.UTC().String())
 	})
 }
 
 // Auto create struct when given pointer.
 func Test_Struct_Create(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Uid  int
 			Name string
@@ -560,12 +560,12 @@ func Test_Struct_Create(t *testing.T) {
 			"Name": "john",
 		}
 		err := gconv.Struct(params, &user)
-		gtest.Assert(err, nil)
-		gtest.Assert(user.Uid, 1)
-		gtest.Assert(user.Name, "john")
+		t.Assert(err, nil)
+		t.Assert(user.Uid, 1)
+		t.Assert(user.Name, "john")
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Uid  int
 			Name string
@@ -576,13 +576,13 @@ func Test_Struct_Create(t *testing.T) {
 			"Name": "john",
 		}
 		err := gconv.Struct(params, user)
-		gtest.AssertNE(err, nil)
-		gtest.Assert(user, nil)
+		t.AssertNE(err, nil)
+		t.Assert(user, nil)
 	})
 }
 
 func Test_Struct_Interface(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Uid  interface{}
 			Name interface{}
@@ -593,14 +593,14 @@ func Test_Struct_Interface(t *testing.T) {
 			"Name": nil,
 		}
 		err := gconv.Struct(params, &user)
-		gtest.Assert(err, nil)
-		gtest.Assert(user.Uid, 1)
-		gtest.Assert(user.Name, nil)
+		t.Assert(err, nil)
+		t.Assert(user.Uid, 1)
+		t.Assert(user.Name, nil)
 	})
 }
 
 func Test_Struct_NilAttribute(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type Item struct {
 			Title string `json:"title"`
 			Key   string `json:"key"`
@@ -622,15 +622,15 @@ func Test_Struct_NilAttribute(t *testing.T) {
 			"txt":   "hello",
 			"items": nil,
 		}, m)
-		gtest.Assert(err, nil)
-		gtest.AssertNE(m.Me, nil)
-		gtest.Assert(m.Me["day"], "20009")
-		gtest.Assert(m.Items, nil)
+		t.Assert(err, nil)
+		t.AssertNE(m.Me, nil)
+		t.Assert(m.Me["day"], "20009")
+		t.Assert(m.Items, nil)
 	})
 }
 
 func Test_Struct_Complex(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type ApplyReportDetail struct {
 			ApplyScore        string `json:"apply_score"`
 			ApplyCredibility  string `json:"apply_credibility"`
@@ -765,18 +765,18 @@ func Test_Struct_Complex(t *testing.T) {
 }`
 		m := make(g.Map)
 		err := json.Unmarshal([]byte(data), &m)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		model := new(XinYanModel)
 		err = gconv.Struct(m, model)
-		gtest.Assert(err, nil)
-		gtest.Assert(model.ErrorCode, nil)
-		gtest.Assert(model.ErrorMsg, nil)
-		gtest.Assert(model.Success, true)
-		gtest.Assert(model.Data.IDName, "dd67a5943781369ddd7c594e231e9e70")
-		gtest.Assert(model.Data.TradeNo, "201704011507240100057329")
-		gtest.Assert(model.Data.ResultDetail.ApplyReportDetail.ApplyScore, "189")
-		gtest.Assert(model.Data.ResultDetail.BehaviorReportDetail.LoansSettleCount, "280")
-		gtest.Assert(model.Data.ResultDetail.CurrentReportDetail.LoansProductCount, "8")
+		t.Assert(err, nil)
+		t.Assert(model.ErrorCode, nil)
+		t.Assert(model.ErrorMsg, nil)
+		t.Assert(model.Success, true)
+		t.Assert(model.Data.IDName, "dd67a5943781369ddd7c594e231e9e70")
+		t.Assert(model.Data.TradeNo, "201704011507240100057329")
+		t.Assert(model.Data.ResultDetail.ApplyReportDetail.ApplyScore, "189")
+		t.Assert(model.Data.ResultDetail.BehaviorReportDetail.LoansSettleCount, "280")
+		t.Assert(model.Data.ResultDetail.CurrentReportDetail.LoansProductCount, "8")
 	})
 }

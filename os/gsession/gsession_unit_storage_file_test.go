@@ -19,7 +19,7 @@ func Test_StorageFile(t *testing.T) {
 	storage := gsession.NewStorageFile()
 	manager := gsession.New(time.Second, storage)
 	sessionId := ""
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		s := manager.New()
 		defer s.Close()
 		s.Set("k1", "v1")
@@ -28,47 +28,47 @@ func Test_StorageFile(t *testing.T) {
 			"k3": "v3",
 			"k4": "v4",
 		})
-		gtest.Assert(s.IsDirty(), true)
+		t.Assert(s.IsDirty(), true)
 		sessionId = s.Id()
 	})
 
 	time.Sleep(500 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		s := manager.New(sessionId)
-		gtest.Assert(s.Get("k1"), "v1")
-		gtest.Assert(s.Get("k2"), "v2")
-		gtest.Assert(s.Get("k3"), "v3")
-		gtest.Assert(s.Get("k4"), "v4")
-		gtest.Assert(len(s.Map()), 4)
-		gtest.Assert(s.Map()["k1"], "v1")
-		gtest.Assert(s.Map()["k4"], "v4")
-		gtest.Assert(s.Id(), sessionId)
-		gtest.Assert(s.Size(), 4)
-		gtest.Assert(s.Contains("k1"), true)
-		gtest.Assert(s.Contains("k3"), true)
-		gtest.Assert(s.Contains("k5"), false)
+		t.Assert(s.Get("k1"), "v1")
+		t.Assert(s.Get("k2"), "v2")
+		t.Assert(s.Get("k3"), "v3")
+		t.Assert(s.Get("k4"), "v4")
+		t.Assert(len(s.Map()), 4)
+		t.Assert(s.Map()["k1"], "v1")
+		t.Assert(s.Map()["k4"], "v4")
+		t.Assert(s.Id(), sessionId)
+		t.Assert(s.Size(), 4)
+		t.Assert(s.Contains("k1"), true)
+		t.Assert(s.Contains("k3"), true)
+		t.Assert(s.Contains("k5"), false)
 		s.Remove("k4")
-		gtest.Assert(s.Size(), 3)
-		gtest.Assert(s.Contains("k3"), true)
-		gtest.Assert(s.Contains("k4"), false)
+		t.Assert(s.Size(), 3)
+		t.Assert(s.Contains("k3"), true)
+		t.Assert(s.Contains("k4"), false)
 		s.RemoveAll()
-		gtest.Assert(s.Size(), 0)
-		gtest.Assert(s.Contains("k1"), false)
-		gtest.Assert(s.Contains("k2"), false)
+		t.Assert(s.Size(), 0)
+		t.Assert(s.Contains("k1"), false)
+		t.Assert(s.Contains("k2"), false)
 		s.Sets(g.Map{
 			"k5": "v5",
 			"k6": "v6",
 		})
-		gtest.Assert(s.Size(), 2)
-		gtest.Assert(s.Contains("k5"), true)
-		gtest.Assert(s.Contains("k6"), true)
+		t.Assert(s.Size(), 2)
+		t.Assert(s.Contains("k5"), true)
+		t.Assert(s.Contains("k6"), true)
 	})
 
 	time.Sleep(1000 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		s := manager.New(sessionId)
-		gtest.Assert(s.Size(), 0)
-		gtest.Assert(s.Get("k5"), nil)
-		gtest.Assert(s.Get("k6"), nil)
+		t.Assert(s.Size(), 0)
+		t.Assert(s.Get("k5"), nil)
+		t.Assert(s.Get("k6"), nil)
 	})
 }

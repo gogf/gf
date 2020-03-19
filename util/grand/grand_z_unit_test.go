@@ -17,155 +17,155 @@ import (
 )
 
 func Test_Intn(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 1000000; i++ {
 			n := grand.Intn(100)
-			gtest.AssertLT(n, 100)
-			gtest.AssertGE(n, 0)
+			t.AssertLT(n, 100)
+			t.AssertGE(n, 0)
 		}
 		for i := 0; i < 1000000; i++ {
 			n := grand.Intn(-100)
-			gtest.AssertLE(n, 0)
-			gtest.Assert(n, -100)
+			t.AssertLE(n, 0)
+			t.Assert(n, -100)
 		}
 	})
 }
 
 func Test_Meet(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {
-			gtest.Assert(grand.Meet(100, 100), true)
+			t.Assert(grand.Meet(100, 100), true)
 		}
 		for i := 0; i < 100; i++ {
-			gtest.Assert(grand.Meet(0, 100), false)
+			t.Assert(grand.Meet(0, 100), false)
 		}
 		for i := 0; i < 100; i++ {
-			gtest.AssertIN(grand.Meet(50, 100), []bool{true, false})
+			t.AssertIN(grand.Meet(50, 100), []bool{true, false})
 		}
 	})
 }
 
 func Test_MeetProb(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {
-			gtest.Assert(grand.MeetProb(1), true)
+			t.Assert(grand.MeetProb(1), true)
 		}
 		for i := 0; i < 100; i++ {
-			gtest.Assert(grand.MeetProb(0), false)
+			t.Assert(grand.MeetProb(0), false)
 		}
 		for i := 0; i < 100; i++ {
-			gtest.AssertIN(grand.MeetProb(0.5), []bool{true, false})
+			t.AssertIN(grand.MeetProb(0.5), []bool{true, false})
 		}
 	})
 }
 
 func Test_N(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {
-			gtest.Assert(grand.N(1, 1), 1)
+			t.Assert(grand.N(1, 1), 1)
 		}
 		for i := 0; i < 100; i++ {
-			gtest.Assert(grand.N(0, 0), 0)
+			t.Assert(grand.N(0, 0), 0)
 		}
 		for i := 0; i < 100; i++ {
-			gtest.AssertIN(grand.N(1, 2), []int{1, 2})
+			t.AssertIN(grand.N(1, 2), []int{1, 2})
 		}
 	})
 }
 
 func Test_Rand(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {
-			gtest.Assert(grand.N(1, 1), 1)
+			t.Assert(grand.N(1, 1), 1)
 		}
 		for i := 0; i < 100; i++ {
-			gtest.Assert(grand.N(0, 0), 0)
+			t.Assert(grand.N(0, 0), 0)
 		}
 		for i := 0; i < 100; i++ {
-			gtest.AssertIN(grand.N(1, 2), []int{1, 2})
+			t.AssertIN(grand.N(1, 2), []int{1, 2})
 		}
 		for i := 0; i < 100; i++ {
-			gtest.AssertIN(grand.N(-1, 2), []int{-1, 0, 1, 2})
+			t.AssertIN(grand.N(-1, 2), []int{-1, 0, 1, 2})
 		}
 	})
 }
 
 func Test_Str(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {
-			gtest.Assert(len(grand.S(5)), 5)
+			t.Assert(len(grand.S(5)), 5)
 		}
 	})
 }
 
 func Test_RandS(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {
-			gtest.Assert(len(grand.S(5)), 5)
+			t.Assert(len(grand.S(5)), 5)
 		}
 	})
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {
-			gtest.Assert(len(grand.S(5, true)), 5)
+			t.Assert(len(grand.S(5, true)), 5)
 		}
 	})
 }
 
 func Test_RandStr(t *testing.T) {
 	str := "我爱GoFrame"
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 10; i++ {
 			s := grand.Str(str, 100000)
-			gtest.Assert(gstr.Contains(s, "我"), true)
-			gtest.Assert(gstr.Contains(s, "爱"), true)
-			gtest.Assert(gstr.Contains(s, "G"), true)
-			gtest.Assert(gstr.Contains(s, "o"), true)
-			gtest.Assert(gstr.Contains(s, "F"), true)
-			gtest.Assert(gstr.Contains(s, "r"), true)
-			gtest.Assert(gstr.Contains(s, "a"), true)
-			gtest.Assert(gstr.Contains(s, "m"), true)
-			gtest.Assert(gstr.Contains(s, "e"), true)
-			gtest.Assert(gstr.Contains(s, "w"), false)
+			t.Assert(gstr.Contains(s, "我"), true)
+			t.Assert(gstr.Contains(s, "爱"), true)
+			t.Assert(gstr.Contains(s, "G"), true)
+			t.Assert(gstr.Contains(s, "o"), true)
+			t.Assert(gstr.Contains(s, "F"), true)
+			t.Assert(gstr.Contains(s, "r"), true)
+			t.Assert(gstr.Contains(s, "a"), true)
+			t.Assert(gstr.Contains(s, "m"), true)
+			t.Assert(gstr.Contains(s, "e"), true)
+			t.Assert(gstr.Contains(s, "w"), false)
 		}
 	})
 }
 
 func Test_Digits(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {
-			gtest.Assert(len(grand.Digits(5)), 5)
+			t.Assert(len(grand.Digits(5)), 5)
 		}
 	})
 }
 
 func Test_RandDigits(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {
-			gtest.Assert(len(grand.Digits(5)), 5)
+			t.Assert(len(grand.Digits(5)), 5)
 		}
 	})
 }
 
 func Test_Letters(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {
-			gtest.Assert(len(grand.Letters(5)), 5)
+			t.Assert(len(grand.Letters(5)), 5)
 		}
 	})
 }
 
 func Test_RandLetters(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {
-			gtest.Assert(len(grand.Letters(5)), 5)
+			t.Assert(len(grand.Letters(5)), 5)
 		}
 	})
 }
 
 func Test_Perm(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {
-			gtest.AssertIN(grand.Perm(5), []int{0, 1, 2, 3, 4})
+			t.AssertIN(grand.Perm(5), []int{0, 1, 2, 3, 4})
 		}
 	})
 }

@@ -14,31 +14,31 @@ import (
 )
 
 func Test_SetGet(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		gins.Set("test-user", 1)
-		gtest.Assert(gins.Get("test-user"), 1)
-		gtest.Assert(gins.Get("none-exists"), nil)
+		t.Assert(gins.Get("test-user"), 1)
+		t.Assert(gins.Get("none-exists"), nil)
 	})
-	gtest.Case(t, func() {
-		gtest.Assert(gins.GetOrSet("test-1", 1), 1)
-		gtest.Assert(gins.Get("test-1"), 1)
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gins.GetOrSet("test-1", 1), 1)
+		t.Assert(gins.Get("test-1"), 1)
 	})
-	gtest.Case(t, func() {
-		gtest.Assert(gins.GetOrSetFunc("test-2", func() interface{} {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gins.GetOrSetFunc("test-2", func() interface{} {
 			return 2
 		}), 2)
-		gtest.Assert(gins.Get("test-2"), 2)
+		t.Assert(gins.Get("test-2"), 2)
 	})
-	gtest.Case(t, func() {
-		gtest.Assert(gins.GetOrSetFuncLock("test-3", func() interface{} {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gins.GetOrSetFuncLock("test-3", func() interface{} {
 			return 3
 		}), 3)
-		gtest.Assert(gins.Get("test-3"), 3)
+		t.Assert(gins.Get("test-3"), 3)
 	})
-	gtest.Case(t, func() {
-		gtest.Assert(gins.SetIfNotExist("test-4", 4), true)
-		gtest.Assert(gins.Get("test-4"), 4)
-		gtest.Assert(gins.SetIfNotExist("test-4", 5), false)
-		gtest.Assert(gins.Get("test-4"), 4)
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gins.SetIfNotExist("test-4", 4), true)
+		t.Assert(gins.Get("test-4"), 4)
+		t.Assert(gins.SetIfNotExist("test-4", 5), false)
+		t.Assert(gins.Get("test-4"), 4)
 	})
 }

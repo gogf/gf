@@ -15,34 +15,34 @@ import (
 )
 
 func Test_Interface(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		t := Temp{Name: "gf", Age: 18}
 		t1 := Temp{Name: "gf", Age: 19}
 		i := gtype.New(t)
 		iClone := i.Clone()
-		gtest.AssertEQ(iClone.Set(t1), t)
-		gtest.AssertEQ(iClone.Val().(Temp), t1)
+		t.AssertEQ(iClone.Set(t1), t)
+		t.AssertEQ(iClone.Val().(Temp), t1)
 
 		//空参测试
 		i1 := gtype.New()
-		gtest.AssertEQ(i1.Val(), nil)
+		t.AssertEQ(i1.Val(), nil)
 	})
 }
 
 func Test_Interface_JSON(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		s := "i love gf"
 		i := gtype.New(s)
 		b1, err1 := json.Marshal(i)
 		b2, err2 := json.Marshal(i.Val())
-		gtest.Assert(err1, nil)
-		gtest.Assert(err2, nil)
-		gtest.Assert(b1, b2)
+		t.Assert(err1, nil)
+		t.Assert(err2, nil)
+		t.Assert(b1, b2)
 
 		i2 := gtype.New()
 		err := json.Unmarshal(b2, &i2)
-		gtest.Assert(err, nil)
-		gtest.Assert(i2.Val(), s)
+		t.Assert(err, nil)
+		t.Assert(i2.Val(), s)
 	})
 }
 
@@ -51,14 +51,14 @@ func Test_Interface_UnmarshalValue(t *testing.T) {
 		Name string
 		Var  *gtype.Interface
 	}
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var t *T
 		err := gconv.Struct(map[string]interface{}{
 			"name": "john",
 			"var":  "123",
 		}, &t)
-		gtest.Assert(err, nil)
-		gtest.Assert(t.Name, "john")
-		gtest.Assert(t.Var.Val(), "123")
+		t.Assert(err, nil)
+		t.Assert(t.Name, "john")
+		t.Assert(t.Var.Val(), "123")
 	})
 }

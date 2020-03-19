@@ -248,12 +248,12 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (*ClientResp
 		}
 	}
 	r := &ClientResponse{
-		cookies: make(map[string]string),
+		Response: resp,
 	}
-	r.Response = resp
 	// Auto sending cookie content.
 	if c.browserMode {
 		now := time.Now()
+		r.cookies = make(map[string]string)
 		for _, v := range r.Cookies() {
 			if v.Expires.UnixNano() < now.UnixNano() {
 				delete(c.cookies, v.Name)

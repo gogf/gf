@@ -42,18 +42,18 @@ func Test_WebSocket(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		conn, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf("ws://127.0.0.1:%d/ws", p), nil)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 		defer conn.Close()
 
 		msg := []byte("hello")
 		err = conn.WriteMessage(websocket.TextMessage, msg)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		t, data, err := conn.ReadMessage()
-		gtest.Assert(err, nil)
-		gtest.Assert(t, websocket.TextMessage)
-		gtest.Assert(data, msg)
+		t.Assert(err, nil)
+		t.Assert(t, websocket.TextMessage)
+		t.Assert(data, msg)
 	})
 }

@@ -17,7 +17,7 @@ import (
 
 func Test_Locker_RLock(t *testing.T) {
 	//RLock before Lock
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		key := "testRLockBeforeLock"
 		array := garray.New(true)
 		go func() {
@@ -33,13 +33,13 @@ func Test_Locker_RLock(t *testing.T) {
 			gmlock.Unlock(key)
 		}()
 		time.Sleep(100 * time.Millisecond)
-		gtest.Assert(array.Len(), 1)
+		t.Assert(array.Len(), 1)
 		time.Sleep(200 * time.Millisecond)
-		gtest.Assert(array.Len(), 2)
+		t.Assert(array.Len(), 2)
 	})
 
 	//Lock before RLock
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		key := "testLockBeforeRLock"
 		array := garray.New(true)
 		go func() {
@@ -55,13 +55,13 @@ func Test_Locker_RLock(t *testing.T) {
 			gmlock.RUnlock(key)
 		}()
 		time.Sleep(100 * time.Millisecond)
-		gtest.Assert(array.Len(), 1)
+		t.Assert(array.Len(), 1)
 		time.Sleep(200 * time.Millisecond)
-		gtest.Assert(array.Len(), 2)
+		t.Assert(array.Len(), 2)
 	})
 
 	//Lock before RLocks
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		key := "testLockBeforeRLocks"
 		array := garray.New(true)
 		go func() {
@@ -85,15 +85,15 @@ func Test_Locker_RLock(t *testing.T) {
 			gmlock.RUnlock(key)
 		}()
 		time.Sleep(200 * time.Millisecond)
-		gtest.Assert(array.Len(), 1)
+		t.Assert(array.Len(), 1)
 		time.Sleep(200 * time.Millisecond)
-		gtest.Assert(array.Len(), 3)
+		t.Assert(array.Len(), 3)
 	})
 }
 
 func Test_Locker_TryRLock(t *testing.T) {
 	//Lock before TryRLock
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		key := "testLockBeforeTryRLock"
 		array := garray.New(true)
 		go func() {
@@ -110,13 +110,13 @@ func Test_Locker_TryRLock(t *testing.T) {
 			}
 		}()
 		time.Sleep(150 * time.Millisecond)
-		gtest.Assert(array.Len(), 1)
+		t.Assert(array.Len(), 1)
 		time.Sleep(200 * time.Millisecond)
-		gtest.Assert(array.Len(), 1)
+		t.Assert(array.Len(), 1)
 	})
 
 	//Lock before TryRLocks
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		key := "testLockBeforeTryRLocks"
 		array := garray.New(true)
 		go func() {
@@ -140,15 +140,15 @@ func Test_Locker_TryRLock(t *testing.T) {
 			}
 		}()
 		time.Sleep(150 * time.Millisecond)
-		gtest.Assert(array.Len(), 1)
+		t.Assert(array.Len(), 1)
 		time.Sleep(200 * time.Millisecond)
-		gtest.Assert(array.Len(), 2)
+		t.Assert(array.Len(), 2)
 	})
 }
 
 func Test_Locker_RLockFunc(t *testing.T) {
 	//RLockFunc before Lock
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		key := "testRLockFuncBeforeLock"
 		array := garray.New(true)
 		go func() {
@@ -164,13 +164,13 @@ func Test_Locker_RLockFunc(t *testing.T) {
 			gmlock.Unlock(key)
 		}()
 		time.Sleep(150 * time.Millisecond)
-		gtest.Assert(array.Len(), 1)
+		t.Assert(array.Len(), 1)
 		time.Sleep(200 * time.Millisecond)
-		gtest.Assert(array.Len(), 2)
+		t.Assert(array.Len(), 2)
 	})
 
 	//Lock before RLockFunc
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		key := "testLockBeforeRLockFunc"
 		array := garray.New(true)
 		go func() {
@@ -186,13 +186,13 @@ func Test_Locker_RLockFunc(t *testing.T) {
 			})
 		}()
 		time.Sleep(100 * time.Millisecond)
-		gtest.Assert(array.Len(), 1)
+		t.Assert(array.Len(), 1)
 		time.Sleep(200 * time.Millisecond)
-		gtest.Assert(array.Len(), 2)
+		t.Assert(array.Len(), 2)
 	})
 
 	//Lock before RLockFuncs
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		key := "testLockBeforeRLockFuncs"
 		array := garray.New(true)
 		go func() {
@@ -216,15 +216,15 @@ func Test_Locker_RLockFunc(t *testing.T) {
 			})
 		}()
 		time.Sleep(100 * time.Millisecond)
-		gtest.Assert(array.Len(), 1)
+		t.Assert(array.Len(), 1)
 		time.Sleep(200 * time.Millisecond)
-		gtest.Assert(array.Len(), 3)
+		t.Assert(array.Len(), 3)
 	})
 }
 
 func Test_Locker_TryRLockFunc(t *testing.T) {
 	//Lock before TryRLockFunc
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		key := "testLockBeforeTryRLockFunc"
 		array := garray.New(true)
 		go func() {
@@ -240,13 +240,13 @@ func Test_Locker_TryRLockFunc(t *testing.T) {
 			})
 		}()
 		time.Sleep(100 * time.Millisecond)
-		gtest.Assert(array.Len(), 1)
+		t.Assert(array.Len(), 1)
 		time.Sleep(200 * time.Millisecond)
-		gtest.Assert(array.Len(), 1)
+		t.Assert(array.Len(), 1)
 	})
 
 	//Lock before TryRLockFuncs
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		key := "testLockBeforeTryRLockFuncs"
 		array := garray.New(true)
 		go func() {
@@ -268,8 +268,8 @@ func Test_Locker_TryRLockFunc(t *testing.T) {
 			})
 		}()
 		time.Sleep(100 * time.Millisecond)
-		gtest.Assert(array.Len(), 1)
+		t.Assert(array.Len(), 1)
 		time.Sleep(300 * time.Millisecond)
-		gtest.Assert(array.Len(), 2)
+		t.Assert(array.Len(), 2)
 	})
 }

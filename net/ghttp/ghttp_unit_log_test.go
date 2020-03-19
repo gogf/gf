@@ -22,7 +22,7 @@ import (
 )
 
 func Test_Log(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		logDir := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
 		p := ports.PopRand()
 		s := g.Server(p)
@@ -44,19 +44,19 @@ func Test_Log(t *testing.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/hello"), "hello")
-		gtest.Assert(client.GetContent("/error"), "custom error")
+		t.Assert(client.GetContent("/hello"), "hello")
+		t.Assert(client.GetContent("/error"), "custom error")
 
 		logPath1 := gfile.Join(logDir, gtime.Now().Format("Y-m-d")+".log")
-		gtest.Assert(gstr.Contains(gfile.GetContents(logPath1), "http server started listening on"), true)
-		gtest.Assert(gstr.Contains(gfile.GetContents(logPath1), "HANDLER"), true)
+		t.Assert(gstr.Contains(gfile.GetContents(logPath1), "http server started listening on"), true)
+		t.Assert(gstr.Contains(gfile.GetContents(logPath1), "HANDLER"), true)
 
 		logPath2 := gfile.Join(logDir, "access-"+gtime.Now().Format("Ymd")+".log")
 		fmt.Println(gfile.GetContents(logPath2))
-		gtest.Assert(gstr.Contains(gfile.GetContents(logPath2), " /hello "), true)
+		t.Assert(gstr.Contains(gfile.GetContents(logPath2), " /hello "), true)
 
 		logPath3 := gfile.Join(logDir, "error-"+gtime.Now().Format("Ymd")+".log")
-		gtest.Assert(gstr.Contains(gfile.GetContents(logPath3), "[ERRO]"), true)
-		gtest.Assert(gstr.Contains(gfile.GetContents(logPath3), "custom error"), true)
+		t.Assert(gstr.Contains(gfile.GetContents(logPath3), "[ERRO]"), true)
+		t.Assert(gstr.Contains(gfile.GetContents(logPath3), "custom error"), true)
 	})
 }

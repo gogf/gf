@@ -15,19 +15,19 @@ import (
 func TestStripTags(t *testing.T) {
 	src := `<p>Test paragraph.</p><!-- Comment -->  <a href="#fragment">Other text</a>`
 	dst := `Test paragraph.  Other text`
-	gtest.Assert(ghtml.StripTags(src), dst)
+	t.Assert(ghtml.StripTags(src), dst)
 }
 
 func TestEntities(t *testing.T) {
 	src := `A 'quote' "is" <b>bold</b>`
 	dst := `A &#39;quote&#39; &#34;is&#34; &lt;b&gt;bold&lt;/b&gt;`
-	gtest.Assert(ghtml.Entities(src), dst)
-	gtest.Assert(ghtml.EntitiesDecode(dst), src)
+	t.Assert(ghtml.Entities(src), dst)
+	t.Assert(ghtml.EntitiesDecode(dst), src)
 }
 
 func TestSpecialChars(t *testing.T) {
 	src := `A 'quote' "is" <b>bold</b>`
 	dst := `A &#39;quote&#39; &#34;is&#34; &lt;b&gt;bold&lt;/b&gt;`
-	gtest.Assert(ghtml.SpecialChars(src), dst)
-	gtest.Assert(ghtml.SpecialCharsDecode(dst), src)
+	t.Assert(ghtml.SpecialChars(src), dst)
+	t.Assert(ghtml.SpecialCharsDecode(dst), src)
 }

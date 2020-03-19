@@ -20,7 +20,7 @@ import (
 )
 
 func TestGetContents(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 
 		var f *os.File
 		var err error
@@ -50,11 +50,11 @@ func TestGetContents(t *testing.T) {
 			}
 
 			cache := gfcache.GetContents(f.Name(), 1)
-			gtest.Assert(cache, strTest)
+			t.Assert(cache, strTest)
 		}
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 
 		var f *os.File
 		var err error
@@ -84,7 +84,7 @@ func TestGetContents(t *testing.T) {
 				t.Error("write error", err)
 			}
 
-			gtest.Assert(cache, "")
+			t.Assert(cache, "")
 
 			time.Sleep(100 * time.Millisecond)
 		}

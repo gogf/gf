@@ -18,15 +18,15 @@ import (
 
 func TestJson_UnmarshalJSON(t *testing.T) {
 	data := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]}`)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		j := gjson.New(nil)
 		err := json.Unmarshal(data, j)
-		gtest.Assert(err, nil)
-		gtest.Assert(j.Get("n"), "123456789")
-		gtest.Assert(j.Get("m"), g.Map{"k": "v"})
-		gtest.Assert(j.Get("m.k"), "v")
-		gtest.Assert(j.Get("a"), g.Slice{1, 2, 3})
-		gtest.Assert(j.Get("a.1"), 2)
+		t.Assert(err, nil)
+		t.Assert(j.Get("n"), "123456789")
+		t.Assert(j.Get("m"), g.Map{"k": "v"})
+		t.Assert(j.Get("m.k"), "v")
+		t.Assert(j.Get("a"), g.Slice{1, 2, 3})
+		t.Assert(j.Get("a.1"), 2)
 	})
 }
 
@@ -36,22 +36,22 @@ func TestJson_UnmarshalValue(t *testing.T) {
 		Json *gjson.Json
 	}
 	// JSON
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var t *T
 		err := gconv.Struct(g.Map{
 			"name": "john",
 			"json": []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]}`),
 		}, &t)
-		gtest.Assert(err, nil)
-		gtest.Assert(t.Name, "john")
-		gtest.Assert(t.Json.Get("n"), "123456789")
-		gtest.Assert(t.Json.Get("m"), g.Map{"k": "v"})
-		gtest.Assert(t.Json.Get("m.k"), "v")
-		gtest.Assert(t.Json.Get("a"), g.Slice{1, 2, 3})
-		gtest.Assert(t.Json.Get("a.1"), 2)
+		t.Assert(err, nil)
+		t.Assert(t.Name, "john")
+		t.Assert(t.Json.Get("n"), "123456789")
+		t.Assert(t.Json.Get("m"), g.Map{"k": "v"})
+		t.Assert(t.Json.Get("m.k"), "v")
+		t.Assert(t.Json.Get("a"), g.Slice{1, 2, 3})
+		t.Assert(t.Json.Get("a.1"), 2)
 	})
 	// Map
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var t *T
 		err := gconv.Struct(g.Map{
 			"name": "john",
@@ -61,12 +61,12 @@ func TestJson_UnmarshalValue(t *testing.T) {
 				"a": g.Slice{1, 2, 3},
 			},
 		}, &t)
-		gtest.Assert(err, nil)
-		gtest.Assert(t.Name, "john")
-		gtest.Assert(t.Json.Get("n"), "123456789")
-		gtest.Assert(t.Json.Get("m"), g.Map{"k": "v"})
-		gtest.Assert(t.Json.Get("m.k"), "v")
-		gtest.Assert(t.Json.Get("a"), g.Slice{1, 2, 3})
-		gtest.Assert(t.Json.Get("a.1"), 2)
+		t.Assert(err, nil)
+		t.Assert(t.Name, "john")
+		t.Assert(t.Json.Get("n"), "123456789")
+		t.Assert(t.Json.Get("m"), g.Map{"k": "v"})
+		t.Assert(t.Json.Get("m.k"), "v")
+		t.Assert(t.Json.Get("a"), g.Slice{1, 2, 3})
+		t.Assert(t.Json.Get("a.1"), 2)
 	})
 }

@@ -12,7 +12,7 @@ import (
 )
 
 func Test_SetConfigWithMap(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		l := New()
 		m := map[string]interface{}{
 			"path":     "/var/log",
@@ -21,9 +21,9 @@ func Test_SetConfigWithMap(t *testing.T) {
 			"StStatus": 0,
 		}
 		err := l.SetConfigWithMap(m)
-		gtest.Assert(err, nil)
-		gtest.Assert(l.config.Path, m["path"])
-		gtest.Assert(l.config.Level, m["level"])
-		gtest.Assert(l.config.StdoutPrint, m["stdout"])
+		t.Assert(err, nil)
+		t.Assert(l.config.Path, m["path"])
+		t.Assert(l.config.Level, m["level"])
+		t.Assert(l.config.StdoutPrint, m["stdout"])
 	})
 }

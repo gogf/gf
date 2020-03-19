@@ -22,7 +22,7 @@ func Test_Map(t *testing.T) {
 	}
 
 	err := gvalid.Check(val, rule, nil)
-	gtest.Assert(err.Map(), msg)
+	t.Assert(err.Map(), msg)
 }
 
 func Test_FirstString(t *testing.T) {
@@ -31,7 +31,7 @@ func Test_FirstString(t *testing.T) {
 
 	err := gvalid.Check(val, rule, nil)
 	n := err.FirstString()
-	gtest.Assert(n, "IPv4地址格式不正确")
+	t.Assert(n, "IPv4地址格式不正确")
 }
 
 func Test_SetDefaultErrorMsgs(t *testing.T) {
