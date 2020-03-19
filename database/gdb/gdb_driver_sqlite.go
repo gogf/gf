@@ -14,6 +14,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/text/gstr"
 	"strings"
 )
@@ -34,10 +35,15 @@ func (d *DriverSqlite) New(core *Core, node *ConfigNode) (DB, error) {
 // Open creates and returns a underlying sql.DB object for sqlite.
 func (d *DriverSqlite) Open(config *ConfigNode) (*sql.DB, error) {
 	var source string
+	var err error
 	if config.LinkInfo != "" {
 		source = config.LinkInfo
 	} else {
 		source = config.Name
+	}
+	source, err = gfile.Search(source)
+	if err != nil {
+		return nil, err
 	}
 	intlog.Printf("Open: %s", source)
 	if db, err := sql.Open("sqlite3", source); err == nil {
