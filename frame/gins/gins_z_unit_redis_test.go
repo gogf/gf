@@ -18,7 +18,9 @@ import (
 )
 
 func Test_Redis(t *testing.T) {
-	redisContent := gfile.GetContents(gfile.Join(gdebug.TestDataPath(), "redis", "config.toml"))
+	redisContent := gfile.GetContents(
+		gfile.Join(gdebug.TestDataPath(), "redis", "config.toml"),
+	)
 
 	gtest.C(t, func(t *gtest.T) {
 		var err error
@@ -33,14 +35,12 @@ func Test_Redis(t *testing.T) {
 
 		err = gins.Config().AddPath(dirPath)
 		t.Assert(err, nil)
-	})
 
-	defer gins.Config().Clear()
+		defer gins.Config().Clear()
 
-	// for gfsnotify callbacks to refresh cache of config file
-	time.Sleep(500 * time.Millisecond)
+		// for gfsnotify callbacks to refresh cache of config file
+		time.Sleep(500 * time.Millisecond)
 
-	gtest.C(t, func(t *gtest.T) {
 		//fmt.Println("gins Test_Redis", Config().Get("test"))
 
 		redisDefault := gins.Redis()
