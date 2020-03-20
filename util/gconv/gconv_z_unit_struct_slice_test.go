@@ -15,84 +15,84 @@ import (
 )
 
 func Test_Struct_Slice(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Scores []int
 		}
 		user := new(User)
 		array := g.Slice{1, 2, 3}
 		err := gconv.Struct(g.Map{"scores": array}, user)
-		gtest.Assert(err, nil)
-		gtest.Assert(user.Scores, array)
+		t.Assert(err, nil)
+		t.Assert(user.Scores, array)
 	})
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Scores []int32
 		}
 		user := new(User)
 		array := g.Slice{1, 2, 3}
 		err := gconv.Struct(g.Map{"scores": array}, user)
-		gtest.Assert(err, nil)
-		gtest.Assert(user.Scores, array)
+		t.Assert(err, nil)
+		t.Assert(user.Scores, array)
 	})
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Scores []int64
 		}
 		user := new(User)
 		array := g.Slice{1, 2, 3}
 		err := gconv.Struct(g.Map{"scores": array}, user)
-		gtest.Assert(err, nil)
-		gtest.Assert(user.Scores, array)
+		t.Assert(err, nil)
+		t.Assert(user.Scores, array)
 	})
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Scores []uint
 		}
 		user := new(User)
 		array := g.Slice{1, 2, 3}
 		err := gconv.Struct(g.Map{"scores": array}, user)
-		gtest.Assert(err, nil)
-		gtest.Assert(user.Scores, array)
+		t.Assert(err, nil)
+		t.Assert(user.Scores, array)
 	})
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Scores []uint32
 		}
 		user := new(User)
 		array := g.Slice{1, 2, 3}
 		err := gconv.Struct(g.Map{"scores": array}, user)
-		gtest.Assert(err, nil)
-		gtest.Assert(user.Scores, array)
+		t.Assert(err, nil)
+		t.Assert(user.Scores, array)
 	})
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Scores []uint64
 		}
 		user := new(User)
 		array := g.Slice{1, 2, 3}
 		err := gconv.Struct(g.Map{"scores": array}, user)
-		gtest.Assert(err, nil)
-		gtest.Assert(user.Scores, array)
+		t.Assert(err, nil)
+		t.Assert(user.Scores, array)
 	})
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Scores []float32
 		}
 		user := new(User)
 		array := g.Slice{1, 2, 3}
 		err := gconv.Struct(g.Map{"scores": array}, user)
-		gtest.Assert(err, nil)
-		gtest.Assert(user.Scores, array)
+		t.Assert(err, nil)
+		t.Assert(user.Scores, array)
 	})
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Scores []float64
 		}
 		user := new(User)
 		array := g.Slice{1, 2, 3}
 		err := gconv.Struct(g.Map{"scores": array}, user)
-		gtest.Assert(err, nil)
-		gtest.Assert(user.Scores, array)
+		t.Assert(err, nil)
+		t.Assert(user.Scores, array)
 	})
 }

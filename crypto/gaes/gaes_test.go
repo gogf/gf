@@ -40,111 +40,111 @@ var (
 )
 
 func TestEncrypt(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		data, err := gaes.Encrypt(content, key_16)
-		gtest.Assert(err, nil)
-		gtest.Assert(data, []byte(content_16))
+		t.Assert(err, nil)
+		t.Assert(data, []byte(content_16))
 		data, err = gaes.Encrypt(content, key_24)
-		gtest.Assert(err, nil)
-		gtest.Assert(data, []byte(content_24))
+		t.Assert(err, nil)
+		t.Assert(data, []byte(content_24))
 		data, err = gaes.Encrypt(content, key_32)
-		gtest.Assert(err, nil)
-		gtest.Assert(data, []byte(content_32))
+		t.Assert(err, nil)
+		t.Assert(data, []byte(content_32))
 		data, err = gaes.Encrypt(content, key_16, iv)
-		gtest.Assert(err, nil)
-		gtest.Assert(data, []byte(content_16_iv))
+		t.Assert(err, nil)
+		t.Assert(data, []byte(content_16_iv))
 		data, err = gaes.Encrypt(content, key_32, iv)
-		gtest.Assert(err, nil)
-		gtest.Assert(data, []byte(content_32_iv))
+		t.Assert(err, nil)
+		t.Assert(data, []byte(content_32_iv))
 	})
 }
 
 func TestDecrypt(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		decrypt, err := gaes.Decrypt([]byte(content_16), key_16)
-		gtest.Assert(err, nil)
-		gtest.Assert(decrypt, content)
+		t.Assert(err, nil)
+		t.Assert(decrypt, content)
 
 		decrypt, err = gaes.Decrypt([]byte(content_24), key_24)
-		gtest.Assert(err, nil)
-		gtest.Assert(decrypt, content)
+		t.Assert(err, nil)
+		t.Assert(decrypt, content)
 
 		decrypt, err = gaes.Decrypt([]byte(content_32), key_32)
-		gtest.Assert(err, nil)
-		gtest.Assert(decrypt, content)
+		t.Assert(err, nil)
+		t.Assert(decrypt, content)
 
 		decrypt, err = gaes.Decrypt([]byte(content_16_iv), key_16, iv)
-		gtest.Assert(err, nil)
-		gtest.Assert(decrypt, content)
+		t.Assert(err, nil)
+		t.Assert(decrypt, content)
 
 		decrypt, err = gaes.Decrypt([]byte(content_32_iv), key_32, iv)
-		gtest.Assert(err, nil)
-		gtest.Assert(decrypt, content)
+		t.Assert(err, nil)
+		t.Assert(decrypt, content)
 
 		decrypt, err = gaes.Decrypt([]byte(content_32_iv), keys, iv)
-		gtest.Assert(err, "invalid padding")
+		t.Assert(err, "invalid padding")
 	})
 }
 
 func TestEncryptErr(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		// encrypt key error
 		_, err := gaes.Encrypt(content, key_err)
-		gtest.AssertNE(err, nil)
+		t.AssertNE(err, nil)
 	})
 }
 
 func TestDecryptErr(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		// decrypt key error
 		encrypt, err := gaes.Encrypt(content, key_16)
 		_, err = gaes.Decrypt(encrypt, key_err)
-		gtest.AssertNE(err, nil)
+		t.AssertNE(err, nil)
 
 		// decrypt content too short error
 		_, err = gaes.Decrypt([]byte("test"), key_16)
-		gtest.AssertNE(err, nil)
+		t.AssertNE(err, nil)
 
 		// decrypt content size error
 		_, err = gaes.Decrypt(key_17, key_16)
-		gtest.AssertNE(err, nil)
+		t.AssertNE(err, nil)
 	})
 }
 
 func TestPKCS5UnPaddingErr(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		// PKCS5UnPadding blockSize zero
 		_, err := gaes.PKCS5UnPadding(content, 0)
-		gtest.AssertNE(err, nil)
+		t.AssertNE(err, nil)
 
 		// PKCS5UnPadding src len zero
 		_, err = gaes.PKCS5UnPadding([]byte(""), 16)
-		gtest.AssertNE(err, nil)
+		t.AssertNE(err, nil)
 
 		// PKCS5UnPadding src len > blockSize
 		_, err = gaes.PKCS5UnPadding(key_17, 16)
-		gtest.AssertNE(err, nil)
+		t.AssertNE(err, nil)
 
 		// PKCS5UnPadding src len > blockSize
 		_, err = gaes.PKCS5UnPadding(key_32_err, 32)
-		gtest.AssertNE(err, nil)
+		t.AssertNE(err, nil)
 	})
 }
 
 func TestEncryptCFB(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var padding int = 0
 		data, err := gaes.EncryptCFB(content, key_16, &padding, iv)
-		gtest.Assert(err, nil)
-		gtest.Assert(padding, padding_size)
-		gtest.Assert(data, []byte(content_16_cfb))
+		t.Assert(err, nil)
+		t.Assert(padding, padding_size)
+		t.Assert(data, []byte(content_16_cfb))
 	})
 }
 
 func TestDecryptCFB(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		decrypt, err := gaes.DecryptCFB([]byte(content_16_cfb), key_16, padding_size, iv)
-		gtest.Assert(err, nil)
-		gtest.Assert(decrypt, content)
+		t.Assert(err, nil)
+		t.Assert(decrypt, content)
 	})
 }

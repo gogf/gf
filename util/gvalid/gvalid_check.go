@@ -520,11 +520,14 @@ func checkRequired(value, ruleKey, ruleVal string, params map[string]string) boo
 		return true
 	}
 }
+
 // 对字段值长度进行检测
 func checkLength(value, ruleKey, ruleVal string, customMsgMap map[string]string) string {
-	msg := ""
-	runeArray := gconv.Runes(value)
-	valueLen := len(runeArray)
+	var (
+		msg       = ""
+		runeArray = gconv.Runes(value)
+		valueLen  = len(runeArray)
+	)
 	switch ruleKey {
 	// 长度范围
 	case "length":
@@ -667,9 +670,9 @@ func checkIDNumber(value string) bool {
 		return false
 	}
 	// 加权因子
-	weightFactor := [...]int{7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2}
+	weightFactor := []int{7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2}
 	// 校验码
-	checkCode := [...]byte{'1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2'}
+	checkCode := []byte{'1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2'}
 	last := value[17]
 	num := 0
 	for i := 0; i < 17; i++ {
@@ -679,8 +682,7 @@ func checkIDNumber(value string) bool {
 		}
 		num = num + tmp*weightFactor[i]
 	}
-	resisue := num % 11
-	if checkCode[resisue] != last {
+	if checkCode[num%11] != last {
 		return false
 	}
 

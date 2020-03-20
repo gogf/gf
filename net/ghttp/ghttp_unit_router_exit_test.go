@@ -36,12 +36,12 @@ func Test_Router_Exit(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "123")
-		gtest.Assert(client.GetContent("/test/test"), "1test-start23")
+		t.Assert(client.GetContent("/"), "123")
+		t.Assert(client.GetContent("/test/test"), "1test-start23")
 	})
 }
 
@@ -74,12 +74,12 @@ func Test_Router_ExitHook(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "Not Found")
-		gtest.Assert(client.GetContent("/priority/show"), "3show")
+		t.Assert(client.GetContent("/"), "Not Found")
+		t.Assert(client.GetContent("/priority/show"), "3show")
 	})
 }
 
@@ -112,11 +112,11 @@ func Test_Router_ExitAll(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "Not Found")
-		gtest.Assert(client.GetContent("/priority/show"), "3")
+		t.Assert(client.GetContent("/"), "Not Found")
+		t.Assert(client.GetContent("/priority/show"), "3")
 	})
 }

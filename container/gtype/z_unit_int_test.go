@@ -16,13 +16,13 @@ import (
 )
 
 func Test_Int(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var wg sync.WaitGroup
 		addTimes := 1000
 		i := gtype.NewInt(0)
 		iClone := i.Clone()
-		gtest.AssertEQ(iClone.Set(1), 0)
-		gtest.AssertEQ(iClone.Val(), 1)
+		t.AssertEQ(iClone.Set(1), 0)
+		t.AssertEQ(iClone.Val(), 1)
 		for index := 0; index < addTimes; index++ {
 			wg.Add(1)
 			go func() {
@@ -31,44 +31,44 @@ func Test_Int(t *testing.T) {
 			}()
 		}
 		wg.Wait()
-		gtest.AssertEQ(addTimes, i.Val())
+		t.AssertEQ(addTimes, i.Val())
 
 		//空参测试
 		i1 := gtype.NewInt()
-		gtest.AssertEQ(i1.Val(), 0)
+		t.AssertEQ(i1.Val(), 0)
 	})
 }
 
 func Test_Int_JSON(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		v := 666
 		i := gtype.NewInt(v)
 		b1, err1 := json.Marshal(i)
 		b2, err2 := json.Marshal(i.Val())
-		gtest.Assert(err1, nil)
-		gtest.Assert(err2, nil)
-		gtest.Assert(b1, b2)
+		t.Assert(err1, nil)
+		t.Assert(err2, nil)
+		t.Assert(b1, b2)
 
 		i2 := gtype.NewInt()
 		err := json.Unmarshal(b2, &i2)
-		gtest.Assert(err, nil)
-		gtest.Assert(i2.Val(), v)
+		t.Assert(err, nil)
+		t.Assert(i2.Val(), v)
 	})
 }
 
 func Test_Int_UnmarshalValue(t *testing.T) {
-	type T struct {
+	type Var struct {
 		Name string
 		Var  *gtype.Int
 	}
-	gtest.Case(t, func() {
-		var t *T
+	gtest.C(t, func(t *gtest.T) {
+		var v *Var
 		err := gconv.Struct(map[string]interface{}{
 			"name": "john",
 			"var":  "123",
-		}, &t)
-		gtest.Assert(err, nil)
-		gtest.Assert(t.Name, "john")
-		gtest.Assert(t.Var.Val(), "123")
+		}, &v)
+		t.Assert(err, nil)
+		t.Assert(v.Name, "john")
+		t.Assert(v.Var.Val(), "123")
 	})
 }

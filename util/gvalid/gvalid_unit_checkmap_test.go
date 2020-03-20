@@ -150,7 +150,7 @@ func Test_CheckMapWithNilAndNotRequiredField(t *testing.T) {
 }
 
 func Test_Sequence(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		params := map[string]interface{}{
 			"passport":  "",
 			"password":  "123456",
@@ -162,21 +162,21 @@ func Test_Sequence(t *testing.T) {
 			"password2@required|length:6,16#",
 		}
 		err := gvalid.CheckMap(params, rules)
-		gtest.AssertNE(err, nil)
-		gtest.Assert(len(err.Map()), 2)
-		gtest.Assert(err.Map()["required"], "账号不能为空")
-		gtest.Assert(err.Map()["length"], "账号长度应当在6到16之间")
-		gtest.Assert(len(err.Maps()), 2)
+		t.AssertNE(err, nil)
+		t.Assert(len(err.Map()), 2)
+		t.Assert(err.Map()["required"], "账号不能为空")
+		t.Assert(err.Map()["length"], "账号长度应当在6到16之间")
+		t.Assert(len(err.Maps()), 2)
 
-		gtest.Assert(err.String(), "账号不能为空; 账号长度应当在6到16之间; 两次密码输入不相等")
-		gtest.Assert(err.Strings(), []string{"账号不能为空", "账号长度应当在6到16之间", "两次密码输入不相等"})
+		t.Assert(err.String(), "账号不能为空; 账号长度应当在6到16之间; 两次密码输入不相等")
+		t.Assert(err.Strings(), []string{"账号不能为空", "账号长度应当在6到16之间", "两次密码输入不相等"})
 
 		k, m := err.FirstItem()
-		gtest.Assert(k, "passport")
-		gtest.Assert(m, err.Map())
+		t.Assert(k, "passport")
+		t.Assert(m, err.Map())
 
 		r, s := err.FirstRule()
-		gtest.Assert(r, "required")
-		gtest.Assert(s, "账号不能为空")
+		t.Assert(r, "required")
+		t.Assert(s, "账号不能为空")
 	})
 }

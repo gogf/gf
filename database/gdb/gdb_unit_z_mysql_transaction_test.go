@@ -115,7 +115,7 @@ func Test_TX_Insert(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		tx, err := db.Begin()
 		if err != nil {
 			gtest.Error(err)
@@ -144,7 +144,7 @@ func Test_TX_Insert(t *testing.T) {
 		if n, err := tx.Table(table).Count(); err != nil {
 			gtest.Error(err)
 		} else {
-			gtest.Assert(n, 2)
+			t.Assert(n, 2)
 		}
 
 		if err := tx.Commit(); err != nil {
@@ -158,7 +158,7 @@ func Test_TX_BatchInsert(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		tx, err := db.Begin()
 		if err != nil {
 			gtest.Error(err)
@@ -187,7 +187,7 @@ func Test_TX_BatchInsert(t *testing.T) {
 		if n, err := db.Table(table).Count(); err != nil {
 			gtest.Error(err)
 		} else {
-			gtest.Assert(n, 2)
+			t.Assert(n, 2)
 		}
 	})
 }
@@ -196,7 +196,7 @@ func Test_TX_BatchReplace(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		tx, err := db.Begin()
 		if err != nil {
 			gtest.Error(err)
@@ -225,12 +225,12 @@ func Test_TX_BatchReplace(t *testing.T) {
 		if n, err := db.Table(table).Count(); err != nil {
 			gtest.Error(err)
 		} else {
-			gtest.Assert(n, SIZE)
+			t.Assert(n, SIZE)
 		}
 		if value, err := db.Table(table).Fields("password").Where("id", 2).Value(); err != nil {
 			gtest.Error(err)
 		} else {
-			gtest.Assert(value.String(), "PASS_2")
+			t.Assert(value.String(), "PASS_2")
 		}
 	})
 }
@@ -239,7 +239,7 @@ func Test_TX_BatchSave(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		tx, err := db.Begin()
 		if err != nil {
 			gtest.Error(err)
@@ -262,13 +262,13 @@ func Test_TX_BatchSave(t *testing.T) {
 		if n, err := db.Table(table).Count(); err != nil {
 			gtest.Error(err)
 		} else {
-			gtest.Assert(n, SIZE)
+			t.Assert(n, SIZE)
 		}
 
 		if value, err := db.Table(table).Fields("password").Where("id", 4).Value(); err != nil {
 			gtest.Error(err)
 		} else {
-			gtest.Assert(value.String(), "PASS_4")
+			t.Assert(value.String(), "PASS_4")
 		}
 	})
 }
@@ -277,7 +277,7 @@ func Test_TX_Replace(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		tx, err := db.Begin()
 		if err != nil {
 			gtest.Error(err)
@@ -297,7 +297,7 @@ func Test_TX_Replace(t *testing.T) {
 		if value, err := db.Table(table).Fields("nickname").Where("id", 1).Value(); err != nil {
 			gtest.Error(err)
 		} else {
-			gtest.Assert(value.String(), "name_1")
+			t.Assert(value.String(), "name_1")
 		}
 	})
 
@@ -307,7 +307,7 @@ func Test_TX_Save(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		tx, err := db.Begin()
 		if err != nil {
 			gtest.Error(err)
@@ -327,7 +327,7 @@ func Test_TX_Save(t *testing.T) {
 		if value, err := db.Table(table).Fields("nickname").Where("id", 1).Value(); err != nil {
 			gtest.Error(err)
 		} else {
-			gtest.Assert(value.String(), "NAME_1")
+			t.Assert(value.String(), "NAME_1")
 		}
 	})
 }
@@ -336,7 +336,7 @@ func Test_TX_Update(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		tx, err := db.Begin()
 		if err != nil {
 			gtest.Error(err)
@@ -345,18 +345,18 @@ func Test_TX_Update(t *testing.T) {
 			gtest.Error(err)
 		} else {
 			n, _ := result.RowsAffected()
-			gtest.Assert(n, 1)
+			t.Assert(n, 1)
 		}
 		if err := tx.Commit(); err != nil {
 			gtest.Error(err)
 		}
 		_, err = tx.Table(table).Fields("create_time").Where("id", 3).Value()
-		gtest.AssertNE(err, nil)
+		t.AssertNE(err, nil)
 
 		if value, err := db.Table(table).Fields("create_time").Where("id", 3).Value(); err != nil {
 			gtest.Error(err)
 		} else {
-			gtest.Assert(value.String(), "2019-10-24 10:00:00")
+			t.Assert(value.String(), "2019-10-24 10:00:00")
 		}
 	})
 }
@@ -365,7 +365,7 @@ func Test_TX_GetAll(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		tx, err := db.Begin()
 		if err != nil {
 			gtest.Error(err)
@@ -373,7 +373,7 @@ func Test_TX_GetAll(t *testing.T) {
 		if result, err := tx.GetAll(fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 1); err != nil {
 			gtest.Error(err)
 		} else {
-			gtest.Assert(len(result), 1)
+			t.Assert(len(result), 1)
 		}
 		if err := tx.Commit(); err != nil {
 			gtest.Error(err)
@@ -385,7 +385,7 @@ func Test_TX_GetOne(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		tx, err := db.Begin()
 		if err != nil {
 			gtest.Error(err)
@@ -396,7 +396,7 @@ func Test_TX_GetOne(t *testing.T) {
 			if record == nil {
 				gtest.Error("FAIL")
 			}
-			gtest.Assert(record["nickname"].String(), "name_2")
+			t.Assert(record["nickname"].String(), "name_2")
 		}
 		if err := tx.Commit(); err != nil {
 			gtest.Error(err)
@@ -408,7 +408,7 @@ func Test_TX_GetValue(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		tx, err := db.Begin()
 		if err != nil {
 			gtest.Error(err)
@@ -416,7 +416,7 @@ func Test_TX_GetValue(t *testing.T) {
 		if value, err := tx.GetValue(fmt.Sprintf("SELECT id FROM %s WHERE passport=?", table), "user_3"); err != nil {
 			gtest.Error(err)
 		} else {
-			gtest.Assert(value.Int(), 3)
+			t.Assert(value.Int(), 3)
 		}
 		if err := tx.Commit(); err != nil {
 			gtest.Error(err)
@@ -429,7 +429,7 @@ func Test_TX_GetCount(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		tx, err := db.Begin()
 		if err != nil {
 			gtest.Error(err)
@@ -437,7 +437,7 @@ func Test_TX_GetCount(t *testing.T) {
 		if count, err := tx.GetCount("SELECT * FROM " + table); err != nil {
 			gtest.Error(err)
 		} else {
-			gtest.Assert(count, SIZE)
+			t.Assert(count, SIZE)
 		}
 		if err := tx.Commit(); err != nil {
 			gtest.Error(err)
@@ -449,7 +449,7 @@ func Test_TX_GetStruct(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		tx, err := db.Begin()
 		if err != nil {
 			gtest.Error(err)
@@ -465,13 +465,13 @@ func Test_TX_GetStruct(t *testing.T) {
 		if err := tx.GetStruct(user, fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 3); err != nil {
 			gtest.Error(err)
 		}
-		gtest.Assert(user.NickName, "name_3")
-		gtest.Assert(user.CreateTime.String(), "2018-10-24 10:00:00")
+		t.Assert(user.NickName, "name_3")
+		t.Assert(user.CreateTime.String(), "2018-10-24 10:00:00")
 		if err := tx.Commit(); err != nil {
 			gtest.Error(err)
 		}
 	})
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		tx, err := db.Begin()
 		if err != nil {
 			gtest.Error(err)
@@ -487,8 +487,8 @@ func Test_TX_GetStruct(t *testing.T) {
 		if err := tx.GetStruct(user, fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 3); err != nil {
 			gtest.Error(err)
 		}
-		gtest.Assert(user.NickName, "name_3")
-		gtest.Assert(user.CreateTime.String(), "2018-10-24 10:00:00")
+		t.Assert(user.NickName, "name_3")
+		t.Assert(user.CreateTime.String(), "2018-10-24 10:00:00")
 		if err := tx.Commit(); err != nil {
 			gtest.Error(err)
 		}
@@ -499,7 +499,7 @@ func Test_TX_GetStructs(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		tx, err := db.Begin()
 		if err != nil {
 			gtest.Error(err)
@@ -515,20 +515,20 @@ func Test_TX_GetStructs(t *testing.T) {
 		if err := tx.GetStructs(&users, fmt.Sprintf("SELECT * FROM %s WHERE id>=?", table), 1); err != nil {
 			gtest.Error(err)
 		}
-		gtest.Assert(len(users), SIZE)
-		gtest.Assert(users[0].Id, 1)
-		gtest.Assert(users[1].Id, 2)
-		gtest.Assert(users[2].Id, 3)
-		gtest.Assert(users[0].NickName, "name_1")
-		gtest.Assert(users[1].NickName, "name_2")
-		gtest.Assert(users[2].NickName, "name_3")
-		gtest.Assert(users[2].CreateTime.String(), "2018-10-24 10:00:00")
+		t.Assert(len(users), SIZE)
+		t.Assert(users[0].Id, 1)
+		t.Assert(users[1].Id, 2)
+		t.Assert(users[2].Id, 3)
+		t.Assert(users[0].NickName, "name_1")
+		t.Assert(users[1].NickName, "name_2")
+		t.Assert(users[2].NickName, "name_3")
+		t.Assert(users[2].CreateTime.String(), "2018-10-24 10:00:00")
 		if err := tx.Commit(); err != nil {
 			gtest.Error(err)
 		}
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		tx, err := db.Begin()
 		if err != nil {
 			gtest.Error(err)
@@ -544,14 +544,14 @@ func Test_TX_GetStructs(t *testing.T) {
 		if err := tx.GetStructs(&users, fmt.Sprintf("SELECT * FROM %s WHERE id>=?", table), 1); err != nil {
 			gtest.Error(err)
 		}
-		gtest.Assert(len(users), SIZE)
-		gtest.Assert(users[0].Id, 1)
-		gtest.Assert(users[1].Id, 2)
-		gtest.Assert(users[2].Id, 3)
-		gtest.Assert(users[0].NickName, "name_1")
-		gtest.Assert(users[1].NickName, "name_2")
-		gtest.Assert(users[2].NickName, "name_3")
-		gtest.Assert(users[2].CreateTime.String(), "2018-10-24 10:00:00")
+		t.Assert(len(users), SIZE)
+		t.Assert(users[0].Id, 1)
+		t.Assert(users[1].Id, 2)
+		t.Assert(users[2].Id, 3)
+		t.Assert(users[0].NickName, "name_1")
+		t.Assert(users[1].NickName, "name_2")
+		t.Assert(users[2].NickName, "name_3")
+		t.Assert(users[2].CreateTime.String(), "2018-10-24 10:00:00")
 		if err := tx.Commit(); err != nil {
 			gtest.Error(err)
 		}
@@ -562,7 +562,7 @@ func Test_TX_GetScan(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		tx, err := db.Begin()
 		if err != nil {
 			gtest.Error(err)
@@ -578,13 +578,13 @@ func Test_TX_GetScan(t *testing.T) {
 		if err := tx.GetScan(user, fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 3); err != nil {
 			gtest.Error(err)
 		}
-		gtest.Assert(user.NickName, "name_3")
-		gtest.Assert(user.CreateTime.String(), "2018-10-24 10:00:00")
+		t.Assert(user.NickName, "name_3")
+		t.Assert(user.CreateTime.String(), "2018-10-24 10:00:00")
 		if err := tx.Commit(); err != nil {
 			gtest.Error(err)
 		}
 	})
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		tx, err := db.Begin()
 		if err != nil {
 			gtest.Error(err)
@@ -600,14 +600,14 @@ func Test_TX_GetScan(t *testing.T) {
 		if err := tx.GetScan(user, fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 3); err != nil {
 			gtest.Error(err)
 		}
-		gtest.Assert(user.NickName, "name_3")
-		gtest.Assert(user.CreateTime.String(), "2018-10-24 10:00:00")
+		t.Assert(user.NickName, "name_3")
+		t.Assert(user.CreateTime.String(), "2018-10-24 10:00:00")
 		if err := tx.Commit(); err != nil {
 			gtest.Error(err)
 		}
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		tx, err := db.Begin()
 		if err != nil {
 			gtest.Error(err)
@@ -623,20 +623,20 @@ func Test_TX_GetScan(t *testing.T) {
 		if err := tx.GetScan(&users, fmt.Sprintf("SELECT * FROM %s WHERE id>=?", table), 1); err != nil {
 			gtest.Error(err)
 		}
-		gtest.Assert(len(users), SIZE)
-		gtest.Assert(users[0].Id, 1)
-		gtest.Assert(users[1].Id, 2)
-		gtest.Assert(users[2].Id, 3)
-		gtest.Assert(users[0].NickName, "name_1")
-		gtest.Assert(users[1].NickName, "name_2")
-		gtest.Assert(users[2].NickName, "name_3")
-		gtest.Assert(users[2].CreateTime.String(), "2018-10-24 10:00:00")
+		t.Assert(len(users), SIZE)
+		t.Assert(users[0].Id, 1)
+		t.Assert(users[1].Id, 2)
+		t.Assert(users[2].Id, 3)
+		t.Assert(users[0].NickName, "name_1")
+		t.Assert(users[1].NickName, "name_2")
+		t.Assert(users[2].NickName, "name_3")
+		t.Assert(users[2].CreateTime.String(), "2018-10-24 10:00:00")
 		if err := tx.Commit(); err != nil {
 			gtest.Error(err)
 		}
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		tx, err := db.Begin()
 		if err != nil {
 			gtest.Error(err)
@@ -652,14 +652,14 @@ func Test_TX_GetScan(t *testing.T) {
 		if err := tx.GetScan(&users, fmt.Sprintf("SELECT * FROM %s WHERE id>=?", table), 1); err != nil {
 			gtest.Error(err)
 		}
-		gtest.Assert(len(users), SIZE)
-		gtest.Assert(users[0].Id, 1)
-		gtest.Assert(users[1].Id, 2)
-		gtest.Assert(users[2].Id, 3)
-		gtest.Assert(users[0].NickName, "name_1")
-		gtest.Assert(users[1].NickName, "name_2")
-		gtest.Assert(users[2].NickName, "name_3")
-		gtest.Assert(users[2].CreateTime.String(), "2018-10-24 10:00:00")
+		t.Assert(len(users), SIZE)
+		t.Assert(users[0].Id, 1)
+		t.Assert(users[1].Id, 2)
+		t.Assert(users[2].Id, 3)
+		t.Assert(users[0].NickName, "name_1")
+		t.Assert(users[1].NickName, "name_2")
+		t.Assert(users[2].NickName, "name_3")
+		t.Assert(users[2].CreateTime.String(), "2018-10-24 10:00:00")
 		if err := tx.Commit(); err != nil {
 			gtest.Error(err)
 		}
@@ -668,7 +668,7 @@ func Test_TX_GetScan(t *testing.T) {
 
 func Test_TX_Delete(t *testing.T) {
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		table := createInitTable()
 		defer dropTable(table)
 		tx, err := db.Begin()
@@ -684,11 +684,11 @@ func Test_TX_Delete(t *testing.T) {
 		if n, err := db.Table(table).Count(); err != nil {
 			gtest.Error(err)
 		} else {
-			gtest.Assert(n, 0)
+			t.Assert(n, 0)
 		}
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		table := createInitTable()
 		defer dropTable(table)
 		tx, err := db.Begin()
@@ -701,7 +701,7 @@ func Test_TX_Delete(t *testing.T) {
 		if n, err := tx.Table(table).Count(); err != nil {
 			gtest.Error(err)
 		} else {
-			gtest.Assert(n, 0)
+			t.Assert(n, 0)
 		}
 		if err := tx.Rollback(); err != nil {
 			gtest.Error(err)
@@ -709,8 +709,8 @@ func Test_TX_Delete(t *testing.T) {
 		if n, err := db.Table(table).Count(); err != nil {
 			gtest.Error(err)
 		} else {
-			gtest.Assert(n, SIZE)
-			gtest.AssertNE(n, 0)
+			t.Assert(n, SIZE)
+			t.AssertNE(n, 0)
 		}
 	})
 

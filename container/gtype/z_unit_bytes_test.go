@@ -16,48 +16,48 @@ import (
 )
 
 func Test_Bytes(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		i := gtype.NewBytes([]byte("abc"))
 		iClone := i.Clone()
-		gtest.AssertEQ(iClone.Set([]byte("123")), []byte("abc"))
-		gtest.AssertEQ(iClone.Val(), []byte("123"))
+		t.AssertEQ(iClone.Set([]byte("123")), []byte("abc"))
+		t.AssertEQ(iClone.Val(), []byte("123"))
 
 		//空参测试
 		i1 := gtype.NewBytes()
-		gtest.AssertEQ(i1.Val(), nil)
+		t.AssertEQ(i1.Val(), nil)
 	})
 }
 
 func Test_Bytes_JSON(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		b := []byte("i love gf")
 		i := gtype.NewBytes(b)
 		b1, err1 := json.Marshal(i)
 		b2, err2 := json.Marshal(i.Val())
-		gtest.Assert(err1, nil)
-		gtest.Assert(err2, nil)
-		gtest.Assert(b1, b2)
+		t.Assert(err1, nil)
+		t.Assert(err2, nil)
+		t.Assert(b1, b2)
 
 		i2 := gtype.NewBytes()
 		err := json.Unmarshal(b2, &i2)
-		gtest.Assert(err, nil)
-		gtest.Assert(i2.Val(), b)
+		t.Assert(err, nil)
+		t.Assert(i2.Val(), b)
 	})
 }
 
 func Test_Bytes_UnmarshalValue(t *testing.T) {
-	type T struct {
+	type Var struct {
 		Name string
 		Var  *gtype.Bytes
 	}
-	gtest.Case(t, func() {
-		var t *T
+	gtest.C(t, func(t *gtest.T) {
+		var v *Var
 		err := gconv.Struct(map[string]interface{}{
 			"name": "john",
 			"var":  "123",
-		}, &t)
-		gtest.Assert(err, nil)
-		gtest.Assert(t.Name, "john")
-		gtest.Assert(t.Var.Val(), "123")
+		}, &v)
+		t.Assert(err, nil)
+		t.Assert(v.Name, "john")
+		t.Assert(v.Var.Val(), "123")
 	})
 }

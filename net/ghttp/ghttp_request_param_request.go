@@ -12,14 +12,14 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
-// GetRequest retrieves and returns the parameter named <key> passed from client as interface{},
-// no matter what HTTP method the client is using. The parameter <def> specifies the default value
-// if the <key> does not exist.
+// GetRequest retrieves and returns the parameter named <key> passed from client and
+// custom params as interface{}, no matter what HTTP method the client is using. The
+// parameter <def> specifies the default value if the <key> does not exist.
 //
 // GetRequest is one of the most commonly used functions for retrieving parameters.
 //
-// Note that if there're multiple parameters with the same name, the parameters are retrieved and overwrote
-// in order of priority: router < query < body < form < custom.
+// Note that if there're multiple parameters with the same name, the parameters are
+// retrieved and overwrote in order of priority: router < query < body < form < custom.
 func (r *Request) GetRequest(key string, def ...interface{}) interface{} {
 	value := r.GetParam(key)
 	if value == nil {
@@ -46,127 +46,127 @@ func (r *Request) GetRequest(key string, def ...interface{}) interface{} {
 	return value
 }
 
-// GetRequestVar retrieves and returns the parameter named <key> passed from client as *gvar.Var,
-// no matter what HTTP method the client is using. The parameter <def> specifies the default value
-// if the <key> does not exist.
+// GetRequestVar retrieves and returns the parameter named <key> passed from client and
+// custom params as *gvar.Var, no matter what HTTP method the client is using. The parameter
+// <def> specifies the default value if the <key> does not exist.
 func (r *Request) GetRequestVar(key string, def ...interface{}) *gvar.Var {
 	return gvar.New(r.GetRequest(key, def...))
 }
 
-// GetRequestString retrieves and returns the parameter named <key> passed from client as string,
-// no matter what HTTP method the client is using. The parameter <def> specifies the default value
-// if the <key> does not exist.
+// GetRequestString retrieves and returns the parameter named <key> passed from client and
+// custom params as string, no matter what HTTP method the client is using. The parameter
+// <def> specifies the default value if the <key> does not exist.
 func (r *Request) GetRequestString(key string, def ...interface{}) string {
 	return r.GetRequestVar(key, def...).String()
 }
 
-// GetRequestBool retrieves and returns the parameter named <key> passed from client as bool,
-// no matter what HTTP method the client is using. The parameter <def> specifies the default value
-// if the <key> does not exist.
+// GetRequestBool retrieves and returns the parameter named <key> passed from client and
+// custom params as bool, no matter what HTTP method the client is using. The parameter
+// <def> specifies the default value if the <key> does not exist.
 func (r *Request) GetRequestBool(key string, def ...interface{}) bool {
 	return r.GetRequestVar(key, def...).Bool()
 }
 
-// GetRequestInt retrieves and returns the parameter named <key> passed from client as int,
-// no matter what HTTP method the client is using. The parameter <def> specifies the default value
-// if the <key> does not exist.
+// GetRequestInt retrieves and returns the parameter named <key> passed from client and
+// custom params as int, no matter what HTTP method the client is using. The parameter
+// <def> specifies the default value if the <key> does not exist.
 func (r *Request) GetRequestInt(key string, def ...interface{}) int {
 	return r.GetRequestVar(key, def...).Int()
 }
 
-// GetRequestInt32 retrieves and returns the parameter named <key> passed from client as int32,
-// no matter what HTTP method the client is using. The parameter <def> specifies the default value
-// if the <key> does not exist.
+// GetRequestInt32 retrieves and returns the parameter named <key> passed from client and
+// custom params as int32, no matter what HTTP method the client is using. The parameter
+// <def> specifies the default value if the <key> does not exist.
 func (r *Request) GetRequestInt32(key string, def ...interface{}) int32 {
 	return r.GetRequestVar(key, def...).Int32()
 }
 
-// GetRequestInt64 retrieves and returns the parameter named <key> passed from client as int64,
-// no matter what HTTP method the client is using. The parameter <def> specifies the default value
-// if the <key> does not exist.
+// GetRequestInt64 retrieves and returns the parameter named <key> passed from client and
+// custom params as int64, no matter what HTTP method the client is using. The parameter
+// <def> specifies the default value if the <key> does not exist.
 func (r *Request) GetRequestInt64(key string, def ...interface{}) int64 {
 	return r.GetRequestVar(key, def...).Int64()
 }
 
-// GetRequestInts retrieves and returns the parameter named <key> passed from client as []int,
-// no matter what HTTP method the client is using. The parameter <def> specifies the default value
-// if the <key> does not exist.
+// GetRequestInts retrieves and returns the parameter named <key> passed from client and
+// custom params as []int, no matter what HTTP method the client is using. The parameter
+// <def> specifies the default value if the <key> does not exist.
 func (r *Request) GetRequestInts(key string, def ...interface{}) []int {
 	return r.GetRequestVar(key, def...).Ints()
 }
 
-// GetRequestUint retrieves and returns the parameter named <key> passed from client as uint,
-// no matter what HTTP method the client is using. The parameter <def> specifies the default value
-// if the <key> does not exist.
+// GetRequestUint retrieves and returns the parameter named <key> passed from client and
+// custom params as uint, no matter what HTTP method the client is using. The parameter
+// <def> specifies the default value if the <key> does not exist.
 func (r *Request) GetRequestUint(key string, def ...interface{}) uint {
 	return r.GetRequestVar(key, def...).Uint()
 }
 
-// GetRequestUint32 retrieves and returns the parameter named <key> passed from client as uint32,
-// no matter what HTTP method the client is using. The parameter <def> specifies the default value
-// if the <key> does not exist.
+// GetRequestUint32 retrieves and returns the parameter named <key> passed from client and
+// custom params as uint32, no matter what HTTP method the client is using. The parameter
+// <def> specifies the default value if the <key> does not exist.
 func (r *Request) GetRequestUint32(key string, def ...interface{}) uint32 {
 	return r.GetRequestVar(key, def...).Uint32()
 }
 
-// GetRequestUint64 retrieves and returns the parameter named <key> passed from client as uint64,
-// no matter what HTTP method the client is using. The parameter <def> specifies the default value
-// if the <key> does not exist.
+// GetRequestUint64 retrieves and returns the parameter named <key> passed from client and
+// custom params as uint64, no matter what HTTP method the client is using. The parameter
+// <def> specifies the default value if the <key> does not exist.
 func (r *Request) GetRequestUint64(key string, def ...interface{}) uint64 {
 	return r.GetRequestVar(key, def...).Uint64()
 }
 
-// GetRequestFloat32 retrieves and returns the parameter named <key> passed from client as float32,
-// no matter what HTTP method the client is using. The parameter <def> specifies the default value
-// if the <key> does not exist.
+// GetRequestFloat32 retrieves and returns the parameter named <key> passed from client and
+// custom params as float32, no matter what HTTP method the client is using. The parameter
+// <def> specifies the default value if the <key> does not exist.
 func (r *Request) GetRequestFloat32(key string, def ...interface{}) float32 {
 	return r.GetRequestVar(key, def...).Float32()
 }
 
-// GetRequestFloat64 retrieves and returns the parameter named <key> passed from client as float64,
-// no matter what HTTP method the client is using. The parameter <def> specifies the default value
-// if the <key> does not exist.
+// GetRequestFloat64 retrieves and returns the parameter named <key> passed from client and
+// custom params as float64, no matter what HTTP method the client is using. The parameter
+// <def> specifies the default value if the <key> does not exist.
 func (r *Request) GetRequestFloat64(key string, def ...interface{}) float64 {
 	return r.GetRequestVar(key, def...).Float64()
 }
 
-// GetRequestFloats retrieves and returns the parameter named <key> passed from client as []float64,
-// no matter what HTTP method the client is using. The parameter <def> specifies the default value
-// if the <key> does not exist.
+// GetRequestFloats retrieves and returns the parameter named <key> passed from client and
+// custom params as []float64, no matter what HTTP method the client is using. The parameter
+// <def> specifies the default value if the <key> does not exist.
 func (r *Request) GetRequestFloats(key string, def ...interface{}) []float64 {
 	return r.GetRequestVar(key, def...).Floats()
 }
 
-// GetRequestArray retrieves and returns the parameter named <key> passed from client as []string,
-// no matter what HTTP method the client is using. The parameter <def> specifies the default value
-// if the <key> does not exist.
+// GetRequestArray retrieves and returns the parameter named <key> passed from client and
+// custom params as []string, no matter what HTTP method the client is using. The parameter
+// <def> specifies the default value if the <key> does not exist.
 func (r *Request) GetRequestArray(key string, def ...interface{}) []string {
 	return r.GetRequestVar(key, def...).Strings()
 }
 
-// GetRequestStrings retrieves and returns the parameter named <key> passed from client as []string,
-// no matter what HTTP method the client is using. The parameter <def> specifies the default value
-// if the <key> does not exist.
+// GetRequestStrings retrieves and returns the parameter named <key> passed from client and
+// custom params as []string, no matter what HTTP method the client is using. The parameter
+// <def> specifies the default value if the <key> does not exist.
 func (r *Request) GetRequestStrings(key string, def ...interface{}) []string {
 	return r.GetRequestVar(key, def...).Strings()
 }
 
-// GetRequestInterfaces retrieves and returns the parameter named <key> passed from client as []interface{},
-// no matter what HTTP method the client is using. The parameter <def> specifies the default value
-// if the <key> does not exist.
+// GetRequestInterfaces retrieves and returns the parameter named <key> passed from client
+// and custom params as []interface{}, no matter what HTTP method the client is using. The
+// parameter <def> specifies the default value if the <key> does not exist.
 func (r *Request) GetRequestInterfaces(key string, def ...interface{}) []interface{} {
 	return r.GetRequestVar(key, def...).Interfaces()
 }
 
-// GetRequestMap retrieves and returns all parameters passed from client as map,
-// no matter what HTTP method the client is using. The parameter <kvMap> specifies the keys
-// retrieving from client parameters, the associated values are the default values if the client
-// does not pass the according keys.
+// GetRequestMap retrieves and returns all parameters passed from client and custom params
+// as map, no matter what HTTP method the client is using. The parameter <kvMap> specifies
+// the keys retrieving from client parameters, the associated values are the default values
+// if the client does not pass the according keys.
 //
 // GetRequestMap is one of the most commonly used functions for retrieving parameters.
 //
-// Note that if there're multiple parameters with the same name, the parameters are retrieved and overwrote
-// in order of priority: router < query < body < form < custom.
+// Note that if there're multiple parameters with the same name, the parameters are retrieved
+// and overwrote in order of priority: router < query < body < form < custom.
 func (r *Request) GetRequestMap(kvMap ...map[string]interface{}) map[string]interface{} {
 	r.parseQuery()
 	r.parseForm()
@@ -231,10 +231,10 @@ func (r *Request) GetRequestMap(kvMap ...map[string]interface{}) map[string]inte
 	return m
 }
 
-// GetRequestMapStrStr retrieves and returns all parameters passed from client as map[string]string,
-// no matter what HTTP method the client is using. The parameter <kvMap> specifies the keys
-// retrieving from client parameters, the associated values are the default values if the client
-// does not pass.
+// GetRequestMapStrStr retrieves and returns all parameters passed from client and custom
+// params as map[string]string, no matter what HTTP method the client is using. The parameter
+// <kvMap> specifies the keys retrieving from client parameters, the associated values are the
+// default values if the client does not pass.
 func (r *Request) GetRequestMapStrStr(kvMap ...map[string]interface{}) map[string]string {
 	requestMap := r.GetRequestMap(kvMap...)
 	if len(requestMap) > 0 {
@@ -247,10 +247,10 @@ func (r *Request) GetRequestMapStrStr(kvMap ...map[string]interface{}) map[strin
 	return nil
 }
 
-// GetRequestMapStrVar retrieves and returns all parameters passed from client as map[string]*gvar.Var,
-// no matter what HTTP method the client is using. The parameter <kvMap> specifies the keys
-// retrieving from client parameters, the associated values are the default values if the client
-// does not pass.
+// GetRequestMapStrVar retrieves and returns all parameters passed from client and custom
+// params as map[string]*gvar.Var, no matter what HTTP method the client is using. The parameter
+// <kvMap> specifies the keys retrieving from client parameters, the associated values are the
+// default values if the client does not pass.
 func (r *Request) GetRequestMapStrVar(kvMap ...map[string]interface{}) map[string]*gvar.Var {
 	requestMap := r.GetRequestMap(kvMap...)
 	if len(requestMap) > 0 {
@@ -263,8 +263,9 @@ func (r *Request) GetRequestMapStrVar(kvMap ...map[string]interface{}) map[strin
 	return nil
 }
 
-// GetRequestStruct retrieves all parameters passed from client no matter what HTTP method the client is using,
-// and converts them to given struct object. Note that the parameter <pointer> is a pointer to the struct object.
+// GetRequestStruct retrieves all parameters passed from client and custom params no matter
+// what HTTP method the client is using, and converts them to given struct object. Note that
+// the parameter <pointer> is a pointer to the struct object.
 // The optional parameter <mapping> is used to specify the key to attribute mapping.
 func (r *Request) GetRequestStruct(pointer interface{}, mapping ...map[string]string) error {
 	tagMap := structs.TagMapName(pointer, paramTagPriority, true)

@@ -50,14 +50,14 @@ func Test_Params_Json_Request(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/get", `{"id":1,"name":"john","password1":"123Abc!@#","password2":"123Abc!@#"}`), `1john`)
-		gtest.Assert(client.GetContent("/map", `{"id":1,"name":"john","password1":"123Abc!@#","password2":"123Abc!@#"}`), `1john123Abc!@#123Abc!@#`)
-		gtest.Assert(client.PostContent("/parse", `{"id":1,"name":"john","password1":"123Abc!@#","password2":"123Abc!@#"}`), `1john123Abc!@#123Abc!@#`)
-		gtest.Assert(client.PostContent("/parse", `{"id":1,"name":"john","password1":"123Abc!@#","password2":"123"}`), `密码强度不足; 两次密码不一致`)
+		t.Assert(client.GetContent("/get", `{"id":1,"name":"john","password1":"123Abc!@#","password2":"123Abc!@#"}`), `1john`)
+		t.Assert(client.GetContent("/map", `{"id":1,"name":"john","password1":"123Abc!@#","password2":"123Abc!@#"}`), `1john123Abc!@#123Abc!@#`)
+		t.Assert(client.PostContent("/parse", `{"id":1,"name":"john","password1":"123Abc!@#","password2":"123Abc!@#"}`), `1john123Abc!@#123Abc!@#`)
+		t.Assert(client.PostContent("/parse", `{"id":1,"name":"john","password1":"123Abc!@#","password2":"123"}`), `密码强度不足; 两次密码不一致`)
 	})
 }
 
@@ -139,40 +139,40 @@ func Test_Params_Json_Response(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		map1 := make(map[string]interface{})
 		err1 := json.Unmarshal([]byte(client.GetContent("/json1")), &map1)
-		gtest.Assert(err1, nil)
-		gtest.Assert(len(map1), 4)
-		gtest.Assert(map1["Name"], "john")
-		gtest.Assert(map1["Uid"], 100)
-		gtest.Assert(map1["password1"], "123")
-		gtest.Assert(map1["password2"], "456")
+		t.Assert(err1, nil)
+		t.Assert(len(map1), 4)
+		t.Assert(map1["Name"], "john")
+		t.Assert(map1["Uid"], 100)
+		t.Assert(map1["password1"], "123")
+		t.Assert(map1["password2"], "456")
 
 		map2 := make(map[string]interface{})
 		err2 := json.Unmarshal([]byte(client.GetContent("/json2")), &map2)
-		gtest.Assert(err2, nil)
-		gtest.Assert(len(map2), 4)
-		gtest.Assert(map2["Name"], "john")
-		gtest.Assert(map2["Uid"], 100)
-		gtest.Assert(map2["password1"], "123")
-		gtest.Assert(map2["password2"], "456")
+		t.Assert(err2, nil)
+		t.Assert(len(map2), 4)
+		t.Assert(map2["Name"], "john")
+		t.Assert(map2["Uid"], 100)
+		t.Assert(map2["password1"], "123")
+		t.Assert(map2["password2"], "456")
 
 		map3 := make(map[string]interface{})
 		err3 := json.Unmarshal([]byte(client.GetContent("/json3")), &map3)
-		gtest.Assert(err3, nil)
-		gtest.Assert(len(map3), 2)
-		gtest.Assert(map3["success"], "true")
-		gtest.Assert(map3["message"], g.Map{"body": "测试", "code": 3, "error": "error"})
+		t.Assert(err3, nil)
+		t.Assert(len(map3), 2)
+		t.Assert(map3["success"], "true")
+		t.Assert(map3["message"], g.Map{"body": "测试", "code": 3, "error": "error"})
 
 		map4 := make(map[string]interface{})
 		err4 := json.Unmarshal([]byte(client.GetContent("/json4")), &map4)
-		gtest.Assert(err4, nil)
-		gtest.Assert(len(map4), 2)
-		gtest.Assert(map4["success"], "true")
-		gtest.Assert(map4["message"], g.Map{"body": "测试", "code": 3, "error": "error"})
+		t.Assert(err4, nil)
+		t.Assert(len(map4), 2)
+		t.Assert(map4["success"], "true")
+		t.Assert(map4["message"], g.Map{"body": "测试", "code": 3, "error": "error"})
 	})
 }

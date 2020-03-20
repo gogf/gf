@@ -16,7 +16,7 @@ import (
 )
 
 func Test_MTime(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 
 		var (
 			file1   = "/testfile_t1.txt"
@@ -27,15 +27,15 @@ func Test_MTime(t *testing.T) {
 		createTestFile(file1, "")
 		defer delTestFiles(file1)
 		fileobj, err = os.Stat(testpath() + file1)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
-		gtest.Assert(gfile.MTime(testpath()+file1), fileobj.ModTime().Unix())
-		gtest.Assert(gfile.MTime(""), 0)
+		t.Assert(gfile.MTime(testpath()+file1), fileobj.ModTime().Unix())
+		t.Assert(gfile.MTime(""), 0)
 	})
 }
 
 func Test_MTimeMillisecond(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
 			file1   = "/testfile_t1.txt"
 			err     error
@@ -45,13 +45,13 @@ func Test_MTimeMillisecond(t *testing.T) {
 		createTestFile(file1, "")
 		defer delTestFiles(file1)
 		fileobj, err = os.Stat(testpath() + file1)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		time.Sleep(time.Millisecond * 100)
-		gtest.AssertGE(
+		t.AssertGE(
 			gfile.MTimeMillisecond(testpath()+file1),
 			fileobj.ModTime().UnixNano()/1000000,
 		)
-		gtest.Assert(gfile.MTimeMillisecond(""), 0)
+		t.Assert(gfile.MTimeMillisecond(""), 0)
 	})
 }

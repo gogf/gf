@@ -18,37 +18,38 @@ import (
 )
 
 func Test_Database(t *testing.T) {
-	databaseContent := gfile.GetContents(gfile.Join(gdebug.TestDataPath(), "database", "config.toml"))
+	databaseContent := gfile.GetContents(
+		gfile.Join(gdebug.TestDataPath(), "database", "config.toml"),
+	)
+	gtest.C(t, func(t *gtest.T) {
+		var err error
+		dirPath := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
+		err = gfile.Mkdir(dirPath)
+		t.Assert(err, nil)
+		defer gfile.Remove(dirPath)
 
-	var err error
-	dirPath := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
-	err = gfile.Mkdir(dirPath)
-	gtest.Assert(err, nil)
-	defer gfile.Remove(dirPath)
+		name := "config.toml"
+		err = gfile.PutContents(gfile.Join(dirPath, name), databaseContent)
+		t.Assert(err, nil)
 
-	name := "config.toml"
-	err = gfile.PutContents(gfile.Join(dirPath, name), databaseContent)
-	gtest.Assert(err, nil)
+		err = gins.Config().AddPath(dirPath)
+		t.Assert(err, nil)
 
-	err = gins.Config().AddPath(dirPath)
-	gtest.Assert(err, nil)
+		defer gins.Config().Clear()
 
-	defer gins.Config().Clear()
+		// for gfsnotify callbacks to refresh cache of config file
+		time.Sleep(500 * time.Millisecond)
 
-	// for gfsnotify callbacks to refresh cache of config file
-	time.Sleep(500 * time.Millisecond)
-
-	gtest.Case(t, func() {
 		//fmt.Println("gins Test_Database", Config().Get("test"))
 
 		dbDefault := gins.Database()
 		dbTest := gins.Database("test")
-		gtest.AssertNE(dbDefault, nil)
-		gtest.AssertNE(dbTest, nil)
+		t.AssertNE(dbDefault, nil)
+		t.AssertNE(dbTest, nil)
 
-		gtest.Assert(dbDefault.PingMaster(), nil)
-		gtest.Assert(dbDefault.PingSlave(), nil)
-		gtest.Assert(dbTest.PingMaster(), nil)
-		gtest.Assert(dbTest.PingSlave(), nil)
+		t.Assert(dbDefault.PingMaster(), nil)
+		t.Assert(dbDefault.PingSlave(), nil)
+		t.Assert(dbTest.PingMaster(), nil)
+		t.Assert(dbTest.PingSlave(), nil)
 	})
 }

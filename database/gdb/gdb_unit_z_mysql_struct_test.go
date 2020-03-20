@@ -18,7 +18,7 @@ func Test_Model_Inherit_Insert(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type Base struct {
 			Id         int    `json:"id"`
 			Uid        int    `json:"uid"`
@@ -40,12 +40,12 @@ func Test_Model_Inherit_Insert(t *testing.T) {
 				CreateTime: gtime.Now().String(),
 			},
 		}).Insert()
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 		n, _ := result.RowsAffected()
-		gtest.Assert(n, 1)
+		t.Assert(n, 1)
 		value, err := db.Table(table).Fields("passport").Where("id=100").Value()
-		gtest.Assert(err, nil)
-		gtest.Assert(value.String(), "john-test")
+		t.Assert(err, nil)
+		t.Assert(value.String(), "john-test")
 	})
 }
 
@@ -53,7 +53,7 @@ func Test_Model_Inherit_MapToStruct(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type Ids struct {
 			Id  int `json:"id"`
 			Uid int `json:"uid"`
@@ -77,21 +77,21 @@ func Test_Model_Inherit_MapToStruct(t *testing.T) {
 			"create_time": gtime.Now().String(),
 		}
 		result, err := db.Table(table).Filter().Data(data).Insert()
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 		n, _ := result.RowsAffected()
-		gtest.Assert(n, 1)
+		t.Assert(n, 1)
 
 		one, err := db.Table(table).Where("id=100").One()
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		user := new(User)
 
-		gtest.Assert(one.Struct(user), nil)
-		gtest.Assert(user.Id, data["id"])
-		gtest.Assert(user.Passport, data["passport"])
-		gtest.Assert(user.Password, data["password"])
-		gtest.Assert(user.Nickname, data["nickname"])
-		gtest.Assert(user.CreateTime, data["create_time"])
+		t.Assert(one.Struct(user), nil)
+		t.Assert(user.Id, data["id"])
+		t.Assert(user.Passport, data["passport"])
+		t.Assert(user.Password, data["password"])
+		t.Assert(user.Nickname, data["nickname"])
+		t.Assert(user.CreateTime, data["create_time"])
 
 	})
 

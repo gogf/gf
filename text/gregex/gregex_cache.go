@@ -14,7 +14,9 @@ import (
 var (
 	regexMu = sync.RWMutex{}
 	// Cache for regex object.
-	// Note that there's no expiring logic for this map.
+	// Note that:
+	// 1. It uses sync.RWMutex ensuring the concurrent safety.
+	// 2. There's no expiring logic for this map.
 	regexMap = make(map[string]*regexp.Regexp)
 )
 

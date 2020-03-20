@@ -11,6 +11,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/internal/intlog"
 	"time"
 
 	"github.com/gogf/gf/os/glog"
@@ -370,6 +371,7 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 	v := c.cache.GetOrSetFuncLock(node.String(), func() interface{} {
 		sqlDb, err = c.DB.Open(node)
 		if err != nil {
+			intlog.Printf("DB open failed: %v, %+v", err, node)
 			return nil
 		}
 		if c.maxIdleConnCount > 0 {

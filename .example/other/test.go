@@ -1,35 +1,38 @@
 package main
 
 import (
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/os/gtimer"
-	"time"
+	"encoding/json"
+	"fmt"
+	"github.com/gogf/gf/encoding/gjson"
 )
 
-func GetList() {
-START:
-	for {
-		res, err := g.Redis().DoVar("RPOP", "mill")
-		if err != nil {
-			glog.Debug("Rpop:", err)
-			break
-		}
-		glog.Debug(res)
-		if res.IsEmpty() {
-			glog.Debug("nil")
-			continue START
-		}
-		interval := 50 * time.Second
-		gtimer.AddOnce(interval, func() {
-			glog.Debug("end------:", res, gtime.Now().Format("Y-m-d H:i:s"))
-		})
-	}
+type ModifyFieldInfoType struct {
+	Id  int64  `json:"id"`
+	New string `json:"new"`
+}
+type ModifyFieldInfosType struct {
+	Duration ModifyFieldInfoType `json:"duration"`
+	OMLevel  ModifyFieldInfoType `json:"om_level"`
 }
 
+type MediaRequestModifyInfo struct {
+	Modify ModifyFieldInfosType `json:"modifyFieldInfos"`
+	Field  ModifyFieldInfosType `json:"fieldInfos"`
+	FeedID string               `json:"feed_id"`
+	Vid    string               `json:"id"`
+}
+
+var processQueue chan MediaRequestModifyInfo
+
 func main() {
-	g.Redis().SetMaxActive(2)
-	//g.Redis().SetMaxIdle(100)
-	GetList()
+
+	jsonContent := `{"dataSetId":2001,"fieldInfos":{"duration":{"id":80079,"value":"59"},"om_level":{"id":2409,"value":"4"}},"id":"g0936lt1u0f","modifyFieldInfos":{"om_level":{"id":2409,"new":"4","old":""}},"timeStamp":1584599734}`
+	var t MediaRequestModifyInfo
+	err := gjson.DecodeTo(jsonContent, &t)
+	fmt.Println(err)
+	fmt.Printf("%+v\n", t)
+	fmt.Println(gjson.New(t).MustToJsonString())
+
+	b, _ := json.Marshal(t)
+	fmt.Println(string(b))
 }

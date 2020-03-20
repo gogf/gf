@@ -138,28 +138,28 @@ func TestConvert(t *testing.T) {
 }
 
 func TestConvertErr(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		srcCharset := "big5"
 		dstCharset := "gbk"
 		src := "Hello \xb1`\xa5\u03b0\xea\xa6r\xbc\u0437\u01e6r\xc5\xe9\xaa\xed"
 
 		s1, e1 := gcharset.Convert(srcCharset, srcCharset, src)
-		gtest.Assert(e1, nil)
-		gtest.Assert(s1, src)
+		t.Assert(e1, nil)
+		t.Assert(s1, src)
 
 		s2, e2 := gcharset.Convert(dstCharset, "no this charset", src)
-		gtest.AssertNE(e2, nil)
-		gtest.Assert(s2, src)
+		t.AssertNE(e2, nil)
+		t.Assert(s2, src)
 
 		s3, e3 := gcharset.Convert("no this charset", srcCharset, src)
-		gtest.AssertNE(e3, nil)
-		gtest.Assert(s3, src)
+		t.AssertNE(e3, nil)
+		t.Assert(s3, src)
 	})
 }
 
 func TestSupported(t *testing.T) {
-	gtest.Case(t, func() {
-		gtest.Assert(gcharset.Supported("UTF-8"), true)
-		gtest.Assert(gcharset.Supported("UTF-80"), false)
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gcharset.Supported("UTF-8"), true)
+		t.Assert(gcharset.Supported("UTF-80"), false)
 	})
 }

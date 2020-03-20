@@ -107,28 +107,28 @@ func Test_Decode1(t *testing.T) {
 }
 
 func Test_Decode2(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		content := `
 <?xml version="1.0" encoding="UTF-8"?><doc><username>johngcn</username><password1>123456</password1><password2>123456</password2></doc>
 `
 		m, err := gxml.Decode([]byte(content))
-		gtest.Assert(err, nil)
-		gtest.Assert(m["doc"].(map[string]interface{})["username"], "johngcn")
-		gtest.Assert(m["doc"].(map[string]interface{})["password1"], "123456")
-		gtest.Assert(m["doc"].(map[string]interface{})["password2"], "123456")
+		t.Assert(err, nil)
+		t.Assert(m["doc"].(map[string]interface{})["username"], "johngcn")
+		t.Assert(m["doc"].(map[string]interface{})["password1"], "123456")
+		t.Assert(m["doc"].(map[string]interface{})["password2"], "123456")
 	})
 }
 
 func Test_DecodeWitoutRoot(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		content := `
 <?xml version="1.0" encoding="UTF-8"?><doc><username>johngcn</username><password1>123456</password1><password2>123456</password2></doc>
 `
 		m, err := gxml.DecodeWithoutRoot([]byte(content))
-		gtest.Assert(err, nil)
-		gtest.Assert(m["username"], "johngcn")
-		gtest.Assert(m["password1"], "123456")
-		gtest.Assert(m["password2"], "123456")
+		t.Assert(err, nil)
+		t.Assert(m["username"], "johngcn")
+		t.Assert(m["password1"], "123456")
+		t.Assert(m["password2"], "123456")
 	})
 }
 
@@ -190,7 +190,7 @@ func TestErrXml(t *testing.T) {
 }
 
 func TestErrCase(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		errXml := `<root><bool>true</bool><float>100.92</float><int>123</int><string>hello world</string>`
 		_, err := gxml.ToJson([]byte(errXml))
 		if err == nil {
@@ -198,7 +198,7 @@ func TestErrCase(t *testing.T) {
 		}
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		errXml := `<root><bool>true</bool><float>100.92</float><int>123</int><string>hello world</string>`
 		_, err := gxml.Decode([]byte(errXml))
 		if err == nil {

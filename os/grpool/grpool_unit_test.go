@@ -19,7 +19,7 @@ import (
 )
 
 func Test_Basic(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		wg := sync.WaitGroup{}
 		array := garray.NewArray(true)
 		size := 100
@@ -32,14 +32,14 @@ func Test_Basic(t *testing.T) {
 		}
 		wg.Wait()
 		time.Sleep(100 * time.Millisecond)
-		gtest.Assert(array.Len(), size)
-		gtest.Assert(grpool.Jobs(), 0)
-		gtest.Assert(grpool.Size(), 0)
+		t.Assert(array.Len(), size)
+		t.Assert(grpool.Jobs(), 0)
+		t.Assert(grpool.Size(), 0)
 	})
 }
 
 func Test_Limit1(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		wg := sync.WaitGroup{}
 		array := garray.NewArray(true)
 		size := 100
@@ -52,12 +52,12 @@ func Test_Limit1(t *testing.T) {
 			})
 		}
 		wg.Wait()
-		gtest.Assert(array.Len(), size)
+		t.Assert(array.Len(), size)
 	})
 }
 
 func Test_Limit2(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		wg := sync.WaitGroup{}
 		array := garray.NewArray(true)
 		size := 100
@@ -70,16 +70,16 @@ func Test_Limit2(t *testing.T) {
 			})
 		}
 		wg.Wait()
-		gtest.Assert(array.Len(), size)
+		t.Assert(array.Len(), size)
 	})
 }
 
 func Test_Limit3(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		array := garray.NewArray(true)
 		size := 1000
 		pool := grpool.New(100)
-		gtest.Assert(pool.Cap(), 100)
+		t.Assert(pool.Cap(), 100)
 		for i := 0; i < size; i++ {
 			pool.Add(func() {
 				array.Append(1)
@@ -87,16 +87,16 @@ func Test_Limit3(t *testing.T) {
 			})
 		}
 		time.Sleep(time.Second)
-		gtest.Assert(pool.Size(), 100)
-		gtest.Assert(pool.Jobs(), 900)
-		gtest.Assert(array.Len(), 100)
+		t.Assert(pool.Size(), 100)
+		t.Assert(pool.Jobs(), 900)
+		t.Assert(array.Len(), 100)
 		pool.Close()
 		time.Sleep(2 * time.Second)
-		gtest.Assert(pool.Size(), 0)
-		gtest.Assert(pool.Jobs(), 900)
-		gtest.Assert(array.Len(), 100)
-		gtest.Assert(pool.IsClosed(), true)
-		gtest.AssertNE(pool.Add(func() {}), nil)
+		t.Assert(pool.Size(), 0)
+		t.Assert(pool.Jobs(), 900)
+		t.Assert(array.Len(), 100)
+		t.Assert(pool.IsClosed(), true)
+		t.AssertNE(pool.Add(func() {}), nil)
 
 	})
 }

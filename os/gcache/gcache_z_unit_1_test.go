@@ -26,183 +26,183 @@ func clear() {
 }
 
 func TestCache_Set(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New()
 		cache.Set(1, 11, 0)
-		gtest.Assert(cache.Get(1), 11)
-		gtest.Assert(cache.Contains(1), true)
+		t.Assert(cache.Get(1), 11)
+		t.Assert(cache.Contains(1), true)
 
 		clear()
 		gcache.Set(1, 11, 0)
-		gtest.Assert(gcache.Get(1), 11)
-		gtest.Assert(gcache.Contains(1), true)
+		t.Assert(gcache.Get(1), 11)
+		t.Assert(gcache.Contains(1), true)
 	})
 }
 
 func TestCache_Set_Expire(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New()
 		cache.Set(2, 22, 100*time.Millisecond)
-		gtest.Assert(cache.Get(2), 22)
+		t.Assert(cache.Get(2), 22)
 		time.Sleep(200 * time.Millisecond)
-		gtest.Assert(cache.Get(2), nil)
+		t.Assert(cache.Get(2), nil)
 		time.Sleep(3 * time.Second)
-		gtest.Assert(cache.Size(), 0)
+		t.Assert(cache.Size(), 0)
 		cache.Close()
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New()
 		cache.Set(1, 11, 100*time.Millisecond)
-		gtest.Assert(cache.Get(1), 11)
+		t.Assert(cache.Get(1), 11)
 		time.Sleep(200 * time.Millisecond)
-		gtest.Assert(cache.Get(1), nil)
+		t.Assert(cache.Get(1), nil)
 	})
 }
 
 func TestCache_Keys_Values(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New()
 		for i := 0; i < 10; i++ {
 			cache.Set(i, i*10, 0)
 		}
-		gtest.Assert(len(cache.Keys()), 10)
-		gtest.Assert(len(cache.Values()), 10)
-		gtest.AssertIN(0, cache.Keys())
-		gtest.AssertIN(90, cache.Values())
+		t.Assert(len(cache.Keys()), 10)
+		t.Assert(len(cache.Values()), 10)
+		t.AssertIN(0, cache.Keys())
+		t.AssertIN(90, cache.Values())
 	})
 }
 
 func TestCache_LRU(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New(2)
 		for i := 0; i < 10; i++ {
 			cache.Set(i, i, 0)
 		}
-		gtest.Assert(cache.Size(), 10)
-		gtest.Assert(cache.Get(6), 6)
+		t.Assert(cache.Size(), 10)
+		t.Assert(cache.Get(6), 6)
 		time.Sleep(4 * time.Second)
-		gtest.Assert(cache.Size(), 2)
-		gtest.Assert(cache.Get(6), 6)
-		gtest.Assert(cache.Get(1), nil)
+		t.Assert(cache.Size(), 2)
+		t.Assert(cache.Get(6), 6)
+		t.Assert(cache.Get(1), nil)
 		cache.Close()
 	})
 }
 
 func TestCache_LRU_expire(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New(2)
 		cache.Set(1, nil, 1000)
-		gtest.Assert(cache.Size(), 1)
-		gtest.Assert(cache.Get(1), nil)
+		t.Assert(cache.Size(), 1)
+		t.Assert(cache.Get(1), nil)
 	})
 }
 
 func TestCache_SetIfNotExist(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New()
 		cache.SetIfNotExist(1, 11, 0)
-		gtest.Assert(cache.Get(1), 11)
+		t.Assert(cache.Get(1), 11)
 		cache.SetIfNotExist(1, 22, 0)
-		gtest.Assert(cache.Get(1), 11)
+		t.Assert(cache.Get(1), 11)
 		cache.SetIfNotExist(2, 22, 0)
-		gtest.Assert(cache.Get(2), 22)
+		t.Assert(cache.Get(2), 22)
 
 		clear()
 		gcache.SetIfNotExist(1, 11, 0)
-		gtest.Assert(gcache.Get(1), 11)
+		t.Assert(gcache.Get(1), 11)
 		gcache.SetIfNotExist(1, 22, 0)
-		gtest.Assert(gcache.Get(1), 11)
+		t.Assert(gcache.Get(1), 11)
 	})
 }
 
 func TestCache_Sets(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New()
 		cache.Sets(g.MapAnyAny{1: 11, 2: 22}, 0)
-		gtest.Assert(cache.Get(1), 11)
+		t.Assert(cache.Get(1), 11)
 
 		clear()
 		gcache.Sets(g.MapAnyAny{1: 11, 2: 22}, 0)
-		gtest.Assert(gcache.Get(1), 11)
+		t.Assert(gcache.Get(1), 11)
 	})
 }
 
 func TestCache_GetOrSet(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New()
 		cache.GetOrSet(1, 11, 0)
-		gtest.Assert(cache.Get(1), 11)
+		t.Assert(cache.Get(1), 11)
 		cache.GetOrSet(1, 111, 0)
-		gtest.Assert(cache.Get(1), 11)
+		t.Assert(cache.Get(1), 11)
 
 		clear()
 		gcache.GetOrSet(1, 11, 0)
-		gtest.Assert(gcache.Get(1), 11)
+		t.Assert(gcache.Get(1), 11)
 		gcache.GetOrSet(1, 111, 0)
-		gtest.Assert(gcache.Get(1), 11)
+		t.Assert(gcache.Get(1), 11)
 	})
 }
 
 func TestCache_GetOrSetFunc(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New()
 		cache.GetOrSetFunc(1, func() interface{} {
 			return 11
 		}, 0)
-		gtest.Assert(cache.Get(1), 11)
+		t.Assert(cache.Get(1), 11)
 		cache.GetOrSetFunc(1, func() interface{} {
 			return 111
 		}, 0)
-		gtest.Assert(cache.Get(1), 11)
+		t.Assert(cache.Get(1), 11)
 
 		clear()
 		gcache.GetOrSetFunc(1, func() interface{} {
 			return 11
 		}, 0)
-		gtest.Assert(gcache.Get(1), 11)
+		t.Assert(gcache.Get(1), 11)
 		gcache.GetOrSetFunc(1, func() interface{} {
 			return 111
 		}, 0)
-		gtest.Assert(gcache.Get(1), 11)
+		t.Assert(gcache.Get(1), 11)
 	})
 }
 
 func TestCache_GetOrSetFuncLock(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New()
 		cache.GetOrSetFuncLock(1, func() interface{} {
 			return 11
 		}, 0)
-		gtest.Assert(cache.Get(1), 11)
+		t.Assert(cache.Get(1), 11)
 		cache.GetOrSetFuncLock(1, func() interface{} {
 			return 111
 		}, 0)
-		gtest.Assert(cache.Get(1), 11)
+		t.Assert(cache.Get(1), 11)
 
 		clear()
 		gcache.GetOrSetFuncLock(1, func() interface{} {
 			return 11
 		}, 0)
-		gtest.Assert(gcache.Get(1), 11)
+		t.Assert(gcache.Get(1), 11)
 		gcache.GetOrSetFuncLock(1, func() interface{} {
 			return 111
 		}, 0)
-		gtest.Assert(gcache.Get(1), 11)
+		t.Assert(gcache.Get(1), 11)
 	})
 }
 
 func TestCache_Clear(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New()
 		cache.Sets(g.MapAnyAny{1: 11, 2: 22}, 0)
 		cache.Clear()
-		gtest.Assert(cache.Size(), 0)
+		t.Assert(cache.Size(), 0)
 	})
 }
 
 func TestCache_SetConcurrency(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New()
 		pool := grpool.New(4)
 		go func() {
@@ -232,51 +232,51 @@ func TestCache_SetConcurrency(t *testing.T) {
 }
 
 func TestCache_Basic(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		{
 			cache := gcache.New()
 			cache.Sets(g.MapAnyAny{1: 11, 2: 22}, 0)
-			gtest.Assert(cache.Contains(1), true)
-			gtest.Assert(cache.Get(1), 11)
+			t.Assert(cache.Contains(1), true)
+			t.Assert(cache.Get(1), 11)
 			data := cache.Data()
-			gtest.Assert(data[1], 11)
-			gtest.Assert(data[2], 22)
-			gtest.Assert(data[3], nil)
-			gtest.Assert(cache.Size(), 2)
+			t.Assert(data[1], 11)
+			t.Assert(data[2], 22)
+			t.Assert(data[3], nil)
+			t.Assert(cache.Size(), 2)
 			keys := cache.Keys()
-			gtest.Assert(gset.NewFrom(g.Slice{1, 2}).Equal(gset.NewFrom(keys)), true)
+			t.Assert(gset.NewFrom(g.Slice{1, 2}).Equal(gset.NewFrom(keys)), true)
 			keyStrs := cache.KeyStrings()
-			gtest.Assert(gset.NewFrom(g.Slice{"1", "2"}).Equal(gset.NewFrom(keyStrs)), true)
+			t.Assert(gset.NewFrom(g.Slice{"1", "2"}).Equal(gset.NewFrom(keyStrs)), true)
 			values := cache.Values()
-			gtest.Assert(gset.NewFrom(g.Slice{11, 22}).Equal(gset.NewFrom(values)), true)
+			t.Assert(gset.NewFrom(g.Slice{11, 22}).Equal(gset.NewFrom(values)), true)
 			removeData1 := cache.Remove(1)
-			gtest.Assert(removeData1, 11)
-			gtest.Assert(cache.Size(), 1)
+			t.Assert(removeData1, 11)
+			t.Assert(cache.Size(), 1)
 			cache.Removes(g.Slice{2})
-			gtest.Assert(cache.Size(), 0)
+			t.Assert(cache.Size(), 0)
 		}
 
 		clear()
 		{
 			gcache.Sets(g.MapAnyAny{1: 11, 2: 22}, 0)
-			gtest.Assert(gcache.Contains(1), true)
-			gtest.Assert(gcache.Get(1), 11)
+			t.Assert(gcache.Contains(1), true)
+			t.Assert(gcache.Get(1), 11)
 			data := gcache.Data()
-			gtest.Assert(data[1], 11)
-			gtest.Assert(data[2], 22)
-			gtest.Assert(data[3], nil)
-			gtest.Assert(gcache.Size(), 2)
+			t.Assert(data[1], 11)
+			t.Assert(data[2], 22)
+			t.Assert(data[3], nil)
+			t.Assert(gcache.Size(), 2)
 			keys := gcache.Keys()
-			gtest.Assert(gset.NewFrom(g.Slice{1, 2}).Equal(gset.NewFrom(keys)), true)
+			t.Assert(gset.NewFrom(g.Slice{1, 2}).Equal(gset.NewFrom(keys)), true)
 			keyStrs := gcache.KeyStrings()
-			gtest.Assert(gset.NewFrom(g.Slice{"1", "2"}).Equal(gset.NewFrom(keyStrs)), true)
+			t.Assert(gset.NewFrom(g.Slice{"1", "2"}).Equal(gset.NewFrom(keyStrs)), true)
 			values := gcache.Values()
-			gtest.Assert(gset.NewFrom(g.Slice{11, 22}).Equal(gset.NewFrom(values)), true)
+			t.Assert(gset.NewFrom(g.Slice{11, 22}).Equal(gset.NewFrom(values)), true)
 			removeData1 := gcache.Remove(1)
-			gtest.Assert(removeData1, 11)
-			gtest.Assert(gcache.Size(), 1)
+			t.Assert(removeData1, 11)
+			t.Assert(gcache.Size(), 1)
 			gcache.Removes(g.Slice{2})
-			gtest.Assert(gcache.Size(), 0)
+			t.Assert(gcache.Size(), 0)
 		}
 	})
 }

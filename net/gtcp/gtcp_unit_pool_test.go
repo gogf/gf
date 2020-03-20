@@ -29,15 +29,15 @@ func Test_Pool_Basic1(t *testing.T) {
 	go s.Run()
 	defer s.Close()
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		conn, err := gtcp.NewPoolConn(fmt.Sprintf("127.0.0.1:%d", p))
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 		defer conn.Close()
 		data := []byte("9999")
 		err = conn.SendPkg(data)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 		err = conn.SendPkgWithTimeout(data, time.Second)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 	})
 }
 
@@ -49,17 +49,17 @@ func Test_Pool_Basic2(t *testing.T) {
 	go s.Run()
 	defer s.Close()
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		conn, err := gtcp.NewPoolConn(fmt.Sprintf("127.0.0.1:%d", p))
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 		defer conn.Close()
 		data := []byte("9999")
 		err = conn.SendPkg(data)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 		//err = conn.SendPkgWithTimeout(data, time.Second)
-		//gtest.Assert(err, nil)
+		//t.Assert(err, nil)
 
 		_, err = conn.SendRecv(data, -1)
-		gtest.AssertNE(err, nil)
+		t.AssertNE(err, nil)
 	})
 }

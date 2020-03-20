@@ -122,7 +122,6 @@ func Convert(i interface{}, t string, params ...interface{}) interface{} {
 	case "Duration", "time.Duration":
 		return Duration(i)
 	default:
-
 		return i
 	}
 }

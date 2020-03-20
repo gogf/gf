@@ -20,7 +20,7 @@ import (
 )
 
 func Test_Parse(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		os.Args = []string{"gf", "--force", "remove", "-fq", "-p=www", "path", "-n", "root"}
 		p, err := gcmd.Parse(map[string]bool{
 			"n, name":   true,
@@ -28,34 +28,34 @@ func Test_Parse(t *testing.T) {
 			"f,force":   false,
 			"q,quiet":   false,
 		})
-		gtest.Assert(err, nil)
-		gtest.Assert(len(p.GetArgAll()), 3)
-		gtest.Assert(p.GetArg(0), "gf")
-		gtest.Assert(p.GetArg(1), "remove")
-		gtest.Assert(p.GetArg(2), "path")
-		gtest.Assert(p.GetArgVar(2).String(), "path")
+		t.Assert(err, nil)
+		t.Assert(len(p.GetArgAll()), 3)
+		t.Assert(p.GetArg(0), "gf")
+		t.Assert(p.GetArg(1), "remove")
+		t.Assert(p.GetArg(2), "path")
+		t.Assert(p.GetArgVar(2).String(), "path")
 
-		gtest.Assert(len(p.GetOptAll()), 8)
-		gtest.Assert(p.GetOpt("n"), "root")
-		gtest.Assert(p.GetOpt("name"), "root")
-		gtest.Assert(p.GetOpt("p"), "www")
-		gtest.Assert(p.GetOpt("prefix"), "www")
-		gtest.Assert(p.GetOptVar("prefix").String(), "www")
+		t.Assert(len(p.GetOptAll()), 8)
+		t.Assert(p.GetOpt("n"), "root")
+		t.Assert(p.GetOpt("name"), "root")
+		t.Assert(p.GetOpt("p"), "www")
+		t.Assert(p.GetOpt("prefix"), "www")
+		t.Assert(p.GetOptVar("prefix").String(), "www")
 
-		gtest.Assert(p.ContainsOpt("n"), true)
-		gtest.Assert(p.ContainsOpt("name"), true)
-		gtest.Assert(p.ContainsOpt("p"), true)
-		gtest.Assert(p.ContainsOpt("prefix"), true)
-		gtest.Assert(p.ContainsOpt("f"), true)
-		gtest.Assert(p.ContainsOpt("force"), true)
-		gtest.Assert(p.ContainsOpt("q"), true)
-		gtest.Assert(p.ContainsOpt("quiet"), true)
-		gtest.Assert(p.ContainsOpt("none"), false)
+		t.Assert(p.ContainsOpt("n"), true)
+		t.Assert(p.ContainsOpt("name"), true)
+		t.Assert(p.ContainsOpt("p"), true)
+		t.Assert(p.ContainsOpt("prefix"), true)
+		t.Assert(p.ContainsOpt("f"), true)
+		t.Assert(p.ContainsOpt("force"), true)
+		t.Assert(p.ContainsOpt("q"), true)
+		t.Assert(p.ContainsOpt("quiet"), true)
+		t.Assert(p.ContainsOpt("none"), false)
 	})
 }
 
 func Test_ParseWithArgs(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		p, err := gcmd.ParseWithArgs(
 			[]string{"gf", "--force", "remove", "-fq", "-p=www", "path", "-n", "root"},
 			map[string]bool{
@@ -64,34 +64,34 @@ func Test_ParseWithArgs(t *testing.T) {
 				"f,force":   false,
 				"q,quiet":   false,
 			})
-		gtest.Assert(err, nil)
-		gtest.Assert(len(p.GetArgAll()), 3)
-		gtest.Assert(p.GetArg(0), "gf")
-		gtest.Assert(p.GetArg(1), "remove")
-		gtest.Assert(p.GetArg(2), "path")
-		gtest.Assert(p.GetArgVar(2).String(), "path")
+		t.Assert(err, nil)
+		t.Assert(len(p.GetArgAll()), 3)
+		t.Assert(p.GetArg(0), "gf")
+		t.Assert(p.GetArg(1), "remove")
+		t.Assert(p.GetArg(2), "path")
+		t.Assert(p.GetArgVar(2).String(), "path")
 
-		gtest.Assert(len(p.GetOptAll()), 8)
-		gtest.Assert(p.GetOpt("n"), "root")
-		gtest.Assert(p.GetOpt("name"), "root")
-		gtest.Assert(p.GetOpt("p"), "www")
-		gtest.Assert(p.GetOpt("prefix"), "www")
-		gtest.Assert(p.GetOptVar("prefix").String(), "www")
+		t.Assert(len(p.GetOptAll()), 8)
+		t.Assert(p.GetOpt("n"), "root")
+		t.Assert(p.GetOpt("name"), "root")
+		t.Assert(p.GetOpt("p"), "www")
+		t.Assert(p.GetOpt("prefix"), "www")
+		t.Assert(p.GetOptVar("prefix").String(), "www")
 
-		gtest.Assert(p.ContainsOpt("n"), true)
-		gtest.Assert(p.ContainsOpt("name"), true)
-		gtest.Assert(p.ContainsOpt("p"), true)
-		gtest.Assert(p.ContainsOpt("prefix"), true)
-		gtest.Assert(p.ContainsOpt("f"), true)
-		gtest.Assert(p.ContainsOpt("force"), true)
-		gtest.Assert(p.ContainsOpt("q"), true)
-		gtest.Assert(p.ContainsOpt("quiet"), true)
-		gtest.Assert(p.ContainsOpt("none"), false)
+		t.Assert(p.ContainsOpt("n"), true)
+		t.Assert(p.ContainsOpt("name"), true)
+		t.Assert(p.ContainsOpt("p"), true)
+		t.Assert(p.ContainsOpt("prefix"), true)
+		t.Assert(p.ContainsOpt("f"), true)
+		t.Assert(p.ContainsOpt("force"), true)
+		t.Assert(p.ContainsOpt("q"), true)
+		t.Assert(p.ContainsOpt("quiet"), true)
+		t.Assert(p.ContainsOpt("none"), false)
 	})
 }
 
 func Test_Handler(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		p, err := gcmd.ParseWithArgs(
 			[]string{"gf", "--force", "remove", "-fq", "-p=www", "path", "-n", "root"},
 			map[string]bool{
@@ -100,37 +100,37 @@ func Test_Handler(t *testing.T) {
 				"f,force":   false,
 				"q,quiet":   false,
 			})
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 		array := garray.New()
 		err = p.BindHandle("remove", func() {
 			array.Append(1)
 		})
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		err = p.BindHandle("remove", func() {
 			array.Append(1)
 		})
-		gtest.AssertNE(err, nil)
+		t.AssertNE(err, nil)
 
 		err = p.BindHandle("test", func() {
 			array.Append(1)
 		})
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		err = p.RunHandle("remove")
-		gtest.Assert(err, nil)
-		gtest.Assert(array.Len(), 1)
+		t.Assert(err, nil)
+		t.Assert(array.Len(), 1)
 
 		err = p.RunHandle("none")
-		gtest.AssertNE(err, nil)
-		gtest.Assert(array.Len(), 1)
+		t.AssertNE(err, nil)
+		t.Assert(array.Len(), 1)
 
 		err = p.RunHandle("test")
-		gtest.Assert(err, nil)
-		gtest.Assert(array.Len(), 2)
+		t.Assert(err, nil)
+		t.Assert(array.Len(), 2)
 
 		err = p.AutoRun()
-		gtest.Assert(err, nil)
-		gtest.Assert(array.Len(), 3)
+		t.Assert(err, nil)
+		t.Assert(array.Len(), 3)
 	})
 }

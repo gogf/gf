@@ -39,13 +39,13 @@ dd = 11
 `
 
 func Test_Decode(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		result, err := gyaml.Decode([]byte(yamlStr))
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		m, ok := result.(map[string]interface{})
-		gtest.Assert(ok, true)
-		gtest.Assert(m, map[string]interface{}{
+		t.Assert(ok, true)
+		t.Assert(m, map[string]interface{}{
 			"url":      "https://goframe.org",
 			"server":   g.Slice{"120.168.117.21", "120.168.117.22"},
 			"pi":       3.14,
@@ -56,11 +56,11 @@ func Test_Decode(t *testing.T) {
 }
 
 func Test_DecodeTo(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		result := make(map[string]interface{})
 		err := gyaml.DecodeTo([]byte(yamlStr), &result)
-		gtest.Assert(err, nil)
-		gtest.Assert(result, map[string]interface{}{
+		t.Assert(err, nil)
+		t.Assert(result, map[string]interface{}{
 			"url":      "https://goframe.org",
 			"server":   g.Slice{"120.168.117.21", "120.168.117.22"},
 			"pi":       3.14,
@@ -71,18 +71,18 @@ func Test_DecodeTo(t *testing.T) {
 }
 
 func Test_DecodeError(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		_, err := gyaml.Decode([]byte(yamlErr))
-		gtest.AssertNE(err, nil)
+		t.AssertNE(err, nil)
 
 		result := make(map[string]interface{})
 		err = gyaml.DecodeTo([]byte(yamlErr), &result)
-		gtest.AssertNE(err, nil)
+		t.AssertNE(err, nil)
 	})
 }
 
 func Test_ToJson(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		m := make(map[string]string)
 		m["yaml"] = yamlStr
 		res, err := gyaml.Encode(m)
@@ -107,10 +107,10 @@ func Test_ToJson(t *testing.T) {
 			t.Errorf("parser ToJson failed. %v", err)
 			return
 		}
-		gtest.Assert(jsonyaml, expectJson)
+		t.Assert(jsonyaml, expectJson)
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		_, err := gyaml.ToJson([]byte(yamlErr))
 		if err == nil {
 			t.Errorf("ToJson failed. %v", err)

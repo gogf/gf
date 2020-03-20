@@ -16,7 +16,7 @@ import (
 )
 
 func Test_Config(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		config := gview.Config{
 			Paths: []string{gfile.Join(gdebug.TestDataPath(), "config")},
 			Data: g.Map{
@@ -27,22 +27,22 @@ func Test_Config(t *testing.T) {
 		}
 		view := gview.New()
 		err := view.SetConfig(config)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		str := `hello ${.name},version:${.version}`
 		view.Assigns(g.Map{"version": "1.7.0"})
 		result, err := view.ParseContent(str, nil)
-		gtest.Assert(err, nil)
-		gtest.Assert(result, "hello gf,version:1.7.0")
+		t.Assert(err, nil)
+		t.Assert(result, "hello gf,version:1.7.0")
 
 		result, err = view.ParseDefault()
-		gtest.Assert(err, nil)
-		gtest.Assert(result, "name:gf")
+		t.Assert(err, nil)
+		t.Assert(result, "name:gf")
 	})
 }
 
 func Test_ConfigWithMap(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		view := gview.New()
 		err := view.SetConfigWithMap(g.Map{
 			"Paths":       []string{gfile.Join(gdebug.TestDataPath(), "config")},
@@ -52,16 +52,16 @@ func Test_ConfigWithMap(t *testing.T) {
 				"name": "gf",
 			},
 		})
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		str := `hello ${.name},version:${.version}`
 		view.Assigns(g.Map{"version": "1.7.0"})
 		result, err := view.ParseContent(str, nil)
-		gtest.Assert(err, nil)
-		gtest.Assert(result, "hello gf,version:1.7.0")
+		t.Assert(err, nil)
+		t.Assert(result, "hello gf,version:1.7.0")
 
 		result, err = view.ParseDefault()
-		gtest.Assert(err, nil)
-		gtest.Assert(result, "name:gf")
+		t.Assert(err, nil)
+		t.Assert(result, "name:gf")
 	})
 }

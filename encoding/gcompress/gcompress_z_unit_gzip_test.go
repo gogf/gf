@@ -29,16 +29,16 @@ func Test_Gzip_UnGzip(t *testing.T) {
 		0x24, 0xa8, 0xd1, 0x0d, 0x00,
 		0x00, 0x00,
 	}
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		arr := []byte(src)
 		data, _ := gcompress.Gzip(arr)
-		gtest.Assert(data, gzip)
+		t.Assert(data, gzip)
 
 		data, _ = gcompress.UnGzip(gzip)
-		gtest.Assert(data, arr)
+		t.Assert(data, arr)
 
 		data, _ = gcompress.UnGzip(gzip[1:])
-		gtest.Assert(data, nil)
+		t.Assert(data, nil)
 	})
 }
 
@@ -48,18 +48,18 @@ func Test_Gzip_UnGzip_File(t *testing.T) {
 	dstPath2 := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr(), "file.txt")
 
 	// Compress.
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		err := gcompress.GzipFile(srcPath, dstPath1, 9)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 		defer gfile.Remove(dstPath1)
-		gtest.Assert(gfile.Exists(dstPath1), true)
+		t.Assert(gfile.Exists(dstPath1), true)
 
 		// Decompress.
 		err = gcompress.UnGzipFile(dstPath1, dstPath2)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 		defer gfile.Remove(dstPath2)
-		gtest.Assert(gfile.Exists(dstPath2), true)
+		t.Assert(gfile.Exists(dstPath2), true)
 
-		gtest.Assert(gfile.GetContents(srcPath), gfile.GetContents(dstPath2))
+		t.Assert(gfile.GetContents(srcPath), gfile.GetContents(dstPath2))
 	})
 }

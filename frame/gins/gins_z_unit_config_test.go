@@ -27,59 +27,59 @@ var (
 )
 
 func Test_Config1(t *testing.T) {
-	gtest.Case(t, func() {
-		gtest.AssertNE(configContent, "")
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertNE(configContent, "")
 	})
-	gtest.Case(t, func() {
-		gtest.AssertNE(gins.Config(), nil)
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertNE(gins.Config(), nil)
 	})
 }
 
 func Test_Config2(t *testing.T) {
 	// relative path
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var err error
 		dirPath := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
 		err = gfile.Mkdir(dirPath)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 		defer gfile.Remove(dirPath)
 
 		name := "config.toml"
 		err = gfile.PutContents(gfile.Join(dirPath, name), configContent)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		err = gins.Config().AddPath(dirPath)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		defer gins.Config().Clear()
 
-		gtest.Assert(gins.Config().Get("test"), "v=1")
-		gtest.Assert(gins.Config().Get("database.default.1.host"), "127.0.0.1")
-		gtest.Assert(gins.Config().Get("redis.disk"), "127.0.0.1:6379,0")
+		t.Assert(gins.Config().Get("test"), "v=1")
+		t.Assert(gins.Config().Get("database.default.1.host"), "127.0.0.1")
+		t.Assert(gins.Config().Get("redis.disk"), "127.0.0.1:6379,0")
 	})
 	// for gfsnotify callbacks to refresh cache of config file
 	time.Sleep(500 * time.Millisecond)
 
 	// relative path, config folder
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var err error
 		dirPath := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
 		err = gfile.Mkdir(dirPath)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 		defer gfile.Remove(dirPath)
 
 		name := "config/config.toml"
 		err = gfile.PutContents(gfile.Join(dirPath, name), configContent)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		err = gins.Config().AddPath(dirPath)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		defer gins.Config().Clear()
 
-		gtest.Assert(gins.Config().Get("test"), "v=1")
-		gtest.Assert(gins.Config().Get("database.default.1.host"), "127.0.0.1")
-		gtest.Assert(gins.Config().Get("redis.disk"), "127.0.0.1:6379,0")
+		t.Assert(gins.Config().Get("test"), "v=1")
+		t.Assert(gins.Config().Get("database.default.1.host"), "127.0.0.1")
+		t.Assert(gins.Config().Get("redis.disk"), "127.0.0.1:6379,0")
 
 		// for gfsnotify callbacks to refresh cache of config file
 		time.Sleep(500 * time.Millisecond)
@@ -87,129 +87,125 @@ func Test_Config2(t *testing.T) {
 }
 
 func Test_Config3(t *testing.T) {
-	gtest.Case(t, func() {
-		gtest.Case(t, func() {
-			var err error
-			dirPath := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
-			err = gfile.Mkdir(dirPath)
-			gtest.Assert(err, nil)
-			defer gfile.Remove(dirPath)
+	gtest.C(t, func(t *gtest.T) {
+		var err error
+		dirPath := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
+		err = gfile.Mkdir(dirPath)
+		t.Assert(err, nil)
+		defer gfile.Remove(dirPath)
 
-			name := "test.toml"
-			err = gfile.PutContents(gfile.Join(dirPath, name), configContent)
-			gtest.Assert(err, nil)
+		name := "test.toml"
+		err = gfile.PutContents(gfile.Join(dirPath, name), configContent)
+		t.Assert(err, nil)
 
-			err = gins.Config("test").AddPath(dirPath)
-			gtest.Assert(err, nil)
+		err = gins.Config("test").AddPath(dirPath)
+		t.Assert(err, nil)
 
-			defer gins.Config("test").Clear()
-			gins.Config("test").SetFileName("test.toml")
+		defer gins.Config("test").Clear()
+		gins.Config("test").SetFileName("test.toml")
 
-			gtest.Assert(gins.Config("test").Get("test"), "v=1")
-			gtest.Assert(gins.Config("test").Get("database.default.1.host"), "127.0.0.1")
-			gtest.Assert(gins.Config("test").Get("redis.disk"), "127.0.0.1:6379,0")
-		})
-		// for gfsnotify callbacks to refresh cache of config file
-		time.Sleep(500 * time.Millisecond)
-
-		gtest.Case(t, func() {
-			var err error
-			dirPath := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
-			err = gfile.Mkdir(dirPath)
-			gtest.Assert(err, nil)
-			defer gfile.Remove(dirPath)
-
-			name := "config/test.toml"
-			err = gfile.PutContents(gfile.Join(dirPath, name), configContent)
-			gtest.Assert(err, nil)
-
-			err = gins.Config("test").AddPath(dirPath)
-			gtest.Assert(err, nil)
-
-			defer gins.Config("test").Clear()
-			gins.Config("test").SetFileName("test.toml")
-
-			gtest.Assert(gins.Config("test").Get("test"), "v=1")
-			gtest.Assert(gins.Config("test").Get("database.default.1.host"), "127.0.0.1")
-			gtest.Assert(gins.Config("test").Get("redis.disk"), "127.0.0.1:6379,0")
-		})
-		// for gfsnotify callbacks to refresh cache of config file for next unit testing case.
-		time.Sleep(500 * time.Millisecond)
+		t.Assert(gins.Config("test").Get("test"), "v=1")
+		t.Assert(gins.Config("test").Get("database.default.1.host"), "127.0.0.1")
+		t.Assert(gins.Config("test").Get("redis.disk"), "127.0.0.1:6379,0")
 	})
+	// for gfsnotify callbacks to refresh cache of config file
+	time.Sleep(500 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		var err error
+		dirPath := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
+		err = gfile.Mkdir(dirPath)
+		t.Assert(err, nil)
+		defer gfile.Remove(dirPath)
+
+		name := "config/test.toml"
+		err = gfile.PutContents(gfile.Join(dirPath, name), configContent)
+		t.Assert(err, nil)
+
+		err = gins.Config("test").AddPath(dirPath)
+		t.Assert(err, nil)
+
+		defer gins.Config("test").Clear()
+		gins.Config("test").SetFileName("test.toml")
+
+		t.Assert(gins.Config("test").Get("test"), "v=1")
+		t.Assert(gins.Config("test").Get("database.default.1.host"), "127.0.0.1")
+		t.Assert(gins.Config("test").Get("redis.disk"), "127.0.0.1:6379,0")
+	})
+	// for gfsnotify callbacks to refresh cache of config file for next unit testing case.
+	time.Sleep(500 * time.Millisecond)
 }
 
 func Test_Config4(t *testing.T) {
-	gtest.Case(t, func() {
-		// absolute path
-		gtest.Case(t, func() {
-			path := fmt.Sprintf(`%s/%d`, gfile.TempDir(), gtime.TimestampNano())
-			file := fmt.Sprintf(`%s/%s`, path, "config.toml")
-			err := gfile.PutContents(file, configContent)
-			gtest.Assert(err, nil)
-			defer gfile.Remove(file)
-			defer gins.Config().Clear()
+	// absolute path
+	gtest.C(t, func(t *gtest.T) {
+		path := fmt.Sprintf(`%s/%d`, gfile.TempDir(), gtime.TimestampNano())
+		file := fmt.Sprintf(`%s/%s`, path, "config.toml")
+		err := gfile.PutContents(file, configContent)
+		t.Assert(err, nil)
+		defer gfile.Remove(file)
+		defer gins.Config().Clear()
 
-			gtest.Assert(gins.Config().AddPath(path), nil)
-			gtest.Assert(gins.Config().Get("test"), "v=1")
-			gtest.Assert(gins.Config().Get("database.default.1.host"), "127.0.0.1")
-			gtest.Assert(gins.Config().Get("redis.disk"), "127.0.0.1:6379,0")
-		})
-		time.Sleep(500 * time.Millisecond)
+		t.Assert(gins.Config().AddPath(path), nil)
+		t.Assert(gins.Config().Get("test"), "v=1")
+		t.Assert(gins.Config().Get("database.default.1.host"), "127.0.0.1")
+		t.Assert(gins.Config().Get("redis.disk"), "127.0.0.1:6379,0")
+	})
+	time.Sleep(500 * time.Millisecond)
 
-		gtest.Case(t, func() {
-			path := fmt.Sprintf(`%s/%d/config`, gfile.TempDir(), gtime.TimestampNano())
-			file := fmt.Sprintf(`%s/%s`, path, "config.toml")
-			err := gfile.PutContents(file, configContent)
-			gtest.Assert(err, nil)
-			defer gfile.Remove(file)
-			defer gins.Config().Clear()
-			gtest.Assert(gins.Config().AddPath(path), nil)
-			gtest.Assert(gins.Config().Get("test"), "v=1")
-			gtest.Assert(gins.Config().Get("database.default.1.host"), "127.0.0.1")
-			gtest.Assert(gins.Config().Get("redis.disk"), "127.0.0.1:6379,0")
-		})
-		time.Sleep(500 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		path := fmt.Sprintf(`%s/%d/config`, gfile.TempDir(), gtime.TimestampNano())
+		file := fmt.Sprintf(`%s/%s`, path, "config.toml")
+		err := gfile.PutContents(file, configContent)
+		t.Assert(err, nil)
+		defer gfile.Remove(file)
+		defer gins.Config().Clear()
+		t.Assert(gins.Config().AddPath(path), nil)
+		t.Assert(gins.Config().Get("test"), "v=1")
+		t.Assert(gins.Config().Get("database.default.1.host"), "127.0.0.1")
+		t.Assert(gins.Config().Get("redis.disk"), "127.0.0.1:6379,0")
+	})
+	time.Sleep(500 * time.Millisecond)
 
-		gtest.Case(t, func() {
-			path := fmt.Sprintf(`%s/%d`, gfile.TempDir(), gtime.TimestampNano())
-			file := fmt.Sprintf(`%s/%s`, path, "test.toml")
-			err := gfile.PutContents(file, configContent)
-			gtest.Assert(err, nil)
-			defer gfile.Remove(file)
-			defer gins.Config("test").Clear()
-			gins.Config("test").SetFileName("test.toml")
-			gtest.Assert(gins.Config("test").AddPath(path), nil)
-			gtest.Assert(gins.Config("test").Get("test"), "v=1")
-			gtest.Assert(gins.Config("test").Get("database.default.1.host"), "127.0.0.1")
-			gtest.Assert(gins.Config("test").Get("redis.disk"), "127.0.0.1:6379,0")
-		})
-		time.Sleep(500 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		path := fmt.Sprintf(`%s/%d`, gfile.TempDir(), gtime.TimestampNano())
+		file := fmt.Sprintf(`%s/%s`, path, "test.toml")
+		err := gfile.PutContents(file, configContent)
+		t.Assert(err, nil)
+		defer gfile.Remove(file)
+		defer gins.Config("test").Clear()
+		gins.Config("test").SetFileName("test.toml")
+		t.Assert(gins.Config("test").AddPath(path), nil)
+		t.Assert(gins.Config("test").Get("test"), "v=1")
+		t.Assert(gins.Config("test").Get("database.default.1.host"), "127.0.0.1")
+		t.Assert(gins.Config("test").Get("redis.disk"), "127.0.0.1:6379,0")
+	})
+	time.Sleep(500 * time.Millisecond)
 
-		gtest.Case(t, func() {
-			path := fmt.Sprintf(`%s/%d/config`, gfile.TempDir(), gtime.TimestampNano())
-			file := fmt.Sprintf(`%s/%s`, path, "test.toml")
-			err := gfile.PutContents(file, configContent)
-			gtest.Assert(err, nil)
-			defer gfile.Remove(file)
-			defer gins.Config().Clear()
-			gins.Config("test").SetFileName("test.toml")
-			gtest.Assert(gins.Config("test").AddPath(path), nil)
-			gtest.Assert(gins.Config("test").Get("test"), "v=1")
-			gtest.Assert(gins.Config("test").Get("database.default.1.host"), "127.0.0.1")
-			gtest.Assert(gins.Config("test").Get("redis.disk"), "127.0.0.1:6379,0")
-		})
+	gtest.C(t, func(t *gtest.T) {
+		path := fmt.Sprintf(`%s/%d/config`, gfile.TempDir(), gtime.TimestampNano())
+		file := fmt.Sprintf(`%s/%s`, path, "test.toml")
+		err := gfile.PutContents(file, configContent)
+		t.Assert(err, nil)
+		defer gfile.Remove(file)
+		defer gins.Config().Clear()
+		gins.Config("test").SetFileName("test.toml")
+		t.Assert(gins.Config("test").AddPath(path), nil)
+		t.Assert(gins.Config("test").Get("test"), "v=1")
+		t.Assert(gins.Config("test").Get("database.default.1.host"), "127.0.0.1")
+		t.Assert(gins.Config("test").Get("redis.disk"), "127.0.0.1:6379,0")
 	})
 }
 func Test_Basic2(t *testing.T) {
 	config := `log-path = "logs"`
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		path := gcfg.DEFAULT_CONFIG_FILE
 		err := gfile.PutContents(path, config)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 		defer func() {
 			_ = gfile.Remove(path)
 		}()
 
-		gtest.Assert(gins.Config().Get("log-path"), "logs")
+		t.Assert(gins.Config().Get("log-path"), "logs")
 	})
 }

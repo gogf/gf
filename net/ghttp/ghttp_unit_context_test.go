@@ -35,10 +35,10 @@ func Test_Context(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/"), `123`)
+		t.Assert(client.GetContent("/"), `123`)
 	})
 }
