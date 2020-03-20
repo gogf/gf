@@ -13,33 +13,33 @@ import (
 
 func Test_Func_bindArgsToQuery(t *testing.T) {
 	// mysql
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var s string
 		s = bindArgsToQuery("select * from table where id>=? and sex=?", []interface{}{100, 1})
-		gtest.Assert(s, "select * from table where id>=100 and sex=1")
+		t.Assert(s, "select * from table where id>=100 and sex=1")
 	})
 	// mssql
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var s string
 		s = bindArgsToQuery("select * from table where id>=@p1 and sex=@p2", []interface{}{100, 1})
-		gtest.Assert(s, "select * from table where id>=100 and sex=1")
+		t.Assert(s, "select * from table where id>=100 and sex=1")
 	})
 	// pgsql
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var s string
 		s = bindArgsToQuery("select * from table where id>=$1 and sex=$2", []interface{}{100, 1})
-		gtest.Assert(s, "select * from table where id>=100 and sex=1")
+		t.Assert(s, "select * from table where id>=100 and sex=1")
 	})
 	// oracle
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var s string
 		s = bindArgsToQuery("select * from table where id>=:1 and sex=:2", []interface{}{100, 1})
-		gtest.Assert(s, "select * from table where id>=100 and sex=1")
+		t.Assert(s, "select * from table where id>=100 and sex=1")
 	})
 }
 
 func Test_Func_doQuoteWord(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		array := map[string]string{
 			"user":                   "`user`",
 			"user u":                 "user u",
@@ -50,13 +50,13 @@ func Test_Func_doQuoteWord(t *testing.T) {
 			"u.id asc, ut.uid desc":  "u.id asc, ut.uid desc",
 		}
 		for k, v := range array {
-			gtest.Assert(doQuoteWord(k, "`", "`"), v)
+			t.Assert(doQuoteWord(k, "`", "`"), v)
 		}
 	})
 }
 
 func Test_Func_doQuoteString(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		// "user", "user u", "user,user_detail", "user u, user_detail ut", "u.id asc".
 		array := map[string]string{
 			"user":                             "`user`",
@@ -70,13 +70,13 @@ func Test_Func_doQuoteString(t *testing.T) {
 			"user..user u, user.user_detail ut": "`user`..`user` u,`user`.`user_detail` ut",
 		}
 		for k, v := range array {
-			gtest.Assert(doQuoteString(k, "`", "`"), v)
+			t.Assert(doQuoteString(k, "`", "`"), v)
 		}
 	})
 }
 
 func Test_Func_addTablePrefix(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		prefix := ""
 		array := map[string]string{
 			"user":                         "`user`",
@@ -90,10 +90,10 @@ func Test_Func_addTablePrefix(t *testing.T) {
 			"UserCenter..user as u, user_detail as ut": "`UserCenter`..`user` as u,`user_detail` as ut",
 		}
 		for k, v := range array {
-			gtest.Assert(doHandleTableName(k, prefix, "`", "`"), v)
+			t.Assert(doHandleTableName(k, prefix, "`", "`"), v)
 		}
 	})
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		prefix := "gf_"
 		array := map[string]string{
 			"user":                         "`gf_user`",
@@ -107,7 +107,7 @@ func Test_Func_addTablePrefix(t *testing.T) {
 			"UserCenter..user as u, user_detail as ut": "`UserCenter`..`gf_user` as u,`gf_user_detail` as ut",
 		}
 		for k, v := range array {
-			gtest.Assert(doHandleTableName(k, prefix, "`", "`"), v)
+			t.Assert(doHandleTableName(k, prefix, "`", "`"), v)
 		}
 	})
 }

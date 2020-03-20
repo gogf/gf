@@ -65,36 +65,36 @@ func Test_Router_ObjectRest(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "1Object Get2")
-		gtest.Assert(client.PutContent("/"), "1Object Put2")
-		gtest.Assert(client.PostContent("/"), "1Object Post2")
-		gtest.Assert(client.DeleteContent("/"), "1Object Delete2")
-		gtest.Assert(client.PatchContent("/"), "1Object Patch2")
-		gtest.Assert(client.OptionsContent("/"), "1Object Options2")
+		t.Assert(client.GetContent("/"), "1Object Get2")
+		t.Assert(client.PutContent("/"), "1Object Put2")
+		t.Assert(client.PostContent("/"), "1Object Post2")
+		t.Assert(client.DeleteContent("/"), "1Object Delete2")
+		t.Assert(client.PatchContent("/"), "1Object Patch2")
+		t.Assert(client.OptionsContent("/"), "1Object Options2")
 		resp1, err := client.Head("/")
 		if err == nil {
 			defer resp1.Close()
 		}
-		gtest.Assert(err, nil)
-		gtest.Assert(resp1.Header.Get("head-ok"), "1")
+		t.Assert(err, nil)
+		t.Assert(resp1.Header.Get("head-ok"), "1")
 
-		gtest.Assert(client.GetContent("/object-rest/get"), "1Object Get2")
-		gtest.Assert(client.PutContent("/object-rest/put"), "1Object Put2")
-		gtest.Assert(client.PostContent("/object-rest/post"), "1Object Post2")
-		gtest.Assert(client.DeleteContent("/object-rest/delete"), "1Object Delete2")
-		gtest.Assert(client.PatchContent("/object-rest/patch"), "1Object Patch2")
-		gtest.Assert(client.OptionsContent("/object-rest/options"), "1Object Options2")
+		t.Assert(client.GetContent("/object-rest/get"), "1Object Get2")
+		t.Assert(client.PutContent("/object-rest/put"), "1Object Put2")
+		t.Assert(client.PostContent("/object-rest/post"), "1Object Post2")
+		t.Assert(client.DeleteContent("/object-rest/delete"), "1Object Delete2")
+		t.Assert(client.PatchContent("/object-rest/patch"), "1Object Patch2")
+		t.Assert(client.OptionsContent("/object-rest/options"), "1Object Options2")
 		resp2, err := client.Head("/object-rest/head")
 		if err == nil {
 			defer resp2.Close()
 		}
-		gtest.Assert(err, nil)
-		gtest.Assert(resp2.Header.Get("head-ok"), "1")
+		t.Assert(err, nil)
+		t.Assert(resp2.Header.Get("head-ok"), "1")
 
-		gtest.Assert(client.GetContent("/none-exist"), "Not Found")
+		t.Assert(client.GetContent("/none-exist"), "Not Found")
 	})
 }

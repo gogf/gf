@@ -36,12 +36,12 @@ func Test_Router_Group_Hook1(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		gtest.Assert(client.GetContent("/api/handler"), "012")
-		gtest.Assert(client.PostContent("/api/handler"), "02")
-		gtest.Assert(client.GetContent("/api/ThisDoesNotExist"), "Not Found")
+		t.Assert(client.GetContent("/api/handler"), "012")
+		t.Assert(client.PostContent("/api/handler"), "02")
+		t.Assert(client.GetContent("/api/ThisDoesNotExist"), "Not Found")
 	})
 }
 
@@ -65,13 +65,13 @@ func Test_Router_Group_Hook2(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		gtest.Assert(client.GetContent("/api/handler"), "012")
-		gtest.Assert(client.PostContent("/api/handler"), "Not Found")
-		gtest.Assert(client.GetContent("/api/ThisDoesNotExist"), "02")
-		gtest.Assert(client.PostContent("/api/ThisDoesNotExist"), "Not Found")
+		t.Assert(client.GetContent("/api/handler"), "012")
+		t.Assert(client.PostContent("/api/handler"), "Not Found")
+		t.Assert(client.GetContent("/api/ThisDoesNotExist"), "02")
+		t.Assert(client.PostContent("/api/ThisDoesNotExist"), "Not Found")
 	})
 }
 
@@ -96,11 +96,11 @@ func Test_Router_Group_Hook3(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		gtest.Assert(client.GetContent("/api/handler"), "012")
-		gtest.Assert(client.PostContent("/api/handler"), "012")
-		gtest.Assert(client.DeleteContent("/api/ThisDoesNotExist"), "02")
+		t.Assert(client.GetContent("/api/handler"), "012")
+		t.Assert(client.PostContent("/api/handler"), "012")
+		t.Assert(client.DeleteContent("/api/ThisDoesNotExist"), "02")
 	})
 }

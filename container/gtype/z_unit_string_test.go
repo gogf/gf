@@ -15,48 +15,48 @@ import (
 )
 
 func Test_String(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		i := gtype.NewString("abc")
 		iClone := i.Clone()
-		gtest.AssertEQ(iClone.Set("123"), "abc")
-		gtest.AssertEQ(iClone.Val(), "123")
+		t.AssertEQ(iClone.Set("123"), "abc")
+		t.AssertEQ(iClone.Val(), "123")
 
 		//空参测试
 		i1 := gtype.NewString()
-		gtest.AssertEQ(i1.Val(), "")
+		t.AssertEQ(i1.Val(), "")
 	})
 }
 
 func Test_String_JSON(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		s := "i love gf"
 		i1 := gtype.NewString(s)
 		b1, err1 := json.Marshal(i1)
 		b2, err2 := json.Marshal(i1.Val())
-		gtest.Assert(err1, nil)
-		gtest.Assert(err2, nil)
-		gtest.Assert(b1, b2)
+		t.Assert(err1, nil)
+		t.Assert(err2, nil)
+		t.Assert(b1, b2)
 
 		i2 := gtype.NewString()
 		err := json.Unmarshal(b2, &i2)
-		gtest.Assert(err, nil)
-		gtest.Assert(i2.Val(), s)
+		t.Assert(err, nil)
+		t.Assert(i2.Val(), s)
 	})
 }
 
 func Test_String_UnmarshalValue(t *testing.T) {
-	type T struct {
+	type V struct {
 		Name string
 		Var  *gtype.String
 	}
-	gtest.Case(t, func() {
-		var t *T
+	gtest.C(t, func(t *gtest.T) {
+		var v *V
 		err := gconv.Struct(map[string]interface{}{
 			"name": "john",
 			"var":  "123",
-		}, &t)
-		gtest.Assert(err, nil)
-		gtest.Assert(t.Name, "john")
-		gtest.Assert(t.Var.Val(), "123")
+		}, &v)
+		t.Assert(err, nil)
+		t.Assert(v.Name, "john")
+		t.Assert(v.Var.Val(), "123")
 	})
 }

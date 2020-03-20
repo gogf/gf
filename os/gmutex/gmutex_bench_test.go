@@ -59,7 +59,7 @@ func Benchmark_GMutex_TryLock(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			if gmu.TryLock() {
-				defer gmu.Unlock()
+				gmu.Unlock()
 			}
 		}
 	})
@@ -77,7 +77,9 @@ func Benchmark_GMutex_RLockRUnlock(b *testing.B) {
 func Benchmark_GMutex_TryRLock(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			gmu.TryRLock()
+			if gmu.TryRLock() {
+				gmu.RUnlock()
+			}
 		}
 	})
 }

@@ -28,7 +28,7 @@ require github.com/gogf/gf latest
 
 # Limitation
 ```
-golang version >= 1.10
+golang version >= 1.11
 ```
 
 # Documentation

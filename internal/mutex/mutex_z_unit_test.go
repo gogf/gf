@@ -16,29 +16,29 @@ import (
 )
 
 func TestMutexIsSafe(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		lock := mutex.New()
-		gtest.Assert(lock.IsSafe(), false)
+		t.Assert(lock.IsSafe(), false)
 
 		lock = mutex.New(false)
-		gtest.Assert(lock.IsSafe(), false)
+		t.Assert(lock.IsSafe(), false)
 
 		lock = mutex.New(false, false)
-		gtest.Assert(lock.IsSafe(), false)
+		t.Assert(lock.IsSafe(), false)
 
 		lock = mutex.New(true, false)
-		gtest.Assert(lock.IsSafe(), true)
+		t.Assert(lock.IsSafe(), true)
 
 		lock = mutex.New(true, true)
-		gtest.Assert(lock.IsSafe(), true)
+		t.Assert(lock.IsSafe(), true)
 
 		lock = mutex.New(true)
-		gtest.Assert(lock.IsSafe(), true)
+		t.Assert(lock.IsSafe(), true)
 	})
 }
 
 func TestSafeMutex(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		safeLock := mutex.New(true)
 		array := garray.New(true)
 
@@ -58,18 +58,18 @@ func TestSafeMutex(t *testing.T) {
 			safeLock.Unlock()
 		}()
 		time.Sleep(50 * time.Millisecond)
-		gtest.Assert(array.Len(), 1)
+		t.Assert(array.Len(), 1)
 		time.Sleep(80 * time.Millisecond)
-		gtest.Assert(array.Len(), 3)
+		t.Assert(array.Len(), 3)
 		time.Sleep(100 * time.Millisecond)
-		gtest.Assert(array.Len(), 3)
+		t.Assert(array.Len(), 3)
 		time.Sleep(100 * time.Millisecond)
-		gtest.Assert(array.Len(), 4)
+		t.Assert(array.Len(), 4)
 	})
 }
 
 func TestUnsafeMutex(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		unsafeLock := mutex.New()
 		array := garray.New(true)
 
@@ -89,12 +89,12 @@ func TestUnsafeMutex(t *testing.T) {
 			unsafeLock.Unlock()
 		}()
 		time.Sleep(50 * time.Millisecond)
-		gtest.Assert(array.Len(), 2)
+		t.Assert(array.Len(), 2)
 		time.Sleep(100 * time.Millisecond)
-		gtest.Assert(array.Len(), 3)
+		t.Assert(array.Len(), 3)
 		time.Sleep(50 * time.Millisecond)
-		gtest.Assert(array.Len(), 3)
+		t.Assert(array.Len(), 3)
 		time.Sleep(100 * time.Millisecond)
-		gtest.Assert(array.Len(), 4)
+		t.Assert(array.Len(), 4)
 	})
 }

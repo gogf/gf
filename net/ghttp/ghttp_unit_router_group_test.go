@@ -90,30 +90,30 @@ func Test_Router_GroupBasic1(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/api/handler"), "Handler")
+		t.Assert(client.GetContent("/api/handler"), "Handler")
 
-		gtest.Assert(client.GetContent("/api/ctl"), "1Controller Index2")
-		gtest.Assert(client.GetContent("/api/ctl/"), "1Controller Index2")
-		gtest.Assert(client.GetContent("/api/ctl/index"), "1Controller Index2")
-		gtest.Assert(client.GetContent("/api/ctl/my-show"), "1Controller Show2")
-		gtest.Assert(client.GetContent("/api/ctl/post"), "1Controller Post2")
-		gtest.Assert(client.GetContent("/api/ctl/show"), "1Controller Show2")
-		gtest.Assert(client.PostContent("/api/ctl/rest"), "1Controller Post2")
+		t.Assert(client.GetContent("/api/ctl"), "1Controller Index2")
+		t.Assert(client.GetContent("/api/ctl/"), "1Controller Index2")
+		t.Assert(client.GetContent("/api/ctl/index"), "1Controller Index2")
+		t.Assert(client.GetContent("/api/ctl/my-show"), "1Controller Show2")
+		t.Assert(client.GetContent("/api/ctl/post"), "1Controller Post2")
+		t.Assert(client.GetContent("/api/ctl/show"), "1Controller Show2")
+		t.Assert(client.PostContent("/api/ctl/rest"), "1Controller Post2")
 
-		gtest.Assert(client.GetContent("/api/obj"), "1Object Index2")
-		gtest.Assert(client.GetContent("/api/obj/"), "1Object Index2")
-		gtest.Assert(client.GetContent("/api/obj/index"), "1Object Index2")
-		gtest.Assert(client.GetContent("/api/obj/delete"), "1Object Delete2")
-		gtest.Assert(client.GetContent("/api/obj/my-show"), "1Object Show2")
-		gtest.Assert(client.GetContent("/api/obj/show"), "1Object Show2")
-		gtest.Assert(client.DeleteContent("/api/obj/rest"), "1Object Delete2")
+		t.Assert(client.GetContent("/api/obj"), "1Object Index2")
+		t.Assert(client.GetContent("/api/obj/"), "1Object Index2")
+		t.Assert(client.GetContent("/api/obj/index"), "1Object Index2")
+		t.Assert(client.GetContent("/api/obj/delete"), "1Object Delete2")
+		t.Assert(client.GetContent("/api/obj/my-show"), "1Object Show2")
+		t.Assert(client.GetContent("/api/obj/show"), "1Object Show2")
+		t.Assert(client.DeleteContent("/api/obj/rest"), "1Object Delete2")
 
-		gtest.Assert(client.DeleteContent("/ThisDoesNotExist"), "Not Found")
-		gtest.Assert(client.DeleteContent("/api/ThisDoesNotExist"), "Not Found")
+		t.Assert(client.DeleteContent("/ThisDoesNotExist"), "Not Found")
+		t.Assert(client.DeleteContent("/api/ThisDoesNotExist"), "Not Found")
 	})
 }
 
@@ -138,24 +138,24 @@ func Test_Router_GroupBasic2(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/api/handler"), "Handler")
+		t.Assert(client.GetContent("/api/handler"), "Handler")
 
-		gtest.Assert(client.GetContent("/api/ctl/my-show"), "1Controller Show2")
-		gtest.Assert(client.GetContent("/api/ctl/post"), "1Controller Post2")
-		gtest.Assert(client.GetContent("/api/ctl/show"), "1Controller Show2")
-		gtest.Assert(client.PostContent("/api/ctl/rest"), "1Controller Post2")
+		t.Assert(client.GetContent("/api/ctl/my-show"), "1Controller Show2")
+		t.Assert(client.GetContent("/api/ctl/post"), "1Controller Post2")
+		t.Assert(client.GetContent("/api/ctl/show"), "1Controller Show2")
+		t.Assert(client.PostContent("/api/ctl/rest"), "1Controller Post2")
 
-		gtest.Assert(client.GetContent("/api/obj/delete"), "1Object Delete2")
-		gtest.Assert(client.GetContent("/api/obj/my-show"), "1Object Show2")
-		gtest.Assert(client.GetContent("/api/obj/show"), "1Object Show2")
-		gtest.Assert(client.DeleteContent("/api/obj/rest"), "1Object Delete2")
+		t.Assert(client.GetContent("/api/obj/delete"), "1Object Delete2")
+		t.Assert(client.GetContent("/api/obj/my-show"), "1Object Show2")
+		t.Assert(client.GetContent("/api/obj/show"), "1Object Show2")
+		t.Assert(client.DeleteContent("/api/obj/rest"), "1Object Delete2")
 
-		gtest.Assert(client.DeleteContent("/ThisDoesNotExist"), "Not Found")
-		gtest.Assert(client.DeleteContent("/api/ThisDoesNotExist"), "Not Found")
+		t.Assert(client.DeleteContent("/ThisDoesNotExist"), "Not Found")
+		t.Assert(client.DeleteContent("/api/ThisDoesNotExist"), "Not Found")
 	})
 }
 
@@ -174,20 +174,20 @@ func Test_Router_GroupBuildInVar(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/api/group-controller/index"), "1Controller Index2")
-		gtest.Assert(client.GetContent("/api/group-controller/post"), "1Controller Post2")
-		gtest.Assert(client.GetContent("/api/group-controller/show"), "1Controller Show2")
+		t.Assert(client.GetContent("/api/group-controller/index"), "1Controller Index2")
+		t.Assert(client.GetContent("/api/group-controller/post"), "1Controller Post2")
+		t.Assert(client.GetContent("/api/group-controller/show"), "1Controller Show2")
 
-		gtest.Assert(client.GetContent("/api/group-object/index"), "1Object Index2")
-		gtest.Assert(client.GetContent("/api/group-object/delete"), "1Object Delete2")
-		gtest.Assert(client.GetContent("/api/group-object/show"), "1Object Show2")
+		t.Assert(client.GetContent("/api/group-object/index"), "1Object Index2")
+		t.Assert(client.GetContent("/api/group-object/delete"), "1Object Delete2")
+		t.Assert(client.GetContent("/api/group-object/show"), "1Object Show2")
 
-		gtest.Assert(client.DeleteContent("/ThisDoesNotExist"), "Not Found")
-		gtest.Assert(client.DeleteContent("/api/ThisDoesNotExist"), "Not Found")
+		t.Assert(client.DeleteContent("/ThisDoesNotExist"), "Not Found")
+		t.Assert(client.DeleteContent("/api/ThisDoesNotExist"), "Not Found")
 	})
 }
 
@@ -205,12 +205,12 @@ func Test_Router_Group_Mthods(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		gtest.Assert(client.GetContent("/ctl/show"), "1Controller Show2")
-		gtest.Assert(client.GetContent("/ctl/post"), "1Controller Post2")
-		gtest.Assert(client.GetContent("/obj/show"), "1Object Show2")
-		gtest.Assert(client.GetContent("/obj/delete"), "1Object Delete2")
+		t.Assert(client.GetContent("/ctl/show"), "1Controller Show2")
+		t.Assert(client.GetContent("/ctl/post"), "1Controller Post2")
+		t.Assert(client.GetContent("/obj/show"), "1Object Show2")
+		t.Assert(client.GetContent("/obj/delete"), "1Object Delete2")
 	})
 }

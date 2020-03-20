@@ -16,49 +16,49 @@ import (
 )
 
 func Test_Float32(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		i := gtype.NewFloat32(0)
 		iClone := i.Clone()
-		gtest.AssertEQ(iClone.Set(0.1), float32(0))
-		gtest.AssertEQ(iClone.Val(), float32(0.1))
+		t.AssertEQ(iClone.Set(0.1), float32(0))
+		t.AssertEQ(iClone.Val(), float32(0.1))
 
 		//空参测试
 		i1 := gtype.NewFloat32()
-		gtest.AssertEQ(i1.Val(), float32(0))
+		t.AssertEQ(i1.Val(), float32(0))
 	})
 }
 
 func Test_Float32_JSON(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		v := float32(math.MaxFloat32)
 		i := gtype.NewFloat32(v)
 		b1, err1 := json.Marshal(i)
 		b2, err2 := json.Marshal(i.Val())
 
-		gtest.Assert(err1, nil)
-		gtest.Assert(err2, nil)
-		gtest.Assert(b1, b2)
+		t.Assert(err1, nil)
+		t.Assert(err2, nil)
+		t.Assert(b1, b2)
 
 		i2 := gtype.NewFloat32()
 		err := json.Unmarshal(b2, &i2)
-		gtest.Assert(err, nil)
-		gtest.Assert(i2.Val(), v)
+		t.Assert(err, nil)
+		t.Assert(i2.Val(), v)
 	})
 }
 
 func Test_Float32_UnmarshalValue(t *testing.T) {
-	type T struct {
+	type Var struct {
 		Name string
 		Var  *gtype.Float32
 	}
-	gtest.Case(t, func() {
-		var t *T
+	gtest.C(t, func(t *gtest.T) {
+		var v *Var
 		err := gconv.Struct(map[string]interface{}{
 			"name": "john",
 			"var":  "123.456",
-		}, &t)
-		gtest.Assert(err, nil)
-		gtest.Assert(t.Name, "john")
-		gtest.Assert(t.Var.Val(), "123.456")
+		}, &v)
+		t.Assert(err, nil)
+		t.Assert(v.Name, "john")
+		t.Assert(v.Var.Val(), "123.456")
 	})
 }

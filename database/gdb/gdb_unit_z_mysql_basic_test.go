@@ -14,16 +14,16 @@ import (
 )
 
 func Test_Instance(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		_, err := gdb.Instance("none")
-		gtest.AssertNE(err, nil)
+		t.AssertNE(err, nil)
 
 		db, err := gdb.Instance()
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		err1 := db.PingMaster()
 		err2 := db.PingSlave()
-		gtest.Assert(err1, nil)
-		gtest.Assert(err2, nil)
+		t.Assert(err1, nil)
+		t.Assert(err2, nil)
 	})
 }
