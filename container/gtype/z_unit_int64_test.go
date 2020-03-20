@@ -57,12 +57,12 @@ func Test_Int64_JSON(t *testing.T) {
 }
 
 func Test_Int64_UnmarshalValue(t *testing.T) {
-	type Var struct {
+	type V struct {
 		Name string
 		Var  *gtype.Int64
 	}
 	gtest.C(t, func(t *gtest.T) {
-		var v *Var
+		var v *V
 		err := gconv.Struct(map[string]interface{}{
 			"name": "john",
 			"var":  "123",

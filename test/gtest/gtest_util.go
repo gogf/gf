@@ -23,7 +23,7 @@ const (
 
 // C creates an unit testing case.
 // The parameter <t> is the pointer to testing.T of stdlib (*testing.T).
-// The parameter <f> is the callback function for unit test case.
+// The parameter <f> is the closure function for unit testing case.
 func C(t *testing.T, f func(t *T)) {
 	defer func() {
 		if err := recover(); err != nil {
@@ -36,7 +36,7 @@ func C(t *testing.T, f func(t *T)) {
 
 // Case creates an unit testing case.
 // The parameter <t> is the pointer to testing.T of stdlib (*testing.T).
-// The parameter <f> is the callback function for unit test case.
+// The parameter <f> is the closure function for unit testing case.
 // Deprecated.
 func Case(t *testing.T, f func()) {
 	defer func() {
