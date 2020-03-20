@@ -36,7 +36,7 @@ func init() {
 		"name": true,
 		"type": true,
 	}, false)
-	t.Assert(err, nil)
+	gtest.Assert(err, nil)
 	configNode = gdb.ConfigNode{
 		Host:             "127.0.0.1",
 		Port:             "3306",

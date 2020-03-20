@@ -44,14 +44,15 @@ func TestRowEncodeAndDecode(t *testing.T) {
 }
 
 func TestBuildQuery(t *testing.T) {
-	src := url.Values{
-		"a": {"a2", "a1"},
-		"b": {"b2", "b1"},
-		"c": {"c1", "c2"},
-	}
-	expect := "a=a2&a=a1&b=b2&b=b1&c=c1&c=c2"
-
-	t.Assert(gurl.BuildQuery(src), expect)
+	gtest.C(t, func(t *gtest.T) {
+		src := url.Values{
+			"a": {"a2", "a1"},
+			"b": {"b2", "b1"},
+			"c": {"c1", "c2"},
+		}
+		expect := "a=a2&a=a1&b=b2&b=b1&c=c1&c=c2"
+		t.Assert(gurl.BuildQuery(src), expect)
+	})
 }
 
 func TestParseURL(t *testing.T) {
