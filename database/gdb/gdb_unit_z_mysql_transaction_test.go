@@ -102,7 +102,7 @@ func Test_TX_Prepare(t *testing.T) {
 	if err != nil {
 		gtest.Error(err)
 	}
-	t.Assert(array[0], "100")
+	gtest.Assert(array[0], "100")
 	if err := rows.Close(); err != nil {
 		gtest.Error(err)
 	}

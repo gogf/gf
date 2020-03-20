@@ -1510,23 +1510,25 @@ func Test_Model_Delete(t *testing.T) {
 func Test_Model_Offset(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
-
-	result, err := db.Table(table).Limit(2).Offset(5).Order("id").Select()
-	t.Assert(err, nil)
-	t.Assert(len(result), 2)
-	t.Assert(result[0]["id"], 6)
-	tgit.Assert(result[1]["id"], 7)
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Table(table).Limit(2).Offset(5).Order("id").Select()
+		t.Assert(err, nil)
+		t.Assert(len(result), 2)
+		t.Assert(result[0]["id"], 6)
+		t.Assert(result[1]["id"], 7)
+	})
 }
 
 func Test_Model_ForPage(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
-
-	result, err := db.Table(table).ForPage(3, 3).Order("id").Select()
-	t.Assert(err, nil)
-	t.Assert(len(result), 3)
-	t.Assert(result[0]["id"], 7)
-	t.Assert(result[1]["id"], 8)
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Table(table).Page(3, 3).Order("id").All()
+		t.Assert(err, nil)
+		t.Assert(len(result), 3)
+		t.Assert(result[0]["id"], 7)
+		t.Assert(result[1]["id"], 8)
+	})
 }
 
 func Test_Model_Option_Map(t *testing.T) {

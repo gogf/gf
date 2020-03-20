@@ -105,7 +105,7 @@ func Test_Pool_Package_Timeout(t *testing.T) {
 				break
 			}
 			time.Sleep(time.Second)
-			t.Assert(conn.SendPkg(data), nil)
+			gtest.Assert(conn.SendPkg(data), nil)
 		}
 	})
 	go s.Run()
@@ -141,7 +141,7 @@ func Test_Pool_Package_Option(t *testing.T) {
 			if err != nil {
 				break
 			}
-			t.Assert(conn.SendPkg(data, option), nil)
+			gtest.Assert(conn.SendPkg(data, option), nil)
 		}
 	})
 	go s.Run()

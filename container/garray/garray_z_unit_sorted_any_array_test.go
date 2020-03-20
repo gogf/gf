@@ -679,31 +679,31 @@ func TestSortedArray_RemoveValue(t *testing.T) {
 }
 
 func TestSortedArray_UnmarshalValue(t *testing.T) {
-	type T struct {
+	type V struct {
 		Name  string
 		Array *garray.SortedArray
 	}
 	// JSON
 	gtest.C(t, func(t *gtest.T) {
-		var t *T
+		var v *V
 		err := gconv.Struct(g.Map{
 			"name":  "john",
 			"array": []byte(`[2,3,1]`),
-		}, &t)
+		}, &v)
 		t.Assert(err, nil)
-		t.Assert(t.Name, "john")
-		t.Assert(t.Array.Slice(), g.Slice{1, 2, 3})
+		t.Assert(v.Name, "john")
+		t.Assert(v.Array.Slice(), g.Slice{1, 2, 3})
 	})
 	// Map
 	gtest.C(t, func(t *gtest.T) {
-		var t *T
+		var v *V
 		err := gconv.Struct(g.Map{
 			"name":  "john",
 			"array": g.Slice{2, 3, 1},
-		}, &t)
+		}, &v)
 		t.Assert(err, nil)
-		t.Assert(t.Name, "john")
-		t.Assert(t.Array.Slice(), g.Slice{1, 2, 3})
+		t.Assert(v.Name, "john")
+		t.Assert(v.Array.Slice(), g.Slice{1, 2, 3})
 	})
 }
 
