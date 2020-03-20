@@ -579,13 +579,13 @@ func TestStrArray_RemoveValue(t *testing.T) {
 }
 
 func TestStrArray_UnmarshalValue(t *testing.T) {
-	type Var struct {
+	type V struct {
 		Name  string
 		Array *garray.StrArray
 	}
 	// JSON
 	gtest.C(t, func(t *gtest.T) {
-		var v *Var
+		var v *V
 		err := gconv.Struct(g.Map{
 			"name":  "john",
 			"array": []byte(`["1","2","3"]`),
@@ -596,7 +596,7 @@ func TestStrArray_UnmarshalValue(t *testing.T) {
 	})
 	// Map
 	gtest.C(t, func(t *gtest.T) {
-		var v *Var
+		var v *V
 		err := gconv.Struct(g.Map{
 			"name":  "john",
 			"array": g.SliceStr{"1", "2", "3"},

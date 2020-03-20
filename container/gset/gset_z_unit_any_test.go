@@ -365,13 +365,13 @@ func TestSet_AddIfNotExistFunc(t *testing.T) {
 }
 
 func TestSet_UnmarshalValue(t *testing.T) {
-	type Var struct {
+	type V struct {
 		Name string
 		Set  *gset.Set
 	}
 	// JSON
 	gtest.C(t, func(t *gtest.T) {
-		var v *Var
+		var v *V
 		err := gconv.Struct(g.Map{
 			"name": "john",
 			"set":  []byte(`["k1","k2","k3"]`),
@@ -386,7 +386,7 @@ func TestSet_UnmarshalValue(t *testing.T) {
 	})
 	// Map
 	gtest.C(t, func(t *gtest.T) {
-		var v *Var
+		var v *V
 		err := gconv.Struct(g.Map{
 			"name": "john",
 			"set":  g.Slice{"k1", "k2", "k3"},

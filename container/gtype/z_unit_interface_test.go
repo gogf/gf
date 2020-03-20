@@ -47,12 +47,12 @@ func Test_Interface_JSON(t *testing.T) {
 }
 
 func Test_Interface_UnmarshalValue(t *testing.T) {
-	type Var struct {
+	type V struct {
 		Name string
 		Var  *gtype.Interface
 	}
 	gtest.C(t, func(t *gtest.T) {
-		var v *Var
+		var v *V
 		err := gconv.Struct(map[string]interface{}{
 			"name": "john",
 			"var":  "123",
