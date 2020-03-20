@@ -8,7 +8,6 @@ package gjson_test
 
 import (
 	"github.com/gogf/gf/encoding/gjson"
-	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/test/gtest"
 	"testing"
 )
@@ -91,7 +90,6 @@ func Test_ToStruct1(t *testing.T) {
 		t.Assert(err, nil)
 		err = j.ToStruct(data)
 		t.Assert(err, nil)
-		g.Dump(data)
 	})
 }
 

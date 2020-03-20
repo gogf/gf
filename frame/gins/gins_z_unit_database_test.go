@@ -18,8 +18,9 @@ import (
 )
 
 func Test_Database(t *testing.T) {
-	databaseContent := gfile.GetContents(gfile.Join(gdebug.TestDataPath(), "database", "config.toml"))
-
+	databaseContent := gfile.GetContents(
+		gfile.Join(gdebug.TestDataPath(), "database", "config.toml"),
+	)
 	gtest.C(t, func(t *gtest.T) {
 		var err error
 		dirPath := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
@@ -33,14 +34,12 @@ func Test_Database(t *testing.T) {
 
 		err = gins.Config().AddPath(dirPath)
 		t.Assert(err, nil)
-	})
 
-	defer gins.Config().Clear()
+		defer gins.Config().Clear()
 
-	// for gfsnotify callbacks to refresh cache of config file
-	time.Sleep(500 * time.Millisecond)
+		// for gfsnotify callbacks to refresh cache of config file
+		time.Sleep(500 * time.Millisecond)
 
-	gtest.C(t, func(t *gtest.T) {
 		//fmt.Println("gins Test_Database", Config().Get("test"))
 
 		dbDefault := gins.Database()
