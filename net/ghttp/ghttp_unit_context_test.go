@@ -7,7 +7,6 @@
 package ghttp_test
 
 import (
-	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -22,11 +21,11 @@ func Test_Context(t *testing.T) {
 	s := g.Server(p)
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(func(r *ghttp.Request) {
-			r.Context = context.WithValue(r.Context, "traceid", 123)
+			r.SetCtxVar("traceid", 123)
 			r.Middleware.Next()
 		})
 		group.GET("/", func(r *ghttp.Request) {
-			r.Response.Write(r.Context.Value("traceid"))
+			r.Response.Write(r.GetCtxVar("traceid"))
 		})
 	})
 	s.SetPort(p)

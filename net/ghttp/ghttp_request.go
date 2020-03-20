@@ -32,7 +32,7 @@ type Request struct {
 	LeaveTime       int64                  // Request ending time in microseconds.
 	Middleware      *Middleware            // Middleware manager.
 	StaticFile      *StaticFile            // Static file object for static file serving.
-	Context         context.Context        // Custom context for internal usage purpose.
+	context         context.Context        // Custom context for internal usage purpose.
 	handlers        []*handlerParsedItem   // All matched handlers containing handler, hook and middleware for this request.
 	hasHookHandler  bool                   // A bool marking whether there's hook handler in the handlers for performance purpose.
 	hasServeHandler bool                   // A bool marking whether there's serving handler in the handlers for performance purpose.
@@ -68,7 +68,6 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 		Request:   r,
 		Response:  newResponse(s, w),
 		EnterTime: gtime.TimestampMilli(),
-		Context:   r.Context(),
 	}
 	request.Cookie = GetCookie(request)
 	request.Session = s.sessionManager.New(request.GetSessionId())
