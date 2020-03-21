@@ -11,20 +11,19 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
 )
 
-//Decode converts INI format to map
+// Decode converts INI format to map.
 func Decode(data []byte) (res map[string]interface{}, err error) {
 	res = make(map[string]interface{})
 	fieldMap := make(map[string]interface{})
 
 	a := bytes.NewReader(data)
-
 	r := bufio.NewReader(a)
-
 	var section string
 	var lastSection string
 	var haveSection bool
@@ -65,30 +64,27 @@ func Decode(data []byte) (res map[string]interface{}, err error) {
 
 		if strings.Contains(lineStr, "=") && haveSection {
 			values := strings.Split(lineStr, "=")
-
 			fieldMap[strings.TrimSpace(values[0])] = strings.TrimSpace(strings.Join(values[1:], ""))
 			res[section] = fieldMap
 		}
-
 	}
 
 	if haveSection == false {
-		return nil, fmt.Errorf("Failed to parse INI file, not found section")
+		return nil, errors.New("failed to parse INI file, section not found")
 	}
 	return res, nil
 }
 
-//Encode converts map to INI format
+// Encode converts map to INI format.
 func Encode(data map[string]interface{}) (res []byte, err error) {
 	w := new(bytes.Buffer)
 
-	w.WriteString(";gini\n")
+	w.WriteString("; this ini file is produced by package gini\n")
 	for k, v := range data {
 		n, err := w.WriteString(fmt.Sprintf("[%s]\n", k))
 		if err != nil || n == 0 {
 			return nil, fmt.Errorf("write data failed. %v", err)
 		}
-
 		for kk, vv := range v.(map[string]interface{}) {
 			n, err := w.WriteString(fmt.Sprintf("%s=%s\n", kk, vv.(string)))
 			if err != nil || n == 0 {
@@ -105,12 +101,11 @@ func Encode(data map[string]interface{}) (res []byte, err error) {
 	return res, nil
 }
 
-//ToJson convert INI format to JSON
+// ToJson convert INI format to JSON.
 func ToJson(data []byte) (res []byte, err error) {
 	iniMap, err := Decode(data)
 	if err != nil {
 		return nil, err
 	}
-
 	return json.Marshal(iniMap)
 }

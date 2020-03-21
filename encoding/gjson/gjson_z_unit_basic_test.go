@@ -400,11 +400,21 @@ func Test_Basic(t *testing.T) {
 		err = j.Remove("1")
 		t.Assert(err, nil)
 		t.Assert(j.Get("0"), 1)
+		t.Assert(len(j.ToArray()), 2)
+
+		j = gjson.New(`[1,2,3]`)
+		// If index 0 is delete, its next item will be at index 0.
+		t.Assert(j.Remove("0"), nil)
+		t.Assert(j.Remove("0"), nil)
+		t.Assert(j.Remove("0"), nil)
+		t.Assert(j.Get("0"), nil)
+		t.Assert(len(j.ToArray()), 0)
 
 		j = gjson.New(`[1,2,3]`)
 		err = j.Remove("3")
 		t.Assert(err, nil)
 		t.Assert(j.Get("0"), 1)
+		t.Assert(len(j.ToArray()), 3)
 
 		j = gjson.New(`[1,2,3]`)
 		err = j.Remove("0.3")
@@ -414,7 +424,7 @@ func Test_Basic(t *testing.T) {
 		j = gjson.New(`[1,2,3]`)
 		err = j.Remove("0.a")
 		t.Assert(err, nil)
-		t.Assert(len(j.Get("0").(g.Map)), 0)
+		t.Assert(j.Get("0"), 1)
 
 		name := struct {
 			Name string
