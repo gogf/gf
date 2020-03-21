@@ -23,7 +23,7 @@ func Test_I18n(t *testing.T) {
 		expect2 := `john says "こんにちは世界!"`
 		expect3 := `john says "{#hello}{#world}!"`
 
-		g.I18n().SetPath(gdebug.CallerDirectory() + gfile.Separator + "testdata" + gfile.Separator + "i18n")
+		g.I18n().SetPath(gdebug.TestDataPath("i18n"))
 
 		g.I18n().SetLanguage("zh-CN")
 		result1, err := g.View().ParseContent(content, g.Map{
