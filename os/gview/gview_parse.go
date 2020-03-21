@@ -174,7 +174,7 @@ func (view *View) ParseContent(content string, params ...Params) (string, error)
 		return "", nil
 	}
 	err := (error)(nil)
-	key := fmt.Sprintf("%s_%v", gCONTENT_TEMPLATE_NAME, view.delimiters)
+	key := fmt.Sprintf("%s_%v_%v", gCONTENT_TEMPLATE_NAME, view.delimiters, view.config.AutoEncode)
 	tpl := templates.GetOrSetFuncLock(key, func() interface{} {
 		if view.config.AutoEncode {
 			return htmltpl.New(gCONTENT_TEMPLATE_NAME).Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcMap)
