@@ -38,7 +38,7 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 	array := strings.Split(pattern, string(j.c))
 	length := len(array)
 	value = j.convertValue(value)
-	// 初始化判断
+	// Initialization checks.
 	if *j.p == nil {
 		if gstr.IsNumeric(array[0]) {
 			*j.p = make([]interface{}, 0)
@@ -146,9 +146,15 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 						pointer = &v
 					}
 				} else {
-					var v interface{} = make(map[string]interface{})
-					pparent = j.setPointerWithValue(pointer, array[i], v)
-					pointer = &v
+					v := (*pointer).([]interface{})
+					if len(v) > valn {
+						pparent = pointer
+						pointer = &(*pointer).([]interface{})[valn]
+					} else {
+						var v interface{} = make(map[string]interface{})
+						pparent = j.setPointerWithValue(pointer, array[i], v)
+						pointer = &v
+					}
 				}
 			}
 

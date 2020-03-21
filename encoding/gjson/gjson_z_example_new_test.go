@@ -11,7 +11,7 @@ import (
 	"github.com/gogf/gf/encoding/gjson"
 )
 
-func Example_NewFromJson() {
+func Example_New_FromJson() {
 	jsonContent := `{"name":"john", "score":"100"}`
 	j := gjson.New(jsonContent)
 	fmt.Println(j.Get("name"))
@@ -21,9 +21,10 @@ func Example_NewFromJson() {
 	// 100
 }
 
-func Example_NewFromXml() {
+func Example_New_FromXml() {
 	jsonContent := `<?xml version="1.0" encoding="UTF-8"?><doc><name>john</name><score>100</score></doc>`
 	j := gjson.New(jsonContent)
+	// Note that there's root node in the XML content.
 	fmt.Println(j.Get("doc.name"))
 	fmt.Println(j.Get("doc.score"))
 	// Output:
@@ -31,7 +32,7 @@ func Example_NewFromXml() {
 	// 100
 }
 
-func Example_NewFromStruct() {
+func Example_New_FromStruct() {
 	type Me struct {
 		Name  string `json:"name"`
 		Score int    `json:"score"`
@@ -48,7 +49,7 @@ func Example_NewFromStruct() {
 	// 100
 }
 
-func Example_NewFromStructWithTag() {
+func Example_New_FromStructWithTag() {
 	type Me struct {
 		Name  string `tag:"name"`
 		Score int    `tag:"score"`
@@ -59,6 +60,8 @@ func Example_NewFromStructWithTag() {
 		Score: 100,
 		Title: "engineer",
 	}
+	// The parameter <tags> specifies custom priority tags for struct conversion to map,
+	// multiple tags joined with char ','.
 	j := gjson.NewWithTag(me, "tag")
 	fmt.Println(j.Get("name"))
 	fmt.Println(j.Get("score"))
