@@ -12,6 +12,7 @@ import (
 )
 
 // Context retrieves and returns the request's context.
+// This function overwrites the http.Request.Context function.
 func (r *Request) Context() context.Context {
 	if r.context == nil {
 		r.context = r.Request.Context()
