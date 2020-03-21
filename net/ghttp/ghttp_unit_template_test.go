@@ -47,6 +47,32 @@ func Test_Template_Basic(t *testing.T) {
 	})
 }
 
+func Test_Template_Encode(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		v := gview.New(gfile.Join(gdebug.TestDataPath(), "template", "basic"))
+		v.SetAutoEncode(true)
+		p := ports.PopRand()
+		s := g.Server(p)
+		s.SetView(v)
+		s.BindHandler("/", func(r *ghttp.Request) {
+			err := r.Response.WriteTpl("index.html", g.Map{
+				"name": "john",
+			})
+			t.Assert(err, nil)
+		})
+		s.SetDumpRouterMap(false)
+		s.SetPort(p)
+		s.Start()
+		defer s.Shutdown()
+		time.Sleep(100 * time.Millisecond)
+		client := ghttp.NewClient()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+
+		t.Assert(client.GetContent("/"), "Name:john")
+		t.Assert(client.GetContent("/"), "Name:john")
+	})
+}
+
 func Test_Template_Layout1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New(gfile.Join(gdebug.TestDataPath(), "template", "layout1"))

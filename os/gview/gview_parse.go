@@ -142,7 +142,11 @@ func (view *View) Parse(file string, params ...Params) (result string, err error
 	}
 	buffer := bytes.NewBuffer(nil)
 	if view.config.AutoEncode {
-		if err := tpl.(*htmltpl.Template).Execute(buffer, variables); err != nil {
+		newTpl, err := tpl.(*htmltpl.Template).Clone()
+		if err != nil {
+			return "", err
+		}
+		if err := newTpl.Execute(buffer, variables); err != nil {
 			return "", err
 		}
 	} else {
@@ -221,7 +225,11 @@ func (view *View) ParseContent(content string, params ...Params) (string, error)
 	}
 	buffer := bytes.NewBuffer(nil)
 	if view.config.AutoEncode {
-		if err := tpl.(*htmltpl.Template).Execute(buffer, variables); err != nil {
+		newTpl, err := tpl.(*htmltpl.Template).Clone()
+		if err != nil {
+			return "", err
+		}
+		if err := newTpl.Execute(buffer, variables); err != nil {
 			return "", err
 		}
 	} else {
