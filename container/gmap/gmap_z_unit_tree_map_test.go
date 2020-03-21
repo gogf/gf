@@ -76,7 +76,6 @@ func Test_TreeMap_Batch(t *testing.T) {
 func Test_TreeMap_Iterator(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect := map[interface{}]interface{}{1: 1, "key1": "val1"}
-
 		m := gmap.NewTreeMapFrom(gutil.ComparatorString, expect)
 		m.Iterator(func(k interface{}, v interface{}) bool {
 			t.Assert(expect[k], v)
@@ -95,6 +94,25 @@ func Test_TreeMap_Iterator(t *testing.T) {
 		})
 		t.Assert(i, 2)
 		t.Assert(j, 1)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		expect := map[interface{}]interface{}{1: 1, "key1": "val1"}
+		m := gmap.NewTreeMapFrom(gutil.ComparatorString, expect)
+		for i := 0; i < 10; i++ {
+			m.IteratorAsc(func(k interface{}, v interface{}) bool {
+				t.Assert(expect[k], v)
+				return true
+			})
+		}
+		j := 0
+		for i := 0; i < 10; i++ {
+			m.IteratorAsc(func(k interface{}, v interface{}) bool {
+				j++
+				return false
+			})
+		}
+		t.Assert(j, 10)
 	})
 }
 

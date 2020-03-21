@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gjson provides convenient API for JSON/XML/YAML/TOML data handling.
+// Package gjson provides convenient API for JSON/XML/INI/YAML/TOML data handling.
 package gjson
 
 import (
