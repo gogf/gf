@@ -1,54 +1,36 @@
 package main
 
 import (
-	"fmt"
-	"github.com/gogf/gf/encoding/gjson"
-	"github.com/gogf/gf/text/gstr"
+	"net/http"
+
+	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/net/ghttp"
 )
 
-const (
-	TraceIdName = "trace-id"
-)
+func MiddlewareAuth(r *ghttp.Request) {
+	token := r.Get("token")
+	if token == "123456" {
+		r.Response.Writeln("auth")
+		r.Middleware.Next()
+	} else {
+		r.Response.WriteStatus(http.StatusForbidden)
+	}
+}
+
+func MiddlewareCORS(r *ghttp.Request) {
+	r.Response.Writeln("cors")
+	r.Response.CORSDefault()
+	r.Middleware.Next()
+}
 
 func main() {
-
-	type Sender struct {
-		Name  string `json:"name"`
-		Email string `json:"email"`
-	}
-	type To struct {
-		Name  string `json:"name"`
-		Email string `json:"email"`
-	}
-
-	type SendReq struct {
-		Sender *Sender `json:"sender"`
-		//Name        string  `json:"name"`
-		HtmlContent string `json:"htmlContent"`
-		Subject     string `json:"subject"`
-		To          []*To  `json:"to"`
-	}
-
-	//url := "emailCampaigns"
-	sendreq := SendReq{
-		Sender: &Sender{
-			Name:  "123",
-			Email: "globalclienthelp@gmail.com",
-		},
-		To: []*To{{
-			Name: "456",
-			//Email: order.Email,
-			Email: "jinmao88@hotmail.com",
-		}},
-	}
-	subject := ""
-	htmlcontent := ""
-
-	subject = " Your order：" + gstr.Split("11111", "-")[1] + " ，  Shipment is on its way."
-	htmlcontent = "test"
-	sendreq.Subject = subject
-	sendreq.HtmlContent = htmlcontent
-	j, err := gjson.DecodeToJson(sendreq)
-	fmt.Println(err)
-	fmt.Println(j)
+	s := g.Server()
+	s.Group("/api.v2", func(group *ghttp.RouterGroup) {
+		group.Middleware(MiddlewareCORS, MiddlewareAuth)
+		group.ALL("/user/list", func(r *ghttp.Request) {
+			r.Response.Writeln("list")
+		})
+	})
+	s.SetPort(8199)
+	s.Run()
 }
