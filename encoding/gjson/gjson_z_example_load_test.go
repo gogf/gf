@@ -14,14 +14,14 @@ import (
 )
 
 func Example_LoadJson() {
-	jsonFilePath := gfile.Join(gdebug.TestDataPath(), "json", "data1.json")
+	jsonFilePath := gdebug.TestDataPath("json", "data1.json")
 	j, _ := gjson.Load(jsonFilePath)
 	fmt.Println(j.Get("name"))
 	fmt.Println(j.Get("score"))
 }
 
 func Example_LoadXml() {
-	jsonFilePath := gfile.Join(gdebug.TestDataPath(), "xml", "data1.xml")
+	jsonFilePath := gdebug.TestDataPath("xml", "data1.xml")
 	j, _ := gjson.Load(jsonFilePath)
 	fmt.Println(j.Get("doc.name"))
 	fmt.Println(j.Get("doc.score"))

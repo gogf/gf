@@ -19,7 +19,7 @@ import (
 
 func Test_Database(t *testing.T) {
 	databaseContent := gfile.GetContents(
-		gfile.Join(gdebug.TestDataPath(), "database", "config.toml"),
+		gdebug.TestDataPath("database", "config.toml"),
 	)
 	gtest.C(t, func(t *gtest.T) {
 		var err error

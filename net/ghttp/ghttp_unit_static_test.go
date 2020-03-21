@@ -66,7 +66,7 @@ func Test_Static_ServerRoot_Security(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		p := ports.PopRand()
 		s := g.Server(p)
-		s.SetServerRoot(gfile.Join(gdebug.TestDataPath(), "static1"))
+		s.SetServerRoot(gdebug.TestDataPath("static1"))
 		s.SetPort(p)
 		s.Start()
 		defer s.Shutdown()

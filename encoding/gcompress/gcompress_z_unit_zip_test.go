@@ -20,8 +20,8 @@ import (
 func Test_ZipPath(t *testing.T) {
 	// file
 	gtest.C(t, func(t *gtest.T) {
-		srcPath := gfile.Join(gdebug.TestDataPath(), "zip", "path1", "1.txt")
-		dstPath := gfile.Join(gdebug.TestDataPath(), "zip", "zip.zip")
+		srcPath := gdebug.TestDataPath("zip", "path1", "1.txt")
+		dstPath := gdebug.TestDataPath("zip", "zip.zip")
 
 		t.Assert(gfile.Exists(dstPath), false)
 		err := gcompress.ZipPath(srcPath, dstPath)
@@ -44,8 +44,8 @@ func Test_ZipPath(t *testing.T) {
 	})
 	// directory
 	gtest.C(t, func(t *gtest.T) {
-		srcPath := gfile.Join(gdebug.TestDataPath(), "zip")
-		dstPath := gfile.Join(gdebug.TestDataPath(), "zip", "zip.zip")
+		srcPath := gdebug.TestDataPath("zip")
+		dstPath := gdebug.TestDataPath("zip", "zip.zip")
 
 		pwd := gfile.Pwd()
 		err := gfile.Chdir(srcPath)
@@ -77,10 +77,10 @@ func Test_ZipPath(t *testing.T) {
 	})
 	// multiple paths joined using char ','
 	gtest.C(t, func(t *gtest.T) {
-		srcPath := gfile.Join(gdebug.TestDataPath(), "zip")
-		srcPath1 := gfile.Join(gdebug.TestDataPath(), "zip", "path1")
-		srcPath2 := gfile.Join(gdebug.TestDataPath(), "zip", "path2")
-		dstPath := gfile.Join(gdebug.TestDataPath(), "zip", "zip.zip")
+		srcPath := gdebug.TestDataPath("zip")
+		srcPath1 := gdebug.TestDataPath("zip", "path1")
+		srcPath2 := gdebug.TestDataPath("zip", "path2")
+		dstPath := gdebug.TestDataPath("zip", "zip.zip")
 
 		pwd := gfile.Pwd()
 		err := gfile.Chdir(srcPath)
@@ -116,9 +116,9 @@ func Test_ZipPath(t *testing.T) {
 
 func Test_ZipPathWriter(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		srcPath := gfile.Join(gdebug.TestDataPath(), "zip")
-		srcPath1 := gfile.Join(gdebug.TestDataPath(), "zip", "path1")
-		srcPath2 := gfile.Join(gdebug.TestDataPath(), "zip", "path2")
+		srcPath := gdebug.TestDataPath("zip")
+		srcPath1 := gdebug.TestDataPath("zip", "path1")
+		srcPath2 := gdebug.TestDataPath("zip", "path2")
 
 		pwd := gfile.Pwd()
 		err := gfile.Chdir(srcPath)

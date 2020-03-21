@@ -45,7 +45,7 @@ func Test_Params_File_Single(t *testing.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		srcPath := gfile.Join(gdebug.TestDataPath(), "upload", "file1.txt")
+		srcPath := gdebug.TestDataPath("upload", "file1.txt")
 		dstPath := gfile.Join(dstDirPath, "file1.txt")
 		content := client.PostContent("/upload/single", g.Map{
 			"file": "@file:" + srcPath,
@@ -61,7 +61,7 @@ func Test_Params_File_Single(t *testing.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		srcPath := gfile.Join(gdebug.TestDataPath(), "upload", "file2.txt")
+		srcPath := gdebug.TestDataPath("upload", "file2.txt")
 		content := client.PostContent("/upload/single", g.Map{
 			"file":           "@file:" + srcPath,
 			"randomlyRename": true,
@@ -98,7 +98,7 @@ func Test_Params_File_CustomName(t *testing.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		srcPath := gfile.Join(gdebug.TestDataPath(), "upload", "file1.txt")
+		srcPath := gdebug.TestDataPath("upload", "file1.txt")
 		dstPath := gfile.Join(dstDirPath, "my.txt")
 		content := client.PostContent("/upload/single", g.Map{
 			"file": "@file:" + srcPath,
@@ -135,8 +135,8 @@ func Test_Params_File_Batch(t *testing.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		srcPath1 := gfile.Join(gdebug.TestDataPath(), "upload", "file1.txt")
-		srcPath2 := gfile.Join(gdebug.TestDataPath(), "upload", "file2.txt")
+		srcPath1 := gdebug.TestDataPath("upload", "file1.txt")
+		srcPath2 := gdebug.TestDataPath("upload", "file2.txt")
 		dstPath1 := gfile.Join(dstDirPath, "file1.txt")
 		dstPath2 := gfile.Join(dstDirPath, "file2.txt")
 		content := client.PostContent("/upload/batch", g.Map{
@@ -155,8 +155,8 @@ func Test_Params_File_Batch(t *testing.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		srcPath1 := gfile.Join(gdebug.TestDataPath(), "upload", "file1.txt")
-		srcPath2 := gfile.Join(gdebug.TestDataPath(), "upload", "file2.txt")
+		srcPath1 := gdebug.TestDataPath("upload", "file1.txt")
+		srcPath2 := gdebug.TestDataPath("upload", "file2.txt")
 		content := client.PostContent("/upload/batch", g.Map{
 			"file[0]":        "@file:" + srcPath1,
 			"file[1]":        "@file:" + srcPath2,
