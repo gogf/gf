@@ -8,7 +8,6 @@ package gbase64_test
 
 import (
 	"github.com/gogf/gf/debug/gdebug"
-	"github.com/gogf/gf/os/gfile"
 	"testing"
 
 	"github.com/gogf/gf/encoding/gbase64"

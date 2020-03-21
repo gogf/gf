@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/debug/gdebug"
-	"github.com/gogf/gf/os/gfile"
 	"net/http"
 	"testing"
 	"time"

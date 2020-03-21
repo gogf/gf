@@ -53,7 +53,7 @@ func (r *Request) GetPage(totalSize, pageSize int) *gpage.Page {
 		values := url.Query()
 		values.Set(gpage.PAGE_NAME, gpage.PAGE_PLACE_HOLDER)
 		url.RawQuery = values.Encode()
-		// Replace the encodes "{.page}" to "{.page}".
+		// Replace the encoded "{.page}" to original "{.page}".
 		url.RawQuery = gstr.Replace(url.RawQuery, "%7B.page%7D", "{.page}")
 	}
 	if url.RawQuery != "" {

@@ -6,6 +6,10 @@ import (
 	"github.com/gogf/gf/text/gstr"
 )
 
+const (
+	TraceIdName = "trace-id"
+)
+
 func main() {
 
 	type Sender struct {
