@@ -12,6 +12,12 @@ import (
 
 // TestDataPath retrieves and returns the testdata path of current package.
 // It is used for unit testing cases only.
-func TestDataPath() string {
-	return CallerDirectory() + string(filepath.Separator) + "testdata"
+// The parameter <names> specifies the underlying sub-folders/sub-files,
+// which will be joined with current system separator.
+func TestDataPath(names ...string) string {
+	path := CallerDirectory() + string(filepath.Separator) + "testdata"
+	for _, name := range names {
+		path += string(filepath.Separator) + name
+	}
+	return path
 }
