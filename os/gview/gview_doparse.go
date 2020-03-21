@@ -46,6 +46,7 @@ var (
 	// Templates cache map for template folder.
 	// Note that there's no expiring logic for this map.
 	templates = gmap.NewStrAnyMap(true)
+
 	// Try-folders for resource template file searching.
 	resourceTryFolders = []string{"template/", "template", "/template", "/template/"}
 )
@@ -106,7 +107,9 @@ func (view *View) Parse(file string, params ...Params) (result string, err error
 			tpl, err = tpl.(*texttpl.Template).Parse(item.content)
 		}
 	})
-
+	if err != nil {
+		return "", err
+	}
 	// Note that the template variable assignment cannot change the value
 	// of the existing <params> or view.data because both variables are pointers.
 	// It needs to merge the values of the two maps into a new map.
