@@ -160,7 +160,7 @@ func (s *StorageFile) GetSession(id string, ttl time.Duration, data *gmap.StrAny
 	if data != nil {
 		return data, nil
 	}
-	intlog.Printf("StorageFile.GetSession: %s, %v", id, ttl)
+	//intlog.Printf("StorageFile.GetSession: %s, %v", id, ttl)
 	path := s.sessionFilePath(id)
 	content := gfile.GetBytes(path)
 	if len(content) > 8 {
