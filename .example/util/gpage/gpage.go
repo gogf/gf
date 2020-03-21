@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	s := ghttp.GetServer()
+	s := g.Server()
 	s.BindHandler("/page/demo", func(r *ghttp.Request) {
 		page := r.GetPage(100, 10)
 		buffer, _ := gview.ParseContent(`
