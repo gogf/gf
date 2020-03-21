@@ -22,7 +22,7 @@ import (
 
 var (
 	configContent = gfile.GetContents(
-		gfile.Join(gdebug.TestDataPath(), "config", "config.toml"),
+		gdebug.TestDataPath("config", "config.toml"),
 	)
 )
 

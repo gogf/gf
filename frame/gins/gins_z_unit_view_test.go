@@ -52,7 +52,7 @@ func Test_View(t *testing.T) {
 func Test_View_Config(t *testing.T) {
 	// view1 test1
 	gtest.C(t, func(t *gtest.T) {
-		dirPath := gfile.Join(gdebug.TestDataPath(), "view1")
+		dirPath := gdebug.TestDataPath("view1")
 		gcfg.SetContent(gfile.GetContents(gfile.Join(dirPath, "config.toml")))
 		defer gcfg.ClearContent()
 		defer instances.Clear()
@@ -74,7 +74,7 @@ func Test_View_Config(t *testing.T) {
 	})
 	// view1 test2
 	gtest.C(t, func(t *gtest.T) {
-		dirPath := gfile.Join(gdebug.TestDataPath(), "view1")
+		dirPath := gdebug.TestDataPath("view1")
 		gcfg.SetContent(gfile.GetContents(gfile.Join(dirPath, "config.toml")))
 		defer gcfg.ClearContent()
 		defer instances.Clear()
@@ -96,7 +96,7 @@ func Test_View_Config(t *testing.T) {
 	})
 	// view2
 	gtest.C(t, func(t *gtest.T) {
-		dirPath := gfile.Join(gdebug.TestDataPath(), "view2")
+		dirPath := gdebug.TestDataPath("view2")
 		gcfg.SetContent(gfile.GetContents(gfile.Join(dirPath, "config.toml")))
 		defer gcfg.ClearContent()
 		defer instances.Clear()
@@ -118,7 +118,7 @@ func Test_View_Config(t *testing.T) {
 	})
 	// view2
 	gtest.C(t, func(t *gtest.T) {
-		dirPath := gfile.Join(gdebug.TestDataPath(), "view2")
+		dirPath := gdebug.TestDataPath("view2")
 		gcfg.SetContent(gfile.GetContents(gfile.Join(dirPath, "config.toml")))
 		defer gcfg.ClearContent()
 		defer instances.Clear()

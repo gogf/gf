@@ -67,7 +67,7 @@ func Test_Basic(t *testing.T) {
 }
 
 func Test_File(t *testing.T) {
-	path := gfile.Join(gdebug.TestDataPath(), "test")
+	path := gdebug.TestDataPath("test")
 	expect := "dGVzdA=="
 	gtest.C(t, func(t *gtest.T) {
 		b, err := gbase64.EncodeFile(path)

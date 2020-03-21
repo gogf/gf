@@ -19,7 +19,7 @@ import (
 
 func Test_Redis(t *testing.T) {
 	redisContent := gfile.GetContents(
-		gfile.Join(gdebug.TestDataPath(), "redis", "config.toml"),
+		gdebug.TestDataPath("redis", "config.toml"),
 	)
 
 	gtest.C(t, func(t *gtest.T) {

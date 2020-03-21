@@ -24,7 +24,7 @@ import (
 
 func Test_Template_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		v := gview.New(gfile.Join(gdebug.TestDataPath(), "template", "basic"))
+		v := gview.New(gdebug.TestDataPath("template", "basic"))
 		p := ports.PopRand()
 		s := g.Server(p)
 		s.SetView(v)
@@ -49,7 +49,7 @@ func Test_Template_Basic(t *testing.T) {
 
 func Test_Template_Encode(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		v := gview.New(gfile.Join(gdebug.TestDataPath(), "template", "basic"))
+		v := gview.New(gdebug.TestDataPath("template", "basic"))
 		v.SetAutoEncode(true)
 		p := ports.PopRand()
 		s := g.Server(p)
@@ -75,7 +75,7 @@ func Test_Template_Encode(t *testing.T) {
 
 func Test_Template_Layout1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		v := gview.New(gfile.Join(gdebug.TestDataPath(), "template", "layout1"))
+		v := gview.New(gdebug.TestDataPath("template", "layout1"))
 		p := ports.PopRand()
 		s := g.Server(p)
 		s.SetView(v)
@@ -105,7 +105,7 @@ func Test_Template_Layout1(t *testing.T) {
 
 func Test_Template_Layout2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		v := gview.New(gfile.Join(gdebug.TestDataPath(), "template", "layout2"))
+		v := gview.New(gdebug.TestDataPath("template", "layout2"))
 		p := ports.PopRand()
 		s := g.Server(p)
 		s.SetView(v)
