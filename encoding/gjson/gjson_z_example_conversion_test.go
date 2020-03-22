@@ -11,7 +11,7 @@ import (
 	"github.com/gogf/gf/encoding/gjson"
 )
 
-func Example_Conversion_NormalFormats() {
+func Example_ConversionNormalFormats() {
 	data :=
 		`{
         "users" : {
@@ -59,7 +59,7 @@ func Example_Conversion_NormalFormats() {
 	//   count = 1.0
 }
 
-func Example_Conversion_GetStruct() {
+func Example_ConversionGetStruct() {
 	data :=
 		`{
         "users" : {
@@ -85,7 +85,7 @@ func Example_Conversion_GetStruct() {
 	// &{Count:1 Array:[John Ming]}
 }
 
-func Example_Conversion_ToStruct() {
+func Example_ConversionToStruct() {
 	data :=
 		`
 	{
