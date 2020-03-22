@@ -8,7 +8,6 @@ package gdb
 
 import (
 	"bytes"
-	"database/sql"
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/internal/empty"
@@ -222,11 +221,11 @@ func GetPrimaryKeyCondition(primary string, where ...interface{}) (newWhereCondi
 	return where
 }
 
-// formatQuery formats the query string and its arguments before executing.
+// formatSql formats the sql string and its arguments before executing.
 // The internal handleArguments function might be called twice during the SQL procedure,
 // but do not worry about it, it's safe and efficient.
-func formatQuery(query string, args []interface{}) (newQuery string, newArgs []interface{}) {
-	return handleArguments(query, args)
+func formatSql(sql string, args []interface{}) (newQuery string, newArgs []interface{}) {
+	return handleArguments(sql, args)
 }
 
 // formatWhere formats where statement and its arguments.
@@ -384,8 +383,8 @@ func formatWhereKeyValue(db DB, buffer *bytes.Buffer, newArgs []interface{}, key
 
 // handleArguments is a nice function which handles the query and its arguments before committing to
 // underlying driver.
-func handleArguments(query string, args []interface{}) (newQuery string, newArgs []interface{}) {
-	newQuery = query
+func handleArguments(sql string, args []interface{}) (newSql string, newArgs []interface{}) {
+	newSql = sql
 	// Handles the slice arguments.
 	if len(args) > 0 {
 		for index, arg := range args {
@@ -409,12 +408,12 @@ func handleArguments(query string, args []interface{}) (newQuery string, newArgs
 				// It the '?' holder count equals the length of the slice,
 				// it does not implement the arguments splitting logic.
 				// Eg: db.Query("SELECT ?+?", g.Slice{1, 2})
-				if len(args) == 1 && gstr.Count(newQuery, "?") == rv.Len() {
+				if len(args) == 1 && gstr.Count(newSql, "?") == rv.Len() {
 					break
 				}
 				// counter is used to finding the inserting position for the '?' holder.
 				counter := 0
-				newQuery, _ = gregex.ReplaceStringFunc(`\?`, newQuery, func(s string) string {
+				newSql, _ = gregex.ReplaceStringFunc(`\?`, newSql, func(s string) string {
 					counter++
 					if counter == index+1 {
 						return "?" + strings.Repeat(",?", rv.Len()-1)
@@ -450,19 +449,19 @@ func handleArguments(query string, args []interface{}) (newQuery string, newArgs
 }
 
 // formatError customizes and returns the SQL error.
-func formatError(err error, query string, args ...interface{}) error {
-	if err != nil && err != sql.ErrNoRows {
-		return errors.New(fmt.Sprintf("%s, %s\n", err.Error(), bindArgsToQuery(query, args)))
+func formatError(err error, sql string, args ...interface{}) error {
+	if err != nil && err != ErrNoRows {
+		return errors.New(fmt.Sprintf("%s, %s\n", err.Error(), FormatSqlWithArgs(sql, args)))
 	}
 	return err
 }
 
-// bindArgsToQuery binds the arguments to the query string and returns a complete
+// FormatSqlWithArgs binds the arguments to the sql string and returns a complete
 // sql string, just for debugging.
-func bindArgsToQuery(query string, args []interface{}) string {
+func FormatSqlWithArgs(sql string, args []interface{}) string {
 	index := -1
 	newQuery, _ := gregex.ReplaceStringFunc(
-		`(\?|:\d+|\$\d+|@p\d+)`, query, func(s string) string {
+		`(\?|:\d+|\$\d+|@p\d+)`, sql, func(s string) string {
 			index++
 			if len(args) > index {
 				if args[index] == nil {

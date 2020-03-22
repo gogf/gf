@@ -145,19 +145,19 @@ func (m *Model) ForPage(page, limit int) *Model {
 }
 
 // getAll does the query from database.
-func (m *Model) getAll(query string, args ...interface{}) (result Result, err error) {
+func (m *Model) getAll(sql string, args ...interface{}) (result Result, err error) {
 	cacheKey := ""
 	// Retrieve from cache.
 	if m.cacheEnabled {
 		cacheKey = m.cacheName
 		if len(cacheKey) == 0 {
-			cacheKey = query + "/" + gconv.String(args)
+			cacheKey = sql + "/" + gconv.String(args)
 		}
 		if v := m.db.GetCache().Get(cacheKey); v != nil {
 			return v.(Result), nil
 		}
 	}
-	result, err = m.db.DoGetAll(m.getLink(false), query, m.mergeArguments(args)...)
+	result, err = m.db.DoGetAll(m.getLink(false), sql, m.mergeArguments(args)...)
 	// Cache the result.
 	if len(cacheKey) > 0 && err == nil {
 		if m.cacheDuration < 0 {

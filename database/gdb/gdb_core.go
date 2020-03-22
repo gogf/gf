@@ -45,75 +45,75 @@ func (c *Core) Slave() (*sql.DB, error) {
 
 // Query commits one query SQL to underlying driver and returns the execution result.
 // It is most commonly used for data querying.
-func (c *Core) Query(query string, args ...interface{}) (rows *sql.Rows, err error) {
+func (c *Core) Query(sql string, args ...interface{}) (rows *sql.Rows, err error) {
 	link, err := c.DB.Slave()
 	if err != nil {
 		return nil, err
 	}
-	return c.DB.DoQuery(link, query, args...)
+	return c.DB.DoQuery(link, sql, args...)
 }
 
-// doQuery commits the query string and its arguments to underlying driver
+// DoQuery commits the sql string and its arguments to underlying driver
 // through given link object and returns the execution result.
-func (c *Core) DoQuery(link Link, query string, args ...interface{}) (rows *sql.Rows, err error) {
-	query, args = formatQuery(query, args)
-	query, args = c.DB.HandleSqlBeforeCommit(link, query, args)
+func (c *Core) DoQuery(link Link, sql string, args ...interface{}) (rows *sql.Rows, err error) {
+	sql, args = formatSql(sql, args)
+	sql, args = c.DB.HandleSqlBeforeCommit(link, sql, args)
 	if c.DB.GetDebug() {
 		mTime1 := gtime.TimestampMilli()
-		rows, err = link.Query(query, args...)
+		rows, err = link.Query(sql, args...)
 		mTime2 := gtime.TimestampMilli()
 		s := &Sql{
-			Sql:    query,
+			Sql:    sql,
 			Args:   args,
-			Format: bindArgsToQuery(query, args),
+			Format: FormatSqlWithArgs(sql, args),
 			Error:  err,
 			Start:  mTime1,
 			End:    mTime2,
 		}
 		c.writeSqlToLogger(s)
 	} else {
-		rows, err = link.Query(query, args...)
+		rows, err = link.Query(sql, args...)
 	}
 	if err == nil {
 		return rows, nil
 	} else {
-		err = formatError(err, query, args...)
+		err = formatError(err, sql, args...)
 	}
 	return nil, err
 }
 
 // Exec commits one query SQL to underlying driver and returns the execution result.
 // It is most commonly used for data inserting and updating.
-func (c *Core) Exec(query string, args ...interface{}) (result sql.Result, err error) {
+func (c *Core) Exec(sql string, args ...interface{}) (result sql.Result, err error) {
 	link, err := c.DB.Master()
 	if err != nil {
 		return nil, err
 	}
-	return c.DB.DoExec(link, query, args...)
+	return c.DB.DoExec(link, sql, args...)
 }
 
-// doExec commits the query string and its arguments to underlying driver
+// DoExec commits the sql string and its arguments to underlying driver
 // through given link object and returns the execution result.
-func (c *Core) DoExec(link Link, query string, args ...interface{}) (result sql.Result, err error) {
-	query, args = formatQuery(query, args)
-	query, args = c.DB.HandleSqlBeforeCommit(link, query, args)
+func (c *Core) DoExec(link Link, sql string, args ...interface{}) (result sql.Result, err error) {
+	sql, args = formatSql(sql, args)
+	sql, args = c.DB.HandleSqlBeforeCommit(link, sql, args)
 	if c.DB.GetDebug() {
 		mTime1 := gtime.TimestampMilli()
-		result, err = link.Exec(query, args...)
+		result, err = link.Exec(sql, args...)
 		mTime2 := gtime.TimestampMilli()
 		s := &Sql{
-			Sql:    query,
+			Sql:    sql,
 			Args:   args,
-			Format: bindArgsToQuery(query, args),
+			Format: FormatSqlWithArgs(sql, args),
 			Error:  err,
 			Start:  mTime1,
 			End:    mTime2,
 		}
 		c.writeSqlToLogger(s)
 	} else {
-		result, err = link.Exec(query, args...)
+		result, err = link.Exec(sql, args...)
 	}
-	return result, formatError(err, query, args...)
+	return result, formatError(err, sql, args...)
 }
 
 // Prepare creates a prepared statement for later queries or executions.
@@ -124,7 +124,7 @@ func (c *Core) DoExec(link Link, query string, args ...interface{}) (result sql.
 //
 // The parameter <execOnMaster> specifies whether executing the sql on master node,
 // or else it executes the sql on slave node if master-slave configured.
-func (c *Core) Prepare(query string, execOnMaster ...bool) (*sql.Stmt, error) {
+func (c *Core) Prepare(sql string, execOnMaster ...bool) (*sql.Stmt, error) {
 	err := (error)(nil)
 	link := (Link)(nil)
 	if len(execOnMaster) > 0 && execOnMaster[0] {
@@ -136,28 +136,28 @@ func (c *Core) Prepare(query string, execOnMaster ...bool) (*sql.Stmt, error) {
 			return nil, err
 		}
 	}
-	return c.DB.DoPrepare(link, query)
+	return c.DB.DoPrepare(link, sql)
 }
 
 // doPrepare calls prepare function on given link object and returns the statement object.
-func (c *Core) DoPrepare(link Link, query string) (*sql.Stmt, error) {
-	return link.Prepare(query)
+func (c *Core) DoPrepare(link Link, sql string) (*sql.Stmt, error) {
+	return link.Prepare(sql)
 }
 
 // GetAll queries and returns data records from database.
-func (c *Core) GetAll(query string, args ...interface{}) (Result, error) {
-	return c.DB.DoGetAll(nil, query, args...)
+func (c *Core) GetAll(sql string, args ...interface{}) (Result, error) {
+	return c.DB.DoGetAll(nil, sql, args...)
 }
 
 // doGetAll queries and returns data records from database.
-func (c *Core) DoGetAll(link Link, query string, args ...interface{}) (result Result, err error) {
+func (c *Core) DoGetAll(link Link, sql string, args ...interface{}) (result Result, err error) {
 	if link == nil {
 		link, err = c.DB.Slave()
 		if err != nil {
 			return nil, err
 		}
 	}
-	rows, err := c.DB.DoQuery(link, query, args...)
+	rows, err := c.DB.DoQuery(link, sql, args...)
 	if err != nil || rows == nil {
 		return nil, err
 	}
@@ -166,8 +166,8 @@ func (c *Core) DoGetAll(link Link, query string, args ...interface{}) (result Re
 }
 
 // GetOne queries and returns one record from database.
-func (c *Core) GetOne(query string, args ...interface{}) (Record, error) {
-	list, err := c.DB.GetAll(query, args...)
+func (c *Core) GetOne(sql string, args ...interface{}) (Record, error) {
+	list, err := c.DB.GetAll(sql, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -179,8 +179,8 @@ func (c *Core) GetOne(query string, args ...interface{}) (Record, error) {
 
 // GetArray queries and returns data values as slice from database.
 // Note that if there're multiple columns in the result, it returns just one column values randomly.
-func (c *Core) GetArray(query string, args ...interface{}) ([]Value, error) {
-	all, err := c.DB.DoGetAll(nil, query, args...)
+func (c *Core) GetArray(sql string, args ...interface{}) ([]Value, error) {
+	all, err := c.DB.DoGetAll(nil, sql, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -189,26 +189,26 @@ func (c *Core) GetArray(query string, args ...interface{}) ([]Value, error) {
 
 // GetStruct queries one record from database and converts it to given struct.
 // The parameter <pointer> should be a pointer to struct.
-func (c *Core) GetStruct(pointer interface{}, query string, args ...interface{}) error {
-	one, err := c.DB.GetOne(query, args...)
+func (c *Core) GetStruct(pointer interface{}, sql string, args ...interface{}) error {
+	one, err := c.DB.GetOne(sql, args...)
 	if err != nil {
 		return err
 	}
 	if len(one) == 0 {
-		return sql.ErrNoRows
+		return ErrNoRows
 	}
 	return one.Struct(pointer)
 }
 
 // GetStructs queries records from database and converts them to given struct.
 // The parameter <pointer> should be type of struct slice: []struct/[]*struct.
-func (c *Core) GetStructs(pointer interface{}, query string, args ...interface{}) error {
-	all, err := c.DB.GetAll(query, args...)
+func (c *Core) GetStructs(pointer interface{}, sql string, args ...interface{}) error {
+	all, err := c.DB.GetAll(sql, args...)
 	if err != nil {
 		return err
 	}
 	if len(all) == 0 {
-		return sql.ErrNoRows
+		return ErrNoRows
 	}
 	return all.Structs(pointer)
 }
@@ -219,7 +219,7 @@ func (c *Core) GetStructs(pointer interface{}, query string, args ...interface{}
 // If parameter <pointer> is type of struct pointer, it calls GetStruct internally for
 // the conversion. If parameter <pointer> is type of slice, it calls GetStructs internally
 // for conversion.
-func (c *Core) GetScan(pointer interface{}, query string, args ...interface{}) error {
+func (c *Core) GetScan(pointer interface{}, sql string, args ...interface{}) error {
 	t := reflect.TypeOf(pointer)
 	k := t.Kind()
 	if k != reflect.Ptr {
@@ -228,9 +228,9 @@ func (c *Core) GetScan(pointer interface{}, query string, args ...interface{}) e
 	k = t.Elem().Kind()
 	switch k {
 	case reflect.Array, reflect.Slice:
-		return c.DB.GetStructs(pointer, query, args...)
+		return c.DB.GetStructs(pointer, sql, args...)
 	case reflect.Struct:
-		return c.DB.GetStruct(pointer, query, args...)
+		return c.DB.GetStruct(pointer, sql, args...)
 	}
 	return fmt.Errorf("element type should be type of struct/slice, unsupported: %v", k)
 }
@@ -238,8 +238,8 @@ func (c *Core) GetScan(pointer interface{}, query string, args ...interface{}) e
 // GetValue queries and returns the field value from database.
 // The sql should queries only one field from database, or else it returns only one
 // field of the result.
-func (c *Core) GetValue(query string, args ...interface{}) (Value, error) {
-	one, err := c.DB.GetOne(query, args...)
+func (c *Core) GetValue(sql string, args ...interface{}) (Value, error) {
+	one, err := c.DB.GetOne(sql, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -250,13 +250,13 @@ func (c *Core) GetValue(query string, args ...interface{}) (Value, error) {
 }
 
 // GetCount queries and returns the count from database.
-func (c *Core) GetCount(query string, args ...interface{}) (int, error) {
+func (c *Core) GetCount(sql string, args ...interface{}) (int, error) {
 	// If the query fields do not contains function "COUNT",
-	// it replaces the query string and adds the "COUNT" function to the fields.
-	if !gregex.IsMatchString(`(?i)SELECT\s+COUNT\(.+\)\s+FROM`, query) {
-		query, _ = gregex.ReplaceString(`(?i)(SELECT)\s+(.+)\s+(FROM)`, `$1 COUNT($2) $3`, query)
+	// it replaces the sql string and adds the "COUNT" function to the fields.
+	if !gregex.IsMatchString(`(?i)SELECT\s+COUNT\(.+\)\s+FROM`, sql) {
+		sql, _ = gregex.ReplaceString(`(?i)(SELECT)\s+(.+)\s+(FROM)`, `$1 COUNT($2) $3`, sql)
 	}
-	value, err := c.DB.GetValue(query, args...)
+	value, err := c.DB.GetValue(sql, args...)
 	if err != nil {
 		return 0, err
 	}
