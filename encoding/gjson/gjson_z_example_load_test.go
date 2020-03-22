@@ -12,21 +12,21 @@ import (
 	"github.com/gogf/gf/encoding/gjson"
 )
 
-func Example_Load_Json() {
+func Example_LoadJson() {
 	jsonFilePath := gdebug.TestDataPath("json", "data1.json")
 	j, _ := gjson.Load(jsonFilePath)
 	fmt.Println(j.Get("name"))
 	fmt.Println(j.Get("score"))
 }
 
-func Example_Load_Xml() {
+func Example_LoadXml() {
 	jsonFilePath := gdebug.TestDataPath("xml", "data1.xml")
 	j, _ := gjson.Load(jsonFilePath)
 	fmt.Println(j.Get("doc.name"))
 	fmt.Println(j.Get("doc.score"))
 }
 
-func Example_Load_Content() {
+func Example_LoadContent() {
 	jsonContent := `{"name":"john", "score":"100"}`
 	j, _ := gjson.LoadContent(jsonContent)
 	fmt.Println(j.Get("name"))

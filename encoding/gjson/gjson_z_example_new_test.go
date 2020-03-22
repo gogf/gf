@@ -11,7 +11,7 @@ import (
 	"github.com/gogf/gf/encoding/gjson"
 )
 
-func Example_New_FromJson() {
+func Example_NewFromJson() {
 	jsonContent := `{"name":"john", "score":"100"}`
 	j := gjson.New(jsonContent)
 	fmt.Println(j.Get("name"))
@@ -21,7 +21,7 @@ func Example_New_FromJson() {
 	// 100
 }
 
-func Example_New_FromXml() {
+func Example_NewFromXml() {
 	jsonContent := `<?xml version="1.0" encoding="UTF-8"?><doc><name>john</name><score>100</score></doc>`
 	j := gjson.New(jsonContent)
 	// Note that there's root node in the XML content.
@@ -32,7 +32,7 @@ func Example_New_FromXml() {
 	// 100
 }
 
-func Example_New_FromStruct() {
+func Example_NewFromStruct() {
 	type Me struct {
 		Name  string `json:"name"`
 		Score int    `json:"score"`
@@ -49,7 +49,7 @@ func Example_New_FromStruct() {
 	// 100
 }
 
-func Example_New_FromStructWithTag() {
+func Example_NewFromStructWithTag() {
 	type Me struct {
 		Name  string `tag:"name"`
 		Score int    `tag:"score"`
