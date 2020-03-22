@@ -11,7 +11,7 @@ import (
 	"github.com/gogf/gf/encoding/gjson"
 )
 
-func Example_PatternGet() {
+func Example_patternGet() {
 	data :=
 		`{
         "users" : {
@@ -31,7 +31,7 @@ func Example_PatternGet() {
 	// John Score: 99.5
 }
 
-func Example_PatternCustomSplitChar() {
+func Example_patternCustomSplitChar() {
 	data :=
 		`{
         "users" : {
@@ -52,7 +52,7 @@ func Example_PatternCustomSplitChar() {
 	// John Score: 99.5
 }
 
-func Example_PatternViolenceCheck() {
+func Example_patternViolenceCheck() {
 	data :=
 		`{
         "users" : {

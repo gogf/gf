@@ -13,7 +13,7 @@ import (
 	"github.com/gogf/gf/container/garray"
 )
 
-func Example_Basic() {
+func Example_basic() {
 	// A normal array.
 	a := garray.New()
 
@@ -72,7 +72,7 @@ func Example_Basic() {
 	// []
 }
 
-func Example_Rand() {
+func Example_rand() {
 	array := garray.NewFrom([]interface{}{1, 2, 3, 4, 5, 6, 7, 8, 9})
 
 	// Randomly retrieve and return 2 items from the array.
@@ -84,7 +84,7 @@ func Example_Rand() {
 	fmt.Println(array.PopRand())
 }
 
-func Example_PopItem() {
+func Example_popItem() {
 	array := garray.NewFrom([]interface{}{1, 2, 3, 4, 5, 6, 7, 8, 9})
 
 	// Any Pop* functions pick, delete and return the item from array.
@@ -101,7 +101,7 @@ func Example_PopItem() {
 	// [7 8]
 }
 
-func Example_MergeArray() {
+func Example_mergeArray() {
 	array1 := garray.NewFrom([]interface{}{1, 2})
 	array2 := garray.NewFrom([]interface{}{3, 4})
 	slice1 := []interface{}{5, 6}
@@ -120,7 +120,7 @@ func Example_MergeArray() {
 	// [1 2 1 2 3 4 5 6 7 8 9 0]
 }
 
-func Example_Filter() {
+func Example_filter() {
 	array1 := garray.NewFrom(g.Slice{0, 1, 2, nil, "", g.Slice{}, "john"})
 	array2 := garray.NewFrom(g.Slice{0, 1, 2, nil, "", g.Slice{}, "john"})
 	fmt.Printf("%#v\n", array1.FilterNil().Slice())
