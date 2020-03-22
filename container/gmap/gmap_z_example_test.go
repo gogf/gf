@@ -6,7 +6,7 @@ import (
 	"github.com/gogf/gf/container/gmap"
 )
 
-func Example_NormalBasic() {
+func Example_normalBasic() {
 	m := gmap.New()
 
 	//Add data
@@ -61,7 +61,7 @@ func Example_NormalBasic() {
 	fmt.Println(m.Size())
 
 }
-func Example_NormalMerge() {
+func Example_normalMerge() {
 	m1 := gmap.New()
 	m2 := gmap.New()
 	m1.Set("key1", "val1")

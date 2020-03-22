@@ -13,7 +13,7 @@ import (
 	"github.com/gogf/gf/os/glog"
 )
 
-func ExampleCron_AddSingleton() {
+func Example_cronAddSingleton() {
 	gcron.AddSingleton("* * * * * *", func() {
 		glog.Println("doing")
 		time.Sleep(2 * time.Second)
