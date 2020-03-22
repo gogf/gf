@@ -30,29 +30,29 @@ type DB interface {
 	Open(config *ConfigNode) (*sql.DB, error)
 
 	// Query APIs.
-	Query(query string, args ...interface{}) (*sql.Rows, error)
+	Query(sql string, args ...interface{}) (*sql.Rows, error)
 	Exec(sql string, args ...interface{}) (sql.Result, error)
 	Prepare(sql string, execOnMaster ...bool) (*sql.Stmt, error)
 
 	// Internal APIs for CURD, which can be overwrote for custom CURD implements.
-	DoQuery(link Link, query string, args ...interface{}) (rows *sql.Rows, err error)
-	DoGetAll(link Link, query string, args ...interface{}) (result Result, err error)
-	DoExec(link Link, query string, args ...interface{}) (result sql.Result, err error)
-	DoPrepare(link Link, query string) (*sql.Stmt, error)
+	DoQuery(link Link, sql string, args ...interface{}) (rows *sql.Rows, err error)
+	DoGetAll(link Link, sql string, args ...interface{}) (result Result, err error)
+	DoExec(link Link, sql string, args ...interface{}) (result sql.Result, err error)
+	DoPrepare(link Link, sql string) (*sql.Stmt, error)
 	DoInsert(link Link, table string, data interface{}, option int, batch ...int) (result sql.Result, err error)
 	DoBatchInsert(link Link, table string, list interface{}, option int, batch ...int) (result sql.Result, err error)
 	DoUpdate(link Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error)
 	DoDelete(link Link, table string, condition string, args ...interface{}) (result sql.Result, err error)
 
 	// Query APIs for convenience purpose.
-	GetAll(query string, args ...interface{}) (Result, error)
-	GetOne(query string, args ...interface{}) (Record, error)
-	GetValue(query string, args ...interface{}) (Value, error)
-	GetArray(query string, args ...interface{}) ([]Value, error)
-	GetCount(query string, args ...interface{}) (int, error)
-	GetStruct(objPointer interface{}, query string, args ...interface{}) error
-	GetStructs(objPointerSlice interface{}, query string, args ...interface{}) error
-	GetScan(objPointer interface{}, query string, args ...interface{}) error
+	GetAll(sql string, args ...interface{}) (Result, error)
+	GetOne(sql string, args ...interface{}) (Record, error)
+	GetValue(sql string, args ...interface{}) (Value, error)
+	GetArray(sql string, args ...interface{}) ([]Value, error)
+	GetCount(sql string, args ...interface{}) (int, error)
+	GetStruct(objPointer interface{}, sql string, args ...interface{}) error
+	GetStructs(objPointerSlice interface{}, sql string, args ...interface{}) error
+	GetScan(objPointer interface{}, sql string, args ...interface{}) error
 
 	// Master/Slave specification support.
 	Master() (*sql.DB, error)
@@ -107,9 +107,9 @@ type DB interface {
 
 	// HandleSqlBeforeCommit is a hook function, which deals with the sql string before
 	// it's committed to underlying driver. The parameter <link> specifies the current
-	// database connection operation object. You can modify the sql string <query> and its
+	// database connection operation object. You can modify the sql string <sql> and its
 	// arguments <args> as you wish before they're committed to driver.
-	HandleSqlBeforeCommit(link Link, query string, args []interface{}) (string, []interface{})
+	HandleSqlBeforeCommit(link Link, sql string, args []interface{}) (string, []interface{})
 
 	// Internal methods.
 	filterFields(schema, table string, data map[string]interface{}) map[string]interface{}
@@ -161,7 +161,7 @@ type TableField struct {
 
 // Link is a common database function wrapper interface.
 type Link interface {
-	Query(query string, args ...interface{}) (*sql.Rows, error)
+	Query(sql string, args ...interface{}) (*sql.Rows, error)
 	Exec(sql string, args ...interface{}) (sql.Result, error)
 	Prepare(sql string) (*sql.Stmt, error)
 }
@@ -193,6 +193,8 @@ const (
 )
 
 var (
+	// ErrNoRows is alias of sql.ErrNoRows.
+	ErrNoRows = sql.ErrNoRows
 	// instances is the management map for instances.
 	instances = gmap.NewStrAnyMap(true)
 	// driverMap manages all custom registered driver.

@@ -33,14 +33,14 @@ func (tx *TX) Rollback() error {
 
 // Query does query operation on transaction.
 // See Core.Query.
-func (tx *TX) Query(query string, args ...interface{}) (rows *sql.Rows, err error) {
-	return tx.db.DoQuery(tx.tx, query, args...)
+func (tx *TX) Query(sql string, args ...interface{}) (rows *sql.Rows, err error) {
+	return tx.db.DoQuery(tx.tx, sql, args...)
 }
 
 // Exec does none query operation on transaction.
 // See Core.Exec.
-func (tx *TX) Exec(query string, args ...interface{}) (sql.Result, error) {
-	return tx.db.DoExec(tx.tx, query, args...)
+func (tx *TX) Exec(sql string, args ...interface{}) (sql.Result, error) {
+	return tx.db.DoExec(tx.tx, sql, args...)
 }
 
 // Prepare creates a prepared statement for later queries or executions.
@@ -48,13 +48,13 @@ func (tx *TX) Exec(query string, args ...interface{}) (sql.Result, error) {
 // returned statement.
 // The caller must call the statement's Close method
 // when the statement is no longer needed.
-func (tx *TX) Prepare(query string) (*sql.Stmt, error) {
-	return tx.db.DoPrepare(tx.tx, query)
+func (tx *TX) Prepare(sql string) (*sql.Stmt, error) {
+	return tx.db.DoPrepare(tx.tx, sql)
 }
 
 // GetAll queries and returns data records from database.
-func (tx *TX) GetAll(query string, args ...interface{}) (Result, error) {
-	rows, err := tx.Query(query, args...)
+func (tx *TX) GetAll(sql string, args ...interface{}) (Result, error) {
+	rows, err := tx.Query(sql, args...)
 	if err != nil || rows == nil {
 		return nil, err
 	}
@@ -63,8 +63,8 @@ func (tx *TX) GetAll(query string, args ...interface{}) (Result, error) {
 }
 
 // GetOne queries and returns one record from database.
-func (tx *TX) GetOne(query string, args ...interface{}) (Record, error) {
-	list, err := tx.GetAll(query, args...)
+func (tx *TX) GetOne(sql string, args ...interface{}) (Record, error) {
+	list, err := tx.GetAll(sql, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -76,8 +76,8 @@ func (tx *TX) GetOne(query string, args ...interface{}) (Record, error) {
 
 // GetStruct queries one record from database and converts it to given struct.
 // The parameter <pointer> should be a pointer to struct.
-func (tx *TX) GetStruct(obj interface{}, query string, args ...interface{}) error {
-	one, err := tx.GetOne(query, args...)
+func (tx *TX) GetStruct(obj interface{}, sql string, args ...interface{}) error {
+	one, err := tx.GetOne(sql, args...)
 	if err != nil {
 		return err
 	}
@@ -86,8 +86,8 @@ func (tx *TX) GetStruct(obj interface{}, query string, args ...interface{}) erro
 
 // GetStructs queries records from database and converts them to given struct.
 // The parameter <pointer> should be type of struct slice: []struct/[]*struct.
-func (tx *TX) GetStructs(objPointerSlice interface{}, query string, args ...interface{}) error {
-	all, err := tx.GetAll(query, args...)
+func (tx *TX) GetStructs(objPointerSlice interface{}, sql string, args ...interface{}) error {
+	all, err := tx.GetAll(sql, args...)
 	if err != nil {
 		return err
 	}
@@ -100,7 +100,7 @@ func (tx *TX) GetStructs(objPointerSlice interface{}, query string, args ...inte
 // If parameter <pointer> is type of struct pointer, it calls GetStruct internally for
 // the conversion. If parameter <pointer> is type of slice, it calls GetStructs internally
 // for conversion.
-func (tx *TX) GetScan(objPointer interface{}, query string, args ...interface{}) error {
+func (tx *TX) GetScan(objPointer interface{}, sql string, args ...interface{}) error {
 	t := reflect.TypeOf(objPointer)
 	k := t.Kind()
 	if k != reflect.Ptr {
@@ -109,9 +109,9 @@ func (tx *TX) GetScan(objPointer interface{}, query string, args ...interface{})
 	k = t.Elem().Kind()
 	switch k {
 	case reflect.Array, reflect.Slice:
-		return tx.db.GetStructs(objPointer, query, args...)
+		return tx.db.GetStructs(objPointer, sql, args...)
 	case reflect.Struct:
-		return tx.db.GetStruct(objPointer, query, args...)
+		return tx.db.GetStruct(objPointer, sql, args...)
 	default:
 		return fmt.Errorf("element type should be type of struct/slice, unsupported: %v", k)
 	}
@@ -121,8 +121,8 @@ func (tx *TX) GetScan(objPointer interface{}, query string, args ...interface{})
 // GetValue queries and returns the field value from database.
 // The sql should queries only one field from database, or else it returns only one
 // field of the result.
-func (tx *TX) GetValue(query string, args ...interface{}) (Value, error) {
-	one, err := tx.GetOne(query, args...)
+func (tx *TX) GetValue(sql string, args ...interface{}) (Value, error) {
+	one, err := tx.GetOne(sql, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -133,11 +133,11 @@ func (tx *TX) GetValue(query string, args ...interface{}) (Value, error) {
 }
 
 // GetCount queries and returns the count from database.
-func (tx *TX) GetCount(query string, args ...interface{}) (int, error) {
-	if !gregex.IsMatchString(`(?i)SELECT\s+COUNT\(.+\)\s+FROM`, query) {
-		query, _ = gregex.ReplaceString(`(?i)(SELECT)\s+(.+)\s+(FROM)`, `$1 COUNT($2) $3`, query)
+func (tx *TX) GetCount(sql string, args ...interface{}) (int, error) {
+	if !gregex.IsMatchString(`(?i)SELECT\s+COUNT\(.+\)\s+FROM`, sql) {
+		sql, _ = gregex.ReplaceString(`(?i)(SELECT)\s+(.+)\s+(FROM)`, `$1 COUNT($2) $3`, sql)
 	}
-	value, err := tx.GetValue(query, args...)
+	value, err := tx.GetValue(sql, args...)
 	if err != nil {
 		return 0, err
 	}
