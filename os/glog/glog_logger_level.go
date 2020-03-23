@@ -15,13 +15,9 @@ import (
 // Note that the LEVEL_PANI and LEVEL_FATA levels are not used for logging output,
 // but for prefix configurations.
 const (
-	// Deprecated.
-	LEVEL_ALL = LEVEL_DEBU | LEVEL_INFO | LEVEL_NOTI | LEVEL_WARN | LEVEL_ERRO | LEVEL_CRIT
-	// Deprecated.
-	LEVEL_DEV = LEVEL_ALL
-	// Deprecated.
+	LEVEL_ALL  = LEVEL_DEBU | LEVEL_INFO | LEVEL_NOTI | LEVEL_WARN | LEVEL_ERRO | LEVEL_CRIT
+	LEVEL_DEV  = LEVEL_ALL
 	LEVEL_PROD = LEVEL_WARN | LEVEL_ERRO | LEVEL_CRIT
-
 	LEVEL_DEBU = 1 << iota // 8
 	LEVEL_INFO             // 16
 	LEVEL_NOTI             // 32
