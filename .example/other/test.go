@@ -1,13 +1,12 @@
 package main
 
-import "fmt"
+import (
+	"github.com/gogf/gf/os/glog"
+)
 
 func main() {
-	Path := "////////"
-	if Path != "/" {
-		for len(Path) > 1 && Path[len(Path)-1] == '/' {
-			Path = Path[:len(Path)-1]
-		}
-	}
-	fmt.Println(Path)
+	l := glog.New()
+	l.Info("info1")
+	l.SetLevelStr("notice")
+	l.Info("info2")
 }
