@@ -15,9 +15,9 @@ import (
 
 // MyDriver is a custom database driver, which is used for testing only.
 // For simplifying the unit testing case purpose, MyDriver struct inherits the mysql driver
-// gdb.DriverMysql and overwrites its function HandleSqlBeforeCommit.
-// So if there's any sql execution, it goes through MyDriver.HandleSqlBeforeCommit firstly and
-// then gdb.DriverMysql.HandleSqlBeforeCommit.
+// gdb.DriverMysql and overwrites its functions DoQuery and DoExec.
+// So if there's any sql execution, it goes through MyDriver.DoQuery/MyDriver.DoExec firstly
+// and then gdb.DriverMysql.DoQuery/gdb.DriverMysql.DoExec.
 // You can call it sql "HOOK" or "HiJack" as your will.
 type MyDriver struct {
 	*gdb.DriverMysql
