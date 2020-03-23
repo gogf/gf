@@ -8,6 +8,7 @@ package glog
 
 import (
 	"errors"
+	"fmt"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/util/gconv"
@@ -81,13 +82,10 @@ func (l *Logger) SetConfigWithMap(m map[string]interface{}) error {
 	// Change string configuration to int value for level.
 	levelKey, levelValue := gutil.MapPossibleItemByKey(m, "level")
 	if levelValue != nil {
-		switch gconv.String(levelValue) {
-		case "all":
-			m[levelKey] = LEVEL_ALL
-		case "dev":
-			m[levelKey] = LEVEL_DEV
-		case "prod":
-			m[levelKey] = LEVEL_PROD
+		if level, ok := levelStringMap[strings.ToUpper(gconv.String(levelValue))]; ok {
+			m[levelKey] = level
+		} else {
+			return errors.New(fmt.Sprintf(`invalid level string: %v`, levelValue))
 		}
 	}
 	config := DefaultConfig()
@@ -96,16 +94,6 @@ func (l *Logger) SetConfigWithMap(m map[string]interface{}) error {
 		return err
 	}
 	return l.SetConfig(config)
-}
-
-// SetLevel sets the logging level.
-func (l *Logger) SetLevel(level int) {
-	l.config.Level = level
-}
-
-// GetLevel returns the logging level value.
-func (l *Logger) GetLevel() int {
-	return l.config.Level
 }
 
 // SetDebug enables/disables the debug level for logger.
