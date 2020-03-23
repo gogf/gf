@@ -71,6 +71,8 @@ func (d *DriverMssql) HandleSqlBeforeCommit(link Link, sql string, args []interf
 	return d.parseSql(str), args
 }
 
+// parseSql does some replacement of the sql before commits it to underlying driver,
+// for support of microsoft sql server.
 func (d *DriverMssql) parseSql(sql string) string {
 	// SELECT * FROM USER WHERE ID=1 LIMIT 1
 	if m, _ := gregex.MatchString(`^SELECT(.+)LIMIT 1$`, sql); len(m) > 1 {
@@ -91,22 +93,20 @@ func (d *DriverMssql) parseSql(sql string) string {
 	index++
 	switch keyword {
 	case "SELECT":
-		// 不含LIMIT关键字则不处理
+		// LIMIT statement checks.
 		if len(res) < 2 ||
 			(strings.HasPrefix(res[index][0], "LIMIT") == false &&
 				strings.HasPrefix(res[index][0], "limit") == false) {
 			break
 		}
-		// 不含LIMIT则不处理
 		if gregex.IsMatchString("((?i)SELECT)(.+)((?i)LIMIT)", sql) == false {
 			break
 		}
-		// 判断SQL中是否含有order by
+		// ORDER BY statement checks.
 		selectStr := ""
 		orderStr := ""
 		haveOrder := gregex.IsMatchString("((?i)SELECT)(.+)((?i)ORDER BY)", sql)
 		if haveOrder {
-			// 取order by 前面的字符串
 			queryExpr, _ := gregex.MatchString("((?i)SELECT)(.+)((?i)ORDER BY)", sql)
 			if len(queryExpr) != 4 ||
 				strings.EqualFold(queryExpr[1], "SELECT") == false ||
@@ -114,8 +114,6 @@ func (d *DriverMssql) parseSql(sql string) string {
 				break
 			}
 			selectStr = queryExpr[2]
-
-			// 取order by表达式的值
 			orderExpr, _ := gregex.MatchString("((?i)ORDER BY)(.+)((?i)LIMIT)", sql)
 			if len(orderExpr) != 4 ||
 				strings.EqualFold(orderExpr[1], "ORDER BY") == false ||
@@ -132,8 +130,6 @@ func (d *DriverMssql) parseSql(sql string) string {
 			}
 			selectStr = queryExpr[2]
 		}
-
-		// 取limit后面的取值范围
 		first, limit := 0, 0
 		for i := 1; i < len(res[index]); i++ {
 			if len(strings.TrimSpace(res[index][i])) == 0 {
@@ -147,7 +143,6 @@ func (d *DriverMssql) parseSql(sql string) string {
 				break
 			}
 		}
-
 		if haveOrder {
 			sql = fmt.Sprintf(
 				"SELECT * FROM "+

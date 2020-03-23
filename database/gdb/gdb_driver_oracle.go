@@ -75,6 +75,8 @@ func (d *DriverOracle) HandleSqlBeforeCommit(link Link, sql string, args []inter
 	return d.parseSql(str), args
 }
 
+// parseSql does some replacement of the sql before commits it to underlying driver,
+// for support of oracle server.
 func (d *DriverOracle) parseSql(sql string) string {
 	patten := `^\s*(?i)(SELECT)|(LIMIT\s*(\d+)\s*,\s*(\d+))`
 	if gregex.IsMatchString(patten, sql) == false {
@@ -93,22 +95,18 @@ func (d *DriverOracle) parseSql(sql string) string {
 	index++
 	switch keyword {
 	case "SELECT":
-		// 不含LIMIT关键字则不处理
-		if len(res) < 2 || (strings.HasPrefix(res[index][0], "LIMIT") == false && strings.HasPrefix(res[index][0], "limit") == false) {
+		if len(res) < 2 || (strings.HasPrefix(res[index][0], "LIMIT") == false &&
+			strings.HasPrefix(res[index][0], "limit") == false) {
 			break
 		}
-
-		// 取limit前面的字符串
 		if gregex.IsMatchString("((?i)SELECT)(.+)((?i)LIMIT)", sql) == false {
 			break
 		}
-
 		queryExpr, _ := gregex.MatchString("((?i)SELECT)(.+)((?i)LIMIT)", sql)
-		if len(queryExpr) != 4 || strings.EqualFold(queryExpr[1], "SELECT") == false || strings.EqualFold(queryExpr[3], "LIMIT") == false {
+		if len(queryExpr) != 4 || strings.EqualFold(queryExpr[1], "SELECT") == false ||
+			strings.EqualFold(queryExpr[3], "LIMIT") == false {
 			break
 		}
-
-		// 取limit后面的取值范围
 		first, limit := 0, 0
 		for i := 1; i < len(res[index]); i++ {
 			if len(strings.TrimSpace(res[index][i])) == 0 {
@@ -121,10 +119,10 @@ func (d *DriverOracle) parseSql(sql string) string {
 				break
 			}
 		}
-
-		// 也可以使用between,据说这种写法的性能会比between好点,里层SQL中的ROWNUM_ >= limit可以缩小查询后的数据集规模
 		sql = fmt.Sprintf(
-			"SELECT * FROM (SELECT GFORM.*, ROWNUM ROWNUM_ FROM (%s %s) GFORM WHERE ROWNUM <= %d) WHERE ROWNUM_ >= %d",
+			"SELECT * FROM "+
+				"(SELECT GFORM.*, ROWNUM ROWNUM_ FROM (%s %s) GFORM WHERE ROWNUM <= %d)"+
+				" WHERE ROWNUM_ >= %d",
 			queryExpr[1], queryExpr[2], limit, first,
 		)
 	}
