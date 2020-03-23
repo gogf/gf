@@ -41,16 +41,16 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// 去掉末尾的"/"号
+	if r.URL.Path != "/" {
+		for len(r.URL.Path) > 0 && r.URL.Path[len(r.URL.Path)-1] == '/' {
+			r.URL.Path = r.URL.Path[:len(r.URL.Path)-1]
+		}
+	}
+
 	// URI默认值
 	if r.URL.Path == "" {
 		r.URL.Path = "/"
-	}
-
-	// 去掉末尾的"/"号
-	if r.URL.Path != "/" {
-		for r.URL.Path[len(r.URL.Path)-1] == '/' {
-			r.URL.Path = r.URL.Path[:len(r.URL.Path)-1]
-		}
 	}
 
 	// 创建请求处理对象
