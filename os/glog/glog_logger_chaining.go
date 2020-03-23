@@ -37,7 +37,9 @@ func (l *Logger) Path(path string) *Logger {
 		logger = l
 	}
 	if path != "" {
-		logger.SetPath(path)
+		if err := logger.SetPath(path); err != nil {
+			panic(err)
+		}
 	}
 	return logger
 }
@@ -53,7 +55,9 @@ func (l *Logger) Cat(category string) *Logger {
 		logger = l
 	}
 	if logger.config.Path != "" {
-		logger.SetPath(logger.config.Path + gfile.Separator + category)
+		if err := logger.SetPath(gfile.Join(logger.config.Path, category)); err != nil {
+			panic(err)
+		}
 	}
 	return logger
 }
@@ -81,6 +85,21 @@ func (l *Logger) Level(level int) *Logger {
 		logger = l
 	}
 	logger.SetLevel(level)
+	return logger
+}
+
+// LevelStr is a chaining function,
+// which sets logging level for the current logging content output using level string.
+func (l *Logger) LevelStr(levelStr string) *Logger {
+	logger := (*Logger)(nil)
+	if l.parent == nil {
+		logger = l.Clone()
+	} else {
+		logger = l
+	}
+	if err := logger.SetLevelStr(levelStr); err != nil {
+		panic(err)
+	}
 	return logger
 }
 

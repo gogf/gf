@@ -6,7 +6,6 @@ import (
 
 func main() {
 	l := glog.New()
-	l.Info("info1")
-	l.SetLevelStr("notice")
-	l.Info("info2")
+	l.SetLevelPrefix(glog.LEVEL_DEBU, "debug")
+	l.Debug("test")
 }
