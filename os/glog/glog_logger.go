@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/os/gfpool"
 	"github.com/gogf/gf/os/gtimer"
 	"io"
 	"os"
@@ -20,25 +21,27 @@ import (
 	"github.com/gogf/gf/debug/gdebug"
 
 	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/gfpool"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/util/gconv"
 )
 
 // Logger is the struct for logging management.
+// Note that, there's no need using mutex or locker for file output,
+// as there's already write lock in the underlying file writer.
+// See: /usr/local/go/src/internal/poll/fd_unix.go:255
 type Logger struct {
-	mu     sync.Mutex // Mutex is not for common logging, but for file rotation feature.
-	parent *Logger    // Parent logger.
+	rmu    sync.Mutex // Mutex for rotation feature.
+	parent *Logger    // Parent logger, if it is not empty, it means the logger is used in chaining function.
 	config Config     // Logger configuration.
 }
 
 const (
-	gDEFAULT_FILE_FORMAT     = `{Y-m-d}.log`
-	gDEFAULT_FILE_POOL_FLAGS = os.O_CREATE | os.O_WRONLY | os.O_APPEND
-	gDEFAULT_FPOOL_PERM      = os.FileMode(0666)
-	gDEFAULT_FPOOL_EXPIRE    = time.Minute
-	gPATH_FILTER_KEY         = "/os/glog/glog"
+	gDEFAULT_FILE_FORMAT = `{Y-m-d}.log`
+	gDEFAULT_FILE_FLAGS  = os.O_CREATE | os.O_WRONLY | os.O_APPEND
+	gDEFAULT_FILE_PERM   = os.FileMode(0666)
+	gDEFAULT_FILE_EXPIRE = time.Minute
+	gPATH_FILTER_KEY     = "/os/glog/glog"
 )
 
 const (
@@ -74,30 +77,6 @@ func (l *Logger) Clone() *Logger {
 	logger = *l
 	logger.parent = l
 	return &logger
-}
-
-// getFilePointer returns the file pinter for file logging.
-// It returns nil if file logging is disabled, or file opening fails.
-func (l *Logger) getFilePointer(now time.Time) *gfpool.File {
-	if path := l.config.Path; path != "" {
-		// Create path if it does not exist.
-		if !gfile.Exists(path) {
-			if err := gfile.Mkdir(path); err != nil {
-				fmt.Fprintln(os.Stderr, fmt.Sprintf(`[glog] mkdir "%s" failed: %s`, path, err.Error()))
-				return nil
-			}
-		}
-		if fp, err := gfpool.Open(
-			l.getFilePath(now),
-			gDEFAULT_FILE_POOL_FLAGS,
-			gDEFAULT_FPOOL_PERM,
-			gDEFAULT_FPOOL_EXPIRE); err == nil {
-			return fp
-		} else {
-			fmt.Fprintln(os.Stderr, err)
-		}
-	}
-	return nil
 }
 
 // getFilePath returns the logging file path.
@@ -195,11 +174,21 @@ func (l *Logger) print(std io.Writer, lead string, value ...interface{}) {
 // printToWriter writes buffer to writer.
 func (l *Logger) printToWriter(now time.Time, std io.Writer, buffer *bytes.Buffer) {
 	if l.config.Writer == nil {
-		if f := l.getFilePointer(now); f != nil {
-			defer f.Close()
+		// Output content to disk file.
+		if l.config.Path != "" {
+			file, err := gfpool.Open(
+				l.getFilePath(now),
+				gDEFAULT_FILE_FLAGS,
+				gDEFAULT_FILE_PERM,
+				gDEFAULT_FILE_EXPIRE,
+			)
+			if err != nil {
+				panic(err)
+			}
+			defer file.Close()
 			// Rotation file size checks.
 			if l.config.RotateSize > 0 {
-				state, err := f.Stat()
+				state, err := file.Stat()
 				if err != nil {
 					panic(err)
 				}
@@ -209,19 +198,19 @@ func (l *Logger) printToWriter(now time.Time, std io.Writer, buffer *bytes.Buffe
 					return
 				}
 			}
-			if _, err := io.WriteString(f, buffer.String()); err != nil {
-				fmt.Fprintln(os.Stderr, err.Error())
+			if _, err := io.WriteString(file, buffer.String()); err != nil {
+				panic(err)
 			}
 		}
 		// Allow output to stdout?
 		if l.config.StdoutPrint {
 			if _, err := std.Write(buffer.Bytes()); err != nil {
-				fmt.Fprintln(os.Stderr, err.Error())
+				panic(err)
 			}
 		}
 	} else {
 		if _, err := l.config.Writer.Write(buffer.Bytes()); err != nil {
-			fmt.Fprintln(os.Stderr, err.Error())
+			panic(err)
 		}
 	}
 }
