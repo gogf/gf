@@ -80,12 +80,20 @@ func (l *Logger) SetConfigWithMap(m map[string]interface{}) error {
 		return errors.New("configuration cannot be empty")
 	}
 	// Change string configuration to int value for level.
-	levelKey, levelValue := gutil.MapPossibleItemByKey(m, "level")
+	levelKey, levelValue := gutil.MapPossibleItemByKey(m, "Level")
 	if levelValue != nil {
 		if level, ok := levelStringMap[strings.ToUpper(gconv.String(levelValue))]; ok {
 			m[levelKey] = level
 		} else {
 			return errors.New(fmt.Sprintf(`invalid level string: %v`, levelValue))
+		}
+	}
+	// Change string configuration to int value for file rotation size.
+	rotateSizeKey, rotateSizeValue := gutil.MapPossibleItemByKey(m, "RotateSize")
+	if rotateSizeValue != nil {
+		m[rotateSizeKey] = gfile.StrToSize(gconv.String(rotateSizeValue))
+		if m[rotateSizeKey] == -1 {
+			return errors.New(fmt.Sprintf(`invalid rotate size: %v`, rotateSizeValue))
 		}
 	}
 	config := DefaultConfig()

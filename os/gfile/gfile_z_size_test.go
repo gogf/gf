@@ -7,6 +7,7 @@
 package gfile_test
 
 import (
+	"github.com/gogf/gf/util/gconv"
 	"testing"
 
 	"github.com/gogf/gf/os/gfile"
@@ -29,6 +30,25 @@ func Test_Size(t *testing.T) {
 		sizes = gfile.Size("")
 		t.Assert(sizes, 0)
 
+	})
+}
+
+func Test_StrToSize(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gfile.StrToSize("0.00B"), 0)
+		t.Assert(gfile.StrToSize("16.00B"), 16)
+		t.Assert(gfile.StrToSize("1.00K"), 1024)
+		t.Assert(gfile.StrToSize("1.00KB"), 1024)
+		t.Assert(gfile.StrToSize("1.00KiloByte"), 1024)
+		t.Assert(gfile.StrToSize("15.26M"), gconv.Int64(15.26*1024*1024))
+		t.Assert(gfile.StrToSize("15.26MB"), gconv.Int64(15.26*1024*1024))
+		t.Assert(gfile.StrToSize("1.49G"), gconv.Int64(1.49*1024*1024*1024))
+		t.Assert(gfile.StrToSize("1.49GB"), gconv.Int64(1.49*1024*1024*1024))
+		t.Assert(gfile.StrToSize("8.73T"), gconv.Int64(8.73*1024*1024*1024*1024))
+		t.Assert(gfile.StrToSize("8.73TB"), gconv.Int64(8.73*1024*1024*1024*1024))
+		t.Assert(gfile.StrToSize("8.53P"), gconv.Int64(8.53*1024*1024*1024*1024*1024))
+		t.Assert(gfile.StrToSize("8.53PB"), gconv.Int64(8.53*1024*1024*1024*1024*1024))
+		t.Assert(gfile.StrToSize("8.01EB"), gconv.Int64(8.01*1024*1024*1024*1024*1024*1024))
 	})
 }
 
