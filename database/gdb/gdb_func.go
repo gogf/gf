@@ -40,6 +40,11 @@ type apiInterfaces interface {
 	Interfaces() []interface{}
 }
 
+// apiMapStrAny is the interface support for converting struct parameter to map.
+type apiMapStrAny interface {
+	MapStrAny() map[string]interface{}
+}
+
 const (
 	ORM_TAG_FOR_STRUCT  = "orm"
 	ORM_TAG_FOR_UNIQUE  = "unique"
