@@ -24,8 +24,8 @@ func (l *Logger) rotateFile(now time.Time) {
 	if l.config.RotateSize <= 0 {
 		return
 	}
-	l.mu.Lock()
-	defer l.mu.Unlock()
+	l.rmu.Lock()
+	defer l.rmu.Unlock()
 	filePath := l.getFilePath(now)
 	// No backups, it then just removes the current logging file.
 	if l.config.RotateBackups == 0 {
