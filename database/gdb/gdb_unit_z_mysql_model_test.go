@@ -9,6 +9,7 @@ package gdb_test
 import (
 	"database/sql"
 	"fmt"
+	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/util/gutil"
 	"testing"
@@ -937,14 +938,47 @@ func Test_Model_GroupBy(t *testing.T) {
 }
 
 func Test_Model_Data(t *testing.T) {
-	table := createInitTable()
-	defer dropTable(table)
-
 	gtest.C(t, func(t *gtest.T) {
+		table := createInitTable()
+		defer dropTable(table)
 		result, err := db.Table(table).Data("nickname=?", "test").Where("id=?", 3).Update()
 		t.Assert(err, nil)
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		table := createTable()
+		defer dropTable(table)
+		users := make([]g.MapStrAny, 0)
+		for i := 1; i <= 10; i++ {
+			users = append(users, g.MapStrAny{
+				"id":       i,
+				"passport": fmt.Sprintf(`passport_%d`, i),
+				"password": fmt.Sprintf(`password_%d`, i),
+				"nickname": fmt.Sprintf(`nickname_%d`, i),
+			})
+		}
+		result, err := db.Table(table).Data(users).Batch(2).Insert()
+		t.Assert(err, nil)
+		n, _ := result.RowsAffected()
+		t.Assert(n, 10)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		table := createTable()
+		defer dropTable(table)
+		users := garray.New()
+		for i := 1; i <= 10; i++ {
+			users.Append(g.MapStrAny{
+				"id":       i,
+				"passport": fmt.Sprintf(`passport_%d`, i),
+				"password": fmt.Sprintf(`password_%d`, i),
+				"nickname": fmt.Sprintf(`nickname_%d`, i),
+			})
+		}
+		result, err := db.Table(table).Data(users).Batch(2).Insert()
+		t.Assert(err, nil)
+		n, _ := result.RowsAffected()
+		t.Assert(n, 10)
 	})
 }
 
@@ -2000,5 +2034,55 @@ func Test_Model_Schema2(t *testing.T) {
 		v, err = db.Schema(SCHEMA2).Table(table).Value("nickname", "id=?", i)
 		t.Assert(err, nil)
 		t.Assert(v.String(), "")
+	})
+}
+
+func Test_Model_FieldsExStruct(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id       int    `orm:"id"       json:"id"`
+			Passport string `orm:"password" json:"pass_port"`
+			Password string `orm:"password" json:"password"`
+			NickName string `orm:"nickname" json:"nick__name"`
+		}
+		user := &User{
+			Id:       1,
+			Passport: "111",
+			Password: "222",
+			NickName: "333",
+		}
+		r, err := db.Table(table).FieldsEx("create_time, password").OmitEmpty().Data(user).Insert()
+		t.Assert(err, nil)
+		n, err := r.RowsAffected()
+		t.Assert(err, nil)
+		t.Assert(n, 1)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id       int    `orm:"id"       json:"id"`
+			Passport string `orm:"password" json:"pass_port"`
+			Password string `orm:"password" json:"password"`
+			NickName string `orm:"nickname" json:"nick__name"`
+		}
+		users := make([]*User, 0)
+		for i := 100; i < 110; i++ {
+			users = append(users, &User{
+				Id:       i,
+				Passport: fmt.Sprintf(`passport_%d`, i),
+				Password: fmt.Sprintf(`password_%d`, i),
+				NickName: fmt.Sprintf(`nickname_%d`, i),
+			})
+		}
+		r, err := db.Table(table).FieldsEx("create_time, password").
+			OmitEmpty().
+			Batch(2).
+			Data(users).
+			Insert()
+		t.Assert(err, nil)
+		n, err := r.RowsAffected()
+		t.Assert(err, nil)
+		t.Assert(n, 10)
 	})
 }

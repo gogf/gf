@@ -67,8 +67,21 @@ func (m *Model) Data(data ...interface{}) *Model {
 					list[i] = DataToMapDeep(rv.Index(i).Interface())
 				}
 				model.data = list
-			case reflect.Map, reflect.Struct:
+			case reflect.Map:
 				model.data = DataToMapDeep(data[0])
+			case reflect.Struct:
+				if v, ok := data[0].(apiMapStrAny); ok {
+					model.data = v.MapStrAny()
+				} else if v, ok := data[0].(apiInterfaces); ok {
+					array := v.Interfaces()
+					list := make(List, len(array))
+					for i := 0; i < len(array); i++ {
+						list[i] = DataToMapDeep(array[i])
+					}
+					model.data = list
+				} else {
+					model.data = DataToMapDeep(data[0])
+				}
 			default:
 				model.data = data[0]
 			}
