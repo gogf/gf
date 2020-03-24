@@ -214,3 +214,38 @@ func Test_Router_Group_Mthods(t *testing.T) {
 		t.Assert(client.GetContent("/obj/delete"), "1Object Delete2")
 	})
 }
+
+func Test_Router_Group_MultiServer(t *testing.T) {
+	p1 := ports.PopRand()
+	p2 := ports.PopRand()
+	s1 := g.Server(p1)
+	s2 := g.Server(p2)
+	s1.Group("/", func(group *ghttp.RouterGroup) {
+		group.POST("/post", func(r *ghttp.Request) {
+			r.Response.Write("post1")
+		})
+	})
+	s2.Group("/", func(group *ghttp.RouterGroup) {
+		group.POST("/post", func(r *ghttp.Request) {
+			r.Response.Write("post2")
+		})
+	})
+	s1.SetPort(p1)
+	s2.SetPort(p2)
+	s1.SetDumpRouterMap(false)
+	s2.SetDumpRouterMap(false)
+	gtest.Assert(s1.Start(), nil)
+	gtest.Assert(s2.Start(), nil)
+	defer s1.Shutdown()
+	defer s2.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		c1 := ghttp.NewClient()
+		c1.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p1))
+		c2 := ghttp.NewClient()
+		c2.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p2))
+		t.Assert(c1.PostContent("/post"), "post1")
+		t.Assert(c2.PostContent("/post"), "post2")
+	})
+}

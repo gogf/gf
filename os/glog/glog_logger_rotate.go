@@ -15,17 +15,18 @@ import (
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/os/gtimer"
 	"github.com/gogf/gf/text/gregex"
+	"time"
 )
 
 // rotateFile rotates the current logging file.
-func (l *Logger) rotateFile() {
+func (l *Logger) rotateFile(now time.Time) {
 	// Rotation feature is not enabled as rotation file size is zero.
-	if l.config.RotateSize == 0 {
+	if l.config.RotateSize <= 0 {
 		return
 	}
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	filePath := l.getFilePath()
+	filePath := l.getFilePath(now)
 	// No backups, it then just removes the current logging file.
 	if l.config.RotateBackups == 0 {
 		if err := gfile.Remove(filePath); err != nil {
@@ -66,7 +67,7 @@ func (l *Logger) rotateChecks() {
 	}()
 
 	// Checks whether file rotation not enabled.
-	if l.config.RotateSize == 0 || l.config.RotateBackups == 0 {
+	if l.config.RotateSize <= 0 || l.config.RotateBackups == 0 {
 		return
 	}
 	files, _ := gfile.ScanDirFile(l.config.Path, "*.*", true)

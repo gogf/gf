@@ -78,7 +78,7 @@ func (l *Logger) Clone() *Logger {
 
 // getFilePointer returns the file pinter for file logging.
 // It returns nil if file logging is disabled, or file opening fails.
-func (l *Logger) getFilePointer() *gfpool.File {
+func (l *Logger) getFilePointer(now time.Time) *gfpool.File {
 	if path := l.config.Path; path != "" {
 		// Create path if it does not exist.
 		if !gfile.Exists(path) {
@@ -88,7 +88,7 @@ func (l *Logger) getFilePointer() *gfpool.File {
 			}
 		}
 		if fp, err := gfpool.Open(
-			l.getFilePath(),
+			l.getFilePath(now),
 			gDEFAULT_FILE_POOL_FLAGS,
 			gDEFAULT_FPOOL_PERM,
 			gDEFAULT_FPOOL_EXPIRE); err == nil {
@@ -101,17 +101,20 @@ func (l *Logger) getFilePointer() *gfpool.File {
 }
 
 // getFilePath returns the logging file path.
-func (l *Logger) getFilePath() string {
+func (l *Logger) getFilePath(now time.Time) string {
 	// Content containing "{}" in the file name is formatted using gtime.
 	file, _ := gregex.ReplaceStringFunc(`{.+?}`, l.config.File, func(s string) string {
-		return gtime.Now().Format(strings.Trim(s, "{}"))
+		return gtime.New(now).Format(strings.Trim(s, "{}"))
 	})
 	return gfile.Join(l.config.Path, file)
 }
 
 // print prints <s> to defined writer, logging file or passed <std>.
 func (l *Logger) print(std io.Writer, lead string, value ...interface{}) {
-	buffer := bytes.NewBuffer(nil)
+	var (
+		now    = time.Now()
+		buffer = bytes.NewBuffer(nil)
+	)
 	if l.config.HeaderPrint {
 		// Time.
 		timeFormat := ""
@@ -125,7 +128,7 @@ func (l *Logger) print(std io.Writer, lead string, value ...interface{}) {
 			timeFormat += "15:04:05.000 "
 		}
 		if len(timeFormat) > 0 {
-			buffer.WriteString(time.Now().Format(timeFormat))
+			buffer.WriteString(now.Format(timeFormat))
 		}
 		// Lead string.
 		if len(lead) > 0 {
@@ -179,20 +182,20 @@ func (l *Logger) print(std io.Writer, lead string, value ...interface{}) {
 	buffer.WriteString(valueStr + "\n")
 	if l.config.Flags&F_ASYNC > 0 {
 		err := asyncPool.Add(func() {
-			l.printToWriter(std, buffer)
+			l.printToWriter(now, std, buffer)
 		})
 		if err != nil {
 			intlog.Error(err)
 		}
 	} else {
-		l.printToWriter(std, buffer)
+		l.printToWriter(now, std, buffer)
 	}
 }
 
 // printToWriter writes buffer to writer.
-func (l *Logger) printToWriter(std io.Writer, buffer *bytes.Buffer) {
+func (l *Logger) printToWriter(now time.Time, std io.Writer, buffer *bytes.Buffer) {
 	if l.config.Writer == nil {
-		if f := l.getFilePointer(); f != nil {
+		if f := l.getFilePointer(now); f != nil {
 			defer f.Close()
 			// Rotation file size checks.
 			if l.config.RotateSize > 0 {
@@ -201,8 +204,8 @@ func (l *Logger) printToWriter(std io.Writer, buffer *bytes.Buffer) {
 					panic(err)
 				}
 				if state.Size() > l.config.RotateSize {
-					l.rotateFile()
-					l.printToWriter(std, buffer)
+					l.rotateFile(now)
+					l.printToWriter(now, std, buffer)
 					return
 				}
 			}
