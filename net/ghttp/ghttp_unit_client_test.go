@@ -7,6 +7,7 @@
 package ghttp_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -92,5 +93,134 @@ func Test_Client_Cookies(t *testing.T) {
 		t.Assert(m["test2"], 2)
 		t.Assert(resp.GetCookie("test1"), 1)
 		t.Assert(resp.GetCookie("test2"), 2)
+	})
+}
+
+func Test_Client_Chain_Header(t *testing.T) {
+	p := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/header1", func(r *ghttp.Request) {
+		r.Response.Write(r.Header.Get("test1"))
+	})
+	s.BindHandler("/header2", func(r *ghttp.Request) {
+		r.Response.Write(r.Header.Get("test2"))
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		c := ghttp.NewClient()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+
+		t.Assert(c.Header(g.MapStrStr{"test1": "1234567890"}).GetContent("/header1"), "1234567890")
+		t.Assert(c.HeaderRaw("test1: 1234567890\ntest2: abcdefg").GetContent("/header1"), "1234567890")
+		t.Assert(c.HeaderRaw("test1: 1234567890\ntest2: abcdefg").GetContent("/header2"), "abcdefg")
+	})
+}
+
+func Test_Client_Chain_Context(t *testing.T) {
+	p := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/context", func(r *ghttp.Request) {
+		time.Sleep(1 * time.Second)
+		r.Response.Write("ok")
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		c := ghttp.NewClient()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+
+		ctx, _ := context.WithTimeout(context.Background(), 100*time.Millisecond)
+		t.Assert(c.Ctx(ctx).GetContent("/context"), "")
+
+		ctx, _ = context.WithTimeout(context.Background(), 2000*time.Millisecond)
+		t.Assert(c.Ctx(ctx).GetContent("/context"), "ok")
+	})
+}
+
+func Test_Client_Chain_Timeout(t *testing.T) {
+	p := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/timeout", func(r *ghttp.Request) {
+		time.Sleep(1 * time.Second)
+		r.Response.Write("ok")
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		c := ghttp.NewClient()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		t.Assert(c.Timeout(100*time.Millisecond).GetContent("/timeout"), "")
+		t.Assert(c.Timeout(2000*time.Millisecond).GetContent("/timeout"), "ok")
+	})
+}
+
+func Test_Client_Chain_ContentJson(t *testing.T) {
+	p := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/json", func(r *ghttp.Request) {
+		r.Response.Write(r.Get("name"), r.Get("score"))
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		c := ghttp.NewClient()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		t.Assert(c.ContentJson().PostContent("/json", g.Map{
+			"name":  "john",
+			"score": 100,
+		}), "john100")
+		t.Assert(c.ContentJson().PostContent("/json", `{"name":"john", "score":100}`), "john100")
+
+		type User struct {
+			Name  string `json:"name"`
+			Score int    `json:"score"`
+		}
+		t.Assert(c.ContentJson().PostContent("/json", User{"john", 100}), "john100")
+	})
+}
+
+func Test_Client_Chain_ContentXml(t *testing.T) {
+	p := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/xml", func(r *ghttp.Request) {
+		r.Response.Write(r.Get("name"), r.Get("score"))
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		c := ghttp.NewClient()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		t.Assert(c.ContentXml().PostContent("/xml", g.Map{
+			"name":  "john",
+			"score": 100,
+		}), "john100")
+		t.Assert(c.ContentXml().PostContent("/xml", `{"name":"john", "score":100}`), "john100")
+
+		type User struct {
+			Name  string `json:"name"`
+			Score int    `json:"score"`
+		}
+		t.Assert(c.ContentXml().PostContent("/xml", User{"john", 100}), "john100")
 	})
 }

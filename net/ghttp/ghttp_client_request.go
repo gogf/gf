@@ -11,7 +11,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/encoding/gparser"
 	"github.com/gogf/gf/text/gregex"
+	"github.com/gogf/gf/util/gconv"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -90,7 +92,32 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 	}
 	param := ""
 	if len(data) > 0 {
-		param = BuildParams(data[0])
+		switch c.header["Content-Type"] {
+		case "application/json":
+			switch data[0].(type) {
+			case string, []byte:
+				param = gconv.String(data[0])
+			default:
+				if b, err := json.Marshal(data[0]); err != nil {
+					return nil, err
+				} else {
+					param = gconv.UnsafeBytesToStr(b)
+				}
+			}
+		case "application/xml":
+			switch data[0].(type) {
+			case string, []byte:
+				param = gconv.String(data[0])
+			default:
+				if b, err := gparser.VarToXml(data[0]); err != nil {
+					return nil, err
+				} else {
+					param = gconv.UnsafeBytesToStr(b)
+				}
+			}
+		default:
+			param = BuildParams(data[0])
+		}
 	}
 	req := (*http.Request)(nil)
 	if strings.Contains(param, "@file:") {
@@ -128,7 +155,7 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 		if err = writer.Close(); err != nil {
 			return nil, err
 		}
-		if req, err = http.NewRequest(method, url, buffer); err != nil {
+		if req, err = http.NewRequestWithContext(c.ctx, method, url, buffer); err != nil {
 			return nil, err
 		} else {
 			req.Header.Set("Content-Type", writer.FormDataContentType())
@@ -136,14 +163,16 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 	} else {
 		// Normal request.
 		paramBytes := []byte(param)
-		if req, err = http.NewRequest(method, url, bytes.NewReader(paramBytes)); err != nil {
+		if req, err = http.NewRequestWithContext(
+			c.ctx, method, url, bytes.NewReader(paramBytes),
+		); err != nil {
 			return nil, err
 		} else {
 			if v, ok := c.header["Content-Type"]; ok {
 				// Custom Content-Type.
 				req.Header.Set("Content-Type", v)
-			} else {
-				if json.Valid(paramBytes) {
+			} else if len(paramBytes) > 0 {
+				if (paramBytes[0] == '[' || paramBytes[0] == '{') && json.Valid(paramBytes) {
 					// Auto detecting and setting the post content format: JSON.
 					req.Header.Set("Content-Type", "application/json")
 				} else if gregex.IsMatchString(`^[\w\[\]]+=.+`, param) {
