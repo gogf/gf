@@ -18,7 +18,7 @@ import (
 
 func Test_Concurrent(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		c := 10000
+		c := 1000
 		l := glog.New()
 		s := "@1234567890#"
 		f := "test.log"
