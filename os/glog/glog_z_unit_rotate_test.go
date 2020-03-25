@@ -22,14 +22,14 @@ func Test_Rotate(t *testing.T) {
 		l := glog.New()
 		p := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
 		err := l.SetConfigWithMap(g.Map{
-			"Path":           p,
-			"File":           "access.log",
-			"StdoutPrint":    false,
-			"RotateSize":     10,
-			"RotateBackups":  2,
-			"RotateExpire":   5 * time.Second,
-			"RotateCompress": 9,
-			"RotateInterval": time.Second, // For unit testing only.
+			"Path":               p,
+			"File":               "access.log",
+			"StdoutPrint":        false,
+			"RotateSize":         10,
+			"RotateBackLimit":    2,
+			"RotateBackExpire":   5 * time.Second,
+			"RotateBackCompress": 9,
+			"RotateInterval":     time.Second, // For unit testing only.
 		})
 		t.Assert(err, nil)
 		defer gfile.Remove(p)
@@ -48,7 +48,7 @@ func Test_Rotate(t *testing.T) {
 		content := gfile.GetContents(gfile.Join(p, "access.log"))
 		t.Assert(gstr.Count(content, s), 1)
 
-		time.Sleep(time.Second * 4)
+		time.Sleep(time.Second * 5)
 		files, err = gfile.ScanDirFile(p, "*.gz")
 		t.Assert(err, nil)
 		t.Assert(len(files), 0)

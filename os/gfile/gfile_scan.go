@@ -7,10 +7,10 @@
 package gfile
 
 import (
+	"github.com/gogf/gf/text/gstr"
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
 )
 
 // ScanDir returns all sub-files with absolute paths of given <path>,
@@ -75,12 +75,12 @@ func doScanDir(path string, pattern string, recursive bool, onlyFile bool) ([]st
 	if err != nil {
 		return nil, err
 	}
-	filePath := ""
-	isDir := false
-	patterns := strings.Split(pattern, ",")
-	for i := 0; i < len(patterns); i++ {
-		patterns[i] = strings.TrimSpace(patterns[i])
-	}
+
+	var (
+		filePath = ""
+		isDir    = false
+		patterns = gstr.SplitAndTrim(pattern, ",")
+	)
 	for _, name := range names {
 		filePath = path + Separator + name
 		isDir = IsDir(filePath)

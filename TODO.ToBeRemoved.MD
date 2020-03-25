@@ -10,7 +10,6 @@
 1. gjson对大json数据的解析效率问题；
 1. ghttp增加route name特性，并同时支持backend和template(提供内置函数)引用，可以通过RedirectRoute方法给定route name和路由参数跳转到指定的路由地址上；
 1. gvalid校验支持当第一个规则失败后便不再校验后续的规则，最好做成链式操作；
-1. gvalid增加支持对[]rune的长度校验(一个中文占3个字节)；
 1. ghttp.Request增加对输入参数的自动HtmlEncode机制；
 1. 常量命名风格根据golint进行修改；
 1. 开放rwmutex包，并将gjson的互斥锁使用自定义的mutex替换；
@@ -21,8 +20,6 @@
     - ghttp Server&Client basic auth、
     - glog分类&日志等级&链式操作、gdb debug自动输出调试信息、gmlock内存锁、
 1. 服务注册域名增加对泛域名的支持；
-1. Cookie设置中文失效问题；
-1. 使用gconv将slice映射到struct属性上，例如redis hscan的结果集；
 1. 项目参考：
     - https://github.com/namreg/godown
     - https://github.com/Masterminds/sprig
@@ -31,32 +28,36 @@
 1. 路由增加不区分大小写得匹配方式；
 1. 改进WebServer获取POST参数处理逻辑，当提交非form数据时，例如json数据，针对某些方法可以直接解析；
 1. WebServer增加可选择的路由覆盖配置，默认情况下不覆盖；
-1. grpool性能压测结果变慢的问题；
 1. 增加jumplist的数据结构容器；
 1. DelayQueue/PriorityQueue；
 1. 权限管理模块；
 1. 从ghttp中剥离SESSION功能构成单独的模块gsession；
 1. 改进gproc进程间通信处理逻辑，提高稳定性，以应对进程间大批量的数据发送/接收；
-1. ghttp的热重启的本地进程端口监听，在不使用该特性时默认关闭掉；
-1. gtcp增加对TLS加密通信的支持；
 1. 添加Save/Replace/BatchSave/BatchReplace方法对sqlite数据库的支持；
 1. 添加sqlite数据库的单元测试用例；
 1. gredis增加cluster支持；
 1. gset.Add/Remove/Contains方法增加批量操作支持；
 1. gmlock增加手动清理机制：当内存锁不再使用时，由调用端决定是否清理内存锁；
 1. gtimer增加DelayAdd*方法返回Entry对象，以便DelayAdd*的定时任务也能进行状态控制；gcron同理需要改进；
-1. 改进gdb对pgsql/mssql/oracle的支持，使用方法覆盖的方式改进操作，而不是完全依靠正则替换的方式；
-1. gdb的Cache缓存功能增加可自定义缓存接口，以便支持外部缓存功能，缓存接口可以通过io.ReadWriter接口实现；
 1. grpool增加支持阻塞添加任务接口；
 1. gdb.Model在链式安全的对象创建中增加sync.Pool的使用；
 1. 增加g.Table快捷方法以方便操作数据表，但是得考虑后续模型操作设计，特别是脚手架的模型管理；
-1. 改进ghttp分组路由中对hook的支持方式，以便格式与BindHookHandler统一；
+
 
 
 
 
 
 # DONE
+1. Cookie设置中文失效问题；
+1. gvalid增加支持对[]rune的长度校验(一个中文占3个字节)；
+1. grpool性能压测结果变慢的问题；
+1. ghttp的热重启的本地进程端口监听，在不使用该特性时默认关闭掉；
+1. gtcp增加对TLS加密通信的支持；
+1. 改进gdb对pgsql/mssql/oracle的支持，使用方法覆盖的方式改进操作，而不是完全依靠正则替换的方式；
+1. gdb的Cache缓存功能增加可自定义缓存接口，以便支持外部缓存功能，缓存接口可以通过io.ReadWriter接口实现；
+1. 改进ghttp分组路由中对hook的支持方式，以便格式与BindHookHandler统一；
+1. 使用gconv将slice映射到struct属性上，例如redis hscan的结果集；
 1.  gconv完善针对不同类型的判断，例如：尽量减少sprintf("%v", xxx)来执行string类型的转换；
 2.  ghttp.Server请求执行中增加服务退出的方法，不再执行后续操作；
 3.  ghttp.Response对象完善并改进数据返回方法(Write/WriteString)；

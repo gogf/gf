@@ -196,6 +196,9 @@ func (a *SortedArray) RemoveValue(value interface{}) bool {
 func (a *SortedArray) PopLeft() interface{} {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	if len(a.array) == 0 {
+		return nil
+	}
 	value := a.array[0]
 	a.array = a.array[1:]
 	return value
@@ -206,6 +209,9 @@ func (a *SortedArray) PopRight() interface{} {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	index := len(a.array) - 1
+	if index <= 0 {
+		return nil
+	}
 	value := a.array[index]
 	a.array = a.array[:index]
 	return value
@@ -222,6 +228,9 @@ func (a *SortedArray) PopRands(size int) []interface{} {
 	defer a.mu.Unlock()
 	if size > len(a.array) {
 		size = len(a.array)
+	}
+	if size == 0 {
+		return nil
 	}
 	array := make([]interface{}, size)
 	for i := 0; i < size; i++ {
@@ -240,6 +249,9 @@ func (a *SortedArray) PopLefts(size int) []interface{} {
 	if size > length {
 		size = length
 	}
+	if size == 0 {
+		return nil
+	}
 	value := a.array[0:size]
 	a.array = a.array[size:]
 	return value
@@ -249,6 +261,9 @@ func (a *SortedArray) PopLefts(size int) []interface{} {
 func (a *SortedArray) PopRights(size int) []interface{} {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	if len(a.array) == 0 {
+		return nil
+	}
 	index := len(a.array) - size
 	if index < 0 {
 		index = 0
@@ -732,4 +747,9 @@ func (a *SortedArray) FilterEmpty() *SortedArray {
 		}
 	}
 	return a
+}
+
+// IsEmpty checks whether the array is empty.
+func (a *SortedArray) IsEmpty() bool {
+	return a.Len() == 0
 }
