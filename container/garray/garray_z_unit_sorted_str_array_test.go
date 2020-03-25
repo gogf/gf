@@ -144,6 +144,18 @@ func TestSortedStrArray_PopRands(t *testing.T) {
 	})
 }
 
+func TestSortedStrArray_Empty(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewSortedStrArray()
+		t.Assert(array.PopLeft(), nil)
+		t.Assert(array.PopLefts(10), nil)
+		t.Assert(array.PopRight(), nil)
+		t.Assert(array.PopRights(10), nil)
+		t.Assert(array.PopRand(), nil)
+		t.Assert(array.PopRands(10), nil)
+	})
+}
+
 func TestSortedStrArray_PopLefts(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []string{"e", "a", "d", "c", "b"}

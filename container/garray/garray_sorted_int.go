@@ -143,6 +143,7 @@ func (a *SortedIntArray) Get(index int) int {
 }
 
 // Remove removes an item by index.
+// Note that if the index is out of range of array, it returns 0.
 func (a *SortedIntArray) Remove(index int) int {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -178,25 +179,40 @@ func (a *SortedIntArray) RemoveValue(value int) bool {
 }
 
 // PopLeft pops and returns an item from the beginning of array.
+// Note that if the array is empty, it returns 0.
+// Be very careful when use this function in loop statement.
+// You can use IsEmpty() of Len() == 0 checks if this array empty.
 func (a *SortedIntArray) PopLeft() int {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	if len(a.array) == 0 {
+		return 0
+	}
 	value := a.array[0]
 	a.array = a.array[1:]
 	return value
 }
 
 // PopRight pops and returns an item from the end of array.
+// Note that if the array is empty, it returns 0.
+// Be very careful when use this function in loop statement.
+// You can use IsEmpty() of Len() == 0 checks if this array empty.
 func (a *SortedIntArray) PopRight() int {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	index := len(a.array) - 1
+	if index <= 0 {
+		return 0
+	}
 	value := a.array[index]
 	a.array = a.array[:index]
 	return value
 }
 
 // PopRand randomly pops and return an item out of array.
+// Note that if the array is empty, it returns 0.
+// Be very careful when use this function in loop statement.
+// You can use IsEmpty() of Len() == 0 checks if this array empty.
 func (a *SortedIntArray) PopRand() int {
 	return a.Remove(grand.Intn(len(a.array)))
 }
@@ -207,6 +223,9 @@ func (a *SortedIntArray) PopRands(size int) []int {
 	defer a.mu.Unlock()
 	if size > len(a.array) {
 		size = len(a.array)
+	}
+	if size == 0 {
+		return nil
 	}
 	array := make([]int, size)
 	for i := 0; i < size; i++ {
@@ -225,6 +244,9 @@ func (a *SortedIntArray) PopLefts(size int) []int {
 	if size > length {
 		size = length
 	}
+	if size == 0 {
+		return nil
+	}
 	value := a.array[0:size]
 	a.array = a.array[size:]
 	return value
@@ -234,6 +256,9 @@ func (a *SortedIntArray) PopLefts(size int) []int {
 func (a *SortedIntArray) PopRights(size int) []int {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	if len(a.array) == 0 {
+		return nil
+	}
 	index := len(a.array) - size
 	if index < 0 {
 		index = 0
@@ -679,4 +704,9 @@ func (a *SortedIntArray) FilterEmpty() *SortedIntArray {
 		}
 	}
 	return a
+}
+
+// IsEmpty checks whether the array is empty.
+func (a *SortedIntArray) IsEmpty() bool {
+	return a.Len() == 0
 }

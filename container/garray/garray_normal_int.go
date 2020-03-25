@@ -176,6 +176,7 @@ func (a *IntArray) InsertAfter(index int, value int) *IntArray {
 }
 
 // Remove removes an item by index.
+// Note that if the index is out of range of array, it returns 0.
 func (a *IntArray) Remove(index int) int {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -228,25 +229,39 @@ func (a *IntArray) PushRight(value ...int) *IntArray {
 }
 
 // PopLeft pops and returns an item from the beginning of array.
+// Note that if the array is empty, it returns 0.
+// Be very careful when use this function in loop statement.
+// You can use IsEmpty() of Len() == 0 checks if this array empty.
 func (a *IntArray) PopLeft() int {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	if len(a.array) == 0 {
+		return 0
+	}
 	value := a.array[0]
 	a.array = a.array[1:]
 	return value
 }
 
 // PopRight pops and returns an item from the end of array.
+// Note that if the array is empty, it returns 0.
+// Be very careful when use this function in loop statement.
+// You can use IsEmpty() of Len() == 0 checks if this array empty.
 func (a *IntArray) PopRight() int {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	index := len(a.array) - 1
+	if index <= 0 {
+		return 0
+	}
 	value := a.array[index]
 	a.array = a.array[:index]
 	return value
 }
 
 // PopRand randomly pops and return an item out of array.
+// Be very careful when use this function in loop statement.
+// You can use IsEmpty() of Len() == 0 checks if this array empty.
 func (a *IntArray) PopRand() int {
 	return a.Remove(grand.Intn(len(a.array)))
 }
@@ -257,6 +272,9 @@ func (a *IntArray) PopRands(size int) []int {
 	defer a.mu.Unlock()
 	if size > len(a.array) {
 		size = len(a.array)
+	}
+	if size == 0 {
+		return nil
 	}
 	array := make([]int, size)
 	for i := 0; i < size; i++ {
@@ -272,6 +290,9 @@ func (a *IntArray) PopLefts(size int) []int {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	length := len(a.array)
+	if length == 0 {
+		return nil
+	}
 	if size > length {
 		size = length
 	}
@@ -284,6 +305,9 @@ func (a *IntArray) PopLefts(size int) []int {
 func (a *IntArray) PopRights(size int) []int {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	if len(a.array) == 0 {
+		return nil
+	}
 	index := len(a.array) - size
 	if index < 0 {
 		index = 0
@@ -729,4 +753,9 @@ func (a *IntArray) FilterEmpty() *IntArray {
 		}
 	}
 	return a
+}
+
+// IsEmpty checks whether the array is empty.
+func (a *IntArray) IsEmpty() bool {
+	return a.Len() == 0
 }

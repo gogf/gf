@@ -237,6 +237,9 @@ func (a *Array) PopRands(size int) []interface{} {
 	if size > len(a.array) {
 		size = len(a.array)
 	}
+	if size == 0 {
+		return nil
+	}
 	array := make([]interface{}, size)
 	for i := 0; i < size; i++ {
 		index := grand.Intn(len(a.array))
@@ -250,6 +253,9 @@ func (a *Array) PopRands(size int) []interface{} {
 func (a *Array) PopLeft() interface{} {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	if len(a.array) == 0 {
+		return nil
+	}
 	value := a.array[0]
 	a.array = a.array[1:]
 	return value
@@ -260,6 +266,9 @@ func (a *Array) PopRight() interface{} {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	index := len(a.array) - 1
+	if index <= 0 {
+		return nil
+	}
 	value := a.array[index]
 	a.array = a.array[:index]
 	return value
@@ -270,6 +279,9 @@ func (a *Array) PopLefts(size int) []interface{} {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	length := len(a.array)
+	if length == 0 {
+		return nil
+	}
 	if size > length {
 		size = length
 	}
@@ -282,6 +294,9 @@ func (a *Array) PopLefts(size int) []interface{} {
 func (a *Array) PopRights(size int) []interface{} {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	if len(a.array) == 0 {
+		return nil
+	}
 	index := len(a.array) - size
 	if index < 0 {
 		index = 0
@@ -764,4 +779,9 @@ func (a *Array) FilterEmpty() *Array {
 		}
 	}
 	return a
+}
+
+// IsEmpty checks whether the array is empty.
+func (a *Array) IsEmpty() bool {
+	return a.Len() == 0
 }

@@ -128,6 +128,7 @@ func (a *SortedStrArray) Get(index int) string {
 }
 
 // Remove removes an item by index.
+// Note that if the index is out of range of array, it returns an empty string.
 func (a *SortedStrArray) Remove(index int) string {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -163,25 +164,40 @@ func (a *SortedStrArray) RemoveValue(value string) bool {
 }
 
 // PopLeft pops and returns an item from the beginning of array.
+// Note that if the array is empty, it returns an empty string.
+// Be very careful when use this function in loop statement.
+// You can use IsEmpty() of Len() == 0 checks if this array empty.
 func (a *SortedStrArray) PopLeft() string {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	if len(a.array) == 0 {
+		return ""
+	}
 	value := a.array[0]
 	a.array = a.array[1:]
 	return value
 }
 
 // PopRight pops and returns an item from the end of array.
+// Note that if the array is empty, it returns an empty string.
+// Be very careful when use this function in loop statement.
+// You can use IsEmpty() of Len() == 0 checks if this array empty.
 func (a *SortedStrArray) PopRight() string {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	index := len(a.array) - 1
+	if index <= 0 {
+		return ""
+	}
 	value := a.array[index]
 	a.array = a.array[:index]
 	return value
 }
 
 // PopRand randomly pops and return an item out of array.
+// Note that if the array is empty, it returns an empty string.
+// Be very careful when use this function in loop statement.
+// You can use IsEmpty() of Len() == 0 checks if this array empty.
 func (a *SortedStrArray) PopRand() string {
 	return a.Remove(grand.Intn(len(a.array)))
 }
@@ -192,6 +208,9 @@ func (a *SortedStrArray) PopRands(size int) []string {
 	defer a.mu.Unlock()
 	if size > len(a.array) {
 		size = len(a.array)
+	}
+	if size == 0 {
+		return nil
 	}
 	array := make([]string, size)
 	for i := 0; i < size; i++ {
@@ -210,6 +229,9 @@ func (a *SortedStrArray) PopLefts(size int) []string {
 	if size > length {
 		size = length
 	}
+	if size == 0 {
+		return nil
+	}
 	value := a.array[0:size]
 	a.array = a.array[size:]
 	return value
@@ -219,6 +241,9 @@ func (a *SortedStrArray) PopLefts(size int) []string {
 func (a *SortedStrArray) PopRights(size int) []string {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	if len(a.array) == 0 {
+		return nil
+	}
 	index := len(a.array) - size
 	if index < 0 {
 		index = 0
@@ -675,4 +700,9 @@ func (a *SortedStrArray) FilterEmpty() *SortedStrArray {
 		}
 	}
 	return a
+}
+
+// IsEmpty checks whether the array is empty.
+func (a *SortedStrArray) IsEmpty() bool {
+	return a.Len() == 0
 }

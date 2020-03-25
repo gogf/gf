@@ -197,6 +197,18 @@ func TestSortedArray_PopRands(t *testing.T) {
 	})
 }
 
+func TestSortedArray_Empty(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewSortedArray(gutil.ComparatorInt)
+		t.Assert(array.PopLeft(), nil)
+		t.Assert(array.PopLefts(10), nil)
+		t.Assert(array.PopRight(), nil)
+		t.Assert(array.PopRights(10), nil)
+		t.Assert(array.PopRand(), nil)
+		t.Assert(array.PopRands(10), nil)
+	})
+}
+
 func TestSortedArray_PopLefts(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []interface{}{"a", "d", "c", "b", "e", "f"}

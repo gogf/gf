@@ -93,6 +93,16 @@ func TestIntArray_PushAndPop(t *testing.T) {
 
 func TestIntArray_PopLeftsAndPopRights(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewIntArray()
+		t.Assert(array.PopLeft(), 0)
+		t.Assert(array.PopLefts(10), nil)
+		t.Assert(array.PopRight(), 0)
+		t.Assert(array.PopRights(10), nil)
+		t.Assert(array.PopRand(), 0)
+		t.Assert(array.PopRands(10), nil)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
 		value1 := []int{0, 1, 2, 3, 4, 5, 6}
 		value2 := []int{0, 1, 2, 3, 4, 5, 6}
 		array1 := garray.NewIntArrayFrom(value1)

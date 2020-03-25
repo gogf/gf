@@ -50,7 +50,7 @@ func (m *Mutex) Lock() {
 }
 
 // Unlock unlocks writing lock on the mutex.
-// It is safe to be called multiple times if there's any locks or not.
+// It is safe to be called multiple times even there's no locks.
 func (m *Mutex) Unlock() {
 	if m.state.Cas(-1, 0) {
 		// Note that there might be more than one goroutines can enter this block.
@@ -91,7 +91,7 @@ func (m *Mutex) TryLock() bool {
 	return false
 }
 
-// RLock locks mutex for reading purpose purpose.
+// RLock locks mutex for reading purpose.
 // If the mutex is already locked for writing,
 // it blocks until the lock is available.
 func (m *Mutex) RLock() {
@@ -113,7 +113,7 @@ func (m *Mutex) RLock() {
 }
 
 // RUnlock unlocks the reading lock on the mutex.
-// It is safe to be called multiple times if there's any locks or not.
+// It is safe to be called multiple times even there's no locks.
 func (m *Mutex) RUnlock() {
 	var n int32
 	for {

@@ -105,6 +105,16 @@ func TestArray_PopRands(t *testing.T) {
 
 func TestArray_PopLeftsAndPopRights(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
+		array := garray.New()
+		t.Assert(array.PopLeft(), nil)
+		t.Assert(array.PopLefts(10), nil)
+		t.Assert(array.PopRight(), nil)
+		t.Assert(array.PopRights(10), nil)
+		t.Assert(array.PopRand(), nil)
+		t.Assert(array.PopRands(10), nil)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
 		value1 := []interface{}{0, 1, 2, 3, 4, 5, 6}
 		value2 := []interface{}{0, 1, 2, 3, 4, 5, 6}
 		array1 := garray.NewArrayFrom(value1)
