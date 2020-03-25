@@ -234,7 +234,7 @@ func GetServer(name ...interface{}) *Server {
 	if s := serverMapping.Get(serverName); s != nil {
 		return s.(*Server)
 	}
-	c := defaultServerConfig
+	c := Config()
 	s := &Server{
 		name:             serverName,
 		plugins:          make([]Plugin, 0),

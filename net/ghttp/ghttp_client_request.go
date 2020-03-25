@@ -36,124 +36,8 @@ func (c *Client) Put(url string, data ...interface{}) (*ClientResponse, error) {
 
 // Post sends request using HTTP method POST and returns the response object.
 // Note that the response object MUST be closed if it'll be never used.
-//
-// Note that it uses "multipart/form-data" as its Content-Type if it contains file uploading,
-// else it uses "application/x-www-form-urlencoded". It also automatically detects the post
-// content for JSON format, and for that it automatically sets the Content-Type as "application/json".
-func (c *Client) Post(url string, data ...interface{}) (resp *ClientResponse, err error) {
-	if len(c.prefix) > 0 {
-		url = c.prefix + url
-	}
-	param := ""
-	if len(data) > 0 {
-		param = BuildParams(data[0])
-	}
-	req := (*http.Request)(nil)
-	if strings.Contains(param, "@file:") {
-		// File uploading request.
-		buffer := new(bytes.Buffer)
-		writer := multipart.NewWriter(buffer)
-		for _, item := range strings.Split(param, "&") {
-			array := strings.Split(item, "=")
-			if len(array[1]) > 6 && strings.Compare(array[1][0:6], "@file:") == 0 {
-				path := array[1][6:]
-				if !gfile.Exists(path) {
-					return nil, errors.New(fmt.Sprintf(`"%s" does not exist`, path))
-				}
-				if file, err := writer.CreateFormFile(array[0], path); err == nil {
-					if f, err := os.Open(path); err == nil {
-						defer f.Close()
-						if _, err = io.Copy(file, f); err != nil {
-							return nil, err
-						}
-					} else {
-						return nil, err
-					}
-				} else {
-					return nil, err
-				}
-			} else {
-				writer.WriteField(array[0], array[1])
-			}
-		}
-		writer.Close()
-		if req, err = http.NewRequest("POST", url, buffer); err != nil {
-			return nil, err
-		} else {
-			req.Header.Set("Content-Type", writer.FormDataContentType())
-		}
-	} else {
-		// Normal request.
-		paramBytes := []byte(param)
-		if req, err = http.NewRequest("POST", url, bytes.NewReader(paramBytes)); err != nil {
-			return nil, err
-		} else {
-			if v, ok := c.header["Content-Type"]; ok {
-				// Custom Content-Type.
-				req.Header.Set("Content-Type", v)
-			} else {
-				if json.Valid(paramBytes) {
-					// Auto detecting and setting the post content format: JSON.
-					req.Header.Set("Content-Type", "application/json")
-				} else if gregex.IsMatchString(`^[\w\[\]]+=.+`, param) {
-					// If the parameters passed like "name=value", it then uses form type.
-					req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-				}
-			}
-		}
-	}
-	// Custom header.
-	if len(c.header) > 0 {
-		for k, v := range c.header {
-			req.Header.Set(k, v)
-		}
-	}
-	// Custom Cookie.
-	if len(c.cookies) > 0 {
-		headerCookie := ""
-		for k, v := range c.cookies {
-			if len(headerCookie) > 0 {
-				headerCookie += ";"
-			}
-			headerCookie += k + "=" + v
-		}
-		if len(headerCookie) > 0 {
-			req.Header.Set("Cookie", headerCookie)
-		}
-	}
-	// HTTP basic authentication.
-	if len(c.authUser) > 0 {
-		req.SetBasicAuth(c.authUser, c.authPass)
-	}
-	// Sending request.
-	r := (*http.Response)(nil)
-	for {
-		if r, err = c.Do(req); err != nil {
-			if c.retryCount > 0 {
-				c.retryCount--
-			} else {
-				return nil, err
-			}
-		} else {
-			break
-		}
-	}
-	resp = &ClientResponse{
-		cookies: make(map[string]string),
-	}
-	resp.Response = r
-	// Auto saving cookie content.
-	if c.browserMode {
-		now := time.Now()
-		for _, v := range r.Cookies() {
-			if v.Expires.UnixNano() < now.UnixNano() {
-				delete(c.cookies, v.Name)
-			} else {
-				c.cookies[v.Name] = v.Value
-			}
-		}
-	}
-	return resp, nil
+func (c *Client) Post(url string, data ...interface{}) (*ClientResponse, error) {
+	return c.DoRequest("POST", url, data...)
 }
 
 // Delete send DELETE request and returns the response object.
@@ -194,10 +78,13 @@ func (c *Client) Trace(url string, data ...interface{}) (*ClientResponse, error)
 
 // DoRequest sends request with given HTTP method and data and returns the response object.
 // Note that the response object MUST be closed if it'll be never used.
-func (c *Client) DoRequest(method, url string, data ...interface{}) (*ClientResponse, error) {
-	if strings.EqualFold("POST", method) {
-		return c.Post(url, data...)
-	}
+//
+// Note that it uses "multipart/form-data" as its Content-Type if it contains file uploading,
+// else it uses "application/x-www-form-urlencoded". It also automatically detects the post
+// content for JSON format, and for that it automatically sets the Content-Type as
+// "application/json".
+func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *ClientResponse, err error) {
+	method = strings.ToUpper(method)
 	if len(c.prefix) > 0 {
 		url = c.prefix + url
 	}
@@ -205,22 +92,69 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (*ClientResp
 	if len(data) > 0 {
 		param = BuildParams(data[0])
 	}
-	req, err := http.NewRequest(strings.ToUpper(method), url, bytes.NewReader([]byte(param)))
-	if err != nil {
-		return nil, err
+	req := (*http.Request)(nil)
+	if strings.Contains(param, "@file:") {
+		// File uploading request.
+		buffer := new(bytes.Buffer)
+		writer := multipart.NewWriter(buffer)
+		defer writer.Close()
+		for _, item := range strings.Split(param, "&") {
+			array := strings.Split(item, "=")
+			if len(array[1]) > 6 && strings.Compare(array[1][0:6], "@file:") == 0 {
+				path := array[1][6:]
+				if !gfile.Exists(path) {
+					return nil, errors.New(fmt.Sprintf(`"%s" does not exist`, path))
+				}
+				if file, err := writer.CreateFormFile(array[0], path); err == nil {
+					if f, err := os.Open(path); err == nil {
+						defer f.Close()
+						if _, err = io.Copy(file, f); err != nil {
+							return nil, err
+						}
+					} else {
+						return nil, err
+					}
+				} else {
+					return nil, err
+				}
+			} else {
+				if err := writer.WriteField(array[0], array[1]); err != nil {
+					return nil, err
+				}
+			}
+		}
+		if req, err = http.NewRequest(method, url, buffer); err != nil {
+			return nil, err
+		} else {
+			req.Header.Set("Content-Type", writer.FormDataContentType())
+		}
+	} else {
+		// Normal request.
+		paramBytes := []byte(param)
+		if req, err = http.NewRequest(method, url, bytes.NewReader(paramBytes)); err != nil {
+			return nil, err
+		} else {
+			if v, ok := c.header["Content-Type"]; ok {
+				// Custom Content-Type.
+				req.Header.Set("Content-Type", v)
+			} else {
+				if json.Valid(paramBytes) {
+					// Auto detecting and setting the post content format: JSON.
+					req.Header.Set("Content-Type", "application/json")
+				} else if gregex.IsMatchString(`^[\w\[\]]+=.+`, param) {
+					// If the parameters passed like "name=value", it then uses form type.
+					req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+				}
+			}
+		}
 	}
-	// custom header.
+	// Custom header.
 	if len(c.header) > 0 {
 		for k, v := range c.header {
 			req.Header.Set(k, v)
 		}
 	}
-	// Automatically set default content type to "application/x-www-form-urlencoded"
-	// if there' no content type set.
-	if _, ok := c.header["Content-Type"]; !ok {
-		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	}
-	// Custom cookie.
+	// Custom Cookie.
 	if len(c.cookies) > 0 {
 		headerCookie := ""
 		for k, v := range c.cookies {
@@ -233,27 +167,29 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (*ClientResp
 			req.Header.Set("Cookie", headerCookie)
 		}
 	}
+	// HTTP basic authentication.
+	if len(c.authUser) > 0 {
+		req.SetBasicAuth(c.authUser, c.authPass)
+	}
 	// Sending request.
-	resp := (*http.Response)(nil)
+	var r *http.Response
 	for {
-		if r, err := c.Do(req); err != nil {
+		if r, err = c.Do(req); err != nil {
 			if c.retryCount > 0 {
 				c.retryCount--
 			} else {
 				return nil, err
 			}
 		} else {
-			resp = r
 			break
 		}
 	}
-	r := &ClientResponse{
-		Response: resp,
+	resp = &ClientResponse{
+		Response: r,
 	}
-	// Auto sending cookie content.
+	// Auto saving cookie content.
 	if c.browserMode {
 		now := time.Now()
-		r.cookies = make(map[string]string)
 		for _, v := range r.Cookies() {
 			if v.Expires.UnixNano() < now.UnixNano() {
 				delete(c.cookies, v.Name)
@@ -262,5 +198,5 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (*ClientResp
 			}
 		}
 	}
-	return r, nil
+	return resp, nil
 }

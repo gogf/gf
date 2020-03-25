@@ -79,49 +79,48 @@ type ServerConfig struct {
 	Graceful          bool              // Other: Enable graceful reload feature for all servers of the process.
 }
 
-// defaultServerConfig is the default configuration object for server.
-var defaultServerConfig = ServerConfig{
-	Address:           "",
-	HTTPSAddr:         "",
-	Handler:           nil,
-	ReadTimeout:       60 * time.Second,
-	WriteTimeout:      60 * time.Second,
-	IdleTimeout:       60 * time.Second,
-	MaxHeaderBytes:    1024,
-	KeepAlive:         true,
-	IndexFiles:        []string{"index.html", "index.htm"},
-	IndexFolder:       false,
-	ServerAgent:       "GF HTTP Server",
-	ServerRoot:        "",
-	StaticPaths:       make([]staticPathItem, 0),
-	FileServerEnabled: false,
-	CookieMaxAge:      time.Hour * 24 * 365,
-	CookiePath:        "/",
-	CookieDomain:      "",
-	SessionMaxAge:     time.Hour * 24,
-	SessionIdName:     "gfsessionid",
-	SessionPath:       gsession.DefaultStorageFilePath,
-	Logger:            glog.New(),
-	LogStdout:         true,
-	ErrorStack:        true,
-	ErrorLogEnabled:   true,
-	ErrorLogPattern:   "error-{Ymd}.log",
-	AccessLogEnabled:  false,
-	AccessLogPattern:  "access-{Ymd}.log",
-	DumpRouterMap:     true,
-	FormParsingMemory: 100 * 1024 * 1024, // 100MB
-	Rewrites:          make(map[string]string),
-	Graceful:          true,
-}
-
 // Config returns the default ServerConfig object.
+// Note that, do not define this default configuration to local variable,
+// as there're some pointer attributes that may be shared in different servers.
 func Config() ServerConfig {
-	return defaultServerConfig
+	return ServerConfig{
+		Address:           "",
+		HTTPSAddr:         "",
+		Handler:           nil,
+		ReadTimeout:       60 * time.Second,
+		WriteTimeout:      60 * time.Second,
+		IdleTimeout:       60 * time.Second,
+		MaxHeaderBytes:    1024,
+		KeepAlive:         true,
+		IndexFiles:        []string{"index.html", "index.htm"},
+		IndexFolder:       false,
+		ServerAgent:       "GF HTTP Server",
+		ServerRoot:        "",
+		StaticPaths:       make([]staticPathItem, 0),
+		FileServerEnabled: false,
+		CookieMaxAge:      time.Hour * 24 * 365,
+		CookiePath:        "/",
+		CookieDomain:      "",
+		SessionMaxAge:     time.Hour * 24,
+		SessionIdName:     "gfsessionid",
+		SessionPath:       gsession.DefaultStorageFilePath,
+		Logger:            glog.New(),
+		LogStdout:         true,
+		ErrorStack:        true,
+		ErrorLogEnabled:   true,
+		ErrorLogPattern:   "error-{Ymd}.log",
+		AccessLogEnabled:  false,
+		AccessLogPattern:  "access-{Ymd}.log",
+		DumpRouterMap:     true,
+		FormParsingMemory: 100 * 1024 * 1024, // 100MB
+		Rewrites:          make(map[string]string),
+		Graceful:          true,
+	}
 }
 
 // ConfigFromMap creates and returns a ServerConfig object with given map.
 func ConfigFromMap(m map[string]interface{}) (ServerConfig, error) {
-	config := defaultServerConfig
+	config := Config()
 	if err := gconv.Struct(m, &config); err != nil {
 		return config, err
 	}
