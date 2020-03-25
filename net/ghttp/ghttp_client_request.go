@@ -97,7 +97,6 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 		// File uploading request.
 		buffer := new(bytes.Buffer)
 		writer := multipart.NewWriter(buffer)
-		defer writer.Close()
 		for _, item := range strings.Split(param, "&") {
 			array := strings.Split(item, "=")
 			if len(array[1]) > 6 && strings.Compare(array[1][0:6], "@file:") == 0 {
@@ -107,10 +106,11 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 				}
 				if file, err := writer.CreateFormFile(array[0], path); err == nil {
 					if f, err := os.Open(path); err == nil {
-						defer f.Close()
 						if _, err = io.Copy(file, f); err != nil {
+							f.Close()
 							return nil, err
 						}
+						f.Close()
 					} else {
 						return nil, err
 					}
@@ -118,10 +118,15 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 					return nil, err
 				}
 			} else {
-				if err := writer.WriteField(array[0], array[1]); err != nil {
+				if err = writer.WriteField(array[0], array[1]); err != nil {
 					return nil, err
 				}
 			}
+		}
+		// Close finishes the multipart message and writes the trailing
+		// boundary end line to the output.
+		if err = writer.Close(); err != nil {
+			return nil, err
 		}
 		if req, err = http.NewRequest(method, url, buffer); err != nil {
 			return nil, err
