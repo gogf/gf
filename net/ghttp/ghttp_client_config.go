@@ -7,6 +7,7 @@
 package ghttp
 
 import (
+	"context"
 	"crypto/tls"
 	"net/http"
 	"strings"
@@ -18,6 +19,8 @@ import (
 // Client is the HTTP client for HTTP request management.
 type Client struct {
 	http.Client                     // Underlying HTTP Client.
+	ctx           context.Context   // Context for each request.
+	parent        *Client           // Parent http client, this is used for chaining operations.
 	header        map[string]string // Custom header map.
 	cookies       map[string]string // Custom cookie map.
 	prefix        string            // Prefix for request.
@@ -40,6 +43,7 @@ func NewClient() *Client {
 				DisableKeepAlives: true,
 			},
 		},
+		ctx:     context.Background(),
 		header:  make(map[string]string),
 		cookies: make(map[string]string),
 	}
@@ -89,8 +93,8 @@ func (c *Client) SetContentType(contentType string) *Client {
 }
 
 // SetHeaderRaw sets custom HTTP header using raw string.
-func (c *Client) SetHeaderRaw(header string) *Client {
-	for _, line := range strings.Split(strings.TrimSpace(header), "\n") {
+func (c *Client) SetHeaderRaw(headers string) *Client {
+	for _, line := range strings.Split(strings.TrimSpace(headers), "\n") {
 		array, _ := gregex.MatchString(`^([\w\-]+):\s*(.+)`, line)
 		if len(array) >= 3 {
 			c.header[array[1]] = array[2]
@@ -120,8 +124,8 @@ func (c *Client) SetPrefix(prefix string) *Client {
 }
 
 // SetTimeOut sets the request timeout for the client.
-func (c *Client) SetTimeOut(t time.Duration) *Client {
-	c.Timeout = t
+func (c *Client) SetTimeout(t time.Duration) *Client {
+	c.Client.Timeout = t
 	return c
 }
 
@@ -129,6 +133,12 @@ func (c *Client) SetTimeOut(t time.Duration) *Client {
 func (c *Client) SetBasicAuth(user, pass string) *Client {
 	c.authUser = user
 	c.authPass = pass
+	return c
+}
+
+// SetCtx sets context for each request of this client.
+func (c *Client) SetCtx(ctx context.Context) *Client {
+	c.ctx = ctx
 	return c
 }
 
