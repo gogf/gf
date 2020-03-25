@@ -6,11 +6,14 @@
 
 package ghttp
 
+import "github.com/gogf/gf/internal/intlog"
+
 // 设置日志目录，只有在设置了日志目录的情况下才会输出日志到日志文件中。
 func (s *Server) SetLogPath(path string) {
 	if len(path) == 0 {
 		return
 	}
+	intlog.Print("SetLogPath:", path)
 	s.config.LogPath = path
 	s.config.ErrorLogEnabled = true
 	s.config.AccessLogEnabled = true
