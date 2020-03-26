@@ -47,21 +47,21 @@ func StrToSize(sizeStr string) int64 {
 	switch strings.ToLower(unit) {
 	case "b", "bytes":
 		return int64(number)
-	case "k", "kb", "kib", "kilobyte":
+	case "k", "kb", "ki", "kib", "kilobyte":
 		return int64(number * 1024)
-	case "m", "mb", "mib", "mebibyte":
+	case "m", "mb", "mi", "mib", "mebibyte":
 		return int64(number * 1024 * 1024)
-	case "g", "gb", "gib", "gigabyte":
+	case "g", "gb", "gi", "gib", "gigabyte":
 		return int64(number * 1024 * 1024 * 1024)
-	case "t", "tb", "tib", "terabyte":
+	case "t", "tb", "ti", "tib", "terabyte":
 		return int64(number * 1024 * 1024 * 1024 * 1024)
-	case "p", "pb", "pib", "petabyte":
+	case "p", "pb", "pi", "pib", "petabyte":
 		return int64(number * 1024 * 1024 * 1024 * 1024 * 1024)
-	case "e", "eb", "eib", "exabyte":
+	case "e", "eb", "ei", "eib", "exabyte":
 		return int64(number * 1024 * 1024 * 1024 * 1024 * 1024 * 1024)
-	case "z", "zb", "zib", "zettabyte":
+	case "z", "zb", "zi", "zib", "zettabyte":
 		return int64(number * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024)
-	case "y", "yb", "yib", "yottabyte":
+	case "y", "yb", "yi", "yib", "yottabyte":
 		return int64(number * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024)
 	case "bb", "brontobyte":
 		return int64(number * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024)
