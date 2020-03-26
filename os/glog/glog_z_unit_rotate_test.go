@@ -22,14 +22,14 @@ func Test_Rotate_Size(t *testing.T) {
 		l := glog.New()
 		p := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
 		err := l.SetConfigWithMap(g.Map{
-			"Path":               p,
-			"File":               "access.log",
-			"StdoutPrint":        false,
-			"RotateSize":         10,
-			"RotateBackLimit":    2,
-			"RotateBackExpire":   5 * time.Second,
-			"RotateBackCompress": 9,
-			"RotateInterval":     time.Second, // For unit testing only.
+			"Path":                 p,
+			"File":                 "access.log",
+			"StdoutPrint":          false,
+			"RotateSize":           10,
+			"RotateBackupLimit":    2,
+			"RotateBackupExpire":   5 * time.Second,
+			"RotateBackupCompress": 9,
+			"RotateCheckInterval":  time.Second, // For unit testing only.
 		})
 		t.Assert(err, nil)
 		defer gfile.Remove(p)
@@ -60,14 +60,14 @@ func Test_Rotate_Expire(t *testing.T) {
 		l := glog.New()
 		p := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
 		err := l.SetConfigWithMap(g.Map{
-			"Path":               p,
-			"File":               "access.log",
-			"StdoutPrint":        false,
-			"RotateExpire":       time.Second,
-			"RotateBackLimit":    2,
-			"RotateBackExpire":   5 * time.Second,
-			"RotateBackCompress": 9,
-			"RotateInterval":     time.Second, // For unit testing only.
+			"Path":                 p,
+			"File":                 "access.log",
+			"StdoutPrint":          false,
+			"RotateExpire":         time.Second,
+			"RotateBackupLimit":    2,
+			"RotateBackupExpire":   5 * time.Second,
+			"RotateBackupCompress": 9,
+			"RotateCheckInterval":  time.Second, // For unit testing only.
 		})
 		t.Assert(err, nil)
 		defer gfile.Remove(p)

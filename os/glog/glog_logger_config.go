@@ -20,37 +20,37 @@ import (
 
 // Config is the configuration object for logger.
 type Config struct {
-	Writer             io.Writer      // Customized io.Writer.
-	Flags              int            // Extra flags for logging output features.
-	Path               string         // Logging directory path.
-	File               string         // Format for logging file.
-	Level              int            // Output level.
-	Prefix             string         // Prefix string for every logging content.
-	StSkip             int            // Skip count for stack.
-	StStatus           int            // Stack status(1: enabled - default; 0: disabled)
-	StFilter           string         // Stack string filter.
-	HeaderPrint        bool           `c:"header"` // Print header or not(true in default).
-	StdoutPrint        bool           `c:"stdout"` // Output to stdout or not(true in default).
-	LevelPrefixes      map[int]string // Logging level to its prefix string mapping.
-	RotateSize         int64          // Rotate the logging file if its size > 0 in bytes.
-	RotateExpire       time.Duration  // Rotate the logging file if its mtime exceeds this duration.
-	RotateBackLimit    int            // Max backup for rotated files, default is 0, means no backups.
-	RotateBackExpire   time.Duration  // Max expire for rotated files, which is 0 in default, means no expiration.
-	RotateBackCompress int            // Compress level for rotated files using gzip algorithm. It's 0 in default, means no compression.
-	RotateInterval     time.Duration  // Asynchronizely checks the backups and expiration at intervals. It's 1 hour in default.
+	Writer               io.Writer      // Customized io.Writer.
+	Flags                int            // Extra flags for logging output features.
+	Path                 string         // Logging directory path.
+	File                 string         // Format for logging file.
+	Level                int            // Output level.
+	Prefix               string         // Prefix string for every logging content.
+	StSkip               int            // Skip count for stack.
+	StStatus             int            // Stack status(1: enabled - default; 0: disabled)
+	StFilter             string         // Stack string filter.
+	HeaderPrint          bool           `c:"header"` // Print header or not(true in default).
+	StdoutPrint          bool           `c:"stdout"` // Output to stdout or not(true in default).
+	LevelPrefixes        map[int]string // Logging level to its prefix string mapping.
+	RotateSize           int64          // Rotate the logging file if its size > 0 in bytes.
+	RotateExpire         time.Duration  // Rotate the logging file if its mtime exceeds this duration.
+	RotateBackupLimit    int            // Max backup for rotated files, default is 0, means no backups.
+	RotateBackupExpire   time.Duration  // Max expire for rotated files, which is 0 in default, means no expiration.
+	RotateBackupCompress int            // Compress level for rotated files using gzip algorithm. It's 0 in default, means no compression.
+	RotateCheckInterval  time.Duration  // Asynchronizely checks the backups and expiration at intervals. It's 1 hour in default.
 }
 
 // DefaultConfig returns the default configuration for logger.
 func DefaultConfig() Config {
 	c := Config{
-		File:           gDEFAULT_FILE_FORMAT,
-		Flags:          F_TIME_STD,
-		Level:          LEVEL_ALL,
-		StStatus:       1,
-		HeaderPrint:    true,
-		StdoutPrint:    true,
-		LevelPrefixes:  make(map[int]string, len(defaultLevelPrefixes)),
-		RotateInterval: time.Hour,
+		File:                gDEFAULT_FILE_FORMAT,
+		Flags:               F_TIME_STD,
+		Level:               LEVEL_ALL,
+		StStatus:            1,
+		HeaderPrint:         true,
+		StdoutPrint:         true,
+		LevelPrefixes:       make(map[int]string, len(defaultLevelPrefixes)),
+		RotateCheckInterval: time.Hour,
 	}
 	for k, v := range defaultLevelPrefixes {
 		c.LevelPrefixes[k] = v
