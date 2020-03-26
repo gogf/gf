@@ -50,7 +50,7 @@ func (l *Logger) doRotateFile(filePath string) error {
 	)
 	// Rename the logging file by adding extra datetime information to microseconds, like:
 	// access.log          -> access.20200326101301899002.log
-	// access.20200102.log -> access.20200102.20200326101301899002.log
+	// access.20200326.log -> access.20200326.20200326101301899002.log
 	for {
 		var (
 			now   = gtime.Now()
