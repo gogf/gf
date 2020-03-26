@@ -18,7 +18,6 @@ import (
 )
 
 func Test_Rotate_Size(t *testing.T) {
-	t.Parallel()
 	gtest.C(t, func(t *gtest.T) {
 		l := glog.New()
 		p := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
@@ -57,7 +56,6 @@ func Test_Rotate_Size(t *testing.T) {
 }
 
 func Test_Rotate_Expire(t *testing.T) {
-	t.Parallel()
 	gtest.C(t, func(t *gtest.T) {
 		l := glog.New()
 		p := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
