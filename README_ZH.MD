@@ -41,7 +41,7 @@ require github.com/gogf/gf latest
 
 # 限制
 ```shell
-golang版本 >= 1.11
+golang版本 >= 1.13
 ```
 
 # 架构

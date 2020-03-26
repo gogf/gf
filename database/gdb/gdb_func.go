@@ -103,21 +103,27 @@ func DataToMapDeep(obj interface{}) map[string]interface{} {
 	return data
 }
 
-// QuotePrefixTableName adds prefix string and quote chars for the table. It handles table string like:
-// "user", "user u", "user,user_detail", "user u, user_detail ut", "user as u, user_detail as ut", "user.user u".
+// doHandleTableName adds prefix string and quote chars for the table. It handles table string like:
+// "user", "user u", "user,user_detail", "user u, user_detail ut", "user as u, user_detail as ut",
+// "user.user u", "`user`.`user` u".
 //
 // Note that, this will automatically checks the table prefix whether already added, if true it does
 // nothing to the table name, or else adds the prefix to the table name.
 func doHandleTableName(table, prefix, charLeft, charRight string) string {
-	index := 0
-	array1 := gstr.SplitAndTrim(table, ",")
+	var (
+		index  = 0
+		chars  = charLeft + charRight
+		array1 = gstr.SplitAndTrim(table, ",")
+	)
 	for k1, v1 := range array1 {
 		array2 := gstr.SplitAndTrim(v1, " ")
 		// Trim the security chars.
-		array2[0] = gstr.TrimLeftStr(array2[0], charLeft)
-		array2[0] = gstr.TrimRightStr(array2[0], charRight)
+		array2[0] = gstr.Trim(array2[0], chars)
 		// Check whether it has database name.
 		array3 := gstr.Split(gstr.Trim(array2[0]), ".")
+		for k, v := range array3 {
+			array3[k] = gstr.Trim(v, chars)
+		}
 		index = len(array3) - 1
 		// If the table name already has the prefix, skips the prefix adding.
 		if len(array3[index]) <= len(prefix) || array3[index][:len(prefix)] != prefix {
