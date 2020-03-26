@@ -29,8 +29,8 @@ func Test_MTime(t *testing.T) {
 		fileobj, err = os.Stat(testpath() + file1)
 		t.Assert(err, nil)
 
-		t.Assert(gfile.MTime(testpath()+file1), fileobj.ModTime().Unix())
-		t.Assert(gfile.MTime(""), 0)
+		t.Assert(gfile.MTime(testpath()+file1), fileobj.ModTime())
+		t.Assert(gfile.MTime(""), "")
 	})
 }
 
@@ -49,9 +49,9 @@ func Test_MTimeMillisecond(t *testing.T) {
 
 		time.Sleep(time.Millisecond * 100)
 		t.AssertGE(
-			gfile.MTimeMillisecond(testpath()+file1),
+			gfile.MTimestampMilli(testpath()+file1),
 			fileobj.ModTime().UnixNano()/1000000,
 		)
-		t.Assert(gfile.MTimeMillisecond(""), 0)
+		t.Assert(gfile.MTimestampMilli(""), -1)
 	})
 }
