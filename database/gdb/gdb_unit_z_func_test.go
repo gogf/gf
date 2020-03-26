@@ -84,6 +84,8 @@ func Test_Func_addTablePrefix(t *testing.T) {
 			"user as u":                    "`user` as u",
 			"user,user_detail":             "`user`,`user_detail`",
 			"user u, user_detail ut":       "`user` u,`user_detail` ut",
+			"`user`.user_detail":           "`user`.`user_detail`",
+			"`user`.`user_detail`":         "`user`.`user_detail`",
 			"user as u, user_detail as ut": "`user` as u,`user_detail` as ut",
 			"UserCenter.user as u, UserCenter.user_detail as ut": "`UserCenter`.`user` as u,`UserCenter`.`user_detail` as ut",
 			// mssql global schema access with double dots.
@@ -101,6 +103,8 @@ func Test_Func_addTablePrefix(t *testing.T) {
 			"user as u":                    "`gf_user` as u",
 			"user,user_detail":             "`gf_user`,`gf_user_detail`",
 			"user u, user_detail ut":       "`gf_user` u,`gf_user_detail` ut",
+			"`user`.user_detail":           "`user`.`gf_user_detail`",
+			"`user`.`user_detail`":         "`user`.`gf_user_detail`",
 			"user as u, user_detail as ut": "`gf_user` as u,`gf_user_detail` as ut",
 			"UserCenter.user as u, UserCenter.user_detail as ut": "`UserCenter`.`gf_user` as u,`UserCenter`.`gf_user_detail` as ut",
 			// mssql global schema access with double dots.

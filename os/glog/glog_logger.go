@@ -35,11 +35,11 @@ type Logger struct {
 }
 
 const (
-	gDEFAULT_FILE_FORMAT = `{Y-m-d}.log`
-	gDEFAULT_FILE_FLAGS  = os.O_CREATE | os.O_WRONLY | os.O_APPEND
-	gDEFAULT_FILE_PERM   = os.FileMode(0666)
-	gDEFAULT_FILE_EXPIRE = time.Minute
-	gPATH_FILTER_KEY     = "/os/glog/glog"
+	gDEFAULT_FILE_FORMAT l.con = `{Y-m-d}.log`
+	gDEFAULT_FILE_FLAGS        = os.O_CREATE | os.O_WRONLY | os.O_APPEND
+	gDEFAULT_FILE_PERM         = os.FileMode(0666)
+	gDEFAULT_FILE_EXPIRE       = time.Minute
+	gPATH_FILTER_KEY           = "/os/glog/glog"
 )
 
 const (
@@ -58,7 +58,7 @@ func New() *Logger {
 		config: DefaultConfig(),
 	}
 	// Initialize the internal handler after some delay.
-	gtimer.AddOnce(500*time.Millisecond, func() {
+	gtimer.AddOnce(time.Second, func() {
 		gtimer.AddOnce(logger.config.RotateCheckInterval, logger.rotateChecksTimely)
 	})
 	return logger
