@@ -177,11 +177,12 @@ func Stat(path string) (os.FileInfo, error) {
 }
 
 // Move renames (moves) <src> to <dst> path.
+// If <dst> already exists and is not a directory, it'll be replaced.
 func Move(src string, dst string) error {
 	return os.Rename(src, dst)
 }
 
-// Alias of Move.
+// Rename is alias of Move.
 // See Move.
 func Rename(src string, dst string) error {
 	return Move(src, dst)

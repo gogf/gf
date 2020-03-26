@@ -57,9 +57,9 @@ func New() *Logger {
 	logger := &Logger{
 		config: DefaultConfig(),
 	}
-	// Initialize the internal handler after one second.
-	gtimer.AddOnce(time.Second, func() {
-		gtimer.AddOnce(logger.config.RotateInterval, logger.rotateChecksTimely)
+	// Initialize the internal handler after some delay.
+	gtimer.AddOnce(500*time.Millisecond, func() {
+		gtimer.AddOnce(logger.config.RotateCheckInterval, logger.rotateChecksTimely)
 	})
 	return logger
 }
