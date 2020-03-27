@@ -46,6 +46,11 @@ func Create(value interface{}, safe ...bool) Var {
 	return v
 }
 
+// Clone does a shallow copy of current Var and returns a pointer to this Var.
+func (v *Var) Clone() *Var {
+	return New(v.Val(), v.safe)
+}
+
 // Set sets <value> to <v>, and returns the old value.
 func (v *Var) Set(value interface{}) (old interface{}) {
 	if v.safe {

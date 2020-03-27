@@ -61,6 +61,9 @@ func (view *View) SetConfigWithMap(m map[string]interface{}) error {
 	if m == nil || len(m) == 0 {
 		return errors.New("configuration cannot be empty")
 	}
+	// The m now is a shallow copy of m.
+	// A little tricky, isn't it?
+	m = gutil.CopyMap(m)
 	// Most common used configuration support for single view path.
 	_, v1 := gutil.MapPossibleItemByKey(m, "paths")
 	_, v2 := gutil.MapPossibleItemByKey(m, "path")

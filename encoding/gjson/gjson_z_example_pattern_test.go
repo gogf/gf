@@ -69,3 +69,31 @@ func Example_patternViolenceCheck() {
 	// Output:
 	// Users Count: 101
 }
+
+func Example_mapSliceChange() {
+	jsonContent := `{"map":{"key":"value"}, "slice":[59,90]}`
+	j, _ := gjson.LoadJson(jsonContent)
+	m := j.GetMap("map")
+	fmt.Println(m)
+
+	// Change the key-value pair.
+	m["key"] = "john"
+
+	// It changes the underlying key-value pair.
+	fmt.Println(j.GetMap("map"))
+
+	s := j.GetArray("slice")
+	fmt.Println(s)
+
+	// Change the value of specified index.
+	s[0] = 100
+
+	// It changes the underlying slice.
+	fmt.Println(j.GetArray("slice"))
+
+	// output:
+	// map[key:value]
+	// map[key:john]
+	// [59 90]
+	// [100 90]
+}

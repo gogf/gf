@@ -80,6 +80,9 @@ func (l *Logger) SetConfigWithMap(m map[string]interface{}) error {
 	if m == nil || len(m) == 0 {
 		return errors.New("configuration cannot be empty")
 	}
+	// The m now is a shallow copy of m.
+	// A little tricky, isn't it?
+	m = gutil.CopyMap(m)
 	// Change string configuration to int value for level.
 	levelKey, levelValue := gutil.MapPossibleItemByKey(m, "Level")
 	if levelValue != nil {
