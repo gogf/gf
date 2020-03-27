@@ -29,7 +29,7 @@ func Test_To(t *testing.T) {
 
 func Test_Path(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		path := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
+		path := gfile.TempDir(gtime.TimestampNanoStr())
 		file := fmt.Sprintf(`%d.log`, gtime.TimestampNano())
 
 		err := gfile.Mkdir(path)
@@ -47,7 +47,7 @@ func Test_Path(t *testing.T) {
 func Test_Cat(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cat := "category"
-		path := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
+		path := gfile.TempDir(gtime.TimestampNanoStr())
 		file := fmt.Sprintf(`%d.log`, gtime.TimestampNano())
 
 		err := gfile.Mkdir(path)
@@ -64,7 +64,7 @@ func Test_Cat(t *testing.T) {
 
 func Test_Level(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		path := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
+		path := gfile.TempDir(gtime.TimestampNanoStr())
 		file := fmt.Sprintf(`%d.log`, gtime.TimestampNano())
 
 		err := gfile.Mkdir(path)
@@ -81,7 +81,7 @@ func Test_Level(t *testing.T) {
 
 func Test_Skip(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		path := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
+		path := gfile.TempDir(gtime.TimestampNanoStr())
 		file := fmt.Sprintf(`%d.log`, gtime.TimestampNano())
 
 		err := gfile.Mkdir(path)
@@ -99,7 +99,7 @@ func Test_Skip(t *testing.T) {
 
 func Test_Stack(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		path := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
+		path := gfile.TempDir(gtime.TimestampNanoStr())
 		file := fmt.Sprintf(`%d.log`, gtime.TimestampNano())
 
 		err := gfile.Mkdir(path)
@@ -117,7 +117,7 @@ func Test_Stack(t *testing.T) {
 
 func Test_StackWithFilter(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		path := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
+		path := gfile.TempDir(gtime.TimestampNanoStr())
 		file := fmt.Sprintf(`%d.log`, gtime.TimestampNano())
 
 		err := gfile.Mkdir(path)
@@ -131,7 +131,7 @@ func Test_StackWithFilter(t *testing.T) {
 		t.Assert(gstr.Count(content, "Stack"), 1)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		path := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
+		path := gfile.TempDir(gtime.TimestampNanoStr())
 		file := fmt.Sprintf(`%d.log`, gtime.TimestampNano())
 
 		err := gfile.Mkdir(path)
@@ -148,7 +148,7 @@ func Test_StackWithFilter(t *testing.T) {
 
 func Test_Header(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		path := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
+		path := gfile.TempDir(gtime.TimestampNanoStr())
 		file := fmt.Sprintf(`%d.log`, gtime.TimestampNano())
 
 		err := gfile.Mkdir(path)
@@ -161,7 +161,7 @@ func Test_Header(t *testing.T) {
 		t.Assert(gstr.Count(content, "1 2 3"), 1)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		path := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
+		path := gfile.TempDir(gtime.TimestampNanoStr())
 		file := fmt.Sprintf(`%d.log`, gtime.TimestampNano())
 
 		err := gfile.Mkdir(path)
@@ -177,7 +177,7 @@ func Test_Header(t *testing.T) {
 
 func Test_Line(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		path := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
+		path := gfile.TempDir(gtime.TimestampNanoStr())
 		file := fmt.Sprintf(`%d.log`, gtime.TimestampNano())
 
 		err := gfile.Mkdir(path)
@@ -192,7 +192,7 @@ func Test_Line(t *testing.T) {
 		t.Assert(gstr.Contains(content, gfile.Separator), true)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		path := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
+		path := gfile.TempDir(gtime.TimestampNanoStr())
 		file := fmt.Sprintf(`%d.log`, gtime.TimestampNano())
 
 		err := gfile.Mkdir(path)
@@ -210,7 +210,7 @@ func Test_Line(t *testing.T) {
 
 func Test_Async(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		path := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
+		path := gfile.TempDir(gtime.TimestampNanoStr())
 		file := fmt.Sprintf(`%d.log`, gtime.TimestampNano())
 
 		err := gfile.Mkdir(path)
@@ -228,7 +228,7 @@ func Test_Async(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		path := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
+		path := gfile.TempDir(gtime.TimestampNanoStr())
 		file := fmt.Sprintf(`%d.log`, gtime.TimestampNano())
 
 		err := gfile.Mkdir(path)

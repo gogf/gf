@@ -35,7 +35,7 @@ type StorageFile struct {
 }
 
 var (
-	DefaultStorageFilePath          = gfile.Join(gfile.TempDir(), "gsessions")
+	DefaultStorageFilePath          = gfile.TempDir("gsessions")
 	DefaultStorageFileCryptoKey     = []byte("Session storage file crypto key!")
 	DefaultStorageFileCryptoEnabled = false
 	DefaultStorageFileLoopInterval  = 10 * time.Second

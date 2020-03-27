@@ -22,7 +22,7 @@ func Test_Concurrent(t *testing.T) {
 		l := glog.New()
 		s := "@1234567890#"
 		f := "test.log"
-		p := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
+		p := gfile.TempDir(gtime.TimestampNanoStr())
 		t.Assert(l.SetPath(p), nil)
 		defer gfile.Remove(p)
 		wg := sync.WaitGroup{}

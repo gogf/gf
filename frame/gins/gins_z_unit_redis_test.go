@@ -24,7 +24,7 @@ func Test_Redis(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		var err error
-		dirPath := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
+		dirPath := gfile.TempDir(gtime.TimestampNanoStr())
 		err = gfile.Mkdir(dirPath)
 		t.Assert(err, nil)
 		defer gfile.Remove(dirPath)

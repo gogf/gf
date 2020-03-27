@@ -21,7 +21,7 @@ import (
 func TestWatcher_AddOnce(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		value := gtype.New()
-		path := gfile.Join(gfile.TempDir(), gconv.String(gtime.TimestampNano()))
+		path := gfile.TempDir(gconv.String(gtime.TimestampNano()))
 		err := gfile.PutContents(path, "init")
 		t.Assert(err, nil)
 		defer gfile.Remove(path)
