@@ -44,7 +44,7 @@ func Test_Pack(t *testing.T) {
 func Test_PackToFile(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		srcPath := gdebug.TestDataPath("files")
-		dstPath := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
+		dstPath := gfile.TempDir(gtime.TimestampNanoStr())
 		err := gres.PackToFile(srcPath, dstPath)
 		t.Assert(err, nil)
 

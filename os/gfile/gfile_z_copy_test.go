@@ -49,8 +49,8 @@ func Test_CopyFile(t *testing.T) {
 	})
 	// Content replacement.
 	gtest.C(t, func(t *gtest.T) {
-		src := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
-		dst := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
+		src := gfile.TempDir(gtime.TimestampNanoStr())
+		dst := gfile.TempDir(gtime.TimestampNanoStr())
 		srcContent := "1"
 		dstContent := "1"
 		gfile.PutContents(src, srcContent)
@@ -115,8 +115,8 @@ func Test_CopyDir(t *testing.T) {
 	})
 	// Content replacement.
 	gtest.C(t, func(t *gtest.T) {
-		src := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr(), gtime.TimestampNanoStr())
-		dst := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr(), gtime.TimestampNanoStr())
+		src := gfile.TempDir(gtime.TimestampNanoStr(), gtime.TimestampNanoStr())
+		dst := gfile.TempDir(gtime.TimestampNanoStr(), gtime.TimestampNanoStr())
 		srcContent := "1"
 		dstContent := "1"
 		gfile.PutContents(src, srcContent)

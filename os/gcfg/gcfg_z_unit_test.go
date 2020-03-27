@@ -362,7 +362,7 @@ func TestCfg_FilePath(t *testing.T) {
 func TestCfg_Get(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var err error
-		configPath := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
+		configPath := gfile.TempDir(gtime.TimestampNanoStr())
 		err = gfile.Mkdir(configPath)
 		t.Assert(err, nil)
 		defer gfile.Remove(configPath)

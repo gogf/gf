@@ -20,7 +20,7 @@ import (
 func Test_Rotate_Size(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := glog.New()
-		p := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
+		p := gfile.TempDir(gtime.TimestampNanoStr())
 		err := l.SetConfigWithMap(g.Map{
 			"Path":                 p,
 			"File":                 "access.log",
@@ -58,7 +58,7 @@ func Test_Rotate_Size(t *testing.T) {
 func Test_Rotate_Expire(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := glog.New()
-		p := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
+		p := gfile.TempDir(gtime.TimestampNanoStr())
 		err := l.SetConfigWithMap(g.Map{
 			"Path":                 p,
 			"File":                 "access.log",
