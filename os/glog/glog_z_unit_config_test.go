@@ -25,7 +25,7 @@ func Test_SetConfigWithMap(t *testing.T) {
 		err := l.SetConfigWithMap(m)
 		t.Assert(err, nil)
 		t.Assert(l.config.Path, m["path"])
-		t.Assert(l.config.Level, m["level"])
+		t.Assert(l.config.Level, LEVEL_ALL)
 		t.Assert(l.config.StdoutPrint, m["stdout"])
 	})
 }
