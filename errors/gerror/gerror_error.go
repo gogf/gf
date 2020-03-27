@@ -132,7 +132,7 @@ func formatSubStack(st stack, buffer *bytes.Buffer) {
 				continue
 			}
 			// Avoid GF stacks if not in GF development.
-			if !intlog.IsGFDebug() {
+			if !intlog.IsEnabled() {
 				if strings.Contains(file, "github.com/gogf/gf/") {
 					continue
 				}
