@@ -279,24 +279,26 @@ func (s *Server) Start() error {
 			return errors.New(fmt.Sprintf("[ghttp] set log path '%s' error: %v", s.config.LogPath, err))
 		}
 	}
-	// Default session storage.
-	if s.config.SessionStorage == nil {
-		path := ""
-		if s.config.SessionPath != "" {
-			path = gfile.Join(s.config.SessionPath, s.name)
-			if !gfile.Exists(path) {
-				if err := gfile.Mkdir(path); err != nil {
-					return errors.New(fmt.Sprintf("[ghttp] mkdir failed for '%s': %v", path, err))
+	if s.config.SessionEnable {
+		// Default session storage.
+		if s.config.SessionStorage == nil {
+			path := ""
+			if s.config.SessionPath != "" {
+				path = gfile.Join(s.config.SessionPath, s.name)
+				if !gfile.Exists(path) {
+					if err := gfile.Mkdir(path); err != nil {
+						return errors.New(fmt.Sprintf("[ghttp] mkdir failed for '%s': %v", path, err))
+					}
 				}
 			}
+			s.config.SessionStorage = gsession.NewStorageFile(path)
 		}
-		s.config.SessionStorage = gsession.NewStorageFile(path)
+		// Initialize session manager when start running.
+		s.sessionManager = gsession.New(
+			s.config.SessionMaxAge,
+			s.config.SessionStorage,
+		)
 	}
-	// Initialize session manager when start running.
-	s.sessionManager = gsession.New(
-		s.config.SessionMaxAge,
-		s.config.SessionStorage,
-	)
 
 	// PProf feature.
 	if s.config.PProfEnabled {

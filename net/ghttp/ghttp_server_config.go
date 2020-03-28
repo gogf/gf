@@ -58,6 +58,7 @@ type ServerConfig struct {
 	CookieMaxAge      time.Duration     // Cookie: Max TTL for cookie items.
 	CookiePath        string            // Cookie: Cookie Path(also affects the default storage for session id).
 	CookieDomain      string            // Cookie: Cookie Domain(also affects the default storage for session id).
+	SessionEnable     bool              // open session when server init.
 	SessionMaxAge     time.Duration     // Session: Max TTL for session items.
 	SessionIdName     string            // Session: Session id name.
 	SessionPath       string            // Session: Session Storage directory path for storing session files.
@@ -233,6 +234,11 @@ func (s *Server) EnableHTTPS(certFile, keyFile string, tlsConfig ...*tls.Config)
 	if len(tlsConfig) > 0 {
 		s.config.TLSConfig = tlsConfig[0]
 	}
+}
+
+// SetSessionEnable set enable session feature for the server.
+func (s *Server) SetSessionEnable(enable bool) {
+	s.config.SessionEnable = enable
 }
 
 // SetTLSConfig sets custom TLS configuration and enables HTTPS feature for the server.
