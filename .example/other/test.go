@@ -1,31 +1,25 @@
 package main
 
 import (
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/frame/gins"
-	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/crypto/gaes"
+	"github.com/gogf/gf/os/gfile"
+	"github.com/gogf/gf/os/gres"
 )
 
-func getNameLogger(name, path string) *glog.Logger {
-	inst := gins.Get(name)
-	if inst == nil {
-		logger := g.Log(name)
-		logConf := map[string]interface{}{
-			"Path":  path,
-			"Level": "ALL",
-		}
-		if err := logger.SetConfigWithMap(logConf); err != nil {
-			panic(err)
-		}
-		return logger
-	}
-	return inst.(*glog.Logger)
-}
+var (
+	CryptoKey = []byte("x76cgqt36i9c863bzmotuf8626dxiwu0")
+)
 
 func main() {
-	alog := getNameLogger("logger.日志1", "c:/logger1")
-	alog.Print(1)
-
-	blog := getNameLogger("logger.日志2", "c:/logger2")
-	blog.Print(2)
+	binContent, err := gres.Pack("public,config")
+	if err != nil {
+		panic(err)
+	}
+	binContent, err = gaes.Encrypt(binContent, CryptoKey)
+	if err != nil {
+		panic(err)
+	}
+	if err := gfile.PutBytes("data.bin", binContent); err != nil {
+		panic(err)
+	}
 }

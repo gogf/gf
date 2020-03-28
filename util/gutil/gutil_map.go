@@ -40,6 +40,7 @@ func MapPossibleItemByKey(data map[string]interface{}, key string) (string, inte
 	}
 	// Loop for check.
 	for k, v := range data {
+		// Remove all special chars and compare with case insensitive.
 		if strings.EqualFold(replaceCharReg.ReplaceAllString(k, ""), replacedKey) {
 			return k, v
 		}
