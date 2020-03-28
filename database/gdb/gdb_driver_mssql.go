@@ -148,17 +148,15 @@ func (d *DriverMssql) parseSql(sql string) string {
 				"SELECT * FROM "+
 					"(SELECT ROW_NUMBER() OVER (ORDER BY %s) as ROWNUMBER_, %s ) as TMP_ "+
 					"WHERE TMP_.ROWNUMBER_ > %d AND TMP_.ROWNUMBER_ <= %d",
-				orderStr, selectStr, first, limit,
+				orderStr, selectStr, first, first+limit,
 			)
 		} else {
 			if first == 0 {
 				first = limit
-			} else {
-				first = limit - first
 			}
 			sql = fmt.Sprintf(
 				"SELECT * FROM (SELECT TOP %d * FROM (SELECT TOP %d %s) as TMP1_ ) as TMP2_ ",
-				first, limit, selectStr,
+				limit, first+limit, selectStr,
 			)
 		}
 	default:
