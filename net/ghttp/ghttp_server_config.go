@@ -99,6 +99,7 @@ var defaultServerConfig = ServerConfig{
 	CookieMaxAge:      time.Hour * 24 * 365,
 	CookiePath:        "/",
 	CookieDomain:      "",
+	SessionEnable:     true,
 	SessionMaxAge:     time.Hour * 24,
 	SessionIdName:     "gfsessionid",
 	SessionPath:       gsession.DefaultStorageFilePath,
