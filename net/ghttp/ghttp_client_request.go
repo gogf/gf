@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"github.com/gogf/gf/encoding/gparser"
 	"github.com/gogf/gf/text/gregex"
+	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
 	"io"
 	"mime/multipart"
@@ -88,7 +89,7 @@ func (c *Client) Trace(url string, data ...interface{}) (*ClientResponse, error)
 func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *ClientResponse, err error) {
 	method = strings.ToUpper(method)
 	if len(c.prefix) > 0 {
-		url = c.prefix + url
+		url = c.prefix + gstr.Trim(url)
 	}
 	param := ""
 	if len(data) > 0 {

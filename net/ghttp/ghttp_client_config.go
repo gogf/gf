@@ -36,7 +36,7 @@ func NewClient() *Client {
 	return &Client{
 		Client: http.Client{
 			Transport: &http.Transport{
-				// No validation for https certification of the server.
+				// No validation for https certification of the server in default.
 				TLSClientConfig: &tls.Config{
 					InsecureSkipVerify: true,
 				},
