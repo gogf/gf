@@ -1263,6 +1263,18 @@ func Test_Model_Where_ISNULL_2(t *testing.T) {
 		t.Assert(result[0]["id"].Int(), 1)
 	})
 }
+
+func Test_Model_Where_GTime(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Table(table).Where("create_time>?", gtime.NewFromStr("2010-09-01")).All()
+		t.Assert(err, nil)
+		t.Assert(len(result), 10)
+	})
+}
+
 func Test_Model_WherePri(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)

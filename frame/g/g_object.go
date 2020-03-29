@@ -20,6 +20,11 @@ import (
 	"github.com/gogf/gf/os/gview"
 )
 
+// Client is a convenience function, that creates and returns a new HTTP client.
+func Client() *ghttp.Client {
+	return ghttp.NewClient()
+}
+
 // Server returns an instance of http server with specified name.
 func Server(name ...interface{}) *ghttp.Server {
 	return gins.Server(name...)
