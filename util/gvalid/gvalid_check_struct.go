@@ -30,7 +30,7 @@ func CheckStruct(object interface{}, rules interface{}, msgs ...interface{}) *Er
 	errorRules := make([]string, 0)
 	// 返回的校验错误
 	errorMaps := make(ErrorMap)
-	// 用于field-in/field-not-in的效验
+	// FieldRangeMsg 用于field-in/field-not-in的效验
 	var fieldRangeMsg FieldRangeMsg
 	// 解析rules参数
 	switch v := rules.(type) {

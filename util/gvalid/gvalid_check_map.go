@@ -32,7 +32,7 @@ func CheckMap(params interface{}, rules interface{}, msgs ...interface{}) *Error
 	errorRules := make([]string, 0)
 	// 返回的校验错误
 	errorMaps := make(ErrorMap)
-	// 用于field-in/field-not-in的验证字段
+	// FieldRangeMsg 用于field-in/field-not-in的验证字段
 	var fieldRangeMsg FieldRangeMsg
 	// 解析rules参数
 	switch v := rules.(type) {
