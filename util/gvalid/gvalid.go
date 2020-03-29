@@ -62,7 +62,7 @@ regex                格式：regex:pattern                         说明：参
 // 自定义错误信息: map[键名] => 字符串|map[规则]错误信息
 type CustomMsg = map[string]interface{}
 
-// 用于field-in,field-not-in的数据信息: map[键名] => []string range部分
+// FieldRangeMsg 用于field-in,field-not-in的数据信息: map[键名] => []string range部分
 type FieldRangeMsg = map[string][]string
 
 // 解析单条sequence tag，格式: [alias@]rule[...#msg...]
