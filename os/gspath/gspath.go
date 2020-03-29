@@ -52,7 +52,7 @@ func New(path string, cache bool) *SPath {
 	}
 	if len(path) > 0 {
 		if _, err := sp.Add(path); err != nil {
-			intlog.Print(err)
+			//intlog.Print(err)
 		}
 	}
 	return sp
