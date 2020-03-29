@@ -42,6 +42,30 @@ func Test_Client_Basic(t *testing.T) {
 	})
 }
 
+func Test_Client_BasicAuth(t *testing.T) {
+	p := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/auth", func(r *ghttp.Request) {
+		if r.BasicAuth("admin", "admin") {
+			r.Response.Write("1")
+		} else {
+			r.Response.Write("0")
+		}
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		t.Assert(c.BasicAuth("admin", "123").GetContent("/auth"), "0")
+		t.Assert(c.BasicAuth("admin", "admin").GetContent("/auth"), "1")
+	})
+}
+
 func Test_Client_Cookie(t *testing.T) {
 	p := ports.PopRand()
 	s := g.Server(p)

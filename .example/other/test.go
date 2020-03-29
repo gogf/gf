@@ -1,25 +1,19 @@
 package main
 
 import (
-	"github.com/gogf/gf/crypto/gaes"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/gres"
-)
-
-var (
-	CryptoKey = []byte("x76cgqt36i9c863bzmotuf8626dxiwu0")
+	"fmt"
+	"github.com/gogf/gf/frame/g"
 )
 
 func main() {
-	binContent, err := gres.Pack("public,config")
-	if err != nil {
-		panic(err)
-	}
-	binContent, err = gaes.Encrypt(binContent, CryptoKey)
-	if err != nil {
-		panic(err)
-	}
-	if err := gfile.PutBytes("data.bin", binContent); err != nil {
-		panic(err)
+	c := g.Client()
+	c.SetCookieMap(g.MapStrStr{
+		"name":  "john",
+		"score": "100",
+	})
+	if r, e := c.Get("http://127.0.0.1:8199/"); e != nil {
+		panic(e)
+	} else {
+		fmt.Println(r.ReadAllString())
 	}
 }
