@@ -20,7 +20,7 @@ var (
 
 // 校验struct对象属性，object参数也可以是一个指向对象的指针，返回值同CheckMap方法。
 // struct的数据校验结果信息是顺序的。
-func CheckStruct(object interface{}, rules interface{}, msgs ...CustomMsg) *Error {
+func CheckStruct(object interface{}, rules interface{}, msgs ...interface{}) *Error {
 	params := make(map[string]interface{})
 	checkRules := make(map[string]string)
 	customMsgs := make(CustomMsg)
@@ -30,6 +30,8 @@ func CheckStruct(object interface{}, rules interface{}, msgs ...CustomMsg) *Erro
 	errorRules := make([]string, 0)
 	// 返回的校验错误
 	errorMaps := make(ErrorMap)
+	// 用于field-in/field-not-in的效验
+	var fieldRangeMsg FieldRangeMsg
 	// 解析rules参数
 	switch v := rules.(type) {
 	// 支持校验错误顺序: []sequence tag
@@ -123,13 +125,26 @@ func CheckStruct(object interface{}, rules interface{}, msgs ...CustomMsg) *Erro
 	}
 
 	// 自定义错误消息，非必须参数，优先级比rules参数中以及struct tag中定义的错误消息更高
-	if len(msgs) > 0 && len(msgs[0]) > 0 {
-		for k, v := range msgs[0] {
-			if a, ok := fieldAliases[k]; ok {
-				// 属性的别名存在时，覆盖别名的错误信息
-				customMsgs[a] = v
-			} else {
-				customMsgs[k] = v
+	if len(msgs) > 0 {
+		for _, msg := range msgs {
+			switch msg.(type) {
+			case CustomMsg:
+				m := msg.(CustomMsg)
+				if len(m) > 0 {
+					for k, v := range m {
+						if a, ok := fieldAliases[k]; ok {
+							// 属性的别名存在时，覆盖别名的错误信息
+							customMsgs[a] = v
+						} else {
+							customMsgs[k] = v
+						}
+					}
+				}
+			case FieldRangeMsg:
+				m := msg.(FieldRangeMsg)
+				if len(m) > 0 {
+					fieldRangeMsg = m
+				}
 			}
 		}
 	}
@@ -144,7 +159,7 @@ func CheckStruct(object interface{}, rules interface{}, msgs ...CustomMsg) *Erro
 		if v, ok := params[key]; ok {
 			value = v
 		}
-		if e := Check(value, rule, customMsgs[key], params); e != nil {
+		if e := Check(value, rule, customMsgs[key], params, fieldRangeMsg[key]); e != nil {
 			_, item := e.FirstItem()
 			// 如果值为nil|""，并且不需要require*验证时，其他验证失效
 			if value == nil || gconv.String(value) == "" {

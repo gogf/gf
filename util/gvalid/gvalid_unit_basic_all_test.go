@@ -891,3 +891,31 @@ func Test_Regex2(t *testing.T) {
 		t.AssertNE(err2.Map()["min-length"], nil)
 	})
 }
+
+func Test_FieldIn(t *testing.T) {
+	rule := "field-in"
+	fieldMsg := []string{"123", "321", "121"}
+	msgs := map[string]interface{}{
+		"field-in": "不在其中",
+	}
+
+	if m := gvalid.Check("111", rule, msgs, fieldMsg); m == nil {
+		t.Log("效验成功")
+	} else {
+		t.Log(m)
+	}
+}
+
+func Test_FieldNotIn(t *testing.T) {
+	rule := "field-not-in"
+	fieldMsg := []string{"123", "321", "121"}
+	msgs := map[string]interface{}{
+		"field-not-in": "在其中",
+	}
+
+	if m := gvalid.Check("123", rule, msgs, fieldMsg); m == nil {
+		t.Log("效验成功")
+	} else {
+		t.Log(m)
+	}
+}

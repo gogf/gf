@@ -15,7 +15,7 @@ import (
 // 检测键值对参数Map，
 // rules参数支持 []string / map[string]string 类型，前面一种类型支持返回校验结果顺序(具体格式参考struct tag)，后一种不支持；
 // rules参数中得 map[string]string 是一个2维的关联数组，第一维键名为参数键名，第二维为带有错误的校验规则名称，值为错误信息。
-func CheckMap(params interface{}, rules interface{}, msgs ...CustomMsg) *Error {
+func CheckMap(params interface{}, rules interface{}, msgs ...interface{}) *Error {
 	// 将参数转换为 map[string]interface{}类型
 	data := gconv.Map(params)
 	if data == nil {
@@ -32,6 +32,8 @@ func CheckMap(params interface{}, rules interface{}, msgs ...CustomMsg) *Error {
 	errorRules := make([]string, 0)
 	// 返回的校验错误
 	errorMaps := make(ErrorMap)
+	// 用于field-in/field-not-in的验证字段
+	var fieldRangeMsg FieldRangeMsg
 	// 解析rules参数
 	switch v := rules.(type) {
 	// 支持校验错误顺序: []sequence tag
@@ -68,14 +70,28 @@ func CheckMap(params interface{}, rules interface{}, msgs ...CustomMsg) *Error {
 	case map[string]string:
 		checkRules = v
 	}
-	// 自定义错误消息，非必须参数，优先级比rules参数中定义的错误消息更高
-	if len(msgs) > 0 && len(msgs[0]) > 0 {
-		if len(customMsgs) > 0 {
-			for k, v := range msgs[0] {
-				customMsgs[k] = v
+
+	if len(msgs) > 0 {
+		for _, msg := range msgs {
+			switch msg.(type) {
+			case CustomMsg:
+				m := msg.(CustomMsg)
+				if len(m) > 0 {
+					// 自定义错误消息，非必须参数，优先级比rules参数中定义的错误消息更高
+					if len(customMsgs) > 0 {
+						for k, v := range m {
+							customMsgs[k] = v
+						}
+					} else {
+						customMsgs = m
+					}
+				}
+			case FieldRangeMsg:
+				m := msg.(FieldRangeMsg)
+				if len(m) > 0 {
+					fieldRangeMsg = m
+				}
 			}
-		} else {
-			customMsgs = msgs[0]
 		}
 	}
 	// 开始执行校验: 以校验规则作为基础进行遍历校验
@@ -90,7 +106,7 @@ func CheckMap(params interface{}, rules interface{}, msgs ...CustomMsg) *Error {
 		if v, ok := data[key]; ok {
 			value = v
 		}
-		if e := Check(value, rule, customMsgs[key], data); e != nil {
+		if e := Check(value, rule, customMsgs[key], data, fieldRangeMsg[key]); e != nil {
 			_, item := e.FirstItem()
 			// 如果值为nil|""，并且不需要require*验证时，其他验证失效
 			if value == nil || gconv.String(value) == "" {

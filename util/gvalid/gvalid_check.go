@@ -89,6 +89,8 @@ var (
 		"in":                   {},
 		"not-in":               {},
 		"regex":                {},
+		"field-in":             {},
+		"field-not-in":         {},
 	}
 	// 布尔Map
 	boolMap = map[string]struct{}{
@@ -120,9 +122,20 @@ func Check(value interface{}, rules string, msgs interface{}, params ...interfac
 	val := strings.TrimSpace(gconv.String(value))
 	data := make(map[string]string)
 	errorMsgs := make(map[string]string)
+	var fieldMsg []string
 	if len(params) > 0 {
-		for k, v := range gconv.Map(params[0]) {
-			data[k] = gconv.String(v)
+		for _, msg := range params {
+			switch msg.(type) {
+			case map[string]interface{}:
+				m := msg.(map[string]interface{})
+				if len(m) > 0 {
+					for k, v := range gconv.Map(m) {
+						data[k] = gconv.String(v)
+					}
+				}
+			case []string:
+				fieldMsg = msg.([]string)
+			}
 		}
 	}
 	// 自定义错误消息处理
@@ -266,6 +279,23 @@ func Check(value interface{}, rules string, msgs interface{}, params ...interfac
 			match = true
 			array := strings.Split(ruleVal, ",")
 			for _, v := range array {
+				if strings.Compare(val, strings.TrimSpace(v)) == 0 {
+					match = false
+					break
+				}
+			}
+
+		case "field-in":
+			for _, v := range fieldMsg {
+				if strings.Compare(val, strings.TrimSpace(v)) == 0 {
+					match = true
+					break
+				}
+			}
+
+		case "field-not-in":
+			match = true
+			for _, v := range fieldMsg {
 				if strings.Compare(val, strings.TrimSpace(v)) == 0 {
 					match = false
 					break
