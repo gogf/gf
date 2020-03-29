@@ -1,3 +1,5 @@
+> This markdown is deprecated and will be removed in future. All TODO features are staged in the issue: https://github.com/gogf/gf/issues
+
 # ON THE WAY
 1. 增加图形验证码支持，至少支持数字和英文字母；
 1. Cookie&Session数据池化处理；
