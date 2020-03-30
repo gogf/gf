@@ -31,7 +31,7 @@ func CheckStruct(object interface{}, rules interface{}, msgs ...interface{}) *Er
 	// 返回的校验错误
 	errorMaps := make(ErrorMap)
 	// FieldRangeMsg 用于field-in/field-not-in的效验
-	var fieldRangeMsg FieldRangeMsg
+	fieldRangeMsg := make(FieldRangeMsg)
 	// 解析rules参数
 	switch v := rules.(type) {
 	// 支持校验错误顺序: []sequence tag
