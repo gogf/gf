@@ -7,6 +7,7 @@
 package gmutex_test
 
 import (
+	"github.com/gogf/gf/os/glog"
 	"testing"
 	"time"
 
@@ -239,35 +240,40 @@ func Test_Mutex_RLockFunc(t *testing.T) {
 
 func Test_Mutex_TryRLockFunc(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		mu := gmutex.New()
-		array := garray.New(true)
+		var (
+			mu    = gmutex.New()
+			array = garray.New(true)
+		)
+		// First writing lock
 		go func() {
 			mu.LockFunc(func() {
 				array.Append(1)
-				time.Sleep(500 * time.Millisecond)
+				glog.Println("lock1 done")
+				time.Sleep(2000 * time.Millisecond)
 			})
 		}()
+		// This goroutine never gets the lock.
 		go func() {
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(1000 * time.Millisecond)
 			mu.TryRLockFunc(func() {
 				array.Append(1)
 			})
 		}()
 		for index := 0; index < 1000; index++ {
 			go func() {
-				time.Sleep(1000 * time.Millisecond)
+				time.Sleep(4000 * time.Millisecond)
 				mu.TryRLockFunc(func() {
 					array.Append(1)
 				})
 			}()
 		}
-		time.Sleep(50 * time.Millisecond)
+		time.Sleep(1000 * time.Millisecond)
 		t.Assert(array.Len(), 1)
-		time.Sleep(150 * time.Millisecond)
+		time.Sleep(1000 * time.Millisecond)
 		t.Assert(array.Len(), 1)
-		time.Sleep(600 * time.Millisecond)
+		time.Sleep(1000 * time.Millisecond)
 		t.Assert(array.Len(), 1)
-		time.Sleep(600 * time.Millisecond)
+		time.Sleep(2000 * time.Millisecond)
 		t.Assert(array.Len(), 1001)
 	})
 }
