@@ -43,7 +43,7 @@ func (o *ObjectRest2) Delete(r *ghttp.Request) {
 }
 
 func Test_Router_ObjectRest_Id(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindObjectRest("/object/:id", new(ObjectRest2))
 	s.SetPort(p)

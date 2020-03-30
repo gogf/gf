@@ -17,7 +17,7 @@ import (
 )
 
 func Test_Router_Exit(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHookHandlerByMap("/*", map[string]ghttp.HandlerFunc{
 		ghttp.HOOK_BEFORE_SERVE:  func(r *ghttp.Request) { r.Response.Write("1") },
@@ -46,7 +46,7 @@ func Test_Router_Exit(t *testing.T) {
 }
 
 func Test_Router_ExitHook(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/priority/show", func(r *ghttp.Request) {
 		r.Response.Write("show")
@@ -84,7 +84,7 @@ func Test_Router_ExitHook(t *testing.T) {
 }
 
 func Test_Router_ExitAll(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/priority/show", func(r *ghttp.Request) {
 		r.Response.Write("show")

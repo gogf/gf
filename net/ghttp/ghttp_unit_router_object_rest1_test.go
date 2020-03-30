@@ -55,7 +55,7 @@ func (o *ObjectRest) Head(r *ghttp.Request) {
 }
 
 func Test_Router_ObjectRest(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindObjectRest("/", new(ObjectRest))
 	s.BindObjectRest("/{.struct}/{.method}", new(ObjectRest))

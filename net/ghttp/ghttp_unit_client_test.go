@@ -18,7 +18,7 @@ import (
 )
 
 func Test_Client_Basic(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/hello", func(r *ghttp.Request) {
 		r.Response.Write("hello")
@@ -43,7 +43,7 @@ func Test_Client_Basic(t *testing.T) {
 }
 
 func Test_Client_BasicAuth(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/auth", func(r *ghttp.Request) {
 		if r.BasicAuth("admin", "admin") {
@@ -67,7 +67,7 @@ func Test_Client_BasicAuth(t *testing.T) {
 }
 
 func Test_Client_Cookie(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/cookie", func(r *ghttp.Request) {
 		r.Response.Write(r.Cookie.Get("test"))
@@ -88,7 +88,7 @@ func Test_Client_Cookie(t *testing.T) {
 }
 
 func Test_Client_Cookies(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/cookie", func(r *ghttp.Request) {
 		r.Cookie.Set("test1", "1")
@@ -121,7 +121,7 @@ func Test_Client_Cookies(t *testing.T) {
 }
 
 func Test_Client_Chain_Header(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/header1", func(r *ghttp.Request) {
 		r.Response.Write(r.Header.Get("test1"))
@@ -146,7 +146,7 @@ func Test_Client_Chain_Header(t *testing.T) {
 }
 
 func Test_Client_Chain_Context(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/context", func(r *ghttp.Request) {
 		time.Sleep(1 * time.Second)
@@ -171,7 +171,7 @@ func Test_Client_Chain_Context(t *testing.T) {
 }
 
 func Test_Client_Chain_Timeout(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/timeout", func(r *ghttp.Request) {
 		time.Sleep(1 * time.Second)
@@ -192,7 +192,7 @@ func Test_Client_Chain_Timeout(t *testing.T) {
 }
 
 func Test_Client_Chain_ContentJson(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/json", func(r *ghttp.Request) {
 		r.Response.Write(r.Get("name"), r.Get("score"))
@@ -221,7 +221,7 @@ func Test_Client_Chain_ContentJson(t *testing.T) {
 }
 
 func Test_Client_Chain_ContentXml(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/xml", func(r *ghttp.Request) {
 		r.Response.Write(r.Get("name"), r.Get("score"))

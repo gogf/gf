@@ -24,7 +24,7 @@ import (
 func Test_Template_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New(gdebug.TestDataPath("template", "basic"))
-		p := ports.PopRand()
+		p, _ := ports.PopRand()
 		s := g.Server(p)
 		s.SetView(v)
 		s.BindHandler("/", func(r *ghttp.Request) {
@@ -50,7 +50,7 @@ func Test_Template_Encode(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New(gdebug.TestDataPath("template", "basic"))
 		v.SetAutoEncode(true)
-		p := ports.PopRand()
+		p, _ := ports.PopRand()
 		s := g.Server(p)
 		s.SetView(v)
 		s.BindHandler("/", func(r *ghttp.Request) {
@@ -75,7 +75,7 @@ func Test_Template_Encode(t *testing.T) {
 func Test_Template_Layout1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New(gdebug.TestDataPath("template", "layout1"))
-		p := ports.PopRand()
+		p, _ := ports.PopRand()
 		s := g.Server(p)
 		s.SetView(v)
 		s.BindHandler("/layout", func(r *ghttp.Request) {
@@ -105,7 +105,7 @@ func Test_Template_Layout1(t *testing.T) {
 func Test_Template_Layout2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New(gdebug.TestDataPath("template", "layout2"))
-		p := ports.PopRand()
+		p, _ := ports.PopRand()
 		s := g.Server(p)
 		s.SetView(v)
 		s.BindHandler("/main1", func(r *ghttp.Request) {
@@ -144,7 +144,7 @@ func Test_Template_XSS(t *testing.T) {
 		v := gview.New()
 		v.SetAutoEncode(true)
 		c := "<br>"
-		p := ports.PopRand()
+		p, _ := ports.PopRand()
 		s := g.Server(p)
 		s.SetView(v)
 		s.BindHandler("/", func(r *ghttp.Request) {

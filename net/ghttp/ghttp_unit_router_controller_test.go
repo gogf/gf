@@ -44,7 +44,7 @@ func (c *Controller) Info() {
 }
 
 func Test_Router_Controller1(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindController("/", new(Controller))
 	s.BindController("/{.struct}/{.method}", new(Controller))
@@ -75,7 +75,7 @@ func Test_Router_Controller1(t *testing.T) {
 }
 
 func Test_Router_Controller2(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindController("/controller", new(Controller), "Show, Info")
 	s.SetPort(p)
@@ -101,7 +101,7 @@ func Test_Router_Controller2(t *testing.T) {
 }
 
 func Test_Router_ControllerMethod(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindControllerMethod("/controller-info", new(Controller), "Info")
 	s.SetPort(p)

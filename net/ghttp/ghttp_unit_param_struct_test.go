@@ -26,7 +26,7 @@ func Test_Params_Struct(t *testing.T) {
 		Pass1 string `p:"password1"`
 		Pass2 string `p:"password2" v:"passwd1 @required|length:2,20|password3#||密码强度不足"`
 	}
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/struct1", func(r *ghttp.Request) {
 		if m := r.GetMap(); len(m) > 0 {

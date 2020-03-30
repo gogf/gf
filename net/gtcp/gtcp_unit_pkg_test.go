@@ -16,7 +16,7 @@ import (
 )
 
 func Test_Package_Basic(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := gtcp.NewServer(fmt.Sprintf(`:%d`, p), func(conn *gtcp.Conn) {
 		defer conn.Close()
 		for {
@@ -96,7 +96,7 @@ func Test_Package_Basic(t *testing.T) {
 }
 
 func Test_Package_Timeout(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := gtcp.NewServer(fmt.Sprintf(`:%d`, p), func(conn *gtcp.Conn) {
 		defer conn.Close()
 		for {
@@ -132,7 +132,7 @@ func Test_Package_Timeout(t *testing.T) {
 }
 
 func Test_Package_Option(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := gtcp.NewServer(fmt.Sprintf(`:%d`, p), func(conn *gtcp.Conn) {
 		defer conn.Close()
 		option := gtcp.PkgOption{HeaderSize: 1}

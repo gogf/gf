@@ -17,7 +17,7 @@ import (
 )
 
 func Test_Basic(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := gudp.NewServer(fmt.Sprintf("127.0.0.1:%d", p), func(conn *gudp.Conn) {
 		defer conn.Close()
 		for {
@@ -75,7 +75,7 @@ func Test_Basic(t *testing.T) {
 // If the read buffer size is less than the sent package size,
 // the rest data would be dropped.
 func Test_Buffer(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := gudp.NewServer(fmt.Sprintf("127.0.0.1:%d", p), func(conn *gudp.Conn) {
 		defer conn.Close()
 		for {

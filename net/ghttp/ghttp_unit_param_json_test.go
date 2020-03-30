@@ -25,7 +25,7 @@ func Test_Params_Json_Request(t *testing.T) {
 		Pass1 string `p:"password1"`
 		Pass2 string `p:"password2" v:"required|length:2,20|password3|same:password1#||密码强度不足|两次密码不一致"`
 	}
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/get", func(r *ghttp.Request) {
 		r.Response.WriteExit(r.Get("id"), r.Get("name"))
@@ -71,7 +71,7 @@ func Test_Params_Json_Response(t *testing.T) {
 		Pass2    string `json:"password2"`
 	}
 
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/json1", func(r *ghttp.Request) {
 		r.Response.WriteJson(User{

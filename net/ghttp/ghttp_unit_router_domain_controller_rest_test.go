@@ -60,7 +60,7 @@ func (c *DomainControllerRest) Head() {
 
 // 控制器注册测试
 func Test_Router_DomainControllerRest(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	d := s.Domain("localhost, local")
 	d.BindControllerRest("/", new(DomainControllerRest))

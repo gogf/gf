@@ -17,7 +17,7 @@ import (
 )
 
 func Test_Params_Page(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.GET("/list", func(r *ghttp.Request) {

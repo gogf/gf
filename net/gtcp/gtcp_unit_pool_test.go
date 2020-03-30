@@ -15,7 +15,7 @@ import (
 )
 
 func Test_Pool_Basic1(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := gtcp.NewServer(fmt.Sprintf(`:%d`, p), func(conn *gtcp.Conn) {
 		defer conn.Close()
 		for {
@@ -42,7 +42,7 @@ func Test_Pool_Basic1(t *testing.T) {
 }
 
 func Test_Pool_Basic2(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := gtcp.NewServer(fmt.Sprintf(`:%d`, p), func(conn *gtcp.Conn) {
 		conn.Close()
 	})

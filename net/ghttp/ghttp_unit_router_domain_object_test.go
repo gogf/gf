@@ -39,7 +39,7 @@ func (o *DomainObject) Info(r *ghttp.Request) {
 }
 
 func Test_Router_DomainObject1(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.Domain("localhost, local").BindObject("/", new(DomainObject))
 	s.SetPort(p)
@@ -88,7 +88,7 @@ func Test_Router_DomainObject1(t *testing.T) {
 }
 
 func Test_Router_DomainObject2(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.Domain("localhost, local").BindObject("/object", new(DomainObject), "Show, Info")
 	s.SetPort(p)
@@ -139,7 +139,7 @@ func Test_Router_DomainObject2(t *testing.T) {
 }
 
 func Test_Router_DomainObjectMethod(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.Domain("localhost, local").BindObjectMethod("/object-info", new(DomainObject), "Info")
 	s.SetPort(p)
