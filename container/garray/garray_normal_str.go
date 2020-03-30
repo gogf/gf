@@ -21,6 +21,7 @@ import (
 	"github.com/gogf/gf/util/grand"
 )
 
+// StrArray is a golang string array with rich features.
 type StrArray struct {
 	mu    *rwmutex.RWMutex
 	array []string

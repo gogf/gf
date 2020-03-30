@@ -19,6 +19,7 @@ import (
 	"github.com/gogf/gf/util/grand"
 )
 
+// IntArray is a golang int array with rich features.
 type IntArray struct {
 	mu    *rwmutex.RWMutex
 	array []int
