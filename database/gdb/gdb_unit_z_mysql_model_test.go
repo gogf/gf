@@ -13,6 +13,7 @@ import (
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/util/gutil"
 	"testing"
+	"time"
 
 	"github.com/gogf/gf/database/gdb"
 
@@ -2096,5 +2097,29 @@ func Test_Model_FieldsExStruct(t *testing.T) {
 		n, err := r.RowsAffected()
 		t.Assert(err, nil)
 		t.Assert(n, 10)
+	})
+}
+
+func Test_Model_OmitEmpty_Time(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id       int       `orm:"id"       json:"id"`
+			Passport string    `orm:"password" json:"pass_port"`
+			Password string    `orm:"password" json:"password"`
+			Time     time.Time `orm:"create_time" `
+		}
+		user := &User{
+			Id:       1,
+			Passport: "111",
+			Password: "222",
+			Time:     time.Time{},
+		}
+		r, err := db.Table(table).OmitEmpty().Data(user).WherePri(1).Update()
+		t.Assert(err, nil)
+		n, err := r.RowsAffected()
+		t.Assert(err, nil)
+		t.Assert(n, 1)
 	})
 }
