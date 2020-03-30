@@ -68,8 +68,13 @@ func TestSortedStrArray_Get(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []string{"a", "d", "c", "b"}
 		array1 := garray.NewSortedStrArrayFrom(a1)
-		t.Assert(array1.Get(2), "c")
-		t.Assert(array1.Get(0), "a")
+		v, ok := array1.Get(2)
+		t.Assert(v, "c")
+		t.Assert(ok, true)
+
+		v, ok = array1.Get(0)
+		t.Assert(v, "a")
+		t.Assert(ok, true)
 	})
 }
 
@@ -78,20 +83,36 @@ func TestSortedStrArray_Remove(t *testing.T) {
 		a1 := []string{"a", "d", "c", "b"}
 		array1 := garray.NewSortedStrArrayFrom(a1)
 
-		t.Assert(array1.Remove(-1), "")
-		t.Assert(array1.Remove(100000), "")
+		v, ok := array1.Remove(-1)
+		t.Assert(v, "")
+		t.Assert(ok, false)
 
-		t.Assert(array1.Remove(2), "c")
-		t.Assert(array1.Get(2), "d")
+		v, ok = array1.Remove(100000)
+		t.Assert(v, "")
+		t.Assert(ok, false)
+
+		v, ok = array1.Remove(2)
+		t.Assert(v, "c")
+		t.Assert(ok, true)
+
+		v, ok = array1.Get(2)
+		t.Assert(v, "d")
+		t.Assert(ok, true)
+
 		t.Assert(array1.Len(), 3)
 		t.Assert(array1.Contains("c"), false)
 
-		t.Assert(array1.Remove(0), "a")
+		v, ok = array1.Remove(0)
+		t.Assert(v, "a")
+		t.Assert(ok, true)
+
 		t.Assert(array1.Len(), 2)
 		t.Assert(array1.Contains("a"), false)
 
-		// 此时array1里的元素只剩下2个
-		t.Assert(array1.Remove(1), "d")
+		v, ok = array1.Remove(1)
+		t.Assert(v, "d")
+		t.Assert(ok, true)
+
 		t.Assert(array1.Len(), 1)
 	})
 }
@@ -100,8 +121,9 @@ func TestSortedStrArray_PopLeft(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []string{"e", "a", "d", "c", "b"}
 		array1 := garray.NewSortedStrArrayFrom(a1)
-		s1 := array1.PopLeft()
-		t.Assert(s1, "a")
+		v, ok := array1.PopLeft()
+		t.Assert(v, "a")
+		t.Assert(ok, true)
 		t.Assert(array1.Len(), 4)
 		t.Assert(array1.Contains("a"), false)
 	})
@@ -111,8 +133,9 @@ func TestSortedStrArray_PopRight(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []string{"e", "a", "d", "c", "b"}
 		array1 := garray.NewSortedStrArrayFrom(a1)
-		s1 := array1.PopRight()
-		t.Assert(s1, "e")
+		v, ok := array1.PopRight()
+		t.Assert(v, "e")
+		t.Assert(ok, ok)
 		t.Assert(array1.Len(), 4)
 		t.Assert(array1.Contains("e"), false)
 	})
@@ -122,7 +145,8 @@ func TestSortedStrArray_PopRand(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []string{"e", "a", "d", "c", "b"}
 		array1 := garray.NewSortedStrArrayFrom(a1)
-		s1 := array1.PopRand()
+		s1, ok := array1.PopRand()
+		t.Assert(ok, true)
 		t.AssertIN(s1, []string{"e", "a", "d", "c", "b"})
 		t.Assert(array1.Len(), 4)
 		t.Assert(array1.Contains(s1), false)
@@ -147,11 +171,19 @@ func TestSortedStrArray_PopRands(t *testing.T) {
 func TestSortedStrArray_Empty(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.NewSortedStrArray()
-		t.Assert(array.PopLeft(), nil)
+		v, ok := array.PopLeft()
+		t.Assert(v, "")
+		t.Assert(ok, false)
 		t.Assert(array.PopLefts(10), nil)
-		t.Assert(array.PopRight(), nil)
+
+		v, ok = array.PopRight()
+		t.Assert(v, "")
+		t.Assert(ok, false)
 		t.Assert(array.PopRights(10), nil)
-		t.Assert(array.PopRand(), nil)
+
+		v, ok = array.PopRand()
+		t.Assert(v, "")
+		t.Assert(ok, false)
 		t.Assert(array.PopRands(10), nil)
 	})
 }
@@ -283,7 +315,9 @@ func TestSortedStrArray_Rand(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []string{"e", "a", "d"}
 		array1 := garray.NewSortedStrArrayFrom(a1)
-		t.AssertIN(array1.Rand(), []string{"e", "a", "d"})
+		v, ok := array1.Rand()
+		t.AssertIN(v, []string{"e", "a", "d"})
+		t.Assert(ok, true)
 	})
 }
 
@@ -297,8 +331,7 @@ func TestSortedStrArray_Rands(t *testing.T) {
 		t.Assert(len(s1), 2)
 
 		s1 = array1.Rands(4)
-		t.AssertIN(s1, []string{"e", "a", "d"})
-		t.Assert(len(s1), 3)
+		t.Assert(len(s1), 4)
 	})
 }
 

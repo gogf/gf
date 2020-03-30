@@ -29,14 +29,31 @@ func Test_IntArray_Basic(t *testing.T) {
 		t.Assert(array.Slice(), expect)
 		t.Assert(array.Interfaces(), expect)
 		array.Set(0, 100)
-		t.Assert(array.Get(0), 100)
-		t.Assert(array.Get(1), 1)
+
+		v, ok := array.Get(0)
+		t.Assert(v, 100)
+		t.Assert(ok, true)
+
+		v, ok = array.Get(1)
+		t.Assert(v, 1)
+		t.Assert(ok, true)
+
 		t.Assert(array.Search(100), 0)
 		t.Assert(array2.Search(100), -1)
 		t.Assert(array.Contains(100), true)
-		t.Assert(array.Remove(0), 100)
-		t.Assert(array.Remove(-1), 0)
-		t.Assert(array.Remove(100000), 0)
+
+		v, ok = array.Remove(0)
+		t.Assert(v, 100)
+		t.Assert(ok, true)
+
+		v, ok = array.Remove(-1)
+		t.Assert(v, 0)
+		t.Assert(ok, false)
+
+		v, ok = array.Remove(100000)
+		t.Assert(v, 0)
+		t.Assert(ok, false)
+
 		t.Assert(array.Contains(100), false)
 		array.Append(4)
 		t.Assert(array.Len(), 4)
@@ -81,10 +98,27 @@ func TestIntArray_PushAndPop(t *testing.T) {
 		expect := []int{0, 1, 2, 3}
 		array := garray.NewIntArrayFrom(expect)
 		t.Assert(array.Slice(), expect)
-		t.Assert(array.PopLeft(), 0)
-		t.Assert(array.PopRight(), 3)
-		t.AssertIN(array.PopRand(), []int{1, 2})
-		t.AssertIN(array.PopRand(), []int{1, 2})
+
+		v, ok := array.PopLeft()
+		t.Assert(v, 0)
+		t.Assert(ok, true)
+
+		v, ok = array.PopRight()
+		t.Assert(v, 3)
+		t.Assert(ok, true)
+
+		v, ok = array.PopRand()
+		t.AssertIN(v, []int{1, 2})
+		t.Assert(ok, true)
+
+		v, ok = array.PopRand()
+		t.AssertIN(v, []int{1, 2})
+		t.Assert(ok, true)
+
+		v, ok = array.PopRand()
+		t.Assert(v, 0)
+		t.Assert(ok, false)
+
 		t.Assert(array.Len(), 0)
 		array.PushLeft(1).PushRight(2)
 		t.Assert(array.Slice(), []int{1, 2})
@@ -94,11 +128,23 @@ func TestIntArray_PushAndPop(t *testing.T) {
 func TestIntArray_PopLeftsAndPopRights(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.NewIntArray()
-		t.Assert(array.PopLeft(), 0)
+
+		v, ok := array.PopLeft()
+		t.Assert(v, 0)
+		t.Assert(ok, false)
+
 		t.Assert(array.PopLefts(10), nil)
-		t.Assert(array.PopRight(), 0)
+
+		v, ok = array.PopRight()
+		t.Assert(v, 0)
+		t.Assert(ok, false)
+
 		t.Assert(array.PopRights(10), nil)
-		t.Assert(array.PopRand(), 0)
+
+		v, ok = array.PopRand()
+		t.Assert(v, 0)
+		t.Assert(ok, false)
+
 		t.Assert(array.PopRands(10), nil)
 	})
 
@@ -173,9 +219,14 @@ func TestIntArray_Fill(t *testing.T) {
 		a2 := []int{0}
 		array1 := garray.NewIntArrayFrom(a1)
 		array2 := garray.NewIntArrayFrom(a2)
-		t.Assert(array1.Fill(1, 2, 100).Slice(), []int{0, 100, 100})
-		t.Assert(array2.Fill(0, 2, 100).Slice(), []int{100, 100})
-		t.Assert(array2.Fill(-1, 2, 100).Slice(), []int{100, 100})
+		t.Assert(array1.Fill(1, 2, 100), nil)
+		t.Assert(array1.Slice(), []int{0, 100, 100})
+
+		t.Assert(array2.Fill(0, 2, 100), nil)
+		t.Assert(array2.Slice(), []int{100, 100})
+
+		t.AssertNE(array2.Fill(-1, 2, 100), nil)
+		t.Assert(array2.Slice(), []int{100, 100})
 	})
 }
 
@@ -259,9 +310,12 @@ func TestIntArray_Rand(t *testing.T) {
 		a1 := []int{0, 1, 2, 3, 4, 5, 6}
 		array1 := garray.NewIntArrayFrom(a1)
 		t.Assert(len(array1.Rands(2)), 2)
-		t.Assert(len(array1.Rands(10)), 7)
+		t.Assert(len(array1.Rands(10)), 10)
 		t.AssertIN(array1.Rands(1)[0], a1)
-		t.AssertIN(array1.Rand(), a1)
+
+		v, ok := array1.Rand()
+		t.AssertIN(v, a1)
+		t.Assert(ok, true)
 	})
 }
 
@@ -358,7 +412,9 @@ func TestArray_Get(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []int{1, 2, 3, 5}
 		array1 := garray.NewIntArrayFrom(a1)
-		t.Assert(array1.Get(2), 3)
+		v, ok := array1.Get(2)
+		t.Assert(v, 3)
+		t.Assert(ok, true)
 		t.Assert(array1.Len(), 4)
 	})
 }
@@ -395,16 +451,19 @@ func TestIntArray_Remove(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []int{1, 2, 3, 5, 4}
 		array1 := garray.NewIntArrayFrom(a1)
-		n1 := array1.Remove(1)
-		t.Assert(n1, 2)
+		v, ok := array1.Remove(1)
+		t.Assert(v, 2)
+		t.Assert(ok, true)
 		t.Assert(array1.Len(), 4)
 
-		n1 = array1.Remove(0)
-		t.Assert(n1, 1)
+		v, ok = array1.Remove(0)
+		t.Assert(v, 1)
+		t.Assert(ok, true)
 		t.Assert(array1.Len(), 3)
 
-		n1 = array1.Remove(2)
-		t.Assert(n1, 4)
+		v, ok = array1.Remove(2)
+		t.Assert(v, 4)
+		t.Assert(ok, true)
 		t.Assert(array1.Len(), 2)
 	})
 }

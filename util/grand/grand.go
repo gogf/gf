@@ -105,6 +105,7 @@ func Symbols(n int) string {
 }
 
 // Perm returns, as a slice of n int numbers, a pseudo-random permutation of the integers [0,n).
+// TODO performance improving for large slice producing.
 func Perm(n int) []int {
 	m := make([]int, n)
 	for i := 0; i < n; i++ {
