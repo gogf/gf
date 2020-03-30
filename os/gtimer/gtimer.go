@@ -11,7 +11,8 @@
 // between gtimer and gcron are as follows:
 // 1. package gcron is implemented based on package gtimer.
 // 2. gtimer is designed for high performance and for millions of timing jobs.
-// 3. gcron supports configuration pattern grammar like linux crontab, which is more manually readable.
+// 3. gcron supports configuration pattern grammar like linux crontab, which is more manually
+//    readable.
 // 4. gtimer's benchmark OP is measured in nanoseconds, and gcron's benchmark OP is measured
 //    in microseconds.
 //

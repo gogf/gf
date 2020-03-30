@@ -133,119 +133,125 @@ func (a *SortedIntArray) Add(values ...int) *SortedIntArray {
 	return a
 }
 
-// Get returns the value of the specified index,
-// the caller should notice the boundary of the array.
-func (a *SortedIntArray) Get(index int) int {
+// Get returns the value by the specified index.
+// If the given <index> is out of range of the array, the <found> is false.
+func (a *SortedIntArray) Get(index int) (value int, found bool) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	value := a.array[index]
-	return value
+	if index < 0 || index >= len(a.array) {
+		return 0, false
+	}
+	return a.array[index], true
 }
 
 // Remove removes an item by index.
-// Note that if the index is out of range of array, it returns 0.
-func (a *SortedIntArray) Remove(index int) int {
+// If the given <index> is out of range of the array, the <found> is false.
+func (a *SortedIntArray) Remove(index int) (value int, found bool) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	return a.doRemoveWithoutLock(index)
+}
+
+// doRemoveWithoutLock removes an item by index without lock.
+func (a *SortedIntArray) doRemoveWithoutLock(index int) (value int, found bool) {
 	if index < 0 || index >= len(a.array) {
-		return 0
+		return 0, false
 	}
 	// Determine array boundaries when deleting to improve deletion efficiency.
 	if index == 0 {
 		value := a.array[0]
 		a.array = a.array[1:]
-		return value
+		return value, true
 	} else if index == len(a.array)-1 {
 		value := a.array[index]
 		a.array = a.array[:index]
-		return value
+		return value, true
 	}
 	// If it is a non-boundary delete,
 	// it will involve the creation of an array,
 	// then the deletion is less efficient.
-	value := a.array[index]
+	value = a.array[index]
 	a.array = append(a.array[:index], a.array[index+1:]...)
-	return value
+	return value, true
 }
 
 // RemoveValue removes an item by value.
 // It returns true if value is found in the array, or else false if not found.
 func (a *SortedIntArray) RemoveValue(value int) bool {
 	if i := a.Search(value); i != -1 {
-		a.Remove(i)
-		return true
+		_, found := a.Remove(i)
+		return found
 	}
 	return false
 }
 
 // PopLeft pops and returns an item from the beginning of array.
-// Note that if the array is empty, it returns 0.
-// Be very careful when use this function in loop statement.
-// You can use IsEmpty() of Len() == 0 checks if this array empty.
-func (a *SortedIntArray) PopLeft() int {
+// Note that if the array is empty, the <found> is false.
+func (a *SortedIntArray) PopLeft() (value int, found bool) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if len(a.array) == 0 {
-		return 0
+		return 0, false
 	}
-	value := a.array[0]
+	value = a.array[0]
 	a.array = a.array[1:]
-	return value
+	return value, true
 }
 
 // PopRight pops and returns an item from the end of array.
-// Note that if the array is empty, it returns 0.
-// Be very careful when use this function in loop statement.
-// You can use IsEmpty() of Len() == 0 checks if this array empty.
-func (a *SortedIntArray) PopRight() int {
+// Note that if the array is empty, the <found> is false.
+func (a *SortedIntArray) PopRight() (value int, found bool) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	index := len(a.array) - 1
 	if index <= 0 {
-		return 0
+		return 0, false
 	}
-	value := a.array[index]
+	value = a.array[index]
 	a.array = a.array[:index]
-	return value
+	return value, true
 }
 
 // PopRand randomly pops and return an item out of array.
-// Note that if the array is empty, it returns 0.
-// Be very careful when use this function in loop statement.
-// You can use IsEmpty() of Len() == 0 checks if this array empty.
-func (a *SortedIntArray) PopRand() int {
-	return a.Remove(grand.Intn(len(a.array)))
+// Note that if the array is empty, the <found> is false.
+func (a *SortedIntArray) PopRand() (value int, found bool) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	return a.doRemoveWithoutLock(grand.Intn(len(a.array)))
 }
 
 // PopRands randomly pops and returns <size> items out of array.
+// If the given <size> is greater than size of the array, it returns all elements of the array.
+// Note that if given <size> <= 0 or the array is empty, it returns nil.
 func (a *SortedIntArray) PopRands(size int) []int {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	if size > len(a.array) {
-		size = len(a.array)
-	}
-	if size == 0 {
+	if size <= 0 || len(a.array) == 0 {
 		return nil
+	}
+	if size >= len(a.array) {
+		size = len(a.array)
 	}
 	array := make([]int, size)
 	for i := 0; i < size; i++ {
-		index := grand.Intn(len(a.array))
-		array[i] = a.array[index]
-		a.array = append(a.array[:index], a.array[index+1:]...)
+		array[i], _ = a.doRemoveWithoutLock(grand.Intn(len(a.array)))
 	}
 	return array
 }
 
 // PopLefts pops and returns <size> items from the beginning of array.
+// If the given <size> is greater than size of the array, it returns all elements of the array.
+// Note that if given <size> <= 0 or the array is empty, it returns nil.
 func (a *SortedIntArray) PopLefts(size int) []int {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	length := len(a.array)
-	if size > length {
-		size = length
-	}
-	if size == 0 {
+	if size <= 0 || len(a.array) == 0 {
 		return nil
+	}
+	if size >= len(a.array) {
+		array := a.array
+		a.array = a.array[:0]
+		return array
 	}
 	value := a.array[0:size]
 	a.array = a.array[size:]
@@ -253,15 +259,19 @@ func (a *SortedIntArray) PopLefts(size int) []int {
 }
 
 // PopRights pops and returns <size> items from the end of array.
+// If the given <size> is greater than size of the array, it returns all elements of the array.
+// Note that if given <size> <= 0 or the array is empty, it returns nil.
 func (a *SortedIntArray) PopRights(size int) []int {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	if len(a.array) == 0 {
+	if size <= 0 || len(a.array) == 0 {
 		return nil
 	}
 	index := len(a.array) - size
-	if index < 0 {
-		index = 0
+	if index <= 0 {
+		array := a.array
+		a.array = a.array[:0]
+		return array
 	}
 	value := a.array[index:]
 	a.array = a.array[:index]
@@ -555,27 +565,27 @@ func (a *SortedIntArray) Chunk(size int) [][]int {
 }
 
 // Rand randomly returns one item from array(no deleting).
-func (a *SortedIntArray) Rand() int {
+func (a *SortedIntArray) Rand() (value int, found bool) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	return a.array[grand.Intn(len(a.array))]
+	if len(a.array) == 0 {
+		return 0, false
+	}
+	return a.array[grand.Intn(len(a.array))], true
 }
 
 // Rands randomly returns <size> items from array(no deleting).
 func (a *SortedIntArray) Rands(size int) []int {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	if size > len(a.array) {
-		size = len(a.array)
+	if size <= 0 || len(a.array) == 0 {
+		return nil
 	}
-	n := make([]int, size)
-	for i, v := range grand.Perm(len(a.array)) {
-		n[i] = a.array[v]
-		if i == size-1 {
-			break
-		}
+	array := make([]int, size)
+	for i := 0; i < size; i++ {
+		array[i] = a.array[grand.Intn(len(a.array))]
 	}
-	return n
+	return array
 }
 
 // Join joins array elements with a string <glue>.

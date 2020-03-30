@@ -61,7 +61,7 @@ func Example_basic() {
 	// Output:
 	// 10
 	// [0 1 2 3 4 5 6 7 8 9]
-	// 6
+	// 6 true
 	// true
 	// false
 	// [0 1 2 3 4 5 6 7 8 9 10 11]
@@ -95,9 +95,9 @@ func Example_popItem() {
 	fmt.Println(array.PopRights(2))
 
 	// Output:
-	// 1
+	// 1 true
 	// [2 3]
-	// 9
+	// 9 true
 	// [7 8]
 }
 

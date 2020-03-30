@@ -68,9 +68,17 @@ func TestSortedIntArray_Get(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []int{1, 3, 5, 0}
 		array1 := garray.NewSortedIntArrayFrom(a1)
-		t.Assert(array1.Get(0), 0)
-		t.Assert(array1.Get(1), 1)
-		t.Assert(array1.Get(3), 5)
+		v, ok := array1.Get(0)
+		t.Assert(v, 0)
+		t.Assert(ok, true)
+
+		v, ok = array1.Get(1)
+		t.Assert(v, 1)
+		t.Assert(ok, true)
+
+		v, ok = array1.Get(3)
+		t.Assert(v, 5)
+		t.Assert(ok, true)
 	})
 }
 
@@ -79,26 +87,39 @@ func TestSortedIntArray_Remove(t *testing.T) {
 		a1 := []int{1, 3, 5, 0}
 		array1 := garray.NewSortedIntArrayFrom(a1)
 
-		t.Assert(array1.Remove(-1), 0)
-		t.Assert(array1.Remove(100000), 0)
+		v, ok := array1.Remove(-1)
+		t.Assert(v, 0)
+		t.Assert(ok, false)
 
-		i1 := array1.Remove(2)
-		t.Assert(i1, 3)
+		v, ok = array1.Remove(-100000)
+		t.Assert(v, 0)
+		t.Assert(ok, false)
+
+		v, ok = array1.Remove(2)
+		t.Assert(v, 3)
+		t.Assert(ok, true)
+
 		t.Assert(array1.Search(5), 2)
 
-		// 再次删除剩下的数组中的第一个
-		i2 := array1.Remove(0)
-		t.Assert(i2, 0)
+		v, ok = array1.Remove(0)
+		t.Assert(v, 0)
+		t.Assert(ok, true)
+
 		t.Assert(array1.Search(5), 1)
 
 		a2 := []int{1, 3, 4}
 		array2 := garray.NewSortedIntArrayFrom(a2)
-		i3 := array2.Remove(1)
+
+		v, ok = array2.Remove(1)
+		t.Assert(v, 3)
+		t.Assert(ok, true)
 		t.Assert(array2.Search(1), 0)
-		t.Assert(i3, 3)
-		i3 = array2.Remove(1)
+
+		v, ok = array2.Remove(1)
+		t.Assert(v, 4)
+		t.Assert(ok, true)
+
 		t.Assert(array2.Search(4), -1)
-		t.Assert(i3, 4)
 	})
 }
 
@@ -106,8 +127,9 @@ func TestSortedIntArray_PopLeft(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []int{1, 3, 5, 2}
 		array1 := garray.NewSortedIntArrayFrom(a1)
-		i1 := array1.PopLeft()
-		t.Assert(i1, 1)
+		v, ok := array1.PopLeft()
+		t.Assert(v, 1)
+		t.Assert(ok, true)
 		t.Assert(array1.Len(), 3)
 		t.Assert(array1.Search(1), -1)
 	})
@@ -117,8 +139,9 @@ func TestSortedIntArray_PopRight(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []int{1, 3, 5, 2}
 		array1 := garray.NewSortedIntArrayFrom(a1)
-		i1 := array1.PopRight()
-		t.Assert(i1, 5)
+		v, ok := array1.PopRight()
+		t.Assert(v, 5)
+		t.Assert(ok, true)
 		t.Assert(array1.Len(), 3)
 		t.Assert(array1.Search(5), -1)
 	})
@@ -128,7 +151,8 @@ func TestSortedIntArray_PopRand(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []int{1, 3, 5, 2}
 		array1 := garray.NewSortedIntArrayFrom(a1)
-		i1 := array1.PopRand()
+		i1, ok := array1.PopRand()
+		t.Assert(ok, true)
 		t.Assert(array1.Len(), 3)
 		t.Assert(array1.Search(i1), -1)
 		t.AssertIN(i1, []int{1, 3, 5, 2})
@@ -155,11 +179,19 @@ func TestSortedIntArray_PopRands(t *testing.T) {
 func TestSortedIntArray_Empty(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.NewSortedIntArray()
-		t.Assert(array.PopLeft(), 0)
+		v, ok := array.PopLeft()
+		t.Assert(v, 0)
+		t.Assert(ok, false)
 		t.Assert(array.PopLefts(10), nil)
-		t.Assert(array.PopRight(), 0)
+
+		v, ok = array.PopRight()
+		t.Assert(v, 0)
+		t.Assert(ok, false)
 		t.Assert(array.PopRights(10), nil)
-		t.Assert(array.PopRand(), 0)
+
+		v, ok = array.PopRand()
+		t.Assert(v, 0)
+		t.Assert(ok, false)
 		t.Assert(array.PopRands(10), nil)
 	})
 }
@@ -340,8 +372,9 @@ func TestSortedIntArray_Rand(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []int{1, 2, 3, 4, 5}
 		array1 := garray.NewSortedIntArrayFrom(a1)
-		ns1 := array1.Rand() //按每几个元素切成一个数组
+		ns1, ok := array1.Rand()
 		t.AssertIN(ns1, a1)
+		t.Assert(ok, true)
 	})
 }
 
@@ -349,13 +382,12 @@ func TestSortedIntArray_Rands(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []int{1, 2, 3, 4, 5}
 		array1 := garray.NewSortedIntArrayFrom(a1)
-		ns1 := array1.Rands(2) //按每几个元素切成一个数组
+		ns1 := array1.Rands(2)
 		t.AssertIN(ns1, a1)
 		t.Assert(len(ns1), 2)
 
-		ns2 := array1.Rands(6) //按每几个元素切成一个数组
-		t.AssertIN(ns2, a1)
-		t.Assert(len(ns2), 5)
+		ns2 := array1.Rands(6)
+		t.Assert(len(ns2), 6)
 	})
 }
 

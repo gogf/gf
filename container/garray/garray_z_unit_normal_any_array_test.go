@@ -28,17 +28,38 @@ func Test_Array_Basic(t *testing.T) {
 		t.Assert(array.Slice(), expect)
 		t.Assert(array.Interfaces(), expect)
 		array.Set(0, 100)
-		t.Assert(array.Get(0), 100)
-		t.Assert(array.Get(1), 1)
+
+		v, ok := array.Get(0)
+		t.Assert(v, 100)
+		t.Assert(ok, true)
+
+		v, ok = array.Get(1)
+		t.Assert(v, 1)
+		t.Assert(ok, true)
+
 		t.Assert(array.Search(100), 0)
 		t.Assert(array3.Search(100), -1)
 		t.Assert(array.Contains(100), true)
-		t.Assert(array.Remove(0), 100)
-		t.Assert(array.Remove(-1), nil)
-		t.Assert(array.Remove(100000), nil)
 
-		t.Assert(array2.Remove(3), 3)
-		t.Assert(array2.Remove(1), 1)
+		v, ok = array.Remove(0)
+		t.Assert(v, 100)
+		t.Assert(ok, true)
+
+		v, ok = array.Remove(-1)
+		t.Assert(v, nil)
+		t.Assert(ok, false)
+
+		v, ok = array.Remove(100000)
+		t.Assert(v, nil)
+		t.Assert(ok, false)
+
+		v, ok = array2.Remove(3)
+		t.Assert(v, 3)
+		t.Assert(ok, true)
+
+		v, ok = array2.Remove(1)
+		t.Assert(v, 1)
+		t.Assert(ok, true)
 
 		t.Assert(array.Contains(100), false)
 		array.Append(4)
@@ -85,10 +106,23 @@ func TestArray_PushAndPop(t *testing.T) {
 		expect := []interface{}{0, 1, 2, 3}
 		array := garray.NewArrayFrom(expect)
 		t.Assert(array.Slice(), expect)
-		t.Assert(array.PopLeft(), 0)
-		t.Assert(array.PopRight(), 3)
-		t.AssertIN(array.PopRand(), []interface{}{1, 2})
-		t.AssertIN(array.PopRand(), []interface{}{1, 2})
+
+		v, ok := array.PopLeft()
+		t.Assert(v, 0)
+		t.Assert(ok, true)
+
+		v, ok = array.PopRight()
+		t.Assert(v, 3)
+		t.Assert(ok, true)
+
+		v, ok = array.PopRand()
+		t.AssertIN(v, []interface{}{1, 2})
+		t.Assert(ok, true)
+
+		v, ok = array.PopRand()
+		t.AssertIN(v, []interface{}{1, 2})
+		t.Assert(ok, true)
+
 		t.Assert(array.Len(), 0)
 		array.PushLeft(1).PushRight(2)
 		t.Assert(array.Slice(), []interface{}{1, 2})
@@ -106,11 +140,19 @@ func TestArray_PopRands(t *testing.T) {
 func TestArray_PopLeftsAndPopRights(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.New()
-		t.Assert(array.PopLeft(), nil)
+		v, ok := array.PopLeft()
+		t.Assert(v, nil)
+		t.Assert(ok, false)
 		t.Assert(array.PopLefts(10), nil)
-		t.Assert(array.PopRight(), nil)
+
+		v, ok = array.PopRight()
+		t.Assert(v, nil)
+		t.Assert(ok, false)
 		t.Assert(array.PopRights(10), nil)
-		t.Assert(array.PopRand(), nil)
+
+		v, ok = array.PopRand()
+		t.Assert(v, nil)
+		t.Assert(ok, false)
 		t.Assert(array.PopRands(10), nil)
 	})
 
@@ -185,9 +227,15 @@ func TestArray_Fill(t *testing.T) {
 		a2 := []interface{}{0}
 		array1 := garray.NewArrayFrom(a1)
 		array2 := garray.NewArrayFrom(a2, true)
-		t.Assert(array1.Fill(1, 2, 100).Slice(), []interface{}{0, 100, 100})
-		t.Assert(array2.Fill(0, 2, 100).Slice(), []interface{}{100, 100})
-		t.Assert(array2.Fill(-1, 2, 100).Slice(), []interface{}{100, 100})
+
+		t.Assert(array1.Fill(1, 2, 100), nil)
+		t.Assert(array1.Slice(), []interface{}{0, 100, 100})
+
+		t.Assert(array2.Fill(0, 2, 100), nil)
+		t.Assert(array2.Slice(), []interface{}{100, 100})
+
+		t.AssertNE(array2.Fill(-1, 2, 100), nil)
+		t.Assert(array2.Slice(), []interface{}{100, 100})
 	})
 }
 
@@ -263,14 +311,15 @@ func TestArray_Rand(t *testing.T) {
 		a1 := []interface{}{0, 1, 2, 3, 4, 5, 6}
 		array1 := garray.NewArrayFrom(a1)
 		t.Assert(len(array1.Rands(2)), 2)
-		t.Assert(len(array1.Rands(10)), 7)
+		t.Assert(len(array1.Rands(10)), 10)
 		t.AssertIN(array1.Rands(1)[0], a1)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
 		s1 := []interface{}{"a", "b", "c", "d"}
 		a1 := garray.NewArrayFrom(s1)
-		i1 := a1.Rand()
+		i1, ok := a1.Rand()
+		t.Assert(ok, true)
 		t.Assert(a1.Contains(i1), true)
 		t.Assert(a1.Len(), 4)
 	})

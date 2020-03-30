@@ -187,9 +187,9 @@ func (l *Logger) rotateChecksTimely() {
 		for _, array := range backupFilesMap {
 			diff := array.Len() - l.config.RotateBackupLimit
 			for i := 0; i < diff; i++ {
-				path := array.PopLeft().(string)
+				path, _ := array.PopLeft()
 				intlog.Printf(`remove exceeded backup limit file: %s`, path)
-				if err := gfile.Remove(path); err != nil {
+				if err := gfile.Remove(path.(string)); err != nil {
 					intlog.Print(err)
 				}
 			}
