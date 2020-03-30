@@ -17,7 +17,7 @@ import (
 )
 
 func Test_Session_Cookie(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/set", func(r *ghttp.Request) {
 		r.Session.Set(r.GetString("k"), r.GetString("v"))
@@ -64,7 +64,7 @@ func Test_Session_Cookie(t *testing.T) {
 }
 
 func Test_Session_Header(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/set", func(r *ghttp.Request) {
 		r.Session.Set(r.GetString("k"), r.GetString("v"))
@@ -115,7 +115,7 @@ func Test_Session_Header(t *testing.T) {
 
 func Test_Session_StorageFile(t *testing.T) {
 	sessionId := ""
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/set", func(r *ghttp.Request) {
 		r.Session.Set(r.GetString("k"), r.GetString("v"))

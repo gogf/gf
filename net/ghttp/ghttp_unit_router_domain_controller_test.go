@@ -43,7 +43,7 @@ func (c *DomainController) Info() {
 }
 
 func Test_Router_DomainController1(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.Domain("localhost, local").BindController("/", new(DomainController))
 	s.SetPort(p)
@@ -93,7 +93,7 @@ func Test_Router_DomainController1(t *testing.T) {
 }
 
 func Test_Router_DomainController2(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.Domain("localhost, local").BindController("/controller", new(DomainController), "Show, Info")
 	s.SetPort(p)
@@ -146,7 +146,7 @@ func Test_Router_DomainController2(t *testing.T) {
 }
 
 func Test_Router_DomainControllerMethod(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.Domain("localhost, local").BindControllerMethod("/controller-info", new(DomainController), "Info")
 	s.SetPort(p)

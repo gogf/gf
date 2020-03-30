@@ -71,7 +71,7 @@ func Handler(r *ghttp.Request) {
 }
 
 func Test_Router_GroupBasic1(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	obj := new(GroupObject)
 	ctl := new(GroupController)
@@ -118,7 +118,7 @@ func Test_Router_GroupBasic1(t *testing.T) {
 }
 
 func Test_Router_GroupBasic2(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	obj := new(GroupObject)
 	ctl := new(GroupController)
@@ -160,7 +160,7 @@ func Test_Router_GroupBasic2(t *testing.T) {
 }
 
 func Test_Router_GroupBuildInVar(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	obj := new(GroupObject)
 	ctl := new(GroupController)
@@ -192,7 +192,7 @@ func Test_Router_GroupBuildInVar(t *testing.T) {
 }
 
 func Test_Router_Group_Mthods(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	obj := new(GroupObject)
 	ctl := new(GroupController)

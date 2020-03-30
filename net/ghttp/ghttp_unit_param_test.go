@@ -23,7 +23,7 @@ func Test_Params_Basic(t *testing.T) {
 		Pass1 string `params:"password1"`
 		Pass2 string `params:"password2"`
 	}
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	// GET
 	s.BindHandler("/get", func(r *ghttp.Request) {
@@ -405,7 +405,7 @@ func Test_Params_Basic(t *testing.T) {
 }
 
 func Test_Params_SupportChars(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/form-value", func(r *ghttp.Request) {
 		r.Response.Write(r.GetQuery("test-value"))
@@ -430,7 +430,7 @@ func Test_Params_SupportChars(t *testing.T) {
 }
 
 func Test_Params_Priority(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/query", func(r *ghttp.Request) {
 		r.Response.Write(r.GetQuery("a"))

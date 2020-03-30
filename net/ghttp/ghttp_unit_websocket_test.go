@@ -19,7 +19,7 @@ import (
 )
 
 func Test_WebSocket(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/ws", func(r *ghttp.Request) {
 		ws, err := r.WebSocket()

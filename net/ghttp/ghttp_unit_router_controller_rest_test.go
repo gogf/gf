@@ -52,7 +52,7 @@ func (c *ControllerRest) Head() {
 
 // 控制器注册测试
 func Test_Router_ControllerRest(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindControllerRest("/", new(ControllerRest))
 	s.BindControllerRest("/{.struct}/{.method}", new(ControllerRest))

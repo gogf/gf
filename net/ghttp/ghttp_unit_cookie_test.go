@@ -17,7 +17,7 @@ import (
 )
 
 func Test_Cookie(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/set", func(r *ghttp.Request) {
 		r.Cookie.Set(r.GetString("k"), r.GetString("v"))

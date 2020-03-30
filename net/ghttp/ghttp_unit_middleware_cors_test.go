@@ -16,7 +16,7 @@ import (
 )
 
 func Test_Middleware_CORS1(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.Group("/api.v2", func(group *ghttp.RouterGroup) {
 		group.Middleware(MiddlewareCORS)
@@ -79,7 +79,7 @@ func Test_Middleware_CORS1(t *testing.T) {
 }
 
 func Test_Middleware_CORS2(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.Group("/api.v2", func(group *ghttp.RouterGroup) {
 		group.Middleware(MiddlewareCORS)

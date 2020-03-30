@@ -17,7 +17,7 @@ import (
 )
 
 func Test_GetUrl(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/url", func(r *ghttp.Request) {
 		r.Response.Write(r.GetUrl())

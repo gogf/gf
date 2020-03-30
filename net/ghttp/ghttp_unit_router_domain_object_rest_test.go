@@ -55,7 +55,7 @@ func (o *DomainObjectRest) Head(r *ghttp.Request) {
 }
 
 func Test_Router_DomainObjectRest(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	d := s.Domain("localhost, local")
 	d.BindObjectRest("/", new(DomainObjectRest))

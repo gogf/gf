@@ -17,7 +17,7 @@ import (
 )
 
 func Test_Context(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(func(r *ghttp.Request) {

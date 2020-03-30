@@ -20,7 +20,7 @@ import (
 
 func TestServer_EnablePProf(t *testing.T) {
 	C(t, func(t *T) {
-		p := ports.PopRand()
+		p, _ := ports.PopRand()
 		s := g.Server(p)
 		s.EnablePProf("/pprof")
 		s.SetDumpRouterMap(false)
