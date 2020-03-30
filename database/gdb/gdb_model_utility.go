@@ -8,9 +8,11 @@ package gdb
 
 import (
 	"fmt"
-	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/container/gset"
+	"github.com/gogf/gf/internal/empty"
+	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gstr"
+	"time"
 )
 
 // getModel creates and returns a cloned model of current model if <safe> is true, or else it returns
@@ -45,9 +47,25 @@ func (m *Model) doFilterDataMapForInsertOrUpdate(data Map, allowOmitEmpty bool) 
 	}
 	// Remove key-value pairs of which the value is empty.
 	if allowOmitEmpty && m.option&OPTION_OMITEMPTY > 0 {
-		m := gmap.NewStrAnyMapFrom(data)
-		m.FilterEmpty()
-		data = m.Map()
+		tempMap := make(Map, len(data))
+		for k, v := range data {
+			if empty.IsEmpty(v) {
+				continue
+			}
+			// Special type filtering.
+			switch r := v.(type) {
+			case time.Time:
+				if r.IsZero() {
+					continue
+				}
+			case gtime.Time:
+				if r.IsZero() {
+					continue
+				}
+			}
+			tempMap[k] = v
+		}
+		data = tempMap
 	}
 
 	if len(m.fields) > 0 && m.fields != "*" {
