@@ -19,6 +19,7 @@ import (
 	"github.com/gogf/gf/util/grand"
 )
 
+// SortedStrArray is a golang sorted string array with rich features.
 // It's using increasing order in default.
 type SortedStrArray struct {
 	mu         *rwmutex.RWMutex

@@ -216,8 +216,8 @@ func Test_Router_Group_Mthods(t *testing.T) {
 }
 
 func Test_Router_Group_MultiServer(t *testing.T) {
-	p1 := ports.PopRand()
-	p2 := ports.PopRand()
+	p1, _ := ports.PopRand()
+	p2, _ := ports.PopRand()
 	s1 := g.Server(p1)
 	s2 := g.Server(p2)
 	s1.Group("/", func(group *ghttp.RouterGroup) {

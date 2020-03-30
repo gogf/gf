@@ -19,6 +19,7 @@ import (
 	"github.com/gogf/gf/util/grand"
 )
 
+// SortedIntArray is a golang sorted int array with rich features.
 // It's using increasing order in default.
 type SortedIntArray struct {
 	mu         *rwmutex.RWMutex
