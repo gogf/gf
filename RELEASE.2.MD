@@ -1,12 +1,14 @@
-# `v1.12.0` (2020-03-30)
+# `v1.12.1` (2020-03-31)
 
-大家好啊！久等了！
+大家好啊！久等啦！
 
-由于自从上次版本的发布以来，越来越多小伙伴加入了`GF`的大家庭，并提供了大量不错的建议和反馈，这次版本对其中大部分反馈进行了处理，包括大部分改进工作和部分新特性，因此这次的版本发布时隔了两个多月。同时，这次版本也对框架大部分模块的示例、注释和单元测试用例进行了完善，`GF`非常注重代码质量以及功能稳定性，目前单元测试用例数量约为`1991`例，代码覆盖率为`71%`，覆盖了所有模块的绝大部分主要功能。
+由于自从上次版本的发布以来，越来越多小伙伴加入了`GF`的大家庭，并提供了许多不错的建议和反馈，这次版本对其中大部分反馈进行了处理，包括大部分的改进建议和部分新特性，因此这次的版本发布时隔了两个多月。`GF`非常注重代码质量以及可持续维护性，这次版本也进一步对框架大部分模块的示例、注释和单元测试用例进行了完善，目前单元测试用例数量约为`1991`例，代码覆盖率为`71%`，覆盖了所有模块的绝大部分主要功能。
 
-`GF`框架提供了比较常用、高质量的基础开发模块，轻量级、模块化、高性能，推荐大家阅读框架源码了解更多细节。本次发布有个别的不兼容升级，一般批量替换即可，以下change log比较完善，请仔细阅读。
+`GF`框架提供了比较常用、高质量的基础开发模块，轻量级、模块化、高性能，推荐大家阅读框架源码了解更多细节。本次发布有个别的不兼容升级，往往批量替换即可，以下`change log`比较完善，建议升级前仔细阅读。
 
-感谢大家支持！Enjoy it！
+本次发布即意味下一版本开发计划的开启，欢迎更多小伙伴参与开源贡献：https://github.com/gogf/gf/projects/8
+
+感谢大家支持！Enjoy your `GF`！
 
 
 # GoFrame
@@ -24,38 +26,19 @@
 * 更适合企业及团队使用；
 
 ## 地址
-- **主库**：https://github.com/gogf/gf 
-- **码云**：https://gitee.com/johng/gf 
-
-## 文档
-
-- 开发文档：https://goframe.org
-- 接口文档：https://godoc.org/github.com/gogf/gf
+- 官网：https://goframe.org
+- 主库：https://github.com/gogf/gf 
+- 码云：https://gitee.com/johng/gf 
 
 # Change Log
 
 从`GF v1.12`版本开始，框架要求的最低`Golang`运行版本为`v1.13`，由于`Golang`新版本都是向后兼容的，因此推荐大家更新使用`Golang`新版本：https://golang.google.cn/dl/
 
-> 本次版本也新增了`Swagger`的工具及插件支持，下次单独发布。
+> 本次版本也新增了`Swagger`的工具及插件支持，另行独立发布。
 
 ## `tool chain`
 1. `gen model`命令新增对`pgsql/mssql/sqlite/oracle`的模型生成支持。
 1. `gen model`命令生成模型新增公开包变量`Columns`用于获得表的字段名称。
-
-## `container`
-1. 所有容器对象新增`UnmarshalValue(interface{}) error`接口方法实现，用于`gconv`转换时根据任意类型变量创建/设置对象内容，`GF`框架的所有容器对象均实现了该接口。
-
-1. `garray`
-    - 新增`RemoveValue`方法，用于根据数值检索并删除元素项。
-    - 新增`FilterNil`方法，用于遍历并删除数组中的`nil`元素项。
-    - 新增`FilterEmpty`方法，用于遍历并删除数组中的空值元素项，空值包括：`0, nil, false, "", len(slice/map/chan) == 0`。
-    - 完善单元测试。
-
-1. `gpool`
-    - 调整缓存池过期时间参数类型，旧版本为`int`类型表示毫秒，新版本为`time.Duration`类型使得时间控制更灵活。
-    - 内部代码优化，性能改进。
-    - 完善单元测试。
-    - 完善注释。
 
 ## `net`
 1. `ghttp`
@@ -95,6 +78,7 @@
         - https://goframe.org/database/gdb/chaining/select
         - https://goframe.org/database/gdb/chaining/update-delete
     - 查询结果对象`Result`新增`Array`方法，用于获得指定字段的数值，构造成数组返回：https://goframe.org/database/gdb/result
+    - 改进`OmitEmpty`方法对`Data`输入参数的过滤，当给定的`Data`参数为空时间对象时，将会被过滤。
     - 增加默认的数据库连接池参数：`MaxIdleConns=10`。
     - 其他一些改进。
     - 完善单元测试。
@@ -102,6 +86,24 @@
 1. `gredis`
     - 增加/修改默认的数据库连接池参数：`MaxIdle=10`, `IdleTimeout=10s`, `MaxConnLifetime=30s`, `Wait=true`。
     - 完善单元测试。
+
+## `container`
+1. 所有容器对象新增`UnmarshalValue(interface{}) error`接口方法实现，用于`gconv`转换时根据任意类型变量创建/设置对象内容，`GF`框架的所有容器对象均实现了该接口。
+
+1. `garray`
+    - 新增`RemoveValue`方法，用于根据数值检索并删除元素项。
+    - 新增`FilterNil`方法，用于遍历并删除数组中的`nil`元素项。
+    - 新增`FilterEmpty`方法，用于遍历并删除数组中的空值元素项，空值包括：`0, nil, false, "", len(slice/map/chan) == 0`。
+    - 改进`Set/Fill/InsertBefore/InsertAfter`方法严谨性，将原有的链式操作返回值对象修改为`error`返回值。
+    - 改进`Get/Remove/PopRand/PopLeft/PopRight/Rand`方法严谨性，增加`found`的`bool`返回值，标识当前方法是否有数据返回，当空数组或者操作越界时`found`返回值为`false`。
+    - 改变`Rands`方法原有逻辑，保证按照给定大小返回随机数组。
+    - 完善单元测试。
+
+1. `gpool`
+    - 调整缓存池过期时间参数类型，旧版本为`int`类型表示毫秒，新版本为`time.Duration`类型使得时间控制更灵活。
+    - 内部代码优化，性能改进。
+    - 完善单元测试。
+    - 完善注释。
 
 ## `os`
 1. `glog`
@@ -210,6 +212,8 @@
 1. 修复`gfile.MTimeMillisecond`方法返回错误的文件修改毫秒时间戳。
 1. 修复`gconv.Int64`对负数转换的支持。
 1. 其他一些修复。
+1. 详见：https://github.com/gogf/gf/issues?q=label%3Abug
+
 
 
 # `v1.11.2` (2020-01-14)
