@@ -186,6 +186,10 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 	// Custom header.
 	if len(c.header) > 0 {
 		for k, v := range c.header {
+			// Set host by req.Host.
+			if strings.ToLower(k) == "host" {
+				req.Host = v
+			}
 			req.Header.Set(k, v)
 		}
 	}
