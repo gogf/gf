@@ -186,12 +186,19 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 	// Custom header.
 	if len(c.header) > 0 {
 		for k, v := range c.header {
-			// Set host by req.Host.
-			if strings.ToLower(k) == "host" {
-				req.Host = v
-			}
 			req.Header.Set(k, v)
 		}
+	}
+	// For server requests Host specifies the host on which the
+	// URL is sought. Per RFC 2616, this is either the value of
+	// the "Host" header or the host name given in the URL itself.
+	// It may be of the form "host:port".
+	//
+	// For client requests Host optionally overrides the Host
+	// header to send. If empty, the Request.Write method uses
+	// the value of URL.Host.
+	if host := req.Header.Get("Host"); host != "" {
+		req.Host = host
 	}
 	// Custom Cookie.
 	if len(c.cookies) > 0 {
