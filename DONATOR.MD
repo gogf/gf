@@ -69,6 +69,8 @@ We currently accept donation by Alipay/WechatPay, please note your github/gitee 
 |1*1x|wechat|￥100.00| 
 |[ywanbing](https://github.com/ywanbing)|wechat|￥66.66| 
 |[侯哥](http://www.macnie.com)|wechat|￥10.00| 
+|如果🍋|alipay|￥100.00| 错误的奶茶^_^
+|蔡蔡|wechat|666.00| gf真强大，让项目省心
 
 
 <img src="https://goframe.org/images/donate.png"/>
