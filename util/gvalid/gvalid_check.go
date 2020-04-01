@@ -89,8 +89,8 @@ var (
 		"in":                   {},
 		"not-in":               {},
 		"regex":                {},
-		"field-in":             {},
-		"field-not-in":         {},
+		"in-field":             {},
+		"not-in-field":         {},
 	}
 	// 布尔Map
 	boolMap = map[string]struct{}{
@@ -285,7 +285,7 @@ func Check(value interface{}, rules string, msgs interface{}, params ...interfac
 				}
 			}
 
-		case "field-in":
+		case "in-field":
 			for _, v := range fieldMsg {
 				if strings.Compare(val, strings.TrimSpace(v)) == 0 {
 					match = true
@@ -293,7 +293,7 @@ func Check(value interface{}, rules string, msgs interface{}, params ...interfac
 				}
 			}
 
-		case "field-not-in":
+		case "not-in-field":
 			match = true
 			for _, v := range fieldMsg {
 				if strings.Compare(val, strings.TrimSpace(v)) == 0 {
