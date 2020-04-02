@@ -893,29 +893,25 @@ func Test_Regex2(t *testing.T) {
 }
 
 func Test_FieldIn(t *testing.T) {
-	rule := "field-in"
-	fieldMsg := []string{"123", "321", "121"}
-	msgs := map[string]interface{}{
-		"field-in": "不在其中",
-	}
-
-	if m := gvalid.Check("111", rule, msgs, fieldMsg); m == nil {
-		t.Log("效验成功")
-	} else {
-		t.Log(m)
-	}
+	gtest.C(t, func(t *gtest.T) {
+		rule := "in-field"
+		fieldMsg := []string{"123", "321", "121"}
+		msgs := map[string]interface{}{
+			"in-field": "不在其中",
+		}
+		t.AssertNE(gvalid.Check("111", rule, msgs, fieldMsg), nil)
+		t.Assert(gvalid.Check("111", rule, msgs, fieldMsg).String(), "不在其中")
+	})
 }
 
 func Test_FieldNotIn(t *testing.T) {
-	rule := "field-not-in"
-	fieldMsg := []string{"123", "321", "121"}
-	msgs := map[string]interface{}{
-		"field-not-in": "在其中",
-	}
-
-	if m := gvalid.Check("123", rule, msgs, fieldMsg); m == nil {
-		t.Log("效验成功")
-	} else {
-		t.Log(m)
-	}
+	gtest.C(t, func(t *gtest.T) {
+		rule := "not-in-field"
+		fieldMsg := []string{"123", "321", "121"}
+		msgs := map[string]interface{}{
+			"not-in-field": "在其中",
+		}
+		t.AssertNE(gvalid.Check("123", rule, msgs, fieldMsg), nil)
+		t.Assert(gvalid.Check("123", rule, msgs, fieldMsg).String(), "在其中")
+	})
 }

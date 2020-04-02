@@ -181,44 +181,41 @@ func Test_Sequence(t *testing.T) {
 	})
 }
 
-func Test_CheckMapWithFieldIn(t *testing.T) {
-	kvmap := map[string]interface{}{
-		"id": "121",
-	}
-	rules := []string{
-		"id@field-in",
-	}
-	msg := map[string]interface{}{
-		"id": "id效验错误",
-	}
-	fieldMsg := map[string][]string{
-		"id": {"111", "222", "333", "123"},
-	}
+func Test_CheckMapWithInField(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		kvmap := map[string]interface{}{
+			"id": "121",
+		}
+		rules := []string{
+			"id@in-field",
+		}
+		msg := map[string]interface{}{
+			"id": "id效验错误",
+		}
+		fieldMsg := map[string][]string{
+			"id": {"111", "222", "333", "123"},
+		}
 
-	if m := gvalid.CheckMap(kvmap, rules, msg, fieldMsg); m != nil {
-		t.Log(m)
-	} else {
-		t.Log("效验成功")
-	}
+		t.AssertNE(gvalid.CheckMap(kvmap, rules, msg, fieldMsg), nil)
+		t.Assert(gvalid.CheckMap(kvmap, rules, msg, fieldMsg).String(), "id效验错误")
+	})
 }
 
 func Test_CheckMapFieldWithNotIn(t *testing.T) {
-	kvmap := map[string]interface{}{
-		"id": "212",
-	}
-	rules := []string{
-		"id@field-not-in",
-	}
-	msg := map[string]interface{}{
-		"id": "id效验错误",
-	}
-	fieldMsg := map[string][]string{
-		"id": {"111", "222", "333", "123"},
-	}
+	gtest.C(t, func(t *gtest.T) {
+		kvmap := map[string]interface{}{
+			"id": "212",
+		}
+		rules := []string{
+			"id@not-in-field",
+		}
+		msg := map[string]interface{}{
+			"id": "id效验错误",
+		}
+		fieldMsg := map[string][]string{
+			"id": {"111", "222", "333", "123"},
+		}
+		t.Assert(gvalid.CheckMap(kvmap, rules, msg, fieldMsg), nil)
+	})
 
-	if m := gvalid.CheckMap(kvmap, rules, msg, fieldMsg); m != nil {
-		t.Log(m)
-	} else {
-		t.Log("效验成功")
-	}
 }
