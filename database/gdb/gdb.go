@@ -89,6 +89,8 @@ type DB interface {
 	SetSchema(schema string)
 	GetSchema() string
 	GetPrefix() string
+	SetDryRun(dryrun bool)
+	GetDryRun() bool
 	SetLogger(logger *glog.Logger)
 	GetLogger() *glog.Logger
 	SetMaxIdleConnCount(n int)
@@ -124,6 +126,7 @@ type Core struct {
 	debug            *gtype.Bool   // Enable debug mode for the database.
 	cache            *gcache.Cache // Cache manager.
 	schema           *gtype.String // Custom schema for this object.
+	dryrun           *gtype.Bool   // Dry run.
 	prefix           string        // Table prefix.
 	logger           *glog.Logger  // Logger.
 	maxIdleConnCount int           // Max idle connection count.
@@ -234,6 +237,7 @@ func New(name ...string) (db DB, err error) {
 				debug:            gtype.NewBool(),
 				cache:            gcache.New(),
 				schema:           gtype.NewString(),
+				dryrun:           gtype.NewBool(),
 				logger:           glog.New(),
 				prefix:           node.Prefix,
 				maxIdleConnCount: gDEFAULT_CONN_MAX_IDLE_COUNT,
@@ -400,6 +404,9 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 	}
 	if node.Debug {
 		c.DB.SetDebug(node.Debug)
+	}
+	if node.Debug {
+		c.DB.SetDryRun(node.DryRun)
 	}
 	return
 }

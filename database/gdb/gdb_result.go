@@ -38,10 +38,16 @@ func (r *SqlResult) RowsAffected() (int64, error) {
 	if r.affected > 0 {
 		return r.affected, nil
 	}
+	if r.result == nil {
+		return 0, nil
+	}
 	return r.result.RowsAffected()
 }
 
 // see sql.Result.LastInsertId
 func (r *SqlResult) LastInsertId() (int64, error) {
+	if r.result == nil {
+		return 0, nil
+	}
 	return r.result.LastInsertId()
 }

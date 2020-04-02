@@ -7,7 +7,10 @@
 // Package genv provides operations for environment variables of system.
 package genv
 
-import "os"
+import (
+	"github.com/gogf/gf/container/gvar"
+	"os"
+)
 import "strings"
 
 // All returns a copy of strings representing the environment,
@@ -35,6 +38,17 @@ func Get(key string, def ...string) string {
 		return def[0]
 	}
 	return v
+}
+
+// GetVar creates and returns a Var with the value of the environment variable
+// named by the <key>. It uses the given <def> if the variable does not exist
+// in the environment.
+func GetVar(key string, def ...interface{}) *gvar.Var {
+	v, ok := os.LookupEnv(key)
+	if !ok && len(def) > 0 {
+		return gvar.New(def[0])
+	}
+	return gvar.New(v)
 }
 
 // Set sets the value of the environment variable named by the <key>.
