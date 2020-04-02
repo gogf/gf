@@ -189,15 +189,9 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 			req.Header.Set(k, v)
 		}
 	}
-	// For server requests Host specifies the host on which the
-	// URL is sought. Per RFC 2616, this is either the value of
-	// the "Host" header or the host name given in the URL itself.
-	// It may be of the form "host:port".
-	//
-	// For client requests Host optionally overrides the Host
-	// header to send. If empty, the Request.Write method uses
-	// the value of URL.Host.
-	if host := req.Header.Get("Host"); host != "" {
+	// It's necessary set the req.Host if you want to custom the host value of the request.
+	// It uses the "Host" value of the header.
+	if host := req.Header.Get("Host"); host != "" && req.Host == "" {
 		req.Host = host
 	}
 	// Custom Cookie.

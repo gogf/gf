@@ -2123,3 +2123,38 @@ func Test_Model_OmitEmpty_Time(t *testing.T) {
 		t.Assert(n, 1)
 	})
 }
+
+func Test_Result_Chunk(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		r, err := db.Table(table).Order("id asc").All()
+		t.Assert(err, nil)
+		chunks := r.Chunk(3)
+		t.Assert(len(chunks), 4)
+		t.Assert(chunks[0][0]["id"].Int(), 1)
+		t.Assert(chunks[1][0]["id"].Int(), 4)
+		t.Assert(chunks[2][0]["id"].Int(), 7)
+		t.Assert(chunks[3][0]["id"].Int(), 10)
+	})
+}
+
+func Test_Model_DryRun(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	db.SetDryRun(true)
+	defer db.SetDryRun(false)
+
+	gtest.C(t, func(t *gtest.T) {
+		one, err := db.Table(table).FindOne(1)
+		t.Assert(err, nil)
+		t.Assert(one["id"], 1)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		r, err := db.Table(table).Data("passport", "port_1").WherePri(1).Update()
+		t.Assert(err, nil)
+		n, err := r.RowsAffected()
+		t.Assert(err, nil)
+		t.Assert(n, 0)
+	})
+}

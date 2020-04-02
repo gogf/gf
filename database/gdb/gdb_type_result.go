@@ -9,10 +9,32 @@ package gdb
 import (
 	"database/sql"
 	"fmt"
+	"math"
 	"reflect"
 
 	"github.com/gogf/gf/encoding/gparser"
 )
+
+// Chunk splits an Result into multiple Results,
+// the size of each array is determined by <size>.
+// The last chunk may contain less than size elements.
+func (r Result) Chunk(size int) []Result {
+	if size < 1 {
+		return nil
+	}
+	length := len(r)
+	chunks := int(math.Ceil(float64(length) / float64(size)))
+	var n []Result
+	for i, end := 0, 0; chunks > 0; chunks-- {
+		end = (i + 1) * size
+		if end > length {
+			end = length
+		}
+		n = append(n, r[i*size:end])
+		i++
+	}
+	return n
+}
 
 // Json converts <r> to JSON format content.
 func (r Result) Json() string {

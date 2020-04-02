@@ -99,7 +99,11 @@ func (c *Core) DoExec(link Link, sql string, args ...interface{}) (result sql.Re
 	sql, args = c.DB.HandleSqlBeforeCommit(link, sql, args)
 	if c.DB.GetDebug() {
 		mTime1 := gtime.TimestampMilli()
-		result, err = link.Exec(sql, args...)
+		if !c.DB.GetDryRun() {
+			result, err = link.Exec(sql, args...)
+		} else {
+			result = new(SqlResult)
+		}
 		mTime2 := gtime.TimestampMilli()
 		s := &Sql{
 			Sql:    sql,
@@ -111,7 +115,11 @@ func (c *Core) DoExec(link Link, sql string, args ...interface{}) (result sql.Re
 		}
 		c.writeSqlToLogger(s)
 	} else {
-		result, err = link.Exec(sql, args...)
+		if !c.DB.GetDryRun() {
+			result, err = link.Exec(sql, args...)
+		} else {
+			result = new(SqlResult)
+		}
 	}
 	return result, formatError(err, sql, args...)
 }

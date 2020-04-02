@@ -107,7 +107,7 @@ func (r *Response) WriteJson(content interface{}) error {
 	switch content.(type) {
 	case string, []byte:
 		r.Header().Set("Content-Type", "application/json")
-		r.Write(content)
+		r.Write(gconv.String(content))
 		return nil
 	}
 	// Else use json.Marshal function to encode the parameter.
@@ -139,7 +139,7 @@ func (r *Response) WriteJsonP(content interface{}) error {
 	switch content.(type) {
 	case string, []byte:
 		r.Header().Set("Content-Type", "application/json")
-		r.Write(content)
+		r.Write(gconv.String(content))
 		return nil
 	}
 	// Else use json.Marshal function to encode the parameter.
@@ -179,7 +179,7 @@ func (r *Response) WriteXml(content interface{}, rootTag ...string) error {
 	switch content.(type) {
 	case string, []byte:
 		r.Header().Set("Content-Type", "application/xml")
-		r.Write(content)
+		r.Write(gconv.String(content))
 		return nil
 	}
 	// Else use gparser.VarToXml function to encode the parameter.
