@@ -69,7 +69,7 @@ func (c *Core) Table(table string) *Model {
 		fields:     "*",
 		start:      -1,
 		offset:     -1,
-		safe:       false,
+		safe:       true,
 		option:     OPTION_ALLOWEMPTY,
 	}
 }
@@ -99,7 +99,7 @@ func (tx *TX) Table(table string) *Model {
 		fields:     "*",
 		start:      -1,
 		offset:     -1,
-		safe:       false,
+		safe:       true,
 		option:     OPTION_ALLOWEMPTY,
 	}
 }
