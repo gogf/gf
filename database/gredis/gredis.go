@@ -57,6 +57,7 @@ const (
 	gDEFAULT_POOL_IDLE_TIMEOUT  = 10 * time.Second
 	gDEFAULT_POOL_CONN_TIMEOUT  = 10 * time.Second
 	gDEFAULT_POOL_MAX_IDLE      = 10
+	gDEFAULT_POOL_MAX_ACTIVE    = 100
 	gDEFAULT_POOL_MAX_LIFE_TIME = 30 * time.Second
 )
 
@@ -73,6 +74,10 @@ func New(config Config) *Redis {
 	// can not exceed the limit of the server.
 	if config.MaxIdle == 0 {
 		config.MaxIdle = gDEFAULT_POOL_MAX_IDLE
+	}
+	// This value SHOULD NOT exceed the connection limit of redis server.
+	if config.MaxActive == 0 {
+		config.MaxActive = gDEFAULT_POOL_MAX_ACTIVE
 	}
 	if config.IdleTimeout == 0 {
 		config.IdleTimeout = gDEFAULT_POOL_IDLE_TIMEOUT
@@ -126,6 +131,9 @@ func New(config Config) *Redis {
 
 // NewFromStr creates a redis client object with given configuration string.
 // Redis client maintains a connection pool automatically.
+// The parameter <str> like:
+// 127.0.0.1:6379,0
+// 127.0.0.1:6379,0,password
 func NewFromStr(str string) (*Redis, error) {
 	config, err := ConfigFromStr(str)
 	if err != nil {
