@@ -1,21 +1,23 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"gopkg.in/yaml.v3"
 )
 
-func Test() (int, int) {
-	return 1, 1
-}
-
-func Assert(v1, v2, v3 interface{}) {
-	fmt.Println(v1)
-}
-
-func F(v ...interface{}) []interface{} {
-	return v
-}
-
 func main() {
-	Assert(F(Test()), 2, 3)
+	data := []byte(`
+m:
+ k: v
+    `)
+	var result map[string]interface{}
+	if err := yaml.Unmarshal(data, &result); err != nil {
+		panic(err)
+	}
+	b, err := json.Marshal(result)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(string(b))
 }
