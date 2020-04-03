@@ -204,16 +204,13 @@ func (r *Response) WriteXmlExit(content interface{}, rootTag ...string) error {
 }
 
 // WriteStatus writes HTTP <status> and <content> to the response.
+// Note that do not set Content-Type header here.
 func (r *Response) WriteStatus(status int, content ...interface{}) {
 	r.WriteHeader(status)
 	if len(content) > 0 {
 		r.Write(content...)
 	} else {
 		r.Write(http.StatusText(status))
-	}
-	if r.Header().Get("Content-Type") == "" {
-		r.Header().Set("Content-Type", "text/plain; charset=utf-8")
-		//r.Header().Set("X-Content-Type-Options", "nosniff")
 	}
 }
 
