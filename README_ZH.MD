@@ -53,9 +53,9 @@ golang版本 >= 1.13
 
 # 文档
 
-开发文档：[https://goframe.org](https://goframe.org)
+开发文档：https://goframe.org
 
-接口文档：[https://godoc.org/github.com/gogf/gf](https://godoc.org/github.com/gogf/gf)
+接口文档：https://godoc.org/github.com/gogf/gf
 
 # 帮助
 - QQ交流群：[116707870](//shang.qq.com/wpa/qunwpa?idkey=195f91eceeb5d7fa76009b7cd5a4641f70bf4897b7f5a520635eb26ff17adfe7)
