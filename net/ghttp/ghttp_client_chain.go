@@ -11,6 +11,17 @@ import (
 	"time"
 )
 
+// Prefix is a chaining function,
+// which sets the URL prefix for next request of this client.
+func (c *Client) Prefix(prefix string) *Client {
+	newClient := c
+	if c.parent == nil {
+		newClient = c.Clone()
+	}
+	newClient.SetPrefix(prefix)
+	return newClient
+}
+
 // Header is a chaining function,
 // which sets custom HTTP headers with map for next request.
 func (c *Client) Header(m map[string]string) *Client {

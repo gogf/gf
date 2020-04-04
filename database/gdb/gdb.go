@@ -78,8 +78,8 @@ type DB interface {
 	Delete(table string, condition interface{}, args ...interface{}) (sql.Result, error)
 
 	// Model creation.
-	From(tables string) *Model
 	Table(tables string) *Model
+	Model(tables string) *Model
 	Schema(schema string) *Schema
 
 	// Configuration methods.

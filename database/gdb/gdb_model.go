@@ -69,7 +69,6 @@ func (c *Core) Table(table string) *Model {
 		fields:     "*",
 		start:      -1,
 		offset:     -1,
-		safe:       true,
 		option:     OPTION_ALLOWEMPTY,
 	}
 }
@@ -77,13 +76,6 @@ func (c *Core) Table(table string) *Model {
 // Model is alias of Core.Table.
 // See Core.Table.
 func (c *Core) Model(table string) *Model {
-	return c.DB.Table(table)
-}
-
-// From is alias of Core.Table.
-// See Core.Table.
-// Deprecated.
-func (c *Core) From(table string) *Model {
 	return c.DB.Table(table)
 }
 
@@ -99,7 +91,6 @@ func (tx *TX) Table(table string) *Model {
 		fields:     "*",
 		start:      -1,
 		offset:     -1,
-		safe:       true,
 		option:     OPTION_ALLOWEMPTY,
 	}
 }
@@ -107,13 +98,6 @@ func (tx *TX) Table(table string) *Model {
 // Model is alias of tx.Table.
 // See tx.Table.
 func (tx *TX) Model(table string) *Model {
-	return tx.Table(table)
-}
-
-// From is alias of tx.Table.
-// See tx.Table.
-// Deprecated.
-func (tx *TX) From(table string) *Model {
 	return tx.Table(table)
 }
 

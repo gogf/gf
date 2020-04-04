@@ -19,9 +19,15 @@ import (
 // The optional parameter <noUrlEncode> specifies whether ignore the url encoding for the data.
 func BuildParams(params interface{}, noUrlEncode ...bool) (encodedParamStr string) {
 	// If given string/[]byte, converts and returns it directly as string.
-	switch params.(type) {
+	switch v := params.(type) {
 	case string, []byte:
 		return gconv.String(params)
+	case []interface{}:
+		if len(v) > 0 {
+			params = v[0]
+		} else {
+			params = nil
+		}
 	}
 	// Else converts it to map and does the url encoding.
 	m, urlEncode := gconv.Map(params), true
