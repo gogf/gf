@@ -26,7 +26,7 @@ func Test_Model_Insert(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
-		user := db.From(table)
+		user := db.Table(table)
 		result, err := user.Filter().Data(g.Map{
 			"id":          1,
 			"uid":         1,

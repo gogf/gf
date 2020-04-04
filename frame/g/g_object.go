@@ -91,6 +91,13 @@ func DB(name ...string) gdb.DB {
 	return gins.Database(name...)
 }
 
+// Table creates and returns a model from specified database or default database configuration.
+// The optional parameter <db> specifies the configuration group name of the database,
+// which is "default" in default.
+func Table(tables string, db ...string) *gdb.Model {
+	return DB(db...).Table(tables)
+}
+
 // Redis returns an instance of redis client with specified configuration group name.
 func Redis(name ...string) *gredis.Redis {
 	return gins.Redis(name...)
