@@ -129,6 +129,9 @@ func ConfigFromMap(m map[string]interface{}) (ServerConfig, error) {
 
 // Handler returns the request handler of the server.
 func (s *Server) Handler() http.Handler {
+	if s.config.Handler == nil {
+		return s
+	}
 	return s.config.Handler
 }
 
