@@ -14,18 +14,6 @@ import (
 	"github.com/gogf/gf/encoding/gbase64"
 )
 
-// setBasicAuth sets the http basic authentication tips.
-func (r *Request) setBasicAuth(tips ...string) {
-	realm := ""
-	if len(tips) > 0 && tips[0] != "" {
-		realm = tips[0]
-	} else {
-		realm = "Need Login"
-	}
-	r.Response.Header().Set("WWW-Authenticate", fmt.Sprintf(`Basic realm="%s"`, realm))
-	r.Response.WriteHeader(http.StatusUnauthorized)
-}
-
 // BasicAuth enables the http basic authentication feature with given passport and password
 // and asks client for authentication. It returns true if authentication success, else returns
 // false if failure.
@@ -62,5 +50,16 @@ func (r *Request) BasicAuth(user, pass string, tips ...string) bool {
 		r.Response.WriteStatus(http.StatusForbidden)
 		return false
 	}
-	return false
+}
+
+// setBasicAuth sets the http basic authentication tips.
+func (r *Request) setBasicAuth(tips ...string) {
+	realm := ""
+	if len(tips) > 0 && tips[0] != "" {
+		realm = tips[0]
+	} else {
+		realm = "Need Login"
+	}
+	r.Response.Header().Set("WWW-Authenticate", fmt.Sprintf(`Basic realm="%s"`, realm))
+	r.Response.WriteHeader(http.StatusUnauthorized)
 }

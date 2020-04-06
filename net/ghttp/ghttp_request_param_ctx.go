@@ -11,8 +11,9 @@ import (
 	"github.com/gogf/gf/container/gvar"
 )
 
-// Context retrieves and returns the request's context.
+// Context is alias for function GetCtx.
 // This function overwrites the http.Request.Context function.
+// See GetCtx.
 func (r *Request) Context() context.Context {
 	if r.context == nil {
 		r.context = r.Request.Context()
@@ -20,13 +21,14 @@ func (r *Request) Context() context.Context {
 	return r.context
 }
 
-// GetCtx is alias for function Context.
-// See Context.
+// GetCtx retrieves and returns the request's context.
 func (r *Request) GetCtx() context.Context {
 	return r.Context()
 }
 
 // GetCtxVar retrieves and returns a Var with given key name.
+// The optional parameter <def> specifies the default value of the Var if given <key>
+// does not exist in the context.
 func (r *Request) GetCtxVar(key interface{}, def ...interface{}) *gvar.Var {
 	value := r.Context().Value(key)
 	if value == nil && len(def) > 0 {
