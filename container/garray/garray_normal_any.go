@@ -533,23 +533,7 @@ func (a *Array) RLockFunc(f func(array []interface{})) *Array {
 // The difference between Merge and Append is Append supports only specified slice type,
 // but Merge supports more parameter types.
 func (a *Array) Merge(array interface{}) *Array {
-	switch v := array.(type) {
-	case *Array:
-		a.Append(gconv.Interfaces(v.Slice())...)
-	case *IntArray:
-		a.Append(gconv.Interfaces(v.Slice())...)
-	case *StrArray:
-		a.Append(gconv.Interfaces(v.Slice())...)
-	case *SortedArray:
-		a.Append(gconv.Interfaces(v.Slice())...)
-	case *SortedIntArray:
-		a.Append(gconv.Interfaces(v.Slice())...)
-	case *SortedStrArray:
-		a.Append(gconv.Interfaces(v.Slice())...)
-	default:
-		a.Append(gconv.Interfaces(array)...)
-	}
-	return a
+	return a.Append(gconv.Interfaces(array)...)
 }
 
 // Fill fills an array with num entries of the value <value>,

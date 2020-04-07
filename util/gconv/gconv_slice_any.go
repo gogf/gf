@@ -11,14 +11,14 @@ import (
 	"reflect"
 )
 
+// apiInterfaces is used for type assert api for Interfaces.
+type apiInterfaces interface {
+	Interfaces() []interface{}
+}
+
 // SliceAny is alias of Interfaces.
 func SliceAny(i interface{}) []interface{} {
 	return Interfaces(i)
-}
-
-// Type assert api for Interfaces.
-type apiInterfaces interface {
-	Interfaces() []interface{}
 }
 
 // Interfaces converts <i> to []interface{}.
