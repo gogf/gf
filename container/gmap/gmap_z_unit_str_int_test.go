@@ -17,9 +17,39 @@ import (
 	"github.com/gogf/gf/test/gtest"
 )
 
-func stringIntCallBack(string, int) bool {
-	return true
+func Test_StrIntMap_Var(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var m gmap.StrIntMap
+		m.Set("a", 1)
+
+		t.Assert(m.Get("a"), 1)
+		t.Assert(m.Size(), 1)
+		t.Assert(m.IsEmpty(), false)
+
+		t.Assert(m.GetOrSet("b", 2), 2)
+		t.Assert(m.SetIfNotExist("b", 2), false)
+
+		t.Assert(m.SetIfNotExist("c", 3), true)
+
+		t.Assert(m.Remove("b"), 2)
+		t.Assert(m.Contains("b"), false)
+
+		t.AssertIN("c", m.Keys())
+		t.AssertIN("a", m.Keys())
+		t.AssertIN(3, m.Values())
+		t.AssertIN(1, m.Values())
+
+		m_f := gmap.NewStrIntMap()
+		m_f.Set("1", 2)
+		m_f.Flip()
+		t.Assert(m_f.Map(), map[string]int{"2": 1})
+
+		m.Clear()
+		t.Assert(m.Size(), 0)
+		t.Assert(m.IsEmpty(), true)
+	})
 }
+
 func Test_StrIntMap_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewStrIntMap()
@@ -55,6 +85,7 @@ func Test_StrIntMap_Basic(t *testing.T) {
 		t.Assert(m2.Map(), map[string]int{"a": 1, "b": 2})
 	})
 }
+
 func Test_StrIntMap_Set_Fun(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewStrIntMap()

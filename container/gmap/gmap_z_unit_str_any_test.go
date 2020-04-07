@@ -17,9 +17,37 @@ import (
 	"github.com/gogf/gf/test/gtest"
 )
 
-func stringAnyCallBack(string, interface{}) bool {
-	return true
+func Test_StrAnyMap_Var(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var m gmap.StrAnyMap
+		m.Set("a", 1)
+
+		t.Assert(m.Get("a"), 1)
+		t.Assert(m.Size(), 1)
+		t.Assert(m.IsEmpty(), false)
+
+		t.Assert(m.GetOrSet("b", "2"), "2")
+		t.Assert(m.SetIfNotExist("b", "2"), false)
+
+		t.Assert(m.SetIfNotExist("c", 3), true)
+
+		t.Assert(m.Remove("b"), "2")
+		t.Assert(m.Contains("b"), false)
+
+		t.AssertIN("c", m.Keys())
+		t.AssertIN("a", m.Keys())
+		t.AssertIN(3, m.Values())
+		t.AssertIN(1, m.Values())
+
+		m.Flip()
+		t.Assert(m.Map(), map[string]interface{}{"1": "a", "3": "c"})
+
+		m.Clear()
+		t.Assert(m.Size(), 0)
+		t.Assert(m.IsEmpty(), true)
+	})
 }
+
 func Test_StrAnyMap_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewStrAnyMap()
@@ -53,6 +81,7 @@ func Test_StrAnyMap_Basic(t *testing.T) {
 		t.Assert(m2.Map(), map[string]interface{}{"a": 1, "b": "2"})
 	})
 }
+
 func Test_StrAnyMap_Set_Fun(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewStrAnyMap()

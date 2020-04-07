@@ -16,7 +16,7 @@ import (
 )
 
 type StrSet struct {
-	mu   *rwmutex.RWMutex
+	mu   rwmutex.RWMutex
 	data map[string]struct{}
 }
 
@@ -25,7 +25,7 @@ type StrSet struct {
 // which is false in default.
 func NewStrSet(safe ...bool) *StrSet {
 	return &StrSet{
-		mu:   rwmutex.New(safe...),
+		mu:   rwmutex.Create(safe...),
 		data: make(map[string]struct{}),
 	}
 }
@@ -37,7 +37,7 @@ func NewStrSetFrom(items []string, safe ...bool) *StrSet {
 		m[v] = struct{}{}
 	}
 	return &StrSet{
-		mu:   rwmutex.New(safe...),
+		mu:   rwmutex.Create(safe...),
 		data: m,
 	}
 }
@@ -58,6 +58,9 @@ func (set *StrSet) Iterator(f func(v string) bool) *StrSet {
 // Add adds one or multiple items to the set.
 func (set *StrSet) Add(item ...string) *StrSet {
 	set.mu.Lock()
+	if set.data == nil {
+		set.data = make(map[string]struct{})
+	}
 	for _, v := range item {
 		set.data[v] = struct{}{}
 	}
@@ -96,6 +99,9 @@ func (set *StrSet) AddIfNotExistFuncLock(item string, f func() string) *StrSet {
 func (set *StrSet) doAddWithLockCheck(item string, value interface{}) string {
 	set.mu.Lock()
 	defer set.mu.Unlock()
+	if set.data == nil {
+		set.data = make(map[string]struct{})
+	}
 	if _, ok := set.data[item]; !ok && value != nil {
 		if f, ok := value.(func() string); ok {
 			item = f()
@@ -111,16 +117,21 @@ func (set *StrSet) doAddWithLockCheck(item string, value interface{}) string {
 
 // Contains checks whether the set contains <item>.
 func (set *StrSet) Contains(item string) bool {
+	var ok bool
 	set.mu.RLock()
-	_, exists := set.data[item]
+	if set.data != nil {
+		_, ok = set.data[item]
+	}
 	set.mu.RUnlock()
-	return exists
+	return ok
 }
 
 // Remove deletes <item> from set.
 func (set *StrSet) Remove(item string) *StrSet {
 	set.mu.Lock()
-	delete(set.data, item)
+	if set.data != nil {
+		delete(set.data, item)
+	}
 	set.mu.Unlock()
 	return set
 }
@@ -144,8 +155,10 @@ func (set *StrSet) Clear() *StrSet {
 // Slice returns the a of items of the set as slice.
 func (set *StrSet) Slice() []string {
 	set.mu.RLock()
-	ret := make([]string, len(set.data))
-	i := 0
+	var (
+		i   = 0
+		ret = make([]string, len(set.data))
+	)
 	for item := range set.data {
 		ret[i] = item
 		i++
@@ -159,9 +172,14 @@ func (set *StrSet) Slice() []string {
 func (set *StrSet) Join(glue string) string {
 	set.mu.RLock()
 	defer set.mu.RUnlock()
-	buffer := bytes.NewBuffer(nil)
-	l := len(set.data)
-	i := 0
+	if len(set.data) == 0 {
+		return ""
+	}
+	var (
+		l      = len(set.data)
+		i      = 0
+		buffer = bytes.NewBuffer(nil)
+	)
 	for k, _ := range set.data {
 		buffer.WriteString(k)
 		if i != l-1 {
@@ -176,9 +194,11 @@ func (set *StrSet) Join(glue string) string {
 func (set *StrSet) String() string {
 	set.mu.RLock()
 	defer set.mu.RUnlock()
-	buffer := bytes.NewBuffer(nil)
-	l := len(set.data)
-	i := 0
+	var (
+		l      = len(set.data)
+		i      = 0
+		buffer = bytes.NewBuffer(nil)
+	)
 	for k, _ := range set.data {
 		buffer.WriteString(`"` + gstr.QuoteMeta(k, `"\`) + `"`)
 		if i != l-1 {
@@ -243,7 +263,7 @@ func (set *StrSet) IsSubsetOf(other *StrSet) bool {
 // Union returns a new set which is the union of <set> and <other>.
 // Which means, all the items in <newSet> are in <set> or in <other>.
 func (set *StrSet) Union(others ...*StrSet) (newSet *StrSet) {
-	newSet = NewStrSet(true)
+	newSet = NewStrSet()
 	set.mu.RLock()
 	defer set.mu.RUnlock()
 	for _, other := range others {
@@ -269,7 +289,7 @@ func (set *StrSet) Union(others ...*StrSet) (newSet *StrSet) {
 // Diff returns a new set which is the difference set from <set> to <other>.
 // Which means, all the items in <newSet> are in <set> but not in <other>.
 func (set *StrSet) Diff(others ...*StrSet) (newSet *StrSet) {
-	newSet = NewStrSet(true)
+	newSet = NewStrSet()
 	set.mu.RLock()
 	defer set.mu.RUnlock()
 	for _, other := range others {
@@ -290,7 +310,7 @@ func (set *StrSet) Diff(others ...*StrSet) (newSet *StrSet) {
 // Intersect returns a new set which is the intersection from <set> to <other>.
 // Which means, all the items in <newSet> are in <set> and also in <other>.
 func (set *StrSet) Intersect(others ...*StrSet) (newSet *StrSet) {
-	newSet = NewStrSet(true)
+	newSet = NewStrSet()
 	set.mu.RLock()
 	defer set.mu.RUnlock()
 	for _, other := range others {
@@ -315,7 +335,7 @@ func (set *StrSet) Intersect(others ...*StrSet) (newSet *StrSet) {
 // It returns the difference between <full> and <set>
 // if the given set <full> is not the full set of <set>.
 func (set *StrSet) Complement(full *StrSet) (newSet *StrSet) {
-	newSet = NewStrSet(true)
+	newSet = NewStrSet()
 	set.mu.RLock()
 	defer set.mu.RUnlock()
 	if set != full {
@@ -402,12 +422,11 @@ func (set *StrSet) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (set *StrSet) UnmarshalJSON(b []byte) error {
-	if set.mu == nil {
-		set.mu = rwmutex.New()
-		set.data = make(map[string]struct{})
-	}
 	set.mu.Lock()
 	defer set.mu.Unlock()
+	if set.data == nil {
+		set.data = make(map[string]struct{})
+	}
 	var array []string
 	if err := json.Unmarshal(b, &array); err != nil {
 		return err
@@ -420,12 +439,11 @@ func (set *StrSet) UnmarshalJSON(b []byte) error {
 
 // UnmarshalValue is an interface implement which sets any type of value for set.
 func (set *StrSet) UnmarshalValue(value interface{}) (err error) {
-	if set.mu == nil {
-		set.mu = rwmutex.New()
-		set.data = make(map[string]struct{})
-	}
 	set.mu.Lock()
 	defer set.mu.Unlock()
+	if set.data == nil {
+		set.data = make(map[string]struct{})
+	}
 	var array []string
 	switch value.(type) {
 	case string, []byte:

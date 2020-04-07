@@ -15,7 +15,7 @@ import (
 )
 
 type IntSet struct {
-	mu   *rwmutex.RWMutex
+	mu   rwmutex.RWMutex
 	data map[int]struct{}
 }
 
@@ -24,7 +24,7 @@ type IntSet struct {
 // which is false in default.
 func NewIntSet(safe ...bool) *IntSet {
 	return &IntSet{
-		mu:   rwmutex.New(safe...),
+		mu:   rwmutex.Create(safe...),
 		data: make(map[int]struct{}),
 	}
 }
@@ -36,7 +36,7 @@ func NewIntSetFrom(items []int, safe ...bool) *IntSet {
 		m[v] = struct{}{}
 	}
 	return &IntSet{
-		mu:   rwmutex.New(safe...),
+		mu:   rwmutex.Create(safe...),
 		data: m,
 	}
 }
@@ -57,6 +57,9 @@ func (set *IntSet) Iterator(f func(v int) bool) *IntSet {
 // Add adds one or multiple items to the set.
 func (set *IntSet) Add(item ...int) *IntSet {
 	set.mu.Lock()
+	if set.data == nil {
+		set.data = make(map[int]struct{})
+	}
 	for _, v := range item {
 		set.data[v] = struct{}{}
 	}
@@ -95,6 +98,9 @@ func (set *IntSet) AddIfNotExistFuncLock(item int, f func() int) *IntSet {
 func (set *IntSet) doAddWithLockCheck(item int, value interface{}) int {
 	set.mu.Lock()
 	defer set.mu.Unlock()
+	if set.data == nil {
+		set.data = make(map[int]struct{})
+	}
 	if _, ok := set.data[item]; !ok && value != nil {
 		if f, ok := value.(func() int); ok {
 			item = f()
@@ -108,16 +114,21 @@ func (set *IntSet) doAddWithLockCheck(item int, value interface{}) int {
 
 // Contains checks whether the set contains <item>.
 func (set *IntSet) Contains(item int) bool {
+	var ok bool
 	set.mu.RLock()
-	_, exists := set.data[item]
+	if set.data != nil {
+		_, ok = set.data[item]
+	}
 	set.mu.RUnlock()
-	return exists
+	return ok
 }
 
 // Remove deletes <item> from set.
 func (set *IntSet) Remove(item int) *IntSet {
 	set.mu.Lock()
-	delete(set.data, item)
+	if set.data != nil {
+		delete(set.data, item)
+	}
 	set.mu.Unlock()
 	return set
 }
@@ -141,8 +152,10 @@ func (set *IntSet) Clear() *IntSet {
 // Slice returns the a of items of the set as slice.
 func (set *IntSet) Slice() []int {
 	set.mu.RLock()
-	ret := make([]int, len(set.data))
-	i := 0
+	var (
+		i   = 0
+		ret = make([]int, len(set.data))
+	)
 	for k, _ := range set.data {
 		ret[i] = k
 		i++
@@ -155,9 +168,14 @@ func (set *IntSet) Slice() []int {
 func (set *IntSet) Join(glue string) string {
 	set.mu.RLock()
 	defer set.mu.RUnlock()
-	buffer := bytes.NewBuffer(nil)
-	l := len(set.data)
-	i := 0
+	if len(set.data) == 0 {
+		return ""
+	}
+	var (
+		l      = len(set.data)
+		i      = 0
+		buffer = bytes.NewBuffer(nil)
+	)
 	for k, _ := range set.data {
 		buffer.WriteString(gconv.String(k))
 		if i != l-1 {
@@ -227,7 +245,7 @@ func (set *IntSet) IsSubsetOf(other *IntSet) bool {
 // Union returns a new set which is the union of <set> and <other>.
 // Which means, all the items in <newSet> are in <set> or in <other>.
 func (set *IntSet) Union(others ...*IntSet) (newSet *IntSet) {
-	newSet = NewIntSet(true)
+	newSet = NewIntSet()
 	set.mu.RLock()
 	defer set.mu.RUnlock()
 	for _, other := range others {
@@ -253,7 +271,7 @@ func (set *IntSet) Union(others ...*IntSet) (newSet *IntSet) {
 // Diff returns a new set which is the difference set from <set> to <other>.
 // Which means, all the items in <newSet> are in <set> but not in <other>.
 func (set *IntSet) Diff(others ...*IntSet) (newSet *IntSet) {
-	newSet = NewIntSet(true)
+	newSet = NewIntSet()
 	set.mu.RLock()
 	defer set.mu.RUnlock()
 	for _, other := range others {
@@ -274,7 +292,7 @@ func (set *IntSet) Diff(others ...*IntSet) (newSet *IntSet) {
 // Intersect returns a new set which is the intersection from <set> to <other>.
 // Which means, all the items in <newSet> are in <set> and also in <other>.
 func (set *IntSet) Intersect(others ...*IntSet) (newSet *IntSet) {
-	newSet = NewIntSet(true)
+	newSet = NewIntSet()
 	set.mu.RLock()
 	defer set.mu.RUnlock()
 	for _, other := range others {
@@ -299,7 +317,7 @@ func (set *IntSet) Intersect(others ...*IntSet) (newSet *IntSet) {
 // It returns the difference between <full> and <set>
 // if the given set <full> is not the full set of <set>.
 func (set *IntSet) Complement(full *IntSet) (newSet *IntSet) {
-	newSet = NewIntSet(true)
+	newSet = NewIntSet()
 	set.mu.RLock()
 	defer set.mu.RUnlock()
 	if set != full {
@@ -386,12 +404,11 @@ func (set *IntSet) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (set *IntSet) UnmarshalJSON(b []byte) error {
-	if set.mu == nil {
-		set.mu = rwmutex.New()
-		set.data = make(map[int]struct{})
-	}
 	set.mu.Lock()
 	defer set.mu.Unlock()
+	if set.data == nil {
+		set.data = make(map[int]struct{})
+	}
 	var array []int
 	if err := json.Unmarshal(b, &array); err != nil {
 		return err
@@ -404,12 +421,11 @@ func (set *IntSet) UnmarshalJSON(b []byte) error {
 
 // UnmarshalValue is an interface implement which sets any type of value for set.
 func (set *IntSet) UnmarshalValue(value interface{}) (err error) {
-	if set.mu == nil {
-		set.mu = rwmutex.New()
-		set.data = make(map[int]struct{})
-	}
 	set.mu.Lock()
 	defer set.mu.Unlock()
+	if set.data == nil {
+		set.data = make(map[int]struct{})
+	}
 	var array []int
 	switch value.(type) {
 	case string, []byte:
