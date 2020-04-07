@@ -158,9 +158,35 @@ func IsNumeric(s string) bool {
 
 // SubStr returns a portion of string <str> specified by the <start> and <length> parameters.
 func SubStr(str string, start int, length ...int) (substr string) {
+	lth := len(str)
+
+	// Simple border checks.
+	if start < 0 {
+		start = 0
+	}
+	if start >= lth {
+		start = lth
+	}
+	end := lth
+	if len(length) > 0 {
+		end = start + length[0]
+		if end < start {
+			end = lth
+		}
+	}
+	if end > lth {
+		end = lth
+	}
+	return str[start:end]
+}
+
+// SubStrRune returns a portion of string <str> specified by the <start> and <length> parameters.
+// SubStrRune considers parameter <str> as unicode string.
+func SubStrRune(str string, start int, length ...int) (substr string) {
 	// Converting to []rune to support unicode.
 	rs := []rune(str)
 	lth := len(rs)
+
 	// Simple border checks.
 	if start < 0 {
 		start = 0
@@ -181,10 +207,23 @@ func SubStr(str string, start int, length ...int) (substr string) {
 	return string(rs[start:end])
 }
 
-// StrLimit returns a portion of string <str> specified by <length> parameters,
-// if the length of <str> is greater than <length>,
-// then the <suffix> will be appended to the result string.
+// StrLimit returns a portion of string <str> specified by <length> parameters, if the length
+// of <str> is greater than <length>, then the <suffix> will be appended to the result string.
 func StrLimit(str string, length int, suffix ...string) string {
+	if len(str) < length {
+		return str
+	}
+	addStr := "..."
+	if len(suffix) > 0 {
+		addStr = suffix[0]
+	}
+	return str[0:length] + addStr
+}
+
+// StrLimitRune returns a portion of string <str> specified by <length> parameters, if the length
+// of <str> is greater than <length>, then the <suffix> will be appended to the result string.
+// StrLimitRune considers parameter <str> as unicode string.
+func StrLimitRune(str string, length int, suffix ...string) string {
 	rs := []rune(str)
 	if len(rs) < length {
 		return str
@@ -255,6 +294,7 @@ func NumberFormat(number float64, decimals int, decPoint, thousandsSep string) s
 // Can be used to split a string into smaller chunks which is useful for
 // e.g. converting BASE64 string output to match RFC 2045 semantics.
 // It inserts end every chunkLen characters.
+// It considers parameter <body> and <end> as unicode string.
 func ChunkSplit(body string, chunkLen int, end string) string {
 	if end == "" {
 		end = "\r\n"
@@ -304,6 +344,7 @@ func HasSuffix(s, suffix string) bool {
 }
 
 // CountWords returns information about words' count used in a string.
+// It considers parameter <str> as unicode string.
 func CountWords(str string) map[string]int {
 	m := make(map[string]int)
 	buffer := bytes.NewBuffer(nil)
@@ -324,6 +365,7 @@ func CountWords(str string) map[string]int {
 }
 
 // CountChars returns information about chars' count used in a string.
+// It considers parameter <str> as unicode string.
 func CountChars(str string, noSpace ...bool) map[string]int {
 	m := make(map[string]int)
 	countSpace := true
@@ -423,6 +465,7 @@ func Str(haystack string, needle string) string {
 }
 
 // Shuffle randomly shuffles a string.
+// It considers parameter <str> as unicode string.
 func Shuffle(str string) string {
 	runes := []rune(str)
 	s := make([]rune, len(runes))
@@ -502,19 +545,22 @@ func Ord(char string) int {
 }
 
 // HideStr replaces part of the the string <str> to <hide> by <percentage> from the <middle>.
+// It considers parameter <str> as unicode string.
 func HideStr(str string, percent int, hide string) string {
 	array := strings.Split(str, "@")
 	if len(array) > 1 {
 		str = array[0]
 	}
-	rs := []rune(str)
-	length := len(rs)
-	mid := math.Floor(float64(length / 2))
-	hideLen := int(math.Floor(float64(length) * (float64(percent) / 100)))
-	start := int(mid - math.Floor(float64(hideLen)/2))
-	hideStr := []rune("")
-	hideRune := []rune(hide)
-	for i := 0; i < int(hideLen); i++ {
+	var (
+		rs       = []rune(str)
+		length   = len(rs)
+		mid      = math.Floor(float64(length / 2))
+		hideLen  = int(math.Floor(float64(length) * (float64(percent) / 100)))
+		start    = int(mid - math.Floor(float64(hideLen)/2))
+		hideStr  = []rune("")
+		hideRune = []rune(hide)
+	)
+	for i := 0; i < hideLen; i++ {
 		hideStr = append(hideStr, hideRune...)
 	}
 	buffer := bytes.NewBuffer(nil)
@@ -529,6 +575,7 @@ func HideStr(str string, percent int, hide string) string {
 
 // Nl2Br inserts HTML line breaks(<br>|<br />) before all newlines in a string:
 // \n\r, \r\n, \r, \n.
+// It considers parameter <str> as unicode string.
 func Nl2Br(str string, isXhtml ...bool) string {
 	r, n, runes := '\r', '\n', []rune(str)
 	var br []byte
