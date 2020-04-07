@@ -13,7 +13,6 @@ import (
 	"math"
 	"sort"
 
-	"github.com/gogf/gf/container/gtype"
 	"github.com/gogf/gf/internal/rwmutex"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/grand"
@@ -22,9 +21,9 @@ import (
 // SortedIntArray is a golang sorted int array with rich features.
 // It's using increasing order in default.
 type SortedIntArray struct {
-	mu         *rwmutex.RWMutex
+	mu         rwmutex.RWMutex
 	array      []int
-	unique     *gtype.Bool        // Whether enable unique feature(false)
+	unique     bool               // Whether enable unique feature(false)
 	comparator func(a, b int) int // Comparison function(it returns -1: a < b; 0: a == b; 1: a > b)
 }
 
@@ -48,9 +47,8 @@ func NewSortedIntArrayComparator(comparator func(a, b int) int, safe ...bool) *S
 // which is false in default.
 func NewSortedIntArraySize(cap int, safe ...bool) *SortedIntArray {
 	return &SortedIntArray{
-		mu:         rwmutex.New(safe...),
+		mu:         rwmutex.Create(safe...),
 		array:      make([]int, 0, cap),
-		unique:     gtype.NewBool(),
 		comparator: defaultComparatorInt,
 	}
 }
@@ -93,8 +91,9 @@ func NewSortedIntArrayFromCopy(array []int, safe ...bool) *SortedIntArray {
 func (a *SortedIntArray) SetArray(array []int) *SortedIntArray {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	a.initComparator()
 	a.array = array
-	sort.Ints(a.array)
+	quickSortInt(a.array, a.comparator)
 	return a
 }
 
@@ -104,7 +103,8 @@ func (a *SortedIntArray) SetArray(array []int) *SortedIntArray {
 func (a *SortedIntArray) Sort() *SortedIntArray {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	sort.Ints(a.array)
+	a.initComparator()
+	quickSortInt(a.array, a.comparator)
 	return a
 }
 
@@ -117,7 +117,7 @@ func (a *SortedIntArray) Add(values ...int) *SortedIntArray {
 	defer a.mu.Unlock()
 	for _, value := range values {
 		index, cmp := a.binSearch(value, false)
-		if a.unique.Val() && cmp == 0 {
+		if a.unique && cmp == 0 {
 			continue
 		}
 		if index < 0 {
@@ -424,6 +424,7 @@ func (a *SortedIntArray) Search(value int) (index int) {
 // If <result> lesser than 0, it means the value at <index> is lesser than <value>.
 // If <result> greater than 0, it means the value at <index> is greater than <value>.
 func (a *SortedIntArray) binSearch(value int, lock bool) (index int, result int) {
+	a.initComparator()
 	if len(a.array) == 0 {
 		return -1, -2
 	}
@@ -436,7 +437,7 @@ func (a *SortedIntArray) binSearch(value int, lock bool) (index int, result int)
 	mid := 0
 	cmp := -2
 	for min <= max {
-		mid = int((min + max) / 2)
+		mid = (min + max) / 2
 		cmp = a.comparator(value, a.array[mid])
 		switch {
 		case cmp < 0:
@@ -454,8 +455,8 @@ func (a *SortedIntArray) binSearch(value int, lock bool) (index int, result int)
 // which means it does not contain any repeated items.
 // It also do unique check, remove all repeated items.
 func (a *SortedIntArray) SetUnique(unique bool) *SortedIntArray {
-	oldUnique := a.unique.Val()
-	a.unique.Set(unique)
+	oldUnique := a.unique
+	a.unique = unique
 	if unique && oldUnique != unique {
 		a.Unique()
 	}
@@ -466,6 +467,7 @@ func (a *SortedIntArray) SetUnique(unique bool) *SortedIntArray {
 func (a *SortedIntArray) Unique() *SortedIntArray {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	a.initComparator()
 	if len(a.array) == 0 {
 		return a
 	}
@@ -593,6 +595,9 @@ func (a *SortedIntArray) Rands(size int) []int {
 func (a *SortedIntArray) Join(glue string) string {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
+	if len(a.array) == 0 {
+		return ""
+	}
 	buffer := bytes.NewBuffer(nil)
 	for k, v := range a.array {
 		buffer.WriteString(gconv.String(v))
@@ -657,10 +662,8 @@ func (a *SortedIntArray) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (a *SortedIntArray) UnmarshalJSON(b []byte) error {
-	if a.mu == nil {
-		a.mu = rwmutex.New()
+	if a.comparator == nil {
 		a.array = make([]int, 0)
-		a.unique = gtype.NewBool()
 		a.comparator = defaultComparatorInt
 	}
 	a.mu.Lock()
@@ -676,10 +679,7 @@ func (a *SortedIntArray) UnmarshalJSON(b []byte) error {
 
 // UnmarshalValue is an interface implement which sets any type of value for array.
 func (a *SortedIntArray) UnmarshalValue(value interface{}) (err error) {
-	if a.mu == nil {
-		a.mu = rwmutex.New()
-		a.unique = gtype.NewBool()
-		// Note that the comparator is string comparator in default.
+	if a.comparator == nil {
 		a.comparator = defaultComparatorInt
 	}
 	a.mu.Lock()
@@ -720,4 +720,11 @@ func (a *SortedIntArray) FilterEmpty() *SortedIntArray {
 // IsEmpty checks whether the array is empty.
 func (a *SortedIntArray) IsEmpty() bool {
 	return a.Len() == 0
+}
+
+// initComparator checks and sets default integer comparator if comparator is nil.
+func (a *SortedIntArray) initComparator() {
+	if a.comparator == nil {
+		a.comparator = defaultComparatorInt
+	}
 }

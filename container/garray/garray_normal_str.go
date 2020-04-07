@@ -23,7 +23,7 @@ import (
 
 // StrArray is a golang string array with rich features.
 type StrArray struct {
-	mu    *rwmutex.RWMutex
+	mu    rwmutex.RWMutex
 	array []string
 }
 
@@ -39,7 +39,7 @@ func NewStrArray(safe ...bool) *StrArray {
 // which is false in default.
 func NewStrArraySize(size int, cap int, safe ...bool) *StrArray {
 	return &StrArray{
-		mu:    rwmutex.New(safe...),
+		mu:    rwmutex.Create(safe...),
 		array: make([]string, size, cap),
 	}
 }
@@ -49,7 +49,7 @@ func NewStrArraySize(size int, cap int, safe ...bool) *StrArray {
 // which is false in default.
 func NewStrArrayFrom(array []string, safe ...bool) *StrArray {
 	return &StrArray{
-		mu:    rwmutex.New(safe...),
+		mu:    rwmutex.Create(safe...),
 		array: array,
 	}
 }
@@ -61,7 +61,7 @@ func NewStrArrayFromCopy(array []string, safe ...bool) *StrArray {
 	newArray := make([]string, len(array))
 	copy(newArray, array)
 	return &StrArray{
-		mu:    rwmutex.New(safe...),
+		mu:    rwmutex.Create(safe...),
 		array: newArray,
 	}
 }
@@ -661,6 +661,9 @@ func (a *StrArray) Reverse() *StrArray {
 func (a *StrArray) Join(glue string) string {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
+	if len(a.array) == 0 {
+		return ""
+	}
 	buffer := bytes.NewBuffer(nil)
 	for k, v := range a.array {
 		buffer.WriteString(v)
@@ -736,8 +739,7 @@ func (a *StrArray) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (a *StrArray) UnmarshalJSON(b []byte) error {
-	if a.mu == nil {
-		a.mu = rwmutex.New()
+	if a.array == nil {
 		a.array = make([]string, 0)
 	}
 	a.mu.Lock()
@@ -750,9 +752,6 @@ func (a *StrArray) UnmarshalJSON(b []byte) error {
 
 // UnmarshalValue is an interface implement which sets any type of value for array.
 func (a *StrArray) UnmarshalValue(value interface{}) error {
-	if a.mu == nil {
-		a.mu = rwmutex.New()
-	}
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	switch value.(type) {
