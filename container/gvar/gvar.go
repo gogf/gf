@@ -54,11 +54,13 @@ func (v *Var) Clone() *Var {
 // Set sets <value> to <v>, and returns the old value.
 func (v *Var) Set(value interface{}) (old interface{}) {
 	if v.safe {
-		old = v.value.(*gtype.Interface).Set(value)
-	} else {
-		old = v.value
-		v.value = value
+		if t, ok := v.value.(*gtype.Interface); ok {
+			old = t.Set(value)
+			return
+		}
 	}
+	old = v.value
+	v.value = value
 	return
 }
 
@@ -68,7 +70,9 @@ func (v *Var) Val() interface{} {
 		return nil
 	}
 	if v.safe {
-		return v.value.(*gtype.Interface).Val()
+		if t, ok := v.value.(*gtype.Interface); ok {
+			return t.Val()
+		}
 	}
 	return v.value
 }

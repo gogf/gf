@@ -20,6 +20,26 @@ import (
 	"github.com/gogf/gf/test/gtest"
 )
 
+func TestStrSet_Var(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var s gset.StrSet
+		s.Add("1").Add("1").Add("2")
+		s.Add([]string{"3", "4"}...)
+		t.Assert(s.Size(), 4)
+		t.AssertIN("1", s.Slice())
+		t.AssertIN("2", s.Slice())
+		t.AssertIN("3", s.Slice())
+		t.AssertIN("4", s.Slice())
+		t.AssertNI("0", s.Slice())
+		t.Assert(s.Contains("4"), true)
+		t.Assert(s.Contains("5"), false)
+		s.Remove("1")
+		t.Assert(s.Size(), 3)
+		s.Clear()
+		t.Assert(s.Size(), 0)
+	})
+}
+
 func TestStrSet_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := gset.NewStrSet()
