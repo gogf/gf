@@ -137,20 +137,40 @@ func Test_IsNumeric(t *testing.T) {
 func Test_SubStr(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gstr.SubStr("我爱GoFrame", 0), "我爱GoFrame")
-		t.Assert(gstr.SubStr("我爱GoFrame", 2), "GoFrame")
-		t.Assert(gstr.SubStr("我爱GoFrame", 2, 2), "Go")
+		t.Assert(gstr.SubStr("我爱GoFrame", 6), "GoFrame")
+		t.Assert(gstr.SubStr("我爱GoFrame", 6, 2), "Go")
 		t.Assert(gstr.SubStr("我爱GoFrame", -1, 30), "我爱GoFrame")
 		t.Assert(gstr.SubStr("我爱GoFrame", 30, 30), "")
 	})
 }
 
+func Test_SubStrRune(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.SubStrRune("我爱GoFrame", 0), "我爱GoFrame")
+		t.Assert(gstr.SubStrRune("我爱GoFrame", 2), "GoFrame")
+		t.Assert(gstr.SubStrRune("我爱GoFrame", 2, 2), "Go")
+		t.Assert(gstr.SubStrRune("我爱GoFrame", -1, 30), "我爱GoFrame")
+		t.Assert(gstr.SubStrRune("我爱GoFrame", 30, 30), "")
+	})
+}
+
 func Test_StrLimit(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		t.Assert(gstr.StrLimit("我爱GoFrame", 2), "我爱...")
-		t.Assert(gstr.StrLimit("我爱GoFrame", 2, ""), "我爱")
-		t.Assert(gstr.StrLimit("我爱GoFrame", 2, "**"), "我爱**")
-		t.Assert(gstr.StrLimit("我爱GoFrame", 4, ""), "我爱Go")
+		t.Assert(gstr.StrLimit("我爱GoFrame", 6), "我爱...")
+		t.Assert(gstr.StrLimit("我爱GoFrame", 6, ""), "我爱")
+		t.Assert(gstr.StrLimit("我爱GoFrame", 6, "**"), "我爱**")
+		t.Assert(gstr.StrLimit("我爱GoFrame", 8, ""), "我爱Go")
 		t.Assert(gstr.StrLimit("*", 4, ""), "*")
+	})
+}
+
+func Test_StrLimitRune(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.StrLimitRune("我爱GoFrame", 2), "我爱...")
+		t.Assert(gstr.StrLimitRune("我爱GoFrame", 2, ""), "我爱")
+		t.Assert(gstr.StrLimitRune("我爱GoFrame", 2, "**"), "我爱**")
+		t.Assert(gstr.StrLimitRune("我爱GoFrame", 4, ""), "我爱Go")
+		t.Assert(gstr.StrLimitRune("*", 4, ""), "*")
 	})
 }
 
