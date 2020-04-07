@@ -16,7 +16,6 @@ import (
 	"math"
 	"sort"
 
-	"github.com/gogf/gf/container/gtype"
 	"github.com/gogf/gf/internal/rwmutex"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/grand"
@@ -25,9 +24,9 @@ import (
 // SortedArray is a golang sorted array with rich features.
 // It's using increasing order in default.
 type SortedArray struct {
-	mu         *rwmutex.RWMutex
+	mu         rwmutex.RWMutex
 	array      []interface{}
-	unique     *gtype.Bool                // Whether enable unique feature(false)
+	unique     bool                       // Whether enable unique feature(false)
 	comparator func(a, b interface{}) int // Comparison function(it returns -1: a < b; 0: a == b; 1: a > b)
 }
 
@@ -46,8 +45,7 @@ func NewSortedArray(comparator func(a, b interface{}) int, safe ...bool) *Sorted
 // which is false in default.
 func NewSortedArraySize(cap int, comparator func(a, b interface{}) int, safe ...bool) *SortedArray {
 	return &SortedArray{
-		mu:         rwmutex.New(safe...),
-		unique:     gtype.NewBool(),
+		mu:         rwmutex.Create(safe...),
 		array:      make([]interface{}, 0, cap),
 		comparator: comparator,
 	}
@@ -93,6 +91,7 @@ func NewSortedArrayFromCopy(array []interface{}, comparator func(a, b interface{
 func (a *SortedArray) SetArray(array []interface{}) *SortedArray {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	a.checkComparator()
 	a.array = array
 	sort.Slice(a.array, func(i, j int) bool {
 		return a.comparator(a.array[i], a.array[j]) < 0
@@ -101,11 +100,11 @@ func (a *SortedArray) SetArray(array []interface{}) *SortedArray {
 }
 
 // SetComparator sets/changes the comparator for sorting.
+// It resorts the array as the comparator is changed.
 func (a *SortedArray) SetComparator(comparator func(a, b interface{}) int) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	a.comparator = comparator
-	// Resort the array if comparator is changed.
 	sort.Slice(a.array, func(i, j int) bool {
 		return a.comparator(a.array[i], a.array[j]) < 0
 	})
@@ -117,6 +116,7 @@ func (a *SortedArray) SetComparator(comparator func(a, b interface{}) int) {
 func (a *SortedArray) Sort() *SortedArray {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	a.checkComparator()
 	sort.Slice(a.array, func(i, j int) bool {
 		return a.comparator(a.array[i], a.array[j]) < 0
 	})
@@ -132,7 +132,7 @@ func (a *SortedArray) Add(values ...interface{}) *SortedArray {
 	defer a.mu.Unlock()
 	for _, value := range values {
 		index, cmp := a.binSearch(value, false)
-		if a.unique.Val() && cmp == 0 {
+		if a.unique && cmp == 0 {
 			continue
 		}
 		if index < 0 {
@@ -427,6 +427,7 @@ func (a *SortedArray) Search(value interface{}) (index int) {
 // If <result> lesser than 0, it means the value at <index> is lesser than <value>.
 // If <result> greater than 0, it means the value at <index> is greater than <value>.
 func (a *SortedArray) binSearch(value interface{}, lock bool) (index int, result int) {
+	a.checkComparator()
 	if len(a.array) == 0 {
 		return -1, -2
 	}
@@ -439,7 +440,7 @@ func (a *SortedArray) binSearch(value interface{}, lock bool) (index int, result
 	mid := 0
 	cmp := -2
 	for min <= max {
-		mid = int((min + max) / 2)
+		mid = (min + max) / 2
 		cmp = a.comparator(value, a.array[mid])
 		switch {
 		case cmp < 0:
@@ -457,8 +458,8 @@ func (a *SortedArray) binSearch(value interface{}, lock bool) (index int, result
 // which means it does not contain any repeated items.
 // It also do unique check, remove all repeated items.
 func (a *SortedArray) SetUnique(unique bool) *SortedArray {
-	oldUnique := a.unique.Val()
-	a.unique.Set(unique)
+	oldUnique := a.unique
+	a.unique = unique
 	if unique && oldUnique != unique {
 		a.Unique()
 	}
@@ -469,6 +470,7 @@ func (a *SortedArray) SetUnique(unique bool) *SortedArray {
 func (a *SortedArray) Unique() *SortedArray {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	a.checkComparator()
 	if len(a.array) == 0 {
 		return a
 	}
@@ -596,6 +598,9 @@ func (a *SortedArray) Rands(size int) []interface{} {
 func (a *SortedArray) Join(glue string) string {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
+	if len(a.array) == 0 {
+		return ""
+	}
 	buffer := bytes.NewBuffer(nil)
 	for k, v := range a.array {
 		buffer.WriteString(gconv.String(v))
@@ -676,12 +681,10 @@ func (a *SortedArray) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
+// Note that the comparator is set as string comparator in default.
 func (a *SortedArray) UnmarshalJSON(b []byte) error {
-	if a.mu == nil {
-		a.mu = rwmutex.New()
+	if a.comparator == nil {
 		a.array = make([]interface{}, 0)
-		a.unique = gtype.NewBool()
-		// Note that the comparator is string comparator in default.
 		a.comparator = gutil.ComparatorString
 	}
 	a.mu.Lock()
@@ -698,11 +701,9 @@ func (a *SortedArray) UnmarshalJSON(b []byte) error {
 }
 
 // UnmarshalValue is an interface implement which sets any type of value for array.
+// Note that the comparator is set as string comparator in default.
 func (a *SortedArray) UnmarshalValue(value interface{}) (err error) {
-	if a.mu == nil {
-		a.mu = rwmutex.New()
-		a.unique = gtype.NewBool()
-		// Note that the comparator is string comparator in default.
+	if a.comparator == nil {
 		a.comparator = gutil.ComparatorString
 	}
 	a.mu.Lock()
@@ -767,4 +768,12 @@ func (a *SortedArray) FilterEmpty() *SortedArray {
 // IsEmpty checks whether the array is empty.
 func (a *SortedArray) IsEmpty() bool {
 	return a.Len() == 0
+}
+
+// checkComparator checks if comparator is nil.
+// Note that it panics if no comparator is set.
+func (a *SortedArray) checkComparator() {
+	if a.comparator == nil {
+		panic("comparator is missing for sorted array")
+	}
 }
