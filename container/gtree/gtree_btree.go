@@ -20,7 +20,7 @@ import (
 
 // BTree holds elements of the B-tree.
 type BTree struct {
-	mu         *rwmutex.RWMutex
+	mu         rwmutex.RWMutex
 	root       *BTreeNode
 	comparator func(v1, v2 interface{}) int
 	size       int // Total number of keys in the tree
@@ -50,7 +50,7 @@ func NewBTree(m int, comparator func(v1, v2 interface{}) int, safe ...bool) *BTr
 	}
 	return &BTree{
 		comparator: comparator,
-		mu:         rwmutex.New(safe...),
+		mu:         rwmutex.Create(safe...),
 		m:          m,
 	}
 }
@@ -67,7 +67,7 @@ func NewBTreeFrom(m int, comparator func(v1, v2 interface{}) int, data map[inter
 }
 
 // Clone returns a new tree with a copy of current tree.
-func (tree *BTree) Clone(safe ...bool) *BTree {
+func (tree *BTree) Clone() *BTree {
 	newTree := NewBTree(tree.m, tree.comparator, !tree.mu.IsSafe())
 	newTree.Sets(tree.Map())
 	return newTree
@@ -621,7 +621,7 @@ func (tree *BTree) search(node *BTreeNode, key interface{}) (index int, found bo
 	low, mid, high := 0, 0, len(node.Entries)-1
 	for low <= high {
 		mid = (high + low) / 2
-		compare := tree.comparator(key, node.Entries[mid].Key)
+		compare := tree.getComparator()(key, node.Entries[mid].Key)
 		switch {
 		case compare > 0:
 			low = mid + 1
@@ -933,4 +933,13 @@ func (tree *BTree) deleteChild(node *BTreeNode, index int) {
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (tree *BTree) MarshalJSON() ([]byte, error) {
 	return json.Marshal(tree.Map())
+}
+
+// getComparator returns the comparator if it's previously set,
+// or else it panics.
+func (tree *BTree) getComparator() func(a, b interface{}) int {
+	if tree.comparator == nil {
+		panic("comparator is missing for tree")
+	}
+	return tree.comparator
 }

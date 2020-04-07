@@ -7,9 +7,10 @@
 // Package gmap provides concurrent-safe/unsafe map containers.
 package gmap
 
-// Map based on hash table, alias of AnyAnyMap.
-type Map = AnyAnyMap
-type HashMap = AnyAnyMap
+type (
+	Map     = AnyAnyMap // Map is alias of AnyAnyMap.
+	HashMap = AnyAnyMap // HashMap is alias of AnyAnyMap.
+)
 
 // New creates and returns an empty hash map.
 // The parameter <safe> is used to specify whether using map in concurrent-safety,

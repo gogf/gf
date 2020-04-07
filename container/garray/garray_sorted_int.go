@@ -91,9 +91,8 @@ func NewSortedIntArrayFromCopy(array []int, safe ...bool) *SortedIntArray {
 func (a *SortedIntArray) SetArray(array []int) *SortedIntArray {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	a.initComparator()
 	a.array = array
-	quickSortInt(a.array, a.comparator)
+	quickSortInt(a.array, a.getComparator())
 	return a
 }
 
@@ -103,8 +102,7 @@ func (a *SortedIntArray) SetArray(array []int) *SortedIntArray {
 func (a *SortedIntArray) Sort() *SortedIntArray {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	a.initComparator()
-	quickSortInt(a.array, a.comparator)
+	quickSortInt(a.array, a.getComparator())
 	return a
 }
 
@@ -424,7 +422,6 @@ func (a *SortedIntArray) Search(value int) (index int) {
 // If <result> lesser than 0, it means the value at <index> is lesser than <value>.
 // If <result> greater than 0, it means the value at <index> is greater than <value>.
 func (a *SortedIntArray) binSearch(value int, lock bool) (index int, result int) {
-	a.initComparator()
 	if len(a.array) == 0 {
 		return -1, -2
 	}
@@ -438,7 +435,7 @@ func (a *SortedIntArray) binSearch(value int, lock bool) (index int, result int)
 	cmp := -2
 	for min <= max {
 		mid = (min + max) / 2
-		cmp = a.comparator(value, a.array[mid])
+		cmp = a.getComparator()(value, a.array[mid])
 		switch {
 		case cmp < 0:
 			max = mid - 1
@@ -467,7 +464,6 @@ func (a *SortedIntArray) SetUnique(unique bool) *SortedIntArray {
 func (a *SortedIntArray) Unique() *SortedIntArray {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	a.initComparator()
 	if len(a.array) == 0 {
 		return a
 	}
@@ -476,7 +472,7 @@ func (a *SortedIntArray) Unique() *SortedIntArray {
 		if i == len(a.array)-1 {
 			break
 		}
-		if a.comparator(a.array[i], a.array[i+1]) == 0 {
+		if a.getComparator()(a.array[i], a.array[i+1]) == 0 {
 			a.array = append(a.array[:i+1], a.array[i+1+1:]...)
 		} else {
 			i++
@@ -722,9 +718,11 @@ func (a *SortedIntArray) IsEmpty() bool {
 	return a.Len() == 0
 }
 
-// initComparator checks and sets default integer comparator if comparator is nil.
-func (a *SortedIntArray) initComparator() {
+// getComparator returns the comparator if it's previously set,
+// or else it returns a default comparator.
+func (a *SortedIntArray) getComparator() func(a, b int) int {
 	if a.comparator == nil {
-		a.comparator = defaultComparatorInt
+		return defaultComparatorInt
 	}
+	return a.comparator
 }
