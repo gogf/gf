@@ -59,7 +59,7 @@ func NewSortedStrArraySize(cap int, safe ...bool) *SortedStrArray {
 func NewSortedStrArrayFrom(array []string, safe ...bool) *SortedStrArray {
 	a := NewSortedStrArraySize(0, safe...)
 	a.array = array
-	quickSortStr(a.array, a.comparator)
+	quickSortStr(a.array, a.getComparator())
 	return a
 }
 
@@ -76,9 +76,8 @@ func NewSortedStrArrayFromCopy(array []string, safe ...bool) *SortedStrArray {
 func (a *SortedStrArray) SetArray(array []string) *SortedStrArray {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	a.initComparator()
 	a.array = array
-	quickSortStr(a.array, a.comparator)
+	quickSortStr(a.array, a.getComparator())
 	return a
 }
 
@@ -88,8 +87,7 @@ func (a *SortedStrArray) SetArray(array []string) *SortedStrArray {
 func (a *SortedStrArray) Sort() *SortedStrArray {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	a.initComparator()
-	quickSortStr(a.array, a.comparator)
+	quickSortStr(a.array, a.getComparator())
 	return a
 }
 
@@ -409,7 +407,6 @@ func (a *SortedStrArray) Search(value string) (index int) {
 // If <result> lesser than 0, it means the value at <index> is lesser than <value>.
 // If <result> greater than 0, it means the value at <index> is greater than <value>.
 func (a *SortedStrArray) binSearch(value string, lock bool) (index int, result int) {
-	a.initComparator()
 	if len(a.array) == 0 {
 		return -1, -2
 	}
@@ -423,7 +420,7 @@ func (a *SortedStrArray) binSearch(value string, lock bool) (index int, result i
 	cmp := -2
 	for min <= max {
 		mid = (min + max) / 2
-		cmp = a.comparator(value, a.array[mid])
+		cmp = a.getComparator()(value, a.array[mid])
 		switch {
 		case cmp < 0:
 			max = mid - 1
@@ -452,7 +449,6 @@ func (a *SortedStrArray) SetUnique(unique bool) *SortedStrArray {
 func (a *SortedStrArray) Unique() *SortedStrArray {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	a.initComparator()
 	if len(a.array) == 0 {
 		return a
 	}
@@ -461,7 +457,7 @@ func (a *SortedStrArray) Unique() *SortedStrArray {
 		if i == len(a.array)-1 {
 			break
 		}
-		if a.comparator(a.array[i], a.array[i+1]) == 0 {
+		if a.getComparator()(a.array[i], a.array[i+1]) == 0 {
 			a.array = append(a.array[:i+1], a.array[i+1+1:]...)
 		} else {
 			i++
@@ -718,9 +714,11 @@ func (a *SortedStrArray) IsEmpty() bool {
 	return a.Len() == 0
 }
 
-// initComparator checks and sets default string comparator if comparator is nil.
-func (a *SortedStrArray) initComparator() {
+// getComparator returns the comparator if it's previously set,
+// or else it returns a default comparator.
+func (a *SortedStrArray) getComparator() func(a, b string) int {
 	if a.comparator == nil {
-		a.comparator = defaultComparatorStr
+		return defaultComparatorStr
 	}
+	return a.comparator
 }

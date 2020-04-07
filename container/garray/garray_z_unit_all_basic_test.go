@@ -25,14 +25,35 @@ func Test_Array_Var(t *testing.T) {
 		array.Append(2, 3, 1)
 		t.Assert(array.Slice(), expect)
 	})
-}
-
-func Test_SortedArray_Var(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var array garray.IntArray
+		expect := []int{2, 3, 1}
+		array.Append(2, 3, 1)
+		t.Assert(array.Slice(), expect)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var array garray.StrArray
+		expect := []string{"b", "a"}
+		array.Append("b", "a")
+		t.Assert(array.Slice(), expect)
+	})
 	gtest.C(t, func(t *gtest.T) {
 		var array garray.SortedArray
 		array.SetComparator(gutil.ComparatorInt)
 		expect := []int{1, 2, 3}
 		array.Add(2, 3, 1)
+		t.Assert(array.Slice(), expect)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var array garray.SortedIntArray
+		expect := []int{1, 2, 3}
+		array.Add(2, 3, 1)
+		t.Assert(array.Slice(), expect)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var array garray.SortedStrArray
+		expect := []string{"a", "b", "c"}
+		array.Add("c", "a", "b")
 		t.Assert(array.Slice(), expect)
 	})
 }

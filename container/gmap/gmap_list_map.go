@@ -19,7 +19,7 @@ import (
 )
 
 type ListMap struct {
-	mu   *rwmutex.RWMutex
+	mu   rwmutex.RWMutex
 	data map[interface{}]*glist.Element
 	list *glist.List
 }
@@ -35,7 +35,7 @@ type gListMapNode struct {
 // which is false in default.
 func NewListMap(safe ...bool) *ListMap {
 	return &ListMap{
-		mu:   rwmutex.New(safe...),
+		mu:   rwmutex.Create(safe...),
 		data: make(map[interface{}]*glist.Element),
 		list: glist.New(),
 	}
@@ -60,11 +60,13 @@ func (m *ListMap) Iterator(f func(key, value interface{}) bool) {
 func (m *ListMap) IteratorAsc(f func(key interface{}, value interface{}) bool) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	node := (*gListMapNode)(nil)
-	m.list.IteratorAsc(func(e *glist.Element) bool {
-		node = e.Value.(*gListMapNode)
-		return f(node.key, node.value)
-	})
+	if m.list != nil {
+		node := (*gListMapNode)(nil)
+		m.list.IteratorAsc(func(e *glist.Element) bool {
+			node = e.Value.(*gListMapNode)
+			return f(node.key, node.value)
+		})
+	}
 }
 
 // IteratorDesc iterates the map in descending order with given callback function <f>.
@@ -72,11 +74,13 @@ func (m *ListMap) IteratorAsc(f func(key interface{}, value interface{}) bool) {
 func (m *ListMap) IteratorDesc(f func(key interface{}, value interface{}) bool) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	node := (*gListMapNode)(nil)
-	m.list.IteratorDesc(func(e *glist.Element) bool {
-		node = e.Value.(*gListMapNode)
-		return f(node.key, node.value)
-	})
+	if m.list != nil {
+		node := (*gListMapNode)(nil)
+		m.list.IteratorDesc(func(e *glist.Element) bool {
+			node = e.Value.(*gListMapNode)
+			return f(node.key, node.value)
+		})
+	}
 }
 
 // Clone returns a new link map with copy of current map data.
@@ -110,13 +114,16 @@ func (m *ListMap) Replace(data map[interface{}]interface{}) {
 // Map returns a copy of the underlying data of the map.
 func (m *ListMap) Map() map[interface{}]interface{} {
 	m.mu.RLock()
-	node := (*gListMapNode)(nil)
-	data := make(map[interface{}]interface{}, len(m.data))
-	m.list.IteratorAsc(func(e *glist.Element) bool {
-		node = e.Value.(*gListMapNode)
-		data[node.key] = node.value
-		return true
-	})
+	var node *gListMapNode
+	var data map[interface{}]interface{}
+	if m.list != nil {
+		data = make(map[interface{}]interface{}, len(m.data))
+		m.list.IteratorAsc(func(e *glist.Element) bool {
+			node = e.Value.(*gListMapNode)
+			data[node.key] = node.value
+			return true
+		})
+	}
 	m.mu.RUnlock()
 	return data
 }
@@ -124,13 +131,16 @@ func (m *ListMap) Map() map[interface{}]interface{} {
 // MapStrAny returns a copy of the underlying data of the map as map[string]interface{}.
 func (m *ListMap) MapStrAny() map[string]interface{} {
 	m.mu.RLock()
-	node := (*gListMapNode)(nil)
-	data := make(map[string]interface{}, len(m.data))
-	m.list.IteratorAsc(func(e *glist.Element) bool {
-		node = e.Value.(*gListMapNode)
-		data[gconv.String(node.key)] = node.value
-		return true
-	})
+	var node *gListMapNode
+	var data map[string]interface{}
+	if m.list != nil {
+		data = make(map[string]interface{}, len(m.data))
+		m.list.IteratorAsc(func(e *glist.Element) bool {
+			node = e.Value.(*gListMapNode)
+			data[gconv.String(node.key)] = node.value
+			return true
+		})
+	}
 	m.mu.RUnlock()
 	return data
 }
@@ -138,20 +148,22 @@ func (m *ListMap) MapStrAny() map[string]interface{} {
 // FilterEmpty deletes all key-value pair of which the value is empty.
 func (m *ListMap) FilterEmpty() {
 	m.mu.Lock()
-	keys := make([]interface{}, 0)
-	node := (*gListMapNode)(nil)
-	m.list.IteratorAsc(func(e *glist.Element) bool {
-		node = e.Value.(*gListMapNode)
-		if empty.IsEmpty(node.value) {
-			keys = append(keys, node.key)
-		}
-		return true
-	})
-	if len(keys) > 0 {
-		for _, key := range keys {
-			if e, ok := m.data[key]; ok {
-				delete(m.data, key)
-				m.list.Remove(e)
+	if m.list != nil {
+		keys := make([]interface{}, 0)
+		node := (*gListMapNode)(nil)
+		m.list.IteratorAsc(func(e *glist.Element) bool {
+			node = e.Value.(*gListMapNode)
+			if empty.IsEmpty(node.value) {
+				keys = append(keys, node.key)
+			}
+			return true
+		})
+		if len(keys) > 0 {
+			for _, key := range keys {
+				if e, ok := m.data[key]; ok {
+					delete(m.data, key)
+					m.list.Remove(e)
+				}
 			}
 		}
 	}
@@ -161,6 +173,10 @@ func (m *ListMap) FilterEmpty() {
 // Set sets key-value to the map.
 func (m *ListMap) Set(key interface{}, value interface{}) {
 	m.mu.Lock()
+	if m.data == nil {
+		m.data = make(map[interface{}]*glist.Element)
+		m.list = glist.New()
+	}
 	if e, ok := m.data[key]; !ok {
 		m.data[key] = m.list.PushBack(&gListMapNode{key, value})
 	} else {
@@ -172,6 +188,10 @@ func (m *ListMap) Set(key interface{}, value interface{}) {
 // Sets batch sets key-values to the map.
 func (m *ListMap) Sets(data map[interface{}]interface{}) {
 	m.mu.Lock()
+	if m.data == nil {
+		m.data = make(map[interface{}]*glist.Element)
+		m.list = glist.New()
+	}
 	for key, value := range data {
 		if e, ok := m.data[key]; !ok {
 			m.data[key] = m.list.PushBack(&gListMapNode{key, value})
@@ -186,9 +206,11 @@ func (m *ListMap) Sets(data map[interface{}]interface{}) {
 // Second return parameter <found> is true if key was found, otherwise false.
 func (m *ListMap) Search(key interface{}) (value interface{}, found bool) {
 	m.mu.RLock()
-	if e, ok := m.data[key]; ok {
-		value = e.Value.(*gListMapNode).value
-		found = ok
+	if m.data != nil {
+		if e, ok := m.data[key]; ok {
+			value = e.Value.(*gListMapNode).value
+			found = ok
+		}
 	}
 	m.mu.RUnlock()
 	return
@@ -197,8 +219,10 @@ func (m *ListMap) Search(key interface{}) (value interface{}, found bool) {
 // Get returns the value by given <key>.
 func (m *ListMap) Get(key interface{}) (value interface{}) {
 	m.mu.RLock()
-	if e, ok := m.data[key]; ok {
-		value = e.Value.(*gListMapNode).value
+	if m.data != nil {
+		if e, ok := m.data[key]; ok {
+			value = e.Value.(*gListMapNode).value
+		}
 	}
 	m.mu.RUnlock()
 	return
@@ -255,6 +279,10 @@ func (m *ListMap) Pops(size int) map[interface{}]interface{} {
 func (m *ListMap) doSetWithLockCheck(key interface{}, value interface{}) interface{} {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	if m.data == nil {
+		m.data = make(map[interface{}]*glist.Element)
+		m.list = glist.New()
+	}
 	if e, ok := m.data[key]; ok {
 		return e.Value.(*gListMapNode).value
 	}
@@ -302,26 +330,26 @@ func (m *ListMap) GetOrSetFuncLock(key interface{}, f func() interface{}) interf
 	}
 }
 
-// GetVar returns a gvar.Var with the value by given <key>.
-// The returned gvar.Var is un-concurrent safe.
+// GetVar returns a Var with the value by given <key>.
+// The returned Var is un-concurrent safe.
 func (m *ListMap) GetVar(key interface{}) *gvar.Var {
 	return gvar.New(m.Get(key))
 }
 
-// GetVarOrSet returns a gvar.Var with result from GetVarOrSet.
-// The returned gvar.Var is un-concurrent safe.
+// GetVarOrSet returns a Var with result from GetVarOrSet.
+// The returned Var is un-concurrent safe.
 func (m *ListMap) GetVarOrSet(key interface{}, value interface{}) *gvar.Var {
 	return gvar.New(m.GetOrSet(key, value))
 }
 
-// GetVarOrSetFunc returns a gvar.Var with result from GetOrSetFunc.
-// The returned gvar.Var is un-concurrent safe.
+// GetVarOrSetFunc returns a Var with result from GetOrSetFunc.
+// The returned Var is un-concurrent safe.
 func (m *ListMap) GetVarOrSetFunc(key interface{}, f func() interface{}) *gvar.Var {
 	return gvar.New(m.GetOrSetFunc(key, f))
 }
 
-// GetVarOrSetFuncLock returns a gvar.Var with result from GetOrSetFuncLock.
-// The returned gvar.Var is un-concurrent safe.
+// GetVarOrSetFuncLock returns a Var with result from GetOrSetFuncLock.
+// The returned Var is un-concurrent safe.
 func (m *ListMap) GetVarOrSetFuncLock(key interface{}, f func() interface{}) *gvar.Var {
 	return gvar.New(m.GetOrSetFuncLock(key, f))
 }
@@ -362,10 +390,12 @@ func (m *ListMap) SetIfNotExistFuncLock(key interface{}, f func() interface{}) b
 // Remove deletes value from map by given <key>, and return this deleted value.
 func (m *ListMap) Remove(key interface{}) (value interface{}) {
 	m.mu.Lock()
-	if e, ok := m.data[key]; ok {
-		value = e.Value.(*gListMapNode).value
-		delete(m.data, key)
-		m.list.Remove(e)
+	if m.data != nil {
+		if e, ok := m.data[key]; ok {
+			value = e.Value.(*gListMapNode).value
+			delete(m.data, key)
+			m.list.Remove(e)
+		}
 	}
 	m.mu.Unlock()
 	return
@@ -374,10 +404,12 @@ func (m *ListMap) Remove(key interface{}) (value interface{}) {
 // Removes batch deletes values of the map by keys.
 func (m *ListMap) Removes(keys []interface{}) {
 	m.mu.Lock()
-	for _, key := range keys {
-		if e, ok := m.data[key]; ok {
-			delete(m.data, key)
-			m.list.Remove(e)
+	if m.data != nil {
+		for _, key := range keys {
+			if e, ok := m.data[key]; ok {
+				delete(m.data, key)
+				m.list.Remove(e)
+			}
 		}
 	}
 	m.mu.Unlock()
@@ -386,13 +418,17 @@ func (m *ListMap) Removes(keys []interface{}) {
 // Keys returns all keys of the map as a slice in ascending order.
 func (m *ListMap) Keys() []interface{} {
 	m.mu.RLock()
-	keys := make([]interface{}, m.list.Len())
-	index := 0
-	m.list.IteratorAsc(func(e *glist.Element) bool {
-		keys[index] = e.Value.(*gListMapNode).key
-		index++
-		return true
-	})
+	var (
+		keys  = make([]interface{}, m.list.Len())
+		index = 0
+	)
+	if m.list != nil {
+		m.list.IteratorAsc(func(e *glist.Element) bool {
+			keys[index] = e.Value.(*gListMapNode).key
+			index++
+			return true
+		})
+	}
 	m.mu.RUnlock()
 	return keys
 }
@@ -400,13 +436,17 @@ func (m *ListMap) Keys() []interface{} {
 // Values returns all values of the map as a slice.
 func (m *ListMap) Values() []interface{} {
 	m.mu.RLock()
-	values := make([]interface{}, m.list.Len())
-	index := 0
-	m.list.IteratorAsc(func(e *glist.Element) bool {
-		values[index] = e.Value.(*gListMapNode).value
-		index++
-		return true
-	})
+	var (
+		values = make([]interface{}, m.list.Len())
+		index  = 0
+	)
+	if m.list != nil {
+		m.list.IteratorAsc(func(e *glist.Element) bool {
+			values[index] = e.Value.(*gListMapNode).value
+			index++
+			return true
+		})
+	}
 	m.mu.RUnlock()
 	return values
 }
@@ -415,7 +455,9 @@ func (m *ListMap) Values() []interface{} {
 // It returns true if the <key> exists, or else false.
 func (m *ListMap) Contains(key interface{}) (ok bool) {
 	m.mu.RLock()
-	_, ok = m.data[key]
+	if m.data != nil {
+		_, ok = m.data[key]
+	}
 	m.mu.RUnlock()
 	return
 }
@@ -448,6 +490,10 @@ func (m *ListMap) Flip() {
 func (m *ListMap) Merge(other *ListMap) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	if m.data == nil {
+		m.data = make(map[interface{}]*glist.Element)
+		m.list = glist.New()
+	}
 	if other != m {
 		other.mu.RLock()
 		defer other.mu.RUnlock()
@@ -471,13 +517,12 @@ func (m *ListMap) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (m *ListMap) UnmarshalJSON(b []byte) error {
-	if m.mu == nil {
-		m.mu = rwmutex.New()
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.data == nil {
 		m.data = make(map[interface{}]*glist.Element)
 		m.list = glist.New()
 	}
-	m.mu.Lock()
-	defer m.mu.Unlock()
 	var data map[string]interface{}
 	if err := json.Unmarshal(b, &data); err != nil {
 		return err
@@ -494,13 +539,12 @@ func (m *ListMap) UnmarshalJSON(b []byte) error {
 
 // UnmarshalValue is an interface implement which sets any type of value for map.
 func (m *ListMap) UnmarshalValue(value interface{}) (err error) {
-	if m.mu == nil {
-		m.mu = rwmutex.New()
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.data == nil {
 		m.data = make(map[interface{}]*glist.Element)
 		m.list = glist.New()
 	}
-	m.mu.Lock()
-	defer m.mu.Unlock()
 	for k, v := range gconv.Map(value) {
 		if e, ok := m.data[k]; !ok {
 			m.data[k] = m.list.PushBack(&gListMapNode{k, v})

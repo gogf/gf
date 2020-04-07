@@ -73,7 +73,7 @@ func NewSortedArrayFrom(array []interface{}, comparator func(a, b interface{}) i
 	a := NewSortedArraySize(0, comparator, safe...)
 	a.array = array
 	sort.Slice(a.array, func(i, j int) bool {
-		return a.comparator(a.array[i], a.array[j]) < 0
+		return a.getComparator()(a.array[i], a.array[j]) < 0
 	})
 	return a
 }
@@ -91,10 +91,9 @@ func NewSortedArrayFromCopy(array []interface{}, comparator func(a, b interface{
 func (a *SortedArray) SetArray(array []interface{}) *SortedArray {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	a.checkComparator()
 	a.array = array
 	sort.Slice(a.array, func(i, j int) bool {
-		return a.comparator(a.array[i], a.array[j]) < 0
+		return a.getComparator()(a.array[i], a.array[j]) < 0
 	})
 	return a
 }
@@ -106,7 +105,7 @@ func (a *SortedArray) SetComparator(comparator func(a, b interface{}) int) {
 	defer a.mu.Unlock()
 	a.comparator = comparator
 	sort.Slice(a.array, func(i, j int) bool {
-		return a.comparator(a.array[i], a.array[j]) < 0
+		return a.getComparator()(a.array[i], a.array[j]) < 0
 	})
 }
 
@@ -116,9 +115,8 @@ func (a *SortedArray) SetComparator(comparator func(a, b interface{}) int) {
 func (a *SortedArray) Sort() *SortedArray {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	a.checkComparator()
 	sort.Slice(a.array, func(i, j int) bool {
-		return a.comparator(a.array[i], a.array[j]) < 0
+		return a.getComparator()(a.array[i], a.array[j]) < 0
 	})
 	return a
 }
@@ -427,7 +425,6 @@ func (a *SortedArray) Search(value interface{}) (index int) {
 // If <result> lesser than 0, it means the value at <index> is lesser than <value>.
 // If <result> greater than 0, it means the value at <index> is greater than <value>.
 func (a *SortedArray) binSearch(value interface{}, lock bool) (index int, result int) {
-	a.checkComparator()
 	if len(a.array) == 0 {
 		return -1, -2
 	}
@@ -441,7 +438,7 @@ func (a *SortedArray) binSearch(value interface{}, lock bool) (index int, result
 	cmp := -2
 	for min <= max {
 		mid = (min + max) / 2
-		cmp = a.comparator(value, a.array[mid])
+		cmp = a.getComparator()(value, a.array[mid])
 		switch {
 		case cmp < 0:
 			max = mid - 1
@@ -470,7 +467,6 @@ func (a *SortedArray) SetUnique(unique bool) *SortedArray {
 func (a *SortedArray) Unique() *SortedArray {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	a.checkComparator()
 	if len(a.array) == 0 {
 		return a
 	}
@@ -479,7 +475,7 @@ func (a *SortedArray) Unique() *SortedArray {
 		if i == len(a.array)-1 {
 			break
 		}
-		if a.comparator(a.array[i], a.array[i+1]) == 0 {
+		if a.getComparator()(a.array[i], a.array[i+1]) == 0 {
 			a.array = append(a.array[:i+1], a.array[i+1+1:]...)
 		} else {
 			i++
@@ -770,10 +766,11 @@ func (a *SortedArray) IsEmpty() bool {
 	return a.Len() == 0
 }
 
-// checkComparator checks if comparator is nil.
-// Note that it panics if no comparator is set.
-func (a *SortedArray) checkComparator() {
+// getComparator returns the comparator if it's previously set,
+// or else it panics.
+func (a *SortedArray) getComparator() func(a, b interface{}) int {
 	if a.comparator == nil {
 		panic("comparator is missing for sorted array")
 	}
+	return a.comparator
 }
