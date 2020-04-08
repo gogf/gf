@@ -40,6 +40,14 @@ func (s *Schema) Table(table string) *Model {
 	} else {
 		m = s.db.Table(table)
 	}
+	// Do not change the schema of the original db,
+	// it here creates a new db and changes its schema.
+	db, err := New(m.db.GetGroup())
+	if err != nil {
+		panic(err)
+	}
+	db.SetSchema(s.schema)
+	m.db = db
 	m.schema = s.schema
 	return m
 }

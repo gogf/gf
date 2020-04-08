@@ -8,6 +8,7 @@ package gdb
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/text/gregex"
@@ -89,9 +90,10 @@ func (d *DriverMysql) Tables(schema ...string) (tables []string, err error) {
 //
 // It's using cache feature to enhance the performance, which is never expired util the process restarts.
 func (d *DriverMysql) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
-	table = gstr.Trim(table)
+	charL, charR := d.GetChars()
+	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
-		panic("function TableFields supports only single table operations")
+		return nil, errors.New("function TableFields supports only single table operations")
 	}
 	checkSchema := d.schema.Val()
 	if len(schema) > 0 && schema[0] != "" {
