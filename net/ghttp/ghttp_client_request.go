@@ -11,16 +11,17 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/gogf/gf/encoding/gparser"
-	"github.com/gogf/gf/text/gregex"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/gogf/gf/encoding/gparser"
+	"github.com/gogf/gf/text/gregex"
+	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/util/gconv"
 
 	"github.com/gogf/gf/os/gfile"
 )
@@ -213,20 +214,21 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 	}
 	// Sending request.
 	var r *http.Response
+	resp = &ClientResponse{}
 	for {
 		if r, err = c.Do(req); err != nil {
 			if c.retryCount > 0 {
 				c.retryCount--
 			} else {
-				return nil, err
+				resp.req = req
+				return resp, err
 			}
 		} else {
 			break
 		}
 	}
-	resp = &ClientResponse{
-		Response: r,
-	}
+	resp.Response = r
+
 	// Auto saving cookie content.
 	if c.browserMode {
 		now := time.Now()

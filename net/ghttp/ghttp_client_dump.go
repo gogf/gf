@@ -71,19 +71,33 @@ func getResponseBody(resp *http.Response) string {
 	return gconv.UnsafeBytesToStr(bytesBody)
 }
 
+func (r *ClientResponse) getRequest() *http.Request {
+	if r.Response != nil && r.Request != nil {
+		return r.Request
+	}
+	if r.req != nil {
+		return r.req
+	}
+	return nil
+}
+
 // RawRequest dump request to raw string
 func (r *ClientResponse) RawRequest() string {
 	// this can be nil
-	if r == nil || r.Request == nil {
+	if r == nil {
+		return ""
+	}
+	req := r.getRequest()
+	if req == nil {
 		return ""
 	}
 	// DumpRequestOut will write more header than DumpRequest, such as User-Agent.
 	// read body using getRequestBody method.
-	bs, err := httputil.DumpRequestOut(r.Request, false)
+	bs, err := httputil.DumpRequestOut(req, false)
 	if err != nil {
 		return ""
 	}
-	return fmt.Sprintf(dumpTextFormat, "REQUEST ", gconv.UnsafeBytesToStr(bs), getRequestBody(r.Request))
+	return fmt.Sprintf(dumpTextFormat, "REQUEST ", gconv.UnsafeBytesToStr(bs), getRequestBody(req))
 }
 
 // RawResponse dump response to raw string
