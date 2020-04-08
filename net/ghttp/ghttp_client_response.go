@@ -7,14 +7,16 @@
 package ghttp
 
 import (
-	"github.com/gogf/gf/util/gconv"
 	"io/ioutil"
 	"net/http"
 	"time"
+
+	"github.com/gogf/gf/util/gconv"
 )
 
 // ClientResponse is the struct for client request response.
 type ClientResponse struct {
+	req *http.Request
 	*http.Response
 	cookies map[string]string
 }
