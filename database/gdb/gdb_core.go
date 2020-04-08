@@ -157,7 +157,7 @@ func (c *Core) GetAll(sql string, args ...interface{}) (Result, error) {
 	return c.DB.DoGetAll(nil, sql, args...)
 }
 
-// doGetAll queries and returns data records from database.
+// DoGetAll queries and returns data records from database.
 func (c *Core) DoGetAll(link Link, sql string, args ...interface{}) (result Result, err error) {
 	if link == nil {
 		link, err = c.DB.Slave()
@@ -379,13 +379,15 @@ func (c *Core) Save(table string, data interface{}, batch ...int) (sql.Result, e
 // 2: save:    if there's unique/primary key in the data, it updates it or else inserts a new one;
 // 3: ignore:  if there's unique/primary key in the data, it ignores the inserting;
 func (c *Core) DoInsert(link Link, table string, data interface{}, option int, batch ...int) (result sql.Result, err error) {
-	var fields []string
-	var values []string
-	var params []interface{}
-	var dataMap Map
 	table = c.DB.QuotePrefixTableName(table)
-	reflectValue := reflect.ValueOf(data)
-	reflectKind := reflectValue.Kind()
+	var (
+		fields       []string
+		values       []string
+		params       []interface{}
+		dataMap      Map
+		reflectValue = reflect.ValueOf(data)
+		reflectKind  = reflectValue.Kind()
+	)
 	if reflectKind == reflect.Ptr {
 		reflectValue = reflectValue.Elem()
 		reflectKind = reflectValue.Kind()
@@ -401,16 +403,23 @@ func (c *Core) DoInsert(link Link, table string, data interface{}, option int, b
 	if len(dataMap) == 0 {
 		return nil, errors.New("data cannot be empty")
 	}
-	charL, charR := c.DB.GetChars()
+	var (
+		charL, charR = c.DB.GetChars()
+		operation    = GetInsertOperationByOption(option)
+		updateStr    = ""
+	)
 	for k, v := range dataMap {
 		fields = append(fields, charL+k+charR)
 		values = append(values, "?")
 		params = append(params, v)
 	}
-	operation := GetInsertOperationByOption(option)
-	updateStr := ""
 	if option == gINSERT_OPTION_SAVE {
 		for k, _ := range dataMap {
+			// If it's SAVE operation,
+			// do not automatically update the creating time.
+			if k == gSOFT_FIELD_NAME_CREATE {
+				continue
+			}
 			if len(updateStr) > 0 {
 				updateStr += ","
 			}
@@ -462,12 +471,15 @@ func (c *Core) BatchSave(table string, list interface{}, batch ...int) (sql.Resu
 	return c.DB.DoBatchInsert(nil, table, list, gINSERT_OPTION_SAVE, batch...)
 }
 
-// doBatchInsert batch inserts/replaces/saves data.
+// DoBatchInsert batch inserts/replaces/saves data.
 func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option int, batch ...int) (result sql.Result, err error) {
-	var keys, values []string
-	var params []interface{}
 	table = c.DB.QuotePrefixTableName(table)
-	listMap := (List)(nil)
+	var (
+		keys    []string
+		values  []string
+		params  []interface{}
+		listMap List
+	)
 	switch v := list.(type) {
 	case Result:
 		listMap = v.List()
@@ -478,8 +490,10 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 	case Map:
 		listMap = List{v}
 	default:
-		rv := reflect.ValueOf(list)
-		kind := rv.Kind()
+		var (
+			rv   = reflect.ValueOf(list)
+			kind = rv.Kind()
+		)
 		if kind == reflect.Ptr {
 			rv = rv.Elem()
 			kind = rv.Kind()
@@ -512,15 +526,21 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 		holders = append(holders, "?")
 	}
 	// Prepare the batch result pointer.
-	batchResult := new(SqlResult)
-	charL, charR := c.DB.GetChars()
-	keysStr := charL + strings.Join(keys, charR+","+charL) + charR
-	valueHolderStr := "(" + strings.Join(holders, ",") + ")"
-
-	operation := GetInsertOperationByOption(option)
-	updateStr := ""
+	var (
+		charL, charR   = c.DB.GetChars()
+		batchResult    = new(SqlResult)
+		keysStr        = charL + strings.Join(keys, charR+","+charL) + charR
+		valueHolderStr = "(" + strings.Join(holders, ",") + ")"
+		operation      = GetInsertOperationByOption(option)
+		updateStr      = ""
+	)
 	if option == gINSERT_OPTION_SAVE {
 		for _, k := range keys {
+			// If it's SAVE operation,
+			// do not automatically update the creating time.
+			if k == gSOFT_FIELD_NAME_CREATE {
+				continue
+			}
 			if len(updateStr) > 0 {
 				updateStr += ","
 			}
@@ -599,18 +619,25 @@ func (c *Core) Update(table string, data interface{}, condition interface{}, arg
 // Also see Update.
 func (c *Core) DoUpdate(link Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) {
 	table = c.DB.QuotePrefixTableName(table)
-	updates := ""
-	rv := reflect.ValueOf(data)
-	kind := rv.Kind()
+	var (
+		rv   = reflect.ValueOf(data)
+		kind = rv.Kind()
+	)
 	if kind == reflect.Ptr {
 		rv = rv.Elem()
 		kind = rv.Kind()
 	}
-	params := []interface{}(nil)
+	var (
+		params  []interface{}
+		updates = ""
+	)
 	switch kind {
 	case reflect.Map, reflect.Struct:
-		var fields []string
-		for k, v := range DataToMapDeep(data) {
+		var (
+			fields  []string
+			dataMap = DataToMapDeep(data)
+		)
+		for k, v := range dataMap {
 			fields = append(fields, c.DB.QuoteWord(k)+"=?")
 			params = append(params, v)
 		}
@@ -656,7 +683,7 @@ func (c *Core) Delete(table string, condition interface{}, args ...interface{}) 
 	return c.DB.DoDelete(nil, table, newWhere, newArgs...)
 }
 
-// doDelete does "DELETE FROM ... " statement for the table.
+// DoDelete does "DELETE FROM ... " statement for the table.
 // Also see Delete.
 func (c *Core) DoDelete(link Link, table string, condition string, args ...interface{}) (result sql.Result, err error) {
 	if link == nil {

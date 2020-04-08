@@ -30,7 +30,7 @@ func CopyMap(data map[string]interface{}) (copy map[string]interface{}) {
 // cases or chars '-'/'_'/'.'/' '.
 //
 // Note that this function might be of low performance.
-func MapPossibleItemByKey(data map[string]interface{}, key string) (string, interface{}) {
+func MapPossibleItemByKey(data map[string]interface{}, key string) (foundKey string, foundValue interface{}) {
 	if v, ok := data[key]; ok {
 		return key, v
 	}
@@ -46,4 +46,13 @@ func MapPossibleItemByKey(data map[string]interface{}, key string) (string, inte
 		}
 	}
 	return "", nil
+}
+
+// MapContainsPossibleKey checks if the given <key> is contained in given map <data>.
+// It checks the key with or without cases or chars '-'/'_'/'.'/' '.
+func MapContainsPossibleKey(data map[string]interface{}, key string) bool {
+	if k, _ := MapPossibleItemByKey(data, key); k != "" {
+		return true
+	}
+	return false
 }

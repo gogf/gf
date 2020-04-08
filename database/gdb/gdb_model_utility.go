@@ -28,15 +28,19 @@ func (m *Model) getModel() *Model {
 // filterDataForInsertOrUpdate does filter feature with data for inserting/updating operations.
 // Note that, it does not filter list item, which is also type of map, for "omit empty" feature.
 func (m *Model) filterDataForInsertOrUpdate(data interface{}) interface{} {
-	if list, ok := m.data.(List); ok {
-		for k, item := range list {
-			list[k] = m.doFilterDataMapForInsertOrUpdate(item, false)
+	switch value := data.(type) {
+	case List:
+		for k, item := range value {
+			value[k] = m.doFilterDataMapForInsertOrUpdate(item, false)
 		}
-		return list
-	} else if item, ok := m.data.(Map); ok {
-		return m.doFilterDataMapForInsertOrUpdate(item, true)
+		return value
+
+	case Map:
+		return m.doFilterDataMapForInsertOrUpdate(value, true)
+
+	default:
+		return data
 	}
-	return data
 }
 
 // doFilterDataMapForInsertOrUpdate does the filter features for map.
@@ -144,16 +148,15 @@ func (m *Model) checkAndRemoveCache() {
 // Note that this function does not change any attribute value of the <m>.
 //
 // The parameter <limit> specifies whether limits querying only one record if m.limit is not set.
-func (m *Model) formatCondition(limit bool) (condition string, conditionArgs []interface{}) {
-	var where string
+func (m *Model) formatCondition(limit bool) (conditionWhere string, conditionExtra string, conditionArgs []interface{}) {
 	if len(m.whereHolder) > 0 {
 		for _, v := range m.whereHolder {
 			switch v.operator {
 			case gWHERE_HOLDER_WHERE:
-				if where == "" {
+				if conditionWhere == "" {
 					newWhere, newArgs := formatWhere(m.db, v.where, v.args, m.option&OPTION_OMITEMPTY > 0)
 					if len(newWhere) > 0 {
-						where = newWhere
+						conditionWhere = newWhere
 						conditionArgs = newArgs
 					}
 					continue
@@ -163,10 +166,10 @@ func (m *Model) formatCondition(limit bool) (condition string, conditionArgs []i
 			case gWHERE_HOLDER_AND:
 				newWhere, newArgs := formatWhere(m.db, v.where, v.args, m.option&OPTION_OMITEMPTY > 0)
 				if len(newWhere) > 0 {
-					if where[0] == '(' {
-						where = fmt.Sprintf(`%s AND (%s)`, where, newWhere)
+					if conditionWhere[0] == '(' {
+						conditionWhere = fmt.Sprintf(`%s AND (%s)`, conditionWhere, newWhere)
 					} else {
-						where = fmt.Sprintf(`(%s) AND (%s)`, where, newWhere)
+						conditionWhere = fmt.Sprintf(`(%s) AND (%s)`, conditionWhere, newWhere)
 					}
 					conditionArgs = append(conditionArgs, newArgs...)
 				}
@@ -174,39 +177,39 @@ func (m *Model) formatCondition(limit bool) (condition string, conditionArgs []i
 			case gWHERE_HOLDER_OR:
 				newWhere, newArgs := formatWhere(m.db, v.where, v.args, m.option&OPTION_OMITEMPTY > 0)
 				if len(newWhere) > 0 {
-					if where[0] == '(' {
-						where = fmt.Sprintf(`%s OR (%s)`, where, newWhere)
+					if conditionWhere[0] == '(' {
+						conditionWhere = fmt.Sprintf(`%s OR (%s)`, conditionWhere, newWhere)
 					} else {
-						where = fmt.Sprintf(`(%s) OR (%s)`, where, newWhere)
+						conditionWhere = fmt.Sprintf(`(%s) OR (%s)`, conditionWhere, newWhere)
 					}
 					conditionArgs = append(conditionArgs, newArgs...)
 				}
 			}
 		}
 	}
-	if where != "" {
-		condition += " WHERE " + where
+	if conditionWhere != "" {
+		conditionWhere = " WHERE " + conditionWhere
 	}
 	if m.groupBy != "" {
-		condition += " GROUP BY " + m.groupBy
+		conditionExtra += " GROUP BY " + m.groupBy
 	}
 	if m.orderBy != "" {
-		condition += " ORDER BY " + m.orderBy
+		conditionExtra += " ORDER BY " + m.orderBy
 	}
 	if m.limit != 0 {
 		if m.start >= 0 {
-			condition += fmt.Sprintf(" LIMIT %d,%d", m.start, m.limit)
+			conditionExtra += fmt.Sprintf(" LIMIT %d,%d", m.start, m.limit)
 		} else {
-			condition += fmt.Sprintf(" LIMIT %d", m.limit)
+			conditionExtra += fmt.Sprintf(" LIMIT %d", m.limit)
 		}
 	} else if limit {
-		condition += " LIMIT 1"
+		conditionExtra += " LIMIT 1"
 	}
 	if m.offset >= 0 {
-		condition += fmt.Sprintf(" OFFSET %d", m.offset)
+		conditionExtra += fmt.Sprintf(" OFFSET %d", m.offset)
 	}
 	if m.lockInfo != "" {
-		condition += " " + m.lockInfo
+		conditionExtra += " " + m.lockInfo
 	}
 	return
 }
