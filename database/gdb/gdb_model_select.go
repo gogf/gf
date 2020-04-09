@@ -34,8 +34,10 @@ func (m *Model) All(where ...interface{}) (Result, error) {
 		fieldNameDelete                               = m.getSoftFieldNameDelete()
 		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(false)
 	)
-	if !m.force && fieldNameDelete != "" {
-		if conditionWhere != "" {
+	if !m.unscoped && fieldNameDelete != "" {
+		if conditionWhere == "" {
+			conditionWhere = " WHERE"
+		} else {
 			conditionWhere += " AND"
 		}
 		conditionWhere += fmt.Sprintf(` %s IS NULL`, m.db.QuoteWord(fieldNameDelete))
@@ -244,7 +246,19 @@ func (m *Model) Count(where ...interface{}) (int, error) {
 	if m.fields != "" && m.fields != "*" {
 		countFields = fmt.Sprintf(`COUNT(%s)`, m.fields)
 	}
-	conditionWhere, conditionExtra, conditionArgs := m.formatCondition(false)
+	var (
+		fieldNameDelete                               = m.getSoftFieldNameDelete()
+		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(false)
+	)
+	if !m.unscoped && fieldNameDelete != "" {
+		if conditionWhere == "" {
+			conditionWhere = " WHERE"
+		} else {
+			conditionWhere += " AND"
+		}
+		conditionWhere += fmt.Sprintf(` %s IS NULL`, m.db.QuoteWord(fieldNameDelete))
+	}
+
 	s := fmt.Sprintf("SELECT %s FROM %s %s", countFields, m.tables, conditionWhere+conditionExtra)
 	if len(m.groupBy) > 0 {
 		s = fmt.Sprintf("SELECT COUNT(1) FROM (%s) count_alias", s)

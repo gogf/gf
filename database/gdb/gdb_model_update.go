@@ -46,7 +46,7 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(false)
 	)
 	// Automatically update the record updating time.
-	if !m.force && fieldNameUpdate != "" {
+	if !m.unscoped && fieldNameUpdate != "" {
 		var (
 			refValue = reflect.ValueOf(m.data)
 			refKind  = refValue.Kind()
