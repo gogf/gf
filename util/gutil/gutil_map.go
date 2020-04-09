@@ -16,13 +16,19 @@ var (
 	replaceCharReg, _ = regexp.Compile(`[\-\.\_\s]+`)
 )
 
-// CopyMap does a shallow copy from map <data> to <copy> for most commonly used map type
+// MapCopy does a shallow copy from map <data> to <copy> for most commonly used map type
 // map[string]interface{}.
-func CopyMap(data map[string]interface{}) (copy map[string]interface{}) {
+func MapCopy(data map[string]interface{}) (copy map[string]interface{}) {
 	copy = make(map[string]interface{}, len(data))
 	for k, v := range data {
 		copy[k] = v
 	}
+	return
+}
+
+// MapContains checks whether map <data> contains <key>.
+func MapContains(data map[string]interface{}, key string) (ok bool) {
+	_, ok = data[key]
 	return
 }
 

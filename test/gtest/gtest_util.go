@@ -60,8 +60,10 @@ func Assert(value, expect interface{}) {
 		}
 		return
 	}
-	strValue := gconv.String(value)
-	strExpect := gconv.String(expect)
+	var (
+		strValue  = gconv.String(value)
+		strExpect = gconv.String(expect)
+	)
 	if strValue != strExpect {
 		panic(fmt.Sprintf(`[ASSERT] EXPECT %v == %v`, strValue, strExpect))
 	}
@@ -105,11 +107,30 @@ func AssertNE(value, expect interface{}) {
 		}
 		return
 	}
-	strValue := gconv.String(value)
-	strExpect := gconv.String(expect)
+	var (
+		strValue  = gconv.String(value)
+		strExpect = gconv.String(expect)
+	)
 	if strValue == strExpect {
 		panic(fmt.Sprintf(`[ASSERT] EXPECT %v != %v`, strValue, strExpect))
 	}
+}
+
+// AssertNEQ checks <value> and <expect> NOT EQUAL, including their TYPES.
+func AssertNEQ(value, expect interface{}) {
+	// Type assert.
+	t1 := reflect.TypeOf(value)
+	t2 := reflect.TypeOf(expect)
+	if t1 == t2 {
+		panic(
+			fmt.Sprintf(
+				`[ASSERT] EXPECT TYPE %v[%v] != %v[%v]`,
+				gconv.String(value), t1, gconv.String(expect), t2,
+			),
+		)
+	}
+	// Value assert.
+	AssertNE(value, expect)
 }
 
 // AssertGT checks <value> is GREATER THAN <expect>.

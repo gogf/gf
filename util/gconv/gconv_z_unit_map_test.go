@@ -7,6 +7,7 @@
 package gconv_test
 
 import (
+	"github.com/gogf/gf/util/gutil"
 	"testing"
 
 	"github.com/gogf/gf/frame/g"
@@ -179,7 +180,7 @@ func Test_Map_PrivateAttribute(t *testing.T) {
 	})
 }
 
-func Test_MapDeep(t *testing.T) {
+func Test_MapDeep1(t *testing.T) {
 	type Ids struct {
 		Id  int `c:"id"`
 		Uid int `c:"uid"`
@@ -213,6 +214,47 @@ func Test_MapDeep(t *testing.T) {
 		t.Assert(m["id"], user.Id)
 		t.Assert(m["nickname"], user.Nickname)
 		t.Assert(m["create_time"], user.CreateTime)
+	})
+}
+
+func Test_MapDeep2(t *testing.T) {
+	type A struct {
+		F string
+		G string
+	}
+
+	type B struct {
+		A
+		H string
+	}
+
+	type C struct {
+		A A
+		F string
+	}
+
+	type D struct {
+		I A
+		F string
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		b := new(B)
+		c := new(C)
+		d := new(D)
+		mb := gconv.MapDeep(b)
+		mc := gconv.MapDeep(c)
+		md := gconv.MapDeep(d)
+		t.Assert(gutil.MapContains(mb, "F"), true)
+		t.Assert(gutil.MapContains(mb, "G"), true)
+		t.Assert(gutil.MapContains(mb, "H"), true)
+		t.Assert(gutil.MapContains(mc, "A"), true)
+		t.Assert(gutil.MapContains(mc, "F"), true)
+		t.Assert(gutil.MapContains(mc, "G"), false)
+		t.Assert(gutil.MapContains(md, "F"), true)
+		t.Assert(gutil.MapContains(md, "I"), true)
+		t.Assert(gutil.MapContains(md, "H"), false)
+		t.Assert(gutil.MapContains(md, "G"), false)
 	})
 }
 
