@@ -3,21 +3,29 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"gopkg.in/yaml.v3"
+	"github.com/gogf/gf/encoding/gjson"
 )
 
-func main() {
-	data := []byte(`
-m:
- k: v
-    `)
-	var result map[string]interface{}
-	if err := yaml.Unmarshal(data, &result); err != nil {
-		panic(err)
-	}
-	b, err := json.Marshal(result)
+type A struct {
+	D string
+	E string
+}
+type B struct {
+	A `json:"a"`
+	F string
+}
+
+func SystemJsonEncode(a interface{}) string {
+	js, err := json.Marshal(a)
 	if err != nil {
-		panic(err)
+		return "{}"
+	} else {
+		return fmt.Sprintf("%s", js)
 	}
-	fmt.Println(string(b))
+}
+
+func main() {
+	var b B
+	fmt.Println(SystemJsonEncode(b))
+	fmt.Println(gjson.New(b).MustToJsonString())
 }

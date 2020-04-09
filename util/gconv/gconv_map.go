@@ -158,9 +158,14 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 				return v.MapStrAny()
 			}
 			// Using reflect for converting.
-			rt := rv.Type()
-			name := ""
-			tagArray := structTagPriority
+			var (
+				rtField  reflect.StructField
+				rvField  reflect.Value
+				rvKind   reflect.Kind
+				rt       = rv.Type()
+				name     = ""
+				tagArray = structTagPriority
+			)
 			switch len(tags) {
 			case 0:
 				// No need handle.
@@ -169,9 +174,6 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 			default:
 				tagArray = append(tags, structTagPriority...)
 			}
-			var rtField reflect.StructField
-			var rvField reflect.Value
-			var rvKind reflect.Kind
 			for i := 0; i < rv.NumField(); i++ {
 				rtField = rt.Field(i)
 				rvField = rv.Field(i)
@@ -188,7 +190,7 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 					}
 				}
 				if name == "" {
-					name = strings.TrimSpace(fieldName)
+					name = fieldName
 				} else {
 					// Support json tag feature: -, omitempty
 					name = strings.TrimSpace(name)
@@ -216,9 +218,17 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 						rvKind = rvField.Kind()
 					}
 					if rvKind == reflect.Struct {
-						for k, v := range doMapConvert(rvField.Interface(), recursive, tags...) {
-							m[k] = v
+						if name == fieldName {
+							// It means this attribute field has no tag.
+							// Overwrite the attribute with sub-struct attribute fields.
+							for k, v := range doMapConvert(rvField.Interface(), recursive, tags...) {
+								m[k] = v
+							}
+						} else {
+							// It means this attribute field has desired tag.
+							m[name] = doMapConvert(rvField.Interface(), recursive, tags...)
 						}
+
 					} else {
 						m[name] = rvField.Interface()
 					}
