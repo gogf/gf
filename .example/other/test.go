@@ -7,11 +7,22 @@ import (
 )
 
 type A struct {
-	D string
-	E string
+	F string
+	G string
 }
+
 type B struct {
-	A `json:"a"`
+	A
+	H string
+}
+
+type C struct {
+	A A
+	F string
+}
+
+type D struct {
+	I A
 	F string
 }
 
@@ -25,7 +36,12 @@ func SystemJsonEncode(a interface{}) string {
 }
 
 func main() {
-	var b B
-	fmt.Println(SystemJsonEncode(b))
-	fmt.Println(gjson.New(b).MustToJsonString())
+	fmt.Println("encoding/json", SystemJsonEncode(B{}))
+	fmt.Println("gjson", gjson.New(B{}).MustToJsonString())
+	fmt.Println()
+	fmt.Println("encoding/json", SystemJsonEncode(C{}))
+	fmt.Println("gjson", gjson.New(C{}).MustToJsonString())
+	fmt.Println()
+	fmt.Println("encoding/json", SystemJsonEncode(D{}))
+	fmt.Println("gjson", gjson.New(D{}).MustToJsonString())
 }

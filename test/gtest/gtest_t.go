@@ -30,6 +30,11 @@ func (t *T) AssertNE(value, expect interface{}) {
 	AssertNE(value, expect)
 }
 
+// AssertNE checks <value> and <expect> NOT EQUAL, including their TYPES.
+func (t *T) AssertNEQ(value, expect interface{}) {
+	AssertNEQ(value, expect)
+}
+
 // AssertGT checks <value> is GREATER THAN <expect>.
 // Notice that, only string, integer and float types can be compared by AssertGT,
 // others are invalid.

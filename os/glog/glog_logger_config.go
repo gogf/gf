@@ -82,7 +82,7 @@ func (l *Logger) SetConfigWithMap(m map[string]interface{}) error {
 	}
 	// The m now is a shallow copy of m.
 	// A little tricky, isn't it?
-	m = gutil.CopyMap(m)
+	m = gutil.MapCopy(m)
 	// Change string configuration to int value for level.
 	levelKey, levelValue := gutil.MapPossibleItemByKey(m, "Level")
 	if levelValue != nil {

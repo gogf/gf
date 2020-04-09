@@ -218,7 +218,8 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 						rvKind = rvField.Kind()
 					}
 					if rvKind == reflect.Struct {
-						if name == fieldName {
+						hasNoTag := name == fieldName
+						if hasNoTag && rtField.Anonymous {
 							// It means this attribute field has no tag.
 							// Overwrite the attribute with sub-struct attribute fields.
 							for k, v := range doMapConvert(rvField.Interface(), recursive, tags...) {

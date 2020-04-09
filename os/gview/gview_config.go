@@ -63,7 +63,7 @@ func (view *View) SetConfigWithMap(m map[string]interface{}) error {
 	}
 	// The m now is a shallow copy of m.
 	// A little tricky, isn't it?
-	m = gutil.CopyMap(m)
+	m = gutil.MapCopy(m)
 	// Most common used configuration support for single view path.
 	_, v1 := gutil.MapPossibleItemByKey(m, "paths")
 	_, v2 := gutil.MapPossibleItemByKey(m, "path")
