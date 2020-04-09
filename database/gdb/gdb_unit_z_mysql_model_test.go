@@ -2158,3 +2158,45 @@ func Test_Model_DryRun(t *testing.T) {
 		t.Assert(n, 0)
 	})
 }
+
+func Test_Model_Cache(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		one, err := db.Table(table).Cache(time.Second, "test1").FindOne(1)
+		t.Assert(err, nil)
+		t.Assert(one["passport"], "user_1")
+
+		r, err := db.Table(table).Data("passport", "user_100").WherePri(1).Update()
+		t.Assert(err, nil)
+		n, err := r.RowsAffected()
+		t.Assert(err, nil)
+		t.Assert(n, 1)
+
+		one, err = db.Table(table).Cache(time.Second, "test1").FindOne(1)
+		t.Assert(err, nil)
+		t.Assert(one["passport"], "user_1")
+
+		time.Sleep(time.Second * 2)
+
+		one, err = db.Table(table).Cache(time.Second, "test1").FindOne(1)
+		t.Assert(err, nil)
+		t.Assert(one["passport"], "user_100")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		one, err := db.Table(table).Cache(time.Second, "test2").FindOne(2)
+		t.Assert(err, nil)
+		t.Assert(one["passport"], "user_2")
+
+		r, err := db.Table(table).Data("passport", "user_200").Cache(-1, "test2").WherePri(2).Update()
+		t.Assert(err, nil)
+		n, err := r.RowsAffected()
+		t.Assert(err, nil)
+		t.Assert(n, 1)
+
+		one, err = db.Table(table).Cache(time.Second, "test2").FindOne(2)
+		t.Assert(err, nil)
+		t.Assert(one["passport"], "user_200")
+	})
+}
