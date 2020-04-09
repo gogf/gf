@@ -12,13 +12,13 @@ import (
 	"github.com/gogf/gf/os/gtime"
 )
 
-// Force enables/disables the soft deleting feature.
-func (m *Model) Force(force ...bool) *Model {
+// Unscoped enables/disables the soft deleting feature.
+func (m *Model) Unscoped(unscoped ...bool) *Model {
 	model := m.getModel()
-	if len(force) > 0 {
-		model.force = force[0]
+	if len(unscoped) > 0 {
+		model.unscoped = unscoped[0]
 	} else {
-		model.force = true
+		model.unscoped = true
 	}
 	return model
 }
@@ -40,7 +40,7 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(false)
 	)
 	// Soft deleting.
-	if !m.force && fieldNameDelete != "" {
+	if !m.unscoped && fieldNameDelete != "" {
 		return m.db.DoUpdate(
 			m.getLink(true),
 			m.tables,

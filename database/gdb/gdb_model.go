@@ -37,7 +37,7 @@ type Model struct {
 	cacheEnabled  bool           // Enable sql result cache feature.
 	cacheDuration time.Duration  // Cache TTL duration.
 	cacheName     string         // Cache name for custom operation.
-	force         bool           // Force select/delete without soft operation features.
+	unscoped      bool           // Disables soft deleting features when select/delete operations.
 	safe          bool           // If true, it clones and returns a new model object whenever operation done; or else it changes the attribute of current model.
 }
 

@@ -157,7 +157,7 @@ func (m *Model) doInsertWithOption(option int, data ...interface{}) (result sql.
 			batch = m.batch
 		}
 		// Automatic handling for creating/updating time.
-		if !m.force && (fieldNameCreate != "" || fieldNameUpdate != "") {
+		if !m.unscoped && (fieldNameCreate != "" || fieldNameUpdate != "") {
 			for k, v := range list {
 				if fieldNameCreate != "" && !gutil.MapContainsPossibleKey(v, fieldNameCreate) {
 					v[fieldNameCreate] = nowString
@@ -179,7 +179,7 @@ func (m *Model) doInsertWithOption(option int, data ...interface{}) (result sql.
 	// Single operation.
 	if data, ok := m.data.(Map); ok {
 		// Automatic handling for creating/updating time.
-		if !m.force && (fieldNameCreate != "" || fieldNameUpdate != "") {
+		if !m.unscoped && (fieldNameCreate != "" || fieldNameUpdate != "") {
 			if fieldNameCreate != "" && !gutil.MapContainsPossibleKey(data, fieldNameCreate) {
 				data[fieldNameCreate] = nowString
 			}

@@ -116,8 +116,8 @@ func AssertNE(value, expect interface{}) {
 	}
 }
 
-// AssertNEQ checks <value> and <expect> NOT EQUAL, including their TYPES.
-func AssertNEQ(value, expect interface{}) {
+// AssertNQ checks <value> and <expect> NOT EQUAL, including their TYPES.
+func AssertNQ(value, expect interface{}) {
 	// Type assert.
 	t1 := reflect.TypeOf(value)
 	t2 := reflect.TypeOf(expect)
