@@ -44,7 +44,7 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 		return m.db.DoUpdate(
 			m.getLink(true),
 			m.tables,
-			fmt.Sprintf(`%s='%s'`, m.db.QuoteWord(fieldNameDelete), gtime.Now().String()),
+			fmt.Sprintf(`%s='%s'`, m.db.QuoteString(fieldNameDelete), gtime.Now().String()),
 			conditionWhere+conditionExtra,
 			conditionArgs...,
 		)

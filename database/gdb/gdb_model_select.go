@@ -31,19 +31,24 @@ func (m *Model) All(where ...interface{}) (Result, error) {
 		return m.Where(where[0], where[1:]...).All()
 	}
 	var (
-		fieldNameDelete                               = m.getSoftFieldNameDelete()
+		softDeletingCondition                         = m.getConditionForSoftDeleting()
 		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(false)
 	)
-	if !m.unscoped && fieldNameDelete != "" {
+	if !m.unscoped && softDeletingCondition != "" {
 		if conditionWhere == "" {
-			conditionWhere = " WHERE"
+			conditionWhere = " WHERE "
 		} else {
-			conditionWhere += " AND"
+			conditionWhere += " AND "
 		}
-		conditionWhere += fmt.Sprintf(` %s IS NULL`, m.db.QuoteWord(fieldNameDelete))
+		conditionWhere += softDeletingCondition
 	}
 	return m.getAll(
-		fmt.Sprintf("SELECT %s FROM %s%s", m.fields, m.tables, conditionWhere+conditionExtra),
+		fmt.Sprintf(
+			"SELECT %s FROM %s%s",
+			m.db.QuoteString(m.fields),
+			m.tables,
+			conditionWhere+conditionExtra,
+		),
 		conditionArgs...,
 	)
 }
@@ -244,19 +249,19 @@ func (m *Model) Count(where ...interface{}) (int, error) {
 	}
 	countFields := "COUNT(1)"
 	if m.fields != "" && m.fields != "*" {
-		countFields = fmt.Sprintf(`COUNT(%s)`, m.fields)
+		countFields = fmt.Sprintf(`COUNT(%s)`, m.db.QuoteString(m.fields))
 	}
 	var (
-		fieldNameDelete                               = m.getSoftFieldNameDelete()
+		softDeletingCondition                         = m.getConditionForSoftDeleting()
 		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(false)
 	)
-	if !m.unscoped && fieldNameDelete != "" {
+	if !m.unscoped && softDeletingCondition != "" {
 		if conditionWhere == "" {
-			conditionWhere = " WHERE"
+			conditionWhere = " WHERE "
 		} else {
-			conditionWhere += " AND"
+			conditionWhere += " AND "
 		}
-		conditionWhere += fmt.Sprintf(` %s IS NULL`, m.db.QuoteWord(fieldNameDelete))
+		conditionWhere += softDeletingCondition
 	}
 
 	s := fmt.Sprintf("SELECT %s FROM %s %s", countFields, m.tables, conditionWhere+conditionExtra)
