@@ -78,6 +78,9 @@ func (m *Model) getSoftFieldName(table string, key string) (field string) {
 // "user LEFT JOIN user_detail ON(user_detail.uid=user.uid)"
 // "user u LEFT JOIN user_detail ud ON(ud.uid=u.uid) LEFT JOIN user_stats us ON(us.uid=u.uid)"
 func (m *Model) getConditionForSoftDeleting() string {
+	if m.unscoped {
+		return ""
+	}
 	conditionArray := garray.NewStrArray()
 	if gstr.Contains(m.tables, " JOIN ") {
 		// Base table.
