@@ -32,6 +32,17 @@ func (m *Model) Where(where interface{}, args ...interface{}) *Model {
 	return model
 }
 
+// Having sets the having statement for the model.
+// The parameters of this function usage are as the same as function Where.
+// See Where.
+func (m *Model) Having(having interface{}, args ...interface{}) *Model {
+	model := m.getModel()
+	model.having = []interface{}{
+		having, args,
+	}
+	return model
+}
+
 // WherePri does the same logic as Model.Where except that if the parameter <where>
 // is a single condition like int/string/float/slice, it treats the condition as the primary
 // key value. That is, if primary key is "id" and given <where> parameter as "123", the
