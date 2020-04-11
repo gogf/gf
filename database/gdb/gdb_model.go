@@ -28,6 +28,7 @@ type Model struct {
 	whereHolder   []*whereHolder // Condition strings for where operation.
 	groupBy       string         // Used for "group by" statement.
 	orderBy       string         // Used for "order by" statement.
+	having        []interface{}  // Used for "having..." statement.
 	start         int            // Used for "select ... start, limit ..." statement.
 	limit         int            // Used for "select ... start, limit ..." statement.
 	option        int            // Option for extra operation features.

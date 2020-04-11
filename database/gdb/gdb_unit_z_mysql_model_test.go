@@ -2200,3 +2200,29 @@ func Test_Model_Cache(t *testing.T) {
 		t.Assert(one["passport"], "user_200")
 	})
 }
+
+func Test_Model_Having(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		all, err := db.Table(table).Where("id > 1").Having("id > 8").All()
+		t.Assert(err, nil)
+		t.Assert(len(all), 2)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		all, err := db.Table(table).Where("id > 1").Having("id > ?", 8).All()
+		t.Assert(err, nil)
+		t.Assert(len(all), 2)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		all, err := db.Table(table).Where("id > ?", 1).Having("id > ?", 8).All()
+		t.Assert(err, nil)
+		t.Assert(len(all), 2)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		all, err := db.Table(table).Where("id > ?", 1).Having("id", 8).All()
+		t.Assert(err, nil)
+		t.Assert(len(all), 1)
+	})
+}

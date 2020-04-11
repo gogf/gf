@@ -12,6 +12,7 @@ import (
 	"github.com/gogf/gf/internal/empty"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/util/gconv"
 	"time"
 )
 
@@ -159,7 +160,9 @@ func (m *Model) formatCondition(limit bool) (conditionWhere string, conditionExt
 			switch v.operator {
 			case gWHERE_HOLDER_WHERE:
 				if conditionWhere == "" {
-					newWhere, newArgs := formatWhere(m.db, v.where, v.args, m.option&OPTION_OMITEMPTY > 0)
+					newWhere, newArgs := formatWhere(
+						m.db, v.where, v.args, m.option&OPTION_OMITEMPTY > 0,
+					)
 					if len(newWhere) > 0 {
 						conditionWhere = newWhere
 						conditionArgs = newArgs
@@ -169,7 +172,9 @@ func (m *Model) formatCondition(limit bool) (conditionWhere string, conditionExt
 				fallthrough
 
 			case gWHERE_HOLDER_AND:
-				newWhere, newArgs := formatWhere(m.db, v.where, v.args, m.option&OPTION_OMITEMPTY > 0)
+				newWhere, newArgs := formatWhere(
+					m.db, v.where, v.args, m.option&OPTION_OMITEMPTY > 0,
+				)
 				if len(newWhere) > 0 {
 					if conditionWhere[0] == '(' {
 						conditionWhere = fmt.Sprintf(`%s AND (%s)`, conditionWhere, newWhere)
@@ -180,7 +185,9 @@ func (m *Model) formatCondition(limit bool) (conditionWhere string, conditionExt
 				}
 
 			case gWHERE_HOLDER_OR:
-				newWhere, newArgs := formatWhere(m.db, v.where, v.args, m.option&OPTION_OMITEMPTY > 0)
+				newWhere, newArgs := formatWhere(
+					m.db, v.where, v.args, m.option&OPTION_OMITEMPTY > 0,
+				)
 				if len(newWhere) > 0 {
 					if conditionWhere[0] == '(' {
 						conditionWhere = fmt.Sprintf(`%s OR (%s)`, conditionWhere, newWhere)
@@ -200,6 +207,15 @@ func (m *Model) formatCondition(limit bool) (conditionWhere string, conditionExt
 	}
 	if m.orderBy != "" {
 		conditionExtra += " ORDER BY " + m.orderBy
+	}
+	if len(m.having) > 0 {
+		havingStr, havingArgs := formatWhere(
+			m.db, m.having[0], gconv.Interfaces(m.having[1]), m.option&OPTION_OMITEMPTY > 0,
+		)
+		if len(havingStr) > 0 {
+			conditionExtra += " HAVING " + havingStr
+			conditionArgs = append(conditionArgs, havingArgs...)
+		}
 	}
 	if m.limit != 0 {
 		if m.start >= 0 {
