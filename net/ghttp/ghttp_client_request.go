@@ -214,12 +214,14 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 	}
 	// Sending request.
 	var r *http.Response
+	// do not return nil even if the request fails
 	resp = &ClientResponse{}
 	for {
 		if r, err = c.Do(req); err != nil {
 			if c.retryCount > 0 {
 				c.retryCount--
 			} else {
+				// we need a copy of the request when the request fails.
 				resp.req = req
 				return resp, err
 			}
