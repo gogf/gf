@@ -147,3 +147,74 @@ CREATE TABLE %s (
 		t.Assert(i, 0)
 	})
 }
+
+func Test_SoftDelete_Join(t *testing.T) {
+	table1 := "time_test_table1"
+	if _, err := db.Exec(fmt.Sprintf(`
+CREATE TABLE %s (
+  id        int(11) NOT NULL,
+  name      varchar(45) DEFAULT NULL,
+  create_at datetime DEFAULT NULL,
+  update_at datetime DEFAULT NULL,
+  delete_at datetime DEFAULT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    `, table1)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(table1)
+
+	table2 := "time_test_table2"
+	if _, err := db.Exec(fmt.Sprintf(`
+CREATE TABLE %s (
+  id        int(11) NOT NULL,
+  name      varchar(45) DEFAULT NULL,
+  createat datetime DEFAULT NULL,
+  updateat datetime DEFAULT NULL,
+  deleteat datetime DEFAULT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    `, table2)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(table2)
+
+	gtest.C(t, func(t *gtest.T) {
+		//db.SetDebug(true)
+		dataInsert1 := g.Map{
+			"id":   1,
+			"name": "name_1",
+		}
+		r, err := db.Table(table1).Data(dataInsert1).Insert()
+		t.Assert(err, nil)
+		n, _ := r.RowsAffected()
+		t.Assert(n, 1)
+
+		dataInsert2 := g.Map{
+			"id":   1,
+			"name": "name_2",
+		}
+		r, err = db.Table(table2).Data(dataInsert2).Insert()
+		t.Assert(err, nil)
+		n, _ = r.RowsAffected()
+		t.Assert(n, 1)
+
+		one, err := db.Table(table1, "t1").LeftJoin(table2, "t2", "t2.id=t1.id").Fields("t1.name").FindOne()
+		t.Assert(err, nil)
+		t.Assert(one["name"], "name_1")
+
+		// Soft deleting.
+		r, err = db.Table(table1).Delete()
+		t.Assert(err, nil)
+		n, _ = r.RowsAffected()
+		t.Assert(n, 1)
+
+		one, err = db.Table(table1, "t1").LeftJoin(table2, "t2", "t2.id=t1.id").Fields("t1.name").FindOne()
+		t.Assert(err, nil)
+		t.Assert(one.IsEmpty(), true)
+
+		one, err = db.Table(table2, "t2").LeftJoin(table1, "t1", "t2.id=t1.id").Fields("t2.name").FindOne()
+		t.Assert(err, nil)
+		t.Assert(one.IsEmpty(), true)
+	})
+}

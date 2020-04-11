@@ -74,8 +74,13 @@ func (m *Model) doFilterDataMapForInsertOrUpdate(data Map, allowOmitEmpty bool) 
 
 	if len(m.fields) > 0 && m.fields != "*" {
 		// Keep specified fields.
-		set := gset.NewStrSetFrom(gstr.SplitAndTrim(m.fields, ","))
+		var (
+			set          = gset.NewStrSetFrom(gstr.SplitAndTrim(m.fields, ","))
+			charL, charR = m.db.GetChars()
+			chars        = charL + charR
+		)
 		for k := range data {
+			k = gstr.Trim(k, chars)
 			if !set.Contains(k) {
 				delete(data, k)
 			}

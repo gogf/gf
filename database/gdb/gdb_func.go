@@ -147,8 +147,13 @@ func doQuoteWord(s, charLeft, charRight string) string {
 }
 
 // doQuoteString quotes string with quote chars. It handles strings like:
-// "user", "user u", "user,user_detail", "user u, user_detail ut",
-// "user.user u, user.user_detail ut", "u.id asc".
+// "user",
+// "user u",
+// "user,user_detail",
+// "user u, user_detail ut",
+// "user.user u, user.user_detail ut",
+// "u.id, u.name, u.age",
+// "u.id asc".
 func doQuoteString(s, charLeft, charRight string) string {
 	array1 := gstr.SplitAndTrim(s, ",")
 	for k1, v1 := range array1 {

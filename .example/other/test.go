@@ -1,47 +1,23 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"github.com/gogf/gf/encoding/gjson"
+	"github.com/gogf/gf/text/gregex"
+	"github.com/gogf/gf/text/gstr"
 )
 
-type A struct {
-	F string
-	G string
-}
-
-type B struct {
-	A
-	H string
-}
-
-type C struct {
-	A A
-	F string
-}
-
-type D struct {
-	I A
-	F string
-}
-
-func SystemJsonEncode(a interface{}) string {
-	js, err := json.Marshal(a)
-	if err != nil {
-		return "{}"
-	} else {
-		return fmt.Sprintf("%s", js)
-	}
-}
-
 func main() {
-	fmt.Println("encoding/json", SystemJsonEncode(B{}))
-	fmt.Println("gjson", gjson.New(B{}).MustToJsonString())
-	fmt.Println()
-	fmt.Println("encoding/json", SystemJsonEncode(C{}))
-	fmt.Println("gjson", gjson.New(C{}).MustToJsonString())
-	fmt.Println()
-	fmt.Println("encoding/json", SystemJsonEncode(D{}))
-	fmt.Println("gjson", gjson.New(D{}).MustToJsonString())
+	s := `user u LEFT JOIN user_detail ud ON(ud.id=u.id) LEFT JOIN user_stats us ON(us.id=u.id)`
+	split := " JOIN "
+	as := "my-as"
+	if gstr.Contains(s, split) {
+		// For join table.
+		array := gstr.Split(s, split)
+		array[len(array)-1], _ = gregex.ReplaceString(`(.+) ON`, fmt.Sprintf(`$1 AS %s ON`, as), array[len(array)-1])
+		s = gstr.Join(array, split)
+	} else {
+		// For base table.
+		s = gstr.TrimRight(s) + " AS " + as
+	}
+	fmt.Println(s)
 }

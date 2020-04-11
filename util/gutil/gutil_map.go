@@ -7,8 +7,8 @@
 package gutil
 
 import (
+	"github.com/gogf/gf/internal/utils"
 	"regexp"
-	"strings"
 )
 
 var (
@@ -40,14 +40,9 @@ func MapPossibleItemByKey(data map[string]interface{}, key string) (foundKey str
 	if v, ok := data[key]; ok {
 		return key, v
 	}
-	replacedKey := replaceCharReg.ReplaceAllString(key, "")
-	if v, ok := data[replacedKey]; ok {
-		return replacedKey, v
-	}
-	// Loop for check.
+	// Loop checking.
 	for k, v := range data {
-		// Remove all special chars and compare with case insensitive.
-		if strings.EqualFold(replaceCharReg.ReplaceAllString(k, ""), replacedKey) {
+		if utils.EqualFoldWithoutChars(k, key) {
 			return k, v
 		}
 	}

@@ -11,6 +11,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/internal/utils"
 	"reflect"
 	"regexp"
 	"strings"
@@ -417,7 +418,7 @@ func (c *Core) DoInsert(link Link, table string, data interface{}, option int, b
 		for k, _ := range dataMap {
 			// If it's SAVE operation,
 			// do not automatically update the creating time.
-			if k == gSOFT_FIELD_NAME_CREATE {
+			if utils.EqualFoldWithoutChars(k, gSOFT_FIELD_NAME_CREATE) {
 				continue
 			}
 			if len(updateStr) > 0 {
@@ -538,7 +539,7 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 		for _, k := range keys {
 			// If it's SAVE operation,
 			// do not automatically update the creating time.
-			if k == gSOFT_FIELD_NAME_CREATE {
+			if utils.EqualFoldWithoutChars(k, gSOFT_FIELD_NAME_CREATE) {
 				continue
 			}
 			if len(updateStr) > 0 {
