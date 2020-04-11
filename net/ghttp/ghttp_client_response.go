@@ -16,7 +16,7 @@ import (
 
 // ClientResponse is the struct for client request response.
 type ClientResponse struct {
-	req *http.Request
+	req *http.Request // just a copy of the request when the request failed.
 	*http.Response
 	cookies map[string]string
 }

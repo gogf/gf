@@ -17,6 +17,7 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
+// dumpTextFormat is the format of the dumped raw string
 const dumpTextFormat = `+---------------------------------------------+
 |               ghttp %s                |
 +---------------------------------------------+
@@ -24,8 +25,9 @@ const dumpTextFormat = `+---------------------------------------------+
 %s
 `
 
+// ifDumpBody determine whether to output body according to content-type
 func ifDumpBody(contentType string) bool {
-	// only dump body when contentType in.
+	// the body should not be output when the body is html or stream.
 	if gstr.Contains(contentType, "application/json") ||
 		gstr.Contains(contentType, "application/xml") ||
 		gstr.Contains(contentType, "multipart/form-data") ||
@@ -36,14 +38,13 @@ func ifDumpBody(contentType string) bool {
 	return false
 }
 
-// getRequestBody return request body string.
-// if error occurs, return empty string
+// getRequestBody returns the raw text of the request body.
 func getRequestBody(req *http.Request) string {
 	contentType := req.Header.Get("Content-Type")
 	if !ifDumpBody(contentType) {
 		return ""
 	}
-	// must use this method for reading the body more than once
+	// so that the request body can be read again.
 	bodyReader, errGetBody := req.GetBody()
 	if errGetBody != nil {
 		return ""
@@ -55,8 +56,7 @@ func getRequestBody(req *http.Request) string {
 	return gconv.UnsafeBytesToStr(bytesBody)
 }
 
-// getResponseBody return response body string.
-// if error occurs, return empty string
+// getResponseBody returns the text of the response body.
 func getResponseBody(resp *http.Response) string {
 	contentType := resp.Header.Get("Content-Type")
 	if !ifDumpBody(contentType) {
@@ -66,24 +66,27 @@ func getResponseBody(resp *http.Response) string {
 	if errReadBody != nil {
 		return ""
 	}
-	// for reading the body more than once
+	// so that the response body can be read again.
 	resp.Body = ioutil.NopCloser(bytes.NewBuffer(bytesBody))
 	return gconv.UnsafeBytesToStr(bytesBody)
 }
 
+// getRequest returns the request related to the response.
+// will return the copy of request when the request failed.
 func (r *ClientResponse) getRequest() *http.Request {
 	if r.Response != nil && r.Request != nil {
 		return r.Request
 	}
+	// r.req is the copy of request when the http request failed.
 	if r.req != nil {
 		return r.req
 	}
 	return nil
 }
 
-// RawRequest dump request to raw string
+// RawRequest returns the raw text of the request.
 func (r *ClientResponse) RawRequest() string {
-	// this can be nil
+	// ClientResponse can be nil.
 	if r == nil {
 		return ""
 	}
@@ -91,8 +94,7 @@ func (r *ClientResponse) RawRequest() string {
 	if req == nil {
 		return ""
 	}
-	// DumpRequestOut will write more header than DumpRequest, such as User-Agent.
-	// read body using getRequestBody method.
+	// DumpRequestOut writes more request headers than DumpRequest, such as User-Agent.
 	bs, err := httputil.DumpRequestOut(req, false)
 	if err != nil {
 		return ""
@@ -100,13 +102,12 @@ func (r *ClientResponse) RawRequest() string {
 	return fmt.Sprintf(dumpTextFormat, "REQUEST ", gconv.UnsafeBytesToStr(bs), getRequestBody(req))
 }
 
-// RawResponse dump response to raw string
+// RawResponse returns the raw text of the response.
 func (r *ClientResponse) RawResponse() string {
-	// this can be nil
+	// ClientResponse can be nil.
 	if r == nil || r.Response == nil {
 		return ""
 	}
-	// read body using getResponseBody method.
 	bs, err := httputil.DumpResponse(r.Response, false)
 	if err != nil {
 		return ""
@@ -115,7 +116,7 @@ func (r *ClientResponse) RawResponse() string {
 	return fmt.Sprintf(dumpTextFormat, "RESPONSE", gconv.UnsafeBytesToStr(bs), getResponseBody(r.Response))
 }
 
-// Raw dump request and response string
+// Raw returns the raw text of the request and the response.
 func (r *ClientResponse) Raw() string {
 	return fmt.Sprintf("%s\n%s", r.RawRequest(), r.RawResponse())
 }
