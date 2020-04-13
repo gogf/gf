@@ -116,10 +116,12 @@ func (p *Process) Kill() error {
 			p.Manager.processes.Remove(p.Pid())
 		}
 		if runtime.GOOS != "windows" {
-			p.Process.Release()
+			if err = p.Process.Release(); err != nil {
+				return err
+			}
 		}
-		p.Process.Wait()
-		return nil
+		_, err = p.Process.Wait()
+		return err
 	} else {
 		return err
 	}

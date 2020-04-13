@@ -13,7 +13,9 @@ import (
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/util/gconv"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/container/gset"
@@ -23,7 +25,7 @@ import (
 func TestIntSet_Var(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var s gset.IntSet
-		s.Add(1).Add(1).Add(2)
+		s.Add(1, 1, 2)
 		s.Add([]int{3, 4}...)
 		t.Assert(s.Size(), 4)
 		t.AssertIN(1, s.Slice())
@@ -43,7 +45,7 @@ func TestIntSet_Var(t *testing.T) {
 func TestIntSet_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := gset.NewIntSet()
-		s.Add(1).Add(1).Add(2)
+		s.Add(1, 1, 2)
 		s.Add([]int{3, 4}...)
 		t.Assert(s.Size(), 4)
 		t.AssertIN(1, s.Slice())
@@ -63,7 +65,7 @@ func TestIntSet_Basic(t *testing.T) {
 func TestIntSet_Iterator(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := gset.NewIntSet()
-		s.Add(1).Add(2).Add(3)
+		s.Add(1, 2, 3)
 		t.Assert(s.Size(), 3)
 
 		a1 := garray.New(true)
@@ -84,7 +86,7 @@ func TestIntSet_Iterator(t *testing.T) {
 func TestIntSet_LockFunc(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := gset.NewIntSet()
-		s.Add(1).Add(2).Add(3)
+		s.Add(1, 2, 3)
 		t.Assert(s.Size(), 3)
 		s.LockFunc(func(m map[int]struct{}) {
 			delete(m, 1)
@@ -104,9 +106,9 @@ func TestIntSet_Equal(t *testing.T) {
 		s1 := gset.NewIntSet()
 		s2 := gset.NewIntSet()
 		s3 := gset.NewIntSet()
-		s1.Add(1).Add(2).Add(3)
-		s2.Add(1).Add(2).Add(3)
-		s3.Add(1).Add(2).Add(3).Add(4)
+		s1.Add(1, 2, 3)
+		s2.Add(1, 2, 3)
+		s3.Add(1, 2, 3, 4)
 		t.Assert(s1.Equal(s2), true)
 		t.Assert(s1.Equal(s3), false)
 	})
@@ -117,9 +119,9 @@ func TestIntSet_IsSubsetOf(t *testing.T) {
 		s1 := gset.NewIntSet()
 		s2 := gset.NewIntSet()
 		s3 := gset.NewIntSet()
-		s1.Add(1).Add(2)
-		s2.Add(1).Add(2).Add(3)
-		s3.Add(1).Add(2).Add(3).Add(4)
+		s1.Add(1, 2)
+		s2.Add(1, 2, 3)
+		s3.Add(1, 2, 3, 4)
 		t.Assert(s1.IsSubsetOf(s2), true)
 		t.Assert(s2.IsSubsetOf(s3), true)
 		t.Assert(s1.IsSubsetOf(s3), true)
@@ -132,8 +134,8 @@ func TestIntSet_Union(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewIntSet()
 		s2 := gset.NewIntSet()
-		s1.Add(1).Add(2)
-		s2.Add(3).Add(4)
+		s1.Add(1, 2)
+		s2.Add(3, 4)
 		s3 := s1.Union(s2)
 		t.Assert(s3.Contains(1), true)
 		t.Assert(s3.Contains(2), true)
@@ -146,8 +148,8 @@ func TestIntSet_Diff(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewIntSet()
 		s2 := gset.NewIntSet()
-		s1.Add(1).Add(2).Add(3)
-		s2.Add(3).Add(4).Add(5)
+		s1.Add(1, 2, 3)
+		s2.Add(3, 4, 5)
 		s3 := s1.Diff(s2)
 		t.Assert(s3.Contains(1), true)
 		t.Assert(s3.Contains(2), true)
@@ -160,8 +162,8 @@ func TestIntSet_Intersect(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewIntSet()
 		s2 := gset.NewIntSet()
-		s1.Add(1).Add(2).Add(3)
-		s2.Add(3).Add(4).Add(5)
+		s1.Add(1, 2, 3)
+		s2.Add(3, 4, 5)
 		s3 := s1.Intersect(s2)
 		t.Assert(s3.Contains(1), false)
 		t.Assert(s3.Contains(2), false)
@@ -174,8 +176,8 @@ func TestIntSet_Complement(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewIntSet()
 		s2 := gset.NewIntSet()
-		s1.Add(1).Add(2).Add(3)
-		s2.Add(3).Add(4).Add(5)
+		s1.Add(1, 2, 3)
+		s2.Add(3, 4, 5)
 		s3 := s1.Complement(s2)
 		t.Assert(s3.Contains(1), false)
 		t.Assert(s3.Contains(2), false)
@@ -187,7 +189,7 @@ func TestIntSet_Complement(t *testing.T) {
 func TestIntSet_Size(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewIntSet(true)
-		s1.Add(1).Add(2).Add(3)
+		s1.Add(1, 2, 3)
 		t.Assert(s1.Size(), 3)
 
 	})
@@ -198,8 +200,8 @@ func TestIntSet_Merge(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewIntSet()
 		s2 := gset.NewIntSet()
-		s1.Add(1).Add(2).Add(3)
-		s2.Add(3).Add(4).Add(5)
+		s1.Add(1, 2, 3)
+		s2.Add(3, 4, 5)
 		s3 := s1.Merge(s2)
 		t.Assert(s3.Contains(1), true)
 		t.Assert(s3.Contains(5), true)
@@ -210,7 +212,7 @@ func TestIntSet_Merge(t *testing.T) {
 func TestIntSet_Join(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewIntSet()
-		s1.Add(1).Add(2).Add(3)
+		s1.Add(1, 2, 3)
 		s3 := s1.Join(",")
 		t.Assert(strings.Contains(s3, "1"), true)
 		t.Assert(strings.Contains(s3, "2"), true)
@@ -221,7 +223,7 @@ func TestIntSet_Join(t *testing.T) {
 func TestIntSet_String(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewIntSet()
-		s1.Add(1).Add(2).Add(3)
+		s1.Add(1, 2, 3)
 		s3 := s1.String()
 		t.Assert(strings.Contains(s3, "["), true)
 		t.Assert(strings.Contains(s3, "]"), true)
@@ -234,9 +236,9 @@ func TestIntSet_String(t *testing.T) {
 func TestIntSet_Sum(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewIntSet()
-		s1.Add(1).Add(2).Add(3)
+		s1.Add(1, 2, 3)
 		s2 := gset.NewIntSet()
-		s2.Add(5).Add(6).Add(7)
+		s2.Add(5, 6, 7)
 		t.Assert(s2.Sum(), 18)
 
 	})
@@ -246,7 +248,7 @@ func TestIntSet_Sum(t *testing.T) {
 func TestIntSet_Pop(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := gset.NewIntSet()
-		s.Add(4).Add(2).Add(3)
+		s.Add(4, 2, 3)
 		t.Assert(s.Size(), 3)
 		t.AssertIN(s.Pop(), []int{4, 2, 3})
 		t.AssertIN(s.Pop(), []int{4, 2, 3})
@@ -257,7 +259,7 @@ func TestIntSet_Pop(t *testing.T) {
 func TestIntSet_Pops(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := gset.NewIntSet()
-		s.Add(1).Add(4).Add(2).Add(3)
+		s.Add(1, 4, 2, 3)
 		t.Assert(s.Size(), 4)
 		t.Assert(s.Pops(0), nil)
 		t.AssertIN(s.Pops(1), []int{1, 4, 2, 3})
@@ -275,6 +277,74 @@ func TestIntSet_Pops(t *testing.T) {
 		t.Assert(s.Size(), 4)
 		t.Assert(s.Pops(-2), nil)
 		t.AssertIN(s.Pops(-1), a)
+	})
+}
+
+func TestIntSet_AddIfNotExist(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		s := gset.NewIntSet(true)
+		s.Add(1)
+		t.Assert(s.Contains(1), true)
+		t.Assert(s.AddIfNotExist(1), false)
+		t.Assert(s.AddIfNotExist(2), true)
+		t.Assert(s.Contains(2), true)
+		t.Assert(s.AddIfNotExist(2), false)
+		t.Assert(s.Contains(2), true)
+	})
+}
+
+func TestIntSet_AddIfNotExistFunc(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		s := gset.NewIntSet(true)
+		s.Add(1)
+		t.Assert(s.Contains(1), true)
+		t.Assert(s.Contains(2), false)
+		t.Assert(s.AddIfNotExistFunc(2, func() bool { return false }), false)
+		t.Assert(s.Contains(2), false)
+		t.Assert(s.AddIfNotExistFunc(2, func() bool { return true }), true)
+		t.Assert(s.Contains(2), true)
+		t.Assert(s.AddIfNotExistFunc(2, func() bool { return true }), false)
+		t.Assert(s.Contains(2), true)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		s := gset.NewIntSet(true)
+		wg := sync.WaitGroup{}
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			r := s.AddIfNotExistFunc(1, func() bool {
+				time.Sleep(100 * time.Millisecond)
+				return true
+			})
+			t.Assert(r, false)
+		}()
+		s.Add(1)
+		wg.Wait()
+	})
+}
+
+func TestIntSet_AddIfNotExistFuncLock(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		s := gset.NewIntSet(true)
+		wg := sync.WaitGroup{}
+		wg.Add(2)
+		go func() {
+			defer wg.Done()
+			r := s.AddIfNotExistFuncLock(1, func() bool {
+				time.Sleep(500 * time.Millisecond)
+				return true
+			})
+			t.Assert(r, true)
+		}()
+		time.Sleep(100 * time.Millisecond)
+		go func() {
+			defer wg.Done()
+			r := s.AddIfNotExistFuncLock(1, func() bool {
+				return true
+			})
+			t.Assert(r, false)
+		}()
+		wg.Wait()
 	})
 }
 
@@ -304,46 +374,6 @@ func TestIntSet_Json(t *testing.T) {
 		t.Assert(a2.Contains(3), true)
 		t.Assert(a2.Contains(4), true)
 		t.Assert(a2.Contains(5), false)
-	})
-}
-
-func TestIntSet_AddIfNotExistFunc(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		s := gset.NewIntSet(true)
-		s.Add(1)
-		t.Assert(s.Contains(1), true)
-		t.Assert(s.Contains(2), false)
-
-		s.AddIfNotExistFunc(2, func() int {
-			return 3
-		})
-		t.Assert(s.Contains(2), false)
-		t.Assert(s.Contains(3), true)
-
-		s.AddIfNotExistFunc(3, func() int {
-			return 4
-		})
-		t.Assert(s.Contains(3), true)
-		t.Assert(s.Contains(4), false)
-	})
-
-	gtest.C(t, func(t *gtest.T) {
-		s := gset.NewIntSet(true)
-		s.Add(1)
-		t.Assert(s.Contains(1), true)
-		t.Assert(s.Contains(2), false)
-
-		s.AddIfNotExistFuncLock(2, func() int {
-			return 3
-		})
-		t.Assert(s.Contains(2), false)
-		t.Assert(s.Contains(3), true)
-
-		s.AddIfNotExistFuncLock(3, func() int {
-			return 4
-		})
-		t.Assert(s.Contains(3), true)
-		t.Assert(s.Contains(4), false)
 	})
 }
 
