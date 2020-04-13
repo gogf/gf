@@ -15,16 +15,19 @@ import (
 )
 
 // Add monitors <path> with callback function <callbackFunc> to the watcher.
-// The optional parameter <recursive> specifies whether monitoring the <path> recursively, which is true in default.
+// The optional parameter <recursive> specifies whether monitoring the <path> recursively,
+// which is true in default.
 func (w *Watcher) Add(path string, callbackFunc func(event *Event), recursive ...bool) (callback *Callback, err error) {
 	return w.AddOnce("", path, callbackFunc, recursive...)
 }
 
-// AddOnce monitors <path> with callback function <callbackFunc> only once using unique name <name> to the watcher.
-// If AddOnce is called multiple times with the same <name> parameter, <path> is only added to monitor once. It returns error
-// if it's called twice with the same <name>.
+// AddOnce monitors <path> with callback function <callbackFunc> only once using unique name
+// <name> to the watcher. If AddOnce is called multiple times with the same <name> parameter,
+// <path> is only added to monitor once.
+// It returns error if it's called twice with the same <name>.
 //
-// The optional parameter <recursive> specifies whether monitoring the <path> recursively, which is true in default.
+// The optional parameter <recursive> specifies whether monitoring the <path> recursively,
+// which is true in default.
 func (w *Watcher) AddOnce(name, path string, callbackFunc func(event *Event), recursive ...bool) (callback *Callback, err error) {
 	w.nameSet.AddIfNotExistFuncLock(name, func() bool {
 		// Firstly add the path to watcher.
@@ -48,6 +51,9 @@ func (w *Watcher) AddOnce(name, path string, callbackFunc func(event *Event), re
 					}
 				}
 			}
+		}
+		if name == "" {
+			return false
 		}
 		return true
 	})
