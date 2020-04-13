@@ -50,7 +50,7 @@ func NewFrom(items interface{}, safe ...bool) *Set {
 
 // Iterator iterates the set with given callback function <f>,
 // if <f> returns true then continue iterating; or false to stop.
-func (set *Set) Iterator(f func(v interface{}) bool) *Set {
+func (set *Set) Iterator(f func(v interface{}) bool) {
 	set.mu.RLock()
 	defer set.mu.RUnlock()
 	for k, _ := range set.data {
@@ -58,11 +58,10 @@ func (set *Set) Iterator(f func(v interface{}) bool) *Set {
 			break
 		}
 	}
-	return set
 }
 
 // Add adds one or multiple items to the set.
-func (set *Set) Add(item ...interface{}) *Set {
+func (set *Set) Add(item ...interface{}) {
 	set.mu.Lock()
 	if set.data == nil {
 		set.data = make(map[interface{}]struct{})
@@ -71,54 +70,81 @@ func (set *Set) Add(item ...interface{}) *Set {
 		set.data[v] = struct{}{}
 	}
 	set.mu.Unlock()
-	return set
 }
 
-// AddIfNotExistFunc adds the returned value of callback function <f> to the set
-// if <item> does not exit in the set.
-func (set *Set) AddIfNotExistFunc(item interface{}, f func() interface{}) *Set {
+// AddIfNotExist checks whether item exists in the set,
+// it adds the item to set and returns true if it does not exists in the set,
+// or else it does nothing and returns false.
+//
+// Note that, if <item> is nil, it does nothing and returns false.
+func (set *Set) AddIfNotExist(item interface{}) bool {
+	if item == nil {
+		return false
+	}
 	if !set.Contains(item) {
-		set.doAddWithLockCheck(item, f())
-	}
-	return set
-}
-
-// AddIfNotExistFuncLock adds the returned value of callback function <f> to the set
-// if <item> does not exit in the set.
-//
-// Note that the callback function <f> is executed in the mutex.Lock of the set.
-func (set *Set) AddIfNotExistFuncLock(item interface{}, f func() interface{}) *Set {
-	if !set.Contains(item) {
-		set.doAddWithLockCheck(item, f)
-	}
-	return set
-}
-
-// doAddWithLockCheck checks whether item exists with mutex.Lock,
-// if not exists, it adds item to the set or else just returns the existing value.
-//
-// If <value> is type of <func() interface {}>,
-// it will be executed with mutex.Lock of the set,
-// and its return value will be added to the set.
-//
-// It returns item successfully added..
-func (set *Set) doAddWithLockCheck(item interface{}, value interface{}) interface{} {
-	set.mu.Lock()
-	defer set.mu.Unlock()
-	if set.data == nil {
-		set.data = make(map[interface{}]struct{})
-	}
-	if _, ok := set.data[item]; !ok && value != nil {
-		if f, ok := value.(func() interface{}); ok {
-			item = f()
-		} else {
-			item = value
+		set.mu.Lock()
+		defer set.mu.Unlock()
+		if set.data == nil {
+			set.data = make(map[interface{}]struct{})
+		}
+		if _, ok := set.data[item]; !ok {
+			set.data[item] = struct{}{}
+			return true
 		}
 	}
-	if item != nil {
-		set.data[item] = struct{}{}
+	return false
+}
+
+// AddIfNotExistFunc checks whether item exists in the set,
+// it adds the item to set and returns true if it does not exists in the set and
+// function <f> returns true, or else it does nothing and returns false.
+//
+// Note that, if <item> is nil, it does nothing and returns false. The function <f>
+// is executed without writing lock.
+func (set *Set) AddIfNotExistFunc(item interface{}, f func() bool) bool {
+	if item == nil {
+		return false
 	}
-	return item
+	if !set.Contains(item) {
+		if f() {
+			set.mu.Lock()
+			defer set.mu.Unlock()
+			if set.data == nil {
+				set.data = make(map[interface{}]struct{})
+			}
+			if _, ok := set.data[item]; !ok {
+				set.data[item] = struct{}{}
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// AddIfNotExistFunc checks whether item exists in the set,
+// it adds the item to set and returns true if it does not exists in the set and
+// function <f> returns true, or else it does nothing and returns false.
+//
+// Note that, if <item> is nil, it does nothing and returns false. The function <f>
+// is executed within writing lock.
+func (set *Set) AddIfNotExistFuncLock(item interface{}, f func() bool) bool {
+	if item == nil {
+		return false
+	}
+	if !set.Contains(item) {
+		set.mu.Lock()
+		defer set.mu.Unlock()
+		if set.data == nil {
+			set.data = make(map[interface{}]struct{})
+		}
+		if f() {
+			if _, ok := set.data[item]; !ok {
+				set.data[item] = struct{}{}
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // Contains checks whether the set contains <item>.
@@ -133,13 +159,12 @@ func (set *Set) Contains(item interface{}) bool {
 }
 
 // Remove deletes <item> from set.
-func (set *Set) Remove(item interface{}) *Set {
+func (set *Set) Remove(item interface{}) {
 	set.mu.Lock()
 	if set.data != nil {
 		delete(set.data, item)
 	}
 	set.mu.Unlock()
-	return set
 }
 
 // Size returns the size of the set.
@@ -151,11 +176,10 @@ func (set *Set) Size() int {
 }
 
 // Clear deletes all items of the set.
-func (set *Set) Clear() *Set {
+func (set *Set) Clear() {
 	set.mu.Lock()
 	set.data = make(map[interface{}]struct{})
 	set.mu.Unlock()
-	return set
 }
 
 // Slice returns the a of items of the set as slice.

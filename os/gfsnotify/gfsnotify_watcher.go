@@ -26,11 +26,11 @@ func (w *Watcher) Add(path string, callbackFunc func(event *Event), recursive ..
 //
 // The optional parameter <recursive> specifies whether monitoring the <path> recursively, which is true in default.
 func (w *Watcher) AddOnce(name, path string, callbackFunc func(event *Event), recursive ...bool) (callback *Callback, err error) {
-	w.nameSet.AddIfNotExistFuncLock(name, func() string {
+	w.nameSet.AddIfNotExistFuncLock(name, func() bool {
 		// Firstly add the path to watcher.
 		callback, err = w.addWithCallbackFunc(name, path, callbackFunc, recursive...)
 		if err != nil {
-			return ""
+			return false
 		}
 		// If it's recursive adding, it then adds all sub-folders to the monitor.
 		// NOTE:
@@ -49,7 +49,7 @@ func (w *Watcher) AddOnce(name, path string, callbackFunc func(event *Event), re
 				}
 			}
 		}
-		return name
+		return true
 	})
 	return
 }

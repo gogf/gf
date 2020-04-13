@@ -12,8 +12,8 @@ import (
 )
 
 // IsEmpty checks whether given <value> empty.
-// It returns true if <value> is in: 0, nil, false, "", len(slice/map/chan) == 0.
-// Or else it returns true.
+// It returns true if <value> is in: 0, nil, false, "", len(slice/map/chan) == 0,
+// or else it returns false.
 func IsEmpty(value interface{}) bool {
 	if value == nil {
 		return true
@@ -48,6 +48,8 @@ func IsEmpty(value interface{}) bool {
 	case string:
 		return value == ""
 	case []byte:
+		return len(value) == 0
+	case []rune:
 		return len(value) == 0
 	default:
 		// Finally using reflect.
