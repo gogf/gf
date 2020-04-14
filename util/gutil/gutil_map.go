@@ -8,12 +8,6 @@ package gutil
 
 import (
 	"github.com/gogf/gf/internal/utils"
-	"regexp"
-)
-
-var (
-	// replaceCharReg is the regular expression object for replacing chars in map keys.
-	replaceCharReg, _ = regexp.Compile(`[\-\.\_\s]+`)
 )
 
 // MapCopy does a shallow copy from map <data> to <copy> for most commonly used map type
@@ -29,6 +23,29 @@ func MapCopy(data map[string]interface{}) (copy map[string]interface{}) {
 // MapContains checks whether map <data> contains <key>.
 func MapContains(data map[string]interface{}, key string) (ok bool) {
 	_, ok = data[key]
+	return
+}
+
+// MapMerge merges all map from <src> to map <dst>.
+func MapMerge(dst map[string]interface{}, src ...map[string]interface{}) {
+	if dst == nil {
+		return
+	}
+	for _, m := range src {
+		for k, v := range m {
+			dst[k] = v
+		}
+	}
+}
+
+// MapMergeCopy creates and returns a new map which merges all map from <src>.
+func MapMergeCopy(src ...map[string]interface{}) (copy map[string]interface{}) {
+	copy = make(map[string]interface{})
+	for _, m := range src {
+		for k, v := range m {
+			copy[k] = v
+		}
+	}
 	return
 }
 

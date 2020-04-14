@@ -22,10 +22,25 @@ import (
 // Config is the configuration object for template engine.
 type Config struct {
 	Paths       []string               // Searching array for path, NOT concurrent-safe for performance purpose.
-	Data        map[string]interface{} // Global template variables.
+	Data        map[string]interface{} // Global template variables including configuration.
 	DefaultFile string                 // Default template file for parsing.
 	Delimiters  []string               // Custom template delimiters.
 	AutoEncode  bool                   // Automatically encodes and provides safe html output, which is good for avoiding XSS.
+	I18nManager *gi18n.Manager         // I18n manager for the view.
+}
+
+const (
+	// Default template file for parsing.
+	defaultParsingFile = "index.html"
+)
+
+// DefaultConfig creates and returns a configuration object with default configurations.
+func DefaultConfig() Config {
+	return Config{
+		DefaultFile: defaultParsingFile,
+		I18nManager: gi18n.Instance(),
+		Delimiters:  make([]string, 2),
+	}
 }
 
 // SetConfig sets the configuration for view.
@@ -199,13 +214,17 @@ func (view *View) Assign(key string, value interface{}) {
 
 // SetDefaultFile sets default template file for parsing.
 func (view *View) SetDefaultFile(file string) {
-	view.defaultFile = file
+	view.config.DefaultFile = file
+}
+
+// GetDefaultFile returns default template file for parsing.
+func (view *View) GetDefaultFile() string {
+	return view.config.DefaultFile
 }
 
 // SetDelimiters sets customized delimiters for template parsing.
 func (view *View) SetDelimiters(left, right string) {
-	view.delimiters[0] = left
-	view.delimiters[1] = right
+	view.config.Delimiters = []string{left, right}
 }
 
 // SetAutoEncode enables/disables automatically html encoding feature.
@@ -237,5 +256,5 @@ func (view *View) BindFuncMap(funcMap FuncMap) {
 
 // SetI18n binds i18n manager to current view engine.
 func (view *View) SetI18n(manager *gi18n.Manager) {
-	view.i18nManager = manager
+	view.config.I18nManager = manager
 }
