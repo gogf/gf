@@ -85,12 +85,11 @@ func (view *View) SetConfigWithMap(m map[string]interface{}) error {
 	if v1 == nil && v2 != nil {
 		m["paths"] = []interface{}{v2}
 	}
-	config := Config{}
-	err := gconv.Struct(m, &config)
+	err := gconv.Struct(m, &view.config)
 	if err != nil {
 		return err
 	}
-	return view.SetConfig(config)
+	return view.SetConfig(view.config)
 }
 
 // SetPath sets the template directory path for template file search.
