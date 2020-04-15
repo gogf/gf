@@ -149,6 +149,7 @@ func (m *Model) doInsertWithOption(option int, data ...interface{}) (result sql.
 		nowString       = gtime.Now().String()
 		fieldNameCreate = m.getSoftFieldNameCreate()
 		fieldNameUpdate = m.getSoftFieldNameUpdate()
+		fieldNameDelete = m.getSoftFieldNameDelete()
 	)
 	// Batch operation.
 	if list, ok := m.data.(List); ok {
@@ -159,10 +160,11 @@ func (m *Model) doInsertWithOption(option int, data ...interface{}) (result sql.
 		// Automatic handling for creating/updating time.
 		if !m.unscoped && (fieldNameCreate != "" || fieldNameUpdate != "") {
 			for k, v := range list {
-				if fieldNameCreate != "" && !gutil.MapContainsPossibleKey(v, fieldNameCreate) {
+				gutil.MapDelete(v, fieldNameCreate, fieldNameUpdate, fieldNameDelete)
+				if fieldNameCreate != "" {
 					v[fieldNameCreate] = nowString
 				}
-				if fieldNameUpdate != "" && !gutil.MapContainsPossibleKey(v, fieldNameUpdate) {
+				if fieldNameUpdate != "" {
 					v[fieldNameUpdate] = nowString
 				}
 				list[k] = v
@@ -180,10 +182,11 @@ func (m *Model) doInsertWithOption(option int, data ...interface{}) (result sql.
 	if data, ok := m.data.(Map); ok {
 		// Automatic handling for creating/updating time.
 		if !m.unscoped && (fieldNameCreate != "" || fieldNameUpdate != "") {
-			if fieldNameCreate != "" && !gutil.MapContainsPossibleKey(data, fieldNameCreate) {
+			gutil.MapDelete(data, fieldNameCreate, fieldNameUpdate, fieldNameDelete)
+			if fieldNameCreate != "" {
 				data[fieldNameCreate] = nowString
 			}
-			if fieldNameUpdate != "" && !gutil.MapContainsPossibleKey(data, fieldNameUpdate) {
+			if fieldNameUpdate != "" {
 				data[fieldNameUpdate] = nowString
 			}
 		}

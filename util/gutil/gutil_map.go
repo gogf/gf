@@ -26,6 +26,16 @@ func MapContains(data map[string]interface{}, key string) (ok bool) {
 	return
 }
 
+// MapDelete deletes all <key> from map <data>.
+func MapDelete(data map[string]interface{}, key ...string) {
+	if data == nil {
+		return
+	}
+	for _, v := range key {
+		delete(data, v)
+	}
+}
+
 // MapMerge merges all map from <src> to map <dst>.
 func MapMerge(dst map[string]interface{}, src ...map[string]interface{}) {
 	if dst == nil {
