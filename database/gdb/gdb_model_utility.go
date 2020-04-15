@@ -176,7 +176,9 @@ func (m *Model) formatCondition(limit bool) (conditionWhere string, conditionExt
 					m.db, v.where, v.args, m.option&OPTION_OMITEMPTY > 0,
 				)
 				if len(newWhere) > 0 {
-					if conditionWhere[0] == '(' {
+					if len(conditionWhere) == 0 {
+						conditionWhere = newWhere
+					} else if conditionWhere[0] == '(' {
 						conditionWhere = fmt.Sprintf(`%s AND (%s)`, conditionWhere, newWhere)
 					} else {
 						conditionWhere = fmt.Sprintf(`(%s) AND (%s)`, conditionWhere, newWhere)
@@ -189,7 +191,9 @@ func (m *Model) formatCondition(limit bool) (conditionWhere string, conditionExt
 					m.db, v.where, v.args, m.option&OPTION_OMITEMPTY > 0,
 				)
 				if len(newWhere) > 0 {
-					if conditionWhere[0] == '(' {
+					if len(conditionWhere) == 0 {
+						conditionWhere = newWhere
+					} else if conditionWhere[0] == '(' {
 						conditionWhere = fmt.Sprintf(`%s OR (%s)`, conditionWhere, newWhere)
 					} else {
 						conditionWhere = fmt.Sprintf(`(%s) OR (%s)`, conditionWhere, newWhere)

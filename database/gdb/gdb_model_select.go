@@ -264,7 +264,7 @@ func (m *Model) Count(where ...interface{}) (int, error) {
 		conditionWhere += softDeletingCondition
 	}
 
-	s := fmt.Sprintf("SELECT %s FROM %s %s", countFields, m.tables, conditionWhere+conditionExtra)
+	s := fmt.Sprintf("SELECT %s FROM %s%s", countFields, m.tables, conditionWhere+conditionExtra)
 	if len(m.groupBy) > 0 {
 		s = fmt.Sprintf("SELECT COUNT(1) FROM (%s) count_alias", s)
 	}
