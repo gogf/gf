@@ -338,7 +338,7 @@ func Test_Model_Safe(t *testing.T) {
 		t.Assert(err, nil)
 		t.Assert(len(all), 2)
 
-		all, err = md2.ForPage(1, 10).All()
+		all, err = md2.Page(1, 10).All()
 		t.Assert(err, nil)
 		t.Assert(len(all), 2)
 	})
@@ -362,7 +362,7 @@ func Test_Model_Safe(t *testing.T) {
 		t.Assert(all[0]["id"].Int(), 1)
 		t.Assert(all[1]["id"].Int(), 3)
 
-		all, err = md2.ForPage(1, 10).All()
+		all, err = md2.Page(1, 10).All()
 		t.Assert(err, nil)
 		t.Assert(len(all), 2)
 
@@ -378,7 +378,7 @@ func Test_Model_Safe(t *testing.T) {
 		t.Assert(all[1]["id"].Int(), 5)
 		t.Assert(all[2]["id"].Int(), 6)
 
-		all, err = md3.ForPage(1, 10).All()
+		all, err = md3.Page(1, 10).All()
 		t.Assert(err, nil)
 		t.Assert(len(all), 3)
 	})
@@ -1566,7 +1566,7 @@ func Test_Model_Offset(t *testing.T) {
 	})
 }
 
-func Test_Model_ForPage(t *testing.T) {
+func Test_Model_Page(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -1575,6 +1575,15 @@ func Test_Model_ForPage(t *testing.T) {
 		t.Assert(len(result), 3)
 		t.Assert(result[0]["id"], 7)
 		t.Assert(result[1]["id"], 8)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		model := db.Table(table).Safe().Order("id")
+		all, err := model.Page(3, 3).All()
+		count, err := model.Count()
+		t.Assert(err, nil)
+		t.Assert(len(all), 3)
+		t.Assert(all[0]["id"], "7")
+		t.Assert(count, SIZE)
 	})
 }
 
