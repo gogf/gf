@@ -42,7 +42,9 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 	}
 	var (
 		updateData                                    = m.data
+		fieldNameCreate                               = m.getSoftFieldNameCreate()
 		fieldNameUpdate                               = m.getSoftFieldNameUpdate()
+		fieldNameDelete                               = m.getSoftFieldNameDelete()
 		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(false)
 	)
 	// Automatically update the record updating time.
@@ -58,7 +60,8 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 		switch refKind {
 		case reflect.Map, reflect.Struct:
 			dataMap := DataToMapDeep(m.data)
-			if fieldNameUpdate != "" && !gutil.MapContainsPossibleKey(dataMap, fieldNameUpdate) {
+			gutil.MapDelete(dataMap, fieldNameCreate, fieldNameUpdate, fieldNameDelete)
+			if fieldNameUpdate != "" {
 				dataMap[fieldNameUpdate] = gtime.Now().String()
 			}
 			updateData = dataMap
