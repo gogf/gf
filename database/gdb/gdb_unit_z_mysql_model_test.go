@@ -1274,6 +1274,11 @@ func Test_Model_Where_GTime(t *testing.T) {
 		t.Assert(err, nil)
 		t.Assert(len(result), 10)
 	})
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Table(table).Where("create_time>?", *gtime.NewFromStr("2010-09-01")).All()
+		t.Assert(err, nil)
+		t.Assert(len(result), 10)
+	})
 }
 
 func Test_Model_WherePri(t *testing.T) {

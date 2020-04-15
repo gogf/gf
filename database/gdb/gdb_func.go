@@ -206,8 +206,13 @@ func GetPrimaryKey(pointer interface{}) string {
 
 // GetPrimaryKeyCondition returns a new where condition by primary field name.
 // The optional parameter <where> is like follows:
-// 123, []int{1, 2, 3}, "john", []string{"john", "smith"}
-// g.Map{"id": g.Slice{1,2,3}}, g.Map{"id": 1, "name": "john"}, etc.
+// 123
+// []int{1, 2, 3}
+// "john"
+// []string{"john", "smith"}
+// g.Map{"id": g.Slice{1,2,3}}
+// g.Map{"id": 1, "name": "john"}
+// etc.
 //
 // Note that it returns the given <where> parameter directly if there's the <primary> is empty.
 func GetPrimaryKeyCondition(primary string, where ...interface{}) (newWhereCondition []interface{}) {
@@ -448,11 +453,23 @@ func handleArguments(sql string, args []interface{}) (newSql string, newArgs []i
 					newArgs = append(newArgs, arg)
 					continue
 				}
-				// It converts the struct to string in default
-				// if it implements the String interface.
-				if v, ok := arg.(apiString); ok {
+				switch v := arg.(type) {
+				case time.Time, *time.Time:
+					newArgs = append(newArgs, arg)
+					continue
+
+				// Special handling for gtime.Time.
+				case gtime.Time:
 					newArgs = append(newArgs, v.String())
 					continue
+
+				default:
+					// It converts the struct to string in default
+					// if it implements the String interface.
+					if v, ok := arg.(apiString); ok {
+						newArgs = append(newArgs, v.String())
+						continue
+					}
 				}
 				newArgs = append(newArgs, arg)
 
