@@ -124,3 +124,14 @@ func (c *Client) Ctx(ctx context.Context) *Client {
 	newClient.SetCtx(ctx)
 	return newClient
 }
+
+// Retry is a chaining function,
+// which sets retry count and interval when failure for next request.
+func (c *Client) Retry(retryCount int, retryInterval time.Duration) *Client {
+	newClient := c
+	if c.parent == nil {
+		newClient = c.Clone()
+	}
+	newClient.SetRetry(retryCount, retryInterval)
+	return c
+}
