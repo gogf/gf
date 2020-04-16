@@ -190,7 +190,7 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 		}
 	}
 	// It's necessary set the req.Host if you want to custom the host value of the request.
-	// It uses the "Host" value of the header.
+	// It uses the "Host" value from header if it's not set in the request.
 	if host := req.Header.Get("Host"); host != "" && req.Host == "" {
 		req.Host = host
 	}
@@ -217,6 +217,7 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 		if r, err = c.Do(req); err != nil {
 			if c.retryCount > 0 {
 				c.retryCount--
+				time.Sleep(c.retryInterval)
 			} else {
 				return nil, err
 			}
