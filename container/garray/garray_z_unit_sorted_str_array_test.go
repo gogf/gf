@@ -652,3 +652,12 @@ func TestSortedStrArray_FilterEmpty(t *testing.T) {
 		t.Assert(array.FilterEmpty(), g.SliceStr{"1", "2"})
 	})
 }
+
+func TestSortedStrArray_Walk(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewSortedStrArrayFrom(g.SliceStr{"1", "2"})
+		t.Assert(array.Walk(func(value string) string {
+			return "key-" + value
+		}), g.Slice{"key-1", "key-2"})
+	})
+}

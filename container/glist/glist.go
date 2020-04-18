@@ -360,7 +360,7 @@ func (l *List) Iterator(f func(e *Element) bool) {
 	l.IteratorAsc(f)
 }
 
-// IteratorAsc iterates the list in ascending order with given callback function <f>.
+// IteratorAsc iterates the list readonly in ascending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
 func (l *List) IteratorAsc(f func(e *Element) bool) {
 	l.mu.RLock()
@@ -375,7 +375,7 @@ func (l *List) IteratorAsc(f func(e *Element) bool) {
 	}
 }
 
-// IteratorDesc iterates the list in descending order with given callback function <f>.
+// IteratorDesc iterates the list readonly in descending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
 func (l *List) IteratorDesc(f func(e *Element) bool) {
 	l.mu.RLock()

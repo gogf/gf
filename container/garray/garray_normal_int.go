@@ -683,7 +683,7 @@ func (a *IntArray) Iterator(f func(k int, v int) bool) {
 	a.IteratorAsc(f)
 }
 
-// IteratorAsc iterates the array in ascending order with given callback function <f>.
+// IteratorAsc iterates the array readonly in ascending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
 func (a *IntArray) IteratorAsc(f func(k int, v int) bool) {
 	a.mu.RLock()
@@ -695,7 +695,7 @@ func (a *IntArray) IteratorAsc(f func(k int, v int) bool) {
 	}
 }
 
-// IteratorDesc iterates the array in descending order with given callback function <f>.
+// IteratorDesc iterates the array readonly in descending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
 func (a *IntArray) IteratorDesc(f func(k int, v int) bool) {
 	a.mu.RLock()
@@ -755,6 +755,16 @@ func (a *IntArray) FilterEmpty() *IntArray {
 		} else {
 			i++
 		}
+	}
+	return a
+}
+
+// Walk applies a user supplied function <f> to every item of array.
+func (a *IntArray) Walk(f func(value int) int) *IntArray {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for i, v := range a.array {
+		a.array[i] = f(v)
 	}
 	return a
 }

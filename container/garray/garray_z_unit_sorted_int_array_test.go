@@ -642,3 +642,12 @@ func TestSortedIntArray_FilterEmpty(t *testing.T) {
 		t.Assert(array.FilterEmpty(), g.SliceInt{1, 2, 3, 4})
 	})
 }
+
+func TestSortedIntArray_Walk(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewSortedIntArrayFrom(g.SliceInt{1, 2})
+		t.Assert(array.Walk(func(value int) int {
+			return 10 + value
+		}), g.Slice{11, 12})
+	})
+}

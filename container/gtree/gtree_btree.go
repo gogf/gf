@@ -406,7 +406,7 @@ func (tree *BTree) IteratorFrom(key interface{}, match bool, f func(key, value i
 	tree.IteratorAscFrom(key, match, f)
 }
 
-// IteratorAsc iterates the tree in ascending order with given callback function <f>.
+// IteratorAsc iterates the tree readonly in ascending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
 func (tree *BTree) IteratorAsc(f func(key, value interface{}) bool) {
 	tree.mu.RLock()
@@ -418,7 +418,7 @@ func (tree *BTree) IteratorAsc(f func(key, value interface{}) bool) {
 	tree.doIteratorAsc(node, node.Entries[0], 0, f)
 }
 
-// IteratorAscFrom iterates the tree in ascending order with given callback function <f>.
+// IteratorAscFrom iterates the tree readonly in ascending order with given callback function <f>.
 // The parameter <key> specifies the start entry for iterating. The <match> specifies whether
 // starting iterating if the <key> is fully matched, or else using index searching iterating.
 // If <f> returns true, then it continues iterating; or false to stop.
@@ -479,7 +479,7 @@ loop:
 	}
 }
 
-// IteratorDesc iterates the tree in descending order with given callback function <f>.
+// IteratorDesc iterates the tree readonly in descending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
 func (tree *BTree) IteratorDesc(f func(key, value interface{}) bool) {
 	tree.mu.RLock()
@@ -493,7 +493,7 @@ func (tree *BTree) IteratorDesc(f func(key, value interface{}) bool) {
 	tree.doIteratorDesc(node, entry, index, f)
 }
 
-// IteratorDescFrom iterates the tree in descending order with given callback function <f>.
+// IteratorDescFrom iterates the tree readonly in descending order with given callback function <f>.
 // The parameter <key> specifies the start entry for iterating. The <match> specifies whether
 // starting iterating if the <key> is fully matched, or else using index searching iterating.
 // If <f> returns true, then it continues iterating; or false to stop.
@@ -510,7 +510,7 @@ func (tree *BTree) IteratorDescFrom(key interface{}, match bool, f func(key, val
 	}
 }
 
-// IteratorDesc iterates the tree in descending order with given callback function <f>.
+// IteratorDesc iterates the tree readonly in descending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
 func (tree *BTree) doIteratorDesc(node *BTreeNode, entry *BTreeEntry, index int, f func(key, value interface{}) bool) {
 	first := true

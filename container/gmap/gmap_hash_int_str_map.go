@@ -40,7 +40,7 @@ func NewIntStrMapFrom(data map[int]string, safe ...bool) *IntStrMap {
 	}
 }
 
-// Iterator iterates the hash map with custom callback function <f>.
+// Iterator iterates the hash map readonly with custom callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
 func (m *IntStrMap) Iterator(f func(k int, v string) bool) {
 	m.mu.RLock()

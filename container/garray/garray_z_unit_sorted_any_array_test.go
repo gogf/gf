@@ -779,3 +779,12 @@ func TestSortedArray_FilterEmpty(t *testing.T) {
 		t.Assert(array.FilterEmpty(), g.Slice{1, 2, 3, 4})
 	})
 }
+
+func TestSortedArray_Walk(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewSortedArrayFrom(g.Slice{"1", "2"}, gutil.ComparatorString)
+		t.Assert(array.Walk(func(value interface{}) interface{} {
+			return "key-" + gconv.String(value)
+		}), g.Slice{"key-1", "key-2"})
+	})
+}

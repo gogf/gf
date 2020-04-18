@@ -681,7 +681,7 @@ func (a *Array) Iterator(f func(k int, v interface{}) bool) {
 	a.IteratorAsc(f)
 }
 
-// IteratorAsc iterates the array in ascending order with given callback function <f>.
+// IteratorAsc iterates the array readonly in ascending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
 func (a *Array) IteratorAsc(f func(k int, v interface{}) bool) {
 	a.mu.RLock()
@@ -693,7 +693,7 @@ func (a *Array) IteratorAsc(f func(k int, v interface{}) bool) {
 	}
 }
 
-// IteratorDesc iterates the array in descending order with given callback function <f>.
+// IteratorDesc iterates the array readonly in descending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
 func (a *Array) IteratorDesc(f func(k int, v interface{}) bool) {
 	a.mu.RLock()
@@ -785,6 +785,16 @@ func (a *Array) FilterEmpty() *Array {
 		} else {
 			i++
 		}
+	}
+	return a
+}
+
+// Walk applies a user supplied function <f> to every item of array.
+func (a *Array) Walk(f func(value interface{}) interface{}) *Array {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for i, v := range a.array {
+		a.array[i] = f(v)
 	}
 	return a
 }

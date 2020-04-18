@@ -604,7 +604,7 @@ func (a *SortedIntArray) Iterator(f func(k int, v int) bool) {
 	a.IteratorAsc(f)
 }
 
-// IteratorAsc iterates the array in ascending order with given callback function <f>.
+// IteratorAsc iterates the array readonly in ascending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
 func (a *SortedIntArray) IteratorAsc(f func(k int, v int) bool) {
 	a.mu.RLock()
@@ -616,7 +616,7 @@ func (a *SortedIntArray) IteratorAsc(f func(k int, v int) bool) {
 	}
 }
 
-// IteratorDesc iterates the array in descending order with given callback function <f>.
+// IteratorDesc iterates the array readonly in descending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
 func (a *SortedIntArray) IteratorDesc(f func(k int, v int) bool) {
 	a.mu.RLock()
@@ -693,6 +693,20 @@ func (a *SortedIntArray) FilterEmpty() *SortedIntArray {
 		} else {
 			break
 		}
+	}
+	return a
+}
+
+// Walk applies a user supplied function <f> to every item of array.
+func (a *SortedIntArray) Walk(f func(value int) int) *SortedIntArray {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	// Keep the array always sorted.
+	defer quickSortInt(a.array, a.getComparator())
+
+	for i, v := range a.array {
+		a.array[i] = f(v)
 	}
 	return a
 }

@@ -41,7 +41,7 @@ func NewIntSetFrom(items []int, safe ...bool) *IntSet {
 	}
 }
 
-// Iterator iterates the set with given callback function <f>,
+// Iterator iterates the set readonly with given callback function <f>,
 // if <f> returns true then continue iterating; or false to stop.
 func (set *IntSet) Iterator(f func(v int) bool) {
 	set.mu.RLock()
