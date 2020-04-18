@@ -10,6 +10,7 @@ package gdebug
 
 import (
 	"runtime"
+	"runtime/debug"
 	"testing"
 )
 
@@ -46,6 +47,12 @@ func Benchmark_callerFromIndex(b *testing.B) {
 func Benchmark_Stack(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		Stack()
+	}
+}
+
+func Benchmark_StackOfStdlib(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		debug.Stack()
 	}
 }
 
