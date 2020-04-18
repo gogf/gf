@@ -55,7 +55,7 @@ func (m *ListMap) Iterator(f func(key, value interface{}) bool) {
 	m.IteratorAsc(f)
 }
 
-// IteratorAsc iterates the map in ascending order with given callback function <f>.
+// IteratorAsc iterates the map readonly in ascending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
 func (m *ListMap) IteratorAsc(f func(key interface{}, value interface{}) bool) {
 	m.mu.RLock()
@@ -69,7 +69,7 @@ func (m *ListMap) IteratorAsc(f func(key interface{}, value interface{}) bool) {
 	}
 }
 
-// IteratorDesc iterates the map in descending order with given callback function <f>.
+// IteratorDesc iterates the map readonly in descending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
 func (m *ListMap) IteratorDesc(f func(key interface{}, value interface{}) bool) {
 	m.mu.RLock()

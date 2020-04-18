@@ -388,7 +388,7 @@ func (a *SortedArray) Len() int {
 // Note that, if it's in concurrent-safe usage, it returns a copy of underlying data,
 // or else a pointer to the underlying data.
 func (a *SortedArray) Slice() []interface{} {
-	array := ([]interface{})(nil)
+	var array []interface{}
 	if a.mu.IsSafe() {
 		a.mu.RLock()
 		defer a.mu.RUnlock()
@@ -507,6 +507,12 @@ func (a *SortedArray) Clear() *SortedArray {
 func (a *SortedArray) LockFunc(f func(array []interface{})) *SortedArray {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+
+	// Keep the array always sorted.
+	defer sort.Slice(a.array, func(i, j int) bool {
+		return a.getComparator()(a.array[i], a.array[j]) < 0
+	})
+
 	f(a.array)
 	return a
 }
@@ -607,7 +613,7 @@ func (a *SortedArray) Iterator(f func(k int, v interface{}) bool) {
 	a.IteratorAsc(f)
 }
 
-// IteratorAsc iterates the array in ascending order with given callback function <f>.
+// IteratorAsc iterates the array readonly in ascending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
 func (a *SortedArray) IteratorAsc(f func(k int, v interface{}) bool) {
 	a.mu.RLock()
@@ -619,7 +625,7 @@ func (a *SortedArray) IteratorAsc(f func(k int, v interface{}) bool) {
 	}
 }
 
-// IteratorDesc iterates the array in descending order with given callback function <f>.
+// IteratorDesc iterates the array readonly in descending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
 func (a *SortedArray) IteratorDesc(f func(k int, v interface{}) bool) {
 	a.mu.RLock()
@@ -741,6 +747,20 @@ func (a *SortedArray) FilterEmpty() *SortedArray {
 		} else {
 			break
 		}
+	}
+	return a
+}
+
+// Walk applies a user supplied function <f> to every item of array.
+func (a *SortedArray) Walk(f func(value interface{}) interface{}) *SortedArray {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	// Keep the array always sorted.
+	defer sort.Slice(a.array, func(i, j int) bool {
+		return a.getComparator()(a.array[i], a.array[j]) < 0
+	})
+	for i, v := range a.array {
+		a.array[i] = f(v)
 	}
 	return a
 }

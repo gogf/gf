@@ -12,12 +12,17 @@ import (
 	"strings"
 )
 
-// url encode string, is + not %20
+// Encode escapes the string so it can be safely placed
+// inside a URL query.
 func Encode(str string) string {
 	return url.QueryEscape(str)
 }
 
-// url decode string
+// Decode does the inverse transformation of Encode,
+// converting each 3-byte encoded substring of the form "%AB" into the
+// hex-decoded byte 0xAB.
+// It returns an error if any % is not followed by two hexadecimal
+// digits.
 func Decode(str string) (string, error) {
 	return url.QueryUnescape(str)
 }
