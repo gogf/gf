@@ -42,12 +42,14 @@ func init() {
 	}
 }
 
-// CallerPath returns the function name and the absolute file path along with its line number of the caller.
+// CallerPath returns the function name and the absolute file path along with its line
+// number of the caller.
 func Caller(skip ...int) (function string, path string, line int) {
 	return CallerWithFilter("", skip...)
 }
 
-// CallerPathWithFilter returns the function name and the absolute file path along with its line number of the caller.
+// CallerPathWithFilter returns the function name and the absolute file path along with
+// its line number of the caller.
 //
 // The parameter <filter> is used to filter the path of the caller.
 func CallerWithFilter(filter string, skip ...int) (function string, path string, line int) {
@@ -84,7 +86,10 @@ func CallerWithFilter(filter string, skip ...int) (function string, path string,
 	return "", "", -1
 }
 
-// callerFromIndex returns the caller position and according information exclusive of the debug package.
+// callerFromIndex returns the caller position and according information exclusive of the
+// debug package.
+//
+// VERY NOTE THAT, the returned index value should be <index - 1> as the caller's start point.
 func callerFromIndex(filters []string) (pc uintptr, file string, line int, index int) {
 	var filtered, ok bool
 	for index = 0; index < gMAX_DEPTH; index++ {
@@ -101,6 +106,9 @@ func callerFromIndex(filters []string) (pc uintptr, file string, line int, index
 			}
 			if strings.Contains(file, gFILTER_KEY) {
 				continue
+			}
+			if index > 0 {
+				index--
 			}
 			return
 		}
