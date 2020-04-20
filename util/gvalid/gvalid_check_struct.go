@@ -20,16 +20,15 @@ var (
 
 // 校验struct对象属性，object参数也可以是一个指向对象的指针，返回值同CheckMap方法。
 // struct的数据校验结果信息是顺序的。
-func CheckStruct(object interface{}, rules interface{}, msgs ...CustomMsg) *Error {
-	params := make(map[string]interface{})
-	checkRules := make(map[string]string)
-	customMsgs := make(CustomMsg)
-	// 字段别名记录，用于msgs覆盖struct tag的
-	fieldAliases := make(map[string]string)
-	// 返回的顺序规则
-	errorRules := make([]string, 0)
-	// 返回的校验错误
-	errorMaps := make(ErrorMap)
+func CheckStruct(object interface{}, rules interface{}, messages ...CustomMsg) *Error {
+	var (
+		params        = make(map[string]interface{})
+		checkRules    = make(map[string]string)
+		customMessage = make(CustomMsg)
+		fieldAliases  = make(map[string]string) // Alias names for <messages> overwriting struct tag names.
+		errorRules    = make([]string, 0)       // Sequence rules.
+		errorMaps     = make(ErrorMap)          // Returned error
+	)
 	// 解析rules参数
 	switch v := rules.(type) {
 	// 支持校验错误顺序: []sequence tag
@@ -52,10 +51,10 @@ func CheckStruct(object interface{}, rules interface{}, msgs ...CustomMsg) *Erro
 						continue
 					}
 					array := strings.Split(v, ":")
-					if _, ok := customMsgs[name]; !ok {
-						customMsgs[name] = make(map[string]string)
+					if _, ok := customMessage[name]; !ok {
+						customMessage[name] = make(map[string]string)
 					}
-					customMsgs[name].(map[string]string)[strings.TrimSpace(array[0])] = strings.TrimSpace(msgArray[k])
+					customMessage[name].(map[string]string)[strings.TrimSpace(array[0])] = strings.TrimSpace(msgArray[k])
 				}
 			}
 			checkRules[name] = rule
@@ -114,22 +113,22 @@ func CheckStruct(object interface{}, rules interface{}, msgs ...CustomMsg) *Erro
 					continue
 				}
 				array := strings.Split(v, ":")
-				if _, ok := customMsgs[name]; !ok {
-					customMsgs[name] = make(map[string]string)
+				if _, ok := customMessage[name]; !ok {
+					customMessage[name] = make(map[string]string)
 				}
-				customMsgs[name].(map[string]string)[strings.TrimSpace(array[0])] = strings.TrimSpace(msgArray[k])
+				customMessage[name].(map[string]string)[strings.TrimSpace(array[0])] = strings.TrimSpace(msgArray[k])
 			}
 		}
 	}
 
 	// 自定义错误消息，非必须参数，优先级比rules参数中以及struct tag中定义的错误消息更高
-	if len(msgs) > 0 && len(msgs[0]) > 0 {
-		for k, v := range msgs[0] {
+	if len(messages) > 0 && len(messages[0]) > 0 {
+		for k, v := range messages[0] {
 			if a, ok := fieldAliases[k]; ok {
 				// 属性的别名存在时，覆盖别名的错误信息
-				customMsgs[a] = v
+				customMessage[a] = v
 			} else {
-				customMsgs[k] = v
+				customMessage[k] = v
 			}
 		}
 	}
@@ -144,7 +143,7 @@ func CheckStruct(object interface{}, rules interface{}, msgs ...CustomMsg) *Erro
 		if v, ok := params[key]; ok {
 			value = v
 		}
-		if e := Check(value, rule, customMsgs[key], params); e != nil {
+		if e := Check(value, rule, customMessage[key], params); e != nil {
 			_, item := e.FirstItem()
 			// 如果值为nil|""，并且不需要require*验证时，其他验证失效
 			if value == nil || gconv.String(value) == "" {

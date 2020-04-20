@@ -382,16 +382,18 @@ func CountChars(str string, noSpace ...bool) map[string]int {
 }
 
 // WordWrap wraps a string to a given number of characters.
-// TODO: Enable cut param, see http://php.net/manual/en/function.wordwrap.php.
+// TODO: Enable cut parameter, see http://php.net/manual/en/function.wordwrap.php.
 func WordWrap(str string, width int, br string) string {
 	if br == "" {
 		br = "\n"
 	}
-	init := make([]byte, 0, len(str))
-	buf := bytes.NewBuffer(init)
-	var current int
-	var wordBuf, spaceBuf bytes.Buffer
-	for _, char := range str {
+	var (
+		current           int
+		wordBuf, spaceBuf bytes.Buffer
+		init              = make([]byte, 0, len(str))
+		buf               = bytes.NewBuffer(init)
+	)
+	for _, char := range []rune(str) {
 		if char == '\n' {
 			if wordBuf.Len() == 0 {
 				if current+spaceBuf.Len() > width {
@@ -441,7 +443,13 @@ func WordWrap(str string, width int, br string) string {
 }
 
 // RuneLen returns string length of unicode.
+// Deprecated, use LenRune instead.
 func RuneLen(str string) int {
+	return LenRune(str)
+}
+
+// LenRune returns string length of unicode.
+func LenRune(str string) int {
 	return utf8.RuneCountInString(str)
 }
 

@@ -507,7 +507,7 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 				listMap[i] = DataToMapDeep(rv.Index(i).Interface())
 			}
 		case reflect.Map, reflect.Struct:
-			listMap = List{DataToMapDeep(list)}
+			listMap = List{DataToMapDeep(v)}
 		default:
 			return result, errors.New(fmt.Sprint("unsupported list type:", kind))
 		}
