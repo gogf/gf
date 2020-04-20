@@ -231,10 +231,18 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 						}
 
 					} else {
-						m[name] = rvField.Interface()
+						if rvField.IsValid() {
+							m[name] = rvField.Interface()
+						} else {
+							m[name] = nil
+						}
 					}
 				} else {
-					m[name] = rvField.Interface()
+					if rvField.IsValid() {
+						m[name] = rvField.Interface()
+					} else {
+						m[name] = nil
+					}
 				}
 			}
 		default:

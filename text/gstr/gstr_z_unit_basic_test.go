@@ -267,6 +267,7 @@ func Test_WordWrap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gstr.WordWrap("12 34", 2, "<br>"), "12<br>34")
 		t.Assert(gstr.WordWrap("12 34", 2, "\n"), "12\n34")
+		t.Assert(gstr.WordWrap("我爱 GF", 2, "\n"), "我爱\nGF")
 		t.Assert(gstr.WordWrap("A very long woooooooooooooooooord. and something", 7, "<br>"),
 			"A very<br>long<br>woooooooooooooooooord.<br>and<br>something")
 	})

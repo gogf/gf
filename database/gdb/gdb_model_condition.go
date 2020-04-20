@@ -6,7 +6,10 @@
 
 package gdb
 
-import "github.com/gogf/gf/util/gconv"
+import (
+	"github.com/gogf/gf/util/gconv"
+	"strings"
+)
 
 // Where sets the condition statement for the model. The parameter <where> can be type of
 // string/map/gmap/slice/struct/*struct, etc. Note that, if it's called more than one times,
@@ -98,9 +101,9 @@ func (m *Model) GroupBy(groupBy string) *Model {
 }
 
 // Order sets the "ORDER BY" statement for the model.
-func (m *Model) Order(orderBy string) *Model {
+func (m *Model) Order(orderBy ...string) *Model {
 	model := m.getModel()
-	model.orderBy = m.db.QuoteString(orderBy)
+	model.orderBy = m.db.QuoteString(strings.Join(orderBy, " "))
 	return model
 }
 
