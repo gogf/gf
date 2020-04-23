@@ -30,9 +30,25 @@ func (m *Model) All(where ...interface{}) (Result, error) {
 	if len(where) > 0 {
 		return m.Where(where[0], where[1:]...).All()
 	}
-	condition, conditionArgs := m.formatCondition(false)
+	var (
+		softDeletingCondition                         = m.getConditionForSoftDeleting()
+		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(false)
+	)
+	if !m.unscoped && softDeletingCondition != "" {
+		if conditionWhere == "" {
+			conditionWhere = " WHERE "
+		} else {
+			conditionWhere += " AND "
+		}
+		conditionWhere += softDeletingCondition
+	}
 	return m.getAll(
-		fmt.Sprintf("SELECT %s FROM %s%s", m.fields, m.tables, condition),
+		fmt.Sprintf(
+			"SELECT %s FROM %s%s",
+			m.db.QuoteString(m.fields),
+			m.tables,
+			conditionWhere+conditionExtra,
+		),
 		conditionArgs...,
 	)
 }
@@ -73,8 +89,7 @@ func (m *Model) One(where ...interface{}) (Record, error) {
 	if len(where) > 0 {
 		return m.Where(where[0], where[1:]...).One()
 	}
-	condition, conditionArgs := m.formatCondition(true)
-	all, err := m.getAll(fmt.Sprintf("SELECT %s FROM %s%s", m.fields, m.tables, condition), conditionArgs...)
+	all, err := m.All()
 	if err != nil {
 		return nil, err
 	}
@@ -234,10 +249,22 @@ func (m *Model) Count(where ...interface{}) (int, error) {
 	}
 	countFields := "COUNT(1)"
 	if m.fields != "" && m.fields != "*" {
-		countFields = fmt.Sprintf(`COUNT(%s)`, m.fields)
+		countFields = fmt.Sprintf(`COUNT(%s)`, m.db.QuoteString(m.fields))
 	}
-	condition, conditionArgs := m.formatCondition(false)
-	s := fmt.Sprintf("SELECT %s FROM %s %s", countFields, m.tables, condition)
+	var (
+		softDeletingCondition                         = m.getConditionForSoftDeleting()
+		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(false)
+	)
+	if !m.unscoped && softDeletingCondition != "" {
+		if conditionWhere == "" {
+			conditionWhere = " WHERE "
+		} else {
+			conditionWhere += " AND "
+		}
+		conditionWhere += softDeletingCondition
+	}
+
+	s := fmt.Sprintf("SELECT %s FROM %s%s", countFields, m.tables, conditionWhere+conditionExtra)
 	if len(m.groupBy) > 0 {
 		s = fmt.Sprintf("SELECT COUNT(1) FROM (%s) count_alias", s)
 	}

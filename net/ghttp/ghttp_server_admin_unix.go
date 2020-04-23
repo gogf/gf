@@ -9,6 +9,7 @@
 package ghttp
 
 import (
+	"github.com/gogf/gf/internal/intlog"
 	"os"
 	"os/signal"
 	"syscall"
@@ -26,14 +27,16 @@ func handleProcessSignal() {
 		syscall.SIGQUIT,
 		syscall.SIGKILL,
 		syscall.SIGTERM,
+		syscall.SIGABRT,
 		syscall.SIGUSR1,
 		syscall.SIGUSR2,
 	)
 	for {
 		sig = <-procSignalChan
+		intlog.Printf(`signal received: %s`, sig.String())
 		switch sig {
 		// 进程终止，停止所有子进程运行
-		case syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGTERM:
+		case syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGTERM, syscall.SIGABRT:
 			shutdownWebServers(sig.String())
 			return
 

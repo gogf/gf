@@ -17,6 +17,7 @@ import (
 	"github.com/gogf/gf/os/gmlock"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/util/gutil"
 	htmltpl "html/template"
 	"strconv"
 	"strings"
@@ -113,32 +114,9 @@ func (view *View) Parse(file string, params ...Params) (result string, err error
 	// Note that the template variable assignment cannot change the value
 	// of the existing <params> or view.data because both variables are pointers.
 	// It needs to merge the values of the two maps into a new map.
-	var variables map[string]interface{}
-	length := len(view.data)
-	if len(params) > 0 {
-		length += len(params[0])
-	}
-	if length > 0 {
-		variables = make(map[string]interface{}, length)
-	}
+	variables := gutil.MapMergeCopy(params...)
 	if len(view.data) > 0 {
-		if len(params) > 0 {
-			if variables == nil {
-				variables = make(map[string]interface{})
-			}
-			for k, v := range params[0] {
-				variables[k] = v
-			}
-			for k, v := range view.data {
-				variables[k] = v
-			}
-		} else {
-			variables = view.data
-		}
-	} else {
-		if len(params) > 0 {
-			variables = params[0]
-		}
+		gutil.MapMerge(variables, view.data)
 	}
 	buffer := bytes.NewBuffer(nil)
 	if view.config.AutoEncode {
@@ -163,7 +141,7 @@ func (view *View) Parse(file string, params ...Params) (result string, err error
 
 // ParseDefault parses the default template file with params.
 func (view *View) ParseDefault(params ...Params) (result string, err error) {
-	return view.Parse(view.defaultFile, params...)
+	return view.Parse(view.config.DefaultFile, params...)
 }
 
 // ParseContent parses given template content <content>  with template variables <params>
@@ -174,12 +152,18 @@ func (view *View) ParseContent(content string, params ...Params) (string, error)
 		return "", nil
 	}
 	err := (error)(nil)
-	key := fmt.Sprintf("%s_%v_%v", gCONTENT_TEMPLATE_NAME, view.delimiters, view.config.AutoEncode)
+	key := fmt.Sprintf("%s_%v_%v", gCONTENT_TEMPLATE_NAME, view.config.Delimiters, view.config.AutoEncode)
 	tpl := templates.GetOrSetFuncLock(key, func() interface{} {
 		if view.config.AutoEncode {
-			return htmltpl.New(gCONTENT_TEMPLATE_NAME).Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcMap)
+			return htmltpl.New(gCONTENT_TEMPLATE_NAME).Delims(
+				view.config.Delimiters[0],
+				view.config.Delimiters[1],
+			).Funcs(view.funcMap)
 		}
-		return texttpl.New(gCONTENT_TEMPLATE_NAME).Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcMap)
+		return texttpl.New(gCONTENT_TEMPLATE_NAME).Delims(
+			view.config.Delimiters[0],
+			view.config.Delimiters[1],
+		).Funcs(view.funcMap)
 	})
 	// Using memory lock to ensure concurrent safety for content parsing.
 	hash := strconv.FormatUint(ghash.DJBHash64([]byte(content)), 10)
@@ -196,32 +180,9 @@ func (view *View) ParseContent(content string, params ...Params) (string, error)
 	// Note that the template variable assignment cannot change the value
 	// of the existing <params> or view.data because both variables are pointers.
 	// It needs to merge the values of the two maps into a new map.
-	var variables map[string]interface{}
-	length := len(view.data)
-	if len(params) > 0 {
-		length += len(params[0])
-	}
-	if length > 0 {
-		variables = make(map[string]interface{}, length)
-	}
+	variables := gutil.MapMergeCopy(params...)
 	if len(view.data) > 0 {
-		if len(params) > 0 {
-			if variables == nil {
-				variables = make(map[string]interface{})
-			}
-			for k, v := range params[0] {
-				variables[k] = v
-			}
-			for k, v := range view.data {
-				variables[k] = v
-			}
-		} else {
-			variables = view.data
-		}
-	} else {
-		if len(params) > 0 {
-			variables = params[0]
-		}
+		gutil.MapMerge(variables, view.data)
 	}
 	buffer := bytes.NewBuffer(nil)
 	if view.config.AutoEncode {
@@ -249,14 +210,20 @@ func (view *View) ParseContent(content string, params ...Params) (string, error)
 // if the template files under <path> changes (recursively).
 func (view *View) getTemplate(filePath, folderPath, pattern string) (tpl interface{}, err error) {
 	// Key for template cache.
-	key := fmt.Sprintf("%s_%v", filePath, view.delimiters)
+	key := fmt.Sprintf("%s_%v", filePath, view.config.Delimiters)
 	result := templates.GetOrSetFuncLock(key, func() interface{} {
 		// Do not use <key> but the <filePath> as the parameter <name> for function New,
 		// because when error occurs the <name> will be printed out for error locating.
 		if view.config.AutoEncode {
-			tpl = htmltpl.New(filePath).Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcMap)
+			tpl = htmltpl.New(filePath).Delims(
+				view.config.Delimiters[0],
+				view.config.Delimiters[1],
+			).Funcs(view.funcMap)
 		} else {
-			tpl = texttpl.New(filePath).Delims(view.delimiters[0], view.delimiters[1]).Funcs(view.funcMap)
+			tpl = texttpl.New(filePath).Delims(
+				view.config.Delimiters[0],
+				view.config.Delimiters[1],
+			).Funcs(view.funcMap)
 		}
 		// Firstly checking the resource manager.
 		if !gres.IsEmpty() {

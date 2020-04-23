@@ -13,6 +13,7 @@ package gdb
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/text/gstr"
@@ -78,7 +79,6 @@ func (d *DriverPgsql) Tables(schema ...string) (tables []string, err error) {
 	if err != nil {
 		return nil, err
 	}
-
 	query := "SELECT TABLENAME FROM PG_TABLES WHERE SCHEMANAME = 'public' ORDER BY TABLENAME"
 	if len(schema) > 0 && schema[0] != "" {
 		query = fmt.Sprintf("SELECT TABLENAME FROM PG_TABLES WHERE SCHEMANAME = '%s' ORDER BY TABLENAME", schema[0])
@@ -97,9 +97,10 @@ func (d *DriverPgsql) Tables(schema ...string) (tables []string, err error) {
 
 // TableFields retrieves and returns the fields information of specified table of current schema.
 func (d *DriverPgsql) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
-	table = gstr.Trim(table)
+	charL, charR := d.GetChars()
+	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
-		panic("function TableFields supports only single table operations")
+		return nil, errors.New("function TableFields supports only single table operations")
 	}
 	table, _ = gregex.ReplaceString("\"", "", table)
 	checkSchema := d.DB.GetSchema()

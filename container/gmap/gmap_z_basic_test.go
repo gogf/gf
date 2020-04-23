@@ -7,6 +7,7 @@
 package gmap_test
 
 import (
+	"github.com/gogf/gf/util/gutil"
 	"testing"
 
 	"github.com/gogf/gf/container/gmap"
@@ -15,6 +16,55 @@ import (
 
 func getValue() interface{} {
 	return 3
+}
+
+func Test_Map_Var(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var m gmap.Map
+		m.Set(1, 11)
+		t.Assert(m.Get(1), 11)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var m gmap.IntAnyMap
+		m.Set(1, 11)
+		t.Assert(m.Get(1), 11)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var m gmap.IntIntMap
+		m.Set(1, 11)
+		t.Assert(m.Get(1), 11)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var m gmap.IntStrMap
+		m.Set(1, "11")
+		t.Assert(m.Get(1), "11")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var m gmap.StrAnyMap
+		m.Set("1", "11")
+		t.Assert(m.Get("1"), "11")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var m gmap.StrStrMap
+		m.Set("1", "11")
+		t.Assert(m.Get("1"), "11")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var m gmap.StrIntMap
+		m.Set("1", 11)
+		t.Assert(m.Get("1"), 11)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var m gmap.ListMap
+		m.Set("1", 11)
+		t.Assert(m.Get("1"), 11)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var m gmap.TreeMap
+		m.SetComparator(gutil.ComparatorString)
+		m.Set("1", 11)
+		t.Assert(m.Get("1"), 11)
+	})
 }
 
 func Test_Map_Basic(t *testing.T) {

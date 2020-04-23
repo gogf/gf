@@ -96,7 +96,7 @@ func (s *Server) doBindObject(
 			} else {
 				// 否则只是Debug提示
 				s.Logger().Debugf(
-					`ignore route method: %s.%s.%s defined as "%s", no match "func(*ghttp.Request)"`,
+					`ignore route method: %s.%s.%s defined as "%s", no match "func(*ghttp.Request)" for object registry`,
 					pkgPath, objName, methodName, v.Method(i).Type().String(),
 				)
 			}

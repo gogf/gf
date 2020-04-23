@@ -11,6 +11,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/internal/intlog"
 	"time"
 
@@ -18,7 +19,6 @@ import (
 
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/container/gtype"
-	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/os/gcache"
 	"github.com/gogf/gf/util/grand"
 )
@@ -78,8 +78,8 @@ type DB interface {
 	Delete(table string, condition interface{}, args ...interface{}) (sql.Result, error)
 
 	// Model creation.
-	From(tables string) *Model
-	Table(tables string) *Model
+	Table(table ...string) *Model
+	Model(table ...string) *Model
 	Schema(schema string) *Schema
 
 	// Configuration methods.
@@ -89,6 +89,7 @@ type DB interface {
 	SetSchema(schema string)
 	GetSchema() string
 	GetPrefix() string
+	GetGroup() string
 	SetDryRun(dryrun bool)
 	GetDryRun() bool
 	SetLogger(logger *glog.Logger)
@@ -169,21 +170,23 @@ type Link interface {
 	Prepare(sql string) (*sql.Stmt, error)
 }
 
-// Value is the field value type.
-type Value = *gvar.Var
+type (
+	// Value is the field value type.
+	Value = *gvar.Var
 
-// Record is the row record of the table.
-type Record map[string]Value
+	// Record is the row record of the table.
+	Record map[string]Value
 
-// Result is the row record array.
-type Result []Record
+	// Result is the row record array.
+	Result []Record
 
-// Map is alias of map[string]interface{},
-// which is the most common usage map type.
-type Map = map[string]interface{}
+	// Map is alias of map[string]interface{},
+	// which is the most common usage map type.
+	Map = map[string]interface{}
 
-// List is type of map array.
-type List = []Map
+	// List is type of map array.
+	List = []Map
+)
 
 const (
 	gINSERT_OPTION_DEFAULT       = 0

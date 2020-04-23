@@ -7,6 +7,8 @@
 package gdb
 
 import (
+	"fmt"
+	"github.com/gogf/gf/text/gregex"
 	"time"
 
 	"github.com/gogf/gf/text/gstr"
@@ -26,6 +28,7 @@ type Model struct {
 	whereHolder   []*whereHolder // Condition strings for where operation.
 	groupBy       string         // Used for "group by" statement.
 	orderBy       string         // Used for "order by" statement.
+	having        []interface{}  // Used for "having..." statement.
 	start         int            // Used for "select ... start, limit ..." statement.
 	limit         int            // Used for "select ... start, limit ..." statement.
 	option        int            // Option for extra operation features.
@@ -37,6 +40,7 @@ type Model struct {
 	cacheEnabled  bool           // Enable sql result cache feature.
 	cacheDuration time.Duration  // Cache TTL duration.
 	cacheName     string         // Cache name for custom operation.
+	unscoped      bool           // Disables soft deleting features when select/delete operations.
 	safe          bool           // If true, it clones and returns a new model object whenever operation done; or else it changes the attribute of current model.
 }
 
@@ -58,70 +62,70 @@ const (
 )
 
 // Table creates and returns a new ORM model from given schema.
-// The parameter <tables> can be more than one table names, like :
-// "user", "user u", "user, user_detail", "user u, user_detail ud"
-func (c *Core) Table(table string) *Model {
-	table = c.DB.QuotePrefixTableName(table)
+// The parameter <table> can be more than one table names, and also alias name, like:
+// 1. Table names:
+//    Table("user")
+//    Table("user u")
+//    Table("user, user_detail")
+//    Table("user u, user_detail ud")
+// 2. Table name with alias: Table("user", "u")
+func (c *Core) Table(table ...string) *Model {
+	tables := ""
+	if len(table) > 1 {
+		tables = fmt.Sprintf(
+			`%s AS %s`, c.DB.QuotePrefixTableName(table[0]), c.DB.QuoteWord(table[1]),
+		)
+	} else if len(table) == 1 {
+		tables = c.DB.QuotePrefixTableName(table[0])
+	} else {
+		panic("table cannot be empty")
+	}
 	return &Model{
 		db:         c.DB,
-		tablesInit: table,
-		tables:     table,
+		tablesInit: tables,
+		tables:     tables,
 		fields:     "*",
 		start:      -1,
 		offset:     -1,
-		safe:       true,
 		option:     OPTION_ALLOWEMPTY,
 	}
 }
 
 // Model is alias of Core.Table.
 // See Core.Table.
-func (c *Core) Model(table string) *Model {
-	return c.DB.Table(table)
-}
-
-// From is alias of Core.Table.
-// See Core.Table.
-// Deprecated.
-func (c *Core) From(table string) *Model {
-	return c.DB.Table(table)
+func (c *Core) Model(table ...string) *Model {
+	return c.DB.Table(table...)
 }
 
 // Table acts like Core.Table except it operates on transaction.
 // See Core.Table.
-func (tx *TX) Table(table string) *Model {
-	table = tx.db.QuotePrefixTableName(table)
-	return &Model{
-		db:         tx.db,
-		tx:         tx,
-		tablesInit: table,
-		tables:     table,
-		fields:     "*",
-		start:      -1,
-		offset:     -1,
-		safe:       true,
-		option:     OPTION_ALLOWEMPTY,
-	}
+func (tx *TX) Table(table ...string) *Model {
+	model := tx.db.Table(table...)
+	model.db = tx.db
+	model.tx = tx
+	return model
 }
 
 // Model is alias of tx.Table.
 // See tx.Table.
-func (tx *TX) Model(table string) *Model {
-	return tx.Table(table)
-}
-
-// From is alias of tx.Table.
-// See tx.Table.
-// Deprecated.
-func (tx *TX) From(table string) *Model {
-	return tx.Table(table)
+func (tx *TX) Model(table ...string) *Model {
+	return tx.Table(table...)
 }
 
 // As sets an alias name for current table.
 func (m *Model) As(as string) *Model {
 	if m.tables != "" {
 		model := m.getModel()
-		model.tables = gstr.TrimRight(model.tables) + " AS " + as
+		split := " JOIN "
+		if gstr.Contains(model.tables, split) {
+			// For join table.
+			array := gstr.Split(model.tables, split)
+			array[len(array)-1], _ = gregex.ReplaceString(`(.+) ON`, fmt.Sprintf(`$1 AS %s ON`, as), array[len(array)-1])
+			model.tables = gstr.Join(array, split)
+		} else {
+			// For base table.
+			model.tables = gstr.TrimRight(model.tables) + " AS " + as
+		}
 		return model
 	}
 	return m

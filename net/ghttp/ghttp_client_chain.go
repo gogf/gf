@@ -11,6 +11,17 @@ import (
 	"time"
 )
 
+// Prefix is a chaining function,
+// which sets the URL prefix for next request of this client.
+func (c *Client) Prefix(prefix string) *Client {
+	newClient := c
+	if c.parent == nil {
+		newClient = c.Clone()
+	}
+	newClient.SetPrefix(prefix)
+	return newClient
+}
+
 // Header is a chaining function,
 // which sets custom HTTP headers with map for next request.
 func (c *Client) Header(m map[string]string) *Client {
@@ -112,4 +123,15 @@ func (c *Client) Ctx(ctx context.Context) *Client {
 	}
 	newClient.SetCtx(ctx)
 	return newClient
+}
+
+// Retry is a chaining function,
+// which sets retry count and interval when failure for next request.
+func (c *Client) Retry(retryCount int, retryInterval time.Duration) *Client {
+	newClient := c
+	if c.parent == nil {
+		newClient = c.Clone()
+	}
+	newClient.SetRetry(retryCount, retryInterval)
+	return c
 }

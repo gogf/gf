@@ -28,7 +28,7 @@ type Client struct {
 	authPass      string            // HTTP basic authentication: pass.
 	browserMode   bool              // Whether auto saving and sending cookie content.
 	retryCount    int               // Retry count when request fails.
-	retryInterval int               // Retry interval when request fails.
+	retryInterval time.Duration     // Retry interval when request fails.
 }
 
 // NewClient creates and returns a new HTTP client object.
@@ -43,7 +43,6 @@ func NewClient() *Client {
 				DisableKeepAlives: true,
 			},
 		},
-		ctx:     context.Background(),
 		header:  make(map[string]string),
 		cookies: make(map[string]string),
 	}
@@ -143,7 +142,7 @@ func (c *Client) SetCtx(ctx context.Context) *Client {
 }
 
 // SetRetry sets retry count and interval.
-func (c *Client) SetRetry(retryCount int, retryInterval int) *Client {
+func (c *Client) SetRetry(retryCount int, retryInterval time.Duration) *Client {
 	c.retryCount = retryCount
 	c.retryInterval = retryInterval
 	return c

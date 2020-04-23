@@ -16,21 +16,13 @@ func Throw(exception interface{}) {
 	panic(exception)
 }
 
-// TryCatch implements try...catch... logistics.
+// TryCatch implements try...catch... logistics using internal panic...recover.
 func TryCatch(try func(), catch ...func(exception interface{})) {
-	if len(catch) > 0 {
-		// If <catch> is given, it's used to handle the exception.
-		defer func() {
-			if e := recover(); e != nil {
-				catch[0](e)
-			}
-		}()
-	} else {
-		// If no <catch> function passed, it filters the exception.
-		defer func() {
-			recover()
-		}()
-	}
+	defer func() {
+		if e := recover(); e != nil && len(catch) > 0 {
+			catch[0](e)
+		}
+	}()
 	try()
 }
 

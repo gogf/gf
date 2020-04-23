@@ -15,22 +15,25 @@ import (
 )
 
 // Add monitors <path> with callback function <callbackFunc> to the watcher.
-// The optional parameter <recursive> specifies whether monitoring the <path> recursively, which is true in default.
+// The optional parameter <recursive> specifies whether monitoring the <path> recursively,
+// which is true in default.
 func (w *Watcher) Add(path string, callbackFunc func(event *Event), recursive ...bool) (callback *Callback, err error) {
 	return w.AddOnce("", path, callbackFunc, recursive...)
 }
 
-// AddOnce monitors <path> with callback function <callbackFunc> only once using unique name <name> to the watcher.
-// If AddOnce is called multiple times with the same <name> parameter, <path> is only added to monitor once. It returns error
-// if it's called twice with the same <name>.
+// AddOnce monitors <path> with callback function <callbackFunc> only once using unique name
+// <name> to the watcher. If AddOnce is called multiple times with the same <name> parameter,
+// <path> is only added to monitor once.
+// It returns error if it's called twice with the same <name>.
 //
-// The optional parameter <recursive> specifies whether monitoring the <path> recursively, which is true in default.
+// The optional parameter <recursive> specifies whether monitoring the <path> recursively,
+// which is true in default.
 func (w *Watcher) AddOnce(name, path string, callbackFunc func(event *Event), recursive ...bool) (callback *Callback, err error) {
-	w.nameSet.AddIfNotExistFuncLock(name, func() string {
+	w.nameSet.AddIfNotExistFuncLock(name, func() bool {
 		// Firstly add the path to watcher.
 		callback, err = w.addWithCallbackFunc(name, path, callbackFunc, recursive...)
 		if err != nil {
-			return ""
+			return false
 		}
 		// If it's recursive adding, it then adds all sub-folders to the monitor.
 		// NOTE:
@@ -49,7 +52,10 @@ func (w *Watcher) AddOnce(name, path string, callbackFunc func(event *Event), re
 				}
 			}
 		}
-		return name
+		if name == "" {
+			return false
+		}
+		return true
 	})
 	return
 }

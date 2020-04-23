@@ -11,6 +11,7 @@ import (
 	"github.com/gogf/gf/os/gcfg"
 	"github.com/gogf/gf/os/gview"
 	"github.com/gogf/gf/util/gmode"
+	"github.com/gogf/gf/util/gutil"
 )
 
 // WriteTpl parses and responses given template file.
@@ -74,27 +75,19 @@ func (r *Response) ParseTplContent(content string, params ...gview.Params) (stri
 
 // buildInVars merges build-in variables into <params> and returns the new template variables.
 func (r *Response) buildInVars(params ...map[string]interface{}) map[string]interface{} {
-	var vars map[string]interface{}
-	if len(params) > 0 && params[0] != nil {
-		vars = params[0]
-	} else {
-		vars = make(map[string]interface{})
-	}
+	m := gutil.MapMergeCopy(params...)
 	// Retrieve custom template variables from request object.
-	if len(r.Request.viewParams) > 0 {
-		for k, v := range r.Request.viewParams {
-			vars[k] = v
-		}
-	}
+	gutil.MapMerge(m, r.Request.viewParams, map[string]interface{}{
+		"Form":    r.Request.GetFormMap(),
+		"Query":   r.Request.GetQueryMap(),
+		"Request": r.Request.GetMap(),
+		"Cookie":  r.Request.Cookie.Map(),
+		"Session": r.Request.Session.Map(),
+	})
 	// Note that it should assign no Config variable to template
 	// if there's no configuration file.
 	if c := gcfg.Instance(); c.Available() {
-		vars["Config"] = c.GetMap(".")
+		m["Config"] = c.GetMap(".")
 	}
-	vars["Form"] = r.Request.GetFormMap()
-	vars["Query"] = r.Request.GetQueryMap()
-	vars["Request"] = r.Request.GetMap()
-	vars["Cookie"] = r.Request.Cookie.Map()
-	vars["Session"] = r.Request.Session.Map()
-	return vars
+	return m
 }

@@ -24,12 +24,8 @@ type ClientResponse struct {
 // initCookie initializes the cookie map attribute of ClientResponse.
 func (r *ClientResponse) initCookie() {
 	if r.cookies == nil {
-		now := time.Now()
 		r.cookies = make(map[string]string)
 		for _, v := range r.Cookies() {
-			if v.Expires.UnixNano() < now.UnixNano() {
-				continue
-			}
 			r.cookies[v.Name] = v.Value
 		}
 	}

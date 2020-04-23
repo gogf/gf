@@ -7,21 +7,54 @@
 package gutil
 
 import (
-	"regexp"
-	"strings"
+	"github.com/gogf/gf/internal/utils"
 )
 
-var (
-	// replaceCharReg is the regular expression object for replacing chars in map keys.
-	replaceCharReg, _ = regexp.Compile(`[\-\.\_\s]+`)
-)
-
-// CopyMap does a shallow copy from map <data> to <copy> for most commonly used map type
+// MapCopy does a shallow copy from map <data> to <copy> for most commonly used map type
 // map[string]interface{}.
-func CopyMap(data map[string]interface{}) (copy map[string]interface{}) {
+func MapCopy(data map[string]interface{}) (copy map[string]interface{}) {
 	copy = make(map[string]interface{}, len(data))
 	for k, v := range data {
 		copy[k] = v
+	}
+	return
+}
+
+// MapContains checks whether map <data> contains <key>.
+func MapContains(data map[string]interface{}, key string) (ok bool) {
+	_, ok = data[key]
+	return
+}
+
+// MapDelete deletes all <key> from map <data>.
+func MapDelete(data map[string]interface{}, key ...string) {
+	if data == nil {
+		return
+	}
+	for _, v := range key {
+		delete(data, v)
+	}
+}
+
+// MapMerge merges all map from <src> to map <dst>.
+func MapMerge(dst map[string]interface{}, src ...map[string]interface{}) {
+	if dst == nil {
+		return
+	}
+	for _, m := range src {
+		for k, v := range m {
+			dst[k] = v
+		}
+	}
+}
+
+// MapMergeCopy creates and returns a new map which merges all map from <src>.
+func MapMergeCopy(src ...map[string]interface{}) (copy map[string]interface{}) {
+	copy = make(map[string]interface{})
+	for _, m := range src {
+		for k, v := range m {
+			copy[k] = v
+		}
 	}
 	return
 }
@@ -30,20 +63,24 @@ func CopyMap(data map[string]interface{}) (copy map[string]interface{}) {
 // cases or chars '-'/'_'/'.'/' '.
 //
 // Note that this function might be of low performance.
-func MapPossibleItemByKey(data map[string]interface{}, key string) (string, interface{}) {
+func MapPossibleItemByKey(data map[string]interface{}, key string) (foundKey string, foundValue interface{}) {
 	if v, ok := data[key]; ok {
 		return key, v
 	}
-	replacedKey := replaceCharReg.ReplaceAllString(key, "")
-	if v, ok := data[replacedKey]; ok {
-		return replacedKey, v
-	}
-	// Loop for check.
+	// Loop checking.
 	for k, v := range data {
-		// Remove all special chars and compare with case insensitive.
-		if strings.EqualFold(replaceCharReg.ReplaceAllString(k, ""), replacedKey) {
+		if utils.EqualFoldWithoutChars(k, key) {
 			return k, v
 		}
 	}
 	return "", nil
+}
+
+// MapContainsPossibleKey checks if the given <key> is contained in given map <data>.
+// It checks the key with or without cases or chars '-'/'_'/'.'/' '.
+func MapContainsPossibleKey(data map[string]interface{}, key string) bool {
+	if k, _ := MapPossibleItemByKey(data, key); k != "" {
+		return true
+	}
+	return false
 }

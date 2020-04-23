@@ -118,7 +118,8 @@ func Config() ServerConfig {
 	}
 }
 
-// ConfigFromMap creates and returns a ServerConfig object with given map.
+// ConfigFromMap creates and returns a ServerConfig object with given map and
+// default configuration object.
 func ConfigFromMap(m map[string]interface{}) (ServerConfig, error) {
 	config := Config()
 	if err := gconv.Struct(m, &config); err != nil {
@@ -127,9 +128,13 @@ func ConfigFromMap(m map[string]interface{}) (ServerConfig, error) {
 	return config, nil
 }
 
-// Handler returns the request handler of the server.
-func (s *Server) Handler() http.Handler {
-	return s.config.Handler
+// SetConfigWithMap sets the configuration for the server using map.
+func (s *Server) SetConfigWithMap(m map[string]interface{}) error {
+	// Update the current configuration object.
+	if err := gconv.Struct(m, &s.config); err != nil {
+		return err
+	}
+	return s.SetConfig(s.config)
 }
 
 // SetConfig sets the configuration for the server.
@@ -154,15 +159,6 @@ func (s *Server) SetConfig(c ServerConfig) error {
 
 	intlog.Printf("SetConfig: %+v", s.config)
 	return nil
-}
-
-// SetConfigWithMap sets the configuration for the server using map.
-func (s *Server) SetConfigWithMap(m map[string]interface{}) error {
-	config, err := ConfigFromMap(m)
-	if err != nil {
-		return err
-	}
-	return s.SetConfig(config)
 }
 
 // SetAddr sets the listening address for the server.
@@ -277,4 +273,12 @@ func (s *Server) SetView(view *gview.View) {
 // GetName returns the name of the server.
 func (s *Server) GetName() string {
 	return s.name
+}
+
+// Handler returns the request handler of the server.
+func (s *Server) Handler() http.Handler {
+	if s.config.Handler == nil {
+		return s
+	}
+	return s.config.Handler
 }

@@ -1,23 +1,12 @@
 package main
 
 import (
-	"encoding/json"
+	"encoding/hex"
 	"fmt"
-	"gopkg.in/yaml.v3"
 )
 
 func main() {
-	data := []byte(`
-m:
- k: v
-    `)
-	var result map[string]interface{}
-	if err := yaml.Unmarshal(data, &result); err != nil {
-		panic(err)
-	}
-	b, err := json.Marshal(result)
-	if err != nil {
-		panic(err)
-	}
+	b := []byte{3, 0, 0}
 	fmt.Println(string(b))
+	fmt.Println(hex.EncodeToString(b))
 }

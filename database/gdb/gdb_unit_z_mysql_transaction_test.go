@@ -120,7 +120,7 @@ func Test_TX_Insert(t *testing.T) {
 		if err != nil {
 			gtest.Error(err)
 		}
-		user := tx.From(table)
+		user := tx.Table(table)
 		if _, err := user.Data(g.Map{
 			"id":          1,
 			"passport":    "t1",

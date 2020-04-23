@@ -87,6 +87,26 @@ func Test_Client_Cookie(t *testing.T) {
 	})
 }
 
+func Test_Client_MapParam(t *testing.T) {
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/map", func(r *ghttp.Request) {
+		r.Response.Write(r.Get("test"))
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		c := ghttp.NewClient()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+
+		t.Assert(c.GetContent("/map", g.Map{"test": "1234567890"}), "1234567890")
+	})
+}
+
 func Test_Client_Cookies(t *testing.T) {
 	p, _ := ports.PopRand()
 	s := g.Server(p)

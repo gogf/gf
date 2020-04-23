@@ -35,25 +35,33 @@ func StackWithFilter(filter string, skip ...int) string {
 // StackWithFilters returns a formatted stack trace of the goroutine that calls it.
 // It calls runtime.Stack with a large enough buffer to capture the entire trace.
 //
-// The parameter <filters> is a slice of strings, which are used to filter the path of the caller.
+// The parameter <filters> is a slice of strings, which are used to filter the path of the
+// caller.
+//
+// TODO Improve the performance using debug.Stack.
 func StackWithFilters(filters []string, skip ...int) string {
 	number := 0
 	if len(skip) > 0 {
 		number = skip[0]
 	}
-	name := ""
-	space := "  "
-	index := 1
-	buffer := bytes.NewBuffer(nil)
-	filtered := false
-	ok := true
-	pc, file, line, start := callerFromIndex(filters)
+	var (
+		name                  = ""
+		space                 = "  "
+		index                 = 1
+		buffer                = bytes.NewBuffer(nil)
+		filtered              = false
+		ok                    = true
+		pc, file, line, start = callerFromIndex(filters)
+	)
 	for i := start + number; i < gMAX_DEPTH; i++ {
 		if i != start {
 			pc, file, line, ok = runtime.Caller(i)
 		}
 		if ok {
-			if goRootForFilter != "" && len(file) >= len(goRootForFilter) && file[0:len(goRootForFilter)] == goRootForFilter {
+			// GOROOT filter.
+			if goRootForFilter != "" &&
+				len(file) >= len(goRootForFilter) &&
+				file[0:len(goRootForFilter)] == goRootForFilter {
 				continue
 			}
 			filtered = false

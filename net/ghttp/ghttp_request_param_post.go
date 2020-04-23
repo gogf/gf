@@ -16,8 +16,8 @@ import (
 // It returns <def> if <key> does not exist in neither form nor body.
 // It returns nil if <def> is not passed.
 //
-// Note that if there're multiple parameters with the same name, the parameters are retrieved and overwrote
-// in order of priority: form > body.
+// Note that if there're multiple parameters with the same name, the parameters are retrieved
+// and overwrote in order of priority: form > body.
 //
 // Deprecated.
 func (r *Request) GetPost(key string, def ...interface{}) interface{} {
