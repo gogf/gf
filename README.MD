@@ -9,7 +9,7 @@
 
 English | [简体中文](README_ZH.MD)
 
-`GF(GoFrame)` is a modular, full-featured and production-ready application development framework 
+`GF(GoFrame)` is a modular, high-performance and production-ready application development framework 
 of golang. Providing a series of core components and dozens of practical modules, such as: 
 cache, logging, containers, timer, resource, validator, database orm, etc. 
 Supporting web server integrated with router, cookie, session, middleware, logger, configure, 
@@ -37,16 +37,16 @@ golang version >= 1.13
 
 # Performance
 
-Performance testing cases source codes are hosted at: https://github.com/gogf/gf-performance
+Here's the most popular Golang frameworks and libraries performance testing result in `WEB Server`. Performance testing cases source codes are hosted at: https://github.com/gogf/gf-performance
 
-## Environment:
+Environment:
 
     OS   : Ubuntu 18.04 amd64
     CPU  : AMD A8-6600K x 4
     MEM  : 32GB
     GO   : v1.13.4
 
-## Testing tool
+Testing tool
 
 `ab`: Apache HTTP server benchmarking tool.
 
