@@ -26,7 +26,7 @@ func Test_Model_Insert(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
-		user := db.From(table)
+		user := db.Table(table)
 		result, err := user.Filter().Data(g.Map{
 			"id":          1,
 			"uid":         1,
@@ -338,7 +338,7 @@ func Test_Model_Safe(t *testing.T) {
 		t.Assert(err, nil)
 		t.Assert(len(all), 2)
 
-		all, err = md2.ForPage(1, 10).All()
+		all, err = md2.Page(1, 10).All()
 		t.Assert(err, nil)
 		t.Assert(len(all), 2)
 	})
@@ -362,7 +362,7 @@ func Test_Model_Safe(t *testing.T) {
 		t.Assert(all[0]["id"].Int(), 1)
 		t.Assert(all[1]["id"].Int(), 3)
 
-		all, err = md2.ForPage(1, 10).All()
+		all, err = md2.Page(1, 10).All()
 		t.Assert(err, nil)
 		t.Assert(len(all), 2)
 
@@ -378,7 +378,7 @@ func Test_Model_Safe(t *testing.T) {
 		t.Assert(all[1]["id"].Int(), 5)
 		t.Assert(all[2]["id"].Int(), 6)
 
-		all, err = md3.ForPage(1, 10).All()
+		all, err = md3.Page(1, 10).All()
 		t.Assert(err, nil)
 		t.Assert(len(all), 3)
 	})
@@ -1274,6 +1274,11 @@ func Test_Model_Where_GTime(t *testing.T) {
 		t.Assert(err, nil)
 		t.Assert(len(result), 10)
 	})
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Table(table).Where("create_time>?", *gtime.NewFromStr("2010-09-01")).All()
+		t.Assert(err, nil)
+		t.Assert(len(result), 10)
+	})
 }
 
 func Test_Model_WherePri(t *testing.T) {
@@ -1566,7 +1571,7 @@ func Test_Model_Offset(t *testing.T) {
 	})
 }
 
-func Test_Model_ForPage(t *testing.T) {
+func Test_Model_Page(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
@@ -1575,6 +1580,15 @@ func Test_Model_ForPage(t *testing.T) {
 		t.Assert(len(result), 3)
 		t.Assert(result[0]["id"], 7)
 		t.Assert(result[1]["id"], 8)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		model := db.Table(table).Safe().Order("id")
+		all, err := model.Page(3, 3).All()
+		count, err := model.Count()
+		t.Assert(err, nil)
+		t.Assert(len(all), 3)
+		t.Assert(all[0]["id"], "7")
+		t.Assert(count, SIZE)
 	})
 }
 
@@ -2156,5 +2170,73 @@ func Test_Model_DryRun(t *testing.T) {
 		n, err := r.RowsAffected()
 		t.Assert(err, nil)
 		t.Assert(n, 0)
+	})
+}
+
+func Test_Model_Cache(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		one, err := db.Table(table).Cache(time.Second, "test1").FindOne(1)
+		t.Assert(err, nil)
+		t.Assert(one["passport"], "user_1")
+
+		r, err := db.Table(table).Data("passport", "user_100").WherePri(1).Update()
+		t.Assert(err, nil)
+		n, err := r.RowsAffected()
+		t.Assert(err, nil)
+		t.Assert(n, 1)
+
+		one, err = db.Table(table).Cache(time.Second, "test1").FindOne(1)
+		t.Assert(err, nil)
+		t.Assert(one["passport"], "user_1")
+
+		time.Sleep(time.Second * 2)
+
+		one, err = db.Table(table).Cache(time.Second, "test1").FindOne(1)
+		t.Assert(err, nil)
+		t.Assert(one["passport"], "user_100")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		one, err := db.Table(table).Cache(time.Second, "test2").FindOne(2)
+		t.Assert(err, nil)
+		t.Assert(one["passport"], "user_2")
+
+		r, err := db.Table(table).Data("passport", "user_200").Cache(-1, "test2").WherePri(2).Update()
+		t.Assert(err, nil)
+		n, err := r.RowsAffected()
+		t.Assert(err, nil)
+		t.Assert(n, 1)
+
+		one, err = db.Table(table).Cache(time.Second, "test2").FindOne(2)
+		t.Assert(err, nil)
+		t.Assert(one["passport"], "user_200")
+	})
+}
+
+func Test_Model_Having(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		all, err := db.Table(table).Where("id > 1").Having("id > 8").All()
+		t.Assert(err, nil)
+		t.Assert(len(all), 2)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		all, err := db.Table(table).Where("id > 1").Having("id > ?", 8).All()
+		t.Assert(err, nil)
+		t.Assert(len(all), 2)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		all, err := db.Table(table).Where("id > ?", 1).Having("id > ?", 8).All()
+		t.Assert(err, nil)
+		t.Assert(len(all), 2)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		all, err := db.Table(table).Where("id > ?", 1).Having("id", 8).All()
+		t.Assert(err, nil)
+		t.Assert(len(all), 1)
 	})
 }

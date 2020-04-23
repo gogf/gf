@@ -157,7 +157,8 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 		if err = writer.Close(); err != nil {
 			return nil, err
 		}
-		if req, err = http.NewRequestWithContext(c.ctx, method, url, buffer); err != nil {
+
+		if req, err = http.NewRequest(method, url, buffer); err != nil {
 			return nil, err
 		} else {
 			req.Header.Set("Content-Type", writer.FormDataContentType())
@@ -165,9 +166,7 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 	} else {
 		// Normal request.
 		paramBytes := []byte(param)
-		if req, err = http.NewRequestWithContext(
-			c.ctx, method, url, bytes.NewReader(paramBytes),
-		); err != nil {
+		if req, err = http.NewRequest(method, url, bytes.NewReader(paramBytes)); err != nil {
 			return nil, err
 		} else {
 			if v, ok := c.header["Content-Type"]; ok {
@@ -184,6 +183,10 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 			}
 		}
 	}
+	// Context.
+	if c.ctx != nil {
+		req = req.WithContext(c.ctx)
+	}
 	// Custom header.
 	if len(c.header) > 0 {
 		for k, v := range c.header {
@@ -191,7 +194,7 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 		}
 	}
 	// It's necessary set the req.Host if you want to custom the host value of the request.
-	// It uses the "Host" value of the header.
+	// It uses the "Host" value from header if it's not set in the request.
 	if host := req.Header.Get("Host"); host != "" && req.Host == "" {
 		req.Host = host
 	}
@@ -220,6 +223,7 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 		if r, err = c.Do(req); err != nil {
 			if c.retryCount > 0 {
 				c.retryCount--
+				time.Sleep(c.retryInterval)
 			} else {
 				// we need a copy of the request when the request fails.
 				resp.req = req

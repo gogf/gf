@@ -9,7 +9,7 @@
 
 English | [简体中文](README_ZH.MD)
 
-`GF(GoFrame)` is a modular, full-featured and production-ready application development framework 
+`GF(GoFrame)` is a modular, high-performance and production-ready application development framework 
 of golang. Providing a series of core components and dozens of practical modules, such as: 
 cache, logging, containers, timer, resource, validator, database orm, etc. 
 Supporting web server integrated with router, cookie, session, middleware, logger, configure, 
@@ -27,8 +27,66 @@ require github.com/gogf/gf latest
 
 # Limitation
 ```
-golang version >= 1.13
+golang version >= 1.11
 ```
+
+# Architecture
+<div align=center>
+<img src="https://goframe.org/images/arch.png?v=11"/>
+</div>
+
+# Performance
+
+Here's the most popular Golang frameworks and libraries performance testing result in `WEB Server`. Performance testing cases source codes are hosted at: https://github.com/gogf/gf-performance
+
+## Environment
+
+    OS   : Ubuntu 18.04 amd64
+    CPU  : AMD A8-6600K x 4
+    MEM  : 32GB
+    GO   : v1.13.4
+
+## Testing Tool
+
+`ab`: Apache HTTP server benchmarking tool.
+
+Command:
+```
+ab -t 10 -c 100 http://127.0.0.1:3000/hello
+ab -t 10 -c 100 http://127.0.0.1:3000/query?id=10000
+ab -t 10 -c 100 http://127.0.0.1:3000/json
+```
+The concurrency starts from `100` to `10000`.
+
+> Run `5` times for each case of each project and pick up the best testing result.
+
+## 1. Hello World
+<table>
+<tr>
+<th>Throughputs</th>
+<th>Mean Latency</th>
+<th>P99 Latency</th>
+</tr>
+<tr>
+<td width="30%"><img src="http://gfcdn.johng.cn/images/performance/throughputs1.jpeg"></td>
+<td width="30%"><img src="http://gfcdn.johng.cn/images/performance/meanlatency1.jpeg"></td>
+<td width="30%"><img src="http://gfcdn.johng.cn/images/performance/p99latency1.jpeg"></td>
+</tr>
+</table>
+
+## 2. Json Response
+<table>
+<tr>
+<th>Throughputs</th>
+<th>Mean Latency</th>
+<th>P99 Latency</th>
+</tr>
+<tr>
+<td width="30%"><img src="http://gfcdn.johng.cn/images/performance/throughputs3.jpeg"></td>
+<td width="30%"><img src="http://gfcdn.johng.cn/images/performance/meanlatency3.jpeg"></td>
+<td width="30%"><img src="http://gfcdn.johng.cn/images/performance/p99latency3.jpeg"></td>
+</tr>
+</table>
 
 # Documentation
 
@@ -42,12 +100,6 @@ golang version >= 1.13
 - Issues：https://github.com/gogf/gf/issues
 
 > It's recommended learning `GoFrame` through its awesome source codes and API reference.
-
-# Architecture
-<div align=center>
-<img src="https://goframe.org/images/arch.png?v=11"/>
-</div>
-
 
 # License
 

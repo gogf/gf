@@ -23,7 +23,7 @@ import (
 
 // StrArray is a golang string array with rich features.
 type StrArray struct {
-	mu    *rwmutex.RWMutex
+	mu    rwmutex.RWMutex
 	array []string
 }
 
@@ -39,7 +39,7 @@ func NewStrArray(safe ...bool) *StrArray {
 // which is false in default.
 func NewStrArraySize(size int, cap int, safe ...bool) *StrArray {
 	return &StrArray{
-		mu:    rwmutex.New(safe...),
+		mu:    rwmutex.Create(safe...),
 		array: make([]string, size, cap),
 	}
 }
@@ -49,7 +49,7 @@ func NewStrArraySize(size int, cap int, safe ...bool) *StrArray {
 // which is false in default.
 func NewStrArrayFrom(array []string, safe ...bool) *StrArray {
 	return &StrArray{
-		mu:    rwmutex.New(safe...),
+		mu:    rwmutex.Create(safe...),
 		array: array,
 	}
 }
@@ -61,7 +61,7 @@ func NewStrArrayFromCopy(array []string, safe ...bool) *StrArray {
 	newArray := make([]string, len(array))
 	copy(newArray, array)
 	return &StrArray{
-		mu:    rwmutex.New(safe...),
+		mu:    rwmutex.Create(safe...),
 		array: newArray,
 	}
 }
@@ -526,23 +526,7 @@ func (a *StrArray) RLockFunc(f func(array []string)) *StrArray {
 // The difference between Merge and Append is Append supports only specified slice type,
 // but Merge supports more parameter types.
 func (a *StrArray) Merge(array interface{}) *StrArray {
-	switch v := array.(type) {
-	case *Array:
-		a.Append(gconv.Strings(v.Slice())...)
-	case *IntArray:
-		a.Append(gconv.Strings(v.Slice())...)
-	case *StrArray:
-		a.Append(gconv.Strings(v.Slice())...)
-	case *SortedArray:
-		a.Append(gconv.Strings(v.Slice())...)
-	case *SortedIntArray:
-		a.Append(gconv.Strings(v.Slice())...)
-	case *SortedStrArray:
-		a.Append(gconv.Strings(v.Slice())...)
-	default:
-		a.Append(gconv.Strings(array)...)
-	}
-	return a
+	return a.Append(gconv.Strings(array)...)
 }
 
 // Fill fills an array with num entries of the value <value>,
@@ -661,6 +645,9 @@ func (a *StrArray) Reverse() *StrArray {
 func (a *StrArray) Join(glue string) string {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
+	if len(a.array) == 0 {
+		return ""
+	}
 	buffer := bytes.NewBuffer(nil)
 	for k, v := range a.array {
 		buffer.WriteString(v)
@@ -687,7 +674,7 @@ func (a *StrArray) Iterator(f func(k int, v string) bool) {
 	a.IteratorAsc(f)
 }
 
-// IteratorAsc iterates the array in ascending order with given callback function <f>.
+// IteratorAsc iterates the array readonly in ascending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
 func (a *StrArray) IteratorAsc(f func(k int, v string) bool) {
 	a.mu.RLock()
@@ -699,7 +686,7 @@ func (a *StrArray) IteratorAsc(f func(k int, v string) bool) {
 	}
 }
 
-// IteratorDesc iterates the array in descending order with given callback function <f>.
+// IteratorDesc iterates the array readonly in descending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
 func (a *StrArray) IteratorDesc(f func(k int, v string) bool) {
 	a.mu.RLock()
@@ -736,8 +723,7 @@ func (a *StrArray) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (a *StrArray) UnmarshalJSON(b []byte) error {
-	if a.mu == nil {
-		a.mu = rwmutex.New()
+	if a.array == nil {
 		a.array = make([]string, 0)
 	}
 	a.mu.Lock()
@@ -750,9 +736,6 @@ func (a *StrArray) UnmarshalJSON(b []byte) error {
 
 // UnmarshalValue is an interface implement which sets any type of value for array.
 func (a *StrArray) UnmarshalValue(value interface{}) error {
-	if a.mu == nil {
-		a.mu = rwmutex.New()
-	}
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	switch value.(type) {
@@ -774,6 +757,16 @@ func (a *StrArray) FilterEmpty() *StrArray {
 		} else {
 			i++
 		}
+	}
+	return a
+}
+
+// Walk applies a user supplied function <f> to every item of array.
+func (a *StrArray) Walk(f func(value string) string) *StrArray {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for i, v := range a.array {
+		a.array[i] = f(v)
 	}
 	return a
 }

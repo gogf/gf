@@ -82,7 +82,7 @@ func (l *Logger) SetConfigWithMap(m map[string]interface{}) error {
 	}
 	// The m now is a shallow copy of m.
 	// A little tricky, isn't it?
-	m = gutil.CopyMap(m)
+	m = gutil.MapCopy(m)
 	// Change string configuration to int value for level.
 	levelKey, levelValue := gutil.MapPossibleItemByKey(m, "Level")
 	if levelValue != nil {
@@ -100,12 +100,11 @@ func (l *Logger) SetConfigWithMap(m map[string]interface{}) error {
 			return errors.New(fmt.Sprintf(`invalid rotate size: %v`, rotateSizeValue))
 		}
 	}
-	config := DefaultConfig()
-	err := gconv.Struct(m, &config)
+	err := gconv.Struct(m, &l.config)
 	if err != nil {
 		return err
 	}
-	return l.SetConfig(config)
+	return l.SetConfig(l.config)
 }
 
 // SetDebug enables/disables the debug level for logger.

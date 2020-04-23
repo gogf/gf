@@ -683,3 +683,12 @@ func TestIntArray_FilterEmpty(t *testing.T) {
 		t.Assert(array.FilterEmpty(), g.SliceInt{1, 2, 3, 4})
 	})
 }
+
+func TestIntArray_Walk(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewIntArrayFrom(g.SliceInt{1, 2})
+		t.Assert(array.Walk(func(value int) int {
+			return 10 + value
+		}), g.Slice{11, 12})
+	})
+}

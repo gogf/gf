@@ -42,7 +42,7 @@ var (
 
 func init() {
 	// Initialize internal package variable: tempDir.
-	if !Exists(tempDir) {
+	if Separator == "/" && !Exists(tempDir) {
 		tempDir = os.TempDir()
 	}
 	// Initialize internal package variable: selfPath.

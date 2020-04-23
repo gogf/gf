@@ -231,35 +231,35 @@ func String(i interface{}) string {
 			// If the variable implements the String() interface,
 			// then use that interface to perform the conversion
 			return f.String()
-		} else if f, ok := value.(apiError); ok {
+		}
+		if f, ok := value.(apiError); ok {
 			// If the variable implements the Error() interface,
 			// then use that interface to perform the conversion
 			return f.Error()
+		}
+		// Reflect checks.
+		rv := reflect.ValueOf(value)
+		kind := rv.Kind()
+		switch kind {
+		case reflect.Chan,
+			reflect.Map,
+			reflect.Slice,
+			reflect.Func,
+			reflect.Ptr,
+			reflect.Interface,
+			reflect.UnsafePointer:
+			if rv.IsNil() {
+				return ""
+			}
+		}
+		if kind == reflect.Ptr {
+			return String(rv.Elem().Interface())
+		}
+		// Finally we use json.Marshal to convert.
+		if jsonContent, err := json.Marshal(value); err != nil {
+			return fmt.Sprint(value)
 		} else {
-			// Reflect checks.
-			rv := reflect.ValueOf(value)
-			kind := rv.Kind()
-			switch kind {
-			case reflect.Chan,
-				reflect.Map,
-				reflect.Slice,
-				reflect.Func,
-				reflect.Ptr,
-				reflect.Interface,
-				reflect.UnsafePointer:
-				if rv.IsNil() {
-					return ""
-				}
-			}
-			if kind == reflect.Ptr {
-				return String(rv.Elem().Interface())
-			}
-			// Finally we use json.Marshal to convert.
-			if jsonContent, err := json.Marshal(value); err != nil {
-				return fmt.Sprint(value)
-			} else {
-				return string(jsonContent)
-			}
+			return string(jsonContent)
 		}
 	}
 }

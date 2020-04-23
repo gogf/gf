@@ -13,7 +13,6 @@ import (
 	"math"
 	"sort"
 
-	"github.com/gogf/gf/container/gtype"
 	"github.com/gogf/gf/internal/rwmutex"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/grand"
@@ -22,9 +21,9 @@ import (
 // SortedIntArray is a golang sorted int array with rich features.
 // It's using increasing order in default.
 type SortedIntArray struct {
-	mu         *rwmutex.RWMutex
+	mu         rwmutex.RWMutex
 	array      []int
-	unique     *gtype.Bool        // Whether enable unique feature(false)
+	unique     bool               // Whether enable unique feature(false)
 	comparator func(a, b int) int // Comparison function(it returns -1: a < b; 0: a == b; 1: a > b)
 }
 
@@ -48,9 +47,8 @@ func NewSortedIntArrayComparator(comparator func(a, b int) int, safe ...bool) *S
 // which is false in default.
 func NewSortedIntArraySize(cap int, safe ...bool) *SortedIntArray {
 	return &SortedIntArray{
-		mu:         rwmutex.New(safe...),
+		mu:         rwmutex.Create(safe...),
 		array:      make([]int, 0, cap),
-		unique:     gtype.NewBool(),
 		comparator: defaultComparatorInt,
 	}
 }
@@ -94,7 +92,7 @@ func (a *SortedIntArray) SetArray(array []int) *SortedIntArray {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	a.array = array
-	sort.Ints(a.array)
+	quickSortInt(a.array, a.getComparator())
 	return a
 }
 
@@ -104,7 +102,7 @@ func (a *SortedIntArray) SetArray(array []int) *SortedIntArray {
 func (a *SortedIntArray) Sort() *SortedIntArray {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	sort.Ints(a.array)
+	quickSortInt(a.array, a.getComparator())
 	return a
 }
 
@@ -117,7 +115,7 @@ func (a *SortedIntArray) Add(values ...int) *SortedIntArray {
 	defer a.mu.Unlock()
 	for _, value := range values {
 		index, cmp := a.binSearch(value, false)
-		if a.unique.Val() && cmp == 0 {
+		if a.unique && cmp == 0 {
 			continue
 		}
 		if index < 0 {
@@ -436,8 +434,8 @@ func (a *SortedIntArray) binSearch(value int, lock bool) (index int, result int)
 	mid := 0
 	cmp := -2
 	for min <= max {
-		mid = int((min + max) / 2)
-		cmp = a.comparator(value, a.array[mid])
+		mid = (min + max) / 2
+		cmp = a.getComparator()(value, a.array[mid])
 		switch {
 		case cmp < 0:
 			max = mid - 1
@@ -454,8 +452,8 @@ func (a *SortedIntArray) binSearch(value int, lock bool) (index int, result int)
 // which means it does not contain any repeated items.
 // It also do unique check, remove all repeated items.
 func (a *SortedIntArray) SetUnique(unique bool) *SortedIntArray {
-	oldUnique := a.unique.Val()
-	a.unique.Set(unique)
+	oldUnique := a.unique
+	a.unique = unique
 	if unique && oldUnique != unique {
 		a.Unique()
 	}
@@ -474,7 +472,7 @@ func (a *SortedIntArray) Unique() *SortedIntArray {
 		if i == len(a.array)-1 {
 			break
 		}
-		if a.comparator(a.array[i], a.array[i+1]) == 0 {
+		if a.getComparator()(a.array[i], a.array[i+1]) == 0 {
 			a.array = append(a.array[:i+1], a.array[i+1+1:]...)
 		} else {
 			i++
@@ -523,23 +521,7 @@ func (a *SortedIntArray) RLockFunc(f func(array []int)) *SortedIntArray {
 // The difference between Merge and Append is Append supports only specified slice type,
 // but Merge supports more parameter types.
 func (a *SortedIntArray) Merge(array interface{}) *SortedIntArray {
-	switch v := array.(type) {
-	case *Array:
-		a.Add(gconv.Ints(v.Slice())...)
-	case *IntArray:
-		a.Add(gconv.Ints(v.Slice())...)
-	case *StrArray:
-		a.Add(gconv.Ints(v.Slice())...)
-	case *SortedArray:
-		a.Add(gconv.Ints(v.Slice())...)
-	case *SortedIntArray:
-		a.Add(gconv.Ints(v.Slice())...)
-	case *SortedStrArray:
-		a.Add(gconv.Ints(v.Slice())...)
-	default:
-		a.Add(gconv.Ints(array)...)
-	}
-	return a
+	return a.Add(gconv.Ints(array)...)
 }
 
 // Chunk splits an array into multiple arrays,
@@ -593,6 +575,9 @@ func (a *SortedIntArray) Rands(size int) []int {
 func (a *SortedIntArray) Join(glue string) string {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
+	if len(a.array) == 0 {
+		return ""
+	}
 	buffer := bytes.NewBuffer(nil)
 	for k, v := range a.array {
 		buffer.WriteString(gconv.String(v))
@@ -619,7 +604,7 @@ func (a *SortedIntArray) Iterator(f func(k int, v int) bool) {
 	a.IteratorAsc(f)
 }
 
-// IteratorAsc iterates the array in ascending order with given callback function <f>.
+// IteratorAsc iterates the array readonly in ascending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
 func (a *SortedIntArray) IteratorAsc(f func(k int, v int) bool) {
 	a.mu.RLock()
@@ -631,7 +616,7 @@ func (a *SortedIntArray) IteratorAsc(f func(k int, v int) bool) {
 	}
 }
 
-// IteratorDesc iterates the array in descending order with given callback function <f>.
+// IteratorDesc iterates the array readonly in descending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
 func (a *SortedIntArray) IteratorDesc(f func(k int, v int) bool) {
 	a.mu.RLock()
@@ -657,10 +642,8 @@ func (a *SortedIntArray) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (a *SortedIntArray) UnmarshalJSON(b []byte) error {
-	if a.mu == nil {
-		a.mu = rwmutex.New()
+	if a.comparator == nil {
 		a.array = make([]int, 0)
-		a.unique = gtype.NewBool()
 		a.comparator = defaultComparatorInt
 	}
 	a.mu.Lock()
@@ -676,10 +659,7 @@ func (a *SortedIntArray) UnmarshalJSON(b []byte) error {
 
 // UnmarshalValue is an interface implement which sets any type of value for array.
 func (a *SortedIntArray) UnmarshalValue(value interface{}) (err error) {
-	if a.mu == nil {
-		a.mu = rwmutex.New()
-		a.unique = gtype.NewBool()
-		// Note that the comparator is string comparator in default.
+	if a.comparator == nil {
 		a.comparator = defaultComparatorInt
 	}
 	a.mu.Lock()
@@ -717,7 +697,30 @@ func (a *SortedIntArray) FilterEmpty() *SortedIntArray {
 	return a
 }
 
+// Walk applies a user supplied function <f> to every item of array.
+func (a *SortedIntArray) Walk(f func(value int) int) *SortedIntArray {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	// Keep the array always sorted.
+	defer quickSortInt(a.array, a.getComparator())
+
+	for i, v := range a.array {
+		a.array[i] = f(v)
+	}
+	return a
+}
+
 // IsEmpty checks whether the array is empty.
 func (a *SortedIntArray) IsEmpty() bool {
 	return a.Len() == 0
+}
+
+// getComparator returns the comparator if it's previously set,
+// or else it returns a default comparator.
+func (a *SortedIntArray) getComparator() func(a, b int) int {
+	if a.comparator == nil {
+		return defaultComparatorInt
+	}
+	return a.comparator
 }

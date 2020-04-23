@@ -17,8 +17,34 @@ import (
 	"github.com/gogf/gf/test/gtest"
 )
 
-func anyAnyCallBack(int, interface{}) bool {
-	return true
+func Test_AnyAnyMap_Var(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var m gmap.AnyAnyMap
+		m.Set(1, 1)
+
+		t.Assert(m.Get(1), 1)
+		t.Assert(m.Size(), 1)
+		t.Assert(m.IsEmpty(), false)
+
+		t.Assert(m.GetOrSet(2, "2"), "2")
+		t.Assert(m.SetIfNotExist(2, "2"), false)
+
+		t.Assert(m.SetIfNotExist(3, 3), true)
+
+		t.Assert(m.Remove(2), "2")
+		t.Assert(m.Contains(2), false)
+
+		t.AssertIN(3, m.Keys())
+		t.AssertIN(1, m.Keys())
+		t.AssertIN(3, m.Values())
+		t.AssertIN(1, m.Values())
+		m.Flip()
+		t.Assert(m.Map(), map[interface{}]int{1: 1, 3: 3})
+
+		m.Clear()
+		t.Assert(m.Size(), 0)
+		t.Assert(m.IsEmpty(), true)
+	})
 }
 
 func Test_AnyAnyMap_Basic(t *testing.T) {

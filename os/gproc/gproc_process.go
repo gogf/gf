@@ -9,6 +9,7 @@ package gproc
 import (
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/internal/intlog"
 	"os"
 	"os/exec"
 	"runtime"
@@ -116,9 +117,14 @@ func (p *Process) Kill() error {
 			p.Manager.processes.Remove(p.Pid())
 		}
 		if runtime.GOOS != "windows" {
-			p.Process.Release()
+			if err = p.Process.Release(); err != nil {
+				intlog.Error(err)
+				//return err
+			}
 		}
-		p.Process.Wait()
+		_, err = p.Process.Wait()
+		intlog.Error(err)
+		//return err
 		return nil
 	} else {
 		return err

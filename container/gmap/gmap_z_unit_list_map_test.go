@@ -17,6 +17,38 @@ import (
 	"github.com/gogf/gf/test/gtest"
 )
 
+func Test_ListMap_Var(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var m gmap.ListMap
+		m.Set("key1", "val1")
+		t.Assert(m.Keys(), []interface{}{"key1"})
+
+		t.Assert(m.Get("key1"), "val1")
+		t.Assert(m.Size(), 1)
+		t.Assert(m.IsEmpty(), false)
+
+		t.Assert(m.GetOrSet("key2", "val2"), "val2")
+		t.Assert(m.SetIfNotExist("key2", "val2"), false)
+
+		t.Assert(m.SetIfNotExist("key3", "val3"), true)
+		t.Assert(m.Remove("key2"), "val2")
+		t.Assert(m.Contains("key2"), false)
+
+		t.AssertIN("key3", m.Keys())
+		t.AssertIN("key1", m.Keys())
+		t.AssertIN("val3", m.Values())
+		t.AssertIN("val1", m.Values())
+
+		m.Flip()
+
+		t.Assert(m.Map(), map[interface{}]interface{}{"val3": "key3", "val1": "key1"})
+
+		m.Clear()
+		t.Assert(m.Size(), 0)
+		t.Assert(m.IsEmpty(), true)
+	})
+}
+
 func Test_ListMap_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewListMap()
@@ -51,6 +83,7 @@ func Test_ListMap_Basic(t *testing.T) {
 		t.Assert(m2.Map(), map[interface{}]interface{}{1: 1, "key1": "val1"})
 	})
 }
+
 func Test_ListMap_Set_Fun(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewListMap()

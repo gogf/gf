@@ -41,6 +41,44 @@ func checkListPointers(t *gtest.T, l *List, es []*Element) {
 	})
 }
 
+func TestVar(t *testing.T) {
+	var l List
+	l.PushFront(1)
+	l.PushFront(2)
+	if v := l.PopBack(); v != 1 {
+		t.Errorf("EXPECT %v, GOT %v", 1, v)
+	} else {
+		//fmt.Println(v)
+	}
+	if v := l.PopBack(); v != 2 {
+		t.Errorf("EXPECT %v, GOT %v", 2, v)
+	} else {
+		//fmt.Println(v)
+	}
+	if v := l.PopBack(); v != nil {
+		t.Errorf("EXPECT %v, GOT %v", nil, v)
+	} else {
+		//fmt.Println(v)
+	}
+	l.PushBack(1)
+	l.PushBack(2)
+	if v := l.PopFront(); v != 1 {
+		t.Errorf("EXPECT %v, GOT %v", 1, v)
+	} else {
+		//fmt.Println(v)
+	}
+	if v := l.PopFront(); v != 2 {
+		t.Errorf("EXPECT %v, GOT %v", 2, v)
+	} else {
+		//fmt.Println(v)
+	}
+	if v := l.PopFront(); v != nil {
+		t.Errorf("EXPECT %v, GOT %v", nil, v)
+	} else {
+		//fmt.Println(v)
+	}
+}
+
 func TestBasic(t *testing.T) {
 	l := New()
 	l.PushFront(1)

@@ -25,15 +25,7 @@ import (
 )
 
 // 默认HTTP Server处理入口，http包底层默认使用了gorutine异步处理请求，所以这里不再异步执行
-func (s *Server) defaultHandler(w http.ResponseWriter, r *http.Request) {
-	s.handleRequest(w, r)
-}
-
-// 执行处理HTTP请求，
-// 首先，查找是否有对应域名的处理接口配置；
-// 其次，如果没有对应的自定义处理接口配置，那么走默认的域名处理接口配置；
-// 最后，如果以上都没有找到处理接口，那么进行文件处理；
-func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
+func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// 重写规则判断
 	if len(s.config.Rewrites) > 0 {
 		if rewrite, ok := s.config.Rewrites[r.URL.Path]; ok {

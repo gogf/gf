@@ -63,6 +63,22 @@ func (s *Server) callHookHandler(hook string, r *Request) {
 	}
 }
 
+// 获得当前请求，指定类型的的钩子函数列表
+func (r *Request) getHookHandlers(hook string) []*handlerParsedItem {
+	if !r.hasHookHandler {
+		return nil
+	}
+	parsedItems := make([]*handlerParsedItem, 0, 4)
+	for _, v := range r.handlers {
+		if v.handler.hookName != hook {
+			continue
+		}
+		item := v
+		parsedItems = append(parsedItems, item)
+	}
+	return parsedItems
+}
+
 // 友好地调用方法
 func (s *Server) niceCallHookHandler(f HandlerFunc, r *Request) (err interface{}) {
 	defer func() {

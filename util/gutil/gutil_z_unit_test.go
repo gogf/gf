@@ -19,18 +19,9 @@ func Test_Dump(t *testing.T) {
 			100: 100,
 		})
 	})
-
-	gtest.C(t, func(t *gtest.T) {
-		gutil.Dump(map[string]interface{}{"": func() {}})
-	})
-
-	gtest.C(t, func(t *gtest.T) {
-		gutil.Dump([]byte("gutil Dump test"))
-	})
 }
 
 func Test_TryCatch(t *testing.T) {
-
 	gtest.C(t, func(t *gtest.T) {
 		gutil.TryCatch(func() {
 			panic("gutil TryCatch test")

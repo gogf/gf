@@ -174,6 +174,11 @@ func (c *Core) GetPrefix() string {
 	return c.prefix
 }
 
+// GetGroup returns the group string configured.
+func (c *Core) GetGroup() string {
+	return c.group
+}
+
 // SetDryRun enables/disables the DryRun feature.
 func (c *Core) SetDryRun(dryrun bool) {
 	c.dryrun.Set(dryrun)

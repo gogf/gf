@@ -306,7 +306,7 @@ func (s *Server) Start() error {
 
 	// Default HTTP handler.
 	if s.config.Handler == nil {
-		s.config.Handler = http.HandlerFunc(s.defaultHandler)
+		s.config.Handler = s
 	}
 
 	// Install external plugins.
