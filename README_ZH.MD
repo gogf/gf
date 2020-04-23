@@ -88,7 +88,7 @@ ab -t 10 -c 100 http://127.0.0.1:3000/json
 </tr>
 </table>
 
-## 2. Json Response.
+## 2. Json Response
 <table>
 <tr>
 <th>Throughputs</th>
