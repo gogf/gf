@@ -43,7 +43,6 @@ func NewClient() *Client {
 				DisableKeepAlives: true,
 			},
 		},
-		ctx:     context.Background(),
 		header:  make(map[string]string),
 		cookies: make(map[string]string),
 	}
