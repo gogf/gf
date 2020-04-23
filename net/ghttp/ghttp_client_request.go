@@ -215,30 +215,28 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 	if len(c.authUser) > 0 {
 		req.SetBasicAuth(c.authUser, c.authPass)
 	}
-	// Sending request.
-	var r *http.Response
 	// do not return nil even if the request fails
 	resp = &ClientResponse{}
 	for {
-		if r, err = c.Do(req); err != nil {
+		if resp.Response, err = c.Do(req); err != nil {
 			if c.retryCount > 0 {
 				c.retryCount--
 				time.Sleep(c.retryInterval)
 			} else {
 				// we need a copy of the request when the request fails.
-				resp.req = req
+				resp.request = req
 				return resp, err
 			}
 		} else {
+			resp.request = resp.Request
 			break
 		}
 	}
-	resp.Response = r
 
 	// Auto saving cookie content.
 	if c.browserMode {
 		now := time.Now()
-		for _, v := range r.Cookies() {
+		for _, v := range resp.Response.Cookies() {
 			if v.Expires.UnixNano() < now.UnixNano() {
 				delete(c.cookies, v.Name)
 			} else {

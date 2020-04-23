@@ -70,7 +70,7 @@ func Test_Router_Hook_Fuzzy_Router(t *testing.T) {
 		r.Response.Write(r.Router.Uri)
 	})
 	s.SetPort(p)
-	//s.SetDumpRouterMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 

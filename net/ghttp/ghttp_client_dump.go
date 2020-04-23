@@ -19,13 +19,13 @@ import (
 
 // dumpTextFormat is the format of the dumped raw string
 const dumpTextFormat = `+---------------------------------------------+
-|               ghttp %s                |
+|                    %s                 |
 +---------------------------------------------+
 %s
 %s
 `
 
-// ifDumpBody determine whether to output body according to content-type
+// ifDumpBody determines whether to output body according to content-type.
 func ifDumpBody(contentType string) bool {
 	// the body should not be output when the body is html or stream.
 	if gstr.Contains(contentType, "application/json") ||
@@ -66,43 +66,34 @@ func getResponseBody(resp *http.Response) string {
 	if errReadBody != nil {
 		return ""
 	}
-	// so that the response body can be read again.
+	// So the response body can be read again.
 	resp.Body = ioutil.NopCloser(bytes.NewBuffer(bytesBody))
 	return gconv.UnsafeBytesToStr(bytesBody)
 }
 
-// getRequest returns the request related to the response.
-// will return the copy of request when the request failed.
-func (r *ClientResponse) getRequest() *http.Request {
-	if r.Response != nil && r.Request != nil {
-		return r.Request
-	}
-	// r.req is the copy of request when the http request failed.
-	if r.req != nil {
-		return r.req
-	}
-	return nil
-}
-
-// RawRequest returns the raw text of the request.
+// RawRequest returns the raw content of the request.
 func (r *ClientResponse) RawRequest() string {
 	// ClientResponse can be nil.
 	if r == nil {
 		return ""
 	}
-	req := r.getRequest()
-	if req == nil {
+	if r.request == nil {
 		return ""
 	}
 	// DumpRequestOut writes more request headers than DumpRequest, such as User-Agent.
-	bs, err := httputil.DumpRequestOut(req, false)
+	bs, err := httputil.DumpRequestOut(r.request, false)
 	if err != nil {
 		return ""
 	}
-	return fmt.Sprintf(dumpTextFormat, "REQUEST ", gconv.UnsafeBytesToStr(bs), getRequestBody(req))
+	return fmt.Sprintf(
+		dumpTextFormat,
+		"REQUEST ",
+		gconv.UnsafeBytesToStr(bs),
+		getRequestBody(r.request),
+	)
 }
 
-// RawResponse returns the raw text of the response.
+// RawResponse returns the raw content of the response.
 func (r *ClientResponse) RawResponse() string {
 	// ClientResponse can be nil.
 	if r == nil || r.Response == nil {
@@ -113,7 +104,12 @@ func (r *ClientResponse) RawResponse() string {
 		return ""
 	}
 
-	return fmt.Sprintf(dumpTextFormat, "RESPONSE", gconv.UnsafeBytesToStr(bs), getResponseBody(r.Response))
+	return fmt.Sprintf(
+		dumpTextFormat,
+		"RESPONSE",
+		gconv.UnsafeBytesToStr(bs),
+		getResponseBody(r.Response),
+	)
 }
 
 // Raw returns the raw text of the request and the response.

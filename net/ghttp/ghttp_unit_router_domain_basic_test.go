@@ -349,7 +349,7 @@ func Test_Router_DomainGroup(t *testing.T) {
 		})
 	})
 	s.SetPort(p)
-	//s.SetDumpRouterMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
