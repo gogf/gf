@@ -48,6 +48,39 @@ golang version >= 1.13
 <img src="https://goframe.org/images/arch.png?v=11"/>
 </div>
 
+# Performance
+
+> Run `5` times for each case of each project and pick up the best testing result.
+
+Performance testing cases source codes are hosted at: https://github.com/gogf/gf-performance
+
+## 1. Hello World
+<table>
+<tr>
+<th>Throughputs</th>
+<th>Mean Latency</th>
+<th>P99 Latency</th>
+</tr>
+<tr>
+<td width="30%"><img src="http://gfcdn.johng.cn/images/performance/throughputs1.jpeg"></td>
+<td width="30%"><img src="http://gfcdn.johng.cn/images/performance/meanlatency1.jpeg"></td>
+<td width="30%"><img src="http://gfcdn.johng.cn/images/performance/p99latency1.jpeg"></td>
+</tr>
+</table>
+
+## 2. JSON Response.
+<table>
+<tr>
+<th>Throughputs</th>
+<th>Mean Latency</th>
+<th>P99 Latency</th>
+</tr>
+<tr>
+<td width="30%"><img src="http://gfcdn.johng.cn/images/performance/throughputs3.jpeg"></td>
+<td width="30%"><img src="http://gfcdn.johng.cn/images/performance/meanlatency3.jpeg"></td>
+<td width="30%"><img src="http://gfcdn.johng.cn/images/performance/p99latency3.jpeg"></td>
+</tr>
+</table>
 
 # License
 
