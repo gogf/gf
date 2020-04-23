@@ -49,6 +49,58 @@ golang版本 >= 1.13
 <img src="https://goframe.org/images/arch.png?v=11"/>
 </div>
 
+# 性能
+
+性能测试用例源代码仓库: https://github.com/gogf/gf-performance
+
+## 环境:
+
+    OS   : Ubuntu 18.04 amd64
+    CPU  : AMD A8-6600K x 4
+    MEM  : 32GB
+    GO   : v1.13.4
+
+## 工具
+
+`ab`: Apache HTTP server benchmarking tool.
+
+测试命令:
+```
+ab -t 10 -c 100 http://127.0.0.1:3000/hello
+ab -t 10 -c 100 http://127.0.0.1:3000/query?id=10000
+ab -t 10 -c 100 http://127.0.0.1:3000/json
+```
+并发客户端数量从 `100` 递增到 `10000`。
+
+> 每个项目的每个用例均运行`5`次，取最优的结果展示。
+
+## 1. Hello World
+<table>
+<tr>
+<th>Throughputs</th>
+<th>Mean Latency</th>
+<th>P99 Latency</th>
+</tr>
+<tr>
+<td width="30%"><img src="http://gfcdn.johng.cn/images/performance/throughputs1.jpeg"></td>
+<td width="30%"><img src="http://gfcdn.johng.cn/images/performance/meanlatency1.jpeg"></td>
+<td width="30%"><img src="http://gfcdn.johng.cn/images/performance/p99latency1.jpeg"></td>
+</tr>
+</table>
+
+## 2. Json Response.
+<table>
+<tr>
+<th>Throughputs</th>
+<th>Mean Latency</th>
+<th>P99 Latency</th>
+</tr>
+<tr>
+<td width="30%"><img src="http://gfcdn.johng.cn/images/performance/throughputs3.jpeg"></td>
+<td width="30%"><img src="http://gfcdn.johng.cn/images/performance/meanlatency3.jpeg"></td>
+<td width="30%"><img src="http://gfcdn.johng.cn/images/performance/p99latency3.jpeg"></td>
+</tr>
+</table>
 
 
 # 文档

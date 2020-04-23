@@ -30,19 +30,6 @@ require github.com/gogf/gf latest
 golang version >= 1.13
 ```
 
-# Documentation
-
-* 中文官网: https://goframe.org
-* GoDoc API: https://godoc.org/github.com/gogf/gf
-
-
-# Discussion
-- QQ Group：[116707870](//shang.qq.com/wpa/qunwpa?idkey=195f91eceeb5d7fa76009b7cd5a4641f70bf4897b7f5a520635eb26ff17adfe7)
-- WX Group：Add friend`389961817` in WeChat, commenting `GF`
-- Issues：https://github.com/gogf/gf/issues
-
-> It's recommended learning `GoFrame` through its awesome source codes and API reference.
-
 # Architecture
 <div align=center>
 <img src="https://goframe.org/images/arch.png?v=11"/>
@@ -100,6 +87,19 @@ The concurrency starts from `100` to `10000`.
 <td width="30%"><img src="http://gfcdn.johng.cn/images/performance/p99latency3.jpeg"></td>
 </tr>
 </table>
+
+# Documentation
+
+* 中文官网: https://goframe.org
+* GoDoc API: https://godoc.org/github.com/gogf/gf
+
+
+# Discussion
+- QQ Group：[116707870](//shang.qq.com/wpa/qunwpa?idkey=195f91eceeb5d7fa76009b7cd5a4641f70bf4897b7f5a520635eb26ff17adfe7)
+- WX Group：Add friend`389961817` in WeChat, commenting `GF`
+- Issues：https://github.com/gogf/gf/issues
+
+> It's recommended learning `GoFrame` through its awesome source codes and API reference.
 
 # License
 
