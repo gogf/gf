@@ -50,9 +50,28 @@ golang version >= 1.13
 
 # Performance
 
-> Run `5` times for each case of each project and pick up the best testing result.
-
 Performance testing cases source codes are hosted at: https://github.com/gogf/gf-performance
+
+## Environment:
+
+    OS   : Ubuntu 18.04 amd64
+    CPU  : AMD A8-6600K x 4
+    MEM  : 32GB
+    GO   : v1.13.4
+
+## Testing tool
+
+`ab`: Apache HTTP server benchmarking tool.
+
+Command:
+```
+ab -t 10 -c 100 http://127.0.0.1:3000/hello
+ab -t 10 -c 100 http://127.0.0.1:3000/query?id=10000
+ab -t 10 -c 100 http://127.0.0.1:3000/json
+```
+The concurrency starts from `100` to `10000`.
+
+> Run `5` times for each case of each project and pick up the best testing result.
 
 ## 1. Hello World
 <table>
