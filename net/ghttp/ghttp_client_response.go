@@ -9,15 +9,14 @@ package ghttp
 import (
 	"io/ioutil"
 	"net/http"
-	"time"
 
 	"github.com/gogf/gf/util/gconv"
 )
 
 // ClientResponse is the struct for client request response.
 type ClientResponse struct {
-	req *http.Request // just a copy of the request when the request failed.
 	*http.Response
+	request *http.Request
 	cookies map[string]string
 }
 
@@ -49,7 +48,7 @@ func (r *ClientResponse) GetCookieMap() map[string]string {
 
 // ReadAll retrieves and returns the response content as []byte.
 func (r *ClientResponse) ReadAll() []byte {
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := ioutil.ReadAll(r.Response.Body)
 	if err != nil {
 		return nil
 	}
@@ -64,5 +63,5 @@ func (r *ClientResponse) ReadAllString() string {
 // Close closes the response when it will never be used.
 func (r *ClientResponse) Close() error {
 	r.Response.Close = true
-	return r.Body.Close()
+	return r.Response.Body.Close()
 }
