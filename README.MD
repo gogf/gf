@@ -74,7 +74,7 @@ The concurrency starts from `100` to `10000`.
 </tr>
 </table>
 
-## 2. Json Response.
+## 2. Json Response
 <table>
 <tr>
 <th>Throughputs</th>
