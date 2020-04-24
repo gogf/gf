@@ -217,25 +217,24 @@ func String(i interface{}) string {
 			return ""
 		}
 		return value.String()
-	case *gtime.Time:
+	// If the variable implements the String() interface,
+	// then use that interface to perform the conversion
+	case apiString :
 		if value == nil {
 			return ""
 		}
 		return value.String()
+	// If the variable implements the Error() interface,
+	// then use that interface to perform the conversion
+	case apiError:
+		if value == nil {
+			return ""
+		}
+		return value.Error()
 	default:
 		// Empty checks.
 		if value == nil {
 			return ""
-		}
-		if f, ok := value.(apiString); ok {
-			// If the variable implements the String() interface,
-			// then use that interface to perform the conversion
-			return f.String()
-		}
-		if f, ok := value.(apiError); ok {
-			// If the variable implements the Error() interface,
-			// then use that interface to perform the conversion
-			return f.Error()
 		}
 		// Reflect checks.
 		rv := reflect.ValueOf(value)
