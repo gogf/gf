@@ -219,7 +219,7 @@ func String(i interface{}) string {
 		return value.String()
 	// If the variable implements the String() interface,
 	// then use that interface to perform the conversion
-	case apiString :
+	case apiString:
 		if value == nil {
 			return ""
 		}
