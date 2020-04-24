@@ -207,11 +207,6 @@ func String(i interface{}) string {
 			return ""
 		}
 		return value.String()
-	case *time.Time:
-		if value == nil {
-			return ""
-		}
-		return value.String()
 	case gtime.Time:
 		if value.IsZero() {
 			return ""
