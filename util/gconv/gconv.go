@@ -217,11 +217,6 @@ func String(i interface{}) string {
 			return ""
 		}
 		return value.String()
-	case *gtime.Time:
-		if value == nil {
-			return ""
-		}
-		return value.String()
 	default:
 		// Empty checks.
 		if value == nil {

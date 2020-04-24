@@ -16,7 +16,7 @@ func UnsafeStrToBytes(s string) []byte {
 }
 
 // UnsafeBytesToStr converts []byte to string without memory copy.
-// Note that, if you completely sure you will never use <s> in the feature,
+// Note that, if you completely sure you will never use <b> in the feature,
 // you can use this unsafe function to implement type conversion in high performance.
 func UnsafeBytesToStr(b []byte) string {
 	return *(*string)(unsafe.Pointer(&b))
