@@ -310,6 +310,34 @@ func (c *Core) Begin() (*TX, error) {
 	}
 }
 
+// Transaction wraps the transaction logic using function <f>.
+// It rollbacks the transaction and returns the error from function <f> if
+// it returns non-nil error. It commits the transaction and returns nil if
+// function <f> returns nil.
+//
+// Note that, you should not Commit or Rollback the transaction in function <f>
+// as it is automatically handled by this function.
+func (c *Core) Transaction(f func(tx *TX) error) (err error) {
+	var tx *TX
+	tx, err = c.DB.Begin()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			if e := tx.Rollback(); e != nil {
+				err = e
+			}
+		} else {
+			if e := tx.Commit(); e != nil {
+				err = e
+			}
+		}
+	}()
+	err = f(tx)
+	return
+}
+
 // Insert does "INSERT INTO ..." statement for the table.
 // If there's already one unique record of the data in the table, it returns error.
 //

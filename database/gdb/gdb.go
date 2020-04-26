@@ -64,6 +64,7 @@ type DB interface {
 
 	// Transaction.
 	Begin() (*TX, error)
+	Transaction(f func(tx *TX) error) (err error)
 
 	Insert(table string, data interface{}, batch ...int) (sql.Result, error)
 	InsertIgnore(table string, data interface{}, batch ...int) (sql.Result, error)
