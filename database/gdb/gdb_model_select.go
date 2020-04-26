@@ -42,7 +42,7 @@ func (m *Model) All(where ...interface{}) (Result, error) {
 		}
 		conditionWhere += softDeletingCondition
 	}
-	return m.getAll(
+	return m.doGetAll(
 		fmt.Sprintf(
 			"SELECT %s FROM %s%s",
 			m.db.QuoteString(m.fields),
@@ -268,7 +268,7 @@ func (m *Model) Count(where ...interface{}) (int, error) {
 	if len(m.groupBy) > 0 {
 		s = fmt.Sprintf("SELECT COUNT(1) FROM (%s) count_alias", s)
 	}
-	list, err := m.getAll(s, conditionArgs...)
+	list, err := m.doGetAll(s, conditionArgs...)
 	if err != nil {
 		return 0, err
 	}
@@ -339,4 +339,29 @@ func (m *Model) FindScan(pointer interface{}, where ...interface{}) error {
 		return m.WherePri(where[0], where[1:]...).Scan(pointer)
 	}
 	return m.Scan(pointer)
+}
+
+// doGetAll does the select statement on the database.
+func (m *Model) doGetAll(sql string, args ...interface{}) (result Result, err error) {
+	cacheKey := ""
+	// Retrieve from cache.
+	if m.cacheEnabled && m.tx == nil {
+		cacheKey = m.cacheName
+		if len(cacheKey) == 0 {
+			cacheKey = sql + "/" + gconv.String(args)
+		}
+		if v := m.db.GetCache().Get(cacheKey); v != nil {
+			return v.(Result), nil
+		}
+	}
+	result, err = m.db.DoGetAll(m.getLink(false), sql, m.mergeArguments(args)...)
+	// Cache the result.
+	if cacheKey != "" && err == nil {
+		if m.cacheDuration < 0 {
+			m.db.GetCache().Remove(cacheKey)
+		} else {
+			m.db.GetCache().Set(cacheKey, result, m.cacheDuration)
+		}
+	}
+	return result, err
 }

@@ -18,19 +18,26 @@ import (
 // If the parameter <duration> = 0, which means it never expires.
 // If the parameter <duration> > 0, which means it expires after <duration>.
 //
-// The optional parameter <name> is used to bind a name to the cache, which means you can later
-// control the cache like changing the <duration> or clearing the cache with specified <name>.
+// The optional parameter <name> is used to bind a name to the cache, which means you can
+// later control the cache like changing the <duration> or clearing the cache with specified
+// <name>.
 //
-// Note that, the cache feature is disabled if the model is operating on a transaction.
+// Note that, the cache feature is disabled if the model is performing select statement
+// on a transaction.
 func (m *Model) Cache(duration time.Duration, name ...string) *Model {
 	model := m.getModel()
 	model.cacheDuration = duration
 	if len(name) > 0 {
 		model.cacheName = name[0]
 	}
-	// It does not support cache on transaction.
-	if model.tx == nil {
-		model.cacheEnabled = true
-	}
+	model.cacheEnabled = true
 	return model
+}
+
+// checkAndRemoveCache checks and removes the cache in insert/update/delete statement if
+// cache feature is enabled.
+func (m *Model) checkAndRemoveCache() {
+	if m.cacheEnabled && m.cacheDuration < 0 && len(m.cacheName) > 0 {
+		m.db.GetCache().Remove(m.cacheName)
+	}
 }
