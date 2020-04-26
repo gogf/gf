@@ -17,7 +17,7 @@ var (
 
 func init() {
 	genv.Set("UNDER_TEST", "1")
-	for i := 10000; i <= 11000; i++ {
+	for i := 8000; i <= 9000; i++ {
 		ports.Append(i)
 	}
 }
