@@ -7,7 +7,9 @@
 package gdb_test
 
 import (
+	"errors"
 	"fmt"
+	"github.com/gogf/gf/database/gdb"
 	"testing"
 
 	"github.com/gogf/gf/frame/g"
@@ -300,7 +302,6 @@ func Test_TX_Replace(t *testing.T) {
 			t.Assert(value.String(), "name_1")
 		}
 	})
-
 }
 
 func Test_TX_Save(t *testing.T) {
@@ -713,5 +714,53 @@ func Test_TX_Delete(t *testing.T) {
 			t.AssertNE(n, 0)
 		}
 	})
+}
 
+func Test_Transaction(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		err := db.Transaction(func(tx *gdb.TX) error {
+			if _, err := tx.Replace(table, g.Map{
+				"id":          1,
+				"passport":    "USER_1",
+				"password":    "PASS_1",
+				"nickname":    "NAME_1",
+				"create_time": gtime.Now().String(),
+			}); err != nil {
+				t.Error(err)
+			}
+			return errors.New("error")
+		})
+		t.AssertNE(err, nil)
+
+		if value, err := db.Table(table).Fields("nickname").Where("id", 1).Value(); err != nil {
+			gtest.Error(err)
+		} else {
+			t.Assert(value.String(), "name_1")
+		}
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		err := db.Transaction(func(tx *gdb.TX) error {
+			if _, err := tx.Replace(table, g.Map{
+				"id":          1,
+				"passport":    "USER_1",
+				"password":    "PASS_1",
+				"nickname":    "NAME_1",
+				"create_time": gtime.Now().String(),
+			}); err != nil {
+				t.Error(err)
+			}
+			return nil
+		})
+		t.Assert(err, nil)
+
+		if value, err := db.Table(table).Fields("nickname").Where("id", 1).Value(); err != nil {
+			gtest.Error(err)
+		} else {
+			t.Assert(value.String(), "NAME_1")
+		}
+	})
 }
