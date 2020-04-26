@@ -278,13 +278,15 @@ func (r *Request) parseForm() {
 			for name, values := range r.PostForm {
 				// Invalid parameter name.
 				// Only allow chars of: '\w', '[', ']', '-'.
-				if !gregex.IsMatchString(`^[\w\-\[\]]+$`, name) {
-					if len(r.PostForm) == 1 {
-						// It might be JSON/XML content.
-						r.bodyContent = gconv.UnsafeStrToBytes(name + strings.Join(values, " "))
+				if !gregex.IsMatchString(`^[\w\-\[\]]+$`, name) && len(r.PostForm) == 1 {
+					// It might be JSON/XML content.
+					if s := name + strings.Join(values, " "); len(s) > 0 {
+						if s[0] == '{' && s[len(s)-1] == '}' || s[0] == '<' && s[len(s)-1] == '>' {
+							r.bodyContent = gconv.UnsafeStrToBytes(s)
+							params = ""
+							break
+						}
 					}
-					params = ""
-					break
 				}
 				if len(values) == 1 {
 					if len(params) > 0 {
@@ -308,8 +310,10 @@ func (r *Request) parseForm() {
 					}
 				}
 			}
-			if r.formMap, err = gstr.Parse(params); err != nil {
-				panic(err)
+			if params != "" {
+				if r.formMap, err = gstr.Parse(params); err != nil {
+					panic(err)
+				}
 			}
 		}
 		if r.formMap == nil {
