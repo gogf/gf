@@ -143,13 +143,6 @@ func (m *Model) getPrimaryKey() string {
 	return ""
 }
 
-// checkAndRemoveCache checks and remove the cache if necessary.
-func (m *Model) checkAndRemoveCache() {
-	if m.cacheEnabled && m.cacheDuration < 0 && len(m.cacheName) > 0 {
-		m.db.GetCache().Remove(m.cacheName)
-	}
-}
-
 // formatCondition formats where arguments of the model and returns a new condition sql and its arguments.
 // Note that this function does not change any attribute value of the <m>.
 //

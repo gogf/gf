@@ -2213,6 +2213,63 @@ func Test_Model_Cache(t *testing.T) {
 		t.Assert(err, nil)
 		t.Assert(one["passport"], "user_200")
 	})
+	// transaction.
+	gtest.C(t, func(t *gtest.T) {
+		// make cache for id 3
+		one, err := db.Table(table).Cache(time.Second, "test3").FindOne(3)
+		t.Assert(err, nil)
+		t.Assert(one["passport"], "user_3")
+
+		r, err := db.Table(table).Data("passport", "user_300").Cache(time.Second, "test3").WherePri(3).Update()
+		t.Assert(err, nil)
+		n, err := r.RowsAffected()
+		t.Assert(err, nil)
+		t.Assert(n, 1)
+
+		err = db.Transaction(func(tx *gdb.TX) error {
+			one, err := tx.Table(table).Cache(time.Second, "test3").FindOne(3)
+			t.Assert(err, nil)
+			t.Assert(one["passport"], "user_300")
+			return nil
+		})
+		t.Assert(err, nil)
+
+		one, err = db.Table(table).Cache(time.Second, "test3").FindOne(3)
+		t.Assert(err, nil)
+		t.Assert(one["passport"], "user_3")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		// make cache for id 4
+		one, err := db.Table(table).Cache(time.Second, "test4").FindOne(4)
+		t.Assert(err, nil)
+		t.Assert(one["passport"], "user_4")
+
+		r, err := db.Table(table).Data("passport", "user_400").Cache(time.Second, "test3").WherePri(4).Update()
+		t.Assert(err, nil)
+		n, err := r.RowsAffected()
+		t.Assert(err, nil)
+		t.Assert(n, 1)
+
+		err = db.Transaction(func(tx *gdb.TX) error {
+			// Cache feature disabled.
+			one, err := tx.Table(table).Cache(time.Second, "test4").FindOne(4)
+			t.Assert(err, nil)
+			t.Assert(one["passport"], "user_400")
+			// Update the cache.
+			r, err := tx.Table(table).Data("passport", "user_4000").
+				Cache(-1, "test4").WherePri(4).Update()
+			t.Assert(err, nil)
+			n, err := r.RowsAffected()
+			t.Assert(err, nil)
+			t.Assert(n, 1)
+			return nil
+		})
+		t.Assert(err, nil)
+		// Read from db.
+		one, err = db.Table(table).Cache(time.Second, "test4").FindOne(4)
+		t.Assert(err, nil)
+		t.Assert(one["passport"], "user_4000")
+	})
 }
 
 func Test_Model_Having(t *testing.T) {

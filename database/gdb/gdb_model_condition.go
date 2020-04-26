@@ -7,7 +7,6 @@
 package gdb
 
 import (
-	"github.com/gogf/gf/util/gconv"
 	"strings"
 )
 
@@ -49,7 +48,8 @@ func (m *Model) Having(having interface{}, args ...interface{}) *Model {
 // WherePri does the same logic as Model.Where except that if the parameter <where>
 // is a single condition like int/string/float/slice, it treats the condition as the primary
 // key value. That is, if primary key is "id" and given <where> parameter as "123", the
-// WherePri function treats it as "id=123", but Model.Where treats it as string "123".
+// WherePri function treats the condition as "id=123", but Model.Where treats the condition
+// as string "123".
 func (m *Model) WherePri(where interface{}, args ...interface{}) *Model {
 	if len(args) > 0 {
 		return m.Where(where, args...)
@@ -156,29 +156,4 @@ func (m *Model) Page(page, limit int) *Model {
 // Deprecated.
 func (m *Model) ForPage(page, limit int) *Model {
 	return m.Page(page, limit)
-}
-
-// getAll does the query from database.
-func (m *Model) getAll(sql string, args ...interface{}) (result Result, err error) {
-	cacheKey := ""
-	// Retrieve from cache.
-	if m.cacheEnabled {
-		cacheKey = m.cacheName
-		if len(cacheKey) == 0 {
-			cacheKey = sql + "/" + gconv.String(args)
-		}
-		if v := m.db.GetCache().Get(cacheKey); v != nil {
-			return v.(Result), nil
-		}
-	}
-	result, err = m.db.DoGetAll(m.getLink(false), sql, m.mergeArguments(args)...)
-	// Cache the result.
-	if len(cacheKey) > 0 && err == nil {
-		if m.cacheDuration < 0 {
-			m.db.GetCache().Remove(cacheKey)
-		} else {
-			m.db.GetCache().Set(cacheKey, result, m.cacheDuration)
-		}
-	}
-	return result, err
 }

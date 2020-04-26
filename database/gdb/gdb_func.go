@@ -206,15 +206,16 @@ func GetPrimaryKey(pointer interface{}) string {
 
 // GetPrimaryKeyCondition returns a new where condition by primary field name.
 // The optional parameter <where> is like follows:
-// 123
-// []int{1, 2, 3}
-// "john"
-// []string{"john", "smith"}
-// g.Map{"id": g.Slice{1,2,3}}
-// g.Map{"id": 1, "name": "john"}
+// 123                             => primary=123
+// []int{1, 2, 3}                  => primary IN(1,2,3)
+// "john"                          => primary='john'
+// []string{"john", "smith"}       => primary IN('john','smith')
+// g.Map{"id": g.Slice{1,2,3}}     => id IN(1,2,3)
+// g.Map{"id": 1, "name": "john"}  => id=1 AND name='john'
 // etc.
 //
-// Note that it returns the given <where> parameter directly if there's the <primary> is empty.
+// Note that it returns the given <where> parameter directly if the <primary> is empty
+// or length of <where> > 1.
 func GetPrimaryKeyCondition(primary string, where ...interface{}) (newWhereCondition []interface{}) {
 	if len(where) == 0 {
 		return nil
@@ -231,6 +232,7 @@ func GetPrimaryKeyCondition(primary string, where ...interface{}) (newWhereCondi
 		}
 		switch kind {
 		case reflect.Map, reflect.Struct:
+			// Ignore the parameter <primary>.
 			break
 
 		default:

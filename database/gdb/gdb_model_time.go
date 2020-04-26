@@ -25,39 +25,39 @@ const (
 // If there's no field name for storing creating time, it returns an empty string.
 // It checks the key with or without cases or chars '-'/'_'/'.'/' '.
 func (m *Model) getSoftFieldNameCreate(table ...string) string {
-	name := ""
+	tableName := ""
 	if len(table) > 0 {
-		name = table[0]
+		tableName = table[0]
 	} else {
-		name = m.getPrimaryTableName()
+		tableName = m.getPrimaryTableName()
 	}
-	return m.getSoftFieldName(name, gSOFT_FIELD_NAME_CREATE)
+	return m.getSoftFieldName(tableName, gSOFT_FIELD_NAME_CREATE)
 }
 
 // getSoftFieldNameUpdate checks and returns the field name for record updating time.
 // If there's no field name for storing updating time, it returns an empty string.
 // It checks the key with or without cases or chars '-'/'_'/'.'/' '.
 func (m *Model) getSoftFieldNameUpdate(table ...string) (field string) {
-	name := ""
+	tableName := ""
 	if len(table) > 0 {
-		name = table[0]
+		tableName = table[0]
 	} else {
-		name = m.getPrimaryTableName()
+		tableName = m.getPrimaryTableName()
 	}
-	return m.getSoftFieldName(name, gSOFT_FIELD_NAME_UPDATE)
+	return m.getSoftFieldName(tableName, gSOFT_FIELD_NAME_UPDATE)
 }
 
 // getSoftFieldNameDelete checks and returns the field name for record deleting time.
 // If there's no field name for storing deleting time, it returns an empty string.
 // It checks the key with or without cases or chars '-'/'_'/'.'/' '.
 func (m *Model) getSoftFieldNameDelete(table ...string) (field string) {
-	name := ""
+	tableName := ""
 	if len(table) > 0 {
-		name = table[0]
+		tableName = table[0]
 	} else {
-		name = m.getPrimaryTableName()
+		tableName = m.getPrimaryTableName()
 	}
-	return m.getSoftFieldName(name, gSOFT_FIELD_NAME_DELETE)
+	return m.getSoftFieldName(tableName, gSOFT_FIELD_NAME_DELETE)
 }
 
 // getSoftFieldName retrieves and returns the field name of the table for possible key.
