@@ -11,7 +11,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-
 	"github.com/gogf/gf/os/gres"
 
 	"github.com/gogf/gf/container/garray"
@@ -336,6 +335,8 @@ func (c *Config) getJson(file ...string) *gjson.Json {
 				content = gfile.GetContents(filePath)
 			}
 		}
+		// Expand content Env
+		content = ExpandValueEnvForStr(content)
 		if j, err := gjson.LoadContent(content, true); err == nil {
 			j.SetViolenceCheck(c.vc.Val())
 			// Add monitor for this configuration file,

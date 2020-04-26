@@ -13,6 +13,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/gogf/gf/os/genv"
+
 	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gcfg"
@@ -141,6 +143,67 @@ array = [1,2,3]
 		gtest.AssertEQ(c.GetString("v2"), "true")
 		gtest.AssertEQ(c.GetBool("v2"), true)
 		gtest.AssertEQ(c.GetBool("v3"), false)
+
+		gtest.AssertEQ(c.Contains("v1"), true)
+		gtest.AssertEQ(c.Contains("v2"), true)
+		gtest.AssertEQ(c.Contains("v3"), true)
+		gtest.AssertEQ(c.Contains("v4"), true)
+		gtest.AssertEQ(c.Contains("v5"), false)
+
+		gtest.AssertEQ(c.GetInts("array"), []int{1, 2, 3})
+		gtest.AssertEQ(c.GetStrings("array"), []string{"1", "2", "3"})
+		gtest.AssertEQ(c.GetArray("array"), []interface{}{1, 2, 3})
+		gtest.AssertEQ(c.GetInterfaces("array"), []interface{}{1, 2, 3})
+		gtest.AssertEQ(c.GetMap("redis"), map[string]interface{}{
+			"disk":  "127.0.0.1:6379,0",
+			"cache": "127.0.0.1:6379,1",
+		})
+	})
+}
+
+func Test_ExpandContentEnv(t *testing.T) {
+	content := `
+v1    = "${V1}"
+v2    = "${V2||1}"
+v3    = "${V3}"
+v4    = "${V4||1.23}"
+array = "${ARRAY}"
+[redis]
+    disk  = "${REDIS_DISK}"
+    cache = "${REDIS_CACHE||127.0.0.1:6379,1}"
+`
+	genv.Set("V1", "1")
+	genv.Set("V3", "1.23")
+	genv.Set("REDIS_DISK", "127.0.0.1:6379,0")
+	genv.Set("ARRAY", "[1,2,3]")
+	gcfg.SetContent(content)
+	defer gcfg.ClearContent()
+
+	gtest.Case(t, func() {
+		c := gcfg.New()
+		gtest.Assert(c.Get("v1"), 1)
+		gtest.AssertEQ(c.GetInt("v1"), 1)
+		gtest.AssertEQ(c.GetInt8("v1"), int8(1))
+		gtest.AssertEQ(c.GetInt16("v1"), int16(1))
+		gtest.AssertEQ(c.GetInt32("v1"), int32(1))
+		gtest.AssertEQ(c.GetInt64("v1"), int64(1))
+		gtest.AssertEQ(c.GetUint("v1"), uint(1))
+		gtest.AssertEQ(c.GetUint8("v1"), uint8(1))
+		gtest.AssertEQ(c.GetUint16("v1"), uint16(1))
+		gtest.AssertEQ(c.GetUint32("v1"), uint32(1))
+		gtest.AssertEQ(c.GetUint64("v1"), uint64(1))
+		gtest.AssertEQ(c.GetVar("v1").String(), "1")
+		gtest.AssertEQ(c.GetVar("v1").Bool(), true)
+
+		gtest.AssertEQ(c.GetVar("v2").String(), "1")
+		gtest.AssertEQ(c.GetVar("v2").Bool(), true)
+
+		gtest.AssertEQ(c.GetString("v1"), "1")
+		gtest.AssertEQ(c.GetFloat32("v4"), float32(1.23))
+		gtest.AssertEQ(c.GetFloat64("v4"), float64(1.23))
+		gtest.AssertEQ(c.GetString("v2"), "1")
+		gtest.AssertEQ(c.GetBool("v2"), true)
+		gtest.AssertEQ(c.GetBool("v3"), true)
 
 		gtest.AssertEQ(c.Contains("v1"), true)
 		gtest.AssertEQ(c.Contains("v2"), true)
