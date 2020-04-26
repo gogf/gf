@@ -9,8 +9,6 @@ package gcfg
 import (
 	"os"
 
-	"github.com/gogf/gf/os/glog"
-
 	"github.com/gogf/gf/container/garray"
 
 	"github.com/gogf/gf/container/gmap"
@@ -78,8 +76,7 @@ func ExpandValueEnvForStr(c string) string {
 			if len(env) > 0 {
 				envStr := string(env[0])
 				realValue := ExpandValueEnv(gstr.Trim(envStr, "\""))
-				realValue = envStrParse(realValue)
-				glog.Info(realValue)
+				realValue = EnvStrParse(realValue)
 				envMap.Set(envStr, realValue)
 			}
 		}
@@ -93,7 +90,7 @@ func ExpandValueEnvForStr(c string) string {
 	return c
 }
 
-// envStrParse returns the toml value represented by the string.
+// EnvStrParse returns the toml value represented by the string.
 //
 // Bool
 // true, TRUE, True return string true; false,FALSE, False return string false.
@@ -102,8 +99,14 @@ func ExpandValueEnvForStr(c string) string {
 // return source string.
 //
 // Any other value return double quoted string.
-func envStrParse(val string) string {
+func EnvStrParse(val string) string {
 	if val != "" {
+		// Double quotes are considered to be strings
+		patterDQ := `^\".*?\"$`
+		if gregex.IsMatch(patterDQ, []byte(val)) {
+			return val
+		}
+
 		// parse bool
 		trueArr := garray.NewStrArrayFrom([]string{"true", "TRUE", "True"})
 		if trueArr.Contains(val) {
@@ -116,7 +119,8 @@ func envStrParse(val string) string {
 
 		// parse int or float
 		patterIF := `^(\d+)$`
-		if gregex.IsMatch(patterIF, []byte(val)) {
+		intFloatStr := gstr.Replace(gstr.TrimLeft(val, "-"), ".", "", -1)
+		if gregex.IsMatch(patterIF, []byte(intFloatStr)) {
 			return val
 		}
 

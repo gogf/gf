@@ -1,0 +1,10 @@
+[server]
+    Address          = ":8199"
+    AccessLogEnabled = true
+    ErrorLogEnabled  = true
+    PProfEnabled     = "${PPROF_ENABLE||false}"
+# redis配置
+[[redis-cache]]
+    db   = 0
+    host = "${REDIS_HOST||192.168.0.100}"
+    port = "${REDIS_PORT||6379}"
