@@ -73,6 +73,9 @@ We currently accept donation by Alipay/WechatPay, please note your github/gitee 
 |蔡蔡|wechat|￥666.00| gf真强大，让项目省心
 |jack|wechat|￥100.00| 
 |sbilly|wechat|￥100.00| 祝好！
+|米司|wechat|￥166.66| 大佬加油！
+|*秦|wechat|￥20.00| 给群主献上一杯咖啡...
+|[zhuhuan12](https://gitee.com/zhuhuan12)|wechat|￥50.00| 
 
 
 <img src="https://goframe.org/images/donate.png"/>
