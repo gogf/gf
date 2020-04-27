@@ -42,10 +42,12 @@ func (m *Model) All(where ...interface{}) (Result, error) {
 		}
 		conditionWhere += softDeletingCondition
 	}
+	// DO NOT quote the m.fields where, in case of fields like:
+	// DISTINCT t.user_id uid
 	return m.doGetAll(
 		fmt.Sprintf(
 			"SELECT %s FROM %s%s",
-			m.db.QuoteString(m.fields),
+			m.fields,
 			m.tables,
 			conditionWhere+conditionExtra,
 		),
@@ -249,7 +251,9 @@ func (m *Model) Count(where ...interface{}) (int, error) {
 	}
 	countFields := "COUNT(1)"
 	if m.fields != "" && m.fields != "*" {
-		countFields = fmt.Sprintf(`COUNT(%s)`, m.db.QuoteString(m.fields))
+		// DO NOT quote the m.fields here, in case of fields like:
+		// DISTINCT t.user_id uid
+		countFields = fmt.Sprintf(`COUNT(%s)`, m.fields)
 	}
 	var (
 		softDeletingCondition                         = m.getConditionForSoftDeleting()
