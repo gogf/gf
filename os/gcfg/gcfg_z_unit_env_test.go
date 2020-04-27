@@ -38,6 +38,10 @@ v2    = "${V2||1}"
 v3    = "${V3}"
 v4    = "${V4||1.23}"
 array = "${ARRAY}"
+ip    = "${IP}"
+str1  = "${STR1}"
+str2  = "${STR2}"
+str3  = "${STR3}"
 [redis]
     disk  = "${REDIS_DISK}"
     cache = "${REDIS_CACHE||127.0.0.1:6379,1}"
@@ -46,6 +50,10 @@ array = "${ARRAY}"
 	genv.Set("V3", "1.23")
 	genv.Set("REDIS_DISK", "127.0.0.1:6379,0")
 	genv.Set("ARRAY", "[1,2,3]")
+	genv.Set("IP", "127.0.0.1")
+	genv.Set("STR1", "127.0.0.1,locahost")
+	genv.Set("STR2", "\"127.0.0.1,192.168.0.1\"")
+	genv.Set("STR3", "${gogf#")
 	gcfg.SetContent(content)
 	defer func() {
 		gcfg.ClearContent()
@@ -53,6 +61,10 @@ array = "${ARRAY}"
 		genv.Remove("V3")
 		genv.Remove("REDIS_DISK")
 		genv.Remove("ARRAY")
+		genv.Remove("IP")
+		genv.Remove("STR1")
+		genv.Remove("STR2")
+		genv.Remove("STR3")
 	}()
 
 	gtest.Case(t, func() {
@@ -63,6 +75,10 @@ array = "${ARRAY}"
 		gtest.AssertEQ(c.GetFloat32("v3"), float32(1.23))
 		gtest.AssertEQ(c.GetString("v4"), "1.23")
 		gtest.AssertEQ(c.GetStrings("array"), []string{"1", "2", "3"})
+		gtest.AssertEQ(c.GetString("ip"), "127.0.0.1")
+		gtest.AssertEQ(c.GetString("str1"), "127.0.0.1,locahost")
+		gtest.AssertEQ(c.GetString("str2"), "127.0.0.1,192.168.0.1")
+		gtest.AssertEQ(c.GetString("str3"), "${gogf#")
 		gtest.AssertEQ(c.GetMap("redis"), map[string]interface{}{
 			"disk":  "127.0.0.1:6379,0",
 			"cache": "127.0.0.1:6379,1",
@@ -83,6 +99,8 @@ func Test_envStrParse(t *testing.T) {
 		gtest.Assert(gcfg.EnvStrParse("-1"), "-1")
 		gtest.Assert(gcfg.EnvStrParse("1.1"), "1.1")
 		gtest.Assert(gcfg.EnvStrParse("-1.1"), "-1.1")
+		gtest.Assert(gcfg.EnvStrParse("127.0.0.1"), "\"127.0.0.1\"")
+		gtest.Assert(gcfg.EnvStrParse("${test$"), "\"${test$\"")
 		gtest.Assert(gcfg.EnvStrParse("[1,2,3]"), "[1,2,3]")
 		gtest.Assert(gcfg.EnvStrParse("$$"), "\"$$\"")
 		gtest.Assert(gcfg.EnvStrParse("test"), "\"test\"")

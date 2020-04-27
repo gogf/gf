@@ -99,39 +99,39 @@ func ExpandValueEnvForStr(c string) string {
 // return source string.
 //
 // Any other value return double quoted string.
-func EnvStrParse(val string) string {
-	if val != "" {
+func EnvStrParse(value string) string {
+	if len(value) > 0 {
 		// Double quotes are considered to be strings
 		patterDQ := `^\".*?\"$`
-		if gregex.IsMatch(patterDQ, []byte(val)) {
-			return val
+		if gregex.IsMatch(patterDQ, []byte(value)) {
+			return value
 		}
 
 		// parse bool
 		trueArr := garray.NewStrArrayFrom([]string{"true", "TRUE", "True"})
-		if trueArr.Contains(val) {
+		if trueArr.Contains(value) {
 			return "true"
 		}
 		falseArr := garray.NewStrArrayFrom([]string{"false", "FALSE", "False"})
-		if falseArr.Contains(val) {
+		if falseArr.Contains(value) {
 			return "false"
 		}
 
 		// parse int or float
 		patterIF := `^(\d+)$`
-		intFloatStr := gstr.Replace(gstr.TrimLeft(val, "-"), ".", "", -1)
+		intFloatStr := gstr.Replace(gstr.TrimLeft(value, "-"), ".", "", 1)
 		if gregex.IsMatch(patterIF, []byte(intFloatStr)) {
-			return val
+			return value
 		}
 
 		// parse array
 		// []
 		pattenArr := `^\[.*?\]$`
-		if gregex.IsMatch(pattenArr, []byte(val)) {
-			return val
+		if gregex.IsMatch(pattenArr, []byte(value)) {
+			return value
 		}
 
-		return "\"" + gconv.String(val) + "\""
+		return "\"" + gconv.String(value) + "\""
 	}
-	return val
+	return value
 }

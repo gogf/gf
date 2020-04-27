@@ -11,6 +11,9 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+
+	"github.com/joho/godotenv"
+
 	"github.com/gogf/gf/os/gres"
 
 	"github.com/gogf/gf/container/garray"
@@ -27,6 +30,8 @@ import (
 const (
 	// DEFAULT_CONFIG_FILE is the default configuration file name.
 	DEFAULT_CONFIG_FILE = "config.toml"
+	// DEFAULT_DOTENV_FILE is the default dot env file name.
+	DEFAULT_DOTENV_FILE = ".env"
 )
 
 // Configuration struct.
@@ -335,6 +340,8 @@ func (c *Config) getJson(file ...string) *gjson.Json {
 				content = gfile.GetContents(filePath)
 			}
 		}
+		// Which loads env vars from a .env file
+		_ = godotenv.Load(c.filePath(DEFAULT_DOTENV_FILE))
 		// Expand content Env
 		content = ExpandValueEnvForStr(content)
 		if j, err := gjson.LoadContent(content, true); err == nil {
