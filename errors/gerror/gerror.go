@@ -11,15 +11,17 @@ import (
 	"fmt"
 )
 
+// ApiStack is the interface for Stack feature.
 type ApiStack interface {
 	Stack() string
 }
 
+// ApiCause is the interface for Cause feature.
 type ApiCause interface {
 	Cause() error
 }
 
-// New returns an error that formats as the given text.
+// New creates and returns an error which is formatted from given text.
 func New(text string) error {
 	if text == "" {
 		return nil
@@ -30,7 +32,7 @@ func New(text string) error {
 	}
 }
 
-// Newf returns an error that formats as the given text.
+// Newf returns an error that formats as the given format and args.
 func Newf(format string, args ...interface{}) error {
 	if format == "" {
 		return nil
@@ -56,7 +58,7 @@ func Wrap(err error, text string) error {
 
 // Wrapf returns an error annotating err with a stack trace
 // at the point Wrapf is called, and the format specifier.
-// It returns nil if given err is nil.
+// It returns nil if given <err> is nil.
 func Wrapf(err error, format string, args ...interface{}) error {
 	if err == nil {
 		return nil
@@ -68,7 +70,7 @@ func Wrapf(err error, format string, args ...interface{}) error {
 	}
 }
 
-// Cause returns the root cause error.
+// Cause returns the root cause error of <err>.
 func Cause(err error) error {
 	if err != nil {
 		if e, ok := err.(ApiCause); ok {
@@ -79,7 +81,7 @@ func Cause(err error) error {
 }
 
 // Stack returns the stack callers as string.
-// It returns an empty string id the <err> does not support stacks.
+// It returns an empty string if the <err> does not support stacks.
 func Stack(err error) string {
 	if err == nil {
 		return ""

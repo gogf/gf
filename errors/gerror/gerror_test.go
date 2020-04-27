@@ -15,10 +15,6 @@ import (
 	"github.com/gogf/gf/test/gtest"
 )
 
-func interfaceNil() interface{} {
-	return nil
-}
-
 func nilError() error {
 	return nil
 }

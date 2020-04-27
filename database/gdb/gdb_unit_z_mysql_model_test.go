@@ -2297,3 +2297,30 @@ func Test_Model_Having(t *testing.T) {
 		t.Assert(len(all), 1)
 	})
 }
+
+func Test_Model_Distinct(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		all, err := db.Table(table, "t").Fields("distinct t.id").Where("id > 1").Having("id > 8").All()
+		t.Assert(err, nil)
+		t.Assert(len(all), 2)
+	})
+}
+
+func Test_Model_Min_Max(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		value, err := db.Table(table, "t").Fields("min(t.id)").Where("id > 1").Value()
+		t.Assert(err, nil)
+		t.Assert(value.Int(), 2)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		value, err := db.Table(table, "t").Fields("max(t.id)").Where("id > 1").Value()
+		t.Assert(err, nil)
+		t.Assert(value.Int(), 10)
+	})
+}

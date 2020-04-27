@@ -94,7 +94,7 @@ func (err *Error) Format(s fmt.State, verb rune) {
 }
 
 // Stack returns the stack callers as string.
-// It returns an empty string id the <err> does not support stacks.
+// It returns an empty string if the <err> does not support stacks.
 func (err *Error) Stack() string {
 	if err == nil {
 		return ""
