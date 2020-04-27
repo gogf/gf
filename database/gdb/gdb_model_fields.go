@@ -7,7 +7,7 @@
 package gdb
 
 import (
-	"github.com/gogf/gf/container/garray"
+	"fmt"
 	"github.com/gogf/gf/container/gset"
 	"github.com/gogf/gf/text/gstr"
 )
@@ -34,21 +34,31 @@ func (m *Model) FieldsEx(fields string) *Model {
 	if gstr.Contains(m.tables, " ") {
 		panic("function FieldsEx supports only single table operations")
 	}
+	tableFields, err := m.db.TableFields(m.tables)
+	if err != nil {
+		panic(err)
+	}
+	if len(tableFields) == 0 {
+		panic(fmt.Sprintf(`empty table fields for table "%s"`, m.tables))
+	}
 	model := m.getModel()
 	model.fieldsEx = fields
 	fieldsExSet := gset.NewStrSetFrom(gstr.SplitAndTrim(fields, ","))
-	if m, err := m.db.TableFields(m.tables); err == nil {
-		model.fields = ""
-		for k, _ := range m {
-			if fieldsExSet.Contains(k) {
-				continue
-			}
-			if len(model.fields) > 0 {
-				model.fields += ","
-			}
-			model.fields += k
-		}
+	fieldsArray := make([]string, len(tableFields))
+	for k, v := range tableFields {
+		fieldsArray[v.Index] = k
 	}
+	model.fields = ""
+	for _, k := range fieldsArray {
+		if fieldsExSet.Contains(k) {
+			continue
+		}
+		if len(model.fields) > 0 {
+			model.fields += ","
+		}
+		model.fields += k
+	}
+	model.fields = model.db.QuoteString(model.fields)
 	return model
 }
 
@@ -59,14 +69,26 @@ func (m *Model) FieldsStr(prefix ...string) string {
 	if len(prefix) > 0 {
 		prefixStr = prefix[0]
 	}
-	if m, err := m.db.TableFields(m.tables); err == nil {
-		fieldsArray := garray.NewStrArraySize(len(m), len(m))
-		for _, field := range m {
-			fieldsArray.Set(field.Index, prefixStr+field.Name)
-		}
-		return fieldsArray.Join(",")
+	tableFields, err := m.db.TableFields(m.tables)
+	if err != nil {
+		panic(err)
 	}
-	return ""
+	if len(tableFields) == 0 {
+		panic(fmt.Sprintf(`empty table fields for table "%s"`, m.tables))
+	}
+	fieldsArray := make([]string, len(tableFields))
+	for k, v := range tableFields {
+		fieldsArray[v.Index] = k
+	}
+	newFields := ""
+	for _, k := range fieldsArray {
+		if len(newFields) > 0 {
+			newFields += ","
+		}
+		newFields += prefixStr + k
+	}
+	newFields = m.db.QuoteString(newFields)
+	return newFields
 }
 
 // FieldsExStr retrieves and returns fields which are not in parameter <fields> from the table,
@@ -78,17 +100,28 @@ func (m *Model) FieldsExStr(fields string, prefix ...string) string {
 	if len(prefix) > 0 {
 		prefixStr = prefix[0]
 	}
-	if m, err := m.db.TableFields(m.tables); err == nil {
-		fieldsArray := garray.NewStrArraySize(len(m), len(m))
-		fieldsExSet := gset.NewStrSetFrom(gstr.SplitAndTrim(fields, ","))
-		for _, field := range m {
-			if fieldsExSet.Contains(field.Name) {
-				continue
-			}
-			fieldsArray.Set(field.Index, prefixStr+field.Name)
-		}
-		fieldsArray.FilterEmpty()
-		return fieldsArray.Join(",")
+	tableFields, err := m.db.TableFields(m.tables)
+	if err != nil {
+		panic(err)
 	}
-	return ""
+	if len(tableFields) == 0 {
+		panic(fmt.Sprintf(`empty table fields for table "%s"`, m.tables))
+	}
+	fieldsExSet := gset.NewStrSetFrom(gstr.SplitAndTrim(fields, ","))
+	fieldsArray := make([]string, len(tableFields))
+	for k, v := range tableFields {
+		fieldsArray[v.Index] = k
+	}
+	newFields := ""
+	for _, k := range fieldsArray {
+		if fieldsExSet.Contains(k) {
+			continue
+		}
+		if len(newFields) > 0 {
+			newFields += ","
+		}
+		newFields += prefixStr + k
+	}
+	newFields = m.db.QuoteString(newFields)
+	return newFields
 }
