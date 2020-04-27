@@ -95,8 +95,13 @@ func (view *View) SetConfigWithMap(m map[string]interface{}) error {
 // SetPath sets the template directory path for template file search.
 // The parameter <path> can be absolute or relative path, but absolute path is suggested.
 func (view *View) SetPath(path string) error {
-	isDir := false
-	realPath := ""
+	var (
+		isDir    = false
+		realPath = ""
+	)
+	if path == "" {
+		path = "."
+	}
 	if file := gres.Get(path); file != nil {
 		realPath = path
 		isDir = file.FileInfo().IsDir()
@@ -147,8 +152,13 @@ func (view *View) SetPath(path string) error {
 
 // AddPath adds a absolute or relative path to the search paths.
 func (view *View) AddPath(path string) error {
-	isDir := false
-	realPath := ""
+	var (
+		isDir    = false
+		realPath = ""
+	)
+	if path == "" {
+		path = "."
+	}
 	if file := gres.Get(path); file != nil {
 		realPath = path
 		isDir = file.FileInfo().IsDir()
