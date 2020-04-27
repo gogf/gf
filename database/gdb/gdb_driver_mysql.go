@@ -83,12 +83,15 @@ func (d *DriverMysql) Tables(schema ...string) (tables []string, err error) {
 	return
 }
 
-// TableFields retrieves and returns the fields information of specified table of current schema.
+// TableFields retrieves and returns the fields information of specified table of current
+// schema.
 //
 // Note that it returns a map containing the field name and its corresponding fields.
-// As a map is unsorted, the TableField struct has a "Index" field marks its sequence in the fields.
+// As a map is unsorted, the TableField struct has a "Index" field marks its sequence in
+// the fields.
 //
-// It's using cache feature to enhance the performance, which is never expired util the process restarts.
+// It's using cache feature to enhance the performance, which is never expired util the
+// process restarts.
 func (d *DriverMysql) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
 	charL, charR := d.GetChars()
 	table = gstr.Trim(table, charL+charR)

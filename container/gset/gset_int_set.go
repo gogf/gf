@@ -412,6 +412,16 @@ func (set *IntSet) Pops(size int) []int {
 	return array
 }
 
+// Walk applies a user supplied function <f> to every item of set.
+func (set *IntSet) Walk(f func(item int) int) *IntSet {
+	set.mu.Lock()
+	defer set.mu.Unlock()
+	for k, v := range set.data {
+		set.data[f(k)] = v
+	}
+	return set
+}
+
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (set *IntSet) MarshalJSON() ([]byte, error) {
 	return json.Marshal(set.Slice())

@@ -1870,8 +1870,8 @@ func Test_Model_FieldsStr(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		t.Assert(db.Table(table).FieldsStr(), "id,passport,password,nickname,create_time")
-		t.Assert(db.Table(table).FieldsStr("a."), "a.id,a.passport,a.password,a.nickname,a.create_time")
+		t.Assert(db.Table(table).FieldsStr(), "`id`,`passport`,`password`,`nickname`,`create_time`")
+		t.Assert(db.Table(table).FieldsStr("a."), "`a`.`id`,`a`.`passport`,`a`.`password`,`a`.`nickname`,`a`.`create_time`")
 	})
 }
 
@@ -1880,8 +1880,8 @@ func Test_Model_FieldsExStr(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		t.Assert(db.Table(table).FieldsExStr("create_time,nickname"), "id,passport,password")
-		t.Assert(db.Table(table).FieldsExStr("create_time,nickname", "a."), "a.id,a.passport,a.password")
+		t.Assert(db.Table(table).FieldsExStr("create_time,nickname"), "`id`,`passport`,`password`")
+		t.Assert(db.Table(table).FieldsExStr("create_time,nickname", "a."), "`a`.`id`,`a`.`passport`,`a`.`password`")
 	})
 }
 

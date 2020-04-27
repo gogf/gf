@@ -80,6 +80,9 @@ func (m *Model) doFilterDataMapForInsertOrUpdate(data Map, allowOmitEmpty bool) 
 			charL, charR = m.db.GetChars()
 			chars        = charL + charR
 		)
+		set.Walk(func(item string) string {
+			return gstr.Trim(item, chars)
+		})
 		for k := range data {
 			k = gstr.Trim(k, chars)
 			if !set.Contains(k) {
