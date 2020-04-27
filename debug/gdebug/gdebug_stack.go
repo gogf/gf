@@ -58,6 +58,10 @@ func StackWithFilters(filters []string, skip ...int) string {
 			pc, file, line, ok = runtime.Caller(i)
 		}
 		if ok {
+			// Filter empty file.
+			if file == "" {
+				continue
+			}
 			// GOROOT filter.
 			if goRootForFilter != "" &&
 				len(file) >= len(goRootForFilter) &&

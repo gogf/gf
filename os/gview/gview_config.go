@@ -99,9 +99,6 @@ func (view *View) SetPath(path string) error {
 		isDir    = false
 		realPath = ""
 	)
-	if path == "" {
-		path = "."
-	}
 	if file := gres.Get(path); file != nil {
 		realPath = path
 		isDir = file.FileInfo().IsDir()
@@ -156,9 +153,6 @@ func (view *View) AddPath(path string) error {
 		isDir    = false
 		realPath = ""
 	)
-	if path == "" {
-		path = "."
-	}
 	if file := gres.Get(path); file != nil {
 		realPath = path
 		isDir = file.FileInfo().IsDir()

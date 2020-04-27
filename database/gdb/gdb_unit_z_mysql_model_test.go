@@ -2324,3 +2324,31 @@ func Test_Model_Min_Max(t *testing.T) {
 		t.Assert(value.Int(), 10)
 	})
 }
+
+func Test_Model_NullField(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id       int
+			Passport *string
+		}
+		data := g.Map{
+			"id":       1,
+			"passport": nil,
+		}
+		result, err := db.Table(table).Data(data).Insert()
+		t.Assert(err, nil)
+		n, _ := result.RowsAffected()
+		t.Assert(n, 1)
+		one, err := db.Table(table).FindOne(1)
+		t.Assert(err, nil)
+
+		var user *User
+		err = one.Struct(&user)
+		t.Assert(err, nil)
+		t.Assert(user.Id, data["id"])
+		t.Assert(user.Passport, data["passport"])
+	})
+}
