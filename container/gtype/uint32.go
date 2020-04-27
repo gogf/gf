@@ -49,7 +49,7 @@ func (v *Uint32) Add(delta uint32) (new uint32) {
 }
 
 // Cas executes the compare-and-swap operation for value.
-func (v *Uint32) Cas(old, new uint32) bool {
+func (v *Uint32) Cas(old, new uint32) (swapped bool) {
 	return atomic.CompareAndSwapUint32(&v.value, old, new)
 }
 
@@ -66,5 +66,11 @@ func (v *Uint32) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (v *Uint32) UnmarshalJSON(b []byte) error {
 	v.Set(gconv.Uint32(gconv.UnsafeBytesToStr(b)))
+	return nil
+}
+
+// UnmarshalValue is an interface implement which sets any type of value for <v>.
+func (v *Uint32) UnmarshalValue(value interface{}) error {
+	v.Set(gconv.Uint32(value))
 	return nil
 }

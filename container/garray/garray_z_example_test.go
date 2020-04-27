@@ -8,51 +8,52 @@ package garray_test
 
 import (
 	"fmt"
+	"github.com/gogf/gf/frame/g"
 
 	"github.com/gogf/gf/container/garray"
 )
 
 func Example_basic() {
-	// 创建普通的数组，默认并发安全(带锁)
-	a := garray.New(true)
+	// A normal array.
+	a := garray.New()
 
-	// 添加数据项
+	// Adding items.
 	for i := 0; i < 10; i++ {
 		a.Append(i)
 	}
 
-	// 获取当前数组长度
+	// Print the array length.
 	fmt.Println(a.Len())
 
-	// 获取当前数据项列表
+	// Print the array items.
 	fmt.Println(a.Slice())
 
-	// 获取指定索引项
+	// Retrieve item by index.
 	fmt.Println(a.Get(6))
 
-	// 查找指定数据项是否存在
+	// Check item existence.
 	fmt.Println(a.Contains(6))
 	fmt.Println(a.Contains(100))
 
-	// 在指定索引前插入数据项
+	// Insert item before specified index.
 	a.InsertAfter(9, 11)
-	// 在指定索引后插入数据项
+	// Insert item after specified index.
 	a.InsertBefore(10, 10)
 
 	fmt.Println(a.Slice())
 
-	// 修改指定索引的数据项
+	// Modify item by index.
 	a.Set(0, 100)
 	fmt.Println(a.Slice())
 
-	// 搜索数据项，返回搜索到的索引位置
+	// Search item and return its index.
 	fmt.Println(a.Search(5))
 
-	// 删除指定索引的数据项
+	// Remove item by index.
 	a.Remove(0)
 	fmt.Println(a.Slice())
 
-	// 清空数组
+	// Empty the array, removes all items of it.
 	fmt.Println(a.Slice())
 	a.Clear()
 	fmt.Println(a.Slice())
@@ -60,7 +61,7 @@ func Example_basic() {
 	// Output:
 	// 10
 	// [0 1 2 3 4 5 6 7 8 9]
-	// 6
+	// 6 true
 	// true
 	// false
 	// [0 1 2 3 4 5 6 7 8 9 10 11]
@@ -73,26 +74,34 @@ func Example_basic() {
 
 func Example_rand() {
 	array := garray.NewFrom([]interface{}{1, 2, 3, 4, 5, 6, 7, 8, 9})
-	// 随机返回两个数据项(不删除)
+
+	// Randomly retrieve and return 2 items from the array.
+	// It does not delete the items from array.
 	fmt.Println(array.Rands(2))
+
+	// Randomly pick and return one item from the array.
+	// It deletes the picked up item from array.
 	fmt.Println(array.PopRand())
 }
 
-func Example_pop() {
+func Example_popItem() {
 	array := garray.NewFrom([]interface{}{1, 2, 3, 4, 5, 6, 7, 8, 9})
+
+	// Any Pop* functions pick, delete and return the item from array.
+
 	fmt.Println(array.PopLeft())
 	fmt.Println(array.PopLefts(2))
 	fmt.Println(array.PopRight())
 	fmt.Println(array.PopRights(2))
 
 	// Output:
-	// 1
+	// 1 true
 	// [2 3]
-	// 9
+	// 9 true
 	// [7 8]
 }
 
-func Example_merge() {
+func Example_mergeArray() {
 	array1 := garray.NewFrom([]interface{}{1, 2})
 	array2 := garray.NewFrom([]interface{}{3, 4})
 	slice1 := []interface{}{5, 6}
@@ -109,4 +118,15 @@ func Example_merge() {
 	// Output:
 	// [1 2]
 	// [1 2 1 2 3 4 5 6 7 8 9 0]
+}
+
+func Example_filter() {
+	array1 := garray.NewFrom(g.Slice{0, 1, 2, nil, "", g.Slice{}, "john"})
+	array2 := garray.NewFrom(g.Slice{0, 1, 2, nil, "", g.Slice{}, "john"})
+	fmt.Printf("%#v\n", array1.FilterNil().Slice())
+	fmt.Printf("%#v\n", array2.FilterEmpty().Slice())
+
+	// Output:
+	// []interface {}{0, 1, 2, "", []interface {}{}, "john"}
+	// []interface {}{1, 2, "john"}
 }

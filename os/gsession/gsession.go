@@ -23,5 +23,5 @@ var (
 // NewSessionId creates and returns a new and unique session id string,
 // the length of which is 18 bytes.
 func NewSessionId() string {
-	return strings.ToUpper(strconv.FormatInt(gtime.Nanosecond(), 36) + grand.Str(6))
+	return strings.ToUpper(strconv.FormatInt(gtime.TimestampNano(), 36) + grand.S(6))
 }

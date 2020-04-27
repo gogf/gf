@@ -94,7 +94,7 @@ func (err *Error) Format(s fmt.State, verb rune) {
 }
 
 // Stack returns the stack callers as string.
-// It returns an empty string id the <err> does not support stacks.
+// It returns an empty string if the <err> does not support stacks.
 func (err *Error) Stack() string {
 	if err == nil {
 		return ""
@@ -132,7 +132,7 @@ func formatSubStack(st stack, buffer *bytes.Buffer) {
 				continue
 			}
 			// Avoid GF stacks if not in GF development.
-			if !intlog.IsInGFDevelop() {
+			if !intlog.IsEnabled() {
 				if strings.Contains(file, "github.com/gogf/gf/") {
 					continue
 				}

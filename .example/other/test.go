@@ -1,16 +1,25 @@
 package main
 
 import (
-	"fmt"
 	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/gview"
+	"github.com/gogf/gf/util/gconv"
 )
 
 func main() {
-	s, err := gview.ParseContent(`{{.a}}`, g.Map{
-		"a": 1,
-		"b": 1,
-	})
-	fmt.Println(err)
-	fmt.Println(s)
+	type SaveReq1 struct {
+		Id   uint
+		Tags string
+	}
+	type SaveReq2 struct {
+		Id   uint
+		Tags []string
+	}
+	r1 := SaveReq1{
+		Id:   1,
+		Tags: "ac",
+	}
+	var r2 *SaveReq2
+	err := gconv.Struct(r1, &r2)
+	g.Dump(err)
+	g.Dump(r2)
 }

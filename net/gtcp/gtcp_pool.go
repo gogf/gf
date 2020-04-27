@@ -23,10 +23,10 @@ type PoolConn struct {
 }
 
 const (
-	gDEFAULT_POOL_EXPIRE = 10000 // (Millisecond) Default TTL for connection in the pool.
-	gCONN_STATUS_UNKNOWN = 0     // Means it is unknown it's connective or not.
-	gCONN_STATUS_ACTIVE  = 1     // Means it is now connective.
-	gCONN_STATUS_ERROR   = 2     // Means it should be closed and removed from pool.
+	gDEFAULT_POOL_EXPIRE = 10 * time.Second // Default TTL for connection in the pool.
+	gCONN_STATUS_UNKNOWN = 0                // Means it is unknown it's connective or not.
+	gCONN_STATUS_ACTIVE  = 1                // Means it is now connective.
+	gCONN_STATUS_ERROR   = 2                // Means it should be closed and removed from pool.
 )
 
 var (

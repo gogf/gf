@@ -35,18 +35,11 @@ type StorageFile struct {
 }
 
 var (
-	DefaultStorageFilePath          = gfile.Join(gfile.TempDir(), "gsessions")
+	DefaultStorageFilePath          = gfile.TempDir("gsessions")
 	DefaultStorageFileCryptoKey     = []byte("Session storage file crypto key!")
 	DefaultStorageFileCryptoEnabled = false
 	DefaultStorageFileLoopInterval  = 10 * time.Second
 )
-
-func init() {
-	tmpPath := "/tmp"
-	if gfile.Exists(tmpPath) && gfile.IsWritable(tmpPath) {
-		DefaultStorageFilePath = gfile.Join(tmpPath, "gsessions")
-	}
-}
 
 // NewStorageFile creates and returns a file storage object for session.
 func NewStorageFile(path ...string) *StorageFile {
@@ -54,7 +47,7 @@ func NewStorageFile(path ...string) *StorageFile {
 	if len(path) > 0 && path[0] != "" {
 		storagePath, _ = gfile.Search(path[0])
 		if storagePath == "" {
-			panic(fmt.Sprintf(fmt.Sprintf("'%s' does not exist", path[0])))
+			panic(fmt.Sprintf("'%s' does not exist", path[0]))
 		}
 		if !gfile.IsWritable(storagePath) {
 			panic(fmt.Sprintf("'%s' is not writable", path[0]))
@@ -73,7 +66,7 @@ func NewStorageFile(path ...string) *StorageFile {
 	}
 	// Batch updates the TTL for session ids timely.
 	gtimer.AddSingleton(DefaultStorageFileLoopInterval, func() {
-		intlog.Print("StorageFile.timer start")
+		//intlog.Print("StorageFile.timer start")
 		var id string
 		var err error
 		for {
@@ -84,7 +77,7 @@ func NewStorageFile(path ...string) *StorageFile {
 				intlog.Error(err)
 			}
 		}
-		intlog.Print("StorageFile.timer end")
+		//intlog.Print("StorageFile.timer end")
 	})
 	return s
 }
@@ -160,12 +153,12 @@ func (s *StorageFile) GetSession(id string, ttl time.Duration, data *gmap.StrAny
 	if data != nil {
 		return data, nil
 	}
-	intlog.Printf("StorageFile.GetSession: %s, %v", id, ttl)
+	//intlog.Printf("StorageFile.GetSession: %s, %v", id, ttl)
 	path := s.sessionFilePath(id)
 	content := gfile.GetBytes(path)
 	if len(content) > 8 {
 		timestampMilli := gbinary.DecodeToInt64(content[:8])
-		if timestampMilli+ttl.Nanoseconds()/1e6 < gtime.Millisecond() {
+		if timestampMilli+ttl.Nanoseconds()/1e6 < gtime.TimestampMilli() {
 			return nil, nil
 		}
 		var err error
@@ -206,12 +199,14 @@ func (s *StorageFile) SetSession(id string, data *gmap.StrAnyMap, ttl time.Durat
 			return err
 		}
 	}
-	file, err := gfile.OpenWithFlag(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC)
+	file, err := gfile.OpenWithFlagPerm(
+		path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.ModePerm,
+	)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
-	if _, err = file.Write(gbinary.EncodeInt64(gtime.Millisecond())); err != nil {
+	if _, err = file.Write(gbinary.EncodeInt64(gtime.TimestampMilli())); err != nil {
 		return err
 	}
 	if _, err = file.Write(content); err != nil {
@@ -239,7 +234,7 @@ func (s *StorageFile) doUpdateTTL(id string) error {
 	if err != nil {
 		return err
 	}
-	if _, err = file.WriteAt(gbinary.EncodeInt64(gtime.Millisecond()), 0); err != nil {
+	if _, err = file.WriteAt(gbinary.EncodeInt64(gtime.TimestampMilli()), 0); err != nil {
 		return err
 	}
 	return file.Close()

@@ -1,5 +1,5 @@
 # GoFrame
-[![Go Doc](https://godoc.org/github.com/gogf/gf?status.svg)](https://godoc.org/github.com/gogf/gf/g#pkg-subdirectories) 
+[![Go Doc](https://godoc.org/github.com/gogf/gf?status.svg)](https://godoc.org/github.com/gogf/gf) 
 [![Build Status](https://travis-ci.org/gogf/gf.svg?branch=master)](https://travis-ci.org/gogf/gf) 
 [![Go Report](https://goreportcard.com/badge/github.com/gogf/gf?v=1)](https://goreportcard.com/report/github.com/gogf/gf)
 [![Code Coverage](https://codecov.io/gh/gogf/gf/branch/master/graph/badge.svg)](https://codecov.io/gh/gogf/gf/branch/master)
@@ -8,21 +8,27 @@
 
 [English](README.MD) | 简体中文
 
-`GF(Go Frame)`是一款模块化、高性能、生产级的Go基础开发框架。实现了比较完善的基础设施建设，包括常用的核心开发组件，
-如：缓存、日志、文件、时间、队列、数组、集合、字符串、定时器、命令行、文件锁、内存锁、对象池、连接池、资源管理、数据校验、数据编码、文件监控、
-定时任务、数据库ORM、TCP/UDP组件、进程管理/通信、并发安全容器等等。
-并提供了Web服务开发的系列核心组件，如：Router、Cookie、Session、Middleware、服务注册、配置管理、模板引擎等等，
-支持热重启、热更新、多域名、多端口、多服务、HTTPS、Rewrite等特性。
+`GF(Go Frame)`是一款模块化、高性能、生产级的Go基础开发框架。
+实现了比较完善的基础设施建设以及开发工具链，提供了常用的基础开发模块，
+如：缓存、日志、队列、数组、集合、容器、定时器、命令行、内存锁、对象池、
+配置管理、资源管理、数据校验、数据编码、定时任务、数据库ORM、TCP/UDP组件、进程管理/通信等等。
+并提供了Web服务开发的系列核心组件，如：Router、Cookie、Session、Middleware、服务注册、模板引擎等等，
+支持热重启、热更新、域名绑定、TLS/HTTPS、Rewrite等特性。
 
 
 # 特点
 * 模块化、松耦合设计；
 * 模块丰富，开箱即用；
-* 简便及可维护性为宗旨；
+* 简便易用，易于维护；
+* 社区活跃，大牛谦逊低调脾气好；
+* 高代码质量、高单元测试覆盖率；
 * 详尽的开发文档及示例；
 * 完善的本地中文化支持；
 * 更适合企业及团队使用；
-* 更多请查阅文档及源码；
+
+# 地址
+- **主库**：https://github.com/gogf/gf 
+- **码云**：https://gitee.com/johng/gf 
 
 # 安装
 ```html
@@ -40,46 +46,95 @@ golang版本 >= 1.11
 
 # 架构
 <div align=center>
-<img src="https://goframe.org/images/arch.png?v=10"/>
+<img src="https://goframe.org/images/arch.png?v=11"/>
 </div>
 
+# 性能
+
+以下是目前最流行的`WEB Server` Golang框架/类库性能测试结果。
+性能测试用例源代码仓库: https://github.com/gogf/gf-performance
+
+## 环境:
+
+    OS   : Ubuntu 18.04 amd64
+    CPU  : AMD A8-6600K x 4
+    MEM  : 32GB
+    GO   : v1.13.4
+
+## 工具
+
+`ab`: Apache HTTP server benchmarking tool.
+
+测试命令:
+```
+ab -t 10 -c 100 http://127.0.0.1:3000/hello
+ab -t 10 -c 100 http://127.0.0.1:3000/query?id=10000
+ab -t 10 -c 100 http://127.0.0.1:3000/json
+```
+并发客户端数量从 `100` 递增到 `10000`。
+
+> 每个项目的每个用例均运行`5`次，取最优的结果展示。
+
+## 1. Hello World
+<table>
+<tr>
+<th>Throughputs</th>
+<th>Mean Latency</th>
+<th>P99 Latency</th>
+</tr>
+<tr>
+<td width="30%"><img src="http://gfcdn.johng.cn/images/performance/throughputs1.jpeg"></td>
+<td width="30%"><img src="http://gfcdn.johng.cn/images/performance/meanlatency1.jpeg"></td>
+<td width="30%"><img src="http://gfcdn.johng.cn/images/performance/p99latency1.jpeg"></td>
+</tr>
+</table>
+
+## 2. Json Response
+<table>
+<tr>
+<th>Throughputs</th>
+<th>Mean Latency</th>
+<th>P99 Latency</th>
+</tr>
+<tr>
+<td width="30%"><img src="http://gfcdn.johng.cn/images/performance/throughputs3.jpeg"></td>
+<td width="30%"><img src="http://gfcdn.johng.cn/images/performance/meanlatency3.jpeg"></td>
+<td width="30%"><img src="http://gfcdn.johng.cn/images/performance/p99latency3.jpeg"></td>
+</tr>
+</table>
 
 
 # 文档
 
-开发文档：[https://goframe.org](https://goframe.org)
+开发文档：https://goframe.org
 
-接口文档：[https://godoc.org/github.com/gogf/gf](https://godoc.org/github.com/gogf/gf)
+接口文档：https://godoc.org/github.com/gogf/gf
 
-# 使用
-```go
-package main
+# 帮助
+- QQ交流群：[116707870](//shang.qq.com/wpa/qunwpa?idkey=195f91eceeb5d7fa76009b7cd5a4641f70bf4897b7f5a520635eb26ff17adfe7)
+- WX交流群：微信添加`389961817`备注`GF`
+- 主库ISSUE：https://github.com/gogf/gf/issues
 
-import (
-    "github.com/gogf/gf/frame/g"
-    "github.com/gogf/gf/net/ghttp"
-)
-
-func main() {
-    s := g.Server()
-    s.BindHandler("/", func(r *ghttp.Request) {
-        r.Response.Write("Hello World")
-    })
-    s.Run()
-}
-```
-
-[更多..](https://goframe.org/start/index)
-
+> 建议通过阅读`Gorame`的源码以及API文档深度学习`GoFrame`，了解更多的精妙设计。
 
 # 协议
 
 `GF` 使用非常友好的 [MIT](LICENSE) 开源协议进行发布，永久`100%`开源免费。
 
+# 贡献
+
+感谢所有参与`GoFrame`开发的贡献者。 [[贡献者列表](https://github.com/gogf/gf/graphs/contributors)].
+<a href="https://github.com/gogf/gf/graphs/contributors"><img src="https://opencollective.com/goframe/contributors.svg?width=890&button=false" /></a>
+
+
 # 捐赠
 
 如果您喜欢`GF`，要不[给开发者来杯咖啡吧](DONATOR.MD)！
 请在捐赠时备注您的`github`/`gitee`账号名称。
+
+# 赞助
+
+赞助支持`GF`框架的快速研发，如果您感兴趣，请联系 微信 `389961817` / 邮件 `john@goframe.org`。
 
 # 感谢
 <a href="https://www.jetbrains.com/?from=GoFrame"><img src="https://goframe.org/images/jetbrains.png" width="100" alt="JetBrains"/></a>

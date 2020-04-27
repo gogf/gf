@@ -15,17 +15,17 @@ import (
 )
 
 func Test_NotFound(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		teatFile := gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/readline/error.log"
 		callback := func(line string) {
 		}
 		err := gfile.ReadLines(teatFile, callback)
-		gtest.AssertNE(err, nil)
+		t.AssertNE(err, nil)
 	})
 }
 
 func Test_ReadLines(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		expectList := []string{"a", "b", "c", "d", "e"}
 
 		getList := make([]string, 0)
@@ -36,13 +36,13 @@ func Test_ReadLines(t *testing.T) {
 		teatFile := gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/readline/file.log"
 		err := gfile.ReadLines(teatFile, callback)
 
-		gtest.AssertEQ(getList, expectList)
-		gtest.AssertEQ(err, nil)
+		t.AssertEQ(getList, expectList)
+		t.AssertEQ(err, nil)
 	})
 }
 
 func Test_ReadByteLines(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		expectList := [][]byte{[]byte("a"), []byte("b"), []byte("c"), []byte("d"), []byte("e")}
 
 		getList := make([][]byte, 0)
@@ -53,7 +53,7 @@ func Test_ReadByteLines(t *testing.T) {
 		teatFile := gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata/readline/file.log"
 		err := gfile.ReadByteLines(teatFile, callback)
 
-		gtest.AssertEQ(getList, expectList)
-		gtest.AssertEQ(err, nil)
+		t.AssertEQ(getList, expectList)
+		t.AssertEQ(err, nil)
 	})
 }

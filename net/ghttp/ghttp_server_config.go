@@ -9,6 +9,7 @@ package ghttp
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/gogf/gf/internal/intlog"
 	"net/http"
 	"strconv"
 	"time"
@@ -78,58 +79,62 @@ type ServerConfig struct {
 	Graceful          bool              // Other: Enable graceful reload feature for all servers of the process.
 }
 
-// defaultServerConfig is the default configuration object for server.
-var defaultServerConfig = ServerConfig{
-	Address:           "",
-	HTTPSAddr:         "",
-	Handler:           nil,
-	ReadTimeout:       60 * time.Second,
-	WriteTimeout:      60 * time.Second,
-	IdleTimeout:       60 * time.Second,
-	MaxHeaderBytes:    1024,
-	KeepAlive:         true,
-	IndexFiles:        []string{"index.html", "index.htm"},
-	IndexFolder:       false,
-	ServerAgent:       "GF HTTP Server",
-	ServerRoot:        "",
-	StaticPaths:       make([]staticPathItem, 0),
-	FileServerEnabled: false,
-	CookieMaxAge:      time.Hour * 24 * 365,
-	CookiePath:        "/",
-	CookieDomain:      "",
-	SessionMaxAge:     time.Hour * 24,
-	SessionIdName:     "gfsessionid",
-	SessionPath:       gsession.DefaultStorageFilePath,
-	Logger:            glog.New(),
-	LogStdout:         true,
-	ErrorStack:        true,
-	ErrorLogEnabled:   true,
-	ErrorLogPattern:   "error-{Ymd}.log",
-	AccessLogEnabled:  false,
-	AccessLogPattern:  "access-{Ymd}.log",
-	DumpRouterMap:     true,
-	FormParsingMemory: 100 * 1024 * 1024, // 100MB
-	Rewrites:          make(map[string]string),
-	Graceful:          true,
-}
-
 // Config returns the default ServerConfig object.
+// Note that, do not define this default configuration to local variable,
+// as there're some pointer attributes that may be shared in different servers.
 func Config() ServerConfig {
-	return defaultServerConfig
+	return ServerConfig{
+		Address:           "",
+		HTTPSAddr:         "",
+		Handler:           nil,
+		ReadTimeout:       60 * time.Second,
+		WriteTimeout:      60 * time.Second,
+		IdleTimeout:       60 * time.Second,
+		MaxHeaderBytes:    1024,
+		KeepAlive:         true,
+		IndexFiles:        []string{"index.html", "index.htm"},
+		IndexFolder:       false,
+		ServerAgent:       "GF HTTP Server",
+		ServerRoot:        "",
+		StaticPaths:       make([]staticPathItem, 0),
+		FileServerEnabled: false,
+		CookieMaxAge:      time.Hour * 24 * 365,
+		CookiePath:        "/",
+		CookieDomain:      "",
+		SessionMaxAge:     time.Hour * 24,
+		SessionIdName:     "gfsessionid",
+		SessionPath:       gsession.DefaultStorageFilePath,
+		Logger:            glog.New(),
+		LogStdout:         true,
+		ErrorStack:        true,
+		ErrorLogEnabled:   true,
+		ErrorLogPattern:   "error-{Ymd}.log",
+		AccessLogEnabled:  false,
+		AccessLogPattern:  "access-{Ymd}.log",
+		DumpRouterMap:     true,
+		FormParsingMemory: 100 * 1024 * 1024, // 100MB
+		Rewrites:          make(map[string]string),
+		Graceful:          true,
+	}
 }
 
-// ConfigFromMap creates and returns a ServerConfig object with given map.
+// ConfigFromMap creates and returns a ServerConfig object with given map and
+// default configuration object.
 func ConfigFromMap(m map[string]interface{}) (ServerConfig, error) {
-	config := defaultServerConfig
+	config := Config()
 	if err := gconv.Struct(m, &config); err != nil {
 		return config, err
 	}
 	return config, nil
 }
 
-// Handler returns the request handler of the server.
-func (s *Server) Handler() http.Handler {
-	return s.config.Handler
+// SetConfigWithMap sets the configuration for the server using map.
+func (s *Server) SetConfigWithMap(m map[string]interface{}) error {
+	// Update the current configuration object.
+	if err := gconv.Struct(m, &s.config); err != nil {
+		return err
+	}
+	return s.SetConfig(s.config)
 }
 
 // SetConfig sets the configuration for the server.
@@ -139,21 +144,21 @@ func (s *Server) SetConfig(c ServerConfig) error {
 	if c.ServerRoot != "" {
 		s.SetServerRoot(c.ServerRoot)
 	}
+	if len(c.SearchPaths) > 0 {
+		paths := c.SearchPaths
+		c.SearchPaths = []string{}
+		for _, v := range paths {
+			s.AddSearchPath(v)
+		}
+	}
 	// HTTPS.
 	if c.TLSConfig == nil && c.HTTPSCertPath != "" {
 		s.EnableHTTPS(c.HTTPSCertPath, c.HTTPSKeyPath)
 	}
 	SetGraceful(c.Graceful)
-	return nil
-}
 
-// SetConfigWithMap sets the configuration for the server using map.
-func (s *Server) SetConfigWithMap(m map[string]interface{}) error {
-	config, err := ConfigFromMap(m)
-	if err != nil {
-		return err
-	}
-	return s.SetConfig(config)
+	intlog.Printf("SetConfig: %+v", s.config)
+	return nil
 }
 
 // SetAddr sets the listening address for the server.
@@ -206,7 +211,7 @@ func (s *Server) EnableHTTPS(certFile, keyFile string, tlsConfig ...*tls.Config)
 		}
 	}
 	if certFileRealPath == "" {
-		glog.Fatal(fmt.Sprintf(`[ghttp] EnableHTTPS failed: certFile "%s" does not exist`, certFile))
+		s.Logger().Fatal(fmt.Sprintf(`[ghttp] EnableHTTPS failed: certFile "%s" does not exist`, certFile))
 	}
 	keyFileRealPath := gfile.RealPath(keyFile)
 	if keyFileRealPath == "" {
@@ -216,7 +221,7 @@ func (s *Server) EnableHTTPS(certFile, keyFile string, tlsConfig ...*tls.Config)
 		}
 	}
 	if keyFileRealPath == "" {
-		glog.Fatal(fmt.Sprintf(`[ghttp] EnableHTTPS failed: keyFile "%s" does not exist`, keyFile))
+		s.Logger().Fatal(fmt.Sprintf(`[ghttp] EnableHTTPS failed: keyFile "%s" does not exist`, keyFile))
 	}
 	s.config.HTTPSCertPath = certFileRealPath
 	s.config.HTTPSKeyPath = keyFileRealPath
@@ -268,4 +273,12 @@ func (s *Server) SetView(view *gview.View) {
 // GetName returns the name of the server.
 func (s *Server) GetName() string {
 	return s.name
+}
+
+// Handler returns the request handler of the server.
+func (s *Server) Handler() http.Handler {
+	if s.config.Handler == nil {
+		return s
+	}
+	return s.config.Handler
 }

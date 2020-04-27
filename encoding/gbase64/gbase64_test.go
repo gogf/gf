@@ -8,7 +8,6 @@ package gbase64_test
 
 import (
 	"github.com/gogf/gf/debug/gdebug"
-	"github.com/gogf/gf/os/gfile"
 	"testing"
 
 	"github.com/gogf/gf/encoding/gbase64"
@@ -46,52 +45,52 @@ var pairs = []testPair{
 }
 
 func Test_Basic(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		for k := range pairs {
 			// Encode
-			gtest.Assert(gbase64.Encode([]byte(pairs[k].decoded)), []byte(pairs[k].encoded))
-			gtest.Assert(gbase64.EncodeToString([]byte(pairs[k].decoded)), pairs[k].encoded)
-			gtest.Assert(gbase64.EncodeString(pairs[k].decoded), pairs[k].encoded)
+			t.Assert(gbase64.Encode([]byte(pairs[k].decoded)), []byte(pairs[k].encoded))
+			t.Assert(gbase64.EncodeToString([]byte(pairs[k].decoded)), pairs[k].encoded)
+			t.Assert(gbase64.EncodeString(pairs[k].decoded), pairs[k].encoded)
 
 			// Decode
 			r1, _ := gbase64.Decode([]byte(pairs[k].encoded))
-			gtest.Assert(r1, []byte(pairs[k].decoded))
+			t.Assert(r1, []byte(pairs[k].decoded))
 
 			r2, _ := gbase64.DecodeString(pairs[k].encoded)
-			gtest.Assert(r2, []byte(pairs[k].decoded))
+			t.Assert(r2, []byte(pairs[k].decoded))
 
 			r3, _ := gbase64.DecodeToString(pairs[k].encoded)
-			gtest.Assert(r3, pairs[k].decoded)
+			t.Assert(r3, pairs[k].decoded)
 		}
 	})
 }
 
 func Test_File(t *testing.T) {
-	path := gfile.Join(gdebug.CallerDirectory(), "testdata", "test")
+	path := gdebug.TestDataPath("test")
 	expect := "dGVzdA=="
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		b, err := gbase64.EncodeFile(path)
-		gtest.Assert(err, nil)
-		gtest.Assert(string(b), expect)
+		t.Assert(err, nil)
+		t.Assert(string(b), expect)
 	})
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		s, err := gbase64.EncodeFileToString(path)
-		gtest.Assert(err, nil)
-		gtest.Assert(s, expect)
+		t.Assert(err, nil)
+		t.Assert(s, expect)
 	})
 }
 
 func Test_File_Error(t *testing.T) {
 	path := "none-exist-file"
 	expect := ""
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		b, err := gbase64.EncodeFile(path)
-		gtest.AssertNE(err, nil)
-		gtest.Assert(string(b), expect)
+		t.AssertNE(err, nil)
+		t.Assert(string(b), expect)
 	})
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		s, err := gbase64.EncodeFileToString(path)
-		gtest.AssertNE(err, nil)
-		gtest.Assert(s, expect)
+		t.AssertNE(err, nil)
+		t.Assert(s, expect)
 	})
 }

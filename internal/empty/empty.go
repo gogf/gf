@@ -12,8 +12,8 @@ import (
 )
 
 // IsEmpty checks whether given <value> empty.
-// It returns true if <value> is in: 0, nil, false, "", len(slice/map/chan) == 0.
-// Or else it returns true.
+// It returns true if <value> is in: 0, nil, false, "", len(slice/map/chan) == 0,
+// or else it returns false.
 func IsEmpty(value interface{}) bool {
 	if value == nil {
 		return true
@@ -49,9 +49,16 @@ func IsEmpty(value interface{}) bool {
 		return value == ""
 	case []byte:
 		return len(value) == 0
+	case []rune:
+		return len(value) == 0
 	default:
 		// Finally using reflect.
-		rv := reflect.ValueOf(value)
+		var rv reflect.Value
+		if v, ok := value.(reflect.Value); ok {
+			rv = v
+		} else {
+			rv = reflect.ValueOf(value)
+		}
 		switch rv.Kind() {
 		case reflect.Chan,
 			reflect.Map,
@@ -72,12 +79,17 @@ func IsEmpty(value interface{}) bool {
 }
 
 // IsNil checks whether given <value> is nil.
-// Note that it's using reflect feature which affects performance a little bit.
+// Note that it might use reflect feature which affects performance a little bit.
 func IsNil(value interface{}) bool {
 	if value == nil {
 		return true
 	}
-	rv := reflect.ValueOf(value)
+	var rv reflect.Value
+	if v, ok := value.(reflect.Value); ok {
+		rv = v
+	} else {
+		rv = reflect.ValueOf(value)
+	}
 	switch rv.Kind() {
 	case reflect.Chan,
 		reflect.Map,

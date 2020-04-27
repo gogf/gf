@@ -7,7 +7,7 @@ import (
 	"github.com/gogf/gf/util/gpage"
 )
 
-// 自定义分页名称
+// pageContent customizes the page tag name.
 func pageContent(page *gpage.Page) string {
 	page.NextPageTag = "NextPage"
 	page.PrevPageTag = "PrevPage"
@@ -15,16 +15,16 @@ func pageContent(page *gpage.Page) string {
 	page.LastPageTag = "LastPage"
 	pageStr := page.FirstPage()
 	pageStr += page.PrevPage()
-	pageStr += page.PageBar("current-page")
+	pageStr += page.PageBar()
 	pageStr += page.NextPage()
 	pageStr += page.LastPage()
 	return pageStr
 }
 
 func main() {
-	s := ghttp.GetServer()
+	s := g.Server()
 	s.BindHandler("/page/custom2/*page", func(r *ghttp.Request) {
-		page := gpage.New(100, 10, r.Get("page"), r.URL.String(), r.Router)
+		page := r.GetPage(100, 10)
 		buffer, _ := gview.ParseContent(`
         <html>
             <head>

@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/container/gset"
+	"github.com/gogf/gf/internal/intlog"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
@@ -61,15 +62,24 @@ const (
 )
 
 const (
-	REPEAT_EVENT_FILTER_DURATION = time.Millisecond // Duration for repeated event filter.
-	gFSNOTIFY_EVENT_EXIT         = "exit"           // Custom exit event for internal usage.
+	repeatEventFilterDuration = time.Millisecond // Duration for repeated event filter.
+	callbackExitEventPanicStr = "exit"           // Custom exit event for internal usage.
 )
 
 var (
-	defaultWatcher, _   = New()                   // Default watcher.
+	defaultWatcher      *Watcher                  // Default watcher.
 	callbackIdMap       = gmap.NewIntAnyMap(true) // Id to callback mapping.
 	callbackIdGenerator = gtype.NewInt()          // Atomic id generator for callback.
 )
+
+func init() {
+	var err error
+	defaultWatcher, err = New()
+	if err != nil {
+		// Default watcher object must be created, or else it panics.
+		panic(fmt.Sprintf(`creating default fsnotify watcher failed: %s`, err.Error()))
+	}
+}
 
 // New creates and returns a new watcher.
 // Note that the watcher number is limited by the file handle setting of the system.
@@ -85,6 +95,7 @@ func New() (*Watcher, error) {
 	if watcher, err := fsnotify.NewWatcher(); err == nil {
 		w.watcher = watcher
 	} else {
+		intlog.Printf("New watcher failed: %v", err)
 		return nil, err
 	}
 	w.startWatchLoop()
@@ -125,7 +136,8 @@ func RemoveCallback(callbackId int) error {
 	return nil
 }
 
-// Exit is only used in the callback function, which can be used to remove current callback from the watcher.
+// Exit is only used in the callback function, which can be used to remove current callback
+// of itself from the watcher.
 func Exit() {
-	panic(gFSNOTIFY_EVENT_EXIT)
+	panic(callbackExitEventPanicStr)
 }

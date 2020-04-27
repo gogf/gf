@@ -23,11 +23,11 @@ func (r *Request) SetQuery(key string, value interface{}) {
 }
 
 // GetQuery retrieves and returns parameter with given name <key> from query string
-// and request body. It returns <def> if <key> does not exist in the query. It returns nil
-// if <def> is not passed.
+// and request body. It returns <def> if <key> does not exist in the query and <def> is given,
+// or else it returns nil.
 //
-// Note that if there're multiple parameters with the same name, the parameters are retrieved and overwrote
-// in order of priority: query > body.
+// Note that if there're multiple parameters with the same name, the parameters are retrieved
+// and overwrote in order of priority: query > body.
 func (r *Request) GetQuery(key string, def ...interface{}) interface{} {
 	r.parseQuery()
 	if len(r.queryMap) > 0 {

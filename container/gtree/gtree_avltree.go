@@ -18,7 +18,7 @@ import (
 
 // AVLTree holds elements of the AVL tree.
 type AVLTree struct {
-	mu         *rwmutex.RWMutex
+	mu         rwmutex.RWMutex
 	root       *AVLTreeNode
 	comparator func(v1, v2 interface{}) int
 	size       int
@@ -38,7 +38,7 @@ type AVLTreeNode struct {
 // which is false in default.
 func NewAVLTree(comparator func(v1, v2 interface{}) int, safe ...bool) *AVLTree {
 	return &AVLTree{
-		mu:         rwmutex.New(safe...),
+		mu:         rwmutex.Create(safe...),
 		comparator: comparator,
 	}
 }
@@ -55,7 +55,7 @@ func NewAVLTreeFrom(comparator func(v1, v2 interface{}) int, data map[interface{
 }
 
 // Clone returns a new tree with a copy of current tree.
-func (tree *AVLTree) Clone(safe ...bool) *AVLTree {
+func (tree *AVLTree) Clone() *AVLTree {
 	newTree := NewAVLTree(tree.comparator, !tree.mu.IsSafe())
 	newTree.Sets(tree.Map())
 	return newTree
@@ -93,7 +93,7 @@ func (tree *AVLTree) Search(key interface{}) (value interface{}, found bool) {
 func (tree *AVLTree) doSearch(key interface{}) (node *AVLTreeNode, found bool) {
 	node = tree.root
 	for node != nil {
-		cmp := tree.comparator(key, node.Key)
+		cmp := tree.getComparator()(key, node.Key)
 		switch {
 		case cmp == 0:
 			return node, true
@@ -331,7 +331,7 @@ func (tree *AVLTree) Floor(key interface{}) (floor *AVLTreeNode, found bool) {
 	defer tree.mu.RUnlock()
 	n := tree.root
 	for n != nil {
-		c := tree.comparator(key, n.Key)
+		c := tree.getComparator()(key, n.Key)
 		switch {
 		case c == 0:
 			return n, true
@@ -361,7 +361,7 @@ func (tree *AVLTree) Ceiling(key interface{}) (ceiling *AVLTreeNode, found bool)
 	defer tree.mu.RUnlock()
 	n := tree.root
 	for n != nil {
-		c := tree.comparator(key, n.Key)
+		c := tree.getComparator()(key, n.Key)
 		switch {
 		case c == 0:
 			return n, true
@@ -465,7 +465,7 @@ func (tree *AVLTree) IteratorFrom(key interface{}, match bool, f func(key, value
 	tree.IteratorAscFrom(key, match, f)
 }
 
-// IteratorAsc iterates the tree in ascending order with given callback function <f>.
+// IteratorAsc iterates the tree readonly in ascending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
 func (tree *AVLTree) IteratorAsc(f func(key, value interface{}) bool) {
 	tree.mu.RLock()
@@ -473,7 +473,7 @@ func (tree *AVLTree) IteratorAsc(f func(key, value interface{}) bool) {
 	tree.doIteratorAsc(tree.bottom(0), f)
 }
 
-// IteratorAscFrom iterates the tree in ascending order with given callback function <f>.
+// IteratorAscFrom iterates the tree readonly in ascending order with given callback function <f>.
 // The parameter <key> specifies the start entry for iterating. The <match> specifies whether
 // starting iterating if the <key> is fully matched, or else using index searching iterating.
 // If <f> returns true, then it continues iterating; or false to stop.
@@ -499,7 +499,7 @@ func (tree *AVLTree) doIteratorAsc(node *AVLTreeNode, f func(key, value interfac
 	}
 }
 
-// IteratorDesc iterates the tree in descending order with given callback function <f>.
+// IteratorDesc iterates the tree readonly in descending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
 func (tree *AVLTree) IteratorDesc(f func(key, value interface{}) bool) {
 	tree.mu.RLock()
@@ -507,7 +507,7 @@ func (tree *AVLTree) IteratorDesc(f func(key, value interface{}) bool) {
 	tree.doIteratorDesc(tree.bottom(1), f)
 }
 
-// IteratorDescFrom iterates the tree in descending order with given callback function <f>.
+// IteratorDescFrom iterates the tree readonly in descending order with given callback function <f>.
 // The parameter <key> specifies the start entry for iterating. The <match> specifies whether
 // starting iterating if the <key> is fully matched, or else using index searching iterating.
 // If <f> returns true, then it continues iterating; or false to stop.
@@ -541,7 +541,7 @@ func (tree *AVLTree) put(key interface{}, value interface{}, p *AVLTreeNode, qp 
 		return true
 	}
 
-	c := tree.comparator(key, q.Key)
+	c := tree.getComparator()(key, q.Key)
 	if c == 0 {
 		q.Key = key
 		q.Value = value
@@ -566,7 +566,7 @@ func (tree *AVLTree) remove(key interface{}, qp **AVLTreeNode) (value interface{
 		return nil, false
 	}
 
-	c := tree.comparator(key, q.Key)
+	c := tree.getComparator()(key, q.Key)
 	if c == 0 {
 		tree.size--
 		value = q.Value
@@ -783,4 +783,13 @@ func output(node *AVLTreeNode, prefix string, isTail bool, str *string) {
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (tree *AVLTree) MarshalJSON() ([]byte, error) {
 	return json.Marshal(tree.Map())
+}
+
+// getComparator returns the comparator if it's previously set,
+// or else it panics.
+func (tree *AVLTree) getComparator() func(a, b interface{}) int {
+	if tree.comparator == nil {
+		panic("comparator is missing for tree")
+	}
+	return tree.comparator
 }

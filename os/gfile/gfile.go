@@ -8,13 +8,10 @@
 package gfile
 
 import (
-	"bytes"
-	"errors"
+	"github.com/gogf/gf/text/gstr"
 	"os"
 	"os/exec"
-	"os/user"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"time"
 
@@ -30,16 +27,31 @@ const (
 var (
 	// Default perm for file opening.
 	DefaultPerm = os.FileMode(0666)
+
 	// The absolute file path for main package.
 	// It can be only checked and set once.
 	mainPkgPath = gtype.NewString()
+
+	// selfPath is the current running binary path.
+	// As it is most commonly used, it is so defined as an internal package variable.
+	selfPath = ""
+
 	// Temporary directory of system.
 	tempDir = "/tmp"
 )
 
 func init() {
-	if !Exists(tempDir) {
+	// Initialize internal package variable: tempDir.
+	if Separator == "/" && !Exists(tempDir) {
 		tempDir = os.TempDir()
+	}
+	// Initialize internal package variable: selfPath.
+	selfPath, _ = exec.LookPath(os.Args[0])
+	if selfPath != "" {
+		selfPath, _ = filepath.Abs(selfPath)
+	}
+	if selfPath == "" {
+		selfPath, _ = filepath.Abs(os.Args[0])
 	}
 }
 
@@ -58,22 +70,27 @@ func Mkdir(path string) error {
 func Create(path string) (*os.File, error) {
 	dir := Dir(path)
 	if !Exists(dir) {
-		Mkdir(dir)
+		if err := Mkdir(dir); err != nil {
+			return nil, err
+		}
 	}
 	return os.Create(path)
 }
 
-// Open opens file/directory readonly.
+// Open opens file/directory READONLY.
 func Open(path string) (*os.File, error) {
 	return os.Open(path)
 }
 
-// OpenFile opens file/directory with given <flag> and <perm>.
+// OpenFile opens file/directory with custom <flag> and <perm>.
+// The parameter <flag> is like: O_RDONLY, O_RDWR, O_RDWR|O_CREATE|O_TRUNC, etc.
 func OpenFile(path string, flag int, perm os.FileMode) (*os.File, error) {
 	return os.OpenFile(path, flag, perm)
 }
 
-// OpenWithFlag opens file/directory with default perm and given <flag>.
+// OpenWithFlag opens file/directory with default perm and custom <flag>.
+// The default <perm> is 0666.
+// The parameter <flag> is like: O_RDONLY, O_RDWR, O_RDWR|O_CREATE|O_TRUNC, etc.
 func OpenWithFlag(path string, flag int) (*os.File, error) {
 	f, err := os.OpenFile(path, flag, DefaultPerm)
 	if err != nil {
@@ -82,9 +99,11 @@ func OpenWithFlag(path string, flag int) (*os.File, error) {
 	return f, nil
 }
 
-// OpenWithFlagPerm opens file/directory with given <flag> and <perm>.
+// OpenWithFlagPerm opens file/directory with custom <flag> and <perm>.
+// The parameter <flag> is like: O_RDONLY, O_RDWR, O_RDWR|O_CREATE|O_TRUNC, etc.
+// The parameter <perm> is like: 0600, 0666, 0777, etc.
 func OpenWithFlagPerm(path string, flag int, perm os.FileMode) (*os.File, error) {
-	f, err := os.OpenFile(path, flag, os.FileMode(perm))
+	f, err := os.OpenFile(path, flag, perm)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +112,14 @@ func OpenWithFlagPerm(path string, flag int, perm os.FileMode) (*os.File, error)
 
 // Join joins string array paths with file separator of current system.
 func Join(paths ...string) string {
-	return strings.Join(paths, Separator)
+	var s string
+	for _, path := range paths {
+		if s != "" {
+			s += Separator
+		}
+		s += gstr.TrimRight(path, Separator)
+	}
+	return s
 }
 
 // Exists checks whether given <path> exist.
@@ -147,11 +173,12 @@ func Stat(path string) (os.FileInfo, error) {
 }
 
 // Move renames (moves) <src> to <dst> path.
+// If <dst> already exists and is not a directory, it'll be replaced.
 func Move(src string, dst string) error {
 	return os.Rename(src, dst)
 }
 
-// Alias of Move.
+// Rename is alias of Move.
 // See Move.
 func Rename(src string, dst string) error {
 	return Move(src, dst)
@@ -198,6 +225,7 @@ func Glob(pattern string, onlyNames ...bool) ([]string, error) {
 // Remove deletes all file/directory with <path> parameter.
 // If parameter <path> is directory, it deletes it recursively.
 func Remove(path string) error {
+	//intlog.Print(`Remove:`, path)
 	return os.RemoveAll(path)
 }
 
@@ -268,17 +296,7 @@ func RealPath(path string) string {
 
 // SelfPath returns absolute file path of current running process(binary).
 func SelfPath() string {
-	path, _ := exec.LookPath(os.Args[0])
-	if path != "" {
-		path, _ = filepath.Abs(path)
-		if path != "" {
-			return path
-		}
-	}
-	if path == "" {
-		path, _ = filepath.Abs(os.Args[0])
-	}
-	return path
+	return selfPath
 }
 
 // SelfName returns file name of current running process(binary).
@@ -291,7 +309,7 @@ func SelfDir() string {
 	return filepath.Dir(SelfPath())
 }
 
-// Basename returns the last element of path.
+// Basename returns the last element of path, which contains file extension.
 // Trailing path separators are removed before extracting the last element.
 // If the path is empty, Base returns ".".
 // If the path consists entirely of separators, Basename returns a single separator.
@@ -299,7 +317,7 @@ func Basename(path string) string {
 	return filepath.Base(path)
 }
 
-// Name returns the last element of path without extension.
+// Name returns the last element of path without file extension.
 func Name(path string) string {
 	base := filepath.Base(path)
 	if i := strings.LastIndexByte(base, '.'); i != -1 {
@@ -364,52 +382,14 @@ func ExtName(path string) string {
 	return strings.TrimLeft(Ext(path), ".")
 }
 
-// Home returns absolute path of current user's home directory.
-func Home() (string, error) {
-	u, err := user.Current()
-	if nil == err {
-		return u.HomeDir, nil
+// TempDir retrieves and returns the temporary directory of current system.
+// It return "/tmp" is current in *nix system, or else it returns os.TempDir().
+// The optional parameter <names> specifies the its sub-folders/sub-files,
+// which will be joined with current system separator and returned with the path.
+func TempDir(names ...string) string {
+	path := tempDir
+	for _, name := range names {
+		path += Separator + name
 	}
-	if "windows" == runtime.GOOS {
-		return homeWindows()
-	}
-	return homeUnix()
-}
-
-func homeUnix() (string, error) {
-	if home := os.Getenv("HOME"); home != "" {
-		return home, nil
-	}
-	var stdout bytes.Buffer
-	cmd := exec.Command("sh", "-c", "eval echo ~$USER")
-	cmd.Stdout = &stdout
-	if err := cmd.Run(); err != nil {
-		return "", err
-	}
-
-	result := strings.TrimSpace(stdout.String())
-	if result == "" {
-		return "", errors.New("blank output when reading home directory")
-	}
-
-	return result, nil
-}
-
-func homeWindows() (string, error) {
-	drive := os.Getenv("HOMEDRIVE")
-	path := os.Getenv("HOMEPATH")
-	home := drive + path
-	if drive == "" || path == "" {
-		home = os.Getenv("USERPROFILE")
-	}
-	if home == "" {
-		return "", errors.New("HOMEDRIVE, HOMEPATH, and USERPROFILE are blank")
-	}
-
-	return home, nil
-}
-
-// See os.TempDir().
-func TempDir() string {
-	return tempDir
+	return path
 }

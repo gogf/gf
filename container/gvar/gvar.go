@@ -46,14 +46,21 @@ func Create(value interface{}, safe ...bool) Var {
 	return v
 }
 
+// Clone does a shallow copy of current Var and returns a pointer to this Var.
+func (v *Var) Clone() *Var {
+	return New(v.Val(), v.safe)
+}
+
 // Set sets <value> to <v>, and returns the old value.
 func (v *Var) Set(value interface{}) (old interface{}) {
 	if v.safe {
-		old = v.value.(*gtype.Interface).Set(value)
-	} else {
-		old = v.value
-		v.value = value
+		if t, ok := v.value.(*gtype.Interface); ok {
+			old = t.Set(value)
+			return
+		}
 	}
+	old = v.value
+	v.value = value
 	return
 }
 
@@ -63,7 +70,9 @@ func (v *Var) Val() interface{} {
 		return nil
 	}
 	if v.safe {
-		return v.value.(*gtype.Interface).Val()
+		if t, ok := v.value.(*gtype.Interface); ok {
+			return t.Val()
+		}
 	}
 	return v.value
 }
@@ -333,5 +342,11 @@ func (v *Var) UnmarshalJSON(b []byte) error {
 		return err
 	}
 	v.Set(i)
+	return nil
+}
+
+// UnmarshalValue is an interface implement which sets any type of value for Var.
+func (v *Var) UnmarshalValue(value interface{}) error {
+	v.Set(value)
 	return nil
 }

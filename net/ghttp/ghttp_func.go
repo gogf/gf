@@ -13,9 +13,23 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
-// 构建请求参数，参数支持任意数据类型，常见参数类型为string/map。
-// 如果参数为map类型，参数值将会进行urlencode编码；可以通过 noUrlEncode:true 参数取消编码。
+// BuildParams builds the request string for the http client. The <params> can be type of:
+// string/[]byte/map/struct/*struct.
+//
+// The optional parameter <noUrlEncode> specifies whether ignore the url encoding for the data.
 func BuildParams(params interface{}, noUrlEncode ...bool) (encodedParamStr string) {
+	// If given string/[]byte, converts and returns it directly as string.
+	switch v := params.(type) {
+	case string, []byte:
+		return gconv.String(params)
+	case []interface{}:
+		if len(v) > 0 {
+			params = v[0]
+		} else {
+			params = nil
+		}
+	}
+	// Else converts it to map and does the url encoding.
 	m, urlEncode := gconv.Map(params), true
 	if len(m) == 0 {
 		return gconv.String(params)
@@ -37,14 +51,12 @@ func BuildParams(params interface{}, noUrlEncode ...bool) (encodedParamStr strin
 	return
 }
 
-// 友好地调用方法
+// niceCallFunc calls function <f> with exception capture logic.
 func niceCallFunc(f func()) {
 	defer func() {
 		if err := recover(); err != nil {
 			switch err {
-			case gEXCEPTION_EXIT:
-				fallthrough
-			case gEXCEPTION_EXIT_ALL:
+			case gEXCEPTION_EXIT, gEXCEPTION_EXIT_ALL:
 				return
 			default:
 				panic(err)

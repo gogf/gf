@@ -14,6 +14,8 @@ import (
 
 // MapField retrieves struct field as map[name/tag]*Field from <pointer>, and returns the map.
 //
+// The parameter <pointer> should be type of struct/*struct.
+//
 // The parameter <priority> specifies the priority tag array for retrieving from high to low.
 //
 // The parameter <recursive> specifies whether retrieving the struct field recursively.

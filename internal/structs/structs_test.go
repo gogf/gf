@@ -17,22 +17,22 @@ import (
 )
 
 func Test_Basic(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Id   int
 			Name string `params:"name"`
 			Pass string `my-tag1:"pass1" my-tag2:"pass2" params:"pass"`
 		}
 		var user User
-		gtest.Assert(structs.TagMapName(user, []string{"params"}, true), g.Map{"name": "Name", "pass": "Pass"})
-		gtest.Assert(structs.TagMapName(&user, []string{"params"}, true), g.Map{"name": "Name", "pass": "Pass"})
+		t.Assert(structs.TagMapName(user, []string{"params"}, true), g.Map{"name": "Name", "pass": "Pass"})
+		t.Assert(structs.TagMapName(&user, []string{"params"}, true), g.Map{"name": "Name", "pass": "Pass"})
 
-		gtest.Assert(structs.TagMapName(&user, []string{"params", "my-tag1"}, true), g.Map{"name": "Name", "pass": "Pass"})
-		gtest.Assert(structs.TagMapName(&user, []string{"my-tag1", "params"}, true), g.Map{"name": "Name", "pass1": "Pass"})
-		gtest.Assert(structs.TagMapName(&user, []string{"my-tag2", "params"}, true), g.Map{"name": "Name", "pass2": "Pass"})
+		t.Assert(structs.TagMapName(&user, []string{"params", "my-tag1"}, true), g.Map{"name": "Name", "pass": "Pass"})
+		t.Assert(structs.TagMapName(&user, []string{"my-tag1", "params"}, true), g.Map{"name": "Name", "pass1": "Pass"})
+		t.Assert(structs.TagMapName(&user, []string{"my-tag2", "params"}, true), g.Map{"name": "Name", "pass2": "Pass"})
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type Base struct {
 			Pass1 string `params:"password1"`
 			Pass2 string `params:"password2"`
@@ -43,14 +43,14 @@ func Test_Basic(t *testing.T) {
 			Base `params:"base"`
 		}
 		user := new(UserWithBase)
-		gtest.Assert(structs.TagMapName(user, []string{"params"}, true), g.Map{
+		t.Assert(structs.TagMapName(user, []string{"params"}, true), g.Map{
 			"base":      "Base",
 			"password1": "Pass1",
 			"password2": "Pass2",
 		})
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type Base struct {
 			Pass1 string `params:"password1"`
 			Pass2 string `params:"password2"`
@@ -67,7 +67,7 @@ func Test_Basic(t *testing.T) {
 		}
 		user1 := new(UserWithBase1)
 		user2 := new(UserWithBase2)
-		gtest.Assert(structs.TagMapName(user1, []string{"params"}, true), g.Map{"password1": "Pass1", "password2": "Pass2"})
-		gtest.Assert(structs.TagMapName(user2, []string{"params"}, true), g.Map{"password1": "Pass1", "password2": "Pass2"})
+		t.Assert(structs.TagMapName(user1, []string{"params"}, true), g.Map{"password1": "Pass1", "password2": "Pass2"})
+		t.Assert(structs.TagMapName(user2, []string{"params"}, true), g.Map{"password1": "Pass1", "password2": "Pass2"})
 	})
 }

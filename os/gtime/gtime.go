@@ -316,6 +316,9 @@ func StrToTime(str string, format ...string) (*Time, error) {
 			}
 		}
 	}
+	if year <= 0 || month <= 0 || day <= 0 || hour < 0 || min < 0 || sec < 0 || nsec < 0 {
+		return nil, errors.New("invalid time string:" + str)
+	}
 	// It finally converts all time to UTC time zone.
 	return NewFromTime(time.Date(year, time.Month(month), day, hour, min, sec, nsec, local)), nil
 }
@@ -377,9 +380,9 @@ func ParseTimeFromContent(content string, format ...string) *Time {
 
 // FuncCost calculates the cost time of function <f> in nanoseconds.
 func FuncCost(f func()) int64 {
-	t := Nanosecond()
+	t := TimestampNano()
 	f()
-	return Nanosecond() - t
+	return TimestampNano() - t
 }
 
 // isNumeric checks whether given <s> is a number.

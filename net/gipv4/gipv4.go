@@ -63,18 +63,18 @@ func GetNameByAddr(ipAddress string) (string, error) {
 }
 
 // Ip2long converts ip address to an uint32 integer.
-func Ip2long(ipAddress string) uint32 {
-	ip := net.ParseIP(ipAddress)
-	if ip == nil {
+func Ip2long(ip string) uint32 {
+	netIp := net.ParseIP(ip)
+	if netIp == nil {
 		return 0
 	}
-	return binary.BigEndian.Uint32(ip.To4())
+	return binary.BigEndian.Uint32(netIp.To4())
 }
 
 // Long2ip converts an uint32 integer ip address to its string type address.
-func Long2ip(properAddress uint32) string {
+func Long2ip(long uint32) string {
 	ipByte := make([]byte, 4)
-	binary.BigEndian.PutUint32(ipByte, properAddress)
+	binary.BigEndian.PutUint32(ipByte, long)
 	return net.IP(ipByte).String()
 }
 

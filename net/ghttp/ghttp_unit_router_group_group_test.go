@@ -17,7 +17,7 @@ import (
 )
 
 func Test_Router_Group_Group(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.Group("/api.v2", func(group *ghttp.RouterGroup) {
 		group.Middleware(func(r *ghttp.Request) {
@@ -62,23 +62,23 @@ func Test_Router_Group_Group(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "Not Found")
-		gtest.Assert(client.GetContent("/api.v2"), "Not Found")
-		gtest.Assert(client.GetContent("/api.v2/test"), "1test2")
-		gtest.Assert(client.GetContent("/api.v2/hook"), "hook any")
-		gtest.Assert(client.GetContent("/api.v2/hook/name"), "hook namehook any")
-		gtest.Assert(client.GetContent("/api.v2/hook/name/any"), "hook any")
-		gtest.Assert(client.GetContent("/api.v2/order/list"), "1list2")
-		gtest.Assert(client.GetContent("/api.v2/order/update"), "Not Found")
-		gtest.Assert(client.PutContent("/api.v2/order/update"), "1update2")
-		gtest.Assert(client.GetContent("/api.v2/user/drop"), "Not Found")
-		gtest.Assert(client.DeleteContent("/api.v2/user/drop"), "1drop2")
-		gtest.Assert(client.GetContent("/api.v2/user/edit"), "Not Found")
-		gtest.Assert(client.PostContent("/api.v2/user/edit"), "1edit2")
-		gtest.Assert(client.GetContent("/api.v2/user/info"), "1info2")
+		t.Assert(client.GetContent("/"), "Not Found")
+		t.Assert(client.GetContent("/api.v2"), "Not Found")
+		t.Assert(client.GetContent("/api.v2/test"), "1test2")
+		t.Assert(client.GetContent("/api.v2/hook"), "hook any")
+		t.Assert(client.GetContent("/api.v2/hook/name"), "hook namehook any")
+		t.Assert(client.GetContent("/api.v2/hook/name/any"), "hook any")
+		t.Assert(client.GetContent("/api.v2/order/list"), "1list2")
+		t.Assert(client.GetContent("/api.v2/order/update"), "Not Found")
+		t.Assert(client.PutContent("/api.v2/order/update"), "1update2")
+		t.Assert(client.GetContent("/api.v2/user/drop"), "Not Found")
+		t.Assert(client.DeleteContent("/api.v2/user/drop"), "1drop2")
+		t.Assert(client.GetContent("/api.v2/user/edit"), "Not Found")
+		t.Assert(client.PostContent("/api.v2/user/edit"), "1edit2")
+		t.Assert(client.GetContent("/api.v2/user/info"), "1info2")
 	})
 }

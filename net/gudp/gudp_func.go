@@ -52,14 +52,3 @@ func SendRecv(address string, data []byte, receive int, retry ...Retry) ([]byte,
 	defer conn.Close()
 	return conn.SendRecv(data, receive, retry...)
 }
-
-// isTimeout checks whether given <err> is a timeout error.
-func isTimeout(err error) bool {
-	if err == nil {
-		return false
-	}
-	if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
-		return true
-	}
-	return false
-}

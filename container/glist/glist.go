@@ -20,8 +20,8 @@ import (
 
 type (
 	List struct {
-		mu   *rwmutex.RWMutex
-		list *list.List
+		mu   rwmutex.RWMutex
+		list list.List
 	}
 
 	Element = list.Element
@@ -30,8 +30,8 @@ type (
 // New creates and returns a new empty doubly linked list.
 func New(safe ...bool) *List {
 	return &List{
-		mu:   rwmutex.New(safe...),
-		list: list.New(),
+		mu:   rwmutex.Create(safe...),
+		list: list.List{},
 	}
 }
 
@@ -39,12 +39,12 @@ func New(safe ...bool) *List {
 // The parameter <safe> is used to specify whether using list in concurrent-safety,
 // which is false in default.
 func NewFrom(array []interface{}, safe ...bool) *List {
-	l := list.New()
+	l := list.List{}
 	for _, v := range array {
 		l.PushBack(v)
 	}
 	return &List{
-		mu:   rwmutex.New(safe...),
+		mu:   rwmutex.Create(safe...),
 		list: l,
 	}
 }
@@ -273,7 +273,7 @@ func (l *List) PushBackList(other *List) {
 		defer other.mu.RUnlock()
 	}
 	l.mu.Lock()
-	l.list.PushBackList(other.list)
+	l.list.PushBackList(&other.list)
 	l.mu.Unlock()
 }
 
@@ -285,7 +285,7 @@ func (l *List) PushFrontList(other *List) {
 		defer other.mu.RUnlock()
 	}
 	l.mu.Lock()
-	l.list.PushFrontList(other.list)
+	l.list.PushFrontList(&other.list)
 	l.mu.Unlock()
 }
 
@@ -332,7 +332,7 @@ func (l *List) Removes(es []*Element) {
 // RemoveAll removes all elements from list <l>.
 func (l *List) RemoveAll() {
 	l.mu.Lock()
-	l.list = list.New()
+	l.list = list.List{}
 	l.mu.Unlock()
 }
 
@@ -345,14 +345,14 @@ func (l *List) Clear() {
 func (l *List) RLockFunc(f func(list *list.List)) {
 	l.mu.RLock()
 	defer l.mu.RUnlock()
-	f(l.list)
+	f(&l.list)
 }
 
 // LockFunc locks writing with given callback function <f> within RWMutex.Lock.
 func (l *List) LockFunc(f func(list *list.List)) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	f(l.list)
+	f(&l.list)
 }
 
 // Iterator is alias of IteratorAsc.
@@ -360,7 +360,7 @@ func (l *List) Iterator(f func(e *Element) bool) {
 	l.IteratorAsc(f)
 }
 
-// IteratorAsc iterates the list in ascending order with given callback function <f>.
+// IteratorAsc iterates the list readonly in ascending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
 func (l *List) IteratorAsc(f func(e *Element) bool) {
 	l.mu.RLock()
@@ -375,7 +375,7 @@ func (l *List) IteratorAsc(f func(e *Element) bool) {
 	}
 }
 
-// IteratorDesc iterates the list in descending order with given callback function <f>.
+// IteratorDesc iterates the list readonly in descending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
 func (l *List) IteratorDesc(f func(e *Element) bool) {
 	l.mu.RLock()
@@ -425,10 +425,6 @@ func (l *List) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (l *List) UnmarshalJSON(b []byte) error {
-	if l.mu == nil {
-		l.mu = rwmutex.New()
-		l.list = list.New()
-	}
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	var array []interface{}
@@ -437,4 +433,19 @@ func (l *List) UnmarshalJSON(b []byte) error {
 	}
 	l.PushBacks(array)
 	return nil
+}
+
+// UnmarshalValue is an interface implement which sets any type of value for list.
+func (l *List) UnmarshalValue(value interface{}) (err error) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	var array []interface{}
+	switch value.(type) {
+	case string, []byte:
+		err = json.Unmarshal(gconv.Bytes(value), &array)
+	default:
+		array = gconv.SliceAny(value)
+	}
+	l.PushBacks(array)
+	return err
 }

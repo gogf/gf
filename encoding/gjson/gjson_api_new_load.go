@@ -4,7 +4,6 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gjson provides convenient API for JSON/XML/YAML/TOML data handling.
 package gjson
 
 import (
@@ -25,11 +24,24 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
-// New creates a Json object with any variable type of <data>, but <data> should be a map or slice
-// for data access reason, or it will make no sense.
-// The <safe> param specifies whether using this Json object in concurrent-safe context, which is
-// false in default.
+// New creates a Json object with any variable type of <data>, but <data> should be a map
+// or slice for data access reason, or it will make no sense.
+//
+// The parameter <safe> specifies whether using this Json object in concurrent-safe context,
+// which is false in default.
 func New(data interface{}, safe ...bool) *Json {
+	return NewWithTag(data, "json", safe...)
+}
+
+// NewWithTag creates a Json object with any variable type of <data>, but <data> should be a map
+// or slice for data access reason, or it will make no sense.
+//
+// The parameter <tags> specifies priority tags for struct conversion to map, multiple tags joined
+// with char ','.
+//
+// The parameter <safe> specifies whether using this Json object in concurrent-safe context, which
+// is false in default.
+func NewWithTag(data interface{}, tags string, safe ...bool) *Json {
 	j := (*Json)(nil)
 	switch data.(type) {
 	case string, []byte:
@@ -60,8 +72,9 @@ func New(data interface{}, safe ...bool) *Json {
 			}
 		case reflect.Map, reflect.Struct:
 			i := interface{}(nil)
-			// Note that it uses MapDeep function implementing the converting.
-			i = gconv.MapDeep(data, "json")
+			// Note that it uses Map function implementing the converting.
+			// Note that it here should not use MapDeep function if you really know what it means.
+			i = gconv.MapDeep(data, tags)
 			j = &Json{
 				p:  &i,
 				c:  byte(gDEFAULT_SPLIT_CHAR),
@@ -79,48 +92,7 @@ func New(data interface{}, safe ...bool) *Json {
 	return j
 }
 
-// Valid checks whether <data> is a valid JSON data type.
-func Valid(data interface{}) bool {
-	return json.Valid(gconv.Bytes(data))
-}
-
-// Encode encodes <value> to JSON data type of bytes.
-func Encode(value interface{}) ([]byte, error) {
-	return json.Marshal(value)
-}
-
-// Decode decodes <data>(string/[]byte) to golang variable.
-func Decode(data interface{}) (interface{}, error) {
-	var value interface{}
-	if err := DecodeTo(gconv.Bytes(data), &value); err != nil {
-		return nil, err
-	} else {
-		return value, nil
-	}
-}
-
-// Decode decodes <data>(string/[]byte) to specified golang variable <v>.
-// The <v> should be a pointer type.
-func DecodeTo(data interface{}, v interface{}) error {
-	decoder := json.NewDecoder(bytes.NewReader(gconv.Bytes(data)))
-	// Do not use number, it converts float64 to json.Number type,
-	// which actually a string type. It causes converting issue for other data formats,
-	// for example: yaml.
-	//decoder.UseNumber()
-	return decoder.Decode(v)
-}
-
-// DecodeToJson codes <data>(string/[]byte) to a Json object.
-func DecodeToJson(data interface{}, safe ...bool) (*Json, error) {
-	if v, err := Decode(gconv.Bytes(data)); err != nil {
-		return nil, err
-	} else {
-		return New(v, safe...), nil
-	}
-}
-
-// Load loads content from specified file <path>,
-// and creates a Json object from its content.
+// Load loads content from specified file <path>, and creates a Json object from its content.
 func Load(path string, safe ...bool) (*Json, error) {
 	if p, err := gfile.Search(path); err != nil {
 		return nil, err
@@ -130,26 +102,34 @@ func Load(path string, safe ...bool) (*Json, error) {
 	return doLoadContent(gfile.Ext(path), gfcache.GetBinContents(path), safe...)
 }
 
+// LoadJson creates a Json object from given JSON format content.
 func LoadJson(data interface{}, safe ...bool) (*Json, error) {
 	return doLoadContent("json", gconv.Bytes(data), safe...)
 }
 
+// LoadXml creates a Json object from given XML format content.
 func LoadXml(data interface{}, safe ...bool) (*Json, error) {
 	return doLoadContent("xml", gconv.Bytes(data), safe...)
 }
 
-func LoadYaml(data interface{}, safe ...bool) (*Json, error) {
-	return doLoadContent("yaml", gconv.Bytes(data), safe...)
-}
-
-func LoadToml(data interface{}, safe ...bool) (*Json, error) {
-	return doLoadContent("toml", gconv.Bytes(data), safe...)
-}
-
+// LoadIni creates a Json object from given INI format content.
 func LoadIni(data interface{}, safe ...bool) (*Json, error) {
 	return doLoadContent("ini", gconv.Bytes(data), safe...)
 }
 
+// LoadYaml creates a Json object from given YAML format content.
+func LoadYaml(data interface{}, safe ...bool) (*Json, error) {
+	return doLoadContent("yaml", gconv.Bytes(data), safe...)
+}
+
+// LoadToml creates a Json object from given TOML format content.
+func LoadToml(data interface{}, safe ...bool) (*Json, error) {
+	return doLoadContent("toml", gconv.Bytes(data), safe...)
+}
+
+// doLoadContent creates a Json object from given content.
+// It supports data content type as follows:
+// JSON, XML, INI, YAML and TOML.
 func doLoadContent(dataType string, data []byte, safe ...bool) (*Json, error) {
 	var err error
 	var result interface{}
@@ -201,6 +181,9 @@ func doLoadContent(dataType string, data []byte, safe ...bool) (*Json, error) {
 	return New(result, safe...), nil
 }
 
+// LoadContent creates a Json object from given content, it checks the data type of <content>
+// automatically, supporting data content type as follows:
+// JSON, XML, INI, YAML and TOML.
 func LoadContent(data interface{}, safe ...bool) (*Json, error) {
 	content := gconv.Bytes(data)
 	if len(content) == 0 {

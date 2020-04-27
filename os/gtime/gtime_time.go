@@ -14,7 +14,7 @@ import (
 
 // Time is a wrapper for time.Time for additional features.
 type Time struct {
-	time.Time
+	TimeWrapper
 }
 
 // New creates and returns a Time object with given time.Time object.
@@ -24,21 +24,21 @@ func New(t ...time.Time) *Time {
 		return NewFromTime(t[0])
 	}
 	return &Time{
-		time.Time{},
+		TimeWrapper{time.Time{}},
 	}
 }
 
-// Now returns a time object for now.
+// Now creates and returns a time object of now.
 func Now() *Time {
 	return &Time{
-		time.Now(),
+		TimeWrapper{time.Now()},
 	}
 }
 
 // NewFromTime creates and returns a Time object with given time.Time object.
 func NewFromTime(t time.Time) *Time {
 	return &Time{
-		t,
+		TimeWrapper{t},
 	}
 }
 
@@ -50,7 +50,8 @@ func NewFromStr(str string) *Time {
 	return nil
 }
 
-// NewFromStrFormat creates and returns a Time object with given string and custom format like: Y-m-d H:i:s.
+// NewFromStrFormat creates and returns a Time object with given string and
+// custom format like: Y-m-d H:i:s.
 func NewFromStrFormat(str string, format string) *Time {
 	if t, err := StrToTimeFormat(str, format); err == nil {
 		return t
@@ -58,7 +59,8 @@ func NewFromStrFormat(str string, format string) *Time {
 	return nil
 }
 
-// NewFromStrLayout creates and returns a Time object with given string and stdlib layout like: 2006-01-02 15:04:05.
+// NewFromStrLayout creates and returns a Time object with given string and
+// stdlib layout like: 2006-01-02 15:04:05.
 func NewFromStrLayout(str string, layout string) *Time {
 	if t, err := StrToTimeLayout(str, layout); err == nil {
 		return t
@@ -66,16 +68,24 @@ func NewFromStrLayout(str string, layout string) *Time {
 	return nil
 }
 
-// NewFromTimeStamp creates and returns a Time object with given timestamp, which can be in seconds to nanoseconds.
+// NewFromTimeStamp creates and returns a Time object with given timestamp,
+// which can be in seconds to nanoseconds.
 func NewFromTimeStamp(timestamp int64) *Time {
 	if timestamp == 0 {
 		return &Time{}
 	}
-	for timestamp < 1e18 {
-		timestamp *= 10
+	var sec, nano int64
+	if timestamp > 1e9 {
+		for timestamp < 1e18 {
+			timestamp *= 10
+		}
+		sec = timestamp / 1e9
+		nano = timestamp % 1e9
+	} else {
+		sec = timestamp
 	}
 	return &Time{
-		time.Unix(timestamp/1e9, timestamp%1e9),
+		TimeWrapper{time.Unix(sec, nano)},
 	}
 }
 
@@ -150,6 +160,9 @@ func (t *Time) Nanosecond() int {
 // String returns current time object as string.
 func (t *Time) String() string {
 	if t == nil {
+		return ""
+	}
+	if t.IsZero() {
 		return ""
 	}
 	return t.Format("Y-m-d H:i:s")

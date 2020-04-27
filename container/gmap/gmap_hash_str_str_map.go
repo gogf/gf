@@ -9,6 +9,7 @@ package gmap
 
 import (
 	"encoding/json"
+	"github.com/gogf/gf/util/gconv"
 
 	"github.com/gogf/gf/internal/empty"
 
@@ -16,7 +17,7 @@ import (
 )
 
 type StrStrMap struct {
-	mu   *rwmutex.RWMutex
+	mu   rwmutex.RWMutex
 	data map[string]string
 }
 
@@ -26,7 +27,7 @@ type StrStrMap struct {
 func NewStrStrMap(safe ...bool) *StrStrMap {
 	return &StrStrMap{
 		data: make(map[string]string),
-		mu:   rwmutex.New(safe...),
+		mu:   rwmutex.Create(safe...),
 	}
 }
 
@@ -35,12 +36,12 @@ func NewStrStrMap(safe ...bool) *StrStrMap {
 // there might be some concurrent-safe issues when changing the map outside.
 func NewStrStrMapFrom(data map[string]string, safe ...bool) *StrStrMap {
 	return &StrStrMap{
-		mu:   rwmutex.New(safe...),
+		mu:   rwmutex.Create(safe...),
 		data: data,
 	}
 }
 
-// Iterator iterates the hash map with custom callback function <f>.
+// Iterator iterates the hash map readonly with custom callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
 func (m *StrStrMap) Iterator(f func(k string, v string) bool) {
 	m.mu.RLock()
@@ -109,6 +110,9 @@ func (m *StrStrMap) FilterEmpty() {
 // Set sets key-value to the hash map.
 func (m *StrStrMap) Set(key string, val string) {
 	m.mu.Lock()
+	if m.data == nil {
+		m.data = make(map[string]string)
+	}
 	m.data[key] = val
 	m.mu.Unlock()
 }
@@ -116,8 +120,12 @@ func (m *StrStrMap) Set(key string, val string) {
 // Sets batch sets key-values to the hash map.
 func (m *StrStrMap) Sets(data map[string]string) {
 	m.mu.Lock()
-	for k, v := range data {
-		m.data[k] = v
+	if m.data == nil {
+		m.data = data
+	} else {
+		for k, v := range data {
+			m.data[k] = v
+		}
 	}
 	m.mu.Unlock()
 }
@@ -126,17 +134,21 @@ func (m *StrStrMap) Sets(data map[string]string) {
 // Second return parameter <found> is true if key was found, otherwise false.
 func (m *StrStrMap) Search(key string) (value string, found bool) {
 	m.mu.RLock()
-	value, found = m.data[key]
+	if m.data != nil {
+		value, found = m.data[key]
+	}
 	m.mu.RUnlock()
 	return
 }
 
 // Get returns the value by given <key>.
-func (m *StrStrMap) Get(key string) string {
+func (m *StrStrMap) Get(key string) (value string) {
 	m.mu.RLock()
-	val, _ := m.data[key]
+	if m.data != nil {
+		value, _ = m.data[key]
+	}
 	m.mu.RUnlock()
-	return val
+	return
 }
 
 // Pop retrieves and deletes an item from the map.
@@ -161,8 +173,10 @@ func (m *StrStrMap) Pops(size int) map[string]string {
 	if size == 0 {
 		return nil
 	}
-	index := 0
-	newMap := make(map[string]string, size)
+	var (
+		index  = 0
+		newMap = make(map[string]string, size)
+	)
 	for k, v := range m.data {
 		delete(m.data, k)
 		newMap[k] = v
@@ -182,6 +196,9 @@ func (m *StrStrMap) Pops(size int) map[string]string {
 func (m *StrStrMap) doSetWithLockCheck(key string, value string) string {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	if m.data == nil {
+		m.data = make(map[string]string)
+	}
 	if v, ok := m.data[key]; ok {
 		return v
 	}
@@ -220,13 +237,14 @@ func (m *StrStrMap) GetOrSetFuncLock(key string, f func() string) string {
 	if v, ok := m.Search(key); !ok {
 		m.mu.Lock()
 		defer m.mu.Unlock()
+		if m.data == nil {
+			m.data = make(map[string]string)
+		}
 		if v, ok = m.data[key]; ok {
 			return v
 		}
 		v = f()
-		if v != "" {
-			m.data[key] = v
-		}
+		m.data[key] = v
 		return v
 	} else {
 		return v
@@ -262,6 +280,9 @@ func (m *StrStrMap) SetIfNotExistFuncLock(key string, f func() string) bool {
 	if !m.Contains(key) {
 		m.mu.Lock()
 		defer m.mu.Unlock()
+		if m.data == nil {
+			m.data = make(map[string]string)
+		}
 		if _, ok := m.data[key]; !ok {
 			m.data[key] = f()
 		}
@@ -273,28 +294,34 @@ func (m *StrStrMap) SetIfNotExistFuncLock(key string, f func() string) bool {
 // Removes batch deletes values of the map by keys.
 func (m *StrStrMap) Removes(keys []string) {
 	m.mu.Lock()
-	for _, key := range keys {
-		delete(m.data, key)
+	if m.data != nil {
+		for _, key := range keys {
+			delete(m.data, key)
+		}
 	}
 	m.mu.Unlock()
 }
 
 // Remove deletes value from map by given <key>, and return this deleted value.
-func (m *StrStrMap) Remove(key string) string {
+func (m *StrStrMap) Remove(key string) (value string) {
 	m.mu.Lock()
-	val, exists := m.data[key]
-	if exists {
-		delete(m.data, key)
+	if m.data != nil {
+		var ok bool
+		if value, ok = m.data[key]; ok {
+			delete(m.data, key)
+		}
 	}
 	m.mu.Unlock()
-	return val
+	return
 }
 
 // Keys returns all keys of the map as a slice.
 func (m *StrStrMap) Keys() []string {
 	m.mu.RLock()
-	keys := make([]string, len(m.data))
-	index := 0
+	var (
+		keys  = make([]string, len(m.data))
+		index = 0
+	)
 	for key := range m.data {
 		keys[index] = key
 		index++
@@ -306,8 +333,10 @@ func (m *StrStrMap) Keys() []string {
 // Values returns all values of the map as a slice.
 func (m *StrStrMap) Values() []string {
 	m.mu.RLock()
-	values := make([]string, len(m.data))
-	index := 0
+	var (
+		values = make([]string, len(m.data))
+		index  = 0
+	)
 	for _, value := range m.data {
 		values[index] = value
 		index++
@@ -319,10 +348,13 @@ func (m *StrStrMap) Values() []string {
 // Contains checks whether a key exists.
 // It returns true if the <key> exists, or else false.
 func (m *StrStrMap) Contains(key string) bool {
+	var ok bool
 	m.mu.RLock()
-	_, exists := m.data[key]
+	if m.data != nil {
+		_, ok = m.data[key]
+	}
 	m.mu.RUnlock()
-	return exists
+	return ok
 }
 
 // Size returns the size of the map.
@@ -383,6 +415,10 @@ func (m *StrStrMap) Flip() {
 func (m *StrStrMap) Merge(other *StrStrMap) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	if m.data == nil {
+		m.data = other.MapCopy()
+		return
+	}
 	if other != m {
 		other.mu.RLock()
 		defer other.mu.RUnlock()
@@ -401,14 +437,21 @@ func (m *StrStrMap) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (m *StrStrMap) UnmarshalJSON(b []byte) error {
-	if m.mu == nil {
-		m.mu = rwmutex.New()
-		m.data = make(map[string]string)
-	}
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	if m.data == nil {
+		m.data = make(map[string]string)
+	}
 	if err := json.Unmarshal(b, &m.data); err != nil {
 		return err
 	}
 	return nil
+}
+
+// UnmarshalValue is an interface implement which sets any type of value for map.
+func (m *StrStrMap) UnmarshalValue(value interface{}) (err error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.data = gconv.MapStrStr(value)
+	return
 }

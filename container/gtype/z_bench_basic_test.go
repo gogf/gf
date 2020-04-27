@@ -49,6 +49,12 @@ func BenchmarkInt_Add(b *testing.B) {
 	}
 }
 
+func BenchmarkInt_Cas(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		it.Cas(i, i)
+	}
+}
+
 func BenchmarkInt32_Set(b *testing.B) {
 	for i := int32(0); i < int32(b.N); i++ {
 		it32.Set(i)
@@ -148,6 +154,12 @@ func BenchmarkBool_Set(b *testing.B) {
 func BenchmarkBool_Val(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		bl.Val()
+	}
+}
+
+func BenchmarkBool_Cas(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		bl.Cas(false, true)
 	}
 }
 

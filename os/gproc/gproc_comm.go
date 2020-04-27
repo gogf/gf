@@ -43,7 +43,7 @@ var (
 	commReceiveQueues = gmap.NewStrAnyMap(true)
 
 	// commPidFolderPath specifies the folder path storing pid to port mapping files.
-	commPidFolderPath = gfile.Join(gfile.TempDir(), "gproc")
+	commPidFolderPath = gfile.TempDir("gproc")
 )
 
 func init() {

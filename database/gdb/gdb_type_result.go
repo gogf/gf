@@ -9,10 +9,32 @@ package gdb
 import (
 	"database/sql"
 	"fmt"
+	"math"
 	"reflect"
 
 	"github.com/gogf/gf/encoding/gparser"
 )
+
+// Chunk splits an Result into multiple Results,
+// the size of each array is determined by <size>.
+// The last chunk may contain less than size elements.
+func (r Result) Chunk(size int) []Result {
+	if size < 1 {
+		return nil
+	}
+	length := len(r)
+	chunks := int(math.Ceil(float64(length) / float64(size)))
+	var n []Result
+	for i, end := 0, 0; chunks > 0; chunks-- {
+		end = (i + 1) * size
+		if end > length {
+			end = length
+		}
+		n = append(n, r[i*size:end])
+		i++
+	}
+	return n
+}
 
 // Json converts <r> to JSON format content.
 func (r Result) Json() string {
@@ -28,11 +50,33 @@ func (r Result) Xml(rootTag ...string) string {
 
 // List converts <r> to a List.
 func (r Result) List() List {
-	l := make(List, len(r))
+	list := make(List, len(r))
 	for k, v := range r {
-		l[k] = v.Map()
+		list[k] = v.Map()
 	}
-	return l
+	return list
+}
+
+// Array retrieves and returns specified column values as slice.
+// The parameter <field> is optional is the column field is only one.
+func (r Result) Array(field ...string) []Value {
+	array := make([]Value, len(r))
+	if len(r) == 0 {
+		return array
+	}
+	key := ""
+	if len(field) > 0 && field[0] != "" {
+		key = field[0]
+	} else {
+		for k, _ := range r[0] {
+			key = k
+			break
+		}
+	}
+	for k, v := range r {
+		array[k] = v[key]
+	}
+	return array
 }
 
 // MapKeyStr converts <r> to a map[string]Map of which key is specified by <key>.

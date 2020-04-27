@@ -6,3 +6,13 @@
 [redis]
     default  = "127.0.0.1:6379,0"
     cache = "127.0.0.1:6379,1"
+
+# Logger.
+[logger]
+    Path        = "/tmp/log/gf-app"
+    Level       = "all"
+    Stdout      = true
+
+[viewer]
+    delimiters  =  ["${", "}"]
+    autoencode  =  true

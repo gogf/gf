@@ -19,7 +19,10 @@ func CheckMap(params interface{}, rules interface{}, msgs ...CustomMsg) *Error {
 	// 将参数转换为 map[string]interface{}类型
 	data := gconv.Map(params)
 	if data == nil {
-		return newErrorStr("invalid_params", "invalid params type: convert to map[string]interface{} failed")
+		return newErrorStr(
+			"invalid_params",
+			"invalid params type: convert to map[string]interface{} failed",
+		)
 	}
 	// 真实校验规则数据结构
 	checkRules := make(map[string]string)

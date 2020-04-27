@@ -7,18 +7,18 @@
 package gconv
 
 import (
-	"github.com/gogf/gf/internal/utilstr"
+	"github.com/gogf/gf/internal/utils"
 	"reflect"
 )
+
+// apiInterfaces is used for type assert api for Interfaces.
+type apiInterfaces interface {
+	Interfaces() []interface{}
+}
 
 // SliceAny is alias of Interfaces.
 func SliceAny(i interface{}) []interface{} {
 	return Interfaces(i)
-}
-
-// Type assert api for Interfaces.
-type apiInterfaces interface {
-	Interfaces() []interface{}
 }
 
 // Interfaces converts <i> to []interface{}.
@@ -121,7 +121,7 @@ func Interfaces(i interface{}) []interface{} {
 				array = make([]interface{}, 0)
 				for i := 0; i < rv.NumField(); i++ {
 					// Only public attributes.
-					if !utilstr.IsLetterUpper(rt.Field(i).Name[0]) {
+					if !utils.IsLetterUpper(rt.Field(i).Name[0]) {
 						continue
 					}
 					array = append(array, rv.Field(i).Interface())

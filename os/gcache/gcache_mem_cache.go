@@ -143,7 +143,7 @@ func (c *memCache) doSetWithLockCheck(key interface{}, value interface{}, durati
 // getInternalExpire returns the expire time with given expire duration in milliseconds.
 func (c *memCache) getInternalExpire(expire int64) int64 {
 	if expire != 0 {
-		return gtime.Millisecond() + expire
+		return gtime.TimestampMilli() + expire
 	} else {
 		return gDEFAULT_MAX_EXPIRE
 	}
@@ -179,7 +179,7 @@ func (c *memCache) Get(key interface{}) interface{} {
 	item, ok := c.data[key]
 	c.dataMu.RUnlock()
 	if ok && !item.IsExpired() {
-		// Adding to LRU history if LRU feature is enbaled.
+		// Adding to LRU history if LRU feature is enabled.
 		if c.cap > 0 {
 			c.lruGetList.PushBack(key)
 		}
@@ -238,7 +238,7 @@ func (c *memCache) Remove(key interface{}) (value interface{}) {
 		c.dataMu.Lock()
 		delete(c.data, key)
 		c.dataMu.Unlock()
-		c.eventList.PushBack(&memCacheEvent{k: key, e: gtime.Millisecond() - 1000})
+		c.eventList.PushBack(&memCacheEvent{k: key, e: gtime.TimestampMilli() - 1000})
 	}
 	return
 }
@@ -365,7 +365,7 @@ func (c *memCache) syncEventAndClearExpired() {
 	// ========================
 	// Data Cleaning up.
 	// ========================
-	ek := c.makeExpireKey(gtime.Millisecond())
+	ek := c.makeExpireKey(gtime.TimestampMilli())
 	eks := []int64{ek - 1000, ek - 2000, ek - 3000, ek - 4000, ek - 5000}
 	for _, expireTime := range eks {
 		if expireSet := c.getExpireSet(expireTime); expireSet != nil {

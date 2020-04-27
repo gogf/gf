@@ -16,7 +16,7 @@ import (
 )
 
 type IntIntMap struct {
-	mu   *rwmutex.RWMutex
+	mu   rwmutex.RWMutex
 	data map[int]int
 }
 
@@ -25,7 +25,7 @@ type IntIntMap struct {
 // which is false in default.
 func NewIntIntMap(safe ...bool) *IntIntMap {
 	return &IntIntMap{
-		mu:   rwmutex.New(safe...),
+		mu:   rwmutex.Create(safe...),
 		data: make(map[int]int),
 	}
 }
@@ -35,12 +35,12 @@ func NewIntIntMap(safe ...bool) *IntIntMap {
 // there might be some concurrent-safe issues when changing the map outside.
 func NewIntIntMapFrom(data map[int]int, safe ...bool) *IntIntMap {
 	return &IntIntMap{
-		mu:   rwmutex.New(safe...),
+		mu:   rwmutex.Create(safe...),
 		data: data,
 	}
 }
 
-// Iterator iterates the hash map with custom callback function <f>.
+// Iterator iterates the hash map readonly with custom callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
 func (m *IntIntMap) Iterator(f func(k int, v int) bool) {
 	m.mu.RLock()
@@ -109,6 +109,9 @@ func (m *IntIntMap) FilterEmpty() {
 // Set sets key-value to the hash map.
 func (m *IntIntMap) Set(key int, val int) {
 	m.mu.Lock()
+	if m.data == nil {
+		m.data = make(map[int]int)
+	}
 	m.data[key] = val
 	m.mu.Unlock()
 }
@@ -116,8 +119,12 @@ func (m *IntIntMap) Set(key int, val int) {
 // Sets batch sets key-values to the hash map.
 func (m *IntIntMap) Sets(data map[int]int) {
 	m.mu.Lock()
-	for k, v := range data {
-		m.data[k] = v
+	if m.data == nil {
+		m.data = data
+	} else {
+		for k, v := range data {
+			m.data[k] = v
+		}
 	}
 	m.mu.Unlock()
 }
@@ -126,17 +133,21 @@ func (m *IntIntMap) Sets(data map[int]int) {
 // Second return parameter <found> is true if key was found, otherwise false.
 func (m *IntIntMap) Search(key int) (value int, found bool) {
 	m.mu.RLock()
-	value, found = m.data[key]
+	if m.data != nil {
+		value, found = m.data[key]
+	}
 	m.mu.RUnlock()
 	return
 }
 
 // Get returns the value by given <key>.
-func (m *IntIntMap) Get(key int) int {
+func (m *IntIntMap) Get(key int) (value int) {
 	m.mu.RLock()
-	val, _ := m.data[key]
+	if m.data != nil {
+		value, _ = m.data[key]
+	}
 	m.mu.RUnlock()
-	return val
+	return
 }
 
 // Pop retrieves and deletes an item from the map.
@@ -161,8 +172,10 @@ func (m *IntIntMap) Pops(size int) map[int]int {
 	if size == 0 {
 		return nil
 	}
-	index := 0
-	newMap := make(map[int]int, size)
+	var (
+		index  = 0
+		newMap = make(map[int]int, size)
+	)
 	for k, v := range m.data {
 		delete(m.data, k)
 		newMap[k] = v
@@ -181,12 +194,14 @@ func (m *IntIntMap) Pops(size int) map[int]int {
 // It returns value with given <key>.
 func (m *IntIntMap) doSetWithLockCheck(key int, value int) int {
 	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.data == nil {
+		m.data = make(map[int]int)
+	}
 	if v, ok := m.data[key]; ok {
-		m.mu.Unlock()
 		return v
 	}
 	m.data[key] = value
-	m.mu.Unlock()
 	return value
 }
 
@@ -219,6 +234,9 @@ func (m *IntIntMap) GetOrSetFuncLock(key int, f func() int) int {
 	if v, ok := m.Search(key); !ok {
 		m.mu.Lock()
 		defer m.mu.Unlock()
+		if m.data == nil {
+			m.data = make(map[int]int)
+		}
 		if v, ok = m.data[key]; ok {
 			return v
 		}
@@ -259,6 +277,9 @@ func (m *IntIntMap) SetIfNotExistFuncLock(key int, f func() int) bool {
 	if !m.Contains(key) {
 		m.mu.Lock()
 		defer m.mu.Unlock()
+		if m.data == nil {
+			m.data = make(map[int]int)
+		}
 		if _, ok := m.data[key]; !ok {
 			m.data[key] = f()
 		}
@@ -270,28 +291,34 @@ func (m *IntIntMap) SetIfNotExistFuncLock(key int, f func() int) bool {
 // Removes batch deletes values of the map by keys.
 func (m *IntIntMap) Removes(keys []int) {
 	m.mu.Lock()
-	for _, key := range keys {
-		delete(m.data, key)
+	if m.data != nil {
+		for _, key := range keys {
+			delete(m.data, key)
+		}
 	}
 	m.mu.Unlock()
 }
 
 // Remove deletes value from map by given <key>, and return this deleted value.
-func (m *IntIntMap) Remove(key int) int {
+func (m *IntIntMap) Remove(key int) (value int) {
 	m.mu.Lock()
-	val, exists := m.data[key]
-	if exists {
-		delete(m.data, key)
+	if m.data != nil {
+		var ok bool
+		if value, ok = m.data[key]; ok {
+			delete(m.data, key)
+		}
 	}
 	m.mu.Unlock()
-	return val
+	return
 }
 
 // Keys returns all keys of the map as a slice.
 func (m *IntIntMap) Keys() []int {
 	m.mu.RLock()
-	keys := make([]int, len(m.data))
-	index := 0
+	var (
+		keys  = make([]int, len(m.data))
+		index = 0
+	)
 	for key := range m.data {
 		keys[index] = key
 		index++
@@ -303,8 +330,10 @@ func (m *IntIntMap) Keys() []int {
 // Values returns all values of the map as a slice.
 func (m *IntIntMap) Values() []int {
 	m.mu.RLock()
-	values := make([]int, len(m.data))
-	index := 0
+	var (
+		values = make([]int, len(m.data))
+		index  = 0
+	)
 	for _, value := range m.data {
 		values[index] = value
 		index++
@@ -316,10 +345,13 @@ func (m *IntIntMap) Values() []int {
 // Contains checks whether a key exists.
 // It returns true if the <key> exists, or else false.
 func (m *IntIntMap) Contains(key int) bool {
+	var ok bool
 	m.mu.RLock()
-	_, exists := m.data[key]
+	if m.data != nil {
+		_, ok = m.data[key]
+	}
 	m.mu.RUnlock()
-	return exists
+	return ok
 }
 
 // Size returns the size of the map.
@@ -380,6 +412,10 @@ func (m *IntIntMap) Flip() {
 func (m *IntIntMap) Merge(other *IntIntMap) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	if m.data == nil {
+		m.data = other.MapCopy()
+		return
+	}
 	if other != m {
 		other.mu.RLock()
 		defer other.mu.RUnlock()
@@ -398,14 +434,31 @@ func (m *IntIntMap) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (m *IntIntMap) UnmarshalJSON(b []byte) error {
-	if m.mu == nil {
-		m.mu = rwmutex.New()
-		m.data = make(map[int]int)
-	}
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	if m.data == nil {
+		m.data = make(map[int]int)
+	}
 	if err := json.Unmarshal(b, &m.data); err != nil {
 		return err
 	}
 	return nil
+}
+
+// UnmarshalValue is an interface implement which sets any type of value for map.
+func (m *IntIntMap) UnmarshalValue(value interface{}) (err error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.data == nil {
+		m.data = make(map[int]int)
+	}
+	switch value.(type) {
+	case string, []byte:
+		return json.Unmarshal(gconv.Bytes(value), &m.data)
+	default:
+		for k, v := range gconv.Map(value) {
+			m.data[gconv.Int(k)] = gconv.Int(v)
+		}
+	}
+	return
 }

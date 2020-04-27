@@ -20,6 +20,11 @@ import (
 	"github.com/gogf/gf/os/gview"
 )
 
+// Client is a convenience function, that creates and returns a new HTTP client.
+func Client() *ghttp.Client {
+	return ghttp.NewClient()
+}
+
 // Server returns an instance of http server with specified name.
 func Server(name ...interface{}) *ghttp.Server {
 	return gins.Server(name...)
@@ -84,6 +89,13 @@ func Database(name ...string) gdb.DB {
 // See Database.
 func DB(name ...string) gdb.DB {
 	return gins.Database(name...)
+}
+
+// Table creates and returns a model from specified database or default database configuration.
+// The optional parameter <db> specifies the configuration group name of the database,
+// which is "default" in default.
+func Table(tables string, db ...string) *gdb.Model {
+	return DB(db...).Table(tables)
 }
 
 // Redis returns an instance of redis client with specified configuration group name.

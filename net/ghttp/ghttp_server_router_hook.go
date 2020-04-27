@@ -13,11 +13,16 @@ import (
 
 // 绑定指定的hook回调函数, pattern参数同BindHandler，支持命名路由；hook参数的值由ghttp server设定，参数不区分大小写
 func (s *Server) BindHookHandler(pattern string, hook string, handler HandlerFunc) {
+	s.doBindHookHandler(pattern, hook, handler, "")
+}
+
+func (s *Server) doBindHookHandler(pattern string, hook string, handler HandlerFunc, source string) {
 	s.setHandler(pattern, &handlerItem{
 		itemType: gHANDLER_TYPE_HOOK,
 		itemName: gdebug.FuncPath(handler),
 		itemFunc: handler,
 		hookName: hook,
+		source:   source,
 	})
 }
 
@@ -58,6 +63,22 @@ func (s *Server) callHookHandler(hook string, r *Request) {
 	}
 }
 
+// 获得当前请求，指定类型的的钩子函数列表
+func (r *Request) getHookHandlers(hook string) []*handlerParsedItem {
+	if !r.hasHookHandler {
+		return nil
+	}
+	parsedItems := make([]*handlerParsedItem, 0, 4)
+	for _, v := range r.handlers {
+		if v.handler.hookName != hook {
+			continue
+		}
+		item := v
+		parsedItems = append(parsedItems, item)
+	}
+	return parsedItems
+}
+
 // 友好地调用方法
 func (s *Server) niceCallHookHandler(f HandlerFunc, r *Request) (err interface{}) {
 	defer func() {
@@ -65,9 +86,4 @@ func (s *Server) niceCallHookHandler(f HandlerFunc, r *Request) (err interface{}
 	}()
 	f(r)
 	return
-}
-
-// 生成hook key，如果是hook key，那么使用'%'符号分隔
-func (s *Server) handlerKey(hook, method, path, domain string) string {
-	return hook + "%" + s.serveHandlerKey(method, path, domain)
 }

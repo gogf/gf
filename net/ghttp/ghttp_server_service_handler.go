@@ -16,23 +16,27 @@ import (
 
 // 注意该方法是直接绑定函数的内存地址，执行的时候直接执行该方法，不会存在初始化新的控制器逻辑
 func (s *Server) BindHandler(pattern string, handler HandlerFunc) {
-	s.doBindHandler(pattern, handler, nil)
+	s.doBindHandler(pattern, handler, nil, "")
 }
 
 // 绑定URI到操作函数/方法
 // pattern的格式形如：/user/list, put:/user, delete:/user, post:/user@johng.cn
 // 支持RESTful的请求格式，具体业务逻辑由绑定的处理方法来执行
-func (s *Server) doBindHandler(pattern string, handler HandlerFunc, middleware []HandlerFunc) {
+func (s *Server) doBindHandler(
+	pattern string, handler HandlerFunc,
+	middleware []HandlerFunc, source string,
+) {
 	s.setHandler(pattern, &handlerItem{
 		itemName:   gdebug.FuncPath(handler),
 		itemType:   gHANDLER_TYPE_HANDLER,
 		itemFunc:   handler,
 		middleware: middleware,
+		source:     source,
 	})
 }
 
 // 通过映射map绑定URI到操作函数/方法
-func (s *Server) bindHandlerByMap(m handlerMap) {
+func (s *Server) bindHandlerByMap(m map[string]*handlerItem) {
 	for p, h := range m {
 		s.setHandler(p, h)
 	}

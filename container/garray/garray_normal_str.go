@@ -9,6 +9,8 @@ package garray
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"github.com/gogf/gf/text/gstr"
 	"math"
 	"sort"
@@ -19,8 +21,9 @@ import (
 	"github.com/gogf/gf/util/grand"
 )
 
+// StrArray is a golang string array with rich features.
 type StrArray struct {
-	mu    *rwmutex.RWMutex
+	mu    rwmutex.RWMutex
 	array []string
 }
 
@@ -36,7 +39,7 @@ func NewStrArray(safe ...bool) *StrArray {
 // which is false in default.
 func NewStrArraySize(size int, cap int, safe ...bool) *StrArray {
 	return &StrArray{
-		mu:    rwmutex.New(safe...),
+		mu:    rwmutex.Create(safe...),
 		array: make([]string, size, cap),
 	}
 }
@@ -46,7 +49,7 @@ func NewStrArraySize(size int, cap int, safe ...bool) *StrArray {
 // which is false in default.
 func NewStrArrayFrom(array []string, safe ...bool) *StrArray {
 	return &StrArray{
-		mu:    rwmutex.New(safe...),
+		mu:    rwmutex.Create(safe...),
 		array: array,
 	}
 }
@@ -58,26 +61,31 @@ func NewStrArrayFromCopy(array []string, safe ...bool) *StrArray {
 	newArray := make([]string, len(array))
 	copy(newArray, array)
 	return &StrArray{
-		mu:    rwmutex.New(safe...),
+		mu:    rwmutex.Create(safe...),
 		array: newArray,
 	}
 }
 
-// Get returns the value of the specified index,
-// the caller should notice the boundary of the array.
-func (a *StrArray) Get(index int) string {
+// Get returns the value by the specified index.
+// If the given <index> is out of range of the array, the <found> is false.
+func (a *StrArray) Get(index int) (value string, found bool) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	value := a.array[index]
-	return value
+	if index < 0 || index >= len(a.array) {
+		return "", false
+	}
+	return a.array[index], true
 }
 
 // Set sets value to specified index.
-func (a *StrArray) Set(index int, value string) *StrArray {
+func (a *StrArray) Set(index int, value string) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	if index < 0 || index >= len(a.array) {
+		return errors.New(fmt.Sprintf("index %d out of array range %d", index, len(a.array)))
+	}
 	a.array[index] = value
-	return a
+	return nil
 }
 
 // SetArray sets the underlying slice array with the given <array>.
@@ -142,45 +150,70 @@ func (a *StrArray) SortFunc(less func(v1, v2 string) bool) *StrArray {
 }
 
 // InsertBefore inserts the <value> to the front of <index>.
-func (a *StrArray) InsertBefore(index int, value string) *StrArray {
+func (a *StrArray) InsertBefore(index int, value string) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	if index < 0 || index >= len(a.array) {
+		return errors.New(fmt.Sprintf("index %d out of array range %d", index, len(a.array)))
+	}
 	rear := append([]string{}, a.array[index:]...)
 	a.array = append(a.array[0:index], value)
 	a.array = append(a.array, rear...)
-	return a
+	return nil
 }
 
 // InsertAfter inserts the <value> to the back of <index>.
-func (a *StrArray) InsertAfter(index int, value string) *StrArray {
+func (a *StrArray) InsertAfter(index int, value string) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	if index < 0 || index >= len(a.array) {
+		return errors.New(fmt.Sprintf("index %d out of array range %d", index, len(a.array)))
+	}
 	rear := append([]string{}, a.array[index+1:]...)
 	a.array = append(a.array[0:index+1], value)
 	a.array = append(a.array, rear...)
-	return a
+	return nil
 }
 
 // Remove removes an item by index.
-func (a *StrArray) Remove(index int) string {
+// If the given <index> is out of range of the array, the <found> is false.
+func (a *StrArray) Remove(index int) (value string, found bool) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	// Determine array boundaries when deleting to improve deletion efficiency。
+	return a.doRemoveWithoutLock(index)
+}
+
+// doRemoveWithoutLock removes an item by index without lock.
+func (a *StrArray) doRemoveWithoutLock(index int) (value string, found bool) {
+	if index < 0 || index >= len(a.array) {
+		return "", false
+	}
+	// Determine array boundaries when deleting to improve deletion efficiency.
 	if index == 0 {
 		value := a.array[0]
 		a.array = a.array[1:]
-		return value
+		return value, true
 	} else if index == len(a.array)-1 {
 		value := a.array[index]
 		a.array = a.array[:index]
-		return value
+		return value, true
 	}
 	// If it is a non-boundary delete,
 	// it will involve the creation of an array,
 	// then the deletion is less efficient.
-	value := a.array[index]
+	value = a.array[index]
 	a.array = append(a.array[:index], a.array[index+1:]...)
-	return value
+	return value, true
+}
+
+// RemoveValue removes an item by value.
+// It returns true if value is found in the array, or else false if not found.
+func (a *StrArray) RemoveValue(value string) bool {
+	if i := a.Search(value); i != -1 {
+		_, found := a.Remove(i)
+		return found
+	}
+	return false
 }
 
 // PushLeft pushes one or multiple items to the beginning of array.
@@ -201,52 +234,72 @@ func (a *StrArray) PushRight(value ...string) *StrArray {
 }
 
 // PopLeft pops and returns an item from the beginning of array.
-func (a *StrArray) PopLeft() string {
+// Note that if the array is empty, the <found> is false.
+func (a *StrArray) PopLeft() (value string, found bool) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	value := a.array[0]
+	if len(a.array) == 0 {
+		return "", false
+	}
+	value = a.array[0]
 	a.array = a.array[1:]
-	return value
+	return value, true
 }
 
 // PopRight pops and returns an item from the end of array.
-func (a *StrArray) PopRight() string {
+// Note that if the array is empty, the <found> is false.
+func (a *StrArray) PopRight() (value string, found bool) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	index := len(a.array) - 1
-	value := a.array[index]
+	if index <= 0 {
+		return "", false
+	}
+	value = a.array[index]
 	a.array = a.array[:index]
-	return value
+	return value, true
 }
 
 // PopRand randomly pops and return an item out of array.
-func (a *StrArray) PopRand() string {
-	return a.Remove(grand.Intn(len(a.array)))
+// Note that if the array is empty, the <found> is false.
+func (a *StrArray) PopRand() (value string, found bool) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	return a.doRemoveWithoutLock(grand.Intn(len(a.array)))
 }
 
 // PopRands randomly pops and returns <size> items out of array.
+// If the given <size> is greater than size of the array, it returns all elements of the array.
+// Note that if given <size> <= 0 or the array is empty, it returns nil.
 func (a *StrArray) PopRands(size int) []string {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	if size > len(a.array) {
+	if size <= 0 || len(a.array) == 0 {
+		return nil
+	}
+	if size >= len(a.array) {
 		size = len(a.array)
 	}
 	array := make([]string, size)
 	for i := 0; i < size; i++ {
-		index := grand.Intn(len(a.array))
-		array[i] = a.array[index]
-		a.array = append(a.array[:index], a.array[index+1:]...)
+		array[i], _ = a.doRemoveWithoutLock(grand.Intn(len(a.array)))
 	}
 	return array
 }
 
 // PopLefts pops and returns <size> items from the beginning of array.
+// If the given <size> is greater than size of the array, it returns all elements of the array.
+// Note that if given <size> <= 0 or the array is empty, it returns nil.
 func (a *StrArray) PopLefts(size int) []string {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	length := len(a.array)
-	if size > length {
-		size = length
+	if size <= 0 || len(a.array) == 0 {
+		return nil
+	}
+	if size >= len(a.array) {
+		array := a.array
+		a.array = a.array[:0]
+		return array
 	}
 	value := a.array[0:size]
 	a.array = a.array[size:]
@@ -254,12 +307,19 @@ func (a *StrArray) PopLefts(size int) []string {
 }
 
 // PopRights pops and returns <size> items from the end of array.
+// If the given <size> is greater than size of the array, it returns all elements of the array.
+// Note that if given <size> <= 0 or the array is empty, it returns nil.
 func (a *StrArray) PopRights(size int) []string {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	if size <= 0 || len(a.array) == 0 {
+		return nil
+	}
 	index := len(a.array) - size
-	if index < 0 {
-		index = 0
+	if index <= 0 {
+		array := a.array
+		a.array = a.array[:0]
+		return array
 	}
 	value := a.array[index:]
 	a.array = a.array[:index]
@@ -466,32 +526,16 @@ func (a *StrArray) RLockFunc(f func(array []string)) *StrArray {
 // The difference between Merge and Append is Append supports only specified slice type,
 // but Merge supports more parameter types.
 func (a *StrArray) Merge(array interface{}) *StrArray {
-	switch v := array.(type) {
-	case *Array:
-		a.Append(gconv.Strings(v.Slice())...)
-	case *IntArray:
-		a.Append(gconv.Strings(v.Slice())...)
-	case *StrArray:
-		a.Append(gconv.Strings(v.Slice())...)
-	case *SortedArray:
-		a.Append(gconv.Strings(v.Slice())...)
-	case *SortedIntArray:
-		a.Append(gconv.Strings(v.Slice())...)
-	case *SortedStrArray:
-		a.Append(gconv.Strings(v.Slice())...)
-	default:
-		a.Append(gconv.Strings(array)...)
-	}
-	return a
+	return a.Append(gconv.Strings(array)...)
 }
 
 // Fill fills an array with num entries of the value <value>,
 // keys starting at the <startIndex> parameter.
-func (a *StrArray) Fill(startIndex int, num int, value string) *StrArray {
+func (a *StrArray) Fill(startIndex int, num int, value string) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	if startIndex < 0 {
-		startIndex = 0
+	if startIndex < 0 || startIndex > len(a.array) {
+		return errors.New(fmt.Sprintf("index %d out of array range %d", startIndex, len(a.array)))
 	}
 	for i := startIndex; i < startIndex+num; i++ {
 		if i > len(a.array)-1 {
@@ -500,7 +544,7 @@ func (a *StrArray) Fill(startIndex int, num int, value string) *StrArray {
 			a.array[i] = value
 		}
 	}
-	return a
+	return nil
 }
 
 // Chunk splits an array into multiple arrays,
@@ -554,27 +598,27 @@ func (a *StrArray) Pad(size int, value string) *StrArray {
 }
 
 // Rand randomly returns one item from array(no deleting).
-func (a *StrArray) Rand() string {
+func (a *StrArray) Rand() (value string, found bool) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	return a.array[grand.Intn(len(a.array))]
+	if len(a.array) == 0 {
+		return "", false
+	}
+	return a.array[grand.Intn(len(a.array))], true
 }
 
 // Rands randomly returns <size> items from array(no deleting).
 func (a *StrArray) Rands(size int) []string {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	if size > len(a.array) {
-		size = len(a.array)
+	if size <= 0 || len(a.array) == 0 {
+		return nil
 	}
-	n := make([]string, size)
-	for i, v := range grand.Perm(len(a.array)) {
-		n[i] = a.array[v]
-		if i == size-1 {
-			break
-		}
+	array := make([]string, size)
+	for i := 0; i < size; i++ {
+		array[i] = a.array[grand.Intn(len(a.array))]
 	}
-	return n
+	return array
 }
 
 // Shuffle randomly shuffles the array.
@@ -601,6 +645,9 @@ func (a *StrArray) Reverse() *StrArray {
 func (a *StrArray) Join(glue string) string {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
+	if len(a.array) == 0 {
+		return ""
+	}
 	buffer := bytes.NewBuffer(nil)
 	for k, v := range a.array {
 		buffer.WriteString(v)
@@ -627,7 +674,7 @@ func (a *StrArray) Iterator(f func(k int, v string) bool) {
 	a.IteratorAsc(f)
 }
 
-// IteratorAsc iterates the array in ascending order with given callback function <f>.
+// IteratorAsc iterates the array readonly in ascending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
 func (a *StrArray) IteratorAsc(f func(k int, v string) bool) {
 	a.mu.RLock()
@@ -639,7 +686,7 @@ func (a *StrArray) IteratorAsc(f func(k int, v string) bool) {
 	}
 }
 
-// IteratorDesc iterates the array in descending order with given callback function <f>.
+// IteratorDesc iterates the array readonly in descending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
 func (a *StrArray) IteratorDesc(f func(k int, v string) bool) {
 	a.mu.RLock()
@@ -676,8 +723,7 @@ func (a *StrArray) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (a *StrArray) UnmarshalJSON(b []byte) error {
-	if a.mu == nil {
-		a.mu = rwmutex.New()
+	if a.array == nil {
 		a.array = make([]string, 0)
 	}
 	a.mu.Lock()
@@ -686,4 +732,46 @@ func (a *StrArray) UnmarshalJSON(b []byte) error {
 		return err
 	}
 	return nil
+}
+
+// UnmarshalValue is an interface implement which sets any type of value for array.
+func (a *StrArray) UnmarshalValue(value interface{}) error {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	switch value.(type) {
+	case string, []byte:
+		return json.Unmarshal(gconv.Bytes(value), &a.array)
+	default:
+		a.array = gconv.SliceStr(value)
+	}
+	return nil
+}
+
+// FilterEmpty removes all empty string value of the array.
+func (a *StrArray) FilterEmpty() *StrArray {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for i := 0; i < len(a.array); {
+		if a.array[i] == "" {
+			a.array = append(a.array[:i], a.array[i+1:]...)
+		} else {
+			i++
+		}
+	}
+	return a
+}
+
+// Walk applies a user supplied function <f> to every item of array.
+func (a *StrArray) Walk(f func(value string) string) *StrArray {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	for i, v := range a.array {
+		a.array[i] = f(v)
+	}
+	return a
+}
+
+// IsEmpty checks whether the array is empty.
+func (a *StrArray) IsEmpty() bool {
+	return a.Len() == 0
 }

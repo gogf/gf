@@ -13,20 +13,20 @@ func main() {
 			r.Middleware.Next()
 			r.Response.Write("end")
 		})
-		g.Group("/order", func(group *ghttp.RouterGroup) {
-			g.GET("/list", func(r *ghttp.Request) {
+		group.Group("/order", func(group *ghttp.RouterGroup) {
+			group.GET("/list", func(r *ghttp.Request) {
 				r.Response.Write("list")
 			})
 		})
-		g.Group("/user", func(group *ghttp.RouterGroup) {
-			g.GET("/info", func(r *ghttp.Request) {
+		group.Group("/user", func(group *ghttp.RouterGroup) {
+			group.GET("/info", func(r *ghttp.Request) {
 				r.Response.Write("info")
 			})
-			g.POST("/edit", func(r *ghttp.Request) {
+			group.POST("/edit", func(r *ghttp.Request) {
 				r.Response.Write("edit")
 			})
 		})
-		g.Group("/hook", func(group *ghttp.RouterGroup) {
+		group.Group("/hook", func(group *ghttp.RouterGroup) {
 			group.Hook("/*", ghttp.HOOK_BEFORE_SERVE, func(r *ghttp.Request) {
 				r.Response.Write("hook any")
 			})

@@ -48,7 +48,8 @@ var (
 )
 
 // Convert converts the variable <i> to the type <t>, the type <t> is specified by string.
-// The optional parameter <params> is used for additional parameter passing.
+// The optional parameter <params> is used for additional necessary parameter for this conversion.
+// It supports common types conversion as its conversion based on type name string.
 func Convert(i interface{}, t string, params ...interface{}) interface{} {
 	switch t {
 	case "int":
@@ -201,8 +202,18 @@ func String(i interface{}) string {
 		return value
 	case []byte:
 		return string(value)
+	case time.Time:
+		if value.IsZero() {
+			return ""
+		}
+		return value.String()
 	case *time.Time:
 		if value == nil {
+			return ""
+		}
+		return value.String()
+	case gtime.Time:
+		if value.IsZero() {
 			return ""
 		}
 		return value.String()
@@ -220,35 +231,35 @@ func String(i interface{}) string {
 			// If the variable implements the String() interface,
 			// then use that interface to perform the conversion
 			return f.String()
-		} else if f, ok := value.(apiError); ok {
+		}
+		if f, ok := value.(apiError); ok {
 			// If the variable implements the Error() interface,
 			// then use that interface to perform the conversion
 			return f.Error()
+		}
+		// Reflect checks.
+		rv := reflect.ValueOf(value)
+		kind := rv.Kind()
+		switch kind {
+		case reflect.Chan,
+			reflect.Map,
+			reflect.Slice,
+			reflect.Func,
+			reflect.Ptr,
+			reflect.Interface,
+			reflect.UnsafePointer:
+			if rv.IsNil() {
+				return ""
+			}
+		}
+		if kind == reflect.Ptr {
+			return String(rv.Elem().Interface())
+		}
+		// Finally we use json.Marshal to convert.
+		if jsonContent, err := json.Marshal(value); err != nil {
+			return fmt.Sprint(value)
 		} else {
-			// Reflect checks.
-			rv := reflect.ValueOf(value)
-			kind := rv.Kind()
-			switch kind {
-			case reflect.Chan,
-				reflect.Map,
-				reflect.Slice,
-				reflect.Func,
-				reflect.Ptr,
-				reflect.Interface,
-				reflect.UnsafePointer:
-				if rv.IsNil() {
-					return ""
-				}
-			}
-			if kind == reflect.Ptr {
-				return String(rv.Elem().Interface())
-			}
-			// Finally we use json.Marshal to convert.
-			if jsonContent, err := json.Marshal(value); err != nil {
-				return fmt.Sprint(value)
-			} else {
-				return string(jsonContent)
-			}
+			return string(jsonContent)
 		}
 	}
 }
@@ -378,20 +389,38 @@ func Int64(i interface{}) int64 {
 		return gbinary.DecodeToInt64(value)
 	default:
 		s := String(value)
+		isMinus := false
+		if len(s) > 0 {
+			if s[0] == '-' {
+				isMinus = true
+				s = s[1:]
+			} else if s[0] == '+' {
+				s = s[1:]
+			}
+		}
 		// Hexadecimal
 		if len(s) > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X') {
 			if v, e := strconv.ParseInt(s[2:], 16, 64); e == nil {
+				if isMinus {
+					return -v
+				}
 				return v
 			}
 		}
 		// Octal
 		if len(s) > 1 && s[0] == '0' {
 			if v, e := strconv.ParseInt(s[1:], 8, 64); e == nil {
+				if isMinus {
+					return -v
+				}
 				return v
 			}
 		}
 		// Decimal
 		if v, e := strconv.ParseInt(s, 10, 64); e == nil {
+			if isMinus {
+				return -v
+			}
 			return v
 		}
 		// Float64

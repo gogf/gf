@@ -10,31 +10,36 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/os/gfpool"
+	"github.com/gogf/gf/os/gmlock"
+	"github.com/gogf/gf/os/gtimer"
 	"io"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gogf/gf/debug/gdebug"
 
 	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/gfpool"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/util/gconv"
 )
 
+// Logger is the struct for logging management.
 type Logger struct {
-	parent *Logger // Parent logger.
-	config Config  // Logger configuration.
+	rmu    sync.Mutex // Mutex for rotation feature.
+	parent *Logger    // Parent logger, if it is not empty, it means the logger is used in chaining function.
+	config Config     // Logger configuration.
 }
 
 const (
-	gDEFAULT_FILE_FORMAT     = `{Y-m-d}.log`
-	gDEFAULT_FILE_POOL_FLAGS = os.O_CREATE | os.O_WRONLY | os.O_APPEND
-	gDEFAULT_FPOOL_PERM      = os.FileMode(0666)
-	gDEFAULT_FPOOL_EXPIRE    = 60000
-	gPATH_FILTER_KEY         = "/os/glog/glog"
+	gDEFAULT_FILE_FORMAT = `{Y-m-d}.log`
+	gDEFAULT_FILE_FLAGS  = os.O_CREATE | os.O_WRONLY | os.O_APPEND
+	gDEFAULT_FILE_PERM   = os.FileMode(0666)
+	gDEFAULT_FILE_EXPIRE = time.Minute
+	gPATH_FILTER_KEY     = "/os/glog/glog"
 )
 
 const (
@@ -49,12 +54,25 @@ const (
 
 // New creates and returns a custom logger.
 func New() *Logger {
-	return &Logger{
+	logger := &Logger{
 		config: DefaultConfig(),
 	}
+	// Initialize the internal handler after some delay.
+	gtimer.AddOnce(time.Second, func() {
+		gtimer.AddOnce(logger.config.RotateCheckInterval, logger.rotateChecksTimely)
+	})
+	return logger
+}
+
+// NewWithWriter creates and returns a custom logger with io.Writer.
+func NewWithWriter(writer io.Writer) *Logger {
+	l := New()
+	l.SetWriter(writer)
+	return l
 }
 
 // Clone returns a new logger, which is the clone the current logger.
+// It's commonly used for chaining operations.
 func (l *Logger) Clone() *Logger {
 	logger := Logger{}
 	logger = *l
@@ -62,37 +80,26 @@ func (l *Logger) Clone() *Logger {
 	return &logger
 }
 
-// getFilePointer returns the file pinter for file logging.
-// It returns nil if file logging is disabled, or file opening fails.
-func (l *Logger) getFilePointer() *gfpool.File {
-	if path := l.config.Path; path != "" {
-		// Content containing "{}" in the file name is formatted using gtime.
-		file, _ := gregex.ReplaceStringFunc(`{.+?}`, l.config.File, func(s string) string {
-			return gtime.Now().Format(strings.Trim(s, "{}"))
-		})
-		// Create path if it does not exist.
-		if !gfile.Exists(path) {
-			if err := gfile.Mkdir(path); err != nil {
-				fmt.Fprintln(os.Stderr, fmt.Sprintf(`[glog] mkdir "%s" failed: %s`, path, err.Error()))
-				return nil
-			}
-		}
-		if fp, err := gfpool.Open(
-			path+gfile.Separator+file,
-			gDEFAULT_FILE_POOL_FLAGS,
-			gDEFAULT_FPOOL_PERM,
-			gDEFAULT_FPOOL_EXPIRE); err == nil {
-			return fp
-		} else {
-			fmt.Fprintln(os.Stderr, err)
-		}
+// getFilePath returns the logging file path.
+// The logging file name must have extension name of "log".
+func (l *Logger) getFilePath(now time.Time) string {
+	// Content containing "{}" in the file name is formatted using gtime.
+	file, _ := gregex.ReplaceStringFunc(`{.+?}`, l.config.File, func(s string) string {
+		return gtime.New(now).Format(strings.Trim(s, "{}"))
+	})
+	file = gfile.Join(l.config.Path, file)
+	if gfile.ExtName(file) != "log" {
+		file += ".log"
 	}
-	return nil
+	return file
 }
 
 // print prints <s> to defined writer, logging file or passed <std>.
 func (l *Logger) print(std io.Writer, lead string, value ...interface{}) {
-	buffer := bytes.NewBuffer(nil)
+	var (
+		now    = time.Now()
+		buffer = bytes.NewBuffer(nil)
+	)
 	if l.config.HeaderPrint {
 		// Time.
 		timeFormat := ""
@@ -106,7 +113,7 @@ func (l *Logger) print(std io.Writer, lead string, value ...interface{}) {
 			timeFormat += "15:04:05.000 "
 		}
 		if len(timeFormat) > 0 {
-			buffer.WriteString(time.Now().Format(timeFormat))
+			buffer.WriteString(now.Format(timeFormat))
 		}
 		// Lead string.
 		if len(lead) > 0 {
@@ -160,36 +167,75 @@ func (l *Logger) print(std io.Writer, lead string, value ...interface{}) {
 	buffer.WriteString(valueStr + "\n")
 	if l.config.Flags&F_ASYNC > 0 {
 		err := asyncPool.Add(func() {
-			l.printToWriter(std, buffer)
+			l.printToWriter(now, std, buffer)
 		})
 		if err != nil {
 			intlog.Error(err)
 		}
 	} else {
-		l.printToWriter(std, buffer)
+		l.printToWriter(now, std, buffer)
 	}
 }
 
 // printToWriter writes buffer to writer.
-func (l *Logger) printToWriter(std io.Writer, buffer *bytes.Buffer) {
+func (l *Logger) printToWriter(now time.Time, std io.Writer, buffer *bytes.Buffer) {
 	if l.config.Writer == nil {
-		if f := l.getFilePointer(); f != nil {
-			defer f.Close()
-			if _, err := io.WriteString(f, buffer.String()); err != nil {
-				fmt.Fprintln(os.Stderr, err.Error())
-			}
+		// Output content to disk file.
+		if l.config.Path != "" {
+			l.printToFile(now, buffer)
 		}
 		// Allow output to stdout?
 		if l.config.StdoutPrint {
 			if _, err := std.Write(buffer.Bytes()); err != nil {
-				fmt.Fprintln(os.Stderr, err.Error())
+				panic(err)
 			}
 		}
 	} else {
 		if _, err := l.config.Writer.Write(buffer.Bytes()); err != nil {
-			fmt.Fprintln(os.Stderr, err.Error())
+			panic(err)
 		}
 	}
+}
+
+// printToFile outputs logging content to disk file.
+func (l *Logger) printToFile(now time.Time, buffer *bytes.Buffer) {
+	var (
+		logFilePath   = l.getFilePath(now)
+		memoryLockKey = "glog.file.lock:" + logFilePath
+	)
+	gmlock.Lock(memoryLockKey)
+	defer gmlock.Unlock(memoryLockKey)
+	file := l.getFilePointer(logFilePath)
+	defer file.Close()
+	// Rotation file size checks.
+	if l.config.RotateSize > 0 {
+		stat, err := file.Stat()
+		if err != nil {
+			panic(err)
+		}
+		if stat.Size() > l.config.RotateSize {
+			l.rotateFileBySize(now)
+			file = l.getFilePointer(logFilePath)
+			defer file.Close()
+		}
+	}
+	if _, err := file.Write(buffer.Bytes()); err != nil {
+		panic(err)
+	}
+}
+
+// getFilePointer retrieves and returns a file pointer from file pool.
+func (l *Logger) getFilePointer(path string) *gfpool.File {
+	file, err := gfpool.Open(
+		path,
+		gDEFAULT_FILE_FLAGS,
+		gDEFAULT_FILE_PERM,
+		gDEFAULT_FILE_EXPIRE,
+	)
+	if err != nil {
+		panic(err)
+	}
+	return file
 }
 
 // printStd prints content <s> without stack.

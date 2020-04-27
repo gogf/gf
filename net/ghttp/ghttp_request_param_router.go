@@ -12,7 +12,9 @@ import "github.com/gogf/gf/container/gvar"
 // It returns <def> if <key> does not exist.
 func (r *Request) GetRouterValue(key string, def ...interface{}) interface{} {
 	if r.routerMap != nil {
-		return r.routerMap[key]
+		if v, ok := r.routerMap[key]; ok {
+			return v
+		}
 	}
 	if len(def) > 0 {
 		return def[0]

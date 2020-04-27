@@ -7,15 +7,16 @@
 package gconv
 
 import (
+	"encoding/json"
 	"errors"
 	"reflect"
 	"strings"
 
 	"github.com/gogf/gf/internal/empty"
-	"github.com/gogf/gf/internal/utilstr"
+	"github.com/gogf/gf/internal/utils"
 )
 
-// apiMapStrAny is the interface support for package gmap.
+// apiMapStrAny is the interface support for converting struct parameter to map.
 type apiMapStrAny interface {
 	MapStrAny() map[string]interface{}
 }
@@ -24,7 +25,8 @@ type apiMapStrAny interface {
 // map/struct/*struct type, then the conversion will fail and returns nil.
 //
 // If <value> is a struct/*struct object, the second parameter <tags> specifies the most priority
-// tags that will be detected, otherwise it detects the tags in order of: gconv, json, and then the field name.
+// tags that will be detected, otherwise it detects the tags in order of:
+// gconv, json, field name.
 func Map(value interface{}, tags ...string) map[string]interface{} {
 	return doMapConvert(value, false, tags...)
 }
@@ -38,165 +40,216 @@ func MapDeep(value interface{}, tags ...string) map[string]interface{} {
 }
 
 // doMapConvert implements the map converting.
+// It automatically checks and converts json string to map if <value> is string/[]byte.
 func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]interface{} {
 	if value == nil {
 		return nil
 	}
-	if r, ok := value.(map[string]interface{}); ok {
+
+	// Assert the common combination of types, and finally it uses reflection.
+	m := make(map[string]interface{})
+	switch r := value.(type) {
+	case string:
+		if len(r) > 0 && r[0] == '{' && r[len(r)-1] == '}' {
+			if err := json.Unmarshal([]byte(r), &m); err != nil {
+				return nil
+			}
+		} else {
+			return nil
+		}
+	case []byte:
+		if len(r) > 0 && r[0] == '{' && r[len(r)-1] == '}' {
+			if err := json.Unmarshal(r, &m); err != nil {
+				return nil
+			}
+		} else {
+			return nil
+		}
+	case map[interface{}]interface{}:
+		for k, v := range r {
+			m[String(k)] = v
+		}
+	case map[interface{}]string:
+		for k, v := range r {
+			m[String(k)] = v
+		}
+	case map[interface{}]int:
+		for k, v := range r {
+			m[String(k)] = v
+		}
+	case map[interface{}]uint:
+		for k, v := range r {
+			m[String(k)] = v
+		}
+	case map[interface{}]float32:
+		for k, v := range r {
+			m[String(k)] = v
+		}
+	case map[interface{}]float64:
+		for k, v := range r {
+			m[String(k)] = v
+		}
+	case map[string]bool:
+		for k, v := range r {
+			m[k] = v
+		}
+	case map[string]int:
+		for k, v := range r {
+			m[k] = v
+		}
+	case map[string]uint:
+		for k, v := range r {
+			m[k] = v
+		}
+	case map[string]float32:
+		for k, v := range r {
+			m[k] = v
+		}
+	case map[string]float64:
+		for k, v := range r {
+			m[k] = v
+		}
+	case map[string]interface{}:
 		return r
-	} else {
-		// Assert the common combination of types, and finally it uses reflection.
-		m := make(map[string]interface{})
-		switch value.(type) {
-		case map[interface{}]interface{}:
-			for k, v := range value.(map[interface{}]interface{}) {
-				m[String(k)] = v
-			}
-		case map[interface{}]string:
-			for k, v := range value.(map[interface{}]string) {
-				m[String(k)] = v
-			}
-		case map[interface{}]int:
-			for k, v := range value.(map[interface{}]int) {
-				m[String(k)] = v
-			}
-		case map[interface{}]uint:
-			for k, v := range value.(map[interface{}]uint) {
-				m[String(k)] = v
-			}
-		case map[interface{}]float32:
-			for k, v := range value.(map[interface{}]float32) {
-				m[String(k)] = v
-			}
-		case map[interface{}]float64:
-			for k, v := range value.(map[interface{}]float64) {
-				m[String(k)] = v
-			}
-		case map[string]bool:
-			for k, v := range value.(map[string]bool) {
-				m[k] = v
-			}
-		case map[string]int:
-			for k, v := range value.(map[string]int) {
-				m[k] = v
-			}
-		case map[string]uint:
-			for k, v := range value.(map[string]uint) {
-				m[k] = v
-			}
-		case map[string]float32:
-			for k, v := range value.(map[string]float32) {
-				m[k] = v
-			}
-		case map[string]float64:
-			for k, v := range value.(map[string]float64) {
-				m[k] = v
-			}
-		case map[int]interface{}:
-			for k, v := range value.(map[int]interface{}) {
-				m[String(k)] = v
-			}
-		case map[int]string:
-			for k, v := range value.(map[int]string) {
-				m[String(k)] = v
-			}
-		case map[uint]string:
-			for k, v := range value.(map[uint]string) {
-				m[String(k)] = v
-			}
-		// Not a common type, then use reflection.
-		default:
-			rv := reflect.ValueOf(value)
-			kind := rv.Kind()
-			// If it is a pointer, we should find its real data type.
-			if kind == reflect.Ptr {
-				rv = rv.Elem()
-				kind = rv.Kind()
-			}
-			switch kind {
-			case reflect.Map:
-				ks := rv.MapKeys()
-				for _, k := range ks {
-					m[String(k.Interface())] = rv.MapIndex(k).Interface()
+	case map[int]interface{}:
+		for k, v := range r {
+			m[String(k)] = v
+		}
+	case map[int]string:
+		for k, v := range r {
+			m[String(k)] = v
+		}
+	case map[uint]string:
+		for k, v := range r {
+			m[String(k)] = v
+		}
+	// Not a common type, it then uses reflection for conversion.
+	default:
+		rv := reflect.ValueOf(value)
+		kind := rv.Kind()
+		// If it is a pointer, we should find its real data type.
+		if kind == reflect.Ptr {
+			rv = rv.Elem()
+			kind = rv.Kind()
+		}
+		switch kind {
+		// If <value> is type of array, it converts the value of even number index as its key and
+		// the value of odd number index as its corresponding value.
+		// Eg:
+		// []string{"k1","v1","k2","v2"} => map[string]interface{}{"k1":"v1", "k2":"v2"}
+		// []string{"k1","v1","k2"} => map[string]interface{}{"k1":"v1", "k2":nil}
+		case reflect.Slice, reflect.Array:
+			length := rv.Len()
+			for i := 0; i < length; i += 2 {
+				if i+1 < length {
+					m[String(rv.Index(i).Interface())] = rv.Index(i + 1).Interface()
+				} else {
+					m[String(rv.Index(i).Interface())] = nil
 				}
-			case reflect.Struct:
-				if v, ok := value.(apiMapStrAny); ok {
-					return v.MapStrAny()
+			}
+		case reflect.Map:
+			ks := rv.MapKeys()
+			for _, k := range ks {
+				m[String(k.Interface())] = rv.MapIndex(k).Interface()
+			}
+		case reflect.Struct:
+			// Map converting interface check.
+			if v, ok := value.(apiMapStrAny); ok {
+				return v.MapStrAny()
+			}
+			// Using reflect for converting.
+			var (
+				rtField  reflect.StructField
+				rvField  reflect.Value
+				rvKind   reflect.Kind
+				rt       = rv.Type()
+				name     = ""
+				tagArray = structTagPriority
+			)
+			switch len(tags) {
+			case 0:
+				// No need handle.
+			case 1:
+				tagArray = append(strings.Split(tags[0], ","), structTagPriority...)
+			default:
+				tagArray = append(tags, structTagPriority...)
+			}
+			for i := 0; i < rv.NumField(); i++ {
+				rtField = rt.Field(i)
+				rvField = rv.Field(i)
+				// Only convert the public attributes.
+				fieldName := rtField.Name
+				if !utils.IsLetterUpper(fieldName[0]) {
+					continue
 				}
-				rt := rv.Type()
-				name := ""
-				tagArray := structTagPriority
-				switch len(tags) {
-				case 0:
-					// No need handle.
-				case 1:
-					tagArray = append(strings.Split(tags[0], ","), structTagPriority...)
-				default:
-					tagArray = append(tags, structTagPriority...)
+				name = ""
+				fieldTag := rtField.Tag
+				for _, tag := range tagArray {
+					if name = fieldTag.Get(tag); name != "" {
+						break
+					}
 				}
-				var rtField reflect.StructField
-				var rvField reflect.Value
-				var rvKind reflect.Kind
-				for i := 0; i < rv.NumField(); i++ {
-					rtField = rt.Field(i)
-					rvField = rv.Field(i)
-					// Only convert the public attributes.
-					fieldName := rtField.Name
-					if !utilstr.IsLetterUpper(fieldName[0]) {
+				if name == "" {
+					name = fieldName
+				} else {
+					// Support json tag feature: -, omitempty
+					name = strings.TrimSpace(name)
+					if name == "-" {
 						continue
 					}
-					name = ""
-					fieldTag := rtField.Tag
-					for _, tag := range tagArray {
-						if name = fieldTag.Get(tag); name != "" {
-							break
-						}
-					}
-					if name == "" {
-						name = strings.TrimSpace(fieldName)
-					} else {
-						// Support json tag feature: -, omitempty
-						name = strings.TrimSpace(name)
-						if name == "-" {
-							continue
-						}
-						array := strings.Split(name, ",")
-						if len(array) > 1 {
-							switch strings.TrimSpace(array[1]) {
-							case "omitempty":
-								if empty.IsEmpty(rvField.Interface()) {
-									continue
-								} else {
-									name = strings.TrimSpace(array[0])
-								}
-							default:
+					array := strings.Split(name, ",")
+					if len(array) > 1 {
+						switch strings.TrimSpace(array[1]) {
+						case "omitempty":
+							if empty.IsEmpty(rvField.Interface()) {
+								continue
+							} else {
 								name = strings.TrimSpace(array[0])
 							}
+						default:
+							name = strings.TrimSpace(array[0])
 						}
 					}
-					if recursive {
+				}
+				if recursive {
+					rvKind = rvField.Kind()
+					if rvKind == reflect.Ptr {
+						rvField = rvField.Elem()
 						rvKind = rvField.Kind()
-						if rvKind == reflect.Ptr {
-							rvField = rvField.Elem()
-							rvKind = rvField.Kind()
-						}
-						if rvKind == reflect.Struct {
+					}
+					if rvKind == reflect.Struct {
+						hasNoTag := name == fieldName
+						if hasNoTag && rtField.Anonymous {
+							// It means this attribute field has no tag.
+							// Overwrite the attribute with sub-struct attribute fields.
 							for k, v := range doMapConvert(rvField.Interface(), recursive, tags...) {
 								m[k] = v
 							}
 						} else {
-							m[name] = rvField.Interface()
+							// It means this attribute field has desired tag.
+							m[name] = doMapConvert(rvField.Interface(), recursive, tags...)
 						}
+
 					} else {
+						if rvField.IsValid() {
+							m[name] = rvField.Interface()
+						} else {
+							m[name] = nil
+						}
+					}
+				} else {
+					if rvField.IsValid() {
 						m[name] = rvField.Interface()
+					} else {
+						m[name] = nil
 					}
 				}
-			default:
-				return nil
 			}
+		default:
+			return nil
 		}
-		return m
 	}
+	return m
 }
 
 // MapStrStr converts <value> to map[string]string.
@@ -234,7 +287,7 @@ func MapStrStrDeep(value interface{}, tags ...string) map[string]string {
 }
 
 // MapToMap converts map type variable <params> to another map type variable <pointer> using reflect.
-// The elements of <pointer> should be type of *map.
+// The parameter of <pointer> should be type of *map.
 func MapToMap(params interface{}, pointer interface{}, mapping ...map[string]string) error {
 	return doMapToMap(params, pointer, false, mapping...)
 }
@@ -293,19 +346,19 @@ func doMapToMap(params interface{}, pointer interface{}, deep bool, mapping ...m
 }
 
 // MapToMaps converts map type variable <params> to another map type variable <pointer>.
-// The elements of <pointer> should be type of []map/*map.
+// The parameter of <pointer> should be type of []map/*map.
 func MapToMaps(params interface{}, pointer interface{}, mapping ...map[string]string) error {
 	return doMapToMaps(params, pointer, false, mapping...)
 }
 
 // MapToMapsDeep recursively converts map type variable <params> to another map type variable <pointer>.
-// The elements of <pointer> should be type of []map/*map.
+// The parameter of <pointer> should be type of []map/*map.
 func MapToMapsDeep(params interface{}, pointer interface{}, mapping ...map[string]string) error {
 	return doMapToMaps(params, pointer, true, mapping...)
 }
 
 // doMapToMaps converts map type variable <params> to another map type variable <pointer>.
-// The elements of <pointer> should be type of []map/*map.
+// The parameter of <pointer> should be type of []map/*map.
 func doMapToMaps(params interface{}, pointer interface{}, deep bool, mapping ...map[string]string) error {
 	paramsRv := reflect.ValueOf(params)
 	paramsKind := paramsRv.Kind()

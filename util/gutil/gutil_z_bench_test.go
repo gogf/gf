@@ -12,6 +12,15 @@ import (
 	"testing"
 )
 
+var (
+	m1 = map[string]interface{}{
+		"k1": "v1",
+	}
+	m2 = map[string]interface{}{
+		"k2": "v2",
+	}
+)
+
 func Benchmark_TryCatch(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		TryCatch(func() {
@@ -19,5 +28,11 @@ func Benchmark_TryCatch(b *testing.B) {
 		}, func(err interface{}) {
 
 		})
+	}
+}
+
+func Benchmark_MapMergeCopy(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		MapMergeCopy(m1, m2)
 	}
 }

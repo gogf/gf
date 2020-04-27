@@ -15,7 +15,7 @@ import (
 )
 
 func Test_Check(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		rule := "abc:6,16"
 		val1 := 0
 		val2 := 7
@@ -23,9 +23,9 @@ func Test_Check(t *testing.T) {
 		err1 := gvalid.Check(val1, rule, nil)
 		err2 := gvalid.Check(val2, rule, nil)
 		err3 := gvalid.Check(val3, rule, nil)
-		gtest.Assert(err1, "invalid rules:abc:6,16")
-		gtest.Assert(err2, "invalid rules:abc:6,16")
-		gtest.Assert(err3, "invalid rules:abc:6,16")
+		t.Assert(err1, "invalid rules:abc:6,16")
+		t.Assert(err2, "invalid rules:abc:6,16")
+		t.Assert(err3, "invalid rules:abc:6,16")
 	})
 }
 
@@ -45,7 +45,7 @@ func Test_Required(t *testing.T) {
 }
 
 func Test_RequiredIf(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		rule := "required-if:100,200"
 		val1 := ""
 		val2 := "100"
@@ -53,14 +53,14 @@ func Test_RequiredIf(t *testing.T) {
 		err1 := gvalid.Check(val1, rule, nil)
 		err2 := gvalid.Check(val2, rule, nil)
 		err3 := gvalid.Check(val3, rule, nil)
-		gtest.Assert(err1, nil)
-		gtest.Assert(err2, nil)
-		gtest.Assert(err3, nil)
+		t.Assert(err1, nil)
+		t.Assert(err2, nil)
+		t.Assert(err3, nil)
 	})
 }
 
 func Test_RequiredUnless(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		rule := "required-unless:100,200"
 		val1 := ""
 		val2 := "100"
@@ -68,14 +68,14 @@ func Test_RequiredUnless(t *testing.T) {
 		err1 := gvalid.Check(val1, rule, nil)
 		err2 := gvalid.Check(val2, rule, nil)
 		err3 := gvalid.Check(val3, rule, nil)
-		gtest.AssertNE(err1, nil)
-		gtest.Assert(err2, nil)
-		gtest.Assert(err3, nil)
+		t.AssertNE(err1, nil)
+		t.Assert(err2, nil)
+		t.Assert(err3, nil)
 	})
 }
 
 func Test_RequiredWith(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		rule := "required-with:id,name"
 		val1 := ""
 		params1 := g.Map{
@@ -91,14 +91,14 @@ func Test_RequiredWith(t *testing.T) {
 		err1 := gvalid.Check(val1, rule, nil, params1)
 		err2 := gvalid.Check(val1, rule, nil, params2)
 		err3 := gvalid.Check(val1, rule, nil, params3)
-		gtest.Assert(err1, nil)
-		gtest.AssertNE(err2, nil)
-		gtest.AssertNE(err3, nil)
+		t.Assert(err1, nil)
+		t.AssertNE(err2, nil)
+		t.AssertNE(err3, nil)
 	})
 }
 
 func Test_RequiredWithAll(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		rule := "required-with-all:id,name"
 		val1 := ""
 		params1 := g.Map{
@@ -114,14 +114,14 @@ func Test_RequiredWithAll(t *testing.T) {
 		err1 := gvalid.Check(val1, rule, nil, params1)
 		err2 := gvalid.Check(val1, rule, nil, params2)
 		err3 := gvalid.Check(val1, rule, nil, params3)
-		gtest.Assert(err1, nil)
-		gtest.Assert(err2, nil)
-		gtest.AssertNE(err3, nil)
+		t.Assert(err1, nil)
+		t.Assert(err2, nil)
+		t.AssertNE(err3, nil)
 	})
 }
 
 func Test_RequiredWithOut(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		rule := "required-without:id,name"
 		val1 := ""
 		params1 := g.Map{
@@ -137,14 +137,14 @@ func Test_RequiredWithOut(t *testing.T) {
 		err1 := gvalid.Check(val1, rule, nil, params1)
 		err2 := gvalid.Check(val1, rule, nil, params2)
 		err3 := gvalid.Check(val1, rule, nil, params3)
-		gtest.AssertNE(err1, nil)
-		gtest.AssertNE(err2, nil)
-		gtest.Assert(err3, nil)
+		t.AssertNE(err1, nil)
+		t.AssertNE(err2, nil)
+		t.Assert(err3, nil)
 	})
 }
 
 func Test_RequiredWithOutAll(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		rule := "required-without-all:id,name"
 		val1 := ""
 		params1 := g.Map{
@@ -160,14 +160,14 @@ func Test_RequiredWithOutAll(t *testing.T) {
 		err1 := gvalid.Check(val1, rule, nil, params1)
 		err2 := gvalid.Check(val1, rule, nil, params2)
 		err3 := gvalid.Check(val1, rule, nil, params3)
-		gtest.AssertNE(err1, nil)
-		gtest.Assert(err2, nil)
-		gtest.Assert(err3, nil)
+		t.AssertNE(err1, nil)
+		t.Assert(err2, nil)
+		t.Assert(err3, nil)
 	})
 }
 
 func Test_Date(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		rule := "date"
 		val1 := "2010"
 		val2 := "201011"
@@ -181,17 +181,17 @@ func Test_Date(t *testing.T) {
 		err4 := gvalid.Check(val4, rule, nil)
 		err5 := gvalid.Check(val5, rule, nil)
 		err6 := gvalid.Check(val6, rule, nil)
-		gtest.AssertNE(err1, nil)
-		gtest.AssertNE(err2, nil)
-		gtest.Assert(err3, nil)
-		gtest.Assert(err4, nil)
-		gtest.Assert(err5, nil)
-		gtest.Assert(err6, nil)
+		t.AssertNE(err1, nil)
+		t.AssertNE(err2, nil)
+		t.Assert(err3, nil)
+		t.Assert(err4, nil)
+		t.Assert(err5, nil)
+		t.Assert(err6, nil)
 	})
 }
 
 func Test_DateFormat(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		val1 := "2010"
 		val2 := "201011"
 		val3 := "2010.11"
@@ -204,17 +204,17 @@ func Test_DateFormat(t *testing.T) {
 		err4 := gvalid.Check(val4, "date-format:Ym-d", nil)
 		err5 := gvalid.Check(val5, "date-format:Y~m~d", nil)
 		err6 := gvalid.Check(val6, "date-format:Y~m~d", nil)
-		gtest.Assert(err1, nil)
-		gtest.Assert(err2, nil)
-		gtest.Assert(err3, nil)
-		gtest.Assert(err4, nil)
-		gtest.Assert(err5, nil)
-		gtest.AssertNE(err6, nil)
+		t.Assert(err1, nil)
+		t.Assert(err2, nil)
+		t.Assert(err3, nil)
+		t.Assert(err4, nil)
+		t.Assert(err5, nil)
+		t.AssertNE(err6, nil)
 	})
 }
 
 func Test_Email(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		rule := "email"
 		value1 := "m@johngcn"
 		value2 := "m@www@johngcn"
@@ -224,28 +224,28 @@ func Test_Email(t *testing.T) {
 		err2 := gvalid.Check(value2, rule, nil)
 		err3 := gvalid.Check(value3, rule, nil)
 		err4 := gvalid.Check(value4, rule, nil)
-		gtest.AssertNE(err1, nil)
-		gtest.AssertNE(err2, nil)
-		gtest.Assert(err3, nil)
-		gtest.Assert(err4, nil)
+		t.AssertNE(err1, nil)
+		t.AssertNE(err2, nil)
+		t.Assert(err3, nil)
+		t.Assert(err4, nil)
 	})
 }
 
 func Test_Phone(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		err1 := gvalid.Check("1361990897", "phone", nil)
 		err2 := gvalid.Check("13619908979", "phone", nil)
 		err3 := gvalid.Check("16719908979", "phone", nil)
 		err4 := gvalid.Check("19719908989", "phone", nil)
-		gtest.AssertNE(err1.String(), nil)
-		gtest.Assert(err2, nil)
-		gtest.Assert(err3, nil)
-		gtest.Assert(err4, nil)
+		t.AssertNE(err1.String(), nil)
+		t.Assert(err2, nil)
+		t.Assert(err3, nil)
+		t.Assert(err4, nil)
 	})
 }
 
 func Test_Telephone(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		rule := "telephone"
 		val1 := "869265"
 		val2 := "028-869265"
@@ -257,16 +257,16 @@ func Test_Telephone(t *testing.T) {
 		err3 := gvalid.Check(val3, rule, nil)
 		err4 := gvalid.Check(val4, rule, nil)
 		err5 := gvalid.Check(val5, rule, nil)
-		gtest.AssertNE(err1, nil)
-		gtest.AssertNE(err2, nil)
-		gtest.Assert(err3, nil)
-		gtest.Assert(err4, nil)
-		gtest.Assert(err5, nil)
+		t.AssertNE(err1, nil)
+		t.AssertNE(err2, nil)
+		t.Assert(err3, nil)
+		t.Assert(err4, nil)
+		t.Assert(err5, nil)
 	})
 }
 
 func Test_Passport(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		rule := "passport"
 		val1 := "123456"
 		val2 := "a12345-6"
@@ -278,16 +278,16 @@ func Test_Passport(t *testing.T) {
 		err3 := gvalid.Check(val3, rule, nil)
 		err4 := gvalid.Check(val4, rule, nil)
 		err5 := gvalid.Check(val5, rule, nil)
-		gtest.AssertNE(err1, nil)
-		gtest.AssertNE(err2, nil)
-		gtest.AssertNE(err3, nil)
-		gtest.Assert(err4, nil)
-		gtest.Assert(err5, nil)
+		t.AssertNE(err1, nil)
+		t.AssertNE(err2, nil)
+		t.AssertNE(err3, nil)
+		t.Assert(err4, nil)
+		t.Assert(err5, nil)
 	})
 }
 
 func Test_Password(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		rule := "password"
 		val1 := "12345"
 		val2 := "aaaaa"
@@ -299,16 +299,16 @@ func Test_Password(t *testing.T) {
 		err3 := gvalid.Check(val3, rule, nil)
 		err4 := gvalid.Check(val4, rule, nil)
 		err5 := gvalid.Check(val5, rule, nil)
-		gtest.AssertNE(err1, nil)
-		gtest.AssertNE(err2, nil)
-		gtest.Assert(err3, nil)
-		gtest.Assert(err4, nil)
-		gtest.Assert(err5, nil)
+		t.AssertNE(err1, nil)
+		t.AssertNE(err2, nil)
+		t.Assert(err3, nil)
+		t.Assert(err4, nil)
+		t.Assert(err5, nil)
 	})
 }
 
 func Test_Password2(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		rule := "password2"
 		val1 := "12345"
 		val2 := "Naaaa"
@@ -324,18 +324,18 @@ func Test_Password2(t *testing.T) {
 		err5 := gvalid.Check(val5, rule, nil)
 		err6 := gvalid.Check(val6, rule, nil)
 		err7 := gvalid.Check(val7, rule, nil)
-		gtest.AssertNE(err1, nil)
-		gtest.AssertNE(err2, nil)
-		gtest.AssertNE(err3, nil)
-		gtest.AssertNE(err4, nil)
-		gtest.AssertNE(err5, nil)
-		gtest.Assert(err6, nil)
-		gtest.Assert(err7, nil)
+		t.AssertNE(err1, nil)
+		t.AssertNE(err2, nil)
+		t.AssertNE(err3, nil)
+		t.AssertNE(err4, nil)
+		t.AssertNE(err5, nil)
+		t.Assert(err6, nil)
+		t.Assert(err7, nil)
 	})
 }
 
 func Test_Password3(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		rule := "password3"
 		val1 := "12345"
 		val2 := "Naaaa"
@@ -351,30 +351,30 @@ func Test_Password3(t *testing.T) {
 		err5 := gvalid.Check(val5, rule, nil)
 		err6 := gvalid.Check(val6, rule, nil)
 		err7 := gvalid.Check(val7, rule, nil)
-		gtest.AssertNE(err1, nil)
-		gtest.AssertNE(err2, nil)
-		gtest.AssertNE(err3, nil)
-		gtest.AssertNE(err4, nil)
-		gtest.AssertNE(err5, nil)
-		gtest.AssertNE(err6, nil)
-		gtest.Assert(err7, nil)
+		t.AssertNE(err1, nil)
+		t.AssertNE(err2, nil)
+		t.AssertNE(err3, nil)
+		t.AssertNE(err4, nil)
+		t.AssertNE(err5, nil)
+		t.AssertNE(err6, nil)
+		t.Assert(err7, nil)
 	})
 }
 
 func Test_Postcode(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		rule := "postcode"
 		val1 := "12345"
 		val2 := "610036"
 		err1 := gvalid.Check(val1, rule, nil)
 		err2 := gvalid.Check(val2, rule, nil)
-		gtest.AssertNE(err1, nil)
-		gtest.Assert(err2, nil)
+		t.AssertNE(err1, nil)
+		t.Assert(err2, nil)
 	})
 }
 
 func Test_IDNumber(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		rule := "id-number"
 		val1 := "11111111111111"
 		val2 := "1111111111111111"
@@ -386,28 +386,28 @@ func Test_IDNumber(t *testing.T) {
 		err3 := gvalid.Check(val3, rule, nil)
 		err4 := gvalid.Check(val4, rule, nil)
 		err5 := gvalid.Check(val5, rule, nil)
-		gtest.AssertNE(err1, nil)
-		gtest.AssertNE(err2, nil)
-		gtest.AssertNE(err3, nil)
-		gtest.AssertNE(err4, nil)
-		gtest.Assert(err5, nil)
+		t.AssertNE(err1, nil)
+		t.AssertNE(err2, nil)
+		t.AssertNE(err3, nil)
+		t.AssertNE(err4, nil)
+		t.Assert(err5, nil)
 	})
 }
 
 func Test_LuHn(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		rule := "luhn"
 		val1 := "6230514630000424470"
 		val2 := "6230514630000424473"
 		err1 := gvalid.Check(val1, rule, nil)
 		err2 := gvalid.Check(val2, rule, nil)
-		gtest.AssertNE(err1, nil)
-		gtest.Assert(err2, nil)
+		t.AssertNE(err1, nil)
+		t.Assert(err2, nil)
 	})
 }
 
 func Test_QQ(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		rule := "qq"
 		val1 := "100"
 		val2 := "1"
@@ -419,11 +419,11 @@ func Test_QQ(t *testing.T) {
 		err3 := gvalid.Check(val3, rule, nil)
 		err4 := gvalid.Check(val4, rule, nil)
 		err5 := gvalid.Check(val5, rule, nil)
-		gtest.AssertNE(err1, nil)
-		gtest.AssertNE(err2, nil)
-		gtest.Assert(err3, nil)
-		gtest.Assert(err4, nil)
-		gtest.Assert(err5, nil)
+		t.AssertNE(err1, nil)
+		t.AssertNE(err2, nil)
+		t.Assert(err3, nil)
+		t.Assert(err4, nil)
+		t.Assert(err5, nil)
 	})
 }
 
@@ -458,7 +458,7 @@ func Test_Ip(t *testing.T) {
 }
 
 func Test_IPv4(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		rule := "ipv4"
 		val1 := "0.0.0"
 		val2 := "0.0.0.0"
@@ -470,16 +470,16 @@ func Test_IPv4(t *testing.T) {
 		err3 := gvalid.Check(val3, rule, nil)
 		err4 := gvalid.Check(val4, rule, nil)
 		err5 := gvalid.Check(val5, rule, nil)
-		gtest.AssertNE(err1, nil)
-		gtest.Assert(err2, nil)
-		gtest.Assert(err3, nil)
-		gtest.Assert(err4, nil)
-		gtest.Assert(err5, nil)
+		t.AssertNE(err1, nil)
+		t.Assert(err2, nil)
+		t.Assert(err3, nil)
+		t.Assert(err4, nil)
+		t.Assert(err5, nil)
 	})
 }
 
 func Test_IPv6(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		rule := "ipv6"
 		val1 := "192.168.1.1"
 		val2 := "CDCD:910A:2222:5498:8475:1111:3900:2020"
@@ -491,16 +491,16 @@ func Test_IPv6(t *testing.T) {
 		err3 := gvalid.Check(val3, rule, nil)
 		err4 := gvalid.Check(val4, rule, nil)
 		err5 := gvalid.Check(val5, rule, nil)
-		gtest.AssertNE(err1, nil)
-		gtest.Assert(err2, nil)
-		gtest.Assert(err3, nil)
-		gtest.Assert(err4, nil)
-		gtest.Assert(err5, nil)
+		t.AssertNE(err1, nil)
+		t.Assert(err2, nil)
+		t.Assert(err3, nil)
+		t.Assert(err4, nil)
+		t.Assert(err5, nil)
 	})
 }
 
 func Test_MAC(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		rule := "mac"
 		val1 := "192.168.1.1"
 		val2 := "44-45-53-54-00-00"
@@ -508,14 +508,14 @@ func Test_MAC(t *testing.T) {
 		err1 := gvalid.Check(val1, rule, nil)
 		err2 := gvalid.Check(val2, rule, nil)
 		err3 := gvalid.Check(val3, rule, nil)
-		gtest.AssertNE(err1, nil)
-		gtest.Assert(err2, nil)
-		gtest.Assert(err3, nil)
+		t.AssertNE(err1, nil)
+		t.Assert(err2, nil)
+		t.Assert(err3, nil)
 	})
 }
 
 func Test_URL(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		rule := "url"
 		val1 := "127.0.0.1"
 		val2 := "https://www.baidu.com"
@@ -525,15 +525,15 @@ func Test_URL(t *testing.T) {
 		err2 := gvalid.Check(val2, rule, nil)
 		err3 := gvalid.Check(val3, rule, nil)
 		err4 := gvalid.Check(val4, rule, nil)
-		gtest.AssertNE(err1, nil)
-		gtest.Assert(err2, nil)
-		gtest.Assert(err3, nil)
-		gtest.Assert(err4, nil)
+		t.AssertNE(err1, nil)
+		t.Assert(err2, nil)
+		t.Assert(err3, nil)
+		t.Assert(err4, nil)
 	})
 }
 
 func Test_Domain(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		rule := "domain"
 		val1 := "localhost"
 		val2 := "baidu.com"
@@ -547,12 +547,12 @@ func Test_Domain(t *testing.T) {
 		err4 := gvalid.Check(val4, rule, nil)
 		err5 := gvalid.Check(val5, rule, nil)
 		err6 := gvalid.Check(val6, rule, nil)
-		gtest.AssertNE(err1, nil)
-		gtest.Assert(err2, nil)
-		gtest.Assert(err3, nil)
-		gtest.Assert(err4, nil)
-		gtest.Assert(err5, nil)
-		gtest.Assert(err6, nil)
+		t.AssertNE(err1, nil)
+		t.Assert(err2, nil)
+		t.Assert(err3, nil)
+		t.Assert(err4, nil)
+		t.Assert(err5, nil)
+		t.Assert(err6, nil)
 	})
 }
 
@@ -622,7 +622,7 @@ func Test_Between(t *testing.T) {
 }
 
 func Test_Min(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		rule := "min:100"
 		val1 := "1"
 		val2 := "99"
@@ -634,20 +634,20 @@ func Test_Min(t *testing.T) {
 		err3 := gvalid.Check(val3, rule, nil)
 		err4 := gvalid.Check(val4, rule, nil)
 		err5 := gvalid.Check(val5, rule, nil)
-		gtest.AssertNE(err1, nil)
-		gtest.AssertNE(err2, nil)
-		gtest.Assert(err3, nil)
-		gtest.Assert(err4, nil)
-		gtest.AssertNE(err5, nil)
+		t.AssertNE(err1, nil)
+		t.AssertNE(err2, nil)
+		t.Assert(err3, nil)
+		t.Assert(err4, nil)
+		t.AssertNE(err5, nil)
 
 		rule2 := "min:a"
 		err6 := gvalid.Check(val1, rule2, nil)
-		gtest.AssertNE(err6, nil)
+		t.AssertNE(err6, nil)
 	})
 }
 
 func Test_Max(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		rule := "max:100"
 		val1 := "1"
 		val2 := "99"
@@ -659,20 +659,20 @@ func Test_Max(t *testing.T) {
 		err3 := gvalid.Check(val3, rule, nil)
 		err4 := gvalid.Check(val4, rule, nil)
 		err5 := gvalid.Check(val5, rule, nil)
-		gtest.Assert(err1, nil)
-		gtest.Assert(err2, nil)
-		gtest.Assert(err3, nil)
-		gtest.AssertNE(err4, nil)
-		gtest.AssertNE(err5, nil)
+		t.Assert(err1, nil)
+		t.Assert(err2, nil)
+		t.Assert(err3, nil)
+		t.AssertNE(err4, nil)
+		t.AssertNE(err5, nil)
 
 		rule2 := "max:a"
 		err6 := gvalid.Check(val1, rule2, nil)
-		gtest.AssertNE(err6, nil)
+		t.AssertNE(err6, nil)
 	})
 }
 
 func Test_Json(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		rule := "json"
 		val1 := ""
 		val2 := "."
@@ -686,17 +686,17 @@ func Test_Json(t *testing.T) {
 		err4 := gvalid.Check(val4, rule, nil)
 		err5 := gvalid.Check(val5, rule, nil)
 		err6 := gvalid.Check(val6, rule, nil)
-		gtest.AssertNE(err1, nil)
-		gtest.AssertNE(err2, nil)
-		gtest.Assert(err3, nil)
-		gtest.Assert(err4, nil)
-		gtest.Assert(err5, nil)
-		gtest.Assert(err6, nil)
+		t.AssertNE(err1, nil)
+		t.AssertNE(err2, nil)
+		t.Assert(err3, nil)
+		t.Assert(err4, nil)
+		t.Assert(err5, nil)
+		t.Assert(err6, nil)
 	})
 }
 
 func Test_Integer(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		rule := "integer"
 		val1 := ""
 		val2 := "1.0"
@@ -710,17 +710,17 @@ func Test_Integer(t *testing.T) {
 		err4 := gvalid.Check(val4, rule, nil)
 		err5 := gvalid.Check(val5, rule, nil)
 		err6 := gvalid.Check(val6, rule, nil)
-		gtest.AssertNE(err1, nil)
-		gtest.AssertNE(err2, nil)
-		gtest.Assert(err3, nil)
-		gtest.Assert(err4, nil)
-		gtest.Assert(err5, nil)
-		gtest.Assert(err6, nil)
+		t.AssertNE(err1, nil)
+		t.AssertNE(err2, nil)
+		t.Assert(err3, nil)
+		t.Assert(err4, nil)
+		t.Assert(err5, nil)
+		t.Assert(err6, nil)
 	})
 }
 
 func Test_Float(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		rule := "float"
 		val1 := ""
 		val2 := "a"
@@ -734,17 +734,17 @@ func Test_Float(t *testing.T) {
 		err4 := gvalid.Check(val4, rule, nil)
 		err5 := gvalid.Check(val5, rule, nil)
 		err6 := gvalid.Check(val6, rule, nil)
-		gtest.AssertNE(err1, nil)
-		gtest.AssertNE(err2, nil)
-		gtest.Assert(err3, nil)
-		gtest.Assert(err4, nil)
-		gtest.Assert(err5, nil)
-		gtest.Assert(err6, nil)
+		t.AssertNE(err1, nil)
+		t.AssertNE(err2, nil)
+		t.Assert(err3, nil)
+		t.Assert(err4, nil)
+		t.Assert(err5, nil)
+		t.Assert(err6, nil)
 	})
 }
 
 func Test_Boolean(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		rule := "boolean"
 		val1 := "a"
 		val2 := "-"
@@ -758,17 +758,17 @@ func Test_Boolean(t *testing.T) {
 		err4 := gvalid.Check(val4, rule, nil)
 		err5 := gvalid.Check(val5, rule, nil)
 		err6 := gvalid.Check(val6, rule, nil)
-		gtest.AssertNE(err1, nil)
-		gtest.AssertNE(err2, nil)
-		gtest.Assert(err3, nil)
-		gtest.Assert(err4, nil)
-		gtest.Assert(err5, nil)
-		gtest.Assert(err6, nil)
+		t.AssertNE(err1, nil)
+		t.AssertNE(err2, nil)
+		t.Assert(err3, nil)
+		t.Assert(err4, nil)
+		t.Assert(err5, nil)
+		t.Assert(err6, nil)
 	})
 }
 
 func Test_Same(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		rule := "same:id"
 		val1 := "100"
 		params1 := g.Map{
@@ -784,14 +784,14 @@ func Test_Same(t *testing.T) {
 		err1 := gvalid.Check(val1, rule, nil, params1)
 		err2 := gvalid.Check(val1, rule, nil, params2)
 		err3 := gvalid.Check(val1, rule, nil, params3)
-		gtest.AssertNE(err1, nil)
-		gtest.Assert(err2, nil)
-		gtest.Assert(err3, nil)
+		t.AssertNE(err1, nil)
+		t.Assert(err2, nil)
+		t.Assert(err3, nil)
 	})
 }
 
 func Test_Different(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		rule := "different:id"
 		val1 := "100"
 		params1 := g.Map{
@@ -807,14 +807,14 @@ func Test_Different(t *testing.T) {
 		err1 := gvalid.Check(val1, rule, nil, params1)
 		err2 := gvalid.Check(val1, rule, nil, params2)
 		err3 := gvalid.Check(val1, rule, nil, params3)
-		gtest.Assert(err1, nil)
-		gtest.AssertNE(err2, nil)
-		gtest.AssertNE(err3, nil)
+		t.Assert(err1, nil)
+		t.AssertNE(err2, nil)
+		t.AssertNE(err3, nil)
 	})
 }
 
 func Test_In(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		rule := "in:100,200"
 		val1 := ""
 		val2 := "1"
@@ -824,15 +824,30 @@ func Test_In(t *testing.T) {
 		err2 := gvalid.Check(val2, rule, nil)
 		err3 := gvalid.Check(val3, rule, nil)
 		err4 := gvalid.Check(val4, rule, nil)
-		gtest.AssertNE(err1, nil)
-		gtest.AssertNE(err2, nil)
-		gtest.Assert(err3, nil)
-		gtest.Assert(err4, nil)
+		t.AssertNE(err1, nil)
+		t.AssertNE(err2, nil)
+		t.Assert(err3, nil)
+		t.Assert(err4, nil)
 	})
 }
 
 func Test_NotIn(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
+		rule := "not-in:100"
+		val1 := ""
+		val2 := "1"
+		val3 := "100"
+		val4 := "200"
+		err1 := gvalid.Check(val1, rule, nil)
+		err2 := gvalid.Check(val2, rule, nil)
+		err3 := gvalid.Check(val3, rule, nil)
+		err4 := gvalid.Check(val4, rule, nil)
+		t.Assert(err1, nil)
+		t.Assert(err2, nil)
+		t.AssertNE(err3, nil)
+		t.Assert(err4, nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
 		rule := "not-in:100,200"
 		val1 := ""
 		val2 := "1"
@@ -842,10 +857,10 @@ func Test_NotIn(t *testing.T) {
 		err2 := gvalid.Check(val2, rule, nil)
 		err3 := gvalid.Check(val3, rule, nil)
 		err4 := gvalid.Check(val4, rule, nil)
-		gtest.Assert(err1, nil)
-		gtest.Assert(err2, nil)
-		gtest.AssertNE(err3, nil)
-		gtest.AssertNE(err4, nil)
+		t.Assert(err1, nil)
+		t.Assert(err2, nil)
+		t.AssertNE(err3, nil)
+		t.AssertNE(err4, nil)
 	})
 }
 
@@ -860,7 +875,7 @@ func Test_Regex1(t *testing.T) {
 }
 
 func Test_Regex2(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		rule := `required|min-length:6|regex:^data:image\/(jpeg|png);base64,`
 		str1 := ""
 		str2 := "data"
@@ -868,11 +883,11 @@ func Test_Regex2(t *testing.T) {
 		err1 := gvalid.Check(str1, rule, nil)
 		err2 := gvalid.Check(str2, rule, nil)
 		err3 := gvalid.Check(str3, rule, nil)
-		gtest.AssertNE(err1, nil)
-		gtest.AssertNE(err2, nil)
-		gtest.Assert(err3, nil)
+		t.AssertNE(err1, nil)
+		t.AssertNE(err2, nil)
+		t.Assert(err3, nil)
 
-		gtest.AssertNE(err1.Map()["required"], nil)
-		gtest.AssertNE(err2.Map()["min-length"], nil)
+		t.AssertNE(err1.Map()["required"], nil)
+		t.AssertNE(err2.Map()["min-length"], nil)
 	})
 }

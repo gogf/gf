@@ -49,7 +49,7 @@ func Parse(supportedOptions map[string]bool, strict ...bool) (*Parser, error) {
 //
 // The optional parameter <strict> specifies whether stops parsing and returns error if invalid option passed.
 func ParseWithArgs(args []string, supportedOptions map[string]bool, strict ...bool) (*Parser, error) {
-	strictParsing := true
+	strictParsing := false
 	if len(strict) > 0 {
 		strictParsing = strict[0]
 	}
@@ -77,7 +77,7 @@ func ParseWithArgs(args []string, supportedOptions map[string]bool, strict ...bo
 			} else {
 				if parser.isOptionValid(option) {
 					if parser.isOptionNeedArgument(option) {
-						if i+1 < len(args) {
+						if i < len(args)-1 {
 							parser.setOptionValue(option, args[i+1])
 							i += 2
 							continue
@@ -95,7 +95,7 @@ func ParseWithArgs(args []string, supportedOptions map[string]bool, strict ...bo
 						}
 						i++
 						continue
-					} else {
+					} else if parser.strict {
 						return nil, errors.New(fmt.Sprintf(`invalid option '%s'`, args[i]))
 					}
 				}
@@ -136,9 +136,6 @@ func (p *Parser) parseOption(argument string) string {
 }
 
 func (p *Parser) isOptionValid(name string) bool {
-	if !p.strict {
-		return true
-	}
 	_, ok := p.supportedOptions[name]
 	return ok
 }
@@ -174,8 +171,14 @@ func (p *Parser) GetOpt(name string, def ...string) string {
 }
 
 // GetOptVar returns the option value named <name> as *gvar.Var.
-func (p *Parser) GetOptVar(name string, def ...string) *gvar.Var {
-	return gvar.New(p.GetOpt(name, def...))
+func (p *Parser) GetOptVar(name string, def ...interface{}) *gvar.Var {
+	if p.ContainsOpt(name) {
+		return gvar.New(p.GetOpt(name))
+	}
+	if len(def) > 0 {
+		return gvar.New(def[0])
+	}
+	return gvar.New(nil)
 }
 
 // GetOptAll returns all parsed options.
@@ -184,7 +187,7 @@ func (p *Parser) GetOptAll() map[string]string {
 }
 
 // ContainsOpt checks whether option named <name> exist in the arguments.
-func (p *Parser) ContainsOpt(name string, def ...string) bool {
+func (p *Parser) ContainsOpt(name string) bool {
 	_, ok := p.parsedOptions[name]
 	return ok
 }

@@ -17,13 +17,14 @@ import (
 
 func Test_Types(t *testing.T) {
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		if _, err := db.Exec(fmt.Sprintf(`
     CREATE TABLE IF NOT EXISTS types (
         id int(10) unsigned NOT NULL AUTO_INCREMENT,
         %s blob NOT NULL,
         %s binary(8) NOT NULL,
         %s date NOT NULL,
+        %s time NOT NULL,
         %s decimal(5,2) NOT NULL,
         %s double NOT NULL,
         %s bit(2) NOT NULL,
@@ -31,7 +32,8 @@ func Test_Types(t *testing.T) {
         %s bool NOT NULL,
         PRIMARY KEY (id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-    `, "`blob`", "`binary`", "`date`", "`decimal`", "`double`", "`bit`", "`tinyint`", "`bool`")); err != nil {
+    `, "`blob`", "`binary`", "`date`", "`time`",
+			"`decimal`", "`double`", "`bit`", "`tinyint`", "`bool`")); err != nil {
 			gtest.Error(err)
 		}
 		defer dropTable("types")
@@ -40,27 +42,29 @@ func Test_Types(t *testing.T) {
 			"blob":    "i love gf",
 			"binary":  []byte("abcdefgh"),
 			"date":    "2018-10-24",
-			"decimal": 123.456,
-			"double":  123.456,
+			"time":    "10:00:01",
+			"decimal": -123.456,
+			"double":  -123.456,
 			"bit":     2,
 			"tinyint": true,
 			"bool":    false,
 		}
 		r, err := db.Table("types").Data(data).Insert()
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 		n, _ := r.RowsAffected()
-		gtest.Assert(n, 1)
+		t.Assert(n, 1)
 
 		one, err := db.Table("types").One()
-		gtest.Assert(err, nil)
-		gtest.Assert(one["id"].Int(), 1)
-		gtest.Assert(one["blob"].String(), data["blob"])
-		gtest.Assert(one["binary"].String(), data["binary"])
-		gtest.Assert(one["date"].String(), data["date"])
-		gtest.Assert(one["decimal"].String(), 123.46)
-		gtest.Assert(one["double"].String(), data["double"])
-		gtest.Assert(one["bit"].Int(), data["bit"])
-		gtest.Assert(one["tinyint"].Bool(), data["tinyint"])
-		gtest.Assert(one["tinyint"].Bool(), data["tinyint"])
+		t.Assert(err, nil)
+		t.Assert(one["id"].Int(), 1)
+		t.Assert(one["blob"].String(), data["blob"])
+		t.Assert(one["binary"].String(), data["binary"])
+		t.Assert(one["date"].String(), data["date"])
+		t.Assert(one["time"].String(), data["time"])
+		t.Assert(one["decimal"].String(), -123.46)
+		t.Assert(one["double"].String(), data["double"])
+		t.Assert(one["bit"].Int(), data["bit"])
+		t.Assert(one["tinyint"].Bool(), data["tinyint"])
+		t.Assert(one["tinyint"].Bool(), data["tinyint"])
 	})
 }

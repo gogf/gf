@@ -26,7 +26,7 @@ func Test_Params_Struct(t *testing.T) {
 		Pass1 string `p:"password1"`
 		Pass2 string `p:"password2" v:"passwd1 @required|length:2,20|password3#||密码强度不足"`
 	}
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/struct1", func(r *ghttp.Request) {
 		if m := r.GetMap(); len(m) > 0 {
@@ -74,17 +74,17 @@ func Test_Params_Struct(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		gtest.Assert(client.GetContent("/struct1", `id=1&name=john&password1=123&password2=456`), `1john123456`)
-		gtest.Assert(client.PostContent("/struct1", `id=1&name=john&password1=123&password2=456`), `1john123456`)
-		gtest.Assert(client.PostContent("/struct2", `id=1&name=john&password1=123&password2=456`), `1john123456`)
-		gtest.Assert(client.PostContent("/struct2", ``), ``)
-		gtest.Assert(client.PostContent("/struct-valid", `id=1&name=john&password1=123&password2=0`), `字段长度为2到20个字符; 密码强度不足`)
-		gtest.Assert(client.PostContent("/parse", `id=1&name=john&password1=123&password2=0`), `字段长度为2到20个字符; 密码强度不足`)
-		gtest.Assert(client.GetContent("/parse", `id=1&name=john&password1=123&password2=456`), `密码强度不足`)
-		gtest.Assert(client.GetContent("/parse", `id=1&name=john&password1=123Abc!@#&password2=123Abc!@#`), `1john123Abc!@#123Abc!@#`)
-		gtest.Assert(client.PostContent("/parse", `{"id":1,"name":"john","password1":"123Abc!@#","password2":"123Abc!@#"}`), `1john123Abc!@#123Abc!@#`)
+		t.Assert(client.GetContent("/struct1", `id=1&name=john&password1=123&password2=456`), `1john123456`)
+		t.Assert(client.PostContent("/struct1", `id=1&name=john&password1=123&password2=456`), `1john123456`)
+		t.Assert(client.PostContent("/struct2", `id=1&name=john&password1=123&password2=456`), `1john123456`)
+		t.Assert(client.PostContent("/struct2", ``), ``)
+		t.Assert(client.PostContent("/struct-valid", `id=1&name=john&password1=123&password2=0`), `字段长度为2到20个字符; 密码强度不足`)
+		t.Assert(client.PostContent("/parse", `id=1&name=john&password1=123&password2=0`), `字段长度为2到20个字符; 密码强度不足`)
+		t.Assert(client.GetContent("/parse", `id=1&name=john&password1=123&password2=456`), `密码强度不足`)
+		t.Assert(client.GetContent("/parse", `id=1&name=john&password1=123Abc!@#&password2=123Abc!@#`), `1john123Abc!@#123Abc!@#`)
+		t.Assert(client.PostContent("/parse", `{"id":1,"name":"john","password1":"123Abc!@#","password2":"123Abc!@#"}`), `1john123Abc!@#123Abc!@#`)
 	})
 }

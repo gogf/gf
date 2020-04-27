@@ -45,6 +45,12 @@ func Level(level int) *Logger {
 	return logger.Level(level)
 }
 
+// LevelStr is a chaining function,
+// which sets logging level for the current logging content output using level string.
+func LevelStr(levelStr string) *Logger {
+	return logger.LevelStr(levelStr)
+}
+
 // Skip is a chaining function,
 // which sets stack skip for the current logging content output.
 // It also affects the caller file path checks when line number printing enabled.

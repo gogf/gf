@@ -9,6 +9,7 @@ package gproc
 
 import (
 	"bytes"
+	"github.com/gogf/gf/os/genv"
 	"github.com/gogf/gf/text/gstr"
 	"io"
 	"os"
@@ -188,21 +189,31 @@ func SearchBinary(file string) string {
 	if gfile.Exists(file) {
 		return file
 	}
+	return SearchBinaryPath(file)
+}
+
+// SearchBinaryPath searches the binary <file> in PATH environment.
+func SearchBinaryPath(file string) string {
 	array := ([]string)(nil)
 	switch runtime.GOOS {
 	case "windows":
-		array = gstr.SplitAndTrim(os.Getenv("Path"), ";")
+		envPath := genv.Get("PATH", genv.Get("Path"))
+		if gstr.Contains(envPath, ";") {
+			array = gstr.SplitAndTrim(envPath, ";")
+		} else if gstr.Contains(envPath, ":") {
+			array = gstr.SplitAndTrim(envPath, ":")
+		}
 		if gfile.Ext(file) != ".exe" {
 			file += ".exe"
 		}
 	default:
-		array = gstr.SplitAndTrim(os.Getenv("PATH"), ":")
+		array = gstr.SplitAndTrim(genv.Get("PATH"), ":")
 	}
 	if len(array) > 0 {
 		path := ""
 		for _, v := range array {
 			path = v + gfile.Separator + file
-			if gfile.Exists(path) {
+			if gfile.Exists(path) && gfile.IsFile(path) {
 				return path
 			}
 		}

@@ -43,7 +43,7 @@ type utilAdmin struct{}
 var serverActionLocker sync.Mutex
 
 // (进程级别)用于记录上一次操作的时间(毫秒)
-var serverActionLastTime = gtype.NewInt64(gtime.Millisecond())
+var serverActionLastTime = gtype.NewInt64(gtime.TimestampMilli())
 
 // 当前服务进程所处的互斥管理操作状态
 var serverProcessStatus = gtype.NewInt()
@@ -93,11 +93,11 @@ func checkProcessStatus() error {
 
 // 检测当前操作的频繁度
 func checkActionFrequence() error {
-	interval := gtime.Millisecond() - serverActionLastTime.Val()
+	interval := gtime.TimestampMilli() - serverActionLastTime.Val()
 	if interval < gADMIN_ACTION_INTERVAL_LIMIT {
 		return errors.New(fmt.Sprintf("too frequent action, please retry in %d ms", gADMIN_ACTION_INTERVAL_LIMIT-interval))
 	}
-	serverActionLastTime.Set(gtime.Millisecond())
+	serverActionLastTime.Set(gtime.TimestampMilli())
 	return nil
 }
 
