@@ -203,9 +203,6 @@ func (c *Core) GetStruct(pointer interface{}, sql string, args ...interface{}) e
 	if err != nil {
 		return err
 	}
-	if len(one) == 0 {
-		return ErrNoRows
-	}
 	return one.Struct(pointer)
 }
 
@@ -215,9 +212,6 @@ func (c *Core) GetStructs(pointer interface{}, sql string, args ...interface{}) 
 	all, err := c.DB.GetAll(sql, args...)
 	if err != nil {
 		return err
-	}
-	if len(all) == 0 {
-		return ErrNoRows
 	}
 	return all.Structs(pointer)
 }

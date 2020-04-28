@@ -820,7 +820,7 @@ func Test_Model_Structs(t *testing.T) {
 		}
 		var users []*User
 		err := db.Table(table).Where("id<0").Structs(&users)
-		t.Assert(err, sql.ErrNoRows)
+		t.Assert(err, nil)
 	})
 }
 
@@ -905,12 +905,14 @@ func Test_Model_Scan(t *testing.T) {
 			NickName   string
 			CreateTime *gtime.Time
 		}
-		user := new(User)
-		users := new([]*User)
+		var (
+			user  = new(User)
+			users = new([]*User)
+		)
 		err1 := db.Table(table).Where("id < 0").Scan(user)
 		err2 := db.Table(table).Where("id < 0").Scan(users)
 		t.Assert(err1, sql.ErrNoRows)
-		t.Assert(err2, sql.ErrNoRows)
+		t.Assert(err2, nil)
 	})
 }
 
