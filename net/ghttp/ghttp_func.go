@@ -61,8 +61,12 @@ func niceCallFunc(f func()) {
 				return
 			default:
 				if _, ok := e.(gerror.ApiStack); ok {
+					// It's already an error that has stack info.
 					panic(e)
 				} else {
+					// Create a new error with stack info.
+					// Note that there's a skip pointing the start stacktrace
+					// of the real error point.
 					panic(gerror.NewfSkip(1, "%v", e))
 				}
 			}
