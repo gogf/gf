@@ -7,7 +7,6 @@
 package gdb
 
 import (
-	"database/sql"
 	"fmt"
 	"github.com/gogf/gf/util/gconv"
 	"reflect"
@@ -171,9 +170,6 @@ func (m *Model) Struct(pointer interface{}, where ...interface{}) error {
 	if err != nil {
 		return err
 	}
-	if len(one) == 0 {
-		return sql.ErrNoRows
-	}
 	return one.Struct(pointer)
 }
 
@@ -197,9 +193,6 @@ func (m *Model) Structs(pointer interface{}, where ...interface{}) error {
 	all, err := m.All(where...)
 	if err != nil {
 		return err
-	}
-	if len(all) == 0 {
-		return sql.ErrNoRows
 	}
 	return all.Structs(pointer)
 }

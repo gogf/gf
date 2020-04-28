@@ -94,5 +94,87 @@ func Test_Model_Inherit_MapToStruct(t *testing.T) {
 		t.Assert(user.CreateTime, data["create_time"])
 
 	})
+}
 
+func Test_Struct_Empty(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	type User struct {
+		Id       int
+		Passport string
+		Password string
+		Nickname string
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		one, err := db.Table(table).Where("id=100").One()
+		t.Assert(err, nil)
+		user := new(User)
+		t.AssertNE(one.Struct(user), nil)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		one, err := db.Table(table).Where("id=100").One()
+		t.Assert(err, nil)
+		var user *User
+		t.Assert(one.Struct(&user), nil)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		one, err := db.Table(table).Where("id=100").One()
+		t.Assert(err, nil)
+		var user *User
+		t.AssertNE(one.Struct(user), nil)
+	})
+}
+
+func Test_Structs_Empty(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	type User struct {
+		Id       int
+		Passport string
+		Password string
+		Nickname string
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		all, err := db.Table(table).Where("id>100").All()
+		t.Assert(err, nil)
+		users := make([]User, 0)
+		t.Assert(all.Structs(&users), nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		all, err := db.Table(table).Where("id>100").All()
+		t.Assert(err, nil)
+		users := make([]User, 10)
+		t.AssertNE(all.Structs(&users), nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		all, err := db.Table(table).Where("id>100").All()
+		t.Assert(err, nil)
+		var users []User
+		t.Assert(all.Structs(&users), nil)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		all, err := db.Table(table).Where("id>100").All()
+		t.Assert(err, nil)
+		users := make([]*User, 0)
+		t.Assert(all.Structs(&users), nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		all, err := db.Table(table).Where("id>100").All()
+		t.Assert(err, nil)
+		users := make([]*User, 10)
+		t.Assert(all.Structs(&users), nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		all, err := db.Table(table).Where("id>100").All()
+		t.Assert(err, nil)
+		var users []*User
+		t.Assert(all.Structs(&users), nil)
+	})
 }

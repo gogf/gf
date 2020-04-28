@@ -148,27 +148,48 @@ func (r Result) RecordKeyUint(key string) map[uint]Record {
 // Structs converts <r> to struct slice.
 // Note that the parameter <pointer> should be type of *[]struct/*[]*struct.
 func (r Result) Structs(pointer interface{}) (err error) {
-	l := len(r)
-	if l == 0 {
-		return sql.ErrNoRows
+	var (
+		reflectValue = reflect.ValueOf(pointer)
+		reflectKind  = reflectValue.Kind()
+	)
+	if reflectKind != reflect.Ptr {
+		return fmt.Errorf("pointer should be type of pointer to struct slice, but got: %v", reflectKind)
 	}
-	t := reflect.TypeOf(pointer)
-	if t.Kind() != reflect.Ptr {
-		return fmt.Errorf("pointer should be type of pointer, but got: %v", t.Kind())
+	reflectValue = reflectValue.Elem()
+	reflectKind = reflectValue.Kind()
+	if reflectKind != reflect.Slice && reflectKind != reflect.Array {
+		return fmt.Errorf("pointer should be type of pointer to struct slice, but got: %v", reflectKind)
 	}
-	array := reflect.MakeSlice(t.Elem(), l, l)
-	itemType := array.Index(0).Type()
-	for i := 0; i < l; i++ {
-		if itemType.Kind() == reflect.Ptr {
+	length := len(r)
+	if length == 0 {
+		// The pointed slice is not empty.
+		if reflectValue.Len() > 0 {
+			// It here checks if it has struct item, which is already initialized.
+			// It then returns error to warn the developer its empty and no conversion.
+			if v := reflectValue.Index(0); v.Kind() != reflect.Ptr {
+				return sql.ErrNoRows
+			}
+		}
+		// Do nothing for empty struct slice.
+		return nil
+	}
+	var (
+		reflectType = reflect.TypeOf(pointer)
+		array       = reflect.MakeSlice(reflectType.Elem(), length, length)
+		itemType    = array.Index(0).Type()
+		itemKind    = itemType.Kind()
+	)
+	for i := 0; i < length; i++ {
+		if itemKind == reflect.Ptr {
 			e := reflect.New(itemType.Elem()).Elem()
 			if err = r[i].Struct(e); err != nil {
-				return err
+				return fmt.Errorf(`slice element conversion failed: %s`, err.Error())
 			}
 			array.Index(i).Set(e.Addr())
 		} else {
 			e := reflect.New(itemType).Elem()
 			if err = r[i].Struct(e); err != nil {
-				return err
+				return fmt.Errorf(`slice element conversion failed: %s`, err.Error())
 			}
 			array.Index(i).Set(e)
 		}
