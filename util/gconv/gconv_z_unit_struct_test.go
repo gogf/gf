@@ -780,3 +780,22 @@ func Test_Struct_Complex(t *testing.T) {
 		t.Assert(model.Data.ResultDetail.CurrentReportDetail.LoansProductCount, "8")
 	})
 }
+
+func Test_Struct_CatchPanic(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Score struct {
+			Name   string
+			Result int
+		}
+		type User struct {
+			Score
+		}
+
+		user := new(User)
+		scores := map[string]interface{}{
+			"Score": 1,
+		}
+		err := gconv.Struct(scores, user)
+		t.AssertNE(err, nil)
+	})
+}

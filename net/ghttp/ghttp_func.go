@@ -7,6 +7,7 @@
 package ghttp
 
 import (
+	"github.com/gogf/gf/errors/gerror"
 	"strings"
 
 	"github.com/gogf/gf/encoding/gurl"
@@ -54,12 +55,16 @@ func BuildParams(params interface{}, noUrlEncode ...bool) (encodedParamStr strin
 // niceCallFunc calls function <f> with exception capture logic.
 func niceCallFunc(f func()) {
 	defer func() {
-		if err := recover(); err != nil {
-			switch err {
+		if e := recover(); e != nil {
+			switch e {
 			case gEXCEPTION_EXIT, gEXCEPTION_EXIT_ALL:
 				return
 			default:
-				panic(err)
+				if _, ok := e.(gerror.ApiStack); ok {
+					panic(e)
+				} else {
+					panic(gerror.NewfSkip(1, "%v", e))
+				}
 			}
 		}
 	}()

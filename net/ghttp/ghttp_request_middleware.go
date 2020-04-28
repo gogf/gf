@@ -7,10 +7,9 @@
 package ghttp
 
 import (
+	"github.com/gogf/gf/errors/gerror"
 	"net/http"
 	"reflect"
-
-	"github.com/gogf/gf/errors/gerror"
 
 	"github.com/gogf/gf/util/gutil"
 )
@@ -122,7 +121,11 @@ func (m *Middleware) Next() {
 				loop = false
 			}
 		}, func(exception interface{}) {
-			m.request.error = gerror.Newf("%v", exception)
+			if e, ok := exception.(gerror.ApiStack); ok {
+				m.request.error = e.(error)
+			} else {
+				m.request.error = gerror.NewfSkip(1, "%v", exception)
+			}
 			m.request.Response.WriteStatus(http.StatusInternalServerError, exception)
 			loop = false
 		})
