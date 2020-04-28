@@ -122,8 +122,12 @@ func (m *Middleware) Next() {
 			}
 		}, func(exception interface{}) {
 			if e, ok := exception.(gerror.ApiStack); ok {
+				// It's already an error that has stack info.
 				m.request.error = e.(error)
 			} else {
+				// Create a new error with stack info.
+				// Note that there's a skip pointing the start stacktrace
+				// of the real error point.
 				m.request.error = gerror.NewfSkip(1, "%v", exception)
 			}
 			m.request.Response.WriteStatus(http.StatusInternalServerError, exception)

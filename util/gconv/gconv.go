@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gconv implements powerful and easy-to-use converting functionality for any types of variables.
+// Package gconv implements powerful and convenient converting functionality for any types of variables.
 package gconv
 
 import (
