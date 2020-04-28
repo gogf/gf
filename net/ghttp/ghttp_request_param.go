@@ -280,7 +280,7 @@ func (r *Request) parseForm() {
 				// Only allow chars of: '\w', '[', ']', '-'.
 				if !gregex.IsMatchString(`^[\w\-\[\]]+$`, name) && len(r.PostForm) == 1 {
 					// It might be JSON/XML content.
-					if s := name + strings.Join(values, " "); len(s) > 0 {
+					if s := gstr.Trim(name + strings.Join(values, " ")); len(s) > 0 {
 						if s[0] == '{' && s[len(s)-1] == '}' || s[0] == '<' && s[len(s)-1] == '>' {
 							r.bodyContent = gconv.UnsafeStrToBytes(s)
 							params = ""

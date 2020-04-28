@@ -9,6 +9,7 @@ package gconv
 import (
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/empty"
 	"reflect"
 	"regexp"
@@ -31,8 +32,8 @@ var (
 )
 
 // Struct maps the params key-value pairs to the corresponding struct object's properties.
-// The third parameter <mapping> is unnecessary, indicating the mapping rules between the custom key name
-// and the attribute name(case sensitive).
+// The third parameter <mapping> is unnecessary, indicating the mapping rules between the
+// custom key name and the attribute name(case sensitive).
 //
 // Note:
 // 1. The <params> can be any type of map/struct, usually a map.
@@ -42,14 +43,18 @@ var (
 //    It will automatically convert the first letter of the key to uppercase
 //    in mapping procedure to do the matching.
 //    It ignores the map key, if it does not match.
-func Struct(params interface{}, pointer interface{}, mapping ...map[string]string) error {
+func Struct(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
 	if params == nil {
 		return errors.New("params cannot be nil")
 	}
 	if pointer == nil {
 		return errors.New("object pointer cannot be nil")
 	}
-
+	defer func() {
+		if e := recover(); e != nil {
+			err = gerror.NewfSkip(1, "%v", e)
+		}
+	}()
 	// paramsMap is the map[string]interface{} type variable for params.
 	paramsMap := Map(params)
 	if paramsMap == nil {

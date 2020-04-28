@@ -5,6 +5,9 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package errors provides simple functions to manipulate errors.
+//
+// Very note that, this package is quite a base package, which should not import extra
+// packages except standard packages, to avoid cycle imports.
 package gerror
 
 import (
@@ -13,11 +16,13 @@ import (
 
 // ApiStack is the interface for Stack feature.
 type ApiStack interface {
+	Error() string // It should be en error.
 	Stack() string
 }
 
 // ApiCause is the interface for Cause feature.
 type ApiCause interface {
+	Error() string // It should be en error.
 	Cause() error
 }
 
@@ -32,6 +37,18 @@ func New(text string) error {
 	}
 }
 
+// NewSkip creates and returns an error which is formatted from given text.
+// The parameter <skip> specifies the stack callers skipped amount.
+func NewSkip(skip int, text string) error {
+	if text == "" {
+		return nil
+	}
+	return &Error{
+		stack: callers(skip),
+		text:  text,
+	}
+}
+
 // Newf returns an error that formats as the given format and args.
 func Newf(format string, args ...interface{}) error {
 	if format == "" {
@@ -39,6 +56,18 @@ func Newf(format string, args ...interface{}) error {
 	}
 	return &Error{
 		stack: callers(),
+		text:  fmt.Sprintf(format, args...),
+	}
+}
+
+// NewfSkip returns an error that formats as the given format and args.
+// The parameter <skip> specifies the stack callers skipped amount.
+func NewfSkip(skip int, format string, args ...interface{}) error {
+	if format == "" {
+		return nil
+	}
+	return &Error{
+		stack: callers(skip),
 		text:  fmt.Sprintf(format, args...),
 	}
 }

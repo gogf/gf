@@ -15,8 +15,14 @@ const (
 	gMAX_STACK_DEPTH = 32
 )
 
-func callers() stack {
-	var pcs [gMAX_STACK_DEPTH]uintptr
-	n := runtime.Callers(3, pcs[:])
-	return pcs[0:n]
+// callers returns the stack callers.
+func callers(skip ...int) stack {
+	var (
+		pcs [gMAX_STACK_DEPTH]uintptr
+		n   = 3
+	)
+	if len(skip) > 0 {
+		n += skip[0]
+	}
+	return pcs[:runtime.Callers(n, pcs[:])]
 }

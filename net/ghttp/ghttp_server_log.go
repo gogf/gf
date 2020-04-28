@@ -12,10 +12,6 @@ import (
 	"github.com/gogf/gf/os/glog"
 )
 
-const (
-	gPATH_FILTER_KEY = "github.com/gogf/gf/"
-)
-
 // Logger returns the logger of the server.
 func (s *Server) Logger() *glog.Logger {
 	return s.config.Logger
@@ -54,22 +50,22 @@ func (s *Server) handleErrorLog(err error, r *Request) {
 		scheme = "https"
 	}
 	content := fmt.Sprintf(
-		`%d, "%s %s %s %s %s" %.3f, %s, "%s", "%s"`,
+		`%d "%s %s %s %s %s" %.3f, %s, "%s", "%s"`,
 		r.Response.Status, r.Method, scheme, r.Host, r.URL.String(), r.Proto,
 		float64(r.LeaveTime-r.EnterTime)/1000,
 		r.GetClientIp(), r.Referer(), r.UserAgent(),
 	)
-	if stack := gerror.Stack(err); stack != "" {
-		content += "\nStack:\n" + stack
-		s.config.Logger.File(s.config.ErrorLogPattern).
-			Stack(false).
-			Stdout(s.config.LogStdout).
-			Error(content)
-		return
+	if s.config.ErrorStack {
+		if stack := gerror.Stack(err); stack != "" {
+			content += "\nStack:\n" + stack
+		} else {
+			content += ", " + err.Error()
+		}
+	} else {
+		content += ", " + err.Error()
 	}
-	s.Logger().File(s.config.ErrorLogPattern).
-		Stack(s.config.ErrorStack).
-		StackWithFilter(gPATH_FILTER_KEY).
+	s.config.Logger.
+		File(s.config.ErrorLogPattern).
 		Stdout(s.config.LogStdout).
-		Error(content)
+		Print(content)
 }
