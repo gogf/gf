@@ -15,6 +15,7 @@
 并提供了Web服务开发的系列核心组件，如：Router、Cookie、Session、Middleware、服务注册、模板引擎等等，
 支持热重启、热更新、域名绑定、TLS/HTTPS、Rewrite等特性。
 
+> 如果您初识`Go`语言，您可以将`GoFrame`类似于`PHP`中的`Laravel`, `Java`中的`SpringBoot`或者`Python`中的`Django`。
 
 # 特点
 * 模块化、松耦合设计；
