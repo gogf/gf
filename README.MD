@@ -15,6 +15,7 @@ cache, logging, containers, timer, resource, validator, database orm, etc.
 Supporting web server integrated with router, cookie, session, middleware, logger, configure, 
 template, https, hooks, rewrites and many more features. 
 
+> If you're a newbie to `Go`, you may consider `GoFrame` easy and great as `Laravel` in `PHP`, `SpringBoot` in `Java` or `Django` in `Python`.
 
 # Installation
 ```
