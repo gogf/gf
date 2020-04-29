@@ -118,7 +118,7 @@ func Test_Struct_Empty(t *testing.T) {
 		one, err := db.Table(table).Where("id=100").One()
 		t.Assert(err, nil)
 		var user *User
-		t.Assert(one.Struct(&user), nil)
+		t.AssertNE(one.Struct(&user), nil)
 	})
 
 	gtest.C(t, func(t *gtest.T) {

@@ -44,9 +44,12 @@ func (r Record) GMap() *gmap.StrAnyMap {
 // Struct converts <r> to a struct.
 // Note that the parameter <pointer> should be type of *struct/**struct.
 //
-// Note that if returns error if <r> is nil an given <pointer> is a pointer to an existing
-// struct.
+// Note that it returns sql.ErrNoRows if <r> is empty.
 func (r Record) Struct(pointer interface{}) error {
+	// If the record is empty, it returns error.
+	if r.IsEmpty() {
+		return sql.ErrNoRows
+	}
 	// Special handling for parameter type: reflect.Value
 	if _, ok := pointer.(reflect.Value); ok {
 		return mapToStruct(r.Map(), pointer)
@@ -65,10 +68,6 @@ func (r Record) Struct(pointer interface{}) error {
 	}
 	if reflectKind != reflect.Ptr && reflectKind != reflect.Struct {
 		return errors.New("parameter should be type of *struct/**struct")
-	}
-	// If the record is nil, check if returning error.
-	if r == nil && reflectKind == reflect.Struct {
-		return sql.ErrNoRows
 	}
 	return mapToStruct(r.Map(), pointer)
 }

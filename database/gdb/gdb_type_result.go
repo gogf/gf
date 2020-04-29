@@ -153,12 +153,12 @@ func (r Result) Structs(pointer interface{}) (err error) {
 		reflectKind  = reflectValue.Kind()
 	)
 	if reflectKind != reflect.Ptr {
-		return fmt.Errorf("pointer should be type of pointer to struct slice, but got: %v", reflectKind)
+		return fmt.Errorf("parameter should be type of *[]struct/*[]*struct, but got: %v", reflectKind)
 	}
 	reflectValue = reflectValue.Elem()
 	reflectKind = reflectValue.Kind()
 	if reflectKind != reflect.Slice && reflectKind != reflect.Array {
-		return fmt.Errorf("pointer should be type of pointer to struct slice, but got: %v", reflectKind)
+		return fmt.Errorf("parameter should be type of *[]struct/*[]*struct, but got: %v", reflectKind)
 	}
 	length := len(r)
 	if length == 0 {
