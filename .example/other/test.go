@@ -1,17 +1,13 @@
 package main
 
 import (
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
+	"fmt"
+	"github.com/gogf/gf/os/gtimer"
+	"time"
 )
 
 func main() {
-	s := g.Server()
-	s.Group("/", func(group *ghttp.RouterGroup) {
-		group.ALL("/", func(r *ghttp.Request) {
-			r.Response.Write(r.GetBodyString())
-		})
-	})
-	s.SetPort(8199)
-	s.Run()
+	tr := gtimer.New(100, 1*time.Second, 10)
+	tr.Add(1*time.Second, func() { fmt.Println("hello") })
+	select {}
 }

@@ -34,8 +34,10 @@ func (w *wheel) addEntry(interval time.Duration, job JobFunc, singleton bool, ti
 	if times <= 0 {
 		times = gDEFAULT_TIMES
 	}
-	ms := interval.Nanoseconds() / 1e6
-	num := ms / w.intervalMs
+	var (
+		ms  = interval.Nanoseconds() / 1e6
+		num = ms / w.intervalMs
+	)
 	if num == 0 {
 		// If the given interval is lesser than the one of the wheel,
 		// then sets it to one tick, which means it will be run in one interval.

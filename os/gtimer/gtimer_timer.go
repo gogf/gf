@@ -7,6 +7,7 @@
 package gtimer
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/gogf/gf/container/glist"
@@ -39,6 +40,9 @@ type wheel struct {
 // The optional parameter <level> specifies the wheels count of the timer,
 // which is gDEFAULT_WHEEL_LEVEL in default.
 func New(slot int, interval time.Duration, level ...int) *Timer {
+	if slot <= 0 {
+		panic(fmt.Sprintf("invalid slot number: %d", slot))
+	}
 	length := gDEFAULT_WHEEL_LEVEL
 	if len(level) > 0 {
 		length = level[0]
@@ -53,6 +57,9 @@ func New(slot int, interval time.Duration, level ...int) *Timer {
 	for i := 0; i < length; i++ {
 		if i > 0 {
 			n := time.Duration(t.wheels[i-1].totalMs) * time.Millisecond
+			if n <= 0 {
+				panic(fmt.Sprintf(`inteval is too large with level: %dms x %d`, interval, length))
+			}
 			w := t.newWheel(i, slot, n)
 			t.wheels[i] = w
 			t.wheels[i-1].addEntry(n, w.proceed, false, gDEFAULT_TIMES, STATUS_READY)
