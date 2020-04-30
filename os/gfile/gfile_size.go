@@ -27,7 +27,7 @@ func ReadableSize(path string) string {
 	return FormatSize(Size(path))
 }
 
-// StrToSize converts formatted size string to its size in bytes from Bytes to BrontoByte.
+// StrToSize converts formatted size string to its size in bytes.
 func StrToSize(sizeStr string) int64 {
 	i := 0
 	for ; i < len(sizeStr); i++ {

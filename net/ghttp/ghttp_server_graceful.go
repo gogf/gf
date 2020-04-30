@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/os/gproc"
+	"github.com/gogf/gf/text/gstr"
 	"log"
 	"net"
 	"net/http"
@@ -22,7 +23,7 @@ import (
 type gracefulServer struct {
 	server      *Server      // Belonged server.
 	fd          uintptr      // 热重启时传递的socket监听文件句柄
-	itemFunc    string       // 监听地址信息
+	address     string       // 监听地址信息
 	httpServer  *http.Server // 底层http.Server
 	rawListener net.Listener // 原始listener
 	listener    net.Listener // 接口化封装的listener
@@ -31,11 +32,15 @@ type gracefulServer struct {
 }
 
 // 创建一个优雅的Http Server
-func (s *Server) newGracefulServer(itemFunc string, fd ...int) *gracefulServer {
+func (s *Server) newGracefulServer(address string, fd ...int) *gracefulServer {
+	// Change port to address like: 80 -> :80
+	if gstr.IsNumeric(address) {
+		address = ":" + address
+	}
 	gs := &gracefulServer{
 		server:     s,
-		itemFunc:   itemFunc,
-		httpServer: s.newHttpServer(itemFunc),
+		address:    address,
+		httpServer: s.newHttpServer(address),
 	}
 	// 是否有继承的文件描述符
 	if len(fd) > 0 && fd[0] > 0 {
@@ -45,9 +50,9 @@ func (s *Server) newGracefulServer(itemFunc string, fd ...int) *gracefulServer {
 }
 
 // 生成一个底层的Web Server对象
-func (s *Server) newHttpServer(itemFunc string) *http.Server {
+func (s *Server) newHttpServer(address string) *http.Server {
 	server := &http.Server{
-		Addr:           itemFunc,
+		Addr:           address,
 		Handler:        s.config.Handler,
 		ReadTimeout:    s.config.ReadTimeout,
 		WriteTimeout:   s.config.WriteTimeout,
@@ -61,8 +66,7 @@ func (s *Server) newHttpServer(itemFunc string) *http.Server {
 
 // 执行HTTP监听
 func (s *gracefulServer) ListenAndServe() error {
-	itemFunc := s.httpServer.Addr
-	ln, err := s.getNetListener(itemFunc)
+	ln, err := s.getNetListener()
 	if err != nil {
 		return err
 	}
@@ -89,7 +93,6 @@ func (s *gracefulServer) setFd(fd int) {
 
 // 执行HTTPS监听
 func (s *gracefulServer) ListenAndServeTLS(certFile, keyFile string, tlsConfig ...*tls.Config) error {
-	itemFunc := s.httpServer.Addr
 	var config *tls.Config
 	if len(tlsConfig) > 0 && tlsConfig[0] != nil {
 		config = tlsConfig[0]
@@ -109,7 +112,7 @@ func (s *gracefulServer) ListenAndServeTLS(certFile, keyFile string, tlsConfig .
 	if err != nil {
 		return errors.New(fmt.Sprintf(`open cert file "%s","%s" failed: %s`, certFile, keyFile, err.Error()))
 	}
-	ln, err := s.getNetListener(itemFunc)
+	ln, err := s.getNetListener()
 	if err != nil {
 		return err
 	}
@@ -134,7 +137,10 @@ func (s *gracefulServer) doServe() error {
 	if s.fd != 0 {
 		action = "reloaded"
 	}
-	s.server.Logger().Printf("%d: %s server %s listening on [%s]", gproc.Pid(), s.getProto(), action, s.itemFunc)
+	s.server.Logger().Printf(
+		"%d: %s server %s listening on [%s]",
+		gproc.Pid(), s.getProto(), action, s.address,
+	)
 	s.status = SERVER_STATUS_RUNNING
 	err := s.httpServer.Serve(s.listener)
 	s.status = SERVER_STATUS_STOPPED
@@ -142,7 +148,7 @@ func (s *gracefulServer) doServe() error {
 }
 
 // 自定义的net.Listener
-func (s *gracefulServer) getNetListener(itemFunc string) (net.Listener, error) {
+func (s *gracefulServer) getNetListener() (net.Listener, error) {
 	var ln net.Listener
 	var err error
 	if s.fd > 0 {
@@ -153,7 +159,7 @@ func (s *gracefulServer) getNetListener(itemFunc string) (net.Listener, error) {
 			return nil, err
 		}
 	} else {
-		ln, err = net.Listen("tcp", itemFunc)
+		ln, err = net.Listen("tcp", s.httpServer.Addr)
 		if err != nil {
 			err = fmt.Errorf("%d: net.Listen error: %v", gproc.Pid(), err)
 		}
@@ -167,7 +173,10 @@ func (s *gracefulServer) shutdown() {
 		return
 	}
 	if err := s.httpServer.Shutdown(context.Background()); err != nil {
-		s.server.Logger().Errorf("%d: %s server [%s] shutdown error: %v", gproc.Pid(), s.getProto(), s.itemFunc, err)
+		s.server.Logger().Errorf(
+			"%d: %s server [%s] shutdown error: %v",
+			gproc.Pid(), s.getProto(), s.address, err,
+		)
 	}
 }
 
@@ -177,6 +186,9 @@ func (s *gracefulServer) close() {
 		return
 	}
 	if err := s.httpServer.Close(); err != nil {
-		s.server.Logger().Errorf("%d: %s server [%s] closed error: %v", gproc.Pid(), s.getProto(), s.itemFunc, err)
+		s.server.Logger().Errorf(
+			"%d: %s server [%s] closed error: %v",
+			gproc.Pid(), s.getProto(), s.address, err,
+		)
 	}
 }

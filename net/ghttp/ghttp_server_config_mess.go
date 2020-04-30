@@ -14,6 +14,10 @@ func (s *Server) SetDumpRouterMap(enabled bool) {
 	s.config.DumpRouterMap = enabled
 }
 
+func (s *Server) SetClientMaxBodySize(maxSize int64) {
+	s.config.ClientMaxBodySize = maxSize
+}
+
 func (s *Server) SetFormParsingMemory(maxMemory int64) {
 	s.config.FormParsingMemory = maxMemory
 }
