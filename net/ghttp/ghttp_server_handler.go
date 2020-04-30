@@ -26,6 +26,10 @@ import (
 
 // 默认HTTP Server处理入口，http包底层默认使用了gorutine异步处理请求，所以这里不再异步执行
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// Max body size limit.
+	if s.config.ClientMaxBodySize > 0 {
+		r.Body = http.MaxBytesReader(w, r.Body, s.config.ClientMaxBodySize)
+	}
 	// 重写规则判断
 	if len(s.config.Rewrites) > 0 {
 		if rewrite, ok := s.config.Rewrites[r.URL.Path]; ok {

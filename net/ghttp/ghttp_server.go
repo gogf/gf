@@ -598,7 +598,7 @@ func (s *Server) getListenerFdMap() map[string]string {
 		"http":  "",
 	}
 	for _, v := range s.servers {
-		str := v.itemFunc + "#" + gconv.String(v.Fd()) + ","
+		str := v.address + "#" + gconv.String(v.Fd()) + ","
 		if v.isHttps {
 			if len(m["https"]) > 0 {
 				m["https"] += ","

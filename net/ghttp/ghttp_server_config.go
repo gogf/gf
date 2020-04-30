@@ -10,6 +10,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/util/gutil"
 	"net/http"
 	"strconv"
 	"time"
@@ -33,55 +34,206 @@ const (
 	URI_TYPE_CAMEL      = 3      // Method name to URI converting type, which converts name to its camel case.
 )
 
-// HTTP Server configuration.
+// ServerConfig is the HTTP Server configuration manager.
 type ServerConfig struct {
-	Address           string            // Basic: Server listening address like ":port", multiple addresses joined using ','.
-	HTTPSAddr         string            // Basic: HTTPS addresses, multiple addresses joined using char ','.
-	HTTPSCertPath     string            // Basic: HTTPS certification file path.
-	HTTPSKeyPath      string            // Basic: HTTPS key file path.
-	TLSConfig         *tls.Config       // Basic: TLS configuration for use by ServeTLS and ListenAndServeTLS.
-	Handler           http.Handler      // Basic: Request handler.
-	ReadTimeout       time.Duration     // Basic: Maximum duration for reading the entire request, including the body.
-	WriteTimeout      time.Duration     // Basic: Maximum duration before timing out writes of the response.
-	IdleTimeout       time.Duration     // Basic: Maximum amount of time to wait for the next request when keep-alive is enabled.
-	MaxHeaderBytes    int               // Basic: Maximum number of bytes the server will read parsing the request header's keys and values, including the request line.
-	KeepAlive         bool              // Basic: Enable HTTP keep-alive.
-	ServerAgent       string            // Basic: Server agent information.
-	View              *gview.View       // Basic: View object for the server.
-	Rewrites          map[string]string // Static: URI rewrite rules map.
-	IndexFiles        []string          // Static: The index files for static folder.
-	IndexFolder       bool              // Static: List sub-files when requesting folder; server responses HTTP status code 403 if false.
-	ServerRoot        string            // Static: The root directory for static service.
-	SearchPaths       []string          // Static: Additional searching directories for static service.
-	StaticPaths       []staticPathItem  // Static: URI to directory mapping array.
-	FileServerEnabled bool              // Static: Switch for static service.
-	CookieMaxAge      time.Duration     // Cookie: Max TTL for cookie items.
-	CookiePath        string            // Cookie: Cookie Path(also affects the default storage for session id).
-	CookieDomain      string            // Cookie: Cookie Domain(also affects the default storage for session id).
-	SessionMaxAge     time.Duration     // Session: Max TTL for session items.
-	SessionIdName     string            // Session: Session id name.
-	SessionPath       string            // Session: Session Storage directory path for storing session files.
-	SessionStorage    gsession.Storage  // Session: Session Storage implementer.
-	Logger            *glog.Logger      // Logging: Logger for server.
-	LogPath           string            // Logging: Directory for storing logging files.
-	LogStdout         bool              // Logging: Printing logging content to stdout.
-	ErrorStack        bool              // Logging: Logging stack information when error.
-	ErrorLogEnabled   bool              // Logging: Enable error logging files.
-	ErrorLogPattern   string            // Logging: Error log file pattern like: error-{Ymd}.log
-	AccessLogEnabled  bool              // Logging: Enable access logging files.
-	AccessLogPattern  string            // Logging: Error log file pattern like: access-{Ymd}.log
-	PProfEnabled      bool              // PProf: Enable PProf feature.
-	PProfPattern      string            // PProf: PProf service pattern for router.
-	FormParsingMemory int64             // Other: Max memory in bytes which can be used for parsing multimedia form.
-	NameToUriType     int               // Other: Type for converting struct method name to URI when registering routes.
-	RouteOverWrite    bool              // Other: Allow overwrite the route if duplicated.
-	DumpRouterMap     bool              // Other: Whether automatically dump router map when server starts.
-	Graceful          bool              // Other: Enable graceful reload feature for all servers of the process.
+	// ==================================
+	// Basic.
+	// ==================================
+
+	// Address specifies the server listening address like "port" or ":port",
+	// multiple addresses joined using ','.
+	Address string
+
+	// HTTPSAddr specifies the HTTPS addresses, multiple addresses joined using char ','.
+	HTTPSAddr string
+
+	// HTTPSCertPath specifies certification file path for HTTPS service.
+	HTTPSCertPath string
+
+	// HTTPSKeyPath specifies the key file path for HTTPS service.
+	HTTPSKeyPath string
+
+	// TLSConfig optionally provides a TLS configuration for use
+	// by ServeTLS and ListenAndServeTLS. Note that this value is
+	// cloned by ServeTLS and ListenAndServeTLS, so it's not
+	// possible to modify the configuration with methods like
+	// tls.Config.SetSessionTicketKeys. To use
+	// SetSessionTicketKeys, use Server.Serve with a TLS Listener
+	// instead.
+	TLSConfig *tls.Config
+
+	// Handler the handler for HTTP request.
+	Handler http.Handler
+
+	// ReadTimeout is the maximum duration for reading the entire
+	// request, including the body.
+	//
+	// Because ReadTimeout does not let Handlers make per-request
+	// decisions on each request body's acceptable deadline or
+	// upload rate, most users will prefer to use
+	// ReadHeaderTimeout. It is valid to use them both.
+	ReadTimeout time.Duration
+
+	// WriteTimeout is the maximum duration before timing out
+	// writes of the response. It is reset whenever a new
+	// request's header is read. Like ReadTimeout, it does not
+	// let Handlers make decisions on a per-request basis.
+	WriteTimeout time.Duration
+
+	// IdleTimeout is the maximum amount of time to wait for the
+	// next request when keep-alives are enabled. If IdleTimeout
+	// is zero, the value of ReadTimeout is used. If both are
+	// zero, there is no timeout.
+	IdleTimeout time.Duration
+
+	// MaxHeaderBytes controls the maximum number of bytes the
+	// server will read parsing the request header's keys and
+	// values, including the request line. It does not limit the
+	// size of the request body.
+	//
+	// It can be configured in configuration file using string like: 1m, 10m, 500kb etc.
+	// It's 1024 bytes in default.
+	MaxHeaderBytes int
+
+	// KeepAlive enables HTTP keep-alive.
+	KeepAlive bool
+
+	// ServerAgent specifies the server agent information, which is wrote to
+	// HTTP response header as "Server".
+	ServerAgent string
+
+	// View specifies the default template view object for the server.
+	View *gview.View
+
+	// ==================================
+	// Static.
+	// ==================================
+
+	// Rewrites specifies the URI rewrite rules map.
+	Rewrites map[string]string
+
+	// IndexFiles specifies the index files for static folder.
+	IndexFiles []string
+
+	// IndexFolder specifies if listing sub-files when requesting folder.
+	// The server responses HTTP status code 403 if it is false.
+	IndexFolder bool
+
+	// ServerRoot specifies the root directory for static service.
+	ServerRoot string
+
+	// SearchPaths specifies additional searching directories for static service.
+	SearchPaths []string
+
+	// StaticPaths specifies URI to directory mapping array.
+	StaticPaths []staticPathItem
+
+	// FileServerEnabled is the global switch for static service.
+	// It is automatically set enabled if any static path is set.
+	FileServerEnabled bool
+
+	// ==================================
+	// Cookie.
+	// ==================================
+
+	// CookieMaxAge specifies the max TTL for cookie items.
+	CookieMaxAge time.Duration
+
+	// CookiePath specifies cookie path.
+	// It also affects the default storage for session id.
+	CookiePath string
+
+	// CookieDomain specifies cookie domain.
+	// It also affects the default storage for session id.
+	CookieDomain string
+
+	// ==================================
+	// Session.
+	// ==================================
+
+	// SessionMaxAge specifies max TTL for session items.
+	SessionMaxAge time.Duration
+
+	// SessionIdName specifies the session id name.
+	SessionIdName string
+
+	// SessionPath specifies the session storage directory path for storing session files.
+	// It only makes sense if the session storage is type of file storage.
+	SessionPath string
+
+	// SessionStorage specifies the session storage.
+	SessionStorage gsession.Storage
+
+	// ==================================
+	// Logging.
+	// ==================================
+
+	// Logger specifies the logger for server.
+	Logger *glog.Logger
+
+	// LogPath specifies the directory for storing logging files.
+	LogPath string
+
+	// LogStdout specifies whether printing logging content to stdout.
+	LogStdout bool
+
+	// ErrorStack specifies whether logging stack information when error.
+	ErrorStack bool
+
+	// ErrorLogEnabled enables error logging content to files.
+	ErrorLogEnabled bool
+
+	// ErrorLogPattern specifies the error log file pattern like: error-{Ymd}.log
+	ErrorLogPattern string
+
+	// AccessLogEnabled enables access logging content to files.
+	AccessLogEnabled bool
+
+	// AccessLogPattern specifies the error log file pattern like: access-{Ymd}.log
+	AccessLogPattern string
+
+	// ==================================
+	// PProf.
+	// ==================================
+
+	// PProfEnabled enables PProf feature.
+	PProfEnabled bool
+
+	// PProfPattern specifies the PProf service pattern for router.
+	PProfPattern string
+
+	// ==================================
+	// Other.
+	// ==================================
+
+	// ClientMaxBodySize specifies the max body size limit in bytes for client request.
+	// It can be configured in configuration file using string like: 1m, 10m, 500kb etc.
+	// It's 8MB in default.
+	ClientMaxBodySize int64
+
+	// FormParsingMemory specifies max memory buffer size in bytes which can be used for
+	// parsing multimedia form.
+	// It can be configured in configuration file using string like: 1m, 10m, 500kb etc.
+	// It's 1MB in default.
+	FormParsingMemory int64
+
+	// NameToUriType specifies the type for converting struct method name to URI when
+	// registering routes.
+	NameToUriType int
+
+	// RouteOverWrite allows overwrite the route if duplicated.
+	RouteOverWrite bool
+
+	// DumpRouterMap specifies whether automatically dumps router map when server starts.
+	DumpRouterMap bool
+
+	// Graceful enables graceful reload feature for all servers of the process.
+	Graceful bool
 }
 
-// Config returns the default ServerConfig object.
-// Note that, do not define this default configuration to local variable,
-// as there're some pointer attributes that may be shared in different servers.
+// Config creates and returns a ServerConfig object with default configurations.
+// Note that, do not define this default configuration to local package variable, as there're
+// some pointer attributes that may be shared in different servers.
 func Config() ServerConfig {
 	return ServerConfig{
 		Address:           "",
@@ -112,7 +264,8 @@ func Config() ServerConfig {
 		AccessLogEnabled:  false,
 		AccessLogPattern:  "access-{Ymd}.log",
 		DumpRouterMap:     true,
-		FormParsingMemory: 100 * 1024 * 1024, // 100MB
+		ClientMaxBodySize: 8 * 1024 * 1024, // 8MB
+		FormParsingMemory: 1024 * 1024,     // 1MB
 		Rewrites:          make(map[string]string),
 		Graceful:          true,
 	}
@@ -130,6 +283,21 @@ func ConfigFromMap(m map[string]interface{}) (ServerConfig, error) {
 
 // SetConfigWithMap sets the configuration for the server using map.
 func (s *Server) SetConfigWithMap(m map[string]interface{}) error {
+	// The m now is a shallow copy of m.
+	// Any changes to m does not affect the original one.
+	// A little tricky, isn't it?
+	m = gutil.MapCopy(m)
+	// Allow setting the size configuration items using string size like:
+	// 1m, 100mb, 512kb, etc.
+	if k, v := gutil.MapPossibleItemByKey(m, "MaxHeaderBytes"); k != "" {
+		m[k] = gfile.StrToSize(gconv.String(v))
+	}
+	if k, v := gutil.MapPossibleItemByKey(m, "ClientMaxBodySize"); k != "" {
+		m[k] = gfile.StrToSize(gconv.String(v))
+	}
+	if k, v := gutil.MapPossibleItemByKey(m, "FormParsingMemory"); k != "" {
+		m[k] = gfile.StrToSize(gconv.String(v))
+	}
 	// Update the current configuration object.
 	if err := gconv.Struct(m, &s.config); err != nil {
 		return err
@@ -156,7 +324,6 @@ func (s *Server) SetConfig(c ServerConfig) error {
 		s.EnableHTTPS(c.HTTPSCertPath, c.HTTPSKeyPath)
 	}
 	SetGraceful(c.Graceful)
-
 	intlog.Printf("SetConfig: %+v", s.config)
 	return nil
 }
@@ -168,7 +335,7 @@ func (s *Server) SetAddr(address string) {
 }
 
 // SetPort sets the listening ports for the server.
-// The listening ports can be multiple.
+// The listening ports can be multiple like: SetPort(80, 8080).
 func (s *Server) SetPort(port ...int) {
 	if len(port) > 0 {
 		s.config.Address = ""
@@ -187,7 +354,7 @@ func (s *Server) SetHTTPSAddr(address string) {
 }
 
 // SetHTTPSPort sets the HTTPS listening ports for the server.
-// The listening ports can be multiple.
+// The listening ports can be multiple like: SetHTTPSPort(443, 500).
 func (s *Server) SetHTTPSPort(port ...int) {
 	if len(port) > 0 {
 		s.config.HTTPSAddr = ""
