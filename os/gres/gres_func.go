@@ -9,22 +9,24 @@ package gres
 import (
 	"archive/zip"
 	"bytes"
-	"encoding/hex"
 	"fmt"
+	"github.com/gogf/gf/encoding/gbase64"
 	"github.com/gogf/gf/encoding/gcompress"
+	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
 
 	"github.com/gogf/gf/os/gfile"
 )
 
 const (
-	gPACKAGE_TEMPLATE = `package %s
+	gPACKAGE_TEMPLATE = `
+package %s
 
 import "github.com/gogf/gf/os/gres"
 
 func init() {
 	if err := gres.Add("%s"); err != nil {
-		panic(err)
+		panic("add binary content to resource manager failed: " + err.Error())
 	}
 }
 `
@@ -76,7 +78,7 @@ func PackToGoFile(srcPath, goFilePath, pkgName string, keyPrefix ...string) erro
 	}
 	return gfile.PutContents(
 		goFilePath,
-		fmt.Sprintf(gPACKAGE_TEMPLATE, pkgName, bytesToHexStr(data)),
+		fmt.Sprintf(gstr.Trim(gPACKAGE_TEMPLATE), pkgName, gbase64.EncodeToString(data)),
 	)
 }
 
@@ -93,8 +95,12 @@ func Unpack(path string) ([]*File, error) {
 func UnpackContent(content string) ([]*File, error) {
 	var data []byte
 	var err error
-	if isHexStr(content) {
-		data, err = gcompress.UnGzip(hexStrToBytes(content))
+	if isBase64(content) {
+		b, err := gbase64.DecodeString(content)
+		if err != nil {
+			return nil, err
+		}
+		data, err = gcompress.UnGzip(b)
 		if err != nil {
 			return nil, err
 		}
@@ -115,32 +121,19 @@ func UnpackContent(content string) ([]*File, error) {
 	return array, nil
 }
 
-// isHexStr checks and returns whether given content <s> is hex string.
-// It returns true if <s> is hex string, or false if not.
-func isHexStr(s string) bool {
+// isBase64 checks and returns whether given content <s> is base64 string.
+// It returns true if <s> is base64 string, or false if not.
+func isBase64(s string) bool {
 	var r bool
 	for i := 0; i < len(s); i++ {
 		r = (s[i] >= '0' && s[i] <= '9') ||
-			(s[i] >= 'a' && s[i] <= 'f') ||
-			(s[i] >= 'A' && s[i] <= 'F')
+			(s[i] >= 'a' && s[i] <= 'z') ||
+			(s[i] >= 'A' && s[i] <= 'Z') ||
+			(s[i] == '+' || s[i] == '-') ||
+			(s[i] == '_' || s[i] == '/') || s[i] == '='
 		if !r {
 			return false
 		}
 	}
 	return true
-}
-
-// bytesToHexString converts binary content to hex string content.
-func bytesToHexStr(b []byte) string {
-	dst := make([]byte, hex.EncodedLen(len(b)))
-	hex.Encode(dst, b)
-	return gconv.UnsafeBytesToStr(dst)
-}
-
-// hexStrToBytes converts hex string content to []byte.
-func hexStrToBytes(s string) []byte {
-	src := gconv.UnsafeStrToBytes(s)
-	dst := make([]byte, hex.DecodedLen(len(src)))
-	hex.Decode(dst, src)
-	return dst
 }
