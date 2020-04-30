@@ -78,7 +78,7 @@ func PackToGoFile(srcPath, goFilePath, pkgName string, keyPrefix ...string) erro
 	}
 	return gfile.PutContents(
 		goFilePath,
-		fmt.Sprintf(gstr.Trim(gPACKAGE_TEMPLATE), pkgName, gbase64.EncodeToString(data)),
+		fmt.Sprintf(gstr.TrimLeft(gPACKAGE_TEMPLATE), pkgName, gbase64.EncodeToString(data)),
 	)
 }
 
