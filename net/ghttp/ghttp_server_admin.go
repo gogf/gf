@@ -16,6 +16,9 @@ import (
 	"github.com/gogf/gf/os/gview"
 )
 
+// utilAdmin is the controller for administration.
+type utilAdmin struct{}
+
 // Index shows the administration page.
 func (p *utilAdmin) Index(r *Request) {
 	data := map[string]interface{}{
