@@ -9,7 +9,6 @@ package ghttp
 import (
 	"github.com/gogf/gf/container/gvar"
 
-	"github.com/gogf/gf/internal/structs"
 	"github.com/gogf/gf/util/gconv"
 )
 
@@ -194,13 +193,7 @@ func (r *Request) GetQueryMapStrVar(kvMap ...map[string]interface{}) map[string]
 // attribute mapping.
 func (r *Request) GetQueryStruct(pointer interface{}, mapping ...map[string]string) error {
 	r.parseQuery()
-	tagMap := structs.TagMapName(pointer, paramTagPriority, true)
-	if len(mapping) > 0 {
-		for k, v := range mapping[0] {
-			tagMap[k] = v
-		}
-	}
-	return gconv.StructDeep(r.GetQueryMap(), pointer, tagMap)
+	return gconv.StructDeep(r.GetQueryMap(), pointer, mapping...)
 }
 
 // GetQueryToStruct is alias of GetQueryStruct. See GetQueryStruct.

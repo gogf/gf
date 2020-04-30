@@ -8,7 +8,6 @@ package ghttp
 
 import (
 	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/internal/structs"
 	"github.com/gogf/gf/util/gconv"
 )
 
@@ -205,13 +204,7 @@ func (r *Request) GetPostMapStrVar(kvMap ...map[string]interface{}) map[string]*
 //
 // Deprecated.
 func (r *Request) GetPostStruct(pointer interface{}, mapping ...map[string]string) error {
-	tagMap := structs.TagMapName(pointer, paramTagPriority, true)
-	if len(mapping) > 0 {
-		for k, v := range mapping[0] {
-			tagMap[k] = v
-		}
-	}
-	return gconv.StructDeep(r.GetPostMap(), pointer, tagMap)
+	return gconv.StructDeep(r.GetPostMap(), pointer, mapping...)
 }
 
 // GetPostToStruct is alias of GetQueryStruct. See GetPostStruct.

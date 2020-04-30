@@ -20,6 +20,7 @@ import (
 	"github.com/gogf/gf/util/gvalid"
 	"io/ioutil"
 	"mime/multipart"
+	"reflect"
 	"strings"
 )
 
@@ -28,17 +29,53 @@ var (
 	xmlHeaderBytes = []byte("<?xml")
 )
 
-// Parse calls r.GetStruct to convert the parameters, which are sent from client,
-// to given struct, and then calls gvalid.CheckStruct validating the struct according
+// Parse is the most commonly used function, which converts request parameters to struct or struct
+// slice. It also automatically validates the struct or every element of the struct slice according
 // to the validation tag of the struct.
 //
-// See r.GetStruct, gvalid.CheckStruct.
+// The parameter <pointer> can be type of: *struct/**struct/*[]struct/*[]*struct.
+//
+// TODO: Improve the performance by reducing duplicated reflect usage on the same variable across packages.
 func (r *Request) Parse(pointer interface{}) error {
-	if err := r.GetStruct(pointer); err != nil {
-		return err
+	var (
+		reflectVal1  = reflect.ValueOf(pointer)
+		reflectKind1 = reflectVal1.Kind()
+	)
+	if reflectKind1 != reflect.Ptr {
+		return fmt.Errorf(
+			"parameter should be type of *struct/**struct/*[]struct/*[]*struct, but got: %v",
+			reflectKind1,
+		)
 	}
-	if err := gvalid.CheckStruct(pointer, nil); err != nil {
-		return err
+	var (
+		reflectVal2  = reflectVal1.Elem()
+		reflectKind2 = reflectVal2.Kind()
+	)
+	switch reflectKind2 {
+	case reflect.Ptr, reflect.Struct:
+		// Struct conversion.
+		if err := r.GetStruct(pointer); err != nil {
+			return err
+		}
+		// Struct validation.
+		if err := gvalid.CheckStruct(pointer, nil); err != nil {
+			return err
+		}
+	case reflect.Array, reflect.Slice:
+		// If struct slice conversion, it might post JSON/XML content,
+		// so it uses gjson for the conversion.
+		j, err := gjson.LoadContent(r.GetBody())
+		if err != nil {
+			return err
+		}
+		if err := j.GetStructs(".", pointer); err != nil {
+			return err
+		}
+		for i := 0; i < reflectVal2.Len(); i++ {
+			if err := gvalid.CheckStruct(reflectVal2.Index(i), nil); err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }

@@ -51,6 +51,7 @@ func Struct(params interface{}, pointer interface{}, mapping ...map[string]strin
 		return errors.New("object pointer cannot be nil")
 	}
 	defer func() {
+		// Catch the panic, especially the reflect operation panics.
 		if e := recover(); e != nil {
 			err = gerror.NewfSkip(1, "%v", e)
 		}
@@ -76,7 +77,7 @@ func Struct(params interface{}, pointer interface{}, mapping ...map[string]strin
 	}
 	// It automatically creates struct object if necessary.
 	// For example, if <pointer> is **User, then <elem> is *User, which is a pointer to User.
-	if elem.Type().Kind() == reflect.Ptr {
+	if elem.Kind() == reflect.Ptr {
 		if !elem.IsValid() || elem.IsNil() {
 			e := reflect.New(elem.Type().Elem()).Elem()
 			elem.Set(e.Addr())

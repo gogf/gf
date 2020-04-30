@@ -9,6 +9,7 @@ package gconv
 import (
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/errors/gerror"
 	"reflect"
 )
 
@@ -96,6 +97,12 @@ func doStructs(params interface{}, pointer interface{}, deep bool, mapping ...ma
 	if pointer == nil {
 		return errors.New("object pointer cannot be nil")
 	}
+	defer func() {
+		// Catch the panic, especially the reflect operation panics.
+		if e := recover(); e != nil {
+			err = gerror.NewfSkip(1, "%v", e)
+		}
+	}()
 	pointerRv, ok := pointer.(reflect.Value)
 	if !ok {
 		pointerRv = reflect.ValueOf(pointer)
@@ -103,30 +110,34 @@ func doStructs(params interface{}, pointer interface{}, deep bool, mapping ...ma
 			return fmt.Errorf("pointer should be type of pointer, but got: %v", kind)
 		}
 	}
-	rv := reflect.ValueOf(params)
-	kind := rv.Kind()
-	for kind == reflect.Ptr {
-		rv = rv.Elem()
-		kind = rv.Kind()
+	var (
+		reflectValue = reflect.ValueOf(params)
+		reflectKind  = reflectValue.Kind()
+	)
+	for reflectKind == reflect.Ptr {
+		reflectValue = reflectValue.Elem()
+		reflectKind = reflectValue.Kind()
 	}
-	switch kind {
+	switch reflectKind {
 	case reflect.Slice, reflect.Array:
 		// If <params> is an empty slice, no conversion.
-		if rv.Len() == 0 {
+		if reflectValue.Len() == 0 {
 			return nil
 		}
-		array := reflect.MakeSlice(pointerRv.Type().Elem(), rv.Len(), rv.Len())
-		itemType := array.Index(0).Type()
-		for i := 0; i < rv.Len(); i++ {
+		var (
+			array    = reflect.MakeSlice(pointerRv.Type().Elem(), reflectValue.Len(), reflectValue.Len())
+			itemType = array.Index(0).Type()
+		)
+		for i := 0; i < reflectValue.Len(); i++ {
 			if itemType.Kind() == reflect.Ptr {
 				// Slice element is type pointer.
 				e := reflect.New(itemType.Elem()).Elem()
 				if deep {
-					if err = StructDeep(rv.Index(i).Interface(), e, mapping...); err != nil {
+					if err = StructDeep(reflectValue.Index(i).Interface(), e, mapping...); err != nil {
 						return err
 					}
 				} else {
-					if err = Struct(rv.Index(i).Interface(), e, mapping...); err != nil {
+					if err = Struct(reflectValue.Index(i).Interface(), e, mapping...); err != nil {
 						return err
 					}
 				}
@@ -135,11 +146,11 @@ func doStructs(params interface{}, pointer interface{}, deep bool, mapping ...ma
 				// Slice element is not type of pointer.
 				e := reflect.New(itemType).Elem()
 				if deep {
-					if err = StructDeep(rv.Index(i).Interface(), e, mapping...); err != nil {
+					if err = StructDeep(reflectValue.Index(i).Interface(), e, mapping...); err != nil {
 						return err
 					}
 				} else {
-					if err = Struct(rv.Index(i).Interface(), e, mapping...); err != nil {
+					if err = Struct(reflectValue.Index(i).Interface(), e, mapping...); err != nil {
 						return err
 					}
 				}
@@ -149,6 +160,6 @@ func doStructs(params interface{}, pointer interface{}, deep bool, mapping ...ma
 		pointerRv.Elem().Set(array)
 		return nil
 	default:
-		return fmt.Errorf("params should be type of slice, but got: %v", kind)
+		return fmt.Errorf("params should be type of slice, but got: %v", reflectKind)
 	}
 }

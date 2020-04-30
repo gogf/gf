@@ -104,8 +104,10 @@ func Interfaces(i interface{}) []interface{} {
 			}
 		default:
 			// Finally we use reflection.
-			rv := reflect.ValueOf(i)
-			kind := rv.Kind()
+			var (
+				rv   = reflect.ValueOf(i)
+				kind = rv.Kind()
+			)
 			for kind == reflect.Ptr {
 				rv = rv.Elem()
 				kind = rv.Kind()
