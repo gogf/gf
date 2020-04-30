@@ -19,9 +19,11 @@ import (
 //
 // Note that it returns error if given <level> is invalid.
 func Gzip(data []byte, level ...int) ([]byte, error) {
-	var writer *gzip.Writer
-	var buf bytes.Buffer
-	var err error
+	var (
+		writer *gzip.Writer
+		buf    bytes.Buffer
+		err    error
+	)
 	if len(level) > 0 {
 		writer, err = gzip.NewWriterLevel(&buf, level[0])
 		if err != nil {
@@ -41,8 +43,10 @@ func Gzip(data []byte, level ...int) ([]byte, error) {
 
 // GzipFile compresses the file <src> to <dst> using gzip algorithm.
 func GzipFile(src, dst string, level ...int) error {
-	var writer *gzip.Writer
-	var err error
+	var (
+		writer *gzip.Writer
+		err    error
+	)
 	srcFile, err := gfile.Open(src)
 	if err != nil {
 		return err
