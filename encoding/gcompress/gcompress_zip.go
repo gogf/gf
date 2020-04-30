@@ -10,16 +10,12 @@ import (
 	"archive/zip"
 	"bytes"
 	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/os/gfile"
+	"github.com/gogf/gf/text/gstr"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
-
-	"github.com/gogf/gf/internal/fileinfo"
-
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/text/gstr"
 )
 
 // ZipPath compresses <paths> to <dest> using zip compressing algorithm.
@@ -85,11 +81,13 @@ func doZipPathWriter(path string, exclude string, zipWriter *zip.Writer, prefix 
 		headerPrefix = prefix[0]
 	}
 	headerPrefix = strings.TrimRight(headerPrefix, "\\/")
-	if len(headerPrefix) > 0 && gfile.IsDir(path) {
-		headerPrefix += "/"
-	}
-	if headerPrefix == "" {
-		headerPrefix = gfile.Basename(path)
+	if gfile.IsDir(path) {
+		if len(headerPrefix) > 0 {
+			headerPrefix += "/"
+		} else {
+			headerPrefix = gfile.Basename(path)
+		}
+
 	}
 	headerPrefix = strings.Replace(headerPrefix, "//", "/", -1)
 	for _, file := range files {
@@ -97,22 +95,14 @@ func doZipPathWriter(path string, exclude string, zipWriter *zip.Writer, prefix 
 			intlog.Printf(`exclude file path: %s`, file)
 			continue
 		}
-		err := zipFile(file, headerPrefix+gfile.Dir(file[len(path):]), zipWriter)
+		dir := gfile.Dir(file[len(path):])
+		if dir == "." {
+			dir = ""
+		}
+		err := zipFile(file, headerPrefix+dir, zipWriter)
 		if err != nil {
 			return err
 		}
-	}
-	// Add prefix to zip archive.
-	path = headerPrefix
-	for {
-		err := zipFileVirtual(fileinfo.New(gfile.Basename(path), 0, os.ModeDir, time.Now()), path, zipWriter)
-		if err != nil {
-			return err
-		}
-		if path == "/" || !strings.Contains(path, "/") {
-			break
-		}
-		path = gfile.Dir(path)
 	}
 	return nil
 }
@@ -203,14 +193,23 @@ func zipFile(path string, prefix string, zw *zip.Writer) error {
 		return nil
 	}
 	defer file.Close()
+
 	info, err := file.Stat()
 	if err != nil {
 		return err
 	}
+
 	header, err := createFileHeader(info, prefix)
 	if err != nil {
 		return err
 	}
+
+	if info.IsDir() {
+		header.Name += "/"
+	} else {
+		header.Method = zip.Deflate
+	}
+
 	writer, err := zw.CreateHeader(header)
 	if err != nil {
 		return err
@@ -223,23 +222,12 @@ func zipFile(path string, prefix string, zw *zip.Writer) error {
 	return nil
 }
 
-func zipFileVirtual(info os.FileInfo, path string, zw *zip.Writer) error {
-	header, err := createFileHeader(info, "")
-	if err != nil {
-		return err
-	}
-	header.Name = path
-	if _, err := zw.CreateHeader(header); err != nil {
-		return err
-	}
-	return nil
-}
-
 func createFileHeader(info os.FileInfo, prefix string) (*zip.FileHeader, error) {
 	header, err := zip.FileInfoHeader(info)
 	if err != nil {
 		return nil, err
 	}
+
 	if len(prefix) > 0 {
 		prefix = strings.Replace(prefix, `\`, `/`, -1)
 		prefix = strings.TrimRight(prefix, `/`)
