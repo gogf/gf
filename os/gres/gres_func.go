@@ -11,9 +11,9 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"github.com/gogf/gf/encoding/gcompress"
 	"github.com/gogf/gf/util/gconv"
 
-	"github.com/gogf/gf/encoding/gcompress"
 	"github.com/gogf/gf/os/gfile"
 )
 
@@ -41,7 +41,7 @@ func Pack(srcPaths string, keyPrefix ...string) ([]byte, error) {
 	if len(keyPrefix) > 0 && keyPrefix[0] != "" {
 		headerPrefix = keyPrefix[0]
 	}
-	err := gcompress.ZipPathWriter(srcPaths, buffer, headerPrefix)
+	err := zipPathWriter(srcPaths, buffer, headerPrefix)
 	if err != nil {
 		return nil, err
 	}

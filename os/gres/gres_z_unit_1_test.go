@@ -35,9 +35,10 @@ func Test_Pack(t *testing.T) {
 		t.Assert(err, nil)
 
 		r := gres.New()
+
 		err = r.Add(string(data))
 		t.Assert(err, nil)
-		t.Assert(r.Contains("files"), true)
+		t.Assert(r.Contains("files/"), true)
 	})
 }
 
