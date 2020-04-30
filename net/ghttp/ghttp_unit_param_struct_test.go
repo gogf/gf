@@ -88,3 +88,37 @@ func Test_Params_Struct(t *testing.T) {
 		t.Assert(client.PostContent("/parse", `{"id":1,"name":"john","password1":"123Abc!@#","password2":"123Abc!@#"}`), `1john123Abc!@#123Abc!@#`)
 	})
 }
+
+func Test_Params_Structs(t *testing.T) {
+	type User struct {
+		Id    int
+		Name  string
+		Time  *time.Time
+		Pass1 string `p:"password1"`
+		Pass2 string `p:"password2" v:"passwd1 @required|length:2,20|password3#||密码强度不足"`
+	}
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/parse1", func(r *ghttp.Request) {
+		var users []*User
+		if err := r.Parse(&users); err != nil {
+			r.Response.WriteExit(err)
+		}
+		r.Response.WriteExit(users[0].Id, users[1].Id)
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		client := ghttp.NewClient()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		t.Assert(client.PostContent(
+			"/parse1",
+			`[{"id":1,"name":"john","password1":"123Abc!@#","password2":"123Abc!@#"}, {"id":2,"name":"john","password1":"123Abc!@#","password2":"123Abc!@#"}]`),
+			`12`,
+		)
+	})
+}

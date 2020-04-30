@@ -3,7 +3,6 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
-// pprof封装.
 
 package ghttp
 
@@ -17,7 +16,7 @@ import (
 	"github.com/gogf/gf/os/gview"
 )
 
-// 服务管理首页
+// Index shows the administration page.
 func (p *utilAdmin) Index(r *Request) {
 	data := map[string]interface{}{
 		"pid": gproc.Pid(),
@@ -38,38 +37,40 @@ func (p *utilAdmin) Index(r *Request) {
 	r.Response.Write(buffer)
 }
 
-// 服务重启
+// Restart restarts all the servers in the process.
 func (p *utilAdmin) Restart(r *Request) {
 	var err error = nil
-	// 必须检查可执行文件的权限
+	// Custom start binary path when this process exits.
 	path := r.GetQueryString("newExeFilePath")
 	if path == "" {
 		path = os.Args[0]
 	}
-	// 执行重启操作
 	if len(path) > 0 {
 		err = RestartAllServer(path)
 	} else {
 		err = RestartAllServer()
 	}
 	if err == nil {
-		r.Response.Write("server restarted")
+		r.Response.WriteExit("server restarted")
 	} else {
-		r.Response.Write(err.Error())
+		r.Response.WriteExit(err.Error())
 	}
 }
 
-// 服务关闭
+// Shutdown shuts down all the servers.
 func (p *utilAdmin) Shutdown(r *Request) {
-	r.Server.Shutdown()
+	if err := r.Server.Shutdown(); err != nil {
+		r.Response.WriteExit(err.Error())
+	}
 	if err := ShutdownAllServer(); err == nil {
-		r.Response.Write("server shutdown")
+		r.Response.WriteExit("server shutdown")
 	} else {
-		r.Response.Write(err.Error())
+		r.Response.WriteExit(err.Error())
 	}
 }
 
-// 开启服务管理支持
+// EnableAdmin enables the administration feature for the process.
+// The optional parameter <pattern> specifies the URI for the administration page.
 func (s *Server) EnableAdmin(pattern ...string) {
 	p := "/debug/admin"
 	if len(pattern) > 0 {
@@ -78,12 +79,13 @@ func (s *Server) EnableAdmin(pattern ...string) {
 	s.BindObject(p, &utilAdmin{})
 }
 
-// 关闭当前Web Server
+// Shutdown shuts down current server.
 func (s *Server) Shutdown() error {
-	// 非终端信号下，异步1秒后再执行关闭，
-	// 目的是让接口能够正确返回结果，否则接口会报错(因为web server关闭了)
+	// It shuts down the server after 1 second, which is not triggered by system signal,
+	// to ensure the response successfully to the client.
 	gtimer.SetTimeout(time.Second, func() {
-		// 只关闭当前的Web Server
+		// Only shut down current server.
+		// It may have multiple underlying http servers.
 		for _, v := range s.servers {
 			v.close()
 		}

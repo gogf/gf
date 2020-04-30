@@ -8,7 +8,6 @@ package ghttp
 
 import (
 	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/internal/structs"
 	"github.com/gogf/gf/util/gconv"
 )
 
@@ -190,13 +189,7 @@ func (r *Request) GetFormMapStrVar(kvMap ...map[string]interface{}) map[string]*
 // The optional parameter <mapping> is used to specify the key to attribute mapping.
 func (r *Request) GetFormStruct(pointer interface{}, mapping ...map[string]string) error {
 	r.parseForm()
-	tagMap := structs.TagMapName(pointer, paramTagPriority, true)
-	if len(mapping) > 0 {
-		for k, v := range mapping[0] {
-			tagMap[k] = v
-		}
-	}
-	return gconv.StructDeep(r.formMap, pointer, tagMap)
+	return gconv.StructDeep(r.formMap, pointer, mapping...)
 }
 
 // GetFormToStruct is alias of GetFormStruct. See GetFormStruct.

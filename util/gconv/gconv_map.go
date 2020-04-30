@@ -125,7 +125,12 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 		}
 	// Not a common type, it then uses reflection for conversion.
 	default:
-		rv := reflect.ValueOf(value)
+		var rv reflect.Value
+		if v, ok := value.(reflect.Value); ok {
+			rv = v
+		} else {
+			rv = reflect.ValueOf(value)
+		}
 		kind := rv.Kind()
 		// If it is a pointer, we should find its real data type.
 		if kind == reflect.Ptr {
@@ -301,8 +306,10 @@ func MapToMapDeep(params interface{}, pointer interface{}, mapping ...map[string
 // doMapToMap converts map type variable <params> to another map type variable <pointer>.
 // The elements of <pointer> should be type of *map.
 func doMapToMap(params interface{}, pointer interface{}, deep bool, mapping ...map[string]string) error {
-	paramsRv := reflect.ValueOf(params)
-	paramsKind := paramsRv.Kind()
+	var (
+		paramsRv   = reflect.ValueOf(params)
+		paramsKind = paramsRv.Kind()
+	)
 	if paramsKind == reflect.Ptr {
 		paramsRv = paramsRv.Elem()
 		paramsKind = paramsRv.Kind()
@@ -310,8 +317,12 @@ func doMapToMap(params interface{}, pointer interface{}, deep bool, mapping ...m
 	if paramsKind != reflect.Map {
 		return errors.New("params should be type of map")
 	}
-
-	pointerRv := reflect.ValueOf(pointer)
+	var pointerRv reflect.Value
+	if v, ok := pointer.(reflect.Value); ok {
+		pointerRv = v
+	} else {
+		pointerRv = reflect.ValueOf(pointer)
+	}
 	pointerKind := pointerRv.Kind()
 	for pointerKind == reflect.Ptr {
 		pointerRv = pointerRv.Elem()
@@ -320,11 +331,13 @@ func doMapToMap(params interface{}, pointer interface{}, deep bool, mapping ...m
 	if pointerKind != reflect.Map {
 		return errors.New("pointer should be type of map")
 	}
-	err := (error)(nil)
-	paramsKeys := paramsRv.MapKeys()
-	pointerKeyType := pointerRv.Type().Key()
-	pointerValueType := pointerRv.Type().Elem()
-	dataMap := reflect.MakeMapWithSize(pointerRv.Type(), len(paramsKeys))
+	var (
+		err              error
+		paramsKeys       = paramsRv.MapKeys()
+		pointerKeyType   = pointerRv.Type().Key()
+		pointerValueType = pointerRv.Type().Elem()
+		dataMap          = reflect.MakeMapWithSize(pointerRv.Type(), len(paramsKeys))
+	)
 	for _, key := range paramsKeys {
 		e := reflect.New(pointerValueType).Elem()
 		if deep {
@@ -360,8 +373,10 @@ func MapToMapsDeep(params interface{}, pointer interface{}, mapping ...map[strin
 // doMapToMaps converts map type variable <params> to another map type variable <pointer>.
 // The parameter of <pointer> should be type of []map/*map.
 func doMapToMaps(params interface{}, pointer interface{}, deep bool, mapping ...map[string]string) error {
-	paramsRv := reflect.ValueOf(params)
-	paramsKind := paramsRv.Kind()
+	var (
+		paramsRv   = reflect.ValueOf(params)
+		paramsKind = paramsRv.Kind()
+	)
 	if paramsKind == reflect.Ptr {
 		paramsRv = paramsRv.Elem()
 		paramsKind = paramsRv.Kind()
@@ -369,9 +384,10 @@ func doMapToMaps(params interface{}, pointer interface{}, deep bool, mapping ...
 	if paramsKind != reflect.Map {
 		return errors.New("params should be type of map")
 	}
-
-	pointerRv := reflect.ValueOf(pointer)
-	pointerKind := pointerRv.Kind()
+	var (
+		pointerRv   = reflect.ValueOf(pointer)
+		pointerKind = pointerRv.Kind()
+	)
 	for pointerKind == reflect.Ptr {
 		pointerRv = pointerRv.Elem()
 		pointerKind = pointerRv.Kind()
@@ -379,11 +395,13 @@ func doMapToMaps(params interface{}, pointer interface{}, deep bool, mapping ...
 	if pointerKind != reflect.Map {
 		return errors.New("pointer should be type of map")
 	}
-	err := (error)(nil)
-	paramsKeys := paramsRv.MapKeys()
-	pointerKeyType := pointerRv.Type().Key()
-	pointerValueType := pointerRv.Type().Elem()
-	dataMap := reflect.MakeMapWithSize(pointerRv.Type(), len(paramsKeys))
+	var (
+		err              error
+		paramsKeys       = paramsRv.MapKeys()
+		pointerKeyType   = pointerRv.Type().Key()
+		pointerValueType = pointerRv.Type().Elem()
+		dataMap          = reflect.MakeMapWithSize(pointerRv.Type(), len(paramsKeys))
+	)
 	for _, key := range paramsKeys {
 		e := reflect.New(pointerValueType).Elem().Addr()
 		if deep {
