@@ -493,6 +493,7 @@ func (a *StrArray) ContainsI(value string) bool {
 // or returns -1 if not exists.
 func (a *StrArray) Search(value string) int {
 	a.mu.RLock()
+	defer a.mu.RUnlock()
 	if len(a.array) == 0 {
 		return -1
 	}
@@ -503,7 +504,6 @@ func (a *StrArray) Search(value string) int {
 			break
 		}
 	}
-	a.mu.RUnlock()
 	return result
 }
 

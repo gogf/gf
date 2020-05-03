@@ -489,6 +489,7 @@ func (a *IntArray) Contains(value int) bool {
 // or returns -1 if not exists.
 func (a *IntArray) Search(value int) int {
 	a.mu.RLock()
+	defer a.mu.RUnlock()
 	if len(a.array) == 0 {
 		return -1
 	}
@@ -499,7 +500,6 @@ func (a *IntArray) Search(value int) int {
 			break
 		}
 	}
-	a.mu.RUnlock()
 	return result
 }
 
