@@ -64,6 +64,16 @@ func Test_StrArray_Basic(t *testing.T) {
 	})
 }
 
+func TestStrArray_ContainsI(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		s := garray.NewStrArray()
+		s.Append("a", "b", "C")
+		t.Assert(s.Contains("A"), false)
+		t.Assert(s.Contains("a"), true)
+		t.Assert(s.ContainsI("A"), true)
+	})
+}
+
 func TestStrArray_Sort(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		expect1 := []string{"0", "1", "2", "3"}

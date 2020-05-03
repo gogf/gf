@@ -51,6 +51,16 @@ func TestSortedStrArray_SetArray(t *testing.T) {
 	})
 }
 
+func TestSortedStrArray_ContainsI(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		s := garray.NewSortedStrArray()
+		s.Append("a", "b", "C")
+		t.Assert(s.Contains("A"), false)
+		t.Assert(s.Contains("a"), true)
+		t.Assert(s.ContainsI("A"), true)
+	})
+}
+
 func TestSortedStrArray_Sort(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []string{"a", "d", "c", "b"}

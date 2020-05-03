@@ -473,6 +473,9 @@ func (a *Array) Contains(value interface{}) bool {
 // or returns -1 if not exists.
 func (a *Array) Search(value interface{}) int {
 	a.mu.RLock()
+	if len(a.array) == 0 {
+		return -1
+	}
 	result := -1
 	for index, v := range a.array {
 		if v == value {
