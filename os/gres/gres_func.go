@@ -97,8 +97,7 @@ func UnpackContent(content string) ([]*File, error) {
 	var data []byte
 	var err error
 	if isHexStr(content) {
-		// It here keeps supporting Old version packing string using hex string,
-		// to make it compatible to old version using hex string.
+		// It here keeps compatible with old version packing string using hex string.
 		// TODO remove this support in the future.
 		data, err = gcompress.UnGzip(hexStrToBytes(content))
 		if err != nil {
