@@ -13,6 +13,7 @@ import (
 	"github.com/gogf/gf/internal/rwmutex"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
+	"strings"
 )
 
 type StrSet struct {
@@ -137,6 +138,19 @@ func (set *StrSet) Contains(item string) bool {
 	}
 	set.mu.RUnlock()
 	return ok
+}
+
+// ContainsI checks whether a value exists in the set with case-insensitively.
+// Note that it internally iterates the whole set to do the comparison with case-insensitively.
+func (set *StrSet) ContainsI(item string) bool {
+	set.mu.RLock()
+	defer set.mu.RUnlock()
+	for k, _ := range set.data {
+		if strings.EqualFold(k, item) {
+			return true
+		}
+	}
+	return false
 }
 
 // Remove deletes <item> from set.

@@ -12,6 +12,7 @@ import (
 	"github.com/gogf/gf/text/gstr"
 	"math"
 	"sort"
+	"strings"
 
 	"github.com/gogf/gf/internal/rwmutex"
 	"github.com/gogf/gf/util/gconv"
@@ -92,7 +93,13 @@ func (a *SortedStrArray) Sort() *SortedStrArray {
 }
 
 // Add adds one or multiple values to sorted array, the array always keeps sorted.
+// It's alias of function Append, see Append.
 func (a *SortedStrArray) Add(values ...string) *SortedStrArray {
+	return a.Append(values...)
+}
+
+// Append adds one or multiple values to sorted array, the array always keeps sorted.
+func (a *SortedStrArray) Append(values ...string) *SortedStrArray {
 	if len(values) == 0 {
 		return a
 	}
@@ -392,6 +399,22 @@ func (a *SortedStrArray) Contains(value string) bool {
 	return a.Search(value) != -1
 }
 
+// ContainsI checks whether a value exists in the array with case-insensitively.
+// Note that it internally iterates the whole array to do the comparison with case-insensitively.
+func (a *SortedStrArray) ContainsI(value string) bool {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	if len(a.array) == 0 {
+		return false
+	}
+	for _, v := range a.array {
+		if strings.EqualFold(v, value) {
+			return true
+		}
+	}
+	return false
+}
+
 // Search searches array by <value>, returns the index of <value>,
 // or returns -1 if not exists.
 func (a *SortedStrArray) Search(value string) (index int) {
@@ -407,12 +430,12 @@ func (a *SortedStrArray) Search(value string) (index int) {
 // If <result> lesser than 0, it means the value at <index> is lesser than <value>.
 // If <result> greater than 0, it means the value at <index> is greater than <value>.
 func (a *SortedStrArray) binSearch(value string, lock bool) (index int, result int) {
-	if len(a.array) == 0 {
-		return -1, -2
-	}
 	if lock {
 		a.mu.RLock()
 		defer a.mu.RUnlock()
+	}
+	if len(a.array) == 0 {
+		return -1, -2
 	}
 	min := 0
 	max := len(a.array) - 1

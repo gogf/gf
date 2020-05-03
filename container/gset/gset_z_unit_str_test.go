@@ -62,6 +62,16 @@ func TestStrSet_Basic(t *testing.T) {
 	})
 }
 
+func TestStrSet_ContainsI(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		s := gset.NewStrSet()
+		s.Add("a", "b", "C")
+		t.Assert(s.Contains("A"), false)
+		t.Assert(s.Contains("a"), true)
+		t.Assert(s.ContainsI("A"), true)
+	})
+}
+
 func TestStrSet_Iterator(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := gset.NewStrSet()

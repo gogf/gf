@@ -122,7 +122,13 @@ func (a *SortedArray) Sort() *SortedArray {
 }
 
 // Add adds one or multiple values to sorted array, the array always keeps sorted.
+// It's alias of function Append, see Append.
 func (a *SortedArray) Add(values ...interface{}) *SortedArray {
+	return a.Append(values...)
+}
+
+// Append adds one or multiple values to sorted array, the array always keeps sorted.
+func (a *SortedArray) Append(values ...interface{}) *SortedArray {
 	if len(values) == 0 {
 		return a
 	}
@@ -425,12 +431,12 @@ func (a *SortedArray) Search(value interface{}) (index int) {
 // If <result> lesser than 0, it means the value at <index> is lesser than <value>.
 // If <result> greater than 0, it means the value at <index> is greater than <value>.
 func (a *SortedArray) binSearch(value interface{}, lock bool) (index int, result int) {
-	if len(a.array) == 0 {
-		return -1, -2
-	}
 	if lock {
 		a.mu.RLock()
 		defer a.mu.RUnlock()
+	}
+	if len(a.array) == 0 {
+		return -1, -2
 	}
 	min := 0
 	max := len(a.array) - 1

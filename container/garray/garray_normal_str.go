@@ -473,13 +473,29 @@ func (a *StrArray) Contains(value string) bool {
 	return a.Search(value) != -1
 }
 
+// ContainsI checks whether a value exists in the array with case-insensitively.
+// Note that it internally iterates the whole array to do the comparison with case-insensitively.
+func (a *StrArray) ContainsI(value string) bool {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	if len(a.array) == 0 {
+		return false
+	}
+	for _, v := range a.array {
+		if strings.EqualFold(v, value) {
+			return true
+		}
+	}
+	return false
+}
+
 // Search searches array by <value>, returns the index of <value>,
 // or returns -1 if not exists.
 func (a *StrArray) Search(value string) int {
+	a.mu.RLock()
 	if len(a.array) == 0 {
 		return -1
 	}
-	a.mu.RLock()
 	result := -1
 	for index, v := range a.array {
 		if strings.Compare(v, value) == 0 {
