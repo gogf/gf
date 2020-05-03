@@ -9,6 +9,7 @@ package gres
 import (
 	"archive/zip"
 	"bytes"
+	"encoding/hex"
 	"fmt"
 	"github.com/gogf/gf/encoding/gbase64"
 	"github.com/gogf/gf/encoding/gcompress"
@@ -95,7 +96,16 @@ func Unpack(path string) ([]*File, error) {
 func UnpackContent(content string) ([]*File, error) {
 	var data []byte
 	var err error
-	if isBase64(content) {
+	if isHexStr(content) {
+		// It here keeps supporting Old version packing string using hex string,
+		// to make it compatible to old version using hex string.
+		// TODO remove this support in the future.
+		data, err = gcompress.UnGzip(hexStrToBytes(content))
+		if err != nil {
+			return nil, err
+		}
+	} else if isBase64(content) {
+		// New version packing string using base64.
 		b, err := gbase64.DecodeString(content)
 		if err != nil {
 			return nil, err
@@ -136,4 +146,27 @@ func isBase64(s string) bool {
 		}
 	}
 	return true
+}
+
+// isHexStr checks and returns whether given content <s> is hex string.
+// It returns true if <s> is hex string, or false if not.
+func isHexStr(s string) bool {
+	var r bool
+	for i := 0; i < len(s); i++ {
+		r = (s[i] >= '0' && s[i] <= '9') ||
+			(s[i] >= 'a' && s[i] <= 'f') ||
+			(s[i] >= 'A' && s[i] <= 'F')
+		if !r {
+			return false
+		}
+	}
+	return true
+}
+
+// hexStrToBytes converts hex string content to []byte.
+func hexStrToBytes(s string) []byte {
+	src := gconv.UnsafeStrToBytes(s)
+	dst := make([]byte, hex.DecodedLen(len(src)))
+	hex.Decode(dst, src)
+	return dst
 }
