@@ -9,13 +9,9 @@ package gvar_test
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/json"
 	"github.com/gogf/gf/util/gconv"
-	"math"
 	"testing"
 	"time"
-
-	"github.com/gogf/gf/frame/g"
 
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/test/gtest"
@@ -302,90 +298,6 @@ func Test_Duration(t *testing.T) {
 		var timeUnix int64 = 1556242660
 		objOne := gvar.New(timeUnix, true)
 		t.Assert(objOne.Duration(), time.Duration(timeUnix))
-	})
-}
-
-func Test_Map(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		m := g.Map{
-			"k1": "v1",
-			"k2": "v2",
-		}
-		objOne := gvar.New(m, true)
-		t.Assert(objOne.Map()["k1"], m["k1"])
-		t.Assert(objOne.Map()["k2"], m["k2"])
-	})
-}
-
-func Test_Struct(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		type StTest struct {
-			Test int
-		}
-
-		Kv := make(map[string]int, 1)
-		Kv["Test"] = 100
-
-		testObj := &StTest{}
-
-		objOne := gvar.New(Kv, true)
-
-		objOne.Struct(testObj)
-
-		t.Assert(testObj.Test, Kv["Test"])
-	})
-	gtest.C(t, func(t *gtest.T) {
-		type StTest struct {
-			Test int8
-		}
-		o := &StTest{}
-		v := gvar.New(g.Slice{"Test", "-25"})
-		v.Struct(o)
-		t.Assert(o.Test, -25)
-	})
-}
-
-func Test_Json(t *testing.T) {
-	// Marshal
-	gtest.C(t, func(t *gtest.T) {
-		s := "i love gf"
-		v := gvar.New(s)
-		b1, err1 := json.Marshal(v)
-		b2, err2 := json.Marshal(s)
-		t.Assert(err1, err2)
-		t.Assert(b1, b2)
-	})
-
-	gtest.C(t, func(t *gtest.T) {
-		s := int64(math.MaxInt64)
-		v := gvar.New(s)
-		b1, err1 := json.Marshal(v)
-		b2, err2 := json.Marshal(s)
-		t.Assert(err1, err2)
-		t.Assert(b1, b2)
-	})
-
-	// Unmarshal
-	gtest.C(t, func(t *gtest.T) {
-		s := "i love gf"
-		v := gvar.New(nil)
-		b, err := json.Marshal(s)
-		t.Assert(err, nil)
-
-		err = json.Unmarshal(b, v)
-		t.Assert(err, nil)
-		t.Assert(v.String(), s)
-	})
-
-	gtest.C(t, func(t *gtest.T) {
-		var v gvar.Var
-		s := "i love gf"
-		b, err := json.Marshal(s)
-		t.Assert(err, nil)
-
-		err = json.Unmarshal(b, &v)
-		t.Assert(err, nil)
-		t.Assert(v.String(), s)
 	})
 }
 

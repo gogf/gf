@@ -35,8 +35,8 @@ func (j *Json) IsNil() bool {
 // It returns all values of current Json object if <pattern> is given empty or string ".".
 // It returns nil if no value found by <pattern>.
 //
-// We can also access slice item by its index number in <pattern>,
-// eg: "items.name.first", "list.10".
+// We can also access slice item by its index number in <pattern> like:
+// "list.10", "array.0.name", "array.0.1.id".
 //
 // It returns a default value specified by <def> if value for <pattern> is not found.
 func (j *Json) Get(pattern string, def ...interface{}) interface{} {
@@ -78,8 +78,7 @@ func (j *Json) GetVars(pattern string, def ...interface{}) []*gvar.Var {
 	return gvar.New(j.Get(pattern, def...)).Vars()
 }
 
-// GetMap retrieves the value by specified <pattern>,
-// and converts it to map[string]interface{}.
+// GetMap retrieves and returns the value by specified <pattern> as map[string]interface{}.
 func (j *Json) GetMap(pattern string, def ...interface{}) map[string]interface{} {
 	result := j.Get(pattern, def...)
 	if result != nil {
@@ -88,12 +87,20 @@ func (j *Json) GetMap(pattern string, def ...interface{}) map[string]interface{}
 	return nil
 }
 
-// GetMapStrStr retrieves the value by specified <pattern>,
-// and converts it to map[string]string.
+// GetMapStrStr retrieves and returns the value by specified <pattern> as map[string]string.
 func (j *Json) GetMapStrStr(pattern string, def ...interface{}) map[string]string {
 	result := j.Get(pattern, def...)
 	if result != nil {
 		return gconv.MapStrStr(result)
+	}
+	return nil
+}
+
+// GetMaps retrieves and returns the value by specified <pattern> as []map[string]interface{}.
+func (j *Json) GetMaps(pattern string, def ...interface{}) []map[string]interface{} {
+	result := j.Get(pattern, def...)
+	if result != nil {
+		return gconv.Maps(result)
 	}
 	return nil
 }
@@ -323,25 +330,28 @@ func (j *Json) GetStructsDeep(pattern string, pointer interface{}, mapping ...ma
 }
 
 // GetMapToMap retrieves the value by specified <pattern> and converts it specified map variable.
-// The parameter of <pointer> should be type of *map.
+// See gconv.MapToMap.
 func (j *Json) GetMapToMap(pattern string, pointer interface{}, mapping ...map[string]string) error {
 	return gconv.MapToMap(j.Get(pattern), pointer, mapping...)
 }
 
 // GetMapToMapDeep retrieves the value by specified <pattern> and converts it specified map
-// variable recursively. The parameter of <pointer> should be type of *map.
+// variable recursively.
+// See gconv.MapToMapDeep.
 func (j *Json) GetMapToMapDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
 	return gconv.MapToMapDeep(j.Get(pattern), pointer, mapping...)
 }
 
 // GetMapToMaps retrieves the value by specified <pattern> and converts it specified map slice
-// variable. The parameter of <pointer> should be type of []map/*map.
+// variable.
+// See gconv.MapToMaps.
 func (j *Json) GetMapToMaps(pattern string, pointer interface{}, mapping ...map[string]string) error {
 	return gconv.MapToMaps(j.Get(pattern), pointer, mapping...)
 }
 
 // GetMapToMapsDeep retrieves the value by specified <pattern> and converts it specified map slice
-// variable recursively. The parameter of <pointer> should be type of []map/*map.
+// variable recursively.
+// See gconv.MapToMapsDeep.
 func (j *Json) GetMapToMapsDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
 	return gconv.MapToMapsDeep(j.Get(pattern), pointer, mapping...)
 }
