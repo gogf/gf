@@ -32,6 +32,7 @@ func Test_Log(t *testing.T) {
 		s.BindHandler("/error", func(r *ghttp.Request) {
 			panic("custom error")
 		})
+		s.SetDumpRouterMap(false)
 		s.SetLogPath(logDir)
 		s.SetAccessLogEnabled(true)
 		s.SetErrorLogEnabled(true)
