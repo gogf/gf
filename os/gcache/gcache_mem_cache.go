@@ -142,10 +142,10 @@ func (c *memCache) doSetWithLockCheck(key interface{}, value interface{}, durati
 
 // getInternalExpire returns the expire time with given expire duration in milliseconds.
 func (c *memCache) getInternalExpire(expire int64) int64 {
-	if expire != 0 {
-		return gtime.TimestampMilli() + expire
-	} else {
+	if expire <= 0 {
 		return gDEFAULT_MAX_EXPIRE
+	} else {
+		return gtime.TimestampMilli() + expire
 	}
 }
 
