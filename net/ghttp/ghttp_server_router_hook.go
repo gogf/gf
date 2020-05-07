@@ -11,7 +11,7 @@ import (
 	"net/http"
 )
 
-// 绑定指定的hook回调函数, pattern参数同BindHandler，支持命名路由；hook参数的值由ghttp server设定，参数不区分大小写
+// BindHookHandler registers handler for specified hook.
 func (s *Server) BindHookHandler(pattern string, hook string, handler HandlerFunc) {
 	s.doBindHookHandler(pattern, hook, handler, "")
 }
@@ -26,23 +26,22 @@ func (s *Server) doBindHookHandler(pattern string, hook string, handler HandlerF
 	})
 }
 
-// 通过map批量绑定回调函数
 func (s *Server) BindHookHandlerByMap(pattern string, hookMap map[string]HandlerFunc) {
 	for k, v := range hookMap {
 		s.BindHookHandler(pattern, k, v)
 	}
 }
 
-// 事件回调处理，内部使用了缓存处理.
-// 并按照指定hook回调函数的优先级及注册顺序进行调用
+// callHookHandler calls the hook handler by their registered sequences.
 func (s *Server) callHookHandler(hook string, r *Request) {
 	hookItems := r.getHookHandlers(hook)
 	if len(hookItems) > 0 {
-		// 备份原有的router变量
+		// Backup the old router variable map.
 		oldRouterMap := r.routerMap
 		for _, item := range hookItems {
 			r.routerMap = item.values
-			// 不使用hook的router对象，保留路由注册服务的router对象，不能覆盖
+			// DO NOT USE the router of the hook handler,
+			// which can overwrite the router of serving handler.
 			// r.Router = item.handler.router
 			if err := s.niceCallHookHandler(item.handler.itemFunc, r); err != nil {
 				switch err {
@@ -58,12 +57,12 @@ func (s *Server) callHookHandler(hook string, r *Request) {
 				}
 			}
 		}
-		// 恢复原有的router变量
+		// Restore the old router variable map.
 		r.routerMap = oldRouterMap
 	}
 }
 
-// 获得当前请求，指定类型的的钩子函数列表
+// getHookHandlers retrieves and returns the hook handlers of specified hook.
 func (r *Request) getHookHandlers(hook string) []*handlerParsedItem {
 	if !r.hasHookHandler {
 		return nil
@@ -79,7 +78,9 @@ func (r *Request) getHookHandlers(hook string) []*handlerParsedItem {
 	return parsedItems
 }
 
-// 友好地调用方法
+// niceCallHookHandler nicely calls the hook handler function,
+// which means it automatically catches and returns the possible panic error to
+// avoid goroutine crash.
 func (s *Server) niceCallHookHandler(f HandlerFunc, r *Request) (err interface{}) {
 	defer func() {
 		err = recover()
