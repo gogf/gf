@@ -17,7 +17,7 @@ func (s *Server) Logger() *glog.Logger {
 	return s.config.Logger
 }
 
-// 处理服务错误信息，主要是panic，http请求的status由access log进行管理
+// handleAccessLog handles the access logging for server.
 func (s *Server) handleAccessLog(r *Request) {
 	if !s.IsAccessLogEnabled() {
 		return
@@ -37,14 +37,13 @@ func (s *Server) handleAccessLog(r *Request) {
 		)
 }
 
-// 处理服务错误信息，主要是panic，http请求的status由access log进行管理
+// handleErrorLog handles the error logging for server.
 func (s *Server) handleErrorLog(err error, r *Request) {
-	// 错误输出默认是开启的
+	// It does nothing if error logging is custom disabled.
 	if !s.IsErrorLogEnabled() {
 		return
 	}
 
-	// 错误日志信息
 	scheme := "http"
 	if r.TLS != nil {
 		scheme = "https"

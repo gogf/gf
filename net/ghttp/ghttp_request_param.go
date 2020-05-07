@@ -35,6 +35,10 @@ var (
 //
 // The parameter <pointer> can be type of: *struct/**struct/*[]struct/*[]*struct.
 //
+// It supports single and multiple struct convertion:
+// 1. Single struct, post content like: {"id":1, "name":"john"}
+// 2. Multiple struct, post content like: [{"id":1, "name":"john"}, {"id":, "name":"smith"}]
+//
 // TODO: Improve the performance by reducing duplicated reflect usage on the same variable across packages.
 func (r *Request) Parse(pointer interface{}) error {
 	var (
@@ -52,15 +56,20 @@ func (r *Request) Parse(pointer interface{}) error {
 		reflectKind2 = reflectVal2.Kind()
 	)
 	switch reflectKind2 {
+	// Single struct, post content like:
+	// {"id":1, "name":"john"}
 	case reflect.Ptr, reflect.Struct:
-		// Struct conversion.
+		// Conversion.
 		if err := r.GetStruct(pointer); err != nil {
 			return err
 		}
-		// Struct validation.
+		// Validation.
 		if err := gvalid.CheckStruct(pointer, nil); err != nil {
 			return err
 		}
+
+	// Multiple struct, post content like:
+	// [{"id":1, "name":"john"}, {"id":, "name":"smith"}]
 	case reflect.Array, reflect.Slice:
 		// If struct slice conversion, it might post JSON/XML content,
 		// so it uses gjson for the conversion.

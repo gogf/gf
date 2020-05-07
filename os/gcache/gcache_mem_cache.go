@@ -431,7 +431,7 @@ func (c *memCache) syncEventAndClearExpired() {
 }
 
 // clearByKey deletes the key-value pair with given <key>.
-// The parameter <force> specifies whether doing this deleting forcedly.
+// The parameter <force> specifies whether doing this deleting forcibly.
 func (c *memCache) clearByKey(key interface{}, force ...bool) {
 	c.dataMu.Lock()
 	// Doubly check before really deleting it from cache.
