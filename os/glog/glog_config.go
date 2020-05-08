@@ -99,6 +99,19 @@ func GetFlags() int {
 	return logger.GetFlags()
 }
 
+// SetCtxKeys sets the context keys for logger. The keys is used for retrieving values
+// from context and printing them to logging content.
+//
+// Note that multiple calls of this function will overwrite the previous set context keys.
+func SetCtxKeys(keys ...interface{}) {
+	logger.SetCtxKeys(keys...)
+}
+
+// GetCtxKeys retrieves and returns the context keys for logging.
+func GetCtxKeys() []interface{} {
+	return logger.GetCtxKeys()
+}
+
 // PrintStack prints the caller stack,
 // the optional parameter <skip> specify the skipped stack offset from the end point.
 func PrintStack(skip ...int) {

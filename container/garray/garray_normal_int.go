@@ -504,6 +504,7 @@ func (a *IntArray) Search(value int) int {
 }
 
 // Unique uniques the array, clear repeated items.
+// Example: [1,1,2,3,2] -> [1,2,3]
 func (a *IntArray) Unique() *IntArray {
 	a.mu.Lock()
 	for i := 0; i < len(a.array)-1; i++ {
