@@ -252,7 +252,7 @@ func (a *StrArray) PopRight() (value string, found bool) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	index := len(a.array) - 1
-	if index <= 0 {
+	if index < 0 {
 		return "", false
 	}
 	value = a.array[index]
@@ -732,7 +732,8 @@ func (a *StrArray) String() string {
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (a *StrArray) MarshalJSON() ([]byte, error) {
+// Note that do not use pointer as its receiver here.
+func (a StrArray) MarshalJSON() ([]byte, error) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	return json.Marshal(a.array)
