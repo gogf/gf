@@ -137,6 +137,21 @@ func TestSortedStrArray_PopLeft(t *testing.T) {
 		t.Assert(array1.Len(), 4)
 		t.Assert(array1.Contains("a"), false)
 	})
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewSortedStrArrayFrom(g.SliceStr{"1", "2", "3"})
+		v, ok := array.PopLeft()
+		t.Assert(v, 1)
+		t.Assert(ok, true)
+		t.Assert(array.Len(), 2)
+		v, ok = array.PopLeft()
+		t.Assert(v, 2)
+		t.Assert(ok, true)
+		t.Assert(array.Len(), 1)
+		v, ok = array.PopLeft()
+		t.Assert(v, 3)
+		t.Assert(ok, true)
+		t.Assert(array.Len(), 0)
+	})
 }
 
 func TestSortedStrArray_PopRight(t *testing.T) {
@@ -148,6 +163,23 @@ func TestSortedStrArray_PopRight(t *testing.T) {
 		t.Assert(ok, ok)
 		t.Assert(array1.Len(), 4)
 		t.Assert(array1.Contains("e"), false)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewSortedStrArrayFrom(g.SliceStr{"1", "2", "3"})
+		v, ok := array.PopRight()
+		t.Assert(v, 3)
+		t.Assert(ok, true)
+		t.Assert(array.Len(), 2)
+
+		v, ok = array.PopRight()
+		t.Assert(v, 2)
+		t.Assert(ok, true)
+		t.Assert(array.Len(), 1)
+
+		v, ok = array.PopRight()
+		t.Assert(v, 1)
+		t.Assert(ok, true)
+		t.Assert(array.Len(), 0)
 	})
 }
 
@@ -210,6 +242,7 @@ func TestSortedStrArray_PopLefts(t *testing.T) {
 		s1 = array1.PopLefts(4)
 		t.Assert(len(s1), 3)
 		t.Assert(s1, []string{"c", "d", "e"})
+		t.Assert(array1.Len(), 0)
 	})
 }
 
@@ -523,6 +556,7 @@ func TestSortedStrArray_Merge(t *testing.T) {
 }
 
 func TestSortedStrArray_Json(t *testing.T) {
+	// array pointer
 	gtest.C(t, func(t *gtest.T) {
 		s1 := []string{"a", "b", "d", "c"}
 		s2 := []string{"a", "b", "c", "d"}
@@ -543,11 +577,51 @@ func TestSortedStrArray_Json(t *testing.T) {
 		t.Assert(a3.Slice(), s1)
 		t.Assert(a3.Interfaces(), s1)
 	})
+	// array value
+	gtest.C(t, func(t *gtest.T) {
+		s1 := []string{"a", "b", "d", "c"}
+		s2 := []string{"a", "b", "c", "d"}
+		a1 := *garray.NewSortedStrArrayFrom(s1)
+		b1, err1 := json.Marshal(a1)
+		b2, err2 := json.Marshal(s1)
+		t.Assert(b1, b2)
+		t.Assert(err1, err2)
 
+		a2 := garray.NewSortedStrArray()
+		err1 = json.Unmarshal(b2, &a2)
+		t.Assert(a2.Slice(), s2)
+		t.Assert(a2.Interfaces(), s2)
+
+		var a3 garray.SortedStrArray
+		err := json.Unmarshal(b2, &a3)
+		t.Assert(err, nil)
+		t.Assert(a3.Slice(), s1)
+		t.Assert(a3.Interfaces(), s1)
+	})
+	// array pointer
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Name   string
 			Scores *garray.SortedStrArray
+		}
+		data := g.Map{
+			"Name":   "john",
+			"Scores": []string{"A+", "A", "A"},
+		}
+		b, err := json.Marshal(data)
+		t.Assert(err, nil)
+
+		user := new(User)
+		err = json.Unmarshal(b, user)
+		t.Assert(err, nil)
+		t.Assert(user.Name, data["Name"])
+		t.Assert(user.Scores, []string{"A", "A", "A+"})
+	})
+	// array value
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Name   string
+			Scores garray.SortedStrArray
 		}
 		data := g.Map{
 			"Name":   "john",

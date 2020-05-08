@@ -1,29 +1,30 @@
 package main
 
 import (
-	"encoding/hex"
-	"fmt"
-	"github.com/gogf/gf/encoding/gbase64"
+	"time"
+
+	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/util/gconv"
-	"github.com/gogf/gf/util/grand"
+
+	"github.com/gogf/gf/container/garray"
 )
 
-// bytesToHexString converts binary content to hex string content.
-func bytesToHexStr(b []byte) string {
-	dst := make([]byte, hex.EncodedLen(len(b)))
-	hex.Encode(dst, b)
-	return gconv.UnsafeBytesToStr(dst)
-}
-
 func main() {
-	b := make([]byte, 1024)
-	for i := 0; i < 1024; i++ {
-		b[i] = byte(grand.N(0, 255))
+	// 创建对象
+	var a = garray.NewStrArray()
+	// push 100个 字符串进去
+	for i := 1; i <= 10; i++ {
+		a.PushLeft("a_" + gconv.String(i))
 	}
-
-	fmt.Println(bytesToHexStr(b))
-	fmt.Println(len(b))
-	fmt.Println(len(bytesToHexStr(b)))
-	fmt.Println(gbase64.EncodeToString(b))
-	fmt.Println(len(gbase64.EncodeToString(b)))
+	// 死循环 Pop 取出
+	for {
+		glog.Printf("a.Len() ---> %d", a.Len())
+		if a.Len() == 0 {
+			break
+		}
+		if v, isFound := a.PopRight(); isFound {
+			glog.Printf("Pop -----> %s", v)
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
 }

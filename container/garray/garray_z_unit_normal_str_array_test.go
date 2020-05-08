@@ -129,6 +129,65 @@ func TestStrArray_PushAndPop(t *testing.T) {
 	})
 }
 
+func TestStrArray_PopLeft(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewStrArrayFrom(g.SliceStr{"1", "2", "3"})
+		v, ok := array.PopLeft()
+		t.Assert(v, 1)
+		t.Assert(ok, true)
+		t.Assert(array.Len(), 2)
+		v, ok = array.PopLeft()
+		t.Assert(v, 2)
+		t.Assert(ok, true)
+		t.Assert(array.Len(), 1)
+		v, ok = array.PopLeft()
+		t.Assert(v, 3)
+		t.Assert(ok, true)
+		t.Assert(array.Len(), 0)
+	})
+}
+
+func TestStrArray_PopRight(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewStrArrayFrom(g.SliceStr{"1", "2", "3"})
+
+		v, ok := array.PopRight()
+		t.Assert(v, 3)
+		t.Assert(ok, true)
+		t.Assert(array.Len(), 2)
+
+		v, ok = array.PopRight()
+		t.Assert(v, 2)
+		t.Assert(ok, true)
+		t.Assert(array.Len(), 1)
+
+		v, ok = array.PopRight()
+		t.Assert(v, 1)
+		t.Assert(ok, true)
+		t.Assert(array.Len(), 0)
+	})
+}
+
+func TestStrArray_PopLefts(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewStrArrayFrom(g.SliceStr{"1", "2", "3"})
+		t.Assert(array.PopLefts(2), g.Slice{"1", "2"})
+		t.Assert(array.Len(), 1)
+		t.Assert(array.PopLefts(2), g.Slice{"3"})
+		t.Assert(array.Len(), 0)
+	})
+}
+
+func TestStrArray_PopRights(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewStrArrayFrom(g.SliceStr{"1", "2", "3"})
+		t.Assert(array.PopRights(2), g.Slice{"2", "3"})
+		t.Assert(array.Len(), 1)
+		t.Assert(array.PopLefts(2), g.Slice{"1"})
+		t.Assert(array.Len(), 0)
+	})
+}
+
 func TestStrArray_PopLeftsAndPopRights(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.NewStrArray()
@@ -545,6 +604,7 @@ func TestStrArray_LockFunc(t *testing.T) {
 }
 
 func TestStrArray_Json(t *testing.T) {
+	// array pointer
 	gtest.C(t, func(t *gtest.T) {
 		s1 := []string{"a", "b", "d", "c"}
 		a1 := garray.NewStrArrayFrom(s1)
@@ -562,11 +622,48 @@ func TestStrArray_Json(t *testing.T) {
 		t.Assert(err, nil)
 		t.Assert(a3.Slice(), s1)
 	})
+	// array value
+	gtest.C(t, func(t *gtest.T) {
+		s1 := []string{"a", "b", "d", "c"}
+		a1 := *garray.NewStrArrayFrom(s1)
+		b1, err1 := json.Marshal(a1)
+		b2, err2 := json.Marshal(s1)
+		t.Assert(b1, b2)
+		t.Assert(err1, err2)
 
+		a2 := garray.NewStrArray()
+		err1 = json.Unmarshal(b2, &a2)
+		t.Assert(a2.Slice(), s1)
+
+		var a3 garray.StrArray
+		err := json.Unmarshal(b2, &a3)
+		t.Assert(err, nil)
+		t.Assert(a3.Slice(), s1)
+	})
+	// array pointer
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Name   string
 			Scores *garray.StrArray
+		}
+		data := g.Map{
+			"Name":   "john",
+			"Scores": []string{"A+", "A", "A"},
+		}
+		b, err := json.Marshal(data)
+		t.Assert(err, nil)
+
+		user := new(User)
+		err = json.Unmarshal(b, user)
+		t.Assert(err, nil)
+		t.Assert(user.Name, data["Name"])
+		t.Assert(user.Scores, data["Scores"])
+	})
+	// array value
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Name   string
+			Scores garray.StrArray
 		}
 		data := g.Map{
 			"Name":   "john",
