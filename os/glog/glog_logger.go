@@ -8,6 +8,7 @@ package glog
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/os/gfpool"
@@ -29,9 +30,10 @@ import (
 
 // Logger is the struct for logging management.
 type Logger struct {
-	rmu    sync.Mutex // Mutex for rotation feature.
-	parent *Logger    // Parent logger, if it is not empty, it means the logger is used in chaining function.
-	config Config     // Logger configuration.
+	rmu    sync.Mutex      // Mutex for rotation feature.
+	ctx    context.Context // Context for logging.
+	parent *Logger         // Parent logger, if it is not empty, it means the logger is used in chaining function.
+	config Config          // Logger configuration.
 }
 
 const (
@@ -95,7 +97,7 @@ func (l *Logger) getFilePath(now time.Time) string {
 }
 
 // print prints <s> to defined writer, logging file or passed <std>.
-func (l *Logger) print(std io.Writer, lead string, value ...interface{}) {
+func (l *Logger) print(std io.Writer, lead string, values ...interface{}) {
 	var (
 		now    = time.Now()
 		buffer = bytes.NewBuffer(nil)
@@ -118,7 +120,7 @@ func (l *Logger) print(std io.Writer, lead string, value ...interface{}) {
 		// Lead string.
 		if len(lead) > 0 {
 			buffer.WriteString(lead)
-			if len(value) > 0 {
+			if len(values) > 0 {
 				buffer.WriteByte(' ')
 			}
 		}
@@ -141,9 +143,26 @@ func (l *Logger) print(std io.Writer, lead string, value ...interface{}) {
 		}
 	}
 	// Convert value to string.
-	tempStr := ""
-	valueStr := ""
-	for _, v := range value {
+	var (
+		tempStr  = ""
+		valueStr = ""
+	)
+	// Context values.
+	if l.ctx != nil && len(l.config.CtxKeys) > 0 {
+		ctxStr := ""
+		for _, key := range l.config.CtxKeys {
+			if v := l.ctx.Value(key); v != nil {
+				if ctxStr != "" {
+					ctxStr += ", "
+				}
+				ctxStr += fmt.Sprintf("%s: %+v", key, v)
+			}
+		}
+		if ctxStr != "" {
+			buffer.WriteString(fmt.Sprintf("{%s} ", ctxStr))
+		}
+	}
+	for _, v := range values {
 		if err, ok := v.(error); ok {
 			tempStr = fmt.Sprintf("%+v", err)
 		} else {

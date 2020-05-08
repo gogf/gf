@@ -7,10 +7,27 @@
 package glog
 
 import (
+	"context"
 	"io"
 
 	"github.com/gogf/gf/os/gfile"
 )
+
+// Ctx is a chaining function,
+// which sets the context for current logging.
+func (l *Logger) Ctx(ctx context.Context, keys ...interface{}) *Logger {
+	logger := (*Logger)(nil)
+	if l.parent == nil {
+		logger = l.Clone()
+	} else {
+		logger = l
+	}
+	logger.ctx = ctx
+	if len(keys) > 0 {
+		logger.SetCtxKeys(keys...)
+	}
+	return logger
+}
 
 // To is a chaining function,
 // which redirects current logging content output to the specified <writer>.

@@ -488,6 +488,7 @@ func (a *Array) Search(value interface{}) int {
 }
 
 // Unique uniques the array, clear repeated items.
+// Example: [1,1,2,3,2] -> [1,2,3]
 func (a *Array) Unique() *Array {
 	a.mu.Lock()
 	for i := 0; i < len(a.array)-1; i++ {

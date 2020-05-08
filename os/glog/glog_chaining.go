@@ -7,12 +7,20 @@
 package glog
 
 import (
+	"context"
 	"io"
 )
 
 // Expose returns the default logger of glog.
 func Expose() *Logger {
 	return logger
+}
+
+// Ctx is a chaining function,
+// which sets the context for current logging.
+// The parameter <keys> specifies the context keys for retrieving values.
+func Ctx(ctx context.Context, keys ...interface{}) *Logger {
+	return logger.Ctx(ctx, keys...)
 }
 
 // To is a chaining function,
