@@ -12,6 +12,10 @@ import (
 	"strings"
 )
 
+const (
+	gERROR_INVALID_LENGTH_TYPE = `should be type of integer`
+)
+
 // checkLength checks the length rules for value.
 // The length is calculated using unicode string, which means one chinese character or letter
 // both has the length of 1.
@@ -60,7 +64,7 @@ func checkLength(value, ruleKey, ruleVal string, customMsgMap map[string]string)
 				msg = strings.Replace(msg, ":min", strconv.Itoa(min), -1)
 			}
 		} else {
-			msg = "校验参数[" + ruleVal + "]应当为整数类型"
+			msg = gERROR_INVALID_LENGTH_TYPE
 		}
 
 	case "max-length":
@@ -74,7 +78,7 @@ func checkLength(value, ruleKey, ruleVal string, customMsgMap map[string]string)
 				msg = strings.Replace(msg, ":max", strconv.Itoa(max), -1)
 			}
 		} else {
-			msg = "校验参数[" + ruleVal + "]应当为整数类型"
+			msg = gERROR_INVALID_LENGTH_TYPE
 		}
 	}
 	return msg

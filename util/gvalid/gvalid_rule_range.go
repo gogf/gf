@@ -11,11 +11,15 @@ import (
 	"strings"
 )
 
-// 对字段值大小进行检测
+const (
+	gERROR_INVALID_RANGE_TYPE = `should be type of integer/float`
+)
+
+// checkRange checks the range rules.
 func checkRange(value, ruleKey, ruleVal string, customMsgMap map[string]string) string {
 	msg := ""
 	switch ruleKey {
-	// 大小范围
+	// Value range.
 	case "between":
 		array := strings.Split(ruleVal, ",")
 		min := float64(0)
@@ -41,10 +45,10 @@ func checkRange(value, ruleKey, ruleVal string, customMsgMap map[string]string) 
 				msg = strings.Replace(msg, ":max", strconv.FormatFloat(max, 'f', -1, 64), -1)
 			}
 		} else {
-			msg = "输入参数[" + value + "]应当为数字类型"
+			msg = gERROR_INVALID_RANGE_TYPE
 		}
 
-	// 最小值
+	// Min value.
 	case "min":
 		if min, err := strconv.ParseFloat(ruleVal, 10); err == nil {
 			if v, err := strconv.ParseFloat(value, 10); err == nil {
@@ -57,13 +61,13 @@ func checkRange(value, ruleKey, ruleVal string, customMsgMap map[string]string) 
 					msg = strings.Replace(msg, ":min", strconv.FormatFloat(min, 'f', -1, 64), -1)
 				}
 			} else {
-				msg = "输入参数[" + value + "]应当为数字类型"
+				msg = gERROR_INVALID_RANGE_TYPE
 			}
 		} else {
-			msg = "校验参数[" + ruleVal + "]应当为数字类型"
+			msg = gERROR_INVALID_RANGE_TYPE
 		}
 
-	// 最大值
+	// Max value.
 	case "max":
 		if max, err := strconv.ParseFloat(ruleVal, 10); err == nil {
 			if v, err := strconv.ParseFloat(value, 10); err == nil {
@@ -76,10 +80,10 @@ func checkRange(value, ruleKey, ruleVal string, customMsgMap map[string]string) 
 					msg = strings.Replace(msg, ":max", strconv.FormatFloat(max, 'f', -1, 64), -1)
 				}
 			} else {
-				msg = "输入参数[" + value + "]应当为数字类型"
+				msg = gERROR_INVALID_RANGE_TYPE
 			}
 		} else {
-			msg = "校验参数[" + ruleVal + "]应当为数字类型"
+			msg = gERROR_INVALID_RANGE_TYPE
 		}
 	}
 	return msg

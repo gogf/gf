@@ -12,9 +12,11 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
-// 检测键值对参数Map，
-// rules参数支持 []string / map[string]string 类型，前面一种类型支持返回校验结果顺序(具体格式参考struct tag)，后一种不支持；
-// rules参数中得 map[string]string 是一个2维的关联数组，第一维键名为参数键名，第二维为带有错误的校验规则名称，值为错误信息。
+// CheckMap validates map and returns the error result. It returns nil if with successful validation.
+//
+// The parameter <rules> can be type of []string/map[string]string. It supports sequence in error result
+// if <rules> is type of []string.
+// The optional parameter <messages> specifies the custom error messages for specified keys and rules.
 func CheckMap(params interface{}, rules interface{}, messages ...CustomMsg) *Error {
 	data := gconv.Map(params)
 	if data == nil {
@@ -29,21 +31,23 @@ func CheckMap(params interface{}, rules interface{}, messages ...CustomMsg) *Err
 		errorRules = make([]string, 0)
 		errorMaps  = make(ErrorMap)
 	)
-	// 解析rules参数
 	switch v := rules.(type) {
-	// 支持校验错误顺序: []sequence tag
+	// Sequence tag: []sequence tag
+	// Sequence has order for error results.
 	case []string:
 		for _, tag := range v {
 			name, rule, msg := parseSequenceTag(tag)
 			if len(name) == 0 {
 				continue
 			}
-			// 错误提示
 			if len(msg) > 0 {
-				ruleArray := strings.Split(rule, "|")
-				msgArray := strings.Split(msg, "|")
+				var (
+					msgArray  = strings.Split(msg, "|")
+					ruleArray = strings.Split(rule, "|")
+				)
 				for k, v := range ruleArray {
-					// 如果msg条数比rule少，那么多余的rule使用默认的错误信息
+					// If length of custom messages is lesser than length of rules,
+					// the rest rules use the default error messages.
 					if len(msgArray) <= k {
 						continue
 					}
@@ -61,11 +65,10 @@ func CheckMap(params interface{}, rules interface{}, messages ...CustomMsg) *Err
 			errorRules = append(errorRules, name+"@"+rule)
 		}
 
-	// 不支持校验错误顺序: map[键名]校验规则
+	// No sequence rules: map[field]rule
 	case map[string]string:
 		checkRules = v
 	}
-	// 自定义错误消息，非必须参数，优先级比rules参数中定义的错误消息更高
 	if len(messages) > 0 && len(messages[0]) > 0 {
 		if len(customMsgs) > 0 {
 			for k, v := range messages[0] {
@@ -75,11 +78,8 @@ func CheckMap(params interface{}, rules interface{}, messages ...CustomMsg) *Err
 			customMsgs = messages[0]
 		}
 	}
-	// 开始执行校验: 以校验规则作为基础进行遍历校验
 	var value interface{}
-	// 这里的rule变量为多条校验规则，不包含名字或者错误信息定义
 	for key, rule := range checkRules {
-		// 如果规则为空，那么不执行校验
 		if len(rule) == 0 {
 			continue
 		}
@@ -89,7 +89,8 @@ func CheckMap(params interface{}, rules interface{}, messages ...CustomMsg) *Err
 		}
 		if e := Check(value, rule, customMsgs[key], data); e != nil {
 			_, item := e.FirstItem()
-			// 如果值为nil|""，并且不需要require*验证时，其他验证失效
+			// If value is nil or empty string and has no required* rules,
+			// clear the error message.
 			if value == nil || gconv.String(value) == "" {
 				required := false
 				// rule => error
