@@ -43,11 +43,7 @@ func checkLength(value, ruleKey, ruleVal string, customMsgMap map[string]string)
 			}
 		}
 		if valueLen < min || valueLen > max {
-			if v, ok := customMsgMap[ruleKey]; !ok {
-				msg = getDefaultErrorMessageByRule(ruleKey)
-			} else {
-				msg = v
-			}
+			msg = getErrorMessageByRule(ruleKey, customMsgMap)
 			msg = strings.Replace(msg, ":min", strconv.Itoa(min), -1)
 			msg = strings.Replace(msg, ":max", strconv.Itoa(max), -1)
 			return msg
@@ -56,11 +52,7 @@ func checkLength(value, ruleKey, ruleVal string, customMsgMap map[string]string)
 	case "min-length":
 		if min, err := strconv.Atoi(ruleVal); err == nil {
 			if valueLen < min {
-				if v, ok := customMsgMap[ruleKey]; !ok {
-					msg = getDefaultErrorMessageByRule(ruleKey)
-				} else {
-					msg = v
-				}
+				msg = getErrorMessageByRule(ruleKey, customMsgMap)
 				msg = strings.Replace(msg, ":min", strconv.Itoa(min), -1)
 			}
 		} else {
@@ -70,11 +62,7 @@ func checkLength(value, ruleKey, ruleVal string, customMsgMap map[string]string)
 	case "max-length":
 		if max, err := strconv.Atoi(ruleVal); err == nil {
 			if valueLen > max {
-				if v, ok := customMsgMap[ruleKey]; !ok {
-					msg = getDefaultErrorMessageByRule(ruleKey)
-				} else {
-					msg = v
-				}
+				msg = getErrorMessageByRule(ruleKey, customMsgMap)
 				msg = strings.Replace(msg, ":max", strconv.Itoa(max), -1)
 			}
 		} else {

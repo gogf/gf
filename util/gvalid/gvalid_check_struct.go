@@ -43,8 +43,10 @@ func CheckStruct(object interface{}, rules interface{}, messages ...CustomMsg) *
 				continue
 			}
 			if len(msg) > 0 {
-				ruleArray := strings.Split(rule, "|")
-				msgArray := strings.Split(msg, "|")
+				var (
+					msgArray  = strings.Split(msg, "|")
+					ruleArray = strings.Split(rule, "|")
+				)
 				for k, v := range ruleArray {
 					// If length of custom messages is lesser than length of rules,
 					// the rest rules use the default error messages.

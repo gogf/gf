@@ -203,7 +203,7 @@ func checkDataType(content []byte) string {
 		return "yml"
 	} else if (gregex.IsMatch(`^[\s\t\[*\]].?*[\w\-]+\s*=\s*.+`, content) || gregex.IsMatch(`\n[\s\t\[*\]]*[\w\-]+\s*=\s*.+`, content)) && gregex.IsMatch(`\n[\s\t]*[\w\-]+\s*=*\"*.+\"`, content) == false && gregex.IsMatch(`^[\s\t]*[\w\-]+\s*=*\"*.+\"`, content) == false {
 		return "ini"
-	} else if gregex.IsMatch(`^[\s\t]*[\w\-]+\s*=\s*.+`, content) || gregex.IsMatch(`\n[\s\t]*[\w\-]+\s*=\s*.+`, content) {
+	} else if gregex.IsMatch(`^[\s\t]*[\w\-\."]+\s*=\s*.+`, content) || gregex.IsMatch(`\n[\s\t]*[\w\-\."]+\s*=\s*.+`, content) {
 		return "toml"
 	} else {
 		return ""
