@@ -6,31 +6,31 @@
 
 package gvalid
 
-// 默认规则校验错误消息(可以通过接口自定义错误消息)
+// defaultMessages is the default error messages.
 var defaultMessages = map[string]string{
-	"required":             "字段不能为空",
-	"required-if":          "字段不能为空",
-	"required-unless":      "字段不能为空",
-	"required-with":        "字段不能为空",
-	"required-with-all":    "字段不能为空",
-	"required-without":     "字段不能为空",
-	"required-without-all": "字段不能为空",
-	"date":                 "日期格式不正确",
-	"date-format":          "日期格式不正确",
-	"email":                "邮箱地址格式不正确",
-	"phone":                "手机号码格式不正确",
-	"telephone":            "电话号码格式不正确",
-	"passport":             "账号格式不合法，必需以字母开头，只能包含字母、数字和下划线，长度在6~18之间",
-	"password":             "密码格式不合法，密码格式为任意6-18位的可见字符",
-	"password2":            "密码格式不合法，密码格式为任意6-18位的可见字符，必须包含大小写字母和数字",
-	"password3":            "密码格式不合法，密码格式为任意6-18位的可见字符，必须包含大小写字母、数字和特殊字符",
-	"postcode":             "邮政编码不正确",
-	"id-number":            "身份证号码不正确",
-	"luhn":                 "银行卡号不正确",
-	"qq":                   "QQ号码格式不正确",
-	"ip":                   "IP地址格式不正确",
-	"ipv4":                 "IPv4地址格式不正确",
-	"ipv6":                 "IPv6地址格式不正确",
+	"required":             "The :attribute field is required",
+	"required-if":          "The :attribute field is required when :other is :value",
+	"required-unless":      "The :attribute field is required unless :other is in :values",
+	"required-with":        "The :attribute field is required when :values is present",
+	"required-with-all":    "The :attribute field is required when :values is present",
+	"required-without":     "The :attribute field is required when :values is not present",
+	"required-without-all": "The :attribute field is required when none of :values are present",
+	"date":                 "The :attribute is not a valid date",
+	"date-format":          "The :attribute does not match the format :format",
+	"email":                "The :attribute must be a valid email address",
+	"phone":                "The :attribute must be a valid phone number",
+	"telephone":            "The :attribute must be a valid telephone number",
+	"passport":             "Invalid passport format",
+	"password":             "Invalid passport format",
+	"password2":            "Invalid passport format",
+	"password3":            "Invalid passport format",
+	"postcode":             "Invalid postcode format",
+	"id-number":            "Invalid id",
+	"luhn":                 "The :attribute must be a valid bank card number",
+	"qq":                   "The :attribute must be a valid QQ number",
+	"ip":                   "The :attribute must be a valid IP address",
+	"ipv4":                 "The :attribute must be a valid IPv4 address",
+	"ipv6":                 "The :attribute must be a valid IPv6 address",
 	"mac":                  "MAC地址格式不正确",
 	"url":                  "URL地址格式不正确",
 	"domain":               "域名格式不正确",
@@ -53,15 +53,11 @@ var defaultMessages = map[string]string{
 	"regex":                "字段值不合法",
 }
 
-// 初始化错误消息管理对象
 func init() {
 	errorMsgMap.Sets(defaultMessages)
 }
 
-// 替换默认的错误提示为指定的自定义提示
-// 主要作用：
-// 1、便于多语言错误提示设置；
-// 2、默认错误提示信息不满意；
+// SetDefaultErrorMsgs sets the default error messages for package.
 func SetDefaultErrorMsgs(msgs map[string]string) {
 	errorMsgMap.Sets(msgs)
 }
