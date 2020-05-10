@@ -236,6 +236,11 @@ func Check(value interface{}, rules string, messages interface{}, params ...inte
 		case "date-format":
 			if _, err := gtime.StrToTimeFormat(val, ruleVal); err == nil {
 				match = true
+			} else {
+				var msg string
+				msg = getErrorMessageByRule(ruleKey, customMsgMap)
+				msg = strings.Replace(msg, ":format", ruleVal, -1)
+				errorMsgs[ruleKey] = msg
 			}
 
 		// Values of two fields should be equal as string.
@@ -245,6 +250,12 @@ func Check(value interface{}, rules string, messages interface{}, params ...inte
 					match = true
 				}
 			}
+			if !match {
+				var msg string
+				msg = getErrorMessageByRule(ruleKey, customMsgMap)
+				msg = strings.Replace(msg, ":field", ruleVal, -1)
+				errorMsgs[ruleKey] = msg
+			}
 
 		// Values of two fields should not be equal as string.
 		case "different":
@@ -253,6 +264,12 @@ func Check(value interface{}, rules string, messages interface{}, params ...inte
 				if strings.Compare(val, v) == 0 {
 					match = false
 				}
+			}
+			if !match {
+				var msg string
+				msg = getErrorMessageByRule(ruleKey, customMsgMap)
+				msg = strings.Replace(msg, ":field", ruleVal, -1)
+				errorMsgs[ruleKey] = msg
 			}
 
 		// Field value should be in range of.
@@ -429,11 +446,7 @@ func Check(value interface{}, rules string, messages interface{}, params ...inte
 			// It does nothing if the error message for this rule
 			// is already set in previous validation.
 			if _, ok := errorMsgs[ruleKey]; !ok {
-				if msg, ok := customMsgMap[ruleKey]; ok {
-					errorMsgs[ruleKey] = msg
-				} else {
-					errorMsgs[ruleKey] = getDefaultErrorMessageByRule(ruleKey)
-				}
+				errorMsgs[ruleKey] = getErrorMessageByRule(ruleKey, customMsgMap)
 			}
 		}
 		index++

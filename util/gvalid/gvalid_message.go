@@ -51,21 +51,24 @@ var defaultMessages = map[string]string{
 	"integer":              "The :attribute value must be an integer",
 	"float":                "The :attribute value must be a float",
 	"boolean":              "The :attribute value field must be true or false",
-	"same":                 "The :attribute value must be the same as field :other",
-	"different":            "The :attribute value must be different from field :other",
+	"same":                 "The :attribute value must be the same as field :field",
+	"different":            "The :attribute value must be different from field :field",
 	"in":                   "The :attribute value is not in acceptable range",
 	"not-in":               "The :attribute value is not in acceptable range",
 	"regex":                "The :attribute value is invalid",
 }
 
-// getDefaultErrorMessageByRule retrieves and returns the default error message
-// for specified rule. It firstly retrieves the message from i18n manager, it returns
-// from default error messages if it's not found in i18n manager.
-func getDefaultErrorMessageByRule(rule string) string {
-	i18nKey := fmt.Sprintf(`gf.gvalid.%s`, rule)
-	content := gi18n.GetContent(i18nKey)
+// getErrorMessageByRule retrieves and returns the error message for specified rule.
+// It firstly retrieves the message from custom message map, and then checks i18n manager,
+// it returns the default error message if it's not found in custom message map or i18n manager.
+func getErrorMessageByRule(ruleKey string, customMsgMap map[string]string) string {
+	content := customMsgMap[ruleKey]
+	if content != "" {
+		return content
+	}
+	content = gi18n.GetContent(fmt.Sprintf(`gf.gvalid.%s`, ruleKey))
 	if content == "" {
-		content = defaultMessages[rule]
+		content = defaultMessages[ruleKey]
 	}
 	return content
 }

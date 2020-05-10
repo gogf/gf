@@ -36,11 +36,7 @@ func checkRange(value, ruleKey, ruleVal string, customMsgMap map[string]string) 
 		}
 		if v, err := strconv.ParseFloat(value, 10); err == nil {
 			if v < min || v > max {
-				if v, ok := customMsgMap[ruleKey]; !ok {
-					msg = getDefaultErrorMessageByRule(ruleKey)
-				} else {
-					msg = v
-				}
+				msg = getErrorMessageByRule(ruleKey, customMsgMap)
 				msg = strings.Replace(msg, ":min", strconv.FormatFloat(min, 'f', -1, 64), -1)
 				msg = strings.Replace(msg, ":max", strconv.FormatFloat(max, 'f', -1, 64), -1)
 			}
@@ -53,11 +49,7 @@ func checkRange(value, ruleKey, ruleVal string, customMsgMap map[string]string) 
 		if min, err := strconv.ParseFloat(ruleVal, 10); err == nil {
 			if v, err := strconv.ParseFloat(value, 10); err == nil {
 				if v < min {
-					if v, ok := customMsgMap[ruleKey]; !ok {
-						msg = getDefaultErrorMessageByRule(ruleKey)
-					} else {
-						msg = v
-					}
+					msg = getErrorMessageByRule(ruleKey, customMsgMap)
 					msg = strings.Replace(msg, ":min", strconv.FormatFloat(min, 'f', -1, 64), -1)
 				}
 			} else {
@@ -72,11 +64,7 @@ func checkRange(value, ruleKey, ruleVal string, customMsgMap map[string]string) 
 		if max, err := strconv.ParseFloat(ruleVal, 10); err == nil {
 			if v, err := strconv.ParseFloat(value, 10); err == nil {
 				if v > max {
-					if v, ok := customMsgMap[ruleKey]; !ok {
-						msg = getDefaultErrorMessageByRule(ruleKey)
-					} else {
-						msg = v
-					}
+					msg = getErrorMessageByRule(ruleKey, customMsgMap)
 					msg = strings.Replace(msg, ":max", strconv.FormatFloat(max, 'f', -1, 64), -1)
 				}
 			} else {
