@@ -8,6 +8,7 @@
 package gi18n
 
 var (
+	// defaultManager is the default i18n instance for package functions.
 	defaultManager = Instance()
 )
 
@@ -26,7 +27,7 @@ func SetDelimiters(left, right string) {
 	defaultManager.SetDelimiters(left, right)
 }
 
-// T is alias of Translate.
+// T is alias of Translate for convenience.
 func T(content string, language ...string) string {
 	return defaultManager.T(content, language...)
 }
@@ -35,4 +36,10 @@ func T(content string, language ...string) string {
 // The parameter <language> specifies custom translation language ignoring configured language.
 func Translate(content string, language ...string) string {
 	return defaultManager.Translate(content, language...)
+}
+
+// GetValue retrieves and returns the configured content for given key and specified language.
+// It returns an empty string if not found.
+func GetContent(key string, language ...string) string {
+	return defaultManager.GetContent(key, language...)
 }

@@ -6,6 +6,11 @@
 
 package gvalid
 
+import (
+	"fmt"
+	"github.com/gogf/gf/i18n/gi18n"
+)
+
 // defaultMessages is the default error messages.
 var defaultMessages = map[string]string{
 	"required":             "The :attribute field is required",
@@ -20,44 +25,47 @@ var defaultMessages = map[string]string{
 	"email":                "The :attribute must be a valid email address",
 	"phone":                "The :attribute must be a valid phone number",
 	"telephone":            "The :attribute must be a valid telephone number",
-	"passport":             "Invalid passport format",
-	"password":             "Invalid passport format",
-	"password2":            "Invalid passport format",
-	"password3":            "Invalid passport format",
-	"postcode":             "Invalid postcode format",
-	"id-number":            "Invalid id",
-	"luhn":                 "The :attribute must be a valid bank card number",
+	"passport":             "The :attribute value is not a valid passport format",
+	"password":             "The :attribute value is not a valid passport format",
+	"password2":            "The :attribute value is not a valid passport format",
+	"password3":            "The :attribute value is not a valid passport format",
+	"postcode":             "The :attribute value is not a valid passport format",
+	"resident-id":          "The :attribute value is not a valid resident id number",
+	"bank-card":            "The :attribute must be a valid bank card number",
 	"qq":                   "The :attribute must be a valid QQ number",
 	"ip":                   "The :attribute must be a valid IP address",
 	"ipv4":                 "The :attribute must be a valid IPv4 address",
 	"ipv6":                 "The :attribute must be a valid IPv6 address",
-	"mac":                  "MAC地址格式不正确",
-	"url":                  "URL地址格式不正确",
-	"domain":               "域名格式不正确",
-	"length":               "字段长度为:min到:max个字符",
-	"min-length":           "字段最小长度为:min",
-	"max-length":           "字段最大长度为:max",
-	"between":              "字段大小为:min到:max",
-	"min":                  "字段最小值为:min",
-	"max":                  "字段最大值为:max",
-	"json":                 "字段应当为JSON格式",
-	"xml":                  "字段应当为XML格式",
-	"array":                "字段应当为数组",
-	"integer":              "字段应当为整数",
-	"float":                "字段应当为浮点数",
-	"boolean":              "字段应当为布尔值",
-	"same":                 "字段值不合法",
-	"different":            "字段值不合法",
-	"in":                   "字段值不合法",
-	"not-in":               "字段值不合法",
-	"regex":                "字段值不合法",
+	"mac":                  "The :attribute must be a valid MAC address",
+	"url":                  "The :attribute must be a valid URL address",
+	"domain":               "The :attribute must be a valid domain format",
+	"length":               "The :attribute length must be between :min and :max",
+	"min-length":           "The :attribute length must be equal or greater than :min",
+	"max-length":           "The :attribute length must be equal or lesser than :max",
+	"between":              "The :attribute value must be between :min and :max",
+	"min":                  "The :attribute value must be equal or greater than :min",
+	"max":                  "The :attribute value must be equal or lesser than :max",
+	"json":                 "The :attribute must be a valid JSON string",
+	"xml":                  "The :attribute must be a valid XML string",
+	"array":                "The :attribute must be an array",
+	"integer":              "The :attribute must be an integer",
+	"float":                "The :attribute must be a float",
+	"boolean":              "The :attribute field must be true or false",
+	"same":                 "The :attribute value must be the same as field :other",
+	"different":            "The :attribute value must be different from field :other",
+	"in":                   "The :attribute value is not in acceptable range",
+	"not-in":               "The :attribute value is not in acceptable range",
+	"regex":                "The :attribute value is invalid",
 }
 
-func init() {
-	errorMsgMap.Sets(defaultMessages)
-}
-
-// SetDefaultErrorMsgs sets the default error messages for package.
-func SetDefaultErrorMsgs(msgs map[string]string) {
-	errorMsgMap.Sets(msgs)
+// getDefaultErrorMessageByRule retrieves and returns the default error message
+// for specified rule. It firstly retrieves the message from i18n manager, it returns
+// from default error messages if it's not found in i18n manager.
+func getDefaultErrorMessageByRule(rule string) string {
+	i18nKey := fmt.Sprintf(`gf.gvalid.%s`, rule)
+	content := gi18n.GetContent(i18nKey)
+	if content == "" {
+		content = defaultMessages[rule]
+	}
+	return content
 }
