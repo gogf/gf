@@ -103,6 +103,7 @@ var (
 )
 
 // Check checks single value with specified rules.
+// It returns nil if with successful validation.
 //
 // The parameter <value> can be any type of variable, which will be converted to string
 // for validation.
