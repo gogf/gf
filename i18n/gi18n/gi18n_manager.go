@@ -43,11 +43,13 @@ type Options struct {
 }
 
 var (
-	// defaultDelimiters defines the key variable delimiters.
+	// defaultDelimiters defines the default key variable delimiters.
 	defaultDelimiters = []string{"{#", "}"}
 )
 
 // New creates and returns a new i18n manager.
+// The optional parameter <option> specifies the custom options for i18n manager.
+// It uses a default one if it's not passed.
 func New(options ...Options) *Manager {
 	var opts Options
 	if len(options) > 0 {
@@ -70,20 +72,23 @@ func New(options ...Options) *Manager {
 	return m
 }
 
-// DefaultOptions returns the default options for i18n manager.
+// DefaultOptions creates and returns a default options for i18n manager.
 func DefaultOptions() Options {
-	path := "i18n"
-	realPath, _ := gfile.Search(path)
+	var (
+		path        = "i18n"
+		realPath, _ = gfile.Search(path)
+	)
 	if realPath != "" {
 		path = realPath
-		// To avoid of the source of GF: github.com/gogf/i18n/gi18n
+		// To avoid of the source path of GF: github.com/gogf/i18n/gi18n
 		if gfile.Exists(path + gfile.Separator + "gi18n") {
 			path = ""
 		}
 	}
 	return Options{
 		Path:       path,
-		Delimiters: []string{"{#", "}"},
+		Language:   "en",
+		Delimiters: defaultDelimiters,
 	}
 }
 
@@ -114,7 +119,7 @@ func (m *Manager) SetDelimiters(left, right string) {
 	intlog.Printf(`SetDelimiters: %v`, m.pattern)
 }
 
-// T is alias of Translate.
+// T is alias of Translate for convenience.
 func (m *Manager) T(content string, language ...string) string {
 	return m.Translate(content, language...)
 }
@@ -140,20 +145,41 @@ func (m *Manager) Translate(content string, language ...string) string {
 		return v
 	}
 	// Parse content as variables container.
-	result, _ := gregex.ReplaceStringFuncMatch(m.pattern, content, func(match []string) string {
-		if v, ok := data[match[1]]; ok {
-			return v
-		}
-		return match[0]
-	})
+	result, _ := gregex.ReplaceStringFuncMatch(
+		m.pattern, content,
+		func(match []string) string {
+			if v, ok := data[match[1]]; ok {
+				return v
+			}
+			return match[0]
+		})
 	intlog.Printf(`Translate for language: %s`, transLang)
 	return result
+}
+
+// GetValue retrieves and returns the configured content for given key and specified language.
+// It returns an empty string if not found.
+func (m *Manager) GetContent(key string, language ...string) string {
+	m.init()
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	transLang := m.options.Language
+	if len(language) > 0 && language[0] != "" {
+		transLang = language[0]
+	} else {
+		transLang = m.options.Language
+	}
+	if data, ok := m.data[transLang]; ok {
+		return data[key]
+	}
+	return ""
 }
 
 // init initializes the manager for lazy initialization design.
 // The i18n manager is only initialized once.
 func (m *Manager) init() {
 	m.mu.RLock()
+	// If the data is not nil, means it's already initialized.
 	if m.data != nil {
 		m.mu.RUnlock()
 		return
@@ -165,10 +191,12 @@ func (m *Manager) init() {
 	if gres.Contains(m.options.Path) {
 		files := gres.ScanDirFile(m.options.Path, "*.*", true)
 		if len(files) > 0 {
-			var path string
-			var name string
-			var lang string
-			var array []string
+			var (
+				path  string
+				name  string
+				lang  string
+				array []string
+			)
 			m.data = make(map[string]map[string]string)
 			for _, file := range files {
 				name = file.Name()
@@ -193,36 +221,45 @@ func (m *Manager) init() {
 		}
 	} else if m.options.Path != "" {
 		files, _ := gfile.ScanDirFile(m.options.Path, "*.*", true)
-		if len(files) > 0 {
-			var path string
-			var lang string
-			var array []string
-			m.data = make(map[string]map[string]string)
-			for _, file := range files {
-				path = file[len(m.options.Path)+1:]
-				array = strings.Split(path, gfile.Separator)
-				if len(array) > 1 {
-					lang = array[0]
-				} else {
-					lang = gfile.Name(array[0])
-				}
-				if m.data[lang] == nil {
-					m.data[lang] = make(map[string]string)
-				}
-				if j, err := gjson.LoadContent(gfile.GetBytes(file)); err == nil {
-					for k, v := range j.ToMap() {
-						m.data[lang][k] = gconv.String(v)
-					}
-				} else {
-					glog.Errorf("load i18n file '%s' failed: %v", file, err)
-				}
-			}
-			_, _ = gfsnotify.Add(path, func(event *gfsnotify.Event) {
-				m.mu.Lock()
-				m.data = nil
-				m.mu.Unlock()
-				gfsnotify.Exit()
-			})
+		if len(files) == 0 {
+			intlog.Printf(
+				"no i18n files found in configured directory:%s",
+				m.options.Path,
+			)
+			return
 		}
+		var (
+			path  string
+			lang  string
+			array []string
+		)
+		m.data = make(map[string]map[string]string)
+		for _, file := range files {
+			path = file[len(m.options.Path)+1:]
+			array = strings.Split(path, gfile.Separator)
+			if len(array) > 1 {
+				lang = array[0]
+			} else {
+				lang = gfile.Name(array[0])
+			}
+			if m.data[lang] == nil {
+				m.data[lang] = make(map[string]string)
+			}
+			if j, err := gjson.LoadContent(gfile.GetBytes(file)); err == nil {
+				for k, v := range j.ToMap() {
+					m.data[lang][k] = gconv.String(v)
+				}
+			} else {
+				glog.Errorf("load i18n file '%s' failed: %v", file, err)
+			}
+		}
+		// Monitor changes of i18n files for hot reload feature.
+		_, _ = gfsnotify.Add(path, func(event *gfsnotify.Event) {
+			// Any changes of i18n files, clear the data.
+			m.mu.Lock()
+			m.data = nil
+			m.mu.Unlock()
+			gfsnotify.Exit()
+		})
 	}
 }
