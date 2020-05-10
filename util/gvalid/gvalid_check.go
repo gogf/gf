@@ -102,40 +102,46 @@ var (
 	}
 )
 
-// 检测单条数据的规则:
+// Check checks single value with specified rules.
 //
-// 1. value为需要校验的数据，可以为任意基本数据类型；
-//
-// 2. msgs为自定义错误信息，由于同一条数据的校验规则可能存在多条，为方便调用，参数类型支持 string/map/struct/*struct,
-// 允许传递多个自定义的错误信息，如果类型为string，那么中间使用"|"符号分隔多个自定义错误；
-//
-// 3. params参数为联合校验参数，支持任意的map/struct/*struct类型，对于需要联合校验的规则有效，如：required-*、same、different；
-func Check(value interface{}, rules string, msgs interface{}, params ...interface{}) *Error {
+// The parameter <value> can be any type of variable, which will be converted to string
+// for validation.
+// The parameter <rules> can be one or more rules, multiple rules joined using char '|'.
+// The parameter <messages> specifies the custom error messages, which can be type of:
+// string/map/struct/*struct.
+// The optional parameter <params> specifies the extra validation parameters for some rules
+// like: required-*、same、different, etc.
+func Check(value interface{}, rules string, messages interface{}, params ...interface{}) *Error {
 	if rules == "" {
 		return nil
 	}
-	// 内部会将参数全部转换为字符串类型进行校验
-	val := strings.TrimSpace(gconv.String(value))
-	data := make(map[string]string)
-	errorMsgs := make(map[string]string)
+	// It converts value to string and then does the validation.
+	var (
+		val       = strings.TrimSpace(gconv.String(value))
+		data      = make(map[string]string)
+		errorMsgs = make(map[string]string)
+	)
 	if len(params) > 0 {
 		for k, v := range gconv.Map(params[0]) {
 			data[k] = gconv.String(v)
 		}
 	}
-	// 自定义错误消息处理
-	msgArray := make([]string, 0)
-	customMsgMap := make(map[string]string)
-	switch v := msgs.(type) {
+	// Custom error messages handling.
+	var (
+		msgArray     = make([]string, 0)
+		customMsgMap = make(map[string]string)
+	)
+	switch v := messages.(type) {
 	case string:
 		msgArray = strings.Split(v, "|")
 	default:
-		for k, v := range gconv.Map(msgs) {
+		for k, v := range gconv.Map(messages) {
 			customMsgMap[k] = gconv.String(v)
 		}
 	}
+	// Handle the char '|' in the rule,
+	// which makes this rule separated into multiple rules.
 	ruleItems := strings.Split(strings.TrimSpace(rules), "|")
-	// 规则项预处理, 主要解决规则中存在的"|"关键字符号
 	for i := 0; ; {
 		array := strings.Split(ruleItems[i], ":")
 		if _, ok := allSupportedRules[array[0]]; !ok {
@@ -143,7 +149,10 @@ func Check(value interface{}, rules string, msgs interface{}, params ...interfac
 				ruleItems[i-1] += "|" + ruleItems[i]
 				ruleItems = append(ruleItems[:i], ruleItems[i+1:]...)
 			} else {
-				return newErrorStr("parse_error", "invalid rules:"+rules)
+				return newErrorStr(
+					"invalid_rules",
+					"invalid rules: "+rules,
+				)
 			}
 		} else {
 			i++
@@ -176,6 +185,7 @@ func Check(value interface{}, rules string, msgs interface{}, params ...interfac
 			match = checkRequired(val, ruleKey, ruleVal, data)
 
 		// Length rules.
+		// It also supports length of unicode string.
 		case
 			"length",
 			"min-length",
@@ -210,12 +220,12 @@ func Check(value interface{}, rules string, msgs interface{}, params ...interfac
 
 		// Date rules.
 		case "date":
-			// Standard date string, which must contain char '-'.
+			// Standard date string, which must contain char '-' or '.'.
 			if _, err := gtime.StrToTime(val); err == nil {
 				match = true
 				break
 			}
-			// Date that not contains char '-'.
+			// Date that not contains char '-' or '.'.
 			if _, err := gtime.StrToTime(val, "Ymd"); err == nil {
 				match = true
 				break
@@ -329,26 +339,21 @@ func Check(value interface{}, rules string, msgs interface{}, params ...interfac
 			match = checkResidentId(val)
 
 		// Bank card number using LUHN algorithm.
-		case
-			"luhn",
-			"bank-card":
+		case "bank-card":
 			match = checkLuHn(val)
 
 		// Universal passport format rule:
-		// Starting with letter, containing only numbers or underscores, length between 6 and 18
-		// 通用帐号规则(字母开头，只能包含字母、数字和下划线，长度在6~18之间)
+		// Starting with letter, containing only numbers or underscores, length between 6 and 18.
 		case "passport":
 			match = gregex.IsMatchString(`^[a-zA-Z]{1}\w{5,17}$`, val)
 
 		// Universal password format rule1:
-		// Containing any visible chars, length between 6 and 18
-		// 通用密码(任意可见字符，长度在6~18之间)
+		// Containing any visible chars, length between 6 and 18.
 		case "password":
 			match = gregex.IsMatchString(`^[\w\S]{6,18}$`, val)
 
 		// Universal password format rule2:
 		// Must meet password rule1, must contain lower and upper letters and numbers.
-		// 中等强度密码(在弱密码的基础上，必须包含大小写字母和数字)
 		case "password2":
 			if gregex.IsMatchString(`^[\w\S]{6,18}$`, val) && gregex.IsMatchString(`[a-z]+`, val) && gregex.IsMatchString(`[A-Z]+`, val) && gregex.IsMatchString(`\d+`, val) {
 				match = true
@@ -356,7 +361,6 @@ func Check(value interface{}, rules string, msgs interface{}, params ...interfac
 
 		// Universal password format rule3:
 		// Must meet password rule1, must contain lower and upper letters, numbers and special chars.
-		// 强等强度密码(在弱密码的基础上，必须包含大小写字母、数字和特殊字符)
 		case "password3":
 			if gregex.IsMatchString(`^[\w\S]{6,18}$`, val) && gregex.IsMatchString(`[a-z]+`, val) && gregex.IsMatchString(`[A-Z]+`, val) && gregex.IsMatchString(`\d+`, val) && gregex.IsMatchString(`[^a-zA-Z0-9]+`, val) {
 				match = true
@@ -416,7 +420,7 @@ func Check(value interface{}, rules string, msgs interface{}, params ...interfac
 			match = gregex.IsMatchString(`^([0-9A-Fa-f]{2}[\-:]){5}[0-9A-Fa-f]{2}$`, val)
 
 		default:
-			errorMsgs[ruleKey] = "Invalid rule name:" + ruleKey
+			errorMsgs[ruleKey] = "Invalid rule name: " + ruleKey
 		}
 
 		// Error message handling.

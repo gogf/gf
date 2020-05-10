@@ -10,19 +10,20 @@ import (
 	"strings"
 )
 
-// 判断必须字段
+// checkRequired checks the required rules.
 func checkRequired(value, ruleKey, ruleVal string, params map[string]string) bool {
 	required := false
 	switch ruleKey {
-	// 必须字段
+	// Required.
 	case "required":
 		required = true
 
-	// 必须字段(当任意所给定字段值与所给值相等时)
+	// Required unless all given field and its value are equal.
+	// Example: required-if: id,1,age,18
 	case "required-if":
 		required = false
 		array := strings.Split(ruleVal, ",")
-		// 必须为偶数，才能是键值对匹配
+		// It supports multiple field and value pairs.
 		if len(array)%2 == 0 {
 			for i := 0; i < len(array); {
 				tk := array[i]
@@ -37,11 +38,12 @@ func checkRequired(value, ruleKey, ruleVal string, params map[string]string) boo
 			}
 		}
 
-	// 必须字段(当所给定字段值与所给值都不相等时)
+	// Required unless all given field and its value are not equal.
+	// Example: required-unless: id,1,age,18
 	case "required-unless":
 		required = true
 		array := strings.Split(ruleVal, ",")
-		// 必须为偶数，才能是键值对匹配
+		// It supports multiple field and value pairs.
 		if len(array)%2 == 0 {
 			for i := 0; i < len(array); {
 				tk := array[i]
@@ -56,7 +58,8 @@ func checkRequired(value, ruleKey, ruleVal string, params map[string]string) boo
 			}
 		}
 
-	// 必须字段(当所给定任意字段值不为空时)
+	// Required if any of given fields are not empty.
+	// Example: required-with:id,name
 	case "required-with":
 		required = false
 		array := strings.Split(ruleVal, ",")
@@ -67,7 +70,8 @@ func checkRequired(value, ruleKey, ruleVal string, params map[string]string) boo
 			}
 		}
 
-	// 必须字段(当所给定所有字段值都不为空时)
+	// Required if all of given fields are not empty.
+	// Example: required-with:id,name
 	case "required-with-all":
 		required = true
 		array := strings.Split(ruleVal, ",")
@@ -78,7 +82,8 @@ func checkRequired(value, ruleKey, ruleVal string, params map[string]string) boo
 			}
 		}
 
-	// 必须字段(当所给定任意字段值为空时)
+	// Required if any of given fields are empty.
+	// Example: required-with:id,name
 	case "required-without":
 		required = false
 		array := strings.Split(ruleVal, ",")
@@ -89,7 +94,8 @@ func checkRequired(value, ruleKey, ruleVal string, params map[string]string) boo
 			}
 		}
 
-	// 必须字段(当所给定所有字段值都为空时)
+	// Required if all of given fields are empty.
+	// Example: required-with:id,name
 	case "required-without-all":
 		required = true
 		array := strings.Split(ruleVal, ",")
