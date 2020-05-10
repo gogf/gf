@@ -15,23 +15,20 @@ import (
 // 检测键值对参数Map，
 // rules参数支持 []string / map[string]string 类型，前面一种类型支持返回校验结果顺序(具体格式参考struct tag)，后一种不支持；
 // rules参数中得 map[string]string 是一个2维的关联数组，第一维键名为参数键名，第二维为带有错误的校验规则名称，值为错误信息。
-func CheckMap(params interface{}, rules interface{}, msgs ...CustomMsg) *Error {
-	// 将参数转换为 map[string]interface{}类型
+func CheckMap(params interface{}, rules interface{}, messages ...CustomMsg) *Error {
 	data := gconv.Map(params)
 	if data == nil {
 		return newErrorStr(
 			"invalid_params",
-			"invalid params type: convert to map[string]interface{} failed",
+			"invalid params type: convert to map failed",
 		)
 	}
-	// 真实校验规则数据结构
-	checkRules := make(map[string]string)
-	// 真实自定义错误信息数据结构
-	customMsgs := make(CustomMsg)
-	// 返回的顺序规则
-	errorRules := make([]string, 0)
-	// 返回的校验错误
-	errorMaps := make(ErrorMap)
+	var (
+		checkRules = make(map[string]string)
+		customMsgs = make(CustomMsg)
+		errorRules = make([]string, 0)
+		errorMaps  = make(ErrorMap)
+	)
 	// 解析rules参数
 	switch v := rules.(type) {
 	// 支持校验错误顺序: []sequence tag
@@ -69,13 +66,13 @@ func CheckMap(params interface{}, rules interface{}, msgs ...CustomMsg) *Error {
 		checkRules = v
 	}
 	// 自定义错误消息，非必须参数，优先级比rules参数中定义的错误消息更高
-	if len(msgs) > 0 && len(msgs[0]) > 0 {
+	if len(messages) > 0 && len(messages[0]) > 0 {
 		if len(customMsgs) > 0 {
-			for k, v := range msgs[0] {
+			for k, v := range messages[0] {
 				customMsgs[k] = v
 			}
 		} else {
-			customMsgs = msgs[0]
+			customMsgs = messages[0]
 		}
 	}
 	// 开始执行校验: 以校验规则作为基础进行遍历校验

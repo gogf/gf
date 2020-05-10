@@ -12,7 +12,9 @@ import (
 	"strings"
 )
 
-// 对字段值长度进行检测
+// checkLength checks the length rules for value.
+// The length is calculated using unicode string, which means one chinese character or letter
+// both has the length of 1.
 func checkLength(value, ruleKey, ruleVal string, customMsgMap map[string]string) string {
 	var (
 		msg       = ""
@@ -20,11 +22,12 @@ func checkLength(value, ruleKey, ruleVal string, customMsgMap map[string]string)
 		valueLen  = len(runeArray)
 	)
 	switch ruleKey {
-	// 长度范围
 	case "length":
-		array := strings.Split(ruleVal, ",")
-		min := 0
-		max := 0
+		var (
+			min   = 0
+			max   = 0
+			array = strings.Split(ruleVal, ",")
+		)
 		if len(array) > 0 {
 			if v, err := strconv.Atoi(strings.TrimSpace(array[0])); err == nil {
 				min = v
@@ -46,7 +49,6 @@ func checkLength(value, ruleKey, ruleVal string, customMsgMap map[string]string)
 			return msg
 		}
 
-	// 最小长度
 	case "min-length":
 		if min, err := strconv.Atoi(ruleVal); err == nil {
 			if valueLen < min {
@@ -61,7 +63,6 @@ func checkLength(value, ruleKey, ruleVal string, customMsgMap map[string]string)
 			msg = "校验参数[" + ruleVal + "]应当为整数类型"
 		}
 
-	// 最大长度
 	case "max-length":
 		if max, err := strconv.Atoi(ruleVal); err == nil {
 			if valueLen > max {

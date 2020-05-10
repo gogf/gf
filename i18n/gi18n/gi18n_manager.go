@@ -223,7 +223,7 @@ func (m *Manager) init() {
 		files, _ := gfile.ScanDirFile(m.options.Path, "*.*", true)
 		if len(files) == 0 {
 			intlog.Printf(
-				"no i18n files found in configured directory:%s",
+				"no i18n files found in configured directory: %s",
 				m.options.Path,
 			)
 			return
