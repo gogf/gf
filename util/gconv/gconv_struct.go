@@ -31,7 +31,7 @@ var (
 	replaceCharReg, _ = regexp.Compile(`[\-\.\_\s]+`)
 )
 
-// Struct maps the params key-value pairs to the corresponding struct object's properties.
+// Struct maps the params key-value pairs to the corresponding struct object's attributes.
 // The third parameter <mapping> is unnecessary, indicating the mapping rules between the
 // custom key name and the attribute name(case sensitive).
 //
