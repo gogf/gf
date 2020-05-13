@@ -96,6 +96,150 @@ func Test_Model_Inherit_MapToStruct(t *testing.T) {
 	})
 }
 
+func Test_Struct_Pointer_Attribute(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	type User struct {
+		Id       *int
+		Passport *string
+		Password *string
+		Nickname string
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		one, err := db.Table(table).FindOne(1)
+		t.Assert(err, nil)
+		user := new(User)
+		err = one.Struct(user)
+		t.Assert(err, nil)
+		t.Assert(*user.Id, 1)
+		t.Assert(*user.Passport, "user_1")
+		t.Assert(*user.Password, "pass_1")
+		t.Assert(user.Nickname, "name_1")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		user := new(User)
+		err := db.Table(table).Struct(user, "id=1")
+		t.Assert(err, nil)
+		t.Assert(*user.Id, 1)
+		t.Assert(*user.Passport, "user_1")
+		t.Assert(*user.Password, "pass_1")
+		t.Assert(user.Nickname, "name_1")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var user *User
+		err := db.Table(table).Struct(&user, "id=1")
+		t.Assert(err, nil)
+		t.Assert(*user.Id, 1)
+		t.Assert(*user.Passport, "user_1")
+		t.Assert(*user.Password, "pass_1")
+		t.Assert(user.Nickname, "name_1")
+	})
+}
+
+func Test_Structs_Pointer_Attribute(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	type User struct {
+		Id       *int
+		Passport *string
+		Password *string
+		Nickname string
+	}
+	// All
+	gtest.C(t, func(t *gtest.T) {
+		one, err := db.Table(table).All("id < 3")
+		t.Assert(err, nil)
+		users := make([]User, 0)
+		err = one.Structs(&users)
+		t.Assert(err, nil)
+		t.Assert(len(users), 2)
+		t.Assert(*users[0].Id, 1)
+		t.Assert(*users[0].Passport, "user_1")
+		t.Assert(*users[0].Password, "pass_1")
+		t.Assert(users[0].Nickname, "name_1")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		one, err := db.Table(table).All("id < 3")
+		t.Assert(err, nil)
+		users := make([]*User, 0)
+		err = one.Structs(&users)
+		t.Assert(err, nil)
+		t.Assert(len(users), 2)
+		t.Assert(*users[0].Id, 1)
+		t.Assert(*users[0].Passport, "user_1")
+		t.Assert(*users[0].Password, "pass_1")
+		t.Assert(users[0].Nickname, "name_1")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var users []User
+		one, err := db.Table(table).All("id < 3")
+		t.Assert(err, nil)
+		err = one.Structs(&users)
+		t.Assert(err, nil)
+		t.Assert(len(users), 2)
+		t.Assert(*users[0].Id, 1)
+		t.Assert(*users[0].Passport, "user_1")
+		t.Assert(*users[0].Password, "pass_1")
+		t.Assert(users[0].Nickname, "name_1")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var users []*User
+		one, err := db.Table(table).All("id < 3")
+		t.Assert(err, nil)
+		err = one.Structs(&users)
+		t.Assert(err, nil)
+		t.Assert(len(users), 2)
+		t.Assert(*users[0].Id, 1)
+		t.Assert(*users[0].Passport, "user_1")
+		t.Assert(*users[0].Password, "pass_1")
+		t.Assert(users[0].Nickname, "name_1")
+	})
+	// Structs
+	gtest.C(t, func(t *gtest.T) {
+		users := make([]User, 0)
+		err := db.Table(table).Structs(&users, "id < 3")
+		t.Assert(err, nil)
+		t.Assert(len(users), 2)
+		t.Assert(*users[0].Id, 1)
+		t.Assert(*users[0].Passport, "user_1")
+		t.Assert(*users[0].Password, "pass_1")
+		t.Assert(users[0].Nickname, "name_1")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		users := make([]*User, 0)
+		err := db.Table(table).Structs(&users, "id < 3")
+		t.Assert(err, nil)
+		t.Assert(len(users), 2)
+		t.Assert(*users[0].Id, 1)
+		t.Assert(*users[0].Passport, "user_1")
+		t.Assert(*users[0].Password, "pass_1")
+		t.Assert(users[0].Nickname, "name_1")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var users []User
+		err := db.Table(table).Structs(&users, "id < 3")
+		t.Assert(err, nil)
+		t.Assert(len(users), 2)
+		t.Assert(*users[0].Id, 1)
+		t.Assert(*users[0].Passport, "user_1")
+		t.Assert(*users[0].Password, "pass_1")
+		t.Assert(users[0].Nickname, "name_1")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var users []*User
+		err := db.Table(table).Structs(&users, "id < 3")
+		t.Assert(err, nil)
+		t.Assert(len(users), 2)
+		t.Assert(*users[0].Id, 1)
+		t.Assert(*users[0].Passport, "user_1")
+		t.Assert(*users[0].Password, "pass_1")
+		t.Assert(users[0].Nickname, "name_1")
+	})
+}
+
 func Test_Struct_Empty(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
