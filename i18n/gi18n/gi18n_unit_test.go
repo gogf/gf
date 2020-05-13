@@ -121,10 +121,10 @@ func Test_Instance(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(g.I18n().T("{#hello}{#world}"), "你好世界")
 	})
-
+	// Default language is: en
 	gtest.C(t, func(t *gtest.T) {
 		m := gi18n.Instance(gconv.String(gtime.TimestampNano()))
-		t.Assert(m.T("{#hello}{#world}"), "{#hello}{#world}")
+		t.Assert(m.T("{#hello}{#world}"), "HelloWorld")
 	})
 }
 
