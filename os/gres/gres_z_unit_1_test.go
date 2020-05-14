@@ -73,7 +73,7 @@ func Test_PackMulti(t *testing.T) {
 func Test_PackWithPrefix1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		srcPath := gdebug.TestDataPath("files")
-		goFilePath := gdebug.TestDataPath("testdata.go")
+		goFilePath := gfile.TempDir("testdata.go")
 		pkgName := "testdata"
 		err := gres.PackToGoFile(srcPath, goFilePath, pkgName, "www/gf-site/test")
 		t.Assert(err, nil)
@@ -83,7 +83,7 @@ func Test_PackWithPrefix1(t *testing.T) {
 func Test_PackWithPrefix2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		srcPath := gdebug.TestDataPath("files")
-		goFilePath := gdebug.TestDataPath("testdata.go")
+		goFilePath := gfile.TempDir("testdata.go")
 		pkgName := "testdata"
 		err := gres.PackToGoFile(srcPath, goFilePath, pkgName, "/var/www/gf-site/test")
 		t.Assert(err, nil)

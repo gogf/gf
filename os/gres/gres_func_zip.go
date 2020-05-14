@@ -39,8 +39,10 @@ func zipPathWriter(paths string, writer io.Writer, prefix ...string) error {
 // commonly the destination zip file path.
 // The unnecessary parameter <prefix> indicates the path prefix for zip file.
 func doZipPathWriter(path string, exclude string, zipWriter *zip.Writer, prefix ...string) error {
-	var err error
-	var files []string
+	var (
+		err   error
+		files []string
+	)
 	path, err = gfile.Search(path)
 	if err != nil {
 		return err
@@ -99,6 +101,7 @@ func doZipPathWriter(path string, exclude string, zipWriter *zip.Writer, prefix 
 // zipFile compresses the file of given <path> and writes the content to <zw>.
 // The parameter <prefix> indicates the path prefix for zip file.
 func zipFile(path string, prefix string, zw *zip.Writer) error {
+	prefix = strings.Replace(prefix, "//", "/", -1)
 	file, err := os.Open(path)
 	if err != nil {
 		return nil

@@ -384,6 +384,7 @@ func ExtName(path string) string {
 
 // TempDir retrieves and returns the temporary directory of current system.
 // It return "/tmp" is current in *nix system, or else it returns os.TempDir().
+//
 // The optional parameter <names> specifies the its sub-folders/sub-files,
 // which will be joined with current system separator and returned with the path.
 func TempDir(names ...string) string {

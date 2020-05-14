@@ -91,6 +91,7 @@ func (r *Resource) Get(path string) *File {
 //
 // GetWithIndex is usually used for http static file service.
 func (r *Resource) GetWithIndex(path string, indexFiles []string) *File {
+	// Necessary for double char '/' replacement in prefix.
 	path = strings.Replace(path, "\\", "/", -1)
 	if path != "/" {
 		for path[len(path)-1] == '/' {
@@ -173,10 +174,12 @@ func (r *Resource) doScanDir(path string, pattern string, recursive bool, onlyFi
 			path = path[:len(path)-1]
 		}
 	}
-	name := ""
-	files := make([]*File, 0)
-	length := len(path)
-	patterns := strings.Split(pattern, ",")
+	var (
+		name     = ""
+		files    = make([]*File, 0)
+		length   = len(path)
+		patterns = strings.Split(pattern, ",")
+	)
 	for i := 0; i < len(patterns); i++ {
 		patterns[i] = strings.TrimSpace(patterns[i])
 	}
