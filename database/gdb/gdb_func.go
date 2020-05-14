@@ -248,6 +248,9 @@ func GetPrimaryKeyCondition(primary string, where ...interface{}) (newWhereCondi
 // The internal handleArguments function might be called twice during the SQL procedure,
 // but do not worry about it, it's safe and efficient.
 func formatSql(sql string, args []interface{}) (newQuery string, newArgs []interface{}) {
+	sql = gstr.Trim(sql)
+	sql = gstr.Replace(sql, "\n", " ")
+	sql, _ = gregex.ReplaceString(`\s{2,}`, ` `, sql)
 	return handleArguments(sql, args)
 }
 
