@@ -20,7 +20,7 @@ func (f *File) Close() error {
 func (f *File) Readdir(count int) ([]os.FileInfo, error) {
 	files := f.resource.ScanDir(f.Name(), "*", false)
 	if len(files) > 0 {
-		if count < 0 || count > len(files) {
+		if count <= 0 || count > len(files) {
 			count = len(files)
 		}
 		infos := make([]os.FileInfo, count)
