@@ -25,22 +25,47 @@ func (c *Core) convertValue(fieldValue []byte, fieldType string) interface{} {
 	t, _ := gregex.ReplaceString(`\(.+\)`, "", fieldType)
 	t = strings.ToLower(t)
 	switch t {
-	case "binary", "varbinary", "blob", "tinyblob", "mediumblob", "longblob":
+	case
+		"binary",
+		"varbinary",
+		"blob",
+		"tinyblob",
+		"mediumblob",
+		"longblob":
 		return fieldValue
 
-	case "int", "tinyint", "small_int", "smallint", "medium_int", "mediumint":
+	case
+		"int",
+		"tinyint",
+		"small_int",
+		"smallint",
+		"medium_int",
+		"mediumint",
+		"serial",
+		"smallmoney":
 		if gstr.ContainsI(fieldType, "unsigned") {
 			gconv.Uint(string(fieldValue))
 		}
 		return gconv.Int(string(fieldValue))
 
-	case "big_int", "bigint":
+	case
+		"big_int",
+		"bigint",
+		"bigserial",
+		"money":
 		if gstr.ContainsI(fieldType, "unsigned") {
 			gconv.Uint64(string(fieldValue))
 		}
 		return gconv.Int64(string(fieldValue))
 
-	case "float", "double", "decimal":
+	case "real":
+		return gconv.Float32(string(fieldValue))
+
+	case
+		"float",
+		"double",
+		"decimal",
+		"numeric":
 		return gconv.Float64(string(fieldValue))
 
 	case "bit":
@@ -61,17 +86,19 @@ func (c *Core) convertValue(fieldValue []byte, fieldType string) interface{} {
 		t, _ := gtime.StrToTime(string(fieldValue))
 		return t.Format("Y-m-d")
 
-	case "datetime", "timestamp":
+	case
+		"datetime",
+		"timestamp":
 		t, _ := gtime.StrToTime(string(fieldValue))
 		return t.String()
 
 	default:
 		// Auto detect field type, using key match.
 		switch {
-		case strings.Contains(t, "text") || strings.Contains(t, "char"):
+		case strings.Contains(t, "text") || strings.Contains(t, "char") || strings.Contains(t, "character"):
 			return string(fieldValue)
 
-		case strings.Contains(t, "float") || strings.Contains(t, "double"):
+		case strings.Contains(t, "float") || strings.Contains(t, "double") || strings.Contains(t, "numeric"):
 			return gconv.Float64(string(fieldValue))
 
 		case strings.Contains(t, "bool"):

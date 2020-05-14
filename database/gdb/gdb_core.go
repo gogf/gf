@@ -734,9 +734,11 @@ func (c *Core) rowsToResult(rows *sql.Rows) (Result, error) {
 		columnTypes[k] = v.DatabaseTypeName()
 		columnNames[k] = v.Name()
 	}
-	values := make([]sql.RawBytes, len(columnNames))
-	records := make(Result, 0)
-	scanArgs := make([]interface{}, len(values))
+	var (
+		values   = make([]sql.RawBytes, len(columnNames))
+		records  = make(Result, 0)
+		scanArgs = make([]interface{}, len(values))
+	)
 	for i := range values {
 		scanArgs[i] = &values[i]
 	}
