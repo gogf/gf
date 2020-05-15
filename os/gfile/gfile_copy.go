@@ -71,11 +71,7 @@ func CopyFile(src, dst string) (err error) {
 	if err != nil {
 		return
 	}
-	si, err := os.Stat(src)
-	if err != nil {
-		return
-	}
-	err = os.Chmod(dst, si.Mode())
+	err = os.Chmod(dst, DefaultPermCopy)
 	if err != nil {
 		return
 	}
@@ -102,7 +98,7 @@ func CopyDir(src string, dst string) (err error) {
 		return fmt.Errorf("source is not a directory")
 	}
 	if !Exists(dst) {
-		err = os.MkdirAll(dst, si.Mode())
+		err = os.MkdirAll(dst, DefaultPermCopy)
 		if err != nil {
 			return
 		}
