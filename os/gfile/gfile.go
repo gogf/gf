@@ -134,14 +134,17 @@ func Exists(path string) bool {
 func IsDir(path string) bool {
 	s, err := os.Stat(path)
 	if err != nil {
-		return false
+		panic(err)
 	}
 	return s.IsDir()
 }
 
 // Pwd returns absolute path of current working directory.
 func Pwd() string {
-	path, _ := os.Getwd()
+	path, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
 	return path
 }
 
@@ -155,7 +158,7 @@ func Chdir(dir string) error {
 func IsFile(path string) bool {
 	s, err := os.Stat(path)
 	if err != nil {
-		return false
+		panic(err)
 	}
 	return !s.IsDir()
 }
@@ -313,11 +316,17 @@ func SelfDir() string {
 // Trailing path separators are removed before extracting the last element.
 // If the path is empty, Base returns ".".
 // If the path consists entirely of separators, Basename returns a single separator.
+// Example:
+// /var/www/file.js -> file.js
+// file.js          -> file.js
 func Basename(path string) string {
 	return filepath.Base(path)
 }
 
 // Name returns the last element of path without file extension.
+// Example:
+// /var/www/file.js -> file
+// file.js          -> file
 func Name(path string) string {
 	base := filepath.Base(path)
 	if i := strings.LastIndexByte(base, '.'); i != -1 {
