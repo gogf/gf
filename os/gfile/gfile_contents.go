@@ -67,25 +67,25 @@ func Truncate(path string, size int) error {
 // PutContents puts string <content> to file of <path>.
 // It creates file of <path> recursively if it does not exist.
 func PutContents(path string, content string) error {
-	return putContents(path, []byte(content), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, DefaultPerm)
+	return putContents(path, []byte(content), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, DefaultPermOpen)
 }
 
 // PutContentsAppend appends string <content> to file of <path>.
 // It creates file of <path> recursively if it does not exist.
 func PutContentsAppend(path string, content string) error {
-	return putContents(path, []byte(content), os.O_WRONLY|os.O_CREATE|os.O_APPEND, DefaultPerm)
+	return putContents(path, []byte(content), os.O_WRONLY|os.O_CREATE|os.O_APPEND, DefaultPermOpen)
 }
 
 // PutBytes puts binary <content> to file of <path>.
 // It creates file of <path> recursively if it does not exist.
 func PutBytes(path string, content []byte) error {
-	return putContents(path, content, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, DefaultPerm)
+	return putContents(path, content, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, DefaultPermOpen)
 }
 
 // PutBytesAppend appends binary <content> to file of <path>.
 // It creates file of <path> recursively if it does not exist.
 func PutBytesAppend(path string, content []byte) error {
-	return putContents(path, content, os.O_WRONLY|os.O_CREATE|os.O_APPEND, DefaultPerm)
+	return putContents(path, content, os.O_WRONLY|os.O_CREATE|os.O_APPEND, DefaultPermOpen)
 }
 
 // GetNextCharOffset returns the file offset for given <char> starting from <start>.
@@ -110,7 +110,7 @@ func GetNextCharOffset(reader io.ReaderAt, char byte, start int64) int64 {
 // GetNextCharOffsetByPath returns the file offset for given <char> starting from <start>.
 // It opens file of <path> for reading with os.O_RDONLY flag and default perm.
 func GetNextCharOffsetByPath(path string, char byte, start int64) int64 {
-	if f, err := OpenWithFlagPerm(path, os.O_RDONLY, DefaultPerm); err == nil {
+	if f, err := OpenWithFlagPerm(path, os.O_RDONLY, DefaultPermOpen); err == nil {
 		defer f.Close()
 		return GetNextCharOffset(f, char, start)
 	}
@@ -134,7 +134,7 @@ func GetBytesTilChar(reader io.ReaderAt, char byte, start int64) ([]byte, int64)
 //
 // Note: Returned value contains the character of the last position.
 func GetBytesTilCharByPath(path string, char byte, start int64) ([]byte, int64) {
-	if f, err := OpenWithFlagPerm(path, os.O_RDONLY, DefaultPerm); err == nil {
+	if f, err := OpenWithFlagPerm(path, os.O_RDONLY, DefaultPermOpen); err == nil {
 		defer f.Close()
 		return GetBytesTilChar(f, char, start)
 	}
@@ -157,7 +157,7 @@ func GetBytesByTwoOffsets(reader io.ReaderAt, start int64, end int64) []byte {
 // it returns content range as [start, end).
 // It opens file of <path> for reading with os.O_RDONLY flag and default perm.
 func GetBytesByTwoOffsetsByPath(path string, start int64, end int64) []byte {
-	if f, err := OpenWithFlagPerm(path, os.O_RDONLY, DefaultPerm); err == nil {
+	if f, err := OpenWithFlagPerm(path, os.O_RDONLY, DefaultPermOpen); err == nil {
 		defer f.Close()
 		return GetBytesByTwoOffsets(f, start, end)
 	}

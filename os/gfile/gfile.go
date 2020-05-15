@@ -25,8 +25,11 @@ const (
 )
 
 var (
-	// Default perm for file opening.
-	DefaultPerm = os.FileMode(0666)
+	// DefaultPerm is the default perm for file opening.
+	DefaultPermOpen = os.FileMode(0666)
+
+	// DefaultPermCopy is the default perm for file/folder copy.
+	DefaultPermCopy = os.FileMode(0777)
 
 	// The absolute file path for main package.
 	// It can be only checked and set once.
@@ -92,7 +95,7 @@ func OpenFile(path string, flag int, perm os.FileMode) (*os.File, error) {
 // The default <perm> is 0666.
 // The parameter <flag> is like: O_RDONLY, O_RDWR, O_RDWR|O_CREATE|O_TRUNC, etc.
 func OpenWithFlag(path string, flag int) (*os.File, error) {
-	f, err := os.OpenFile(path, flag, DefaultPerm)
+	f, err := os.OpenFile(path, flag, DefaultPermOpen)
 	if err != nil {
 		return nil, err
 	}
@@ -235,7 +238,7 @@ func Remove(path string) error {
 // IsReadable checks whether given <path> is readable.
 func IsReadable(path string) bool {
 	result := true
-	file, err := os.OpenFile(path, os.O_RDONLY, DefaultPerm)
+	file, err := os.OpenFile(path, os.O_RDONLY, DefaultPermOpen)
 	if err != nil {
 		result = false
 	}
@@ -259,7 +262,7 @@ func IsWritable(path string) bool {
 		}
 	} else {
 		// 如果是文件，那么判断文件是否可打开
-		file, err := os.OpenFile(path, os.O_WRONLY, DefaultPerm)
+		file, err := os.OpenFile(path, os.O_WRONLY, DefaultPermOpen)
 		if err != nil {
 			result = false
 		}
