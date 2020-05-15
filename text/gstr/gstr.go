@@ -687,7 +687,17 @@ func InArray(a []string, s string) bool {
 }
 
 // CompareVersion compares <a> and <b> as standard golang version.
-// Golang standard version is as: 1.0.0, v1.0.1, v2.10.8, 10.2.0 etc.
+// It returns  1 if <a> > <b>.
+// It returns -1 if <a> < <b>.
+// It returns  0 if <a> = <b>.
+// Golang standard version is like:
+// 1.0.0
+// v1.0.1
+// v2.10.8
+// 10.2.0
+// v0.0.0-20190626092158-b2ccc519800e
+// v4.20.0+incompatible
+// etc.
 func CompareVersion(a, b string) int {
 	if a[0] == 'v' {
 		a = a[1:]
@@ -695,6 +705,24 @@ func CompareVersion(a, b string) int {
 	if b[0] == 'v' {
 		b = b[1:]
 	}
+	if Count(a, "-") > 1 {
+		if i := PosR(a, "-"); i > 0 {
+			a = a[:i]
+		}
+	}
+	if Count(b, "-") > 1 {
+		if i := PosR(b, "-"); i > 0 {
+			b = b[:i]
+		}
+	}
+	if i := Pos(a, "+"); i > 0 {
+		a = a[:i]
+	}
+	if i := Pos(b, "+"); i > 0 {
+		b = b[:i]
+	}
+	a = Replace(a, "-", ".")
+	b = Replace(b, "-", ".")
 	array1 := strings.Split(a, ".")
 	array2 := strings.Split(b, ".")
 	for i := 0; i < len(array2)-len(array1); i++ {

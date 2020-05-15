@@ -458,3 +458,16 @@ func Test_InArray(t *testing.T) {
 		t.AssertEQ(gstr.InArray(a, "d"), false)
 	})
 }
+
+func Test_CompareVersion(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertEQ(gstr.CompareVersion("v1.0.1", "v1.1.0"), -1)
+		t.AssertEQ(gstr.CompareVersion("1.0.1", "v1.1.0"), -1)
+		t.AssertEQ(gstr.CompareVersion("1.0.0", "v0.1.0"), 1)
+		t.AssertEQ(gstr.CompareVersion("1.0.0", "v1.0.0"), 0)
+		t.AssertEQ(gstr.CompareVersion("v0.0.0-20190626092158-b2ccc519800e", "0.0.0-20190626092158"), 0)
+		t.AssertEQ(gstr.CompareVersion("v0.0.0-20190626092159-b2ccc519800e", "0.0.0-20190626092158"), 1)
+		t.AssertEQ(gstr.CompareVersion("v4.20.0+incompatible", "4.20.0"), 0)
+		t.AssertEQ(gstr.CompareVersion("v4.20.0+incompatible", "4.20.1"), -1)
+	})
+}
