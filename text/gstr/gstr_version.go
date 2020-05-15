@@ -15,7 +15,7 @@ import (
 // It returns  1 if <a> > <b>.
 // It returns -1 if <a> < <b>.
 // It returns  0 if <a> = <b>.
-// Golang standard version is like:
+// GNU standard version is like:
 // v1.0
 // 1
 // 1.0.0
