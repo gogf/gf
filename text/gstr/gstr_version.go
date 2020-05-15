@@ -58,7 +58,7 @@ func CompareVersion(a, b string) int {
 	return 0
 }
 
-// CompareVersion compares <a> and <b> as standard Golang version.
+// CompareVersionGo compares <a> and <b> as standard Golang version.
 // It returns  1 if <a> > <b>.
 // It returns -1 if <a> < <b>.
 // It returns  0 if <a> = <b>.
@@ -70,7 +70,7 @@ func CompareVersion(a, b string) int {
 // v0.0.0-20190626092158-b2ccc519800e
 // v4.20.0+incompatible
 // etc.
-func CompareVersionGolang(a, b string) int {
+func CompareVersionGo(a, b string) int {
 	if a[0] == 'v' {
 		a = a[1:]
 	}
