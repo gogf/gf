@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-// checkRequired checks the required rules.
+// checkRequired checks <value> using required rules.
 func checkRequired(value, ruleKey, ruleVal string, params map[string]string) bool {
 	required := false
 	switch ruleKey {
