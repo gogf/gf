@@ -22,11 +22,13 @@ var (
 )
 
 // It uses a asynchronous goroutine to produce the random number,
-// and a buffer chan to store the random number. So it has high performance
-// to generate random number.
+// and a buffer chan to store the random numbers.
+// So it has high performance to generate random numbers.
 func init() {
-	step := 0
-	buffer := make([]byte, 1024)
+	var (
+		step   = 0
+		buffer = make([]byte, 1024)
+	)
 	go func() {
 		for {
 			if n, err := rand.Read(buffer); err != nil {
@@ -43,6 +45,8 @@ func init() {
 						break
 					}
 				}
+				// The step cannot be 0,
+				// as it will produce the same random number as previous.
 				if step == 0 {
 					step = 2
 				}
@@ -55,10 +59,10 @@ func init() {
 	}()
 }
 
-// Intn returns a int number which is between 0 and max - [0, max).
+// Intn returns a int number which is between 0 and max: [0, max).
 //
-// Note:
-// 1. The <max> can only be geater than 0, or else it return <max> directly;
+// Note that:
+// 1. The <max> can only be greater than 0, or else it returns <max> directly;
 // 2. The result is greater than or equal to 0, but less than <max>;
 // 3. The result number is 32bit and less than math.MaxUint32.
 func Intn(max int) int {
