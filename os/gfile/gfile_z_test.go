@@ -610,7 +610,11 @@ func Test_ExtName(t *testing.T) {
 
 func Test_TempDir(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		t.Assert(gfile.TempDir(), "/tmp")
+		if gfile.Separator != "/" || !gfile.Exists("/tmp") {
+			t.Assert(gfile.TempDir(), os.TempDir())
+		} else {
+			t.Assert(gfile.TempDir(), "/tmp")
+		}
 	})
 }
 

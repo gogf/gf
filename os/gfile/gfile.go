@@ -134,19 +134,22 @@ func Exists(path string) bool {
 }
 
 // IsDir checks whether given <path> a directory.
+// Note that it returns false if the <path> does not exist.
 func IsDir(path string) bool {
 	s, err := os.Stat(path)
 	if err != nil {
-		panic(err)
+		return false
 	}
 	return s.IsDir()
 }
 
 // Pwd returns absolute path of current working directory.
+// Note that it returns an empty string if retrieving current
+// working directory failed.
 func Pwd() string {
 	path, err := os.Getwd()
 	if err != nil {
-		panic(err)
+		return ""
 	}
 	return path
 }
@@ -158,10 +161,11 @@ func Chdir(dir string) error {
 }
 
 // IsFile checks whether given <path> a file, which means it's not a directory.
+// Note that it returns false if the <path> does not exist.
 func IsFile(path string) bool {
 	s, err := os.Stat(path)
 	if err != nil {
-		panic(err)
+		return false
 	}
 	return !s.IsDir()
 }
@@ -231,7 +235,6 @@ func Glob(pattern string, onlyNames ...bool) ([]string, error) {
 // Remove deletes all file/directory with <path> parameter.
 // If parameter <path> is directory, it deletes it recursively.
 func Remove(path string) error {
-	//intlog.Print(`Remove:`, path)
 	return os.RemoveAll(path)
 }
 

@@ -45,6 +45,10 @@ func CopyFile(src, dst string) (err error) {
 	if dst == "" {
 		return errors.New("destination file cannot be empty")
 	}
+	// If src and dst are the same path, it does nothing.
+	if src == dst {
+		return nil
+	}
 	in, err := os.Open(src)
 	if err != nil {
 		return
@@ -87,6 +91,10 @@ func CopyDir(src string, dst string) (err error) {
 	}
 	if dst == "" {
 		return errors.New("destination directory cannot be empty")
+	}
+	// If src and dst are the same path, it does nothing.
+	if src == dst {
+		return nil
 	}
 	src = filepath.Clean(src)
 	dst = filepath.Clean(dst)
