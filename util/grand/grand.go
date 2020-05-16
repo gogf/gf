@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package grand provides high performance random string generation functionality.
+// Package grand provides high performance random bytes/number/string generation functionality.
 package grand
 
 import (
