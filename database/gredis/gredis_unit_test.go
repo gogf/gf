@@ -8,7 +8,7 @@ package gredis_test
 
 import (
 	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/util/guuid"
+	"github.com/gogf/gf/util/guid"
 	"testing"
 	"time"
 
@@ -234,7 +234,7 @@ func Test_Bool(t *testing.T) {
 func Test_Int(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		redis := gredis.New(config)
-		key := guuid.New()
+		key := guid.S()
 		defer redis.Do("DEL", key)
 
 		_, err := redis.Do("SET", key, 1)
@@ -249,7 +249,7 @@ func Test_Int(t *testing.T) {
 func Test_HSet(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		redis := gredis.New(config)
-		key := guuid.New()
+		key := guid.S()
 		defer redis.Do("DEL", key)
 
 		_, err := redis.Do("HSET", key, "name", "john")
@@ -265,7 +265,7 @@ func Test_HGetAll(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var err error
 		redis := gredis.New(config)
-		key := guuid.New()
+		key := guid.S()
 		defer redis.Do("DEL", key)
 
 		_, err = redis.Do("HSET", key, "id", "100")

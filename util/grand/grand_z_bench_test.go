@@ -16,7 +16,10 @@ import (
 	"github.com/gogf/gf/util/grand"
 )
 
-var buffer = make([]byte, 8)
+var (
+	buffer    = make([]byte, 8)
+	strForStr = "我爱GoFrame"
+)
 
 func Benchmark_Rand_Intn(b *testing.B) {
 	for i := 0; i < b.N; i++ {
@@ -48,15 +51,33 @@ func Benchmark_Rand_N2(b *testing.B) {
 	}
 }
 
-func Benchmark_Str(b *testing.B) {
+func Benchmark_B(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		grand.B(16)
+	}
+}
+
+func Benchmark_S(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		grand.S(16)
 	}
 }
 
-func Benchmark_StrSymbols(b *testing.B) {
+func Benchmark_S_Symbols(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		grand.S(16, true)
+	}
+}
+
+func Benchmark_Str(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		grand.Str(strForStr, 16)
+	}
+}
+
+func Benchmark_Symbols(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		grand.Symbols(16)
 	}
 }
 
