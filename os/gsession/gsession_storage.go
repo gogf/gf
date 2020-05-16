@@ -11,6 +11,7 @@ import (
 	"time"
 )
 
+// Storage is the interface definition for session storage.
 type Storage interface {
 	// New creates a custom session id.
 	// This function can be used for custom session creation.
