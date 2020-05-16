@@ -8,6 +8,7 @@
 package grand
 
 import (
+	"encoding/binary"
 	"unsafe"
 )
 
@@ -26,6 +27,23 @@ func Meet(num, total int) bool {
 // MeetProb randomly calculate whether the given probability is met.
 func MeetProb(prob float32) bool {
 	return Intn(1e7) < int(prob*1e7)
+}
+
+// B retrieves and returns random bytes of given length <n>.
+func B(n int) []byte {
+	if n <= 0 {
+		return nil
+	}
+	i := 0
+	b := make([]byte, n)
+	for {
+		copy(b[i:], <-bufferChan)
+		i += 4
+		if i >= n {
+			break
+		}
+	}
+	return b
 }
 
 // N returns a random int between min and max: [min, max].
@@ -114,4 +132,21 @@ func Perm(n int) []int {
 		m[j] = i
 	}
 	return m
+}
+
+// Intn returns a int number which is between 0 and max: [0, max).
+//
+// Note that:
+// 1. The <max> can only be greater than 0, or else it returns <max> directly;
+// 2. The result is greater than or equal to 0, but less than <max>;
+// 3. The result number is 32bit and less than math.MaxUint32.
+func Intn(max int) int {
+	if max <= 0 {
+		return max
+	}
+	n := int(binary.LittleEndian.Uint32(<-bufferChan)) % max
+	if (max > 0 && n < 0) || (max < 0 && n > 0) {
+		return -n
+	}
+	return n
 }

@@ -60,6 +60,12 @@ func Benchmark_StrSymbols(b *testing.B) {
 	}
 }
 
+func Benchmark_Uint32Converting(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		binary.LittleEndian.Uint32([]byte{1, 1, 1, 1})
+	}
+}
+
 func Benchmark_Buffer(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		if _, err := rand.Read(buffer); err == nil {
