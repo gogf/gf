@@ -7,6 +7,7 @@
 package gsession
 
 import (
+	"errors"
 	"github.com/gogf/gf/internal/intlog"
 	"time"
 
@@ -16,22 +17,27 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
-// Session struct for storing single session data.
+// Session struct for storing single session data,
+// which is bound to a single request.
 type Session struct {
 	id      string          // Session id.
 	data    *gmap.StrAnyMap // Session data.
 	dirty   bool            // Used to mark session is modified.
 	start   bool            // Used to mark session is started.
 	manager *Manager        // Parent manager.
+
+	// idFunc is a callback function used for creating custom session id.
+	// This is called if session id is empty ever when session starts.
+	idFunc func(ttl time.Duration) (id string)
 }
 
-// init does the delay initialization for session.
+// init does the lazy initialization for session.
 // It here initializes real session if necessary.
 func (s *Session) init() {
 	if s.start {
 		return
 	}
-	if len(s.id) > 0 {
+	if s.id != "" {
 		var err error
 		// Retrieve memory session data from manager.
 		if r := s.manager.sessionData.Get(s.id); r != nil {
@@ -50,10 +56,16 @@ func (s *Session) init() {
 			s.id = ""
 		}
 	}
-	if len(s.id) == 0 {
+	// Use custom session id creating function.
+	if s.id == "" && s.idFunc != nil {
+		s.id = s.idFunc(s.manager.ttl)
+	}
+	// Use default session id creating function of storage.
+	if s.id == "" {
 		s.id = s.manager.storage.New(s.manager.ttl)
 	}
-	if len(s.id) == 0 {
+	// Use default session id creating function.
+	if s.id == "" {
 		s.id = NewSessionId()
 	}
 	if s.data == nil {
@@ -67,7 +79,7 @@ func (s *Session) init() {
 //
 // NOTE that this function must be called ever after a session request done.
 func (s *Session) Close() {
-	if s.start && len(s.id) > 0 {
+	if s.start && s.id != "" {
 		size := s.data.Size()
 		if s.manager.storage != nil {
 			if s.dirty {
@@ -116,7 +128,7 @@ func (s *Session) Sets(data map[string]interface{}) error {
 
 // Remove removes key along with its value from this session.
 func (s *Session) Remove(key string) error {
-	if len(s.id) == 0 {
+	if s.id == "" {
 		return nil
 	}
 	s.init()
@@ -138,7 +150,7 @@ func (s *Session) Clear() error {
 
 // RemoveAll deletes all key-value pairs from this session.
 func (s *Session) RemoveAll() error {
-	if len(s.id) == 0 {
+	if s.id == "" {
 		return nil
 	}
 	s.init()
@@ -160,10 +172,30 @@ func (s *Session) Id() string {
 	return s.id
 }
 
+// SetId sets custom session before session starts.
+// It returns error if it is called after session starts.
+func (s *Session) SetId(id string) error {
+	if s.start {
+		return errors.New("session already started")
+	}
+	s.id = id
+	return nil
+}
+
+// SetIdFunc sets custom session id creating function before session starts.
+// It returns error if it is called after session starts.
+func (s *Session) SetIdFunc(f func(ttl time.Duration) string) error {
+	if s.start {
+		return errors.New("session already started")
+	}
+	s.idFunc = f
+	return nil
+}
+
 // Map returns all data as map.
 // Note that it's using value copy internally for concurrent-safe purpose.
 func (s *Session) Map() map[string]interface{} {
-	if len(s.id) > 0 {
+	if s.id != "" {
 		s.init()
 		if data := s.manager.storage.GetMap(s.id); data != nil {
 			return data
@@ -175,7 +207,7 @@ func (s *Session) Map() map[string]interface{} {
 
 // Size returns the size of the session.
 func (s *Session) Size() int {
-	if len(s.id) > 0 {
+	if s.id != "" {
 		s.init()
 		if size := s.manager.storage.GetSize(s.id); size >= 0 {
 			return size
@@ -200,7 +232,7 @@ func (s *Session) IsDirty() bool {
 // It returns <def> if the key does not exist in the session if <def> is given,
 // or else it return nil.
 func (s *Session) Get(key string, def ...interface{}) interface{} {
-	if len(s.id) == 0 {
+	if s.id == "" {
 		return nil
 	}
 	s.init()

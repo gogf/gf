@@ -8,5 +8,6 @@ package ghttp
 
 import "github.com/gogf/gf/os/gsession"
 
-// Session is actually a alias of gsession.Session.
+// Session is actually a alias of gsession.Session,
+// which is bound to a single request.
 type Session = gsession.Session
