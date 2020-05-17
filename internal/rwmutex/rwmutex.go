@@ -9,7 +9,7 @@ package rwmutex
 
 import "sync"
 
-// RWMutex is a sync.RWMutex with a switch of concurrent safe feature.
+// RWMutex is a sync.RWMutex with a switch for concurrent safe feature.
 // If its attribute *sync.RWMutex is not nil, it means it's in concurrent safety usage.
 // Its attribute *sync.RWMutex is nil in default, which makes this struct mush lightweight.
 type RWMutex struct {

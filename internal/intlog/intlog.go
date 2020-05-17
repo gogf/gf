@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package intlog provides internal logging for GF development usage only.
+// Package intlog provides internal logging for GoFrame development usage only.
 package intlog
 
 import (

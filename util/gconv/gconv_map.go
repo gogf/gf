@@ -292,21 +292,21 @@ func MapStrStrDeep(value interface{}, tags ...string) map[string]string {
 	return nil
 }
 
-// MapToMap converts map type variable <params> to another map type variable <pointer> using
-// reflect.
+// MapToMap converts any map type variable <params> to another map type variable <pointer>
+// using reflect.
 // See doMapToMap.
 func MapToMap(params interface{}, pointer interface{}, mapping ...map[string]string) error {
 	return doMapToMap(params, pointer, false, mapping...)
 }
 
-// MapToMapDeep converts map type variable <params> to another map type variable <pointer> using
-// reflect recursively.
+// MapToMapDeep converts any map type variable <params> to another map type variable <pointer>
+// using reflect recursively.
 // See doMapToMap.
 func MapToMapDeep(params interface{}, pointer interface{}, mapping ...map[string]string) error {
 	return doMapToMap(params, pointer, true, mapping...)
 }
 
-// doMapToMap converts map type variable <params> to another map type variable <pointer>.
+// doMapToMap converts any map type variable <params> to another map type variable <pointer>.
 //
 // The parameter <params> can be any type of map, like:
 // map[string]string, map[string]struct, , map[string]*struct, etc.
@@ -400,20 +400,20 @@ func doMapToMap(params interface{}, pointer interface{}, deep bool, mapping ...m
 	return nil
 }
 
-// MapToMaps converts map type variable <params> to another map type variable <pointer>.
+// MapToMaps converts any map type variable <params> to another map type variable <pointer>.
 // See doMapToMaps.
 func MapToMaps(params interface{}, pointer interface{}, mapping ...map[string]string) error {
 	return doMapToMaps(params, pointer, false, mapping...)
 }
 
-// MapToMapsDeep converts map type variable <params> to another map type variable
+// MapToMapsDeep converts any map type variable <params> to another map type variable
 // <pointer> recursively.
 // See doMapToMaps.
 func MapToMapsDeep(params interface{}, pointer interface{}, mapping ...map[string]string) error {
 	return doMapToMaps(params, pointer, true, mapping...)
 }
 
-// doMapToMaps converts map type variable <params> to another map type variable <pointer>.
+// doMapToMaps converts any map type variable <params> to another map type variable <pointer>.
 //
 // The parameter <params> can be any type of map, of which the item type is slice map, like:
 // map[int][]map, map[string][]map.

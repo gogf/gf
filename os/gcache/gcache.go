@@ -7,7 +7,10 @@
 // Package gcache provides high performance and concurrent-safe in-memory cache for process.
 package gcache
 
-import "time"
+import (
+	"github.com/gogf/gf/container/gvar"
+	"time"
+)
 
 // Default cache object.
 var cache = New()
@@ -35,6 +38,11 @@ func Sets(data map[interface{}]interface{}, duration time.Duration) {
 // It returns nil if it does not exist or its value is nil.
 func Get(key interface{}) interface{} {
 	return cache.Get(key)
+}
+
+// GetVar retrieves and returns the value of <key> as *gvar.Var.
+func GetVar(key interface{}) *gvar.Var {
+	return cache.GetVar(key)
 }
 
 // GetOrSet returns the value of <key>,
@@ -67,12 +75,14 @@ func Contains(key interface{}) bool {
 	return cache.Contains(key)
 }
 
-// Remove deletes the <key> in the cache, and returns its value.
-func Remove(key interface{}) interface{} {
-	return cache.Remove(key)
+// Remove deletes the one or more keys from cache, and returns its value.
+// If multiple keys are given, it returns the value of the deleted last item.
+func Remove(keys ...interface{}) (value interface{}) {
+	return cache.Remove(keys...)
 }
 
 // Removes deletes <keys> in the cache.
+// Deprecated, use Remove instead.
 func Removes(keys []interface{}) {
 	cache.Removes(keys)
 }
