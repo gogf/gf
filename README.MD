@@ -31,6 +31,15 @@ require github.com/gogf/gf latest
 golang version >= 1.11
 ```
 
+# Packages
+1. Primary
+
+    The `gf` repository maintains some basic and most commonly used packages, keeping it as lightweight and simple as possible. 
+
+1. Community
+
+    The community packages are contrinuted and maintained by community members, which are reposited in `gogf` organization.
+
 # Architecture
 <div align=center>
 <img src="https://goframe.org/images/arch.png?v=11"/>
