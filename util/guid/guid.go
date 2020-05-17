@@ -25,109 +25,101 @@ import (
 
 var (
 	sequence      gtype.Uint32                             // Sequence for unique purpose of current process.
-	macAddrStr    string                                   // MAC addresses hash result in 7 bytes.
-	processIdStr  string                                   // Process id in 4 bytes.
+	sequenceMax   = uint32(1000000)                        // Sequence max.
 	randomStrBase = "0123456789abcdefghijklmnopqrstuvwxyz" // 36
+	macAddrStr    = "0000000"                              // MAC addresses hash result in 7 bytes.
+	processIdStr  = "0000"                                 // Process id in 4 bytes.
 )
 
+// init initializes several fixed local variable.
 func init() {
 	// MAC addresses hash result in 7 bytes.
 	macs, _ := gipv4.MacArray()
 	if len(macs) > 0 {
-		var b []byte
+		var macAddrBytes []byte
 		for _, mac := range macs {
-			b = append(b, []byte(mac)...)
+			macAddrBytes = append(macAddrBytes, []byte(mac)...)
 		}
-		macAddrStr = strconv.FormatUint(uint64(ghash.DJBHash(b)), 36)
-		if n := 7 - len(macAddrStr); n > 0 {
-			for i := 0; i < n; i++ {
-				macAddrStr = "0" + macAddrStr
-			}
-		}
-		if n := len(macAddrStr) - 7; n > 0 {
-			macAddrStr = macAddrStr[n:]
-		}
+		b := []byte{'0', '0', '0', '0', '0', '0', '0'}
+		s := strconv.FormatUint(uint64(ghash.DJBHash(macAddrBytes)), 36)
+		copy(b[7-len(s):], s)
+		macAddrStr = string(b)
 	}
 	// Process id in 4 bytes.
-	processIdStr = strconv.FormatInt(int64(os.Getpid()), 36)
-	if n := 4 - len(processIdStr); n > 0 {
-		for i := 0; i < n; i++ {
-			processIdStr = "0" + processIdStr
-		}
-	}
-	if n := len(processIdStr) - 4; n > 0 {
-		processIdStr = processIdStr[n:]
+	{
+		b := []byte{'0', '0', '0', '0'}
+		s := strconv.FormatInt(int64(os.Getpid()), 36)
+		copy(b[4-len(s):], s)
+		processIdStr = string(b)
 	}
 }
 
-// S creates and returns an unique string in 36 bytes that meets most
-// common usages without strict UUID algorithm.
-// The returned string is composed with:
-// MAC(7) + PID(4) + Sequence(7) + TimestampNano(12) + RandomString(6)
-func S() string {
-	b := make([]byte, 36)
-	copy(b, macAddrStr)
-	copy(b[7:], processIdStr)
-	copy(b[11:], getSequence())
-	copy(b[18:], strconv.FormatInt(time.Now().UnixNano(), 36))
-	copy(b[30:], randomStr(randomStrBase, 6))
-	return gconv.UnsafeBytesToStr(b)
-}
-
-// New creates and returns an unique string in 36 bytes using custom data.
-// The returned string is composed with:
-// Data...(7 - 21) + TimestampNano(12) + RandomString(3 - 17)
+// S creates and returns an unique string in 36 bytes that meets most common usages
+// without strict UUID algorithm. It returns an unique string using default unique
+// algorithm if no <data> is given.
 //
-// The specified <data> can be count of 1 to 3. No matter how long each of the <data>
+// The specified <data> can be no more than 3 count. No matter how long each of the <data>
 // size is, each of them will be hashed into 7 bytes as part of the result. If given
 // <data> count is less than 3, the leftover size of the result bytes will be token by
 // random string.
 //
-// Note that the <data> can not be empty.
-func New(data ...[]byte) string {
+// The returned string is composed with:
+// 1. Default:    MAC(7) + PID(4) + Sequence(4) + TimestampNano(12) + RandomString(9)
+// 2. CustomData: Data...(7 - 21) + TimestampNano(12) + RandomString(3 - 17)
+//
+// Note that the returned length is fixed to 36 bytes for performance purpose.
+func S(data ...[]byte) string {
+	var (
+		b       = make([]byte, 36)
+		nanoStr = strconv.FormatInt(time.Now().UnixNano(), 36)
+	)
 	if len(data) == 0 {
-		panic("data cannot be empty")
-	}
-	if len(data) > 3 {
+		copy(b, macAddrStr)
+		copy(b[7:], processIdStr)
+		copy(b[11:], getSequence())
+		copy(b[15:], nanoStr)
+		copy(b[27:], getRandomStr(9))
+	} else if len(data) <= 3 {
+		n := 0
+		for i, v := range data {
+			copy(b[i*7:], getDataHashStr(v))
+			n += 7
+		}
+		copy(b[n:], nanoStr)
+		copy(b[n+12:], getRandomStr(36-n-12))
+	} else {
 		panic("data count too long, no more than 3")
 	}
-	b := make([]byte, 36)
-	n := 0
-	for i, v := range data {
-		copy(b[i*7:], getDataHashStr(v))
-		n += 7
-	}
-	copy(b[n:], strconv.FormatInt(time.Now().UnixNano(), 36))
-	copy(b[n+12:], randomStr(randomStrBase, 36-n-12))
 	return gconv.UnsafeBytesToStr(b)
 }
 
-// getSequence increases and returns the sequence string in 7 bytes.
+// getSequence increases and returns the sequence string in 4 bytes.
+// The sequence is less than 1000000.
 func getSequence() string {
-	b := make([]byte, 7)
-	copy(b, []byte{'0', '0', '0', '0', '0', '0', '0'})
-	s := strconv.FormatUint(uint64(sequence.Add(1)), 36)
-	copy(b[7-len(s):], s)
+	b := []byte{'0', '0', '0', '0'}
+	s := strconv.FormatUint(uint64(sequence.Add(1)%sequenceMax), 36)
+	copy(b[4-len(s):], s)
 	return gconv.UnsafeBytesToStr(b)
 }
 
-// Str randomly picks and returns <n> count of chars from given string <s>.
-// It also supports unicode string like Chinese/Russian/Japanese, etc.
-func randomStr(s string, n int) string {
+// getRandomStr randomly picks and returns <n> count of chars from randomStrBase.
+func getRandomStr(n int) string {
+	if n <= 0 {
+		return ""
+	}
 	var (
 		b           = make([]byte, n)
 		numberBytes = grand.B(n)
 	)
 	for i := range b {
-		b[i] = s[numberBytes[i]%36]
+		b[i] = randomStrBase[numberBytes[i]%36]
 	}
 	return gconv.UnsafeBytesToStr(b)
 }
 
 // getDataHashStr creates and returns hash bytes in 7 bytes with given data bytes.
 func getDataHashStr(data []byte) string {
-	b := make([]byte, 7)
-	copy(b, []byte{'0', '0', '0', '0', '0', '0', '0'})
+	b := []byte{'0', '0', '0', '0', '0', '0', '0'}
 	s := strconv.FormatUint(uint64(ghash.DJBHash(data)), 36)
 	copy(b[7-len(s):], s)
 	return gconv.UnsafeBytesToStr(b)

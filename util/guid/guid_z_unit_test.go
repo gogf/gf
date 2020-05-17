@@ -27,8 +27,8 @@ func Test_S(t *testing.T) {
 	})
 }
 
-func Test_New(t *testing.T) {
+func Test_S_Data(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		t.Assert(len(guid.New([]byte("123"))), 36)
+		t.Assert(len(guid.S([]byte("123"))), 36)
 	})
 }
