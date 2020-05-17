@@ -19,20 +19,20 @@ func Benchmark_S(b *testing.B) {
 	}
 }
 
-func Benchmark_New1(b *testing.B) {
+func Benchmark_S_Data_1(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		guid.New([]byte("123"))
+		guid.S([]byte("123"))
 	}
 }
 
-func Benchmark_New2(b *testing.B) {
+func Benchmark_S_Data_2(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		guid.New([]byte("123"), []byte("456"))
+		guid.S([]byte("123"), []byte("456"))
 	}
 }
 
-func Benchmark_New3(b *testing.B) {
+func Benchmark_S_Data_3(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		guid.New([]byte("123"), []byte("456"), []byte("789"))
+		guid.S([]byte("123"), []byte("456"), []byte("789"))
 	}
 }
