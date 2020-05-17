@@ -35,7 +35,9 @@ func asyncProducingRandomBufferBytesLoop() {
 			panic(err)
 		} else {
 			for i := 0; i < n-4; i += 4 {
-				bufferChan <- buffer[i : i+4]
+				b := make([]byte, 4)
+				copy(b, buffer[i:i+4])
+				bufferChan <- b
 			}
 		}
 	}
