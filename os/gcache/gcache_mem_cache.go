@@ -7,6 +7,7 @@
 package gcache
 
 import (
+	"github.com/gogf/gf/container/gvar"
 	"math"
 	"sync"
 	"time"
@@ -222,6 +223,11 @@ func (c *memCache) Get(key interface{}) interface{} {
 	return nil
 }
 
+// GetVar retrieves and returns the value of <key> as *gvar.Var.
+func (c *memCache) GetVar(key interface{}) *gvar.Var {
+	return gvar.New(c.Get(key))
+}
+
 // GetOrSet returns the value of <key>, or sets <key>-<value> pair and returns <value> if <key>
 // does not exist in the cache. The key-value pair expires after <duration>. It does not expire
 // if <duration> == 0.
@@ -268,29 +274,29 @@ func (c *memCache) Contains(key interface{}) bool {
 	return c.Get(key) != nil
 }
 
-// Remove deletes the <key> in the cache, and returns its value.
-func (c *memCache) Remove(key interface{}) (value interface{}) {
-	c.dataMu.RLock()
-	item, ok := c.data[key]
-	c.dataMu.RUnlock()
-	if ok {
-		value = item.v
-		c.dataMu.Lock()
-		delete(c.data, key)
-		c.dataMu.Unlock()
-		c.eventList.PushBack(&memCacheEvent{
-			k: key,
-			e: gtime.TimestampMilli() - 1000,
-		})
+// Remove deletes the one or more keys from cache, and returns its value.
+// If multiple keys are given, it returns the value of the deleted last item.
+func (c *memCache) Remove(keys ...interface{}) (value interface{}) {
+	c.dataMu.Lock()
+	defer c.dataMu.Unlock()
+	for _, key := range keys {
+		item, ok := c.data[key]
+		if ok {
+			value = item.v
+			delete(c.data, key)
+			c.eventList.PushBack(&memCacheEvent{
+				k: key,
+				e: gtime.TimestampMilli() - 1000,
+			})
+		}
 	}
 	return
 }
 
 // Removes deletes <keys> in the cache.
+// Deprecated, use Remove instead.
 func (c *memCache) Removes(keys []interface{}) {
-	for _, key := range keys {
-		c.Remove(key)
-	}
+	c.Remove(keys...)
 }
 
 // Data returns a copy of all key-value pairs in the cache as map type.

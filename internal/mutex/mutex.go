@@ -9,7 +9,7 @@ package mutex
 
 import "sync"
 
-// Mutex is a sync.Mutex with a switch of concurrent safe feature.
+// Mutex is a sync.Mutex with a switch for concurrent safe feature.
 type Mutex struct {
 	sync.Mutex
 	safe bool

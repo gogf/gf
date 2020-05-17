@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package empty provides checks for empty variables.
+// Package empty provides functions for checking empty variables.
 package empty
 
 import (

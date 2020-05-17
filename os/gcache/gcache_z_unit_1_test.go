@@ -19,23 +19,36 @@ import (
 	"github.com/gogf/gf/test/gtest"
 )
 
-//clear 用于清除全局缓存，因gcache api 暂未暴露 Clear 方法
-//暂定所有测试用例key的集合为1,2,3，避免不同测试用例间因全局cache共享带来的问题，每个测试用例在测试gcache.XXX之前，先调用clear()
-func clear() {
-	gcache.Removes(g.Slice{1, 2, 3})
+func TestCache_GCache_Set(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		gcache.Set(1, 11, 0)
+		defer gcache.Removes(g.Slice{1, 2, 3})
+		t.Assert(gcache.Get(1), 11)
+		t.Assert(gcache.Contains(1), true)
+	})
 }
 
 func TestCache_Set(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		cache := gcache.New()
-		cache.Set(1, 11, 0)
-		t.Assert(cache.Get(1), 11)
-		t.Assert(cache.Contains(1), true)
+		c := gcache.New()
+		defer c.Close()
+		c.Set(1, 11, 0)
+		t.Assert(c.Get(1), 11)
+		t.Assert(c.Contains(1), true)
+	})
+}
 
-		clear()
-		gcache.Set(1, 11, 0)
-		t.Assert(gcache.Get(1), 11)
-		t.Assert(gcache.Contains(1), true)
+func TestCache_GetVar(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		c := gcache.New()
+		defer c.Close()
+		c.Set(1, 11, 0)
+		t.Assert(c.Get(1), 11)
+		t.Assert(c.Contains(1), true)
+		t.Assert(c.GetVar(1).Int(), 11)
+		t.Assert(c.GetVar(2).Int(), 0)
+		t.Assert(c.GetVar(2).IsNil(), true)
+		t.Assert(c.GetVar(2).IsEmpty(), true)
 	})
 }
 
@@ -108,7 +121,7 @@ func TestCache_SetIfNotExist(t *testing.T) {
 		cache.SetIfNotExist(2, 22, 0)
 		t.Assert(cache.Get(2), 22)
 
-		clear()
+		gcache.Removes(g.Slice{1, 2, 3})
 		gcache.SetIfNotExist(1, 11, 0)
 		t.Assert(gcache.Get(1), 11)
 		gcache.SetIfNotExist(1, 22, 0)
@@ -122,7 +135,7 @@ func TestCache_Sets(t *testing.T) {
 		cache.Sets(g.MapAnyAny{1: 11, 2: 22}, 0)
 		t.Assert(cache.Get(1), 11)
 
-		clear()
+		gcache.Removes(g.Slice{1, 2, 3})
 		gcache.Sets(g.MapAnyAny{1: 11, 2: 22}, 0)
 		t.Assert(gcache.Get(1), 11)
 	})
@@ -136,7 +149,7 @@ func TestCache_GetOrSet(t *testing.T) {
 		cache.GetOrSet(1, 111, 0)
 		t.Assert(cache.Get(1), 11)
 
-		clear()
+		gcache.Removes(g.Slice{1, 2, 3})
 		gcache.GetOrSet(1, 11, 0)
 		t.Assert(gcache.Get(1), 11)
 		gcache.GetOrSet(1, 111, 0)
@@ -156,7 +169,7 @@ func TestCache_GetOrSetFunc(t *testing.T) {
 		}, 0)
 		t.Assert(cache.Get(1), 11)
 
-		clear()
+		gcache.Removes(g.Slice{1, 2, 3})
 		gcache.GetOrSetFunc(1, func() interface{} {
 			return 11
 		}, 0)
@@ -180,7 +193,7 @@ func TestCache_GetOrSetFuncLock(t *testing.T) {
 		}, 0)
 		t.Assert(cache.Get(1), 11)
 
-		clear()
+		gcache.Removes(g.Slice{1, 2, 3})
 		gcache.GetOrSetFuncLock(1, func() interface{} {
 			return 11
 		}, 0)
@@ -256,7 +269,7 @@ func TestCache_Basic(t *testing.T) {
 			t.Assert(cache.Size(), 0)
 		}
 
-		clear()
+		gcache.Removes(g.Slice{1, 2, 3})
 		{
 			gcache.Sets(g.MapAnyAny{1: 11, 2: 22}, 0)
 			t.Assert(gcache.Contains(1), true)
