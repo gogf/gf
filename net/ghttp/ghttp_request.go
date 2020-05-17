@@ -9,7 +9,6 @@ package ghttp
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/os/gres"
 	"github.com/gogf/gf/os/gsession"
 	"github.com/gogf/gf/os/gview"
@@ -84,7 +83,7 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 			address = request.RemoteAddr
 			cookie  = request.Header.Get("Cookie")
 		)
-		intlog.Print(agent, address, cookie)
+		//intlog.Print(agent, address, cookie)
 		return guid.S([]byte(agent), []byte(address), []byte(cookie))
 	})
 	if err != nil {
