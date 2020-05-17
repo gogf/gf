@@ -26,7 +26,7 @@ import (
 var (
 	sequence      gtype.Uint32                             // Sequence for unique purpose of current process.
 	sequenceMax   = uint32(1000000)                        // Sequence max.
-	randomStrBase = "0123456789abcdefghijklmnopqrstuvwxyz" // 36
+	randomStrBase = "0123456789abcdefghijklmnopqrstuvwxyz" // Random chars string(36 bytes).
 	macAddrStr    = "0000000"                              // MAC addresses hash result in 7 bytes.
 	processIdStr  = "0000"                                 // Process id in 4 bytes.
 )
@@ -82,8 +82,11 @@ func S(data ...[]byte) string {
 	} else if len(data) <= 3 {
 		n := 0
 		for i, v := range data {
-			copy(b[i*7:], getDataHashStr(v))
-			n += 7
+			// Ignore empty data item bytes.
+			if len(v) > 0 {
+				copy(b[i*7:], getDataHashStr(v))
+				n += 7
+			}
 		}
 		copy(b[n:], nanoStr)
 		copy(b[n+12:], getRandomStr(36-n-12))
