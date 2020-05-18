@@ -119,6 +119,16 @@ func Convert(i interface{}, t string, params ...interface{}) interface{} {
 
 	case "Duration", "time.Duration":
 		return Duration(i)
+
+	case "map[string]string":
+		return MapStrStr(i)
+
+	case "map[string]interface{}":
+		return Map(i)
+
+	case "[]map[string]interface{}":
+		return Maps(i)
+
 	default:
 		return i
 	}

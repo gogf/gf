@@ -347,7 +347,7 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}) (e
 		defer func() {
 			if e := recover(); e != nil {
 				err = errors.New(
-					fmt.Sprintf(`cannot convert value "%d" to type "%s"`,
+					fmt.Sprintf(`cannot convert value "%+v" to type "%s"`,
 						value,
 						structFieldValue.Type().String(),
 					),
