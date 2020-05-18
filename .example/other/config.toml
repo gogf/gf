@@ -16,3 +16,10 @@
 [viewer]
     delimiters  =  ["${", "}"]
     autoencode  =  true
+
+
+[server]
+	Address     = ":8800"
+	ServerRoot  = "/Users/john/Downloads"
+	ServerAgent = "gf-app"
+#	LogPath     = "./log/gf-app/server"

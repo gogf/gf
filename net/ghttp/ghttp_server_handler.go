@@ -279,7 +279,16 @@ func (s *Server) listDir(r *Request, f http.File) {
 		r.Response.WriteStatus(http.StatusInternalServerError, "Error reading directory")
 		return
 	}
-	sort.Slice(files, func(i, j int) bool { return files[i].Name() < files[j].Name() })
+	// The folder type has the most priority than file.
+	sort.Slice(files, func(i, j int) bool {
+		if files[i].IsDir() && !files[j].IsDir() {
+			return true
+		}
+		if !files[i].IsDir() && files[j].IsDir() {
+			return false
+		}
+		return files[i].Name() < files[j].Name()
+	})
 	if r.Response.Header().Get("Content-Type") == "" {
 		r.Response.Header().Set("Content-Type", "text/html; charset=utf-8")
 	}
