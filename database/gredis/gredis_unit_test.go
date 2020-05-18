@@ -281,3 +281,39 @@ func Test_HGetAll(t *testing.T) {
 		})
 	})
 }
+
+func Test_Auto_Marshal(t *testing.T) {
+	var (
+		err   error
+		redis = gredis.New(config)
+		key   = guid.S()
+	)
+	defer redis.Do("DEL", key)
+
+	type User struct {
+		Id   int
+		Name string
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		user := &User{
+			Id:   10000,
+			Name: "john",
+		}
+
+		_, err = redis.Do("SET", key, user)
+		t.Assert(err, nil)
+
+		r, err := redis.DoVar("GET", key)
+		t.Assert(err, nil)
+		t.Assert(r.Map(), g.MapStrAny{
+			"Id":   user.Id,
+			"Name": user.Name,
+		})
+
+		var user2 *User
+		t.Assert(r.Struct(&user2), nil)
+		t.Assert(user2.Id, user.Id)
+		t.Assert(user2.Name, user.Name)
+	})
+}
