@@ -34,7 +34,7 @@ var (
 // init initializes several fixed local variable.
 func init() {
 	// MAC addresses hash result in 7 bytes.
-	macs, _ := gipv4.MacArray()
+	macs, _ := gipv4.GetMacArray()
 	if len(macs) > 0 {
 		var macAddrBytes []byte
 		for _, mac := range macs {
