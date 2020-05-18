@@ -419,7 +419,7 @@ func Check(value interface{}, rules string, messages interface{}, params ...inte
 
 		// Domain
 		case "domain":
-			match = gregex.IsMatchString(`^([0-9a-zA-Z][0-9a-zA-Z-]{0,62}\.)+([0-9a-zA-Z][0-9a-zA-Z-]{0,62})\.?$`, val)
+			match = gregex.IsMatchString(`^([0-9a-zA-Z][0-9a-zA-Z\-]{0,62}\.)+([a-zA-Z]{0,62})$`, val)
 
 		// IP(IPv4/IPv6).
 		case "ip":

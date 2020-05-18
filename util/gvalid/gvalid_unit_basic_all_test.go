@@ -524,25 +524,32 @@ func Test_URL(t *testing.T) {
 
 func Test_Domain(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		rule := "domain"
-		val1 := "localhost"
-		val2 := "baidu.com"
-		val3 := "www.baidu.com"
-		val4 := "jn.np"
-		val5 := "www.jn.np"
-		val6 := "w.www.jn.np"
-		err1 := gvalid.Check(val1, rule, nil)
-		err2 := gvalid.Check(val2, rule, nil)
-		err3 := gvalid.Check(val3, rule, nil)
-		err4 := gvalid.Check(val4, rule, nil)
-		err5 := gvalid.Check(val5, rule, nil)
-		err6 := gvalid.Check(val6, rule, nil)
-		t.AssertNE(err1, nil)
-		t.Assert(err2, nil)
-		t.Assert(err3, nil)
-		t.Assert(err4, nil)
-		t.Assert(err5, nil)
-		t.Assert(err6, nil)
+		m := g.MapStrBool{
+			"localhost":     false,
+			"baidu.com":     true,
+			"www.baidu.com": true,
+			"jn.np":         true,
+			"www.jn.np":     true,
+			"w.www.jn.np":   true,
+			"127.0.0.1":     false,
+			"www.360.com":   true,
+			"www.360":       false,
+			"360":           false,
+			"my-gf":         false,
+			"my-gf.com":     true,
+			"my-gf.360.com": true,
+		}
+		var err error
+		for k, v := range m {
+			err = gvalid.Check(k, "domain", nil)
+			if v {
+				//fmt.Println(k)
+				t.Assert(err, nil)
+			} else {
+				//fmt.Println(k)
+				t.AssertNE(err, nil)
+			}
+		}
 	})
 }
 
