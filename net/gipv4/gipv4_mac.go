@@ -11,9 +11,9 @@ import (
 	"net"
 )
 
-// Mac retrieves and returns the first mac address of current host.
-func Mac() (mac string, err error) {
-	macs, err := MacArray()
+// GetMac retrieves and returns the first mac address of current host.
+func GetMac() (mac string, err error) {
+	macs, err := GetMacArray()
 	if err != nil {
 		return "", err
 	}
@@ -23,8 +23,8 @@ func Mac() (mac string, err error) {
 	return "", nil
 }
 
-// MacArray retrieves and returns all the mac address of current host.
-func MacArray() (macs []string, err error) {
+// GetMacArray retrieves and returns all the mac address of current host.
+func GetMacArray() (macs []string, err error) {
 	netInterfaces, err := net.Interfaces()
 	if err != nil {
 		return nil, err

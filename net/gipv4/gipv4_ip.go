@@ -14,8 +14,8 @@ import (
 	"strings"
 )
 
-// IPArray retrieves and returns all the ip of current host.
-func IPArray() (ips []string, err error) {
+// GetIpArray retrieves and returns all the ip of current host.
+func GetIpArray() (ips []string, err error) {
 	interfaceAddr, err := net.InterfaceAddrs()
 	if err != nil {
 		return nil, err
@@ -31,9 +31,9 @@ func IPArray() (ips []string, err error) {
 	return ips, nil
 }
 
-// IntranetIP retrieves and returns the first intranet ip of current machine.
-func IntranetIP() (ip string, err error) {
-	ips, err := IntranetIPArray()
+// GetIntranetIp retrieves and returns the first intranet ip of current machine.
+func GetIntranetIp() (ip string, err error) {
+	ips, err := GetIntranetIpArray()
 	if err != nil {
 		return "", err
 	}
@@ -43,8 +43,8 @@ func IntranetIP() (ip string, err error) {
 	return ips[0], nil
 }
 
-// IntranetIPArray retrieves and returns the intranet ip list of current machine.
-func IntranetIPArray() (ips []string, err error) {
+// GetIntranetIpArray retrieves and returns the intranet ip list of current machine.
+func GetIntranetIpArray() (ips []string, err error) {
 	interFaces, e := net.Interfaces()
 	if e != nil {
 		return ips, e
