@@ -240,7 +240,7 @@ func Config() ServerConfig {
 		HTTPSAddr:         "",
 		Handler:           nil,
 		ReadTimeout:       60 * time.Second,
-		WriteTimeout:      60 * time.Second,
+		WriteTimeout:      0, // No timeout.
 		IdleTimeout:       60 * time.Second,
 		MaxHeaderBytes:    1024,
 		KeepAlive:         true,
