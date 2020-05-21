@@ -242,7 +242,7 @@ func Config() ServerConfig {
 		ReadTimeout:       60 * time.Second,
 		WriteTimeout:      0, // No timeout.
 		IdleTimeout:       60 * time.Second,
-		MaxHeaderBytes:    1024,
+		MaxHeaderBytes:    10240, // 10KB
 		KeepAlive:         true,
 		IndexFiles:        []string{"index.html", "index.htm"},
 		IndexFolder:       false,
