@@ -5,7 +5,7 @@
 // You can obtain one at https://github.com/gogf/gf.
 //
 
-// Package glist provides a concurrent-safe/unsafe doubly linked list.
+// Package glist provides most commonly used doubly linked list container which also supports concurrent-safe/unsafe switch feature.
 package glist
 
 import (
@@ -19,11 +19,13 @@ import (
 )
 
 type (
+	// List is a doubly linked list containing a concurrent-safe/unsafe switch.
+	// The switch should be set when its initialization and cannot be changed then.
 	List struct {
 		mu   rwmutex.RWMutex
 		list list.List
 	}
-
+	// Element the item type of the list.
 	Element = list.Element
 )
 

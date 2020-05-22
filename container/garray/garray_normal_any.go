@@ -22,6 +22,8 @@ import (
 )
 
 // Array is a golang array with rich features.
+// It contains a concurrent-safe/unsafe switch, which should be set
+// when its initialization and cannot be changed then.
 type Array struct {
 	mu    rwmutex.RWMutex
 	array []interface{}

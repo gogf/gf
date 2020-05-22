@@ -22,6 +22,8 @@ import (
 )
 
 // StrArray is a golang string array with rich features.
+// It contains a concurrent-safe/unsafe switch, which should be set
+// when its initialization and cannot be changed then.
 type StrArray struct {
 	mu    rwmutex.RWMutex
 	array []string
