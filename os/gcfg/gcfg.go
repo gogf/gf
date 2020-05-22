@@ -173,12 +173,12 @@ func (c *Config) SetPath(path string) error {
 	return nil
 }
 
-// SetViolenceCheck sets whether to perform hierarchical conflict check.
+// SetViolenceCheck sets whether to perform hierarchical conflict checking.
 // This feature needs to be enabled when there is a level symbol in the key name.
-// The default is off.
-// Turning on this feature is quite expensive,
-// and it is not recommended to allow separators in the key names.
-// It is best to avoid this on the application side.
+// It is off in default.
+//
+// Note that, turning on this feature is quite expensive, and it is not recommended
+// to allow separators in the key names. It is best to avoid this on the application side.
 func (c *Config) SetViolenceCheck(check bool) {
 	c.vc = check
 	c.Clear()
@@ -186,8 +186,12 @@ func (c *Config) SetViolenceCheck(check bool) {
 
 // AddPath adds a absolute or relative path to the search paths.
 func (c *Config) AddPath(path string) error {
-	isDir := false
-	realPath := ""
+	var (
+		isDir    = false
+		realPath = ""
+	)
+	// It firstly checks the resource manager,
+	// and then checks the filesystem for the path.
 	if file := gres.Get(path); file != nil {
 		realPath = path
 		isDir = file.FileInfo().IsDir()

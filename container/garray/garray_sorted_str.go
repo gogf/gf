@@ -20,7 +20,10 @@ import (
 )
 
 // SortedStrArray is a golang sorted string array with rich features.
-// It's using increasing order in default.
+// It is using increasing order in default, which can be changed by
+// setting it a custom comparator.
+// It contains a concurrent-safe/unsafe switch, which should be set
+// when its initialization and cannot be changed then.
 type SortedStrArray struct {
 	mu         rwmutex.RWMutex
 	array      []string
