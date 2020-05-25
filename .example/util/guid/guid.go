@@ -6,8 +6,5 @@ import (
 )
 
 func main() {
-	for i := 0; i < 1000; i++ {
-		s := guid.S()
-		fmt.Println(s, len(s))
-	}
+	fmt.Printf("TraceId: %s\n", guid.S())
 }
