@@ -6,11 +6,6 @@
 
 package gconv
 
-// apiFloats is used for type assert api for Floats.
-type apiFloats interface {
-	Floats() []float64
-}
-
 // SliceFloat is alias of Floats.
 func SliceFloat(i interface{}) []float64 {
 	return Floats(i)

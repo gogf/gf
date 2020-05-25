@@ -9,12 +9,12 @@ package gmap_test
 import (
 	"encoding/json"
 	"github.com/gogf/gf/container/garray"
+	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/test/gtest"
 	"github.com/gogf/gf/util/gconv"
 	"testing"
-
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/test/gtest"
+	"time"
 )
 
 func Test_AnyAnyMap_Var(t *testing.T) {
@@ -217,6 +217,18 @@ func Test_AnyAnyMap_FilterEmpty(t *testing.T) {
 		m.FilterEmpty()
 		t.Assert(m.Get(1), nil)
 		t.Assert(m.Get(2), 2)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		m := gmap.NewAnyAnyMap()
+		m.Set(1, 0)
+		m.Set("time1", time.Time{})
+		m.Set("time2", time.Now())
+		t.Assert(m.Get(1), 0)
+		t.Assert(m.Get("time1"), time.Time{})
+		m.FilterEmpty()
+		t.Assert(m.Get(1), nil)
+		t.Assert(m.Get("time1"), nil)
+		t.AssertNE(m.Get("time2"), nil)
 	})
 }
 

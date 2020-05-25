@@ -6,11 +6,6 @@
 
 package gconv
 
-// apiInts is used for type assert api for Ints.
-type apiInts interface {
-	Ints() []int
-}
-
 // SliceInt is alias of Ints.
 func SliceInt(i interface{}) []int {
 	return Ints(i)
