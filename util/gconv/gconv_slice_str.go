@@ -6,11 +6,6 @@
 
 package gconv
 
-// apiStrings is used for type assert api for Strings.
-type apiStrings interface {
-	Strings() []string
-}
-
 // SliceStr is alias of Strings.
 func SliceStr(i interface{}) []string {
 	return Strings(i)

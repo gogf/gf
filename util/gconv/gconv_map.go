@@ -17,11 +17,6 @@ import (
 	"github.com/gogf/gf/internal/utils"
 )
 
-// apiMapStrAny is the interface support for converting struct parameter to map.
-type apiMapStrAny interface {
-	MapStrAny() map[string]interface{}
-}
-
 // Map converts any variable <value> to map[string]interface{}. If the parameter <value> is not a
 // map/struct/*struct type, then the conversion will fail and returns nil.
 //

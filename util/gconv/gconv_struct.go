@@ -19,12 +19,6 @@ import (
 	"github.com/gogf/gf/internal/utils"
 )
 
-// apiUnmarshalValue is the interface for custom defined types customizing value assignment.
-// Note that only pointer can implement interface apiUnmarshalValue.
-type apiUnmarshalValue interface {
-	UnmarshalValue(interface{}) error
-}
-
 var (
 	// replaceCharReg is the regular expression object for replacing chars
 	// in map keys and attribute names.

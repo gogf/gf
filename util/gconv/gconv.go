@@ -19,16 +19,6 @@ import (
 	"github.com/gogf/gf/encoding/gbinary"
 )
 
-// Type assert api for String().
-type apiString interface {
-	String() string
-}
-
-// Type assert api for Error().
-type apiError interface {
-	Error() string
-}
-
 var (
 	// Empty strings.
 	emptyStringMap = map[string]struct{}{

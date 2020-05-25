@@ -11,6 +11,21 @@ import (
 	"reflect"
 )
 
+// apiString is used for type assert api for String().
+type apiString interface {
+	String() string
+}
+
+// apiInterfaces is used for type assert api for Interfaces.
+type apiInterfaces interface {
+	Interfaces() []interface{}
+}
+
+// apiMapStrAny is the interface support for converting struct parameter to map.
+type apiMapStrAny interface {
+	MapStrAny() map[string]interface{}
+}
+
 // IsEmpty checks whether given <value> empty.
 // It returns true if <value> is in: 0, nil, false, "", len(slice/map/chan) == 0,
 // or else it returns false.
@@ -52,6 +67,16 @@ func IsEmpty(value interface{}) bool {
 	case []rune:
 		return len(value) == 0
 	default:
+		// Common interfaces checks.
+		if f, ok := value.(apiString); ok {
+			return f.String() == ""
+		}
+		if f, ok := value.(apiInterfaces); ok {
+			return len(f.Interfaces()) == 0
+		}
+		if f, ok := value.(apiMapStrAny); ok {
+			return len(f.MapStrAny()) == 0
+		}
 		// Finally using reflect.
 		var rv reflect.Value
 		if v, ok := value.(reflect.Value); ok {
