@@ -9,6 +9,7 @@ package ghttp
 import (
 	"context"
 	"fmt"
+	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/os/gres"
 	"github.com/gogf/gf/os/gsession"
 	"github.com/gogf/gf/os/gview"
@@ -79,12 +80,11 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 	// Custom session id creating function.
 	err := request.Session.SetIdFunc(func(ttl time.Duration) string {
 		var (
-			agent   = request.UserAgent()
 			address = request.RemoteAddr
-			cookie  = request.Header.Get("Cookie")
+			header  = fmt.Sprintf("%v", request.Header)
 		)
-		//intlog.Print(agent, address, cookie)
-		return guid.S([]byte(agent), []byte(address), []byte(cookie))
+		intlog.Print(address, header)
+		return guid.S([]byte(address), []byte(header))
 	})
 	if err != nil {
 		panic(err)
