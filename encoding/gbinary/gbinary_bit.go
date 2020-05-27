@@ -6,7 +6,7 @@
 
 package gbinary
 
-// 实验特性
+// NOTE: THIS IS AN EXPERIMENTAL FEATURE!
 
 // 二进制位(0|1)
 type Bit int8

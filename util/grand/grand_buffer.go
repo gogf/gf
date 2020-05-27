@@ -37,23 +37,12 @@ func asyncProducingRandomBufferBytesLoop() {
 		} else {
 			// The random buffer from system is very expensive,
 			// so fully reuse the random buffer by changing
-			// the step with a different prime number can
+			// the step with a different number can
 			// improve the performance a lot.
-			step = 4
-			for i := 0; i < n-4; i += step {
-				bufferChan <- buffer[i : i+4]
-			}
-			step = 5
-			for i := 0; i < n-4; i += step {
-				bufferChan <- buffer[i : i+4]
-			}
-			step = 7
-			for i := 0; i < n-4; i += step {
-				bufferChan <- buffer[i : i+4]
-			}
-			step = 13
-			for i := 0; i < n-4; i += step {
-				bufferChan <- buffer[i : i+4]
+			for _, step = range []int{4, 5, 6, 7} {
+				for i := 0; i <= n-4; i += step {
+					bufferChan <- buffer[i : i+4]
+				}
 			}
 		}
 	}
