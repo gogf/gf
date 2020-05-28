@@ -17,6 +17,6 @@ func Test_NewSessionId(t *testing.T) {
 		id1 := NewSessionId()
 		id2 := NewSessionId()
 		t.AssertNE(id1, id2)
-		t.Assert(len(id1), 36)
+		t.Assert(len(id1), 32)
 	})
 }
