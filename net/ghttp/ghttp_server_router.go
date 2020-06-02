@@ -230,12 +230,40 @@ func (s *Server) compareRouterPriority(newItem *handlerItem, oldItem *handlerIte
 	if newItem.router.Priority < oldItem.router.Priority {
 		return false
 	}
-	// Route type: {xxx} > :xxx > *xxx.
-	// Eg: /name/act > /{name}/:act
-	var fuzzyCountFieldNew, fuzzyCountFieldOld int
-	var fuzzyCountNameNew, fuzzyCountNameOld int
-	var fuzzyCountAnyNew, fuzzyCountAnyOld int
-	var fuzzyCountTotalNew, fuzzyCountTotalOld int
+
+	// Compare the length of their URI,
+	// but the fuzzy and named parts of the URI are not calculated to the result.
+
+	// Eg:
+	// /admin-goods-{page} > /admin-{page}
+	// /{hash}.{type}      > /{hash}
+	var uriNew, uriOld string
+	uriNew, _ = gregex.ReplaceString(`\{[^/]+?\}`, "", newItem.router.Uri)
+	uriOld, _ = gregex.ReplaceString(`\{[^/]+?\}`, "", oldItem.router.Uri)
+	uriNew, _ = gregex.ReplaceString(`:[^/]+?`, "", uriNew)
+	uriOld, _ = gregex.ReplaceString(`:[^/]+?`, "", uriOld)
+	uriNew, _ = gregex.ReplaceString(`\*[^/]*`, "", uriNew) // Replace "/*" and "/*any".
+	uriOld, _ = gregex.ReplaceString(`\*[^/]*`, "", uriOld) // Replace "/*" and "/*any".
+	if len(uriNew) > len(uriOld) {
+		return true
+	}
+	if len(uriNew) < len(uriOld) {
+		return false
+	}
+
+	// Route type checks: {xxx} > :xxx > *xxx.
+	// Eg:
+	// /name/act > /{name}/:act
+	var (
+		fuzzyCountFieldNew int
+		fuzzyCountFieldOld int
+		fuzzyCountNameNew  int
+		fuzzyCountNameOld  int
+		fuzzyCountAnyNew   int
+		fuzzyCountAnyOld   int
+		fuzzyCountTotalNew int
+		fuzzyCountTotalOld int
+	)
 	for _, v := range newItem.router.Uri {
 		switch v {
 		case '{':
@@ -279,24 +307,6 @@ func (s *Server) compareRouterPriority(newItem *handlerItem, oldItem *handlerIte
 		return true
 	}
 	if fuzzyCountNameNew < fuzzyCountNameOld {
-		return false
-	}
-
-	// It then compares the length of their URI,
-	// but the fuzzy and named parts of the URI are not calculated to the result.
-
-	// Eg: /admin-goods-{page} > /admin-{page}
-	var uriNew, uriOld string
-	uriNew, _ = gregex.ReplaceString(`\{[^/]+\}`, "", newItem.router.Uri)
-	uriNew, _ = gregex.ReplaceString(`:[^/]+`, "", uriNew)
-	uriNew, _ = gregex.ReplaceString(`\*[^/]+`, "", uriNew)
-	uriOld, _ = gregex.ReplaceString(`\{[^/]+\}`, "", oldItem.router.Uri)
-	uriOld, _ = gregex.ReplaceString(`:[^/]+`, "", uriOld)
-	uriOld, _ = gregex.ReplaceString(`\*[^/]+`, "", uriOld)
-	if len(uriNew) > len(uriOld) {
-		return true
-	}
-	if len(uriNew) < len(uriOld) {
 		return false
 	}
 

@@ -38,7 +38,7 @@ func Test_Struct_Basic1(t *testing.T) {
 			"PASS2":     "456",
 		}
 		if err := gconv.Struct(params1, user); err != nil {
-			gtest.Error(err)
+			t.Error(err)
 		}
 		t.Assert(user, &User{
 			Uid:      1,
@@ -60,7 +60,7 @@ func Test_Struct_Basic1(t *testing.T) {
 			"password2": "222",
 		}
 		if err := gconv.Struct(params2, user); err != nil {
-			gtest.Error(err)
+			t.Error(err)
 		}
 		t.Assert(user, &User{
 			Uid:      2,
@@ -92,7 +92,7 @@ func Test_Struct_Basic2(t *testing.T) {
 			"PASS2":    "456",
 		}
 		if err := gconv.Struct(params, user); err != nil {
-			gtest.Error(err)
+			t.Error(err)
 		}
 		t.Assert(user, &User{
 			Uid:     1,
@@ -117,15 +117,14 @@ func Test_Struct_Basic3(t *testing.T) {
 			"Name": "john",
 		}
 		if err := gconv.Struct(params, user); err != nil {
-			gtest.Error(err)
+			t.Error(err)
 		}
 		t.Assert(user.Uid, 1)
 		t.Assert(*user.Name, "john")
 	})
 }
 
-// slice类型属性的赋值
-func Test_Struct_Attr_Slice(t *testing.T) {
+func Test_Struct_Attr_Slice1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Scores []int
@@ -133,7 +132,7 @@ func Test_Struct_Attr_Slice(t *testing.T) {
 		scores := []interface{}{99, 100, 60, 140}
 		user := new(User)
 		if err := gconv.Struct(g.Map{"Scores": scores}, user); err != nil {
-			gtest.Error(err)
+			t.Error(err)
 		} else {
 			t.Assert(user, &User{
 				Scores: []int{99, 100, 60, 140},
@@ -141,6 +140,24 @@ func Test_Struct_Attr_Slice(t *testing.T) {
 		}
 	})
 }
+
+// It does not support this kind of converting yet.
+//func Test_Struct_Attr_Slice2(t *testing.T) {
+//	gtest.C(t, func(t *gtest.T) {
+//		type User struct {
+//			Scores [][]int
+//		}
+//		scores := []interface{}{[]interface{}{99, 100, 60, 140}}
+//		user := new(User)
+//		if err := gconv.Struct(g.Map{"Scores": scores}, user); err != nil {
+//			t.Error(err)
+//		} else {
+//			t.Assert(user, &User{
+//				Scores: [][]int{{99, 100, 60, 140}},
+//			})
+//		}
+//	})
+//}
 
 // 属性为struct对象
 func Test_Struct_Attr_Struct(t *testing.T) {
@@ -163,7 +180,7 @@ func Test_Struct_Attr_Struct(t *testing.T) {
 
 		// 嵌套struct转换
 		if err := gconv.Struct(scores, user); err != nil {
-			gtest.Error(err)
+			t.Error(err)
 		} else {
 			t.Assert(user, &User{
 				Scores: Score{
@@ -196,7 +213,7 @@ func Test_Struct_Attr_Struct_Ptr(t *testing.T) {
 
 		// 嵌套struct转换
 		if err := gconv.Struct(scores, user); err != nil {
-			gtest.Error(err)
+			t.Error(err)
 		} else {
 			t.Assert(user.Scores, &Score{
 				Name:   "john",
@@ -227,7 +244,7 @@ func Test_Struct_Attr_Struct_Slice1(t *testing.T) {
 
 		// 嵌套struct转换，属性为slice类型，数值为map类型
 		if err := gconv.Struct(scores, user); err != nil {
-			gtest.Error(err)
+			t.Error(err)
 		} else {
 			t.Assert(user.Scores, []Score{
 				{
@@ -266,7 +283,7 @@ func Test_Struct_Attr_Struct_Slice2(t *testing.T) {
 
 		// 嵌套struct转换，属性为slice类型，数值为slice map类型
 		if err := gconv.Struct(scores, user); err != nil {
-			gtest.Error(err)
+			t.Error(err)
 		} else {
 			t.Assert(user.Scores, []Score{
 				{
@@ -309,7 +326,7 @@ func Test_Struct_Attr_Struct_Slice_Ptr(t *testing.T) {
 
 		// 嵌套struct转换，属性为slice类型，数值为slice map类型
 		if err := gconv.Struct(scores, user); err != nil {
-			gtest.Error(err)
+			t.Error(err)
 		} else {
 			t.Assert(len(user.Scores), 2)
 			t.Assert(user.Scores[0], &Score{

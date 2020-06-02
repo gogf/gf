@@ -16,7 +16,7 @@ import (
 	"github.com/gogf/gf/test/gtest"
 )
 
-func Test_Router_Basic(t *testing.T) {
+func Test_Router_Basic1(t *testing.T) {
 	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/:name", func(r *ghttp.Request) {
@@ -47,6 +47,29 @@ func Test_Router_Basic(t *testing.T) {
 		t.Assert(client.GetContent("/john/update"), "john")
 		t.Assert(client.GetContent("/john/edit"), "edit")
 		t.Assert(client.GetContent("/user/list/100.html"), "100")
+	})
+}
+
+func Test_Router_Basic2(t *testing.T) {
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/{hash}", func(r *ghttp.Request) {
+		r.Response.Write(r.Get("hash"))
+	})
+	s.BindHandler("/{hash}.{type}", func(r *ghttp.Request) {
+		r.Response.Write(r.Get("type"))
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		client := ghttp.NewClient()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		t.Assert(client.GetContent("/data"), "data")
+		t.Assert(client.GetContent("/data.json"), "json")
 	})
 }
 
