@@ -1,23 +1,20 @@
 package main
 
 import (
-	"fmt"
-	"github.com/gogf/gf/encoding/gjson"
+	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/util/guid"
 )
 
-func CreateSessionId(r *ghttp.Request) string {
-	var (
-		agent   = r.UserAgent()
-		address = r.RemoteAddr
-		cookie  = r.Header.Get("Cookie")
-	)
-	return guid.S([]byte(agent), []byte(address), []byte(cookie))
-}
 func main() {
-	body := "{\"id\": 413231383385427875}"
-	if dat, err := gjson.DecodeToJson(body); err == nil {
-		fmt.Println(dat.MustToJsonString())
-	}
+	s := g.Server()
+	s.BindHandler("POST:/login", func(r *ghttp.Request) {
+		r.Response.Write("login handler")
+	})
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.GET("/test", func(r *ghttp.Request) {
+			r.Response.Write("for authenticated handler testing")
+		})
+	})
+	s.SetPort(8199)
+	s.Run()
 }

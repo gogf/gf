@@ -18,6 +18,67 @@ import (
 	"github.com/gogf/gf/test/gtest"
 )
 
+func Test_Params_Parse1(t *testing.T) {
+	type User struct {
+		Id   int
+		Name string
+		Map  map[string]interface{}
+	}
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/parse", func(r *ghttp.Request) {
+		if m := r.GetMap(); len(m) > 0 {
+			var user *User
+			if err := r.Parse(&user); err != nil {
+				r.Response.WriteExit(err)
+			}
+			r.Response.WriteExit(user.Map["id"], user.Map["score"])
+		}
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		client := ghttp.NewClient()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		t.Assert(client.PostContent("/parse", `{"id":1,"name":"john","map":{"id":1,"score":100}}`), `1100`)
+	})
+}
+
+// It does not support this kind of converting yet.
+//func Test_Params_Parse2(t *testing.T) {
+//	type User struct {
+//		Id     int
+//		Name   string
+//		Scores [][]int
+//	}
+//	p, _ := ports.PopRand()
+//	s := g.Server(p)
+//	s.BindHandler("/parse", func(r *ghttp.Request) {
+//		if m := r.GetMap(); len(m) > 0 {
+//			var user *User
+//			if err := r.Parse(&user); err != nil {
+//				r.Response.WriteExit(err)
+//			}
+//			r.Response.WriteExit(user.Scores)
+//		}
+//	})
+//	s.SetPort(p)
+//	s.SetDumpRouterMap(false)
+//	s.Start()
+//	defer s.Shutdown()
+//
+//	time.Sleep(100 * time.Millisecond)
+//	gtest.C(t, func(t *gtest.T) {
+//		client := ghttp.NewClient()
+//		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+//		t.Assert(client.PostContent("/parse", `{"id":1,"name":"john","scores":[[1,2,3]]}`), `1100`)
+//	})
+//}
+
 func Test_Params_Struct(t *testing.T) {
 	type User struct {
 		Id    int
