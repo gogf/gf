@@ -342,6 +342,9 @@ func Test_HideStr(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gstr.HideStr("15928008611", 40, "*"), "159****8611")
 		t.Assert(gstr.HideStr("john@kohg.cn", 40, "*"), "jo*n@kohg.cn")
+		t.Assert(gstr.HideStr("张三", 50, "*"), "张*")
+		t.Assert(gstr.HideStr("张小三", 50, "*"), "张*三")
+		t.Assert(gstr.HideStr("欧阳小三", 50, "*"), "欧**三")
 	})
 }
 
