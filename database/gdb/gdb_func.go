@@ -411,11 +411,15 @@ func formatWhereKeyValue(db DB, buffer *bytes.Buffer, newArgs []interface{}, key
 // underlying driver.
 func handleArguments(sql string, args []interface{}) (newSql string, newArgs []interface{}) {
 	newSql = sql
+	// insertHolderCount is used to calculate the inserting position for the '?' holder.
+	insertHolderCount := 0
 	// Handles the slice arguments.
 	if len(args) > 0 {
 		for index, arg := range args {
-			rv := reflect.ValueOf(arg)
-			kind := rv.Kind()
+			var (
+				rv   = reflect.ValueOf(arg)
+				kind = rv.Kind()
+			)
 			if kind == reflect.Ptr {
 				rv = rv.Elem()
 				kind = rv.Kind()
@@ -431,17 +435,25 @@ func handleArguments(sql string, args []interface{}) (newSql string, newArgs []i
 				for i := 0; i < rv.Len(); i++ {
 					newArgs = append(newArgs, rv.Index(i).Interface())
 				}
-				// It the '?' holder count equals the length of the slice,
+				// If the '?' holder count equals the length of the slice,
 				// it does not implement the arguments splitting logic.
 				// Eg: db.Query("SELECT ?+?", g.Slice{1, 2})
 				if len(args) == 1 && gstr.Count(newSql, "?") == rv.Len() {
 					break
 				}
 				// counter is used to finding the inserting position for the '?' holder.
-				counter := 0
+				var (
+					counter  = 0
+					replaced = false
+				)
 				newSql, _ = gregex.ReplaceStringFunc(`\?`, newSql, func(s string) string {
+					if replaced {
+						return s
+					}
 					counter++
-					if counter == index+1 {
+					if counter == index+insertHolderCount+1 {
+						replaced = true
+						insertHolderCount += rv.Len() - 1
 						return "?" + strings.Repeat(",?", rv.Len()-1)
 					}
 					return s

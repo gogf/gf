@@ -1024,15 +1024,6 @@ func Test_Model_Where(t *testing.T) {
 		t.Assert(result["id"].Int(), 3)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Table(table).Where(g.Map{
-			"id":       g.Slice{1, 2, 3},
-			"passport": g.Slice{"user_2", "user_3"},
-		}).Or("nickname=?", g.Slice{"name_4"}).And("id", 3).One()
-		t.Assert(err, nil)
-		t.AssertGT(len(result), 0)
-		t.Assert(result["id"].Int(), 3)
-	})
-	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Table(table).Where("id=3", g.Slice{}).One()
 		t.Assert(err, nil)
 		t.AssertGT(len(result), 0)
@@ -1343,7 +1334,7 @@ func Test_Model_WherePri(t *testing.T) {
 		}).Or("nickname=?", g.Slice{"name_4"}).And("id", 3).One()
 		t.Assert(err, nil)
 		t.AssertGT(len(result), 0)
-		t.Assert(result["id"].Int(), 3)
+		t.Assert(result["id"].Int(), 2)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Table(table).WherePri("id=3", g.Slice{}).One()
@@ -1830,6 +1821,32 @@ func Test_Model_Option_Where(t *testing.T) {
 		v, err := db.Table(table).Where("id", 1).Fields("nickname").Value()
 		t.Assert(err, nil)
 		t.Assert(v.String(), "1")
+	})
+}
+
+func Test_Model_Where_MultiSliceArguments(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		r, err := db.Table(table).Where(g.Map{
+			"id":       g.Slice{1, 2, 3, 4},
+			"passport": g.Slice{"user_2", "user_3", "user_4"},
+			"nickname": g.Slice{"name_2", "name_4"},
+			"id >= 4":  nil,
+		}).All()
+		t.Assert(err, nil)
+		t.Assert(len(r), 1)
+		t.Assert(r[0]["id"], 4)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Table(table).Where(g.Map{
+			"id":       g.Slice{1, 2, 3},
+			"passport": g.Slice{"user_2", "user_3"},
+		}).Or("nickname=?", g.Slice{"name_4"}).And("id", 3).One()
+		t.Assert(err, nil)
+		t.AssertGT(len(result), 0)
+		t.Assert(result["id"].Int(), 2)
 	})
 }
 
