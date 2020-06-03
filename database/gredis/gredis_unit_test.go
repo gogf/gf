@@ -261,14 +261,14 @@ func Test_HSet(t *testing.T) {
 	})
 }
 
-func Test_HGetAll(t *testing.T) {
+func Test_HGetAll1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var err error
 		redis := gredis.New(config)
 		key := guid.S()
 		defer redis.Do("DEL", key)
 
-		_, err = redis.Do("HSET", key, "id", "100")
+		_, err = redis.Do("HSET", key, "id", 100)
 		t.Assert(err, nil)
 		_, err = redis.Do("HSET", key, "name", "john")
 		t.Assert(err, nil)
@@ -279,6 +279,28 @@ func Test_HGetAll(t *testing.T) {
 			"id":   100,
 			"name": "john",
 		})
+	})
+}
+
+func Test_HGetAll2(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err   error
+			key   = guid.S()
+			redis = gredis.New(config)
+		)
+		defer redis.Do("DEL", key)
+
+		_, err = redis.Do("HSET", key, "id", 100)
+		t.Assert(err, nil)
+		_, err = redis.Do("HSET", key, "name", "john")
+		t.Assert(err, nil)
+
+		result, err := redis.DoVar("HGETALL", key)
+		t.Assert(err, nil)
+
+		t.Assert(gconv.Uint(result.MapStrVar()["id"]), 100)
+		t.Assert(result.MapStrVar()["id"].Uint(), 100)
 	})
 }
 
