@@ -261,7 +261,7 @@ func MapStrStr(value interface{}, tags ...string) map[string]string {
 	}
 	m := Map(value, tags...)
 	if len(m) > 0 {
-		vMap := make(map[string]string)
+		vMap := make(map[string]string, len(m))
 		for k, v := range m {
 			vMap[k] = String(v)
 		}
@@ -278,7 +278,7 @@ func MapStrStrDeep(value interface{}, tags ...string) map[string]string {
 	}
 	m := MapDeep(value, tags...)
 	if len(m) > 0 {
-		vMap := make(map[string]string)
+		vMap := make(map[string]string, len(m))
 		for k, v := range m {
 			vMap[k] = String(v)
 		}

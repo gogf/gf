@@ -22,7 +22,7 @@ func (v *Var) MapStrStr(tags ...string) map[string]string {
 func (v *Var) MapStrVar(tags ...string) map[string]*Var {
 	m := v.Map(tags...)
 	if len(m) > 0 {
-		vMap := make(map[string]*Var)
+		vMap := make(map[string]*Var, len(m))
 		for k, v := range m {
 			vMap[k] = New(v)
 		}
@@ -45,7 +45,7 @@ func (v *Var) MapStrStrDeep(tags ...string) map[string]string {
 func (v *Var) MapStrVarDeep(tags ...string) map[string]*Var {
 	m := v.MapDeep(tags...)
 	if len(m) > 0 {
-		vMap := make(map[string]*Var)
+		vMap := make(map[string]*Var, len(m))
 		for k, v := range m {
 			vMap[k] = New(v)
 		}
