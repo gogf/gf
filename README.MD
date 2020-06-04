@@ -38,7 +38,7 @@ golang version >= 1.11
 
 1. **Community Package**
 
-    The community packages are contributed and maintained by community members, which are stored in `gogf` organization. Some of the community packages are separated from the `gf` repository, which are not of common usage or are with heavy dependencies. 
+    The community packages are contributed and maintained by community members, which are hosted in `gogf` organization. Some of the community packages are separated from the `gf` repository, which are not of common usage or are with heavy dependencies. 
 
 # Architecture
 <div align=center>

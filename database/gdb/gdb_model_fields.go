@@ -13,6 +13,7 @@ import (
 )
 
 // Filter marks filtering the fields which does not exist in the fields of the operated table.
+// Note that this function supports only single table operations.
 func (m *Model) Filter() *Model {
 	if gstr.Contains(m.tables, " ") {
 		panic("function Filter supports only single table operations")
@@ -30,6 +31,7 @@ func (m *Model) Fields(fields string) *Model {
 }
 
 // FieldsEx sets the excluded operation fields of the model, multiple fields joined using char ','.
+// Note that this function supports only single table operations.
 func (m *Model) FieldsEx(fields string) *Model {
 	if gstr.Contains(m.tables, " ") {
 		panic("function FieldsEx supports only single table operations")
