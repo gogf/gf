@@ -61,12 +61,12 @@ func (set *Set) Iterator(f func(v interface{}) bool) {
 }
 
 // Add adds one or multiple items to the set.
-func (set *Set) Add(item ...interface{}) {
+func (set *Set) Add(items ...interface{}) {
 	set.mu.Lock()
 	if set.data == nil {
 		set.data = make(map[interface{}]struct{})
 	}
-	for _, v := range item {
+	for _, v := range items {
 		set.data[v] = struct{}{}
 	}
 	set.mu.Unlock()
@@ -456,9 +456,11 @@ func (set *Set) Pops(size int) []interface{} {
 func (set *Set) Walk(f func(item interface{}) interface{}) *Set {
 	set.mu.Lock()
 	defer set.mu.Unlock()
+	m := make(map[interface{}]struct{}, len(set.data))
 	for k, v := range set.data {
-		set.data[f(k)] = v
+		m[f(k)] = v
 	}
+	set.data = m
 	return set
 }
 

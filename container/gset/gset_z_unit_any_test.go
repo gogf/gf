@@ -389,6 +389,19 @@ func TestSet_AddIfNotExistFunc(t *testing.T) {
 	})
 }
 
+func TestSet_Walk(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var set gset.Set
+		set.Add(g.Slice{1, 2}...)
+		set.Walk(func(item interface{}) interface{} {
+			return gconv.Int(item) + 10
+		})
+		t.Assert(set.Size(), 2)
+		t.Assert(set.Contains(11), true)
+		t.Assert(set.Contains(12), true)
+	})
+}
+
 func TestSet_AddIfNotExistFuncLock(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := gset.New(true)
