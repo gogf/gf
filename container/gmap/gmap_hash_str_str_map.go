@@ -97,6 +97,7 @@ func (m *StrStrMap) MapCopy() map[string]string {
 }
 
 // FilterEmpty deletes all key-value pair of which the value is empty.
+// Values like: 0, nil, false, "", len(slice/map/chan) == 0 are considered empty.
 func (m *StrStrMap) FilterEmpty() {
 	m.mu.Lock()
 	for k, v := range m.data {
