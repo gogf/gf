@@ -92,6 +92,7 @@ func (m *StrAnyMap) MapCopy() map[string]interface{} {
 }
 
 // FilterEmpty deletes all key-value pair of which the value is empty.
+// Values like: 0, nil, false, "", len(slice/map/chan) == 0 are considered empty.
 func (m *StrAnyMap) FilterEmpty() {
 	m.mu.Lock()
 	for k, v := range m.data {
@@ -100,6 +101,17 @@ func (m *StrAnyMap) FilterEmpty() {
 		}
 	}
 	m.mu.Unlock()
+}
+
+// FilterNil deletes all key-value pair of which the value is nil.
+func (m *StrAnyMap) FilterNil() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for k, v := range m.data {
+		if empty.IsNil(v) {
+			delete(m.data, k)
+		}
+	}
 }
 
 // Set sets key-value to the hash map.
