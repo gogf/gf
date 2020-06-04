@@ -377,6 +377,19 @@ func TestIntSet_Json(t *testing.T) {
 	})
 }
 
+func TestIntSet_Walk(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var set gset.IntSet
+		set.Add(g.SliceInt{1, 2}...)
+		set.Walk(func(item int) int {
+			return item + 10
+		})
+		t.Assert(set.Size(), 2)
+		t.Assert(set.Contains(11), true)
+		t.Assert(set.Contains(12), true)
+	})
+}
+
 func TestIntSet_UnmarshalValue(t *testing.T) {
 	type V struct {
 		Name string

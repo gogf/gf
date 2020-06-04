@@ -126,6 +126,14 @@ func Example_rand() {
 	fmt.Println(array.PopRand())
 }
 
+func Example_join() {
+	array := garray.NewFrom(g.Slice{"a", "b", "c", "d"})
+	fmt.Println(array.Join(","))
+
+	// Output:
+	// a,b,c,d
+}
+
 func Example_chunk() {
 	array := garray.NewFrom(g.Slice{1, 2, 3, 4, 5, 6, 7, 8, 9})
 

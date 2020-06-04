@@ -423,6 +423,24 @@ func TestStrSet_Json(t *testing.T) {
 	})
 }
 
+func TestStrSet_Walk(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			set    gset.StrSet
+			names  = g.SliceStr{"user", "user_detail"}
+			prefix = "gf_"
+		)
+		set.Add(names...)
+		// Add prefix for given table names.
+		set.Walk(func(item string) string {
+			return prefix + item
+		})
+		t.Assert(set.Size(), 2)
+		t.Assert(set.Contains("gf_user"), true)
+		t.Assert(set.Contains("gf_user_detail"), true)
+	})
+}
+
 func TestStrSet_UnmarshalValue(t *testing.T) {
 	type V struct {
 		Name string
