@@ -5,6 +5,8 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package gconv implements powerful and convenient converting functionality for any types of variables.
+//
+// This package should keep much less dependencies with other packages.
 package gconv
 
 import (

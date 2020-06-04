@@ -10,6 +10,7 @@ import (
 	"container/list"
 	"fmt"
 	"github.com/gogf/gf/container/garray"
+	"github.com/gogf/gf/frame/g"
 
 	"github.com/gogf/gf/container/glist"
 )
@@ -96,5 +97,30 @@ func Example_iterate() {
 	//10987654321
 	//12345678910
 	//10987654321
-	//[1,2,3,4,5,"M",7,8,9,10]
+	//[1,2,3,4,5,M,7,8,9,10]
+}
+
+func Example_popItem() {
+	l := glist.NewFrom(g.Slice{1, 2, 3, 4, 5, 6, 7, 8, 9})
+
+	fmt.Println(l.PopBack())
+	fmt.Println(l.PopBacks(2))
+	fmt.Println(l.PopFront())
+	fmt.Println(l.PopFronts(2))
+
+	// Output:
+	// 9
+	// [8 7]
+	// 1
+	// [2 3]
+}
+
+func Example_join() {
+	var l glist.List
+	l.PushBacks(g.Slice{"a", "b", "c", "d"})
+
+	fmt.Println(l.Join(","))
+
+	// Output:
+	// a,b,c,d
 }
