@@ -101,6 +101,34 @@ func Example_popItem() {
 	// [7 8]
 }
 
+func Example_walk() {
+	var array garray.StrArray
+	tables := g.SliceStr{"user", "user_detail"}
+	prefix := "gf_"
+	array.Append(tables...)
+	// Add prefix for given table names.
+	array.Walk(func(value string) string {
+		return prefix + value
+	})
+	fmt.Println(array.Slice())
+
+	// Output:
+	// [gf_user gf_user_detail]
+}
+
+func Example_contains() {
+	var array garray.StrArray
+	array.Append("a")
+	fmt.Println(array.Contains("a"))
+	fmt.Println(array.Contains("A"))
+	fmt.Println(array.ContainsI("A"))
+
+	// Output:
+	// true
+	// false
+	// true
+}
+
 func Example_mergeArray() {
 	array1 := garray.NewFrom([]interface{}{1, 2})
 	array2 := garray.NewFrom([]interface{}{3, 4})
