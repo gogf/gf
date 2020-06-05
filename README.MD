@@ -115,6 +115,11 @@ The concurrency starts from `100` to `10000`.
 
 `GF` is licensed under the [MIT License](LICENSE), 100% free and open-source, forever.
 
+# Known Users
+
+Logos are not authorized to be shown due to trademark copyrights.
+
+
 # Contributors
 This project exists thanks to all the people who contribute. [[Contributors](https://github.com/gogf/gf/graphs/contributors)].
 <a href="https://github.com/gogf/gf/graphs/contributors"><img src="https://opencollective.com/goframe/contributors.svg?width=890&button=false" /></a>
@@ -128,8 +133,13 @@ We currently accept donation by Alipay/WechatPay, please note your github/gitee 
 We appreciate any kind of sponsorship for `GF` development. If you've got some interesting, please contact WeChat `389961817` / Email `john@goframe.org`.
 
 
+
 # Thanks
 <a href="https://www.jetbrains.com/?from=GoFrame"><img src="https://goframe.org/images/jetbrains.png" width="100" alt="JetBrains"/></a>
+
+
+
+
 
 
 
