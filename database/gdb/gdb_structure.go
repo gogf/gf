@@ -51,8 +51,7 @@ func (c *Core) convertValue(fieldValue []byte, fieldType string) interface{} {
 	case
 		"big_int",
 		"bigint",
-		"bigserial",
-		"money":
+		"bigserial":
 		if gstr.ContainsI(fieldType, "unsigned") {
 			gconv.Uint64(string(fieldValue))
 		}
@@ -65,6 +64,7 @@ func (c *Core) convertValue(fieldValue []byte, fieldType string) interface{} {
 		"float",
 		"double",
 		"decimal",
+		"money",
 		"numeric":
 		return gconv.Float64(string(fieldValue))
 
