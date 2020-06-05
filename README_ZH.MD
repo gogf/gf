@@ -133,6 +133,10 @@ ab -t 10 -c 100 http://127.0.0.1:3000/json
 
 `GF` 使用非常友好的 [MIT](LICENSE) 开源协议进行发布，永久`100%`开源免费。
 
+# 用户
+
+由于商标版权缘故，未经厂商商务部授权允许无法用于宣传展示。
+
 # 贡献
 
 感谢所有参与`GoFrame`开发的贡献者。 [[贡献者列表](https://github.com/gogf/gf/graphs/contributors)].
