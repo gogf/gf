@@ -41,8 +41,7 @@ func (c *Core) convertValue(fieldValue []byte, fieldType string) interface{} {
 		"smallint",
 		"medium_int",
 		"mediumint",
-		"serial",
-		"smallmoney":
+		"serial":
 		if gstr.ContainsI(fieldType, "unsigned") {
 			gconv.Uint(string(fieldValue))
 		}
@@ -65,7 +64,8 @@ func (c *Core) convertValue(fieldValue []byte, fieldType string) interface{} {
 		"double",
 		"decimal",
 		"money",
-		"numeric":
+		"numeric",
+		"smallmoney":
 		return gconv.Float64(string(fieldValue))
 
 	case "bit":
