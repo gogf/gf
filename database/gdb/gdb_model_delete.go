@@ -12,14 +12,10 @@ import (
 	"github.com/gogf/gf/os/gtime"
 )
 
-// Unscoped enables/disables the soft deleting feature.
-func (m *Model) Unscoped(unscoped ...bool) *Model {
+// Unscoped disables the soft deleting feature.
+func (m *Model) Unscoped() *Model {
 	model := m.getModel()
-	if len(unscoped) > 0 {
-		model.unscoped = unscoped[0]
-	} else {
-		model.unscoped = true
-	}
+	model.unscoped = true
 	return model
 }
 
