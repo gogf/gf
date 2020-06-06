@@ -68,7 +68,7 @@ func New(options ...Options) *Manager {
 			gregex.Quote(opts.Delimiters[1]),
 		),
 	}
-	intlog.Printf(`New: %+v`, m)
+	intlog.Printf(`New: %#v`, m)
 	return m
 }
 
