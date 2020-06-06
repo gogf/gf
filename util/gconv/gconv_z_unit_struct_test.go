@@ -27,7 +27,6 @@ func Test_Struct_Basic1(t *testing.T) {
 			Pass1    string `gconv:"password1"`
 			Pass2    string `gconv:"password2"`
 		}
-		// 使用默认映射规则绑定属性值到对象
 		user := new(User)
 		params1 := g.Map{
 			"uid":       1,
@@ -49,7 +48,6 @@ func Test_Struct_Basic1(t *testing.T) {
 			Pass2:    "456",
 		})
 
-		// 使用struct tag映射绑定属性值到对象
 		user = new(User)
 		params2 := g.Map{
 			"uid":       2,
@@ -73,7 +71,6 @@ func Test_Struct_Basic1(t *testing.T) {
 	})
 }
 
-// 使用默认映射规则绑定属性值到对象
 func Test_Struct_Basic2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
@@ -104,11 +101,10 @@ func Test_Struct_Basic2(t *testing.T) {
 	})
 }
 
-// 带有指针的基础类型属性
-func Test_Struct_Basic3(t *testing.T) {
+func Test_Struct_Attr_Pointer(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
-			Uid  int
+			Uid  *int
 			Name *string
 		}
 		user := new(User)
@@ -192,7 +188,6 @@ func Test_Struct_Attr_Struct(t *testing.T) {
 	})
 }
 
-// 属性为struct对象指针
 func Test_Struct_Attr_Struct_Ptr(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Score struct {
@@ -223,7 +218,6 @@ func Test_Struct_Attr_Struct_Ptr(t *testing.T) {
 	})
 }
 
-// 属性为struct对象slice
 func Test_Struct_Attr_Struct_Slice1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Score struct {
@@ -242,7 +236,6 @@ func Test_Struct_Attr_Struct_Slice1(t *testing.T) {
 			},
 		}
 
-		// 嵌套struct转换，属性为slice类型，数值为map类型
 		if err := gconv.Struct(scores, user); err != nil {
 			t.Error(err)
 		} else {
@@ -256,7 +249,6 @@ func Test_Struct_Attr_Struct_Slice1(t *testing.T) {
 	})
 }
 
-// 属性为struct对象slice
 func Test_Struct_Attr_Struct_Slice2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Score struct {
@@ -281,7 +273,6 @@ func Test_Struct_Attr_Struct_Slice2(t *testing.T) {
 			},
 		}
 
-		// 嵌套struct转换，属性为slice类型，数值为slice map类型
 		if err := gconv.Struct(scores, user); err != nil {
 			t.Error(err)
 		} else {
@@ -299,7 +290,6 @@ func Test_Struct_Attr_Struct_Slice2(t *testing.T) {
 	})
 }
 
-// 属性为struct对象slice ptr
 func Test_Struct_Attr_Struct_Slice_Ptr(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Score struct {
