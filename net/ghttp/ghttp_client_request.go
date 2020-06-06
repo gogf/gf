@@ -11,7 +11,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/internal/utils"
 	"io"
+	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -215,20 +217,25 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 	if len(c.authUser) > 0 {
 		req.SetBasicAuth(c.authUser, c.authPass)
 	}
-	// do not return nil even if the request fails
-	resp = &ClientResponse{}
+	resp = &ClientResponse{
+		request: req,
+	}
+	// The request body can be reused for dumping
+	// raw HTTP request-response procedure.
+	reqBodyContent, _ := ioutil.ReadAll(req.Body)
+	req.Body = utils.NewReadCloser(reqBodyContent, false)
+	defer func() {
+		resp.request.Body = utils.NewReadCloser(reqBodyContent, true)
+	}()
 	for {
 		if resp.Response, err = c.Do(req); err != nil {
 			if c.retryCount > 0 {
 				c.retryCount--
 				time.Sleep(c.retryInterval)
 			} else {
-				// we need a copy of the request when the request fails.
-				resp.request = req
 				return resp, err
 			}
 		} else {
-			resp.request = resp.Request
 			break
 		}
 	}
