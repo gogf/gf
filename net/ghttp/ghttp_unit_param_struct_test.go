@@ -18,7 +18,7 @@ import (
 	"github.com/gogf/gf/test/gtest"
 )
 
-func Test_Params_Parse1(t *testing.T) {
+func Test_Params_Parse(t *testing.T) {
 	type User struct {
 		Id   int
 		Name string
@@ -48,8 +48,47 @@ func Test_Params_Parse1(t *testing.T) {
 	})
 }
 
+func Test_Params_Parse_Attr_Pointer(t *testing.T) {
+	type User struct {
+		Id   *int
+		Name *string
+	}
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/parse1", func(r *ghttp.Request) {
+		if m := r.GetMap(); len(m) > 0 {
+			var user *User
+			if err := r.Parse(&user); err != nil {
+				r.Response.WriteExit(err)
+			}
+			r.Response.WriteExit(user.Id, user.Name)
+		}
+	})
+	s.BindHandler("/parse2", func(r *ghttp.Request) {
+		if m := r.GetMap(); len(m) > 0 {
+			var user = new(User)
+			if err := r.Parse(user); err != nil {
+				r.Response.WriteExit(err)
+			}
+			r.Response.WriteExit(user.Id, user.Name)
+		}
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		client := ghttp.NewClient()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		t.Assert(client.PostContent("/parse1", `{"id":1,"name":"john"}`), `1john`)
+		t.Assert(client.PostContent("/parse2", `{"id":1,"name":"john"}`), `1john`)
+	})
+}
+
 // It does not support this kind of converting yet.
-//func Test_Params_Parse2(t *testing.T) {
+//func Test_Params_Parse_Attr_SliceSlice(t *testing.T) {
 //	type User struct {
 //		Id     int
 //		Name   string
