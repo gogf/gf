@@ -8,6 +8,7 @@ package gins
 
 import (
 	"fmt"
+	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gutil"
 
@@ -58,6 +59,7 @@ func Database(name ...string) gdb.DB {
 				}
 			}
 			if len(cg) > 0 {
+				intlog.Printf("%s, %#v", group, cg)
 				gdb.SetConfigGroup(group, cg)
 			}
 		}
@@ -69,6 +71,7 @@ func Database(name ...string) gdb.DB {
 				cg = append(cg, *node)
 			}
 			if len(cg) > 0 {
+				intlog.Printf("%s, %#v", gdb.DEFAULT_GROUP_NAME, cg)
 				gdb.SetConfigGroup(gdb.DEFAULT_GROUP_NAME, cg)
 			}
 		}

@@ -39,10 +39,10 @@ type ConfigNode struct {
 	DryRun           bool          // (Optional) Dry run, which does SELECT but no INSERT/UPDATE/DELETE statements.
 	Weight           int           // (Optional) Weight for load balance calculating, it's useless if there's just one node.
 	Charset          string        // (Optional, "utf8mb4" in default) Custom charset when operating on database.
-	LinkInfo         string        // (Optional) Custom link information, when it is used, configuration Host/Port/User/Pass/Name are ignored.
-	MaxIdleConnCount int           // (Optional) Max idle connection configuration for underlying connection pool.
-	MaxOpenConnCount int           // (Optional) Max open connection configuration for underlying connection pool.
-	MaxConnLifetime  time.Duration // (Optional) Max connection TTL configuration for underlying connection pool.
+	LinkInfo         string        `json:"link"`        // (Optional) Custom link information, when it is used, configuration Host/Port/User/Pass/Name are ignored.
+	MaxIdleConnCount int           `json:"maxidle"`     // (Optional) Max idle connection configuration for underlying connection pool.
+	MaxOpenConnCount int           `json:"maxopen"`     // (Optional) Max open connection configuration for underlying connection pool.
+	MaxConnLifetime  time.Duration `json:"maxlifetime"` // (Optional) Max connection TTL configuration for underlying connection pool.
 }
 
 // configs is internal used configuration object.

@@ -50,11 +50,13 @@ func Struct(params interface{}, pointer interface{}, mapping ...map[string]strin
 			err = gerror.NewfSkip(1, "%v", e)
 		}
 	}()
+
 	// paramsMap is the map[string]interface{} type variable for params.
 	paramsMap := Map(params)
 	if paramsMap == nil {
 		return fmt.Errorf("invalid params: %v", params)
 	}
+
 	// Using reflect to do the converting,
 	// it also supports type of reflect.Value for <pointer>(always in internal usage).
 	elem, ok := pointer.(reflect.Value)
@@ -86,7 +88,8 @@ func Struct(params interface{}, pointer interface{}, mapping ...map[string]strin
 		}
 	}
 	// It only performs one converting to the same attribute.
-	// doneMap is used to check repeated converting, its key is the attribute name of the struct.
+	// doneMap is used to check repeated converting, its key is the real attribute name
+	// of the struct.
 	doneMap := make(map[string]struct{})
 	// It first checks the passed mapping rules.
 	if len(mapping) > 0 && len(mapping[0]) > 0 {
@@ -100,26 +103,13 @@ func Struct(params interface{}, pointer interface{}, mapping ...map[string]strin
 			}
 		}
 	}
-	// It secondly checks the tags of attributes.
-	tagMap := structs.TagMapName(pointer, structTagPriority, true)
-	for tagK, tagV := range tagMap {
-		// tagV is the the attribute name of the struct.
-		if _, ok := doneMap[tagV]; ok {
-			continue
-		}
-		if v, ok := paramsMap[tagK]; ok {
-			doneMap[tagV] = struct{}{}
-			if err := bindVarToStructAttr(elem, tagV, v); err != nil {
-				return err
-			}
-		}
-	}
-	// It finally do the converting with default rules.
 	// The key of the map is the attribute name of the struct,
 	// and the value is its replaced name for later comparison to improve performance.
-	attrMap := make(map[string]string)
-	elemType := elem.Type()
-	tempName := ""
+	var (
+		attrMap  = make(map[string]string)
+		elemType = elem.Type()
+		tempName = ""
+	)
 	for i := 0; i < elem.NumField(); i++ {
 		// Only do converting to public attributes.
 		if !utils.IsLetterUpper(elemType.Field(i).Name[0]) {
@@ -131,12 +121,27 @@ func Struct(params interface{}, pointer interface{}, mapping ...map[string]strin
 	if len(attrMap) == 0 {
 		return nil
 	}
-	var attrName, checkName string
+	var (
+		attrName  string
+		checkName string
+		tagMap    = structs.TagMapName(pointer, structTagPriority, true)
+	)
 	for mapK, mapV := range paramsMap {
 		attrName = ""
 		checkName = replaceCharReg.ReplaceAllString(mapK, "")
 		// Loop to find the matched attribute name with or without
 		// string cases and chars like '-'/'_'/'.'/' '.
+
+		// Matching the parameters to struct tag names.
+		// The <tagV> is the attribute name of the struct.
+		for tagK, tagV := range tagMap {
+			if strings.EqualFold(checkName, tagK) {
+				attrName = tagV
+				break
+			}
+		}
+
+		// Matching the parameters to struct attributes.
 		for attrK, attrV := range attrMap {
 			// Eg:
 			// UserName  eq user_name
@@ -148,17 +153,13 @@ func Struct(params interface{}, pointer interface{}, mapping ...map[string]strin
 				break
 			}
 		}
-		// If the attribute name is already checked converting, then skip it.
-		if attrName != "" {
-			if _, ok := doneMap[attrName]; ok {
-				continue
-			}
-			if _, ok := tagMap[attrName]; ok {
-				continue
-			}
-		}
+
 		// No matching, give up this attribute converting.
 		if attrName == "" {
+			continue
+		}
+		// If the attribute name is already checked converting, then skip it.
+		if _, ok := doneMap[attrName]; ok {
 			continue
 		}
 		// Mark it done.
