@@ -63,3 +63,27 @@ func Example_autoMarshalUnmarshalStruct() {
 	}
 	fmt.Println(user2.Id, user2.Name)
 }
+
+func Example_hashSet() {
+	var (
+		err    error
+		result *gvar.Var
+		key    = "user"
+	)
+	_, err = g.Redis().Do("HSET", key, "id", 10000)
+	if err != nil {
+		panic(err)
+	}
+	_, err = g.Redis().Do("HSET", key, "name", "john")
+	if err != nil {
+		panic(err)
+	}
+	result, err = g.Redis().DoVar("HGETALL", key)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(result.Map())
+
+	// May Output:
+	// map[id:10000 name:john]
+}
