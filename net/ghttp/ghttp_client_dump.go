@@ -90,7 +90,7 @@ func (r *ClientResponse) Raw() string {
 	return fmt.Sprintf("%s\n%s", r.RawRequest(), r.RawResponse())
 }
 
-// Dump outputs the raw text of the request and the response to stdout.
-func (r *ClientResponse) Dump() {
+// RawDump outputs the raw text of the request and the response to stdout.
+func (r *ClientResponse) RawDump() {
 	fmt.Println(r.Raw())
 }
