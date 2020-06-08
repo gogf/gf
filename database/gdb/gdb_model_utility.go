@@ -63,7 +63,15 @@ func (m *Model) doFilterDataMapForInsertOrUpdate(data Map, allowOmitEmpty bool) 
 				if r.IsZero() {
 					continue
 				}
+			case *time.Time:
+				if r.IsZero() {
+					continue
+				}
 			case gtime.Time:
+				if r.IsZero() {
+					continue
+				}
+			case *gtime.Time:
 				if r.IsZero() {
 					continue
 				}
