@@ -80,6 +80,16 @@ We currently accept donation by Alipay/WechatPay, please note your github/gitee 
 |*天|wechat|￥10.00| 
 |*.|wechat|￥20.00| 学生一个微薄之力，冲
 |李勇|wechat|￥50.00| 
+|[米司特包](https://github.com/misitebao)|wechat|￥66.66| 
+|千年|wechat|￥1.08| 
+|[szzxing](https://github.com/szzxing)|wechat|￥50.00| 
+|伟客互联|wechat|￥66.66| 
+|sbilly|wechat|￥99.00| 
+|**阳|alipay|￥100.01| 
+|**亮|alipay|￥10.00| 
+|[mingzaily](https://github.com/mingzaily)|alipay|￥30.00| 
+|[seny0929](https://gitee.com/seny0929)|alipay|￥9.90| 
+|Fly的狐狸|alipay|￥100.00| 
 
 
 <img src="https://goframe.org/images/donate.png"/>
