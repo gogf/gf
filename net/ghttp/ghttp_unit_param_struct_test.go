@@ -84,6 +84,8 @@ func Test_Params_Parse_Attr_Pointer(t *testing.T) {
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		t.Assert(client.PostContent("/parse1", `{"id":1,"name":"john"}`), `1john`)
 		t.Assert(client.PostContent("/parse2", `{"id":1,"name":"john"}`), `1john`)
+		t.Assert(client.PostContent("/parse2?id=1&name=john"), `1john`)
+		t.Assert(client.PostContent("/parse2", `id=1&name=john`), `1john`)
 	})
 }
 
