@@ -133,7 +133,7 @@ func Example_filter() {
 	fmt.Println(m1.Map())
 	fmt.Println(m2.Map())
 
-	// Output:
+	// May Output:
 	// map[k4:1]
 	// map[k1: k3:0 k4:1]
 }
