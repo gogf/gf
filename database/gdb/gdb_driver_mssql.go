@@ -15,10 +15,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/gogf/gf/internal/intlog"
-	"github.com/gogf/gf/text/gstr"
 	"strconv"
 	"strings"
+
+	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/text/gstr"
 
 	"github.com/gogf/gf/text/gregex"
 )
@@ -206,23 +207,43 @@ func (d *DriverMssql) TableFields(table string, schema ...string) (fields map[st
 				return nil
 			}
 			result, err = d.DB.DoGetAll(link, fmt.Sprintf(`
-			SELECT c.name as FIELD, CASE t.name 
-				WHEN 'numeric' THEN t.name + '(' + convert(varchar(20),c.xprec) + ',' + convert(varchar(20),c.xscale) + ')' 
-				WHEN 'char' THEN t.name + '(' + convert(varchar(20),c.length)+ ')'
-				WHEN 'varchar' THEN t.name + '(' + convert(varchar(20),c.length)+ ')'
-				ELSE t.name + '(' + convert(varchar(20),c.length)+ ')' END as TYPE
-			FROM systypes t,syscolumns c WHERE t.xtype=c.xtype 
-			AND c.id = (SELECT id FROM sysobjects WHERE name='%s') 
-			ORDER BY c.colid`, strings.ToUpper(table)))
+			SELECT a.name Field,
+	CASE b.name 
+		WHEN 'datetime' THEN 'datetime'
+		WHEN 'numeric' THEN b.name + '(' + convert(varchar(20),a.xprec) + ',' + convert(varchar(20),a.xscale) + ')' 
+		WHEN 'char' THEN b.name + '(' + convert(varchar(20),a.length)+ ')'
+		WHEN 'varchar' THEN b.name + '(' + convert(varchar(20),a.length)+ ')'
+		ELSE b.name + '(' + convert(varchar(20),a.length)+ ')' END as TYPE,
+	case when a.isnullable=1 then 'YES'else 'NO' end as [Null],
+	case when exists(SELECT 1 FROM sysobjects where xtype='PK' and name in (
+	  SELECT name FROM sysindexes WHERE indid in(
+	   SELECT indid FROM sysindexkeys WHERE id = a.id AND colid=a.colid
+	   ))) then 'PRI' else '' end AS [Key],
+	case when COLUMNPROPERTY(a.id,a.name,'IsIdentity')=1 then 'auto_increment'else '' end Extra,
+	isnull(e.text,'') as [Default],
+	isnull(g.[value],'') AS [Comment]
+	FROM syscolumns a
+	left join systypes b on a.xtype=b.xusertype
+	inner join sysobjects d on a.id=d.id and d.xtype='U' and d.name<>'dtproperties'
+	left join syscomments e on a.cdefault=e.id
+	left join sys.extended_properties g on a.id=g.major_id and a.colid=g.minor_id
+	left join sys.extended_properties f on d.id=f.major_id and f.minor_id =0
+	where d.name='%s'
+	order by a.id,a.colorder`, strings.ToUpper(table)))
 			if err != nil {
 				return nil
 			}
 			fields = make(map[string]*TableField)
 			for i, m := range result {
 				fields[strings.ToLower(m["FIELD"].String())] = &TableField{
-					Index: i,
-					Name:  strings.ToLower(m["FIELD"].String()),
-					Type:  strings.ToLower(m["TYPE"].String()),
+					Index:   i,
+					Name:    strings.ToLower(m["FIELD"].String()),
+					Type:    strings.ToLower(m["TYPE"].String()),
+					Null:    m["Null"].Bool(),
+					Key:     m["Key"].String(),
+					Default: m["Default"].Val(),
+					Extra:   m["Extra"].String(),
+					Comment: m["Comment"].String(),
 				}
 			}
 			return fields
