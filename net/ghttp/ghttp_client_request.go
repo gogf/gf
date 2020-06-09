@@ -223,10 +223,8 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 	// The request body can be reused for dumping
 	// raw HTTP request-response procedure.
 	reqBodyContent, _ := ioutil.ReadAll(req.Body)
+	resp.requestBody = reqBodyContent
 	req.Body = utils.NewReadCloser(reqBodyContent, false)
-	defer func() {
-		resp.request.Body = utils.NewReadCloser(reqBodyContent, true)
-	}()
 	for {
 		if resp.Response, err = c.Do(req); err != nil {
 			if c.retryCount > 0 {
