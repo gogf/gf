@@ -16,8 +16,9 @@ import (
 // ClientResponse is the struct for client request response.
 type ClientResponse struct {
 	*http.Response
-	request *http.Request
-	cookies map[string]string
+	request     *http.Request
+	requestBody []byte
+	cookies     map[string]string
 }
 
 // initCookie initializes the cookie map attribute of ClientResponse.

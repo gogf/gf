@@ -18,21 +18,11 @@ import (
 
 // dumpTextFormat is the format of the dumped raw string
 const dumpTextFormat = `+---------------------------------------------+
-|                   %s                  |
+|                   %s                   |
 +---------------------------------------------+
 %s
 %s
 `
-
-// getRequestBody returns the raw text of the request body.
-func getRequestBody(req *http.Request) string {
-	if req.Body == nil {
-		return ""
-	}
-	bodyContent, _ := ioutil.ReadAll(req.Body)
-	req.Body = utils.NewReadCloser(bodyContent, true)
-	return gconv.UnsafeBytesToStr(bodyContent)
-}
 
 // getResponseBody returns the text of the response body.
 func getResponseBody(res *http.Response) string {
@@ -60,9 +50,9 @@ func (r *ClientResponse) RawRequest() string {
 	}
 	return fmt.Sprintf(
 		dumpTextFormat,
-		"REQUEST ",
+		"REQUEST",
 		gconv.UnsafeBytesToStr(bs),
-		getRequestBody(r.request),
+		r.requestBody,
 	)
 }
 
