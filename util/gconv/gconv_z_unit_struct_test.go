@@ -109,7 +109,7 @@ func Test_Struct_Attr_Pointer(t *testing.T) {
 		}
 		user := new(User)
 		params := g.Map{
-			"uid":  1,
+			"uid":  "1",
 			"Name": "john",
 		}
 		if err := gconv.Struct(params, user); err != nil {
