@@ -158,7 +158,7 @@ func ExampleArray_Chunk() {
 	// [[1 2] [3 4] [5 6] [7 8] [9]]
 }
 
-func Example_popItem() {
+func ExampleArray_PopLeft() {
 	array := garray.NewFrom([]interface{}{1, 2, 3, 4, 5, 6, 7, 8, 9})
 
 	// Any Pop* functions pick, delete and return the item from array.
@@ -175,19 +175,55 @@ func Example_popItem() {
 	// [7 8]
 }
 
-func Example_walk() {
-	var array garray.StrArray
-	tables := g.SliceStr{"user", "user_detail"}
-	prefix := "gf_"
-	array.Append(tables...)
-	// Add prefix for given table names.
-	array.Walk(func(value string) string {
-		return prefix + value
-	})
-	fmt.Println(array.Slice())
+func ExampleArray_PopLefts() {
+	array := garray.NewFrom([]interface{}{1, 2, 3, 4, 5, 6, 7, 8, 9})
+
+	// Any Pop* functions pick, delete and return the item from array.
+
+	fmt.Println(array.PopLeft())
+	fmt.Println(array.PopLefts(2))
+	fmt.Println(array.PopRight())
+	fmt.Println(array.PopRights(2))
 
 	// Output:
-	// [gf_user gf_user_detail]
+	// 1 true
+	// [2 3]
+	// 9 true
+	// [7 8]
+}
+
+func ExampleArray_PopRight() {
+	array := garray.NewFrom([]interface{}{1, 2, 3, 4, 5, 6, 7, 8, 9})
+
+	// Any Pop* functions pick, delete and return the item from array.
+
+	fmt.Println(array.PopLeft())
+	fmt.Println(array.PopLefts(2))
+	fmt.Println(array.PopRight())
+	fmt.Println(array.PopRights(2))
+
+	// Output:
+	// 1 true
+	// [2 3]
+	// 9 true
+	// [7 8]
+}
+
+func ExampleArray_PopRights() {
+	array := garray.NewFrom([]interface{}{1, 2, 3, 4, 5, 6, 7, 8, 9})
+
+	// Any Pop* functions pick, delete and return the item from array.
+
+	fmt.Println(array.PopLeft())
+	fmt.Println(array.PopLefts(2))
+	fmt.Println(array.PopRight())
+	fmt.Println(array.PopRights(2))
+
+	// Output:
+	// 1 true
+	// [2 3]
+	// 9 true
+	// [7 8]
 }
 
 func ExampleArray_Contains() {
