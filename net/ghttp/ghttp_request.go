@@ -13,6 +13,7 @@ import (
 	"github.com/gogf/gf/os/gres"
 	"github.com/gogf/gf/os/gsession"
 	"github.com/gogf/gf/os/gview"
+	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/guid"
 	"net/http"
 	"strings"
@@ -50,6 +51,7 @@ type Request struct {
 	exit            bool                   // A bool marking whether current request is exited.
 	parsedHost      string                 // The parsed host name for current host used by GetHost function.
 	clientIp        string                 // The parsed client ip for current host used by GetClientIp function.
+	clientRealIp    string                 // The parsed client real ip for current host used by GetClientIp function.
 	bodyContent     []byte                 // Request body content.
 	isFileRequest   bool                   // A bool marking whether current request is file serving.
 	viewObject      *gview.View            // Custom template view engine object for this response.
@@ -162,6 +164,36 @@ func (r *Request) GetClientIp() string {
 		}
 	}
 	return r.clientIp
+}
+
+func (r *Request) GetClientRealIp() string {
+	if len(r.clientRealIp) == 0 {
+		readlIps := r.Header.Get("X-Forwarded-For")
+		if readlIps != "" && len(readlIps) != 0 && !strings.EqualFold("unknown", readlIps) {
+			ipArray := gstr.Split(readlIps, ",")
+			//	g.Log().Info("ipArray",ipArray)
+			r.clientRealIp = ipArray[0]
+		}
+		if r.clientRealIp == "" || len(readlIps) == 0 || strings.EqualFold("unknown", readlIps) {
+			r.clientRealIp = r.Header.Get("Proxy-Client-IP")
+		}
+		if r.clientRealIp == "" || len(readlIps) == 0 ||  strings.EqualFold("unknown", readlIps) {
+			r.clientRealIp = r.Header.Get("WL-Proxy-Client-IP")
+		}
+		if r.clientRealIp == "" || len(readlIps) == 0 ||  strings.EqualFold("unknown", readlIps) {
+			r.clientRealIp = r.Header.Get("HTTP_CLIENT_IP")
+		}
+		if r.clientRealIp == "" || len(readlIps) == 0 ||  strings.EqualFold("unknown", readlIps) {
+			r.clientRealIp = r.Header.Get("HTTP_X_FORWARDED_FOR")
+		}
+		if r.clientRealIp == "" || len(readlIps) == 0 ||  strings.EqualFold("unknown", readlIps) {
+			r.clientRealIp = r.Header.Get("X-Real-IP")
+		}
+		if r.clientRealIp == "" || len(readlIps) == 0 ||  strings.EqualFold("unknown", readlIps) {
+			r.clientRealIp = r.RemoteAddr
+		}
+	}
+	return r.clientRealIp
 }
 
 // GetUrl returns current URL of this request.
