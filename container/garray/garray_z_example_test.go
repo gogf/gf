@@ -178,7 +178,7 @@ func Example_walk() {
 	// [gf_user gf_user_detail]
 }
 
-func Example_contains() {
+func ExampleArray_Contains() {
 	var array garray.StrArray
 	array.Append("a")
 	fmt.Println(array.Contains("a"))
