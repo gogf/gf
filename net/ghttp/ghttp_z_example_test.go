@@ -11,7 +11,7 @@ import (
 	"github.com/gogf/gf/net/ghttp"
 )
 
-func Example_helloWorld() {
+func ExampleGetServer() {
 	s := g.Server()
 	s.BindHandler("/", func(r *ghttp.Request) {
 		r.Response.Write("hello world")
@@ -20,7 +20,7 @@ func Example_helloWorld() {
 	s.Run()
 }
 
-func Example_clientDump() {
+func ExampleClientResponse_RawDump() {
 	response, err := g.Client().Get("https://goframe.org")
 	if err != nil {
 		panic(err)
