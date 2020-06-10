@@ -12,7 +12,7 @@ import (
 	"github.com/gogf/gf/frame/g"
 )
 
-func Example_intersectDiffUnionComplement() {
+func ExampleSet_Intersect() {
 	s1 := gset.NewFrom(g.Slice{1, 2, 3})
 	s2 := gset.NewFrom(g.Slice{4, 5, 6})
 	s3 := gset.NewFrom(g.Slice{1, 2, 3, 4, 5, 6, 7})
@@ -29,7 +29,58 @@ func Example_intersectDiffUnionComplement() {
 	// [4 5 6 7]
 }
 
-func Example_isSubsetOf() {
+func ExampleSet_Diff() {
+	s1 := gset.NewFrom(g.Slice{1, 2, 3})
+	s2 := gset.NewFrom(g.Slice{4, 5, 6})
+	s3 := gset.NewFrom(g.Slice{1, 2, 3, 4, 5, 6, 7})
+
+	fmt.Println(s3.Intersect(s1).Slice())
+	fmt.Println(s3.Diff(s1).Slice())
+	fmt.Println(s1.Union(s2).Slice())
+	fmt.Println(s1.Complement(s3).Slice())
+
+	// May Output:
+	// [2 3 1]
+	// [5 6 7 4]
+	// [6 1 2 3 4 5]
+	// [4 5 6 7]
+}
+
+func ExampleSet_Union() {
+	s1 := gset.NewFrom(g.Slice{1, 2, 3})
+	s2 := gset.NewFrom(g.Slice{4, 5, 6})
+	s3 := gset.NewFrom(g.Slice{1, 2, 3, 4, 5, 6, 7})
+
+	fmt.Println(s3.Intersect(s1).Slice())
+	fmt.Println(s3.Diff(s1).Slice())
+	fmt.Println(s1.Union(s2).Slice())
+	fmt.Println(s1.Complement(s3).Slice())
+
+	// May Output:
+	// [2 3 1]
+	// [5 6 7 4]
+	// [6 1 2 3 4 5]
+	// [4 5 6 7]
+}
+
+func ExampleSet_Complement() {
+	s1 := gset.NewFrom(g.Slice{1, 2, 3})
+	s2 := gset.NewFrom(g.Slice{4, 5, 6})
+	s3 := gset.NewFrom(g.Slice{1, 2, 3, 4, 5, 6, 7})
+
+	fmt.Println(s3.Intersect(s1).Slice())
+	fmt.Println(s3.Diff(s1).Slice())
+	fmt.Println(s1.Union(s2).Slice())
+	fmt.Println(s1.Complement(s3).Slice())
+
+	// May Output:
+	// [2 3 1]
+	// [5 6 7 4]
+	// [6 1 2 3 4 5]
+	// [4 5 6 7]
+}
+
+func ExampleSet_IsSubsetOf() {
 	var s1, s2 gset.Set
 	s1.Add(g.Slice{1, 2, 3}...)
 	s2.Add(g.Slice{2, 3}...)
@@ -41,7 +92,7 @@ func Example_isSubsetOf() {
 	// true
 }
 
-func Example_addIfNotExist() {
+func ExampleSet_AddIfNotExist() {
 	var set gset.Set
 	fmt.Println(set.AddIfNotExist(1))
 	fmt.Println(set.AddIfNotExist(1))
@@ -53,7 +104,7 @@ func Example_addIfNotExist() {
 	// [1]
 }
 
-func Example_pop() {
+func ExampleSet_Pop() {
 	var set gset.Set
 	set.Add(1, 2, 3, 4)
 	fmt.Println(set.Pop())
@@ -66,7 +117,20 @@ func Example_pop() {
 	// 1
 }
 
-func Example_join() {
+func ExampleSet_Pops() {
+	var set gset.Set
+	set.Add(1, 2, 3, 4)
+	fmt.Println(set.Pop())
+	fmt.Println(set.Pops(2))
+	fmt.Println(set.Size())
+
+	// May Output:
+	// 1
+	// [2 3]
+	// 1
+}
+
+func ExampleSet_Join() {
 	var set gset.Set
 	set.Add("a", "b", "c", "d")
 	fmt.Println(set.Join(","))
@@ -75,7 +139,7 @@ func Example_join() {
 	// a,b,c,d
 }
 
-func Example_contains() {
+func ExampleSet_Contains() {
 	var set gset.StrSet
 	set.Add("a")
 	fmt.Println(set.Contains("a"))
@@ -88,7 +152,7 @@ func Example_contains() {
 	// true
 }
 
-func Example_Contains() {
+func ExampleSet_ContainsI() {
 	var set gset.StrSet
 	set.Add("a")
 	fmt.Println(set.Contains("a"))
@@ -99,21 +163,4 @@ func Example_Contains() {
 	// true
 	// false
 	// true
-}
-
-func Example_walk() {
-	var (
-		set    gset.StrSet
-		names  = g.SliceStr{"user", "user_detail"}
-		prefix = "gf_"
-	)
-	set.Add(names...)
-	// Add prefix for given table names.
-	set.Walk(func(item string) string {
-		return prefix + item
-	})
-	fmt.Println(set.Slice())
-
-	// May Output:
-	// [gf_user gf_user_detail]
 }
