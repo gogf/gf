@@ -121,9 +121,6 @@ func ExampleList_PopBack() {
 
 	// Output:
 	// 9
-	// [8 7]
-	// 1
-	// [2 3]
 }
 func ExampleList_PopBacks() {
 	l := glist.NewFrom(g.Slice{1, 2, 3, 4, 5, 6, 7, 8, 9})
