@@ -7,12 +7,16 @@
 package ghttp
 
 import (
+	"context"
 	"crypto/tls"
+	"net"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
 	"github.com/gogf/gf/text/gregex"
+	"golang.org/x/net/proxy"
 )
 
 // Client is the HTTP client for HTTP request management.
@@ -43,6 +47,73 @@ func NewClient() *Client {
 		header:  make(map[string]string),
 		cookies: make(map[string]string),
 	}
+}
+
+// NewClientWithProxy creates and returns a new HTTP client object using a proxy.
+// Will returns an HTTP client not using a proxy when the parameter `proxyUrl` is empty or in wrong pattern.
+// The correct pattern is like `http://USER:PASSWORD@IP:PORT` or `socks5://USER:PASSWORD@IP:PORT`.
+// Only `http` and `socks5` proxies are supported currently.
+func NewClientWithProxy(proxyUrl string) (client *Client) {
+	client = NewClient()
+	if strings.TrimSpace(proxyUrl) == "" {
+		return client
+	}
+
+	_proxy, err := url.Parse(proxyUrl)
+	if err != nil {
+		return client
+	}
+
+	if _proxy.Scheme == "http" {
+		client.Client.Transport = &http.Transport{
+			Proxy: http.ProxyURL(_proxy),
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+			DisableKeepAlives: true,
+		}
+		return client
+	}
+	if _proxy.Scheme == "socks5" {
+		var auth = &proxy.Auth{}
+		user := _proxy.User.Username()
+
+		if user != "" {
+			auth.User = user
+			password, hasPassword := _proxy.User.Password()
+			if hasPassword && password != "" {
+				auth.Password = password
+			}
+		} else {
+			auth = nil
+		}
+
+		dialer, err := proxy.SOCKS5(
+			"tcp",
+			_proxy.Host,
+			auth,
+			&net.Dialer{
+				Timeout:   30 * time.Second,
+				KeepAlive: 30 * time.Second,
+			},
+		)
+		if err != nil {
+			return client
+		}
+		client.Client.Transport = &http.Transport{
+			DialContext: func(ctx context.Context, network, addr string) (conn net.Conn, e error) {
+				return dialer.Dial(network, addr)
+			},
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+			DisableKeepAlives: true,
+		}
+		return client
+
+	}
+
+	return client
 }
 
 // Clone clones current client and returns a new one.
