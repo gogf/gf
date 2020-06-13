@@ -58,7 +58,7 @@ golang版本 >= 1.11
 
 # 架构
 <div align=center>
-<img src="https://goframe.org/images/arch.png?v=11"/>
+<img src="https://goframe.org/images/arch.png?v=12"/>
 </div>
 
 # 性能
