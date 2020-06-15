@@ -143,8 +143,8 @@ func (c *Cookie) RemoveCookie(key, domain, path string) {
 	c.SetCookie(key, "", domain, path, -86400)
 }
 
-// Output outputs the cookie items to client.
-func (c *Cookie) Output() {
+// Flush outputs the cookie items to client.
+func (c *Cookie) Flush() {
 	if len(c.data) == 0 {
 		return
 	}
