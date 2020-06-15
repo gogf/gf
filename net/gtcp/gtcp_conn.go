@@ -98,8 +98,9 @@ func (c *Conn) Send(data []byte, retry ...Retry) error {
 //
 // Note that,
 // 1. If length = 0, which means it receives the data from current buffer and returns immediately.
-// 2. If length < 0, which means it receives all data from buffer and returns if it waits til no data from connection.
-//    Developers should notice the package parsing yourself if you decide receiving all data from buffer.
+// 2. If length < 0, which means it receives all data from connection and returns it until no data
+//    from connection. Developers should notice the package parsing yourself if you decide receiving
+//    all data from buffer.
 // 3. If length > 0, which means it blocks reading data from connection until length size was received.
 //    It is the most commonly used length value for data receiving.
 func (c *Conn) Recv(length int, retry ...Retry) ([]byte, error) {
