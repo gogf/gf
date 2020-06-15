@@ -12,6 +12,116 @@ import (
 	"testing"
 )
 
+func Test_GetScan(t *testing.T) {
+	type User struct {
+		Name  string
+		Score float64
+	}
+	j := gjson.New(`[{"name":"john", "score":"100"},{"name":"smith", "score":"60"}]`)
+	gtest.C(t, func(t *gtest.T) {
+		var user *User
+		err := j.GetScan("1", &user)
+		t.Assert(err, nil)
+		t.Assert(user, &User{
+			Name:  "smith",
+			Score: 60,
+		})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var users []User
+		err := j.GetScan(".", &users)
+		t.Assert(err, nil)
+		t.Assert(users, []User{
+			{
+				Name:  "john",
+				Score: 100,
+			},
+			{
+				Name:  "smith",
+				Score: 60,
+			},
+		})
+	})
+}
+
+func Test_GetScanDeep(t *testing.T) {
+	type User struct {
+		Name  string
+		Score float64
+	}
+	j := gjson.New(`[{"name":"john", "score":"100"},{"name":"smith", "score":"60"}]`)
+	gtest.C(t, func(t *gtest.T) {
+		var user *User
+		err := j.GetScanDeep("1", &user)
+		t.Assert(err, nil)
+		t.Assert(user, &User{
+			Name:  "smith",
+			Score: 60,
+		})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var users []User
+		err := j.GetScanDeep(".", &users)
+		t.Assert(err, nil)
+		t.Assert(users, []User{
+			{
+				Name:  "john",
+				Score: 100,
+			},
+			{
+				Name:  "smith",
+				Score: 60,
+			},
+		})
+	})
+}
+
+func Test_ToScan(t *testing.T) {
+	type User struct {
+		Name  string
+		Score float64
+	}
+	j := gjson.New(`[{"name":"john", "score":"100"},{"name":"smith", "score":"60"}]`)
+	gtest.C(t, func(t *gtest.T) {
+		var users []User
+		err := j.ToScan(&users)
+		t.Assert(err, nil)
+		t.Assert(users, []User{
+			{
+				Name:  "john",
+				Score: 100,
+			},
+			{
+				Name:  "smith",
+				Score: 60,
+			},
+		})
+	})
+}
+
+func Test_ToScanDeep(t *testing.T) {
+	type User struct {
+		Name  string
+		Score float64
+	}
+	j := gjson.New(`[{"name":"john", "score":"100"},{"name":"smith", "score":"60"}]`)
+	gtest.C(t, func(t *gtest.T) {
+		var users []User
+		err := j.ToScanDeep(&users)
+		t.Assert(err, nil)
+		t.Assert(users, []User{
+			{
+				Name:  "john",
+				Score: 100,
+			},
+			{
+				Name:  "smith",
+				Score: 60,
+			},
+		})
+	})
+}
+
 func Test_ToStruct1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type BaseInfoItem struct {

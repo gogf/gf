@@ -226,13 +226,11 @@ func (m *Model) Scan(pointer interface{}, where ...interface{}) error {
 		return fmt.Errorf("params should be type of pointer, but got: %v", k)
 	}
 	switch t.Elem().Kind() {
-	case reflect.Array:
-	case reflect.Slice:
+	case reflect.Array, reflect.Slice:
 		return m.Structs(pointer, where...)
 	default:
 		return m.Struct(pointer, where...)
 	}
-	return nil
 }
 
 // Count does "SELECT COUNT(x) FROM ..." statement for the model.
