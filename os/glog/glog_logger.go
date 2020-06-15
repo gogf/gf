@@ -206,7 +206,7 @@ func (l *Logger) printToWriter(now time.Time, std io.Writer, buffer *bytes.Buffe
 		// Allow output to stdout?
 		if l.config.StdoutPrint {
 			if _, err := std.Write(buffer.Bytes()); err != nil {
-				panic(err)
+				intlog.Error(err)
 			}
 		}
 	} else {
