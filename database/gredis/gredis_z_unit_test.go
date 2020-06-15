@@ -7,6 +7,7 @@
 package gredis_test
 
 import (
+	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/util/guid"
 	"testing"
@@ -337,5 +338,47 @@ func Test_Auto_Marshal(t *testing.T) {
 		t.Assert(r.Struct(&user2), nil)
 		t.Assert(user2.Id, user.Id)
 		t.Assert(user2.Name, user.Name)
+	})
+}
+
+func Test_Auto_MarshalSlice(t *testing.T) {
+	var (
+		err   error
+		redis = gredis.New(config)
+		key   = guid.S()
+	)
+	defer redis.Do("DEL", key)
+
+	type User struct {
+		Id   int
+		Name string
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			result *gvar.Var
+			key    = "user-slice"
+			users1 = []User{
+				{
+					Id:   1,
+					Name: "john1",
+				},
+				{
+					Id:   2,
+					Name: "john2",
+				},
+			}
+		)
+
+		_, err = redis.Do("SET", key, users1)
+		t.Assert(err, nil)
+
+		result, err = redis.DoVar("GET", key)
+		t.Assert(err, nil)
+
+		var users2 []User
+		err = result.Structs(&users2)
+		t.Assert(err, nil)
+		t.Assert(users2, users1)
 	})
 }
