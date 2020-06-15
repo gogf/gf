@@ -7,6 +7,7 @@
 package gconv
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/errors/gerror"
@@ -38,9 +39,33 @@ func Maps(value interface{}, tags ...string) []map[string]interface{} {
 	if value == nil {
 		return nil
 	}
-	if r, ok := value.([]map[string]interface{}); ok {
+	switch r := value.(type) {
+	case string:
+		list := make([]map[string]interface{}, 0)
+		if len(r) > 0 && r[0] == '[' && r[len(r)-1] == ']' {
+			if err := json.Unmarshal([]byte(r), &list); err != nil {
+				return nil
+			}
+			return list
+		} else {
+			return nil
+		}
+
+	case []byte:
+		list := make([]map[string]interface{}, 0)
+		if len(r) > 0 && r[0] == '[' && r[len(r)-1] == ']' {
+			if err := json.Unmarshal(r, &list); err != nil {
+				return nil
+			}
+			return list
+		} else {
+			return nil
+		}
+
+	case []map[string]interface{}:
 		return r
-	} else {
+
+	default:
 		array := Interfaces(value)
 		if len(array) == 0 {
 			return nil
@@ -54,13 +79,39 @@ func Maps(value interface{}, tags ...string) []map[string]interface{} {
 }
 
 // MapsDeep converts <i> to []map[string]interface{} recursively.
+//
+// TODO completely implement the recursive converting for all types.
 func MapsDeep(value interface{}, tags ...string) []map[string]interface{} {
 	if value == nil {
 		return nil
 	}
-	if r, ok := value.([]map[string]interface{}); ok {
+	switch r := value.(type) {
+	case string:
+		list := make([]map[string]interface{}, 0)
+		if len(r) > 0 && r[0] == '[' && r[len(r)-1] == ']' {
+			if err := json.Unmarshal([]byte(r), &list); err != nil {
+				return nil
+			}
+			return list
+		} else {
+			return nil
+		}
+
+	case []byte:
+		list := make([]map[string]interface{}, 0)
+		if len(r) > 0 && r[0] == '[' && r[len(r)-1] == ']' {
+			if err := json.Unmarshal(r, &list); err != nil {
+				return nil
+			}
+			return list
+		} else {
+			return nil
+		}
+
+	case []map[string]interface{}:
 		return r
-	} else {
+
+	default:
 		array := Interfaces(value)
 		if len(array) == 0 {
 			return nil
@@ -110,6 +161,7 @@ func doStructs(params interface{}, pointer interface{}, deep bool, mapping ...ma
 			return fmt.Errorf("pointer should be type of pointer, but got: %v", kind)
 		}
 	}
+	params = Maps(params)
 	var (
 		reflectValue = reflect.ValueOf(params)
 		reflectKind  = reflectValue.Kind()

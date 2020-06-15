@@ -25,12 +25,12 @@ func (v *Var) StructDeep(pointer interface{}, mapping ...map[string]string) erro
 }
 
 // Structs converts and returns <v> as given struct slice.
-func (v *Var) Structs(pointer interface{}, mapping ...map[string]string) (err error) {
+func (v *Var) Structs(pointer interface{}, mapping ...map[string]string) error {
 	return gconv.Structs(v.Val(), pointer, mapping...)
 }
 
 // StructsDeep converts and returns <v> as given struct slice recursively.
-func (v *Var) StructsDeep(pointer interface{}, mapping ...map[string]string) (err error) {
+func (v *Var) StructsDeep(pointer interface{}, mapping ...map[string]string) error {
 	return gconv.StructsDeep(v.Val(), pointer, mapping...)
 }
 
@@ -38,7 +38,7 @@ func (v *Var) StructsDeep(pointer interface{}, mapping ...map[string]string) (er
 // <pointer> to implement the converting.
 // It calls function Struct if <pointer> is type of *struct/**struct to do the converting.
 // It calls function Structs if <pointer> is type of *[]struct/*[]*struct to do the converting.
-func (v *Var) Scan(pointer interface{}, mapping ...map[string]string) (err error) {
+func (v *Var) Scan(pointer interface{}, mapping ...map[string]string) error {
 	return gconv.Scan(v.Val(), pointer, mapping...)
 }
 
@@ -46,6 +46,6 @@ func (v *Var) Scan(pointer interface{}, mapping ...map[string]string) (err error
 // parameter <pointer> to implement the converting.
 // It calls function StructDeep if <pointer> is type of *struct/**struct to do the converting.
 // It calls function StructsDeep if <pointer> is type of *[]struct/*[]*struct to do the converting.
-func (v *Var) ScanDeep(pointer interface{}, mapping ...map[string]string) (err error) {
+func (v *Var) ScanDeep(pointer interface{}, mapping ...map[string]string) error {
 	return gconv.ScanDeep(v.Val(), pointer, mapping...)
 }

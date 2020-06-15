@@ -55,13 +55,23 @@ func Test_Map_Slice(t *testing.T) {
 	})
 }
 
-func Test_Maps(t *testing.T) {
+func Test_Maps_Basic(t *testing.T) {
 	params := g.Slice{
 		g.Map{"id": 100, "name": "john"},
 		g.Map{"id": 200, "name": "smith"},
 	}
 	gtest.C(t, func(t *gtest.T) {
 		list := gconv.Maps(params)
+		t.Assert(len(list), 2)
+		t.Assert(list[0]["id"], 100)
+		t.Assert(list[1]["id"], 200)
+	})
+}
+
+func Test_Maps_JsonStr(t *testing.T) {
+	jsonStr := `[{"id":100, "name":"john"},{"id":200, "name":"smith"}]`
+	gtest.C(t, func(t *gtest.T) {
+		list := gconv.Maps(jsonStr)
 		t.Assert(len(list), 2)
 		t.Assert(list[0]["id"], 100)
 		t.Assert(list[1]["id"], 200)
