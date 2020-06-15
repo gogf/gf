@@ -103,7 +103,7 @@ var (
 )
 
 // Check checks single value with specified rules.
-// It returns nil if with successful validation.
+// It returns nil if successful validation.
 //
 // The parameter <value> can be any type of variable, which will be converted to string
 // for validation.
@@ -113,6 +113,11 @@ var (
 // The optional parameter <params> specifies the extra validation parameters for some rules
 // like: required-*、same、different, etc.
 func Check(value interface{}, rules string, messages interface{}, params ...interface{}) *Error {
+	return doCheck("", value, rules, messages, params...)
+}
+
+// doCheck does the really rules validation for single key-value.
+func doCheck(key string, value interface{}, rules string, messages interface{}, params ...interface{}) *Error {
 	if rules == "" {
 		return nil
 	}
@@ -453,8 +458,7 @@ func Check(value interface{}, rules string, messages interface{}, params ...inte
 	}
 	if len(errorMsgs) > 0 {
 		return newError([]string{rules}, ErrorMap{
-			// Single rule validation has no key.
-			"": errorMsgs,
+			key: errorMsgs,
 		})
 	}
 	return nil

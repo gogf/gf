@@ -42,7 +42,7 @@ golang version >= 1.11
 
 # Architecture
 <div align=center>
-<img src="https://goframe.org/images/arch.png?v=11"/>
+<img src="https://goframe.org/images/arch.png?v=12"/>
 </div>
 
 # Performance

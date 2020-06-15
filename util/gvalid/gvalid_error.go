@@ -27,9 +27,7 @@ type ErrorMap map[string]map[string]string
 func newError(rules []string, errors map[string]map[string]string) *Error {
 	for field, m := range errors {
 		for k, v := range m {
-			if field != "" {
-				v = strings.Replace(v, ":attribute", field, -1)
-			}
+			v = strings.Replace(v, ":attribute", field, -1)
 			m[k], _ = gregex.ReplaceString(`\s{2,}`, ` `, v)
 		}
 		errors[field] = m

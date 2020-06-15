@@ -149,7 +149,7 @@ func CheckStruct(object interface{}, rules interface{}, messages ...CustomMsg) *
 		if v, ok := params[key]; ok {
 			value = v
 		}
-		if e := Check(value, rule, customMessage[key], params); e != nil {
+		if e := doCheck(key, value, rule, customMessage[key], params); e != nil {
 			_, item := e.FirstItem()
 			// If value is nil or empty string and has no required* rules,
 			// clear the error message.
