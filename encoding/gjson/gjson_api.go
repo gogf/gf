@@ -329,27 +329,39 @@ func (j *Json) GetStructsDeep(pattern string, pointer interface{}, mapping ...ma
 	return gconv.StructsDeep(j.Get(pattern), pointer, mapping...)
 }
 
-// GetMapToMap retrieves the value by specified <pattern> and converts it specified map variable.
+// GetScan automatically calls Struct or Structs function according to the type of parameter
+// <pointer> to implement the converting..
+func (j *Json) GetScan(pattern string, pointer interface{}, mapping ...map[string]string) error {
+	return gconv.Scan(j.Get(pattern), pointer, mapping...)
+}
+
+// GetScanDeep automatically calls StructDeep or StructsDeep function according to the type of
+// parameter <pointer> to implement the converting..
+func (j *Json) GetScanDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
+	return gconv.ScanDeep(j.Get(pattern), pointer, mapping...)
+}
+
+// GetMapToMap retrieves the value by specified <pattern> and converts it to specified map variable.
 // See gconv.MapToMap.
 func (j *Json) GetMapToMap(pattern string, pointer interface{}, mapping ...map[string]string) error {
 	return gconv.MapToMap(j.Get(pattern), pointer, mapping...)
 }
 
-// GetMapToMapDeep retrieves the value by specified <pattern> and converts it specified map
+// GetMapToMapDeep retrieves the value by specified <pattern> and converts it to specified map
 // variable recursively.
 // See gconv.MapToMapDeep.
 func (j *Json) GetMapToMapDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
 	return gconv.MapToMapDeep(j.Get(pattern), pointer, mapping...)
 }
 
-// GetMapToMaps retrieves the value by specified <pattern> and converts it specified map slice
+// GetMapToMaps retrieves the value by specified <pattern> and converts it to specified map slice
 // variable.
 // See gconv.MapToMaps.
 func (j *Json) GetMapToMaps(pattern string, pointer interface{}, mapping ...map[string]string) error {
 	return gconv.MapToMaps(j.Get(pattern), pointer, mapping...)
 }
 
-// GetMapToMapsDeep retrieves the value by specified <pattern> and converts it specified map slice
+// GetMapToMapsDeep retrieves the value by specified <pattern> and converts it to specified map slice
 // variable recursively.
 // See gconv.MapToMapsDeep.
 func (j *Json) GetMapToMapsDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
@@ -402,6 +414,18 @@ func (j *Json) ToStructsDeep(pointer interface{}, mapping ...map[string]string) 
 	j.mu.RLock()
 	defer j.mu.RUnlock()
 	return gconv.StructsDeep(*(j.p), pointer, mapping...)
+}
+
+// ToScan automatically calls Struct or Structs function according to the type of parameter
+// <pointer> to implement the converting..
+func (j *Json) ToScan(pointer interface{}, mapping ...map[string]string) error {
+	return gconv.Scan(*(j.p), pointer, mapping...)
+}
+
+// ToScanDeep automatically calls StructDeep or StructsDeep function according to the type of
+// parameter <pointer> to implement the converting..
+func (j *Json) ToScanDeep(pointer interface{}, mapping ...map[string]string) error {
+	return gconv.ScanDeep(*(j.p), pointer, mapping...)
 }
 
 // ToMapToMap converts current Json object to specified map variable.
