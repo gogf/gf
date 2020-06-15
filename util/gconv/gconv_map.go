@@ -37,6 +37,8 @@ func MapDeep(value interface{}, tags ...string) map[string]interface{} {
 
 // doMapConvert implements the map converting.
 // It automatically checks and converts json string to map if <value> is string/[]byte.
+//
+// TODO completely implement the recursive converting for all types.
 func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]interface{} {
 	if value == nil {
 		return nil
