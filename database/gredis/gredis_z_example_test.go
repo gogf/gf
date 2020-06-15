@@ -64,6 +64,43 @@ func Example_autoMarshalUnmarshalStruct() {
 	fmt.Println(user2.Id, user2.Name)
 }
 
+func Example_autoMarshalUnmarshalStructSlice() {
+	type User struct {
+		Id   int
+		Name string
+	}
+	var (
+		err    error
+		result *gvar.Var
+		key    = "user-slice"
+		users1 = []User{
+			{
+				Id:   1,
+				Name: "john1",
+			},
+			{
+				Id:   2,
+				Name: "john2",
+			},
+		}
+	)
+
+	_, err = g.Redis().Do("SET", key, users1)
+	if err != nil {
+		panic(err)
+	}
+	result, err = g.Redis().DoVar("GET", key)
+	if err != nil {
+		panic(err)
+	}
+
+	var users2 []User
+	if err = result.Structs(&users2); err != nil {
+		panic(err)
+	}
+	fmt.Println(users2)
+}
+
 func Example_hashSet() {
 	var (
 		err    error

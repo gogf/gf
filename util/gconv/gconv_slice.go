@@ -109,7 +109,11 @@ func MapsDeep(value interface{}, tags ...string) []map[string]interface{} {
 		}
 
 	case []map[string]interface{}:
-		return r
+		list := make([]map[string]interface{}, len(r))
+		for k, v := range r {
+			list[k] = MapDeep(v, tags...)
+		}
+		return list
 
 	default:
 		array := Interfaces(value)
