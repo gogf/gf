@@ -7,11 +7,12 @@
 package gsession
 
 import (
+	"time"
+
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/database/gredis"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/util/gconv"
-	"time"
 )
 
 // StorageRedisHashTable implements the Session Storage interface with redis hash table.
@@ -134,7 +135,7 @@ func (s *StorageRedisHashTable) GetSession(id string, ttl time.Duration, data *g
 // This copy all session data map from memory to storage.
 func (s *StorageRedisHashTable) SetSession(id string, data *gmap.StrAnyMap, ttl time.Duration) error {
 	intlog.Printf("StorageRedisHashTable.SetSession: %s, %v", id, ttl)
-	_, err := s.redis.Do("EXPIRE", s.key(id), ttl.Seconds())
+	_, err := s.redis.Do("EXPIRE", s.key(id), int64(ttl.Seconds()))
 	return err
 }
 
@@ -143,7 +144,7 @@ func (s *StorageRedisHashTable) SetSession(id string, data *gmap.StrAnyMap, ttl 
 // It just adds the session id to the async handling queue.
 func (s *StorageRedisHashTable) UpdateTTL(id string, ttl time.Duration) error {
 	intlog.Printf("StorageRedisHashTable.UpdateTTL: %s, %v", id, ttl)
-	_, err := s.redis.Do("EXPIRE", s.key(id), ttl.Seconds())
+	_, err := s.redis.Do("EXPIRE", s.key(id), int64(ttl.Seconds()))
 	return err
 }
 
