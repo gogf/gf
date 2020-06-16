@@ -171,25 +171,25 @@ func (tree *BTree) GetOrSetFuncLock(key interface{}, f func() interface{}) inter
 
 // GetVar returns a gvar.Var with the value by given <key>.
 // The returned gvar.Var is un-concurrent safe.
-func (tree *BTree) GetVar(key interface{}) *gvar.Var {
+func (tree *BTree) GetVar(key interface{}) gvar.Var {
 	return gvar.New(tree.Get(key))
 }
 
 // GetVarOrSet returns a gvar.Var with result from GetVarOrSet.
 // The returned gvar.Var is un-concurrent safe.
-func (tree *BTree) GetVarOrSet(key interface{}, value interface{}) *gvar.Var {
+func (tree *BTree) GetVarOrSet(key interface{}, value interface{}) gvar.Var {
 	return gvar.New(tree.GetOrSet(key, value))
 }
 
 // GetVarOrSetFunc returns a gvar.Var with result from GetOrSetFunc.
 // The returned gvar.Var is un-concurrent safe.
-func (tree *BTree) GetVarOrSetFunc(key interface{}, f func() interface{}) *gvar.Var {
+func (tree *BTree) GetVarOrSetFunc(key interface{}, f func() interface{}) gvar.Var {
 	return gvar.New(tree.GetOrSetFunc(key, f))
 }
 
 // GetVarOrSetFuncLock returns a gvar.Var with result from GetOrSetFuncLock.
 // The returned gvar.Var is un-concurrent safe.
-func (tree *BTree) GetVarOrSetFuncLock(key interface{}, f func() interface{}) *gvar.Var {
+func (tree *BTree) GetVarOrSetFuncLock(key interface{}, f func() interface{}) gvar.Var {
 	return gvar.New(tree.GetOrSetFuncLock(key, f))
 }
 

@@ -99,7 +99,7 @@ func (r *Request) Get(key string, def ...interface{}) interface{} {
 
 // GetVar is alis of GetRequestVar.
 // See GetRequestVar.
-func (r *Request) GetVar(key string, def ...interface{}) *gvar.Var {
+func (r *Request) GetVar(key string, def ...interface{}) gvar.Var {
 	return r.GetRequestVar(key, def...)
 }
 

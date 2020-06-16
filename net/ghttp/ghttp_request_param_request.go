@@ -46,9 +46,9 @@ func (r *Request) GetRequest(key string, def ...interface{}) interface{} {
 }
 
 // GetRequestVar retrieves and returns the parameter named <key> passed from client and
-// custom params as *gvar.Var, no matter what HTTP method the client is using. The parameter
+// custom params as gvar.Var, no matter what HTTP method the client is using. The parameter
 // <def> specifies the default value if the <key> does not exist.
-func (r *Request) GetRequestVar(key string, def ...interface{}) *gvar.Var {
+func (r *Request) GetRequestVar(key string, def ...interface{}) gvar.Var {
 	return gvar.New(r.GetRequest(key, def...))
 }
 
@@ -247,13 +247,13 @@ func (r *Request) GetRequestMapStrStr(kvMap ...map[string]interface{}) map[strin
 }
 
 // GetRequestMapStrVar retrieves and returns all parameters passed from client and custom
-// params as map[string]*gvar.Var, no matter what HTTP method the client is using. The parameter
+// params as map[string]gvar.Var, no matter what HTTP method the client is using. The parameter
 // <kvMap> specifies the keys retrieving from client parameters, the associated values are the
 // default values if the client does not pass.
-func (r *Request) GetRequestMapStrVar(kvMap ...map[string]interface{}) map[string]*gvar.Var {
+func (r *Request) GetRequestMapStrVar(kvMap ...map[string]interface{}) map[string]gvar.Var {
 	requestMap := r.GetRequestMap(kvMap...)
 	if len(requestMap) > 0 {
-		m := make(map[string]*gvar.Var, len(requestMap))
+		m := make(map[string]gvar.Var, len(requestMap))
 		for k, v := range requestMap {
 			m[k] = gvar.New(v)
 		}

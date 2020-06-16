@@ -356,7 +356,7 @@ func Test_Auto_MarshalSlice(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			result *gvar.Var
+			result gvar.Var
 			key    = "user-slice"
 			users1 = []User{
 				{

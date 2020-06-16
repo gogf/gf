@@ -241,33 +241,19 @@ func bindVarToStructAttr(elem reflect.Value, name string, value interface{}) (er
 	return nil
 }
 
-// bindVarToStructByIndex sets value to struct object attribute by index.
-func bindVarToStructByIndex(elem reflect.Value, index int, value interface{}) (err error) {
-	structFieldValue := elem.FieldByIndex([]int{index})
-	if !structFieldValue.IsValid() {
-		return nil
-	}
-	// CanSet checks whether attribute is public accessible.
-	if !structFieldValue.CanSet() {
-		return nil
-	}
-	// If any panic, it secondly uses reflect conversion and assignment.
-	defer func() {
-		if recover() != nil {
-			err = bindVarToReflectValue(structFieldValue, value)
-		}
-	}()
-	if empty.IsNil(value) {
-		structFieldValue.Set(reflect.Zero(structFieldValue.Type()))
-	} else {
-		// It firstly simply assigns the value to the attribute.
-		structFieldValue.Set(reflect.ValueOf(Convert(value, structFieldValue.Type().String())))
-	}
-	return nil
-}
-
 // bindVarToReflectValue sets <value> to reflect value object <structFieldValue>.
 func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}) (err error) {
+	// Converting using interface.
+	if v, ok := structFieldValue.Interface().(apiSet); ok {
+		v.Set(value)
+		return nil
+	} else if v, ok := structFieldValue.Interface().(apiUnmarshalValue); ok {
+		err = v.UnmarshalValue(value)
+		if err == nil {
+			return err
+		}
+	}
+	// Converting by kind.
 	switch structFieldValue.Kind() {
 	case reflect.Struct:
 		if err := Struct(value, structFieldValue); err != nil {
