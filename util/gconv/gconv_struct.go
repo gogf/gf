@@ -244,15 +244,18 @@ func bindVarToStructAttr(elem reflect.Value, name string, value interface{}) (er
 // bindVarToReflectValue sets <value> to reflect value object <structFieldValue>.
 func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}) (err error) {
 	// Converting using interface.
-	if v, ok := structFieldValue.Interface().(apiSet); ok {
-		v.Set(value)
-		return nil
-	} else if v, ok := structFieldValue.Interface().(apiUnmarshalValue); ok {
-		err = v.UnmarshalValue(value)
-		if err == nil {
-			return err
+	if !structFieldValue.IsNil() {
+		if v, ok := structFieldValue.Interface().(apiSet); ok {
+			v.Set(value)
+			return nil
+		} else if v, ok := structFieldValue.Interface().(apiUnmarshalValue); ok {
+			err = v.UnmarshalValue(value)
+			if err == nil {
+				return err
+			}
 		}
 	}
+
 	// Converting by kind.
 	switch structFieldValue.Kind() {
 	case reflect.Struct:
