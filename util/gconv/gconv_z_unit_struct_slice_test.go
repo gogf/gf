@@ -96,3 +96,50 @@ func Test_Struct_Slice(t *testing.T) {
 		t.Assert(user.Scores, array)
 	})
 }
+
+func Test_Struct_SliceWithTag(t *testing.T) {
+	type User struct {
+		Uid      int    `json:"id"`
+		NickName string `json:"name"`
+	}
+	gtest.C(t, func(t *gtest.T) {
+		var users []User
+		params := g.Slice{
+			g.Map{
+				"id":   1,
+				"name": "name1",
+			},
+			g.Map{
+				"id":   2,
+				"name": "name2",
+			},
+		}
+		err := gconv.Structs(params, &users)
+		t.Assert(err, nil)
+		t.Assert(len(users), 2)
+		t.Assert(users[0].Uid, 1)
+		t.Assert(users[0].NickName, "name1")
+		t.Assert(users[1].Uid, 2)
+		t.Assert(users[1].NickName, "name2")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var users []*User
+		params := g.Slice{
+			g.Map{
+				"id":   1,
+				"name": "name1",
+			},
+			g.Map{
+				"id":   2,
+				"name": "name2",
+			},
+		}
+		err := gconv.Structs(params, &users)
+		t.Assert(err, nil)
+		t.Assert(len(users), 2)
+		t.Assert(users[0].Uid, 1)
+		t.Assert(users[0].NickName, "name1")
+		t.Assert(users[1].Uid, 2)
+		t.Assert(users[1].NickName, "name2")
+	})
+}

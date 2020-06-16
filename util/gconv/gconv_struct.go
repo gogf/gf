@@ -103,7 +103,8 @@ func Struct(params interface{}, pointer interface{}, mapping ...map[string]strin
 			}
 		}
 	}
-	// The key of the map is the attribute name of the struct,
+
+	// The key of the attrMap is the attribute name of the struct,
 	// and the value is its replaced name for later comparison to improve performance.
 	var (
 		attrMap  = make(map[string]string)
@@ -121,10 +122,17 @@ func Struct(params interface{}, pointer interface{}, mapping ...map[string]strin
 	if len(attrMap) == 0 {
 		return nil
 	}
+
+	// The key of the tagMap is the attribute name of the struct,
+	// and the value is its replaced tag name for later comparison to improve performance.
+	tagMap := make(map[string]string)
+	for k, v := range structs.TagMapName(pointer, structTagPriority, true) {
+		tagMap[v] = replaceCharReg.ReplaceAllString(k, "")
+	}
+
 	var (
 		attrName  string
 		checkName string
-		tagMap    = structs.TagMapName(pointer, structTagPriority, true)
 	)
 	for mapK, mapV := range paramsMap {
 		attrName = ""
@@ -134,22 +142,22 @@ func Struct(params interface{}, pointer interface{}, mapping ...map[string]strin
 
 		// Matching the parameters to struct tag names.
 		// The <tagV> is the attribute name of the struct.
-		for tagK, tagV := range tagMap {
-			if strings.EqualFold(checkName, tagK) {
-				attrName = tagV
+		for attrKey, cmpKey := range tagMap {
+			if strings.EqualFold(checkName, cmpKey) {
+				attrName = attrKey
 				break
 			}
 		}
 
 		// Matching the parameters to struct attributes.
-		for attrK, attrV := range attrMap {
+		for attrKey, cmpKey := range attrMap {
 			// Eg:
 			// UserName  eq user_name
 			// User-Name eq username
 			// username  eq userName
 			// etc.
-			if strings.EqualFold(checkName, attrV) {
-				attrName = attrK
+			if strings.EqualFold(checkName, cmpKey) {
+				attrName = attrKey
 				break
 			}
 		}

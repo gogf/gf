@@ -824,6 +824,34 @@ func Test_Model_Structs(t *testing.T) {
 	})
 }
 
+func Test_Model_StructsWithJsonTag(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Uid      int `json:"id"`
+			Passport string
+			Password string
+			Name     string     `json:"nick_name"`
+			Time     gtime.Time `json:"create_time"`
+		}
+		var users []User
+		err := db.Table(table).Order("id asc").Structs(&users)
+		if err != nil {
+			gtest.Error(err)
+		}
+		t.Assert(len(users), SIZE)
+		t.Assert(users[0].Uid, 1)
+		t.Assert(users[1].Uid, 2)
+		t.Assert(users[2].Uid, 3)
+		t.Assert(users[0].Name, "name_1")
+		t.Assert(users[1].Name, "name_2")
+		t.Assert(users[2].Name, "name_3")
+		t.Assert(users[0].Time.String(), "2018-10-24 10:00:00")
+	})
+}
+
 func Test_Model_Scan(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
