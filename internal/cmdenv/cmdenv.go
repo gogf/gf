@@ -42,7 +42,7 @@ func doInit() {
 // Fetching Rules:
 // 1. Command line arguments are in lowercase format, eg: gf.<package name>.<variable name>;
 // 2. Environment arguments are in uppercase format, eg: GF_<package name>_<variable name>；
-func Get(key string, def ...interface{}) *gvar.Var {
+func Get(key string, def ...interface{}) gvar.Var {
 	value := interface{}(nil)
 	if len(def) > 0 {
 		value = def[0]

@@ -8,6 +8,7 @@ package gdb
 
 import (
 	"fmt"
+	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/util/gconv"
 	"reflect"
 )
@@ -118,12 +119,12 @@ func (m *Model) Value(fieldsAndWhere ...interface{}) (Value, error) {
 	}
 	one, err := m.One()
 	if err != nil {
-		return nil, err
+		return gvar.New(nil), err
 	}
 	for _, v := range one {
 		return v, nil
 	}
-	return nil, nil
+	return gvar.New(nil), nil
 }
 
 // Array queries and returns data values as slice from database.

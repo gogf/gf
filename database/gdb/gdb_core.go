@@ -244,12 +244,12 @@ func (c *Core) GetScan(pointer interface{}, sql string, args ...interface{}) err
 func (c *Core) GetValue(sql string, args ...interface{}) (Value, error) {
 	one, err := c.DB.GetOne(sql, args...)
 	if err != nil {
-		return nil, err
+		return gvar.New(nil), err
 	}
 	for _, v := range one {
 		return v, nil
 	}
-	return nil, nil
+	return gvar.New(nil), nil
 }
 
 // GetCount queries and returns the count from database.
