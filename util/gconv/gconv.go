@@ -253,6 +253,7 @@ func Convert(i interface{}, t string, params ...interface{}) interface{} {
 		return Maps(i)
 
 	case "gvar.Var":
+		// TODO remove reflect usage to create gvar.Var, considering using unsafe pointer
 		rv := reflect.New(intstore.ReflectTypeVarImp)
 		ri := rv.Interface()
 		if v, ok := ri.(apiSet); ok {
