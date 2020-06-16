@@ -46,7 +46,7 @@ func (r *Request) GetQuery(key string, def ...interface{}) interface{} {
 	return nil
 }
 
-func (r *Request) GetQueryVar(key string, def ...interface{}) *gvar.Var {
+func (r *Request) GetQueryVar(key string, def ...interface{}) gvar.Var {
 	return gvar.New(r.GetQuery(key, def...))
 }
 
@@ -172,13 +172,13 @@ func (r *Request) GetQueryMapStrStr(kvMap ...map[string]interface{}) map[string]
 }
 
 // GetQueryMapStrVar retrieves and returns all parameters passed from client using HTTP GET method
-// as map[string]*gvar.Var. The parameter <kvMap> specifies the keys
+// as map[string]gvar.Var. The parameter <kvMap> specifies the keys
 // retrieving from client parameters, the associated values are the default values if the client
 // does not pass.
-func (r *Request) GetQueryMapStrVar(kvMap ...map[string]interface{}) map[string]*gvar.Var {
+func (r *Request) GetQueryMapStrVar(kvMap ...map[string]interface{}) map[string]gvar.Var {
 	queryMap := r.GetQueryMap(kvMap...)
 	if len(queryMap) > 0 {
-		m := make(map[string]*gvar.Var, len(queryMap))
+		m := make(map[string]gvar.Var, len(queryMap))
 		for k, v := range queryMap {
 			m[k] = gvar.New(v)
 		}

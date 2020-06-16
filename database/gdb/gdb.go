@@ -173,7 +173,7 @@ type Link interface {
 
 type (
 	// Value is the field value type.
-	Value = *gvar.Var
+	Value = gvar.Var
 
 	// Record is the row record of the table.
 	Record map[string]Value

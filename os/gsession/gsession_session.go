@@ -248,7 +248,7 @@ func (s *Session) Get(key string, def ...interface{}) interface{} {
 	return nil
 }
 
-func (s *Session) GetVar(key string, def ...interface{}) *gvar.Var {
+func (s *Session) GetVar(key string, def ...interface{}) gvar.Var {
 	return gvar.New(s.Get(key, def...), true)
 }
 

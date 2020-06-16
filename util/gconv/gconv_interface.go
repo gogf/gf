@@ -51,3 +51,8 @@ type apiMapStrAny interface {
 type apiUnmarshalValue interface {
 	UnmarshalValue(interface{}) error
 }
+
+// apiSet is the interface for custom value assignment.
+type apiSet interface {
+	Set(value interface{}) (old interface{})
+}

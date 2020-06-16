@@ -23,7 +23,7 @@ func (c *Config) Get(pattern string, def ...interface{}) interface{} {
 	return nil
 }
 
-func (c *Config) GetVar(pattern string, def ...interface{}) *gvar.Var {
+func (c *Config) GetVar(pattern string, def ...interface{}) gvar.Var {
 	if j := c.getJson(); j != nil {
 		return gvar.New(j.Get(pattern, def...))
 	}

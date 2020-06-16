@@ -40,8 +40,8 @@ func Get(key interface{}) interface{} {
 	return cache.Get(key)
 }
 
-// GetVar retrieves and returns the value of <key> as *gvar.Var.
-func GetVar(key interface{}) *gvar.Var {
+// GetVar retrieves and returns the value of <key> as gvar.Var.
+func GetVar(key interface{}) gvar.Var {
 	return cache.GetVar(key)
 }
 

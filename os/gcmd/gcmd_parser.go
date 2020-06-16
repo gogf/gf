@@ -170,8 +170,8 @@ func (p *Parser) GetOpt(name string, def ...string) string {
 	return ""
 }
 
-// GetOptVar returns the option value named <name> as *gvar.Var.
-func (p *Parser) GetOptVar(name string, def ...interface{}) *gvar.Var {
+// GetOptVar returns the option value named <name> as gvar.Var.
+func (p *Parser) GetOptVar(name string, def ...interface{}) gvar.Var {
 	if p.ContainsOpt(name) {
 		return gvar.New(p.GetOpt(name))
 	}
@@ -203,8 +203,8 @@ func (p *Parser) GetArg(index int, def ...string) string {
 	return ""
 }
 
-// GetArgVar returns the argument at <index> as *gvar.Var.
-func (p *Parser) GetArgVar(index int, def ...string) *gvar.Var {
+// GetArgVar returns the argument at <index> as gvar.Var.
+func (p *Parser) GetArgVar(index int, def ...string) gvar.Var {
 	return gvar.New(p.GetArg(index, def...))
 }
 

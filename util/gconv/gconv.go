@@ -12,6 +12,7 @@ package gconv
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gogf/gf/internal/intstore"
 	"github.com/gogf/gf/os/gtime"
 	"reflect"
 	"strconv"
@@ -250,6 +251,18 @@ func Convert(i interface{}, t string, params ...interface{}) interface{} {
 
 	case "[]map[string]interface{}":
 		return Maps(i)
+
+	case "gvar.Var":
+		rv := reflect.New(intstore.ReflectTypeVarImp)
+		ri := rv.Interface()
+		if v, ok := ri.(apiSet); ok {
+			v.Set(i)
+		} else if v, ok := ri.(apiUnmarshalValue); ok {
+			v.UnmarshalValue(i)
+		} else {
+			rv.Set(reflect.ValueOf(i))
+		}
+		return ri
 
 	default:
 		return i
