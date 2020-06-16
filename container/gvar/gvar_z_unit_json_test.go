@@ -47,7 +47,7 @@ func Test_Json(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		var v gvar.Var
+		var v gvar.VarImp
 		s := "i love gf"
 		b, err := json.Marshal(s)
 		t.Assert(err, nil)

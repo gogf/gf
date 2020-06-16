@@ -68,13 +68,13 @@ func (j *Json) Get(pattern string, def ...interface{}) interface{} {
 	return nil
 }
 
-// GetVar returns a *gvar.Var with value by given <pattern>.
-func (j *Json) GetVar(pattern string, def ...interface{}) *gvar.Var {
+// GetVar returns a gvar.Var with value by given <pattern>.
+func (j *Json) GetVar(pattern string, def ...interface{}) gvar.Var {
 	return gvar.New(j.Get(pattern, def...))
 }
 
-// GetVars returns []*gvar.Var with value by given <pattern>.
-func (j *Json) GetVars(pattern string, def ...interface{}) []*gvar.Var {
+// GetVars returns []gvar.Var with value by given <pattern>.
+func (j *Json) GetVars(pattern string, def ...interface{}) []gvar.Var {
 	return gvar.New(j.Get(pattern, def...)).Vars()
 }
 
