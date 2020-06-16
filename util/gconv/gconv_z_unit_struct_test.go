@@ -155,7 +155,6 @@ func Test_Struct_Attr_Slice1(t *testing.T) {
 //	})
 //}
 
-// 属性为struct对象
 func Test_Struct_Attr_Struct(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Score struct {
