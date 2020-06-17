@@ -517,8 +517,10 @@ func FormatSqlWithArgs(sql string, args []interface{}) string {
 				if args[index] == nil {
 					return "null"
 				}
-				rv := reflect.ValueOf(args[index])
-				kind := rv.Kind()
+				var (
+					rv   = reflect.ValueOf(args[index])
+					kind = rv.Kind()
+				)
 				if kind == reflect.Ptr {
 					if rv.IsNil() || !rv.IsValid() {
 						return "null"
