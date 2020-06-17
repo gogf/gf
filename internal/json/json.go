@@ -13,7 +13,7 @@ import (
 	"io"
 )
 
-// ConfigCompatibleWithStandardLibrary tries to be 90% compatible
+// ConfigCompatibleWithStandardLibrary tries to be 80% compatible
 // with standard library behavior.
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
@@ -65,5 +65,5 @@ func NewDecoder(reader io.Reader) *jsoniter.Decoder {
 
 // Valid reports whether data is a valid JSON encoding.
 func Valid(data []byte) bool {
-	return json.Valid(data)
+	return json2.Valid(data)
 }
