@@ -11,7 +11,7 @@ package glist
 import (
 	"bytes"
 	"container/list"
-	"encoding/json"
+	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/util/gconv"
 
 	"github.com/gogf/gf/internal/rwmutex"

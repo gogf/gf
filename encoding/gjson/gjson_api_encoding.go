@@ -7,11 +7,11 @@
 package gjson
 
 import (
-	"encoding/json"
 	"github.com/gogf/gf/encoding/gini"
 	"github.com/gogf/gf/encoding/gtoml"
 	"github.com/gogf/gf/encoding/gxml"
 	"github.com/gogf/gf/encoding/gyaml"
+	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/util/gconv"
 )
 

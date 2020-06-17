@@ -8,8 +8,8 @@ package gutil
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
+	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/util/gconv"
 	"os"
 	"reflect"

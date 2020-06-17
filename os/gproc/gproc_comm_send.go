@@ -7,8 +7,8 @@
 package gproc
 
 import (
-	"encoding/json"
 	"errors"
+	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/net/gtcp"
 	"io"
 )

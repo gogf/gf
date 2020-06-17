@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/test/gtest"
 )
 
+// TODO
 func Test_Table_Join(t *testing.T) {
 	var (
 		tableUser       = "user_" + gtime.TimestampMicroStr()
@@ -22,7 +23,7 @@ func Test_Table_Join(t *testing.T) {
 	if _, err := db.Exec(fmt.Sprintf(`
 CREATE TABLE %s (
   uid int(10) unsigned NOT NULL AUTO_INCREMENT,
-  name varchar(45) NOT NULL COMMENT,
+  name varchar(45) NOT NULL,
   PRIMARY KEY (uid)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
     `, tableUser)); err != nil {
@@ -33,7 +34,7 @@ CREATE TABLE %s (
 	if _, err := db.Exec(fmt.Sprintf(`
 CREATE TABLE %s (
   uid int(10) unsigned NOT NULL AUTO_INCREMENT,
-  name varchar(45) NOT NULL COMMENT,
+  name varchar(45) NOT NULL,
   PRIMARY KEY (uid)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
     `, tableUserDetail)); err != nil {
@@ -54,6 +55,5 @@ CREATE TABLE %s (
 			User       *EntityUser
 			UserDetail *EntityUserDetail
 		}
-
 	})
 }
