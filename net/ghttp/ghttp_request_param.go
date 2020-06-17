@@ -8,12 +8,12 @@ package ghttp
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/encoding/gurl"
 	"github.com/gogf/gf/encoding/gxml"
+	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/internal/utils"
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/text/gstr"

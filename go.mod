@@ -11,6 +11,7 @@ require (
 	github.com/gorilla/websocket v1.4.1
 	github.com/gqcn/structs v1.1.1
 	github.com/grokify/html-strip-tags-go v0.0.0-20190921062105-daaa06bf1aaf
+	github.com/json-iterator/go v1.1.10
 	github.com/mattn/go-runewidth v0.0.9 // indirect
 	github.com/olekukonko/tablewriter v0.0.1
 	golang.org/x/sys v0.0.0-20200610111108-226ff32320da // indirect

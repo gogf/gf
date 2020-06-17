@@ -7,7 +7,7 @@
 package gvar
 
 import (
-	"encoding/json"
+	"github.com/gogf/gf/internal/json"
 	"time"
 
 	"github.com/gogf/gf/internal/empty"

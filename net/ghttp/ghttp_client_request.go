@@ -8,9 +8,9 @@ package ghttp
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/internal/utils"
 	"io"
 	"io/ioutil"

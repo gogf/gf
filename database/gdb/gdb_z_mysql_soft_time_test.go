@@ -148,6 +148,74 @@ CREATE TABLE %s (
 	})
 }
 
+func Test_SoftDelete(t *testing.T) {
+	table := "time_test_table"
+	if _, err := db.Exec(fmt.Sprintf(`
+CREATE TABLE %s (
+  id        int(11) NOT NULL,
+  name      varchar(45) DEFAULT NULL,
+  create_at datetime DEFAULT NULL,
+  update_at datetime DEFAULT NULL,
+  delete_at datetime DEFAULT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    `, table)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(table)
+	db.SetDebug(true)
+	gtest.C(t, func(t *gtest.T) {
+		for i := 1; i <= 10; i++ {
+			data := g.Map{
+				"id":   i,
+				"name": fmt.Sprintf("name_%d", i),
+			}
+			r, err := db.Table(table).Data(data).Insert()
+			t.Assert(err, nil)
+			n, _ := r.RowsAffected()
+			t.Assert(n, 1)
+		}
+	})
+	gtest.C(t, func(t *gtest.T) {
+		one, err := db.Table(table).FindOne(1)
+		t.Assert(err, nil)
+		t.AssertNE(one["create_at"].String(), "")
+		t.AssertNE(one["update_at"].String(), "")
+		t.Assert(one["delete_at"].String(), "")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		one, err := db.Table(table).FindOne(10)
+		t.Assert(err, nil)
+		t.AssertNE(one["create_at"].String(), "")
+		t.AssertNE(one["update_at"].String(), "")
+		t.Assert(one["delete_at"].String(), "")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		ids := g.SliceInt{1, 3, 5}
+		r, err := db.Table(table).Where("id", ids).Delete()
+		t.Assert(err, nil)
+		n, _ := r.RowsAffected()
+		t.Assert(n, 3)
+
+		count, err := db.Table(table).FindCount(ids)
+		t.Assert(err, nil)
+		t.Assert(count, 0)
+
+		all, err := db.Table(table).Unscoped().FindAll(ids)
+		t.Assert(err, nil)
+		t.Assert(len(all), 3)
+		t.AssertNE(all[0]["create_at"].String(), "")
+		t.AssertNE(all[0]["update_at"].String(), "")
+		t.AssertNE(all[0]["delete_at"].String(), "")
+		t.AssertNE(all[1]["create_at"].String(), "")
+		t.AssertNE(all[1]["update_at"].String(), "")
+		t.AssertNE(all[1]["delete_at"].String(), "")
+		t.AssertNE(all[2]["create_at"].String(), "")
+		t.AssertNE(all[2]["update_at"].String(), "")
+		t.AssertNE(all[2]["delete_at"].String(), "")
+	})
+}
+
 func Test_SoftDelete_Join(t *testing.T) {
 	table1 := "time_test_table1"
 	if _, err := db.Exec(fmt.Sprintf(`
