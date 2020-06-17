@@ -9,7 +9,7 @@ package gset
 
 import (
 	"bytes"
-	"encoding/json"
+	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/internal/rwmutex"
 	"github.com/gogf/gf/util/gconv"
 )

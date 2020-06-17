@@ -9,7 +9,7 @@ package gres
 import (
 	"archive/zip"
 	"bytes"
-	"encoding/json"
+	"github.com/gogf/gf/internal/json"
 	"io"
 	"os"
 )

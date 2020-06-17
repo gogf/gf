@@ -8,7 +8,7 @@
 package gmap
 
 import (
-	"encoding/json"
+	"github.com/gogf/gf/internal/json"
 
 	"github.com/gogf/gf/internal/empty"
 	"github.com/gogf/gf/internal/rwmutex"

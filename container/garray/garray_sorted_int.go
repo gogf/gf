@@ -8,8 +8,8 @@ package garray
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
+	"github.com/gogf/gf/internal/json"
 	"math"
 	"sort"
 

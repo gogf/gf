@@ -158,7 +158,7 @@ func (m *Model) Array(fieldsAndWhere ...interface{}) ([]Value, error) {
 // see Model.Where.
 //
 // Note that it returns sql.ErrNoRows if there's no record retrieved with the given conditions
-// from table.
+// from table and <pointer> is not nil.
 //
 // Eg:
 // user := new(User)
@@ -182,14 +182,14 @@ func (m *Model) Struct(pointer interface{}, where ...interface{}) error {
 // see Model.Where.
 //
 // Note that it returns sql.ErrNoRows if there's no record retrieved with the given conditions
-// from table.
+// from table and <pointer> is not empty.
 //
 // Eg:
 // users := ([]User)(nil)
-// err := db.Table("user").Structs(&users)
+// err   := db.Table("user").Structs(&users)
 //
 // users := ([]*User)(nil)
-// err := db.Table("user").Structs(&users)
+// err   := db.Table("user").Structs(&users)
 func (m *Model) Structs(pointer interface{}, where ...interface{}) error {
 	all, err := m.All(where...)
 	if err != nil {
@@ -216,10 +216,10 @@ func (m *Model) Structs(pointer interface{}, where ...interface{}) error {
 // err  := db.Table("user").Where("id", 1).Struct(&user)
 //
 // users := ([]User)(nil)
-// err := db.Table("user").Structs(&users)
+// err   := db.Table("user").Structs(&users)
 //
 // users := ([]*User)(nil)
-// err := db.Table("user").Structs(&users)
+// err   := db.Table("user").Structs(&users)
 func (m *Model) Scan(pointer interface{}, where ...interface{}) error {
 	t := reflect.TypeOf(pointer)
 	k := t.Kind()

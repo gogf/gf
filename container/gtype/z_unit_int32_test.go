@@ -7,8 +7,8 @@
 package gtype_test
 
 import (
-	"encoding/json"
 	"github.com/gogf/gf/container/gtype"
+	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/test/gtest"
 	"github.com/gogf/gf/util/gconv"
 	"math"

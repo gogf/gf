@@ -7,7 +7,7 @@
 package gjson_test
 
 import (
-	"encoding/json"
+	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/util/gconv"
 	"testing"
 

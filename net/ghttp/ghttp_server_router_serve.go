@@ -7,8 +7,8 @@
 package ghttp
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/gogf/gf/internal/json"
 	"strings"
 
 	"github.com/gogf/gf/container/glist"

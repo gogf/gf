@@ -10,9 +10,9 @@ package gini
 import (
 	"bufio"
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/internal/json"
 	"io"
 	"strings"
 )

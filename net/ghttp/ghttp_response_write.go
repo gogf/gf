@@ -8,8 +8,8 @@
 package ghttp
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/gogf/gf/internal/json"
 	"net/http"
 
 	"github.com/gogf/gf/encoding/gparser"

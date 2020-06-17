@@ -8,9 +8,9 @@ package garray
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"github.com/gogf/gf/internal/empty"
+	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gutil"
 	"math"

@@ -7,10 +7,10 @@
 package gconv
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/internal/json"
 	"reflect"
 )
 
