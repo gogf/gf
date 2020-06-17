@@ -7,7 +7,7 @@
 package gyaml_test
 
 import (
-	"encoding/json"
+	"github.com/gogf/gf/internal/json"
 	"testing"
 
 	"github.com/gogf/gf/encoding/gparser"

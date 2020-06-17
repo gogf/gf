@@ -7,8 +7,8 @@
 package gproc
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/gogf/gf/internal/json"
 	"net"
 
 	"github.com/gogf/gf/container/gqueue"

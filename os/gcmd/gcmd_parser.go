@@ -8,8 +8,8 @@
 package gcmd
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/gogf/gf/internal/json"
 	"os"
 	"strings"
 

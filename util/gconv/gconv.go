@@ -10,9 +10,9 @@
 package gconv
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/gogf/gf/internal/intstore"
+	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/os/gtime"
 	"reflect"
 	"strconv"

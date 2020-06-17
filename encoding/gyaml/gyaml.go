@@ -8,7 +8,7 @@
 package gyaml
 
 import (
-	"encoding/json"
+	"github.com/gogf/gf/internal/json"
 	"gopkg.in/yaml.v3"
 
 	"github.com/gogf/gf/util/gconv"

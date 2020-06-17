@@ -7,7 +7,7 @@
 package gconv_test
 
 import (
-	"encoding/json"
+	"github.com/gogf/gf/internal/json"
 	"testing"
 	"time"
 

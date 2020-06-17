@@ -8,9 +8,9 @@ package gjson
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/internal/json"
 	"reflect"
 
 	"github.com/gogf/gf/encoding/gini"
