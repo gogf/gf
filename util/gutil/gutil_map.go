@@ -26,13 +26,13 @@ func MapContains(data map[string]interface{}, key string) (ok bool) {
 	return
 }
 
-// MapDelete deletes all <key> from map <data>.
-func MapDelete(data map[string]interface{}, key ...string) {
+// MapDelete deletes all <keys> from map <data>.
+func MapDelete(data map[string]interface{}, keys ...string) {
 	if data == nil {
 		return
 	}
-	for _, v := range key {
-		delete(data, v)
+	for _, key := range keys {
+		delete(data, key)
 	}
 }
 
@@ -78,6 +78,8 @@ func MapPossibleItemByKey(data map[string]interface{}, key string) (foundKey str
 
 // MapContainsPossibleKey checks if the given <key> is contained in given map <data>.
 // It checks the key with or without cases or chars '-'/'_'/'.'/' '.
+//
+// Note that this function might be of low performance.
 func MapContainsPossibleKey(data map[string]interface{}, key string) bool {
 	if k, _ := MapPossibleItemByKey(data, key); k != "" {
 		return true
