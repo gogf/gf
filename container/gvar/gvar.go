@@ -62,6 +62,8 @@ type Var interface {
 	MapToMaps(pointer interface{}, mapping ...map[string]string) (err error)
 	MapToMapsDeep(pointer interface{}, mapping ...map[string]string) (err error)
 
+	Scan(pointer interface{}, mapping ...map[string]string) error
+	ScanDeep(pointer interface{}, mapping ...map[string]string) error
 	Struct(pointer interface{}, mapping ...map[string]string) error
 	StructDeep(pointer interface{}, mapping ...map[string]string) error
 	Structs(pointer interface{}, mapping ...map[string]string) (err error)
