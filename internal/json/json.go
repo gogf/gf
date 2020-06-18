@@ -13,8 +13,9 @@ import (
 	"io"
 )
 
-// ConfigCompatibleWithStandardLibrary tries to be 80% compatible
+// ConfigCompatibleWithStandardLibrary tries to be 50% compatible
 // with standard library behavior.
+// 50% - -!
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 // Marshal adapts to json/encoding Marshal API.
@@ -49,8 +50,8 @@ func Unmarshal(data []byte, v interface{}) error {
 }
 
 // NewEncoder same as json.NewEncoder
-func NewEncoder(writer io.Writer) *jsoniter.Encoder {
-	return json.NewEncoder(writer)
+func NewEncoder(writer io.Writer) *json2.Encoder {
+	return json2.NewEncoder(writer)
 }
 
 // NewDecoder adapts to json/stream NewDecoder API.
@@ -59,8 +60,8 @@ func NewEncoder(writer io.Writer) *jsoniter.Encoder {
 //
 // Instead of a json/encoding Decoder, an Decoder is returned
 // Refer to https://godoc.org/encoding/json#NewDecoder for more information.
-func NewDecoder(reader io.Reader) *jsoniter.Decoder {
-	return json.NewDecoder(reader)
+func NewDecoder(reader io.Reader) *json2.Decoder {
+	return json2.NewDecoder(reader)
 }
 
 // Valid reports whether data is a valid JSON encoding.
