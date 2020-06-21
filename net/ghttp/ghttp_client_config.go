@@ -147,3 +147,14 @@ func (c *Client) SetRetry(retryCount int, retryInterval time.Duration) *Client {
 	c.retryInterval = retryInterval
 	return c
 }
+
+// SetRedirectLimit limit the number of jumps
+func (c *Client) SetRedirectLimit(redirectLimit int) *Client {
+	c.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		if len(via) >= redirectLimit {
+			return http.ErrUseLastResponse
+		}
+		return nil
+	}
+	return c
+}
