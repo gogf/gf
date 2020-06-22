@@ -135,3 +135,17 @@ func (c *Client) Retry(retryCount int, retryInterval time.Duration) *Client {
 	newClient.SetRetry(retryCount, retryInterval)
 	return c
 }
+
+// Proxy is a chaining function,
+// which sets proxy for next request.
+// Make sure you pass the correct `proxyURL`.
+// The correct pattern is like `http://USER:PASSWORD@IP:PORT` or `socks5://USER:PASSWORD@IP:PORT`.
+// Only `http` and `socks5` proxies are supported currently.
+func (c *Client) Proxy(proxyURL string) *Client {
+	newClient := c
+	if c.parent == nil {
+		newClient = c.Clone()
+	}
+	newClient.SetProxy(proxyURL)
+	return c
+}
