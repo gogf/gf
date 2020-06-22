@@ -170,6 +170,7 @@ func (p *Pool) checkExpireItems() {
 		if r := p.list.PopFront(); r != nil {
 			item := r.(*poolItem)
 			latestExpire = item.expire
+			// TODO improve the auto-expiration mechanism of the pool.
 			if item.expire > timestampMilli {
 				p.list.PushFront(item)
 				break
