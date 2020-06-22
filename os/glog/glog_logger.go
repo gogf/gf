@@ -51,6 +51,7 @@ const (
 	F_TIME_DATE              // Print the date in the local time zone: 2009-01-23.
 	F_TIME_TIME              // Print the time in the local time zone: 01:23:23.
 	F_TIME_MILLI             // Print the time with milliseconds in the local time zone: 01:23:23.675.
+	F_CALLER_FN              // Print Caller function name and package: main.main
 	F_TIME_STD   = F_TIME_DATE | F_TIME_MILLI
 )
 
@@ -124,18 +125,21 @@ func (l *Logger) print(std io.Writer, lead string, values ...interface{}) {
 				buffer.WriteByte(' ')
 			}
 		}
-		// Caller path.
-		callerPath := ""
-		if l.config.Flags&F_FILE_LONG > 0 {
-			_, path, line := gdebug.CallerWithFilter(gPATH_FILTER_KEY, l.config.StSkip)
-			callerPath = fmt.Sprintf(`%s:%d: `, path, line)
-		}
-		if l.config.Flags&F_FILE_SHORT > 0 {
-			_, path, line := gdebug.CallerWithFilter(gPATH_FILTER_KEY, l.config.StSkip)
-			callerPath = fmt.Sprintf(`%s:%d: `, gfile.Basename(path), line)
-		}
-		if len(callerPath) > 0 {
+		// Caller path and Fn name.
+		if l.config.Flags&(F_FILE_LONG|F_FILE_SHORT|F_CALLER_FN) > 0 {
+			callerPath := ""
+			callerFnName, path, line := gdebug.CallerWithFilter(gPATH_FILTER_KEY, l.config.StSkip)
+			if l.config.Flags&F_CALLER_FN > 0 {
+				buffer.WriteString(fmt.Sprintf(`[%s] `, callerFnName))
+			}
+			if l.config.Flags&F_FILE_LONG > 0 {
+				callerPath = fmt.Sprintf(`%s:%d: `, path, line)
+			}
+			if l.config.Flags&F_FILE_SHORT > 0 {
+				callerPath = fmt.Sprintf(`%s:%d: `, gfile.Basename(path), line)
+			}
 			buffer.WriteString(callerPath)
+
 		}
 		// Prefix.
 		if len(l.config.Prefix) > 0 {
