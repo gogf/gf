@@ -6,9 +6,9 @@
 
 package gutil
 
-// CopySlice does a shallow copy of slice <data> for most commonly used slice type
+// SliceCopy does a shallow copy of slice <data> for most commonly used slice type
 // []interface{}.
-func CopySlice(data []interface{}) []interface{} {
+func SliceCopy(data []interface{}) []interface{} {
 	newData := make([]interface{}, len(data))
 	copy(newData, data)
 	return newData
