@@ -10,7 +10,11 @@ import (
 	"context"
 	"crypto/tls"
 	"github.com/gogf/gf/text/gstr"
+	"golang.org/x/net/proxy"
+	"net"
 	"net/http"
+	"net/url"
+	"strings"
 	"time"
 
 	"github.com/gogf/gf/text/gregex"
@@ -157,4 +161,62 @@ func (c *Client) SetRedirectLimit(redirectLimit int) *Client {
 		return nil
 	}
 	return c
+}
+
+// SetProxy set proxy for the client.
+// This func will do nothing when the parameter `proxyURL` is empty or in wrong pattern.
+// The correct pattern is like `http://USER:PASSWORD@IP:PORT` or `socks5://USER:PASSWORD@IP:PORT`.
+// Only `http` and `socks5` proxies are supported currently.
+func (c *Client) SetProxy(proxyURL string) {
+	if strings.TrimSpace(proxyURL) == "" {
+		return
+	}
+	_proxy, err := url.Parse(proxyURL)
+	if err != nil {
+		return
+	}
+	if _proxy.Scheme == "http" {
+		c.Transport = &http.Transport{
+			Proxy: http.ProxyURL(_proxy),
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+			DisableKeepAlives: true,
+		}
+	} else {
+		var auth = &proxy.Auth{}
+		user := _proxy.User.Username()
+
+		if user != "" {
+			auth.User = user
+			password, hasPassword := _proxy.User.Password()
+			if hasPassword && password != "" {
+				auth.Password = password
+			}
+		} else {
+			auth = nil
+		}
+		// refer to the source code, error is always nil
+		dialer, err := proxy.SOCKS5(
+			"tcp",
+			_proxy.Host,
+			auth,
+			&net.Dialer{
+				Timeout:   30 * time.Second,
+				KeepAlive: 30 * time.Second,
+			},
+		)
+		if err != nil {
+			return
+		}
+		c.Transport = &http.Transport{
+			DialContext: func(ctx context.Context, network, addr string) (conn net.Conn, e error) {
+				return dialer.Dial(network, addr)
+			},
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+			DisableKeepAlives: true,
+		}
+	}
 }
