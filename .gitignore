@@ -6,7 +6,7 @@
 .idea/
 .settings/
 .vscode/
-vender/
+vendor/
 composer.lock
 gitpush.sh
 pkg/
