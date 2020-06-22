@@ -67,6 +67,9 @@ var (
 
 // Format formats and returns the formatted result with custom <format>.
 func (t *Time) Format(format string) string {
+	if t == nil {
+		return ""
+	}
 	runes := []rune(format)
 	buffer := bytes.NewBuffer(nil)
 	for i := 0; i < len(runes); {
