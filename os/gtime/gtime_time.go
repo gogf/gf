@@ -43,6 +43,7 @@ func NewFromTime(t time.Time) *Time {
 }
 
 // NewFromStr creates and returns a Time object with given string.
+// Note that it returns nil if there's error occurs.
 func NewFromStr(str string) *Time {
 	if t, err := StrToTime(str); err == nil {
 		return t
@@ -52,6 +53,7 @@ func NewFromStr(str string) *Time {
 
 // NewFromStrFormat creates and returns a Time object with given string and
 // custom format like: Y-m-d H:i:s.
+// Note that it returns nil if there's error occurs.
 func NewFromStrFormat(str string, format string) *Time {
 	if t, err := StrToTimeFormat(str, format); err == nil {
 		return t
@@ -61,6 +63,7 @@ func NewFromStrFormat(str string, format string) *Time {
 
 // NewFromStrLayout creates and returns a Time object with given string and
 // stdlib layout like: 2006-01-02 15:04:05.
+// Note that it returns nil if there's error occurs.
 func NewFromStrLayout(str string, layout string) *Time {
 	if t, err := StrToTimeLayout(str, layout); err == nil {
 		return t
