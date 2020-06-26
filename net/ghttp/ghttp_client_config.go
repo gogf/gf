@@ -176,13 +176,7 @@ func (c *Client) SetProxy(proxyURL string) {
 		return
 	}
 	if _proxy.Scheme == "http" {
-		c.Transport = &http.Transport{
-			Proxy: http.ProxyURL(_proxy),
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: true,
-			},
-			DisableKeepAlives: true,
-		}
+		c.Transport.(*http.Transport).Proxy = http.ProxyURL(_proxy)
 	} else {
 		var auth = &proxy.Auth{}
 		user := _proxy.User.Username()
@@ -202,21 +196,16 @@ func (c *Client) SetProxy(proxyURL string) {
 			_proxy.Host,
 			auth,
 			&net.Dialer{
-				Timeout:   30 * time.Second,
-				KeepAlive: 30 * time.Second,
+				Timeout:   10 * time.Second,
+				KeepAlive: 10 * time.Second,
 			},
 		)
 		if err != nil {
 			return
 		}
-		c.Transport = &http.Transport{
-			DialContext: func(ctx context.Context, network, addr string) (conn net.Conn, e error) {
-				return dialer.Dial(network, addr)
-			},
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: true,
-			},
-			DisableKeepAlives: true,
+		c.Transport.(*http.Transport).DialContext = func(ctx context.Context, network, addr string) (conn net.Conn, e error) {
+			return dialer.Dial(network, addr)
 		}
+		//c.SetTimeout(10*time.Second)
 	}
 }
