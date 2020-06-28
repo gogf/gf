@@ -11,10 +11,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/gogf/gf/internal/utils"
 	"reflect"
 	"regexp"
 	"strings"
+
+	"github.com/gogf/gf/internal/utils"
 
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/os/gtime"
@@ -64,12 +65,13 @@ func (c *Core) DoQuery(link Link, sql string, args ...interface{}) (rows *sql.Ro
 		rows, err = link.Query(sql, args...)
 		mTime2 := gtime.TimestampMilli()
 		s := &Sql{
-			Sql:    sql,
-			Args:   args,
-			Format: FormatSqlWithArgs(sql, args),
-			Error:  err,
-			Start:  mTime1,
-			End:    mTime2,
+			Sql:         sql,
+			Args:        args,
+			Format:      FormatSqlWithArgs(sql, args),
+			Error:       err,
+			Start:       mTime1,
+			End:         mTime2,
+			DBGroupName: c.group,
 		}
 		c.writeSqlToLogger(s)
 	} else {
@@ -781,7 +783,7 @@ func (c *Core) MarshalJSON() ([]byte, error) {
 // writeSqlToLogger outputs the sql object to logger.
 // It is enabled when configuration "debug" is true.
 func (c *Core) writeSqlToLogger(v *Sql) {
-	s := fmt.Sprintf("[%3d ms] %s", v.End-v.Start, v.Format)
+	s := fmt.Sprintf("[%s] [%3d ms] %s", v.DBGroupName, v.End-v.Start, v.Format)
 	if v.Error != nil {
 		s += "\nError: " + v.Error.Error()
 		c.logger.StackWithFilter(gPATH_FILTER_KEY).Error(s)

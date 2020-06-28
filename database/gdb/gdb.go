@@ -11,9 +11,10 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/internal/intlog"
-	"time"
 
 	"github.com/gogf/gf/os/glog"
 
@@ -144,12 +145,13 @@ type Driver interface {
 
 // Sql is the sql recording struct.
 type Sql struct {
-	Sql    string        // SQL string(may contain reserved char '?').
-	Args   []interface{} // Arguments for this sql.
-	Format string        // Formatted sql which contains arguments in the sql.
-	Error  error         // Execution result.
-	Start  int64         // Start execution timestamp in milliseconds.
-	End    int64         // End execution timestamp in milliseconds.
+	Sql         string        // SQL string(may contain reserved char '?').
+	Args        []interface{} // Arguments for this sql.
+	Format      string        // Formatted sql which contains arguments in the sql.
+	Error       error         // Execution result.
+	Start       int64         // Start execution timestamp in milliseconds.
+	End         int64         // End execution timestamp in milliseconds.
+	DBGroupName string        // DBGroupName is which database call the sql.
 }
 
 // TableField is the struct for table field.
