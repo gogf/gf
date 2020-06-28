@@ -202,8 +202,10 @@ const (
 var (
 	// ErrNoRows is alias of sql.ErrNoRows.
 	ErrNoRows = sql.ErrNoRows
+
 	// instances is the management map for instances.
 	instances = gmap.NewStrAnyMap(true)
+
 	// driverMap manages all custom registered driver.
 	driverMap = map[string]Driver{
 		"mysql":  &DriverMysql{},
@@ -212,6 +214,14 @@ var (
 		"oracle": &DriverOracle{},
 		"sqlite": &DriverSqlite{},
 	}
+
+	// lastOperatorRegPattern is the regular expression pattern for a string
+	// which has operator at its tail.
+	lastOperatorRegPattern = `[<>=]+\s*$`
+
+	// regularFieldNameRegPattern is the regular expression pattern for a string
+	// which is a regular field name of table.
+	regularFieldNameRegPattern = `^[\w\.\-]+$`
 )
 
 // Register registers custom database driver to gdb.

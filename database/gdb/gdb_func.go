@@ -257,9 +257,11 @@ func formatSql(sql string, args []interface{}) (newQuery string, newArgs []inter
 // formatWhere formats where statement and its arguments.
 // TODO []interface{} type support for parameter <where> does not completed yet.
 func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool) (newWhere string, newArgs []interface{}) {
-	buffer := bytes.NewBuffer(nil)
-	rv := reflect.ValueOf(where)
-	kind := rv.Kind()
+	var (
+		buffer = bytes.NewBuffer(nil)
+		rv     = reflect.ValueOf(where)
+		kind   = rv.Kind()
+	)
 	if kind == reflect.Ptr {
 		rv = rv.Elem()
 		kind = rv.Kind()
@@ -270,7 +272,7 @@ func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool) (
 
 	case reflect.Map:
 		for key, value := range DataToMapDeep(where) {
-			if omitEmpty && empty.IsEmpty(value) {
+			if gregex.IsMatchString(regularFieldNameRegPattern, key) && omitEmpty && empty.IsEmpty(value) {
 				continue
 			}
 			newArgs = formatWhereKeyValue(db, buffer, newArgs, key, value)
@@ -283,10 +285,11 @@ func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool) (
 		// which implement apiIterator interface and are index-friendly for where conditions.
 		if iterator, ok := where.(apiIterator); ok {
 			iterator.Iterator(func(key, value interface{}) bool {
-				if omitEmpty && empty.IsEmpty(value) {
+				ketStr := gconv.String(key)
+				if gregex.IsMatchString(regularFieldNameRegPattern, ketStr) && omitEmpty && empty.IsEmpty(value) {
 					return true
 				}
-				newArgs = formatWhereKeyValue(db, buffer, newArgs, gconv.String(key), value)
+				newArgs = formatWhereKeyValue(db, buffer, newArgs, ketStr, value)
 				return true
 			})
 			break
@@ -309,10 +312,10 @@ func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool) (
 	newWhere = buffer.String()
 	if len(newArgs) > 0 {
 		if gstr.Pos(newWhere, "?") == -1 {
-			if lastOperatorReg.MatchString(newWhere) {
+			if gregex.IsMatchString(lastOperatorRegPattern, newWhere) {
 				// Eg: Where/And/Or("uid>=", 1)
 				newWhere += "?"
-			} else if gregex.IsMatchString(`^[\w\.\-]+$`, newWhere) {
+			} else if gregex.IsMatchString(regularFieldNameRegPattern, newWhere) {
 				newWhere = db.QuoteString(newWhere)
 				if len(newArgs) > 0 {
 					if utils.IsArray(newArgs[0]) {
@@ -362,8 +365,10 @@ func formatWhereKeyValue(db DB, buffer *bytes.Buffer, newArgs []interface{}, key
 	// If the value is type of slice, and there's only one '?' holder in
 	// the key string, it automatically adds '?' holder chars according to its arguments count
 	// and converts it to "IN" statement.
-	rv := reflect.ValueOf(value)
-	kind := rv.Kind()
+	var (
+		rv   = reflect.ValueOf(value)
+		kind = rv.Kind()
+	)
 	switch kind {
 	case reflect.Slice, reflect.Array:
 		count := gstr.Count(quotedKey, "?")
@@ -379,7 +384,7 @@ func formatWhereKeyValue(db DB, buffer *bytes.Buffer, newArgs []interface{}, key
 		}
 	default:
 		if value == nil || empty.IsNil(rv) {
-			if gregex.IsMatchString(`^[\w\.\-]+$`, key) {
+			if gregex.IsMatchString(regularFieldNameRegPattern, key) {
 				// The key is a single field name.
 				buffer.WriteString(quotedKey + " IS NULL")
 			} else {
@@ -392,11 +397,24 @@ func formatWhereKeyValue(db DB, buffer *bytes.Buffer, newArgs []interface{}, key
 			if gstr.Pos(quotedKey, "?") == -1 {
 				like := " like"
 				if len(quotedKey) > len(like) && gstr.Equal(quotedKey[len(quotedKey)-len(like):], like) {
+					// Eg: Where(g.Map{"name like": "john%"})
 					buffer.WriteString(quotedKey + " ?")
-				} else if lastOperatorReg.MatchString(quotedKey) {
+				} else if gregex.IsMatchString(lastOperatorRegPattern, quotedKey) {
+					// Eg: Where(g.Map{"age > ": 16})
 					buffer.WriteString(quotedKey + " ?")
-				} else {
+				} else if gregex.IsMatchString(regularFieldNameRegPattern, key) {
+					// The key is a regular field name.
 					buffer.WriteString(quotedKey + "=?")
+				} else {
+					// The key is not a regular field name.
+					// Eg: Where(g.Map{"age > 16": nil})
+					// Issue: https://github.com/gogf/gf/issues/765
+					if empty.IsEmpty(value) {
+						buffer.WriteString(quotedKey)
+						break
+					} else {
+						buffer.WriteString(quotedKey + "=?")
+					}
 				}
 			} else {
 				buffer.WriteString(quotedKey)
