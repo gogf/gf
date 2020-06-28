@@ -183,6 +183,7 @@ func init() {
 // which is false in default.
 //
 // Note that this feature switch is not for single server instance but for whole process.
+// Deprecated, use configuration of ghttp.Server for controlling this feature.
 func SetGraceful(enabled bool) {
 	gracefulEnabled = enabled
 }

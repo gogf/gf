@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/text/gstr"
 	"os"
 	"runtime"
 	"strings"
@@ -112,7 +113,7 @@ func forkReloadProcess(newExeFilePath ...string) error {
 		for fdk, fdv := range m {
 			if len(fdv) > 0 {
 				s := ""
-				for _, item := range strings.Split(fdv, ",") {
+				for _, item := range gstr.SplitAndTrim(fdv, ",") {
 					array := strings.Split(item, "#")
 					fd := uintptr(gconv.Uint(array[1]))
 					if fd > 0 {
