@@ -109,12 +109,13 @@ func (c *Core) DoExec(link Link, sql string, args ...interface{}) (result sql.Re
 		}
 		mTime2 := gtime.TimestampMilli()
 		s := &Sql{
-			Sql:    sql,
-			Args:   args,
-			Format: FormatSqlWithArgs(sql, args),
-			Error:  err,
-			Start:  mTime1,
-			End:    mTime2,
+			Sql:         sql,
+			Args:        args,
+			Format:      FormatSqlWithArgs(sql, args),
+			Error:       err,
+			Start:       mTime1,
+			End:         mTime2,
+			DBGroupName: c.group,
 		}
 		c.writeSqlToLogger(s)
 	} else {
