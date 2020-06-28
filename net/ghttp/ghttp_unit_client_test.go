@@ -268,3 +268,26 @@ func Test_Client_Chain_ContentXml(t *testing.T) {
 		t.Assert(c.ContentXml().PostContent("/xml", User{"john", 100}), "john100")
 	})
 }
+
+func Test_Client_Param_Containing_Special_Char(t *testing.T) {
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/", func(r *ghttp.Request) {
+		r.Response.Write("k1=", r.Get("k1"), "&k2=", r.Get("k2"))
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		c := ghttp.NewClient()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		t.Assert(c.PostContent("/", "k1=MTIxMg==&k2=100"), "k1=MTIxMg==&k2=100")
+		t.Assert(c.PostContent("/", g.Map{
+			"k1": "MTIxMg==",
+			"k2": 100,
+		}), "k1=MTIxMg==&k2=100")
+	})
+}
