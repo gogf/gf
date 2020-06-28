@@ -163,7 +163,7 @@ CREATE TABLE %s (
 		gtest.Error(err)
 	}
 	defer dropTable(table)
-	db.SetDebug(true)
+	// db.SetDebug(true)
 	gtest.C(t, func(t *gtest.T) {
 		for i := 1; i <= 10; i++ {
 			data := g.Map{

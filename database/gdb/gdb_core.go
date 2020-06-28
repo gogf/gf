@@ -13,7 +13,6 @@ import (
 	"fmt"
 	"github.com/gogf/gf/internal/utils"
 	"reflect"
-	"regexp"
 	"strings"
 
 	"github.com/gogf/gf/container/gvar"
@@ -24,12 +23,6 @@ import (
 
 const (
 	gPATH_FILTER_KEY = "/database/gdb/gdb"
-)
-
-var (
-	// lastOperatorReg is the regular expression object for a string
-	// which has operator at its tail.
-	lastOperatorReg = regexp.MustCompile(`[<>=]+\s*$`)
 )
 
 // Master creates and returns a connection from master node if master-slave configured.

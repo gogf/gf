@@ -1286,6 +1286,29 @@ func Test_Model_Where_ISNULL_2(t *testing.T) {
 	})
 }
 
+func Test_Model_Where_OmitEmpty(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		conditions := g.Map{
+			"id < 4": "",
+		}
+		result, err := db.Table(table).WherePri(conditions).Order("id asc").All()
+		t.Assert(err, nil)
+		t.Assert(len(result), 3)
+		t.Assert(result[0]["id"].Int(), 1)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		conditions := g.Map{
+			"id < 4": "",
+		}
+		result, err := db.Table(table).WherePri(conditions).OmitEmpty().Order("id asc").All()
+		t.Assert(err, nil)
+		t.Assert(len(result), 3)
+		t.Assert(result[0]["id"].Int(), 1)
+	})
+}
+
 func Test_Model_Where_GTime(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
