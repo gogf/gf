@@ -70,7 +70,7 @@ func (g *gzipHandler) handler(r *ghttp.Request) {
 	if _, err := gz.Write(r.Response.Buffer()); err != nil {
 		return
 	}
-	if err := gz.Flush(); err != nil {
+	if err := gz.Close(); err != nil {
 		return
 	}
 	r.Response.SetBuffer(buffer.Bytes())
