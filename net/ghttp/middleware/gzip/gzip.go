@@ -11,6 +11,7 @@ import (
 	"sync"
 )
 
+// Compress level
 const (
 	BestCompression    = gzip.BestCompression
 	BestSpeed          = gzip.BestSpeed
@@ -28,11 +29,13 @@ type gzipHandler struct {
 	gzPool  sync.Pool
 }
 
+// Compress Options Control whether compression is turned on
 type CompressOptions struct {
 	ExcludeExt *gset.Set
 	UseGzip    func(r *ghttp.Request) bool
 }
 
+// gzip compress Middleware
 func Compress(level int, options *CompressOptions) func(r *ghttp.Request) {
 	var gzPool sync.Pool
 	gzPool.New = func() interface{} {
@@ -61,11 +64,15 @@ func (g *gzipHandler) handler(r *ghttp.Request) {
 	defer gz.Reset(ioutil.Discard)
 	gz.Reset(&buffer)
 	defer func() {
-		gz.Close()
+		_ = gz.Close()
 	}()
 	r.Middleware.Next()
-	gz.Write(r.Response.Buffer())
-	gz.Flush()
+	if _, err := gz.Write(r.Response.Buffer()); err != nil {
+		return
+	}
+	if err := gz.Flush(); err != nil {
+		return
+	}
 	r.Response.SetBuffer(buffer.Bytes())
 	r.Response.Header().Add("Content-Encoding", "gzip")
 	r.Response.Header().Add("Vary", "Accept-Encoding")
@@ -90,6 +97,7 @@ func (g *gzipHandler) needCompress(r *ghttp.Request) bool {
 	return true
 }
 
+// gzip decompress middleware
 func Decompress(r *ghttp.Request) {
 	if r.Request.Body == nil {
 		r.Middleware.Next()
