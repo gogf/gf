@@ -211,7 +211,7 @@ func (r *Redis) Do(command string, args ...interface{}) (interface{}, error) {
 }
 
 // DoVar returns value from Do as gvar.Var.
-func (r *Redis) DoVar(command string, args ...interface{}) (gvar.Var, error) {
+func (r *Redis) DoVar(command string, args ...interface{}) (*gvar.Var, error) {
 	v, err := r.Do(command, args...)
 	if result, ok := v.([]byte); ok {
 		return gvar.New(gconv.UnsafeBytesToStr(result)), err

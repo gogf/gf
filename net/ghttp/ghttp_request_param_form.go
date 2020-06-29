@@ -37,7 +37,7 @@ func (r *Request) GetForm(key string, def ...interface{}) interface{} {
 
 // GetFormVar retrieves and returns parameter <key> from form as Var.
 // It returns <def> if <key> does not exist in the form and <def> is given, or else it returns nil.
-func (r *Request) GetFormVar(key string, def ...interface{}) gvar.Var {
+func (r *Request) GetFormVar(key string, def ...interface{}) *gvar.Var {
 	return gvar.New(r.GetForm(key, def...))
 }
 
@@ -169,13 +169,13 @@ func (r *Request) GetFormMapStrStr(kvMap ...map[string]interface{}) map[string]s
 	return nil
 }
 
-// GetFormMapStrVar retrieves and returns all form parameters passed from client as map[string]gvar.Var.
+// GetFormMapStrVar retrieves and returns all form parameters passed from client as map[string]*gvar.Var.
 // The parameter <kvMap> specifies the keys retrieving from client parameters, the associated values
 // are the default values if the client does not pass.
-func (r *Request) GetFormMapStrVar(kvMap ...map[string]interface{}) map[string]gvar.Var {
+func (r *Request) GetFormMapStrVar(kvMap ...map[string]interface{}) map[string]*gvar.Var {
 	postMap := r.GetFormMap(kvMap...)
 	if len(postMap) > 0 {
-		m := make(map[string]gvar.Var, len(postMap))
+		m := make(map[string]*gvar.Var, len(postMap))
 		for k, v := range postMap {
 			m[k] = gvar.New(v)
 		}

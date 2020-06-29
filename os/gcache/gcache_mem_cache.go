@@ -224,7 +224,7 @@ func (c *memCache) Get(key interface{}) interface{} {
 }
 
 // GetVar retrieves and returns the value of <key> as gvar.Var.
-func (c *memCache) GetVar(key interface{}) gvar.Var {
+func (c *memCache) GetVar(key interface{}) *gvar.Var {
 	return gvar.New(c.Get(key))
 }
 
