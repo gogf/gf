@@ -19,12 +19,12 @@ import (
 
 func Test_Set(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var v gvar.VarImp
+		var v gvar.Var
 		v.Set(123.456)
 		t.Assert(v.Val(), 123.456)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		var v gvar.VarImp
+		var v gvar.Var
 		v.Set(123.456)
 		t.Assert(v.Val(), 123.456)
 	})
@@ -304,7 +304,7 @@ func Test_Duration(t *testing.T) {
 func Test_UnmarshalValue(t *testing.T) {
 	type V struct {
 		Name string
-		Var  gvar.Var
+		Var  *gvar.Var
 	}
 	gtest.C(t, func(t *gtest.T) {
 		var v *V

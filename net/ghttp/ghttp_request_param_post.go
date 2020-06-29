@@ -39,7 +39,7 @@ func (r *Request) GetPost(key string, def ...interface{}) interface{} {
 }
 
 // Deprecated.
-func (r *Request) GetPostVar(key string, def ...interface{}) gvar.Var {
+func (r *Request) GetPostVar(key string, def ...interface{}) *gvar.Var {
 	return gvar.New(r.GetPost(key, def...))
 }
 
@@ -180,15 +180,15 @@ func (r *Request) GetPostMapStrStr(kvMap ...map[string]interface{}) map[string]s
 }
 
 // GetPostMapStrVar retrieves and returns all parameters in the form and body passed from client
-// as map[string]gvar.Var. The parameter <kvMap> specifies the keys
+// as map[string]*gvar.Var. The parameter <kvMap> specifies the keys
 // retrieving from client parameters, the associated values are the default values if the client
 // does not pass.
 //
 // Deprecated.
-func (r *Request) GetPostMapStrVar(kvMap ...map[string]interface{}) map[string]gvar.Var {
+func (r *Request) GetPostMapStrVar(kvMap ...map[string]interface{}) map[string]*gvar.Var {
 	postMap := r.GetPostMap(kvMap...)
 	if len(postMap) > 0 {
-		m := make(map[string]gvar.Var, len(postMap))
+		m := make(map[string]*gvar.Var, len(postMap))
 		for k, v := range postMap {
 			m[k] = gvar.New(v)
 		}

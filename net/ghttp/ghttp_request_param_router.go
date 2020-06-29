@@ -24,7 +24,7 @@ func (r *Request) GetRouterValue(key string, def ...interface{}) interface{} {
 
 // GetRouterVar retrieves and returns the router value as gvar.Var with given key name <key>.
 // It returns <def> if <key> does not exist.
-func (r *Request) GetRouterVar(key string, def ...interface{}) gvar.Var {
+func (r *Request) GetRouterVar(key string, def ...interface{}) *gvar.Var {
 	return gvar.New(r.GetRouterValue(key, def...))
 }
 

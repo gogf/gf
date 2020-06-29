@@ -259,25 +259,25 @@ func (m *StrAnyMap) GetOrSetFuncLock(key string, f func() interface{}) interface
 
 // GetVar returns a Var with the value by given <key>.
 // The returned Var is un-concurrent safe.
-func (m *StrAnyMap) GetVar(key string) gvar.Var {
+func (m *StrAnyMap) GetVar(key string) *gvar.Var {
 	return gvar.New(m.Get(key))
 }
 
 // GetVarOrSet returns a Var with result from GetVarOrSet.
 // The returned Var is un-concurrent safe.
-func (m *StrAnyMap) GetVarOrSet(key string, value interface{}) gvar.Var {
+func (m *StrAnyMap) GetVarOrSet(key string, value interface{}) *gvar.Var {
 	return gvar.New(m.GetOrSet(key, value))
 }
 
 // GetVarOrSetFunc returns a Var with result from GetOrSetFunc.
 // The returned Var is un-concurrent safe.
-func (m *StrAnyMap) GetVarOrSetFunc(key string, f func() interface{}) gvar.Var {
+func (m *StrAnyMap) GetVarOrSetFunc(key string, f func() interface{}) *gvar.Var {
 	return gvar.New(m.GetOrSetFunc(key, f))
 }
 
 // GetVarOrSetFuncLock returns a Var with result from GetOrSetFuncLock.
 // The returned Var is un-concurrent safe.
-func (m *StrAnyMap) GetVarOrSetFuncLock(key string, f func() interface{}) gvar.Var {
+func (m *StrAnyMap) GetVarOrSetFuncLock(key string, f func() interface{}) *gvar.Var {
 	return gvar.New(m.GetOrSetFuncLock(key, f))
 }
 

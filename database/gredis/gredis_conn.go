@@ -44,13 +44,13 @@ func (c *Conn) Do(commandName string, args ...interface{}) (reply interface{}, e
 }
 
 // DoVar retrieves and returns the result from command as gvar.Var.
-func (c *Conn) DoVar(command string, args ...interface{}) (gvar.Var, error) {
+func (c *Conn) DoVar(command string, args ...interface{}) (*gvar.Var, error) {
 	v, err := c.Do(command, args...)
 	return gvar.New(v), err
 }
 
 // ReceiveVar receives a single reply as gvar.Var from the Redis server.
-func (c *Conn) ReceiveVar() (gvar.Var, error) {
+func (c *Conn) ReceiveVar() (*gvar.Var, error) {
 	v, err := c.Receive()
 	return gvar.New(v), err
 }

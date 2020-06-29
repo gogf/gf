@@ -14,7 +14,7 @@ import (
 )
 
 // NewVar returns a gvar.Var.
-func NewVar(i interface{}, safe ...bool) Var {
+func NewVar(i interface{}, safe ...bool) *Var {
 	return gvar.New(i, safe...)
 }
 

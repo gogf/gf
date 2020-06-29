@@ -9,20 +9,20 @@ package gvar
 import "github.com/gogf/gf/util/gconv"
 
 // Map converts and returns <v> as map[string]interface{}.
-func (v *VarImp) Map(tags ...string) map[string]interface{} {
+func (v *Var) Map(tags ...string) map[string]interface{} {
 	return gconv.Map(v.Val(), tags...)
 }
 
 // MapStrStr converts and returns <v> as map[string]string.
-func (v *VarImp) MapStrStr(tags ...string) map[string]string {
+func (v *Var) MapStrStr(tags ...string) map[string]string {
 	return gconv.MapStrStr(v.Val(), tags...)
 }
 
 // MapStrVar converts and returns <v> as map[string]Var.
-func (v *VarImp) MapStrVar(tags ...string) map[string]Var {
+func (v *Var) MapStrVar(tags ...string) map[string]*Var {
 	m := v.Map(tags...)
 	if len(m) > 0 {
-		vMap := make(map[string]Var, len(m))
+		vMap := make(map[string]*Var, len(m))
 		for k, v := range m {
 			vMap[k] = New(v)
 		}
@@ -32,20 +32,20 @@ func (v *VarImp) MapStrVar(tags ...string) map[string]Var {
 }
 
 // MapDeep converts and returns <v> as map[string]interface{} recursively.
-func (v *VarImp) MapDeep(tags ...string) map[string]interface{} {
+func (v *Var) MapDeep(tags ...string) map[string]interface{} {
 	return gconv.MapDeep(v.Val(), tags...)
 }
 
 // MapDeep converts and returns <v> as map[string]string recursively.
-func (v *VarImp) MapStrStrDeep(tags ...string) map[string]string {
+func (v *Var) MapStrStrDeep(tags ...string) map[string]string {
 	return gconv.MapStrStrDeep(v.Val(), tags...)
 }
 
-// MapStrVarDeep converts and returns <v> as map[string]*VarImp recursively.
-func (v *VarImp) MapStrVarDeep(tags ...string) map[string]Var {
+// MapStrVarDeep converts and returns <v> as map[string]*Var recursively.
+func (v *Var) MapStrVarDeep(tags ...string) map[string]*Var {
 	m := v.MapDeep(tags...)
 	if len(m) > 0 {
-		vMap := make(map[string]Var, len(m))
+		vMap := make(map[string]*Var, len(m))
 		for k, v := range m {
 			vMap[k] = New(v)
 		}
@@ -56,32 +56,32 @@ func (v *VarImp) MapStrVarDeep(tags ...string) map[string]Var {
 
 // Maps converts and returns <v> as map[string]string.
 // See gconv.Maps.
-func (v *VarImp) Maps(tags ...string) []map[string]interface{} {
+func (v *Var) Maps(tags ...string) []map[string]interface{} {
 	return gconv.Maps(v.Val(), tags...)
 }
 
 // MapToMap converts any map type variable <params> to another map type variable <pointer>.
 // See gconv.MapToMap.
-func (v *VarImp) MapToMap(pointer interface{}, mapping ...map[string]string) (err error) {
+func (v *Var) MapToMap(pointer interface{}, mapping ...map[string]string) (err error) {
 	return gconv.MapToMap(v.Val(), pointer, mapping...)
 }
 
 // MapToMapDeep converts any map type variable <params> to another map type variable
 // <pointer> recursively.
 // See gconv.MapToMapDeep.
-func (v *VarImp) MapToMapDeep(pointer interface{}, mapping ...map[string]string) (err error) {
+func (v *Var) MapToMapDeep(pointer interface{}, mapping ...map[string]string) (err error) {
 	return gconv.MapToMapDeep(v.Val(), pointer, mapping...)
 }
 
 // MapToMaps converts any map type variable <params> to another map type variable <pointer>.
 // See gconv.MapToMaps.
-func (v *VarImp) MapToMaps(pointer interface{}, mapping ...map[string]string) (err error) {
+func (v *Var) MapToMaps(pointer interface{}, mapping ...map[string]string) (err error) {
 	return gconv.MapToMaps(v.Val(), pointer, mapping...)
 }
 
 // MapToMapsDeep converts any map type variable <params> to another map type variable
 // <pointer> recursively.
 // See gconv.MapToMapsDeep.
-func (v *VarImp) MapToMapsDeep(pointer interface{}, mapping ...map[string]string) (err error) {
+func (v *Var) MapToMapsDeep(pointer interface{}, mapping ...map[string]string) (err error) {
 	return gconv.MapToMapsDeep(v.Val(), pointer, mapping...)
 }
