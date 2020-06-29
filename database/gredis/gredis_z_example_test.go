@@ -15,7 +15,7 @@ import (
 func Example_autoMarshalUnmarshalMap() {
 	var (
 		err    error
-		result gvar.Var
+		result *gvar.Var
 		key    = "user"
 		data   = g.Map{
 			"id":   10000,
@@ -40,7 +40,7 @@ func Example_autoMarshalUnmarshalStruct() {
 	}
 	var (
 		err    error
-		result gvar.Var
+		result *gvar.Var
 		key    = "user"
 		user   = &User{
 			Id:   10000,
@@ -71,7 +71,7 @@ func Example_autoMarshalUnmarshalStructSlice() {
 	}
 	var (
 		err    error
-		result gvar.Var
+		result *gvar.Var
 		key    = "user-slice"
 		users1 = []User{
 			{
@@ -104,7 +104,7 @@ func Example_autoMarshalUnmarshalStructSlice() {
 func Example_hashSet() {
 	var (
 		err    error
-		result gvar.Var
+		result *gvar.Var
 		key    = "user"
 	)
 	_, err = g.Redis().Do("HSET", key, "id", 10000)
