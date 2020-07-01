@@ -1,6 +1,6 @@
 # Donators
 
-We currently accept donation by Alipay/WechatPay, please note your github/gitee account in your payment bill.
+We currently accept donation by Alipay/Gitee, please note your github/gitee account in your payment bill.
 
 > If you cannot view the donation image, please click [here](https://goframe.org/images/donate.png).
 
@@ -90,6 +90,8 @@ We currently accept donation by Alipay/WechatPay, please note your github/gitee 
 |[mingzaily](https://github.com/mingzaily)|alipay|￥30.00| 
 |[seny0929](https://gitee.com/seny0929)|alipay|￥9.90| 
 |Fly的狐狸|alipay|￥100.00| 
+|六七     ·|wechat|￥88.88| 
+
 
 
 <img src="https://goframe.org/images/donate.png"/>
