@@ -1,6 +1,6 @@
 # Donators
 
-We currently accept donation by [Alipay](https://goframe.org/images/donate.png)/[Gitee](https://gitee.com/johng/gf), 
+We currently accept donation by [Alipay](https://goframe.org/images/donate.png) / [Gitee](https://gitee.com/johng/gf), 
 please note your github/gitee account in your payment bill.
 
 | Name | Channel | Amount | Comment 
@@ -93,5 +93,5 @@ please note your github/gitee account in your payment bill.
 
 
 
-<img src="https://goframe.org/images/donate.png"/>
+<img src="https://goframe.org/images/donate.jpeg"/>
 
