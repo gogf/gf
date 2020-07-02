@@ -13,3 +13,21 @@ func SliceCopy(data []interface{}) []interface{} {
 	copy(newData, data)
 	return newData
 }
+
+// SliceDelete deletes an element at <index> and returns the new slice.
+// It does nothing if the given <index> is invalid.
+func SliceDelete(data []interface{}, index int) (newSlice []interface{}) {
+	if index < 0 || index >= len(data) {
+		return data
+	}
+	// Determine array boundaries when deleting to improve deletion efficiency.
+	if index == 0 {
+		return data[1:]
+	} else if index == len(data)-1 {
+		return data[:index]
+	}
+	// If it is a non-boundary delete,
+	// it will involve the creation of an array,
+	// then the deletion is less efficient.
+	return append(data[:index], data[index+1:]...)
+}
