@@ -176,7 +176,9 @@ func (c *Client) SetProxy(proxyURL string) {
 		return
 	}
 	if _proxy.Scheme == "http" {
-		c.Transport.(*http.Transport).Proxy = http.ProxyURL(_proxy)
+		if _, ok := c.Transport.(*http.Transport); ok {
+			c.Transport.(*http.Transport).Proxy = http.ProxyURL(_proxy)
+		}
 	} else {
 		var auth = &proxy.Auth{}
 		user := _proxy.User.Username()
@@ -196,15 +198,17 @@ func (c *Client) SetProxy(proxyURL string) {
 			_proxy.Host,
 			auth,
 			&net.Dialer{
-				Timeout:   10 * time.Second,
-				KeepAlive: 10 * time.Second,
+				Timeout:   c.Client.Timeout,
+				KeepAlive: c.Client.Timeout,
 			},
 		)
 		if err != nil {
 			return
 		}
-		c.Transport.(*http.Transport).DialContext = func(ctx context.Context, network, addr string) (conn net.Conn, e error) {
-			return dialer.Dial(network, addr)
+		if _, ok := c.Transport.(*http.Transport); ok {
+			c.Transport.(*http.Transport).DialContext = func(ctx context.Context, network, addr string) (conn net.Conn, e error) {
+				return dialer.Dial(network, addr)
+			}
 		}
 		//c.SetTimeout(10*time.Second)
 	}
