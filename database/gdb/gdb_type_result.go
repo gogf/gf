@@ -9,6 +9,7 @@ package gdb
 import (
 	"database/sql"
 	"fmt"
+	"github.com/gogf/gf/container/gvar"
 	"math"
 	"reflect"
 
@@ -77,6 +78,34 @@ func (r Result) Array(field ...string) []Value {
 		array[k] = v[key]
 	}
 	return array
+}
+
+// MapKeyValue converts <r> to a map[string]Value of which key is specified by <key>.
+// Note that the item value can be type of slice.
+func (r Result) MapKeyValue(key string) map[string]Value {
+	var (
+		s              = ""
+		m              = make(map[string]Value)
+		tempMap        = make(map[string][]interface{})
+		hasMultiValues bool
+	)
+	for _, item := range r {
+		if k, ok := item[key]; ok {
+			s = k.String()
+			tempMap[s] = append(tempMap[s], item)
+			if len(tempMap[s]) > 1 {
+				hasMultiValues = true
+			}
+		}
+	}
+	for k, v := range tempMap {
+		if hasMultiValues {
+			m[k] = gvar.New(v)
+		} else {
+			m[k] = gvar.New(v[0])
+		}
+	}
+	return m
 }
 
 // MapKeyStr converts <r> to a map[string]Map of which key is specified by <key>.

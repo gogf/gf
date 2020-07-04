@@ -17,10 +17,10 @@ func ListItemValues(list interface{}, key interface{}) (values []interface{}) {
 	// If the given <list> is the most common used slice type []map[string]interface{},
 	// it enhances the performance using type assertion.
 	if l, ok := list.([]map[string]interface{}); ok {
+		if len(l) == 0 {
+			return
+		}
 		if mapKey, ok := key.(string); ok {
-			if len(l) == 0 {
-				return
-			}
 			if _, ok := l[0][mapKey]; !ok {
 				return
 			}
