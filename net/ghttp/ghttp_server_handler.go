@@ -232,34 +232,30 @@ func (s *Server) searchStaticFile(uri string) *StaticFile {
 // serveFile serves the static file for client.
 // The optional parameter <allowIndex> specifies if allowing directory listing if <f> is directory.
 func (s *Server) serveFile(r *Request, f *StaticFile, allowIndex ...bool) {
-	// Use resource file from memory.
-	if f.File != nil {
-		if f.IsDir {
-			if s.config.IndexFolder || (len(allowIndex) > 0 && allowIndex[0]) {
-				s.listDir(r, f.File)
-			} else {
-				r.Response.WriteStatus(http.StatusForbidden)
-			}
-		} else {
-			info := f.File.FileInfo()
-			r.Response.wroteHeader = true
-			http.ServeContent(r.Response.Writer.RawWriter(), r.Request, info.Name(), info.ModTime(), f.File)
+	var info os.FileInfo
+	var file http.File
+	var err error
+	if f.File == nil && f.Path != "" {
+		// Use file from dist.
+		file, err = os.Open(f.Path)
+		if err != nil {
+			r.Response.WriteStatus(http.StatusForbidden)
+			return
 		}
-		return
-	}
-	// Use file from dist.
-	file, err := os.Open(f.Path)
-	if err != nil {
+		defer file.Close()
+		f.File = file
+	} else {
 		r.Response.WriteStatus(http.StatusForbidden)
 		return
 	}
-	defer file.Close()
 
+	s.callHookHandler(HOOK_BEFORE_STATICFILE, r)
+
+	info, _ = r.StaticFile.File.Stat()
+	file = r.StaticFile.File
 	// Clear the response buffer before file serving.
 	// It ignores all custom buffer content and uses the file content.
 	r.Response.ClearBuffer()
-
-	info, _ := file.Stat()
 	if info.IsDir() {
 		if s.config.IndexFolder || (len(allowIndex) > 0 && allowIndex[0]) {
 			s.listDir(r, file)
@@ -270,6 +266,7 @@ func (s *Server) serveFile(r *Request, f *StaticFile, allowIndex ...bool) {
 		r.Response.wroteHeader = true
 		http.ServeContent(r.Response.Writer.RawWriter(), r.Request, info.Name(), info.ModTime(), file)
 	}
+	s.callHookHandler(HOOK_AFTER_STATICFILE, r)
 }
 
 // listDir lists the sub files of specified directory as HTML content to client.

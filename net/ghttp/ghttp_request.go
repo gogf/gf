@@ -10,7 +10,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/gogf/gf/internal/intlog"
-	"github.com/gogf/gf/os/gres"
 	"github.com/gogf/gf/os/gsession"
 	"github.com/gogf/gf/os/gview"
 	"github.com/gogf/gf/util/guid"
@@ -58,9 +57,9 @@ type Request struct {
 
 // StaticFile is the file struct for static file service.
 type StaticFile struct {
-	File  *gres.File // Resource file object.
-	Path  string     // File path.
-	IsDir bool       // Is directory.
+	File  http.File // Resource file object.
+	Path  string    // File path.
+	IsDir bool      // Is directory.
 }
 
 // newRequest creates and returns a new request object.
