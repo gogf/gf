@@ -23,6 +23,8 @@ const (
 	SCHEMA1 = "test1"
 	SCHEMA2 = "test2"
 	PREFIX1 = "gf_"
+	USER    = "john"
+	PASS    = "Nantish1986!"
 )
 
 var (
@@ -40,8 +42,8 @@ func init() {
 	configNode = gdb.ConfigNode{
 		Host:             "127.0.0.1",
 		Port:             "3306",
-		User:             "root",
-		Pass:             "12345678",
+		User:             USER,
+		Pass:             PASS,
 		Name:             parser.GetOpt("name", ""),
 		Type:             parser.GetOpt("type", "mysql"),
 		Role:             "master",

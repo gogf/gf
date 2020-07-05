@@ -56,8 +56,8 @@ func Test_Custom_Driver(t *testing.T) {
 	gdb.AddConfigNode("driver-test", gdb.ConfigNode{
 		Host:    "127.0.0.1",
 		Port:    "3306",
-		User:    "root",
-		Pass:    "12345678",
+		User:    USER,
+		Pass:    PASS,
 		Name:    "test",
 		Type:    customDriverName,
 		Role:    "master",

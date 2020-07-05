@@ -16,6 +16,8 @@ import (
 
 const (
 	SCHEMA = "test_internal"
+	USER   = "john"
+	PASS   = "Nantish1986!"
 )
 
 var (
@@ -32,8 +34,8 @@ func init() {
 	configNode = ConfigNode{
 		Host:             "127.0.0.1",
 		Port:             "3306",
-		User:             "root",
-		Pass:             "12345678",
+		User:             USER,
+		Pass:             PASS,
 		Name:             parser.GetOpt("name", ""),
 		Type:             parser.GetOpt("type", "mysql"),
 		Role:             "master",

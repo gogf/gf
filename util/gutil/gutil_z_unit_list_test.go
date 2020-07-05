@@ -35,6 +35,23 @@ func Test_ListItemValues_Map(t *testing.T) {
 	})
 }
 
+func Test_ListItemValues_SubKey(t *testing.T) {
+	type Scores struct {
+		Math    int
+		English int
+	}
+	gtest.C(t, func(t *gtest.T) {
+		listMap := g.List{
+			g.Map{"id": 1, "scores": Scores{100, 60}},
+			g.Map{"id": 2, "scores": Scores{0, 100}},
+			g.Map{"id": 3, "scores": Scores{59, 99}},
+		}
+		t.Assert(gutil.ListItemValues(listMap, "scores", "Math"), g.Slice{100, 0, 59})
+		t.Assert(gutil.ListItemValues(listMap, "scores", "English"), g.Slice{60, 100, 99})
+		t.Assert(gutil.ListItemValues(listMap, "scores", "PE"), g.Slice{})
+	})
+}
+
 func Test_ListItemValues_Struct(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type T struct {
