@@ -378,14 +378,21 @@ func doCheck(key string, value interface{}, rules string, messages interface{}, 
 		// Universal password format rule2:
 		// Must meet password rule1, must contain lower and upper letters and numbers.
 		case "password2":
-			if gregex.IsMatchString(`^[\w\S]{6,18}$`, val) && gregex.IsMatchString(`[a-z]+`, val) && gregex.IsMatchString(`[A-Z]+`, val) && gregex.IsMatchString(`\d+`, val) {
+			if gregex.IsMatchString(`^[\w\S]{6,18}$`, val) &&
+				gregex.IsMatchString(`[a-z]+`, val) &&
+				gregex.IsMatchString(`[A-Z]+`, val) &&
+				gregex.IsMatchString(`\d+`, val) {
 				match = true
 			}
 
 		// Universal password format rule3:
 		// Must meet password rule1, must contain lower and upper letters, numbers and special chars.
 		case "password3":
-			if gregex.IsMatchString(`^[\w\S]{6,18}$`, val) && gregex.IsMatchString(`[a-z]+`, val) && gregex.IsMatchString(`[A-Z]+`, val) && gregex.IsMatchString(`\d+`, val) && gregex.IsMatchString(`[^a-zA-Z0-9]+`, val) {
+			if gregex.IsMatchString(`^[\w\S]{6,18}$`, val) &&
+				gregex.IsMatchString(`[a-z]+`, val) &&
+				gregex.IsMatchString(`[A-Z]+`, val) &&
+				gregex.IsMatchString(`\d+`, val) &&
+				gregex.IsMatchString(`[^a-zA-Z0-9]+`, val) {
 				match = true
 			}
 
@@ -443,7 +450,23 @@ func doCheck(key string, value interface{}, rules string, messages interface{}, 
 			match = gregex.IsMatchString(`^([0-9A-Fa-f]{2}[\-:]){5}[0-9A-Fa-f]{2}$`, val)
 
 		default:
-			errorMsgs[ruleKey] = "Invalid rule name: " + ruleKey
+			if f, ok := customRuleFuncMap[ruleKey]; ok {
+				var (
+					dataMap map[string]interface{}
+					message = getErrorMessageByRule(ruleKey, customMsgMap)
+				)
+				if len(params) > 0 {
+					dataMap = gconv.Map(params[0])
+				}
+				if err := f(value, message, dataMap); err != nil {
+					match = false
+					errorMsgs[ruleKey] = err.Error()
+				} else {
+					match = true
+				}
+			} else {
+				errorMsgs[ruleKey] = "Invalid rule name: " + ruleKey
+			}
 		}
 
 		// Error message handling.
