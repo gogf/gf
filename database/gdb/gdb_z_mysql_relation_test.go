@@ -8,9 +8,9 @@ package gdb_test
 
 import (
 	"fmt"
+	"github.com/gogf/gf/database/gdb"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/util/gconv"
-	"github.com/gogf/gf/util/gutil"
 	"testing"
 
 	"github.com/gogf/gf/os/gtime"
@@ -131,14 +131,14 @@ CREATE TABLE %s (
 		t.Assert(users[0].User, &EntityUser{3, "name_3"})
 		t.Assert(users[1].User, &EntityUser{4, "name_4"})
 		// Detail
-		all, err = db.Table(tableUserDetail).Where("uid", gutil.ListItemValues(users, "User", "Uid")).Order("uid asc").All()
+		all, err = db.Table(tableUserDetail).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("uid asc").All()
 		gtest.Assert(err, nil)
 		err = all.ScanList(&users, "UserDetail", "User", "uid:Uid")
 		t.Assert(err, nil)
 		t.Assert(users[0].UserDetail, &EntityUserDetail{3, "address_3"})
 		t.Assert(users[1].UserDetail, &EntityUserDetail{4, "address_4"})
 		// Scores
-		all, err = db.Table(tableUserScores).Where("uid", gutil.ListItemValues(users, "User", "Uid")).Order("id asc").All()
+		all, err = db.Table(tableUserScores).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("id asc").All()
 		gtest.Assert(err, nil)
 		err = all.ScanList(&users, "UserScores", "User", "uid:Uid")
 		t.Assert(err, nil)
@@ -164,14 +164,14 @@ CREATE TABLE %s (
 		t.Assert(users[0].User, &EntityUser{3, "name_3"})
 		t.Assert(users[1].User, &EntityUser{4, "name_4"})
 		// Detail
-		all, err = db.Table(tableUserDetail).Where("uid", gutil.ListItemValues(users, "User", "Uid")).Order("uid asc").All()
+		all, err = db.Table(tableUserDetail).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("uid asc").All()
 		gtest.Assert(err, nil)
 		err = all.ScanList(&users, "UserDetail", "User", "uid:Uid")
 		t.Assert(err, nil)
 		t.Assert(users[0].UserDetail, &EntityUserDetail{3, "address_3"})
 		t.Assert(users[1].UserDetail, &EntityUserDetail{4, "address_4"})
 		// Scores
-		all, err = db.Table(tableUserScores).Where("uid", gutil.ListItemValues(users, "User", "Uid")).Order("id asc").All()
+		all, err = db.Table(tableUserScores).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("id asc").All()
 		gtest.Assert(err, nil)
 		err = all.ScanList(&users, "UserScores", "User", "uid:Uid")
 		t.Assert(err, nil)
@@ -215,14 +215,14 @@ CREATE TABLE %s (
 		t.Assert(users[0].User, &EntityUser{3, "name_3"})
 		t.Assert(users[1].User, &EntityUser{4, "name_4"})
 		// Detail
-		all, err = db.Table(tableUserDetail).Where("uid", gutil.ListItemValues(users, "User", "Uid")).Order("uid asc").All()
+		all, err = db.Table(tableUserDetail).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("uid asc").All()
 		gtest.Assert(err, nil)
 		err = all.ScanList(&users, "UserDetail", "User", "uid:Uid")
 		t.Assert(err, nil)
 		t.Assert(users[0].UserDetail, &EntityUserDetail{3, "address_3"})
 		t.Assert(users[1].UserDetail, &EntityUserDetail{4, "address_4"})
 		// Scores
-		all, err = db.Table(tableUserScores).Where("uid", gutil.ListItemValues(users, "User", "Uid")).Order("id asc").All()
+		all, err = db.Table(tableUserScores).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("id asc").All()
 		gtest.Assert(err, nil)
 		err = all.ScanList(&users, "UserScores", "User", "uid:Uid")
 		t.Assert(err, nil)
@@ -267,17 +267,56 @@ CREATE TABLE %s (
 		t.Assert(users[0].User, &EntityUser{3, "name_3"})
 		t.Assert(users[1].User, &EntityUser{4, "name_4"})
 		// Detail
-		all, err = db.Table(tableUserDetail).Where("uid", gutil.ListItemValues(users, "User", "Uid")).Order("uid asc").All()
+		all, err = db.Table(tableUserDetail).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("uid asc").All()
 		gtest.Assert(err, nil)
 		err = all.ScanList(&users, "UserDetail", "User", "uid:Uid")
 		t.Assert(err, nil)
 		t.Assert(users[0].UserDetail, &EntityUserDetail{3, "address_3"})
 		t.Assert(users[1].UserDetail, &EntityUserDetail{4, "address_4"})
 		// Scores
-		all, err = db.Table(tableUserScores).Where("uid", gutil.ListItemValues(users, "User", "Uid")).Order("id asc").All()
+		all, err = db.Table(tableUserScores).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("id asc").All()
 		gtest.Assert(err, nil)
 		err = all.ScanList(&users, "UserScores", "User", "uid:Uid")
 		t.Assert(err, nil)
+		t.Assert(len(users[0].UserScores), 5)
+		t.Assert(len(users[1].UserScores), 5)
+		t.Assert(users[0].UserScores[0].Uid, 3)
+		t.Assert(users[0].UserScores[0].Score, 1)
+		t.Assert(users[0].UserScores[4].Score, 5)
+		t.Assert(users[1].UserScores[0].Uid, 4)
+		t.Assert(users[1].UserScores[0].Score, 1)
+		t.Assert(users[1].UserScores[4].Score, 5)
+	})
+
+	// Model ScanList with pointer elements and pointer attributes.
+	gtest.C(t, func(t *gtest.T) {
+		var users []*Entity
+		// User
+		err := db.Table(tableUser).
+			Where("uid", g.Slice{3, 4}).
+			Order("uid asc").
+			ScanList(&users, "User")
+		t.Assert(err, nil)
+		// Detail
+		err = db.Table(tableUserDetail).
+			Where("uid", gdb.ListItemValues(users, "User", "Uid")).
+			Order("uid asc").
+			ScanList(&users, "UserDetail", "User", "uid:Uid")
+		gtest.Assert(err, nil)
+		// Scores
+		err = db.Table(tableUserScores).
+			Where("uid", gdb.ListItemValues(users, "User", "Uid")).
+			Order("id asc").
+			ScanList(&users, "UserScores", "User", "uid:Uid")
+		t.Assert(err, nil)
+
+		t.Assert(len(users), 2)
+		t.Assert(users[0].User, &EntityUser{3, "name_3"})
+		t.Assert(users[1].User, &EntityUser{4, "name_4"})
+
+		t.Assert(users[0].UserDetail, &EntityUserDetail{3, "address_3"})
+		t.Assert(users[1].UserDetail, &EntityUserDetail{4, "address_4"})
+
 		t.Assert(len(users[0].UserScores), 5)
 		t.Assert(len(users[1].UserScores), 5)
 		t.Assert(users[0].UserScores[0].Uid, 3)

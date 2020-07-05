@@ -23,8 +23,8 @@ const (
 	SCHEMA1 = "test1"
 	SCHEMA2 = "test2"
 	PREFIX1 = "gf_"
-	USER    = "john"
-	PASS    = "Nantish1986!"
+	USER    = "root"
+	PASS    = "12345678"
 )
 
 var (

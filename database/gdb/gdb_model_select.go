@@ -234,6 +234,36 @@ func (m *Model) Scan(pointer interface{}, where ...interface{}) error {
 	}
 }
 
+// ScanList converts <r> to struct slice which contains other complex struct attributes.
+// Note that the parameter <listPointer> should be type of *[]struct/*[]*struct.
+// Usage example:
+//
+// type Entity struct {
+// 	   User       *EntityUser
+// 	   UserDetail *EntityUserDetail
+//	   UserScores []*EntityUserScores
+// }
+// var users []*Entity
+// or
+// var users []Entity
+//
+// ScanList(&users, "User")
+// ScanList(&users, "UserDetail", "User", "uid:Uid")
+// ScanList(&users, "UserScores", "User", "uid:Uid")
+// The parameters "User"/"UserDetail"/"UserScores" in the example codes specify the target attribute struct
+// that current result will be bound to.
+// The "uid" in the example codes is the table field name of the result, and the "Uid" is the relational
+// struct attribute name. It automatically calculates the HasOne/HasMany relationship with given <relation>
+// parameter.
+// See the example or unit testing cases for clear understanding for this function.
+func (m *Model) ScanList(listPointer interface{}, attributeName string, relation ...string) (err error) {
+	all, err := m.All()
+	if err != nil {
+		return err
+	}
+	return all.ScanList(listPointer, attributeName, relation...)
+}
+
 // Count does "SELECT COUNT(x) FROM ..." statement for the model.
 // The optional parameter <where> is the same as the parameter of Model.Where function,
 // see Model.Where.
