@@ -236,8 +236,8 @@ func (r Result) ScanList(listPointer interface{}, attributeName string, relation
 			}
 			attrValue.Set(e)
 
-		case reflect.Map:
-			// TODO
+		default:
+			return fmt.Errorf(`unsupport attribute type: %s`, attrKind.String())
 		}
 	}
 	reflect.ValueOf(listPointer).Elem().Set(arrayValue)
