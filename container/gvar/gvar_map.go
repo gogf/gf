@@ -13,6 +13,11 @@ func (v *Var) Map(tags ...string) map[string]interface{} {
 	return gconv.Map(v.Val(), tags...)
 }
 
+// MapStrAny is like function Map, but implements the interface of MapStrAny.
+func (v *Var) MapStrAny() map[string]interface{} {
+	return v.Map()
+}
+
 // MapStrStr converts and returns <v> as map[string]string.
 func (v *Var) MapStrStr(tags ...string) map[string]string {
 	return gconv.MapStrStr(v.Val(), tags...)

@@ -10,6 +10,7 @@ import (
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/util/gconv"
 	"testing"
 )
 
@@ -38,5 +39,38 @@ func Test_Struct(t *testing.T) {
 		v := gvar.New(g.Slice{"Test", "-25"})
 		v.Struct(o)
 		t.Assert(o.Test, -25)
+	})
+}
+
+func Test_Var_Attribute_Struct(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Uid  int
+			Name string
+		}
+		user := new(User)
+		err := gconv.Struct(
+			g.Map{
+				"uid":  gvar.New(1),
+				"name": gvar.New("john"),
+			}, user)
+		t.Assert(err, nil)
+		t.Assert(user.Uid, 1)
+		t.Assert(user.Name, "john")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Uid  int
+			Name string
+		}
+		var user *User
+		err := gconv.Struct(
+			g.Map{
+				"uid":  gvar.New(1),
+				"name": gvar.New("john"),
+			}, &user)
+		t.Assert(err, nil)
+		t.Assert(user.Uid, 1)
+		t.Assert(user.Name, "john")
 	})
 }
