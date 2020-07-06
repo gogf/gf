@@ -57,6 +57,13 @@ func Struct(params interface{}, pointer interface{}, mapping ...map[string]strin
 		return fmt.Errorf("invalid params: %v", params)
 	}
 
+	// UnmarshalValue.
+	// Assign value with interface UnmarshalValue.
+	// Note that only pointer can implement interface UnmarshalValue.
+	if v, ok := pointer.(apiUnmarshalValue); ok {
+		return v.UnmarshalValue(params)
+	}
+
 	// Using reflect to do the converting,
 	// it also supports type of reflect.Value for <pointer>(always in internal usage).
 	elem, ok := pointer.(reflect.Value)
@@ -71,6 +78,7 @@ func Struct(params interface{}, pointer interface{}, mapping ...map[string]strin
 		}
 		elem = rv.Elem()
 	}
+
 	// It automatically creates struct object if necessary.
 	// For example, if <pointer> is **User, then <elem> is *User, which is a pointer to User.
 	if elem.Kind() == reflect.Ptr {
@@ -79,14 +87,19 @@ func Struct(params interface{}, pointer interface{}, mapping ...map[string]strin
 			elem.Set(e.Addr())
 			elem = e
 		} else {
-			// Assign value with interface Set.
-			// Note that only pointer can implement interface Set.
-			if v, ok := elem.Interface().(apiUnmarshalValue); ok {
-				v.UnmarshalValue(params)
-				return nil
-			}
+			elem = elem.Elem()
 		}
 	}
+
+	// UnmarshalValue.
+	// Assign value with interface UnmarshalValue.
+	// Note that only pointer can implement interface UnmarshalValue.
+	if elem.Kind() == reflect.Struct {
+		if v, ok := elem.Addr().Interface().(apiUnmarshalValue); ok {
+			return v.UnmarshalValue(params)
+		}
+	}
+
 	// It only performs one converting to the same attribute.
 	// doneMap is used to check repeated converting, its key is the real attribute name
 	// of the struct.
