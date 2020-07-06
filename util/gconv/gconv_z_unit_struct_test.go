@@ -805,3 +805,35 @@ func Test_Struct_CatchPanic(t *testing.T) {
 		t.AssertNE(err, nil)
 	})
 }
+
+type MyTime struct {
+	time.Time
+}
+
+type MyTimeSt struct {
+	ServiceDate MyTime
+}
+
+func (st *MyTimeSt) UnmarshalValue(v interface{}) error {
+	m := gconv.Map(v)
+	t, err := gtime.StrToTime(gconv.String(m["ServiceDate"]))
+	if err != nil {
+		return err
+	}
+	st.ServiceDate = MyTime{t.Time}
+	return nil
+}
+
+func Test_Struct_UnmarshalValue(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		st := &MyTimeSt{}
+		err := gconv.Struct(g.Map{"ServiceDate": "2020-10-10 12:00:01"}, st)
+		t.Assert(err, nil)
+		t.Assert(st.ServiceDate.Time.Format("2006-01-02 15:04:05"), "2020-10-10 12:00:01")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		st := &MyTimeSt{}
+		err := gconv.Struct(g.Map{"ServiceDate": nil}, st)
+		t.AssertNE(err, nil)
+	})
+}
