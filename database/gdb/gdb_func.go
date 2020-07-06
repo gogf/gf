@@ -13,6 +13,7 @@ import (
 	"github.com/gogf/gf/internal/empty"
 	"github.com/gogf/gf/internal/utils"
 	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/util/gutil"
 	"reflect"
 	"regexp"
 	"strings"
@@ -55,6 +56,12 @@ var (
 	// quoteWordReg is the regular expression object for a word check.
 	quoteWordReg = regexp.MustCompile(`^[a-zA-Z0-9\-_]+$`)
 )
+
+// ListItemValues is alias for gutil.ListItemValues.
+// See gutil.ListItemValues.
+func ListItemValues(list interface{}, key interface{}, subKey ...interface{}) (values []interface{}) {
+	return gutil.ListItemValues(list, key, subKey...)
+}
 
 // GetInsertOperationByOption returns proper insert option with given parameter <option>.
 func GetInsertOperationByOption(option int) string {

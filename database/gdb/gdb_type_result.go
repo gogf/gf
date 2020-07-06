@@ -9,11 +9,27 @@ package gdb
 import (
 	"database/sql"
 	"fmt"
+	"github.com/gogf/gf/container/gvar"
 	"math"
 	"reflect"
 
 	"github.com/gogf/gf/encoding/gparser"
 )
+
+// IsEmpty checks and returns whether <r> is empty.
+func (r Result) IsEmpty() bool {
+	return r.Len() == 0
+}
+
+// Len returns the length of result list.
+func (r Result) Len() int {
+	return len(r)
+}
+
+// Size is alias of function Len.
+func (r Result) Size() int {
+	return r.Len()
+}
 
 // Chunk splits an Result into multiple Results,
 // the size of each array is determined by <size>.
@@ -77,6 +93,34 @@ func (r Result) Array(field ...string) []Value {
 		array[k] = v[key]
 	}
 	return array
+}
+
+// MapKeyValue converts <r> to a map[string]Value of which key is specified by <key>.
+// Note that the item value may be type of slice.
+func (r Result) MapKeyValue(key string) map[string]Value {
+	var (
+		s              = ""
+		m              = make(map[string]Value)
+		tempMap        = make(map[string][]interface{})
+		hasMultiValues bool
+	)
+	for _, item := range r {
+		if k, ok := item[key]; ok {
+			s = k.String()
+			tempMap[s] = append(tempMap[s], item)
+			if len(tempMap[s]) > 1 {
+				hasMultiValues = true
+			}
+		}
+	}
+	for k, v := range tempMap {
+		if hasMultiValues {
+			m[k] = gvar.New(v)
+		} else {
+			m[k] = gvar.New(v[0])
+		}
+	}
+	return m
 }
 
 // MapKeyStr converts <r> to a map[string]Map of which key is specified by <key>.
@@ -196,9 +240,4 @@ func (r Result) Structs(pointer interface{}) (err error) {
 	}
 	reflect.ValueOf(pointer).Elem().Set(array)
 	return nil
-}
-
-// IsEmpty checks and returns whether <r> is empty.
-func (r Result) IsEmpty() bool {
-	return len(r) == 0
 }
