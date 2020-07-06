@@ -277,6 +277,11 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}) (e
 	// Converting by kind.
 	switch kind {
 	case reflect.Struct:
+		// UnmarshalValue.
+		if v, ok := structFieldValue.Addr().Interface().(apiUnmarshalValue); ok {
+			return v.UnmarshalValue(value)
+		}
+
 		if err := Struct(value, structFieldValue); err != nil {
 			// Note there's reflect conversion mechanism here.
 			structFieldValue.Set(reflect.ValueOf(value).Convert(structFieldValue.Type()))
