@@ -210,6 +210,21 @@ func doStruct(params interface{}, pointer interface{}, recursive bool, mapping .
 			return err
 		}
 	}
+	// Recursively concerting for struct attributes with the same params map.
+	if recursive && elem.Kind() == reflect.Struct {
+		for i := 0; i < elemType.NumField(); i++ {
+			// Only do converting to public attributes.
+			if !utils.IsLetterUpper(elemType.Field(i).Name[0]) {
+				continue
+			}
+			fieldValue := elem.Field(i)
+			if fieldValue.Kind() == reflect.Struct {
+				if err := doStruct(paramsMap, fieldValue, recursive, mapping...); err != nil {
+					return err
+				}
+			}
+		}
+	}
 	return nil
 }
 

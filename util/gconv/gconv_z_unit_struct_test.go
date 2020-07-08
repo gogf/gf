@@ -528,6 +528,42 @@ func Test_StructDeep4(t *testing.T) {
 	})
 }
 
+func Test_StructDeep5(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Base struct {
+			Pass1 string `params:"password1"`
+			Pass2 string `params:"password2"`
+		}
+		type UserWithBase1 struct {
+			Id   int
+			Name string
+			Base
+		}
+		type UserWithBase2 struct {
+			Id   int
+			Name string
+			Pass Base
+		}
+
+		data := g.Map{
+			"id":        1,
+			"name":      "john",
+			"password1": "123",
+			"password2": "456",
+		}
+		var err error
+		user1 := new(UserWithBase1)
+		user2 := new(UserWithBase2)
+		err = gconv.StructDeep(data, user1)
+		t.Assert(err, nil)
+		t.Assert(user1, &UserWithBase1{1, "john", Base{"123", "456"}})
+
+		err = gconv.StructDeep(data, user2)
+		t.Assert(err, nil)
+		t.Assert(user2, &UserWithBase2{1, "john", Base{"123", "456"}})
+	})
+}
+
 func Test_Struct_Time(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
