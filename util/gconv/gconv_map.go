@@ -48,6 +48,7 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 	m := make(map[string]interface{})
 	switch r := value.(type) {
 	case string:
+		// If it is a JSON string, automatically unmarshal it!
 		if len(r) > 0 && r[0] == '{' && r[len(r)-1] == '}' {
 			if err := json.Unmarshal([]byte(r), &m); err != nil {
 				return nil
@@ -56,6 +57,7 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 			return nil
 		}
 	case []byte:
+		// If it is a JSON string, automatically unmarshal it!
 		if len(r) > 0 && r[0] == '{' && r[len(r)-1] == '}' {
 			if err := json.Unmarshal(r, &m); err != nil {
 				return nil
@@ -121,8 +123,9 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 		for k, v := range r {
 			m[String(k)] = v
 		}
-	// Not a common type, it then uses reflection for conversion.
+
 	default:
+		// Not a common type, it then uses reflection for conversion.
 		var rv reflect.Value
 		if v, ok := value.(reflect.Value); ok {
 			rv = v
@@ -137,10 +140,9 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 		}
 		switch kind {
 		// If <value> is type of array, it converts the value of even number index as its key and
-		// the value of odd number index as its corresponding value.
-		// Eg:
+		// the value of odd number index as its corresponding value, for example:
 		// []string{"k1","v1","k2","v2"} => map[string]interface{}{"k1":"v1", "k2":"v2"}
-		// []string{"k1","v1","k2"} => map[string]interface{}{"k1":"v1", "k2":nil}
+		// []string{"k1","v1","k2"}      => map[string]interface{}{"k1":"v1", "k2":nil}
 		case reflect.Slice, reflect.Array:
 			length := rv.Len()
 			for i := 0; i < length; i += 2 {

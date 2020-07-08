@@ -491,6 +491,43 @@ func Test_StructDeep3(t *testing.T) {
 	})
 }
 
+// https://github.com/gogf/gf/issues/775
+func Test_StructDeep4(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Sub2 struct {
+			SubName string
+		}
+		type sub1 struct {
+			Sub2
+			Name string
+		}
+		type Test struct {
+			Sub sub1 `json:"sub"`
+		}
+
+		data := `{
+    "sub": {
+		"map":{"k":"v"},
+        "Name": "name",
+        "SubName": "subname"
+    }}`
+
+		expect := Test{
+			Sub: sub1{
+				Name: "name",
+				Sub2: Sub2{
+					SubName: "subname",
+				},
+			},
+		}
+		tx := new(Test)
+		if err := gconv.StructDeep(data, &tx); err != nil {
+			panic(err)
+		}
+		t.Assert(tx, expect)
+	})
+}
+
 func Test_Struct_Time(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
