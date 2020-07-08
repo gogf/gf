@@ -123,7 +123,8 @@ func doCheck(key string, value interface{}, rules string, messages interface{}, 
 	}
 	// It converts value to string and then does the validation.
 	var (
-		val       = strings.TrimSpace(gconv.String(value))
+		// Do not trim it as the space is also part of the value.
+		val       = gconv.String(value)
 		data      = make(map[string]string)
 		errorMsgs = make(map[string]string)
 	)
