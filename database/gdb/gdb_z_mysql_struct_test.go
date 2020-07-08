@@ -7,11 +7,11 @@
 package gdb_test
 
 import (
-	"testing"
-
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/util/gconv"
+	"testing"
 )
 
 func Test_Model_Inherit_Insert(t *testing.T) {
@@ -320,5 +320,42 @@ func Test_Structs_Empty(t *testing.T) {
 		t.Assert(err, nil)
 		var users []*User
 		t.Assert(all.Structs(&users), nil)
+	})
+}
+
+type MyTime struct {
+	gtime.Time
+}
+
+type MyTimeSt struct {
+	CreateTime MyTime
+}
+
+func (st *MyTimeSt) UnmarshalValue(v interface{}) error {
+	m := gconv.Map(v)
+	t, err := gtime.StrToTime(gconv.String(m["create_time"]))
+	if err != nil {
+		return err
+	}
+	st.CreateTime = MyTime{*t}
+	return nil
+}
+
+func Test_Model_Scan_CustomType(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		st := new(MyTimeSt)
+		err := db.Table(table).Fields("create_time").Scan(st)
+		t.Assert(err, nil)
+		t.Assert(st.CreateTime.String(), "2018-10-24 10:00:00")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var stSlice []*MyTimeSt
+		err := db.Table(table).Fields("create_time").Scan(&stSlice)
+		t.Assert(err, nil)
+		t.Assert(len(stSlice), SIZE)
+		t.Assert(stSlice[0].CreateTime.String(), "2018-10-24 10:00:00")
+		t.Assert(stSlice[9].CreateTime.String(), "2018-10-24 10:00:00")
 	})
 }
