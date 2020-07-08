@@ -9,6 +9,8 @@ package gins
 import (
 	"fmt"
 	"github.com/gogf/gf/os/gview"
+	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/util/gutil"
 )
 
 const (
@@ -39,12 +41,22 @@ func getViewInstance(name ...string) *gview.View {
 	if Config().Available() {
 		var m map[string]interface{}
 		// It firstly searches the configuration of the instance name.
-		if m = Config().GetMap(fmt.Sprintf(`%s.%s`, gVIEWER_NODE_NAME, instanceName)); m == nil {
+		if _, v := gutil.MapPossibleItemByKey(
+			Config().GetMap("."),
+			fmt.Sprintf(`%s.%s`, gVIEWER_NODE_NAME, instanceName),
+		); v != nil {
+			m = gconv.Map(v)
+		} else {
 			// If the configuration for the instance does not exist,
 			// it uses the default view configuration.
-			m = Config().GetMap(gVIEWER_NODE_NAME)
+			if _, v := gutil.MapPossibleItemByKey(
+				Config().GetMap("."),
+				gVIEWER_NODE_NAME,
+			); v != nil {
+				m = gconv.Map(v)
+			}
 		}
-		if m != nil {
+		if len(m) > 0 {
 			if err := view.SetConfigWithMap(m); err != nil {
 				panic(err)
 			}
