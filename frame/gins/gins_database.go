@@ -25,7 +25,6 @@ const (
 // Database returns an instance of database ORM object
 // with specified configuration group name.
 func Database(name ...string) gdb.DB {
-	config := Config()
 	group := gdb.DEFAULT_GROUP_NAME
 	if len(name) > 0 && name[0] != "" {
 		group = name[0]
@@ -41,13 +40,12 @@ func Database(name ...string) gdb.DB {
 			return db
 		}
 		var m map[string]interface{}
-		if _, v := gutil.MapPossibleItemByKey(
-			config.GetMap("."),
-			gDATABASE_NODE_NAME,
-		); v != nil {
-			m = gconv.Map(v)
+		// It firstly searches the configuration of the instance name.
+		nodeKey, _ := gutil.MapPossibleItemByKey(Config().GetMap("."), gVIEWER_NODE_NAME)
+		if nodeKey == "" {
+			nodeKey = gDATABASE_NODE_NAME
 		}
-		if len(m) == 0 {
+		if m = Config().GetMap(nodeKey); len(m) == 0 {
 			panic(fmt.Sprintf(`database init failed: "%s" node not found, is config file or configuration missing?`, gDATABASE_NODE_NAME))
 		}
 		// Parse <m> as map-slice and adds it to gdb's global configurations.
@@ -86,18 +84,9 @@ func Database(name ...string) gdb.DB {
 		if db, err := gdb.New(name...); err == nil {
 			// Initialize logger for ORM.
 			var m map[string]interface{}
-			if _, v := gutil.MapPossibleItemByKey(
-				config.GetMap("."),
-				fmt.Sprintf("%s.%s", gDATABASE_NODE_NAME, gLOGGER_NODE_NAME),
-			); v != nil {
-				m = gconv.Map(v)
-			} else {
-				if _, v := gutil.MapPossibleItemByKey(
-					Config().GetMap("."),
-					gLOGGER_NODE_NAME,
-				); v != nil {
-					m = gconv.Map(v)
-				}
+			m = Config().GetMap(fmt.Sprintf("%s.%s", nodeKey, gLOGGER_NODE_NAME))
+			if len(m) == 0 {
+				m = Config().GetMap(nodeKey)
 			}
 			if len(m) > 0 {
 				if err := db.GetLogger().SetConfigWithMap(m); err != nil {

@@ -9,7 +9,6 @@ package gins
 import (
 	"fmt"
 	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/gutil"
 )
 
@@ -26,21 +25,13 @@ func Server(name ...interface{}) *ghttp.Server {
 		// To avoid file no found error while it's not necessary.
 		if Config().Available() {
 			var m map[string]interface{}
-			// It firstly searches the configuration of the instance name.
-			if _, v := gutil.MapPossibleItemByKey(
-				Config().GetMap("."),
-				fmt.Sprintf(`%s.%s`, gSERVER_NODE_NAME, s.GetName()),
-			); v != nil {
-				m = gconv.Map(v)
-			} else {
-				// If the configuration for the instance does not exist,
-				// it uses the default server configuration.
-				if _, v := gutil.MapPossibleItemByKey(
-					Config().GetMap("."),
-					gSERVER_NODE_NAME,
-				); v != nil {
-					m = gconv.Map(v)
-				}
+			nodeKey, _ := gutil.MapPossibleItemByKey(Config().GetMap("."), gSERVER_NODE_NAME)
+			if nodeKey == "" {
+				nodeKey = gSERVER_NODE_NAME
+			}
+			m = Config().GetMap(fmt.Sprintf(`%s.%s`, nodeKey, s.GetName()))
+			if len(m) == 0 {
+				m = Config().GetMap(nodeKey)
 			}
 			if len(m) > 0 {
 				if err := s.SetConfigWithMap(m); err != nil {
