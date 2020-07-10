@@ -91,6 +91,7 @@ please note your github/gitee account in your payment bill.
 |Fly的狐狸|alipay|￥100.00| 
 |六七     ·|wechat|￥88.88| gf越来越好
 |Tom|wechat|￥500.00| 一点心意  希望GF越来越好
+|Chao|wechat|￥166.00| 
 
 
 
