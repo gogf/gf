@@ -526,15 +526,21 @@ func TestSortedArray_CountValues(t *testing.T) {
 
 func TestSortedArray_SetUnique(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		a1 := []interface{}{"a", "d", "c", "c"}
-
-		func1 := func(v1, v2 interface{}) int {
-			return strings.Compare(gconv.String(v1), gconv.String(v2))
-		}
-		array1 := garray.NewSortedArrayFrom(a1, func1)
+		a1 := []interface{}{1, 2, 3, 4, 5, 3, 2, 2, 3, 5, 5}
+		array1 := garray.NewSortedArrayFrom(a1, gutil.ComparatorInt)
 		array1.SetUnique(true)
-		t.Assert(array1.Len(), 3)
-		t.Assert(array1, []interface{}{"a", "c", "d"})
+		t.Assert(array1.Len(), 5)
+		t.Assert(array1, []interface{}{1, 2, 3, 4, 5})
+	})
+}
+
+func TestSortedArray_Unique(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		a1 := []interface{}{1, 2, 3, 4, 5, 3, 2, 2, 3, 5, 5}
+		array1 := garray.NewSortedArrayFrom(a1, gutil.ComparatorInt)
+		array1.Unique()
+		t.Assert(array1.Len(), 5)
+		t.Assert(array1, []interface{}{1, 2, 3, 4, 5})
 	})
 }
 

@@ -514,9 +514,11 @@ func (a *StrArray) Search(value string) int {
 func (a *StrArray) Unique() *StrArray {
 	a.mu.Lock()
 	for i := 0; i < len(a.array)-1; i++ {
-		for j := i + 1; j < len(a.array); j++ {
+		for j := i + 1; j < len(a.array); {
 			if a.array[i] == a.array[j] {
 				a.array = append(a.array[:j], a.array[j+1:]...)
+			} else {
+				j++
 			}
 		}
 	}

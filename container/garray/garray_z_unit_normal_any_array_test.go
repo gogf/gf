@@ -95,9 +95,9 @@ func TestArray_Sort(t *testing.T) {
 
 func TestArray_Unique(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		expect := []interface{}{1, 1, 2, 3}
+		expect := []interface{}{1, 2, 3, 4, 5, 3, 2, 2, 3, 5, 5}
 		array := garray.NewArrayFrom(expect)
-		t.Assert(array.Unique().Slice(), []interface{}{1, 2, 3})
+		t.Assert(array.Unique().Slice(), []interface{}{1, 2, 3, 4, 5})
 	})
 }
 
