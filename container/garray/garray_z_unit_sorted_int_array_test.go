@@ -436,9 +436,19 @@ func TestSortedIntArray_CountValues(t *testing.T) {
 
 func TestSortedIntArray_SetUnique(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		a1 := []int{1, 2, 3, 4, 5, 3}
+		a1 := []int{1, 2, 3, 4, 5, 3, 2, 2, 3, 5, 5}
 		array1 := garray.NewSortedIntArrayFrom(a1)
 		array1.SetUnique(true)
+		t.Assert(array1.Len(), 5)
+		t.Assert(array1, []int{1, 2, 3, 4, 5})
+	})
+}
+
+func TestSortedIntArray_Unique(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		a1 := []int{1, 2, 3, 4, 5, 3, 2, 2, 3, 5, 5}
+		array1 := garray.NewSortedIntArrayFrom(a1)
+		array1.Unique()
 		t.Assert(array1.Len(), 5)
 		t.Assert(array1, []int{1, 2, 3, 4, 5})
 	})

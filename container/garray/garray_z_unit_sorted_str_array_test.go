@@ -454,11 +454,21 @@ func TestSortedStrArray_Chunk(t *testing.T) {
 
 func TestSortedStrArray_SetUnique(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		a1 := []string{"e", "a", "d", "a", "c"}
+		a1 := []string{"1", "1", "2", "2", "3", "3", "2", "2"}
 		array1 := garray.NewSortedStrArrayFrom(a1)
 		array2 := array1.SetUnique(true)
-		t.Assert(array2.Len(), 4)
-		t.Assert(array2, []string{"a", "c", "d", "e"})
+		t.Assert(array2.Len(), 3)
+		t.Assert(array2, []string{"1", "2", "3"})
+	})
+}
+
+func TestSortedStrArray_Unique(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		a1 := []string{"1", "1", "2", "2", "3", "3", "2", "2"}
+		array1 := garray.NewSortedStrArrayFrom(a1)
+		array1.Unique()
+		t.Assert(array1.Len(), 3)
+		t.Assert(array1, []string{"1", "2", "3"})
 	})
 }
 
