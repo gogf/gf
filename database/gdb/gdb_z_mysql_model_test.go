@@ -2422,3 +2422,18 @@ func Test_Model_NullField(t *testing.T) {
 		t.Assert(user.Passport, data["passport"])
 	})
 }
+
+func Test_Model_Empty_Slice_Argument(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).Where(`id`, g.Slice{}).All()
+		t.Assert(err, nil)
+		t.Assert(len(result), 0)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).Where(`id in(?)`, g.Slice{}).All()
+		t.Assert(err, nil)
+		t.Assert(len(result), 0)
+	})
+}

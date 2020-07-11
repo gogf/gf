@@ -1186,26 +1186,26 @@ func Test_Model_InnerJoin(t *testing.T) {
 
 		res, err := db.Table(table1).Where("id > ?", 5).Delete()
 		if err != nil {
-			gtest.Fatal(err)
+			t.Fatal(err)
 		}
 
 		n, err := res.RowsAffected()
 		if err != nil {
-			gtest.Fatal(err)
+			t.Fatal(err)
 		}
 
 		t.Assert(n, 5)
 
 		result, err := db.Table(table1+" u1").InnerJoin(table2+" u2", "u1.id = u2.id").OrderBy("u1.id").Select()
 		if err != nil {
-			gtest.Fatal(err)
+			t.Fatal(err)
 		}
 
 		t.Assert(len(result), 5)
 
 		result, err = db.Table(table1+" u1").InnerJoin(table2+" u2", "u1.id = u2.id").Where("u1.id > ?", 1).OrderBy("u1.id").Select()
 		if err != nil {
-			gtest.Fatal(err)
+			t.Fatal(err)
 		}
 
 		t.Assert(len(result), 4)
@@ -1222,26 +1222,26 @@ func Test_Model_LeftJoin(t *testing.T) {
 
 		res, err := db.Table(table2).Where("id > ?", 3).Delete()
 		if err != nil {
-			gtest.Fatal(err)
+			t.Fatal(err)
 		}
 
 		n, err := res.RowsAffected()
 		if err != nil {
-			gtest.Fatal(err)
+			t.Fatal(err)
 		} else {
 			t.Assert(n, 7)
 		}
 
 		result, err := db.Table(table1+" u1").LeftJoin(table2+" u2", "u1.id = u2.id").Select()
 		if err != nil {
-			gtest.Fatal(err)
+			t.Fatal(err)
 		}
 
 		t.Assert(len(result), 10)
 
 		result, err = db.Table(table1+" u1").LeftJoin(table2+" u2", "u1.id = u2.id").Where("u1.id > ? ", 2).Select()
 		if err != nil {
-			gtest.Fatal(err)
+			t.Fatal(err)
 		}
 
 		t.Assert(len(result), 8)
@@ -1258,26 +1258,36 @@ func Test_Model_RightJoin(t *testing.T) {
 
 		res, err := db.Table(table1).Where("id > ?", 3).Delete()
 		if err != nil {
-			gtest.Fatal(err)
+			t.Fatal(err)
 		}
 
 		n, err := res.RowsAffected()
 		if err != nil {
-			gtest.Fatal(err)
+			t.Fatal(err)
 		}
 
 		t.Assert(n, 7)
 
 		result, err := db.Table(table1+" u1").RightJoin(table2+" u2", "u1.id = u2.id").Select()
 		if err != nil {
-			gtest.Fatal(err)
+			t.Fatal(err)
 		}
 		t.Assert(len(result), 10)
 
 		result, err = db.Table(table1+" u1").RightJoin(table2+" u2", "u1.id = u2.id").Where("u1.id > 2").Select()
 		if err != nil {
-			gtest.Fatal(err)
+			t.Fatal(err)
 		}
 		t.Assert(len(result), 1)
+	})
+}
+
+func Test_Empty_Slice_Argument(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.GetAll(fmt.Sprintf(`select * from %s where id in(?)`, table), g.Slice{})
+		t.Assert(err, nil)
+		t.Assert(len(result), 0)
 	})
 }
