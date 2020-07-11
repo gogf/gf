@@ -29,7 +29,7 @@ type DB interface {
 	// Model creation.
 	// ===========================================================================
 
-	// Deprecated, use Model instead. The DB interface is designed not only for
+	// The DB interface is designed not only for
 	// relational databases but also for NoSQL databases in the future. The name
 	// "Table" is not proper for that purpose any more.
 	Table(table ...string) *Model

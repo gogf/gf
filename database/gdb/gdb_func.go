@@ -254,7 +254,7 @@ func GetPrimaryKeyCondition(primary string, where ...interface{}) (newWhereCondi
 // formatSql formats the sql string and its arguments before executing.
 // The internal handleArguments function might be called twice during the SQL procedure,
 // but do not worry about it, it's safe and efficient.
-func formatSql(sql string, args []interface{}) (newQuery string, newArgs []interface{}) {
+func formatSql(sql string, args []interface{}) (newSql string, newArgs []interface{}) {
 	sql = gstr.Trim(sql)
 	sql = gstr.Replace(sql, "\n", " ")
 	sql, _ = gregex.ReplaceString(`\s{2,}`, ` `, sql)
@@ -344,7 +344,7 @@ func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool) (
 }
 
 // formatWhereInterfaces formats <where> as []interface{}.
-// TODO []interface{} type support for parameter <where> does not completed yet.
+// TODO supporting for parameter <where> with []interface{} type is not completed yet.
 func formatWhereInterfaces(db DB, where []interface{}, buffer *bytes.Buffer, newArgs []interface{}) []interface{} {
 	var str string
 	var array []interface{}
@@ -457,9 +457,26 @@ func handleArguments(sql string, args []interface{}) (newSql string, newArgs []i
 					newArgs = append(newArgs, arg)
 					continue
 				}
-				for i := 0; i < rv.Len(); i++ {
-					newArgs = append(newArgs, rv.Index(i).Interface())
+
+				if rv.Len() == 0 {
+					// Empty slice argument, it converts the sql to a false sql.
+					// Eg:
+					// Query("select * from xxx where id in(?)", g.Slice{}) -> select * from xxx where 0=1
+					// Where("id in(?)", g.Slice{}) -> WHERE 0=1
+					if gstr.Contains(newSql, "?") {
+						whereKeyWord := " WHERE "
+						if p := gstr.PosI(newSql, whereKeyWord); p == -1 {
+							return "0=1", []interface{}{}
+						} else {
+							return gstr.SubStr(newSql, 0, p+len(whereKeyWord)) + "0=1", []interface{}{}
+						}
+					}
+				} else {
+					for i := 0; i < rv.Len(); i++ {
+						newArgs = append(newArgs, rv.Index(i).Interface())
+					}
 				}
+
 				// If the '?' holder count equals the length of the slice,
 				// it does not implement the arguments splitting logic.
 				// Eg: db.Query("SELECT ?+?", g.Slice{1, 2})

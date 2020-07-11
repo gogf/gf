@@ -21,10 +21,6 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
-const (
-	gPATH_FILTER_KEY = "/database/gdb/gdb"
-)
-
 // Master creates and returns a connection from master node if master-slave configured.
 // It returns the default connection if master-slave not configured.
 func (c *Core) Master() (*sql.DB, error) {
@@ -777,8 +773,8 @@ func (c *Core) writeSqlToLogger(v *Sql) {
 	s := fmt.Sprintf("[%3d ms] %s", v.End-v.Start, v.Format)
 	if v.Error != nil {
 		s += "\nError: " + v.Error.Error()
-		c.logger.StackWithFilter(gPATH_FILTER_KEY).Error(s)
+		c.logger.Error(s)
 	} else {
-		c.logger.StackWithFilter(gPATH_FILTER_KEY).Debug(s)
+		c.logger.Debug(s)
 	}
 }

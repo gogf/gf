@@ -91,7 +91,7 @@ func DB(name ...string) gdb.DB {
 	return gins.Database(name...)
 }
 
-// Deprecated, use Model instead.
+// Table is alias of Model.
 func Table(tables string, db ...string) *gdb.Model {
 	return DB(db...).Table(tables)
 }
