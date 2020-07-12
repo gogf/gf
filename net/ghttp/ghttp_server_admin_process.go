@@ -251,7 +251,8 @@ func forceCloseWebServers() {
 	})
 }
 
-// handleProcessMessage listens the signal from system.
+// handleProcessMessage receives and handles the message from processes,
+// which are commonly used for graceful reloading feature.
 func handleProcessMessage() {
 	for {
 		if msg := gproc.Receive(gADMIN_GPROC_COMM_GROUP); msg != nil {
