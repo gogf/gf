@@ -26,8 +26,8 @@ import (
 )
 
 const (
-	// DEFAULT_CONFIG_FILE is the default configuration file name.
-	DEFAULT_CONFIG_FILE = "config.toml"
+	DEFAULT_CONFIG_FILE = "config.toml" // The default configuration file name.
+	gCMDENV_KEY         = "gf.gcfg"     // Configuration key for command argument or environment.
 )
 
 // Configuration struct.
@@ -55,7 +55,7 @@ func New(file ...string) *Config {
 		jsons: gmap.NewStrAnyMap(true),
 	}
 	// Customized dir path from env/cmd.
-	if envPath := cmdenv.Get("gf.gcfg.path").String(); envPath != "" {
+	if envPath := cmdenv.Get(fmt.Sprintf("%s.path", gCMDENV_KEY)).String(); envPath != "" {
 		if gfile.Exists(envPath) {
 			_ = c.SetPath(envPath)
 		} else {
