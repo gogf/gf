@@ -31,6 +31,11 @@ require github.com/gogf/gf latest
 golang version >= 1.11
 ```
 
+# Architecture
+<div align=center>
+<img src="https://goframe.org/images/arch.png?v=12"/>
+</div>
+
 # Packages
 1. **Primary Package**
 
@@ -39,11 +44,6 @@ golang version >= 1.11
 1. **Community Package**
 
     The community packages are contributed and maintained by community members, which are hosted in `gogf` organization. Some of the community packages are separated from the `gf` repository, which are not of common usage or are with heavy dependencies. 
-
-# Architecture
-<div align=center>
-<img src="https://goframe.org/images/arch.png?v=12"/>
-</div>
 
 # Performance
 

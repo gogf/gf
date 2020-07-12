@@ -45,6 +45,13 @@ require github.com/gogf/gf latest
 golang版本 >= 1.11
 ```
 
+
+
+# 架构
+<div align=center>
+<img src="https://goframe.org/images/arch.png?v=12"/>
+</div>
+
 # 模块
 
 1. **核心模块**
@@ -55,11 +62,6 @@ golang版本 >= 1.11
 
     社区模块主要由社区贡献并维护，大部分也是由`gf`主仓库的贡献者提供及维护，存放于`gogf`空间下，与`gf`主仓库处于同一级别。有的社区模块是从`gf`主仓库中剥离出来单独维护的模块，这些模块并不是特别常用，或者对外部依赖较重。
 
-
-# 架构
-<div align=center>
-<img src="https://goframe.org/images/arch.png?v=12"/>
-</div>
 
 # 性能
 
