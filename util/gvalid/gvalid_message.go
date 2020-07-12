@@ -12,6 +12,7 @@ import (
 )
 
 // defaultMessages is the default error messages.
+// Note that these messages are synchronized from ./i18n/en/validation.toml .
 var defaultMessages = map[string]string{
 	"required":             "The :attribute field is required",
 	"required-if":          "The :attribute field is required",
