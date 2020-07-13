@@ -61,17 +61,17 @@ func doStruct(params interface{}, pointer interface{}, recursive bool, mapping .
 		}
 	}()
 
-	// paramsMap is the map[string]interface{} type variable for params.
-	paramsMap := MapDeep(params)
-	if paramsMap == nil {
-		return gerror.Newf("invalid params: %v", params)
-	}
-
 	// UnmarshalValue.
 	// Assign value with interface UnmarshalValue.
 	// Note that only pointer can implement interface UnmarshalValue.
 	if v, ok := pointer.(apiUnmarshalValue); ok {
 		return v.UnmarshalValue(params)
+	}
+
+	// paramsMap is the map[string]interface{} type variable for params.
+	paramsMap := MapDeep(params)
+	if paramsMap == nil {
+		return gerror.Newf("invalid params: %v", params)
 	}
 
 	// Using reflect to do the converting,
