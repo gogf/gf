@@ -7,7 +7,6 @@
 package gconv
 
 import (
-	"errors"
 	"fmt"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/empty"
@@ -50,10 +49,10 @@ func StructDeep(params interface{}, pointer interface{}, mapping ...map[string]s
 // doStruct is the core internal converting function for any data to struct recursively or not.
 func doStruct(params interface{}, pointer interface{}, recursive bool, mapping ...map[string]string) (err error) {
 	if params == nil {
-		return errors.New("params cannot be nil")
+		return gerror.New("params cannot be nil")
 	}
 	if pointer == nil {
-		return errors.New("object pointer cannot be nil")
+		return gerror.New("object pointer cannot be nil")
 	}
 	defer func() {
 		// Catch the panic, especially the reflect operation panics.
@@ -65,7 +64,7 @@ func doStruct(params interface{}, pointer interface{}, recursive bool, mapping .
 	// paramsMap is the map[string]interface{} type variable for params.
 	paramsMap := MapDeep(params)
 	if paramsMap == nil {
-		return fmt.Errorf("invalid params: %v", params)
+		return gerror.Newf("invalid params: %v", params)
 	}
 
 	// UnmarshalValue.
@@ -81,13 +80,21 @@ func doStruct(params interface{}, pointer interface{}, recursive bool, mapping .
 	if !ok {
 		rv := reflect.ValueOf(pointer)
 		if kind := rv.Kind(); kind != reflect.Ptr {
-			return fmt.Errorf("object pointer should be type of '*struct', but got '%v'", kind)
+			return gerror.Newf("object pointer should be type of '*struct', but got '%v'", kind)
 		}
 		// Using IsNil on reflect.Ptr variable is OK.
 		if !rv.IsValid() || rv.IsNil() {
-			return errors.New("object pointer cannot be nil")
+			return gerror.New("object pointer cannot be nil")
 		}
 		elem = rv.Elem()
+	}
+
+	// Check if an invalid interface.
+	if elem.Kind() == reflect.Interface {
+		elem = elem.Elem()
+		if !elem.IsValid() {
+			return gerror.New("interface type converting is not supported")
+		}
 	}
 
 	// It automatically creates struct object if necessary.
@@ -360,7 +367,7 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, re
 	default:
 		defer func() {
 			if e := recover(); e != nil {
-				err = errors.New(
+				err = gerror.New(
 					fmt.Sprintf(`cannot convert value "%+v" to type "%s"`,
 						value,
 						structFieldValue.Type().String(),

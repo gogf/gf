@@ -7,7 +7,6 @@
 package gconv
 
 import (
-	"errors"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/json"
 	"reflect"
@@ -325,7 +324,7 @@ func doMapToMap(params interface{}, pointer interface{}, deep bool, mapping ...m
 		paramsKind = paramsRv.Kind()
 	}
 	if paramsKind != reflect.Map {
-		return errors.New("params should be type of map")
+		return gerror.New("params should be type of map")
 	}
 	// Empty params map, no need continue.
 	if paramsRv.Len() == 0 {
@@ -343,7 +342,7 @@ func doMapToMap(params interface{}, pointer interface{}, deep bool, mapping ...m
 		pointerKind = pointerRv.Kind()
 	}
 	if pointerKind != reflect.Map {
-		return errors.New("pointer should be type of *map")
+		return gerror.New("pointer should be type of *map")
 	}
 	defer func() {
 		// Catch the panic, especially the reflect operation panics.
@@ -434,7 +433,7 @@ func doMapToMaps(params interface{}, pointer interface{}, deep bool, mapping ...
 		paramsKind = paramsRv.Kind()
 	}
 	if paramsKind != reflect.Map {
-		return errors.New("params should be type of map")
+		return gerror.New("params should be type of map")
 	}
 	// Empty params map, no need continue.
 	if paramsRv.Len() == 0 {
@@ -449,7 +448,7 @@ func doMapToMaps(params interface{}, pointer interface{}, deep bool, mapping ...
 		pointerKind = pointerRv.Kind()
 	}
 	if pointerKind != reflect.Map {
-		return errors.New("pointer should be type of *map/**map")
+		return gerror.New("pointer should be type of *map/**map")
 	}
 	defer func() {
 		// Catch the panic, especially the reflect operation panics.

@@ -7,8 +7,6 @@
 package gconv
 
 import (
-	"errors"
-	"fmt"
 	"github.com/gogf/gf/errors/gerror"
 	"reflect"
 )
@@ -32,10 +30,10 @@ func StructsDeep(params interface{}, pointer interface{}, mapping ...map[string]
 // it will create the struct/pointer internally.
 func doStructs(params interface{}, pointer interface{}, deep bool, mapping ...map[string]string) (err error) {
 	if params == nil {
-		return errors.New("params cannot be nil")
+		return gerror.New("params cannot be nil")
 	}
 	if pointer == nil {
-		return errors.New("object pointer cannot be nil")
+		return gerror.New("object pointer cannot be nil")
 	}
 	defer func() {
 		// Catch the panic, especially the reflect operation panics.
@@ -47,7 +45,7 @@ func doStructs(params interface{}, pointer interface{}, deep bool, mapping ...ma
 	if !ok {
 		pointerRv = reflect.ValueOf(pointer)
 		if kind := pointerRv.Kind(); kind != reflect.Ptr {
-			return fmt.Errorf("pointer should be type of pointer, but got: %v", kind)
+			return gerror.Newf("pointer should be type of pointer, but got: %v", kind)
 		}
 	}
 	params = Maps(params)
@@ -101,6 +99,6 @@ func doStructs(params interface{}, pointer interface{}, deep bool, mapping ...ma
 		pointerRv.Elem().Set(array)
 		return nil
 	default:
-		return fmt.Errorf("params should be type of slice, but got: %v", reflectKind)
+		return gerror.Newf("params should be type of slice, but got: %v", reflectKind)
 	}
 }

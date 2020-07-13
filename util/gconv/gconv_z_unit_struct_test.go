@@ -910,3 +910,53 @@ func Test_Struct_UnmarshalValue(t *testing.T) {
 		t.AssertNE(err, nil)
 	})
 }
+
+type T struct {
+	Name string
+}
+
+func (t *T) Test() string {
+	return t.Name
+}
+
+type TestInterface interface {
+	Test() string
+}
+
+type TestStruct struct {
+	TestInterface
+}
+
+func Test_Struct_WithInterfaceAttr(t *testing.T) {
+	// Implemented interface attribute.
+	gtest.C(t, func(t *gtest.T) {
+		v1 := TestStruct{
+			TestInterface: &T{"john"},
+		}
+		v2 := g.Map{}
+		err := gconv.StructDeep(v2, &v1)
+		t.Assert(err, nil)
+		t.Assert(v1.Test(), "john")
+	})
+	// Implemented interface attribute.
+	gtest.C(t, func(t *gtest.T) {
+		v1 := TestStruct{
+			TestInterface: &T{"john"},
+		}
+		v2 := g.Map{
+			"name": "test",
+		}
+		err := gconv.StructDeep(v2, &v1)
+		t.Assert(err, nil)
+		t.Assert(v1.Test(), "test")
+	})
+	// No implemented interface attribute.
+	gtest.C(t, func(t *gtest.T) {
+		v1 := TestStruct{}
+		v2 := g.Map{
+			"name": "test",
+		}
+		err := gconv.StructDeep(v2, &v1)
+		t.AssertNE(err, nil)
+	})
+}
