@@ -7,7 +7,7 @@
 package gconv
 
 import (
-	"fmt"
+	"github.com/gogf/gf/errors/gerror"
 	"reflect"
 )
 
@@ -19,7 +19,7 @@ func Scan(params interface{}, pointer interface{}, mapping ...map[string]string)
 	t := reflect.TypeOf(pointer)
 	k := t.Kind()
 	if k != reflect.Ptr {
-		return fmt.Errorf("params should be type of pointer, but got: %v", k)
+		return gerror.Newf("params should be type of pointer, but got: %v", k)
 	}
 	switch t.Elem().Kind() {
 	case reflect.Array, reflect.Slice:
@@ -37,7 +37,7 @@ func ScanDeep(params interface{}, pointer interface{}, mapping ...map[string]str
 	t := reflect.TypeOf(pointer)
 	k := t.Kind()
 	if k != reflect.Ptr {
-		return fmt.Errorf("params should be type of pointer, but got: %v", k)
+		return gerror.Newf("params should be type of pointer, but got: %v", k)
 	}
 	switch t.Elem().Kind() {
 	case reflect.Array, reflect.Slice:
