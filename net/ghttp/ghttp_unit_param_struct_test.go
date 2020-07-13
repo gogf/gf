@@ -48,7 +48,7 @@ func Test_Params_Parse(t *testing.T) {
 	})
 }
 
-func Test_Params_Parse_Attr_Pointer(t *testing.T) {
+func Test_Params_Parse_Attr_Pointer1(t *testing.T) {
 	type User struct {
 		Id   *int
 		Name *string
@@ -86,6 +86,33 @@ func Test_Params_Parse_Attr_Pointer(t *testing.T) {
 		t.Assert(client.PostContent("/parse2", `{"id":1,"name":"john"}`), `1john`)
 		t.Assert(client.PostContent("/parse2?id=1&name=john"), `1john`)
 		t.Assert(client.PostContent("/parse2", `id=1&name=john`), `1john`)
+	})
+}
+
+func Test_Params_Parse_Attr_Pointer2(t *testing.T) {
+	type User struct {
+		Id *int `v:"required"`
+	}
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/parse", func(r *ghttp.Request) {
+		var user *User
+		if err := r.Parse(&user); err != nil {
+			r.Response.WriteExit(err.Error())
+		}
+		r.Response.WriteExit(user.Id)
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		client := ghttp.NewClient()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		t.Assert(client.PostContent("/parse"), `The Id field is required`)
+		t.Assert(client.PostContent("/parse?id=1"), `1`)
 	})
 }
 
