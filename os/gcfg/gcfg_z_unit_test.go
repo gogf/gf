@@ -82,7 +82,6 @@ array = [1,2,3]
 			"cache": "127.0.0.1:6379,1",
 		})
 		t.AssertEQ(c.FilePath(), gfile.Pwd()+gfile.Separator+path)
-
 	})
 }
 
@@ -356,6 +355,23 @@ func TestCfg_FilePath(t *testing.T) {
 		t.Assert(path, "")
 		path = c.FilePath("tmp")
 		t.Assert(path, "")
+	})
+}
+
+func TestCfg_et(t *testing.T) {
+	config := `log-path = "logs"`
+	gtest.C(t, func(t *gtest.T) {
+		path := gcfg.DEFAULT_CONFIG_FILE
+		err := gfile.PutContents(path, config)
+		t.Assert(err, nil)
+		defer gfile.Remove(path)
+
+		c := gcfg.New()
+		t.Assert(c.Get("log-path"), "logs")
+
+		err = c.Set("log-path", "custom-logs")
+		t.Assert(err, nil)
+		t.Assert(c.Get("log-path"), "custom-logs")
 	})
 }
 
