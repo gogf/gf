@@ -91,7 +91,7 @@ func (m *Model) One(where ...interface{}) (Record, error) {
 	if len(where) > 0 {
 		return m.Where(where[0], where[1:]...).One()
 	}
-	all, err := m.All()
+	all, err := m.Limit(1).All()
 	if err != nil {
 		return nil, err
 	}
