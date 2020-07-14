@@ -957,6 +957,7 @@ func Test_Struct_WithInterfaceAttr(t *testing.T) {
 			"name": "test",
 		}
 		err := gconv.StructDeep(v2, &v1)
-		t.AssertNE(err, nil)
+		t.Assert(err, nil)
+		t.Assert(v1.TestInterface, nil)
 	})
 }

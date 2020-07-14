@@ -138,23 +138,33 @@ func doStruct(params interface{}, pointer interface{}, recursive bool, mapping .
 	// The key of the attrMap is the attribute name of the struct,
 	// and the value is its replaced name for later comparison to improve performance.
 	var (
-		attrMap  = make(map[string]string)
-		elemType = elem.Type()
-		tempName = ""
+		tempName       string
+		elemFieldType  reflect.StructField
+		elemFieldValue reflect.Value
+		elemType       = elem.Type()
+		attrMap        = make(map[string]string)
 	)
 	for i := 0; i < elem.NumField(); i++ {
-		field := elemType.Field(i)
+		elemFieldType = elemType.Field(i)
 		// Only do converting to public attributes.
-		if !utils.IsLetterUpper(field.Name[0]) {
+		if !utils.IsLetterUpper(elemFieldType.Name[0]) {
 			continue
 		}
 		// Maybe it's struct/*struct.
-		if recursive && field.Anonymous {
-			if err = doStruct(paramsMap, elem.Field(i), recursive, mapping...); err != nil {
+		if recursive && elemFieldType.Anonymous {
+			elemFieldValue = elem.Field(i)
+			// Ignore the interface attribute if it's nil.
+			if elemFieldValue.Kind() == reflect.Interface {
+				elemFieldValue = elemFieldValue.Elem()
+				if !elemFieldValue.IsValid() {
+					continue
+				}
+			}
+			if err = doStruct(paramsMap, elemFieldValue, recursive, mapping...); err != nil {
 				return err
 			}
 		} else {
-			tempName = field.Name
+			tempName = elemFieldType.Name
 			attrMap[tempName] = replaceCharReg.ReplaceAllString(tempName, "")
 		}
 	}
