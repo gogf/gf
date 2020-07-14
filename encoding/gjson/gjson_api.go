@@ -150,13 +150,13 @@ func (j *Json) GetString(pattern string, def ...interface{}) string {
 	return gconv.String(j.Get(pattern, def...))
 }
 
-// GetBytes retrieves the value by specified <pattern> and converts it to byte.
+// GetBytes retrieves the value by specified <pattern> and converts it to []byte.
 func (j *Json) GetBytes(pattern string, def ...interface{}) []byte {
 	return gconv.Bytes(j.Get(pattern, def...))
 }
 
-// GetBool gets the value by specified <pattern>,
-// and converts it to bool.
+// GetBool retrieves the value by specified <pattern>,
+// converts and returns it as bool.
 // It returns false when value is: "", 0, false, off, nil;
 // or returns true instead.
 func (j *Json) GetBool(pattern string, def ...interface{}) bool {

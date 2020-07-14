@@ -328,8 +328,10 @@ func (c *Config) getJson(file ...string) *gjson.Json {
 		name = c.name
 	}
 	r := c.jsons.GetOrSetFuncLock(name, func() interface{} {
-		content := ""
-		filePath := ""
+		var (
+			content  = ""
+			filePath = ""
+		)
 		if content = GetContent(name); content == "" {
 			filePath = c.filePath(name)
 			if filePath == "" {
@@ -341,6 +343,7 @@ func (c *Config) getJson(file ...string) *gjson.Json {
 				content = gfile.GetContents(filePath)
 			}
 		}
+		// Note that the underlying configuration json object operations are concurrent safe.
 		if j, err := gjson.LoadContent(content, true); err == nil {
 			j.SetViolenceCheck(c.vc)
 			// Add monitor for this configuration file,
