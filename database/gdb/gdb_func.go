@@ -553,7 +553,7 @@ func formatError(err error, sql string, args ...interface{}) error {
 func FormatSqlWithArgs(sql string, args []interface{}) string {
 	index := -1
 	newQuery, _ := gregex.ReplaceStringFunc(
-		`(\?|:\d+|\$\d+|@p\d+)`, sql, func(s string) string {
+		`(\?|:v\d+|\$\d+|@v\d+)`, sql, func(s string) string {
 			index++
 			if len(args) > index {
 				if args[index] == nil {
