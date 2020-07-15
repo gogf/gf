@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/test/gtest"
 )
 
-func Test_CreateUpdateDeleteTime(t *testing.T) {
+func Test_SoftCreateUpdateDeleteTime(t *testing.T) {
 	table := "time_test_table"
 	if _, err := db.Exec(fmt.Sprintf(`
 CREATE TABLE %s (
@@ -52,6 +52,7 @@ CREATE TABLE %s (
 		t.AssertGE(oneInsert["create_at"].GTime().Timestamp(), gtime.Timestamp()-2)
 		t.AssertGE(oneInsert["update_at"].GTime().Timestamp(), gtime.Timestamp())
 
+		// For time asserting purpose.
 		time.Sleep(2 * time.Second)
 
 		// Save
@@ -73,11 +74,11 @@ CREATE TABLE %s (
 		t.AssertNE(oneSave["update_at"].GTime().Timestamp(), oneInsert["update_at"].GTime().Timestamp())
 		t.AssertGE(oneSave["update_at"].GTime().Timestamp(), gtime.Now().Timestamp()-2)
 
+		// For time asserting purpose.
 		time.Sleep(2 * time.Second)
 
 		// Update
 		dataUpdate := g.Map{
-			"id":   1,
 			"name": "name_1000",
 		}
 		r, err = db.Table(table).Data(dataUpdate).WherePri(1).Update()
@@ -111,6 +112,7 @@ CREATE TABLE %s (
 		t.AssertGE(oneReplace["create_at"].GTime().Timestamp(), oneInsert["create_at"].GTime().Timestamp())
 		t.AssertGE(oneReplace["update_at"].GTime().Timestamp(), oneInsert["update_at"].GTime().Timestamp())
 
+		// For time asserting purpose.
 		time.Sleep(2 * time.Second)
 
 		// Delete
@@ -145,6 +147,46 @@ CREATE TABLE %s (
 		i, err = db.Table(table).Unscoped().FindCount()
 		t.Assert(err, nil)
 		t.Assert(i, 0)
+	})
+}
+
+func Test_SoftUpdateTime(t *testing.T) {
+	table := "time_test_table"
+	if _, err := db.Exec(fmt.Sprintf(`
+CREATE TABLE %s (
+  id        int(11) NOT NULL,
+  num       int(11) DEFAULT NULL,
+  create_at datetime DEFAULT NULL,
+  update_at datetime DEFAULT NULL,
+  delete_at datetime DEFAULT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    `, table)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		// Insert
+		dataInsert := g.Map{
+			"id":  1,
+			"num": 10,
+		}
+		r, err := db.Table(table).Data(dataInsert).Insert()
+		t.Assert(err, nil)
+		n, _ := r.RowsAffected()
+		t.Assert(n, 1)
+
+		oneInsert, err := db.Table(table).FindOne(1)
+		t.Assert(err, nil)
+		t.Assert(oneInsert["id"].Int(), 1)
+		t.Assert(oneInsert["num"].Int(), 10)
+
+		// Update.
+		r, err = db.Table(table).Data("num=num+1").Where("id=?", 1).Update()
+		t.Assert(err, nil)
+		n, _ = r.RowsAffected()
+		t.Assert(n, 1)
 	})
 }
 
