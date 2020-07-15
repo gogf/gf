@@ -27,12 +27,23 @@ func (m *Model) Select(where ...interface{}) (Result, error) {
 // The optional parameter <where> is the same as the parameter of Model.Where function,
 // see Model.Where.
 func (m *Model) All(where ...interface{}) (Result, error) {
+	return m.doGetAll(false, where...)
+}
+
+// doGetAll does "SELECT FROM ..." statement for the model.
+// It retrieves the records from table and returns the result as slice type.
+// It returns nil if there's no record retrieved with the given conditions from table.
+//
+// The parameter <limit1> specifies whether limits querying only one record if m.limit is not set.
+// The optional parameter <where> is the same as the parameter of Model.Where function,
+// see Model.Where.
+func (m *Model) doGetAll(limit1 bool, where ...interface{}) (Result, error) {
 	if len(where) > 0 {
 		return m.Where(where[0], where[1:]...).All()
 	}
 	var (
 		softDeletingCondition                         = m.getConditionForSoftDeleting()
-		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(false)
+		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(limit1)
 	)
 	if !m.unscoped && softDeletingCondition != "" {
 		if conditionWhere == "" {
@@ -44,7 +55,7 @@ func (m *Model) All(where ...interface{}) (Result, error) {
 	}
 	// DO NOT quote the m.fields where, in case of fields like:
 	// DISTINCT t.user_id uid
-	return m.doGetAll(
+	return m.doGetAllBySql(
 		fmt.Sprintf(
 			"SELECT %s FROM %s%s",
 			m.fields,
@@ -91,7 +102,7 @@ func (m *Model) One(where ...interface{}) (Record, error) {
 	if len(where) > 0 {
 		return m.Where(where[0], where[1:]...).One()
 	}
-	all, err := m.Limit(1).All()
+	all, err := m.doGetAll(true)
 	if err != nil {
 		return nil, err
 	}
@@ -294,7 +305,7 @@ func (m *Model) Count(where ...interface{}) (int, error) {
 	if len(m.groupBy) > 0 {
 		s = fmt.Sprintf("SELECT COUNT(1) FROM (%s) count_alias", s)
 	}
-	list, err := m.doGetAll(s, conditionArgs...)
+	list, err := m.doGetAllBySql(s, conditionArgs...)
 	if err != nil {
 		return 0, err
 	}
@@ -367,8 +378,8 @@ func (m *Model) FindScan(pointer interface{}, where ...interface{}) error {
 	return m.Scan(pointer)
 }
 
-// doGetAll does the select statement on the database.
-func (m *Model) doGetAll(sql string, args ...interface{}) (result Result, err error) {
+// doGetAllBySql does the select statement on the database.
+func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, err error) {
 	cacheKey := ""
 	// Retrieve from cache.
 	if m.cacheEnabled && m.tx == nil {
