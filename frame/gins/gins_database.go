@@ -41,7 +41,7 @@ func Database(name ...string) gdb.DB {
 		}
 		var m map[string]interface{}
 		// It firstly searches the configuration of the instance name.
-		nodeKey, _ := gutil.MapPossibleItemByKey(Config().GetMap("."), gVIEWER_NODE_NAME)
+		nodeKey, _ := gutil.MapPossibleItemByKey(Config().GetMap("."), gDATABASE_NODE_NAME)
 		if nodeKey == "" {
 			nodeKey = gDATABASE_NODE_NAME
 		}
