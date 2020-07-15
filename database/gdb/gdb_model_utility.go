@@ -157,8 +157,8 @@ func (m *Model) getPrimaryKey() string {
 // formatCondition formats where arguments of the model and returns a new condition sql and its arguments.
 // Note that this function does not change any attribute value of the <m>.
 //
-// The parameter <limit> specifies whether limits querying only one record if m.limit is not set.
-func (m *Model) formatCondition(limit bool) (conditionWhere string, conditionExtra string, conditionArgs []interface{}) {
+// The parameter <limit1> specifies whether limits querying only one record if m.limit is not set.
+func (m *Model) formatCondition(limit1 bool) (conditionWhere string, conditionExtra string, conditionArgs []interface{}) {
 	if len(m.whereHolder) > 0 {
 		for _, v := range m.whereHolder {
 			switch v.operator {
@@ -231,7 +231,7 @@ func (m *Model) formatCondition(limit bool) (conditionWhere string, conditionExt
 		} else {
 			conditionExtra += fmt.Sprintf(" LIMIT %d", m.limit)
 		}
-	} else if limit {
+	} else if limit1 {
 		conditionExtra += " LIMIT 1"
 	}
 	if m.offset >= 0 {
