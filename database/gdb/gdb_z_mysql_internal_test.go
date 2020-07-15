@@ -75,19 +75,19 @@ func Test_Func_FormatSqlWithArgs(t *testing.T) {
 	// mssql
 	gtest.C(t, func(t *gtest.T) {
 		var s string
-		s = FormatSqlWithArgs("select * from table where id>=@p1 and sex=@p2", []interface{}{100, 1})
+		s = FormatSqlWithArgs("select * from table where id>=@v1 and sex=@v2", []interface{}{100, 1})
 		t.Assert(s, "select * from table where id>=100 and sex=1")
 	})
 	// pgsql
 	gtest.C(t, func(t *gtest.T) {
 		var s string
-		s = FormatSqlWithArgs("select * from table where id>=$1 and sex=$2", []interface{}{100, 1})
+		s = FormatSqlWithArgs("select * from table where id>=$v1 and sex=$v2", []interface{}{100, 1})
 		t.Assert(s, "select * from table where id>=100 and sex=1")
 	})
 	// oracle
 	gtest.C(t, func(t *gtest.T) {
 		var s string
-		s = FormatSqlWithArgs("select * from table where id>=:1 and sex=:2", []interface{}{100, 1})
+		s = FormatSqlWithArgs("select * from table where id>=:v1 and sex=:v2", []interface{}{100, 1})
 		t.Assert(s, "select * from table where id>=100 and sex=1")
 	})
 }
