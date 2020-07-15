@@ -30,7 +30,8 @@ var (
 //
 // Note:
 // 1. The <params> can be any type of map/struct, usually a map.
-// 2. The second parameter <pointer> should be a pointer to the struct object.
+// 2. The <pointer> should be type of *struct/**struct, which is a pointer to struct object
+//    or struct pointer.
 // 3. Only the public attributes of struct object can be mapped.
 // 4. If <params> is a map, the key of the map <params> can be lowercase.
 //    It will automatically convert the first letter of the key to uppercase
@@ -109,10 +110,10 @@ func doStruct(params interface{}, pointer interface{}, recursive bool, mapping .
 		}
 	}
 
-	// UnmarshalValue.
+	// UnmarshalValue checks again.
 	// Assign value with interface UnmarshalValue.
 	// Note that only pointer can implement interface UnmarshalValue.
-	if elem.Kind() == reflect.Struct {
+	if elem.Kind() == reflect.Struct && elem.CanAddr() {
 		if v, ok := elem.Addr().Interface().(apiUnmarshalValue); ok {
 			return v.UnmarshalValue(params)
 		}
