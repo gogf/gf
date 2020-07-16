@@ -68,7 +68,7 @@ func (view *View) Parse(file string, params ...Params) (result string, err error
 		if resource != nil {
 			content = gconv.UnsafeBytesToStr(resource.Content())
 		} else {
-			content = gfcache.GetContents(path)
+			content = gfile.GetContentsWithCache(path)
 		}
 		// Monitor template files changes using fsnotify asynchronously.
 		if resource == nil {

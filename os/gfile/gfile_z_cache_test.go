@@ -1,27 +1,22 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright 2020 gf Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// go test *.go -bench=".*" -benchmem
-
-package gfcache_test
+package gfile_test
 
 import (
+	"github.com/gogf/gf/os/gfile"
+	"github.com/gogf/gf/test/gtest"
 	"io/ioutil"
 	"os"
 	"testing"
 	"time"
-
-	"github.com/gogf/gf/os/gfcache"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/test/gtest"
 )
 
-func TestGetContents(t *testing.T) {
+func Test_GetContentsWithCache(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-
 		var f *os.File
 		var err error
 		fileName := "test"
@@ -38,7 +33,6 @@ func TestGetContents(t *testing.T) {
 		defer os.Remove(f.Name())
 
 		if gfile.Exists(f.Name()) {
-
 			f, err = gfile.OpenFile(f.Name(), os.O_APPEND|os.O_WRONLY, os.ModeAppend)
 			if err != nil {
 				t.Error("file open fail", err)
@@ -49,7 +43,7 @@ func TestGetContents(t *testing.T) {
 				t.Error("write error", err)
 			}
 
-			cache := gfcache.GetContents(f.Name(), 1)
+			cache := gfile.GetContentsWithCache(f.Name(), 1)
 			t.Assert(cache, strTest)
 		}
 	})
@@ -72,7 +66,7 @@ func TestGetContents(t *testing.T) {
 		defer os.Remove(f.Name())
 
 		if gfile.Exists(f.Name()) {
-			cache := gfcache.GetContents(f.Name())
+			cache := gfile.GetContentsWithCache(f.Name())
 
 			f, err = gfile.OpenFile(f.Name(), os.O_APPEND|os.O_WRONLY, os.ModeAppend)
 			if err != nil {

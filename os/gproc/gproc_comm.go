@@ -73,7 +73,7 @@ func getConnByPid(pid int) (*gtcp.PoolConn, error) {
 // It returns 0 if no port found for the specified pid.
 func getPortByPid(pid int) int {
 	path := getCommFilePath(pid)
-	content := gfcache.GetContents(path)
+	content := gfile.GetContentsWithCache(path)
 	return gconv.Int(content)
 }
 
