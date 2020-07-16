@@ -18,7 +18,6 @@ import (
 	"github.com/gogf/gf/encoding/gxml"
 	"github.com/gogf/gf/encoding/gyaml"
 	"github.com/gogf/gf/internal/rwmutex"
-	"github.com/gogf/gf/os/gfcache"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/util/gconv"
@@ -99,7 +98,7 @@ func Load(path string, safe ...bool) (*Json, error) {
 	} else {
 		path = p
 	}
-	return doLoadContent(gfile.Ext(path), gfcache.GetBinContents(path), safe...)
+	return doLoadContent(gfile.Ext(path), gfile.GetBytesWithCache(path), safe...)
 }
 
 // LoadJson creates a Json object from given JSON format content.
