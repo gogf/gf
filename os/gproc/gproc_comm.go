@@ -3,42 +3,81 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
-// "不要通过共享内存来通信，而应该通过通信来共享内存"
 
 package gproc
 
 import (
-	"os"
-
+	"errors"
+	"fmt"
 	"github.com/gogf/gf/container/gmap"
+	"github.com/gogf/gf/net/gtcp"
+	"github.com/gogf/gf/os/gfcache"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/util/gconv"
 )
 
-// 进程通信数据结构
-type Msg struct {
-	SendPid int    `json:"spid"`  // 发送进程ID
-	RecvPid int    `json:"rpid"`  // 接收进程ID
-	Group   string `json:"group"` // 分组名称
-	Data    []byte `json:"data"`  // 原始数据
+// MsgRequest is the request structure for process communication.
+type MsgRequest struct {
+	SendPid int    // Sender PID.
+	RecvPid int    // Receiver PID.
+	Group   string // Message group name.
+	Data    []byte // Request data.
 }
 
-// 本地进程通信接收消息队列(按照分组进行构建的map，键值为*gqueue.Queue对象)
-var commReceiveQueues = gmap.NewStrAnyMap(true)
-
-// (用于发送)已建立的PID对应的Conn通信对象，键值为一个Pool，防止并行使用同一个通信对象造成数据重叠
-var commPidConnMap = gmap.NewIntAnyMap(true)
-
-// 获取指定进程的通信文件地址
-func getCommFilePath(pid int) string {
-	return getCommDirPath() + gfile.Separator + gconv.String(pid)
+// MsgResponse is the response structure for process communication.
+type MsgResponse struct {
+	Code    int    // 1: OK; Other: Error.
+	Message string // Response message.
+	Data    []byte // Response data.
 }
 
-// 获取进程间通信目录地址
-func getCommDirPath() string {
-	tempDir := os.Getenv(gPROC_TEMP_DIR_ENV_KEY)
-	if tempDir == "" {
-		tempDir = gfile.TempDir()
+const (
+	gPROC_COMM_DEFAULT_GRUOP_NAME = ""    // Default group name.
+	gPROC_DEFAULT_TCP_PORT        = 10000 // Starting port number for receiver listening.
+	gPROC_MSG_QUEUE_MAX_LENGTH    = 10000 // Max size for each message queue of the group.
+)
+
+var (
+	// commReceiveQueues is the group name to queue map for storing received data.
+	// The value of the map is type of *gqueue.Queue.
+	commReceiveQueues = gmap.NewStrAnyMap(true)
+
+	// commPidFolderPath specifies the folder path storing pid to port mapping files.
+	commPidFolderPath = gfile.TempDir("gproc")
+)
+
+func init() {
+	// Automatically create the storage folder.
+	if !gfile.Exists(commPidFolderPath) {
+		err := gfile.Mkdir(commPidFolderPath)
+		if err != nil {
+			panic(fmt.Errorf(`create gproc folder failed: %v`, err))
+		}
 	}
-	return tempDir + gfile.Separator + "gproc"
+}
+
+// getConnByPid creates and returns a TCP connection for specified pid.
+func getConnByPid(pid int) (*gtcp.PoolConn, error) {
+	port := getPortByPid(pid)
+	if port > 0 {
+		if conn, err := gtcp.NewPoolConn(fmt.Sprintf("127.0.0.1:%d", port)); err == nil {
+			return conn, nil
+		} else {
+			return nil, err
+		}
+	}
+	return nil, errors.New(fmt.Sprintf("could not find port for pid: %d", pid))
+}
+
+// getPortByPid returns the listening port for specified pid.
+// It returns 0 if no port found for the specified pid.
+func getPortByPid(pid int) int {
+	path := getCommFilePath(pid)
+	content := gfile.GetContentsWithCache(path)
+	return gconv.Int(content)
+}
+
+// getCommFilePath returns the pid to port mapping file path for given pid.
+func getCommFilePath(pid int) string {
+	return gfile.Join(commPidFolderPath, gconv.String(pid))
 }

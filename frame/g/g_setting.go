@@ -10,6 +10,7 @@ import "github.com/gogf/gf/net/ghttp"
 
 // SetServerGraceful enables/disables graceful reload feature of http Web Server.
 // This feature is disabled in default.
+// Deprecated, use configuration of ghttp.Server for controlling this feature.
 func SetServerGraceful(enabled bool) {
 	ghttp.SetGraceful(enabled)
 }

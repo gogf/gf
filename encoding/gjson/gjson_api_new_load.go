@@ -4,14 +4,13 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gjson provides convenient API for JSON/XML/YAML/TOML data handling.
 package gjson
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/internal/json"
 	"reflect"
 
 	"github.com/gogf/gf/encoding/gini"
@@ -19,18 +18,29 @@ import (
 	"github.com/gogf/gf/encoding/gxml"
 	"github.com/gogf/gf/encoding/gyaml"
 	"github.com/gogf/gf/internal/rwmutex"
-	"github.com/gogf/gf/os/gfcache"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/util/gconv"
 )
 
-// New creates a Json object with any variable type of <data>,
-// but <data> should be a map or slice for data access reason,
-// or it will make no sense.
-// The <unsafe> param specifies whether using this Json object
-// in un-concurrent-safe context, which is false in default.
+// New creates a Json object with any variable type of <data>, but <data> should be a map
+// or slice for data access reason, or it will make no sense.
+//
+// The parameter <safe> specifies whether using this Json object in concurrent-safe context,
+// which is false in default.
 func New(data interface{}, safe ...bool) *Json {
+	return NewWithTag(data, "json", safe...)
+}
+
+// NewWithTag creates a Json object with any variable type of <data>, but <data> should be a map
+// or slice for data access reason, or it will make no sense.
+//
+// The parameter <tags> specifies priority tags for struct conversion to map, multiple tags joined
+// with char ','.
+//
+// The parameter <safe> specifies whether using this Json object in concurrent-safe context, which
+// is false in default.
+func NewWithTag(data interface{}, tags string, safe ...bool) *Json {
 	j := (*Json)(nil)
 	switch data.(type) {
 	case string, []byte:
@@ -51,9 +61,7 @@ func New(data interface{}, safe ...bool) *Json {
 			kind = rv.Kind()
 		}
 		switch kind {
-		case reflect.Slice:
-			fallthrough
-		case reflect.Array:
+		case reflect.Slice, reflect.Array:
 			i := interface{}(nil)
 			i = gconv.Interfaces(data)
 			j = &Json{
@@ -61,11 +69,11 @@ func New(data interface{}, safe ...bool) *Json {
 				c:  byte(gDEFAULT_SPLIT_CHAR),
 				vc: false,
 			}
-		case reflect.Map:
-			fallthrough
-		case reflect.Struct:
+		case reflect.Map, reflect.Struct:
 			i := interface{}(nil)
-			i = gconv.Map(data, "json")
+			// Note that it uses Map function implementing the converting.
+			// Note that it here should not use MapDeep function if you really know what it means.
+			i = gconv.Map(data, tags)
 			j = &Json{
 				p:  &i,
 				c:  byte(gDEFAULT_SPLIT_CHAR),
@@ -83,74 +91,44 @@ func New(data interface{}, safe ...bool) *Json {
 	return j
 }
 
-// Valid checks whether <data> is a valid JSON data type.
-func Valid(data interface{}) bool {
-	return json.Valid(gconv.Bytes(data))
-}
-
-// Encode encodes <value> to JSON data type of bytes.
-func Encode(value interface{}) ([]byte, error) {
-	return json.Marshal(value)
-}
-
-// Decode decodes <data>(string/[]byte) to golang variable.
-func Decode(data interface{}) (interface{}, error) {
-	var value interface{}
-	if err := DecodeTo(gconv.Bytes(data), &value); err != nil {
-		return nil, err
-	} else {
-		return value, nil
-	}
-}
-
-// Decode decodes <data>(string/[]byte) to specified golang variable <v>.
-// The <v> should be a pointer type.
-func DecodeTo(data interface{}, v interface{}) error {
-	decoder := json.NewDecoder(bytes.NewReader(gconv.Bytes(data)))
-	decoder.UseNumber()
-	return decoder.Decode(v)
-}
-
-// DecodeToJson codes <data>(string/[]byte) to a Json object.
-func DecodeToJson(data interface{}, safe ...bool) (*Json, error) {
-	if v, err := Decode(gconv.Bytes(data)); err != nil {
-		return nil, err
-	} else {
-		return New(v, safe...), nil
-	}
-}
-
-// Load loads content from specified file <path>,
-// and creates a Json object from its content.
+// Load loads content from specified file <path>, and creates a Json object from its content.
 func Load(path string, safe ...bool) (*Json, error) {
 	if p, err := gfile.Search(path); err != nil {
 		return nil, err
 	} else {
 		path = p
 	}
-	return doLoadContent(gfile.Ext(path), gfcache.GetBinContents(path), safe...)
+	return doLoadContent(gfile.Ext(path), gfile.GetBytesWithCache(path), safe...)
 }
 
+// LoadJson creates a Json object from given JSON format content.
 func LoadJson(data interface{}, safe ...bool) (*Json, error) {
 	return doLoadContent("json", gconv.Bytes(data), safe...)
 }
 
+// LoadXml creates a Json object from given XML format content.
 func LoadXml(data interface{}, safe ...bool) (*Json, error) {
 	return doLoadContent("xml", gconv.Bytes(data), safe...)
 }
 
-func LoadYaml(data interface{}, safe ...bool) (*Json, error) {
-	return doLoadContent("yaml", gconv.Bytes(data), safe...)
-}
-
-func LoadToml(data interface{}, safe ...bool) (*Json, error) {
-	return doLoadContent("toml", gconv.Bytes(data), safe...)
-}
-
+// LoadIni creates a Json object from given INI format content.
 func LoadIni(data interface{}, safe ...bool) (*Json, error) {
 	return doLoadContent("ini", gconv.Bytes(data), safe...)
 }
 
+// LoadYaml creates a Json object from given YAML format content.
+func LoadYaml(data interface{}, safe ...bool) (*Json, error) {
+	return doLoadContent("yaml", gconv.Bytes(data), safe...)
+}
+
+// LoadToml creates a Json object from given TOML format content.
+func LoadToml(data interface{}, safe ...bool) (*Json, error) {
+	return doLoadContent("toml", gconv.Bytes(data), safe...)
+}
+
+// doLoadContent creates a Json object from given content.
+// It supports data content type as follows:
+// JSON, XML, INI, YAML and TOML.
 func doLoadContent(dataType string, data []byte, safe ...bool) (*Json, error) {
 	var err error
 	var result interface{}
@@ -188,7 +166,10 @@ func doLoadContent(dataType string, data []byte, safe ...bool) (*Json, error) {
 		return nil, err
 	}
 	decoder := json.NewDecoder(bytes.NewReader(data))
-	decoder.UseNumber()
+	// Do not use number, it converts float64 to json.Number type,
+	// which actually a string type. It causes converting issue for other data formats,
+	// for example: yaml.
+	//decoder.UseNumber()
 	if err := decoder.Decode(&result); err != nil {
 		return nil, err
 	}
@@ -199,6 +180,9 @@ func doLoadContent(dataType string, data []byte, safe ...bool) (*Json, error) {
 	return New(result, safe...), nil
 }
 
+// LoadContent creates a Json object from given content, it checks the data type of <content>
+// automatically, supporting data content type as follows:
+// JSON, XML, INI, YAML and TOML.
 func LoadContent(data interface{}, safe ...bool) (*Json, error) {
 	content := gconv.Bytes(data)
 	if len(content) == 0 {
@@ -218,7 +202,7 @@ func checkDataType(content []byte) string {
 		return "yml"
 	} else if (gregex.IsMatch(`^[\s\t\[*\]].?*[\w\-]+\s*=\s*.+`, content) || gregex.IsMatch(`\n[\s\t\[*\]]*[\w\-]+\s*=\s*.+`, content)) && gregex.IsMatch(`\n[\s\t]*[\w\-]+\s*=*\"*.+\"`, content) == false && gregex.IsMatch(`^[\s\t]*[\w\-]+\s*=*\"*.+\"`, content) == false {
 		return "ini"
-	} else if gregex.IsMatch(`^[\s\t]*[\w\-]+\s*=\s*.+`, content) || gregex.IsMatch(`\n[\s\t]*[\w\-]+\s*=\s*.+`, content) {
+	} else if gregex.IsMatch(`^[\s\t]*[\w\-\."]+\s*=\s*.+`, content) || gregex.IsMatch(`\n[\s\t]*[\w\-\."]+\s*=\s*.+`, content) {
 		return "toml"
 	} else {
 		return ""

@@ -16,37 +16,52 @@ import (
 )
 
 func Test_ScanDir(t *testing.T) {
-	teatPath := gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata"
-	gtest.Case(t, func() {
+	teatPath := gdebug.TestDataPath()
+	gtest.C(t, func(t *gtest.T) {
 		files, err := gfile.ScanDir(teatPath, "*", false)
-		gtest.Assert(err, nil)
-		gtest.AssertIN(teatPath+gfile.Separator+"dir1", files)
-		gtest.AssertIN(teatPath+gfile.Separator+"dir2", files)
-		gtest.AssertNE(teatPath+gfile.Separator+"dir1"+gfile.Separator+"file1", files)
+		t.Assert(err, nil)
+		t.AssertIN(teatPath+gfile.Separator+"dir1", files)
+		t.AssertIN(teatPath+gfile.Separator+"dir2", files)
+		t.AssertNE(teatPath+gfile.Separator+"dir1"+gfile.Separator+"file1", files)
 	})
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		files, err := gfile.ScanDir(teatPath, "*", true)
-		gtest.Assert(err, nil)
-		gtest.AssertIN(teatPath+gfile.Separator+"dir1", files)
-		gtest.AssertIN(teatPath+gfile.Separator+"dir2", files)
-		gtest.AssertIN(teatPath+gfile.Separator+"dir1"+gfile.Separator+"file1", files)
-		gtest.AssertIN(teatPath+gfile.Separator+"dir2"+gfile.Separator+"file2", files)
+		t.Assert(err, nil)
+		t.AssertIN(teatPath+gfile.Separator+"dir1", files)
+		t.AssertIN(teatPath+gfile.Separator+"dir2", files)
+		t.AssertIN(teatPath+gfile.Separator+"dir1"+gfile.Separator+"file1", files)
+		t.AssertIN(teatPath+gfile.Separator+"dir2"+gfile.Separator+"file2", files)
+	})
+}
+
+func Test_ScanDirFunc(t *testing.T) {
+	teatPath := gdebug.TestDataPath()
+	gtest.C(t, func(t *gtest.T) {
+		files, err := gfile.ScanDirFunc(teatPath, "*", true, func(path string) string {
+			if gfile.Name(path) != "file1" {
+				return ""
+			}
+			return path
+		})
+		t.Assert(err, nil)
+		t.Assert(len(files), 1)
+		t.Assert(gfile.Name(files[0]), "file1")
 	})
 }
 
 func Test_ScanDirFile(t *testing.T) {
-	teatPath := gfile.Dir(gdebug.CallerFilePath()) + gfile.Separator + "testdata"
-	gtest.Case(t, func() {
+	teatPath := gdebug.TestDataPath()
+	gtest.C(t, func(t *gtest.T) {
 		files, err := gfile.ScanDirFile(teatPath, "*", false)
-		gtest.Assert(err, nil)
-		gtest.Assert(len(files), 0)
+		t.Assert(err, nil)
+		t.Assert(len(files), 0)
 	})
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		files, err := gfile.ScanDirFile(teatPath, "*", true)
-		gtest.Assert(err, nil)
-		gtest.AssertNI(teatPath+gfile.Separator+"dir1", files)
-		gtest.AssertNI(teatPath+gfile.Separator+"dir2", files)
-		gtest.AssertIN(teatPath+gfile.Separator+"dir1"+gfile.Separator+"file1", files)
-		gtest.AssertIN(teatPath+gfile.Separator+"dir2"+gfile.Separator+"file2", files)
+		t.Assert(err, nil)
+		t.AssertNI(teatPath+gfile.Separator+"dir1", files)
+		t.AssertNI(teatPath+gfile.Separator+"dir2", files)
+		t.AssertIN(teatPath+gfile.Separator+"dir1"+gfile.Separator+"file1", files)
+		t.AssertIN(teatPath+gfile.Separator+"dir2"+gfile.Separator+"file2", files)
 	})
 }

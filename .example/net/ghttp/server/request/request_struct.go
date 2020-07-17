@@ -5,20 +5,20 @@ import (
 	"github.com/gogf/gf/net/ghttp"
 )
 
-type User struct {
-	Uid   int    `json:"uid"`
-	Name  string `json:"name"  params:"username"`
-	Pass1 string `json:"pass1" params:"password1,userpass1"`
-	Pass2 string `json:"pass2" params:"password3,userpass2"`
-}
-
 func main() {
+	type User struct {
+		Uid   int    `json:"uid"`
+		Name  string `json:"name"  p:"username"`
+		Pass1 string `json:"pass1" p:"password1"`
+		Pass2 string `json:"pass2" p:"password2"`
+	}
+
 	s := g.Server()
 	s.BindHandler("/user", func(r *ghttp.Request) {
-		user := new(User)
-		r.GetToStruct(user)
-		//r.GetPostToStruct(user)
-		//r.GetQueryToStruct(user)
+		var user *User
+		if err := r.Parse(&user); err != nil {
+			panic(err)
+		}
 		r.Response.WriteJson(user)
 	})
 	s.SetPort(8199)

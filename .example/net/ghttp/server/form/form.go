@@ -8,7 +8,7 @@ import (
 func main() {
 	s := g.Server()
 	s.BindHandler("/", func(r *ghttp.Request) {
-		g.Dump(r.GetPostMap())
+		g.Dump(r.GetForm("array"))
 		r.Response.WriteTpl("form.html")
 	})
 	s.SetPort(8199)

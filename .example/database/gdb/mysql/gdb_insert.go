@@ -2,22 +2,26 @@ package main
 
 import (
 	"fmt"
+	"github.com/gogf/gf/database/gdb"
 	"time"
-
-	"github.com/gogf/gf/frame/g"
 )
 
 func main() {
-	db := g.DB()
-	// 开启调试模式，以便于记录所有执行的SQL
+	//db := g.DB()
+
+	gdb.AddDefaultConfigNode(gdb.ConfigNode{
+		LinkInfo: "root:12345678@tcp(127.0.0.1:3306)/test?parseTime=true&loc=Local",
+		Type:     "mysql",
+		Charset:  "utf8",
+	})
+	db, _ := gdb.New()
+
 	db.SetDebug(true)
 
-	r, e := db.Table("user").Data(g.Map{
-		"passport":    "1",
-		"password":    "1",
-		"nickname":    "1",
-		"create_time": time.Now(),
-	}).Insert()
+	type User struct {
+		CreateTime time.Time `orm:"create_time"`
+	}
+	r, e := db.Table("user").Data(User{CreateTime: time.Now()}).Insert()
 	if e != nil {
 		panic(e)
 	}

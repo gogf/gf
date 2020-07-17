@@ -4,13 +4,12 @@ import (
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
 	"github.com/gogf/gf/os/gview"
-	"github.com/gogf/gf/util/gpage"
 )
 
 func main() {
 	s := g.Server()
 	s.BindHandler("/:obj/*action/{page}.html", func(r *ghttp.Request) {
-		page := gpage.New(100, 10, r.Get("page"), r.URL.String(), r.Router)
+		page := r.GetPage(100, 10)
 		buffer, _ := gview.ParseContent(`
         <html>
             <head>

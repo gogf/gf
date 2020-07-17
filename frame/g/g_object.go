@@ -15,13 +15,19 @@ import (
 	"github.com/gogf/gf/net/gtcp"
 	"github.com/gogf/gf/net/gudp"
 	"github.com/gogf/gf/os/gcfg"
+	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/os/gres"
 	"github.com/gogf/gf/os/gview"
 )
 
+// Client is a convenience function, that creates and returns a new HTTP client.
+func Client() *ghttp.Client {
+	return ghttp.NewClient()
+}
+
 // Server returns an instance of http server with specified name.
 func Server(name ...interface{}) *ghttp.Server {
-	return ghttp.GetServer(name...)
+	return gins.Server(name...)
 }
 
 // TCPServer returns an instance of tcp server with specified name.
@@ -68,6 +74,12 @@ func Res(name ...string) *gres.Resource {
 	return Resource(name...)
 }
 
+// Log returns an instance of glog.Logger.
+// The parameter <name> is the name for the instance.
+func Log(name ...string) *glog.Logger {
+	return gins.Log(name...)
+}
+
 // Database returns an instance of database ORM object with specified configuration group name.
 func Database(name ...string) gdb.DB {
 	return gins.Database(name...)
@@ -77,6 +89,18 @@ func Database(name ...string) gdb.DB {
 // See Database.
 func DB(name ...string) gdb.DB {
 	return gins.Database(name...)
+}
+
+// Table is alias of Model.
+func Table(tables string, db ...string) *gdb.Model {
+	return DB(db...).Table(tables)
+}
+
+// Model creates and returns a model from specified database or default database configuration.
+// The optional parameter <db> specifies the configuration group name of the database,
+// which is "default" in default.
+func Model(tables string, db ...string) *gdb.Model {
+	return DB(db...).Model(tables)
 }
 
 // Redis returns an instance of redis client with specified configuration group name.

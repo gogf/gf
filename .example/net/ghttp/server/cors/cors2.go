@@ -18,9 +18,9 @@ func Order(r *ghttp.Request) {
 
 func main() {
 	s := g.Server()
-	s.Group("/api.v1", func(g *ghttp.RouterGroup) {
-		g.Middleware(MiddlewareCORS)
-		g.GET("/order", Order)
+	s.Group("/api.v1", func(group *ghttp.RouterGroup) {
+		group.Middleware(MiddlewareCORS)
+		group.GET("/order", Order)
 	})
 	s.SetPort(8199)
 	s.Run()

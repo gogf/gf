@@ -8,6 +8,8 @@ package ghttp
 
 import "github.com/gorilla/websocket"
 
+// WebSocket wraps the underlying websocket connection
+// and provides convenient functions.
 type WebSocket struct {
 	*websocket.Conn
 }

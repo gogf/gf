@@ -7,72 +7,94 @@
 package ghttp
 
 import (
+	"context"
 	"fmt"
-	"io/ioutil"
+	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/os/gres"
+	"github.com/gogf/gf/os/gsession"
+	"github.com/gogf/gf/os/gview"
+	"github.com/gogf/gf/util/guid"
 	"net/http"
 	"strings"
+	"time"
 
-	"github.com/gogf/gf/os/gsession"
-
-	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gregex"
 )
 
-// 请求对象
+// Request is the context object for a request.
 type Request struct {
 	*http.Request
-	Id              int                    // 请求ID(当前Server对象唯一)
-	Server          *Server                // 请求关联的服务器对象
-	Cookie          *Cookie                // 与当前请求绑定的Cookie对象(并发安全)
-	Session         *gsession.Session      // 与当前请求绑定的Session对象(并发安全)
-	Response        *Response              // 对应请求的返回数据操作对象
-	Router          *Router                // 匹配到的路由对象
-	EnterTime       int64                  // 请求进入时间(微秒)
-	LeaveTime       int64                  // 请求完成时间(微秒)
-	Middleware      *Middleware            // 中间件功能调用对象
-	handlers        []*handlerParsedItem   // 请求执行服务函数列表(包含中间件、路由函数、钩子函数)
-	handlerIndex    int                    // 当前执行函数的索引号
-	hasHookHandler  bool                   // 是否检索到钩子函数(用于请求时提高钩子函数功能启用判断效率)
-	hasServeHandler bool                   // 是否检索到服务函数
-	parsedGet       bool                   // GET参数是否已经解析
-	parsedPost      bool                   // POST参数是否已经解析
-	parsedRaw       bool                   // 原始参数是否已经解析
-	getMap          map[string]interface{} // GET解析参数
-	postMap         map[string]interface{} // POST解析参数
-	routerMap       map[string]interface{} // 路由解析参数
-	rawVarMap       map[string]interface{} // 原始数据参数
-	error           error                  // 当前请求执行错误
-	exit            bool                   // 是否退出当前请求流程执行
-	params          map[string]interface{} // 开发者自定义参数(请求流程中有效)
-	parsedHost      string                 // 解析过后不带端口号的服务器域名名称
-	clientIp        string                 // 解析过后的客户端IP地址
-	rawContent      []byte                 // 客户端提交的原始参数
-	isFileRequest   bool                   // 是否为静态文件请求(非服务请求，当静态文件存在时，优先级会被服务请求高，被识别为文件请求)
+	Server          *Server                // Server.
+	Cookie          *Cookie                // Cookie.
+	Session         *gsession.Session      // Session.
+	Response        *Response              // Corresponding Response of this request.
+	Router          *Router                // Matched Router for this request. Note that it's not available in HOOK handler.
+	EnterTime       int64                  // Request starting time in microseconds.
+	LeaveTime       int64                  // Request ending time in microseconds.
+	Middleware      *Middleware            // Middleware manager.
+	StaticFile      *StaticFile            // Static file object for static file serving.
+	context         context.Context        // Custom context for internal usage purpose.
+	handlers        []*handlerParsedItem   // All matched handlers containing handler, hook and middleware for this request.
+	hasHookHandler  bool                   // A bool marking whether there's hook handler in the handlers for performance purpose.
+	hasServeHandler bool                   // A bool marking whether there's serving handler in the handlers for performance purpose.
+	parsedQuery     bool                   // A bool marking whether the GET parameters parsed.
+	parsedBody      bool                   // A bool marking whether the request body parsed.
+	parsedForm      bool                   // A bool marking whether request Form parsed for HTTP method PUT, POST, PATCH.
+	paramsMap       map[string]interface{} // Custom parameters map.
+	routerMap       map[string]string      // Router parameters map, which might be nil if there're no router parameters.
+	queryMap        map[string]interface{} // Query parameters map, which is nil if there's no query string.
+	formMap         map[string]interface{} // Form parameters map, which is nil if there's no form data from client.
+	bodyMap         map[string]interface{} // Body parameters map, which might be nil if there're no body content.
+	error           error                  // Current executing error of the request.
+	exit            bool                   // A bool marking whether current request is exited.
+	parsedHost      string                 // The parsed host name for current host used by GetHost function.
+	clientIp        string                 // The parsed client ip for current host used by GetClientIp function.
+	bodyContent     []byte                 // Request body content.
+	isFileRequest   bool                   // A bool marking whether current request is file serving.
+	viewObject      *gview.View            // Custom template view engine object for this response.
+	viewParams      gview.Params           // Custom template view variables for this response.
 }
 
-// 创建一个Request对象
+// StaticFile is the file struct for static file service.
+type StaticFile struct {
+	File  *gres.File // Resource file object.
+	Path  string     // File path.
+	IsDir bool       // Is directory.
+}
+
+// newRequest creates and returns a new request object.
 func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 	request := &Request{
-		routerMap: make(map[string]interface{}),
-		Id:        s.servedCount.Add(1),
 		Server:    s,
 		Request:   r,
 		Response:  newResponse(s, w),
-		EnterTime: gtime.Microsecond(),
+		EnterTime: gtime.TimestampMilli(),
 	}
-	// 会话处理
 	request.Cookie = GetCookie(request)
 	request.Session = s.sessionManager.New(request.GetSessionId())
 	request.Response.Request = request
 	request.Middleware = &Middleware{
 		request: request,
 	}
+	// Custom session id creating function.
+	err := request.Session.SetIdFunc(func(ttl time.Duration) string {
+		var (
+			address = request.RemoteAddr
+			header  = fmt.Sprintf("%v", request.Header)
+		)
+		intlog.Print(address, header)
+		return guid.S([]byte(address), []byte(header))
+	})
+	if err != nil {
+		panic(err)
+	}
 	return request
 }
 
-// 获取Web Socket连接对象(如果是非WS请求会失败，注意检查返回的error结果)
+// WebSocket upgrades current request as a websocket request.
+// It returns a new WebSocket object if success, or the error if failure.
+// Note that the request should be a websocket request, or it will surely fail upgrading.
 func (r *Request) WebSocket() (*WebSocket, error) {
 	if conn, err := wsUpgrader.Upgrade(r.Response.Writer, r.Request, nil); err == nil {
 		return &WebSocket{
@@ -83,115 +105,28 @@ func (r *Request) WebSocket() (*WebSocket, error) {
 	}
 }
 
-// Get是GetRequest方法的别名，用于获得指定名称的参数值，注意键值可能是字符串、数组、Map类型。
-// 大多数场景下，你可能需要的是 GetString/GetVar。
-func (r *Request) Get(key string, def ...interface{}) interface{} {
-	return r.GetRequest(key, def...)
-}
-
-// 建议都用该参数替代参数获取
-func (r *Request) GetVar(key string, def ...interface{}) *gvar.Var {
-	return r.GetRequestVar(key, def...)
-}
-
-// 获取原始请求输入二进制。
-func (r *Request) GetRaw() []byte {
-	if r.rawContent == nil {
-		r.rawContent, _ = ioutil.ReadAll(r.Body)
-	}
-	return r.rawContent
-}
-
-// 获取原始请求输入字符串。
-func (r *Request) GetRawString() string {
-	return string(r.GetRaw())
-}
-
-// 获取原始json请求输入字符串，并解析为json对象
-func (r *Request) GetJson() (*gjson.Json, error) {
-	return gjson.LoadJson(r.GetRaw())
-}
-
-func (r *Request) GetString(key string, def ...interface{}) string {
-	return r.GetRequestString(key, def...)
-}
-
-func (r *Request) GetBool(key string, def ...interface{}) bool {
-	return r.GetRequestBool(key, def...)
-}
-
-func (r *Request) GetInt(key string, def ...interface{}) int {
-	return r.GetRequestInt(key, def...)
-}
-
-func (r *Request) GetInts(key string, def ...interface{}) []int {
-	return r.GetRequestInts(key, def...)
-}
-
-func (r *Request) GetUint(key string, def ...interface{}) uint {
-	return r.GetRequestUint(key, def...)
-}
-
-func (r *Request) GetFloat32(key string, def ...interface{}) float32 {
-	return r.GetRequestFloat32(key, def...)
-}
-
-func (r *Request) GetFloat64(key string, def ...interface{}) float64 {
-	return r.GetRequestFloat64(key, def...)
-}
-
-func (r *Request) GetFloats(key string, def ...interface{}) []float64 {
-	return r.GetRequestFloats(key, def...)
-}
-
-func (r *Request) GetArray(key string, def ...interface{}) []string {
-	return r.GetRequestArray(key, def...)
-}
-
-func (r *Request) GetStrings(key string, def ...interface{}) []string {
-	return r.GetRequestStrings(key, def...)
-}
-
-func (r *Request) GetInterfaces(key string, def ...interface{}) []interface{} {
-	return r.GetRequestInterfaces(key, def...)
-}
-
-func (r *Request) GetMap(def ...map[string]interface{}) map[string]interface{} {
-	return r.GetRequestMap(def...)
-}
-
-func (r *Request) GetMapStrStr(def ...map[string]interface{}) map[string]string {
-	return r.GetRequestMapStrStr(def...)
-}
-
-// 将所有的request参数映射到struct属性上，参数pointer应当为一个struct对象的指针,
-// mapping为非必需参数，自定义参数与属性的映射关系
-func (r *Request) GetToStruct(pointer interface{}, mapping ...map[string]string) error {
-	return r.GetRequestToStruct(pointer, mapping...)
-}
-
-// 仅退出当前逻辑执行函数, 如:服务函数、HOOK函数
+// Exit exits executing of current HTTP handler.
 func (r *Request) Exit() {
 	panic(gEXCEPTION_EXIT)
 }
 
-// 退出当前请求执行，后续所有的服务逻辑流程(包括其他的HOOK)将不会执行
+// ExitAll exits executing of current and following HTTP handlers.
 func (r *Request) ExitAll() {
 	r.exit = true
 	panic(gEXCEPTION_EXIT_ALL)
 }
 
-// 仅针对HOOK执行，默认情况下HOOK会按照优先级进行调用，当使用ExitHook后当前类型的后续HOOK将不会被调用
+// ExitHook exits executing of current and following HTTP HOOK handlers.
 func (r *Request) ExitHook() {
 	panic(gEXCEPTION_EXIT_HOOK)
 }
 
-// 判断当前请求是否停止执行
+// IsExited checks and returns whether current request is exited.
 func (r *Request) IsExited() bool {
 	return r.exit
 }
 
-// 获取请求的服务端IP/域名
+// GetHost returns current request host name, which might be a domain or an IP without port.
 func (r *Request) GetHost() string {
 	if len(r.parsedHost) == 0 {
 		array, _ := gregex.MatchString(`(.+):(\d+)`, r.Host)
@@ -204,20 +139,40 @@ func (r *Request) GetHost() string {
 	return r.parsedHost
 }
 
-// 判断是否为静态文件请求
+// IsFileRequest checks and returns whether current request is serving file.
 func (r *Request) IsFileRequest() bool {
 	return r.isFileRequest
 }
 
-// 判断是否为AJAX请求
+// IsAjaxRequest checks and returns whether current request is an AJAX request.
 func (r *Request) IsAjaxRequest() bool {
 	return strings.EqualFold(r.Header.Get("X-Requested-With"), "XMLHttpRequest")
 }
 
-// 获取请求的客户端IP地址
+// GetClientIp returns the client ip of this request without port.
 func (r *Request) GetClientIp() string {
 	if len(r.clientIp) == 0 {
-		if r.clientIp = r.Header.Get("X-Real-IP"); r.clientIp == "" {
+		realIps := r.Header.Get("X-Forwarded-For")
+		if realIps != "" && len(realIps) != 0 && !strings.EqualFold("unknown", realIps) {
+			ipArray := strings.Split(realIps, ",")
+			r.clientIp = ipArray[0]
+		}
+		if r.clientIp == "" || strings.EqualFold("unknown", realIps) {
+			r.clientIp = r.Header.Get("Proxy-Client-IP")
+		}
+		if r.clientIp == "" || strings.EqualFold("unknown", realIps) {
+			r.clientIp = r.Header.Get("WL-Proxy-Client-IP")
+		}
+		if r.clientIp == "" || strings.EqualFold("unknown", realIps) {
+			r.clientIp = r.Header.Get("HTTP_CLIENT_IP")
+		}
+		if r.clientIp == "" || strings.EqualFold("unknown", realIps) {
+			r.clientIp = r.Header.Get("HTTP_X_FORWARDED_FOR")
+		}
+		if r.clientIp == "" || strings.EqualFold("unknown", realIps) {
+			r.clientIp = r.Header.Get("X-Real-IP")
+		}
+		if r.clientIp == "" || strings.EqualFold("unknown", realIps) {
 			array, _ := gregex.MatchString(`(.+):(\d+)`, r.RemoteAddr)
 			if len(array) > 1 {
 				r.clientIp = array[1]
@@ -229,7 +184,7 @@ func (r *Request) GetClientIp() string {
 	return r.clientIp
 }
 
-// 获得当前请求URL地址
+// GetUrl returns current URL of this request.
 func (r *Request) GetUrl() string {
 	scheme := "http"
 	if r.TLS != nil {
@@ -238,7 +193,7 @@ func (r *Request) GetUrl() string {
 	return fmt.Sprintf(`%s://%s%s`, scheme, r.Host, r.URL.String())
 }
 
-// 从Cookie和Header中查询SESSIONID
+// GetSessionId retrieves and returns session id from cookie or header.
 func (r *Request) GetSessionId() string {
 	id := r.Cookie.GetSessionId()
 	if id == "" {
@@ -247,7 +202,13 @@ func (r *Request) GetSessionId() string {
 	return id
 }
 
-// 获得请求来源URL地址
+// GetReferer returns referer of this request.
 func (r *Request) GetReferer() string {
 	return r.Header.Get("Referer")
+}
+
+// GetError returns the error occurs in the procedure of the request.
+// It returns nil if there's no error.
+func (r *Request) GetError() error {
+	return r.error
 }

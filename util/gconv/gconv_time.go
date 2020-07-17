@@ -9,12 +9,18 @@ package gconv
 import (
 	"time"
 
-	"github.com/gogf/gf/internal/utilstr"
+	"github.com/gogf/gf/internal/utils"
 	"github.com/gogf/gf/os/gtime"
 )
 
 // Time converts <i> to time.Time.
 func Time(i interface{}, format ...string) time.Time {
+	// It's already this type.
+	if len(format) == 0 {
+		if v, ok := i.(time.Time); ok {
+			return v
+		}
+	}
 	if t := GTime(i, format...); t != nil {
 		return t.Time
 	}
@@ -25,8 +31,12 @@ func Time(i interface{}, format ...string) time.Time {
 // If <i> is string, then it uses time.ParseDuration to convert it.
 // If <i> is numeric, then it converts <i> as nanoseconds.
 func Duration(i interface{}) time.Duration {
+	// It's already this type.
+	if v, ok := i.(time.Duration); ok {
+		return v
+	}
 	s := String(i)
-	if !utilstr.IsNumeric(s) {
+	if !utils.IsNumeric(s) {
 		d, _ := time.ParseDuration(s)
 		return d
 	}
@@ -38,6 +48,15 @@ func Duration(i interface{}) time.Duration {
 // If no <format> given, it converts <i> using gtime.NewFromTimeStamp if <i> is numeric,
 // or using gtime.StrToTime if <i> is string.
 func GTime(i interface{}, format ...string) *gtime.Time {
+	if i == nil {
+		return nil
+	}
+	// It's already this type.
+	if len(format) == 0 {
+		if v, ok := i.(*gtime.Time); ok {
+			return v
+		}
+	}
 	s := String(i)
 	if len(s) == 0 {
 		return gtime.New()
@@ -47,7 +66,7 @@ func GTime(i interface{}, format ...string) *gtime.Time {
 		t, _ := gtime.StrToTimeFormat(s, format[0])
 		return t
 	}
-	if utilstr.IsNumeric(s) {
+	if utils.IsNumeric(s) {
 		return gtime.NewFromTimeStamp(Int64(s))
 	} else {
 		t, _ := gtime.StrToTime(s)

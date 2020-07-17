@@ -27,120 +27,120 @@ import (
 )
 
 func Test_Basic(t *testing.T) {
-	gtest.Case(t, func() {
-		t := gi18n.New(gi18n.Options{
-			Path: gdebug.CallerDirectory() + gfile.Separator + "testdata" + gfile.Separator + "i18n",
+	gtest.C(t, func(t *gtest.T) {
+		i18n := gi18n.New(gi18n.Options{
+			Path: gdebug.TestDataPath("i18n"),
 		})
-		t.SetLanguage("none")
-		gtest.Assert(t.T("{#hello}{#world}"), "{#hello}{#world}")
+		i18n.SetLanguage("none")
+		t.Assert(i18n.T("{#hello}{#world}"), "{#hello}{#world}")
 
-		t.SetLanguage("ja")
-		gtest.Assert(t.T("{#hello}{#world}"), "こんにちは世界")
+		i18n.SetLanguage("ja")
+		t.Assert(i18n.T("{#hello}{#world}"), "こんにちは世界")
 
-		t.SetLanguage("zh-CN")
-		gtest.Assert(t.T("{#hello}{#world}"), "你好世界")
-		t.SetDelimiters("{$", "}")
-		gtest.Assert(t.T("{#hello}{#world}"), "{#hello}{#world}")
-		gtest.Assert(t.T("{$hello}{$world}"), "你好世界")
+		i18n.SetLanguage("zh-CN")
+		t.Assert(i18n.T("{#hello}{#world}"), "你好世界")
+		i18n.SetDelimiters("{$", "}")
+		t.Assert(i18n.T("{#hello}{#world}"), "{#hello}{#world}")
+		t.Assert(i18n.T("{$hello}{$world}"), "你好世界")
 	})
 
-	gtest.Case(t, func() {
-		t := gi18n.New(gi18n.Options{
-			Path: gdebug.CallerDirectory() + gfile.Separator + "testdata" + gfile.Separator + "i18n-file",
+	gtest.C(t, func(t *gtest.T) {
+		i18n := gi18n.New(gi18n.Options{
+			Path: gdebug.TestDataPath("i18n-file"),
 		})
-		t.SetLanguage("none")
-		gtest.Assert(t.T("{#hello}{#world}"), "{#hello}{#world}")
+		i18n.SetLanguage("none")
+		t.Assert(i18n.T("{#hello}{#world}"), "{#hello}{#world}")
 
-		t.SetLanguage("ja")
-		gtest.Assert(t.T("{#hello}{#world}"), "こんにちは世界")
+		i18n.SetLanguage("ja")
+		t.Assert(i18n.T("{#hello}{#world}"), "こんにちは世界")
 
-		t.SetLanguage("zh-CN")
-		gtest.Assert(t.T("{#hello}{#world}"), "你好世界")
+		i18n.SetLanguage("zh-CN")
+		t.Assert(i18n.T("{#hello}{#world}"), "你好世界")
 	})
 
-	gtest.Case(t, func() {
-		t := gi18n.New(gi18n.Options{
+	gtest.C(t, func(t *gtest.T) {
+		i18n := gi18n.New(gi18n.Options{
 			Path: gdebug.CallerDirectory() + gfile.Separator + "testdata" + gfile.Separator + "i18n-dir",
 		})
-		t.SetLanguage("none")
-		gtest.Assert(t.T("{#hello}{#world}"), "{#hello}{#world}")
+		i18n.SetLanguage("none")
+		t.Assert(i18n.T("{#hello}{#world}"), "{#hello}{#world}")
 
-		t.SetLanguage("ja")
-		gtest.Assert(t.T("{#hello}{#world}"), "こんにちは世界")
+		i18n.SetLanguage("ja")
+		t.Assert(i18n.T("{#hello}{#world}"), "こんにちは世界")
 
-		t.SetLanguage("zh-CN")
-		gtest.Assert(t.T("{#hello}{#world}"), "你好世界")
+		i18n.SetLanguage("zh-CN")
+		t.Assert(i18n.T("{#hello}{#world}"), "你好世界")
 	})
 }
 
 func Test_DefaultManager(t *testing.T) {
-	gtest.Case(t, func() {
-		err := gi18n.SetPath(gdebug.CallerDirectory() + gfile.Separator + "testdata" + gfile.Separator + "i18n")
-		gtest.Assert(err, nil)
+	gtest.C(t, func(t *gtest.T) {
+		err := gi18n.SetPath(gdebug.TestDataPath("i18n"))
+		t.Assert(err, nil)
 
 		gi18n.SetLanguage("none")
-		gtest.Assert(gi18n.T("{#hello}{#world}"), "{#hello}{#world}")
+		t.Assert(gi18n.T("{#hello}{#world}"), "{#hello}{#world}")
 
 		gi18n.SetLanguage("ja")
-		gtest.Assert(gi18n.T("{#hello}{#world}"), "こんにちは世界")
+		t.Assert(gi18n.T("{#hello}{#world}"), "こんにちは世界")
 
 		gi18n.SetLanguage("zh-CN")
-		gtest.Assert(gi18n.T("{#hello}{#world}"), "你好世界")
+		t.Assert(gi18n.T("{#hello}{#world}"), "你好世界")
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		err := gi18n.SetPath(gdebug.CallerDirectory() + gfile.Separator + "testdata" + gfile.Separator + "i18n-dir")
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		gi18n.SetLanguage("none")
-		gtest.Assert(gi18n.Translate("{#hello}{#world}"), "{#hello}{#world}")
+		t.Assert(gi18n.Translate("{#hello}{#world}"), "{#hello}{#world}")
 
 		gi18n.SetLanguage("ja")
-		gtest.Assert(gi18n.Translate("{#hello}{#world}"), "こんにちは世界")
+		t.Assert(gi18n.Translate("{#hello}{#world}"), "こんにちは世界")
 
 		gi18n.SetLanguage("zh-CN")
-		gtest.Assert(gi18n.Translate("{#hello}{#world}"), "你好世界")
+		t.Assert(gi18n.Translate("{#hello}{#world}"), "你好世界")
 	})
 }
 
 func Test_Instance(t *testing.T) {
 	gres.Dump()
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		m := gi18n.Instance()
 		err := m.SetPath("i18n-dir")
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 		m.SetLanguage("zh-CN")
-		gtest.Assert(m.T("{#hello}{#world}"), "你好世界")
+		t.Assert(m.T("{#hello}{#world}"), "你好世界")
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		m := gi18n.Instance()
-		gtest.Assert(m.T("{#hello}{#world}"), "你好世界")
+		t.Assert(m.T("{#hello}{#world}"), "你好世界")
 	})
 
-	gtest.Case(t, func() {
-		gtest.Assert(g.I18n().T("{#hello}{#world}"), "你好世界")
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(g.I18n().T("{#hello}{#world}"), "你好世界")
 	})
-
-	gtest.Case(t, func() {
-		m := gi18n.Instance(gconv.String(gtime.Nanosecond()))
-		gtest.Assert(m.T("{#hello}{#world}"), "{#hello}{#world}")
+	// Default language is: en
+	gtest.C(t, func(t *gtest.T) {
+		m := gi18n.Instance(gconv.String(gtime.TimestampNano()))
+		t.Assert(m.T("{#hello}{#world}"), "HelloWorld")
 	})
 }
 
 func Test_Resource(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		m := g.I18n("resource")
 		err := m.SetPath("i18n-dir")
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		m.SetLanguage("none")
-		gtest.Assert(m.T("{#hello}{#world}"), "{#hello}{#world}")
+		t.Assert(m.T("{#hello}{#world}"), "{#hello}{#world}")
 
 		m.SetLanguage("ja")
-		gtest.Assert(m.T("{#hello}{#world}"), "こんにちは世界")
+		t.Assert(m.T("{#hello}{#world}"), "こんにちは世界")
 
 		m.SetLanguage("zh-CN")
-		gtest.Assert(m.T("{#hello}{#world}"), "你好世界")
+		t.Assert(m.T("{#hello}{#world}"), "你好世界")
 	})
 }

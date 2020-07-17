@@ -10,16 +10,16 @@ import (
 	"net"
 )
 
-// 创建标准库UDP链接操作对象
-func NewNetConn(raddr string, laddr ...string) (*net.UDPConn, error) {
+// NewNetConn creates and returns a *net.UDPConn with given addresses.
+func NewNetConn(remoteAddress string, localAddress ...string) (*net.UDPConn, error) {
 	var err error
 	var remoteAddr, localAddr *net.UDPAddr
-	remoteAddr, err = net.ResolveUDPAddr("udp", raddr)
+	remoteAddr, err = net.ResolveUDPAddr("udp", remoteAddress)
 	if err != nil {
 		return nil, err
 	}
-	if len(laddr) > 0 {
-		localAddr, err = net.ResolveUDPAddr("udp", laddr[0])
+	if len(localAddress) > 0 {
+		localAddr, err = net.ResolveUDPAddr("udp", localAddress[0])
 		if err != nil {
 			return nil, err
 		}
@@ -31,9 +31,10 @@ func NewNetConn(raddr string, laddr ...string) (*net.UDPConn, error) {
 	return conn, nil
 }
 
-// (面向短链接)发送数据
-func Send(addr string, data []byte, retry ...Retry) error {
-	conn, err := NewConn(addr)
+// Send writes data to <address> using UDP connection and then closes the connection.
+// Note that it is used for short connection usage.
+func Send(address string, data []byte, retry ...Retry) error {
+	conn, err := NewConn(address)
 	if err != nil {
 		return err
 	}
@@ -41,23 +42,13 @@ func Send(addr string, data []byte, retry ...Retry) error {
 	return conn.Send(data, retry...)
 }
 
-// (面向短链接)发送数据并等待接收返回数据
-func SendRecv(addr string, data []byte, receive int, retry ...Retry) ([]byte, error) {
-	conn, err := NewConn(addr)
+// SendRecv writes data to <address> using UDP connection, reads response and then closes the connection.
+// Note that it is used for short connection usage.
+func SendRecv(address string, data []byte, receive int, retry ...Retry) ([]byte, error) {
+	conn, err := NewConn(address)
 	if err != nil {
 		return nil, err
 	}
 	defer conn.Close()
 	return conn.SendRecv(data, receive, retry...)
-}
-
-// 判断是否是超时错误
-func isTimeout(err error) bool {
-	if err == nil {
-		return false
-	}
-	if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
-		return true
-	}
-	return false
 }

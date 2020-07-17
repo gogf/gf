@@ -10,40 +10,39 @@ import (
 	"io"
 	"net"
 	"time"
-
-	"github.com/gogf/gf/errors/gerror"
 )
 
-// 封装的UDP链接对象
+// Conn handles the UDP connection.
 type Conn struct {
-	*net.UDPConn                 // 底层链接对象
-	raddr          *net.UDPAddr  // 远程地址
-	recvDeadline   time.Time     // 读取超时时间
-	sendDeadline   time.Time     // 写入超时时间
-	recvBufferWait time.Duration // 读取全部缓冲区数据时，读取完毕后的写入等待间隔
+	*net.UDPConn                 // Underlying UDP connection.
+	remoteAddr     *net.UDPAddr  // Remote address.
+	recvDeadline   time.Time     // Timeout point for reading data.
+	sendDeadline   time.Time     // Timeout point for writing data.
+	recvBufferWait time.Duration // Interval duration for reading buffer.
 }
 
 const (
-	gDEFAULT_RETRY_INTERVAL   = 100              // (毫秒)默认重试时间间隔
-	gDEFAULT_READ_BUFFER_SIZE = 64               // (KB)默认数据读取缓冲区大小
-	gRECV_ALL_WAIT_TIMEOUT    = time.Millisecond // 读取全部缓冲数据时，没有缓冲数据时的等待间隔
+	gDEFAULT_RETRY_INTERVAL   = 100 * time.Millisecond // Retry interval.
+	gDEFAULT_READ_BUFFER_SIZE = 1024                   // (Byte)Buffer size.
+	gRECV_ALL_WAIT_TIMEOUT    = time.Millisecond       // Default interval for reading buffer.
 )
 
 type Retry struct {
-	Count    int // 重试次数
-	Interval int // 重试间隔(毫秒)
+	Count    int           // Max retry count.
+	Interval time.Duration // Retry interval.
 }
 
-// 创建TCP链接
-func NewConn(raddr string, laddr ...string) (*Conn, error) {
-	if conn, err := NewNetConn(raddr, laddr...); err == nil {
+// NewConn creates UDP connection to <remoteAddress>.
+// The optional parameter <localAddress> specifies the local address for connection.
+func NewConn(remoteAddress string, localAddress ...string) (*Conn, error) {
+	if conn, err := NewNetConn(remoteAddress, localAddress...); err == nil {
 		return NewConnByNetConn(conn), nil
 	} else {
 		return nil, err
 	}
 }
 
-// 将*net.UDPConn对象转换为*Conn对象
+// NewConnByNetConn creates a UDP connection object with given *net.UDPConn object.
 func NewConnByNetConn(udp *net.UDPConn) *Conn {
 	return &Conn{
 		UDPConn:        udp,
@@ -53,20 +52,20 @@ func NewConnByNetConn(udp *net.UDPConn) *Conn {
 	}
 }
 
-// 发送数据
+// Send writes data to remote address.
 func (c *Conn) Send(data []byte, retry ...Retry) (err error) {
 	for {
-		if c.raddr != nil {
-			_, err = c.WriteToUDP(data, c.raddr)
+		if c.remoteAddr != nil {
+			_, err = c.WriteToUDP(data, c.remoteAddr)
 		} else {
 			_, err = c.Write(data)
 		}
 		if err != nil {
-			// 链接已关闭
+			// Connection closed.
 			if err == io.EOF {
 				return err
 			}
-			// 其他错误，重试之后仍不能成功
+			// Still failed even after retrying.
 			if len(retry) == 0 || retry[0].Count == 0 {
 				return err
 			}
@@ -75,7 +74,7 @@ func (c *Conn) Send(data []byte, retry ...Retry) (err error) {
 				if retry[0].Interval == 0 {
 					retry[0].Interval = gDEFAULT_RETRY_INTERVAL
 				}
-				time.Sleep(time.Duration(retry[0].Interval) * time.Millisecond)
+				time.Sleep(retry[0].Interval)
 			}
 		} else {
 			return nil
@@ -83,70 +82,35 @@ func (c *Conn) Send(data []byte, retry ...Retry) (err error) {
 	}
 }
 
-// 接收UDP协议数据.
+// Recv receives and returns data from remote address.
+// The parameter <buffer> is used for customizing the receiving buffer size. If <buffer> <= 0,
+// it uses the default buffer size, which is 1024 byte.
 //
-// 注意事项：
-// 1、UDP协议存在消息边界，因此使用 length < 0 可以获取缓冲区所有消息包数据，即一个完整包；
-// 2、当length = 0时，表示获取当前的缓冲区数据，获取一次后立即返回；
-func (c *Conn) Recv(length int, retry ...Retry) ([]byte, error) {
-	var err error          // 读取错误
-	var size int           // 读取长度
-	var index int          // 已读取长度
-	var raddr *net.UDPAddr // 当前读取的远程地址
-	var buffer []byte      // 读取缓冲区
-	var bufferWait bool    // 是否设置读取的超时时间
-
-	if length > 0 {
-		buffer = make([]byte, length)
+// There's package border in UDP protocol, we can receive a complete package if specified
+// buffer size is big enough. VERY NOTE that we should receive the complete package in once
+// or else the leftover package data would be dropped.
+func (c *Conn) Recv(buffer int, retry ...Retry) ([]byte, error) {
+	var err error               // Reading error.
+	var size int                // Reading size.
+	var data []byte             // Buffer object.
+	var remoteAddr *net.UDPAddr // Current remote address for reading.
+	if buffer > 0 {
+		data = make([]byte, buffer)
 	} else {
-		buffer = make([]byte, gDEFAULT_READ_BUFFER_SIZE)
+		data = make([]byte, gDEFAULT_READ_BUFFER_SIZE)
 	}
-
 	for {
-		if length < 0 && index > 0 {
-			bufferWait = true
-			if err = c.SetReadDeadline(time.Now().Add(c.recvBufferWait)); err != nil {
-				return nil, err
-			}
-		}
-		size, raddr, err = c.ReadFromUDP(buffer[index:])
+		size, remoteAddr, err = c.ReadFromUDP(data)
 		if err == nil {
-			c.raddr = raddr
-		}
-		if size > 0 {
-			index += size
-			if length > 0 {
-				// 如果指定了读取大小，那么必须读取到指定长度才返回
-				if index == length {
-					break
-				}
-			} else {
-				if index >= gDEFAULT_READ_BUFFER_SIZE {
-					// 如果长度超过了自定义的读取缓冲区，那么自动增长
-					buffer = append(buffer, make([]byte, gDEFAULT_READ_BUFFER_SIZE)...)
-				} else {
-					// 如果第一次读取的数据并未达到缓冲变量长度，那么直接返回
-					if !bufferWait {
-						break
-					}
-				}
-			}
+			c.remoteAddr = remoteAddr
 		}
 		if err != nil {
-			// 链接已关闭
+			// Connection closed.
 			if err == io.EOF {
 				break
 			}
-			// 判断数据是否全部读取完毕(由于超时机制的存在，获取的数据完整性不可靠)
-			if bufferWait && isTimeout(err) {
-				if err = c.SetReadDeadline(c.recvDeadline); err != nil {
-					return nil, err
-				}
-				err = nil
-				break
-			}
 			if len(retry) > 0 {
-				// 其他错误，重试之后仍不能成功
+				// It fails even it retried.
 				if retry[0].Count == 0 {
 					break
 				}
@@ -154,20 +118,17 @@ func (c *Conn) Recv(length int, retry ...Retry) ([]byte, error) {
 				if retry[0].Interval == 0 {
 					retry[0].Interval = gDEFAULT_RETRY_INTERVAL
 				}
-				time.Sleep(time.Duration(retry[0].Interval) * time.Millisecond)
+				time.Sleep(retry[0].Interval)
 				continue
 			}
 			break
 		}
-		// 只获取一次数据
-		if length == 0 {
-			break
-		}
+		break
 	}
-	return buffer[:index], err
+	return data[:size], err
 }
 
-// 发送数据并等待接收返回数据
+// SendRecv writes data to connection and blocks reading response.
 func (c *Conn) SendRecv(data []byte, receive int, retry ...Retry) ([]byte, error) {
 	if err := c.Send(data, retry...); err == nil {
 		return c.Recv(receive, retry...)
@@ -176,31 +137,27 @@ func (c *Conn) SendRecv(data []byte, receive int, retry ...Retry) ([]byte, error
 	}
 }
 
-// 带超时时间的数据获取
+// RecvWithTimeout reads data from remote address with timeout.
 func (c *Conn) RecvWithTimeout(length int, timeout time.Duration, retry ...Retry) (data []byte, err error) {
 	if err := c.SetRecvDeadline(time.Now().Add(timeout)); err != nil {
 		return nil, err
 	}
-	defer func() {
-		err = gerror.Wrap(c.SetRecvDeadline(time.Time{}), "SetRecvDeadline error")
-	}()
+	defer c.SetRecvDeadline(time.Time{})
 	data, err = c.Recv(length, retry...)
 	return
 }
 
-// 带超时时间的数据发送
+// SendWithTimeout writes data to connection with timeout.
 func (c *Conn) SendWithTimeout(data []byte, timeout time.Duration, retry ...Retry) (err error) {
 	if err := c.SetSendDeadline(time.Now().Add(timeout)); err != nil {
 		return err
 	}
-	defer func() {
-		err = gerror.Wrap(c.SetSendDeadline(time.Time{}), "SetSendDeadline error")
-	}()
+	defer c.SetSendDeadline(time.Time{})
 	err = c.Send(data, retry...)
 	return
 }
 
-// 发送数据并等待接收返回数据(带返回超时等待时间)
+// SendRecvWithTimeout writes data to connection and reads response with timeout.
 func (c *Conn) SendRecvWithTimeout(data []byte, receive int, timeout time.Duration, retry ...Retry) ([]byte, error) {
 	if err := c.Send(data, retry...); err == nil {
 		return c.RecvWithTimeout(receive, timeout, retry...)
@@ -234,15 +191,15 @@ func (c *Conn) SetSendDeadline(t time.Time) error {
 	return err
 }
 
-// 读取全部缓冲区数据时，读取完毕后的写入等待间隔，如果超过该等待时间后仍无可读数据，那么读取操作返回。
-// 该时间间隔不能设置得太大，会影响Recv读取时长(默认为1毫秒)。
+// SetRecvBufferWait sets the buffer waiting timeout when reading all data from connection.
+// The waiting duration cannot be too long which might delay receiving data from remote address.
 func (c *Conn) SetRecvBufferWait(d time.Duration) {
 	c.recvBufferWait = d
 }
 
-// 不能使用c.conn.RemoteAddr()，其返回为nil，
-// 这里使用c.raddr获取远程连接地址。
+// RemoteAddr returns the remote address of current UDP connection.
+// Note that it cannot use c.conn.RemoteAddr() as it's nil.
 func (c *Conn) RemoteAddr() net.Addr {
 	//return c.conn.RemoteAddr()
-	return c.raddr
+	return c.remoteAddr
 }

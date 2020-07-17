@@ -8,22 +8,32 @@ package gfile
 
 import (
 	"os"
+	"time"
 )
 
 // MTime returns the modification time of file given by <path> in second.
-func MTime(path string) int64 {
+func MTime(path string) time.Time {
 	s, e := os.Stat(path)
 	if e != nil {
-		return 0
+		return time.Time{}
 	}
-	return s.ModTime().Unix()
+	return s.ModTime()
 }
 
-// MTimeMillisecond returns the modification time of file given by <path> in millisecond.
-func MTimeMillisecond(path string) int64 {
-	s, e := os.Stat(path)
-	if e != nil {
-		return 0
+// MTimestamp returns the modification time of file given by <path> in second.
+func MTimestamp(path string) int64 {
+	mtime := MTime(path)
+	if mtime.IsZero() {
+		return -1
 	}
-	return int64(s.ModTime().Nanosecond() / 1000000)
+	return mtime.Unix()
+}
+
+// MTimestampMilli returns the modification time of file given by <path> in millisecond.
+func MTimestampMilli(path string) int64 {
+	mtime := MTime(path)
+	if mtime.IsZero() {
+		return -1
+	}
+	return mtime.UnixNano() / 1000000
 }

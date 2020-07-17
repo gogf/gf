@@ -8,24 +8,27 @@ package gdb
 
 import (
 	"database/sql"
-
+	"errors"
+	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/encoding/gparser"
+	"github.com/gogf/gf/util/gconv"
+	"reflect"
 )
 
-// 将记录结果转换为JSON字符串
-func (r Record) ToJson() string {
-	content, _ := gparser.VarToJson(r.ToMap())
-	return string(content)
+// Json converts <r> to JSON format content.
+func (r Record) Json() string {
+	content, _ := gparser.VarToJson(r.Map())
+	return gconv.UnsafeBytesToStr(content)
 }
 
-// 将记录结果转换为XML字符串
-func (r Record) ToXml(rootTag ...string) string {
-	content, _ := gparser.VarToXml(r.ToMap(), rootTag...)
-	return string(content)
+// Xml converts <r> to XML format content.
+func (r Record) Xml(rootTag ...string) string {
+	content, _ := gparser.VarToXml(r.Map(), rootTag...)
+	return gconv.UnsafeBytesToStr(content)
 }
 
-// 将Record转换为Map，其中最主要的区别是里面的键值被强制转换为string类型，方便json处理
-func (r Record) ToMap() Map {
+// Map converts <r> to map[string]interface{}.
+func (r Record) Map() Map {
 	m := make(map[string]interface{})
 	for k, v := range r {
 		m[k] = v.Val()
@@ -33,10 +36,43 @@ func (r Record) ToMap() Map {
 	return m
 }
 
-// 将Map变量映射到指定的struct对象中，注意参数应当是一个对象的指针
-func (r Record) ToStruct(pointer interface{}) error {
-	if r == nil {
+// GMap converts <r> to a gmap.
+func (r Record) GMap() *gmap.StrAnyMap {
+	return gmap.NewStrAnyMapFrom(r.Map())
+}
+
+// Struct converts <r> to a struct.
+// Note that the parameter <pointer> should be type of *struct/**struct.
+//
+// Note that it returns sql.ErrNoRows if <r> is empty.
+func (r Record) Struct(pointer interface{}) error {
+	// If the record is empty, it returns error.
+	if r.IsEmpty() {
 		return sql.ErrNoRows
 	}
-	return mapToStruct(r.ToMap(), pointer)
+	// Special handling for parameter type: reflect.Value
+	if _, ok := pointer.(reflect.Value); ok {
+		return mapToStruct(r.Map(), pointer)
+	}
+	var (
+		reflectValue = reflect.ValueOf(pointer)
+		reflectKind  = reflectValue.Kind()
+	)
+	if reflectKind != reflect.Ptr {
+		return errors.New("parameter should be type of *struct/**struct")
+	}
+	reflectValue = reflectValue.Elem()
+	reflectKind = reflectValue.Kind()
+	if reflectKind == reflect.Invalid {
+		return errors.New("parameter is an invalid pointer, maybe nil")
+	}
+	if reflectKind != reflect.Ptr && reflectKind != reflect.Struct {
+		return errors.New("parameter should be type of *struct/**struct")
+	}
+	return mapToStruct(r.Map(), pointer)
+}
+
+// IsEmpty checks and returns whether <r> is empty.
+func (r Record) IsEmpty() bool {
+	return len(r) == 0
 }

@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	start := gtime.Millisecond()
+	start := gtime.TimestampMilli()
 	wg := sync.WaitGroup{}
 	for i := 0; i < 100000; i++ {
 		wg.Add(1)
@@ -21,5 +21,5 @@ func main() {
 	}
 	wg.Wait()
 	fmt.Println(grpool.Size())
-	fmt.Println("time spent:", gtime.Millisecond()-start)
+	fmt.Println("time spent:", gtime.TimestampMilli()-start)
 }

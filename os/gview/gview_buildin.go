@@ -8,6 +8,7 @@ package gview
 
 import (
 	"fmt"
+	"github.com/gogf/gf/util/gutil"
 	"strings"
 
 	"github.com/gogf/gf/encoding/ghtml"
@@ -15,9 +16,21 @@ import (
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
+
+	htmltpl "html/template"
 )
 
-// Build-in template function: eq
+// funcDump implements build-in template function: dump
+func (view *View) funcDump(values ...interface{}) (result string) {
+	result += "<!--\n"
+	for _, v := range values {
+		result += gutil.Export(v) + "\n"
+	}
+	result += "-->\n"
+	return result
+}
+
+// funcEq implements build-in template function: eq
 func (view *View) funcEq(value interface{}, others ...interface{}) bool {
 	s := gconv.String(value)
 	for _, v := range others {
@@ -28,13 +41,13 @@ func (view *View) funcEq(value interface{}, others ...interface{}) bool {
 	return true
 }
 
-// Build-in template function: ne
-func (view *View) funcNe(value interface{}, other interface{}) bool {
+// funcNe implements build-in template function: ne
+func (view *View) funcNe(value, other interface{}) bool {
 	return strings.Compare(gconv.String(value), gconv.String(other)) != 0
 }
 
-// Build-in template function: lt
-func (view *View) funcLt(value interface{}, other interface{}) bool {
+// funcLt implements build-in template function: lt
+func (view *View) funcLt(value, other interface{}) bool {
 	s1 := gconv.String(value)
 	s2 := gconv.String(other)
 	if gstr.IsNumeric(s1) && gstr.IsNumeric(s2) {
@@ -43,8 +56,8 @@ func (view *View) funcLt(value interface{}, other interface{}) bool {
 	return strings.Compare(s1, s2) < 0
 }
 
-// Build-in template function: le
-func (view *View) funcLe(value interface{}, other interface{}) bool {
+// funcLe implements build-in template function: le
+func (view *View) funcLe(value, other interface{}) bool {
 	s1 := gconv.String(value)
 	s2 := gconv.String(other)
 	if gstr.IsNumeric(s1) && gstr.IsNumeric(s2) {
@@ -53,8 +66,8 @@ func (view *View) funcLe(value interface{}, other interface{}) bool {
 	return strings.Compare(s1, s2) <= 0
 }
 
-// Build-in template function: gt
-func (view *View) funcGt(value interface{}, other interface{}) bool {
+// funcGt implements build-in template function: gt
+func (view *View) funcGt(value, other interface{}) bool {
 	s1 := gconv.String(value)
 	s2 := gconv.String(other)
 	if gstr.IsNumeric(s1) && gstr.IsNumeric(s2) {
@@ -63,8 +76,8 @@ func (view *View) funcGt(value interface{}, other interface{}) bool {
 	return strings.Compare(s1, s2) > 0
 }
 
-// Build-in template function: ge
-func (view *View) funcGe(value interface{}, other interface{}) bool {
+// funcGe implements build-in template function: ge
+func (view *View) funcGe(value, other interface{}) bool {
 	s1 := gconv.String(value)
 	s2 := gconv.String(other)
 	if gstr.IsNumeric(s1) && gstr.IsNumeric(s2) {
@@ -73,41 +86,46 @@ func (view *View) funcGe(value interface{}, other interface{}) bool {
 	return strings.Compare(s1, s2) >= 0
 }
 
-// Build-in template function: include
-func (view *View) funcInclude(file string, data ...map[string]interface{}) string {
+// funcInclude implements build-in template function: include
+// Note that configuration AutoEncode does not affect the output of this function.
+func (view *View) funcInclude(file interface{}, data ...map[string]interface{}) htmltpl.HTML {
 	var m map[string]interface{} = nil
 	if len(data) > 0 {
 		m = data[0]
 	}
-	// It will search the file internally.
-	content, err := view.Parse(file, m)
-	if err != nil {
-		return err.Error()
+	path := gconv.String(file)
+	if path == "" {
+		return ""
 	}
-	return content
+	// It will search the file internally.
+	content, err := view.Parse(path, m)
+	if err != nil {
+		return htmltpl.HTML(err.Error())
+	}
+	return htmltpl.HTML(content)
 }
 
-// Build-in template function: text
+// funcText implements build-in template function: text
 func (view *View) funcText(html interface{}) string {
 	return ghtml.StripTags(gconv.String(html))
 }
 
-// Build-in template function: html
+// funcHtmlEncode implements build-in template function: html
 func (view *View) funcHtmlEncode(html interface{}) string {
 	return ghtml.Entities(gconv.String(html))
 }
 
-// Build-in template function: htmldecode
+// funcHtmlDecode implements build-in template function: htmldecode
 func (view *View) funcHtmlDecode(html interface{}) string {
 	return ghtml.EntitiesDecode(gconv.String(html))
 }
 
-// Build-in template function: url
+// funcUrlEncode implements build-in template function: url
 func (view *View) funcUrlEncode(url interface{}) string {
 	return gurl.Encode(gconv.String(url))
 }
 
-// Build-in template function: urldecode
+// funcUrlDecode implements build-in template function: urldecode
 func (view *View) funcUrlDecode(url interface{}) string {
 	if content, err := gurl.Decode(gconv.String(url)); err == nil {
 		return content
@@ -116,54 +134,68 @@ func (view *View) funcUrlDecode(url interface{}) string {
 	}
 }
 
-// Build-in template function: date
-func (view *View) funcDate(format string, timestamp ...interface{}) string {
+// funcDate implements build-in template function: date
+func (view *View) funcDate(format interface{}, timestamp ...interface{}) string {
 	t := int64(0)
 	if len(timestamp) > 0 {
 		t = gconv.Int64(timestamp[0])
 	}
 	if t == 0 {
-		t = gtime.Millisecond()
+		t = gtime.Timestamp()
 	}
-	return gtime.NewFromTimeStamp(t).Format(format)
+	return gtime.NewFromTimeStamp(t).Format(gconv.String(format))
 }
 
-// Build-in template function: compare
+// funcCompare implements build-in template function: compare
 func (view *View) funcCompare(value1, value2 interface{}) int {
 	return strings.Compare(gconv.String(value1), gconv.String(value2))
 }
 
-// Build-in template function: substr
-func (view *View) funcSubStr(start, end int, str interface{}) string {
-	return gstr.SubStr(gconv.String(str), start, end)
+// funcSubStr implements build-in template function: substr
+func (view *View) funcSubStr(start, end, str interface{}) string {
+	return gstr.SubStrRune(gconv.String(str), gconv.Int(start), gconv.Int(end))
 }
 
-// Build-in template function: strlimit
-func (view *View) funcStrLimit(length int, suffix string, str interface{}) string {
-	return gstr.StrLimit(gconv.String(str), length, suffix)
+// funcStrLimit implements build-in template function: strlimit
+func (view *View) funcStrLimit(length, suffix, str interface{}) string {
+	return gstr.StrLimitRune(gconv.String(str), gconv.Int(length), gconv.String(suffix))
 }
 
-// Build-in template function: highlight
-func (view *View) funcHighlight(key string, color string, str interface{}) string {
-	return gstr.Replace(gconv.String(str), key, fmt.Sprintf(`<span style="color:%s;">%s</span>`, color, key))
+// funcConcat implements build-in template function: concat
+func (view *View) funcConcat(str ...interface{}) string {
+	var s string
+	for _, v := range str {
+		s += gconv.String(v)
+	}
+	return s
 }
 
-// Build-in template function: hidestr
-func (view *View) funcHideStr(percent int, hide string, str interface{}) string {
-	return gstr.HideStr(gconv.String(str), percent, hide)
+// funcReplace implements build-in template function: replace
+func (view *View) funcReplace(search, replace, str interface{}) string {
+	return gstr.Replace(gconv.String(str), gconv.String(search), gconv.String(replace), -1)
 }
 
-// Build-in template function: toupper
+// funcHighlight implements build-in template function: highlight
+func (view *View) funcHighlight(key, color, str interface{}) string {
+	return gstr.Replace(gconv.String(str), gconv.String(key), fmt.Sprintf(`<span style="color:%v;">%v</span>`, color, key))
+}
+
+// funcHideStr implements build-in template function: hidestr
+func (view *View) funcHideStr(percent, hide, str interface{}) string {
+	return gstr.HideStr(gconv.String(str), gconv.Int(percent), gconv.String(hide))
+}
+
+// funcToUpper implements build-in template function: toupper
 func (view *View) funcToUpper(str interface{}) string {
 	return gstr.ToUpper(gconv.String(str))
 }
 
-// Build-in template function: toupper
+// funcToLower implements build-in template function: toupper
 func (view *View) funcToLower(str interface{}) string {
 	return gstr.ToLower(gconv.String(str))
 }
 
-// Build-in template function: nl2br
+// funcNl2Br implements build-in template function: nl2br
 func (view *View) funcNl2Br(str interface{}) string {
 	return gstr.Nl2Br(gconv.String(str))
 }

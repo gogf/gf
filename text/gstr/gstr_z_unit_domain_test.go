@@ -16,46 +16,46 @@ import (
 )
 
 func Test_IsSubDomain(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		main := "goframe.org"
-		gtest.Assert(gstr.IsSubDomain("goframe.org", main), true)
-		gtest.Assert(gstr.IsSubDomain("s.goframe.org", main), true)
-		gtest.Assert(gstr.IsSubDomain("s.s.goframe.org", main), true)
-		gtest.Assert(gstr.IsSubDomain("s.s.goframe.org:8080", main), true)
-		gtest.Assert(gstr.IsSubDomain("johng.cn", main), false)
-		gtest.Assert(gstr.IsSubDomain("s.johng.cn", main), false)
-		gtest.Assert(gstr.IsSubDomain("s.s.johng.cn", main), false)
+		t.Assert(gstr.IsSubDomain("goframe.org", main), true)
+		t.Assert(gstr.IsSubDomain("s.goframe.org", main), true)
+		t.Assert(gstr.IsSubDomain("s.s.goframe.org", main), true)
+		t.Assert(gstr.IsSubDomain("s.s.goframe.org:8080", main), true)
+		t.Assert(gstr.IsSubDomain("johng.cn", main), false)
+		t.Assert(gstr.IsSubDomain("s.johng.cn", main), false)
+		t.Assert(gstr.IsSubDomain("s.s.johng.cn", main), false)
 	})
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		main := "*.goframe.org"
-		gtest.Assert(gstr.IsSubDomain("goframe.org", main), true)
-		gtest.Assert(gstr.IsSubDomain("s.goframe.org", main), true)
-		gtest.Assert(gstr.IsSubDomain("s.goframe.org:80", main), true)
-		gtest.Assert(gstr.IsSubDomain("s.s.goframe.org", main), false)
-		gtest.Assert(gstr.IsSubDomain("johng.cn", main), false)
-		gtest.Assert(gstr.IsSubDomain("s.johng.cn", main), false)
-		gtest.Assert(gstr.IsSubDomain("s.s.johng.cn", main), false)
+		t.Assert(gstr.IsSubDomain("goframe.org", main), true)
+		t.Assert(gstr.IsSubDomain("s.goframe.org", main), true)
+		t.Assert(gstr.IsSubDomain("s.goframe.org:80", main), true)
+		t.Assert(gstr.IsSubDomain("s.s.goframe.org", main), false)
+		t.Assert(gstr.IsSubDomain("johng.cn", main), false)
+		t.Assert(gstr.IsSubDomain("s.johng.cn", main), false)
+		t.Assert(gstr.IsSubDomain("s.s.johng.cn", main), false)
 	})
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		main := "*.*.goframe.org"
-		gtest.Assert(gstr.IsSubDomain("goframe.org", main), true)
-		gtest.Assert(gstr.IsSubDomain("s.goframe.org", main), true)
-		gtest.Assert(gstr.IsSubDomain("s.s.goframe.org", main), true)
-		gtest.Assert(gstr.IsSubDomain("s.s.goframe.org:8000", main), true)
-		gtest.Assert(gstr.IsSubDomain("s.s.s.goframe.org", main), false)
-		gtest.Assert(gstr.IsSubDomain("johng.cn", main), false)
-		gtest.Assert(gstr.IsSubDomain("s.johng.cn", main), false)
-		gtest.Assert(gstr.IsSubDomain("s.s.johng.cn", main), false)
+		t.Assert(gstr.IsSubDomain("goframe.org", main), true)
+		t.Assert(gstr.IsSubDomain("s.goframe.org", main), true)
+		t.Assert(gstr.IsSubDomain("s.s.goframe.org", main), true)
+		t.Assert(gstr.IsSubDomain("s.s.goframe.org:8000", main), true)
+		t.Assert(gstr.IsSubDomain("s.s.s.goframe.org", main), false)
+		t.Assert(gstr.IsSubDomain("johng.cn", main), false)
+		t.Assert(gstr.IsSubDomain("s.johng.cn", main), false)
+		t.Assert(gstr.IsSubDomain("s.s.johng.cn", main), false)
 	})
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		main := "*.*.goframe.org:8080"
-		gtest.Assert(gstr.IsSubDomain("goframe.org", main), true)
-		gtest.Assert(gstr.IsSubDomain("s.goframe.org", main), true)
-		gtest.Assert(gstr.IsSubDomain("s.s.goframe.org", main), true)
-		gtest.Assert(gstr.IsSubDomain("s.s.goframe.org:8000", main), true)
-		gtest.Assert(gstr.IsSubDomain("s.s.s.goframe.org", main), false)
-		gtest.Assert(gstr.IsSubDomain("johng.cn", main), false)
-		gtest.Assert(gstr.IsSubDomain("s.johng.cn", main), false)
-		gtest.Assert(gstr.IsSubDomain("s.s.johng.cn", main), false)
+		t.Assert(gstr.IsSubDomain("goframe.org", main), true)
+		t.Assert(gstr.IsSubDomain("s.goframe.org", main), true)
+		t.Assert(gstr.IsSubDomain("s.s.goframe.org", main), true)
+		t.Assert(gstr.IsSubDomain("s.s.goframe.org:8000", main), true)
+		t.Assert(gstr.IsSubDomain("s.s.s.goframe.org", main), false)
+		t.Assert(gstr.IsSubDomain("johng.cn", main), false)
+		t.Assert(gstr.IsSubDomain("s.johng.cn", main), false)
+		t.Assert(gstr.IsSubDomain("s.s.johng.cn", main), false)
 	})
 }
