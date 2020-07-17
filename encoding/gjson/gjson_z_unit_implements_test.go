@@ -1,19 +1,19 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright 2017 gf Author(https://github.com/jin502437344/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/jin502437344/gf.
 
 package gjson_test
 
 import (
-	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/jin502437344/gf/internal/json"
+	"github.com/jin502437344/gf/util/gconv"
 	"testing"
 
-	"github.com/gogf/gf/encoding/gjson"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/jin502437344/gf/encoding/gjson"
+	"github.com/jin502437344/gf/frame/g"
+	"github.com/jin502437344/gf/test/gtest"
 )
 
 func TestJson_UnmarshalJSON(t *testing.T) {

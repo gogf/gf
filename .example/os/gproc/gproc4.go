@@ -4,9 +4,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/gogf/gf/os/genv"
-	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/os/gproc"
+	"github.com/jin502437344/gf/os/genv"
+	"github.com/jin502437344/gf/os/glog"
+	"github.com/jin502437344/gf/os/gproc"
 )
 
 // 查看父子进程的环境变量

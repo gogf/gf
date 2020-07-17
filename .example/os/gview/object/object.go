@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/gogf/gf/frame/g"
+	"github.com/jin502437344/gf/frame/g"
 )
 
 type T struct {

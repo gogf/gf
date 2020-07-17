@@ -1,8 +1,8 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright 2018 gf Author(https://github.com/jin502437344/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/jin502437344/gf.
 
 package garray
 
@@ -10,15 +10,15 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/gogf/gf/internal/empty"
-	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/jin502437344/gf/internal/empty"
+	"github.com/jin502437344/gf/internal/json"
+	"github.com/jin502437344/gf/text/gstr"
 	"math"
 	"sort"
 
-	"github.com/gogf/gf/internal/rwmutex"
-	"github.com/gogf/gf/util/gconv"
-	"github.com/gogf/gf/util/grand"
+	"github.com/jin502437344/gf/internal/rwmutex"
+	"github.com/jin502437344/gf/util/gconv"
+	"github.com/jin502437344/gf/util/grand"
 )
 
 // Array is a golang array with rich features.

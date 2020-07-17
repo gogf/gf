@@ -1,14 +1,14 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright 2017 gf Author(https://github.com/jin502437344/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/jin502437344/gf.
 
 // Package gutil provides utility functions.
 package gutil
 
 import (
-	"github.com/gogf/gf/internal/empty"
+	"github.com/jin502437344/gf/internal/empty"
 )
 
 // Throw throws out an exception, which can be caught be TryCatch or recover.

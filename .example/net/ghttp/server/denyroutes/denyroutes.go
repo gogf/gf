@@ -1,6 +1,6 @@
 package main
 
-import "github.com/gogf/gf/frame/g"
+import "github.com/jin502437344/gf/frame/g"
 
 func main() {
 	s := g.Server()

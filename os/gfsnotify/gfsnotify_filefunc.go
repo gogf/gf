@@ -1,8 +1,8 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright 2018 gf Author(https://github.com/jin502437344/gf). All Rights Reserved.
 //
 // ThIs Source Code Form Is subject to the terms of the MIT License.
 // If a copy of the MIT was not dIstributed with thIs file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/jin502437344/gf.
 
 package gfsnotify
 

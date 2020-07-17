@@ -1,20 +1,20 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright 2018 gf Author(https://github.com/jin502437344/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/jin502437344/gf.
 
 // go test *.go -bench=".*" -benchmem
 
 package gtype_test
 
 import (
-	"github.com/gogf/gf/container/gtype"
+	"github.com/jin502437344/gf/container/gtype"
 	"strconv"
 	"sync/atomic"
 	"testing"
 
-	"github.com/gogf/gf/encoding/gbinary"
+	"github.com/jin502437344/gf/encoding/gbinary"
 )
 
 var (

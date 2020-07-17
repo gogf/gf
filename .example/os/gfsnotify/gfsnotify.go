@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/gogf/gf/os/gfsnotify"
-	"github.com/gogf/gf/os/glog"
+	"github.com/jin502437344/gf/os/gfsnotify"
+	"github.com/jin502437344/gf/os/glog"
 )
 
 func main() {

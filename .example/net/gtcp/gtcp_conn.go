@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/gogf/gf/net/gtcp"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/jin502437344/gf/net/gtcp"
+	"github.com/jin502437344/gf/util/gconv"
 )
 
 func main() {

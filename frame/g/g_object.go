@@ -1,23 +1,23 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright 2018 gf Author(https://github.com/jin502437344/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/jin502437344/gf.
 
 package g
 
 import (
-	"github.com/gogf/gf/database/gdb"
-	"github.com/gogf/gf/database/gredis"
-	"github.com/gogf/gf/frame/gins"
-	"github.com/gogf/gf/i18n/gi18n"
-	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/net/gtcp"
-	"github.com/gogf/gf/net/gudp"
-	"github.com/gogf/gf/os/gcfg"
-	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/os/gres"
-	"github.com/gogf/gf/os/gview"
+	"github.com/jin502437344/gf/database/gdb"
+	"github.com/jin502437344/gf/database/gredis"
+	"github.com/jin502437344/gf/frame/gins"
+	"github.com/jin502437344/gf/i18n/gi18n"
+	"github.com/jin502437344/gf/net/ghttp"
+	"github.com/jin502437344/gf/net/gtcp"
+	"github.com/jin502437344/gf/net/gudp"
+	"github.com/jin502437344/gf/os/gcfg"
+	"github.com/jin502437344/gf/os/glog"
+	"github.com/jin502437344/gf/os/gres"
+	"github.com/jin502437344/gf/os/gview"
 )
 
 // Client is a convenience function, that creates and returns a new HTTP client.

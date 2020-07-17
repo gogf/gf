@@ -1,8 +1,8 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright 2019 gf Author(https://github.com/jin502437344/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/jin502437344/gf.
 
 // go test *.go -bench=".*"
 
@@ -11,9 +11,9 @@ package gcrc32_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/crypto/gcrc32"
-	"github.com/gogf/gf/crypto/gmd5"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/jin502437344/gf/crypto/gcrc32"
+	"github.com/jin502437344/gf/crypto/gmd5"
+	"github.com/jin502437344/gf/test/gtest"
 )
 
 func TestEncrypt(t *testing.T) {

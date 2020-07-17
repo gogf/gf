@@ -3,8 +3,8 @@ package main
 import (
 	"net/http"
 
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
+	"github.com/jin502437344/gf/frame/g"
+	"github.com/jin502437344/gf/net/ghttp"
 )
 
 func MiddlewareCORS(r *ghttp.Request) {

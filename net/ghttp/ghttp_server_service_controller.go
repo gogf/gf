@@ -1,8 +1,8 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright 2018 gf Author(https://github.com/jin502437344/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/jin502437344/gf.
 
 package ghttp
 
@@ -11,9 +11,9 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/text/gregex"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/jin502437344/gf/os/gfile"
+	"github.com/jin502437344/gf/text/gregex"
+	"github.com/jin502437344/gf/text/gstr"
 )
 
 // BindController registers controller to server routes with specified pattern. The controller

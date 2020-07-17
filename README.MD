@@ -1,11 +1,11 @@
 # GoFrame
 
-[![Go Doc](https://godoc.org/github.com/gogf/gf?status.svg)](https://godoc.org/github.com/gogf/gf)
-[![Build Status](https://travis-ci.org/gogf/gf.svg?branch=master)](https://travis-ci.org/gogf/gf)
-[![Go Report](https://goreportcard.com/badge/github.com/gogf/gf?v=1)](https://goreportcard.com/report/github.com/gogf/gf)
-[![Code Coverage](https://codecov.io/gh/gogf/gf/branch/master/graph/badge.svg)](https://codecov.io/gh/gogf/gf/branch/master)
-[![Production Ready](https://img.shields.io/badge/production-ready-blue.svg)](https://github.com/gogf/gf)
-[![License](https://img.shields.io/github/license/gogf/gf.svg?style=flat)](https://github.com/gogf/gf)
+[![Go Doc](https://godoc.org/github.com/jin502437344/gf?status.svg)](https://godoc.org/github.com/jin502437344/gf)
+[![Build Status](https://travis-ci.org/jin502437344/gf.svg?branch=master)](https://travis-ci.org/jin502437344/gf)
+[![Go Report](https://goreportcard.com/badge/github.com/jin502437344/gf?v=1)](https://goreportcard.com/report/github.com/jin502437344/gf)
+[![Code Coverage](https://codecov.io/gh/jin502437344/gf/branch/master/graph/badge.svg)](https://codecov.io/gh/jin502437344/gf/branch/master)
+[![Production Ready](https://img.shields.io/badge/production-ready-blue.svg)](https://github.com/jin502437344/gf)
+[![License](https://img.shields.io/github/license/jin502437344/gf.svg?style=flat)](https://github.com/jin502437344/gf)
 
 English | [简体中文](README_ZH.MD)
 
@@ -19,11 +19,11 @@ template, https, hooks, rewrites and many more features.
 
 # Installation
 ```
-go get -u -v github.com/gogf/gf
+go get -u -v github.com/jin502437344/gf
 ```
 suggested using `go.mod`:
 ```
-require github.com/gogf/gf latest
+require github.com/jin502437344/gf latest
 ```
 
 # Limitation
@@ -43,11 +43,11 @@ golang version >= 1.11
 
 1. **Community Package**
 
-    The community packages are contributed and maintained by community members, which are hosted in `gogf` organization. Some of the community packages are separated from the `gf` repository, which are not of common usage or are with heavy dependencies. 
+    The community packages are contributed and maintained by community members, which are hosted in `jin502437344` organization. Some of the community packages are separated from the `gf` repository, which are not of common usage or are with heavy dependencies. 
 
 # Performance
 
-Here's the most popular Golang frameworks and libraries performance testing result in `WEB Server`. Performance testing cases source codes are hosted at: https://github.com/gogf/gf-performance
+Here's the most popular Golang frameworks and libraries performance testing result in `WEB Server`. Performance testing cases source codes are hosted at: https://github.com/jin502437344/gf-performance
 
 ## Environment
 
@@ -101,13 +101,13 @@ The concurrency starts from `100` to `10000`.
 # Documentation
 
 * 中文官网: https://goframe.org
-* GoDoc API: https://godoc.org/github.com/gogf/gf
+* GoDoc API: https://godoc.org/github.com/jin502437344/gf
 
 
 # Discussion
 - QQ Group：[116707870](//shang.qq.com/wpa/qunwpa?idkey=195f91eceeb5d7fa76009b7cd5a4641f70bf4897b7f5a520635eb26ff17adfe7)
 - WX Group：Add friend`389961817` in WeChat, commenting `GF`
-- Issues：https://github.com/gogf/gf/issues
+- Issues：https://github.com/jin502437344/gf/issues
 
 > It's recommended learning `GoFrame` through its awesome source codes and API reference.
 
@@ -121,8 +121,8 @@ Logos are not authorized to be shown due to trademark copyrights.
 
 
 # Contributors
-This project exists thanks to all the people who contribute. [[Contributors](https://github.com/gogf/gf/graphs/contributors)].
-<a href="https://github.com/gogf/gf/graphs/contributors"><img src="https://opencollective.com/goframe/contributors.svg?width=890&button=false" /></a>
+This project exists thanks to all the people who contribute. [[Contributors](https://github.com/jin502437344/gf/graphs/contributors)].
+<a href="https://github.com/jin502437344/gf/graphs/contributors"><img src="https://opencollective.com/goframe/contributors.svg?width=890&button=false" /></a>
 
 
 # Donators

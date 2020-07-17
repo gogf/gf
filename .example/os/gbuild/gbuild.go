@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/gbuild"
+	"github.com/jin502437344/gf/frame/g"
+	"github.com/jin502437344/gf/os/gbuild"
 )
 
 func main() {

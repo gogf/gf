@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/util/gutil"
+	"github.com/jin502437344/gf/os/gfile"
+	"github.com/jin502437344/gf/util/gutil"
 )
 
 var dirpath1 = "/home/john/Workspace/temp/"

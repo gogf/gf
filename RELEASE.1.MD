@@ -163,7 +163,7 @@
 1. `gspath`增加缓存及非缓存检索检索方法`Search`/`SearchWithCache`；
 1. `gjson`模块增加默认的`UseNumber`功能支持；
 1. `gmap`增加`SetIfNotExistFunc/SetIfNotExistFuncLock`方法；
-1. 迁移`greuseport`模块到新的仓库：https://github.com/gogf/greuseport
+1. 迁移`greuseport`模块到新的仓库：https://github.com/jin502437344/greuseport
 1. 大量的单元测试完善；
 
 ## Bug Fix
@@ -181,15 +181,15 @@
 # `v1.5.8` (2019-02-28)
 
 ## 新特性
-1. 主库从`gitee`迁移到了`github`( https://github.com/gogf/gf )，`gitee`作为镜像站，用于国内的代码贡献及ISSUE提交，迁移说明详见：https://goframe.org/upgradeto150
-1. 对常用的`container`数组模块: `garray`做了大量改进/完善工作，新增大量常用方法，并完善单元测试用例及方法注释，详见API文档：https://godoc.org/github.com/gogf/gf/container/garray
-1. 对常用的`container`集合模块: `gset`做了大量改进/完善工作，新增大量常用方法，并完善单元测试用例及方法注释，详见API文档：https://godoc.org/github.com/gogf/gf/container/gset
-1. 对常用的`container`MAP模块: `gmap`做了大量改进/完善工作，新增大量常用方法，并完善单元测试用例及方法注释，详见API文档：https://godoc.org/github.com/gogf/gf/container/gmap
-1. 对常用的字符串模块: `gstr`做了大量改进/完善工作，新增大量常用方法，并完善单元测试用例及方法注释，详见API文档：https://godoc.org/github.com/gogf/gf/text/gstr
+1. 主库从`gitee`迁移到了`github`( https://github.com/jin502437344/gf )，`gitee`作为镜像站，用于国内的代码贡献及ISSUE提交，迁移说明详见：https://goframe.org/upgradeto150
+1. 对常用的`container`数组模块: `garray`做了大量改进/完善工作，新增大量常用方法，并完善单元测试用例及方法注释，详见API文档：https://godoc.org/github.com/jin502437344/gf/container/garray
+1. 对常用的`container`集合模块: `gset`做了大量改进/完善工作，新增大量常用方法，并完善单元测试用例及方法注释，详见API文档：https://godoc.org/github.com/jin502437344/gf/container/gset
+1. 对常用的`container`MAP模块: `gmap`做了大量改进/完善工作，新增大量常用方法，并完善单元测试用例及方法注释，详见API文档：https://godoc.org/github.com/jin502437344/gf/container/gmap
+1. 对常用的字符串模块: `gstr`做了大量改进/完善工作，新增大量常用方法，并完善单元测试用例及方法注释，详见API文档：https://godoc.org/github.com/jin502437344/gf/text/gstr
 1. 改进`gform`中对`struct`/`*struct`参数的支持，`*Insert/*Save/*Replace/*Update/Where/Data`方法的参数调整为`interface{}`类型，并支持任意类型的: `string/map/slice/struct/*struct`参数传递，具体请参考：https://goframe.org/database/orm/chaining
 1. 新增/完善若干模块的单元测试用例, 包括：`gvalid`/`gregex`/`garray`/`gset`/`gmap`/`gstr`/`gconv`/`ghttp`/`gdb`；
-1. 由于`gkafka`模块比较重，且不是框架核心模块，因此将该模块迁移到新的仓库中独立管理，并去掉相关依赖包：https://github.com/gogf/gkafka
-1. 新增`greuseport`模块，用以实现TCP的`REUSEPORT`特性：https://godoc.org/github.com/gogf/gf/net/greuseport
+1. 由于`gkafka`模块比较重，且不是框架核心模块，因此将该模块迁移到新的仓库中独立管理，并去掉相关依赖包：https://github.com/jin502437344/gkafka
+1. 新增`greuseport`模块，用以实现TCP的`REUSEPORT`特性：https://godoc.org/github.com/jin502437344/gf/net/greuseport
 
 ## 新功能/改进
 1. 去掉模板引擎内置变量中自动初始化`session`对象带来的内存占用问题；
@@ -319,7 +319,7 @@
 ## 问题修复
 1. 修复`gspath`模块在`windows`下搜索失效问题；
 1. 修复`gspath`模块Search时带有indexFiles的检索问题;
-1. bug fix INZS1([https://github.com/gogf/gf/issues/INZS1](https://github.com/gogf/gf/issues/INZS1));
+1. bug fix INZS1([https://github.com/jin502437344/gf/issues/INZS1](https://github.com/jin502437344/gf/issues/INZS1));
 1. 修复`gproc.ShellRun`在windows下的执行问题;
 
 
@@ -558,8 +558,8 @@
     12、gdb数据库ORM包增加And/Or条件链式方法，并改进Where/Data方法参数灵活性；
     13、对于新增加的模块，同时也增加了对应的开发文档，并梳理完善了现有的其他模块开发文档；
     14、修复ISSUE:
-        #IISWI github.com/gogf/gf/issues/IISWI,
-        #IISMY github.com/gogf/gf/issues/IISMY,
+        #IISWI github.com/jin502437344/gf/issues/IISWI,
+        #IISMY github.com/jin502437344/gf/issues/IISMY,
         反馈并跟踪完成第三方依赖mxj包的ISSUE修复(github.com/clbanning/mxj/issues/48)；
 
 

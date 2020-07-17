@@ -3,8 +3,8 @@ package main
 import (
 	"time"
 
-	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/os/gtime"
+	"github.com/jin502437344/gf/os/glog"
+	"github.com/jin502437344/gf/os/gtime"
 )
 
 // 测试删除日志文件是否会重建日志文件

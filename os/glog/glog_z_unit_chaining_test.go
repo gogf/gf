@@ -1,18 +1,18 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright 2017 gf Author(https://github.com/jin502437344/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/jin502437344/gf.
 
 package glog
 
 import (
 	"bytes"
 	"fmt"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/test/gtest"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/jin502437344/gf/os/gfile"
+	"github.com/jin502437344/gf/os/gtime"
+	"github.com/jin502437344/gf/test/gtest"
+	"github.com/jin502437344/gf/text/gstr"
 	"testing"
 	"time"
 )
@@ -138,7 +138,7 @@ func Test_StackWithFilter(t *testing.T) {
 		t.Assert(err, nil)
 		defer gfile.Remove(path)
 
-		Path(path).File(file).StackWithFilter("gogf").Stdout(false).Error(1, 2, 3)
+		Path(path).File(file).StackWithFilter("jin502437344").Stdout(false).Error(1, 2, 3)
 		content := gfile.GetContents(gfile.Join(path, file))
 		t.Assert(gstr.Count(content, defaultLevelPrefixes[LEVEL_ERRO]), 1)
 		t.Assert(gstr.Count(content, "1 2 3"), 1)

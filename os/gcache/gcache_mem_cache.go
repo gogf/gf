@@ -1,23 +1,23 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright 2018 gf Author(https://github.com/jin502437344/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/jin502437344/gf.
 
 package gcache
 
 import (
-	"github.com/gogf/gf/container/gvar"
+	"github.com/jin502437344/gf/container/gvar"
 	"math"
 	"sync"
 	"time"
 
-	"github.com/gogf/gf/container/glist"
-	"github.com/gogf/gf/container/gset"
-	"github.com/gogf/gf/container/gtype"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/os/gtimer"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/jin502437344/gf/container/glist"
+	"github.com/jin502437344/gf/container/gset"
+	"github.com/jin502437344/gf/container/gtype"
+	"github.com/jin502437344/gf/os/gtime"
+	"github.com/jin502437344/gf/os/gtimer"
+	"github.com/jin502437344/gf/util/gconv"
 )
 
 // Internal cache object.

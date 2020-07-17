@@ -1,8 +1,8 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright 2018 gf Author(https://github.com/jin502437344/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/jin502437344/gf.
 
 // Package gring provides a concurrent-safe/unsafe ring(circular lists).
 package gring
@@ -10,8 +10,8 @@ package gring
 import (
 	"container/ring"
 
-	"github.com/gogf/gf/container/gtype"
-	"github.com/gogf/gf/internal/rwmutex"
+	"github.com/jin502437344/gf/container/gtype"
+	"github.com/jin502437344/gf/internal/rwmutex"
 )
 
 // Ring is a struct of ring structure.

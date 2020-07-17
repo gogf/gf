@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/frame/gmvc"
+	"github.com/jin502437344/gf/frame/g"
+	"github.com/jin502437344/gf/frame/gmvc"
 )
 
 func init() {

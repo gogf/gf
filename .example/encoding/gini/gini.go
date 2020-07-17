@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/gogf/gf/encoding/gini"
+	"github.com/jin502437344/gf/encoding/gini"
 )
 
 func main() {

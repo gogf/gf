@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/gogf/gf/util/gconv"
+	"github.com/jin502437344/gf/util/gconv"
 )
 
 // struct转slice

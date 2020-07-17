@@ -1,29 +1,29 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright 2019 gf Author(https://github.com/jin502437344/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/jin502437344/gf.
 
 package gsession
 
 import (
 	"fmt"
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/internal/intlog"
-	"github.com/gogf/gf/internal/json"
+	"github.com/jin502437344/gf/container/gmap"
+	"github.com/jin502437344/gf/internal/intlog"
+	"github.com/jin502437344/gf/internal/json"
 	"os"
 	"time"
 
-	"github.com/gogf/gf/crypto/gaes"
+	"github.com/jin502437344/gf/crypto/gaes"
 
-	"github.com/gogf/gf/os/gtimer"
+	"github.com/jin502437344/gf/os/gtimer"
 
-	"github.com/gogf/gf/container/gset"
-	"github.com/gogf/gf/encoding/gbinary"
+	"github.com/jin502437344/gf/container/gset"
+	"github.com/jin502437344/gf/encoding/gbinary"
 
-	"github.com/gogf/gf/os/gtime"
+	"github.com/jin502437344/gf/os/gtime"
 
-	"github.com/gogf/gf/os/gfile"
+	"github.com/jin502437344/gf/os/gfile"
 )
 
 // StorageFile implements the Session Storage interface with file system.

@@ -3,7 +3,7 @@ package main
 import (
 	"archive/zip"
 	"fmt"
-	"github.com/gogf/gf/encoding/gcompress"
+	"github.com/jin502437344/gf/encoding/gcompress"
 	"io"
 	"os"
 	"path/filepath"
@@ -59,10 +59,10 @@ func Zip(srcFile string, destZip string) error {
 }
 
 func main() {
-	src := `/Users/john/Workspace/Go/GOPATH/src/github.com/gogf/gf/test`
-	dst := `/Users/john/Workspace/Go/GOPATH/src/github.com/gogf/gf/test.zip`
-	//src := `/Users/john/Workspace/Go/GOPATH/src/github.com/gogf/gf/README.MD`
-	//dst := `/Users/john/Workspace/Go/GOPATH/src/github.com/gogf/gf/README.MD.zip`
+	src := `/Users/john/Workspace/Go/GOPATH/src/github.com/jin502437344/gf/test`
+	dst := `/Users/john/Workspace/Go/GOPATH/src/github.com/jin502437344/gf/test.zip`
+	//src := `/Users/john/Workspace/Go/GOPATH/src/github.com/jin502437344/gf/README.MD`
+	//dst := `/Users/john/Workspace/Go/GOPATH/src/github.com/jin502437344/gf/README.MD.zip`
 	fmt.Println(gcompress.ZipPath(src, dst))
 	//fmt.Println(Zip(src, dst))
 }

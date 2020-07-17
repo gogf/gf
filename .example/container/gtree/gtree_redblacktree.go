@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/gogf/gf/container/gtree"
+	"github.com/jin502437344/gf/container/gtree"
 )
 
 func main() {

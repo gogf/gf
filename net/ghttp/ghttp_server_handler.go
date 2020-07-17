@@ -1,8 +1,8 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright 2017 gf Author(https://github.com/jin502437344/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/jin502437344/gf.
 
 package ghttp
 
@@ -12,16 +12,16 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/gogf/gf/text/gstr"
+	"github.com/jin502437344/gf/text/gstr"
 
-	"github.com/gogf/gf/errors/gerror"
+	"github.com/jin502437344/gf/errors/gerror"
 
-	"github.com/gogf/gf/os/gres"
+	"github.com/jin502437344/gf/os/gres"
 
-	"github.com/gogf/gf/encoding/ghtml"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/gspath"
-	"github.com/gogf/gf/os/gtime"
+	"github.com/jin502437344/gf/encoding/ghtml"
+	"github.com/jin502437344/gf/os/gfile"
+	"github.com/jin502437344/gf/os/gspath"
+	"github.com/jin502437344/gf/os/gtime"
 )
 
 // ServeHTTP is the default handler for http request.

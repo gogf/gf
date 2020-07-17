@@ -1,8 +1,8 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright 2017 gf Author(https://github.com/jin502437344/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/jin502437344/gf.
 
 package gparser_test
 
@@ -10,10 +10,10 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/gogf/gf/encoding/gparser"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/jin502437344/gf/encoding/gparser"
+	"github.com/jin502437344/gf/frame/g"
+	"github.com/jin502437344/gf/os/gfile"
+	"github.com/jin502437344/gf/test/gtest"
 )
 
 func Test_Load_JSON(t *testing.T) {

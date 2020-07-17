@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/glog"
+	"github.com/jin502437344/gf/frame/g"
+	"github.com/jin502437344/gf/os/gfile"
+	"github.com/jin502437344/gf/os/glog"
 )
 
 // 设置日志输出路径

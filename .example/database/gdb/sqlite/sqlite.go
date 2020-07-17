@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 
-	"github.com/gogf/gf/database/gdb"
-	"github.com/gogf/gf/frame/g"
+	"github.com/jin502437344/gf/database/gdb"
+	"github.com/jin502437344/gf/frame/g"
 	_ "github.com/mattn/go-sqlite3"
 )
 

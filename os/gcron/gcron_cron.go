@@ -1,8 +1,8 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright 2018 gf Author(https://github.com/jin502437344/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/jin502437344/gf.
 
 package gcron
 
@@ -11,11 +11,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gogf/gf/container/garray"
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/container/gtype"
-	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/os/gtimer"
+	"github.com/jin502437344/gf/container/garray"
+	"github.com/jin502437344/gf/container/gmap"
+	"github.com/jin502437344/gf/container/gtype"
+	"github.com/jin502437344/gf/os/glog"
+	"github.com/jin502437344/gf/os/gtimer"
 )
 
 type Cron struct {

@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/gogf/gf/container/glist"
+	"github.com/jin502437344/gf/container/glist"
 )
 
 func main() {

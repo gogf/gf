@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/gogf/gf/frame/g"
+	"github.com/jin502437344/gf/frame/g"
 )
 
 // 使用默认的config.toml配置文件读取配置

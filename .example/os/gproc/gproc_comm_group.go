@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/gogf/gf/os/gproc"
-	"github.com/gogf/gf/os/gtime"
+	"github.com/jin502437344/gf/os/gproc"
+	"github.com/jin502437344/gf/os/gtime"
 )
 
 func main() {

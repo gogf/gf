@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/gogf/gf/os/gtime"
+	"github.com/jin502437344/gf/os/gtime"
 )
 
 func main() {

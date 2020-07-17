@@ -3,9 +3,9 @@ package main
 import (
 	"encoding/json"
 
-	"github.com/gogf/gf/.example/net/gtcp/pkg_operations/monitor/types"
-	"github.com/gogf/gf/net/gtcp"
-	"github.com/gogf/gf/os/glog"
+	"github.com/jin502437344/gf/.example/net/gtcp/pkg_operations/monitor/types"
+	"github.com/jin502437344/gf/net/gtcp"
+	"github.com/jin502437344/gf/os/glog"
 )
 
 func main() {

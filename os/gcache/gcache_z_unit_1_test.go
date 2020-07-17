@@ -1,8 +1,8 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright 2017 gf Author(https://github.com/jin502437344/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/jin502437344/gf.
 
 // go test *.go -bench=".*" -benchmem
 
@@ -12,11 +12,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/container/gset"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/gcache"
-	"github.com/gogf/gf/os/grpool"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/jin502437344/gf/container/gset"
+	"github.com/jin502437344/gf/frame/g"
+	"github.com/jin502437344/gf/os/gcache"
+	"github.com/jin502437344/gf/os/grpool"
+	"github.com/jin502437344/gf/test/gtest"
 )
 
 func TestCache_GCache_Set(t *testing.T) {

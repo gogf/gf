@@ -5,10 +5,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/os/gproc"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/os/gtimer"
+	"github.com/jin502437344/gf/os/glog"
+	"github.com/jin502437344/gf/os/gproc"
+	"github.com/jin502437344/gf/os/gtime"
+	"github.com/jin502437344/gf/os/gtimer"
 )
 
 func main() {

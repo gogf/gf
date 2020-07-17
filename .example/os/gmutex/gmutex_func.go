@@ -3,9 +3,9 @@ package main
 import (
 	"time"
 
-	"github.com/gogf/gf/os/glog"
+	"github.com/jin502437344/gf/os/glog"
 
-	"github.com/gogf/gf/os/gmutex"
+	"github.com/jin502437344/gf/os/gmutex"
 )
 
 func main() {

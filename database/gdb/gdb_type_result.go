@@ -1,19 +1,19 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright 2018 gf Author(https://github.com/jin502437344/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/jin502437344/gf.
 
 package gdb
 
 import (
 	"database/sql"
 	"fmt"
-	"github.com/gogf/gf/container/gvar"
+	"github.com/jin502437344/gf/container/gvar"
 	"math"
 	"reflect"
 
-	"github.com/gogf/gf/encoding/gparser"
+	"github.com/jin502437344/gf/encoding/gparser"
 )
 
 // IsEmpty checks and returns whether <r> is empty.

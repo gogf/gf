@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/gogf/gf/frame/g"
+	"github.com/jin502437344/gf/frame/g"
 	"path/filepath"
 
-	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/os/glog"
+	"github.com/jin502437344/gf/net/ghttp"
+	"github.com/jin502437344/gf/os/glog"
 )
 
 func SendXmlFile(gameId int, areaName string, filePath string) error {
@@ -28,9 +28,9 @@ func SendXmlFile(gameId int, areaName string, filePath string) error {
 }
 
 func main() {
-	SendXmlFile(1, "xxx", "/Users/john/Workspace/Go/GOPATH/src/github.com/gogf/gf/.example/net/ghttp/server/session.go")
+	SendXmlFile(1, "xxx", "/Users/john/Workspace/Go/GOPATH/src/github.com/jin502437344/gf/.example/net/ghttp/server/session.go")
 	return
-	path := "/home/john/Workspace/Go/github.com/gogf/gf/version.go"
+	path := "/home/john/Workspace/Go/github.com/jin502437344/gf/version.go"
 	r, e := ghttp.Post("http://127.0.0.1:8199/upload", "upload-file=@file:"+path)
 	if e != nil {
 		glog.Error(e)

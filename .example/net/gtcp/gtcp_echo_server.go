@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/gogf/gf/net/gtcp"
+	"github.com/jin502437344/gf/net/gtcp"
 )
 
 func main() {

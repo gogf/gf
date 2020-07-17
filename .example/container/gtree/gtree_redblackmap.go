@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 
-	"github.com/gogf/gf/container/gtree"
-	"github.com/gogf/gf/util/gutil"
+	"github.com/jin502437344/gf/container/gtree"
+	"github.com/jin502437344/gf/util/gutil"
 )
 
 func main() {

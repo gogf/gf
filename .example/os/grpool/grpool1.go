@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gogf/gf/os/grpool"
-	"github.com/gogf/gf/os/gtimer"
+	"github.com/jin502437344/gf/os/grpool"
+	"github.com/jin502437344/gf/os/gtimer"
 )
 
 func job() {
