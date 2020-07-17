@@ -8,15 +8,16 @@
 package gsession
 
 import (
-	"strconv"
-	"strings"
+	"errors"
+	"github.com/gogf/gf/util/guid"
+)
 
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/util/grand"
+var (
+	ErrorDisabled = errors.New("this feature is disabled in this storage")
 )
 
 // NewSessionId creates and returns a new and unique session id string,
-// the length of which is 18 bytes.
+// which is in 36 bytes.
 func NewSessionId() string {
-	return strings.ToUpper(strconv.FormatInt(gtime.Nanosecond(), 36) + grand.Str(6))
+	return guid.S()
 }

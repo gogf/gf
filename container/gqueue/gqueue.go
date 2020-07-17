@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gqueue provides a dynamic/static concurrent-safe queue.
+// Package gqueue provides dynamic/static concurrent-safe queue.
 //
 // Features:
 //
@@ -25,6 +25,7 @@ import (
 	"github.com/gogf/gf/container/gtype"
 )
 
+// Queue is a concurrent-safe queue built on doubly linked list and channel.
 type Queue struct {
 	limit  int              // Limit for queue size.
 	list   *glist.List      // Underlying list structure for data maintaining.
@@ -54,14 +55,14 @@ func New(limit ...int) *Queue {
 		q.list = glist.New(true)
 		q.events = make(chan struct{}, math.MaxInt32)
 		q.C = make(chan interface{}, gDEFAULT_QUEUE_SIZE)
-		go q.startAsyncLoop()
+		go q.asyncLoopFromListToChannel()
 	}
 	return q
 }
 
-// startAsyncLoop starts an asynchronous goroutine,
+// asyncLoopFromListToChannel starts an asynchronous goroutine,
 // which handles the data synchronization from list <q.list> to channel <q.C>.
-func (q *Queue) startAsyncLoop() {
+func (q *Queue) asyncLoopFromListToChannel() {
 	defer func() {
 		if q.closed.Val() {
 			_ = recover()
@@ -129,6 +130,8 @@ func (q *Queue) Close() {
 }
 
 // Len returns the length of the queue.
+// Note that the result might not be accurate as there's a
+// asynchronize channel reading the list constantly.
 func (q *Queue) Len() (length int) {
 	if q.list != nil {
 		length += q.list.Len()

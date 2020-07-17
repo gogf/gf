@@ -7,14 +7,17 @@
 package gtype
 
 import (
+	"bytes"
+	"github.com/gogf/gf/util/gconv"
 	"sync/atomic"
 )
 
+// String is a struct for concurrent-safe operation for type string.
 type String struct {
 	value atomic.Value
 }
 
-// NewString returns a concurrent-safe object for string type,
+// NewString creates and returns a concurrent-safe object for string type,
 // with given initial value <value>.
 func NewString(value ...string) *String {
 	t := &String{}
@@ -36,11 +39,33 @@ func (v *String) Set(value string) (old string) {
 	return
 }
 
-// Val atomically loads t.value.
+// Val atomically loads and returns t.value.
 func (v *String) Val() string {
 	s := v.value.Load()
 	if s != nil {
 		return s.(string)
 	}
 	return ""
+}
+
+// String implements String interface for string printing.
+func (v *String) String() string {
+	return v.Val()
+}
+
+// MarshalJSON implements the interface MarshalJSON for json.Marshal.
+func (v *String) MarshalJSON() ([]byte, error) {
+	return gconv.UnsafeStrToBytes(`"` + v.Val() + `"`), nil
+}
+
+// UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
+func (v *String) UnmarshalJSON(b []byte) error {
+	v.Set(gconv.UnsafeBytesToStr(bytes.Trim(b, `"`)))
+	return nil
+}
+
+// UnmarshalValue is an interface implement which sets any type of value for <v>.
+func (v *String) UnmarshalValue(value interface{}) error {
+	v.Set(gconv.String(value))
+	return nil
 }

@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	m1 := gmap.New()
+	m1 := gmap.New(true)
 	m1.Set("1", "1")
 
 	m2 := m1.Map()

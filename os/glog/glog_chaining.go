@@ -7,12 +7,20 @@
 package glog
 
 import (
+	"context"
 	"io"
 )
 
 // Expose returns the default logger of glog.
 func Expose() *Logger {
 	return logger
+}
+
+// Ctx is a chaining function,
+// which sets the context for current logging.
+// The parameter <keys> specifies the context keys for retrieving values.
+func Ctx(ctx context.Context, keys ...interface{}) *Logger {
+	return logger.Ctx(ctx, keys...)
 }
 
 // To is a chaining function,
@@ -43,6 +51,12 @@ func File(pattern string) *Logger {
 // which sets logging level for the current logging content output.
 func Level(level int) *Logger {
 	return logger.Level(level)
+}
+
+// LevelStr is a chaining function,
+// which sets logging level for the current logging content output using level string.
+func LevelStr(levelStr string) *Logger {
+	return logger.LevelStr(levelStr)
 }
 
 // Skip is a chaining function,

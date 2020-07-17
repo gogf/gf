@@ -7,9 +7,7 @@ import (
 func main() {
 	s := ghttp.GetServer()
 	s.BindHandler("/log/error", func(r *ghttp.Request) {
-		if j := r.GetJson(); j != nil {
-			r.Response.Write(j.Get("test"))
-		}
+		panic("OMG")
 	})
 	s.SetErrorLogEnabled(true)
 	s.SetPort(8199)

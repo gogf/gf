@@ -17,7 +17,7 @@ import (
 )
 
 func Test_Cookie(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/set", func(r *ghttp.Request) {
 		r.Cookie.Set(r.GetString("k"), r.GetString("v"))
@@ -29,13 +29,12 @@ func Test_Cookie(t *testing.T) {
 		r.Cookie.Remove(r.GetString("k"))
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
-	// 等待启动完成
-	time.Sleep(200 * time.Millisecond)
-	gtest.Case(t, func() {
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetBrowserMode(true)
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
@@ -43,18 +42,18 @@ func Test_Cookie(t *testing.T) {
 		if r1 != nil {
 			defer r1.Close()
 		}
-		gtest.Assert(e1, nil)
-		gtest.Assert(r1.ReadAllString(), "")
+		t.Assert(e1, nil)
+		t.Assert(r1.ReadAllString(), "")
 
-		gtest.Assert(client.GetContent("/set?k=key2&v=200"), "")
+		t.Assert(client.GetContent("/set?k=key2&v=200"), "")
 
-		gtest.Assert(client.GetContent("/get?k=key1"), "100")
-		gtest.Assert(client.GetContent("/get?k=key2"), "200")
-		gtest.Assert(client.GetContent("/get?k=key3"), "")
-		gtest.Assert(client.GetContent("/remove?k=key1"), "")
-		gtest.Assert(client.GetContent("/remove?k=key3"), "")
-		gtest.Assert(client.GetContent("/remove?k=key4"), "")
-		gtest.Assert(client.GetContent("/get?k=key1"), "")
-		gtest.Assert(client.GetContent("/get?k=key2"), "200")
+		t.Assert(client.GetContent("/get?k=key1"), "100")
+		t.Assert(client.GetContent("/get?k=key2"), "200")
+		t.Assert(client.GetContent("/get?k=key3"), "")
+		t.Assert(client.GetContent("/remove?k=key1"), "")
+		t.Assert(client.GetContent("/remove?k=key3"), "")
+		t.Assert(client.GetContent("/remove?k=key4"), "")
+		t.Assert(client.GetContent("/get?k=key1"), "")
+		t.Assert(client.GetContent("/get?k=key2"), "200")
 	})
 }

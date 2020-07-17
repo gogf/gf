@@ -9,10 +9,11 @@ package gproc
 
 import (
 	"bytes"
+	"github.com/gogf/gf/os/genv"
+	"github.com/gogf/gf/text/gstr"
 	"io"
 	"os"
 	"runtime"
-	"strings"
 	"time"
 
 	"github.com/gogf/gf/os/gfile"
@@ -21,25 +22,25 @@ import (
 
 const (
 	gPROC_ENV_KEY_PPID_KEY = "GPROC_PPID"
-	gPROC_TEMP_DIR_ENV_KEY = "GPROC_TEMP_DIR"
 )
 
 var (
-	// 进程开始执行时间
+	// processPid is the pid of current process.
+	processPid = os.Getpid()
+	// processStartTime is the start time of current process.
 	processStartTime = time.Now()
 )
 
-// 获取当前进程ID
+// Pid returns the pid of current process.
 func Pid() int {
-	return os.Getpid()
+	return processPid
 }
 
-// 获取父进程ID(gproc父进程，如果当前进程本身就是父进程，那么返回自身的pid，不存在时则使用系统父进程)
+// PPid returns the custom parent pid if exists, or else it returns the system parent pid.
 func PPid() int {
 	if !IsChild() {
 		return Pid()
 	}
-	// gPROC_ENV_KEY_PPID_KEY为gproc包自定义的父进程
 	ppidValue := os.Getenv(gPROC_ENV_KEY_PPID_KEY)
 	if ppidValue != "" && ppidValue != "0" {
 		return gconv.Int(ppidValue)
@@ -47,18 +48,22 @@ func PPid() int {
 	return PPidOS()
 }
 
-// 获取父进程ID(系统父进程)
+// PPidOS returns the system parent pid of current process.
+// Note that the difference between PPidOS and PPid function is that the PPidOS returns
+// the system ppid, but the PPid functions may return the custom pid by gproc if the custom
+// ppid exists.
 func PPidOS() int {
 	return os.Getppid()
 }
 
-// 判断当前进程是否为gproc创建的子进程
+// IsChild checks and returns whether current process is a child process.
+// A child process is forked by another gproc process.
 func IsChild() bool {
 	ppidValue := os.Getenv(gPROC_ENV_KEY_PPID_KEY)
 	return ppidValue != "" && ppidValue != "0"
 }
 
-// 设置gproc父进程ID，当ppid为0时表示该进程为gproc主进程，否则为gproc子进程
+// SetPPid sets custom parent pid for current process.
 func SetPPid(ppid int) error {
 	if ppid > 0 {
 		return os.Setenv(gPROC_ENV_KEY_PPID_KEY, gconv.String(ppid))
@@ -67,64 +72,108 @@ func SetPPid(ppid int) error {
 	}
 }
 
-// 进程开始执行时间
+// StartTime returns the start time of current process.
 func StartTime() time.Time {
 	return processStartTime
 }
 
-// 进程已经运行的时间(毫秒)
-func Uptime() int {
-	return int(time.Now().UnixNano()/1e6 - processStartTime.UnixNano()/1e6)
+// Uptime returns the duration which current process has been running
+func Uptime() time.Duration {
+	return time.Now().Sub(processStartTime)
 }
 
-// 阻塞执行shell指令，并给定输入输出对象
+// Shell executes command <cmd> synchronizingly with given input pipe <in> and output pipe <out>.
+// The command <cmd> reads the input parameters from input pipe <in>, and writes its output automatically
+// to output pipe <out>.
 func Shell(cmd string, out io.Writer, in io.Reader) error {
-	p := NewProcess(getShell(), []string{getShellOption(), cmd})
+	p := NewProcess(getShell(), append([]string{getShellOption()}, parseCommand(cmd)...))
 	p.Stdin = in
 	p.Stdout = out
 	return p.Run()
 }
 
-// 阻塞执行shell指令，并输出结果当终端(如果需要异步，请使用goroutine)
+// ShellRun executes given command <cmd> synchronizingly and outputs the command result to the stdout.
 func ShellRun(cmd string) error {
-	p := NewProcess(getShell(), []string{getShellOption(), cmd})
+	p := NewProcess(getShell(), append([]string{getShellOption()}, parseCommand(cmd)...))
 	return p.Run()
 }
 
-// 阻塞执行shell指令，并返回输出结果(如果需要异步，请使用goroutine)
+// ShellExec executes given command <cmd> synchronizingly and returns the command result.
 func ShellExec(cmd string, environment ...[]string) (string, error) {
 	buf := bytes.NewBuffer(nil)
-	p := NewProcess(getShell(), []string{getShellOption(), cmd}, environment...)
+	p := NewProcess(getShell(), append([]string{getShellOption()}, parseCommand(cmd)...), environment...)
 	p.Stdout = buf
+	p.Stderr = buf
 	err := p.Run()
 	return buf.String(), err
 }
 
-// 检测环境变量中是否已经存在指定键名
-func checkEnvKey(env []string, key string) bool {
-	for _, v := range env {
-		if len(v) >= len(key) && strings.EqualFold(v[0:len(key)], key) {
-			return true
+// parseCommand parses command <cmd> into slice arguments.
+//
+// Note that it just parses the <cmd> for "cmd.exe" binary in windows, but it is not necessary
+// parsing the <cmd> for other systems using "bash"/"sh" binary.
+func parseCommand(cmd string) (args []string) {
+	if runtime.GOOS != "windows" {
+		return []string{cmd}
+	}
+	// Just for "cmd.exe" in windows.
+	var argStr string
+	var firstChar, prevChar, lastChar1, lastChar2 byte
+	array := gstr.SplitAndTrim(cmd, " ")
+	for _, v := range array {
+		if len(argStr) > 0 {
+			argStr += " "
+		}
+		firstChar = v[0]
+		lastChar1 = v[len(v)-1]
+		lastChar2 = 0
+		if len(v) > 1 {
+			lastChar2 = v[len(v)-2]
+		}
+		if prevChar == 0 && (firstChar == '"' || firstChar == '\'') {
+			// It should remove the first quote char.
+			argStr += v[1:]
+			prevChar = firstChar
+		} else if prevChar != 0 && lastChar2 != '\\' && lastChar1 == prevChar {
+			// It should remove the last quote char.
+			argStr += v[:len(v)-1]
+			args = append(args, argStr)
+			argStr = ""
+			prevChar = 0
+		} else if len(argStr) > 0 {
+			argStr += v
+		} else {
+			args = append(args, v)
 		}
 	}
-	return false
+	return
 }
 
-// 获取当前系统下的shell路径
+// getShell returns the shell command depending on current working operation system.
+// It returns "cmd.exe" for windows, and "bash" or "sh" for others.
 func getShell() string {
 	switch runtime.GOOS {
 	case "windows":
-		return searchBinFromEnvPath("cmd.exe")
+		return SearchBinary("cmd.exe")
 	default:
-		path := searchBinFromEnvPath("bash")
+		// Check the default binary storage path.
+		if gfile.Exists("/bin/bash") {
+			return "/bin/bash"
+		}
+		if gfile.Exists("/bin/sh") {
+			return "/bin/sh"
+		}
+		// Else search the env PATH.
+		path := SearchBinary("bash")
 		if path == "" {
-			path = searchBinFromEnvPath("sh")
+			path = SearchBinary("sh")
 		}
 		return path
 	}
 }
 
-// 获取当前系统默认shell执行指令的option参数
+// getShellOption returns the shell option depending on current working operation system.
+// It returns "/c" for windows, and "-c" for others.
 func getShellOption() string {
 	switch runtime.GOOS {
 	case "windows":
@@ -134,26 +183,37 @@ func getShellOption() string {
 	}
 }
 
-// 从环境变量PATH中搜索可执行文件
-func searchBinFromEnvPath(file string) string {
-	// 如果是绝对路径，或者相对路径下存在，那么直接返回
+// SearchBinary searches the binary <file> in current working folder and PATH environment.
+func SearchBinary(file string) string {
+	// Check if it's absolute path of exists at current working directory.
 	if gfile.Exists(file) {
 		return file
 	}
+	return SearchBinaryPath(file)
+}
+
+// SearchBinaryPath searches the binary <file> in PATH environment.
+func SearchBinaryPath(file string) string {
 	array := ([]string)(nil)
 	switch runtime.GOOS {
 	case "windows":
-		array = strings.Split(os.Getenv("Path"), ";")
+		envPath := genv.Get("PATH", genv.Get("Path"))
+		if gstr.Contains(envPath, ";") {
+			array = gstr.SplitAndTrim(envPath, ";")
+		} else if gstr.Contains(envPath, ":") {
+			array = gstr.SplitAndTrim(envPath, ":")
+		}
 		if gfile.Ext(file) != ".exe" {
 			file += ".exe"
 		}
 	default:
-		array = strings.Split(os.Getenv("PATH"), ":")
+		array = gstr.SplitAndTrim(genv.Get("PATH"), ":")
 	}
 	if len(array) > 0 {
+		path := ""
 		for _, v := range array {
-			path := v + gfile.Separator + file
-			if gfile.Exists(path) {
+			path = v + gfile.Separator + file
+			if gfile.Exists(path) && gfile.IsFile(path) {
 				return path
 			}
 		}

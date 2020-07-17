@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
-// Val returns the json value.
+// Value returns the json value.
 func (j *Json) Value() interface{} {
 	j.mu.RLock()
 	defer j.mu.RUnlock()
@@ -31,12 +31,12 @@ func (j *Json) IsNil() bool {
 	return j.p == nil || *(j.p) == nil
 }
 
-// Get returns value by specified <pattern>.
-// It returns all values of current Json object, if <pattern> is empty or not specified.
+// Get retrieves and returns value by specified <pattern>.
+// It returns all values of current Json object if <pattern> is given empty or string ".".
 // It returns nil if no value found by <pattern>.
 //
-// We can also access slice item by its index number in <pattern>,
-// eg: "items.name.first", "list.10".
+// We can also access slice item by its index number in <pattern> like:
+// "list.10", "array.0.name", "array.0.1.id".
 //
 // It returns a default value specified by <def> if value for <pattern> is not found.
 func (j *Json) Get(pattern string, def ...interface{}) interface{} {
@@ -68,7 +68,7 @@ func (j *Json) Get(pattern string, def ...interface{}) interface{} {
 	return nil
 }
 
-// GetVar returns a *gvar.Var with value by given <pattern>.
+// GetVar returns a gvar.Var with value by given <pattern>.
 func (j *Json) GetVar(pattern string, def ...interface{}) *gvar.Var {
 	return gvar.New(j.Get(pattern, def...))
 }
@@ -78,12 +78,29 @@ func (j *Json) GetVars(pattern string, def ...interface{}) []*gvar.Var {
 	return gvar.New(j.Get(pattern, def...)).Vars()
 }
 
-// GetMap gets the value by specified <pattern>,
-// and converts it to map[string]interface{}.
+// GetMap retrieves and returns the value by specified <pattern> as map[string]interface{}.
 func (j *Json) GetMap(pattern string, def ...interface{}) map[string]interface{} {
 	result := j.Get(pattern, def...)
 	if result != nil {
 		return gconv.Map(result)
+	}
+	return nil
+}
+
+// GetMapStrStr retrieves and returns the value by specified <pattern> as map[string]string.
+func (j *Json) GetMapStrStr(pattern string, def ...interface{}) map[string]string {
+	result := j.Get(pattern, def...)
+	if result != nil {
+		return gconv.MapStrStr(result)
+	}
+	return nil
+}
+
+// GetMaps retrieves and returns the value by specified <pattern> as []map[string]interface{}.
+func (j *Json) GetMaps(pattern string, def ...interface{}) []map[string]interface{} {
+	result := j.Get(pattern, def...)
+	if result != nil {
+		return gconv.Maps(result)
 	}
 	return nil
 }
@@ -122,105 +139,122 @@ func (j *Json) GetJsonMap(pattern string, def ...interface{}) map[string]*Json {
 	return nil
 }
 
-// GetArray gets the value by specified <pattern>,
+// GetArray retrieves the value by specified <pattern>,
 // and converts it to a slice of []interface{}.
 func (j *Json) GetArray(pattern string, def ...interface{}) []interface{} {
 	return gconv.Interfaces(j.Get(pattern, def...))
 }
 
-// GetString gets the value by specified <pattern>,
-// and converts it to string.
+// GetString retrieves the value by specified <pattern> and converts it to string.
 func (j *Json) GetString(pattern string, def ...interface{}) string {
 	return gconv.String(j.Get(pattern, def...))
 }
 
+// GetBytes retrieves the value by specified <pattern> and converts it to []byte.
 func (j *Json) GetBytes(pattern string, def ...interface{}) []byte {
 	return gconv.Bytes(j.Get(pattern, def...))
 }
 
-// GetBool gets the value by specified <pattern>,
-// and converts it to bool.
+// GetBool retrieves the value by specified <pattern>,
+// converts and returns it as bool.
 // It returns false when value is: "", 0, false, off, nil;
 // or returns true instead.
 func (j *Json) GetBool(pattern string, def ...interface{}) bool {
 	return gconv.Bool(j.Get(pattern, def...))
 }
 
+// GetInt retrieves the value by specified <pattern> and converts it to int.
 func (j *Json) GetInt(pattern string, def ...interface{}) int {
 	return gconv.Int(j.Get(pattern, def...))
 }
 
+// GetInt8 retrieves the value by specified <pattern> and converts it to int8.
 func (j *Json) GetInt8(pattern string, def ...interface{}) int8 {
 	return gconv.Int8(j.Get(pattern, def...))
 }
 
+// GetInt16 retrieves the value by specified <pattern> and converts it to int16.
 func (j *Json) GetInt16(pattern string, def ...interface{}) int16 {
 	return gconv.Int16(j.Get(pattern, def...))
 }
 
+// GetInt32 retrieves the value by specified <pattern> and converts it to int32.
 func (j *Json) GetInt32(pattern string, def ...interface{}) int32 {
 	return gconv.Int32(j.Get(pattern, def...))
 }
 
+// GetInt64 retrieves the value by specified <pattern> and converts it to int64.
 func (j *Json) GetInt64(pattern string, def ...interface{}) int64 {
 	return gconv.Int64(j.Get(pattern, def...))
 }
 
+// GetUint retrieves the value by specified <pattern> and converts it to uint.
 func (j *Json) GetUint(pattern string, def ...interface{}) uint {
 	return gconv.Uint(j.Get(pattern, def...))
 }
 
+// GetUint8 retrieves the value by specified <pattern> and converts it to uint8.
 func (j *Json) GetUint8(pattern string, def ...interface{}) uint8 {
 	return gconv.Uint8(j.Get(pattern, def...))
 }
 
+// GetUint16 retrieves the value by specified <pattern> and converts it to uint16.
 func (j *Json) GetUint16(pattern string, def ...interface{}) uint16 {
 	return gconv.Uint16(j.Get(pattern, def...))
 }
 
+// GetUint32 retrieves the value by specified <pattern> and converts it to uint32.
 func (j *Json) GetUint32(pattern string, def ...interface{}) uint32 {
 	return gconv.Uint32(j.Get(pattern, def...))
 }
 
+// GetUint64 retrieves the value by specified <pattern> and converts it to uint64.
 func (j *Json) GetUint64(pattern string, def ...interface{}) uint64 {
 	return gconv.Uint64(j.Get(pattern, def...))
 }
 
+// GetFloat32 retrieves the value by specified <pattern> and converts it to float32.
 func (j *Json) GetFloat32(pattern string, def ...interface{}) float32 {
 	return gconv.Float32(j.Get(pattern, def...))
 }
 
+// GetFloat64 retrieves the value by specified <pattern> and converts it to float64.
 func (j *Json) GetFloat64(pattern string, def ...interface{}) float64 {
 	return gconv.Float64(j.Get(pattern, def...))
 }
 
+// GetFloats retrieves the value by specified <pattern> and converts it to []float64.
 func (j *Json) GetFloats(pattern string, def ...interface{}) []float64 {
 	return gconv.Floats(j.Get(pattern, def...))
 }
 
+// GetInts retrieves the value by specified <pattern> and converts it to []int.
 func (j *Json) GetInts(pattern string, def ...interface{}) []int {
 	return gconv.Ints(j.Get(pattern, def...))
 }
 
-// GetStrings gets the value by specified <pattern>,
-// and converts it to a slice of []string.
+// GetStrings retrieves the value by specified <pattern> and converts it to []string.
 func (j *Json) GetStrings(pattern string, def ...interface{}) []string {
 	return gconv.Strings(j.Get(pattern, def...))
 }
 
+// GetInterfaces is alias of GetArray.
 // See GetArray.
 func (j *Json) GetInterfaces(pattern string, def ...interface{}) []interface{} {
 	return gconv.Interfaces(j.Get(pattern, def...))
 }
 
+// GetTime retrieves the value by specified <pattern> and converts it to time.Time.
 func (j *Json) GetTime(pattern string, format ...string) time.Time {
 	return gconv.Time(j.Get(pattern), format...)
 }
 
+// GetDuration retrieves the value by specified <pattern> and converts it to time.Duration.
 func (j *Json) GetDuration(pattern string, def ...interface{}) time.Duration {
 	return gconv.Duration(j.Get(pattern, def...))
 }
 
+// GetGTime retrieves the value by specified <pattern> and converts it to *gtime.Time.
 func (j *Json) GetGTime(pattern string, format ...string) *gtime.Time {
 	return gconv.GTime(j.Get(pattern), format...)
 }
@@ -274,9 +308,8 @@ func (j *Json) Append(pattern string, value interface{}) error {
 	return fmt.Errorf("invalid variable type of %s", pattern)
 }
 
-// GetStruct gets the value by specified <pattern>,
-// and converts it to specified object <pointer>.
-// The <pointer> should be the pointer to an object.
+// GetStruct retrieves the value by specified <pattern> and converts it to specified object
+// <pointer>. The <pointer> should be the pointer to an object.
 func (j *Json) GetStruct(pattern string, pointer interface{}, mapping ...map[string]string) error {
 	return gconv.Struct(j.Get(pattern), pointer, mapping...)
 }
@@ -296,18 +329,41 @@ func (j *Json) GetStructsDeep(pattern string, pointer interface{}, mapping ...ma
 	return gconv.StructsDeep(j.Get(pattern), pointer, mapping...)
 }
 
+// GetScan automatically calls Struct or Structs function according to the type of parameter
+// <pointer> to implement the converting..
+func (j *Json) GetScan(pattern string, pointer interface{}, mapping ...map[string]string) error {
+	return gconv.Scan(j.Get(pattern), pointer, mapping...)
+}
+
+// GetScanDeep automatically calls StructDeep or StructsDeep function according to the type of
+// parameter <pointer> to implement the converting..
+func (j *Json) GetScanDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
+	return gconv.ScanDeep(j.Get(pattern), pointer, mapping...)
+}
+
+// GetMapToMap retrieves the value by specified <pattern> and converts it to specified map variable.
+// See gconv.MapToMap.
 func (j *Json) GetMapToMap(pattern string, pointer interface{}, mapping ...map[string]string) error {
 	return gconv.MapToMap(j.Get(pattern), pointer, mapping...)
 }
 
+// GetMapToMapDeep retrieves the value by specified <pattern> and converts it to specified map
+// variable recursively.
+// See gconv.MapToMapDeep.
 func (j *Json) GetMapToMapDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
 	return gconv.MapToMapDeep(j.Get(pattern), pointer, mapping...)
 }
 
+// GetMapToMaps retrieves the value by specified <pattern> and converts it to specified map slice
+// variable.
+// See gconv.MapToMaps.
 func (j *Json) GetMapToMaps(pattern string, pointer interface{}, mapping ...map[string]string) error {
 	return gconv.MapToMaps(j.Get(pattern), pointer, mapping...)
 }
 
+// GetMapToMapsDeep retrieves the value by specified <pattern> and converts it to specified map slice
+// variable recursively.
+// See gconv.MapToMapsDeep.
 func (j *Json) GetMapToMapsDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
 	return gconv.MapToMapsDeep(j.Get(pattern), pointer, mapping...)
 }
@@ -329,49 +385,75 @@ func (j *Json) ToArray() []interface{} {
 }
 
 // ToStruct converts current Json object to specified object.
-// The <pointer> should be a pointer type.
+// The <pointer> should be a pointer type of *struct.
 func (j *Json) ToStruct(pointer interface{}, mapping ...map[string]string) error {
 	j.mu.RLock()
 	defer j.mu.RUnlock()
 	return gconv.Struct(*(j.p), pointer, mapping...)
 }
 
+// ToStructDeep converts current Json object to specified object recursively.
+// The <pointer> should be a pointer type of *struct.
 func (j *Json) ToStructDeep(pointer interface{}, mapping ...map[string]string) error {
 	j.mu.RLock()
 	defer j.mu.RUnlock()
 	return gconv.StructDeep(*(j.p), pointer, mapping...)
 }
 
+// ToStructs converts current Json object to specified object slice.
+// The <pointer> should be a pointer type of []struct/*struct.
 func (j *Json) ToStructs(pointer interface{}, mapping ...map[string]string) error {
 	j.mu.RLock()
 	defer j.mu.RUnlock()
 	return gconv.Structs(*(j.p), pointer, mapping...)
 }
 
+// ToStructsDeep converts current Json object to specified object slice recursively.
+// The <pointer> should be a pointer type of []struct/*struct.
 func (j *Json) ToStructsDeep(pointer interface{}, mapping ...map[string]string) error {
 	j.mu.RLock()
 	defer j.mu.RUnlock()
 	return gconv.StructsDeep(*(j.p), pointer, mapping...)
 }
 
+// ToScan automatically calls Struct or Structs function according to the type of parameter
+// <pointer> to implement the converting..
+func (j *Json) ToScan(pointer interface{}, mapping ...map[string]string) error {
+	return gconv.Scan(*(j.p), pointer, mapping...)
+}
+
+// ToScanDeep automatically calls StructDeep or StructsDeep function according to the type of
+// parameter <pointer> to implement the converting..
+func (j *Json) ToScanDeep(pointer interface{}, mapping ...map[string]string) error {
+	return gconv.ScanDeep(*(j.p), pointer, mapping...)
+}
+
+// ToMapToMap converts current Json object to specified map variable.
+// The parameter of <pointer> should be type of *map.
 func (j *Json) ToMapToMap(pointer interface{}, mapping ...map[string]string) error {
 	j.mu.RLock()
 	defer j.mu.RUnlock()
 	return gconv.MapToMap(*(j.p), pointer, mapping...)
 }
 
+// ToMapToMapDeep converts current Json object to specified map variable recursively.
+// The parameter of <pointer> should be type of *map.
 func (j *Json) ToMapToMapDeep(pointer interface{}, mapping ...map[string]string) error {
 	j.mu.RLock()
 	defer j.mu.RUnlock()
 	return gconv.MapToMapDeep(*(j.p), pointer, mapping...)
 }
 
+// ToMapToMaps converts current Json object to specified map variable slice.
+// The parameter of <pointer> should be type of []map/*map.
 func (j *Json) ToMapToMaps(pointer interface{}, mapping ...map[string]string) error {
 	j.mu.RLock()
 	defer j.mu.RUnlock()
 	return gconv.MapToMaps(*(j.p), pointer, mapping...)
 }
 
+// ToMapToMapsDeep converts current Json object to specified map variable slice recursively.
+// The parameter of <pointer> should be type of []map/*map.
 func (j *Json) ToMapToMapsDeep(pointer interface{}, mapping ...map[string]string) error {
 	j.mu.RLock()
 	defer j.mu.RUnlock()

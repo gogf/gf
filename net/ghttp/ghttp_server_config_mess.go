@@ -6,47 +6,23 @@
 
 package ghttp
 
-import "github.com/gogf/gf/os/glog"
-
-func (s *Server) SetGzipContentTypes(types []string) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
-	s.config.GzipContentTypes = types
-}
-
-// 服务注册时对象和方法名称转换为URI时的规则
+// SetNameToUriType sets the NameToUriType for server.
 func (s *Server) SetNameToUriType(t int) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
 	s.config.NameToUriType = t
 }
 
-// 是否在程序启动时打印路由表信息
-func (s *Server) SetDumpRouteMap(enabled bool) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
-	s.config.DumpRouteMap = enabled
+// SetDumpRouterMap sets the DumpRouterMap for server.
+// If DumpRouterMap is enabled, it automatically dumps the route map when server starts.
+func (s *Server) SetDumpRouterMap(enabled bool) {
+	s.config.DumpRouterMap = enabled
 }
 
-// 设置路由缓存过期时间(秒)
-func (s *Server) SetRouterCacheExpire(expire int) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
-	s.config.RouterCacheExpire = expire
+// SetClientMaxBodySize sets the ClientMaxBodySize for server.
+func (s *Server) SetClientMaxBodySize(maxSize int64) {
+	s.config.ClientMaxBodySize = maxSize
 }
 
+// SetFormParsingMemory sets the FormParsingMemory for server.
 func (s *Server) SetFormParsingMemory(maxMemory int64) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
 	s.config.FormParsingMemory = maxMemory
 }

@@ -8,7 +8,7 @@
 
 package ghttp
 
-// windows不处理信号量
+// handleProcessSignal does nothing on windows platform.
 func handleProcessSignal() {
 
 }

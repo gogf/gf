@@ -10,45 +10,29 @@ import (
 	"time"
 
 	"github.com/gogf/gf/os/gsession"
-
-	"github.com/gogf/gf/os/glog"
 )
 
-// 设置http server参数 - SessionMaxAge
+// SetSessionMaxAge sets the SessionMaxAge for server.
 func (s *Server) SetSessionMaxAge(ttl time.Duration) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
 	s.config.SessionMaxAge = ttl
-	s.sessionManager.SetTTL(ttl)
 }
 
-// 设置http server参数 - SessionIdName
+// SetSessionIdName sets the SessionIdName for server.
 func (s *Server) SetSessionIdName(name string) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
 	s.config.SessionIdName = name
 }
 
-// 设置http server参数 - SessionStorage
+// SetSessionStorage sets the SessionStorage for server.
 func (s *Server) SetSessionStorage(storage gsession.Storage) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
 	s.config.SessionStorage = storage
-	s.sessionManager.SetStorage(storage)
 }
 
-// 获取http server参数 - SessionMaxAge
+// GetSessionMaxAge returns the SessionMaxAge of server.
 func (s *Server) GetSessionMaxAge() time.Duration {
 	return s.config.SessionMaxAge
 }
 
-// 获取http server参数 - SessionIdName
+// GetSessionIdName returns the SessionIdName of server.
 func (s *Server) GetSessionIdName() string {
 	return s.config.SessionIdName
 }

@@ -19,18 +19,19 @@ const (
 	gDEFAULT_SERVER = "default"
 )
 
-// tcp server结构体
+// Server is the UDP server.
 type Server struct {
-	conn    *Conn  // UDP server connection object.
-	address string // Listening address.
-	handler func(*Conn)
+	conn    *Conn       // UDP server connection object.
+	address string      // UDP server listening address.
+	handler func(*Conn) // Handler for UDP connection.
 }
 
-// Server表，用以存储和检索名称与Server对象之间的关联关系
-var serverMapping = gmap.NewStrAnyMap(true)
+var (
+	// serverMapping is used for instance name to its UDP server mappings.
+	serverMapping = gmap.NewStrAnyMap(true)
+)
 
-// 获取/创建一个空配置的UDP Server
-// 单例模式，请保证name的唯一性
+// GetServer creates and returns a UDP server instance with given name.
 func GetServer(name ...interface{}) *Server {
 	serverName := gDEFAULT_SERVER
 	if len(name) > 0 && name[0] != "" {
@@ -44,24 +45,26 @@ func GetServer(name ...interface{}) *Server {
 	return s
 }
 
-// 创建一个tcp server对象，并且可以选择指定一个单例名字
-func NewServer(address string, handler func(*Conn), names ...string) *Server {
+// NewServer creates and returns a UDP server.
+// The optional parameter <name> is used to specify its name, which can be used for
+// GetServer function to retrieve its instance.
+func NewServer(address string, handler func(*Conn), name ...string) *Server {
 	s := &Server{
 		address: address,
 		handler: handler,
 	}
-	if len(names) > 0 {
-		serverMapping.Set(names[0], s)
+	if len(name) > 0 && name[0] != "" {
+		serverMapping.Set(name[0], s)
 	}
 	return s
 }
 
-// 设置参数 - address
+// SetAddress sets the server address for UDP server.
 func (s *Server) SetAddress(address string) {
 	s.address = address
 }
 
-// 设置参数 - handler
+// SetHandler sets the connection handler for UDP server.
 func (s *Server) SetHandler(handler func(*Conn)) {
 	s.handler = handler
 }
@@ -72,7 +75,7 @@ func (s *Server) Close() error {
 	return s.conn.Close()
 }
 
-// 执行监听
+// Run starts listening UDP connection.
 func (s *Server) Run() error {
 	if s.handler == nil {
 		err := errors.New("start running failed: socket handler not defined")

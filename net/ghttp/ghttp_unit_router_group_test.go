@@ -4,7 +4,6 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// 分组路由测试
 package ghttp_test
 
 import (
@@ -72,54 +71,54 @@ func Handler(r *ghttp.Request) {
 }
 
 func Test_Router_GroupBasic1(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	obj := new(GroupObject)
 	ctl := new(GroupController)
 	// 分组路由方法注册
-	g := s.Group("/api")
-	g.ALL("/handler", Handler)
-	g.ALL("/ctl", ctl)
-	g.GET("/ctl/my-show", ctl, "Show")
-	g.REST("/ctl/rest", ctl)
-	g.ALL("/obj", obj)
-	g.GET("/obj/my-show", obj, "Show")
-	g.REST("/obj/rest", obj)
+	group := s.Group("/api")
+	group.ALL("/handler", Handler)
+	group.ALL("/ctl", ctl)
+	group.GET("/ctl/my-show", ctl, "Show")
+	group.REST("/ctl/rest", ctl)
+	group.ALL("/obj", obj)
+	group.GET("/obj/my-show", obj, "Show")
+	group.REST("/obj/rest", obj)
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
-	time.Sleep(200 * time.Millisecond)
-	gtest.Case(t, func() {
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/api/handler"), "Handler")
+		t.Assert(client.GetContent("/api/handler"), "Handler")
 
-		gtest.Assert(client.GetContent("/api/ctl"), "1Controller Index2")
-		gtest.Assert(client.GetContent("/api/ctl/"), "1Controller Index2")
-		gtest.Assert(client.GetContent("/api/ctl/index"), "1Controller Index2")
-		gtest.Assert(client.GetContent("/api/ctl/my-show"), "1Controller Show2")
-		gtest.Assert(client.GetContent("/api/ctl/post"), "1Controller Post2")
-		gtest.Assert(client.GetContent("/api/ctl/show"), "1Controller Show2")
-		gtest.Assert(client.PostContent("/api/ctl/rest"), "1Controller Post2")
+		t.Assert(client.GetContent("/api/ctl"), "1Controller Index2")
+		t.Assert(client.GetContent("/api/ctl/"), "1Controller Index2")
+		t.Assert(client.GetContent("/api/ctl/index"), "1Controller Index2")
+		t.Assert(client.GetContent("/api/ctl/my-show"), "1Controller Show2")
+		t.Assert(client.GetContent("/api/ctl/post"), "1Controller Post2")
+		t.Assert(client.GetContent("/api/ctl/show"), "1Controller Show2")
+		t.Assert(client.PostContent("/api/ctl/rest"), "1Controller Post2")
 
-		gtest.Assert(client.GetContent("/api/obj"), "1Object Index2")
-		gtest.Assert(client.GetContent("/api/obj/"), "1Object Index2")
-		gtest.Assert(client.GetContent("/api/obj/index"), "1Object Index2")
-		gtest.Assert(client.GetContent("/api/obj/delete"), "1Object Delete2")
-		gtest.Assert(client.GetContent("/api/obj/my-show"), "1Object Show2")
-		gtest.Assert(client.GetContent("/api/obj/show"), "1Object Show2")
-		gtest.Assert(client.DeleteContent("/api/obj/rest"), "1Object Delete2")
+		t.Assert(client.GetContent("/api/obj"), "1Object Index2")
+		t.Assert(client.GetContent("/api/obj/"), "1Object Index2")
+		t.Assert(client.GetContent("/api/obj/index"), "1Object Index2")
+		t.Assert(client.GetContent("/api/obj/delete"), "1Object Delete2")
+		t.Assert(client.GetContent("/api/obj/my-show"), "1Object Show2")
+		t.Assert(client.GetContent("/api/obj/show"), "1Object Show2")
+		t.Assert(client.DeleteContent("/api/obj/rest"), "1Object Delete2")
 
-		gtest.Assert(client.DeleteContent("/ThisDoesNotExist"), "Not Found")
-		gtest.Assert(client.DeleteContent("/api/ThisDoesNotExist"), "Not Found")
+		t.Assert(client.DeleteContent("/ThisDoesNotExist"), "Not Found")
+		t.Assert(client.DeleteContent("/api/ThisDoesNotExist"), "Not Found")
 	})
 }
 
-func Test_Router_Basic2(t *testing.T) {
-	p := ports.PopRand()
+func Test_Router_GroupBasic2(t *testing.T) {
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	obj := new(GroupObject)
 	ctl := new(GroupController)
@@ -134,60 +133,119 @@ func Test_Router_Basic2(t *testing.T) {
 		{"REST", "/obj/rest", obj},
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
-	time.Sleep(200 * time.Millisecond)
-	gtest.Case(t, func() {
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/api/handler"), "Handler")
+		t.Assert(client.GetContent("/api/handler"), "Handler")
 
-		gtest.Assert(client.GetContent("/api/ctl/my-show"), "1Controller Show2")
-		gtest.Assert(client.GetContent("/api/ctl/post"), "1Controller Post2")
-		gtest.Assert(client.GetContent("/api/ctl/show"), "1Controller Show2")
-		gtest.Assert(client.PostContent("/api/ctl/rest"), "1Controller Post2")
+		t.Assert(client.GetContent("/api/ctl/my-show"), "1Controller Show2")
+		t.Assert(client.GetContent("/api/ctl/post"), "1Controller Post2")
+		t.Assert(client.GetContent("/api/ctl/show"), "1Controller Show2")
+		t.Assert(client.PostContent("/api/ctl/rest"), "1Controller Post2")
 
-		gtest.Assert(client.GetContent("/api/obj/delete"), "1Object Delete2")
-		gtest.Assert(client.GetContent("/api/obj/my-show"), "1Object Show2")
-		gtest.Assert(client.GetContent("/api/obj/show"), "1Object Show2")
-		gtest.Assert(client.DeleteContent("/api/obj/rest"), "1Object Delete2")
+		t.Assert(client.GetContent("/api/obj/delete"), "1Object Delete2")
+		t.Assert(client.GetContent("/api/obj/my-show"), "1Object Show2")
+		t.Assert(client.GetContent("/api/obj/show"), "1Object Show2")
+		t.Assert(client.DeleteContent("/api/obj/rest"), "1Object Delete2")
 
-		gtest.Assert(client.DeleteContent("/ThisDoesNotExist"), "Not Found")
-		gtest.Assert(client.DeleteContent("/api/ThisDoesNotExist"), "Not Found")
+		t.Assert(client.DeleteContent("/ThisDoesNotExist"), "Not Found")
+		t.Assert(client.DeleteContent("/api/ThisDoesNotExist"), "Not Found")
 	})
 }
 
 func Test_Router_GroupBuildInVar(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	obj := new(GroupObject)
 	ctl := new(GroupController)
 	// 分组路由方法注册
-	g := s.Group("/api")
-	g.ALL("/{.struct}/{.method}", ctl)
-	g.ALL("/{.struct}/{.method}", obj)
+	group := s.Group("/api")
+	group.ALL("/{.struct}/{.method}", ctl)
+	group.ALL("/{.struct}/{.method}", obj)
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
-	time.Sleep(200 * time.Millisecond)
-	gtest.Case(t, func() {
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/api/group-controller/index"), "1Controller Index2")
-		gtest.Assert(client.GetContent("/api/group-controller/post"), "1Controller Post2")
-		gtest.Assert(client.GetContent("/api/group-controller/show"), "1Controller Show2")
+		t.Assert(client.GetContent("/api/group-controller/index"), "1Controller Index2")
+		t.Assert(client.GetContent("/api/group-controller/post"), "1Controller Post2")
+		t.Assert(client.GetContent("/api/group-controller/show"), "1Controller Show2")
 
-		gtest.Assert(client.GetContent("/api/group-object/index"), "1Object Index2")
-		gtest.Assert(client.GetContent("/api/group-object/delete"), "1Object Delete2")
-		gtest.Assert(client.GetContent("/api/group-object/show"), "1Object Show2")
+		t.Assert(client.GetContent("/api/group-object/index"), "1Object Index2")
+		t.Assert(client.GetContent("/api/group-object/delete"), "1Object Delete2")
+		t.Assert(client.GetContent("/api/group-object/show"), "1Object Show2")
 
-		gtest.Assert(client.DeleteContent("/ThisDoesNotExist"), "Not Found")
-		gtest.Assert(client.DeleteContent("/api/ThisDoesNotExist"), "Not Found")
+		t.Assert(client.DeleteContent("/ThisDoesNotExist"), "Not Found")
+		t.Assert(client.DeleteContent("/api/ThisDoesNotExist"), "Not Found")
+	})
+}
+
+func Test_Router_Group_Mthods(t *testing.T) {
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	obj := new(GroupObject)
+	ctl := new(GroupController)
+	group := s.Group("/")
+	group.ALL("/obj", obj, "Show, Delete")
+	group.ALL("/ctl", ctl, "Show, Post")
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		client := ghttp.NewClient()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		t.Assert(client.GetContent("/ctl/show"), "1Controller Show2")
+		t.Assert(client.GetContent("/ctl/post"), "1Controller Post2")
+		t.Assert(client.GetContent("/obj/show"), "1Object Show2")
+		t.Assert(client.GetContent("/obj/delete"), "1Object Delete2")
+	})
+}
+
+func Test_Router_Group_MultiServer(t *testing.T) {
+	p1, _ := ports.PopRand()
+	p2, _ := ports.PopRand()
+	s1 := g.Server(p1)
+	s2 := g.Server(p2)
+	s1.Group("/", func(group *ghttp.RouterGroup) {
+		group.POST("/post", func(r *ghttp.Request) {
+			r.Response.Write("post1")
+		})
+	})
+	s2.Group("/", func(group *ghttp.RouterGroup) {
+		group.POST("/post", func(r *ghttp.Request) {
+			r.Response.Write("post2")
+		})
+	})
+	s1.SetPort(p1)
+	s2.SetPort(p2)
+	s1.SetDumpRouterMap(false)
+	s2.SetDumpRouterMap(false)
+	gtest.Assert(s1.Start(), nil)
+	gtest.Assert(s2.Start(), nil)
+	defer s1.Shutdown()
+	defer s2.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		c1 := ghttp.NewClient()
+		c1.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p1))
+		c2 := ghttp.NewClient()
+		c2.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p2))
+		t.Assert(c1.PostContent("/post"), "post1")
+		t.Assert(c2.PostContent("/post"), "post2")
 	})
 }

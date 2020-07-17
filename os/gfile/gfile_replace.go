@@ -10,39 +10,48 @@ import (
 	"github.com/gogf/gf/text/gstr"
 )
 
-// Replace replaces content for files under <path>.
+// ReplaceFile replaces content for file <path>.
+func ReplaceFile(search, replace, path string) error {
+	return PutContents(path, gstr.Replace(GetContents(path), search, replace))
+}
+
+// ReplaceFileFunc replaces content for file <path> with callback function <f>.
+func ReplaceFileFunc(f func(path, content string) string, path string) error {
+	data := GetContents(path)
+	result := f(path, data)
+	if len(data) != len(result) && data != result {
+		return PutContents(path, result)
+	}
+	return nil
+}
+
+// ReplaceDir replaces content for files under <path>.
 // The parameter <pattern> specifies the file pattern which matches to be replaced.
 // It does replacement recursively if given parameter <recursive> is true.
-func Replace(search, replace, path, pattern string, recursive ...bool) error {
+func ReplaceDir(search, replace, path, pattern string, recursive ...bool) error {
 	files, err := ScanDirFile(path, pattern, recursive...)
 	if err != nil {
 		return err
 	}
 	for _, file := range files {
-		if err = PutContents(file, gstr.Replace(GetContents(file), search, replace)); err != nil {
+		if err = ReplaceFile(search, replace, file); err != nil {
 			return err
 		}
 	}
 	return err
 }
 
-// ReplaceFunc replaces content for files under <path> with callback function <f>.
+// ReplaceDirFunc replaces content for files under <path> with callback function <f>.
 // The parameter <pattern> specifies the file pattern which matches to be replaced.
 // It does replacement recursively if given parameter <recursive> is true.
-func ReplaceFunc(f func(path, content string) string, path, pattern string, recursive ...bool) error {
+func ReplaceDirFunc(f func(path, content string) string, path, pattern string, recursive ...bool) error {
 	files, err := ScanDirFile(path, pattern, recursive...)
 	if err != nil {
 		return err
 	}
-	data := ""
-	result := ""
 	for _, file := range files {
-		data = GetContents(file)
-		result = f(file, data)
-		if data != result {
-			if err = PutContents(file, result); err != nil {
-				return err
-			}
+		if err = ReplaceFileFunc(f, file); err != nil {
+			return err
 		}
 	}
 	return err

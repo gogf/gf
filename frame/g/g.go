@@ -10,7 +10,7 @@ import (
 	"github.com/gogf/gf/container/gvar"
 )
 
-// Var is a universal variable type, like generics.
+// Var is a universal variable interface, like generics.
 type Var = gvar.Var
 
 // Frequently-used map type alias.
@@ -30,17 +30,18 @@ type MapIntBool = map[int]bool
 
 // Frequently-used slice type alias.
 type List = []Map
-type ListAnyStr = []map[interface{}]string
-type ListAnyInt = []map[interface{}]int
-type ListStrAny = []map[string]interface{}
-type ListStrStr = []map[string]string
-type ListStrInt = []map[string]int
-type ListIntAny = []map[int]interface{}
-type ListIntStr = []map[int]string
-type ListIntInt = []map[int]int
-type ListAnyBool = []map[interface{}]bool
-type ListStrBool = []map[string]bool
-type ListIntBool = []map[int]bool
+type ListAnyAny = []Map
+type ListAnyStr = []MapAnyStr
+type ListAnyInt = []MapAnyInt
+type ListStrAny = []MapStrAny
+type ListStrStr = []MapStrStr
+type ListStrInt = []MapStrInt
+type ListIntAny = []MapIntAny
+type ListIntStr = []MapIntStr
+type ListIntInt = []MapIntInt
+type ListAnyBool = []MapAnyBool
+type ListStrBool = []MapStrBool
+type ListIntBool = []MapIntBool
 
 // Frequently-used slice type alias.
 type Slice = []interface{}

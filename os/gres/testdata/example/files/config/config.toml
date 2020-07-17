@@ -1,0 +1,11 @@
+
+[server]
+    Address    = ":8888"
+    ServerRoot = "public"
+
+[viewer]
+    DefaultFile = "index.tpl"
+    Delimiters  =  ["${", "}"]
+
+
+

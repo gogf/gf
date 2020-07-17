@@ -11,11 +11,12 @@ package gpool_test
 import (
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/gogf/gf/container/gpool"
 )
 
-var pool = gpool.New(99999999, nil)
+var pool = gpool.New(time.Hour, nil)
 var syncp = sync.Pool{}
 
 func BenchmarkGPoolPut(b *testing.B) {
@@ -36,7 +37,7 @@ func BenchmarkSyncPoolPut(b *testing.B) {
 	}
 }
 
-func BenchmarkGpoolGet(b *testing.B) {
+func BenchmarkSyncPoolGet(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		syncp.Get()
 	}

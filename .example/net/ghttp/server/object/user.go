@@ -5,21 +5,18 @@ import (
 	"github.com/gogf/gf/net/ghttp"
 )
 
-type User struct {
-}
+type User struct{}
 
-func (c *User) Index(r *ghttp.Request) {
-	r.Response.Write("Index")
-}
-
-// 不符合规范，不会被注册
-func (c *User) Test(r *ghttp.Request, value interface{}) {
+func (c *User) Test(r *ghttp.Request) {
 	r.Response.Write("Test")
 }
 
 func main() {
 	s := g.Server()
-	s.BindObject("/user", new(User))
+	u := new(User)
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.GET("/db-{table}/{id}", u, "Test")
+	})
 	s.SetPort(8199)
 	s.Run()
 }

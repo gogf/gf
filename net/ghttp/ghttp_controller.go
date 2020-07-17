@@ -6,7 +6,7 @@
 
 package ghttp
 
-// 控制器接口
+// Controller is the base struct for controller.
 type Controller interface {
 	Init(*Request)
 	Shut()

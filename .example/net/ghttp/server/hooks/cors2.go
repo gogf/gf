@@ -2,26 +2,21 @@ package main
 
 import (
 	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/frame/gmvc"
 	"github.com/gogf/gf/net/ghttp"
 )
 
-type Order2 struct {
-	gmvc.Controller
-}
-
-func (o *Order2) Get() {
-	o.Response.Write("GET")
+func Order(r *ghttp.Request) {
+	r.Response.Write("GET")
 }
 
 func main() {
 	s := g.Server()
-	s.BindHookHandlerByMap("/api.v2/*any", map[string]ghttp.HandlerFunc{
-		"BeforeServe": func(r *ghttp.Request) {
+	s.Group("/api.v1", func(group *ghttp.RouterGroup) {
+		group.Hook("/*any", ghttp.HOOK_BEFORE_SERVE, func(r *ghttp.Request) {
 			r.Response.CORSDefault()
-		},
+		})
+		g.GET("/order", Order)
 	})
-	s.BindControllerRest("/api.v2/{.struct}", new(Order2))
 	s.SetPort(8199)
 	s.Run()
 }

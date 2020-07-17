@@ -13,7 +13,7 @@ import (
 	"github.com/gogf/gf/os/gtimer"
 )
 
-func ExampleAdd() {
+func Example_add() {
 	now := time.Now()
 	interval := 1400 * time.Millisecond
 	gtimer.Add(interval, func() {

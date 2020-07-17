@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gjson provides convenient API for JSON/XML/YAML/TOML data handling.
+// Package gjson provides convenient API for JSON/XML/INI/YAML/TOML data handling.
 package gjson
 
 import (
@@ -30,11 +30,6 @@ type Json struct {
 	vc bool         // Violence Check(false in default), which is used to access data when the hierarchical data key contains separator char.
 }
 
-// MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (j *Json) MarshalJSON() ([]byte, error) {
-	return j.ToJson()
-}
-
 // setValue sets <value> to <j> by <pattern>.
 // Note:
 // 1. If value is nil and removed is true, means deleting this value;
@@ -43,7 +38,7 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 	array := strings.Split(pattern, string(j.c))
 	length := len(array)
 	value = j.convertValue(value)
-	// 初始化判断
+	// Initialization checks.
 	if *j.p == nil {
 		if gstr.IsNumeric(array[0]) {
 			*j.p = make([]interface{}, 0)
@@ -151,9 +146,15 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 						pointer = &v
 					}
 				} else {
-					var v interface{} = make(map[string]interface{})
-					pparent = j.setPointerWithValue(pointer, array[i], v)
-					pointer = &v
+					v := (*pointer).([]interface{})
+					if len(v) > valn {
+						pparent = pointer
+						pointer = &(*pointer).([]interface{})[valn]
+					} else {
+						var v interface{} = make(map[string]interface{})
+						pparent = j.setPointerWithValue(pointer, array[i], v)
+						pointer = &v
+					}
 				}
 			}
 

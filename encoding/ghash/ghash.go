@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package ghash provides some popular hash functions(uint32/uint64) in go.
+// Package ghash provides some classic hash functions(uint32/uint64) in go.
 package ghash
 
 // BKDR Hash Function
@@ -160,7 +160,7 @@ func DJBHash(str []byte) uint32 {
 	return hash
 }
 
-// DJB Hash Function 64
+// DJB Hash Function 64.
 func DJBHash64(str []byte) uint64 {
 	var hash uint64 = 5381
 	for i := 0; i < len(str); i++ {

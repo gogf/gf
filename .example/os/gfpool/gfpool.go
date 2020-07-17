@@ -11,7 +11,7 @@ import (
 func main() {
 	for {
 		time.Sleep(time.Second)
-		if f, err := gfpool.Open("/home/john/temp/log.log", os.O_RDONLY, 0666, 60000000*1000); err == nil {
+		if f, err := gfpool.Open("/home/john/temp/log.log", os.O_RDONLY, 0666, time.Hour); err == nil {
 			fmt.Println(f.Name())
 			f.Close()
 		} else {
