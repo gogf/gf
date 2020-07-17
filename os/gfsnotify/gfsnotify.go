@@ -77,7 +77,7 @@ func init() {
 	defaultWatcher, err = New()
 	if err != nil {
 		// Default watcher object must be created, or else it panics.
-		panic(fmt.Sprintf(`creating default fsnotify watcher failed: %s`, err.Error()))
+		//panic(fmt.Sprintf(`creating default fsnotify watcher failed: %s`, err.Error()))
 	}
 }
 
