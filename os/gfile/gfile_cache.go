@@ -20,7 +20,7 @@ const (
 
 var (
 	// Default expire time for file content caching.
-	cacheExpire = cmdenv.Get("gf.gfcache.expire", gDEFAULT_CACHE_EXPIRE).Duration()
+	cacheExpire = cmdenv.Get("gf.gfile.cache", gDEFAULT_CACHE_EXPIRE).Duration()
 )
 
 // GetContents returns string content of given file by <path> from cache.
@@ -59,5 +59,5 @@ func GetBytesWithCache(path string, duration ...time.Duration) []byte {
 
 // cacheKey produces the cache key for gcache.
 func cacheKey(path string) string {
-	return "gf.gfcache:" + path
+	return "gf.gfile.cache:" + path
 }

@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"github.com/gogf/gf/encoding/ghash"
 	"github.com/gogf/gf/internal/intlog"
-	"github.com/gogf/gf/os/gfcache"
 	"github.com/gogf/gf/os/gfsnotify"
 	"github.com/gogf/gf/os/gmlock"
 	"github.com/gogf/gf/text/gstr"
