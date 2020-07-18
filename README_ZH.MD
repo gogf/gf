@@ -137,7 +137,7 @@ ab -t 10 -c 100 http://127.0.0.1:3000/json
 
 # 用户
 
-- [腾讯科技](https://www.tecent.com/)
+- [腾讯科技](https://www.tencent.com/)
 - [中兴科技](https://www.zte.com.cn/china/)
 - [蚂蚁金服](https://www.antfin.com/)
 - [医联科技](https://www.medlinker.com/)

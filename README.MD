@@ -117,7 +117,7 @@ The concurrency starts from `100` to `10000`.
 
 # Part Of Users
 
-- [Tencent](https://www.tecent.com/)
+- [Tencent](https://www.tencent.com/)
 - [ZTE](https://www.zte.com.cn/china/)
 - [Ant Financial Services](https://www.antfin.com/)
 - [Medlinker](https://www.medlinker.com/)
