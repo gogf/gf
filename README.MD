@@ -115,9 +115,16 @@ The concurrency starts from `100` to `10000`.
 
 `GF` is licensed under the [MIT License](LICENSE), 100% free and open-source, forever.
 
-# Known Users
+# Part Of Users
 
-Logos are not authorized to be shown due to trademark copyrights.
+- [Tencent](https://www.tecent.com/)
+- [ZTE](https://www.zte.com.cn/china/)
+- [Ant Financial Services](https://www.antfin.com/)
+- [Medlinker](https://www.medlinker.com/)
+- [Yesk](http://www.yesky.com)
+- [KuCoin](https://www.kucoin.io/)
+
+> We list part of the users here, if your company or products are using `GoFrame`, let us know [here](https://github.com/gogf/gf/issues/168).
 
 
 # Contributors
