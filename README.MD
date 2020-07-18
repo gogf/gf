@@ -123,6 +123,8 @@ The concurrency starts from `100` to `10000`.
 - [Medlinker](https://www.medlinker.com/)
 - [Yesk](http://www.yesky.com)
 - [KuCoin](https://www.kucoin.io/)
+- [Leyoujia Holding Group](https://www.leyoujia.com/)
+
 
 > We list part of the users here, if your company or products are using `GoFrame`, please let us know [here](https://github.com/gogf/gf/issues/168).
 
