@@ -124,7 +124,7 @@ The concurrency starts from `100` to `10000`.
 - [Yesk](http://www.yesky.com)
 - [KuCoin](https://www.kucoin.io/)
 
-> We list part of the users here, if your company or products are using `GoFrame`, let us know [here](https://github.com/gogf/gf/issues/168).
+> We list part of the users here, if your company or products are using `GoFrame`, please let us know [here](https://github.com/gogf/gf/issues/168).
 
 
 # Contributors
