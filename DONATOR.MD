@@ -1,7 +1,12 @@
 # Donators
 
-We currently accept donation by [Alipay](https://goframe.org/images/donate.png) / [Gitee](https://gitee.com/johng/gf), 
-please note your github/gitee account in your payment bill.
+We currently accept donation by [Wechat](https://goframe.org/images/donate.png) / [Alipay](https://goframe.org/images/donate.png) / [Gitee](https://gitee.com/johng/gf), 
+please note your github/gitee account in your payment bill. All the donations will be used only for `GoFrame` project development and its community construction. 
+
+> If you cannot see the donation image, please click [here](https://goframe.org/images/donate.png).
+
+<img src="https://goframe.org/images/donate.png?20200718"/>
+
 
 | Name | Channel | Amount | Comment 
 |---|---|--- | ---
@@ -95,5 +100,5 @@ please note your github/gitee account in your payment bill.
 
 
 
-<img src="https://goframe.org/images/donate.jpeg"/>
+
 
