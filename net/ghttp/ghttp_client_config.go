@@ -120,6 +120,11 @@ func (c *Client) SetCookieMap(m map[string]string) *Client {
 	return c
 }
 
+// GetCookieMap sets cookie items with map.
+func (c *Client) GetCookieMap() map[string]string{
+	return c.cookies
+}
+
 // SetPrefix sets the request server URL prefix.
 func (c *Client) SetPrefix(prefix string) *Client {
 	c.prefix = prefix
