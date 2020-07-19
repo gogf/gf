@@ -65,7 +65,7 @@ func (d *DriverPgsql) HandleSqlBeforeCommit(link Link, sql string, args []interf
 	// Convert place holder char '?' to string "$vx".
 	sql, _ = gregex.ReplaceStringFunc("\\?", sql, func(s string) string {
 		index++
-		return fmt.Sprintf("$v%d", index)
+		return fmt.Sprintf("$%d", index)
 	})
 	sql, _ = gregex.ReplaceString(` LIMIT (\d+),\s*(\d+)`, ` LIMIT $2 OFFSET $1`, sql)
 	return sql, args
