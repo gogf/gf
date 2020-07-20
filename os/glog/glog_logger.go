@@ -233,6 +233,7 @@ func (l *Logger) printToFile(now time.Time, buffer *bytes.Buffer) {
 	if l.config.RotateSize > 0 {
 		stat, err := file.Stat()
 		if err != nil {
+			file.Close()
 			panic(err)
 		}
 		if stat.Size() > l.config.RotateSize {
@@ -241,10 +242,10 @@ func (l *Logger) printToFile(now time.Time, buffer *bytes.Buffer) {
 		}
 	}
 	if _, err := file.Write(buffer.Bytes()); err != nil {
-		defer file.Close()
+		file.Close()
 		panic(err)
 	}
-	defer file.Close()
+	file.Close()
 }
 
 // getFilePointer retrieves and returns a file pointer from file pool.
