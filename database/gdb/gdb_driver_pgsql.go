@@ -62,7 +62,7 @@ func (d *DriverPgsql) GetChars() (charLeft string, charRight string) {
 // HandleSqlBeforeCommit deals with the sql string before commits it to underlying sql driver.
 func (d *DriverPgsql) HandleSqlBeforeCommit(link Link, sql string, args []interface{}) (string, []interface{}) {
 	var index int
-	// Convert place holder char '?' to string "$vx".
+	// Convert place holder char '?' to string "$x".
 	sql, _ = gregex.ReplaceStringFunc("\\?", sql, func(s string) string {
 		index++
 		return fmt.Sprintf("$%d", index)
