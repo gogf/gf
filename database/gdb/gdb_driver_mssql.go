@@ -64,10 +64,10 @@ func (d *DriverMssql) GetChars() (charLeft string, charRight string) {
 // HandleSqlBeforeCommit deals with the sql string before commits it to underlying sql driver.
 func (d *DriverMssql) HandleSqlBeforeCommit(link Link, sql string, args []interface{}) (string, []interface{}) {
 	var index int
-	// Convert place holder char '?' to string "@vx".
+	// Convert place holder char '?' to string "@px".
 	str, _ := gregex.ReplaceStringFunc("\\?", sql, func(s string) string {
 		index++
-		return fmt.Sprintf("@v%d", index)
+		return fmt.Sprintf("@p%d", index)
 	})
 	str, _ = gregex.ReplaceString("\"", "", str)
 	return d.parseSql(str), args
