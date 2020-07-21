@@ -126,6 +126,11 @@ func (r *Request) IsExited() bool {
 	return r.exit
 }
 
+// GetHeader retrieves and returns the header value with given <key>.
+func (r *Request) GetHeader(key string) string {
+	return r.Header.Get(key)
+}
+
 // GetHost returns current request host name, which might be a domain or an IP without port.
 func (r *Request) GetHost() string {
 	if len(r.parsedHost) == 0 {
