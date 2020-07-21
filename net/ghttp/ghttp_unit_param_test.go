@@ -404,6 +404,27 @@ func Test_Params_Basic(t *testing.T) {
 	})
 }
 
+func Test_Params_Header(t *testing.T) {
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/header", func(r *ghttp.Request) {
+		r.Response.Write(r.GetHeader("test"))
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		prefix := fmt.Sprintf("http://127.0.0.1:%d", p)
+		client := ghttp.NewClient()
+		client.SetPrefix(prefix)
+
+		t.Assert(client.Header(g.MapStrStr{"test": "123456"}).GetContent("/header"), "123456")
+	})
+}
+
 func Test_Params_SupportChars(t *testing.T) {
 	p, _ := ports.PopRand()
 	s := g.Server(p)
