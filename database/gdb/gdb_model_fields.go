@@ -7,7 +7,6 @@
 package gdb
 
 import (
-	"errors"
 	"fmt"
 	"github.com/gogf/gf/container/gset"
 	"github.com/gogf/gf/text/gstr"
@@ -136,7 +135,7 @@ func (m *Model) HasField(field string) (bool, error) {
 		return false, err
 	}
 	if len(tableFields) == 0 {
-		return false, errors.New(fmt.Sprintf(`empty table fields for table "%s"`, m.tables))
+		return false, fmt.Errorf(`empty table fields for table "%s"`, m.tables)
 	}
 	fieldsArray := make([]string, len(tableFields))
 	for k, v := range tableFields {
