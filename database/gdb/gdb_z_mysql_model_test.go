@@ -2437,3 +2437,37 @@ func Test_Model_Empty_Slice_Argument(t *testing.T) {
 		t.Assert(len(result), 0)
 	})
 }
+
+func Test_Model_HasTable(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.HasTable(table)
+		t.Assert(result, true)
+		t.Assert(err, nil)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.HasTable("table12321")
+		t.Assert(result, false)
+		t.Assert(err, nil)
+	})
+}
+
+func Test_Model_HasField(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Table(table).HasField("id")
+		t.Assert(result, true)
+		t.Assert(err, nil)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Table(table).HasField("id123")
+		t.Assert(result, false)
+		t.Assert(err, nil)
+	})
+}

@@ -7,6 +7,7 @@
 package gdb
 
 import (
+	"errors"
 	"fmt"
 	"github.com/gogf/gf/container/gset"
 	"github.com/gogf/gf/text/gstr"
@@ -129,13 +130,13 @@ func (m *Model) FieldsExStr(fields string, prefix ...string) string {
 }
 
 // HasField determine whether the field exists in the table.
-func (m *Model) HasField(field string) bool {
+func (m *Model) HasField(field string) (bool, error) {
 	tableFields, err := m.db.TableFields(m.tables)
 	if err != nil {
-		panic(err)
+		return false, err
 	}
 	if len(tableFields) == 0 {
-		panic(fmt.Sprintf(`empty table fields for table "%s"`, m.tables))
+		return false, errors.New(fmt.Sprintf(`empty table fields for table "%s"`, m.tables))
 	}
 	fieldsArray := make([]string, len(tableFields))
 	for k, v := range tableFields {
@@ -143,8 +144,8 @@ func (m *Model) HasField(field string) bool {
 	}
 	for _, f := range fieldsArray {
 		if f == field {
-			return true
+			return true, nil
 		}
 	}
-	return false
+	return false, nil
 }
