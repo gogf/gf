@@ -135,7 +135,7 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 				if !gfile.Exists(path) {
 					return nil, errors.New(fmt.Sprintf(`"%s" does not exist`, path))
 				}
-				if file, err := writer.CreateFormFile(array[0], path); err == nil {
+				if file, err := writer.CreateFormFile(array[0], gfile.Basename(path)); err == nil {
 					if f, err := os.Open(path); err == nil {
 						if _, err = io.Copy(file, f); err != nil {
 							f.Close()
