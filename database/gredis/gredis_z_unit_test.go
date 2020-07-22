@@ -28,6 +28,7 @@ var (
 		Db:   1,
 	}
 
+	//demo for tls config
 	tlsConfig = gredis.Config{
 		Host: "127.0.0.1",
 		Port: 6379,
@@ -388,29 +389,5 @@ func Test_Auto_MarshalSlice(t *testing.T) {
 		err = result.Structs(&users2)
 		t.Assert(err, nil)
 		t.Assert(users2, users1)
-	})
-}
-
-func Test_Conn_TLS(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		redis := gredis.New(tlsConfig)
-		defer redis.Close()
-		conn := redis.Conn()
-		defer conn.Close()
-
-		key := gconv.String(gtime.TimestampNano())
-		value := []byte("v")
-		r, err := conn.Do("SET", key, value)
-		t.Assert(err, nil)
-
-		r, err = conn.Do("GET", key)
-		t.Assert(err, nil)
-		t.Assert(r, value)
-
-		_, err = conn.Do("DEL", key)
-		t.Assert(err, nil)
-		r, err = conn.Do("GET", key)
-		t.Assert(err, nil)
-		t.Assert(r, nil)
 	})
 }
