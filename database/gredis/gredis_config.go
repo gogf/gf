@@ -110,6 +110,12 @@ func ConfigFromStr(str string) (config Config, err error) {
 		if v, ok := parse["maxConnLifetime"]; ok {
 			config.MaxConnLifetime = gconv.Duration(v) * time.Second
 		}
+		if v, ok := parse["tls"]; ok {
+			config.TLS = gconv.Bool(v)
+		}
+		if v, ok := parse["skipVerify"]; ok {
+			config.TLSSkipVerify = gconv.Bool(v)
+		}
 		return
 	}
 	array, _ = gregex.MatchString(`([^:]+):*(\d*),{0,1}(\d*),{0,1}(.*)`, str)
