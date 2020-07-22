@@ -27,15 +27,6 @@ var (
 		Port: 6379,
 		Db:   1,
 	}
-
-	//demo for tls config
-	tlsConfig = gredis.Config{
-		Host: "127.0.0.1",
-		Port: 6379,
-		Db:   1,
-		TLS: true,
-		TLSSkipVerify: true,
-	}
 )
 
 func Test_NewClose(t *testing.T) {
