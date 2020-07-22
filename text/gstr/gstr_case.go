@@ -53,6 +53,36 @@ func SnakeScreamingCase(s string) string {
 	return DelimitedScreamingCase(s, '_', true)
 }
 
+// SnakeFirstUpperCase converts a string from RGBCodeMd5 to rgb_code_md5.
+// The length of word should not be too long
+func SnakeFirstUpperCase(word string, underscore ...string) string {
+	replace := "_"
+	if len(underscore) > 0 {
+		replace = underscore[0]
+	}
+
+	r := regexp.MustCompile(`([\w\W]*?)([_]?[A-Z]+)$`)
+	m := r.FindAllStringSubmatch(word, 1)
+	if len(m) > 0 {
+		word = m[0][1] + replace + TrimLeft(ToLower(m[0][2]), replace)
+	}
+
+	r = regexp.MustCompile(`([A-Z]+)([A-Z]?[_a-z\d]+)|$`)
+	for {
+		m := r.FindAllStringSubmatch(word, 1)
+		if len(m) > 0 && m[0][1] != "" {
+			w := strings.ToLower(m[0][1])
+			w = string(w[:len(w)-1]) + replace + string(w[len(w)-1])
+
+			word = strings.Replace(word, m[0][1], w, 1)
+		} else {
+			break
+		}
+	}
+
+	return TrimLeft(word, replace)
+}
+
 // KebabCase converts a string to kebab-case
 func KebabCase(s string) string {
 	return DelimitedCase(s, '-')
