@@ -145,13 +145,13 @@ func (c *Cookie) Get(key string, def ...string) string {
 // Remove deletes specified key and its value from cookie using default domain and path.
 // It actually tells the http client that the cookie is expired, do not send it to server next time.
 func (c *Cookie) Remove(key string) {
-	c.SetCookie(key, "", c.domain, c.path, -86400)
+	c.SetCookie(key, "", c.domain, c.path, -86400, false, SameSiteLaxMode)
 }
 
 // RemoveCookie deletes specified key and its value from cookie using given domain and path.
 // It actually tells the http client that the cookie is expired, do not send it to server next time.
 func (c *Cookie) RemoveCookie(key, domain, path string) {
-	c.SetCookie(key, "", domain, path, -86400)
+	c.SetCookie(key, "", domain, path, -86400, false, SameSiteLaxMode)
 }
 
 // Flush outputs the cookie items to client.
