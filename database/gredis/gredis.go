@@ -46,6 +46,8 @@ type Config struct {
 	IdleTimeout     time.Duration // Maximum idle time for connection (default is 10 seconds, not allowed to be set to 0)
 	MaxConnLifetime time.Duration // Maximum lifetime of the connection (default is 30 seconds, not allowed to be set to 0)
 	ConnectTimeout  time.Duration // Dial connection timeout.
+	TLS             bool          // Specifies the config to use when a TLS connection is dialed.
+	TLSSkipVerify   bool          // Disables server name verification when connecting over TLS
 }
 
 // Pool statistics.
@@ -102,6 +104,8 @@ func New(config Config) *Redis {
 						"tcp",
 						fmt.Sprintf("%s:%d", config.Host, config.Port),
 						redis.DialConnectTimeout(config.ConnectTimeout),
+						redis.DialUseTLS(config.TLS),
+						redis.DialTLSSkipVerify(config.TLSSkipVerify),
 					)
 					if err != nil {
 						return nil, err
