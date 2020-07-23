@@ -31,7 +31,18 @@ type CookieItem struct {
 	path     string // Cookie path.
 	expireAt int64  // Cookie expiration timestamp.
 	httpOnly bool
+	SameSite CookieSameSiteItem // Cookie SameSite Items
+	Secure   string             // Cookie SameSite=None; Secure
 }
+
+type CookieSameSiteItem int32
+
+const (
+	SameSiteDefaultMode CookieSameSiteItem = iota + 1 //1
+	SameSiteLaxMode                                   //2  lax
+	SameSiteStrictMode                                //3  strict
+	SameSiteNoneMode                                  //4  none
+)
 
 // GetCookie creates or retrieves a cookie object with given request.
 // It retrieves and returns an existing cookie object if it already exists with given request.
@@ -60,7 +71,7 @@ func (c *Cookie) init() {
 		//}
 		for _, v := range c.request.Cookies() {
 			c.data[v.Name] = CookieItem{
-				v.Value, v.Domain, v.Path, int64(v.Expires.Second()), v.HttpOnly,
+				v.Value, v.Domain, v.Path, int64(v.Expires.Second()), v.HttpOnly, SameSiteLaxMode, "",
 			}
 		}
 	}
@@ -89,20 +100,20 @@ func (c *Cookie) Contains(key string) bool {
 
 // Set sets cookie item with default domain, path and expiration age.
 func (c *Cookie) Set(key, value string) {
-	c.SetCookie(key, value, c.domain, c.path, c.server.GetCookieMaxAge())
+	c.SetCookie(key, value, c.domain, c.path, c.server.GetCookieMaxAge(), false, SameSiteLaxMode)
 }
 
 // SetCookie sets cookie item given given domain, path and expiration age.
 // The optional parameter <httpOnly> specifies if the cookie item is only available in HTTP,
 // which is usually empty.
-func (c *Cookie) SetCookie(key, value, domain, path string, maxAge time.Duration, httpOnly ...bool) {
+func (c *Cookie) SetCookie(key, value, domain, path string, maxAge time.Duration, httpOnly bool, SameSite CookieSameSiteItem) {
 	c.init()
-	isHttpOnly := false
+	/*isHttpOnly := false
 	if len(httpOnly) > 0 {
 		isHttpOnly = httpOnly[0]
-	}
+	}*/
 	c.data[key] = CookieItem{
-		value, domain, path, gtime.Timestamp() + int64(maxAge.Seconds()), isHttpOnly,
+		value, domain, path, gtime.Timestamp() + int64(maxAge.Seconds()), httpOnly, SameSiteLaxMode, "",
 	}
 }
 
