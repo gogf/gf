@@ -70,7 +70,8 @@ func doStruct(params interface{}, pointer interface{}, recursive bool, mapping .
 	}
 
 	// paramsMap is the map[string]interface{} type variable for params.
-	paramsMap := MapDeep(params)
+	// DO NOT use MapDeep here.
+	paramsMap := Map(params)
 	if paramsMap == nil {
 		return gerror.Newf("invalid params: %v", params)
 	}
