@@ -778,3 +778,17 @@ func (c *Core) writeSqlToLogger(v *Sql) {
 		c.logger.Debug(s)
 	}
 }
+
+// HasTable determine whether the table name exists in the database.
+func (c *Core) HasTable(name string) (bool, error) {
+	tableList, err := c.DB.Tables()
+	if err != nil {
+		return false, err
+	}
+	for _, table := range tableList {
+		if table == name {
+			return true, nil
+		}
+	}
+	return false, nil
+}

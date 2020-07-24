@@ -142,6 +142,7 @@ type DB interface {
 	QuotePrefixTableName(table string) string
 	Tables(schema ...string) (tables []string, err error)
 	TableFields(table string, schema ...string) (map[string]*TableField, error)
+	HasTable(name string) (bool, error)
 
 	// HandleSqlBeforeCommit is a hook function, which deals with the sql string before
 	// it's committed to underlying driver. The parameter <link> specifies the current

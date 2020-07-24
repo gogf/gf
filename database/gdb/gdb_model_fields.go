@@ -127,3 +127,24 @@ func (m *Model) FieldsExStr(fields string, prefix ...string) string {
 	newFields = m.db.QuoteString(newFields)
 	return newFields
 }
+
+// HasField determine whether the field exists in the table.
+func (m *Model) HasField(field string) (bool, error) {
+	tableFields, err := m.db.TableFields(m.tables)
+	if err != nil {
+		return false, err
+	}
+	if len(tableFields) == 0 {
+		return false, fmt.Errorf(`empty table fields for table "%s"`, m.tables)
+	}
+	fieldsArray := make([]string, len(tableFields))
+	for k, v := range tableFields {
+		fieldsArray[v.Index] = k
+	}
+	for _, f := range fieldsArray {
+		if f == field {
+			return true, nil
+		}
+	}
+	return false, nil
+}

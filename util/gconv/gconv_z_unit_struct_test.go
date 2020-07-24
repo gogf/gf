@@ -961,3 +961,23 @@ func Test_Struct_WithInterfaceAttr(t *testing.T) {
 		t.Assert(v1.TestInterface, nil)
 	})
 }
+
+func Test_Struct_To_Struct(t *testing.T) {
+	var TestA struct {
+		Id   int       `p:"id"`
+		Date time.Time `p:"date"`
+	}
+
+	var TestB struct {
+		Id   int       `p:"id"`
+		Date time.Time `p:"date"`
+	}
+	TestB.Id = 666
+	TestB.Date = time.Now()
+
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gconv.Struct(TestB, &TestA), nil)
+		t.Assert(TestA.Id, TestB.Id)
+		t.Assert(TestA.Date, TestB.Date)
+	})
+}
