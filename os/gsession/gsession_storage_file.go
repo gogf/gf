@@ -7,10 +7,10 @@
 package gsession
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/internal/json"
 	"os"
 	"time"
 
@@ -35,18 +35,11 @@ type StorageFile struct {
 }
 
 var (
-	DefaultStorageFilePath          = gfile.Join(gfile.TempDir(), "gsessions")
+	DefaultStorageFilePath          = gfile.TempDir("gsessions")
 	DefaultStorageFileCryptoKey     = []byte("Session storage file crypto key!")
 	DefaultStorageFileCryptoEnabled = false
 	DefaultStorageFileLoopInterval  = 10 * time.Second
 )
-
-func init() {
-	tmpPath := "/tmp"
-	if gfile.Exists(tmpPath) && gfile.IsWritable(tmpPath) {
-		DefaultStorageFilePath = gfile.Join(tmpPath, "gsessions")
-	}
-}
 
 // NewStorageFile creates and returns a file storage object for session.
 func NewStorageFile(path ...string) *StorageFile {
@@ -160,7 +153,7 @@ func (s *StorageFile) GetSession(id string, ttl time.Duration, data *gmap.StrAny
 	if data != nil {
 		return data, nil
 	}
-	intlog.Printf("StorageFile.GetSession: %s, %v", id, ttl)
+	//intlog.Printf("StorageFile.GetSession: %s, %v", id, ttl)
 	path := s.sessionFilePath(id)
 	content := gfile.GetBytes(path)
 	if len(content) > 8 {
@@ -206,7 +199,9 @@ func (s *StorageFile) SetSession(id string, data *gmap.StrAnyMap, ttl time.Durat
 			return err
 		}
 	}
-	file, err := gfile.OpenWithFlag(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC)
+	file, err := gfile.OpenWithFlagPerm(
+		path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.ModePerm,
+	)
 	if err != nil {
 		return err
 	}

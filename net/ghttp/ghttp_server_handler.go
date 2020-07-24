@@ -24,42 +24,42 @@ import (
 	"github.com/gogf/gf/os/gtime"
 )
 
-// 默认HTTP Server处理入口，http包底层默认使用了gorutine异步处理请求，所以这里不再异步执行
-func (s *Server) defaultHandler(w http.ResponseWriter, r *http.Request) {
-	s.handleRequest(w, r)
-}
+// ServeHTTP is the default handler for http request.
+// It should not create new goroutine handling the request as
+// it's called by am already created new goroutine from http.Server.
+//
+// This function also make serve implementing the interface of http.Handler.
+func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// Max body size limit.
+	if s.config.ClientMaxBodySize > 0 {
+		r.Body = http.MaxBytesReader(w, r.Body, s.config.ClientMaxBodySize)
+	}
 
-// 执行处理HTTP请求，
-// 首先，查找是否有对应域名的处理接口配置；
-// 其次，如果没有对应的自定义处理接口配置，那么走默认的域名处理接口配置；
-// 最后，如果以上都没有找到处理接口，那么进行文件处理；
-func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
-	// 重写规则判断
+	// Rewrite feature checks.
 	if len(s.config.Rewrites) > 0 {
 		if rewrite, ok := s.config.Rewrites[r.URL.Path]; ok {
 			r.URL.Path = rewrite
 		}
 	}
 
-	// URI默认值
-	if r.URL.Path == "" {
-		r.URL.Path = "/"
-	}
-
-	// 去掉末尾的"/"号
+	// Remove char '/' in the tail of URI.
 	if r.URL.Path != "/" {
-		for r.URL.Path[len(r.URL.Path)-1] == '/' {
+		for len(r.URL.Path) > 0 && r.URL.Path[len(r.URL.Path)-1] == '/' {
 			r.URL.Path = r.URL.Path[:len(r.URL.Path)-1]
 		}
 	}
 
-	// 创建请求处理对象
+	// Default URI value if it's empty.
+	if r.URL.Path == "" {
+		r.URL.Path = "/"
+	}
+
+	// Create a new request object.
 	request := newRequest(s, r, w)
 
 	defer func() {
-		// 设置请求完成时间
 		request.LeaveTime = gtime.TimestampMilli()
-		// error log
+		// error log handling.
 		if request.error != nil {
 			s.handleErrorLog(request.error, request)
 		} else {
@@ -68,18 +68,20 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 				s.handleErrorLog(gerror.Newf("%v", exception), request)
 			}
 		}
-		// access log
+		// access log handling.
 		s.handleAccessLog(request)
-		// 关闭当前Session，并更新会话超时时间
+		// Close the session, which automatically update the TTL
+		// of the session if it exists.
 		request.Session.Close()
 	}()
 
 	// ============================================================
-	// 优先级控制:
-	// 静态文件 > 动态服务 > 静态目录
+	// Priority:
+	// Static File > Dynamic Service > Static Directory
 	// ============================================================
 
-	// 优先执行静态文件检索(检测是否存在对应的静态文件，包括index files处理)
+	// Search the static file with most high priority,
+	// which also handle the index files feature.
 	if s.config.FileServerEnabled {
 		request.StaticFile = s.searchStaticFile(r.URL.Path)
 		if request.StaticFile != nil {
@@ -87,29 +89,29 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// 动态服务检索
+	// Search the dynamic service handler.
 	request.handlers, request.hasHookHandler, request.hasServeHandler = s.getHandlersWithCache(request)
 
-	// 判断最终对该请求提供的服务方式
+	// Check the service type static or dynamic for current request.
 	if request.StaticFile != nil && request.StaticFile.IsDir && request.hasServeHandler {
 		request.isFileRequest = false
 	}
 
-	// 事件 - BeforeServe
+	// HOOK - BeforeServe
 	s.callHookHandler(HOOK_BEFORE_SERVE, request)
 
-	// 执行静态文件服务/回调控制器/执行对象/方法
+	// Core serving handling.
 	if !request.IsExited() {
 		if request.isFileRequest {
-			// 静态服务
+			// Static file service.
 			s.serveFile(request, request.StaticFile)
 		} else {
 			if len(request.handlers) > 0 {
-				// 动态服务
+				// Dynamic service.
 				request.Middleware.Next()
 			} else {
 				if request.StaticFile != nil && request.StaticFile.IsDir {
-					// 静态目录
+					// Serve the directory.
 					s.serveFile(request, request.StaticFile)
 				} else {
 					if len(request.Response.Header()) == 0 &&
@@ -122,12 +124,12 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// 事件 - AfterServe
+	// HOOK - AfterServe
 	if !request.IsExited() {
 		s.callHookHandler(HOOK_AFTER_SERVE, request)
 	}
 
-	// 事件 - BeforeOutput
+	// HOOK - BeforeOutput
 	if !request.IsExited() {
 		s.callHookHandler(HOOK_BEFORE_OUTPUT, request)
 	}
@@ -150,15 +152,16 @@ func (s *Server) handleRequest(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// 设置Session Id到Cookie中
+	// Automatically set the session id to cookie
+	// if it creates a new session id in this request.
 	if request.Session.IsDirty() && request.Session.Id() != request.GetSessionId() {
 		request.Cookie.SetSessionId(request.Session.Id())
 	}
-	// 输出Cookie
-	request.Cookie.Output()
-	// 输出缓冲区
-	request.Response.Output()
-	// 事件 - AfterOutput
+	// Output the cookie content to client.
+	request.Cookie.Flush()
+	// Output the buffer content to client.
+	request.Response.Flush()
+	// HOOK - AfterOutput
 	if !request.IsExited() {
 		s.callHookHandler(HOOK_AFTER_OUTPUT, request)
 	}
@@ -226,9 +229,10 @@ func (s *Server) searchStaticFile(uri string) *StaticFile {
 	return nil
 }
 
-// http server静态文件处理，path可以为相对路径也可以为绝对路径
+// serveFile serves the static file for client.
+// The optional parameter <allowIndex> specifies if allowing directory listing if <f> is directory.
 func (s *Server) serveFile(r *Request, f *StaticFile, allowIndex ...bool) {
-	// 使用资源文件
+	// Use resource file from memory.
 	if f.File != nil {
 		if f.IsDir {
 			if s.config.IndexFolder || (len(allowIndex) > 0 && allowIndex[0]) {
@@ -243,7 +247,7 @@ func (s *Server) serveFile(r *Request, f *StaticFile, allowIndex ...bool) {
 		}
 		return
 	}
-	// 使用磁盘文件
+	// Use file from dist.
 	file, err := os.Open(f.Path)
 	if err != nil {
 		r.Response.WriteStatus(http.StatusForbidden)
@@ -268,14 +272,23 @@ func (s *Server) serveFile(r *Request, f *StaticFile, allowIndex ...bool) {
 	}
 }
 
-// 显示目录列表
+// listDir lists the sub files of specified directory as HTML content to client.
 func (s *Server) listDir(r *Request, f http.File) {
 	files, err := f.Readdir(-1)
 	if err != nil {
 		r.Response.WriteStatus(http.StatusInternalServerError, "Error reading directory")
 		return
 	}
-	sort.Slice(files, func(i, j int) bool { return files[i].Name() < files[j].Name() })
+	// The folder type has the most priority than file.
+	sort.Slice(files, func(i, j int) bool {
+		if files[i].IsDir() && !files[j].IsDir() {
+			return true
+		}
+		if !files[i].IsDir() && files[j].IsDir() {
+			return false
+		}
+		return files[i].Name() < files[j].Name()
+	})
 	if r.Response.Header().Get("Content-Type") == "" {
 		r.Response.Header().Set("Content-Type", "text/html; charset=utf-8")
 	}

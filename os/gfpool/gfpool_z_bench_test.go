@@ -64,3 +64,14 @@ func Benchmark_GFPool_Open_Close_RDONLY(b *testing.B) {
 		f.Close()
 	}
 }
+
+func Benchmark_Stat(b *testing.B) {
+	f, err := os.Create("/tmp/bench-test-stat")
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	for i := 0; i < b.N; i++ {
+		f.Stat()
+	}
+}

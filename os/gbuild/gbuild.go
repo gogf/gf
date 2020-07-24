@@ -8,11 +8,11 @@
 package gbuild
 
 import (
-	"encoding/json"
 	"github.com/gogf/gf"
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/encoding/gbase64"
 	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/util/gconv"
 	"runtime"
 )
@@ -59,7 +59,7 @@ func Get(name string, def ...interface{}) interface{} {
 	return nil
 }
 
-// Get retrieves and returns the build-in binary variable of given name as *gvar.Var.
+// Get retrieves and returns the build-in binary variable of given name as gvar.Var.
 func GetVar(name string, def ...interface{}) *gvar.Var {
 	return gvar.New(Get(name, def...))
 }

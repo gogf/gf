@@ -7,26 +7,29 @@
 // Package gcache provides high performance and concurrent-safe in-memory cache for process.
 package gcache
 
-import "time"
+import (
+	"github.com/gogf/gf/container/gvar"
+	"time"
+)
 
 // Default cache object.
 var cache = New()
 
 // Set sets cache with <key>-<value> pair, which is expired after <duration>.
-// It does not expire if <duration> <= 0.
+// It does not expire if <duration> == 0.
 func Set(key interface{}, value interface{}, duration time.Duration) {
 	cache.Set(key, value, duration)
 }
 
 // SetIfNotExist sets cache with <key>-<value> pair if <key> does not exist in the cache,
-// which is expired after <duration>. It does not expire if <duration> <= 0.
+// which is expired after <duration>. It does not expire if <duration> == 0.
 func SetIfNotExist(key interface{}, value interface{}, duration time.Duration) bool {
 	return cache.SetIfNotExist(key, value, duration)
 }
 
 // Sets batch sets cache with key-value pairs by <data>, which is expired after <duration>.
 //
-// It does not expire if <duration> <= 0.
+// It does not expire if <duration> == 0.
 func Sets(data map[interface{}]interface{}, duration time.Duration) {
 	cache.Sets(data, duration)
 }
@@ -37,25 +40,30 @@ func Get(key interface{}) interface{} {
 	return cache.Get(key)
 }
 
+// GetVar retrieves and returns the value of <key> as gvar.Var.
+func GetVar(key interface{}) *gvar.Var {
+	return cache.GetVar(key)
+}
+
 // GetOrSet returns the value of <key>,
 // or sets <key>-<value> pair and returns <value> if <key> does not exist in the cache.
 // The key-value pair expires after <duration>.
 //
-// It does not expire if <duration> <= 0.
+// It does not expire if <duration> == 0.
 func GetOrSet(key interface{}, value interface{}, duration time.Duration) interface{} {
 	return cache.GetOrSet(key, value, duration)
 }
 
 // GetOrSetFunc returns the value of <key>, or sets <key> with result of function <f>
 // and returns its result if <key> does not exist in the cache. The key-value pair expires
-// after <duration>. It does not expire if <duration> <= 0.
+// after <duration>. It does not expire if <duration> == 0.
 func GetOrSetFunc(key interface{}, f func() interface{}, duration time.Duration) interface{} {
 	return cache.GetOrSetFunc(key, f, duration)
 }
 
 // GetOrSetFuncLock returns the value of <key>, or sets <key> with result of function <f>
 // and returns its result if <key> does not exist in the cache. The key-value pair expires
-// after <duration>. It does not expire if <duration> <= 0.
+// after <duration>. It does not expire if <duration> == 0.
 //
 // Note that the function <f> is executed within writing mutex lock.
 func GetOrSetFuncLock(key interface{}, f func() interface{}, duration time.Duration) interface{} {
@@ -67,12 +75,14 @@ func Contains(key interface{}) bool {
 	return cache.Contains(key)
 }
 
-// Remove deletes the <key> in the cache, and returns its value.
-func Remove(key interface{}) interface{} {
-	return cache.Remove(key)
+// Remove deletes the one or more keys from cache, and returns its value.
+// If multiple keys are given, it returns the value of the deleted last item.
+func Remove(keys ...interface{}) (value interface{}) {
+	return cache.Remove(keys...)
 }
 
 // Removes deletes <keys> in the cache.
+// Deprecated, use Remove instead.
 func Removes(keys []interface{}) {
 	cache.Removes(keys)
 }

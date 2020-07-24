@@ -22,7 +22,7 @@ import (
 
 var (
 	configContent = gfile.GetContents(
-		gfile.Join(gdebug.TestDataPath(), "config", "config.toml"),
+		gdebug.TestDataPath("config", "config.toml"),
 	)
 )
 
@@ -39,7 +39,7 @@ func Test_Config2(t *testing.T) {
 	// relative path
 	gtest.C(t, func(t *gtest.T) {
 		var err error
-		dirPath := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
+		dirPath := gfile.TempDir(gtime.TimestampNanoStr())
 		err = gfile.Mkdir(dirPath)
 		t.Assert(err, nil)
 		defer gfile.Remove(dirPath)
@@ -63,7 +63,7 @@ func Test_Config2(t *testing.T) {
 	// relative path, config folder
 	gtest.C(t, func(t *gtest.T) {
 		var err error
-		dirPath := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
+		dirPath := gfile.TempDir(gtime.TimestampNanoStr())
 		err = gfile.Mkdir(dirPath)
 		t.Assert(err, nil)
 		defer gfile.Remove(dirPath)
@@ -89,7 +89,7 @@ func Test_Config2(t *testing.T) {
 func Test_Config3(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var err error
-		dirPath := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
+		dirPath := gfile.TempDir(gtime.TimestampNanoStr())
 		err = gfile.Mkdir(dirPath)
 		t.Assert(err, nil)
 		defer gfile.Remove(dirPath)
@@ -113,7 +113,7 @@ func Test_Config3(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		var err error
-		dirPath := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
+		dirPath := gfile.TempDir(gtime.TimestampNanoStr())
 		err = gfile.Mkdir(dirPath)
 		t.Assert(err, nil)
 		defer gfile.Remove(dirPath)

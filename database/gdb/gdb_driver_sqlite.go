@@ -12,6 +12,7 @@ package gdb
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/os/gfile"
@@ -59,8 +60,8 @@ func (d *DriverSqlite) GetChars() (charLeft string, charRight string) {
 }
 
 // HandleSqlBeforeCommit deals with the sql string before commits it to underlying sql driver.
-// @todo 需要增加对Save方法的支持，可使用正则来实现替换，
-// @todo 将ON DUPLICATE KEY UPDATE触发器修改为两条SQL语句(INSERT OR IGNORE & UPDATE)
+// TODO 需要增加对Save方法的支持，可使用正则来实现替换，
+// TODO 将ON DUPLICATE KEY UPDATE触发器修改为两条SQL语句(INSERT OR IGNORE & UPDATE)
 func (d *DriverSqlite) HandleSqlBeforeCommit(link Link, sql string, args []interface{}) (string, []interface{}) {
 	return sql, args
 }
@@ -88,11 +89,11 @@ func (d *DriverSqlite) Tables(schema ...string) (tables []string, err error) {
 
 // TableFields retrieves and returns the fields information of specified table of current schema.
 func (d *DriverSqlite) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
-	table = gstr.Trim(table)
+	charL, charR := d.GetChars()
+	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
-		panic("function TableFields supports only single table operations")
+		return nil, errors.New("function TableFields supports only single table operations")
 	}
-
 	checkSchema := d.DB.GetSchema()
 	if len(schema) > 0 && schema[0] != "" {
 		checkSchema = schema[0]

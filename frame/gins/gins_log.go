@@ -9,6 +9,7 @@ package gins
 import (
 	"fmt"
 	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/util/gutil"
 )
 
 const (
@@ -29,13 +30,15 @@ func Log(name ...string) *glog.Logger {
 		// To avoid file no found error while it's not necessary.
 		if Config().Available() {
 			var m map[string]interface{}
-			// It firstly searches the configuration of the instance name.
-			if m = Config().GetMap(fmt.Sprintf(`%s.%s`, gLOGGER_NODE_NAME, instanceName)); m == nil {
-				// If the configuration for the instance does not exist,
-				// it uses the default logging configuration.
-				m = Config().GetMap(gLOGGER_NODE_NAME)
+			nodeKey, _ := gutil.MapPossibleItemByKey(Config().GetMap("."), gLOGGER_NODE_NAME)
+			if nodeKey == "" {
+				nodeKey = gLOGGER_NODE_NAME
 			}
-			if m != nil {
+			m = Config().GetMap(fmt.Sprintf(`%s.%s`, nodeKey, instanceName))
+			if len(m) == 0 {
+				m = Config().GetMap(nodeKey)
+			}
+			if len(m) > 0 {
 				if err := logger.SetConfigWithMap(m); err != nil {
 					panic(err)
 				}

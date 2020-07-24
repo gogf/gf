@@ -13,11 +13,13 @@ package gdb
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
-	"github.com/gogf/gf/internal/intlog"
-	"github.com/gogf/gf/text/gstr"
 	"strconv"
 	"strings"
+
+	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/text/gstr"
 
 	"github.com/gogf/gf/text/gregex"
 )
@@ -60,10 +62,10 @@ func (d *DriverMssql) GetChars() (charLeft string, charRight string) {
 }
 
 // HandleSqlBeforeCommit deals with the sql string before commits it to underlying sql driver.
-func (d *DriverMssql) HandleSqlBeforeCommit(link Link, query string, args []interface{}) (string, []interface{}) {
+func (d *DriverMssql) HandleSqlBeforeCommit(link Link, sql string, args []interface{}) (string, []interface{}) {
 	var index int
 	// Convert place holder char '?' to string "@px".
-	str, _ := gregex.ReplaceStringFunc("\\?", query, func(s string) string {
+	str, _ := gregex.ReplaceStringFunc("\\?", sql, func(s string) string {
 		index++
 		return fmt.Sprintf("@p%d", index)
 	})
@@ -71,6 +73,8 @@ func (d *DriverMssql) HandleSqlBeforeCommit(link Link, query string, args []inte
 	return d.parseSql(str), args
 }
 
+// parseSql does some replacement of the sql before commits it to underlying driver,
+// for support of microsoft sql server.
 func (d *DriverMssql) parseSql(sql string) string {
 	// SELECT * FROM USER WHERE ID=1 LIMIT 1
 	if m, _ := gregex.MatchString(`^SELECT(.+)LIMIT 1$`, sql); len(m) > 1 {
@@ -91,22 +95,20 @@ func (d *DriverMssql) parseSql(sql string) string {
 	index++
 	switch keyword {
 	case "SELECT":
-		// 不含LIMIT关键字则不处理
+		// LIMIT statement checks.
 		if len(res) < 2 ||
 			(strings.HasPrefix(res[index][0], "LIMIT") == false &&
 				strings.HasPrefix(res[index][0], "limit") == false) {
 			break
 		}
-		// 不含LIMIT则不处理
 		if gregex.IsMatchString("((?i)SELECT)(.+)((?i)LIMIT)", sql) == false {
 			break
 		}
-		// 判断SQL中是否含有order by
+		// ORDER BY statement checks.
 		selectStr := ""
 		orderStr := ""
 		haveOrder := gregex.IsMatchString("((?i)SELECT)(.+)((?i)ORDER BY)", sql)
 		if haveOrder {
-			// 取order by 前面的字符串
 			queryExpr, _ := gregex.MatchString("((?i)SELECT)(.+)((?i)ORDER BY)", sql)
 			if len(queryExpr) != 4 ||
 				strings.EqualFold(queryExpr[1], "SELECT") == false ||
@@ -114,8 +116,6 @@ func (d *DriverMssql) parseSql(sql string) string {
 				break
 			}
 			selectStr = queryExpr[2]
-
-			// 取order by表达式的值
 			orderExpr, _ := gregex.MatchString("((?i)ORDER BY)(.+)((?i)LIMIT)", sql)
 			if len(orderExpr) != 4 ||
 				strings.EqualFold(orderExpr[1], "ORDER BY") == false ||
@@ -132,8 +132,6 @@ func (d *DriverMssql) parseSql(sql string) string {
 			}
 			selectStr = queryExpr[2]
 		}
-
-		// 取limit后面的取值范围
 		first, limit := 0, 0
 		for i := 1; i < len(res[index]); i++ {
 			if len(strings.TrimSpace(res[index][i])) == 0 {
@@ -147,7 +145,6 @@ func (d *DriverMssql) parseSql(sql string) string {
 				break
 			}
 		}
-
 		if haveOrder {
 			sql = fmt.Sprintf(
 				"SELECT * FROM "+
@@ -192,9 +189,10 @@ func (d *DriverMssql) Tables(schema ...string) (tables []string, err error) {
 
 // TableFields retrieves and returns the fields information of specified table of current schema.
 func (d *DriverMssql) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
-	table = gstr.Trim(table)
+	charL, charR := d.GetChars()
+	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
-		panic("function TableFields supports only single table operations")
+		return nil, errors.New("function TableFields supports only single table operations")
 	}
 	checkSchema := d.DB.GetSchema()
 	if len(schema) > 0 && schema[0] != "" {
@@ -209,23 +207,43 @@ func (d *DriverMssql) TableFields(table string, schema ...string) (fields map[st
 				return nil
 			}
 			result, err = d.DB.DoGetAll(link, fmt.Sprintf(`
-			SELECT c.name as FIELD, CASE t.name 
-				WHEN 'numeric' THEN t.name + '(' + convert(varchar(20),c.xprec) + ',' + convert(varchar(20),c.xscale) + ')' 
-				WHEN 'char' THEN t.name + '(' + convert(varchar(20),c.length)+ ')'
-				WHEN 'varchar' THEN t.name + '(' + convert(varchar(20),c.length)+ ')'
-				ELSE t.name + '(' + convert(varchar(20),c.length)+ ')' END as TYPE
-			FROM systypes t,syscolumns c WHERE t.xtype=c.xtype 
-			AND c.id = (SELECT id FROM sysobjects WHERE name='%s') 
-			ORDER BY c.colid`, strings.ToUpper(table)))
+			SELECT a.name Field,
+	CASE b.name 
+		WHEN 'datetime' THEN 'datetime'
+		WHEN 'numeric' THEN b.name + '(' + convert(varchar(20),a.xprec) + ',' + convert(varchar(20),a.xscale) + ')' 
+		WHEN 'char' THEN b.name + '(' + convert(varchar(20),a.length)+ ')'
+		WHEN 'varchar' THEN b.name + '(' + convert(varchar(20),a.length)+ ')'
+		ELSE b.name + '(' + convert(varchar(20),a.length)+ ')' END as TYPE,
+	case when a.isnullable=1 then 'YES'else 'NO' end as [Null],
+	case when exists(SELECT 1 FROM sysobjects where xtype='PK' and name in (
+	  SELECT name FROM sysindexes WHERE indid in(
+	   SELECT indid FROM sysindexkeys WHERE id = a.id AND colid=a.colid
+	   ))) then 'PRI' else '' end AS [Key],
+	case when COLUMNPROPERTY(a.id,a.name,'IsIdentity')=1 then 'auto_increment'else '' end Extra,
+	isnull(e.text,'') as [Default],
+	isnull(g.[value],'') AS [Comment]
+	FROM syscolumns a
+	left join systypes b on a.xtype=b.xusertype
+	inner join sysobjects d on a.id=d.id and d.xtype='U' and d.name<>'dtproperties'
+	left join syscomments e on a.cdefault=e.id
+	left join sys.extended_properties g on a.id=g.major_id and a.colid=g.minor_id
+	left join sys.extended_properties f on d.id=f.major_id and f.minor_id =0
+	where d.name='%s'
+	order by a.id,a.colorder`, strings.ToUpper(table)))
 			if err != nil {
 				return nil
 			}
 			fields = make(map[string]*TableField)
 			for i, m := range result {
 				fields[strings.ToLower(m["FIELD"].String())] = &TableField{
-					Index: i,
-					Name:  strings.ToLower(m["FIELD"].String()),
-					Type:  strings.ToLower(m["TYPE"].String()),
+					Index:   i,
+					Name:    strings.ToLower(m["FIELD"].String()),
+					Type:    strings.ToLower(m["TYPE"].String()),
+					Null:    m["Null"].Bool(),
+					Key:     m["Key"].String(),
+					Default: m["Default"].Val(),
+					Extra:   m["Extra"].String(),
+					Comment: m["Comment"].String(),
 				}
 			}
 			return fields

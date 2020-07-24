@@ -7,6 +7,7 @@
 package ghttp
 
 import (
+	"github.com/gogf/gf/errors/gerror"
 	"strings"
 
 	"github.com/gogf/gf/encoding/gurl"
@@ -19,9 +20,15 @@ import (
 // The optional parameter <noUrlEncode> specifies whether ignore the url encoding for the data.
 func BuildParams(params interface{}, noUrlEncode ...bool) (encodedParamStr string) {
 	// If given string/[]byte, converts and returns it directly as string.
-	switch params.(type) {
+	switch v := params.(type) {
 	case string, []byte:
 		return gconv.String(params)
+	case []interface{}:
+		if len(v) > 0 {
+			params = v[0]
+		} else {
+			params = nil
+		}
 	}
 	// Else converts it to map and does the url encoding.
 	m, urlEncode := gconv.Map(params), true
@@ -48,12 +55,20 @@ func BuildParams(params interface{}, noUrlEncode ...bool) (encodedParamStr strin
 // niceCallFunc calls function <f> with exception capture logic.
 func niceCallFunc(f func()) {
 	defer func() {
-		if err := recover(); err != nil {
-			switch err {
+		if e := recover(); e != nil {
+			switch e {
 			case gEXCEPTION_EXIT, gEXCEPTION_EXIT_ALL:
 				return
 			default:
-				panic(err)
+				if _, ok := e.(gerror.ApiStack); ok {
+					// It's already an error that has stack info.
+					panic(e)
+				} else {
+					// Create a new error with stack info.
+					// Note that there's a skip pointing the start stacktrace
+					// of the real error point.
+					panic(gerror.NewfSkip(1, "%v", e))
+				}
 			}
 		}
 	}()

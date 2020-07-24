@@ -16,9 +16,13 @@ import (
 	"github.com/gogf/gf/text/gstr"
 )
 
-// 绑定控制器，控制器需要实现 gmvc.Controller 接口,
-// 这种方式绑定的控制器每一次请求都会初始化一个新的控制器对象进行处理，对应不同的请求会话,
-// 第三个参数methods用以指定需要注册的方法，支持多个方法名称，多个方法以英文“,”号分隔，区分大小写.
+// BindController registers controller to server routes with specified pattern. The controller
+// needs to implement the gmvc.Controller interface. Each request of the controller bound in
+// this way will initialize a new controller object for processing, corresponding to different
+// request sessions.
+//
+// The optional parameter <method> is used to specify the method to be registered, which
+// supports multiple method names, multiple methods are separated by char ',', case sensitive.
 func (s *Server) BindController(pattern string, controller Controller, method ...string) {
 	bindMethod := ""
 	if len(method) > 0 {
@@ -27,15 +31,23 @@ func (s *Server) BindController(pattern string, controller Controller, method ..
 	s.doBindController(pattern, controller, bindMethod, nil, "")
 }
 
-// 绑定路由到指定的方法执行, 第三个参数method仅支持一个方法注册，不支持多个，并且区分大小写。
+// BindControllerMethod registers specified method to server routes with specified pattern.
+//
+// The optional parameter <method> is used to specify the method to be registered, which
+// does not supports multiple method names but only one, case sensitive.
 func (s *Server) BindControllerMethod(pattern string, controller Controller, method string) {
 	s.doBindControllerMethod(pattern, controller, method, nil, "")
 }
 
-// 绑定控制器(RESTFul)，控制器需要实现gmvc.Controller接口
-// 方法会识别HTTP方法，并做REST绑定处理，例如：Post方法会绑定到HTTP POST的方法请求处理，Delete方法会绑定到HTTP DELETE的方法请求处理
-// 因此只会绑定HTTP Method对应的方法，其他方法不会自动注册绑定
-// 这种方式绑定的控制器每一次请求都会初始化一个新的控制器对象进行处理，对应不同的请求会话
+// BindControllerRest registers controller in REST API style to server with specified pattern.
+// The controller needs to implement the gmvc.Controller interface. Each request of the controller
+// bound in this way will initialize a new controller object for processing, corresponding to
+// different request sessions.
+// The method will recognize the HTTP method and do REST binding, for example:
+// The method "Post" of controller will be bound to the HTTP POST method request processing,
+// and the method "Delete" will be bound to the HTTP DELETE method request processing.
+// Therefore, only the method corresponding to the HTTP Method will be bound, other methods will
+// not automatically register the binding.
 func (s *Server) BindControllerRest(pattern string, controller Controller) {
 	s.doBindControllerRest(pattern, controller, nil, "")
 }
@@ -52,7 +64,6 @@ func (s *Server) doBindController(
 			methodMap[strings.TrimSpace(v)] = true
 		}
 	}
-	// 当pattern中的method为all时，去掉该method，以便于后续方法判断
 	domain, method, path, err := s.parsePattern(pattern)
 	if err != nil {
 		s.Logger().Fatal(err)
@@ -61,7 +72,7 @@ func (s *Server) doBindController(
 	if strings.EqualFold(method, gDEFAULT_METHOD) {
 		pattern = s.serveHandlerKey("", path, domain)
 	}
-	// 遍历控制器，获取方法列表，并构造成uri
+	// Retrieve a list of methods, create construct corresponding URI.
 	m := make(map[string]*handlerItem)
 	v := reflect.ValueOf(controller)
 	t := v.Type()
@@ -82,13 +93,17 @@ func (s *Server) doBindController(
 		}
 		if _, ok := v.Method(i).Interface().(func()); !ok {
 			if len(methodMap) > 0 {
-				// 指定的方法名称注册，那么需要使用错误提示
-				s.Logger().Errorf(`invalid route method: %s.%s.%s defined as "%s", but "func()" is required for controller registry`,
-					pkgPath, ctlName, methodName, v.Method(i).Type().String())
+				// If registering with specified method, print error.
+				s.Logger().Errorf(
+					`invalid route method: %s.%s.%s defined as "%s", but "func()" is required for controller registry`,
+					pkgPath, ctlName, methodName, v.Method(i).Type().String(),
+				)
 			} else {
-				// 否则只是Debug提示
-				s.Logger().Debugf(`ignore route method: %s.%s.%s defined as "%s", no match "func()"`,
-					pkgPath, ctlName, methodName, v.Method(i).Type().String())
+				// Else, just print debug information.
+				s.Logger().Debugf(
+					`ignore route method: %s.%s.%s defined as "%s", no match "func()" for controller registry`,
+					pkgPath, ctlName, methodName, v.Method(i).Type().String(),
+				)
 			}
 			continue
 		}
@@ -103,10 +118,13 @@ func (s *Server) doBindController(
 			middleware: middleware,
 			source:     source,
 		}
-		// 如果方法中带有Index方法，那么额外自动增加一个路由规则匹配主URI，
-		// 例如: pattern为/user, 那么会同时注册/user及/user/index，
-		// 这里处理新增/user路由绑定。
-		// 注意，当pattern带有内置变量时，不会自动加该路由。
+		// If there's "Index" method, then an additional route is automatically added
+		// to match the main URI, for example:
+		// If pattern is "/user", then "/user" and "/user/index" are both automatically
+		// registered.
+		//
+		// Note that if there's built-in variables in pattern, this route will not be added
+		// automatically.
 		if strings.EqualFold(methodName, "Index") && !gregex.IsMatchString(`\{\.\w+\}`, pattern) {
 			p := gstr.PosRI(key, "/index")
 			k := key[0:p] + key[p+6:]
@@ -176,13 +194,11 @@ func (s *Server) doBindControllerRest(
 	pattern string, controller Controller,
 	middleware []HandlerFunc, source string,
 ) {
-	// 遍历控制器，获取方法列表，并构造成uri
 	m := make(map[string]*handlerItem)
 	v := reflect.ValueOf(controller)
 	t := v.Type()
 	pkgPath := t.Elem().PkgPath()
 	structName := t.Elem().Name()
-	// 如果存在与HttpMethod对应名字的方法，那么绑定这些方法
 	for i := 0; i < v.NumMethod(); i++ {
 		methodName := t.Method(i).Name
 		if _, ok := methodsMap[strings.ToUpper(methodName)]; !ok {

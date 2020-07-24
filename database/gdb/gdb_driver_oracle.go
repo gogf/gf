@@ -64,17 +64,19 @@ func (d *DriverOracle) GetChars() (charLeft string, charRight string) {
 }
 
 // HandleSqlBeforeCommit deals with the sql string before commits it to underlying sql driver.
-func (d *DriverOracle) HandleSqlBeforeCommit(link Link, query string, args []interface{}) (string, []interface{}) {
+func (d *DriverOracle) HandleSqlBeforeCommit(link Link, sql string, args []interface{}) (string, []interface{}) {
 	var index int
-	// Convert place holder char '?' to string ":x".
-	str, _ := gregex.ReplaceStringFunc("\\?", query, func(s string) string {
+	// Convert place holder char '?' to string ":vx".
+	str, _ := gregex.ReplaceStringFunc("\\?", sql, func(s string) string {
 		index++
-		return fmt.Sprintf(":%d", index)
+		return fmt.Sprintf(":v%d", index)
 	})
 	str, _ = gregex.ReplaceString("\"", "", str)
 	return d.parseSql(str), args
 }
 
+// parseSql does some replacement of the sql before commits it to underlying driver,
+// for support of oracle server.
 func (d *DriverOracle) parseSql(sql string) string {
 	patten := `^\s*(?i)(SELECT)|(LIMIT\s*(\d+)\s*,\s*(\d+))`
 	if gregex.IsMatchString(patten, sql) == false {
@@ -86,29 +88,25 @@ func (d *DriverOracle) parseSql(sql string) string {
 		return ""
 	}
 
-	index := 0
-	keyword := strings.TrimSpace(res[index][0])
-	keyword = strings.ToUpper(keyword)
-
+	var (
+		index   = 0
+		keyword = strings.ToUpper(strings.TrimSpace(res[index][0]))
+	)
 	index++
 	switch keyword {
 	case "SELECT":
-		// 不含LIMIT关键字则不处理
-		if len(res) < 2 || (strings.HasPrefix(res[index][0], "LIMIT") == false && strings.HasPrefix(res[index][0], "limit") == false) {
+		if len(res) < 2 || (strings.HasPrefix(res[index][0], "LIMIT") == false &&
+			strings.HasPrefix(res[index][0], "limit") == false) {
 			break
 		}
-
-		// 取limit前面的字符串
 		if gregex.IsMatchString("((?i)SELECT)(.+)((?i)LIMIT)", sql) == false {
 			break
 		}
-
 		queryExpr, _ := gregex.MatchString("((?i)SELECT)(.+)((?i)LIMIT)", sql)
-		if len(queryExpr) != 4 || strings.EqualFold(queryExpr[1], "SELECT") == false || strings.EqualFold(queryExpr[3], "LIMIT") == false {
+		if len(queryExpr) != 4 || strings.EqualFold(queryExpr[1], "SELECT") == false ||
+			strings.EqualFold(queryExpr[3], "LIMIT") == false {
 			break
 		}
-
-		// 取limit后面的取值范围
 		first, limit := 0, 0
 		for i := 1; i < len(res[index]); i++ {
 			if len(strings.TrimSpace(res[index][i])) == 0 {
@@ -121,10 +119,10 @@ func (d *DriverOracle) parseSql(sql string) string {
 				break
 			}
 		}
-
-		// 也可以使用between,据说这种写法的性能会比between好点,里层SQL中的ROWNUM_ >= limit可以缩小查询后的数据集规模
 		sql = fmt.Sprintf(
-			"SELECT * FROM (SELECT GFORM.*, ROWNUM ROWNUM_ FROM (%s %s) GFORM WHERE ROWNUM <= %d) WHERE ROWNUM_ >= %d",
+			"SELECT * FROM "+
+				"(SELECT GFORM.*, ROWNUM ROWNUM_ FROM (%s %s) GFORM WHERE ROWNUM <= %d)"+
+				" WHERE ROWNUM_ >= %d",
 			queryExpr[1], queryExpr[2], limit, first,
 		)
 	}
@@ -150,9 +148,10 @@ func (d *DriverOracle) Tables(schema ...string) (tables []string, err error) {
 
 // TableFields retrieves and returns the fields information of specified table of current schema.
 func (d *DriverOracle) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
-	table = gstr.Trim(table)
+	charL, charR := d.GetChars()
+	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
-		panic("function TableFields supports only single table operations")
+		return nil, errors.New("function TableFields supports only single table operations")
 	}
 	checkSchema := d.DB.GetSchema()
 	if len(schema) > 0 && schema[0] != "" {

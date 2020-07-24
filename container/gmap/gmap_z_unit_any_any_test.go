@@ -7,18 +7,44 @@
 package gmap_test
 
 import (
-	"encoding/json"
 	"github.com/gogf/gf/container/garray"
+	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/internal/json"
+	"github.com/gogf/gf/test/gtest"
 	"github.com/gogf/gf/util/gconv"
 	"testing"
-
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/test/gtest"
+	"time"
 )
 
-func anyAnyCallBack(int, interface{}) bool {
-	return true
+func Test_AnyAnyMap_Var(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var m gmap.AnyAnyMap
+		m.Set(1, 1)
+
+		t.Assert(m.Get(1), 1)
+		t.Assert(m.Size(), 1)
+		t.Assert(m.IsEmpty(), false)
+
+		t.Assert(m.GetOrSet(2, "2"), "2")
+		t.Assert(m.SetIfNotExist(2, "2"), false)
+
+		t.Assert(m.SetIfNotExist(3, 3), true)
+
+		t.Assert(m.Remove(2), "2")
+		t.Assert(m.Contains(2), false)
+
+		t.AssertIN(3, m.Keys())
+		t.AssertIN(1, m.Keys())
+		t.AssertIN(3, m.Values())
+		t.AssertIN(1, m.Values())
+		m.Flip()
+		t.Assert(m.Map(), map[interface{}]int{1: 1, 3: 3})
+
+		m.Clear()
+		t.Assert(m.Size(), 0)
+		t.Assert(m.IsEmpty(), true)
+	})
 }
 
 func Test_AnyAnyMap_Basic(t *testing.T) {
@@ -191,6 +217,18 @@ func Test_AnyAnyMap_FilterEmpty(t *testing.T) {
 		m.FilterEmpty()
 		t.Assert(m.Get(1), nil)
 		t.Assert(m.Get(2), 2)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		m := gmap.NewAnyAnyMap()
+		m.Set(1, 0)
+		m.Set("time1", time.Time{})
+		m.Set("time2", time.Now())
+		t.Assert(m.Get(1), 0)
+		t.Assert(m.Get("time1"), time.Time{})
+		m.FilterEmpty()
+		t.Assert(m.Get(1), nil)
+		t.Assert(m.Get("time1"), nil)
+		t.AssertNE(m.Get("time2"), nil)
 	})
 }
 

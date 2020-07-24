@@ -8,9 +8,12 @@ package gdb
 
 import (
 	"fmt"
-	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/container/gset"
+	"github.com/gogf/gf/internal/empty"
+	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/util/gconv"
+	"time"
 )
 
 // getModel creates and returns a cloned model of current model if <safe> is true, or else it returns
@@ -26,15 +29,19 @@ func (m *Model) getModel() *Model {
 // filterDataForInsertOrUpdate does filter feature with data for inserting/updating operations.
 // Note that, it does not filter list item, which is also type of map, for "omit empty" feature.
 func (m *Model) filterDataForInsertOrUpdate(data interface{}) interface{} {
-	if list, ok := m.data.(List); ok {
-		for k, item := range list {
-			list[k] = m.doFilterDataMapForInsertOrUpdate(item, false)
+	switch value := data.(type) {
+	case List:
+		for k, item := range value {
+			value[k] = m.doFilterDataMapForInsertOrUpdate(item, false)
 		}
-		return list
-	} else if item, ok := m.data.(Map); ok {
-		return m.doFilterDataMapForInsertOrUpdate(item, true)
+		return value
+
+	case Map:
+		return m.doFilterDataMapForInsertOrUpdate(value, true)
+
+	default:
+		return data
 	}
-	return data
 }
 
 // doFilterDataMapForInsertOrUpdate does the filter features for map.
@@ -45,15 +52,47 @@ func (m *Model) doFilterDataMapForInsertOrUpdate(data Map, allowOmitEmpty bool) 
 	}
 	// Remove key-value pairs of which the value is empty.
 	if allowOmitEmpty && m.option&OPTION_OMITEMPTY > 0 {
-		m := gmap.NewStrAnyMapFrom(data)
-		m.FilterEmpty()
-		data = m.Map()
+		tempMap := make(Map, len(data))
+		for k, v := range data {
+			if empty.IsEmpty(v) {
+				continue
+			}
+			// Special type filtering.
+			switch r := v.(type) {
+			case time.Time:
+				if r.IsZero() {
+					continue
+				}
+			case *time.Time:
+				if r.IsZero() {
+					continue
+				}
+			case gtime.Time:
+				if r.IsZero() {
+					continue
+				}
+			case *gtime.Time:
+				if r.IsZero() {
+					continue
+				}
+			}
+			tempMap[k] = v
+		}
+		data = tempMap
 	}
 
 	if len(m.fields) > 0 && m.fields != "*" {
 		// Keep specified fields.
-		set := gset.NewStrSetFrom(gstr.SplitAndTrim(m.fields, ","))
+		var (
+			set          = gset.NewStrSetFrom(gstr.SplitAndTrim(m.fields, ","))
+			charL, charR = m.db.GetChars()
+			chars        = charL + charR
+		)
+		set.Walk(func(item string) string {
+			return gstr.Trim(item, chars)
+		})
 		for k := range data {
+			k = gstr.Trim(k, chars)
 			if !set.Contains(k) {
 				delete(data, k)
 			}
@@ -115,27 +154,21 @@ func (m *Model) getPrimaryKey() string {
 	return ""
 }
 
-// checkAndRemoveCache checks and remove the cache if necessary.
-func (m *Model) checkAndRemoveCache() {
-	if m.cacheEnabled && m.cacheDuration < 0 && len(m.cacheName) > 0 {
-		m.db.GetCache().Remove(m.cacheName)
-	}
-}
-
 // formatCondition formats where arguments of the model and returns a new condition sql and its arguments.
 // Note that this function does not change any attribute value of the <m>.
 //
-// The parameter <limit> specifies whether limits querying only one record if m.limit is not set.
-func (m *Model) formatCondition(limit bool) (condition string, conditionArgs []interface{}) {
-	var where string
+// The parameter <limit1> specifies whether limits querying only one record if m.limit is not set.
+func (m *Model) formatCondition(limit1 bool) (conditionWhere string, conditionExtra string, conditionArgs []interface{}) {
 	if len(m.whereHolder) > 0 {
 		for _, v := range m.whereHolder {
 			switch v.operator {
 			case gWHERE_HOLDER_WHERE:
-				if where == "" {
-					newWhere, newArgs := formatWhere(m.db, v.where, v.args, m.option&OPTION_OMITEMPTY > 0)
+				if conditionWhere == "" {
+					newWhere, newArgs := formatWhere(
+						m.db, v.where, v.args, m.option&OPTION_OMITEMPTY > 0,
+					)
 					if len(newWhere) > 0 {
-						where = newWhere
+						conditionWhere = newWhere
 						conditionArgs = newArgs
 					}
 					continue
@@ -143,52 +176,69 @@ func (m *Model) formatCondition(limit bool) (condition string, conditionArgs []i
 				fallthrough
 
 			case gWHERE_HOLDER_AND:
-				newWhere, newArgs := formatWhere(m.db, v.where, v.args, m.option&OPTION_OMITEMPTY > 0)
+				newWhere, newArgs := formatWhere(
+					m.db, v.where, v.args, m.option&OPTION_OMITEMPTY > 0,
+				)
 				if len(newWhere) > 0 {
-					if where[0] == '(' {
-						where = fmt.Sprintf(`%s AND (%s)`, where, newWhere)
+					if len(conditionWhere) == 0 {
+						conditionWhere = newWhere
+					} else if conditionWhere[0] == '(' {
+						conditionWhere = fmt.Sprintf(`%s AND (%s)`, conditionWhere, newWhere)
 					} else {
-						where = fmt.Sprintf(`(%s) AND (%s)`, where, newWhere)
+						conditionWhere = fmt.Sprintf(`(%s) AND (%s)`, conditionWhere, newWhere)
 					}
 					conditionArgs = append(conditionArgs, newArgs...)
 				}
 
 			case gWHERE_HOLDER_OR:
-				newWhere, newArgs := formatWhere(m.db, v.where, v.args, m.option&OPTION_OMITEMPTY > 0)
+				newWhere, newArgs := formatWhere(
+					m.db, v.where, v.args, m.option&OPTION_OMITEMPTY > 0,
+				)
 				if len(newWhere) > 0 {
-					if where[0] == '(' {
-						where = fmt.Sprintf(`%s OR (%s)`, where, newWhere)
+					if len(conditionWhere) == 0 {
+						conditionWhere = newWhere
+					} else if conditionWhere[0] == '(' {
+						conditionWhere = fmt.Sprintf(`%s OR (%s)`, conditionWhere, newWhere)
 					} else {
-						where = fmt.Sprintf(`(%s) OR (%s)`, where, newWhere)
+						conditionWhere = fmt.Sprintf(`(%s) OR (%s)`, conditionWhere, newWhere)
 					}
 					conditionArgs = append(conditionArgs, newArgs...)
 				}
 			}
 		}
 	}
-	if where != "" {
-		condition += " WHERE " + where
+	if conditionWhere != "" {
+		conditionWhere = " WHERE " + conditionWhere
 	}
 	if m.groupBy != "" {
-		condition += " GROUP BY " + m.groupBy
+		conditionExtra += " GROUP BY " + m.groupBy
 	}
 	if m.orderBy != "" {
-		condition += " ORDER BY " + m.orderBy
+		conditionExtra += " ORDER BY " + m.orderBy
+	}
+	if len(m.having) > 0 {
+		havingStr, havingArgs := formatWhere(
+			m.db, m.having[0], gconv.Interfaces(m.having[1]), m.option&OPTION_OMITEMPTY > 0,
+		)
+		if len(havingStr) > 0 {
+			conditionExtra += " HAVING " + havingStr
+			conditionArgs = append(conditionArgs, havingArgs...)
+		}
 	}
 	if m.limit != 0 {
 		if m.start >= 0 {
-			condition += fmt.Sprintf(" LIMIT %d,%d", m.start, m.limit)
+			conditionExtra += fmt.Sprintf(" LIMIT %d,%d", m.start, m.limit)
 		} else {
-			condition += fmt.Sprintf(" LIMIT %d", m.limit)
+			conditionExtra += fmt.Sprintf(" LIMIT %d", m.limit)
 		}
-	} else if limit {
-		condition += " LIMIT 1"
+	} else if limit1 {
+		conditionExtra += " LIMIT 1"
 	}
 	if m.offset >= 0 {
-		condition += fmt.Sprintf(" OFFSET %d", m.offset)
+		conditionExtra += fmt.Sprintf(" OFFSET %d", m.offset)
 	}
 	if m.lockInfo != "" {
-		condition += " " + m.lockInfo
+		conditionExtra += " " + m.lockInfo
 	}
 	return
 }

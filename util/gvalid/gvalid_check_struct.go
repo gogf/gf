@@ -18,33 +18,38 @@ var (
 	aliasNameTagPriority = []string{"param", "params", "p"} // aliasNameTagPriority specifies the alias tag priority array.
 )
 
-// 校验struct对象属性，object参数也可以是一个指向对象的指针，返回值同CheckMap方法。
-// struct的数据校验结果信息是顺序的。
-func CheckStruct(object interface{}, rules interface{}, msgs ...CustomMsg) *Error {
-	params := make(map[string]interface{})
-	checkRules := make(map[string]string)
-	customMsgs := make(CustomMsg)
-	// 字段别名记录，用于msgs覆盖struct tag的
-	fieldAliases := make(map[string]string)
-	// 返回的顺序规则
-	errorRules := make([]string, 0)
-	// 返回的校验错误
-	errorMaps := make(ErrorMap)
-	// 解析rules参数
+// CheckStruct validates strcut and returns the error result.
+//
+// The parameter <object> should be type of struct/*struct.
+// The parameter <rules> can be type of []string/map[string]string. It supports sequence in error result
+// if <rules> is type of []string.
+// The optional parameter <messages> specifies the custom error messages for specified keys and rules.
+func CheckStruct(object interface{}, rules interface{}, messages ...CustomMsg) *Error {
+	var (
+		params        = make(map[string]interface{})
+		checkRules    = make(map[string]string)
+		customMessage = make(CustomMsg)
+		fieldAliases  = make(map[string]string) // Alias names for <messages> overwriting struct tag names.
+		errorRules    = make([]string, 0)       // Sequence rules.
+		errorMaps     = make(ErrorMap)          // Returned error
+	)
 	switch v := rules.(type) {
-	// 支持校验错误顺序: []sequence tag
+	// Sequence tag: []sequence tag
+	// Sequence has order for error results.
 	case []string:
 		for _, tag := range v {
 			name, rule, msg := parseSequenceTag(tag)
 			if len(name) == 0 {
 				continue
 			}
-			// 错误提示
 			if len(msg) > 0 {
-				ruleArray := strings.Split(rule, "|")
-				msgArray := strings.Split(msg, "|")
+				var (
+					msgArray  = strings.Split(msg, "|")
+					ruleArray = strings.Split(rule, "|")
+				)
 				for k, v := range ruleArray {
-					// 如果msg条数比rule少，那么多余的rule使用默认的错误信息
+					// If length of custom messages is lesser than length of rules,
+					// the rest rules use the default error messages.
 					if len(msgArray) <= k {
 						continue
 					}
@@ -52,10 +57,10 @@ func CheckStruct(object interface{}, rules interface{}, msgs ...CustomMsg) *Erro
 						continue
 					}
 					array := strings.Split(v, ":")
-					if _, ok := customMsgs[name]; !ok {
-						customMsgs[name] = make(map[string]string)
+					if _, ok := customMessage[name]; !ok {
+						customMessage[name] = make(map[string]string)
 					}
-					customMsgs[name].(map[string]string)[strings.TrimSpace(array[0])] = strings.TrimSpace(msgArray[k])
+					customMessage[name].(map[string]string)[strings.TrimSpace(array[0])] = strings.TrimSpace(msgArray[k])
 				}
 			}
 			checkRules[name] = rule
@@ -72,25 +77,25 @@ func CheckStruct(object interface{}, rules interface{}, msgs ...CustomMsg) *Erro
 		params[nameOrTag] = field.Value()
 		params[field.Name()] = field.Value()
 	}
-	// 首先, 按照属性循环一遍将struct的属性、数值、tag解析
 	// It here must use structs.TagFields not structs.MapField to ensure error sequence.
 	for _, field := range structs.TagFields(object, structTagPriority, true) {
 		fieldName := field.Name()
-		// sequence tag == struct tag, 这里的name为别名
+		// sequence tag == struct tag
+		// The name here is alias of field name.
 		name, rule, msg := parseSequenceTag(field.Tag)
 		if len(name) == 0 {
 			name = fieldName
 		} else {
 			fieldAliases[fieldName] = name
 		}
-		// params参数使用别名**扩容**(而不仅仅使用别名)，仅用于验证使用
+		// It here extends the params map using alias names.
 		if _, ok := params[name]; !ok {
 			params[name] = field.Value()
 		}
-		// 校验规则
 		if _, ok := checkRules[name]; !ok {
 			if _, ok := checkRules[fieldName]; ok {
-				// tag中存在别名，且rules传入的参数中使用了属性命名时，进行规则替换，并删除该属性的规则
+				// If there's alias name,
+				// use alias name as its key and remove the field name key.
 				checkRules[name] = checkRules[fieldName]
 				delete(checkRules, fieldName)
 			} else {
@@ -98,15 +103,17 @@ func CheckStruct(object interface{}, rules interface{}, msgs ...CustomMsg) *Erro
 			}
 			errorRules = append(errorRules, name+"@"+rule)
 		} else {
-			// 传递的rules规则会覆盖struct tag的规则
+			// The passed rules can overwrite the rules in struct tag.
 			continue
 		}
-		// 错误提示
 		if len(msg) > 0 {
-			ruleArray := strings.Split(rule, "|")
-			msgArray := strings.Split(msg, "|")
+			var (
+				msgArray  = strings.Split(msg, "|")
+				ruleArray = strings.Split(rule, "|")
+			)
 			for k, v := range ruleArray {
-				// 如果msg条数比rule少，那么多余的rule使用默认的错误信息
+				// If length of custom messages is lesser than length of rules,
+				// the rest rules use the default error messages.
 				if len(msgArray) <= k {
 					continue
 				}
@@ -114,39 +121,38 @@ func CheckStruct(object interface{}, rules interface{}, msgs ...CustomMsg) *Erro
 					continue
 				}
 				array := strings.Split(v, ":")
-				if _, ok := customMsgs[name]; !ok {
-					customMsgs[name] = make(map[string]string)
+				if _, ok := customMessage[name]; !ok {
+					customMessage[name] = make(map[string]string)
 				}
-				customMsgs[name].(map[string]string)[strings.TrimSpace(array[0])] = strings.TrimSpace(msgArray[k])
+				customMessage[name].(map[string]string)[strings.TrimSpace(array[0])] = strings.TrimSpace(msgArray[k])
 			}
 		}
 	}
 
-	// 自定义错误消息，非必须参数，优先级比rules参数中以及struct tag中定义的错误消息更高
-	if len(msgs) > 0 && len(msgs[0]) > 0 {
-		for k, v := range msgs[0] {
+	// Custom error messages,
+	// which have the most priority than <rules> and struct tag.
+	if len(messages) > 0 && len(messages[0]) > 0 {
+		for k, v := range messages[0] {
 			if a, ok := fieldAliases[k]; ok {
-				// 属性的别名存在时，覆盖别名的错误信息
-				customMsgs[a] = v
+				// Overwrite the key of field name.
+				customMessage[a] = v
 			} else {
-				customMsgs[k] = v
+				customMessage[k] = v
 			}
 		}
 	}
 
-	/* 以下逻辑和CheckMap相同 */
-
-	// 开始执行校验: 以校验规则作为基础进行遍历校验
+	// The following logic is the same as some of CheckMap.
 	var value interface{}
-	// 这里的rule变量为多条校验规则，不包含名字或者错误信息定义
 	for key, rule := range checkRules {
 		value = nil
 		if v, ok := params[key]; ok {
 			value = v
 		}
-		if e := Check(value, rule, customMsgs[key], params); e != nil {
+		if e := doCheck(key, value, rule, customMessage[key], params); e != nil {
 			_, item := e.FirstItem()
-			// 如果值为nil|""，并且不需要require*验证时，其他验证失效
+			// If value is nil or empty string and has no required* rules,
+			// clear the error message.
 			if value == nil || gconv.String(value) == "" {
 				required := false
 				// rule => error

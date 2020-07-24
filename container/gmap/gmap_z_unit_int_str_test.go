@@ -7,9 +7,9 @@
 package gmap_test
 
 import (
-	"encoding/json"
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/util/gconv"
 	"testing"
 
@@ -20,9 +20,40 @@ import (
 func getStr() string {
 	return "z"
 }
-func intStrCallBack(int, string) bool {
-	return true
+
+func Test_IntStrMap_Var(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var m gmap.IntStrMap
+		m.Set(1, "a")
+
+		t.Assert(m.Get(1), "a")
+		t.Assert(m.Size(), 1)
+		t.Assert(m.IsEmpty(), false)
+
+		t.Assert(m.GetOrSet(2, "b"), "b")
+		t.Assert(m.SetIfNotExist(2, "b"), false)
+
+		t.Assert(m.SetIfNotExist(3, "c"), true)
+
+		t.Assert(m.Remove(2), "b")
+		t.Assert(m.Contains(2), false)
+
+		t.AssertIN(3, m.Keys())
+		t.AssertIN(1, m.Keys())
+		t.AssertIN("a", m.Values())
+		t.AssertIN("c", m.Values())
+
+		m_f := gmap.NewIntStrMap()
+		m_f.Set(1, "2")
+		m_f.Flip()
+		t.Assert(m_f.Map(), map[int]string{2: "1"})
+
+		m.Clear()
+		t.Assert(m.Size(), 0)
+		t.Assert(m.IsEmpty(), true)
+	})
 }
+
 func Test_IntStrMap_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewIntStrMap()
@@ -60,6 +91,7 @@ func Test_IntStrMap_Basic(t *testing.T) {
 		t.Assert(m2.Map(), map[int]string{1: "a", 2: "b"})
 	})
 }
+
 func Test_IntStrMap_Set_Fun(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewIntStrMap()

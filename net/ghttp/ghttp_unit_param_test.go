@@ -23,7 +23,7 @@ func Test_Params_Basic(t *testing.T) {
 		Pass1 string `params:"password1"`
 		Pass2 string `params:"password2"`
 	}
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	// GET
 	s.BindHandler("/get", func(r *ghttp.Request) {
@@ -404,8 +404,29 @@ func Test_Params_Basic(t *testing.T) {
 	})
 }
 
+func Test_Params_Header(t *testing.T) {
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/header", func(r *ghttp.Request) {
+		r.Response.Write(r.GetHeader("test"))
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		prefix := fmt.Sprintf("http://127.0.0.1:%d", p)
+		client := ghttp.NewClient()
+		client.SetPrefix(prefix)
+
+		t.Assert(client.Header(g.MapStrStr{"test": "123456"}).GetContent("/header"), "123456")
+	})
+}
+
 func Test_Params_SupportChars(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/form-value", func(r *ghttp.Request) {
 		r.Response.Write(r.GetQuery("test-value"))
@@ -430,7 +451,7 @@ func Test_Params_SupportChars(t *testing.T) {
 }
 
 func Test_Params_Priority(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/query", func(r *ghttp.Request) {
 		r.Response.Write(r.GetQuery("a"))
@@ -467,5 +488,32 @@ func Test_Params_Priority(t *testing.T) {
 		t.Assert(client.PutContent("/form?a=1", "a=100"), "100")
 		t.Assert(client.GetContent("/request?a=1", "a=100"), "100")
 		t.Assert(client.GetContent("/request-map?a=1&b=2&c=3", "a=100&b=200&c=300"), `{"a":"100","b":"200"}`)
+	})
+}
+
+func Test_Params_GetRequestMap(t *testing.T) {
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/map", func(r *ghttp.Request) {
+		r.Response.Write(r.GetRequestMap())
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		prefix := fmt.Sprintf("http://127.0.0.1:%d", p)
+		client := ghttp.NewClient()
+		client.SetPrefix(prefix)
+
+		t.Assert(
+			client.PostContent(
+				"/map",
+				"time_end2020-04-18 16:11:58&returnmsg=Success&attach=",
+			),
+			`{"attach":"","returnmsg":"Success"}`,
+		)
 	})
 }

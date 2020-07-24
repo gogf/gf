@@ -9,8 +9,8 @@
 package garray_test
 
 import (
-	"encoding/json"
 	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/internal/json"
 	"testing"
 	"time"
 
@@ -68,9 +68,17 @@ func TestSortedIntArray_Get(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []int{1, 3, 5, 0}
 		array1 := garray.NewSortedIntArrayFrom(a1)
-		t.Assert(array1.Get(0), 0)
-		t.Assert(array1.Get(1), 1)
-		t.Assert(array1.Get(3), 5)
+		v, ok := array1.Get(0)
+		t.Assert(v, 0)
+		t.Assert(ok, true)
+
+		v, ok = array1.Get(1)
+		t.Assert(v, 1)
+		t.Assert(ok, true)
+
+		v, ok = array1.Get(3)
+		t.Assert(v, 5)
+		t.Assert(ok, true)
 	})
 }
 
@@ -79,26 +87,39 @@ func TestSortedIntArray_Remove(t *testing.T) {
 		a1 := []int{1, 3, 5, 0}
 		array1 := garray.NewSortedIntArrayFrom(a1)
 
-		t.Assert(array1.Remove(-1), 0)
-		t.Assert(array1.Remove(100000), 0)
+		v, ok := array1.Remove(-1)
+		t.Assert(v, 0)
+		t.Assert(ok, false)
 
-		i1 := array1.Remove(2)
-		t.Assert(i1, 3)
+		v, ok = array1.Remove(-100000)
+		t.Assert(v, 0)
+		t.Assert(ok, false)
+
+		v, ok = array1.Remove(2)
+		t.Assert(v, 3)
+		t.Assert(ok, true)
+
 		t.Assert(array1.Search(5), 2)
 
-		// 再次删除剩下的数组中的第一个
-		i2 := array1.Remove(0)
-		t.Assert(i2, 0)
+		v, ok = array1.Remove(0)
+		t.Assert(v, 0)
+		t.Assert(ok, true)
+
 		t.Assert(array1.Search(5), 1)
 
 		a2 := []int{1, 3, 4}
 		array2 := garray.NewSortedIntArrayFrom(a2)
-		i3 := array2.Remove(1)
+
+		v, ok = array2.Remove(1)
+		t.Assert(v, 3)
+		t.Assert(ok, true)
 		t.Assert(array2.Search(1), 0)
-		t.Assert(i3, 3)
-		i3 = array2.Remove(1)
+
+		v, ok = array2.Remove(1)
+		t.Assert(v, 4)
+		t.Assert(ok, true)
+
 		t.Assert(array2.Search(4), -1)
-		t.Assert(i3, 4)
 	})
 }
 
@@ -106,10 +127,26 @@ func TestSortedIntArray_PopLeft(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []int{1, 3, 5, 2}
 		array1 := garray.NewSortedIntArrayFrom(a1)
-		i1 := array1.PopLeft()
-		t.Assert(i1, 1)
+		v, ok := array1.PopLeft()
+		t.Assert(v, 1)
+		t.Assert(ok, true)
 		t.Assert(array1.Len(), 3)
 		t.Assert(array1.Search(1), -1)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewSortedIntArrayFrom(g.SliceInt{1, 2, 3})
+		v, ok := array.PopLeft()
+		t.Assert(v, 1)
+		t.Assert(ok, true)
+		t.Assert(array.Len(), 2)
+		v, ok = array.PopLeft()
+		t.Assert(v, 2)
+		t.Assert(ok, true)
+		t.Assert(array.Len(), 1)
+		v, ok = array.PopLeft()
+		t.Assert(v, 3)
+		t.Assert(ok, true)
+		t.Assert(array.Len(), 0)
 	})
 }
 
@@ -117,10 +154,28 @@ func TestSortedIntArray_PopRight(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []int{1, 3, 5, 2}
 		array1 := garray.NewSortedIntArrayFrom(a1)
-		i1 := array1.PopRight()
-		t.Assert(i1, 5)
+		v, ok := array1.PopRight()
+		t.Assert(v, 5)
+		t.Assert(ok, true)
 		t.Assert(array1.Len(), 3)
 		t.Assert(array1.Search(5), -1)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewSortedIntArrayFrom(g.SliceInt{1, 2, 3})
+		v, ok := array.PopRight()
+		t.Assert(v, 3)
+		t.Assert(ok, true)
+		t.Assert(array.Len(), 2)
+
+		v, ok = array.PopRight()
+		t.Assert(v, 2)
+		t.Assert(ok, true)
+		t.Assert(array.Len(), 1)
+
+		v, ok = array.PopRight()
+		t.Assert(v, 1)
+		t.Assert(ok, true)
+		t.Assert(array.Len(), 0)
 	})
 }
 
@@ -128,7 +183,8 @@ func TestSortedIntArray_PopRand(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []int{1, 3, 5, 2}
 		array1 := garray.NewSortedIntArrayFrom(a1)
-		i1 := array1.PopRand()
+		i1, ok := array1.PopRand()
+		t.Assert(ok, true)
 		t.Assert(array1.Len(), 3)
 		t.Assert(array1.Search(i1), -1)
 		t.AssertIN(i1, []int{1, 3, 5, 2})
@@ -149,6 +205,26 @@ func TestSortedIntArray_PopRands(t *testing.T) {
 		t.Assert(array2.Len(), 0)
 		t.Assert(len(ns2), 4)
 		t.AssertIN(ns2, []int{1, 3, 5, 2})
+	})
+}
+
+func TestSortedIntArray_Empty(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewSortedIntArray()
+		v, ok := array.PopLeft()
+		t.Assert(v, 0)
+		t.Assert(ok, false)
+		t.Assert(array.PopLefts(10), nil)
+
+		v, ok = array.PopRight()
+		t.Assert(v, 0)
+		t.Assert(ok, false)
+		t.Assert(array.PopRights(10), nil)
+
+		v, ok = array.PopRand()
+		t.Assert(v, 0)
+		t.Assert(ok, false)
+		t.Assert(array.PopRands(10), nil)
 	})
 }
 
@@ -328,8 +404,9 @@ func TestSortedIntArray_Rand(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []int{1, 2, 3, 4, 5}
 		array1 := garray.NewSortedIntArrayFrom(a1)
-		ns1 := array1.Rand() //按每几个元素切成一个数组
+		ns1, ok := array1.Rand()
 		t.AssertIN(ns1, a1)
+		t.Assert(ok, true)
 	})
 }
 
@@ -337,13 +414,12 @@ func TestSortedIntArray_Rands(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []int{1, 2, 3, 4, 5}
 		array1 := garray.NewSortedIntArrayFrom(a1)
-		ns1 := array1.Rands(2) //按每几个元素切成一个数组
+		ns1 := array1.Rands(2)
 		t.AssertIN(ns1, a1)
 		t.Assert(len(ns1), 2)
 
-		ns2 := array1.Rands(6) //按每几个元素切成一个数组
-		t.AssertIN(ns2, a1)
-		t.Assert(len(ns2), 5)
+		ns2 := array1.Rands(6)
+		t.Assert(len(ns2), 6)
 	})
 }
 
@@ -360,9 +436,19 @@ func TestSortedIntArray_CountValues(t *testing.T) {
 
 func TestSortedIntArray_SetUnique(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		a1 := []int{1, 2, 3, 4, 5, 3}
+		a1 := []int{1, 2, 3, 4, 5, 3, 2, 2, 3, 5, 5}
 		array1 := garray.NewSortedIntArrayFrom(a1)
 		array1.SetUnique(true)
+		t.Assert(array1.Len(), 5)
+		t.Assert(array1, []int{1, 2, 3, 4, 5})
+	})
+}
+
+func TestSortedIntArray_Unique(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		a1 := []int{1, 2, 3, 4, 5, 3, 2, 2, 3, 5, 5}
+		array1 := garray.NewSortedIntArrayFrom(a1)
+		array1.Unique()
 		t.Assert(array1.Len(), 5)
 		t.Assert(array1, []int{1, 2, 3, 4, 5})
 	})
@@ -460,6 +546,7 @@ func TestSortedIntArray_Merge(t *testing.T) {
 }
 
 func TestSortedIntArray_Json(t *testing.T) {
+	// array pointer
 	gtest.C(t, func(t *gtest.T) {
 		s1 := []int{1, 4, 3, 2}
 		s2 := []int{1, 2, 3, 4}
@@ -478,11 +565,49 @@ func TestSortedIntArray_Json(t *testing.T) {
 		t.Assert(err, nil)
 		t.Assert(a3.Slice(), s1)
 	})
+	// array value
+	gtest.C(t, func(t *gtest.T) {
+		s1 := []int{1, 4, 3, 2}
+		s2 := []int{1, 2, 3, 4}
+		a1 := *garray.NewSortedIntArrayFrom(s1)
+		b1, err1 := json.Marshal(a1)
+		b2, err2 := json.Marshal(s1)
+		t.Assert(b1, b2)
+		t.Assert(err1, err2)
 
+		a2 := garray.NewSortedIntArray()
+		err1 = json.Unmarshal(b2, &a2)
+		t.Assert(a2.Slice(), s2)
+
+		var a3 garray.SortedIntArray
+		err := json.Unmarshal(b2, &a3)
+		t.Assert(err, nil)
+		t.Assert(a3.Slice(), s1)
+	})
+	// array pointer
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Name   string
 			Scores *garray.SortedIntArray
+		}
+		data := g.Map{
+			"Name":   "john",
+			"Scores": []int{99, 100, 98},
+		}
+		b, err := json.Marshal(data)
+		t.Assert(err, nil)
+
+		user := new(User)
+		err = json.Unmarshal(b, user)
+		t.Assert(err, nil)
+		t.Assert(user.Name, data["Name"])
+		t.Assert(user.Scores, []int{98, 99, 100})
+	})
+	// array value
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Name   string
+			Scores garray.SortedIntArray
 		}
 		data := g.Map{
 			"Name":   "john",
@@ -596,5 +721,14 @@ func TestSortedIntArray_FilterEmpty(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.NewSortedIntArrayFrom(g.SliceInt{1, 2, 3, 4})
 		t.Assert(array.FilterEmpty(), g.SliceInt{1, 2, 3, 4})
+	})
+}
+
+func TestSortedIntArray_Walk(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewSortedIntArrayFrom(g.SliceInt{1, 2})
+		t.Assert(array.Walk(func(value int) int {
+			return 10 + value
+		}), g.Slice{11, 12})
 	})
 }

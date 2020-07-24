@@ -12,42 +12,47 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/os/gproc"
+	"github.com/gogf/gf/text/gstr"
 	"log"
 	"net"
 	"net/http"
 	"os"
 )
 
-// 优雅的Web Server对象封装
+// gracefulServer wraps the net/http.Server with graceful reload/restart feature.
 type gracefulServer struct {
 	server      *Server      // Belonged server.
-	fd          uintptr      // 热重启时传递的socket监听文件句柄
-	itemFunc    string       // 监听地址信息
-	httpServer  *http.Server // 底层http.Server
-	rawListener net.Listener // 原始listener
-	listener    net.Listener // 接口化封装的listener
-	isHttps     bool         // 是否HTTPS
-	status      int          // 当前Server状态(关闭/运行)
+	fd          uintptr      // File descriptor for passing to child process when graceful reload.
+	address     string       // Listening address like:":80", ":8080".
+	httpServer  *http.Server // Underlying http.Server.
+	rawListener net.Listener // Underlying net.Listener.
+	listener    net.Listener // Wrapped net.Listener.
+	isHttps     bool         // Is HTTPS.
+	status      int          // Status of current server.
 }
 
-// 创建一个优雅的Http Server
-func (s *Server) newGracefulServer(itemFunc string, fd ...int) *gracefulServer {
+// newGracefulServer creates and returns a graceful http server with given address.
+// The optional parameter <fd> specifies the file descriptor which is passed from parent server.
+func (s *Server) newGracefulServer(address string, fd ...int) *gracefulServer {
+	// Change port to address like: 80 -> :80
+	if gstr.IsNumeric(address) {
+		address = ":" + address
+	}
 	gs := &gracefulServer{
 		server:     s,
-		itemFunc:   itemFunc,
-		httpServer: s.newHttpServer(itemFunc),
+		address:    address,
+		httpServer: s.newHttpServer(address),
 	}
-	// 是否有继承的文件描述符
 	if len(fd) > 0 && fd[0] > 0 {
 		gs.fd = uintptr(fd[0])
 	}
 	return gs
 }
 
-// 生成一个底层的Web Server对象
-func (s *Server) newHttpServer(itemFunc string) *http.Server {
+// newGracefulServer creates and returns a underlying http.Server with given address.
+func (s *Server) newHttpServer(address string) *http.Server {
 	server := &http.Server{
-		Addr:           itemFunc,
+		Addr:           address,
 		Handler:        s.config.Handler,
 		ReadTimeout:    s.config.ReadTimeout,
 		WriteTimeout:   s.config.WriteTimeout,
@@ -59,10 +64,9 @@ func (s *Server) newHttpServer(itemFunc string) *http.Server {
 	return server
 }
 
-// 执行HTTP监听
+// ListenAndServe starts listening on configured address.
 func (s *gracefulServer) ListenAndServe() error {
-	itemFunc := s.httpServer.Addr
-	ln, err := s.getNetListener(itemFunc)
+	ln, err := s.getNetListener()
 	if err != nil {
 		return err
 	}
@@ -71,7 +75,8 @@ func (s *gracefulServer) ListenAndServe() error {
 	return s.doServe()
 }
 
-// 获得文件描述符
+// Fd retrieves and returns the file descriptor of current server.
+// It is available ony in *nix like operation systems like: linux, unix, darwin.
 func (s *gracefulServer) Fd() uintptr {
 	if s.rawListener != nil {
 		file, err := s.rawListener.(*net.TCPListener).File()
@@ -82,14 +87,15 @@ func (s *gracefulServer) Fd() uintptr {
 	return 0
 }
 
-// 设置自定义fd
+// setFd sets the file descriptor for current server.
 func (s *gracefulServer) setFd(fd int) {
 	s.fd = uintptr(fd)
 }
 
-// 执行HTTPS监听
+// ListenAndServeTLS starts listening on configured address with HTTPS.
+// The parameter <certFile> and <keyFile> specify the necessary certification and key files for HTTPS.
+// The optional parameter <tlsConfig> specifies the custom TLS configuration.
 func (s *gracefulServer) ListenAndServeTLS(certFile, keyFile string, tlsConfig ...*tls.Config) error {
-	itemFunc := s.httpServer.Addr
 	var config *tls.Config
 	if len(tlsConfig) > 0 && tlsConfig[0] != nil {
 		config = tlsConfig[0]
@@ -109,7 +115,7 @@ func (s *gracefulServer) ListenAndServeTLS(certFile, keyFile string, tlsConfig .
 	if err != nil {
 		return errors.New(fmt.Sprintf(`open cert file "%s","%s" failed: %s`, certFile, keyFile, err.Error()))
 	}
-	ln, err := s.getNetListener(itemFunc)
+	ln, err := s.getNetListener()
 	if err != nil {
 		return err
 	}
@@ -119,7 +125,7 @@ func (s *gracefulServer) ListenAndServeTLS(certFile, keyFile string, tlsConfig .
 	return s.doServe()
 }
 
-// 获取服务协议字符串
+// getProto retrieves and returns the proto string of current server.
 func (s *gracefulServer) getProto() string {
 	proto := "http"
 	if s.isHttps {
@@ -128,21 +134,24 @@ func (s *gracefulServer) getProto() string {
 	return proto
 }
 
-// 开始执行Web Server服务处理
+// doServe does staring the serving.
 func (s *gracefulServer) doServe() error {
 	action := "started"
 	if s.fd != 0 {
 		action = "reloaded"
 	}
-	s.server.Logger().Printf("%d: %s server %s listening on [%s]", gproc.Pid(), s.getProto(), action, s.itemFunc)
+	s.server.Logger().Printf(
+		"%d: %s server %s listening on [%s]",
+		gproc.Pid(), s.getProto(), action, s.address,
+	)
 	s.status = SERVER_STATUS_RUNNING
 	err := s.httpServer.Serve(s.listener)
 	s.status = SERVER_STATUS_STOPPED
 	return err
 }
 
-// 自定义的net.Listener
-func (s *gracefulServer) getNetListener(itemFunc string) (net.Listener, error) {
+// getNetListener retrieves and returns the wrapped net.Listener.
+func (s *gracefulServer) getNetListener() (net.Listener, error) {
 	var ln net.Listener
 	var err error
 	if s.fd > 0 {
@@ -153,7 +162,7 @@ func (s *gracefulServer) getNetListener(itemFunc string) (net.Listener, error) {
 			return nil, err
 		}
 	} else {
-		ln, err = net.Listen("tcp", itemFunc)
+		ln, err = net.Listen("tcp", s.httpServer.Addr)
 		if err != nil {
 			err = fmt.Errorf("%d: net.Listen error: %v", gproc.Pid(), err)
 		}
@@ -161,22 +170,28 @@ func (s *gracefulServer) getNetListener(itemFunc string) (net.Listener, error) {
 	return ln, err
 }
 
-// 执行请求优雅关闭
+// shutdown shuts down the server gracefully.
 func (s *gracefulServer) shutdown() {
 	if s.status == SERVER_STATUS_STOPPED {
 		return
 	}
 	if err := s.httpServer.Shutdown(context.Background()); err != nil {
-		s.server.Logger().Errorf("%d: %s server [%s] shutdown error: %v", gproc.Pid(), s.getProto(), s.itemFunc, err)
+		s.server.Logger().Errorf(
+			"%d: %s server [%s] shutdown error: %v",
+			gproc.Pid(), s.getProto(), s.address, err,
+		)
 	}
 }
 
-// 执行请求强制关闭
+// close shuts down the server forcibly.
 func (s *gracefulServer) close() {
 	if s.status == SERVER_STATUS_STOPPED {
 		return
 	}
 	if err := s.httpServer.Close(); err != nil {
-		s.server.Logger().Errorf("%d: %s server [%s] closed error: %v", gproc.Pid(), s.getProto(), s.itemFunc, err)
+		s.server.Logger().Errorf(
+			"%d: %s server [%s] closed error: %v",
+			gproc.Pid(), s.getProto(), s.address, err,
+		)
 	}
 }

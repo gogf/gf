@@ -16,11 +16,6 @@ func SliceAny(i interface{}) []interface{} {
 	return Interfaces(i)
 }
 
-// Type assert api for Interfaces.
-type apiInterfaces interface {
-	Interfaces() []interface{}
-}
-
 // Interfaces converts <i> to []interface{}.
 func Interfaces(i interface{}) []interface{} {
 	if i == nil {
@@ -104,8 +99,10 @@ func Interfaces(i interface{}) []interface{} {
 			}
 		default:
 			// Finally we use reflection.
-			rv := reflect.ValueOf(i)
-			kind := rv.Kind()
+			var (
+				rv   = reflect.ValueOf(i)
+				kind = rv.Kind()
+			)
 			for kind == reflect.Ptr {
 				rv = rv.Elem()
 				kind = rv.Kind()

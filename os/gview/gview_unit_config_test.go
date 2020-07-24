@@ -9,7 +9,6 @@ package gview_test
 import (
 	"github.com/gogf/gf/debug/gdebug"
 	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/gview"
 	"github.com/gogf/gf/test/gtest"
 	"testing"
@@ -18,7 +17,7 @@ import (
 func Test_Config(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		config := gview.Config{
-			Paths: []string{gfile.Join(gdebug.TestDataPath(), "config")},
+			Paths: []string{gdebug.TestDataPath("config")},
 			Data: g.Map{
 				"name": "gf",
 			},
@@ -45,7 +44,7 @@ func Test_ConfigWithMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		view := gview.New()
 		err := view.SetConfigWithMap(g.Map{
-			"Paths":       []string{gfile.Join(gdebug.TestDataPath(), "config")},
+			"Paths":       []string{gdebug.TestDataPath("config")},
 			"DefaultFile": "test.html",
 			"Delimiters":  []string{"${", "}"},
 			"Data": g.Map{

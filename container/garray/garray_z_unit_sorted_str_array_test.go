@@ -9,8 +9,8 @@
 package garray_test
 
 import (
-	"encoding/json"
 	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/internal/json"
 	"testing"
 	"time"
 
@@ -51,6 +51,16 @@ func TestSortedStrArray_SetArray(t *testing.T) {
 	})
 }
 
+func TestSortedStrArray_ContainsI(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		s := garray.NewSortedStrArray()
+		s.Append("a", "b", "C")
+		t.Assert(s.Contains("A"), false)
+		t.Assert(s.Contains("a"), true)
+		t.Assert(s.ContainsI("A"), true)
+	})
+}
+
 func TestSortedStrArray_Sort(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []string{"a", "d", "c", "b"}
@@ -68,8 +78,13 @@ func TestSortedStrArray_Get(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []string{"a", "d", "c", "b"}
 		array1 := garray.NewSortedStrArrayFrom(a1)
-		t.Assert(array1.Get(2), "c")
-		t.Assert(array1.Get(0), "a")
+		v, ok := array1.Get(2)
+		t.Assert(v, "c")
+		t.Assert(ok, true)
+
+		v, ok = array1.Get(0)
+		t.Assert(v, "a")
+		t.Assert(ok, true)
 	})
 }
 
@@ -78,20 +93,36 @@ func TestSortedStrArray_Remove(t *testing.T) {
 		a1 := []string{"a", "d", "c", "b"}
 		array1 := garray.NewSortedStrArrayFrom(a1)
 
-		t.Assert(array1.Remove(-1), "")
-		t.Assert(array1.Remove(100000), "")
+		v, ok := array1.Remove(-1)
+		t.Assert(v, "")
+		t.Assert(ok, false)
 
-		t.Assert(array1.Remove(2), "c")
-		t.Assert(array1.Get(2), "d")
+		v, ok = array1.Remove(100000)
+		t.Assert(v, "")
+		t.Assert(ok, false)
+
+		v, ok = array1.Remove(2)
+		t.Assert(v, "c")
+		t.Assert(ok, true)
+
+		v, ok = array1.Get(2)
+		t.Assert(v, "d")
+		t.Assert(ok, true)
+
 		t.Assert(array1.Len(), 3)
 		t.Assert(array1.Contains("c"), false)
 
-		t.Assert(array1.Remove(0), "a")
+		v, ok = array1.Remove(0)
+		t.Assert(v, "a")
+		t.Assert(ok, true)
+
 		t.Assert(array1.Len(), 2)
 		t.Assert(array1.Contains("a"), false)
 
-		// 此时array1里的元素只剩下2个
-		t.Assert(array1.Remove(1), "d")
+		v, ok = array1.Remove(1)
+		t.Assert(v, "d")
+		t.Assert(ok, true)
+
 		t.Assert(array1.Len(), 1)
 	})
 }
@@ -100,10 +131,26 @@ func TestSortedStrArray_PopLeft(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []string{"e", "a", "d", "c", "b"}
 		array1 := garray.NewSortedStrArrayFrom(a1)
-		s1 := array1.PopLeft()
-		t.Assert(s1, "a")
+		v, ok := array1.PopLeft()
+		t.Assert(v, "a")
+		t.Assert(ok, true)
 		t.Assert(array1.Len(), 4)
 		t.Assert(array1.Contains("a"), false)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewSortedStrArrayFrom(g.SliceStr{"1", "2", "3"})
+		v, ok := array.PopLeft()
+		t.Assert(v, 1)
+		t.Assert(ok, true)
+		t.Assert(array.Len(), 2)
+		v, ok = array.PopLeft()
+		t.Assert(v, 2)
+		t.Assert(ok, true)
+		t.Assert(array.Len(), 1)
+		v, ok = array.PopLeft()
+		t.Assert(v, 3)
+		t.Assert(ok, true)
+		t.Assert(array.Len(), 0)
 	})
 }
 
@@ -111,10 +158,28 @@ func TestSortedStrArray_PopRight(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []string{"e", "a", "d", "c", "b"}
 		array1 := garray.NewSortedStrArrayFrom(a1)
-		s1 := array1.PopRight()
-		t.Assert(s1, "e")
+		v, ok := array1.PopRight()
+		t.Assert(v, "e")
+		t.Assert(ok, ok)
 		t.Assert(array1.Len(), 4)
 		t.Assert(array1.Contains("e"), false)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewSortedStrArrayFrom(g.SliceStr{"1", "2", "3"})
+		v, ok := array.PopRight()
+		t.Assert(v, 3)
+		t.Assert(ok, true)
+		t.Assert(array.Len(), 2)
+
+		v, ok = array.PopRight()
+		t.Assert(v, 2)
+		t.Assert(ok, true)
+		t.Assert(array.Len(), 1)
+
+		v, ok = array.PopRight()
+		t.Assert(v, 1)
+		t.Assert(ok, true)
+		t.Assert(array.Len(), 0)
 	})
 }
 
@@ -122,7 +187,8 @@ func TestSortedStrArray_PopRand(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []string{"e", "a", "d", "c", "b"}
 		array1 := garray.NewSortedStrArrayFrom(a1)
-		s1 := array1.PopRand()
+		s1, ok := array1.PopRand()
+		t.Assert(ok, true)
 		t.AssertIN(s1, []string{"e", "a", "d", "c", "b"})
 		t.Assert(array1.Len(), 4)
 		t.Assert(array1.Contains(s1), false)
@@ -144,6 +210,26 @@ func TestSortedStrArray_PopRands(t *testing.T) {
 	})
 }
 
+func TestSortedStrArray_Empty(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewSortedStrArray()
+		v, ok := array.PopLeft()
+		t.Assert(v, "")
+		t.Assert(ok, false)
+		t.Assert(array.PopLefts(10), nil)
+
+		v, ok = array.PopRight()
+		t.Assert(v, "")
+		t.Assert(ok, false)
+		t.Assert(array.PopRights(10), nil)
+
+		v, ok = array.PopRand()
+		t.Assert(v, "")
+		t.Assert(ok, false)
+		t.Assert(array.PopRands(10), nil)
+	})
+}
+
 func TestSortedStrArray_PopLefts(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []string{"e", "a", "d", "c", "b"}
@@ -156,6 +242,7 @@ func TestSortedStrArray_PopLefts(t *testing.T) {
 		s1 = array1.PopLefts(4)
 		t.Assert(len(s1), 3)
 		t.Assert(s1, []string{"c", "d", "e"})
+		t.Assert(array1.Len(), 0)
 	})
 }
 
@@ -271,7 +358,9 @@ func TestSortedStrArray_Rand(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []string{"e", "a", "d"}
 		array1 := garray.NewSortedStrArrayFrom(a1)
-		t.AssertIN(array1.Rand(), []string{"e", "a", "d"})
+		v, ok := array1.Rand()
+		t.AssertIN(v, []string{"e", "a", "d"})
+		t.Assert(ok, true)
 	})
 }
 
@@ -285,8 +374,7 @@ func TestSortedStrArray_Rands(t *testing.T) {
 		t.Assert(len(s1), 2)
 
 		s1 = array1.Rands(4)
-		t.AssertIN(s1, []string{"e", "a", "d"})
-		t.Assert(len(s1), 3)
+		t.Assert(len(s1), 4)
 	})
 }
 
@@ -366,11 +454,21 @@ func TestSortedStrArray_Chunk(t *testing.T) {
 
 func TestSortedStrArray_SetUnique(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		a1 := []string{"e", "a", "d", "a", "c"}
+		a1 := []string{"1", "1", "2", "2", "3", "3", "2", "2"}
 		array1 := garray.NewSortedStrArrayFrom(a1)
 		array2 := array1.SetUnique(true)
-		t.Assert(array2.Len(), 4)
-		t.Assert(array2, []string{"a", "c", "d", "e"})
+		t.Assert(array2.Len(), 3)
+		t.Assert(array2, []string{"1", "2", "3"})
+	})
+}
+
+func TestSortedStrArray_Unique(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		a1 := []string{"1", "1", "2", "2", "3", "3", "2", "2"}
+		array1 := garray.NewSortedStrArrayFrom(a1)
+		array1.Unique()
+		t.Assert(array1.Len(), 3)
+		t.Assert(array1, []string{"1", "2", "3"})
 	})
 }
 
@@ -468,6 +566,7 @@ func TestSortedStrArray_Merge(t *testing.T) {
 }
 
 func TestSortedStrArray_Json(t *testing.T) {
+	// array pointer
 	gtest.C(t, func(t *gtest.T) {
 		s1 := []string{"a", "b", "d", "c"}
 		s2 := []string{"a", "b", "c", "d"}
@@ -488,11 +587,51 @@ func TestSortedStrArray_Json(t *testing.T) {
 		t.Assert(a3.Slice(), s1)
 		t.Assert(a3.Interfaces(), s1)
 	})
+	// array value
+	gtest.C(t, func(t *gtest.T) {
+		s1 := []string{"a", "b", "d", "c"}
+		s2 := []string{"a", "b", "c", "d"}
+		a1 := *garray.NewSortedStrArrayFrom(s1)
+		b1, err1 := json.Marshal(a1)
+		b2, err2 := json.Marshal(s1)
+		t.Assert(b1, b2)
+		t.Assert(err1, err2)
 
+		a2 := garray.NewSortedStrArray()
+		err1 = json.Unmarshal(b2, &a2)
+		t.Assert(a2.Slice(), s2)
+		t.Assert(a2.Interfaces(), s2)
+
+		var a3 garray.SortedStrArray
+		err := json.Unmarshal(b2, &a3)
+		t.Assert(err, nil)
+		t.Assert(a3.Slice(), s1)
+		t.Assert(a3.Interfaces(), s1)
+	})
+	// array pointer
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Name   string
 			Scores *garray.SortedStrArray
+		}
+		data := g.Map{
+			"Name":   "john",
+			"Scores": []string{"A+", "A", "A"},
+		}
+		b, err := json.Marshal(data)
+		t.Assert(err, nil)
+
+		user := new(User)
+		err = json.Unmarshal(b, user)
+		t.Assert(err, nil)
+		t.Assert(user.Name, data["Name"])
+		t.Assert(user.Scores, []string{"A", "A", "A+"})
+	})
+	// array value
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Name   string
+			Scores garray.SortedStrArray
 		}
 		data := g.Map{
 			"Name":   "john",
@@ -605,5 +744,14 @@ func TestSortedStrArray_FilterEmpty(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.NewSortedStrArrayFrom(g.SliceStr{"1", "2"})
 		t.Assert(array.FilterEmpty(), g.SliceStr{"1", "2"})
+	})
+}
+
+func TestSortedStrArray_Walk(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewSortedStrArrayFrom(g.SliceStr{"1", "2"})
+		t.Assert(array.Walk(func(value string) string {
+			return "key-" + value
+		}), g.Slice{"key-1", "key-2"})
 	})
 }

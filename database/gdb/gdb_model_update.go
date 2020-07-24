@@ -9,6 +9,12 @@ package gdb
 import (
 	"database/sql"
 	"errors"
+	"fmt"
+	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/util/gutil"
+	"reflect"
 )
 
 // Update does "UPDATE ... " statement for the model.
@@ -34,12 +40,44 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 	if m.data == nil {
 		return nil, errors.New("updating table with empty data")
 	}
-	condition, conditionArgs := m.formatCondition(false)
+	var (
+		updateData                                    = m.data
+		fieldNameCreate                               = m.getSoftFieldNameCreate()
+		fieldNameUpdate                               = m.getSoftFieldNameUpdate()
+		fieldNameDelete                               = m.getSoftFieldNameDelete()
+		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(false)
+	)
+	// Automatically update the record updating time.
+	if !m.unscoped && fieldNameUpdate != "" {
+		var (
+			refValue = reflect.ValueOf(m.data)
+			refKind  = refValue.Kind()
+		)
+		if refKind == reflect.Ptr {
+			refValue = refValue.Elem()
+			refKind = refValue.Kind()
+		}
+		switch refKind {
+		case reflect.Map, reflect.Struct:
+			dataMap := DataToMapDeep(m.data)
+			gutil.MapDelete(dataMap, fieldNameCreate, fieldNameUpdate, fieldNameDelete)
+			if fieldNameUpdate != "" {
+				dataMap[fieldNameUpdate] = gtime.Now().String()
+			}
+			updateData = dataMap
+		default:
+			updates := gconv.String(m.data)
+			if fieldNameUpdate != "" && !gstr.Contains(updates, fieldNameUpdate) {
+				updates += fmt.Sprintf(`,%s='%s'`, fieldNameUpdate, gtime.Now().String())
+			}
+			updateData = updates
+		}
+	}
 	return m.db.DoUpdate(
 		m.getLink(true),
 		m.tables,
-		m.filterDataForInsertOrUpdate(m.data),
-		condition,
+		m.filterDataForInsertOrUpdate(updateData),
+		conditionWhere+conditionExtra,
 		m.mergeArguments(conditionArgs)...,
 	)
 }

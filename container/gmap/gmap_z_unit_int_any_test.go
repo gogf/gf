@@ -7,9 +7,9 @@
 package gmap_test
 
 import (
-	"encoding/json"
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/util/gconv"
 	"testing"
 
@@ -20,9 +20,37 @@ import (
 func getAny() interface{} {
 	return 123
 }
-func intAnyCallBack(int, interface{}) bool {
-	return true
+
+func Test_IntAnyMap_Var(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var m gmap.IntAnyMap
+		m.Set(1, 1)
+
+		t.Assert(m.Get(1), 1)
+		t.Assert(m.Size(), 1)
+		t.Assert(m.IsEmpty(), false)
+
+		t.Assert(m.GetOrSet(2, "2"), "2")
+		t.Assert(m.SetIfNotExist(2, "2"), false)
+
+		t.Assert(m.SetIfNotExist(3, 3), true)
+
+		t.Assert(m.Remove(2), "2")
+		t.Assert(m.Contains(2), false)
+
+		t.AssertIN(3, m.Keys())
+		t.AssertIN(1, m.Keys())
+		t.AssertIN(3, m.Values())
+		t.AssertIN(1, m.Values())
+		m.Flip()
+		t.Assert(m.Map(), map[interface{}]int{1: 1, 3: 3})
+
+		m.Clear()
+		t.Assert(m.Size(), 0)
+		t.Assert(m.IsEmpty(), true)
+	})
 }
+
 func Test_IntAnyMap_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewIntAnyMap()
@@ -55,6 +83,7 @@ func Test_IntAnyMap_Basic(t *testing.T) {
 		t.Assert(m2.Map(), map[int]interface{}{1: 1, 2: "2"})
 	})
 }
+
 func Test_IntAnyMap_Set_Fun(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := gmap.NewIntAnyMap()

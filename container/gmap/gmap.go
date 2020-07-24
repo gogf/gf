@@ -4,12 +4,13 @@
 // If a copy of the MIT was not distributed with gm file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gmap provides concurrent-safe/unsafe map containers.
+// Package gmap provides most commonly used map container which also support concurrent-safe/unsafe switch feature.
 package gmap
 
-// Map based on hash table, alias of AnyAnyMap.
-type Map = AnyAnyMap
-type HashMap = AnyAnyMap
+type (
+	Map     = AnyAnyMap // Map is alias of AnyAnyMap.
+	HashMap = AnyAnyMap // HashMap is alias of AnyAnyMap.
+)
 
 // New creates and returns an empty hash map.
 // The parameter <safe> is used to specify whether using map in concurrent-safety,

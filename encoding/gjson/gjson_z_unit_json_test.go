@@ -8,6 +8,7 @@ package gjson_test
 
 import (
 	"github.com/gogf/gf/encoding/gjson"
+	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/test/gtest"
 	"github.com/gogf/gf/text/gstr"
 	"testing"
@@ -44,5 +45,41 @@ func Test_ToJson(t *testing.T) {
 		t.Assert(gstr.Contains(content, `"id":"g0936lt1u0f"`), true)
 		t.Assert(gstr.Contains(content, `"new":"4"`), true)
 	})
+}
 
+func Test_MapAttributeConvert(t *testing.T) {
+	var data = `
+ {
+   "title": {"l1":"标签1","l2":"标签2"}
+}
+`
+	gtest.C(t, func(t *gtest.T) {
+		j, err := gjson.LoadContent(data)
+		gtest.Assert(err, nil)
+
+		tx := struct {
+			Title map[string]interface{}
+		}{}
+
+		err = j.ToStruct(&tx)
+		gtest.Assert(err, nil)
+		t.Assert(tx.Title, g.Map{
+			"l1": "标签1", "l2": "标签2",
+		})
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		j, err := gjson.LoadContent(data)
+		gtest.Assert(err, nil)
+
+		tx := struct {
+			Title map[string]string
+		}{}
+
+		err = j.ToStruct(&tx)
+		gtest.Assert(err, nil)
+		t.Assert(tx.Title, g.Map{
+			"l1": "标签1", "l2": "标签2",
+		})
+	})
 }

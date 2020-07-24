@@ -23,7 +23,7 @@ const (
 
 // C creates an unit testing case.
 // The parameter <t> is the pointer to testing.T of stdlib (*testing.T).
-// The parameter <f> is the callback function for unit test case.
+// The parameter <f> is the closure function for unit testing case.
 func C(t *testing.T, f func(t *T)) {
 	defer func() {
 		if err := recover(); err != nil {
@@ -36,7 +36,7 @@ func C(t *testing.T, f func(t *T)) {
 
 // Case creates an unit testing case.
 // The parameter <t> is the pointer to testing.T of stdlib (*testing.T).
-// The parameter <f> is the callback function for unit test case.
+// The parameter <f> is the closure function for unit testing case.
 // Deprecated.
 func Case(t *testing.T, f func()) {
 	defer func() {
@@ -60,8 +60,10 @@ func Assert(value, expect interface{}) {
 		}
 		return
 	}
-	strValue := gconv.String(value)
-	strExpect := gconv.String(expect)
+	var (
+		strValue  = gconv.String(value)
+		strExpect = gconv.String(expect)
+	)
 	if strValue != strExpect {
 		panic(fmt.Sprintf(`[ASSERT] EXPECT %v == %v`, strValue, strExpect))
 	}
@@ -105,11 +107,30 @@ func AssertNE(value, expect interface{}) {
 		}
 		return
 	}
-	strValue := gconv.String(value)
-	strExpect := gconv.String(expect)
+	var (
+		strValue  = gconv.String(value)
+		strExpect = gconv.String(expect)
+	)
 	if strValue == strExpect {
 		panic(fmt.Sprintf(`[ASSERT] EXPECT %v != %v`, strValue, strExpect))
 	}
+}
+
+// AssertNQ checks <value> and <expect> NOT EQUAL, including their TYPES.
+func AssertNQ(value, expect interface{}) {
+	// Type assert.
+	t1 := reflect.TypeOf(value)
+	t2 := reflect.TypeOf(expect)
+	if t1 == t2 {
+		panic(
+			fmt.Sprintf(
+				`[ASSERT] EXPECT TYPE %v[%v] != %v[%v]`,
+				gconv.String(value), t1, gconv.String(expect), t2,
+			),
+		)
+	}
+	// Value assert.
+	AssertNE(value, expect)
 }
 
 // AssertGT checks <value> is GREATER THAN <expect>.

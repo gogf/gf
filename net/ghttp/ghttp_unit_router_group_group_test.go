@@ -17,7 +17,7 @@ import (
 )
 
 func Test_Router_Group_Group(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.Group("/api.v2", func(group *ghttp.RouterGroup) {
 		group.Middleware(func(r *ghttp.Request) {

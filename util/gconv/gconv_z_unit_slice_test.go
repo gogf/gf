@@ -25,7 +25,6 @@ func Test_Slice(t *testing.T) {
 	})
 }
 
-// 私有属性不会进行转换
 func Test_Slice_PrivateAttribute(t *testing.T) {
 	type User struct {
 		Id   int

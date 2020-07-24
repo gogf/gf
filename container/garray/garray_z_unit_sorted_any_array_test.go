@@ -9,8 +9,8 @@
 package garray_test
 
 import (
-	"encoding/json"
 	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/util/gutil"
 	"strings"
 	"testing"
@@ -99,8 +99,13 @@ func TestSortedArray_Get(t *testing.T) {
 			return strings.Compare(gconv.String(v1), gconv.String(v2))
 		}
 		array1 := garray.NewSortedArrayFrom(a1, func1)
-		t.Assert(array1.Get(2), "f")
-		t.Assert(array1.Get(1), "c")
+		v, ok := array1.Get(2)
+		t.Assert(v, "f")
+		t.Assert(ok, true)
+
+		v, ok = array1.Get(1)
+		t.Assert(v, "c")
+		t.Assert(ok, true)
 	})
 
 }
@@ -112,20 +117,28 @@ func TestSortedArray_Remove(t *testing.T) {
 			return strings.Compare(gconv.String(v1), gconv.String(v2))
 		}
 		array1 := garray.NewSortedArrayFrom(a1, func1)
-		i1 := array1.Remove(1)
+		i1, ok := array1.Remove(1)
+		t.Assert(ok, true)
 		t.Assert(gconv.String(i1), "b")
 		t.Assert(array1.Len(), 3)
 		t.Assert(array1.Contains("b"), false)
 
-		t.Assert(array1.Remove(-1), nil)
-		t.Assert(array1.Remove(100000), nil)
+		v, ok := array1.Remove(-1)
+		t.Assert(v, nil)
+		t.Assert(ok, false)
 
-		i2 := array1.Remove(0)
+		v, ok = array1.Remove(100000)
+		t.Assert(v, nil)
+		t.Assert(ok, false)
+
+		i2, ok := array1.Remove(0)
+		t.Assert(ok, true)
 		t.Assert(gconv.String(i2), "a")
 		t.Assert(array1.Len(), 2)
 		t.Assert(array1.Contains("a"), false)
 
-		i3 := array1.Remove(1)
+		i3, ok := array1.Remove(1)
+		t.Assert(ok, true)
 		t.Assert(gconv.String(i3), "d")
 		t.Assert(array1.Len(), 1)
 		t.Assert(array1.Contains("d"), false)
@@ -135,32 +148,62 @@ func TestSortedArray_Remove(t *testing.T) {
 
 func TestSortedArray_PopLeft(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		a1 := []interface{}{"a", "d", "c", "b"}
-		func1 := func(v1, v2 interface{}) int {
-			return strings.Compare(gconv.String(v1), gconv.String(v2))
-		}
-		array1 := garray.NewSortedArrayFrom(a1, func1)
-		i1 := array1.PopLeft()
+		array1 := garray.NewSortedArrayFrom(
+			[]interface{}{"a", "d", "c", "b"},
+			gutil.ComparatorString,
+		)
+		i1, ok := array1.PopLeft()
+		t.Assert(ok, true)
 		t.Assert(gconv.String(i1), "a")
 		t.Assert(array1.Len(), 3)
 		t.Assert(array1, []interface{}{"b", "c", "d"})
 	})
-
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewSortedArrayFrom(g.Slice{1, 2, 3}, gutil.ComparatorInt)
+		v, ok := array.PopLeft()
+		t.Assert(v, 1)
+		t.Assert(ok, true)
+		t.Assert(array.Len(), 2)
+		v, ok = array.PopLeft()
+		t.Assert(v, 2)
+		t.Assert(ok, true)
+		t.Assert(array.Len(), 1)
+		v, ok = array.PopLeft()
+		t.Assert(v, 3)
+		t.Assert(ok, true)
+		t.Assert(array.Len(), 0)
+	})
 }
 
 func TestSortedArray_PopRight(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		a1 := []interface{}{"a", "d", "c", "b"}
-		func1 := func(v1, v2 interface{}) int {
-			return strings.Compare(gconv.String(v1), gconv.String(v2))
-		}
-		array1 := garray.NewSortedArrayFrom(a1, func1)
-		i1 := array1.PopRight()
+		array1 := garray.NewSortedArrayFrom(
+			[]interface{}{"a", "d", "c", "b"},
+			gutil.ComparatorString,
+		)
+		i1, ok := array1.PopRight()
+		t.Assert(ok, true)
 		t.Assert(gconv.String(i1), "d")
 		t.Assert(array1.Len(), 3)
 		t.Assert(array1, []interface{}{"a", "b", "c"})
 	})
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewSortedArrayFrom(g.Slice{1, 2, 3}, gutil.ComparatorInt)
+		v, ok := array.PopRight()
+		t.Assert(v, 3)
+		t.Assert(ok, true)
+		t.Assert(array.Len(), 2)
 
+		v, ok = array.PopRight()
+		t.Assert(v, 2)
+		t.Assert(ok, true)
+		t.Assert(array.Len(), 1)
+
+		v, ok = array.PopRight()
+		t.Assert(v, 1)
+		t.Assert(ok, true)
+		t.Assert(array.Len(), 0)
+	})
 }
 
 func TestSortedArray_PopRand(t *testing.T) {
@@ -170,7 +213,8 @@ func TestSortedArray_PopRand(t *testing.T) {
 			return strings.Compare(gconv.String(v1), gconv.String(v2))
 		}
 		array1 := garray.NewSortedArrayFrom(a1, func1)
-		i1 := array1.PopRand()
+		i1, ok := array1.PopRand()
+		t.Assert(ok, true)
 		t.AssertIN(i1, []interface{}{"a", "d", "c", "b"})
 		t.Assert(array1.Len(), 3)
 
@@ -197,6 +241,26 @@ func TestSortedArray_PopRands(t *testing.T) {
 	})
 }
 
+func TestSortedArray_Empty(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewSortedArray(gutil.ComparatorInt)
+		v, ok := array.PopLeft()
+		t.Assert(v, nil)
+		t.Assert(ok, false)
+		t.Assert(array.PopLefts(10), nil)
+
+		v, ok = array.PopRight()
+		t.Assert(v, nil)
+		t.Assert(ok, false)
+		t.Assert(array.PopRights(10), nil)
+
+		v, ok = array.PopRand()
+		t.Assert(v, nil)
+		t.Assert(ok, false)
+		t.Assert(array.PopRands(10), nil)
+	})
+}
+
 func TestSortedArray_PopLefts(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		a1 := []interface{}{"a", "d", "c", "b", "e", "f"}
@@ -213,7 +277,6 @@ func TestSortedArray_PopLefts(t *testing.T) {
 		t.Assert(len(i2), 4)
 		t.AssertIN(i1, []interface{}{"a", "d", "c", "b", "e", "f"})
 		t.Assert(array1.Len(), 0)
-
 	})
 }
 
@@ -231,7 +294,7 @@ func TestSortedArray_PopRights(t *testing.T) {
 
 		i2 := array1.PopRights(10)
 		t.Assert(len(i2), 4)
-
+		t.Assert(array1.Len(), 0)
 	})
 }
 
@@ -394,7 +457,8 @@ func TestSortedArray_Rand(t *testing.T) {
 			return strings.Compare(gconv.String(v1), gconv.String(v2))
 		}
 		array1 := garray.NewSortedArrayFrom(a1, func1)
-		i1 := array1.Rand()
+		i1, ok := array1.Rand()
+		t.Assert(ok, true)
 		t.AssertIN(i1, []interface{}{"a", "d", "c"})
 		t.Assert(array1.Len(), 3)
 	})
@@ -414,7 +478,7 @@ func TestSortedArray_Rands(t *testing.T) {
 		t.Assert(array1.Len(), 3)
 
 		i1 = array1.Rands(4)
-		t.Assert(len(i1), 3)
+		t.Assert(len(i1), 4)
 	})
 }
 
@@ -462,15 +526,21 @@ func TestSortedArray_CountValues(t *testing.T) {
 
 func TestSortedArray_SetUnique(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		a1 := []interface{}{"a", "d", "c", "c"}
-
-		func1 := func(v1, v2 interface{}) int {
-			return strings.Compare(gconv.String(v1), gconv.String(v2))
-		}
-		array1 := garray.NewSortedArrayFrom(a1, func1)
+		a1 := []interface{}{1, 2, 3, 4, 5, 3, 2, 2, 3, 5, 5}
+		array1 := garray.NewSortedArrayFrom(a1, gutil.ComparatorInt)
 		array1.SetUnique(true)
-		t.Assert(array1.Len(), 3)
-		t.Assert(array1, []interface{}{"a", "c", "d"})
+		t.Assert(array1.Len(), 5)
+		t.Assert(array1, []interface{}{1, 2, 3, 4, 5})
+	})
+}
+
+func TestSortedArray_Unique(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		a1 := []interface{}{1, 2, 3, 4, 5, 3, 2, 2, 3, 5, 5}
+		array1 := garray.NewSortedArrayFrom(a1, gutil.ComparatorInt)
+		array1.Unique()
+		t.Assert(array1.Len(), 5)
+		t.Assert(array1, []interface{}{1, 2, 3, 4, 5})
 	})
 }
 
@@ -575,6 +645,7 @@ func TestSortedArray_Merge(t *testing.T) {
 }
 
 func TestSortedArray_Json(t *testing.T) {
+	// array pointer
 	gtest.C(t, func(t *gtest.T) {
 		s1 := []interface{}{"a", "b", "d", "c"}
 		s2 := []interface{}{"a", "b", "c", "d"}
@@ -594,7 +665,27 @@ func TestSortedArray_Json(t *testing.T) {
 		t.Assert(a3.Slice(), s1)
 		t.Assert(a3.Interfaces(), s1)
 	})
+	// array value
+	gtest.C(t, func(t *gtest.T) {
+		s1 := []interface{}{"a", "b", "d", "c"}
+		s2 := []interface{}{"a", "b", "c", "d"}
+		a1 := *garray.NewSortedArrayFrom(s1, gutil.ComparatorString)
+		b1, err1 := json.Marshal(a1)
+		b2, err2 := json.Marshal(s1)
+		t.Assert(b1, b2)
+		t.Assert(err1, err2)
 
+		a2 := garray.NewSortedArray(gutil.ComparatorString)
+		err1 = json.Unmarshal(b2, &a2)
+		t.Assert(a2.Slice(), s2)
+
+		var a3 garray.SortedArray
+		err := json.Unmarshal(b2, &a3)
+		t.Assert(err, nil)
+		t.Assert(a3.Slice(), s1)
+		t.Assert(a3.Interfaces(), s1)
+	})
+	// array pointer
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Name   string
@@ -613,9 +704,58 @@ func TestSortedArray_Json(t *testing.T) {
 		t.Assert(user.Name, data["Name"])
 		t.AssertNE(user.Scores, nil)
 		t.Assert(user.Scores.Len(), 3)
-		t.AssertIN(user.Scores.PopLeft(), data["Scores"])
-		t.AssertIN(user.Scores.PopLeft(), data["Scores"])
-		t.AssertIN(user.Scores.PopLeft(), data["Scores"])
+
+		v, ok := user.Scores.PopLeft()
+		t.AssertIN(v, data["Scores"])
+		t.Assert(ok, true)
+
+		v, ok = user.Scores.PopLeft()
+		t.AssertIN(v, data["Scores"])
+		t.Assert(ok, true)
+
+		v, ok = user.Scores.PopLeft()
+		t.AssertIN(v, data["Scores"])
+		t.Assert(ok, true)
+
+		v, ok = user.Scores.PopLeft()
+		t.Assert(v, nil)
+		t.Assert(ok, false)
+	})
+	// array value
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Name   string
+			Scores garray.SortedArray
+		}
+		data := g.Map{
+			"Name":   "john",
+			"Scores": []int{99, 100, 98},
+		}
+		b, err := json.Marshal(data)
+		t.Assert(err, nil)
+
+		user := new(User)
+		err = json.Unmarshal(b, user)
+		t.Assert(err, nil)
+		t.Assert(user.Name, data["Name"])
+		t.AssertNE(user.Scores, nil)
+		t.Assert(user.Scores.Len(), 3)
+
+		v, ok := user.Scores.PopLeft()
+		t.AssertIN(v, data["Scores"])
+		t.Assert(ok, true)
+
+		v, ok = user.Scores.PopLeft()
+		t.AssertIN(v, data["Scores"])
+		t.Assert(ok, true)
+
+		v, ok = user.Scores.PopLeft()
+		t.AssertIN(v, data["Scores"])
+		t.Assert(ok, true)
+
+		v, ok = user.Scores.PopLeft()
+		t.Assert(v, nil)
+		t.Assert(ok, false)
 	})
 }
 
@@ -727,5 +867,14 @@ func TestSortedArray_FilterEmpty(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.NewSortedArrayFrom(g.Slice{1, 2, 3, 4}, gutil.ComparatorInt)
 		t.Assert(array.FilterEmpty(), g.Slice{1, 2, 3, 4})
+	})
+}
+
+func TestSortedArray_Walk(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewSortedArrayFrom(g.Slice{"1", "2"}, gutil.ComparatorString)
+		t.Assert(array.Walk(func(value interface{}) interface{} {
+			return "key-" + gconv.String(value)
+		}), g.Slice{"key-1", "key-2"})
 	})
 }

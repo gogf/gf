@@ -10,13 +10,13 @@ import (
 	"strings"
 )
 
-// 域名管理器对象
+// Domain is used for route register for domains.
 type Domain struct {
-	server  *Server             // 所属Server
-	domains map[string]struct{} // 多域名
+	server  *Server             // Belonged server
+	domains map[string]struct{} // Support multiple domains.
 }
 
-// 生成一个域名对象, 参数 domains 支持给定多个域名。
+// Domain creates and returns a domain object for management for one or more domains.
 func (s *Server) Domain(domains string) *Domain {
 	d := &Domain{
 		server:  s,

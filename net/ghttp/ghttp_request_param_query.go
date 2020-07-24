@@ -9,7 +9,6 @@ package ghttp
 import (
 	"github.com/gogf/gf/container/gvar"
 
-	"github.com/gogf/gf/internal/structs"
 	"github.com/gogf/gf/util/gconv"
 )
 
@@ -23,11 +22,11 @@ func (r *Request) SetQuery(key string, value interface{}) {
 }
 
 // GetQuery retrieves and returns parameter with given name <key> from query string
-// and request body. It returns <def> if <key> does not exist in the query. It returns nil
-// if <def> is not passed.
+// and request body. It returns <def> if <key> does not exist in the query and <def> is given,
+// or else it returns nil.
 //
-// Note that if there're multiple parameters with the same name, the parameters are retrieved and overwrote
-// in order of priority: query > body.
+// Note that if there're multiple parameters with the same name, the parameters are retrieved
+// and overwrote in order of priority: query > body.
 func (r *Request) GetQuery(key string, def ...interface{}) interface{} {
 	r.parseQuery()
 	if len(r.queryMap) > 0 {
@@ -194,13 +193,7 @@ func (r *Request) GetQueryMapStrVar(kvMap ...map[string]interface{}) map[string]
 // attribute mapping.
 func (r *Request) GetQueryStruct(pointer interface{}, mapping ...map[string]string) error {
 	r.parseQuery()
-	tagMap := structs.TagMapName(pointer, paramTagPriority, true)
-	if len(mapping) > 0 {
-		for k, v := range mapping[0] {
-			tagMap[k] = v
-		}
-	}
-	return gconv.StructDeep(r.GetQueryMap(), pointer, tagMap)
+	return gconv.StructDeep(r.GetQueryMap(), pointer, mapping...)
 }
 
 // GetQueryToStruct is alias of GetQueryStruct. See GetQueryStruct.

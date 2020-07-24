@@ -179,29 +179,22 @@ func init() {
 	}
 }
 
-// 主要用于开发者在HTTP处理中自定义异常捕获时，判断捕获的异常是否Server抛出的自定义退出异常
-func IsExitError(err interface{}) bool {
-	errStr := gconv.String(err)
-	if strings.EqualFold(errStr, gEXCEPTION_EXIT) ||
-		strings.EqualFold(errStr, gEXCEPTION_EXIT_ALL) ||
-		strings.EqualFold(errStr, gEXCEPTION_EXIT_HOOK) {
-		return true
-	}
-	return false
-}
-
-// 是否开启平滑重启特性
+// SetGraceful enables/disables the graceful reload feature for server,
+// which is false in default.
+//
+// Note that this feature switch is not for single server instance but for whole process.
+// Deprecated, use configuration of ghttp.Server for controlling this feature.
 func SetGraceful(enabled bool) {
 	gracefulEnabled = enabled
 }
 
-// Web Server进程初始化.
-// 注意该方法不能放置于包初始化方法init中，不使用ghttp.Server的功能便不能初始化对应的协程goroutine逻辑.
+// serverProcessInit initializes some process configurations, which can only be done once.
 func serverProcessInit() {
 	if !serverProcessInited.Cas(false, true) {
 		return
 	}
-	// 如果是完整重启，那么需要等待主进程销毁后，才开始执行监听，防止端口冲突
+	// This means it is a restart server, it should kill its parent before starting its listening,
+	// to avoid duplicated port listening in two processes.
 	if genv.Get(gADMIN_ACTION_RESTART_ENVKEY) != "" {
 		if p, e := os.FindProcess(gproc.PPid()); e == nil {
 			p.Kill()
@@ -211,21 +204,24 @@ func serverProcessInit() {
 		}
 	}
 
-	// 信号量管理操作监听
+	// Signal handler.
 	go handleProcessSignal()
-	// 异步监听进程间消息
+
+	// Process message handler.
+	// It's enabled only graceful feature is enabled.
 	if gracefulEnabled {
 		go handleProcessMessage()
 	}
 
-	// 是否处于开发环境，这里调用该方法初始化main包路径值，
-	// 防止异步服务goroutine获取main包路径失败，
-	// 该方法只有在main协程中才会执行。
+	// It's an ugly calling for better initializing the main package path
+	// in source development environment. It is useful only be used in main goroutine.
+	// It fails retrieving the main package path in asynchronized goroutines.
 	gfile.MainPkgPath()
 }
 
-// 获取/创建一个默认配置的HTTP Server(默认监听端口是80)
-// 单例模式，请保证name的唯一性
+// GetServer creates and returns a server instance using given name and default configurations.
+// Note that the parameter <name> should be unique for different servers. It returns an existing
+// server instance if given <name> is already existing in the server mapping.
 func GetServer(name ...interface{}) *Server {
 	serverName := gDEFAULT_SERVER
 	if len(name) > 0 && name[0] != "" {
@@ -234,7 +230,6 @@ func GetServer(name ...interface{}) *Server {
 	if s := serverMapping.Get(serverName); s != nil {
 		return s.(*Server)
 	}
-	c := defaultServerConfig
 	s := &Server{
 		name:             serverName,
 		plugins:          make([]Plugin, 0),
@@ -246,17 +241,17 @@ func GetServer(name ...interface{}) *Server {
 		serveCache:       gcache.New(),
 		routesMap:        make(map[string][]registeredRouteItem),
 	}
-	// 初始化时使用默认配置
-	if err := s.SetConfig(c); err != nil {
+	// Initialize the server using default configurations.
+	if err := s.SetConfig(Config()); err != nil {
 		panic(err)
 	}
-	// 记录到全局ServerMap中
+	// Record the server to internal server mapping by name.
 	serverMapping.Set(serverName, s)
 	return s
 }
 
-// 作为守护协程异步执行(当同一进程中存在多个Web Server时，需要采用这种方式执行),
-// 需要结合Wait方式一起使用.
+// Start starts listening on configured port.
+// This function does not block the process, you can use function Wait blocking the process.
 func (s *Server) Start() error {
 	// Register group routes.
 	s.handlePreBindItems()
@@ -306,7 +301,7 @@ func (s *Server) Start() error {
 
 	// Default HTTP handler.
 	if s.config.Handler == nil {
-		s.config.Handler = http.HandlerFunc(s.defaultHandler)
+		s.config.Handler = s
 	}
 
 	// Install external plugins.
@@ -481,14 +476,11 @@ func Wait() {
 	glog.Printf("[ghttp] %d: all servers shutdown", gproc.Pid())
 }
 
-// 开启底层Web Server执行
+// startServer starts the underlying server listening.
 func (s *Server) startServer(fdMap listenerFdMap) {
 	var httpsEnabled bool
-	// 判断是否启用HTTPS
+	// HTTPS
 	if s.config.TLSConfig != nil || (s.config.HTTPSCertPath != "" && s.config.HTTPSKeyPath != "") {
-		// ================
-		// HTTPS
-		// ================
 		if len(s.config.HTTPSAddr) == 0 {
 			if len(s.config.Address) > 0 {
 				s.config.HTTPSAddr = s.config.Address
@@ -513,7 +505,8 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 			array := strings.Split(v, "#")
 			if len(array) > 1 {
 				itemFunc = array[0]
-				// windows系统不支持文件描述符传递socket通信平滑交接，因此只能完整重启
+				// The windows OS does not support socket file descriptor passing
+				// from parent process.
 				if runtime.GOOS != "windows" {
 					fd = gconv.Int(array[1])
 				}
@@ -526,10 +519,7 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 			s.servers[len(s.servers)-1].isHttps = true
 		}
 	}
-	// ================
 	// HTTP
-	// ================
-	// 当HTTPS服务未启用时，默认HTTP地址才会生效
 	if !httpsEnabled && len(s.config.Address) == 0 {
 		s.config.Address = gDEFAULT_HTTP_ADDR
 	}
@@ -548,7 +538,8 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 		array := strings.Split(v, "#")
 		if len(array) > 1 {
 			itemFunc = array[0]
-			// windows系统不支持文件描述符传递socket通信平滑交接，因此只能完整重启
+			// The windows OS does not support socket file descriptor passing
+			// from parent process.
 			if runtime.GOOS != "windows" {
 				fd = gconv.Int(array[1])
 			}
@@ -559,7 +550,7 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 			s.servers = append(s.servers, s.newGracefulServer(itemFunc))
 		}
 	}
-	// 开始执行异步监听
+	// Start listening asynchronizedly.
 	serverRunning.Add(1)
 	for _, v := range s.servers {
 		go func(server *gracefulServer) {
@@ -570,14 +561,13 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 			} else {
 				err = server.ListenAndServe()
 			}
-			// 如果非关闭错误，那么提示报错，否则认为是正常的服务关闭操作
+			// The process exits if the server is closed with none closing error.
 			if err != nil && !strings.EqualFold(http.ErrServerClosed.Error(), err.Error()) {
 				s.Logger().Fatal(err)
 			}
-			// 如果所有异步的http.Server都已经停止，那么WebServer就可以退出了
+			// If all the underlying servers shutdown, the process exits.
 			if s.serverCount.Add(-1) < 1 {
 				s.closeChan <- struct{}{}
-				// 如果所有WebServer都退出，那么退出Wait等待
 				if serverRunning.Add(-1) < 1 {
 					serverMapping.Remove(s.name)
 					allDoneChan <- struct{}{}
@@ -587,13 +577,12 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 	}
 }
 
-// 获取当前服务器的状态
+// Status retrieves and returns the server status.
 func (s *Server) Status() int {
-	// 当全局运行的Web Server数量为0时表示所有Server都是停止状态
 	if serverRunning.Val() == 0 {
 		return SERVER_STATUS_STOPPED
 	}
-	// 只要有一个Server处于运行状态，那么都表示运行状态
+	// If any underlying server is running, the server status is running.
 	for _, v := range s.servers {
 		if v.status == SERVER_STATUS_RUNNING {
 			return SERVER_STATUS_RUNNING
@@ -602,28 +591,39 @@ func (s *Server) Status() int {
 	return SERVER_STATUS_STOPPED
 }
 
-// 获取当前监听的文件描述符信息，构造成map返回
+// getListenerFdMap retrieves and returns the socket file descriptors.
+// The key of the returned map is "http" and "https".
 func (s *Server) getListenerFdMap() map[string]string {
 	m := map[string]string{
 		"https": "",
 		"http":  "",
 	}
-	// s.servers是从HTTPS到HTTP优先级遍历，解析的时候也应当按照这个顺序读取fd
 	for _, v := range s.servers {
-		str := v.itemFunc + "#" + gconv.String(v.Fd()) + ","
+		str := v.address + "#" + gconv.String(v.Fd()) + ","
 		if v.isHttps {
+			if len(m["https"]) > 0 {
+				m["https"] += ","
+			}
 			m["https"] += str
 		} else {
+			if len(m["http"]) > 0 {
+				m["http"] += ","
+			}
 			m["http"] += str
 		}
 	}
-	// 去掉末尾的","号
-	if len(m["https"]) > 0 {
-		m["https"] = m["https"][0 : len(m["https"])-1]
-	}
-	if len(m["http"]) > 0 {
-		m["http"] = m["http"][0 : len(m["http"])-1]
-	}
-
 	return m
+}
+
+// IsExitError checks if given error is an exit error of server.
+// This is used in old version of server for custom error handler.
+// Deprecated.
+func IsExitError(err interface{}) bool {
+	errStr := gconv.String(err)
+	if strings.EqualFold(errStr, gEXCEPTION_EXIT) ||
+		strings.EqualFold(errStr, gEXCEPTION_EXIT_ALL) ||
+		strings.EqualFold(errStr, gEXCEPTION_EXIT_HOOK) {
+		return true
+	}
+	return false
 }

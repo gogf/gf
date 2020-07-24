@@ -9,12 +9,14 @@ package ghttp
 import (
 	"context"
 	"fmt"
+	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/os/gres"
+	"github.com/gogf/gf/os/gsession"
 	"github.com/gogf/gf/os/gview"
+	"github.com/gogf/gf/util/guid"
 	"net/http"
 	"strings"
-
-	"github.com/gogf/gf/os/gsession"
+	"time"
 
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gregex"
@@ -32,7 +34,7 @@ type Request struct {
 	LeaveTime       int64                  // Request ending time in microseconds.
 	Middleware      *Middleware            // Middleware manager.
 	StaticFile      *StaticFile            // Static file object for static file serving.
-	Context         context.Context        // Custom context for internal usage purpose.
+	context         context.Context        // Custom context for internal usage purpose.
 	handlers        []*handlerParsedItem   // All matched handlers containing handler, hook and middleware for this request.
 	hasHookHandler  bool                   // A bool marking whether there's hook handler in the handlers for performance purpose.
 	hasServeHandler bool                   // A bool marking whether there's serving handler in the handlers for performance purpose.
@@ -68,13 +70,24 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 		Request:   r,
 		Response:  newResponse(s, w),
 		EnterTime: gtime.TimestampMilli(),
-		Context:   r.Context(),
 	}
 	request.Cookie = GetCookie(request)
 	request.Session = s.sessionManager.New(request.GetSessionId())
 	request.Response.Request = request
 	request.Middleware = &Middleware{
 		request: request,
+	}
+	// Custom session id creating function.
+	err := request.Session.SetIdFunc(func(ttl time.Duration) string {
+		var (
+			address = request.RemoteAddr
+			header  = fmt.Sprintf("%v", request.Header)
+		)
+		intlog.Print(address, header)
+		return guid.S([]byte(address), []byte(header))
+	})
+	if err != nil {
+		panic(err)
 	}
 	return request
 }
@@ -113,6 +126,11 @@ func (r *Request) IsExited() bool {
 	return r.exit
 }
 
+// GetHeader retrieves and returns the header value with given <key>.
+func (r *Request) GetHeader(key string) string {
+	return r.Header.Get(key)
+}
+
 // GetHost returns current request host name, which might be a domain or an IP without port.
 func (r *Request) GetHost() string {
 	if len(r.parsedHost) == 0 {
@@ -139,7 +157,27 @@ func (r *Request) IsAjaxRequest() bool {
 // GetClientIp returns the client ip of this request without port.
 func (r *Request) GetClientIp() string {
 	if len(r.clientIp) == 0 {
-		if r.clientIp = r.Header.Get("X-Real-IP"); r.clientIp == "" {
+		realIps := r.Header.Get("X-Forwarded-For")
+		if realIps != "" && len(realIps) != 0 && !strings.EqualFold("unknown", realIps) {
+			ipArray := strings.Split(realIps, ",")
+			r.clientIp = ipArray[0]
+		}
+		if r.clientIp == "" || strings.EqualFold("unknown", realIps) {
+			r.clientIp = r.Header.Get("Proxy-Client-IP")
+		}
+		if r.clientIp == "" || strings.EqualFold("unknown", realIps) {
+			r.clientIp = r.Header.Get("WL-Proxy-Client-IP")
+		}
+		if r.clientIp == "" || strings.EqualFold("unknown", realIps) {
+			r.clientIp = r.Header.Get("HTTP_CLIENT_IP")
+		}
+		if r.clientIp == "" || strings.EqualFold("unknown", realIps) {
+			r.clientIp = r.Header.Get("HTTP_X_FORWARDED_FOR")
+		}
+		if r.clientIp == "" || strings.EqualFold("unknown", realIps) {
+			r.clientIp = r.Header.Get("X-Real-IP")
+		}
+		if r.clientIp == "" || strings.EqualFold("unknown", realIps) {
 			array, _ := gregex.MatchString(`(.+):(\d+)`, r.RemoteAddr)
 			if len(array) > 1 {
 				r.clientIp = array[1]

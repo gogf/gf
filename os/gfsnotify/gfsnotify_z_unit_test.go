@@ -21,7 +21,7 @@ import (
 func TestWatcher_AddOnce(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		value := gtype.New()
-		path := gfile.Join(gfile.TempDir(), gconv.String(gtime.TimestampNano()))
+		path := gfile.TempDir(gconv.String(gtime.TimestampNano()))
 		err := gfile.PutContents(path, "init")
 		t.Assert(err, nil)
 		defer gfile.Remove(path)
@@ -121,9 +121,9 @@ func TestWatcher_AddRemove(t *testing.T) {
 	})
 }
 
-func TestWatcher_Callback(t *testing.T) {
+func TestWatcher_Callback1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		path1 := gfile.TempDir() + gfile.Separator + gconv.String(gtime.TimestampNano())
+		path1 := gfile.TempDir(gtime.TimestampNanoStr())
 		gfile.PutContents(path1, "1")
 		defer func() {
 			gfile.Remove(path1)
@@ -148,10 +148,13 @@ func TestWatcher_Callback(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
 		t.Assert(v.Val(), 3)
 	})
+}
+
+func TestWatcher_Callback2(t *testing.T) {
 	// multiple callbacks
 	gtest.C(t, func(t *gtest.T) {
-		path1 := gfile.TempDir() + gfile.Separator + gconv.String(gtime.TimestampNano())
-		gfile.PutContents(path1, "1")
+		path1 := gfile.TempDir(gtime.TimestampNanoStr())
+		t.Assert(gfile.PutContents(path1, "1"), nil)
 		defer func() {
 			gfile.Remove(path1)
 		}()
@@ -174,7 +177,7 @@ func TestWatcher_Callback(t *testing.T) {
 		t.AssertNE(callback1, nil)
 		t.AssertNE(callback2, nil)
 
-		gfile.PutContents(path1, "2")
+		t.Assert(gfile.PutContents(path1, "2"), nil)
 		time.Sleep(100 * time.Millisecond)
 		t.Assert(v1.Val(), 2)
 		t.Assert(v2.Val(), 2)
@@ -182,7 +185,7 @@ func TestWatcher_Callback(t *testing.T) {
 		v1.Set(3)
 		v2.Set(3)
 		gfsnotify.RemoveCallback(callback1.Id)
-		gfile.PutContents(path1, "3")
+		t.Assert(gfile.PutContents(path1, "3"), nil)
 		time.Sleep(100 * time.Millisecond)
 		t.Assert(v1.Val(), 3)
 		t.Assert(v2.Val(), 2)

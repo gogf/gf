@@ -6,9 +6,18 @@
 
 package utils
 
-import "strings"
+import (
+	"regexp"
+	"strings"
+)
 
-// IsLetterUpper tests whether the given byte b is in upper case.
+var (
+	// replaceCharReg is the regular expression object for replacing chars in key.
+	// It is used for function EqualFoldWithoutChars.
+	replaceCharReg, _ = regexp.Compile(`[\-\.\_\s]+`)
+)
+
+// IsLetterUpper checks whether the given byte b is in upper case.
 func IsLetterUpper(b byte) bool {
 	if b >= byte('A') && b <= byte('Z') {
 		return true
@@ -16,7 +25,7 @@ func IsLetterUpper(b byte) bool {
 	return false
 }
 
-// IsLetterLower tests whether the given byte b is in lower case.
+// IsLetterLower checks whether the given byte b is in lower case.
 func IsLetterLower(b byte) bool {
 	if b >= byte('a') && b <= byte('z') {
 		return true
@@ -24,7 +33,12 @@ func IsLetterLower(b byte) bool {
 	return false
 }
 
-// IsNumeric tests whether the given string s is numeric.
+// IsLetter checks whether the given byte b is a letter.
+func IsLetter(b byte) bool {
+	return IsLetterUpper(b) || IsLetterLower(b)
+}
+
+// IsNumeric checks whether the given string s is numeric.
 // Note that float string like "123.456" is also numeric.
 func IsNumeric(s string) bool {
 	length := len(s)
@@ -67,4 +81,13 @@ func ReplaceByMap(origin string, replaces map[string]string) string {
 		origin = strings.Replace(origin, k, v, -1)
 	}
 	return origin
+}
+
+// EqualFoldWithoutChars checks string <s1> and <s2> equal case-insensitively,
+// with/without chars '-'/'_'/'.'/' '.
+func EqualFoldWithoutChars(s1, s2 string) bool {
+	return strings.EqualFold(
+		replaceCharReg.ReplaceAllString(s1, ""),
+		replaceCharReg.ReplaceAllString(s2, ""),
+	)
 }

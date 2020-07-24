@@ -8,7 +8,7 @@ import (
 	"github.com/gogf/gf/util/gpage"
 )
 
-// 分页标签使用li标签包裹
+// wrapContent wraps each of the page tag with html li and ul.
 func wrapContent(page *gpage.Page) string {
 	content := page.GetContent(4)
 	content = gstr.ReplaceByMap(content, map[string]string{
@@ -21,7 +21,7 @@ func wrapContent(page *gpage.Page) string {
 }
 
 func main() {
-	s := ghttp.GetServer()
+	s := g.Server()
 	s.BindHandler("/page/custom1/*page", func(r *ghttp.Request) {
 		page := r.GetPage(100, 10)
 		content := wrapContent(page)

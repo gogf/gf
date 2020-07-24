@@ -13,8 +13,27 @@ import (
 	"github.com/gogf/gf/util/gvalid"
 )
 
-func Test_CheckMap(t *testing.T) {
+func Test_CheckMap1(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		data := map[string]interface{}{
+			"id":   "0",
+			"name": "john",
+		}
+		rules := map[string]string{
+			"id":   "required|between:1,100",
+			"name": "required|length:6,16",
+		}
+		if m := gvalid.CheckMap(data, rules); m == nil {
+			t.Error("CheckMap校验失败")
+		} else {
+			t.Assert(len(m.Maps()), 2)
+			t.Assert(m.Maps()["id"]["between"], "The id value must be between 1 and 100")
+			t.Assert(m.Maps()["name"]["length"], "The name value length must be between 6 and 16")
+		}
+	})
+}
 
+func Test_CheckMap2(t *testing.T) {
 	var params interface{}
 	if m := gvalid.CheckMap(params, nil, nil); m == nil {
 		t.Error("CheckMap校验失败")

@@ -3,9 +3,11 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
+
 package gyaml_test
 
 import (
+	"github.com/gogf/gf/internal/json"
 	"testing"
 
 	"github.com/gogf/gf/encoding/gparser"
@@ -78,6 +80,20 @@ func Test_DecodeError(t *testing.T) {
 		result := make(map[string]interface{})
 		err = gyaml.DecodeTo([]byte(yamlErr), &result)
 		t.AssertNE(err, nil)
+	})
+}
+
+func Test_DecodeMapToJson(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		data := []byte(`
+m:
+ k: v
+    `)
+		v, err := gyaml.Decode(data)
+		t.Assert(err, nil)
+		b, err := json.Marshal(v)
+		t.Assert(err, nil)
+		t.Assert(b, `{"m":{"k":"v"}}`)
 	})
 }
 

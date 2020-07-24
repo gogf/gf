@@ -6,7 +6,9 @@
 
 package gdb
 
-import "github.com/gogf/gf/util/gconv"
+import (
+	"strings"
+)
 
 // Where sets the condition statement for the model. The parameter <where> can be type of
 // string/map/gmap/slice/struct/*struct, etc. Note that, if it's called more than one times,
@@ -32,10 +34,22 @@ func (m *Model) Where(where interface{}, args ...interface{}) *Model {
 	return model
 }
 
+// Having sets the having statement for the model.
+// The parameters of this function usage are as the same as function Where.
+// See Where.
+func (m *Model) Having(having interface{}, args ...interface{}) *Model {
+	model := m.getModel()
+	model.having = []interface{}{
+		having, args,
+	}
+	return model
+}
+
 // WherePri does the same logic as Model.Where except that if the parameter <where>
 // is a single condition like int/string/float/slice, it treats the condition as the primary
 // key value. That is, if primary key is "id" and given <where> parameter as "123", the
-// WherePri function treats it as "id=123", but Model.Where treats it as string "123".
+// WherePri function treats the condition as "id=123", but Model.Where treats the condition
+// as string "123".
 func (m *Model) WherePri(where interface{}, args ...interface{}) *Model {
 	if len(args) > 0 {
 		return m.Where(where, args...)
@@ -87,9 +101,9 @@ func (m *Model) GroupBy(groupBy string) *Model {
 }
 
 // Order sets the "ORDER BY" statement for the model.
-func (m *Model) Order(orderBy string) *Model {
+func (m *Model) Order(orderBy ...string) *Model {
 	model := m.getModel()
-	model.orderBy = m.db.QuoteString(orderBy)
+	model.orderBy = m.db.QuoteString(strings.Join(orderBy, " "))
 	return model
 }
 
@@ -142,29 +156,4 @@ func (m *Model) Page(page, limit int) *Model {
 // Deprecated.
 func (m *Model) ForPage(page, limit int) *Model {
 	return m.Page(page, limit)
-}
-
-// getAll does the query from database.
-func (m *Model) getAll(query string, args ...interface{}) (result Result, err error) {
-	cacheKey := ""
-	// Retrieve from cache.
-	if m.cacheEnabled {
-		cacheKey = m.cacheName
-		if len(cacheKey) == 0 {
-			cacheKey = query + "/" + gconv.String(args)
-		}
-		if v := m.db.GetCache().Get(cacheKey); v != nil {
-			return v.(Result), nil
-		}
-	}
-	result, err = m.db.DoGetAll(m.getLink(false), query, m.mergeArguments(args)...)
-	// Cache the result.
-	if len(cacheKey) > 0 && err == nil {
-		if m.cacheDuration < 0 {
-			m.db.GetCache().Remove(cacheKey)
-		} else {
-			m.db.GetCache().Set(cacheKey, result, m.cacheDuration)
-		}
-	}
-	return result, err
 }

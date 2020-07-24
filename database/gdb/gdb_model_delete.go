@@ -8,7 +8,16 @@ package gdb
 
 import (
 	"database/sql"
+	"fmt"
+	"github.com/gogf/gf/os/gtime"
 )
+
+// Unscoped disables the soft deleting feature.
+func (m *Model) Unscoped() *Model {
+	model := m.getModel()
+	model.unscoped = true
+	return model
+}
 
 // Delete does "DELETE FROM ... " statement for the model.
 // The optional parameter <where> is the same as the parameter of Model.Where function,
@@ -22,6 +31,19 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 			m.checkAndRemoveCache()
 		}
 	}()
-	condition, conditionArgs := m.formatCondition(false)
-	return m.db.DoDelete(m.getLink(true), m.tables, condition, conditionArgs...)
+	var (
+		fieldNameDelete                               = m.getSoftFieldNameDelete()
+		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(false)
+	)
+	// Soft deleting.
+	if !m.unscoped && fieldNameDelete != "" {
+		return m.db.DoUpdate(
+			m.getLink(true),
+			m.tables,
+			fmt.Sprintf(`%s=?`, m.db.QuoteString(fieldNameDelete)),
+			conditionWhere+conditionExtra,
+			append([]interface{}{gtime.Now().String()}, conditionArgs...),
+		)
+	}
+	return m.db.DoDelete(m.getLink(true), m.tables, conditionWhere+conditionExtra, conditionArgs...)
 }

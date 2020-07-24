@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/net/gtcp"
-	"github.com/gogf/gf/os/gfcache"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/util/gconv"
 )
@@ -43,7 +42,7 @@ var (
 	commReceiveQueues = gmap.NewStrAnyMap(true)
 
 	// commPidFolderPath specifies the folder path storing pid to port mapping files.
-	commPidFolderPath = gfile.Join(gfile.TempDir(), "gproc")
+	commPidFolderPath = gfile.TempDir("gproc")
 )
 
 func init() {
@@ -73,7 +72,7 @@ func getConnByPid(pid int) (*gtcp.PoolConn, error) {
 // It returns 0 if no port found for the specified pid.
 func getPortByPid(pid int) int {
 	path := getCommFilePath(pid)
-	content := gfcache.GetContents(path)
+	content := gfile.GetContentsWithCache(path)
 	return gconv.Int(content)
 }
 

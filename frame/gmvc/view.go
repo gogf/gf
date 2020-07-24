@@ -99,7 +99,7 @@ func (view *View) BindFuncMap(funcMap gview.FuncMap) {
 
 // Display parses and writes the parsed template file content to http response.
 func (view *View) Display(file ...string) error {
-	name := "index.tpl"
+	name := view.view.GetDefaultFile()
 	if len(file) > 0 {
 		name = file[0]
 	}

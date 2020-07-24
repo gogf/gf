@@ -7,7 +7,7 @@
 package gtype_test
 
 import (
-	"encoding/json"
+	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/util/gconv"
 	"testing"
 
@@ -98,12 +98,12 @@ func Test_Bool_JSON(t *testing.T) {
 }
 
 func Test_Bool_UnmarshalValue(t *testing.T) {
-	type Var struct {
+	type V struct {
 		Name string
 		Var  *gtype.Bool
 	}
 	gtest.C(t, func(t *gtest.T) {
-		var v *Var
+		var v *V
 		err := gconv.Struct(map[string]interface{}{
 			"name": "john",
 			"var":  "true",
@@ -113,7 +113,7 @@ func Test_Bool_UnmarshalValue(t *testing.T) {
 		t.Assert(v.Var.Val(), true)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		var v *Var
+		var v *V
 		err := gconv.Struct(map[string]interface{}{
 			"name": "john",
 			"var":  "false",

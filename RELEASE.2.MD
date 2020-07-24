@@ -1,3 +1,561 @@
+# `v1.13.1` (2020-06-10)
+
+# GoFrame
+
+`GF(Go Frame)`是一款模块化、高性能、生产级的Go基础开发框架。实现了比较完善的基础设施建设以及开发工具链，提供了常用的基础开发模块，如：缓存、日志、队列、数组、集合、容器、定时器、命令行、内存锁、对象池、配置管理、资源管理、数据校验、数据编码、定时任务、数据库ORM、TCP/UDP组件、进程管理/通信等等。并提供了Web服务开发的系列核心组件，如：Router、Cookie、Session、Middleware、服务注册、模板引擎等等，支持热重启、热更新、域名绑定、TLS/HTTPS、Rewrite等特性。
+
+## 特点
+
+* 模块化、松耦合设计；
+* 模块丰富、开箱即用；
+* 简便易用、易于维护；
+* 高代码质量、高单元测试覆盖率；
+* 社区活跃，大牛谦逊低调脾气好；
+* 详尽的开发文档及示例；
+* 完善的本地中文化支持；
+* 设计为团队及企业使用；
+
+## 发展
+
+`GoFrame`开始得比较早，`2011`年始于北京一个智能物联网平台项目，那时还没有这么多物联网的现行标准，`Go`的标准库以及生态也未如此丰富。`2017`年的时候`GF`才开始发布测试版，`2018`年`1024`程序员节日的时候才发布`v1.0`正式版，为`Go`生态发展添砖加瓦。开源以来快速迭代、发展成长，广受开发者和企业的青睐，也有许多的开发者加入了贡献行列。`GF`原本是为开发团队设计的，因此她的开发效率和可维护性做得非常好，有着很高的代码质量以及丰富的单元测试和示例，并且`GF`是目前中文化文档做的最好的`Golang`开发框架。
+
+# Change Log
+
+1. 应多数开发者的要求，框架要求的最低`Golang`运行版本降级为了`v1.11`。
+1. 新增`GoFrame`视频教程地址：
+    - bilibili：https://www.bilibili.com/video/av94410029
+    - 西瓜视频： https://www.ixigua.com/pseries/6809291194665796100/
+1. 将不常用的`guuid`模块迁移到 github.com/gogf/guuid 作为社区模块维护，保持`gf`主仓库的轻量级。
+1. 新增`guid`模块，用于高效轻量级的唯一字符串生成：https://goframe.org/util/guid/index
+
+
+## `tool chain`
+
+1. 工具链更新：https://goframe.org/toolchain/cli
+1. 新增`gf env`命令，更优雅地查看当前`Golang`环境变量信息。
+1. 新增`gf mod path`命令，用于将当前`go modules`包拷贝到`GOPATH`中，以便使用原始的`GOPATH`方式开发项目。
+1. 对现有`cli`命令进行了一些改进，提高使用体验；预编译二进制版本在部分平台下提供了`upx`压缩，使得下载的文件更小。
+
+## `container`
+1. `garray`
+    - https://goframe.org/container/garray/index
+    - 简化数组使用方式，支持类似于`var garray.Array`的变量定义使用方式；
+    - 增加`Walk`方法，用于自定义的数组元素处理方法；
+    - 增加`ContainsI`方法，用于大小写忽略匹配的数组元素项存在性查找；
+    - 完善单元测试，代码覆盖率`94%`；
+    - 代码改进，提高性能；
+    - 修复一些问题；
+1. `gchan`
+    - 由于该封装包实际意义不是很大，因此从主框架中删除；
+1. `glist`
+    - https://goframe.org/container/glist/index
+    - 简化链表使用方式，支持类似于`var glist.List`的变量定义使用方式；
+    - 完善单元测试，代码覆盖率`99%`；
+1. `gmap`
+    - https://goframe.org/container/gmap/index
+    - 简化`Map`使用方式，支持类似于`var gmap.Map`的变量定义使用方式；
+    - 完善单元测试，代码覆盖率`81%`；
+    - 代码改进，提高性能；
+1. `gset`
+    - https://goframe.org/container/gset/index
+    - 简化集合使用方式，支持类似于`var gset.Set`的变量定义使用方式；
+    - 增加`Walk`方法，用于自定义的集合元素处理方法；
+    - 完善单元测试，代码覆盖率`90%`；
+    - 代码改进，提高性能；
+1. `gtree`
+    - https://goframe.org/container/gtree/index
+    - 简化树型使用方式，支持类似于`var gtree.BTree`的变量定义使用方式；
+    - 完善单元测试，代码覆盖率`90%`；
+1. `gvar`
+    - https://goframe.org/container/gvar/index
+    - 完善单元测试，代码覆盖率`69%`；
+    - 代码组织结构调整，提高维护性；
+    - 代码改进，提高性能；
+
+## `database`
+
+1. `gdb`
+    - 增加`Transaction(f func(tx *TX) error) (err error)`接口方法，用于通过闭包实现事务封装处理：https://goframe.org/database/gdb/transaction
+    - 去掉不常用的`From`接口方法，改进`Table`及`Model`方法的参数为不定参数，并支持通过不定参数传递表别名：https://goframe.org/database/gdb/chaining/select
+    - 增加`DryRun`特性，支持空跑时只执行查询不执行写入/更新/删除操作：https://goframe.org/database/gdb/senior
+    - 增加`create_at`, `update_at`写入时间、更新时间字段自动填充特性：https://goframe.org/database/gdb/chaining/auto-time
+    - 增加`delete_at`软删除特性：https://goframe.org/database/gdb/chaining/auto-time
+    - 增加`Having`链式操作方法，用于`having`条件查询：https://goframe.org/database/gdb/chaining/select
+    - `Result`结果对象增加`Chunk`方法，用于自定义的数据分批处理：https://goframe.org/database/gdb/result
+    - 改进`Schema`数据库运行时切换特性；
+    - 改进对`pgsql`, `mssql`, `sqlite`, `oracle`数据库字段类型的支持；
+    - 进一步完善单元测试；
+    - 代码组织结构调整，提高维护性；
+    - 代码改进，提高性能；
+1. `gredis`
+    - 增加`MaxActive`连接池参数默认配置为`100`，限制默认的连接数量；
+    - 改进`Conn`连接对象的`Do`方法，支持对`map/slice/struct`类型进行自动的`json.Marshal`处理，注意获取数据时使用`DoVar`方法获取：https://goframe.org/database/gredis/usage
+    - 完善单元测试，代码覆盖率`72%`；
+
+## `net`
+1. `ghttp`
+    - 增加`Prefix`及`Retry`客户端链式操作方法；
+    - 增加客户端原始请求打印特性：https://goframe.org/net/ghttp/client/demo/dump
+    - 增加`ClientMaxBodySize`的服务端配置，用于限制客户端提交的`Body`大小，默认为`8MB`；在涉及到上传的Server中需要增加该配置的大小，在配置文件中指定对应的大小即可，如`ClientMaxBodySize="100MB"`：https://goframe.org/net/ghttp/config
+    - 改进`SessionId`生成的随机性，提高`Session`安全性：https://goframe.org/os/gsession/index
+    - 改进`ghttp.Server`实现了标准库的`http.Handler`接口，便于与其他第三方的服务如`Prometheus`进行代码集成；
+    - 其他大量的代码细节改进工作，提高性能及持久维护性；
+    - 完善单元测试，代码覆盖率`61%`；
+
+1. `gipv4`
+    - 增加`GetIpArray`方法，用于获取当前主机的所有IPv4地址；
+    - 增加`GetMacArray`及`GetMac`方法，用于获取当前主机的`MAC`地址信息；
+    - 修改`IntranetIP`方法名称为`GetIntranetIp`，修改`IntranetIPArray`方法名称为`GetIntranetIpArray`；
+
+## `encoding`
+1. `gjson`
+    - 新增`GetMaps`获取`JSON`内部节点变量方法；
+    - 改进`NewWithTag`方法对`map/struct`的处理；
+    - 完善单元测试，代码覆盖率`77%`；
+1. `gyaml`
+    - 升级依赖的第三方`yaml`解析包，解决了`map[interface{}]interface{}`转换问题；
+
+## `error`
+1. `gerror`
+    - 新增`NewfSkip`方法，用于创建`skip`指定堆栈的错误对象；
+    - 放开框架所有的堆栈链路打印，展示错误时真实的链路调用详情；
+
+## `os`
+1. `gcache`
+    - 增加`GetVar`方法，用于获得可以便捷转换为其他数据类型的"泛型"变量；
+    - 标记`Removes`方法废弃，改进`Remove`方法参数为不定参数，统一使用`Remove`方法删除单个/多个键值对；
+    - 完善单元测试，代码覆盖率`96%`；
+
+1. `genv`
+    - 增加`GetVar`方法，用于获得可以便捷转换为其他数据类型的"泛型"变量；
+
+1. `gfile`
+    - 改进`CopyDir/CopyFile`复制目录/文件方法；
+    - 新增`ScanDirFunc`方法，用于支持自定义处理回调的目录检索；
+    - 完善单元测试，代码覆盖率`64%`；
+
+1. `glog`
+    - 增加支持`Context`上下文变量的日志打印特性：https://goframe.org/os/glog/context
+
+1. `gres`
+    - 改进打包特性，增强生成二进制文件及Go文件的压缩比，比旧版本增加`20%`压缩率，使得编译生成的二进制文件体积更小；
+    - 代码结构改进，提高执行效率及可持久维护性；
+
+1. `gsession`
+    - 改进`SessionId`默认生成方法，采用`guid.S`方法生成；
+    - 增加`SetId`及`SetIdFunc`方法，用于自定义`SessionId`及自定义的`SessionId`生成方法；
+
+## `frame`
+1. `g`
+    - 新增`g.Table`方法，用于快速创建数据库模型操作对象；
+
+## `i18n`
+1. `gi18n`
+    - 新增`GetContent`方法，用于获取指定`i18n`关键字为转译内容；
+    - 改进代码细节，提高性能和持久可维护性；
+    - 完善单元测试，代码覆盖率`74%`；
+
+## `test`
+1. `gtest`
+    - 增加`AssertNQ`断言方法，用于强类型的不相等判断；
+
+## `text`
+1. `gstr`
+    - 增加`SubStrRune`方法，用于支持`unicode`的字符串截取；
+    - 增加`StrLimitRune`方法，用于支持`unicode`的字符串截断隐藏；
+    - 增加`LenRune`方法，用于替换`RuneLen`方法，统一方法命名风格；
+    - 增加`PosRune/PosIRune/PosRRune/PosRIRune`方法，用于支持`unicode`的字符串左右位置查找；
+    - 增加`CompareVersionGo`方法，用于`Golang`风格的版本号大小比较；
+    - 完善单元测试，代码覆盖率`75%`；
+
+## `util`
+1. `gconv`
+    - 改进`Convert`转换方法，支持常见`map`类型的转换；
+    - 改进类型转换过程中异常错误的捕获，通过`error`返回；
+    - 其他一些细节改进；
+    - 完善单元测试，代码覆盖率`63%`；
+
+1. `grand`
+    - 增加`B`方法，用于获得随机的二进制数据；
+    - 改进代码底层实现，部分接口性能提高`50%`；
+    - 完善单元测试，代码覆盖率`74%`；
+
+1. `guid`
+    - 新增`guid`模块，用于高效轻量级的唯一字符串生成：https://goframe.org/util/guid/index
+
+1. `gutil`
+    - 增加`MapContains`方法，用于判断map中是否包含指定键名；
+    - 增加`MapDelete`方法，用于删除map中指定的键名，可以为多个键名；
+    - 增加`MapMerge`方法，用于合并两个map；
+    - 增加`MapMergeCopy`方法，用于拷贝多个map；
+    - 增加`MapContainsPossibleKey`方法，用于查找指定键名，忽略大小写及字符`'-'/'_'/'.'/' '`；
+
+1. `gvalid`
+    - 所有默认的错误提示改为了英文；
+    - 错误提示的配置改为了通过`i18n`来配置实现，以便支持国际化：https://goframe.org/util/gvalid/message
+    - 身份证号规则名称从`id-number`改为了`resident-id `；
+    - 银行卡号规则名称从`luhn`改为了`bank-card`；
+    - 完善单元测试，代码覆盖率`96%`；
+
+## Bug Fix
+1. 修复`gcompress`的多文件`zip`压缩问题；
+1. 修复`ghttp.Client`获取返回的过期`Cookie`的问题；
+1. 修复`gres.File`对于`http.File`接口的实现细节；
+1. 修复`garray.Pop*`方法的边界问题；
+1. 修复`gres`中`Readdir`方法参数为`0`时报错的问题；
+1. 其他一些修复：https://github.com/gogf/gf/issues?q=is%3Aissue+label%3Abug
+
+
+
+
+# `v1.12.1` (2020-03-31)
+
+大家好啊！久等啦！
+
+由于自从上次版本的发布以来，越来越多小伙伴加入了`GF`的大家庭，并提供了许多不错的建议和反馈，这次版本对其中大部分反馈进行了处理，包括大部分的改进建议和部分新特性，因此这次的版本发布时隔了两个多月。`GF`非常注重代码质量以及可持续维护性，这次版本也进一步对框架大部分模块的示例、注释和单元测试用例进行了完善，目前单元测试用例数量约为`1991`例，代码覆盖率为`71%`，覆盖了所有模块的绝大部分主要功能。
+
+`GF`框架提供了比较常用、高质量的基础开发模块，轻量级、模块化、高性能，推荐大家阅读框架源码了解更多细节。本次发布有个别的不兼容升级，往往批量替换即可，以下`change log`比较完善，建议升级前仔细阅读。
+
+本次发布即意味下一版本开发计划的开启，欢迎更多小伙伴参与开源贡献：https://github.com/gogf/gf/projects/8
+
+感谢大家支持！Enjoy your `GF`！
+
+
+# GoFrame
+
+`GF(Go Frame)`是一款模块化、高性能、生产级的Go基础开发框架。实现了比较完善的基础设施建设以及开发工具链，提供了常用的基础开发模块，如：缓存、日志、队列、数组、集合、容器、定时器、命令行、内存锁、对象池、配置管理、资源管理、数据校验、数据编码、定时任务、数据库ORM、TCP/UDP组件、进程管理/通信等等。并提供了Web服务开发的系列核心组件，如：Router、Cookie、Session、Middleware、服务注册、模板引擎等等，支持热重启、热更新、域名绑定、TLS/HTTPS、Rewrite等特性。
+
+## 特点
+* 模块化、松耦合设计；
+* 模块丰富，开箱即用；
+* 简便易用，易于维护；
+* 社区活跃，大牛谦逊低调脾气好；
+* 高代码质量、高单元测试覆盖率；
+* 详尽的开发文档及示例；
+* 完善的本地中文化支持；
+* 更适合企业及团队使用；
+
+## 地址
+- 官网：https://goframe.org
+- 主库：https://github.com/gogf/gf 
+- 码云：https://gitee.com/johng/gf 
+
+# Change Log
+
+从`GF v1.12`版本开始，框架要求的最低`Golang`运行版本为`v1.13`，由于`Golang`新版本都是向后兼容的，因此推荐大家更新使用`Golang`新版本：https://golang.google.cn/dl/
+
+> 本次版本也新增了`Swagger`的工具及插件支持，另行独立发布。
+
+## `tool chain`
+1. `gen model`命令新增对`pgsql/mssql/sqlite/oracle`的模型生成支持。
+1. `gen model`命令生成模型新增公开包变量`Columns`用于获得表的字段名称。
+
+## `net`
+1. `ghttp`
+    - 注意：从该版本开始，`Server`默认关闭了平滑重启特性。开发者可以通过相应的配置选项打开。
+    - 改进`Client.Get`方法，增加可选的请求参数。
+    - 新增`Client`链式操作方法：`Header`, `HeaderRaw`, `Cookie`, `ContentType`, `ContentJson`, `ContentXml`, `Timeout`, `BasicAuth`, `Ctx`：https://goframe.org/net/ghttp/client/chain
+    - 新增`Request.GetCtx/GetCtxVar/SetCtxVar/Context`上下文变量管理方法，用于请求内部的上下文变量特性：
+        - 自定义变量：https://goframe.org/net/ghttp/request/custom
+        - 上下文变量：https://goframe.org/net/ghttp/request/context
+    - 新增`Request.GetUploadFile/GetUploadFiles`方法，以及`UploadFile`类型，极大简化文件上传处理逻辑：https://goframe.org/net/ghttp/client/demo/upload
+    - 新增`Request.GetPage`方法，用于便捷地获得分页对象：
+        - 基本介绍：https://goframe.org/util/gpage/index
+        - 动态分页：https://goframe.org/util/gpage/dynamic
+        - 静态分页：https://goframe.org/util/gpage/static
+        - Ajax分页：https://goframe.org/util/gpage/ajax
+        - URL模板：https://goframe.org/util/gpage/template
+        - 自定义分页：https://goframe.org/util/gpage/custom
+    - 改进`Response.Redirect*`方法，增加自定义的跳转HTTP状态码参数。
+    - 改进`CORS`特性，完善跨域功能处理，并完全遵守`W3C`关于`OPTIONS`请求方法的规范约定：https://goframe.org/net/ghttp/cors
+    - 模板视图对象增加`Request`内置变量，用于模板获得请求参数。由于`GF`框架的模板引擎采用两级缓存设计，减少`IO`开销的同时提升了执行效率，即使增加了大量的内置变量以及内置方法，经过大规模的性能测试，性能比其他`WebServer`库相同逻辑下高出`50% - 200%`的效率。
+    - 新增`Server`实验性的`Plugin`特性。
+    - 改进`Server`底层路由存储、检索逻辑，优化代码，提升效率。
+    - 改进分组路由注册的源码位置记录功能，当路由注册冲突时能够精准定位及提示重复路由源码位置。
+    - 改进`Server`日志处理。
+    - 完善单元测试。
+
+
+## `database`
+1. `gdb`
+    - 代码重构改进，增加`Driver`驱动接口设计，方便开发者自定义驱动实现。新增`Register`包方法，用于开发者注册自定义的数据库类型驱动：https://goframe.org/database/gdb/driver
+    - 新增`GetArray`接口及实现，用于获取指定字段列的数据，构造成数组返回：https://goframe.org/database/gdb/chaining/select
+    - 新增`InsertIgnore`接口及实现，用于写入时忽略写入冲突，仅对`mysql`数据库类型有效：https://goframe.org/database/gdb/chaining/insert-save
+    - 新增`Schema`接口及实现，用于动态切换并获取指定名称的数据库对象：https://goframe.org/database/gdb/chaining/schema
+    - 新增`FieldsStr/FieldsExStr`模型方法，用于获取表字段，并构造成字符串返回：hhttps://goframe.org/database/gdb/chaining/fields-retrieve
+    - 新增`LockUpdate/LockShared`模型链式操作方法，用于实现悲观锁操作：https://goframe.org/database/gdb/chaining/lock
+    - 改进`Where/Data`方法对更新参数输入方式的支持，提高灵活性：
+        - https://goframe.org/database/gdb/chaining/select
+        - https://goframe.org/database/gdb/chaining/update-delete
+    - 查询结果对象`Result`新增`Array`方法，用于获得指定字段的数值，构造成数组返回：https://goframe.org/database/gdb/result
+    - 改进`OmitEmpty`方法对`Data`输入参数的过滤，当给定的`Data`参数为空时间对象时，将会被过滤。
+    - 增加默认的数据库连接池参数：`MaxIdleConns=10`。
+    - 其他一些改进。
+    - 完善单元测试。
+
+1. `gredis`
+    - 增加/修改默认的数据库连接池参数：`MaxIdle=10`, `IdleTimeout=10s`, `MaxConnLifetime=30s`, `Wait=true`。
+    - 完善单元测试。
+
+## `container`
+1. 所有容器对象新增`UnmarshalValue(interface{}) error`接口方法实现，用于`gconv`转换时根据任意类型变量创建/设置对象内容，`GF`框架的所有容器对象均实现了该接口。
+
+1. `garray`
+    - 新增`RemoveValue`方法，用于根据数值检索并删除元素项。
+    - 新增`FilterNil`方法，用于遍历并删除数组中的`nil`元素项。
+    - 新增`FilterEmpty`方法，用于遍历并删除数组中的空值元素项，空值包括：`0, nil, false, "", len(slice/map/chan) == 0`。
+    - 改进`Set/Fill/InsertBefore/InsertAfter`方法严谨性，将原有的链式操作返回值对象修改为`error`返回值。
+    - 改进`Get/Remove/PopRand/PopLeft/PopRight/Rand`方法严谨性，增加`found`的`bool`返回值，标识当前方法是否有数据返回，当空数组或者操作越界时`found`返回值为`false`。
+    - 改变`Rands`方法原有逻辑，保证按照给定大小返回随机数组。
+    - 完善单元测试。
+
+1. `gpool`
+    - 调整缓存池过期时间参数类型，旧版本为`int`类型表示毫秒，新版本为`time.Duration`类型使得时间控制更灵活。
+    - 内部代码优化，性能改进。
+    - 完善单元测试。
+    - 完善注释。
+
+## `os`
+1. `glog`
+    - 增加`Rotation`日志滚动切分特性，新增按照文件大小或过期时间进行日志切分，并支持切分文件数量限制、对日志文件进行自动压缩、可自定义压缩级别（`1-9`）、支持对切分文件过期时间清理：https://goframe.org/os/glog/rotate
+    - 新增`LevelPrefixes`特性，支持对日志级别的前缀名称进行自定义：https://goframe.org/os/glog/level
+    - 新增`SetLevelStr`方法，并增加按照字符串进行日志级别配置的特性：
+        - https://goframe.org/os/glog/level
+        - https://goframe.org/os/glog/config
+    - 新增`SetDefaultLogger`包方法，用于设置全局默认的`Logger`对象。
+
+1. `gres`
+    1. 改进资源内容编码设计，采用新的压缩算法，减少资源文件大小，例如原本`15MB`的网站静态资源文件（`css/js/html`等），资源文件打包后约为`4MB`左右：https://goframe.org/os/gres/index
+    1. 注意：该改进与旧版本无法兼容，需要重新打包原有的资源文件。
+    1. 完善单元测试。
+
+1. `gcfg`
+    - 去掉配置对象属性的原子并发安全控制，改为普通变量类型。由于配置管理是最常用模块之一，因此确保高效的设计及方法实现。
+    - 单例对象做较大调整：为方便多文件场景下的配置文件调用，简便使用并提高开发效率，因此当给定的单例名称对应的`toml`配置文件在配置目录中存在时，将自动设置该单例对象的默认配置文件为该文件。例如：`g.Cfg("redis")`获取到的单例对象将会默认去检索并设置默认的配置文件为`redis.toml`，当该文件不存在时，则使用默认的配置文件（`config.toml`）：https://goframe.org/net/ghttp/config
+    - 完善单元测试。
+
+1. `gview`
+    - 新增`concat`内置字符串拼接方法：https://goframe.org/os/gview/function/buildin
+    - 完善单元测试。
+
+1. `gfile`
+    - 改进`SelfPath`获取当前执行文件路径方法，提高执行效率。
+    - 改进`Join`文件路径连接方法，防止多余的路径连接符号。
+    - 改建`GetContents`文件内容获取方法执行效率，降低内存占用。
+    - 新增`StrToSize`方法，用于将大小字符串转换为字节数字，大小字符串例如`10m`, `5KB`, `1.25Gib`等。
+    - 新增`ReadLines/ReadByteLines`方法，用于按行读取指定文件内容，并给定读取回调函数。
+    - 完善单元测试。
+
+1. `gtime`
+    - 改进`gtime.Time`对象实现，统一字符串打印时间格式为`Y-m-d H:i:s`，如：`2020-01-01 12:00:00`。
+
+1. `gcmd`
+    - 命令行解析方法增加`strict`参数，用于设置当前解析是否严格解析，严格解析下如果给定了非法的选项，将会停止解析并返回错误。默认情况下为非严格解析。
+
+1. `genv`
+    - 改进`Remove`删除环境变量键值对方法，增加对多个键值对环境变量的删除。
+
+1. `gfpool`
+    - 改进代码实现，提高效率。
+    - 完善单元测试。
+
+1. `gfsnotify`
+    - 改进包初始化方法，当系统原因引起默认`Watcher`对象创建失败时，直接`panic`。
+
+1. `gproc`
+    - 改进`SearchBinaryPath`方法。
+    - 改进`Process.Kill`方法在`windows`及`*niux`平台下不同表现的处理。
+
+## `encoding`
+1. `gjson`
+    - 代码改进、完善注释、新增大量代码示例。
+    - 文档更新：
+        - 基本介绍：https://goframe.org/encoding/gjson/index
+        - 对象创建：https://goframe.org/encoding/gjson/object
+        - 层级访问：https://goframe.org/encoding/gjson/pattern
+        - Struct转换：https://goframe.org/encoding/gjson/conversion-struct
+        - 动态创建修改：https://goframe.org/encoding/gjson/dataset
+        - 数据格式转换：https://goframe.org/encoding/gjson/conversion-format
+
+## `frame`
+1. `g`
+    - 新增`IsNil`方法，用于判断当前给定的变量是否为`nil`，该方法有可能会使用到反射来实现判断。
+    - 新增`IsEmpty`方法，用于判断当前给定的变量是否为`空`，该方法优先使用断言判断但有可能会使用到反射来实现判断。空值包括：`0, nil, false, "", len(slice/map/chan) == 0`。
+    - 标记废弃`SetServerGraceful`方法，转而统一交给`Server`的配置来管理。
+1. `gins`
+    - 改进代码结构，方便维护。
+    - 改进、完善单元测试。
+1. `gmvc`
+    - 新增`M`类型，为`*gdb.Model`的别名简称，用于工具链自动生成模型中的`M`属性。
+
+## `text`
+1. `gstr`
+    - 新增`HasPrefix/HasSuffix`方法。
+    - 新增`OctStr`方法，用于将八进制字符串转换为其对应的`unicode`字符串，例如转换为中文。常用于`gRPC`底层通信编码中。
+    - 完善单元测试。
+
+## `debug`
+1. `gdebug`
+    - 改进代码结构，方便维护。
+    - 新增`TestDataPath`方法，用于当前包单元测试中获得当前包中`testdata`目录的绝对路径。
+
+## `util`
+1. `gconv`
+    - 改进`String`字符串转换方法，增加对`time.Time/*time.Time/gtime.Time`类型的内置支持。
+    - 改进`Map/Struct`转换方法，增加对一些特殊场景的细节处理。经过大规模的使用，大量的反馈改进，不断完善了细节。
+    - 改进`Struct`转换方法，增加对`UnmarshalValue(interface{}) error`接口的支持。
+    - 完善单元测试。
+
+1. `grand`
+    - 注意：不兼容调整，原有的`Str`方法更名为`S`方法，用以获取指定长度的随机字符串、数字，并增加`symbol`参数，指定是否可以随机返回特殊可见字符。
+    - 新增`Str`方法，用于从指定的字符串字符中随机获取指定长度的字符串。该方法同时支持`unicode`字符串，例如：中文：https://goframe.org/util/grand/index
+    - 新增`Symbols`方法，用于随机返回指定场孤独的特殊可见字符：https://goframe.org/util/grand/index
+    - 完善单元测试。
+
+1. `gvalid`
+    - 长度校验规则增加对`unicode`字符串的支持，例如：中文。
+
+# Bug Fix
+1. 修复`Server`的视图对象配置失效问题。
+1. 修复`Server`中间件在中间件`panic`情况下，忽略`Middleware.Next`方法控制，导致鉴权中间件失效的问题。
+1. 修复`gudp.Server`在请求包大小超过`64bytes`时的断包问题，并调整默认缓冲区大小为`1024byte`，开发者可自定义缓冲区大小。
+1. 修复`gfile.MTimeMillisecond`方法返回错误的文件修改毫秒时间戳。
+1. 修复`gconv.Int64`对负数转换的支持。
+1. 其他一些修复。
+1. 详见：https://github.com/gogf/gf/issues?q=label%3Abug
+
+
+
+# `v1.11.2` (2020-01-14)
+
+`GF(Go Frame)` https://goframe.org 是一款模块化、高性能、生产级的Go基础开发框架。实现了比较完善的基础设施建设，包括常用的核心开发组件， 如：缓存、日志、文件、时间、队列、数组、集合、字符串、定时器、命令行、文件锁、内存锁、对象池、连接池、资源管理、数据校验、数据编码、文件监控、 定时任务、数据库ORM、TCP/UDP组件、进程管理/通信、并发安全容器等等。 并提供了Web服务开发的系列核心组件，如：Router、Cookie、Session、Middleware、服务注册、配置管理、模板引擎等等， 支持热重启、热更新、多域名、多端口、多服务、HTTPS、Rewrite等特性。
+
+`GF`有着丰富的基础模块、完善的工具链、详尽的开发文档。开源近两年以来，`GF`得到越来越多小伙伴的肯定和支持，从寂寂无名到现在被广泛应用于微服务、物联网、区块链、电商系统、银行系统等企业级的生产项目中，经历了百万级、千万级项目的考验，2019年度被码云`gitee`评选为`GVP`最有价值开源项目。`GF`正在快速地成长中，目前保持着1-2个月迭代版本的发布规律，社区活跃，欢迎加入`GF`大家庭。
+
+最后，祝大家2020新年快乐，鼠年大吉！
+
+
+
+## 新特性
+
+1. 新年新气象，官网文档大量更新：https://goframe.org/index
+1. `GF`工具链更新：https://goframe.org/toolchain/cli
+    - 新增`gf run`热编译运行命令；
+    - 新增`gf docker` Docker镜像编译命令；
+    - 新增`gf gen model` 强大的模型自动生成命令；
+    - `gf build`命令增加对配置文件配置支持；
+    - 大量命令行工具改进工作；
+    - 新增自动代理设置特性；
+1. 数据库`ORM`新特性：
+    - 增加`prefix`数据表前缀支持：https://goframe.org/database/gdb/config
+    - 新增`Schema`数据库对象并改进数据库切换特性：https://goframe.org/database/gdb/chaining/schema
+    - 新增`WherePri`方法，用于自动识别主键的条件方法：https://goframe.org/database/gdb/chaining/select
+    - 文档及示例大量更新，覆盖95%以上的功能特性；
+
+
+
+## 功能改进
+
+### `container`
+1. `garray`
+    - 新增`New*ArrayRange`方法，用于初始化创建指定数值范围的数组。
+    - 新增`Iterator*`方法，用于数组项元素回调遍历。
+    - 完善单元测试。
+1. `gvar`
+    - 改进`MapStrStr`、`MapStrStrDeep`方法实现。
+
+### `net`
+1. `ghttp`
+    - 改进HTTP客户端，增加对提交参数的自动`Content-Type`识别功能。
+    - `Request`对象增加`Parse`方法，用于快捷的对象转换即参数校验。
+    - `Request.GetPost*`方法全部标记为`deprecated`，统一客户端参数提交方式为`QueryString`, `Form`, `Body`。
+    - 去掉`Response`模板解析时的`Get`/`Post`内置变量，新增`Query`, `Form`, `Request`内置变量：https://goframe.org/net/ghttp/response/template
+    - 改进`Response.WriteJson*`及`Response.WriteXml*`方法，增加对`string`, `[]byte`类型参数的支持。
+    - `Server`新增`GetRouterArray`方法，用于向应用层暴露并获取`Server`的路由列表。
+    - `Server`新增`Use`方法，该方法为`BindMiddlewareDefault`的别名，用以全局中间件的注册。
+    - `Server`新增`RouteOverWrite`配置项，用于控制是否在注册路由冲突时自动覆盖，默认关闭并提示。
+    - `Server`新增`Graceful`配置项，用于在单服务场景下控制平滑重启特性的开启/关闭，默认开启。
+    - 完善单元测试。
+1. `gtcp`
+    - 改进简单协议下的数据包发送接收功能。
+    - 将连接池默认的缓存过期时间`30`秒修改为`10`秒。
+    - 完善单元测试。
+
+### `database`
+1. `gdb`
+    - 新增`As`数据表别名方法。
+    - 改进数据表、字段的安全字符自动识别添加功能。
+    - 新增`DB`数据库对象切换方法。
+    - 新增`TX`链式操作事务支持方法。
+    - 完善单元测试。
+### `os`
+1. `gcfg`
+    - 新增`GetMapStrStr`方法。
+1. `gcmd`
+    - 增加参数解析的`strict`严格参数，默认严格解析，不存在指定参数/选项名称时则报错返回。
+1. `genv`
+    - 改进`Remove`方法支持多个环境变量的删除。
+1. `gfile`
+    - 改进`TempDir`临时目录获取方法，在`*nix`系统下默认为`/tmp`目录。
+    - 新增`ReadLines`, `ReadByteLines`方法，用以按行回调读取文件内容。
+    - 新增`Copy*`方法，用以文件/目录的拷贝，支持递归。
+    - 新增`Replace*`方法，用以目录下的文件内容替换，支持递归。
+    - 改进`Scan*`方法，用以检索并返回指定目录下的所有文件/目录，支持文件模式指定，支持递归。
+    - 完善单元测试。
+1. `gproc`
+    - 改进命令行运行方法。
+    - 改进`Shell`命令文件检索逻辑。
+    - 改进实验性的进程间通信设计。
+1. `gtime`
+    - 将包方法以及`Time`对象的时间戳方法`Second`, `Millisecond`, `Microsecond`, `Nanosecond`标记为废除，
+    并新增`Timestamp`, `TimestampMilli`, `TimestampMicro`, `TimestampNano`替换。
+    - 需要注意的是以上修改可能和老版本存在兼容性问题。
+
+1. `gview`
+    - 解析功能、缓存设计改进。
+    - 新增`encode`, `decode`HTML编码/解码模板函数。
+    - 新增`concat`字符串拼接模板函数。
+    - 新增`dump`模板函数，功能类似于`g.Dump`方法。
+    - 新增`AutoEncode`配置项，用于自动转码输出的`HTML`内容，常用于防止`XSS`，默认关闭。需要注意的是该特性并不会影响`include`内置函数: https://goframe.org/os/gview/xss
+    - 单元测试完善。
+
+### `crypto`
+1. `gmd5`
+    - 增加`MustEncrypt`, `MustEncryptBytes`, `MustEncryptString`, `MustEncryptFile`方法。
+1. `gsha1`
+    - 增加`MustEncryptFile`方法
+
+### `encoding`
+1. `gbase64`
+    - 新增`MustEncodeFile`, `MustEncodeFileToString`, `MustDecode`, `MustDecodeToString`方法。
+1. `gjson`/`gparser`
+    - 新增`GetMapStrStr`方法。
+    - 新增`Must*`方法，用于指定数据格式的转换失败时产生`panic`错误，而不会返回`error`参数。
+
+### `util`
+1. `gconv`
+    - 改进`Convert`方法增加对`[]int32`, `[]int64`, `[]uint`, `[]uint32`, `[]uint64`, `[]float32`, `[]float64`数据类型的转换支持。
+    - 改进`String`字符串转换方法对指针参数的支持。
+    - 改进`Map*` Map转换方法的代码结构及性能。
+    - 新增`Floats`, `Float32s`, `Float64s`对`[]float32`, `[]float64`类型转换方法。
+    - 新增`Ints`, `Int32s`, `Int64s`对`[]int`, `[]int32`, `[]int64`类型转换方法。
+    - 新增`Uints`, `Uint32s`, `Uint64s`对`[]uint`, `[]uint32`, `[]uint64`类型转换方法。
+    - 完善单元测试。
+
+
+### `frame`
+1. `gins`
+    - 所有的单例对象在获取失败时产生`panic`错误。
+
+## Bug Fix
+1. 增加对常见错误路由格式例如`/user//index`的兼容支持。
+1. 修复`gtcp`/`gudp`在数据接收时的间隔时间单位问题。
+1. 修复`gfile`/`gspath`/`gfsnotify`包对文件的存在性判断不严谨问题。
+1. 修复`gproc.Kill`方法在`windows`系统下的运行阻塞问题。
+1. 修复`gstr.TrimLeftStr`/`gstr.TrimRightStr`在被替换字符串长度小于替换字符串长度时的数组溢出问题。
+
+
+
 # `v1.10.0` (2019-12-05)
 
 各位`gfer`久等了，较上一次发布时间过去已有两个多月了，这段时间`GF`也在不断地迭代改进，细节比较多，拟了个大概，以下是`release log`。

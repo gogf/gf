@@ -8,8 +8,8 @@
 package ghttp
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/gogf/gf/internal/json"
 	"net/http"
 
 	"github.com/gogf/gf/encoding/gparser"
@@ -107,7 +107,7 @@ func (r *Response) WriteJson(content interface{}) error {
 	switch content.(type) {
 	case string, []byte:
 		r.Header().Set("Content-Type", "application/json")
-		r.Write(content)
+		r.Write(gconv.String(content))
 		return nil
 	}
 	// Else use json.Marshal function to encode the parameter.
@@ -139,7 +139,7 @@ func (r *Response) WriteJsonP(content interface{}) error {
 	switch content.(type) {
 	case string, []byte:
 		r.Header().Set("Content-Type", "application/json")
-		r.Write(content)
+		r.Write(gconv.String(content))
 		return nil
 	}
 	// Else use json.Marshal function to encode the parameter.
@@ -179,7 +179,7 @@ func (r *Response) WriteXml(content interface{}, rootTag ...string) error {
 	switch content.(type) {
 	case string, []byte:
 		r.Header().Set("Content-Type", "application/xml")
-		r.Write(content)
+		r.Write(gconv.String(content))
 		return nil
 	}
 	// Else use gparser.VarToXml function to encode the parameter.
@@ -204,16 +204,13 @@ func (r *Response) WriteXmlExit(content interface{}, rootTag ...string) error {
 }
 
 // WriteStatus writes HTTP <status> and <content> to the response.
+// Note that do not set Content-Type header here.
 func (r *Response) WriteStatus(status int, content ...interface{}) {
 	r.WriteHeader(status)
 	if len(content) > 0 {
 		r.Write(content...)
 	} else {
 		r.Write(http.StatusText(status))
-	}
-	if r.Header().Get("Content-Type") == "" {
-		r.Header().Set("Content-Type", "text/plain; charset=utf-8")
-		//r.Header().Set("X-Content-Type-Options", "nosniff")
 	}
 }
 

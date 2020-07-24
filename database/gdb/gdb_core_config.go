@@ -36,12 +36,13 @@ type ConfigNode struct {
 	Role             string        // (Optional, "master" in default) Node role, used for master-slave mode: master, slave.
 	Debug            bool          // (Optional) Debug mode enables debug information logging and output.
 	Prefix           string        // (Optional) Table prefix.
+	DryRun           bool          // (Optional) Dry run, which does SELECT but no INSERT/UPDATE/DELETE statements.
 	Weight           int           // (Optional) Weight for load balance calculating, it's useless if there's just one node.
 	Charset          string        // (Optional, "utf8mb4" in default) Custom charset when operating on database.
-	LinkInfo         string        // (Optional) Custom link information, when it is used, configuration Host/Port/User/Pass/Name are ignored.
-	MaxIdleConnCount int           // (Optional) Max idle connection configuration for underlying connection pool.
-	MaxOpenConnCount int           // (Optional) Max open connection configuration for underlying connection pool.
-	MaxConnLifetime  time.Duration // (Optional) Max connection TTL configuration for underlying connection pool.
+	LinkInfo         string        `json:"link"`        // (Optional) Custom link information, when it is used, configuration Host/Port/User/Pass/Name are ignored.
+	MaxIdleConnCount int           `json:"maxidle"`     // (Optional) Max idle connection configuration for underlying connection pool.
+	MaxOpenConnCount int           `json:"maxopen"`     // (Optional) Max open connection configuration for underlying connection pool.
+	MaxConnLifetime  time.Duration `json:"maxlifetime"` // (Optional) Max connection TTL configuration for underlying connection pool.
 }
 
 // configs is internal used configuration object.
@@ -142,24 +143,19 @@ func (c *Core) SetMaxConnLifetime(d time.Duration) {
 
 // String returns the node as string.
 func (node *ConfigNode) String() string {
-	if node.LinkInfo != "" {
-		return node.LinkInfo
-	}
 	return fmt.Sprintf(
-		`%s@%s:%s,%s,%s,%s,%s,%v,%d-%d-%d`,
+		`%s@%s:%s,%s,%s,%s,%s,%v,%d-%d-%d#%s`,
 		node.User, node.Host, node.Port,
 		node.Name, node.Type, node.Role, node.Charset, node.Debug,
 		node.MaxIdleConnCount,
 		node.MaxOpenConnCount,
 		node.MaxConnLifetime,
+		node.LinkInfo,
 	)
 }
 
 // SetDebug enables/disables the debug mode.
 func (c *Core) SetDebug(debug bool) {
-	if c.debug.Val() == debug {
-		return
-	}
 	c.debug.Set(debug)
 }
 
@@ -176,6 +172,21 @@ func (c *Core) GetCache() *gcache.Cache {
 // GetPrefix returns the table prefix string configured.
 func (c *Core) GetPrefix() string {
 	return c.prefix
+}
+
+// GetGroup returns the group string configured.
+func (c *Core) GetGroup() string {
+	return c.group
+}
+
+// SetDryRun enables/disables the DryRun feature.
+func (c *Core) SetDryRun(dryrun bool) {
+	c.dryrun.Set(dryrun)
+}
+
+// GetDryRun returns the DryRun value.
+func (c *Core) GetDryRun() bool {
+	return c.dryrun.Val()
 }
 
 // SetSchema changes the schema for this database connection object.

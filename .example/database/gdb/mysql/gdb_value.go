@@ -8,5 +8,5 @@ func main() {
 	db := g.DB()
 	db.SetDebug(true)
 
-	db.Table("user").Fields("DISTINCT id,nickname").Filter().All()
+	db.Table("user").Data("num=num+1").Where("id", 8).Update()
 }

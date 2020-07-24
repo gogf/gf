@@ -26,90 +26,95 @@ func Uints(i interface{}) []uint {
 	if i == nil {
 		return nil
 	}
-	if r, ok := i.([]uint); ok {
-		return r
-	} else {
-		var array []uint
-		switch value := i.(type) {
-		case []string:
-			array = make([]uint, len(value))
-			for k, v := range value {
-				array[k] = Uint(v)
-			}
-		case []int8:
-			array = make([]uint, len(value))
-			for k, v := range value {
-				array[k] = uint(v)
-			}
-		case []int16:
-			array = make([]uint, len(value))
-			for k, v := range value {
-				array[k] = uint(v)
-			}
-		case []int32:
-			array = make([]uint, len(value))
-			for k, v := range value {
-				array[k] = uint(v)
-			}
-		case []int64:
-			array = make([]uint, len(value))
-			for k, v := range value {
-				array[k] = uint(v)
-			}
-		case []uint8:
-			array = make([]uint, len(value))
-			for k, v := range value {
-				array[k] = uint(v)
-			}
-		case []uint16:
-			array = make([]uint, len(value))
-			for k, v := range value {
-				array[k] = uint(v)
-			}
-		case []uint32:
-			array = make([]uint, len(value))
-			for k, v := range value {
-				array[k] = uint(v)
-			}
-		case []uint64:
-			array = make([]uint, len(value))
-			for k, v := range value {
-				array[k] = uint(v)
-			}
-		case []bool:
-			array = make([]uint, len(value))
-			for k, v := range value {
-				if v {
-					array[k] = 1
-				} else {
-					array[k] = 0
-				}
-			}
-		case []float32:
-			array = make([]uint, len(value))
-			for k, v := range value {
-				array[k] = Uint(v)
-			}
-		case []float64:
-			array = make([]uint, len(value))
-			for k, v := range value {
-				array[k] = Uint(v)
-			}
-		case []interface{}:
-			array = make([]uint, len(value))
-			for k, v := range value {
-				array[k] = Uint(v)
-			}
-		case [][]byte:
-			array = make([]uint, len(value))
-			for k, v := range value {
-				array[k] = Uint(v)
-			}
-		default:
-			return []uint{Uint(i)}
+
+	var array []uint
+	switch value := i.(type) {
+	case []string:
+		array = make([]uint, len(value))
+		for k, v := range value {
+			array[k] = Uint(v)
 		}
-		return array
+	case []int8:
+		array = make([]uint, len(value))
+		for k, v := range value {
+			array[k] = uint(v)
+		}
+	case []int16:
+		array = make([]uint, len(value))
+		for k, v := range value {
+			array[k] = uint(v)
+		}
+	case []int32:
+		array = make([]uint, len(value))
+		for k, v := range value {
+			array[k] = uint(v)
+		}
+	case []int64:
+		array = make([]uint, len(value))
+		for k, v := range value {
+			array[k] = uint(v)
+		}
+	case []uint:
+		array = value
+	case []uint8:
+		array = make([]uint, len(value))
+		for k, v := range value {
+			array[k] = uint(v)
+		}
+	case []uint16:
+		array = make([]uint, len(value))
+		for k, v := range value {
+			array[k] = uint(v)
+		}
+	case []uint32:
+		array = make([]uint, len(value))
+		for k, v := range value {
+			array[k] = uint(v)
+		}
+	case []uint64:
+		array = make([]uint, len(value))
+		for k, v := range value {
+			array[k] = uint(v)
+		}
+	case []bool:
+		array = make([]uint, len(value))
+		for k, v := range value {
+			if v {
+				array[k] = 1
+			} else {
+				array[k] = 0
+			}
+		}
+	case []float32:
+		array = make([]uint, len(value))
+		for k, v := range value {
+			array[k] = Uint(v)
+		}
+	case []float64:
+		array = make([]uint, len(value))
+		for k, v := range value {
+			array[k] = Uint(v)
+		}
+	case []interface{}:
+		array = make([]uint, len(value))
+		for k, v := range value {
+			array[k] = Uint(v)
+		}
+	case [][]byte:
+		array = make([]uint, len(value))
+		for k, v := range value {
+			array[k] = Uint(v)
+		}
+	default:
+		if v, ok := i.(apiUints); ok {
+			return v.Uints()
+		}
+		if v, ok := i.(apiInterfaces); ok {
+			return Uints(v.Interfaces())
+		}
+		return []uint{Uint(i)}
 	}
+	return array
 }
 
 // Uint32s converts <i> to []uint32.
@@ -117,90 +122,94 @@ func Uint32s(i interface{}) []uint32 {
 	if i == nil {
 		return nil
 	}
-	if r, ok := i.([]uint32); ok {
-		return r
-	} else {
-		var array []uint32
-		switch value := i.(type) {
-		case []string:
-			array = make([]uint32, len(value))
-			for k, v := range value {
-				array[k] = Uint32(v)
-			}
-		case []int8:
-			array = make([]uint32, len(value))
-			for k, v := range value {
-				array[k] = uint32(v)
-			}
-		case []int16:
-			array = make([]uint32, len(value))
-			for k, v := range value {
-				array[k] = uint32(v)
-			}
-		case []int32:
-			array = make([]uint32, len(value))
-			for k, v := range value {
-				array[k] = uint32(v)
-			}
-		case []int64:
-			array = make([]uint32, len(value))
-			for k, v := range value {
-				array[k] = uint32(v)
-			}
-		case []uint:
-			array = make([]uint32, len(value))
-			for k, v := range value {
-				array[k] = uint32(v)
-			}
-		case []uint8:
-			array = make([]uint32, len(value))
-			for k, v := range value {
-				array[k] = uint32(v)
-			}
-		case []uint16:
-			array = make([]uint32, len(value))
-			for k, v := range value {
-				array[k] = uint32(v)
-			}
-		case []uint64:
-			array = make([]uint32, len(value))
-			for k, v := range value {
-				array[k] = uint32(v)
-			}
-		case []bool:
-			array = make([]uint32, len(value))
-			for k, v := range value {
-				if v {
-					array[k] = 1
-				} else {
-					array[k] = 0
-				}
-			}
-		case []float32:
-			array = make([]uint32, len(value))
-			for k, v := range value {
-				array[k] = Uint32(v)
-			}
-		case []float64:
-			array = make([]uint32, len(value))
-			for k, v := range value {
-				array[k] = Uint32(v)
-			}
-		case []interface{}:
-			array = make([]uint32, len(value))
-			for k, v := range value {
-				array[k] = Uint32(v)
-			}
-		case [][]byte:
-			array = make([]uint32, len(value))
-			for k, v := range value {
-				array[k] = Uint32(v)
-			}
-		default:
-			return []uint32{Uint32(i)}
+	var array []uint32
+	switch value := i.(type) {
+	case []string:
+		array = make([]uint32, len(value))
+		for k, v := range value {
+			array[k] = Uint32(v)
 		}
-		return array
+	case []int8:
+		array = make([]uint32, len(value))
+		for k, v := range value {
+			array[k] = uint32(v)
+		}
+	case []int16:
+		array = make([]uint32, len(value))
+		for k, v := range value {
+			array[k] = uint32(v)
+		}
+	case []int32:
+		array = make([]uint32, len(value))
+		for k, v := range value {
+			array[k] = uint32(v)
+		}
+	case []int64:
+		array = make([]uint32, len(value))
+		for k, v := range value {
+			array[k] = uint32(v)
+		}
+	case []uint:
+		array = make([]uint32, len(value))
+		for k, v := range value {
+			array[k] = uint32(v)
+		}
+	case []uint8:
+		array = make([]uint32, len(value))
+		for k, v := range value {
+			array[k] = uint32(v)
+		}
+	case []uint16:
+		array = make([]uint32, len(value))
+		for k, v := range value {
+			array[k] = uint32(v)
+		}
+	case []uint32:
+		array = value
+	case []uint64:
+		array = make([]uint32, len(value))
+		for k, v := range value {
+			array[k] = uint32(v)
+		}
+	case []bool:
+		array = make([]uint32, len(value))
+		for k, v := range value {
+			if v {
+				array[k] = 1
+			} else {
+				array[k] = 0
+			}
+		}
+	case []float32:
+		array = make([]uint32, len(value))
+		for k, v := range value {
+			array[k] = Uint32(v)
+		}
+	case []float64:
+		array = make([]uint32, len(value))
+		for k, v := range value {
+			array[k] = Uint32(v)
+		}
+	case []interface{}:
+		array = make([]uint32, len(value))
+		for k, v := range value {
+			array[k] = Uint32(v)
+		}
+	case [][]byte:
+		array = make([]uint32, len(value))
+		for k, v := range value {
+			array[k] = Uint32(v)
+		}
+	default:
+		if v, ok := i.(apiUints); ok {
+			return Uint32s(v.Uints())
+		}
+		if v, ok := i.(apiInterfaces); ok {
+			return Uint32s(v.Interfaces())
+		}
+		return []uint32{Uint32(i)}
 	}
+	return array
 }
 
 // Uint64s converts <i> to []uint64.
@@ -208,88 +217,92 @@ func Uint64s(i interface{}) []uint64 {
 	if i == nil {
 		return nil
 	}
-	if r, ok := i.([]uint64); ok {
-		return r
-	} else {
-		var array []uint64
-		switch value := i.(type) {
-		case []string:
-			array = make([]uint64, len(value))
-			for k, v := range value {
-				array[k] = Uint64(v)
-			}
-		case []int8:
-			array = make([]uint64, len(value))
-			for k, v := range value {
-				array[k] = uint64(v)
-			}
-		case []int16:
-			array = make([]uint64, len(value))
-			for k, v := range value {
-				array[k] = uint64(v)
-			}
-		case []int32:
-			array = make([]uint64, len(value))
-			for k, v := range value {
-				array[k] = uint64(v)
-			}
-		case []int64:
-			array = make([]uint64, len(value))
-			for k, v := range value {
-				array[k] = uint64(v)
-			}
-		case []uint:
-			array = make([]uint64, len(value))
-			for k, v := range value {
-				array[k] = uint64(v)
-			}
-		case []uint8:
-			array = make([]uint64, len(value))
-			for k, v := range value {
-				array[k] = uint64(v)
-			}
-		case []uint16:
-			array = make([]uint64, len(value))
-			for k, v := range value {
-				array[k] = uint64(v)
-			}
-		case []uint32:
-			array = make([]uint64, len(value))
-			for k, v := range value {
-				array[k] = uint64(v)
-			}
-		case []bool:
-			array = make([]uint64, len(value))
-			for k, v := range value {
-				if v {
-					array[k] = 1
-				} else {
-					array[k] = 0
-				}
-			}
-		case []float32:
-			array = make([]uint64, len(value))
-			for k, v := range value {
-				array[k] = Uint64(v)
-			}
-		case []float64:
-			array = make([]uint64, len(value))
-			for k, v := range value {
-				array[k] = Uint64(v)
-			}
-		case []interface{}:
-			array = make([]uint64, len(value))
-			for k, v := range value {
-				array[k] = Uint64(v)
-			}
-		case [][]byte:
-			array = make([]uint64, len(value))
-			for k, v := range value {
-				array[k] = Uint64(v)
-			}
-		default:
-			return []uint64{Uint64(i)}
+	var array []uint64
+	switch value := i.(type) {
+	case []string:
+		array = make([]uint64, len(value))
+		for k, v := range value {
+			array[k] = Uint64(v)
 		}
-		return array
+	case []int8:
+		array = make([]uint64, len(value))
+		for k, v := range value {
+			array[k] = uint64(v)
+		}
+	case []int16:
+		array = make([]uint64, len(value))
+		for k, v := range value {
+			array[k] = uint64(v)
+		}
+	case []int32:
+		array = make([]uint64, len(value))
+		for k, v := range value {
+			array[k] = uint64(v)
+		}
+	case []int64:
+		array = make([]uint64, len(value))
+		for k, v := range value {
+			array[k] = uint64(v)
+		}
+	case []uint:
+		array = make([]uint64, len(value))
+		for k, v := range value {
+			array[k] = uint64(v)
+		}
+	case []uint8:
+		array = make([]uint64, len(value))
+		for k, v := range value {
+			array[k] = uint64(v)
+		}
+	case []uint16:
+		array = make([]uint64, len(value))
+		for k, v := range value {
+			array[k] = uint64(v)
+		}
+	case []uint32:
+		array = make([]uint64, len(value))
+		for k, v := range value {
+			array[k] = uint64(v)
+		}
+	case []uint64:
+		array = value
+	case []bool:
+		array = make([]uint64, len(value))
+		for k, v := range value {
+			if v {
+				array[k] = 1
+			} else {
+				array[k] = 0
+			}
+		}
+	case []float32:
+		array = make([]uint64, len(value))
+		for k, v := range value {
+			array[k] = Uint64(v)
+		}
+	case []float64:
+		array = make([]uint64, len(value))
+		for k, v := range value {
+			array[k] = Uint64(v)
+		}
+	case []interface{}:
+		array = make([]uint64, len(value))
+		for k, v := range value {
+			array[k] = Uint64(v)
+		}
+	case [][]byte:
+		array = make([]uint64, len(value))
+		for k, v := range value {
+			array[k] = Uint64(v)
+		}
+	default:
+		if v, ok := i.(apiUints); ok {
+			return Uint64s(v.Uints())
+		}
+		if v, ok := i.(apiInterfaces); ok {
+			return Uint64s(v.Interfaces())
+		}
+		return []uint64{Uint64(i)}
 	}
+	return array
 }

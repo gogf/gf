@@ -8,14 +8,13 @@ package glist
 
 import (
 	"container/list"
-	"encoding/json"
+	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/test/gtest"
 	"github.com/gogf/gf/util/gconv"
 
 	"testing"
 )
 
-// 检查链表长度
 func checkListLen(t *gtest.T, l *List, len int) bool {
 	if n := l.Len(); n != len {
 		t.Errorf("l.Len() = %d, want %d", n, len)
@@ -24,7 +23,6 @@ func checkListLen(t *gtest.T, l *List, len int) bool {
 	return true
 }
 
-// 检查指针地址
 func checkListPointers(t *gtest.T, l *List, es []*Element) {
 	if !checkListLen(t, l, len(es)) {
 		return
@@ -39,6 +37,44 @@ func checkListPointers(t *gtest.T, l *List, es []*Element) {
 			}
 		}
 	})
+}
+
+func TestVar(t *testing.T) {
+	var l List
+	l.PushFront(1)
+	l.PushFront(2)
+	if v := l.PopBack(); v != 1 {
+		t.Errorf("EXPECT %v, GOT %v", 1, v)
+	} else {
+		//fmt.Println(v)
+	}
+	if v := l.PopBack(); v != 2 {
+		t.Errorf("EXPECT %v, GOT %v", 2, v)
+	} else {
+		//fmt.Println(v)
+	}
+	if v := l.PopBack(); v != nil {
+		t.Errorf("EXPECT %v, GOT %v", nil, v)
+	} else {
+		//fmt.Println(v)
+	}
+	l.PushBack(1)
+	l.PushBack(2)
+	if v := l.PopFront(); v != 1 {
+		t.Errorf("EXPECT %v, GOT %v", 1, v)
+	} else {
+		//fmt.Println(v)
+	}
+	if v := l.PopFront(); v != 2 {
+		t.Errorf("EXPECT %v, GOT %v", 2, v)
+	} else {
+		//fmt.Println(v)
+	}
+	if v := l.PopFront(); v != nil {
+		t.Errorf("EXPECT %v, GOT %v", nil, v)
+	} else {
+		//fmt.Println(v)
+	}
 }
 
 func TestBasic(t *testing.T) {
@@ -567,6 +603,17 @@ func TestList_Removes(t *testing.T) {
 	})
 }
 
+func TestList_Pop(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		l := NewFrom([]interface{}{1, 2, 3, 4, 5, 6, 7, 8, 9})
+
+		t.Assert(l.PopBack(), 9)
+		t.Assert(l.PopBacks(2), []interface{}{8, 7})
+		t.Assert(l.PopFront(), 1)
+		t.Assert(l.PopFronts(2), []interface{}{2, 3})
+	})
+}
+
 func TestList_Clear(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := New()
@@ -634,15 +681,15 @@ func TestList_Iterator(t *testing.T) {
 func TestList_Join(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := NewFrom([]interface{}{1, 2, "a", `"b"`, `\c`})
-		t.Assert(l.Join(","), `1,2,"a","\"b\"","\\c"`)
-		t.Assert(l.Join("."), `1.2."a"."\"b\""."\\c"`)
+		t.Assert(l.Join(","), `1,2,a,"b",\c`)
+		t.Assert(l.Join("."), `1.2.a."b".\c`)
 	})
 }
 
 func TestList_String(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		l := NewFrom([]interface{}{1, 2, "a", `"b"`, `\c`})
-		t.Assert(l.String(), `[1,2,"a","\"b\"","\\c"]`)
+		t.Assert(l.String(), `[1,2,a,"b",\c]`)
 	})
 }
 

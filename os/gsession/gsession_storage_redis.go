@@ -7,10 +7,10 @@
 package gsession
 
 import (
-	"encoding/json"
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/database/gredis"
 	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/internal/json"
 	"time"
 
 	"github.com/gogf/gf/os/gtimer"
@@ -147,7 +147,7 @@ func (s *StorageRedis) SetSession(id string, data *gmap.StrAnyMap, ttl time.Dura
 	if err != nil {
 		return err
 	}
-	_, err = s.redis.DoVar("SETEX", s.key(id), ttl.Seconds(), content)
+	_, err = s.redis.DoVar("SETEX", s.key(id), int64(ttl.Seconds()), content)
 	return err
 }
 

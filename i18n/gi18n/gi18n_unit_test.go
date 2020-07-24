@@ -29,7 +29,7 @@ import (
 func Test_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		i18n := gi18n.New(gi18n.Options{
-			Path: gdebug.CallerDirectory() + gfile.Separator + "testdata" + gfile.Separator + "i18n",
+			Path: gdebug.TestDataPath("i18n"),
 		})
 		i18n.SetLanguage("none")
 		t.Assert(i18n.T("{#hello}{#world}"), "{#hello}{#world}")
@@ -46,7 +46,7 @@ func Test_Basic(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		i18n := gi18n.New(gi18n.Options{
-			Path: gdebug.CallerDirectory() + gfile.Separator + "testdata" + gfile.Separator + "i18n-file",
+			Path: gdebug.TestDataPath("i18n-file"),
 		})
 		i18n.SetLanguage("none")
 		t.Assert(i18n.T("{#hello}{#world}"), "{#hello}{#world}")
@@ -75,7 +75,7 @@ func Test_Basic(t *testing.T) {
 
 func Test_DefaultManager(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		err := gi18n.SetPath(gdebug.CallerDirectory() + gfile.Separator + "testdata" + gfile.Separator + "i18n")
+		err := gi18n.SetPath(gdebug.TestDataPath("i18n"))
 		t.Assert(err, nil)
 
 		gi18n.SetLanguage("none")
@@ -121,10 +121,10 @@ func Test_Instance(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(g.I18n().T("{#hello}{#world}"), "你好世界")
 	})
-
+	// Default language is: en
 	gtest.C(t, func(t *gtest.T) {
 		m := gi18n.Instance(gconv.String(gtime.TimestampNano()))
-		t.Assert(m.T("{#hello}{#world}"), "{#hello}{#world}")
+		t.Assert(m.T("{#hello}{#world}"), "HelloWorld")
 	})
 }
 

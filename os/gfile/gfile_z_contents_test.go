@@ -19,25 +19,21 @@ import (
 	"github.com/gogf/gf/test/gtest"
 )
 
-// 创建测试文件
 func createTestFile(filename, content string) error {
 	TempDir := testpath()
 	err := ioutil.WriteFile(TempDir+filename, []byte(content), 0666)
 	return err
 }
 
-// 测试完删除文件或目录
 func delTestFiles(filenames string) {
 	os.RemoveAll(testpath() + filenames)
 }
 
-// 创建目录
 func createDir(paths string) {
 	TempDir := testpath()
 	os.Mkdir(TempDir+paths, 0777)
 }
 
-// 统一格式化文件目录为"/"
 func formatpaths(paths []string) []string {
 	for k, v := range paths {
 		paths[k] = filepath.ToSlash(v)
@@ -47,14 +43,12 @@ func formatpaths(paths []string) []string {
 	return paths
 }
 
-// 统一格式化文件目录为"/"
 func formatpath(paths string) string {
 	paths = filepath.ToSlash(paths)
 	paths = strings.Replace(paths, "./", "/", 1)
 	return paths
 }
 
-// 指定返回要测试的目录
 func testpath() string {
 	return gstr.TrimRight(os.TempDir(), "\\/")
 }
@@ -77,10 +71,10 @@ func Test_GetContents(t *testing.T) {
 func Test_GetBinContents(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			filepaths1  string = "/testfile_t1.txt"                 // 文件存在时
-			filepaths2  string = testpath() + "/testfile_t1_no.txt" // 文件不存在时
+			filepaths1  = "/testfile_t1.txt"
+			filepaths2  = testpath() + "/testfile_t1_no.txt"
 			readcontent []byte
-			str1        string = "my name is jroam"
+			str1        = "my name is jroam"
 		)
 		createTestFile(filepaths1, str1)
 		defer delTestFiles(filepaths1)
@@ -95,11 +89,10 @@ func Test_GetBinContents(t *testing.T) {
 	})
 }
 
-// 截断文件为指定的大小
 func Test_Truncate(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			filepaths1 string = "/testfile_GetContentsyyui.txt" //文件存在时
+			filepaths1 = "/testfile_GetContentsyyui.txt"
 			err        error
 			files      *os.File
 		)
@@ -108,7 +101,6 @@ func Test_Truncate(t *testing.T) {
 		err = gfile.Truncate(testpath()+filepaths1, 10)
 		t.Assert(err, nil)
 
-		//=========================检查修改文后的大小，是否与期望一致
 		files, err = os.Open(testpath() + filepaths1)
 		defer files.Close()
 		t.Assert(err, nil)
@@ -116,7 +108,6 @@ func Test_Truncate(t *testing.T) {
 		t.Assert(err2, nil)
 		t.Assert(fileinfo.Size(), 10)
 
-		//====测试当为空时，是否报错
 		err = gfile.Truncate("", 10)
 		t.AssertNE(err, nil)
 
@@ -126,7 +117,7 @@ func Test_Truncate(t *testing.T) {
 func Test_PutContents(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			filepaths   string = "/testfile_PutContents.txt"
+			filepaths   = "/testfile_PutContents.txt"
 			err         error
 			readcontent []byte
 		)
@@ -136,7 +127,6 @@ func Test_PutContents(t *testing.T) {
 		err = gfile.PutContents(testpath()+filepaths, "test!")
 		t.Assert(err, nil)
 
-		//==================判断是否真正写入
 		readcontent, err = ioutil.ReadFile(testpath() + filepaths)
 		t.Assert(err, nil)
 		t.Assert(string(readcontent), "test!")
@@ -150,7 +140,7 @@ func Test_PutContents(t *testing.T) {
 func Test_PutContentsAppend(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			filepaths   string = "/testfile_PutContents.txt"
+			filepaths   = "/testfile_PutContents.txt"
 			err         error
 			readcontent []byte
 		)
@@ -160,7 +150,6 @@ func Test_PutContentsAppend(t *testing.T) {
 		err = gfile.PutContentsAppend(testpath()+filepaths, "hello")
 		t.Assert(err, nil)
 
-		//==================判断是否真正写入
 		readcontent, err = ioutil.ReadFile(testpath() + filepaths)
 		t.Assert(err, nil)
 		t.Assert(string(readcontent), "ahello")
@@ -175,7 +164,7 @@ func Test_PutContentsAppend(t *testing.T) {
 func Test_PutBinContents(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			filepaths   string = "/testfile_PutContents.txt"
+			filepaths   = "/testfile_PutContents.txt"
 			err         error
 			readcontent []byte
 		)
@@ -185,7 +174,6 @@ func Test_PutBinContents(t *testing.T) {
 		err = gfile.PutBytes(testpath()+filepaths, []byte("test!!"))
 		t.Assert(err, nil)
 
-		// 判断是否真正写入
 		readcontent, err = ioutil.ReadFile(testpath() + filepaths)
 		t.Assert(err, nil)
 		t.Assert(string(readcontent), "test!!")
@@ -199,7 +187,7 @@ func Test_PutBinContents(t *testing.T) {
 func Test_PutBinContentsAppend(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			filepaths   string = "/testfile_PutContents.txt" //原文件内容: yy
+			filepaths   = "/testfile_PutContents.txt"
 			err         error
 			readcontent []byte
 		)
@@ -208,7 +196,6 @@ func Test_PutBinContentsAppend(t *testing.T) {
 		err = gfile.PutBytesAppend(testpath()+filepaths, []byte("word"))
 		t.Assert(err, nil)
 
-		// 判断是否真正写入
 		readcontent, err = ioutil.ReadFile(testpath() + filepaths)
 		t.Assert(err, nil)
 		t.Assert(string(readcontent), "test!!word")
@@ -222,7 +209,7 @@ func Test_PutBinContentsAppend(t *testing.T) {
 func Test_GetBinContentsByTwoOffsetsByPath(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			filepaths   string = "/testfile_GetContents.txt" // 文件内容: abcdefghijk
+			filepaths   = "/testfile_GetContents.txt"
 			readcontent []byte
 		)
 
@@ -242,7 +229,7 @@ func Test_GetBinContentsByTwoOffsetsByPath(t *testing.T) {
 func Test_GetNextCharOffsetByPath(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			filepaths  string = "/testfile_GetContents.txt" // 文件内容: abcdefghijk
+			filepaths  = "/testfile_GetContents.txt"
 			localindex int64
 		)
 		createTestFile(filepaths, "abcdefghijk")
@@ -310,7 +297,7 @@ func Test_GetBinContentsTilCharByPath(t *testing.T) {
 		var (
 			reads     []byte
 			indexs    int64
-			filepaths string = "/testfile_GetContents.txt"
+			filepaths = "/testfile_GetContents.txt"
 		)
 
 		createTestFile(filepaths, "abcdefghijklmn")
@@ -338,6 +325,5 @@ func Test_Home(t *testing.T) {
 		reads, err = gfile.Home()
 		t.Assert(err, nil)
 		t.AssertNE(reads, "")
-
 	})
 }

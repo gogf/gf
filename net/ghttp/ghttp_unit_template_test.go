@@ -18,14 +18,64 @@ import (
 
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/test/gtest"
 )
 
+func Test_Template_Basic(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		v := gview.New(gdebug.TestDataPath("template", "basic"))
+		p, _ := ports.PopRand()
+		s := g.Server(p)
+		s.SetView(v)
+		s.BindHandler("/", func(r *ghttp.Request) {
+			err := r.Response.WriteTpl("index.html", g.Map{
+				"name": "john",
+			})
+			t.Assert(err, nil)
+		})
+		s.SetDumpRouterMap(false)
+		s.SetPort(p)
+		s.Start()
+		defer s.Shutdown()
+		time.Sleep(100 * time.Millisecond)
+		client := ghttp.NewClient()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+
+		t.Assert(client.GetContent("/"), "Name:john")
+		t.Assert(client.GetContent("/"), "Name:john")
+	})
+}
+
+func Test_Template_Encode(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		v := gview.New(gdebug.TestDataPath("template", "basic"))
+		v.SetAutoEncode(true)
+		p, _ := ports.PopRand()
+		s := g.Server(p)
+		s.SetView(v)
+		s.BindHandler("/", func(r *ghttp.Request) {
+			err := r.Response.WriteTpl("index.html", g.Map{
+				"name": "john",
+			})
+			t.Assert(err, nil)
+		})
+		s.SetDumpRouterMap(false)
+		s.SetPort(p)
+		s.Start()
+		defer s.Shutdown()
+		time.Sleep(100 * time.Millisecond)
+		client := ghttp.NewClient()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+
+		t.Assert(client.GetContent("/"), "Name:john")
+		t.Assert(client.GetContent("/"), "Name:john")
+	})
+}
+
 func Test_Template_Layout1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		v := gview.New(gfile.Join(gdebug.TestDataPath(), "template", "layout1"))
-		p := ports.PopRand()
+		v := gview.New(gdebug.TestDataPath("template", "layout1"))
+		p, _ := ports.PopRand()
 		s := g.Server(p)
 		s.SetView(v)
 		s.BindHandler("/layout", func(r *ghttp.Request) {
@@ -54,8 +104,8 @@ func Test_Template_Layout1(t *testing.T) {
 
 func Test_Template_Layout2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		v := gview.New(gfile.Join(gdebug.TestDataPath(), "template", "layout2"))
-		p := ports.PopRand()
+		v := gview.New(gdebug.TestDataPath("template", "layout2"))
+		p, _ := ports.PopRand()
 		s := g.Server(p)
 		s.SetView(v)
 		s.BindHandler("/main1", func(r *ghttp.Request) {
@@ -94,7 +144,7 @@ func Test_Template_XSS(t *testing.T) {
 		v := gview.New()
 		v.SetAutoEncode(true)
 		c := "<br>"
-		p := ports.PopRand()
+		p, _ := ports.PopRand()
 		s := g.Server(p)
 		s.SetView(v)
 		s.BindHandler("/", func(r *ghttp.Request) {

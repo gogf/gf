@@ -38,12 +38,13 @@ type (
 		pattern  string
 		object   interface{}   // Can be handler, controller or object.
 		params   []interface{} // Extra parameters for route registering depending on the type.
-		source   string        // // Handler is register at certain source file path:line.
+		source   string        // Handler is register at certain source file path:line.
+		bound    bool          // Is this item bound to server.
 	}
 )
 
 var (
-	preBindItems = make([]preBindItem, 0, 64)
+	preBindItems = make([]*preBindItem, 0, 64)
 )
 
 // handlePreBindItems is called when server starts, which does really route registering to the server.
@@ -52,6 +53,9 @@ func (s *Server) handlePreBindItems() {
 		return
 	}
 	for _, item := range preBindItems {
+		if item.bound {
+			continue
+		}
 		// Handle the items of current server.
 		if item.group.server != nil && item.group.server != s {
 			continue
@@ -60,8 +64,8 @@ func (s *Server) handlePreBindItems() {
 			continue
 		}
 		item.group.doBindRoutersToServer(item)
+		item.bound = true
 	}
-	preBindItems = preBindItems[:0]
 }
 
 // Group creates and returns a RouterGroup object.
@@ -238,7 +242,7 @@ func (g *RouterGroup) Middleware(handlers ...HandlerFunc) *RouterGroup {
 // preBindToLocalArray adds the route registering parameters to internal variable array for lazily registering feature.
 func (g *RouterGroup) preBindToLocalArray(bindType string, pattern string, object interface{}, params ...interface{}) *RouterGroup {
 	_, file, line := gdebug.CallerWithFilter(gFILTER_KEY)
-	preBindItems = append(preBindItems, preBindItem{
+	preBindItems = append(preBindItems, &preBindItem{
 		group:    g,
 		bindType: bindType,
 		pattern:  pattern,
@@ -261,7 +265,7 @@ func (g *RouterGroup) getPrefix() string {
 }
 
 // doBindRoutersToServer does really registering for the group.
-func (g *RouterGroup) doBindRoutersToServer(item preBindItem) *RouterGroup {
+func (g *RouterGroup) doBindRoutersToServer(item *preBindItem) *RouterGroup {
 	var (
 		bindType = item.bindType
 		pattern  = item.pattern

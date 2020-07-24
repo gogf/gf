@@ -46,6 +46,8 @@ type Config struct {
 	IdleTimeout     time.Duration // Maximum idle time for connection (default is 10 seconds, not allowed to be set to 0)
 	MaxConnLifetime time.Duration // Maximum lifetime of the connection (default is 30 seconds, not allowed to be set to 0)
 	ConnectTimeout  time.Duration // Dial connection timeout.
+	TLS             bool          // Specifies the config to use when a TLS connection is dialed.
+	TLSSkipVerify   bool          // Disables server name verification when connecting over TLS
 }
 
 // Pool statistics.
@@ -57,6 +59,7 @@ const (
 	gDEFAULT_POOL_IDLE_TIMEOUT  = 10 * time.Second
 	gDEFAULT_POOL_CONN_TIMEOUT  = 10 * time.Second
 	gDEFAULT_POOL_MAX_IDLE      = 10
+	gDEFAULT_POOL_MAX_ACTIVE    = 100
 	gDEFAULT_POOL_MAX_LIFE_TIME = 30 * time.Second
 )
 
@@ -73,6 +76,10 @@ func New(config Config) *Redis {
 	// can not exceed the limit of the server.
 	if config.MaxIdle == 0 {
 		config.MaxIdle = gDEFAULT_POOL_MAX_IDLE
+	}
+	// This value SHOULD NOT exceed the connection limit of redis server.
+	if config.MaxActive == 0 {
+		config.MaxActive = gDEFAULT_POOL_MAX_ACTIVE
 	}
 	if config.IdleTimeout == 0 {
 		config.IdleTimeout = gDEFAULT_POOL_IDLE_TIMEOUT
@@ -97,6 +104,8 @@ func New(config Config) *Redis {
 						"tcp",
 						fmt.Sprintf("%s:%d", config.Host, config.Port),
 						redis.DialConnectTimeout(config.ConnectTimeout),
+						redis.DialUseTLS(config.TLS),
+						redis.DialTLSSkipVerify(config.TLSSkipVerify),
 					)
 					if err != nil {
 						return nil, err
@@ -126,6 +135,9 @@ func New(config Config) *Redis {
 
 // NewFromStr creates a redis client object with given configuration string.
 // Redis client maintains a connection pool automatically.
+// The parameter <str> like:
+// 127.0.0.1:6379,0
+// 127.0.0.1:6379,0,password
 func NewFromStr(str string) (*Redis, error) {
 	config, err := ConfigFromStr(str)
 	if err != nil {
@@ -207,6 +219,10 @@ func (r *Redis) DoVar(command string, args ...interface{}) (*gvar.Var, error) {
 	v, err := r.Do(command, args...)
 	if result, ok := v.([]byte); ok {
 		return gvar.New(gconv.UnsafeBytesToStr(result)), err
+	}
+	// It treats all returned slice as string slice.
+	if result, ok := v.([]interface{}); ok {
+		return gvar.New(gconv.Strings(result)), err
 	}
 	return gvar.New(v), err
 }

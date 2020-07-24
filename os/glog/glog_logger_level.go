@@ -6,6 +6,12 @@
 
 package glog
 
+import (
+	"errors"
+	"fmt"
+	"strings"
+)
+
 // Note that the LEVEL_PANI and LEVEL_FATA levels are not used for logging output,
 // but for prefix configurations.
 const (
@@ -32,6 +38,46 @@ var defaultLevelPrefixes = map[int]string{
 	LEVEL_CRIT: "CRIT",
 	LEVEL_PANI: "PANI",
 	LEVEL_FATA: "FATA",
+}
+
+// levelStringMap defines level string name to its level mapping.
+var levelStringMap = map[string]int{
+	"ALL":      LEVEL_DEBU | LEVEL_INFO | LEVEL_NOTI | LEVEL_WARN | LEVEL_ERRO | LEVEL_CRIT,
+	"DEV":      LEVEL_DEBU | LEVEL_INFO | LEVEL_NOTI | LEVEL_WARN | LEVEL_ERRO | LEVEL_CRIT,
+	"DEVELOP":  LEVEL_DEBU | LEVEL_INFO | LEVEL_NOTI | LEVEL_WARN | LEVEL_ERRO | LEVEL_CRIT,
+	"PROD":     LEVEL_WARN | LEVEL_ERRO | LEVEL_CRIT,
+	"PRODUCT":  LEVEL_WARN | LEVEL_ERRO | LEVEL_CRIT,
+	"DEBU":     LEVEL_DEBU | LEVEL_INFO | LEVEL_NOTI | LEVEL_WARN | LEVEL_ERRO | LEVEL_CRIT,
+	"DEBUG":    LEVEL_DEBU | LEVEL_INFO | LEVEL_NOTI | LEVEL_WARN | LEVEL_ERRO | LEVEL_CRIT,
+	"INFO":     LEVEL_INFO | LEVEL_NOTI | LEVEL_WARN | LEVEL_ERRO | LEVEL_CRIT,
+	"NOTI":     LEVEL_NOTI | LEVEL_WARN | LEVEL_ERRO | LEVEL_CRIT,
+	"NOTICE":   LEVEL_NOTI | LEVEL_WARN | LEVEL_ERRO | LEVEL_CRIT,
+	"WARN":     LEVEL_WARN | LEVEL_ERRO | LEVEL_CRIT,
+	"WARNING":  LEVEL_WARN | LEVEL_ERRO | LEVEL_CRIT,
+	"ERRO":     LEVEL_ERRO | LEVEL_CRIT,
+	"ERROR":    LEVEL_ERRO | LEVEL_CRIT,
+	"CRIT":     LEVEL_CRIT,
+	"CRITICAL": LEVEL_CRIT,
+}
+
+// SetLevel sets the logging level.
+func (l *Logger) SetLevel(level int) {
+	l.config.Level = level
+}
+
+// GetLevel returns the logging level value.
+func (l *Logger) GetLevel() int {
+	return l.config.Level
+}
+
+// SetLevelStr sets the logging level by level string.
+func (l *Logger) SetLevelStr(levelStr string) error {
+	if level, ok := levelStringMap[strings.ToUpper(levelStr)]; ok {
+		l.config.Level = level
+	} else {
+		return errors.New(fmt.Sprintf(`invalid level string: %s`, levelStr))
+	}
+	return nil
 }
 
 // SetLevelPrefix sets the prefix string for specified level.

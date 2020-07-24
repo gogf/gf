@@ -137,20 +137,40 @@ func Test_IsNumeric(t *testing.T) {
 func Test_SubStr(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gstr.SubStr("我爱GoFrame", 0), "我爱GoFrame")
-		t.Assert(gstr.SubStr("我爱GoFrame", 2), "GoFrame")
-		t.Assert(gstr.SubStr("我爱GoFrame", 2, 2), "Go")
+		t.Assert(gstr.SubStr("我爱GoFrame", 6), "GoFrame")
+		t.Assert(gstr.SubStr("我爱GoFrame", 6, 2), "Go")
 		t.Assert(gstr.SubStr("我爱GoFrame", -1, 30), "我爱GoFrame")
 		t.Assert(gstr.SubStr("我爱GoFrame", 30, 30), "")
 	})
 }
 
+func Test_SubStrRune(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.SubStrRune("我爱GoFrame", 0), "我爱GoFrame")
+		t.Assert(gstr.SubStrRune("我爱GoFrame", 2), "GoFrame")
+		t.Assert(gstr.SubStrRune("我爱GoFrame", 2, 2), "Go")
+		t.Assert(gstr.SubStrRune("我爱GoFrame", -1, 30), "我爱GoFrame")
+		t.Assert(gstr.SubStrRune("我爱GoFrame", 30, 30), "")
+	})
+}
+
 func Test_StrLimit(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		t.Assert(gstr.StrLimit("我爱GoFrame", 2), "我爱...")
-		t.Assert(gstr.StrLimit("我爱GoFrame", 2, ""), "我爱")
-		t.Assert(gstr.StrLimit("我爱GoFrame", 2, "**"), "我爱**")
-		t.Assert(gstr.StrLimit("我爱GoFrame", 4, ""), "我爱Go")
+		t.Assert(gstr.StrLimit("我爱GoFrame", 6), "我爱...")
+		t.Assert(gstr.StrLimit("我爱GoFrame", 6, ""), "我爱")
+		t.Assert(gstr.StrLimit("我爱GoFrame", 6, "**"), "我爱**")
+		t.Assert(gstr.StrLimit("我爱GoFrame", 8, ""), "我爱Go")
 		t.Assert(gstr.StrLimit("*", 4, ""), "*")
+	})
+}
+
+func Test_StrLimitRune(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.StrLimitRune("我爱GoFrame", 2), "我爱...")
+		t.Assert(gstr.StrLimitRune("我爱GoFrame", 2, ""), "我爱")
+		t.Assert(gstr.StrLimitRune("我爱GoFrame", 2, "**"), "我爱**")
+		t.Assert(gstr.StrLimitRune("我爱GoFrame", 4, ""), "我爱Go")
+		t.Assert(gstr.StrLimitRune("*", 4, ""), "*")
 	})
 }
 
@@ -247,6 +267,7 @@ func Test_WordWrap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gstr.WordWrap("12 34", 2, "<br>"), "12<br>34")
 		t.Assert(gstr.WordWrap("12 34", 2, "\n"), "12\n34")
+		t.Assert(gstr.WordWrap("我爱 GF", 2, "\n"), "我爱\nGF")
 		t.Assert(gstr.WordWrap("A very long woooooooooooooooooord. and something", 7, "<br>"),
 			"A very<br>long<br>woooooooooooooooooord.<br>and<br>something")
 	})
@@ -321,6 +342,9 @@ func Test_HideStr(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gstr.HideStr("15928008611", 40, "*"), "159****8611")
 		t.Assert(gstr.HideStr("john@kohg.cn", 40, "*"), "jo*n@kohg.cn")
+		t.Assert(gstr.HideStr("张三", 50, "*"), "张*")
+		t.Assert(gstr.HideStr("张小三", 50, "*"), "张*三")
+		t.Assert(gstr.HideStr("欧阳小三", 50, "*"), "欧**三")
 	})
 }
 

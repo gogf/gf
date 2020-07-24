@@ -8,14 +8,10 @@
 package gfile
 
 import (
-	"bytes"
-	"errors"
 	"github.com/gogf/gf/text/gstr"
 	"os"
 	"os/exec"
-	"os/user"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"time"
 
@@ -29,8 +25,11 @@ const (
 )
 
 var (
-	// Default perm for file opening.
-	DefaultPerm = os.FileMode(0666)
+	// DefaultPerm is the default perm for file opening.
+	DefaultPermOpen = os.FileMode(0666)
+
+	// DefaultPermCopy is the default perm for file/folder copy.
+	DefaultPermCopy = os.FileMode(0777)
 
 	// The absolute file path for main package.
 	// It can be only checked and set once.
@@ -46,7 +45,7 @@ var (
 
 func init() {
 	// Initialize internal package variable: tempDir.
-	if !Exists(tempDir) {
+	if Separator != "/" || !Exists(tempDir) {
 		tempDir = os.TempDir()
 	}
 	// Initialize internal package variable: selfPath.
@@ -96,7 +95,7 @@ func OpenFile(path string, flag int, perm os.FileMode) (*os.File, error) {
 // The default <perm> is 0666.
 // The parameter <flag> is like: O_RDONLY, O_RDWR, O_RDWR|O_CREATE|O_TRUNC, etc.
 func OpenWithFlag(path string, flag int) (*os.File, error) {
-	f, err := os.OpenFile(path, flag, DefaultPerm)
+	f, err := os.OpenFile(path, flag, DefaultPermOpen)
 	if err != nil {
 		return nil, err
 	}
@@ -135,6 +134,7 @@ func Exists(path string) bool {
 }
 
 // IsDir checks whether given <path> a directory.
+// Note that it returns false if the <path> does not exist.
 func IsDir(path string) bool {
 	s, err := os.Stat(path)
 	if err != nil {
@@ -144,8 +144,13 @@ func IsDir(path string) bool {
 }
 
 // Pwd returns absolute path of current working directory.
+// Note that it returns an empty string if retrieving current
+// working directory failed.
 func Pwd() string {
-	path, _ := os.Getwd()
+	path, err := os.Getwd()
+	if err != nil {
+		return ""
+	}
 	return path
 }
 
@@ -156,6 +161,7 @@ func Chdir(dir string) error {
 }
 
 // IsFile checks whether given <path> a file, which means it's not a directory.
+// Note that it returns false if the <path> does not exist.
 func IsFile(path string) bool {
 	s, err := os.Stat(path)
 	if err != nil {
@@ -177,11 +183,12 @@ func Stat(path string) (os.FileInfo, error) {
 }
 
 // Move renames (moves) <src> to <dst> path.
+// If <dst> already exists and is not a directory, it'll be replaced.
 func Move(src string, dst string) error {
 	return os.Rename(src, dst)
 }
 
-// Alias of Move.
+// Rename is alias of Move.
 // See Move.
 func Rename(src string, dst string) error {
 	return Move(src, dst)
@@ -228,14 +235,13 @@ func Glob(pattern string, onlyNames ...bool) ([]string, error) {
 // Remove deletes all file/directory with <path> parameter.
 // If parameter <path> is directory, it deletes it recursively.
 func Remove(path string) error {
-	//intlog.Print(`Remove:`, path)
 	return os.RemoveAll(path)
 }
 
 // IsReadable checks whether given <path> is readable.
 func IsReadable(path string) bool {
 	result := true
-	file, err := os.OpenFile(path, os.O_RDONLY, DefaultPerm)
+	file, err := os.OpenFile(path, os.O_RDONLY, DefaultPermOpen)
 	if err != nil {
 		result = false
 	}
@@ -259,7 +265,7 @@ func IsWritable(path string) bool {
 		}
 	} else {
 		// 如果是文件，那么判断文件是否可打开
-		file, err := os.OpenFile(path, os.O_WRONLY, DefaultPerm)
+		file, err := os.OpenFile(path, os.O_WRONLY, DefaultPermOpen)
 		if err != nil {
 			result = false
 		}
@@ -316,11 +322,17 @@ func SelfDir() string {
 // Trailing path separators are removed before extracting the last element.
 // If the path is empty, Base returns ".".
 // If the path consists entirely of separators, Basename returns a single separator.
+// Example:
+// /var/www/file.js -> file.js
+// file.js          -> file.js
 func Basename(path string) string {
 	return filepath.Base(path)
 }
 
 // Name returns the last element of path without file extension.
+// Example:
+// /var/www/file.js -> file
+// file.js          -> file
 func Name(path string) string {
 	base := filepath.Base(path)
 	if i := strings.LastIndexByte(base, '.'); i != -1 {
@@ -385,52 +397,15 @@ func ExtName(path string) string {
 	return strings.TrimLeft(Ext(path), ".")
 }
 
-// Home returns absolute path of current user's home directory.
-func Home() (string, error) {
-	u, err := user.Current()
-	if nil == err {
-		return u.HomeDir, nil
+// TempDir retrieves and returns the temporary directory of current system.
+// It return "/tmp" is current in *nix system, or else it returns os.TempDir().
+//
+// The optional parameter <names> specifies the its sub-folders/sub-files,
+// which will be joined with current system separator and returned with the path.
+func TempDir(names ...string) string {
+	path := tempDir
+	for _, name := range names {
+		path += Separator + name
 	}
-	if "windows" == runtime.GOOS {
-		return homeWindows()
-	}
-	return homeUnix()
-}
-
-func homeUnix() (string, error) {
-	if home := os.Getenv("HOME"); home != "" {
-		return home, nil
-	}
-	var stdout bytes.Buffer
-	cmd := exec.Command("sh", "-c", "eval echo ~$USER")
-	cmd.Stdout = &stdout
-	if err := cmd.Run(); err != nil {
-		return "", err
-	}
-
-	result := strings.TrimSpace(stdout.String())
-	if result == "" {
-		return "", errors.New("blank output when reading home directory")
-	}
-
-	return result, nil
-}
-
-func homeWindows() (string, error) {
-	drive := os.Getenv("HOMEDRIVE")
-	path := os.Getenv("HOMEPATH")
-	home := drive + path
-	if drive == "" || path == "" {
-		home = os.Getenv("USERPROFILE")
-	}
-	if home == "" {
-		return "", errors.New("HOMEDRIVE, HOMEPATH, and USERPROFILE are blank")
-	}
-
-	return home, nil
-}
-
-// See os.TempDir().
-func TempDir() string {
-	return tempDir
+	return path
 }

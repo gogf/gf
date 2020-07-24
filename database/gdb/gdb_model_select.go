@@ -7,8 +7,8 @@
 package gdb
 
 import (
-	"database/sql"
 	"fmt"
+	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/util/gconv"
 	"reflect"
 )
@@ -27,12 +27,41 @@ func (m *Model) Select(where ...interface{}) (Result, error) {
 // The optional parameter <where> is the same as the parameter of Model.Where function,
 // see Model.Where.
 func (m *Model) All(where ...interface{}) (Result, error) {
+	return m.doGetAll(false, where...)
+}
+
+// doGetAll does "SELECT FROM ..." statement for the model.
+// It retrieves the records from table and returns the result as slice type.
+// It returns nil if there's no record retrieved with the given conditions from table.
+//
+// The parameter <limit1> specifies whether limits querying only one record if m.limit is not set.
+// The optional parameter <where> is the same as the parameter of Model.Where function,
+// see Model.Where.
+func (m *Model) doGetAll(limit1 bool, where ...interface{}) (Result, error) {
 	if len(where) > 0 {
 		return m.Where(where[0], where[1:]...).All()
 	}
-	condition, conditionArgs := m.formatCondition(false)
-	return m.getAll(
-		fmt.Sprintf("SELECT %s FROM %s%s", m.fields, m.tables, condition),
+	var (
+		softDeletingCondition                         = m.getConditionForSoftDeleting()
+		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(limit1)
+	)
+	if !m.unscoped && softDeletingCondition != "" {
+		if conditionWhere == "" {
+			conditionWhere = " WHERE "
+		} else {
+			conditionWhere += " AND "
+		}
+		conditionWhere += softDeletingCondition
+	}
+	// DO NOT quote the m.fields where, in case of fields like:
+	// DISTINCT t.user_id uid
+	return m.doGetAllBySql(
+		fmt.Sprintf(
+			"SELECT %s FROM %s%s",
+			m.fields,
+			m.tables,
+			conditionWhere+conditionExtra,
+		),
 		conditionArgs...,
 	)
 }
@@ -73,8 +102,7 @@ func (m *Model) One(where ...interface{}) (Record, error) {
 	if len(where) > 0 {
 		return m.Where(where[0], where[1:]...).One()
 	}
-	condition, conditionArgs := m.formatCondition(true)
-	all, err := m.getAll(fmt.Sprintf("SELECT %s FROM %s%s", m.fields, m.tables, condition), conditionArgs...)
+	all, err := m.doGetAll(true)
 	if err != nil {
 		return nil, err
 	}
@@ -102,12 +130,12 @@ func (m *Model) Value(fieldsAndWhere ...interface{}) (Value, error) {
 	}
 	one, err := m.One()
 	if err != nil {
-		return nil, err
+		return gvar.New(nil), err
 	}
 	for _, v := range one {
 		return v, nil
 	}
-	return nil, nil
+	return gvar.New(nil), nil
 }
 
 // Array queries and returns data values as slice from database.
@@ -141,7 +169,7 @@ func (m *Model) Array(fieldsAndWhere ...interface{}) ([]Value, error) {
 // see Model.Where.
 //
 // Note that it returns sql.ErrNoRows if there's no record retrieved with the given conditions
-// from table.
+// from table and <pointer> is not nil.
 //
 // Eg:
 // user := new(User)
@@ -154,9 +182,6 @@ func (m *Model) Struct(pointer interface{}, where ...interface{}) error {
 	if err != nil {
 		return err
 	}
-	if len(one) == 0 {
-		return sql.ErrNoRows
-	}
 	return one.Struct(pointer)
 }
 
@@ -168,21 +193,18 @@ func (m *Model) Struct(pointer interface{}, where ...interface{}) error {
 // see Model.Where.
 //
 // Note that it returns sql.ErrNoRows if there's no record retrieved with the given conditions
-// from table.
+// from table and <pointer> is not empty.
 //
 // Eg:
 // users := ([]User)(nil)
-// err := db.Table("user").Structs(&users)
+// err   := db.Table("user").Structs(&users)
 //
 // users := ([]*User)(nil)
-// err := db.Table("user").Structs(&users)
+// err   := db.Table("user").Structs(&users)
 func (m *Model) Structs(pointer interface{}, where ...interface{}) error {
 	all, err := m.All(where...)
 	if err != nil {
 		return err
-	}
-	if len(all) == 0 {
-		return sql.ErrNoRows
 	}
 	return all.Structs(pointer)
 }
@@ -205,10 +227,10 @@ func (m *Model) Structs(pointer interface{}, where ...interface{}) error {
 // err  := db.Table("user").Where("id", 1).Struct(&user)
 //
 // users := ([]User)(nil)
-// err := db.Table("user").Structs(&users)
+// err   := db.Table("user").Structs(&users)
 //
 // users := ([]*User)(nil)
-// err := db.Table("user").Structs(&users)
+// err   := db.Table("user").Structs(&users)
 func (m *Model) Scan(pointer interface{}, where ...interface{}) error {
 	t := reflect.TypeOf(pointer)
 	k := t.Kind()
@@ -216,13 +238,41 @@ func (m *Model) Scan(pointer interface{}, where ...interface{}) error {
 		return fmt.Errorf("params should be type of pointer, but got: %v", k)
 	}
 	switch t.Elem().Kind() {
-	case reflect.Array:
-	case reflect.Slice:
+	case reflect.Array, reflect.Slice:
 		return m.Structs(pointer, where...)
 	default:
 		return m.Struct(pointer, where...)
 	}
-	return nil
+}
+
+// ScanList converts <r> to struct slice which contains other complex struct attributes.
+// Note that the parameter <listPointer> should be type of *[]struct/*[]*struct.
+// Usage example:
+//
+// type Entity struct {
+// 	   User       *EntityUser
+// 	   UserDetail *EntityUserDetail
+//	   UserScores []*EntityUserScores
+// }
+// var users []*Entity
+// or
+// var users []Entity
+//
+// ScanList(&users, "User")
+// ScanList(&users, "UserDetail", "User", "uid:Uid")
+// ScanList(&users, "UserScores", "User", "uid:Uid")
+// The parameters "User"/"UserDetail"/"UserScores" in the example codes specify the target attribute struct
+// that current result will be bound to.
+// The "uid" in the example codes is the table field name of the result, and the "Uid" is the relational
+// struct attribute name. It automatically calculates the HasOne/HasMany relationship with given <relation>
+// parameter.
+// See the example or unit testing cases for clear understanding for this function.
+func (m *Model) ScanList(listPointer interface{}, attributeName string, relation ...string) (err error) {
+	all, err := m.All()
+	if err != nil {
+		return err
+	}
+	return all.ScanList(listPointer, attributeName, relation...)
 }
 
 // Count does "SELECT COUNT(x) FROM ..." statement for the model.
@@ -234,14 +284,28 @@ func (m *Model) Count(where ...interface{}) (int, error) {
 	}
 	countFields := "COUNT(1)"
 	if m.fields != "" && m.fields != "*" {
+		// DO NOT quote the m.fields here, in case of fields like:
+		// DISTINCT t.user_id uid
 		countFields = fmt.Sprintf(`COUNT(%s)`, m.fields)
 	}
-	condition, conditionArgs := m.formatCondition(false)
-	s := fmt.Sprintf("SELECT %s FROM %s %s", countFields, m.tables, condition)
+	var (
+		softDeletingCondition                         = m.getConditionForSoftDeleting()
+		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(false)
+	)
+	if !m.unscoped && softDeletingCondition != "" {
+		if conditionWhere == "" {
+			conditionWhere = " WHERE "
+		} else {
+			conditionWhere += " AND "
+		}
+		conditionWhere += softDeletingCondition
+	}
+
+	s := fmt.Sprintf("SELECT %s FROM %s%s", countFields, m.tables, conditionWhere+conditionExtra)
 	if len(m.groupBy) > 0 {
 		s = fmt.Sprintf("SELECT COUNT(1) FROM (%s) count_alias", s)
 	}
-	list, err := m.getAll(s, conditionArgs...)
+	list, err := m.doGetAllBySql(s, conditionArgs...)
 	if err != nil {
 		return 0, err
 	}
@@ -312,4 +376,29 @@ func (m *Model) FindScan(pointer interface{}, where ...interface{}) error {
 		return m.WherePri(where[0], where[1:]...).Scan(pointer)
 	}
 	return m.Scan(pointer)
+}
+
+// doGetAllBySql does the select statement on the database.
+func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, err error) {
+	cacheKey := ""
+	// Retrieve from cache.
+	if m.cacheEnabled && m.tx == nil {
+		cacheKey = m.cacheName
+		if len(cacheKey) == 0 {
+			cacheKey = sql + "/" + gconv.String(args)
+		}
+		if v := m.db.GetCache().Get(cacheKey); v != nil {
+			return v.(Result), nil
+		}
+	}
+	result, err = m.db.DoGetAll(m.getLink(false), sql, m.mergeArguments(args)...)
+	// Cache the result.
+	if cacheKey != "" && err == nil {
+		if m.cacheDuration < 0 {
+			m.db.GetCache().Remove(cacheKey)
+		} else {
+			m.db.GetCache().Set(cacheKey, result, m.cacheDuration)
+		}
+	}
+	return result, err
 }

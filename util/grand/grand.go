@@ -4,10 +4,11 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package grand provides high performance random string generation functionality.
+// Package grand provides high performance random bytes/number/string generation functionality.
 package grand
 
 import (
+	"encoding/binary"
 	"unsafe"
 )
 
@@ -18,14 +19,38 @@ var (
 	characters = letters + digits + symbols                             // 94
 )
 
-// Meet randomly calculate whether the given probability <num>/<total> is met.
-func Meet(num, total int) bool {
-	return Intn(total) < num
+// Intn returns a int number which is between 0 and max: [0, max).
+//
+// Note that:
+// 1. The <max> can only be greater than 0, or else it returns <max> directly;
+// 2. The result is greater than or equal to 0, but less than <max>;
+// 3. The result number is 32bit and less than math.MaxUint32.
+func Intn(max int) int {
+	if max <= 0 {
+		return max
+	}
+	n := int(binary.LittleEndian.Uint32(<-bufferChan)) % max
+	if (max > 0 && n < 0) || (max < 0 && n > 0) {
+		return -n
+	}
+	return n
 }
 
-// MeetProb randomly calculate whether the given probability is met.
-func MeetProb(prob float32) bool {
-	return Intn(1e7) < int(prob*1e7)
+// B retrieves and returns random bytes of given length <n>.
+func B(n int) []byte {
+	if n <= 0 {
+		return nil
+	}
+	i := 0
+	b := make([]byte, n)
+	for {
+		copy(b[i:], <-bufferChan)
+		i += 4
+		if i >= n {
+			break
+		}
+	}
+	return b
 }
 
 // N returns a random int between min and max: [min, max].
@@ -55,12 +80,18 @@ func N(min, max int) int {
 // The optional parameter <symbols> specifies whether the result could contain symbols,
 // which is false in default.
 func S(n int, symbols ...bool) string {
-	b := make([]byte, n)
+	if n <= 0 {
+		return ""
+	}
+	var (
+		b           = make([]byte, n)
+		numberBytes = B(n)
+	)
 	for i := range b {
 		if len(symbols) > 0 && symbols[0] {
-			b[i] = characters[Intn(94)]
+			b[i] = characters[numberBytes[i]%94]
 		} else {
-			b[i] = characters[Intn(62)]
+			b[i] = characters[numberBytes[i]%62]
 		}
 	}
 	return *(*string)(unsafe.Pointer(&b))
@@ -69,42 +100,73 @@ func S(n int, symbols ...bool) string {
 // Str randomly picks and returns <n> count of chars from given string <s>.
 // It also supports unicode string like Chinese/Russian/Japanese, etc.
 func Str(s string, n int) string {
-	b := make([]rune, n)
-	runes := []rune(s)
-	for i := range b {
-		b[i] = runes[Intn(len(runes))]
+	if n <= 0 {
+		return ""
+	}
+	var (
+		b     = make([]rune, n)
+		runes = []rune(s)
+	)
+	if len(runes) <= 255 {
+		numberBytes := B(n)
+		for i := range b {
+			b[i] = runes[int(numberBytes[i])%len(runes)]
+		}
+	} else {
+		for i := range b {
+			b[i] = runes[Intn(len(runes))]
+		}
 	}
 	return string(b)
 }
 
 // Digits returns a random string which contains only digits, and its length is <n>.
 func Digits(n int) string {
-	b := make([]byte, n)
+	if n <= 0 {
+		return ""
+	}
+	var (
+		b           = make([]byte, n)
+		numberBytes = B(n)
+	)
 	for i := range b {
-		b[i] = digits[Intn(10)]
+		b[i] = digits[numberBytes[i]%10]
 	}
 	return *(*string)(unsafe.Pointer(&b))
 }
 
 // Letters returns a random string which contains only letters, and its length is <n>.
 func Letters(n int) string {
-	b := make([]byte, n)
+	if n <= 0 {
+		return ""
+	}
+	var (
+		b           = make([]byte, n)
+		numberBytes = B(n)
+	)
 	for i := range b {
-		b[i] = letters[Intn(52)]
+		b[i] = letters[numberBytes[i]%52]
 	}
 	return *(*string)(unsafe.Pointer(&b))
 }
 
 // Symbols returns a random string which contains only symbols, and its length is <n>.
 func Symbols(n int) string {
-	b := make([]byte, n)
+	if n <= 0 {
+		return ""
+	}
+	var (
+		b           = make([]byte, n)
+		numberBytes = B(n)
+	)
 	for i := range b {
-		b[i] = symbols[Intn(52)]
+		b[i] = symbols[numberBytes[i]%32]
 	}
 	return *(*string)(unsafe.Pointer(&b))
 }
 
 // Perm returns, as a slice of n int numbers, a pseudo-random permutation of the integers [0,n).
+// TODO performance improving for large slice producing.
 func Perm(n int) []int {
 	m := make([]int, n)
 	for i := 0; i < n; i++ {
@@ -113,4 +175,14 @@ func Perm(n int) []int {
 		m[j] = i
 	}
 	return m
+}
+
+// Meet randomly calculate whether the given probability <num>/<total> is met.
+func Meet(num, total int) bool {
+	return Intn(total) < num
+}
+
+// MeetProb randomly calculate whether the given probability is met.
+func MeetProb(prob float32) bool {
+	return Intn(1e7) < int(prob*1e7)
 }

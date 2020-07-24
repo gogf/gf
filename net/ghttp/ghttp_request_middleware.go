@@ -7,10 +7,9 @@
 package ghttp
 
 import (
+	"github.com/gogf/gf/errors/gerror"
 	"net/http"
 	"reflect"
-
-	"github.com/gogf/gf/errors/gerror"
 
 	"github.com/gogf/gf/util/gutil"
 )
@@ -24,6 +23,7 @@ type Middleware struct {
 }
 
 // Next calls the next workflow handler.
+// It's an important function controlling the workflow of the server request execution.
 func (m *Middleware) Next() {
 	var item *handlerParsedItem
 	var loop = true
@@ -121,7 +121,15 @@ func (m *Middleware) Next() {
 				loop = false
 			}
 		}, func(exception interface{}) {
-			m.request.error = gerror.Newf("%v", exception)
+			if e, ok := exception.(gerror.ApiStack); ok {
+				// It's already an error that has stack info.
+				m.request.error = e.(error)
+			} else {
+				// Create a new error with stack info.
+				// Note that there's a skip pointing the start stacktrace
+				// of the real error point.
+				m.request.error = gerror.NewfSkip(1, "%v", exception)
+			}
 			m.request.Response.WriteStatus(http.StatusInternalServerError, exception)
 			loop = false
 		})

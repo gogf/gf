@@ -90,15 +90,7 @@ func Test_Rand(t *testing.T) {
 	})
 }
 
-func Test_Str(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		for i := 0; i < 100; i++ {
-			t.Assert(len(grand.S(5)), 5)
-		}
-	})
-}
-
-func Test_RandS(t *testing.T) {
+func Test_S(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {
 			t.Assert(len(grand.S(5)), 5)
@@ -107,6 +99,24 @@ func Test_RandS(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		for i := 0; i < 100; i++ {
 			t.Assert(len(grand.S(5, true)), 5)
+		}
+	})
+}
+
+func Test_B(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		for i := 0; i < 100; i++ {
+			b := grand.B(5)
+			t.Assert(len(b), 5)
+			t.AssertNE(b, make([]byte, 5))
+		}
+	})
+}
+
+func Test_Str(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		for i := 0; i < 100; i++ {
+			t.Assert(len(grand.S(5)), 5)
 		}
 	})
 }

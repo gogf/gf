@@ -7,7 +7,7 @@
 package gtype_test
 
 import (
-	"encoding/json"
+	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/util/gconv"
 	"sync"
 	"testing"
@@ -60,12 +60,12 @@ func Test_Byte_JSON(t *testing.T) {
 }
 
 func Test_Byte_UnmarshalValue(t *testing.T) {
-	type Var struct {
+	type V struct {
 		Name string
 		Var  *gtype.Byte
 	}
 	gtest.C(t, func(t *gtest.T) {
-		var v *Var
+		var v *V
 		err := gconv.Struct(map[string]interface{}{
 			"name": "john",
 			"var":  "2",

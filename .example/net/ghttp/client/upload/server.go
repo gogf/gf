@@ -8,8 +8,8 @@ import (
 // Upload uploads files to /tmp .
 func Upload(r *ghttp.Request) {
 	saveDirPath := "/tmp/"
-	files := r.GetUploadFiles("upload-file")
-	if err := files.Save(saveDirPath); err != nil {
+	files := r.GetUploadFiles("file")
+	if _, err := files.Save(saveDirPath); err != nil {
 		r.Response.WriteExit(err)
 	}
 	r.Response.WriteExit("upload successfully")

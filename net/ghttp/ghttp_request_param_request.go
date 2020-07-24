@@ -8,7 +8,6 @@ package ghttp
 
 import (
 	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/internal/structs"
 	"github.com/gogf/gf/util/gconv"
 )
 
@@ -47,7 +46,7 @@ func (r *Request) GetRequest(key string, def ...interface{}) interface{} {
 }
 
 // GetRequestVar retrieves and returns the parameter named <key> passed from client and
-// custom params as *gvar.Var, no matter what HTTP method the client is using. The parameter
+// custom params as gvar.Var, no matter what HTTP method the client is using. The parameter
 // <def> specifies the default value if the <key> does not exist.
 func (r *Request) GetRequestVar(key string, def ...interface{}) *gvar.Var {
 	return gvar.New(r.GetRequest(key, def...))
@@ -268,13 +267,7 @@ func (r *Request) GetRequestMapStrVar(kvMap ...map[string]interface{}) map[strin
 // the parameter <pointer> is a pointer to the struct object.
 // The optional parameter <mapping> is used to specify the key to attribute mapping.
 func (r *Request) GetRequestStruct(pointer interface{}, mapping ...map[string]string) error {
-	tagMap := structs.TagMapName(pointer, paramTagPriority, true)
-	if len(mapping) > 0 {
-		for k, v := range mapping[0] {
-			tagMap[k] = v
-		}
-	}
-	return gconv.StructDeep(r.GetRequestMap(), pointer, tagMap)
+	return gconv.StructDeep(r.GetRequestMap(), pointer, mapping...)
 }
 
 // GetRequestToStruct is alias of GetRequestStruct. See GetRequestStruct.

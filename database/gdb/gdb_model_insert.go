@@ -9,8 +9,10 @@ package gdb
 import (
 	"database/sql"
 	"errors"
+	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/util/gutil"
 	"reflect"
 )
 
@@ -67,8 +69,21 @@ func (m *Model) Data(data ...interface{}) *Model {
 					list[i] = DataToMapDeep(rv.Index(i).Interface())
 				}
 				model.data = list
-			case reflect.Map, reflect.Struct:
+			case reflect.Map:
 				model.data = DataToMapDeep(data[0])
+			case reflect.Struct:
+				if v, ok := data[0].(apiMapStrAny); ok {
+					model.data = v.MapStrAny()
+				} else if v, ok := data[0].(apiInterfaces); ok {
+					array := v.Interfaces()
+					list := make(List, len(array))
+					for i := 0; i < len(array); i++ {
+						list[i] = DataToMapDeep(array[i])
+					}
+					model.data = list
+				} else {
+					model.data = DataToMapDeep(data[0])
+				}
 			default:
 				model.data = data[0]
 			}
@@ -81,6 +96,9 @@ func (m *Model) Data(data ...interface{}) *Model {
 // The optional parameter <data> is the same as the parameter of Model.Data function,
 // see Model.Data.
 func (m *Model) Insert(data ...interface{}) (result sql.Result, err error) {
+	if len(data) > 0 {
+		return m.Data(data...).Insert()
+	}
 	return m.doInsertWithOption(gINSERT_OPTION_DEFAULT, data...)
 }
 
@@ -88,45 +106,10 @@ func (m *Model) Insert(data ...interface{}) (result sql.Result, err error) {
 // The optional parameter <data> is the same as the parameter of Model.Data function,
 // see Model.Data.
 func (m *Model) InsertIgnore(data ...interface{}) (result sql.Result, err error) {
-	return m.doInsertWithOption(gINSERT_OPTION_IGNORE, data...)
-}
-
-// doInsertWithOption inserts data with option parameter.
-func (m *Model) doInsertWithOption(option int, data ...interface{}) (result sql.Result, err error) {
 	if len(data) > 0 {
 		return m.Data(data...).Insert()
 	}
-	defer func() {
-		if err == nil {
-			m.checkAndRemoveCache()
-		}
-	}()
-	if m.data == nil {
-		return nil, errors.New("inserting into table with empty data")
-	}
-	if list, ok := m.data.(List); ok {
-		// Batch insert.
-		batch := 10
-		if m.batch > 0 {
-			batch = m.batch
-		}
-		return m.db.DoBatchInsert(
-			m.getLink(true),
-			m.tables,
-			m.filterDataForInsertOrUpdate(list),
-			option,
-			batch,
-		)
-	} else if data, ok := m.data.(Map); ok {
-		// Single insert.
-		return m.db.DoInsert(
-			m.getLink(true),
-			m.tables,
-			m.filterDataForInsertOrUpdate(data),
-			option,
-		)
-	}
-	return nil, errors.New("inserting into table with invalid data type")
+	return m.doInsertWithOption(gINSERT_OPTION_IGNORE, data...)
 }
 
 // Replace does "REPLACE INTO ..." statement for the model.
@@ -136,37 +119,7 @@ func (m *Model) Replace(data ...interface{}) (result sql.Result, err error) {
 	if len(data) > 0 {
 		return m.Data(data...).Replace()
 	}
-	defer func() {
-		if err == nil {
-			m.checkAndRemoveCache()
-		}
-	}()
-	if m.data == nil {
-		return nil, errors.New("replacing into table with empty data")
-	}
-	if list, ok := m.data.(List); ok {
-		// Batch replace.
-		batch := 10
-		if m.batch > 0 {
-			batch = m.batch
-		}
-		return m.db.DoBatchInsert(
-			m.getLink(true),
-			m.tables,
-			m.filterDataForInsertOrUpdate(list),
-			gINSERT_OPTION_REPLACE,
-			batch,
-		)
-	} else if data, ok := m.data.(Map); ok {
-		// Single insert.
-		return m.db.DoInsert(
-			m.getLink(true),
-			m.tables,
-			m.filterDataForInsertOrUpdate(data),
-			gINSERT_OPTION_REPLACE,
-		)
-	}
-	return nil, errors.New("replacing into table with invalid data type")
+	return m.doInsertWithOption(gINSERT_OPTION_REPLACE, data...)
 }
 
 // Save does "INSERT INTO ... ON DUPLICATE KEY UPDATE..." statement for the model.
@@ -179,35 +132,70 @@ func (m *Model) Save(data ...interface{}) (result sql.Result, err error) {
 	if len(data) > 0 {
 		return m.Data(data...).Save()
 	}
+	return m.doInsertWithOption(gINSERT_OPTION_SAVE, data...)
+}
+
+// doInsertWithOption inserts data with option parameter.
+func (m *Model) doInsertWithOption(option int, data ...interface{}) (result sql.Result, err error) {
 	defer func() {
 		if err == nil {
 			m.checkAndRemoveCache()
 		}
 	}()
 	if m.data == nil {
-		return nil, errors.New("saving into table with empty data")
+		return nil, errors.New("inserting into table with empty data")
 	}
+	var (
+		nowString       = gtime.Now().String()
+		fieldNameCreate = m.getSoftFieldNameCreate()
+		fieldNameUpdate = m.getSoftFieldNameUpdate()
+		fieldNameDelete = m.getSoftFieldNameDelete()
+	)
+	// Batch operation.
 	if list, ok := m.data.(List); ok {
-		// Batch save.
 		batch := gDEFAULT_BATCH_NUM
 		if m.batch > 0 {
 			batch = m.batch
+		}
+		// Automatic handling for creating/updating time.
+		if !m.unscoped && (fieldNameCreate != "" || fieldNameUpdate != "") {
+			for k, v := range list {
+				gutil.MapDelete(v, fieldNameCreate, fieldNameUpdate, fieldNameDelete)
+				if fieldNameCreate != "" {
+					v[fieldNameCreate] = nowString
+				}
+				if fieldNameUpdate != "" {
+					v[fieldNameUpdate] = nowString
+				}
+				list[k] = v
+			}
 		}
 		return m.db.DoBatchInsert(
 			m.getLink(true),
 			m.tables,
 			m.filterDataForInsertOrUpdate(list),
-			gINSERT_OPTION_SAVE,
+			option,
 			batch,
 		)
-	} else if data, ok := m.data.(Map); ok {
-		// Single save.
+	}
+	// Single operation.
+	if data, ok := m.data.(Map); ok {
+		// Automatic handling for creating/updating time.
+		if !m.unscoped && (fieldNameCreate != "" || fieldNameUpdate != "") {
+			gutil.MapDelete(data, fieldNameCreate, fieldNameUpdate, fieldNameDelete)
+			if fieldNameCreate != "" {
+				data[fieldNameCreate] = nowString
+			}
+			if fieldNameUpdate != "" {
+				data[fieldNameUpdate] = nowString
+			}
+		}
 		return m.db.DoInsert(
 			m.getLink(true),
 			m.tables,
 			m.filterDataForInsertOrUpdate(data),
-			gINSERT_OPTION_SAVE,
+			option,
 		)
 	}
-	return nil, errors.New("saving into table with invalid data type")
+	return nil, errors.New("inserting into table with invalid data type")
 }

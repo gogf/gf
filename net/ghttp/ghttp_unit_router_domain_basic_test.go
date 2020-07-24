@@ -18,7 +18,7 @@ import (
 )
 
 func Test_Router_DomainBasic(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	d := s.Domain("localhost, local")
 	d.BindHandler("/:name", func(r *ghttp.Request) {
@@ -69,7 +69,7 @@ func Test_Router_DomainBasic(t *testing.T) {
 }
 
 func Test_Router_DomainMethod(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	d := s.Domain("localhost, local")
 	d.BindHandler("GET:/get", func(r *ghttp.Request) {
@@ -161,7 +161,7 @@ func Test_Router_DomainMethod(t *testing.T) {
 }
 
 func Test_Router_DomainStatus(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	d := s.Domain("localhost, local")
 	d.BindHandler("/200", func(r *ghttp.Request) {
@@ -257,7 +257,7 @@ func Test_Router_DomainStatus(t *testing.T) {
 }
 
 func Test_Router_DomainCustomStatusHandler(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	d := s.Domain("localhost, local")
 	d.BindHandler("/", func(r *ghttp.Request) {
@@ -296,7 +296,7 @@ func Test_Router_DomainCustomStatusHandler(t *testing.T) {
 }
 
 func Test_Router_Domain404(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	d := s.Domain("localhost, local")
 	d.BindHandler("/", func(r *ghttp.Request) {
@@ -329,7 +329,7 @@ func Test_Router_Domain404(t *testing.T) {
 }
 
 func Test_Router_DomainGroup(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	d := s.Domain("localhost, local")
 	d.Group("/", func(group *ghttp.RouterGroup) {
@@ -349,7 +349,7 @@ func Test_Router_DomainGroup(t *testing.T) {
 		})
 	})
 	s.SetPort(p)
-	//s.SetDumpRouterMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 

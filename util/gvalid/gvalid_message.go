@@ -6,62 +6,70 @@
 
 package gvalid
 
-// 默认规则校验错误消息(可以通过接口自定义错误消息)
+import (
+	"fmt"
+	"github.com/gogf/gf/i18n/gi18n"
+)
+
+// defaultMessages is the default error messages.
+// Note that these messages are synchronized from ./i18n/en/validation.toml .
 var defaultMessages = map[string]string{
-	"required":             "字段不能为空",
-	"required-if":          "字段不能为空",
-	"required-unless":      "字段不能为空",
-	"required-with":        "字段不能为空",
-	"required-with-all":    "字段不能为空",
-	"required-without":     "字段不能为空",
-	"required-without-all": "字段不能为空",
-	"date":                 "日期格式不正确",
-	"date-format":          "日期格式不正确",
-	"email":                "邮箱地址格式不正确",
-	"phone":                "手机号码格式不正确",
-	"telephone":            "电话号码格式不正确",
-	"passport":             "账号格式不合法，必需以字母开头，只能包含字母、数字和下划线，长度在6~18之间",
-	"password":             "密码格式不合法，密码格式为任意6-18位的可见字符",
-	"password2":            "密码格式不合法，密码格式为任意6-18位的可见字符，必须包含大小写字母和数字",
-	"password3":            "密码格式不合法，密码格式为任意6-18位的可见字符，必须包含大小写字母、数字和特殊字符",
-	"postcode":             "邮政编码不正确",
-	"id-number":            "身份证号码不正确",
-	"luhn":                 "银行卡号不正确",
-	"qq":                   "QQ号码格式不正确",
-	"ip":                   "IP地址格式不正确",
-	"ipv4":                 "IPv4地址格式不正确",
-	"ipv6":                 "IPv6地址格式不正确",
-	"mac":                  "MAC地址格式不正确",
-	"url":                  "URL地址格式不正确",
-	"domain":               "域名格式不正确",
-	"length":               "字段长度为:min到:max个字符",
-	"min-length":           "字段最小长度为:min",
-	"max-length":           "字段最大长度为:max",
-	"between":              "字段大小为:min到:max",
-	"min":                  "字段最小值为:min",
-	"max":                  "字段最大值为:max",
-	"json":                 "字段应当为JSON格式",
-	"xml":                  "字段应当为XML格式",
-	"array":                "字段应当为数组",
-	"integer":              "字段应当为整数",
-	"float":                "字段应当为浮点数",
-	"boolean":              "字段应当为布尔值",
-	"same":                 "字段值不合法",
-	"different":            "字段值不合法",
-	"in":                   "字段值不合法",
-	"not-in":               "字段值不合法",
-	"regex":                "字段值不合法",
+	"required":             "The :attribute field is required",
+	"required-if":          "The :attribute field is required",
+	"required-unless":      "The :attribute field is required",
+	"required-with":        "The :attribute field is required",
+	"required-with-all":    "The :attribute field is required",
+	"required-without":     "The :attribute field is required",
+	"required-without-all": "The :attribute field is required",
+	"date":                 "The :attribute value is not a valid date",
+	"date-format":          "The :attribute value does not match the format :format",
+	"email":                "The :attribute value must be a valid email address",
+	"phone":                "The :attribute value must be a valid phone number",
+	"telephone":            "The :attribute value must be a valid telephone number",
+	"passport":             "The :attribute value is not a valid passport format",
+	"password":             "The :attribute value is not a valid passport format",
+	"password2":            "The :attribute value is not a valid passport format",
+	"password3":            "The :attribute value is not a valid passport format",
+	"postcode":             "The :attribute value is not a valid passport format",
+	"resident-id":          "The :attribute value is not a valid resident id number",
+	"bank-card":            "The :attribute value must be a valid bank card number",
+	"qq":                   "The :attribute value must be a valid QQ number",
+	"ip":                   "The :attribute value must be a valid IP address",
+	"ipv4":                 "The :attribute value must be a valid IPv4 address",
+	"ipv6":                 "The :attribute value must be a valid IPv6 address",
+	"mac":                  "The :attribute value must be a valid MAC address",
+	"url":                  "The :attribute value must be a valid URL address",
+	"domain":               "The :attribute value must be a valid domain format",
+	"length":               "The :attribute value length must be between :min and :max",
+	"min-length":           "The :attribute value length must be equal or greater than :min",
+	"max-length":           "The :attribute value length must be equal or lesser than :max",
+	"between":              "The :attribute value must be between :min and :max",
+	"min":                  "The :attribute value must be equal or greater than :min",
+	"max":                  "The :attribute value must be equal or lesser than :max",
+	"json":                 "The :attribute value must be a valid JSON string",
+	"xml":                  "The :attribute value must be a valid XML string",
+	"array":                "The :attribute value must be an array",
+	"integer":              "The :attribute value must be an integer",
+	"float":                "The :attribute value must be a float",
+	"boolean":              "The :attribute value field must be true or false",
+	"same":                 "The :attribute value must be the same as field :field",
+	"different":            "The :attribute value must be different from field :field",
+	"in":                   "The :attribute value is not in acceptable range",
+	"not-in":               "The :attribute value is not in acceptable range",
+	"regex":                "The :attribute value is invalid",
 }
 
-// 初始化错误消息管理对象
-func init() {
-	errorMsgMap.Sets(defaultMessages)
-}
-
-// 替换默认的错误提示为指定的自定义提示
-// 主要作用：
-// 1、便于多语言错误提示设置；
-// 2、默认错误提示信息不满意；
-func SetDefaultErrorMsgs(msgs map[string]string) {
-	errorMsgMap.Sets(msgs)
+// getErrorMessageByRule retrieves and returns the error message for specified rule.
+// It firstly retrieves the message from custom message map, and then checks i18n manager,
+// it returns the default error message if it's not found in custom message map or i18n manager.
+func getErrorMessageByRule(ruleKey string, customMsgMap map[string]string) string {
+	content := customMsgMap[ruleKey]
+	if content != "" {
+		return content
+	}
+	content = gi18n.GetContent(fmt.Sprintf(`gf.gvalid.rule.%s`, ruleKey))
+	if content == "" {
+		content = defaultMessages[ruleKey]
+	}
+	return content
 }

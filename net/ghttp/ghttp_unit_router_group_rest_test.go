@@ -98,7 +98,7 @@ func (o *GroupObjRest) Head(r *ghttp.Request) {
 }
 
 func Test_Router_GroupRest(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	g := s.Group("/api")
 	ctl := new(GroupCtlRest)
