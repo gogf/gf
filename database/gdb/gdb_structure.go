@@ -22,6 +22,9 @@ import (
 // convertValue automatically checks and converts field value from database type
 // to golang variable type.
 func (c *Core) convertValue(fieldValue []byte, fieldType string) interface{} {
+	if fieldType == "" {
+		return fieldValue
+	}
 	t, _ := gregex.ReplaceString(`\(.+\)`, "", fieldType)
 	t = strings.ToLower(t)
 	switch t {
@@ -127,7 +130,7 @@ func (c *Core) convertValue(fieldValue []byte, fieldType string) interface{} {
 			return t.Format("Y-m-d")
 
 		default:
-			return string(fieldValue)
+			return fieldValue
 		}
 	}
 }
