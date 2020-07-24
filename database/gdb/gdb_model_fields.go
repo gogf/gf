@@ -13,6 +13,7 @@ import (
 )
 
 // Filter marks filtering the fields which does not exist in the fields of the operated table.
+// Note that this function supports only single table operations.
 func (m *Model) Filter() *Model {
 	if gstr.Contains(m.tables, " ") {
 		panic("function Filter supports only single table operations")
@@ -30,6 +31,7 @@ func (m *Model) Fields(fields string) *Model {
 }
 
 // FieldsEx sets the excluded operation fields of the model, multiple fields joined using char ','.
+// Note that this function supports only single table operations.
 func (m *Model) FieldsEx(fields string) *Model {
 	if gstr.Contains(m.tables, " ") {
 		panic("function FieldsEx supports only single table operations")
@@ -124,4 +126,25 @@ func (m *Model) FieldsExStr(fields string, prefix ...string) string {
 	}
 	newFields = m.db.QuoteString(newFields)
 	return newFields
+}
+
+// HasField determine whether the field exists in the table.
+func (m *Model) HasField(field string) (bool, error) {
+	tableFields, err := m.db.TableFields(m.tables)
+	if err != nil {
+		return false, err
+	}
+	if len(tableFields) == 0 {
+		return false, fmt.Errorf(`empty table fields for table "%s"`, m.tables)
+	}
+	fieldsArray := make([]string, len(tableFields))
+	for k, v := range tableFields {
+		fieldsArray[v.Index] = k
+	}
+	for _, f := range fieldsArray {
+		if f == field {
+			return true, nil
+		}
+	}
+	return false, nil
 }

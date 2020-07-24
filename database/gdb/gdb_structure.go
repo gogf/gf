@@ -22,6 +22,9 @@ import (
 // convertValue automatically checks and converts field value from database type
 // to golang variable type.
 func (c *Core) convertValue(fieldValue []byte, fieldType string) interface{} {
+	if fieldType == "" {
+		return fieldValue
+	}
 	t, _ := gregex.ReplaceString(`\(.+\)`, "", fieldType)
 	t = strings.ToLower(t)
 	switch t {
@@ -41,8 +44,7 @@ func (c *Core) convertValue(fieldValue []byte, fieldType string) interface{} {
 		"smallint",
 		"medium_int",
 		"mediumint",
-		"serial",
-		"smallmoney":
+		"serial":
 		if gstr.ContainsI(fieldType, "unsigned") {
 			gconv.Uint(string(fieldValue))
 		}
@@ -51,8 +53,7 @@ func (c *Core) convertValue(fieldValue []byte, fieldType string) interface{} {
 	case
 		"big_int",
 		"bigint",
-		"bigserial",
-		"money":
+		"bigserial":
 		if gstr.ContainsI(fieldType, "unsigned") {
 			gconv.Uint64(string(fieldValue))
 		}
@@ -65,7 +66,9 @@ func (c *Core) convertValue(fieldValue []byte, fieldType string) interface{} {
 		"float",
 		"double",
 		"decimal",
-		"numeric":
+		"money",
+		"numeric",
+		"smallmoney":
 		return gconv.Float64(string(fieldValue))
 
 	case "bit":
@@ -127,7 +130,7 @@ func (c *Core) convertValue(fieldValue []byte, fieldType string) interface{} {
 			return t.Format("Y-m-d")
 
 		default:
-			return string(fieldValue)
+			return fieldValue
 		}
 	}
 }

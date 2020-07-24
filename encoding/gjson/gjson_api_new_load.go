@@ -8,9 +8,9 @@ package gjson
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/internal/json"
 	"reflect"
 
 	"github.com/gogf/gf/encoding/gini"
@@ -18,7 +18,6 @@ import (
 	"github.com/gogf/gf/encoding/gxml"
 	"github.com/gogf/gf/encoding/gyaml"
 	"github.com/gogf/gf/internal/rwmutex"
-	"github.com/gogf/gf/os/gfcache"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/util/gconv"
@@ -74,7 +73,7 @@ func NewWithTag(data interface{}, tags string, safe ...bool) *Json {
 			i := interface{}(nil)
 			// Note that it uses Map function implementing the converting.
 			// Note that it here should not use MapDeep function if you really know what it means.
-			i = gconv.MapDeep(data, tags)
+			i = gconv.Map(data, tags)
 			j = &Json{
 				p:  &i,
 				c:  byte(gDEFAULT_SPLIT_CHAR),
@@ -99,7 +98,7 @@ func Load(path string, safe ...bool) (*Json, error) {
 	} else {
 		path = p
 	}
-	return doLoadContent(gfile.Ext(path), gfcache.GetBinContents(path), safe...)
+	return doLoadContent(gfile.Ext(path), gfile.GetBytesWithCache(path), safe...)
 }
 
 // LoadJson creates a Json object from given JSON format content.

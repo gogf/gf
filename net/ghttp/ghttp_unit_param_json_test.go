@@ -7,8 +7,8 @@
 package ghttp_test
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/gogf/gf/internal/json"
 	"testing"
 	"time"
 

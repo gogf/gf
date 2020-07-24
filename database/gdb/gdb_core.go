@@ -13,23 +13,12 @@ import (
 	"fmt"
 	"github.com/gogf/gf/internal/utils"
 	"reflect"
-	"regexp"
 	"strings"
 
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/util/gconv"
-)
-
-const (
-	gPATH_FILTER_KEY = "/database/gdb/gdb"
-)
-
-var (
-	// lastOperatorReg is the regular expression object for a string
-	// which has operator at its tail.
-	lastOperatorReg = regexp.MustCompile(`[<>=]+\s*$`)
 )
 
 // Master creates and returns a connection from master node if master-slave configured.
@@ -244,12 +233,12 @@ func (c *Core) GetScan(pointer interface{}, sql string, args ...interface{}) err
 func (c *Core) GetValue(sql string, args ...interface{}) (Value, error) {
 	one, err := c.DB.GetOne(sql, args...)
 	if err != nil {
-		return nil, err
+		return gvar.New(nil), err
 	}
 	for _, v := range one {
 		return v, nil
 	}
-	return nil, nil
+	return gvar.New(nil), nil
 }
 
 // GetCount queries and returns the count from database.
@@ -784,8 +773,22 @@ func (c *Core) writeSqlToLogger(v *Sql) {
 	s := fmt.Sprintf("[%3d ms] %s", v.End-v.Start, v.Format)
 	if v.Error != nil {
 		s += "\nError: " + v.Error.Error()
-		c.logger.StackWithFilter(gPATH_FILTER_KEY).Error(s)
+		c.logger.Error(s)
 	} else {
-		c.logger.StackWithFilter(gPATH_FILTER_KEY).Debug(s)
+		c.logger.Debug(s)
 	}
+}
+
+// HasTable determine whether the table name exists in the database.
+func (c *Core) HasTable(name string) (bool, error) {
+	tableList, err := c.DB.Tables()
+	if err != nil {
+		return false, err
+	}
+	for _, table := range tableList {
+		if table == name {
+			return true, nil
+		}
+	}
+	return false, nil
 }

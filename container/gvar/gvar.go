@@ -8,7 +8,7 @@
 package gvar
 
 import (
-	"encoding/json"
+	"github.com/gogf/gf/internal/json"
 	"time"
 
 	"github.com/gogf/gf/internal/empty"
@@ -18,17 +18,23 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
-// Var is an universal variable type.
+// Var is an universal variable type implementer.
 type Var struct {
 	value interface{} // Underlying value.
 	safe  bool        // Concurrent safe or not.
 }
 
-// New creates and returns a new *Var with given <value>.
+// New creates and returns a new Var with given <value>.
 // The optional parameter <safe> specifies whether Var is used in concurrent-safety,
 // which is false in default.
 func New(value interface{}, safe ...bool) *Var {
-	v := Create(value, safe...)
+	v := Var{}
+	if len(safe) > 0 && !safe[0] {
+		v.safe = true
+		v.value = gtype.NewInterface(value)
+	} else {
+		v.value = value
+	}
 	return &v
 }
 
@@ -202,7 +208,7 @@ func (v *Var) Array() []interface{} {
 	return v.Interfaces()
 }
 
-// Vars converts and returns <v> as []*Var.
+// Vars converts and returns <v> as []Var.
 func (v *Var) Vars() []*Var {
 	array := gconv.Interfaces(v.Val())
 	if len(array) == 0 {

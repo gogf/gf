@@ -30,9 +30,3 @@ func Benchmark_S_Data_2(b *testing.B) {
 		guid.S([]byte("123"), []byte("456"))
 	}
 }
-
-func Benchmark_S_Data_3(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		guid.S([]byte("123"), []byte("456"), []byte("789"))
-	}
-}

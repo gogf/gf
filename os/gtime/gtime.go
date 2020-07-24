@@ -5,10 +5,13 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package gtime provides functionality for measuring and displaying time.
+//
+// This package should keep much less dependencies with other packages.
 package gtime
 
 import (
 	"errors"
+	"github.com/gogf/gf/errors/gerror"
 	"regexp"
 	"strconv"
 	"strings"
@@ -231,10 +234,12 @@ func StrToTime(str string, format ...string) (*Time, error) {
 	if len(format) > 0 {
 		return StrToTimeFormat(str, format[0])
 	}
-	var year, month, day int
-	var hour, min, sec, nsec int
-	var match []string
-	var local = time.Local
+	var (
+		year, month, day     int
+		hour, min, sec, nsec int
+		match                []string
+		local                = time.Local
+	)
 	if match = timeRegex1.FindStringSubmatch(str); len(match) > 0 && match[1] != "" {
 		for k, v := range match {
 			match[k] = strings.TrimSpace(v)
@@ -280,6 +285,9 @@ func StrToTime(str string, format ...string) (*Time, error) {
 			h, _ := strconv.Atoi(zone[0:2])
 			m, _ := strconv.Atoi(zone[2:4])
 			s, _ := strconv.Atoi(zone[4:6])
+			if h > 24 || m > 59 || s > 59 {
+				return nil, gerror.Newf("invalid zone string: %s", match[6])
+			}
 			// Comparing the given time zone whether equals to current tine zone,
 			// it converts it to UTC if they does not.
 			_, localOffset := time.Now().Zone()

@@ -9,8 +9,8 @@
 package gset_test
 
 import (
-	"encoding/json"
 	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/util/gconv"
 	"strings"
 	"sync"
@@ -374,6 +374,19 @@ func TestIntSet_Json(t *testing.T) {
 		t.Assert(a2.Contains(3), true)
 		t.Assert(a2.Contains(4), true)
 		t.Assert(a2.Contains(5), false)
+	})
+}
+
+func TestIntSet_Walk(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var set gset.IntSet
+		set.Add(g.SliceInt{1, 2}...)
+		set.Walk(func(item int) int {
+			return item + 10
+		})
+		t.Assert(set.Size(), 2)
+		t.Assert(set.Contains(11), true)
+		t.Assert(set.Contains(12), true)
 	})
 }
 

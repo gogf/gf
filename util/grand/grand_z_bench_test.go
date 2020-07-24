@@ -17,11 +17,25 @@ import (
 )
 
 var (
-	buffer    = make([]byte, 8)
-	strForStr = "我爱GoFrame"
+	buffer         = make([]byte, 8)
+	randBuffer4    = make([]byte, 4)
+	randBuffer1024 = make([]byte, 1024)
+	strForStr      = "我爱GoFrame"
 )
 
-func Benchmark_Rand_Intn(b *testing.B) {
+func Benchmark_Rand_Buffer4(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		rand.Read(randBuffer4)
+	}
+}
+
+func Benchmark_Rand_Buffer1024(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		rand.Read(randBuffer1024)
+	}
+}
+
+func Benchmark_GRand_Intn(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		grand.N(0, 99)
 	}

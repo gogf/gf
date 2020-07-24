@@ -45,6 +45,13 @@ require github.com/gogf/gf latest
 golang版本 >= 1.11
 ```
 
+
+
+# 架构
+<div align=center>
+<img src="https://goframe.org/images/arch.png?v=12"/>
+</div>
+
 # 模块
 
 1. **核心模块**
@@ -53,13 +60,8 @@ golang版本 >= 1.11
 
 1. **社区模块**
 
-    社区模块主要由社区贡献并维护，大部分也是由`gf`主仓库的贡献者提供及维护，存放于`gogf`组织下，与`gf`主仓库处于同一级别。有的社区模块是从`gf`主仓库中剥离出来单独维护的模块，这些模块并不是特别常用，或者对外部依赖较重。
+    社区模块主要由社区贡献并维护，大部分也是由`gf`主仓库的贡献者提供及维护，存放于`gogf`空间下，与`gf`主仓库处于同一级别。有的社区模块是从`gf`主仓库中剥离出来单独维护的模块，这些模块并不是特别常用，或者对外部依赖较重。
 
-
-# 架构
-<div align=center>
-<img src="https://goframe.org/images/arch.png?v=11"/>
-</div>
 
 # 性能
 
@@ -127,11 +129,23 @@ ab -t 10 -c 100 http://127.0.0.1:3000/json
 - WX交流群：微信添加`389961817`备注`GF`
 - 主库ISSUE：https://github.com/gogf/gf/issues
 
-> 建议通过阅读`Gorame`的源码以及API文档深度学习`GoFrame`，了解更多的精妙设计。
+> 建议通过阅读`GoFrame`的源码以及API文档深度学习`GoFrame`，了解更多的精妙设计。
 
 # 协议
 
 `GF` 使用非常友好的 [MIT](LICENSE) 开源协议进行发布，永久`100%`开源免费。
+
+# 用户
+
+- [腾讯科技](https://www.tencent.com/)
+- [中兴科技](https://www.zte.com.cn/china/)
+- [蚂蚁金服](https://www.antfin.com/)
+- [医联科技](https://www.medlinker.com/)
+- [天极数码](http://www.yesky.com)
+- [库币科技](https://www.kucoin.io/)
+- [乐有家](https://www.leyoujia.com/)
+
+> 在这里只列举了部分知名的用户，如果您的企业或者产品正在使用`GoFrame`，欢迎到 [这里] (https://github.com/gogf/gf/issues/168)留言。
 
 # 贡献
 
@@ -150,3 +164,4 @@ ab -t 10 -c 100 http://127.0.0.1:3000/json
 
 # 感谢
 <a href="https://www.jetbrains.com/?from=GoFrame"><img src="https://goframe.org/images/jetbrains.png" width="100" alt="JetBrains"/></a>
+

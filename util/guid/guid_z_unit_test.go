@@ -22,13 +22,13 @@ func Test_S(t *testing.T) {
 		for i := 0; i < 1000000; i++ {
 			s := guid.S()
 			t.Assert(set.AddIfNotExist(s), true)
-			t.Assert(len(s), 36)
+			t.Assert(len(s), 32)
 		}
 	})
 }
 
 func Test_S_Data(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		t.Assert(len(guid.S([]byte("123"))), 36)
+		t.Assert(len(guid.S([]byte("123"))), 32)
 	})
 }

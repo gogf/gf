@@ -46,7 +46,7 @@ func (r *Request) GetRequest(key string, def ...interface{}) interface{} {
 }
 
 // GetRequestVar retrieves and returns the parameter named <key> passed from client and
-// custom params as *gvar.Var, no matter what HTTP method the client is using. The parameter
+// custom params as gvar.Var, no matter what HTTP method the client is using. The parameter
 // <def> specifies the default value if the <key> does not exist.
 func (r *Request) GetRequestVar(key string, def ...interface{}) *gvar.Var {
 	return gvar.New(r.GetRequest(key, def...))

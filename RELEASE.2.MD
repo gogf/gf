@@ -1,3 +1,213 @@
+# `v1.13.1` (2020-06-10)
+
+# GoFrame
+
+`GF(Go Frame)`是一款模块化、高性能、生产级的Go基础开发框架。实现了比较完善的基础设施建设以及开发工具链，提供了常用的基础开发模块，如：缓存、日志、队列、数组、集合、容器、定时器、命令行、内存锁、对象池、配置管理、资源管理、数据校验、数据编码、定时任务、数据库ORM、TCP/UDP组件、进程管理/通信等等。并提供了Web服务开发的系列核心组件，如：Router、Cookie、Session、Middleware、服务注册、模板引擎等等，支持热重启、热更新、域名绑定、TLS/HTTPS、Rewrite等特性。
+
+## 特点
+
+* 模块化、松耦合设计；
+* 模块丰富、开箱即用；
+* 简便易用、易于维护；
+* 高代码质量、高单元测试覆盖率；
+* 社区活跃，大牛谦逊低调脾气好；
+* 详尽的开发文档及示例；
+* 完善的本地中文化支持；
+* 设计为团队及企业使用；
+
+## 发展
+
+`GoFrame`开始得比较早，`2011`年始于北京一个智能物联网平台项目，那时还没有这么多物联网的现行标准，`Go`的标准库以及生态也未如此丰富。`2017`年的时候`GF`才开始发布测试版，`2018`年`1024`程序员节日的时候才发布`v1.0`正式版，为`Go`生态发展添砖加瓦。开源以来快速迭代、发展成长，广受开发者和企业的青睐，也有许多的开发者加入了贡献行列。`GF`原本是为开发团队设计的，因此她的开发效率和可维护性做得非常好，有着很高的代码质量以及丰富的单元测试和示例，并且`GF`是目前中文化文档做的最好的`Golang`开发框架。
+
+# Change Log
+
+1. 应多数开发者的要求，框架要求的最低`Golang`运行版本降级为了`v1.11`。
+1. 新增`GoFrame`视频教程地址：
+    - bilibili：https://www.bilibili.com/video/av94410029
+    - 西瓜视频： https://www.ixigua.com/pseries/6809291194665796100/
+1. 将不常用的`guuid`模块迁移到 github.com/gogf/guuid 作为社区模块维护，保持`gf`主仓库的轻量级。
+1. 新增`guid`模块，用于高效轻量级的唯一字符串生成：https://goframe.org/util/guid/index
+
+
+## `tool chain`
+
+1. 工具链更新：https://goframe.org/toolchain/cli
+1. 新增`gf env`命令，更优雅地查看当前`Golang`环境变量信息。
+1. 新增`gf mod path`命令，用于将当前`go modules`包拷贝到`GOPATH`中，以便使用原始的`GOPATH`方式开发项目。
+1. 对现有`cli`命令进行了一些改进，提高使用体验；预编译二进制版本在部分平台下提供了`upx`压缩，使得下载的文件更小。
+
+## `container`
+1. `garray`
+    - https://goframe.org/container/garray/index
+    - 简化数组使用方式，支持类似于`var garray.Array`的变量定义使用方式；
+    - 增加`Walk`方法，用于自定义的数组元素处理方法；
+    - 增加`ContainsI`方法，用于大小写忽略匹配的数组元素项存在性查找；
+    - 完善单元测试，代码覆盖率`94%`；
+    - 代码改进，提高性能；
+    - 修复一些问题；
+1. `gchan`
+    - 由于该封装包实际意义不是很大，因此从主框架中删除；
+1. `glist`
+    - https://goframe.org/container/glist/index
+    - 简化链表使用方式，支持类似于`var glist.List`的变量定义使用方式；
+    - 完善单元测试，代码覆盖率`99%`；
+1. `gmap`
+    - https://goframe.org/container/gmap/index
+    - 简化`Map`使用方式，支持类似于`var gmap.Map`的变量定义使用方式；
+    - 完善单元测试，代码覆盖率`81%`；
+    - 代码改进，提高性能；
+1. `gset`
+    - https://goframe.org/container/gset/index
+    - 简化集合使用方式，支持类似于`var gset.Set`的变量定义使用方式；
+    - 增加`Walk`方法，用于自定义的集合元素处理方法；
+    - 完善单元测试，代码覆盖率`90%`；
+    - 代码改进，提高性能；
+1. `gtree`
+    - https://goframe.org/container/gtree/index
+    - 简化树型使用方式，支持类似于`var gtree.BTree`的变量定义使用方式；
+    - 完善单元测试，代码覆盖率`90%`；
+1. `gvar`
+    - https://goframe.org/container/gvar/index
+    - 完善单元测试，代码覆盖率`69%`；
+    - 代码组织结构调整，提高维护性；
+    - 代码改进，提高性能；
+
+## `database`
+
+1. `gdb`
+    - 增加`Transaction(f func(tx *TX) error) (err error)`接口方法，用于通过闭包实现事务封装处理：https://goframe.org/database/gdb/transaction
+    - 去掉不常用的`From`接口方法，改进`Table`及`Model`方法的参数为不定参数，并支持通过不定参数传递表别名：https://goframe.org/database/gdb/chaining/select
+    - 增加`DryRun`特性，支持空跑时只执行查询不执行写入/更新/删除操作：https://goframe.org/database/gdb/senior
+    - 增加`create_at`, `update_at`写入时间、更新时间字段自动填充特性：https://goframe.org/database/gdb/chaining/auto-time
+    - 增加`delete_at`软删除特性：https://goframe.org/database/gdb/chaining/auto-time
+    - 增加`Having`链式操作方法，用于`having`条件查询：https://goframe.org/database/gdb/chaining/select
+    - `Result`结果对象增加`Chunk`方法，用于自定义的数据分批处理：https://goframe.org/database/gdb/result
+    - 改进`Schema`数据库运行时切换特性；
+    - 改进对`pgsql`, `mssql`, `sqlite`, `oracle`数据库字段类型的支持；
+    - 进一步完善单元测试；
+    - 代码组织结构调整，提高维护性；
+    - 代码改进，提高性能；
+1. `gredis`
+    - 增加`MaxActive`连接池参数默认配置为`100`，限制默认的连接数量；
+    - 改进`Conn`连接对象的`Do`方法，支持对`map/slice/struct`类型进行自动的`json.Marshal`处理，注意获取数据时使用`DoVar`方法获取：https://goframe.org/database/gredis/usage
+    - 完善单元测试，代码覆盖率`72%`；
+
+## `net`
+1. `ghttp`
+    - 增加`Prefix`及`Retry`客户端链式操作方法；
+    - 增加客户端原始请求打印特性：https://goframe.org/net/ghttp/client/demo/dump
+    - 增加`ClientMaxBodySize`的服务端配置，用于限制客户端提交的`Body`大小，默认为`8MB`；在涉及到上传的Server中需要增加该配置的大小，在配置文件中指定对应的大小即可，如`ClientMaxBodySize="100MB"`：https://goframe.org/net/ghttp/config
+    - 改进`SessionId`生成的随机性，提高`Session`安全性：https://goframe.org/os/gsession/index
+    - 改进`ghttp.Server`实现了标准库的`http.Handler`接口，便于与其他第三方的服务如`Prometheus`进行代码集成；
+    - 其他大量的代码细节改进工作，提高性能及持久维护性；
+    - 完善单元测试，代码覆盖率`61%`；
+
+1. `gipv4`
+    - 增加`GetIpArray`方法，用于获取当前主机的所有IPv4地址；
+    - 增加`GetMacArray`及`GetMac`方法，用于获取当前主机的`MAC`地址信息；
+    - 修改`IntranetIP`方法名称为`GetIntranetIp`，修改`IntranetIPArray`方法名称为`GetIntranetIpArray`；
+
+## `encoding`
+1. `gjson`
+    - 新增`GetMaps`获取`JSON`内部节点变量方法；
+    - 改进`NewWithTag`方法对`map/struct`的处理；
+    - 完善单元测试，代码覆盖率`77%`；
+1. `gyaml`
+    - 升级依赖的第三方`yaml`解析包，解决了`map[interface{}]interface{}`转换问题；
+
+## `error`
+1. `gerror`
+    - 新增`NewfSkip`方法，用于创建`skip`指定堆栈的错误对象；
+    - 放开框架所有的堆栈链路打印，展示错误时真实的链路调用详情；
+
+## `os`
+1. `gcache`
+    - 增加`GetVar`方法，用于获得可以便捷转换为其他数据类型的"泛型"变量；
+    - 标记`Removes`方法废弃，改进`Remove`方法参数为不定参数，统一使用`Remove`方法删除单个/多个键值对；
+    - 完善单元测试，代码覆盖率`96%`；
+
+1. `genv`
+    - 增加`GetVar`方法，用于获得可以便捷转换为其他数据类型的"泛型"变量；
+
+1. `gfile`
+    - 改进`CopyDir/CopyFile`复制目录/文件方法；
+    - 新增`ScanDirFunc`方法，用于支持自定义处理回调的目录检索；
+    - 完善单元测试，代码覆盖率`64%`；
+
+1. `glog`
+    - 增加支持`Context`上下文变量的日志打印特性：https://goframe.org/os/glog/context
+
+1. `gres`
+    - 改进打包特性，增强生成二进制文件及Go文件的压缩比，比旧版本增加`20%`压缩率，使得编译生成的二进制文件体积更小；
+    - 代码结构改进，提高执行效率及可持久维护性；
+
+1. `gsession`
+    - 改进`SessionId`默认生成方法，采用`guid.S`方法生成；
+    - 增加`SetId`及`SetIdFunc`方法，用于自定义`SessionId`及自定义的`SessionId`生成方法；
+
+## `frame`
+1. `g`
+    - 新增`g.Table`方法，用于快速创建数据库模型操作对象；
+
+## `i18n`
+1. `gi18n`
+    - 新增`GetContent`方法，用于获取指定`i18n`关键字为转译内容；
+    - 改进代码细节，提高性能和持久可维护性；
+    - 完善单元测试，代码覆盖率`74%`；
+
+## `test`
+1. `gtest`
+    - 增加`AssertNQ`断言方法，用于强类型的不相等判断；
+
+## `text`
+1. `gstr`
+    - 增加`SubStrRune`方法，用于支持`unicode`的字符串截取；
+    - 增加`StrLimitRune`方法，用于支持`unicode`的字符串截断隐藏；
+    - 增加`LenRune`方法，用于替换`RuneLen`方法，统一方法命名风格；
+    - 增加`PosRune/PosIRune/PosRRune/PosRIRune`方法，用于支持`unicode`的字符串左右位置查找；
+    - 增加`CompareVersionGo`方法，用于`Golang`风格的版本号大小比较；
+    - 完善单元测试，代码覆盖率`75%`；
+
+## `util`
+1. `gconv`
+    - 改进`Convert`转换方法，支持常见`map`类型的转换；
+    - 改进类型转换过程中异常错误的捕获，通过`error`返回；
+    - 其他一些细节改进；
+    - 完善单元测试，代码覆盖率`63%`；
+
+1. `grand`
+    - 增加`B`方法，用于获得随机的二进制数据；
+    - 改进代码底层实现，部分接口性能提高`50%`；
+    - 完善单元测试，代码覆盖率`74%`；
+
+1. `guid`
+    - 新增`guid`模块，用于高效轻量级的唯一字符串生成：https://goframe.org/util/guid/index
+
+1. `gutil`
+    - 增加`MapContains`方法，用于判断map中是否包含指定键名；
+    - 增加`MapDelete`方法，用于删除map中指定的键名，可以为多个键名；
+    - 增加`MapMerge`方法，用于合并两个map；
+    - 增加`MapMergeCopy`方法，用于拷贝多个map；
+    - 增加`MapContainsPossibleKey`方法，用于查找指定键名，忽略大小写及字符`'-'/'_'/'.'/' '`；
+
+1. `gvalid`
+    - 所有默认的错误提示改为了英文；
+    - 错误提示的配置改为了通过`i18n`来配置实现，以便支持国际化：https://goframe.org/util/gvalid/message
+    - 身份证号规则名称从`id-number`改为了`resident-id `；
+    - 银行卡号规则名称从`luhn`改为了`bank-card`；
+    - 完善单元测试，代码覆盖率`96%`；
+
+## Bug Fix
+1. 修复`gcompress`的多文件`zip`压缩问题；
+1. 修复`ghttp.Client`获取返回的过期`Cookie`的问题；
+1. 修复`gres.File`对于`http.File`接口的实现细节；
+1. 修复`garray.Pop*`方法的边界问题；
+1. 修复`gres`中`Readdir`方法参数为`0`时报错的问题；
+1. 其他一些修复：https://github.com/gogf/gf/issues?q=is%3Aissue+label%3Abug
+
+
+
+
 # `v1.12.1` (2020-03-31)
 
 大家好啊！久等啦！

@@ -13,14 +13,9 @@ import (
 	"github.com/gogf/gf/util/gutil"
 )
 
-// NewVar returns a *gvar.Var.
+// NewVar returns a gvar.Var.
 func NewVar(i interface{}, safe ...bool) *Var {
 	return gvar.New(i, safe...)
-}
-
-// CreateVar returns a gvar.Var.
-func CreateVar(i interface{}, safe ...bool) Var {
-	return gvar.Create(i, safe...)
 }
 
 // Wait blocks until all the web servers shutdown.

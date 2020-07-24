@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"github.com/gogf/gf/encoding/ghash"
 	"github.com/gogf/gf/internal/intlog"
-	"github.com/gogf/gf/os/gfcache"
 	"github.com/gogf/gf/os/gfsnotify"
 	"github.com/gogf/gf/os/gmlock"
 	"github.com/gogf/gf/text/gstr"
@@ -68,7 +67,7 @@ func (view *View) Parse(file string, params ...Params) (result string, err error
 		if resource != nil {
 			content = gconv.UnsafeBytesToStr(resource.Content())
 		} else {
-			content = gfcache.GetContents(path)
+			content = gfile.GetContentsWithCache(path)
 		}
 		// Monitor template files changes using fsnotify asynchronously.
 		if resource == nil {

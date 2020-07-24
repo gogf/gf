@@ -7,68 +7,31 @@
 package ghttp
 
 import (
-	"bytes"
 	"fmt"
+	"github.com/gogf/gf/internal/utils"
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
 
-	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
 )
 
 // dumpTextFormat is the format of the dumped raw string
 const dumpTextFormat = `+---------------------------------------------+
-|                    %s                 |
+|                   %s                   |
 +---------------------------------------------+
 %s
 %s
 `
 
-// ifDumpBody determines whether to output body according to content-type.
-func ifDumpBody(contentType string) bool {
-	// the body should not be output when the body is html or stream.
-	if gstr.Contains(contentType, "application/json") ||
-		gstr.Contains(contentType, "application/xml") ||
-		gstr.Contains(contentType, "multipart/form-data") ||
-		gstr.Contains(contentType, "application/x-www-form-urlencoded") ||
-		gstr.Contains(contentType, "text/plain") {
-		return true
-	}
-	return false
-}
-
-// getRequestBody returns the raw text of the request body.
-func getRequestBody(req *http.Request) string {
-	contentType := req.Header.Get("Content-Type")
-	if !ifDumpBody(contentType) {
-		return ""
-	}
-	// so that the request body can be read again.
-	bodyReader, errGetBody := req.GetBody()
-	if errGetBody != nil {
-		return ""
-	}
-	bytesBody, errReadBody := ioutil.ReadAll(bodyReader)
-	if errReadBody != nil {
-		return ""
-	}
-	return gconv.UnsafeBytesToStr(bytesBody)
-}
-
 // getResponseBody returns the text of the response body.
-func getResponseBody(resp *http.Response) string {
-	contentType := resp.Header.Get("Content-Type")
-	if !ifDumpBody(contentType) {
+func getResponseBody(res *http.Response) string {
+	if res.Body == nil {
 		return ""
 	}
-	bytesBody, errReadBody := ioutil.ReadAll(resp.Body)
-	if errReadBody != nil {
-		return ""
-	}
-	// So the response body can be read again.
-	resp.Body = ioutil.NopCloser(bytes.NewBuffer(bytesBody))
-	return gconv.UnsafeBytesToStr(bytesBody)
+	bodyContent, _ := ioutil.ReadAll(res.Body)
+	res.Body = utils.NewReadCloser(bodyContent, true)
+	return gconv.UnsafeBytesToStr(bodyContent)
 }
 
 // RawRequest returns the raw content of the request.
@@ -87,9 +50,9 @@ func (r *ClientResponse) RawRequest() string {
 	}
 	return fmt.Sprintf(
 		dumpTextFormat,
-		"REQUEST ",
+		"REQUEST",
 		gconv.UnsafeBytesToStr(bs),
-		getRequestBody(r.request),
+		r.requestBody,
 	)
 }
 
@@ -115,4 +78,9 @@ func (r *ClientResponse) RawResponse() string {
 // Raw returns the raw text of the request and the response.
 func (r *ClientResponse) Raw() string {
 	return fmt.Sprintf("%s\n%s", r.RawRequest(), r.RawResponse())
+}
+
+// RawDump outputs the raw text of the request and the response to stdout.
+func (r *ClientResponse) RawDump() {
+	fmt.Println(r.Raw())
 }

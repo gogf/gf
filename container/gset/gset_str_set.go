@@ -9,7 +9,7 @@ package gset
 
 import (
 	"bytes"
-	"encoding/json"
+	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/internal/rwmutex"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
@@ -444,9 +444,11 @@ func (set *StrSet) Pops(size int) []string {
 func (set *StrSet) Walk(f func(item string) string) *StrSet {
 	set.mu.Lock()
 	defer set.mu.Unlock()
+	m := make(map[string]struct{}, len(set.data))
 	for k, v := range set.data {
-		set.data[f(k)] = v
+		m[f(k)] = v
 	}
+	set.data = m
 	return set
 }
 

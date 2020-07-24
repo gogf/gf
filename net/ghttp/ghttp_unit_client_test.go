@@ -9,6 +9,9 @@ package ghttp_test
 import (
 	"context"
 	"fmt"
+	"github.com/gogf/gf/debug/gdebug"
+	"github.com/gogf/gf/os/gfile"
+	"github.com/gogf/gf/util/guid"
 	"testing"
 	"time"
 
@@ -266,5 +269,63 @@ func Test_Client_Chain_ContentXml(t *testing.T) {
 			Score int    `json:"score"`
 		}
 		t.Assert(c.ContentXml().PostContent("/xml", User{"john", 100}), "john100")
+	})
+}
+
+func Test_Client_Param_Containing_Special_Char(t *testing.T) {
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/", func(r *ghttp.Request) {
+		r.Response.Write("k1=", r.Get("k1"), "&k2=", r.Get("k2"))
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		c := ghttp.NewClient()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		t.Assert(c.PostContent("/", "k1=MTIxMg==&k2=100"), "k1=MTIxMg==&k2=100")
+		t.Assert(c.PostContent("/", g.Map{
+			"k1": "MTIxMg==",
+			"k2": 100,
+		}), "k1=MTIxMg==&k2=100")
+	})
+}
+
+func Test_Client_File_And_Param(t *testing.T) {
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/", func(r *ghttp.Request) {
+		tmpPath := gfile.TempDir(guid.S())
+		err := gfile.Mkdir(tmpPath)
+		gtest.Assert(err, nil)
+		defer gfile.Remove(tmpPath)
+
+		file := r.GetUploadFile("file")
+		_, err = file.Save(tmpPath)
+		gtest.Assert(err, nil)
+		r.Response.Write(
+			r.Get("key"),
+			gfile.GetContents(gfile.Join(tmpPath, gfile.Basename(file.Filename))),
+		)
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		filePath := gdebug.TestDataPath("upload", "file1.txt")
+		t.Assert(
+			c.PostContent("/", "key=1&file=@file:"+filePath),
+			"1"+gfile.GetContents(filePath),
+		)
 	})
 }

@@ -5,11 +5,13 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package gconv implements powerful and convenient converting functionality for any types of variables.
+//
+// This package should keep much less dependencies with other packages.
 package gconv
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/os/gtime"
 	"reflect"
 	"strconv"
@@ -18,16 +20,6 @@ import (
 
 	"github.com/gogf/gf/encoding/gbinary"
 )
-
-// Type assert api for String().
-type apiString interface {
-	String() string
-}
-
-// Type assert api for Error().
-type apiError interface {
-	Error() string
-}
 
 var (
 	// Empty strings.
@@ -52,32 +44,130 @@ func Convert(i interface{}, t string, params ...interface{}) interface{} {
 	switch t {
 	case "int":
 		return Int(i)
+	case "*int":
+		if _, ok := i.(*int); ok {
+			return i
+		}
+		v := Int(i)
+		return &v
+
 	case "int8":
 		return Int8(i)
+	case "*int8":
+		if _, ok := i.(*int8); ok {
+			return i
+		}
+		v := Int8(i)
+		return &v
+
 	case "int16":
 		return Int16(i)
+	case "*int16":
+		if _, ok := i.(*int16); ok {
+			return i
+		}
+		v := Int16(i)
+		return &v
+
 	case "int32":
 		return Int32(i)
+	case "*int32":
+		if _, ok := i.(*int32); ok {
+			return i
+		}
+		v := Int32(i)
+		return &v
+
 	case "int64":
 		return Int64(i)
+	case "*int64":
+		if _, ok := i.(*int64); ok {
+			return i
+		}
+		v := Int64(i)
+		return &v
+
 	case "uint":
 		return Uint(i)
+	case "*uint":
+		if _, ok := i.(*uint); ok {
+			return i
+		}
+		v := Uint(i)
+		return &v
+
 	case "uint8":
 		return Uint8(i)
+	case "*uint8":
+		if _, ok := i.(*uint8); ok {
+			return i
+		}
+		v := Uint8(i)
+		return &v
+
 	case "uint16":
 		return Uint16(i)
+	case "*uint16":
+		if _, ok := i.(*uint16); ok {
+			return i
+		}
+		v := Uint16(i)
+		return &v
+
 	case "uint32":
 		return Uint32(i)
+	case "*uint32":
+		if _, ok := i.(*uint32); ok {
+			return i
+		}
+		v := Uint32(i)
+		return &v
+
 	case "uint64":
 		return Uint64(i)
+	case "*uint64":
+		if _, ok := i.(*uint64); ok {
+			return i
+		}
+		v := Uint64(i)
+		return &v
+
 	case "float32":
 		return Float32(i)
+	case "*float32":
+		if _, ok := i.(*float32); ok {
+			return i
+		}
+		v := Float32(i)
+		return &v
+
 	case "float64":
 		return Float64(i)
+	case "*float64":
+		if _, ok := i.(*float64); ok {
+			return i
+		}
+		v := Float64(i)
+		return &v
+
 	case "bool":
 		return Bool(i)
+	case "*bool":
+		if _, ok := i.(*bool); ok {
+			return i
+		}
+		v := Bool(i)
+		return &v
+
 	case "string":
 		return String(i)
+	case "*string":
+		if _, ok := i.(*string); ok {
+			return i
+		}
+		v := String(i)
+		return &v
+
 	case "[]byte":
 		return Bytes(i)
 	case "[]int":
@@ -104,21 +194,53 @@ func Convert(i interface{}, t string, params ...interface{}) interface{} {
 			return Time(i, String(params[0]))
 		}
 		return Time(i)
-
-	case "gtime.Time":
+	case "*time.Time":
+		var v interface{}
 		if len(params) > 0 {
-			return GTime(i, String(params[0]))
+			v = Time(i, String(params[0]))
+		} else {
+			if _, ok := i.(*time.Time); ok {
+				return i
+			}
+			v = Time(i)
 		}
-		return *GTime(i)
+		return &v
 
-	case "GTime", "*gtime.Time":
+	case "GTime", "gtime.Time":
 		if len(params) > 0 {
-			return GTime(i, String(params[0]))
+			if v := GTime(i, String(params[0])); v != nil {
+				return *v
+			} else {
+				return *gtime.New()
+			}
 		}
-		return GTime(i)
+		if v := GTime(i); v != nil {
+			return *v
+		} else {
+			return *gtime.New()
+		}
+	case "*gtime.Time":
+		if len(params) > 0 {
+			if v := GTime(i, String(params[0])); v != nil {
+				return v
+			} else {
+				return gtime.New()
+			}
+		}
+		if v := GTime(i); v != nil {
+			return v
+		} else {
+			return gtime.New()
+		}
 
 	case "Duration", "time.Duration":
 		return Duration(i)
+	case "*time.Duration":
+		if _, ok := i.(*time.Duration); ok {
+			return i
+		}
+		v := Duration(i)
+		return &v
 
 	case "map[string]string":
 		return MapStrStr(i)
@@ -128,6 +250,19 @@ func Convert(i interface{}, t string, params ...interface{}) interface{} {
 
 	case "[]map[string]interface{}":
 		return Maps(i)
+
+	//case "gvar.Var":
+	//	// TODO remove reflect usage to create gvar.Var, considering using unsafe pointer
+	//	rv := reflect.New(intstore.ReflectTypeVarImp)
+	//	ri := rv.Interface()
+	//	if v, ok := ri.(apiSet); ok {
+	//		v.Set(i)
+	//	} else if v, ok := ri.(apiUnmarshalValue); ok {
+	//		v.UnmarshalValue(i)
+	//	} else {
+	//		rv.Set(reflect.ValueOf(i))
+	//	}
+	//	return ri
 
 	default:
 		return i

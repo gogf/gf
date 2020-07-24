@@ -8,12 +8,13 @@ package ghttp
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/encoding/gurl"
 	"github.com/gogf/gf/encoding/gxml"
+	"github.com/gogf/gf/internal/json"
+	"github.com/gogf/gf/internal/utils"
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
@@ -121,7 +122,7 @@ func (r *Request) GetRawString() string {
 func (r *Request) GetBody() []byte {
 	if r.bodyContent == nil {
 		r.bodyContent, _ = ioutil.ReadAll(r.Body)
-		r.RefillBody()
+		r.Body = utils.NewReadCloser(r.bodyContent, true)
 	}
 	return r.bodyContent
 }

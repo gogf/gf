@@ -10,7 +10,11 @@ import (
 	"context"
 	"crypto/tls"
 	"github.com/gogf/gf/text/gstr"
+	"golang.org/x/net/proxy"
+	"net"
 	"net/http"
+	"net/url"
+	"strings"
 	"time"
 
 	"github.com/gogf/gf/text/gregex"
@@ -146,4 +150,66 @@ func (c *Client) SetRetry(retryCount int, retryInterval time.Duration) *Client {
 	c.retryCount = retryCount
 	c.retryInterval = retryInterval
 	return c
+}
+
+// SetRedirectLimit limit the number of jumps
+func (c *Client) SetRedirectLimit(redirectLimit int) *Client {
+	c.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		if len(via) >= redirectLimit {
+			return http.ErrUseLastResponse
+		}
+		return nil
+	}
+	return c
+}
+
+// SetProxy set proxy for the client.
+// This func will do nothing when the parameter `proxyURL` is empty or in wrong pattern.
+// The correct pattern is like `http://USER:PASSWORD@IP:PORT` or `socks5://USER:PASSWORD@IP:PORT`.
+// Only `http` and `socks5` proxies are supported currently.
+func (c *Client) SetProxy(proxyURL string) {
+	if strings.TrimSpace(proxyURL) == "" {
+		return
+	}
+	_proxy, err := url.Parse(proxyURL)
+	if err != nil {
+		return
+	}
+	if _proxy.Scheme == "http" {
+		if _, ok := c.Transport.(*http.Transport); ok {
+			c.Transport.(*http.Transport).Proxy = http.ProxyURL(_proxy)
+		}
+	} else {
+		var auth = &proxy.Auth{}
+		user := _proxy.User.Username()
+
+		if user != "" {
+			auth.User = user
+			password, hasPassword := _proxy.User.Password()
+			if hasPassword && password != "" {
+				auth.Password = password
+			}
+		} else {
+			auth = nil
+		}
+		// refer to the source code, error is always nil
+		dialer, err := proxy.SOCKS5(
+			"tcp",
+			_proxy.Host,
+			auth,
+			&net.Dialer{
+				Timeout:   c.Client.Timeout,
+				KeepAlive: c.Client.Timeout,
+			},
+		)
+		if err != nil {
+			return
+		}
+		if _, ok := c.Transport.(*http.Transport); ok {
+			c.Transport.(*http.Transport).DialContext = func(ctx context.Context, network, addr string) (conn net.Conn, e error) {
+				return dialer.Dial(network, addr)
+			}
+		}
+		//c.SetTimeout(10*time.Second)
+	}
 }

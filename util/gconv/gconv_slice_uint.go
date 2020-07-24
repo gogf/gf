@@ -6,11 +6,6 @@
 
 package gconv
 
-// apiUints is used for type assert api for Uints.
-type apiUints interface {
-	Uints() []uint
-}
-
 // SliceUint is alias of Uints.
 func SliceUint(i interface{}) []uint {
 	return Uints(i)

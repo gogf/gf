@@ -9,8 +9,8 @@
 package garray_test
 
 import (
-	"encoding/json"
 	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/internal/json"
 	"strings"
 	"testing"
 	"time"
@@ -91,7 +91,7 @@ func TestStrArray_Sort(t *testing.T) {
 
 func TestStrArray_Unique(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		expect := []string{"1", "1", "2", "3"}
+		expect := []string{"1", "1", "2", "2", "3", "3", "2", "2"}
 		array := garray.NewStrArrayFrom(expect)
 		t.Assert(array.Unique().Slice(), []string{"1", "2", "3"})
 	})

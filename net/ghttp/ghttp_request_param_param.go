@@ -29,7 +29,7 @@ func (r *Request) GetParam(key string, def ...interface{}) interface{} {
 	return nil
 }
 
-// GetParamVar returns custom parameter with given name <key> as *gvar.Var.
+// GetParamVar returns custom parameter with given name <key> as gvar.Var.
 // It returns <def> if <key> does not exist.
 // It returns nil if <def> is not passed.
 func (r *Request) GetParamVar(key string, def ...interface{}) *gvar.Var {

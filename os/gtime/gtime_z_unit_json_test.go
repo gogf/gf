@@ -7,7 +7,7 @@
 package gtime_test
 
 import (
-	"encoding/json"
+	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/test/gtest"
 	"testing"

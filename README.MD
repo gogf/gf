@@ -31,19 +31,19 @@ require github.com/gogf/gf latest
 golang version >= 1.11
 ```
 
+# Architecture
+<div align=center>
+<img src="https://goframe.org/images/arch.png?v=12"/>
+</div>
+
 # Packages
-1. **Primary**
+1. **Primary Package**
 
     The `gf` repository maintains some basic and most commonly used packages, keeping it as lightweight and simple as possible. 
 
-1. **Community**
+1. **Community Package**
 
-    The community packages are contrinuted and maintained by community members, which are reposited in `gogf` organization. Some of the community packages are seperated from th `gf` repository, which are not of common usage or are with heavy dependecies. 
-
-# Architecture
-<div align=center>
-<img src="https://goframe.org/images/arch.png?v=11"/>
-</div>
+    The community packages are contributed and maintained by community members, which are hosted in `gogf` organization. Some of the community packages are separated from the `gf` repository, which are not of common usage or are with heavy dependencies. 
 
 # Performance
 
@@ -115,21 +115,40 @@ The concurrency starts from `100` to `10000`.
 
 `GF` is licensed under the [MIT License](LICENSE), 100% free and open-source, forever.
 
+# Part Of Users
+
+- [Tencent](https://www.tencent.com/)
+- [ZTE](https://www.zte.com.cn/china/)
+- [Ant Financial Services](https://www.antfin.com/)
+- [Medlinker](https://www.medlinker.com/)
+- [Yesk](http://www.yesky.com)
+- [KuCoin](https://www.kucoin.io/)
+- [Leyoujia Holding Group](https://www.leyoujia.com/)
+
+
+> We list part of the users here, if your company or products are using `GoFrame`, please let us know [here](https://github.com/gogf/gf/issues/168).
+
+
 # Contributors
 This project exists thanks to all the people who contribute. [[Contributors](https://github.com/gogf/gf/graphs/contributors)].
 <a href="https://github.com/gogf/gf/graphs/contributors"><img src="https://opencollective.com/goframe/contributors.svg?width=890&button=false" /></a>
 
-<!--
+
 # Donators
 
 We currently accept donation by Alipay/WechatPay, please note your github/gitee account in your payment bill. If you like `GF`, why not [buy developer a cup of coffee](DONATOR.MD)?
 
 # Sponsors
 We appreciate any kind of sponsorship for `GF` development. If you've got some interesting, please contact WeChat `389961817` / Email `john@goframe.org`.
--->
+
+
 
 # Thanks
 <a href="https://www.jetbrains.com/?from=GoFrame"><img src="https://goframe.org/images/jetbrains.png" width="100" alt="JetBrains"/></a>
+
+
+
+
 
 
 

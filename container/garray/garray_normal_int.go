@@ -8,9 +8,9 @@ package garray
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/internal/json"
 	"math"
 	"sort"
 
@@ -510,9 +510,11 @@ func (a *IntArray) Search(value int) int {
 func (a *IntArray) Unique() *IntArray {
 	a.mu.Lock()
 	for i := 0; i < len(a.array)-1; i++ {
-		for j := i + 1; j < len(a.array); j++ {
+		for j := i + 1; j < len(a.array); {
 			if a.array[i] == a.array[j] {
 				a.array = append(a.array[:j], a.array[j+1:]...)
+			} else {
+				j++
 			}
 		}
 	}

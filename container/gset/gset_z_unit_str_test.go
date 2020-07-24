@@ -9,8 +9,8 @@
 package gset_test
 
 import (
-	"encoding/json"
 	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/util/gconv"
 	"strings"
 	"sync"
@@ -420,6 +420,24 @@ func TestStrSet_Json(t *testing.T) {
 		t.Assert(a3.Contains("c"), true)
 		t.Assert(a3.Contains("d"), true)
 		t.Assert(a3.Contains("e"), false)
+	})
+}
+
+func TestStrSet_Walk(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			set    gset.StrSet
+			names  = g.SliceStr{"user", "user_detail"}
+			prefix = "gf_"
+		)
+		set.Add(names...)
+		// Add prefix for given table names.
+		set.Walk(func(item string) string {
+			return prefix + item
+		})
+		t.Assert(set.Size(), 2)
+		t.Assert(set.Contains("gf_user"), true)
+		t.Assert(set.Contains("gf_user_detail"), true)
 	})
 }
 

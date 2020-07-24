@@ -10,10 +10,12 @@ import (
 	"fmt"
 	"github.com/gogf/gf/database/gredis"
 	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/util/gutil"
 )
 
 const (
 	gFRAME_CORE_COMPONENT_NAME_REDIS = "gf.core.component.redis"
+	gREDIS_NODE_NAME                 = "redis"
 )
 
 // Redis returns an instance of redis client with specified configuration group name.
@@ -30,7 +32,11 @@ func Redis(name ...string) *gredis.Redis {
 			return gredis.Instance(group)
 		}
 		// Or else, it parses the default configuration file and returns a new redis instance.
-		if m := config.GetMap("redis"); m != nil {
+		var m map[string]interface{}
+		if _, v := gutil.MapPossibleItemByKey(Config().GetMap("."), gREDIS_NODE_NAME); v != nil {
+			m = gconv.Map(v)
+		}
+		if len(m) > 0 {
 			if v, ok := m[group]; ok {
 				redisConfig, err := gredis.ConfigFromStr(gconv.String(v))
 				if err != nil {

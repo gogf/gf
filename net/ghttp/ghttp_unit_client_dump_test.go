@@ -48,7 +48,7 @@ func Test_Client_Request_13_Dump(t *testing.T) {
 		r2, err := client2.Post("/hello2", g.Map{"field": "test_for_request_body"})
 		t.Assert(err, nil)
 		dumpedText3 := r2.RawRequest()
-		t.Assert(gstr.Contains(dumpedText3, "test_for_request_body"), false)
+		t.Assert(gstr.Contains(dumpedText3, "test_for_request_body"), true)
 		dumpedText4 := r2.RawResponse()
 		t.Assert(gstr.Contains(dumpedText4, "test_for_request_body"), false)
 

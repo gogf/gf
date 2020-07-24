@@ -26,8 +26,8 @@ import (
 )
 
 const (
-	// DEFAULT_CONFIG_FILE is the default configuration file name.
-	DEFAULT_CONFIG_FILE = "config.toml"
+	DEFAULT_CONFIG_FILE = "config.toml" // The default configuration file name.
+	gCMDENV_KEY         = "gf.gcfg"     // Configuration key for command argument or environment.
 )
 
 // Configuration struct.
@@ -55,7 +55,7 @@ func New(file ...string) *Config {
 		jsons: gmap.NewStrAnyMap(true),
 	}
 	// Customized dir path from env/cmd.
-	if envPath := cmdenv.Get("gf.gcfg.path").String(); envPath != "" {
+	if envPath := cmdenv.Get(fmt.Sprintf("%s.path", gCMDENV_KEY)).String(); envPath != "" {
 		if gfile.Exists(envPath) {
 			_ = c.SetPath(envPath)
 		} else {
@@ -328,8 +328,10 @@ func (c *Config) getJson(file ...string) *gjson.Json {
 		name = c.name
 	}
 	r := c.jsons.GetOrSetFuncLock(name, func() interface{} {
-		content := ""
-		filePath := ""
+		var (
+			content  = ""
+			filePath = ""
+		)
 		if content = GetContent(name); content == "" {
 			filePath = c.filePath(name)
 			if filePath == "" {
@@ -341,6 +343,7 @@ func (c *Config) getJson(file ...string) *gjson.Json {
 				content = gfile.GetContents(filePath)
 			}
 		}
+		// Note that the underlying configuration json object operations are concurrent safe.
 		if j, err := gjson.LoadContent(content, true); err == nil {
 			j.SetViolenceCheck(c.vc)
 			// Add monitor for this configuration file,

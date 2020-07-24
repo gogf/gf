@@ -7,8 +7,8 @@
 package gvar_test
 
 import (
-	"encoding/json"
 	"github.com/gogf/gf/container/gvar"
+	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/test/gtest"
 	"math"
 	"testing"

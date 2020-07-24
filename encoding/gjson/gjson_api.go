@@ -68,7 +68,7 @@ func (j *Json) Get(pattern string, def ...interface{}) interface{} {
 	return nil
 }
 
-// GetVar returns a *gvar.Var with value by given <pattern>.
+// GetVar returns a gvar.Var with value by given <pattern>.
 func (j *Json) GetVar(pattern string, def ...interface{}) *gvar.Var {
 	return gvar.New(j.Get(pattern, def...))
 }
@@ -150,13 +150,13 @@ func (j *Json) GetString(pattern string, def ...interface{}) string {
 	return gconv.String(j.Get(pattern, def...))
 }
 
-// GetBytes retrieves the value by specified <pattern> and converts it to byte.
+// GetBytes retrieves the value by specified <pattern> and converts it to []byte.
 func (j *Json) GetBytes(pattern string, def ...interface{}) []byte {
 	return gconv.Bytes(j.Get(pattern, def...))
 }
 
-// GetBool gets the value by specified <pattern>,
-// and converts it to bool.
+// GetBool retrieves the value by specified <pattern>,
+// converts and returns it as bool.
 // It returns false when value is: "", 0, false, off, nil;
 // or returns true instead.
 func (j *Json) GetBool(pattern string, def ...interface{}) bool {
@@ -329,27 +329,39 @@ func (j *Json) GetStructsDeep(pattern string, pointer interface{}, mapping ...ma
 	return gconv.StructsDeep(j.Get(pattern), pointer, mapping...)
 }
 
-// GetMapToMap retrieves the value by specified <pattern> and converts it specified map variable.
+// GetScan automatically calls Struct or Structs function according to the type of parameter
+// <pointer> to implement the converting..
+func (j *Json) GetScan(pattern string, pointer interface{}, mapping ...map[string]string) error {
+	return gconv.Scan(j.Get(pattern), pointer, mapping...)
+}
+
+// GetScanDeep automatically calls StructDeep or StructsDeep function according to the type of
+// parameter <pointer> to implement the converting..
+func (j *Json) GetScanDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
+	return gconv.ScanDeep(j.Get(pattern), pointer, mapping...)
+}
+
+// GetMapToMap retrieves the value by specified <pattern> and converts it to specified map variable.
 // See gconv.MapToMap.
 func (j *Json) GetMapToMap(pattern string, pointer interface{}, mapping ...map[string]string) error {
 	return gconv.MapToMap(j.Get(pattern), pointer, mapping...)
 }
 
-// GetMapToMapDeep retrieves the value by specified <pattern> and converts it specified map
+// GetMapToMapDeep retrieves the value by specified <pattern> and converts it to specified map
 // variable recursively.
 // See gconv.MapToMapDeep.
 func (j *Json) GetMapToMapDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
 	return gconv.MapToMapDeep(j.Get(pattern), pointer, mapping...)
 }
 
-// GetMapToMaps retrieves the value by specified <pattern> and converts it specified map slice
+// GetMapToMaps retrieves the value by specified <pattern> and converts it to specified map slice
 // variable.
 // See gconv.MapToMaps.
 func (j *Json) GetMapToMaps(pattern string, pointer interface{}, mapping ...map[string]string) error {
 	return gconv.MapToMaps(j.Get(pattern), pointer, mapping...)
 }
 
-// GetMapToMapsDeep retrieves the value by specified <pattern> and converts it specified map slice
+// GetMapToMapsDeep retrieves the value by specified <pattern> and converts it to specified map slice
 // variable recursively.
 // See gconv.MapToMapsDeep.
 func (j *Json) GetMapToMapsDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
@@ -402,6 +414,18 @@ func (j *Json) ToStructsDeep(pointer interface{}, mapping ...map[string]string) 
 	j.mu.RLock()
 	defer j.mu.RUnlock()
 	return gconv.StructsDeep(*(j.p), pointer, mapping...)
+}
+
+// ToScan automatically calls Struct or Structs function according to the type of parameter
+// <pointer> to implement the converting..
+func (j *Json) ToScan(pointer interface{}, mapping ...map[string]string) error {
+	return gconv.Scan(*(j.p), pointer, mapping...)
+}
+
+// ToScanDeep automatically calls StructDeep or StructsDeep function according to the type of
+// parameter <pointer> to implement the converting..
+func (j *Json) ToScanDeep(pointer interface{}, mapping ...map[string]string) error {
+	return gconv.ScanDeep(*(j.p), pointer, mapping...)
 }
 
 // ToMapToMap converts current Json object to specified map variable.

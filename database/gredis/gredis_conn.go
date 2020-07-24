@@ -7,8 +7,8 @@
 package gredis
 
 import (
-	"encoding/json"
 	"github.com/gogf/gf/container/gvar"
+	"github.com/gogf/gf/internal/json"
 	"reflect"
 )
 

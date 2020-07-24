@@ -246,7 +246,7 @@ func Test_Append(t *testing.T) {
 
 func TestJson_ToJson(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		p := gjson.New("1")
+		p := gjson.New(1)
 		s, e := p.ToJsonString()
 		t.Assert(e, nil)
 		t.Assert(s, "1")

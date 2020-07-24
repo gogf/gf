@@ -158,9 +158,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		request.Cookie.SetSessionId(request.Session.Id())
 	}
 	// Output the cookie content to client.
-	request.Cookie.Output()
+	request.Cookie.Flush()
 	// Output the buffer content to client.
-	request.Response.Output()
+	request.Response.Flush()
 	// HOOK - AfterOutput
 	if !request.IsExited() {
 		s.callHookHandler(HOOK_AFTER_OUTPUT, request)

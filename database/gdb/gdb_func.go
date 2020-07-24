@@ -13,6 +13,7 @@ import (
 	"github.com/gogf/gf/internal/empty"
 	"github.com/gogf/gf/internal/utils"
 	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/util/gutil"
 	"reflect"
 	"regexp"
 	"strings"
@@ -55,6 +56,12 @@ var (
 	// quoteWordReg is the regular expression object for a word check.
 	quoteWordReg = regexp.MustCompile(`^[a-zA-Z0-9\-_]+$`)
 )
+
+// ListItemValues is alias for gutil.ListItemValues.
+// See gutil.ListItemValues.
+func ListItemValues(list interface{}, key interface{}, subKey ...interface{}) (values []interface{}) {
+	return gutil.ListItemValues(list, key, subKey...)
+}
 
 // GetInsertOperationByOption returns proper insert option with given parameter <option>.
 func GetInsertOperationByOption(option int) string {
@@ -247,7 +254,7 @@ func GetPrimaryKeyCondition(primary string, where ...interface{}) (newWhereCondi
 // formatSql formats the sql string and its arguments before executing.
 // The internal handleArguments function might be called twice during the SQL procedure,
 // but do not worry about it, it's safe and efficient.
-func formatSql(sql string, args []interface{}) (newQuery string, newArgs []interface{}) {
+func formatSql(sql string, args []interface{}) (newSql string, newArgs []interface{}) {
 	sql = gstr.Trim(sql)
 	sql = gstr.Replace(sql, "\n", " ")
 	sql, _ = gregex.ReplaceString(`\s{2,}`, ` `, sql)
@@ -257,9 +264,11 @@ func formatSql(sql string, args []interface{}) (newQuery string, newArgs []inter
 // formatWhere formats where statement and its arguments.
 // TODO []interface{} type support for parameter <where> does not completed yet.
 func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool) (newWhere string, newArgs []interface{}) {
-	buffer := bytes.NewBuffer(nil)
-	rv := reflect.ValueOf(where)
-	kind := rv.Kind()
+	var (
+		buffer = bytes.NewBuffer(nil)
+		rv     = reflect.ValueOf(where)
+		kind   = rv.Kind()
+	)
 	if kind == reflect.Ptr {
 		rv = rv.Elem()
 		kind = rv.Kind()
@@ -270,7 +279,7 @@ func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool) (
 
 	case reflect.Map:
 		for key, value := range DataToMapDeep(where) {
-			if omitEmpty && empty.IsEmpty(value) {
+			if gregex.IsMatchString(regularFieldNameRegPattern, key) && omitEmpty && empty.IsEmpty(value) {
 				continue
 			}
 			newArgs = formatWhereKeyValue(db, buffer, newArgs, key, value)
@@ -283,10 +292,11 @@ func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool) (
 		// which implement apiIterator interface and are index-friendly for where conditions.
 		if iterator, ok := where.(apiIterator); ok {
 			iterator.Iterator(func(key, value interface{}) bool {
-				if omitEmpty && empty.IsEmpty(value) {
+				ketStr := gconv.String(key)
+				if gregex.IsMatchString(regularFieldNameRegPattern, ketStr) && omitEmpty && empty.IsEmpty(value) {
 					return true
 				}
-				newArgs = formatWhereKeyValue(db, buffer, newArgs, gconv.String(key), value)
+				newArgs = formatWhereKeyValue(db, buffer, newArgs, ketStr, value)
 				return true
 			})
 			break
@@ -309,10 +319,10 @@ func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool) (
 	newWhere = buffer.String()
 	if len(newArgs) > 0 {
 		if gstr.Pos(newWhere, "?") == -1 {
-			if lastOperatorReg.MatchString(newWhere) {
+			if gregex.IsMatchString(lastOperatorRegPattern, newWhere) {
 				// Eg: Where/And/Or("uid>=", 1)
 				newWhere += "?"
-			} else if gregex.IsMatchString(`^[\w\.\-]+$`, newWhere) {
+			} else if gregex.IsMatchString(regularFieldNameRegPattern, newWhere) {
 				newWhere = db.QuoteString(newWhere)
 				if len(newArgs) > 0 {
 					if utils.IsArray(newArgs[0]) {
@@ -334,7 +344,7 @@ func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool) (
 }
 
 // formatWhereInterfaces formats <where> as []interface{}.
-// TODO []interface{} type support for parameter <where> does not completed yet.
+// TODO supporting for parameter <where> with []interface{} type is not completed yet.
 func formatWhereInterfaces(db DB, where []interface{}, buffer *bytes.Buffer, newArgs []interface{}) []interface{} {
 	var str string
 	var array []interface{}
@@ -362,8 +372,10 @@ func formatWhereKeyValue(db DB, buffer *bytes.Buffer, newArgs []interface{}, key
 	// If the value is type of slice, and there's only one '?' holder in
 	// the key string, it automatically adds '?' holder chars according to its arguments count
 	// and converts it to "IN" statement.
-	rv := reflect.ValueOf(value)
-	kind := rv.Kind()
+	var (
+		rv   = reflect.ValueOf(value)
+		kind = rv.Kind()
+	)
 	switch kind {
 	case reflect.Slice, reflect.Array:
 		count := gstr.Count(quotedKey, "?")
@@ -379,7 +391,7 @@ func formatWhereKeyValue(db DB, buffer *bytes.Buffer, newArgs []interface{}, key
 		}
 	default:
 		if value == nil || empty.IsNil(rv) {
-			if gregex.IsMatchString(`^[\w\.\-]+$`, key) {
+			if gregex.IsMatchString(regularFieldNameRegPattern, key) {
 				// The key is a single field name.
 				buffer.WriteString(quotedKey + " IS NULL")
 			} else {
@@ -392,11 +404,24 @@ func formatWhereKeyValue(db DB, buffer *bytes.Buffer, newArgs []interface{}, key
 			if gstr.Pos(quotedKey, "?") == -1 {
 				like := " like"
 				if len(quotedKey) > len(like) && gstr.Equal(quotedKey[len(quotedKey)-len(like):], like) {
+					// Eg: Where(g.Map{"name like": "john%"})
 					buffer.WriteString(quotedKey + " ?")
-				} else if lastOperatorReg.MatchString(quotedKey) {
+				} else if gregex.IsMatchString(lastOperatorRegPattern, quotedKey) {
+					// Eg: Where(g.Map{"age > ": 16})
 					buffer.WriteString(quotedKey + " ?")
-				} else {
+				} else if gregex.IsMatchString(regularFieldNameRegPattern, key) {
+					// The key is a regular field name.
 					buffer.WriteString(quotedKey + "=?")
+				} else {
+					// The key is not a regular field name.
+					// Eg: Where(g.Map{"age > 16": nil})
+					// Issue: https://github.com/gogf/gf/issues/765
+					if empty.IsEmpty(value) {
+						buffer.WriteString(quotedKey)
+						break
+					} else {
+						buffer.WriteString(quotedKey + "=?")
+					}
 				}
 			} else {
 				buffer.WriteString(quotedKey)
@@ -411,11 +436,15 @@ func formatWhereKeyValue(db DB, buffer *bytes.Buffer, newArgs []interface{}, key
 // underlying driver.
 func handleArguments(sql string, args []interface{}) (newSql string, newArgs []interface{}) {
 	newSql = sql
+	// insertHolderCount is used to calculate the inserting position for the '?' holder.
+	insertHolderCount := 0
 	// Handles the slice arguments.
 	if len(args) > 0 {
 		for index, arg := range args {
-			rv := reflect.ValueOf(arg)
-			kind := rv.Kind()
+			var (
+				rv   = reflect.ValueOf(arg)
+				kind = rv.Kind()
+			)
 			if kind == reflect.Ptr {
 				rv = rv.Elem()
 				kind = rv.Kind()
@@ -428,20 +457,45 @@ func handleArguments(sql string, args []interface{}) (newSql string, newArgs []i
 					newArgs = append(newArgs, arg)
 					continue
 				}
-				for i := 0; i < rv.Len(); i++ {
-					newArgs = append(newArgs, rv.Index(i).Interface())
+
+				if rv.Len() == 0 {
+					// Empty slice argument, it converts the sql to a false sql.
+					// Eg:
+					// Query("select * from xxx where id in(?)", g.Slice{}) -> select * from xxx where 0=1
+					// Where("id in(?)", g.Slice{}) -> WHERE 0=1
+					if gstr.Contains(newSql, "?") {
+						whereKeyWord := " WHERE "
+						if p := gstr.PosI(newSql, whereKeyWord); p == -1 {
+							return "0=1", []interface{}{}
+						} else {
+							return gstr.SubStr(newSql, 0, p+len(whereKeyWord)) + "0=1", []interface{}{}
+						}
+					}
+				} else {
+					for i := 0; i < rv.Len(); i++ {
+						newArgs = append(newArgs, rv.Index(i).Interface())
+					}
 				}
-				// It the '?' holder count equals the length of the slice,
+
+				// If the '?' holder count equals the length of the slice,
 				// it does not implement the arguments splitting logic.
 				// Eg: db.Query("SELECT ?+?", g.Slice{1, 2})
 				if len(args) == 1 && gstr.Count(newSql, "?") == rv.Len() {
 					break
 				}
 				// counter is used to finding the inserting position for the '?' holder.
-				counter := 0
+				var (
+					counter  = 0
+					replaced = false
+				)
 				newSql, _ = gregex.ReplaceStringFunc(`\?`, newSql, func(s string) string {
+					if replaced {
+						return s
+					}
 					counter++
-					if counter == index+1 {
+					if counter == index+insertHolderCount+1 {
+						replaced = true
+						insertHolderCount += rv.Len() - 1
 						return "?" + strings.Repeat(",?", rv.Len()-1)
 					}
 					return s
@@ -499,14 +553,16 @@ func formatError(err error, sql string, args ...interface{}) error {
 func FormatSqlWithArgs(sql string, args []interface{}) string {
 	index := -1
 	newQuery, _ := gregex.ReplaceStringFunc(
-		`(\?|:\d+|\$\d+|@p\d+)`, sql, func(s string) string {
+		`(\?|:v\d+|\$\d+|@p\d+)`, sql, func(s string) string {
 			index++
 			if len(args) > index {
 				if args[index] == nil {
 					return "null"
 				}
-				rv := reflect.ValueOf(args[index])
-				kind := rv.Kind()
+				var (
+					rv   = reflect.ValueOf(args[index])
+					kind = rv.Kind()
+				)
 				if kind == reflect.Ptr {
 					if rv.IsNil() || !rv.IsValid() {
 						return "null"

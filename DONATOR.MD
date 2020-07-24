@@ -1,8 +1,12 @@
 # Donators
 
-We currently accept donation by Alipay/WechatPay, please note your github/gitee account in your payment bill.
+We currently accept donation by [Wechat](https://goframe.org/images/donate.png) / [Alipay](https://goframe.org/images/donate.png) / [Gitee](https://gitee.com/johng/gf), 
+please note your github/gitee account in your payment bill. All the donations will be used only for `GoFrame` project development and its community construction. 
 
-> If you cannot view the donation image, please click [here](https://goframe.org/images/donate.png).
+> If you cannot see the donation image, please click [here](https://goframe.org/images/donate.png).
+
+<img src="https://goframe.org/images/donate.png?20200718"/>
+
 
 | Name | Channel | Amount | Comment 
 |---|---|--- | ---
@@ -46,7 +50,7 @@ We currently accept donation by Alipay/WechatPay, please note your github/gitee 
 |struggler|alipay|￥18.80| 
 |*铁|wechat|￥0.01| 
 |C*e|wechat|￥66.66| GF越来越好，棒👍！
-|(佚名)|wechat|￥6.66| (名字打不出来，也没备注，捐赠时间2020-02-21 14:24:34)
+|---P คิดถึง|wechat|￥6.66| 
 |[王飞](https://gitee.com/wang_2018)|gitee|￥20.00| 感谢您的开源项目！
 |[Zeroing-ZY](https://gitee.com/yunjieg)|gitee|￥20.00| 感谢您的开源项目！
 |[katydid酱](https://gitee.com/katydid2005)|gitee|￥50.00| 感谢您的开源项目！框架给予了很大的帮助！谢谢大佬！
@@ -56,7 +60,7 @@ We currently accept donation by Alipay/WechatPay, please note your github/gitee 
 |🚶|wechat|￥6.88| 喝杯冰阔落
 |a*l|wechat|￥10.00| gf
 |[wxkj](https://gitee.com/wxkj)|wechat|￥10.00| 
-|*包|wechat|￥9.99| 
+|[米司特包](https://github.com/misitebao)|wechat|￥9.99| 
 |重庆宝尔威科技|wechat|￥6.66| 
 |琦玉-QPT|wechat|￥6.66| 
 |sailsea|wechat|￥11.00| 
@@ -64,7 +68,7 @@ We currently accept donation by Alipay/WechatPay, please note your github/gitee 
 |*华|wechat|￥6.66| 感谢郭强的热心
 |[Playhi](https://github.com/Playhi)|alipay|￥10.00| 
 |北京京纬互动科技|alipay|￥200.00| 
-|米司特包|wechat|￥99.99| 
+|[米司特包](https://github.com/misitebao)|wechat|￥99.99| 
 |金毛|alipay|￥100.00| 
 |1*1x|wechat|￥100.00| 
 |[ywanbing](https://github.com/ywanbing)|wechat|￥66.66| 
@@ -73,13 +77,28 @@ We currently accept donation by Alipay/WechatPay, please note your github/gitee 
 |蔡蔡|wechat|￥666.00| gf真强大，让项目省心
 |jack|wechat|￥100.00| 
 |sbilly|wechat|￥100.00| 祝好！
-|米司|wechat|￥166.66| 大佬加油！
+|[米司特包](https://github.com/misitebao)|wechat|￥166.66| 大佬加油！
 |*秦|wechat|￥20.00| 给群主献上一杯咖啡...
 |[zhuhuan12](https://gitee.com/zhuhuan12)|wechat|￥50.00| 
 |faddei|qq|￥9.99| 
 |*天|wechat|￥10.00| 
 |*.|wechat|￥20.00| 学生一个微薄之力，冲
 |李勇|wechat|￥50.00| 
+|[米司特包](https://github.com/misitebao)|wechat|￥66.66| 
+|千年|wechat|￥1.08| 
+|[szzxing](https://github.com/szzxing)|wechat|￥50.00| 
+|伟客互联|wechat|￥66.66| 
+|[sbilly](https://github.com/sbilly)|wechat|￥99.00| 
+|**阳|alipay|￥100.01| 
+|**亮|alipay|￥10.00| 
+|[mingzaily](https://github.com/mingzaily)|alipay|￥30.00| 
+|[seny0929](https://gitee.com/seny0929)|alipay|￥9.90| 
+|Fly的狐狸|alipay|￥100.00| 
+|六七     ·|wechat|￥88.88| gf越来越好
+|Tom|wechat|￥500.00| 一点心意  希望GF越来越好
+|Chao|wechat|￥166.00| 
 
 
-<img src="https://goframe.org/images/donate.png"/>
+
+
+

@@ -16,6 +16,8 @@ import (
 
 const (
 	SCHEMA = "test_internal"
+	USER   = "root"
+	PASS   = "12345678"
 )
 
 var (
@@ -32,8 +34,8 @@ func init() {
 	configNode = ConfigNode{
 		Host:             "127.0.0.1",
 		Port:             "3306",
-		User:             "root",
-		Pass:             "12345678",
+		User:             USER,
+		Pass:             PASS,
 		Name:             parser.GetOpt("name", ""),
 		Type:             parser.GetOpt("type", "mysql"),
 		Role:             "master",
@@ -85,7 +87,7 @@ func Test_Func_FormatSqlWithArgs(t *testing.T) {
 	// oracle
 	gtest.C(t, func(t *gtest.T) {
 		var s string
-		s = FormatSqlWithArgs("select * from table where id>=:1 and sex=:2", []interface{}{100, 1})
+		s = FormatSqlWithArgs("select * from table where id>=:v1 and sex=:v2", []interface{}{100, 1})
 		t.Assert(s, "select * from table where id>=100 and sex=1")
 	})
 }

@@ -9,8 +9,8 @@
 package gset_test
 
 import (
-	"encoding/json"
 	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/util/gconv"
 	"strings"
 	"sync"
@@ -386,6 +386,19 @@ func TestSet_AddIfNotExistFunc(t *testing.T) {
 		}()
 		s.Add(1)
 		wg.Wait()
+	})
+}
+
+func TestSet_Walk(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var set gset.Set
+		set.Add(g.Slice{1, 2}...)
+		set.Walk(func(item interface{}) interface{} {
+			return gconv.Int(item) + 10
+		})
+		t.Assert(set.Size(), 2)
+		t.Assert(set.Contains(11), true)
+		t.Assert(set.Contains(12), true)
 	})
 }
 

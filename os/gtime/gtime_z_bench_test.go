@@ -12,25 +12,25 @@ import (
 	"github.com/gogf/gf/os/gtime"
 )
 
-func Benchmark_Second(b *testing.B) {
+func Benchmark_Timestamp(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		gtime.Timestamp()
 	}
 }
 
-func Benchmark_Millisecond(b *testing.B) {
+func Benchmark_TimestampMilli(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		gtime.TimestampMilli()
 	}
 }
 
-func Benchmark_Microsecond(b *testing.B) {
+func Benchmark_TimestampMicro(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		gtime.TimestampMicro()
 	}
 }
 
-func Benchmark_Nanosecond(b *testing.B) {
+func Benchmark_TimestampNano(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		gtime.TimestampNano()
 	}

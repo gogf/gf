@@ -7,20 +7,14 @@
 package gconv
 
 import (
-	"encoding/json"
-	"errors"
 	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/internal/json"
 	"reflect"
 	"strings"
 
 	"github.com/gogf/gf/internal/empty"
 	"github.com/gogf/gf/internal/utils"
 )
-
-// apiMapStrAny is the interface support for converting struct parameter to map.
-type apiMapStrAny interface {
-	MapStrAny() map[string]interface{}
-}
 
 // Map converts any variable <value> to map[string]interface{}. If the parameter <value> is not a
 // map/struct/*struct type, then the conversion will fail and returns nil.
@@ -42,6 +36,8 @@ func MapDeep(value interface{}, tags ...string) map[string]interface{} {
 
 // doMapConvert implements the map converting.
 // It automatically checks and converts json string to map if <value> is string/[]byte.
+//
+// TODO completely implement the recursive converting for all types.
 func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]interface{} {
 	if value == nil {
 		return nil
@@ -51,6 +47,7 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 	m := make(map[string]interface{})
 	switch r := value.(type) {
 	case string:
+		// If it is a JSON string, automatically unmarshal it!
 		if len(r) > 0 && r[0] == '{' && r[len(r)-1] == '}' {
 			if err := json.Unmarshal([]byte(r), &m); err != nil {
 				return nil
@@ -59,6 +56,7 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 			return nil
 		}
 	case []byte:
+		// If it is a JSON string, automatically unmarshal it!
 		if len(r) > 0 && r[0] == '{' && r[len(r)-1] == '}' {
 			if err := json.Unmarshal(r, &m); err != nil {
 				return nil
@@ -124,8 +122,9 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 		for k, v := range r {
 			m[String(k)] = v
 		}
-	// Not a common type, it then uses reflection for conversion.
+
 	default:
+		// Not a common type, it then uses reflection for conversion.
 		var rv reflect.Value
 		if v, ok := value.(reflect.Value); ok {
 			rv = v
@@ -140,10 +139,9 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 		}
 		switch kind {
 		// If <value> is type of array, it converts the value of even number index as its key and
-		// the value of odd number index as its corresponding value.
-		// Eg:
+		// the value of odd number index as its corresponding value, for example:
 		// []string{"k1","v1","k2","v2"} => map[string]interface{}{"k1":"v1", "k2":"v2"}
-		// []string{"k1","v1","k2"} => map[string]interface{}{"k1":"v1", "k2":nil}
+		// []string{"k1","v1","k2"}      => map[string]interface{}{"k1":"v1", "k2":nil}
 		case reflect.Slice, reflect.Array:
 			length := rv.Len()
 			for i := 0; i < length; i += 2 {
@@ -266,7 +264,7 @@ func MapStrStr(value interface{}, tags ...string) map[string]string {
 	}
 	m := Map(value, tags...)
 	if len(m) > 0 {
-		vMap := make(map[string]string)
+		vMap := make(map[string]string, len(m))
 		for k, v := range m {
 			vMap[k] = String(v)
 		}
@@ -283,7 +281,7 @@ func MapStrStrDeep(value interface{}, tags ...string) map[string]string {
 	}
 	m := MapDeep(value, tags...)
 	if len(m) > 0 {
-		vMap := make(map[string]string)
+		vMap := make(map[string]string, len(m))
 		for k, v := range m {
 			vMap[k] = String(v)
 		}
@@ -326,7 +324,7 @@ func doMapToMap(params interface{}, pointer interface{}, deep bool, mapping ...m
 		paramsKind = paramsRv.Kind()
 	}
 	if paramsKind != reflect.Map {
-		return errors.New("params should be type of map")
+		return gerror.New("params should be type of map")
 	}
 	// Empty params map, no need continue.
 	if paramsRv.Len() == 0 {
@@ -344,7 +342,7 @@ func doMapToMap(params interface{}, pointer interface{}, deep bool, mapping ...m
 		pointerKind = pointerRv.Kind()
 	}
 	if pointerKind != reflect.Map {
-		return errors.New("pointer should be type of *map")
+		return gerror.New("pointer should be type of *map")
 	}
 	defer func() {
 		// Catch the panic, especially the reflect operation panics.
@@ -435,7 +433,7 @@ func doMapToMaps(params interface{}, pointer interface{}, deep bool, mapping ...
 		paramsKind = paramsRv.Kind()
 	}
 	if paramsKind != reflect.Map {
-		return errors.New("params should be type of map")
+		return gerror.New("params should be type of map")
 	}
 	// Empty params map, no need continue.
 	if paramsRv.Len() == 0 {
@@ -450,7 +448,7 @@ func doMapToMaps(params interface{}, pointer interface{}, deep bool, mapping ...
 		pointerKind = pointerRv.Kind()
 	}
 	if pointerKind != reflect.Map {
-		return errors.New("pointer should be type of *map/**map")
+		return gerror.New("pointer should be type of *map/**map")
 	}
 	defer func() {
 		// Catch the panic, especially the reflect operation panics.

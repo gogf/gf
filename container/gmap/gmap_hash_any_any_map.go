@@ -7,7 +7,7 @@
 package gmap
 
 import (
-	"encoding/json"
+	"github.com/gogf/gf/internal/json"
 
 	"github.com/gogf/gf/internal/empty"
 
@@ -98,11 +98,23 @@ func (m *AnyAnyMap) MapStrAny() map[string]interface{} {
 }
 
 // FilterEmpty deletes all key-value pair of which the value is empty.
+// Values like: 0, nil, false, "", len(slice/map/chan) == 0 are considered empty.
 func (m *AnyAnyMap) FilterEmpty() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	for k, v := range m.data {
 		if empty.IsEmpty(v) {
+			delete(m.data, k)
+		}
+	}
+}
+
+// FilterNil deletes all key-value pair of which the value is nil.
+func (m *AnyAnyMap) FilterNil() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for k, v := range m.data {
+		if empty.IsNil(v) {
 			delete(m.data, k)
 		}
 	}

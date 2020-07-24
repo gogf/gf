@@ -137,9 +137,9 @@ func (r *Response) ClearBuffer() {
 }
 
 // Output outputs the buffer content to the client and clears the buffer.
-func (r *Response) Output() {
+func (r *Response) Flush() {
 	if r.Server.config.ServerAgent != "" {
 		r.Header().Set("Server", r.Server.config.ServerAgent)
 	}
-	r.Writer.OutputBuffer()
+	r.Writer.Flush()
 }

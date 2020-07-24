@@ -20,6 +20,7 @@
 package gtimer
 
 import (
+	"fmt"
 	"math"
 	"time"
 
@@ -36,12 +37,13 @@ const (
 	gDEFAULT_SLOT_NUMBER    = 10            // Default slot number.
 	gDEFAULT_WHEEL_INTERVAL = 50            // Default wheel interval.
 	gDEFAULT_WHEEL_LEVEL    = 6             // Default wheel level.
+	gCMDENV_KEY             = "gf.gtimer"   // Configuration key for command argument or environment.
 )
 
 var (
-	defaultSlots    = cmdenv.Get("gf.gtimer.slots", gDEFAULT_SLOT_NUMBER).Int()
-	defaultLevel    = cmdenv.Get("gf.gtimer.level", gDEFAULT_WHEEL_LEVEL).Int()
-	defaultInterval = cmdenv.Get("gf.gtimer.interval", gDEFAULT_WHEEL_INTERVAL).Duration() * time.Millisecond
+	defaultSlots    = cmdenv.Get(fmt.Sprintf("%s.slots", gCMDENV_KEY), gDEFAULT_SLOT_NUMBER).Int()
+	defaultLevel    = cmdenv.Get(fmt.Sprintf("%s.level", gCMDENV_KEY), gDEFAULT_WHEEL_LEVEL).Int()
+	defaultInterval = cmdenv.Get(fmt.Sprintf("%s.interval", gCMDENV_KEY), gDEFAULT_WHEEL_INTERVAL).Duration() * time.Millisecond
 	defaultTimer    = New(defaultSlots, defaultInterval, defaultLevel)
 )
 

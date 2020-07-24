@@ -9,6 +9,7 @@ package ghttp
 import (
 	"context"
 	"fmt"
+	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/os/gres"
 	"github.com/gogf/gf/os/gsession"
 	"github.com/gogf/gf/os/gview"
@@ -79,12 +80,11 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 	// Custom session id creating function.
 	err := request.Session.SetIdFunc(func(ttl time.Duration) string {
 		var (
-			agent   = request.UserAgent()
 			address = request.RemoteAddr
-			cookie  = request.Header.Get("Cookie")
+			header  = fmt.Sprintf("%v", request.Header)
 		)
-		//intlog.Print(agent, address, cookie)
-		return guid.S([]byte(agent), []byte(address), []byte(cookie))
+		intlog.Print(address, header)
+		return guid.S([]byte(address), []byte(header))
 	})
 	if err != nil {
 		panic(err)
@@ -126,6 +126,11 @@ func (r *Request) IsExited() bool {
 	return r.exit
 }
 
+// GetHeader retrieves and returns the header value with given <key>.
+func (r *Request) GetHeader(key string) string {
+	return r.Header.Get(key)
+}
+
 // GetHost returns current request host name, which might be a domain or an IP without port.
 func (r *Request) GetHost() string {
 	if len(r.parsedHost) == 0 {
@@ -152,7 +157,27 @@ func (r *Request) IsAjaxRequest() bool {
 // GetClientIp returns the client ip of this request without port.
 func (r *Request) GetClientIp() string {
 	if len(r.clientIp) == 0 {
-		if r.clientIp = r.Header.Get("X-Real-IP"); r.clientIp == "" {
+		realIps := r.Header.Get("X-Forwarded-For")
+		if realIps != "" && len(realIps) != 0 && !strings.EqualFold("unknown", realIps) {
+			ipArray := strings.Split(realIps, ",")
+			r.clientIp = ipArray[0]
+		}
+		if r.clientIp == "" || strings.EqualFold("unknown", realIps) {
+			r.clientIp = r.Header.Get("Proxy-Client-IP")
+		}
+		if r.clientIp == "" || strings.EqualFold("unknown", realIps) {
+			r.clientIp = r.Header.Get("WL-Proxy-Client-IP")
+		}
+		if r.clientIp == "" || strings.EqualFold("unknown", realIps) {
+			r.clientIp = r.Header.Get("HTTP_CLIENT_IP")
+		}
+		if r.clientIp == "" || strings.EqualFold("unknown", realIps) {
+			r.clientIp = r.Header.Get("HTTP_X_FORWARDED_FOR")
+		}
+		if r.clientIp == "" || strings.EqualFold("unknown", realIps) {
+			r.clientIp = r.Header.Get("X-Real-IP")
+		}
+		if r.clientIp == "" || strings.EqualFold("unknown", realIps) {
 			array, _ := gregex.MatchString(`(.+):(\d+)`, r.RemoteAddr)
 			if len(array) > 1 {
 				r.clientIp = array[1]

@@ -9,7 +9,7 @@ package gset
 
 import (
 	"bytes"
-	"encoding/json"
+	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/internal/rwmutex"
 	"github.com/gogf/gf/util/gconv"
 )
@@ -416,9 +416,11 @@ func (set *IntSet) Pops(size int) []int {
 func (set *IntSet) Walk(f func(item int) int) *IntSet {
 	set.mu.Lock()
 	defer set.mu.Unlock()
+	m := make(map[int]struct{}, len(set.data))
 	for k, v := range set.data {
-		set.data[f(k)] = v
+		m[f(k)] = v
 	}
+	set.data = m
 	return set
 }
 
