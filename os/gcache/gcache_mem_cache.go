@@ -129,10 +129,13 @@ func (c *memCache) doSetWithLockCheck(key interface{}, value interface{}, durati
 	if v, ok := c.data[key]; ok && !v.IsExpired() {
 		return v.v
 	}
+	if _, ok := value.(error);ok{
+		return value
+	}
 	if f, ok := value.(func() interface{}); ok {
 		value = f()
-		if value == nil {
-			return nil
+		if _,ok := value.(error);ok || value == nil {
+			return value
 		}
 	}
 	c.data[key] = memCacheItem{v: value, e: expireTimestamp}
