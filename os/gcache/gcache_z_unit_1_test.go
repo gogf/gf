@@ -178,6 +178,14 @@ func TestCache_GetOrSetFunc(t *testing.T) {
 			return 111
 		}, 0)
 		t.Assert(gcache.Get(1), 11)
+		gcache.GetOrSetFunc(2, func() interface{} {
+			return gerror.New("error")
+		}, 0)
+		t.Assert(gcache.Get(2), nil)
+		gcache.GetOrSetFunc(3, func() interface{} {
+			return nil
+		}, 0)
+		t.Assert(gcache.Get(3), nil)
 	})
 }
 
@@ -202,6 +210,14 @@ func TestCache_GetOrSetFuncLock(t *testing.T) {
 			return 111
 		}, 0)
 		t.Assert(gcache.Get(1), 11)
+		gcache.GetOrSetFuncLock(2, func() interface{} {
+			return gerror.New("error")
+		}, 0)
+		t.Assert(gcache.Get(2), nil)
+		gcache.GetOrSetFuncLock(3, func() interface{} {
+			return nil
+		}, 0)
+		t.Assert(gcache.Get(3), nil)
 	})
 }
 
