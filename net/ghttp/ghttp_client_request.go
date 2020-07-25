@@ -227,6 +227,10 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 	req.Body = utils.NewReadCloser(reqBodyContent, false)
 	for {
 		if resp.Response, err = c.Do(req); err != nil {
+			// The response might not be nil when err != nil.
+			if resp.Response != nil {
+				resp.Response.Body.Close()
+			}
 			if c.retryCount > 0 {
 				c.retryCount--
 				time.Sleep(c.retryInterval)

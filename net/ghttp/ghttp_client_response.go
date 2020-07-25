@@ -63,6 +63,9 @@ func (r *ClientResponse) ReadAllString() string {
 
 // Close closes the response when it will never be used.
 func (r *ClientResponse) Close() error {
+	if r == nil || r.Response == nil || r.Response.Close {
+		return nil
+	}
 	r.Response.Close = true
 	return r.Response.Body.Close()
 }
