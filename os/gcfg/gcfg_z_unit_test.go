@@ -479,7 +479,7 @@ func TestCfg_Config(t *testing.T) {
 
 func TestCfg_With_UTF8_BOM(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		cfg := g.Cfg()
+		cfg := g.Cfg("test-cfg-with-utf8-bom")
 		t.Assert(cfg.SetPath("testdata"), nil)
 		cfg.SetFileName("cfg-with-utf8-bom.toml")
 		t.Assert(cfg.GetInt("test.testInt"), 1)
