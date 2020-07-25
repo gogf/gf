@@ -222,10 +222,10 @@ func (m *Manager) init() {
 	} else if m.options.Path != "" {
 		files, _ := gfile.ScanDirFile(m.options.Path, "*.*", true)
 		if len(files) == 0 {
-			intlog.Printf(
-				"no i18n files found in configured directory: %s",
-				m.options.Path,
-			)
+			//intlog.Printf(
+			//	"no i18n files found in configured directory: %s",
+			//	m.options.Path,
+			//)
 			return
 		}
 		var (
