@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/text/gstr"
 	"os"
 	"runtime"
@@ -49,6 +50,9 @@ var serverProcessStatus = gtype.NewInt()
 // RestartAllServer restarts all the servers of the process.
 // The optional parameter <newExeFilePath> specifies the new binary file for creating process.
 func RestartAllServer(newExeFilePath ...string) error {
+	if !gracefulEnabled {
+		return errors.New("graceful reload feature is disabled")
+	}
 	serverActionLocker.Lock()
 	defer serverActionLocker.Unlock()
 	if err := checkProcessStatus(); err != nil {
@@ -147,7 +151,7 @@ func forkRestartProcess(newExeFilePath ...string) error {
 	env = append(env, gADMIN_ACTION_RESTART_ENVKEY+"=1")
 	p := gproc.NewProcess(path, os.Args, env)
 	if _, err := p.Start(); err != nil {
-		glog.Errorf("%d: fork process failed, error:%s", gproc.Pid(), err.Error())
+		glog.Errorf(`%d: fork process failed, error:%s, are you running using "go run"?`, gproc.Pid(), err.Error())
 		return err
 	}
 	return nil
@@ -257,8 +261,10 @@ func handleProcessMessage() {
 	for {
 		if msg := gproc.Receive(gADMIN_GPROC_COMM_GROUP); msg != nil {
 			if bytes.EqualFold(msg.Data, []byte("exit")) {
+				intlog.Printf("%d: process message: exit", gproc.Pid())
 				gracefulShutdownWebServers()
 				allDoneChan <- struct{}{}
+				intlog.Printf("%d: process message: exit done", gproc.Pid())
 				return
 			}
 		}
