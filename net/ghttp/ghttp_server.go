@@ -210,7 +210,10 @@ func serverProcessInit() {
 	// Process message handler.
 	// It's enabled only graceful feature is enabled.
 	if gracefulEnabled {
+		intlog.Printf("%d: graceful reload feature is enabled", gproc.Pid())
 		go handleProcessMessage()
+	} else {
+		intlog.Printf("%d: graceful reload feature is disabled", gproc.Pid())
 	}
 
 	// It's an ugly calling for better initializing the main package path

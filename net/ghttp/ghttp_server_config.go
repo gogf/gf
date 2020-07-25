@@ -267,7 +267,7 @@ func Config() ServerConfig {
 		ClientMaxBodySize: 8 * 1024 * 1024, // 8MB
 		FormParsingMemory: 1024 * 1024,     // 1MB
 		Rewrites:          make(map[string]string),
-		Graceful:          true,
+		Graceful:          false,
 	}
 }
 
