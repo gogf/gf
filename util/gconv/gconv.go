@@ -34,7 +34,7 @@ var (
 	// Priority tags for Map*/Struct* functions.
 	// Note, the "gconv", "param", "params" tags are used by old version of package.
 	// It is strongly recommended using short tag "c" or "p" instead in the future.
-	structTagPriority = []string{"gconv", "param", "params", "c", "p", "json"}
+	StructTagPriority = []string{"gconv", "param", "params", "c", "p", "json"}
 )
 
 // Convert converts the variable <i> to the type <t>, the type <t> is specified by string.

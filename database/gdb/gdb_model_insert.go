@@ -72,11 +72,11 @@ func (m *Model) Data(data ...interface{}) *Model {
 			case reflect.Map:
 				model.data = DataToMapDeep(data[0])
 			case reflect.Struct:
-				if v, ok := data[0].(apiMapStrAny); ok {
-					model.data = v.MapStrAny()
-				} else if v, ok := data[0].(apiInterfaces); ok {
-					array := v.Interfaces()
-					list := make(List, len(array))
+				if v, ok := data[0].(apiInterfaces); ok {
+					var (
+						array = v.Interfaces()
+						list  = make(List, len(array))
+					)
 					for i := 0; i < len(array); i++ {
 						list[i] = DataToMapDeep(array[i])
 					}

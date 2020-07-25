@@ -492,15 +492,15 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 		params  []interface{}
 		listMap List
 	)
-	switch v := list.(type) {
+	switch value := list.(type) {
 	case Result:
-		listMap = v.List()
+		listMap = value.List()
 	case Record:
-		listMap = List{v.Map()}
+		listMap = List{value.Map()}
 	case List:
-		listMap = v
+		listMap = value
 	case Map:
-		listMap = List{v}
+		listMap = List{value}
 	default:
 		var (
 			rv   = reflect.ValueOf(list)
@@ -517,8 +517,21 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 			for i := 0; i < rv.Len(); i++ {
 				listMap[i] = DataToMapDeep(rv.Index(i).Interface())
 			}
-		case reflect.Map, reflect.Struct:
-			listMap = List{DataToMapDeep(v)}
+		case reflect.Map:
+			listMap = List{DataToMapDeep(value)}
+		case reflect.Struct:
+			if v, ok := value.(apiInterfaces); ok {
+				var (
+					array = v.Interfaces()
+					list  = make(List, len(array))
+				)
+				for i := 0; i < len(array); i++ {
+					list[i] = DataToMapDeep(array[i])
+				}
+				listMap = list
+			} else {
+				listMap = List{DataToMapDeep(value)}
+			}
 		default:
 			return result, errors.New(fmt.Sprint("unsupported list type:", kind))
 		}

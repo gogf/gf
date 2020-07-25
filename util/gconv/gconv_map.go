@@ -168,15 +168,15 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 				rvKind   reflect.Kind
 				rt       = rv.Type()
 				name     = ""
-				tagArray = structTagPriority
+				tagArray = StructTagPriority
 			)
 			switch len(tags) {
 			case 0:
 				// No need handle.
 			case 1:
-				tagArray = append(strings.Split(tags[0], ","), structTagPriority...)
+				tagArray = append(strings.Split(tags[0], ","), StructTagPriority...)
 			default:
-				tagArray = append(tags, structTagPriority...)
+				tagArray = append(tags, StructTagPriority...)
 			}
 			for i := 0; i < rv.NumField(); i++ {
 				rtField = rt.Field(i)
