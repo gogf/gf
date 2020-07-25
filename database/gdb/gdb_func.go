@@ -60,10 +60,27 @@ var (
 	structTagPriority = append([]string{ORM_TAG_FOR_STRUCT}, gconv.StructTagPriority...)
 )
 
-// ListItemValues is alias for gutil.ListItemValues.
+// ListItemValues retrieves and returns the elements of all item struct/map with key <key>.
+// Note that the parameter <list> should be type of slice which contains elements of map or struct,
+// or else it returns an empty slice.
+//
+// The parameter <list> supports types like:
+// []map[string]interface{}
+// []map[string]sub-map
+// []struct
+// []struct:sub-struct
+// Note that the sub-map/sub-struct makes sense only if the optional parameter <subKey> is given.
 // See gutil.ListItemValues.
 func ListItemValues(list interface{}, key interface{}, subKey ...interface{}) (values []interface{}) {
 	return gutil.ListItemValues(list, key, subKey...)
+}
+
+// ListItemValuesUnique retrieves and returns the unique elements of all struct/map with key <key>.
+// Note that the parameter <list> should be type of slice which contains elements of map or struct,
+// or else it returns an empty slice.
+// See gutil.ListItemValuesUnique.
+func ListItemValuesUnique(list interface{}, key string, subKey ...interface{}) []interface{} {
+	return gutil.ListItemValuesUnique(list, key, subKey...)
 }
 
 // GetInsertOperationByOption returns proper insert option with given parameter <option>.
