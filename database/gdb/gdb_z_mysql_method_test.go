@@ -8,9 +8,10 @@ package gdb_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/container/garray"
 	"testing"
 	"time"
+
+	"github.com/gogf/gf/container/garray"
 
 	"github.com/gogf/gf/database/gdb"
 	"github.com/gogf/gf/encoding/gjson"
@@ -43,6 +44,10 @@ func Test_DB_Query(t *testing.T) {
 
 		_, err = db.Query("ERROR")
 		t.AssertNE(err, nil)
+
+		v, err := db.GetValue("SELECT :v1+:v2", g.Map{"v1": 1, ":v2": 2})
+		t.Assert(err, nil)
+		t.AssertEQ(v.Int(), 3)
 	})
 
 }

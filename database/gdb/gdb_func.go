@@ -10,14 +10,15 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/gogf/gf/internal/empty"
-	"github.com/gogf/gf/internal/utils"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/util/gutil"
 	"reflect"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/gogf/gf/internal/empty"
+	"github.com/gogf/gf/internal/utils"
+	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/util/gutil"
 
 	"github.com/gogf/gf/internal/structs"
 
@@ -258,6 +259,31 @@ func formatSql(sql string, args []interface{}) (newSql string, newArgs []interfa
 	sql = gstr.Trim(sql)
 	sql = gstr.Replace(sql, "\n", " ")
 	sql, _ = gregex.ReplaceString(`\s{2,}`, ` `, sql)
+
+	regx := regexp.MustCompile(`:(\w+)`)
+	if regx.MatchString(sql) {
+		argmap := make(map[string]interface{})
+		argx := make([]interface{}, 0)
+		for _, v := range args {
+			for k, v := range gconv.Map(v) {
+				argmap[k] = v
+			}
+		}
+
+		if len(argmap) > 0 {
+			query := regx.ReplaceAllStringFunc(sql, func(s string) string {
+				arg, ok := argmap[s]
+				if !ok {
+					arg, ok = argmap[s[1:]]
+				}
+				argx = append(argx, arg)
+				return "?"
+			})
+			sql = query
+			args = argx
+		}
+	}
+
 	return handleArguments(sql, args)
 }
 
