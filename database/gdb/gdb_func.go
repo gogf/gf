@@ -259,31 +259,6 @@ func formatSql(sql string, args []interface{}) (newSql string, newArgs []interfa
 	sql = gstr.Trim(sql)
 	sql = gstr.Replace(sql, "\n", " ")
 	sql, _ = gregex.ReplaceString(`\s{2,}`, ` `, sql)
-
-	regx := regexp.MustCompile(`:(\w+)`)
-	if regx.MatchString(sql) {
-		argmap := make(map[string]interface{})
-		argx := make([]interface{}, 0)
-		for _, v := range args {
-			for k, v := range gconv.Map(v) {
-				argmap[k] = v
-			}
-		}
-
-		if len(argmap) > 0 {
-			query := regx.ReplaceAllStringFunc(sql, func(s string) string {
-				arg, ok := argmap[s]
-				if !ok {
-					arg, ok = argmap[s[1:]]
-				}
-				argx = append(argx, arg)
-				return "?"
-			})
-			sql = query
-			args = argx
-		}
-	}
-
 	return handleArguments(sql, args)
 }
 
@@ -466,6 +441,30 @@ func handleArguments(sql string, args []interface{}) (newSql string, newArgs []i
 	insertHolderCount := 0
 	// Handles the slice arguments.
 	if len(args) > 0 {
+		regxTest := `:(\w+)`
+		if gregex.IsMatchString(regxTest, sql) {
+			argmap := gconv.Map(args[0])
+
+			if len(argmap) > 0 {
+				argx := make([]interface{}, 0)
+				query, err := gregex.ReplaceStringFunc(regxTest, sql, func(s string) string {
+					arg, ok := argmap[s]
+					if !ok {
+						arg, ok = argmap[s[1:]]
+					}
+					if !ok {
+						return s
+					}
+					argx = append(argx, arg)
+					return "?"
+				})
+				if err == nil {
+					newSql = query
+					args = argx
+				}
+			}
+		}
+
 		for index, arg := range args {
 			var (
 				rv   = reflect.ValueOf(arg)

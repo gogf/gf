@@ -44,12 +44,44 @@ func Test_DB_Query(t *testing.T) {
 
 		_, err = db.Query("ERROR")
 		t.AssertNE(err, nil)
+	})
+}
 
+func Test_DB_Named_Placeholder(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
 		v, err := db.GetValue("SELECT :v1+:v2", g.Map{"v1": 1, ":v2": 2})
 		t.Assert(err, nil)
 		t.AssertEQ(v.Int(), 3)
-	})
 
+		where := g.Map{"id": 1, "name": "name_1"}
+
+		one, err := db.Table(table).Where("id=:id", map[string]int{":id": 1}).One()
+		t.Assert(err, nil)
+		t.Assert(one["id"], 1)
+		t.Assert(one["passport"], "user_1")
+		t.Assert(one["password"], "pass_1")
+		t.Assert(one["nickname"], "name_1")
+
+		result, err := db.Table(table).Where("id=:id AND nickname=:name", g.Map{"id": 2, "name": "name_2"}).Delete()
+		t.Assert(err, nil)
+		n, _ := result.RowsAffected()
+		t.Assert(n, 1)
+
+		all, err := db.Table(table).Where("id in (:id)", g.Map{":id": []int{1, 2, 3, 4}}).All()
+		t.Assert(err, nil)
+		t.Assert(all.Size(), 3)
+
+		result, err = db.Table(table).Where("id=:id AND nickname=:name", where).Update("password='test-update'")
+		t.Assert(err, nil)
+		n, _ = result.RowsAffected()
+		t.Assert(n, 1)
+
+		v, err = db.Table(table).Where("id=:id AND nickname=:name", where).Value("password")
+		t.Assert(err, nil)
+		t.Assert(v.String(), "test-update")
+	})
 }
 
 func Test_DB_Exec(t *testing.T) {
