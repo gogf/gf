@@ -7,14 +7,19 @@
 package gredis
 
 import (
+	"errors"
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/internal/json"
+	"github.com/gogf/gf/util/gconv"
+	"github.com/gomodule/redigo/redis"
 	"reflect"
+	"time"
 )
 
 // Do sends a command to the server and returns the received reply.
 // It uses json.Marshal for struct/slice/map type values before committing them to redis.
-func (c *Conn) Do(commandName string, args ...interface{}) (reply interface{}, err error) {
+// The timeout overrides the read timeout set when dialing the connection.
+func (c *Conn) do(timeout time.Duration, commandName string, args ...interface{}) (reply interface{}, err error) {
 	var (
 		reflectValue reflect.Value
 		reflectKind  reflect.Kind
@@ -40,17 +45,64 @@ func (c *Conn) Do(commandName string, args ...interface{}) (reply interface{}, e
 			}
 		}
 	}
+	if timeout > 0 {
+		conn, ok := c.Conn.(redis.ConnWithTimeout)
+		if !ok {
+			return gvar.New(nil), errors.New(`current connection does not support "ConnWithTimeout"`)
+		}
+		return conn.DoWithTimeout(timeout, commandName, args...)
+	}
 	return c.Conn.Do(commandName, args...)
 }
 
+// Do sends a command to the server and returns the received reply.
+// It uses json.Marshal for struct/slice/map type values before committing them to redis.
+func (c *Conn) Do(commandName string, args ...interface{}) (reply interface{}, err error) {
+	return c.do(0, commandName, args...)
+}
+
+// DoWithTimeout sends a command to the server and returns the received reply.
+// The timeout overrides the read timeout set when dialing the connection.
+func (c *Conn) DoWithTimeout(timeout time.Duration, commandName string, args ...interface{}) (reply interface{}, err error) {
+	return c.do(timeout, commandName, args...)
+}
+
 // DoVar retrieves and returns the result from command as gvar.Var.
-func (c *Conn) DoVar(command string, args ...interface{}) (*gvar.Var, error) {
-	v, err := c.Do(command, args...)
-	return gvar.New(v), err
+func (c *Conn) DoVar(commandName string, args ...interface{}) (*gvar.Var, error) {
+	return resultToVar(c.Do(commandName, args...))
+}
+
+// DoVarWithTimeout retrieves and returns the result from command as gvar.Var.
+// The timeout overrides the read timeout set when dialing the connection.
+func (c *Conn) DoVarWithTimeout(timeout time.Duration, commandName string, args ...interface{}) (*gvar.Var, error) {
+	return resultToVar(c.DoWithTimeout(timeout, commandName, args...))
 }
 
 // ReceiveVar receives a single reply as gvar.Var from the Redis server.
 func (c *Conn) ReceiveVar() (*gvar.Var, error) {
-	v, err := c.Receive()
-	return gvar.New(v), err
+	return resultToVar(c.Receive())
+}
+
+// ReceiveVarWithTimeout receives a single reply as gvar.Var from the Redis server.
+// The timeout overrides the read timeout set when dialing the connection.
+func (c *Conn) ReceiveVarWithTimeout(timeout time.Duration) (*gvar.Var, error) {
+	conn, ok := c.Conn.(redis.ConnWithTimeout)
+	if !ok {
+		return gvar.New(nil), errors.New(`current connection does not support "ConnWithTimeout"`)
+	}
+	return resultToVar(conn.ReceiveWithTimeout(timeout))
+}
+
+// resultToVar converts redis operation result to gvar.Var.
+func resultToVar(result interface{}, err error) (*gvar.Var, error) {
+	if err == nil {
+		if result, ok := result.([]byte); ok {
+			return gvar.New(gconv.UnsafeBytesToStr(result)), err
+		}
+		// It treats all returned slice as string slice.
+		if result, ok := result.([]interface{}); ok {
+			return gvar.New(gconv.Strings(result)), err
+		}
+	}
+	return gvar.New(result), err
 }
