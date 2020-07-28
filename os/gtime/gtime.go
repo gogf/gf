@@ -11,7 +11,9 @@ package gtime
 
 import (
 	"errors"
+	"fmt"
 	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/internal/utils"
 	"regexp"
 	"strconv"
 	"strings"
@@ -209,7 +211,7 @@ func parseDateStr(s string) (year, month, day int) {
 		return
 	}
 	// Checking the year in head or tail.
-	if isNumeric(array[1]) {
+	if utils.IsNumeric(array[1]) {
 		year, _ = strconv.Atoi(array[0])
 		month, _ = strconv.Atoi(array[1])
 		day, _ = strconv.Atoi(array[2])
@@ -368,7 +370,8 @@ func StrToTimeLayout(str string, layout string) (*Time, error) {
 	}
 }
 
-// ParseTimeFromContent retrieves time information for content string, it then parses and returns it as *Time object.
+// ParseTimeFromContent retrieves time information for content string, it then parses and returns it
+// as *Time object.
 // It returns the first time information if there're more than one time string in the content.
 // It only retrieves and parses the time information with given <format> if it's passed.
 func ParseTimeFromContent(content string, format ...string) *Time {
@@ -386,23 +389,38 @@ func ParseTimeFromContent(content string, format ...string) *Time {
 	return nil
 }
 
+// ParseDuration parses a duration string.
+// A duration string is a possibly signed sequence of
+// decimal numbers, each with optional fraction and a unit suffix,
+// such as "300ms", "-1.5h", "1d" or "2h45m".
+// Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h", "d".
+//
+// Very note that it supports unit "d" more than function time.ParseDuration.
+func ParseDuration(s string) (time.Duration, error) {
+	if utils.IsNumeric(s) {
+		v, err := strconv.ParseInt(s, 10, 64)
+		if err != nil {
+			return 0, err
+		}
+		return time.Duration(v), nil
+	}
+	match, err := gregex.MatchString(`^([\-\d]+)[dD](.+)$`, s)
+	if err != nil {
+		return 0, err
+	}
+	if len(match) == 3 {
+		v, err := strconv.ParseInt(match[1], 10, 64)
+		if err != nil {
+			return 0, err
+		}
+		return time.ParseDuration(fmt.Sprintf(`%dh%s`, v*24, match[2]))
+	}
+	return time.ParseDuration(s)
+}
+
 // FuncCost calculates the cost time of function <f> in nanoseconds.
 func FuncCost(f func()) int64 {
 	t := TimestampNano()
 	f()
 	return TimestampNano() - t
-}
-
-// isNumeric checks whether given <s> is a number.
-func isNumeric(s string) bool {
-	length := len(s)
-	if length == 0 {
-		return false
-	}
-	for i := 0; i < len(s); i++ {
-		if s[i] < byte('0') || s[i] > byte('9') {
-			return false
-		}
-	}
-	return true
 }
