@@ -220,9 +220,27 @@ func Test_ConvertZone(t *testing.T) {
 	})
 }
 
-func Test_StrToTimeFormat(t *testing.T) {
+func Test_ParseDuration(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-
+		d, err := gtime.ParseDuration("1d2h3m")
+		t.Assert(err, nil)
+		t.Assert(d.String(), "26h3m0s")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		d, err := gtime.ParseDuration("-1d2h3m")
+		t.Assert(err, nil)
+		t.Assert(d.String(), "-26h3m0s")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		d, err := gtime.ParseDuration("3m")
+		t.Assert(err, nil)
+		t.Assert(d.String(), "3m0s")
+	})
+	// error
+	gtest.C(t, func(t *gtest.T) {
+		d, err := gtime.ParseDuration("-1dd2h3m")
+		t.AssertNE(err, nil)
+		t.Assert(d.String(), "0s")
 	})
 }
 
