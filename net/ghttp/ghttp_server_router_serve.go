@@ -64,6 +64,22 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 	if len(path) == 0 {
 		return nil, false, false
 	}
+	// In case of double '/' URI, for example:
+	// /user//index, //user/index, //user//index//
+	var previousIsSep = false
+	for i := 0; i < len(path); {
+		if path[i] == '/' {
+			if previousIsSep {
+				path = path[:i] + path[i+1:]
+				continue
+			} else {
+				previousIsSep = true
+			}
+		} else {
+			previousIsSep = false
+		}
+		i++
+	}
 	// Split the URL.path to separate parts.
 	var array []string
 	if strings.EqualFold("/", path) {
@@ -71,9 +87,12 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 	} else {
 		array = strings.Split(path[1:], "/")
 	}
-	parsedItemList := glist.New()
-	lastMiddlewareElem := (*glist.Element)(nil)
-	repeatHandlerCheckMap := make(map[int]struct{}, 16)
+	var (
+		lastMiddlewareElem    *glist.Element
+		parsedItemList        = glist.New()
+		repeatHandlerCheckMap = make(map[int]struct{}, 16)
+	)
+
 	// Default domain has the most priority when iteration.
 	for _, domain := range []string{gDEFAULT_DOMAIN, domain} {
 		p, ok := s.serveTree[domain]
@@ -83,10 +102,6 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 		// Make a list array with capacity of 16.
 		lists := make([]*glist.List, 0, 16)
 		for i, part := range array {
-			// In case of double '/' URI, eg: /user//index
-			if part == "" {
-				continue
-			}
 			// Add all list of each node to the list array.
 			if v, ok := p.(map[string]interface{})["*list"]; ok {
 				lists = append(lists, v.(*glist.List))
