@@ -737,7 +737,7 @@ func (c *Core) rowsToResult(rows *sql.Rows) (Result, error) {
 		columnNames[k] = v.Name()
 	}
 	var (
-		values   = make([]sql.RawBytes, len(columnNames))
+		values   = make([]interface{}, len(columnNames))
 		records  = make(Result, 0)
 		scanArgs = make([]interface{}, len(values))
 	)
@@ -748,19 +748,12 @@ func (c *Core) rowsToResult(rows *sql.Rows) (Result, error) {
 		if err := rows.Scan(scanArgs...); err != nil {
 			return records, err
 		}
-		// Creates a new row object.
 		row := make(Record)
-		// Note that the internal looping variable <value> is type of []byte,
-		// which points to the same memory address. So it should do a copy.
 		for i, value := range values {
 			if value == nil {
 				row[columnNames[i]] = gvar.New(nil)
 			} else {
-				// As sql.RawBytes is type of slice,
-				// it should do a copy of it.
-				v := make([]byte, len(value))
-				copy(v, value)
-				row[columnNames[i]] = gvar.New(c.DB.convertValue(v, columnTypes[i]))
+				row[columnNames[i]] = gvar.New(c.DB.convertValue(value, columnTypes[i]))
 			}
 		}
 		records = append(records, row)

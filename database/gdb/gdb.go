@@ -155,7 +155,7 @@ type DB interface {
 	// ===========================================================================
 
 	filterFields(schema, table string, data map[string]interface{}) map[string]interface{}
-	convertValue(fieldValue []byte, fieldType string) interface{}
+	convertValue(fieldValue interface{}, fieldType string) interface{}
 	rowsToResult(rows *sql.Rows) (Result, error)
 }
 
