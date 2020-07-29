@@ -404,7 +404,7 @@ func ParseDuration(s string) (time.Duration, error) {
 		}
 		return time.Duration(v), nil
 	}
-	match, err := gregex.MatchString(`^([\-\d]+)[dD](.+)$`, s)
+	match, err := gregex.MatchString(`^([\-\d]+)[dD](.*)$`, s)
 	if err != nil {
 		return 0, err
 	}
