@@ -9,6 +9,7 @@
 package gtimer_test
 
 import (
+	"github.com/gogf/gf/os/glog"
 	"testing"
 	"time"
 
@@ -70,6 +71,19 @@ func TestTimer_Start_Stop_Close(t *testing.T) {
 		timer.Close()
 		time.Sleep(1000 * time.Millisecond)
 		t.Assert(array.Len(), 2)
+	})
+}
+
+func TestTimer_Reset(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		glog.Printf("start time:%d", time.Now().Unix())
+		singleton := timer.AddSingleton(2*time.Second, func() {
+			glog.Println(time.Now().Unix())
+		})
+		time.Sleep(5 * time.Second)
+		glog.Printf("reset time:%d", time.Now().Unix())
+		singleton.Reset()
+		select {}
 	})
 }
 
