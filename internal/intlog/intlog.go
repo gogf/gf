@@ -25,6 +25,7 @@ var (
 )
 
 func init() {
+	// Debugging configured.
 	if !cmdenv.Get("GF_DEBUG").IsEmpty() {
 		isGFDebug = true
 		return

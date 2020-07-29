@@ -137,6 +137,9 @@ func Test_Router_ExtraChar(t *testing.T) {
 		t.Assert(client.GetContent("/api/test"), "test")
 		t.Assert(client.GetContent("/api/test/"), "test")
 		t.Assert(client.GetContent("/api/test//"), "test")
+		t.Assert(client.GetContent("//api/test//"), "test")
+		t.Assert(client.GetContent("//api//test//"), "test")
+		t.Assert(client.GetContent("///api///test///"), "test")
 	})
 }
 

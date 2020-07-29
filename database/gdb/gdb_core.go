@@ -492,15 +492,15 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 		params  []interface{}
 		listMap List
 	)
-	switch v := list.(type) {
+	switch value := list.(type) {
 	case Result:
-		listMap = v.List()
+		listMap = value.List()
 	case Record:
-		listMap = List{v.Map()}
+		listMap = List{value.Map()}
 	case List:
-		listMap = v
+		listMap = value
 	case Map:
-		listMap = List{v}
+		listMap = List{value}
 	default:
 		var (
 			rv   = reflect.ValueOf(list)
@@ -517,8 +517,21 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 			for i := 0; i < rv.Len(); i++ {
 				listMap[i] = DataToMapDeep(rv.Index(i).Interface())
 			}
-		case reflect.Map, reflect.Struct:
-			listMap = List{DataToMapDeep(v)}
+		case reflect.Map:
+			listMap = List{DataToMapDeep(value)}
+		case reflect.Struct:
+			if v, ok := value.(apiInterfaces); ok {
+				var (
+					array = v.Interfaces()
+					list  = make(List, len(array))
+				)
+				for i := 0; i < len(array); i++ {
+					list[i] = DataToMapDeep(array[i])
+				}
+				listMap = list
+			} else {
+				listMap = List{DataToMapDeep(value)}
+			}
 		default:
 			return result, errors.New(fmt.Sprint("unsupported list type:", kind))
 		}
@@ -724,7 +737,7 @@ func (c *Core) rowsToResult(rows *sql.Rows) (Result, error) {
 		columnNames[k] = v.Name()
 	}
 	var (
-		values   = make([]sql.RawBytes, len(columnNames))
+		values   = make([]interface{}, len(columnNames))
 		records  = make(Result, 0)
 		scanArgs = make([]interface{}, len(values))
 	)
@@ -735,19 +748,12 @@ func (c *Core) rowsToResult(rows *sql.Rows) (Result, error) {
 		if err := rows.Scan(scanArgs...); err != nil {
 			return records, err
 		}
-		// Creates a new row object.
 		row := make(Record)
-		// Note that the internal looping variable <value> is type of []byte,
-		// which points to the same memory address. So it should do a copy.
 		for i, value := range values {
 			if value == nil {
 				row[columnNames[i]] = gvar.New(nil)
 			} else {
-				// As sql.RawBytes is type of slice,
-				// it should do a copy of it.
-				v := make([]byte, len(value))
-				copy(v, value)
-				row[columnNames[i]] = gvar.New(c.DB.convertValue(v, columnTypes[i]))
+				row[columnNames[i]] = gvar.New(c.DB.convertValue(value, columnTypes[i]))
 			}
 		}
 		records = append(records, row)
