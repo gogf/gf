@@ -157,3 +157,38 @@ func Test_Router_Hook_Multi(t *testing.T) {
 		t.Assert(client.GetContent("/multi-hook"), "12show")
 	})
 }
+
+func Test_Router_Hook_ExitAll(t *testing.T) {
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/test", func(r *ghttp.Request) {
+		r.Response.Write("test")
+	})
+	s.Group("/hook", func(group *ghttp.RouterGroup) {
+		group.Middleware(func(r *ghttp.Request) {
+			r.Response.Write("1")
+			r.Middleware.Next()
+		})
+		group.ALL("/test", func(r *ghttp.Request) {
+			r.Response.Write("2")
+		})
+	})
+
+	s.BindHookHandler("/hook/*", ghttp.HOOK_BEFORE_SERVE, func(r *ghttp.Request) {
+		r.Response.Write("hook")
+		r.ExitAll()
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		client := ghttp.NewClient()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+
+		t.Assert(client.GetContent("/test"), "test")
+		t.Assert(client.GetContent("/hook/test"), "hook")
+	})
+}
