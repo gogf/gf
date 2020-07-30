@@ -31,6 +31,7 @@ const (
 	STATUS_READY            = 0             // Job is ready for running.
 	STATUS_RUNNING          = 1             // Job is already running.
 	STATUS_STOPPED          = 2             // Job is stopped.
+	STATUS_RESET            = 3             // Job is reset.
 	STATUS_CLOSED           = -1            // Job is closed and waiting to be deleted.
 	gPANIC_EXIT             = "exit"        // Internal usage for custom job exit function with panic.
 	gDEFAULT_TIMES          = math.MaxInt32 // Default limit running times, a big number.
