@@ -76,6 +76,7 @@ func TestTimer_Start_Stop_Close(t *testing.T) {
 
 func TestTimer_Reset(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
+		timer := New()
 		array := garray.New(true)
 		glog.Printf("start time:%d", time.Now().Unix())
 		singleton := timer.AddSingleton(2*time.Second, func() {
