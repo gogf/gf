@@ -183,13 +183,13 @@ type Driver interface {
 
 // Sql is the sql recording struct.
 type Sql struct {
-	Sql         string        // SQL string(may contain reserved char '?').
-	Args        []interface{} // Arguments for this sql.
-	Format      string        // Formatted sql which contains arguments in the sql.
-	Error       error         // Execution result.
-	Start       int64         // Start execution timestamp in milliseconds.
-	End         int64         // End execution timestamp in milliseconds.
-	DBGroupName string        // DBGroupName is which database call the sql.
+	Sql    string        // SQL string(may contain reserved char '?').
+	Args   []interface{} // Arguments for this sql.
+	Format string        // Formatted sql which contains arguments in the sql.
+	Error  error         // Execution result.
+	Start  int64         // Start execution timestamp in milliseconds.
+	End    int64         // End execution timestamp in milliseconds.
+	Group  string        // Group is the group name of the configuration that the sql is executed from.
 }
 
 // TableField is the struct for table field.
