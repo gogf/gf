@@ -33,7 +33,7 @@ import (
 type Logger struct {
 	rmu    sync.Mutex      // Mutex for rotation feature.
 	ctx    context.Context // Context for logging.
-	init   gtype.Bool      // Initialized.
+	init   *gtype.Bool     // Initialized.
 	parent *Logger         // Parent logger, if it is not empty, it means the logger is used in chaining function.
 	config Config          // Logger configuration.
 }
@@ -60,6 +60,7 @@ const (
 // New creates and returns a custom logger.
 func New() *Logger {
 	logger := &Logger{
+		init:   gtype.NewBool(),
 		config: DefaultConfig(),
 	}
 	return logger
@@ -75,10 +76,11 @@ func NewWithWriter(writer io.Writer) *Logger {
 // Clone returns a new logger, which is the clone the current logger.
 // It's commonly used for chaining operations.
 func (l *Logger) Clone() *Logger {
-	logger := Logger{}
-	logger = *l
+	logger := New()
+	logger.ctx = l.ctx
+	logger.config = l.config
 	logger.parent = l
-	return &logger
+	return logger
 }
 
 // getFilePath returns the logging file path.
