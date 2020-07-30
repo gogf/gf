@@ -31,6 +31,15 @@ func Database(name ...string) gdb.DB {
 	}
 	instanceKey := fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_DATABASE, group)
 	db := instances.GetOrSetFuncLock(instanceKey, func() interface{} {
+		// If configuration file does not exist but the gdb configurations are already set.
+		if !Config().Available() && gdb.GetConfig(group) != nil {
+			db, err := gdb.Instance(group)
+			if err != nil {
+				panic(err)
+			}
+			return db
+		}
+		// Check the configuration file.
 		var m map[string]interface{}
 		// It firstly searches the configuration of the instance name.
 		nodeKey, _ := gutil.MapPossibleItemByKey(Config().GetMap("."), gDATABASE_NODE_NAME)
