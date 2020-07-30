@@ -9,10 +9,11 @@ package gcron
 import (
 	"errors"
 	"fmt"
-	"github.com/gogf/gf/os/gtime"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/gogf/gf/os/gtime"
 
 	"github.com/gogf/gf/text/gregex"
 )
@@ -32,7 +33,9 @@ type cronSchedule struct {
 
 const (
 	// regular expression for cron pattern, which contains 6 parts of time units.
-	gREGEX_FOR_CRON = `^([\-/\d\*\?,]+)\s+([\-/\d\*\?,]+)\s+([\-/\d\*\?,]+)\s+([\-/\d\*\?,]+)\s+([\-/\d\*\?,A-Za-z]+)\s+([\-/\d\*\?,A-Za-z]+)$`
+	gREGEX_FOR_CRON = `^([\-/\d\*\?,]+)\s+([\-/\d\*\?,]+)\s+([\-/\d\*\?,]+)\s+((?:L|[\-/\d\*\?,]+)W?)\s+([\-/\d\*\?,A-Za-z]+)\s+([\-/\d\*\?,A-Za-z]+)$`
+	FLAG_LAST       = 0x100
+	FLAG_WORKDAY    = 0x200
 )
 
 var (
@@ -175,6 +178,8 @@ func parseItem(item string, min int, max int, allowQuestionMark bool) (map[int]s
 			case 12:
 				// It's checking month field.
 				fieldType = 'm'
+			case 31:
+				fieldType = 'd'
 			}
 			// Eg: */5
 			if rangeArray[0] != "*" {
@@ -219,6 +224,22 @@ func parseItemValue(value string, fieldType byte) (int, error) {
 			if i, ok := weekMap[strings.ToLower(value)]; ok {
 				return i, nil
 			}
+		case 'd':
+			i := 0
+			for n := 0; n < len(value); n++ {
+				b := value[n]
+				switch {
+				case b >= '0' && b <= '9':
+					i *= 10
+					i += int(b - '0')
+				case b == 'L':
+					i |= FLAG_LAST
+				case b == 'W':
+					i |= FLAG_WORKDAY
+				}
+			}
+			return i, nil
+
 		}
 	}
 	return 0, errors.New(fmt.Sprintf(`invalid pattern value: "%s"`, value))
@@ -245,7 +266,37 @@ func (s *cronSchedule) meet(t time.Time) bool {
 			return false
 		}
 		if _, ok := s.day[t.Day()]; !ok {
-			return false
+			test := false
+			w := t.Weekday()
+			isWorkday := w > time.Sunday && w < time.Saturday
+			isLastday := t.AddDate(0, 0, 1).Day() == 1
+
+			for v, _ := range s.day {
+				//not flag or with workday flag but is not working day
+				if v < 0xff || (v&FLAG_WORKDAY > 0 && !isWorkday) {
+					continue
+				}
+
+				if (v & FLAG_LAST) > 0 { //last flag
+					if isLastday {
+						test = true
+					} else if v&FLAG_WORKDAY > 0 && w == time.Friday && t.AddDate(0, 0, 3).Day() < 3 {
+						test = true
+					}
+				} else {
+					day := v & 0xff
+					switch {
+					case day == t.Day(), w == time.Monday && t.AddDate(0, 0, -1).Day() == day, w == time.Friday && t.AddDate(0, 0, 1).Day() == day:
+						test = true
+					}
+				}
+				if test {
+					break
+				}
+			}
+			if test == false {
+				return false
+			}
 		}
 		if _, ok := s.month[int(t.Month())]; !ok {
 			return false
