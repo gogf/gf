@@ -186,6 +186,10 @@ func (c *Core) SetDryRun(dryrun bool) {
 
 // GetDryRun returns the DryRun value.
 func (c *Core) GetDryRun() bool {
+	if allDryRun {
+		// Globally set.
+		return true
+	}
 	return c.dryrun.Val()
 }
 
