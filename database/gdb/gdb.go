@@ -11,6 +11,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/internal/cmdenv"
 	"time"
 
 	"github.com/gogf/gf/container/gvar"
@@ -262,7 +263,16 @@ var (
 	// regularFieldNameRegPattern is the regular expression pattern for a string
 	// which is a regular field name of table.
 	regularFieldNameRegPattern = `^[\w\.\-]+$`
+
+	// allDryRun sets dry-run feature for all database connections.
+	// It is commonly used for command options for convenience.
+	allDryRun = false
 )
+
+func init() {
+	// allDryRun is initialized from environment or command options.
+	allDryRun = cmdenv.Get("gf.gdb.dryrun", false).Bool()
+}
 
 // Register registers custom database driver to gdb.
 func Register(name string, driver Driver) error {
