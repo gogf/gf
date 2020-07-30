@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/gogf/gf/container/gtype"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/os/gfpool"
 	"github.com/gogf/gf/os/gmlock"
@@ -32,6 +33,7 @@ import (
 type Logger struct {
 	rmu    sync.Mutex      // Mutex for rotation feature.
 	ctx    context.Context // Context for logging.
+	init   gtype.Bool      // Initialized.
 	parent *Logger         // Parent logger, if it is not empty, it means the logger is used in chaining function.
 	config Config          // Logger configuration.
 }
@@ -60,10 +62,6 @@ func New() *Logger {
 	logger := &Logger{
 		config: DefaultConfig(),
 	}
-	// Initialize the internal handler after some delay.
-	gtimer.AddOnce(time.Second, func() {
-		gtimer.AddOnce(logger.config.RotateCheckInterval, logger.rotateChecksTimely)
-	})
 	return logger
 }
 
@@ -99,6 +97,11 @@ func (l *Logger) getFilePath(now time.Time) string {
 
 // print prints <s> to defined writer, logging file or passed <std>.
 func (l *Logger) print(std io.Writer, lead string, values ...interface{}) {
+	// Lazy initialize.
+	if !l.init.Val() && l.init.Cas(false, true) {
+		gtimer.AddOnce(logger.config.RotateCheckInterval, logger.rotateChecksTimely)
+	}
+
 	var (
 		now    = time.Now()
 		buffer = bytes.NewBuffer(nil)
