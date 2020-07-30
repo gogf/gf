@@ -12,6 +12,7 @@ import (
 	"github.com/gogf/gf/encoding/gcompress"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/os/gfile"
+	"github.com/gogf/gf/os/gmlock"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/os/gtimer"
 	"github.com/gogf/gf/text/gregex"
@@ -81,8 +82,20 @@ func (l *Logger) rotateChecksTimely() {
 	defer gtimer.AddOnce(l.config.RotateCheckInterval, l.rotateChecksTimely)
 	// Checks whether file rotation not enabled.
 	if l.config.RotateSize <= 0 && l.config.RotateExpire == 0 {
+		intlog.Printf(
+			"logging rotation ignore checks: RotateSize: %d, RotateExpire: %s",
+			l.config.RotateSize, l.config.RotateExpire.String(),
+		)
 		return
 	}
+
+	// It here uses memory lock to guarantee the concurrent safety.
+	lockKey := "glog.rotateChecksTimely:" + l.config.Path
+	if !gmlock.TryLock(lockKey) {
+		return
+	}
+	defer gmlock.Unlock(lockKey)
+
 	var (
 		now      = time.Now()
 		pattern  = "*.log, *.gz"
