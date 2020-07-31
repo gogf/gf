@@ -7,13 +7,21 @@
 
 package gcmd
 
-import "fmt"
+import (
+	"bufio"
+	"fmt"
+	"os"
+
+	"github.com/gogf/gf/text/gstr"
+)
 
 // Scan prints <info> to stdout, reads and returns user input, which stops by '\n'.
 func Scan(info ...interface{}) string {
 	var s string
 	fmt.Print(info...)
-	fmt.Scanln(&s)
+	reader := bufio.NewReader(os.Stdin)
+	s, _ = reader.ReadString('\n')
+	s = gstr.Trim(s)
 	return s
 }
 
