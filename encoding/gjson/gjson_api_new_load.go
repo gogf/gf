@@ -10,8 +10,9 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/gogf/gf/internal/json"
 	"reflect"
+
+	"github.com/gogf/gf/internal/json"
 
 	"github.com/gogf/gf/encoding/gini"
 	"github.com/gogf/gf/encoding/gtoml"
@@ -188,6 +189,12 @@ func LoadContent(data interface{}, safe ...bool) (*Json, error) {
 	if len(content) == 0 {
 		return New(nil, safe...), nil
 	}
+
+	//ignore UTF8-BOM
+	if content[0] == 0xEF && content[1] == 0xBB && content[2] == 0xBF {
+		content = content[3:]
+	}
+
 	return doLoadContent(checkDataType(content), content, safe...)
 
 }
