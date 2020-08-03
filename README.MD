@@ -120,11 +120,10 @@ The concurrency starts from `100` to `10000`.
 - [Tencent](https://www.tencent.com/)
 - [ZTE](https://www.zte.com.cn/china/)
 - [Ant Financial Services](https://www.antfin.com/)
-- [Medlinker](https://www.medlinker.com/)
-- [Yesk](http://www.yesky.com)
+- [MedLinker](https://www.medlinker.com/)
 - [KuCoin](https://www.kucoin.io/)
-- [Leyoujia Holding Group](https://www.leyoujia.com/)
-
+- [LeYouJia](https://www.leyoujia.com/)
+- [IGG](https://igg.com)
 
 > We list part of the users here, if your company or products are using `GoFrame`, please let us know [here](https://github.com/gogf/gf/issues/168).
 
