@@ -104,8 +104,10 @@ func (l *Logger) print(std io.Writer, lead string, values ...interface{}) {
 	// It here uses CAP for performance and concurrent safety.
 	if !l.init.Val() && l.init.Cas(false, true) {
 		// It just initializes once for each logger.
-		gtimer.AddOnce(l.config.RotateCheckInterval, l.rotateChecksTimely)
-		intlog.Printf("logger initialized: every %s", l.config.RotateCheckInterval.String())
+		if l.config.RotateSize > 0 || l.config.RotateExpire > 0 {
+			gtimer.AddOnce(l.config.RotateCheckInterval, l.rotateChecksTimely)
+			intlog.Printf("logger rotation initialized: every %s", l.config.RotateCheckInterval.String())
+		}
 	}
 
 	var (
