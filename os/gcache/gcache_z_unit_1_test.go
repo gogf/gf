@@ -73,6 +73,29 @@ func TestCache_Set_Expire(t *testing.T) {
 	})
 }
 
+func TestCache_Expire_SetVar(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		gcache.Set(1, 11, 3*time.Second)
+		expireBefore, okBefore := gcache.GetExpire(1)
+		if okBefore {
+			t.AssertGT(expireBefore, 0)
+		}
+		t.Assert(gcache.Get(1), 11)
+		gcache.SetVar(1, 12)
+		t.Assert(gcache.Get(1), 12)
+		time.Sleep(1 * time.Second)
+		gcache.SetExpire(1, 5*time.Second)
+		expireAfter, okAfter := gcache.GetExpire(1)
+		if okAfter {
+			t.Assert(expireAfter-expireBefore, 3000)
+		}
+		time.Sleep(4 * time.Second)
+		t.Assert(gcache.Get(1), 12)
+		time.Sleep(2 * time.Second)
+		t.Assert(gcache.Get(1), nil)
+	})
+}
+
 func TestCache_Keys_Values(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New()
