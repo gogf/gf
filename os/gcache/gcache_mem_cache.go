@@ -113,6 +113,41 @@ func (c *memCache) Set(key interface{}, value interface{}, duration time.Duratio
 	})
 }
 
+// SetVar retrieves and set the value of <key>.
+func (c *memCache) SetVar(key interface{}, value interface{}) bool {
+	if c.Contains(key) {
+		c.dataMu.Lock()
+		c.data[key] = memCacheItem{
+			v: value,
+			e: c.data[key].e,
+		}
+		c.dataMu.Unlock()
+		return true
+	}
+	return false
+}
+
+// SetExpire retrieves and set the value of <key>.
+func (c *memCache) SetExpire(key interface{}, duration time.Duration) {
+	value := c.GetVar(key)
+	c.Remove(key)
+	c.Set(key, value, duration)
+}
+
+func (c *memCache) GetExpire(key interface{}) (int64, bool) {
+	c.dataMu.RLock()
+	item, ok := c.data[key]
+	c.dataMu.RUnlock()
+	if ok {
+		// Adding to LRU history if LRU feature is enabled.
+		if c.cap > 0 {
+			c.lruGetList.PushBack(key)
+		}
+		return item.e, true
+	}
+	return 0, false
+}
+
 // doSetWithLockCheck sets cache with <key>-<value> pair if <key> does not exist in the
 // cache, which is expired after <duration>.
 //
