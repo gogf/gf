@@ -55,7 +55,7 @@ func (r *Response) DefaultCORSOptions() CORSOptions {
 		array := gstr.SplitAndTrim(headers, ",")
 		for _, header := range array {
 			if _, ok := defaultAllowHeadersMap[header]; !ok {
-				options.AllowHeaders += header + ","
+				options.AllowHeaders += "," + header
 			}
 		}
 	}
