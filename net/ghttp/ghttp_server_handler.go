@@ -73,6 +73,13 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// Close the session, which automatically update the TTL
 		// of the session if it exists.
 		request.Session.Close()
+
+		// Close the request and response body
+		// to release the file descriptor in time.
+		request.Request.Body.Close()
+		if request.Request.Response != nil {
+			request.Request.Response.Body.Close()
+		}
 	}()
 
 	// ============================================================
