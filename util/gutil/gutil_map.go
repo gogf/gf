@@ -86,3 +86,12 @@ func MapContainsPossibleKey(data map[string]interface{}, key string) bool {
 	}
 	return false
 }
+
+// MapOmitEmpty deletes all empty values from guven map.
+func MapOmitEmpty(data map[string]interface{}) {
+	for k, v := range data {
+		if IsEmpty(v) {
+			delete(data, k)
+		}
+	}
+}
