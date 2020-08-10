@@ -247,7 +247,11 @@ func (c *memCache) GetOrSet(key interface{}, value interface{}, duration time.Du
 // It does nothing if function <f> returns nil.
 func (c *memCache) GetOrSetFunc(key interface{}, f func() interface{}, duration time.Duration) interface{} {
 	if v := c.Get(key); v == nil {
-		return c.doSetWithLockCheck(key, f(), duration)
+		value := f()
+		if value == nil {
+			return nil
+		}
+		return c.doSetWithLockCheck(key, value, duration)
 	} else {
 		return v
 	}
