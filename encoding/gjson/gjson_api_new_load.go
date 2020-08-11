@@ -207,17 +207,14 @@ func checkDataType(content []byte) string {
 		return "json"
 	} else if gregex.IsMatch(`^<.+>[\S\s]+<.+>$`, content) {
 		return "xml"
-	} else if (gregex.IsMatch(`^[\s\t\n\r]*[\w\-]+\s*:\s*".+"`, content) || gregex.IsMatch(`^[\s\t\n\r]*[\w\-]+\s*:\s*\w+`, content)) ||
-		(gregex.IsMatch(`[\s\t\n\r]+[\w\-]+\s*:\s*".+"`, content) || gregex.IsMatch(`[\s\t\n\r]+[\w\-]+\s*:\s*\w+`, content)) {
+	} else if (gregex.IsMatch(`^[\n\r]*[\w\-\s\t]+\s*:\s*".+"`, content) || gregex.IsMatch(`^[\n\r]*[\w\-\s\t]+\s*:\s*\w+`, content)) ||
+		(gregex.IsMatch(`[\n\r]+[\w\-\s\t]+\s*:\s*".+"`, content) || gregex.IsMatch(`[\n\r]+[\w\-\s\t]+\s*:\s*\w+`, content)) {
 		return "yml"
-	} else if !gregex.IsMatch(`^[\s\t\n\r]*;.+`, content) &&
-		!gregex.IsMatch(`[\s\t\n\r]+;.+`, content) &&
-		(gregex.IsMatch(`[\s\t\n\r]*[\w\-\."]+\s*=\s*".+"`, content) || gregex.IsMatch(`[\s\t\n\r]*[\w\-\."]+\s*=\s*\w+`, content)) {
+	} else if !gregex.IsMatch(`^[\s\t\n\r]*;.+`, content) && !gregex.IsMatch(`[\s\t\n\r]+;.+`, content) &&
+		(gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*".+"`, content) || gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*\w+`, content)) {
 		return "toml"
-	} else if gregex.IsMatch(`\[[\w]+\]`, content) &&
-		!gregex.IsMatch(`^[\s\t\n\r]*#.+`, content) &&
-		!gregex.IsMatch(`[\s\t\n\r]+#.+`, content) &&
-		(gregex.IsMatch(`[\s\t\n\r]*[\w\-\."]+\s*=\s*".+"`, content) || gregex.IsMatch(`[\s\t\n\r]*[\w\-\."]+\s*=\s*\w+`, content)) {
+	} else if gregex.IsMatch(`\[[\w]+\]`, content) && !gregex.IsMatch(`^[\s\t\n\r]*#.+`, content) && !gregex.IsMatch(`[\s\t\n\r]+#.+`, content) &&
+		(gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*".+"`, content) || gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*\w+`, content)) {
 		// Must contain "[xxx]" section.
 		return "ini"
 	} else {
