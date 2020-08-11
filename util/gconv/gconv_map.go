@@ -44,12 +44,12 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 	}
 
 	// Assert the common combination of types, and finally it uses reflection.
-	m := make(map[string]interface{})
+	dataMap := make(map[string]interface{})
 	switch r := value.(type) {
 	case string:
 		// If it is a JSON string, automatically unmarshal it!
 		if len(r) > 0 && r[0] == '{' && r[len(r)-1] == '}' {
-			if err := json.Unmarshal([]byte(r), &m); err != nil {
+			if err := json.Unmarshal([]byte(r), &dataMap); err != nil {
 				return nil
 			}
 		} else {
@@ -58,7 +58,7 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 	case []byte:
 		// If it is a JSON string, automatically unmarshal it!
 		if len(r) > 0 && r[0] == '{' && r[len(r)-1] == '}' {
-			if err := json.Unmarshal(r, &m); err != nil {
+			if err := json.Unmarshal(r, &dataMap); err != nil {
 				return nil
 			}
 		} else {
@@ -66,61 +66,61 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 		}
 	case map[interface{}]interface{}:
 		for k, v := range r {
-			m[String(k)] = v
+			dataMap[String(k)] = v
 		}
 	case map[interface{}]string:
 		for k, v := range r {
-			m[String(k)] = v
+			dataMap[String(k)] = v
 		}
 	case map[interface{}]int:
 		for k, v := range r {
-			m[String(k)] = v
+			dataMap[String(k)] = v
 		}
 	case map[interface{}]uint:
 		for k, v := range r {
-			m[String(k)] = v
+			dataMap[String(k)] = v
 		}
 	case map[interface{}]float32:
 		for k, v := range r {
-			m[String(k)] = v
+			dataMap[String(k)] = v
 		}
 	case map[interface{}]float64:
 		for k, v := range r {
-			m[String(k)] = v
+			dataMap[String(k)] = v
 		}
 	case map[string]bool:
 		for k, v := range r {
-			m[k] = v
+			dataMap[k] = v
 		}
 	case map[string]int:
 		for k, v := range r {
-			m[k] = v
+			dataMap[k] = v
 		}
 	case map[string]uint:
 		for k, v := range r {
-			m[k] = v
+			dataMap[k] = v
 		}
 	case map[string]float32:
 		for k, v := range r {
-			m[k] = v
+			dataMap[k] = v
 		}
 	case map[string]float64:
 		for k, v := range r {
-			m[k] = v
+			dataMap[k] = v
 		}
 	case map[string]interface{}:
 		return r
 	case map[int]interface{}:
 		for k, v := range r {
-			m[String(k)] = v
+			dataMap[String(k)] = v
 		}
 	case map[int]string:
 		for k, v := range r {
-			m[String(k)] = v
+			dataMap[String(k)] = v
 		}
 	case map[uint]string:
 		for k, v := range r {
-			m[String(k)] = v
+			dataMap[String(k)] = v
 		}
 
 	default:
@@ -146,15 +146,15 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 			length := rv.Len()
 			for i := 0; i < length; i += 2 {
 				if i+1 < length {
-					m[String(rv.Index(i).Interface())] = rv.Index(i + 1).Interface()
+					dataMap[String(rv.Index(i).Interface())] = rv.Index(i + 1).Interface()
 				} else {
-					m[String(rv.Index(i).Interface())] = nil
+					dataMap[String(rv.Index(i).Interface())] = nil
 				}
 			}
 		case reflect.Map:
 			ks := rv.MapKeys()
 			for _, k := range ks {
-				m[String(k.Interface())] = rv.MapIndex(k).Interface()
+				dataMap[String(k.Interface())] = rv.MapIndex(k).Interface()
 			}
 		case reflect.Struct:
 			// Map converting interface check.
@@ -165,7 +165,6 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 			var (
 				rtField  reflect.StructField
 				rvField  reflect.Value
-				rvKind   reflect.Kind
 				rt       = rv.Type()
 				name     = ""
 				tagArray = StructTagPriority
@@ -216,36 +215,45 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 					}
 				}
 				if recursive {
-					rvKind = rvField.Kind()
-					if rvKind == reflect.Ptr {
-						rvField = rvField.Elem()
-						rvKind = rvField.Kind()
+					var (
+						rvAttrField = rvField
+						rvAttrKind  = rvField.Kind()
+					)
+					if rvAttrKind == reflect.Ptr {
+						rvAttrField = rvField.Elem()
+						rvAttrKind = rvAttrField.Kind()
 					}
-					if rvKind == reflect.Struct {
-						hasNoTag := name == fieldName
+					if rvAttrKind == reflect.Struct {
+						var (
+							hasNoTag        = name == fieldName
+							rvAttrInterface = rvAttrField.Interface()
+						)
 						if hasNoTag && rtField.Anonymous {
 							// It means this attribute field has no tag.
 							// Overwrite the attribute with sub-struct attribute fields.
-							for k, v := range doMapConvert(rvField.Interface(), recursive, tags...) {
-								m[k] = v
+							for k, v := range doMapConvert(rvAttrInterface, recursive, tags...) {
+								dataMap[k] = v
 							}
 						} else {
 							// It means this attribute field has desired tag.
-							m[name] = doMapConvert(rvField.Interface(), recursive, tags...)
+							if m := doMapConvert(rvAttrInterface, recursive, tags...); len(m) > 0 {
+								dataMap[name] = m
+							} else {
+								dataMap[name] = rv.Field(i).Interface()
+							}
 						}
-
 					} else {
 						if rvField.IsValid() {
-							m[name] = rvField.Interface()
+							dataMap[name] = rv.Field(i).Interface()
 						} else {
-							m[name] = nil
+							dataMap[name] = nil
 						}
 					}
 				} else {
 					if rvField.IsValid() {
-						m[name] = rvField.Interface()
+						dataMap[name] = rv.Field(i).Interface()
 					} else {
-						m[name] = nil
+						dataMap[name] = nil
 					}
 				}
 			}
@@ -253,7 +261,7 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 			return nil
 		}
 	}
-	return m
+	return dataMap
 }
 
 // MapStrStr converts <value> to map[string]string.
