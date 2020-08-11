@@ -12,11 +12,25 @@ import (
 )
 
 func Test_checkDataType(t *testing.T) {
-	data := []byte(`
+	gtest.C(t, func(t *gtest.T) {
+		data := []byte(`
 bb           = """
                    dig := dig;                         END;"""
 `)
+		t.Assert(checkDataType(data), "toml")
+	})
+
 	gtest.C(t, func(t *gtest.T) {
+		data := []byte(`
+# 模板引擎目录
+viewpath = "/home/www/templates/"
+# MySQL数据库配置
+[redis]
+dd = 11
+[redis]
+    disk  = "127.0.0.1:6379,0"
+    cache = "127.0.0.1:6379,1"
+`)
 		t.Assert(checkDataType(data), "toml")
 	})
 }
