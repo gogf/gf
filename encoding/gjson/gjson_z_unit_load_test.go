@@ -215,8 +215,7 @@ func Test_Load_Ini(t *testing.T) {
 
 ;注释
 
-[addr] 
-#注释
+[addr]
 ip = 127.0.0.1
 port=9001
 enable=true
