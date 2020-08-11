@@ -6,12 +6,17 @@
 
 package gjson
 
-//func Test_Load_YAML3(t *testing.T) {
-//	data := []byte(`
-//bb           = """
-//                    dig := dig;                         END;"""
-//`)
-//	gtest.C(t, func(t *gtest.T) {
-//		t.Assert(checkDataType(data), "toml")
-//	})
-//}
+import (
+	"github.com/gogf/gf/test/gtest"
+	"testing"
+)
+
+func Test_checkDataType(t *testing.T) {
+	data := []byte(`
+bb           = """
+                   dig := dig;                         END;"""
+`)
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(checkDataType(data), "toml")
+	})
+}
