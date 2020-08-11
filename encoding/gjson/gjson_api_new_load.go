@@ -207,7 +207,8 @@ func checkDataType(content []byte) string {
 		return "json"
 	} else if gregex.IsMatch(`^<.+>[\S\s]+<.+>$`, content) {
 		return "xml"
-	} else if gregex.IsMatch(`[\s\t\n]*[\w\-]+\s*:\s*.+`, content) {
+	} else if gregex.IsMatch(`[\s\t\n]*[\w\-]+\s*:\s*".+"`, content) ||
+		gregex.IsMatch(`[\s\t\n]*[\w\-]+\s*:\s*\w+`, content) {
 		return "yml"
 	} else if gregex.IsMatch(`\[[\w]+\]`, content) &&
 		gregex.IsMatch(`[\s\t\n\[\]]*[\w\-]+\s*=\s*.+`, content) &&
