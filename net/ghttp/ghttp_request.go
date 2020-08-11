@@ -155,6 +155,7 @@ func (r *Request) IsAjaxRequest() bool {
 }
 
 // GetClientIp returns the client ip of this request without port.
+// Note that this ip address might be modified by client header.
 func (r *Request) GetClientIp() string {
 	if len(r.clientIp) == 0 {
 		realIps := r.Header.Get("X-Forwarded-For")
@@ -178,15 +179,19 @@ func (r *Request) GetClientIp() string {
 			r.clientIp = r.Header.Get("X-Real-IP")
 		}
 		if r.clientIp == "" || strings.EqualFold("unknown", realIps) {
-			array, _ := gregex.MatchString(`(.+):(\d+)`, r.RemoteAddr)
-			if len(array) > 1 {
-				r.clientIp = array[1]
-			} else {
-				r.clientIp = r.RemoteAddr
-			}
+			r.clientIp = r.GetRemoteIp()
 		}
 	}
 	return r.clientIp
+}
+
+// GetRemoteIp returns the ip from RemoteAddr.
+func (r *Request) GetRemoteIp() string {
+	array, _ := gregex.MatchString(`(.+):(\d+)`, r.RemoteAddr)
+	if len(array) > 1 {
+		return array[1]
+	}
+	return r.RemoteAddr
 }
 
 // GetUrl returns current URL of this request.
