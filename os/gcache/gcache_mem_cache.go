@@ -64,7 +64,7 @@ type memCache struct {
 // Internal cache item.
 type memCacheItem struct {
 	v interface{} // Value.
-	e int64       // Expire time in milliseconds.
+	e int64       // Expire timestamp in milliseconds.
 }
 
 // Internal event item.
@@ -97,7 +97,6 @@ func newMemCache(lruCap ...int) *memCache {
 }
 
 // Set sets cache with <key>-<value> pair, which is expired after <duration>.
-//
 // It does not expire if <duration> == 0.
 func (c *memCache) Set(key interface{}, value interface{}, duration time.Duration) {
 	expireTime := c.getInternalExpire(duration)
@@ -113,8 +112,9 @@ func (c *memCache) Set(key interface{}, value interface{}, duration time.Duratio
 	})
 }
 
-// SetVar retrieves and set the value of <key>.
-func (c *memCache) SetVar(key interface{}, value interface{}) bool {
+// Update updates the value of <key> without changing its expiration and returns the old value.
+// The returned <exist> value is false if the <key> does not exist in the cache.
+func (c *memCache) Update(key interface{}, value interface{}) (oldValue interface{}, exist bool) {
 	c.dataMu.Lock()
 	defer c.dataMu.Unlock()
 	if item, ok := c.data[key]; ok {
@@ -122,21 +122,18 @@ func (c *memCache) SetVar(key interface{}, value interface{}) bool {
 			v: value,
 			e: item.e,
 		}
-		return true
+		return item.v, true
 	}
-	return false
+	return nil, false
 }
 
-// SetExpire retrieves and set the value of <key>.
-func (c *memCache) SetExpire(key interface{}, duration time.Duration) bool {
+// UpdateExpire updates the expiration of <key> and returns the old expiration duration value.
+// It returns -1 if the <key> does not exist in the cache.
+func (c *memCache) UpdateExpire(key interface{}, duration time.Duration) (oldDuration time.Duration) {
+	newExpireTime := c.getInternalExpire(duration)
 	c.dataMu.Lock()
 	defer c.dataMu.Unlock()
 	if item, ok := c.data[key]; ok {
-		c.eventList.PushBack(&memCacheEvent{
-			k: key,
-			e: gtime.TimestampMilli() - 1000,
-		})
-		newExpireTime := c.getInternalExpire(duration)
 		c.data[key] = memCacheItem{
 			v: item.v,
 			e: newExpireTime,
@@ -145,18 +142,20 @@ func (c *memCache) SetExpire(key interface{}, duration time.Duration) bool {
 			k: key,
 			e: newExpireTime,
 		})
-		return true
+		return time.Duration(item.e-gtime.TimestampMilli()) * time.Millisecond
 	}
-	return false
+	return -1
 }
 
-func (c *memCache) GetExpire(key interface{}) (int64, bool) {
+// GetExpire retrieves and returns the expiration of <key>.
+// It returns -1 if the <key> does not exist in the cache.
+func (c *memCache) GetExpire(key interface{}) time.Duration {
 	c.dataMu.RLock()
 	defer c.dataMu.RUnlock()
 	if item, ok := c.data[key]; ok {
-		return item.e, true
+		return time.Duration(item.e-gtime.TimestampMilli()) * time.Millisecond
 	}
-	return 0, false
+	return -1
 }
 
 // doSetWithLockCheck sets cache with <key>-<value> pair if <key> does not exist in the

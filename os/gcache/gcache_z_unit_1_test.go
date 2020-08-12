@@ -9,9 +9,7 @@
 package gcache_test
 
 import (
-	"fmt"
-	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/util/grand"
+	"github.com/gogf/gf/util/guid"
 	"testing"
 	"time"
 
@@ -76,32 +74,51 @@ func TestCache_Set_Expire(t *testing.T) {
 	})
 }
 
-func TestCache_SetVar(t *testing.T) {
+func TestCache_Update_GetExpire(t *testing.T) {
+	// gcache
+	gtest.C(t, func(t *gtest.T) {
+		key := guid.S()
+		gcache.Set(key, 11, 3*time.Second)
+		oldExpire1 := gcache.GetExpire(key)
+		gcache.Update(key, 12)
+		oldExpire2 := gcache.GetExpire(key)
+		t.Assert(gcache.GetVar(key), 12)
+		t.Assert(oldExpire1, oldExpire2)
+	})
+	// gcache.Cache
 	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New()
 		cache.Set(1, 11, 3*time.Second)
-		expireBefore, _ := cache.GetExpire(1)
-		cache.SetVar(1, 12)
-		expireAfter, _ := cache.GetExpire(1)
+		oldExpire1 := cache.GetExpire(1)
+		cache.Update(1, 12)
+		oldExpire2 := cache.GetExpire(1)
 		t.Assert(cache.GetVar(1), 12)
-		t.Assert(expireBefore, expireAfter)
+		t.Assert(oldExpire1, oldExpire2)
 	})
 }
 
-func BenchmarkMemCache_GetSetExpire(b *testing.B) {
-	cache := gcache.New()
-	cache.Set(1, 11, 3*time.Second)
-	if expire, ok := cache.GetExpire(1); ok {
-		glog.Println(expire)
-	}
-	for i := 0; i < b.N; i++ {
-		r := time.Duration(grand.N(5, 10))
-		cache.SetExpire(1, r*time.Second)
-		//cache.SetExpire(1, 7*time.Second)
-		if _, ok := cache.GetExpire(1); !ok {
-			panic(fmt.Sprintf("[ERROR] %s", "GetExpire error"))
-		}
-	}
+func TestCache_UpdateExpire(t *testing.T) {
+	// gcache
+	gtest.C(t, func(t *gtest.T) {
+		key := guid.S()
+		gcache.Set(key, 11, 3*time.Second)
+		defer gcache.Remove(key)
+		oldExpire := gcache.GetExpire(key)
+		newExpire := 10 * time.Second
+		gcache.UpdateExpire(key, newExpire)
+		t.AssertNE(gcache.GetExpire(key), oldExpire)
+		t.Assert(gcache.GetExpire(key), newExpire)
+	})
+	// gcache.Cache
+	gtest.C(t, func(t *gtest.T) {
+		cache := gcache.New()
+		cache.Set(1, 11, 3*time.Second)
+		oldExpire := cache.GetExpire(1)
+		newExpire := 10 * time.Second
+		cache.UpdateExpire(1, newExpire)
+		t.AssertNE(cache.GetExpire(1), oldExpire)
+		t.Assert(cache.GetExpire(1), newExpire)
+	})
 }
 
 func TestCache_Keys_Values(t *testing.T) {
