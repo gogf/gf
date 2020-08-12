@@ -115,34 +115,45 @@ func (c *memCache) Set(key interface{}, value interface{}, duration time.Duratio
 
 // SetVar retrieves and set the value of <key>.
 func (c *memCache) SetVar(key interface{}, value interface{}) bool {
-	if c.Contains(key) {
-		c.dataMu.Lock()
+	c.dataMu.Lock()
+	defer c.dataMu.Unlock()
+	if item, ok := c.data[key]; ok {
 		c.data[key] = memCacheItem{
 			v: value,
-			e: c.data[key].e,
+			e: item.e,
 		}
-		c.dataMu.Unlock()
 		return true
 	}
 	return false
 }
 
 // SetExpire retrieves and set the value of <key>.
-func (c *memCache) SetExpire(key interface{}, duration time.Duration) {
-	value := c.GetVar(key)
-	c.Remove(key)
-	c.Set(key, value, duration)
+func (c *memCache) SetExpire(key interface{}, duration time.Duration) bool {
+	c.dataMu.Lock()
+	defer c.dataMu.Unlock()
+	if item, ok := c.data[key]; ok {
+		c.eventList.PushBack(&memCacheEvent{
+			k: key,
+			e: gtime.TimestampMilli() - 1000,
+		})
+		newExpireTime := c.getInternalExpire(duration)
+		c.data[key] = memCacheItem{
+			v: item.v,
+			e: newExpireTime,
+		}
+		c.eventList.PushBack(&memCacheEvent{
+			k: key,
+			e: newExpireTime,
+		})
+		return true
+	}
+	return false
 }
 
 func (c *memCache) GetExpire(key interface{}) (int64, bool) {
 	c.dataMu.RLock()
-	item, ok := c.data[key]
-	c.dataMu.RUnlock()
-	if ok {
-		// Adding to LRU history if LRU feature is enabled.
-		if c.cap > 0 {
-			c.lruGetList.PushBack(key)
-		}
+	defer c.dataMu.RUnlock()
+	if item, ok := c.data[key]; ok {
 		return item.e, true
 	}
 	return 0, false
