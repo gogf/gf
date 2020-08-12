@@ -80,8 +80,11 @@ func TestCache_SetVar(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New()
 		cache.Set(1, 11, 3*time.Second)
+		expireBefore, _ := cache.GetExpire(1)
 		cache.SetVar(1, 12)
+		expireAfter, _ := cache.GetExpire(1)
 		t.Assert(cache.GetVar(1), 12)
+		t.Assert(expireBefore, expireAfter)
 	})
 }
 
