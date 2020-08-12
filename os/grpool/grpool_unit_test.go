@@ -97,6 +97,23 @@ func Test_Limit3(t *testing.T) {
 		t.Assert(array.Len(), 100)
 		t.Assert(pool.IsClosed(), true)
 		t.AssertNE(pool.Add(func() {}), nil)
+	})
+}
 
+func Test_AddWithRecover(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewArray(true)
+		grpool.AddWithRecover(func() {
+			array.Append(1)
+			panic(1)
+		}, func(err error) {
+			array.Append(1)
+		})
+		grpool.AddWithRecover(func() {
+			panic(1)
+			array.Append(1)
+		})
+		time.Sleep(500 * time.Millisecond)
+		t.Assert(array.Len(), 2)
 	})
 }
