@@ -189,14 +189,22 @@ func LoadContent(data interface{}, safe ...bool) (*Json, error) {
 	if len(content) == 0 {
 		return New(nil, safe...), nil
 	}
+	return LoadContentType(checkDataType(content), content, safe...)
+}
 
+// LoadContentType creates a Json object from given type and content,
+// supporting data content type as follows:
+// JSON, XML, INI, YAML and TOML.
+func LoadContentType(dataType string, data interface{}, safe ...bool) (*Json, error) {
+	content := gconv.Bytes(data)
+	if len(content) == 0 {
+		return New(nil, safe...), nil
+	}
 	//ignore UTF8-BOM
 	if content[0] == 0xEF && content[1] == 0xBB && content[2] == 0xBF {
 		content = content[3:]
 	}
-
-	return doLoadContent(checkDataType(content), content, safe...)
-
+	return doLoadContent(dataType, content, safe...)
 }
 
 // checkDataType automatically checks and returns the data type for <content>.

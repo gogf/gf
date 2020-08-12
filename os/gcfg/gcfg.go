@@ -113,8 +113,10 @@ func (c *Config) filePath(file ...string) (path string) {
 // The parameter <path> can be absolute or relative path,
 // but absolute path is strongly recommended.
 func (c *Config) SetPath(path string) error {
-	isDir := false
-	realPath := ""
+	var (
+		isDir    = false
+		realPath = ""
+	)
 	if file := gres.Get(path); file != nil {
 		realPath = path
 		isDir = file.FileInfo().IsDir()
