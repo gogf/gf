@@ -9,6 +9,7 @@ package grpool
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/gogf/gf/container/glist"
 	"github.com/gogf/gf/container/gtype"
@@ -47,6 +48,14 @@ func Add(f func()) error {
 	return pool.Add(f)
 }
 
+// AddWithRecover pushes a new job to the pool with specified recover function.
+// The optional <recoverFunc> is called when any panic during executing of <userFunc>.
+// If <recoverFunc> is not passed or given nil, it ignores the panic from <userFunc>.
+// The job will be executed asynchronously.
+func AddWithRecover(userFunc func(), recoverFunc ...func(err error)) error {
+	return pool.AddWithRecover(userFunc, recoverFunc...)
+}
+
 // Size returns current goroutine count of default goroutine pool.
 func Size() int {
 	return pool.Size()
@@ -79,6 +88,23 @@ func (p *Pool) Add(f func()) error {
 	}
 	p.fork()
 	return nil
+}
+
+// AddWithRecover pushes a new job to the pool with specified recover function.
+// The optional <recoverFunc> is called when any panic during executing of <userFunc>.
+// If <recoverFunc> is not passed or given nil, it ignores the panic from <userFunc>.
+// The job will be executed asynchronously.
+func (p *Pool) AddWithRecover(userFunc func(), recoverFunc ...func(err error)) error {
+	return p.Add(func() {
+		defer func() {
+			if err := recover(); err != nil {
+				if len(recoverFunc) > 0 && recoverFunc[0] != nil {
+					recoverFunc[0](errors.New(fmt.Sprintf(`%v`, err)))
+				}
+			}
+		}()
+		userFunc()
+	})
 }
 
 // Cap returns the capacity of the pool.
