@@ -113,6 +113,52 @@ func (c *memCache) Set(key interface{}, value interface{}, duration time.Duratio
 	})
 }
 
+// SetVar retrieves and set the value of <key>.
+func (c *memCache) SetVar(key interface{}, value interface{}) bool {
+	c.dataMu.Lock()
+	defer c.dataMu.Unlock()
+	if item, ok := c.data[key]; ok {
+		c.data[key] = memCacheItem{
+			v: value,
+			e: item.e,
+		}
+		return true
+	}
+	return false
+}
+
+// SetExpire retrieves and set the value of <key>.
+func (c *memCache) SetExpire(key interface{}, duration time.Duration) bool {
+	c.dataMu.Lock()
+	defer c.dataMu.Unlock()
+	if item, ok := c.data[key]; ok {
+		c.eventList.PushBack(&memCacheEvent{
+			k: key,
+			e: gtime.TimestampMilli() - 1000,
+		})
+		newExpireTime := c.getInternalExpire(duration)
+		c.data[key] = memCacheItem{
+			v: item.v,
+			e: newExpireTime,
+		}
+		c.eventList.PushBack(&memCacheEvent{
+			k: key,
+			e: newExpireTime,
+		})
+		return true
+	}
+	return false
+}
+
+func (c *memCache) GetExpire(key interface{}) (int64, bool) {
+	c.dataMu.RLock()
+	defer c.dataMu.RUnlock()
+	if item, ok := c.data[key]; ok {
+		return item.e, true
+	}
+	return 0, false
+}
+
 // doSetWithLockCheck sets cache with <key>-<value> pair if <key> does not exist in the
 // cache, which is expired after <duration>.
 //

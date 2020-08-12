@@ -21,6 +21,12 @@ func Set(key interface{}, value interface{}, duration time.Duration) {
 	cache.Set(key, value, duration)
 }
 
+// SetVar edit cache with <key>-<value> , but will not change expire.
+// If key is not exist return false. Nothing will change.
+func SetVar(key interface{}, value interface{}) bool {
+	return cache.SetVar(key, value)
+}
+
 // SetIfNotExist sets cache with <key>-<value> pair if <key> does not exist in the cache,
 // which is expired after <duration>. It does not expire if <duration> == 0.
 func SetIfNotExist(key interface{}, value interface{}, duration time.Duration) bool {
@@ -110,4 +116,14 @@ func Values() []interface{} {
 // Size returns the size of the cache.
 func Size() int {
 	return cache.Size()
+}
+
+// GetExpire returns the expire time with given expired duration in milliseconds.
+func GetExpire(key interface{}) (int64, bool) {
+	return cache.GetExpire(key)
+}
+
+// SetExpire set cache expired after <duration>.
+func SetExpire(key interface{}, duration time.Duration) bool {
+	return cache.SetExpire(key, duration)
 }
