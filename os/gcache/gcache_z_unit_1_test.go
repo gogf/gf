@@ -9,6 +9,9 @@
 package gcache_test
 
 import (
+	"fmt"
+	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/util/grand"
 	"testing"
 	"time"
 
@@ -73,25 +76,29 @@ func TestCache_Set_Expire(t *testing.T) {
 	})
 }
 
-func TestCache_Expire_SetVar(t *testing.T) {
+func TestCache_SetVar(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New()
 		cache.Set(1, 11, 3*time.Second)
-		expireBefore, _ := cache.GetExpire(1)
-		t.Assert(cache.Get(1), 11)
 		cache.SetVar(1, 12)
-		t.Assert(cache.Get(1), 12)
-		time.Sleep(1 * time.Second)
-		cache.SetExpire(1, 5*time.Second)
-		expireAfter, okAfter := cache.GetExpire(1)
-		if okAfter {
-			t.Assert(expireAfter-expireBefore, 3000)
-		}
-		time.Sleep(4 * time.Second)
-		t.Assert(cache.Get(1), 12)
-		time.Sleep(2 * time.Second)
-		t.Assert(cache.Get(1), nil)
+		t.Assert(cache.GetVar(1), 12)
 	})
+}
+
+func BenchmarkMemCache_GetSetExpire(b *testing.B) {
+	cache := gcache.New()
+	cache.Set(1, 11, 3*time.Second)
+	if expire, ok := cache.GetExpire(1); ok {
+		glog.Println(expire)
+	}
+	for i := 0; i < b.N; i++ {
+		r := time.Duration(grand.N(5, 10))
+		cache.SetExpire(1, r*time.Second)
+		//cache.SetExpire(1, 7*time.Second)
+		if _, ok := cache.GetExpire(1); !ok {
+			panic(fmt.Sprintf("[ERROR] %s", "GetExpire error"))
+		}
+	}
 }
 
 func TestCache_Keys_Values(t *testing.T) {

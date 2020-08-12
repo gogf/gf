@@ -124,6 +124,6 @@ func GetExpire(key interface{}) (int64, bool) {
 }
 
 // SetExpire set cache expired after <duration>.
-func SetExpire(key interface{}, duration time.Duration) {
-	cache.SetExpire(key, duration)
+func SetExpire(key interface{}, duration time.Duration) bool {
+	return cache.SetExpire(key, duration)
 }
