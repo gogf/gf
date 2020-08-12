@@ -208,7 +208,7 @@ func LoadContentType(dataType string, data interface{}, safe ...bool) (*Json, er
 }
 
 // checkDataType automatically checks and returns the data type for <content>.
-// Note that it uses regular expression for loose checking, you can use LoadXXX
+// Note that it uses regular expression for loose checking, you can use LoadXXX/LoadContentType
 // functions to load the content for certain content type.
 func checkDataType(content []byte) string {
 	if json.Valid(content) {
@@ -218,10 +218,12 @@ func checkDataType(content []byte) string {
 	} else if (gregex.IsMatch(`^[\n\r]*[\w\-\s\t]+\s*:\s*".+"`, content) || gregex.IsMatch(`^[\n\r]*[\w\-\s\t]+\s*:\s*\w+`, content)) ||
 		(gregex.IsMatch(`[\n\r]+[\w\-\s\t]+\s*:\s*".+"`, content) || gregex.IsMatch(`[\n\r]+[\w\-\s\t]+\s*:\s*\w+`, content)) {
 		return "yml"
-	} else if !gregex.IsMatch(`^[\s\t\n\r]*;.+`, content) && !gregex.IsMatch(`[\s\t\n\r]+;.+`, content) &&
+	} else if !gregex.IsMatch(`^[\s\t\n\r]*;.+`, content) &&
+		!gregex.IsMatch(`[\s\t\n\r]+;.+`, content) &&
+		!gregex.IsMatch(`[\n\r]+[\s\t\w\-]+\.[\s\t\w\-]+\s*=\s*.+`, content) &&
 		(gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*".+"`, content) || gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*\w+`, content)) {
 		return "toml"
-	} else if gregex.IsMatch(`\[[\w]+\]`, content) && !gregex.IsMatch(`^[\s\t\n\r]*#.+`, content) && !gregex.IsMatch(`[\s\t\n\r]+#.+`, content) &&
+	} else if gregex.IsMatch(`\[[\w\.]+\]`, content) &&
 		(gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*".+"`, content) || gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*\w+`, content)) {
 		// Must contain "[xxx]" section.
 		return "ini"

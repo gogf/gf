@@ -87,4 +87,29 @@ dd = 11
 		//fmt.Println(gregex.MatchString(`[\n\r]+[\w\-\s\t]+\s*:\s*\w+`, string(data)))
 		t.Assert(checkDataType(data), "toml")
 	})
+
+	gtest.C(t, func(t *gtest.T) {
+		data := []byte(`
+[default]
+db.engine         = mysql
+db.max.idle.conns = 5
+db.max.open.conns = 100
+allow_ips         =
+api.key           =
+api.secret        =
+enable_tls        = false
+concurrency.queue = 500
+auth_secret       = 63358e6f3daf0e5775ec3fb4d2516b01d41530bf30960aa76972f6ce7e08552f
+ca_file           =
+cert_file         =
+key_file          =
+host_port         = 8088
+log_path          = /Users/zhaosuji/go/src/git.medlinker.com/foundations/gocron/log
+#k8s-api地址(只提供内网访问)
+k8s-inner-api = http://127.0.0.1:8081/kube/add
+conf_dir = ./config
+app_conf = ./config/app.ini
+`)
+		t.Assert(checkDataType(data), "ini")
+	})
 }
