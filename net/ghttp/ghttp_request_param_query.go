@@ -194,8 +194,8 @@ func (r *Request) GetQueryMapStrVar(kvMap ...map[string]interface{}) map[string]
 func (r *Request) GetQueryStruct(pointer interface{}, mapping ...map[string]string) error {
 	r.parseQuery()
 	m := r.GetQueryMap()
-	if len(m) == 0 {
-		return nil
+	if m == nil {
+		m = map[string]interface{}{}
 	}
 	return gconv.StructDeep(m, pointer, mapping...)
 }
