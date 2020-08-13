@@ -115,7 +115,7 @@ please note your github/gitee account in your payment bill. All the donations wi
 |(hyuant)[https://github.com/hyuant]|alipay|￥66.66| 
 |*庆|alipay|￥9.99| 支持一下，gf越来越好
 |**君|alipay|￥10.00| 加油
-|**君|alipay|￥200.00| gf越来越强！
+|闫沧|alipay|￥200.00| gf越来越强！
 
 
 
