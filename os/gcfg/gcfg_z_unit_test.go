@@ -9,10 +9,11 @@
 package gcfg_test
 
 import (
-	"github.com/gogf/gf/debug/gdebug"
-	"github.com/gogf/gf/os/gtime"
 	"os"
 	"testing"
+
+	"github.com/gogf/gf/debug/gdebug"
+	"github.com/gogf/gf/os/gtime"
 
 	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/frame/g"
@@ -473,5 +474,15 @@ func TestCfg_Config(t *testing.T) {
 		gcfg.RemoveContent("config.yml")
 		gcfg.ClearContent()
 		t.Assert(gcfg.GetContent("name"), "")
+	})
+}
+
+func TestCfg_With_UTF8_BOM(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		cfg := g.Cfg("test-cfg-with-utf8-bom")
+		t.Assert(cfg.SetPath("testdata"), nil)
+		cfg.SetFileName("cfg-with-utf8-bom.toml")
+		t.Assert(cfg.GetInt("test.testInt"), 1)
+		t.Assert(cfg.GetString("test.testStr"), "test")
 	})
 }

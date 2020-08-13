@@ -118,3 +118,19 @@ func Test_MapContainsPossibleKey(t *testing.T) {
 		t.Assert(gutil.MapContainsPossibleKey(m, "none"), false)
 	})
 }
+
+func Test_MapOmitEmpty(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m := g.Map{
+			"k1": "john",
+			"e1": "",
+			"e2": 0,
+			"e3": nil,
+			"k2": "smith",
+		}
+		gutil.MapOmitEmpty(m)
+		t.Assert(len(m), 2)
+		t.AssertNE(m["k1"], nil)
+		t.AssertNE(m["k2"], nil)
+	})
+}

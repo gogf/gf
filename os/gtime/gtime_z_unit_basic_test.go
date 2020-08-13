@@ -222,6 +222,11 @@ func Test_ConvertZone(t *testing.T) {
 
 func Test_ParseDuration(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
+		d, err := gtime.ParseDuration("1d")
+		t.Assert(err, nil)
+		t.Assert(d.String(), "24h0m0s")
+	})
+	gtest.C(t, func(t *gtest.T) {
 		d, err := gtime.ParseDuration("1d2h3m")
 		t.Assert(err, nil)
 		t.Assert(d.String(), "26h3m0s")

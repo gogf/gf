@@ -73,6 +73,33 @@ func Test_Router_Basic2(t *testing.T) {
 	})
 }
 
+func Test_Router_Value(t *testing.T) {
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/{hash}", func(r *ghttp.Request) {
+		r.Response.Write(r.GetRouterString("hash"))
+	})
+	s.BindHandler("/{hash}.{type}", func(r *ghttp.Request) {
+		r.Response.Write(r.GetRouterString("type"))
+	})
+	s.BindHandler("/{hash}.{type}.map", func(r *ghttp.Request) {
+		r.Response.Write(r.GetRouterMap()["type"])
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		client := ghttp.NewClient()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		t.Assert(client.GetContent("/data"), "data")
+		t.Assert(client.GetContent("/data.json"), "json")
+		t.Assert(client.GetContent("/data.json.map"), "json")
+	})
+}
+
 // HTTP method register.
 func Test_Router_Method(t *testing.T) {
 	p, _ := ports.PopRand()

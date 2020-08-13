@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/gogf/gf/container/gtype"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/os/gfpool"
 	"github.com/gogf/gf/os/gmlock"
@@ -32,6 +33,7 @@ import (
 type Logger struct {
 	rmu    sync.Mutex      // Mutex for rotation feature.
 	ctx    context.Context // Context for logging.
+	init   *gtype.Bool     // Initialized.
 	parent *Logger         // Parent logger, if it is not empty, it means the logger is used in chaining function.
 	config Config          // Logger configuration.
 }
@@ -58,12 +60,9 @@ const (
 // New creates and returns a custom logger.
 func New() *Logger {
 	logger := &Logger{
+		init:   gtype.NewBool(),
 		config: DefaultConfig(),
 	}
-	// Initialize the internal handler after some delay.
-	gtimer.AddOnce(time.Second, func() {
-		gtimer.AddOnce(logger.config.RotateCheckInterval, logger.rotateChecksTimely)
-	})
 	return logger
 }
 
@@ -77,10 +76,11 @@ func NewWithWriter(writer io.Writer) *Logger {
 // Clone returns a new logger, which is the clone the current logger.
 // It's commonly used for chaining operations.
 func (l *Logger) Clone() *Logger {
-	logger := Logger{}
-	logger = *l
+	logger := New()
+	logger.ctx = l.ctx
+	logger.config = l.config
 	logger.parent = l
-	return &logger
+	return logger
 }
 
 // getFilePath returns the logging file path.
@@ -99,6 +99,17 @@ func (l *Logger) getFilePath(now time.Time) string {
 
 // print prints <s> to defined writer, logging file or passed <std>.
 func (l *Logger) print(std io.Writer, lead string, values ...interface{}) {
+	// Lazy initialize for rotation feature.
+	// It uses atomic reading operation to enhance the checking performance.
+	// It here uses CAP for performance and concurrent safety.
+	if !l.init.Val() && l.init.Cas(false, true) {
+		// It just initializes once for each logger.
+		if l.config.RotateSize > 0 || l.config.RotateExpire > 0 {
+			gtimer.AddOnce(l.config.RotateCheckInterval, l.rotateChecksTimely)
+			intlog.Printf("logger rotation initialized: every %s", l.config.RotateCheckInterval.String())
+		}
+	}
+
 	var (
 		now    = time.Now()
 		buffer = bytes.NewBuffer(nil)
