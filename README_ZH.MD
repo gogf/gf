@@ -144,6 +144,7 @@ ab -t 10 -c 100 http://127.0.0.1:3000/json
 - [库币科技](https://www.kucoin.io/)
 - [乐有家](https://www.leyoujia.com/)
 - [IGG](https://igg.com)
+- [喜马拉雅](https://www.ximalaya.com)
 
 > 在这里只列举了部分知名的用户，如果您的企业或者产品正在使用`GoFrame`，欢迎到 [这里] (https://github.com/gogf/gf/issues/168)留言。
 
