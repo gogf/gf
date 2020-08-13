@@ -66,9 +66,9 @@ CREATE TABLE %s (
 		Address string `json:"address"`
 	}
 	type EntityUserScores struct {
-		Id     int `json:"id"`
-		UserId int `json:"uid"`
-		Score  int `json:"score"`
+		Id    int `json:"id"`
+		Uid   int `json:"uid"`
+		Score int `json:"score"`
 	}
 	type Entity struct {
 		User       *EntityUser
@@ -144,10 +144,10 @@ CREATE TABLE %s (
 		t.Assert(err, nil)
 		t.Assert(len(users[0].UserScores), 5)
 		t.Assert(len(users[1].UserScores), 5)
-		t.Assert(users[0].UserScores[0].UserId, 3)
+		t.Assert(users[0].UserScores[0].Uid, 3)
 		t.Assert(users[0].UserScores[0].Score, 1)
 		t.Assert(users[0].UserScores[4].Score, 5)
-		t.Assert(users[1].UserScores[0].UserId, 4)
+		t.Assert(users[1].UserScores[0].Uid, 4)
 		t.Assert(users[1].UserScores[0].Score, 1)
 		t.Assert(users[1].UserScores[4].Score, 5)
 	})
@@ -177,10 +177,10 @@ CREATE TABLE %s (
 		t.Assert(err, nil)
 		t.Assert(len(users[0].UserScores), 5)
 		t.Assert(len(users[1].UserScores), 5)
-		t.Assert(users[0].UserScores[0].UserId, 3)
+		t.Assert(users[0].UserScores[0].Uid, 3)
 		t.Assert(users[0].UserScores[0].Score, 1)
 		t.Assert(users[0].UserScores[4].Score, 5)
-		t.Assert(users[1].UserScores[0].UserId, 4)
+		t.Assert(users[1].UserScores[0].Uid, 4)
 		t.Assert(users[1].UserScores[0].Score, 1)
 		t.Assert(users[1].UserScores[4].Score, 5)
 	})
