@@ -7,9 +7,13 @@
 package ghttp_test
 
 import (
+	"bytes"
 	"fmt"
+	"io/ioutil"
 	"testing"
 	"time"
+
+	"github.com/gogf/gf/encoding/gjson"
 
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
@@ -514,6 +518,42 @@ func Test_Params_GetRequestMap(t *testing.T) {
 				"time_end2020-04-18 16:11:58&returnmsg=Success&attach=",
 			),
 			`{"attach":"","returnmsg":"Success"}`,
+		)
+	})
+}
+
+func Test_Params_Modify(t *testing.T) {
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/param/modify", func(r *ghttp.Request) {
+		param := r.GetMap()
+		param["id"] = 2
+		paramBytes, err := gjson.Encode(param)
+		if err != nil {
+			r.Response.Write(err)
+			return
+		}
+		r.Request.Body = ioutil.NopCloser(bytes.NewReader(paramBytes))
+		r.ReloadParam()
+		r.Response.Write(r.GetMap())
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		prefix := fmt.Sprintf("http://127.0.0.1:%d", p)
+		client := ghttp.NewClient()
+		client.SetPrefix(prefix)
+
+		t.Assert(
+			client.PostContent(
+				"/param/modify",
+				`{"id":1}`,
+			),
+			`{"id":2}`,
 		)
 	})
 }
