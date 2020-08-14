@@ -224,7 +224,7 @@ func (r *Request) GetError() error {
 	return r.error
 }
 
-// ReloadParam used for request parameter modifying.
+// ReloadParam used for modifying request parameter.
 func (r *Request) ReloadParam() {
 	r.parsedBody = false
 	r.parsedForm = false
