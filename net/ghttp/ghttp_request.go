@@ -229,4 +229,5 @@ func (r *Request) ReloadParam() {
 	r.parsedBody = false
 	r.parsedForm = false
 	r.parsedQuery = false
+	r.bodyContent = nil
 }
