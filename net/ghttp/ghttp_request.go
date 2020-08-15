@@ -9,14 +9,15 @@ package ghttp
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"strings"
+	"time"
+
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/os/gres"
 	"github.com/gogf/gf/os/gsession"
 	"github.com/gogf/gf/os/gview"
 	"github.com/gogf/gf/util/guid"
-	"net/http"
-	"strings"
-	"time"
 
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gregex"
@@ -221,4 +222,12 @@ func (r *Request) GetReferer() string {
 // It returns nil if there's no error.
 func (r *Request) GetError() error {
 	return r.error
+}
+
+// ReloadParam used for modifying request parameter.
+func (r *Request) ReloadParam() {
+	r.parsedBody = false
+	r.parsedForm = false
+	r.parsedQuery = false
+	r.bodyContent = nil
 }
