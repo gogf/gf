@@ -224,7 +224,9 @@ func (r *Request) GetError() error {
 	return r.error
 }
 
-// ReloadParam used for modifying request parameter.
+// ReloadParam is used for modifying request parameter.
+// Sometimes, we want to modify request parameters through middleware, but directly modifying Request.Body
+// is invalid, so it clears the parsed* marks to make the parameters re-parsed.
 func (r *Request) ReloadParam() {
 	r.parsedBody = false
 	r.parsedForm = false
