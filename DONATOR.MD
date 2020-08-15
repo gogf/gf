@@ -104,15 +104,15 @@ please note your github/gitee account in your payment bill. All the donations wi
 |Glowworm|wechat|￥8.88| 感谢大佬
 |徒行|wechat|￥10.00| 目前项目在转用这个框架，鼓励一下大佬吧👍👍👍
 |产品设计.软件开发|wechat|￥10.00| 祝愿走向更成功！
-|(charlieccGuo)[https://github.com/charlieccGuo]|wechat|￥10.00| 
+|[charlieccGuo](https://github.com/charlieccGuo)|wechat|￥10.00| 
 |yiran|wechat|￥20.00| 赏给大佬喝茶🍵
 |长夏朔酒|wechat|￥20.00| 请大佬喝茶
 |💥聪จุ๊บ 🇨🇳|wechat|￥66.66| 请大佬喝茶
 |Even_|wechat|￥10.00| 日照市民发来贺电！
 |智慧人生|wechat|￥50.00| 智慧人生
 |一滴水|wechat|￥10.00| goframe 越来越强大
-|(wenzi1)[https://github.com/wenzi1]|alipay|￥100.00| 
-|(hyuant)[https://github.com/hyuant]|alipay|￥66.66| 
+|[wenzi1](https://github.com/wenzi1)|alipay|￥100.00| 
+|[hyuant](https://github.com/hyuant)|alipay|￥66.66| 
 |*庆|alipay|￥9.99| 支持一下，gf越来越好
 |**君|alipay|￥10.00| 加油
 
