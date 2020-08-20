@@ -7,6 +7,7 @@
 package gvalid_test
 
 import (
+	"github.com/gogf/gf/container/gvar"
 	"testing"
 
 	"github.com/gogf/gf/frame/g"
@@ -260,7 +261,20 @@ func Test_CheckStruct_Optional(t *testing.T) {
 		}
 		obj := &Params{
 			Page: 1,
-			Size: 1,
+			Size: 10,
+		}
+		err := gvalid.CheckStruct(obj, nil)
+		t.Assert(err, nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			Page      int       `v:"required|min:1         # page is required"`
+			Size      int       `v:"required|between:1,100 # size is required"`
+			ProjectId *gvar.Var `v:"between:1,10000        # project id must between :min, :max"`
+		}
+		obj := &Params{
+			Page: 1,
+			Size: 10,
 		}
 		err := gvalid.CheckStruct(obj, nil)
 		t.Assert(err, nil)
@@ -273,7 +287,7 @@ func Test_CheckStruct_Optional(t *testing.T) {
 		}
 		obj := &Params{
 			Page: 1,
-			Size: 1,
+			Size: 10,
 		}
 		err := gvalid.CheckStruct(obj, nil)
 		t.Assert(err.String(), "project id must between 1, 10000")
