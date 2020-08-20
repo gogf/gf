@@ -10,9 +10,10 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/gogf/gf/container/gmap"
 	"reflect"
 	"time"
+
+	"github.com/gogf/gf/container/gmap"
 
 	"github.com/gogf/gf/container/gset"
 	"github.com/gogf/gf/text/gstr"
@@ -139,8 +140,7 @@ func (m *Model) TX(tx *TX) *Model {
 
 // Clone creates and returns a new model which is a clone of current model.
 // Note that it uses deep-copy for the clone.
-func (m *Model) Clone() *Model {
-	newModel := (*Model)(nil)
+func (m *Model) Clone() (newModel *Model) {
 	if m.tx != nil {
 		newModel = m.tx.Table(m.tablesInit)
 	} else {
@@ -219,7 +219,11 @@ func (m *Model) InnerJoin(table string, on string) *Model {
 // Fields sets the operation fields of the model, multiple fields joined using char ','.
 func (m *Model) Fields(fields string) *Model {
 	model := m.getModel()
-	model.fields = fields
+	if model.fields != "" {
+		model.fields += "," + fields
+	} else {
+		model.fields = fields
+	}
 	return model
 }
 
@@ -230,7 +234,7 @@ func (m *Model) FieldsEx(fields string) *Model {
 	fieldsExSet := gset.NewStrSetFrom(gstr.SplitAndTrim(fields, ","))
 	if m, err := m.db.TableFields(m.tables); err == nil {
 		model.fields = ""
-		for k, _ := range m {
+		for k := range m {
 			if fieldsExSet.Contains(k) {
 				continue
 			}
@@ -615,11 +619,12 @@ func (m *Model) Save(data ...interface{}) (result sql.Result, err error) {
 // Also see Model.Data and Model.Where functions.
 func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err error) {
 	if len(dataAndWhere) > 0 {
-		if len(dataAndWhere) > 2 {
+		switch {
+		case len(dataAndWhere) > 2:
 			return m.Data(dataAndWhere[0]).Where(dataAndWhere[1], dataAndWhere[2:]...).Update()
-		} else if len(dataAndWhere) == 2 {
+		case len(dataAndWhere) == 2:
 			return m.Data(dataAndWhere[0]).Where(dataAndWhere[1]).Update()
-		} else {
+		default:
 			return m.Data(dataAndWhere[0]).Update()
 		}
 	}
@@ -706,11 +711,12 @@ func (m *Model) One(where ...interface{}) (Record, error) {
 // Also see Model.Fields and Model.Where functions.
 func (m *Model) Value(fieldsAndWhere ...interface{}) (Value, error) {
 	if len(fieldsAndWhere) > 0 {
-		if len(fieldsAndWhere) > 2 {
+		switch {
+		case len(fieldsAndWhere) > 2:
 			return m.Fields(gconv.String(fieldsAndWhere[0])).Where(fieldsAndWhere[1], fieldsAndWhere[2:]...).Value()
-		} else if len(fieldsAndWhere) == 2 {
+		case len(fieldsAndWhere) == 2:
 			return m.Fields(gconv.String(fieldsAndWhere[0])).Where(fieldsAndWhere[1]).Value()
-		} else {
+		default:
 			return m.Fields(gconv.String(fieldsAndWhere[0])).Value()
 		}
 	}
@@ -913,7 +919,7 @@ func (m *Model) Chunk(limit int, callback func(result Result, err error) bool) {
 		if len(data) == 0 {
 			break
 		}
-		if callback(data, err) == false {
+		if !callback(data, err) {
 			break
 		}
 		if len(data) < limit {
@@ -1097,5 +1103,5 @@ func (m *Model) formatCondition(limit bool) (condition string, conditionArgs []i
 	if m.offset >= 0 {
 		condition += fmt.Sprintf(" OFFSET %d", m.offset)
 	}
-	return
+	return condition, conditionArgs
 }
