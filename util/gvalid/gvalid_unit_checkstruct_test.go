@@ -254,9 +254,9 @@ func Test_CheckStruct_With_Inherit(t *testing.T) {
 func Test_CheckStruct_Optional(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Params struct {
-			Page      int    `v:"required|min:1        #page is required"`
-			Size      int    `v:"required|between:1,100#size is required"`
-			ProjectId string `v:"between:1,10000       #project id must between :min, :max"`
+			Page      int    `v:"required|min:1         # page is required"`
+			Size      int    `v:"required|between:1,100 # size is required"`
+			ProjectId string `v:"between:1,10000        # project id must between :min, :max"`
 		}
 		obj := &Params{
 			Page: 1,
@@ -267,9 +267,9 @@ func Test_CheckStruct_Optional(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type Params struct {
-			Page      int `v:"required|min:1        #page is required"`
-			Size      int `v:"required|between:1,100#size is required"`
-			ProjectId int `v:"between:1,10000       #project id must between :min, :max"`
+			Page      int `v:"required|min:1         # page is required"`
+			Size      int `v:"required|between:1,100 # size is required"`
+			ProjectId int `v:"between:1,10000        # project id must between :min, :max"`
 		}
 		obj := &Params{
 			Page: 1,
