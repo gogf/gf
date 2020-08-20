@@ -38,11 +38,11 @@ var (
 		"required-with-all":    {},
 		"required-without":     {},
 		"required-without-all": {},
-		"same":                 {},
-		"different":            {},
-		"in":                   {},
-		"not-in":               {},
-		"regex":                {},
+		//"same":                 {},
+		//"different":            {},
+		//"in":                   {},
+		//"not-in":               {},
+		//"regex":                {},
 	}
 	// allSupportedRules defines all supported rules that is used for quick checks.
 	allSupportedRules = map[string]struct{}{
