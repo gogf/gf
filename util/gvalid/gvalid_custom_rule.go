@@ -25,7 +25,7 @@ var (
 // It returns error if there's already the same rule registered previously.
 func RegisterRule(rule string, f RuleFunc) error {
 	if _, ok := allSupportedRules[rule]; ok {
-		return fmt.Errorf(`validation rule "%s" is already registed`, rule)
+		return fmt.Errorf(`validation rule "%s" is already registered`, rule)
 	}
 	allSupportedRules[rule] = struct{}{}
 	customRuleFuncMap[rule] = f

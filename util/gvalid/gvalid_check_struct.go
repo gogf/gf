@@ -151,8 +151,10 @@ func CheckStruct(object interface{}, rules interface{}, messages ...CustomMsg) *
 		}
 		if e := doCheck(key, value, rule, customMessage[key], params); e != nil {
 			_, item := e.FirstItem()
+			// ===========================================================
 			// If value is nil or empty string and has no required* rules,
 			// clear the error message.
+			// ===========================================================
 			if value == nil || gconv.String(value) == "" {
 				required := false
 				// rule => error
