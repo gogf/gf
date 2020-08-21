@@ -42,6 +42,7 @@ var (
 		"different":            {},
 		"in":                   {},
 		"not-in":               {},
+		"price":                {},
 		"regex":                {},
 	}
 	// allSupportedRules defines all supported rules that is used for quick checks.
@@ -86,6 +87,7 @@ var (
 		"different":            {},
 		"in":                   {},
 		"not-in":               {},
+		"price":                {},
 		"regex":                {},
 	}
 	// boolMap defines the boolean values.
@@ -248,7 +250,6 @@ func doCheck(key string, value interface{}, rules string, messages interface{}, 
 				msg = strings.Replace(msg, ":format", ruleVal, -1)
 				errorMsgs[ruleKey] = msg
 			}
-
 		// Values of two fields should be equal as string.
 		case "same":
 			if v, ok := data[ruleVal]; ok {
@@ -338,7 +339,10 @@ func doCheck(key string, value interface{}, rules string, messages interface{}, 
 		// Postcode number.
 		case "postcode":
 			match = gregex.IsMatchString(`^\d{6}$`, val)
-
+		// Price : integer or decimal (1 or 2 decimal places) such as 10.00 or 10 or 10.1
+		case "price":
+			pattern := `(^[1-9]\d*(\.\d{1,2})?$)|(^[0]{1}(\.\d{1,2})?$)`
+			match = gregex.IsMatchString(pattern, val)
 		// China resident id number.
 		//
 		// xxxxxx yyyy MM dd 375 0  十八位

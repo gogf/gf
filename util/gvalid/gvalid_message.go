@@ -56,6 +56,7 @@ var defaultMessages = map[string]string{
 	"different":            "The :attribute value must be different from field :field",
 	"in":                   "The :attribute value is not in acceptable range",
 	"not-in":               "The :attribute value is not in acceptable range",
+	"price":                "The :attribute value must be 1 decimal or 2 decimal or integer",
 	"regex":                "The :attribute value is invalid",
 }
 
