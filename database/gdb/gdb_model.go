@@ -217,9 +217,9 @@ func (m *Model) InnerJoin(table string, on string) *Model {
 }
 
 // Fields sets the operation fields of the model, multiple fields joined using char ','.
-func (m *Model) Fields(fields string) *Model {
+func (m *Model) Fields(fields string, accumulation ...bool) *Model {
 	model := m.getModel()
-	if model.fields != "" {
+	if len(accumulation) > 0 && accumulation[0] && model.fields != "" {
 		model.fields += "," + fields
 	} else {
 		model.fields = fields
