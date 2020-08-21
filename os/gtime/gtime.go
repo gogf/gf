@@ -227,7 +227,7 @@ func parseDateStr(s string) (year, month, day int) {
 	return
 }
 
-// StrToTime converts string to *Time object.
+// StrToTime converts string to *Time object. It also supports timestamp string.
 // The parameter <format> is unnecessary, which specifies the format for converting like "Y-m-d H:i:s".
 // If <format> is given, it acts as same as function StrToTimeFormat.
 // If <format> is not given, it converts string as a "standard" datetime string.
@@ -235,6 +235,10 @@ func parseDateStr(s string) (year, month, day int) {
 func StrToTime(str string, format ...string) (*Time, error) {
 	if len(format) > 0 {
 		return StrToTimeFormat(str, format[0])
+	}
+	if isTimestampStr(str) {
+		timestamp, _ := strconv.ParseInt(str, 10, 64)
+		return NewFromTimeStamp(timestamp), nil
 	}
 	var (
 		year, month, day     int
@@ -290,8 +294,8 @@ func StrToTime(str string, format ...string) (*Time, error) {
 			if h > 24 || m > 59 || s > 59 {
 				return nil, gerror.Newf("invalid zone string: %s", match[6])
 			}
-			// Comparing the given time zone whether equals to current tine zone,
-			// it converts it to UTC if they does not.
+			// Comparing the given time zone whether equals to current time zone,
+			// it converts it to UTC if they does not equal.
 			_, localOffset := time.Now().Zone()
 			// Comparing in seconds.
 			if (h*3600 + m*60 + s) != localOffset {
@@ -326,7 +330,7 @@ func StrToTime(str string, format ...string) (*Time, error) {
 			}
 		}
 	}
-	if year <= 0 || month <= 0 || day <= 0 || hour < 0 || min < 0 || sec < 0 || nsec < 0 {
+	if year <= 0 {
 		return nil, errors.New("invalid time string:" + str)
 	}
 	// It finally converts all time to UTC time zone.
@@ -423,4 +427,18 @@ func FuncCost(f func()) int64 {
 	t := TimestampNano()
 	f()
 	return TimestampNano() - t
+}
+
+// isTimestampStr checks and returns whether given string a timestamp string.
+func isTimestampStr(s string) bool {
+	length := len(s)
+	if length == 0 {
+		return false
+	}
+	for i := 0; i < len(s); i++ {
+		if s[i] < '0' || s[i] > '9' {
+			return false
+		}
+	}
+	return true
 }
