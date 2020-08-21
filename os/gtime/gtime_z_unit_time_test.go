@@ -16,6 +16,7 @@ import (
 )
 
 func Test_New(t *testing.T) {
+	// time.Time
 	gtest.C(t, func(t *gtest.T) {
 		timeNow := time.Now()
 		timeTemp := gtime.New(timeNow)
@@ -23,6 +24,23 @@ func Test_New(t *testing.T) {
 
 		timeTemp1 := gtime.New()
 		t.Assert(timeTemp1.Time, time.Time{})
+	})
+	// string
+	gtest.C(t, func(t *gtest.T) {
+		timeNow := gtime.Now()
+		timeTemp := gtime.New(timeNow.String())
+		t.Assert(timeTemp.Time.Format("2006-01-02 15:04:05"), timeNow.Time.Format("2006-01-02 15:04:05"))
+	})
+	gtest.C(t, func(t *gtest.T) {
+		timeNow := gtime.Now()
+		timeTemp := gtime.New(timeNow.TimestampMicroStr())
+		t.Assert(timeTemp.Time.Format("2006-01-02 15:04:05"), timeNow.Time.Format("2006-01-02 15:04:05"))
+	})
+	// int64
+	gtest.C(t, func(t *gtest.T) {
+		timeNow := gtime.Now()
+		timeTemp := gtime.New(timeNow.TimestampMicro())
+		t.Assert(timeTemp.Time.Format("2006-01-02 15:04:05"), timeNow.Time.Format("2006-01-02 15:04:05"))
 	})
 }
 
@@ -42,7 +60,7 @@ func Test_NewFromStr(t *testing.T) {
 		timeTemp := gtime.NewFromStr("2006-01-02 15:04:05")
 		t.Assert(timeTemp.Format("Y-m-d H:i:s"), "2006-01-02 15:04:05")
 
-		timeTemp1 := gtime.NewFromStr("20060102")
+		timeTemp1 := gtime.NewFromStr("2006.0102")
 		if timeTemp1 != nil {
 			t.Error("test fail")
 		}
