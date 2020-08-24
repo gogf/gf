@@ -10,13 +10,35 @@ import (
 	"fmt"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
+	"github.com/gogf/gf/os/gfile"
 	"time"
 )
 
-func ExampleGetServer() {
+func ExampleHelloWorld() {
 	s := g.Server()
 	s.BindHandler("/", func(r *ghttp.Request) {
 		r.Response.Write("hello world")
+	})
+	s.SetPort(8999)
+	s.Run()
+}
+
+// Custom saving file name.
+func ExampleUploadFile_Save() {
+	s := g.Server()
+	s.BindHandler("/upload", func(r *ghttp.Request) {
+		file := r.GetUploadFile("TestFile")
+		if file == nil {
+			r.Response.Write("empty file")
+			return
+		}
+		file.Filename = "MyCustomFileName.txt"
+		fileName, err := file.Save(gfile.TempDir())
+		if err != nil {
+			r.Response.Write(err)
+			return
+		}
+		r.Response.Write(fileName)
 	})
 	s.SetPort(8999)
 	s.Run()
