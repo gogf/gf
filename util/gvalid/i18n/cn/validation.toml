@@ -40,4 +40,5 @@
 "gf.gvalid.rule.different"            = ":attribute 字段值不能与:field相同"
 "gf.gvalid.rule.in"                   = ":attribute 字段值不合法"
 "gf.gvalid.rule.not-in"               = ":attribute 字段值不合法"
+"gf.gvalid.rule.price"                = ":attribute 字段值不合法"
 "gf.gvalid.rule.regex"                = ":attribute 字段值不合法"

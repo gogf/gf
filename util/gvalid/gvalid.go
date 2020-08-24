@@ -56,6 +56,7 @@ import (
 // different            format: different:field                       brief: Value should be different from value of field.
 // in                   format: in:value1,value2,...                  brief: Value should be in: value1,value2,...
 // not-in               format: not-in:value1,value2,...              brief: Value should not be in: value1,value2,...
+// price                format: price:value                           brief: Value should match price such as 10.00 or 10 or 10.1.
 // regex                format: regex:pattern                         brief: Value should match custom regular expression pattern.
 
 // CustomMsg is the custom error message type,

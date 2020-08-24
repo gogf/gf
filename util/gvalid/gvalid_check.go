@@ -38,6 +38,7 @@ var (
 		"required-with-all":    {},
 		"required-without":     {},
 		"required-without-all": {},
+		"price":                {},
 		//"same":                 {},
 		//"different":            {},
 		//"in":                   {},
@@ -86,6 +87,7 @@ var (
 		"different":            {},
 		"in":                   {},
 		"not-in":               {},
+		"price":                {},
 		"regex":                {},
 	}
 	// boolMap defines the boolean values.
@@ -338,6 +340,11 @@ func doCheck(key string, value interface{}, rules string, messages interface{}, 
 		// Postcode number.
 		case "postcode":
 			match = gregex.IsMatchString(`^\d{6}$`, val)
+
+		// Price : integer or decimal (1 or 2 decimal places) such as 10.00 or 10 or 10.1
+		case "price":
+			pattern := `(^[1-9]\d*(\.\d{1,2})?$)|(^[0]{1}(\.\d{1,2})?$)`
+			match = gregex.IsMatchString(pattern, val)
 
 		// China resident id number.
 		//
