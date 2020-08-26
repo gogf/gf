@@ -100,13 +100,17 @@ func (l *Logger) getFilePath(now time.Time) string {
 // print prints <s> to defined writer, logging file or passed <std>.
 func (l *Logger) print(std io.Writer, lead string, values ...interface{}) {
 	// Lazy initialize for rotation feature.
-	// It uses atomic reading operation to enhance the checking performance.
+	// It uses atomic reading operation to enhance the performance checking.
 	// It here uses CAP for performance and concurrent safety.
-	if !l.init.Val() && l.init.Cas(false, true) {
+	p := l
+	if p.parent != nil {
+		p = p.parent
+	}
+	if !p.init.Val() && p.init.Cas(false, true) {
 		// It just initializes once for each logger.
-		if l.config.RotateSize > 0 || l.config.RotateExpire > 0 {
-			gtimer.AddOnce(l.config.RotateCheckInterval, l.rotateChecksTimely)
-			intlog.Printf("logger rotation initialized: every %s", l.config.RotateCheckInterval.String())
+		if p.config.RotateSize > 0 || p.config.RotateExpire > 0 {
+			gtimer.AddOnce(p.config.RotateCheckInterval, p.rotateChecksTimely)
+			intlog.Printf("logger rotation initialized: every %s", p.config.RotateCheckInterval.String())
 		}
 	}
 
