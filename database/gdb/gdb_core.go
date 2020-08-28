@@ -11,6 +11,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/os/glog"
 	"reflect"
 	"strings"
 
@@ -645,6 +646,14 @@ func (c *Core) Update(table string, data interface{}, condition interface{}, arg
 
 // doUpdate does "UPDATE ... " statement for the table.
 // Also see Update.
+type UpdateCounter struct {
+	Field string      `json:"field"`
+	Value interface{} `json:"value"`
+}
+
+func (c *Core) isUpdateCounter(str string) bool {
+	return strings.HasSuffix(str, "UpdateCounter")
+}
 func (c *Core) DoUpdate(link Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) {
 	table = c.DB.QuotePrefixTableName(table)
 	var (
@@ -666,8 +675,18 @@ func (c *Core) DoUpdate(link Link, table string, data interface{}, condition str
 			dataMap = DataToMapDeep(data)
 		)
 		for k, v := range dataMap {
-			fields = append(fields, c.DB.QuoteWord(k)+"=?")
-			params = append(params, v)
+			valVarName := reflect.TypeOf(v).String()
+			if c.isUpdateCounter(valVarName) {
+				valMap := gconv.Map(v)
+				glog.Line().Println(valMap)
+				column := c.DB.QuoteWord(gconv.String(valMap["field"]))
+				value := valMap["value"]
+				fields = append(fields, column+"="+column+"+?")
+				params = append(params, value)
+			} else {
+				fields = append(fields, c.DB.QuoteWord(k)+"=?")
+				params = append(params, v)
+			}
 		}
 		updates = strings.Join(fields, ",")
 	default:
