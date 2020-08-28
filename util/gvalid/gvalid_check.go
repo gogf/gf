@@ -38,12 +38,21 @@ var (
 		"required-with-all":    {},
 		"required-without":     {},
 		"required-without-all": {},
+<<<<<<< HEAD
 		"same":                 {},
 		"different":            {},
 		"in":                   {},
 		"not-in":               {},
 		"price":                {},
 		"regex":                {},
+=======
+		"price":                {},
+		//"same":                 {},
+		//"different":            {},
+		//"in":                   {},
+		//"not-in":               {},
+		//"regex":                {},
+>>>>>>> b79745d0dff8c42148b1c6c855e2f74a3c69d8ef
 	}
 	// allSupportedRules defines all supported rules that is used for quick checks.
 	allSupportedRules = map[string]struct{}{
@@ -339,10 +348,18 @@ func doCheck(key string, value interface{}, rules string, messages interface{}, 
 		// Postcode number.
 		case "postcode":
 			match = gregex.IsMatchString(`^\d{6}$`, val)
+<<<<<<< HEAD
+=======
+
+>>>>>>> b79745d0dff8c42148b1c6c855e2f74a3c69d8ef
 		// Price : integer or decimal (1 or 2 decimal places) such as 10.00 or 10 or 10.1
 		case "price":
 			pattern := `(^[1-9]\d*(\.\d{1,2})?$)|(^[0]{1}(\.\d{1,2})?$)`
 			match = gregex.IsMatchString(pattern, val)
+<<<<<<< HEAD
+=======
+
+>>>>>>> b79745d0dff8c42148b1c6c855e2f74a3c69d8ef
 		// China resident id number.
 		//
 		// xxxxxx yyyy MM dd 375 0  十八位

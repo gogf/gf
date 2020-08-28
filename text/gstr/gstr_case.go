@@ -24,9 +24,8 @@ import (
 )
 
 var (
-	numberSequence    = regexp.MustCompile(`([a-zA-Z])(\d+)([a-zA-Z]?)`)
-	numberReplacement = []byte(`$1 $2 $3`)
-
+	numberSequence      = regexp.MustCompile(`([a-zA-Z])(\d+)([a-zA-Z]?)`)
+	numberReplacement   = []byte(`$1 $2 $3`)
 	firstCamelCaseStart = regexp.MustCompile(`([A-Z]+)([A-Z]?[_a-z\d]+)|$`)
 	firstCamelCaseEnd   = regexp.MustCompile(`([\w\W]*?)([_]?[A-Z]+)$`)
 )

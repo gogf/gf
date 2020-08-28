@@ -32,11 +32,15 @@ import (
 // ScanList(&users, "User")
 // ScanList(&users, "UserDetail", "User", "uid:Uid")
 // ScanList(&users, "UserScores", "User", "uid:Uid")
+//
 // The parameters "User"/"UserDetail"/"UserScores" in the example codes specify the target attribute struct
 // that current result will be bound to.
+//
 // The "uid" in the example codes is the table field name of the result, and the "Uid" is the relational
-// struct attribute name. It automatically calculates the HasOne/HasMany relationship with given <relation>
-// parameter.
+// struct attribute name - not the attribute name of the bound to target. In the example codes, it's attribute
+// name "Uid" of "User" of entity "Entity". It automatically calculates the HasOne/HasMany relationship with
+// given <relation> parameter.
+//
 // See the example or unit testing cases for clear understanding for this function.
 func (r Result) ScanList(listPointer interface{}, attributeName string, relation ...string) (err error) {
 	// Necessary checks for parameters.
