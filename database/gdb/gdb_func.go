@@ -182,7 +182,7 @@ func DataToMapDeep(value interface{}) map[string]interface{} {
 		// The underlying driver supports time.Time/*time.Time types.
 		fieldValue := rvField.Interface()
 		switch fieldValue.(type) {
-		case time.Time, *time.Time:
+		case time.Time, *time.Time, gtime.Time, *gtime.Time:
 			data[name] = fieldValue
 		default:
 			// Use string conversion in default.
