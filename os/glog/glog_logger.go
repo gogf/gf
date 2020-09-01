@@ -230,7 +230,8 @@ func (l *Logger) printToWriter(now time.Time, std io.Writer, buffer *bytes.Buffe
 		}
 	} else {
 		if _, err := l.config.Writer.Write(buffer.Bytes()); err != nil {
-			panic(err)
+			// panic(err)
+			intlog.Error(err)
 		}
 	}
 }
@@ -249,7 +250,9 @@ func (l *Logger) printToFile(now time.Time, buffer *bytes.Buffer) {
 		stat, err := file.Stat()
 		if err != nil {
 			file.Close()
-			panic(err)
+			// panic(err)
+			intlog.Error(err)
+			return
 		}
 		if stat.Size() > l.config.RotateSize {
 			l.rotateFileBySize(now)
@@ -258,7 +261,9 @@ func (l *Logger) printToFile(now time.Time, buffer *bytes.Buffer) {
 	}
 	if _, err := file.Write(buffer.Bytes()); err != nil {
 		file.Close()
-		panic(err)
+		// panic(err)
+		intlog.Error(err)
+		return
 	}
 	file.Close()
 }
@@ -272,7 +277,8 @@ func (l *Logger) getFilePointer(path string) *gfpool.File {
 		gDEFAULT_FILE_EXPIRE,
 	)
 	if err != nil {
-		panic(err)
+		// panic(err)
+		intlog.Error(err)
 	}
 	return file
 }

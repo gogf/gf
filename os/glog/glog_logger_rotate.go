@@ -28,7 +28,8 @@ func (l *Logger) rotateFileBySize(now time.Time) {
 	l.rmu.Lock()
 	defer l.rmu.Unlock()
 	if err := l.doRotateFile(l.getFilePath(now)); err != nil {
-		panic(err)
+		// panic(err)
+		intlog.Error(err)
 	}
 }
 
