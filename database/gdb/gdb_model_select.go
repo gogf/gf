@@ -8,7 +8,9 @@ package gdb
 
 import (
 	"fmt"
+	"github.com/gogf/gf/container/gset"
 	"github.com/gogf/gf/container/gvar"
+	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
 	"reflect"
 )
@@ -53,17 +55,65 @@ func (m *Model) doGetAll(limit1 bool, where ...interface{}) (Result, error) {
 		}
 		conditionWhere += softDeletingCondition
 	}
+
 	// DO NOT quote the m.fields where, in case of fields like:
 	// DISTINCT t.user_id uid
 	return m.doGetAllBySql(
 		fmt.Sprintf(
 			"SELECT %s FROM %s%s",
-			m.fields,
+			m.getFieldsFiltered(),
 			m.tables,
 			conditionWhere+conditionExtra,
 		),
 		conditionArgs...,
 	)
+}
+
+// getFieldsFiltered checks the fields and fieldsEx attributes, filters and returns the fields that will
+// really be committed to underlying database driver.
+func (m *Model) getFieldsFiltered() string {
+	if m.fieldsEx == "" {
+		// No filtering.
+		return m.fields
+	}
+	var (
+		fieldsArray []string
+		fieldsExSet = gset.NewStrSetFrom(gstr.SplitAndTrim(m.fieldsEx, ","))
+	)
+	if m.fields != "*" {
+		// Filter custom fields with fieldEx.
+		fieldsArray = make([]string, 0, 8)
+		for _, v := range gstr.SplitAndTrim(m.fields, ",") {
+			fieldsArray = append(fieldsArray, v[gstr.PosR(v, "-")+1:])
+		}
+	} else {
+		if gstr.Contains(m.tables, " ") {
+			panic("function FieldsEx supports only single table operations")
+		}
+		// Filter table fields with fieldEx.
+		tableFields, err := m.db.TableFields(m.tables)
+		if err != nil {
+			panic(err)
+		}
+		if len(tableFields) == 0 {
+			panic(fmt.Sprintf(`empty table fields for table "%s"`, m.tables))
+		}
+		fieldsArray = make([]string, len(tableFields))
+		for k, v := range tableFields {
+			fieldsArray[v.Index] = k
+		}
+	}
+	newFields := ""
+	for _, k := range fieldsArray {
+		if fieldsExSet.Contains(k) {
+			continue
+		}
+		if len(newFields) > 0 {
+			newFields += ","
+		}
+		newFields += k
+	}
+	return newFields
 }
 
 // Chunk iterates the query result with given size and callback function.
