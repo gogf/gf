@@ -7,10 +7,16 @@
 package gfile
 
 import (
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/text/gstr"
 	"os"
 	"path/filepath"
 	"sort"
+)
+
+const (
+	// Max recursive depth for directory scanning.
+	gMAX_SCAN_DEPTH = 100000
 )
 
 // ScanDir returns all sub-files with absolute paths of given <path>,
@@ -23,7 +29,7 @@ func ScanDir(path string, pattern string, recursive ...bool) ([]string, error) {
 	if len(recursive) > 0 {
 		isRecursive = recursive[0]
 	}
-	list, err := doScanDir(path, pattern, isRecursive, nil)
+	list, err := doScanDir(0, path, pattern, isRecursive, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +53,7 @@ func ScanDir(path string, pattern string, recursive ...bool) ([]string, error) {
 // the <path> and its sub-folders. It ignores the sub-file path if <handler> returns an empty
 // string, or else it appends the sub-file path to result slice.
 func ScanDirFunc(path string, pattern string, recursive bool, handler func(path string) string) ([]string, error) {
-	list, err := doScanDir(path, pattern, recursive, handler)
+	list, err := doScanDir(0, path, pattern, recursive, handler)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +75,7 @@ func ScanDirFile(path string, pattern string, recursive ...bool) ([]string, erro
 	if len(recursive) > 0 {
 		isRecursive = recursive[0]
 	}
-	list, err := doScanDir(path, pattern, isRecursive, func(path string) string {
+	list, err := doScanDir(0, path, pattern, isRecursive, func(path string) string {
 		if IsDir(path) {
 			return ""
 		}
@@ -97,7 +103,10 @@ func ScanDirFile(path string, pattern string, recursive ...bool) ([]string, erro
 // The parameter <handler> specifies the callback function handling each sub-file path of
 // the <path> and its sub-folders. It ignores the sub-file path if <handler> returns an empty
 // string, or else it appends the sub-file path to result slice.
-func doScanDir(path string, pattern string, recursive bool, handler func(path string) string) ([]string, error) {
+func doScanDir(depth int, path string, pattern string, recursive bool, handler func(path string) string) ([]string, error) {
+	if depth >= gMAX_SCAN_DEPTH {
+		return nil, gerror.Newf("directory scanning exceeds max recursive depth: %d", gMAX_SCAN_DEPTH)
+	}
 	list := ([]string)(nil)
 	file, err := os.Open(path)
 	if err != nil {
@@ -115,7 +124,7 @@ func doScanDir(path string, pattern string, recursive bool, handler func(path st
 	for _, name := range names {
 		filePath = path + Separator + name
 		if IsDir(filePath) && recursive {
-			array, _ := doScanDir(filePath, pattern, true, handler)
+			array, _ := doScanDir(depth+1, filePath, pattern, true, handler)
 			if len(array) > 0 {
 				list = append(list, array...)
 			}
