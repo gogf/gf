@@ -7,7 +7,6 @@
 package gfile
 
 import (
-	"fmt"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/text/gstr"
 	"os"
@@ -105,7 +104,6 @@ func ScanDirFile(path string, pattern string, recursive ...bool) ([]string, erro
 // the <path> and its sub-folders. It ignores the sub-file path if <handler> returns an empty
 // string, or else it appends the sub-file path to result slice.
 func doScanDir(depth int, path string, pattern string, recursive bool, handler func(path string) string) ([]string, error) {
-	fmt.Println("doScanDir:", path)
 	if depth >= gMAX_SCAN_DEPTH {
 		return nil, gerror.Newf("directory scanning exceeds max recursive depth: %d", gMAX_SCAN_DEPTH)
 	}
