@@ -78,44 +78,45 @@ func (d *DriverOracle) HandleSqlBeforeCommit(link Link, sql string, args []inter
 // parseSql does some replacement of the sql before commits it to underlying driver,
 // for support of oracle server.
 func (d *DriverOracle) parseSql(sql string) string {
-	patten := `^\s*(?i)(SELECT)|(LIMIT\s*(\d+)\s*,\s*(\d+))`
-	if gregex.IsMatchString(patten, sql) == false {
+	var (
+		patten      = `^\s*(?i)(SELECT)|(LIMIT\s*(\d+)\s*,{0,1}\s*(\d*))`
+		allMatch, _ = gregex.MatchAllString(patten, sql)
+	)
+	if len(allMatch) == 0 {
 		return sql
 	}
-
-	res, err := gregex.MatchAllString(patten, sql)
-	if err != nil {
-		return ""
-	}
-
 	var (
 		index   = 0
-		keyword = strings.ToUpper(strings.TrimSpace(res[index][0]))
+		keyword = strings.ToUpper(strings.TrimSpace(allMatch[index][0]))
 	)
 	index++
 	switch keyword {
 	case "SELECT":
-		if len(res) < 2 || (strings.HasPrefix(res[index][0], "LIMIT") == false &&
-			strings.HasPrefix(res[index][0], "limit") == false) {
+		if len(allMatch) < 2 || strings.HasPrefix(allMatch[index][0], "LIMIT") == false {
 			break
 		}
 		if gregex.IsMatchString("((?i)SELECT)(.+)((?i)LIMIT)", sql) == false {
 			break
 		}
 		queryExpr, _ := gregex.MatchString("((?i)SELECT)(.+)((?i)LIMIT)", sql)
-		if len(queryExpr) != 4 || strings.EqualFold(queryExpr[1], "SELECT") == false ||
+		if len(queryExpr) != 4 ||
+			strings.EqualFold(queryExpr[1], "SELECT") == false ||
 			strings.EqualFold(queryExpr[3], "LIMIT") == false {
 			break
 		}
 		first, limit := 0, 0
-		for i := 1; i < len(res[index]); i++ {
-			if len(strings.TrimSpace(res[index][i])) == 0 {
+		for i := 1; i < len(allMatch[index]); i++ {
+			if len(strings.TrimSpace(allMatch[index][i])) == 0 {
 				continue
 			}
 
-			if strings.HasPrefix(res[index][i], "LIMIT") || strings.HasPrefix(res[index][i], "limit") {
-				first, _ = strconv.Atoi(res[index][i+1])
-				limit, _ = strconv.Atoi(res[index][i+2])
+			if strings.HasPrefix(allMatch[index][i], "LIMIT") {
+				if allMatch[index][i+2] != "" {
+					first, _ = strconv.Atoi(allMatch[index][i+1])
+					limit, _ = strconv.Atoi(allMatch[index][i+2])
+				} else {
+					limit, _ = strconv.Atoi(allMatch[index][i+1])
+				}
 				break
 			}
 		}
