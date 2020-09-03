@@ -2243,6 +2243,19 @@ func Test_Model_DryRun(t *testing.T) {
 	})
 }
 
+func Test_Model_Join_SubQuery(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		subQuery := fmt.Sprintf("select * from `%s`", table)
+		r, err := db.Table(table, "t1").Fields("t2.id").LeftJoin(subQuery, "t2", "t2.id=t1.id").Array()
+		t.Assert(err, nil)
+		t.Assert(len(r), SIZE)
+		t.Assert(r[0], "1")
+		t.Assert(r[SIZE-1], SIZE)
+	})
+}
+
 func Test_Model_Cache(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)

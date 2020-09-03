@@ -303,3 +303,12 @@ func Test_Func_DataToMapDeep(t *testing.T) {
 		t.Assert(m["reset_password_token_at"], new(mysql.NullTime))
 	})
 }
+
+func Test_isSubQuery(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(isSubQuery("user"), false)
+		t.Assert(isSubQuery("user.uid"), false)
+		t.Assert(isSubQuery("u, user.uid"), false)
+		t.Assert(isSubQuery("select 1"), true)
+	})
+}

@@ -86,8 +86,8 @@ func (m *Model) getConditionForSoftDeleting() string {
 		// Base table.
 		match, _ := gregex.MatchString(`(.+?) [A-Z]+ JOIN`, m.tables)
 		conditionArray.Append(m.getConditionOfTableStringForSoftDeleting(match[1]))
-		// Multiple joined tables.
-		matches, _ := gregex.MatchAllString(`JOIN (.+?) ON`, m.tables)
+		// Multiple joined tables, exclude the sub query sql which contains char '(' and ')'.
+		matches, _ := gregex.MatchAllString(`JOIN ([^()]+?) ON`, m.tables)
 		for _, match := range matches {
 			conditionArray.Append(m.getConditionOfTableStringForSoftDeleting(match[1]))
 		}

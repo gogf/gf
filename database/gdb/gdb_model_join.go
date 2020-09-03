@@ -6,7 +6,21 @@
 
 package gdb
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/gogf/gf/text/gstr"
+)
+
+// isSubQuery checks and returns whether given string a sub-query sql string.
+func isSubQuery(s string) bool {
+	s = gstr.TrimLeft(s)
+	if p := gstr.Pos(s, " "); p != -1 {
+		if gstr.Equal(s[:p], "select") {
+			return true
+		}
+	}
+	return false
+}
 
 // LeftJoin does "LEFT JOIN ... ON ..." statement on the model.
 // The parameter <table> can be joined table and its joined condition,
@@ -14,19 +28,32 @@ import "fmt"
 // Table("user").LeftJoin("user_detail", "user_detail.uid=user.uid")
 // Table("user", "u").LeftJoin("user_detail", "ud", "ud.uid=u.uid")
 func (m *Model) LeftJoin(table ...string) *Model {
-	model := m.getModel()
+	var (
+		model   = m.getModel()
+		joinStr = ""
+	)
+	if len(table) > 0 {
+		if isSubQuery(table[0]) {
+			joinStr = "(" + table[0] + ")"
+		} else {
+			joinStr = m.db.QuotePrefixTableName(table[0])
+		}
+	}
 	if len(table) > 2 {
 		model.tables += fmt.Sprintf(
 			" LEFT JOIN %s AS %s ON (%s)",
-			m.db.QuotePrefixTableName(table[0]), m.db.QuoteWord(table[1]), table[2],
+			joinStr, m.db.QuoteWord(table[1]), table[2],
 		)
 	} else if len(table) == 2 {
 		model.tables += fmt.Sprintf(
 			" LEFT JOIN %s ON (%s)",
-			m.db.QuotePrefixTableName(table[0]), table[1],
+			joinStr, table[1],
 		)
-	} else {
-		panic("invalid join table parameter")
+	} else if len(table) == 1 {
+		model.tables += fmt.Sprintf(
+			" LEFT JOIN %s",
+			joinStr,
+		)
 	}
 	return model
 }
@@ -37,19 +64,32 @@ func (m *Model) LeftJoin(table ...string) *Model {
 // Table("user").RightJoin("user_detail", "user_detail.uid=user.uid")
 // Table("user", "u").RightJoin("user_detail", "ud", "ud.uid=u.uid")
 func (m *Model) RightJoin(table ...string) *Model {
-	model := m.getModel()
+	var (
+		model   = m.getModel()
+		joinStr = ""
+	)
+	if len(table) > 0 {
+		if isSubQuery(table[0]) {
+			joinStr = "(" + table[0] + ")"
+		} else {
+			joinStr = m.db.QuotePrefixTableName(table[0])
+		}
+	}
 	if len(table) > 2 {
 		model.tables += fmt.Sprintf(
 			" RIGHT JOIN %s AS %s ON (%s)",
-			m.db.QuotePrefixTableName(table[0]), m.db.QuoteWord(table[1]), table[2],
+			joinStr, m.db.QuoteWord(table[1]), table[2],
 		)
 	} else if len(table) == 2 {
 		model.tables += fmt.Sprintf(
 			" RIGHT JOIN %s ON (%s)",
-			m.db.QuotePrefixTableName(table[0]), table[1],
+			joinStr, table[1],
 		)
-	} else {
-		panic("invalid join table parameter")
+	} else if len(table) == 1 {
+		model.tables += fmt.Sprintf(
+			" RIGHT JOIN %s",
+			joinStr,
+		)
 	}
 	return model
 }
@@ -60,19 +100,32 @@ func (m *Model) RightJoin(table ...string) *Model {
 // Table("user").InnerJoin("user_detail", "user_detail.uid=user.uid")
 // Table("user", "u").InnerJoin("user_detail", "ud", "ud.uid=u.uid")
 func (m *Model) InnerJoin(table ...string) *Model {
-	model := m.getModel()
+	var (
+		model   = m.getModel()
+		joinStr = ""
+	)
+	if len(table) > 0 {
+		if isSubQuery(table[0]) {
+			joinStr = "(" + table[0] + ")"
+		} else {
+			joinStr = m.db.QuotePrefixTableName(table[0])
+		}
+	}
 	if len(table) > 2 {
 		model.tables += fmt.Sprintf(
 			" INNER JOIN %s AS %s ON (%s)",
-			m.db.QuotePrefixTableName(table[0]), m.db.QuoteWord(table[1]), table[2],
+			joinStr, m.db.QuoteWord(table[1]), table[2],
 		)
 	} else if len(table) == 2 {
 		model.tables += fmt.Sprintf(
 			" INNER JOIN %s ON (%s)",
-			m.db.QuotePrefixTableName(table[0]), table[1],
+			joinStr, table[1],
 		)
-	} else {
-		panic("invalid join table parameter")
+	} else if len(table) == 1 {
+		model.tables += fmt.Sprintf(
+			" INNER JOIN %s",
+			joinStr,
+		)
 	}
 	return model
 }
