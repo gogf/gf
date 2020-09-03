@@ -115,6 +115,14 @@ func GetDefaultGroup() string {
 	return configs.group
 }
 
+// IsConfigured checks and returns whether the database configured.
+// It returns true if any configuration exists.
+func IsConfigured() bool {
+	configs.RLock()
+	defer configs.RUnlock()
+	return len(configs.config) > 0
+}
+
 // SetLogger sets the logger for orm.
 func (c *Core) SetLogger(logger *glog.Logger) {
 	c.logger = logger
@@ -186,6 +194,10 @@ func (c *Core) SetDryRun(dryrun bool) {
 
 // GetDryRun returns the DryRun value.
 func (c *Core) GetDryRun() bool {
+	if allDryRun {
+		// Globally set.
+		return true
+	}
 	return c.dryrun.Val()
 }
 

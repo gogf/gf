@@ -165,18 +165,21 @@ func Test_Date(t *testing.T) {
 		val4 := "2010-11-01"
 		val5 := "2010.11.01"
 		val6 := "2010/11/01"
+		val7 := "2010=11=01"
 		err1 := gvalid.Check(val1, rule, nil)
 		err2 := gvalid.Check(val2, rule, nil)
 		err3 := gvalid.Check(val3, rule, nil)
 		err4 := gvalid.Check(val4, rule, nil)
 		err5 := gvalid.Check(val5, rule, nil)
 		err6 := gvalid.Check(val6, rule, nil)
-		t.AssertNE(err1, nil)
-		t.AssertNE(err2, nil)
+		err7 := gvalid.Check(val7, rule, nil)
+		t.Assert(err1, nil)
+		t.Assert(err2, nil)
 		t.Assert(err3, nil)
 		t.Assert(err4, nil)
 		t.Assert(err5, nil)
 		t.Assert(err6, nil)
+		t.AssertNE(err7, nil)
 	})
 }
 

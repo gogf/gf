@@ -17,11 +17,22 @@ type Time struct {
 	TimeWrapper
 }
 
-// New creates and returns a Time object with given time.Time object.
-// The parameter <t> is optional.
-func New(t ...time.Time) *Time {
-	if len(t) > 0 {
-		return NewFromTime(t[0])
+// New creates and returns a Time object with given parameter.
+// The optional parameter can be type of: time.Time, string or integer.
+func New(param ...interface{}) *Time {
+	if len(param) > 0 {
+		switch r := param[0].(type) {
+		case time.Time:
+			return NewFromTime(r)
+		case string:
+			return NewFromStr(r)
+		case []byte:
+			return NewFromStr(string(r))
+		case int:
+			return NewFromTimeStamp(int64(r))
+		case int64:
+			return NewFromTimeStamp(r)
+		}
 	}
 	return &Time{
 		TimeWrapper{time.Time{}},

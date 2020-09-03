@@ -510,6 +510,12 @@ func (m *ListMap) Merge(other *ListMap) {
 	})
 }
 
+// String returns the map as a string.
+func (m *ListMap) String() string {
+	b, _ := m.MarshalJSON()
+	return gconv.UnsafeBytesToStr(b)
+}
+
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (m *ListMap) MarshalJSON() ([]byte, error) {
 	return json.Marshal(gconv.Map(m.Map()))

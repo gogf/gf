@@ -18,7 +18,6 @@ import (
 
 	"github.com/gogf/gf/database/gredis"
 	"github.com/gogf/gf/test/gtest"
-	redis2 "github.com/gomodule/redigo/redis"
 )
 
 var (
@@ -181,28 +180,20 @@ func Test_Error(t *testing.T) {
 		t.Assert(err, nil)
 		t.Assert(v.String(), "v")
 
-		conn := redis.GetConn()
+		conn := redis.Conn()
+		defer conn.Close()
 		_, err = conn.DoVar("SET", "k", "v")
 		t.Assert(err, nil)
 
-		//v, err = conn.ReceiveVar()
-		//t.Assert(err, nil)
-		//t.Assert(v.String(), "v")
+		_, err = conn.DoVar("Subscribe", "gf")
+		t.Assert(err, nil)
 
-		psc := redis2.PubSubConn{Conn: conn}
-		psc.Subscribe("gf")
-		redis.DoVar("PUBLISH", "gf", "gf test")
-		go func() {
-			for {
-				v, _ := conn.ReceiveVar()
-				switch obj := v.Val().(type) {
-				case redis2.Message:
-					t.Assert(string(obj.Data), "gf test")
-				case redis2.Subscription:
+		_, err = redis.DoVar("PUBLISH", "gf", "test")
+		t.Assert(err, nil)
 
-				}
-			}
-		}()
+		v, _ = conn.ReceiveVar()
+		t.Assert(len(v.Strings()), 3)
+		t.Assert(v.Strings()[2], "test")
 
 		time.Sleep(time.Second)
 	})

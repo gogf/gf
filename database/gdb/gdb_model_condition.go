@@ -140,7 +140,7 @@ func (m *Model) Offset(offset int) *Model {
 
 // Page sets the paging number for the model.
 // The parameter <page> is started from 1 for paging.
-// Note that, it differs that the Limit function start from 0 for "LIMIT" statement.
+// Note that, it differs that the Limit function starts from 0 for "LIMIT" statement.
 func (m *Model) Page(page, limit int) *Model {
 	model := m.getModel()
 	if page <= 0 {

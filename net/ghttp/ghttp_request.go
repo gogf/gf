@@ -9,14 +9,15 @@ package ghttp
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"strings"
+	"time"
+
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/os/gres"
 	"github.com/gogf/gf/os/gsession"
 	"github.com/gogf/gf/os/gview"
 	"github.com/gogf/gf/util/guid"
-	"net/http"
-	"strings"
-	"time"
 
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gregex"
@@ -155,6 +156,7 @@ func (r *Request) IsAjaxRequest() bool {
 }
 
 // GetClientIp returns the client ip of this request without port.
+// Note that this ip address might be modified by client header.
 func (r *Request) GetClientIp() string {
 	if len(r.clientIp) == 0 {
 		realIps := r.Header.Get("X-Forwarded-For")
@@ -178,15 +180,19 @@ func (r *Request) GetClientIp() string {
 			r.clientIp = r.Header.Get("X-Real-IP")
 		}
 		if r.clientIp == "" || strings.EqualFold("unknown", realIps) {
-			array, _ := gregex.MatchString(`(.+):(\d+)`, r.RemoteAddr)
-			if len(array) > 1 {
-				r.clientIp = array[1]
-			} else {
-				r.clientIp = r.RemoteAddr
-			}
+			r.clientIp = r.GetRemoteIp()
 		}
 	}
 	return r.clientIp
+}
+
+// GetRemoteIp returns the ip from RemoteAddr.
+func (r *Request) GetRemoteIp() string {
+	array, _ := gregex.MatchString(`(.+):(\d+)`, r.RemoteAddr)
+	if len(array) > 1 {
+		return array[1]
+	}
+	return r.RemoteAddr
 }
 
 // GetUrl returns current URL of this request.
@@ -216,4 +222,14 @@ func (r *Request) GetReferer() string {
 // It returns nil if there's no error.
 func (r *Request) GetError() error {
 	return r.error
+}
+
+// ReloadParam is used for modifying request parameter.
+// Sometimes, we want to modify request parameters through middleware, but directly modifying Request.Body
+// is invalid, so it clears the parsed* marks to make the parameters re-parsed.
+func (r *Request) ReloadParam() {
+	r.parsedBody = false
+	r.parsedForm = false
+	r.parsedQuery = false
+	r.bodyContent = nil
 }

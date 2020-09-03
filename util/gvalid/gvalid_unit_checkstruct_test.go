@@ -7,6 +7,7 @@
 package gvalid_test
 
 import (
+	"github.com/gogf/gf/container/gvar"
 	"testing"
 
 	"github.com/gogf/gf/frame/g"
@@ -248,5 +249,47 @@ func Test_CheckStruct_With_Inherit(t *testing.T) {
 		t.Assert(err.Maps()["name"], g.Map{"required": "请输入您的姓名"})
 		t.Assert(err.Maps()["password1"], g.Map{"same": "您两次输入的密码不一致"})
 		t.Assert(err.Maps()["password2"], g.Map{"same": "您两次输入的密码不一致"})
+	})
+}
+
+func Test_CheckStruct_Optional(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			Page      int    `v:"required|min:1         # page is required"`
+			Size      int    `v:"required|between:1,100 # size is required"`
+			ProjectId string `v:"between:1,10000        # project id must between :min, :max"`
+		}
+		obj := &Params{
+			Page: 1,
+			Size: 10,
+		}
+		err := gvalid.CheckStruct(obj, nil)
+		t.Assert(err, nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			Page      int       `v:"required|min:1         # page is required"`
+			Size      int       `v:"required|between:1,100 # size is required"`
+			ProjectId *gvar.Var `v:"between:1,10000        # project id must between :min, :max"`
+		}
+		obj := &Params{
+			Page: 1,
+			Size: 10,
+		}
+		err := gvalid.CheckStruct(obj, nil)
+		t.Assert(err, nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			Page      int `v:"required|min:1         # page is required"`
+			Size      int `v:"required|between:1,100 # size is required"`
+			ProjectId int `v:"between:1,10000        # project id must between :min, :max"`
+		}
+		obj := &Params{
+			Page: 1,
+			Size: 10,
+		}
+		err := gvalid.CheckStruct(obj, nil)
+		t.Assert(err.String(), "project id must between 1, 10000")
 	})
 }

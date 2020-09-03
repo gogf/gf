@@ -14,6 +14,7 @@
 //   | DelimitedScreamingCase(s, '.')    | ANY.KIND.OF.STRING |
 //   | CamelCase(s)                      | AnyKindOfString    |
 //   | CamelLowerCase(s)                 | anyKindOfString    |
+//   | SnakeFirstUpperCase(RGBCodeMd5)   | rgb_code_md5       |
 
 package gstr
 
@@ -23,8 +24,10 @@ import (
 )
 
 var (
-	numberSequence    = regexp.MustCompile(`([a-zA-Z])(\d+)([a-zA-Z]?)`)
-	numberReplacement = []byte(`$1 $2 $3`)
+	numberSequence      = regexp.MustCompile(`([a-zA-Z])(\d+)([a-zA-Z]?)`)
+	numberReplacement   = []byte(`$1 $2 $3`)
+	firstCamelCaseStart = regexp.MustCompile(`([A-Z]+)([A-Z]?[_a-z\d]+)|$`)
+	firstCamelCaseEnd   = regexp.MustCompile(`([\w\W]*?)([_]?[A-Z]+)$`)
 )
 
 // CamelCase converts a string to CamelCase.
@@ -51,6 +54,35 @@ func SnakeCase(s string) string {
 // SnakeScreamingCase converts a string to SNAKE_CASE_SCREAMING.
 func SnakeScreamingCase(s string) string {
 	return DelimitedScreamingCase(s, '_', true)
+}
+
+// SnakeFirstUpperCase converts a string from RGBCodeMd5 to rgb_code_md5.
+// The length of word should not be too long
+// TODO for efficiency should change regexp to traversing string in future
+func SnakeFirstUpperCase(word string, underscore ...string) string {
+	replace := "_"
+	if len(underscore) > 0 {
+		replace = underscore[0]
+	}
+
+	m := firstCamelCaseEnd.FindAllStringSubmatch(word, 1)
+	if len(m) > 0 {
+		word = m[0][1] + replace + TrimLeft(ToLower(m[0][2]), replace)
+	}
+
+	for {
+		m := firstCamelCaseStart.FindAllStringSubmatch(word, 1)
+		if len(m) > 0 && m[0][1] != "" {
+			w := strings.ToLower(m[0][1])
+			w = string(w[:len(w)-1]) + replace + string(w[len(w)-1])
+
+			word = strings.Replace(word, m[0][1], w, 1)
+		} else {
+			break
+		}
+	}
+
+	return TrimLeft(word, replace)
 }
 
 // KebabCase converts a string to kebab-case

@@ -74,6 +74,10 @@ func (w *wheel) proceed() {
 				}
 				// If rolls on the job.
 				if addable {
+					//If STATUS_RESET , reset to runnable state.
+					if entry.Status() == STATUS_RESET {
+						entry.SetStatus(STATUS_READY)
+					}
 					entry.wheel.timer.doAddEntryByParent(entry.rawIntervalMs, entry)
 				}
 			}

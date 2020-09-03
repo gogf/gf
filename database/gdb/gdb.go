@@ -11,9 +11,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/internal/cmdenv"
+	"time"
+
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/internal/intlog"
-	"time"
 
 	"github.com/gogf/gf/os/glog"
 
@@ -155,7 +157,7 @@ type DB interface {
 	// ===========================================================================
 
 	filterFields(schema, table string, data map[string]interface{}) map[string]interface{}
-	convertValue(fieldValue []byte, fieldType string) interface{}
+	convertValue(fieldValue interface{}, fieldType string) interface{}
 	rowsToResult(rows *sql.Rows) (Result, error)
 }
 
@@ -188,6 +190,7 @@ type Sql struct {
 	Error  error         // Execution result.
 	Start  int64         // Start execution timestamp in milliseconds.
 	End    int64         // End execution timestamp in milliseconds.
+	Group  string        // Group is the group name of the configuration that the sql is executed from.
 }
 
 // TableField is the struct for table field.
@@ -260,7 +263,16 @@ var (
 	// regularFieldNameRegPattern is the regular expression pattern for a string
 	// which is a regular field name of table.
 	regularFieldNameRegPattern = `^[\w\.\-]+$`
+
+	// allDryRun sets dry-run feature for all database connections.
+	// It is commonly used for command options for convenience.
+	allDryRun = false
 )
+
+func init() {
+	// allDryRun is initialized from environment or command options.
+	allDryRun = cmdenv.Get("gf.gdb.dryrun", false).Bool()
+}
 
 // Register registers custom database driver to gdb.
 func Register(name string, driver Driver) error {
@@ -271,10 +283,10 @@ func Register(name string, driver Driver) error {
 // New creates and returns an ORM object with global configurations.
 // The parameter <name> specifies the configuration group name,
 // which is DEFAULT_GROUP_NAME in default.
-func New(name ...string) (db DB, err error) {
-	group := configs.group
-	if len(name) > 0 && name[0] != "" {
-		group = name[0]
+func New(group ...string) (db DB, err error) {
+	groupName := configs.group
+	if len(group) > 0 && group[0] != "" {
+		groupName = group[0]
 	}
 	configs.RLock()
 	defer configs.RUnlock()
@@ -282,10 +294,10 @@ func New(name ...string) (db DB, err error) {
 	if len(configs.config) < 1 {
 		return nil, errors.New("empty database configuration")
 	}
-	if _, ok := configs.config[group]; ok {
-		if node, err := getConfigNodeByGroup(group, true); err == nil {
+	if _, ok := configs.config[groupName]; ok {
+		if node, err := getConfigNodeByGroup(groupName, true); err == nil {
 			c := &Core{
-				group:            group,
+				group:            groupName,
 				debug:            gtype.NewBool(),
 				cache:            gcache.New(),
 				schema:           gtype.NewString(),
@@ -308,7 +320,7 @@ func New(name ...string) (db DB, err error) {
 			return nil, err
 		}
 	} else {
-		return nil, errors.New(fmt.Sprintf(`database configuration node "%s" is not found`, group))
+		return nil, errors.New(fmt.Sprintf(`database configuration node "%s" is not found`, groupName))
 	}
 }
 

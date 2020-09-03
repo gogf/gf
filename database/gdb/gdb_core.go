@@ -11,9 +11,10 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/gogf/gf/internal/utils"
 	"reflect"
 	"strings"
+
+	"github.com/gogf/gf/internal/utils"
 
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/os/gtime"
@@ -59,6 +60,7 @@ func (c *Core) DoQuery(link Link, sql string, args ...interface{}) (rows *sql.Ro
 			Error:  err,
 			Start:  mTime1,
 			End:    mTime2,
+			Group:  c.DB.GetGroup(),
 		}
 		c.writeSqlToLogger(s)
 	} else {
@@ -102,6 +104,7 @@ func (c *Core) DoExec(link Link, sql string, args ...interface{}) (result sql.Re
 			Error:  err,
 			Start:  mTime1,
 			End:    mTime2,
+			Group:  c.DB.GetGroup(),
 		}
 		c.writeSqlToLogger(s)
 	} else {
@@ -331,7 +334,10 @@ func (c *Core) Transaction(f func(tx *TX) error) (err error) {
 //
 // The parameter <batch> specifies the batch operation count when given data is slice.
 func (c *Core) Insert(table string, data interface{}, batch ...int) (sql.Result, error) {
-	return c.DB.DoInsert(nil, table, data, gINSERT_OPTION_DEFAULT, batch...)
+	if len(batch) > 0 {
+		return c.Model(table).Data(data).Batch(batch[0]).Insert()
+	}
+	return c.Model(table).Data(data).Insert()
 }
 
 // InsertIgnore does "INSERT IGNORE INTO ..." statement for the table.
@@ -344,7 +350,10 @@ func (c *Core) Insert(table string, data interface{}, batch ...int) (sql.Result,
 //
 // The parameter <batch> specifies the batch operation count when given data is slice.
 func (c *Core) InsertIgnore(table string, data interface{}, batch ...int) (sql.Result, error) {
-	return c.DB.DoInsert(nil, table, data, gINSERT_OPTION_IGNORE, batch...)
+	if len(batch) > 0 {
+		return c.Model(table).Data(data).Batch(batch[0]).InsertIgnore()
+	}
+	return c.Model(table).Data(data).InsertIgnore()
 }
 
 // Replace does "REPLACE INTO ..." statement for the table.
@@ -360,7 +369,10 @@ func (c *Core) InsertIgnore(table string, data interface{}, batch ...int) (sql.R
 // If given data is type of slice, it then does batch replacing, and the optional parameter
 // <batch> specifies the batch operation count.
 func (c *Core) Replace(table string, data interface{}, batch ...int) (sql.Result, error) {
-	return c.DB.DoInsert(nil, table, data, gINSERT_OPTION_REPLACE, batch...)
+	if len(batch) > 0 {
+		return c.Model(table).Data(data).Batch(batch[0]).Replace()
+	}
+	return c.Model(table).Data(data).Replace()
 }
 
 // Save does "INSERT INTO ... ON DUPLICATE KEY UPDATE..." statement for the table.
@@ -375,11 +387,14 @@ func (c *Core) Replace(table string, data interface{}, batch ...int) (sql.Result
 // If given data is type of slice, it then does batch saving, and the optional parameter
 // <batch> specifies the batch operation count.
 func (c *Core) Save(table string, data interface{}, batch ...int) (sql.Result, error) {
-	return c.DB.DoInsert(nil, table, data, gINSERT_OPTION_SAVE, batch...)
+	if len(batch) > 0 {
+		return c.Model(table).Data(data).Batch(batch[0]).Save()
+	}
+	return c.Model(table).Data(data).Save()
 }
 
 // doInsert inserts or updates data for given table.
-//
+// This function is usually used for custom interface definition, you do not need call it manually.
 // The parameter <data> can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
 // Eg:
 // Data(g.Map{"uid": 10000, "name":"john"})
@@ -462,28 +477,41 @@ func (c *Core) DoInsert(link Link, table string, data interface{}, option int, b
 // BatchInsert batch inserts data.
 // The parameter <list> must be type of slice of map or struct.
 func (c *Core) BatchInsert(table string, list interface{}, batch ...int) (sql.Result, error) {
-	return c.DB.DoBatchInsert(nil, table, list, gINSERT_OPTION_DEFAULT, batch...)
+	if len(batch) > 0 {
+		return c.Model(table).Data(list).Batch(batch[0]).Insert()
+	}
+	return c.Model(table).Data(list).Insert()
 }
 
-// BatchInsert batch inserts data with ignore option.
+// BatchInsertIgnore batch inserts data with ignore option.
 // The parameter <list> must be type of slice of map or struct.
 func (c *Core) BatchInsertIgnore(table string, list interface{}, batch ...int) (sql.Result, error) {
-	return c.DB.DoBatchInsert(nil, table, list, gINSERT_OPTION_IGNORE, batch...)
+	if len(batch) > 0 {
+		return c.Model(table).Data(list).Batch(batch[0]).InsertIgnore()
+	}
+	return c.Model(table).Data(list).InsertIgnore()
 }
 
 // BatchReplace batch replaces data.
 // The parameter <list> must be type of slice of map or struct.
 func (c *Core) BatchReplace(table string, list interface{}, batch ...int) (sql.Result, error) {
-	return c.DB.DoBatchInsert(nil, table, list, gINSERT_OPTION_REPLACE, batch...)
+	if len(batch) > 0 {
+		return c.Model(table).Data(list).Batch(batch[0]).Replace()
+	}
+	return c.Model(table).Data(list).Replace()
 }
 
 // BatchSave batch replaces data.
 // The parameter <list> must be type of slice of map or struct.
 func (c *Core) BatchSave(table string, list interface{}, batch ...int) (sql.Result, error) {
-	return c.DB.DoBatchInsert(nil, table, list, gINSERT_OPTION_SAVE, batch...)
+	if len(batch) > 0 {
+		return c.Model(table).Data(list).Batch(batch[0]).Save()
+	}
+	return c.Model(table).Data(list).Save()
 }
 
 // DoBatchInsert batch inserts/replaces/saves data.
+// This function is usually used for custom interface definition, you do not need call it manually.
 func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option int, batch ...int) (result sql.Result, err error) {
 	table = c.DB.QuotePrefixTableName(table)
 	var (
@@ -492,15 +520,15 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 		params  []interface{}
 		listMap List
 	)
-	switch v := list.(type) {
+	switch value := list.(type) {
 	case Result:
-		listMap = v.List()
+		listMap = value.List()
 	case Record:
-		listMap = List{v.Map()}
+		listMap = List{value.Map()}
 	case List:
-		listMap = v
+		listMap = value
 	case Map:
-		listMap = List{v}
+		listMap = List{value}
 	default:
 		var (
 			rv   = reflect.ValueOf(list)
@@ -517,8 +545,21 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 			for i := 0; i < rv.Len(); i++ {
 				listMap[i] = DataToMapDeep(rv.Index(i).Interface())
 			}
-		case reflect.Map, reflect.Struct:
-			listMap = List{DataToMapDeep(v)}
+		case reflect.Map:
+			listMap = List{DataToMapDeep(value)}
+		case reflect.Struct:
+			if v, ok := value.(apiInterfaces); ok {
+				var (
+					array = v.Interfaces()
+					list  = make(List, len(array))
+				)
+				for i := 0; i < len(array); i++ {
+					list[i] = DataToMapDeep(array[i])
+				}
+				listMap = list
+			} else {
+				listMap = List{DataToMapDeep(value)}
+			}
 		default:
 			return result, errors.New(fmt.Sprint("unsupported list type:", kind))
 		}
@@ -620,15 +661,11 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 // "age IN(?,?)", 18, 50
 // User{ Id : 1, UserName : "john"}
 func (c *Core) Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error) {
-	newWhere, newArgs := formatWhere(c.DB, condition, args, false)
-	if newWhere != "" {
-		newWhere = " WHERE " + newWhere
-	}
-	return c.DB.DoUpdate(nil, table, data, newWhere, newArgs...)
+	return c.Model(table).Data(data).Where(condition, args...).Update()
 }
 
 // doUpdate does "UPDATE ... " statement for the table.
-// Also see Update.
+// This function is usually used for custom interface definition, you do not need call it manually.
 func (c *Core) DoUpdate(link Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) {
 	table = c.DB.QuotePrefixTableName(table)
 	var (
@@ -688,15 +725,11 @@ func (c *Core) DoUpdate(link Link, table string, data interface{}, condition str
 // "age IN(?,?)", 18, 50
 // User{ Id : 1, UserName : "john"}
 func (c *Core) Delete(table string, condition interface{}, args ...interface{}) (result sql.Result, err error) {
-	newWhere, newArgs := formatWhere(c.DB, condition, args, false)
-	if newWhere != "" {
-		newWhere = " WHERE " + newWhere
-	}
-	return c.DB.DoDelete(nil, table, newWhere, newArgs...)
+	return c.Model(table).Where(condition, args...).Delete()
 }
 
 // DoDelete does "DELETE FROM ... " statement for the table.
-// Also see Delete.
+// This function is usually used for custom interface definition, you do not need call it manually.
 func (c *Core) DoDelete(link Link, table string, condition string, args ...interface{}) (result sql.Result, err error) {
 	if link == nil {
 		if link, err = c.DB.Master(); err != nil {
@@ -724,7 +757,7 @@ func (c *Core) rowsToResult(rows *sql.Rows) (Result, error) {
 		columnNames[k] = v.Name()
 	}
 	var (
-		values   = make([]sql.RawBytes, len(columnNames))
+		values   = make([]interface{}, len(columnNames))
 		records  = make(Result, 0)
 		scanArgs = make([]interface{}, len(values))
 	)
@@ -735,19 +768,12 @@ func (c *Core) rowsToResult(rows *sql.Rows) (Result, error) {
 		if err := rows.Scan(scanArgs...); err != nil {
 			return records, err
 		}
-		// Creates a new row object.
 		row := make(Record)
-		// Note that the internal looping variable <value> is type of []byte,
-		// which points to the same memory address. So it should do a copy.
 		for i, value := range values {
 			if value == nil {
 				row[columnNames[i]] = gvar.New(nil)
 			} else {
-				// As sql.RawBytes is type of slice,
-				// it should do a copy of it.
-				v := make([]byte, len(value))
-				copy(v, value)
-				row[columnNames[i]] = gvar.New(c.DB.convertValue(v, columnTypes[i]))
+				row[columnNames[i]] = gvar.New(c.DB.convertValue(value, columnTypes[i]))
 			}
 		}
 		records = append(records, row)
@@ -770,7 +796,7 @@ func (c *Core) MarshalJSON() ([]byte, error) {
 // writeSqlToLogger outputs the sql object to logger.
 // It is enabled when configuration "debug" is true.
 func (c *Core) writeSqlToLogger(v *Sql) {
-	s := fmt.Sprintf("[%3d ms] %s", v.End-v.Start, v.Format)
+	s := fmt.Sprintf("[%3d ms] [%s] %s", v.End-v.Start, v.Group, v.Format)
 	if v.Error != nil {
 		s += "\nError: " + v.Error.Error()
 		c.logger.Error(s)

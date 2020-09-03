@@ -11,7 +11,9 @@ package gtime
 
 import (
 	"errors"
+	"fmt"
 	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/internal/utils"
 	"regexp"
 	"strconv"
 	"strings"
@@ -209,7 +211,7 @@ func parseDateStr(s string) (year, month, day int) {
 		return
 	}
 	// Checking the year in head or tail.
-	if isNumeric(array[1]) {
+	if utils.IsNumeric(array[1]) {
 		year, _ = strconv.Atoi(array[0])
 		month, _ = strconv.Atoi(array[1])
 		day, _ = strconv.Atoi(array[2])
@@ -225,7 +227,7 @@ func parseDateStr(s string) (year, month, day int) {
 	return
 }
 
-// StrToTime converts string to *Time object.
+// StrToTime converts string to *Time object. It also supports timestamp string.
 // The parameter <format> is unnecessary, which specifies the format for converting like "Y-m-d H:i:s".
 // If <format> is given, it acts as same as function StrToTimeFormat.
 // If <format> is not given, it converts string as a "standard" datetime string.
@@ -233,6 +235,10 @@ func parseDateStr(s string) (year, month, day int) {
 func StrToTime(str string, format ...string) (*Time, error) {
 	if len(format) > 0 {
 		return StrToTimeFormat(str, format[0])
+	}
+	if isTimestampStr(str) {
+		timestamp, _ := strconv.ParseInt(str, 10, 64)
+		return NewFromTimeStamp(timestamp), nil
 	}
 	var (
 		year, month, day     int
@@ -288,8 +294,8 @@ func StrToTime(str string, format ...string) (*Time, error) {
 			if h > 24 || m > 59 || s > 59 {
 				return nil, gerror.Newf("invalid zone string: %s", match[6])
 			}
-			// Comparing the given time zone whether equals to current tine zone,
-			// it converts it to UTC if they does not.
+			// Comparing the given time zone whether equals to current time zone,
+			// it converts it to UTC if they does not equal.
 			_, localOffset := time.Now().Zone()
 			// Comparing in seconds.
 			if (h*3600 + m*60 + s) != localOffset {
@@ -324,7 +330,7 @@ func StrToTime(str string, format ...string) (*Time, error) {
 			}
 		}
 	}
-	if year <= 0 || month <= 0 || day <= 0 || hour < 0 || min < 0 || sec < 0 || nsec < 0 {
+	if year <= 0 {
 		return nil, errors.New("invalid time string:" + str)
 	}
 	// It finally converts all time to UTC time zone.
@@ -368,7 +374,8 @@ func StrToTimeLayout(str string, layout string) (*Time, error) {
 	}
 }
 
-// ParseTimeFromContent retrieves time information for content string, it then parses and returns it as *Time object.
+// ParseTimeFromContent retrieves time information for content string, it then parses and returns it
+// as *Time object.
 // It returns the first time information if there're more than one time string in the content.
 // It only retrieves and parses the time information with given <format> if it's passed.
 func ParseTimeFromContent(content string, format ...string) *Time {
@@ -386,6 +393,35 @@ func ParseTimeFromContent(content string, format ...string) *Time {
 	return nil
 }
 
+// ParseDuration parses a duration string.
+// A duration string is a possibly signed sequence of
+// decimal numbers, each with optional fraction and a unit suffix,
+// such as "300ms", "-1.5h", "1d" or "2h45m".
+// Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h", "d".
+//
+// Very note that it supports unit "d" more than function time.ParseDuration.
+func ParseDuration(s string) (time.Duration, error) {
+	if utils.IsNumeric(s) {
+		v, err := strconv.ParseInt(s, 10, 64)
+		if err != nil {
+			return 0, err
+		}
+		return time.Duration(v), nil
+	}
+	match, err := gregex.MatchString(`^([\-\d]+)[dD](.*)$`, s)
+	if err != nil {
+		return 0, err
+	}
+	if len(match) == 3 {
+		v, err := strconv.ParseInt(match[1], 10, 64)
+		if err != nil {
+			return 0, err
+		}
+		return time.ParseDuration(fmt.Sprintf(`%dh%s`, v*24, match[2]))
+	}
+	return time.ParseDuration(s)
+}
+
 // FuncCost calculates the cost time of function <f> in nanoseconds.
 func FuncCost(f func()) int64 {
 	t := TimestampNano()
@@ -393,14 +429,14 @@ func FuncCost(f func()) int64 {
 	return TimestampNano() - t
 }
 
-// isNumeric checks whether given <s> is a number.
-func isNumeric(s string) bool {
+// isTimestampStr checks and returns whether given string a timestamp string.
+func isTimestampStr(s string) bool {
 	length := len(s)
 	if length == 0 {
 		return false
 	}
 	for i := 0; i < len(s); i++ {
-		if s[i] < byte('0') || s[i] > byte('9') {
+		if s[i] < '0' || s[i] > '9' {
 			return false
 		}
 	}

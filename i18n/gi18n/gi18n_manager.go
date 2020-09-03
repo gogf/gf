@@ -124,6 +124,30 @@ func (m *Manager) T(content string, language ...string) string {
 	return m.Translate(content, language...)
 }
 
+// TF is alias of TranslateFormat for convenience.
+func (m *Manager) TF(format string, values ...interface{}) string {
+	return m.TranslateFormat(format, values...)
+}
+
+// TFL is alias of TranslateFormatLang for convenience.
+func (m *Manager) TFL(format string, language string, values ...interface{}) string {
+	return m.TranslateFormatLang(format, language, values...)
+}
+
+// TranslateFormat translates, formats and returns the <format> with configured language
+// and given <values>.
+func (m *Manager) TranslateFormat(format string, values ...interface{}) string {
+	return fmt.Sprintf(m.Translate(format), values...)
+}
+
+// TranslateFormatLang translates, formats and returns the <format> with configured language
+// and given <values>. The parameter <language> specifies custom translation language ignoring
+// configured language. If <language> is given empty string, it uses the default configured
+// language for the translation.
+func (m *Manager) TranslateFormatLang(format string, language string, values ...interface{}) string {
+	return fmt.Sprintf(m.Translate(format, language), values...)
+}
+
 // Translate translates <content> with configured language.
 // The parameter <language> specifies custom translation language ignoring configured language.
 func (m *Manager) Translate(content string, language ...string) string {
@@ -222,10 +246,10 @@ func (m *Manager) init() {
 	} else if m.options.Path != "" {
 		files, _ := gfile.ScanDirFile(m.options.Path, "*.*", true)
 		if len(files) == 0 {
-			intlog.Printf(
-				"no i18n files found in configured directory: %s",
-				m.options.Path,
-			)
+			//intlog.Printf(
+			//	"no i18n files found in configured directory: %s",
+			//	m.options.Path,
+			//)
 			return
 		}
 		var (

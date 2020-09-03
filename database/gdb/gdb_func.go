@@ -55,12 +55,32 @@ const (
 var (
 	// quoteWordReg is the regular expression object for a word check.
 	quoteWordReg = regexp.MustCompile(`^[a-zA-Z0-9\-_]+$`)
+
+	// Priority tags for struct converting for orm field mapping.
+	structTagPriority = append([]string{ORM_TAG_FOR_STRUCT}, gconv.StructTagPriority...)
 )
 
-// ListItemValues is alias for gutil.ListItemValues.
+// ListItemValues retrieves and returns the elements of all item struct/map with key <key>.
+// Note that the parameter <list> should be type of slice which contains elements of map or struct,
+// or else it returns an empty slice.
+//
+// The parameter <list> supports types like:
+// []map[string]interface{}
+// []map[string]sub-map
+// []struct
+// []struct:sub-struct
+// Note that the sub-map/sub-struct makes sense only if the optional parameter <subKey> is given.
 // See gutil.ListItemValues.
 func ListItemValues(list interface{}, key interface{}, subKey ...interface{}) (values []interface{}) {
 	return gutil.ListItemValues(list, key, subKey...)
+}
+
+// ListItemValuesUnique retrieves and returns the unique elements of all struct/map with key <key>.
+// Note that the parameter <list> should be type of slice which contains elements of map or struct,
+// or else it returns an empty slice.
+// See gutil.ListItemValuesUnique.
+func ListItemValuesUnique(list interface{}, key string, subKey ...interface{}) []interface{} {
+	return gutil.ListItemValuesUnique(list, key, subKey...)
 }
 
 // GetInsertOperationByOption returns proper insert option with given parameter <option>.
@@ -78,32 +98,98 @@ func GetInsertOperationByOption(option int) string {
 }
 
 // DataToMapDeep converts struct object to map type recursively.
-func DataToMapDeep(obj interface{}) map[string]interface{} {
-	data := gconv.Map(obj, ORM_TAG_FOR_STRUCT)
-	for key, value := range data {
-		rv := reflect.ValueOf(value)
-		kind := rv.Kind()
-		if kind == reflect.Ptr {
-			rv = rv.Elem()
-			kind = rv.Kind()
+// The parameter <obj> should be type of *map/map/*struct/struct.
+// It supports inherit struct definition for struct.
+func DataToMapDeep(value interface{}) map[string]interface{} {
+	if v, ok := value.(apiMapStrAny); ok {
+		return v.MapStrAny()
+	}
+
+	var (
+		rvValue reflect.Value
+		rvField reflect.Value
+		rvKind  reflect.Kind
+		rtField reflect.StructField
+	)
+	if v, ok := value.(reflect.Value); ok {
+		rvValue = v
+	} else {
+		rvValue = reflect.ValueOf(value)
+	}
+	rvKind = rvValue.Kind()
+	if rvKind == reflect.Ptr {
+		rvValue = rvValue.Elem()
+		rvKind = rvValue.Kind()
+	}
+	// If given <value> is not a struct, it uses gconv.Map for converting.
+	if rvKind != reflect.Struct {
+		return gconv.Map(value, structTagPriority...)
+	}
+	// Struct handling.
+	var (
+		fieldTag reflect.StructTag
+		rvType   = rvValue.Type()
+		name     = ""
+		data     = make(map[string]interface{})
+	)
+	for i := 0; i < rvValue.NumField(); i++ {
+		rtField = rvType.Field(i)
+		rvField = rvValue.Field(i)
+		fieldName := rtField.Name
+		if !utils.IsLetterUpper(fieldName[0]) {
+			continue
 		}
-		switch kind {
-		case reflect.Struct:
-			// The underlying driver supports time.Time/*time.Time types.
-			if _, ok := value.(time.Time); ok {
-				continue
-			}
-			if _, ok := value.(*time.Time); ok {
-				continue
-			}
-			// Use string conversion in default.
-			if s, ok := value.(apiString); ok {
-				data[key] = s.String()
-				continue
-			}
-			delete(data, key)
-			for k, v := range DataToMapDeep(value) {
+		// Struct attribute inherit
+		if rtField.Anonymous {
+			for k, v := range DataToMapDeep(rvField) {
 				data[k] = v
+			}
+			continue
+		}
+		// Other attributes.
+		name = ""
+		fieldTag = rtField.Tag
+		for _, tag := range structTagPriority {
+			if s := fieldTag.Get(tag); s != "" {
+				name = s
+				break
+			}
+		}
+		if name == "" {
+			name = fieldName
+		} else {
+			// The "orm" tag supports json tag feature: -, omitempty
+			// The "orm" tag would be like: "id,priority", so it should use splitting handling.
+			name = gstr.Trim(name)
+			if name == "-" {
+				continue
+			}
+			array := gstr.SplitAndTrim(name, ",")
+			if len(array) > 1 {
+				switch array[1] {
+				case "omitempty":
+					if empty.IsEmpty(rvField.Interface()) {
+						continue
+					} else {
+						name = array[0]
+					}
+				default:
+					name = array[0]
+				}
+			}
+		}
+
+		// The underlying driver supports time.Time/*time.Time types.
+		fieldValue := rvField.Interface()
+		switch fieldValue.(type) {
+		case time.Time, *time.Time, gtime.Time, *gtime.Time:
+			data[name] = fieldValue
+		default:
+			// Use string conversion in default.
+			if s, ok := fieldValue.(apiString); ok {
+				data[name] = s.String()
+			} else {
+				data[name] = fieldValue
 			}
 		}
 	}

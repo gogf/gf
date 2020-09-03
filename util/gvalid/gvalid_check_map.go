@@ -89,8 +89,10 @@ func CheckMap(params interface{}, rules interface{}, messages ...CustomMsg) *Err
 		}
 		if e := doCheck(key, value, rule, customMsgs[key], data); e != nil {
 			_, item := e.FirstItem()
+			// ===========================================================
 			// If value is nil or empty string and has no required* rules,
 			// clear the error message.
+			// ===========================================================
 			if gconv.String(value) == "" {
 				required := false
 				// rule => error
