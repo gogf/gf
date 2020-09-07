@@ -47,3 +47,25 @@ func Test_Load_NewWithTag(t *testing.T) {
 		t.Assert(j.Get("addr-json"), nil)
 	})
 }
+
+func Test_Load_New_CustomStruct(t *testing.T) {
+	type Base struct {
+		Id int
+	}
+	type User struct {
+		Base
+		Name string
+	}
+	user := new(User)
+	user.Id = 1
+	user.Name = "john"
+
+	gtest.C(t, func(t *gtest.T) {
+		j := gjson.New(user)
+		t.AssertNE(j, nil)
+
+		s, err := j.ToJsonString()
+		t.Assert(err, nil)
+		t.Assert(s == `{"Id":1,"Name":"john"}` || s == `{"Name":"john","Id":1}`, true)
+	})
+}

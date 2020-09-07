@@ -55,8 +55,10 @@ func NewWithTag(data interface{}, tags string, safe ...bool) *Json {
 			}
 		}
 	default:
-		rv := reflect.ValueOf(data)
-		kind := rv.Kind()
+		var (
+			rv   = reflect.ValueOf(data)
+			kind = rv.Kind()
+		)
 		if kind == reflect.Ptr {
 			rv = rv.Elem()
 			kind = rv.Kind()
@@ -72,9 +74,7 @@ func NewWithTag(data interface{}, tags string, safe ...bool) *Json {
 			}
 		case reflect.Map, reflect.Struct:
 			i := interface{}(nil)
-			// Note that it uses Map function implementing the converting.
-			// Note that it here should not use MapDeep function if you really know what it means.
-			i = gconv.Map(data, tags)
+			i = gconv.MapDeep(data, tags)
 			j = &Json{
 				p:  &i,
 				c:  byte(gDEFAULT_SPLIT_CHAR),
