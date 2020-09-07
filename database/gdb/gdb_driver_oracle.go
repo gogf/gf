@@ -78,7 +78,7 @@ func (d *DriverOracle) HandleSqlBeforeCommit(link Link, sql string, args []inter
 // parseSql does some replacement of the sql before commits it to underlying driver,
 // for support of oracle server.
 func (d *DriverOracle) parseSql(sql string) string {
-	patten := `^\s*(?i)(SELECT)|(LIMIT\s*(\d+)\s*,\s*(\d+))`
+	patten := `^\s*(?i)(SELECT)|(LIMIT\s*(\d+)\s*(,*)\s*(\d*))`
 	if gregex.IsMatchString(patten, sql) == false {
 		return sql
 	}
@@ -102,30 +102,61 @@ func (d *DriverOracle) parseSql(sql string) string {
 		if gregex.IsMatchString("((?i)SELECT)(.+)((?i)LIMIT)", sql) == false {
 			break
 		}
-		queryExpr, _ := gregex.MatchString("((?i)SELECT)(.+)((?i)LIMIT)", sql)
-		if len(queryExpr) != 4 || strings.EqualFold(queryExpr[1], "SELECT") == false ||
-			strings.EqualFold(queryExpr[3], "LIMIT") == false {
+		//queryExpr, _ := gregex.MatchString(`((?i)SELECT)(\s*.+)((?i)WHERE|.*)(\s*\w+)((?i)ORDER|.*)(\s*\w*)((?i)LIMIT\s*(\d+)\s*(,*)\s*(\d*))(.*)`, sql)
+		queryExpr, _ := gregex.MatchString(`((?i)SELECT)(\s*.*)((?i)LIMIT\s*(\d+)\s*(,*)\s*(\d*))(.*)`, sql)
+		if len(queryExpr) < 7 || strings.EqualFold(queryExpr[1], "SELECT") == false ||
+			strings.HasPrefix(strings.ToUpper(queryExpr[3]), "LIMIT") == false {
 			break
 		}
-		first, limit := 0, 0
-		for i := 1; i < len(res[index]); i++ {
-			if len(strings.TrimSpace(res[index][i])) == 0 {
-				continue
+
+		if gregex.IsMatchString(`^\s*(?i)(LIMIT\s*(\d+)\s*,\s*(\d*))`, res[index][0]) {
+			first, limit := 0, 0
+			for i := 1; i < len(res[index]); i++ {
+				if len(strings.TrimSpace(res[index][i])) == 0 {
+					continue
+				}
+
+				if strings.HasPrefix(res[index][i], "LIMIT") || strings.HasPrefix(res[index][i], "limit") {
+					first, _ = strconv.Atoi(res[index][i+1])
+					limit, _ = strconv.Atoi(res[index][i+3])
+					break
+				}
+			}
+			sql = fmt.Sprintf(
+				"SELECT * FROM "+
+					"(SELECT GFORM.*, ROWNUM ROWNUM_ FROM (%s %s) GFORM WHERE ROWNUM <= %d)"+
+					" WHERE ROWNUM_ >= %d",
+				queryExpr[1], queryExpr[2], limit, first,
+			)
+		} else if gregex.IsMatchString(`^\s*(?i)(LIMIT\s*(\d+)\s*)`, res[index][0]) {
+			limit := 0
+			for i := 1; i < len(res[index]); i++ {
+				if len(strings.TrimSpace(res[index][i])) == 0 {
+					continue
+				}
+
+				if strings.HasPrefix(res[index][i], "LIMIT") || strings.HasPrefix(res[index][i], "limit") {
+					limit, _ = strconv.Atoi(res[index][i+1])
+					break
+				}
 			}
 
-			if strings.HasPrefix(res[index][i], "LIMIT") || strings.HasPrefix(res[index][i], "limit") {
-				first, _ = strconv.Atoi(res[index][i+1])
-				limit, _ = strconv.Atoi(res[index][i+2])
-				break
+			if gregex.IsMatchString("((?i)WHERE)(.+)((?i)ORDER)(.+)((?i)LIMIT)", sql) {
+				ch, _ := gregex.MatchString(`(\s*.*)((?i)WHERE)(\s*.*)((?i)ORDER)(\s*.*)`, queryExpr[2])
+
+				sql = fmt.Sprintf("%s %s AND ROWNUM <= %d %s", queryExpr[1], strings.Join(ch[1:4], ""), limit, strings.Join(ch[4:], ""))
+			} else if gregex.IsMatchString("((?i)WHERE)(.+)((?i)LIMIT)", sql) {
+				sql = fmt.Sprintf("%s AND ROWNUM <= %d", strings.Join(queryExpr[1:3], ""), limit)
+			} else {
+				queryExpr[3] = fmt.Sprintf(" WHERE 1=1 AND ROWNUM <= %d ", limit)
+				queryExpr[4] = ""
+				sql = strings.Join(queryExpr[1:], "")
 			}
+
 		}
-		sql = fmt.Sprintf(
-			"SELECT * FROM "+
-				"(SELECT GFORM.*, ROWNUM ROWNUM_ FROM (%s %s) GFORM WHERE ROWNUM <= %d)"+
-				" WHERE ROWNUM_ >= %d",
-			queryExpr[1], queryExpr[2], limit, first,
-		)
+
 	}
+
 	return sql
 }
 
