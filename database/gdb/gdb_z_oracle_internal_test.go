@@ -39,4 +39,11 @@ func Test_Oracle_parseSql(t *testing.T) {
 		newSql := o.parseSql(sql)
 		t.Assert(newSql, `SELECT * FROM (SELECT GFORM.*, ROWNUM ROWNUM_ FROM (SELECT  * FROM user ) GFORM WHERE ROWNUM <= 1) WHERE ROWNUM_ >= 0`)
 	})
+
+	gtest.C(t, func(t *gtest.T) {
+		o := new(DriverOracle)
+		sql := `SELECT ENAME FROM USER_INFO WHERE ID=2 LIMIT 1`
+		newSql := o.parseSql(sql)
+		t.Assert(newSql, `SELECT * FROM (SELECT GFORM.*, ROWNUM ROWNUM_ FROM (SELECT  ENAME FROM USER_INFO WHERE ID=2 ) GFORM WHERE ROWNUM <= 1) WHERE ROWNUM_ >= 0`)
+	})
 }
