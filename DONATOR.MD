@@ -115,6 +115,10 @@ please note your github/gitee account in your payment bill. All the donations wi
 |[hyuant](https://github.com/hyuant)|alipay|￥66.66| 
 |*庆|alipay|￥9.99| 支持一下，gf越来越好
 |**君|alipay|￥10.00| 加油
+|向回走的闹钟|wechat|￥20.00| 越来越好
+|金毛|wechat|￥100.00| 
+|莫失莫忘|wechat|￥100.00| 
+|**航|alipay|￥20.00| 
 
 
 
