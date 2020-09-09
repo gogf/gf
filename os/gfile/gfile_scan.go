@@ -90,6 +90,38 @@ func ScanDirFile(path string, pattern string, recursive ...bool) ([]string, erro
 	return list, nil
 }
 
+// ScanDirFileFunc returns all sub-files with absolute paths of given <path>,
+// It scans directory recursively if given parameter <recursive> is true.
+//
+// The pattern parameter <pattern> supports multiple file name patterns, using the ','
+// symbol to separate multiple patterns.
+//
+// The parameter <recursive> specifies whether scanning the <path> recursively, which
+// means it scans its sub-files and appends the files path to result array if the sub-file
+// is also a folder. It is false in default.
+//
+// The parameter <handler> specifies the callback function handling each sub-file path of
+// the <path> and its sub-folders. It ignores the sub-file path if <handler> returns an empty
+// string, or else it appends the sub-file path to result slice.
+//
+// Note that the parameter <path> for <handler> is not a directory but a file.
+// It returns only files, exclusive of directories.
+func ScanDirFileFunc(path string, pattern string, recursive bool, handler func(path string) string) ([]string, error) {
+	list, err := doScanDir(0, path, pattern, recursive, func(path string) string {
+		if IsDir(path) {
+			return ""
+		}
+		return handler(path)
+	})
+	if err != nil {
+		return nil, err
+	}
+	if len(list) > 0 {
+		sort.Strings(list)
+	}
+	return list, nil
+}
+
 // doScanDir is an internal method which scans directory and returns the absolute path
 // list of files that are not sorted.
 //

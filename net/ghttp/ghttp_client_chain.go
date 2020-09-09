@@ -149,3 +149,14 @@ func (c *Client) Proxy(proxyURL string) *Client {
 	newClient.SetProxy(proxyURL)
 	return c
 }
+
+// RedirectLimit is a chaining function,
+// which sets the redirect limit the number of jumps for the request.
+func (c *Client) RedirectLimit(redirectLimit int) *Client {
+	newClient := c
+	if c.parent == nil {
+		newClient = c.Clone()
+	}
+	newClient.SetRedirectLimit(redirectLimit)
+	return c
+}
