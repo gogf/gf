@@ -7,6 +7,7 @@
 package gfile_test
 
 import (
+	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/debug/gdebug"
 	"testing"
 
@@ -63,5 +64,32 @@ func Test_ScanDirFile(t *testing.T) {
 		t.AssertNI(teatPath+gfile.Separator+"dir2", files)
 		t.AssertIN(teatPath+gfile.Separator+"dir1"+gfile.Separator+"file1", files)
 		t.AssertIN(teatPath+gfile.Separator+"dir2"+gfile.Separator+"file2", files)
+	})
+}
+
+func Test_ScanDirFileFunc(t *testing.T) {
+	teatPath := gdebug.TestDataPath()
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.New()
+		files, err := gfile.ScanDirFileFunc(teatPath, "*", false, func(path string) string {
+			array.Append(1)
+			return path
+		})
+		t.Assert(err, nil)
+		t.Assert(len(files), 0)
+		t.Assert(array.Len(), 0)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.New()
+		files, err := gfile.ScanDirFileFunc(teatPath, "*", true, func(path string) string {
+			array.Append(1)
+			if gfile.Basename(path) == "file1" {
+				return path
+			}
+			return ""
+		})
+		t.Assert(err, nil)
+		t.Assert(len(files), 1)
+		t.Assert(array.Len(), 3)
 	})
 }
