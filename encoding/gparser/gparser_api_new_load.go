@@ -10,7 +10,7 @@ import (
 	"github.com/gogf/gf/encoding/gjson"
 )
 
-// New creates a Parser object with any variable type of <data>, but <data> should be a map or
+// New creates a Parser object with any variable type of <data>, but <data> should be a map, struct or
 // slice for data access reason, or it will make no sense.
 //
 // The parameter <safe> specifies whether using this Json object in concurrent-safe context, which

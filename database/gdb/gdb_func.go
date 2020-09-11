@@ -182,7 +182,7 @@ func DataToMapDeep(value interface{}) map[string]interface{} {
 		// The underlying driver supports time.Time/*time.Time types.
 		fieldValue := rvField.Interface()
 		switch fieldValue.(type) {
-		case time.Time, *time.Time:
+		case time.Time, *time.Time, gtime.Time, *gtime.Time:
 			data[name] = fieldValue
 		default:
 			// Use string conversion in default.
@@ -317,8 +317,10 @@ func GetPrimaryKeyCondition(primary string, where ...interface{}) (newWhereCondi
 		return where
 	}
 	if len(where) == 1 {
-		rv := reflect.ValueOf(where[0])
-		kind := rv.Kind()
+		var (
+			rv   = reflect.ValueOf(where[0])
+			kind = rv.Kind()
+		)
 		if kind == reflect.Ptr {
 			rv = rv.Elem()
 			kind = rv.Kind()

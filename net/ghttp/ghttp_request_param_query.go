@@ -193,7 +193,11 @@ func (r *Request) GetQueryMapStrVar(kvMap ...map[string]interface{}) map[string]
 // attribute mapping.
 func (r *Request) GetQueryStruct(pointer interface{}, mapping ...map[string]string) error {
 	r.parseQuery()
-	return gconv.StructDeep(r.GetQueryMap(), pointer, mapping...)
+	m := r.GetQueryMap()
+	if m == nil {
+		m = map[string]interface{}{}
+	}
+	return gconv.StructDeep(m, pointer, mapping...)
 }
 
 // GetQueryToStruct is alias of GetQueryStruct. See GetQueryStruct.

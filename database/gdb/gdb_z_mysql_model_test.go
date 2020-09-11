@@ -52,20 +52,20 @@ func Test_Model_Insert(t *testing.T) {
 		t.Assert(n, 1)
 
 		type User struct {
-			Id         int    `gconv:"id"`
-			Uid        int    `gconv:"uid"`
-			Passport   string `json:"passport"`
-			Password   string `gconv:"password"`
-			Nickname   string `gconv:"nickname"`
-			CreateTime string `json:"create_time"`
+			Id         int         `gconv:"id"`
+			Uid        int         `gconv:"uid"`
+			Passport   string      `json:"passport"`
+			Password   string      `gconv:"password"`
+			Nickname   string      `gconv:"nickname"`
+			CreateTime *gtime.Time `json:"create_time"`
 		}
+		// Model inserting.
 		result, err = db.Table(table).Filter().Data(User{
-			Id:         3,
-			Uid:        3,
-			Passport:   "t3",
-			Password:   "25d55ad283aa400af464c76d713c07ad",
-			Nickname:   "name_3",
-			CreateTime: gtime.Now().String(),
+			Id:       3,
+			Uid:      3,
+			Passport: "t3",
+			Password: "25d55ad283aa400af464c76d713c07ad",
+			Nickname: "name_3",
 		}).Insert()
 		t.Assert(err, nil)
 		n, _ = result.RowsAffected()
@@ -80,7 +80,7 @@ func Test_Model_Insert(t *testing.T) {
 			Passport:   "t4",
 			Password:   "25d55ad283aa400af464c76d713c07ad",
 			Nickname:   "T4",
-			CreateTime: gtime.Now().String(),
+			CreateTime: gtime.Now(),
 		}).Insert()
 		t.Assert(err, nil)
 		n, _ = result.RowsAffected()
@@ -2240,6 +2240,19 @@ func Test_Model_DryRun(t *testing.T) {
 		n, err := r.RowsAffected()
 		t.Assert(err, nil)
 		t.Assert(n, 0)
+	})
+}
+
+func Test_Model_Join_SubQuery(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		subQuery := fmt.Sprintf("select * from `%s`", table)
+		r, err := db.Table(table, "t1").Fields("t2.id").LeftJoin(subQuery, "t2", "t2.id=t1.id").Array()
+		t.Assert(err, nil)
+		t.Assert(len(r), SIZE)
+		t.Assert(r[0], "1")
+		t.Assert(r[SIZE-1], SIZE)
 	})
 }
 

@@ -8,6 +8,7 @@ package gdb
 
 import (
 	"strings"
+	"time"
 
 	"github.com/gogf/gf/text/gstr"
 
@@ -88,12 +89,18 @@ func (c *Core) convertValue(fieldValue interface{}, fieldType string) interface{
 		return gconv.Bool(fieldValue)
 
 	case "date":
+		if t, ok := fieldValue.(time.Time); ok {
+			return gtime.NewFromTime(t).Format("Y-m-d")
+		}
 		t, _ := gtime.StrToTime(gconv.String(fieldValue))
 		return t.Format("Y-m-d")
 
 	case
 		"datetime",
 		"timestamp":
+		if t, ok := fieldValue.(time.Time); ok {
+			return gtime.NewFromTime(t)
+		}
 		t, _ := gtime.StrToTime(gconv.String(fieldValue))
 		return t.String()
 

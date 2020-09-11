@@ -267,7 +267,11 @@ func (r *Request) GetRequestMapStrVar(kvMap ...map[string]interface{}) map[strin
 // the parameter <pointer> is a pointer to the struct object.
 // The optional parameter <mapping> is used to specify the key to attribute mapping.
 func (r *Request) GetRequestStruct(pointer interface{}, mapping ...map[string]string) error {
-	return gconv.StructDeep(r.GetRequestMap(), pointer, mapping...)
+	m := r.GetRequestMap()
+	if m == nil {
+		m = map[string]interface{}{}
+	}
+	return gconv.StructDeep(m, pointer, mapping...)
 }
 
 // GetRequestToStruct is alias of GetRequestStruct. See GetRequestStruct.
