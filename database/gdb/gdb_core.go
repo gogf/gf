@@ -422,7 +422,13 @@ func (c *Core) DoInsert(link Link, table string, data interface{}, option int, b
 	switch reflectKind {
 	case reflect.Slice, reflect.Array:
 		return c.DB.DoBatchInsert(link, table, data, option, batch...)
-	case reflect.Map, reflect.Struct:
+	case reflect.Struct:
+		if _, ok := data.(apiInterfaces); ok {
+			return c.DB.DoBatchInsert(link, table, data, option, batch...)
+		} else {
+			dataMap = DataToMapDeep(data)
+		}
+	case reflect.Map:
 		dataMap = DataToMapDeep(data)
 	default:
 		return result, errors.New(fmt.Sprint("unsupported data type:", reflectKind))

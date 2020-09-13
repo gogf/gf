@@ -104,7 +104,6 @@ func DataToMapDeep(value interface{}) map[string]interface{} {
 	if v, ok := value.(apiMapStrAny); ok {
 		return v.MapStrAny()
 	}
-
 	var (
 		rvValue reflect.Value
 		rvField reflect.Value
