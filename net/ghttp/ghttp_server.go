@@ -267,11 +267,6 @@ func (s *Server) Start() error {
 		return errors.New("[ghttp] server is already running")
 	}
 
-	// If there's no route registered  and no static service enabled,
-	// it then returns an error of invalid usage of server.
-	if len(s.routesMap) == 0 && !s.config.FileServerEnabled {
-		return errors.New(`[ghttp] there's no route set or static feature enabled, did you forget import the router?`)
-	}
 	// Logging path setting check.
 	if s.config.LogPath != "" {
 		if err := s.config.Logger.SetPath(s.config.LogPath); err != nil {
@@ -315,6 +310,12 @@ func (s *Server) Start() error {
 	}
 	// Check the group routes again.
 	s.handlePreBindItems()
+
+	// If there's no route registered  and no static service enabled,
+	// it then returns an error of invalid usage of server.
+	if len(s.routesMap) == 0 && !s.config.FileServerEnabled {
+		return errors.New(`[ghttp] there's no route set or static feature enabled, did you forget import the router?`)
+	}
 
 	// Start the HTTP server.
 	reloaded := false
