@@ -223,7 +223,7 @@ func (d *DriverMssql) TableFields(table string, schema ...string) (fields map[st
 	isnull(e.text,'') as [Default],
 	isnull(g.[value],'') AS [Comment]
 	FROM syscolumns a
-	left join systypes b on a.xtype=b.xusertype
+	left join systypes b on a.xtype=b.xtype and a.xusertype=b.xusertype
 	inner join sysobjects d on a.id=d.id and d.xtype='U' and d.name<>'dtproperties'
 	left join syscomments e on a.cdefault=e.id
 	left join sys.extended_properties g on a.id=g.major_id and a.colid=g.minor_id
