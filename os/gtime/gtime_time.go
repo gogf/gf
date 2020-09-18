@@ -17,13 +17,21 @@ type Time struct {
 	TimeWrapper
 }
 
+// apiUnixNano is an interface definition commonly for custom time.Time wrapper.
+type apiUnixNano interface {
+	UnixNano() int64
+}
+
 // New creates and returns a Time object with given parameter.
-// The optional parameter can be type of: time.Time, string or integer.
+// The optional parameter can be type of: time.Time/*time.Time, string or integer.
 func New(param ...interface{}) *Time {
 	if len(param) > 0 {
 		switch r := param[0].(type) {
 		case time.Time:
+			r.Nanosecond()
 			return NewFromTime(r)
+		case *time.Time:
+			return NewFromTime(*r)
 		case string:
 			return NewFromStr(r)
 		case []byte:
@@ -32,6 +40,10 @@ func New(param ...interface{}) *Time {
 			return NewFromTimeStamp(int64(r))
 		case int64:
 			return NewFromTimeStamp(r)
+		default:
+			if v, ok := r.(apiUnixNano); ok {
+				return NewFromTimeStamp(v.UnixNano())
+			}
 		}
 	}
 	return &Time{
@@ -84,6 +96,7 @@ func NewFromStrLayout(str string, layout string) *Time {
 
 // NewFromTimeStamp creates and returns a Time object with given timestamp,
 // which can be in seconds to nanoseconds.
+// Eg: 1600443866 and 1600443866199266000 are both considered as valid timestamp number.
 func NewFromTimeStamp(timestamp int64) *Time {
 	if timestamp == 0 {
 		return &Time{}
