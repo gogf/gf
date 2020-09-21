@@ -334,7 +334,10 @@ func (c *Config) getJson(file ...string) *gjson.Json {
 			content  = ""
 			filePath = ""
 		)
+		// The configured content can be any kind of data type different from its file type.
+		isFromConfigContent := true
 		if content = GetContent(name); content == "" {
+			isFromConfigContent = false
 			filePath = c.filePath(name)
 			if filePath == "" {
 				return nil
@@ -346,7 +349,17 @@ func (c *Config) getJson(file ...string) *gjson.Json {
 			}
 		}
 		// Note that the underlying configuration json object operations are concurrent safe.
-		if j, err := gjson.LoadContent(content, true); err == nil {
+		var (
+			j   *gjson.Json
+			err error
+		)
+		dataType := gfile.ExtName(name)
+		if gjson.IsValidDataType(dataType) && !isFromConfigContent {
+			j, err = gjson.LoadContentType(dataType, content, true)
+		} else {
+			j, err = gjson.LoadContent(content, true)
+		}
+		if err == nil {
 			j.SetViolenceCheck(c.vc)
 			// Add monitor for this configuration file,
 			// any changes of this file will refresh its cache in Config object.
