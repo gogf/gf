@@ -7,8 +7,11 @@
 package gvalid_test
 
 import (
+	"errors"
 	"fmt"
 	"github.com/gogf/gf/container/gvar"
+	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/gvalid"
 )
 
@@ -105,4 +108,36 @@ func ExampleCheckStruct3() {
 	fmt.Println(err)
 	// Output:
 	// project id must between 1, 10000
+}
+
+func ExampleRegisterRule() {
+	rule := "unique-name"
+	gvalid.RegisterRule(rule, func(value interface{}, message string, params map[string]interface{}) error {
+		var (
+			id   = gconv.Int(params["Id"])
+			name = gconv.String(value)
+		)
+		n, err := g.Table("user").Where("id != ? and name = ?", id, name).Count()
+		if err != nil {
+			return err
+		}
+		if n > 0 {
+			return errors.New(message)
+		}
+		return nil
+	})
+	type User struct {
+		Id   int
+		Name string `v:"required|unique-name # 请输入用户名称|用户名称已被占用"`
+		Pass string `v:"required|length:6,18"`
+	}
+	user := &User{
+		Id:   1,
+		Name: "john",
+		Pass: "123456",
+	}
+	err := gvalid.CheckStruct(user, nil)
+	fmt.Println(err.Error())
+	// Output:
+	// 用户名称已被占用
 }

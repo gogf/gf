@@ -13,7 +13,8 @@ import (
 // RuleFunc is the custom function for data validation.
 // The parameter <value> specifies the value for this rule to validate.
 // The parameter <message> specifies the custom error message or configured i18n message for this rule.
-// The parameter <params> specifies all the parameters that needs .
+// The parameter <params> specifies all the parameters that needs. You can ignore parameter <params> if
+// you do not really need it in your custom validation rule.
 type RuleFunc func(value interface{}, message string, params map[string]interface{}) error
 
 var (

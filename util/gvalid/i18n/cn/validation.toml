@@ -41,3 +41,4 @@
 "gf.gvalid.rule.in"                   = ":attribute 字段值不合法"
 "gf.gvalid.rule.not-in"               = ":attribute 字段值不合法"
 "gf.gvalid.rule.regex"                = ":attribute 字段值不合法"
+"gf.gvalid.rule.__default__"          = ":attribute 字段值不合法"

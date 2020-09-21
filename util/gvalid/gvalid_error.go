@@ -49,17 +49,26 @@ func newErrorStr(key, err string) *Error {
 
 // Map returns the first error message as map.
 func (e *Error) Map() map[string]string {
+	if e == nil {
+		return map[string]string{}
+	}
 	_, m := e.FirstItem()
 	return m
 }
 
 // Maps returns all error messages as map.
 func (e *Error) Maps() ErrorMap {
+	if e == nil {
+		return nil
+	}
 	return e.errors
 }
 
 // FirstItem returns the field name and error messages for the first validation rule error.
 func (e *Error) FirstItem() (key string, messages map[string]string) {
+	if e == nil {
+		return "", map[string]string{}
+	}
 	if e.firstItem != nil {
 		return e.firstKey, e.firstItem
 	}
@@ -85,6 +94,9 @@ func (e *Error) FirstItem() (key string, messages map[string]string) {
 
 // FirstRule returns the first error rule and message string.
 func (e *Error) FirstRule() (rule string, err string) {
+	if e == nil {
+		return "", ""
+	}
 	// By sequence.
 	if len(e.rules) > 0 {
 		for _, v := range e.rules {
@@ -112,22 +124,34 @@ func (e *Error) FirstRule() (rule string, err string) {
 // FirstString returns the first error message as string.
 // Note that the returned message might be different if it has no sequence.
 func (e *Error) FirstString() (err string) {
+	if e == nil {
+		return ""
+	}
 	_, err = e.FirstRule()
 	return
 }
 
 // String returns all error messages as string, multiple error messages joined using char ';'.
 func (e *Error) String() string {
+	if e == nil {
+		return ""
+	}
 	return strings.Join(e.Strings(), "; ")
 }
 
 // Error implements interface of error.Error.
 func (e *Error) Error() string {
+	if e == nil {
+		return ""
+	}
 	return e.String()
 }
 
 // Strings returns all error messages as string array.
 func (e *Error) Strings() (errs []string) {
+	if e == nil {
+		return []string{}
+	}
 	errs = make([]string, 0)
 	// By sequence.
 	if len(e.rules) > 0 {

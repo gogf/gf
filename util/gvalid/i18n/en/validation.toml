@@ -41,3 +41,4 @@
 "gf.gvalid.rule.in"                   = "The :attribute value is not in acceptable range"
 "gf.gvalid.rule.not-in"               = "The :attribute value is not in acceptable range"
 "gf.gvalid.rule.regex"                = "The :attribute value is invalid"
+"gf.gvalid.rule.__default__"          = "The :attribute value is invalid"
