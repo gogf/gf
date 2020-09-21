@@ -16,7 +16,7 @@ import (
 	"github.com/gogf/gf/util/gvalid"
 )
 
-func Test_CustomRule(t *testing.T) {
+func Test_CustomRule1(t *testing.T) {
 	rule := "custom"
 	err := gvalid.RegisterRule(rule, func(value interface{}, message string, params map[string]interface{}) error {
 		pass := gconv.String(value)
@@ -56,6 +56,50 @@ func Test_CustomRule(t *testing.T) {
 		}
 		st := &T{
 			Value: "123456",
+			Data:  "123456",
+		}
+		err := gvalid.CheckStruct(st, nil)
+		t.Assert(err, nil)
+	})
+}
+
+func Test_CustomRule2(t *testing.T) {
+	rule := "required-map"
+	err := gvalid.RegisterRule(rule, func(value interface{}, message string, params map[string]interface{}) error {
+		m := gconv.Map(value)
+		if len(m) == 0 {
+			return errors.New(message)
+		}
+		return nil
+	})
+	gtest.Assert(err, nil)
+	// Check.
+	gtest.C(t, func(t *gtest.T) {
+		errStr := "data map should not be empty"
+		t.Assert(gvalid.Check(g.Map{}, rule, errStr).String(), errStr)
+		t.Assert(gvalid.Check(g.Map{"k": "v"}, rule, errStr).String(), nil)
+	})
+	// Error with struct validation.
+	gtest.C(t, func(t *gtest.T) {
+		type T struct {
+			Value map[string]string `v:"uid@required-map#自定义错误"`
+			Data  string            `p:"data"`
+		}
+		st := &T{
+			Value: map[string]string{},
+			Data:  "123456",
+		}
+		err := gvalid.CheckStruct(st, nil)
+		t.Assert(err.String(), "自定义错误")
+	})
+	// No error with struct validation.
+	gtest.C(t, func(t *gtest.T) {
+		type T struct {
+			Value map[string]string `v:"uid@required-map#自定义错误"`
+			Data  string            `p:"data"`
+		}
+		st := &T{
+			Value: map[string]string{"k": "v"},
 			Data:  "123456",
 		}
 		err := gvalid.CheckStruct(st, nil)

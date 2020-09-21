@@ -124,9 +124,9 @@ func doCheck(key string, value interface{}, rules string, messages interface{}, 
 	// It converts value to string and then does the validation.
 	var (
 		// Do not trim it as the space is also part of the value.
-		val       = gconv.String(value)
-		data      = make(map[string]string)
-		errorMsgs = make(map[string]string)
+		val           = gconv.String(value)
+		data          = make(map[string]string)
+		errorMsgArray = make(map[string]string)
 	)
 	if len(params) > 0 {
 		for k, v := range gconv.Map(params[0]) {
@@ -198,7 +198,7 @@ func doCheck(key string, value interface{}, rules string, messages interface{}, 
 			"min-length",
 			"max-length":
 			if msg := checkLength(val, ruleKey, ruleVal, customMsgMap); msg != "" {
-				errorMsgs[ruleKey] = msg
+				errorMsgArray[ruleKey] = msg
 			} else {
 				match = true
 			}
@@ -209,7 +209,7 @@ func doCheck(key string, value interface{}, rules string, messages interface{}, 
 			"max",
 			"between":
 			if msg := checkRange(val, ruleKey, ruleVal, customMsgMap); msg != "" {
-				errorMsgs[ruleKey] = msg
+				errorMsgArray[ruleKey] = msg
 			} else {
 				match = true
 			}
@@ -246,7 +246,7 @@ func doCheck(key string, value interface{}, rules string, messages interface{}, 
 				var msg string
 				msg = getErrorMessageByRule(ruleKey, customMsgMap)
 				msg = strings.Replace(msg, ":format", ruleVal, -1)
-				errorMsgs[ruleKey] = msg
+				errorMsgArray[ruleKey] = msg
 			}
 
 		// Values of two fields should be equal as string.
@@ -260,7 +260,7 @@ func doCheck(key string, value interface{}, rules string, messages interface{}, 
 				var msg string
 				msg = getErrorMessageByRule(ruleKey, customMsgMap)
 				msg = strings.Replace(msg, ":field", ruleVal, -1)
-				errorMsgs[ruleKey] = msg
+				errorMsgArray[ruleKey] = msg
 			}
 
 		// Values of two fields should not be equal as string.
@@ -275,7 +275,7 @@ func doCheck(key string, value interface{}, rules string, messages interface{}, 
 				var msg string
 				msg = getErrorMessageByRule(ruleKey, customMsgMap)
 				msg = strings.Replace(msg, ":field", ruleVal, -1)
-				errorMsgs[ruleKey] = msg
+				errorMsgArray[ruleKey] = msg
 			}
 
 		// Field value should be in range of.
@@ -451,6 +451,7 @@ func doCheck(key string, value interface{}, rules string, messages interface{}, 
 			match = gregex.IsMatchString(`^([0-9A-Fa-f]{2}[\-:]){5}[0-9A-Fa-f]{2}$`, val)
 
 		default:
+			// Custom validation rules.
 			if f, ok := customRuleFuncMap[ruleKey]; ok {
 				var (
 					dataMap map[string]interface{}
@@ -461,12 +462,12 @@ func doCheck(key string, value interface{}, rules string, messages interface{}, 
 				}
 				if err := f(value, message, dataMap); err != nil {
 					match = false
-					errorMsgs[ruleKey] = err.Error()
+					errorMsgArray[ruleKey] = err.Error()
 				} else {
 					match = true
 				}
 			} else {
-				errorMsgs[ruleKey] = "Invalid rule name: " + ruleKey
+				errorMsgArray[ruleKey] = "Invalid rule name: " + ruleKey
 			}
 		}
 
@@ -474,15 +475,15 @@ func doCheck(key string, value interface{}, rules string, messages interface{}, 
 		if !match {
 			// It does nothing if the error message for this rule
 			// is already set in previous validation.
-			if _, ok := errorMsgs[ruleKey]; !ok {
-				errorMsgs[ruleKey] = getErrorMessageByRule(ruleKey, customMsgMap)
+			if _, ok := errorMsgArray[ruleKey]; !ok {
+				errorMsgArray[ruleKey] = getErrorMessageByRule(ruleKey, customMsgMap)
 			}
 		}
 		index++
 	}
-	if len(errorMsgs) > 0 {
+	if len(errorMsgArray) > 0 {
 		return newError([]string{rules}, ErrorMap{
-			key: errorMsgs,
+			key: errorMsgArray,
 		})
 	}
 	return nil
