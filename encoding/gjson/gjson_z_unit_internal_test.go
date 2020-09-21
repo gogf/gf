@@ -112,4 +112,22 @@ app_conf = ./config/app.ini
 `)
 		t.Assert(checkDataType(data), "ini")
 	})
+
+	gtest.C(t, func(t *gtest.T) {
+		data := []byte(`
+# API Server
+[server]
+    address = ":8199"
+
+# Jenkins
+[jenkins]
+    url          = "https://jenkins-swimlane.com"
+    nodeJsStaticBuildCmdTpl = """
+npm i --registry=https://registry.npm.taobao.org
+wget http://consul.infra:8500/v1/kv/app_{{.SwimlaneName}}/{{.RepoName}}/.env.qa?raw=true -O ./env.qa
+npm run build:qa
+"""
+`)
+		t.Assert(checkDataType(data), "toml")
+	})
 }
