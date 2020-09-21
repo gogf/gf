@@ -207,7 +207,7 @@ func LoadContentType(dataType string, data interface{}, safe ...bool) (*Json, er
 	return doLoadContent(dataType, content, safe...)
 }
 
-// IsValidDataType checks and returns whether given <dataType> an valid data type for loading.
+// IsValidDataType checks and returns whether given <dataType> a valid data type for loading.
 func IsValidDataType(dataType string) bool {
 	if dataType == "" {
 		return false
