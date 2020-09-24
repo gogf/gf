@@ -6,7 +6,17 @@
 
 package g
 
-import "github.com/gogf/gf/net/ghttp"
+import (
+	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/net/ghttp"
+)
+
+// SetEnabled enables/disables the GoFrame internal logging manually.
+// Note that this function is not concurrent safe, be aware of the DATA RACE,
+// which means you should call this function in your boot but not the runtime.
+func SetDebug(enabled bool) {
+	intlog.SetEnabled(enabled)
+}
 
 // SetServerGraceful enables/disables graceful reload feature of http Web Server.
 // This feature is disabled in default.
