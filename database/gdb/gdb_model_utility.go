@@ -8,12 +8,15 @@ package gdb
 
 import (
 	"fmt"
+	"reflect"
+	"time"
+
 	"github.com/gogf/gf/container/gset"
+	"github.com/gogf/gf/encoding/gparser"
 	"github.com/gogf/gf/internal/empty"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
-	"time"
 )
 
 // getModel creates and returns a cloned model of current model if <safe> is true, or else it returns
@@ -103,6 +106,23 @@ func (m *Model) doFilterDataMapForInsertOrUpdate(data Map, allowOmitEmpty bool) 
 			delete(data, v)
 		}
 	}
+	//convert to json string
+	for k, v := range data {
+		var t interface{}
+		if reflect.TypeOf(v).Kind() == reflect.Ptr {
+			t = reflect.ValueOf(v)
+		} else {
+			t = v
+		}
+		if reflect.TypeOf(t).Kind() == reflect.Struct || reflect.TypeOf(t).Kind() == reflect.Map || reflect.TypeOf(t).Kind() == reflect.Slice {
+			var err error
+			if t, err = gparser.VarToJsonString(t); err != nil {
+				println("%s convert json failed", t)
+			}
+			data[k] = t
+		}
+	}
+
 	return data
 }
 
