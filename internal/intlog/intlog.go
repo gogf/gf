@@ -35,7 +35,10 @@ func init() {
 // SetEnabled enables/disables the internal logging manually.
 // Note that this function is not concurrent safe, be aware of the DATA RACE.
 func SetEnabled(enabled bool) {
-	isGFDebug = enabled
+	// If they're the same, it does not write the <isGFDebug> but only reading operation.
+	if isGFDebug != enabled {
+		isGFDebug = enabled
+	}
 }
 
 // IsEnabled checks and returns whether current process is in GF development.
