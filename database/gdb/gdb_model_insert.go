@@ -56,8 +56,10 @@ func (m *Model) Data(data ...interface{}) *Model {
 		case Map:
 			model.data = params
 		default:
-			rv := reflect.ValueOf(params)
-			kind := rv.Kind()
+			var (
+				rv   = reflect.ValueOf(params)
+				kind = rv.Kind()
+			)
 			if kind == reflect.Ptr {
 				rv = rv.Elem()
 				kind = rv.Kind()
