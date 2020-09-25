@@ -17,7 +17,152 @@ import (
 	"github.com/gogf/gf/test/gtest"
 )
 
-func Test_Table_Relation(t *testing.T) {
+func Test_Table_Relation_One(t *testing.T) {
+	var (
+		tableUser       = "user_" + gtime.TimestampMicroStr()
+		tableUserDetail = "user_detail_" + gtime.TimestampMicroStr()
+		tableUserScores = "user_scores_" + gtime.TimestampMicroStr()
+	)
+	if _, err := db.Exec(fmt.Sprintf(`
+CREATE TABLE %s (
+  uid int(10) unsigned NOT NULL AUTO_INCREMENT,
+  name varchar(45) NOT NULL,
+  PRIMARY KEY (uid)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    `, tableUser)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(tableUser)
+
+	if _, err := db.Exec(fmt.Sprintf(`
+CREATE TABLE %s (
+  uid int(10) unsigned NOT NULL AUTO_INCREMENT,
+  address varchar(45) NOT NULL,
+  PRIMARY KEY (uid)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    `, tableUserDetail)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(tableUserDetail)
+
+	if _, err := db.Exec(fmt.Sprintf(`
+CREATE TABLE %s (
+  id int(10) unsigned NOT NULL AUTO_INCREMENT,
+  uid int(10) unsigned NOT NULL,
+  score int(10) unsigned NOT NULL,
+  course varchar(45) NOT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    `, tableUserScores)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(tableUserScores)
+
+	type EntityUser struct {
+		Uid  int    `orm:"uid"`
+		Name string `orm:"name"`
+	}
+
+	type EntityUserDetail struct {
+		Uid     int    `orm:"uid"`
+		Address string `orm:"address"`
+	}
+
+	type EntityUserScores struct {
+		Id     int    `orm:"id"`
+		Uid    int    `orm:"uid"`
+		Score  int    `orm:"score"`
+		Course string `orm:"course"`
+	}
+
+	type Entity struct {
+		User       *EntityUser
+		UserDetail *EntityUserDetail
+		UserScores []*EntityUserScores
+	}
+
+	// Initialize the data.
+	var err error
+	gtest.C(t, func(t *gtest.T) {
+		err = db.Transaction(func(tx *gdb.TX) error {
+			r, err := tx.Table(tableUser).Save(EntityUser{
+				Name: "john",
+			})
+			if err != nil {
+				return err
+			}
+			uid, err := r.LastInsertId()
+			if err != nil {
+				return err
+			}
+			_, err = tx.Table(tableUserDetail).Save(EntityUserDetail{
+				Uid:     int(uid),
+				Address: "Beijing DongZhiMen #66",
+			})
+			if err != nil {
+				return err
+			}
+			_, err = tx.Table(tableUserScores).Save(g.Slice{
+				EntityUserScores{Uid: int(uid), Score: 100, Course: "math"},
+				EntityUserScores{Uid: int(uid), Score: 99, Course: "physics"},
+			})
+			return err
+		})
+		t.Assert(err, nil)
+	})
+	// Data check.
+	gtest.C(t, func(t *gtest.T) {
+		r, err := db.Table(tableUser).All()
+		t.Assert(err, nil)
+		t.Assert(r.Len(), 1)
+		t.Assert(r[0]["uid"].Int(), 1)
+		t.Assert(r[0]["name"].String(), "john")
+
+		r, err = db.Table(tableUserDetail).Where("uid", r[0]["uid"].Int()).All()
+		t.Assert(err, nil)
+		t.Assert(r.Len(), 1)
+		t.Assert(r[0]["uid"].Int(), 1)
+		t.Assert(r[0]["address"].String(), `Beijing DongZhiMen #66`)
+
+		r, err = db.Table(tableUserScores).Where("uid", r[0]["uid"].Int()).All()
+		t.Assert(err, nil)
+		t.Assert(r.Len(), 2)
+		t.Assert(r[0]["uid"].Int(), 1)
+		t.Assert(r[1]["uid"].Int(), 1)
+		t.Assert(r[0]["course"].String(), `math`)
+		t.Assert(r[1]["course"].String(), `physics`)
+	})
+	// Entity query.
+	gtest.C(t, func(t *gtest.T) {
+		var user Entity
+		// SELECT * FROM `user` WHERE `name`='john'
+		err := db.Table(tableUser).Scan(&user.User, "name", "john")
+		t.Assert(err, nil)
+
+		// SELECT * FROM `user_detail` WHERE `uid`=1
+		err = db.Table(tableUserDetail).Scan(&user.UserDetail, "uid", user.User.Uid)
+		t.Assert(err, nil)
+
+		// SELECT * FROM `user_scores` WHERE `uid`=1
+		err = db.Table(tableUserScores).Scan(&user.UserScores, "uid", user.User.Uid)
+		t.Assert(err, nil)
+
+		t.Assert(user.User, EntityUser{
+			Uid:  1,
+			Name: "john",
+		})
+		t.Assert(user.UserDetail, EntityUserDetail{
+			Uid:     1,
+			Address: "Beijing DongZhiMen #66",
+		})
+		t.Assert(user.UserScores, []EntityUserScores{
+			{Id: 1, Uid: 1, Course: "math", Score: 100},
+			{Id: 2, Uid: 1, Course: "physics", Score: 99},
+		})
+	})
+}
+
+func Test_Table_Relation_Many(t *testing.T) {
 	var (
 		tableUser       = "user_" + gtime.TimestampMicroStr()
 		tableUserDetail = "user_detail_" + gtime.TimestampMicroStr()
