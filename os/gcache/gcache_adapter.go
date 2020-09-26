@@ -11,6 +11,7 @@ import (
 )
 
 // Adapter is the adapter for cache features implements.
+// TODO error returning for each function.
 type Adapter interface {
 	// Set sets cache with <key>-<value> pair, which is expired after <duration>.
 	//
@@ -25,7 +26,9 @@ type Adapter interface {
 	Sets(data map[interface{}]interface{}, duration time.Duration)
 
 	// SetIfNotExist sets cache with <key>-<value> pair which is expired after <duration>
-	// if <key> does not exist in the cache.
+	// if <key> does not exist in the cache. It returns true the <key> dose not exist in the
+	// cache and it sets <value> successfully to the cache, or else it returns false.
+	//
 	// The parameter <value> can be type of <func() interface{}>, but it dose nothing if its
 	// result is nil.
 	//
@@ -67,6 +70,8 @@ type Adapter interface {
 	GetOrSetFuncLock(key interface{}, f func() interface{}, duration time.Duration) interface{}
 
 	// GetExpire retrieves and returns the expiration of <key> in the cache.
+	//
+	// It returns 0 if the <key> does not expire.
 	// It returns -1 if the <key> does not exist in the cache.
 	GetExpire(key interface{}) time.Duration
 
@@ -78,16 +83,14 @@ type Adapter interface {
 	// The returned value <exist> is false if the <key> does not exist in the cache.
 	//
 	// It deletes the <key> if given <value> is nil.
+	// It does nothing if <key> does not exist in the cache.
 	Update(key interface{}, value interface{}) (oldValue interface{}, exist bool)
 
 	// UpdateExpire updates the expiration of <key> and returns the old expiration duration value.
 	//
-	// It returns -1 if the <key> does not exist in the cache.
+	// It returns -1 and does nothing if the <key> does not exist in the cache.
 	// It deletes the <key> if <duration> < 0.
 	UpdateExpire(key interface{}, duration time.Duration) (oldDuration time.Duration)
-
-	// Contains checks and returns whether given <key> exists in the cache.
-	Contains(key interface{}) bool
 
 	// Size returns the number of items in the cache.
 	Size() (size int)

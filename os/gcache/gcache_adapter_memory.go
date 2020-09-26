@@ -116,6 +116,7 @@ func (c *adapterMemory) Set(key interface{}, value interface{}, duration time.Du
 // The returned value <exist> is false if the <key> does not exist in the cache.
 //
 // It deletes the <key> if given <value> is nil.
+// It does nothing if <key> does not exist in the cache.
 func (c *adapterMemory) Update(key interface{}, value interface{}) (oldValue interface{}, exist bool) {
 	c.dataMu.Lock()
 	defer c.dataMu.Unlock()
@@ -131,7 +132,7 @@ func (c *adapterMemory) Update(key interface{}, value interface{}) (oldValue int
 
 // UpdateExpire updates the expiration of <key> and returns the old expiration duration value.
 //
-// It returns -1 if the <key> does not exist in the cache.
+// It returns -1 and does nothing if the <key> does not exist in the cache.
 // It deletes the <key> if <duration> < 0.
 func (c *adapterMemory) UpdateExpire(key interface{}, duration time.Duration) (oldDuration time.Duration) {
 	newExpireTime := c.getInternalExpire(duration)
@@ -152,6 +153,8 @@ func (c *adapterMemory) UpdateExpire(key interface{}, duration time.Duration) (o
 }
 
 // GetExpire retrieves and returns the expiration of <key> in the cache.
+//
+// It returns 0 if the <key> does not expire.
 // It returns -1 if the <key> does not exist in the cache.
 func (c *adapterMemory) GetExpire(key interface{}) time.Duration {
 	c.dataMu.RLock()
@@ -227,8 +230,14 @@ func (c *adapterMemory) getOrNewExpireSet(expire int64) (expireSet *gset.Set) {
 	return
 }
 
-// SetIfNotExist sets cache with <key>-<value> pair if <key> does not exist in the cache,
-// which is expired after <duration>. It does not expire if <duration> == 0.
+// SetIfNotExist sets cache with <key>-<value> pair which is expired after <duration>
+// if <key> does not exist in the cache. It returns true the <key> dose not exist in the
+// cache and it sets <value> successfully to the cache, or else it returns false.
+// The parameter <value> can be type of <func() interface{}>, but it dose nothing if its
+// result is nil.
+//
+// It does not expire if <duration> == 0.
+// It deletes the <key> if <duration> < 0 or given <value> is nil.
 func (c *adapterMemory) SetIfNotExist(key interface{}, value interface{}, duration time.Duration) bool {
 	if !c.Contains(key) {
 		c.doSetWithLockCheck(key, value, duration)
