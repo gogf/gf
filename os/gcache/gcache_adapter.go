@@ -66,6 +66,10 @@ type Adapter interface {
 	// safety purpose.
 	GetOrSetFuncLock(key interface{}, f func() interface{}, duration time.Duration) interface{}
 
+	// GetExpire retrieves and returns the expiration of <key> in the cache.
+	// It returns -1 if the <key> does not exist in the cache.
+	GetExpire(key interface{}) time.Duration
+
 	// Remove deletes one or more keys from cache, and returns its value.
 	// If multiple keys are given, it returns the value of the last deleted item.
 	Remove(keys ...interface{}) (value interface{})
@@ -80,10 +84,6 @@ type Adapter interface {
 
 	// Contains checks and returns whether given <key> exists in the cache.
 	Contains(key interface{}) bool
-
-	// GetExpire retrieves and returns the expiration of <key> in the cache.
-	// It returns -1 if the <key> does not exist in the cache.
-	GetExpire(key interface{}) time.Duration
 
 	// Size returns the number of items in the cache.
 	Size() (size int)
