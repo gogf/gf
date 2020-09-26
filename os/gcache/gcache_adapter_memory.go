@@ -114,6 +114,8 @@ func (c *adapterMemory) Set(key interface{}, value interface{}, duration time.Du
 
 // Update updates the value of <key> without changing its expiration and returns the old value.
 // The returned value <exist> is false if the <key> does not exist in the cache.
+//
+// It deletes the <key> if given <value> is nil.
 func (c *adapterMemory) Update(key interface{}, value interface{}) (oldValue interface{}, exist bool) {
 	c.dataMu.Lock()
 	defer c.dataMu.Unlock()
@@ -128,7 +130,9 @@ func (c *adapterMemory) Update(key interface{}, value interface{}) (oldValue int
 }
 
 // UpdateExpire updates the expiration of <key> and returns the old expiration duration value.
+//
 // It returns -1 if the <key> does not exist in the cache.
+// It deletes the <key> if <duration> < 0.
 func (c *adapterMemory) UpdateExpire(key interface{}, duration time.Duration) (oldDuration time.Duration) {
 	newExpireTime := c.getInternalExpire(duration)
 	c.dataMu.Lock()
