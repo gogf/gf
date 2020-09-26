@@ -38,6 +38,11 @@ func (c *Cache) SetAdapter(adapter Adapter) {
 	c.Adapter = adapter
 }
 
+// Contains returns true if <key> exists in the cache, or else returns false.
+func (c *Cache) Contains(key interface{}) bool {
+	return c.Get(key) != nil
+}
+
 // GetVar retrieves and returns the value of <key> as gvar.Var.
 func (c *Cache) GetVar(key interface{}) *gvar.Var {
 	return gvar.New(c.Get(key))
