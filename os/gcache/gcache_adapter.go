@@ -76,10 +76,14 @@ type Adapter interface {
 
 	// Update updates the value of <key> without changing its expiration and returns the old value.
 	// The returned value <exist> is false if the <key> does not exist in the cache.
+	//
+	// It deletes the <key> if given <value> is nil.
 	Update(key interface{}, value interface{}) (oldValue interface{}, exist bool)
 
 	// UpdateExpire updates the expiration of <key> and returns the old expiration duration value.
+	//
 	// It returns -1 if the <key> does not exist in the cache.
+	// It deletes the <key> if <duration> < 0.
 	UpdateExpire(key interface{}, duration time.Duration) (oldDuration time.Duration)
 
 	// Contains checks and returns whether given <key> exists in the cache.
