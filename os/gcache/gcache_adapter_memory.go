@@ -7,7 +7,6 @@
 package gcache
 
 import (
-	"github.com/gogf/gf/container/gvar"
 	"math"
 	"sync"
 	"time"
@@ -17,11 +16,10 @@ import (
 	"github.com/gogf/gf/container/gtype"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/os/gtimer"
-	"github.com/gogf/gf/util/gconv"
 )
 
 // Internal cache object.
-type memCache struct {
+type adapterMemory struct {
 	// dataMu ensures the concurrent safety of underlying data map.
 	dataMu sync.RWMutex
 
@@ -38,7 +36,7 @@ type memCache struct {
 	cap int
 
 	// data is the underlying cache data which is stored in a hash table.
-	data map[interface{}]memCacheItem
+	data map[interface{}]adapterMemoryItem
 
 	// expireTimes is the expiring key to its timestamp mapping,
 	// which is used for quick indexing and deleting.
@@ -49,7 +47,7 @@ type memCache struct {
 	expireSets map[int64]*gset.Set
 
 	// lru is the LRU manager, which is enabled when attribute cap > 0.
-	lru *memCacheLru
+	lru *adapterMemoryLru
 
 	// lruGetList is the LRU history according with Get function.
 	lruGetList *glist.List
@@ -62,13 +60,13 @@ type memCache struct {
 }
 
 // Internal cache item.
-type memCacheItem struct {
+type adapterMemoryItem struct {
 	v interface{} // Value.
 	e int64       // Expire timestamp in milliseconds.
 }
 
 // Internal event item.
-type memCacheEvent struct {
+type adapterMemoryEvent struct {
 	k interface{} // Key.
 	e int64       // Expire time in milliseconds.
 }
@@ -79,11 +77,11 @@ const (
 	gDEFAULT_MAX_EXPIRE = 9223372036854
 )
 
-// newMemCache creates and returns a new memory cache object.
-func newMemCache(lruCap ...int) *memCache {
-	c := &memCache{
+// newAdapterMemory creates and returns a new memory cache object.
+func newAdapterMemory(lruCap ...int) *adapterMemory {
+	c := &adapterMemory{
 		lruGetList:  glist.New(true),
-		data:        make(map[interface{}]memCacheItem),
+		data:        make(map[interface{}]adapterMemoryItem),
 		expireTimes: make(map[interface{}]int64),
 		expireSets:  make(map[int64]*gset.Set),
 		eventList:   glist.New(true),
@@ -98,15 +96,16 @@ func newMemCache(lruCap ...int) *memCache {
 
 // Set sets cache with <key>-<value> pair, which is expired after <duration>.
 // It does not expire if <duration> == 0.
-func (c *memCache) Set(key interface{}, value interface{}, duration time.Duration) {
+// It deletes the <key> if <duration> < 0 or given <value> is nil.
+func (c *adapterMemory) Set(key interface{}, value interface{}, duration time.Duration) {
 	expireTime := c.getInternalExpire(duration)
 	c.dataMu.Lock()
-	c.data[key] = memCacheItem{
+	c.data[key] = adapterMemoryItem{
 		v: value,
 		e: expireTime,
 	}
 	c.dataMu.Unlock()
-	c.eventList.PushBack(&memCacheEvent{
+	c.eventList.PushBack(&adapterMemoryEvent{
 		k: key,
 		e: expireTime,
 	})
@@ -114,11 +113,11 @@ func (c *memCache) Set(key interface{}, value interface{}, duration time.Duratio
 
 // Update updates the value of <key> without changing its expiration and returns the old value.
 // The returned <exist> value is false if the <key> does not exist in the cache.
-func (c *memCache) Update(key interface{}, value interface{}) (oldValue interface{}, exist bool) {
+func (c *adapterMemory) Update(key interface{}, value interface{}) (oldValue interface{}, exist bool) {
 	c.dataMu.Lock()
 	defer c.dataMu.Unlock()
 	if item, ok := c.data[key]; ok {
-		c.data[key] = memCacheItem{
+		c.data[key] = adapterMemoryItem{
 			v: value,
 			e: item.e,
 		}
@@ -129,16 +128,16 @@ func (c *memCache) Update(key interface{}, value interface{}) (oldValue interfac
 
 // UpdateExpire updates the expiration of <key> and returns the old expiration duration value.
 // It returns -1 if the <key> does not exist in the cache.
-func (c *memCache) UpdateExpire(key interface{}, duration time.Duration) (oldDuration time.Duration) {
+func (c *adapterMemory) UpdateExpire(key interface{}, duration time.Duration) (oldDuration time.Duration) {
 	newExpireTime := c.getInternalExpire(duration)
 	c.dataMu.Lock()
 	defer c.dataMu.Unlock()
 	if item, ok := c.data[key]; ok {
-		c.data[key] = memCacheItem{
+		c.data[key] = adapterMemoryItem{
 			v: item.v,
 			e: newExpireTime,
 		}
-		c.eventList.PushBack(&memCacheEvent{
+		c.eventList.PushBack(&adapterMemoryEvent{
 			k: key,
 			e: newExpireTime,
 		})
@@ -149,7 +148,7 @@ func (c *memCache) UpdateExpire(key interface{}, duration time.Duration) (oldDur
 
 // GetExpire retrieves and returns the expiration of <key>.
 // It returns -1 if the <key> does not exist in the cache.
-func (c *memCache) GetExpire(key interface{}) time.Duration {
+func (c *adapterMemory) GetExpire(key interface{}) time.Duration {
 	c.dataMu.RLock()
 	defer c.dataMu.RUnlock()
 	if item, ok := c.data[key]; ok {
@@ -162,12 +161,12 @@ func (c *memCache) GetExpire(key interface{}) time.Duration {
 // cache, which is expired after <duration>.
 //
 // It does not expire if <duration> == 0.
-// The parameter <value> can be type of <func() interface{}>, but it dose nothing if its
-// result is nil.
+// The parameter <value> can be type of <func() interface{}>, but it dose nothing if the
+// function result is nil.
 //
 // It doubly checks the <key> whether exists in the cache using mutex writing lock
 // before setting it to the cache.
-func (c *memCache) doSetWithLockCheck(key interface{}, value interface{}, duration time.Duration) interface{} {
+func (c *adapterMemory) doSetWithLockCheck(key interface{}, value interface{}, duration time.Duration) interface{} {
 	expireTimestamp := c.getInternalExpire(duration)
 	c.dataMu.Lock()
 	defer c.dataMu.Unlock()
@@ -180,13 +179,13 @@ func (c *memCache) doSetWithLockCheck(key interface{}, value interface{}, durati
 			return nil
 		}
 	}
-	c.data[key] = memCacheItem{v: value, e: expireTimestamp}
-	c.eventList.PushBack(&memCacheEvent{k: key, e: expireTimestamp})
+	c.data[key] = adapterMemoryItem{v: value, e: expireTimestamp}
+	c.eventList.PushBack(&adapterMemoryEvent{k: key, e: expireTimestamp})
 	return value
 }
 
 // getInternalExpire converts and returns the expire time with given expired duration in milliseconds.
-func (c *memCache) getInternalExpire(duration time.Duration) int64 {
+func (c *adapterMemory) getInternalExpire(duration time.Duration) int64 {
 	if duration == 0 {
 		return gDEFAULT_MAX_EXPIRE
 	} else {
@@ -195,12 +194,12 @@ func (c *memCache) getInternalExpire(duration time.Duration) int64 {
 }
 
 // makeExpireKey groups the <expire> in milliseconds to its according seconds.
-func (c *memCache) makeExpireKey(expire int64) int64 {
+func (c *adapterMemory) makeExpireKey(expire int64) int64 {
 	return int64(math.Ceil(float64(expire/1000)+1) * 1000)
 }
 
 // getExpireSet returns the expire set for given <expire> in seconds.
-func (c *memCache) getExpireSet(expire int64) (expireSet *gset.Set) {
+func (c *adapterMemory) getExpireSet(expire int64) (expireSet *gset.Set) {
 	c.expireSetMu.RLock()
 	expireSet, _ = c.expireSets[expire]
 	c.expireSetMu.RUnlock()
@@ -209,7 +208,7 @@ func (c *memCache) getExpireSet(expire int64) (expireSet *gset.Set) {
 
 // getOrNewExpireSet returns the expire set for given <expire> in seconds.
 // It creates and returns a new set for <expire> if it does not exist.
-func (c *memCache) getOrNewExpireSet(expire int64) (expireSet *gset.Set) {
+func (c *adapterMemory) getOrNewExpireSet(expire int64) (expireSet *gset.Set) {
 	if expireSet = c.getExpireSet(expire); expireSet == nil {
 		expireSet = gset.New(true)
 		c.expireSetMu.Lock()
@@ -225,7 +224,7 @@ func (c *memCache) getOrNewExpireSet(expire int64) (expireSet *gset.Set) {
 
 // SetIfNotExist sets cache with <key>-<value> pair if <key> does not exist in the cache,
 // which is expired after <duration>. It does not expire if <duration> == 0.
-func (c *memCache) SetIfNotExist(key interface{}, value interface{}, duration time.Duration) bool {
+func (c *adapterMemory) SetIfNotExist(key interface{}, value interface{}, duration time.Duration) bool {
 	if !c.Contains(key) {
 		c.doSetWithLockCheck(key, value, duration)
 		return true
@@ -236,25 +235,26 @@ func (c *memCache) SetIfNotExist(key interface{}, value interface{}, duration ti
 // Sets batch sets cache with key-value pairs by <data>, which is expired after <duration>.
 //
 // It does not expire if <duration> == 0.
-func (c *memCache) Sets(data map[interface{}]interface{}, duration time.Duration) {
+// It deletes the keys of <data> if <duration> < 0 or given <value> is nil.
+func (c *adapterMemory) Sets(data map[interface{}]interface{}, duration time.Duration) {
 	expireTime := c.getInternalExpire(duration)
 	for k, v := range data {
 		c.dataMu.Lock()
-		c.data[k] = memCacheItem{
+		c.data[k] = adapterMemoryItem{
 			v: v,
 			e: expireTime,
 		}
 		c.dataMu.Unlock()
-		c.eventList.PushBack(&memCacheEvent{
+		c.eventList.PushBack(&adapterMemoryEvent{
 			k: k,
 			e: expireTime,
 		})
 	}
 }
 
-// Get returns the value of <key>.
+// Get retrieves and returns the associated value of given <key>.
 // It returns nil if it does not exist or its value is nil.
-func (c *memCache) Get(key interface{}) interface{} {
+func (c *adapterMemory) Get(key interface{}) interface{} {
 	c.dataMu.RLock()
 	item, ok := c.data[key]
 	c.dataMu.RUnlock()
@@ -268,15 +268,14 @@ func (c *memCache) Get(key interface{}) interface{} {
 	return nil
 }
 
-// GetVar retrieves and returns the value of <key> as gvar.Var.
-func (c *memCache) GetVar(key interface{}) *gvar.Var {
-	return gvar.New(c.Get(key))
-}
-
-// GetOrSet returns the value of <key>, or sets <key>-<value> pair and returns <value> if <key>
-// does not exist in the cache. The key-value pair expires after <duration>. It does not expire
-// if <duration> == 0.
-func (c *memCache) GetOrSet(key interface{}, value interface{}, duration time.Duration) interface{} {
+// GetOrSet retrieves and returns the value of <key>, or sets <key>-<value> pair and
+// returns <value> if <key> does not exist in the cache. The key-value pair expires
+// after <duration>.
+//
+// It does not expire if <duration> == 0.
+// It deletes the <key> if <duration> < 0 or given <value> is nil, but it does nothing
+// if <value> is a function and the function result is nil.
+func (c *adapterMemory) GetOrSet(key interface{}, value interface{}, duration time.Duration) interface{} {
 	if v := c.Get(key); v == nil {
 		return c.doSetWithLockCheck(key, value, duration)
 	} else {
@@ -284,13 +283,14 @@ func (c *memCache) GetOrSet(key interface{}, value interface{}, duration time.Du
 	}
 }
 
-// GetOrSetFunc returns the value of <key>, or sets <key> with result of function <f>
-// and returns its result if <key> does not exist in the cache. The key-value pair expires
-// after <duration>.
+// GetOrSetFunc retrieves and returns the value of <key>, or sets <key> with result of
+// function <f> and returns its result if <key> does not exist in the cache. The key-value
+// pair expires after <duration>.
 //
 // It does not expire if <duration> == 0.
-// It does nothing if function <f> returns nil.
-func (c *memCache) GetOrSetFunc(key interface{}, f func() interface{}, duration time.Duration) interface{} {
+// It deletes the <key> if <duration> < 0 or given <value> is nil, but it does nothing
+// if <value> is a function and the function result is nil.
+func (c *adapterMemory) GetOrSetFunc(key interface{}, f func() interface{}, duration time.Duration) interface{} {
 	if v := c.Get(key); v == nil {
 		value := f()
 		if value == nil {
@@ -302,15 +302,16 @@ func (c *memCache) GetOrSetFunc(key interface{}, f func() interface{}, duration 
 	}
 }
 
-// GetOrSetFuncLock returns the value of <key>, or sets <key> with result of function <f>
-// and returns its result if <key> does not exist in the cache. The key-value pair expires
-// after <duration>.
+// GetOrSetFuncLock retrieves and returns the value of <key>, or sets <key> with result of
+// function <f> and returns its result if <key> does not exist in the cache. The key-value
+// pair expires after <duration>.
 //
 // It does not expire if <duration> == 0.
 // It does nothing if function <f> returns nil.
 //
-// Note that the function <f> is executed within writing mutex lock.
-func (c *memCache) GetOrSetFuncLock(key interface{}, f func() interface{}, duration time.Duration) interface{} {
+// Note that the function <f> should be executed within writing mutex lock for concurrent
+// safety purpose.
+func (c *adapterMemory) GetOrSetFuncLock(key interface{}, f func() interface{}, duration time.Duration) interface{} {
 	if v := c.Get(key); v == nil {
 		return c.doSetWithLockCheck(key, f, duration)
 	} else {
@@ -319,13 +320,13 @@ func (c *memCache) GetOrSetFuncLock(key interface{}, f func() interface{}, durat
 }
 
 // Contains returns true if <key> exists in the cache, or else returns false.
-func (c *memCache) Contains(key interface{}) bool {
+func (c *adapterMemory) Contains(key interface{}) bool {
 	return c.Get(key) != nil
 }
 
 // Remove deletes the one or more keys from cache, and returns its value.
 // If multiple keys are given, it returns the value of the deleted last item.
-func (c *memCache) Remove(keys ...interface{}) (value interface{}) {
+func (c *adapterMemory) Remove(keys ...interface{}) (value interface{}) {
 	c.dataMu.Lock()
 	defer c.dataMu.Unlock()
 	for _, key := range keys {
@@ -333,7 +334,7 @@ func (c *memCache) Remove(keys ...interface{}) (value interface{}) {
 		if ok {
 			value = item.v
 			delete(c.data, key)
-			c.eventList.PushBack(&memCacheEvent{
+			c.eventList.PushBack(&adapterMemoryEvent{
 				k: key,
 				e: gtime.TimestampMilli() - 1000,
 			})
@@ -342,14 +343,8 @@ func (c *memCache) Remove(keys ...interface{}) (value interface{}) {
 	return
 }
 
-// Removes deletes <keys> in the cache.
-// Deprecated, use Remove instead.
-func (c *memCache) Removes(keys []interface{}) {
-	c.Remove(keys...)
-}
-
 // Data returns a copy of all key-value pairs in the cache as map type.
-func (c *memCache) Data() map[interface{}]interface{} {
+func (c *adapterMemory) Data() map[interface{}]interface{} {
 	m := make(map[interface{}]interface{})
 	c.dataMu.RLock()
 	for k, v := range c.data {
@@ -362,7 +357,7 @@ func (c *memCache) Data() map[interface{}]interface{} {
 }
 
 // Keys returns all keys in the cache as slice.
-func (c *memCache) Keys() []interface{} {
+func (c *adapterMemory) Keys() []interface{} {
 	keys := make([]interface{}, 0)
 	c.dataMu.RLock()
 	for k, v := range c.data {
@@ -374,13 +369,8 @@ func (c *memCache) Keys() []interface{} {
 	return keys
 }
 
-// KeyStrings returns all keys in the cache as string slice.
-func (c *memCache) KeyStrings() []string {
-	return gconv.Strings(c.Keys())
-}
-
 // Values returns all values in the cache as slice.
-func (c *memCache) Values() []interface{} {
+func (c *adapterMemory) Values() []interface{} {
 	values := make([]interface{}, 0)
 	c.dataMu.RLock()
 	for _, v := range c.data {
@@ -393,32 +383,42 @@ func (c *memCache) Values() []interface{} {
 }
 
 // Size returns the size of the cache.
-func (c *memCache) Size() (size int) {
+func (c *adapterMemory) Size() (size int) {
 	c.dataMu.RLock()
 	size = len(c.data)
 	c.dataMu.RUnlock()
 	return
 }
 
+// Clear clears all data of the cache.
+// Note that this function is sensitive and should be carefully used.
+func (c *adapterMemory) Clear() error {
+	c.dataMu.Lock()
+	defer c.dataMu.Unlock()
+	c.data = make(map[interface{}]adapterMemoryItem)
+	return nil
+}
+
 // Close closes the cache.
-func (c *memCache) Close() {
+func (c *adapterMemory) Close() error {
 	if c.cap > 0 {
 		c.lru.Close()
 	}
 	c.closed.Set(true)
+	return nil
 }
 
 // syncEventAndClearExpired does the asynchronous task loop:
 // 1. Asynchronously process the data in the event list,
 //    and synchronize the results to the <expireTimes> and <expireSets> properties.
 // 2. Clean up the expired key-value pair data.
-func (c *memCache) syncEventAndClearExpired() {
+func (c *adapterMemory) syncEventAndClearExpired() {
 	if c.closed.Val() {
 		gtimer.Exit()
 		return
 	}
 	var (
-		event         *memCacheEvent
+		event         *adapterMemoryEvent
 		oldExpireTime int64
 		newExpireTime int64
 	)
@@ -430,7 +430,7 @@ func (c *memCache) syncEventAndClearExpired() {
 		if v == nil {
 			break
 		}
-		event = v.(*memCacheEvent)
+		event = v.(*adapterMemoryEvent)
 		// Fetching the old expire set.
 		c.expireTimeMu.RLock()
 		oldExpireTime = c.expireTimes[event.k]
@@ -487,7 +487,7 @@ func (c *memCache) syncEventAndClearExpired() {
 
 // clearByKey deletes the key-value pair with given <key>.
 // The parameter <force> specifies whether doing this deleting forcibly.
-func (c *memCache) clearByKey(key interface{}, force ...bool) {
+func (c *adapterMemory) clearByKey(key interface{}, force ...bool) {
 	c.dataMu.Lock()
 	// Doubly check before really deleting it from cache.
 	if item, ok := c.data[key]; (ok && item.IsExpired()) || (len(force) > 0 && force[0]) {

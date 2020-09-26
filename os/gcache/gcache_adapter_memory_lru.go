@@ -17,17 +17,17 @@ import (
 
 // LRU cache object.
 // It uses list.List from stdlib for its underlying doubly linked list.
-type memCacheLru struct {
-	cache   *memCache   // Parent cache object.
-	data    *gmap.Map   // Key mapping to the item of the list.
-	list    *glist.List // Key list.
-	rawList *glist.List // History for key adding.
-	closed  *gtype.Bool // Closed or not.
+type adapterMemoryLru struct {
+	cache   *adapterMemory // Parent cache object.
+	data    *gmap.Map      // Key mapping to the item of the list.
+	list    *glist.List    // Key list.
+	rawList *glist.List    // History for key adding.
+	closed  *gtype.Bool    // Closed or not.
 }
 
 // newMemCacheLru creates and returns a new LRU object.
-func newMemCacheLru(cache *memCache) *memCacheLru {
-	lru := &memCacheLru{
+func newMemCacheLru(cache *adapterMemory) *adapterMemoryLru {
+	lru := &adapterMemoryLru{
 		cache:   cache,
 		data:    gmap.New(true),
 		list:    glist.New(true),
@@ -39,12 +39,12 @@ func newMemCacheLru(cache *memCache) *memCacheLru {
 }
 
 // Close closes the LRU object.
-func (lru *memCacheLru) Close() {
+func (lru *adapterMemoryLru) Close() {
 	lru.closed.Set(true)
 }
 
 // Remove deletes the <key> FROM <lru>.
-func (lru *memCacheLru) Remove(key interface{}) {
+func (lru *adapterMemoryLru) Remove(key interface{}) {
 	if v := lru.data.Get(key); v != nil {
 		lru.data.Remove(key)
 		lru.list.Remove(v.(*glist.Element))
@@ -52,17 +52,17 @@ func (lru *memCacheLru) Remove(key interface{}) {
 }
 
 // Size returns the size of <lru>.
-func (lru *memCacheLru) Size() int {
+func (lru *adapterMemoryLru) Size() int {
 	return lru.data.Size()
 }
 
 // Push pushes <key> to the tail of <lru>.
-func (lru *memCacheLru) Push(key interface{}) {
+func (lru *adapterMemoryLru) Push(key interface{}) {
 	lru.rawList.PushBack(key)
 }
 
 // Pop deletes and returns the key from tail of <lru>.
-func (lru *memCacheLru) Pop() interface{} {
+func (lru *adapterMemoryLru) Pop() interface{} {
 	if v := lru.list.PopBack(); v != nil {
 		lru.data.Remove(v)
 		return v
@@ -71,7 +71,7 @@ func (lru *memCacheLru) Pop() interface{} {
 }
 
 // Print is used for test only.
-//func (lru *memCacheLru) Print() {
+//func (lru *adapterMemoryLru) Print() {
 //    for _, v := range lru.list.FrontAll() {
 //        fmt.Printf("%v ", v)
 //    }
@@ -80,7 +80,7 @@ func (lru *memCacheLru) Pop() interface{} {
 
 // SyncAndClear synchronizes the keys from <rawList> to <list> and <data>
 // using Least Recently Used algorithm.
-func (lru *memCacheLru) SyncAndClear() {
+func (lru *adapterMemoryLru) SyncAndClear() {
 	if lru.closed.Val() {
 		gtimer.Exit()
 		return

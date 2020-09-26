@@ -21,12 +21,6 @@ func Set(key interface{}, value interface{}, duration time.Duration) {
 	defaultCache.Set(key, value, duration)
 }
 
-// Update updates the value of <key> without changing its expiration and returns the old value.
-// The returned <exist> value is false if the <key> does not exist in the cache.
-func Update(key interface{}, value interface{}) (oldValue interface{}, exist bool) {
-	return defaultCache.Update(key, value)
-}
-
 // SetIfNotExist sets cache with <key>-<value> pair if <key> does not exist in the cache,
 // which is expired after <duration>. It does not expire if <duration> == 0.
 func SetIfNotExist(key interface{}, value interface{}, duration time.Duration) bool {
@@ -122,6 +116,12 @@ func Size() int {
 // It returns -1 if the <key> does not exist in the cache.
 func GetExpire(key interface{}) time.Duration {
 	return defaultCache.GetExpire(key)
+}
+
+// Update updates the value of <key> without changing its expiration and returns the old value.
+// The returned <exist> value is false if the <key> does not exist in the cache.
+func Update(key interface{}, value interface{}) (oldValue interface{}, exist bool) {
+	return defaultCache.Update(key, value)
 }
 
 // UpdateExpire updates the expiration of <key> and returns the old expiration duration value.
