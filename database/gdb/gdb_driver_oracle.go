@@ -16,6 +16,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/os/gcache"
 	"github.com/gogf/gf/text/gstr"
 	"reflect"
 	"strconv"
@@ -158,7 +159,7 @@ func (d *DriverOracle) TableFields(table string, schema ...string) (fields map[s
 	if len(schema) > 0 && schema[0] != "" {
 		checkSchema = schema[0]
 	}
-	v := d.DB.GetCache().GetOrSetFunc(
+	v := gcache.GetOrSetFunc(
 		fmt.Sprintf(`oracle_table_fields_%s_%s`, table, checkSchema),
 		func() interface{} {
 			result := (Result)(nil)
@@ -189,7 +190,7 @@ func (d *DriverOracle) TableFields(table string, schema ...string) (fields map[s
 
 func (d *DriverOracle) getTableUniqueIndex(table string) (fields map[string]map[string]string, err error) {
 	table = strings.ToUpper(table)
-	v := d.DB.GetCache().GetOrSetFunc("table_unique_index_"+table, func() interface{} {
+	v := gcache.GetOrSetFunc("table_unique_index_"+table, func() interface{} {
 		res := (Result)(nil)
 		res, err = d.DB.GetAll(fmt.Sprintf(`
 		SELECT INDEX_NAME,COLUMN_NAME,CHAR_LENGTH FROM USER_IND_COLUMNS 

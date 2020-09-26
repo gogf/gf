@@ -15,6 +15,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/os/gcache"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/text/gstr"
 	"strings"
@@ -98,10 +99,12 @@ func (d *DriverSqlite) TableFields(table string, schema ...string) (fields map[s
 	if len(schema) > 0 && schema[0] != "" {
 		checkSchema = schema[0]
 	}
-	v := d.DB.GetCache().GetOrSetFunc(
+	v := gcache.GetOrSetFunc(
 		fmt.Sprintf(`sqlite_table_fields_%s_%s`, table, checkSchema), func() interface{} {
-			var result Result
-			var link *sql.DB
+			var (
+				result Result
+				link   *sql.DB
+			)
 			link, err = d.DB.GetSlave(checkSchema)
 			if err != nil {
 				return nil

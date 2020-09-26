@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/os/gcache"
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/text/gstr"
 
@@ -102,11 +103,13 @@ func (d *DriverMysql) TableFields(table string, schema ...string) (fields map[st
 	if len(schema) > 0 && schema[0] != "" {
 		checkSchema = schema[0]
 	}
-	v := d.cache.GetOrSetFunc(
+	v := gcache.GetOrSetFunc(
 		fmt.Sprintf(`mysql_table_fields_%s_%s`, table, checkSchema),
 		func() interface{} {
-			var result Result
-			var link *sql.DB
+			var (
+				result Result
+				link   *sql.DB
+			)
 			link, err = d.DB.GetSlave(checkSchema)
 			if err != nil {
 				return nil

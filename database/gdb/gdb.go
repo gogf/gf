@@ -166,7 +166,7 @@ type Core struct {
 	DB               DB            // DB interface object.
 	group            string        // Configuration group name.
 	debug            *gtype.Bool   // Enable debug mode for the database.
-	cache            *gcache.Cache // Cache manager.
+	cache            *gcache.Cache // Cache manager, SQL result cache only.
 	schema           *gtype.String // Custom schema for this object.
 	dryrun           *gtype.Bool   // Dry run.
 	prefix           string        // Table prefix.
@@ -438,7 +438,7 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 		node = &n
 	}
 	// Cache the underlying connection pool object by node.
-	v := c.cache.GetOrSetFuncLock(node.String(), func() interface{} {
+	v := gcache.GetOrSetFuncLock(node.String(), func() interface{} {
 		sqlDb, err = c.DB.Open(node)
 		if err != nil {
 			intlog.Printf("DB open failed: %v, %+v", err, node)
