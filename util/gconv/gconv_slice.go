@@ -31,6 +31,7 @@ func SliceStructDeep(params interface{}, pointer interface{}, mapping ...map[str
 }
 
 // Maps converts <i> to []map[string]interface{}.
+// Note that it automatically checks and converts json string to []map if <value> is string/[]byte.
 func Maps(value interface{}, tags ...string) []map[string]interface{} {
 	if value == nil {
 		return nil

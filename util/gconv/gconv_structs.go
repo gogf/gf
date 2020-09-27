@@ -23,7 +23,7 @@ func StructsDeep(params interface{}, pointer interface{}, mapping ...map[string]
 
 // doStructs converts any slice to given struct slice.
 //
-// The parameter <params> should be type of slice.
+// It automatically checks and converts json string to []map if <params> is string/[]byte.
 //
 // The parameter <pointer> should be type of pointer to slice of struct.
 // Note that if <pointer> is a pointer to another pointer of type of slice of struct,
@@ -48,57 +48,45 @@ func doStructs(params interface{}, pointer interface{}, deep bool, mapping ...ma
 			return gerror.Newf("pointer should be type of pointer, but got: %v", kind)
 		}
 	}
-	params = Maps(params)
-	var (
-		reflectValue = reflect.ValueOf(params)
-		reflectKind  = reflectValue.Kind()
-	)
-	for reflectKind == reflect.Ptr {
-		reflectValue = reflectValue.Elem()
-		reflectKind = reflectValue.Kind()
-	}
-	switch reflectKind {
-	case reflect.Slice, reflect.Array:
-		// If <params> is an empty slice, no conversion.
-		if reflectValue.Len() == 0 {
-			return nil
-		}
-		var (
-			array    = reflect.MakeSlice(pointerRv.Type().Elem(), reflectValue.Len(), reflectValue.Len())
-			itemType = array.Index(0).Type()
-		)
-		for i := 0; i < reflectValue.Len(); i++ {
-			if itemType.Kind() == reflect.Ptr {
-				// Slice element is type pointer.
-				e := reflect.New(itemType.Elem()).Elem()
-				if deep {
-					if err = StructDeep(reflectValue.Index(i).Interface(), e, mapping...); err != nil {
-						return err
-					}
-				} else {
-					if err = Struct(reflectValue.Index(i).Interface(), e, mapping...); err != nil {
-						return err
-					}
-				}
-				array.Index(i).Set(e.Addr())
-			} else {
-				// Slice element is not type of pointer.
-				e := reflect.New(itemType).Elem()
-				if deep {
-					if err = StructDeep(reflectValue.Index(i).Interface(), e, mapping...); err != nil {
-						return err
-					}
-				} else {
-					if err = Struct(reflectValue.Index(i).Interface(), e, mapping...); err != nil {
-						return err
-					}
-				}
-				array.Index(i).Set(e)
-			}
-		}
-		pointerRv.Elem().Set(array)
+	paramsMaps := Maps(params)
+	// If <params> is an empty slice, no conversion.
+	if len(paramsMaps) == 0 {
 		return nil
-	default:
-		return gerror.Newf("params should be type of slice, but got: %v", reflectKind)
 	}
+	var (
+		array    = reflect.MakeSlice(pointerRv.Type().Elem(), len(paramsMaps), len(paramsMaps))
+		itemType = array.Index(0).Type()
+	)
+	for i := 0; i < len(paramsMaps); i++ {
+		if itemType.Kind() == reflect.Ptr {
+			// Slice element is type pointer.
+			e := reflect.New(itemType.Elem()).Elem()
+			if deep {
+				if err = StructDeep(paramsMaps[i], e, mapping...); err != nil {
+					return err
+				}
+			} else {
+				if err = Struct(paramsMaps[i], e, mapping...); err != nil {
+					return err
+				}
+			}
+			array.Index(i).Set(e.Addr())
+		} else {
+			// Slice element is not type of pointer.
+			e := reflect.New(itemType).Elem()
+			if deep {
+				if err = StructDeep(paramsMaps[i], e, mapping...); err != nil {
+					return err
+				}
+			} else {
+				if err = Struct(paramsMaps[i], e, mapping...); err != nil {
+					return err
+				}
+			}
+			array.Index(i).Set(e)
+		}
+	}
+	pointerRv.Elem().Set(array)
+	return nil
+
 }

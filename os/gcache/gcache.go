@@ -4,7 +4,8 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gcache provides high performance and concurrent-safe in-memory cache for process.
+// Package gcache provides kinds of cache management for process.
+// It default provides a concurrent-safe in-memory cache adapter for process.
 package gcache
 
 import (
