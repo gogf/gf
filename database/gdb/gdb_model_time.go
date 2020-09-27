@@ -21,6 +21,13 @@ const (
 	gSOFT_FIELD_NAME_DELETE = "delete_at"
 )
 
+// Unscoped disables the auto-update time feature for insert, update and delete options.
+func (m *Model) Unscoped() *Model {
+	model := m.getModel()
+	model.unscoped = true
+	return model
+}
+
 // getSoftFieldNameCreate checks and returns the field name for record creating time.
 // If there's no field name for storing creating time, it returns an empty string.
 // It checks the key with or without cases or chars '-'/'_'/'.'/' '.
