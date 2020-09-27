@@ -11,7 +11,7 @@ import (
 )
 
 // Adapter is the adapter for cache features implements.
-// TODO error returning for each function.
+// TODO Adding error returning for each function for preciseness.
 type Adapter interface {
 	// Set sets cache with <key>-<value> pair, which is expired after <duration>.
 	//
