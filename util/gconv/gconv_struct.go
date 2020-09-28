@@ -50,7 +50,8 @@ func StructDeep(params interface{}, pointer interface{}, mapping ...map[string]s
 // doStruct is the core internal converting function for any data to struct recursively or not.
 func doStruct(params interface{}, pointer interface{}, recursive bool, mapping ...map[string]string) (err error) {
 	if params == nil {
-		return gerror.New("params cannot be nil")
+		// If <params> is nil, no conversion.
+		return nil
 	}
 	if pointer == nil {
 		return gerror.New("object pointer cannot be nil")
@@ -73,7 +74,8 @@ func doStruct(params interface{}, pointer interface{}, recursive bool, mapping .
 	// DO NOT use MapDeep here.
 	paramsMap := Map(params)
 	if paramsMap == nil {
-		return gerror.Newf("invalid params: %v", params)
+		//return gerror.Newf("invalid params: %v", params)
+		return nil
 	}
 
 	// Using reflect to do the converting,

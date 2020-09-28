@@ -181,7 +181,7 @@ func (r Result) ScanList(listPointer interface{}, attributeName string, relation
 			}
 		}
 		if len(relationDataMap) > 0 && !relationValue.IsValid() {
-			return fmt.Errorf(`invalid relation: %s, %s`, relation[0], relation[1])
+			return fmt.Errorf(`invalid relation: "%s:%s"`, relation[0], relation[1])
 		}
 		switch attrKind {
 		case reflect.Array, reflect.Slice:
@@ -196,7 +196,7 @@ func (r Result) ScanList(listPointer interface{}, attributeName string, relation
 					}
 				} else {
 					// May be the attribute does not exist yet.
-					return fmt.Errorf(`invalid relation: %s, %s`, relation[0], relation[1])
+					return fmt.Errorf(`invalid relation: "%s:%s"`, relation[0], relation[1])
 				}
 			} else {
 				return fmt.Errorf(`relationKey should not be empty as field "%s" is slice`, attributeName)
@@ -207,15 +207,25 @@ func (r Result) ScanList(listPointer interface{}, attributeName string, relation
 			if len(relationDataMap) > 0 {
 				relationField = relationValue.FieldByName(relationAttrName)
 				if relationField.IsValid() {
-					if err = gconv.Struct(relationDataMap[gconv.String(relationField.Interface())], e); err != nil {
+					v := relationDataMap[gconv.String(relationField.Interface())]
+					if v == nil {
+						// There's no relational data.
+						continue
+					}
+					if err = gconv.Struct(v, e); err != nil {
 						return err
 					}
 				} else {
 					// May be the attribute does not exist yet.
-					return fmt.Errorf(`invalid relation: %s, %s`, relation[0], relation[1])
+					return fmt.Errorf(`invalid relation: "%s:%s"`, relation[0], relation[1])
 				}
 			} else {
-				if err = gconv.Struct(r[i], e); err != nil {
+				v := r[i]
+				if v == nil {
+					// There's no relational data.
+					continue
+				}
+				if err = gconv.Struct(v, e); err != nil {
 					return err
 				}
 			}
@@ -226,15 +236,25 @@ func (r Result) ScanList(listPointer interface{}, attributeName string, relation
 			if len(relationDataMap) > 0 {
 				relationField = relationValue.FieldByName(relationAttrName)
 				if relationField.IsValid() {
-					if err = gconv.Struct(relationDataMap[gconv.String(relationField.Interface())], e); err != nil {
+					v := relationDataMap[gconv.String(relationField.Interface())]
+					if v == nil {
+						// There's no relational data.
+						continue
+					}
+					if err = gconv.Struct(v, e); err != nil {
 						return err
 					}
 				} else {
 					// May be the attribute does not exist yet.
-					return fmt.Errorf(`invalid relation: %s, %s`, relation[0], relation[1])
+					return fmt.Errorf(`invalid relation: "%s:%s"`, relation[0], relation[1])
 				}
 			} else {
-				if err = gconv.Struct(r[i], e); err != nil {
+				v := r[i]
+				if v == nil {
+					// There's no relational data.
+					continue
+				}
+				if err = gconv.Struct(v, e); err != nil {
 					return err
 				}
 			}
