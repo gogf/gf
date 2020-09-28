@@ -30,7 +30,8 @@ func StructsDeep(params interface{}, pointer interface{}, mapping ...map[string]
 // it will create the struct/pointer internally.
 func doStructs(params interface{}, pointer interface{}, deep bool, mapping ...map[string]string) (err error) {
 	if params == nil {
-		return gerror.New("params cannot be nil")
+		// If <params> is nil, no conversion.
+		return nil
 	}
 	if pointer == nil {
 		return gerror.New("object pointer cannot be nil")
