@@ -172,9 +172,8 @@ func doCheck(key string, value interface{}, rules string, messages interface{}, 
 	for index := 0; index < len(ruleItems); {
 		var (
 			err         error
-			item        = ruleItems[index]
 			match       = false
-			results     = ruleRegex.FindStringSubmatch(item)
+			results     = ruleRegex.FindStringSubmatch(ruleItems[index])
 			ruleKey     = strings.TrimSpace(results[1])
 			rulePattern = strings.TrimSpace(results[2])
 		)
@@ -191,7 +190,7 @@ func doCheck(key string, value interface{}, rules string, messages interface{}, 
 			if len(params) > 0 {
 				dataMap = gconv.Map(params[0])
 			}
-			if err := f(value, message, dataMap); err != nil {
+			if err := f(ruleItems[index], value, message, dataMap); err != nil {
 				match = false
 				errorMsgArray[ruleKey] = err.Error()
 			} else {

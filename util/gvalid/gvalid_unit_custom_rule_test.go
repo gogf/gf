@@ -18,7 +18,7 @@ import (
 
 func Test_CustomRule1(t *testing.T) {
 	rule := "custom"
-	err := gvalid.RegisterRule(rule, func(value interface{}, message string, params map[string]interface{}) error {
+	err := gvalid.RegisterRule(rule, func(rule string, value interface{}, message string, params map[string]interface{}) error {
 		pass := gconv.String(value)
 		if len(pass) != 6 {
 			return errors.New(message)
@@ -65,7 +65,7 @@ func Test_CustomRule1(t *testing.T) {
 
 func Test_CustomRule2(t *testing.T) {
 	rule := "required-map"
-	err := gvalid.RegisterRule(rule, func(value interface{}, message string, params map[string]interface{}) error {
+	err := gvalid.RegisterRule(rule, func(rule string, value interface{}, message string, params map[string]interface{}) error {
 		m := gconv.Map(value)
 		if len(m) == 0 {
 			return errors.New(message)
