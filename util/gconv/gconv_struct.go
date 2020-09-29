@@ -74,8 +74,7 @@ func doStruct(params interface{}, pointer interface{}, recursive bool, mapping .
 	// DO NOT use MapDeep here.
 	paramsMap := Map(params)
 	if paramsMap == nil {
-		//return gerror.Newf("invalid params: %v", params)
-		return nil
+		return gerror.Newf("convert params to map failed: %v", params)
 	}
 
 	// Using reflect to do the converting,
