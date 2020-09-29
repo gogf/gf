@@ -114,7 +114,7 @@ func ExampleCheckStruct3() {
 
 func ExampleRegisterRule() {
 	rule := "unique-name"
-	gvalid.RegisterRule(rule, func(value interface{}, message string, params map[string]interface{}) error {
+	gvalid.RegisterRule(rule, func(rule string, value interface{}, message string, params map[string]interface{}) error {
 		var (
 			id   = gconv.Int(params["Id"])
 			name = gconv.String(value)
@@ -146,7 +146,7 @@ func ExampleRegisterRule() {
 
 func ExampleRegisterRule_OverwriteRequired() {
 	rule := "required"
-	gvalid.RegisterRule(rule, func(value interface{}, message string, params map[string]interface{}) error {
+	gvalid.RegisterRule(rule, func(rule string, value interface{}, message string, params map[string]interface{}) error {
 		reflectValue := reflect.ValueOf(value)
 		if reflectValue.Kind() == reflect.Ptr {
 			reflectValue = reflectValue.Elem()
