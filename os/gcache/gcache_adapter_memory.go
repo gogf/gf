@@ -252,7 +252,7 @@ func (c *adapterMemory) GetOrSet(key interface{}, value interface{}, duration ti
 // It does not expire if <duration> == 0.
 // It deletes the <key> if <duration> < 0 or given <value> is nil, but it does nothing
 // if <value> is a function and the function result is nil.
-func (c *adapterMemory) GetOrSetFunc(key interface{}, f ValueFunc, duration time.Duration) (interface{}, error) {
+func (c *adapterMemory) GetOrSetFunc(key interface{}, f func() (interface{}, error), duration time.Duration) (interface{}, error) {
 	v, err := c.Get(key)
 	if err != nil {
 		return nil, err
@@ -280,7 +280,7 @@ func (c *adapterMemory) GetOrSetFunc(key interface{}, f ValueFunc, duration time
 //
 // Note that the function <f> should be executed within writing mutex lock for concurrent
 // safety purpose.
-func (c *adapterMemory) GetOrSetFuncLock(key interface{}, f ValueFunc, duration time.Duration) (interface{}, error) {
+func (c *adapterMemory) GetOrSetFuncLock(key interface{}, f func() (interface{}, error), duration time.Duration) (interface{}, error) {
 	v, err := c.Get(key)
 	if err != nil {
 		return nil, err
@@ -401,7 +401,7 @@ func (c *adapterMemory) doSetWithLockCheck(key interface{}, value interface{}, d
 	if v, ok := c.data[key]; ok && !v.IsExpired() {
 		return v.v, nil
 	}
-	if f, ok := value.(ValueFunc); ok {
+	if f, ok := value.(func() (interface{}, error)); ok {
 		v, err := f()
 		if err != nil {
 			return nil, err
