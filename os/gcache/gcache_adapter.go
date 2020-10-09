@@ -55,7 +55,7 @@ type Adapter interface {
 	// It does not expire if <duration> == 0.
 	// It deletes the <key> if <duration> < 0 or given <value> is nil, but it does nothing
 	// if <value> is a function and the function result is nil.
-	GetOrSetFunc(key interface{}, f ValueFunc, duration time.Duration) (interface{}, error)
+	GetOrSetFunc(key interface{}, f func() (interface{}, error), duration time.Duration) (interface{}, error)
 
 	// GetOrSetFuncLock retrieves and returns the value of <key>, or sets <key> with result of
 	// function <f> and returns its result if <key> does not exist in the cache. The key-value
@@ -66,7 +66,7 @@ type Adapter interface {
 	//
 	// Note that the function <f> should be executed within writing mutex lock for concurrent
 	// safety purpose.
-	GetOrSetFuncLock(key interface{}, f ValueFunc, duration time.Duration) (interface{}, error)
+	GetOrSetFuncLock(key interface{}, f func() (interface{}, error), duration time.Duration) (interface{}, error)
 
 	// Contains returns true if <key> exists in the cache, or else returns false.
 	Contains(key interface{}) (bool, error)

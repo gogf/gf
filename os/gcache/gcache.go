@@ -13,9 +13,6 @@ import (
 	"time"
 )
 
-// ValueFunc is the function for custom cache value producing.
-type ValueFunc func() (value interface{}, err error)
-
 // Default cache object.
 var defaultCache = New()
 
@@ -61,7 +58,7 @@ func GetOrSet(key interface{}, value interface{}, duration time.Duration) (inter
 // GetOrSetFunc returns the value of <key>, or sets <key> with result of function <f>
 // and returns its result if <key> does not exist in the cache. The key-value pair expires
 // after <duration>. It does not expire if <duration> == 0.
-func GetOrSetFunc(key interface{}, f ValueFunc, duration time.Duration) (interface{}, error) {
+func GetOrSetFunc(key interface{}, f func() (interface{}, error), duration time.Duration) (interface{}, error) {
 	return defaultCache.GetOrSetFunc(key, f, duration)
 }
 
@@ -70,7 +67,7 @@ func GetOrSetFunc(key interface{}, f ValueFunc, duration time.Duration) (interfa
 // after <duration>. It does not expire if <duration> == 0.
 //
 // Note that the function <f> is executed within writing mutex lock.
-func GetOrSetFuncLock(key interface{}, f ValueFunc, duration time.Duration) (interface{}, error) {
+func GetOrSetFuncLock(key interface{}, f func() (interface{}, error), duration time.Duration) (interface{}, error) {
 	return defaultCache.GetOrSetFuncLock(key, f, duration)
 }
 

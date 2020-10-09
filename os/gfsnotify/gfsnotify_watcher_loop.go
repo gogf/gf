@@ -23,14 +23,14 @@ func (w *Watcher) startWatchLoop() {
 			// Event listening.
 			case ev := <-w.watcher.Events:
 				// Filter the repeated event in custom duration.
-				w.cache.SetIfNotExist(ev.String(), func() interface{} {
+				w.cache.SetIfNotExist(ev.String(), func() (interface{}, error) {
 					w.events.Push(&Event{
 						event:   ev,
 						Path:    ev.Name,
 						Op:      Op(ev.Op),
 						Watcher: w,
 					})
-					return struct{}{}
+					return struct{}{}, nil
 				}, repeatEventFilterDuration)
 
 			case err := <-w.watcher.Errors:
