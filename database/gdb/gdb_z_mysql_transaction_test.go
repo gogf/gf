@@ -764,3 +764,31 @@ func Test_Transaction(t *testing.T) {
 		}
 	})
 }
+
+func Test_Transaction_Panic(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		err := db.Transaction(func(tx *gdb.TX) error {
+			if _, err := tx.Replace(table, g.Map{
+				"id":          1,
+				"passport":    "USER_1",
+				"password":    "PASS_1",
+				"nickname":    "NAME_1",
+				"create_time": gtime.Now().String(),
+			}); err != nil {
+				t.Error(err)
+			}
+			panic("error")
+			return nil
+		})
+		t.AssertNE(err, nil)
+
+		if value, err := db.Table(table).Fields("nickname").Where("id", 1).Value(); err != nil {
+			gtest.Error(err)
+		} else {
+			t.Assert(value.String(), "name_1")
+		}
+	})
+}
