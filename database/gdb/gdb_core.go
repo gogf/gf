@@ -310,6 +310,11 @@ func (c *Core) Transaction(f func(tx *TX) error) (err error) {
 		return err
 	}
 	defer func() {
+		if err == nil {
+			if e := recover(); e != nil {
+				err = fmt.Errorf("%v", e)
+			}
+		}
 		if err != nil {
 			if e := tx.Rollback(); e != nil {
 				err = e
