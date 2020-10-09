@@ -99,19 +99,20 @@ func (d *DriverSqlite) TableFields(table string, schema ...string) (fields map[s
 	if len(schema) > 0 && schema[0] != "" {
 		checkSchema = schema[0]
 	}
-	v := gcache.GetOrSetFunc(
-		fmt.Sprintf(`sqlite_table_fields_%s_%s`, table, checkSchema), func() interface{} {
+	v, _ := gcache.GetOrSetFunc(
+		fmt.Sprintf(`sqlite_table_fields_%s_%s`, table, checkSchema),
+		func() (interface{}, error) {
 			var (
 				result Result
 				link   *sql.DB
 			)
 			link, err = d.DB.GetSlave(checkSchema)
 			if err != nil {
-				return nil
+				return nil, err
 			}
 			result, err = d.DB.DoGetAll(link, fmt.Sprintf(`PRAGMA TABLE_INFO(%s)`, table))
 			if err != nil {
-				return nil
+				return nil, err
 			}
 			fields = make(map[string]*TableField)
 			for i, m := range result {
@@ -121,7 +122,7 @@ func (d *DriverSqlite) TableFields(table string, schema ...string) (fields map[s
 					Type:  strings.ToLower(m["type"].String()),
 				}
 			}
-			return fields
+			return fields, nil
 		}, 0)
 	if err == nil {
 		fields = v.(map[string]*TableField)

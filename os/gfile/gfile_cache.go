@@ -39,7 +39,7 @@ func GetBytesWithCache(path string, duration ...time.Duration) []byte {
 	if len(duration) > 0 {
 		expire = duration[0]
 	}
-	r := gcache.GetOrSetFuncLock(key, func() interface{} {
+	r, _ := gcache.GetOrSetFuncLock(key, func() (interface{}, error) {
 		b := GetBytes(path)
 		if b != nil {
 			// Adding this <path> to gfsnotify,
@@ -49,7 +49,7 @@ func GetBytesWithCache(path string, duration ...time.Duration) []byte {
 				gfsnotify.Exit()
 			})
 		}
-		return b
+		return b, nil
 	}, expire)
 	if r != nil {
 		return r.([]byte)

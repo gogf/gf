@@ -15,7 +15,7 @@ import (
 
 func Test_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		f32 := float32(123.456)
+		f32 := float32(123.451)
 		i64 := int64(1552578474888)
 		t.AssertEQ(gconv.Int(f32), int(123))
 		t.AssertEQ(gconv.Int8(f32), int8(123))

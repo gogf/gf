@@ -103,23 +103,23 @@ func (d *DriverMysql) TableFields(table string, schema ...string) (fields map[st
 	if len(schema) > 0 && schema[0] != "" {
 		checkSchema = schema[0]
 	}
-	v := gcache.GetOrSetFunc(
+	v, _ := gcache.GetOrSetFunc(
 		fmt.Sprintf(`mysql_table_fields_%s_%s`, table, checkSchema),
-		func() interface{} {
+		func() (interface{}, error) {
 			var (
 				result Result
 				link   *sql.DB
 			)
 			link, err = d.DB.GetSlave(checkSchema)
 			if err != nil {
-				return nil
+				return nil, err
 			}
 			result, err = d.DB.DoGetAll(
 				link,
 				fmt.Sprintf(`SHOW FULL COLUMNS FROM %s`, d.DB.QuoteWord(table)),
 			)
 			if err != nil {
-				return nil
+				return nil, err
 			}
 			fields = make(map[string]*TableField)
 			for i, m := range result {
@@ -134,7 +134,7 @@ func (d *DriverMysql) TableFields(table string, schema ...string) (fields map[st
 					Comment: m["Comment"].String(),
 				}
 			}
-			return fields
+			return fields, nil
 		}, 0)
 	if err == nil {
 		fields = v.(map[string]*TableField)

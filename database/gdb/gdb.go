@@ -438,11 +438,11 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 		node = &n
 	}
 	// Cache the underlying connection pool object by node.
-	v := gcache.GetOrSetFuncLock(node.String(), func() interface{} {
+	v, _ := gcache.GetOrSetFuncLock(node.String(), func() (interface{}, error) {
 		sqlDb, err = c.DB.Open(node)
 		if err != nil {
 			intlog.Printf("DB open failed: %v, %+v", err, node)
-			return nil
+			return nil, err
 		}
 		if c.maxIdleConnCount > 0 {
 			sqlDb.SetMaxIdleConns(c.maxIdleConnCount)
@@ -461,7 +461,7 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 		} else if node.MaxConnLifetime > 0 {
 			sqlDb.SetConnMaxLifetime(node.MaxConnLifetime * time.Second)
 		}
-		return sqlDb
+		return sqlDb, nil
 	}, 0)
 	if v != nil && sqlDb == nil {
 		sqlDb = v.(*sql.DB)

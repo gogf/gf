@@ -38,23 +38,24 @@ func (c *Cache) SetAdapter(adapter Adapter) {
 	c.Adapter = adapter
 }
 
-// Contains returns true if <key> exists in the cache, or else returns false.
-func (c *Cache) Contains(key interface{}) bool {
-	return c.Get(key) != nil
-}
-
 // GetVar retrieves and returns the value of <key> as gvar.Var.
-func (c *Cache) GetVar(key interface{}) *gvar.Var {
-	return gvar.New(c.Get(key))
+func (c *Cache) GetVar(key interface{}) (*gvar.Var, error) {
+	v, err := c.Get(key)
+	return gvar.New(v), err
 }
 
 // Removes deletes <keys> in the cache.
 // Deprecated, use Remove instead.
-func (c *Cache) Removes(keys []interface{}) {
-	c.Remove(keys...)
+func (c *Cache) Removes(keys []interface{}) error {
+	_, err := c.Remove(keys...)
+	return err
 }
 
 // KeyStrings returns all keys in the cache as string slice.
-func (c *Cache) KeyStrings() []string {
-	return gconv.Strings(c.Keys())
+func (c *Cache) KeyStrings() ([]string, error) {
+	keys, err := c.Keys()
+	if err != nil {
+		return nil, err
+	}
+	return gconv.Strings(keys), nil
 }

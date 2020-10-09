@@ -108,15 +108,16 @@ func (d *DriverPgsql) TableFields(table string, schema ...string) (fields map[st
 	if len(schema) > 0 && schema[0] != "" {
 		checkSchema = schema[0]
 	}
-	v := gcache.GetOrSetFunc(
-		fmt.Sprintf(`pgsql_table_fields_%s_%s`, table, checkSchema), func() interface{} {
+	v, _ := gcache.GetOrSetFunc(
+		fmt.Sprintf(`pgsql_table_fields_%s_%s`, table, checkSchema),
+		func() (interface{}, error) {
 			var (
 				result Result
 				link   *sql.DB
 			)
 			link, err = d.DB.GetSlave(checkSchema)
 			if err != nil {
-				return nil
+				return nil, err
 			}
 			result, err = d.DB.DoGetAll(link, fmt.Sprintf(`
 			SELECT a.attname AS field, t.typname AS type FROM pg_class c, pg_attribute a 
@@ -124,7 +125,7 @@ func (d *DriverPgsql) TableFields(table string, schema ...string) (fields map[st
 	        WHERE c.relname = '%s' and a.attnum > 0 and a.attrelid = c.oid and a.atttypid = t.oid 
 			ORDER BY a.attnum`, strings.ToLower(table)))
 			if err != nil {
-				return nil
+				return nil, err
 			}
 
 			fields = make(map[string]*TableField)
@@ -135,7 +136,7 @@ func (d *DriverPgsql) TableFields(table string, schema ...string) (fields map[st
 					Type:  m["type"].String(),
 				}
 			}
-			return fields
+			return fields, nil
 		}, 0)
 	if err == nil {
 		fields = v.(map[string]*TableField)

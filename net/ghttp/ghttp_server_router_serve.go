@@ -44,13 +44,15 @@ func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*handlerParsedI
 		}
 	}
 	// Search and cache the router handlers.
-	value := s.serveCache.GetOrSetFunc(s.serveHandlerKey(method, r.URL.Path, r.GetHost()), func() interface{} {
-		parsedItems, hasHook, hasServe = s.searchHandlers(method, r.URL.Path, r.GetHost())
-		if parsedItems != nil {
-			return &handlerCacheItem{parsedItems, hasHook, hasServe}
-		}
-		return nil
-	}, gROUTE_CACHE_DURATION)
+	value, _ := s.serveCache.GetOrSetFunc(
+		s.serveHandlerKey(method, r.URL.Path, r.GetHost()),
+		func() (interface{}, error) {
+			parsedItems, hasHook, hasServe = s.searchHandlers(method, r.URL.Path, r.GetHost())
+			if parsedItems != nil {
+				return &handlerCacheItem{parsedItems, hasHook, hasServe}, nil
+			}
+			return nil, nil
+		}, gROUTE_CACHE_DURATION)
 	if value != nil {
 		item := value.(*handlerCacheItem)
 		return item.parsedItems, item.hasHook, item.hasServe
