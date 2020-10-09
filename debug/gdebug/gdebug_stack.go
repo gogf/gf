@@ -9,6 +9,7 @@ package gdebug
 import (
 	"bytes"
 	"fmt"
+	"path/filepath"
 	"runtime"
 	"strings"
 )
@@ -68,8 +69,13 @@ func StackWithFilters(filters []string, skip ...int) string {
 				file[0:len(goRootForFilter)] == goRootForFilter {
 				continue
 			}
+			// Custom filtering.
 			filtered = false
 			for _, filter := range filters {
+				// Ignore test files.
+				if strings.HasSuffix(filepath.Base(file), "_test.go") {
+					break
+				}
 				if filter != "" && strings.Contains(file, filter) {
 					filtered = true
 					break

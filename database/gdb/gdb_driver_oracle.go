@@ -159,9 +159,9 @@ func (d *DriverOracle) TableFields(table string, schema ...string) (fields map[s
 	if len(schema) > 0 && schema[0] != "" {
 		checkSchema = schema[0]
 	}
-	v := gcache.GetOrSetFunc(
+	v, _ := gcache.GetOrSetFunc(
 		fmt.Sprintf(`oracle_table_fields_%s_%s`, table, checkSchema),
-		func() interface{} {
+		func() (interface{}, error) {
 			result := (Result)(nil)
 			result, err = d.DB.GetAll(fmt.Sprintf(`
 			SELECT COLUMN_NAME AS FIELD, CASE DATA_TYPE 
@@ -170,7 +170,7 @@ func (d *DriverOracle) TableFields(table string, schema ...string) (fields map[s
 				ELSE DATA_TYPE||'('||DATA_LENGTH||')' END AS TYPE  
 			FROM USER_TAB_COLUMNS WHERE TABLE_NAME = '%s' ORDER BY COLUMN_ID`, strings.ToUpper(table)))
 			if err != nil {
-				return nil
+				return nil, err
 			}
 			fields = make(map[string]*TableField)
 			for i, m := range result {
@@ -180,7 +180,7 @@ func (d *DriverOracle) TableFields(table string, schema ...string) (fields map[s
 					Type:  strings.ToLower(m["TYPE"].String()),
 				}
 			}
-			return fields
+			return fields, nil
 		}, 0)
 	if err == nil {
 		fields = v.(map[string]*TableField)
@@ -190,24 +190,26 @@ func (d *DriverOracle) TableFields(table string, schema ...string) (fields map[s
 
 func (d *DriverOracle) getTableUniqueIndex(table string) (fields map[string]map[string]string, err error) {
 	table = strings.ToUpper(table)
-	v := gcache.GetOrSetFunc("table_unique_index_"+table, func() interface{} {
-		res := (Result)(nil)
-		res, err = d.DB.GetAll(fmt.Sprintf(`
+	v, _ := gcache.GetOrSetFunc(
+		"table_unique_index_"+table,
+		func() (interface{}, error) {
+			res := (Result)(nil)
+			res, err = d.DB.GetAll(fmt.Sprintf(`
 		SELECT INDEX_NAME,COLUMN_NAME,CHAR_LENGTH FROM USER_IND_COLUMNS 
 		WHERE TABLE_NAME = '%s' 
 		AND INDEX_NAME IN(SELECT INDEX_NAME FROM USER_INDEXES WHERE TABLE_NAME='%s' AND UNIQUENESS='UNIQUE') 
 		ORDER BY INDEX_NAME,COLUMN_POSITION`, table, table))
-		if err != nil {
-			return nil
-		}
-		fields := make(map[string]map[string]string)
-		for _, v := range res {
-			mm := make(map[string]string)
-			mm[v["COLUMN_NAME"].String()] = v["CHAR_LENGTH"].String()
-			fields[v["INDEX_NAME"].String()] = mm
-		}
-		return fields
-	}, 0)
+			if err != nil {
+				return nil, err
+			}
+			fields := make(map[string]map[string]string)
+			for _, v := range res {
+				mm := make(map[string]string)
+				mm[v["COLUMN_NAME"].String()] = v["CHAR_LENGTH"].String()
+				fields[v["INDEX_NAME"].String()] = mm
+			}
+			return fields, nil
+		}, 0)
 	if err == nil {
 		fields = v.(map[string]map[string]string)
 	}

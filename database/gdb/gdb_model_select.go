@@ -439,7 +439,7 @@ func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, e
 		if len(cacheKey) == 0 {
 			cacheKey = sql + ", @PARAMS:" + gconv.String(args)
 		}
-		if v := cacheObj.GetVar(cacheKey); !v.IsNil() {
+		if v, _ := cacheObj.GetVar(cacheKey); !v.IsNil() {
 			if result, ok := v.Val().(Result); ok {
 				// In-memory cache.
 				return result, nil
