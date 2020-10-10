@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/internal/empty"
+	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/internal/utils"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/util/gutil"
@@ -97,8 +98,51 @@ func GetInsertOperationByOption(option int) string {
 	return operator
 }
 
-// DataToMapDeep converts struct object to map type recursively.
+// ConvertDataForTableRecord is a very important function, which does converting for any data that
+// will be inserted into table as a record.
+//
 // The parameter <obj> should be type of *map/map/*struct/struct.
+// It supports inherit struct definition for struct.
+func ConvertDataForTableRecord(value interface{}) map[string]interface{} {
+	var (
+		rvValue reflect.Value
+		rvKind  reflect.Kind
+		data    = DataToMapDeep(value)
+	)
+	for k, v := range data {
+		rvValue = reflect.ValueOf(v)
+		rvKind = rvValue.Kind()
+		for rvKind == reflect.Ptr {
+			rvValue = rvValue.Elem()
+			rvKind = rvValue.Kind()
+		}
+		switch rvKind {
+		case reflect.Slice, reflect.Array, reflect.Map:
+			// It should ignore the bytes type.
+			if _, ok := v.([]byte); !ok {
+				// Convert the value to JSON.
+				data[k], _ = json.Marshal(v)
+			}
+		case reflect.Struct:
+			switch v.(type) {
+			case time.Time, *time.Time, gtime.Time, *gtime.Time:
+				continue
+			default:
+				// Use string conversion in default.
+				if s, ok := v.(apiString); ok {
+					data[k] = s.String()
+				} else {
+					// Convert the value to JSON.
+					data[k], _ = json.Marshal(v)
+				}
+			}
+		}
+	}
+	return data
+}
+
+// DataToMapDeep converts <value> to map type recursively.
+// The parameter <value> should be type of *map/map/*struct/struct.
 // It supports inherit struct definition for struct.
 func DataToMapDeep(value interface{}) map[string]interface{} {
 	if v, ok := value.(apiMapStrAny); ok {

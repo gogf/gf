@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/container/gmap"
+	"github.com/gogf/gf/encoding/gparser"
 	"github.com/gogf/gf/util/gutil"
 	"testing"
 	"time"
@@ -93,6 +94,32 @@ func Test_Model_Insert(t *testing.T) {
 		t.Assert(err, nil)
 		n, _ = result.RowsAffected()
 		t.Assert(n, 3)
+	})
+}
+
+func Test_Model_Insert_WithStructAndSliceAttribute(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		type Password struct {
+			Salt string `json:"salt"`
+			Pass string `json:"pass"`
+		}
+		data := g.Map{
+			"id":          1,
+			"passport":    "t1",
+			"password":    &Password{"123", "456"},
+			"nickname":    []string{"A", "B", "C"},
+			"create_time": gtime.Now().String(),
+		}
+		_, err := db.Table(table).Data(data).Insert()
+		t.Assert(err, nil)
+
+		one, err := db.Table(table).One("id", 1)
+		t.Assert(err, nil)
+		t.Assert(one["passport"], data["passport"])
+		t.Assert(one["create_time"], data["create_time"])
+		t.Assert(one["nickname"], gparser.MustToJson(data["nickname"]))
 	})
 }
 

@@ -9,6 +9,7 @@ package gdb_test
 import (
 	"fmt"
 	"github.com/gogf/gf/container/garray"
+	"github.com/gogf/gf/encoding/gparser"
 	"testing"
 	"time"
 
@@ -180,6 +181,33 @@ func Test_DB_Insert(t *testing.T) {
 		t.Assert(one["password"].String(), "25d55ad283aa400af464c76d71qw07ad")
 		t.Assert(one["nickname"].String(), "T200")
 		t.Assert(one["create_time"].GTime().String(), timeStr)
+	})
+}
+
+func Test_DB_Insert_WithStructAndSliceAttribute(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		type Password struct {
+			Salt string `json:"salt"`
+			Pass string `json:"pass"`
+		}
+		data := g.Map{
+			"id":          1,
+			"passport":    "t1",
+			"password":    &Password{"123", "456"},
+			"nickname":    []string{"A", "B", "C"},
+			"create_time": gtime.Now().String(),
+		}
+		_, err := db.Insert(table, data)
+		t.Assert(err, nil)
+
+		one, err := db.GetOne(fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 1)
+		t.Assert(err, nil)
+		t.Assert(one["passport"], data["passport"])
+		t.Assert(one["create_time"], data["create_time"])
+		t.Assert(one["nickname"], gparser.MustToJson(data["nickname"]))
 	})
 }
 
