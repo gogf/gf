@@ -24,8 +24,7 @@ import (
 )
 
 var (
-	numberSequence      = regexp.MustCompile(`([a-zA-Z])(\d+)([a-zA-Z]?)`)
-	numberReplacement   = []byte(`$1 $2 $3`)
+	numberSequence      = regexp.MustCompile(`([a-zA-Z]{0,1})(\d+)([a-zA-Z]{0,1})`)
 	firstCamelCaseStart = regexp.MustCompile(`([A-Z]+)([A-Z]?[_a-z\d]+)|$`)
 	firstCamelCaseEnd   = regexp.MustCompile(`([\w\W]*?)([_]?[A-Z]+)$`)
 )
@@ -139,9 +138,21 @@ func DelimitedScreamingCase(s string, del uint8, screaming bool) string {
 }
 
 func addWordBoundariesToNumbers(s string) string {
-	b := []byte(s)
-	b = numberSequence.ReplaceAll(b, numberReplacement)
-	return string(b)
+	r := numberSequence.ReplaceAllFunc([]byte(s), func(bytes []byte) []byte {
+		var result []byte
+		match := numberSequence.FindSubmatch(bytes)
+		if len(match[1]) > 0 {
+			result = append(result, match[1]...)
+			result = append(result, []byte(" ")...)
+		}
+		result = append(result, match[2]...)
+		if len(match[3]) > 0 {
+			result = append(result, []byte(" ")...)
+			result = append(result, match[3]...)
+		}
+		return result
+	})
+	return string(r)
 }
 
 // Converts a string to CamelCase
