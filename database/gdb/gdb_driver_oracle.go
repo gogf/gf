@@ -235,7 +235,7 @@ func (d *DriverOracle) DoInsert(link Link, table string, data interface{}, optio
 	case reflect.Map:
 		fallthrough
 	case reflect.Struct:
-		dataMap = DataToMapDeep(data)
+		dataMap = ConvertDataForTableRecord(data)
 	default:
 		return result, errors.New(fmt.Sprint("unsupported data type:", kind))
 	}
@@ -355,12 +355,12 @@ func (d *DriverOracle) DoBatchInsert(link Link, table string, list interface{}, 
 		case reflect.Array:
 			listMap = make(List, rv.Len())
 			for i := 0; i < rv.Len(); i++ {
-				listMap[i] = DataToMapDeep(rv.Index(i).Interface())
+				listMap[i] = ConvertDataForTableRecord(rv.Index(i).Interface())
 			}
 		case reflect.Map:
 			fallthrough
 		case reflect.Struct:
-			listMap = List{Map(DataToMapDeep(list))}
+			listMap = List{Map(ConvertDataForTableRecord(list))}
 		default:
 			return result, errors.New(fmt.Sprint("unsupported list type:", kind))
 		}

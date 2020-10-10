@@ -59,7 +59,7 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 		}
 		switch refKind {
 		case reflect.Map, reflect.Struct:
-			dataMap := DataToMapDeep(m.data)
+			dataMap := ConvertDataForTableRecord(m.data)
 			gutil.MapDelete(dataMap, fieldNameCreate, fieldNameUpdate, fieldNameDelete)
 			if fieldNameUpdate != "" {
 				dataMap[fieldNameUpdate] = gtime.Now().String()

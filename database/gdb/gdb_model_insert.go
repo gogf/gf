@@ -68,11 +68,11 @@ func (m *Model) Data(data ...interface{}) *Model {
 			case reflect.Slice, reflect.Array:
 				list := make(List, rv.Len())
 				for i := 0; i < rv.Len(); i++ {
-					list[i] = DataToMapDeep(rv.Index(i).Interface())
+					list[i] = ConvertDataForTableRecord(rv.Index(i).Interface())
 				}
 				model.data = list
 			case reflect.Map:
-				model.data = DataToMapDeep(data[0])
+				model.data = ConvertDataForTableRecord(data[0])
 			case reflect.Struct:
 				if v, ok := data[0].(apiInterfaces); ok {
 					var (
@@ -80,11 +80,11 @@ func (m *Model) Data(data ...interface{}) *Model {
 						list  = make(List, len(array))
 					)
 					for i := 0; i < len(array); i++ {
-						list[i] = DataToMapDeep(array[i])
+						list[i] = ConvertDataForTableRecord(array[i])
 					}
 					model.data = list
 				} else {
-					model.data = DataToMapDeep(data[0])
+					model.data = ConvertDataForTableRecord(data[0])
 				}
 			default:
 				model.data = data[0]
