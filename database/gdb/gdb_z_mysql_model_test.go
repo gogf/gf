@@ -123,6 +123,28 @@ func Test_Model_Insert_WithStructAndSliceAttribute(t *testing.T) {
 	})
 }
 
+func Test_Model_Insert_Time(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		data := g.Map{
+			"id":          1,
+			"passport":    "t1",
+			"password":    "p1",
+			"nickname":    "n1",
+			"create_time": "2020-10-10 20:09:18.334",
+		}
+		_, err := db.Table(table).Data(data).Insert()
+		t.Assert(err, nil)
+
+		one, err := db.Table(table).One("id", 1)
+		t.Assert(err, nil)
+		t.Assert(one["passport"], data["passport"])
+		t.Assert(one["create_time"], "2020-10-10 20:09:18")
+		t.Assert(one["nickname"], data["nickname"])
+	})
+}
+
 func Test_Model_BatchInsertWithArrayStruct(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
