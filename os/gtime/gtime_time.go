@@ -202,31 +202,31 @@ func (t *Time) Clone() *Time {
 
 // Add adds the duration to current time.
 func (t *Time) Add(d time.Duration) *Time {
-	t.Time = t.Time.Add(d)
-	return t
+	newTime := t.Clone()
+	newTime.Time = newTime.Time.Add(d)
+	return newTime
 }
 
 // AddStr parses the given duration as string and adds it to current time.
-func (t *Time) AddStr(duration string) error {
+func (t *Time) AddStr(duration string) (*Time, error) {
 	if d, err := time.ParseDuration(duration); err != nil {
-		return err
+		return nil, err
 	} else {
-		t.Time = t.Time.Add(d)
+		return t.Add(d), nil
 	}
-	return nil
 }
 
 // ToLocation converts current time to specified location.
 func (t *Time) ToLocation(location *time.Location) *Time {
-	t.Time = t.Time.In(location)
-	return t
+	newTime := t.Clone()
+	newTime.Time = newTime.Time.In(location)
+	return newTime
 }
 
 // ToZone converts current time to specified zone like: Asia/Shanghai.
 func (t *Time) ToZone(zone string) (*Time, error) {
 	if l, err := time.LoadLocation(zone); err == nil {
-		t.Time = t.Time.In(l)
-		return t, nil
+		return t.ToLocation(l), nil
 	} else {
 		return nil, err
 	}
@@ -234,8 +234,9 @@ func (t *Time) ToZone(zone string) (*Time, error) {
 
 // UTC converts current time to UTC timezone.
 func (t *Time) UTC() *Time {
-	t.Time = t.Time.UTC()
-	return t
+	newTime := t.Clone()
+	newTime.Time = newTime.Time.UTC()
+	return newTime
 }
 
 // ISO8601 formats the time as ISO8601 and returns it as string.
@@ -250,14 +251,16 @@ func (t *Time) RFC822() string {
 
 // Local converts the time to local timezone.
 func (t *Time) Local() *Time {
-	t.Time = t.Time.Local()
-	return t
+	newTime := t.Clone()
+	newTime.Time = newTime.Time.Local()
+	return newTime
 }
 
 // AddDate adds year, month and day to the time.
 func (t *Time) AddDate(years int, months int, days int) *Time {
-	t.Time = t.Time.AddDate(years, months, days)
-	return t
+	newTime := t.Clone()
+	newTime.Time = newTime.Time.AddDate(years, months, days)
+	return newTime
 }
 
 // Round returns the result of rounding t to the nearest multiple of d (since the zero time).
@@ -269,8 +272,9 @@ func (t *Time) AddDate(years int, months int, days int) *Time {
 // time. Thus, Round(Hour) may return a time with a non-zero
 // minute, depending on the time's Location.
 func (t *Time) Round(d time.Duration) *Time {
-	t.Time = t.Time.Round(d)
-	return t
+	newTime := t.Clone()
+	newTime.Time = newTime.Time.Round(d)
+	return newTime
 }
 
 // Truncate returns the result of rounding t down to a multiple of d (since the zero time).
@@ -281,8 +285,9 @@ func (t *Time) Round(d time.Duration) *Time {
 // time. Thus, Truncate(Hour) may return a time with a non-zero
 // minute, depending on the time's Location.
 func (t *Time) Truncate(d time.Duration) *Time {
-	t.Time = t.Time.Truncate(d)
-	return t
+	newTime := t.Clone()
+	newTime.Time = newTime.Time.Truncate(d)
+	return newTime
 }
 
 // Equal reports whether t and u represent the same time instant.
