@@ -119,11 +119,15 @@ func (d *DriverPgsql) TableFields(table string, schema ...string) (fields map[st
 			if err != nil {
 				return nil, err
 			}
-			result, err = d.DB.DoGetAll(link, fmt.Sprintf(`
-			SELECT a.attname AS field, t.typname AS type FROM pg_class c, pg_attribute a 
-	        LEFT OUTER JOIN pg_description b ON a.attrelid=b.objoid AND a.attnum = b.objsubid,pg_type t
-	        WHERE c.relname = '%s' and a.attnum > 0 and a.attrelid = c.oid and a.atttypid = t.oid 
-			ORDER BY a.attnum`, strings.ToLower(table)))
+			structureSql := fmt.Sprintf(`
+SELECT a.attname AS field, t.typname AS type FROM pg_class c, pg_attribute a 
+LEFT OUTER JOIN pg_description b ON a.attrelid=b.objoid AND a.attnum = b.objsubid,pg_type t
+WHERE c.relname = '%s' and a.attnum > 0 and a.attrelid = c.oid and a.atttypid = t.oid 
+ORDER BY a.attnum`,
+				strings.ToLower(table),
+			)
+			structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
+			result, err = d.DB.DoGetAll(link, structureSql)
 			if err != nil {
 				return nil, err
 			}

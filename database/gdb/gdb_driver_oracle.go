@@ -163,12 +163,18 @@ func (d *DriverOracle) TableFields(table string, schema ...string) (fields map[s
 		fmt.Sprintf(`oracle_table_fields_%s_%s`, table, checkSchema),
 		func() (interface{}, error) {
 			result := (Result)(nil)
-			result, err = d.DB.GetAll(fmt.Sprintf(`
-			SELECT COLUMN_NAME AS FIELD, CASE DATA_TYPE 
-			    WHEN 'NUMBER' THEN DATA_TYPE||'('||DATA_PRECISION||','||DATA_SCALE||')' 
-				WHEN 'FLOAT' THEN DATA_TYPE||'('||DATA_PRECISION||','||DATA_SCALE||')' 
-				ELSE DATA_TYPE||'('||DATA_LENGTH||')' END AS TYPE  
-			FROM USER_TAB_COLUMNS WHERE TABLE_NAME = '%s' ORDER BY COLUMN_ID`, strings.ToUpper(table)))
+			structureSql := fmt.Sprintf(`
+SELECT 
+	COLUMN_NAME AS FIELD, 
+	CASE DATA_TYPE  
+	WHEN 'NUMBER' THEN DATA_TYPE||'('||DATA_PRECISION||','||DATA_SCALE||')' 
+	WHEN 'FLOAT' THEN DATA_TYPE||'('||DATA_PRECISION||','||DATA_SCALE||')' 
+	ELSE DATA_TYPE||'('||DATA_LENGTH||')' END AS TYPE  
+FROM USER_TAB_COLUMNS WHERE TABLE_NAME = '%s' ORDER BY COLUMN_ID`,
+				strings.ToUpper(table),
+			)
+			structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
+			result, err = d.DB.GetAll(structureSql)
 			if err != nil {
 				return nil, err
 			}
