@@ -276,6 +276,10 @@ func (r *Request) parseBody() {
 		return
 	}
 	r.parsedBody = true
+	// There's no data posted.
+	if r.ContentLength == 0 {
+		return
+	}
 	if body := r.GetBody(); len(body) > 0 {
 		// Trim space/new line characters.
 		body = bytes.TrimSpace(body)
@@ -306,6 +310,10 @@ func (r *Request) parseForm() {
 		return
 	}
 	r.parsedForm = true
+	// There's no data posted.
+	if r.ContentLength == 0 {
+		return
+	}
 	if contentType := r.Header.Get("Content-Type"); contentType != "" {
 		var err error
 		if gstr.Contains(contentType, "multipart/") {
