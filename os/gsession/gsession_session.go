@@ -50,11 +50,6 @@ func (s *Session) init() {
 				intlog.Errorf("session restoring failed for id '%s': %v", s.id, err)
 			}
 		}
-		// If it's an invalid or expired session id,
-		// it should create a new session id.
-		if s.data == nil {
-			s.id = ""
-		}
 	}
 	// Use custom session id creating function.
 	if s.id == "" && s.idFunc != nil {
