@@ -24,14 +24,19 @@ const (
 
 // EnablePProf enables PProf feature for server.
 func (s *Server) EnablePProf(pattern ...string) {
+	s.Domain(gDEFAULT_DOMAIN).EnablePProf(pattern...)
+}
+
+// EnablePProf enables PProf feature for server of specified domain.
+func (d *Domain) EnablePProf(pattern ...string) {
 	p := gDEFAULT_PPROF_PATTERN
 	if len(pattern) > 0 && pattern[0] != "" {
 		p = pattern[0]
 	}
 	up := &utilPProf{}
-	_, _, uri, _ := s.parsePattern(p)
+	_, _, uri, _ := d.server.parsePattern(p)
 	uri = strings.TrimRight(uri, "/")
-	s.Group(uri, func(group *RouterGroup) {
+	d.Group(uri, func(group *RouterGroup) {
 		group.ALL("/*action", up.Index)
 		group.ALL("/cmdline", up.Cmdline)
 		group.ALL("/profile", up.Profile)
