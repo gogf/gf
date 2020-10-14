@@ -157,6 +157,9 @@ type ServerConfig struct {
 	// SessionIdName specifies the session id name.
 	SessionIdName string
 
+	// SessionCookieOutput specifies whether automatic outputting session id to cookie.
+	SessionCookieOutput bool
+
 	// SessionPath specifies the session storage directory path for storing session files.
 	// It only makes sense if the session storage is type of file storage.
 	SessionPath string
@@ -231,50 +234,56 @@ type ServerConfig struct {
 	Graceful bool
 }
 
-// Config creates and returns a ServerConfig object with default configurations.
+// Deprecated. Use NewConfig instead.
+func Config() ServerConfig {
+	return NewConfig()
+}
+
+// NewConfig creates and returns a ServerConfig object with default configurations.
 // Note that, do not define this default configuration to local package variable, as there're
 // some pointer attributes that may be shared in different servers.
-func Config() ServerConfig {
+func NewConfig() ServerConfig {
 	return ServerConfig{
-		Address:           "",
-		HTTPSAddr:         "",
-		Handler:           nil,
-		ReadTimeout:       60 * time.Second,
-		WriteTimeout:      0, // No timeout.
-		IdleTimeout:       60 * time.Second,
-		MaxHeaderBytes:    10240, // 10KB
-		KeepAlive:         true,
-		IndexFiles:        []string{"index.html", "index.htm"},
-		IndexFolder:       false,
-		ServerAgent:       "GF HTTP Server",
-		ServerRoot:        "",
-		StaticPaths:       make([]staticPathItem, 0),
-		FileServerEnabled: false,
-		CookieMaxAge:      time.Hour * 24 * 365,
-		CookiePath:        "/",
-		CookieDomain:      "",
-		SessionMaxAge:     time.Hour * 24,
-		SessionIdName:     "gfsessionid",
-		SessionPath:       gsession.DefaultStorageFilePath,
-		Logger:            glog.New(),
-		LogStdout:         true,
-		ErrorStack:        true,
-		ErrorLogEnabled:   true,
-		ErrorLogPattern:   "error-{Ymd}.log",
-		AccessLogEnabled:  false,
-		AccessLogPattern:  "access-{Ymd}.log",
-		DumpRouterMap:     true,
-		ClientMaxBodySize: 8 * 1024 * 1024, // 8MB
-		FormParsingMemory: 1024 * 1024,     // 1MB
-		Rewrites:          make(map[string]string),
-		Graceful:          false,
+		Address:             "",
+		HTTPSAddr:           "",
+		Handler:             nil,
+		ReadTimeout:         60 * time.Second,
+		WriteTimeout:        0, // No timeout.
+		IdleTimeout:         60 * time.Second,
+		MaxHeaderBytes:      10240, // 10KB
+		KeepAlive:           true,
+		IndexFiles:          []string{"index.html", "index.htm"},
+		IndexFolder:         false,
+		ServerAgent:         "GF HTTP Server",
+		ServerRoot:          "",
+		StaticPaths:         make([]staticPathItem, 0),
+		FileServerEnabled:   false,
+		CookieMaxAge:        time.Hour * 24 * 365,
+		CookiePath:          "/",
+		CookieDomain:        "",
+		SessionMaxAge:       time.Hour * 24,
+		SessionIdName:       "gfsessionid",
+		SessionPath:         gsession.DefaultStorageFilePath,
+		SessionCookieOutput: true,
+		Logger:              glog.New(),
+		LogStdout:           true,
+		ErrorStack:          true,
+		ErrorLogEnabled:     true,
+		ErrorLogPattern:     "error-{Ymd}.log",
+		AccessLogEnabled:    false,
+		AccessLogPattern:    "access-{Ymd}.log",
+		DumpRouterMap:       true,
+		ClientMaxBodySize:   8 * 1024 * 1024, // 8MB
+		FormParsingMemory:   1024 * 1024,     // 1MB
+		Rewrites:            make(map[string]string),
+		Graceful:            false,
 	}
 }
 
 // ConfigFromMap creates and returns a ServerConfig object with given map and
 // default configuration object.
 func ConfigFromMap(m map[string]interface{}) (ServerConfig, error) {
-	config := Config()
+	config := NewConfig()
 	if err := gconv.Struct(m, &config); err != nil {
 		return config, err
 	}

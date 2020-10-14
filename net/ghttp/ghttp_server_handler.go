@@ -161,7 +161,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// Automatically set the session id to cookie
 	// if it creates a new session id in this request.
-	if request.Session.IsDirty() && request.Session.Id() != request.GetSessionId() {
+	if s.config.SessionCookieOutput &&
+		request.Session.IsDirty() &&
+		request.Session.Id() != request.GetSessionId() {
 		request.Cookie.SetSessionId(request.Session.Id())
 	}
 	// Output the cookie content to client.
