@@ -92,7 +92,7 @@ type ServerConfig struct {
 	// size of the request body.
 	//
 	// It can be configured in configuration file using string like: 1m, 10m, 500kb etc.
-	// It's 1024 bytes in default.
+	// It's 10240 bytes in default.
 	MaxHeaderBytes int
 
 	// KeepAlive enables HTTP keep-alive.
