@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"github.com/gogf/gf/container/gset"
 	"github.com/gogf/gf/internal/intlog"
+	"sync"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
@@ -67,19 +68,11 @@ const (
 )
 
 var (
+	mu                  sync.Mutex                // Mutex for concurrent safety of defaultWatcher.
 	defaultWatcher      *Watcher                  // Default watcher.
 	callbackIdMap       = gmap.NewIntAnyMap(true) // Id to callback mapping.
 	callbackIdGenerator = gtype.NewInt()          // Atomic id generator for callback.
 )
-
-func init() {
-	var err error
-	defaultWatcher, err = New()
-	if err != nil {
-		// Default watcher object must be created, or else it panics.
-		panic(fmt.Sprintf(`creating default fsnotify watcher failed: %s`, err.Error()))
-	}
-}
 
 // New creates and returns a new watcher.
 // Note that the watcher number is limited by the file handle setting of the system.
@@ -106,7 +99,11 @@ func New() (*Watcher, error) {
 // Add monitors <path> using default watcher with callback function <callbackFunc>.
 // The optional parameter <recursive> specifies whether monitoring the <path> recursively, which is true in default.
 func Add(path string, callbackFunc func(event *Event), recursive ...bool) (callback *Callback, err error) {
-	return defaultWatcher.Add(path, callbackFunc, recursive...)
+	w, err := getDefaultWatcher()
+	if err != nil {
+		return nil, err
+	}
+	return w.Add(path, callbackFunc, recursive...)
 }
 
 // AddOnce monitors <path> using default watcher with callback function <callbackFunc> only once using unique name <name>.
@@ -115,16 +112,28 @@ func Add(path string, callbackFunc func(event *Event), recursive ...bool) (callb
 //
 // The optional parameter <recursive> specifies whether monitoring the <path> recursively, which is true in default.
 func AddOnce(name, path string, callbackFunc func(event *Event), recursive ...bool) (callback *Callback, err error) {
-	return defaultWatcher.AddOnce(name, path, callbackFunc, recursive...)
+	w, err := getDefaultWatcher()
+	if err != nil {
+		return nil, err
+	}
+	return w.AddOnce(name, path, callbackFunc, recursive...)
 }
 
 // Remove removes all monitoring callbacks of given <path> from watcher recursively.
 func Remove(path string) error {
-	return defaultWatcher.Remove(path)
+	w, err := getDefaultWatcher()
+	if err != nil {
+		return err
+	}
+	return w.Remove(path)
 }
 
 // RemoveCallback removes specified callback with given id from watcher.
 func RemoveCallback(callbackId int) error {
+	w, err := getDefaultWatcher()
+	if err != nil {
+		return err
+	}
 	callback := (*Callback)(nil)
 	if r := callbackIdMap.Get(callbackId); r != nil {
 		callback = r.(*Callback)
@@ -132,7 +141,7 @@ func RemoveCallback(callbackId int) error {
 	if callback == nil {
 		return errors.New(fmt.Sprintf(`callback for id %d not found`, callbackId))
 	}
-	defaultWatcher.RemoveCallback(callbackId)
+	w.RemoveCallback(callbackId)
 	return nil
 }
 
@@ -140,4 +149,17 @@ func RemoveCallback(callbackId int) error {
 // of itself from the watcher.
 func Exit() {
 	panic(callbackExitEventPanicStr)
+}
+
+// getDefaultWatcher creates and returns the default watcher.
+// This is used for lazy initialization purpose.
+func getDefaultWatcher() (*Watcher, error) {
+	mu.Lock()
+	defer mu.Unlock()
+	if defaultWatcher != nil {
+		return defaultWatcher, nil
+	}
+	var err error
+	defaultWatcher, err = New()
+	return defaultWatcher, err
 }
