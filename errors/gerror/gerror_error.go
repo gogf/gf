@@ -27,6 +27,7 @@ const (
 
 var (
 	// goRootForFilter is used for stack filtering purpose.
+	// Mainly for development environment.
 	goRootForFilter = runtime.GOROOT()
 )
 
@@ -36,8 +37,11 @@ func init() {
 	}
 }
 
-// Error implements the interface of Error, it returns the error as string.
+// Error implements the interface of Error, it returns all the error as string.
 func (err *Error) Error() string {
+	if err == nil {
+		return ""
+	}
 	if err.text != "" {
 		if err.error != nil {
 			return err.text + ": " + err.error.Error()
@@ -49,6 +53,9 @@ func (err *Error) Error() string {
 
 // Cause returns the root cause error.
 func (err *Error) Cause() error {
+	if err == nil {
+		return nil
+	}
 	loop := err
 	for loop != nil {
 		if loop.error != nil {
@@ -66,8 +73,8 @@ func (err *Error) Cause() error {
 
 // Format formats the frame according to the fmt.Formatter interface.
 //
-// %v, %s   : Print the error string;
-// %-v, %-s : Print current error string;
+// %v, %s   : Print all the error string;
+// %-v, %-s : Print current level error string;
 // %+s      : Print full stack error list;
 // %+v      : Print the error string and full stack error list;
 func (err *Error) Format(s fmt.State, verb rune) {
@@ -118,6 +125,28 @@ func (err *Error) Stack() string {
 		}
 	}
 	return buffer.String()
+}
+
+// Current creates and returns the current level error.
+// It returns nil if current level error is nil.
+func (err *Error) Current() error {
+	if err == nil {
+		return nil
+	}
+	return &Error{
+		error: nil,
+		stack: err.stack,
+		text:  err.text,
+	}
+}
+
+// Next returns the next level error.
+// It returns nil if current level error or the next level error is nil.
+func (err *Error) Next() error {
+	if err == nil {
+		return nil
+	}
+	return err.error
 }
 
 // formatSubStack formats the stack for error.
