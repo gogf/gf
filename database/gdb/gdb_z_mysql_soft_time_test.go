@@ -151,7 +151,7 @@ CREATE TABLE %s (
 }
 
 func Test_SoftUpdateTime(t *testing.T) {
-	table := "time_test_table"
+	table := "time_test_table_" + gtime.TimestampNanoStr()
 	if _, err := db.Exec(fmt.Sprintf(`
 CREATE TABLE %s (
   id        int(11) NOT NULL,

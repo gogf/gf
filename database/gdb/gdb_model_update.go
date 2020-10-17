@@ -73,10 +73,14 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 			updateData = updates
 		}
 	}
+	newData, err := m.filterDataForInsertOrUpdate(updateData)
+	if err != nil {
+		return nil, err
+	}
 	return m.db.DoUpdate(
 		m.getLink(true),
 		m.tables,
-		m.filterDataForInsertOrUpdate(updateData),
+		newData,
 		conditionWhere+conditionExtra,
 		m.mergeArguments(conditionArgs)...,
 	)

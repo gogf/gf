@@ -97,6 +97,7 @@ func Test_Model_Insert(t *testing.T) {
 	})
 }
 
+// Fix issue: https://github.com/gogf/gf/issues/819
 func Test_Model_Insert_WithStructAndSliceAttribute(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
@@ -120,6 +121,91 @@ func Test_Model_Insert_WithStructAndSliceAttribute(t *testing.T) {
 		t.Assert(one["passport"], data["passport"])
 		t.Assert(one["create_time"], data["create_time"])
 		t.Assert(one["nickname"], gparser.MustToJson(data["nickname"]))
+	})
+}
+
+func Test_Model_Insert_KeyFieldNameMapping(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id         int
+			Passport   string
+			Password   string
+			Nickname   string
+			CreateTime string
+		}
+		data := User{
+			Id:         1,
+			Passport:   "user_1",
+			Password:   "pass_1",
+			Nickname:   "name_1",
+			CreateTime: "2020-10-10 12:00:01",
+		}
+		_, err := db.Model(table).Data(data).Insert()
+		t.Assert(err, nil)
+
+		one, err := db.Model(table).FindOne(1)
+		t.Assert(err, nil)
+		t.Assert(one["passport"], data.Passport)
+		t.Assert(one["create_time"], data.CreateTime)
+		t.Assert(one["nickname"], data.Nickname)
+	})
+}
+
+func Test_Model_Update_KeyFieldNameMapping(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id         int
+			Passport   string
+			Password   string
+			Nickname   string
+			CreateTime string
+		}
+		data := User{
+			Id:         1,
+			Passport:   "user_10",
+			Password:   "pass_10",
+			Nickname:   "name_10",
+			CreateTime: "2020-10-10 12:00:01",
+		}
+		_, err := db.Model(table).Data(data).WherePri(1).Update()
+		t.Assert(err, nil)
+
+		one, err := db.Model(table).FindOne(1)
+		t.Assert(err, nil)
+		t.Assert(one["passport"], data.Passport)
+		t.Assert(one["create_time"], data.CreateTime)
+		t.Assert(one["nickname"], data.Nickname)
+	})
+}
+
+func Test_Model_Insert_KeyFieldNameMapping_Error(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id             int
+			Passport       string
+			Password       string
+			Nickname       string
+			CreateTime     string
+			NoneExistFiled string
+		}
+		data := User{
+			Id:         1,
+			Passport:   "user_1",
+			Password:   "pass_1",
+			Nickname:   "name_1",
+			CreateTime: "2020-10-10 12:00:01",
+		}
+		_, err := db.Model(table).Data(data).Insert()
+		t.AssertNE(err, nil)
 	})
 }
 

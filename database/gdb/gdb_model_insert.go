@@ -172,10 +172,14 @@ func (m *Model) doInsertWithOption(option int, data ...interface{}) (result sql.
 				list[k] = v
 			}
 		}
+		newData, err := m.filterDataForInsertOrUpdate(list)
+		if err != nil {
+			return nil, err
+		}
 		return m.db.DoBatchInsert(
 			m.getLink(true),
 			m.tables,
-			m.filterDataForInsertOrUpdate(list),
+			newData,
 			option,
 			batch,
 		)
@@ -192,10 +196,14 @@ func (m *Model) doInsertWithOption(option int, data ...interface{}) (result sql.
 				data[fieldNameUpdate] = nowString
 			}
 		}
+		newData, err := m.filterDataForInsertOrUpdate(data)
+		if err != nil {
+			return nil, err
+		}
 		return m.db.DoInsert(
 			m.getLink(true),
 			m.tables,
-			m.filterDataForInsertOrUpdate(data),
+			newData,
 			option,
 		)
 	}
