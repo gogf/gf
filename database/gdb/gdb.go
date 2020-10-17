@@ -156,7 +156,7 @@ type DB interface {
 	// Internal methods.
 	// ===========================================================================
 
-	filterFields(schema, table string, data map[string]interface{}) map[string]interface{}
+	mappingAndFilterData(schema, table string, data map[string]interface{}, filter bool) (map[string]interface{}, error)
 	convertValue(fieldValue interface{}, fieldType string) interface{}
 	rowsToResult(rows *sql.Rows) (Result, error)
 }
