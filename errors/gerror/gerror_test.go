@@ -127,3 +127,31 @@ func Test_Stack(t *testing.T) {
 		//fmt.Printf("%+v", err)
 	})
 }
+
+func Test_Current(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		err := errors.New("1")
+		err = gerror.Wrap(err, "2")
+		err = gerror.Wrap(err, "3")
+		t.Assert(err.Error(), "3: 2: 1")
+		t.Assert(gerror.Current(err).Error(), "3")
+	})
+}
+
+func Test_Next(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		err := errors.New("1")
+		err = gerror.Wrap(err, "2")
+		err = gerror.Wrap(err, "3")
+		t.Assert(err.Error(), "3: 2: 1")
+
+		err = gerror.Next(err)
+		t.Assert(err.Error(), "2: 1")
+
+		err = gerror.Next(err)
+		t.Assert(err.Error(), "1")
+
+		err = gerror.Next(err)
+		t.Assert(err, nil)
+	})
+}
