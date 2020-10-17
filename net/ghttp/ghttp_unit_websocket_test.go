@@ -19,7 +19,7 @@ import (
 )
 
 func Test_WebSocket(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/ws", func(r *ghttp.Request) {
 		ws, err := r.WebSocket()
@@ -37,23 +37,23 @@ func Test_WebSocket(t *testing.T) {
 		}
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		conn, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf("ws://127.0.0.1:%d/ws", p), nil)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 		defer conn.Close()
 
 		msg := []byte("hello")
 		err = conn.WriteMessage(websocket.TextMessage, msg)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
-		t, data, err := conn.ReadMessage()
-		gtest.Assert(err, nil)
-		gtest.Assert(t, websocket.TextMessage)
-		gtest.Assert(data, msg)
+		mt, data, err := conn.ReadMessage()
+		t.Assert(err, nil)
+		t.Assert(mt, websocket.TextMessage)
+		t.Assert(data, msg)
 	})
 }

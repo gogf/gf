@@ -7,57 +7,70 @@
 package ghttp
 
 import (
+	"fmt"
+	"github.com/gogf/gf/debug/gdebug"
 	"reflect"
 	"strings"
 
 	"github.com/gogf/gf/text/gstr"
 
-	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/util/gconv"
 )
 
-// 分组路由对象
-type RouterGroup struct {
-	parent *RouterGroup // 父级分组路由
-	server *Server      // Server
-	domain *Domain      // Domain
-	prefix string       // URI前缀
-}
+type (
+	// RouterGroup is a group wrapping multiple routes and middleware.
+	RouterGroup struct {
+		parent     *RouterGroup  // Parent group.
+		server     *Server       // Server.
+		domain     *Domain       // Domain.
+		prefix     string        // Prefix for sub-route.
+		middleware []HandlerFunc // Middleware array.
+	}
 
-// 分组路由批量绑定项
-type GroupItem = []interface{}
+	// GroupItem is item for router group.
+	GroupItem = []interface{}
 
-// 预绑定路由项结构
-type groupPreBindItem struct {
-	group    *RouterGroup
-	bindType string
-	pattern  string
-	object   interface{}
-	params   []interface{}
-}
-
-var (
-	// 预处理路由项存储数组
-	preBindItems = make([]groupPreBindItem, 0, 64)
+	// preBindItem is item for lazy registering feature of router group. preBindItem is not really registered
+	// to server when route function of the group called but is lazily registered when server starts.
+	preBindItem struct {
+		group    *RouterGroup
+		bindType string
+		pattern  string
+		object   interface{}   // Can be handler, controller or object.
+		params   []interface{} // Extra parameters for route registering depending on the type.
+		source   string        // Handler is register at certain source file path:line.
+		bound    bool          // Is this item bound to server.
+	}
 )
 
-// 处理预绑定路由项
+var (
+	preBindItems = make([]*preBindItem, 0, 64)
+)
+
+// handlePreBindItems is called when server starts, which does really route registering to the server.
 func (s *Server) handlePreBindItems() {
+	if len(preBindItems) == 0 {
+		return
+	}
 	for _, item := range preBindItems {
+		if item.bound {
+			continue
+		}
+		// Handle the items of current server.
 		if item.group.server != nil && item.group.server != s {
 			continue
 		}
-		if item.group.domain != nil && item.group.domain.s != s {
+		if item.group.domain != nil && item.group.domain.server != s {
 			continue
 		}
-		item.group.doBind(item.bindType, item.pattern, item.object, item.params...)
+		item.group.doBindRoutersToServer(item)
+		item.bound = true
 	}
 }
 
-// 获取分组路由对象
-func (s *Server) Group(prefix string, groups ...func(g *RouterGroup)) *RouterGroup {
-	// 自动识别并加上/前缀
-	if prefix[0] != '/' {
+// Group creates and returns a RouterGroup object.
+func (s *Server) Group(prefix string, groups ...func(group *RouterGroup)) *RouterGroup {
+	if len(prefix) > 0 && prefix[0] != '/' {
 		prefix = "/" + prefix
 	}
 	if prefix == "/" {
@@ -75,8 +88,11 @@ func (s *Server) Group(prefix string, groups ...func(g *RouterGroup)) *RouterGro
 	return group
 }
 
-// 获取分组路由对象(绑定域名)
-func (d *Domain) Group(prefix string, groups ...func(g *RouterGroup)) *RouterGroup {
+// Group creates and returns a RouterGroup object, which is bound to a specified domain.
+func (d *Domain) Group(prefix string, groups ...func(group *RouterGroup)) *RouterGroup {
+	if len(prefix) > 0 && prefix[0] != '/' {
+		prefix = "/" + prefix
+	}
 	if prefix == "/" {
 		prefix = ""
 	}
@@ -92,8 +108,8 @@ func (d *Domain) Group(prefix string, groups ...func(g *RouterGroup)) *RouterGro
 	return group
 }
 
-// 层级递归创建分组路由注册项
-func (g *RouterGroup) Group(prefix string, groups ...func(g *RouterGroup)) *RouterGroup {
+// Group creates and returns a sub-group of current router group.
+func (g *RouterGroup) Group(prefix string, groups ...func(group *RouterGroup)) *RouterGroup {
 	if prefix == "/" {
 		prefix = ""
 	}
@@ -103,6 +119,10 @@ func (g *RouterGroup) Group(prefix string, groups ...func(g *RouterGroup)) *Rout
 		domain: g.domain,
 		prefix: prefix,
 	}
+	if len(g.middleware) > 0 {
+		group.middleware = make([]HandlerFunc, len(g.middleware))
+		copy(group.middleware, g.middleware)
+	}
 	if len(groups) > 0 {
 		for _, v := range groups {
 			v(group)
@@ -111,28 +131,32 @@ func (g *RouterGroup) Group(prefix string, groups ...func(g *RouterGroup)) *Rout
 	return group
 }
 
+// Clone returns a new router group which is a clone of current group.
 func (g *RouterGroup) Clone() *RouterGroup {
-	return &RouterGroup{
-		parent: g.parent,
-		server: g.server,
-		domain: g.domain,
-		prefix: g.prefix,
+	newGroup := &RouterGroup{
+		parent:     g.parent,
+		server:     g.server,
+		domain:     g.domain,
+		prefix:     g.prefix,
+		middleware: make([]HandlerFunc, len(g.middleware)),
 	}
+	copy(newGroup.middleware, g.middleware)
+	return newGroup
 }
 
-// 执行分组路由批量绑定
+// Bind does batch route registering feature for router group.
 func (g *RouterGroup) Bind(items []GroupItem) *RouterGroup {
 	group := g.Clone()
 	for _, item := range items {
 		if len(item) < 3 {
-			glog.Fatalf("invalid router item: %s", item)
+			g.server.Logger().Fatalf("invalid router item: %s", item)
 		}
 		bindType := gstr.ToUpper(gconv.String(item[0]))
 		switch bindType {
 		case "REST":
-			group.preBind("REST", gconv.String(item[0])+":"+gconv.String(item[1]), item[2])
+			group.preBindToLocalArray("REST", gconv.String(item[0])+":"+gconv.String(item[1]), item[2])
 		case "MIDDLEWARE":
-			group.preBind("MIDDLEWARE", gconv.String(item[0])+":"+gconv.String(item[1]), item[2])
+			group.preBindToLocalArray("MIDDLEWARE", gconv.String(item[0])+":"+gconv.String(item[1]), item[2])
 		default:
 			if strings.EqualFold(bindType, "ALL") {
 				bindType = ""
@@ -140,101 +164,96 @@ func (g *RouterGroup) Bind(items []GroupItem) *RouterGroup {
 				bindType += ":"
 			}
 			if len(item) > 3 {
-				group.preBind("HANDLER", bindType+gconv.String(item[1]), item[2], item[3])
+				group.preBindToLocalArray("HANDLER", bindType+gconv.String(item[1]), item[2], item[3])
 			} else {
-				group.preBind("HANDLER", bindType+gconv.String(item[1]), item[2])
+				group.preBindToLocalArray("HANDLER", bindType+gconv.String(item[1]), item[2])
 			}
 		}
 	}
 	return group
 }
 
-// 绑定所有的HTTP Method请求方式
+// ALL registers a http handler to given route pattern and all http methods.
 func (g *RouterGroup) ALL(pattern string, object interface{}, params ...interface{}) *RouterGroup {
-	return g.Clone().preBind("HANDLER", gDEFAULT_METHOD+":"+pattern, object, params...)
+	return g.Clone().preBindToLocalArray("HANDLER", gDEFAULT_METHOD+":"+pattern, object, params...)
 }
 
-// 绑定常用方法: GET/PUT/POST/DELETE
-func (g *RouterGroup) COMMON(pattern string, object interface{}, params ...interface{}) *RouterGroup {
-	group := g.Clone()
-	group.preBind("HANDLER", "GET:"+pattern, object, params...)
-	group.preBind("HANDLER", "PUT:"+pattern, object, params...)
-	group.preBind("HANDLER", "POST:"+pattern, object, params...)
-	group.preBind("HANDLER", "DELETE:"+pattern, object, params...)
-	return group
-}
-
+// GET registers a http handler to given route pattern and http method: GET.
 func (g *RouterGroup) GET(pattern string, object interface{}, params ...interface{}) *RouterGroup {
-	return g.Clone().preBind("HANDLER", "GET:"+pattern, object, params...)
+	return g.Clone().preBindToLocalArray("HANDLER", "GET:"+pattern, object, params...)
 }
 
+// PUT registers a http handler to given route pattern and http method: PUT.
 func (g *RouterGroup) PUT(pattern string, object interface{}, params ...interface{}) *RouterGroup {
-	return g.Clone().preBind("HANDLER", "PUT:"+pattern, object, params...)
+	return g.Clone().preBindToLocalArray("HANDLER", "PUT:"+pattern, object, params...)
 }
 
+// POST registers a http handler to given route pattern and http method: POST.
 func (g *RouterGroup) POST(pattern string, object interface{}, params ...interface{}) *RouterGroup {
-	return g.Clone().preBind("HANDLER", "POST:"+pattern, object, params...)
+	return g.Clone().preBindToLocalArray("HANDLER", "POST:"+pattern, object, params...)
 }
 
+// DELETE registers a http handler to given route pattern and http method: DELETE.
 func (g *RouterGroup) DELETE(pattern string, object interface{}, params ...interface{}) *RouterGroup {
-	return g.Clone().preBind("HANDLER", "DELETE:"+pattern, object, params...)
+	return g.Clone().preBindToLocalArray("HANDLER", "DELETE:"+pattern, object, params...)
 }
 
+// PATCH registers a http handler to given route pattern and http method: PATCH.
 func (g *RouterGroup) PATCH(pattern string, object interface{}, params ...interface{}) *RouterGroup {
-	return g.Clone().preBind("HANDLER", "PATCH:"+pattern, object, params...)
+	return g.Clone().preBindToLocalArray("HANDLER", "PATCH:"+pattern, object, params...)
 }
 
+// HEAD registers a http handler to given route pattern and http method: HEAD.
 func (g *RouterGroup) HEAD(pattern string, object interface{}, params ...interface{}) *RouterGroup {
-	return g.Clone().preBind("HANDLER", "HEAD:"+pattern, object, params...)
+	return g.Clone().preBindToLocalArray("HANDLER", "HEAD:"+pattern, object, params...)
 }
 
+// CONNECT registers a http handler to given route pattern and http method: CONNECT.
 func (g *RouterGroup) CONNECT(pattern string, object interface{}, params ...interface{}) *RouterGroup {
-	return g.Clone().preBind("HANDLER", "CONNECT:"+pattern, object, params...)
+	return g.Clone().preBindToLocalArray("HANDLER", "CONNECT:"+pattern, object, params...)
 }
 
+// OPTIONS registers a http handler to given route pattern and http method: OPTIONS.
 func (g *RouterGroup) OPTIONS(pattern string, object interface{}, params ...interface{}) *RouterGroup {
-	return g.Clone().preBind("HANDLER", "OPTIONS:"+pattern, object, params...)
+	return g.Clone().preBindToLocalArray("HANDLER", "OPTIONS:"+pattern, object, params...)
 }
 
+// TRACE registers a http handler to given route pattern and http method: TRACE.
 func (g *RouterGroup) TRACE(pattern string, object interface{}, params ...interface{}) *RouterGroup {
-	return g.Clone().preBind("HANDLER", "TRACE:"+pattern, object, params...)
+	return g.Clone().preBindToLocalArray("HANDLER", "TRACE:"+pattern, object, params...)
 }
 
+// REST registers a http handler to given route pattern according to REST rule.
 func (g *RouterGroup) REST(pattern string, object interface{}) *RouterGroup {
-	return g.Clone().preBind("REST", pattern, object)
+	return g.Clone().preBindToLocalArray("REST", pattern, object)
 }
 
+// Hook registers a hook to given route pattern.
 func (g *RouterGroup) Hook(pattern string, hook string, handler HandlerFunc) *RouterGroup {
-	return g.Clone().preBind("HANDLER", pattern, handler, hook)
+	return g.Clone().preBindToLocalArray("HANDLER", pattern, handler, hook)
 }
 
+// Middleware binds one or more middleware to the router group.
 func (g *RouterGroup) Middleware(handlers ...HandlerFunc) *RouterGroup {
-	group := g.Clone()
-	for _, handler := range handlers {
-		group.preBind("MIDDLEWARE", "/*", handler)
-	}
-	return group
+	g.middleware = append(g.middleware, handlers...)
+	return g
 }
 
-func (g *RouterGroup) MiddlewarePattern(pattern string, handlers ...HandlerFunc) *RouterGroup {
-	group := g.Clone()
-	for _, handler := range handlers {
-		group.preBind("MIDDLEWARE", pattern, handler)
-	}
-	return group
-}
-
-func (g *RouterGroup) preBind(bindType string, pattern string, object interface{}, params ...interface{}) *RouterGroup {
-	preBindItems = append(preBindItems, groupPreBindItem{
+// preBindToLocalArray adds the route registering parameters to internal variable array for lazily registering feature.
+func (g *RouterGroup) preBindToLocalArray(bindType string, pattern string, object interface{}, params ...interface{}) *RouterGroup {
+	_, file, line := gdebug.CallerWithFilter(gFILTER_KEY)
+	preBindItems = append(preBindItems, &preBindItem{
 		group:    g,
 		bindType: bindType,
 		pattern:  pattern,
 		object:   object,
 		params:   params,
+		source:   fmt.Sprintf(`%s:%d`, file, line),
 	})
 	return g
 }
 
+// getPrefix returns the route prefix of the group, which recursively retrieves its parent's prefixo.
 func (g *RouterGroup) getPrefix() string {
 	prefix := g.prefix
 	parent := g.parent
@@ -245,14 +264,21 @@ func (g *RouterGroup) getPrefix() string {
 	return prefix
 }
 
-// 执行路由绑定
-func (g *RouterGroup) doBind(bindType string, pattern string, object interface{}, params ...interface{}) *RouterGroup {
+// doBindRoutersToServer does really registering for the group.
+func (g *RouterGroup) doBindRoutersToServer(item *preBindItem) *RouterGroup {
+	var (
+		bindType = item.bindType
+		pattern  = item.pattern
+		object   = item.object
+		params   = item.params
+		source   = item.source
+	)
 	prefix := g.getPrefix()
-	// 注册路由处理
+	// Route check.
 	if len(prefix) > 0 {
 		domain, method, path, err := g.server.parsePattern(pattern)
 		if err != nil {
-			glog.Fatalf("invalid pattern: %s", pattern)
+			g.server.Logger().Fatalf("invalid pattern: %s", pattern)
 		}
 		// If there'a already a domain, unset the domain field in the pattern.
 		if g.domain != nil {
@@ -261,107 +287,142 @@ func (g *RouterGroup) doBind(bindType string, pattern string, object interface{}
 		if bindType == "REST" {
 			pattern = prefix + "/" + strings.TrimLeft(path, "/")
 		} else {
-			pattern = g.server.serveHandlerKey(method, prefix+"/"+strings.TrimLeft(path, "/"), domain)
+			pattern = g.server.serveHandlerKey(
+				method, prefix+"/"+strings.TrimLeft(path, "/"), domain,
+			)
 		}
 	}
-	// 去掉可能重复出现的'//'符号
+	// Filter repeated char '/'.
 	pattern = gstr.Replace(pattern, "//", "/")
-	// 将附加参数转换为字符串
+	// Convert params to string array.
 	extras := gconv.Strings(params)
-	// 判断是否事件回调注册
+	// Check whether it's a hook handler.
 	if _, ok := object.(HandlerFunc); ok && len(extras) > 0 {
 		bindType = "HOOK"
 	}
 	switch bindType {
-	case "MIDDLEWARE":
-		if h, ok := object.(HandlerFunc); ok {
-			if g.server != nil {
-				g.server.BindMiddleware(pattern, h)
-			} else {
-				g.domain.BindMiddleware(pattern, h)
-			}
-		} else {
-			glog.Fatalf("invalid middleware handler for pattern:%s", pattern)
-		}
 	case "HANDLER":
 		if h, ok := object.(HandlerFunc); ok {
 			if g.server != nil {
-				g.server.BindHandler(pattern, h)
+				g.server.doBindHandler(pattern, h, g.middleware, source)
 			} else {
-				g.domain.BindHandler(pattern, h)
+				g.domain.doBindHandler(pattern, h, g.middleware, source)
 			}
 		} else if g.isController(object) {
 			if len(extras) > 0 {
 				if g.server != nil {
-					g.server.BindControllerMethod(pattern, object.(Controller), extras[0])
+					if gstr.Contains(extras[0], ",") {
+						g.server.doBindController(
+							pattern, object.(Controller), extras[0], g.middleware, source,
+						)
+					} else {
+						g.server.doBindControllerMethod(
+							pattern, object.(Controller), extras[0], g.middleware, source,
+						)
+					}
 				} else {
-					g.domain.BindControllerMethod(pattern, object.(Controller), extras[0])
+					if gstr.Contains(extras[0], ",") {
+						g.domain.doBindController(
+							pattern, object.(Controller), extras[0], g.middleware, source,
+						)
+					} else {
+						g.domain.doBindControllerMethod(
+							pattern, object.(Controller), extras[0], g.middleware, source,
+						)
+					}
 				}
 			} else {
 				if g.server != nil {
-					g.server.BindController(pattern, object.(Controller))
+					g.server.doBindController(
+						pattern, object.(Controller), "", g.middleware, source,
+					)
 				} else {
-					g.domain.BindController(pattern, object.(Controller))
+					g.domain.doBindController(
+						pattern, object.(Controller), "", g.middleware, source,
+					)
 				}
 			}
 		} else {
 			if len(extras) > 0 {
 				if g.server != nil {
-					g.server.BindObjectMethod(pattern, object, extras[0])
+					if gstr.Contains(extras[0], ",") {
+						g.server.doBindObject(
+							pattern, object, extras[0], g.middleware, source,
+						)
+					} else {
+						g.server.doBindObjectMethod(
+							pattern, object, extras[0], g.middleware, source,
+						)
+					}
 				} else {
-					g.domain.BindObjectMethod(pattern, object, extras[0])
+					if gstr.Contains(extras[0], ",") {
+						g.domain.doBindObject(
+							pattern, object, extras[0], g.middleware, source,
+						)
+					} else {
+						g.domain.doBindObjectMethod(
+							pattern, object, extras[0], g.middleware, source,
+						)
+					}
 				}
 			} else {
 				if g.server != nil {
-					g.server.BindObject(pattern, object)
+					g.server.doBindObject(pattern, object, "", g.middleware, source)
 				} else {
-					g.domain.BindObject(pattern, object)
+					g.domain.doBindObject(pattern, object, "", g.middleware, source)
 				}
 			}
 		}
 	case "REST":
 		if g.isController(object) {
 			if g.server != nil {
-				g.server.BindControllerRest(pattern, object.(Controller))
+				g.server.doBindControllerRest(
+					pattern, object.(Controller), g.middleware, source,
+				)
 			} else {
-				g.domain.BindControllerRest(pattern, object.(Controller))
+				g.domain.doBindControllerRest(
+					pattern, object.(Controller), g.middleware, source,
+				)
 			}
 		} else {
 			if g.server != nil {
-				g.server.BindObjectRest(pattern, object)
+				g.server.doBindObjectRest(pattern, object, g.middleware, source)
 			} else {
-				g.domain.BindObjectRest(pattern, object)
+				g.domain.doBindObjectRest(pattern, object, g.middleware, source)
 			}
 		}
 	case "HOOK":
 		if h, ok := object.(HandlerFunc); ok {
 			if g.server != nil {
-				g.server.BindHookHandler(pattern, extras[0], h)
+				g.server.doBindHookHandler(pattern, extras[0], h, source)
 			} else {
-				g.domain.BindHookHandler(pattern, extras[0], h)
+				g.domain.doBindHookHandler(pattern, extras[0], h, source)
 			}
 		} else {
-			glog.Fatalf("invalid hook handler for pattern:%s", pattern)
+			g.server.Logger().Fatalf("invalid hook handler for pattern: %s", pattern)
 		}
 	}
 	return g
 }
 
-// 判断给定对象是否控制器对象：
-// 控制器必须包含以下公开的属性对象：Request/Response/Server/Cookie/Session/View.
+// isController checks and returns whether given <value> is a controller.
+// A controller should contains attributes: Request/Response/Server/Cookie/Session/View.
 func (g *RouterGroup) isController(value interface{}) bool {
-	// 首先判断是否满足控制器接口定义
+	// Whether implements interface Controller.
 	if _, ok := value.(Controller); !ok {
 		return false
 	}
-	// 其次检查控制器的必需属性
+	// Check the necessary attributes.
 	v := reflect.ValueOf(value)
 	if v.Kind() == reflect.Ptr {
 		v = v.Elem()
 	}
-	if v.FieldByName("Request").IsValid() && v.FieldByName("Response").IsValid() &&
-		v.FieldByName("Server").IsValid() && v.FieldByName("Cookie").IsValid() &&
-		v.FieldByName("Session").IsValid() && v.FieldByName("View").IsValid() {
+	if v.FieldByName("Request").IsValid() &&
+		v.FieldByName("Response").IsValid() &&
+		v.FieldByName("Server").IsValid() &&
+		v.FieldByName("Cookie").IsValid() &&
+		v.FieldByName("Session").IsValid() &&
+		v.FieldByName("View").IsValid() {
 		return true
 	}
 	return false

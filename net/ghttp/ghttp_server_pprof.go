@@ -15,10 +15,38 @@ import (
 	"github.com/gogf/gf/os/gview"
 )
 
-// 用于pprof的对象
-type utilPprof struct{}
+// utilPProf is the PProf interface implementer.
+type utilPProf struct{}
 
-func (p *utilPprof) Index(r *Request) {
+const (
+	gDEFAULT_PPROF_PATTERN = "/debug/pprof"
+)
+
+// EnablePProf enables PProf feature for server.
+func (s *Server) EnablePProf(pattern ...string) {
+	s.Domain(gDEFAULT_DOMAIN).EnablePProf(pattern...)
+}
+
+// EnablePProf enables PProf feature for server of specified domain.
+func (d *Domain) EnablePProf(pattern ...string) {
+	p := gDEFAULT_PPROF_PATTERN
+	if len(pattern) > 0 && pattern[0] != "" {
+		p = pattern[0]
+	}
+	up := &utilPProf{}
+	_, _, uri, _ := d.server.parsePattern(p)
+	uri = strings.TrimRight(uri, "/")
+	d.Group(uri, func(group *RouterGroup) {
+		group.ALL("/*action", up.Index)
+		group.ALL("/cmdline", up.Cmdline)
+		group.ALL("/profile", up.Profile)
+		group.ALL("/symbol", up.Symbol)
+		group.ALL("/trace", up.Trace)
+	})
+}
+
+// Index shows the PProf index page.
+func (p *utilPProf) Index(r *Request) {
 	profiles := runpprof.Profiles()
 	action := r.GetString("action")
 	data := map[string]interface{}{
@@ -52,34 +80,30 @@ func (p *utilPprof) Index(r *Request) {
 	}
 }
 
-func (p *utilPprof) Cmdline(r *Request) {
+// Cmdline responds with the running program's
+// command line, with arguments separated by NUL bytes.
+// The package initialization registers it as /debug/pprof/cmdline.
+func (p *utilPProf) Cmdline(r *Request) {
 	netpprof.Cmdline(r.Response.Writer, r.Request)
 }
 
-func (p *utilPprof) Profile(r *Request) {
+// Profile responds with the pprof-formatted cpu profile.
+// Profiling lasts for duration specified in seconds GET parameter, or for 30 seconds if not specified.
+// The package initialization registers it as /debug/pprof/profile.
+func (p *utilPProf) Profile(r *Request) {
 	netpprof.Profile(r.Response.Writer, r.Request)
 }
 
-func (p *utilPprof) Symbol(r *Request) {
+// Symbol looks up the program counters listed in the request,
+// responding with a table mapping program counters to function names.
+// The package initialization registers it as /debug/pprof/symbol.
+func (p *utilPProf) Symbol(r *Request) {
 	netpprof.Symbol(r.Response.Writer, r.Request)
 }
 
-func (p *utilPprof) Trace(r *Request) {
+// Trace responds with the execution trace in binary form.
+// Tracing lasts for duration specified in seconds GET parameter, or for 1 second if not specified.
+// The package initialization registers it as /debug/pprof/trace.
+func (p *utilPProf) Trace(r *Request) {
 	netpprof.Trace(r.Response.Writer, r.Request)
-}
-
-// 开启pprof支持
-func (s *Server) EnablePprof(pattern ...string) {
-	p := "/debug/pprof"
-	if len(pattern) > 0 {
-		p = pattern[0]
-	}
-	up := &utilPprof{}
-	_, _, uri, _ := s.parsePattern(p)
-	uri = strings.TrimRight(uri, "/")
-	s.BindHandler(uri+"/*action", up.Index)
-	s.BindHandler(uri+"/cmdline", up.Cmdline)
-	s.BindHandler(uri+"/profile", up.Profile)
-	s.BindHandler(uri+"/symbol", up.Symbol)
-	s.BindHandler(uri+"/trace", up.Trace)
 }

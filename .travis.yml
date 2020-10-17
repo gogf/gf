@@ -3,6 +3,9 @@ language: go
 go:
   - "1.11.x"
   - "1.12.x"
+  - "1.13.x"
+  - "1.14.x"
+  - "1.15.x"
 
 branches:
   only:
@@ -11,7 +14,7 @@ branches:
   - staging
 
 env:
-- GO111MODULE=on
+- GF_DEBUG=1 GO111MODULE=on
 
 services:
 - mysql
@@ -39,6 +42,7 @@ before_script:
 - sleep 10
 - find . -name "*.go" | xargs gofmt -w
 - git diff --name-only --exit-code || exit 1
+- echo "UPDATE mysql.user SET authentication_string=PASSWORD('12345678') WHERE user='root';\nFLUSH PRIVILEGES;\n" | mysql -u root
 - psql -c 'create database travis_ci_test;' -U postgres
 
 script:

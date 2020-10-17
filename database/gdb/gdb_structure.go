@@ -7,8 +7,8 @@
 package gdb
 
 import (
-	"fmt"
 	"strings"
+	"time"
 
 	"github.com/gogf/gf/text/gstr"
 
@@ -20,31 +20,62 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
-// convertValue converts field value from database type to golang variable type.
-func (bs *dbBase) convertValue(fieldValue []byte, fieldType string) interface{} {
+// convertValue automatically checks and converts field value from database type
+// to golang variable type.
+func (c *Core) convertValue(fieldValue interface{}, fieldType string) interface{} {
+	// If there's no type retrieved, it returns the <fieldValue> directly
+	// to use its original data type, as <fieldValue> is type of interface{}.
+	if fieldType == "" {
+		return fieldValue
+	}
 	t, _ := gregex.ReplaceString(`\(.+\)`, "", fieldType)
 	t = strings.ToLower(t)
 	switch t {
-	case "binary", "varbinary", "blob", "tinyblob", "mediumblob", "longblob":
-		return fieldValue
+	case
+		"binary",
+		"varbinary",
+		"blob",
+		"tinyblob",
+		"mediumblob",
+		"longblob":
+		return gconv.Bytes(fieldValue)
 
-	case "int", "tinyint", "small_int", "smallint", "medium_int", "mediumint":
+	case
+		"int",
+		"tinyint",
+		"small_int",
+		"smallint",
+		"medium_int",
+		"mediumint",
+		"serial":
 		if gstr.ContainsI(fieldType, "unsigned") {
-			gconv.Uint(string(fieldValue))
+			gconv.Uint(gconv.String(fieldValue))
 		}
-		return gconv.Int(string(fieldValue))
+		return gconv.Int(gconv.String(fieldValue))
 
-	case "big_int", "bigint":
+	case
+		"big_int",
+		"bigint",
+		"bigserial":
 		if gstr.ContainsI(fieldType, "unsigned") {
-			gconv.Uint64(string(fieldValue))
+			gconv.Uint64(gconv.String(fieldValue))
 		}
-		return gconv.Int64(string(fieldValue))
+		return gconv.Int64(gconv.String(fieldValue))
 
-	case "float", "double", "decimal":
-		return gconv.Float64(string(fieldValue))
+	case "real":
+		return gconv.Float32(gconv.String(fieldValue))
+
+	case
+		"float",
+		"double",
+		"decimal",
+		"money",
+		"numeric",
+		"smallmoney":
+		return gconv.Float64(gconv.String(fieldValue))
 
 	case "bit":
-		s := string(fieldValue)
+		s := gconv.String(fieldValue)
 		// mssql is true|false string.
 		if strings.EqualFold(s, "true") {
 			return 1
@@ -52,56 +83,72 @@ func (bs *dbBase) convertValue(fieldValue []byte, fieldType string) interface{} 
 		if strings.EqualFold(s, "false") {
 			return 0
 		}
-		return gbinary.BeDecodeToInt64(fieldValue)
+		return gbinary.BeDecodeToInt64(gconv.Bytes(fieldValue))
 
 	case "bool":
 		return gconv.Bool(fieldValue)
 
 	case "date":
-		t, _ := gtime.StrToTime(string(fieldValue))
+		if t, ok := fieldValue.(time.Time); ok {
+			return gtime.NewFromTime(t).Format("Y-m-d")
+		}
+		t, _ := gtime.StrToTime(gconv.String(fieldValue))
 		return t.Format("Y-m-d")
 
-	case "datetime", "timestamp":
-		t, _ := gtime.StrToTime(string(fieldValue))
+	case
+		"datetime",
+		"timestamp":
+		if t, ok := fieldValue.(time.Time); ok {
+			return gtime.NewFromTime(t)
+		}
+		t, _ := gtime.StrToTime(gconv.String(fieldValue))
 		return t.String()
 
 	default:
 		// Auto detect field type, using key match.
 		switch {
-		case strings.Contains(t, "text") || strings.Contains(t, "char"):
-			return string(fieldValue)
+		case strings.Contains(t, "text") || strings.Contains(t, "char") || strings.Contains(t, "character"):
+			return gconv.String(fieldValue)
 
-		case strings.Contains(t, "float") || strings.Contains(t, "double"):
-			return gconv.Float64(string(fieldValue))
+		case strings.Contains(t, "float") || strings.Contains(t, "double") || strings.Contains(t, "numeric"):
+			return gconv.Float64(gconv.String(fieldValue))
 
 		case strings.Contains(t, "bool"):
-			return gconv.Bool(string(fieldValue))
+			return gconv.Bool(gconv.String(fieldValue))
 
 		case strings.Contains(t, "binary") || strings.Contains(t, "blob"):
 			return fieldValue
 
 		case strings.Contains(t, "int"):
-			return gconv.Int(string(fieldValue))
+			return gconv.Int(gconv.String(fieldValue))
 
 		case strings.Contains(t, "time"):
-			t, _ := gtime.StrToTime(string(fieldValue))
+			s := gconv.String(fieldValue)
+			t, err := gtime.StrToTime(s)
+			if err != nil {
+				return s
+			}
 			return t.String()
 
 		case strings.Contains(t, "date"):
-			t, _ := gtime.StrToTime(string(fieldValue))
+			s := gconv.String(fieldValue)
+			t, err := gtime.StrToTime(s)
+			if err != nil {
+				return s
+			}
 			return t.Format("Y-m-d")
 
 		default:
-			return string(fieldValue)
+			return gconv.String(fieldValue)
 		}
 	}
 }
 
-// 将map的数据按照fields进行过滤，只保留与表字段同名的数据
-func (bs *dbBase) filterFields(table string, data map[string]interface{}) map[string]interface{} {
-	// It must use data copy here to avoid changing the origin data map.
+// filterFields removes all key-value pairs which are not the field of given table.
+func (c *Core) filterFields(schema, table string, data map[string]interface{}) map[string]interface{} {
+	// It must use data copy here to avoid its changing the origin data map.
 	newDataMap := make(map[string]interface{}, len(data))
-	if fields, err := bs.db.TableFields(table); err == nil {
+	if fields, err := c.DB.TableFields(table, schema); err == nil {
 		for k, v := range data {
 			if _, ok := fields[k]; ok {
 				newDataMap[k] = v
@@ -109,48 +156,4 @@ func (bs *dbBase) filterFields(table string, data map[string]interface{}) map[st
 		}
 	}
 	return newDataMap
-}
-
-// 返回当前数据库所有的数据表名称
-func (bs *dbBase) Tables() (tables []string, err error) {
-	result := (Result)(nil)
-	result, err = bs.GetAll(`SHOW TABLES`)
-	if err != nil {
-		return
-	}
-	for _, m := range result {
-		for _, v := range m {
-			tables = append(tables, v.String())
-		}
-	}
-	return
-}
-
-// 获得指定表表的数据结构，构造成map哈希表返回，其中键名为表字段名称，键值为字段数据结构.
-func (bs *dbBase) TableFields(table string) (fields map[string]*TableField, err error) {
-	// 缓存不存在时会查询数据表结构，缓存后不过期，直至程序重启(重新部署)
-	v := bs.cache.GetOrSetFunc("table_fields_"+table, func() interface{} {
-		result := (Result)(nil)
-		result, err = bs.GetAll(fmt.Sprintf(`SHOW COLUMNS FROM %s`, bs.db.quoteWord(table)))
-		if err != nil {
-			return nil
-		}
-		fields = make(map[string]*TableField)
-		for i, m := range result {
-			fields[m["Field"].String()] = &TableField{
-				Index:   i,
-				Name:    m["Field"].String(),
-				Type:    m["Type"].String(),
-				Null:    m["Null"].Bool(),
-				Key:     m["Key"].String(),
-				Default: m["Default"].Val(),
-				Extra:   m["Extra"].String(),
-			}
-		}
-		return fields
-	}, 0)
-	if err == nil {
-		fields = v.(map[string]*TableField)
-	}
-	return
 }

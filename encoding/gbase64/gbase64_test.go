@@ -3,9 +3,11 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
+
 package gbase64_test
 
 import (
+	"github.com/gogf/gf/debug/gdebug"
 	"testing"
 
 	"github.com/gogf/gf/encoding/gbase64"
@@ -42,23 +44,53 @@ var pairs = []testPair{
 	{"sure.", "c3VyZS4="},
 }
 
-func TestBase64(t *testing.T) {
-	gtest.Case(t, func() {
+func Test_Basic(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
 		for k := range pairs {
 			// Encode
-			gtest.Assert(gbase64.Encode([]byte(pairs[k].decoded)), []byte(pairs[k].encoded))
-			gtest.Assert(gbase64.EncodeToString([]byte(pairs[k].decoded)), pairs[k].encoded)
-			gtest.Assert(gbase64.EncodeString(pairs[k].decoded), pairs[k].encoded)
+			t.Assert(gbase64.Encode([]byte(pairs[k].decoded)), []byte(pairs[k].encoded))
+			t.Assert(gbase64.EncodeToString([]byte(pairs[k].decoded)), pairs[k].encoded)
+			t.Assert(gbase64.EncodeString(pairs[k].decoded), pairs[k].encoded)
 
 			// Decode
 			r1, _ := gbase64.Decode([]byte(pairs[k].encoded))
-			gtest.Assert(r1, []byte(pairs[k].decoded))
+			t.Assert(r1, []byte(pairs[k].decoded))
 
 			r2, _ := gbase64.DecodeString(pairs[k].encoded)
-			gtest.Assert(r2, []byte(pairs[k].decoded))
+			t.Assert(r2, []byte(pairs[k].decoded))
 
 			r3, _ := gbase64.DecodeToString(pairs[k].encoded)
-			gtest.Assert(r3, pairs[k].decoded)
+			t.Assert(r3, pairs[k].decoded)
 		}
+	})
+}
+
+func Test_File(t *testing.T) {
+	path := gdebug.TestDataPath("test")
+	expect := "dGVzdA=="
+	gtest.C(t, func(t *gtest.T) {
+		b, err := gbase64.EncodeFile(path)
+		t.Assert(err, nil)
+		t.Assert(string(b), expect)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		s, err := gbase64.EncodeFileToString(path)
+		t.Assert(err, nil)
+		t.Assert(s, expect)
+	})
+}
+
+func Test_File_Error(t *testing.T) {
+	path := "none-exist-file"
+	expect := ""
+	gtest.C(t, func(t *gtest.T) {
+		b, err := gbase64.EncodeFile(path)
+		t.AssertNE(err, nil)
+		t.Assert(string(b), expect)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		s, err := gbase64.EncodeFileToString(path)
+		t.AssertNE(err, nil)
+		t.Assert(s, expect)
 	})
 }

@@ -8,55 +8,59 @@ package gfsnotify
 
 import (
 	"github.com/gogf/gf/container/glist"
+	"github.com/gogf/gf/internal/intlog"
 )
 
-// 监听循环
+// startWatchLoop starts the loop for event listening fro underlying inotify monitor.
 func (w *Watcher) startWatchLoop() {
 	go func() {
 		for {
 			select {
-			// 关闭事件
+			// Close event.
 			case <-w.closeChan:
 				return
 
-			// 监听事件
+			// Event listening.
 			case ev := <-w.watcher.Events:
-				//fmt.Println("ev:", ev.String())
-				w.cache.SetIfNotExist(ev.String(), func() interface{} {
+				// Filter the repeated event in custom duration.
+				w.cache.SetIfNotExist(ev.String(), func() (interface{}, error) {
 					w.events.Push(&Event{
 						event:   ev,
 						Path:    ev.Name,
 						Op:      Op(ev.Op),
 						Watcher: w,
 					})
-					return struct{}{}
-				}, REPEAT_EVENT_FILTER_INTERVAL)
+					return struct{}{}, nil
+				}, repeatEventFilterDuration)
 
-			case <-w.watcher.Errors:
-				//fmt.Fprintf(os.Stderr, "[gfsnotify] error: %s\n", err.Error())
+			case err := <-w.watcher.Errors:
+				intlog.Error(err)
 			}
 		}
 	}()
 }
 
-// 获得文件路径的监听回调，包括层级的监听回调。
+// getCallbacks searches and returns all callbacks with given <path>.
+// It also searches its parent for callbacks if they're recursive.
 func (w *Watcher) getCallbacks(path string) (callbacks []*Callback) {
-	// 首先检索path对应的回调函数
+	// Firstly add the callbacks of itself.
 	if v := w.callbacks.Get(path); v != nil {
 		for _, v := range v.(*glist.List).FrontAll() {
 			callback := v.(*Callback)
 			callbacks = append(callbacks, callback)
 		}
 	}
-	// 其次查找父级目录有无回调注册
+	// Secondly searches its parent for callbacks.
 	dirPath := fileDir(path)
 	if v := w.callbacks.Get(dirPath); v != nil {
 		for _, v := range v.(*glist.List).FrontAll() {
 			callback := v.(*Callback)
-			callbacks = append(callbacks, callback)
+			if callback.recursive {
+				callbacks = append(callbacks, callback)
+			}
 		}
 	}
-	// 最后回溯查找递归回调函数
+	// Lastly searches the parent recursively for callbacks.
 	for {
 		parentDirPath := fileDir(dirPath)
 		if parentDirPath == dirPath {
@@ -75,65 +79,83 @@ func (w *Watcher) getCallbacks(path string) (callbacks []*Callback) {
 	return
 }
 
-// 事件循环(核心逻辑)
+// startEventLoop is the core event handler.
 func (w *Watcher) startEventLoop() {
 	go func() {
 		for {
 			if v := w.events.Pop(); v != nil {
 				event := v.(*Event)
-				// 如果该路径一个回调也没有，那么没有必要执行后续逻辑，删除对该文件的监听
+				// If there's no any callback of this path, it removes it from monitor.
 				callbacks := w.getCallbacks(event.Path)
 				if len(callbacks) == 0 {
 					w.watcher.Remove(event.Path)
 					continue
 				}
 				switch {
-				// 如果是删除操作，那么需要判断是否文件真正不存在了，如果存在，那么将此事件认为“假删除”
 				case event.IsRemove():
+					// It should check again the existence of the path.
+					// It adds it back to the monitor if it still exists.
 					if fileExists(event.Path) {
-						// 底层重新添加监控(不用担心重复添加)
-						w.watcher.Add(event.Path)
-						// 修改事件操作为重命名(相当于重命名为自身名称，最终名称没变)
+						// It adds the path back to monitor.
+						// We need no worry about the repeat adding.
+						if err := w.watcher.Add(event.Path); err != nil {
+							intlog.Error(err)
+						} else {
+							intlog.Printf("fake remove event, watcher re-adds monitor for: %s", event.Path)
+						}
+						// Change the event to RENAME, which means it renames itself to its origin name.
 						event.Op = RENAME
 					}
 
-				// 如果是重命名操作，那么需要判断是否文件真正不存在了，如果存在，那么将此事件认为“假命名”
-				// (特别是某些编辑器在编辑文件时会先对文件RENAME再CHMOD)
 				case event.IsRename():
+					// It should check again the existence of the path.
+					// It adds it back to the monitor if it still exists.
+					// Especially Some editors might do RENAME and then CHMOD when it's editing file.
 					if fileExists(event.Path) {
-						// 底层有可能去掉了监控, 这里重新添加监控(不用担心重复添加)
-						w.watcher.Add(event.Path)
-						// 修改事件操作为修改属性
+						// It might lost the monitoring for the path, so we add the path back to monitor.
+						// We need no worry about the repeat adding.
+						if err := w.watcher.Add(event.Path); err != nil {
+							intlog.Error(err)
+						} else {
+							intlog.Printf("fake rename event, watcher re-adds monitor for: %s", event.Path)
+						}
+						// Change the event to CHMOD.
 						event.Op = CHMOD
 					}
 
-				// 创建文件/目录
 				case event.IsCreate():
 					// =========================================
-					// 注意这里只是添加底层监听，并没有注册任何的回调函数，
-					// 默认的回调函数为父级的递归回调
+					// Note that it here just adds the path to monitor without any callback registering,
+					// because its parent already has the callbacks.
 					// =========================================
 					if fileIsDir(event.Path) {
-						// 递归添加
+						// If it's a folder, it then does adding recursively to monitor.
 						for _, subPath := range fileAllDirs(event.Path) {
 							if fileIsDir(subPath) {
-								w.watcher.Add(subPath)
+								if err := w.watcher.Add(subPath); err != nil {
+									intlog.Error(err)
+								} else {
+									intlog.Printf("folder creation event, watcher adds monitor for: %s", subPath)
+								}
 							}
 						}
 					} else {
-						// 添加文件监听
-						w.watcher.Add(event.Path)
+						// If it's a file, it directly adds it to monitor.
+						if err := w.watcher.Add(event.Path); err != nil {
+							intlog.Error(err)
+						} else {
+							intlog.Printf("file creation event, watcher adds monitor for: %s", event.Path)
+						}
 					}
 
 				}
-				// 执行回调处理，异步处理
+				// Calling the callbacks in order.
 				for _, v := range callbacks {
 					go func(callback *Callback) {
 						defer func() {
-							// 是否退出监控
 							if err := recover(); err != nil {
 								switch err {
-								case gFSNOTIFY_EVENT_EXIT:
+								case callbackExitEventPanicStr:
 									w.RemoveCallback(callback.Id)
 								default:
 									panic(err)

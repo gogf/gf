@@ -8,24 +8,26 @@ package gdb
 
 import (
 	"database/sql"
+	"errors"
 	"github.com/gogf/gf/container/gmap"
-
 	"github.com/gogf/gf/encoding/gparser"
+	"github.com/gogf/gf/util/gconv"
+	"reflect"
 )
 
-// 将记录结果转换为JSON字符串
+// Json converts <r> to JSON format content.
 func (r Record) Json() string {
 	content, _ := gparser.VarToJson(r.Map())
-	return string(content)
+	return gconv.UnsafeBytesToStr(content)
 }
 
-// 将记录结果转换为XML字符串
+// Xml converts <r> to XML format content.
 func (r Record) Xml(rootTag ...string) string {
 	content, _ := gparser.VarToXml(r.Map(), rootTag...)
-	return string(content)
+	return gconv.UnsafeBytesToStr(content)
 }
 
-// 将Record转换为Map类型
+// Map converts <r> to map[string]interface{}.
 func (r Record) Map() Map {
 	m := make(map[string]interface{})
 	for k, v := range r {
@@ -34,15 +36,43 @@ func (r Record) Map() Map {
 	return m
 }
 
-// 将Record转换为常用的gmap.StrAnyMap类型
+// GMap converts <r> to a gmap.
 func (r Record) GMap() *gmap.StrAnyMap {
 	return gmap.NewStrAnyMapFrom(r.Map())
 }
 
-// 将Map变量映射到指定的struct对象中，注意参数应当是一个对象的指针
+// Struct converts <r> to a struct.
+// Note that the parameter <pointer> should be type of *struct/**struct.
+//
+// Note that it returns sql.ErrNoRows if <r> is empty.
 func (r Record) Struct(pointer interface{}) error {
-	if r == nil {
+	// If the record is empty, it returns error.
+	if r.IsEmpty() {
 		return sql.ErrNoRows
 	}
+	// Special handling for parameter type: reflect.Value
+	if _, ok := pointer.(reflect.Value); ok {
+		return mapToStruct(r.Map(), pointer)
+	}
+	var (
+		reflectValue = reflect.ValueOf(pointer)
+		reflectKind  = reflectValue.Kind()
+	)
+	if reflectKind != reflect.Ptr {
+		return errors.New("parameter should be type of *struct/**struct")
+	}
+	reflectValue = reflectValue.Elem()
+	reflectKind = reflectValue.Kind()
+	if reflectKind == reflect.Invalid {
+		return errors.New("parameter is an invalid pointer, maybe nil")
+	}
+	if reflectKind != reflect.Ptr && reflectKind != reflect.Struct {
+		return errors.New("parameter should be type of *struct/**struct")
+	}
 	return mapToStruct(r.Map(), pointer)
+}
+
+// IsEmpty checks and returns whether <r> is empty.
+func (r Record) IsEmpty() bool {
+	return len(r) == 0
 }

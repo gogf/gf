@@ -53,8 +53,9 @@ func TrimLeft(str string, characterMask ...string) string {
 // TrimLeftStr strips all of the given <cut> string from the beginning of a string.
 // Note that it does not strips the whitespaces of its beginning.
 func TrimLeftStr(str string, cut string) string {
-	for str[0:len(cut)] == cut {
-		str = str[len(cut):]
+	var lenCut = len(cut)
+	for len(str) >= lenCut && str[0:lenCut] == cut {
+		str = str[lenCut:]
 	}
 	return str
 }
@@ -71,14 +72,12 @@ func TrimRight(str string, characterMask ...string) string {
 // TrimRightStr strips all of the given <cut> string from the end of a string.
 // Note that it does not strips the whitespaces of its end.
 func TrimRightStr(str string, cut string) string {
-	var length int
-	for {
-		length = len(str)
-		if str[length-len(cut):length] == cut {
-			str = str[:length-len(cut)]
-		} else {
-			break
-		}
+	var lenStr = len(str)
+	var lenCut = len(cut)
+	for lenStr >= lenCut && str[lenStr-lenCut:lenStr] == cut {
+		lenStr = lenStr - lenCut
+		str = str[:lenStr]
+
 	}
 	return str
 }

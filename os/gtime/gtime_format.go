@@ -67,6 +67,9 @@ var (
 
 // Format formats and returns the formatted result with custom <format>.
 func (t *Time) Format(format string) string {
+	if t == nil {
+		return ""
+	}
 	runes := []rune(format)
 	buffer := bytes.NewBuffer(nil)
 	for i := 0; i < len(runes); {
@@ -126,19 +129,44 @@ func (t *Time) Format(format string) string {
 	return buffer.String()
 }
 
-// FormatTo formats and returns a new Time object with given custom <format>.
+// FormatNew formats and returns a new Time object with given custom <format>.
+func (t *Time) FormatNew(format string) *Time {
+	if t == nil {
+		return nil
+	}
+	return NewFromStr(t.Format(format))
+}
+
+// FormatTo formats <t> with given custom <format>.
 func (t *Time) FormatTo(format string) *Time {
+	if t == nil {
+		return nil
+	}
 	t.Time = NewFromStr(t.Format(format)).Time
 	return t
 }
 
 // Layout formats the time with stdlib layout and returns the formatted result.
 func (t *Time) Layout(layout string) string {
+	if t == nil {
+		return ""
+	}
 	return t.Time.Format(layout)
 }
 
-// Layout formats the time with stdlib layout and returns the new Time object.
+// LayoutNew formats the time with stdlib layout and returns the new Time object.
+func (t *Time) LayoutNew(layout string) *Time {
+	if t == nil {
+		return nil
+	}
+	return NewFromStr(t.Layout(layout))
+}
+
+// LayoutTo formats <t> with stdlib layout.
 func (t *Time) LayoutTo(layout string) *Time {
+	if t == nil {
+		return nil
+	}
 	t.Time = NewFromStr(t.Layout(layout)).Time
 	return t
 }

@@ -9,18 +9,15 @@ package ghttp
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"github.com/gogf/gf/os/gres"
 
-	"github.com/gogf/gf/encoding/gparser"
 	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/util/gconv"
 )
 
-// Response is the writer for response buffer.
+// Response is the http response manager.
 // Note that it implements the http.ResponseWriter interface with buffering feature.
 type Response struct {
 	*ResponseWriter                 // Underlying ResponseWriter.
@@ -42,114 +39,13 @@ func newResponse(s *Server, w http.ResponseWriter) *Response {
 	return r
 }
 
-// Write writes <content> to the response buffer.
-func (r *Response) Write(content ...interface{}) {
-	if r.hijacked || len(content) == 0 {
-		return
-	}
-	if r.Status == 0 {
-		r.Status = http.StatusOK
-	}
-	for _, v := range content {
-		switch value := v.(type) {
-		case []byte:
-			r.buffer.Write(value)
-		case string:
-			r.buffer.WriteString(value)
-		default:
-			r.buffer.WriteString(gconv.String(v))
-		}
-	}
-}
-
-// WriteOver overwrites the response buffer with <content>.
-func (r *Response) WriteOver(content ...interface{}) {
-	r.ClearBuffer()
-	r.Write(content...)
-}
-
-// Writef writes the response with fmt.Sprintf.
-func (r *Response) Writef(format string, params ...interface{}) {
-	r.Write(fmt.Sprintf(format, params...))
-}
-
-// Writef writes the response with <content> and new line.
-func (r *Response) Writeln(content ...interface{}) {
-	if len(content) == 0 {
-		r.Write("\n")
-		return
-	}
-	r.Write(append(content, "\n")...)
-}
-
-// Writefln writes the response with fmt.Sprintf and new line.
-func (r *Response) Writefln(format string, params ...interface{}) {
-	r.Writeln(fmt.Sprintf(format, params...))
-}
-
-// WriteJson writes <content> to the response with JSON format.
-func (r *Response) WriteJson(content interface{}) error {
-	if b, err := json.Marshal(content); err != nil {
-		return err
-	} else {
-		r.Header().Set("Content-Type", "application/json")
-		r.Write(b)
-	}
-	return nil
-}
-
-// WriteJson writes <content> to the response with JSONP format.
-// Note that there should be a "callback" parameter in the request for JSONP format.
-func (r *Response) WriteJsonP(content interface{}) error {
-	if b, err := json.Marshal(content); err != nil {
-		return err
-	} else {
-		//r.Header().Set("Content-Type", "application/json")
-		if callback := r.Request.GetString("callback"); callback != "" {
-			buffer := []byte(callback)
-			buffer = append(buffer, byte('('))
-			buffer = append(buffer, b...)
-			buffer = append(buffer, byte(')'))
-			r.Write(buffer)
-		} else {
-			r.Write(b)
-		}
-	}
-	return nil
-}
-
-// WriteJson writes <content> to the response with XML format.
-func (r *Response) WriteXml(content interface{}, rootTag ...string) error {
-	if b, err := gparser.VarToXml(content, rootTag...); err != nil {
-		return err
-	} else {
-		r.Header().Set("Content-Type", "application/xml")
-		r.Write(b)
-	}
-	return nil
-}
-
-// WriteStatus writes HTTP <status> and <content> to the response.
-func (r *Response) WriteStatus(status int, content ...interface{}) {
-	r.WriteHeader(status)
-	if len(content) > 0 {
-		r.Write(content...)
-	} else {
-		r.Write(http.StatusText(status))
-	}
-	if r.Header().Get("Content-Type") == "" {
-		r.Header().Set("Content-Type", "text/plain; charset=utf-8")
-		//r.Header().Set("X-Content-Type-Options", "nosniff")
-	}
-}
-
 // ServeFile serves the file to the response.
 func (r *Response) ServeFile(path string, allowIndex ...bool) {
-	serveFile := (*staticServeFile)(nil)
+	serveFile := (*StaticFile)(nil)
 	if file := gres.Get(path); file != nil {
-		serveFile = &staticServeFile{
-			file: file,
-			dir:  file.FileInfo().IsDir(),
+		serveFile = &StaticFile{
+			File:  file,
+			IsDir: file.FileInfo().IsDir(),
 		}
 	} else {
 		path = gfile.RealPath(path)
@@ -157,22 +53,22 @@ func (r *Response) ServeFile(path string, allowIndex ...bool) {
 			r.WriteStatus(http.StatusNotFound)
 			return
 		}
-		serveFile = &staticServeFile{path: path}
+		serveFile = &StaticFile{Path: path}
 	}
 	r.Server.serveFile(r.Request, serveFile, allowIndex...)
 }
 
-// ServeFileDownload serves file as file downloading to the response.
+// ServeFileDownload serves file downloading to the response.
 func (r *Response) ServeFileDownload(path string, name ...string) {
-	serveFile := (*staticServeFile)(nil)
+	serveFile := (*StaticFile)(nil)
 	downloadName := ""
 	if len(name) > 0 {
 		downloadName = name[0]
 	}
 	if file := gres.Get(path); file != nil {
-		serveFile = &staticServeFile{
-			file: file,
-			dir:  file.FileInfo().IsDir(),
+		serveFile = &StaticFile{
+			File:  file,
+			IsDir: file.FileInfo().IsDir(),
 		}
 		if downloadName == "" {
 			downloadName = gfile.Basename(file.Name())
@@ -183,7 +79,7 @@ func (r *Response) ServeFileDownload(path string, name ...string) {
 			r.WriteStatus(http.StatusNotFound)
 			return
 		}
-		serveFile = &staticServeFile{path: path}
+		serveFile = &StaticFile{Path: path}
 		if downloadName == "" {
 			downloadName = gfile.Basename(path)
 		}
@@ -195,28 +91,36 @@ func (r *Response) ServeFileDownload(path string, name ...string) {
 }
 
 // RedirectTo redirects client to another location.
-func (r *Response) RedirectTo(location string) {
+// The optional parameter <code> specifies the http status code for redirecting,
+// which commonly can be 301 or 302. It's 302 in default.
+func (r *Response) RedirectTo(location string, code ...int) {
 	r.Header().Set("Location", location)
-	r.WriteHeader(http.StatusFound)
+	if len(code) > 0 {
+		r.WriteHeader(code[0])
+	} else {
+		r.WriteHeader(http.StatusFound)
+	}
 	r.Request.Exit()
 }
 
 // RedirectBack redirects client back to referer.
-func (r *Response) RedirectBack() {
-	r.RedirectTo(r.Request.GetReferer())
+// The optional parameter <code> specifies the http status code for redirecting,
+// which commonly can be 301 or 302. It's 302 in default.
+func (r *Response) RedirectBack(code ...int) {
+	r.RedirectTo(r.Request.GetReferer(), code...)
 }
 
-// BufferString returns the buffer content as []byte.
+// BufferString returns the buffered content as []byte.
 func (r *Response) Buffer() []byte {
 	return r.buffer.Bytes()
 }
 
-// BufferString returns the buffer content as string.
+// BufferString returns the buffered content as string.
 func (r *Response) BufferString() string {
 	return r.buffer.String()
 }
 
-// BufferLength returns the length of the buffer content.
+// BufferLength returns the length of the buffered content.
 func (r *Response) BufferLength() int {
 	return r.buffer.Len()
 }
@@ -232,9 +136,10 @@ func (r *Response) ClearBuffer() {
 	r.buffer.Reset()
 }
 
-// Output outputs the buffer content to the client.
-func (r *Response) Output() {
-	r.Header().Set("Server", r.Server.config.ServerAgent)
-	//r.handleGzip()
-	r.Writer.OutputBuffer()
+// Output outputs the buffer content to the client and clears the buffer.
+func (r *Response) Flush() {
+	if r.Server.config.ServerAgent != "" {
+		r.Header().Set("Server", r.Server.config.ServerAgent)
+	}
+	r.Writer.Flush()
 }

@@ -8,9 +8,9 @@
 package gyaml
 
 import (
-	"encoding/json"
+	"github.com/gogf/gf/internal/json"
+	"gopkg.in/yaml.v3"
 
-	"github.com/gf-third/yaml"
 	"github.com/gogf/gf/util/gconv"
 )
 

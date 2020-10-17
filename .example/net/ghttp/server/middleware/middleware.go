@@ -7,30 +7,30 @@ import (
 
 func main() {
 	s := g.Server()
-	s.Group("/api.v2", func(g *ghttp.RouterGroup) {
-		g.Middleware(func(r *ghttp.Request) {
+	s.Group("/api.v2", func(group *ghttp.RouterGroup) {
+		group.Middleware(func(r *ghttp.Request) {
 			r.Response.Write("start")
 			r.Middleware.Next()
 			r.Response.Write("end")
 		})
-		g.Group("/order", func(g *ghttp.RouterGroup) {
-			g.GET("/list", func(r *ghttp.Request) {
+		group.Group("/order", func(group *ghttp.RouterGroup) {
+			group.GET("/list", func(r *ghttp.Request) {
 				r.Response.Write("list")
 			})
 		})
-		g.Group("/user", func(g *ghttp.RouterGroup) {
-			g.GET("/info", func(r *ghttp.Request) {
+		group.Group("/user", func(group *ghttp.RouterGroup) {
+			group.GET("/info", func(r *ghttp.Request) {
 				r.Response.Write("info")
 			})
-			g.POST("/edit", func(r *ghttp.Request) {
+			group.POST("/edit", func(r *ghttp.Request) {
 				r.Response.Write("edit")
 			})
 		})
-		g.Group("/hook", func(g *ghttp.RouterGroup) {
-			g.Hook("/*", ghttp.HOOK_BEFORE_SERVE, func(r *ghttp.Request) {
+		group.Group("/hook", func(group *ghttp.RouterGroup) {
+			group.Hook("/*", ghttp.HOOK_BEFORE_SERVE, func(r *ghttp.Request) {
 				r.Response.Write("hook any")
 			})
-			g.Hook("/:name", ghttp.HOOK_BEFORE_SERVE, func(r *ghttp.Request) {
+			group.Hook("/:name", ghttp.HOOK_BEFORE_SERVE, func(r *ghttp.Request) {
 				r.Response.Write("hook name")
 			})
 		})

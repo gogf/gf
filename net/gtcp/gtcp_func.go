@@ -16,41 +16,53 @@ import (
 )
 
 const (
-	gDEFAULT_RETRY_INTERVAL   = 100 // (毫秒)默认重试时间间隔
-	gDEFAULT_READ_BUFFER_SIZE = 128 // (byte)默认数据读取缓冲区大小
+	gDEFAULT_CONN_TIMEOUT     = 30 * time.Second       // Default connection timeout.
+	gDEFAULT_RETRY_INTERVAL   = 100 * time.Millisecond // Default retry interval.
+	gDEFAULT_READ_BUFFER_SIZE = 128                    // (Byte) Buffer size for reading.
 )
 
 type Retry struct {
-	Count    int // 重试次数
-	Interval int // 重试间隔(毫秒)
+	Count    int           // Retry count.
+	Interval time.Duration // Retry interval.
 }
 
-// 创建原生TCP链接, addr地址格式形如：127.0.0.1:80
-func NewNetConn(addr string, timeout ...int) (net.Conn, error) {
+// NewNetConn creates and returns a net.Conn with given address like "127.0.0.1:80".
+// The optional parameter <timeout> specifies the timeout for dialing connection.
+func NewNetConn(addr string, timeout ...time.Duration) (net.Conn, error) {
+	d := gDEFAULT_CONN_TIMEOUT
 	if len(timeout) > 0 {
-		return net.DialTimeout("tcp", addr, time.Duration(timeout[0])*time.Millisecond)
-	} else {
-		return net.Dial("tcp", addr)
+		d = timeout[0]
 	}
+	return net.DialTimeout("tcp", addr, d)
 }
 
-// 创建支持TLS的原生TCP链接, addr地址格式形如：127.0.0.1:80
-func NewNetConnTLS(addr string, tlsConfig *tls.Config) (net.Conn, error) {
-	return tls.Dial("tcp", addr, tlsConfig)
+// NewNetConnTLS creates and returns a TLS net.Conn with given address like "127.0.0.1:80".
+// The optional parameter <timeout> specifies the timeout for dialing connection.
+func NewNetConnTLS(addr string, tlsConfig *tls.Config, timeout ...time.Duration) (net.Conn, error) {
+	dialer := &net.Dialer{
+		Timeout: gDEFAULT_CONN_TIMEOUT,
+	}
+	if len(timeout) > 0 {
+		dialer.Timeout = timeout[0]
+	}
+	return tls.DialWithDialer(dialer, "tcp", addr, tlsConfig)
 }
 
-// 根据给定的证书和密钥文件创建支持TLS的原生TCP链接, addr地址格式形如：127.0.0.1:80
-func NewNetConnKeyCrt(addr, crtFile, keyFile string) (net.Conn, error) {
+// NewNetConnKeyCrt creates and returns a TLS net.Conn with given TLS certificate and key files
+// and address like "127.0.0.1:80". The optional parameter <timeout> specifies the timeout for
+// dialing connection.
+func NewNetConnKeyCrt(addr, crtFile, keyFile string, timeout ...time.Duration) (net.Conn, error) {
 	tlsConfig, err := LoadKeyCrt(crtFile, keyFile)
 	if err != nil {
 		return nil, err
 	}
-	return NewNetConnTLS(addr, tlsConfig)
+	return NewNetConnTLS(addr, tlsConfig, timeout...)
 }
 
-// (面向短链接)发送数据
-func Send(addr string, data []byte, retry ...Retry) error {
-	conn, err := NewConn(addr)
+// Send creates connection to <address>, writes <data> to the connection and then closes the connection.
+// The optional parameter <retry> specifies the retry policy when fails in writing data.
+func Send(address string, data []byte, retry ...Retry) error {
+	conn, err := NewConn(address)
 	if err != nil {
 		return err
 	}
@@ -58,19 +70,25 @@ func Send(addr string, data []byte, retry ...Retry) error {
 	return conn.Send(data, retry...)
 }
 
-// (面向短链接)发送数据并等待接收返回数据
-func SendRecv(addr string, data []byte, receive int, retry ...Retry) ([]byte, error) {
-	conn, err := NewConn(addr)
+// SendRecv creates connection to <address>, writes <data> to the connection, receives response
+// and then closes the connection.
+//
+// The parameter <length> specifies the bytes count waiting to receive. It receives all buffer content
+// and returns if <length> is -1.
+//
+// The optional parameter <retry> specifies the retry policy when fails in writing data.
+func SendRecv(address string, data []byte, length int, retry ...Retry) ([]byte, error) {
+	conn, err := NewConn(address)
 	if err != nil {
 		return nil, err
 	}
 	defer conn.Close()
-	return conn.SendRecv(data, receive, retry...)
+	return conn.SendRecv(data, length, retry...)
 }
 
-// (面向短链接)带超时时间的数据发送
-func SendWithTimeout(addr string, data []byte, timeout time.Duration, retry ...Retry) error {
-	conn, err := NewConn(addr)
+// SendWithTimeout does Send logic with writing timeout limitation.
+func SendWithTimeout(address string, data []byte, timeout time.Duration, retry ...Retry) error {
+	conn, err := NewConn(address)
 	if err != nil {
 		return err
 	}
@@ -78,9 +96,9 @@ func SendWithTimeout(addr string, data []byte, timeout time.Duration, retry ...R
 	return conn.SendWithTimeout(data, timeout, retry...)
 }
 
-// (面向短链接)发送数据并等待接收返回数据(带返回超时等待时间)
-func SendRecvWithTimeout(addr string, data []byte, receive int, timeout time.Duration, retry ...Retry) ([]byte, error) {
-	conn, err := NewConn(addr)
+// SendRecvWithTimeout does SendRecv logic with reading timeout limitation.
+func SendRecvWithTimeout(address string, data []byte, receive int, timeout time.Duration, retry ...Retry) ([]byte, error) {
+	conn, err := NewConn(address)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +106,7 @@ func SendRecvWithTimeout(addr string, data []byte, receive int, timeout time.Dur
 	return conn.SendRecvWithTimeout(data, receive, timeout, retry...)
 }
 
-// 判断是否是超时错误
+// isTimeout checks whether given <err> is a timeout error.
 func isTimeout(err error) bool {
 	if err == nil {
 		return false
@@ -99,7 +117,7 @@ func isTimeout(err error) bool {
 	return false
 }
 
-// 根据证书和密钥生成TLS对象
+// LoadKeyCrt creates and returns a TLS configuration object with given certificate and key files.
 func LoadKeyCrt(crtFile, keyFile string) (*tls.Config, error) {
 	crtPath, err := gfile.Search(crtFile)
 	if err != nil {

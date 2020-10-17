@@ -13,34 +13,23 @@ import (
 )
 
 const (
-	gPKG_DEFAULT_MAX_DATA_SIZE = 65535 // (Byte) Max package size.
-	gPKG_DEFAULT_HEADER_SIZE   = 2     // Header size for simple package protocol.
-	gPKG_MAX_HEADER_SIZE       = 4     // Max header size for simple package protocol.
+	gPKG_HEADER_SIZE_DEFAULT = 2 // Header size for simple package protocol.
+	gPKG_HEADER_SIZE_MAX     = 4 // Max header size for simple package protocol.
 )
 
 // Package option for simple protocol.
 type PkgOption struct {
-	HeaderSize  int   // It's 2 bytes in default, max is 4 bytes.
-	MaxDataSize int   // (Byte)data field size, it's 2 bytes in default, which means 65535 bytes.
-	Retry       Retry // Retry policy.
-}
+	// HeaderSize is used to mark the data length for next data receiving.
+	// It's 2 bytes in default, 4 bytes max, which stands for the max data length
+	// from 65535 to 4294967295 bytes.
+	HeaderSize int
 
-// getPkgOption wraps and returns the PkgOption.
-// If no option given, it returns a new option with default value.
-func getPkgOption(option ...PkgOption) (*PkgOption, error) {
-	pkgOption := PkgOption{}
-	if len(option) > 0 {
-		pkgOption = option[0]
-	}
-	if pkgOption.HeaderSize == 0 {
-		pkgOption.HeaderSize = gPKG_DEFAULT_HEADER_SIZE
-	}
-	if pkgOption.MaxDataSize == 0 {
-		pkgOption.MaxDataSize = gPKG_DEFAULT_MAX_DATA_SIZE
-	} else if pkgOption.MaxDataSize > 0xFFFFFF {
-		return nil, fmt.Errorf(`package size %d exceeds allowed max size %d`, pkgOption.MaxDataSize, 0xFFFFFF)
-	}
-	return &pkgOption, nil
+	// MaxDataSize is the data field size in bytes for data length validation.
+	// If it's not manually set, it'll automatically be set correspondingly with the HeaderSize.
+	MaxDataSize int
+
+	// Retry policy when operation fails.
+	Retry Retry
 }
 
 // SendPkg send data using simple package protocol.
@@ -48,7 +37,7 @@ func getPkgOption(option ...PkgOption) (*PkgOption, error) {
 // Simple package protocol: DataLength(24bit)|DataField(variant)。
 //
 // Note that,
-// 1. The DataLength is the length of DataField, which does not contain the header size 2 bytes.
+// 1. The DataLength is the length of DataField, which does not contain the header size.
 // 2. The integer bytes of the package are encoded using BigEndian order.
 func (c *Conn) SendPkg(data []byte, option ...PkgOption) error {
 	pkgOption, err := getPkgOption(option...)
@@ -57,16 +46,18 @@ func (c *Conn) SendPkg(data []byte, option ...PkgOption) error {
 	}
 	length := len(data)
 	if length > pkgOption.MaxDataSize {
-		return fmt.Errorf(`data size %d exceeds max pkg size %d`, length, pkgOption.MaxDataSize)
+		return fmt.Errorf(
+			`data too long, data size %d exceeds allowed max data size %d`,
+			length, pkgOption.MaxDataSize,
+		)
 	}
-	offset := gPKG_MAX_HEADER_SIZE - pkgOption.HeaderSize
-	buffer := make([]byte, gPKG_MAX_HEADER_SIZE+len(data))
+	offset := gPKG_HEADER_SIZE_MAX - pkgOption.HeaderSize
+	buffer := make([]byte, gPKG_HEADER_SIZE_MAX+len(data))
 	binary.BigEndian.PutUint32(buffer[0:], uint32(length))
-	copy(buffer[gPKG_MAX_HEADER_SIZE:], data)
+	copy(buffer[gPKG_HEADER_SIZE_MAX:], data)
 	if pkgOption.Retry.Count > 0 {
 		return c.Send(buffer[offset:], pkgOption.Retry)
 	}
-	//fmt.Println("SendPkg:", buffer[offset:])
 	return c.Send(buffer[offset:])
 }
 
@@ -98,58 +89,41 @@ func (c *Conn) SendRecvPkgWithTimeout(data []byte, timeout time.Duration, option
 	}
 }
 
-// Recv receives data from connection using simple package protocol.
+// RecvPkg receives data from connection using simple package protocol.
 func (c *Conn) RecvPkg(option ...PkgOption) (result []byte, err error) {
-	var temp []byte
+	var buffer []byte
 	var length int
 	pkgOption, err := getPkgOption(option...)
 	if err != nil {
 		return nil, err
 	}
-	for {
-		for {
-			if len(c.buffer) >= pkgOption.HeaderSize {
-				if length <= 0 {
-					switch pkgOption.HeaderSize {
-					case 1:
-						// It fills with zero if the header size is lesser than 4 bytes (uint32).
-						length = int(binary.BigEndian.Uint32([]byte{0, 0, 0, c.buffer[0]}))
-					case 2:
-						length = int(binary.BigEndian.Uint32([]byte{0, 0, c.buffer[0], c.buffer[1]}))
-					case 3:
-						length = int(binary.BigEndian.Uint32([]byte{0, c.buffer[0], c.buffer[1], c.buffer[2]}))
-					default:
-						length = int(binary.BigEndian.Uint32([]byte{c.buffer[0], c.buffer[1], c.buffer[2], c.buffer[3]}))
-					}
-				}
-				// It here validates the size of the package.
-				// It clears the buffer and returns error immediately if it validates failed.
-				if length < 0 || length > pkgOption.MaxDataSize {
-					c.buffer = c.buffer[:0]
-					return nil, fmt.Errorf(`invalid package size %d`, length)
-				}
-				// It continues reading until it receives complete bytes of the package.
-				if len(c.buffer) < length+pkgOption.HeaderSize {
-					break
-				}
-				result = c.buffer[pkgOption.HeaderSize : pkgOption.HeaderSize+length]
-				c.buffer = c.buffer[pkgOption.HeaderSize+length:]
-				length = 0
-				return
-			} else {
-				break
-			}
-		}
-		temp, err = c.Recv(0, pkgOption.Retry)
-		if err != nil {
-			break
-		}
-		if len(temp) > 0 {
-			c.buffer = append(c.buffer, temp...)
-		}
-		//fmt.Println("RecvPkg:", c.buffer)
+	// Header field.
+	buffer, err = c.Recv(pkgOption.HeaderSize, pkgOption.Retry)
+	if err != nil {
+		return nil, err
 	}
-	return
+	switch pkgOption.HeaderSize {
+	case 1:
+		// It fills with zero if the header size is lesser than 4 bytes (uint32).
+		length = int(binary.BigEndian.Uint32([]byte{0, 0, 0, buffer[0]}))
+	case 2:
+		length = int(binary.BigEndian.Uint32([]byte{0, 0, buffer[0], buffer[1]}))
+	case 3:
+		length = int(binary.BigEndian.Uint32([]byte{0, buffer[0], buffer[1], buffer[2]}))
+	default:
+		length = int(binary.BigEndian.Uint32([]byte{buffer[0], buffer[1], buffer[2], buffer[3]}))
+	}
+	// It here validates the size of the package.
+	// It clears the buffer and returns error immediately if it validates failed.
+	if length < 0 || length > pkgOption.MaxDataSize {
+		return nil, fmt.Errorf(`invalid package size %d`, length)
+	}
+	// Empty package.
+	if length == 0 {
+		return nil, nil
+	}
+	// Data field.
+	return c.Recv(length, pkgOption.Retry)
 }
 
 // RecvPkgWithTimeout reads data from connection with timeout using simple package protocol.
@@ -160,4 +134,42 @@ func (c *Conn) RecvPkgWithTimeout(timeout time.Duration, option ...PkgOption) (d
 	defer c.SetRecvDeadline(time.Time{})
 	data, err = c.RecvPkg(option...)
 	return
+}
+
+// getPkgOption wraps and returns the PkgOption.
+// If no option given, it returns a new option with default value.
+func getPkgOption(option ...PkgOption) (*PkgOption, error) {
+	pkgOption := PkgOption{}
+	if len(option) > 0 {
+		pkgOption = option[0]
+	}
+	if pkgOption.HeaderSize == 0 {
+		pkgOption.HeaderSize = gPKG_HEADER_SIZE_DEFAULT
+	}
+	if pkgOption.HeaderSize > gPKG_HEADER_SIZE_MAX {
+		return nil, fmt.Errorf(
+			`package header size %d definition exceeds max header size %d`,
+			pkgOption.HeaderSize, gPKG_HEADER_SIZE_MAX,
+		)
+	}
+	if pkgOption.MaxDataSize == 0 {
+		switch pkgOption.HeaderSize {
+		case 1:
+			pkgOption.MaxDataSize = 0xFF
+		case 2:
+			pkgOption.MaxDataSize = 0xFFFF
+		case 3:
+			pkgOption.MaxDataSize = 0xFFFFFF
+		case 4:
+			// math.MaxInt32 not math.MaxUint32
+			pkgOption.MaxDataSize = 0x7FFFFFFF
+		}
+	}
+	if pkgOption.MaxDataSize > 0x7FFFFFFF {
+		return nil, fmt.Errorf(
+			`package data size %d definition exceeds allowed max data size %d`,
+			pkgOption.MaxDataSize, 0x7FFFFFFF,
+		)
+	}
+	return &pkgOption, nil
 }

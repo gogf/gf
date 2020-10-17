@@ -11,7 +11,7 @@ func ws(r *ghttp.Request) {
 	ws, err := r.WebSocket()
 	if err != nil {
 		glog.Error(err)
-		r.Exit()
+		return
 	}
 	for {
 		msgType, msg, err := ws.ReadMessage()
@@ -29,7 +29,7 @@ func main() {
 	s.Group("").Bind([]ghttp.GroupItem{
 		{"ALL", "/ws", ws},
 	})
-
+	s.SetAccessLogEnabled(true)
 	s.SetServerRoot(gfile.MainPkgPath())
 	s.SetPort(8199)
 	s.Run()

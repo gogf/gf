@@ -9,40 +9,74 @@
 package gset_test
 
 import (
-	"encoding/json"
+	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/internal/json"
+	"github.com/gogf/gf/util/gconv"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/container/gset"
 	"github.com/gogf/gf/test/gtest"
 )
 
-func TestStrSet_Basic(t *testing.T) {
-	gtest.Case(t, func() {
-		s := gset.NewStrSet()
-		s.Add("1").Add("1").Add("2")
+func TestStrSet_Var(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var s gset.StrSet
+		s.Add("1", "1", "2")
 		s.Add([]string{"3", "4"}...)
-		gtest.Assert(s.Size(), 4)
-		gtest.AssertIN("1", s.Slice())
-		gtest.AssertIN("2", s.Slice())
-		gtest.AssertIN("3", s.Slice())
-		gtest.AssertIN("4", s.Slice())
-		gtest.AssertNI("0", s.Slice())
-		gtest.Assert(s.Contains("4"), true)
-		gtest.Assert(s.Contains("5"), false)
+		t.Assert(s.Size(), 4)
+		t.AssertIN("1", s.Slice())
+		t.AssertIN("2", s.Slice())
+		t.AssertIN("3", s.Slice())
+		t.AssertIN("4", s.Slice())
+		t.AssertNI("0", s.Slice())
+		t.Assert(s.Contains("4"), true)
+		t.Assert(s.Contains("5"), false)
 		s.Remove("1")
-		gtest.Assert(s.Size(), 3)
+		t.Assert(s.Size(), 3)
 		s.Clear()
-		gtest.Assert(s.Size(), 0)
+		t.Assert(s.Size(), 0)
+	})
+}
+
+func TestStrSet_Basic(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		s := gset.NewStrSet()
+		s.Add("1", "1", "2")
+		s.Add([]string{"3", "4"}...)
+		t.Assert(s.Size(), 4)
+		t.AssertIN("1", s.Slice())
+		t.AssertIN("2", s.Slice())
+		t.AssertIN("3", s.Slice())
+		t.AssertIN("4", s.Slice())
+		t.AssertNI("0", s.Slice())
+		t.Assert(s.Contains("4"), true)
+		t.Assert(s.Contains("5"), false)
+		s.Remove("1")
+		t.Assert(s.Size(), 3)
+		s.Clear()
+		t.Assert(s.Size(), 0)
+	})
+}
+
+func TestStrSet_ContainsI(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		s := gset.NewStrSet()
+		s.Add("a", "b", "C")
+		t.Assert(s.Contains("A"), false)
+		t.Assert(s.Contains("a"), true)
+		t.Assert(s.ContainsI("A"), true)
 	})
 }
 
 func TestStrSet_Iterator(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		s := gset.NewStrSet()
-		s.Add("1").Add("2").Add("3")
-		gtest.Assert(s.Size(), 3)
+		s.Add("1", "2", "3")
+		t.Assert(s.Size(), 3)
 
 		a1 := garray.New(true)
 		a2 := garray.New(true)
@@ -54,22 +88,22 @@ func TestStrSet_Iterator(t *testing.T) {
 			a2.Append("1")
 			return true
 		})
-		gtest.Assert(a1.Len(), 1)
-		gtest.Assert(a2.Len(), 3)
+		t.Assert(a1.Len(), 1)
+		t.Assert(a2.Len(), 3)
 	})
 }
 
 func TestStrSet_LockFunc(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		s := gset.NewStrSet()
-		s.Add("1").Add("2").Add("3")
-		gtest.Assert(s.Size(), 3)
+		s.Add("1", "2", "3")
+		t.Assert(s.Size(), 3)
 		s.LockFunc(func(m map[string]struct{}) {
 			delete(m, "1")
 		})
-		gtest.Assert(s.Size(), 2)
+		t.Assert(s.Size(), 2)
 		s.RLockFunc(func(m map[string]struct{}) {
-			gtest.Assert(m, map[string]struct{}{
+			t.Assert(m, map[string]struct{}{
 				"3": struct{}{},
 				"2": struct{}{},
 			})
@@ -78,285 +112,368 @@ func TestStrSet_LockFunc(t *testing.T) {
 }
 
 func TestStrSet_Equal(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewStrSet()
 		s2 := gset.NewStrSet()
 		s3 := gset.NewStrSet()
-		s1.Add("1").Add("2").Add("3")
-		s2.Add("1").Add("2").Add("3")
-		s3.Add("1").Add("2").Add("3").Add("4")
-		gtest.Assert(s1.Equal(s2), true)
-		gtest.Assert(s1.Equal(s3), false)
+		s1.Add("1", "2", "3")
+		s2.Add("1", "2", "3")
+		s3.Add("1", "2", "3", "4")
+		t.Assert(s1.Equal(s2), true)
+		t.Assert(s1.Equal(s3), false)
 	})
 }
 
 func TestStrSet_IsSubsetOf(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewStrSet()
 		s2 := gset.NewStrSet()
 		s3 := gset.NewStrSet()
-		s1.Add("1").Add("2")
-		s2.Add("1").Add("2").Add("3")
-		s3.Add("1").Add("2").Add("3").Add("4")
-		gtest.Assert(s1.IsSubsetOf(s2), true)
-		gtest.Assert(s2.IsSubsetOf(s3), true)
-		gtest.Assert(s1.IsSubsetOf(s3), true)
-		gtest.Assert(s2.IsSubsetOf(s1), false)
-		gtest.Assert(s3.IsSubsetOf(s2), false)
+		s1.Add("1", "2")
+		s2.Add("1", "2", "3")
+		s3.Add("1", "2", "3", "4")
+		t.Assert(s1.IsSubsetOf(s2), true)
+		t.Assert(s2.IsSubsetOf(s3), true)
+		t.Assert(s1.IsSubsetOf(s3), true)
+		t.Assert(s2.IsSubsetOf(s1), false)
+		t.Assert(s3.IsSubsetOf(s2), false)
 	})
 }
 
 func TestStrSet_Union(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewStrSet()
 		s2 := gset.NewStrSet()
-		s1.Add("1").Add("2")
-		s2.Add("3").Add("4")
+		s1.Add("1", "2")
+		s2.Add("3", "4")
 		s3 := s1.Union(s2)
-		gtest.Assert(s3.Contains("1"), true)
-		gtest.Assert(s3.Contains("2"), true)
-		gtest.Assert(s3.Contains("3"), true)
-		gtest.Assert(s3.Contains("4"), true)
+		t.Assert(s3.Contains("1"), true)
+		t.Assert(s3.Contains("2"), true)
+		t.Assert(s3.Contains("3"), true)
+		t.Assert(s3.Contains("4"), true)
 	})
 }
 
 func TestStrSet_Diff(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewStrSet()
 		s2 := gset.NewStrSet()
-		s1.Add("1").Add("2").Add("3")
-		s2.Add("3").Add("4").Add("5")
+		s1.Add("1", "2", "3")
+		s2.Add("3", "4", "5")
 		s3 := s1.Diff(s2)
-		gtest.Assert(s3.Contains("1"), true)
-		gtest.Assert(s3.Contains("2"), true)
-		gtest.Assert(s3.Contains("3"), false)
-		gtest.Assert(s3.Contains("4"), false)
+		t.Assert(s3.Contains("1"), true)
+		t.Assert(s3.Contains("2"), true)
+		t.Assert(s3.Contains("3"), false)
+		t.Assert(s3.Contains("4"), false)
 	})
 }
 
 func TestStrSet_Intersect(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewStrSet()
 		s2 := gset.NewStrSet()
-		s1.Add("1").Add("2").Add("3")
-		s2.Add("3").Add("4").Add("5")
+		s1.Add("1", "2", "3")
+		s2.Add("3", "4", "5")
 		s3 := s1.Intersect(s2)
-		gtest.Assert(s3.Contains("1"), false)
-		gtest.Assert(s3.Contains("2"), false)
-		gtest.Assert(s3.Contains("3"), true)
-		gtest.Assert(s3.Contains("4"), false)
+		t.Assert(s3.Contains("1"), false)
+		t.Assert(s3.Contains("2"), false)
+		t.Assert(s3.Contains("3"), true)
+		t.Assert(s3.Contains("4"), false)
 	})
 }
 
 func TestStrSet_Complement(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewStrSet()
 		s2 := gset.NewStrSet()
-		s1.Add("1").Add("2").Add("3")
-		s2.Add("3").Add("4").Add("5")
+		s1.Add("1", "2", "3")
+		s2.Add("3", "4", "5")
 		s3 := s1.Complement(s2)
-		gtest.Assert(s3.Contains("1"), false)
-		gtest.Assert(s3.Contains("2"), false)
-		gtest.Assert(s3.Contains("4"), true)
-		gtest.Assert(s3.Contains("5"), true)
+		t.Assert(s3.Contains("1"), false)
+		t.Assert(s3.Contains("2"), false)
+		t.Assert(s3.Contains("4"), true)
+		t.Assert(s3.Contains("5"), true)
 	})
 }
 
 func TestNewIntSetFrom(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewIntSetFrom([]int{1, 2, 3, 4})
 		s2 := gset.NewIntSetFrom([]int{5, 6, 7, 8})
-		gtest.Assert(s1.Contains(3), true)
-		gtest.Assert(s1.Contains(5), false)
-		gtest.Assert(s2.Contains(3), false)
-		gtest.Assert(s2.Contains(5), true)
+		t.Assert(s1.Contains(3), true)
+		t.Assert(s1.Contains(5), false)
+		t.Assert(s2.Contains(3), false)
+		t.Assert(s2.Contains(5), true)
 	})
 }
 
 func TestStrSet_Merge(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewStrSet()
 		s2 := gset.NewStrSet()
-		s1.Add("1").Add("2").Add("3")
-		s2.Add("3").Add("4").Add("5")
+		s1.Add("1", "2", "3")
+		s2.Add("3", "4", "5")
 		s3 := s1.Merge(s2)
-		gtest.Assert(s3.Contains("1"), true)
-		gtest.Assert(s3.Contains("6"), false)
-		gtest.Assert(s3.Contains("4"), true)
-		gtest.Assert(s3.Contains("5"), true)
+		t.Assert(s3.Contains("1"), true)
+		t.Assert(s3.Contains("6"), false)
+		t.Assert(s3.Contains("4"), true)
+		t.Assert(s3.Contains("5"), true)
 	})
 }
 
 func TestNewStrSetFrom(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewStrSetFrom([]string{"a", "b", "c"}, true)
-		gtest.Assert(s1.Contains("b"), true)
-		gtest.Assert(s1.Contains("d"), false)
+		t.Assert(s1.Contains("b"), true)
+		t.Assert(s1.Contains("d"), false)
 	})
 }
 
 func TestStrSet_Join(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewStrSetFrom([]string{"a", "b", "c"}, true)
 		str1 := s1.Join(",")
-		gtest.Assert(strings.Contains(str1, "b"), true)
-		gtest.Assert(strings.Contains(str1, "d"), false)
+		t.Assert(strings.Contains(str1, "b"), true)
+		t.Assert(strings.Contains(str1, "d"), false)
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewStrSet()
-		s1.Add("a").Add(`"b"`).Add(`\c`)
+		s1.Add("a", `"b"`, `\c`)
 		str1 := s1.Join(",")
-		gtest.Assert(strings.Contains(str1, `"b"`), true)
-		gtest.Assert(strings.Contains(str1, `\c`), true)
-		gtest.Assert(strings.Contains(str1, `a`), true)
+		t.Assert(strings.Contains(str1, `"b"`), true)
+		t.Assert(strings.Contains(str1, `\c`), true)
+		t.Assert(strings.Contains(str1, `a`), true)
 	})
 }
 
 func TestStrSet_String(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewStrSetFrom([]string{"a", "b", "c"}, true)
 		str1 := s1.String()
-		gtest.Assert(strings.Contains(str1, "b"), true)
-		gtest.Assert(strings.Contains(str1, "d"), false)
+		t.Assert(strings.Contains(str1, "b"), true)
+		t.Assert(strings.Contains(str1, "d"), false)
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.New(true)
-		s1.Add("a").Add("a2").Add("b").Add("c")
+		s1.Add("a", "a2", "b", "c")
 		str1 := s1.String()
-		gtest.Assert(strings.Contains(str1, "["), true)
-		gtest.Assert(strings.Contains(str1, "]"), true)
-		gtest.Assert(strings.Contains(str1, "a2"), true)
+		t.Assert(strings.Contains(str1, "["), true)
+		t.Assert(strings.Contains(str1, "]"), true)
+		t.Assert(strings.Contains(str1, "a2"), true)
 	})
 }
 
 func TestStrSet_Sum(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewStrSetFrom([]string{"a", "b", "c"}, true)
 		s2 := gset.NewIntSetFrom([]int{2, 3, 4}, true)
-		gtest.Assert(s1.Sum(), 0)
-		gtest.Assert(s2.Sum(), 9)
+		t.Assert(s1.Sum(), 0)
+		t.Assert(s2.Sum(), 9)
 	})
 }
 
 func TestStrSet_Size(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewStrSetFrom([]string{"a", "b", "c"}, true)
-		gtest.Assert(s1.Size(), 3)
+		t.Assert(s1.Size(), 3)
 
 	})
 }
 
 func TestStrSet_Remove(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		s1 := gset.NewStrSetFrom([]string{"a", "b", "c"}, true)
-		s1 = s1.Remove("b")
-		gtest.Assert(s1.Contains("b"), false)
-		gtest.Assert(s1.Contains("c"), true)
+		s1.Remove("b")
+		t.Assert(s1.Contains("b"), false)
+		t.Assert(s1.Contains("c"), true)
 	})
 }
 
 func TestStrSet_Pop(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		a := []string{"a", "b", "c", "d"}
 		s := gset.NewStrSetFrom(a, true)
-		gtest.Assert(s.Size(), 4)
-		gtest.AssertIN(s.Pop(), a)
-		gtest.Assert(s.Size(), 3)
-		gtest.AssertIN(s.Pop(), a)
-		gtest.Assert(s.Size(), 2)
+		t.Assert(s.Size(), 4)
+		t.AssertIN(s.Pop(), a)
+		t.Assert(s.Size(), 3)
+		t.AssertIN(s.Pop(), a)
+		t.Assert(s.Size(), 2)
 	})
 }
 
 func TestStrSet_Pops(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		a := []string{"a", "b", "c", "d"}
 		s := gset.NewStrSetFrom(a, true)
 		array := s.Pops(2)
-		gtest.Assert(len(array), 2)
-		gtest.Assert(s.Size(), 2)
-		gtest.AssertIN(array, a)
-		gtest.Assert(s.Pops(0), nil)
-		gtest.AssertIN(s.Pops(2), a)
-		gtest.Assert(s.Size(), 0)
+		t.Assert(len(array), 2)
+		t.Assert(s.Size(), 2)
+		t.AssertIN(array, a)
+		t.Assert(s.Pops(0), nil)
+		t.AssertIN(s.Pops(2), a)
+		t.Assert(s.Size(), 0)
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		s := gset.NewStrSet(true)
 		a := []string{"1", "2", "3", "4"}
 		s.Add(a...)
-		gtest.Assert(s.Size(), 4)
-		gtest.Assert(s.Pops(-2), nil)
-		gtest.AssertIN(s.Pops(-1), a)
+		t.Assert(s.Size(), 4)
+		t.Assert(s.Pops(-2), nil)
+		t.AssertIN(s.Pops(-1), a)
 	})
 }
 
-func TestStrSet_Json(t *testing.T) {
-	gtest.Case(t, func() {
-		s1 := []string{"a", "b", "d", "c"}
-		a1 := gset.NewStrSetFrom(s1)
-		b1, err1 := json.Marshal(a1)
-		b2, err2 := json.Marshal(s1)
-		gtest.Assert(len(b1), len(b2))
-		gtest.Assert(err1, err2)
-
-		a2 := gset.NewStrSet()
-		err2 = json.Unmarshal(b2, &a2)
-		gtest.Assert(err2, nil)
-		gtest.Assert(a2.Contains("a"), true)
-		gtest.Assert(a2.Contains("b"), true)
-		gtest.Assert(a2.Contains("c"), true)
-		gtest.Assert(a2.Contains("d"), true)
-		gtest.Assert(a2.Contains("e"), false)
-
-		var a3 gset.StrSet
-		err := json.Unmarshal(b2, &a3)
-		gtest.Assert(err, nil)
-		gtest.Assert(a3.Contains("a"), true)
-		gtest.Assert(a3.Contains("b"), true)
-		gtest.Assert(a3.Contains("c"), true)
-		gtest.Assert(a3.Contains("d"), true)
-		gtest.Assert(a3.Contains("e"), false)
+func TestStrSet_AddIfNotExist(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		s := gset.NewStrSet(true)
+		s.Add("1")
+		t.Assert(s.Contains("1"), true)
+		t.Assert(s.AddIfNotExist("1"), false)
+		t.Assert(s.AddIfNotExist("2"), true)
+		t.Assert(s.Contains("2"), true)
+		t.Assert(s.AddIfNotExist("2"), false)
+		t.Assert(s.Contains("2"), true)
 	})
 }
 
 func TestStrSet_AddIfNotExistFunc(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		s := gset.NewStrSet(true)
 		s.Add("1")
-		gtest.Assert(s.Contains("1"), true)
-		gtest.Assert(s.Contains("2"), false)
-
-		s.AddIfNotExistFunc("2", func() string {
-			return "3"
-		})
-		gtest.Assert(s.Contains("2"), false)
-		gtest.Assert(s.Contains("3"), true)
-
-		s.AddIfNotExistFunc("3", func() string {
-			return "4"
-		})
-		gtest.Assert(s.Contains("3"), true)
-		gtest.Assert(s.Contains("4"), false)
+		t.Assert(s.Contains("1"), true)
+		t.Assert(s.Contains("2"), false)
+		t.Assert(s.AddIfNotExistFunc("2", func() bool { return false }), false)
+		t.Assert(s.Contains("2"), false)
+		t.Assert(s.AddIfNotExistFunc("2", func() bool { return true }), true)
+		t.Assert(s.Contains("2"), true)
+		t.Assert(s.AddIfNotExistFunc("2", func() bool { return true }), false)
+		t.Assert(s.Contains("2"), true)
 	})
-
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		s := gset.NewStrSet(true)
+		wg := sync.WaitGroup{}
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			r := s.AddIfNotExistFunc("1", func() bool {
+				time.Sleep(100 * time.Millisecond)
+				return true
+			})
+			t.Assert(r, false)
+		}()
 		s.Add("1")
-		gtest.Assert(s.Contains("1"), true)
-		gtest.Assert(s.Contains("2"), false)
+		wg.Wait()
+	})
+}
 
-		s.AddIfNotExistFuncLock("2", func() string {
-			return "3"
-		})
-		gtest.Assert(s.Contains("2"), false)
-		gtest.Assert(s.Contains("3"), true)
+func TestStrSet_AddIfNotExistFuncLock(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		s := gset.NewStrSet(true)
+		wg := sync.WaitGroup{}
+		wg.Add(2)
+		go func() {
+			defer wg.Done()
+			r := s.AddIfNotExistFuncLock("1", func() bool {
+				time.Sleep(500 * time.Millisecond)
+				return true
+			})
+			t.Assert(r, true)
+		}()
+		time.Sleep(100 * time.Millisecond)
+		go func() {
+			defer wg.Done()
+			r := s.AddIfNotExistFuncLock("1", func() bool {
+				return true
+			})
+			t.Assert(r, false)
+		}()
+		wg.Wait()
+	})
+}
 
-		s.AddIfNotExistFuncLock("3", func() string {
-			return "4"
+func TestStrSet_Json(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		s1 := []string{"a", "b", "d", "c"}
+		a1 := gset.NewStrSetFrom(s1)
+		b1, err1 := json.Marshal(a1)
+		b2, err2 := json.Marshal(s1)
+		t.Assert(len(b1), len(b2))
+		t.Assert(err1, err2)
+
+		a2 := gset.NewStrSet()
+		err2 = json.Unmarshal(b2, &a2)
+		t.Assert(err2, nil)
+		t.Assert(a2.Contains("a"), true)
+		t.Assert(a2.Contains("b"), true)
+		t.Assert(a2.Contains("c"), true)
+		t.Assert(a2.Contains("d"), true)
+		t.Assert(a2.Contains("e"), false)
+
+		var a3 gset.StrSet
+		err := json.Unmarshal(b2, &a3)
+		t.Assert(err, nil)
+		t.Assert(a3.Contains("a"), true)
+		t.Assert(a3.Contains("b"), true)
+		t.Assert(a3.Contains("c"), true)
+		t.Assert(a3.Contains("d"), true)
+		t.Assert(a3.Contains("e"), false)
+	})
+}
+
+func TestStrSet_Walk(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			set    gset.StrSet
+			names  = g.SliceStr{"user", "user_detail"}
+			prefix = "gf_"
+		)
+		set.Add(names...)
+		// Add prefix for given table names.
+		set.Walk(func(item string) string {
+			return prefix + item
 		})
-		gtest.Assert(s.Contains("3"), true)
-		gtest.Assert(s.Contains("4"), false)
+		t.Assert(set.Size(), 2)
+		t.Assert(set.Contains("gf_user"), true)
+		t.Assert(set.Contains("gf_user_detail"), true)
+	})
+}
+
+func TestStrSet_UnmarshalValue(t *testing.T) {
+	type V struct {
+		Name string
+		Set  *gset.StrSet
+	}
+	// JSON
+	gtest.C(t, func(t *gtest.T) {
+		var v *V
+		err := gconv.Struct(g.Map{
+			"name": "john",
+			"set":  []byte(`["1","2","3"]`),
+		}, &v)
+		t.Assert(err, nil)
+		t.Assert(v.Name, "john")
+		t.Assert(v.Set.Size(), 3)
+		t.Assert(v.Set.Contains("1"), true)
+		t.Assert(v.Set.Contains("2"), true)
+		t.Assert(v.Set.Contains("3"), true)
+		t.Assert(v.Set.Contains("4"), false)
+	})
+	// Map
+	gtest.C(t, func(t *gtest.T) {
+		var v *V
+		err := gconv.Struct(g.Map{
+			"name": "john",
+			"set":  g.SliceStr{"1", "2", "3"},
+		}, &v)
+		t.Assert(err, nil)
+		t.Assert(v.Name, "john")
+		t.Assert(v.Set.Size(), 3)
+		t.Assert(v.Set.Contains("1"), true)
+		t.Assert(v.Set.Contains("2"), true)
+		t.Assert(v.Set.Contains("3"), true)
+		t.Assert(v.Set.Contains("4"), false)
 	})
 }

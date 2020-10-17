@@ -7,9 +7,9 @@
 package gsession
 
 import (
+	"errors"
+	"github.com/gogf/gf/internal/intlog"
 	"time"
-
-	"github.com/gogf/gf/container/gtype"
 
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/container/gvar"
@@ -17,37 +17,79 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
-// Session struct for storing single session data.
+// Session struct for storing single session data,
+// which is bound to a single request.
 type Session struct {
 	id      string          // Session id.
 	data    *gmap.StrAnyMap // Session data.
-	dirty   *gtype.Bool     // Used to mark session is modified.
+	dirty   bool            // Used to mark session is modified.
+	start   bool            // Used to mark session is started.
 	manager *Manager        // Parent manager.
+
+	// idFunc is a callback function used for creating custom session id.
+	// This is called if session id is empty ever when session starts.
+	idFunc func(ttl time.Duration) (id string)
 }
 
-// init does the delay initialization for session.
-// It here to initialization real session if necessary.
+// init does the lazy initialization for session.
+// It here initializes real session if necessary.
 func (s *Session) init() {
-	if s.dirty == nil {
-		s.dirty = gtype.NewBool(false)
+	if s.start {
+		return
 	}
-	if len(s.id) > 0 && s.data == nil {
-		if data := s.manager.storage.GetSession(s.id, s.manager.ttl); data != nil {
-			if s.data = gmap.NewStrAnyMapFrom(data, true); s.data == nil {
-				panic("session restoring failed for id:" + s.id)
+	if s.id != "" {
+		var err error
+		// Retrieve memory session data from manager.
+		if r, _ := s.manager.sessionData.Get(s.id); r != nil {
+			s.data = r.(*gmap.StrAnyMap)
+			intlog.Print("session init data:", s.data)
+		}
+		// Retrieve stored session data from storage.
+		if s.manager.storage != nil {
+			if s.data, err = s.manager.storage.GetSession(s.id, s.manager.ttl, s.data); err != nil {
+				intlog.Errorf("session restoring failed for id '%s': %v", s.id, err)
 			}
-			return
-		} else {
-			// Invalid or expired session id,
-			// it should create a new one.
-			s.id = ""
 		}
 	}
-	if len(s.id) == 0 {
+	// Use custom session id creating function.
+	if s.id == "" && s.idFunc != nil {
+		s.id = s.idFunc(s.manager.ttl)
+	}
+	// Use default session id creating function of storage.
+	if s.id == "" {
+		s.id = s.manager.storage.New(s.manager.ttl)
+	}
+	// Use default session id creating function.
+	if s.id == "" {
 		s.id = NewSessionId()
 	}
 	if s.data == nil {
 		s.data = gmap.NewStrAnyMap(true)
+	}
+	s.start = true
+}
+
+// Close closes current session and updates its ttl in the session manager.
+// If this session is dirty, it also exports it to storage.
+//
+// NOTE that this function must be called ever after a session request done.
+func (s *Session) Close() {
+	if s.start && s.id != "" {
+		size := s.data.Size()
+		if s.manager.storage != nil {
+			if s.dirty {
+				if err := s.manager.storage.SetSession(s.id, s.data, s.manager.ttl); err != nil {
+					panic(err)
+				}
+			} else if size > 0 {
+				if err := s.manager.storage.UpdateTTL(s.id, s.manager.ttl); err != nil {
+					panic(err)
+				}
+			}
+		}
+		if s.dirty || size > 0 {
+			s.manager.UpdateSessionTTL(s.id, s.data)
+		}
 	}
 }
 
@@ -61,7 +103,7 @@ func (s *Session) Set(key string, value interface{}) error {
 			return err
 		}
 	}
-	s.dirty.Set(true)
+	s.dirty = true
 	return nil
 }
 
@@ -75,13 +117,13 @@ func (s *Session) Sets(data map[string]interface{}) error {
 			return err
 		}
 	}
-	s.dirty.Set(true)
+	s.dirty = true
 	return nil
 }
 
 // Remove removes key along with its value from this session.
 func (s *Session) Remove(key string) error {
-	if len(s.id) == 0 {
+	if s.id == "" {
 		return nil
 	}
 	s.init()
@@ -92,7 +134,7 @@ func (s *Session) Remove(key string) error {
 			return err
 		}
 	}
-	s.dirty.Set(true)
+	s.dirty = true
 	return nil
 }
 
@@ -103,7 +145,7 @@ func (s *Session) Clear() error {
 
 // RemoveAll deletes all key-value pairs from this session.
 func (s *Session) RemoveAll() error {
-	if len(s.id) == 0 {
+	if s.id == "" {
 		return nil
 	}
 	s.init()
@@ -114,7 +156,7 @@ func (s *Session) RemoveAll() error {
 			return err
 		}
 	}
-	s.dirty.Set(true)
+	s.dirty = true
 	return nil
 }
 
@@ -125,10 +167,30 @@ func (s *Session) Id() string {
 	return s.id
 }
 
+// SetId sets custom session before session starts.
+// It returns error if it is called after session starts.
+func (s *Session) SetId(id string) error {
+	if s.start {
+		return errors.New("session already started")
+	}
+	s.id = id
+	return nil
+}
+
+// SetIdFunc sets custom session id creating function before session starts.
+// It returns error if it is called after session starts.
+func (s *Session) SetIdFunc(f func(ttl time.Duration) string) error {
+	if s.start {
+		return errors.New("session already started")
+	}
+	s.idFunc = f
+	return nil
+}
+
 // Map returns all data as map.
 // Note that it's using value copy internally for concurrent-safe purpose.
 func (s *Session) Map() map[string]interface{} {
-	if len(s.id) > 0 {
+	if s.id != "" {
 		s.init()
 		if data := s.manager.storage.GetMap(s.id); data != nil {
 			return data
@@ -140,7 +202,7 @@ func (s *Session) Map() map[string]interface{} {
 
 // Size returns the size of the session.
 func (s *Session) Size() int {
-	if len(s.id) > 0 {
+	if s.id != "" {
 		s.init()
 		if size := s.manager.storage.GetSize(s.id); size >= 0 {
 			return size
@@ -158,40 +220,14 @@ func (s *Session) Contains(key string) bool {
 
 // IsDirty checks whether there's any data changes in the session.
 func (s *Session) IsDirty() bool {
-	if s.dirty == nil {
-		return false
-	}
-	return s.dirty.Val()
-}
-
-// Close closes current session and updates its ttl in the session manager.
-// If this session is dirty, it also exports it to storage.
-//
-// NOTE that this function must be called ever after a session request done.
-func (s *Session) Close() {
-	if len(s.id) > 0 && s.data != nil {
-		if s.manager.storage != nil {
-			if s.dirty.Cas(true, false) {
-				s.data.RLockFunc(func(m map[string]interface{}) {
-					if err := s.manager.storage.SetSession(s.id, m, s.manager.ttl); err != nil {
-						panic(err)
-					}
-				})
-			} else {
-				if err := s.manager.storage.UpdateTTL(s.id, s.manager.ttl); err != nil {
-					panic(err)
-				}
-			}
-		}
-		s.manager.UpdateSessionTTL(s.id, s)
-	}
+	return s.dirty
 }
 
 // Get retrieves session value with given key.
 // It returns <def> if the key does not exist in the session if <def> is given,
 // or else it return nil.
 func (s *Session) Get(key string, def ...interface{}) interface{} {
-	if len(s.id) == 0 {
+	if s.id == "" {
 		return nil
 	}
 	s.init()

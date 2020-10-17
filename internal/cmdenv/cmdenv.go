@@ -47,11 +47,12 @@ func Get(key string, def ...interface{}) *gvar.Var {
 	if len(def) > 0 {
 		value = def[0]
 	}
-	if v, ok := cmdOptions[key]; ok {
+	cmdKey := strings.ToLower(strings.Replace(key, "_", ".", -1))
+	if v, ok := cmdOptions[cmdKey]; ok {
 		value = v
 	} else {
-		key = strings.ToUpper(strings.Replace(key, ".", "_", -1))
-		if v := os.Getenv(key); v != "" {
+		envKey := strings.ToUpper(strings.Replace(key, ".", "_", -1))
+		if v := os.Getenv(envKey); v != "" {
 			value = v
 		}
 	}

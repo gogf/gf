@@ -31,9 +31,9 @@ func MiddlewareError(r *ghttp.Request) {
 
 func main() {
 	s := g.Server()
-	s.Group("/api.v2", func(g *ghttp.RouterGroup) {
-		g.Middleware(MiddlewareAuth, MiddlewareCORS, MiddlewareError)
-		g.ALL("/user/list", func(r *ghttp.Request) {
+	s.Group("/api.v2", func(group *ghttp.RouterGroup) {
+		group.Middleware(MiddlewareAuth, MiddlewareCORS, MiddlewareError)
+		group.ALL("/user/list", func(r *ghttp.Request) {
 			panic("db error: sql is xxxxxxx")
 		})
 	})

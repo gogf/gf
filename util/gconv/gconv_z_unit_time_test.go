@@ -16,10 +16,10 @@ import (
 )
 
 func Test_Time(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		t1 := "2011-10-10 01:02:03.456"
-		gtest.AssertEQ(gconv.GTime(t1), gtime.NewFromStr(t1))
-		gtest.AssertEQ(gconv.Time(t1), gtime.NewFromStr(t1).Time)
-		gtest.AssertEQ(gconv.Duration(100), 100*time.Nanosecond)
+		t.AssertEQ(gconv.GTime(t1), gtime.NewFromStr(t1))
+		t.AssertEQ(gconv.Time(t1), gtime.NewFromStr(t1).Time)
+		t.AssertEQ(gconv.Duration(100), 100*time.Nanosecond)
 	})
 }

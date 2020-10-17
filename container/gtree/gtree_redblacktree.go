@@ -7,8 +7,8 @@
 package gtree
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/gutil"
 
@@ -24,7 +24,7 @@ const (
 
 // RedBlackTree holds elements of the red-black tree.
 type RedBlackTree struct {
-	mu         *rwmutex.RWMutex
+	mu         rwmutex.RWMutex
 	root       *RedBlackTreeNode
 	size       int
 	comparator func(v1, v2 interface{}) int
@@ -41,17 +41,17 @@ type RedBlackTreeNode struct {
 }
 
 // NewRedBlackTree instantiates a red-black tree with the custom key comparator.
-// The parameter <safe> used to specify whether using tree in concurrent-safety,
+// The parameter <safe> is used to specify whether using tree in concurrent-safety,
 // which is false in default.
 func NewRedBlackTree(comparator func(v1, v2 interface{}) int, safe ...bool) *RedBlackTree {
 	return &RedBlackTree{
-		mu:         rwmutex.New(safe...),
+		mu:         rwmutex.Create(safe...),
 		comparator: comparator,
 	}
 }
 
 // NewRedBlackTreeFrom instantiates a red-black tree with the custom key comparator and <data> map.
-// The parameter <safe> used to specify whether using tree in concurrent-safety,
+// The parameter <safe> is used to specify whether using tree in concurrent-safety,
 // which is false in default.
 func NewRedBlackTreeFrom(comparator func(v1, v2 interface{}) int, data map[interface{}]interface{}, safe ...bool) *RedBlackTree {
 	tree := NewRedBlackTree(comparator, safe...)
@@ -82,7 +82,7 @@ func (tree *RedBlackTree) SetComparator(comparator func(a, b interface{}) int) {
 }
 
 // Clone returns a new tree with a copy of current tree.
-func (tree *RedBlackTree) Clone(safe ...bool) *RedBlackTree {
+func (tree *RedBlackTree) Clone() *RedBlackTree {
 	newTree := NewRedBlackTree(tree.comparator, !tree.mu.IsSafe())
 	newTree.Sets(tree.Map())
 	return newTree
@@ -109,14 +109,14 @@ func (tree *RedBlackTree) doSet(key interface{}, value interface{}) {
 	insertedNode := (*RedBlackTreeNode)(nil)
 	if tree.root == nil {
 		// Assert key is of comparator's type for initial tree
-		tree.comparator(key, key)
+		tree.getComparator()(key, key)
 		tree.root = &RedBlackTreeNode{Key: key, Value: value, color: red}
 		insertedNode = tree.root
 	} else {
 		node := tree.root
 		loop := true
 		for loop {
-			compare := tree.comparator(key, node.Key)
+			compare := tree.getComparator()(key, node.Key)
 			switch {
 			case compare == 0:
 				//node.Key   = key
@@ -170,12 +170,14 @@ func (tree *RedBlackTree) doSetWithLockCheck(key interface{}, value interface{})
 	if f, ok := value.(func() interface{}); ok {
 		value = f()
 	}
-	tree.doSet(key, value)
+	if value != nil {
+		tree.doSet(key, value)
+	}
 	return value
 }
 
 // GetOrSet returns the value by key,
-// or set value with given <value> if not exist and returns this value.
+// or sets value with given <value> if it does not exist and then returns this value.
 func (tree *RedBlackTree) GetOrSet(key interface{}, value interface{}) interface{} {
 	if v, ok := tree.Search(key); !ok {
 		return tree.doSetWithLockCheck(key, value)
@@ -185,8 +187,8 @@ func (tree *RedBlackTree) GetOrSet(key interface{}, value interface{}) interface
 }
 
 // GetOrSetFunc returns the value by key,
-// or sets value with return value of callback function <f> if not exist
-// and returns this value.
+// or sets value with returned value of callback function <f> if it does not exist
+// and then returns this value.
 func (tree *RedBlackTree) GetOrSetFunc(key interface{}, f func() interface{}) interface{} {
 	if v, ok := tree.Search(key); !ok {
 		return tree.doSetWithLockCheck(key, f())
@@ -196,8 +198,8 @@ func (tree *RedBlackTree) GetOrSetFunc(key interface{}, f func() interface{}) in
 }
 
 // GetOrSetFuncLock returns the value by key,
-// or sets value with return value of callback function <f> if not exist
-// and returns this value.
+// or sets value with returned value of callback function <f> if it does not exist
+// and then returns this value.
 //
 // GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function <f>
 // with mutex.Lock of the hash map.
@@ -233,7 +235,7 @@ func (tree *RedBlackTree) GetVarOrSetFuncLock(key interface{}, f func() interfac
 	return gvar.New(tree.GetOrSetFuncLock(key, f))
 }
 
-// SetIfNotExist sets <value> to the map if the <key> does not exist, then return true.
+// SetIfNotExist sets <value> to the map if the <key> does not exist, and then returns true.
 // It returns false if <key> exists, and <value> would be ignored.
 func (tree *RedBlackTree) SetIfNotExist(key interface{}, value interface{}) bool {
 	if !tree.Contains(key) {
@@ -243,7 +245,7 @@ func (tree *RedBlackTree) SetIfNotExist(key interface{}, value interface{}) bool
 	return false
 }
 
-// SetIfNotExistFunc sets value with return value of callback function <f>, then return true.
+// SetIfNotExistFunc sets value with return value of callback function <f>, and then returns true.
 // It returns false if <key> exists, and <value> would be ignored.
 func (tree *RedBlackTree) SetIfNotExistFunc(key interface{}, f func() interface{}) bool {
 	if !tree.Contains(key) {
@@ -253,7 +255,7 @@ func (tree *RedBlackTree) SetIfNotExistFunc(key interface{}, f func() interface{
 	return false
 }
 
-// SetIfNotExistFuncLock sets value with return value of callback function <f>, then return true.
+// SetIfNotExistFuncLock sets value with return value of callback function <f>, and then returns true.
 // It returns false if <key> exists, and <value> would be ignored.
 //
 // SetIfNotExistFuncLock differs with SetIfNotExistFunc function is that
@@ -335,8 +337,10 @@ func (tree *RedBlackTree) Size() int {
 
 // Keys returns all keys in asc order.
 func (tree *RedBlackTree) Keys() []interface{} {
-	keys := make([]interface{}, tree.Size())
-	index := 0
+	var (
+		keys  = make([]interface{}, tree.Size())
+		index = 0
+	)
 	tree.IteratorAsc(func(key, value interface{}) bool {
 		keys[index] = key
 		index++
@@ -347,8 +351,10 @@ func (tree *RedBlackTree) Keys() []interface{} {
 
 // Values returns all values in asc order based on the key.
 func (tree *RedBlackTree) Values() []interface{} {
-	values := make([]interface{}, tree.Size())
-	index := 0
+	var (
+		values = make([]interface{}, tree.Size())
+		index  = 0
+	)
 	tree.IteratorAsc(func(key, value interface{}) bool {
 		values[index] = value
 		index++
@@ -438,7 +444,7 @@ func (tree *RedBlackTree) Floor(key interface{}) (floor *RedBlackTreeNode, found
 	defer tree.mu.RUnlock()
 	n := tree.root
 	for n != nil {
-		compare := tree.comparator(key, n.Key)
+		compare := tree.getComparator()(key, n.Key)
 		switch {
 		case compare == 0:
 			return n, true
@@ -466,7 +472,7 @@ func (tree *RedBlackTree) Ceiling(key interface{}) (ceiling *RedBlackTreeNode, f
 	defer tree.mu.RUnlock()
 	n := tree.root
 	for n != nil {
-		compare := tree.comparator(key, n.Key)
+		compare := tree.getComparator()(key, n.Key)
 		switch {
 		case compare == 0:
 			return n, true
@@ -493,7 +499,7 @@ func (tree *RedBlackTree) IteratorFrom(key interface{}, match bool, f func(key, 
 	tree.IteratorAscFrom(key, match, f)
 }
 
-// IteratorAsc iterates the tree in ascending order with given callback function <f>.
+// IteratorAsc iterates the tree readonly in ascending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
 func (tree *RedBlackTree) IteratorAsc(f func(key, value interface{}) bool) {
 	tree.mu.RLock()
@@ -501,7 +507,7 @@ func (tree *RedBlackTree) IteratorAsc(f func(key, value interface{}) bool) {
 	tree.doIteratorAsc(tree.leftNode(), f)
 }
 
-// IteratorAscFrom iterates the tree in ascending order with given callback function <f>.
+// IteratorAscFrom iterates the tree readonly in ascending order with given callback function <f>.
 // The parameter <key> specifies the start entry for iterating. The <match> specifies whether
 // starting iterating if the <key> is fully matched, or else using index searching iterating.
 // If <f> returns true, then it continues iterating; or false to stop.
@@ -537,14 +543,14 @@ loop:
 		old := node
 		for node.parent != nil {
 			node = node.parent
-			if tree.comparator(old.Key, node.Key) <= 0 {
+			if tree.getComparator()(old.Key, node.Key) <= 0 {
 				goto loop
 			}
 		}
 	}
 }
 
-// IteratorDesc iterates the tree in descending order with given callback function <f>.
+// IteratorDesc iterates the tree readonly in descending order with given callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
 func (tree *RedBlackTree) IteratorDesc(f func(key, value interface{}) bool) {
 	tree.mu.RLock()
@@ -552,7 +558,7 @@ func (tree *RedBlackTree) IteratorDesc(f func(key, value interface{}) bool) {
 	tree.doIteratorDesc(tree.rightNode(), f)
 }
 
-// IteratorDescFrom iterates the tree in descending order with given callback function <f>.
+// IteratorDescFrom iterates the tree readonly in descending order with given callback function <f>.
 // The parameter <key> specifies the start entry for iterating. The <match> specifies whether
 // starting iterating if the <key> is fully matched, or else using index searching iterating.
 // If <f> returns true, then it continues iterating; or false to stop.
@@ -588,7 +594,7 @@ loop:
 		old := node
 		for node.parent != nil {
 			node = node.parent
-			if tree.comparator(old.Key, node.Key) >= 0 {
+			if tree.getComparator()(old.Key, node.Key) >= 0 {
 				goto loop
 			}
 		}
@@ -601,6 +607,17 @@ func (tree *RedBlackTree) Clear() {
 	defer tree.mu.Unlock()
 	tree.root = nil
 	tree.size = 0
+}
+
+// Replace the data of the tree with given <data>.
+func (tree *RedBlackTree) Replace(data map[interface{}]interface{}) {
+	tree.mu.Lock()
+	defer tree.mu.Unlock()
+	tree.root = nil
+	tree.size = 0
+	for k, v := range data {
+		tree.doSet(k, v)
+	}
 }
 
 // String returns a string representation of container.
@@ -686,7 +703,7 @@ func (tree *RedBlackTree) output(node *RedBlackTreeNode, prefix string, isTail b
 func (tree *RedBlackTree) doSearch(key interface{}) (node *RedBlackTreeNode, found bool) {
 	node = tree.root
 	for node != nil {
-		compare := tree.comparator(key, node.Key)
+		compare := tree.getComparator()(key, node.Key)
 		switch {
 		case compare == 0:
 			return node, true
@@ -914,12 +931,11 @@ func (tree *RedBlackTree) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (tree *RedBlackTree) UnmarshalJSON(b []byte) error {
-	if tree.mu == nil {
-		tree.mu = rwmutex.New()
-		tree.comparator = gutil.ComparatorString
-	}
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
+	if tree.comparator == nil {
+		tree.comparator = gutil.ComparatorString
+	}
 	var data map[string]interface{}
 	if err := json.Unmarshal(b, &data); err != nil {
 		return err
@@ -928,4 +944,26 @@ func (tree *RedBlackTree) UnmarshalJSON(b []byte) error {
 		tree.doSet(k, v)
 	}
 	return nil
+}
+
+// UnmarshalValue is an interface implement which sets any type of value for map.
+func (tree *RedBlackTree) UnmarshalValue(value interface{}) (err error) {
+	tree.mu.Lock()
+	defer tree.mu.Unlock()
+	if tree.comparator == nil {
+		tree.comparator = gutil.ComparatorString
+	}
+	for k, v := range gconv.Map(value) {
+		tree.doSet(k, v)
+	}
+	return
+}
+
+// getComparator returns the comparator if it's previously set,
+// or else it panics.
+func (tree *RedBlackTree) getComparator() func(a, b interface{}) int {
+	if tree.comparator == nil {
+		panic("comparator is missing for tree")
+	}
+	return tree.comparator
 }

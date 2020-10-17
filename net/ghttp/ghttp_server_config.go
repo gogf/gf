@@ -9,6 +9,8 @@ package ghttp
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/util/gutil"
 	"net/http"
 	"strconv"
 	"time"
@@ -24,148 +26,344 @@ import (
 )
 
 const (
-	gDEFAULT_HTTP_ADDR  = ":80"  // 默认HTTP监听地址
-	gDEFAULT_HTTPS_ADDR = ":443" // 默认HTTPS监听地址
-	URI_TYPE_DEFAULT    = 0      // 服务注册时对象和方法名称转换为URI时，全部转为小写，单词以'-'连接符号连接
-	URI_TYPE_FULLNAME   = 1      // 不处理名称，以原有名称构建成URI
-	URI_TYPE_ALLLOWER   = 2      // 仅转为小写，单词间不使用连接符号
-	URI_TYPE_CAMEL      = 3      // 采用驼峰命名方式
+	gDEFAULT_HTTP_ADDR  = ":80"  // Default listening port for HTTP.
+	gDEFAULT_HTTPS_ADDR = ":443" // Default listening port for HTTPS.
+	URI_TYPE_DEFAULT    = 0      // Method name to URI converting type, which converts name to its lower case and joins the words using char '-'.
+	URI_TYPE_FULLNAME   = 1      // Method name to URI converting type, which does no converting to the method name.
+	URI_TYPE_ALLLOWER   = 2      // Method name to URI converting type, which converts name to its lower case.
+	URI_TYPE_CAMEL      = 3      // Method name to URI converting type, which converts name to its camel case.
 )
 
-// 自定义日志处理方法类型
-type LogHandler func(r *Request, err ...error)
-
-// HTTP Server 设置结构体，静态配置
+// ServerConfig is the HTTP Server configuration manager.
 type ServerConfig struct {
-	Addr              string            // 监听IP和端口，监听本地所有IP使用":端口"(支持多个地址，使用","号分隔)
-	HTTPSAddr         string            // HTTPS服务监听地址(支持多个地址，使用","号分隔)
-	HTTPSCertPath     string            // HTTPS证书文件路径
-	HTTPSKeyPath      string            // HTTPS签名文件路径
-	Handler           http.Handler      // 默认的处理函数
-	ReadTimeout       time.Duration     // 读取超时
-	WriteTimeout      time.Duration     // 写入超时
-	IdleTimeout       time.Duration     // 等待超时
-	MaxHeaderBytes    int               // 最大的header长度
-	TLSConfig         tls.Config        // HTTPS证书配置
-	KeepAlive         bool              // 是否开启长连接
-	ServerAgent       string            // Server Agent
-	View              *gview.View       // 模板引擎对象
-	Rewrites          map[string]string // URI Rewrite重写配置
-	IndexFiles        []string          // Static: 默认访问的文件列表
-	IndexFolder       bool              // Static: 如果访问目录是否显示目录列表
-	ServerRoot        string            // Static: 服务器服务的本地目录根路径(检索优先级比StaticPaths低)
-	SearchPaths       []string          // Static: 静态文件搜索目录(包含ServerRoot，按照优先级进行排序)
-	StaticPaths       []staticPathItem  // Static: 静态文件目录映射(按照优先级进行排序)
-	FileServerEnabled bool              // Static: 是否允许静态文件服务(通过静态文件服务方法调用自动识别)
-	CookieMaxAge      time.Duration     // Cookie: 有效期
-	CookiePath        string            // Cookie: 有效Path(注意同时也会影响SessionID)
-	CookieDomain      string            // Cookie: 有效Domain(注意同时也会影响SessionID)
-	SessionMaxAge     time.Duration     // Session: 有效期
-	SessionIdName     string            // Session: SessionId
-	SessionStorage    gsession.Storage  // Session: 存储路径
-	DenyIps           []string          // Security: 不允许访问的ip列表，支持ip前缀过滤，如: 10 将不允许10开头的ip访问
-	AllowIps          []string          // Security: 仅允许访问的ip列表，支持ip前缀过滤，如: 10 将仅允许10开头的ip访问
-	DenyRoutes        []string          // Security: 不允许访问的路由规则列表
-	LogPath           string            // Logging: 存放日志的目录路径(默认为空，表示不写文件)
-	LogHandler        LogHandler        // Logging: 日志配置: 自定义日志处理回调方法(默认为空)
-	LogStdout         bool              // Logging: 是否打印日志到终端(默认开启)
-	ErrorStack        bool              // Logging: 当产生错误时打印调用链详细堆栈
-	ErrorLogEnabled   bool              // Logging: 是否开启error log(默认开启)
-	AccessLogEnabled  bool              // Logging: 是否开启access log(默认关闭)
-	FormParsingMemory int64             // Mess: 表单解析内存限制(byte)
-	NameToUriType     int               // Mess: 服务注册时对象和方法名称转换为URI时的规则
-	GzipContentTypes  []string          // Mess: 允许进行gzip压缩的文件类型
-	DumpRouteMap      bool              // Mess: 是否在程序启动时默认打印路由表信息
-	RouterCacheExpire int               // Mess: 路由检索缓存过期时间(秒)
+	// ==================================
+	// Basic.
+	// ==================================
+
+	// Address specifies the server listening address like "port" or ":port",
+	// multiple addresses joined using ','.
+	Address string
+
+	// HTTPSAddr specifies the HTTPS addresses, multiple addresses joined using char ','.
+	HTTPSAddr string
+
+	// HTTPSCertPath specifies certification file path for HTTPS service.
+	HTTPSCertPath string
+
+	// HTTPSKeyPath specifies the key file path for HTTPS service.
+	HTTPSKeyPath string
+
+	// TLSConfig optionally provides a TLS configuration for use
+	// by ServeTLS and ListenAndServeTLS. Note that this value is
+	// cloned by ServeTLS and ListenAndServeTLS, so it's not
+	// possible to modify the configuration with methods like
+	// tls.Config.SetSessionTicketKeys. To use
+	// SetSessionTicketKeys, use Server.Serve with a TLS Listener
+	// instead.
+	TLSConfig *tls.Config
+
+	// Handler the handler for HTTP request.
+	Handler http.Handler
+
+	// ReadTimeout is the maximum duration for reading the entire
+	// request, including the body.
+	//
+	// Because ReadTimeout does not let Handlers make per-request
+	// decisions on each request body's acceptable deadline or
+	// upload rate, most users will prefer to use
+	// ReadHeaderTimeout. It is valid to use them both.
+	ReadTimeout time.Duration
+
+	// WriteTimeout is the maximum duration before timing out
+	// writes of the response. It is reset whenever a new
+	// request's header is read. Like ReadTimeout, it does not
+	// let Handlers make decisions on a per-request basis.
+	WriteTimeout time.Duration
+
+	// IdleTimeout is the maximum amount of time to wait for the
+	// next request when keep-alives are enabled. If IdleTimeout
+	// is zero, the value of ReadTimeout is used. If both are
+	// zero, there is no timeout.
+	IdleTimeout time.Duration
+
+	// MaxHeaderBytes controls the maximum number of bytes the
+	// server will read parsing the request header's keys and
+	// values, including the request line. It does not limit the
+	// size of the request body.
+	//
+	// It can be configured in configuration file using string like: 1m, 10m, 500kb etc.
+	// It's 10240 bytes in default.
+	MaxHeaderBytes int
+
+	// KeepAlive enables HTTP keep-alive.
+	KeepAlive bool
+
+	// ServerAgent specifies the server agent information, which is wrote to
+	// HTTP response header as "Server".
+	ServerAgent string
+
+	// View specifies the default template view object for the server.
+	View *gview.View
+
+	// ==================================
+	// Static.
+	// ==================================
+
+	// Rewrites specifies the URI rewrite rules map.
+	Rewrites map[string]string
+
+	// IndexFiles specifies the index files for static folder.
+	IndexFiles []string
+
+	// IndexFolder specifies if listing sub-files when requesting folder.
+	// The server responses HTTP status code 403 if it is false.
+	IndexFolder bool
+
+	// ServerRoot specifies the root directory for static service.
+	ServerRoot string
+
+	// SearchPaths specifies additional searching directories for static service.
+	SearchPaths []string
+
+	// StaticPaths specifies URI to directory mapping array.
+	StaticPaths []staticPathItem
+
+	// FileServerEnabled is the global switch for static service.
+	// It is automatically set enabled if any static path is set.
+	FileServerEnabled bool
+
+	// ==================================
+	// Cookie.
+	// ==================================
+
+	// CookieMaxAge specifies the max TTL for cookie items.
+	CookieMaxAge time.Duration
+
+	// CookiePath specifies cookie path.
+	// It also affects the default storage for session id.
+	CookiePath string
+
+	// CookieDomain specifies cookie domain.
+	// It also affects the default storage for session id.
+	CookieDomain string
+
+	// ==================================
+	// Session.
+	// ==================================
+
+	// SessionMaxAge specifies max TTL for session items.
+	SessionMaxAge time.Duration
+
+	// SessionIdName specifies the session id name.
+	SessionIdName string
+
+	// SessionCookieOutput specifies whether automatic outputting session id to cookie.
+	SessionCookieOutput bool
+
+	// SessionPath specifies the session storage directory path for storing session files.
+	// It only makes sense if the session storage is type of file storage.
+	SessionPath string
+
+	// SessionStorage specifies the session storage.
+	SessionStorage gsession.Storage
+
+	// ==================================
+	// Logging.
+	// ==================================
+
+	// Logger specifies the logger for server.
+	Logger *glog.Logger
+
+	// LogPath specifies the directory for storing logging files.
+	LogPath string
+
+	// LogStdout specifies whether printing logging content to stdout.
+	LogStdout bool
+
+	// ErrorStack specifies whether logging stack information when error.
+	ErrorStack bool
+
+	// ErrorLogEnabled enables error logging content to files.
+	ErrorLogEnabled bool
+
+	// ErrorLogPattern specifies the error log file pattern like: error-{Ymd}.log
+	ErrorLogPattern string
+
+	// AccessLogEnabled enables access logging content to files.
+	AccessLogEnabled bool
+
+	// AccessLogPattern specifies the error log file pattern like: access-{Ymd}.log
+	AccessLogPattern string
+
+	// ==================================
+	// PProf.
+	// ==================================
+
+	// PProfEnabled enables PProf feature.
+	PProfEnabled bool
+
+	// PProfPattern specifies the PProf service pattern for router.
+	PProfPattern string
+
+	// ==================================
+	// Other.
+	// ==================================
+
+	// ClientMaxBodySize specifies the max body size limit in bytes for client request.
+	// It can be configured in configuration file using string like: 1m, 10m, 500kb etc.
+	// It's 8MB in default.
+	ClientMaxBodySize int64
+
+	// FormParsingMemory specifies max memory buffer size in bytes which can be used for
+	// parsing multimedia form.
+	// It can be configured in configuration file using string like: 1m, 10m, 500kb etc.
+	// It's 1MB in default.
+	FormParsingMemory int64
+
+	// NameToUriType specifies the type for converting struct method name to URI when
+	// registering routes.
+	NameToUriType int
+
+	// RouteOverWrite allows overwrite the route if duplicated.
+	RouteOverWrite bool
+
+	// DumpRouterMap specifies whether automatically dumps router map when server starts.
+	DumpRouterMap bool
+
+	// Graceful enables graceful reload feature for all servers of the process.
+	Graceful bool
 }
 
-// 默认HTTP Server配置
-var defaultServerConfig = ServerConfig{
-	Addr:              "",
-	HTTPSAddr:         "",
-	Handler:           nil,
-	ReadTimeout:       60 * time.Second,
-	WriteTimeout:      60 * time.Second,
-	IdleTimeout:       60 * time.Second,
-	MaxHeaderBytes:    1024,
-	KeepAlive:         true,
-	IndexFiles:        []string{"index.html", "index.htm"},
-	IndexFolder:       false,
-	ServerAgent:       "gf http server",
-	ServerRoot:        "",
-	StaticPaths:       make([]staticPathItem, 0),
-	FileServerEnabled: false,
-	CookieMaxAge:      time.Hour * 24 * 365,
-	CookiePath:        "/",
-	CookieDomain:      "",
-	SessionMaxAge:     time.Hour * 24,
-	SessionIdName:     "gfsessionid",
-	LogStdout:         true,
-	ErrorStack:        true,
-	ErrorLogEnabled:   true,
-	AccessLogEnabled:  false,
-	DumpRouteMap:      true,
-	FormParsingMemory: 1024 * 1024 * 1024,
-	RouterCacheExpire: 60,
-	Rewrites:          make(map[string]string),
-}
-
-// 获取默认的http server设置
+// Deprecated. Use NewConfig instead.
 func Config() ServerConfig {
-	return defaultServerConfig
+	return NewConfig()
 }
 
-// 通过Map创建Config配置对象，Map没有传递的属性将会使用模块的默认值
-func ConfigFromMap(m map[string]interface{}) ServerConfig {
-	config := defaultServerConfig
-	gconv.Struct(m, &config)
-	return config
+// NewConfig creates and returns a ServerConfig object with default configurations.
+// Note that, do not define this default configuration to local package variable, as there're
+// some pointer attributes that may be shared in different servers.
+func NewConfig() ServerConfig {
+	return ServerConfig{
+		Address:             "",
+		HTTPSAddr:           "",
+		Handler:             nil,
+		ReadTimeout:         60 * time.Second,
+		WriteTimeout:        0, // No timeout.
+		IdleTimeout:         60 * time.Second,
+		MaxHeaderBytes:      10240, // 10KB
+		KeepAlive:           true,
+		IndexFiles:          []string{"index.html", "index.htm"},
+		IndexFolder:         false,
+		ServerAgent:         "GF HTTP Server",
+		ServerRoot:          "",
+		StaticPaths:         make([]staticPathItem, 0),
+		FileServerEnabled:   false,
+		CookieMaxAge:        time.Hour * 24 * 365,
+		CookiePath:          "/",
+		CookieDomain:        "",
+		SessionMaxAge:       time.Hour * 24,
+		SessionIdName:       "gfsessionid",
+		SessionPath:         gsession.DefaultStorageFilePath,
+		SessionCookieOutput: true,
+		Logger:              glog.New(),
+		LogStdout:           true,
+		ErrorStack:          true,
+		ErrorLogEnabled:     true,
+		ErrorLogPattern:     "error-{Ymd}.log",
+		AccessLogEnabled:    false,
+		AccessLogPattern:    "access-{Ymd}.log",
+		DumpRouterMap:       true,
+		ClientMaxBodySize:   8 * 1024 * 1024, // 8MB
+		FormParsingMemory:   1024 * 1024,     // 1MB
+		Rewrites:            make(map[string]string),
+		Graceful:            false,
+	}
 }
 
-// http server setting设置。
-// 注意使用该方法进行http server配置时，需要配置所有的配置项，否则没有配置的属性将会默认变量为空
+// ConfigFromMap creates and returns a ServerConfig object with given map and
+// default configuration object.
+func ConfigFromMap(m map[string]interface{}) (ServerConfig, error) {
+	config := NewConfig()
+	if err := gconv.Struct(m, &config); err != nil {
+		return config, err
+	}
+	return config, nil
+}
+
+// SetConfigWithMap sets the configuration for the server using map.
+func (s *Server) SetConfigWithMap(m map[string]interface{}) error {
+	// The m now is a shallow copy of m.
+	// Any changes to m does not affect the original one.
+	// A little tricky, isn't it?
+	m = gutil.MapCopy(m)
+	// Allow setting the size configuration items using string size like:
+	// 1m, 100mb, 512kb, etc.
+	if k, v := gutil.MapPossibleItemByKey(m, "MaxHeaderBytes"); k != "" {
+		m[k] = gfile.StrToSize(gconv.String(v))
+	}
+	if k, v := gutil.MapPossibleItemByKey(m, "ClientMaxBodySize"); k != "" {
+		m[k] = gfile.StrToSize(gconv.String(v))
+	}
+	if k, v := gutil.MapPossibleItemByKey(m, "FormParsingMemory"); k != "" {
+		m[k] = gfile.StrToSize(gconv.String(v))
+	}
+	// Update the current configuration object.
+	if err := gconv.Struct(m, &s.config); err != nil {
+		return err
+	}
+	return s.SetConfig(s.config)
+}
+
+// SetConfig sets the configuration for the server.
 func (s *Server) SetConfig(c ServerConfig) error {
-	if c.Handler == nil {
-		c.Handler = http.HandlerFunc(s.defaultHttpHandle)
-	}
 	s.config = c
-
-	if c.LogPath != "" {
-		return s.logger.SetPath(c.LogPath)
+	// Static.
+	if c.ServerRoot != "" {
+		s.SetServerRoot(c.ServerRoot)
 	}
+	if len(c.SearchPaths) > 0 {
+		paths := c.SearchPaths
+		c.SearchPaths = []string{}
+		for _, v := range paths {
+			s.AddSearchPath(v)
+		}
+	}
+	// HTTPS.
+	if c.TLSConfig == nil && c.HTTPSCertPath != "" {
+		s.EnableHTTPS(c.HTTPSCertPath, c.HTTPSKeyPath)
+	}
+	SetGraceful(c.Graceful)
+	intlog.Printf("SetConfig: %+v", s.config)
 	return nil
 }
 
-// 通过map设置http server setting。
-// 注意使用该方法进行http server配置时，需要配置所有的配置项，否则没有配置的属性将会默认变量为空
-func (s *Server) SetConfigWithMap(m map[string]interface{}) {
-	s.SetConfig(ConfigFromMap(m))
-}
-
-// 设置http server参数 - Addr
+// SetAddr sets the listening address for the server.
+// The address is like ':80', '0.0.0.0:80', '127.0.0.1:80', '180.18.99.10:80', etc.
 func (s *Server) SetAddr(address string) {
-	s.config.Addr = address
+	s.config.Address = address
 }
 
-// 设置http server参数 - Port
+// SetPort sets the listening ports for the server.
+// The listening ports can be multiple like: SetPort(80, 8080).
 func (s *Server) SetPort(port ...int) {
 	if len(port) > 0 {
-		s.config.Addr = ""
+		s.config.Address = ""
 		for _, v := range port {
-			if len(s.config.Addr) > 0 {
-				s.config.Addr += ","
+			if len(s.config.Address) > 0 {
+				s.config.Address += ","
 			}
-			s.config.Addr += ":" + strconv.Itoa(v)
+			s.config.Address += ":" + strconv.Itoa(v)
 		}
 	}
 }
 
-// 设置http server参数 - HTTPS Addr
+// SetHTTPSAddr sets the HTTPS listening ports for the server.
 func (s *Server) SetHTTPSAddr(address string) {
 	s.config.HTTPSAddr = address
 }
 
-// 设置http server参数 - HTTPS Port
+// SetHTTPSPort sets the HTTPS listening ports for the server.
+// The listening ports can be multiple like: SetHTTPSPort(443, 500).
 func (s *Server) SetHTTPSPort(port ...int) {
 	if len(port) > 0 {
 		s.config.HTTPSAddr = ""
@@ -178,8 +376,9 @@ func (s *Server) SetHTTPSPort(port ...int) {
 	}
 }
 
-// 开启HTTPS支持，但是必须提供Cert和Key文件，tlsConfig为可选项
-func (s *Server) EnableHTTPS(certFile, keyFile string, tlsConfig ...tls.Config) {
+// EnableHTTPS enables HTTPS with given certification and key files for the server.
+// The optional parameter <tlsConfig> specifies custom TLS configuration.
+func (s *Server) EnableHTTPS(certFile, keyFile string, tlsConfig ...*tls.Config) {
 	certFileRealPath := gfile.RealPath(certFile)
 	if certFileRealPath == "" {
 		certFileRealPath = gfile.RealPath(gfile.Pwd() + gfile.Separator + certFile)
@@ -188,7 +387,7 @@ func (s *Server) EnableHTTPS(certFile, keyFile string, tlsConfig ...tls.Config) 
 		}
 	}
 	if certFileRealPath == "" {
-		glog.Fatal(fmt.Sprintf(`[ghttp] EnableHTTPS failed: certFile "%s" does not exist`, certFile))
+		s.Logger().Fatal(fmt.Sprintf(`[ghttp] EnableHTTPS failed: certFile "%s" does not exist`, certFile))
 	}
 	keyFileRealPath := gfile.RealPath(keyFile)
 	if keyFileRealPath == "" {
@@ -198,7 +397,7 @@ func (s *Server) EnableHTTPS(certFile, keyFile string, tlsConfig ...tls.Config) 
 		}
 	}
 	if keyFileRealPath == "" {
-		glog.Fatal(fmt.Sprintf(`[ghttp] EnableHTTPS failed: keyFile "%s" does not exist`, keyFile))
+		s.Logger().Fatal(fmt.Sprintf(`[ghttp] EnableHTTPS failed: keyFile "%s" does not exist`, keyFile))
 	}
 	s.config.HTTPSCertPath = certFileRealPath
 	s.config.HTTPSKeyPath = keyFileRealPath
@@ -207,47 +406,55 @@ func (s *Server) EnableHTTPS(certFile, keyFile string, tlsConfig ...tls.Config) 
 	}
 }
 
-// 设置TLS配置对象
-func (s *Server) SetTLSConfig(tlsConfig tls.Config) {
+// SetTLSConfig sets custom TLS configuration and enables HTTPS feature for the server.
+func (s *Server) SetTLSConfig(tlsConfig *tls.Config) {
 	s.config.TLSConfig = tlsConfig
 }
 
-// 设置http server参数 - ReadTimeout
+// SetReadTimeout sets the ReadTimeout for the server.
 func (s *Server) SetReadTimeout(t time.Duration) {
 	s.config.ReadTimeout = t
 }
 
-// 设置http server参数 - WriteTimeout
+// SetWriteTimeout sets the WriteTimeout for the server.
 func (s *Server) SetWriteTimeout(t time.Duration) {
 	s.config.WriteTimeout = t
 }
 
-// 设置http server参数 - IdleTimeout
+// SetIdleTimeout sets the IdleTimeout for the server.
 func (s *Server) SetIdleTimeout(t time.Duration) {
 	s.config.IdleTimeout = t
 }
 
-// 设置http server参数 - MaxHeaderBytes
+// SetMaxHeaderBytes sets the MaxHeaderBytes for the server.
 func (s *Server) SetMaxHeaderBytes(b int) {
 	s.config.MaxHeaderBytes = b
 }
 
-// 设置http server参数 - ServerAgent
+// SetServerAgent sets the ServerAgent for the server.
 func (s *Server) SetServerAgent(agent string) {
 	s.config.ServerAgent = agent
 }
 
-// 设置KeepAlive
+// SetKeepAlive sets the KeepAlive for the server.
 func (s *Server) SetKeepAlive(enabled bool) {
 	s.config.KeepAlive = enabled
 }
 
-// 设置模板引擎对象
+// SetView sets the View for the server.
 func (s *Server) SetView(view *gview.View) {
 	s.config.View = view
 }
 
-// 获取WebServer名称
+// GetName returns the name of the server.
 func (s *Server) GetName() string {
 	return s.name
+}
+
+// Handler returns the request handler of the server.
+func (s *Server) Handler() http.Handler {
+	if s.config.Handler == nil {
+		return s
+	}
+	return s.config.Handler
 }

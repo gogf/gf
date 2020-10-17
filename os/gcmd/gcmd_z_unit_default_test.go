@@ -19,32 +19,32 @@ import (
 )
 
 func Test_Default(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		os.Args = []string{"gf", "--force", "remove", "-fq", "-p=www", "path", "-n", "root"}
-		gtest.Assert(len(gcmd.GetArgAll()), 4)
-		gtest.Assert(gcmd.GetArg(1), "remove")
-		gtest.Assert(gcmd.GetArg(100, "test"), "test")
-		gtest.Assert(gcmd.GetOpt("n"), "")
-		gtest.Assert(gcmd.ContainsOpt("p"), true)
-		gtest.Assert(gcmd.ContainsOpt("n"), true)
-		gtest.Assert(gcmd.ContainsOpt("none"), false)
-		gtest.Assert(gcmd.GetOpt("none", "value"), "value")
+		t.Assert(len(gcmd.GetArgAll()), 4)
+		t.Assert(gcmd.GetArg(1), "remove")
+		t.Assert(gcmd.GetArg(100, "test"), "test")
+		t.Assert(gcmd.GetOpt("n"), "")
+		t.Assert(gcmd.ContainsOpt("p"), true)
+		t.Assert(gcmd.ContainsOpt("n"), true)
+		t.Assert(gcmd.ContainsOpt("none"), false)
+		t.Assert(gcmd.GetOpt("none", "value"), "value")
 
 	})
 }
 
 func Test_BuildOptions(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		s := gcmd.BuildOptions(g.MapStrStr{
 			"n": "john",
 		})
-		gtest.Assert(s, "-n=john")
+		t.Assert(s, "-n=john")
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		s := gcmd.BuildOptions(g.MapStrStr{
 			"n": "john",
 		}, "-test")
-		gtest.Assert(s, "-testn=john")
+		t.Assert(s, "-testn=john")
 	})
 }

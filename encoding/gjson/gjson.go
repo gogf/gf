@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gjson provides convenient API for JSON/XML/YAML/TOML data handling.
+// Package gjson provides convenient API for JSON/XML/INI/YAML/TOML data handling.
 package gjson
 
 import (
@@ -30,11 +30,6 @@ type Json struct {
 	vc bool         // Violence Check(false in default), which is used to access data when the hierarchical data key contains separator char.
 }
 
-// MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (j *Json) MarshalJSON() ([]byte, error) {
-	return j.ToJson()
-}
-
 // setValue sets <value> to <j> by <pattern>.
 // Note:
 // 1. If value is nil and removed is true, means deleting this value;
@@ -43,7 +38,7 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 	array := strings.Split(pattern, string(j.c))
 	length := len(array)
 	value = j.convertValue(value)
-	// 初始化判断
+	// Initialization checks.
 	if *j.p == nil {
 		if gstr.IsNumeric(array[0]) {
 			*j.p = make([]interface{}, 0)
@@ -91,6 +86,7 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 			}
 
 		case []interface{}:
+			// A string key.
 			if !gstr.IsNumeric(array[i]) {
 				if i == length-1 {
 					*pointer = map[string]interface{}{array[i]: value}
@@ -102,23 +98,24 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 				}
 				continue
 			}
-
-			valn, err := strconv.Atoi(array[i])
+			// Numeric index.
+			valueNum, err := strconv.Atoi(array[i])
 			if err != nil {
 				return err
 			}
-			// Leaf node.
+
 			if i == length-1 {
-				if len((*pointer).([]interface{})) > valn {
+				// Leaf node.
+				if len((*pointer).([]interface{})) > valueNum {
 					if removed && value == nil {
 						// Deleting element.
 						if pparent == nil {
-							*pointer = append((*pointer).([]interface{})[:valn], (*pointer).([]interface{})[valn+1:]...)
+							*pointer = append((*pointer).([]interface{})[:valueNum], (*pointer).([]interface{})[valueNum+1:]...)
 						} else {
-							j.setPointerWithValue(pparent, array[i-1], append((*pointer).([]interface{})[:valn], (*pointer).([]interface{})[valn+1:]...))
+							j.setPointerWithValue(pparent, array[i-1], append((*pointer).([]interface{})[:valueNum], (*pointer).([]interface{})[valueNum+1:]...))
 						}
 					} else {
-						(*pointer).([]interface{})[valn] = value
+						(*pointer).([]interface{})[valueNum] = value
 					}
 				} else {
 					if removed && value == nil {
@@ -129,19 +126,33 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 						j.setPointerWithValue(pointer, array[i], value)
 					} else {
 						// It is not the root node.
-						s := make([]interface{}, valn+1)
+						s := make([]interface{}, valueNum+1)
 						copy(s, (*pointer).([]interface{}))
-						s[valn] = value
+						s[valueNum] = value
 						j.setPointerWithValue(pparent, array[i-1], s)
 					}
 				}
 			} else {
+				// Branch node.
 				if gstr.IsNumeric(array[i+1]) {
 					n, _ := strconv.Atoi(array[i+1])
-					if len((*pointer).([]interface{})) > valn {
-						(*pointer).([]interface{})[valn] = make([]interface{}, n+1)
-						pparent = pointer
-						pointer = &(*pointer).([]interface{})[valn]
+					pSlice := (*pointer).([]interface{})
+					if len(pSlice) > valueNum {
+						item := pSlice[valueNum]
+						if s, ok := item.([]interface{}); ok {
+							for i := 0; i < n-len(s); i++ {
+								s = append(s, nil)
+							}
+							pparent = pointer
+							pointer = &pSlice[valueNum]
+						} else {
+							if removed && value == nil {
+								goto done
+							}
+							var v interface{} = make([]interface{}, n+1)
+							pparent = j.setPointerWithValue(pointer, array[i], v)
+							pointer = &v
+						}
 					} else {
 						if removed && value == nil {
 							goto done
@@ -151,9 +162,27 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 						pointer = &v
 					}
 				} else {
-					var v interface{} = make(map[string]interface{})
-					pparent = j.setPointerWithValue(pointer, array[i], v)
-					pointer = &v
+					pSlice := (*pointer).([]interface{})
+					if len(pSlice) > valueNum {
+						pparent = pointer
+						pointer = &(*pointer).([]interface{})[valueNum]
+					} else {
+						s := make([]interface{}, valueNum+1)
+						copy(s, pSlice)
+						s[valueNum] = make(map[string]interface{})
+						if pparent != nil {
+							// i > 0
+							j.setPointerWithValue(pparent, array[i-1], s)
+							pparent = pointer
+							pointer = &s[valueNum]
+						} else {
+							// i = 0
+							var v interface{} = s
+							*pointer = v
+							pparent = pointer
+							pointer = &s[valueNum]
+						}
+					}
 				}
 			}
 
@@ -176,19 +205,24 @@ func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 					pparent = pointer
 				}
 			} else {
-				var v interface{} = make(map[string]interface{})
+				var v1, v2 interface{}
 				if i == length-1 {
-					v = map[string]interface{}{
+					v1 = map[string]interface{}{
 						array[i]: value,
+					}
+				} else {
+					v1 = map[string]interface{}{
+						array[i]: nil,
 					}
 				}
 				if pparent != nil {
-					pparent = j.setPointerWithValue(pparent, array[i-1], v)
+					pparent = j.setPointerWithValue(pparent, array[i-1], v1)
 				} else {
-					*pointer = v
+					*pointer = v1
 					pparent = pointer
 				}
-				pointer = &v
+				v2 = v1.(map[string]interface{})[array[i]]
+				pointer = &v2
 			}
 		}
 	}

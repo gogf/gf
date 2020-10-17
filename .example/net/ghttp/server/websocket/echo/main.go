@@ -13,7 +13,7 @@ func main() {
 		ws, err := r.WebSocket()
 		if err != nil {
 			glog.Error(err)
-			r.Exit()
+			return
 		}
 		for {
 			msgType, msg, err := ws.ReadMessage()

@@ -5,10 +5,15 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package gtime provides functionality for measuring and displaying time.
+//
+// This package should keep much less dependencies with other packages.
 package gtime
 
 import (
 	"errors"
+	"fmt"
+	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/internal/utils"
 	"regexp"
 	"strconv"
 	"strings"
@@ -87,7 +92,15 @@ var (
 )
 
 // SetTimeZone sets the time zone for current whole process.
-// The parameter <zone> is an area string specifying corresponding time zone, eg: Asia/Shanghai.
+// The parameter <zone> is an area string specifying corresponding time zone,
+// eg: Asia/Shanghai.
+//
+// Note that the time zone database needed by LoadLocation may not be
+// present on all systems, especially non-Unix systems.
+// LoadLocation looks in the directory or uncompressed zip file
+// named by the ZONEINFO environment variable, if any, then looks in
+// known installation locations on Unix systems,
+// and finally looks in $GOROOT/lib/time/zoneinfo.zip.
 func SetTimeZone(zone string) error {
 	location, err := time.LoadLocation(zone)
 	if err == nil {
@@ -96,24 +109,72 @@ func SetTimeZone(zone string) error {
 	return err
 }
 
-// Nanosecond returns the timestamp in nanoseconds.
-func Nanosecond() int64 {
-	return time.Now().UnixNano()
+// Timestamp retrieves and returns the timestamp in seconds.
+func Timestamp() int64 {
+	return Now().Timestamp()
 }
 
-// Microsecond returns the timestamp in microseconds.
-func Microsecond() int64 {
-	return time.Now().UnixNano() / 1e3
+// TimestampMilli retrieves and returns the timestamp in milliseconds.
+func TimestampMilli() int64 {
+	return Now().TimestampMilli()
 }
 
-// Millisecond returns the timestamp in milliseconds.
-func Millisecond() int64 {
-	return time.Now().UnixNano() / 1e6
+// TimestampMicro retrieves and returns the timestamp in microseconds.
+func TimestampMicro() int64 {
+	return Now().TimestampMicro()
+}
+
+// TimestampNano retrieves and returns the timestamp in nanoseconds.
+func TimestampNano() int64 {
+	return Now().TimestampNano()
+}
+
+// TimestampStr is a convenience method which retrieves and returns
+// the timestamp in seconds as string.
+func TimestampStr() string {
+	return Now().TimestampStr()
+}
+
+// TimestampMilliStr is a convenience method which retrieves and returns
+// the timestamp in milliseconds as string.
+func TimestampMilliStr() string {
+	return Now().TimestampMilliStr()
+}
+
+// TimestampMicroStr is a convenience method which retrieves and returns
+// the timestamp in microseconds as string.
+func TimestampMicroStr() string {
+	return Now().TimestampMicroStr()
+}
+
+// TimestampNanoStr is a convenience method which retrieves and returns
+// the timestamp in nanoseconds as string.
+func TimestampNanoStr() string {
+	return Now().TimestampNanoStr()
 }
 
 // Second returns the timestamp in seconds.
+// Deprecated, use Timestamp instead.
 func Second() int64 {
-	return time.Now().Unix()
+	return Timestamp()
+}
+
+// Millisecond returns the timestamp in milliseconds.
+// Deprecated, use TimestampMilli instead.
+func Millisecond() int64 {
+	return TimestampMilli()
+}
+
+// Microsecond returns the timestamp in microseconds.
+// Deprecated, use TimestampMicro instead.
+func Microsecond() int64 {
+	return TimestampMicro()
+}
+
+// Nanosecond returns the timestamp in nanoseconds.
+// Deprecated, use TimestampNano instead.
+func Nanosecond() int64 {
+	return TimestampNano()
 }
 
 // Date returns current date in string like "2006-01-02".
@@ -150,7 +211,7 @@ func parseDateStr(s string) (year, month, day int) {
 		return
 	}
 	// Checking the year in head or tail.
-	if isNumeric(array[1]) {
+	if utils.IsNumeric(array[1]) {
 		year, _ = strconv.Atoi(array[0])
 		month, _ = strconv.Atoi(array[1])
 		day, _ = strconv.Atoi(array[2])
@@ -166,7 +227,7 @@ func parseDateStr(s string) (year, month, day int) {
 	return
 }
 
-// StrToTime converts string to *Time object.
+// StrToTime converts string to *Time object. It also supports timestamp string.
 // The parameter <format> is unnecessary, which specifies the format for converting like "Y-m-d H:i:s".
 // If <format> is given, it acts as same as function StrToTimeFormat.
 // If <format> is not given, it converts string as a "standard" datetime string.
@@ -175,10 +236,16 @@ func StrToTime(str string, format ...string) (*Time, error) {
 	if len(format) > 0 {
 		return StrToTimeFormat(str, format[0])
 	}
-	var year, month, day int
-	var hour, min, sec, nsec int
-	var match []string
-	var local = time.Local
+	if isTimestampStr(str) {
+		timestamp, _ := strconv.ParseInt(str, 10, 64)
+		return NewFromTimeStamp(timestamp), nil
+	}
+	var (
+		year, month, day     int
+		hour, min, sec, nsec int
+		match                []string
+		local                = time.Local
+	)
 	if match = timeRegex1.FindStringSubmatch(str); len(match) > 0 && match[1] != "" {
 		for k, v := range match {
 			match[k] = strings.TrimSpace(v)
@@ -224,8 +291,11 @@ func StrToTime(str string, format ...string) (*Time, error) {
 			h, _ := strconv.Atoi(zone[0:2])
 			m, _ := strconv.Atoi(zone[2:4])
 			s, _ := strconv.Atoi(zone[4:6])
-			// Comparing the given time zone whether equals to current tine zone,
-			// it converts it to UTC if they does not.
+			if h > 24 || m > 59 || s > 59 {
+				return nil, gerror.Newf("invalid zone string: %s", match[6])
+			}
+			// Comparing the given time zone whether equals to current time zone,
+			// it converts it to UTC if they does not equal.
 			_, localOffset := time.Now().Zone()
 			// Comparing in seconds.
 			if (h*3600 + m*60 + s) != localOffset {
@@ -259,6 +329,9 @@ func StrToTime(str string, format ...string) (*Time, error) {
 				}
 			}
 		}
+	}
+	if year <= 0 {
+		return nil, errors.New("invalid time string:" + str)
 	}
 	// It finally converts all time to UTC time zone.
 	return NewFromTime(time.Date(year, time.Month(month), day, hour, min, sec, nsec, local)), nil
@@ -301,7 +374,8 @@ func StrToTimeLayout(str string, layout string) (*Time, error) {
 	}
 }
 
-// ParseTimeFromContent retrieves time information for content string, it then parses and returns it as *Time object.
+// ParseTimeFromContent retrieves time information for content string, it then parses and returns it
+// as *Time object.
 // It returns the first time information if there're more than one time string in the content.
 // It only retrieves and parses the time information with given <format> if it's passed.
 func ParseTimeFromContent(content string, format ...string) *Time {
@@ -319,21 +393,50 @@ func ParseTimeFromContent(content string, format ...string) *Time {
 	return nil
 }
 
-// FuncCost calculates the cost time of function <f> in nanoseconds.
-func FuncCost(f func()) int64 {
-	t := Nanosecond()
-	f()
-	return Nanosecond() - t
+// ParseDuration parses a duration string.
+// A duration string is a possibly signed sequence of
+// decimal numbers, each with optional fraction and a unit suffix,
+// such as "300ms", "-1.5h", "1d" or "2h45m".
+// Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h", "d".
+//
+// Very note that it supports unit "d" more than function time.ParseDuration.
+func ParseDuration(s string) (time.Duration, error) {
+	if utils.IsNumeric(s) {
+		v, err := strconv.ParseInt(s, 10, 64)
+		if err != nil {
+			return 0, err
+		}
+		return time.Duration(v), nil
+	}
+	match, err := gregex.MatchString(`^([\-\d]+)[dD](.*)$`, s)
+	if err != nil {
+		return 0, err
+	}
+	if len(match) == 3 {
+		v, err := strconv.ParseInt(match[1], 10, 64)
+		if err != nil {
+			return 0, err
+		}
+		return time.ParseDuration(fmt.Sprintf(`%dh%s`, v*24, match[2]))
+	}
+	return time.ParseDuration(s)
 }
 
-// isNumeric checks whether given <s> is a number.
-func isNumeric(s string) bool {
+// FuncCost calculates the cost time of function <f> in nanoseconds.
+func FuncCost(f func()) int64 {
+	t := TimestampNano()
+	f()
+	return TimestampNano() - t
+}
+
+// isTimestampStr checks and returns whether given string a timestamp string.
+func isTimestampStr(s string) bool {
 	length := len(s)
 	if length == 0 {
 		return false
 	}
 	for i := 0; i < len(s); i++ {
-		if s[i] < byte('0') || s[i] > byte('9') {
+		if s[i] < '0' || s[i] > '9' {
 			return false
 		}
 	}

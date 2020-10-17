@@ -4,76 +4,43 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gins provides instances management and core components management.
+// Package gins provides instances and core components management.
 package gins
 
 import (
-	"fmt"
 	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/database/gdb"
-	"github.com/gogf/gf/database/gredis"
-	"github.com/gogf/gf/i18n/gi18n"
-	"github.com/gogf/gf/os/gcfg"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/gfsnotify"
-	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/os/gres"
-	"github.com/gogf/gf/os/gview"
-	"github.com/gogf/gf/text/gregex"
-	"github.com/gogf/gf/util/gconv"
-	"strings"
+
 )
 
-const (
-	gFRAME_CORE_COMPONENT_NAME_REDIS    = "gf.core.component.redis"
-	gFRAME_CORE_COMPONENT_NAME_DATABASE = "gf.core.component.database"
+var (
+	// instances is the instance map for common used components.
+	instances = gmap.NewStrAnyMap(true)
 )
 
-// 单例对象存储器
-var instances = gmap.NewStrAnyMap(true)
-
-// 获取单例对象
-func Get(key string) interface{} {
-	return instances.Get(key)
+// Get returns the instance by given name.
+func Get(name string) interface{} {
+	return instances.Get(name)
 }
 
-// 设置单例对象
-func Set(key string, value interface{}) {
-	instances.Set(key, value)
+// Set sets a instance object to the instance manager with given name.
+func Set(name string, instance interface{}) {
+	instances.Set(name, instance)
 }
 
-// 当键名存在时返回其键值，否则写入指定的键值
-func GetOrSet(key string, value interface{}) interface{} {
-	return instances.GetOrSet(key, value)
+// GetOrSet returns the instance by name,
+// or set instance to the instance manager if it does not exist and returns this instance.
+func GetOrSet(name string, instance interface{}) interface{} {
+	return instances.GetOrSet(name, instance)
 }
 
-// 当键名存在时返回其键值，否则写入指定的键值，键值由指定的函数生成
-func GetOrSetFunc(key string, f func() interface{}) interface{} {
-	return instances.GetOrSetFunc(key, f)
+// GetOrSetFunc returns the instance by name,
+// or sets instance with returned value of callback function <f> if it does not exist
+// and then returns this instance.
+func GetOrSetFunc(name string, f func() interface{}) interface{} {
+	return instances.GetOrSetFunc(name, f)
 }
 
-// 与GetOrSetFunc不同的是，f是在写锁机制内执行
-func GetOrSetFuncLock(key string, f func() interface{}) interface{} {
-	return instances.GetOrSetFuncLock(key, f)
-}
-
-// 当键名不存在时写入，并返回true；否则返回false。
-func SetIfNotExist(key string, value interface{}) bool {
-	return instances.SetIfNotExist(key, value)
-}
-
-// View returns an instance of View with default settings.
-// The parameter <name> is the name for the instance.
-func View(name ...string) *gview.View {
-	return gview.Instance(name...)
-}
-
-// Config returns an instance of View with default settings.
-// The parameter <name> is the name for the instance.
-func Config(name ...string) *gcfg.Config {
-	return gcfg.Instance(name...)
-}
-
+<<<<<<< HEAD
 // Resource returns an instance of Resource.
 // The parameter <name> is the name for the instance.
 func Resource(name ...string) *gres.Resource {
@@ -256,4 +223,20 @@ func addConfigMonitor(key string, config *gcfg.Config) {
 			instances.Remove(key)
 		})
 	}
+=======
+// GetOrSetFuncLock returns the instance by name,
+// or sets instance with returned value of callback function <f> if it does not exist
+// and then returns this instance.
+//
+// GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function <f>
+// with mutex.Lock of the hash map.
+func GetOrSetFuncLock(name string, f func() interface{}) interface{} {
+	return instances.GetOrSetFuncLock(name, f)
+}
+
+// SetIfNotExist sets <instance> to the map if the <name> does not exist, then returns true.
+// It returns false if <name> exists, and <instance> would be ignored.
+func SetIfNotExist(name string, instance interface{}) bool {
+	return instances.SetIfNotExist(name, instance)
+>>>>>>> bd3e25adea5d01b7371b5122e67751262da52ff6
 }
