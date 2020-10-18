@@ -136,7 +136,7 @@ func Current(err error) error {
 	if e, ok := err.(ApiLevel); ok {
 		return e.Current()
 	}
-	return nil
+	return err
 }
 
 // Next returns the next level error.
@@ -148,5 +148,5 @@ func Next(err error) error {
 	if e, ok := err.(ApiLevel); ok {
 		return e.Next()
 	}
-	return nil
+	return err
 }
