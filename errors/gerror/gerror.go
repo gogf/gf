@@ -148,5 +148,5 @@ func Next(err error) error {
 	if e, ok := err.(ApiLevel); ok {
 		return e.Next()
 	}
-	return err
+	return nil
 }
