@@ -133,5 +133,5 @@ func UpdateExpire(key interface{}, duration time.Duration) (oldDuration time.Dur
 
 // SetDefaultAdapter changes the adapter for global gcache.
 func SetDefaultAdapter(adapter Adapter) {
-	defaultCache.Adapter = adapter
+	defaultCache.SetAdapter(adapter)
 }
