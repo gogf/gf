@@ -404,7 +404,7 @@ func Test_Params_Basic(t *testing.T) {
 		t.Assert(client.GetContent("/struct", `id=1&name=john&password1=123&password2=456`), `1john123456`)
 		t.Assert(client.PostContent("/struct", `id=1&name=john&password1=123&password2=456`), `1john123456`)
 		t.Assert(client.PostContent("/struct-with-nil", ``), ``)
-		t.Assert(client.PostContent("/struct-with-base", `id=1&name=john&password1=123&password2=456`), "1john1234561john123456")
+		t.Assert(client.PostContent("/struct-with-base", `id=1&name=john&password1=123&password2=456`), "1john1234561john")
 	})
 }
 

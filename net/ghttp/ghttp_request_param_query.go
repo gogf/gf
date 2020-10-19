@@ -197,7 +197,7 @@ func (r *Request) GetQueryStruct(pointer interface{}, mapping ...map[string]stri
 	if m == nil {
 		m = map[string]interface{}{}
 	}
-	return gconv.StructDeep(m, pointer, mapping...)
+	return gconv.Struct(m, pointer, mapping...)
 }
 
 // GetQueryToStruct is alias of GetQueryStruct. See GetQueryStruct.
