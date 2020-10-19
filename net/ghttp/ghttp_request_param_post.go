@@ -204,7 +204,7 @@ func (r *Request) GetPostMapStrVar(kvMap ...map[string]interface{}) map[string]*
 //
 // Deprecated.
 func (r *Request) GetPostStruct(pointer interface{}, mapping ...map[string]string) error {
-	return gconv.StructDeep(r.GetPostMap(), pointer, mapping...)
+	return gconv.Struct(r.GetPostMap(), pointer, mapping...)
 }
 
 // GetPostToStruct is alias of GetQueryStruct. See GetPostStruct.
