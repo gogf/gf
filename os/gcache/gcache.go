@@ -130,3 +130,8 @@ func Update(key interface{}, value interface{}) (oldValue interface{}, exist boo
 func UpdateExpire(key interface{}, duration time.Duration) (oldDuration time.Duration, err error) {
 	return defaultCache.UpdateExpire(key, duration)
 }
+
+// SetDefaultAdapter changes the adapter for global gcache.
+func SetDefaultAdapter(adapter Adapter) {
+	defaultCache.Adapter = adapter
+}
