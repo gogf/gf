@@ -7,7 +7,7 @@
 package gtype_test
 
 import (
-	"encoding/json"
+	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/util/gconv"
 	"testing"
 
@@ -16,110 +16,110 @@ import (
 )
 
 func Test_Bool(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		i := gtype.NewBool(true)
 		iClone := i.Clone()
-		gtest.AssertEQ(iClone.Set(false), true)
-		gtest.AssertEQ(iClone.Val(), false)
+		t.AssertEQ(iClone.Set(false), true)
+		t.AssertEQ(iClone.Val(), false)
 
 		i1 := gtype.NewBool(false)
 		iClone1 := i1.Clone()
-		gtest.AssertEQ(iClone1.Set(true), false)
-		gtest.AssertEQ(iClone1.Val(), true)
+		t.AssertEQ(iClone1.Set(true), false)
+		t.AssertEQ(iClone1.Val(), true)
 
 		//空参测试
 		i2 := gtype.NewBool()
-		gtest.AssertEQ(i2.Val(), false)
+		t.AssertEQ(i2.Val(), false)
 	})
 }
 
 func Test_Bool_JSON(t *testing.T) {
 	// Marshal
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		i := gtype.NewBool(true)
 		b1, err1 := json.Marshal(i)
 		b2, err2 := json.Marshal(i.Val())
-		gtest.Assert(err1, nil)
-		gtest.Assert(err2, nil)
-		gtest.Assert(b1, b2)
+		t.Assert(err1, nil)
+		t.Assert(err2, nil)
+		t.Assert(b1, b2)
 	})
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		i := gtype.NewBool(false)
 		b1, err1 := json.Marshal(i)
 		b2, err2 := json.Marshal(i.Val())
-		gtest.Assert(err1, nil)
-		gtest.Assert(err2, nil)
-		gtest.Assert(b1, b2)
+		t.Assert(err1, nil)
+		t.Assert(err2, nil)
+		t.Assert(b1, b2)
 	})
 	// Unmarshal
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var err error
 		i := gtype.NewBool()
 		err = json.Unmarshal([]byte("true"), &i)
-		gtest.Assert(err, nil)
-		gtest.Assert(i.Val(), true)
+		t.Assert(err, nil)
+		t.Assert(i.Val(), true)
 		err = json.Unmarshal([]byte("false"), &i)
-		gtest.Assert(err, nil)
-		gtest.Assert(i.Val(), false)
+		t.Assert(err, nil)
+		t.Assert(i.Val(), false)
 		err = json.Unmarshal([]byte("1"), &i)
-		gtest.Assert(err, nil)
-		gtest.Assert(i.Val(), true)
+		t.Assert(err, nil)
+		t.Assert(i.Val(), true)
 		err = json.Unmarshal([]byte("0"), &i)
-		gtest.Assert(err, nil)
-		gtest.Assert(i.Val(), false)
+		t.Assert(err, nil)
+		t.Assert(i.Val(), false)
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		i := gtype.NewBool(true)
 		b1, err1 := json.Marshal(i)
 		b2, err2 := json.Marshal(i.Val())
-		gtest.Assert(err1, nil)
-		gtest.Assert(err2, nil)
-		gtest.Assert(b1, b2)
+		t.Assert(err1, nil)
+		t.Assert(err2, nil)
+		t.Assert(b1, b2)
 
 		i2 := gtype.NewBool()
 		err := json.Unmarshal(b2, &i2)
-		gtest.Assert(err, nil)
-		gtest.Assert(i2.Val(), i.Val())
+		t.Assert(err, nil)
+		t.Assert(i2.Val(), i.Val())
 	})
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		i := gtype.NewBool(false)
 		b1, err1 := json.Marshal(i)
 		b2, err2 := json.Marshal(i.Val())
-		gtest.Assert(err1, nil)
-		gtest.Assert(err2, nil)
-		gtest.Assert(b1, b2)
+		t.Assert(err1, nil)
+		t.Assert(err2, nil)
+		t.Assert(b1, b2)
 
 		i2 := gtype.NewBool()
 		err := json.Unmarshal(b2, &i2)
-		gtest.Assert(err, nil)
-		gtest.Assert(i2.Val(), i.Val())
+		t.Assert(err, nil)
+		t.Assert(i2.Val(), i.Val())
 	})
 }
 
 func Test_Bool_UnmarshalValue(t *testing.T) {
-	type T struct {
+	type V struct {
 		Name string
 		Var  *gtype.Bool
 	}
-	gtest.Case(t, func() {
-		var t *T
+	gtest.C(t, func(t *gtest.T) {
+		var v *V
 		err := gconv.Struct(map[string]interface{}{
 			"name": "john",
 			"var":  "true",
-		}, &t)
-		gtest.Assert(err, nil)
-		gtest.Assert(t.Name, "john")
-		gtest.Assert(t.Var.Val(), true)
+		}, &v)
+		t.Assert(err, nil)
+		t.Assert(v.Name, "john")
+		t.Assert(v.Var.Val(), true)
 	})
-	gtest.Case(t, func() {
-		var t *T
+	gtest.C(t, func(t *gtest.T) {
+		var v *V
 		err := gconv.Struct(map[string]interface{}{
 			"name": "john",
 			"var":  "false",
-		}, &t)
-		gtest.Assert(err, nil)
-		gtest.Assert(t.Name, "john")
-		gtest.Assert(t.Var.Val(), false)
+		}, &v)
+		t.Assert(err, nil)
+		t.Assert(v.Name, "john")
+		t.Assert(v.Var.Val(), false)
 	})
 }

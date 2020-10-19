@@ -92,9 +92,8 @@ func (s *Server) AddStaticPath(prefix string, path string) {
 		path:   realPath,
 	}
 	if len(s.config.StaticPaths) > 0 {
-		// 先添加item
 		s.config.StaticPaths = append(s.config.StaticPaths, addItem)
-		// 按照prefix从长到短进行排序
+		// Sort the array by length of prefix from short to long.
 		array := garray.NewSortedArray(func(v1, v2 interface{}) int {
 			s1 := gconv.String(v1)
 			s2 := gconv.String(v2)
@@ -107,7 +106,7 @@ func (s *Server) AddStaticPath(prefix string, path string) {
 		for _, v := range s.config.StaticPaths {
 			array.Add(v.prefix)
 		}
-		// 按照重新排序的顺序重新添加item
+		// Add the items to paths by previous sorted slice.
 		paths := make([]staticPathItem, 0)
 		for _, v := range array.Slice() {
 			for _, item := range s.config.StaticPaths {

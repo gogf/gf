@@ -16,8 +16,8 @@ import (
 	"github.com/gogf/gf/test/gtest"
 )
 
-func Test_Router_Basic(t *testing.T) {
-	p := ports.PopRand()
+func Test_Router_Basic1(t *testing.T) {
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/:name", func(r *ghttp.Request) {
 		r.Response.Write("/:name")
@@ -40,19 +40,69 @@ func Test_Router_Basic(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		gtest.Assert(client.GetContent("/john"), "")
-		gtest.Assert(client.GetContent("/john/update"), "john")
-		gtest.Assert(client.GetContent("/john/edit"), "edit")
-		gtest.Assert(client.GetContent("/user/list/100.html"), "100")
+		t.Assert(client.GetContent("/john"), "")
+		t.Assert(client.GetContent("/john/update"), "john")
+		t.Assert(client.GetContent("/john/edit"), "edit")
+		t.Assert(client.GetContent("/user/list/100.html"), "100")
 	})
 }
 
-// 测试HTTP Method注册.
+func Test_Router_Basic2(t *testing.T) {
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/{hash}", func(r *ghttp.Request) {
+		r.Response.Write(r.Get("hash"))
+	})
+	s.BindHandler("/{hash}.{type}", func(r *ghttp.Request) {
+		r.Response.Write(r.Get("type"))
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		client := ghttp.NewClient()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		t.Assert(client.GetContent("/data"), "data")
+		t.Assert(client.GetContent("/data.json"), "json")
+	})
+}
+
+func Test_Router_Value(t *testing.T) {
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/{hash}", func(r *ghttp.Request) {
+		r.Response.Write(r.GetRouterString("hash"))
+	})
+	s.BindHandler("/{hash}.{type}", func(r *ghttp.Request) {
+		r.Response.Write(r.GetRouterString("type"))
+	})
+	s.BindHandler("/{hash}.{type}.map", func(r *ghttp.Request) {
+		r.Response.Write(r.GetRouterMap()["type"])
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		client := ghttp.NewClient()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		t.Assert(client.GetContent("/data"), "data")
+		t.Assert(client.GetContent("/data.json"), "json")
+		t.Assert(client.GetContent("/data.json.map"), "json")
+	})
+}
+
+// HTTP method register.
 func Test_Router_Method(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("GET:/get", func(r *ghttp.Request) {
 
@@ -66,35 +116,63 @@ func Test_Router_Method(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		resp1, err := client.Get("/get")
 		defer resp1.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp1.StatusCode, 200)
+		t.Assert(err, nil)
+		t.Assert(resp1.StatusCode, 200)
 
 		resp2, err := client.Post("/get")
 		defer resp2.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp2.StatusCode, 404)
+		t.Assert(err, nil)
+		t.Assert(resp2.StatusCode, 404)
 
 		resp3, err := client.Get("/post")
 		defer resp3.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp3.StatusCode, 404)
+		t.Assert(err, nil)
+		t.Assert(resp3.StatusCode, 404)
 
 		resp4, err := client.Post("/post")
 		defer resp4.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp4.StatusCode, 200)
+		t.Assert(err, nil)
+		t.Assert(resp4.StatusCode, 200)
 	})
 }
 
-// 测试状态返回.
+// Extra char '/' of the router.
+func Test_Router_ExtraChar(t *testing.T) {
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	s.Group("/api", func(group *ghttp.RouterGroup) {
+		group.GET("/test", func(r *ghttp.Request) {
+			r.Response.Write("test")
+		})
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		client := ghttp.NewClient()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+
+		t.Assert(client.GetContent("/api/test"), "test")
+		t.Assert(client.GetContent("/api/test/"), "test")
+		t.Assert(client.GetContent("/api/test//"), "test")
+		t.Assert(client.GetContent("//api/test//"), "test")
+		t.Assert(client.GetContent("//api//test//"), "test")
+		t.Assert(client.GetContent("///api///test///"), "test")
+	})
+}
+
+// Custom status handler.
 func Test_Router_Status(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/200", func(r *ghttp.Request) {
 		r.Response.WriteStatus(200)
@@ -114,40 +192,39 @@ func Test_Router_Status(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		resp1, err := client.Get("/200")
 		defer resp1.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp1.StatusCode, 200)
+		t.Assert(err, nil)
+		t.Assert(resp1.StatusCode, 200)
 
 		resp2, err := client.Get("/300")
 		defer resp2.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp2.StatusCode, 300)
+		t.Assert(err, nil)
+		t.Assert(resp2.StatusCode, 300)
 
 		resp3, err := client.Get("/400")
 		defer resp3.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp3.StatusCode, 400)
+		t.Assert(err, nil)
+		t.Assert(resp3.StatusCode, 400)
 
 		resp4, err := client.Get("/500")
 		defer resp4.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp4.StatusCode, 500)
+		t.Assert(err, nil)
+		t.Assert(resp4.StatusCode, 500)
 
 		resp5, err := client.Get("/404")
 		defer resp5.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp5.StatusCode, 404)
+		t.Assert(err, nil)
+		t.Assert(resp5.StatusCode, 404)
 	})
 }
 
-// 自定义状态码处理.
 func Test_Router_CustomStatusHandler(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/", func(r *ghttp.Request) {
 		r.Response.Write("hello")
@@ -161,22 +238,22 @@ func Test_Router_CustomStatusHandler(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "hello")
+		t.Assert(client.GetContent("/"), "hello")
 		resp, err := client.Get("/ThisDoesNotExist")
 		defer resp.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp.StatusCode, 404)
-		gtest.Assert(resp.ReadAllString(), "404 page")
+		t.Assert(err, nil)
+		t.Assert(resp.StatusCode, 404)
+		t.Assert(resp.ReadAllString(), "404 page")
 	})
 }
 
-// 测试不存在的路由.
+// 404 not found router.
 func Test_Router_404(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/", func(r *ghttp.Request) {
 		r.Response.Write("hello")
@@ -187,20 +264,20 @@ func Test_Router_404(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "hello")
+		t.Assert(client.GetContent("/"), "hello")
 		resp, err := client.Get("/ThisDoesNotExist")
 		defer resp.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp.StatusCode, 404)
+		t.Assert(err, nil)
+		t.Assert(resp.StatusCode, 404)
 	})
 }
 
 func Test_Router_Priority(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/admin", func(r *ghttp.Request) {
 		r.Response.Write("admin")
@@ -220,13 +297,13 @@ func Test_Router_Priority(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/admin"), "admin")
-		gtest.Assert(client.GetContent("/admin-1"), "admin-{page}")
-		gtest.Assert(client.GetContent("/admin-goods"), "admin-goods")
-		gtest.Assert(client.GetContent("/admin-goods-2"), "admin-goods-{page}")
+		t.Assert(client.GetContent("/admin"), "admin")
+		t.Assert(client.GetContent("/admin-1"), "admin-{page}")
+		t.Assert(client.GetContent("/admin-goods"), "admin-goods")
+		t.Assert(client.GetContent("/admin-goods-2"), "admin-goods-{page}")
 	})
 }

@@ -47,35 +47,35 @@ func MustToJsonIndentString(value interface{}) string {
 // ========================================================================
 
 func VarToXml(value interface{}, rootTag ...string) ([]byte, error) {
-	return New(value).ToXml(rootTag...)
+	return NewWithTag(value, "xml").ToXml(rootTag...)
 }
 
 func VarToXmlString(value interface{}, rootTag ...string) (string, error) {
-	return New(value).ToXmlString(rootTag...)
+	return NewWithTag(value, "xml").ToXmlString(rootTag...)
 }
 
 func VarToXmlIndent(value interface{}, rootTag ...string) ([]byte, error) {
-	return New(value).ToXmlIndent(rootTag...)
+	return NewWithTag(value, "xml").ToXmlIndent(rootTag...)
 }
 
 func VarToXmlIndentString(value interface{}, rootTag ...string) (string, error) {
-	return New(value).ToXmlIndentString(rootTag...)
+	return NewWithTag(value, "xml").ToXmlIndentString(rootTag...)
 }
 
 func MustToXml(value interface{}, rootTag ...string) []byte {
-	return New(value).MustToXml(rootTag...)
+	return NewWithTag(value, "xml").MustToXml(rootTag...)
 }
 
 func MustToXmlString(value interface{}, rootTag ...string) string {
-	return New(value).MustToXmlString(rootTag...)
+	return NewWithTag(value, "xml").MustToXmlString(rootTag...)
 }
 
 func MustToXmlIndent(value interface{}, rootTag ...string) []byte {
-	return New(value).MustToXmlIndent(rootTag...)
+	return NewWithTag(value, "xml").MustToXmlIndent(rootTag...)
 }
 
 func MustToXmlIndentString(value interface{}, rootTag ...string) string {
-	return New(value).MustToXmlIndentString(rootTag...)
+	return NewWithTag(value, "xml").MustToXmlIndentString(rootTag...)
 }
 
 // ========================================================================
@@ -83,19 +83,19 @@ func MustToXmlIndentString(value interface{}, rootTag ...string) string {
 // ========================================================================
 
 func VarToYaml(value interface{}) ([]byte, error) {
-	return New(value).ToYaml()
+	return NewWithTag(value, "yaml").ToYaml()
 }
 
 func VarToYamlString(value interface{}) (string, error) {
-	return New(value).ToYamlString()
+	return NewWithTag(value, "yaml").ToYamlString()
 }
 
 func MustToYaml(value interface{}) []byte {
-	return New(value).MustToYaml()
+	return NewWithTag(value, "yaml").MustToYaml()
 }
 
 func MustToYamlString(value interface{}) string {
-	return New(value).MustToYamlString()
+	return NewWithTag(value, "yaml").MustToYamlString()
 }
 
 // ========================================================================
@@ -103,19 +103,19 @@ func MustToYamlString(value interface{}) string {
 // ========================================================================
 
 func VarToToml(value interface{}) ([]byte, error) {
-	return New(value).ToToml()
+	return NewWithTag(value, "toml").ToToml()
 }
 
 func VarToTomlString(value interface{}) (string, error) {
-	return New(value).ToTomlString()
+	return NewWithTag(value, "toml").ToTomlString()
 }
 
 func MustToToml(value interface{}) []byte {
-	return New(value).MustToToml()
+	return NewWithTag(value, "toml").MustToToml()
 }
 
 func MustToTomlString(value interface{}) string {
-	return New(value).MustToTomlString()
+	return NewWithTag(value, "toml").MustToTomlString()
 }
 
 // ========================================================================
@@ -123,17 +123,17 @@ func MustToTomlString(value interface{}) string {
 // ========================================================================
 
 func VarToIni(value interface{}) ([]byte, error) {
-	return New(value).ToIni()
+	return NewWithTag(value, "ini").ToIni()
 }
 
 func VarToIniString(value interface{}) (string, error) {
-	return New(value).ToIniString()
+	return NewWithTag(value, "ini").ToIniString()
 }
 
 func MustToIni(value interface{}) []byte {
-	return New(value).MustToIni()
+	return NewWithTag(value, "ini").MustToIni()
 }
 
 func MustToIniString(value interface{}) string {
-	return New(value).MustToIniString()
+	return NewWithTag(value, "ini").MustToIniString()
 }

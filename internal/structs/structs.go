@@ -7,7 +7,7 @@
 // Package structs provides functions for struct conversion.
 package structs
 
-import "github.com/fatih/structs"
+import "github.com/gqcn/structs"
 
 // Field is alias of structs.Field.
 type Field struct {

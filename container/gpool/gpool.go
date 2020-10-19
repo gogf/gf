@@ -17,22 +17,31 @@ import (
 	"github.com/gogf/gf/os/gtimer"
 )
 
-// Object-Reusable Pool.
+// Pool is an Object-Reusable Pool.
 type Pool struct {
-	list       *glist.List                 // Available/idle list.
-	closed     *gtype.Bool                 // Whether the pool is closed.
-	Expire     int64                       // Max idle time(ms), after which it is recycled.
-	NewFunc    func() (interface{}, error) // Callback function to create item.
-	ExpireFunc func(interface{})           // Expired destruction function for objects.
-	// This function needs to be defined when the pool object
-	// needs to perform additional destruction operations.
+	// Available/idle items list.
+	list *glist.List
+
+	// Whether the pool is closed.
+	closed *gtype.Bool
+
+	// Time To Live for pool items.
+	TTL time.Duration
+
+	// Callback function to create pool item.
+	NewFunc func() (interface{}, error)
+
+	// ExpireFunc is the for expired items destruction.
+	// This function needs to be defined when the pool items
+	// need to perform additional destruction operations.
 	// Eg: net.Conn, os.File, etc.
+	ExpireFunc func(interface{})
 }
 
 // Pool item.
 type poolItem struct {
-	expire int64       // Expire time(millisecond).
-	value  interface{} // Value.
+	expire int64       // Expire timestamp in milliseconds.
+	value  interface{} // Item value.
 }
 
 // Creation function for object.
@@ -41,47 +50,64 @@ type NewFunc func() (interface{}, error)
 // Destruction function for object.
 type ExpireFunc func(interface{})
 
-// New returns a new object pool.
+// New creates and returns a new object pool.
 // To ensure execution efficiency, the expiration time cannot be modified once it is set.
 //
-// Expiration logic:
-// expire = 0 : not expired;
-// expire < 0 : immediate expired after use;
-// expire > 0 : timeout expired;
-// Note that the expiration time unit is ** milliseconds **.
-func New(expire int, newFunc NewFunc, expireFunc ...ExpireFunc) *Pool {
+// Note the expiration logic:
+// ttl = 0 : not expired;
+// ttl < 0 : immediate expired after use;
+// ttl > 0 : timeout expired;
+func New(ttl time.Duration, newFunc NewFunc, expireFunc ...ExpireFunc) *Pool {
 	r := &Pool{
 		list:    glist.New(true),
 		closed:  gtype.NewBool(),
-		Expire:  int64(expire),
+		TTL:     ttl,
 		NewFunc: newFunc,
 	}
 	if len(expireFunc) > 0 {
 		r.ExpireFunc = expireFunc[0]
 	}
-	gtimer.AddSingleton(time.Second, r.checkExpire)
+	gtimer.AddSingleton(time.Second, r.checkExpireItems)
 	return r
 }
 
 // Put puts an item to pool.
-func (p *Pool) Put(value interface{}) {
+func (p *Pool) Put(value interface{}) error {
+	if p.closed.Val() {
+		return errors.New("pool is closed")
+	}
 	item := &poolItem{
 		value: value,
 	}
-	if p.Expire == 0 {
+	if p.TTL == 0 {
 		item.expire = 0
 	} else {
-		item.expire = gtime.TimestampMilli() + p.Expire
+		// As for Golang version < 1.13, there's no method Milliseconds for time.Duration.
+		// So we need calculate the milliseconds using its nanoseconds value.
+		item.expire = gtime.TimestampMilli() + p.TTL.Nanoseconds()/1000000
 	}
 	p.list.PushBack(item)
+	return nil
 }
 
 // Clear clears pool, which means it will remove all items from pool.
 func (p *Pool) Clear() {
-	p.list.RemoveAll()
+	if p.ExpireFunc != nil {
+		for {
+			if r := p.list.PopFront(); r != nil {
+				p.ExpireFunc(r.(*poolItem).value)
+			} else {
+				break
+			}
+		}
+	} else {
+		p.list.RemoveAll()
+	}
+
 }
 
-// Get picks an item from pool.
+// Get picks and returns an item from pool. If the pool is empty and NewFunc is defined,
+// it creates and returns one from NewFunc.
 func (p *Pool) Get() (interface{}, error) {
 	for !p.closed.Val() {
 		if r := p.list.PopFront(); r != nil {
@@ -106,12 +132,13 @@ func (p *Pool) Size() int {
 
 // Close closes the pool. If <p> has ExpireFunc,
 // then it automatically closes all items using this function before it's closed.
+// Commonly you do not need call this function manually.
 func (p *Pool) Close() {
 	p.closed.Set(true)
 }
 
-// checkExpire removes expired items from pool every second.
-func (p *Pool) checkExpire() {
+// checkExpire removes expired items from pool in every second.
+func (p *Pool) checkExpireItems() {
 	if p.closed.Val() {
 		// If p has ExpireFunc,
 		// then it must close all items using this function.
@@ -126,11 +153,25 @@ func (p *Pool) checkExpire() {
 		}
 		gtimer.Exit()
 	}
+	// All items do not expire.
+	if p.TTL == 0 {
+		return
+	}
+	// The latest item expire timestamp in milliseconds.
+	var latestExpire int64 = -1
+	// Retrieve the current timestamp in milliseconds, it expires the items
+	// by comparing with this timestamp. It is not accurate comparison for
+	// every items expired, but high performance.
+	var timestampMilli = gtime.TimestampMilli()
 	for {
-		// TODO Do not use Pop and Push mechanism, which is not graceful.
+		if latestExpire > timestampMilli {
+			break
+		}
 		if r := p.list.PopFront(); r != nil {
 			item := r.(*poolItem)
-			if item.expire == 0 || item.expire > gtime.TimestampMilli() {
+			latestExpire = item.expire
+			// TODO improve the auto-expiration mechanism of the pool.
+			if item.expire > timestampMilli {
 				p.list.PushFront(item)
 				break
 			}

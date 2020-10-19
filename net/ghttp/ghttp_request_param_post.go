@@ -8,7 +8,6 @@ package ghttp
 
 import (
 	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/internal/structs"
 	"github.com/gogf/gf/util/gconv"
 )
 
@@ -16,8 +15,8 @@ import (
 // It returns <def> if <key> does not exist in neither form nor body.
 // It returns nil if <def> is not passed.
 //
-// Note that if there're multiple parameters with the same name, the parameters are retrieved and overwrote
-// in order of priority: form > body.
+// Note that if there're multiple parameters with the same name, the parameters are retrieved
+// and overwrote in order of priority: form > body.
 //
 // Deprecated.
 func (r *Request) GetPost(key string, def ...interface{}) interface{} {
@@ -205,13 +204,7 @@ func (r *Request) GetPostMapStrVar(kvMap ...map[string]interface{}) map[string]*
 //
 // Deprecated.
 func (r *Request) GetPostStruct(pointer interface{}, mapping ...map[string]string) error {
-	tagMap := structs.TagMapName(pointer, paramTagPriority, true)
-	if len(mapping) > 0 {
-		for k, v := range mapping[0] {
-			tagMap[k] = v
-		}
-	}
-	return gconv.StructDeep(r.GetPostMap(), pointer, tagMap)
+	return gconv.Struct(r.GetPostMap(), pointer, mapping...)
 }
 
 // GetPostToStruct is alias of GetQueryStruct. See GetPostStruct.

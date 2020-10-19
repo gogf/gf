@@ -7,7 +7,7 @@
 package gtype
 
 import (
-	"encoding/json"
+	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/util/gconv"
 	"sync/atomic"
 )

@@ -22,17 +22,16 @@ func (w *Watcher) startWatchLoop() {
 
 			// Event listening.
 			case ev := <-w.watcher.Events:
-				//intlog.Print(ev.String())
 				// Filter the repeated event in custom duration.
-				w.cache.SetIfNotExist(ev.String(), func() interface{} {
+				w.cache.SetIfNotExist(ev.String(), func() (interface{}, error) {
 					w.events.Push(&Event{
 						event:   ev,
 						Path:    ev.Name,
 						Op:      Op(ev.Op),
 						Watcher: w,
 					})
-					return struct{}{}
-				}, REPEAT_EVENT_FILTER_DURATION)
+					return struct{}{}, nil
+				}, repeatEventFilterDuration)
 
 			case err := <-w.watcher.Errors:
 				intlog.Error(err)
@@ -101,6 +100,8 @@ func (w *Watcher) startEventLoop() {
 						// We need no worry about the repeat adding.
 						if err := w.watcher.Add(event.Path); err != nil {
 							intlog.Error(err)
+						} else {
+							intlog.Printf("fake remove event, watcher re-adds monitor for: %s", event.Path)
 						}
 						// Change the event to RENAME, which means it renames itself to its origin name.
 						event.Op = RENAME
@@ -115,6 +116,8 @@ func (w *Watcher) startEventLoop() {
 						// We need no worry about the repeat adding.
 						if err := w.watcher.Add(event.Path); err != nil {
 							intlog.Error(err)
+						} else {
+							intlog.Printf("fake rename event, watcher re-adds monitor for: %s", event.Path)
 						}
 						// Change the event to CHMOD.
 						event.Op = CHMOD
@@ -131,6 +134,8 @@ func (w *Watcher) startEventLoop() {
 							if fileIsDir(subPath) {
 								if err := w.watcher.Add(subPath); err != nil {
 									intlog.Error(err)
+								} else {
+									intlog.Printf("folder creation event, watcher adds monitor for: %s", subPath)
 								}
 							}
 						}
@@ -138,6 +143,8 @@ func (w *Watcher) startEventLoop() {
 						// If it's a file, it directly adds it to monitor.
 						if err := w.watcher.Add(event.Path); err != nil {
 							intlog.Error(err)
+						} else {
+							intlog.Printf("file creation event, watcher adds monitor for: %s", event.Path)
 						}
 					}
 
@@ -148,7 +155,7 @@ func (w *Watcher) startEventLoop() {
 						defer func() {
 							if err := recover(); err != nil {
 								switch err {
-								case gFSNOTIFY_EVENT_EXIT:
+								case callbackExitEventPanicStr:
 									w.RemoveCallback(callback.Id)
 								default:
 									panic(err)

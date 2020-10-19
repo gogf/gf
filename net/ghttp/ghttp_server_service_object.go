@@ -16,30 +16,41 @@ import (
 	"github.com/gogf/gf/text/gstr"
 )
 
-// 绑定对象到URI请求处理中，会自动识别方法名称，并附加到对应的URI地址后面
-// 第三个参数methods用以指定需要注册的方法，支持多个方法名称，多个方法以英文“,”号分隔，区分大小写
+// BindObject registers object to server routes with given pattern.
+//
+// The optional parameter <method> is used to specify the method to be registered, which
+// supports multiple method names, multiple methods are separated by char ',', case sensitive.
+//
+// Note that the route method should be defined as ghttp.HandlerFunc.
 func (s *Server) BindObject(pattern string, object interface{}, method ...string) {
 	bindMethod := ""
 	if len(method) > 0 {
 		bindMethod = method[0]
 	}
-	s.doBindObject(pattern, object, bindMethod, nil)
+	s.doBindObject(pattern, object, bindMethod, nil, "")
 }
 
-// 绑定对象到URI请求处理中，会自动识别方法名称，并附加到对应的URI地址后面，
-// 第三个参数method仅支持一个方法注册，不支持多个，并且区分大小写。
+// BindObjectMethod registers specified method of object to server routes with given pattern.
+//
+// The optional parameter <method> is used to specify the method to be registered, which
+// does not supports multiple method names but only one, case sensitive.
+//
+// Note that the route method should be defined as ghttp.HandlerFunc.
 func (s *Server) BindObjectMethod(pattern string, object interface{}, method string) {
-	s.doBindObjectMethod(pattern, object, method, nil)
+	s.doBindObjectMethod(pattern, object, method, nil, "")
 }
 
-// 绑定对象到URI请求处理中，会自动识别方法名称，并附加到对应的URI地址后面,
-// 需要注意对象方法的定义必须按照 ghttp.HandlerFunc 来定义
+// BindObjectRest registers object in REST API style to server with specified pattern.
+// Note that the route method should be defined as ghttp.HandlerFunc.
 func (s *Server) BindObjectRest(pattern string, object interface{}) {
-	s.doBindObjectRest(pattern, object, nil)
+	s.doBindObjectRest(pattern, object, nil, "")
 }
 
-func (s *Server) doBindObject(pattern string, object interface{}, method string, middleware []HandlerFunc) {
-	// Convert input method to map for convenience and high performance searching.
+func (s *Server) doBindObject(
+	pattern string, object interface{}, method string,
+	middleware []HandlerFunc, source string,
+) {
+	// Convert input method to map for convenience and high performance searching purpose.
 	var methodMap map[string]bool
 	if len(method) > 0 {
 		methodMap = make(map[string]bool)
@@ -85,13 +96,15 @@ func (s *Server) doBindObject(pattern string, object interface{}, method string,
 		itemFunc, ok := v.Method(i).Interface().(func(*Request))
 		if !ok {
 			if len(methodMap) > 0 {
-				// 指定的方法名称注册，那么需要使用错误提示
-				s.Logger().Errorf(`invalid route method: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" is required for object registry`,
-					pkgPath, objName, methodName, v.Method(i).Type().String())
+				s.Logger().Errorf(
+					`invalid route method: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" is required for object registry`,
+					pkgPath, objName, methodName, v.Method(i).Type().String(),
+				)
 			} else {
-				// 否则只是Debug提示
-				s.Logger().Debugf(`ignore route method: %s.%s.%s defined as "%s", no match "func(*ghttp.Request)"`,
-					pkgPath, objName, methodName, v.Method(i).Type().String())
+				s.Logger().Debugf(
+					`ignore route method: %s.%s.%s defined as "%s", no match "func(*ghttp.Request)" for object registry`,
+					pkgPath, objName, methodName, v.Method(i).Type().String(),
+				)
 			}
 			continue
 		}
@@ -103,9 +116,15 @@ func (s *Server) doBindObject(pattern string, object interface{}, method string,
 			initFunc:   initFunc,
 			shutFunc:   shutFunc,
 			middleware: middleware,
+			source:     source,
 		}
-		// 如果方法中带有Index方法，那么额外自动增加一个路由规则匹配主URI。
-		// 注意，当pattern带有内置变量时，不会自动加该路由。
+		// If there's "Index" method, then an additional route is automatically added
+		// to match the main URI, for example:
+		// If pattern is "/user", then "/user" and "/user/index" are both automatically
+		// registered.
+		//
+		// Note that if there's built-in variables in pattern, this route will not be added
+		// automatically.
 		if strings.EqualFold(methodName, "Index") && !gregex.IsMatchString(`\{\.\w+\}`, pattern) {
 			p := gstr.PosRI(key, "/index")
 			k := key[0:p] + key[p+6:]
@@ -119,15 +138,17 @@ func (s *Server) doBindObject(pattern string, object interface{}, method string,
 				initFunc:   initFunc,
 				shutFunc:   shutFunc,
 				middleware: middleware,
+				source:     source,
 			}
 		}
 	}
 	s.bindHandlerByMap(m)
 }
 
-// 绑定对象到URI请求处理中，会自动识别方法名称，并附加到对应的URI地址后面，
-// 第三个参数method仅支持一个方法注册，不支持多个，并且区分大小写。
-func (s *Server) doBindObjectMethod(pattern string, object interface{}, method string, middleware []HandlerFunc) {
+func (s *Server) doBindObjectMethod(
+	pattern string, object interface{}, method string,
+	middleware []HandlerFunc, source string,
+) {
 	m := make(map[string]*handlerItem)
 	v := reflect.ValueOf(object)
 	t := v.Type()
@@ -154,8 +175,10 @@ func (s *Server) doBindObjectMethod(pattern string, object interface{}, method s
 	}
 	itemFunc, ok := methodValue.Interface().(func(*Request))
 	if !ok {
-		s.Logger().Errorf(`invalid route method: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" is required for object registry`,
-			pkgPath, objName, methodName, methodValue.Type().String())
+		s.Logger().Errorf(
+			`invalid route method: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" is required for object registry`,
+			pkgPath, objName, methodName, methodValue.Type().String(),
+		)
 		return
 	}
 	key := s.mergeBuildInNameToPattern(pattern, structName, methodName, false)
@@ -166,12 +189,16 @@ func (s *Server) doBindObjectMethod(pattern string, object interface{}, method s
 		initFunc:   initFunc,
 		shutFunc:   shutFunc,
 		middleware: middleware,
+		source:     source,
 	}
 
 	s.bindHandlerByMap(m)
 }
 
-func (s *Server) doBindObjectRest(pattern string, object interface{}, middleware []HandlerFunc) {
+func (s *Server) doBindObjectRest(
+	pattern string, object interface{},
+	middleware []HandlerFunc, source string,
+) {
 	m := make(map[string]*handlerItem)
 	v := reflect.ValueOf(object)
 	t := v.Type()
@@ -197,8 +224,10 @@ func (s *Server) doBindObjectRest(pattern string, object interface{}, middleware
 		}
 		itemFunc, ok := v.Method(i).Interface().(func(*Request))
 		if !ok {
-			s.Logger().Errorf(`invalid route method: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" is required for object registry`,
-				pkgPath, objName, methodName, v.Method(i).Type().String())
+			s.Logger().Errorf(
+				`invalid route method: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" is required for object registry`,
+				pkgPath, objName, methodName, v.Method(i).Type().String(),
+			)
 			continue
 		}
 		key := s.mergeBuildInNameToPattern(methodName+":"+pattern, structName, methodName, false)
@@ -209,6 +238,7 @@ func (s *Server) doBindObjectRest(pattern string, object interface{}, middleware
 			initFunc:   initFunc,
 			shutFunc:   shutFunc,
 			middleware: middleware,
+			source:     source,
 		}
 	}
 	s.bindHandlerByMap(m)

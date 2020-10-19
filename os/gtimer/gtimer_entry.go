@@ -34,8 +34,10 @@ func (w *wheel) addEntry(interval time.Duration, job JobFunc, singleton bool, ti
 	if times <= 0 {
 		times = gDEFAULT_TIMES
 	}
-	ms := interval.Nanoseconds() / 1e6
-	num := ms / w.intervalMs
+	var (
+		ms  = interval.Nanoseconds() / 1e6
+		num = ms / w.intervalMs
+	)
 	if num == 0 {
 		// If the given interval is lesser than the one of the wheel,
 		// then sets it to one tick, which means it will be run in one interval.
@@ -104,6 +106,11 @@ func (entry *Entry) Stop() {
 	entry.status.Set(STATUS_STOPPED)
 }
 
+//Reset reset the job.
+func (entry *Entry) Reset() {
+	entry.status.Set(STATUS_RESET)
+}
+
 // Close closes the job, and then it will be removed from the timer.
 func (entry *Entry) Close() {
 	entry.status.Set(STATUS_CLOSED)
@@ -136,6 +143,8 @@ func (entry *Entry) check(nowTicks int64, nowMs int64) (runnable, addable bool) 
 		return false, true
 	case STATUS_CLOSED:
 		return false, false
+	case STATUS_RESET:
+		return false, true
 	}
 	// Firstly checks using the ticks, this may be low precision as one tick is a little bit long.
 	if diff := nowTicks - entry.create; diff > 0 && diff%entry.interval == 0 {

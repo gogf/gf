@@ -51,7 +51,7 @@ func GetOpt(name string, def ...string) string {
 	return ""
 }
 
-// GetOptVar returns the option value named <name> as *gvar.Var.
+// GetOptVar returns the option value named <name> as gvar.Var.
 func GetOptVar(name string, def ...string) *gvar.Var {
 	doInit()
 	return gvar.New(GetOpt(name, def...))
@@ -82,7 +82,7 @@ func GetArg(index int, def ...string) string {
 	return ""
 }
 
-// GetArgVar returns the argument at <index> as *gvar.Var.
+// GetArgVar returns the argument at <index> as gvar.Var.
 func GetArgVar(index int, def ...string) *gvar.Var {
 	doInit()
 	return gvar.New(GetArg(index, def...))

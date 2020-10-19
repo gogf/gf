@@ -31,6 +31,15 @@ func Pos(haystack, needle string, startOffset ...int) int {
 	return pos + offset
 }
 
+// PosRune acts like function Pos but considers <haystack> and <needle> as unicode string.
+func PosRune(haystack, needle string, startOffset ...int) int {
+	pos := Pos(haystack, needle, startOffset...)
+	if pos < 3 {
+		return pos
+	}
+	return len([]rune(haystack[:pos]))
+}
+
 // PosI returns the position of the first occurrence of <needle>
 // in <haystack> from <startOffset>, case-insensitively.
 // It returns -1, if not found.
@@ -52,6 +61,15 @@ func PosI(haystack, needle string, startOffset ...int) int {
 		return -1
 	}
 	return pos + offset
+}
+
+// PosIRune acts like function PosI but considers <haystack> and <needle> as unicode string.
+func PosIRune(haystack, needle string, startOffset ...int) int {
+	pos := PosI(haystack, needle, startOffset...)
+	if pos < 3 {
+		return pos
+	}
+	return len([]rune(haystack[:pos]))
 }
 
 // PosR returns the position of the last occurrence of <needle>
@@ -79,6 +97,15 @@ func PosR(haystack, needle string, startOffset ...int) int {
 	return pos
 }
 
+// PosRRune acts like function PosR but considers <haystack> and <needle> as unicode string.
+func PosRRune(haystack, needle string, startOffset ...int) int {
+	pos := PosR(haystack, needle, startOffset...)
+	if pos < 3 {
+		return pos
+	}
+	return len([]rune(haystack[:pos]))
+}
+
 // PosRI returns the position of the last occurrence of <needle>
 // in <haystack> from <startOffset>, case-insensitively.
 // It returns -1, if not found.
@@ -102,4 +129,13 @@ func PosRI(haystack, needle string, startOffset ...int) int {
 		pos += offset
 	}
 	return pos
+}
+
+// PosRIRune acts like function PosRI but considers <haystack> and <needle> as unicode string.
+func PosRIRune(haystack, needle string, startOffset ...int) int {
+	pos := PosRI(haystack, needle, startOffset...)
+	if pos < 3 {
+		return pos
+	}
+	return len([]rune(haystack[:pos]))
 }

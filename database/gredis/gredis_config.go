@@ -7,6 +7,7 @@
 package gredis
 
 import (
+	"github.com/gogf/gf/internal/intlog"
 	"time"
 
 	"github.com/gogf/gf/errors/gerror"
@@ -36,6 +37,8 @@ func SetConfig(config Config, name ...string) {
 	}
 	configs.Set(group, config)
 	instances.Remove(group)
+
+	intlog.Printf(`SetConfig for group "%s": %+v`, group, config)
 }
 
 // SetConfigByStr sets the global configuration for specified group with string.
@@ -76,6 +79,8 @@ func RemoveConfig(name ...string) {
 	}
 	configs.Remove(group)
 	instances.Remove(group)
+
+	intlog.Printf(`RemoveConfig: %s`, group)
 }
 
 // ConfigFromStr parses and returns config from given str.
@@ -104,6 +109,12 @@ func ConfigFromStr(str string) (config Config, err error) {
 		}
 		if v, ok := parse["maxConnLifetime"]; ok {
 			config.MaxConnLifetime = gconv.Duration(v) * time.Second
+		}
+		if v, ok := parse["tls"]; ok {
+			config.TLS = gconv.Bool(v)
+		}
+		if v, ok := parse["skipVerify"]; ok {
+			config.TLSSkipVerify = gconv.Bool(v)
 		}
 		return
 	}

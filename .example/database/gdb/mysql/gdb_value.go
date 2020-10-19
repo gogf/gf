@@ -8,10 +8,5 @@ func main() {
 	db := g.DB()
 	db.SetDebug(true)
 
-	one, e := db.Table("order.order o").LeftJoin("user.user u", "o.uid=u.id").Where("u.id", 1).One()
-	if e != nil {
-		panic(e)
-	}
-	g.Dump(one)
-
+	db.Table("user").Data("num=num+1").Where("id", 8).Update()
 }

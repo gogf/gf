@@ -9,10 +9,12 @@ package structs
 import (
 	"reflect"
 
-	"github.com/fatih/structs"
+	"github.com/gqcn/structs"
 )
 
 // MapField retrieves struct field as map[name/tag]*Field from <pointer>, and returns the map.
+//
+// The parameter <pointer> should be type of struct/*struct.
 //
 // The parameter <priority> specifies the priority tag array for retrieving from high to low.
 //
@@ -20,15 +22,19 @@ import (
 //
 // Note that it only retrieves the exported attributes with first letter up-case from struct.
 func MapField(pointer interface{}, priority []string, recursive bool) map[string]*Field {
-	fieldMap := make(map[string]*Field)
-	fields := ([]*structs.Field)(nil)
+	var (
+		fields   []*structs.Field
+		fieldMap = make(map[string]*Field)
+	)
 	if v, ok := pointer.(reflect.Value); ok {
 		fields = structs.Fields(v.Interface())
 	} else {
 		fields = structs.Fields(pointer)
 	}
-	tag := ""
-	name := ""
+	var (
+		tag  = ""
+		name = ""
+	)
 	for _, field := range fields {
 		name = field.Name()
 		// Only retrieve exported attributes.

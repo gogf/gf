@@ -12,7 +12,6 @@ package gview
 
 import (
 	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/i18n/gi18n"
 	"github.com/gogf/gf/internal/intlog"
 
 	"github.com/gogf/gf"
@@ -28,21 +27,12 @@ type View struct {
 	data         map[string]interface{} // Global template variables.
 	funcMap      map[string]interface{} // Global template function map.
 	fileCacheMap *gmap.StrAnyMap        // File cache map.
-	defaultFile  string                 // Default template file for parsing.
-	i18nManager  *gi18n.Manager         // I18n manager for this view.
-	delimiters   []string               // Custom template delimiters.
 	config       Config                 // Extra configuration for the view.
 }
 
-// Params is type for template params.
-type Params = map[string]interface{}
-
-// FuncMap is type for custom template functions.
-type FuncMap = map[string]interface{}
-
-const (
-	// Default template file for parsing.
-	defaultParsingFile = "index.html"
+type (
+	Params  = map[string]interface{} // Params is type for template params.
+	FuncMap = map[string]interface{} // FuncMap is type for custom template functions.
 )
 
 var (
@@ -60,9 +50,9 @@ func checkAndInitDefaultView() {
 
 // ParseContent parses the template content directly using the default view object
 // and returns the parsed content.
-func ParseContent(content string, params Params) (string, error) {
+func ParseContent(content string, params ...Params) (string, error) {
 	checkAndInitDefaultView()
-	return defaultViewObj.ParseContent(content, params)
+	return defaultViewObj.ParseContent(content, params...)
 }
 
 // New returns a new view object.
@@ -73,9 +63,7 @@ func New(path ...string) *View {
 		data:         make(map[string]interface{}),
 		funcMap:      make(map[string]interface{}),
 		fileCacheMap: gmap.NewStrAnyMap(true),
-		defaultFile:  defaultParsingFile,
-		i18nManager:  gi18n.Instance(),
-		delimiters:   make([]string, 2),
+		config:       DefaultConfig(),
 	}
 	if len(path) > 0 && len(path[0]) > 0 {
 		if err := view.SetPath(path[0]); err != nil {
@@ -118,35 +106,36 @@ func New(path ...string) *View {
 		"version": gf.VERSION,
 	}
 	// default build-in functions.
-	view.BindFunc("eq", view.funcEq)
-	view.BindFunc("ne", view.funcNe)
-	view.BindFunc("lt", view.funcLt)
-	view.BindFunc("le", view.funcLe)
-	view.BindFunc("gt", view.funcGt)
-	view.BindFunc("ge", view.funcGe)
-	view.BindFunc("text", view.funcText)
+	view.BindFuncMap(FuncMap{
+		"eq":         view.funcEq,
+		"ne":         view.funcNe,
+		"lt":         view.funcLt,
+		"le":         view.funcLe,
+		"gt":         view.funcGt,
+		"ge":         view.funcGe,
+		"text":       view.funcText,
+		"html":       view.funcHtmlEncode,
+		"htmlencode": view.funcHtmlEncode,
+		"htmldecode": view.funcHtmlDecode,
+		"encode":     view.funcHtmlEncode,
+		"decode":     view.funcHtmlDecode,
+		"url":        view.funcUrlEncode,
+		"urlencode":  view.funcUrlEncode,
+		"urldecode":  view.funcUrlDecode,
+		"date":       view.funcDate,
+		"substr":     view.funcSubStr,
+		"strlimit":   view.funcStrLimit,
+		"concat":     view.funcConcat,
+		"replace":    view.funcReplace,
+		"compare":    view.funcCompare,
+		"hidestr":    view.funcHideStr,
+		"highlight":  view.funcHighlight,
+		"toupper":    view.funcToUpper,
+		"tolower":    view.funcToLower,
+		"nl2br":      view.funcNl2Br,
+		"include":    view.funcInclude,
+		"dump":       view.funcDump,
+	})
 
-	view.BindFunc("html", view.funcHtmlEncode)
-	view.BindFunc("htmlencode", view.funcHtmlEncode)
-	view.BindFunc("htmldecode", view.funcHtmlDecode)
-	view.BindFunc("encode", view.funcHtmlEncode)
-	view.BindFunc("decode", view.funcHtmlDecode)
-
-	view.BindFunc("url", view.funcUrlEncode)
-	view.BindFunc("urlencode", view.funcUrlEncode)
-	view.BindFunc("urldecode", view.funcUrlDecode)
-	view.BindFunc("date", view.funcDate)
-	view.BindFunc("substr", view.funcSubStr)
-	view.BindFunc("strlimit", view.funcStrLimit)
-	view.BindFunc("concat", view.funcConcat)
-	view.BindFunc("replace", view.funcReplace)
-	view.BindFunc("compare", view.funcCompare)
-	view.BindFunc("hidestr", view.funcHideStr)
-	view.BindFunc("highlight", view.funcHighlight)
-	view.BindFunc("toupper", view.funcToUpper)
-	view.BindFunc("tolower", view.funcToLower)
-	view.BindFunc("nl2br", view.funcNl2Br)
-	view.BindFunc("include", view.funcInclude)
-	view.BindFunc("dump", view.funcDump)
 	return view
 }

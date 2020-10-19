@@ -23,7 +23,7 @@ type Conn struct {
 
 const (
 	gDEFAULT_RETRY_INTERVAL   = 100 * time.Millisecond // Retry interval.
-	gDEFAULT_READ_BUFFER_SIZE = 64                     // (KB)Buffer size.
+	gDEFAULT_READ_BUFFER_SIZE = 1024                   // (Byte)Buffer size.
 	gRECV_ALL_WAIT_TIMEOUT    = time.Millisecond       // Default interval for reading buffer.
 )
 
@@ -82,67 +82,31 @@ func (c *Conn) Send(data []byte, retry ...Retry) (err error) {
 	}
 }
 
-// Recv receives data from remote address.
+// Recv receives and returns data from remote address.
+// The parameter <buffer> is used for customizing the receiving buffer size. If <buffer> <= 0,
+// it uses the default buffer size, which is 1024 byte.
 //
-// Note that,
-// 1. There's package border in UDP protocol, so we can receive a complete package if it specifies length < 0.
-// 2. If length = 0, it means it receives the data from current buffer and returns immediately.
-// 3. If length > 0, it means it blocks reading data from connection until length size was received.
-func (c *Conn) Recv(length int, retry ...Retry) ([]byte, error) {
+// There's package border in UDP protocol, we can receive a complete package if specified
+// buffer size is big enough. VERY NOTE that we should receive the complete package in once
+// or else the leftover package data would be dropped.
+func (c *Conn) Recv(buffer int, retry ...Retry) ([]byte, error) {
 	var err error               // Reading error.
 	var size int                // Reading size.
-	var index int               // Received size.
-	var buffer []byte           // Buffer object.
-	var bufferWait bool         // Whether buffer reading timeout set.
+	var data []byte             // Buffer object.
 	var remoteAddr *net.UDPAddr // Current remote address for reading.
-
-	if length > 0 {
-		buffer = make([]byte, length)
+	if buffer > 0 {
+		data = make([]byte, buffer)
 	} else {
-		buffer = make([]byte, gDEFAULT_READ_BUFFER_SIZE)
+		data = make([]byte, gDEFAULT_READ_BUFFER_SIZE)
 	}
-
 	for {
-		if length < 0 && index > 0 {
-			bufferWait = true
-			if err = c.SetReadDeadline(time.Now().Add(c.recvBufferWait)); err != nil {
-				return nil, err
-			}
-		}
-		size, remoteAddr, err = c.ReadFromUDP(buffer[index:])
+		size, remoteAddr, err = c.ReadFromUDP(data)
 		if err == nil {
 			c.remoteAddr = remoteAddr
-		}
-		if size > 0 {
-			index += size
-			if length > 0 {
-				// It reads til <length> size if <length> is specified.
-				if index == length {
-					break
-				}
-			} else {
-				if index >= gDEFAULT_READ_BUFFER_SIZE {
-					// If it exceeds the buffer size, it then automatically increases its buffer size.
-					buffer = append(buffer, make([]byte, gDEFAULT_READ_BUFFER_SIZE)...)
-				} else {
-					// It returns immediately if received size is lesser than buffer size.
-					if !bufferWait {
-						break
-					}
-				}
-			}
 		}
 		if err != nil {
 			// Connection closed.
 			if err == io.EOF {
-				break
-			}
-			// Re-set the timeout when reading data.
-			if bufferWait && isTimeout(err) {
-				if err = c.SetReadDeadline(c.recvDeadline); err != nil {
-					return nil, err
-				}
-				err = nil
 				break
 			}
 			if len(retry) > 0 {
@@ -159,12 +123,9 @@ func (c *Conn) Recv(length int, retry ...Retry) ([]byte, error) {
 			}
 			break
 		}
-		// Just read once from buffer.
-		if length == 0 {
-			break
-		}
+		break
 	}
-	return buffer[:index], err
+	return data[:size], err
 }
 
 // SendRecv writes data to connection and blocks reading response.

@@ -14,7 +14,8 @@ const (
 )
 
 var (
-	// Instances map.
+	// instances is the instances map for management
+	// for multiple i18n instance by name.
 	instances = gmap.NewStrAnyMap(true)
 )
 

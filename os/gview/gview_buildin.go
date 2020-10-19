@@ -153,12 +153,12 @@ func (view *View) funcCompare(value1, value2 interface{}) int {
 
 // funcSubStr implements build-in template function: substr
 func (view *View) funcSubStr(start, end, str interface{}) string {
-	return gstr.SubStr(gconv.String(str), gconv.Int(start), gconv.Int(end))
+	return gstr.SubStrRune(gconv.String(str), gconv.Int(start), gconv.Int(end))
 }
 
 // funcStrLimit implements build-in template function: strlimit
 func (view *View) funcStrLimit(length, suffix, str interface{}) string {
-	return gstr.StrLimit(gconv.String(str), gconv.Int(length), gconv.String(suffix))
+	return gstr.StrLimitRune(gconv.String(str), gconv.Int(length), gconv.String(suffix))
 }
 
 // funcConcat implements build-in template function: concat

@@ -45,6 +45,10 @@ func CopyFile(src, dst string) (err error) {
 	if dst == "" {
 		return errors.New("destination file cannot be empty")
 	}
+	// If src and dst are the same path, it does nothing.
+	if src == dst {
+		return nil
+	}
 	in, err := os.Open(src)
 	if err != nil {
 		return
@@ -71,11 +75,7 @@ func CopyFile(src, dst string) (err error) {
 	if err != nil {
 		return
 	}
-	si, err := os.Stat(src)
-	if err != nil {
-		return
-	}
-	err = os.Chmod(dst, si.Mode())
+	err = os.Chmod(dst, DefaultPermCopy)
 	if err != nil {
 		return
 	}
@@ -92,6 +92,10 @@ func CopyDir(src string, dst string) (err error) {
 	if dst == "" {
 		return errors.New("destination directory cannot be empty")
 	}
+	// If src and dst are the same path, it does nothing.
+	if src == dst {
+		return nil
+	}
 	src = filepath.Clean(src)
 	dst = filepath.Clean(dst)
 	si, err := os.Stat(src)
@@ -102,7 +106,7 @@ func CopyDir(src string, dst string) (err error) {
 		return fmt.Errorf("source is not a directory")
 	}
 	if !Exists(dst) {
-		err = os.MkdirAll(dst, si.Mode())
+		err = os.MkdirAll(dst, DefaultPermCopy)
 		if err != nil {
 			return
 		}

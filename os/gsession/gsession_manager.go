@@ -16,7 +16,7 @@ import (
 // Manager for sessions.
 type Manager struct {
 	ttl         time.Duration // TTL for sessions.
-	storage     Storage       // Storage interface for session storage Set/Get.
+	storage     Storage       // Storage interface for session storage.
 	sessionData *gcache.Cache // Session data cache for session TTL.
 }
 

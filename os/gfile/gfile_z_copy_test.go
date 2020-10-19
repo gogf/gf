@@ -14,119 +14,118 @@ import (
 )
 
 func Test_Copy(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
-			paths  string = "/testfile_copyfile1.txt"
-			topath string = "/testfile_copyfile2.txt"
+			paths  = "/testfile_copyfile1.txt"
+			topath = "/testfile_copyfile2.txt"
 		)
 
 		createTestFile(paths, "")
 		defer delTestFiles(paths)
 
-		gtest.Assert(gfile.Copy(testpath()+paths, testpath()+topath), nil)
+		t.Assert(gfile.Copy(testpath()+paths, testpath()+topath), nil)
 		defer delTestFiles(topath)
 
-		gtest.Assert(gfile.IsFile(testpath()+topath), true)
-		gtest.AssertNE(gfile.Copy("", ""), nil)
+		t.Assert(gfile.IsFile(testpath()+topath), true)
+		t.AssertNE(gfile.Copy("", ""), nil)
 	})
 }
 
 func Test_CopyFile(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
-			paths  string = "/testfile_copyfile1.txt"
-			topath string = "/testfile_copyfile2.txt"
+			paths  = "/testfile_copyfile1.txt"
+			topath = "/testfile_copyfile2.txt"
 		)
 
 		createTestFile(paths, "")
 		defer delTestFiles(paths)
 
-		gtest.Assert(gfile.CopyFile(testpath()+paths, testpath()+topath), nil)
+		t.Assert(gfile.CopyFile(testpath()+paths, testpath()+topath), nil)
 		defer delTestFiles(topath)
 
-		gtest.Assert(gfile.IsFile(testpath()+topath), true)
-		gtest.AssertNE(gfile.CopyFile("", ""), nil)
+		t.Assert(gfile.IsFile(testpath()+topath), true)
+		t.AssertNE(gfile.CopyFile("", ""), nil)
 	})
 	// Content replacement.
-	gtest.Case(t, func() {
-		src := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
-		dst := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr())
+	gtest.C(t, func(t *gtest.T) {
+		src := gfile.TempDir(gtime.TimestampNanoStr())
+		dst := gfile.TempDir(gtime.TimestampNanoStr())
 		srcContent := "1"
 		dstContent := "1"
-		gfile.PutContents(src, srcContent)
-		gfile.PutContents(dst, dstContent)
-		gtest.Assert(gfile.GetContents(src), srcContent)
-		gtest.Assert(gfile.GetContents(dst), dstContent)
+		t.Assert(gfile.PutContents(src, srcContent), nil)
+		t.Assert(gfile.PutContents(dst, dstContent), nil)
+		t.Assert(gfile.GetContents(src), srcContent)
+		t.Assert(gfile.GetContents(dst), dstContent)
 
-		err := gfile.CopyFile(src, dst)
-		gtest.Assert(err, nil)
-		gtest.Assert(gfile.GetContents(src), srcContent)
-		gtest.Assert(gfile.GetContents(dst), srcContent)
+		t.Assert(gfile.CopyFile(src, dst), nil)
+		t.Assert(gfile.GetContents(src), srcContent)
+		t.Assert(gfile.GetContents(dst), srcContent)
 	})
 }
 
 func Test_CopyDir(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
-			dirpath1 string = "/testcopydir1"
-			dirpath2 string = "/testcopydir2"
+			dirPath1 = "/test-copy-dir1"
+			dirPath2 = "/test-copy-dir2"
 		)
-
-		havelist1 := []string{
+		haveList := []string{
 			"t1.txt",
 			"t2.txt",
 		}
-
-		createDir(dirpath1)
-		for _, v := range havelist1 {
-			createTestFile(dirpath1+"/"+v, "")
+		createDir(dirPath1)
+		for _, v := range haveList {
+			t.Assert(createTestFile(dirPath1+"/"+v, ""), nil)
 		}
-		defer delTestFiles(dirpath1)
+		defer delTestFiles(dirPath1)
 
-		yfolder := testpath() + dirpath1
-		tofolder := testpath() + dirpath2
+		var (
+			yfolder  = testpath() + dirPath1
+			tofolder = testpath() + dirPath2
+		)
 
 		if gfile.IsDir(tofolder) {
-			gtest.Assert(gfile.Remove(tofolder), nil)
-			gtest.Assert(gfile.Remove(""), nil)
+			t.Assert(gfile.Remove(tofolder), nil)
+			t.Assert(gfile.Remove(""), nil)
 		}
 
-		gtest.Assert(gfile.CopyDir(yfolder, tofolder), nil)
+		t.Assert(gfile.CopyDir(yfolder, tofolder), nil)
 		defer delTestFiles(tofolder)
 
-		// 检查复制后的旧文件夹是否真实存在
-		gtest.Assert(gfile.IsDir(yfolder), true)
+		t.Assert(gfile.IsDir(yfolder), true)
 
-		// 检查复制后的旧文件夹中的文件是否真实存在
-		for _, v := range havelist1 {
-			gtest.Assert(gfile.IsFile(yfolder+"/"+v), true)
+		for _, v := range haveList {
+			t.Assert(gfile.IsFile(yfolder+"/"+v), true)
 		}
 
-		// 检查复制后的新文件夹是否真实存在
-		gtest.Assert(gfile.IsDir(tofolder), true)
+		t.Assert(gfile.IsDir(tofolder), true)
 
-		// 检查复制后的新文件夹中的文件是否真实存在
-		for _, v := range havelist1 {
-			gtest.Assert(gfile.IsFile(tofolder+"/"+v), true)
+		for _, v := range haveList {
+			t.Assert(gfile.IsFile(tofolder+"/"+v), true)
 		}
 
-		gtest.Assert(gfile.Remove(tofolder), nil)
-		gtest.Assert(gfile.Remove(""), nil)
+		t.Assert(gfile.Remove(tofolder), nil)
+		t.Assert(gfile.Remove(""), nil)
 	})
 	// Content replacement.
-	gtest.Case(t, func() {
-		src := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr(), gtime.TimestampNanoStr())
-		dst := gfile.Join(gfile.TempDir(), gtime.TimestampNanoStr(), gtime.TimestampNanoStr())
+	gtest.C(t, func(t *gtest.T) {
+		src := gfile.TempDir(gtime.TimestampNanoStr(), gtime.TimestampNanoStr())
+		dst := gfile.TempDir(gtime.TimestampNanoStr(), gtime.TimestampNanoStr())
+		defer func() {
+			gfile.Remove(src)
+			gfile.Remove(dst)
+		}()
 		srcContent := "1"
 		dstContent := "1"
-		gfile.PutContents(src, srcContent)
-		gfile.PutContents(dst, dstContent)
-		gtest.Assert(gfile.GetContents(src), srcContent)
-		gtest.Assert(gfile.GetContents(dst), dstContent)
+		t.Assert(gfile.PutContents(src, srcContent), nil)
+		t.Assert(gfile.PutContents(dst, dstContent), nil)
+		t.Assert(gfile.GetContents(src), srcContent)
+		t.Assert(gfile.GetContents(dst), dstContent)
 
 		err := gfile.CopyDir(gfile.Dir(src), gfile.Dir(dst))
-		gtest.Assert(err, nil)
-		gtest.Assert(gfile.GetContents(src), srcContent)
-		gtest.Assert(gfile.GetContents(dst), srcContent)
+		t.Assert(err, nil)
+		t.Assert(gfile.GetContents(src), srcContent)
+		t.Assert(gfile.GetContents(dst), srcContent)
 	})
 }

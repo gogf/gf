@@ -7,7 +7,7 @@
 package gmap
 
 import (
-	"encoding/json"
+	"github.com/gogf/gf/internal/json"
 
 	"github.com/gogf/gf/internal/empty"
 
@@ -16,7 +16,7 @@ import (
 )
 
 type IntStrMap struct {
-	mu   *rwmutex.RWMutex
+	mu   rwmutex.RWMutex
 	data map[int]string
 }
 
@@ -25,7 +25,7 @@ type IntStrMap struct {
 // which is false in default.
 func NewIntStrMap(safe ...bool) *IntStrMap {
 	return &IntStrMap{
-		mu:   rwmutex.New(safe...),
+		mu:   rwmutex.Create(safe...),
 		data: make(map[int]string),
 	}
 }
@@ -35,12 +35,12 @@ func NewIntStrMap(safe ...bool) *IntStrMap {
 // there might be some concurrent-safe issues when changing the map outside.
 func NewIntStrMapFrom(data map[int]string, safe ...bool) *IntStrMap {
 	return &IntStrMap{
-		mu:   rwmutex.New(safe...),
+		mu:   rwmutex.Create(safe...),
 		data: data,
 	}
 }
 
-// Iterator iterates the hash map with custom callback function <f>.
+// Iterator iterates the hash map readonly with custom callback function <f>.
 // If <f> returns true, then it continues iterating; or false to stop.
 func (m *IntStrMap) Iterator(f func(k int, v string) bool) {
 	m.mu.RLock()
@@ -96,6 +96,7 @@ func (m *IntStrMap) MapCopy() map[int]string {
 }
 
 // FilterEmpty deletes all key-value pair of which the value is empty.
+// Values like: 0, nil, false, "", len(slice/map/chan) == 0 are considered empty.
 func (m *IntStrMap) FilterEmpty() {
 	m.mu.Lock()
 	for k, v := range m.data {
@@ -109,6 +110,9 @@ func (m *IntStrMap) FilterEmpty() {
 // Set sets key-value to the hash map.
 func (m *IntStrMap) Set(key int, val string) {
 	m.mu.Lock()
+	if m.data == nil {
+		m.data = make(map[int]string)
+	}
 	m.data[key] = val
 	m.mu.Unlock()
 }
@@ -116,8 +120,12 @@ func (m *IntStrMap) Set(key int, val string) {
 // Sets batch sets key-values to the hash map.
 func (m *IntStrMap) Sets(data map[int]string) {
 	m.mu.Lock()
-	for k, v := range data {
-		m.data[k] = v
+	if m.data == nil {
+		m.data = data
+	} else {
+		for k, v := range data {
+			m.data[k] = v
+		}
 	}
 	m.mu.Unlock()
 }
@@ -126,17 +134,21 @@ func (m *IntStrMap) Sets(data map[int]string) {
 // Second return parameter <found> is true if key was found, otherwise false.
 func (m *IntStrMap) Search(key int) (value string, found bool) {
 	m.mu.RLock()
-	value, found = m.data[key]
+	if m.data != nil {
+		value, found = m.data[key]
+	}
 	m.mu.RUnlock()
 	return
 }
 
 // Get returns the value by given <key>.
-func (m *IntStrMap) Get(key int) string {
+func (m *IntStrMap) Get(key int) (value string) {
 	m.mu.RLock()
-	val, _ := m.data[key]
+	if m.data != nil {
+		value, _ = m.data[key]
+	}
 	m.mu.RUnlock()
-	return val
+	return
 }
 
 // Pop retrieves and deletes an item from the map.
@@ -161,8 +173,10 @@ func (m *IntStrMap) Pops(size int) map[int]string {
 	if size == 0 {
 		return nil
 	}
-	index := 0
-	newMap := make(map[int]string, size)
+	var (
+		index  = 0
+		newMap = make(map[int]string, size)
+	)
 	for k, v := range m.data {
 		delete(m.data, k)
 		newMap[k] = v
@@ -182,6 +196,9 @@ func (m *IntStrMap) Pops(size int) map[int]string {
 func (m *IntStrMap) doSetWithLockCheck(key int, value string) string {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	if m.data == nil {
+		m.data = make(map[int]string)
+	}
 	if v, ok := m.data[key]; ok {
 		return v
 	}
@@ -218,13 +235,14 @@ func (m *IntStrMap) GetOrSetFuncLock(key int, f func() string) string {
 	if v, ok := m.Search(key); !ok {
 		m.mu.Lock()
 		defer m.mu.Unlock()
+		if m.data == nil {
+			m.data = make(map[int]string)
+		}
 		if v, ok = m.data[key]; ok {
 			return v
 		}
 		v = f()
-		if v != "" {
-			m.data[key] = v
-		}
+		m.data[key] = v
 		return v
 	} else {
 		return v
@@ -260,6 +278,9 @@ func (m *IntStrMap) SetIfNotExistFuncLock(key int, f func() string) bool {
 	if !m.Contains(key) {
 		m.mu.Lock()
 		defer m.mu.Unlock()
+		if m.data == nil {
+			m.data = make(map[int]string)
+		}
 		if _, ok := m.data[key]; !ok {
 			m.data[key] = f()
 		}
@@ -271,28 +292,34 @@ func (m *IntStrMap) SetIfNotExistFuncLock(key int, f func() string) bool {
 // Removes batch deletes values of the map by keys.
 func (m *IntStrMap) Removes(keys []int) {
 	m.mu.Lock()
-	for _, key := range keys {
-		delete(m.data, key)
+	if m.data != nil {
+		for _, key := range keys {
+			delete(m.data, key)
+		}
 	}
 	m.mu.Unlock()
 }
 
 // Remove deletes value from map by given <key>, and return this deleted value.
-func (m *IntStrMap) Remove(key int) string {
+func (m *IntStrMap) Remove(key int) (value string) {
 	m.mu.Lock()
-	val, exists := m.data[key]
-	if exists {
-		delete(m.data, key)
+	if m.data != nil {
+		var ok bool
+		if value, ok = m.data[key]; ok {
+			delete(m.data, key)
+		}
 	}
 	m.mu.Unlock()
-	return val
+	return
 }
 
 // Keys returns all keys of the map as a slice.
 func (m *IntStrMap) Keys() []int {
 	m.mu.RLock()
-	keys := make([]int, len(m.data))
-	index := 0
+	var (
+		keys  = make([]int, len(m.data))
+		index = 0
+	)
 	for key := range m.data {
 		keys[index] = key
 		index++
@@ -304,8 +331,10 @@ func (m *IntStrMap) Keys() []int {
 // Values returns all values of the map as a slice.
 func (m *IntStrMap) Values() []string {
 	m.mu.RLock()
-	values := make([]string, len(m.data))
-	index := 0
+	var (
+		values = make([]string, len(m.data))
+		index  = 0
+	)
 	for _, value := range m.data {
 		values[index] = value
 		index++
@@ -317,10 +346,13 @@ func (m *IntStrMap) Values() []string {
 // Contains checks whether a key exists.
 // It returns true if the <key> exists, or else false.
 func (m *IntStrMap) Contains(key int) bool {
+	var ok bool
 	m.mu.RLock()
-	_, exists := m.data[key]
+	if m.data != nil {
+		_, ok = m.data[key]
+	}
 	m.mu.RUnlock()
-	return exists
+	return ok
 }
 
 // Size returns the size of the map.
@@ -381,6 +413,10 @@ func (m *IntStrMap) Flip() {
 func (m *IntStrMap) Merge(other *IntStrMap) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	if m.data == nil {
+		m.data = other.MapCopy()
+		return
+	}
 	if other != m {
 		other.mu.RLock()
 		defer other.mu.RUnlock()
@@ -388,6 +424,12 @@ func (m *IntStrMap) Merge(other *IntStrMap) {
 	for k, v := range other.data {
 		m.data[k] = v
 	}
+}
+
+// String returns the map as a string.
+func (m *IntStrMap) String() string {
+	b, _ := m.MarshalJSON()
+	return gconv.UnsafeBytesToStr(b)
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
@@ -399,12 +441,11 @@ func (m *IntStrMap) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (m *IntStrMap) UnmarshalJSON(b []byte) error {
-	if m.mu == nil {
-		m.mu = rwmutex.New()
-		m.data = make(map[int]string)
-	}
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	if m.data == nil {
+		m.data = make(map[int]string)
+	}
 	if err := json.Unmarshal(b, &m.data); err != nil {
 		return err
 	}
@@ -413,12 +454,11 @@ func (m *IntStrMap) UnmarshalJSON(b []byte) error {
 
 // UnmarshalValue is an interface implement which sets any type of value for map.
 func (m *IntStrMap) UnmarshalValue(value interface{}) (err error) {
-	if m.mu == nil {
-		m.mu = rwmutex.New()
-		m.data = make(map[int]string)
-	}
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	if m.data == nil {
+		m.data = make(map[int]string)
+	}
 	switch value.(type) {
 	case string, []byte:
 		return json.Unmarshal(gconv.Bytes(value), &m.data)

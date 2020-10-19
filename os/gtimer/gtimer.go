@@ -4,19 +4,23 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gtimer implements Hierarchical Timing Wheel for interval/delayed jobs running and management.
+// Package gtimer implements Hierarchical Timing Wheel for interval/delayed jobs
+// running and management.
 //
-// This package is designed for management for millions of timing jobs.
-// The differences between gtime and gcron are as follows:
-// 1. gcron is implemented based on gtimer.
+// This package is designed for management for millions of timing jobs. The differences
+// between gtimer and gcron are as follows:
+// 1. package gcron is implemented based on package gtimer.
 // 2. gtimer is designed for high performance and for millions of timing jobs.
-// 3. gcron supports pattern grammar like linux crontab.
-// 4. gtimer's benchmark OP is measured in nanoseconds, and gcron's benchmark OP is measured in microseconds.
+// 3. gcron supports configuration pattern grammar like linux crontab, which is more manually
+//    readable.
+// 4. gtimer's benchmark OP is measured in nanoseconds, and gcron's benchmark OP is measured
+//    in microseconds.
 //
-// Note the common delay of the timer: https://github.com/golang/go/issues/14410
+// ALSO VERY NOTE the common delay of the timer: https://github.com/golang/go/issues/14410
 package gtimer
 
 import (
+	"fmt"
 	"math"
 	"time"
 
@@ -27,18 +31,20 @@ const (
 	STATUS_READY            = 0             // Job is ready for running.
 	STATUS_RUNNING          = 1             // Job is already running.
 	STATUS_STOPPED          = 2             // Job is stopped.
+	STATUS_RESET            = 3             // Job is reset.
 	STATUS_CLOSED           = -1            // Job is closed and waiting to be deleted.
 	gPANIC_EXIT             = "exit"        // Internal usage for custom job exit function with panic.
 	gDEFAULT_TIMES          = math.MaxInt32 // Default limit running times, a big number.
 	gDEFAULT_SLOT_NUMBER    = 10            // Default slot number.
 	gDEFAULT_WHEEL_INTERVAL = 50            // Default wheel interval.
 	gDEFAULT_WHEEL_LEVEL    = 6             // Default wheel level.
+	gCMDENV_KEY             = "gf.gtimer"   // Configuration key for command argument or environment.
 )
 
 var (
-	defaultSlots    = cmdenv.Get("gf.gtimer.slots", gDEFAULT_SLOT_NUMBER).Int()
-	defaultLevel    = cmdenv.Get("gf.gtimer.level", gDEFAULT_WHEEL_LEVEL).Int()
-	defaultInterval = cmdenv.Get("gf.gtimer.interval", gDEFAULT_WHEEL_INTERVAL).Duration() * time.Millisecond
+	defaultSlots    = cmdenv.Get(fmt.Sprintf("%s.slots", gCMDENV_KEY), gDEFAULT_SLOT_NUMBER).Int()
+	defaultLevel    = cmdenv.Get(fmt.Sprintf("%s.level", gCMDENV_KEY), gDEFAULT_WHEEL_LEVEL).Int()
+	defaultInterval = cmdenv.Get(fmt.Sprintf("%s.interval", gCMDENV_KEY), gDEFAULT_WHEEL_INTERVAL).Duration() * time.Millisecond
 	defaultTimer    = New(defaultSlots, defaultInterval, defaultLevel)
 )
 
@@ -119,8 +125,10 @@ func DelayAddTimes(delay time.Duration, interval time.Duration, times int, job J
 	defaultTimer.DelayAddTimes(delay, interval, times, job)
 }
 
-// Exit is used in timing job, which exits and marks it closed from timer.
-// The timing job will be removed from timer later.
+// Exit is used in timing job internally, which exits and marks it closed from timer.
+// The timing job will be automatically removed from timer later. It uses "panic-recover"
+// mechanism internally implementing this feature, which is designed for simplification
+// and convenience.
 func Exit() {
 	panic(gPANIC_EXIT)
 }

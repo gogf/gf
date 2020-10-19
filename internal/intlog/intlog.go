@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package intlog provides internal logging for GF development usage only.
+// Package intlog provides internal logging for GoFrame development usage only.
 package intlog
 
 import (
@@ -20,26 +20,36 @@ const (
 )
 
 var (
-	// isInGFDevelop marks whether current environment is in GF development.
-	isInGFDevelop = false
+	// isGFDebug marks whether printing GoFrame debug information.
+	isGFDebug = false
 )
 
 func init() {
-	if !cmdenv.Get("GF_DEV").IsEmpty() {
-		isInGFDevelop = true
+	// Debugging configured.
+	if !cmdenv.Get("GF_DEBUG").IsEmpty() {
+		isGFDebug = true
 		return
 	}
 }
 
-// IsInGFDevelop checks and returns whether current process is in GF development.
-func IsInGFDevelop() bool {
-	return isInGFDevelop
+// SetEnabled enables/disables the internal logging manually.
+// Note that this function is not concurrent safe, be aware of the DATA RACE.
+func SetEnabled(enabled bool) {
+	// If they're the same, it does not write the <isGFDebug> but only reading operation.
+	if isGFDebug != enabled {
+		isGFDebug = enabled
+	}
+}
+
+// IsEnabled checks and returns whether current process is in GF development.
+func IsEnabled() bool {
+	return isGFDebug
 }
 
 // Print prints <v> with newline using fmt.Println.
 // The parameter <v> can be multiple variables.
 func Print(v ...interface{}) {
-	if !isInGFDevelop {
+	if !isGFDebug {
 		return
 	}
 	fmt.Println(append([]interface{}{now(), "[INTE]", file()}, v...)...)
@@ -48,7 +58,7 @@ func Print(v ...interface{}) {
 // Printf prints <v> with format <format> using fmt.Printf.
 // The parameter <v> can be multiple variables.
 func Printf(format string, v ...interface{}) {
-	if !isInGFDevelop {
+	if !isGFDebug {
 		return
 	}
 	fmt.Printf(now()+" [INTE] "+file()+" "+format+"\n", v...)
@@ -57,7 +67,7 @@ func Printf(format string, v ...interface{}) {
 // Error prints <v> with newline using fmt.Println.
 // The parameter <v> can be multiple variables.
 func Error(v ...interface{}) {
-	if !isInGFDevelop {
+	if !isGFDebug {
 		return
 	}
 	array := append([]interface{}{now(), "[INTE]", file()}, v...)
@@ -67,7 +77,7 @@ func Error(v ...interface{}) {
 
 // Errorf prints <v> with format <format> using fmt.Printf.
 func Errorf(format string, v ...interface{}) {
-	if !isInGFDevelop {
+	if !isGFDebug {
 		return
 	}
 	fmt.Printf(

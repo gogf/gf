@@ -6,6 +6,8 @@
 
 package ghttp
 
+import "github.com/gogf/gf/container/gvar"
+
 // Get is a convenience method for sending GET request.
 // NOTE that remembers CLOSING the response object when it'll never be used.
 func Get(url string, data ...interface{}) (*ClientResponse, error) {
@@ -184,4 +186,70 @@ func TraceBytes(url string, data ...interface{}) []byte {
 // retrieves and returns the result content as bytes and automatically closes response object.
 func RequestBytes(method string, url string, data ...interface{}) []byte {
 	return NewClient().RequestBytes(method, url, data...)
+}
+
+// GetVar sends a GET request, retrieves and converts the result content to specified pointer.
+// The parameter <pointer> can be type of: struct/*struct/**struct/[]struct/[]*struct/*[]struct, et
+func GetVar(url string, data ...interface{}) *gvar.Var {
+	return RequestVar("GET", url, data...)
+}
+
+// PutVar sends a PUT request, retrieves and converts the result content to specified pointer.
+// The parameter <pointer> can be type of: struct/*struct/**struct/[]struct/[]*struct/*[]struct, et
+func PutVar(url string, data ...interface{}) *gvar.Var {
+	return RequestVar("PUT", url, data...)
+}
+
+// PostVar sends a POST request, retrieves and converts the result content to specified pointer.
+// The parameter <pointer> can be type of: struct/*struct/**struct/[]struct/[]*struct/*[]struct, et
+func PostVar(url string, data ...interface{}) *gvar.Var {
+	return RequestVar("POST", url, data...)
+}
+
+// DeleteVar sends a DELETE request, retrieves and converts the result content to specified pointer.
+// The parameter <pointer> can be type of: struct/*struct/**struct/[]struct/[]*struct/*[]struct, et
+func DeleteVar(url string, data ...interface{}) *gvar.Var {
+	return RequestVar("DELETE", url, data...)
+}
+
+// HeadVar sends a HEAD request, retrieves and converts the result content to specified pointer.
+// The parameter <pointer> can be type of: struct/*struct/**struct/[]struct/[]*struct/*[]struct, et
+func HeadVar(url string, data ...interface{}) *gvar.Var {
+	return RequestVar("HEAD", url, data...)
+}
+
+// PatchVar sends a PATCH request, retrieves and converts the result content to specified pointer.
+// The parameter <pointer> can be type of: struct/*struct/**struct/[]struct/[]*struct/*[]struct, et
+func PatchVar(url string, data ...interface{}) *gvar.Var {
+	return RequestVar("PATCH", url, data...)
+}
+
+// ConnectVar sends a CONNECT request, retrieves and converts the result content to specified pointer.
+// The parameter <pointer> can be type of: struct/*struct/**struct/[]struct/[]*struct/*[]struct, et
+func ConnectVar(url string, data ...interface{}) *gvar.Var {
+	return RequestVar("CONNECT", url, data...)
+}
+
+// OptionsVar sends a OPTIONS request, retrieves and converts the result content to specified pointer.
+// The parameter <pointer> can be type of: struct/*struct/**struct/[]struct/[]*struct/*[]struct, et
+func OptionsVar(url string, data ...interface{}) *gvar.Var {
+	return RequestVar("OPTIONS", url, data...)
+}
+
+// TraceVar sends a TRACE request, retrieves and converts the result content to specified pointer.
+// The parameter <pointer> can be type of: struct/*struct/**struct/[]struct/[]*struct/*[]struct, et
+func TraceVar(url string, data ...interface{}) *gvar.Var {
+	return RequestVar("TRACE", url, data...)
+}
+
+// RequestVar sends request using given HTTP method and data, retrieves converts the result
+// to specified pointer. It reads and closes the response object internally automatically.
+// The parameter <pointer> can be type of: struct/*struct/**struct/[]struct/[]*struct/*[]struct, et
+func RequestVar(method string, url string, data ...interface{}) *gvar.Var {
+	response, err := DoRequest(method, url, data...)
+	if err != nil {
+		return gvar.New(nil)
+	}
+	defer response.Close()
+	return gvar.New(response.ReadAll())
 }

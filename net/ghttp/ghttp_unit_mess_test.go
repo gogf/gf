@@ -17,7 +17,7 @@ import (
 )
 
 func Test_GetUrl(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/url", func(r *ghttp.Request) {
 		r.Response.Write(r.GetUrl())
@@ -28,12 +28,12 @@ func Test_GetUrl(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		prefix := fmt.Sprintf("http://127.0.0.1:%d", p)
 		client := ghttp.NewClient()
 		client.SetBrowserMode(true)
 		client.SetPrefix(prefix)
 
-		gtest.Assert(client.GetContent("/url"), prefix+"/url")
+		t.Assert(client.GetContent("/url"), prefix+"/url")
 	})
 }

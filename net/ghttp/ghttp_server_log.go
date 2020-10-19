@@ -12,16 +12,12 @@ import (
 	"github.com/gogf/gf/os/glog"
 )
 
-const (
-	gPATH_FILTER_KEY = "github.com/gogf/gf/"
-)
-
 // Logger returns the logger of the server.
 func (s *Server) Logger() *glog.Logger {
 	return s.config.Logger
 }
 
-// 处理服务错误信息，主要是panic，http请求的status由access log进行管理
+// handleAccessLog handles the access logging for server.
 func (s *Server) handleAccessLog(r *Request) {
 	if !s.IsAccessLogEnabled() {
 		return
@@ -41,34 +37,34 @@ func (s *Server) handleAccessLog(r *Request) {
 		)
 }
 
-// 处理服务错误信息，主要是panic，http请求的status由access log进行管理
+// handleErrorLog handles the error logging for server.
 func (s *Server) handleErrorLog(err error, r *Request) {
-	// 错误输出默认是开启的
+	// It does nothing if error logging is custom disabled.
 	if !s.IsErrorLogEnabled() {
 		return
 	}
 
-	// 错误日志信息
 	scheme := "http"
 	if r.TLS != nil {
 		scheme = "https"
 	}
-	content := fmt.Sprintf(`%d, "%s %s %s %s %s" %.3f, %s, "%s", "%s"`,
+	content := fmt.Sprintf(
+		`%d "%s %s %s %s %s" %.3f, %s, "%s", "%s"`,
 		r.Response.Status, r.Method, scheme, r.Host, r.URL.String(), r.Proto,
 		float64(r.LeaveTime-r.EnterTime)/1000,
 		r.GetClientIp(), r.Referer(), r.UserAgent(),
 	)
-	if stack := gerror.Stack(err); stack != "" {
-		content += "\nStack:\n" + stack
-		s.config.Logger.File(s.config.AccessLogPattern).
-			Stack(false).
-			Stdout(s.config.LogStdout).
-			Error(content)
-		return
+	if s.config.ErrorStack {
+		if stack := gerror.Stack(err); stack != "" {
+			content += "\nStack:\n" + stack
+		} else {
+			content += ", " + err.Error()
+		}
+	} else {
+		content += ", " + err.Error()
 	}
-	s.Logger().File(s.config.AccessLogPattern).
-		Stack(s.config.ErrorStack).
-		StackWithFilter(gPATH_FILTER_KEY).
+	s.config.Logger.
+		File(s.config.ErrorLogPattern).
 		Stdout(s.config.LogStdout).
-		Error(content)
+		Print(content)
 }

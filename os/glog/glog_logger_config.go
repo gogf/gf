@@ -8,38 +8,53 @@ package glog
 
 import (
 	"errors"
+	"fmt"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/gutil"
 	"io"
 	"strings"
+	"time"
 )
 
 // Config is the configuration object for logger.
 type Config struct {
-	Writer      io.Writer // Customized io.Writer.
-	Flags       int       // Extra flags for logging output features.
-	Path        string    // Logging directory path.
-	File        string    // Format for logging file.
-	Level       int       // Output level.
-	Prefix      string    // Prefix string for every logging content.
-	StSkip      int       // Skip count for stack.
-	StStatus    int       // Stack status(1: enabled - default; 0: disabled)
-	StFilter    string    // Stack string filter.
-	HeaderPrint bool      `c:"header"` // Print header or not(true in default).
-	StdoutPrint bool      `c:"stdout"` // Output to stdout or not(true in default).
+	Writer               io.Writer      // Customized io.Writer.
+	Flags                int            // Extra flags for logging output features.
+	Path                 string         // Logging directory path.
+	File                 string         // Format for logging file.
+	Level                int            // Output level.
+	Prefix               string         // Prefix string for every logging content.
+	StSkip               int            // Skip count for stack.
+	StStatus             int            // Stack status(1: enabled - default; 0: disabled)
+	StFilter             string         // Stack string filter.
+	CtxKeys              []interface{}  // Context keys for logging, which is used for value retrieving from context.
+	HeaderPrint          bool           `c:"header"` // Print header or not(true in default).
+	StdoutPrint          bool           `c:"stdout"` // Output to stdout or not(true in default).
+	LevelPrefixes        map[int]string // Logging level to its prefix string mapping.
+	RotateSize           int64          // Rotate the logging file if its size > 0 in bytes.
+	RotateExpire         time.Duration  // Rotate the logging file if its mtime exceeds this duration.
+	RotateBackupLimit    int            // Max backup for rotated files, default is 0, means no backups.
+	RotateBackupExpire   time.Duration  // Max expire for rotated files, which is 0 in default, means no expiration.
+	RotateBackupCompress int            // Compress level for rotated files using gzip algorithm. It's 0 in default, means no compression.
+	RotateCheckInterval  time.Duration  // Asynchronizely checks the backups and expiration at intervals. It's 1 hour in default.
 }
 
 // DefaultConfig returns the default configuration for logger.
 func DefaultConfig() Config {
 	c := Config{
-		File:        gDEFAULT_FILE_FORMAT,
-		Flags:       F_TIME_STD,
-		Level:       LEVEL_ALL,
-		StStatus:    1,
-		HeaderPrint: true,
-		StdoutPrint: true,
+		File:                gDEFAULT_FILE_FORMAT,
+		Flags:               F_TIME_STD,
+		Level:               LEVEL_ALL,
+		StStatus:            1,
+		HeaderPrint:         true,
+		StdoutPrint:         true,
+		LevelPrefixes:       make(map[int]string, len(defaultLevelPrefixes)),
+		RotateCheckInterval: time.Hour,
+	}
+	for k, v := range defaultLevelPrefixes {
+		c.LevelPrefixes[k] = v
 	}
 	if !defaultDebug {
 		c.Level = c.Level & ^LEVEL_DEBU
@@ -57,7 +72,7 @@ func (l *Logger) SetConfig(config Config) error {
 			return err
 		}
 	}
-	intlog.Print(l.config)
+	intlog.Printf("SetConfig: %+v", l.config)
 	return nil
 }
 
@@ -66,34 +81,31 @@ func (l *Logger) SetConfigWithMap(m map[string]interface{}) error {
 	if m == nil || len(m) == 0 {
 		return errors.New("configuration cannot be empty")
 	}
+	// The m now is a shallow copy of m.
+	// A little tricky, isn't it?
+	m = gutil.MapCopy(m)
 	// Change string configuration to int value for level.
-	levelKey, levelValue := gutil.MapPossibleItemByKey(m, "level")
+	levelKey, levelValue := gutil.MapPossibleItemByKey(m, "Level")
 	if levelValue != nil {
-		switch gconv.String(levelValue) {
-		case "all":
-			m[levelKey] = LEVEL_ALL
-		case "dev":
-			m[levelKey] = LEVEL_DEV
-		case "prod":
-			m[levelKey] = LEVEL_PROD
+		if level, ok := levelStringMap[strings.ToUpper(gconv.String(levelValue))]; ok {
+			m[levelKey] = level
+		} else {
+			return errors.New(fmt.Sprintf(`invalid level string: %v`, levelValue))
 		}
 	}
-	config := DefaultConfig()
-	err := gconv.Struct(m, &config)
+	// Change string configuration to int value for file rotation size.
+	rotateSizeKey, rotateSizeValue := gutil.MapPossibleItemByKey(m, "RotateSize")
+	if rotateSizeValue != nil {
+		m[rotateSizeKey] = gfile.StrToSize(gconv.String(rotateSizeValue))
+		if m[rotateSizeKey] == -1 {
+			return errors.New(fmt.Sprintf(`invalid rotate size: %v`, rotateSizeValue))
+		}
+	}
+	err := gconv.Struct(m, &l.config)
 	if err != nil {
 		return err
 	}
-	return l.SetConfig(config)
-}
-
-// SetLevel sets the logging level.
-func (l *Logger) SetLevel(level int) {
-	l.config.Level = level
-}
-
-// GetLevel returns the logging level value.
-func (l *Logger) GetLevel() int {
-	return l.config.Level
+	return l.SetConfig(l.config)
 }
 
 // SetDebug enables/disables the debug level for logger.
@@ -142,6 +154,19 @@ func (l *Logger) SetStackSkip(skip int) {
 // SetStackFilter sets the stack filter from the end point.
 func (l *Logger) SetStackFilter(filter string) {
 	l.config.StFilter = filter
+}
+
+// SetCtxKeys sets the context keys for logger. The keys is used for retrieving values
+// from context and printing them to logging content.
+//
+// Note that multiple calls of this function will overwrite the previous set context keys.
+func (l *Logger) SetCtxKeys(keys ...interface{}) {
+	l.config.CtxKeys = keys
+}
+
+// GetCtxKeys retrieves and returns the context keys for logging.
+func (l *Logger) GetCtxKeys() []interface{} {
+	return l.config.CtxKeys
 }
 
 // SetWriter sets the customized logging <writer> for logging.

@@ -7,32 +7,30 @@
 package gvalid
 
 import (
-	"regexp"
-	"strconv"
-	"strings"
-
-	"github.com/gogf/gf/container/gmap"
+	"errors"
 	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/net/gipv4"
 	"github.com/gogf/gf/net/gipv6"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/util/gconv"
+	"regexp"
+	"strconv"
+	"strings"
 )
 
 const (
-	// 单条规则匹配正则
+	// regular expression pattern for single validation rule.
 	gSINGLE_RULE_PATTERN = `^([\w-]+):{0,1}(.*)`
 )
 
 var (
-	// 默认错误消息管理对象(并发安全)
-	errorMsgMap = gmap.NewStrStrMap(true)
-
-	// 单规则正则对象，这里使用包内部变量存储，不需要多次解析
+	// regular expression object for single rule
+	// which is compiled just once and of repeatable usage.
 	ruleRegex, _ = regexp.Compile(gSINGLE_RULE_PATTERN)
 
-	// 即使参数为空(nil|"")也需要校验的规则，主要是必需规则及关联规则
+	// mustCheckRulesEvenValueEmpty specifies some rules that must be validated
+	// even the value is empty (nil or empty).
 	mustCheckRulesEvenValueEmpty = map[string]struct{}{
 		"required":             {},
 		"required-if":          {},
@@ -41,13 +39,13 @@ var (
 		"required-with-all":    {},
 		"required-without":     {},
 		"required-without-all": {},
-		"same":                 {},
-		"different":            {},
-		"in":                   {},
-		"not-in":               {},
-		"regex":                {},
+		//"same":                 {},
+		//"different":            {},
+		//"in":                   {},
+		//"not-in":               {},
+		//"regex":                {},
 	}
-	// 所有支持的校验规则
+	// allSupportedRules defines all supported rules that is used for quick checks.
 	allSupportedRules = map[string]struct{}{
 		"required":             {},
 		"required-if":          {},
@@ -66,8 +64,8 @@ var (
 		"password2":            {},
 		"password3":            {},
 		"postcode":             {},
-		"id-number":            {},
-		"luhn":                 {},
+		"resident-id":          {},
+		"bank-card":            {},
 		"qq":                   {},
 		"ip":                   {},
 		"ipv4":                 {},
@@ -91,7 +89,7 @@ var (
 		"not-in":               {},
 		"regex":                {},
 	}
-	// 布尔Map
+	// boolMap defines the boolean values.
 	boolMap = map[string]struct{}{
 		"1":     {},
 		"true":  {},
@@ -105,48 +103,64 @@ var (
 	}
 )
 
-// 检测单条数据的规则:
+// Check checks single value with specified rules.
+// It returns nil if successful validation.
 //
-// 1. value为需要校验的数据，可以为任意基本数据类型；
-//
-// 2. msgs为自定义错误信息，由于同一条数据的校验规则可能存在多条，为方便调用，参数类型支持 string/map/struct/*struct,
-// 允许传递多个自定义的错误信息，如果类型为string，那么中间使用"|"符号分隔多个自定义错误；
-//
-// 3. params参数为联合校验参数，支持任意的map/struct/*struct类型，对于需要联合校验的规则有效，如：required-*、same、different；
-func Check(value interface{}, rules string, msgs interface{}, params ...interface{}) *Error {
+// The parameter <value> can be any type of variable, which will be converted to string
+// for validation.
+// The parameter <rules> can be one or more rules, multiple rules joined using char '|'.
+// The parameter <messages> specifies the custom error messages, which can be type of:
+// string/map/struct/*struct.
+// The optional parameter <params> specifies the extra validation parameters for some rules
+// like: required-*、same、different, etc.
+func Check(value interface{}, rules string, messages interface{}, params ...interface{}) *Error {
+	return doCheck("", value, rules, messages, params...)
+}
+
+// doCheck does the really rules validation for single key-value.
+func doCheck(key string, value interface{}, rules string, messages interface{}, params ...interface{}) *Error {
 	if rules == "" {
 		return nil
 	}
-	// 内部会将参数全部转换为字符串类型进行校验
-	val := strings.TrimSpace(gconv.String(value))
-	data := make(map[string]string)
-	errorMsgs := make(map[string]string)
+	// It converts value to string and then does the validation.
+	var (
+		// Do not trim it as the space is also part of the value.
+		data          = make(map[string]string)
+		errorMsgArray = make(map[string]string)
+	)
 	if len(params) > 0 {
 		for k, v := range gconv.Map(params[0]) {
 			data[k] = gconv.String(v)
 		}
 	}
-	// 自定义错误消息处理
-	msgArray := make([]string, 0)
-	customMsgMap := make(map[string]string)
-	switch v := msgs.(type) {
+	// Custom error messages handling.
+	var (
+		msgArray     = make([]string, 0)
+		customMsgMap = make(map[string]string)
+	)
+	switch v := messages.(type) {
 	case string:
 		msgArray = strings.Split(v, "|")
 	default:
-		for k, v := range gconv.Map(msgs) {
+		for k, v := range gconv.Map(messages) {
 			customMsgMap[k] = gconv.String(v)
 		}
 	}
+	// Handle the char '|' in the rule,
+	// which makes this rule separated into multiple rules.
 	ruleItems := strings.Split(strings.TrimSpace(rules), "|")
-	// 规则项预处理, 主要解决规则中存在的"|"关键字符号
 	for i := 0; ; {
 		array := strings.Split(ruleItems[i], ":")
-		if _, ok := allSupportedRules[array[0]]; !ok {
+		_, ok := allSupportedRules[array[0]]
+		if !ok && customRuleFuncMap[array[0]] == nil {
 			if i > 0 && ruleItems[i-1][:5] == "regex" {
 				ruleItems[i-1] += "|" + ruleItems[i]
 				ruleItems = append(ruleItems[:i], ruleItems[i+1:]...)
 			} else {
-				return newErrorStr("parse_error", "invalid rules:"+rules)
+				return newErrorStr(
+					"invalid_rules",
+					"invalid rules: "+rules,
+				)
 			}
 		} else {
 			i++
@@ -156,553 +170,341 @@ func Check(value interface{}, rules string, msgs interface{}, params ...interfac
 		}
 	}
 	for index := 0; index < len(ruleItems); {
-		item := ruleItems[index]
-		results := ruleRegex.FindStringSubmatch(item)
-		ruleKey := strings.TrimSpace(results[1])
-		ruleVal := strings.TrimSpace(results[2])
-		match := false
+		var (
+			err         error
+			match       = false
+			results     = ruleRegex.FindStringSubmatch(ruleItems[index])
+			ruleKey     = strings.TrimSpace(results[1])
+			rulePattern = strings.TrimSpace(results[2])
+		)
 		if len(msgArray) > index {
 			customMsgMap[ruleKey] = strings.TrimSpace(msgArray[index])
 		}
-		switch ruleKey {
-		// 必须字段
-		case "required":
-			fallthrough
-		case "required-if":
-			fallthrough
-		case "required-unless":
-			fallthrough
-		case "required-with":
-			fallthrough
-		case "required-with-all":
-			fallthrough
-		case "required-without":
-			fallthrough
-		case "required-without-all":
-			match = checkRequired(val, ruleKey, ruleVal, data)
 
-		// 长度范围
-		case "length":
-			fallthrough
-		case "min-length":
-			fallthrough
-		case "max-length":
-			if msg := checkLength(val, ruleKey, ruleVal, customMsgMap); msg != "" {
-				errorMsgs[ruleKey] = msg
+		if f, ok := customRuleFuncMap[ruleKey]; ok {
+			// It checks custom validation rules with most priority.
+			var (
+				dataMap map[string]interface{}
+				message = getErrorMessageByRule(ruleKey, customMsgMap)
+			)
+			if len(params) > 0 {
+				dataMap = gconv.Map(params[0])
+			}
+			if err := f(ruleItems[index], value, message, dataMap); err != nil {
+				match = false
+				errorMsgArray[ruleKey] = err.Error()
 			} else {
 				match = true
 			}
-
-		// 大小范围
-		case "min":
-			fallthrough
-		case "max":
-			fallthrough
-		case "between":
-			if msg := checkSize(val, ruleKey, ruleVal, customMsgMap); msg != "" {
-				errorMsgs[ruleKey] = msg
-			} else {
-				match = true
+		} else {
+			// It checks build-in validation rules if there's no custom rule.
+			match, err = doCheckBuildInRules(index, value, ruleKey, rulePattern, ruleItems, data, customMsgMap)
+			if !match && err != nil {
+				errorMsgArray[ruleKey] = err.Error()
 			}
-
-		// 自定义正则判断
-		case "regex":
-			// 需要判断是否被|符号截断，如果是，那么需要进行整合
-			for i := index + 1; i < len(ruleItems); i++ {
-				// 判断下一个规则是否合法，不合法那么和当前正则规则进行整合
-				if !gregex.IsMatchString(gSINGLE_RULE_PATTERN, ruleItems[i]) {
-					ruleVal += "|" + ruleItems[i]
-					index++
-				}
-			}
-			match = gregex.IsMatchString(ruleVal, val)
-
-		// 日期格式，
-		case "date":
-			// 使用标准日期格式检查，但是日期之间必须带连接符号
-			if _, err := gtime.StrToTime(val); err == nil {
-				match = true
-				break
-			}
-			// 检查是否不带日期连接符号的格式
-			if _, err := gtime.StrToTime(val, "Ymd"); err == nil {
-				match = true
-				break
-			}
-
-		// 日期格式，需要给定日期格式
-		case "date-format":
-			if _, err := gtime.StrToTimeFormat(val, ruleVal); err == nil {
-				match = true
-			}
-
-		// 两字段值应相同(非敏感字符判断，非类型判断)
-		case "same":
-			if v, ok := data[ruleVal]; ok {
-				if strings.Compare(val, v) == 0 {
-					match = true
-				}
-			}
-
-		// 两字段值不应相同(非敏感字符判断，非类型判断)
-		case "different":
-			match = true
-			if v, ok := data[ruleVal]; ok {
-				if strings.Compare(val, v) == 0 {
-					match = false
-				}
-			}
-
-		// 字段值应当在指定范围中
-		case "in":
-			array := strings.Split(ruleVal, ",")
-			for _, v := range array {
-				if strings.Compare(val, strings.TrimSpace(v)) == 0 {
-					match = true
-					break
-				}
-			}
-
-		// 字段值不应当在指定范围中
-		case "not-in":
-			match = true
-			array := strings.Split(ruleVal, ",")
-			for _, v := range array {
-				if strings.Compare(val, strings.TrimSpace(v)) == 0 {
-					match = false
-					break
-				}
-			}
-
-		/*
-		 * 验证所给手机号码是否符合手机号的格式.
-		 * 移动: 134、135、136、137、138、139、150、151、152、157、158、159、182、183、184、187、188、178(4G)、147(上网卡)；
-		 * 联通: 130、131、132、155、156、185、186、176(4G)、145(上网卡)、175；
-		 * 电信: 133、153、180、181、189 、177(4G)；
-		 * 卫星通信:  1349
-		 * 虚拟运营商: 170、173
-		 * 2018新增: 16x, 19x
-		 */
-		case "phone":
-			match = gregex.IsMatchString(`^13[\d]{9}$|^14[5,7]{1}\d{8}$|^15[^4]{1}\d{8}$|^16[\d]{9}$|^17[0,3,5,6,7,8]{1}\d{8}$|^18[\d]{9}$|^19[\d]{9}$`, val)
-
-		// 国内座机电话号码："XXXX-XXXXXXX"、"XXXX-XXXXXXXX"、"XXX-XXXXXXX"、"XXX-XXXXXXXX"、"XXXXXXX"、"XXXXXXXX"
-		case "telephone":
-			match = gregex.IsMatchString(`^((\d{3,4})|\d{3,4}-)?\d{7,8}$`, val)
-
-		// 腾讯QQ号，从10000开始
-		case "qq":
-			match = gregex.IsMatchString(`^[1-9][0-9]{4,}$`, val)
-
-		// 中国邮政编码
-		case "postcode":
-			match = gregex.IsMatchString(`^\d{6}$`, val)
-
-		/*
-		   公民身份证号
-		   xxxxxx yyyy MM dd 375 0     十八位
-		   xxxxxx   yy MM dd  75 0     十五位
-
-		   地区：[1-9]\d{5}
-		   年的前两位：(18|19|([23]\d))      1800-2399
-		   年的后两位：\d{2}
-		   月份：((0[1-9])|(10|11|12))
-		   天数：(([0-2][1-9])|10|20|30|31) 闰年不能禁止29+
-
-		   三位顺序码：\d{3}
-		   两位顺序码：\d{2}
-		   校验码：   [0-9Xx]
-
-		   十八位：^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$
-		   十五位：^[1-9]\d{5}\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}$
-
-		   总：
-		   (^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$)|(^[1-9]\d{5}\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}$)
-		*/
-		case "id-number":
-			match = checkIDNumber(val)
-
-		// LUHN规则(银行卡号验证规则)
-		case "luhn":
-			match = checkLuHn(val)
-
-		// 通用帐号规则(字母开头，只能包含字母、数字和下划线，长度在6~18之间)
-		case "passport":
-			match = gregex.IsMatchString(`^[a-zA-Z]{1}\w{5,17}$`, val)
-
-		// 通用密码(任意可见字符，长度在6~18之间)
-		case "password":
-			match = gregex.IsMatchString(`^[\w\S]{6,18}$`, val)
-
-		// 中等强度密码(在弱密码的基础上，必须包含大小写字母和数字)
-		case "password2":
-			if gregex.IsMatchString(`^[\w\S]{6,18}$`, val) && gregex.IsMatchString(`[a-z]+`, val) && gregex.IsMatchString(`[A-Z]+`, val) && gregex.IsMatchString(`\d+`, val) {
-				match = true
-			}
-
-		// 强等强度密码(在弱密码的基础上，必须包含大小写字母、数字和特殊字符)
-		case "password3":
-			if gregex.IsMatchString(`^[\w\S]{6,18}$`, val) && gregex.IsMatchString(`[a-z]+`, val) && gregex.IsMatchString(`[A-Z]+`, val) && gregex.IsMatchString(`\d+`, val) && gregex.IsMatchString(`[^a-zA-Z0-9]+`, val) {
-				match = true
-			}
-
-		// json
-		case "json":
-			if _, err := gjson.Decode([]byte(val)); err == nil {
-				match = true
-			}
-
-		// 整数
-		case "integer":
-			if _, err := strconv.Atoi(val); err == nil {
-				match = true
-			}
-
-		// 小数
-		case "float":
-			if _, err := strconv.ParseFloat(val, 10); err == nil {
-				match = true
-			}
-
-		// 布尔值(1,true,on,yes:true | 0,false,off,no,"":false)
-		case "boolean":
-			match = false
-			if _, ok := boolMap[strings.ToLower(val)]; ok {
-				match = true
-			}
-
-		// 邮件
-		case "email":
-			match = gregex.IsMatchString(`^[a-zA-Z0-9_\-\.]+@[a-zA-Z0-9_\-]+(\.[a-zA-Z0-9_\-]+)+$`, val)
-
-		// URL
-		case "url":
-			match = gregex.IsMatchString(`(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]`, val)
-
-		// domain
-		case "domain":
-			match = gregex.IsMatchString(`^([0-9a-zA-Z][0-9a-zA-Z-]{0,62}\.)+([0-9a-zA-Z][0-9a-zA-Z-]{0,62})\.?$`, val)
-
-		// IP(IPv4/IPv6)
-		case "ip":
-			match = gipv4.Validate(val) || gipv6.Validate(val)
-
-		// IPv4
-		case "ipv4":
-			match = gipv4.Validate(val)
-
-		// IPv6
-		case "ipv6":
-			match = gipv6.Validate(val)
-
-		// MAC地址
-		case "mac":
-			match = gregex.IsMatchString(`^([0-9A-Fa-f]{2}[\-:]){5}[0-9A-Fa-f]{2}$`, val)
-
-		default:
-			errorMsgs[ruleKey] = "Invalid rule name:" + ruleKey
 		}
 
-		// 错误消息整合
+		// Error message handling.
 		if !match {
-			// 不存在则使用默认的错误信息，
-			// 如果在校验过程中已经设置了错误信息，那么这里便不作处理
-			if _, ok := errorMsgs[ruleKey]; !ok {
-				if msg, ok := customMsgMap[ruleKey]; ok {
-					errorMsgs[ruleKey] = msg
-				} else {
-					errorMsgs[ruleKey] = errorMsgMap.Get(ruleKey)
-				}
+			// It does nothing if the error message for this rule
+			// is already set in previous validation.
+			if _, ok := errorMsgArray[ruleKey]; !ok {
+				errorMsgArray[ruleKey] = getErrorMessageByRule(ruleKey, customMsgMap)
 			}
 		}
 		index++
 	}
-	if len(errorMsgs) > 0 {
+	if len(errorMsgArray) > 0 {
 		return newError([]string{rules}, ErrorMap{
-			// 单条数值校验没有键名
-			"": errorMsgs,
+			key: errorMsgArray,
 		})
 	}
 	return nil
 }
 
-// 判断必须字段
-func checkRequired(value, ruleKey, ruleVal string, params map[string]string) bool {
-	required := false
+func doCheckBuildInRules(
+	index int,
+	value interface{},
+	ruleKey string,
+	rulePattern string,
+	ruleItems []string,
+	dataMap map[string]string,
+	customMsgMap map[string]string,
+) (match bool, err error) {
+	valueStr := gconv.String(value)
 	switch ruleKey {
-	// 必须字段
-	case "required":
-		required = true
+	// Required rules.
+	case
+		"required",
+		"required-if",
+		"required-unless",
+		"required-with",
+		"required-with-all",
+		"required-without",
+		"required-without-all":
+		match = checkRequired(valueStr, ruleKey, rulePattern, dataMap)
 
-	// 必须字段(当任意所给定字段值与所给值相等时)
-	case "required-if":
-		required = false
-		array := strings.Split(ruleVal, ",")
-		// 必须为偶数，才能是键值对匹配
-		if len(array)%2 == 0 {
-			for i := 0; i < len(array); {
-				tk := array[i]
-				tv := array[i+1]
-				if v, ok := params[tk]; ok {
-					if strings.Compare(tv, v) == 0 {
-						required = true
-						break
-					}
-				}
-				i += 2
-			}
+	// Length rules.
+	// It also supports length of unicode string.
+	case
+		"length",
+		"min-length",
+		"max-length":
+		if msg := checkLength(valueStr, ruleKey, rulePattern, customMsgMap); msg != "" {
+			return match, errors.New(msg)
+		} else {
+			match = true
 		}
 
-	// 必须字段(当所给定字段值与所给值都不相等时)
-	case "required-unless":
-		required = true
-		array := strings.Split(ruleVal, ",")
-		// 必须为偶数，才能是键值对匹配
-		if len(array)%2 == 0 {
-			for i := 0; i < len(array); {
-				tk := array[i]
-				tv := array[i+1]
-				if v, ok := params[tk]; ok {
-					if strings.Compare(tv, v) == 0 {
-						required = false
-						break
-					}
-				}
-				i += 2
-			}
+	// Range rules.
+	case
+		"min",
+		"max",
+		"between":
+		if msg := checkRange(valueStr, ruleKey, rulePattern, customMsgMap); msg != "" {
+			return match, errors.New(msg)
+		} else {
+			match = true
 		}
 
-	// 必须字段(当所给定任意字段值不为空时)
-	case "required-with":
-		required = false
-		array := strings.Split(ruleVal, ",")
-		for i := 0; i < len(array); i++ {
-			if params[array[i]] != "" {
-				required = true
+	// Custom regular expression.
+	case "regex":
+		// It here should check the rule as there might be special char '|' in it.
+		for i := index + 1; i < len(ruleItems); i++ {
+			if !gregex.IsMatchString(gSINGLE_RULE_PATTERN, ruleItems[i]) {
+				rulePattern += "|" + ruleItems[i]
+				index++
+			}
+		}
+		match = gregex.IsMatchString(rulePattern, valueStr)
+
+	// Date rules.
+	case "date":
+		// Standard date string, which must contain char '-' or '.'.
+		if _, err := gtime.StrToTime(valueStr); err == nil {
+			match = true
+			break
+		}
+		// Date that not contains char '-' or '.'.
+		if _, err := gtime.StrToTime(valueStr, "Ymd"); err == nil {
+			match = true
+			break
+		}
+
+	// Date rule with specified format.
+	case "date-format":
+		if _, err := gtime.StrToTimeFormat(valueStr, rulePattern); err == nil {
+			match = true
+		} else {
+			var msg string
+			msg = getErrorMessageByRule(ruleKey, customMsgMap)
+			msg = strings.Replace(msg, ":format", rulePattern, -1)
+			return match, errors.New(msg)
+		}
+
+	// Values of two fields should be equal as string.
+	case "same":
+		if v, ok := dataMap[rulePattern]; ok {
+			if strings.Compare(valueStr, v) == 0 {
+				match = true
+			}
+		}
+		if !match {
+			var msg string
+			msg = getErrorMessageByRule(ruleKey, customMsgMap)
+			msg = strings.Replace(msg, ":field", rulePattern, -1)
+			return match, errors.New(msg)
+		}
+
+	// Values of two fields should not be equal as string.
+	case "different":
+		match = true
+		if v, ok := dataMap[rulePattern]; ok {
+			if strings.Compare(valueStr, v) == 0 {
+				match = false
+			}
+		}
+		if !match {
+			var msg string
+			msg = getErrorMessageByRule(ruleKey, customMsgMap)
+			msg = strings.Replace(msg, ":field", rulePattern, -1)
+			return match, errors.New(msg)
+		}
+
+	// Field value should be in range of.
+	case "in":
+		array := strings.Split(rulePattern, ",")
+		for _, v := range array {
+			if strings.Compare(valueStr, strings.TrimSpace(v)) == 0 {
+				match = true
 				break
 			}
 		}
 
-	// 必须字段(当所给定所有字段值都不为空时)
-	case "required-with-all":
-		required = true
-		array := strings.Split(ruleVal, ",")
-		for i := 0; i < len(array); i++ {
-			if params[array[i]] == "" {
-				required = false
+	// Field value should not be in range of.
+	case "not-in":
+		match = true
+		array := strings.Split(rulePattern, ",")
+		for _, v := range array {
+			if strings.Compare(valueStr, strings.TrimSpace(v)) == 0 {
+				match = false
 				break
 			}
 		}
 
-	// 必须字段(当所给定任意字段值为空时)
-	case "required-without":
-		required = false
-		array := strings.Split(ruleVal, ",")
-		for i := 0; i < len(array); i++ {
-			if params[array[i]] == "" {
-				required = true
-				break
-			}
+	// Phone format validation.
+	// 1. China Mobile:
+	//    134, 135, 136, 137, 138, 139, 150, 151, 152, 157, 158, 159, 182, 183, 184, 187, 188,
+	//    178(4G), 147(Net)；
+	//
+	// 2. China Unicom:
+	//    130, 131, 132, 155, 156, 185, 186 ,176(4G), 145(Net), 175
+	//
+	// 3. China Telecom:
+	//    133, 153, 180, 181, 189, 177(4G)
+	//
+	// 4. Satelite:
+	//    1349
+	//
+	// 5. Virtual:
+	//    170, 173
+	//
+	// 6. 2018:
+	//    16x, 19x
+	case "phone":
+		match = gregex.IsMatchString(`^13[\d]{9}$|^14[5,7]{1}\d{8}$|^15[^4]{1}\d{8}$|^16[\d]{9}$|^17[0,3,5,6,7,8]{1}\d{8}$|^18[\d]{9}$|^19[\d]{9}$`, valueStr)
+
+	// Telephone number:
+	// "XXXX-XXXXXXX"
+	// "XXXX-XXXXXXXX"
+	// "XXX-XXXXXXX"
+	// "XXX-XXXXXXXX"
+	// "XXXXXXX"
+	// "XXXXXXXX"
+	case "telephone":
+		match = gregex.IsMatchString(`^((\d{3,4})|\d{3,4}-)?\d{7,8}$`, valueStr)
+
+	// QQ number: from 10000.
+	case "qq":
+		match = gregex.IsMatchString(`^[1-9][0-9]{4,}$`, valueStr)
+
+	// Postcode number.
+	case "postcode":
+		match = gregex.IsMatchString(`^\d{6}$`, valueStr)
+
+	// China resident id number.
+	//
+	// xxxxxx yyyy MM dd 375 0  十八位
+	// xxxxxx   yy MM dd  75 0  十五位
+	//
+	// 地区：     [1-9]\d{5}
+	// 年的前两位：(18|19|([23]\d))  1800-2399
+	// 年的后两位：\d{2}
+	// 月份：     ((0[1-9])|(10|11|12))
+	// 天数：     (([0-2][1-9])|10|20|30|31) 闰年不能禁止29+
+	//
+	// 三位顺序码：\d{3}
+	// 两位顺序码：\d{2}
+	// 校验码：   [0-9Xx]
+	//
+	// 十八位：^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$
+	// 十五位：^[1-9]\d{5}\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}$
+	//
+	// 总：
+	// (^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$)|(^[1-9]\d{5}\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}$)
+	case "resident-id":
+		match = checkResidentId(valueStr)
+
+	// Bank card number using LUHN algorithm.
+	case "bank-card":
+		match = checkLuHn(valueStr)
+
+	// Universal passport format rule:
+	// Starting with letter, containing only numbers or underscores, length between 6 and 18.
+	case "passport":
+		match = gregex.IsMatchString(`^[a-zA-Z]{1}\w{5,17}$`, valueStr)
+
+	// Universal password format rule1:
+	// Containing any visible chars, length between 6 and 18.
+	case "password":
+		match = gregex.IsMatchString(`^[\w\S]{6,18}$`, valueStr)
+
+	// Universal password format rule2:
+	// Must meet password rule1, must contain lower and upper letters and numbers.
+	case "password2":
+		if gregex.IsMatchString(`^[\w\S]{6,18}$`, valueStr) &&
+			gregex.IsMatchString(`[a-z]+`, valueStr) &&
+			gregex.IsMatchString(`[A-Z]+`, valueStr) &&
+			gregex.IsMatchString(`\d+`, valueStr) {
+			match = true
 		}
 
-	// 必须字段(当所给定所有字段值都为空时)
-	case "required-without-all":
-		required = true
-		array := strings.Split(ruleVal, ",")
-		for i := 0; i < len(array); i++ {
-			if params[array[i]] != "" {
-				required = false
-				break
-			}
+	// Universal password format rule3:
+	// Must meet password rule1, must contain lower and upper letters, numbers and special chars.
+	case "password3":
+		if gregex.IsMatchString(`^[\w\S]{6,18}$`, valueStr) &&
+			gregex.IsMatchString(`[a-z]+`, valueStr) &&
+			gregex.IsMatchString(`[A-Z]+`, valueStr) &&
+			gregex.IsMatchString(`\d+`, valueStr) &&
+			gregex.IsMatchString(`[^a-zA-Z0-9]+`, valueStr) {
+			match = true
 		}
+
+	// Json.
+	case "json":
+		if _, err := gjson.Decode([]byte(valueStr)); err == nil {
+			match = true
+		}
+
+	// Integer.
+	case "integer":
+		if _, err := strconv.Atoi(valueStr); err == nil {
+			match = true
+		}
+
+	// Float.
+	case "float":
+		if _, err := strconv.ParseFloat(valueStr, 10); err == nil {
+			match = true
+		}
+
+	// Boolean(1,true,on,yes:true | 0,false,off,no,"":false).
+	case "boolean":
+		match = false
+		if _, ok := boolMap[strings.ToLower(valueStr)]; ok {
+			match = true
+		}
+
+	// Email.
+	case "email":
+		match = gregex.IsMatchString(`^[a-zA-Z0-9_\-\.]+@[a-zA-Z0-9_\-]+(\.[a-zA-Z0-9_\-]+)+$`, valueStr)
+
+	// URL
+	case "url":
+		match = gregex.IsMatchString(`(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]`, valueStr)
+
+	// Domain
+	case "domain":
+		match = gregex.IsMatchString(`^([0-9a-zA-Z][0-9a-zA-Z\-]{0,62}\.)+([a-zA-Z]{0,62})$`, valueStr)
+
+	// IP(IPv4/IPv6).
+	case "ip":
+		match = gipv4.Validate(valueStr) || gipv6.Validate(valueStr)
+
+	// IPv4.
+	case "ipv4":
+		match = gipv4.Validate(valueStr)
+
+	// IPv6.
+	case "ipv6":
+		match = gipv6.Validate(valueStr)
+
+	// MAC.
+	case "mac":
+		match = gregex.IsMatchString(`^([0-9A-Fa-f]{2}[\-:]){5}[0-9A-Fa-f]{2}$`, valueStr)
+
+	default:
+		return match, errors.New("Invalid rule name: " + ruleKey)
 	}
-	if required {
-		return !(value == "")
-	} else {
-		return true
-	}
-}
-
-// 对字段值长度进行检测
-func checkLength(value, ruleKey, ruleVal string, customMsgMap map[string]string) string {
-	msg := ""
-	switch ruleKey {
-	// 长度范围
-	case "length":
-		array := strings.Split(ruleVal, ",")
-		min := 0
-		max := 0
-		if len(array) > 0 {
-			if v, err := strconv.Atoi(strings.TrimSpace(array[0])); err == nil {
-				min = v
-			}
-		}
-		if len(array) > 1 {
-			if v, err := strconv.Atoi(strings.TrimSpace(array[1])); err == nil {
-				max = v
-			}
-		}
-		if len(value) < min || len(value) > max {
-			if v, ok := customMsgMap[ruleKey]; !ok {
-				msg = errorMsgMap.Get(ruleKey)
-			} else {
-				msg = v
-			}
-			msg = strings.Replace(msg, ":min", strconv.Itoa(min), -1)
-			msg = strings.Replace(msg, ":max", strconv.Itoa(max), -1)
-			return msg
-		}
-
-	// 最小长度
-	case "min-length":
-		if min, err := strconv.Atoi(ruleVal); err == nil {
-			if len(value) < min {
-				if v, ok := customMsgMap[ruleKey]; !ok {
-					msg = errorMsgMap.Get(ruleKey)
-				} else {
-					msg = v
-				}
-				msg = strings.Replace(msg, ":min", strconv.Itoa(min), -1)
-			}
-		} else {
-			msg = "校验参数[" + ruleVal + "]应当为整数类型"
-		}
-
-	// 最大长度
-	case "max-length":
-		if max, err := strconv.Atoi(ruleVal); err == nil {
-			if len(value) > max {
-				if v, ok := customMsgMap[ruleKey]; !ok {
-					msg = errorMsgMap.Get(ruleKey)
-				} else {
-					msg = v
-				}
-				msg = strings.Replace(msg, ":max", strconv.Itoa(max), -1)
-			}
-		} else {
-			msg = "校验参数[" + ruleVal + "]应当为整数类型"
-		}
-	}
-	return msg
-}
-
-// 对字段值大小进行检测
-func checkSize(value, ruleKey, ruleVal string, customMsgMap map[string]string) string {
-	msg := ""
-	switch ruleKey {
-	// 大小范围
-	case "between":
-		array := strings.Split(ruleVal, ",")
-		min := float64(0)
-		max := float64(0)
-		if len(array) > 0 {
-			if v, err := strconv.ParseFloat(strings.TrimSpace(array[0]), 10); err == nil {
-				min = v
-			}
-		}
-		if len(array) > 1 {
-			if v, err := strconv.ParseFloat(strings.TrimSpace(array[1]), 10); err == nil {
-				max = v
-			}
-		}
-		if v, err := strconv.ParseFloat(value, 10); err == nil {
-			if v < min || v > max {
-				if v, ok := customMsgMap[ruleKey]; !ok {
-					msg = errorMsgMap.Get(ruleKey)
-				} else {
-					msg = v
-				}
-				msg = strings.Replace(msg, ":min", strconv.FormatFloat(min, 'f', -1, 64), -1)
-				msg = strings.Replace(msg, ":max", strconv.FormatFloat(max, 'f', -1, 64), -1)
-			}
-		} else {
-			msg = "输入参数[" + value + "]应当为数字类型"
-		}
-
-	// 最小值
-	case "min":
-		if min, err := strconv.ParseFloat(ruleVal, 10); err == nil {
-			if v, err := strconv.ParseFloat(value, 10); err == nil {
-				if v < min {
-					if v, ok := customMsgMap[ruleKey]; !ok {
-						msg = errorMsgMap.Get(ruleKey)
-					} else {
-						msg = v
-					}
-					msg = strings.Replace(msg, ":min", strconv.FormatFloat(min, 'f', -1, 64), -1)
-				}
-			} else {
-				msg = "输入参数[" + value + "]应当为数字类型"
-			}
-		} else {
-			msg = "校验参数[" + ruleVal + "]应当为数字类型"
-		}
-
-	// 最大值
-	case "max":
-		if max, err := strconv.ParseFloat(ruleVal, 10); err == nil {
-			if v, err := strconv.ParseFloat(value, 10); err == nil {
-				if v > max {
-					if v, ok := customMsgMap[ruleKey]; !ok {
-						msg = errorMsgMap.Get(ruleKey)
-					} else {
-						msg = v
-					}
-					msg = strings.Replace(msg, ":max", strconv.FormatFloat(max, 'f', -1, 64), -1)
-				}
-			} else {
-				msg = "输入参数[" + value + "]应当为数字类型"
-			}
-		} else {
-			msg = "校验参数[" + ruleVal + "]应当为数字类型"
-		}
-	}
-	return msg
-}
-
-// 身份证号验证
-func checkIDNumber(value string) bool {
-	value = strings.ToUpper(strings.TrimSpace(value))
-	// 18位长检测
-	if len(value) != 18 {
-		return false
-	}
-	// 加权因子
-	weightFactor := [...]int{7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2}
-	// 校验码
-	checkCode := [...]byte{'1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2'}
-	last := value[17]
-	num := 0
-	for i := 0; i < 17; i++ {
-		tmp, err := strconv.Atoi(string(value[i]))
-		if err != nil {
-			return false
-		}
-		num = num + tmp*weightFactor[i]
-	}
-	resisue := num % 11
-	if checkCode[resisue] != last {
-		return false
-	}
-
-	return gregex.IsMatchString(`(^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$)|(^[1-9]\d{5}\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}$)`, value)
-}
-
-// LuHn算法验证(银行卡号校验算法)
-func checkLuHn(value string) bool {
-	var sum = 0
-	var nDigits = len(value)
-	var parity = nDigits % 2
-
-	for i := 0; i < nDigits; i++ {
-		var digit = int(value[i] - 48)
-		if i%2 == parity {
-			digit *= 2
-			if digit > 9 {
-				digit -= 9
-			}
-		}
-		sum += digit
-	}
-	return sum%10 == 0
+	return match, nil
 }

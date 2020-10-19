@@ -6,17 +6,22 @@
 
 // Package gmode provides release mode management for project.
 //
-// It uses string to mark the mode instead of integer, which is easy for configuration.
+// It uses string to mark the mode instead of integer, which is convenient for configuration.
 package gmode
 
-import "github.com/gogf/gf/os/gfile"
+import (
+	"github.com/gogf/gf/debug/gdebug"
+	"github.com/gogf/gf/internal/cmdenv"
+	"github.com/gogf/gf/os/gfile"
+)
 
 const (
-	NOT_SET = "not-set"
-	DEVELOP = "develop"
-	TESTING = "testing"
-	STAGING = "staging"
-	PRODUCT = "product"
+	NOT_SET     = "not-set"
+	DEVELOP     = "develop"
+	TESTING     = "testing"
+	STAGING     = "staging"
+	PRODUCT     = "product"
+	gCMDENV_KEY = "gf.gmode"
 )
 
 var (
@@ -52,10 +57,16 @@ func SetProduct() {
 func Mode() string {
 	// If current mode is not set, do this auto check.
 	if currentMode == NOT_SET {
-		if gfile.MainPkgPath() != "" {
-			return DEVELOP
+		if v := cmdenv.Get(gCMDENV_KEY).String(); v != "" {
+			// Mode configured from command argument of environment.
+			currentMode = v
 		} else {
-			return PRODUCT
+			// If there are source codes found, it's in develop mode, or else in product mode.
+			if gfile.Exists(gdebug.CallerFilePath()) {
+				currentMode = DEVELOP
+			} else {
+				currentMode = PRODUCT
+			}
 		}
 	}
 	return currentMode

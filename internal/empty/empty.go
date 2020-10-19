@@ -4,16 +4,31 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package empty provides checks for empty variables.
+// Package empty provides functions for checking empty variables.
 package empty
 
 import (
 	"reflect"
 )
 
+// apiString is used for type assert api for String().
+type apiString interface {
+	String() string
+}
+
+// apiInterfaces is used for type assert api for Interfaces.
+type apiInterfaces interface {
+	Interfaces() []interface{}
+}
+
+// apiMapStrAny is the interface support for converting struct parameter to map.
+type apiMapStrAny interface {
+	MapStrAny() map[string]interface{}
+}
+
 // IsEmpty checks whether given <value> empty.
-// It returns true if <value> is in: 0, nil, false, "", len(slice/map/chan) == 0.
-// Or else it returns true.
+// It returns true if <value> is in: 0, nil, false, "", len(slice/map/chan) == 0,
+// or else it returns false.
 func IsEmpty(value interface{}) bool {
 	if value == nil {
 		return true
@@ -49,9 +64,26 @@ func IsEmpty(value interface{}) bool {
 		return value == ""
 	case []byte:
 		return len(value) == 0
+	case []rune:
+		return len(value) == 0
 	default:
+		// Common interfaces checks.
+		if f, ok := value.(apiString); ok {
+			return f.String() == ""
+		}
+		if f, ok := value.(apiInterfaces); ok {
+			return len(f.Interfaces()) == 0
+		}
+		if f, ok := value.(apiMapStrAny); ok {
+			return len(f.MapStrAny()) == 0
+		}
 		// Finally using reflect.
-		rv := reflect.ValueOf(value)
+		var rv reflect.Value
+		if v, ok := value.(reflect.Value); ok {
+			rv = v
+		} else {
+			rv = reflect.ValueOf(value)
+		}
 		switch rv.Kind() {
 		case reflect.Chan,
 			reflect.Map,
@@ -72,12 +104,17 @@ func IsEmpty(value interface{}) bool {
 }
 
 // IsNil checks whether given <value> is nil.
-// Note that it's using reflect feature which affects performance a little bit.
+// Note that it might use reflect feature which affects performance a little bit.
 func IsNil(value interface{}) bool {
 	if value == nil {
 		return true
 	}
-	rv := reflect.ValueOf(value)
+	var rv reflect.Value
+	if v, ok := value.(reflect.Value); ok {
+		rv = v
+	} else {
+		rv = reflect.ValueOf(value)
+	}
 	switch rv.Kind() {
 	case reflect.Chan,
 		reflect.Map,

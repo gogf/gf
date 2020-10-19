@@ -1,0 +1,1 @@
+This is an another test file for zip compression purpose.

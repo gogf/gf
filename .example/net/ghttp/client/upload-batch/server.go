@@ -3,34 +3,16 @@ package main
 import (
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/os/gfile"
-	"io"
 )
 
 // Upload uploads files to /tmp .
 func Upload(r *ghttp.Request) {
-	saveDir := "/tmp/"
-	for _, item := range r.GetMultipartFiles("upload-file") {
-		file, err := item.Open()
-		if err != nil {
-			r.Response.Write(err)
-			return
-		}
-		defer file.Close()
-
-		f, err := gfile.Create(saveDir + gfile.Basename(item.Filename))
-		if err != nil {
-			r.Response.Write(err)
-			return
-		}
-		defer f.Close()
-
-		if _, err := io.Copy(f, file); err != nil {
-			r.Response.Write(err)
-			return
-		}
+	saveDirPath := "/tmp/"
+	files := r.GetUploadFiles("upload-file")
+	if _, err := files.Save(saveDirPath); err != nil {
+		r.Response.WriteExit(err)
 	}
-	r.Response.Write("upload successfully")
+	r.Response.WriteExit("upload successfully")
 }
 
 // UploadShow shows uploading simgle file page.
@@ -71,7 +53,7 @@ func UploadShowBatch(r *ghttp.Request) {
 func main() {
 	s := g.Server()
 	s.Group("/upload", func(group *ghttp.RouterGroup) {
-		group.ALL("/", Upload)
+		group.POST("/", Upload)
 		group.ALL("/show", UploadShow)
 		group.ALL("/batch", UploadShowBatch)
 	})

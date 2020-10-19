@@ -13,8 +13,8 @@ import (
 )
 
 var (
-	safeLock   = rwmutex.New(false)
-	unsafeLock = rwmutex.New(true)
+	safeLock   = rwmutex.New(true)
+	unsafeLock = rwmutex.New(false)
 )
 
 func Benchmark_Safe_LockUnlock(b *testing.B) {

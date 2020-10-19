@@ -8,6 +8,7 @@
 package gi18n
 
 var (
+	// defaultManager is the default i18n instance for package functions.
 	defaultManager = Instance()
 )
 
@@ -26,13 +27,43 @@ func SetDelimiters(left, right string) {
 	defaultManager.SetDelimiters(left, right)
 }
 
-// T is alias of Translate.
+// T is alias of Translate for convenience.
 func T(content string, language ...string) string {
 	return defaultManager.T(content, language...)
 }
 
-// Translate translates <content> with configured language.
+// TF is alias of TranslateFormat for convenience.
+func TF(format string, values ...interface{}) string {
+	return defaultManager.TranslateFormat(format, values...)
+}
+
+// TFL is alias of TranslateFormatLang for convenience.
+func TFL(format string, language string, values ...interface{}) string {
+	return defaultManager.TranslateFormatLang(format, language, values...)
+}
+
+// TranslateFormat translates, formats and returns the <format> with configured language
+// and given <values>.
+func TranslateFormat(format string, values ...interface{}) string {
+	return defaultManager.TranslateFormat(format, values...)
+}
+
+// TranslateFormatLang translates, formats and returns the <format> with configured language
+// and given <values>. The parameter <language> specifies custom translation language ignoring
+// configured language. If <language> is given empty string, it uses the default configured
+// language for the translation.
+func TranslateFormatLang(format string, language string, values ...interface{}) string {
+	return defaultManager.TranslateFormatLang(format, language, values...)
+}
+
+// Translate translates <content> with configured language and returns the translated content.
 // The parameter <language> specifies custom translation language ignoring configured language.
 func Translate(content string, language ...string) string {
 	return defaultManager.Translate(content, language...)
+}
+
+// GetValue retrieves and returns the configured content for given key and specified language.
+// It returns an empty string if not found.
+func GetContent(key string, language ...string) string {
+	return defaultManager.GetContent(key, language...)
 }

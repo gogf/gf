@@ -7,9 +7,13 @@
 package ghttp_test
 
 import (
+	"bytes"
 	"fmt"
+	"io/ioutil"
 	"testing"
 	"time"
+
+	"github.com/gogf/gf/encoding/gjson"
 
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
@@ -23,7 +27,7 @@ func Test_Params_Basic(t *testing.T) {
 		Pass1 string `params:"password1"`
 		Pass2 string `params:"password2"`
 	}
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	// GET
 	s.BindHandler("/get", func(r *ghttp.Request) {
@@ -293,119 +297,140 @@ func Test_Params_Basic(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		// GET
-		gtest.Assert(client.GetContent("/get", "array[]=1&array[]=2"), `["1","2"]`)
-		gtest.Assert(client.GetContent("/get", "slice=1&slice=2"), `2`)
-		gtest.Assert(client.GetContent("/get", "bool=1"), `true`)
-		gtest.Assert(client.GetContent("/get", "bool=0"), `false`)
-		gtest.Assert(client.GetContent("/get", "float32=0.11"), `0.11`)
-		gtest.Assert(client.GetContent("/get", "float64=0.22"), `0.22`)
-		gtest.Assert(client.GetContent("/get", "int=-10000"), `-10000`)
-		gtest.Assert(client.GetContent("/get", "int=10000"), `10000`)
-		gtest.Assert(client.GetContent("/get", "uint=10000"), `10000`)
-		gtest.Assert(client.GetContent("/get", "uint=9"), `9`)
-		gtest.Assert(client.GetContent("/get", "string=key"), `key`)
-		gtest.Assert(client.GetContent("/get", "map[a]=1&map[b]=2"), `2`)
-		gtest.Assert(client.GetContent("/get", "a=1&b=2"), `1`)
+		t.Assert(client.GetContent("/get", "array[]=1&array[]=2"), `["1","2"]`)
+		t.Assert(client.GetContent("/get", "slice=1&slice=2"), `2`)
+		t.Assert(client.GetContent("/get", "bool=1"), `true`)
+		t.Assert(client.GetContent("/get", "bool=0"), `false`)
+		t.Assert(client.GetContent("/get", "float32=0.11"), `0.11`)
+		t.Assert(client.GetContent("/get", "float64=0.22"), `0.22`)
+		t.Assert(client.GetContent("/get", "int=-10000"), `-10000`)
+		t.Assert(client.GetContent("/get", "int=10000"), `10000`)
+		t.Assert(client.GetContent("/get", "uint=10000"), `10000`)
+		t.Assert(client.GetContent("/get", "uint=9"), `9`)
+		t.Assert(client.GetContent("/get", "string=key"), `key`)
+		t.Assert(client.GetContent("/get", "map[a]=1&map[b]=2"), `2`)
+		t.Assert(client.GetContent("/get", "a=1&b=2"), `1`)
 
 		// PUT
-		gtest.Assert(client.PutContent("/put", "array[]=1&array[]=2"), `["1","2"]`)
-		gtest.Assert(client.PutContent("/put", "slice=1&slice=2"), `2`)
-		gtest.Assert(client.PutContent("/put", "bool=1"), `true`)
-		gtest.Assert(client.PutContent("/put", "bool=0"), `false`)
-		gtest.Assert(client.PutContent("/put", "float32=0.11"), `0.11`)
-		gtest.Assert(client.PutContent("/put", "float64=0.22"), `0.22`)
-		gtest.Assert(client.PutContent("/put", "int=-10000"), `-10000`)
-		gtest.Assert(client.PutContent("/put", "int=10000"), `10000`)
-		gtest.Assert(client.PutContent("/put", "uint=10000"), `10000`)
-		gtest.Assert(client.PutContent("/put", "uint=9"), `9`)
-		gtest.Assert(client.PutContent("/put", "string=key"), `key`)
-		gtest.Assert(client.PutContent("/put", "map[a]=1&map[b]=2"), `2`)
-		gtest.Assert(client.PutContent("/put", "a=1&b=2"), `1`)
+		t.Assert(client.PutContent("/put", "array[]=1&array[]=2"), `["1","2"]`)
+		t.Assert(client.PutContent("/put", "slice=1&slice=2"), `2`)
+		t.Assert(client.PutContent("/put", "bool=1"), `true`)
+		t.Assert(client.PutContent("/put", "bool=0"), `false`)
+		t.Assert(client.PutContent("/put", "float32=0.11"), `0.11`)
+		t.Assert(client.PutContent("/put", "float64=0.22"), `0.22`)
+		t.Assert(client.PutContent("/put", "int=-10000"), `-10000`)
+		t.Assert(client.PutContent("/put", "int=10000"), `10000`)
+		t.Assert(client.PutContent("/put", "uint=10000"), `10000`)
+		t.Assert(client.PutContent("/put", "uint=9"), `9`)
+		t.Assert(client.PutContent("/put", "string=key"), `key`)
+		t.Assert(client.PutContent("/put", "map[a]=1&map[b]=2"), `2`)
+		t.Assert(client.PutContent("/put", "a=1&b=2"), `1`)
 
 		// POST
-		gtest.Assert(client.PostContent("/post", "array[]=1&array[]=2"), `["1","2"]`)
-		gtest.Assert(client.PostContent("/post", "slice=1&slice=2"), `2`)
-		gtest.Assert(client.PostContent("/post", "bool=1"), `true`)
-		gtest.Assert(client.PostContent("/post", "bool=0"), `false`)
-		gtest.Assert(client.PostContent("/post", "float32=0.11"), `0.11`)
-		gtest.Assert(client.PostContent("/post", "float64=0.22"), `0.22`)
-		gtest.Assert(client.PostContent("/post", "int=-10000"), `-10000`)
-		gtest.Assert(client.PostContent("/post", "int=10000"), `10000`)
-		gtest.Assert(client.PostContent("/post", "uint=10000"), `10000`)
-		gtest.Assert(client.PostContent("/post", "uint=9"), `9`)
-		gtest.Assert(client.PostContent("/post", "string=key"), `key`)
-		gtest.Assert(client.PostContent("/post", "map[a]=1&map[b]=2"), `2`)
-		gtest.Assert(client.PostContent("/post", "a=1&b=2"), `1`)
+		t.Assert(client.PostContent("/post", "array[]=1&array[]=2"), `["1","2"]`)
+		t.Assert(client.PostContent("/post", "slice=1&slice=2"), `2`)
+		t.Assert(client.PostContent("/post", "bool=1"), `true`)
+		t.Assert(client.PostContent("/post", "bool=0"), `false`)
+		t.Assert(client.PostContent("/post", "float32=0.11"), `0.11`)
+		t.Assert(client.PostContent("/post", "float64=0.22"), `0.22`)
+		t.Assert(client.PostContent("/post", "int=-10000"), `-10000`)
+		t.Assert(client.PostContent("/post", "int=10000"), `10000`)
+		t.Assert(client.PostContent("/post", "uint=10000"), `10000`)
+		t.Assert(client.PostContent("/post", "uint=9"), `9`)
+		t.Assert(client.PostContent("/post", "string=key"), `key`)
+		t.Assert(client.PostContent("/post", "map[a]=1&map[b]=2"), `2`)
+		t.Assert(client.PostContent("/post", "a=1&b=2"), `1`)
 
 		// DELETE
-		gtest.Assert(client.DeleteContent("/delete", "array[]=1&array[]=2"), `["1","2"]`)
-		gtest.Assert(client.DeleteContent("/delete", "slice=1&slice=2"), `2`)
-		gtest.Assert(client.DeleteContent("/delete", "bool=1"), `true`)
-		gtest.Assert(client.DeleteContent("/delete", "bool=0"), `false`)
-		gtest.Assert(client.DeleteContent("/delete", "float32=0.11"), `0.11`)
-		gtest.Assert(client.DeleteContent("/delete", "float64=0.22"), `0.22`)
-		gtest.Assert(client.DeleteContent("/delete", "int=-10000"), `-10000`)
-		gtest.Assert(client.DeleteContent("/delete", "int=10000"), `10000`)
-		gtest.Assert(client.DeleteContent("/delete", "uint=10000"), `10000`)
-		gtest.Assert(client.DeleteContent("/delete", "uint=9"), `9`)
-		gtest.Assert(client.DeleteContent("/delete", "string=key"), `key`)
-		gtest.Assert(client.DeleteContent("/delete", "map[a]=1&map[b]=2"), `2`)
-		gtest.Assert(client.DeleteContent("/delete", "a=1&b=2"), `1`)
+		t.Assert(client.DeleteContent("/delete", "array[]=1&array[]=2"), `["1","2"]`)
+		t.Assert(client.DeleteContent("/delete", "slice=1&slice=2"), `2`)
+		t.Assert(client.DeleteContent("/delete", "bool=1"), `true`)
+		t.Assert(client.DeleteContent("/delete", "bool=0"), `false`)
+		t.Assert(client.DeleteContent("/delete", "float32=0.11"), `0.11`)
+		t.Assert(client.DeleteContent("/delete", "float64=0.22"), `0.22`)
+		t.Assert(client.DeleteContent("/delete", "int=-10000"), `-10000`)
+		t.Assert(client.DeleteContent("/delete", "int=10000"), `10000`)
+		t.Assert(client.DeleteContent("/delete", "uint=10000"), `10000`)
+		t.Assert(client.DeleteContent("/delete", "uint=9"), `9`)
+		t.Assert(client.DeleteContent("/delete", "string=key"), `key`)
+		t.Assert(client.DeleteContent("/delete", "map[a]=1&map[b]=2"), `2`)
+		t.Assert(client.DeleteContent("/delete", "a=1&b=2"), `1`)
 
 		// PATCH
-		gtest.Assert(client.PatchContent("/patch", "array[]=1&array[]=2"), `["1","2"]`)
-		gtest.Assert(client.PatchContent("/patch", "slice=1&slice=2"), `2`)
-		gtest.Assert(client.PatchContent("/patch", "bool=1"), `true`)
-		gtest.Assert(client.PatchContent("/patch", "bool=0"), `false`)
-		gtest.Assert(client.PatchContent("/patch", "float32=0.11"), `0.11`)
-		gtest.Assert(client.PatchContent("/patch", "float64=0.22"), `0.22`)
-		gtest.Assert(client.PatchContent("/patch", "int=-10000"), `-10000`)
-		gtest.Assert(client.PatchContent("/patch", "int=10000"), `10000`)
-		gtest.Assert(client.PatchContent("/patch", "uint=10000"), `10000`)
-		gtest.Assert(client.PatchContent("/patch", "uint=9"), `9`)
-		gtest.Assert(client.PatchContent("/patch", "string=key"), `key`)
-		gtest.Assert(client.PatchContent("/patch", "map[a]=1&map[b]=2"), `2`)
-		gtest.Assert(client.PatchContent("/patch", "a=1&b=2"), `1`)
+		t.Assert(client.PatchContent("/patch", "array[]=1&array[]=2"), `["1","2"]`)
+		t.Assert(client.PatchContent("/patch", "slice=1&slice=2"), `2`)
+		t.Assert(client.PatchContent("/patch", "bool=1"), `true`)
+		t.Assert(client.PatchContent("/patch", "bool=0"), `false`)
+		t.Assert(client.PatchContent("/patch", "float32=0.11"), `0.11`)
+		t.Assert(client.PatchContent("/patch", "float64=0.22"), `0.22`)
+		t.Assert(client.PatchContent("/patch", "int=-10000"), `-10000`)
+		t.Assert(client.PatchContent("/patch", "int=10000"), `10000`)
+		t.Assert(client.PatchContent("/patch", "uint=10000"), `10000`)
+		t.Assert(client.PatchContent("/patch", "uint=9"), `9`)
+		t.Assert(client.PatchContent("/patch", "string=key"), `key`)
+		t.Assert(client.PatchContent("/patch", "map[a]=1&map[b]=2"), `2`)
+		t.Assert(client.PatchContent("/patch", "a=1&b=2"), `1`)
 
 		// Form
-		gtest.Assert(client.PostContent("/form", "array[]=1&array[]=2"), `["1","2"]`)
-		gtest.Assert(client.PostContent("/form", "slice=1&slice=2"), `2`)
-		gtest.Assert(client.PostContent("/form", "bool=1"), `true`)
-		gtest.Assert(client.PostContent("/form", "bool=0"), `false`)
-		gtest.Assert(client.PostContent("/form", "float32=0.11"), `0.11`)
-		gtest.Assert(client.PostContent("/form", "float64=0.22"), `0.22`)
-		gtest.Assert(client.PostContent("/form", "int=-10000"), `-10000`)
-		gtest.Assert(client.PostContent("/form", "int=10000"), `10000`)
-		gtest.Assert(client.PostContent("/form", "uint=10000"), `10000`)
-		gtest.Assert(client.PostContent("/form", "uint=9"), `9`)
-		gtest.Assert(client.PostContent("/form", "string=key"), `key`)
-		gtest.Assert(client.PostContent("/form", "map[a]=1&map[b]=2"), `2`)
-		gtest.Assert(client.PostContent("/form", "a=1&b=2"), `1`)
+		t.Assert(client.PostContent("/form", "array[]=1&array[]=2"), `["1","2"]`)
+		t.Assert(client.PostContent("/form", "slice=1&slice=2"), `2`)
+		t.Assert(client.PostContent("/form", "bool=1"), `true`)
+		t.Assert(client.PostContent("/form", "bool=0"), `false`)
+		t.Assert(client.PostContent("/form", "float32=0.11"), `0.11`)
+		t.Assert(client.PostContent("/form", "float64=0.22"), `0.22`)
+		t.Assert(client.PostContent("/form", "int=-10000"), `-10000`)
+		t.Assert(client.PostContent("/form", "int=10000"), `10000`)
+		t.Assert(client.PostContent("/form", "uint=10000"), `10000`)
+		t.Assert(client.PostContent("/form", "uint=9"), `9`)
+		t.Assert(client.PostContent("/form", "string=key"), `key`)
+		t.Assert(client.PostContent("/form", "map[a]=1&map[b]=2"), `2`)
+		t.Assert(client.PostContent("/form", "a=1&b=2"), `1`)
 
 		// Map
-		gtest.Assert(client.GetContent("/map", "id=1&name=john"), `john`)
-		gtest.Assert(client.PostContent("/map", "id=1&name=john"), `john`)
+		t.Assert(client.GetContent("/map", "id=1&name=john"), `john`)
+		t.Assert(client.PostContent("/map", "id=1&name=john"), `john`)
 
 		// Raw
-		gtest.Assert(client.PutContent("/raw", "id=1&name=john"), `id=1&name=john`)
+		t.Assert(client.PutContent("/raw", "id=1&name=john"), `id=1&name=john`)
 
 		// Json
-		gtest.Assert(client.PostContent("/json", `{"id":1, "name":"john"}`), `john`)
+		t.Assert(client.PostContent("/json", `{"id":1, "name":"john"}`), `john`)
 
 		// Struct
-		gtest.Assert(client.GetContent("/struct", `id=1&name=john&password1=123&password2=456`), `1john123456`)
-		gtest.Assert(client.PostContent("/struct", `id=1&name=john&password1=123&password2=456`), `1john123456`)
-		gtest.Assert(client.PostContent("/struct-with-nil", ``), ``)
-		gtest.Assert(client.PostContent("/struct-with-base", `id=1&name=john&password1=123&password2=456`), "1john1234561john123456")
+		t.Assert(client.GetContent("/struct", `id=1&name=john&password1=123&password2=456`), `1john123456`)
+		t.Assert(client.PostContent("/struct", `id=1&name=john&password1=123&password2=456`), `1john123456`)
+		t.Assert(client.PostContent("/struct-with-nil", ``), ``)
+		t.Assert(client.PostContent("/struct-with-base", `id=1&name=john&password1=123&password2=456`), "1john1234561john")
+	})
+}
+
+func Test_Params_Header(t *testing.T) {
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/header", func(r *ghttp.Request) {
+		r.Response.Write(r.GetHeader("test"))
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		prefix := fmt.Sprintf("http://127.0.0.1:%d", p)
+		client := ghttp.NewClient()
+		client.SetPrefix(prefix)
+
+		t.Assert(client.Header(g.MapStrStr{"test": "123456"}).GetContent("/header"), "123456")
 	})
 }
 
 func Test_Params_SupportChars(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/form-value", func(r *ghttp.Request) {
 		r.Response.Write(r.GetQuery("test-value"))
@@ -419,18 +444,18 @@ func Test_Params_SupportChars(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		prefix := fmt.Sprintf("http://127.0.0.1:%d", p)
 		client := ghttp.NewClient()
 		client.SetPrefix(prefix)
 
-		gtest.Assert(client.PostContent("/form-value", "test-value=100"), "100")
-		gtest.Assert(client.PostContent("/form-array", "test-array[]=1&test-array[]=2"), `["1","2"]`)
+		t.Assert(client.PostContent("/form-value", "test-value=100"), "100")
+		t.Assert(client.PostContent("/form-array", "test-array[]=1&test-array[]=2"), `["1","2"]`)
 	})
 }
 
 func Test_Params_Priority(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/query", func(r *ghttp.Request) {
 		r.Response.Write(r.GetQuery("a"))
@@ -456,16 +481,79 @@ func Test_Params_Priority(t *testing.T) {
 	defer s.Shutdown()
 
 	time.Sleep(100 * time.Millisecond)
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		prefix := fmt.Sprintf("http://127.0.0.1:%d", p)
 		client := ghttp.NewClient()
 		client.SetPrefix(prefix)
 
-		gtest.Assert(client.GetContent("/query?a=1", "a=100"), "1")
-		gtest.Assert(client.PostContent("/post?a=1", "a=100"), "100")
-		gtest.Assert(client.PostContent("/form?a=1", "a=100"), "100")
-		gtest.Assert(client.PutContent("/form?a=1", "a=100"), "100")
-		gtest.Assert(client.GetContent("/request?a=1", "a=100"), "100")
-		gtest.Assert(client.GetContent("/request-map?a=1&b=2&c=3", "a=100&b=200&c=300"), `{"a":"100","b":"200"}`)
+		t.Assert(client.GetContent("/query?a=1", "a=100"), "1")
+		t.Assert(client.PostContent("/post?a=1", "a=100"), "100")
+		t.Assert(client.PostContent("/form?a=1", "a=100"), "100")
+		t.Assert(client.PutContent("/form?a=1", "a=100"), "100")
+		t.Assert(client.GetContent("/request?a=1", "a=100"), "100")
+		t.Assert(client.GetContent("/request-map?a=1&b=2&c=3", "a=100&b=200&c=300"), `{"a":"100","b":"200"}`)
+	})
+}
+
+func Test_Params_GetRequestMap(t *testing.T) {
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/map", func(r *ghttp.Request) {
+		r.Response.Write(r.GetRequestMap())
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		prefix := fmt.Sprintf("http://127.0.0.1:%d", p)
+		client := ghttp.NewClient()
+		client.SetPrefix(prefix)
+
+		t.Assert(
+			client.PostContent(
+				"/map",
+				"time_end2020-04-18 16:11:58&returnmsg=Success&attach=",
+			),
+			`{"attach":"","returnmsg":"Success"}`,
+		)
+	})
+}
+
+func Test_Params_Modify(t *testing.T) {
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/param/modify", func(r *ghttp.Request) {
+		param := r.GetMap()
+		param["id"] = 2
+		paramBytes, err := gjson.Encode(param)
+		if err != nil {
+			r.Response.Write(err)
+			return
+		}
+		r.Request.Body = ioutil.NopCloser(bytes.NewReader(paramBytes))
+		r.ReloadParam()
+		r.Response.Write(r.GetMap())
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		prefix := fmt.Sprintf("http://127.0.0.1:%d", p)
+		client := ghttp.NewClient()
+		client.SetPrefix(prefix)
+
+		t.Assert(
+			client.PostContent(
+				"/param/modify",
+				`{"id":1}`,
+			),
+			`{"id":2}`,
+		)
 	})
 }

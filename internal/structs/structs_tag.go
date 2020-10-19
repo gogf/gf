@@ -9,10 +9,12 @@ package structs
 import (
 	"reflect"
 
-	"github.com/fatih/structs"
+	"github.com/gqcn/structs"
 )
 
 // TagFields retrieves struct tags as []*Field from <pointer>, and returns it.
+//
+// The parameter <pointer> should be type of struct/*struct.
 //
 // The parameter <recursive> specifies whether retrieving the struct field recursively.
 //
@@ -23,13 +25,16 @@ func TagFields(pointer interface{}, priority []string, recursive bool) []*Field 
 
 // doTagFields retrieves the tag and corresponding attribute name from <pointer>. It also filters repeated
 // tag internally.
+// The parameter <pointer> should be type of struct/*struct.
 func doTagFields(pointer interface{}, priority []string, recursive bool, tagMap map[string]struct{}) []*Field {
 	var fields []*structs.Field
 	if v, ok := pointer.(reflect.Value); ok {
 		fields = structs.Fields(v.Interface())
 	} else {
-		rv := reflect.ValueOf(pointer)
-		kind := rv.Kind()
+		var (
+			rv   = reflect.ValueOf(pointer)
+			kind = rv.Kind()
+		)
 		if kind == reflect.Ptr {
 			rv = rv.Elem()
 			kind = rv.Kind()
@@ -42,8 +47,10 @@ func doTagFields(pointer interface{}, priority []string, recursive bool, tagMap 
 			fields = structs.Fields(pointer)
 		}
 	}
-	tag := ""
-	name := ""
+	var (
+		tag  = ""
+		name = ""
+	)
 	tagFields := make([]*Field, 0)
 	for _, field := range fields {
 		name = field.Name()
@@ -69,8 +76,10 @@ func doTagFields(pointer interface{}, priority []string, recursive bool, tagMap 
 			})
 		}
 		if recursive {
-			rv := reflect.ValueOf(field.Value())
-			kind := rv.Kind()
+			var (
+				rv   = reflect.ValueOf(field.Value())
+				kind = rv.Kind()
+			)
 			if kind == reflect.Ptr {
 				rv = rv.Elem()
 				kind = rv.Kind()
@@ -85,6 +94,8 @@ func doTagFields(pointer interface{}, priority []string, recursive bool, tagMap 
 
 // TagMapName retrieves struct tags as map[tag]attribute from <pointer>, and returns it.
 //
+// The parameter <pointer> should be type of struct/*struct.
+//
 // The parameter <recursive> specifies whether retrieving the struct field recursively.
 //
 // Note that it only retrieves the exported attributes with first letter up-case from struct.
@@ -98,6 +109,8 @@ func TagMapName(pointer interface{}, priority []string, recursive bool) map[stri
 }
 
 // TagMapField retrieves struct tags as map[tag]*Field from <pointer>, and returns it.
+//
+// The parameter <pointer> should be type of struct/*struct.
 //
 // The parameter <recursive> specifies whether retrieving the struct field recursively.
 //

@@ -20,45 +20,45 @@ import (
 )
 
 func Test_IsDir(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		paths := "/testfile"
 		createDir(paths)
 		defer delTestFiles(paths)
 
-		gtest.Assert(gfile.IsDir(testpath()+paths), true)
-		gtest.Assert(gfile.IsDir("./testfile2"), false)
-		gtest.Assert(gfile.IsDir("./testfile/tt.txt"), false)
-		gtest.Assert(gfile.IsDir(""), false)
+		t.Assert(gfile.IsDir(testpath()+paths), true)
+		t.Assert(gfile.IsDir("./testfile2"), false)
+		t.Assert(gfile.IsDir("./testfile/tt.txt"), false)
+		t.Assert(gfile.IsDir(""), false)
 	})
 }
 
 func Test_IsEmpty(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		path := "/testdir_" + gconv.String(gtime.TimestampNano())
 		createDir(path)
 		defer delTestFiles(path)
 
-		gtest.Assert(gfile.IsEmpty(testpath()+path), true)
-		gtest.Assert(gfile.IsEmpty(testpath()+path+gfile.Separator+"test.txt"), true)
+		t.Assert(gfile.IsEmpty(testpath()+path), true)
+		t.Assert(gfile.IsEmpty(testpath()+path+gfile.Separator+"test.txt"), true)
 	})
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		path := "/testfile_" + gconv.String(gtime.TimestampNano())
 		createTestFile(path, "")
 		defer delTestFiles(path)
 
-		gtest.Assert(gfile.IsEmpty(testpath()+path), true)
+		t.Assert(gfile.IsEmpty(testpath()+path), true)
 	})
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		path := "/testfile_" + gconv.String(gtime.TimestampNano())
 		createTestFile(path, "1")
 		defer delTestFiles(path)
 
-		gtest.Assert(gfile.IsEmpty(testpath()+path), false)
+		t.Assert(gfile.IsEmpty(testpath()+path), false)
 	})
 }
 
 func Test_Create(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
 			err       error
 			filepaths []string
@@ -70,13 +70,13 @@ func Test_Create(t *testing.T) {
 			fileobj, err = gfile.Create(testpath() + v)
 			defer delTestFiles(v)
 			fileobj.Close()
-			gtest.Assert(err, nil)
+			t.Assert(err, nil)
 		}
 	})
 }
 
 func Test_Open(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
 			err     error
 			files   []string
@@ -98,9 +98,9 @@ func Test_Open(t *testing.T) {
 			fileobj, err = gfile.Open(testpath() + v)
 			fileobj.Close()
 			if flags[k] {
-				gtest.Assert(err, nil)
+				t.Assert(err, nil)
 			} else {
-				gtest.AssertNE(err, nil)
+				t.AssertNE(err, nil)
 			}
 
 		}
@@ -109,7 +109,7 @@ func Test_Open(t *testing.T) {
 }
 
 func Test_OpenFile(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
 			err     error
 			files   []string
@@ -131,9 +131,9 @@ func Test_OpenFile(t *testing.T) {
 			fileobj, err = gfile.OpenFile(testpath()+v, os.O_RDWR, 0666)
 			fileobj.Close()
 			if flags[k] {
-				gtest.Assert(err, nil)
+				t.Assert(err, nil)
 			} else {
-				gtest.AssertNE(err, nil)
+				t.AssertNE(err, nil)
 			}
 
 		}
@@ -142,7 +142,7 @@ func Test_OpenFile(t *testing.T) {
 }
 
 func Test_OpenWithFlag(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
 			err     error
 			files   []string
@@ -163,9 +163,9 @@ func Test_OpenWithFlag(t *testing.T) {
 			fileobj, err = gfile.OpenWithFlag(testpath()+v, os.O_RDWR)
 			fileobj.Close()
 			if flags[k] {
-				gtest.Assert(err, nil)
+				t.Assert(err, nil)
 			} else {
-				gtest.AssertNE(err, nil)
+				t.AssertNE(err, nil)
 			}
 
 		}
@@ -174,7 +174,7 @@ func Test_OpenWithFlag(t *testing.T) {
 }
 
 func Test_OpenWithFlagPerm(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
 			err     error
 			files   []string
@@ -194,9 +194,9 @@ func Test_OpenWithFlagPerm(t *testing.T) {
 			fileobj, err = gfile.OpenWithFlagPerm(testpath()+v, os.O_RDWR, 666)
 			fileobj.Close()
 			if flags[k] {
-				gtest.Assert(err, nil)
+				t.Assert(err, nil)
 			} else {
-				gtest.AssertNE(err, nil)
+				t.AssertNE(err, nil)
 			}
 
 		}
@@ -206,7 +206,7 @@ func Test_OpenWithFlagPerm(t *testing.T) {
 
 func Test_Exists(t *testing.T) {
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
 			flag  bool
 			files []string
@@ -226,9 +226,9 @@ func Test_Exists(t *testing.T) {
 		for k, v := range files {
 			flag = gfile.Exists(testpath() + v)
 			if flags[k] {
-				gtest.Assert(flag, true)
+				t.Assert(flag, true)
 			} else {
-				gtest.Assert(flag, false)
+				t.Assert(flag, false)
 			}
 
 		}
@@ -237,16 +237,16 @@ func Test_Exists(t *testing.T) {
 }
 
 func Test_Pwd(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		paths, err := os.Getwd()
-		gtest.Assert(err, nil)
-		gtest.Assert(gfile.Pwd(), paths)
+		t.Assert(err, nil)
+		t.Assert(gfile.Pwd(), paths)
 
 	})
 }
 
 func Test_IsFile(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
 			flag  bool
 			files []string
@@ -271,9 +271,9 @@ func Test_IsFile(t *testing.T) {
 		for k, v := range files {
 			flag = gfile.IsFile(testpath() + v)
 			if flags[k] {
-				gtest.Assert(flag, true)
+				t.Assert(flag, true)
 			} else {
-				gtest.Assert(flag, false)
+				t.Assert(flag, false)
 			}
 
 		}
@@ -282,7 +282,7 @@ func Test_IsFile(t *testing.T) {
 }
 
 func Test_Info(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
 			err    error
 			paths  string = "/testfile_t1.txt"
@@ -293,18 +293,18 @@ func Test_Info(t *testing.T) {
 		createTestFile(paths, "")
 		defer delTestFiles(paths)
 		files, err = gfile.Info(testpath() + paths)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		files2, err = os.Stat(testpath() + paths)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
-		gtest.Assert(files, files2)
+		t.Assert(files, files2)
 
 	})
 }
 
 func Test_Move(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
 			paths     string = "/ovetest"
 			filepaths string = "/testfile_ttn1.txt"
@@ -318,17 +318,17 @@ func Test_Move(t *testing.T) {
 		yfile := testpath() + paths + filepaths
 		tofile := testpath() + paths + topath
 
-		gtest.Assert(gfile.Move(yfile, tofile), nil)
+		t.Assert(gfile.Move(yfile, tofile), nil)
 
 		// 检查移动后的文件是否真实存在
 		_, err := os.Stat(tofile)
-		gtest.Assert(os.IsNotExist(err), false)
+		t.Assert(os.IsNotExist(err), false)
 
 	})
 }
 
 func Test_Rename(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
 			paths  string = "/testfiles"
 			ypath  string = "/testfilettm1.txt"
@@ -341,17 +341,17 @@ func Test_Rename(t *testing.T) {
 		ypath = testpath() + paths + ypath
 		topath = testpath() + paths + topath
 
-		gtest.Assert(gfile.Rename(ypath, topath), nil)
-		gtest.Assert(gfile.IsFile(topath), true)
+		t.Assert(gfile.Rename(ypath, topath), nil)
+		t.Assert(gfile.IsFile(topath), true)
 
-		gtest.AssertNE(gfile.Rename("", ""), nil)
+		t.AssertNE(gfile.Rename("", ""), nil)
 
 	})
 
 }
 
 func Test_DirNames(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
 			paths    string = "/testdirs"
 			err      error
@@ -371,17 +371,17 @@ func Test_DirNames(t *testing.T) {
 
 		readlist, err = gfile.DirNames(testpath() + paths)
 
-		gtest.Assert(err, nil)
-		gtest.AssertIN(readlist, havelist)
+		t.Assert(err, nil)
+		t.AssertIN(readlist, havelist)
 
 		_, err = gfile.DirNames("")
-		gtest.AssertNE(err, nil)
+		t.AssertNE(err, nil)
 
 	})
 }
 
 func Test_Glob(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
 			paths      string = "/testfiles/*.txt"
 			dirpath    string = "/testfiles"
@@ -407,29 +407,29 @@ func Test_Glob(t *testing.T) {
 		defer delTestFiles(dirpath)
 
 		resultlist, err = gfile.Glob(testpath()+paths, true)
-		gtest.Assert(err, nil)
-		gtest.Assert(resultlist, havelist1)
+		t.Assert(err, nil)
+		t.Assert(resultlist, havelist1)
 
 		resultlist, err = gfile.Glob(testpath()+paths, false)
 
-		gtest.Assert(err, nil)
-		gtest.Assert(formatpaths(resultlist), formatpaths(havelist2))
+		t.Assert(err, nil)
+		t.Assert(formatpaths(resultlist), formatpaths(havelist2))
 
 		_, err = gfile.Glob("", true)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 	})
 }
 
 func Test_Remove(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
 			paths string = "/testfile_t1.txt"
 		)
 		createTestFile(paths, "")
-		gtest.Assert(gfile.Remove(testpath()+paths), nil)
+		t.Assert(gfile.Remove(testpath()+paths), nil)
 
-		gtest.Assert(gfile.Remove(""), nil)
+		t.Assert(gfile.Remove(""), nil)
 
 		defer delTestFiles(paths)
 
@@ -437,7 +437,7 @@ func Test_Remove(t *testing.T) {
 }
 
 func Test_IsReadable(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
 			paths1 string = "/testfile_GetContents.txt"
 			paths2 string = "./testfile_GetContents_no.txt"
@@ -446,14 +446,14 @@ func Test_IsReadable(t *testing.T) {
 		createTestFile(paths1, "")
 		defer delTestFiles(paths1)
 
-		gtest.Assert(gfile.IsReadable(testpath()+paths1), true)
-		gtest.Assert(gfile.IsReadable(paths2), false)
+		t.Assert(gfile.IsReadable(testpath()+paths1), true)
+		t.Assert(gfile.IsReadable(paths2), false)
 
 	})
 }
 
 func Test_IsWritable(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
 			paths1 string = "/testfile_GetContents.txt"
 			paths2 string = "./testfile_GetContents_no.txt"
@@ -461,14 +461,14 @@ func Test_IsWritable(t *testing.T) {
 
 		createTestFile(paths1, "")
 		defer delTestFiles(paths1)
-		gtest.Assert(gfile.IsWritable(testpath()+paths1), true)
-		gtest.Assert(gfile.IsWritable(paths2), false)
+		t.Assert(gfile.IsWritable(testpath()+paths1), true)
+		t.Assert(gfile.IsWritable(paths2), false)
 
 	})
 }
 
 func Test_Chmod(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
 			paths1 string = "/testfile_GetContents.txt"
 			paths2 string = "./testfile_GetContents_no.txt"
@@ -476,15 +476,15 @@ func Test_Chmod(t *testing.T) {
 		createTestFile(paths1, "")
 		defer delTestFiles(paths1)
 
-		gtest.Assert(gfile.Chmod(testpath()+paths1, 0777), nil)
-		gtest.AssertNE(gfile.Chmod(paths2, 0777), nil)
+		t.Assert(gfile.Chmod(testpath()+paths1, 0777), nil)
+		t.AssertNE(gfile.Chmod(paths2, 0777), nil)
 
 	})
 }
 
 // 获取绝对目录地址
 func Test_RealPath(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
 			paths1    string = "/testfile_files"
 			readlPath string
@@ -499,16 +499,16 @@ func Test_RealPath(t *testing.T) {
 
 		tempstr, _ = filepath.Abs("./")
 
-		gtest.Assert(readlPath, tempstr)
+		t.Assert(readlPath, tempstr)
 
-		gtest.Assert(gfile.RealPath("./nodirs"), "")
+		t.Assert(gfile.RealPath("./nodirs"), "")
 
 	})
 }
 
 // 获取当前执行文件的目录
 func Test_SelfPath(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
 			paths1    string
 			readlPath string
@@ -521,13 +521,13 @@ func Test_SelfPath(t *testing.T) {
 		paths1 = filepath.ToSlash(tempstr)
 		paths1 = strings.Replace(paths1, "./", "/", 1)
 
-		gtest.Assert(readlPath, paths1)
+		t.Assert(readlPath, paths1)
 
 	})
 }
 
 func Test_SelfDir(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
 			paths1    string
 			readlPath string
@@ -538,13 +538,13 @@ func Test_SelfDir(t *testing.T) {
 		tempstr, _ = filepath.Abs(os.Args[0])
 		paths1 = filepath.Dir(tempstr)
 
-		gtest.Assert(readlPath, paths1)
+		t.Assert(readlPath, paths1)
 
 	})
 }
 
 func Test_Basename(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
 			paths1    string = "/testfilerr_GetContents.txt"
 			readlPath string
@@ -554,13 +554,13 @@ func Test_Basename(t *testing.T) {
 		defer delTestFiles(paths1)
 
 		readlPath = gfile.Basename(testpath() + paths1)
-		gtest.Assert(readlPath, "testfilerr_GetContents.txt")
+		t.Assert(readlPath, "testfilerr_GetContents.txt")
 
 	})
 }
 
 func Test_Dir(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
 			paths1    string = "/testfiless"
 			readlPath string
@@ -570,13 +570,13 @@ func Test_Dir(t *testing.T) {
 
 		readlPath = gfile.Dir(testpath() + paths1)
 
-		gtest.Assert(readlPath, testpath())
+		t.Assert(readlPath, testpath())
 
 	})
 }
 
 func Test_Ext(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
 			paths1   string = "/testfile_GetContents.txt"
 			dirpath1        = "/testdirs"
@@ -587,35 +587,39 @@ func Test_Ext(t *testing.T) {
 		createDir(dirpath1)
 		defer delTestFiles(dirpath1)
 
-		gtest.Assert(gfile.Ext(testpath()+paths1), ".txt")
-		gtest.Assert(gfile.Ext(testpath()+dirpath1), "")
+		t.Assert(gfile.Ext(testpath()+paths1), ".txt")
+		t.Assert(gfile.Ext(testpath()+dirpath1), "")
 	})
 
-	gtest.Case(t, func() {
-		gtest.Assert(gfile.Ext("/var/www/test.js"), ".js")
-		gtest.Assert(gfile.Ext("/var/www/test.min.js"), ".js")
-		gtest.Assert(gfile.Ext("/var/www/test.js?1"), ".js")
-		gtest.Assert(gfile.Ext("/var/www/test.min.js?v1"), ".js")
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gfile.Ext("/var/www/test.js"), ".js")
+		t.Assert(gfile.Ext("/var/www/test.min.js"), ".js")
+		t.Assert(gfile.Ext("/var/www/test.js?1"), ".js")
+		t.Assert(gfile.Ext("/var/www/test.min.js?v1"), ".js")
 	})
 }
 
 func Test_ExtName(t *testing.T) {
-	gtest.Case(t, func() {
-		gtest.Assert(gfile.ExtName("/var/www/test.js"), "js")
-		gtest.Assert(gfile.ExtName("/var/www/test.min.js"), "js")
-		gtest.Assert(gfile.ExtName("/var/www/test.js?v=1"), "js")
-		gtest.Assert(gfile.ExtName("/var/www/test.min.js?v=1"), "js")
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gfile.ExtName("/var/www/test.js"), "js")
+		t.Assert(gfile.ExtName("/var/www/test.min.js"), "js")
+		t.Assert(gfile.ExtName("/var/www/test.js?v=1"), "js")
+		t.Assert(gfile.ExtName("/var/www/test.min.js?v=1"), "js")
 	})
 }
 
 func Test_TempDir(t *testing.T) {
-	gtest.Case(t, func() {
-		gtest.Assert(gfile.TempDir(), "/tmp")
+	gtest.C(t, func(t *gtest.T) {
+		if gfile.Separator != "/" || !gfile.Exists("/tmp") {
+			t.Assert(gfile.TempDir(), os.TempDir())
+		} else {
+			t.Assert(gfile.TempDir(), "/tmp")
+		}
 	})
 }
 
 func Test_Mkdir(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
 			tpath string = "/testfile/createdir"
 			err   error
@@ -624,19 +628,19 @@ func Test_Mkdir(t *testing.T) {
 		defer delTestFiles("/testfile")
 
 		err = gfile.Mkdir(testpath() + tpath)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 		err = gfile.Mkdir("")
-		gtest.AssertNE(err, nil)
+		t.AssertNE(err, nil)
 
 		err = gfile.Mkdir(testpath() + tpath + "2/t1")
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
 	})
 }
 
 func Test_Stat(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		var (
 			tpath1   = "/testfile_t1.txt"
 			tpath2   = "./testfile_t1_no.txt"
@@ -648,19 +652,19 @@ func Test_Stat(t *testing.T) {
 		defer delTestFiles(tpath1)
 
 		fileiofo, err = gfile.Stat(testpath() + tpath1)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
-		gtest.Assert(fileiofo.Size(), 1)
+		t.Assert(fileiofo.Size(), 1)
 
 		_, err = gfile.Stat(tpath2)
-		gtest.AssertNE(err, nil)
+		t.AssertNE(err, nil)
 
 	})
 }
 
 func Test_MainPkgPath(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		reads := gfile.MainPkgPath()
-		gtest.Assert(reads, "")
+		t.Assert(reads, "")
 	})
 }

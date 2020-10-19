@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/i18n/gi18n"
+	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/os/gres"
@@ -21,10 +22,25 @@ import (
 // Config is the configuration object for template engine.
 type Config struct {
 	Paths       []string               // Searching array for path, NOT concurrent-safe for performance purpose.
-	Data        map[string]interface{} // Global template variables.
+	Data        map[string]interface{} // Global template variables including configuration.
 	DefaultFile string                 // Default template file for parsing.
 	Delimiters  []string               // Custom template delimiters.
 	AutoEncode  bool                   // Automatically encodes and provides safe html output, which is good for avoiding XSS.
+	I18nManager *gi18n.Manager         // I18n manager for the view.
+}
+
+const (
+	// Default template file for parsing.
+	defaultParsingFile = "index.html"
+)
+
+// DefaultConfig creates and returns a configuration object with default configurations.
+func DefaultConfig() Config {
+	return Config{
+		DefaultFile: defaultParsingFile,
+		I18nManager: gi18n.Instance(),
+		Delimiters:  make([]string, 2),
+	}
 }
 
 // SetConfig sets the configuration for view.
@@ -50,6 +66,8 @@ func (view *View) SetConfig(config Config) error {
 	// Clear global template object cache.
 	// It's just cache, do not hesitate clearing it.
 	templates.Clear()
+
+	intlog.Printf("SetConfig: %+v", view.config)
 	return nil
 }
 
@@ -58,25 +76,30 @@ func (view *View) SetConfigWithMap(m map[string]interface{}) error {
 	if m == nil || len(m) == 0 {
 		return errors.New("configuration cannot be empty")
 	}
+	// The m now is a shallow copy of m.
+	// Any changes to m does not affect the original one.
+	// A little tricky, isn't it?
+	m = gutil.MapCopy(m)
 	// Most common used configuration support for single view path.
 	_, v1 := gutil.MapPossibleItemByKey(m, "paths")
 	_, v2 := gutil.MapPossibleItemByKey(m, "path")
 	if v1 == nil && v2 != nil {
 		m["paths"] = []interface{}{v2}
 	}
-	config := Config{}
-	err := gconv.Struct(m, &config)
+	err := gconv.Struct(m, &view.config)
 	if err != nil {
 		return err
 	}
-	return view.SetConfig(config)
+	return view.SetConfig(view.config)
 }
 
 // SetPath sets the template directory path for template file search.
 // The parameter <path> can be absolute or relative path, but absolute path is suggested.
 func (view *View) SetPath(path string) error {
-	isDir := false
-	realPath := ""
+	var (
+		isDir    = false
+		realPath = ""
+	)
 	if file := gres.Get(path); file != nil {
 		realPath = path
 		isDir = file.FileInfo().IsDir()
@@ -127,8 +150,10 @@ func (view *View) SetPath(path string) error {
 
 // AddPath adds a absolute or relative path to the search paths.
 func (view *View) AddPath(path string) error {
-	isDir := false
-	realPath := ""
+	var (
+		isDir    = false
+		realPath = ""
+	)
 	if file := gres.Get(path); file != nil {
 		realPath = path
 		isDir = file.FileInfo().IsDir()
@@ -193,13 +218,17 @@ func (view *View) Assign(key string, value interface{}) {
 
 // SetDefaultFile sets default template file for parsing.
 func (view *View) SetDefaultFile(file string) {
-	view.defaultFile = file
+	view.config.DefaultFile = file
+}
+
+// GetDefaultFile returns default template file for parsing.
+func (view *View) GetDefaultFile() string {
+	return view.config.DefaultFile
 }
 
 // SetDelimiters sets customized delimiters for template parsing.
 func (view *View) SetDelimiters(left, right string) {
-	view.delimiters[0] = left
-	view.delimiters[1] = right
+	view.config.Delimiters = []string{left, right}
 }
 
 // SetAutoEncode enables/disables automatically html encoding feature.
@@ -231,5 +260,5 @@ func (view *View) BindFuncMap(funcMap FuncMap) {
 
 // SetI18n binds i18n manager to current view engine.
 func (view *View) SetI18n(manager *gi18n.Manager) {
-	view.i18nManager = manager
+	view.config.I18nManager = manager
 }

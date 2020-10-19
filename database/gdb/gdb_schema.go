@@ -14,9 +14,9 @@ type Schema struct {
 }
 
 // Schema creates and returns a schema.
-func (bs *dbBase) Schema(schema string) *Schema {
+func (c *Core) Schema(schema string) *Schema {
 	return &Schema{
-		db:     bs.db,
+		db:     c.DB,
 		schema: schema,
 	}
 }
@@ -40,12 +40,20 @@ func (s *Schema) Table(table string) *Model {
 	} else {
 		m = s.db.Table(table)
 	}
+	// Do not change the schema of the original db,
+	// it here creates a new db and changes its schema.
+	db, err := New(m.db.GetGroup())
+	if err != nil {
+		panic(err)
+	}
+	db.SetSchema(s.schema)
+	m.db = db
 	m.schema = s.schema
 	return m
 }
 
-// Model is alias of dbBase.Table.
-// See dbBase.Table.
+// Model is alias of Core.Table.
+// See Core.Table.
 func (s *Schema) Model(table string) *Model {
 	return s.Table(table)
 }

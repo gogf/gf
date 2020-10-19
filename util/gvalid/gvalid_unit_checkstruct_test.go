@@ -7,6 +7,7 @@
 package gvalid_test
 
 import (
+	"github.com/gogf/gf/container/gvar"
 	"testing"
 
 	"github.com/gogf/gf/frame/g"
@@ -16,7 +17,7 @@ import (
 )
 
 func Test_CheckStruct(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type Object struct {
 			Name string
 			Age  int
@@ -34,10 +35,10 @@ func Test_CheckStruct(t *testing.T) {
 		}
 		obj := &Object{"john", 16}
 		err := gvalid.CheckStruct(obj, rules, msgs)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type Object struct {
 			Name string
 			Age  int
@@ -55,14 +56,14 @@ func Test_CheckStruct(t *testing.T) {
 		}
 		obj := &Object{"john", 16}
 		err := gvalid.CheckStruct(obj, rules, msgs)
-		gtest.AssertNE(err, nil)
-		gtest.Assert(len(err.Maps()), 2)
-		gtest.Assert(err.Maps()["Name"]["required"], "")
-		gtest.Assert(err.Maps()["Name"]["length"], "名称长度为6到16个字符")
-		gtest.Assert(err.Maps()["Age"]["between"], "年龄为18到30周岁")
+		t.AssertNE(err, nil)
+		t.Assert(len(err.Maps()), 2)
+		t.Assert(err.Maps()["Name"]["required"], "")
+		t.Assert(err.Maps()["Name"]["length"], "名称长度为6到16个字符")
+		t.Assert(err.Maps()["Age"]["between"], "年龄为18到30周岁")
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type Object struct {
 			Name string
 			Age  int
@@ -80,14 +81,14 @@ func Test_CheckStruct(t *testing.T) {
 		}
 		obj := &Object{"john", 16}
 		err := gvalid.CheckStruct(obj, rules, msgs)
-		gtest.AssertNE(err, nil)
-		gtest.Assert(len(err.Maps()), 2)
-		gtest.Assert(err.Maps()["Name"]["required"], "")
-		gtest.Assert(err.Maps()["Name"]["length"], "名称长度为6到16个字符")
-		gtest.Assert(err.Maps()["Age"]["between"], "年龄为18到30周岁")
+		t.AssertNE(err, nil)
+		t.Assert(len(err.Maps()), 2)
+		t.Assert(err.Maps()["Name"]["required"], "")
+		t.Assert(err.Maps()["Name"]["length"], "名称长度为6到16个字符")
+		t.Assert(err.Maps()["Age"]["between"], "年龄为18到30周岁")
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type Object struct {
 			Name string
 			Age  int
@@ -105,49 +106,49 @@ func Test_CheckStruct(t *testing.T) {
 		}
 		obj := &Object{"john", 16}
 		err := gvalid.CheckStruct(obj, rules, msgs)
-		gtest.AssertNE(err, nil)
-		gtest.Assert(len(err.Maps()), 2)
-		gtest.Assert(err.Maps()["Name"]["required"], "")
-		gtest.Assert(err.Maps()["Name"]["length"], "名称长度为6到16个字符")
-		gtest.Assert(err.Maps()["Age"]["between"], "年龄为18到30周岁")
+		t.AssertNE(err, nil)
+		t.Assert(len(err.Maps()), 2)
+		t.Assert(err.Maps()["Name"]["required"], "")
+		t.Assert(err.Maps()["Name"]["length"], "名称长度为6到16个字符")
+		t.Assert(err.Maps()["Age"]["between"], "年龄为18到30周岁")
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type LoginRequest struct {
 			Username string `json:"username" gvalid:"username@required#用户名不能为空"`
 			Password string `json:"password" gvalid:"password@required#登录密码不能为空"`
 		}
 		var login LoginRequest
 		err := gvalid.CheckStruct(login, nil)
-		gtest.AssertNE(err, nil)
-		gtest.Assert(len(err.Maps()), 2)
-		gtest.Assert(err.Maps()["username"]["required"], "用户名不能为空")
-		gtest.Assert(err.Maps()["password"]["required"], "登录密码不能为空")
+		t.AssertNE(err, nil)
+		t.Assert(len(err.Maps()), 2)
+		t.Assert(err.Maps()["username"]["required"], "用户名不能为空")
+		t.Assert(err.Maps()["password"]["required"], "登录密码不能为空")
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type LoginRequest struct {
 			Username string `json:"username" gvalid:"@required#用户名不能为空"`
 			Password string `json:"password" gvalid:"@required#登录密码不能为空"`
 		}
 		var login LoginRequest
 		err := gvalid.CheckStruct(login, nil)
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type LoginRequest struct {
 			username string `json:"username" gvalid:"username@required#用户名不能为空"`
 			Password string `json:"password" gvalid:"password@required#登录密码不能为空"`
 		}
 		var login LoginRequest
 		err := gvalid.CheckStruct(login, nil)
-		gtest.AssertNE(err, nil)
-		gtest.Assert(err.Maps()["password"]["required"], "登录密码不能为空")
+		t.AssertNE(err, nil)
+		t.Assert(err.Maps()["password"]["required"], "登录密码不能为空")
 	})
 
 	// gvalid tag
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Id       int    `gvalid:"uid@required|min:10#|ID不能为空"`
 			Age      int    `gvalid:"age@required#年龄不能为空"`
@@ -160,12 +161,12 @@ func Test_CheckStruct(t *testing.T) {
 			Password: "123456",
 		}
 		err := gvalid.CheckStruct(user, nil)
-		gtest.AssertNE(err, nil)
-		gtest.Assert(len(err.Maps()), 1)
-		gtest.Assert(err.Maps()["uid"]["min"], "ID不能为空")
+		t.AssertNE(err, nil)
+		t.Assert(len(err.Maps()), 1)
+		t.Assert(err.Maps()["uid"]["min"], "ID不能为空")
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Id       int    `gvalid:"uid@required|min:10#|ID不能为空"`
 			Age      int    `gvalid:"age@required#年龄不能为空"`
@@ -183,12 +184,12 @@ func Test_CheckStruct(t *testing.T) {
 		}
 
 		err := gvalid.CheckStruct(user, rules)
-		gtest.AssertNE(err, nil)
-		gtest.Assert(len(err.Maps()), 1)
-		gtest.Assert(err.Maps()["uid"]["min"], "ID不能为空")
+		t.AssertNE(err, nil)
+		t.Assert(len(err.Maps()), 1)
+		t.Assert(err.Maps()["uid"]["min"], "ID不能为空")
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Id       int    `gvalid:"uid@required|min:10#ID不能为空"`
 			Age      int    `gvalid:"age@required#年龄不能为空"`
@@ -201,12 +202,12 @@ func Test_CheckStruct(t *testing.T) {
 			Password: "123456",
 		}
 		err := gvalid.CheckStruct(user, nil)
-		gtest.AssertNE(err, nil)
-		gtest.Assert(len(err.Maps()), 1)
+		t.AssertNE(err, nil)
+		t.Assert(len(err.Maps()), 1)
 	})
 
 	// valid tag
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Id       int    `valid:"uid@required|min:10#|ID不能为空"`
 			Age      int    `valid:"age@required#年龄不能为空"`
@@ -219,14 +220,14 @@ func Test_CheckStruct(t *testing.T) {
 			Password: "123456",
 		}
 		err := gvalid.CheckStruct(user, nil)
-		gtest.AssertNE(err, nil)
-		gtest.Assert(len(err.Maps()), 1)
-		gtest.Assert(err.Maps()["uid"]["min"], "ID不能为空")
+		t.AssertNE(err, nil)
+		t.Assert(len(err.Maps()), 1)
+		t.Assert(err.Maps()["uid"]["min"], "ID不能为空")
 	})
 }
 
 func Test_CheckStruct_With_Inherit(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		type Pass struct {
 			Pass1 string `valid:"password1@required|same:password2#请输入您的密码|您两次输入的密码不一致"`
 			Pass2 string `valid:"password2@required|same:password1#请再次输入您的密码|您两次输入的密码不一致"`
@@ -244,9 +245,51 @@ func Test_CheckStruct_With_Inherit(t *testing.T) {
 			},
 		}
 		err := gvalid.CheckStruct(user, nil)
-		gtest.AssertNE(err, nil)
-		gtest.Assert(err.Maps()["name"], g.Map{"required": "请输入您的姓名"})
-		gtest.Assert(err.Maps()["password1"], g.Map{"same": "您两次输入的密码不一致"})
-		gtest.Assert(err.Maps()["password2"], g.Map{"same": "您两次输入的密码不一致"})
+		t.AssertNE(err, nil)
+		t.Assert(err.Maps()["name"], g.Map{"required": "请输入您的姓名"})
+		t.Assert(err.Maps()["password1"], g.Map{"same": "您两次输入的密码不一致"})
+		t.Assert(err.Maps()["password2"], g.Map{"same": "您两次输入的密码不一致"})
+	})
+}
+
+func Test_CheckStruct_Optional(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			Page      int    `v:"required|min:1         # page is required"`
+			Size      int    `v:"required|between:1,100 # size is required"`
+			ProjectId string `v:"between:1,10000        # project id must between :min, :max"`
+		}
+		obj := &Params{
+			Page: 1,
+			Size: 10,
+		}
+		err := gvalid.CheckStruct(obj, nil)
+		t.Assert(err, nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			Page      int       `v:"required|min:1         # page is required"`
+			Size      int       `v:"required|between:1,100 # size is required"`
+			ProjectId *gvar.Var `v:"between:1,10000        # project id must between :min, :max"`
+		}
+		obj := &Params{
+			Page: 1,
+			Size: 10,
+		}
+		err := gvalid.CheckStruct(obj, nil)
+		t.Assert(err, nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			Page      int `v:"required|min:1         # page is required"`
+			Size      int `v:"required|between:1,100 # size is required"`
+			ProjectId int `v:"between:1,10000        # project id must between :min, :max"`
+		}
+		obj := &Params{
+			Page: 1,
+			Size: 10,
+		}
+		err := gvalid.CheckStruct(obj, nil)
+		t.Assert(err.String(), "project id must between 1, 10000")
 	})
 }

@@ -8,7 +8,6 @@ import (
 func main() {
 	s := ghttp.GetServer()
 	s.BindHandler("/", func(r *ghttp.Request) {
-		r.Response.Write("Hello World")
 		r.Response.WriteTpl("index.tpl", g.Map{
 			"title": "Test",
 			"name":  "John",
