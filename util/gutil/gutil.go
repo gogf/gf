@@ -8,6 +8,7 @@
 package gutil
 
 import (
+	"fmt"
 	"github.com/gogf/gf/internal/empty"
 )
 
@@ -16,11 +17,24 @@ func Throw(exception interface{}) {
 	panic(exception)
 }
 
+// Try implements try... logistics using internal panic...recover.
+// It returns error if any exception occurs, or else it returns nil.
+func Try(try func()) (err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			err = fmt.Errorf(`%v`, e)
+		}
+	}()
+	try()
+	return
+}
+
 // TryCatch implements try...catch... logistics using internal panic...recover.
-func TryCatch(try func(), catch ...func(exception interface{})) {
+// It automatically calls function <catch> if any exception occurs ans passes the exception as an error.
+func TryCatch(try func(), catch ...func(exception error)) {
 	defer func() {
 		if e := recover(); e != nil && len(catch) > 0 {
-			catch[0](e)
+			catch[0](fmt.Errorf(`%v`, e))
 		}
 	}()
 	try()
