@@ -204,9 +204,9 @@ CREATE TABLE %s (
 
 	gtest.C(t, func(t *gtest.T) {
 		model := db.Table(table1)
-		gtest.Assert(model.getSoftFieldNameCreate(table2), "createat")
-		gtest.Assert(model.getSoftFieldNameUpdate(table2), "updateat")
-		gtest.Assert(model.getSoftFieldNameDelete(table2), "deleteat")
+		gtest.Assert(model.getSoftFieldNameCreated(table2), "createat")
+		gtest.Assert(model.getSoftFieldNameUpdated(table2), "updateat")
+		gtest.Assert(model.getSoftFieldNameDeleted(table2), "deleteat")
 	})
 }
 

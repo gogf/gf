@@ -128,6 +128,7 @@ type DB interface {
 	GetDryRun() bool
 	SetLogger(logger *glog.Logger)
 	GetLogger() *glog.Logger
+	GetConfig() *ConfigNode
 	SetMaxIdleConnCount(n int)
 	SetMaxOpenConnCount(n int)
 	SetMaxConnLifetime(d time.Duration)
@@ -171,6 +172,7 @@ type Core struct {
 	dryrun           *gtype.Bool   // Dry run.
 	prefix           string        // Table prefix.
 	logger           *glog.Logger  // Logger.
+	config           *ConfigNode   // Current config node.
 	maxIdleConnCount int           // Max idle connection count.
 	maxOpenConnCount int           // Max open connection count.
 	maxConnLifetime  time.Duration // Max TTL for a connection.
@@ -304,6 +306,7 @@ func New(group ...string) (db DB, err error) {
 				dryrun:           gtype.NewBool(),
 				logger:           glog.New(),
 				prefix:           node.Prefix,
+				config:           node,
 				maxIdleConnCount: gDEFAULT_CONN_MAX_IDLE_COUNT,
 				maxConnLifetime:  gDEFAULT_CONN_MAX_LIFE_TIME, // Default max connection life time if user does not configure.
 			}

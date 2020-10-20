@@ -11,6 +11,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/text/gstr"
 	"reflect"
 	"strings"
 
@@ -455,7 +456,7 @@ func (c *Core) DoInsert(link Link, table string, data interface{}, option int, b
 		for k, _ := range dataMap {
 			// If it's SAVE operation,
 			// do not automatically update the creating time.
-			if utils.EqualFoldWithoutChars(k, gSOFT_FIELD_NAME_CREATE) {
+			if c.isSoftCreatedFiledName(k) {
 				continue
 			}
 			if len(updateStr) > 0 {
@@ -602,7 +603,7 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 		for _, k := range keys {
 			// If it's SAVE operation,
 			// do not automatically update the creating time.
-			if utils.EqualFoldWithoutChars(k, gSOFT_FIELD_NAME_CREATE) {
+			if c.isSoftCreatedFiledName(k) {
 				continue
 			}
 			if len(updateStr) > 0 {
@@ -828,4 +829,23 @@ func (c *Core) HasTable(name string) (bool, error) {
 		}
 	}
 	return false, nil
+}
+
+// isSoftCreatedFiledName checks and returns whether given filed name is an automatic-filled created time.
+func (c *Core) isSoftCreatedFiledName(fieldName string) bool {
+	if fieldName == "" {
+		return false
+	}
+	if config := c.DB.GetConfig(); config.CreatedAt != "" {
+		if utils.EqualFoldWithoutChars(fieldName, config.CreatedAt) {
+			return true
+		}
+		return gstr.InArray(append([]string{config.CreatedAt}, createdFiledNames...), fieldName)
+	}
+	for _, v := range createdFiledNames {
+		if utils.EqualFoldWithoutChars(fieldName, v) {
+			return true
+		}
+	}
+	return false
 }
