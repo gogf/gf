@@ -259,8 +259,11 @@ func bindVarToStructAttr(elem reflect.Value, name string, value interface{}, rec
 		return nil
 	}
 	defer func() {
-		if recover() != nil {
+		if e := recover(); e != nil {
 			err = bindVarToReflectValue(structFieldValue, value, recursive, mapping...)
+			if err != nil {
+				err = gerror.Wrapf(err, `error binding value to attribute "%s"`, name)
+			}
 		}
 	}()
 	if empty.IsNil(value) {
@@ -283,8 +286,7 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, re
 				v.Set(value)
 				return nil
 			} else if v, ok := structFieldValue.Interface().(apiUnmarshalValue); ok {
-				err = v.UnmarshalValue(value)
-				if err == nil {
+				if err = v.UnmarshalValue(value); err == nil {
 					return err
 				}
 			}
