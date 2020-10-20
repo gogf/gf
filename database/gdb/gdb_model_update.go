@@ -42,9 +42,9 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 	}
 	var (
 		updateData                                    = m.data
-		fieldNameCreate                               = m.getSoftFieldNameCreate()
-		fieldNameUpdate                               = m.getSoftFieldNameUpdate()
-		fieldNameDelete                               = m.getSoftFieldNameDelete()
+		fieldNameCreate                               = m.getSoftFieldNameCreated()
+		fieldNameUpdate                               = m.getSoftFieldNameUpdated()
+		fieldNameDelete                               = m.getSoftFieldNameDeleted()
 		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(false)
 	)
 	// Automatically update the record updating time.

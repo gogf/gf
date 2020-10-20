@@ -149,9 +149,9 @@ func (m *Model) doInsertWithOption(option int, data ...interface{}) (result sql.
 	}
 	var (
 		nowString       = gtime.Now().String()
-		fieldNameCreate = m.getSoftFieldNameCreate()
-		fieldNameUpdate = m.getSoftFieldNameUpdate()
-		fieldNameDelete = m.getSoftFieldNameDelete()
+		fieldNameCreate = m.getSoftFieldNameCreated()
+		fieldNameUpdate = m.getSoftFieldNameUpdated()
+		fieldNameDelete = m.getSoftFieldNameDeleted()
 	)
 	// Batch operation.
 	if list, ok := m.data.(List); ok {
