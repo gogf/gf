@@ -981,3 +981,23 @@ func Test_Struct_To_Struct(t *testing.T) {
 		t.Assert(TestA.Date, TestB.Date)
 	})
 }
+
+func Test_Struct_WithJson(t *testing.T) {
+	type A struct {
+		Name string
+	}
+	type B struct {
+		A
+		Score int
+	}
+	gtest.C(t, func(t *gtest.T) {
+		b1 := &B{}
+		b1.Name = "john"
+		b1.Score = 100
+		b, _ := json.Marshal(b1)
+		b2 := &B{}
+		err := gconv.Struct(b, b2)
+		t.Assert(err, nil)
+		t.Assert(b2, b1)
+	})
+}
