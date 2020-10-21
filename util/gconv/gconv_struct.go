@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/empty"
+	"github.com/gogf/gf/internal/json"
 	"reflect"
 	"regexp"
 	"strings"
@@ -62,6 +63,18 @@ func doStruct(params interface{}, pointer interface{}, recursive bool, mapping .
 			err = gerror.NewfSkip(1, "%v", e)
 		}
 	}()
+
+	// If given <params> is JSON, it then uses json.Unmarshal doing the converting.
+	switch r := params.(type) {
+	case []byte:
+		if json.Valid(r) {
+			return json.Unmarshal(r, pointer)
+		}
+	case string:
+		if paramsBytes := []byte(r); json.Valid(paramsBytes) {
+			return json.Unmarshal(paramsBytes, pointer)
+		}
+	}
 
 	// UnmarshalValue.
 	// Assign value with interface UnmarshalValue.

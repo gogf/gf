@@ -8,6 +8,7 @@ package gconv
 
 import (
 	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/internal/json"
 	"reflect"
 )
 
@@ -42,6 +43,18 @@ func doStructs(params interface{}, pointer interface{}, deep bool, mapping ...ma
 			err = gerror.NewfSkip(1, "%v", e)
 		}
 	}()
+	// If given <params> is JSON, it then uses json.Unmarshal doing the converting.
+	switch r := params.(type) {
+	case []byte:
+		if json.Valid(r) {
+			return json.Unmarshal(r, pointer)
+		}
+	case string:
+		if paramsBytes := []byte(r); json.Valid(paramsBytes) {
+			return json.Unmarshal(paramsBytes, pointer)
+		}
+	}
+	// Pointer type check.
 	pointerRv, ok := pointer.(reflect.Value)
 	if !ok {
 		pointerRv = reflect.ValueOf(pointer)
@@ -49,6 +62,7 @@ func doStructs(params interface{}, pointer interface{}, deep bool, mapping ...ma
 			return gerror.Newf("pointer should be type of pointer, but got: %v", kind)
 		}
 	}
+	// Converting <params> to map slice.
 	paramsMaps := Maps(params)
 	// If <params> is an empty slice, no conversion.
 	if len(paramsMaps) == 0 {
