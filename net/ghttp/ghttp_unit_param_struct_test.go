@@ -27,13 +27,11 @@ func Test_Params_Parse(t *testing.T) {
 	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/parse", func(r *ghttp.Request) {
-		if m := r.GetMap(); len(m) > 0 {
-			var user *User
-			if err := r.Parse(&user); err != nil {
-				r.Response.WriteExit(err)
-			}
-			r.Response.WriteExit(user.Map["id"], user.Map["score"])
+		var user *User
+		if err := r.Parse(&user); err != nil {
+			r.Response.WriteExit(err)
 		}
+		r.Response.WriteExit(user.Map["id"], user.Map["score"])
 	})
 	s.SetPort(p)
 	s.SetDumpRouterMap(false)
@@ -48,7 +46,76 @@ func Test_Params_Parse(t *testing.T) {
 	})
 }
 
-func Test_Params_Parse2(t *testing.T) {
+func Test_Params_ParseQuery(t *testing.T) {
+	type User struct {
+		Id   int
+		Name string
+	}
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/parse-query", func(r *ghttp.Request) {
+		var user *User
+		if err := r.ParseQuery(&user); err != nil {
+			r.Response.WriteExit(err)
+		}
+		r.Response.WriteExit(user.Id, user.Name)
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		t.Assert(c.GetContent("/parse-query"), `0`)
+		t.Assert(c.GetContent("/parse-query?id=1&name=john"), `1john`)
+		t.Assert(c.PostContent("/parse-query"), `0`)
+		t.Assert(c.PostContent("/parse-query", g.Map{
+			"id":   1,
+			"name": "john",
+		}), `0`)
+	})
+}
+
+func Test_Params_ParseForm(t *testing.T) {
+	type User struct {
+		Id   int
+		Name string
+	}
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/parse-form", func(r *ghttp.Request) {
+		var user *User
+		if err := r.ParseForm(&user); err != nil {
+			r.Response.WriteExit(err)
+		}
+		r.Response.WriteExit(user.Id, user.Name)
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		t.Assert(c.GetContent("/parse-form"), `0`)
+		t.Assert(c.GetContent("/parse-form", g.Map{
+			"id":   1,
+			"name": "john",
+		}), 0)
+		t.Assert(c.PostContent("/parse-form"), `0`)
+		t.Assert(c.PostContent("/parse-form", g.Map{
+			"id":   1,
+			"name": "john",
+		}), `1john`)
+	})
+}
+
+func Test_Params_ComplexJsonStruct(t *testing.T) {
 	type ItemEnv struct {
 		Type  string
 		Key   string

@@ -27,6 +27,21 @@ func TagFields(pointer interface{}, priority []string, recursive bool) []*Field 
 // tag internally.
 // The parameter <pointer> should be type of struct/*struct.
 func doTagFields(pointer interface{}, priority []string, recursive bool, tagMap map[string]struct{}) []*Field {
+	// If <pointer> points to an invalid address, for example a nil variable,
+	// it here creates an empty struct using reflect feature.
+	var (
+		tempValue    reflect.Value
+		pointerValue = reflect.ValueOf(pointer)
+	)
+	for pointerValue.Kind() == reflect.Ptr {
+		tempValue = pointerValue.Elem()
+		if !tempValue.IsValid() {
+			pointer = reflect.New(pointerValue.Type().Elem()).Elem()
+			break
+		} else {
+			pointerValue = tempValue
+		}
+	}
 	var fields []*structs.Field
 	if v, ok := pointer.(reflect.Value); ok {
 		fields = structs.Fields(v.Interface())
