@@ -433,10 +433,10 @@ func Test_Params_SupportChars(t *testing.T) {
 	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/form-value", func(r *ghttp.Request) {
-		r.Response.Write(r.GetQuery("test-value"))
+		r.Response.Write(r.GetForm("test-value"))
 	})
 	s.BindHandler("/form-array", func(r *ghttp.Request) {
-		r.Response.Write(r.GetQuery("test-array"))
+		r.Response.Write(r.GetForm("test-array"))
 	})
 	s.SetPort(p)
 	s.SetDumpRouterMap(false)
@@ -445,12 +445,10 @@ func Test_Params_SupportChars(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		prefix := fmt.Sprintf("http://127.0.0.1:%d", p)
-		client := ghttp.NewClient()
-		client.SetPrefix(prefix)
-
-		t.Assert(client.PostContent("/form-value", "test-value=100"), "100")
-		t.Assert(client.PostContent("/form-array", "test-array[]=1&test-array[]=2"), `["1","2"]`)
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		t.Assert(c.PostContent("/form-value", "test-value=100"), "100")
+		t.Assert(c.PostContent("/form-array", "test-array[]=1&test-array[]=2"), `["1","2"]`)
 	})
 }
 
