@@ -102,6 +102,9 @@ func Test_Int_All(t *testing.T) {
 		t.AssertEQ(gconv.Int(123.456), 123)
 		t.AssertEQ(gconv.Int(boolStruct{}), 0)
 		t.AssertEQ(gconv.Int(&boolStruct{}), 0)
+
+		t.AssertEQ(gconv.Int("1 "), 1)
+		t.AssertEQ(gconv.Int(" 1 "), 1)
 	})
 }
 
@@ -288,6 +291,8 @@ func Test_Uint_All(t *testing.T) {
 		t.AssertEQ(gconv.Uint(countryCapitalMap), uint(0))
 
 		t.AssertEQ(gconv.Uint("1"), uint(1))
+		t.AssertEQ(gconv.Int("1 "), 1)
+		t.AssertEQ(gconv.Int(" 1 "), 1)
 		t.AssertEQ(gconv.Uint("on"), uint(0))
 		t.AssertEQ(gconv.Uint(1), uint(1))
 		t.AssertEQ(gconv.Uint(123.456), uint(123))
