@@ -14,7 +14,7 @@ import (
 
 // Time is a wrapper for time.Time for additional features.
 type Time struct {
-	TimeWrapper
+	wrapper
 }
 
 // apiUnixNano is an interface definition commonly for custom time.Time wrapper.
@@ -47,21 +47,21 @@ func New(param ...interface{}) *Time {
 		}
 	}
 	return &Time{
-		TimeWrapper{time.Time{}},
+		wrapper{time.Time{}},
 	}
 }
 
 // Now creates and returns a time object of now.
 func Now() *Time {
 	return &Time{
-		TimeWrapper{time.Now()},
+		wrapper{time.Now()},
 	}
 }
 
 // NewFromTime creates and returns a Time object with given time.Time object.
 func NewFromTime(t time.Time) *Time {
 	return &Time{
-		TimeWrapper{t},
+		wrapper{t},
 	}
 }
 
@@ -112,7 +112,7 @@ func NewFromTimeStamp(timestamp int64) *Time {
 		sec = timestamp
 	}
 	return &Time{
-		TimeWrapper{time.Unix(sec, nano)},
+		wrapper{time.Unix(sec, nano)},
 	}
 }
 

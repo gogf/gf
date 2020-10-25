@@ -117,8 +117,14 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 			dataMap[k] = v
 		}
 	case map[string]interface{}:
-		for k, v := range r {
-			dataMap[k] = doMapConvertForMapOrStructValue(false, v, recursive, newTags...)
+		if recursive {
+			// A copy of current map.
+			for k, v := range r {
+				dataMap[k] = doMapConvertForMapOrStructValue(false, v, recursive, newTags...)
+			}
+		} else {
+			// It returns the map directly without any changing.
+			return r
 		}
 	case map[int]interface{}:
 		for k, v := range r {
