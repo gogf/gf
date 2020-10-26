@@ -90,8 +90,8 @@ func Test_TranslateFormat(t *testing.T) {
 		i18n := gi18n.New(gi18n.Options{
 			Path: gdebug.TestDataPath("i18n"),
 		})
-		t.Assert(i18n.Tfl("{#hello}{#world} %d", "ja", 2020), "こんにちは世界 2020")
-		t.Assert(i18n.Tfl("{#hello}{#world} %d", "zh-CN", 2020), "你好世界 2020")
+		t.Assert(i18n.Tfl("ja", "{#hello}{#world} %d", 2020), "こんにちは世界 2020")
+		t.Assert(i18n.Tfl("zh-CN", "{#hello}{#world} %d", 2020), "你好世界 2020")
 	})
 }
 
