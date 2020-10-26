@@ -28,7 +28,6 @@ func New(param ...interface{}) *Time {
 	if len(param) > 0 {
 		switch r := param[0].(type) {
 		case time.Time:
-			r.Nanosecond()
 			return NewFromTime(r)
 		case *time.Time:
 			return NewFromTime(*r)
