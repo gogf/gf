@@ -123,7 +123,7 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 			param = BuildParams(data[0])
 		}
 	}
-	req := (*http.Request)(nil)
+	var req *http.Request
 	if strings.Contains(param, "@file:") {
 		// File uploading request.
 		buffer := new(bytes.Buffer)
