@@ -18,7 +18,7 @@ import (
 var (
 	createdFiledNames = []string{"created_at", "create_at"} // Default filed names of table for automatic-filled created datetime.
 	updatedFiledNames = []string{"updated_at", "update_at"} // Default filed names of table for automatic-filled updated datetime.
-	deletedFiledNames = []string{"updated_at", "delete_at"} // Default filed names of table for automatic-filled deleted datetime.
+	deletedFiledNames = []string{"deleted_at", "delete_at"} // Default filed names of table for automatic-filled deleted datetime.
 )
 
 // Unscoped disables the auto-update time feature for insert, update and delete options.
