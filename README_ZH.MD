@@ -6,7 +6,7 @@
 [![Production Ready](https://img.shields.io/badge/production-ready-blue.svg)](https://github.com/gogf/gf)
 [![License](https://img.shields.io/github/license/gogf/gf.svg?style=flat)](https://github.com/gogf/gf)
 
-[English](README.MD) | 简体中文
+[English](README.MD) | 简体中文 | [繁體中文](README_ZH_TW.MD)
 
 `GF(Go Frame)`是一款模块化、高性能、生产级的Go基础开发框架。
 实现了比较完善的基础设施建设以及开发工具链，提供了常用的基础开发模块，
@@ -68,7 +68,7 @@ golang版本 >= 1.11
 以下是目前最流行的`WEB Server` Golang框架/类库性能测试结果。
 性能测试用例源代码仓库: https://github.com/gogf/gf-performance
 
-## 环境:
+## 环境
 
     OS   : Ubuntu 18.04 amd64
     CPU  : AMD A8-6600K x 4

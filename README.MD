@@ -7,7 +7,7 @@
 [![Production Ready](https://img.shields.io/badge/production-ready-blue.svg)](https://github.com/gogf/gf)
 [![License](https://img.shields.io/github/license/gogf/gf.svg?style=flat)](https://github.com/gogf/gf)
 
-English | [简体中文](README_ZH.MD)
+English | [简体中文](README_ZH.MD) | [繁體中文](README_ZH_TW.MD)
 
 `GF(GoFrame)` is a modular, powerful, high-performance and production-ready application development framework 
 of golang. Providing a series of core components and dozens of practical modules, such as: 
