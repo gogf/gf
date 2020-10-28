@@ -129,6 +129,7 @@ please note your github/gitee account in your payment bill. All the donations wi
 |Panda|wechat|￥20.00|支持一下！gf很棒👍
 |[Thunur](https://gitee.com/thunur)|wechat|￥100.00|
 |[Mr.奇淼](https://www.gin-vue-admin.com/)|wechat|￥18.88|强哥无敌，奇淼爱你
+|[SliverHorn](hhttps://github.com/sliverhorn)|wechat|￥17.77|强哥无敌，SliverHorn爱你
 |[fly的狐狸](https://github.com/zcool321)|wechat|￥50.00|
 |北漂生活|wechat|￥66.66|gf大展鸿图
 |YJ|wechat|￥10.00|YangJ-Eric祝愿越来越好
