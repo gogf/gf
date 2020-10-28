@@ -119,6 +119,25 @@ please note your github/gitee account in your payment bill. All the donations wi
 |金毛|wechat|￥100.00| 
 |莫失莫忘|wechat|￥100.00| 
 |**航|alipay|￥20.00| 
+|阿康|wechat|￥100.00| 
+|Tzp|wechat|￥10.00| 
+|[hkxiaoyu118](https://github.com/hkxiaoyu118)|wechat|￥10.00| 
+|辰|wechat|￥50.00| 
+|LSJ|wechat|￥66.66|我想我是海：祝gf越来越好，统治后端 
+|yu|wechat|￥100.00|感谢开源，加油！我是QQ群里的lah
+|雁字回时月满楼|wechat|￥20.00|感谢gf
+|Panda|wechat|￥20.00|支持一下！gf很棒👍
+|[Thunur](https://gitee.com/thunur)|wechat|￥100.00|
+|[Mr.奇淼](https://www.gin-vue-admin.com/)|wechat|￥18.88|强哥无敌，奇淼爱你
+|[fly的狐狸](https://github.com/zcool321)|wechat|￥50.00|
+|北漂生活|wechat|￥66.66|gf大展鸿图
+|YJ|wechat|￥10.00|YangJ-Eric祝愿越来越好
+|秋葵|wechat|￥20.00|之前强哥
+|陈诚|wechat|￥100.00|Loocor恭喜郭总发版🎉
+|**栋|alipay|￥100.00|
+|**浩|alipay|￥100.00|
+|RAGGA-TIME|alipay|￥50.00|
+|[ChArmy](https://gitee.com/charmy)|alipay|￥50.00|
 
 
 
