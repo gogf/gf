@@ -139,6 +139,7 @@ please note your github/gitee account in your payment bill. All the donations wi
 |**浩|alipay|￥100.00|
 |RAGGA-TIME|alipay|￥50.00|
 |[ChArmy](https://gitee.com/charmy)|alipay|￥50.00|
+|[sanfenzui](https://gitee.com/sanfenzui)|alipay|￥88.00|
 
 
 
