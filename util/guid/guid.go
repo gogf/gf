@@ -11,10 +11,4 @@
 // This package only provides unique number generation for simple, convenient and most common
 // usage purpose, but does not provide strict global unique number generation. Please refer
 // to UUID algorithm for global unique number generation if necessary.
-//
-// Unique Number ID:
-// An Improved SnowFlake ID is inspired by Twitter's Snowflake, which is composed of:
-//     39 bits for time in units of 10 msec
-//     16 bits for a machine id
-//      8 bits for a sequence number.
 package guid

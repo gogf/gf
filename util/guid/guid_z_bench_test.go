@@ -36,11 +36,3 @@ func Benchmark_S_Data_2(b *testing.B) {
 		}
 	})
 }
-
-func Benchmark_I(b *testing.B) {
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			guid.I()
-		}
-	})
-}
