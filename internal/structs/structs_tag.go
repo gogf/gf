@@ -16,17 +16,15 @@ import (
 //
 // The parameter <pointer> should be type of struct/*struct.
 //
-// The parameter <recursive> specifies whether retrieving the struct field recursively.
-//
 // Note that it only retrieves the exported attributes with first letter up-case from struct.
-func TagFields(pointer interface{}, priority []string, recursive bool) []*Field {
-	return doTagFields(pointer, priority, recursive, map[string]struct{}{})
+func TagFields(pointer interface{}, priority []string) []*Field {
+	return doTagFields(pointer, priority, map[string]struct{}{})
 }
 
 // doTagFields retrieves the tag and corresponding attribute name from <pointer>. It also filters repeated
 // tag internally.
 // The parameter <pointer> should be type of struct/*struct.
-func doTagFields(pointer interface{}, priority []string, recursive bool, tagMap map[string]struct{}) []*Field {
+func doTagFields(pointer interface{}, priority []string, tagMap map[string]struct{}) []*Field {
 	// If <pointer> points to an invalid address, for example a nil variable,
 	// it here creates an empty struct using reflect feature.
 	var (
@@ -90,7 +88,8 @@ func doTagFields(pointer interface{}, priority []string, recursive bool, tagMap 
 				Tag:   tag,
 			})
 		}
-		if recursive {
+		// If this is an embedded attribute, it retrieves the tags recursively.
+		if field.IsEmbedded() {
 			var (
 				rv   = reflect.ValueOf(field.Value())
 				kind = rv.Kind()
@@ -100,7 +99,7 @@ func doTagFields(pointer interface{}, priority []string, recursive bool, tagMap 
 				kind = rv.Kind()
 			}
 			if kind == reflect.Struct {
-				tagFields = append(tagFields, doTagFields(rv, priority, recursive, tagMap)...)
+				tagFields = append(tagFields, doTagFields(rv, priority, tagMap)...)
 			}
 		}
 	}
@@ -111,11 +110,9 @@ func doTagFields(pointer interface{}, priority []string, recursive bool, tagMap 
 //
 // The parameter <pointer> should be type of struct/*struct.
 //
-// The parameter <recursive> specifies whether retrieving the struct field recursively.
-//
 // Note that it only retrieves the exported attributes with first letter up-case from struct.
-func TagMapName(pointer interface{}, priority []string, recursive bool) map[string]string {
-	fields := TagFields(pointer, priority, recursive)
+func TagMapName(pointer interface{}, priority []string) map[string]string {
+	fields := TagFields(pointer, priority)
 	tagMap := make(map[string]string, len(fields))
 	for _, v := range fields {
 		tagMap[v.Tag] = v.Name()
@@ -127,11 +124,9 @@ func TagMapName(pointer interface{}, priority []string, recursive bool) map[stri
 //
 // The parameter <pointer> should be type of struct/*struct.
 //
-// The parameter <recursive> specifies whether retrieving the struct field recursively.
-//
 // Note that it only retrieves the exported attributes with first letter up-case from struct.
-func TagMapField(pointer interface{}, priority []string, recursive bool) map[string]*Field {
-	fields := TagFields(pointer, priority, recursive)
+func TagMapField(pointer interface{}, priority []string) map[string]*Field {
+	fields := TagFields(pointer, priority)
 	tagMap := make(map[string]*Field, len(fields))
 	for _, v := range fields {
 		tagMap[v.Tag] = v
