@@ -30,10 +30,10 @@ var (
 )
 
 // I creates and returns an uint64 id which using improved SnowFlake algorithm.
-// An Improved SnowFlake ID is composed of
+// An Improved SnowFlake ID is composed of:
 //     39 bits for time in units of 10 msec
-//      8 bits for a sequence number
-//     16 bits for a machine id.
+//     16 bits for a machine id
+//      8 bits for a sequence number.
 func I() uint64 {
 	return uint64(time.Now().UnixNano())<<(BitLenMachineID+BitLenSequence) | uint64(MachineId<<BitLenSequence) | uint64(sequenceNumber.Add(1)%0xFF)
 }
