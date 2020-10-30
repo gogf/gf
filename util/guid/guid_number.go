@@ -23,11 +23,22 @@ var (
 	// MachineId is 16 bits number composed with the last two parts of the first local private ip.
 	// You can change it as your custom machine id in boot time, but do not change it in runtime.
 	// Note that if there's no net card on the machine, it panics when the process boots.
-	MachineId = getLower16BitPrivateIP()
+	MachineId uint16
 
 	// sequenceNumber is used for internal concurrent-safe sequence number counting.
 	sequenceNumber = gtype.NewInt()
 )
+
+func init() {
+	if MachineId != 0 {
+		return
+	}
+	ip, err := getPrivateIPv4()
+	if err != nil {
+		panic(err)
+	}
+	MachineId = uint16(ip[2])<<8 + uint16(ip[3])
+}
 
 // I creates and returns an uint64 id which using improved SnowFlake algorithm.
 // An Improved SnowFlake ID is composed of:
@@ -36,18 +47,6 @@ var (
 //      8 bits for a sequence number.
 func I() uint64 {
 	return uint64(time.Now().UnixNano())<<(BitLenMachineID+BitLenSequence) | uint64(MachineId<<BitLenSequence) | uint64(sequenceNumber.Add(1)%0xFF)
-}
-
-func getLower16BitPrivateIP() uint16 {
-	if MachineId != 0 {
-		return MachineId
-	}
-	ip, err := getPrivateIPv4()
-	if err != nil {
-		panic(err)
-	}
-	MachineId = uint16(ip[2])<<8 + uint16(ip[3])
-	return MachineId
 }
 
 func getPrivateIPv4() (net.IP, error) {
