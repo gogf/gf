@@ -37,7 +37,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	MachineId = uint16(ip[2])<<8 + uint16(ip[3])
+	MachineId = uint16(ip[2])<<8 | uint16(ip[3])
 }
 
 // I creates and returns an uint64 id which using improved SnowFlake algorithm.
