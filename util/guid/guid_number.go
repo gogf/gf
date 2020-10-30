@@ -20,7 +20,12 @@ const (
 )
 
 var (
-	MachineId      = getLower16BitPrivateIP()
+	// MachineId is 16 bits number composed with the last two parts of the first local private ip.
+	// You can change it as your custom machine id in boot time, but do not change it in runtime.
+	// Note that if there's no net card on the machine, it panics when the process boots.
+	MachineId = getLower16BitPrivateIP()
+
+	// sequenceNumber is used for internal concurrent-safe sequence number counting.
 	sequenceNumber = gtype.NewInt()
 )
 
