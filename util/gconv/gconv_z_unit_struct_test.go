@@ -1001,3 +1001,31 @@ func Test_Struct_WithJson(t *testing.T) {
 		t.Assert(b2, b1)
 	})
 }
+
+func Test_Struct_AttrStructHasTheSameTag(t *testing.T) {
+	type Product struct {
+		Id              int       `json:"id"`
+		UpdatedAt       time.Time `json:"-" `
+		UpdatedAtFormat string    `json:"updated_at" `
+	}
+
+	type Order struct {
+		Id        int       `json:"id"`
+		UpdatedAt time.Time `json:"updated_at"`
+		Product   Product   `json:"products"`
+	}
+	gtest.C(t, func(t *gtest.T) {
+		data := g.Map{
+			"id":         1,
+			"updated_at": time.Now(),
+		}
+		order := new(Order)
+		err := gconv.Struct(data, order)
+		t.Assert(err, nil)
+		t.Assert(order.Id, data["id"])
+		t.Assert(order.UpdatedAt, data["updated_at"])
+		t.Assert(order.Product.Id, 0)
+		t.Assert(order.Product.UpdatedAt.IsZero(), true)
+		t.Assert(order.Product.UpdatedAtFormat, "")
+	})
+}

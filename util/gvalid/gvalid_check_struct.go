@@ -78,7 +78,7 @@ func CheckStruct(object interface{}, rules interface{}, messages ...CustomMsg) *
 		params[field.Name()] = field.Value()
 	}
 	// It here must use structs.TagFields not structs.MapField to ensure error sequence.
-	for _, field := range structs.TagFields(object, structTagPriority, true) {
+	for _, field := range structs.TagFields(object, structTagPriority) {
 		fieldName := field.Name()
 		// sequence tag == struct tag
 		// The name here is alias of field name.

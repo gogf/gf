@@ -191,7 +191,7 @@ func doStruct(params interface{}, pointer interface{}, recursive bool, mapping .
 	// The key of the tagMap is the attribute name of the struct,
 	// and the value is its replaced tag name for later comparison to improve performance.
 	tagMap := make(map[string]string)
-	for k, v := range structs.TagMapName(pointer, StructTagPriority, true) {
+	for k, v := range structs.TagMapName(pointer, StructTagPriority) {
 		tagMap[v] = replaceCharReg.ReplaceAllString(k, "")
 	}
 
