@@ -6,6 +6,8 @@
 
 package gconv
 
+import "reflect"
+
 // SliceInt is alias of Ints.
 func SliceInt(i interface{}) []int {
 	return Ints(i)
@@ -116,7 +118,18 @@ func Ints(i interface{}) []int {
 		if v, ok := i.(apiInterfaces); ok {
 			return Ints(v.Interfaces())
 		}
-		return []int{Int(i)}
+		// Use reflect feature at last.
+		rv := reflect.ValueOf(i)
+		switch rv.Kind() {
+		case reflect.Slice, reflect.Array:
+			length := rv.Len()
+			array = make([]int, length)
+			for n := 0; n < length; n++ {
+				array[n] = Int(rv.Index(n).Interface())
+			}
+		default:
+			return []int{Int(i)}
+		}
 	}
 	return array
 }

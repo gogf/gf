@@ -25,6 +25,17 @@ func Test_Slice(t *testing.T) {
 	})
 }
 
+func Test_Strings(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		array := []*g.Var{
+			g.NewVar(1),
+			g.NewVar(2),
+			g.NewVar(3),
+		}
+		t.AssertEQ(gconv.Strings(array), []string{"1", "2", "3"})
+	})
+}
+
 func Test_Slice_PrivateAttribute(t *testing.T) {
 	type User struct {
 		Id   int
