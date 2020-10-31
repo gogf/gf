@@ -14,6 +14,7 @@ import (
 )
 
 func Benchmark_S(b *testing.B) {
+<<<<<<< HEAD
 	for i := 0; i < b.N; i++ {
 		guid.S()
 	}
@@ -29,4 +30,27 @@ func Benchmark_S_Data_2(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		guid.S([]byte("123"), []byte("456"))
 	}
+=======
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			guid.S()
+		}
+	})
+}
+
+func Benchmark_S_Data_1(b *testing.B) {
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			guid.S([]byte("123"))
+		}
+	})
+}
+
+func Benchmark_S_Data_2(b *testing.B) {
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			guid.S([]byte("123"), []byte("456"))
+		}
+	})
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 }

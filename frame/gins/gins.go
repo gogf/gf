@@ -9,6 +9,7 @@ package gins
 
 import (
 	"github.com/gogf/gf/container/gmap"
+<<<<<<< HEAD
 
 )
 
@@ -17,6 +18,15 @@ var (
 	instances = gmap.NewStrAnyMap(true)
 )
 
+=======
+)
+
+var (
+	// instances is the instance map for common used components.
+	instances = gmap.NewStrAnyMap(true)
+)
+
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 // Get returns the instance by given name.
 func Get(name string) interface{} {
 	return instances.Get(name)
@@ -40,6 +50,7 @@ func GetOrSetFunc(name string, f func() interface{}) interface{} {
 	return instances.GetOrSetFunc(name, f)
 }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 // Resource returns an instance of Resource.
 // The parameter <name> is the name for the instance.
@@ -234,9 +245,24 @@ func GetOrSetFuncLock(name string, f func() interface{}) interface{} {
 	return instances.GetOrSetFuncLock(name, f)
 }
 
+=======
+// GetOrSetFuncLock returns the instance by name,
+// or sets instance with returned value of callback function <f> if it does not exist
+// and then returns this instance.
+//
+// GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function <f>
+// with mutex.Lock of the hash map.
+func GetOrSetFuncLock(name string, f func() interface{}) interface{} {
+	return instances.GetOrSetFuncLock(name, f)
+}
+
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 // SetIfNotExist sets <instance> to the map if the <name> does not exist, then returns true.
 // It returns false if <name> exists, and <instance> would be ignored.
 func SetIfNotExist(name string, instance interface{}) bool {
 	return instances.SetIfNotExist(name, instance)
+<<<<<<< HEAD
 >>>>>>> bd3e25adea5d01b7371b5122e67751262da52ff6
+=======
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 }

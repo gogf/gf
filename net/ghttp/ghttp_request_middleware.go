@@ -120,7 +120,11 @@ func (m *Middleware) Next() {
 				// There should be a "Next" function to be called in the middleware in order to manage the workflow.
 				loop = false
 			}
+<<<<<<< HEAD
 		}, func(exception interface{}) {
+=======
+		}, func(exception error) {
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 			if e, ok := exception.(gerror.ApiStack); ok {
 				// It's already an error that has stack info.
 				m.request.error = e.(error)

@@ -42,9 +42,15 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 	}
 	var (
 		updateData                                    = m.data
+<<<<<<< HEAD
 		fieldNameCreate                               = m.getSoftFieldNameCreate()
 		fieldNameUpdate                               = m.getSoftFieldNameUpdate()
 		fieldNameDelete                               = m.getSoftFieldNameDelete()
+=======
+		fieldNameCreate                               = m.getSoftFieldNameCreated()
+		fieldNameUpdate                               = m.getSoftFieldNameUpdated()
+		fieldNameDelete                               = m.getSoftFieldNameDeleted()
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(false)
 	)
 	// Automatically update the record updating time.
@@ -73,10 +79,21 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 			updateData = updates
 		}
 	}
+<<<<<<< HEAD
 	return m.db.DoUpdate(
 		m.getLink(true),
 		m.tables,
 		m.filterDataForInsertOrUpdate(updateData),
+=======
+	newData, err := m.filterDataForInsertOrUpdate(updateData)
+	if err != nil {
+		return nil, err
+	}
+	return m.db.DoUpdate(
+		m.getLink(true),
+		m.tables,
+		newData,
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 		conditionWhere+conditionExtra,
 		m.mergeArguments(conditionArgs)...,
 	)

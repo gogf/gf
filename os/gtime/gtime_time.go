@@ -14,7 +14,11 @@ import (
 
 // Time is a wrapper for time.Time for additional features.
 type Time struct {
+<<<<<<< HEAD
 	TimeWrapper
+=======
+	wrapper
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 }
 
 // apiUnixNano is an interface definition commonly for custom time.Time wrapper.
@@ -28,7 +32,10 @@ func New(param ...interface{}) *Time {
 	if len(param) > 0 {
 		switch r := param[0].(type) {
 		case time.Time:
+<<<<<<< HEAD
 			r.Nanosecond()
+=======
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 			return NewFromTime(r)
 		case *time.Time:
 			return NewFromTime(*r)
@@ -47,21 +54,33 @@ func New(param ...interface{}) *Time {
 		}
 	}
 	return &Time{
+<<<<<<< HEAD
 		TimeWrapper{time.Time{}},
+=======
+		wrapper{time.Time{}},
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 	}
 }
 
 // Now creates and returns a time object of now.
 func Now() *Time {
 	return &Time{
+<<<<<<< HEAD
 		TimeWrapper{time.Now()},
+=======
+		wrapper{time.Now()},
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 	}
 }
 
 // NewFromTime creates and returns a Time object with given time.Time object.
 func NewFromTime(t time.Time) *Time {
 	return &Time{
+<<<<<<< HEAD
 		TimeWrapper{t},
+=======
+		wrapper{t},
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 	}
 }
 
@@ -112,7 +131,11 @@ func NewFromTimeStamp(timestamp int64) *Time {
 		sec = timestamp
 	}
 	return &Time{
+<<<<<<< HEAD
 		TimeWrapper{time.Unix(sec, nano)},
+=======
+		wrapper{time.Unix(sec, nano)},
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 	}
 }
 

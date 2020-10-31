@@ -193,7 +193,11 @@ func (r *Request) GetFormStruct(pointer interface{}, mapping ...map[string]strin
 	if m == nil {
 		m = map[string]interface{}{}
 	}
+<<<<<<< HEAD
 	return gconv.StructDeep(m, pointer, mapping...)
+=======
+	return gconv.Struct(m, pointer, mapping...)
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 }
 
 // GetFormToStruct is alias of GetFormStruct. See GetFormStruct.

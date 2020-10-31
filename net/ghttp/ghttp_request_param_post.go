@@ -204,7 +204,11 @@ func (r *Request) GetPostMapStrVar(kvMap ...map[string]interface{}) map[string]*
 //
 // Deprecated.
 func (r *Request) GetPostStruct(pointer interface{}, mapping ...map[string]string) error {
+<<<<<<< HEAD:net/ghttp/ghttp_request_param_post.go
 	return gconv.StructDeep(r.GetPostMap(), pointer, mapping...)
+=======
+	return gconv.Struct(r.GetPostMap(), pointer, mapping...)
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c:net/ghttp/ghttp_request_method_post.go
 }
 
 // GetPostToStruct is alias of GetQueryStruct. See GetPostStruct.

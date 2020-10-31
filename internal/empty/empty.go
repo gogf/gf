@@ -69,12 +69,30 @@ func IsEmpty(value interface{}) bool {
 	default:
 		// Common interfaces checks.
 		if f, ok := value.(apiString); ok {
+<<<<<<< HEAD
 			return f.String() == ""
 		}
 		if f, ok := value.(apiInterfaces); ok {
 			return len(f.Interfaces()) == 0
 		}
 		if f, ok := value.(apiMapStrAny); ok {
+=======
+			if f == nil {
+				return true
+			}
+			return f.String() == ""
+		}
+		if f, ok := value.(apiInterfaces); ok {
+			if f == nil {
+				return true
+			}
+			return len(f.Interfaces()) == 0
+		}
+		if f, ok := value.(apiMapStrAny); ok {
+			if f == nil {
+				return true
+			}
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 			return len(f.MapStrAny()) == 0
 		}
 		// Finally using reflect.

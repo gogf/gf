@@ -184,6 +184,10 @@ func Test_DB_Insert(t *testing.T) {
 	})
 }
 
+<<<<<<< HEAD:database/gdb/gdb_z_mysql_method_test.go
+=======
+// Fix issue: https://github.com/gogf/gf/issues/819
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c:database/gdb/gdb_unit_z_mysql_method_test.go
 func Test_DB_Insert_WithStructAndSliceAttribute(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
@@ -211,6 +215,94 @@ func Test_DB_Insert_WithStructAndSliceAttribute(t *testing.T) {
 	})
 }
 
+<<<<<<< HEAD:database/gdb/gdb_z_mysql_method_test.go
+=======
+func Test_DB_Insert_KeyFieldNameMapping(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id         int
+			Passport   string
+			Password   string
+			Nickname   string
+			CreateTime string
+		}
+		data := User{
+			Id:         1,
+			Passport:   "user_1",
+			Password:   "pass_1",
+			Nickname:   "name_1",
+			CreateTime: "2020-10-10 12:00:01",
+		}
+		_, err := db.Insert(table, data)
+		t.Assert(err, nil)
+
+		one, err := db.GetOne(fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 1)
+		t.Assert(err, nil)
+		t.Assert(one["passport"], data.Passport)
+		t.Assert(one["create_time"], data.CreateTime)
+		t.Assert(one["nickname"], data.Nickname)
+	})
+}
+
+func Test_DB_Upadte_KeyFieldNameMapping(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id         int
+			Passport   string
+			Password   string
+			Nickname   string
+			CreateTime string
+		}
+		data := User{
+			Id:         1,
+			Passport:   "user_10",
+			Password:   "pass_10",
+			Nickname:   "name_10",
+			CreateTime: "2020-10-10 12:00:01",
+		}
+		_, err := db.Update(table, data, "id=1")
+		t.Assert(err, nil)
+
+		one, err := db.GetOne(fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 1)
+		t.Assert(err, nil)
+		t.Assert(one["passport"], data.Passport)
+		t.Assert(one["create_time"], data.CreateTime)
+		t.Assert(one["nickname"], data.Nickname)
+	})
+}
+
+func Test_DB_Insert_KeyFieldNameMapping_Error(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id             int
+			Passport       string
+			Password       string
+			Nickname       string
+			CreateTime     string
+			NoneExistField string
+		}
+		data := User{
+			Id:         1,
+			Passport:   "user_1",
+			Password:   "pass_1",
+			Nickname:   "name_1",
+			CreateTime: "2020-10-10 12:00:01",
+		}
+		_, err := db.Insert(table, data)
+		t.AssertNE(err, nil)
+	})
+}
+
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c:database/gdb/gdb_unit_z_mysql_method_test.go
 func Test_DB_InsertIgnore(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)

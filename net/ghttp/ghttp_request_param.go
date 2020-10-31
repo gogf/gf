@@ -25,6 +25,15 @@ import (
 	"strings"
 )
 
+<<<<<<< HEAD
+=======
+const (
+	parseTypeRequest = 0
+	parseTypeQuery   = 1
+	parseTypeForm    = 2
+)
+
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 var (
 	// xmlHeaderBytes is the most common XML format header.
 	xmlHeaderBytes = []byte("<?xml")
@@ -37,11 +46,33 @@ var (
 // The parameter <pointer> can be type of: *struct/**struct/*[]struct/*[]*struct.
 //
 // It supports single and multiple struct convertion:
+<<<<<<< HEAD
 // 1. Single struct, post content like: {"id":1, "name":"john"}
+=======
+// 1. Single struct, post content like: {"id":1, "name":"john"} or ?id=1&name=john
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 // 2. Multiple struct, post content like: [{"id":1, "name":"john"}, {"id":, "name":"smith"}]
 //
 // TODO: Improve the performance by reducing duplicated reflect usage on the same variable across packages.
 func (r *Request) Parse(pointer interface{}) error {
+<<<<<<< HEAD
+=======
+	return r.doParse(pointer, parseTypeRequest)
+}
+
+// ParseQuery performs like function Parse, but only parses the query parameters.
+func (r *Request) ParseQuery(pointer interface{}) error {
+	return r.doParse(pointer, parseTypeQuery)
+}
+
+// ParseForm performs like function Parse, but only parses the form parameters or the body content.
+func (r *Request) ParseForm(pointer interface{}) error {
+	return r.doParse(pointer, parseTypeForm)
+}
+
+// doParse parses the request data to struct/structs according to request type.
+func (r *Request) doParse(pointer interface{}, requestType int) error {
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 	var (
 		reflectVal1  = reflect.ValueOf(pointer)
 		reflectKind1 = reflectVal1.Kind()
@@ -58,18 +89,44 @@ func (r *Request) Parse(pointer interface{}) error {
 	)
 	switch reflectKind2 {
 	// Single struct, post content like:
+<<<<<<< HEAD
 	// {"id":1, "name":"john"}
 	case reflect.Ptr, reflect.Struct:
 		// Conversion.
 		if err := r.GetStruct(pointer); err != nil {
 			return err
 		}
+=======
+	// 1. {"id":1, "name":"john"}
+	// 2. ?id=1&name=john
+	case reflect.Ptr, reflect.Struct:
+		// Converting.
+		switch requestType {
+		case parseTypeQuery:
+			if err := r.GetQueryStruct(pointer); err != nil {
+				return err
+			}
+		case parseTypeForm:
+			if err := r.GetFormStruct(pointer); err != nil {
+				return err
+			}
+		default:
+			if err := r.GetStruct(pointer); err != nil {
+				return err
+			}
+		}
+
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 		// Validation.
 		if err := gvalid.CheckStruct(pointer, nil); err != nil {
 			return err
 		}
 
+<<<<<<< HEAD
 	// Multiple struct, post content like:
+=======
+	// Multiple struct, it only supports JSON type post content like:
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 	// [{"id":1, "name":"john"}, {"id":, "name":"smith"}]
 	case reflect.Array, reflect.Slice:
 		// If struct slice conversion, it might post JSON/XML content,
@@ -371,11 +428,22 @@ func (r *Request) parseForm() {
 				}
 			}
 		}
+<<<<<<< HEAD
 		if r.formMap == nil {
 			r.parseBody()
 			if len(r.bodyMap) > 0 {
 				r.formMap = r.bodyMap
 			}
+=======
+	}
+	// It parses the request body without checking the Content-Type.
+	if r.formMap == nil {
+		if r.Method != "GET" {
+			r.parseBody()
+		}
+		if len(r.bodyMap) > 0 {
+			r.formMap = r.bodyMap
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 		}
 	}
 }

@@ -69,3 +69,34 @@ func Test_Load_New_CustomStruct(t *testing.T) {
 		t.Assert(s == `{"Id":1,"Name":"john"}` || s == `{"Name":"john","Id":1}`, true)
 	})
 }
+<<<<<<< HEAD
+=======
+
+func Test_Load_New_HierarchicalStruct(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Me struct {
+			Name     string `json:"name"`
+			Score    int    `json:"score"`
+			Children []Me   `json:"children"`
+		}
+		me := Me{
+			Name:  "john",
+			Score: 100,
+			Children: []Me{
+				{
+					Name:  "Bean",
+					Score: 99,
+				},
+				{
+					Name:  "Sam",
+					Score: 98,
+				},
+			},
+		}
+		j := gjson.New(me)
+		t.Assert(j.Remove("children.0.score"), nil)
+		t.Assert(j.Remove("children.1.score"), nil)
+		t.Assert(j.MustToJsonString(), `{"children":[{"children":null,"name":"Bean"},{"children":null,"name":"Sam"}],"name":"john","score":100}`)
+	})
+}
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c

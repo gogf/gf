@@ -128,6 +128,10 @@ type DB interface {
 	GetDryRun() bool
 	SetLogger(logger *glog.Logger)
 	GetLogger() *glog.Logger
+<<<<<<< HEAD
+=======
+	GetConfig() *ConfigNode
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 	SetMaxIdleConnCount(n int)
 	SetMaxOpenConnCount(n int)
 	SetMaxConnLifetime(d time.Duration)
@@ -156,7 +160,11 @@ type DB interface {
 	// Internal methods.
 	// ===========================================================================
 
+<<<<<<< HEAD
 	filterFields(schema, table string, data map[string]interface{}) map[string]interface{}
+=======
+	mappingAndFilterData(schema, table string, data map[string]interface{}, filter bool) (map[string]interface{}, error)
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 	convertValue(fieldValue interface{}, fieldType string) interface{}
 	rowsToResult(rows *sql.Rows) (Result, error)
 }
@@ -171,6 +179,10 @@ type Core struct {
 	dryrun           *gtype.Bool   // Dry run.
 	prefix           string        // Table prefix.
 	logger           *glog.Logger  // Logger.
+<<<<<<< HEAD
+=======
+	config           *ConfigNode   // Current config node.
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 	maxIdleConnCount int           // Max idle connection count.
 	maxOpenConnCount int           // Max open connection count.
 	maxConnLifetime  time.Duration // Max TTL for a connection.
@@ -304,6 +316,10 @@ func New(group ...string) (db DB, err error) {
 				dryrun:           gtype.NewBool(),
 				logger:           glog.New(),
 				prefix:           node.Prefix,
+<<<<<<< HEAD
+=======
+				config:           node,
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 				maxIdleConnCount: gDEFAULT_CONN_MAX_IDLE_COUNT,
 				maxConnLifetime:  gDEFAULT_CONN_MAX_LIFE_TIME, // Default max connection life time if user does not configure.
 			}

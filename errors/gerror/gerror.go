@@ -26,6 +26,15 @@ type ApiCause interface {
 	Cause() error
 }
 
+<<<<<<< HEAD
+=======
+// ApiLevel is the interface for Current/Next feature.
+type ApiLevel interface {
+	Current() error
+	Next() error
+}
+
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 // New creates and returns an error which is formatted from given text.
 func New(text string) error {
 	if text == "" {
@@ -119,4 +128,28 @@ func Stack(err error) string {
 		return e.Stack()
 	}
 	return ""
+}
+
+// Current creates and returns the current level error.
+// It returns nil if current level error is nil.
+func Current(err error) error {
+	if err == nil {
+		return nil
+	}
+	if e, ok := err.(ApiLevel); ok {
+		return e.Current()
+	}
+	return err
+}
+
+// Next returns the next level error.
+// It returns nil if current level error or the next level error is nil.
+func Next(err error) error {
+	if err == nil {
+		return nil
+	}
+	if e, ok := err.(ApiLevel); ok {
+		return e.Next()
+	}
+	return nil
 }

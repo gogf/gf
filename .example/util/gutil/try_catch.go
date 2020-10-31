@@ -11,7 +11,7 @@ func main() {
 		fmt.Println(1)
 		gutil.Throw("error")
 		fmt.Println(2)
-	}, func(err interface{}) {
+	}, func(err error) {
 		fmt.Println(err)
 	})
 }

@@ -87,17 +87,32 @@ func CheckMap(params interface{}, rules interface{}, messages ...CustomMsg) *Err
 		if v, ok := data[key]; ok {
 			value = v
 		}
+<<<<<<< HEAD
 		if e := doCheck(key, value, rule, customMsgs[key], data); e != nil {
 			_, item := e.FirstItem()
 			// ===========================================================
 			// If value is nil or empty string and has no required* rules,
 			// clear the error message.
+=======
+		// It checks each rule and its value in loop.
+		if e := doCheck(key, value, rule, customMsgs[key], data); e != nil {
+			_, item := e.FirstItem()
+			// ===========================================================
+			// Only in map and struct validations, if value is nil or empty
+			// string and has no required* rules, it clears the error message.
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 			// ===========================================================
 			if gconv.String(value) == "" {
 				required := false
 				// rule => error
 				for k := range item {
+					// Default required rules.
 					if _, ok := mustCheckRulesEvenValueEmpty[k]; ok {
+						required = true
+						break
+					}
+					// Custom rules are also required in default.
+					if _, ok := customRuleFuncMap[k]; ok {
 						required = true
 						break
 					}

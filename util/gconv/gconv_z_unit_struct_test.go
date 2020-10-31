@@ -979,5 +979,56 @@ func Test_Struct_To_Struct(t *testing.T) {
 		t.Assert(gconv.Struct(TestB, &TestA), nil)
 		t.Assert(TestA.Id, TestB.Id)
 		t.Assert(TestA.Date, TestB.Date)
+<<<<<<< HEAD
+=======
+	})
+}
+
+func Test_Struct_WithJson(t *testing.T) {
+	type A struct {
+		Name string
+	}
+	type B struct {
+		A
+		Score int
+	}
+	gtest.C(t, func(t *gtest.T) {
+		b1 := &B{}
+		b1.Name = "john"
+		b1.Score = 100
+		b, _ := json.Marshal(b1)
+		b2 := &B{}
+		err := gconv.Struct(b, b2)
+		t.Assert(err, nil)
+		t.Assert(b2, b1)
+	})
+}
+
+func Test_Struct_AttrStructHasTheSameTag(t *testing.T) {
+	type Product struct {
+		Id              int       `json:"id"`
+		UpdatedAt       time.Time `json:"-" `
+		UpdatedAtFormat string    `json:"updated_at" `
+	}
+
+	type Order struct {
+		Id        int       `json:"id"`
+		UpdatedAt time.Time `json:"updated_at"`
+		Product   Product   `json:"products"`
+	}
+	gtest.C(t, func(t *gtest.T) {
+		data := g.Map{
+			"id":         1,
+			"updated_at": time.Now(),
+		}
+		order := new(Order)
+		err := gconv.Struct(data, order)
+		t.Assert(err, nil)
+		t.Assert(order.Id, data["id"])
+		t.Assert(order.UpdatedAt, data["updated_at"])
+		t.Assert(order.Product.Id, 0)
+		t.Assert(order.Product.UpdatedAt.IsZero(), true)
+		t.Assert(order.Product.UpdatedAtFormat, "")
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 	})
 }

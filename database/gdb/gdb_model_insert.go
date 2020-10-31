@@ -149,9 +149,15 @@ func (m *Model) doInsertWithOption(option int, data ...interface{}) (result sql.
 	}
 	var (
 		nowString       = gtime.Now().String()
+<<<<<<< HEAD
 		fieldNameCreate = m.getSoftFieldNameCreate()
 		fieldNameUpdate = m.getSoftFieldNameUpdate()
 		fieldNameDelete = m.getSoftFieldNameDelete()
+=======
+		fieldNameCreate = m.getSoftFieldNameCreated()
+		fieldNameUpdate = m.getSoftFieldNameUpdated()
+		fieldNameDelete = m.getSoftFieldNameDeleted()
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 	)
 	// Batch operation.
 	if list, ok := m.data.(List); ok {
@@ -172,10 +178,21 @@ func (m *Model) doInsertWithOption(option int, data ...interface{}) (result sql.
 				list[k] = v
 			}
 		}
+<<<<<<< HEAD
 		return m.db.DoBatchInsert(
 			m.getLink(true),
 			m.tables,
 			m.filterDataForInsertOrUpdate(list),
+=======
+		newData, err := m.filterDataForInsertOrUpdate(list)
+		if err != nil {
+			return nil, err
+		}
+		return m.db.DoBatchInsert(
+			m.getLink(true),
+			m.tables,
+			newData,
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 			option,
 			batch,
 		)
@@ -192,10 +209,21 @@ func (m *Model) doInsertWithOption(option int, data ...interface{}) (result sql.
 				data[fieldNameUpdate] = nowString
 			}
 		}
+<<<<<<< HEAD
 		return m.db.DoInsert(
 			m.getLink(true),
 			m.tables,
 			m.filterDataForInsertOrUpdate(data),
+=======
+		newData, err := m.filterDataForInsertOrUpdate(data)
+		if err != nil {
+			return nil, err
+		}
+		return m.db.DoInsert(
+			m.getLink(true),
+			m.tables,
+			newData,
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 			option,
 		)
 	}

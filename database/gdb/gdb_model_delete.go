@@ -25,7 +25,11 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 		}
 	}()
 	var (
+<<<<<<< HEAD
 		fieldNameDelete                               = m.getSoftFieldNameDelete()
+=======
+		fieldNameDelete                               = m.getSoftFieldNameDeleted()
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(false)
 	)
 	// Soft deleting.

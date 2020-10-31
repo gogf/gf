@@ -124,6 +124,7 @@ func (m *Manager) T(content string, language ...string) string {
 	return m.Translate(content, language...)
 }
 
+<<<<<<< HEAD
 // TF is alias of TranslateFormat for convenience.
 func (m *Manager) TF(format string, values ...interface{}) string {
 	return m.TranslateFormat(format, values...)
@@ -132,6 +133,16 @@ func (m *Manager) TF(format string, values ...interface{}) string {
 // TFL is alias of TranslateFormatLang for convenience.
 func (m *Manager) TFL(format string, language string, values ...interface{}) string {
 	return m.TranslateFormatLang(format, language, values...)
+=======
+// Tf is alias of TranslateFormat for convenience.
+func (m *Manager) Tf(format string, values ...interface{}) string {
+	return m.TranslateFormat(format, values...)
+}
+
+// Tfl is alias of TranslateFormatLang for convenience.
+func (m *Manager) Tfl(language string, format string, values ...interface{}) string {
+	return m.TranslateFormatLang(language, format, values...)
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 }
 
 // TranslateFormat translates, formats and returns the <format> with configured language
@@ -144,7 +155,11 @@ func (m *Manager) TranslateFormat(format string, values ...interface{}) string {
 // and given <values>. The parameter <language> specifies custom translation language ignoring
 // configured language. If <language> is given empty string, it uses the default configured
 // language for the translation.
+<<<<<<< HEAD
 func (m *Manager) TranslateFormatLang(format string, language string, values ...interface{}) string {
+=======
+func (m *Manager) TranslateFormatLang(language string, format string, values ...interface{}) string {
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 	return fmt.Sprintf(m.Translate(format, language), values...)
 }
 

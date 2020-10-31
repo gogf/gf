@@ -271,7 +271,11 @@ func (r *Request) GetRequestStruct(pointer interface{}, mapping ...map[string]st
 	if m == nil {
 		m = map[string]interface{}{}
 	}
+<<<<<<< HEAD
 	return gconv.StructDeep(m, pointer, mapping...)
+=======
+	return gconv.Struct(m, pointer, mapping...)
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 }
 
 // GetRequestToStruct is alias of GetRequestStruct. See GetRequestStruct.

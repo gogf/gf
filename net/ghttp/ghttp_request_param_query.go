@@ -34,7 +34,13 @@ func (r *Request) GetQuery(key string, def ...interface{}) interface{} {
 			return v
 		}
 	}
+<<<<<<< HEAD:net/ghttp/ghttp_request_param_query.go
 	r.parseBody()
+=======
+	if r.Method == "GET" {
+		r.parseBody()
+	}
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c:net/ghttp/ghttp_request_method_query.go
 	if len(r.bodyMap) > 0 {
 		if v, ok := r.bodyMap[key]; ok {
 			return v
@@ -118,7 +124,13 @@ func (r *Request) GetQueryInterfaces(key string, def ...interface{}) []interface
 // in order of priority: query > body.
 func (r *Request) GetQueryMap(kvMap ...map[string]interface{}) map[string]interface{} {
 	r.parseQuery()
+<<<<<<< HEAD:net/ghttp/ghttp_request_param_query.go
 	r.parseBody()
+=======
+	if r.Method == "GET" {
+		r.parseBody()
+	}
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c:net/ghttp/ghttp_request_method_query.go
 	var m map[string]interface{}
 	if len(kvMap) > 0 && kvMap[0] != nil {
 		if len(r.queryMap) == 0 && len(r.bodyMap) == 0 {
@@ -197,7 +209,11 @@ func (r *Request) GetQueryStruct(pointer interface{}, mapping ...map[string]stri
 	if m == nil {
 		m = map[string]interface{}{}
 	}
+<<<<<<< HEAD:net/ghttp/ghttp_request_param_query.go
 	return gconv.StructDeep(m, pointer, mapping...)
+=======
+	return gconv.Struct(m, pointer, mapping...)
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c:net/ghttp/ghttp_request_method_query.go
 }
 
 // GetQueryToStruct is alias of GetQueryStruct. See GetQueryStruct.

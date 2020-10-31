@@ -16,6 +16,10 @@ type RuleFunc func(rule string, value interface{}, message string, params map[st
 
 var (
 	// customRuleFuncMap stores the custom rule functions.
+<<<<<<< HEAD
+=======
+	// map[Rule]RuleFunc
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 	customRuleFuncMap = make(map[string]RuleFunc)
 )
 

@@ -15,6 +15,19 @@ import (
 	"reflect"
 )
 
+<<<<<<< HEAD
+=======
+// apiString is used for type assert api for String().
+type apiString interface {
+	String() string
+}
+
+// apiMapStrAny is the interface support for converting struct parameter to map.
+type apiMapStrAny interface {
+	MapStrAny() map[string]interface{}
+}
+
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 // Dump prints variables <i...> to stdout with more manually readable.
 func Dump(i ...interface{}) {
 	s := Export(i...)
@@ -27,11 +40,24 @@ func Dump(i ...interface{}) {
 func Export(i ...interface{}) string {
 	buffer := bytes.NewBuffer(nil)
 	for _, v := range i {
+<<<<<<< HEAD
 		if b, ok := v.([]byte); ok {
 			buffer.Write(b)
 		} else {
 			rv := reflect.ValueOf(v)
 			kind := rv.Kind()
+=======
+		switch r := v.(type) {
+		case []byte:
+			buffer.Write(r)
+		case string:
+			buffer.WriteString(r)
+		default:
+			var (
+				rv   = reflect.ValueOf(v)
+				kind = rv.Kind()
+			)
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 			if kind == reflect.Ptr {
 				rv = rv.Elem()
 				kind = rv.Kind()
@@ -39,8 +65,19 @@ func Export(i ...interface{}) string {
 			switch kind {
 			case reflect.Slice, reflect.Array:
 				v = gconv.Interfaces(v)
+<<<<<<< HEAD
 			case reflect.Map, reflect.Struct:
 				v = gconv.Map(v)
+=======
+			case reflect.Map:
+				v = gconv.Map(v)
+			case reflect.Struct:
+				if r, ok := v.(apiMapStrAny); ok {
+					v = r.MapStrAny()
+				} else if r, ok := v.(apiString); ok {
+					v = r.String()
+				}
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 			}
 			encoder := json.NewEncoder(buffer)
 			encoder.SetEscapeHTML(false)

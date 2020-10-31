@@ -74,24 +74,42 @@ func Test_Basic(t *testing.T) {
 }
 
 func Test_TranslateFormat(t *testing.T) {
+<<<<<<< HEAD
 	// TF
+=======
+	// Tf
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 	gtest.C(t, func(t *gtest.T) {
 		i18n := gi18n.New(gi18n.Options{
 			Path: gdebug.TestDataPath("i18n"),
 		})
 		i18n.SetLanguage("none")
+<<<<<<< HEAD
 		t.Assert(i18n.TF("{#hello}{#world} %d", 2020), "{#hello}{#world} 2020")
 
 		i18n.SetLanguage("ja")
 		t.Assert(i18n.TF("{#hello}{#world} %d", 2020), "こんにちは世界 2020")
 	})
 	// TFL
+=======
+		t.Assert(i18n.Tf("{#hello}{#world} %d", 2020), "{#hello}{#world} 2020")
+
+		i18n.SetLanguage("ja")
+		t.Assert(i18n.Tf("{#hello}{#world} %d", 2020), "こんにちは世界 2020")
+	})
+	// Tfl
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 	gtest.C(t, func(t *gtest.T) {
 		i18n := gi18n.New(gi18n.Options{
 			Path: gdebug.TestDataPath("i18n"),
 		})
+<<<<<<< HEAD
 		t.Assert(i18n.TFL("{#hello}{#world} %d", "ja", 2020), "こんにちは世界 2020")
 		t.Assert(i18n.TFL("{#hello}{#world} %d", "zh-CN", 2020), "你好世界 2020")
+=======
+		t.Assert(i18n.Tfl("ja", "{#hello}{#world} %d", 2020), "こんにちは世界 2020")
+		t.Assert(i18n.Tfl("zh-CN", "{#hello}{#world} %d", 2020), "你好世界 2020")
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 	})
 }
 

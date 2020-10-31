@@ -8,7 +8,11 @@ package gvalid
 
 import (
 	"errors"
+<<<<<<< HEAD
 	"github.com/gogf/gf/encoding/gjson"
+=======
+	"github.com/gogf/gf/internal/json"
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 	"github.com/gogf/gf/net/gipv4"
 	"github.com/gogf/gf/net/gipv6"
 	"github.com/gogf/gf/os/gtime"
@@ -452,7 +456,11 @@ func doCheckBuildInRules(
 
 	// Json.
 	case "json":
+<<<<<<< HEAD
 		if _, err := gjson.Decode([]byte(valueStr)); err == nil {
+=======
+		if json.Valid([]byte(valueStr)) {
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 			match = true
 		}
 

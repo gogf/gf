@@ -75,7 +75,11 @@ func Test_String(t *testing.T) {
 
 		t2 := *t1
 		t.Assert(t2.String(), "2006-01-02 15:04:05")
+<<<<<<< HEAD
 		t.Assert(fmt.Sprintf("%s", t2), "{2006-01-02 15:04:05}")
+=======
+		t.Assert(fmt.Sprintf("{%s}", t2.String()), "{2006-01-02 15:04:05}")
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 	})
 }
 

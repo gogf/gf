@@ -4,18 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package guid provides simple and high performance unique id generation functionality.
-//
-<<<<<<< HEAD
-=======
-// Unique String ID:
->>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
-// PLEASE VERY NOTE:
-// This package only provides unique number generation for simple, convenient and most common
-// usage purpose, but does not provide strict global unique number generation. Please refer
-// to UUID algorithm for global unique number generation if necessary.
 package guid
-<<<<<<< HEAD
 
 import (
 	"github.com/gogf/gf/container/gtype"
@@ -63,9 +52,9 @@ func init() {
 // usages without strict UUID algorithm. It returns an unique string using default
 // unique algorithm if no <data> is given.
 //
-// The specified <data> can be no more than 2 count. No matter how long each of the
+// The specified <data> can be no more than 2 parts. No matter how long each of the
 // <data> size is, each of them will be hashed into 7 bytes as part of the result.
-// If given <data> count is less than 2, the leftover size of the result bytes will
+// If given <data> parts is less than 2, the leftover size of the result bytes will
 // be token by random string.
 //
 // The returned string is composed with:
@@ -100,7 +89,7 @@ func S(data ...[]byte) string {
 		copy(b[n+12:], getSequence())
 		copy(b[n+12+3:], getRandomStr(32-n-12-3))
 	} else {
-		panic("data count too long, no more than 2")
+		panic("too many data parts, it should be no more than 2 parts")
 	}
 	return gconv.UnsafeBytesToStr(b)
 }
@@ -136,5 +125,3 @@ func getDataHashStr(data []byte) []byte {
 	copy(b, s)
 	return b
 }
-=======
->>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c

@@ -10,6 +10,10 @@ import (
 	"fmt"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/empty"
+<<<<<<< HEAD
+=======
+	"github.com/gogf/gf/internal/json"
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 	"reflect"
 	"regexp"
 	"strings"
@@ -55,6 +59,7 @@ func doStruct(params interface{}, pointer interface{}, recursive bool, mapping .
 	}
 	if pointer == nil {
 		return gerror.New("object pointer cannot be nil")
+<<<<<<< HEAD
 	}
 	defer func() {
 		// Catch the panic, especially the reflect operation panics.
@@ -69,6 +74,34 @@ func doStruct(params interface{}, pointer interface{}, recursive bool, mapping .
 	if v, ok := pointer.(apiUnmarshalValue); ok {
 		return v.UnmarshalValue(params)
 	}
+=======
+	}
+	defer func() {
+		// Catch the panic, especially the reflect operation panics.
+		if e := recover(); e != nil {
+			err = gerror.NewfSkip(1, "%v", e)
+		}
+	}()
+
+	// If given <params> is JSON, it then uses json.Unmarshal doing the converting.
+	switch r := params.(type) {
+	case []byte:
+		if json.Valid(r) {
+			return json.Unmarshal(r, pointer)
+		}
+	case string:
+		if paramsBytes := []byte(r); json.Valid(paramsBytes) {
+			return json.Unmarshal(paramsBytes, pointer)
+		}
+	}
+
+	// UnmarshalValue.
+	// Assign value with interface UnmarshalValue.
+	// Note that only pointer can implement interface UnmarshalValue.
+	if v, ok := pointer.(apiUnmarshalValue); ok {
+		return v.UnmarshalValue(params)
+	}
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 
 	// paramsMap is the map[string]interface{} type variable for params.
 	// DO NOT use MapDeep here.
@@ -110,6 +143,7 @@ func doStruct(params interface{}, pointer interface{}, recursive bool, mapping .
 		} else {
 			elem = elem.Elem()
 		}
+<<<<<<< HEAD
 	}
 
 	// UnmarshalValue checks again.
@@ -121,6 +155,19 @@ func doStruct(params interface{}, pointer interface{}, recursive bool, mapping .
 		}
 	}
 
+=======
+	}
+
+	// UnmarshalValue checks again.
+	// Assign value with interface UnmarshalValue.
+	// Note that only pointer can implement interface UnmarshalValue.
+	if elem.Kind() == reflect.Struct && elem.CanAddr() {
+		if v, ok := elem.Addr().Interface().(apiUnmarshalValue); ok {
+			return v.UnmarshalValue(params)
+		}
+	}
+
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 	// It only performs one converting to the same attribute.
 	// doneMap is used to check repeated converting, its key is the real attribute name
 	// of the struct.
@@ -178,7 +225,11 @@ func doStruct(params interface{}, pointer interface{}, recursive bool, mapping .
 	// The key of the tagMap is the attribute name of the struct,
 	// and the value is its replaced tag name for later comparison to improve performance.
 	tagMap := make(map[string]string)
+<<<<<<< HEAD
 	for k, v := range structs.TagMapName(pointer, StructTagPriority, true) {
+=======
+	for k, v := range structs.TagMapName(pointer, StructTagPriority) {
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 		tagMap[v] = replaceCharReg.ReplaceAllString(k, "")
 	}
 
@@ -259,8 +310,16 @@ func bindVarToStructAttr(elem reflect.Value, name string, value interface{}, rec
 		return nil
 	}
 	defer func() {
+<<<<<<< HEAD
 		if recover() != nil {
 			err = bindVarToReflectValue(structFieldValue, value, recursive, mapping...)
+=======
+		if e := recover(); e != nil {
+			err = bindVarToReflectValue(structFieldValue, value, recursive, mapping...)
+			if err != nil {
+				err = gerror.Wrapf(err, `error binding value to attribute "%s"`, name)
+			}
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 		}
 	}()
 	if empty.IsNil(value) {
@@ -283,8 +342,12 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, re
 				v.Set(value)
 				return nil
 			} else if v, ok := structFieldValue.Interface().(apiUnmarshalValue); ok {
+<<<<<<< HEAD
 				err = v.UnmarshalValue(value)
 				if err == nil {
+=======
+				if err = v.UnmarshalValue(value); err == nil {
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 					return err
 				}
 			}
@@ -297,6 +360,7 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, re
 		// UnmarshalValue.
 		if v, ok := structFieldValue.Addr().Interface().(apiUnmarshalValue); ok {
 			return v.UnmarshalValue(value)
+<<<<<<< HEAD
 		}
 
 		// Recursively converting for struct attribute.
@@ -305,6 +369,16 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, re
 			structFieldValue.Set(reflect.ValueOf(value).Convert(structFieldValue.Type()))
 		}
 
+=======
+		}
+
+		// Recursively converting for struct attribute.
+		if err := doStruct(value, structFieldValue, recursive); err != nil {
+			// Note there's reflect conversion mechanism here.
+			structFieldValue.Set(reflect.ValueOf(value).Convert(structFieldValue.Type()))
+		}
+
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 	// Note that the slice element might be type of struct,
 	// so it uses Struct function doing the converting internally.
 	case reflect.Slice, reflect.Array:

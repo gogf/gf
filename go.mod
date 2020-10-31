@@ -16,7 +16,11 @@ require (
 	github.com/olekukonko/tablewriter v0.0.1
 	golang.org/x/net v0.0.0-20200602114024-627f9648deb9
 	golang.org/x/text v0.3.2
+<<<<<<< HEAD
 
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 
+=======
+	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
+>>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 )
