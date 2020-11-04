@@ -11,7 +11,9 @@ import (
 	"fmt"
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/container/gmap"
+	"github.com/gogf/gf/debug/gdebug"
 	"github.com/gogf/gf/encoding/gparser"
+	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/util/gutil"
 	"testing"
 	"time"
@@ -763,6 +765,26 @@ func Test_Model_Count(t *testing.T) {
 		t.Assert(err, nil)
 		t.Assert(count, SIZE)
 	})
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Table(table).FieldsEx("id").Where("id>8").Count()
+		t.Assert(err, nil)
+		t.Assert(count, 2)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Table(table).Fields("distinct id,nickname").Where("id>8").Count()
+		t.Assert(err, nil)
+		t.Assert(count, 2)
+	})
+	//gtest.C(t, func(t *gtest.T) {
+	//	count, err := db.Table(table).Fields("id myid").Where("id>8").Count()
+	//	t.Assert(err, nil)
+	//	t.Assert(count, 2)
+	//})
+	//gtest.C(t, func(t *gtest.T) {
+	//	count, err := db.Table(table).As("u1").LeftJoin(table, "u2", "u2.id=u1.id").Fields("u2.id u2id").Where("u1.id>8").Count()
+	//	t.Assert(err, nil)
+	//	t.Assert(count, 2)
+	//})
 }
 
 func Test_Model_FindCount(t *testing.T) {
@@ -2090,6 +2112,19 @@ func Test_Model_FieldsEx(t *testing.T) {
 		t.Assert(err, nil)
 		t.Assert(one["nickname"], "123")
 		t.AssertNE(one["password"], "456")
+	})
+}
+
+func Test_Model_FieldsEx_WithReservedWords(t *testing.T) {
+	table := "fieldsex_test_table"
+	sqlTpcPath := gdebug.TestDataPath("reservedwords_table_tpl.sql")
+	if _, err := db.Exec(fmt.Sprintf(gfile.GetContents(sqlTpcPath), table)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		_, err := db.Table(table).FieldsEx("content").One()
+		t.Assert(err, nil)
 	})
 }
 
