@@ -112,7 +112,7 @@ func (m *Model) getFieldsFiltered() string {
 		if len(newFields) > 0 {
 			newFields += ","
 		}
-		newFields += k
+		newFields += m.db.QuoteWord(k)
 	}
 	return newFields
 }
