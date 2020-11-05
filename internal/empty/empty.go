@@ -33,6 +33,7 @@ func IsEmpty(value interface{}) bool {
 	if value == nil {
 		return true
 	}
+	// It firstly checks the variable as common types using assertion, and then reflection.
 	switch value := value.(type) {
 	case int:
 		return value == 0
@@ -65,6 +66,16 @@ func IsEmpty(value interface{}) bool {
 	case []byte:
 		return len(value) == 0
 	case []rune:
+		return len(value) == 0
+	case []int:
+		return len(value) == 0
+	case []string:
+		return len(value) == 0
+	case []float32:
+		return len(value) == 0
+	case []float64:
+		return len(value) == 0
+	case map[string]interface{}:
 		return len(value) == 0
 	default:
 		// Common interfaces checks.
