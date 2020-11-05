@@ -20,6 +20,7 @@ func (v *Var) Struct(pointer interface{}, mapping ...map[string]string) error {
 // Struct maps value of <v> to <pointer> recursively.
 // The parameter <pointer> should be a pointer to a struct instance.
 // The parameter <mapping> is used to specify the key-to-attribute mapping rules.
+// Deprecated, use Struct instead.
 func (v *Var) StructDeep(pointer interface{}, mapping ...map[string]string) error {
 	return gconv.StructDeep(v.Val(), pointer, mapping...)
 }
@@ -30,6 +31,7 @@ func (v *Var) Structs(pointer interface{}, mapping ...map[string]string) error {
 }
 
 // StructsDeep converts and returns <v> as given struct slice recursively.
+// Deprecated, use Struct instead.
 func (v *Var) StructsDeep(pointer interface{}, mapping ...map[string]string) error {
 	return gconv.StructsDeep(v.Val(), pointer, mapping...)
 }

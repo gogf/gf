@@ -299,6 +299,7 @@ func (c *Config) GetStruct(pattern string, pointer interface{}, mapping ...map[s
 }
 
 // GetStructDeep does GetStruct recursively.
+// Deprecated, use GetStruct instead.
 func (c *Config) GetStructDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
 	if j := c.getJson(); j != nil {
 		return j.GetStructDeep(pattern, pointer, mapping...)
@@ -315,6 +316,7 @@ func (c *Config) GetStructs(pattern string, pointer interface{}, mapping ...map[
 }
 
 // GetStructsDeep converts any slice to given struct slice recursively.
+// Deprecated, use GetStructs instead.
 func (c *Config) GetStructsDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
 	if j := c.getJson(); j != nil {
 		return j.GetStructsDeep(pattern, pointer, mapping...)

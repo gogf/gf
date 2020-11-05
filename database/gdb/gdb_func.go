@@ -726,5 +726,5 @@ func mapToStruct(data map[string]interface{}, pointer interface{}) error {
 	for tag, attr := range structs.TagMapName(pointer, []string{ORM_TAG_FOR_STRUCT}) {
 		mapping[strings.Split(tag, ",")[0]] = attr
 	}
-	return gconv.StructDeep(data, pointer, mapping)
+	return gconv.Struct(data, pointer, mapping)
 }

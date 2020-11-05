@@ -390,14 +390,14 @@ func MapStrStrDeep(value interface{}, tags ...string) map[string]string {
 // using reflect.
 // See doMapToMap.
 func MapToMap(params interface{}, pointer interface{}, mapping ...map[string]string) error {
-	return doMapToMap(params, pointer, false, mapping...)
+	return doMapToMap(params, pointer, mapping...)
 }
 
 // MapToMapDeep converts any map type variable <params> to another map type variable <pointer>
 // using reflect recursively.
-// See doMapToMap.
+// Deprecated, use MapToMap instead.
 func MapToMapDeep(params interface{}, pointer interface{}, mapping ...map[string]string) error {
-	return doMapToMap(params, pointer, true, mapping...)
+	return doMapToMap(params, pointer, mapping...)
 }
 
 // doMapToMap converts any map type variable <params> to another map type variable <pointer>.
@@ -410,7 +410,7 @@ func MapToMapDeep(params interface{}, pointer interface{}, mapping ...map[string
 //
 // The optional parameter <mapping> is used for struct attribute to map key mapping, which makes
 // sense only if the items of original map <params> is type struct.
-func doMapToMap(params interface{}, pointer interface{}, deep bool, mapping ...map[string]string) (err error) {
+func doMapToMap(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
 	var (
 		paramsRv   = reflect.ValueOf(params)
 		paramsKind = paramsRv.Kind()
@@ -461,14 +461,8 @@ func doMapToMap(params interface{}, pointer interface{}, deep bool, mapping ...m
 		e := reflect.New(pointerValueType).Elem()
 		switch pointerValueKind {
 		case reflect.Map, reflect.Struct:
-			if deep {
-				if err = StructDeep(paramsRv.MapIndex(key).Interface(), e, mapping...); err != nil {
-					return err
-				}
-			} else {
-				if err = Struct(paramsRv.MapIndex(key).Interface(), e, mapping...); err != nil {
-					return err
-				}
+			if err = Struct(paramsRv.MapIndex(key).Interface(), e, mapping...); err != nil {
+				return err
 			}
 		default:
 			e.Set(
@@ -497,14 +491,14 @@ func doMapToMap(params interface{}, pointer interface{}, deep bool, mapping ...m
 // MapToMaps converts any map type variable <params> to another map type variable <pointer>.
 // See doMapToMaps.
 func MapToMaps(params interface{}, pointer interface{}, mapping ...map[string]string) error {
-	return doMapToMaps(params, pointer, false, mapping...)
+	return doMapToMaps(params, pointer, mapping...)
 }
 
 // MapToMapsDeep converts any map type variable <params> to another map type variable
 // <pointer> recursively.
-// See doMapToMaps.
+// Deprecated, use MapToMaps instead.
 func MapToMapsDeep(params interface{}, pointer interface{}, mapping ...map[string]string) error {
-	return doMapToMaps(params, pointer, true, mapping...)
+	return doMapToMaps(params, pointer, mapping...)
 }
 
 // doMapToMaps converts any map type variable <params> to another map type variable <pointer>.
@@ -519,7 +513,7 @@ func MapToMapsDeep(params interface{}, pointer interface{}, mapping ...map[strin
 // sense only if the items of original map is type struct.
 //
 // TODO it's supposed supporting target type <pointer> like: map[int][]map, map[string][]map.
-func doMapToMaps(params interface{}, pointer interface{}, deep bool, mapping ...map[string]string) (err error) {
+func doMapToMaps(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
 	var (
 		paramsRv   = reflect.ValueOf(params)
 		paramsKind = paramsRv.Kind()
@@ -560,14 +554,8 @@ func doMapToMaps(params interface{}, pointer interface{}, deep bool, mapping ...
 	)
 	for _, key := range paramsKeys {
 		e := reflect.New(pointerValueType).Elem()
-		if deep {
-			if err = StructsDeep(paramsRv.MapIndex(key).Interface(), e.Addr(), mapping...); err != nil {
-				return err
-			}
-		} else {
-			if err = Structs(paramsRv.MapIndex(key).Interface(), e.Addr(), mapping...); err != nil {
-				return err
-			}
+		if err = Structs(paramsRv.MapIndex(key).Interface(), e.Addr(), mapping...); err != nil {
+			return err
 		}
 		dataMap.SetMapIndex(
 			reflect.ValueOf(

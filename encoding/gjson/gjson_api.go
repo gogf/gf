@@ -315,6 +315,7 @@ func (j *Json) GetStruct(pattern string, pointer interface{}, mapping ...map[str
 }
 
 // GetStructDeep does GetStruct recursively.
+// Deprecated, use GetStruct instead.
 func (j *Json) GetStructDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
 	return gconv.StructDeep(j.Get(pattern), pointer, mapping...)
 }
@@ -325,6 +326,7 @@ func (j *Json) GetStructs(pattern string, pointer interface{}, mapping ...map[st
 }
 
 // GetStructsDeep converts any slice to given struct slice recursively.
+// Deprecated, use GetStructs instead.
 func (j *Json) GetStructsDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
 	return gconv.StructsDeep(j.Get(pattern), pointer, mapping...)
 }
@@ -394,6 +396,7 @@ func (j *Json) ToStruct(pointer interface{}, mapping ...map[string]string) error
 
 // ToStructDeep converts current Json object to specified object recursively.
 // The <pointer> should be a pointer type of *struct.
+// Deprecated, use ToStruct instead.
 func (j *Json) ToStructDeep(pointer interface{}, mapping ...map[string]string) error {
 	j.mu.RLock()
 	defer j.mu.RUnlock()
