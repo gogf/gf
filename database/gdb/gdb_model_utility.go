@@ -13,6 +13,7 @@ import (
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/util/gutil"
 	"time"
 )
 
@@ -24,6 +25,33 @@ func (m *Model) getModel() *Model {
 	} else {
 		return m.Clone()
 	}
+}
+
+// mappingToTableFields mappings and changes given field name to really table field name.
+func (m *Model) mappingToTableFields(fields []string) []string {
+	var (
+		foundKey    = ""
+		fieldsArray = gstr.SplitAndTrim(gstr.Join(fields, ","), ",")
+	)
+
+	if fieldsMap, err := m.db.TableFields(m.tables); err == nil {
+		fieldsKeyMap := make(map[string]interface{}, len(fieldsMap))
+		for k, _ := range fieldsMap {
+			fieldsKeyMap[k] = nil
+		}
+		for i, v := range fieldsArray {
+			if _, ok := fieldsKeyMap[v]; !ok {
+				if gstr.Contains(v, " ") || gstr.Contains(v, ".") {
+					continue
+				}
+				foundKey, _ = gutil.MapPossibleItemByKey(fieldsKeyMap, v)
+				if foundKey != "" {
+					fieldsArray[i] = foundKey
+				}
+			}
+		}
+	}
+	return fieldsArray
 }
 
 // filterDataForInsertOrUpdate does filter feature with data for inserting/updating operations.

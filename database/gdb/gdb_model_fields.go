@@ -27,7 +27,7 @@ func (m *Model) Filter() *Model {
 func (m *Model) Fields(fields ...string) *Model {
 	if len(fields) > 0 {
 		model := m.getModel()
-		model.fields = gstr.Join(fields, ",")
+		model.fields = gstr.Join(m.mappingToTableFields(fields), ",")
 		return model
 	}
 	return m
@@ -38,7 +38,7 @@ func (m *Model) Fields(fields ...string) *Model {
 func (m *Model) FieldsEx(fields ...string) *Model {
 	if len(fields) > 0 {
 		model := m.getModel()
-		model.fieldsEx = gstr.Join(fields, ",")
+		model.fieldsEx = gstr.Join(m.mappingToTableFields(fields), ",")
 		return model
 	}
 	return m

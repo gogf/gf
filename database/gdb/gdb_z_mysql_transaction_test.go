@@ -676,7 +676,7 @@ func Test_TX_Delete(t *testing.T) {
 		if err != nil {
 			gtest.Error(err)
 		}
-		if _, err := tx.Delete(table, nil); err != nil {
+		if _, err := tx.Delete(table, 1); err != nil {
 			gtest.Error(err)
 		}
 		if err := tx.Commit(); err != nil {
@@ -696,7 +696,7 @@ func Test_TX_Delete(t *testing.T) {
 		if err != nil {
 			gtest.Error(err)
 		}
-		if _, err := tx.Delete(table, nil); err != nil {
+		if _, err := tx.Delete(table, 1); err != nil {
 			gtest.Error(err)
 		}
 		if n, err := tx.Table(table).Count(); err != nil {
