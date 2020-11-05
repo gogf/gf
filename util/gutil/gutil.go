@@ -10,6 +10,8 @@ package gutil
 import (
 	"fmt"
 	"github.com/gogf/gf/internal/empty"
+	"github.com/gogf/gf/util/gconv"
+	"reflect"
 )
 
 // Throw throws out an exception, which can be caught be TryCatch or recover.
@@ -45,4 +47,65 @@ func TryCatch(try func(), catch ...func(exception error)) {
 // or else returns true.
 func IsEmpty(value interface{}) bool {
 	return empty.IsEmpty(value)
+}
+
+// Keys retrieves and returns the keys from given map or struct.
+func Keys(mapOrStruct interface{}) (keysOrAttrs []string) {
+	keysOrAttrs = make([]string, 0)
+	if m, ok := mapOrStruct.(map[string]interface{}); ok {
+		for k, _ := range m {
+			keysOrAttrs = append(keysOrAttrs, k)
+		}
+		return
+	}
+	var (
+		reflectValue = reflect.ValueOf(mapOrStruct)
+		reflectKind  = reflectValue.Kind()
+	)
+	for reflectKind == reflect.Ptr {
+		reflectValue = reflectValue.Elem()
+		reflectKind = reflectValue.Kind()
+	}
+	switch reflectKind {
+	case reflect.Map:
+		for _, k := range reflectValue.MapKeys() {
+			keysOrAttrs = append(keysOrAttrs, gconv.String(k.Interface()))
+		}
+	case reflect.Struct:
+		reflectType := reflectValue.Type()
+		for i := 0; i < reflectValue.NumField(); i++ {
+			keysOrAttrs = append(keysOrAttrs, reflectType.Field(i).Name)
+		}
+	}
+	return
+}
+
+// Values retrieves and returns the values from given map or struct.
+func Values(mapOrStruct interface{}) (values []interface{}) {
+	values = make([]interface{}, 0)
+	if m, ok := mapOrStruct.(map[string]interface{}); ok {
+		for _, v := range m {
+			values = append(values, v)
+		}
+		return
+	}
+	var (
+		reflectValue = reflect.ValueOf(mapOrStruct)
+		reflectKind  = reflectValue.Kind()
+	)
+	for reflectKind == reflect.Ptr {
+		reflectValue = reflectValue.Elem()
+		reflectKind = reflectValue.Kind()
+	}
+	switch reflectKind {
+	case reflect.Map:
+		for _, k := range reflectValue.MapKeys() {
+			values = append(values, reflectValue.MapIndex(k).Interface())
+		}
+	case reflect.Struct:
+		for i := 0; i < reflectValue.NumField(); i++ {
+			values = append(values, reflectValue.Field(i).Interface())
+		}
+	}
+	return
 }

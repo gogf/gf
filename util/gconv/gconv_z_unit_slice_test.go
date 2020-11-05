@@ -43,7 +43,8 @@ func Test_Slice_PrivateAttribute(t *testing.T) {
 	}
 	gtest.C(t, func(t *gtest.T) {
 		user := &User{1, "john"}
-		t.Assert(gconv.Interfaces(user), g.Slice{1})
+		//t.Assert(gconv.Interfaces(user), g.Slice{1})
+		t.Assert(gconv.Interfaces(user), g.Slice{user})
 	})
 }
 
