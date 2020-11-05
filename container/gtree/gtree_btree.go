@@ -620,7 +620,7 @@ func (tree *BTree) middle() int {
 func (tree *BTree) search(node *BTreeNode, key interface{}) (index int, found bool) {
 	low, mid, high := 0, 0, len(node.Entries)-1
 	for low <= high {
-		mid = (high + low) / 2
+		mid = low + int((high-low)/2)
 		compare := tree.getComparator()(key, node.Entries[mid].Key)
 		switch {
 		case compare > 0:
