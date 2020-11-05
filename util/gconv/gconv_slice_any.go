@@ -7,7 +7,6 @@
 package gconv
 
 import (
-	"github.com/gogf/gf/internal/utils"
 	"reflect"
 )
 
@@ -113,16 +112,16 @@ func Interfaces(i interface{}) []interface{} {
 				for i := 0; i < rv.Len(); i++ {
 					array[i] = rv.Index(i).Interface()
 				}
-			case reflect.Struct:
-				rt := rv.Type()
-				array = make([]interface{}, 0)
-				for i := 0; i < rv.NumField(); i++ {
-					// Only public attributes.
-					if !utils.IsLetterUpper(rt.Field(i).Name[0]) {
-						continue
-					}
-					array = append(array, rv.Field(i).Interface())
-				}
+			//case reflect.Struct:
+			//	rt := rv.Type()
+			//	array = make([]interface{}, 0)
+			//	for i := 0; i < rv.NumField(); i++ {
+			//		// Only public attributes.
+			//		if !utils.IsLetterUpper(rt.Field(i).Name[0]) {
+			//			continue
+			//		}
+			//		array = append(array, rv.Field(i).Interface())
+			//	}
 			default:
 				return []interface{}{i}
 			}
