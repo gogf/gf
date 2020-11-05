@@ -68,11 +68,23 @@ func doStruct(params interface{}, pointer interface{}, recursive bool, mapping .
 	switch r := params.(type) {
 	case []byte:
 		if json.Valid(r) {
-			return json.Unmarshal(r, pointer)
+			if rv, ok := pointer.(reflect.Value); ok {
+				if rv.Kind() == reflect.Ptr {
+					return json.Unmarshal(r, rv.Interface())
+				}
+			} else {
+				return json.Unmarshal(r, pointer)
+			}
 		}
 	case string:
 		if paramsBytes := []byte(r); json.Valid(paramsBytes) {
-			return json.Unmarshal(paramsBytes, pointer)
+			if rv, ok := pointer.(reflect.Value); ok {
+				if rv.Kind() == reflect.Ptr {
+					return json.Unmarshal(paramsBytes, rv.Interface())
+				}
+			} else {
+				return json.Unmarshal(paramsBytes, pointer)
+			}
 		}
 	}
 
