@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"github.com/gogf/gf/container/gset"
 	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/util/gutil"
 )
 
 // Filter marks filtering the fields which does not exist in the fields of the operated table.
@@ -24,10 +26,25 @@ func (m *Model) Filter() *Model {
 }
 
 // Fields sets the operation fields of the model, multiple fields joined using char ','.
-func (m *Model) Fields(fields ...string) *Model {
-	if len(fields) > 0 {
+// The parameter <fieldNamesOrMapStruct> can be type of string/map/*map/struct/*struct.
+func (m *Model) Fields(fieldNamesOrMapStruct ...interface{}) *Model {
+	length := len(fieldNamesOrMapStruct)
+	if length == 0 {
+		return m
+	}
+	switch {
+	case length >= 2:
 		model := m.getModel()
-		model.fields = gstr.Join(m.mappingToTableFields(fields), ",")
+		model.fields = gstr.Join(m.mappingToTableFields(gconv.Strings(fieldNamesOrMapStruct)), ",")
+		return model
+	case length == 1:
+		model := m.getModel()
+		switch r := fieldNamesOrMapStruct[0].(type) {
+		case string:
+			model.fields = gstr.Join(m.mappingToTableFields([]string{r}), ",")
+		default:
+			model.fields = gstr.Join(m.mappingToTableFields(gutil.Keys(r)), ",")
+		}
 		return model
 	}
 	return m
@@ -35,10 +52,24 @@ func (m *Model) Fields(fields ...string) *Model {
 
 // FieldsEx sets the excluded operation fields of the model, multiple fields joined using char ','.
 // Note that this function supports only single table operations.
-func (m *Model) FieldsEx(fields ...string) *Model {
-	if len(fields) > 0 {
-		model := m.getModel()
-		model.fieldsEx = gstr.Join(m.mappingToTableFields(fields), ",")
+// The parameter <fieldNamesOrMapStruct> can be type of string/map/*map/struct/*struct.
+func (m *Model) FieldsEx(fieldNamesOrMapStruct ...interface{}) *Model {
+	length := len(fieldNamesOrMapStruct)
+	if length == 0 {
+		return m
+	}
+	model := m.getModel()
+	switch {
+	case length >= 2:
+		model.fieldsEx = gstr.Join(m.mappingToTableFields(gconv.Strings(fieldNamesOrMapStruct)), ",")
+		return model
+	case length == 1:
+		switch r := fieldNamesOrMapStruct[0].(type) {
+		case string:
+			model.fieldsEx = gstr.Join(m.mappingToTableFields([]string{r}), ",")
+		default:
+			model.fieldsEx = gstr.Join(m.mappingToTableFields(gutil.Keys(r)), ",")
+		}
 		return model
 	}
 	return m
