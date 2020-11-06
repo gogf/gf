@@ -2616,6 +2616,84 @@ func Test_Model_Fields_AutoMapping(t *testing.T) {
 		t.Assert(err, nil)
 		t.Assert(value.String(), "name_2")
 	})
+	// Map
+	gtest.C(t, func(t *gtest.T) {
+		one, err := db.Table(table).Fields(g.Map{
+			"ID":        1,
+			"NICK_NAME": 1,
+		}).Where("id", 2).One()
+		t.Assert(err, nil)
+		t.Assert(len(one), 2)
+		t.Assert(one["id"], 2)
+		t.Assert(one["nickname"], "name_2")
+	})
+	// Struct
+	gtest.C(t, func(t *gtest.T) {
+		type T struct {
+			ID       int
+			NICKNAME int
+		}
+		one, err := db.Table(table).Fields(&T{
+			ID:       0,
+			NICKNAME: 0,
+		}).Where("id", 2).One()
+		t.Assert(err, nil)
+		t.Assert(len(one), 2)
+		t.Assert(one["id"], 2)
+		t.Assert(one["nickname"], "name_2")
+	})
+}
+
+func Test_Model_FieldsEx_AutoMapping(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	// "id":          i,
+	// "passport":    fmt.Sprintf(`user_%d`, i),
+	// "password":    fmt.Sprintf(`pass_%d`, i),
+	// "nickname":    fmt.Sprintf(`name_%d`, i),
+	// "create_time": gtime.NewFromStr("2018-10-24 10:00:00").String(),
+
+	gtest.C(t, func(t *gtest.T) {
+		value, err := db.Table(table).FieldsEx("Passport, Password, NickName, CreateTime").Where("id", 2).Value()
+		t.Assert(err, nil)
+		t.Assert(value.Int(), 2)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		value, err := db.Table(table).FieldsEx("ID, Passport, Password, CreateTime").Where("id", 2).Value()
+		t.Assert(err, nil)
+		t.Assert(value.String(), "name_2")
+	})
+	// Map
+	gtest.C(t, func(t *gtest.T) {
+		one, err := db.Table(table).FieldsEx(g.Map{
+			"Passport":   1,
+			"Password":   1,
+			"CreateTime": 1,
+		}).Where("id", 2).One()
+		t.Assert(err, nil)
+		t.Assert(len(one), 2)
+		t.Assert(one["id"], 2)
+		t.Assert(one["nickname"], "name_2")
+	})
+	// Struct
+	gtest.C(t, func(t *gtest.T) {
+		type T struct {
+			Passport   int
+			Password   int
+			CreateTime int
+		}
+		one, err := db.Table(table).FieldsEx(&T{
+			Passport:   0,
+			Password:   0,
+			CreateTime: 0,
+		}).Where("id", 2).One()
+		t.Assert(err, nil)
+		t.Assert(len(one), 2)
+		t.Assert(one["id"], 2)
+		t.Assert(one["nickname"], "name_2")
+	})
 }
 
 func Test_Model_NullField(t *testing.T) {
