@@ -128,6 +128,7 @@ type DB interface {
 	GetDryRun() bool
 	SetLogger(logger *glog.Logger)
 	GetLogger() *glog.Logger
+	GetConfig() *ConfigNode
 	SetMaxIdleConnCount(n int)
 	SetMaxOpenConnCount(n int)
 	SetMaxConnLifetime(d time.Duration)
@@ -156,7 +157,7 @@ type DB interface {
 	// Internal methods.
 	// ===========================================================================
 
-	filterFields(schema, table string, data map[string]interface{}) map[string]interface{}
+	mappingAndFilterData(schema, table string, data map[string]interface{}, filter bool) (map[string]interface{}, error)
 	convertValue(fieldValue interface{}, fieldType string) interface{}
 	rowsToResult(rows *sql.Rows) (Result, error)
 }
@@ -166,11 +167,12 @@ type Core struct {
 	DB               DB            // DB interface object.
 	group            string        // Configuration group name.
 	debug            *gtype.Bool   // Enable debug mode for the database.
-	cache            *gcache.Cache // Cache manager.
+	cache            *gcache.Cache // Cache manager, SQL result cache only.
 	schema           *gtype.String // Custom schema for this object.
 	dryrun           *gtype.Bool   // Dry run.
 	prefix           string        // Table prefix.
 	logger           *glog.Logger  // Logger.
+	config           *ConfigNode   // Current config node.
 	maxIdleConnCount int           // Max idle connection count.
 	maxOpenConnCount int           // Max open connection count.
 	maxConnLifetime  time.Duration // Max TTL for a connection.
@@ -304,6 +306,7 @@ func New(group ...string) (db DB, err error) {
 				dryrun:           gtype.NewBool(),
 				logger:           glog.New(),
 				prefix:           node.Prefix,
+				config:           node,
 				maxIdleConnCount: gDEFAULT_CONN_MAX_IDLE_COUNT,
 				maxConnLifetime:  gDEFAULT_CONN_MAX_LIFE_TIME, // Default max connection life time if user does not configure.
 			}
@@ -438,11 +441,11 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 		node = &n
 	}
 	// Cache the underlying connection pool object by node.
-	v := c.cache.GetOrSetFuncLock(node.String(), func() interface{} {
+	v, _ := gcache.GetOrSetFuncLock(node.String(), func() (interface{}, error) {
 		sqlDb, err = c.DB.Open(node)
 		if err != nil {
 			intlog.Printf("DB open failed: %v, %+v", err, node)
-			return nil
+			return nil, err
 		}
 		if c.maxIdleConnCount > 0 {
 			sqlDb.SetMaxIdleConns(c.maxIdleConnCount)
@@ -461,7 +464,7 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 		} else if node.MaxConnLifetime > 0 {
 			sqlDb.SetConnMaxLifetime(node.MaxConnLifetime * time.Second)
 		}
-		return sqlDb
+		return sqlDb, nil
 	}, 0)
 	if v != nil && sqlDb == nil {
 		sqlDb = v.(*sql.DB)

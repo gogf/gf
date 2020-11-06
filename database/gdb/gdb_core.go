@@ -11,6 +11,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/text/gstr"
 	"reflect"
 	"strings"
 
@@ -310,6 +311,11 @@ func (c *Core) Transaction(f func(tx *TX) error) (err error) {
 		return err
 	}
 	defer func() {
+		if err == nil {
+			if e := recover(); e != nil {
+				err = fmt.Errorf("%v", e)
+			}
+		}
 		if err != nil {
 			if e := tx.Rollback(); e != nil {
 				err = e
@@ -426,10 +432,10 @@ func (c *Core) DoInsert(link Link, table string, data interface{}, option int, b
 		if _, ok := data.(apiInterfaces); ok {
 			return c.DB.DoBatchInsert(link, table, data, option, batch...)
 		} else {
-			dataMap = DataToMapDeep(data)
+			dataMap = ConvertDataForTableRecord(data)
 		}
 	case reflect.Map:
-		dataMap = DataToMapDeep(data)
+		dataMap = ConvertDataForTableRecord(data)
 	default:
 		return result, errors.New(fmt.Sprint("unsupported data type:", reflectKind))
 	}
@@ -450,7 +456,7 @@ func (c *Core) DoInsert(link Link, table string, data interface{}, option int, b
 		for k, _ := range dataMap {
 			// If it's SAVE operation,
 			// do not automatically update the creating time.
-			if utils.EqualFoldWithoutChars(k, gSOFT_FIELD_NAME_CREATE) {
+			if c.isSoftCreatedFiledName(k) {
 				continue
 			}
 			if len(updateStr) > 0 {
@@ -521,10 +527,10 @@ func (c *Core) BatchSave(table string, list interface{}, batch ...int) (sql.Resu
 func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option int, batch ...int) (result sql.Result, err error) {
 	table = c.DB.QuotePrefixTableName(table)
 	var (
-		keys    []string
-		values  []string
-		params  []interface{}
-		listMap List
+		keys    []string      // Field names.
+		values  []string      // Value holder string array, like: (?,?,?)
+		params  []interface{} // Values that will be committed to underlying database driver.
+		listMap List          // The data list that passed from caller.
 	)
 	switch value := list.(type) {
 	case Result:
@@ -549,10 +555,10 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 		case reflect.Slice, reflect.Array:
 			listMap = make(List, rv.Len())
 			for i := 0; i < rv.Len(); i++ {
-				listMap[i] = DataToMapDeep(rv.Index(i).Interface())
+				listMap[i] = ConvertDataForTableRecord(rv.Index(i).Interface())
 			}
 		case reflect.Map:
-			listMap = List{DataToMapDeep(value)}
+			listMap = List{ConvertDataForTableRecord(value)}
 		case reflect.Struct:
 			if v, ok := value.(apiInterfaces); ok {
 				var (
@@ -560,11 +566,11 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 					list  = make(List, len(array))
 				)
 				for i := 0; i < len(array); i++ {
-					list[i] = DataToMapDeep(array[i])
+					list[i] = ConvertDataForTableRecord(array[i])
 				}
 				listMap = list
 			} else {
-				listMap = List{DataToMapDeep(value)}
+				listMap = List{ConvertDataForTableRecord(value)}
 			}
 		default:
 			return result, errors.New(fmt.Sprint("unsupported list type:", kind))
@@ -597,7 +603,7 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 		for _, k := range keys {
 			// If it's SAVE operation,
 			// do not automatically update the creating time.
-			if utils.EqualFoldWithoutChars(k, gSOFT_FIELD_NAME_CREATE) {
+			if c.isSoftCreatedFiledName(k) {
 				continue
 			}
 			if len(updateStr) > 0 {
@@ -690,7 +696,7 @@ func (c *Core) DoUpdate(link Link, table string, data interface{}, condition str
 	case reflect.Map, reflect.Struct:
 		var (
 			fields  []string
-			dataMap = DataToMapDeep(data)
+			dataMap = ConvertDataForTableRecord(data)
 		)
 		for k, v := range dataMap {
 			fields = append(fields, c.DB.QuoteWord(k)+"=?")
@@ -823,4 +829,23 @@ func (c *Core) HasTable(name string) (bool, error) {
 		}
 	}
 	return false, nil
+}
+
+// isSoftCreatedFiledName checks and returns whether given filed name is an automatic-filled created time.
+func (c *Core) isSoftCreatedFiledName(fieldName string) bool {
+	if fieldName == "" {
+		return false
+	}
+	if config := c.DB.GetConfig(); config.CreatedAt != "" {
+		if utils.EqualFoldWithoutChars(fieldName, config.CreatedAt) {
+			return true
+		}
+		return gstr.InArray(append([]string{config.CreatedAt}, createdFiledNames...), fieldName)
+	}
+	for _, v := range createdFiledNames {
+		if utils.EqualFoldWithoutChars(fieldName, v) {
+			return true
+		}
+	}
+	return false
 }

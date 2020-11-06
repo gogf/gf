@@ -40,7 +40,7 @@ func (s *Session) init() {
 	if s.id != "" {
 		var err error
 		// Retrieve memory session data from manager.
-		if r := s.manager.sessionData.Get(s.id); r != nil {
+		if r, _ := s.manager.sessionData.Get(s.id); r != nil {
 			s.data = r.(*gmap.StrAnyMap)
 			intlog.Print("session init data:", s.data)
 		}
@@ -49,11 +49,6 @@ func (s *Session) init() {
 			if s.data, err = s.manager.storage.GetSession(s.id, s.manager.ttl, s.data); err != nil {
 				intlog.Errorf("session restoring failed for id '%s': %v", s.id, err)
 			}
-		}
-		// If it's an invalid or expired session id,
-		// it should create a new session id.
-		if s.data == nil {
-			s.id = ""
 		}
 	}
 	// Use custom session id creating function.

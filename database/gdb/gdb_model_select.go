@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/gogf/gf/container/gset"
 	"github.com/gogf/gf/container/gvar"
+	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
 	"reflect"
@@ -111,7 +112,7 @@ func (m *Model) getFieldsFiltered() string {
 		if len(newFields) > 0 {
 			newFields += ","
 		}
-		newFields += k
+		newFields += m.db.QuoteWord(k)
 	}
 	return newFields
 }
@@ -431,23 +432,35 @@ func (m *Model) FindScan(pointer interface{}, where ...interface{}) error {
 // doGetAllBySql does the select statement on the database.
 func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, err error) {
 	cacheKey := ""
+	cacheObj := m.db.GetCache()
 	// Retrieve from cache.
 	if m.cacheEnabled && m.tx == nil {
 		cacheKey = m.cacheName
 		if len(cacheKey) == 0 {
-			cacheKey = sql + "/" + gconv.String(args)
+			cacheKey = sql + ", @PARAMS:" + gconv.String(args)
 		}
-		if v := m.db.GetCache().Get(cacheKey); v != nil {
-			return v.(Result), nil
+		if v, _ := cacheObj.GetVar(cacheKey); !v.IsNil() {
+			if result, ok := v.Val().(Result); ok {
+				// In-memory cache.
+				return result, nil
+			} else {
+				// Other cache, it needs conversion.
+				var result Result
+				if err = json.Unmarshal(v.Bytes(), &result); err != nil {
+					return nil, err
+				} else {
+					return result, nil
+				}
+			}
 		}
 	}
 	result, err = m.db.DoGetAll(m.getLink(false), sql, m.mergeArguments(args)...)
 	// Cache the result.
 	if cacheKey != "" && err == nil {
 		if m.cacheDuration < 0 {
-			m.db.GetCache().Remove(cacheKey)
+			cacheObj.Remove(cacheKey)
 		} else {
-			m.db.GetCache().Set(cacheKey, result, m.cacheDuration)
+			cacheObj.Set(cacheKey, result, m.cacheDuration)
 		}
 	}
 	return result, err

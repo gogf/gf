@@ -78,7 +78,7 @@ func CheckStruct(object interface{}, rules interface{}, messages ...CustomMsg) *
 		params[field.Name()] = field.Value()
 	}
 	// It here must use structs.TagFields not structs.MapField to ensure error sequence.
-	for _, field := range structs.TagFields(object, structTagPriority, true) {
+	for _, field := range structs.TagFields(object, structTagPriority) {
 		fieldName := field.Name()
 		// sequence tag == struct tag
 		// The name here is alias of field name.
@@ -149,17 +149,24 @@ func CheckStruct(object interface{}, rules interface{}, messages ...CustomMsg) *
 		if v, ok := params[key]; ok {
 			value = v
 		}
+		// It checks each rule and its value in loop.
 		if e := doCheck(key, value, rule, customMessage[key], params); e != nil {
 			_, item := e.FirstItem()
 			// ===========================================================
-			// If value is nil or empty string and has no required* rules,
-			// clear the error message.
+			// Only in map and struct validations, if value is nil or empty
+			// string and has no required* rules, it clears the error message.
 			// ===========================================================
 			if value == nil || gconv.String(value) == "" {
 				required := false
 				// rule => error
 				for k := range item {
+					// Default required rules.
 					if _, ok := mustCheckRulesEvenValueEmpty[k]; ok {
+						required = true
+						break
+					}
+					// Custom rules are also required in default.
+					if _, ok := customRuleFuncMap[k]; ok {
 						required = true
 						break
 					}

@@ -7,6 +7,8 @@
 package gdb
 
 import (
+	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/util/gutil"
 	"strings"
 	"time"
 
@@ -145,15 +147,50 @@ func (c *Core) convertValue(fieldValue interface{}, fieldType string) interface{
 }
 
 // filterFields removes all key-value pairs which are not the field of given table.
-func (c *Core) filterFields(schema, table string, data map[string]interface{}) map[string]interface{} {
-	// It must use data copy here to avoid its changing the origin data map.
-	newDataMap := make(map[string]interface{}, len(data))
-	if fields, err := c.DB.TableFields(table, schema); err == nil {
-		for k, v := range data {
-			if _, ok := fields[k]; ok {
-				newDataMap[k] = v
+func (c *Core) mappingAndFilterData(schema, table string, data map[string]interface{}, filter bool) (map[string]interface{}, error) {
+	if fieldsMap, err := c.DB.TableFields(table, schema); err == nil {
+		fieldsKeyMap := make(map[string]interface{}, len(fieldsMap))
+		for k, _ := range fieldsMap {
+			fieldsKeyMap[k] = nil
+		}
+		// Automatic data key to table field name mapping.
+		var foundKey string
+		for dataKey, dataValue := range data {
+			if _, ok := fieldsKeyMap[dataKey]; !ok {
+				foundKey, _ = gutil.MapPossibleItemByKey(fieldsKeyMap, dataKey)
+				if foundKey != "" {
+					data[foundKey] = dataValue
+					delete(data, dataKey)
+				} else if !filter {
+					if schema != "" {
+						return nil, gerror.Newf(`no column of name "%s" found for table "%s" in schema "%s"`, dataKey, table, schema)
+					}
+					return nil, gerror.Newf(`no column of name "%s" found for table "%s"`, dataKey, table)
+				}
+			}
+		}
+		// Data filtering.
+		if filter {
+			for dataKey, _ := range data {
+				if _, ok := fieldsMap[dataKey]; !ok {
+					delete(data, dataKey)
+				}
 			}
 		}
 	}
-	return newDataMap
+	return data, nil
 }
+
+//// filterFields removes all key-value pairs which are not the field of given table.
+//func (c *Core) filterFields(schema, table string, data map[string]interface{}) map[string]interface{} {
+//	// It must use data copy here to avoid its changing the origin data map.
+//	newDataMap := make(map[string]interface{}, len(data))
+//	if fields, err := c.DB.TableFields(table, schema); err == nil {
+//		for k, v := range data {
+//			if _, ok := fields[k]; ok {
+//				newDataMap[k] = v
+//			}
+//		}
+//	}
+//	return newDataMap
+//}

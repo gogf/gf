@@ -56,8 +56,10 @@ func (m *Model) Data(data ...interface{}) *Model {
 		case Map:
 			model.data = params
 		default:
-			rv := reflect.ValueOf(params)
-			kind := rv.Kind()
+			var (
+				rv   = reflect.ValueOf(params)
+				kind = rv.Kind()
+			)
 			if kind == reflect.Ptr {
 				rv = rv.Elem()
 				kind = rv.Kind()
@@ -66,11 +68,11 @@ func (m *Model) Data(data ...interface{}) *Model {
 			case reflect.Slice, reflect.Array:
 				list := make(List, rv.Len())
 				for i := 0; i < rv.Len(); i++ {
-					list[i] = DataToMapDeep(rv.Index(i).Interface())
+					list[i] = ConvertDataForTableRecord(rv.Index(i).Interface())
 				}
 				model.data = list
 			case reflect.Map:
-				model.data = DataToMapDeep(data[0])
+				model.data = ConvertDataForTableRecord(data[0])
 			case reflect.Struct:
 				if v, ok := data[0].(apiInterfaces); ok {
 					var (
@@ -78,11 +80,11 @@ func (m *Model) Data(data ...interface{}) *Model {
 						list  = make(List, len(array))
 					)
 					for i := 0; i < len(array); i++ {
-						list[i] = DataToMapDeep(array[i])
+						list[i] = ConvertDataForTableRecord(array[i])
 					}
 					model.data = list
 				} else {
-					model.data = DataToMapDeep(data[0])
+					model.data = ConvertDataForTableRecord(data[0])
 				}
 			default:
 				model.data = data[0]
@@ -147,9 +149,9 @@ func (m *Model) doInsertWithOption(option int, data ...interface{}) (result sql.
 	}
 	var (
 		nowString       = gtime.Now().String()
-		fieldNameCreate = m.getSoftFieldNameCreate()
-		fieldNameUpdate = m.getSoftFieldNameUpdate()
-		fieldNameDelete = m.getSoftFieldNameDelete()
+		fieldNameCreate = m.getSoftFieldNameCreated()
+		fieldNameUpdate = m.getSoftFieldNameUpdated()
+		fieldNameDelete = m.getSoftFieldNameDeleted()
 	)
 	// Batch operation.
 	if list, ok := m.data.(List); ok {
@@ -170,10 +172,14 @@ func (m *Model) doInsertWithOption(option int, data ...interface{}) (result sql.
 				list[k] = v
 			}
 		}
+		newData, err := m.filterDataForInsertOrUpdate(list)
+		if err != nil {
+			return nil, err
+		}
 		return m.db.DoBatchInsert(
 			m.getLink(true),
 			m.tables,
-			m.filterDataForInsertOrUpdate(list),
+			newData,
 			option,
 			batch,
 		)
@@ -190,10 +196,14 @@ func (m *Model) doInsertWithOption(option int, data ...interface{}) (result sql.
 				data[fieldNameUpdate] = nowString
 			}
 		}
+		newData, err := m.filterDataForInsertOrUpdate(data)
+		if err != nil {
+			return nil, err
+		}
 		return m.db.DoInsert(
 			m.getLink(true),
 			m.tables,
-			m.filterDataForInsertOrUpdate(data),
+			newData,
 			option,
 		)
 	}

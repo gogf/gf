@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/internal/empty"
+	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/internal/utils"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/util/gutil"
@@ -97,8 +98,51 @@ func GetInsertOperationByOption(option int) string {
 	return operator
 }
 
-// DataToMapDeep converts struct object to map type recursively.
+// ConvertDataForTableRecord is a very important function, which does converting for any data that
+// will be inserted into table as a record.
+//
 // The parameter <obj> should be type of *map/map/*struct/struct.
+// It supports inherit struct definition for struct.
+func ConvertDataForTableRecord(value interface{}) map[string]interface{} {
+	var (
+		rvValue reflect.Value
+		rvKind  reflect.Kind
+		data    = DataToMapDeep(value)
+	)
+	for k, v := range data {
+		rvValue = reflect.ValueOf(v)
+		rvKind = rvValue.Kind()
+		for rvKind == reflect.Ptr {
+			rvValue = rvValue.Elem()
+			rvKind = rvValue.Kind()
+		}
+		switch rvKind {
+		case reflect.Slice, reflect.Array, reflect.Map:
+			// It should ignore the bytes type.
+			if _, ok := v.([]byte); !ok {
+				// Convert the value to JSON.
+				data[k], _ = json.Marshal(v)
+			}
+		case reflect.Struct:
+			switch v.(type) {
+			case time.Time, *time.Time, gtime.Time, *gtime.Time:
+				continue
+			default:
+				// Use string conversion in default.
+				if s, ok := v.(apiString); ok {
+					data[k] = s.String()
+				} else {
+					// Convert the value to JSON.
+					data[k], _ = json.Marshal(v)
+				}
+			}
+		}
+	}
+	return data
+}
+
+// DataToMapDeep converts <value> to map type recursively.
+// The parameter <value> should be type of *map/map/*struct/struct.
 // It supports inherit struct definition for struct.
 func DataToMapDeep(value interface{}) map[string]interface{} {
 	if v, ok := value.(apiMapStrAny); ok {
@@ -270,7 +314,7 @@ func doQuoteString(s, charLeft, charRight string) string {
 // This function automatically retrieves primary or unique field and its attribute value as condition.
 func GetWhereConditionOfStruct(pointer interface{}) (where string, args []interface{}) {
 	array := ([]string)(nil)
-	for _, field := range structs.TagFields(pointer, []string{ORM_TAG_FOR_STRUCT}, true) {
+	for _, field := range structs.TagFields(pointer, []string{ORM_TAG_FOR_STRUCT}) {
 		array = strings.Split(field.Tag, ",")
 		if len(array) > 1 && gstr.InArray([]string{ORM_TAG_FOR_UNIQUE, ORM_TAG_FOR_PRIMARY}, array[1]) {
 			return array[0], []interface{}{field.Value()}
@@ -287,7 +331,7 @@ func GetWhereConditionOfStruct(pointer interface{}) (where string, args []interf
 // GetPrimaryKey retrieves and returns primary key field name from given struct.
 func GetPrimaryKey(pointer interface{}) string {
 	array := ([]string)(nil)
-	for _, field := range structs.TagFields(pointer, []string{ORM_TAG_FOR_STRUCT}, true) {
+	for _, field := range structs.TagFields(pointer, []string{ORM_TAG_FOR_STRUCT}) {
 		array = strings.Split(field.Tag, ",")
 		if len(array) > 1 && array[1] == ORM_TAG_FOR_PRIMARY {
 			return array[0]
@@ -342,9 +386,10 @@ func GetPrimaryKeyCondition(primary string, where ...interface{}) (newWhereCondi
 // The internal handleArguments function might be called twice during the SQL procedure,
 // but do not worry about it, it's safe and efficient.
 func formatSql(sql string, args []interface{}) (newSql string, newArgs []interface{}) {
-	sql = gstr.Trim(sql)
-	sql = gstr.Replace(sql, "\n", " ")
-	sql, _ = gregex.ReplaceString(`\s{2,}`, ` `, sql)
+	// DO NOT do this as there may be multiple lines and comments in the sql.
+	// sql = gstr.Trim(sql)
+	// sql = gstr.Replace(sql, "\n", " ")
+	// sql, _ = gregex.ReplaceString(`\s{2,}`, ` `, sql)
 	return handleArguments(sql, args)
 }
 
@@ -678,7 +723,7 @@ func FormatSqlWithArgs(sql string, args []interface{}) string {
 func mapToStruct(data map[string]interface{}, pointer interface{}) error {
 	// It retrieves and returns the mapping between orm tag and the struct attribute name.
 	mapping := make(map[string]string)
-	for tag, attr := range structs.TagMapName(pointer, []string{ORM_TAG_FOR_STRUCT}, true) {
+	for tag, attr := range structs.TagMapName(pointer, []string{ORM_TAG_FOR_STRUCT}) {
 		mapping[strings.Split(tag, ",")[0]] = attr
 	}
 	return gconv.StructDeep(data, pointer, mapping)

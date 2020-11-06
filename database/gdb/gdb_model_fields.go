@@ -24,18 +24,24 @@ func (m *Model) Filter() *Model {
 }
 
 // Fields sets the operation fields of the model, multiple fields joined using char ','.
-func (m *Model) Fields(fields string) *Model {
-	model := m.getModel()
-	model.fields = fields
-	return model
+func (m *Model) Fields(fields ...string) *Model {
+	if len(fields) > 0 {
+		model := m.getModel()
+		model.fields = gstr.Join(fields, ",")
+		return model
+	}
+	return m
 }
 
 // FieldsEx sets the excluded operation fields of the model, multiple fields joined using char ','.
 // Note that this function supports only single table operations.
-func (m *Model) FieldsEx(fields string) *Model {
-	model := m.getModel()
-	model.fieldsEx = fields
-	return model
+func (m *Model) FieldsEx(fields ...string) *Model {
+	if len(fields) > 0 {
+		model := m.getModel()
+		model.fieldsEx = gstr.Join(fields, ",")
+		return model
+	}
+	return m
 }
 
 // Deprecated, use GetFieldsStr instead.

@@ -28,27 +28,33 @@ func (m *Model) getModel() *Model {
 
 // filterDataForInsertOrUpdate does filter feature with data for inserting/updating operations.
 // Note that, it does not filter list item, which is also type of map, for "omit empty" feature.
-func (m *Model) filterDataForInsertOrUpdate(data interface{}) interface{} {
+func (m *Model) filterDataForInsertOrUpdate(data interface{}) (interface{}, error) {
+	var err error
 	switch value := data.(type) {
 	case List:
 		for k, item := range value {
-			value[k] = m.doFilterDataMapForInsertOrUpdate(item, false)
+			value[k], err = m.doMappingAndFilterForInsertOrUpdateDataMap(item, false)
+			if err != nil {
+				return nil, err
+			}
 		}
-		return value
+		return value, nil
 
 	case Map:
-		return m.doFilterDataMapForInsertOrUpdate(value, true)
+		return m.doMappingAndFilterForInsertOrUpdateDataMap(value, true)
 
 	default:
-		return data
+		return data, nil
 	}
 }
 
-// doFilterDataMapForInsertOrUpdate does the filter features for map.
+// doMappingAndFilterForInsertOrUpdateDataMap does the filter features for map.
 // Note that, it does not filter list item, which is also type of map, for "omit empty" feature.
-func (m *Model) doFilterDataMapForInsertOrUpdate(data Map, allowOmitEmpty bool) Map {
-	if m.filter {
-		data = m.db.filterFields(m.schema, m.tables, data)
+func (m *Model) doMappingAndFilterForInsertOrUpdateDataMap(data Map, allowOmitEmpty bool) (Map, error) {
+	var err error
+	data, err = m.db.mappingAndFilterData(m.schema, m.tables, data, m.filter)
+	if err != nil {
+		return nil, err
 	}
 	// Remove key-value pairs of which the value is empty.
 	if allowOmitEmpty && m.option&OPTION_OMITEMPTY > 0 {
@@ -103,7 +109,7 @@ func (m *Model) doFilterDataMapForInsertOrUpdate(data Map, allowOmitEmpty bool) 
 			delete(data, v)
 		}
 	}
-	return data
+	return data, nil
 }
 
 // getLink returns the underlying database link object with configured <linkType> attribute.

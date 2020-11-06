@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/empty"
+	"github.com/gogf/gf/internal/json"
 	"reflect"
 	"regexp"
 	"strings"
@@ -50,7 +51,8 @@ func StructDeep(params interface{}, pointer interface{}, mapping ...map[string]s
 // doStruct is the core internal converting function for any data to struct recursively or not.
 func doStruct(params interface{}, pointer interface{}, recursive bool, mapping ...map[string]string) (err error) {
 	if params == nil {
-		return gerror.New("params cannot be nil")
+		// If <params> is nil, no conversion.
+		return nil
 	}
 	if pointer == nil {
 		return gerror.New("object pointer cannot be nil")
@@ -61,6 +63,30 @@ func doStruct(params interface{}, pointer interface{}, recursive bool, mapping .
 			err = gerror.NewfSkip(1, "%v", e)
 		}
 	}()
+
+	// If given <params> is JSON, it then uses json.Unmarshal doing the converting.
+	switch r := params.(type) {
+	case []byte:
+		if json.Valid(r) {
+			if rv, ok := pointer.(reflect.Value); ok {
+				if rv.Kind() == reflect.Ptr {
+					return json.Unmarshal(r, rv.Interface())
+				}
+			} else {
+				return json.Unmarshal(r, pointer)
+			}
+		}
+	case string:
+		if paramsBytes := []byte(r); json.Valid(paramsBytes) {
+			if rv, ok := pointer.(reflect.Value); ok {
+				if rv.Kind() == reflect.Ptr {
+					return json.Unmarshal(paramsBytes, rv.Interface())
+				}
+			} else {
+				return json.Unmarshal(paramsBytes, pointer)
+			}
+		}
+	}
 
 	// UnmarshalValue.
 	// Assign value with interface UnmarshalValue.
@@ -73,7 +99,7 @@ func doStruct(params interface{}, pointer interface{}, recursive bool, mapping .
 	// DO NOT use MapDeep here.
 	paramsMap := Map(params)
 	if paramsMap == nil {
-		return gerror.Newf("invalid params: %v", params)
+		return gerror.Newf("convert params to map failed: %v", params)
 	}
 
 	// Using reflect to do the converting,
@@ -177,7 +203,7 @@ func doStruct(params interface{}, pointer interface{}, recursive bool, mapping .
 	// The key of the tagMap is the attribute name of the struct,
 	// and the value is its replaced tag name for later comparison to improve performance.
 	tagMap := make(map[string]string)
-	for k, v := range structs.TagMapName(pointer, StructTagPriority, true) {
+	for k, v := range structs.TagMapName(pointer, StructTagPriority) {
 		tagMap[v] = replaceCharReg.ReplaceAllString(k, "")
 	}
 
@@ -258,8 +284,11 @@ func bindVarToStructAttr(elem reflect.Value, name string, value interface{}, rec
 		return nil
 	}
 	defer func() {
-		if recover() != nil {
+		if e := recover(); e != nil {
 			err = bindVarToReflectValue(structFieldValue, value, recursive, mapping...)
+			if err != nil {
+				err = gerror.Wrapf(err, `error binding value to attribute "%s"`, name)
+			}
 		}
 	}()
 	if empty.IsNil(value) {
@@ -282,8 +311,7 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, re
 				v.Set(value)
 				return nil
 			} else if v, ok := structFieldValue.Interface().(apiUnmarshalValue); ok {
-				err = v.UnmarshalValue(value)
-				if err == nil {
+				if err = v.UnmarshalValue(value); err == nil {
 					return err
 				}
 			}

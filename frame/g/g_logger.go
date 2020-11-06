@@ -10,17 +10,14 @@ import (
 	"github.com/gogf/gf/os/glog"
 )
 
-// SetDebug disables/enables debug level for logging component globally.
-func SetDebug(debug bool) {
-	glog.SetDebug(debug)
-}
-
 // SetLogLevel sets the logging level globally.
+// Deprecated, use functions of package glog or g.Log() instead.
 func SetLogLevel(level int) {
 	glog.SetLevel(level)
 }
 
 // GetLogLevel returns the global logging level.
+// Deprecated, use functions of package glog or g.Log() instead.
 func GetLogLevel() int {
 	return glog.GetLevel()
 }

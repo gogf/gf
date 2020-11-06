@@ -21,6 +21,15 @@ func Test_Dump(t *testing.T) {
 	})
 }
 
+func Test_Try(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		s := `gutil Try test`
+		t.Assert(gutil.Try(func() {
+			panic(s)
+		}), s)
+	})
+}
+
 func Test_TryCatch(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		gutil.TryCatch(func() {
@@ -32,21 +41,19 @@ func Test_TryCatch(t *testing.T) {
 		gutil.TryCatch(func() {
 			panic("gutil TryCatch test")
 
-		}, func(err interface{}) {
+		}, func(err error) {
 			t.Assert(err, "gutil TryCatch test")
 		})
 	})
 }
 
 func Test_IsEmpty(t *testing.T) {
-
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gutil.IsEmpty(1), false)
 	})
 }
 
 func Test_Throw(t *testing.T) {
-
 	gtest.C(t, func(t *gtest.T) {
 		defer func() {
 			t.Assert(recover(), "gutil Throw test")

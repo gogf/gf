@@ -6,6 +6,8 @@
 
 package gconv
 
+import "reflect"
+
 // SliceStr is alias of Strings.
 func SliceStr(i interface{}) []string {
 	return Strings(i)
@@ -102,7 +104,18 @@ func Strings(i interface{}) []string {
 		if v, ok := i.(apiInterfaces); ok {
 			return Strings(v.Interfaces())
 		}
-		return []string{String(i)}
+		// Use reflect feature at last.
+		rv := reflect.ValueOf(i)
+		switch rv.Kind() {
+		case reflect.Slice, reflect.Array:
+			length := rv.Len()
+			array = make([]string, length)
+			for n := 0; n < length; n++ {
+				array[n] = String(rv.Index(n).Interface())
+			}
+		default:
+			return []string{String(i)}
+		}
 	}
 	return array
 }

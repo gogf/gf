@@ -1,3 +1,177 @@
+# `v1.14.2` (2020-10-27)
+
+# GoFrame
+
+`GF(Go Frame)`是一款模块化、高性能、生产级的Go基础开发框架。实现了比较完善的基础设施建设以及开发工具链，提供了常用的基础开发模块，如：缓存、日志、队列、数组、集合、容器、定时器、命令行、内存锁、对象池、配置管理、资源管理、数据校验、数据编码、定时任务、数据库ORM、TCP/UDP组件、进程管理/通信等等。并提供了Web服务开发的系列核心组件，如：`Router`、`Cookie`、`Session`、`Middleware`、服务注册、模板引擎等等，支持热重启、热更新、域名绑定、`TLS/HTTPS`、`Rewrite`等特性。
+
+## 特点
+
+* 模块化、松耦合设计；
+* 模块丰富、开箱即用；
+* 简便易用、易于维护；
+* 高代码质量、高单元测试覆盖率；
+* 社区活跃，大牛谦逊低调脾气好；
+* 详尽的开发文档及示例；
+* 完善的本地中文化支持；
+* 设计为团队及企业使用；
+
+## 支持我们
+
+OSC最佳开源项目评选开始了，如果您喜欢`GoFrame`，欢迎为`GoFrame`投上您宝贵的一票🙏 https://www.oschina.net/p/goframe
+
+
+# Change Log
+
+由于`GoFrame`是模块化设计，因此每个版本的更新记录都会以模块的形式进行介绍。
+
+重要更新：
+1. 将框架内所有的`json`操作从标准库替换为`json-iterator/go`，提高操作效率。
+1. 缓存模块重构底层设计，增加适配器设计模式，并增加内存及`Redis`适配器支持。其中内存适配器默认核心模块提供，`Redis`适配器由社区模块提供：https://goframe.org/os/gcache/adapter
+1. 增加可自定义的校验规则注册特性：https://goframe.org/util/gvalid/customrule
+1. `Web Server`增加所有配置项示例：https://goframe.org/net/ghttp/config/example
+1. `ORM`新增基于`Redis`的`SQL`缓存适配器：https://goframe.org/database/gdb/model/cache
+1. `ORM`新增模型关联实验特性：https://goframe.org/database/gdb/model/association
+1. `ORM`改进时间自动更新特性增加自定义时间字段：https://goframe.org/database/gdb/model/auto-time
+1. 错误处理模块新增`Current`及`Next`方法：https://goframe.org/errors/gerror/index
+
+
+
+## `net`
+1. `ghttp`
+    - `Client`
+        - 增加`GetVar/PutVar/PostVar`等`*Var`请求方法，用于发起`HTTP`请求获取内容之后直接返回泛型对象，方便类型转换，特别是针对于返回`XML/JSON`的结果处理将会更加简便：https://goframe.org/net/ghttp/client/demo/index
+        - 增加`SetProxy/Proxy`方法，用于设置客户端代理，支持`HTTP/Socket5`代理类型：https://goframe.org/net/ghttp/client/demo/proxy
+        - 增加`SetRedirectLimit/RedirectLimit`方法，用于设置页面跳转数量限制。
+    - `Request`
+        - 增加`ParseQuery`, `ParseForm`方法，用于解析指定类型的参数，并绑定到给定的对象。
+        - 增加`GetHeader`方法，用于获取指定`Header`参数。
+        - 增加`GetRemoteIp`方法，用于获取请求客户端IP。在IP白名单限制时应当使用`GetRemoteIp`而不是`GetClientIp`进行判断，后者可以通过`Header`伪造。
+        - 增加`ReloadParam`方法，往往用在中间件处理中，当中间件修改了请求参数，需要通过调用该方法重新解析一下请求参数。
+        - 增加`GetRouterMap`方法，用于获得所有的路由参数返回为`map`。
+    - `Response`
+        - 将`Output`方法名称改为`Flush`，用于将缓冲区的数据写入到客户端数据流中。
+    - `Server`
+        - `Server`增加所有配置项示例：https://goframe.org/net/ghttp/config/example
+        - 增加`SessionCookieOutput`配置，用于控制是否输出`SessionId`到`Cookie`中，默认为开启。
+        - 改进路由解析，增加对`URI`带有重复的`/`符号的支持。
+        - `Pprof`功能路由支持`Domain`绑定。
+        - 其他一些细节改进。
+    - `Cookie`
+        - 增加`SetHttpCookie`方法，用于根据标准库`http.Cookie`对象设置`Cookie`。
+        - 其他一些功能改进
+    
+
+## `database`
+1. `gdb`
+    - 新增模型关联实验特性：https://goframe.org/database/gdb/model/association
+    - 改进时间自动更新特性增加自定义时间字段：https://goframe.org/database/gdb/model/auto-time
+    - 新增基于`Redis`的`SQL`缓存适配器：https://goframe.org/database/gdb/model/cache
+    - 新增对输入参数的键名-字段名自动识别映射特性：https://goframe.org/database/gdb/senior
+    - 新增`DB.HasTable`方法，用于判断是否当前数据库存在指定数据表。
+    - 新增`Model.HasField`方法，用于判断是否当前数据表存在指定字段。
+    - 新增`Model.ScanList`方法，用于智能地将当前`struct`/`slice`绑定到指定的`list`对应属性上。
+    - 新增`Result.MapKeyValue`方法，用于将当前`Result`转换为`map[string]Value`类型。
+    - 新增`Result.IsEmpty/Len/Size/ScanList`方法。
+    - 增加`ListItemValues`及`ListItemValuesUnique`方法，用于自动获取`list`中指定名称的键值或属性值，构成`slice`返回。
+    - `SQL`日志内容增加分组名称打印。
+    - 改进`DataToMapDeep`方法。
+    - 其他一些细节改进工作。
+    
+1. `gredis`
+    - 新增`TLS`特性支持，并支持配置文件配置，https://goframe.org/database/gredis/config
+
+## `container`
+1. `gvar`
+    - 增加`Scan`及`ScanDeep`方法，用于`struct`/`slice`自动识别转换。
+    - 增加`ListItemValues`及`ListItemValuesUnique`方法，用于自动获取`list`中指定名称的键值或属性值，构成`slice`返回。
+    - 增加`MapStrAny`接口实现方法。
+
+## `os`
+1. `gcache`
+    - 增加`GetVar`方法，用于获取缓存数据并返回为泛型对象。
+    - 增加`Update`方法，用于仅修改缓存数值，不修改缓存过期时间。
+    - 增加`UpdateExpire`方法，用于仅修改缓存过期时间，不修改缓存数值。
+    - 重构底层设计，增加适配器设计模式，并增加内存及`Redis`适配器支持。其中内存适配器默认核心模块提供，`Redis`适配器由社区模块提供：https://goframe.org/os/gcache/adapter
+    - 注意，本次模块的修改会有部分方法不兼容，部分方法增加了`error`参数返回，升级时请注意查看。编译时将不会通过。
+    - 其他一些功能改进。
+1. `gfile`
+    - 增加`ScanDirFileFunc`方法，用于自定义函数处理的递归目录文件遍历。
+    - 改进`Scan*`方法，增加递归层级限制，默认层级限制为`100000`.
+
+1. `gfsnotify`
+    - 去掉模块初始化时的`Watcher`对象创建，调整为运行时按需创建，并且增加了并发安全控制。
+
+1. `grpool`
+    - 增加`AddWithRecover`方法，用于添加异步任务时给定一个`recover`处理方法，当任务`panic`时交由该`recover`方法处理，防止异步任务`panic`引起整个进程崩溃。
+    > 这里解决的痛点是`recover`只能捕获到当前`goroutine`的`panic`，因此只能在创建异步任务的时候指定`recover`处理方法。
+
+1. `gtime`
+    - 增加`ParseDuration`方法，增加了对时间单位`d`的支持，表示天。
+    - 改进`New`方法，支持通过字符串、时间戳、`time.Time`对象创建`gtime.Time`对象，https://goframe.org/os/gtime/time
+    - 改进`Add/AddStr/ToLocation/ToZone/UTCLocal/AddDate/Truncate/Round`方法，这些方法调用时，不再修改当前对象本身，而是创建并返回一个新的`gtine.Time`对象，以便保证和标准库`time.Time`的逻辑一致，防止混淆。
+    - 其他一些细节改进。
+1. `gtimer`
+    - 增加`Reset`方法，用于重置定时任务的计时。
+1. `gfcache`
+    - 去掉了该模块，该模块的功能作用不是特别大。
+
+## `debug`
+1. `gdebug`
+    - 新增`GoroutineId`方法，用于获取当前执行的`goroutine id`，仅作调试使用。
+
+## `encoding`
+1. `gjson`
+    - 新增`GetScan/GetScanDeep`方法。
+    - 新增`ToScan/ToScanDeep`方法。
+    - 新增`LoadContentType`方法，用于根据指定类型的内容创建`Json`操作对象。
+    - 新增`IsValidDataType`方法，用于判断给定的数据类型是否支持解析。
+    - 其他一些改进。
+    - 单元测试完善。
+
+1. `gcompress`
+    - 新增`GzipFile/UnGzipFile`基于`gzip`压缩算法的文件压缩/解压。
+
+## `i18n`
+1. `gi18n`
+    - 新增`TranslateFormat/TranslateFormatLang/Tf/Tfl`方法: https://goframe.org/i18n/gi18n/index
+
+## `text`
+1. `gstr`
+    - 增加`SnakeFirstUpperCase`方法，用于在字母大写前增加连接符，并不会处理数字，例如：`SnakeFirstUpperCase("RGBCodeMd5")`将会返回`rgb_code_md5`。
+
+## `util`
+1. `gconv`
+    - 增加对指针基本类型的转换支持。
+    - 增加`Scan/ScanDeep`方法，用于自动识别转换`Struct/[]Struct`。
+    - 改进`MapDeep`方法的层级递归处理。
+    - 其他一些细节改进，性能改进。
+
+1. `gutil`
+    - 增加`ListItemValues`及`ListItemValuesUnique`方法，用于自动获取`list`中指定名称的键值或属性值，构成`slice`返回。
+    - 增加`ItemValue`方法，用于获取指定`map/*map/struct/*struct`类型的键值/属性值。
+    - 增加`MapOmitEmpty`方法，用于过滤`map`中的空值。
+    - 增加`SliceDelete`方法，用于数组项删除。
+    - 增加`Try`方法，通过闭包执行给定的方法，如果方法产生`panic`则该方法返回`error`，否则返回`nil`。
+    - 改进`TryCatch(try func(), catch ...func(exception interface{}))`为`TryCatch(try func(), catch ...func(exception error))`
+
+1. `gvalid`
+    - 增加自定义规则特性，开发者可注册自定义的校验规则：https://goframe.org/util/gvalid/customrule
+    - 其他一些功能改进。
+
+## `error`
+1. `gerror`
+    - 新增`Current`方法，用于获取当前错误层级的`error`接口对象。
+    - 新增`Next`方法，用于获取层级错误的下一级错误`error`接口对象。当下一层级不存在时，返回`nil`。
+    - 文档更新：https://goframe.org/errors/gerror/index
+
+## Bug Fix
+1. 修复`garray`模块的`Unique`方法问题。
+1. 修复`glog`中定时器懒初始化时的`goroutine`泄露问题。
+1. 修复`gstr`中名称`Case`转换相关方法在名称中带有数字+特殊字符时的名称转换问题。
+1. 修复`ghttp`模块中的`CORS`跨域设置`Header`细节问题。
+1. 其他BUG修复：https://github.com/gogf/gf/issues?q=is%3Aissue+label%3Abug+is%3Aclosed
+
+
 # `v1.13.1` (2020-06-10)
 
 # GoFrame

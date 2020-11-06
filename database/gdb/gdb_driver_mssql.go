@@ -15,6 +15,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/os/gcache"
 	"strconv"
 	"strings"
 
@@ -198,47 +199,58 @@ func (d *DriverMssql) TableFields(table string, schema ...string) (fields map[st
 	if len(schema) > 0 && schema[0] != "" {
 		checkSchema = schema[0]
 	}
-	v := d.DB.GetCache().GetOrSetFunc(
-		fmt.Sprintf(`mssql_table_fields_%s_%s`, table, checkSchema), func() interface{} {
-			var result Result
-			var link *sql.DB
+	v, _ := gcache.GetOrSetFunc(
+		fmt.Sprintf(`mssql_table_fields_%s_%s`, table, checkSchema),
+		func() (interface{}, error) {
+			var (
+				result Result
+				link   *sql.DB
+			)
 			link, err = d.DB.GetSlave(checkSchema)
 			if err != nil {
-				return nil
+				return nil, err
 			}
-			result, err = d.DB.DoGetAll(link, fmt.Sprintf(`
-			SELECT a.name Field,
+			structureSql := fmt.Sprintf(`
+SELECT 
+	a.name Field,
 	CASE b.name 
 		WHEN 'datetime' THEN 'datetime'
-		WHEN 'numeric' THEN b.name + '(' + convert(varchar(20),a.xprec) + ',' + convert(varchar(20),a.xscale) + ')' 
-		WHEN 'char' THEN b.name + '(' + convert(varchar(20),a.length)+ ')'
-		WHEN 'varchar' THEN b.name + '(' + convert(varchar(20),a.length)+ ')'
-		ELSE b.name + '(' + convert(varchar(20),a.length)+ ')' END as TYPE,
-	case when a.isnullable=1 then 'YES'else 'NO' end as [Null],
-	case when exists(SELECT 1 FROM sysobjects where xtype='PK' and name in (
-	  SELECT name FROM sysindexes WHERE indid in(
-	   SELECT indid FROM sysindexkeys WHERE id = a.id AND colid=a.colid
-	   ))) then 'PRI' else '' end AS [Key],
-	case when COLUMNPROPERTY(a.id,a.name,'IsIdentity')=1 then 'auto_increment'else '' end Extra,
-	isnull(e.text,'') as [Default],
+		WHEN 'numeric' THEN b.name + '(' + convert(varchar(20), a.xprec) + ',' + convert(varchar(20), a.xscale) + ')' 
+		WHEN 'char' THEN b.name + '(' + convert(varchar(20), a.length)+ ')'
+		WHEN 'varchar' THEN b.name + '(' + convert(varchar(20), a.length)+ ')'
+		ELSE b.name + '(' + convert(varchar(20),a.length)+ ')' END AS Type,
+	CASE WHEN a.isnullable=1 THEN 'YES' ELSE 'NO' end AS [Null],
+	CASE WHEN exists (
+		SELECT 1 FROM sysobjects WHERE xtype='PK' AND name IN (
+			SELECT name FROM sysindexes WHERE indid IN (
+				SELECT indid FROM sysindexkeys WHERE id = a.id AND colid=a.colid
+			)
+		)
+	) THEN 'PRI' ELSE '' END AS [Key],
+	CASE WHEN COLUMNPROPERTY(a.id,a.name,'IsIdentity')=1 THEN 'auto_increment' ELSE '' END Extra,
+	isnull(e.text,'') AS [Default],
 	isnull(g.[value],'') AS [Comment]
-	FROM syscolumns a
-	left join systypes b on a.xtype=b.xusertype
-	inner join sysobjects d on a.id=d.id and d.xtype='U' and d.name<>'dtproperties'
-	left join syscomments e on a.cdefault=e.id
-	left join sys.extended_properties g on a.id=g.major_id and a.colid=g.minor_id
-	left join sys.extended_properties f on d.id=f.major_id and f.minor_id =0
-	where d.name='%s'
-	order by a.id,a.colorder`, strings.ToUpper(table)))
+FROM syscolumns a
+LEFT JOIN systypes b ON a.xtype=b.xtype AND a.xusertype=b.xusertype
+INNER JOIN sysobjects d ON a.id=d.id AND d.xtype='U' AND d.name<>'dtproperties'
+LEFT JOIN syscomments e ON a.cdefault=e.id
+LEFT JOIN sys.extended_properties g ON a.id=g.major_id AND a.colid=g.minor_id
+LEFT JOIN sys.extended_properties f ON d.id=f.major_id AND f.minor_id =0
+WHERE d.name='%s'
+ORDER BY a.id,a.colorder`,
+				strings.ToUpper(table),
+			)
+			structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
+			result, err = d.DB.DoGetAll(link, structureSql)
 			if err != nil {
-				return nil
+				return nil, err
 			}
 			fields = make(map[string]*TableField)
 			for i, m := range result {
-				fields[strings.ToLower(m["FIELD"].String())] = &TableField{
+				fields[strings.ToLower(m["Field"].String())] = &TableField{
 					Index:   i,
-					Name:    strings.ToLower(m["FIELD"].String()),
-					Type:    strings.ToLower(m["TYPE"].String()),
+					Name:    strings.ToLower(m["Field"].String()),
+					Type:    strings.ToLower(m["Type"].String()),
 					Null:    m["Null"].Bool(),
 					Key:     m["Key"].String(),
 					Default: m["Default"].Val(),
@@ -246,7 +258,7 @@ func (d *DriverMssql) TableFields(table string, schema ...string) (fields map[st
 					Comment: m["Comment"].String(),
 				}
 			}
-			return fields
+			return fields, nil
 		}, 0)
 	if err == nil {
 		fields = v.(map[string]*TableField)

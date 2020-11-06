@@ -381,8 +381,10 @@ func String(i interface{}) string {
 			return f.Error()
 		}
 		// Reflect checks.
-		rv := reflect.ValueOf(value)
-		kind := rv.Kind()
+		var (
+			rv   = reflect.ValueOf(value)
+			kind = rv.Kind()
+		)
 		switch kind {
 		case reflect.Chan,
 			reflect.Map,
@@ -394,6 +396,8 @@ func String(i interface{}) string {
 			if rv.IsNil() {
 				return ""
 			}
+		case reflect.String:
+			return rv.String()
 		}
 		if kind == reflect.Ptr {
 			return String(rv.Elem().Interface())

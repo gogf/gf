@@ -8,10 +8,15 @@ package ghttp
 
 import (
 	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/text/gstr"
 	"strings"
 
 	"github.com/gogf/gf/encoding/gurl"
 	"github.com/gogf/gf/util/gconv"
+)
+
+const (
+	fileUploadingKey = "@file:"
 )
 
 // BuildParams builds the request string for the http client. The <params> can be type of:
@@ -38,13 +43,22 @@ func BuildParams(params interface{}, noUrlEncode ...bool) (encodedParamStr strin
 	if len(noUrlEncode) == 1 {
 		urlEncode = !noUrlEncode[0]
 	}
+	// If there's file uploading, it ignores the url encoding.
+	if urlEncode {
+		for k, v := range m {
+			if gstr.Contains(k, fileUploadingKey) || gstr.Contains(gconv.String(v), fileUploadingKey) {
+				urlEncode = false
+				break
+			}
+		}
+	}
 	s := ""
 	for k, v := range m {
 		if len(encodedParamStr) > 0 {
 			encodedParamStr += "&"
 		}
 		s = gconv.String(v)
-		if urlEncode && len(s) > 6 && strings.Compare(s[0:6], "@file:") != 0 {
+		if urlEncode && len(s) > 6 && strings.Compare(s[0:6], fileUploadingKey) != 0 {
 			s = gurl.Encode(s)
 		}
 		encodedParamStr += k + "=" + s

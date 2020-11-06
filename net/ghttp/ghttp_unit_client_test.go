@@ -295,6 +295,8 @@ func Test_Client_Param_Containing_Special_Char(t *testing.T) {
 	})
 }
 
+// It posts data along with file uploading.
+// It does not url-encodes the parameters.
 func Test_Client_File_And_Param(t *testing.T) {
 	p, _ := ports.PopRand()
 	s := g.Server(p)
@@ -308,7 +310,7 @@ func Test_Client_File_And_Param(t *testing.T) {
 		_, err = file.Save(tmpPath)
 		gtest.Assert(err, nil)
 		r.Response.Write(
-			r.Get("key"),
+			r.Get("json"),
 			gfile.GetContents(gfile.Join(tmpPath, gfile.Basename(file.Filename))),
 		)
 	})
@@ -320,12 +322,13 @@ func Test_Client_File_And_Param(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	gtest.C(t, func(t *gtest.T) {
+		path := gdebug.TestDataPath("upload", "file1.txt")
+		data := g.Map{
+			"file": "@file:" + path,
+			"json": `{"uuid": "luijquiopm", "isRelative": false, "fileName": "test111.xls"}`,
+		}
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		filePath := gdebug.TestDataPath("upload", "file1.txt")
-		t.Assert(
-			c.PostContent("/", "key=1&file=@file:"+filePath),
-			"1"+gfile.GetContents(filePath),
-		)
+		t.Assert(c.PostContent("/", data), data["json"].(string)+gfile.GetContents(path))
 	})
 }
