@@ -82,6 +82,16 @@ func Test_Keys(t *testing.T) {
 		keys := gutil.Keys(new(T))
 		t.Assert(keys, g.SliceStr{"A", "B"})
 	})
+
+	gtest.C(t, func(t *gtest.T) {
+		type T struct {
+			A string
+			B int
+		}
+		var pointer *T
+		keys := gutil.Keys(pointer)
+		t.Assert(keys, g.SliceStr{"A", "B"})
+	})
 }
 
 func Test_Values(t *testing.T) {

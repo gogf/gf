@@ -62,6 +62,12 @@ func Keys(mapOrStruct interface{}) (keysOrAttrs []string) {
 		reflectValue = reflect.ValueOf(mapOrStruct)
 		reflectKind  = reflectValue.Kind()
 	)
+	if reflectKind == reflect.Ptr {
+		if !reflectValue.IsValid() || reflectValue.IsNil() {
+			reflectValue = reflect.New(reflectValue.Type().Elem()).Elem()
+			reflectKind = reflectValue.Kind()
+		}
+	}
 	for reflectKind == reflect.Ptr {
 		reflectValue = reflectValue.Elem()
 		reflectKind = reflectValue.Kind()
