@@ -21,6 +21,9 @@ const (
 var (
 	// Default expire time for file content caching.
 	cacheExpire = cmdenv.Get("gf.gfile.cache", gDEFAULT_CACHE_EXPIRE).Duration()
+
+	// internalCache is the memory cache for internal usage.
+	internalCache = gcache.New()
 )
 
 // GetContents returns string content of given file by <path> from cache.
@@ -39,13 +42,13 @@ func GetBytesWithCache(path string, duration ...time.Duration) []byte {
 	if len(duration) > 0 {
 		expire = duration[0]
 	}
-	r, _ := gcache.GetOrSetFuncLock(key, func() (interface{}, error) {
+	r, _ := internalCache.GetOrSetFuncLock(key, func() (interface{}, error) {
 		b := GetBytes(path)
 		if b != nil {
 			// Adding this <path> to gfsnotify,
 			// it will clear its cache if there's any changes of the file.
 			_, _ = gfsnotify.Add(path, func(event *gfsnotify.Event) {
-				gcache.Remove(key)
+				internalCache.Remove(key)
 				gfsnotify.Exit()
 			})
 		}

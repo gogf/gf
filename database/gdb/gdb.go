@@ -266,6 +266,9 @@ var (
 	// which is a regular field name of table.
 	regularFieldNameRegPattern = `^[\w\.\-]+$`
 
+	// internalCache is the memory cache for internal usage.
+	internalCache = gcache.New()
+
 	// allDryRun sets dry-run feature for all database connections.
 	// It is commonly used for command options for convenience.
 	allDryRun = false
@@ -441,7 +444,7 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 		node = &n
 	}
 	// Cache the underlying connection pool object by node.
-	v, _ := gcache.GetOrSetFuncLock(node.String(), func() (interface{}, error) {
+	v, _ := internalCache.GetOrSetFuncLock(node.String(), func() (interface{}, error) {
 		sqlDb, err = c.DB.Open(node)
 		if err != nil {
 			intlog.Printf("DB open failed: %v, %+v", err, node)
