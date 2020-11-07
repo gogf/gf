@@ -15,7 +15,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/gogf/gf/os/gcache"
 	"strconv"
 	"strings"
 
@@ -199,7 +198,7 @@ func (d *DriverMssql) TableFields(table string, schema ...string) (fields map[st
 	if len(schema) > 0 && schema[0] != "" {
 		checkSchema = schema[0]
 	}
-	v, _ := gcache.GetOrSetFunc(
+	v, _ := internalCache.GetOrSetFunc(
 		fmt.Sprintf(`mssql_table_fields_%s_%s`, table, checkSchema),
 		func() (interface{}, error) {
 			var (
