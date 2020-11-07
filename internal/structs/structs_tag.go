@@ -24,6 +24,7 @@ func TagFields(pointer interface{}, priority []string) []*Field {
 // doTagFields retrieves the tag and corresponding attribute name from <pointer>. It also filters repeated
 // tag internally.
 // The parameter <pointer> should be type of struct/*struct.
+// TODO remove third-party package "structs" by reducing the reflect usage to improve the performance.
 func doTagFields(pointer interface{}, priority []string, tagMap map[string]struct{}) []*Field {
 	// If <pointer> points to an invalid address, for example a nil variable,
 	// it here creates an empty struct using reflect feature.
