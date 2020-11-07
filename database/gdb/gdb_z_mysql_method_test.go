@@ -725,7 +725,7 @@ func Test_DB_Delete(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Delete(table, nil)
+		result, err := db.Delete(table, 1)
 		t.Assert(err, nil)
 		n, _ := result.RowsAffected()
 		t.Assert(n, SIZE)
@@ -774,7 +774,7 @@ func Test_DB_Time(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Delete(table, nil)
+		result, err := db.Delete(table, 1)
 		t.Assert(err, nil)
 		n, _ := result.RowsAffected()
 		t.Assert(n, 2)

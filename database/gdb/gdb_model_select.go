@@ -75,6 +75,9 @@ func (m *Model) doGetAll(limit1 bool, where ...interface{}) (Result, error) {
 func (m *Model) getFieldsFiltered() string {
 	if m.fieldsEx == "" {
 		// No filtering.
+		if !gstr.Contains(m.fields, ".") && !gstr.Contains(m.fields, " ") {
+			return m.db.QuoteString(m.fields)
+		}
 		return m.fields
 	}
 	var (
@@ -112,7 +115,7 @@ func (m *Model) getFieldsFiltered() string {
 		if len(newFields) > 0 {
 			newFields += ","
 		}
-		newFields += k
+		newFields += m.db.QuoteWord(k)
 	}
 	return newFields
 }

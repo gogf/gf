@@ -6,6 +6,8 @@
 
 package gconv
 
+import "reflect"
+
 // SliceUint is alias of Uints.
 func SliceUint(i interface{}) []uint {
 	return Uints(i)
@@ -112,7 +114,18 @@ func Uints(i interface{}) []uint {
 		if v, ok := i.(apiInterfaces); ok {
 			return Uints(v.Interfaces())
 		}
-		return []uint{Uint(i)}
+		// Use reflect feature at last.
+		rv := reflect.ValueOf(i)
+		switch rv.Kind() {
+		case reflect.Slice, reflect.Array:
+			length := rv.Len()
+			array = make([]uint, length)
+			for n := 0; n < length; n++ {
+				array[n] = Uint(rv.Index(n).Interface())
+			}
+		default:
+			return []uint{Uint(i)}
+		}
 	}
 	return array
 }
@@ -207,7 +220,18 @@ func Uint32s(i interface{}) []uint32 {
 		if v, ok := i.(apiInterfaces); ok {
 			return Uint32s(v.Interfaces())
 		}
-		return []uint32{Uint32(i)}
+		// Use reflect feature at last.
+		rv := reflect.ValueOf(i)
+		switch rv.Kind() {
+		case reflect.Slice, reflect.Array:
+			length := rv.Len()
+			array = make([]uint32, length)
+			for n := 0; n < length; n++ {
+				array[n] = Uint32(rv.Index(n).Interface())
+			}
+		default:
+			return []uint32{Uint32(i)}
+		}
 	}
 	return array
 }
@@ -302,7 +326,18 @@ func Uint64s(i interface{}) []uint64 {
 		if v, ok := i.(apiInterfaces); ok {
 			return Uint64s(v.Interfaces())
 		}
-		return []uint64{Uint64(i)}
+		// Use reflect feature at last.
+		rv := reflect.ValueOf(i)
+		switch rv.Kind() {
+		case reflect.Slice, reflect.Array:
+			length := rv.Len()
+			array = make([]uint64, length)
+			for n := 0; n < length; n++ {
+				array[n] = Uint64(rv.Index(n).Interface())
+			}
+		default:
+			return []uint64{Uint64(i)}
+		}
 	}
 	return array
 }

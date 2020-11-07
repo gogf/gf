@@ -9,7 +9,9 @@ package gdb
 import (
 	"database/sql"
 	"fmt"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/text/gstr"
 )
 
 // Delete does "DELETE FROM ... " statement for the model.
@@ -42,5 +44,9 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 			append([]interface{}{gtime.Now().String()}, conditionArgs...),
 		)
 	}
-	return m.db.DoDelete(m.getLink(true), m.tables, conditionWhere+conditionExtra, conditionArgs...)
+	conditionStr := conditionWhere + conditionExtra
+	if !gstr.ContainsI(conditionStr, " WHERE ") {
+		return nil, gerror.New("there should be WHERE condition statement for DELETE operation")
+	}
+	return m.db.DoDelete(m.getLink(true), m.tables, conditionStr, conditionArgs...)
 }

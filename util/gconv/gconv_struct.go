@@ -42,17 +42,17 @@ var (
 //    in mapping procedure to do the matching.
 //    It ignores the map key, if it does not match.
 func Struct(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
-	return doStruct(params, pointer, false, mapping...)
+	return doStruct(params, pointer, mapping...)
 }
 
 // StructDeep do Struct function recursively.
-// See Struct.
+// Deprecated, use Struct instead.
 func StructDeep(params interface{}, pointer interface{}, mapping ...map[string]string) error {
-	return doStruct(params, pointer, true, mapping...)
+	return doStruct(params, pointer, mapping...)
 }
 
-// doStruct is the core internal converting function for any data to struct recursively or not.
-func doStruct(params interface{}, pointer interface{}, recursive bool, mapping ...map[string]string) (err error) {
+// doStruct is the core internal converting function for any data to struct.
+func doStruct(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
 	if params == nil {
 		// If <params> is nil, no conversion.
 		return nil
@@ -87,11 +87,23 @@ func doStruct(params interface{}, pointer interface{}, recursive bool, mapping .
 	switch r := params.(type) {
 	case []byte:
 		if json.Valid(r) {
-			return json.Unmarshal(r, pointer)
+			if rv, ok := pointer.(reflect.Value); ok {
+				if rv.Kind() == reflect.Ptr {
+					return json.Unmarshal(r, rv.Interface())
+				}
+			} else {
+				return json.Unmarshal(r, pointer)
+			}
 		}
 	case string:
 		if paramsBytes := []byte(r); json.Valid(paramsBytes) {
-			return json.Unmarshal(paramsBytes, pointer)
+			if rv, ok := pointer.(reflect.Value); ok {
+				if rv.Kind() == reflect.Ptr {
+					return json.Unmarshal(paramsBytes, rv.Interface())
+				}
+			} else {
+				return json.Unmarshal(paramsBytes, pointer)
+			}
 		}
 	}
 
@@ -178,7 +190,7 @@ func doStruct(params interface{}, pointer interface{}, recursive bool, mapping .
 			// mapV is the the attribute name of the struct.
 			if paramV, ok := paramsMap[mapK]; ok {
 				doneMap[mapV] = struct{}{}
-				if err := bindVarToStructAttr(elem, mapV, paramV, recursive, mapping...); err != nil {
+				if err := bindVarToStructAttr(elem, mapV, paramV, mapping...); err != nil {
 					return err
 				}
 			}
@@ -201,7 +213,7 @@ func doStruct(params interface{}, pointer interface{}, recursive bool, mapping .
 			continue
 		}
 		// Maybe it's struct/*struct.
-		if recursive && elemFieldType.Anonymous {
+		if elemFieldType.Anonymous {
 			elemFieldValue = elem.Field(i)
 			// Ignore the interface attribute if it's nil.
 			if elemFieldValue.Kind() == reflect.Interface {
@@ -210,7 +222,7 @@ func doStruct(params interface{}, pointer interface{}, recursive bool, mapping .
 					continue
 				}
 			}
-			if err = doStruct(paramsMap, elemFieldValue, recursive, mapping...); err != nil {
+			if err = doStruct(paramsMap, elemFieldValue, mapping...); err != nil {
 				return err
 			}
 		} else {
@@ -277,30 +289,15 @@ func doStruct(params interface{}, pointer interface{}, recursive bool, mapping .
 		}
 		// Mark it done.
 		doneMap[attrName] = struct{}{}
-		if err := bindVarToStructAttr(elem, attrName, mapV, recursive, mapping...); err != nil {
+		if err := bindVarToStructAttr(elem, attrName, mapV, mapping...); err != nil {
 			return err
-		}
-	}
-	// Recursively concerting for struct attributes with the same params map.
-	if recursive && elem.Kind() == reflect.Struct {
-		for i := 0; i < elemType.NumField(); i++ {
-			// Only do converting to public attributes.
-			if !utils.IsLetterUpper(elemType.Field(i).Name[0]) {
-				continue
-			}
-			fieldValue := elem.Field(i)
-			if fieldValue.Kind() == reflect.Struct {
-				if err := doStruct(paramsMap, fieldValue, recursive, mapping...); err != nil {
-					return err
-				}
-			}
 		}
 	}
 	return nil
 }
 
 // bindVarToStructAttr sets value to struct object attribute by name.
-func bindVarToStructAttr(elem reflect.Value, name string, value interface{}, recursive bool, mapping ...map[string]string) (err error) {
+func bindVarToStructAttr(elem reflect.Value, name string, value interface{}, mapping ...map[string]string) (err error) {
 	structFieldValue := elem.FieldByName(name)
 	if !structFieldValue.IsValid() {
 		return nil
@@ -315,7 +312,7 @@ func bindVarToStructAttr(elem reflect.Value, name string, value interface{}, rec
 			err = bindVarToReflectValue(structFieldValue, value, recursive, mapping...)
 =======
 		if e := recover(); e != nil {
-			err = bindVarToReflectValue(structFieldValue, value, recursive, mapping...)
+			err = bindVarToReflectValue(structFieldValue, value, mapping...)
 			if err != nil {
 				err = gerror.Wrapf(err, `error binding value to attribute "%s"`, name)
 			}
@@ -331,7 +328,7 @@ func bindVarToStructAttr(elem reflect.Value, name string, value interface{}, rec
 }
 
 // bindVarToReflectValue sets <value> to reflect value object <structFieldValue>.
-func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, recursive bool, mapping ...map[string]string) (err error) {
+func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, mapping ...map[string]string) (err error) {
 	kind := structFieldValue.Kind()
 
 	// Converting using interface, for some kinds.
@@ -373,7 +370,7 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, re
 		}
 
 		// Recursively converting for struct attribute.
-		if err := doStruct(value, structFieldValue, recursive); err != nil {
+		if err := doStruct(value, structFieldValue); err != nil {
 			// Note there's reflect conversion mechanism here.
 			structFieldValue.Set(reflect.ValueOf(value).Convert(structFieldValue.Type()))
 		}
@@ -391,14 +388,14 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, re
 				for i := 0; i < v.Len(); i++ {
 					if t.Kind() == reflect.Ptr {
 						e := reflect.New(t.Elem()).Elem()
-						if err := doStruct(v.Index(i).Interface(), e, recursive); err != nil {
+						if err := doStruct(v.Index(i).Interface(), e); err != nil {
 							// Note there's reflect conversion mechanism here.
 							e.Set(reflect.ValueOf(v.Index(i).Interface()).Convert(t))
 						}
 						a.Index(i).Set(e.Addr())
 					} else {
 						e := reflect.New(t).Elem()
-						if err := doStruct(v.Index(i).Interface(), e, recursive); err != nil {
+						if err := doStruct(v.Index(i).Interface(), e); err != nil {
 							// Note there's reflect conversion mechanism here.
 							e.Set(reflect.ValueOf(v.Index(i).Interface()).Convert(t))
 						}
@@ -411,14 +408,14 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, re
 			t := a.Index(0).Type()
 			if t.Kind() == reflect.Ptr {
 				e := reflect.New(t.Elem()).Elem()
-				if err := doStruct(value, e, recursive); err != nil {
+				if err := doStruct(value, e); err != nil {
 					// Note there's reflect conversion mechanism here.
 					e.Set(reflect.ValueOf(value).Convert(t))
 				}
 				a.Index(0).Set(e.Addr())
 			} else {
 				e := reflect.New(t).Elem()
-				if err := doStruct(value, e, recursive); err != nil {
+				if err := doStruct(value, e); err != nil {
 					// Note there's reflect conversion mechanism here.
 					e.Set(reflect.ValueOf(value).Convert(t))
 				}
@@ -437,7 +434,7 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, re
 			return err
 		}
 		elem := item.Elem()
-		if err = bindVarToReflectValue(elem, value, recursive, mapping...); err == nil {
+		if err = bindVarToReflectValue(elem, value, mapping...); err == nil {
 			structFieldValue.Set(elem.Addr())
 		}
 

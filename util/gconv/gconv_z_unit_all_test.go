@@ -633,7 +633,7 @@ func Test_Convert_All(t *testing.T) {
 		t.AssertEQ(gconv.Convert(true, "bool"), true)
 		t.AssertEQ(gconv.Convert([]byte{}, "[]byte"), []uint8{})
 		t.AssertEQ(gconv.Convert([]string{}, "[]string"), []string{})
-		t.AssertEQ(gconv.Convert([2]int{1, 2}, "[]int"), []int{0})
+		t.AssertEQ(gconv.Convert([2]int{1, 2}, "[]int"), []int{1, 2})
 		t.AssertEQ(gconv.Convert("1989-01-02", "Time", "Y-m-d"), gconv.Time("1989-01-02", "Y-m-d"))
 		t.AssertEQ(gconv.Convert(1989, "Time"), gconv.Time("1970-01-01 08:33:09 +0800 CST"))
 		t.AssertEQ(gconv.Convert(gtime.Now(), "gtime.Time", 1), *gtime.New())
@@ -753,7 +753,8 @@ func Test_Slice_PrivateAttribute_All(t *testing.T) {
 	}
 	gtest.C(t, func(t *gtest.T) {
 		user := &User{1, "john", []interface{}{2}}
-		t.Assert(gconv.Interfaces(user), g.Slice{1, []interface{}{2}})
+		//t.Assert(gconv.Interfaces(user), g.Slice{1, []interface{}{2}})
+		t.Assert(gconv.Interfaces(user), g.Slice{user})
 	})
 }
 
@@ -1278,7 +1279,7 @@ func Test_Struct_PrivateAttribute_All(t *testing.T) {
 	})
 }
 
-func Test_Struct_Deep_All(t *testing.T) {
+func Test_Struct_Embedded_All(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Ids struct {
 			Id  int `json:"id"`
@@ -1303,7 +1304,7 @@ func Test_Struct_Deep_All(t *testing.T) {
 			"create_time": "2019",
 		}
 		user := new(User)
-		gconv.StructDeep(data, user)
+		gconv.Struct(data, user)
 		t.Assert(user.Id, 100)
 		t.Assert(user.Uid, 101)
 		t.Assert(user.Nickname, "T1")

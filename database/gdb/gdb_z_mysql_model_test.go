@@ -11,7 +11,9 @@ import (
 	"fmt"
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/container/gmap"
+	"github.com/gogf/gf/debug/gdebug"
 	"github.com/gogf/gf/encoding/gparser"
+	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/util/gutil"
 	"testing"
 	"time"
@@ -393,7 +395,7 @@ func Test_Model_Update(t *testing.T) {
 	defer dropTable(table)
 	// UPDATE...LIMIT
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Table(table).Data("nickname", "T100").Order("id desc").Limit(2).Update()
+		result, err := db.Table(table).Data("nickname", "T100").Where(1).Order("id desc").Limit(2).Update()
 		t.Assert(err, nil)
 		n, _ := result.RowsAffected()
 		t.Assert(n, 2)
@@ -769,6 +771,26 @@ func Test_Model_Count(t *testing.T) {
 		t.Assert(err, nil)
 		t.Assert(count, SIZE)
 	})
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Table(table).FieldsEx("id").Where("id>8").Count()
+		t.Assert(err, nil)
+		t.Assert(count, 2)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Table(table).Fields("distinct id,nickname").Where("id>8").Count()
+		t.Assert(err, nil)
+		t.Assert(count, 2)
+	})
+	//gtest.C(t, func(t *gtest.T) {
+	//	count, err := db.Table(table).Fields("id myid").Where("id>8").Count()
+	//	t.Assert(err, nil)
+	//	t.Assert(count, 2)
+	//})
+	//gtest.C(t, func(t *gtest.T) {
+	//	count, err := db.Table(table).As("u1").LeftJoin(table, "u2", "u2.id=u1.id").Fields("u2.id u2id").Where("u1.id>8").Count()
+	//	t.Assert(err, nil)
+	//	t.Assert(count, 2)
+	//})
 }
 
 func Test_Model_FindCount(t *testing.T) {
@@ -1753,14 +1775,14 @@ func Test_Model_Delete(t *testing.T) {
 
 	// DELETE...LIMIT
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Table(table).Limit(2).Delete()
+		result, err := db.Table(table).Where(1).Limit(2).Delete()
 		t.Assert(err, nil)
 		n, _ := result.RowsAffected()
 		t.Assert(n, 2)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Table(table).Delete()
+		result, err := db.Table(table).Where(1).Delete()
 		t.Assert(err, nil)
 		n, _ := result.RowsAffected()
 		t.Assert(n, SIZE-2)
@@ -2020,7 +2042,7 @@ func Test_Model_Option_Where(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		table := createInitTable()
 		defer dropTable(table)
-		r, err := db.Table(table).OmitEmpty().Data("nickname", 1).Where(g.Map{"id": 0, "passport": ""}).Update()
+		r, err := db.Table(table).OmitEmpty().Data("nickname", 1).Where(g.Map{"id": 0, "passport": ""}).And(1).Update()
 		t.Assert(err, nil)
 		n, _ := r.RowsAffected()
 		t.Assert(n, SIZE)
@@ -2096,6 +2118,19 @@ func Test_Model_FieldsEx(t *testing.T) {
 		t.Assert(err, nil)
 		t.Assert(one["nickname"], "123")
 		t.AssertNE(one["password"], "456")
+	})
+}
+
+func Test_Model_FieldsEx_WithReservedWords(t *testing.T) {
+	table := "fieldsex_test_table"
+	sqlTpcPath := gdebug.TestDataPath("reservedwords_table_tpl.sql")
+	if _, err := db.Exec(fmt.Sprintf(gfile.GetContents(sqlTpcPath), table)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		_, err := db.Table(table).FieldsEx("content").One()
+		t.Assert(err, nil)
 	})
 }
 
@@ -2569,6 +2604,101 @@ func Test_Model_Min_Max(t *testing.T) {
 		value, err := db.Table(table, "t").Fields("max(t.id)").Where("id > 1").Value()
 		t.Assert(err, nil)
 		t.Assert(value.Int(), 10)
+	})
+}
+
+func Test_Model_Fields_AutoMapping(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		value, err := db.Table(table).Fields("ID").Where("id", 2).Value()
+		t.Assert(err, nil)
+		t.Assert(value.Int(), 2)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		value, err := db.Table(table).Fields("NICK_NAME").Where("id", 2).Value()
+		t.Assert(err, nil)
+		t.Assert(value.String(), "name_2")
+	})
+	// Map
+	gtest.C(t, func(t *gtest.T) {
+		one, err := db.Table(table).Fields(g.Map{
+			"ID":        1,
+			"NICK_NAME": 1,
+		}).Where("id", 2).One()
+		t.Assert(err, nil)
+		t.Assert(len(one), 2)
+		t.Assert(one["id"], 2)
+		t.Assert(one["nickname"], "name_2")
+	})
+	// Struct
+	gtest.C(t, func(t *gtest.T) {
+		type T struct {
+			ID       int
+			NICKNAME int
+		}
+		one, err := db.Table(table).Fields(&T{
+			ID:       0,
+			NICKNAME: 0,
+		}).Where("id", 2).One()
+		t.Assert(err, nil)
+		t.Assert(len(one), 2)
+		t.Assert(one["id"], 2)
+		t.Assert(one["nickname"], "name_2")
+	})
+}
+
+func Test_Model_FieldsEx_AutoMapping(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	// "id":          i,
+	// "passport":    fmt.Sprintf(`user_%d`, i),
+	// "password":    fmt.Sprintf(`pass_%d`, i),
+	// "nickname":    fmt.Sprintf(`name_%d`, i),
+	// "create_time": gtime.NewFromStr("2018-10-24 10:00:00").String(),
+
+	gtest.C(t, func(t *gtest.T) {
+		value, err := db.Table(table).FieldsEx("Passport, Password, NickName, CreateTime").Where("id", 2).Value()
+		t.Assert(err, nil)
+		t.Assert(value.Int(), 2)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		value, err := db.Table(table).FieldsEx("ID, Passport, Password, CreateTime").Where("id", 2).Value()
+		t.Assert(err, nil)
+		t.Assert(value.String(), "name_2")
+	})
+	// Map
+	gtest.C(t, func(t *gtest.T) {
+		one, err := db.Table(table).FieldsEx(g.Map{
+			"Passport":   1,
+			"Password":   1,
+			"CreateTime": 1,
+		}).Where("id", 2).One()
+		t.Assert(err, nil)
+		t.Assert(len(one), 2)
+		t.Assert(one["id"], 2)
+		t.Assert(one["nickname"], "name_2")
+	})
+	// Struct
+	gtest.C(t, func(t *gtest.T) {
+		type T struct {
+			Passport   int
+			Password   int
+			CreateTime int
+		}
+		one, err := db.Table(table).FieldsEx(&T{
+			Passport:   0,
+			Password:   0,
+			CreateTime: 0,
+		}).Where("id", 2).One()
+		t.Assert(err, nil)
+		t.Assert(len(one), 2)
+		t.Assert(one["id"], 2)
+		t.Assert(one["nickname"], "name_2")
 	})
 }
 

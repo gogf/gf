@@ -751,5 +751,5 @@ func mapToStruct(data map[string]interface{}, pointer interface{}) error {
 >>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 		mapping[strings.Split(tag, ",")[0]] = attr
 	}
-	return gconv.StructDeep(data, pointer, mapping)
+	return gconv.Struct(data, pointer, mapping)
 }

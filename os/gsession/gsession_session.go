@@ -355,6 +355,7 @@ func (s *Session) GetStruct(key string, pointer interface{}, mapping ...map[stri
 	return gconv.Struct(s.Get(key), pointer, mapping...)
 }
 
+// Deprecated, use GetStruct instead.
 func (s *Session) GetStructDeep(key string, pointer interface{}, mapping ...map[string]string) error {
 	return gconv.StructDeep(s.Get(key), pointer, mapping...)
 }
@@ -363,6 +364,7 @@ func (s *Session) GetStructs(key string, pointer interface{}, mapping ...map[str
 	return gconv.Structs(s.Get(key), pointer, mapping...)
 }
 
+// Deprecated, use GetStructs instead.
 func (s *Session) GetStructsDeep(key string, pointer interface{}, mapping ...map[string]string) error {
 	return gconv.StructsDeep(s.Get(key), pointer, mapping...)
 }

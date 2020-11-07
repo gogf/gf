@@ -17,12 +17,13 @@ import (
 
 // Structs converts any slice to given struct slice.
 func Structs(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
-	return doStructs(params, pointer, false, mapping...)
+	return doStructs(params, pointer, mapping...)
 }
 
 // StructsDeep converts any slice to given struct slice recursively.
+// Deprecated, use Structs instead.
 func StructsDeep(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
-	return doStructs(params, pointer, true, mapping...)
+	return doStructs(params, pointer, mapping...)
 }
 
 // doStructs converts any slice to given struct slice.
@@ -32,7 +33,7 @@ func StructsDeep(params interface{}, pointer interface{}, mapping ...map[string]
 // The parameter <pointer> should be type of pointer to slice of struct.
 // Note that if <pointer> is a pointer to another pointer of type of slice of struct,
 // it will create the struct/pointer internally.
-func doStructs(params interface{}, pointer interface{}, deep bool, mapping ...map[string]string) (err error) {
+func doStructs(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
 	if params == nil {
 		// If <params> is nil, no conversion.
 		return nil
@@ -52,11 +53,23 @@ func doStructs(params interface{}, pointer interface{}, deep bool, mapping ...ma
 	switch r := params.(type) {
 	case []byte:
 		if json.Valid(r) {
-			return json.Unmarshal(r, pointer)
+			if rv, ok := pointer.(reflect.Value); ok {
+				if rv.Kind() == reflect.Ptr {
+					return json.Unmarshal(r, rv.Interface())
+				}
+			} else {
+				return json.Unmarshal(r, pointer)
+			}
 		}
 	case string:
 		if paramsBytes := []byte(r); json.Valid(paramsBytes) {
-			return json.Unmarshal(paramsBytes, pointer)
+			if rv, ok := pointer.(reflect.Value); ok {
+				if rv.Kind() == reflect.Ptr {
+					return json.Unmarshal(paramsBytes, rv.Interface())
+				}
+			} else {
+				return json.Unmarshal(paramsBytes, pointer)
+			}
 		}
 	}
 	// Pointer type check.
@@ -85,27 +98,15 @@ func doStructs(params interface{}, pointer interface{}, deep bool, mapping ...ma
 		if itemType.Kind() == reflect.Ptr {
 			// Slice element is type pointer.
 			e := reflect.New(itemType.Elem()).Elem()
-			if deep {
-				if err = StructDeep(paramsMaps[i], e, mapping...); err != nil {
-					return err
-				}
-			} else {
-				if err = Struct(paramsMaps[i], e, mapping...); err != nil {
-					return err
-				}
+			if err = Struct(paramsMaps[i], e, mapping...); err != nil {
+				return err
 			}
 			array.Index(i).Set(e.Addr())
 		} else {
 			// Slice element is not type of pointer.
 			e := reflect.New(itemType).Elem()
-			if deep {
-				if err = StructDeep(paramsMaps[i], e, mapping...); err != nil {
-					return err
-				}
-			} else {
-				if err = Struct(paramsMaps[i], e, mapping...); err != nil {
-					return err
-				}
+			if err = Struct(paramsMaps[i], e, mapping...); err != nil {
+				return err
 			}
 			array.Index(i).Set(e)
 		}

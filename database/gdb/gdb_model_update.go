@@ -10,6 +10,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
@@ -89,12 +90,20 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 	if err != nil {
 		return nil, err
 	}
+	conditionStr := conditionWhere + conditionExtra
+	if !gstr.ContainsI(conditionStr, " WHERE ") {
+		return nil, gerror.New("there should be WHERE condition statement for UPDATE operation")
+	}
 	return m.db.DoUpdate(
 		m.getLink(true),
 		m.tables,
 		newData,
+<<<<<<< HEAD
 >>>>>>> 4ae89dc9f62ced2aaf3c7eeb2eaf438c65c1521c
 		conditionWhere+conditionExtra,
+=======
+		conditionStr,
+>>>>>>> 9cb88bca5a84c83c7e053188cb36a1993cd680db
 		m.mergeArguments(conditionArgs)...,
 	)
 }
