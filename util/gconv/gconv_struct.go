@@ -12,17 +12,10 @@ import (
 	"github.com/gogf/gf/internal/empty"
 	"github.com/gogf/gf/internal/json"
 	"reflect"
-	"regexp"
 	"strings"
 
 	"github.com/gogf/gf/internal/structs"
 	"github.com/gogf/gf/internal/utils"
-)
-
-var (
-	// replaceCharReg is the regular expression object for replacing chars
-	// in map keys and attribute names.
-	replaceCharReg, _ = regexp.Compile(`[\-\.\_\s]+`)
 )
 
 // Struct maps the params key-value pairs to the corresponding struct object's attributes.
@@ -193,7 +186,7 @@ func doStruct(params interface{}, pointer interface{}, mapping ...map[string]str
 			}
 		} else {
 			tempName = elemFieldType.Name
-			attrMap[tempName] = replaceCharReg.ReplaceAllString(tempName, "")
+			attrMap[tempName] = utils.RemoveSymbols(tempName)
 		}
 	}
 	if len(attrMap) == 0 {
@@ -204,7 +197,7 @@ func doStruct(params interface{}, pointer interface{}, mapping ...map[string]str
 	// and the value is its replaced tag name for later comparison to improve performance.
 	tagMap := make(map[string]string)
 	for k, v := range structs.TagMapName(pointer, StructTagPriority) {
-		tagMap[v] = replaceCharReg.ReplaceAllString(k, "")
+		tagMap[v] = utils.RemoveSymbols(k)
 	}
 
 	var (
@@ -213,7 +206,7 @@ func doStruct(params interface{}, pointer interface{}, mapping ...map[string]str
 	)
 	for mapK, mapV := range paramsMap {
 		attrName = ""
-		checkName = replaceCharReg.ReplaceAllString(mapK, "")
+		checkName = utils.RemoveSymbols(mapK)
 		// Loop to find the matched attribute name with or without
 		// string cases and chars like '-'/'_'/'.'/' '.
 
