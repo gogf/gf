@@ -11,10 +11,10 @@ import (
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/empty"
 	"github.com/gogf/gf/internal/json"
+	"github.com/gogf/gf/internal/structs"
 	"reflect"
 	"strings"
 
-	"github.com/gogf/gf/internal/structs"
 	"github.com/gogf/gf/internal/utils"
 )
 
@@ -196,7 +196,11 @@ func doStruct(params interface{}, pointer interface{}, mapping ...map[string]str
 	// The key of the tagMap is the attribute name of the struct,
 	// and the value is its replaced tag name for later comparison to improve performance.
 	tagMap := make(map[string]string)
-	for k, v := range structs.TagMapName(pointer, StructTagPriority) {
+	tagToNameMap, err := structs.TagMapName(elem, StructTagPriority)
+	if err != nil {
+		return err
+	}
+	for k, v := range tagToNameMap {
 		tagMap[v] = utils.RemoveSymbols(k)
 	}
 
@@ -263,8 +267,7 @@ func bindVarToStructAttr(elem reflect.Value, name string, value interface{}, map
 	}
 	defer func() {
 		if e := recover(); e != nil {
-			err = bindVarToReflectValue(structFieldValue, value, mapping...)
-			if err != nil {
+			if err = bindVarToReflectValue(structFieldValue, value, mapping...); err != nil {
 				err = gerror.Wrapf(err, `error binding value to attribute "%s"`, name)
 			}
 		}
