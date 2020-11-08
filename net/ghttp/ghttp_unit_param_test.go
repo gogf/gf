@@ -556,33 +556,33 @@ func Test_Params_Modify(t *testing.T) {
 	})
 }
 
-//func Test_Params_Parse_DefaultValueTag(t *testing.T) {
-//	type T struct {
-//		Name  string  `d:"john"`
-//		Score float32 `d:"60"`
-//	}
-//	p, _ := ports.PopRand()
-//	s := g.Server(p)
-//	s.BindHandler("/parse", func(r *ghttp.Request) {
-//		var t *T
-//		if err := r.Parse(&t); err != nil {
-//			r.Response.WriteExit(err)
-//		}
-//		r.Response.WriteExit(t)
-//	})
-//	s.SetPort(p)
-//	s.SetDumpRouterMap(false)
-//	s.Start()
-//	defer s.Shutdown()
-//
-//	time.Sleep(100 * time.Millisecond)
-//	gtest.C(t, func(t *gtest.T) {
-//		prefix := fmt.Sprintf("http://127.0.0.1:%d", p)
-//		client := g.Client()
-//		client.SetPrefix(prefix)
-//
-//		t.Assert(client.PostContent("/parse"), `{"Name":"john","Score":60}`)
-//		t.Assert(client.PostContent("/parse", `{"name":"smith"}`), `{"Name":"smith","Score":60}`)
-//		t.Assert(client.PostContent("/parse", `{"name":"smith", "score":100}`), `{"Name":"smith","Score":100}`)
-//	})
-//}
+func Test_Params_Parse_DefaultValueTag(t *testing.T) {
+	type T struct {
+		Name  string  `d:"john"`
+		Score float32 `d:"60"`
+	}
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/parse", func(r *ghttp.Request) {
+		var t *T
+		if err := r.Parse(&t); err != nil {
+			r.Response.WriteExit(err)
+		}
+		r.Response.WriteExit(t)
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		prefix := fmt.Sprintf("http://127.0.0.1:%d", p)
+		client := g.Client()
+		client.SetPrefix(prefix)
+
+		t.Assert(client.PostContent("/parse"), `{"Name":"john","Score":60}`)
+		t.Assert(client.PostContent("/parse", `{"name":"smith"}`), `{"Name":"smith","Score":60}`)
+		t.Assert(client.PostContent("/parse", `{"name":"smith", "score":100}`), `{"Name":"smith","Score":100}`)
+	})
+}
