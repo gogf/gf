@@ -386,3 +386,17 @@ func Test_BuildInFuncMaps(t *testing.T) {
 		t.Assert(r, ` 0:john 99.9  1:smith 100 `)
 	})
 }
+
+func Test_BuildInFuncDump(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		v := gview.New()
+		v.Assign("v", g.Map{
+			"name":  "john",
+			"score": 100,
+		})
+		r, err := v.ParseContent("{{dump .}}")
+		t.Assert(err, nil)
+		t.Assert(gstr.Contains(r, `"name": "john"`), true)
+		t.Assert(gstr.Contains(r, `"score": 100`), true)
+	})
+}
