@@ -7,7 +7,6 @@
 package utils
 
 import (
-	"bytes"
 	"strings"
 )
 
@@ -79,13 +78,13 @@ func ReplaceByMap(origin string, replaces map[string]string) string {
 
 // RemoveSymbols removes all symbols from string and lefts only numbers and letters.
 func RemoveSymbols(s string) string {
-	buffer := bytes.NewBuffer(nil)
+	var b []byte
 	for _, c := range s {
 		if (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') {
-			buffer.WriteByte(byte(c))
+			b = append(b, byte(c))
 		}
 	}
-	return buffer.String()
+	return string(b)
 }
 
 // EqualFoldWithoutChars checks string <s1> and <s2> equal case-insensitively,

@@ -24,8 +24,8 @@ func MapField(pointer interface{}, priority []string) (map[string]*Field, error)
 	for _, field := range tagFields {
 		tagField := field
 		tagFieldMap[field.Name()] = tagField
-		if tagField.CurrentTag != "" {
-			tagFieldMap[tagField.CurrentTag] = tagField
+		if tagField.TagValue != "" {
+			tagFieldMap[tagField.TagValue] = tagField
 		}
 	}
 	return tagFieldMap, nil

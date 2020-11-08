@@ -319,14 +319,14 @@ func GetWhereConditionOfStruct(pointer interface{}) (where string, args []interf
 	}
 	array := ([]string)(nil)
 	for _, field := range tagField {
-		array = strings.Split(field.CurrentTag, ",")
+		array = strings.Split(field.TagValue, ",")
 		if len(array) > 1 && gstr.InArray([]string{ORM_TAG_FOR_UNIQUE, ORM_TAG_FOR_PRIMARY}, array[1]) {
 			return array[0], []interface{}{field.Value()}, nil
 		}
 		if len(where) > 0 {
 			where += " "
 		}
-		where += field.CurrentTag + "=?"
+		where += field.TagValue + "=?"
 		args = append(args, field.Value())
 	}
 	return
@@ -340,7 +340,7 @@ func GetPrimaryKey(pointer interface{}) (string, error) {
 	}
 	array := ([]string)(nil)
 	for _, field := range tagField {
-		array = strings.Split(field.CurrentTag, ",")
+		array = strings.Split(field.TagValue, ",")
 		if len(array) > 1 && array[1] == ORM_TAG_FOR_PRIMARY {
 			return array[0], nil
 		}
