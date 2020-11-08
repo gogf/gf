@@ -90,7 +90,7 @@ func CheckStruct(object interface{}, rules interface{}, messages ...CustomMsg) *
 		fieldName := field.Name()
 		// sequence tag == struct tag
 		// The name here is alias of field name.
-		name, rule, msg := parseSequenceTag(field.CurrentTag)
+		name, rule, msg := parseSequenceTag(field.TagValue)
 		if len(name) == 0 {
 			name = fieldName
 		} else {

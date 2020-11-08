@@ -20,6 +20,41 @@ func TagFields(pointer interface{}, priority []string) ([]*Field, error) {
 	return getFieldValuesByTagPriority(pointer, priority, map[string]struct{}{})
 }
 
+// TagMapName retrieves struct tags as map[tag]attribute from <pointer>, and returns it.
+//
+// The parameter <pointer> should be type of struct/*struct.
+//
+// Note that it only retrieves the exported attributes with first letter up-case from struct.
+func TagMapName(pointer interface{}, priority []string) (map[string]string, error) {
+	fields, err := TagFields(pointer, priority)
+	if err != nil {
+		return nil, err
+	}
+	tagMap := make(map[string]string, len(fields))
+	for _, field := range fields {
+		tagMap[field.TagValue] = field.Name()
+	}
+	return tagMap, nil
+}
+
+// TagMapField retrieves struct tags as map[tag]*Field from <pointer>, and returns it.
+//
+// The parameter <pointer> should be type of struct/*struct.
+//
+// Note that it only retrieves the exported attributes with first letter up-case from struct.
+func TagMapField(pointer interface{}, priority []string) (map[string]*Field, error) {
+	fields, err := TagFields(pointer, priority)
+	if err != nil {
+		return nil, err
+	}
+	tagMap := make(map[string]*Field, len(fields))
+	for _, field := range fields {
+		tagField := field
+		tagMap[field.TagValue] = tagField
+	}
+	return tagMap, nil
+}
+
 func getFieldValues(value interface{}) ([]*Field, error) {
 	var (
 		reflectValue reflect.Value
@@ -81,7 +116,7 @@ func getFieldValuesByTagPriority(pointer interface{}, priority []string, tagMap 
 		return nil, err
 	}
 	var (
-		tagName   = ""
+		tagValue  = ""
 		tagFields = make([]*Field, 0)
 	)
 	for _, field := range fields {
@@ -89,20 +124,20 @@ func getFieldValuesByTagPriority(pointer interface{}, priority []string, tagMap 
 		if !field.IsExported() {
 			continue
 		}
-		tagName = ""
+		tagValue = ""
 		for _, p := range priority {
-			tagName = field.Tag(p)
-			if tagName != "" && tagName != "-" {
+			tagValue = field.Tag(p)
+			if tagValue != "" && tagValue != "-" {
 				break
 			}
 		}
-		if tagName != "" {
+		if tagValue != "" {
 			// Filter repeated tag.
-			if _, ok := tagMap[tagName]; ok {
+			if _, ok := tagMap[tagValue]; ok {
 				continue
 			}
 			tagField := field
-			tagField.CurrentTag = tagName
+			tagField.TagValue = tagValue
 			tagFields = append(tagFields, tagField)
 		}
 		// If this is an embedded attribute, it retrieves the tags recursively.
@@ -115,39 +150,4 @@ func getFieldValuesByTagPriority(pointer interface{}, priority []string, tagMap 
 		}
 	}
 	return tagFields, nil
-}
-
-// TagMapName retrieves struct tags as map[tag]attribute from <pointer>, and returns it.
-//
-// The parameter <pointer> should be type of struct/*struct.
-//
-// Note that it only retrieves the exported attributes with first letter up-case from struct.
-func TagMapName(pointer interface{}, priority []string) (map[string]string, error) {
-	fields, err := TagFields(pointer, priority)
-	if err != nil {
-		return nil, err
-	}
-	tagMap := make(map[string]string, len(fields))
-	for _, field := range fields {
-		tagMap[field.CurrentTag] = field.Name()
-	}
-	return tagMap, nil
-}
-
-// TagMapField retrieves struct tags as map[tag]*Field from <pointer>, and returns it.
-//
-// The parameter <pointer> should be type of struct/*struct.
-//
-// Note that it only retrieves the exported attributes with first letter up-case from struct.
-func TagMapField(pointer interface{}, priority []string) (map[string]*Field, error) {
-	fields, err := TagFields(pointer, priority)
-	if err != nil {
-		return nil, err
-	}
-	tagMap := make(map[string]*Field, len(fields))
-	for _, field := range fields {
-		tagField := field
-		tagMap[field.CurrentTag] = tagField
-	}
-	return tagMap, nil
 }

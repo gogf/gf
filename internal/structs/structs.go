@@ -17,9 +17,9 @@ import (
 type Field struct {
 	value reflect.Value
 	field reflect.StructField
-	// Retrieved tag name. There might be more than one tags in the field,
+	// Retrieved tag value. There might be more than one tags in the field,
 	// but only one can be retrieved according to calling function rules.
-	CurrentTag string
+	TagValue string
 }
 
 // Tag returns the value associated with key in the tag string. If there is no
