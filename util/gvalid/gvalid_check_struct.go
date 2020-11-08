@@ -73,16 +73,24 @@ func CheckStruct(object interface{}, rules interface{}, messages ...CustomMsg) *
 		checkRules = v
 	}
 	// Checks and extends the parameters map with struct alias tag.
-	for nameOrTag, field := range structs.MapField(object, aliasNameTagPriority, true) {
+	mapField, err := structs.MapField(object, aliasNameTagPriority)
+	if err != nil {
+		return newErrorStr("invalid_object", err.Error())
+	}
+	for nameOrTag, field := range mapField {
 		params[nameOrTag] = field.Value()
 		params[field.Name()] = field.Value()
 	}
 	// It here must use structs.TagFields not structs.MapField to ensure error sequence.
-	for _, field := range structs.TagFields(object, structTagPriority) {
+	tagField, err := structs.TagFields(object, structTagPriority)
+	if err != nil {
+		return newErrorStr("invalid_object", err.Error())
+	}
+	for _, field := range tagField {
 		fieldName := field.Name()
 		// sequence tag == struct tag
 		// The name here is alias of field name.
-		name, rule, msg := parseSequenceTag(field.Tag)
+		name, rule, msg := parseSequenceTag(field.CurrentTag)
 		if len(name) == 0 {
 			name = fieldName
 		} else {

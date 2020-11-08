@@ -312,32 +312,40 @@ func doQuoteString(s, charLeft, charRight string) string {
 
 // GetWhereConditionOfStruct returns the where condition sql and arguments by given struct pointer.
 // This function automatically retrieves primary or unique field and its attribute value as condition.
-func GetWhereConditionOfStruct(pointer interface{}) (where string, args []interface{}) {
+func GetWhereConditionOfStruct(pointer interface{}) (where string, args []interface{}, err error) {
+	tagField, err := structs.TagFields(pointer, []string{ORM_TAG_FOR_STRUCT})
+	if err != nil {
+		return "", nil, err
+	}
 	array := ([]string)(nil)
-	for _, field := range structs.TagFields(pointer, []string{ORM_TAG_FOR_STRUCT}) {
-		array = strings.Split(field.Tag, ",")
+	for _, field := range tagField {
+		array = strings.Split(field.CurrentTag, ",")
 		if len(array) > 1 && gstr.InArray([]string{ORM_TAG_FOR_UNIQUE, ORM_TAG_FOR_PRIMARY}, array[1]) {
-			return array[0], []interface{}{field.Value()}
+			return array[0], []interface{}{field.Value()}, nil
 		}
 		if len(where) > 0 {
 			where += " "
 		}
-		where += field.Tag + "=?"
+		where += field.CurrentTag + "=?"
 		args = append(args, field.Value())
 	}
 	return
 }
 
 // GetPrimaryKey retrieves and returns primary key field name from given struct.
-func GetPrimaryKey(pointer interface{}) string {
+func GetPrimaryKey(pointer interface{}) (string, error) {
+	tagField, err := structs.TagFields(pointer, []string{ORM_TAG_FOR_STRUCT})
+	if err != nil {
+		return "", err
+	}
 	array := ([]string)(nil)
-	for _, field := range structs.TagFields(pointer, []string{ORM_TAG_FOR_STRUCT}) {
-		array = strings.Split(field.Tag, ",")
+	for _, field := range tagField {
+		array = strings.Split(field.CurrentTag, ",")
 		if len(array) > 1 && array[1] == ORM_TAG_FOR_PRIMARY {
-			return array[0]
+			return array[0], nil
 		}
 	}
-	return ""
+	return "", nil
 }
 
 // GetPrimaryKeyCondition returns a new where condition by primary field name.
@@ -721,9 +729,13 @@ func FormatSqlWithArgs(sql string, args []interface{}) string {
 // mapToStruct maps the <data> to given struct.
 // Note that the given parameter <pointer> should be a pointer to s struct.
 func mapToStruct(data map[string]interface{}, pointer interface{}) error {
+	tagNameMap, err := structs.TagMapName(pointer, []string{ORM_TAG_FOR_STRUCT})
+	if err != nil {
+		return err
+	}
 	// It retrieves and returns the mapping between orm tag and the struct attribute name.
 	mapping := make(map[string]string)
-	for tag, attr := range structs.TagMapName(pointer, []string{ORM_TAG_FOR_STRUCT}) {
+	for tag, attr := range tagNameMap {
 		mapping[strings.Split(tag, ",")[0]] = attr
 	}
 	return gconv.Struct(data, pointer, mapping)
