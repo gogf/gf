@@ -91,7 +91,7 @@ func (l *Logger) getFilePath(now time.Time) string {
 		return gtime.New(now).Format(strings.Trim(s, "{}"))
 	})
 	file = gfile.Join(l.config.Path, file)
-	if gfile.ExtName(file) != "log" {
+	if gfile.ExtName(file) == "" {
 		file += ".log"
 	}
 	return file
