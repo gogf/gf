@@ -530,6 +530,11 @@ func Test_StructEmbedded5(t *testing.T) {
 		err = gconv.Struct(data, user2)
 		t.Assert(err, nil)
 		t.Assert(user2, &UserWithBase2{1, "john", Base{"", ""}})
+
+		var user3 *UserWithBase1
+		err = gconv.Struct(user1, &user3)
+		t.Assert(err, nil)
+		t.Assert(user3, user1)
 	})
 }
 

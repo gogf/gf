@@ -271,7 +271,7 @@ func doMapConvertForMapOrStructValue(isRoot bool, value interface{}, recursive b
 					}
 				}
 			}
-			if recursive {
+			if recursive || rtField.Anonymous {
 				// Do map converting recursively.
 				var (
 					rvAttrField = rvField
@@ -290,7 +290,7 @@ func doMapConvertForMapOrStructValue(isRoot bool, value interface{}, recursive b
 					if hasNoTag && rtField.Anonymous {
 						// It means this attribute field has no tag.
 						// Overwrite the attribute with sub-struct attribute fields.
-						anonymousValue := doMapConvertForMapOrStructValue(false, rvAttrInterface, recursive, tags...)
+						anonymousValue := doMapConvertForMapOrStructValue(false, rvAttrInterface, true, tags...)
 						if m, ok := anonymousValue.(map[string]interface{}); ok {
 							for k, v := range m {
 								dataMap[k] = v
@@ -298,9 +298,11 @@ func doMapConvertForMapOrStructValue(isRoot bool, value interface{}, recursive b
 						} else {
 							dataMap[name] = rvAttrInterface
 						}
-					} else {
+					} else if !hasNoTag && rtField.Anonymous {
 						// It means this attribute field has desired tag.
-						dataMap[name] = doMapConvertForMapOrStructValue(false, rvAttrInterface, recursive, tags...)
+						dataMap[name] = doMapConvertForMapOrStructValue(false, rvAttrInterface, true, tags...)
+					} else {
+						dataMap[name] = doMapConvertForMapOrStructValue(false, rvAttrInterface, false, tags...)
 					}
 
 				// The struct attribute is type of slice.
