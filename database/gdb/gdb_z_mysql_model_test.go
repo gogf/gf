@@ -775,6 +775,12 @@ func Test_Model_Count(t *testing.T) {
 		t.Assert(err, nil)
 		t.Assert(count, 2)
 	})
+	// COUNT...LIMIT...
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Table(table).Page(1, 2).Count()
+		t.Assert(err, nil)
+		t.Assert(count, SIZE)
+	})
 	//gtest.C(t, func(t *gtest.T) {
 	//	count, err := db.Table(table).Fields("id myid").Where("id>8").Count()
 	//	t.Assert(err, nil)

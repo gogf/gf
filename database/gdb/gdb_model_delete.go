@@ -28,7 +28,7 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 	}()
 	var (
 		fieldNameDelete                               = m.getSoftFieldNameDeleted()
-		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(false)
+		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(false, false)
 	)
 	// Soft deleting.
 	if !m.unscoped && fieldNameDelete != "" {
