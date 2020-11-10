@@ -402,7 +402,6 @@ func formatSql(sql string, args []interface{}) (newSql string, newArgs []interfa
 }
 
 // formatWhere formats where statement and its arguments.
-// TODO []interface{} type support for parameter <where> does not completed yet.
 func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool) (newWhere string, newArgs []interface{}) {
 	var (
 		buffer = bytes.NewBuffer(nil)
@@ -484,21 +483,23 @@ func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool) (
 }
 
 // formatWhereInterfaces formats <where> as []interface{}.
-// TODO supporting for parameter <where> with []interface{} type is not completed yet.
 func formatWhereInterfaces(db DB, where []interface{}, buffer *bytes.Buffer, newArgs []interface{}) []interface{} {
+	if len(where) == 0 {
+		return newArgs
+	}
+	if len(where)%2 != 0 {
+		buffer.WriteString(gstr.Join(gconv.Strings(where), ""))
+		return newArgs
+	}
 	var str string
-	var array []interface{}
-	var holderCount int
-	for i := 0; i < len(where); {
-		if holderCount > 0 {
-			array = gconv.Interfaces(where[i])
-			newArgs = append(newArgs, array...)
-			holderCount -= len(array)
+	for i := 0; i < len(where); i += 2 {
+		str = gconv.String(where[i])
+		if buffer.Len() > 0 {
+			buffer.WriteString(" AND " + db.QuoteWord(str) + "=?")
 		} else {
-			str = gconv.String(where[i])
-			holderCount = gstr.Count(str, "?")
-			buffer.WriteString(str)
+			buffer.WriteString(db.QuoteWord(str) + "=?")
 		}
+		newArgs = append(newArgs, where[i+1])
 	}
 	return newArgs
 }

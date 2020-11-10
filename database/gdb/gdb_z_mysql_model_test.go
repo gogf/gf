@@ -1210,6 +1210,21 @@ func Test_Model_Where(t *testing.T) {
 		t.AssertGT(len(result), 0)
 		t.Assert(result["id"].Int(), 3)
 	})
+
+	// slice
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Table(table).Where(g.Slice{"id", 3}).One()
+		t.Assert(err, nil)
+		t.AssertGT(len(result), 0)
+		t.Assert(result["id"].Int(), 3)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Table(table).Where(g.Slice{"id", 3, "nickname", "name_3"}).One()
+		t.Assert(err, nil)
+		t.AssertGT(len(result), 0)
+		t.Assert(result["id"].Int(), 3)
+	})
+
 	// slice parameter
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Table(table).Where("id=? and nickname=?", g.Slice{3, "name_3"}).One()
