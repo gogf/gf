@@ -46,7 +46,7 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 		fieldNameCreate                               = m.getSoftFieldNameCreated()
 		fieldNameUpdate                               = m.getSoftFieldNameUpdated()
 		fieldNameDelete                               = m.getSoftFieldNameDeleted()
-		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(false)
+		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(false, false)
 	)
 	// Automatically update the record updating time.
 	if !m.unscoped && fieldNameUpdate != "" {
