@@ -233,13 +233,14 @@ type (
 )
 
 const (
-	gINSERT_OPTION_DEFAULT       = 0
-	gINSERT_OPTION_REPLACE       = 1
-	gINSERT_OPTION_SAVE          = 2
-	gINSERT_OPTION_IGNORE        = 3
-	gDEFAULT_BATCH_NUM           = 10 // Per count for batch insert/replace/save
-	gDEFAULT_CONN_MAX_IDLE_COUNT = 10 // Max idle connection count in pool.
-	gDEFAULT_CONN_MAX_LIFE_TIME  = 30 // Max life time for per connection in pool in seconds.
+	insertOptionDefault     = 0
+	insertOptionReplace     = 1
+	insertOptionSave        = 2
+	insertOptionIgnore      = 3
+	defaultBatchNumber      = 10  // Per count for batch insert/replace/save.
+	defaultMaxIdleConnCount = 10  // Max idle connection count in pool.
+	defaultMaxOpenConnCount = 100 // Max open connection count in pool.
+	defaultMaxConnLifeTime  = 30  // Max life time for per connection in pool in seconds.
 )
 
 var (
@@ -310,8 +311,9 @@ func New(group ...string) (db DB, err error) {
 				logger:           glog.New(),
 				prefix:           node.Prefix,
 				config:           node,
-				maxIdleConnCount: gDEFAULT_CONN_MAX_IDLE_COUNT,
-				maxConnLifetime:  gDEFAULT_CONN_MAX_LIFE_TIME, // Default max connection life time if user does not configure.
+				maxIdleConnCount: defaultMaxIdleConnCount,
+				maxOpenConnCount: defaultMaxOpenConnCount,
+				maxConnLifetime:  defaultMaxConnLifeTime, // Default max connection life time if user does not configure.
 			}
 			if v, ok := driverMap[node.Type]; ok {
 				c.DB, err = v.New(c, node)
