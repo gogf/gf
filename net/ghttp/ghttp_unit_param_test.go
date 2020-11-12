@@ -484,7 +484,7 @@ func Test_Params_Priority(t *testing.T) {
 		client := ghttp.NewClient()
 		client.SetPrefix(prefix)
 
-		t.Assert(client.GetContent("/query?a=1", "a=100"), "1")
+		t.Assert(client.GetContent("/query?a=1", "a=100"), "100")
 		t.Assert(client.PostContent("/post?a=1", "a=100"), "100")
 		t.Assert(client.PostContent("/form?a=1", "a=100"), "100")
 		t.Assert(client.PutContent("/form?a=1", "a=100"), "100")

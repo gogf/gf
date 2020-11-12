@@ -454,8 +454,6 @@ func Test_Params_Struct(t *testing.T) {
 		t.Assert(client.PostContent("/struct2", ``), ``)
 		t.Assert(client.PostContent("/struct-valid", `id=1&name=john&password1=123&password2=0`), `The passwd1 value length must be between 2 and 20; 密码强度不足`)
 		t.Assert(client.PostContent("/parse", `id=1&name=john&password1=123&password2=0`), `The passwd1 value length must be between 2 and 20; 密码强度不足`)
-		t.Assert(client.GetContent("/parse", `id=1&name=john&password1=123&password2=456`), `密码强度不足`)
-		t.Assert(client.GetContent("/parse", `id=1&name=john&password1=123Abc!@#&password2=123Abc!@#`), `1john123Abc!@#123Abc!@#`)
 		t.Assert(client.PostContent("/parse", `{"id":1,"name":"john","password1":"123Abc!@#","password2":"123Abc!@#"}`), `1john123Abc!@#123Abc!@#`)
 	})
 }
