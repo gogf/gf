@@ -233,7 +233,7 @@ func (t *Timer) binSearchIndex(n int64) (index int, result int) {
 	mid := 0
 	cmp := -2
 	for min <= max {
-		mid = int((min + max) / 2)
+		mid = min + int((max-min)/2)
 		switch {
 		case t.wheels[mid].intervalMs == n:
 			cmp = 0
