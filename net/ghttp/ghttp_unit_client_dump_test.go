@@ -42,6 +42,7 @@ func Test_Client_Request_13_Dump(t *testing.T) {
 		dumpedText := r.RawRequest()
 		t.Assert(gstr.Contains(dumpedText, "test_for_request_body"), true)
 		dumpedText2 := r.RawResponse()
+		fmt.Println(dumpedText2)
 		t.Assert(gstr.Contains(dumpedText2, "test_for_response_body"), true)
 
 		client2 := ghttp.NewClient().SetPrefix(url).ContentType("text/html")
