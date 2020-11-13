@@ -203,7 +203,43 @@ func Test_Map_PrivateAttribute(t *testing.T) {
 	})
 }
 
-func Test_MapDeep1(t *testing.T) {
+func Test_Map_Embedded(t *testing.T) {
+	type Base struct {
+		Id int
+	}
+	type User struct {
+		Base
+		Name string
+	}
+	type UserDetail struct {
+		User
+		Brief string
+	}
+	gtest.C(t, func(t *gtest.T) {
+		user := &User{}
+		user.Id = 1
+		user.Name = "john"
+
+		m := gconv.Map(user)
+		t.Assert(len(m), 2)
+		t.Assert(m["Id"], user.Id)
+		t.Assert(m["Name"], user.Name)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		user := &UserDetail{}
+		user.Id = 1
+		user.Name = "john"
+		user.Brief = "john guo"
+
+		m := gconv.Map(user)
+		t.Assert(len(m), 3)
+		t.Assert(m["Id"], user.Id)
+		t.Assert(m["Name"], user.Name)
+		t.Assert(m["Brief"], user.Brief)
+	})
+}
+
+func Test_Map_Embedded2(t *testing.T) {
 	type Ids struct {
 		Id  int `c:"id"`
 		Uid int `c:"uid"`
@@ -224,9 +260,9 @@ func Test_MapDeep1(t *testing.T) {
 		user.Nickname = "john"
 		user.CreateTime = "2019"
 		m := gconv.Map(user)
-		t.Assert(m["id"], "")
+		t.Assert(m["id"], "100")
 		t.Assert(m["nickname"], user.Nickname)
-		t.Assert(m["create_time"], "")
+		t.Assert(m["create_time"], "2019")
 	})
 	gtest.C(t, func(t *gtest.T) {
 		user := new(User)
