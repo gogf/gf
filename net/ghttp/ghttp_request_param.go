@@ -304,13 +304,6 @@ func (r *Request) GetStruct(pointer interface{}, mapping ...map[string]string) e
 	return r.GetRequestStruct(pointer, mapping...)
 }
 
-// GetToStruct is an alias and convenient function for GetRequestStruct.
-// See GetRequestToStruct.
-// Deprecated.
-func (r *Request) GetToStruct(pointer interface{}, mapping ...map[string]string) error {
-	return r.GetRequestStruct(pointer, mapping...)
-}
-
 // parseQuery parses query string into r.queryMap.
 func (r *Request) parseQuery() {
 	if r.parsedQuery {

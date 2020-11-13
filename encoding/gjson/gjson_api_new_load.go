@@ -228,7 +228,7 @@ func IsValidDataType(dataType string) bool {
 func checkDataType(content []byte) string {
 	if json.Valid(content) {
 		return "json"
-	} else if gregex.IsMatch(`^<.+>[\S\s]+<.+>$`, content) {
+	} else if gregex.IsMatch(`^<.+>[\S\s]+<.+>\s*$`, content) {
 		return "xml"
 	} else if !gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*"""[\s\S]+"""`, content) && !gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*'''[\s\S]+'''`, content) &&
 		((gregex.IsMatch(`^[\n\r]*[\w\-\s\t]+\s*:\s*".+"`, content) || gregex.IsMatch(`^[\n\r]*[\w\-\s\t]+\s*:\s*\w+`, content)) ||

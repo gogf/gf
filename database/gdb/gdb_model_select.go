@@ -46,7 +46,7 @@ func (m *Model) doGetAll(limit1 bool, where ...interface{}) (Result, error) {
 	}
 	var (
 		softDeletingCondition                         = m.getConditionForSoftDeleting()
-		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(limit1)
+		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(limit1, false)
 	)
 	if !m.unscoped && softDeletingCondition != "" {
 		if conditionWhere == "" {
@@ -344,7 +344,7 @@ func (m *Model) Count(where ...interface{}) (int, error) {
 	}
 	var (
 		softDeletingCondition                         = m.getConditionForSoftDeleting()
-		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(false)
+		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(false, true)
 	)
 	if !m.unscoped && softDeletingCondition != "" {
 		if conditionWhere == "" {

@@ -455,7 +455,7 @@ func (c *Core) DoInsert(link Link, table string, data interface{}, option int, b
 		values = append(values, "?")
 		params = append(params, v)
 	}
-	if option == gINSERT_OPTION_SAVE {
+	if option == insertOptionSave {
 		for k, _ := range dataMap {
 			// If it's SAVE operation,
 			// do not automatically update the creating time.
@@ -606,7 +606,7 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 		operation      = GetInsertOperationByOption(option)
 		updateStr      = ""
 	)
-	if option == gINSERT_OPTION_SAVE {
+	if option == insertOptionSave {
 		for _, k := range keys {
 			// If it's SAVE operation,
 			// do not automatically update the creating time.
@@ -628,7 +628,7 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 		}
 		updateStr = fmt.Sprintf("ON DUPLICATE KEY UPDATE %s", updateStr)
 	}
-	batchNum := gDEFAULT_BATCH_NUM
+	batchNum := defaultBatchNumber
 	if len(batch) > 0 && batch[0] > 0 {
 		batchNum = batch[0]
 	}
