@@ -143,3 +143,34 @@ func Test_Struct_SliceWithTag(t *testing.T) {
 		t.Assert(users[1].NickName, "name2")
 	})
 }
+
+func Test_Structs_DirectReflectSet(t *testing.T) {
+	type A struct {
+		Id   int
+		Name string
+	}
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			a = []*A{
+				{Id: 1, Name: "john"},
+				{Id: 2, Name: "smith"},
+			}
+			b []*A
+		)
+		err := gconv.Structs(a, &b)
+		t.Assert(err, nil)
+		t.AssertEQ(a, b)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			a = []A{
+				{Id: 1, Name: "john"},
+				{Id: 2, Name: "smith"},
+			}
+			b []A
+		)
+		err := gconv.Structs(a, &b)
+		t.Assert(err, nil)
+		t.AssertEQ(a, b)
+	})
+}

@@ -38,6 +38,11 @@ func doStructs(params interface{}, pointer interface{}, mapping ...map[string]st
 	if pointer == nil {
 		return gerror.New("object pointer cannot be nil")
 	}
+
+	if doStructsByDirectReflectSet(params, pointer) {
+		return nil
+	}
+
 	defer func() {
 		// Catch the panic, especially the reflect operation panics.
 		if e := recover(); e != nil {
@@ -104,5 +109,18 @@ func doStructs(params interface{}, pointer interface{}, mapping ...map[string]st
 	}
 	pointerRv.Elem().Set(array)
 	return nil
+}
 
+// doStructsByDirectReflectSet do the converting directly using reflect Set.
+// It returns true if success, or else false.
+func doStructsByDirectReflectSet(params interface{}, pointer interface{}) (ok bool) {
+	v1 := reflect.ValueOf(pointer)
+	v2 := reflect.ValueOf(params)
+	if v1.Kind() == reflect.Ptr {
+		if elem := v1.Elem(); elem.IsValid() && elem.Type() == v2.Type() {
+			elem.Set(v2)
+			ok = true
+		}
+	}
+	return ok
 }
