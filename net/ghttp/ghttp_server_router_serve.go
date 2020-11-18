@@ -175,8 +175,8 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 							parsedItemList.PushBack(parsedItem)
 
 						// The middleware is inserted before the serving handler.
-						// If there're multiple middlewares, they're inserted into the result list by their registering order.
-						// The middlewares are also executed by their registering order.
+						// If there're multiple middleware, they're inserted into the result list by their registering order.
+						// The middleware are also executed by their registered order.
 						case gHANDLER_TYPE_MIDDLEWARE:
 							if lastMiddlewareElem == nil {
 								lastMiddlewareElem = parsedItemList.PushFront(parsedItem)
