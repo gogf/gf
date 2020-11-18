@@ -229,11 +229,30 @@ func Test_Phone(t *testing.T) {
 		err1 := gvalid.Check("1361990897", "phone", nil)
 		err2 := gvalid.Check("13619908979", "phone", nil)
 		err3 := gvalid.Check("16719908979", "phone", nil)
-		err4 := gvalid.Check("19719908989", "phone", nil)
-		t.AssertNE(err1.String(), nil)
+		err4 := gvalid.Check("17245678110", "phone", nil)
+		err5 := gvalid.Check("19719908989", "phone", nil)
+		t.AssertNE(err1, nil)
 		t.Assert(err2, nil)
 		t.Assert(err3, nil)
 		t.Assert(err4, nil)
+		t.Assert(err5, nil)
+	})
+}
+
+func Test_LooseMobile(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		err1 := gvalid.Check("13333333333", "loose-mobile", nil)
+		err2 := gvalid.Check("15555555555", "loose-mobile", nil)
+		err3 := gvalid.Check("16666666666", "loose-mobile", nil)
+		err4 := gvalid.Check("23333333333", "loose-mobile", nil)
+		err5 := gvalid.Check("1333333333", "loose-mobile", nil)
+		err6 := gvalid.Check("10333333333", "loose-mobile", nil)
+		t.Assert(err1, nil)
+		t.Assert(err2, nil)
+		t.Assert(err3, nil)
+		t.AssertNE(err4, nil)
+		t.AssertNE(err5, nil)
+		t.AssertNE(err6, nil)
 	})
 }
 
