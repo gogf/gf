@@ -50,6 +50,11 @@ func doStruct(params interface{}, pointer interface{}, mapping ...map[string]str
 	if pointer == nil {
 		return gerror.New("object pointer cannot be nil")
 	}
+
+	if doStructByDirectReflectSet(params, pointer) {
+		return nil
+	}
+
 	defer func() {
 		// Catch the panic, especially the reflect operation panics.
 		if e := recover(); e != nil {
@@ -253,6 +258,20 @@ func doStruct(params interface{}, pointer interface{}, mapping ...map[string]str
 		}
 	}
 	return nil
+}
+
+// doStructByDirectReflectSet do the converting directly using reflect Set.
+// It returns true if success, or else false.
+func doStructByDirectReflectSet(params interface{}, pointer interface{}) (ok bool) {
+	v1 := reflect.ValueOf(pointer)
+	v2 := reflect.ValueOf(params)
+	if v1.Kind() == reflect.Ptr {
+		if elem := v1.Elem(); elem.IsValid() && elem.Type() == v2.Type() {
+			elem.Set(v2)
+			ok = true
+		}
+	}
+	return ok
 }
 
 // bindVarToStructAttr sets value to struct object attribute by name.

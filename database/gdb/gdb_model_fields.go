@@ -42,6 +42,8 @@ func (m *Model) Fields(fieldNamesOrMapStruct ...interface{}) *Model {
 		switch r := fieldNamesOrMapStruct[0].(type) {
 		case string:
 			model.fields = gstr.Join(m.mappingToTableFields([]string{r}), ",")
+		case []string:
+			model.fields = gstr.Join(m.mappingToTableFields(r), ",")
 		default:
 			model.fields = gstr.Join(m.mappingToTableFields(gutil.Keys(r)), ",")
 		}

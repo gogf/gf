@@ -199,3 +199,10 @@ func (m *Model) Safe(safe ...bool) *Model {
 	}
 	return m
 }
+
+// Args sets custom arguments for model operation.
+func (m *Model) Args(args ...interface{}) *Model {
+	model := m.getModel()
+	model.extraArgs = append(model.extraArgs, args)
+	return model
+}
