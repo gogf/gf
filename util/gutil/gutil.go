@@ -59,9 +59,15 @@ func Keys(mapOrStruct interface{}) (keysOrAttrs []string) {
 		return
 	}
 	var (
-		reflectValue = reflect.ValueOf(mapOrStruct)
-		reflectKind  = reflectValue.Kind()
+		reflectValue reflect.Value
+		reflectKind  reflect.Kind
 	)
+	if v, ok := mapOrStruct.(reflect.Value); ok {
+		reflectValue = v
+	} else {
+		reflectValue = reflect.ValueOf(mapOrStruct)
+	}
+	reflectKind = reflectValue.Kind()
 	if reflectKind == reflect.Ptr {
 		if !reflectValue.IsValid() || reflectValue.IsNil() {
 			reflectValue = reflect.New(reflectValue.Type().Elem()).Elem()
@@ -78,9 +84,17 @@ func Keys(mapOrStruct interface{}) (keysOrAttrs []string) {
 			keysOrAttrs = append(keysOrAttrs, gconv.String(k.Interface()))
 		}
 	case reflect.Struct:
-		reflectType := reflectValue.Type()
+		var (
+			fieldType   reflect.StructField
+			reflectType = reflectValue.Type()
+		)
 		for i := 0; i < reflectValue.NumField(); i++ {
-			keysOrAttrs = append(keysOrAttrs, reflectType.Field(i).Name)
+			fieldType = reflectType.Field(i)
+			if fieldType.Anonymous {
+				keysOrAttrs = append(keysOrAttrs, Keys(reflectValue.Field(i))...)
+			} else {
+				keysOrAttrs = append(keysOrAttrs, fieldType.Name)
+			}
 		}
 	}
 	return
@@ -96,9 +110,15 @@ func Values(mapOrStruct interface{}) (values []interface{}) {
 		return
 	}
 	var (
-		reflectValue = reflect.ValueOf(mapOrStruct)
-		reflectKind  = reflectValue.Kind()
+		reflectValue reflect.Value
+		reflectKind  reflect.Kind
 	)
+	if v, ok := mapOrStruct.(reflect.Value); ok {
+		reflectValue = v
+	} else {
+		reflectValue = reflect.ValueOf(mapOrStruct)
+	}
+	reflectKind = reflectValue.Kind()
 	for reflectKind == reflect.Ptr {
 		reflectValue = reflectValue.Elem()
 		reflectKind = reflectValue.Kind()
@@ -109,8 +129,17 @@ func Values(mapOrStruct interface{}) (values []interface{}) {
 			values = append(values, reflectValue.MapIndex(k).Interface())
 		}
 	case reflect.Struct:
+		var (
+			fieldType   reflect.StructField
+			reflectType = reflectValue.Type()
+		)
 		for i := 0; i < reflectValue.NumField(); i++ {
-			values = append(values, reflectValue.Field(i).Interface())
+			fieldType = reflectType.Field(i)
+			if fieldType.Anonymous {
+				values = append(values, Values(reflectValue.Field(i))...)
+			} else {
+				values = append(values, reflectValue.Field(i).Interface())
+			}
 		}
 	}
 	return

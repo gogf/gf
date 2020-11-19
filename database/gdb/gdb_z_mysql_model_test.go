@@ -2717,6 +2717,49 @@ func Test_Model_FieldsEx_AutoMapping(t *testing.T) {
 	})
 }
 
+func Test_Model_Fields_Struct(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	type A struct {
+		Passport string
+		Password string
+	}
+	type B struct {
+		A
+		NickName string
+	}
+	gtest.C(t, func(t *gtest.T) {
+		one, err := db.Table(table).Fields(A{}).Where("id", 2).One()
+		t.Assert(err, nil)
+		t.Assert(len(one), 2)
+		t.Assert(one["passport"], "user_2")
+		t.Assert(one["password"], "pass_2")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		one, err := db.Table(table).Fields(&A{}).Where("id", 2).One()
+		t.Assert(err, nil)
+		t.Assert(len(one), 2)
+		t.Assert(one["passport"], "user_2")
+		t.Assert(one["password"], "pass_2")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		one, err := db.Table(table).Fields(B{}).Where("id", 2).One()
+		t.Assert(err, nil)
+		t.Assert(len(one), 3)
+		t.Assert(one["passport"], "user_2")
+		t.Assert(one["password"], "pass_2")
+		t.Assert(one["nickname"], "name_2")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		one, err := db.Table(table).Fields(&B{}).Where("id", 2).One()
+		t.Assert(err, nil)
+		t.Assert(len(one), 3)
+		t.Assert(one["passport"], "user_2")
+		t.Assert(one["password"], "pass_2")
+		t.Assert(one["nickname"], "name_2")
+	})
+}
 func Test_Model_NullField(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
