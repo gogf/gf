@@ -36,15 +36,14 @@ func (d *DriverSqlite) New(core *Core, node *ConfigNode) (DB, error) {
 // Open creates and returns a underlying sql.DB object for sqlite.
 func (d *DriverSqlite) Open(config *ConfigNode) (*sql.DB, error) {
 	var source string
-	var err error
 	if config.LinkInfo != "" {
 		source = config.LinkInfo
 	} else {
 		source = config.Name
 	}
-	source, err = gfile.Search(source)
-	if err != nil {
-		return nil, err
+	// It searches the source file to locate its absolute path..
+	if absolutePath, _ := gfile.Search(source); absolutePath != "" {
+		source = absolutePath
 	}
 	intlog.Printf("Open: %s", source)
 	if db, err := sql.Open("sqlite3", source); err == nil {
