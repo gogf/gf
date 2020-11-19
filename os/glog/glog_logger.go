@@ -242,6 +242,9 @@ func (l *Logger) printToFile(now time.Time, buffer *bytes.Buffer) {
 	gmlock.Lock(memoryLockKey)
 	defer gmlock.Unlock(memoryLockKey)
 	file := l.getFilePointer(logFilePath)
+	if file == nil {
+		return
+	}
 	// Rotation file size checks.
 	if l.config.RotateSize > 0 {
 		stat, err := file.Stat()
