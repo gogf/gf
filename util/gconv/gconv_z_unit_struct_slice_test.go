@@ -174,3 +174,26 @@ func Test_Structs_DirectReflectSet(t *testing.T) {
 		t.AssertEQ(a, b)
 	})
 }
+
+func Test_Structs_SliceIntAttribute(t *testing.T) {
+	type A struct {
+		Id []int
+	}
+	type B struct {
+		*A
+		Name string
+	}
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			array []*B
+		)
+		err := gconv.Structs(g.Slice{
+			g.Map{"id": nil, "name": "john"},
+			g.Map{"id": nil, "name": "smith"},
+		}, &array)
+		t.Assert(err, nil)
+		t.Assert(len(array), 2)
+		t.Assert(array[0].Name, "john")
+		t.Assert(array[1].Name, "smith")
+	})
+}
