@@ -125,6 +125,7 @@ The concurrency starts from `100` to `10000`.
 - [LeYouJia](https://www.leyoujia.com/)
 - [IGG](https://igg.com)
 - [XiMaLaYa](https://www.ximalaya.com)
+- [ZYBang](https://www.zybang.com/)
 
 > We list part of the users here, if your company or products are using `GoFrame`, please let us know [here](https://github.com/gogf/gf/issues/168).
 
