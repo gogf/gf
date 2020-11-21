@@ -25,7 +25,7 @@ var defaultMessages = map[string]string{
 	"date-format":          "The :attribute value does not match the format :format",
 	"email":                "The :attribute value must be a valid email address",
 	"phone":                "The :attribute value must be a valid phone number",
-	"loose-mobile":         "The :attribute value must be a valid mobile number",
+	"phone-loose":          "The :attribute value must be a valid mobile number",
 	"telephone":            "The :attribute value must be a valid telephone number",
 	"passport":             "The :attribute value is not a valid passport format",
 	"password":             "The :attribute value is not a valid passport format",

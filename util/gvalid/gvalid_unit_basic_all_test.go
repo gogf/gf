@@ -239,14 +239,14 @@ func Test_Phone(t *testing.T) {
 	})
 }
 
-func Test_LooseMobile(t *testing.T) {
+func Test_PhoneLoose(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		err1 := gvalid.Check("13333333333", "loose-mobile", nil)
-		err2 := gvalid.Check("15555555555", "loose-mobile", nil)
-		err3 := gvalid.Check("16666666666", "loose-mobile", nil)
-		err4 := gvalid.Check("23333333333", "loose-mobile", nil)
-		err5 := gvalid.Check("1333333333", "loose-mobile", nil)
-		err6 := gvalid.Check("10333333333", "loose-mobile", nil)
+		err1 := gvalid.Check("13333333333", "phone-loose", nil)
+		err2 := gvalid.Check("15555555555", "phone-loose", nil)
+		err3 := gvalid.Check("16666666666", "phone-loose", nil)
+		err4 := gvalid.Check("23333333333", "phone-loose", nil)
+		err5 := gvalid.Check("1333333333", "phone-loose", nil)
+		err6 := gvalid.Check("10333333333", "phone-loose", nil)
 		t.Assert(err1, nil)
 		t.Assert(err2, nil)
 		t.Assert(err3, nil)

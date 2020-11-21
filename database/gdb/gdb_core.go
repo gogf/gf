@@ -643,25 +643,27 @@ func (c *Core) Update(table string, data interface{}, condition interface{}, arg
 	return c.DB.DoUpdate(nil, table, data, newWhere, newArgs...)
 }
 
+// UpdateCounter  is the type for update count.
 type UpdateCounter struct {
-	Field string      `json:"field"`
-	Value interface{} `json:"value"`
+	Field string
+	Value interface{} // allows acceptance of int and float types
 }
 
+// isUpdateCounter verify that a field is an UpdateCounter type.
 func (c *Core) isUpdateCounter(str string) bool {
 	return strings.HasSuffix(str, "UpdateCounter")
 }
 
 // doUpdate does "UPDATE ... " statement for the table.
 // update counter eg.
-//counter := &gdb.UpdateCounter{
-//	Field:"login_times",
-//	Value:1 or -1,
-//}
-//update := g.Map{
-//	"login_times":counter,
-//	"updated_at": gtime.Now().Unix(),
-//}
+// counter := &gdb.UpdateCounter{
+//	 Field:"login_times",
+//	 Value:1 or -1 or 1.23,
+// }
+// update := g.Map{
+//	 "login_times":counter,
+//	 "updated_at": gtime.Now().Unix(),
+// }
 // Also see Update.
 func (c *Core) DoUpdate(link Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) {
 	table = c.DB.QuotePrefixTableName(table)
