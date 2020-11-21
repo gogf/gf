@@ -141,6 +141,7 @@ func (m *Model) DB(db DB) *Model {
 // TX sets/changes the transaction for current operation.
 func (m *Model) TX(tx *TX) *Model {
 	model := m.getModel()
+	model.db = tx.db
 	model.tx = tx
 	return model
 }
