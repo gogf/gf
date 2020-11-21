@@ -261,7 +261,7 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 	if c.browserMode {
 		now := time.Now()
 		for _, v := range resp.Response.Cookies() {
-			if v.Expires.UnixNano() < now.UnixNano() {
+			if !v.Expires.IsZero() && v.Expires.UnixNano() < now.UnixNano() {
 				delete(c.cookies, v.Name)
 			} else {
 				c.cookies[v.Name] = v.Value
