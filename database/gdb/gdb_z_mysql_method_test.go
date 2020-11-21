@@ -375,6 +375,34 @@ func Test_DB_Update(t *testing.T) {
 	})
 }
 
+// update counter test
+func Test_DB_UpdateCounter(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		counter := &gdb.UpdateCounter{
+			Field: "login_times",
+			Value: 1,
+		}
+		updateData := g.Map{
+			"login_times": counter,
+			"password":    "987654321",
+		}
+		result, err := db.Update(table, updateData, "id=3")
+		t.Assert(err, nil)
+		n, _ := result.RowsAffected()
+		t.Assert(n, 1)
+
+		one, err := db.Table(table).Where("id", 3).One()
+		t.Assert(err, nil)
+		t.Assert(one["id"].Int(), 3)
+		t.Assert(one["passport"].String(), "user_3")
+		t.Assert(one["password"].String(), "987654321")
+		t.Assert(one["nickname"].String(), "name_3")
+		t.Assert(one["login_times"].String(), "1")
+	})
+}
+
 func Test_DB_GetAll(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)

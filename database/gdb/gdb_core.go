@@ -643,7 +643,25 @@ func (c *Core) Update(table string, data interface{}, condition interface{}, arg
 	return c.DB.DoUpdate(nil, table, data, newWhere, newArgs...)
 }
 
+type UpdateCounter struct {
+	Field string      `json:"field"`
+	Value interface{} `json:"value"`
+}
+
+func (c *Core) isUpdateCounter(str string) bool {
+	return strings.HasSuffix(str, "UpdateCounter")
+}
+
 // doUpdate does "UPDATE ... " statement for the table.
+// update counter eg.
+//counter := &gdb.UpdateCounter{
+//	Field:"login_times",
+//	Value:1 or -1,
+//}
+//update := g.Map{
+//	"login_times":counter,
+//	"updated_at": gtime.Now().Unix(),
+//}
 // Also see Update.
 func (c *Core) DoUpdate(link Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) {
 	table = c.DB.QuotePrefixTableName(table)
@@ -666,8 +684,17 @@ func (c *Core) DoUpdate(link Link, table string, data interface{}, condition str
 			dataMap = DataToMapDeep(data)
 		)
 		for k, v := range dataMap {
-			fields = append(fields, c.DB.QuoteWord(k)+"=?")
-			params = append(params, v)
+			valVarName := reflect.TypeOf(v).String()
+			if c.isUpdateCounter(valVarName) {
+				valMap := gconv.Map(v)
+				column := c.DB.QuoteWord(gconv.String(valMap["field"]))
+				value := valMap["value"]
+				fields = append(fields, column+"="+column+"+?")
+				params = append(params, value)
+			} else {
+				fields = append(fields, c.DB.QuoteWord(k)+"=?")
+				params = append(params, v)
+			}
 		}
 		updates = strings.Join(fields, ",")
 	default:

@@ -165,18 +165,21 @@ func Test_Date(t *testing.T) {
 		val4 := "2010-11-01"
 		val5 := "2010.11.01"
 		val6 := "2010/11/01"
+		val7 := "2010=11=01"
 		err1 := gvalid.Check(val1, rule, nil)
 		err2 := gvalid.Check(val2, rule, nil)
 		err3 := gvalid.Check(val3, rule, nil)
 		err4 := gvalid.Check(val4, rule, nil)
 		err5 := gvalid.Check(val5, rule, nil)
 		err6 := gvalid.Check(val6, rule, nil)
-		t.AssertNE(err1, nil)
-		t.AssertNE(err2, nil)
+		err7 := gvalid.Check(val7, rule, nil)
+		t.Assert(err1, nil)
+		t.Assert(err2, nil)
 		t.Assert(err3, nil)
 		t.Assert(err4, nil)
 		t.Assert(err5, nil)
 		t.Assert(err6, nil)
+		t.AssertNE(err7, nil)
 	})
 }
 
@@ -226,11 +229,30 @@ func Test_Phone(t *testing.T) {
 		err1 := gvalid.Check("1361990897", "phone", nil)
 		err2 := gvalid.Check("13619908979", "phone", nil)
 		err3 := gvalid.Check("16719908979", "phone", nil)
-		err4 := gvalid.Check("19719908989", "phone", nil)
-		t.AssertNE(err1.String(), nil)
+		err4 := gvalid.Check("17245678110", "phone", nil)
+		err5 := gvalid.Check("19719908989", "phone", nil)
+		t.AssertNE(err1, nil)
 		t.Assert(err2, nil)
 		t.Assert(err3, nil)
 		t.Assert(err4, nil)
+		t.Assert(err5, nil)
+	})
+}
+
+func Test_LooseMobile(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		err1 := gvalid.Check("13333333333", "loose-mobile", nil)
+		err2 := gvalid.Check("15555555555", "loose-mobile", nil)
+		err3 := gvalid.Check("16666666666", "loose-mobile", nil)
+		err4 := gvalid.Check("23333333333", "loose-mobile", nil)
+		err5 := gvalid.Check("1333333333", "loose-mobile", nil)
+		err6 := gvalid.Check("10333333333", "loose-mobile", nil)
+		t.Assert(err1, nil)
+		t.Assert(err2, nil)
+		t.Assert(err3, nil)
+		t.AssertNE(err4, nil)
+		t.AssertNE(err5, nil)
+		t.AssertNE(err6, nil)
 	})
 }
 

@@ -119,6 +119,7 @@ func createTableWithDb(db gdb.DB, table ...string) (name string) {
 		   password char(32) NOT NULL,
 		   nickname varchar(45) NOT NULL,
 		   create_time timestamp NOT NULL,
+           login_times bigint NOT NULL,
 		   PRIMARY KEY (id)
 		) ;`, name,
 		)); err != nil {
@@ -132,6 +133,7 @@ func createTableWithDb(db gdb.DB, table ...string) (name string) {
 		   password char(32) NOT NULL,
 		   nickname varchar(45) NOT NULL,
 		   create_time timestamp NOT NULL,
+           login_times bigint NOT NULL,
 		   PRIMARY KEY (id)
 		) ;`, name,
 		)); err != nil {
@@ -146,6 +148,7 @@ func createTableWithDb(db gdb.DB, table ...string) (name string) {
 		PASSWORD CHAR(32) NOT NULL,
 		NICKNAME VARCHAR(45) NOT NULL,
 		CREATE_TIME datetime NOT NULL,
+        LOGIN_TIMES numeric(10,0) NOT NULL,
 		PRIMARY KEY (ID))`,
 			name, name,
 		)); err != nil {
@@ -159,6 +162,7 @@ func createTableWithDb(db gdb.DB, table ...string) (name string) {
 		PASSWORD CHAR(32) NOT NULL,
 		NICKNAME VARCHAR(45) NOT NULL,
 		CREATE_TIME varchar(45) NOT NULL,
+        LOGIN_TIMES NUMBER(10) NOT NULL,
 		PRIMARY KEY (ID))
 		`, name,
 		)); err != nil {
@@ -172,6 +176,7 @@ func createTableWithDb(db gdb.DB, table ...string) (name string) {
 	        password    char(32) NULL,
 	        nickname    varchar(45) NULL,
 	        create_time timestamp NULL,
+ 		    login_times int(10) NOT NULL,
 	        PRIMARY KEY (id)
 	    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 	    `, name,
@@ -193,6 +198,7 @@ func createInitTableWithDb(db gdb.DB, table ...string) (name string) {
 			"password":    fmt.Sprintf(`pass_%d`, i),
 			"nickname":    fmt.Sprintf(`name_%d`, i),
 			"create_time": gtime.NewFromStr("2018-10-24 10:00:00").String(),
+			"login_times": 0,
 		})
 	}
 
