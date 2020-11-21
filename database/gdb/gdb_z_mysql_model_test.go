@@ -2836,3 +2836,87 @@ func Test_Model_HasField(t *testing.T) {
 		t.Assert(err, nil)
 	})
 }
+
+// Issue: https://github.com/gogf/gf/issues/1002
+func Test_Model_Issue1002(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	result, err := db.Table(table).Data(g.Map{
+		"id":          1,
+		"passport":    "port_1",
+		"password":    "pass_1",
+		"nickname":    "name_2",
+		"create_time": "2020-10-27 19:03:33",
+	}).Insert()
+	gtest.Assert(err, nil)
+	n, _ := result.RowsAffected()
+	gtest.Assert(n, 1)
+
+	// where + string.
+	gtest.C(t, func(t *gtest.T) {
+		v, err := db.Table(table).Fields("id").Where("create_time>'2020-10-27 19:03:32' and create_time<'2020-10-27 19:03:34'").Value()
+		t.Assert(err, nil)
+		t.Assert(v.Int(), 1)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		v, err := db.Table(table).Fields("id").Where("create_time>'2020-10-27 19:03:32' and create_time<'2020-10-27 19:03:34'").FindValue()
+		t.Assert(err, nil)
+		t.Assert(v.Int(), 1)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		v, err := db.Table(table).Where("create_time>'2020-10-27 19:03:32' and create_time<'2020-10-27 19:03:34'").FindValue("id")
+		t.Assert(err, nil)
+		t.Assert(v.Int(), 1)
+	})
+	// where + string arguments.
+	gtest.C(t, func(t *gtest.T) {
+		v, err := db.Table(table).Fields("id").Where("create_time>? and create_time<?", "2020-10-27 19:03:32", "2020-10-27 19:03:34").Value()
+		t.Assert(err, nil)
+		t.Assert(v.Int(), 1)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		v, err := db.Table(table).Fields("id").Where("create_time>? and create_time<?", "2020-10-27 19:03:32", "2020-10-27 19:03:34").FindValue()
+		t.Assert(err, nil)
+		t.Assert(v.Int(), 1)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		v, err := db.Table(table).Where("create_time>? and create_time<?", "2020-10-27 19:03:32", "2020-10-27 19:03:34").FindValue("id")
+		t.Assert(err, nil)
+		t.Assert(v.Int(), 1)
+	})
+	// where + gtime.Time arguments.
+	gtest.C(t, func(t *gtest.T) {
+		v, err := db.Table(table).Fields("id").Where("create_time>? and create_time<?", gtime.New("2020-10-27 19:03:32"), gtime.New("2020-10-27 19:03:34")).Value()
+		t.Assert(err, nil)
+		t.Assert(v.Int(), 1)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		v, err := db.Table(table).Fields("id").Where("create_time>? and create_time<?", gtime.New("2020-10-27 19:03:32"), gtime.New("2020-10-27 19:03:34")).FindValue()
+		t.Assert(err, nil)
+		t.Assert(v.Int(), 1)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		v, err := db.Table(table).Where("create_time>? and create_time<?", gtime.New("2020-10-27 19:03:32"), gtime.New("2020-10-27 19:03:34")).FindValue("id")
+		t.Assert(err, nil)
+		t.Assert(v.Int(), 1)
+	})
+	// where + time.Time arguments.
+	t1, _ := time.Parse("2006-01-02 15:04:05", "2020-10-27 19:03:32")
+	t2, _ := time.Parse("2006-01-02 15:04:05", "2020-10-27 19:03:34")
+	gtest.C(t, func(t *gtest.T) {
+		v, err := db.Table(table).Fields("id").Where("create_time>? and create_time<?", t1, t2).Value()
+		t.Assert(err, nil)
+		t.Assert(v.Int(), 1)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		v, err := db.Table(table).Fields("id").Where("create_time>? and create_time<?", t1, t2).FindValue()
+		t.Assert(err, nil)
+		t.Assert(v.Int(), 1)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		v, err := db.Table(table).Where("create_time>? and create_time<?", t1, t2).FindValue("id")
+		t.Assert(err, nil)
+		t.Assert(v.Int(), 1)
+	})
+}
