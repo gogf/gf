@@ -159,7 +159,7 @@ func (d *DriverOracle) TableFields(table string, schema ...string) (fields map[s
 		checkSchema = schema[0]
 	}
 	v, _ := internalCache.GetOrSetFunc(
-		fmt.Sprintf(`oracle_table_fields_%s_%s`, table, checkSchema),
+		fmt.Sprintf(`oracle_table_fields_%s_%s@group:%s`, table, checkSchema, d.GetGroup()),
 		func() (interface{}, error) {
 			result := (Result)(nil)
 			structureSql := fmt.Sprintf(`

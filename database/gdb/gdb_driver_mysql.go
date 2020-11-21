@@ -103,7 +103,7 @@ func (d *DriverMysql) TableFields(table string, schema ...string) (fields map[st
 		checkSchema = schema[0]
 	}
 	v, _ := internalCache.GetOrSetFunc(
-		fmt.Sprintf(`mysql_table_fields_%s_%s`, table, checkSchema),
+		fmt.Sprintf(`mysql_table_fields_%s_%s@group:%s`, table, checkSchema, d.GetGroup()),
 		func() (interface{}, error) {
 			var (
 				result Result
