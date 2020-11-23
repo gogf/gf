@@ -8,6 +8,7 @@ package gerror
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"runtime"
@@ -60,12 +61,18 @@ func (err *Error) Cause() error {
 	for loop != nil {
 		if loop.error != nil {
 			if e, ok := loop.error.(*Error); ok {
+				// Internal Error struct.
 				loop = e
+			} else if e, ok := loop.error.(ApiCause); ok {
+				// Other Error that implements ApiCause interface.
+				return e.Cause()
 			} else {
 				return loop.error
 			}
 		} else {
-			return loop
+			// return loop
+			// To be compatible with Case of https://github.com/pkg/errors.
+			return errors.New(loop.text)
 		}
 	}
 	return nil
@@ -105,9 +112,11 @@ func (err *Error) Stack() string {
 	if err == nil {
 		return ""
 	}
-	loop := err
-	index := 1
-	buffer := bytes.NewBuffer(nil)
+	var (
+		loop   = err
+		index  = 1
+		buffer = bytes.NewBuffer(nil)
+	)
 	for loop != nil {
 		buffer.WriteString(fmt.Sprintf("%d. %-v\n", index, loop))
 		index++
