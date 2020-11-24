@@ -178,6 +178,15 @@ func (g *RouterGroup) ALL(pattern string, object interface{}, params ...interfac
 	return g.Clone().preBindToLocalArray("HANDLER", gDEFAULT_METHOD+":"+pattern, object, params...)
 }
 
+// ALLMap registers http handlers for http methods using map.
+func (g *RouterGroup) ALLMap(m map[string]interface{}) *RouterGroup {
+	var group *RouterGroup
+	for pattern, object := range m {
+		group = g.ALL(pattern, object)
+	}
+	return group
+}
+
 // GET registers a http handler to given route pattern and http method: GET.
 func (g *RouterGroup) GET(pattern string, object interface{}, params ...interface{}) *RouterGroup {
 	return g.Clone().preBindToLocalArray("HANDLER", "GET:"+pattern, object, params...)
