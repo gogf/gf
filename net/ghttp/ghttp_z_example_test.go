@@ -58,7 +58,7 @@ func ExampleClientResponse_RawDump() {
 // socks5 proxy server listening on `127.0.0.1:1080`
 func ExampleClient_SetProxy() {
 	// connect to a http proxy server
-	client := ghttp.NewClient()
+	client := g.Client()
 	client.SetProxy("http://127.0.0.1:1081")
 	client.SetTimeout(5 * time.Second) // it's suggested to set http client timeout
 	response, err := client.Get("https://api.ip.sb/ip")
@@ -108,7 +108,7 @@ func ExampleClient_SetProxy() {
 // socks5 proxy server listening on `127.0.0.1:1080`
 // for more details, please refer to ExampleClient_SetProxy
 func ExampleClientChain_Proxy() {
-	client := ghttp.NewClient()
+	client := g.Client()
 	response, err := client.Proxy("http://127.0.0.1:1081").Get("https://api.ip.sb/ip")
 	if err != nil {
 		// err is not nil when your proxy server is down.
@@ -117,7 +117,7 @@ func ExampleClientChain_Proxy() {
 	}
 	fmt.Println(response.RawResponse())
 
-	client2 := ghttp.NewClient()
+	client2 := g.Client()
 	response, err = client2.Proxy("socks5://127.0.0.1:1080").Get("https://api.ip.sb/ip")
 	if err != nil {
 		// err is not nil when your proxy server is down.

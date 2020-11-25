@@ -43,7 +43,7 @@ func Test_Router_DomainBasic(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		t.Assert(client.GetContent("/john"), "Not Found")
 		t.Assert(client.GetContent("/john/update"), "Not Found")
@@ -51,7 +51,7 @@ func Test_Router_DomainBasic(t *testing.T) {
 		t.Assert(client.GetContent("/user/list/100.html"), "Not Found")
 	})
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://localhost:%d", p))
 		t.Assert(client.GetContent("/john"), "")
 		t.Assert(client.GetContent("/john/update"), "john")
@@ -59,7 +59,7 @@ func Test_Router_DomainBasic(t *testing.T) {
 		t.Assert(client.GetContent("/user/list/100.html"), "100")
 	})
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://local:%d", p))
 		t.Assert(client.GetContent("/john"), "")
 		t.Assert(client.GetContent("/john/update"), "john")
@@ -85,7 +85,7 @@ func Test_Router_DomainMethod(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		resp1, err := client.Get("/get")
@@ -110,7 +110,7 @@ func Test_Router_DomainMethod(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://localhost:%d", p))
 
 		resp1, err := client.Get("/get")
@@ -135,7 +135,7 @@ func Test_Router_DomainMethod(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://local:%d", p))
 
 		resp1, err := client.Get("/get")
@@ -183,7 +183,7 @@ func Test_Router_DomainStatus(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		resp1, err := client.Get("/200")
@@ -207,7 +207,7 @@ func Test_Router_DomainStatus(t *testing.T) {
 		t.Assert(resp4.StatusCode, 404)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://localhost:%d", p))
 
 		resp1, err := client.Get("/200")
@@ -231,7 +231,7 @@ func Test_Router_DomainStatus(t *testing.T) {
 		t.Assert(resp4.StatusCode, 500)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://local:%d", p))
 
 		resp1, err := client.Get("/200")
@@ -273,21 +273,21 @@ func Test_Router_DomainCustomStatusHandler(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent("/"), "Not Found")
 		t.Assert(client.GetContent("/ThisDoesNotExist"), "Not Found")
 	})
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://localhost:%d", p))
 
 		t.Assert(client.GetContent("/"), "hello")
 		t.Assert(client.GetContent("/ThisDoesNotExist"), "404 page")
 	})
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://local:%d", p))
 
 		t.Assert(client.GetContent("/"), "hello")
@@ -309,19 +309,19 @@ func Test_Router_Domain404(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent("/"), "Not Found")
 	})
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://localhost:%d", p))
 
 		t.Assert(client.GetContent("/"), "hello")
 	})
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://local:%d", p))
 
 		t.Assert(client.GetContent("/"), "hello")
@@ -355,10 +355,10 @@ func Test_Router_DomainGroup(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client1 := ghttp.NewClient()
+		client1 := g.Client()
 		client1.SetPrefix(fmt.Sprintf("http://local:%d", p))
 
-		client2 := ghttp.NewClient()
+		client2 := g.Client()
 		client2.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client1.GetContent("/app/t/list/2.html"), "t&2")
