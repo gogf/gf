@@ -7,6 +7,7 @@
 package gvalid_test
 
 import (
+	"github.com/gogf/gf/errors/gerror"
 	"testing"
 
 	"github.com/gogf/gf/test/gtest"
@@ -197,5 +198,7 @@ func Test_Sequence(t *testing.T) {
 		r, s := err.FirstRule()
 		t.Assert(r, "required")
 		t.Assert(s, "账号不能为空")
+
+		t.Assert(gerror.Current(err), "账号不能为空")
 	})
 }

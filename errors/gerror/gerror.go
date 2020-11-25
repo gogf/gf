@@ -16,19 +16,25 @@ import (
 
 // ApiStack is the interface for Stack feature.
 type ApiStack interface {
-	Error() string // It should be en error.
+	Error() string // It should be an error.
 	Stack() string
 }
 
 // ApiCause is the interface for Cause feature.
 type ApiCause interface {
-	Error() string // It should be en error.
+	Error() string // It should be an error.
 	Cause() error
 }
 
-// ApiLevel is the interface for Current/Next feature.
-type ApiLevel interface {
+// ApiCurrent is the interface for Current feature.
+type ApiCurrent interface {
+	Error() string // It should be an error.
 	Current() error
+}
+
+// ApiNext is the interface for Next feature.
+type ApiNext interface {
+	Error() string // It should be an error.
 	Next() error
 }
 
@@ -133,7 +139,7 @@ func Current(err error) error {
 	if err == nil {
 		return nil
 	}
-	if e, ok := err.(ApiLevel); ok {
+	if e, ok := err.(ApiCurrent); ok {
 		return e.Current()
 	}
 	return err
@@ -145,7 +151,7 @@ func Next(err error) error {
 	if err == nil {
 		return nil
 	}
-	if e, ok := err.(ApiLevel); ok {
+	if e, ok := err.(ApiNext); ok {
 		return e.Next()
 	}
 	return nil
