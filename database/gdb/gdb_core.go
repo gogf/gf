@@ -646,7 +646,8 @@ func (c *Core) Update(table string, data interface{}, condition interface{}, arg
 // UpdateCounter  is the type for update count.
 type UpdateCounter struct {
 	Field string
-	Value interface{} // allows acceptance of int and float types
+	Value interface{} // allows acceptance of int and float types, If you want to do subtraction,
+	// you need to pass in a negative number
 }
 
 // isUpdateCounter verify that a field is an UpdateCounter type.
