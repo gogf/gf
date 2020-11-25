@@ -91,7 +91,7 @@ func Test_Router_GroupBasic1(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent("/api/handler"), "Handler")
@@ -139,7 +139,7 @@ func Test_Router_GroupBasic2(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent("/api/handler"), "Handler")
@@ -175,7 +175,7 @@ func Test_Router_GroupBuildInVar(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent("/api/group-controller/index"), "1Controller Index2")
@@ -206,7 +206,7 @@ func Test_Router_Group_Mthods(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		t.Assert(client.GetContent("/ctl/show"), "1Controller Show2")
 		t.Assert(client.GetContent("/ctl/post"), "1Controller Post2")
@@ -241,9 +241,9 @@ func Test_Router_Group_MultiServer(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		c1 := ghttp.NewClient()
+		c1 := g.Client()
 		c1.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p1))
-		c2 := ghttp.NewClient()
+		c2 := g.Client()
 		c2.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p2))
 		t.Assert(c1.PostContent("/post"), "post1")
 		t.Assert(c2.PostContent("/post"), "post2")

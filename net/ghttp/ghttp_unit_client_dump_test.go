@@ -36,7 +36,7 @@ func Test_Client_Request_13_Dump(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		url := fmt.Sprintf("http://127.0.0.1:%d", p)
-		client := ghttp.NewClient().SetPrefix(url).ContentJson()
+		client := g.Client().SetPrefix(url).ContentJson()
 		r, err := client.Post("/hello", g.Map{"field": "test_for_request_body"})
 		t.Assert(err, nil)
 		dumpedText := r.RawRequest()
@@ -45,7 +45,7 @@ func Test_Client_Request_13_Dump(t *testing.T) {
 		fmt.Println(dumpedText2)
 		t.Assert(gstr.Contains(dumpedText2, "test_for_response_body"), true)
 
-		client2 := ghttp.NewClient().SetPrefix(url).ContentType("text/html")
+		client2 := g.Client().SetPrefix(url).ContentType("text/html")
 		r2, err := client2.Post("/hello2", g.Map{"field": "test_for_request_body"})
 		t.Assert(err, nil)
 		dumpedText3 := r2.RawRequest()

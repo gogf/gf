@@ -298,7 +298,7 @@ func Test_Params_Basic(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		// GET
 		t.Assert(client.GetContent("/get", "array[]=1&array[]=2"), `["1","2"]`)
@@ -422,7 +422,7 @@ func Test_Params_Header(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		prefix := fmt.Sprintf("http://127.0.0.1:%d", p)
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(prefix)
 
 		t.Assert(client.Header(g.MapStrStr{"test": "123456"}).GetContent("/header"), "123456")
@@ -481,7 +481,7 @@ func Test_Params_Priority(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		prefix := fmt.Sprintf("http://127.0.0.1:%d", p)
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(prefix)
 
 		t.Assert(client.GetContent("/query?a=1", "a=100"), "100")
@@ -507,7 +507,7 @@ func Test_Params_GetRequestMap(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		prefix := fmt.Sprintf("http://127.0.0.1:%d", p)
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(prefix)
 
 		t.Assert(
@@ -543,7 +543,7 @@ func Test_Params_Modify(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		prefix := fmt.Sprintf("http://127.0.0.1:%d", p)
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(prefix)
 
 		t.Assert(

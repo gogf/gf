@@ -42,7 +42,7 @@ func Test_Params_File_Single(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	// normal name
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		srcPath := gdebug.TestDataPath("upload", "file1.txt")
@@ -58,7 +58,7 @@ func Test_Params_File_Single(t *testing.T) {
 	})
 	// randomly rename.
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		srcPath := gdebug.TestDataPath("upload", "file2.txt")
@@ -95,7 +95,7 @@ func Test_Params_File_CustomName(t *testing.T) {
 	defer s.Shutdown()
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		srcPath := gdebug.TestDataPath("upload", "file1.txt")
@@ -132,7 +132,7 @@ func Test_Params_File_Batch(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	// normal name
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		srcPath1 := gdebug.TestDataPath("upload", "file1.txt")
@@ -152,7 +152,7 @@ func Test_Params_File_Batch(t *testing.T) {
 	})
 	// randomly rename.
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		srcPath1 := gdebug.TestDataPath("upload", "file1.txt")
