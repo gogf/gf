@@ -30,7 +30,7 @@ type (
 		serveTree        map[string]interface{}           // The route map tree.
 		serveCache       *gcache.Cache                    // Server cache for internal usage.
 		routesMap        map[string][]registeredRouteItem // Route map mainly for route dumps and repeated route checks.
-		statusHandlerMap map[string]HandlerFunc           // Custom status handler map.
+		statusHandlerMap map[string][]HandlerFunc         // Custom status handler map.
 		sessionManager   *gsession.Manager                // Session manager.
 	}
 

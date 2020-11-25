@@ -151,11 +151,15 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	// HTTP status handler.
 	if request.Response.Status != http.StatusOK {
-		if f := s.getStatusHandler(request.Response.Status, request); f != nil {
+		statusFuncArray := s.getStatusHandler(request.Response.Status, request)
+		for _, f := range statusFuncArray {
 			// Call custom status handler.
 			niceCallFunc(func() {
 				f(request)
 			})
+			if request.IsExited() {
+				break
+			}
 		}
 	}
 
