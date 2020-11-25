@@ -100,13 +100,13 @@ func GetServer(name ...interface{}) *Server {
 		servers:          make([]*gracefulServer, 0),
 		closeChan:        make(chan struct{}, 10000),
 		serverCount:      gtype.NewInt(),
-		statusHandlerMap: make(map[string]HandlerFunc),
+		statusHandlerMap: make(map[string][]HandlerFunc),
 		serveTree:        make(map[string]interface{}),
 		serveCache:       gcache.New(),
 		routesMap:        make(map[string][]registeredRouteItem),
 	}
 	// Initialize the server using default configurations.
-	if err := s.SetConfig(Config()); err != nil {
+	if err := s.SetConfig(NewConfig()); err != nil {
 		panic(err)
 	}
 	// Record the server to internal server mapping by name.
