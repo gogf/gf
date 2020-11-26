@@ -123,7 +123,7 @@ func (m *Model) getFieldsFiltered() string {
 // Chunk iterates the query result with given size and callback function.
 func (m *Model) Chunk(limit int, callback func(result Result, err error) bool) {
 	page := m.start
-	if page == 0 {
+	if page <= 0 {
 		page = 1
 	}
 	model := m
