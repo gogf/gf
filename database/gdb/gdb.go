@@ -158,7 +158,7 @@ type DB interface {
 	// ===========================================================================
 
 	mappingAndFilterData(schema, table string, data map[string]interface{}, filter bool) (map[string]interface{}, error)
-	convertValue(fieldValue interface{}, fieldType string) interface{}
+	convertDatabaseValueToLocalValue(fieldValue interface{}, fieldType string) interface{}
 	rowsToResult(rows *sql.Rows) (Result, error)
 }
 

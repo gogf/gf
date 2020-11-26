@@ -22,9 +22,9 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
-// convertValue automatically checks and converts field value from database type
+// convertDatabaseValueToLocalValue automatically checks and converts field value from database type
 // to golang variable type.
-func (c *Core) convertValue(fieldValue interface{}, fieldType string) interface{} {
+func (c *Core) convertDatabaseValueToLocalValue(fieldValue interface{}, fieldType string) interface{} {
 	// If there's no type retrieved, it returns the <fieldValue> directly
 	// to use its original data type, as <fieldValue> is type of interface{}.
 	if fieldType == "" {
