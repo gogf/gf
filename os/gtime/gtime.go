@@ -333,7 +333,6 @@ func StrToTime(str string, format ...string) (*Time, error) {
 	if year <= 0 {
 		return nil, errors.New("invalid time string:" + str)
 	}
-	// It finally converts all time to UTC time zone.
 	return NewFromTime(time.Date(year, time.Month(month), day, hour, min, sec, nsec, local)), nil
 }
 

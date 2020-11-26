@@ -31,6 +31,10 @@ func New(param ...interface{}) *Time {
 			return NewFromTime(r)
 		case *time.Time:
 			return NewFromTime(*r)
+		case Time:
+			return &r
+		case *Time:
+			return r
 		case string:
 			return NewFromStr(r)
 		case []byte:

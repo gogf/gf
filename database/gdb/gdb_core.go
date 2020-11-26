@@ -785,7 +785,7 @@ func (c *Core) rowsToResult(rows *sql.Rows) (Result, error) {
 			if value == nil {
 				row[columnNames[i]] = gvar.New(nil)
 			} else {
-				row[columnNames[i]] = gvar.New(c.DB.convertValue(value, columnTypes[i]))
+				row[columnNames[i]] = gvar.New(c.DB.convertDatabaseValueToLocalValue(value, columnTypes[i]))
 			}
 		}
 		records = append(records, row)
