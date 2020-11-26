@@ -716,7 +716,7 @@ func FormatSqlWithArgs(sql string, args []interface{}) string {
 					return `'` + gstr.QuoteMeta(gconv.String(args[index]), `'`) + `'`
 				case reflect.Struct:
 					if t, ok := args[index].(time.Time); ok {
-						return `'` + gtime.NewFromTime(t).String() + `'`
+						return `'` + t.Format(`2006-01-02 15:04:05`) + `'`
 					}
 					return `'` + gstr.QuoteMeta(gconv.String(args[index]), `'`) + `'`
 				}
