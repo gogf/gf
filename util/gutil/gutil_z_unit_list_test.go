@@ -35,7 +35,7 @@ func Test_ListItemValues_Map(t *testing.T) {
 	})
 }
 
-func Test_ListItemValues_SubKey(t *testing.T) {
+func Test_ListItemValues_Map_SubKey(t *testing.T) {
 	type Scores struct {
 		Math    int
 		English int
@@ -48,6 +48,23 @@ func Test_ListItemValues_SubKey(t *testing.T) {
 		}
 		t.Assert(gutil.ListItemValues(listMap, "scores", "Math"), g.Slice{100, 0, 59})
 		t.Assert(gutil.ListItemValues(listMap, "scores", "English"), g.Slice{60, 100, 99})
+		t.Assert(gutil.ListItemValues(listMap, "scores", "PE"), g.Slice{})
+	})
+}
+
+func Test_ListItemValues_Map_Array_SubKey(t *testing.T) {
+	type Scores struct {
+		Math    int
+		English int
+	}
+	gtest.C(t, func(t *gtest.T) {
+		listMap := g.List{
+			g.Map{"id": 1, "scores": []Scores{{1, 2}, {3, 4}}},
+			g.Map{"id": 2, "scores": []Scores{{5, 6}, {7, 8}}},
+			g.Map{"id": 3, "scores": []Scores{{9, 10}, {11, 12}}},
+		}
+		t.Assert(gutil.ListItemValues(listMap, "scores", "Math"), g.Slice{1, 3, 5, 7, 9, 11})
+		t.Assert(gutil.ListItemValues(listMap, "scores", "English"), g.Slice{2, 4, 6, 8, 10, 12})
 		t.Assert(gutil.ListItemValues(listMap, "scores", "PE"), g.Slice{})
 	})
 }
@@ -96,6 +113,45 @@ func Test_ListItemValues_Struct(t *testing.T) {
 	})
 }
 
+func Test_ListItemValues_Struct_SubKey(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Student struct {
+			Id    int
+			Score float64
+		}
+		type Class struct {
+			Total    int
+			Students []Student
+		}
+		listStruct := g.Slice{
+			Class{2, []Student{{1, 1}, {2, 2}}},
+			Class{3, []Student{{3, 3}, {4, 4}, {5, 5}}},
+			Class{1, []Student{{6, 6}}},
+		}
+		t.Assert(gutil.ListItemValues(listStruct, "Total"), g.Slice{2, 3, 1})
+		t.Assert(gutil.ListItemValues(listStruct, "Students"), `[[{"Id":1,"Score":1},{"Id":2,"Score":2}],[{"Id":3,"Score":3},{"Id":4,"Score":4},{"Id":5,"Score":5}],[{"Id":6,"Score":6}]]`)
+		t.Assert(gutil.ListItemValues(listStruct, "Students", "Id"), g.Slice{1, 2, 3, 4, 5, 6})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Student struct {
+			Id    int
+			Score float64
+		}
+		type Class struct {
+			Total    int
+			Students []*Student
+		}
+		listStruct := g.Slice{
+			&Class{2, []*Student{{1, 1}, {2, 2}}},
+			&Class{3, []*Student{{3, 3}, {4, 4}, {5, 5}}},
+			&Class{1, []*Student{{6, 6}}},
+		}
+		t.Assert(gutil.ListItemValues(listStruct, "Total"), g.Slice{2, 3, 1})
+		t.Assert(gutil.ListItemValues(listStruct, "Students"), `[[{"Id":1,"Score":1},{"Id":2,"Score":2}],[{"Id":3,"Score":3},{"Id":4,"Score":4},{"Id":5,"Score":5}],[{"Id":6,"Score":6}]]`)
+		t.Assert(gutil.ListItemValues(listStruct, "Students", "Id"), g.Slice{1, 2, 3, 4, 5, 6})
+	})
+}
+
 func Test_ListItemValuesUnique(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		listMap := g.List{
@@ -129,5 +185,59 @@ func Test_ListItemValuesUnique(t *testing.T) {
 		}
 		t.Assert(gutil.ListItemValuesUnique(listMap, "id"), g.Slice{1, 2, 3, 4, 5})
 		t.Assert(gutil.ListItemValuesUnique(listMap, "score"), g.Slice{100, 0, 99})
+	})
+}
+
+func Test_ListItemValuesUnique_Struct_SubKey(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Student struct {
+			Id    int
+			Score float64
+		}
+		type Class struct {
+			Total    int
+			Students []Student
+		}
+		listStruct := g.Slice{
+			Class{2, []Student{{1, 1}, {1, 2}}},
+			Class{3, []Student{{2, 3}, {2, 4}, {5, 5}}},
+			Class{1, []Student{{6, 6}}},
+		}
+		t.Assert(gutil.ListItemValuesUnique(listStruct, "Total"), g.Slice{2, 3, 1})
+		t.Assert(gutil.ListItemValuesUnique(listStruct, "Students", "Id"), g.Slice{1, 2, 5, 6})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Student struct {
+			Id    int
+			Score float64
+		}
+		type Class struct {
+			Total    int
+			Students []*Student
+		}
+		listStruct := g.Slice{
+			&Class{2, []*Student{{1, 1}, {1, 2}}},
+			&Class{3, []*Student{{2, 3}, {2, 4}, {5, 5}}},
+			&Class{1, []*Student{{6, 6}}},
+		}
+		t.Assert(gutil.ListItemValuesUnique(listStruct, "Total"), g.Slice{2, 3, 1})
+		t.Assert(gutil.ListItemValuesUnique(listStruct, "Students", "Id"), g.Slice{1, 2, 5, 6})
+	})
+}
+
+func Test_ListItemValuesUnique_Map_Array_SubKey(t *testing.T) {
+	type Scores struct {
+		Math    int
+		English int
+	}
+	gtest.C(t, func(t *gtest.T) {
+		listMap := g.List{
+			g.Map{"id": 1, "scores": []Scores{{1, 2}, {1, 2}}},
+			g.Map{"id": 2, "scores": []Scores{{5, 8}, {5, 8}}},
+			g.Map{"id": 3, "scores": []Scores{{9, 10}, {11, 12}}},
+		}
+		t.Assert(gutil.ListItemValuesUnique(listMap, "scores", "Math"), g.Slice{1, 5, 9, 11})
+		t.Assert(gutil.ListItemValuesUnique(listMap, "scores", "English"), g.Slice{2, 8, 10, 12})
+		t.Assert(gutil.ListItemValuesUnique(listMap, "scores", "PE"), g.Slice{})
 	})
 }

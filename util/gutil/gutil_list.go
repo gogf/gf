@@ -21,26 +21,34 @@ import (
 // []struct:sub-struct
 // Note that the sub-map/sub-struct makes sense only if the optional parameter <subKey> is given.
 func ListItemValues(list interface{}, key interface{}, subKey ...interface{}) (values []interface{}) {
-	var (
+	var reflectValue reflect.Value
+	if v, ok := list.(reflect.Value); ok {
+		reflectValue = v
+	} else {
 		reflectValue = reflect.ValueOf(list)
-		reflectKind  = reflectValue.Kind()
-	)
+	}
+	reflectKind := reflectValue.Kind()
 	for reflectKind == reflect.Ptr {
 		reflectValue = reflectValue.Elem()
 		reflectKind = reflectValue.Kind()
 	}
-	values = []interface{}{}
 	switch reflectKind {
 	case reflect.Slice, reflect.Array:
 		if reflectValue.Len() == 0 {
 			return
 		}
+		values = []interface{}{}
 		for i := 0; i < reflectValue.Len(); i++ {
-			if value, ok := doItemValue(reflectValue.Index(i), key); ok {
+			if value, ok := ItemValue(reflectValue.Index(i), key); ok {
 				if len(subKey) > 0 && subKey[0] != nil {
-					if subValue, ok := doItemValue(value, subKey[0]); ok {
-						values = append(values, subValue)
+					if subValue, ok := ItemValue(value, subKey[0]); ok {
+						value = subValue
+					} else {
+						continue
 					}
+				}
+				if array, ok := value.([]interface{}); ok {
+					values = append(values, array...)
 				} else {
 					values = append(values, value)
 				}
@@ -52,12 +60,7 @@ func ListItemValues(list interface{}, key interface{}, subKey ...interface{}) (v
 
 // ItemValue retrieves and returns its value of which name/attribute specified by <key>.
 // The parameter <item> can be type of map/*map/struct/*struct.
-func ItemValue(item interface{}, key interface{}) (value interface{}) {
-	value, _ = doItemValue(item, key)
-	return
-}
-
-func doItemValue(item interface{}, key interface{}) (value interface{}, found bool) {
+func ItemValue(item interface{}, key interface{}) (value interface{}, found bool) {
 	var reflectValue reflect.Value
 	if v, ok := item.(reflect.Value); ok {
 		reflectValue = v
@@ -80,6 +83,14 @@ func doItemValue(item interface{}, key interface{}) (value interface{}, found bo
 		keyValue = reflect.ValueOf(key)
 	}
 	switch reflectKind {
+	case reflect.Array, reflect.Slice:
+		// The <key> must be type of string.
+		values := ListItemValues(reflectValue, keyValue.String())
+		if values == nil {
+			return nil, false
+		}
+		return values, true
+
 	case reflect.Map:
 		v := reflectValue.MapIndex(keyValue)
 		if v.IsValid() {
