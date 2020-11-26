@@ -40,7 +40,7 @@ func (m *Model) getSoftFieldNameCreated(table ...string) string {
 	}
 	config := m.db.GetConfig()
 	if config.CreatedAt != "" {
-		return m.getSoftFieldName(tableName, append([]string{config.CreatedAt}, createdFiledNames...))
+		return m.getSoftFieldName(tableName, []string{config.CreatedAt})
 	}
 	return m.getSoftFieldName(tableName, createdFiledNames)
 }
@@ -57,7 +57,7 @@ func (m *Model) getSoftFieldNameUpdated(table ...string) (field string) {
 	}
 	config := m.db.GetConfig()
 	if config.UpdatedAt != "" {
-		return m.getSoftFieldName(tableName, append([]string{config.UpdatedAt}, updatedFiledNames...))
+		return m.getSoftFieldName(tableName, []string{config.UpdatedAt})
 	}
 	return m.getSoftFieldName(tableName, updatedFiledNames)
 }
@@ -74,7 +74,7 @@ func (m *Model) getSoftFieldNameDeleted(table ...string) (field string) {
 	}
 	config := m.db.GetConfig()
 	if config.UpdatedAt != "" {
-		return m.getSoftFieldName(tableName, append([]string{config.DeletedAt}, deletedFiledNames...))
+		return m.getSoftFieldName(tableName, []string{config.DeletedAt})
 	}
 	return m.getSoftFieldName(tableName, deletedFiledNames)
 }
