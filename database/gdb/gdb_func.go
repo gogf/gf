@@ -583,14 +583,14 @@ func handleArguments(sql string, args []interface{}) (newSql string, newArgs []i
 	if len(args) > 0 {
 		for index, arg := range args {
 			var (
-				rv   = reflect.ValueOf(arg)
-				kind = rv.Kind()
+				reflectValue = reflect.ValueOf(arg)
+				reflectKind  = reflectValue.Kind()
 			)
-			if kind == reflect.Ptr {
-				rv = rv.Elem()
-				kind = rv.Kind()
+			for reflectKind == reflect.Ptr {
+				reflectValue = reflectValue.Elem()
+				reflectKind = reflectValue.Kind()
 			}
-			switch kind {
+			switch reflectKind {
 			case reflect.Slice, reflect.Array:
 				// It does not split the type of []byte.
 				// Eg: table.Where("name = ?", []byte("john"))
@@ -599,7 +599,7 @@ func handleArguments(sql string, args []interface{}) (newSql string, newArgs []i
 					continue
 				}
 
-				if rv.Len() == 0 {
+				if reflectValue.Len() == 0 {
 					// Empty slice argument, it converts the sql to a false sql.
 					// Eg:
 					// Query("select * from xxx where id in(?)", g.Slice{}) -> select * from xxx where 0=1
@@ -613,15 +613,15 @@ func handleArguments(sql string, args []interface{}) (newSql string, newArgs []i
 						}
 					}
 				} else {
-					for i := 0; i < rv.Len(); i++ {
-						newArgs = append(newArgs, rv.Index(i).Interface())
+					for i := 0; i < reflectValue.Len(); i++ {
+						newArgs = append(newArgs, reflectValue.Index(i).Interface())
 					}
 				}
 
 				// If the '?' holder count equals the length of the slice,
 				// it does not implement the arguments splitting logic.
 				// Eg: db.Query("SELECT ?+?", g.Slice{1, 2})
-				if len(args) == 1 && gstr.Count(newSql, "?") == rv.Len() {
+				if len(args) == 1 && gstr.Count(newSql, "?") == reflectValue.Len() {
 					break
 				}
 				// counter is used to finding the inserting position for the '?' holder.
@@ -636,24 +636,16 @@ func handleArguments(sql string, args []interface{}) (newSql string, newArgs []i
 					counter++
 					if counter == index+insertHolderCount+1 {
 						replaced = true
-						insertHolderCount += rv.Len() - 1
-						return "?" + strings.Repeat(",?", rv.Len()-1)
+						insertHolderCount += reflectValue.Len() - 1
+						return "?" + strings.Repeat(",?", reflectValue.Len()-1)
 					}
 					return s
 				})
 
 			// Special struct handling.
 			case reflect.Struct:
-				// The underlying driver supports time.Time/*time.Time types.
-				if _, ok := arg.(time.Time); ok {
-					newArgs = append(newArgs, arg)
-					continue
-				}
-				if _, ok := arg.(*time.Time); ok {
-					newArgs = append(newArgs, arg)
-					continue
-				}
 				switch v := arg.(type) {
+				// The underlying driver supports time.Time/*time.Time types.
 				case time.Time, *time.Time:
 					newArgs = append(newArgs, arg)
 					continue
@@ -662,7 +654,7 @@ func handleArguments(sql string, args []interface{}) (newSql string, newArgs []i
 				//
 				// DO NOT use its underlying gtime.Time.Time as its argument,
 				// because the std time.Time will be converted to certain timezone
-				// according to underlying driver. An the underlying driver also
+				// according to underlying driver. And the underlying driver also
 				// converts the time.Time to string automatically as the following does.
 				case gtime.Time:
 					newArgs = append(newArgs, v.String())
@@ -736,9 +728,9 @@ func FormatSqlWithArgs(sql string, args []interface{}) string {
 	return newQuery
 }
 
-// mapToStruct maps the <data> to given struct.
+// convertMapToStruct maps the <data> to given struct.
 // Note that the given parameter <pointer> should be a pointer to s struct.
-func mapToStruct(data map[string]interface{}, pointer interface{}) error {
+func convertMapToStruct(data map[string]interface{}, pointer interface{}) error {
 	tagNameMap, err := structs.TagMapName(pointer, []string{ORM_TAG_FOR_STRUCT})
 	if err != nil {
 		return err
