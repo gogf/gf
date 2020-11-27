@@ -658,9 +658,13 @@ func handleArguments(sql string, args []interface{}) (newSql string, newArgs []i
 					newArgs = append(newArgs, arg)
 					continue
 
-				// Special handling for gtime.Time.
+				// Special handling for gtime.Time/*gtime.Time.
 				case gtime.Time:
-					newArgs = append(newArgs, v.String())
+					newArgs = append(newArgs, v.Time)
+					continue
+
+				case *gtime.Time:
+					newArgs = append(newArgs, v.Time)
 					continue
 
 				default:
