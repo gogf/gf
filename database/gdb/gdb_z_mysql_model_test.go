@@ -2946,14 +2946,8 @@ func Test_TimeZoneInsert(t *testing.T) {
 	tableName := createTableForTimeZoneTest()
 	defer dropTable(tableName)
 
-	timeLocal := time.Local
-	gtest.C(t, func(t *gtest.T) {
-		err := gtime.SetTimeZone("Asia/Shanghai")
-		t.Assert(err, nil)
-	})
-	defer func() {
-		time.Local = timeLocal
-	}()
+	asiaLocal, err := time.LoadLocation("Asia/Shanghai")
+	gtest.Assert(err, nil)
 
 	CreateTime := "2020-11-22 12:23:45"
 	UpdateTime := "2020-11-22 13:23:45"
@@ -2964,11 +2958,14 @@ func Test_TimeZoneInsert(t *testing.T) {
 		UpdatedAt gtime.Time  `json:"updated_at"`
 		DeletedAt time.Time   `json:"deleted_at"`
 	}
+	t1, _ := time.ParseInLocation("2006-01-02 15:04:05", CreateTime, asiaLocal)
+	t2, _ := time.ParseInLocation("2006-01-02 15:04:05", UpdateTime, asiaLocal)
+	t3, _ := time.ParseInLocation("2006-01-02 15:04:05", DeleteTime, asiaLocal)
 	u := &User{
 		Id:        1,
-		CreatedAt: gtime.NewFromStr(CreateTime).UTC(),
-		UpdatedAt: *gtime.NewFromStr(UpdateTime).UTC(),
-		DeletedAt: gtime.NewFromStr(DeleteTime).Time.UTC(),
+		CreatedAt: gtime.New(t1.UTC()),
+		UpdatedAt: *gtime.New(t2.UTC()),
+		DeletedAt: t3.UTC(),
 	}
 
 	gtest.C(t, func(t *gtest.T) {
