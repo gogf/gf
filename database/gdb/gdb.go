@@ -164,18 +164,13 @@ type DB interface {
 
 // Core is the base struct for database management.
 type Core struct {
-	DB               DB            // DB interface object.
-	group            string        // Configuration group name.
-	debug            *gtype.Bool   // Enable debug mode for the database.
-	cache            *gcache.Cache // Cache manager, SQL result cache only.
-	schema           *gtype.String // Custom schema for this object.
-	dryrun           *gtype.Bool   // Dry run.
-	prefix           string        // Table prefix.
-	logger           *glog.Logger  // Logger.
-	config           *ConfigNode   // Current config node.
-	maxIdleConnCount int           // Max idle connection count.
-	maxOpenConnCount int           // Max open connection count.
-	maxConnLifetime  time.Duration // Max TTL for a connection.
+	DB     DB            // DB interface object.
+	group  string        // Configuration group name.
+	debug  *gtype.Bool   // Enable debug mode for the database, which can be changed in runtime.
+	cache  *gcache.Cache // Cache manager, SQL result cache only.
+	schema *gtype.String // Custom schema for this object.
+	logger *glog.Logger  // Logger.
+	config *ConfigNode   // Current config node.
 }
 
 // Driver is the interface for integrating sql drivers into package gdb.
@@ -303,17 +298,12 @@ func New(group ...string) (db DB, err error) {
 	if _, ok := configs.config[groupName]; ok {
 		if node, err := getConfigNodeByGroup(groupName, true); err == nil {
 			c := &Core{
-				group:            groupName,
-				debug:            gtype.NewBool(),
-				cache:            gcache.New(),
-				schema:           gtype.NewString(),
-				dryrun:           gtype.NewBool(),
-				logger:           glog.New(),
-				prefix:           node.Prefix,
-				config:           node,
-				maxIdleConnCount: defaultMaxIdleConnCount,
-				maxOpenConnCount: defaultMaxOpenConnCount,
-				maxConnLifetime:  defaultMaxConnLifeTime, // Default max connection life time if user does not configure.
+				group:  groupName,
+				debug:  gtype.NewBool(),
+				cache:  gcache.New(),
+				schema: gtype.NewString(),
+				logger: glog.New(),
+				config: node,
 			}
 			if v, ok := driverMap[node.Type]; ok {
 				c.DB, err = v.New(c, node)
@@ -452,22 +442,20 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 			intlog.Printf("DB open failed: %v, %+v", err, node)
 			return nil, err
 		}
-		if c.maxIdleConnCount > 0 {
-			sqlDb.SetMaxIdleConns(c.maxIdleConnCount)
-		} else if node.MaxIdleConnCount > 0 {
-			sqlDb.SetMaxIdleConns(node.MaxIdleConnCount)
+		if c.config.MaxIdleConnCount > 0 {
+			sqlDb.SetMaxIdleConns(c.config.MaxIdleConnCount)
 		}
-
-		if c.maxOpenConnCount > 0 {
-			sqlDb.SetMaxOpenConns(c.maxOpenConnCount)
-		} else if node.MaxOpenConnCount > 0 {
-			sqlDb.SetMaxOpenConns(node.MaxOpenConnCount)
+		if c.config.MaxOpenConnCount > 0 {
+			sqlDb.SetMaxOpenConns(c.config.MaxOpenConnCount)
 		}
-
-		if c.maxConnLifetime > 0 {
-			sqlDb.SetConnMaxLifetime(c.maxConnLifetime * time.Second)
-		} else if node.MaxConnLifetime > 0 {
-			sqlDb.SetConnMaxLifetime(node.MaxConnLifetime * time.Second)
+		if c.config.MaxConnLifetime > 0 {
+			// Automatically checks whether MaxConnLifetime is configured using string like: "30s", "60s", etc.
+			// Or else it is configured just using number, which means value in seconds.
+			if c.config.MaxConnLifetime > time.Second {
+				sqlDb.SetConnMaxLifetime(c.config.MaxConnLifetime)
+			} else {
+				sqlDb.SetConnMaxLifetime(c.config.MaxConnLifetime * time.Second)
+			}
 		}
 		return sqlDb, nil
 	}, 0)
