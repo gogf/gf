@@ -32,6 +32,10 @@ func (m *Model) Unscoped() *Model {
 // If there's no field name for storing creating time, it returns an empty string.
 // It checks the key with or without cases or chars '-'/'_'/'.'/' '.
 func (m *Model) getSoftFieldNameCreated(table ...string) string {
+	// It checks whether this feature disabled.
+	if m.db.GetConfig().TimeMaintainDisabled {
+		return ""
+	}
 	tableName := ""
 	if len(table) > 0 {
 		tableName = table[0]
@@ -49,6 +53,10 @@ func (m *Model) getSoftFieldNameCreated(table ...string) string {
 // If there's no field name for storing updating time, it returns an empty string.
 // It checks the key with or without cases or chars '-'/'_'/'.'/' '.
 func (m *Model) getSoftFieldNameUpdated(table ...string) (field string) {
+	// It checks whether this feature disabled.
+	if m.db.GetConfig().TimeMaintainDisabled {
+		return ""
+	}
 	tableName := ""
 	if len(table) > 0 {
 		tableName = table[0]
@@ -66,6 +74,10 @@ func (m *Model) getSoftFieldNameUpdated(table ...string) (field string) {
 // If there's no field name for storing deleting time, it returns an empty string.
 // It checks the key with or without cases or chars '-'/'_'/'.'/' '.
 func (m *Model) getSoftFieldNameDeleted(table ...string) (field string) {
+	// It checks whether this feature disabled.
+	if m.db.GetConfig().TimeMaintainDisabled {
+		return ""
+	}
 	tableName := ""
 	if len(table) > 0 {
 		tableName = table[0]
