@@ -42,7 +42,7 @@ func (d *DriverMysql) Open(config *ConfigNode) (*sql.DB, error) {
 		}
 	} else {
 		source = fmt.Sprintf(
-			"%s:%s@tcp(%s:%s)/%s?charset=%s&multiStatements=true&parseTime=true&loc=Local",
+			"%s:%s@tcp(%s:%s)/%s?charset=%s&multiStatements=true&parseTime=true",
 			config.User, config.Pass, config.Host, config.Port, config.Name, config.Charset,
 		)
 	}
