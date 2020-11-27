@@ -52,7 +52,7 @@ func (r Record) Struct(pointer interface{}) error {
 	}
 	// Special handling for parameter type: reflect.Value
 	if _, ok := pointer.(reflect.Value); ok {
-		return mapToStruct(r.Map(), pointer)
+		return convertMapToStruct(r.Map(), pointer)
 	}
 	var (
 		reflectValue = reflect.ValueOf(pointer)
@@ -69,7 +69,7 @@ func (r Record) Struct(pointer interface{}) error {
 	if reflectKind != reflect.Ptr && reflectKind != reflect.Struct {
 		return errors.New("parameter should be type of *struct/**struct")
 	}
-	return mapToStruct(r.Map(), pointer)
+	return convertMapToStruct(r.Map(), pointer)
 }
 
 // IsEmpty checks and returns whether <r> is empty.

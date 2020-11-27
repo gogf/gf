@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/util/gconv"
 	"reflect"
 	"strconv"
 	"strings"
@@ -72,6 +73,15 @@ func (d *DriverOracle) HandleSqlBeforeCommit(link Link, sql string, args []inter
 		return fmt.Sprintf(":v%d", index)
 	})
 	str, _ = gregex.ReplaceString("\"", "", str)
+	// Change time string argument wrapping with TO_DATE function.
+	for i, v := range args {
+		if reflect.TypeOf(v).Kind() == reflect.String {
+			valueStr := gconv.String(v)
+			if gregex.IsMatchString(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$`, valueStr) {
+				args[i] = fmt.Sprintf(`TO_DATE('%s','yyyy-MM-dd HH:MI:SS')`, valueStr)
+			}
+		}
+	}
 	return d.parseSql(str), args
 }
 
