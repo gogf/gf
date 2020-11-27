@@ -31,6 +31,7 @@ func (d *DriverMysql) New(core *Core, node *ConfigNode) (DB, error) {
 }
 
 // Open creates and returns a underlying sql.DB object for mysql.
+// Note that it converts time.Time argument to local timezone in default.
 func (d *DriverMysql) Open(config *ConfigNode) (*sql.DB, error) {
 	var source string
 	if config.LinkInfo != "" {
@@ -41,7 +42,7 @@ func (d *DriverMysql) Open(config *ConfigNode) (*sql.DB, error) {
 		}
 	} else {
 		source = fmt.Sprintf(
-			"%s:%s@tcp(%s:%s)/%s?charset=%s&multiStatements=true&parseTime=true",
+			"%s:%s@tcp(%s:%s)/%s?charset=%s&multiStatements=true&parseTime=true&loc=Local",
 			config.User, config.Pass, config.Host, config.Port, config.Name, config.Charset,
 		)
 	}
