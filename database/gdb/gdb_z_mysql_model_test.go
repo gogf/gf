@@ -2841,7 +2841,7 @@ func Test_Model_HasField(t *testing.T) {
 func Test_Model_Issue1002(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
-	db.SetDebug(true)
+
 	result, err := db.Table(table).Data(g.Map{
 		"id":          1,
 		"passport":    "port_1",
@@ -2907,24 +2907,6 @@ func Test_Model_Issue1002(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v, err := db.Table(table).Fields("id").Where("create_time>? and create_time<?", t1, t2).Value()
 		t.Assert(err, nil)
-		t.Assert(v.Int(), 0)
-	})
-	gtest.C(t, func(t *gtest.T) {
-		v, err := db.Table(table).Fields("id").Where("create_time>? and create_time<?", t1, t2).FindValue()
-		t.Assert(err, nil)
-		t.Assert(v.Int(), 0)
-	})
-	gtest.C(t, func(t *gtest.T) {
-		v, err := db.Table(table).Where("create_time>? and create_time<?", t1, t2).FindValue("id")
-		t.Assert(err, nil)
-		t.Assert(v.Int(), 0)
-	})
-	// where + time.Time arguments, local.
-	t1, _ = time.ParseInLocation("2006-01-02 15:04:05", "2020-10-27 19:03:32", time.Local)
-	t2, _ = time.ParseInLocation("2006-01-02 15:04:05", "2020-10-27 19:03:34", time.Local)
-	gtest.C(t, func(t *gtest.T) {
-		v, err := db.Table(table).Fields("id").Where("create_time>? and create_time<?", t1, t2).Value()
-		t.Assert(err, nil)
 		t.Assert(v.Int(), 1)
 	})
 	gtest.C(t, func(t *gtest.T) {
@@ -2936,5 +2918,66 @@ func Test_Model_Issue1002(t *testing.T) {
 		v, err := db.Table(table).Where("create_time>? and create_time<?", t1, t2).FindValue("id")
 		t.Assert(err, nil)
 		t.Assert(v.Int(), 1)
+	})
+}
+
+func createTableForTimeZoneTest() string {
+	tableName := "user_" + gtime.Now().TimestampNanoStr()
+	if _, err := db.Exec(fmt.Sprintf(`
+	    CREATE TABLE %s (
+	        id          int(10) unsigned NOT NULL AUTO_INCREMENT,
+	        passport    varchar(45) NULL,
+	        password    char(32) NULL,
+	        nickname    varchar(45) NULL,
+	        created_at timestamp NULL,
+ 			updated_at timestamp NULL,
+			deleted_at timestamp NULL,
+	        PRIMARY KEY (id)
+	    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+	    `, tableName,
+	)); err != nil {
+		gtest.Fatal(err)
+	}
+	return tableName
+}
+
+// https://github.com/gogf/gf/issues/1012
+func Test_TimeZoneInsert(t *testing.T) {
+	tableName := createTableForTimeZoneTest()
+	defer dropTable(tableName)
+
+	timeLocal := time.Local
+	gtest.C(t, func(t *gtest.T) {
+		err := gtime.SetTimeZone("Asia/Shanghai")
+		t.Assert(err, nil)
+	})
+	defer func() {
+		time.Local = timeLocal
+	}()
+
+	CreateTime := "2020-11-22 12:23:45"
+	UpdateTime := "2020-11-22 13:23:45"
+	DeleteTime := "2020-11-22 14:23:45"
+	type User struct {
+		Id        int         `json:"id"`
+		CreatedAt *gtime.Time `json:"created_at"`
+		UpdatedAt gtime.Time  `json:"updated_at"`
+		DeletedAt time.Time   `json:"deleted_at"`
+	}
+	u := &User{
+		Id:        1,
+		CreatedAt: gtime.NewFromStr(CreateTime).UTC(),
+		UpdatedAt: *gtime.NewFromStr(UpdateTime).UTC(),
+		DeletedAt: gtime.NewFromStr(DeleteTime).Time.UTC(),
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		_, _ = db.Table(tableName).Unscoped().Insert(u)
+		userEntity := &User{}
+		err := db.Table(tableName).Where("id", 1).Unscoped().Struct(&userEntity)
+		t.Assert(err, nil)
+		t.Assert(userEntity.CreatedAt.String(), "2020-11-22 04:23:45")
+		t.Assert(userEntity.UpdatedAt.String(), "2020-11-22 05:23:45")
+		t.Assert(gtime.NewFromTime(userEntity.DeletedAt).String(), "2020-11-22 06:23:45")
 	})
 }

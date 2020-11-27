@@ -573,8 +573,8 @@ func formatWhereKeyValue(db DB, buffer *bytes.Buffer, newArgs []interface{}, key
 	return newArgs
 }
 
-// handleArguments is a nice function which handles the query and its arguments before committing to
-// underlying driver.
+// handleArguments is an important function, which handles the sql and all its arguments
+// before committing them to underlying driver.
 func handleArguments(sql string, args []interface{}) (newSql string, newArgs []interface{}) {
 	newSql = sql
 	// insertHolderCount is used to calculate the inserting position for the '?' holder.
@@ -659,17 +659,22 @@ func handleArguments(sql string, args []interface{}) (newSql string, newArgs []i
 					continue
 
 				// Special handling for gtime.Time/*gtime.Time.
+				//
+				// DO NOT use its underlying gtime.Time.Time as its argument,
+				// because the std time.Time will be converted to certain timezone
+				// according to underlying driver. An the underlying driver also
+				// converts the time.Time to string automatically as the following does.
 				case gtime.Time:
-					newArgs = append(newArgs, v.Time)
+					newArgs = append(newArgs, v.String())
 					continue
 
 				case *gtime.Time:
-					newArgs = append(newArgs, v.Time)
+					newArgs = append(newArgs, v.String())
 					continue
 
 				default:
 					// It converts the struct to string in default
-					// if it implements the String interface.
+					// if it has implemented the String interface.
 					if v, ok := arg.(apiString); ok {
 						newArgs = append(newArgs, v.String())
 						continue
