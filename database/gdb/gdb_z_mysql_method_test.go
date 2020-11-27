@@ -380,7 +380,7 @@ func Test_DB_UpdateCounter(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
-		counter := &gdb.UpdateCounter{
+		counter := &gdb.Counter{
 			Field: "login_times",
 			Value: 1,
 		}

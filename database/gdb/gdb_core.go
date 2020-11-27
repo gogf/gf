@@ -11,6 +11,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/text/gstr"
 	"reflect"
 	"strings"
 
@@ -643,21 +644,21 @@ func (c *Core) Update(table string, data interface{}, condition interface{}, arg
 	return c.DB.DoUpdate(nil, table, data, newWhere, newArgs...)
 }
 
-// UpdateCounter  is the type for update count.
-type UpdateCounter struct {
+// Counter  is the type for update count.
+type Counter struct {
 	Field string
 	Value interface{} // allows acceptance of int and float types, If you want to do subtraction,
 	// you need to pass in a negative number
 }
 
-// isUpdateCounter verify that a field is an UpdateCounter type.
-func (c *Core) isUpdateCounter(str string) bool {
-	return strings.HasSuffix(str, "UpdateCounter")
+// isCounter verify that a field is an Counter type.
+func (c *Core) isCounter(str string) bool {
+	return strings.HasSuffix(str, "Counter")
 }
 
 // doUpdate does "UPDATE ... " statement for the table.
 // update counter eg.
-// counter := &gdb.UpdateCounter{
+// counter := &gdb.Counter{
 //	 Field:"login_times",
 //	 Value:1 or -1 or 1.23,
 // }
@@ -688,11 +689,15 @@ func (c *Core) DoUpdate(link Link, table string, data interface{}, condition str
 		)
 		for k, v := range dataMap {
 			valVarName := reflect.TypeOf(v).String()
-			if c.isUpdateCounter(valVarName) {
+			if c.isCounter(valVarName) {
 				valMap := gconv.Map(v)
 				column := c.DB.QuoteWord(gconv.String(valMap["field"]))
 				value := valMap["value"]
-				fields = append(fields, column+"="+column+"+?")
+				if gstr.HasPrefix(gconv.String(valMap), "-") {
+					fields = append(fields, column+"="+column+"-?")
+				} else {
+					fields = append(fields, column+"="+column+"+?")
+				}
 				params = append(params, value)
 			} else {
 				fields = append(fields, c.DB.QuoteWord(k)+"=?")
