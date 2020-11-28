@@ -400,3 +400,15 @@ func Test_BuildInFuncDump(t *testing.T) {
 		t.Assert(gstr.Contains(r, `"score": 100`), true)
 	})
 }
+
+func Test_BuildInFuncJson(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		v := gview.New()
+		v.Assign("v", g.Map{
+			"name": "john",
+		})
+		r, err := v.ParseContent("{{json .v}}")
+		t.Assert(err, nil)
+		t.Assert(r, `{"name":"john"}`)
+	})
+}

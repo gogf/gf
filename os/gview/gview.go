@@ -137,6 +137,7 @@ func New(path ...string) *View {
 		"dump":       view.buildInFuncDump,
 		"map":        view.buildInFuncMap,
 		"maps":       view.buildInFuncMaps,
+		"json":       view.buildInFuncJson,
 	})
 
 	return view
