@@ -716,17 +716,20 @@ func (c *Core) DoUpdate(link Link, table string, data interface{}, condition str
 			dataMap = ConvertDataForTableRecord(data)
 		)
 		for k, v := range dataMap {
-			if value, ok := v.(*Counter); ok {
-				column := c.DB.QuoteWord(value.Field)
+			var counterValue Counter
+			switch value := v.(type) {
+			case *Counter, Counter:
+				counterValue = value.(Counter)
+				column := c.DB.QuoteWord(counterValue.Field)
 				var symbol string
-				if gstr.HasPrefix(gconv.String(value.Value), "-") {
+				if gstr.HasPrefix(gconv.String(counterValue.Value), "-") {
 					symbol = "-"
 				} else {
 					symbol = "+"
 				}
 				fields = append(fields, fmt.Sprintf("%s=%s%s?", column, column, symbol))
 				params = append(params, v)
-			} else {
+			default:
 				fields = append(fields, c.DB.QuoteWord(k)+"=?")
 				params = append(params, v)
 			}

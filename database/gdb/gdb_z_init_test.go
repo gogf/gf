@@ -119,7 +119,7 @@ func createTableWithDb(db gdb.DB, table ...string) (name string) {
 		   password char(32) NOT NULL,
 		   nickname varchar(45) NOT NULL,
 		   create_time timestamp NOT NULL,
-           login_times bigint NOT NULL,
+           login_times bigint default 0 NOT NULL,
 		   PRIMARY KEY (id)
 		) ;`, name,
 		)); err != nil {
@@ -176,7 +176,7 @@ func createTableWithDb(db gdb.DB, table ...string) (name string) {
 	        password    char(32) NULL,
 	        nickname    varchar(45) NULL,
 	        create_time timestamp NULL,
- 		    login_times int(10) NOT NULL,
+ 		    login_times int(10) default 0 NOT NULL,
 	        PRIMARY KEY (id)
 	    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 	    `, name,

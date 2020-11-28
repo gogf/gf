@@ -87,6 +87,7 @@ func Test_DB_Insert(t *testing.T) {
 			"password":    "25d55ad283aa400af464c76d713c07ad",
 			"nickname":    "T1",
 			"create_time": gtime.Now().String(),
+			"login_times": 0,
 		})
 		t.Assert(err, nil)
 
@@ -97,6 +98,7 @@ func Test_DB_Insert(t *testing.T) {
 			"password":    "25d55ad283aa400af464c76d713c07ad",
 			"nickname":    "name_2",
 			"create_time": gtime.Now().String(),
+			"login_times": 0,
 		})
 		t.Assert(err, nil)
 		n, _ := result.RowsAffected()
@@ -109,6 +111,7 @@ func Test_DB_Insert(t *testing.T) {
 			Password   string `gconv:"password"`
 			Nickname   string `gconv:"nickname"`
 			CreateTime string `json:"create_time"`
+			LoginTimes int    `json:"login_times"`
 		}
 		timeStr := gtime.Now().String()
 		result, err = db.Insert(table, User{
@@ -117,6 +120,7 @@ func Test_DB_Insert(t *testing.T) {
 			Password:   "25d55ad283aa400af464c76d713c07ad",
 			Nickname:   "name_3",
 			CreateTime: timeStr,
+			LoginTimes: 0,
 		})
 		t.Assert(err, nil)
 		n, _ = result.RowsAffected()
@@ -139,6 +143,7 @@ func Test_DB_Insert(t *testing.T) {
 			Password:   "25d55ad283aa400af464c76d713c07ad",
 			Nickname:   "name_4",
 			CreateTime: timeStr,
+			LoginTimes: 0,
 		})
 		t.Assert(err, nil)
 		n, _ = result.RowsAffected()
@@ -223,6 +228,7 @@ func Test_DB_Insert_KeyFieldNameMapping(t *testing.T) {
 			Password   string
 			Nickname   string
 			CreateTime string
+			LoginTimes int
 		}
 		data := User{
 			Id:         1,
@@ -230,6 +236,7 @@ func Test_DB_Insert_KeyFieldNameMapping(t *testing.T) {
 			Password:   "pass_1",
 			Nickname:   "name_1",
 			CreateTime: "2020-10-10 12:00:01",
+			LoginTimes: 0,
 		}
 		_, err := db.Insert(table, data)
 		t.Assert(err, nil)
@@ -253,6 +260,7 @@ func Test_DB_Upadte_KeyFieldNameMapping(t *testing.T) {
 			Password   string
 			Nickname   string
 			CreateTime string
+			LoginTimes int
 		}
 		data := User{
 			Id:         1,
@@ -260,6 +268,7 @@ func Test_DB_Upadte_KeyFieldNameMapping(t *testing.T) {
 			Password:   "pass_10",
 			Nickname:   "name_10",
 			CreateTime: "2020-10-10 12:00:01",
+			LoginTimes: 0,
 		}
 		_, err := db.Update(table, data, "id=1")
 		t.Assert(err, nil)
@@ -284,6 +293,7 @@ func Test_DB_Insert_KeyFieldNameMapping_Error(t *testing.T) {
 			Nickname       string
 			CreateTime     string
 			NoneExistField string
+			LoginTimes     int
 		}
 		data := User{
 			Id:         1,
@@ -291,6 +301,7 @@ func Test_DB_Insert_KeyFieldNameMapping_Error(t *testing.T) {
 			Password:   "pass_1",
 			Nickname:   "name_1",
 			CreateTime: "2020-10-10 12:00:01",
+			LoginTimes: 0,
 		}
 		_, err := db.Insert(table, data)
 		t.AssertNE(err, nil)
@@ -405,6 +416,7 @@ func Test_DB_BatchInsert_Struct(t *testing.T) {
 			Password   string      `c:"password"`
 			NickName   string      `c:"nickname"`
 			CreateTime *gtime.Time `c:"create_time"`
+			LoginTimes int         `c:"login_times"`
 		}
 		user := &User{
 			Id:         1,
@@ -412,6 +424,7 @@ func Test_DB_BatchInsert_Struct(t *testing.T) {
 			Password:   "p1",
 			NickName:   "T1",
 			CreateTime: gtime.Now(),
+			LoginTimes: 0,
 		}
 		result, err := db.BatchInsert(table, user)
 		t.Assert(err, nil)
@@ -862,6 +875,7 @@ func Test_DB_ToJson(t *testing.T) {
 			Password   string
 			NickName   string
 			CreateTime string
+			LoginTimes int
 		}
 
 		users := User{}
@@ -895,6 +909,7 @@ func Test_DB_ToXml(t *testing.T) {
 			Password   string
 			NickName   string
 			CreateTime string
+			LoginTimes int
 		}
 
 		user := User{}
