@@ -237,6 +237,22 @@ func Test_Phone(t *testing.T) {
 	})
 }
 
+func Test_PhoneLoose(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		err1 := gvalid.Check("13333333333", "phone-loose", nil)
+		err2 := gvalid.Check("15555555555", "phone-loose", nil)
+		err3 := gvalid.Check("16666666666", "phone-loose", nil)
+		err4 := gvalid.Check("23333333333", "phone-loose", nil)
+		err5 := gvalid.Check("1333333333", "phone-loose", nil)
+		err6 := gvalid.Check("10333333333", "phone-loose", nil)
+		t.Assert(err1, nil)
+		t.Assert(err2, nil)
+		t.Assert(err3, nil)
+		t.AssertNE(err4, nil)
+		t.AssertNE(err5, nil)
+		t.AssertNE(err6, nil)
+	})
+}
 func Test_Telephone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "telephone"
