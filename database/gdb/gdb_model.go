@@ -141,6 +141,7 @@ func (m *Model) DB(db DB) *Model {
 // TX sets/changes the transaction for current operation.
 func (m *Model) TX(tx *TX) *Model {
 	model := m.getModel()
+	model.db = tx.db
 	model.tx = tx
 	return model
 }
@@ -198,4 +199,11 @@ func (m *Model) Safe(safe ...bool) *Model {
 		m.safe = true
 	}
 	return m
+}
+
+// Args sets custom arguments for model operation.
+func (m *Model) Args(args ...interface{}) *Model {
+	model := m.getModel()
+	model.extraArgs = append(model.extraArgs, args)
+	return model
 }

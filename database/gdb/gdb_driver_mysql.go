@@ -41,7 +41,7 @@ func (d *DriverMysql) Open(config *ConfigNode) (*sql.DB, error) {
 		}
 	} else {
 		source = fmt.Sprintf(
-			"%s:%s@tcp(%s:%s)/%s?charset=%s&multiStatements=true&parseTime=true&loc=Local",
+			"%s:%s@tcp(%s:%s)/%s?charset=%s&multiStatements=true&parseTime=true",
 			config.User, config.Pass, config.Host, config.Port, config.Name, config.Charset,
 		)
 	}
@@ -102,21 +102,23 @@ func (d *DriverMysql) TableFields(table string, schema ...string) (fields map[st
 	if len(schema) > 0 && schema[0] != "" {
 		checkSchema = schema[0]
 	}
-	v := d.cache.GetOrSetFunc(
-		fmt.Sprintf(`mysql_table_fields_%s_%s`, table, checkSchema),
-		func() interface{} {
-			var result Result
-			var link *sql.DB
+	v, _ := internalCache.GetOrSetFunc(
+		fmt.Sprintf(`mysql_table_fields_%s_%s@group:%s`, table, checkSchema, d.GetGroup()),
+		func() (interface{}, error) {
+			var (
+				result Result
+				link   *sql.DB
+			)
 			link, err = d.DB.GetSlave(checkSchema)
 			if err != nil {
-				return nil
+				return nil, err
 			}
 			result, err = d.DB.DoGetAll(
 				link,
 				fmt.Sprintf(`SHOW FULL COLUMNS FROM %s`, d.DB.QuoteWord(table)),
 			)
 			if err != nil {
-				return nil
+				return nil, err
 			}
 			fields = make(map[string]*TableField)
 			for i, m := range result {
@@ -131,7 +133,7 @@ func (d *DriverMysql) TableFields(table string, schema ...string) (fields map[st
 					Comment: m["Comment"].String(),
 				}
 			}
-			return fields
+			return fields, nil
 		}, 0)
 	if err == nil {
 		fields = v.(map[string]*TableField)

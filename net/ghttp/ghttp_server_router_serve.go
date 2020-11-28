@@ -44,13 +44,15 @@ func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*handlerParsedI
 		}
 	}
 	// Search and cache the router handlers.
-	value := s.serveCache.GetOrSetFunc(s.serveHandlerKey(method, r.URL.Path, r.GetHost()), func() interface{} {
-		parsedItems, hasHook, hasServe = s.searchHandlers(method, r.URL.Path, r.GetHost())
-		if parsedItems != nil {
-			return &handlerCacheItem{parsedItems, hasHook, hasServe}
-		}
-		return nil
-	}, gROUTE_CACHE_DURATION)
+	value, _ := s.serveCache.GetOrSetFunc(
+		s.serveHandlerKey(method, r.URL.Path, r.GetHost()),
+		func() (interface{}, error) {
+			parsedItems, hasHook, hasServe = s.searchHandlers(method, r.URL.Path, r.GetHost())
+			if parsedItems != nil {
+				return &handlerCacheItem{parsedItems, hasHook, hasServe}, nil
+			}
+			return nil, nil
+		}, gROUTE_CACHE_DURATION)
 	if value != nil {
 		item := value.(*handlerCacheItem)
 		return item.parsedItems, item.hasHook, item.hasServe
@@ -173,8 +175,8 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 							parsedItemList.PushBack(parsedItem)
 
 						// The middleware is inserted before the serving handler.
-						// If there're multiple middlewares, they're inserted into the result list by their registering order.
-						// The middlewares are also executed by their registering order.
+						// If there're multiple middleware, they're inserted into the result list by their registering order.
+						// The middleware are also executed by their registered order.
 						case gHANDLER_TYPE_MIDDLEWARE:
 							if lastMiddlewareElem == nil {
 								lastMiddlewareElem = parsedItemList.PushFront(parsedItem)

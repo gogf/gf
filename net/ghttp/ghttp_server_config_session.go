@@ -27,6 +27,11 @@ func (s *Server) SetSessionStorage(storage gsession.Storage) {
 	s.config.SessionStorage = storage
 }
 
+// SetSessionCookieOutput sets the SetSessionCookieOutput for server.
+func (s *Server) SetSessionCookieOutput(enabled bool) {
+	s.config.SessionCookieOutput = enabled
+}
+
 // GetSessionMaxAge returns the SessionMaxAge of server.
 func (s *Server) GetSessionMaxAge() time.Duration {
 	return s.config.SessionMaxAge

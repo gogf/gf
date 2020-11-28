@@ -443,7 +443,7 @@ func (a *SortedIntArray) binSearch(value int, lock bool) (index int, result int)
 	mid := 0
 	cmp := -2
 	for min <= max {
-		mid = (min + max) / 2
+		mid = min + int((max-min)/2)
 		cmp = a.getComparator()(value, a.array[mid])
 		switch {
 		case cmp < 0:

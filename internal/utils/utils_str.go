@@ -7,14 +7,7 @@
 package utils
 
 import (
-	"regexp"
 	"strings"
-)
-
-var (
-	// replaceCharReg is the regular expression object for replacing chars in key.
-	// It is used for function EqualFoldWithoutChars.
-	replaceCharReg, _ = regexp.Compile(`[\-\.\_\s]+`)
 )
 
 // IsLetterUpper checks whether the given byte b is in upper case.
@@ -83,11 +76,19 @@ func ReplaceByMap(origin string, replaces map[string]string) string {
 	return origin
 }
 
+// RemoveSymbols removes all symbols from string and lefts only numbers and letters.
+func RemoveSymbols(s string) string {
+	var b []byte
+	for _, c := range s {
+		if (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') {
+			b = append(b, byte(c))
+		}
+	}
+	return string(b)
+}
+
 // EqualFoldWithoutChars checks string <s1> and <s2> equal case-insensitively,
 // with/without chars '-'/'_'/'.'/' '.
 func EqualFoldWithoutChars(s1, s2 string) bool {
-	return strings.EqualFold(
-		replaceCharReg.ReplaceAllString(s1, ""),
-		replaceCharReg.ReplaceAllString(s2, ""),
-	)
+	return strings.EqualFold(RemoveSymbols(s1), RemoveSymbols(s2))
 }

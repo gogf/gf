@@ -128,6 +128,7 @@ type DB interface {
 	GetDryRun() bool
 	SetLogger(logger *glog.Logger)
 	GetLogger() *glog.Logger
+	GetConfig() *ConfigNode
 	SetMaxIdleConnCount(n int)
 	SetMaxOpenConnCount(n int)
 	SetMaxConnLifetime(d time.Duration)
@@ -156,7 +157,7 @@ type DB interface {
 	// Internal methods.
 	// ===========================================================================
 
-	filterFields(schema, table string, data map[string]interface{}) map[string]interface{}
+	mappingAndFilterData(schema, table string, data map[string]interface{}, filter bool) (map[string]interface{}, error)
 	convertValue(fieldValue interface{}, fieldType string) interface{}
 	rowsToResult(rows *sql.Rows) (Result, error)
 }
@@ -166,11 +167,12 @@ type Core struct {
 	DB               DB            // DB interface object.
 	group            string        // Configuration group name.
 	debug            *gtype.Bool   // Enable debug mode for the database.
-	cache            *gcache.Cache // Cache manager.
+	cache            *gcache.Cache // Cache manager, SQL result cache only.
 	schema           *gtype.String // Custom schema for this object.
 	dryrun           *gtype.Bool   // Dry run.
 	prefix           string        // Table prefix.
 	logger           *glog.Logger  // Logger.
+	config           *ConfigNode   // Current config node.
 	maxIdleConnCount int           // Max idle connection count.
 	maxOpenConnCount int           // Max open connection count.
 	maxConnLifetime  time.Duration // Max TTL for a connection.
@@ -231,13 +233,14 @@ type (
 )
 
 const (
-	gINSERT_OPTION_DEFAULT       = 0
-	gINSERT_OPTION_REPLACE       = 1
-	gINSERT_OPTION_SAVE          = 2
-	gINSERT_OPTION_IGNORE        = 3
-	gDEFAULT_BATCH_NUM           = 10 // Per count for batch insert/replace/save
-	gDEFAULT_CONN_MAX_IDLE_COUNT = 10 // Max idle connection count in pool.
-	gDEFAULT_CONN_MAX_LIFE_TIME  = 30 // Max life time for per connection in pool in seconds.
+	insertOptionDefault     = 0
+	insertOptionReplace     = 1
+	insertOptionSave        = 2
+	insertOptionIgnore      = 3
+	defaultBatchNumber      = 10  // Per count for batch insert/replace/save.
+	defaultMaxIdleConnCount = 10  // Max idle connection count in pool.
+	defaultMaxOpenConnCount = 100 // Max open connection count in pool.
+	defaultMaxConnLifeTime  = 30  // Max life time for per connection in pool in seconds.
 )
 
 var (
@@ -264,6 +267,9 @@ var (
 	// which is a regular field name of table.
 	regularFieldNameRegPattern = `^[\w\.\-]+$`
 
+	// internalCache is the memory cache for internal usage.
+	internalCache = gcache.New()
+
 	// allDryRun sets dry-run feature for all database connections.
 	// It is commonly used for command options for convenience.
 	allDryRun = false
@@ -283,10 +289,10 @@ func Register(name string, driver Driver) error {
 // New creates and returns an ORM object with global configurations.
 // The parameter <name> specifies the configuration group name,
 // which is DEFAULT_GROUP_NAME in default.
-func New(name ...string) (db DB, err error) {
-	group := configs.group
-	if len(name) > 0 && name[0] != "" {
-		group = name[0]
+func New(group ...string) (db DB, err error) {
+	groupName := configs.group
+	if len(group) > 0 && group[0] != "" {
+		groupName = group[0]
 	}
 	configs.RLock()
 	defer configs.RUnlock()
@@ -294,18 +300,20 @@ func New(name ...string) (db DB, err error) {
 	if len(configs.config) < 1 {
 		return nil, errors.New("empty database configuration")
 	}
-	if _, ok := configs.config[group]; ok {
-		if node, err := getConfigNodeByGroup(group, true); err == nil {
+	if _, ok := configs.config[groupName]; ok {
+		if node, err := getConfigNodeByGroup(groupName, true); err == nil {
 			c := &Core{
-				group:            group,
+				group:            groupName,
 				debug:            gtype.NewBool(),
 				cache:            gcache.New(),
 				schema:           gtype.NewString(),
 				dryrun:           gtype.NewBool(),
 				logger:           glog.New(),
 				prefix:           node.Prefix,
-				maxIdleConnCount: gDEFAULT_CONN_MAX_IDLE_COUNT,
-				maxConnLifetime:  gDEFAULT_CONN_MAX_LIFE_TIME, // Default max connection life time if user does not configure.
+				config:           node,
+				maxIdleConnCount: defaultMaxIdleConnCount,
+				maxOpenConnCount: defaultMaxOpenConnCount,
+				maxConnLifetime:  defaultMaxConnLifeTime, // Default max connection life time if user does not configure.
 			}
 			if v, ok := driverMap[node.Type]; ok {
 				c.DB, err = v.New(c, node)
@@ -320,7 +328,7 @@ func New(name ...string) (db DB, err error) {
 			return nil, err
 		}
 	} else {
-		return nil, errors.New(fmt.Sprintf(`database configuration node "%s" is not found`, group))
+		return nil, errors.New(fmt.Sprintf(`database configuration node "%s" is not found`, groupName))
 	}
 }
 
@@ -438,11 +446,11 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 		node = &n
 	}
 	// Cache the underlying connection pool object by node.
-	v := c.cache.GetOrSetFuncLock(node.String(), func() interface{} {
+	v, _ := internalCache.GetOrSetFuncLock(node.String(), func() (interface{}, error) {
 		sqlDb, err = c.DB.Open(node)
 		if err != nil {
 			intlog.Printf("DB open failed: %v, %+v", err, node)
-			return nil
+			return nil, err
 		}
 		if c.maxIdleConnCount > 0 {
 			sqlDb.SetMaxIdleConns(c.maxIdleConnCount)
@@ -461,7 +469,7 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 		} else if node.MaxConnLifetime > 0 {
 			sqlDb.SetConnMaxLifetime(node.MaxConnLifetime * time.Second)
 		}
-		return sqlDb
+		return sqlDb, nil
 	}, 0)
 	if v != nil && sqlDb == nil {
 		sqlDb = v.(*sql.DB)

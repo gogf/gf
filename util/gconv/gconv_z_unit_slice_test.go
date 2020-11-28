@@ -25,6 +25,17 @@ func Test_Slice(t *testing.T) {
 	})
 }
 
+func Test_Strings(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		array := []*g.Var{
+			g.NewVar(1),
+			g.NewVar(2),
+			g.NewVar(3),
+		}
+		t.AssertEQ(gconv.Strings(array), []string{"1", "2", "3"})
+	})
+}
+
 func Test_Slice_PrivateAttribute(t *testing.T) {
 	type User struct {
 		Id   int
@@ -32,7 +43,8 @@ func Test_Slice_PrivateAttribute(t *testing.T) {
 	}
 	gtest.C(t, func(t *gtest.T) {
 		user := &User{1, "john"}
-		t.Assert(gconv.Interfaces(user), g.Slice{1})
+		//t.Assert(gconv.Interfaces(user), g.Slice{1})
+		t.Assert(gconv.Interfaces(user), g.Slice{user})
 	})
 }
 
@@ -57,28 +69,10 @@ func Test_Slice_Structs(t *testing.T) {
 		t.Assert(len(users), 2)
 		t.Assert(users[0].Id, params[0]["id"])
 		t.Assert(users[0].Name, params[0]["name"])
-		t.Assert(users[0].Age, 0)
+		t.Assert(users[0].Age, 18)
 
 		t.Assert(users[1].Id, params[1]["id"])
 		t.Assert(users[1].Name, params[1]["name"])
-		t.Assert(users[1].Age, 0)
-	})
-
-	gtest.C(t, func(t *gtest.T) {
-		users := make([]User, 0)
-		params := []g.Map{
-			{"id": 1, "name": "john", "age": 18},
-			{"id": 2, "name": "smith", "age": 20},
-		}
-		err := gconv.StructsDeep(params, &users)
-		t.Assert(err, nil)
-		t.Assert(len(users), 2)
-		t.Assert(users[0].Id, params[0]["id"])
-		t.Assert(users[0].Name, params[0]["name"])
-		t.Assert(users[0].Age, params[0]["age"])
-
-		t.Assert(users[1].Id, params[1]["id"])
-		t.Assert(users[1].Name, params[1]["name"])
-		t.Assert(users[1].Age, params[1]["age"])
+		t.Assert(users[1].Age, 20)
 	})
 }

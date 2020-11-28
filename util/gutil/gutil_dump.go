@@ -15,6 +15,21 @@ import (
 	"reflect"
 )
 
+// apiVal is used for type assert api for Val().
+type apiVal interface {
+	Val() interface{}
+}
+
+// apiString is used for type assert api for String().
+type apiString interface {
+	String() string
+}
+
+// apiMapStrAny is the interface support for converting struct parameter to map.
+type apiMapStrAny interface {
+	MapStrAny() map[string]interface{}
+}
+
 // Dump prints variables <i...> to stdout with more manually readable.
 func Dump(i ...interface{}) {
 	s := Export(i...)
@@ -26,26 +41,52 @@ func Dump(i ...interface{}) {
 // Export returns variables <i...> as a string with more manually readable.
 func Export(i ...interface{}) string {
 	buffer := bytes.NewBuffer(nil)
-	for _, v := range i {
-		if b, ok := v.([]byte); ok {
-			buffer.Write(b)
-		} else {
-			rv := reflect.ValueOf(v)
-			kind := rv.Kind()
-			if kind == reflect.Ptr {
-				rv = rv.Elem()
-				kind = rv.Kind()
+	for _, value := range i {
+		switch r := value.(type) {
+		case []byte:
+			buffer.Write(r)
+		case string:
+			buffer.WriteString(r)
+		default:
+			var (
+				reflectValue = reflect.ValueOf(value)
+				reflectKind  = reflectValue.Kind()
+			)
+			for reflectKind == reflect.Ptr {
+				reflectValue = reflectValue.Elem()
+				reflectKind = reflectValue.Kind()
 			}
-			switch kind {
+			switch reflectKind {
 			case reflect.Slice, reflect.Array:
-				v = gconv.Interfaces(v)
-			case reflect.Map, reflect.Struct:
-				v = gconv.Map(v)
+				value = gconv.Interfaces(value)
+			case reflect.Map:
+				value = gconv.Map(value)
+			case reflect.Struct:
+				converted := false
+				if r, ok := value.(apiVal); ok {
+					if result := r.Val(); result != nil {
+						value = result
+						converted = true
+					}
+				}
+				if !converted {
+					if r, ok := value.(apiMapStrAny); ok {
+						if result := r.MapStrAny(); result != nil {
+							value = result
+							converted = true
+						}
+					}
+				}
+				if !converted {
+					if r, ok := value.(apiString); ok {
+						value = r.String()
+					}
+				}
 			}
 			encoder := json.NewEncoder(buffer)
 			encoder.SetEscapeHTML(false)
 			encoder.SetIndent("", "\t")
-			if err := encoder.Encode(v); err != nil {
+			if err := encoder.Encode(value); err != nil {
 				fmt.Fprintln(os.Stderr, err.Error())
 			}
 		}

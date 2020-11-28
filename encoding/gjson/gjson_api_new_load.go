@@ -55,8 +55,10 @@ func NewWithTag(data interface{}, tags string, safe ...bool) *Json {
 			}
 		}
 	default:
-		rv := reflect.ValueOf(data)
-		kind := rv.Kind()
+		var (
+			rv   = reflect.ValueOf(data)
+			kind = rv.Kind()
+		)
 		if kind == reflect.Ptr {
 			rv = rv.Elem()
 			kind = rv.Kind()
@@ -72,9 +74,7 @@ func NewWithTag(data interface{}, tags string, safe ...bool) *Json {
 			}
 		case reflect.Map, reflect.Struct:
 			i := interface{}(nil)
-			// Note that it uses Map function implementing the converting.
-			// Note that it here should not use MapDeep function if you really know what it means.
-			i = gconv.Map(data, tags)
+			i = gconv.MapDeep(data, tags)
 			j = &Json{
 				p:  &i,
 				c:  byte(gDEFAULT_SPLIT_CHAR),
@@ -207,16 +207,32 @@ func LoadContentType(dataType string, data interface{}, safe ...bool) (*Json, er
 	return doLoadContent(dataType, content, safe...)
 }
 
+// IsValidDataType checks and returns whether given <dataType> a valid data type for loading.
+func IsValidDataType(dataType string) bool {
+	if dataType == "" {
+		return false
+	}
+	if dataType[0] == '.' {
+		dataType = dataType[1:]
+	}
+	switch dataType {
+	case "json", "js", "xml", "yaml", "yml", "toml", "ini":
+		return true
+	}
+	return false
+}
+
 // checkDataType automatically checks and returns the data type for <content>.
 // Note that it uses regular expression for loose checking, you can use LoadXXX/LoadContentType
 // functions to load the content for certain content type.
 func checkDataType(content []byte) string {
 	if json.Valid(content) {
 		return "json"
-	} else if gregex.IsMatch(`^<.+>[\S\s]+<.+>$`, content) {
+	} else if gregex.IsMatch(`^<.+>[\S\s]+<.+>\s*$`, content) {
 		return "xml"
-	} else if (gregex.IsMatch(`^[\n\r]*[\w\-\s\t]+\s*:\s*".+"`, content) || gregex.IsMatch(`^[\n\r]*[\w\-\s\t]+\s*:\s*\w+`, content)) ||
-		(gregex.IsMatch(`[\n\r]+[\w\-\s\t]+\s*:\s*".+"`, content) || gregex.IsMatch(`[\n\r]+[\w\-\s\t]+\s*:\s*\w+`, content)) {
+	} else if !gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*"""[\s\S]+"""`, content) && !gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*'''[\s\S]+'''`, content) &&
+		((gregex.IsMatch(`^[\n\r]*[\w\-\s\t]+\s*:\s*".+"`, content) || gregex.IsMatch(`^[\n\r]*[\w\-\s\t]+\s*:\s*\w+`, content)) ||
+			(gregex.IsMatch(`[\n\r]+[\w\-\s\t]+\s*:\s*".+"`, content) || gregex.IsMatch(`[\n\r]+[\w\-\s\t]+\s*:\s*\w+`, content))) {
 		return "yml"
 	} else if !gregex.IsMatch(`^[\s\t\n\r]*;.+`, content) &&
 		!gregex.IsMatch(`[\s\t\n\r]+;.+`, content) &&

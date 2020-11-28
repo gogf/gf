@@ -58,6 +58,7 @@ var defaultMessages = map[string]string{
 	"in":                   "The :attribute value is not in acceptable range",
 	"not-in":               "The :attribute value is not in acceptable range",
 	"regex":                "The :attribute value is invalid",
+	"__default__":          "The :attribute value is invalid",
 }
 
 // getErrorMessageByRule retrieves and returns the error message for specified rule.
@@ -71,6 +72,13 @@ func getErrorMessageByRule(ruleKey string, customMsgMap map[string]string) strin
 	content = gi18n.GetContent(fmt.Sprintf(`gf.gvalid.rule.%s`, ruleKey))
 	if content == "" {
 		content = defaultMessages[ruleKey]
+	}
+	// If there's no configured rule message, it uses default one.
+	if content == "" {
+		content = gi18n.GetContent(`gf.gvalid.rule.__default__`)
+		if content == "" {
+			content = defaultMessages["__default__"]
+		}
 	}
 	return content
 }

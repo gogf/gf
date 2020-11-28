@@ -78,44 +78,45 @@ func (d *DriverOracle) HandleSqlBeforeCommit(link Link, sql string, args []inter
 // parseSql does some replacement of the sql before commits it to underlying driver,
 // for support of oracle server.
 func (d *DriverOracle) parseSql(sql string) string {
-	patten := `^\s*(?i)(SELECT)|(LIMIT\s*(\d+)\s*,\s*(\d+))`
-	if gregex.IsMatchString(patten, sql) == false {
+	var (
+		patten      = `^\s*(?i)(SELECT)|(LIMIT\s*(\d+)\s*,{0,1}\s*(\d*))`
+		allMatch, _ = gregex.MatchAllString(patten, sql)
+	)
+	if len(allMatch) == 0 {
 		return sql
 	}
-
-	res, err := gregex.MatchAllString(patten, sql)
-	if err != nil {
-		return ""
-	}
-
 	var (
 		index   = 0
-		keyword = strings.ToUpper(strings.TrimSpace(res[index][0]))
+		keyword = strings.ToUpper(strings.TrimSpace(allMatch[index][0]))
 	)
 	index++
 	switch keyword {
 	case "SELECT":
-		if len(res) < 2 || (strings.HasPrefix(res[index][0], "LIMIT") == false &&
-			strings.HasPrefix(res[index][0], "limit") == false) {
+		if len(allMatch) < 2 || strings.HasPrefix(allMatch[index][0], "LIMIT") == false {
 			break
 		}
 		if gregex.IsMatchString("((?i)SELECT)(.+)((?i)LIMIT)", sql) == false {
 			break
 		}
 		queryExpr, _ := gregex.MatchString("((?i)SELECT)(.+)((?i)LIMIT)", sql)
-		if len(queryExpr) != 4 || strings.EqualFold(queryExpr[1], "SELECT") == false ||
+		if len(queryExpr) != 4 ||
+			strings.EqualFold(queryExpr[1], "SELECT") == false ||
 			strings.EqualFold(queryExpr[3], "LIMIT") == false {
 			break
 		}
 		first, limit := 0, 0
-		for i := 1; i < len(res[index]); i++ {
-			if len(strings.TrimSpace(res[index][i])) == 0 {
+		for i := 1; i < len(allMatch[index]); i++ {
+			if len(strings.TrimSpace(allMatch[index][i])) == 0 {
 				continue
 			}
 
-			if strings.HasPrefix(res[index][i], "LIMIT") || strings.HasPrefix(res[index][i], "limit") {
-				first, _ = strconv.Atoi(res[index][i+1])
-				limit, _ = strconv.Atoi(res[index][i+2])
+			if strings.HasPrefix(allMatch[index][i], "LIMIT") {
+				if allMatch[index][i+2] != "" {
+					first, _ = strconv.Atoi(allMatch[index][i+1])
+					limit, _ = strconv.Atoi(allMatch[index][i+2])
+				} else {
+					limit, _ = strconv.Atoi(allMatch[index][i+1])
+				}
 				break
 			}
 		}
@@ -157,18 +158,24 @@ func (d *DriverOracle) TableFields(table string, schema ...string) (fields map[s
 	if len(schema) > 0 && schema[0] != "" {
 		checkSchema = schema[0]
 	}
-	v := d.DB.GetCache().GetOrSetFunc(
-		fmt.Sprintf(`oracle_table_fields_%s_%s`, table, checkSchema),
-		func() interface{} {
+	v, _ := internalCache.GetOrSetFunc(
+		fmt.Sprintf(`oracle_table_fields_%s_%s@group:%s`, table, checkSchema, d.GetGroup()),
+		func() (interface{}, error) {
 			result := (Result)(nil)
-			result, err = d.DB.GetAll(fmt.Sprintf(`
-			SELECT COLUMN_NAME AS FIELD, CASE DATA_TYPE 
-			    WHEN 'NUMBER' THEN DATA_TYPE||'('||DATA_PRECISION||','||DATA_SCALE||')' 
-				WHEN 'FLOAT' THEN DATA_TYPE||'('||DATA_PRECISION||','||DATA_SCALE||')' 
-				ELSE DATA_TYPE||'('||DATA_LENGTH||')' END AS TYPE  
-			FROM USER_TAB_COLUMNS WHERE TABLE_NAME = '%s' ORDER BY COLUMN_ID`, strings.ToUpper(table)))
+			structureSql := fmt.Sprintf(`
+SELECT 
+	COLUMN_NAME AS FIELD, 
+	CASE DATA_TYPE  
+	WHEN 'NUMBER' THEN DATA_TYPE||'('||DATA_PRECISION||','||DATA_SCALE||')' 
+	WHEN 'FLOAT' THEN DATA_TYPE||'('||DATA_PRECISION||','||DATA_SCALE||')' 
+	ELSE DATA_TYPE||'('||DATA_LENGTH||')' END AS TYPE  
+FROM USER_TAB_COLUMNS WHERE TABLE_NAME = '%s' ORDER BY COLUMN_ID`,
+				strings.ToUpper(table),
+			)
+			structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
+			result, err = d.DB.GetAll(structureSql)
 			if err != nil {
-				return nil
+				return nil, err
 			}
 			fields = make(map[string]*TableField)
 			for i, m := range result {
@@ -178,7 +185,7 @@ func (d *DriverOracle) TableFields(table string, schema ...string) (fields map[s
 					Type:  strings.ToLower(m["TYPE"].String()),
 				}
 			}
-			return fields
+			return fields, nil
 		}, 0)
 	if err == nil {
 		fields = v.(map[string]*TableField)
@@ -188,24 +195,26 @@ func (d *DriverOracle) TableFields(table string, schema ...string) (fields map[s
 
 func (d *DriverOracle) getTableUniqueIndex(table string) (fields map[string]map[string]string, err error) {
 	table = strings.ToUpper(table)
-	v := d.DB.GetCache().GetOrSetFunc("table_unique_index_"+table, func() interface{} {
-		res := (Result)(nil)
-		res, err = d.DB.GetAll(fmt.Sprintf(`
+	v, _ := internalCache.GetOrSetFunc(
+		"table_unique_index_"+table,
+		func() (interface{}, error) {
+			res := (Result)(nil)
+			res, err = d.DB.GetAll(fmt.Sprintf(`
 		SELECT INDEX_NAME,COLUMN_NAME,CHAR_LENGTH FROM USER_IND_COLUMNS 
 		WHERE TABLE_NAME = '%s' 
 		AND INDEX_NAME IN(SELECT INDEX_NAME FROM USER_INDEXES WHERE TABLE_NAME='%s' AND UNIQUENESS='UNIQUE') 
 		ORDER BY INDEX_NAME,COLUMN_POSITION`, table, table))
-		if err != nil {
-			return nil
-		}
-		fields := make(map[string]map[string]string)
-		for _, v := range res {
-			mm := make(map[string]string)
-			mm[v["COLUMN_NAME"].String()] = v["CHAR_LENGTH"].String()
-			fields[v["INDEX_NAME"].String()] = mm
-		}
-		return fields
-	}, 0)
+			if err != nil {
+				return nil, err
+			}
+			fields := make(map[string]map[string]string)
+			for _, v := range res {
+				mm := make(map[string]string)
+				mm[v["COLUMN_NAME"].String()] = v["CHAR_LENGTH"].String()
+				fields[v["INDEX_NAME"].String()] = mm
+			}
+			return fields, nil
+		}, 0)
 	if err == nil {
 		fields = v.(map[string]map[string]string)
 	}
@@ -231,7 +240,7 @@ func (d *DriverOracle) DoInsert(link Link, table string, data interface{}, optio
 	case reflect.Map:
 		fallthrough
 	case reflect.Struct:
-		dataMap = DataToMapDeep(data)
+		dataMap = ConvertDataForTableRecord(data)
 	default:
 		return result, errors.New(fmt.Sprint("unsupported data type:", kind))
 	}
@@ -239,7 +248,7 @@ func (d *DriverOracle) DoInsert(link Link, table string, data interface{}, optio
 	indexs := make([]string, 0)
 	indexMap := make(map[string]string)
 	indexExists := false
-	if option != gINSERT_OPTION_DEFAULT {
+	if option != insertOptionDefault {
 		index, err := d.getTableUniqueIndex(table)
 		if err != nil {
 			return nil, err
@@ -267,7 +276,7 @@ func (d *DriverOracle) DoInsert(link Link, table string, data interface{}, optio
 		k = strings.ToUpper(k)
 
 		// 操作类型为REPLACE/SAVE时且存在唯一索引才使用merge，否则使用insert
-		if (option == gINSERT_OPTION_REPLACE || option == gINSERT_OPTION_SAVE) && indexExists {
+		if (option == insertOptionReplace || option == insertOptionSave) && indexExists {
 			fields = append(fields, tableAlias1+"."+charL+k+charR)
 			values = append(values, tableAlias2+"."+charL+k+charR)
 			params = append(params, v)
@@ -293,18 +302,18 @@ func (d *DriverOracle) DoInsert(link Link, table string, data interface{}, optio
 		}
 	}
 
-	if indexExists && option != gINSERT_OPTION_DEFAULT {
+	if indexExists && option != insertOptionDefault {
 		switch option {
-		case gINSERT_OPTION_REPLACE:
+		case insertOptionReplace:
 			fallthrough
-		case gINSERT_OPTION_SAVE:
+		case insertOptionSave:
 			tmp := fmt.Sprintf(
 				"MERGE INTO %s %s USING(SELECT %s FROM DUAL) %s ON(%s) WHEN MATCHED THEN UPDATE SET %s WHEN NOT MATCHED THEN INSERT (%s) VALUES(%s)",
 				table, tableAlias1, strings.Join(subSqlStr, ","), tableAlias2,
 				strings.Join(onStr, "AND"), strings.Join(updateStr, ","), strings.Join(fields, ","), strings.Join(values, ","),
 			)
 			return d.DB.DoExec(link, tmp, params...)
-		case gINSERT_OPTION_IGNORE:
+		case insertOptionIgnore:
 			return d.DB.DoExec(link,
 				fmt.Sprintf(
 					"INSERT /*+ IGNORE_ROW_ON_DUPKEY_INDEX(%s(%s)) */ INTO %s(%s) VALUES(%s)",
@@ -351,12 +360,12 @@ func (d *DriverOracle) DoBatchInsert(link Link, table string, list interface{}, 
 		case reflect.Array:
 			listMap = make(List, rv.Len())
 			for i := 0; i < rv.Len(); i++ {
-				listMap[i] = DataToMapDeep(rv.Index(i).Interface())
+				listMap[i] = ConvertDataForTableRecord(rv.Index(i).Interface())
 			}
 		case reflect.Map:
 			fallthrough
 		case reflect.Struct:
-			listMap = List{Map(DataToMapDeep(list))}
+			listMap = List{Map(ConvertDataForTableRecord(list))}
 		default:
 			return result, errors.New(fmt.Sprint("unsupported list type:", kind))
 		}
@@ -382,7 +391,7 @@ func (d *DriverOracle) DoBatchInsert(link Link, table string, list interface{}, 
 	valueHolderStr := strings.Join(holders, ",")
 
 	// 当操作类型非insert时调用单笔的insert功能
-	if option != gINSERT_OPTION_DEFAULT {
+	if option != insertOptionDefault {
 		for _, v := range listMap {
 			r, err := d.DB.DoInsert(link, table, v, option, 1)
 			if err != nil {
@@ -400,7 +409,7 @@ func (d *DriverOracle) DoBatchInsert(link Link, table string, list interface{}, 
 	}
 
 	// 构造批量写入数据格式(注意map的遍历是无序的)
-	batchNum := gDEFAULT_BATCH_NUM
+	batchNum := defaultBatchNumber
 	if len(batch) > 0 {
 		batchNum = batch[0]
 	}

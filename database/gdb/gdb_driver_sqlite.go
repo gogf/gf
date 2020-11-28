@@ -36,15 +36,14 @@ func (d *DriverSqlite) New(core *Core, node *ConfigNode) (DB, error) {
 // Open creates and returns a underlying sql.DB object for sqlite.
 func (d *DriverSqlite) Open(config *ConfigNode) (*sql.DB, error) {
 	var source string
-	var err error
 	if config.LinkInfo != "" {
 		source = config.LinkInfo
 	} else {
 		source = config.Name
 	}
-	source, err = gfile.Search(source)
-	if err != nil {
-		return nil, err
+	// It searches the source file to locate its absolute path..
+	if absolutePath, _ := gfile.Search(source); absolutePath != "" {
+		source = absolutePath
 	}
 	intlog.Printf("Open: %s", source)
 	if db, err := sql.Open("sqlite3", source); err == nil {
@@ -98,17 +97,20 @@ func (d *DriverSqlite) TableFields(table string, schema ...string) (fields map[s
 	if len(schema) > 0 && schema[0] != "" {
 		checkSchema = schema[0]
 	}
-	v := d.DB.GetCache().GetOrSetFunc(
-		fmt.Sprintf(`sqlite_table_fields_%s_%s`, table, checkSchema), func() interface{} {
-			var result Result
-			var link *sql.DB
+	v, _ := internalCache.GetOrSetFunc(
+		fmt.Sprintf(`sqlite_table_fields_%s_%s@group:%s`, table, checkSchema, d.GetGroup()),
+		func() (interface{}, error) {
+			var (
+				result Result
+				link   *sql.DB
+			)
 			link, err = d.DB.GetSlave(checkSchema)
 			if err != nil {
-				return nil
+				return nil, err
 			}
 			result, err = d.DB.DoGetAll(link, fmt.Sprintf(`PRAGMA TABLE_INFO(%s)`, table))
 			if err != nil {
-				return nil
+				return nil, err
 			}
 			fields = make(map[string]*TableField)
 			for i, m := range result {
@@ -118,7 +120,7 @@ func (d *DriverSqlite) TableFields(table string, schema ...string) (fields map[s
 					Type:  strings.ToLower(m["type"].String()),
 				}
 			}
-			return fields
+			return fields, nil
 		}, 0)
 	if err == nil {
 		fields = v.(map[string]*TableField)

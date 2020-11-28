@@ -130,6 +130,7 @@ func Test_SnakeScreamingCase(t *testing.T) {
 func Test_KebabCase(t *testing.T) {
 	cases := [][]string{
 		{"testCase", "test-case"},
+		{"optimization1.0.0", "optimization-1-0-0"},
 	}
 	for _, i := range cases {
 		in := i[0]

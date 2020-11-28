@@ -311,6 +311,11 @@ func (c *Core) Transaction(f func(tx *TX) error) (err error) {
 		return err
 	}
 	defer func() {
+		if err == nil {
+			if e := recover(); e != nil {
+				err = fmt.Errorf("%v", e)
+			}
+		}
 		if err != nil {
 			if e := tx.Rollback(); e != nil {
 				err = e
@@ -335,7 +340,10 @@ func (c *Core) Transaction(f func(tx *TX) error) (err error) {
 //
 // The parameter <batch> specifies the batch operation count when given data is slice.
 func (c *Core) Insert(table string, data interface{}, batch ...int) (sql.Result, error) {
-	return c.DB.DoInsert(nil, table, data, gINSERT_OPTION_DEFAULT, batch...)
+	if len(batch) > 0 {
+		return c.Model(table).Data(data).Batch(batch[0]).Insert()
+	}
+	return c.Model(table).Data(data).Insert()
 }
 
 // InsertIgnore does "INSERT IGNORE INTO ..." statement for the table.
@@ -348,7 +356,10 @@ func (c *Core) Insert(table string, data interface{}, batch ...int) (sql.Result,
 //
 // The parameter <batch> specifies the batch operation count when given data is slice.
 func (c *Core) InsertIgnore(table string, data interface{}, batch ...int) (sql.Result, error) {
-	return c.DB.DoInsert(nil, table, data, gINSERT_OPTION_IGNORE, batch...)
+	if len(batch) > 0 {
+		return c.Model(table).Data(data).Batch(batch[0]).InsertIgnore()
+	}
+	return c.Model(table).Data(data).InsertIgnore()
 }
 
 // Replace does "REPLACE INTO ..." statement for the table.
@@ -364,7 +375,10 @@ func (c *Core) InsertIgnore(table string, data interface{}, batch ...int) (sql.R
 // If given data is type of slice, it then does batch replacing, and the optional parameter
 // <batch> specifies the batch operation count.
 func (c *Core) Replace(table string, data interface{}, batch ...int) (sql.Result, error) {
-	return c.DB.DoInsert(nil, table, data, gINSERT_OPTION_REPLACE, batch...)
+	if len(batch) > 0 {
+		return c.Model(table).Data(data).Batch(batch[0]).Replace()
+	}
+	return c.Model(table).Data(data).Replace()
 }
 
 // Save does "INSERT INTO ... ON DUPLICATE KEY UPDATE..." statement for the table.
@@ -379,11 +393,14 @@ func (c *Core) Replace(table string, data interface{}, batch ...int) (sql.Result
 // If given data is type of slice, it then does batch saving, and the optional parameter
 // <batch> specifies the batch operation count.
 func (c *Core) Save(table string, data interface{}, batch ...int) (sql.Result, error) {
-	return c.DB.DoInsert(nil, table, data, gINSERT_OPTION_SAVE, batch...)
+	if len(batch) > 0 {
+		return c.Model(table).Data(data).Batch(batch[0]).Save()
+	}
+	return c.Model(table).Data(data).Save()
 }
 
 // doInsert inserts or updates data for given table.
-//
+// This function is usually used for custom interface definition, you do not need call it manually.
 // The parameter <data> can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
 // Eg:
 // Data(g.Map{"uid": 10000, "name":"john"})
@@ -411,8 +428,14 @@ func (c *Core) DoInsert(link Link, table string, data interface{}, option int, b
 	switch reflectKind {
 	case reflect.Slice, reflect.Array:
 		return c.DB.DoBatchInsert(link, table, data, option, batch...)
-	case reflect.Map, reflect.Struct:
-		dataMap = DataToMapDeep(data)
+	case reflect.Struct:
+		if _, ok := data.(apiInterfaces); ok {
+			return c.DB.DoBatchInsert(link, table, data, option, batch...)
+		} else {
+			dataMap = ConvertDataForTableRecord(data)
+		}
+	case reflect.Map:
+		dataMap = ConvertDataForTableRecord(data)
 	default:
 		return result, errors.New(fmt.Sprint("unsupported data type:", reflectKind))
 	}
@@ -429,11 +452,11 @@ func (c *Core) DoInsert(link Link, table string, data interface{}, option int, b
 		values = append(values, "?")
 		params = append(params, v)
 	}
-	if option == gINSERT_OPTION_SAVE {
+	if option == insertOptionSave {
 		for k, _ := range dataMap {
 			// If it's SAVE operation,
 			// do not automatically update the creating time.
-			if utils.EqualFoldWithoutChars(k, gSOFT_FIELD_NAME_CREATE) {
+			if c.isSoftCreatedFiledName(k) {
 				continue
 			}
 			if len(updateStr) > 0 {
@@ -466,35 +489,48 @@ func (c *Core) DoInsert(link Link, table string, data interface{}, option int, b
 // BatchInsert batch inserts data.
 // The parameter <list> must be type of slice of map or struct.
 func (c *Core) BatchInsert(table string, list interface{}, batch ...int) (sql.Result, error) {
-	return c.DB.DoBatchInsert(nil, table, list, gINSERT_OPTION_DEFAULT, batch...)
+	if len(batch) > 0 {
+		return c.Model(table).Data(list).Batch(batch[0]).Insert()
+	}
+	return c.Model(table).Data(list).Insert()
 }
 
-// BatchInsert batch inserts data with ignore option.
+// BatchInsertIgnore batch inserts data with ignore option.
 // The parameter <list> must be type of slice of map or struct.
 func (c *Core) BatchInsertIgnore(table string, list interface{}, batch ...int) (sql.Result, error) {
-	return c.DB.DoBatchInsert(nil, table, list, gINSERT_OPTION_IGNORE, batch...)
+	if len(batch) > 0 {
+		return c.Model(table).Data(list).Batch(batch[0]).InsertIgnore()
+	}
+	return c.Model(table).Data(list).InsertIgnore()
 }
 
 // BatchReplace batch replaces data.
 // The parameter <list> must be type of slice of map or struct.
 func (c *Core) BatchReplace(table string, list interface{}, batch ...int) (sql.Result, error) {
-	return c.DB.DoBatchInsert(nil, table, list, gINSERT_OPTION_REPLACE, batch...)
+	if len(batch) > 0 {
+		return c.Model(table).Data(list).Batch(batch[0]).Replace()
+	}
+	return c.Model(table).Data(list).Replace()
 }
 
 // BatchSave batch replaces data.
 // The parameter <list> must be type of slice of map or struct.
 func (c *Core) BatchSave(table string, list interface{}, batch ...int) (sql.Result, error) {
-	return c.DB.DoBatchInsert(nil, table, list, gINSERT_OPTION_SAVE, batch...)
+	if len(batch) > 0 {
+		return c.Model(table).Data(list).Batch(batch[0]).Save()
+	}
+	return c.Model(table).Data(list).Save()
 }
 
 // DoBatchInsert batch inserts/replaces/saves data.
+// This function is usually used for custom interface definition, you do not need call it manually.
 func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option int, batch ...int) (result sql.Result, err error) {
 	table = c.DB.QuotePrefixTableName(table)
 	var (
-		keys    []string
-		values  []string
-		params  []interface{}
-		listMap List
+		keys    []string      // Field names.
+		values  []string      // Value holder string array, like: (?,?,?)
+		params  []interface{} // Values that will be committed to underlying database driver.
+		listMap List          // The data list that passed from caller.
 	)
 	switch value := list.(type) {
 	case Result:
@@ -519,10 +555,10 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 		case reflect.Slice, reflect.Array:
 			listMap = make(List, rv.Len())
 			for i := 0; i < rv.Len(); i++ {
-				listMap[i] = DataToMapDeep(rv.Index(i).Interface())
+				listMap[i] = ConvertDataForTableRecord(rv.Index(i).Interface())
 			}
 		case reflect.Map:
-			listMap = List{DataToMapDeep(value)}
+			listMap = List{ConvertDataForTableRecord(value)}
 		case reflect.Struct:
 			if v, ok := value.(apiInterfaces); ok {
 				var (
@@ -530,11 +566,11 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 					list  = make(List, len(array))
 				)
 				for i := 0; i < len(array); i++ {
-					list[i] = DataToMapDeep(array[i])
+					list[i] = ConvertDataForTableRecord(array[i])
 				}
 				listMap = list
 			} else {
-				listMap = List{DataToMapDeep(value)}
+				listMap = List{ConvertDataForTableRecord(value)}
 			}
 		default:
 			return result, errors.New(fmt.Sprint("unsupported list type:", kind))
@@ -563,11 +599,11 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 		operation      = GetInsertOperationByOption(option)
 		updateStr      = ""
 	)
-	if option == gINSERT_OPTION_SAVE {
+	if option == insertOptionSave {
 		for _, k := range keys {
 			// If it's SAVE operation,
 			// do not automatically update the creating time.
-			if utils.EqualFoldWithoutChars(k, gSOFT_FIELD_NAME_CREATE) {
+			if c.isSoftCreatedFiledName(k) {
 				continue
 			}
 			if len(updateStr) > 0 {
@@ -581,7 +617,7 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 		}
 		updateStr = fmt.Sprintf("ON DUPLICATE KEY UPDATE %s", updateStr)
 	}
-	batchNum := gDEFAULT_BATCH_NUM
+	batchNum := defaultBatchNumber
 	if len(batch) > 0 && batch[0] > 0 {
 		batchNum = batch[0]
 	}
@@ -637,11 +673,7 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 // "age IN(?,?)", 18, 50
 // User{ Id : 1, UserName : "john"}
 func (c *Core) Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error) {
-	newWhere, newArgs := formatWhere(c.DB, condition, args, false)
-	if newWhere != "" {
-		newWhere = " WHERE " + newWhere
-	}
-	return c.DB.DoUpdate(nil, table, data, newWhere, newArgs...)
+	return c.Model(table).Data(data).Where(condition, args...).Update()
 }
 
 // Counter  is the type for update count.
@@ -649,11 +681,6 @@ type Counter struct {
 	Field string
 	Value interface{} // allows acceptance of int and float types, If you want to do subtraction,
 	// you need to pass in a negative number
-}
-
-// isCounter verify that a field is an Counter type.
-func (c *Core) isCounter(str string) bool {
-	return strings.HasSuffix(str, "Counter")
 }
 
 // doUpdate does "UPDATE ... " statement for the table.
@@ -667,6 +694,7 @@ func (c *Core) isCounter(str string) bool {
 //	 "updated_at": gtime.Now().Unix(),
 // }
 // Also see Update.
+// This function is usually used for custom interface definition, you do not need call it manually.
 func (c *Core) DoUpdate(link Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) {
 	table = c.DB.QuotePrefixTableName(table)
 	var (
@@ -685,20 +713,19 @@ func (c *Core) DoUpdate(link Link, table string, data interface{}, condition str
 	case reflect.Map, reflect.Struct:
 		var (
 			fields  []string
-			dataMap = DataToMapDeep(data)
+			dataMap = ConvertDataForTableRecord(data)
 		)
 		for k, v := range dataMap {
-			valVarName := reflect.TypeOf(v).String()
-			if c.isCounter(valVarName) {
-				valMap := gconv.Map(v)
-				column := c.DB.QuoteWord(gconv.String(valMap["field"]))
-				value := valMap["value"]
-				if gstr.HasPrefix(gconv.String(valMap), "-") {
-					fields = append(fields, column+"="+column+"-?")
+			if value, ok := v.(*Counter); ok {
+				column := c.DB.QuoteWord(value.Field)
+				var symbol string
+				if gstr.HasPrefix(gconv.String(value.Value), "-") {
+					symbol = "-"
 				} else {
-					fields = append(fields, column+"="+column+"+?")
+					symbol = "+"
 				}
-				params = append(params, value)
+				fields = append(fields, fmt.Sprintf("%s=%s%s?", column, column, symbol))
+				params = append(params, v)
 			} else {
 				fields = append(fields, c.DB.QuoteWord(k)+"=?")
 				params = append(params, v)
@@ -739,15 +766,11 @@ func (c *Core) DoUpdate(link Link, table string, data interface{}, condition str
 // "age IN(?,?)", 18, 50
 // User{ Id : 1, UserName : "john"}
 func (c *Core) Delete(table string, condition interface{}, args ...interface{}) (result sql.Result, err error) {
-	newWhere, newArgs := formatWhere(c.DB, condition, args, false)
-	if newWhere != "" {
-		newWhere = " WHERE " + newWhere
-	}
-	return c.DB.DoDelete(nil, table, newWhere, newArgs...)
+	return c.Model(table).Where(condition, args...).Delete()
 }
 
 // DoDelete does "DELETE FROM ... " statement for the table.
-// Also see Delete.
+// This function is usually used for custom interface definition, you do not need call it manually.
 func (c *Core) DoDelete(link Link, table string, condition string, args ...interface{}) (result sql.Result, err error) {
 	if link == nil {
 		if link, err = c.DB.Master(); err != nil {
@@ -835,4 +858,23 @@ func (c *Core) HasTable(name string) (bool, error) {
 		}
 	}
 	return false, nil
+}
+
+// isSoftCreatedFiledName checks and returns whether given filed name is an automatic-filled created time.
+func (c *Core) isSoftCreatedFiledName(fieldName string) bool {
+	if fieldName == "" {
+		return false
+	}
+	if config := c.DB.GetConfig(); config.CreatedAt != "" {
+		if utils.EqualFoldWithoutChars(fieldName, config.CreatedAt) {
+			return true
+		}
+		return gstr.InArray(append([]string{config.CreatedAt}, createdFiledNames...), fieldName)
+	}
+	for _, v := range createdFiledNames {
+		if utils.EqualFoldWithoutChars(fieldName, v) {
+			return true
+		}
+	}
+	return false
 }

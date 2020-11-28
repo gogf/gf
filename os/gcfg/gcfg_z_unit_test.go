@@ -231,21 +231,16 @@ func Test_SetFileName(t *testing.T) {
 
 func Test_Instance(t *testing.T) {
 	config := `
-{
-	"array": [
-		1,
-		2,
-		3
-	],
-	"redis": {
-		"cache": "127.0.0.1:6379,1",
-		"disk": "127.0.0.1:6379,0"
-	},
-	"v1": 1,
-	"v2": "true",
-	"v3": "off",
-	"v4": "1.234"
-}
+array = [1.0, 2.0, 3.0]
+v1 = 1.0
+v2 = "true"
+v3 = "off"
+v4 = "1.234"
+
+[redis]
+  cache = "127.0.0.1:6379,1"
+  disk = "127.0.0.1:6379,0"
+
 `
 	gtest.C(t, func(t *gtest.T) {
 		path := gcfg.DEFAULT_CONFIG_FILE

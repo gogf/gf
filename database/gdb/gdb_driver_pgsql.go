@@ -107,21 +107,28 @@ func (d *DriverPgsql) TableFields(table string, schema ...string) (fields map[st
 	if len(schema) > 0 && schema[0] != "" {
 		checkSchema = schema[0]
 	}
-	v := d.DB.GetCache().GetOrSetFunc(
-		fmt.Sprintf(`pgsql_table_fields_%s_%s`, table, checkSchema), func() interface{} {
-			var result Result
-			var link *sql.DB
+	v, _ := internalCache.GetOrSetFunc(
+		fmt.Sprintf(`pgsql_table_fields_%s_%s@group:%s`, table, checkSchema, d.GetGroup()),
+		func() (interface{}, error) {
+			var (
+				result Result
+				link   *sql.DB
+			)
 			link, err = d.DB.GetSlave(checkSchema)
 			if err != nil {
-				return nil
+				return nil, err
 			}
-			result, err = d.DB.DoGetAll(link, fmt.Sprintf(`
-			SELECT a.attname AS field, t.typname AS type FROM pg_class c, pg_attribute a 
-	        LEFT OUTER JOIN pg_description b ON a.attrelid=b.objoid AND a.attnum = b.objsubid,pg_type t
-	        WHERE c.relname = '%s' and a.attnum > 0 and a.attrelid = c.oid and a.atttypid = t.oid 
-			ORDER BY a.attnum`, strings.ToLower(table)))
+			structureSql := fmt.Sprintf(`
+SELECT a.attname AS field, t.typname AS type FROM pg_class c, pg_attribute a 
+LEFT OUTER JOIN pg_description b ON a.attrelid=b.objoid AND a.attnum = b.objsubid,pg_type t
+WHERE c.relname = '%s' and a.attnum > 0 and a.attrelid = c.oid and a.atttypid = t.oid 
+ORDER BY a.attnum`,
+				strings.ToLower(table),
+			)
+			structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
+			result, err = d.DB.DoGetAll(link, structureSql)
 			if err != nil {
-				return nil
+				return nil, err
 			}
 
 			fields = make(map[string]*TableField)
@@ -132,7 +139,7 @@ func (d *DriverPgsql) TableFields(table string, schema ...string) (fields map[st
 					Type:  m["type"].String(),
 				}
 			}
-			return fields
+			return fields, nil
 		}, 0)
 	if err == nil {
 		fields = v.(map[string]*TableField)

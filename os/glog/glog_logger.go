@@ -39,11 +39,11 @@ type Logger struct {
 }
 
 const (
-	gDEFAULT_FILE_FORMAT = `{Y-m-d}.log`
-	gDEFAULT_FILE_FLAGS  = os.O_CREATE | os.O_WRONLY | os.O_APPEND
-	gDEFAULT_FILE_PERM   = os.FileMode(0666)
-	gDEFAULT_FILE_EXPIRE = time.Minute
-	gPATH_FILTER_KEY     = "/os/glog/glog"
+	defaultFileFormat = `{Y-m-d}.log`
+	defaultFileFlags  = os.O_CREATE | os.O_WRONLY | os.O_APPEND
+	defaultFilePerm   = os.FileMode(0666)
+	defaultFileExpire = time.Minute
+	pathFilterKey     = "/os/glog/glog"
 )
 
 const (
@@ -91,9 +91,6 @@ func (l *Logger) getFilePath(now time.Time) string {
 		return gtime.New(now).Format(strings.Trim(s, "{}"))
 	})
 	file = gfile.Join(l.config.Path, file)
-	if gfile.ExtName(file) != "log" {
-		file += ".log"
-	}
 	return file
 }
 
@@ -143,7 +140,7 @@ func (l *Logger) print(std io.Writer, lead string, values ...interface{}) {
 		// Caller path and Fn name.
 		if l.config.Flags&(F_FILE_LONG|F_FILE_SHORT|F_CALLER_FN) > 0 {
 			callerPath := ""
-			callerFnName, path, line := gdebug.CallerWithFilter(gPATH_FILTER_KEY, l.config.StSkip)
+			callerFnName, path, line := gdebug.CallerWithFilter(pathFilterKey, l.config.StSkip)
 			if l.config.Flags&F_CALLER_FN > 0 {
 				buffer.WriteString(fmt.Sprintf(`[%s] `, callerFnName))
 			}
@@ -230,7 +227,8 @@ func (l *Logger) printToWriter(now time.Time, std io.Writer, buffer *bytes.Buffe
 		}
 	} else {
 		if _, err := l.config.Writer.Write(buffer.Bytes()); err != nil {
-			panic(err)
+			// panic(err)
+			intlog.Error(err)
 		}
 	}
 }
@@ -244,12 +242,17 @@ func (l *Logger) printToFile(now time.Time, buffer *bytes.Buffer) {
 	gmlock.Lock(memoryLockKey)
 	defer gmlock.Unlock(memoryLockKey)
 	file := l.getFilePointer(logFilePath)
+	if file == nil {
+		return
+	}
 	// Rotation file size checks.
 	if l.config.RotateSize > 0 {
 		stat, err := file.Stat()
 		if err != nil {
 			file.Close()
-			panic(err)
+			// panic(err)
+			intlog.Error(err)
+			return
 		}
 		if stat.Size() > l.config.RotateSize {
 			l.rotateFileBySize(now)
@@ -258,7 +261,9 @@ func (l *Logger) printToFile(now time.Time, buffer *bytes.Buffer) {
 	}
 	if _, err := file.Write(buffer.Bytes()); err != nil {
 		file.Close()
-		panic(err)
+		// panic(err)
+		intlog.Error(err)
+		return
 	}
 	file.Close()
 }
@@ -267,12 +272,13 @@ func (l *Logger) printToFile(now time.Time, buffer *bytes.Buffer) {
 func (l *Logger) getFilePointer(path string) *gfpool.File {
 	file, err := gfpool.Open(
 		path,
-		gDEFAULT_FILE_FLAGS,
-		gDEFAULT_FILE_PERM,
-		gDEFAULT_FILE_EXPIRE,
+		defaultFileFlags,
+		defaultFilePerm,
+		defaultFileExpire,
 	)
 	if err != nil {
-		panic(err)
+		// panic(err)
+		intlog.Error(err)
 	}
 	return file
 }
@@ -315,7 +321,7 @@ func (l *Logger) GetStack(skip ...int) string {
 	if len(skip) > 0 {
 		stackSkip += skip[0]
 	}
-	filters := []string{gPATH_FILTER_KEY}
+	filters := []string{pathFilterKey}
 	if l.config.StFilter != "" {
 		filters = append(filters, l.config.StFilter)
 	}

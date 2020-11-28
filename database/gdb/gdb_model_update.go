@@ -10,6 +10,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
@@ -42,10 +43,10 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 	}
 	var (
 		updateData                                    = m.data
-		fieldNameCreate                               = m.getSoftFieldNameCreate()
-		fieldNameUpdate                               = m.getSoftFieldNameUpdate()
-		fieldNameDelete                               = m.getSoftFieldNameDelete()
-		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(false)
+		fieldNameCreate                               = m.getSoftFieldNameCreated()
+		fieldNameUpdate                               = m.getSoftFieldNameUpdated()
+		fieldNameDelete                               = m.getSoftFieldNameDeleted()
+		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(false, false)
 	)
 	// Automatically update the record updating time.
 	if !m.unscoped && fieldNameUpdate != "" {
@@ -59,7 +60,7 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 		}
 		switch refKind {
 		case reflect.Map, reflect.Struct:
-			dataMap := DataToMapDeep(m.data)
+			dataMap := ConvertDataForTableRecord(m.data)
 			gutil.MapDelete(dataMap, fieldNameCreate, fieldNameUpdate, fieldNameDelete)
 			if fieldNameUpdate != "" {
 				dataMap[fieldNameUpdate] = gtime.Now().String()
@@ -73,11 +74,19 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 			updateData = updates
 		}
 	}
+	newData, err := m.filterDataForInsertOrUpdate(updateData)
+	if err != nil {
+		return nil, err
+	}
+	conditionStr := conditionWhere + conditionExtra
+	if !gstr.ContainsI(conditionStr, " WHERE ") {
+		return nil, gerror.New("there should be WHERE condition statement for UPDATE operation")
+	}
 	return m.db.DoUpdate(
 		m.getLink(true),
 		m.tables,
-		m.filterDataForInsertOrUpdate(updateData),
-		conditionWhere+conditionExtra,
+		newData,
+		conditionStr,
 		m.mergeArguments(conditionArgs)...,
 	)
 }

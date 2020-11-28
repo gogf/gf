@@ -13,6 +13,7 @@ import (
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/util/gutil"
 	"time"
 )
 
@@ -26,29 +27,62 @@ func (m *Model) getModel() *Model {
 	}
 }
 
+// mappingToTableFields mappings and changes given field name to really table field name.
+func (m *Model) mappingToTableFields(fields []string) []string {
+	var (
+		foundKey    = ""
+		fieldsArray = gstr.SplitAndTrim(gstr.Join(fields, ","), ",")
+	)
+
+	if fieldsMap, err := m.db.TableFields(m.tables); err == nil {
+		fieldsKeyMap := make(map[string]interface{}, len(fieldsMap))
+		for k, _ := range fieldsMap {
+			fieldsKeyMap[k] = nil
+		}
+		for i, v := range fieldsArray {
+			if _, ok := fieldsKeyMap[v]; !ok {
+				if gstr.Contains(v, " ") || gstr.Contains(v, ".") {
+					continue
+				}
+				foundKey, _ = gutil.MapPossibleItemByKey(fieldsKeyMap, v)
+				if foundKey != "" {
+					fieldsArray[i] = foundKey
+				}
+			}
+		}
+	}
+	return fieldsArray
+}
+
 // filterDataForInsertOrUpdate does filter feature with data for inserting/updating operations.
 // Note that, it does not filter list item, which is also type of map, for "omit empty" feature.
-func (m *Model) filterDataForInsertOrUpdate(data interface{}) interface{} {
+func (m *Model) filterDataForInsertOrUpdate(data interface{}) (interface{}, error) {
+	var err error
 	switch value := data.(type) {
 	case List:
 		for k, item := range value {
-			value[k] = m.doFilterDataMapForInsertOrUpdate(item, false)
+			value[k], err = m.doMappingAndFilterForInsertOrUpdateDataMap(item, false)
+			if err != nil {
+				return nil, err
+			}
 		}
-		return value
+		return value, nil
 
 	case Map:
-		return m.doFilterDataMapForInsertOrUpdate(value, true)
+		return m.doMappingAndFilterForInsertOrUpdateDataMap(value, true)
 
 	default:
-		return data
+		return data, nil
 	}
 }
 
-// doFilterDataMapForInsertOrUpdate does the filter features for map.
+// doMappingAndFilterForInsertOrUpdateDataMap does the filter features for map.
 // Note that, it does not filter list item, which is also type of map, for "omit empty" feature.
-func (m *Model) doFilterDataMapForInsertOrUpdate(data Map, allowOmitEmpty bool) Map {
-	if m.filter {
-		data = m.db.filterFields(m.schema, m.tables, data)
+func (m *Model) doMappingAndFilterForInsertOrUpdateDataMap(data Map, allowOmitEmpty bool) (Map, error) {
+	var err error
+	data, err = m.db.mappingAndFilterData(m.schema, m.tables, data, m.filter)
+	if err != nil {
+		return nil, err
 	}
 	// Remove key-value pairs of which the value is empty.
 	if allowOmitEmpty && m.option&OPTION_OMITEMPTY > 0 {
@@ -103,7 +137,7 @@ func (m *Model) doFilterDataMapForInsertOrUpdate(data Map, allowOmitEmpty bool) 
 			delete(data, v)
 		}
 	}
-	return data
+	return data, nil
 }
 
 // getLink returns the underlying database link object with configured <linkType> attribute.
@@ -158,7 +192,7 @@ func (m *Model) getPrimaryKey() string {
 // Note that this function does not change any attribute value of the <m>.
 //
 // The parameter <limit1> specifies whether limits querying only one record if m.limit is not set.
-func (m *Model) formatCondition(limit1 bool) (conditionWhere string, conditionExtra string, conditionArgs []interface{}) {
+func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWhere string, conditionExtra string, conditionArgs []interface{}) {
 	if len(m.whereHolder) > 0 {
 		for _, v := range m.whereHolder {
 			switch v.operator {
@@ -225,18 +259,22 @@ func (m *Model) formatCondition(limit1 bool) (conditionWhere string, conditionEx
 			conditionArgs = append(conditionArgs, havingArgs...)
 		}
 	}
-	if m.limit != 0 {
-		if m.start >= 0 {
-			conditionExtra += fmt.Sprintf(" LIMIT %d,%d", m.start, m.limit)
-		} else {
-			conditionExtra += fmt.Sprintf(" LIMIT %d", m.limit)
+	if !isCountStatement {
+		if m.limit != 0 {
+			if m.start >= 0 {
+				conditionExtra += fmt.Sprintf(" LIMIT %d,%d", m.start, m.limit)
+			} else {
+				conditionExtra += fmt.Sprintf(" LIMIT %d", m.limit)
+			}
+		} else if limit1 {
+			conditionExtra += " LIMIT 1"
 		}
-	} else if limit1 {
-		conditionExtra += " LIMIT 1"
+
+		if m.offset >= 0 {
+			conditionExtra += fmt.Sprintf(" OFFSET %d", m.offset)
+		}
 	}
-	if m.offset >= 0 {
-		conditionExtra += fmt.Sprintf(" OFFSET %d", m.offset)
-	}
+
 	if m.lockInfo != "" {
 		conditionExtra += " " + m.lockInfo
 	}

@@ -34,7 +34,9 @@ func (r *Request) GetQuery(key string, def ...interface{}) interface{} {
 			return v
 		}
 	}
-	r.parseBody()
+	if r.Method == "GET" {
+		r.parseBody()
+	}
 	if len(r.bodyMap) > 0 {
 		if v, ok := r.bodyMap[key]; ok {
 			return v
@@ -118,7 +120,9 @@ func (r *Request) GetQueryInterfaces(key string, def ...interface{}) []interface
 // in order of priority: query > body.
 func (r *Request) GetQueryMap(kvMap ...map[string]interface{}) map[string]interface{} {
 	r.parseQuery()
-	r.parseBody()
+	if r.Method == "GET" {
+		r.parseBody()
+	}
 	var m map[string]interface{}
 	if len(kvMap) > 0 && kvMap[0] != nil {
 		if len(r.queryMap) == 0 && len(r.bodyMap) == 0 {
@@ -193,15 +197,12 @@ func (r *Request) GetQueryMapStrVar(kvMap ...map[string]interface{}) map[string]
 // attribute mapping.
 func (r *Request) GetQueryStruct(pointer interface{}, mapping ...map[string]string) error {
 	r.parseQuery()
-	m := r.GetQueryMap()
-	if m == nil {
-		m = map[string]interface{}{}
+	data := r.GetQueryMap()
+	if data == nil {
+		data = map[string]interface{}{}
 	}
-	return gconv.StructDeep(m, pointer, mapping...)
-}
-
-// GetQueryToStruct is alias of GetQueryStruct. See GetQueryStruct.
-// Deprecated.
-func (r *Request) GetQueryToStruct(pointer interface{}, mapping ...map[string]string) error {
-	return r.GetQueryStruct(pointer, mapping...)
+	if err := r.mergeDefaultStructValue(data, pointer); err != nil {
+		return nil
+	}
+	return gconv.Struct(data, pointer, mapping...)
 }
