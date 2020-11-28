@@ -699,8 +699,24 @@ func (c *Core) DoUpdate(link Link, table string, data interface{}, condition str
 			dataMap = ConvertDataForTableRecord(data)
 		)
 		for k, v := range dataMap {
-			fields = append(fields, c.DB.QuoteWord(k)+"=?")
-			params = append(params, v)
+			switch value := v.(type) {
+			case Counter, *Counter:
+				counter := value.(Counter)
+				if counter.Value != 0 {
+					column := c.DB.QuoteWord(counter.Field)
+					var symbol string
+					if counter.Value < 0 {
+						symbol = "-"
+					} else {
+						symbol = "+"
+					}
+					fields = append(fields, fmt.Sprintf("%s=%s%s?", column, column, symbol))
+					params = append(params, v)
+				}
+			default:
+				fields = append(fields, c.DB.QuoteWord(k)+"=?")
+				params = append(params, v)
+			}
 		}
 		updates = strings.Join(fields, ",")
 	default:
