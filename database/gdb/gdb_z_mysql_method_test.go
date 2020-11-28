@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/encoding/gparser"
+	"github.com/gogf/gf/util/gconv"
+	"reflect"
 	"testing"
 	"time"
 
@@ -1403,5 +1405,53 @@ func Test_Empty_Slice_Argument(t *testing.T) {
 		result, err := db.GetAll(fmt.Sprintf(`select * from %s where id in(?)`, table), g.Slice{})
 		t.Assert(err, nil)
 		t.Assert(len(result), 0)
+	})
+}
+
+// update counter test
+func Test_DB_UpdateCounter(t *testing.T) {
+	tableName := "update_counter_test"
+	defer dropTable(tableName)
+	_, err := db.Exec(fmt.Sprintf(`
+		CREATE TABLE IF NOT EXISTS %s (
+		id int(10) unsigned NOT NULL,
+		views  int(8) unsigned DEFAULT '0'  NOT NULL ,
+		updated_time int(10) unsigned DEFAULT '0' NOT NULL
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+	`, tableName))
+	if err != nil {
+		gtest.Fatal(err)
+	}
+	id := 1
+	insertData := g.Map{
+		"id":           id,
+		"views":        0,
+		"updated_time": 0,
+	}
+	_, err = db.Insert(tableName, insertData)
+	if err != nil {
+		gtest.Fatal(err)
+	}
+	gtest.C(t, func(t *gtest.T) {
+		gdbCounter := &gdb.Counter{
+			Field: "views",
+			Value: 1,
+		}
+		updateData := g.Map{
+			"views":        gdbCounter,
+			"updated_time": gtime.Now().Unix(),
+		}
+		result, err := db.Update(tableName, updateData, "id="+gconv.String(id))
+		t.Assert(err, nil)
+		n, _ := result.RowsAffected()
+		t.Assert(n, 1)
+
+		one, err := db.Table(tableName).Where("id", id).One()
+		t.Assert(err, nil)
+		t.Assert(one["id"].Int(), 3)
+		t.Assert(one["passport"].String(), "user_3")
+		t.Assert(one["password"].String(), "987654321")
+		t.Assert(one["nickname"].String(), "name_3")
+		t.Assert(one["login_times"].String(), "1")
 	})
 }
