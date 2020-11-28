@@ -24,7 +24,7 @@ const (
 	SCHEMA2 = "test2"
 	PREFIX1 = "gf_"
 	USER    = "root"
-	PASS    = "12345678"
+	PASS    = "123456"
 )
 
 var (

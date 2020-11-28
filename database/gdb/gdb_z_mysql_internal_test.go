@@ -19,7 +19,7 @@ import (
 const (
 	SCHEMA = "test_internal"
 	USER   = "root"
-	PASS   = "12345678"
+	PASS   = "123456"
 )
 
 var (
