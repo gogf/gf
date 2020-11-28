@@ -700,18 +700,29 @@ func (c *Core) DoUpdate(link Link, table string, data interface{}, condition str
 		)
 		for k, v := range dataMap {
 			switch value := v.(type) {
-			case Counter, *Counter:
-				counter := value.(Counter)
-				if counter.Value != 0 {
-					column := c.DB.QuoteWord(counter.Field)
+			case *Counter:
+				if value.Value != 0 {
+					column := c.DB.QuoteWord(value.Field)
 					var symbol string
-					if counter.Value < 0 {
+					if value.Value < 0 {
 						symbol = "-"
 					} else {
 						symbol = "+"
 					}
 					fields = append(fields, fmt.Sprintf("%s=%s%s?", column, column, symbol))
-					params = append(params, v)
+					params = append(params, value.Value)
+				}
+			case Counter:
+				if value.Value != 0 {
+					column := c.DB.QuoteWord(value.Field)
+					var symbol string
+					if value.Value < 0 {
+						symbol = "-"
+					} else {
+						symbol = "+"
+					}
+					fields = append(fields, fmt.Sprintf("%s=%s%s?", column, column, symbol))
+					params = append(params, value.Value)
 				}
 			default:
 				fields = append(fields, c.DB.QuoteWord(k)+"=?")

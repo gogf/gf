@@ -11,7 +11,6 @@ import (
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/encoding/gparser"
 	"github.com/gogf/gf/util/gconv"
-	"reflect"
 	"testing"
 	"time"
 
@@ -1410,7 +1409,7 @@ func Test_Empty_Slice_Argument(t *testing.T) {
 
 // update counter test
 func Test_DB_UpdateCounter(t *testing.T) {
-	tableName := "update_counter_test"
+	tableName := "gf_update_counter_test"
 	defer dropTable(tableName)
 	_, err := db.Exec(fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS %s (
@@ -1445,13 +1444,9 @@ func Test_DB_UpdateCounter(t *testing.T) {
 		t.Assert(err, nil)
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)
-
 		one, err := db.Table(tableName).Where("id", id).One()
 		t.Assert(err, nil)
-		t.Assert(one["id"].Int(), 3)
-		t.Assert(one["passport"].String(), "user_3")
-		t.Assert(one["password"].String(), "987654321")
-		t.Assert(one["nickname"].String(), "name_3")
-		t.Assert(one["login_times"].String(), "1")
+		t.Assert(one["id"].Int(), 1)
+		t.Assert(one["views"].String(), "1")
 	})
 }
