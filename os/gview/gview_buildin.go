@@ -8,6 +8,7 @@ package gview
 
 import (
 	"fmt"
+	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/util/gutil"
 	"strings"
 
@@ -214,4 +215,11 @@ func (view *View) buildInFuncToLower(str interface{}) string {
 // buildInFuncNl2Br implements build-in template function: nl2br
 func (view *View) buildInFuncNl2Br(str interface{}) string {
 	return gstr.Nl2Br(gconv.String(str))
+}
+
+// buildInFuncJson implements build-in template function: json ,
+// which encodes and returns <value> as JSON string.
+func (view *View) buildInFuncJson(value interface{}) (string, error) {
+	b, err := json.Marshal(value)
+	return gconv.UnsafeBytesToStr(b), err
 }
