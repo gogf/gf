@@ -17,6 +17,9 @@ import (
 // Ctx is a chaining function,
 // which sets the context for current logging.
 func (l *Logger) Ctx(ctx context.Context, keys ...interface{}) *Logger {
+	if ctx == nil {
+		return l
+	}
 	logger := (*Logger)(nil)
 	if l.parent == nil {
 		logger = l.Clone()

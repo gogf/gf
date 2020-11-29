@@ -8,6 +8,7 @@
 package gdb
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -22,6 +23,35 @@ import (
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/util/gconv"
 )
+
+// Ctx is a chaining function, which creates and returns a new DB that is a shallow copy
+// of current DB object and with given context in it.
+// Note that this returned DB object can be used only once, so do not assign it to
+// a global or package variable for long using.
+func (c *Core) Ctx(ctx context.Context) DB {
+	if ctx == nil {
+		return c.DB
+	}
+	var (
+		err        error
+		newCore    = &Core{}
+		configNode = c.DB.GetConfig()
+	)
+	*newCore = *c
+	newCore.ctx = ctx
+	newCore.DB, err = driverMap[configNode.Type].New(newCore, configNode)
+	// Seldom error, just log it.
+	if err != nil {
+		c.DB.GetLogger().Ctx(ctx).Error(err)
+	}
+	return newCore.DB
+}
+
+// GetCtx returns the context for current DB.
+// Note that it might be nil.
+func (c *Core) GetCtx() context.Context {
+	return c.ctx
+}
 
 // Master creates and returns a connection from master node if master-slave configured.
 // It returns the default connection if master-slave not configured.
@@ -164,7 +194,7 @@ func (c *Core) DoGetAll(link Link, sql string, args ...interface{}) (result Resu
 		return nil, err
 	}
 	defer rows.Close()
-	return c.DB.rowsToResult(rows)
+	return c.DB.convertRowsToResult(rows)
 }
 
 // GetOne queries and returns one record from database.
@@ -767,8 +797,8 @@ func (c *Core) DoDelete(link Link, table string, condition string, args ...inter
 	return c.DB.DoExec(link, fmt.Sprintf("DELETE FROM %s%s", table, condition), args...)
 }
 
-// rowsToResult converts underlying data record type sql.Rows to Result type.
-func (c *Core) rowsToResult(rows *sql.Rows) (Result, error) {
+// convertRowsToResult converts underlying data record type sql.Rows to Result type.
+func (c *Core) convertRowsToResult(rows *sql.Rows) (Result, error) {
 	if !rows.Next() {
 		return nil, nil
 	}
@@ -800,7 +830,7 @@ func (c *Core) rowsToResult(rows *sql.Rows) (Result, error) {
 			if value == nil {
 				row[columnNames[i]] = gvar.New(nil)
 			} else {
-				row[columnNames[i]] = gvar.New(c.DB.convertDatabaseValueToLocalValue(value, columnTypes[i]))
+				row[columnNames[i]] = gvar.New(c.DB.convertFieldValueToLocalValue(value, columnTypes[i]))
 			}
 		}
 		records = append(records, row)
@@ -821,14 +851,14 @@ func (c *Core) MarshalJSON() ([]byte, error) {
 }
 
 // writeSqlToLogger outputs the sql object to logger.
-// It is enabled when configuration "debug" is true.
+// It is enabled only if configuration "debug" is true.
 func (c *Core) writeSqlToLogger(v *Sql) {
 	s := fmt.Sprintf("[%3d ms] [%s] %s", v.End-v.Start, v.Group, v.Format)
 	if v.Error != nil {
 		s += "\nError: " + v.Error.Error()
-		c.logger.Error(s)
+		c.logger.Ctx(c.DB.GetCtx()).Error(s)
 	} else {
-		c.logger.Debug(s)
+		c.logger.Ctx(c.DB.GetCtx()).Debug(s)
 	}
 }
 

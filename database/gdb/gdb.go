@@ -8,6 +8,7 @@
 package gdb
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -41,6 +42,12 @@ type DB interface {
 	// Open creates a raw connection object for database with given node configuration.
 	// Note that it is not recommended using the this function manually.
 	Open(config *ConfigNode) (*sql.DB, error)
+
+	// Ctx is a chaining function, which creates and returns a new DB that is a shallow copy
+	// of current DB object and with given context in it.
+	// Note that this returned DB object can be used only once, so do not assign it to
+	// a global or package variable for long using.
+	Ctx(ctx context.Context) DB
 
 	// ===========================================================================
 	// Query APIs.
@@ -137,6 +144,7 @@ type DB interface {
 	// Utility methods.
 	// ===========================================================================
 
+	GetCtx() context.Context
 	GetChars() (charLeft string, charRight string)
 	GetMaster(schema ...string) (*sql.DB, error)
 	GetSlave(schema ...string) (*sql.DB, error)
@@ -154,23 +162,24 @@ type DB interface {
 	HandleSqlBeforeCommit(link Link, sql string, args []interface{}) (string, []interface{})
 
 	// ===========================================================================
-	// Internal methods.
+	// Internal methods, for internal usage purpose, you do not need consider it.
 	// ===========================================================================
 
 	mappingAndFilterData(schema, table string, data map[string]interface{}, filter bool) (map[string]interface{}, error)
-	convertDatabaseValueToLocalValue(fieldValue interface{}, fieldType string) interface{}
-	rowsToResult(rows *sql.Rows) (Result, error)
+	convertFieldValueToLocalValue(fieldValue interface{}, fieldType string) interface{}
+	convertRowsToResult(rows *sql.Rows) (Result, error)
 }
 
 // Core is the base struct for database management.
 type Core struct {
-	DB     DB            // DB interface object.
-	group  string        // Configuration group name.
-	debug  *gtype.Bool   // Enable debug mode for the database, which can be changed in runtime.
-	cache  *gcache.Cache // Cache manager, SQL result cache only.
-	schema *gtype.String // Custom schema for this object.
-	logger *glog.Logger  // Logger.
-	config *ConfigNode   // Current config node.
+	DB     DB              // DB interface object.
+	group  string          // Configuration group name.
+	debug  *gtype.Bool     // Enable debug mode for the database, which can be changed in runtime.
+	cache  *gcache.Cache   // Cache manager, SQL result cache only.
+	schema *gtype.String   // Custom schema for this object.
+	logger *glog.Logger    // Logger.
+	config *ConfigNode     // Current config node.
+	ctx    context.Context // Context for chaining operation only.
 }
 
 // Driver is the interface for integrating sql drivers into package gdb.
