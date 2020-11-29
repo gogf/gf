@@ -38,13 +38,12 @@ func Test_Strings(t *testing.T) {
 
 func Test_Slice_PrivateAttribute(t *testing.T) {
 	type User struct {
-		Id   int
-		name string
+		Id   int    `json:"id"`
+		name string `json:"name"`
 	}
 	gtest.C(t, func(t *gtest.T) {
 		user := &User{1, "john"}
-		//t.Assert(gconv.Interfaces(user), g.Slice{1})
-		t.Assert(gconv.Interfaces(user), g.Slice{user})
+		t.Assert(gconv.Interfaces(user), g.Slice{"id", 1})
 	})
 }
 

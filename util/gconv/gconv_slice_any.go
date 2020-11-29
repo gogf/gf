@@ -99,29 +99,28 @@ func Interfaces(i interface{}) []interface{} {
 		default:
 			// Finally we use reflection.
 			var (
-				rv   = reflect.ValueOf(i)
-				kind = rv.Kind()
+				reflectValue = reflect.ValueOf(i)
+				reflectKind  = reflectValue.Kind()
 			)
-			for kind == reflect.Ptr {
-				rv = rv.Elem()
-				kind = rv.Kind()
+			for reflectKind == reflect.Ptr {
+				reflectValue = reflectValue.Elem()
+				reflectKind = reflectValue.Kind()
 			}
-			switch kind {
+			switch reflectKind {
 			case reflect.Slice, reflect.Array:
-				array = make([]interface{}, rv.Len())
-				for i := 0; i < rv.Len(); i++ {
-					array[i] = rv.Index(i).Interface()
+				array = make([]interface{}, reflectValue.Len())
+				for i := 0; i < reflectValue.Len(); i++ {
+					array[i] = reflectValue.Index(i).Interface()
 				}
-			//case reflect.Struct:
-			//	rt := rv.Type()
-			//	array = make([]interface{}, 0)
-			//	for i := 0; i < rv.NumField(); i++ {
-			//		// Only public attributes.
-			//		if !utils.IsLetterUpper(rt.Field(i).Name[0]) {
-			//			continue
-			//		}
-			//		array = append(array, rv.Field(i).Interface())
-			//	}
+			// Eg: {"K1": "v1", "K2": "v2"} => ["K1", "v1", "K2", "v2"]
+			case reflect.Struct:
+				array = make([]interface{}, 0)
+				// Note that, it uses the gconv tag name instead of the attribute name if
+				// the gconv tag is fined in the struct attributes.
+				for k, v := range Map(reflectValue) {
+					array = append(array, k)
+					array = append(array, v)
+				}
 			default:
 				return []interface{}{i}
 			}
