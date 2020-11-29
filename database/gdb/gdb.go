@@ -214,6 +214,12 @@ type Link interface {
 	Prepare(sql string) (*sql.Stmt, error)
 }
 
+// Counter  is the type for update count.
+type Counter struct {
+	Field string
+	Value float64
+}
+
 type (
 	// Value is the field value type.
 	Value = *gvar.Var
