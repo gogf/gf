@@ -57,7 +57,7 @@ const (
 	OPTION_ALLOWEMPTY = 2
 
 	linkTypeMaster   = 1
-	linkTypeMSlave   = 2
+	linkTypeSlave    = 2
 	whereHolderWhere = 1
 	whereHolderAnd   = 2
 	whereHolderOr    = 3
@@ -198,7 +198,7 @@ func (m *Model) Master() *Model {
 // Note that it makes sense only if there's any slave node configured.
 func (m *Model) Slave() *Model {
 	model := m.getModel()
-	model.linkType = linkTypeMSlave
+	model.linkType = linkTypeSlave
 	return model
 }
 

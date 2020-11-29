@@ -151,7 +151,7 @@ func (m *Model) getLink(master bool) Link {
 		if master {
 			linkType = linkTypeMaster
 		} else {
-			linkType = linkTypeMSlave
+			linkType = linkTypeSlave
 		}
 	}
 	switch linkType {
@@ -161,7 +161,7 @@ func (m *Model) getLink(master bool) Link {
 			panic(err)
 		}
 		return link
-	case linkTypeMSlave:
+	case linkTypeSlave:
 		link, err := m.db.GetSlave(m.schema)
 		if err != nil {
 			panic(err)
