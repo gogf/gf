@@ -58,15 +58,17 @@ func Test_Limit1(t *testing.T) {
 
 func Test_Limit2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		wg := sync.WaitGroup{}
-		array := garray.NewArray(true)
-		size := 100
-		pool := grpool.New(1)
+		var (
+			wg    = sync.WaitGroup{}
+			array = garray.NewArray(true)
+			size  = 100
+			pool  = grpool.New(1)
+		)
 		wg.Add(size)
 		for i := 0; i < size; i++ {
 			pool.Add(func() {
+				defer wg.Done()
 				array.Append(1)
-				wg.Done()
 			})
 		}
 		wg.Wait()

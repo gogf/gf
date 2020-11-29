@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/encoding/gparser"
-	"github.com/gogf/gf/util/gconv"
 	"testing"
 	"time"
 
@@ -1409,8 +1408,7 @@ func Test_Empty_Slice_Argument(t *testing.T) {
 
 // update counter test
 func Test_DB_UpdateCounter(t *testing.T) {
-	tableName := "gf_update_counter_test"
-	defer dropTable(tableName)
+	tableName := "gf_update_counter_test_" + gtime.TimestampNanoStr()
 	_, err := db.Exec(fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS %s (
 		id int(10) unsigned NOT NULL,
@@ -1421,16 +1419,18 @@ func Test_DB_UpdateCounter(t *testing.T) {
 	if err != nil {
 		gtest.Fatal(err)
 	}
-	id := 1
-	insertData := g.Map{
-		"id":           id,
-		"views":        0,
-		"updated_time": 0,
-	}
-	_, err = db.Insert(tableName, insertData)
-	if err != nil {
-		gtest.Fatal(err)
-	}
+	defer dropTable(tableName)
+
+	gtest.C(t, func(t *gtest.T) {
+		insertData := g.Map{
+			"id":           1,
+			"views":        0,
+			"updated_time": 0,
+		}
+		_, err = db.Insert(tableName, insertData)
+		t.Assert(err, nil)
+	})
+
 	gtest.C(t, func(t *gtest.T) {
 		gdbCounter := &gdb.Counter{
 			Field: "views",
@@ -1440,13 +1440,32 @@ func Test_DB_UpdateCounter(t *testing.T) {
 			"views":        gdbCounter,
 			"updated_time": gtime.Now().Unix(),
 		}
-		result, err := db.Update(tableName, updateData, "id="+gconv.String(id))
+		result, err := db.Update(tableName, updateData, "id", 1)
 		t.Assert(err, nil)
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)
-		one, err := db.Table(tableName).Where("id", id).One()
+		one, err := db.Table(tableName).Where("id", 1).One()
 		t.Assert(err, nil)
 		t.Assert(one["id"].Int(), 1)
-		t.Assert(one["views"].String(), "1")
+		t.Assert(one["views"].Int(), 1)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		gdbCounter := &gdb.Counter{
+			Field: "views",
+			Value: -1,
+		}
+		updateData := g.Map{
+			"views":        gdbCounter,
+			"updated_time": gtime.Now().Unix(),
+		}
+		result, err := db.Update(tableName, updateData, "id", 1)
+		t.Assert(err, nil)
+		n, _ := result.RowsAffected()
+		t.Assert(n, 1)
+		one, err := db.Table(tableName).Where("id", 1).One()
+		t.Assert(err, nil)
+		t.Assert(one["id"].Int(), 1)
+		t.Assert(one["views"].Int(), 0)
 	})
 }
