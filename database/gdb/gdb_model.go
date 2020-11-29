@@ -7,6 +7,7 @@
 package gdb
 
 import (
+	"context"
 	"fmt"
 	"github.com/gogf/gf/text/gregex"
 	"time"
@@ -52,13 +53,14 @@ type whereHolder struct {
 }
 
 const (
-	gLINK_TYPE_MASTER   = 1
-	gLINK_TYPE_SLAVE    = 2
-	gWHERE_HOLDER_WHERE = 1
-	gWHERE_HOLDER_AND   = 2
-	gWHERE_HOLDER_OR    = 3
-	OPTION_OMITEMPTY    = 1 << iota
-	OPTION_ALLOWEMPTY
+	OPTION_OMITEMPTY  = 1
+	OPTION_ALLOWEMPTY = 2
+
+	linkTypeMaster   = 1
+	linkTypeMSlave   = 2
+	whereHolderWhere = 1
+	whereHolderAnd   = 2
+	whereHolderOr    = 3
 )
 
 // Table creates and returns a new ORM model from given schema.
@@ -110,6 +112,16 @@ func (tx *TX) Table(table ...string) *Model {
 // See tx.Table.
 func (tx *TX) Model(table ...string) *Model {
 	return tx.Table(table...)
+}
+
+//
+func (m *Model) Ctx(ctx context.Context) *Model {
+	if ctx == nil {
+		return m
+	}
+	model := m.getModel()
+	model.db = model.db.Ctx(ctx)
+	return model
 }
 
 // As sets an alias name for current table.
@@ -178,7 +190,7 @@ func (m *Model) Clone() *Model {
 // Master marks the following operation on master node.
 func (m *Model) Master() *Model {
 	model := m.getModel()
-	model.linkType = gLINK_TYPE_MASTER
+	model.linkType = linkTypeMaster
 	return model
 }
 
@@ -186,7 +198,7 @@ func (m *Model) Master() *Model {
 // Note that it makes sense only if there's any slave node configured.
 func (m *Model) Slave() *Model {
 	model := m.getModel()
-	model.linkType = gLINK_TYPE_SLAVE
+	model.linkType = linkTypeMSlave
 	return model
 }
 

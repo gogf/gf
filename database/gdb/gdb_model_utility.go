@@ -149,19 +149,19 @@ func (m *Model) getLink(master bool) Link {
 	linkType := m.linkType
 	if linkType == 0 {
 		if master {
-			linkType = gLINK_TYPE_MASTER
+			linkType = linkTypeMaster
 		} else {
-			linkType = gLINK_TYPE_SLAVE
+			linkType = linkTypeMSlave
 		}
 	}
 	switch linkType {
-	case gLINK_TYPE_MASTER:
+	case linkTypeMaster:
 		link, err := m.db.GetMaster(m.schema)
 		if err != nil {
 			panic(err)
 		}
 		return link
-	case gLINK_TYPE_SLAVE:
+	case linkTypeMSlave:
 		link, err := m.db.GetSlave(m.schema)
 		if err != nil {
 			panic(err)
@@ -196,7 +196,7 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 	if len(m.whereHolder) > 0 {
 		for _, v := range m.whereHolder {
 			switch v.operator {
-			case gWHERE_HOLDER_WHERE:
+			case whereHolderWhere:
 				if conditionWhere == "" {
 					newWhere, newArgs := formatWhere(
 						m.db, v.where, v.args, m.option&OPTION_OMITEMPTY > 0,
@@ -209,7 +209,7 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 				}
 				fallthrough
 
-			case gWHERE_HOLDER_AND:
+			case whereHolderAnd:
 				newWhere, newArgs := formatWhere(
 					m.db, v.where, v.args, m.option&OPTION_OMITEMPTY > 0,
 				)
@@ -224,7 +224,7 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 					conditionArgs = append(conditionArgs, newArgs...)
 				}
 
-			case gWHERE_HOLDER_OR:
+			case whereHolderOr:
 				newWhere, newArgs := formatWhere(
 					m.db, v.where, v.args, m.option&OPTION_OMITEMPTY > 0,
 				)

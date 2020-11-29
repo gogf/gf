@@ -59,7 +59,7 @@ func (tx *TX) GetAll(sql string, args ...interface{}) (Result, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	return tx.db.rowsToResult(rows)
+	return tx.db.convertRowsToResult(rows)
 }
 
 // GetOne queries and returns one record from database.
