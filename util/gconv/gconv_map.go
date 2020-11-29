@@ -141,30 +141,30 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 
 	default:
 		// Not a common type, it then uses reflection for conversion.
-		var rv reflect.Value
+		var reflectValue reflect.Value
 		if v, ok := value.(reflect.Value); ok {
-			rv = v
+			reflectValue = v
 		} else {
-			rv = reflect.ValueOf(value)
+			reflectValue = reflect.ValueOf(value)
 		}
-		kind := rv.Kind()
+		reflectKind := reflectValue.Kind()
 		// If it is a pointer, we should find its real data type.
-		if kind == reflect.Ptr {
-			rv = rv.Elem()
-			kind = rv.Kind()
+		for reflectKind == reflect.Ptr {
+			reflectValue = reflectValue.Elem()
+			reflectKind = reflectValue.Kind()
 		}
-		switch kind {
+		switch reflectKind {
 		// If <value> is type of array, it converts the value of even number index as its key and
 		// the value of odd number index as its corresponding value, for example:
 		// []string{"k1","v1","k2","v2"} => map[string]interface{}{"k1":"v1", "k2":"v2"}
 		// []string{"k1","v1","k2"}      => map[string]interface{}{"k1":"v1", "k2":nil}
 		case reflect.Slice, reflect.Array:
-			length := rv.Len()
+			length := reflectValue.Len()
 			for i := 0; i < length; i += 2 {
 				if i+1 < length {
-					dataMap[String(rv.Index(i).Interface())] = rv.Index(i + 1).Interface()
+					dataMap[String(reflectValue.Index(i).Interface())] = reflectValue.Index(i + 1).Interface()
 				} else {
-					dataMap[String(rv.Index(i).Interface())] = nil
+					dataMap[String(reflectValue.Index(i).Interface())] = nil
 				}
 			}
 		case reflect.Map, reflect.Struct:
@@ -184,29 +184,29 @@ func doMapConvertForMapOrStructValue(isRoot bool, value interface{}, recursive b
 	if isRoot == false && recursive == false {
 		return value
 	}
-	var rv reflect.Value
+	var reflectValue reflect.Value
 	if v, ok := value.(reflect.Value); ok {
-		rv = v
+		reflectValue = v
 		value = v.Interface()
 	} else {
-		rv = reflect.ValueOf(value)
+		reflectValue = reflect.ValueOf(value)
 	}
-	kind := rv.Kind()
+	reflectKind := reflectValue.Kind()
 	// If it is a pointer, we should find its real data type.
-	for kind == reflect.Ptr {
-		rv = rv.Elem()
-		kind = rv.Kind()
+	for reflectKind == reflect.Ptr {
+		reflectValue = reflectValue.Elem()
+		reflectKind = reflectValue.Kind()
 	}
-	switch kind {
+	switch reflectKind {
 	case reflect.Map:
 		var (
-			mapKeys = rv.MapKeys()
+			mapKeys = reflectValue.MapKeys()
 			dataMap = make(map[string]interface{})
 		)
 		for _, k := range mapKeys {
 			dataMap[String(k.Interface())] = doMapConvertForMapOrStructValue(
 				false,
-				rv.MapIndex(k).Interface(),
+				reflectValue.MapIndex(k).Interface(),
 				recursive,
 				tags...,
 			)
@@ -228,15 +228,15 @@ func doMapConvertForMapOrStructValue(isRoot bool, value interface{}, recursive b
 		}
 		// Using reflect for converting.
 		var (
-			rtField reflect.StructField
-			rvField reflect.Value
-			dataMap = make(map[string]interface{}) // result map.
-			rt      = rv.Type()                    // attribute value type.
-			name    = ""                           // name may be the tag name or the struct attribute name.
+			rtField     reflect.StructField
+			rvField     reflect.Value
+			dataMap     = make(map[string]interface{}) // result map.
+			reflectType = reflectValue.Type()          // attribute value type.
+			name        = ""                           // name may be the tag name or the struct attribute name.
 		)
-		for i := 0; i < rv.NumField(); i++ {
-			rtField = rt.Field(i)
-			rvField = rv.Field(i)
+		for i := 0; i < reflectValue.NumField(); i++ {
+			rtField = reflectType.Field(i)
+			rvField = reflectValue.Field(i)
 			// Only convert the public attributes.
 			fieldName := rtField.Name
 			if !utils.IsLetterUpper(fieldName[0]) {
@@ -320,7 +320,7 @@ func doMapConvertForMapOrStructValue(isRoot bool, value interface{}, recursive b
 
 				default:
 					if rvField.IsValid() {
-						dataMap[name] = rv.Field(i).Interface()
+						dataMap[name] = reflectValue.Field(i).Interface()
 					} else {
 						dataMap[name] = nil
 					}
@@ -328,7 +328,7 @@ func doMapConvertForMapOrStructValue(isRoot bool, value interface{}, recursive b
 			} else {
 				// No recursive map value converting
 				if rvField.IsValid() {
-					dataMap[name] = rv.Field(i).Interface()
+					dataMap[name] = reflectValue.Field(i).Interface()
 				} else {
 					dataMap[name] = nil
 				}
@@ -341,13 +341,13 @@ func doMapConvertForMapOrStructValue(isRoot bool, value interface{}, recursive b
 
 	// The given value is type of slice.
 	case reflect.Array, reflect.Slice:
-		length := rv.Len()
+		length := reflectValue.Len()
 		if length == 0 {
 			break
 		}
-		array := make([]interface{}, rv.Len())
+		array := make([]interface{}, reflectValue.Len())
 		for i := 0; i < length; i++ {
-			array[i] = doMapConvertForMapOrStructValue(false, rv.Index(i), recursive, tags...)
+			array[i] = doMapConvertForMapOrStructValue(false, reflectValue.Index(i), recursive, tags...)
 		}
 		return array
 	}
