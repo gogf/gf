@@ -127,6 +127,8 @@ func ConvertDataForTableRecord(value interface{}) map[string]interface{} {
 			switch v.(type) {
 			case time.Time, *time.Time, gtime.Time, *gtime.Time:
 				continue
+			case Counter, *Counter:
+				continue
 			default:
 				// Use string conversion in default.
 				if s, ok := v.(apiString); ok {
