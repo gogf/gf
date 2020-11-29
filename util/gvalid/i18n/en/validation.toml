@@ -9,6 +9,7 @@
 "gf.gvalid.rule.date-format"          = "The :attribute value does not match the format :format"
 "gf.gvalid.rule.email"                = "The :attribute value must be a valid email address"
 "gf.gvalid.rule.phone"                = "The :attribute value must be a valid phone number"
+"gf.gvalid.rule.phone-loose"          = "The :attribute value must be a valid phone number"
 "gf.gvalid.rule.telephone"            = "The :attribute value must be a valid telephone number"
 "gf.gvalid.rule.passport"             = "The :attribute value is not a valid passport format"
 "gf.gvalid.rule.password"             = "The :attribute value is not a valid passport format"
