@@ -114,7 +114,7 @@ func (tx *TX) Model(table ...string) *Model {
 	return tx.Table(table...)
 }
 
-//
+// Ctx sets the context for current operation.
 func (m *Model) Ctx(ctx context.Context) *Model {
 	if ctx == nil {
 		return m
