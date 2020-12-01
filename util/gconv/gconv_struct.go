@@ -287,6 +287,7 @@ func bindVarToStructAttr(elem reflect.Value, name string, value interface{}, map
 			}
 		}
 	}()
+	// Directly converting.
 	if empty.IsNil(value) {
 		structFieldValue.Set(reflect.Zero(structFieldValue.Type()))
 	} else {
@@ -295,10 +296,35 @@ func bindVarToStructAttr(elem reflect.Value, name string, value interface{}, map
 	return nil
 }
 
+// bindVarToReflectValueWithInterfaceCheck does binding using common interfaces checks.
+func bindVarToReflectValueWithInterfaceCheck(structFieldValue reflect.Value, value interface{}) (err error, ok bool) {
+	if structFieldValue.CanAddr() {
+		pointer := structFieldValue.Addr().Interface()
+		if v, ok := pointer.(apiUnmarshalValue); ok {
+			return v.UnmarshalValue(value), ok
+		}
+		if v, ok := pointer.(apiUnmarshalText); ok {
+			if s, ok := value.(string); ok {
+				return v.UnmarshalText([]byte(s)), ok
+			}
+			if b, ok := value.([]byte); ok {
+				return v.UnmarshalText(b), ok
+			}
+		}
+		if v, ok := pointer.(apiSet); ok {
+			v.Set(value)
+			return nil, ok
+		}
+	}
+	return nil, false
+}
+
 // bindVarToReflectValue sets <value> to reflect value object <structFieldValue>.
 func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, mapping ...map[string]string) (err error) {
+	if err, ok := bindVarToReflectValueWithInterfaceCheck(structFieldValue, value); ok {
+		return err
+	}
 	kind := structFieldValue.Kind()
-
 	// Converting using interface, for some kinds.
 	switch kind {
 	case reflect.Slice, reflect.Array, reflect.Ptr, reflect.Interface:
@@ -306,10 +332,6 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, ma
 			if v, ok := structFieldValue.Interface().(apiSet); ok {
 				v.Set(value)
 				return nil
-			} else if v, ok := structFieldValue.Interface().(apiUnmarshalValue); ok {
-				if err = v.UnmarshalValue(value); err == nil {
-					return err
-				}
 			}
 		}
 	}
@@ -317,11 +339,6 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, ma
 	// Converting by kind.
 	switch kind {
 	case reflect.Struct:
-		// UnmarshalValue.
-		if v, ok := structFieldValue.Addr().Interface().(apiUnmarshalValue); ok {
-			return v.UnmarshalValue(value)
-		}
-
 		// Recursively converting for struct attribute.
 		if err := doStruct(value, structFieldValue); err != nil {
 			// Note there's reflect conversion mechanism here.
@@ -378,10 +395,7 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, ma
 
 	case reflect.Ptr:
 		item := reflect.New(structFieldValue.Type().Elem())
-		// Assign value with interface Set.
-		// Note that only pointer can implement interface Set.
-		if v, ok := item.Interface().(apiUnmarshalValue); ok {
-			err = v.UnmarshalValue(value)
+		if err, ok := bindVarToReflectValueWithInterfaceCheck(item, value); ok {
 			structFieldValue.Set(item)
 			return err
 		}

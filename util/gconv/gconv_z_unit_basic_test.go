@@ -40,3 +40,11 @@ func Test_Basic(t *testing.T) {
 		t.Assert(gconv.Int(s), int64(-0xFF))
 	})
 }
+
+func Test_Duration(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		d := gconv.Duration("1s")
+		t.Assert(d.String(), "1s")
+		t.Assert(d.Nanoseconds(), 1000000000)
+	})
+}
