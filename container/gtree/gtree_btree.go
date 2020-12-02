@@ -68,7 +68,7 @@ func NewBTreeFrom(m int, comparator func(v1, v2 interface{}) int, data map[inter
 
 // Clone returns a new tree with a copy of current tree.
 func (tree *BTree) Clone() *BTree {
-	newTree := NewBTree(tree.m, tree.comparator, !tree.mu.IsSafe())
+	newTree := NewBTree(tree.m, tree.comparator, tree.mu.IsSafe())
 	newTree.Sets(tree.Map())
 	return newTree
 }

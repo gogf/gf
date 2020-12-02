@@ -83,7 +83,7 @@ func (tree *RedBlackTree) SetComparator(comparator func(a, b interface{}) int) {
 
 // Clone returns a new tree with a copy of current tree.
 func (tree *RedBlackTree) Clone() *RedBlackTree {
-	newTree := NewRedBlackTree(tree.comparator, !tree.mu.IsSafe())
+	newTree := NewRedBlackTree(tree.comparator, tree.mu.IsSafe())
 	newTree.Sets(tree.Map())
 	return newTree
 }
@@ -656,9 +656,9 @@ func (tree *RedBlackTree) Search(key interface{}) (value interface{}, found bool
 func (tree *RedBlackTree) Flip(comparator ...func(v1, v2 interface{}) int) {
 	t := (*RedBlackTree)(nil)
 	if len(comparator) > 0 {
-		t = NewRedBlackTree(comparator[0], !tree.mu.IsSafe())
+		t = NewRedBlackTree(comparator[0], tree.mu.IsSafe())
 	} else {
-		t = NewRedBlackTree(tree.comparator, !tree.mu.IsSafe())
+		t = NewRedBlackTree(tree.comparator, tree.mu.IsSafe())
 	}
 	tree.IteratorAsc(func(key, value interface{}) bool {
 		t.doSet(value, key)

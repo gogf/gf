@@ -56,7 +56,7 @@ func (m *StrAnyMap) Iterator(f func(k string, v interface{}) bool) {
 
 // Clone returns a new hash map with copy of current map data.
 func (m *StrAnyMap) Clone() *StrAnyMap {
-	return NewStrAnyMapFrom(m.MapCopy(), !m.mu.IsSafe())
+	return NewStrAnyMapFrom(m.MapCopy(), m.mu.IsSafe())
 }
 
 // Map returns the underlying data map.

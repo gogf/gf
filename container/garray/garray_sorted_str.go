@@ -498,7 +498,7 @@ func (a *SortedStrArray) Clone() (newArray *SortedStrArray) {
 	array := make([]string, len(a.array))
 	copy(array, a.array)
 	a.mu.RUnlock()
-	return NewSortedStrArrayFrom(array, !a.mu.IsSafe())
+	return NewSortedStrArrayFrom(array, a.mu.IsSafe())
 }
 
 // Clear deletes all items of current array.
