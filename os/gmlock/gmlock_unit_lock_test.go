@@ -7,6 +7,7 @@
 package gmlock_test
 
 import (
+	"sync"
 	"testing"
 	"time"
 
@@ -153,5 +154,52 @@ func Test_Locker_TryLockFunc(t *testing.T) {
 		t.Assert(array.Len(), 1)
 		time.Sleep(400 * time.Millisecond)
 		t.Assert(array.Len(), 2)
+	})
+}
+
+func Test_Multiple_Goroutine(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		ch := make(chan struct{}, 0)
+		num := 1000
+		wait := sync.WaitGroup{}
+		wait.Add(num)
+		for i := 0; i < num; i++ {
+			go func() {
+				defer wait.Done()
+				<-ch
+				gmlock.Lock("test")
+				defer gmlock.Unlock("test")
+				time.Sleep(time.Millisecond)
+			}()
+		}
+		close(ch)
+		wait.Wait()
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		ch := make(chan struct{}, 0)
+		num := 100
+		wait := sync.WaitGroup{}
+		wait.Add(num * 2)
+		for i := 0; i < num; i++ {
+			go func() {
+				defer wait.Done()
+				<-ch
+				gmlock.Lock("test")
+				defer gmlock.Unlock("test")
+				time.Sleep(time.Millisecond)
+			}()
+		}
+		for i := 0; i < num; i++ {
+			go func() {
+				defer wait.Done()
+				<-ch
+				gmlock.RLock("test")
+				defer gmlock.RUnlock("test")
+				time.Sleep(time.Millisecond)
+			}()
+		}
+		close(ch)
+		wait.Wait()
 	})
 }
