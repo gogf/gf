@@ -457,7 +457,7 @@ func (a *StrArray) Clone() (newArray *StrArray) {
 	array := make([]string, len(a.array))
 	copy(array, a.array)
 	a.mu.RUnlock()
-	return NewStrArrayFrom(array, !a.mu.IsSafe())
+	return NewStrArrayFrom(array, a.mu.IsSafe())
 }
 
 // Clear deletes all items of current array.

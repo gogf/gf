@@ -496,7 +496,7 @@ func (a *SortedIntArray) Clone() (newArray *SortedIntArray) {
 	array := make([]int, len(a.array))
 	copy(array, a.array)
 	a.mu.RUnlock()
-	return NewSortedIntArrayFrom(array, !a.mu.IsSafe())
+	return NewSortedIntArrayFrom(array, a.mu.IsSafe())
 }
 
 // Clear deletes all items of current array.

@@ -56,7 +56,7 @@ func NewAVLTreeFrom(comparator func(v1, v2 interface{}) int, data map[interface{
 
 // Clone returns a new tree with a copy of current tree.
 func (tree *AVLTree) Clone() *AVLTree {
-	newTree := NewAVLTree(tree.comparator, !tree.mu.IsSafe())
+	newTree := NewAVLTree(tree.comparator, tree.mu.IsSafe())
 	newTree.Sets(tree.Map())
 	return newTree
 }
@@ -441,9 +441,9 @@ func (tree *AVLTree) MapStrAny() map[string]interface{} {
 func (tree *AVLTree) Flip(comparator ...func(v1, v2 interface{}) int) {
 	t := (*AVLTree)(nil)
 	if len(comparator) > 0 {
-		t = NewAVLTree(comparator[0], !tree.mu.IsSafe())
+		t = NewAVLTree(comparator[0], tree.mu.IsSafe())
 	} else {
-		t = NewAVLTree(tree.comparator, !tree.mu.IsSafe())
+		t = NewAVLTree(tree.comparator, tree.mu.IsSafe())
 	}
 	tree.IteratorAsc(func(key, value interface{}) bool {
 		t.put(value, key, nil, &t.root)
