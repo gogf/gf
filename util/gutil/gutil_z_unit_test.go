@@ -65,6 +65,7 @@ func Test_Throw(t *testing.T) {
 }
 
 func Test_Keys(t *testing.T) {
+	// map
 	gtest.C(t, func(t *gtest.T) {
 		keys := gutil.Keys(map[int]int{
 			1: 10,
@@ -73,7 +74,16 @@ func Test_Keys(t *testing.T) {
 		t.AssertIN("1", keys)
 		t.AssertIN("2", keys)
 	})
-
+	// *map
+	gtest.C(t, func(t *gtest.T) {
+		keys := gutil.Keys(&map[int]int{
+			1: 10,
+			2: 20,
+		})
+		t.AssertIN("1", keys)
+		t.AssertIN("2", keys)
+	})
+	// *struct
 	gtest.C(t, func(t *gtest.T) {
 		type T struct {
 			A string
@@ -82,7 +92,7 @@ func Test_Keys(t *testing.T) {
 		keys := gutil.Keys(new(T))
 		t.Assert(keys, g.SliceStr{"A", "B"})
 	})
-
+	// *struct nil
 	gtest.C(t, func(t *gtest.T) {
 		type T struct {
 			A string
@@ -90,6 +100,16 @@ func Test_Keys(t *testing.T) {
 		}
 		var pointer *T
 		keys := gutil.Keys(pointer)
+		t.Assert(keys, g.SliceStr{"A", "B"})
+	})
+	// **struct nil
+	gtest.C(t, func(t *gtest.T) {
+		type T struct {
+			A string
+			B int
+		}
+		var pointer *T
+		keys := gutil.Keys(&pointer)
 		t.Assert(keys, g.SliceStr{"A", "B"})
 	})
 }

@@ -275,7 +275,7 @@ var (
 
 	// regularFieldNameRegPattern is the regular expression pattern for a string
 	// which is a regular field name of table.
-	regularFieldNameRegPattern = `^[\w\.\-]+$`
+	regularFieldNameRegPattern = `^[\w\.\-\_]+$`
 
 	// internalCache is the memory cache for internal usage.
 	internalCache = gcache.New()

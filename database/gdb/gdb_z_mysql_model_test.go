@@ -2978,3 +2978,62 @@ func Test_TimeZoneInsert(t *testing.T) {
 		t.Assert(gtime.NewFromTime(userEntity.DeletedAt).String(), "2020-11-22 06:23:45")
 	})
 }
+
+func Test_Model_Fields_Map_Struct(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	// map
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Table(table).Fields(g.Map{
+			"ID":         1,
+			"PASSPORT":   1,
+			"NONE_EXIST": 1,
+		}).Where("id", 1).One()
+		t.Assert(err, nil)
+		t.Assert(len(result), 2)
+		t.Assert(result["id"], 1)
+		t.Assert(result["passport"], "user_1")
+	})
+	// struct
+	gtest.C(t, func(t *gtest.T) {
+		type A struct {
+			ID       int
+			PASSPORT string
+			XXX_TYPE int
+		}
+		var a = A{}
+		err := db.Table(table).Fields(a).Where("id", 1).Struct(&a)
+		t.Assert(err, nil)
+		t.Assert(a.ID, 1)
+		t.Assert(a.PASSPORT, "user_1")
+		t.Assert(a.XXX_TYPE, 0)
+	})
+	// *struct
+	gtest.C(t, func(t *gtest.T) {
+		type A struct {
+			ID       int
+			PASSPORT string
+			XXX_TYPE int
+		}
+		var a *A
+		err := db.Table(table).Fields(a).Where("id", 1).Struct(&a)
+		t.Assert(err, nil)
+		t.Assert(a.ID, 1)
+		t.Assert(a.PASSPORT, "user_1")
+		t.Assert(a.XXX_TYPE, 0)
+	})
+	// **struct
+	gtest.C(t, func(t *gtest.T) {
+		type A struct {
+			ID       int
+			PASSPORT string
+			XXX_TYPE int
+		}
+		var a *A
+		err := db.Table(table).Fields(&a).Where("id", 1).Struct(&a)
+		t.Assert(err, nil)
+		t.Assert(a.ID, 1)
+		t.Assert(a.PASSPORT, "user_1")
+		t.Assert(a.XXX_TYPE, 0)
+	})
+}

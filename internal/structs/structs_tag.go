@@ -68,30 +68,15 @@ func getFieldValues(value interface{}) ([]*Field, error) {
 		reflectKind = reflectValue.Kind()
 	}
 
-	if reflectKind == reflect.Ptr {
+	for reflectKind == reflect.Ptr {
 		if !reflectValue.IsValid() || reflectValue.IsNil() {
 			// If pointer is type of *struct and nil, then automatically create a temporary struct.
 			reflectValue = reflect.New(reflectValue.Type().Elem()).Elem()
 			reflectKind = reflectValue.Kind()
 		} else {
-			// If pointer is type of **struct and nil, then automatically create a temporary struct.
-			var (
-				pointedValue     = reflectValue.Elem()
-				pointedValueKind = pointedValue.Kind()
-			)
-			if pointedValueKind == reflect.Ptr && (!pointedValue.IsValid() || pointedValue.IsNil()) {
-				reflectValue = reflect.New(pointedValue.Type().Elem()).Elem()
-				reflectKind = reflectValue.Kind()
-			} else {
-				reflectValue = pointedValue
-				reflectKind = pointedValueKind
-			}
+			reflectValue = reflectValue.Elem()
+			reflectKind = reflectValue.Kind()
 		}
-	}
-
-	for reflectKind == reflect.Ptr {
-		reflectValue = reflectValue.Elem()
-		reflectKind = reflectValue.Kind()
 	}
 	if reflectKind != reflect.Struct {
 		return nil, errors.New("given value should be type of struct/*struct")
