@@ -19,7 +19,6 @@ func Test_Get(t *testing.T) {
 	os.Args = []string{"--gf.test.value1=111"}
 	os.Setenv("GF_TEST_VALUE1", "222")
 	os.Setenv("GF_TEST_VALUE2", "333")
-	doInit()
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(Get("gf.test.value1").String(), "111")
 		t.Assert(Get("gf.test.value2").String(), "333")
