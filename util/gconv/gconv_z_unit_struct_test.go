@@ -853,38 +853,6 @@ func Test_Struct_CatchPanic(t *testing.T) {
 	})
 }
 
-type MyTime struct {
-	time.Time
-}
-
-type MyTimeSt struct {
-	ServiceDate MyTime
-}
-
-func (st *MyTimeSt) UnmarshalValue(v interface{}) error {
-	m := gconv.Map(v)
-	t, err := gtime.StrToTime(gconv.String(m["ServiceDate"]))
-	if err != nil {
-		return err
-	}
-	st.ServiceDate = MyTime{t.Time}
-	return nil
-}
-
-func Test_Struct_UnmarshalValue(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		st := &MyTimeSt{}
-		err := gconv.Struct(g.Map{"ServiceDate": "2020-10-10 12:00:01"}, st)
-		t.Assert(err, nil)
-		t.Assert(st.ServiceDate.Time.Format("2006-01-02 15:04:05"), "2020-10-10 12:00:01")
-	})
-	gtest.C(t, func(t *gtest.T) {
-		st := &MyTimeSt{}
-		err := gconv.Struct(g.Map{"ServiceDate": nil}, st)
-		t.AssertNE(err, nil)
-	})
-}
-
 type T struct {
 	Name string
 }
@@ -1054,6 +1022,38 @@ func Test_Struct_NilEmbeddedStructAttribute(t *testing.T) {
 			"name": nil,
 		}, &b)
 		t.Assert(err, nil)
-		g.Dump(b)
+		t.Assert(b.Id, 1)
+		t.Assert(b.Name, "")
+	})
+}
+
+func Test_Struct_JsonParam(t *testing.T) {
+	type A struct {
+		Id   int    `json:"id"`
+		Name string `json:"name"`
+	}
+	// struct
+	gtest.C(t, func(t *gtest.T) {
+		var a = A{}
+		err := gconv.Struct([]byte(`{"id":1,"name":"john"}`), &a)
+		t.Assert(err, nil)
+		t.Assert(a.Id, 1)
+		t.Assert(a.Name, "john")
+	})
+	// *struct
+	gtest.C(t, func(t *gtest.T) {
+		var a = &A{}
+		err := gconv.Struct([]byte(`{"id":1,"name":"john"}`), a)
+		t.Assert(err, nil)
+		t.Assert(a.Id, 1)
+		t.Assert(a.Name, "john")
+	})
+	// *struct nil
+	gtest.C(t, func(t *gtest.T) {
+		var a *A
+		err := gconv.Struct([]byte(`{"id":1,"name":"john"}`), &a)
+		t.Assert(err, nil)
+		t.Assert(a.Id, 1)
+		t.Assert(a.Name, "john")
 	})
 }
