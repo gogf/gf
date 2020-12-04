@@ -36,6 +36,29 @@ func Test_Strings(t *testing.T) {
 	})
 }
 
+func Test_Slice_Interfaces(t *testing.T) {
+	// map
+	gtest.C(t, func(t *gtest.T) {
+		array := gconv.Interfaces(g.Map{
+			"id":   1,
+			"name": "john",
+		})
+		t.AssertIN(array, []interface{}{"id", 1, "name", "john"})
+	})
+	// struct
+	gtest.C(t, func(t *gtest.T) {
+		type A struct {
+			Id   int `json:"id"`
+			Name string
+		}
+		array := gconv.Interfaces(&A{
+			Id:   1,
+			Name: "john",
+		})
+		t.AssertIN(array, []interface{}{"id", 1, "Name", "john"})
+	})
+}
+
 func Test_Slice_PrivateAttribute(t *testing.T) {
 	type User struct {
 		Id   int    `json:"id"`
