@@ -33,19 +33,21 @@ func (m *Model) Fields(fieldNamesOrMapStruct ...interface{}) *Model {
 		return m
 	}
 	switch {
+	// String slice.
 	case length >= 2:
 		model := m.getModel()
-		model.fields = gstr.Join(m.mappingToTableFields(gconv.Strings(fieldNamesOrMapStruct)), ",")
+		model.fields = gstr.Join(m.mappingAndFilterToTableFields(gconv.Strings(fieldNamesOrMapStruct)), ",")
 		return model
+	// It need type asserting.
 	case length == 1:
 		model := m.getModel()
 		switch r := fieldNamesOrMapStruct[0].(type) {
 		case string:
-			model.fields = gstr.Join(m.mappingToTableFields([]string{r}), ",")
+			model.fields = gstr.Join(m.mappingAndFilterToTableFields([]string{r}), ",")
 		case []string:
-			model.fields = gstr.Join(m.mappingToTableFields(r), ",")
+			model.fields = gstr.Join(m.mappingAndFilterToTableFields(r), ",")
 		default:
-			model.fields = gstr.Join(m.mappingToTableFields(gutil.Keys(r)), ",")
+			model.fields = gstr.Join(m.mappingAndFilterToTableFields(gutil.Keys(r)), ",")
 		}
 		return model
 	}
@@ -63,14 +65,16 @@ func (m *Model) FieldsEx(fieldNamesOrMapStruct ...interface{}) *Model {
 	model := m.getModel()
 	switch {
 	case length >= 2:
-		model.fieldsEx = gstr.Join(m.mappingToTableFields(gconv.Strings(fieldNamesOrMapStruct)), ",")
+		model.fieldsEx = gstr.Join(m.mappingAndFilterToTableFields(gconv.Strings(fieldNamesOrMapStruct)), ",")
 		return model
 	case length == 1:
 		switch r := fieldNamesOrMapStruct[0].(type) {
 		case string:
-			model.fieldsEx = gstr.Join(m.mappingToTableFields([]string{r}), ",")
+			model.fieldsEx = gstr.Join(m.mappingAndFilterToTableFields([]string{r}), ",")
+		case []string:
+			model.fieldsEx = gstr.Join(m.mappingAndFilterToTableFields(r), ",")
 		default:
-			model.fieldsEx = gstr.Join(m.mappingToTableFields(gutil.Keys(r)), ",")
+			model.fieldsEx = gstr.Join(m.mappingAndFilterToTableFields(gutil.Keys(r)), ",")
 		}
 		return model
 	}

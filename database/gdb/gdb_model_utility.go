@@ -11,6 +11,7 @@ import (
 	"github.com/gogf/gf/container/gset"
 	"github.com/gogf/gf/internal/empty"
 	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/gutil"
@@ -27,31 +28,35 @@ func (m *Model) getModel() *Model {
 	}
 }
 
-// mappingToTableFields mappings and changes given field name to really table field name.
-func (m *Model) mappingToTableFields(fields []string) []string {
+// mappingAndFilterToTableFields mappings and changes given field name to really table field name.
+func (m *Model) mappingAndFilterToTableFields(fields []string) []string {
+	fieldsMap, err := m.db.TableFields(m.tables)
+	if err != nil || len(fieldsMap) == 0 {
+		return fields
+	}
 	var (
-		foundKey    = ""
-		fieldsArray = gstr.SplitAndTrim(gstr.Join(fields, ","), ",")
+		inputFieldsArray  = gstr.SplitAndTrim(gstr.Join(fields, ","), ",")
+		outputFieldsArray = make([]string, 0, len(inputFieldsArray))
 	)
-
-	if fieldsMap, err := m.db.TableFields(m.tables); err == nil {
-		fieldsKeyMap := make(map[string]interface{}, len(fieldsMap))
-		for k, _ := range fieldsMap {
-			fieldsKeyMap[k] = nil
-		}
-		for i, v := range fieldsArray {
-			if _, ok := fieldsKeyMap[v]; !ok {
-				if gstr.Contains(v, " ") || gstr.Contains(v, ".") {
-					continue
-				}
-				foundKey, _ = gutil.MapPossibleItemByKey(fieldsKeyMap, v)
-				if foundKey != "" {
-					fieldsArray[i] = foundKey
+	fieldsKeyMap := make(map[string]interface{}, len(fieldsMap))
+	for k, _ := range fieldsMap {
+		fieldsKeyMap[k] = nil
+	}
+	for _, field := range inputFieldsArray {
+		if _, ok := fieldsKeyMap[field]; !ok {
+			if !gregex.IsMatchString(regularFieldNameRegPattern, field) {
+				outputFieldsArray = append(outputFieldsArray, field)
+				continue
+			} else {
+				if foundKey, _ := gutil.MapPossibleItemByKey(fieldsKeyMap, field); foundKey != "" {
+					outputFieldsArray = append(outputFieldsArray, foundKey)
 				}
 			}
+		} else {
+			outputFieldsArray = append(outputFieldsArray, field)
 		}
 	}
-	return fieldsArray
+	return outputFieldsArray
 }
 
 // filterDataForInsertOrUpdate does filter feature with data for inserting/updating operations.
