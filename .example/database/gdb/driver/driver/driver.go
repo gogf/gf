@@ -9,7 +9,6 @@ package driver
 import (
 	"database/sql"
 	"github.com/gogf/gf/database/gdb"
-	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gtime"
 )
 
@@ -51,14 +50,13 @@ func (d *MyDriver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
 func (d *MyDriver) DoQuery(link gdb.Link, sql string, args ...interface{}) (rows *sql.Rows, err error) {
 	tsMilli := gtime.TimestampMilli()
 	rows, err = d.DriverMysql.DoQuery(link, sql, args...)
-	if _, err := d.DriverMysql.InsertIgnore("monitor", g.Map{
-		"sql":   gdb.FormatSqlWithArgs(sql, args),
-		"cost":  gtime.TimestampMilli() - tsMilli,
-		"time":  gtime.Now(),
-		"error": err.Error(),
-	}); err != nil {
-		panic(err)
-	}
+	link.Exec(
+		"INSERT INTO `%s`(`sql`,`cost`,`time`,`error`) VALUES(?,?,?,?)",
+		gdb.FormatSqlWithArgs(sql, args),
+		gtime.TimestampMilli()-tsMilli,
+		gtime.Now(),
+		err,
+	)
 	return
 }
 
@@ -67,13 +65,12 @@ func (d *MyDriver) DoQuery(link gdb.Link, sql string, args ...interface{}) (rows
 func (d *MyDriver) DoExec(link gdb.Link, sql string, args ...interface{}) (result sql.Result, err error) {
 	tsMilli := gtime.TimestampMilli()
 	result, err = d.DriverMysql.DoExec(link, sql, args...)
-	if _, err := d.DriverMysql.InsertIgnore("monitor", g.Map{
-		"sql":   gdb.FormatSqlWithArgs(sql, args),
-		"cost":  gtime.TimestampMilli() - tsMilli,
-		"time":  gtime.Now(),
-		"error": err.Error(),
-	}); err != nil {
-		panic(err)
-	}
+	link.Exec(
+		"INSERT INTO `%s`(`sql`,`cost`,`time`,`error`) VALUES(?,?,?,?)",
+		gdb.FormatSqlWithArgs(sql, args),
+		gtime.TimestampMilli()-tsMilli,
+		gtime.Now(),
+		err,
+	)
 	return
 }
