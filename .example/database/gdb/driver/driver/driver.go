@@ -51,7 +51,7 @@ func (d *MyDriver) DoQuery(link gdb.Link, sql string, args ...interface{}) (rows
 	tsMilli := gtime.TimestampMilli()
 	rows, err = d.DriverMysql.DoQuery(link, sql, args...)
 	link.Exec(
-		"INSERT INTO `%s`(`sql`,`cost`,`time`,`error`) VALUES(?,?,?,?)",
+		"INSERT INTO `monitor`(`sql`,`cost`,`time`,`error`) VALUES(?,?,?,?)",
 		gdb.FormatSqlWithArgs(sql, args),
 		gtime.TimestampMilli()-tsMilli,
 		gtime.Now(),
@@ -66,7 +66,7 @@ func (d *MyDriver) DoExec(link gdb.Link, sql string, args ...interface{}) (resul
 	tsMilli := gtime.TimestampMilli()
 	result, err = d.DriverMysql.DoExec(link, sql, args...)
 	link.Exec(
-		"INSERT INTO `%s`(`sql`,`cost`,`time`,`error`) VALUES(?,?,?,?)",
+		"INSERT INTO `monitor`(`sql`,`cost`,`time`,`error`) VALUES(?,?,?,?)",
 		gdb.FormatSqlWithArgs(sql, args),
 		gtime.TimestampMilli()-tsMilli,
 		gtime.Now(),
