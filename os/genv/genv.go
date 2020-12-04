@@ -58,6 +58,16 @@ func Set(key, value string) error {
 	return os.Setenv(key, value)
 }
 
+// SetMap sets the environment variables using map.
+func SetMap(m map[string]string) error {
+	for k, v := range m {
+		if err := os.Setenv(k, v); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // Contains checks whether the environment variable named <key> exists.
 func Contains(key string) bool {
 	_, ok := os.LookupEnv(key)
