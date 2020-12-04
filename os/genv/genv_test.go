@@ -7,6 +7,7 @@
 package genv_test
 
 import (
+	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gcmd"
 	"os"
 	"testing"
@@ -64,6 +65,17 @@ func Test_GEnv_Set(t *testing.T) {
 	})
 }
 
+func Test_GEnv_SetMap(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		err := genv.SetMap(g.MapStrStr{
+			"K1": "TEST1",
+			"K2": "TEST2",
+		})
+		t.Assert(err, nil)
+		t.AssertEQ(os.Getenv("K1"), "TEST1")
+		t.AssertEQ(os.Getenv("K2"), "TEST2")
+	})
+}
 func Test_GEnv_Build(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		s := genv.Build(map[string]string{
