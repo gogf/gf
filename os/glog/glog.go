@@ -8,7 +8,7 @@
 package glog
 
 import (
-	"github.com/gogf/gf/internal/cmdenv"
+	"github.com/gogf/gf/os/gcmd"
 	"github.com/gogf/gf/os/grpool"
 )
 
@@ -26,7 +26,7 @@ var (
 )
 
 func init() {
-	defaultDebug = cmdenv.Get("gf.glog.debug", true).Bool()
+	defaultDebug = gcmd.GetWithEnv("gf.glog.debug", true).Bool()
 	SetDebug(defaultDebug)
 }
 

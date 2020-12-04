@@ -11,6 +11,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/os/gcmd"
 	"github.com/gogf/gf/text/gstr"
 
 	"github.com/gogf/gf/os/gres"
@@ -18,7 +19,6 @@ import (
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/encoding/gjson"
-	"github.com/gogf/gf/internal/cmdenv"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/gfsnotify"
 	"github.com/gogf/gf/os/glog"
@@ -55,7 +55,7 @@ func New(file ...string) *Config {
 		jsons: gmap.NewStrAnyMap(true),
 	}
 	// Customized dir path from env/cmd.
-	if envPath := cmdenv.Get(fmt.Sprintf("%s.path", gCMDENV_KEY)).String(); envPath != "" {
+	if envPath := gcmd.GetWithEnv(fmt.Sprintf("%s.path", gCMDENV_KEY)).String(); envPath != "" {
 		if gfile.Exists(envPath) {
 			_ = c.SetPath(envPath)
 		} else {

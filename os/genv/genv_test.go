@@ -1,4 +1,4 @@
-// Copyright 2017-2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,6 +7,7 @@
 package genv_test
 
 import (
+	"github.com/gogf/gf/os/gcmd"
 	"os"
 	"testing"
 
@@ -83,5 +84,18 @@ func Test_GEnv_Remove(t *testing.T) {
 		err = genv.Remove(key)
 		t.Assert(err, nil)
 		t.AssertEQ(os.Getenv(key), "")
+	})
+}
+
+func Test_GetWithCmd(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		gcmd.Init("-test", "2")
+		t.Assert(genv.GetWithCmd("TEST"), 2)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		genv.Set("TEST", "1")
+		defer genv.Remove("TEST")
+		gcmd.Init("-test", "2")
+		t.Assert(genv.GetWithCmd("test"), 1)
 	})
 }

@@ -10,7 +10,7 @@ package intlog
 import (
 	"fmt"
 	"github.com/gogf/gf/debug/gdebug"
-	"github.com/gogf/gf/internal/cmdenv"
+	"github.com/gogf/gf/os/gcmd"
 	"path/filepath"
 	"time"
 )
@@ -26,7 +26,7 @@ var (
 
 func init() {
 	// Debugging configured.
-	if !cmdenv.Get("GF_DEBUG").IsEmpty() {
+	if !gcmd.GetWithEnv("GF_DEBUG").IsEmpty() {
 		isGFDebug = true
 		return
 	}

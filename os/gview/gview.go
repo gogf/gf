@@ -16,7 +16,7 @@ import (
 
 	"github.com/gogf/gf"
 	"github.com/gogf/gf/container/garray"
-	"github.com/gogf/gf/internal/cmdenv"
+	"github.com/gogf/gf/os/gcmd"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/glog"
 )
@@ -71,7 +71,7 @@ func New(path ...string) *View {
 		}
 	} else {
 		// Customized dir path from env/cmd.
-		if envPath := cmdenv.Get("gf.gview.path").String(); envPath != "" {
+		if envPath := gcmd.GetWithEnv("gf.gview.path").String(); envPath != "" {
 			if gfile.Exists(envPath) {
 				if err := view.SetPath(envPath); err != nil {
 					intlog.Error(err)

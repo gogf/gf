@@ -1,4 +1,4 @@
-// Copyright 2017-2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -9,6 +9,7 @@ package genv
 
 import (
 	"github.com/gogf/gf/container/gvar"
+	"github.com/gogf/gf/os/gcmd"
 	"os"
 )
 import "strings"
@@ -63,17 +64,6 @@ func Contains(key string) bool {
 	return ok
 }
 
-// Build builds a map to a environment variable slice.
-func Build(m map[string]string) []string {
-	array := make([]string, len(m))
-	index := 0
-	for k, v := range m {
-		array[index] = k + "=" + v
-		index++
-	}
-	return array
-}
-
 // Remove deletes one or more environment variables.
 func Remove(key ...string) error {
 	var err error
@@ -84,4 +74,39 @@ func Remove(key ...string) error {
 		}
 	}
 	return nil
+}
+
+// GetWithCmd returns the environment value specified <key>.
+// If the environment value does not exist, then it retrieves and returns the value from command line options.
+// It returns the default value <def> if none of them exists.
+//
+// Fetching Rules:
+// 1. Environment arguments are in uppercase format, eg: GF_<package name>_<variable name>；
+// 2. Command line arguments are in lowercase format, eg: gf.<package name>.<variable name>;
+func GetWithCmd(key string, def ...interface{}) *gvar.Var {
+	value := interface{}(nil)
+	if len(def) > 0 {
+		value = def[0]
+	}
+	envKey := strings.ToUpper(strings.Replace(key, ".", "_", -1))
+	if v := os.Getenv(envKey); v != "" {
+		value = v
+	} else {
+		cmdKey := strings.ToLower(strings.Replace(key, "_", ".", -1))
+		if v := gcmd.GetOpt(cmdKey); v != "" {
+			value = v
+		}
+	}
+	return gvar.New(value)
+}
+
+// Build builds a map to a environment variable slice.
+func Build(m map[string]string) []string {
+	array := make([]string, len(m))
+	index := 0
+	for k, v := range m {
+		array[index] = k + "=" + v
+		index++
+	}
+	return array
 }

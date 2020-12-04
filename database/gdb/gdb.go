@@ -12,7 +12,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/gogf/gf/internal/cmdenv"
+	"github.com/gogf/gf/os/gcmd"
 	"time"
 
 	"github.com/gogf/gf/container/gvar"
@@ -287,7 +287,7 @@ var (
 
 func init() {
 	// allDryRun is initialized from environment or command options.
-	allDryRun = cmdenv.Get("gf.gdb.dryrun", false).Bool()
+	allDryRun = gcmd.GetWithEnv("gf.gdb.dryrun", false).Bool()
 }
 
 // Register registers custom database driver to gdb.
