@@ -114,6 +114,8 @@ func (p *Pool) Get() (interface{}, error) {
 			f := r.(*poolItem)
 			if f.expire == 0 || f.expire > gtime.TimestampMilli() {
 				return f.value, nil
+			} else if p.ExpireFunc != nil {
+				p.ExpireFunc(f.value)
 			}
 		} else {
 			break
