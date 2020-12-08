@@ -479,8 +479,12 @@ func (c *Core) DoInsert(link Link, table string, data interface{}, option int, b
 	)
 	for k, v := range dataMap {
 		fields = append(fields, charL+k+charR)
-		values = append(values, "?")
-		params = append(params, v)
+		if s, ok := v.(Raw); ok {
+			values = append(values, gconv.String(s))
+		} else {
+			values = append(values, "?")
+			params = append(params, v)
+		}
 	}
 	if option == insertOptionSave {
 		for k, _ := range dataMap {
@@ -615,19 +619,16 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 		}
 	}
 	// Handle the field names and place holders.
-	holders := []string(nil)
 	for k, _ := range listMap[0] {
 		keys = append(keys, k)
-		holders = append(holders, "?")
 	}
 	// Prepare the batch result pointer.
 	var (
-		charL, charR   = c.DB.GetChars()
-		batchResult    = new(SqlResult)
-		keysStr        = charL + strings.Join(keys, charR+","+charL) + charR
-		valueHolderStr = "(" + strings.Join(holders, ",") + ")"
-		operation      = GetInsertOperationByOption(option)
-		updateStr      = ""
+		charL, charR = c.DB.GetChars()
+		batchResult  = new(SqlResult)
+		keysStr      = charL + strings.Join(keys, charR+","+charL) + charR
+		operation    = GetInsertOperationByOption(option)
+		updateStr    = ""
 	)
 	if option == insertOptionSave {
 		for _, k := range keys {
@@ -651,23 +652,30 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 	if len(batch) > 0 && batch[0] > 0 {
 		batchNum = batch[0]
 	}
-	listMapLen := len(listMap)
+	var (
+		listMapLen  = len(listMap)
+		valueHolder = make([]string, 0)
+	)
 	for i := 0; i < listMapLen; i++ {
+		values = values[:0]
 		// Note that the map type is unordered,
 		// so it should use slice+key to retrieve the value.
 		for _, k := range keys {
-			params = append(params, listMap[i][k])
+			if s, ok := listMap[i][k].(Raw); ok {
+				values = append(values, gconv.String(s))
+			} else {
+				values = append(values, "?")
+				params = append(params, listMap[i][k])
+			}
 		}
-		values = append(values, valueHolderStr)
+		valueHolder = append(valueHolder, "("+gstr.Join(values, ",")+")")
 		if len(values) == batchNum || (i == listMapLen-1 && len(values) > 0) {
 			r, err := c.DB.DoExec(
 				link,
 				fmt.Sprintf(
 					"%s INTO %s(%s) VALUES%s %s",
-					operation,
-					table,
-					keysStr,
-					strings.Join(values, ","),
+					operation, table, keysStr,
+					gstr.Join(valueHolder, ","),
 					updateStr,
 				),
 				params...,
@@ -682,7 +690,7 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 				batchResult.affected += n
 			}
 			params = params[:0]
-			values = values[:0]
+			valueHolder = valueHolder[:0]
 		}
 	}
 	return batchResult, nil
@@ -743,8 +751,13 @@ func (c *Core) DoUpdate(link Link, table string, data interface{}, condition str
 					params = append(params, value.Value)
 				}
 			default:
-				fields = append(fields, c.DB.QuoteWord(k)+"=?")
-				params = append(params, v)
+				if s, ok := v.(Raw); ok {
+					fields = append(fields, c.DB.QuoteWord(k)+"="+gconv.String(s))
+				} else {
+					fields = append(fields, c.DB.QuoteWord(k)+"=?")
+					params = append(params, v)
+				}
+
 			}
 		}
 		updates = strings.Join(fields, ",")

@@ -225,21 +225,12 @@ type Counter struct {
 }
 
 type (
-	// Value is the field value type.
-	Value = *gvar.Var
-
-	// Record is the row record of the table.
-	Record map[string]Value
-
-	// Result is the row record array.
-	Result []Record
-
-	// Map is alias of map[string]interface{},
-	// which is the most common usage map type.
-	Map = map[string]interface{}
-
-	// List is type of map array.
-	List = []Map
+	Raw    string                   // Raw is a raw sql that will not be treated as argument but as a direct sql part.
+	Value  = *gvar.Var              // Value is the field value type.
+	Record map[string]Value         // Record is the row record of the table.
+	Result []Record                 // Result is the row record array.
+	Map    = map[string]interface{} // Map is alias of map[string]interface{}, which is the most common usage map type.
+	List   = []Map                  // List is type of map array.
 )
 
 const (
@@ -247,10 +238,10 @@ const (
 	insertOptionReplace     = 1
 	insertOptionSave        = 2
 	insertOptionIgnore      = 3
-	defaultBatchNumber      = 10  // Per count for batch insert/replace/save.
-	defaultMaxIdleConnCount = 10  // Max idle connection count in pool.
-	defaultMaxOpenConnCount = 100 // Max open connection count in pool.
-	defaultMaxConnLifeTime  = 30  // Max life time for per connection in pool in seconds.
+	defaultBatchNumber      = 10               // Per count for batch insert/replace/save.
+	defaultMaxIdleConnCount = 10               // Max idle connection count in pool.
+	defaultMaxOpenConnCount = 100              // Max open connection count in pool.
+	defaultMaxConnLifeTime  = 30 * time.Second // Max life time for per connection in pool in seconds.
 )
 
 var (
@@ -459,9 +450,13 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 		}
 		if c.config.MaxIdleConnCount > 0 {
 			sqlDb.SetMaxIdleConns(c.config.MaxIdleConnCount)
+		} else {
+			sqlDb.SetMaxIdleConns(defaultMaxIdleConnCount)
 		}
 		if c.config.MaxOpenConnCount > 0 {
 			sqlDb.SetMaxOpenConns(c.config.MaxOpenConnCount)
+		} else {
+			sqlDb.SetMaxOpenConns(defaultMaxOpenConnCount)
 		}
 		if c.config.MaxConnLifetime > 0 {
 			// Automatically checks whether MaxConnLifetime is configured using string like: "30s", "60s", etc.
@@ -471,6 +466,8 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 			} else {
 				sqlDb.SetConnMaxLifetime(c.config.MaxConnLifetime * time.Second)
 			}
+		} else {
+			sqlDb.SetConnMaxLifetime(defaultMaxConnLifeTime)
 		}
 		return sqlDb, nil
 	}, 0)

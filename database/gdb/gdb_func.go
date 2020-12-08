@@ -501,7 +501,11 @@ func formatWhereInterfaces(db DB, where []interface{}, buffer *bytes.Buffer, new
 		} else {
 			buffer.WriteString(db.QuoteWord(str) + "=?")
 		}
-		newArgs = append(newArgs, where[i+1])
+		if s, ok := where[i+1].(Raw); ok {
+			buffer.WriteString(gconv.String(s))
+		} else {
+			newArgs = append(newArgs, where[i+1])
+		}
 	}
 	return newArgs
 }
@@ -569,7 +573,11 @@ func formatWhereKeyValue(db DB, buffer *bytes.Buffer, newArgs []interface{}, key
 			} else {
 				buffer.WriteString(quotedKey)
 			}
-			newArgs = append(newArgs, value)
+			if s, ok := value.(Raw); ok {
+				buffer.WriteString(gconv.String(s))
+			} else {
+				newArgs = append(newArgs, value)
+			}
 		}
 	}
 	return newArgs
