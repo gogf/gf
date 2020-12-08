@@ -72,9 +72,15 @@ func Test_Update_Raw(t *testing.T) {
 		result, err := user.Data(g.Map{
 			"id":          gdb.Raw("id+100"),
 			"create_time": gdb.Raw("now()"),
-		}).Where("id", 1).Insert()
+		}).Where("id", 1).Update()
 		t.Assert(err, nil)
 		n, _ := result.RowsAffected()
+		t.Assert(n, 1)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		user := db.Table(table)
+		n, err := user.Where("id", 101).Count()
+		t.Assert(err, nil)
 		t.Assert(n, 1)
 	})
 }
