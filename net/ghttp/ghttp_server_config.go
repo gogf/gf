@@ -10,6 +10,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/os/gres"
 	"github.com/gogf/gf/util/gutil"
 	"net/http"
 	"strconv"
@@ -386,6 +387,10 @@ func (s *Server) EnableHTTPS(certFile, keyFile string, tlsConfig ...*tls.Config)
 			certFileRealPath = gfile.RealPath(gfile.MainPkgPath() + gfile.Separator + certFile)
 		}
 	}
+	// Resource.
+	if certFileRealPath == "" && gres.Contains(certFile) {
+		certFileRealPath = certFile
+	}
 	if certFileRealPath == "" {
 		s.Logger().Fatal(fmt.Sprintf(`[ghttp] EnableHTTPS failed: certFile "%s" does not exist`, certFile))
 	}
@@ -395,6 +400,10 @@ func (s *Server) EnableHTTPS(certFile, keyFile string, tlsConfig ...*tls.Config)
 		if keyFileRealPath == "" {
 			keyFileRealPath = gfile.RealPath(gfile.MainPkgPath() + gfile.Separator + keyFile)
 		}
+	}
+	// Resource.
+	if keyFileRealPath == "" && gres.Contains(keyFile) {
+		keyFileRealPath = keyFile
 	}
 	if keyFileRealPath == "" {
 		s.Logger().Fatal(fmt.Sprintf(`[ghttp] EnableHTTPS failed: keyFile "%s" does not exist`, keyFile))
