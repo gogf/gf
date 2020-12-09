@@ -1,4 +1,4 @@
-// Copyright 2020 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -8,8 +8,8 @@ package gdb
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/gutil"
@@ -45,14 +45,14 @@ import (
 func (r Result) ScanList(listPointer interface{}, attributeName string, relation ...string) (err error) {
 	// Necessary checks for parameters.
 	if attributeName == "" {
-		return errors.New(`attributeName should not be empty`)
+		return gerror.New(`attributeName should not be empty`)
 	}
 	if len(relation) > 0 {
 		if len(relation) < 2 {
-			return errors.New(`relation name and key should are both necessary`)
+			return gerror.New(`relation name and key should are both necessary`)
 		}
 		if relation[0] == "" || relation[1] == "" {
-			return errors.New(`relation name and key should not be empty`)
+			return gerror.New(`relation name and key should not be empty`)
 		}
 	}
 

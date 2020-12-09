@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -10,9 +10,9 @@ package gdb
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
-	"github.com/gogf/gf/internal/cmdenv"
+	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/os/gcmd"
 	"time"
 
 	"github.com/gogf/gf/container/gvar"
@@ -225,21 +225,12 @@ type Counter struct {
 }
 
 type (
-	// Value is the field value type.
-	Value = *gvar.Var
-
-	// Record is the row record of the table.
-	Record map[string]Value
-
-	// Result is the row record array.
-	Result []Record
-
-	// Map is alias of map[string]interface{},
-	// which is the most common usage map type.
-	Map = map[string]interface{}
-
-	// List is type of map array.
-	List = []Map
+	Raw    string                   // Raw is a raw sql that will not be treated as argument but as a direct sql part.
+	Value  = *gvar.Var              // Value is the field value type.
+	Record map[string]Value         // Record is the row record of the table.
+	Result []Record                 // Result is the row record array.
+	Map    = map[string]interface{} // Map is alias of map[string]interface{}, which is the most common usage map type.
+	List   = []Map                  // List is type of map array.
 )
 
 const (
@@ -247,10 +238,10 @@ const (
 	insertOptionReplace     = 1
 	insertOptionSave        = 2
 	insertOptionIgnore      = 3
-	defaultBatchNumber      = 10  // Per count for batch insert/replace/save.
-	defaultMaxIdleConnCount = 10  // Max idle connection count in pool.
-	defaultMaxOpenConnCount = 100 // Max open connection count in pool.
-	defaultMaxConnLifeTime  = 30  // Max life time for per connection in pool in seconds.
+	defaultBatchNumber      = 10               // Per count for batch insert/replace/save.
+	defaultMaxIdleConnCount = 10               // Max idle connection count in pool.
+	defaultMaxOpenConnCount = 100              // Max open connection count in pool.
+	defaultMaxConnLifeTime  = 30 * time.Second // Max life time for per connection in pool in seconds.
 )
 
 var (
@@ -287,7 +278,7 @@ var (
 
 func init() {
 	// allDryRun is initialized from environment or command options.
-	allDryRun = cmdenv.Get("gf.gdb.dryrun", false).Bool()
+	allDryRun = gcmd.GetWithEnv("gf.gdb.dryrun", false).Bool()
 }
 
 // Register registers custom database driver to gdb.
@@ -308,7 +299,7 @@ func New(group ...string) (db DB, err error) {
 	defer configs.RUnlock()
 
 	if len(configs.config) < 1 {
-		return nil, errors.New("empty database configuration")
+		return nil, gerror.New("empty database configuration")
 	}
 	if _, ok := configs.config[groupName]; ok {
 		if node, err := getConfigNodeByGroup(groupName, true); err == nil {
@@ -327,13 +318,13 @@ func New(group ...string) (db DB, err error) {
 				}
 				return c.DB, nil
 			} else {
-				return nil, errors.New(fmt.Sprintf(`unsupported database type "%s"`, node.Type))
+				return nil, gerror.New(fmt.Sprintf(`unsupported database type "%s"`, node.Type))
 			}
 		} else {
 			return nil, err
 		}
 	} else {
-		return nil, errors.New(fmt.Sprintf(`database configuration node "%s" is not found`, groupName))
+		return nil, gerror.New(fmt.Sprintf(`database configuration node "%s" is not found`, groupName))
 	}
 }
 
@@ -373,7 +364,7 @@ func getConfigNodeByGroup(group string, master bool) (*ConfigNode, error) {
 			}
 		}
 		if len(masterList) < 1 {
-			return nil, errors.New("at least one master node configuration's need to make sense")
+			return nil, gerror.New("at least one master node configuration's need to make sense")
 		}
 		if len(slaveList) < 1 {
 			slaveList = masterList
@@ -384,7 +375,7 @@ func getConfigNodeByGroup(group string, master bool) (*ConfigNode, error) {
 			return getConfigNodeByWeight(slaveList), nil
 		}
 	} else {
-		return nil, errors.New(fmt.Sprintf("empty database configuration for item name '%s'", group))
+		return nil, gerror.New(fmt.Sprintf("empty database configuration for item name '%s'", group))
 	}
 }
 
@@ -459,9 +450,13 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 		}
 		if c.config.MaxIdleConnCount > 0 {
 			sqlDb.SetMaxIdleConns(c.config.MaxIdleConnCount)
+		} else {
+			sqlDb.SetMaxIdleConns(defaultMaxIdleConnCount)
 		}
 		if c.config.MaxOpenConnCount > 0 {
 			sqlDb.SetMaxOpenConns(c.config.MaxOpenConnCount)
+		} else {
+			sqlDb.SetMaxOpenConns(defaultMaxOpenConnCount)
 		}
 		if c.config.MaxConnLifetime > 0 {
 			// Automatically checks whether MaxConnLifetime is configured using string like: "30s", "60s", etc.
@@ -471,6 +466,8 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 			} else {
 				sqlDb.SetConnMaxLifetime(c.config.MaxConnLifetime * time.Second)
 			}
+		} else {
+			sqlDb.SetConnMaxLifetime(defaultMaxConnLifeTime)
 		}
 		return sqlDb, nil
 	}, 0)

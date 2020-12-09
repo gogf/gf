@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/os/gproc"
+	"github.com/gogf/gf/os/gres"
 	"github.com/gogf/gf/text/gstr"
 	"log"
 	"net"
@@ -110,7 +111,15 @@ func (s *gracefulServer) ListenAndServeTLS(certFile, keyFile string, tlsConfig .
 	err := error(nil)
 	if len(config.Certificates) == 0 {
 		config.Certificates = make([]tls.Certificate, 1)
-		config.Certificates[0], err = tls.LoadX509KeyPair(certFile, keyFile)
+		if gres.Contains(certFile) {
+			config.Certificates[0], err = tls.X509KeyPair(
+				gres.GetContent(certFile),
+				gres.GetContent(keyFile),
+			)
+		} else {
+			config.Certificates[0], err = tls.LoadX509KeyPair(certFile, keyFile)
+		}
+
 	}
 	if err != nil {
 		return errors.New(fmt.Sprintf(`open cert file "%s","%s" failed: %s`, certFile, keyFile, err.Error()))

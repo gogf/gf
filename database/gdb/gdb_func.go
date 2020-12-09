@@ -1,4 +1,4 @@
-// Copyright 2017-2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -8,8 +8,8 @@ package gdb
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/empty"
 	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/internal/utils"
@@ -501,7 +501,11 @@ func formatWhereInterfaces(db DB, where []interface{}, buffer *bytes.Buffer, new
 		} else {
 			buffer.WriteString(db.QuoteWord(str) + "=?")
 		}
-		newArgs = append(newArgs, where[i+1])
+		if s, ok := where[i+1].(Raw); ok {
+			buffer.WriteString(gconv.String(s))
+		} else {
+			newArgs = append(newArgs, where[i+1])
+		}
 	}
 	return newArgs
 }
@@ -569,7 +573,11 @@ func formatWhereKeyValue(db DB, buffer *bytes.Buffer, newArgs []interface{}, key
 			} else {
 				buffer.WriteString(quotedKey)
 			}
-			newArgs = append(newArgs, value)
+			if s, ok := value.(Raw); ok {
+				buffer.WriteString(gconv.String(s))
+			} else {
+				newArgs = append(newArgs, value)
+			}
 		}
 	}
 	return newArgs
@@ -687,7 +695,7 @@ func handleArguments(sql string, args []interface{}) (newSql string, newArgs []i
 // formatError customizes and returns the SQL error.
 func formatError(err error, sql string, args ...interface{}) error {
 	if err != nil && err != ErrNoRows {
-		return errors.New(fmt.Sprintf("%s, %s\n", err.Error(), FormatSqlWithArgs(sql, args)))
+		return gerror.New(fmt.Sprintf("%s, %s\n", err.Error(), FormatSqlWithArgs(sql, args)))
 	}
 	return err
 }
