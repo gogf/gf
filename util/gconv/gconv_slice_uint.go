@@ -31,6 +31,11 @@ func Uints(i interface{}) []uint {
 
 	var array []uint
 	switch value := i.(type) {
+	case string:
+		if value == "" {
+			return []uint{}
+		}
+		return []uint{Uint(value)}
 	case []string:
 		array = make([]uint, len(value))
 		for k, v := range value {
@@ -137,6 +142,11 @@ func Uint32s(i interface{}) []uint32 {
 	}
 	var array []uint32
 	switch value := i.(type) {
+	case string:
+		if value == "" {
+			return []uint32{}
+		}
+		return []uint32{Uint32(value)}
 	case []string:
 		array = make([]uint32, len(value))
 		for k, v := range value {
@@ -243,6 +253,11 @@ func Uint64s(i interface{}) []uint64 {
 	}
 	var array []uint64
 	switch value := i.(type) {
+	case string:
+		if value == "" {
+			return []uint64{}
+		}
+		return []uint64{Uint64(value)}
 	case []string:
 		array = make([]uint64, len(value))
 		for k, v := range value {
