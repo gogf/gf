@@ -25,6 +25,48 @@ func Test_Slice(t *testing.T) {
 	})
 }
 
+func Test_Slice_Empty(t *testing.T) {
+	// Int.
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertEQ(gconv.Ints(""), []int{})
+		t.Assert(gconv.Ints(nil), nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertEQ(gconv.Int32s(""), []int32{})
+		t.Assert(gconv.Int32s(nil), nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertEQ(gconv.Int64s(""), []int64{})
+		t.Assert(gconv.Int64s(nil), nil)
+	})
+	// Uint.
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertEQ(gconv.Uints(""), []uint{})
+		t.Assert(gconv.Uints(nil), nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertEQ(gconv.Uint32s(""), []uint32{})
+		t.Assert(gconv.Uint32s(nil), nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertEQ(gconv.Uint64s(""), []uint64{})
+		t.Assert(gconv.Uint64s(nil), nil)
+	})
+	// Float.
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertEQ(gconv.Floats(""), []float64{})
+		t.Assert(gconv.Floats(nil), nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertEQ(gconv.Float32s(""), []float32{})
+		t.Assert(gconv.Float32s(nil), nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertEQ(gconv.Float64s(""), []float64{})
+		t.Assert(gconv.Float64s(nil), nil)
+	})
+}
+
 func Test_Strings(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := []*g.Var{
