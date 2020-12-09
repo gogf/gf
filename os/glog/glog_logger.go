@@ -242,30 +242,23 @@ func (l *Logger) printToFile(now time.Time, buffer *bytes.Buffer) {
 	gmlock.Lock(memoryLockKey)
 	defer gmlock.Unlock(memoryLockKey)
 
-	// + 2020-12-08 18:13:09
 	// Rotation file size checks.
 	if l.config.RotateSize > 0 {
 		if gfile.Size(logFilePath) > l.config.RotateSize {
 			l.rotateFileBySize(now)
 		}
 	}
-
-	file := l.getFilePointer(logFilePath)
-	if file == nil {
+	// Logging content outputting to disk file.
+	if file := l.getFilePointer(logFilePath); file == nil {
 		intlog.Errorf(`got nil file pointer for: %s`, logFilePath)
-		return
+	} else {
+		if _, err := file.Write(buffer.Bytes()); err != nil {
+			intlog.Error(err)
+		}
+		if err := file.Close(); err != nil {
+			intlog.Error(err)
+		}
 	}
-	// Please note that it differs from `file.Close()`,
-	// as the variable `file` would be changed in next logic.
-	//defer func() {
-	file.Close()
-	//}()
-	if _, err := file.Write(buffer.Bytes()); err != nil {
-		// panic(err)
-		intlog.Error(err)
-		return
-	}
-	// $ 2020-12-08 18:13:14
 }
 
 // getFilePointer retrieves and returns a file pointer from file pool.
