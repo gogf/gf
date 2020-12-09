@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -36,9 +36,11 @@ func Test_CheckMap1(t *testing.T) {
 
 func Test_CheckMap2(t *testing.T) {
 	var params interface{}
-	if m := gvalid.CheckMap(params, nil, nil); m == nil {
-		t.Error("CheckMap校验失败")
-	}
+	gtest.C(t, func(t *gtest.T) {
+		if err := gvalid.CheckMap(params, nil, nil); err == nil {
+			t.Assert(err, nil)
+		}
+	})
 
 	kvmap := map[string]interface{}{
 		"id":   "0",

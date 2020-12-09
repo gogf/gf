@@ -120,6 +120,7 @@ func Check(value interface{}, rules string, messages interface{}, params ...inte
 
 // doCheck does the really rules validation for single key-value.
 func doCheck(key string, value interface{}, rules string, messages interface{}, params ...interface{}) *Error {
+	// If there's no validation rules, it does nothing and returns quickly.
 	if rules == "" {
 		return nil
 	}
