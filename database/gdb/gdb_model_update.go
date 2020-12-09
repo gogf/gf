@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -8,7 +8,6 @@ package gdb
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/os/gtime"
@@ -39,7 +38,7 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 		}
 	}()
 	if m.data == nil {
-		return nil, errors.New("updating table with empty data")
+		return nil, gerror.New("updating table with empty data")
 	}
 	var (
 		updateData                                    = m.data

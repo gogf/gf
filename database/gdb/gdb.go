@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -10,8 +10,8 @@ package gdb
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/os/gcmd"
 	"time"
 
@@ -299,7 +299,7 @@ func New(group ...string) (db DB, err error) {
 	defer configs.RUnlock()
 
 	if len(configs.config) < 1 {
-		return nil, errors.New("empty database configuration")
+		return nil, gerror.New("empty database configuration")
 	}
 	if _, ok := configs.config[groupName]; ok {
 		if node, err := getConfigNodeByGroup(groupName, true); err == nil {
@@ -318,13 +318,13 @@ func New(group ...string) (db DB, err error) {
 				}
 				return c.DB, nil
 			} else {
-				return nil, errors.New(fmt.Sprintf(`unsupported database type "%s"`, node.Type))
+				return nil, gerror.New(fmt.Sprintf(`unsupported database type "%s"`, node.Type))
 			}
 		} else {
 			return nil, err
 		}
 	} else {
-		return nil, errors.New(fmt.Sprintf(`database configuration node "%s" is not found`, groupName))
+		return nil, gerror.New(fmt.Sprintf(`database configuration node "%s" is not found`, groupName))
 	}
 }
 
@@ -364,7 +364,7 @@ func getConfigNodeByGroup(group string, master bool) (*ConfigNode, error) {
 			}
 		}
 		if len(masterList) < 1 {
-			return nil, errors.New("at least one master node configuration's need to make sense")
+			return nil, gerror.New("at least one master node configuration's need to make sense")
 		}
 		if len(slaveList) < 1 {
 			slaveList = masterList
@@ -375,7 +375,7 @@ func getConfigNodeByGroup(group string, master bool) (*ConfigNode, error) {
 			return getConfigNodeByWeight(slaveList), nil
 		}
 	} else {
-		return nil, errors.New(fmt.Sprintf("empty database configuration for item name '%s'", group))
+		return nil, gerror.New(fmt.Sprintf("empty database configuration for item name '%s'", group))
 	}
 }
 

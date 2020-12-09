@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -13,8 +13,8 @@ package gdb
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
@@ -162,7 +162,7 @@ func (d *DriverOracle) TableFields(table string, schema ...string) (fields map[s
 	charL, charR := d.GetChars()
 	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
-		return nil, errors.New("function TableFields supports only single table operations")
+		return nil, gerror.New("function TableFields supports only single table operations")
 	}
 	checkSchema := d.DB.GetSchema()
 	if len(schema) > 0 && schema[0] != "" {
@@ -252,7 +252,7 @@ func (d *DriverOracle) DoInsert(link Link, table string, data interface{}, optio
 	case reflect.Struct:
 		dataMap = ConvertDataForTableRecord(data)
 	default:
-		return result, errors.New(fmt.Sprint("unsupported data type:", kind))
+		return result, gerror.New(fmt.Sprint("unsupported data type:", kind))
 	}
 
 	indexs := make([]string, 0)
@@ -377,12 +377,12 @@ func (d *DriverOracle) DoBatchInsert(link Link, table string, list interface{}, 
 		case reflect.Struct:
 			listMap = List{Map(ConvertDataForTableRecord(list))}
 		default:
-			return result, errors.New(fmt.Sprint("unsupported list type:", kind))
+			return result, gerror.New(fmt.Sprint("unsupported list type:", kind))
 		}
 	}
 	// 判断长度
 	if len(listMap) < 1 {
-		return result, errors.New("empty data list")
+		return result, gerror.New("empty data list")
 	}
 	if link == nil {
 		if link, err = d.DB.Master(); err != nil {

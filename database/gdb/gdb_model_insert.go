@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -8,7 +8,7 @@ package gdb
 
 import (
 	"database/sql"
-	"errors"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
@@ -145,7 +145,7 @@ func (m *Model) doInsertWithOption(option int, data ...interface{}) (result sql.
 		}
 	}()
 	if m.data == nil {
-		return nil, errors.New("inserting into table with empty data")
+		return nil, gerror.New("inserting into table with empty data")
 	}
 	var (
 		nowString       = gtime.Now().String()
@@ -207,5 +207,5 @@ func (m *Model) doInsertWithOption(option int, data ...interface{}) (result sql.
 			option,
 		)
 	}
-	return nil, errors.New("inserting into table with invalid data type")
+	return nil, gerror.New("inserting into table with invalid data type")
 }
