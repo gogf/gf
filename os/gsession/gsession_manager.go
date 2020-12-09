@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -64,6 +64,6 @@ func (m *Manager) TTL() time.Duration {
 }
 
 // UpdateSessionTTL updates the ttl for given session.
-func (m *Manager) UpdateSessionTTL(id string, data *gmap.StrAnyMap) {
-	m.sessionData.Set(id, data, m.ttl)
+func (m *Manager) UpdateSessionTTL(sessionId string, data *gmap.StrAnyMap) {
+	m.sessionData.Set(sessionId, data, m.ttl)
 }
