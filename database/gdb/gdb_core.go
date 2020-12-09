@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -10,8 +10,8 @@ package gdb
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/text/gstr"
 	"reflect"
 	"strings"
@@ -467,10 +467,10 @@ func (c *Core) DoInsert(link Link, table string, data interface{}, option int, b
 	case reflect.Map:
 		dataMap = ConvertDataForTableRecord(data)
 	default:
-		return result, errors.New(fmt.Sprint("unsupported data type:", reflectKind))
+		return result, gerror.New(fmt.Sprint("unsupported data type:", reflectKind))
 	}
 	if len(dataMap) == 0 {
-		return nil, errors.New("data cannot be empty")
+		return nil, gerror.New("data cannot be empty")
 	}
 	var (
 		charL, charR = c.DB.GetChars()
@@ -607,11 +607,11 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 				listMap = List{ConvertDataForTableRecord(value)}
 			}
 		default:
-			return result, errors.New(fmt.Sprint("unsupported list type:", kind))
+			return result, gerror.New(fmt.Sprint("unsupported list type:", kind))
 		}
 	}
 	if len(listMap) < 1 {
-		return result, errors.New("data list cannot be empty")
+		return result, gerror.New("data list cannot be empty")
 	}
 	if link == nil {
 		if link, err = c.DB.Master(); err != nil {
@@ -765,7 +765,7 @@ func (c *Core) DoUpdate(link Link, table string, data interface{}, condition str
 		updates = gconv.String(data)
 	}
 	if len(updates) == 0 {
-		return nil, errors.New("data cannot be empty")
+		return nil, gerror.New("data cannot be empty")
 	}
 	if len(params) > 0 {
 		args = append(params, args...)
