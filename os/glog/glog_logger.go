@@ -61,8 +61,9 @@ const (
 // New creates and returns a custom logger.
 func New() *Logger {
 	logger := &Logger{
-		init:   gtype.NewBool(),
-		config: DefaultConfig(),
+		init:          gtype.NewBool(),
+		config:        DefaultConfig(),
+		cacheFileSize: gtype.NewInt64(-1),
 	}
 	return logger
 }
@@ -241,7 +242,6 @@ func (l *Logger) rotateFile(now time.Time, buffer *bytes.Buffer) {
 			}
 		}
 	}
-
 }
 
 // printToWriter writes buffer to writer.
