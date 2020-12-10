@@ -12,10 +12,12 @@ import "runtime"
 type stack []uintptr
 
 const (
+	// maxStackDepth marks the max stack depth for error back traces.
 	maxStackDepth = 32
 )
 
 // callers returns the stack callers.
+// Note that it here just retrieves the caller memory address array not the caller information.
 func callers(skip ...int) stack {
 	var (
 		pcs [maxStackDepth]uintptr
