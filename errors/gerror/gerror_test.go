@@ -34,13 +34,18 @@ func Test_Wrap(t *testing.T) {
 		t.AssertNE(err, nil)
 		t.Assert(err.Error(), "3: 2: 1")
 	})
-
 	gtest.C(t, func(t *gtest.T) {
 		err := gerror.New("1")
 		err = gerror.Wrap(err, "2")
 		err = gerror.Wrap(err, "3")
 		t.AssertNE(err, nil)
 		t.Assert(err.Error(), "3: 2: 1")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err := gerror.New("1")
+		err = gerror.Wrap(err, "")
+		t.AssertNE(err, nil)
+		t.Assert(err.Error(), "1")
 	})
 }
 

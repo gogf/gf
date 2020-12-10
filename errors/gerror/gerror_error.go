@@ -44,16 +44,14 @@ func (err *Error) Error() string {
 	if err == nil {
 		return ""
 	}
-	if err.text != "" {
-		if err.error != nil {
-			return err.text + ": " + err.error.Error()
-		}
-		return err.text
-	}
+	errStr := err.text
 	if err.error != nil {
-		err.error.Error()
+		if err.text != "" {
+			errStr += ": "
+		}
+		errStr += err.error.Error()
 	}
-	return ""
+	return errStr
 }
 
 // Code returns the error code.
