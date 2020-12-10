@@ -109,7 +109,7 @@ func (m *Model) Insert(data ...interface{}) (result sql.Result, err error) {
 // see Model.Data.
 func (m *Model) InsertIgnore(data ...interface{}) (result sql.Result, err error) {
 	if len(data) > 0 {
-		return m.Data(data...).Insert()
+		return m.Data(data...).InsertIgnore()
 	}
 	return m.doInsertWithOption(insertOptionIgnore, data...)
 }
