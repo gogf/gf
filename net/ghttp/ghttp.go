@@ -92,6 +92,12 @@ type (
 		handler *handlerItem // Handler object.
 	}
 
+	// errorStack is the interface for Stack feature.
+	errorStack interface {
+		Error() string
+		Stack() string
+	}
+
 	// Request handler function.
 	HandlerFunc = func(r *Request)
 

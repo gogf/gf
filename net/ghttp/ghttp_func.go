@@ -74,7 +74,7 @@ func niceCallFunc(f func()) {
 			case gEXCEPTION_EXIT, gEXCEPTION_EXIT_ALL:
 				return
 			default:
-				if _, ok := e.(gerror.ApiStack); ok {
+				if _, ok := e.(errorStack); ok {
 					// It's already an error that has stack info.
 					panic(e)
 				} else {
