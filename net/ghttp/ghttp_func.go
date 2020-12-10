@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -81,7 +81,7 @@ func niceCallFunc(f func()) {
 					// Create a new error with stack info.
 					// Note that there's a skip pointing the start stacktrace
 					// of the real error point.
-					panic(gerror.NewfSkip(1, "%v", e))
+					panic(gerror.NewSkipf(1, "%v", e))
 				}
 			}
 		}
