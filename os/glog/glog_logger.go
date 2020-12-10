@@ -31,11 +31,12 @@ import (
 
 // Logger is the struct for logging management.
 type Logger struct {
-	rmu    sync.Mutex      // Mutex for rotation feature.
-	ctx    context.Context // Context for logging.
-	init   *gtype.Bool     // Initialized.
-	parent *Logger         // Parent logger, if it is not empty, it means the logger is used in chaining function.
-	config Config          // Logger configuration.
+	rmu           sync.Mutex      // Mutex for rotation feature.
+	ctx           context.Context // Context for logging.
+	init          *gtype.Bool     // Initialized.
+	parent        *Logger         // Parent logger, if it is not empty, it means the logger is used in chaining function.
+	config        Config          // Logger configuration.
+	cacheFileSize *gtype.Int64    // 文件大小缓存
 }
 
 const (
@@ -200,6 +201,10 @@ func (l *Logger) print(std io.Writer, lead string, values ...interface{}) {
 		}
 	}
 	buffer.WriteString(valueStr + "\n")
+
+	// + 2020-12-10 12:15:00
+	l.rotateFile(now, buffer)
+	// $
 	if l.config.Flags&F_ASYNC > 0 {
 		err := asyncPool.Add(func() {
 			l.printToWriter(now, std, buffer)
@@ -210,6 +215,33 @@ func (l *Logger) print(std io.Writer, lead string, values ...interface{}) {
 	} else {
 		l.printToWriter(now, std, buffer)
 	}
+}
+
+func (l *Logger) rotateFile(now time.Time, buffer *bytes.Buffer) {
+	// Rotation file size checks.
+	if l.config.Path != "" && l.config.RotateSize > 0 {
+		var (
+			writeSize_    = int64(buffer.Len())
+			logFilePath   = l.getFilePath(now)
+			memoryLockKey = "glog.file.lock:" + logFilePath
+		)
+		gmlock.Lock(memoryLockKey)
+		defer gmlock.Unlock(memoryLockKey)
+		if -1 == l.cacheFileSize.Val() {
+			l.cacheFileSize.Set(gfile.Size(logFilePath))
+		}
+		l.cacheFileSize.Add(writeSize_)
+		intlog.Printf("cache file size: %v", l.cacheFileSize.Val())
+		if l.cacheFileSize.Val() >= l.config.RotateSize {
+			l.closeFilePointer(logFilePath)
+			if err_ := l.rotateFileBySize(now); nil == err_ {
+				l.cacheFileSize.Set(writeSize_)
+			} else {
+				l.cacheFileSize.Set(l.config.RotateSize)
+			}
+		}
+	}
+
 }
 
 // printToWriter writes buffer to writer.
@@ -241,13 +273,6 @@ func (l *Logger) printToFile(now time.Time, buffer *bytes.Buffer) {
 	)
 	gmlock.Lock(memoryLockKey)
 	defer gmlock.Unlock(memoryLockKey)
-
-	// Rotation file size checks.
-	if l.config.RotateSize > 0 {
-		if gfile.Size(logFilePath) > l.config.RotateSize {
-			l.rotateFileBySize(now)
-		}
-	}
 	// Logging content outputting to disk file.
 	if file := l.getFilePointer(logFilePath); file == nil {
 		intlog.Errorf(`got nil file pointer for: %s`, logFilePath)
@@ -259,6 +284,10 @@ func (l *Logger) printToFile(now time.Time, buffer *bytes.Buffer) {
 			intlog.Error(err)
 		}
 	}
+}
+
+func (l *Logger) closeFilePointer(path string) {
+	gfpool.CloseAllPoolOfFile(path, defaultFileFlags, defaultFilePerm, defaultFileExpire)
 }
 
 // getFilePointer retrieves and returns a file pointer from file pool.

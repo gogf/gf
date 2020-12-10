@@ -13,6 +13,18 @@ import (
 	"time"
 )
 
+// 关闭所有文件连接池
+func CloseAllPoolOfFile(path string, flag int, perm os.FileMode, ttl ...time.Duration) {
+	var fpTTL time.Duration
+	if len(ttl) > 0 {
+		fpTTL = ttl[0]
+	}
+	if value_, found_ := pools.Search(fmt.Sprintf("%s&%d&%d&%d", path, flag, fpTTL, perm)); found_ {
+		pool_ := value_.(*Pool)
+		pool_.pool.Clear()
+	}
+}
+
 // Open creates and returns a file item with given file path, flag and opening permission.
 // It automatically creates an associated file pointer pool internally when it's called first time.
 // It retrieves a file item from the file pointer pool after then.

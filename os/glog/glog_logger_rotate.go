@@ -21,20 +21,21 @@ import (
 
 // rotateFileBySize rotates the current logging file according to the
 // configured rotation size.
-func (l *Logger) rotateFileBySize(now time.Time) {
+func (l *Logger) rotateFileBySize(now time.Time) error {
 	if l.config.RotateSize <= 0 {
-		return
+		return nil
 	}
-	if err := l.doRotateFile(l.getFilePath(now)); err != nil {
+	if err := l.doRotateFile(l.getFilePath(now)); err == nil {
+		return nil
+	} else {
 		// panic(err)
 		intlog.Error(err)
+		return err
 	}
 }
 
 // doRotateFile rotates the given logging file.
 func (l *Logger) doRotateFile(filePath string) error {
-	l.rmu.Lock()
-	defer l.rmu.Unlock()
 	// No backups, it then just removes the current logging file.
 	if l.config.RotateBackupLimit == 0 {
 		if err := gfile.Remove(filePath); err != nil {
@@ -102,7 +103,8 @@ func (l *Logger) rotateChecksTimely() {
 	var (
 		now      = time.Now()
 		pattern  = "*.log, *.gz"
-		files, _ = gfile.ScanDirFile(l.config.Path, pattern, true)
+		//files, _ = gfile.ScanDirFile(l.config.Path, pattern, true)
+		files, _ = gfile.ScanDirFile(l.config.Path, pattern, false)
 	)
 	intlog.Printf("logging rotation start checks: %+v", files)
 	// =============================================================
@@ -133,7 +135,8 @@ func (l *Logger) rotateChecksTimely() {
 		}
 		if expireRotated {
 			// Update the files array.
-			files, _ = gfile.ScanDirFile(l.config.Path, pattern, true)
+			//files, _ = gfile.ScanDirFile(l.config.Path, pattern, true)
+			files, _ = gfile.ScanDirFile(l.config.Path, pattern, false)
 		}
 	}
 
@@ -167,7 +170,8 @@ func (l *Logger) rotateChecksTimely() {
 				return true
 			})
 			// Update the files array.
-			files, _ = gfile.ScanDirFile(l.config.Path, pattern, true)
+			//files, _ = gfile.ScanDirFile(l.config.Path, pattern, true)
+			files, _ = gfile.ScanDirFile(l.config.Path, pattern, false)
 		}
 	}
 
