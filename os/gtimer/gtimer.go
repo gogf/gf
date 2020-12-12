@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -36,8 +36,8 @@ const (
 	gPANIC_EXIT             = "exit"        // Internal usage for custom job exit function with panic.
 	gDEFAULT_TIMES          = math.MaxInt32 // Default limit running times, a big number.
 	gDEFAULT_SLOT_NUMBER    = 10            // Default slot number.
-	gDEFAULT_WHEEL_INTERVAL = 50            // Default wheel interval.
-	gDEFAULT_WHEEL_LEVEL    = 6             // Default wheel level.
+	gDEFAULT_WHEEL_INTERVAL = 100           // Default wheel interval.
+	gDEFAULT_WHEEL_LEVEL    = 5             // Default wheel level.
 	gCMDENV_KEY             = "gf.gtimer"   // Configuration key for command argument or environment.
 )
 
