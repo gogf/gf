@@ -13,7 +13,7 @@ func main() {
 	key := "key"
 
 	// 第一次锁带时间
-	gmlock.Lock(key, 1000)
+	gmlock.Lock(key)
 	glog.Println("lock1")
 	// 这个时候上一次的计时解锁已失效
 	gmlock.Unlock(key)

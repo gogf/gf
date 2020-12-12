@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -34,13 +34,18 @@ func Test_Wrap(t *testing.T) {
 		t.AssertNE(err, nil)
 		t.Assert(err.Error(), "3: 2: 1")
 	})
-
 	gtest.C(t, func(t *gtest.T) {
 		err := gerror.New("1")
 		err = gerror.Wrap(err, "2")
 		err = gerror.Wrap(err, "3")
 		t.AssertNE(err, nil)
 		t.Assert(err.Error(), "3: 2: 1")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err := gerror.New("1")
+		err = gerror.Wrap(err, "")
+		t.AssertNE(err, nil)
+		t.Assert(err.Error(), "1")
 	})
 }
 
@@ -153,5 +158,47 @@ func Test_Next(t *testing.T) {
 
 		err = gerror.Next(err)
 		t.Assert(err, nil)
+	})
+}
+
+func Test_Code(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		err := errors.New("123")
+		t.Assert(gerror.Code(err), -1)
+		t.Assert(err.Error(), "123")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err := gerror.NewCode(1, "123")
+		t.Assert(gerror.Code(err), 1)
+		t.Assert(err.Error(), "123")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err := gerror.NewCodef(1, "%s", "123")
+		t.Assert(gerror.Code(err), 1)
+		t.Assert(err.Error(), "123")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err := gerror.NewCodeSkip(1, 0, "123")
+		t.Assert(gerror.Code(err), 1)
+		t.Assert(err.Error(), "123")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err := gerror.NewCodeSkipf(1, 0, "%s", "123")
+		t.Assert(gerror.Code(err), 1)
+		t.Assert(err.Error(), "123")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err := errors.New("1")
+		err = gerror.Wrap(err, "2")
+		err = gerror.WrapCode(1, err, "3")
+		t.Assert(gerror.Code(err), 1)
+		t.Assert(err.Error(), "3: 2: 1")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err := errors.New("1")
+		err = gerror.Wrap(err, "2")
+		err = gerror.WrapCodef(1, err, "%s", "3")
+		t.Assert(gerror.Code(err), 1)
+		t.Assert(err.Error(), "3: 2: 1")
 	})
 }

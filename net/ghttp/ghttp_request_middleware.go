@@ -121,7 +121,7 @@ func (m *Middleware) Next() {
 				loop = false
 			}
 		}, func(exception error) {
-			if e, ok := exception.(gerror.ApiStack); ok {
+			if e, ok := exception.(errorStack); ok {
 				// It's already an error that has stack info.
 				m.request.error = e
 			} else {

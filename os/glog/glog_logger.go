@@ -179,11 +179,7 @@ func (l *Logger) print(std io.Writer, lead string, values ...interface{}) {
 		}
 	}
 	for _, v := range values {
-		if err, ok := v.(error); ok {
-			tempStr = fmt.Sprintf("%+v", err)
-		} else {
-			tempStr = gconv.String(v)
-		}
+		tempStr = gconv.String(v)
 		if len(valueStr) > 0 {
 			if valueStr[len(valueStr)-1] == '\n' {
 				// Remove one blank line(\n\n).
