@@ -7,10 +7,11 @@
 package gdb
 
 import (
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/util/gutil"
 	"strings"
 	"time"
+
+	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/util/gutil"
 
 	"github.com/gogf/gf/text/gstr"
 
@@ -70,11 +71,14 @@ func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType s
 	case
 		"float",
 		"double",
-		"decimal",
 		"money",
 		"numeric",
 		"smallmoney":
 		return gconv.Float64(gconv.String(fieldValue))
+
+	case
+		"decimal":
+		return gconv.Decimal(gconv.String(fieldValue))
 
 	case "bit":
 		s := gconv.String(fieldValue)

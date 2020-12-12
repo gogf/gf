@@ -12,6 +12,7 @@ require (
 	github.com/grokify/html-strip-tags-go v0.0.0-20190921062105-daaa06bf1aaf
 	github.com/mattn/go-runewidth v0.0.9 // indirect
 	github.com/olekukonko/tablewriter v0.0.1
+	github.com/shopspring/decimal v1.2.0
 	golang.org/x/net v0.0.0-20200602114024-627f9648deb9
 	golang.org/x/text v0.3.2
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c

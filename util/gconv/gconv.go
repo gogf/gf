@@ -11,12 +11,15 @@ package gconv
 
 import (
 	"fmt"
-	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/os/gtime"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/shopspring/decimal"
+
+	"github.com/gogf/gf/internal/json"
+	"github.com/gogf/gf/os/gtime"
 
 	"github.com/gogf/gf/encoding/gbinary"
 )
@@ -712,5 +715,23 @@ func Float64(i interface{}) float64 {
 	default:
 		v, _ := strconv.ParseFloat(String(i), 64)
 		return v
+	}
+}
+
+// Decimal converts <i> to decimal.
+func Decimal(i interface{}) decimal.Decimal {
+	if i == nil {
+		return decimal.Zero
+	}
+	switch value := i.(type) {
+	case float32:
+		return decimal.NewFromFloat32(value)
+	case float64:
+		return decimal.NewFromFloat(value)
+	case []byte:
+		return decimal.RequireFromString(string(value))
+	default:
+		v, _ := strconv.ParseFloat(String(i), 64)
+		return decimal.NewFromFloat(v)
 	}
 }
