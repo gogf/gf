@@ -20,7 +20,7 @@ const (
 // Log returns an instance of glog.Logger.
 // The parameter <name> is the name for the instance.
 func Log(name ...string) *glog.Logger {
-	instanceName := glog.DEFAULT_NAME
+	instanceName := glog.DefaultName
 	if len(name) > 0 && name[0] != "" {
 		instanceName = name[0]
 	}
