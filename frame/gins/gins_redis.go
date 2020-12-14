@@ -21,7 +21,7 @@ const (
 // Redis returns an instance of redis client with specified configuration group name.
 func Redis(name ...string) *gredis.Redis {
 	config := Config()
-	group := gredis.DEFAULT_GROUP_NAME
+	group := gredis.DefaultGroupName
 	if len(name) > 0 && name[0] != "" {
 		group = name[0]
 	}
