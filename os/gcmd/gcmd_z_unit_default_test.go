@@ -31,6 +31,12 @@ func Test_Default(t *testing.T) {
 		t.Assert(gcmd.ContainsOpt("none"), false)
 		t.Assert(gcmd.GetOpt("none", "value"), "value")
 	})
+	gtest.C(t, func(t *gtest.T) {
+		gcmd.Init([]string{"gf", "gen", "-h"}...)
+		t.Assert(len(gcmd.GetArgAll()), 2)
+		t.Assert(gcmd.GetOpt("h"), "")
+		t.Assert(gcmd.ContainsOpt("h"), true)
+	})
 }
 
 func Test_BuildOptions(t *testing.T) {

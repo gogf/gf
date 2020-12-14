@@ -42,15 +42,18 @@ func Init(args ...string) {
 			if array[2] == "=" {
 				defaultParsedOptions[array[1]] = array[3]
 			} else if i < len(args)-1 {
-				if args[i+1][0] == '-' {
+				if len(args[i+1]) > 0 && args[i+1][0] == '-' {
+					// Eg: gf gen -d -n 1
 					defaultParsedOptions[array[1]] = array[3]
 				} else {
+					// Eg: gf gen -n 2
 					defaultParsedOptions[array[1]] = args[i+1]
 					i += 2
 					continue
 				}
 			} else {
-				defaultParsedArgs = append(defaultParsedArgs, args[i])
+				// Eg: gf gen -h
+				defaultParsedOptions[array[1]] = array[3]
 			}
 		} else {
 			defaultParsedArgs = append(defaultParsedArgs, args[i])
