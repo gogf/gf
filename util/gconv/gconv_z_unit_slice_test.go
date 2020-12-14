@@ -85,7 +85,9 @@ func Test_Slice_Interfaces(t *testing.T) {
 			"id":   1,
 			"name": "john",
 		})
-		t.AssertIN(array, []interface{}{"id", 1, "name", "john"})
+		t.Assert(len(array), 1)
+		t.Assert(array[0].(g.Map)["id"], 1)
+		t.Assert(array[0].(g.Map)["name"], "john")
 	})
 	// struct
 	gtest.C(t, func(t *gtest.T) {
@@ -97,7 +99,9 @@ func Test_Slice_Interfaces(t *testing.T) {
 			Id:   1,
 			Name: "john",
 		})
-		t.AssertIN(array, []interface{}{"id", 1, "Name", "john"})
+		t.Assert(len(array), 1)
+		t.Assert(array[0].(*A).Id, 1)
+		t.Assert(array[0].(*A).Name, "john")
 	})
 }
 
@@ -108,7 +112,10 @@ func Test_Slice_PrivateAttribute(t *testing.T) {
 	}
 	gtest.C(t, func(t *gtest.T) {
 		user := &User{1, "john"}
-		t.Assert(gconv.Interfaces(user), g.Slice{"id", 1})
+		array := gconv.Interfaces(user)
+		t.Assert(len(array), 1)
+		t.Assert(array[0].(*User).Id, 1)
+		t.Assert(array[0].(*User).name, "john")
 	})
 }
 
