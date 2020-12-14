@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -52,7 +52,7 @@ func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*handlerParsedI
 				return &handlerCacheItem{parsedItems, hasHook, hasServe}, nil
 			}
 			return nil, nil
-		}, gROUTE_CACHE_DURATION)
+		}, routeCacheDuration)
 	if value != nil {
 		item := value.(*handlerCacheItem)
 		return item.parsedItems, item.hasHook, item.hasServe
@@ -96,7 +96,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 	)
 
 	// Default domain has the most priority when iteration.
-	for _, domain := range []string{gDEFAULT_DOMAIN, domain} {
+	for _, domain := range []string{defaultDomainName, domain} {
 		p, ok := s.serveTree[domain]
 		if !ok {
 			continue
@@ -149,11 +149,11 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 				// Serving handler can only be added to the handler array just once.
 				if hasServe {
 					switch item.itemType {
-					case gHANDLER_TYPE_HANDLER, gHANDLER_TYPE_OBJECT, gHANDLER_TYPE_CONTROLLER:
+					case handlerTypeHandler, handlerTypeObject, handlerTypeController:
 						continue
 					}
 				}
-				if item.router.Method == gDEFAULT_METHOD || item.router.Method == method {
+				if item.router.Method == defaultMethod || item.router.Method == method {
 					// Note the rule having no fuzzy rules: len(match) == 1
 					if match, err := gregex.MatchString(item.router.RegRule, path); err == nil && len(match) > 0 {
 						parsedItem := &handlerParsedItem{item, nil}
@@ -170,14 +170,14 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 						}
 						switch item.itemType {
 						// The serving handler can be only added just once.
-						case gHANDLER_TYPE_HANDLER, gHANDLER_TYPE_OBJECT, gHANDLER_TYPE_CONTROLLER:
+						case handlerTypeHandler, handlerTypeObject, handlerTypeController:
 							hasServe = true
 							parsedItemList.PushBack(parsedItem)
 
 						// The middleware is inserted before the serving handler.
 						// If there're multiple middleware, they're inserted into the result list by their registering order.
 						// The middleware are also executed by their registered order.
-						case gHANDLER_TYPE_MIDDLEWARE:
+						case handlerTypeMiddleware:
 							if lastMiddlewareElem == nil {
 								lastMiddlewareElem = parsedItemList.PushFront(parsedItem)
 							} else {
@@ -185,7 +185,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 							}
 
 						// HOOK handler, just push it back to the list.
-						case gHANDLER_TYPE_HOOK:
+						case handlerTypeHook:
 							hasHook = true
 							parsedItemList.PushBack(parsedItem)
 
@@ -211,7 +211,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (item *handlerItem) MarshalJSON() ([]byte, error) {
 	switch item.itemType {
-	case gHANDLER_TYPE_HOOK:
+	case handlerTypeHook:
 		return json.Marshal(
 			fmt.Sprintf(
 				`%s %s:%s (%s)`,
@@ -221,7 +221,7 @@ func (item *handlerItem) MarshalJSON() ([]byte, error) {
 				item.hookName,
 			),
 		)
-	case gHANDLER_TYPE_MIDDLEWARE:
+	case handlerTypeMiddleware:
 		return json.Marshal(
 			fmt.Sprintf(
 				`%s %s:%s (MIDDLEWARE)`,

@@ -12,17 +12,17 @@ func main() {
 	})
 
 	s.BindHookHandlerByMap("/priority/:name", map[string]ghttp.HandlerFunc{
-		ghttp.HOOK_BEFORE_SERVE: func(r *ghttp.Request) {
+		ghttp.HookBeforeServe: func(r *ghttp.Request) {
 			r.Response.Writeln("/priority/:name")
 		},
 	})
 	s.BindHookHandlerByMap("/priority/*any", map[string]ghttp.HandlerFunc{
-		ghttp.HOOK_BEFORE_SERVE: func(r *ghttp.Request) {
+		ghttp.HookBeforeServe: func(r *ghttp.Request) {
 			r.Response.Writeln("/priority/*any")
 		},
 	})
 	s.BindHookHandlerByMap("/priority/show", map[string]ghttp.HandlerFunc{
-		ghttp.HOOK_BEFORE_SERVE: func(r *ghttp.Request) {
+		ghttp.HookBeforeServe: func(r *ghttp.Request) {
 			r.Response.Writeln("/priority/show")
 		},
 	})

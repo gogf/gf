@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -64,7 +64,7 @@ func (s *Server) doBindObject(
 		s.Logger().Fatal(err)
 		return
 	}
-	if strings.EqualFold(method, gDEFAULT_METHOD) {
+	if strings.EqualFold(method, defaultMethod) {
 		pattern = s.serveHandlerKey("", path, domain)
 	}
 	m := make(map[string]*handlerItem)
@@ -111,7 +111,7 @@ func (s *Server) doBindObject(
 		key := s.mergeBuildInNameToPattern(pattern, structName, methodName, true)
 		m[key] = &handlerItem{
 			itemName:   fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, methodName),
-			itemType:   gHANDLER_TYPE_OBJECT,
+			itemType:   handlerTypeObject,
 			itemFunc:   itemFunc,
 			initFunc:   initFunc,
 			shutFunc:   shutFunc,
@@ -133,7 +133,7 @@ func (s *Server) doBindObject(
 			}
 			m[k] = &handlerItem{
 				itemName:   fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, methodName),
-				itemType:   gHANDLER_TYPE_OBJECT,
+				itemType:   handlerTypeObject,
 				itemFunc:   itemFunc,
 				initFunc:   initFunc,
 				shutFunc:   shutFunc,
@@ -184,7 +184,7 @@ func (s *Server) doBindObjectMethod(
 	key := s.mergeBuildInNameToPattern(pattern, structName, methodName, false)
 	m[key] = &handlerItem{
 		itemName:   fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, methodName),
-		itemType:   gHANDLER_TYPE_OBJECT,
+		itemType:   handlerTypeObject,
 		itemFunc:   itemFunc,
 		initFunc:   initFunc,
 		shutFunc:   shutFunc,
@@ -233,7 +233,7 @@ func (s *Server) doBindObjectRest(
 		key := s.mergeBuildInNameToPattern(methodName+":"+pattern, structName, methodName, false)
 		m[key] = &handlerItem{
 			itemName:   fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, methodName),
-			itemType:   gHANDLER_TYPE_OBJECT,
+			itemType:   handlerTypeObject,
 			itemFunc:   itemFunc,
 			initFunc:   initFunc,
 			shutFunc:   shutFunc,

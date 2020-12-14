@@ -71,7 +71,7 @@ func niceCallFunc(f func()) {
 	defer func() {
 		if e := recover(); e != nil {
 			switch e {
-			case gEXCEPTION_EXIT, gEXCEPTION_EXIT_ALL:
+			case exceptionExit, exceptionExitAll:
 				return
 			default:
 				if _, ok := e.(errorStack); ok {

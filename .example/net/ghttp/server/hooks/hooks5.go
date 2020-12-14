@@ -7,10 +7,10 @@ import (
 
 func main() {
 	s := g.Server()
-	s.BindHookHandler("/*any", ghttp.HOOK_BEFORE_SERVE, func(r *ghttp.Request) {
+	s.BindHookHandler("/*any", ghttp.HookBeforeServe, func(r *ghttp.Request) {
 		r.Response.Writeln("/*any")
 	})
-	s.BindHookHandler("/v1/*", ghttp.HOOK_BEFORE_SERVE, func(r *ghttp.Request) {
+	s.BindHookHandler("/v1/*", ghttp.HookBeforeServe, func(r *ghttp.Request) {
 		r.Response.Writeln("/v1/*")
 		r.ExitHook()
 	})

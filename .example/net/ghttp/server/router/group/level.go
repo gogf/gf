@@ -54,10 +54,10 @@ func main() {
 			})
 		})
 		group.Group("/hook", func(group *ghttp.RouterGroup) {
-			group.Hook("/*", ghttp.HOOK_BEFORE_SERVE, func(r *ghttp.Request) {
+			group.Hook("/*", ghttp.HookBeforeServe, func(r *ghttp.Request) {
 				r.Response.Write("hook any")
 			})
-			group.Hook("/:name", ghttp.HOOK_BEFORE_SERVE, func(r *ghttp.Request) {
+			group.Hook("/:name", ghttp.HookBeforeServe, func(r *ghttp.Request) {
 				r.Response.Write("hook name")
 			})
 		})

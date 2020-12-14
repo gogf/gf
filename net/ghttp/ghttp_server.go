@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -35,7 +35,7 @@ import (
 
 func init() {
 	// Initialize the methods map.
-	for _, v := range strings.Split(HTTP_METHODS, ",") {
+	for _, v := range strings.Split(SupportedHttpMethods, ",") {
 		methodsMap[v] = struct{}{}
 	}
 }
@@ -87,7 +87,7 @@ func serverProcessInit() {
 // Note that the parameter <name> should be unique for different servers. It returns an existing
 // server instance if given <name> is already existing in the server mapping.
 func GetServer(name ...interface{}) *Server {
-	serverName := gDEFAULT_SERVER
+	serverName := defaultServerName
 	if len(name) > 0 && name[0] != "" {
 		serverName = gconv.String(name[0])
 	}
@@ -124,7 +124,7 @@ func (s *Server) Start() error {
 	serverProcessInit()
 
 	// Server can only be run once.
-	if s.Status() == SERVER_STATUS_RUNNING {
+	if s.Status() == ServerStatusRunning {
 		return errors.New("[ghttp] server is already running")
 	}
 
@@ -256,9 +256,9 @@ func (s *Server) GetRouterArray() []RouterItem {
 				handler:    registeredItem.handler,
 			}
 			switch item.handler.itemType {
-			case gHANDLER_TYPE_CONTROLLER, gHANDLER_TYPE_OBJECT, gHANDLER_TYPE_HANDLER:
+			case handlerTypeController, handlerTypeObject, handlerTypeHandler:
 				item.IsServiceHandler = true
-			case gHANDLER_TYPE_MIDDLEWARE:
+			case handlerTypeMiddleware:
 				item.Middleware = "GLOBAL MIDDLEWARE"
 			}
 			if len(item.handler.middleware) > 0 {
@@ -280,9 +280,9 @@ func (s *Server) GetRouterArray() []RouterItem {
 					if r = strings.Compare(item1.Domain, item2.Domain); r == 0 {
 						if r = strings.Compare(item1.Route, item2.Route); r == 0 {
 							if r = strings.Compare(item1.Method, item2.Method); r == 0 {
-								if item1.handler.itemType == gHANDLER_TYPE_MIDDLEWARE && item2.handler.itemType != gHANDLER_TYPE_MIDDLEWARE {
+								if item1.handler.itemType == handlerTypeMiddleware && item2.handler.itemType != handlerTypeMiddleware {
 									return -1
-								} else if item1.handler.itemType == gHANDLER_TYPE_MIDDLEWARE && item2.handler.itemType == gHANDLER_TYPE_MIDDLEWARE {
+								} else if item1.handler.itemType == handlerTypeMiddleware && item2.handler.itemType == handlerTypeMiddleware {
 									return 1
 								} else if r = strings.Compare(item1.Middleware, item2.Middleware); r == 0 {
 									r = item2.Priority - item1.Priority
@@ -445,15 +445,15 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 // Status retrieves and returns the server status.
 func (s *Server) Status() int {
 	if serverRunning.Val() == 0 {
-		return SERVER_STATUS_STOPPED
+		return ServerStatusStopped
 	}
 	// If any underlying server is running, the server status is running.
 	for _, v := range s.servers {
-		if v.status == SERVER_STATUS_RUNNING {
-			return SERVER_STATUS_RUNNING
+		if v.status == ServerStatusRunning {
+			return ServerStatusRunning
 		}
 	}
-	return SERVER_STATUS_STOPPED
+	return ServerStatusStopped
 }
 
 // getListenerFdMap retrieves and returns the socket file descriptors.
@@ -485,9 +485,9 @@ func (s *Server) getListenerFdMap() map[string]string {
 // Deprecated.
 func IsExitError(err interface{}) bool {
 	errStr := gconv.String(err)
-	if strings.EqualFold(errStr, gEXCEPTION_EXIT) ||
-		strings.EqualFold(errStr, gEXCEPTION_EXIT_ALL) ||
-		strings.EqualFold(errStr, gEXCEPTION_EXIT_HOOK) {
+	if strings.EqualFold(errStr, exceptionExit) ||
+		strings.EqualFold(errStr, exceptionExitAll) ||
+		strings.EqualFold(errStr, exceptionExitHook) {
 		return true
 	}
 	return false

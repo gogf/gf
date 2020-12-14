@@ -9,7 +9,7 @@ import (
 
 func main() {
 	s := g.Server()
-	s.BindHookHandler("/*any", ghttp.HOOK_BEFORE_SERVE, func(r *ghttp.Request) {
+	s.BindHookHandler("/*any", ghttp.HookBeforeServe, func(r *ghttp.Request) {
 		fmt.Println(r.Router)
 		fmt.Println(r.Get("customer_id"))
 	})

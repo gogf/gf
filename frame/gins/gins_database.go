@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -97,7 +97,7 @@ func Database(name ...string) gdb.DB {
 			if Config().Available() {
 				// Initialize logger for ORM.
 				var loggerConfigMap map[string]interface{}
-				loggerConfigMap = Config().GetMap(fmt.Sprintf("%s.%s", configNodeKey, gLOGGER_NODE_NAME))
+				loggerConfigMap = Config().GetMap(fmt.Sprintf("%s.%s", configNodeKey, configNodeNameLogger))
 				if len(loggerConfigMap) == 0 {
 					loggerConfigMap = Config().GetMap(configNodeKey)
 				}
