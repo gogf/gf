@@ -16,7 +16,8 @@ import (
 )
 
 const (
-	DEFAULT_GROUP_NAME = "default" // Default group name.
+	DEFAULT_GROUP_NAME = "default" // Deprecated, use DefaultGroupName instead.
+	DefaultGroupName   = "default" // Default group name.
 )
 
 // Config is the configuration management object.
@@ -58,7 +59,7 @@ var configs struct {
 
 func init() {
 	configs.config = make(Config)
-	configs.group = DEFAULT_GROUP_NAME
+	configs.group = DefaultGroupName
 }
 
 // SetConfig sets the global configuration for package.
@@ -88,12 +89,12 @@ func AddConfigNode(group string, node ConfigNode) {
 
 // AddDefaultConfigNode adds one node configuration to configuration of default group.
 func AddDefaultConfigNode(node ConfigNode) {
-	AddConfigNode(DEFAULT_GROUP_NAME, node)
+	AddConfigNode(DefaultGroupName, node)
 }
 
 // AddDefaultConfigGroup adds multiple node configurations to configuration of default group.
 func AddDefaultConfigGroup(nodes ConfigGroup) {
-	SetConfigGroup(DEFAULT_GROUP_NAME, nodes)
+	SetConfigGroup(DefaultGroupName, nodes)
 }
 
 // GetConfig retrieves and returns the configuration of given group.

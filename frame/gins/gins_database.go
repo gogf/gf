@@ -18,18 +18,18 @@ import (
 )
 
 const (
-	gFRAME_CORE_COMPONENT_NAME_DATABASE = "gf.core.component.database"
-	gDATABASE_NODE_NAME                 = "database"
+	frameCoreComponentNameDatabase = "gf.core.component.database"
+	configNodeNameDatabase         = "database"
 )
 
 // Database returns an instance of database ORM object
 // with specified configuration group name.
 func Database(name ...string) gdb.DB {
-	group := gdb.DEFAULT_GROUP_NAME
+	group := gdb.DefaultGroupName
 	if len(name) > 0 && name[0] != "" {
 		group = name[0]
 	}
-	instanceKey := fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_DATABASE, group)
+	instanceKey := fmt.Sprintf("%s.%s", frameCoreComponentNameDatabase, group)
 	db := instances.GetOrSetFuncLock(instanceKey, func() interface{} {
 		var (
 			configMap     map[string]interface{}
@@ -37,14 +37,17 @@ func Database(name ...string) gdb.DB {
 		)
 		// It firstly searches the configuration of the instance name.
 		if Config().Available() {
-			configNodeKey, _ = gutil.MapPossibleItemByKey(Config().GetMap("."), gDATABASE_NODE_NAME)
+			configNodeKey, _ = gutil.MapPossibleItemByKey(
+				Config().GetMap("."),
+				configNodeNameDatabase,
+			)
 			if configNodeKey == "" {
-				configNodeKey = gDATABASE_NODE_NAME
+				configNodeKey = configNodeNameDatabase
 			}
 			configMap = Config().GetMap(configNodeKey)
 		}
 		if len(configMap) == 0 && !gdb.IsConfigured() {
-			panic(fmt.Sprintf(`database init failed: "%s" node not found, is config file or configuration missing?`, gDATABASE_NODE_NAME))
+			panic(fmt.Sprintf(`database init failed: "%s" node not found, is config file or configuration missing?`, configNodeNameDatabase))
 		}
 		if len(configMap) == 0 {
 			configMap = make(map[string]interface{})
@@ -84,11 +87,11 @@ func Database(name ...string) gdb.DB {
 
 			if len(cg) > 0 {
 				if gdb.GetConfig(group) == nil {
-					intlog.Printf("add configuration for group: %s, %#v", gdb.DEFAULT_GROUP_NAME, cg)
-					gdb.SetConfigGroup(gdb.DEFAULT_GROUP_NAME, cg)
+					intlog.Printf("add configuration for group: %s, %#v", gdb.DefaultGroupName, cg)
+					gdb.SetConfigGroup(gdb.DefaultGroupName, cg)
 				} else {
-					intlog.Printf("ignore configuration as it already exists for group: %s, %#v", gdb.DEFAULT_GROUP_NAME, cg)
-					intlog.Printf("%s, %#v", gdb.DEFAULT_GROUP_NAME, cg)
+					intlog.Printf("ignore configuration as it already exists for group: %s, %#v", gdb.DefaultGroupName, cg)
+					intlog.Printf("%s, %#v", gdb.DefaultGroupName, cg)
 				}
 			}
 		}

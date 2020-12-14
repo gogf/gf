@@ -57,7 +57,7 @@ func init() {
 	nodePrefix.Prefix = PREFIX1
 	gdb.AddConfigNode("test", configNode)
 	gdb.AddConfigNode("prefix", nodePrefix)
-	gdb.AddConfigNode(gdb.DEFAULT_GROUP_NAME, configNode)
+	gdb.AddConfigNode(gdb.DefaultGroupName, configNode)
 	// Default db.
 	if r, err := gdb.New(); err != nil {
 		gtest.Error(err)

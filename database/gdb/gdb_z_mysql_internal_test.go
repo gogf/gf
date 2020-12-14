@@ -47,7 +47,7 @@ func init() {
 		MaxOpenConnCount: 10,
 		MaxConnLifetime:  600,
 	}
-	AddConfigNode(DEFAULT_GROUP_NAME, configNode)
+	AddConfigNode(DefaultGroupName, configNode)
 	// Default db.
 	if r, err := New(); err != nil {
 		gtest.Error(err)
