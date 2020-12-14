@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -20,10 +20,10 @@ func Test_Router_Hook_Basic(t *testing.T) {
 	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHookHandlerByMap("/*", map[string]ghttp.HandlerFunc{
-		ghttp.HOOK_BEFORE_SERVE:  func(r *ghttp.Request) { r.Response.Write("1") },
-		ghttp.HOOK_AFTER_SERVE:   func(r *ghttp.Request) { r.Response.Write("2") },
-		ghttp.HOOK_BEFORE_OUTPUT: func(r *ghttp.Request) { r.Response.Write("3") },
-		ghttp.HOOK_AFTER_OUTPUT:  func(r *ghttp.Request) { r.Response.Write("4") },
+		ghttp.HookBeforeServe:  func(r *ghttp.Request) { r.Response.Write("1") },
+		ghttp.HookAfterServe:   func(r *ghttp.Request) { r.Response.Write("2") },
+		ghttp.HookBeforeOutput: func(r *ghttp.Request) { r.Response.Write("3") },
+		ghttp.HookAfterOutput:  func(r *ghttp.Request) { r.Response.Write("4") },
 	})
 	s.BindHandler("/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test")
@@ -49,7 +49,7 @@ func Test_Router_Hook_Fuzzy_Router(t *testing.T) {
 	i := 1000
 	pattern1 := "/:name/info"
 	s.BindHookHandlerByMap(pattern1, map[string]ghttp.HandlerFunc{
-		ghttp.HOOK_BEFORE_SERVE: func(r *ghttp.Request) {
+		ghttp.HookBeforeServe: func(r *ghttp.Request) {
 			r.SetParam("uid", i)
 			i++
 		},
@@ -60,7 +60,7 @@ func Test_Router_Hook_Fuzzy_Router(t *testing.T) {
 
 	pattern2 := "/{object}/list/{page}.java"
 	s.BindHookHandlerByMap(pattern2, map[string]ghttp.HandlerFunc{
-		ghttp.HOOK_BEFORE_OUTPUT: func(r *ghttp.Request) {
+		ghttp.HookBeforeOutput: func(r *ghttp.Request) {
 			r.Response.SetBuffer([]byte(
 				fmt.Sprint(r.Get("object"), "&", r.Get("page"), "&", i),
 			))
@@ -95,17 +95,17 @@ func Test_Router_Hook_Priority(t *testing.T) {
 	})
 
 	s.BindHookHandlerByMap("/priority/:name", map[string]ghttp.HandlerFunc{
-		ghttp.HOOK_BEFORE_SERVE: func(r *ghttp.Request) {
+		ghttp.HookBeforeServe: func(r *ghttp.Request) {
 			r.Response.Write("1")
 		},
 	})
 	s.BindHookHandlerByMap("/priority/*any", map[string]ghttp.HandlerFunc{
-		ghttp.HOOK_BEFORE_SERVE: func(r *ghttp.Request) {
+		ghttp.HookBeforeServe: func(r *ghttp.Request) {
 			r.Response.Write("2")
 		},
 	})
 	s.BindHookHandlerByMap("/priority/show", map[string]ghttp.HandlerFunc{
-		ghttp.HOOK_BEFORE_SERVE: func(r *ghttp.Request) {
+		ghttp.HookBeforeServe: func(r *ghttp.Request) {
 			r.Response.Write("3")
 		},
 	})
@@ -134,12 +134,12 @@ func Test_Router_Hook_Multi(t *testing.T) {
 	})
 
 	s.BindHookHandlerByMap("/multi-hook", map[string]ghttp.HandlerFunc{
-		ghttp.HOOK_BEFORE_SERVE: func(r *ghttp.Request) {
+		ghttp.HookBeforeServe: func(r *ghttp.Request) {
 			r.Response.Write("1")
 		},
 	})
 	s.BindHookHandlerByMap("/multi-hook", map[string]ghttp.HandlerFunc{
-		ghttp.HOOK_BEFORE_SERVE: func(r *ghttp.Request) {
+		ghttp.HookBeforeServe: func(r *ghttp.Request) {
 			r.Response.Write("2")
 		},
 	})
@@ -174,7 +174,7 @@ func Test_Router_Hook_ExitAll(t *testing.T) {
 		})
 	})
 
-	s.BindHookHandler("/hook/*", ghttp.HOOK_BEFORE_SERVE, func(r *ghttp.Request) {
+	s.BindHookHandler("/hook/*", ghttp.HookBeforeServe, func(r *ghttp.Request) {
 		r.Response.Write("hook")
 		r.ExitAll()
 	})

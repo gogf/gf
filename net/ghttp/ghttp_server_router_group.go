@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -175,7 +175,7 @@ func (g *RouterGroup) Bind(items []GroupItem) *RouterGroup {
 
 // ALL registers a http handler to given route pattern and all http methods.
 func (g *RouterGroup) ALL(pattern string, object interface{}, params ...interface{}) *RouterGroup {
-	return g.Clone().preBindToLocalArray("HANDLER", gDEFAULT_METHOD+":"+pattern, object, params...)
+	return g.Clone().preBindToLocalArray("HANDLER", defaultMethod+":"+pattern, object, params...)
 }
 
 // ALLMap registers http handlers for http methods using map.

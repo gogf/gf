@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -18,7 +18,7 @@ func (s *Server) BindHookHandler(pattern string, hook string, handler HandlerFun
 
 func (s *Server) doBindHookHandler(pattern string, hook string, handler HandlerFunc, source string) {
 	s.setHandler(pattern, &handlerItem{
-		itemType: gHANDLER_TYPE_HOOK,
+		itemType: handlerTypeHook,
 		itemName: gdebug.FuncPath(handler),
 		itemFunc: handler,
 		hookName: hook,
@@ -45,11 +45,11 @@ func (s *Server) callHookHandler(hook string, r *Request) {
 			// r.Router = item.handler.router
 			if err := s.niceCallHookHandler(item.handler.itemFunc, r); err != nil {
 				switch err {
-				case gEXCEPTION_EXIT:
+				case exceptionExit:
 					break
-				case gEXCEPTION_EXIT_ALL:
+				case exceptionExitAll:
 					fallthrough
-				case gEXCEPTION_EXIT_HOOK:
+				case exceptionExitHook:
 					return
 				default:
 					r.Response.WriteStatus(http.StatusInternalServerError, err)

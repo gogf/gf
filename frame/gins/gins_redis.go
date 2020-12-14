@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	gFRAME_CORE_COMPONENT_NAME_REDIS = "gf.core.component.redis"
-	gREDIS_NODE_NAME                 = "redis"
+	frameCoreComponentNameRedis = "gf.core.component.redis"
+	configNodeNameRedis         = "redis"
 )
 
 // Redis returns an instance of redis client with specified configuration group name.
@@ -25,7 +25,7 @@ func Redis(name ...string) *gredis.Redis {
 	if len(name) > 0 && name[0] != "" {
 		group = name[0]
 	}
-	instanceKey := fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_REDIS, group)
+	instanceKey := fmt.Sprintf("%s.%s", frameCoreComponentNameRedis, group)
 	result := instances.GetOrSetFuncLock(instanceKey, func() interface{} {
 		// If already configured, it returns the redis instance.
 		if _, ok := gredis.GetConfig(group); ok {
@@ -33,7 +33,7 @@ func Redis(name ...string) *gredis.Redis {
 		}
 		// Or else, it parses the default configuration file and returns a new redis instance.
 		var m map[string]interface{}
-		if _, v := gutil.MapPossibleItemByKey(Config().GetMap("."), gREDIS_NODE_NAME); v != nil {
+		if _, v := gutil.MapPossibleItemByKey(Config().GetMap("."), configNodeNameRedis); v != nil {
 			m = gconv.Map(v)
 		}
 		if len(m) > 0 {
