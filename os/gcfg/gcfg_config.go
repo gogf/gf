@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -17,9 +17,9 @@ var (
 )
 
 // SetContent sets customized configuration content for specified <file>.
-// The <file> is unnecessary param, default is DEFAULT_CONFIG_FILE.
+// The <file> is unnecessary param, default is DefaultConfigFile.
 func SetContent(content string, file ...string) {
-	name := DEFAULT_CONFIG_FILE
+	name := DefaultConfigFile
 	if len(file) > 0 {
 		name = file[0]
 	}
@@ -35,9 +35,9 @@ func SetContent(content string, file ...string) {
 }
 
 // GetContent returns customized configuration content for specified <file>.
-// The <file> is unnecessary param, default is DEFAULT_CONFIG_FILE.
+// The <file> is unnecessary param, default is DefaultConfigFile.
 func GetContent(file ...string) string {
-	name := DEFAULT_CONFIG_FILE
+	name := DefaultConfigFile
 	if len(file) > 0 {
 		name = file[0]
 	}
@@ -47,7 +47,7 @@ func GetContent(file ...string) string {
 // RemoveContent removes the global configuration with specified <file>.
 // If <name> is not passed, it removes configuration of the default group name.
 func RemoveContent(file ...string) {
-	name := DEFAULT_CONFIG_FILE
+	name := DefaultConfigFile
 	if len(file) > 0 {
 		name = file[0]
 	}

@@ -16,12 +16,12 @@ import (
 )
 
 const (
-	NOT_SET     = "not-set"
-	DEVELOP     = "develop"
-	TESTING     = "testing"
-	STAGING     = "staging"
-	PRODUCT     = "product"
-	gCMDENV_KEY = "gf.gmode"
+	NOT_SET   = "not-set"
+	DEVELOP   = "develop"
+	TESTING   = "testing"
+	STAGING   = "staging"
+	PRODUCT   = "product"
+	cmdEnvKey = "gf.gmode"
 )
 
 var (
@@ -57,7 +57,7 @@ func SetProduct() {
 func Mode() string {
 	// If current mode is not set, do this auto check.
 	if currentMode == NOT_SET {
-		if v := gcmd.GetWithEnv(gCMDENV_KEY).String(); v != "" {
+		if v := gcmd.GetWithEnv(cmdEnvKey).String(); v != "" {
 			// Mode configured from command argument of environment.
 			currentMode = v
 		} else {

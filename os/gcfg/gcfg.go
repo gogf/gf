@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -26,8 +26,8 @@ import (
 )
 
 const (
-	DEFAULT_CONFIG_FILE = "config.toml" // The default configuration file name.
-	gCMDENV_KEY         = "gf.gcfg"     // Configuration key for command argument or environment.
+	DefaultConfigFile = "config.toml" // The default configuration file name.
+	cmdEnvKey         = "gf.gcfg"     // Configuration key for command argument or environment.
 )
 
 // Configuration struct.
@@ -39,13 +39,14 @@ type Config struct {
 }
 
 var (
-	resourceTryFiles = []string{"", "/", "config/", "config", "/config", "/config/"}
+	supportedFileTypes = []string{"toml", "yaml", "json", "ini", "xml"}
+	resourceTryFiles   = []string{"", "/", "config/", "config", "/config", "/config/"}
 )
 
 // New returns a new configuration management object.
 // The parameter <file> specifies the default configuration file name for reading.
 func New(file ...string) *Config {
-	name := DEFAULT_CONFIG_FILE
+	name := DefaultConfigFile
 	if len(file) > 0 {
 		name = file[0]
 	}
@@ -55,7 +56,7 @@ func New(file ...string) *Config {
 		jsons: gmap.NewStrAnyMap(true),
 	}
 	// Customized dir path from env/cmd.
-	if envPath := gcmd.GetWithEnv(fmt.Sprintf("%s.path", gCMDENV_KEY)).String(); envPath != "" {
+	if envPath := gcmd.GetWithEnv(fmt.Sprintf("%s.path", cmdEnvKey)).String(); envPath != "" {
 		if gfile.Exists(envPath) {
 			_ = c.SetPath(envPath)
 		} else {

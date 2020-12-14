@@ -10,7 +10,7 @@ import "github.com/gogf/gf/container/gmap"
 
 const (
 	// Default group name for instance usage.
-	DEFAULT_NAME = "default"
+	DefaultName = "default"
 )
 
 var (
@@ -21,7 +21,7 @@ var (
 // Instance returns an instance of Logger with default settings.
 // The parameter <name> is the name for the instance.
 func Instance(name ...string) *Logger {
-	key := DEFAULT_NAME
+	key := DefaultName
 	if len(name) > 0 && name[0] != "" {
 		key = name[0]
 	}

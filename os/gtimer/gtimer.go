@@ -38,13 +38,13 @@ const (
 	gDEFAULT_SLOT_NUMBER    = 10            // Default slot number.
 	gDEFAULT_WHEEL_INTERVAL = 100           // Default wheel interval.
 	gDEFAULT_WHEEL_LEVEL    = 5             // Default wheel level.
-	gCMDENV_KEY             = "gf.gtimer"   // Configuration key for command argument or environment.
+	cmdEnvKey               = "gf.gtimer"   // Configuration key for command argument or environment.
 )
 
 var (
-	defaultSlots    = gcmd.GetWithEnv(fmt.Sprintf("%s.slots", gCMDENV_KEY), gDEFAULT_SLOT_NUMBER).Int()
-	defaultLevel    = gcmd.GetWithEnv(fmt.Sprintf("%s.level", gCMDENV_KEY), gDEFAULT_WHEEL_LEVEL).Int()
-	defaultInterval = gcmd.GetWithEnv(fmt.Sprintf("%s.interval", gCMDENV_KEY), gDEFAULT_WHEEL_INTERVAL).Duration() * time.Millisecond
+	defaultSlots    = gcmd.GetWithEnv(fmt.Sprintf("%s.slots", cmdEnvKey), gDEFAULT_SLOT_NUMBER).Int()
+	defaultLevel    = gcmd.GetWithEnv(fmt.Sprintf("%s.level", cmdEnvKey), gDEFAULT_WHEEL_LEVEL).Int()
+	defaultInterval = gcmd.GetWithEnv(fmt.Sprintf("%s.interval", cmdEnvKey), gDEFAULT_WHEEL_INTERVAL).Duration() * time.Millisecond
 	defaultTimer    = New(defaultSlots, defaultInterval, defaultLevel)
 )
 
