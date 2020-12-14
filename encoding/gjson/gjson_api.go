@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -370,97 +370,58 @@ func (j *Json) GetMapToMapsDeep(pattern string, pointer interface{}, mapping ...
 	return gconv.MapToMapsDeep(j.Get(pattern), pointer, mapping...)
 }
 
-// ToMap converts current Json object to map[string]interface{}.
+// Map converts current Json object to map[string]interface{}.
 // It returns nil if fails.
-func (j *Json) ToMap() map[string]interface{} {
+func (j *Json) Map() map[string]interface{} {
 	j.mu.RLock()
 	defer j.mu.RUnlock()
 	return gconv.Map(*(j.p))
 }
 
-// ToArray converts current Json object to []interface{}.
+// Array converts current Json object to []interface{}.
 // It returns nil if fails.
-func (j *Json) ToArray() []interface{} {
+func (j *Json) Array() []interface{} {
 	j.mu.RLock()
 	defer j.mu.RUnlock()
 	return gconv.Interfaces(*(j.p))
 }
 
-// ToStruct converts current Json object to specified object.
+// Struct converts current Json object to specified object.
 // The <pointer> should be a pointer type of *struct.
-func (j *Json) ToStruct(pointer interface{}, mapping ...map[string]string) error {
+func (j *Json) Struct(pointer interface{}, mapping ...map[string]string) error {
 	j.mu.RLock()
 	defer j.mu.RUnlock()
 	return gconv.Struct(*(j.p), pointer, mapping...)
 }
 
-// ToStructDeep converts current Json object to specified object recursively.
-// The <pointer> should be a pointer type of *struct.
-// Deprecated, use ToStruct instead.
-func (j *Json) ToStructDeep(pointer interface{}, mapping ...map[string]string) error {
-	j.mu.RLock()
-	defer j.mu.RUnlock()
-	return gconv.StructDeep(*(j.p), pointer, mapping...)
-}
-
-// ToStructs converts current Json object to specified object slice.
+// Structs converts current Json object to specified object slice.
 // The <pointer> should be a pointer type of []struct/*struct.
-func (j *Json) ToStructs(pointer interface{}, mapping ...map[string]string) error {
+func (j *Json) Structs(pointer interface{}, mapping ...map[string]string) error {
 	j.mu.RLock()
 	defer j.mu.RUnlock()
 	return gconv.Structs(*(j.p), pointer, mapping...)
 }
 
-// ToStructsDeep converts current Json object to specified object slice recursively.
-// The <pointer> should be a pointer type of []struct/*struct.
-func (j *Json) ToStructsDeep(pointer interface{}, mapping ...map[string]string) error {
-	j.mu.RLock()
-	defer j.mu.RUnlock()
-	return gconv.StructsDeep(*(j.p), pointer, mapping...)
-}
-
-// ToScan automatically calls Struct or Structs function according to the type of parameter
+// Scan automatically calls Struct or Structs function according to the type of parameter
 // <pointer> to implement the converting..
-func (j *Json) ToScan(pointer interface{}, mapping ...map[string]string) error {
+func (j *Json) Scan(pointer interface{}, mapping ...map[string]string) error {
 	return gconv.Scan(*(j.p), pointer, mapping...)
 }
 
-// ToScanDeep automatically calls StructDeep or StructsDeep function according to the type of
-// parameter <pointer> to implement the converting..
-func (j *Json) ToScanDeep(pointer interface{}, mapping ...map[string]string) error {
-	return gconv.ScanDeep(*(j.p), pointer, mapping...)
-}
-
-// ToMapToMap converts current Json object to specified map variable.
+// MapToMap converts current Json object to specified map variable.
 // The parameter of <pointer> should be type of *map.
-func (j *Json) ToMapToMap(pointer interface{}, mapping ...map[string]string) error {
+func (j *Json) MapToMap(pointer interface{}, mapping ...map[string]string) error {
 	j.mu.RLock()
 	defer j.mu.RUnlock()
 	return gconv.MapToMap(*(j.p), pointer, mapping...)
 }
 
-// ToMapToMapDeep converts current Json object to specified map variable recursively.
-// The parameter of <pointer> should be type of *map.
-func (j *Json) ToMapToMapDeep(pointer interface{}, mapping ...map[string]string) error {
-	j.mu.RLock()
-	defer j.mu.RUnlock()
-	return gconv.MapToMapDeep(*(j.p), pointer, mapping...)
-}
-
-// ToMapToMaps converts current Json object to specified map variable slice.
+// MapToMaps converts current Json object to specified map variable slice.
 // The parameter of <pointer> should be type of []map/*map.
-func (j *Json) ToMapToMaps(pointer interface{}, mapping ...map[string]string) error {
+func (j *Json) MapToMaps(pointer interface{}, mapping ...map[string]string) error {
 	j.mu.RLock()
 	defer j.mu.RUnlock()
 	return gconv.MapToMaps(*(j.p), pointer, mapping...)
-}
-
-// ToMapToMapsDeep converts current Json object to specified map variable slice recursively.
-// The parameter of <pointer> should be type of []map/*map.
-func (j *Json) ToMapToMapsDeep(pointer interface{}, mapping ...map[string]string) error {
-	j.mu.RLock()
-	defer j.mu.RUnlock()
-	return gconv.MapToMapsDeep(*(j.p), pointer, mapping...)
 }
 
 // Dump prints current Json object with more manually readable.
