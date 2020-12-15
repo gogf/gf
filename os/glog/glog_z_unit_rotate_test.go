@@ -1,4 +1,4 @@
-// Copyright 2020 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,6 +7,7 @@
 package glog_test
 
 import (
+	"fmt"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/glog"
@@ -36,6 +37,7 @@ func Test_Rotate_Size(t *testing.T) {
 
 		s := "1234567890abcdefg"
 		for i := 0; i < 10; i++ {
+			fmt.Println("logging content index:", i)
 			l.Print(s)
 		}
 
