@@ -31,12 +31,11 @@ import (
 
 // Logger is the struct for logging management.
 type Logger struct {
-	rmu           sync.Mutex      // Mutex for rotation feature.
-	ctx           context.Context // Context for logging.
-	init          *gtype.Bool     // Initialized.
-	parent        *Logger         // Parent logger, if it is not empty, it means the logger is used in chaining function.
-	config        Config          // Logger configuration.
-	cacheFileSize *gtype.Int64    // 文件大小缓存
+	rmu    sync.Mutex      // Mutex for rotation feature.
+	ctx    context.Context // Context for logging.
+	init   *gtype.Bool     // Initialized.
+	parent *Logger         // Parent logger, if it is not empty, it means the logger is used in chaining function.
+	config Config          // Logger configuration.
 }
 
 const (
@@ -61,9 +60,8 @@ const (
 // New creates and returns a custom logger.
 func New() *Logger {
 	logger := &Logger{
-		init:          gtype.NewBool(),
-		config:        DefaultConfig(),
-		cacheFileSize: gtype.NewInt64(-1),
+		init:   gtype.NewBool(),
+		config: DefaultConfig(),
 	}
 	return logger
 }
@@ -153,7 +151,6 @@ func (l *Logger) print(std io.Writer, lead string, values ...interface{}) {
 				callerPath = fmt.Sprintf(`%s:%d: `, gfile.Basename(path), line)
 			}
 			buffer.WriteString(callerPath)
-
 		}
 		// Prefix.
 		if len(l.config.Prefix) > 0 {
@@ -222,24 +219,18 @@ func (l *Logger) rotateFile(now time.Time, buffer *bytes.Buffer) {
 	// Rotation file size checks.
 	if l.config.Path != "" && l.config.RotateSize > 0 {
 		var (
-			writeSize_    = int64(buffer.Len())
 			logFilePath   = l.getFilePath(now)
 			memoryLockKey = "glog.file.lock:" + logFilePath
 		)
 		gmlock.Lock(memoryLockKey)
 		defer gmlock.Unlock(memoryLockKey)
-		if -1 == l.cacheFileSize.Val() {
-			l.cacheFileSize.Set(gfile.Size(logFilePath))
-		}
-		l.cacheFileSize.Add(writeSize_)
-		intlog.Printf("cache file size: %v", l.cacheFileSize.Val())
-		if l.cacheFileSize.Val() >= l.config.RotateSize {
+
+		fileSize_ := gfile.Size(logFilePath)
+		writeSize_ := int64(buffer.Len())
+		intlog.Printf("%v %v", logFilePath, fileSize_)
+		if fileSize_+writeSize_ > l.config.RotateSize {
 			l.closeFilePointer(logFilePath)
-			if err_ := l.rotateFileBySize(now); nil == err_ {
-				l.cacheFileSize.Set(writeSize_)
-			} else {
-				l.cacheFileSize.Set(l.config.RotateSize)
-			}
+			l.rotateFileBySize(now)
 		}
 	}
 }
