@@ -252,9 +252,6 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 	if m.groupBy != "" {
 		conditionExtra += " GROUP BY " + m.groupBy
 	}
-	if m.orderBy != "" {
-		conditionExtra += " ORDER BY " + m.orderBy
-	}
 	if len(m.having) > 0 {
 		havingStr, havingArgs := formatWhere(
 			m.db, m.having[0], gconv.Interfaces(m.having[1]), m.option&OPTION_OMITEMPTY > 0,
@@ -263,6 +260,9 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 			conditionExtra += " HAVING " + havingStr
 			conditionArgs = append(conditionArgs, havingArgs...)
 		}
+	}
+	if m.orderBy != "" {
+		conditionExtra += " ORDER BY " + m.orderBy
 	}
 	if !isCountStatement {
 		if m.limit != 0 {

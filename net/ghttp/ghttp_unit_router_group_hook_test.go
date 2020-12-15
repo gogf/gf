@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -25,10 +25,10 @@ func Test_Router_Group_Hook1(t *testing.T) {
 	})
 	group.ALL("/handler", func(r *ghttp.Request) {
 		r.Response.Write("0")
-	}, ghttp.HOOK_BEFORE_SERVE)
+	}, ghttp.HookBeforeServe)
 	group.ALL("/handler", func(r *ghttp.Request) {
 		r.Response.Write("2")
-	}, ghttp.HOOK_AFTER_SERVE)
+	}, ghttp.HookAfterServe)
 
 	s.SetPort(p)
 	s.SetDumpRouterMap(false)
@@ -54,10 +54,10 @@ func Test_Router_Group_Hook2(t *testing.T) {
 	})
 	group.GET("/*", func(r *ghttp.Request) {
 		r.Response.Write("0")
-	}, ghttp.HOOK_BEFORE_SERVE)
+	}, ghttp.HookBeforeServe)
 	group.GET("/*", func(r *ghttp.Request) {
 		r.Response.Write("2")
-	}, ghttp.HOOK_AFTER_SERVE)
+	}, ghttp.HookAfterServe)
 
 	s.SetPort(p)
 	s.SetDumpRouterMap(false)
@@ -84,10 +84,10 @@ func Test_Router_Group_Hook3(t *testing.T) {
 		}},
 		{"ALL", "/*", func(r *ghttp.Request) {
 			r.Response.Write("0")
-		}, ghttp.HOOK_BEFORE_SERVE},
+		}, ghttp.HookBeforeServe},
 		{"ALL", "/*", func(r *ghttp.Request) {
 			r.Response.Write("2")
-		}, ghttp.HOOK_AFTER_SERVE},
+		}, ghttp.HookAfterServe},
 	})
 
 	s.SetPort(p)

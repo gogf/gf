@@ -116,7 +116,7 @@ func Test_GetArray(t *testing.T) {
 		j := gparser.New(data)
 		t.AssertNE(j, nil)
 		t.Assert(j.GetArray("n"), g.Array{123456789})
-		t.Assert(j.GetArray("m"), g.Array{"k", "v"})
+		t.Assert(j.GetArray("m"), g.Array{g.Map{"k": "v"}})
 		t.Assert(j.GetArray("a"), g.Array{1, 2, 3})
 	})
 }
@@ -151,7 +151,7 @@ func Test_GetInterfaces(t *testing.T) {
 		j := gparser.New(data)
 		t.AssertNE(j, nil)
 		t.AssertEQ(j.GetInterfaces("n"), g.Array{123456789})
-		t.AssertEQ(j.GetInterfaces("m"), g.Array{"k", "v"})
+		t.AssertEQ(j.GetInterfaces("m"), g.Array{g.Map{"k": "v"}})
 		t.AssertEQ(j.GetInterfaces("a"), g.Array{1, 2, 3})
 	})
 }

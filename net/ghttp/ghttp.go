@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -107,25 +107,29 @@ type (
 )
 
 const (
-	SERVER_STATUS_STOPPED    = 0
-	SERVER_STATUS_RUNNING    = 1
-	HOOK_BEFORE_SERVE        = "HOOK_BEFORE_SERVE"
-	HOOK_AFTER_SERVE         = "HOOK_AFTER_SERVE"
-	HOOK_BEFORE_OUTPUT       = "HOOK_BEFORE_OUTPUT"
-	HOOK_AFTER_OUTPUT        = "HOOK_AFTER_OUTPUT"
-	HTTP_METHODS             = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
-	gDEFAULT_SERVER          = "default"
-	gDEFAULT_DOMAIN          = "default"
-	gDEFAULT_METHOD          = "ALL"
-	gHANDLER_TYPE_HANDLER    = 1
-	gHANDLER_TYPE_OBJECT     = 2
-	gHANDLER_TYPE_CONTROLLER = 3
-	gHANDLER_TYPE_MIDDLEWARE = 4
-	gHANDLER_TYPE_HOOK       = 5
-	gEXCEPTION_EXIT          = "exit"
-	gEXCEPTION_EXIT_ALL      = "exit_all"
-	gEXCEPTION_EXIT_HOOK     = "exit_hook"
-	gROUTE_CACHE_DURATION    = time.Hour
+	HOOK_BEFORE_SERVE     = "HOOK_BEFORE_SERVE"  // Deprecated, use HookBeforeServe instead.
+	HOOK_AFTER_SERVE      = "HOOK_AFTER_SERVE"   // Deprecated, use HookAfterServe instead.
+	HOOK_BEFORE_OUTPUT    = "HOOK_BEFORE_OUTPUT" // Deprecated, use HookBeforeOutput instead.
+	HOOK_AFTER_OUTPUT     = "HOOK_AFTER_OUTPUT"  // Deprecated, use HookAfterOutput instead.
+	HookBeforeServe       = "HOOK_BEFORE_SERVE"
+	HookAfterServe        = "HOOK_AFTER_SERVE"
+	HookBeforeOutput      = "HOOK_BEFORE_OUTPUT"
+	HookAfterOutput       = "HOOK_AFTER_OUTPUT"
+	ServerStatusStopped   = 0
+	ServerStatusRunning   = 1
+	SupportedHttpMethods  = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
+	defaultServerName     = "default"
+	defaultDomainName     = "default"
+	defaultMethod         = "ALL"
+	handlerTypeHandler    = 1
+	handlerTypeObject     = 2
+	handlerTypeController = 3
+	handlerTypeMiddleware = 4
+	handlerTypeHook       = 5
+	exceptionExit         = "exit"
+	exceptionExitAll      = "exit_all"
+	exceptionExitHook     = "exit_hook"
+	routeCacheDuration    = time.Hour
 )
 
 var (

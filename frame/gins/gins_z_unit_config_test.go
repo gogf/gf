@@ -199,7 +199,7 @@ func Test_Config4(t *testing.T) {
 func Test_Basic2(t *testing.T) {
 	config := `log-path = "logs"`
 	gtest.C(t, func(t *gtest.T) {
-		path := gcfg.DEFAULT_CONFIG_FILE
+		path := gcfg.DefaultConfigFile
 		err := gfile.PutContents(path, config)
 		t.Assert(err, nil)
 		defer func() {

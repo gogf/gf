@@ -11,7 +11,7 @@ func main() {
 		r.Response.Writeln(r.Get("name"))
 	})
 	s.BindHookHandlerByMap("/", map[string]ghttp.HandlerFunc{
-		ghttp.HOOK_BEFORE_SERVE: func(r *ghttp.Request) {
+		ghttp.HookBeforeServe: func(r *ghttp.Request) {
 			r.SetParam("name", "john")
 		},
 	})

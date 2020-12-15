@@ -1,4 +1,4 @@
-// Copyright 2018-2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -10,8 +10,6 @@ package gvar
 import (
 	"github.com/gogf/gf/internal/json"
 	"time"
-
-	"github.com/gogf/gf/internal/empty"
 
 	"github.com/gogf/gf/container/gtype"
 	"github.com/gogf/gf/os/gtime"
@@ -86,16 +84,6 @@ func (v *Var) Val() interface{} {
 // Interface is alias of Val.
 func (v *Var) Interface() interface{} {
 	return v.Val()
-}
-
-// IsNil checks whether <v> is nil.
-func (v *Var) IsNil() bool {
-	return v.Val() == nil
-}
-
-// IsEmpty checks whether <v> is empty.
-func (v *Var) IsEmpty() bool {
-	return empty.IsEmpty(v.Val())
 }
 
 // Bytes converts and returns <v> as []byte.

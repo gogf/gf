@@ -289,7 +289,7 @@ func Register(name string, driver Driver) error {
 
 // New creates and returns an ORM object with global configurations.
 // The parameter <name> specifies the configuration group name,
-// which is DEFAULT_GROUP_NAME in default.
+// which is DefaultGroupName in default.
 func New(group ...string) (db DB, err error) {
 	groupName := configs.group
 	if len(group) > 0 && group[0] != "" {
@@ -330,7 +330,7 @@ func New(group ...string) (db DB, err error) {
 
 // Instance returns an instance for DB operations.
 // The parameter <name> specifies the configuration group name,
-// which is DEFAULT_GROUP_NAME in default.
+// which is DefaultGroupName in default.
 func Instance(name ...string) (db DB, err error) {
 	group := configs.group
 	if len(name) > 0 && name[0] != "" {

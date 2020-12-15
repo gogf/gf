@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -45,7 +45,7 @@ func init() {
 func (r *Response) DefaultCORSOptions() CORSOptions {
 	options := CORSOptions{
 		AllowOrigin:      "*",
-		AllowMethods:     HTTP_METHODS,
+		AllowMethods:     SupportedHttpMethods,
 		AllowCredentials: "true",
 		AllowHeaders:     defaultAllowHeaders,
 		MaxAge:           3628800,
