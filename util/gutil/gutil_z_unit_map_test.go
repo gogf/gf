@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -132,5 +132,41 @@ func Test_MapOmitEmpty(t *testing.T) {
 		t.Assert(len(m), 2)
 		t.AssertNE(m["k1"], nil)
 		t.AssertNE(m["k2"], nil)
+	})
+}
+
+func Test_MapToSlice(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m := g.Map{
+			"k1": "v1",
+			"k2": "v2",
+		}
+		s := gutil.MapToSlice(m)
+		t.Assert(len(s), 4)
+		t.AssertIN(s[0], g.Slice{"k1", "k2", "v1", "v2"})
+		t.AssertIN(s[1], g.Slice{"k1", "k2", "v1", "v2"})
+		t.AssertIN(s[2], g.Slice{"k1", "k2", "v1", "v2"})
+		t.AssertIN(s[3], g.Slice{"k1", "k2", "v1", "v2"})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		m := g.MapStrStr{
+			"k1": "v1",
+			"k2": "v2",
+		}
+		s := gutil.MapToSlice(m)
+		t.Assert(len(s), 4)
+		t.AssertIN(s[0], g.Slice{"k1", "k2", "v1", "v2"})
+		t.AssertIN(s[1], g.Slice{"k1", "k2", "v1", "v2"})
+		t.AssertIN(s[2], g.Slice{"k1", "k2", "v1", "v2"})
+		t.AssertIN(s[3], g.Slice{"k1", "k2", "v1", "v2"})
+	})
+	gtest.C(t, func(t *gtest.T) {
+		m := g.MapStrStr{}
+		s := gutil.MapToSlice(m)
+		t.Assert(len(s), 0)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		s := gutil.MapToSlice(1)
+		t.Assert(s, nil)
 	})
 }
