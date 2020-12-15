@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -64,14 +64,12 @@ func (p *utilAdmin) Restart(r *Request) {
 
 // Shutdown shuts down all the servers.
 func (p *utilAdmin) Shutdown(r *Request) {
-	if err := r.Server.Shutdown(); err != nil {
-		r.Response.WriteExit(err.Error())
-	}
-	if err := ShutdownAllServer(); err == nil {
-		r.Response.WriteExit("server shutdown")
-	} else {
-		r.Response.WriteExit(err.Error())
-	}
+	gtimer.SetTimeout(time.Second, func() {
+		// It shuts down the server after 1 second, which is not triggered by system signal,
+		// to ensure the response successfully to the client.
+		_ = r.Server.Shutdown()
+	})
+	r.Response.WriteExit("server shutdown")
 }
 
 // EnableAdmin enables the administration feature for the process.
@@ -86,14 +84,10 @@ func (s *Server) EnableAdmin(pattern ...string) {
 
 // Shutdown shuts down current server.
 func (s *Server) Shutdown() error {
-	// It shuts down the server after 1 second, which is not triggered by system signal,
-	// to ensure the response successfully to the client.
-	gtimer.SetTimeout(time.Second, func() {
-		// Only shut down current server.
-		// It may have multiple underlying http servers.
-		for _, v := range s.servers {
-			v.close()
-		}
-	})
+	// Only shut down current servers.
+	// It may have multiple underlying http servers.
+	for _, v := range s.servers {
+		v.close()
+	}
 	return nil
 }
