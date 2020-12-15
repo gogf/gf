@@ -1,4 +1,4 @@
-// Copyright 2020 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -33,8 +33,12 @@ func (l *Logger) rotateFileBySize(now time.Time) {
 
 // doRotateFile rotates the given logging file.
 func (l *Logger) doRotateFile(filePath string) error {
-	l.rmu.Lock()
-	defer l.rmu.Unlock()
+	memoryLockKey := "glog.doRotateFile:" + filePath
+	if !gmlock.TryLock(memoryLockKey) {
+		return nil
+	}
+	defer gmlock.Unlock(memoryLockKey)
+
 	// No backups, it then just removes the current logging file.
 	if l.config.RotateBackupLimit == 0 {
 		if err := gfile.Remove(filePath); err != nil {
@@ -93,11 +97,11 @@ func (l *Logger) rotateChecksTimely() {
 	}
 
 	// It here uses memory lock to guarantee the concurrent safety.
-	lockKey := "glog.rotateChecksTimely:" + l.config.Path
-	if !gmlock.TryLock(lockKey) {
+	memoryLockKey := "glog.rotateChecksTimely:" + l.config.Path
+	if !gmlock.TryLock(memoryLockKey) {
 		return
 	}
-	defer gmlock.Unlock(lockKey)
+	defer gmlock.Unlock(memoryLockKey)
 
 	var (
 		now      = time.Now()
