@@ -56,7 +56,7 @@ func serverProcessInit() {
 	}
 	// This means it is a restart server, it should kill its parent before starting its listening,
 	// to avoid duplicated port listening in two processes.
-	if genv.Get(gADMIN_ACTION_RESTART_ENVKEY) != "" {
+	if genv.Get(adminActionRestartEnvKey) != "" {
 		if p, e := os.FindProcess(gproc.PPid()); e == nil {
 			p.Kill()
 			p.Wait()
@@ -180,7 +180,7 @@ func (s *Server) Start() error {
 
 	// Start the HTTP server.
 	reloaded := false
-	fdMapStr := genv.Get(gADMIN_ACTION_RELOAD_ENVKEY)
+	fdMapStr := genv.Get(adminActionReloadEnvKey)
 	if len(fdMapStr) > 0 {
 		sfm := bufferToServerFdMap([]byte(fdMapStr))
 		if v, ok := sfm[s.name]; ok {
@@ -195,7 +195,7 @@ func (s *Server) Start() error {
 	// If this is a child process, it then notifies its parent exit.
 	if gproc.IsChild() {
 		gtimer.SetTimeout(2*time.Second, func() {
-			if err := gproc.Send(gproc.PPid(), []byte("exit"), gADMIN_GPROC_COMM_GROUP); err != nil {
+			if err := gproc.Send(gproc.PPid(), []byte("exit"), adminGProcCommGroup); err != nil {
 				//glog.Error("[ghttp] server error in process communication:", err)
 			}
 		})
