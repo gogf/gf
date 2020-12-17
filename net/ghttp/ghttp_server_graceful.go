@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/os/gproc"
+	"github.com/gogf/gf/os/gres"
 	"github.com/gogf/gf/text/gstr"
 	"log"
 	"net"
@@ -110,7 +111,15 @@ func (s *gracefulServer) ListenAndServeTLS(certFile, keyFile string, tlsConfig .
 	err := error(nil)
 	if len(config.Certificates) == 0 {
 		config.Certificates = make([]tls.Certificate, 1)
-		config.Certificates[0], err = tls.LoadX509KeyPair(certFile, keyFile)
+		if gres.Contains(certFile) {
+			config.Certificates[0], err = tls.X509KeyPair(
+				gres.GetContent(certFile),
+				gres.GetContent(keyFile),
+			)
+		} else {
+			config.Certificates[0], err = tls.LoadX509KeyPair(certFile, keyFile)
+		}
+
 	}
 	if err != nil {
 		return errors.New(fmt.Sprintf(`open cert file "%s","%s" failed: %s`, certFile, keyFile, err.Error()))
@@ -144,9 +153,9 @@ func (s *gracefulServer) doServe() error {
 		"%d: %s server %s listening on [%s]",
 		gproc.Pid(), s.getProto(), action, s.address,
 	)
-	s.status = SERVER_STATUS_RUNNING
+	s.status = ServerStatusRunning
 	err := s.httpServer.Serve(s.listener)
-	s.status = SERVER_STATUS_STOPPED
+	s.status = ServerStatusStopped
 	return err
 }
 
@@ -172,7 +181,7 @@ func (s *gracefulServer) getNetListener() (net.Listener, error) {
 
 // shutdown shuts down the server gracefully.
 func (s *gracefulServer) shutdown() {
-	if s.status == SERVER_STATUS_STOPPED {
+	if s.status == ServerStatusStopped {
 		return
 	}
 	if err := s.httpServer.Shutdown(context.Background()); err != nil {
@@ -185,7 +194,7 @@ func (s *gracefulServer) shutdown() {
 
 // close shuts down the server forcibly.
 func (s *gracefulServer) close() {
-	if s.status == SERVER_STATUS_STOPPED {
+	if s.status == ServerStatusStopped {
 		return
 	}
 	if err := s.httpServer.Close(); err != nil {

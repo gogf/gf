@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -27,7 +27,7 @@ func (m *Model) Where(where interface{}, args ...interface{}) *Model {
 		model.whereHolder = make([]*whereHolder, 0)
 	}
 	model.whereHolder = append(model.whereHolder, &whereHolder{
-		operator: gWHERE_HOLDER_WHERE,
+		operator: whereHolderWhere,
 		where:    where,
 		args:     args,
 	})
@@ -65,7 +65,7 @@ func (m *Model) And(where interface{}, args ...interface{}) *Model {
 		model.whereHolder = make([]*whereHolder, 0)
 	}
 	model.whereHolder = append(model.whereHolder, &whereHolder{
-		operator: gWHERE_HOLDER_AND,
+		operator: whereHolderAnd,
 		where:    where,
 		args:     args,
 	})
@@ -79,7 +79,7 @@ func (m *Model) Or(where interface{}, args ...interface{}) *Model {
 		model.whereHolder = make([]*whereHolder, 0)
 	}
 	model.whereHolder = append(model.whereHolder, &whereHolder{
-		operator: gWHERE_HOLDER_OR,
+		operator: whereHolderOr,
 		where:    where,
 		args:     args,
 	})

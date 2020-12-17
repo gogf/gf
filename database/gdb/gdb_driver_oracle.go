@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -13,11 +13,11 @@ package gdb
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
-	"github.com/gogf/gf/os/gcache"
 	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/util/gconv"
 	"reflect"
 	"strconv"
 	"strings"
@@ -73,6 +73,15 @@ func (d *DriverOracle) HandleSqlBeforeCommit(link Link, sql string, args []inter
 		return fmt.Sprintf(":v%d", index)
 	})
 	str, _ = gregex.ReplaceString("\"", "", str)
+	// Change time string argument wrapping with TO_DATE function.
+	for i, v := range args {
+		if reflect.TypeOf(v).Kind() == reflect.String {
+			valueStr := gconv.String(v)
+			if gregex.IsMatchString(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$`, valueStr) {
+				args[i] = fmt.Sprintf(`TO_DATE('%s','yyyy-MM-dd HH:MI:SS')`, valueStr)
+			}
+		}
+	}
 	return d.parseSql(str), args
 }
 
@@ -153,14 +162,14 @@ func (d *DriverOracle) TableFields(table string, schema ...string) (fields map[s
 	charL, charR := d.GetChars()
 	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
-		return nil, errors.New("function TableFields supports only single table operations")
+		return nil, gerror.New("function TableFields supports only single table operations")
 	}
 	checkSchema := d.DB.GetSchema()
 	if len(schema) > 0 && schema[0] != "" {
 		checkSchema = schema[0]
 	}
-	v, _ := gcache.GetOrSetFunc(
-		fmt.Sprintf(`oracle_table_fields_%s_%s`, table, checkSchema),
+	v, _ := internalCache.GetOrSetFunc(
+		fmt.Sprintf(`oracle_table_fields_%s_%s@group:%s`, table, checkSchema, d.GetGroup()),
 		func() (interface{}, error) {
 			result := (Result)(nil)
 			structureSql := fmt.Sprintf(`
@@ -196,7 +205,7 @@ FROM USER_TAB_COLUMNS WHERE TABLE_NAME = '%s' ORDER BY COLUMN_ID`,
 
 func (d *DriverOracle) getTableUniqueIndex(table string) (fields map[string]map[string]string, err error) {
 	table = strings.ToUpper(table)
-	v, _ := gcache.GetOrSetFunc(
+	v, _ := internalCache.GetOrSetFunc(
 		"table_unique_index_"+table,
 		func() (interface{}, error) {
 			res := (Result)(nil)
@@ -243,13 +252,13 @@ func (d *DriverOracle) DoInsert(link Link, table string, data interface{}, optio
 	case reflect.Struct:
 		dataMap = ConvertDataForTableRecord(data)
 	default:
-		return result, errors.New(fmt.Sprint("unsupported data type:", kind))
+		return result, gerror.New(fmt.Sprint("unsupported data type:", kind))
 	}
 
 	indexs := make([]string, 0)
 	indexMap := make(map[string]string)
 	indexExists := false
-	if option != gINSERT_OPTION_DEFAULT {
+	if option != insertOptionDefault {
 		index, err := d.getTableUniqueIndex(table)
 		if err != nil {
 			return nil, err
@@ -277,7 +286,7 @@ func (d *DriverOracle) DoInsert(link Link, table string, data interface{}, optio
 		k = strings.ToUpper(k)
 
 		// 操作类型为REPLACE/SAVE时且存在唯一索引才使用merge，否则使用insert
-		if (option == gINSERT_OPTION_REPLACE || option == gINSERT_OPTION_SAVE) && indexExists {
+		if (option == insertOptionReplace || option == insertOptionSave) && indexExists {
 			fields = append(fields, tableAlias1+"."+charL+k+charR)
 			values = append(values, tableAlias2+"."+charL+k+charR)
 			params = append(params, v)
@@ -303,18 +312,18 @@ func (d *DriverOracle) DoInsert(link Link, table string, data interface{}, optio
 		}
 	}
 
-	if indexExists && option != gINSERT_OPTION_DEFAULT {
+	if indexExists && option != insertOptionDefault {
 		switch option {
-		case gINSERT_OPTION_REPLACE:
+		case insertOptionReplace:
 			fallthrough
-		case gINSERT_OPTION_SAVE:
+		case insertOptionSave:
 			tmp := fmt.Sprintf(
 				"MERGE INTO %s %s USING(SELECT %s FROM DUAL) %s ON(%s) WHEN MATCHED THEN UPDATE SET %s WHEN NOT MATCHED THEN INSERT (%s) VALUES(%s)",
 				table, tableAlias1, strings.Join(subSqlStr, ","), tableAlias2,
 				strings.Join(onStr, "AND"), strings.Join(updateStr, ","), strings.Join(fields, ","), strings.Join(values, ","),
 			)
 			return d.DB.DoExec(link, tmp, params...)
-		case gINSERT_OPTION_IGNORE:
+		case insertOptionIgnore:
 			return d.DB.DoExec(link,
 				fmt.Sprintf(
 					"INSERT /*+ IGNORE_ROW_ON_DUPKEY_INDEX(%s(%s)) */ INTO %s(%s) VALUES(%s)",
@@ -368,12 +377,12 @@ func (d *DriverOracle) DoBatchInsert(link Link, table string, list interface{}, 
 		case reflect.Struct:
 			listMap = List{Map(ConvertDataForTableRecord(list))}
 		default:
-			return result, errors.New(fmt.Sprint("unsupported list type:", kind))
+			return result, gerror.New(fmt.Sprint("unsupported list type:", kind))
 		}
 	}
 	// 判断长度
 	if len(listMap) < 1 {
-		return result, errors.New("empty data list")
+		return result, gerror.New("empty data list")
 	}
 	if link == nil {
 		if link, err = d.DB.Master(); err != nil {
@@ -392,7 +401,7 @@ func (d *DriverOracle) DoBatchInsert(link Link, table string, list interface{}, 
 	valueHolderStr := strings.Join(holders, ",")
 
 	// 当操作类型非insert时调用单笔的insert功能
-	if option != gINSERT_OPTION_DEFAULT {
+	if option != insertOptionDefault {
 		for _, v := range listMap {
 			r, err := d.DB.DoInsert(link, table, v, option, 1)
 			if err != nil {
@@ -410,7 +419,7 @@ func (d *DriverOracle) DoBatchInsert(link Link, table string, list interface{}, 
 	}
 
 	// 构造批量写入数据格式(注意map的遍历是无序的)
-	batchNum := gDEFAULT_BATCH_NUM
+	batchNum := defaultBatchNumber
 	if len(batch) > 0 {
 		batchNum = batch[0]
 	}

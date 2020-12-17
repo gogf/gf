@@ -747,13 +747,17 @@ func Test_Slice_All(t *testing.T) {
 // 私有属性不会进行转换
 func Test_Slice_PrivateAttribute_All(t *testing.T) {
 	type User struct {
-		Id   int
-		name string
-		Ad   []interface{}
+		Id   int           `json:"id"`
+		name string        `json:"name"`
+		Ad   []interface{} `json:"ad"`
 	}
 	gtest.C(t, func(t *gtest.T) {
 		user := &User{1, "john", []interface{}{2}}
-		t.Assert(gconv.Interfaces(user), g.Slice{1, []interface{}{2}})
+		array := gconv.Interfaces(user)
+		t.Assert(len(array), 1)
+		t.Assert(array[0].(*User).Id, 1)
+		t.Assert(array[0].(*User).name, "john")
+		t.Assert(array[0].(*User).Ad, []interface{}{2})
 	})
 }
 
@@ -1278,7 +1282,7 @@ func Test_Struct_PrivateAttribute_All(t *testing.T) {
 	})
 }
 
-func Test_Struct_Deep_All(t *testing.T) {
+func Test_Struct_Embedded_All(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Ids struct {
 			Id  int `json:"id"`
@@ -1303,7 +1307,7 @@ func Test_Struct_Deep_All(t *testing.T) {
 			"create_time": "2019",
 		}
 		user := new(User)
-		gconv.StructDeep(data, user)
+		gconv.Struct(data, user)
 		t.Assert(user.Id, 100)
 		t.Assert(user.Uid, 101)
 		t.Assert(user.Nickname, "T1")

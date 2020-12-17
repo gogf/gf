@@ -469,7 +469,7 @@ func (a *IntArray) Clone() (newArray *IntArray) {
 	array := make([]int, len(a.array))
 	copy(array, a.array)
 	a.mu.RUnlock()
-	return NewIntArrayFrom(array, !a.mu.IsSafe())
+	return NewIntArrayFrom(array, a.mu.IsSafe())
 }
 
 // Clear deletes all items of current array.

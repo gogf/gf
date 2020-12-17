@@ -58,6 +58,7 @@ var (
 		"date-format":          {},
 		"email":                {},
 		"phone":                {},
+		"phone-loose":          {},
 		"telephone":            {},
 		"passport":             {},
 		"password":             {},
@@ -119,6 +120,7 @@ func Check(value interface{}, rules string, messages interface{}, params ...inte
 
 // doCheck does the really rules validation for single key-value.
 func doCheck(key string, value interface{}, rules string, messages interface{}, params ...interface{}) *Error {
+	// If there's no validation rules, it does nothing and returns quickly.
 	if rules == "" {
 		return nil
 	}
@@ -356,6 +358,7 @@ func doCheckBuildInRules(
 	// 1. China Mobile:
 	//    134, 135, 136, 137, 138, 139, 150, 151, 152, 157, 158, 159, 182, 183, 184, 187, 188,
 	//    178(4G), 147(Net)；
+	//    172
 	//
 	// 2. China Unicom:
 	//    130, 131, 132, 155, 156, 185, 186 ,176(4G), 145(Net), 175
@@ -372,7 +375,12 @@ func doCheckBuildInRules(
 	// 6. 2018:
 	//    16x, 19x
 	case "phone":
-		match = gregex.IsMatchString(`^13[\d]{9}$|^14[5,7]{1}\d{8}$|^15[^4]{1}\d{8}$|^16[\d]{9}$|^17[0,3,5,6,7,8]{1}\d{8}$|^18[\d]{9}$|^19[\d]{9}$`, valueStr)
+		match = gregex.IsMatchString(`^13[\d]{9}$|^14[5,7]{1}\d{8}$|^15[^4]{1}\d{8}$|^16[\d]{9}$|^17[0,2,3,5,6,7,8]{1}\d{8}$|^18[\d]{9}$|^19[\d]{9}$`, valueStr)
+	// Loose mobile phone number verification(宽松的手机号验证)
+	// As long as the 11 digit numbers beginning with
+	// 13, 14, 15, 16, 17, 18, 19 can pass the verification (只要满足 13、14、15、16、17、18、19开头的11位数字都可以通过验证)
+	case "phone-loose":
+		match = gregex.IsMatchString(`^1(3|4|5|6|7|8|9)\d{9}$`, valueStr)
 
 	// Telephone number:
 	// "XXXX-XXXXXXX"

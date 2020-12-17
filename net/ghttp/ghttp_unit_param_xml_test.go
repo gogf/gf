@@ -50,14 +50,14 @@ func Test_Params_Xml_Request(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		content1 := `<doc><id>1</id><name>john</name><password1>123Abc!@#</password1><password2>123Abc!@#</password2></doc>`
 		content2 := `<doc><id>1</id><name>john</name><password1>123Abc!@#</password1><password2>123</password2></doc>`
-		t.Assert(client.GetContent("/get", content1), `1john`)
+		t.Assert(client.GetContent("/get", content1), ``)
 		t.Assert(client.PostContent("/get", content1), `1john`)
-		t.Assert(client.GetContent("/map", content1), `1john123Abc!@#123Abc!@#`)
+		t.Assert(client.GetContent("/map", content1), ``)
 		t.Assert(client.PostContent("/map", content1), `1john123Abc!@#123Abc!@#`)
 		t.Assert(client.PostContent("/parse", content1), `1john123Abc!@#123Abc!@#`)
 		t.Assert(client.PostContent("/parse", content2), `密码强度不足; 两次密码不一致`)

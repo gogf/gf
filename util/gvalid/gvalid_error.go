@@ -7,6 +7,7 @@
 package gvalid
 
 import (
+	"errors"
 	"github.com/gogf/gf/text/gregex"
 	"strings"
 )
@@ -129,6 +130,15 @@ func (e *Error) FirstString() (err string) {
 	}
 	_, err = e.FirstRule()
 	return
+}
+
+// Current is alis of FirstString, which implements interface gerror.ApiCurrent.
+func (e *Error) Current() error {
+	if e == nil {
+		return nil
+	}
+	_, err := e.FirstRule()
+	return errors.New(err)
 }
 
 // String returns all error messages as string, multiple error messages joined using char ';'.

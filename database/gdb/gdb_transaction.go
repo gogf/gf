@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -59,7 +59,7 @@ func (tx *TX) GetAll(sql string, args ...interface{}) (Result, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	return tx.db.rowsToResult(rows)
+	return tx.db.convertRowsToResult(rows)
 }
 
 // GetOne queries and returns one record from database.

@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -16,7 +16,8 @@ import (
 )
 
 const (
-	DEFAULT_GROUP_NAME = "default" // Default group name.
+	DEFAULT_GROUP_NAME = "default" // Deprecated, use DefaultGroupName instead.
+	DefaultGroupName   = "default" // Default group name.
 )
 
 // Config is the configuration management object.
@@ -27,25 +28,26 @@ type ConfigGroup []ConfigNode
 
 // ConfigNode is configuration for one node.
 type ConfigNode struct {
-	Host             string        // Host of server, ip or domain like: 127.0.0.1, localhost
-	Port             string        // Port, it's commonly 3306.
-	User             string        // Authentication username.
-	Pass             string        // Authentication password.
-	Name             string        // Default used database name.
-	Type             string        // Database type: mysql, sqlite, mssql, pgsql, oracle.
-	Role             string        // (Optional, "master" in default) Node role, used for master-slave mode: master, slave.
-	Debug            bool          // (Optional) Debug mode enables debug information logging and output.
-	Prefix           string        // (Optional) Table prefix.
-	DryRun           bool          // (Optional) Dry run, which does SELECT but no INSERT/UPDATE/DELETE statements.
-	Weight           int           // (Optional) Weight for load balance calculating, it's useless if there's just one node.
-	Charset          string        // (Optional, "utf8mb4" in default) Custom charset when operating on database.
-	CreatedAt        string        // (Optional) The filed name of table for automatic-filled created datetime.
-	UpdatedAt        string        // (Optional) The filed name of table for automatic-filled updated datetime.
-	DeletedAt        string        // (Optional) The filed name of table for automatic-filled updated datetime.
-	LinkInfo         string        `json:"link"`        // (Optional) Custom link information, when it is used, configuration Host/Port/User/Pass/Name are ignored.
-	MaxIdleConnCount int           `json:"maxidle"`     // (Optional) Max idle connection configuration for underlying connection pool.
-	MaxOpenConnCount int           `json:"maxopen"`     // (Optional) Max open connection configuration for underlying connection pool.
-	MaxConnLifetime  time.Duration `json:"maxlifetime"` // (Optional) Max connection TTL configuration for underlying connection pool.
+	Host                 string        // Host of server, ip or domain like: 127.0.0.1, localhost
+	Port                 string        // Port, it's commonly 3306.
+	User                 string        // Authentication username.
+	Pass                 string        // Authentication password.
+	Name                 string        // Default used database name.
+	Type                 string        // Database type: mysql, sqlite, mssql, pgsql, oracle.
+	Role                 string        // (Optional, "master" in default) Node role, used for master-slave mode: master, slave.
+	Debug                bool          // (Optional) Debug mode enables debug information logging and output.
+	Prefix               string        // (Optional) Table prefix.
+	DryRun               bool          // (Optional) Dry run, which does SELECT but no INSERT/UPDATE/DELETE statements.
+	Weight               int           // (Optional) Weight for load balance calculating, it's useless if there's just one node.
+	Charset              string        // (Optional, "utf8mb4" in default) Custom charset when operating on database.
+	LinkInfo             string        `json:"link"`        // (Optional) Custom link information, when it is used, configuration Host/Port/User/Pass/Name are ignored.
+	MaxIdleConnCount     int           `json:"maxidle"`     // (Optional) Max idle connection configuration for underlying connection pool.
+	MaxOpenConnCount     int           `json:"maxopen"`     // (Optional) Max open connection configuration for underlying connection pool.
+	MaxConnLifetime      time.Duration `json:"maxlifetime"` // (Optional) Max connection TTL configuration for underlying connection pool.
+	CreatedAt            string        // (Optional) The filed name of table for automatic-filled created datetime.
+	UpdatedAt            string        // (Optional) The filed name of table for automatic-filled updated datetime.
+	DeletedAt            string        // (Optional) The filed name of table for automatic-filled updated datetime.
+	TimeMaintainDisabled bool          // (Optional) Disable the automatic time maintaining feature.
 }
 
 // configs is internal used configuration object.
@@ -57,7 +59,7 @@ var configs struct {
 
 func init() {
 	configs.config = make(Config)
-	configs.group = DEFAULT_GROUP_NAME
+	configs.group = DefaultGroupName
 }
 
 // SetConfig sets the global configuration for package.
@@ -87,12 +89,12 @@ func AddConfigNode(group string, node ConfigNode) {
 
 // AddDefaultConfigNode adds one node configuration to configuration of default group.
 func AddDefaultConfigNode(node ConfigNode) {
-	AddConfigNode(DEFAULT_GROUP_NAME, node)
+	AddConfigNode(DefaultGroupName, node)
 }
 
 // AddDefaultConfigGroup adds multiple node configurations to configuration of default group.
 func AddDefaultConfigGroup(nodes ConfigGroup) {
-	SetConfigGroup(DEFAULT_GROUP_NAME, nodes)
+	SetConfigGroup(DefaultGroupName, nodes)
 }
 
 // GetConfig retrieves and returns the configuration of given group.
@@ -138,18 +140,18 @@ func (c *Core) GetLogger() *glog.Logger {
 
 // SetMaxIdleConnCount sets the max idle connection count for underlying connection pool.
 func (c *Core) SetMaxIdleConnCount(n int) {
-	c.maxIdleConnCount = n
+	c.config.MaxIdleConnCount = n
 }
 
 // SetMaxOpenConnCount sets the max open connection count for underlying connection pool.
 func (c *Core) SetMaxOpenConnCount(n int) {
-	c.maxOpenConnCount = n
+	c.config.MaxOpenConnCount = n
 }
 
 // SetMaxConnLifetime sets the connection TTL for underlying connection pool.
 // If parameter <d> <= 0, it means the connection never expires.
 func (c *Core) SetMaxConnLifetime(d time.Duration) {
-	c.maxConnLifetime = d
+	c.config.MaxConnLifetime = d
 }
 
 // String returns the node as string.
@@ -163,6 +165,11 @@ func (node *ConfigNode) String() string {
 		node.MaxConnLifetime,
 		node.LinkInfo,
 	)
+}
+
+// GetConfig returns the current used node configuration.
+func (c *Core) GetConfig() *ConfigNode {
+	return c.config
 }
 
 // SetDebug enables/disables the debug mode.
@@ -180,28 +187,27 @@ func (c *Core) GetCache() *gcache.Cache {
 	return c.cache
 }
 
-// GetPrefix returns the table prefix string configured.
-func (c *Core) GetPrefix() string {
-	return c.prefix
-}
-
 // GetGroup returns the group string configured.
 func (c *Core) GetGroup() string {
 	return c.group
 }
 
 // SetDryRun enables/disables the DryRun feature.
-func (c *Core) SetDryRun(dryrun bool) {
-	c.dryrun.Set(dryrun)
+// Deprecated, use GetConfig instead.
+func (c *Core) SetDryRun(enabled bool) {
+	c.config.DryRun = enabled
 }
 
 // GetDryRun returns the DryRun value.
+// Deprecated, use GetConfig instead.
 func (c *Core) GetDryRun() bool {
-	if allDryRun {
-		// Globally set.
-		return true
-	}
-	return c.dryrun.Val()
+	return c.config.DryRun
+}
+
+// GetPrefix returns the table prefix string configured.
+// Deprecated, use GetConfig instead.
+func (c *Core) GetPrefix() string {
+	return c.config.Prefix
 }
 
 // SetSchema changes the schema for this database connection object.
@@ -214,9 +220,4 @@ func (c *Core) SetSchema(schema string) {
 // GetSchema returns the schema configured.
 func (c *Core) GetSchema() string {
 	return c.schema.Val()
-}
-
-// GetConfig returns the current used node configuration.
-func (c *Core) GetConfig() *ConfigNode {
-	return c.config
 }

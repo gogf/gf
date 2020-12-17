@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -22,9 +22,9 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
-// convertValue automatically checks and converts field value from database type
+// convertFieldValueToLocalValue automatically checks and converts field value from database type
 // to golang variable type.
-func (c *Core) convertValue(fieldValue interface{}, fieldType string) interface{} {
+func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType string) interface{} {
 	// If there's no type retrieved, it returns the <fieldValue> directly
 	// to use its original data type, as <fieldValue> is type of interface{}.
 	if fieldType == "" {
@@ -146,7 +146,8 @@ func (c *Core) convertValue(fieldValue interface{}, fieldType string) interface{
 	}
 }
 
-// filterFields removes all key-value pairs which are not the field of given table.
+// mappingAndFilterData automatically mappings the map key to table field and removes
+// all key-value pairs that are not the field of given table.
 func (c *Core) mappingAndFilterData(schema, table string, data map[string]interface{}, filter bool) (map[string]interface{}, error) {
 	if fieldsMap, err := c.DB.TableFields(table, schema); err == nil {
 		fieldsKeyMap := make(map[string]interface{}, len(fieldsMap))

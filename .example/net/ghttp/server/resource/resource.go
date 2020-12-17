@@ -18,7 +18,7 @@ func main() {
 	s := g.Server()
 	s.SetIndexFolder(true)
 	s.SetServerRoot("root")
-	s.BindHookHandler("/*", ghttp.HOOK_BEFORE_SERVE, func(r *ghttp.Request) {
+	s.BindHookHandler("/*", ghttp.HookBeforeServe, func(r *ghttp.Request) {
 		fmt.Println(r.URL.Path, r.IsFileRequest())
 	})
 	s.BindHandler("/template", func(r *ghttp.Request) {

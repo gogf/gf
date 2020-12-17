@@ -1,4 +1,4 @@
-// Copyright 2017-2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -8,8 +8,8 @@ package gdb
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/empty"
 	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/internal/utils"
@@ -88,9 +88,9 @@ func ListItemValuesUnique(list interface{}, key string, subKey ...interface{}) [
 func GetInsertOperationByOption(option int) string {
 	var operator string
 	switch option {
-	case gINSERT_OPTION_REPLACE:
+	case insertOptionReplace:
 		operator = "REPLACE"
-	case gINSERT_OPTION_IGNORE:
+	case insertOptionIgnore:
 		operator = "INSERT IGNORE"
 	default:
 		operator = "INSERT"
@@ -126,6 +126,8 @@ func ConvertDataForTableRecord(value interface{}) map[string]interface{} {
 		case reflect.Struct:
 			switch v.(type) {
 			case time.Time, *time.Time, gtime.Time, *gtime.Time:
+				continue
+			case Counter, *Counter:
 				continue
 			default:
 				// Use string conversion in default.
@@ -312,32 +314,40 @@ func doQuoteString(s, charLeft, charRight string) string {
 
 // GetWhereConditionOfStruct returns the where condition sql and arguments by given struct pointer.
 // This function automatically retrieves primary or unique field and its attribute value as condition.
-func GetWhereConditionOfStruct(pointer interface{}) (where string, args []interface{}) {
+func GetWhereConditionOfStruct(pointer interface{}) (where string, args []interface{}, err error) {
+	tagField, err := structs.TagFields(pointer, []string{ORM_TAG_FOR_STRUCT})
+	if err != nil {
+		return "", nil, err
+	}
 	array := ([]string)(nil)
-	for _, field := range structs.TagFields(pointer, []string{ORM_TAG_FOR_STRUCT}) {
-		array = strings.Split(field.Tag, ",")
+	for _, field := range tagField {
+		array = strings.Split(field.TagValue, ",")
 		if len(array) > 1 && gstr.InArray([]string{ORM_TAG_FOR_UNIQUE, ORM_TAG_FOR_PRIMARY}, array[1]) {
-			return array[0], []interface{}{field.Value()}
+			return array[0], []interface{}{field.Value()}, nil
 		}
 		if len(where) > 0 {
 			where += " "
 		}
-		where += field.Tag + "=?"
+		where += field.TagValue + "=?"
 		args = append(args, field.Value())
 	}
 	return
 }
 
 // GetPrimaryKey retrieves and returns primary key field name from given struct.
-func GetPrimaryKey(pointer interface{}) string {
+func GetPrimaryKey(pointer interface{}) (string, error) {
+	tagField, err := structs.TagFields(pointer, []string{ORM_TAG_FOR_STRUCT})
+	if err != nil {
+		return "", err
+	}
 	array := ([]string)(nil)
-	for _, field := range structs.TagFields(pointer, []string{ORM_TAG_FOR_STRUCT}) {
-		array = strings.Split(field.Tag, ",")
+	for _, field := range tagField {
+		array = strings.Split(field.TagValue, ",")
 		if len(array) > 1 && array[1] == ORM_TAG_FOR_PRIMARY {
-			return array[0]
+			return array[0], nil
 		}
 	}
-	return ""
+	return "", nil
 }
 
 // GetPrimaryKeyCondition returns a new where condition by primary field name.
@@ -394,7 +404,6 @@ func formatSql(sql string, args []interface{}) (newSql string, newArgs []interfa
 }
 
 // formatWhere formats where statement and its arguments.
-// TODO []interface{} type support for parameter <where> does not completed yet.
 func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool) (newWhere string, newArgs []interface{}) {
 	var (
 		buffer = bytes.NewBuffer(nil)
@@ -476,20 +485,26 @@ func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool) (
 }
 
 // formatWhereInterfaces formats <where> as []interface{}.
-// TODO supporting for parameter <where> with []interface{} type is not completed yet.
 func formatWhereInterfaces(db DB, where []interface{}, buffer *bytes.Buffer, newArgs []interface{}) []interface{} {
+	if len(where) == 0 {
+		return newArgs
+	}
+	if len(where)%2 != 0 {
+		buffer.WriteString(gstr.Join(gconv.Strings(where), ""))
+		return newArgs
+	}
 	var str string
-	var array []interface{}
-	var holderCount int
-	for i := 0; i < len(where); {
-		if holderCount > 0 {
-			array = gconv.Interfaces(where[i])
-			newArgs = append(newArgs, array...)
-			holderCount -= len(array)
+	for i := 0; i < len(where); i += 2 {
+		str = gconv.String(where[i])
+		if buffer.Len() > 0 {
+			buffer.WriteString(" AND " + db.QuoteWord(str) + "=?")
 		} else {
-			str = gconv.String(where[i])
-			holderCount = gstr.Count(str, "?")
-			buffer.WriteString(str)
+			buffer.WriteString(db.QuoteWord(str) + "=?")
+		}
+		if s, ok := where[i+1].(Raw); ok {
+			buffer.WriteString(gconv.String(s))
+		} else {
+			newArgs = append(newArgs, where[i+1])
 		}
 	}
 	return newArgs
@@ -558,14 +573,18 @@ func formatWhereKeyValue(db DB, buffer *bytes.Buffer, newArgs []interface{}, key
 			} else {
 				buffer.WriteString(quotedKey)
 			}
-			newArgs = append(newArgs, value)
+			if s, ok := value.(Raw); ok {
+				buffer.WriteString(gconv.String(s))
+			} else {
+				newArgs = append(newArgs, value)
+			}
 		}
 	}
 	return newArgs
 }
 
-// handleArguments is a nice function which handles the query and its arguments before committing to
-// underlying driver.
+// handleArguments is an important function, which handles the sql and all its arguments
+// before committing them to underlying driver.
 func handleArguments(sql string, args []interface{}) (newSql string, newArgs []interface{}) {
 	newSql = sql
 	// insertHolderCount is used to calculate the inserting position for the '?' holder.
@@ -574,14 +593,14 @@ func handleArguments(sql string, args []interface{}) (newSql string, newArgs []i
 	if len(args) > 0 {
 		for index, arg := range args {
 			var (
-				rv   = reflect.ValueOf(arg)
-				kind = rv.Kind()
+				reflectValue = reflect.ValueOf(arg)
+				reflectKind  = reflectValue.Kind()
 			)
-			if kind == reflect.Ptr {
-				rv = rv.Elem()
-				kind = rv.Kind()
+			for reflectKind == reflect.Ptr {
+				reflectValue = reflectValue.Elem()
+				reflectKind = reflectValue.Kind()
 			}
-			switch kind {
+			switch reflectKind {
 			case reflect.Slice, reflect.Array:
 				// It does not split the type of []byte.
 				// Eg: table.Where("name = ?", []byte("john"))
@@ -590,7 +609,7 @@ func handleArguments(sql string, args []interface{}) (newSql string, newArgs []i
 					continue
 				}
 
-				if rv.Len() == 0 {
+				if reflectValue.Len() == 0 {
 					// Empty slice argument, it converts the sql to a false sql.
 					// Eg:
 					// Query("select * from xxx where id in(?)", g.Slice{}) -> select * from xxx where 0=1
@@ -604,15 +623,15 @@ func handleArguments(sql string, args []interface{}) (newSql string, newArgs []i
 						}
 					}
 				} else {
-					for i := 0; i < rv.Len(); i++ {
-						newArgs = append(newArgs, rv.Index(i).Interface())
+					for i := 0; i < reflectValue.Len(); i++ {
+						newArgs = append(newArgs, reflectValue.Index(i).Interface())
 					}
 				}
 
 				// If the '?' holder count equals the length of the slice,
 				// it does not implement the arguments splitting logic.
 				// Eg: db.Query("SELECT ?+?", g.Slice{1, 2})
-				if len(args) == 1 && gstr.Count(newSql, "?") == rv.Len() {
+				if len(args) == 1 && gstr.Count(newSql, "?") == reflectValue.Len() {
 					break
 				}
 				// counter is used to finding the inserting position for the '?' holder.
@@ -627,36 +646,37 @@ func handleArguments(sql string, args []interface{}) (newSql string, newArgs []i
 					counter++
 					if counter == index+insertHolderCount+1 {
 						replaced = true
-						insertHolderCount += rv.Len() - 1
-						return "?" + strings.Repeat(",?", rv.Len()-1)
+						insertHolderCount += reflectValue.Len() - 1
+						return "?" + strings.Repeat(",?", reflectValue.Len()-1)
 					}
 					return s
 				})
 
 			// Special struct handling.
 			case reflect.Struct:
-				// The underlying driver supports time.Time/*time.Time types.
-				if _, ok := arg.(time.Time); ok {
-					newArgs = append(newArgs, arg)
-					continue
-				}
-				if _, ok := arg.(*time.Time); ok {
-					newArgs = append(newArgs, arg)
-					continue
-				}
 				switch v := arg.(type) {
+				// The underlying driver supports time.Time/*time.Time types.
 				case time.Time, *time.Time:
 					newArgs = append(newArgs, arg)
 					continue
 
-				// Special handling for gtime.Time.
+				// Special handling for gtime.Time/*gtime.Time.
+				//
+				// DO NOT use its underlying gtime.Time.Time as its argument,
+				// because the std time.Time will be converted to certain timezone
+				// according to underlying driver. And the underlying driver also
+				// converts the time.Time to string automatically as the following does.
 				case gtime.Time:
+					newArgs = append(newArgs, v.String())
+					continue
+
+				case *gtime.Time:
 					newArgs = append(newArgs, v.String())
 					continue
 
 				default:
 					// It converts the struct to string in default
-					// if it implements the String interface.
+					// if it has implemented the String interface.
 					if v, ok := arg.(apiString); ok {
 						newArgs = append(newArgs, v.String())
 						continue
@@ -675,7 +695,7 @@ func handleArguments(sql string, args []interface{}) (newSql string, newArgs []i
 // formatError customizes and returns the SQL error.
 func formatError(err error, sql string, args ...interface{}) error {
 	if err != nil && err != ErrNoRows {
-		return errors.New(fmt.Sprintf("%s, %s\n", err.Error(), FormatSqlWithArgs(sql, args)))
+		return gerror.New(fmt.Sprintf("%s, %s\n", err.Error(), FormatSqlWithArgs(sql, args)))
 	}
 	return err
 }
@@ -707,7 +727,7 @@ func FormatSqlWithArgs(sql string, args []interface{}) string {
 					return `'` + gstr.QuoteMeta(gconv.String(args[index]), `'`) + `'`
 				case reflect.Struct:
 					if t, ok := args[index].(time.Time); ok {
-						return `'` + gtime.NewFromTime(t).String() + `'`
+						return `'` + t.Format(`2006-01-02 15:04:05`) + `'`
 					}
 					return `'` + gstr.QuoteMeta(gconv.String(args[index]), `'`) + `'`
 				}
@@ -718,13 +738,17 @@ func FormatSqlWithArgs(sql string, args []interface{}) string {
 	return newQuery
 }
 
-// mapToStruct maps the <data> to given struct.
+// convertMapToStruct maps the <data> to given struct.
 // Note that the given parameter <pointer> should be a pointer to s struct.
-func mapToStruct(data map[string]interface{}, pointer interface{}) error {
+func convertMapToStruct(data map[string]interface{}, pointer interface{}) error {
+	tagNameMap, err := structs.TagMapName(pointer, []string{ORM_TAG_FOR_STRUCT})
+	if err != nil {
+		return err
+	}
 	// It retrieves and returns the mapping between orm tag and the struct attribute name.
 	mapping := make(map[string]string)
-	for tag, attr := range structs.TagMapName(pointer, []string{ORM_TAG_FOR_STRUCT}) {
+	for tag, attr := range tagNameMap {
 		mapping[strings.Split(tag, ",")[0]] = attr
 	}
-	return gconv.StructDeep(data, pointer, mapping)
+	return gconv.Struct(data, pointer, mapping)
 }

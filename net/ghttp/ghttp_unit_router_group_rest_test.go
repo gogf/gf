@@ -100,13 +100,13 @@ func (o *GroupObjRest) Head(r *ghttp.Request) {
 func Test_Router_GroupRest1(t *testing.T) {
 	p, _ := ports.PopRand()
 	s := g.Server(p)
-	g := s.Group("/api")
+	group := s.Group("/api")
 	ctl := new(GroupCtlRest)
 	obj := new(GroupObjRest)
-	g.REST("/ctl", ctl)
-	g.REST("/obj", obj)
-	g.REST("/{.struct}/{.method}", ctl)
-	g.REST("/{.struct}/{.method}", obj)
+	group.REST("/ctl", ctl)
+	group.REST("/obj", obj)
+	group.REST("/{.struct}/{.method}", ctl)
+	group.REST("/{.struct}/{.method}", obj)
 	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
@@ -114,7 +114,7 @@ func Test_Router_GroupRest1(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent("/api/ctl"), "1Controller Get2")
@@ -191,7 +191,7 @@ func Test_Router_GroupRest2(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent("/api/ctl"), "1Controller Get2")

@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -11,8 +11,10 @@ import (
 	"github.com/gogf/gf/container/gset"
 	"github.com/gogf/gf/internal/empty"
 	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/util/gutil"
 	"time"
 )
 
@@ -24,6 +26,37 @@ func (m *Model) getModel() *Model {
 	} else {
 		return m.Clone()
 	}
+}
+
+// mappingAndFilterToTableFields mappings and changes given field name to really table field name.
+func (m *Model) mappingAndFilterToTableFields(fields []string) []string {
+	fieldsMap, err := m.db.TableFields(m.tables)
+	if err != nil || len(fieldsMap) == 0 {
+		return fields
+	}
+	var (
+		inputFieldsArray  = gstr.SplitAndTrim(gstr.Join(fields, ","), ",")
+		outputFieldsArray = make([]string, 0, len(inputFieldsArray))
+	)
+	fieldsKeyMap := make(map[string]interface{}, len(fieldsMap))
+	for k, _ := range fieldsMap {
+		fieldsKeyMap[k] = nil
+	}
+	for _, field := range inputFieldsArray {
+		if _, ok := fieldsKeyMap[field]; !ok {
+			if !gregex.IsMatchString(regularFieldNameRegPattern, field) {
+				outputFieldsArray = append(outputFieldsArray, field)
+				continue
+			} else {
+				if foundKey, _ := gutil.MapPossibleItemByKey(fieldsKeyMap, field); foundKey != "" {
+					outputFieldsArray = append(outputFieldsArray, foundKey)
+				}
+			}
+		} else {
+			outputFieldsArray = append(outputFieldsArray, field)
+		}
+	}
+	return outputFieldsArray
 }
 
 // filterDataForInsertOrUpdate does filter feature with data for inserting/updating operations.
@@ -121,19 +154,19 @@ func (m *Model) getLink(master bool) Link {
 	linkType := m.linkType
 	if linkType == 0 {
 		if master {
-			linkType = gLINK_TYPE_MASTER
+			linkType = linkTypeMaster
 		} else {
-			linkType = gLINK_TYPE_SLAVE
+			linkType = linkTypeSlave
 		}
 	}
 	switch linkType {
-	case gLINK_TYPE_MASTER:
+	case linkTypeMaster:
 		link, err := m.db.GetMaster(m.schema)
 		if err != nil {
 			panic(err)
 		}
 		return link
-	case gLINK_TYPE_SLAVE:
+	case linkTypeSlave:
 		link, err := m.db.GetSlave(m.schema)
 		if err != nil {
 			panic(err)
@@ -164,11 +197,11 @@ func (m *Model) getPrimaryKey() string {
 // Note that this function does not change any attribute value of the <m>.
 //
 // The parameter <limit1> specifies whether limits querying only one record if m.limit is not set.
-func (m *Model) formatCondition(limit1 bool) (conditionWhere string, conditionExtra string, conditionArgs []interface{}) {
+func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWhere string, conditionExtra string, conditionArgs []interface{}) {
 	if len(m.whereHolder) > 0 {
 		for _, v := range m.whereHolder {
 			switch v.operator {
-			case gWHERE_HOLDER_WHERE:
+			case whereHolderWhere:
 				if conditionWhere == "" {
 					newWhere, newArgs := formatWhere(
 						m.db, v.where, v.args, m.option&OPTION_OMITEMPTY > 0,
@@ -181,7 +214,7 @@ func (m *Model) formatCondition(limit1 bool) (conditionWhere string, conditionEx
 				}
 				fallthrough
 
-			case gWHERE_HOLDER_AND:
+			case whereHolderAnd:
 				newWhere, newArgs := formatWhere(
 					m.db, v.where, v.args, m.option&OPTION_OMITEMPTY > 0,
 				)
@@ -196,7 +229,7 @@ func (m *Model) formatCondition(limit1 bool) (conditionWhere string, conditionEx
 					conditionArgs = append(conditionArgs, newArgs...)
 				}
 
-			case gWHERE_HOLDER_OR:
+			case whereHolderOr:
 				newWhere, newArgs := formatWhere(
 					m.db, v.where, v.args, m.option&OPTION_OMITEMPTY > 0,
 				)
@@ -219,9 +252,6 @@ func (m *Model) formatCondition(limit1 bool) (conditionWhere string, conditionEx
 	if m.groupBy != "" {
 		conditionExtra += " GROUP BY " + m.groupBy
 	}
-	if m.orderBy != "" {
-		conditionExtra += " ORDER BY " + m.orderBy
-	}
 	if len(m.having) > 0 {
 		havingStr, havingArgs := formatWhere(
 			m.db, m.having[0], gconv.Interfaces(m.having[1]), m.option&OPTION_OMITEMPTY > 0,
@@ -231,18 +261,25 @@ func (m *Model) formatCondition(limit1 bool) (conditionWhere string, conditionEx
 			conditionArgs = append(conditionArgs, havingArgs...)
 		}
 	}
-	if m.limit != 0 {
-		if m.start >= 0 {
-			conditionExtra += fmt.Sprintf(" LIMIT %d,%d", m.start, m.limit)
-		} else {
-			conditionExtra += fmt.Sprintf(" LIMIT %d", m.limit)
+	if m.orderBy != "" {
+		conditionExtra += " ORDER BY " + m.orderBy
+	}
+	if !isCountStatement {
+		if m.limit != 0 {
+			if m.start >= 0 {
+				conditionExtra += fmt.Sprintf(" LIMIT %d,%d", m.start, m.limit)
+			} else {
+				conditionExtra += fmt.Sprintf(" LIMIT %d", m.limit)
+			}
+		} else if limit1 {
+			conditionExtra += " LIMIT 1"
 		}
-	} else if limit1 {
-		conditionExtra += " LIMIT 1"
+
+		if m.offset >= 0 {
+			conditionExtra += fmt.Sprintf(" OFFSET %d", m.offset)
+		}
 	}
-	if m.offset >= 0 {
-		conditionExtra += fmt.Sprintf(" OFFSET %d", m.offset)
-	}
+
 	if m.lockInfo != "" {
 		conditionExtra += " " + m.lockInfo
 	}

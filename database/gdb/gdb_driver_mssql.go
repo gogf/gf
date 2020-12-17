@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -13,9 +13,8 @@ package gdb
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
-	"github.com/gogf/gf/os/gcache"
+	"github.com/gogf/gf/errors/gerror"
 	"strconv"
 	"strings"
 
@@ -193,14 +192,14 @@ func (d *DriverMssql) TableFields(table string, schema ...string) (fields map[st
 	charL, charR := d.GetChars()
 	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
-		return nil, errors.New("function TableFields supports only single table operations")
+		return nil, gerror.New("function TableFields supports only single table operations")
 	}
 	checkSchema := d.DB.GetSchema()
 	if len(schema) > 0 && schema[0] != "" {
 		checkSchema = schema[0]
 	}
-	v, _ := gcache.GetOrSetFunc(
-		fmt.Sprintf(`mssql_table_fields_%s_%s`, table, checkSchema),
+	v, _ := internalCache.GetOrSetFunc(
+		fmt.Sprintf(`mssql_table_fields_%s_%s@group:%s`, table, checkSchema, d.GetGroup()),
 		func() (interface{}, error) {
 			var (
 				result Result

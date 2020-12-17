@@ -124,67 +124,82 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 		}
 	}
 	var req *http.Request
-	if strings.Contains(param, "@file:") {
-		// File uploading request.
-		buffer := new(bytes.Buffer)
-		writer := multipart.NewWriter(buffer)
-		for _, item := range strings.Split(param, "&") {
-			array := strings.Split(item, "=")
-			if len(array[1]) > 6 && strings.Compare(array[1][0:6], "@file:") == 0 {
-				path := array[1][6:]
-				if !gfile.Exists(path) {
-					return nil, errors.New(fmt.Sprintf(`"%s" does not exist`, path))
-				}
-				if file, err := writer.CreateFormFile(array[0], gfile.Basename(path)); err == nil {
-					if f, err := os.Open(path); err == nil {
-						if _, err = io.Copy(file, f); err != nil {
+	if method == "GET" {
+		// It appends the parameters to the url if http method is GET.
+		if param != "" {
+			if gstr.Contains(url, "?") {
+				url = url + "&" + param
+			} else {
+				url = url + "?" + param
+			}
+		}
+		if req, err = http.NewRequest(method, url, bytes.NewBuffer(nil)); err != nil {
+			return nil, err
+		}
+	} else {
+		if strings.Contains(param, "@file:") {
+			// File uploading request.
+			buffer := new(bytes.Buffer)
+			writer := multipart.NewWriter(buffer)
+			for _, item := range strings.Split(param, "&") {
+				array := strings.Split(item, "=")
+				if len(array[1]) > 6 && strings.Compare(array[1][0:6], "@file:") == 0 {
+					path := array[1][6:]
+					if !gfile.Exists(path) {
+						return nil, errors.New(fmt.Sprintf(`"%s" does not exist`, path))
+					}
+					if file, err := writer.CreateFormFile(array[0], gfile.Basename(path)); err == nil {
+						if f, err := os.Open(path); err == nil {
+							if _, err = io.Copy(file, f); err != nil {
+								f.Close()
+								return nil, err
+							}
 							f.Close()
+						} else {
 							return nil, err
 						}
-						f.Close()
 					} else {
 						return nil, err
 					}
 				} else {
-					return nil, err
-				}
-			} else {
-				if err = writer.WriteField(array[0], array[1]); err != nil {
-					return nil, err
+					if err = writer.WriteField(array[0], array[1]); err != nil {
+						return nil, err
+					}
 				}
 			}
-		}
-		// Close finishes the multipart message and writes the trailing
-		// boundary end line to the output.
-		if err = writer.Close(); err != nil {
-			return nil, err
-		}
+			// Close finishes the multipart message and writes the trailing
+			// boundary end line to the output.
+			if err = writer.Close(); err != nil {
+				return nil, err
+			}
 
-		if req, err = http.NewRequest(method, url, buffer); err != nil {
-			return nil, err
+			if req, err = http.NewRequest(method, url, buffer); err != nil {
+				return nil, err
+			} else {
+				req.Header.Set("Content-Type", writer.FormDataContentType())
+			}
 		} else {
-			req.Header.Set("Content-Type", writer.FormDataContentType())
-		}
-	} else {
-		// Normal request.
-		paramBytes := []byte(param)
-		if req, err = http.NewRequest(method, url, bytes.NewReader(paramBytes)); err != nil {
-			return nil, err
-		} else {
-			if v, ok := c.header["Content-Type"]; ok {
-				// Custom Content-Type.
-				req.Header.Set("Content-Type", v)
-			} else if len(paramBytes) > 0 {
-				if (paramBytes[0] == '[' || paramBytes[0] == '{') && json.Valid(paramBytes) {
-					// Auto detecting and setting the post content format: JSON.
-					req.Header.Set("Content-Type", "application/json")
-				} else if gregex.IsMatchString(`^[\w\[\]]+=.+`, param) {
-					// If the parameters passed like "name=value", it then uses form type.
-					req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+			// Normal request.
+			paramBytes := []byte(param)
+			if req, err = http.NewRequest(method, url, bytes.NewReader(paramBytes)); err != nil {
+				return nil, err
+			} else {
+				if v, ok := c.header["Content-Type"]; ok {
+					// Custom Content-Type.
+					req.Header.Set("Content-Type", v)
+				} else if len(paramBytes) > 0 {
+					if (paramBytes[0] == '[' || paramBytes[0] == '{') && json.Valid(paramBytes) {
+						// Auto detecting and setting the post content format: JSON.
+						req.Header.Set("Content-Type", "application/json")
+					} else if gregex.IsMatchString(`^[\w\[\]]+=.+`, param) {
+						// If the parameters passed like "name=value", it then uses form type.
+						req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+					}
 				}
 			}
 		}
 	}
+
 	// Context.
 	if c.ctx != nil {
 		req = req.WithContext(c.ctx)
@@ -246,7 +261,7 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 	if c.browserMode {
 		now := time.Now()
 		for _, v := range resp.Response.Cookies() {
-			if v.Expires.UnixNano() < now.UnixNano() {
+			if !v.Expires.IsZero() && v.Expires.UnixNano() < now.UnixNano() {
 				delete(c.cookies, v.Name)
 			} else {
 				c.cookies[v.Name] = v.Value

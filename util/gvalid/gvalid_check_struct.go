@@ -25,6 +25,15 @@ var (
 // if <rules> is type of []string.
 // The optional parameter <messages> specifies the custom error messages for specified keys and rules.
 func CheckStruct(object interface{}, rules interface{}, messages ...CustomMsg) *Error {
+	// It here must use structs.TagFields not structs.MapField to ensure error sequence.
+	tagField, err := structs.TagFields(object, structTagPriority)
+	if err != nil {
+		return newErrorStr("invalid_object", err.Error())
+	}
+	// If there's no struct tag and validation rules, it does nothing and returns quickly.
+	if len(tagField) == 0 && rules == nil {
+		return nil
+	}
 	var (
 		params        = make(map[string]interface{})
 		checkRules    = make(map[string]string)
@@ -72,17 +81,24 @@ func CheckStruct(object interface{}, rules interface{}, messages ...CustomMsg) *
 	case map[string]string:
 		checkRules = v
 	}
+	// If there's no struct tag and validation rules, it does nothing and returns quickly.
+	if len(tagField) == 0 && len(checkRules) == 0 {
+		return nil
+	}
 	// Checks and extends the parameters map with struct alias tag.
-	for nameOrTag, field := range structs.MapField(object, aliasNameTagPriority, true) {
+	mapField, err := structs.MapField(object, aliasNameTagPriority)
+	if err != nil {
+		return newErrorStr("invalid_object", err.Error())
+	}
+	for nameOrTag, field := range mapField {
 		params[nameOrTag] = field.Value()
 		params[field.Name()] = field.Value()
 	}
-	// It here must use structs.TagFields not structs.MapField to ensure error sequence.
-	for _, field := range structs.TagFields(object, structTagPriority) {
+	for _, field := range tagField {
 		fieldName := field.Name()
 		// sequence tag == struct tag
 		// The name here is alias of field name.
-		name, rule, msg := parseSequenceTag(field.Tag)
+		name, rule, msg := parseSequenceTag(field.TagValue)
 		if len(name) == 0 {
 			name = fieldName
 		} else {

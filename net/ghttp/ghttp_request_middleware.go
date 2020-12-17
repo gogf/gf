@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -34,7 +34,7 @@ func (m *Middleware) Next() {
 		}
 		item = m.request.handlers[m.handlerIndex]
 		// Filter the HOOK handlers, which are designed to be called in another standalone procedure.
-		if item.handler.itemType == gHANDLER_TYPE_HOOK {
+		if item.handler.itemType == handlerTypeHook {
 			m.handlerIndex++
 			continue
 		}
@@ -59,7 +59,7 @@ func (m *Middleware) Next() {
 
 			switch item.handler.itemType {
 			// Service controller.
-			case gHANDLER_TYPE_CONTROLLER:
+			case handlerTypeController:
 				m.served = true
 				if m.request.IsExited() {
 					break
@@ -80,7 +80,7 @@ func (m *Middleware) Next() {
 				}
 
 			// Service object.
-			case gHANDLER_TYPE_OBJECT:
+			case handlerTypeObject:
 				m.served = true
 				if m.request.IsExited() {
 					break
@@ -102,7 +102,7 @@ func (m *Middleware) Next() {
 				}
 
 			// Service handler.
-			case gHANDLER_TYPE_HANDLER:
+			case handlerTypeHandler:
 				m.served = true
 				if m.request.IsExited() {
 					break
@@ -112,7 +112,7 @@ func (m *Middleware) Next() {
 				})
 
 			// Global middleware array.
-			case gHANDLER_TYPE_MIDDLEWARE:
+			case handlerTypeMiddleware:
 				niceCallFunc(func() {
 					item.handler.itemFunc(m.request)
 				})
@@ -121,14 +121,14 @@ func (m *Middleware) Next() {
 				loop = false
 			}
 		}, func(exception error) {
-			if e, ok := exception.(gerror.ApiStack); ok {
+			if e, ok := exception.(errorStack); ok {
 				// It's already an error that has stack info.
-				m.request.error = e.(error)
+				m.request.error = e
 			} else {
 				// Create a new error with stack info.
 				// Note that there's a skip pointing the start stacktrace
 				// of the real error point.
-				m.request.error = gerror.NewfSkip(1, "%v", exception)
+				m.request.error = gerror.NewSkip(1, exception.Error())
 			}
 			m.request.Response.WriteStatus(http.StatusInternalServerError, exception)
 			loop = false

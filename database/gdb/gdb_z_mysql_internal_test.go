@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -9,6 +9,7 @@ package gdb
 import (
 	"fmt"
 	"github.com/go-sql-driver/mysql"
+	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/os/gcmd"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/test/gtest"
@@ -46,7 +47,7 @@ func init() {
 		MaxOpenConnCount: 10,
 		MaxConnLifetime:  600,
 	}
-	AddConfigNode(DEFAULT_GROUP_NAME, configNode)
+	AddConfigNode(DefaultGroupName, configNode)
 	// Default db.
 	if r, err := New(); err != nil {
 		gtest.Error(err)
@@ -310,5 +311,28 @@ func Test_isSubQuery(t *testing.T) {
 		t.Assert(isSubQuery("user.uid"), false)
 		t.Assert(isSubQuery("u, user.uid"), false)
 		t.Assert(isSubQuery("select 1"), true)
+	})
+}
+
+func TestResult_Structs1(t *testing.T) {
+	type A struct {
+		Id int `orm:"id"`
+	}
+	type B struct {
+		*A
+		Name string
+	}
+	gtest.C(t, func(t *gtest.T) {
+		r := Result{
+			Record{"id": gvar.New(nil), "name": gvar.New("john")},
+			Record{"id": gvar.New(nil), "name": gvar.New("smith")},
+		}
+		array := make([]*B, 2)
+		err := r.Structs(&array)
+		t.Assert(err, nil)
+		t.Assert(array[0].Id, 0)
+		t.Assert(array[1].Id, 0)
+		t.Assert(array[0].Name, "john")
+		t.Assert(array[1].Name, "smith")
 	})
 }

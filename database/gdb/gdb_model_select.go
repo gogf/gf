@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -46,7 +46,7 @@ func (m *Model) doGetAll(limit1 bool, where ...interface{}) (Result, error) {
 	}
 	var (
 		softDeletingCondition                         = m.getConditionForSoftDeleting()
-		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(limit1)
+		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(limit1, false)
 	)
 	if !m.unscoped && softDeletingCondition != "" {
 		if conditionWhere == "" {
@@ -75,6 +75,9 @@ func (m *Model) doGetAll(limit1 bool, where ...interface{}) (Result, error) {
 func (m *Model) getFieldsFiltered() string {
 	if m.fieldsEx == "" {
 		// No filtering.
+		if !gstr.Contains(m.fields, ".") && !gstr.Contains(m.fields, " ") {
+			return m.db.QuoteString(m.fields)
+		}
 		return m.fields
 	}
 	var (
@@ -120,7 +123,7 @@ func (m *Model) getFieldsFiltered() string {
 // Chunk iterates the query result with given size and callback function.
 func (m *Model) Chunk(limit int, callback func(result Result, err error) bool) {
 	page := m.start
-	if page == 0 {
+	if page <= 0 {
 		page = 1
 	}
 	model := m
@@ -341,7 +344,7 @@ func (m *Model) Count(where ...interface{}) (int, error) {
 	}
 	var (
 		softDeletingCondition                         = m.getConditionForSoftDeleting()
-		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(false)
+		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(false, true)
 	)
 	if !m.unscoped && softDeletingCondition != "" {
 		if conditionWhere == "" {

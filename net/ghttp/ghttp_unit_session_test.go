@@ -38,7 +38,7 @@ func Test_Session_Cookie(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetBrowserMode(true)
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		r1, e1 := client.Get("/set?k=key1&v=100")
@@ -85,7 +85,7 @@ func Test_Session_Header(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		response, e1 := client.Get("/set?k=key1&v=100")
 		if response != nil {
@@ -132,7 +132,7 @@ func Test_Session_StorageFile(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		response, e1 := client.Get("/set?k=key&v=100")
 		if response != nil {
@@ -145,7 +145,7 @@ func Test_Session_StorageFile(t *testing.T) {
 	})
 	time.Sleep(time.Second)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		client.SetHeader(s.GetSessionIdName(), sessionId)
 		t.Assert(client.GetContent("/get?k=key"), "100")

@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -11,8 +11,8 @@ import (
 )
 
 // getStatusHandler retrieves and returns the handler for given status code.
-func (s *Server) getStatusHandler(status int, r *Request) HandlerFunc {
-	domains := []string{r.GetHost(), gDEFAULT_DOMAIN}
+func (s *Server) getStatusHandler(status int, r *Request) []HandlerFunc {
+	domains := []string{r.GetHost(), defaultDomainName}
 	for _, domain := range domains {
 		if f, ok := s.statusHandlerMap[s.statusHandlerKey(status, domain)]; ok {
 			return f
@@ -21,10 +21,13 @@ func (s *Server) getStatusHandler(status int, r *Request) HandlerFunc {
 	return nil
 }
 
-// setStatusHandler sets the handler for given status code.
+// addStatusHandler sets the handler for given status code.
 // The parameter <pattern> is like: domain#status
-func (s *Server) setStatusHandler(pattern string, handler HandlerFunc) {
-	s.statusHandlerMap[pattern] = handler
+func (s *Server) addStatusHandler(pattern string, handler HandlerFunc) {
+	if s.statusHandlerMap[pattern] == nil {
+		s.statusHandlerMap[pattern] = make([]HandlerFunc, 0)
+	}
+	s.statusHandlerMap[pattern] = append(s.statusHandlerMap[pattern], handler)
 }
 
 // statusHandlerKey creates and returns key for given status and domain.
@@ -34,7 +37,7 @@ func (s *Server) statusHandlerKey(status int, domain string) string {
 
 // BindStatusHandler registers handler for given status code.
 func (s *Server) BindStatusHandler(status int, handler HandlerFunc) {
-	s.setStatusHandler(s.statusHandlerKey(status, gDEFAULT_DOMAIN), handler)
+	s.addStatusHandler(s.statusHandlerKey(status, defaultDomainName), handler)
 }
 
 // BindStatusHandlerByMap registers handler for given status code using map.

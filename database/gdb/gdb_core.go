@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -8,9 +8,10 @@
 package gdb
 
 import (
+	"context"
 	"database/sql"
-	"errors"
 	"fmt"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/text/gstr"
 	"reflect"
 	"strings"
@@ -22,6 +23,35 @@ import (
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/util/gconv"
 )
+
+// Ctx is a chaining function, which creates and returns a new DB that is a shallow copy
+// of current DB object and with given context in it.
+// Note that this returned DB object can be used only once, so do not assign it to
+// a global or package variable for long using.
+func (c *Core) Ctx(ctx context.Context) DB {
+	if ctx == nil {
+		return c.DB
+	}
+	var (
+		err        error
+		newCore    = &Core{}
+		configNode = c.DB.GetConfig()
+	)
+	*newCore = *c
+	newCore.ctx = ctx
+	newCore.DB, err = driverMap[configNode.Type].New(newCore, configNode)
+	// Seldom error, just log it.
+	if err != nil {
+		c.DB.GetLogger().Ctx(ctx).Error(err)
+	}
+	return newCore.DB
+}
+
+// GetCtx returns the context for current DB.
+// Note that it might be nil.
+func (c *Core) GetCtx() context.Context {
+	return c.ctx
+}
 
 // Master creates and returns a connection from master node if master-slave configured.
 // It returns the default connection if master-slave not configured.
@@ -164,7 +194,7 @@ func (c *Core) DoGetAll(link Link, sql string, args ...interface{}) (result Resu
 		return nil, err
 	}
 	defer rows.Close()
-	return c.DB.rowsToResult(rows)
+	return c.DB.convertRowsToResult(rows)
 }
 
 // GetOne queries and returns one record from database.
@@ -437,10 +467,10 @@ func (c *Core) DoInsert(link Link, table string, data interface{}, option int, b
 	case reflect.Map:
 		dataMap = ConvertDataForTableRecord(data)
 	default:
-		return result, errors.New(fmt.Sprint("unsupported data type:", reflectKind))
+		return result, gerror.New(fmt.Sprint("unsupported data type:", reflectKind))
 	}
 	if len(dataMap) == 0 {
-		return nil, errors.New("data cannot be empty")
+		return nil, gerror.New("data cannot be empty")
 	}
 	var (
 		charL, charR = c.DB.GetChars()
@@ -449,10 +479,14 @@ func (c *Core) DoInsert(link Link, table string, data interface{}, option int, b
 	)
 	for k, v := range dataMap {
 		fields = append(fields, charL+k+charR)
-		values = append(values, "?")
-		params = append(params, v)
+		if s, ok := v.(Raw); ok {
+			values = append(values, gconv.String(s))
+		} else {
+			values = append(values, "?")
+			params = append(params, v)
+		}
 	}
-	if option == gINSERT_OPTION_SAVE {
+	if option == insertOptionSave {
 		for k, _ := range dataMap {
 			// If it's SAVE operation,
 			// do not automatically update the creating time.
@@ -573,11 +607,11 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 				listMap = List{ConvertDataForTableRecord(value)}
 			}
 		default:
-			return result, errors.New(fmt.Sprint("unsupported list type:", kind))
+			return result, gerror.New(fmt.Sprint("unsupported list type:", kind))
 		}
 	}
 	if len(listMap) < 1 {
-		return result, errors.New("data list cannot be empty")
+		return result, gerror.New("data list cannot be empty")
 	}
 	if link == nil {
 		if link, err = c.DB.Master(); err != nil {
@@ -585,21 +619,18 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 		}
 	}
 	// Handle the field names and place holders.
-	holders := []string(nil)
 	for k, _ := range listMap[0] {
 		keys = append(keys, k)
-		holders = append(holders, "?")
 	}
 	// Prepare the batch result pointer.
 	var (
-		charL, charR   = c.DB.GetChars()
-		batchResult    = new(SqlResult)
-		keysStr        = charL + strings.Join(keys, charR+","+charL) + charR
-		valueHolderStr = "(" + strings.Join(holders, ",") + ")"
-		operation      = GetInsertOperationByOption(option)
-		updateStr      = ""
+		charL, charR = c.DB.GetChars()
+		batchResult  = new(SqlResult)
+		keysStr      = charL + strings.Join(keys, charR+","+charL) + charR
+		operation    = GetInsertOperationByOption(option)
+		updateStr    = ""
 	)
-	if option == gINSERT_OPTION_SAVE {
+	if option == insertOptionSave {
 		for _, k := range keys {
 			// If it's SAVE operation,
 			// do not automatically update the creating time.
@@ -617,27 +648,34 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 		}
 		updateStr = fmt.Sprintf("ON DUPLICATE KEY UPDATE %s", updateStr)
 	}
-	batchNum := gDEFAULT_BATCH_NUM
+	batchNum := defaultBatchNumber
 	if len(batch) > 0 && batch[0] > 0 {
 		batchNum = batch[0]
 	}
-	listMapLen := len(listMap)
+	var (
+		listMapLen  = len(listMap)
+		valueHolder = make([]string, 0)
+	)
 	for i := 0; i < listMapLen; i++ {
+		values = values[:0]
 		// Note that the map type is unordered,
 		// so it should use slice+key to retrieve the value.
 		for _, k := range keys {
-			params = append(params, listMap[i][k])
+			if s, ok := listMap[i][k].(Raw); ok {
+				values = append(values, gconv.String(s))
+			} else {
+				values = append(values, "?")
+				params = append(params, listMap[i][k])
+			}
 		}
-		values = append(values, valueHolderStr)
+		valueHolder = append(valueHolder, "("+gstr.Join(values, ",")+")")
 		if len(values) == batchNum || (i == listMapLen-1 && len(values) > 0) {
 			r, err := c.DB.DoExec(
 				link,
 				fmt.Sprintf(
 					"%s INTO %s(%s) VALUES%s %s",
-					operation,
-					table,
-					keysStr,
-					strings.Join(values, ","),
+					operation, table, keysStr,
+					gstr.Join(valueHolder, ","),
 					updateStr,
 				),
 				params...,
@@ -652,7 +690,7 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 				batchResult.affected += n
 			}
 			params = params[:0]
-			values = values[:0]
+			valueHolder = valueHolder[:0]
 		}
 	}
 	return batchResult, nil
@@ -699,15 +737,35 @@ func (c *Core) DoUpdate(link Link, table string, data interface{}, condition str
 			dataMap = ConvertDataForTableRecord(data)
 		)
 		for k, v := range dataMap {
-			fields = append(fields, c.DB.QuoteWord(k)+"=?")
-			params = append(params, v)
+			switch value := v.(type) {
+			case *Counter:
+				if value.Value != 0 {
+					column := c.DB.QuoteWord(value.Field)
+					fields = append(fields, fmt.Sprintf("%s=%s+?", column, column))
+					params = append(params, value.Value)
+				}
+			case Counter:
+				if value.Value != 0 {
+					column := c.DB.QuoteWord(value.Field)
+					fields = append(fields, fmt.Sprintf("%s=%s+?", column, column))
+					params = append(params, value.Value)
+				}
+			default:
+				if s, ok := v.(Raw); ok {
+					fields = append(fields, c.DB.QuoteWord(k)+"="+gconv.String(s))
+				} else {
+					fields = append(fields, c.DB.QuoteWord(k)+"=?")
+					params = append(params, v)
+				}
+
+			}
 		}
 		updates = strings.Join(fields, ",")
 	default:
 		updates = gconv.String(data)
 	}
 	if len(updates) == 0 {
-		return nil, errors.New("data cannot be empty")
+		return nil, gerror.New("data cannot be empty")
 	}
 	if len(params) > 0 {
 		args = append(params, args...)
@@ -752,8 +810,8 @@ func (c *Core) DoDelete(link Link, table string, condition string, args ...inter
 	return c.DB.DoExec(link, fmt.Sprintf("DELETE FROM %s%s", table, condition), args...)
 }
 
-// rowsToResult converts underlying data record type sql.Rows to Result type.
-func (c *Core) rowsToResult(rows *sql.Rows) (Result, error) {
+// convertRowsToResult converts underlying data record type sql.Rows to Result type.
+func (c *Core) convertRowsToResult(rows *sql.Rows) (Result, error) {
 	if !rows.Next() {
 		return nil, nil
 	}
@@ -785,7 +843,7 @@ func (c *Core) rowsToResult(rows *sql.Rows) (Result, error) {
 			if value == nil {
 				row[columnNames[i]] = gvar.New(nil)
 			} else {
-				row[columnNames[i]] = gvar.New(c.DB.convertValue(value, columnTypes[i]))
+				row[columnNames[i]] = gvar.New(c.DB.convertFieldValueToLocalValue(value, columnTypes[i]))
 			}
 		}
 		records = append(records, row)
@@ -806,14 +864,14 @@ func (c *Core) MarshalJSON() ([]byte, error) {
 }
 
 // writeSqlToLogger outputs the sql object to logger.
-// It is enabled when configuration "debug" is true.
+// It is enabled only if configuration "debug" is true.
 func (c *Core) writeSqlToLogger(v *Sql) {
 	s := fmt.Sprintf("[%3d ms] [%s] %s", v.End-v.Start, v.Group, v.Format)
 	if v.Error != nil {
 		s += "\nError: " + v.Error.Error()
-		c.logger.Error(s)
+		c.logger.Ctx(c.DB.GetCtx()).Error(s)
 	} else {
-		c.logger.Debug(s)
+		c.logger.Ctx(c.DB.GetCtx()).Debug(s)
 	}
 }
 

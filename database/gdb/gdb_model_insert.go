@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -8,7 +8,7 @@ package gdb
 
 import (
 	"database/sql"
-	"errors"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
@@ -101,7 +101,7 @@ func (m *Model) Insert(data ...interface{}) (result sql.Result, err error) {
 	if len(data) > 0 {
 		return m.Data(data...).Insert()
 	}
-	return m.doInsertWithOption(gINSERT_OPTION_DEFAULT, data...)
+	return m.doInsertWithOption(insertOptionDefault, data...)
 }
 
 // InsertIgnore does "INSERT IGNORE INTO ..." statement for the model.
@@ -109,9 +109,9 @@ func (m *Model) Insert(data ...interface{}) (result sql.Result, err error) {
 // see Model.Data.
 func (m *Model) InsertIgnore(data ...interface{}) (result sql.Result, err error) {
 	if len(data) > 0 {
-		return m.Data(data...).Insert()
+		return m.Data(data...).InsertIgnore()
 	}
-	return m.doInsertWithOption(gINSERT_OPTION_IGNORE, data...)
+	return m.doInsertWithOption(insertOptionIgnore, data...)
 }
 
 // Replace does "REPLACE INTO ..." statement for the model.
@@ -121,7 +121,7 @@ func (m *Model) Replace(data ...interface{}) (result sql.Result, err error) {
 	if len(data) > 0 {
 		return m.Data(data...).Replace()
 	}
-	return m.doInsertWithOption(gINSERT_OPTION_REPLACE, data...)
+	return m.doInsertWithOption(insertOptionReplace, data...)
 }
 
 // Save does "INSERT INTO ... ON DUPLICATE KEY UPDATE..." statement for the model.
@@ -134,7 +134,7 @@ func (m *Model) Save(data ...interface{}) (result sql.Result, err error) {
 	if len(data) > 0 {
 		return m.Data(data...).Save()
 	}
-	return m.doInsertWithOption(gINSERT_OPTION_SAVE, data...)
+	return m.doInsertWithOption(insertOptionSave, data...)
 }
 
 // doInsertWithOption inserts data with option parameter.
@@ -145,7 +145,7 @@ func (m *Model) doInsertWithOption(option int, data ...interface{}) (result sql.
 		}
 	}()
 	if m.data == nil {
-		return nil, errors.New("inserting into table with empty data")
+		return nil, gerror.New("inserting into table with empty data")
 	}
 	var (
 		nowString       = gtime.Now().String()
@@ -155,7 +155,7 @@ func (m *Model) doInsertWithOption(option int, data ...interface{}) (result sql.
 	)
 	// Batch operation.
 	if list, ok := m.data.(List); ok {
-		batch := gDEFAULT_BATCH_NUM
+		batch := defaultBatchNumber
 		if m.batch > 0 {
 			batch = m.batch
 		}
@@ -207,5 +207,5 @@ func (m *Model) doInsertWithOption(option int, data ...interface{}) (result sql.
 			option,
 		)
 	}
-	return nil, errors.New("inserting into table with invalid data type")
+	return nil, gerror.New("inserting into table with invalid data type")
 }

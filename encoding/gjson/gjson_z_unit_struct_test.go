@@ -203,7 +203,7 @@ func Test_ToStruct1(t *testing.T) {
 	})
 }
 
-func Test_ToStructDeep(t *testing.T) {
+func Test_ToStruct(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Item struct {
 			Title string `json:"title"`
@@ -231,7 +231,7 @@ func Test_ToStructDeep(t *testing.T) {
 		t.Assert(j.GetBool("items"), false)
 		t.Assert(j.GetArray("items"), nil)
 		m := new(M)
-		err = j.ToStructDeep(m)
+		err = j.ToStruct(m)
 		t.Assert(err, nil)
 		t.AssertNE(m.Me, nil)
 		t.Assert(m.Me["day"], "20009")

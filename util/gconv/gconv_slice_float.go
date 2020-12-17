@@ -35,6 +35,11 @@ func Float32s(i interface{}) []float32 {
 	}
 	var array []float32
 	switch value := i.(type) {
+	case string:
+		if value == "" {
+			return []float32{}
+		}
+		return []float32{Float32(value)}
 	case []string:
 		array = make([]float32, len(value))
 		for k, v := range value {
@@ -136,6 +141,11 @@ func Float64s(i interface{}) []float64 {
 	}
 	var array []float64
 	switch value := i.(type) {
+	case string:
+		if value == "" {
+			return []float64{}
+		}
+		return []float64{Float64(value)}
 	case []string:
 		array = make([]float64, len(value))
 		for k, v := range value {

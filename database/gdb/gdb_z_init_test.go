@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -57,7 +57,7 @@ func init() {
 	nodePrefix.Prefix = PREFIX1
 	gdb.AddConfigNode("test", configNode)
 	gdb.AddConfigNode("prefix", nodePrefix)
-	gdb.AddConfigNode(gdb.DEFAULT_GROUP_NAME, configNode)
+	gdb.AddConfigNode(gdb.DefaultGroupName, configNode)
 	// Default db.
 	if r, err := gdb.New(); err != nil {
 		gtest.Error(err)

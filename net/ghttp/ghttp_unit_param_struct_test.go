@@ -40,7 +40,7 @@ func Test_Params_Parse(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		t.Assert(client.PostContent("/parse", `{"id":1,"name":"john","map":{"id":1,"score":100}}`), `1100`)
 	})
@@ -322,7 +322,7 @@ func Test_Params_Parse_Attr_Pointer1(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		t.Assert(client.PostContent("/parse1", `{"id":1,"name":"john"}`), `1john`)
 		t.Assert(client.PostContent("/parse2", `{"id":1,"name":"john"}`), `1john`)
@@ -351,7 +351,7 @@ func Test_Params_Parse_Attr_Pointer2(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		t.Assert(client.PostContent("/parse"), `The Id field is required`)
 		t.Assert(client.PostContent("/parse?id=1"), `1`)
@@ -383,7 +383,7 @@ func Test_Params_Parse_Attr_Pointer2(t *testing.T) {
 //
 //	time.Sleep(100 * time.Millisecond)
 //	gtest.C(t, func(t *gtest.T) {
-//		client := ghttp.NewClient()
+//		client := g.Client()
 //		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 //		t.Assert(client.PostContent("/parse", `{"id":1,"name":"john","scores":[[1,2,3]]}`), `1100`)
 //	})
@@ -446,7 +446,7 @@ func Test_Params_Struct(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		t.Assert(client.GetContent("/struct1", `id=1&name=john&password1=123&password2=456`), `1john123456`)
 		t.Assert(client.PostContent("/struct1", `id=1&name=john&password1=123&password2=456`), `1john123456`)
@@ -454,8 +454,6 @@ func Test_Params_Struct(t *testing.T) {
 		t.Assert(client.PostContent("/struct2", ``), ``)
 		t.Assert(client.PostContent("/struct-valid", `id=1&name=john&password1=123&password2=0`), `The passwd1 value length must be between 2 and 20; 密码强度不足`)
 		t.Assert(client.PostContent("/parse", `id=1&name=john&password1=123&password2=0`), `The passwd1 value length must be between 2 and 20; 密码强度不足`)
-		t.Assert(client.GetContent("/parse", `id=1&name=john&password1=123&password2=456`), `密码强度不足`)
-		t.Assert(client.GetContent("/parse", `id=1&name=john&password1=123Abc!@#&password2=123Abc!@#`), `1john123Abc!@#123Abc!@#`)
 		t.Assert(client.PostContent("/parse", `{"id":1,"name":"john","password1":"123Abc!@#","password2":"123Abc!@#"}`), `1john123Abc!@#123Abc!@#`)
 	})
 }
@@ -484,7 +482,7 @@ func Test_Params_Structs(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		t.Assert(client.PostContent(
 			"/parse1",

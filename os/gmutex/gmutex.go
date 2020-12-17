@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -16,7 +16,7 @@ import (
 
 // The high level Mutex, which implements more rich features for mutex.
 type Mutex struct {
-	state   *gtype.Int32  // Indicates the state of mutex.
+	state   *gtype.Int32  // Indicates the state of mutex. -1: writing locked; > 1 reading locked.
 	writer  *gtype.Int32  // Pending writer count.
 	reader  *gtype.Int32  // Pending reader count.
 	writing chan struct{} // Channel for writer blocking.
@@ -56,7 +56,7 @@ func (m *Mutex) Unlock() {
 		// Note that there might be more than one goroutines can enter this block.
 		var n int32
 		// Writing lock unlocks, then first check the blocked readers.
-		// If there're readers blocked, it unlocks them with preemption.
+		// If there are readers blocked, it unlocks them with preemption.
 		for {
 			if n = m.reader.Val(); n > 0 {
 				if m.reader.Cas(n, 0) {

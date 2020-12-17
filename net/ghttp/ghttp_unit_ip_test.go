@@ -32,7 +32,7 @@ func TestRequest_GetRemoteIp(t *testing.T) {
 
 		time.Sleep(100 * time.Millisecond)
 
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent("/"), "127.0.0.1")

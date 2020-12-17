@@ -54,7 +54,7 @@ func (m *IntIntMap) Iterator(f func(k int, v int) bool) {
 
 // Clone returns a new hash map with copy of current map data.
 func (m *IntIntMap) Clone() *IntIntMap {
-	return NewIntIntMapFrom(m.MapCopy(), !m.mu.IsSafe())
+	return NewIntIntMapFrom(m.MapCopy(), m.mu.IsSafe())
 }
 
 // Map returns the underlying data map.

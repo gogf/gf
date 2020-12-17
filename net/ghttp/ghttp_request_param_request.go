@@ -8,7 +8,10 @@ package ghttp
 
 import (
 	"github.com/gogf/gf/container/gvar"
+	"github.com/gogf/gf/internal/empty"
+	"github.com/gogf/gf/internal/structs"
 	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/util/gutil"
 )
 
 // GetRequest retrieves and returns the parameter named <key> passed from client and
@@ -267,15 +270,37 @@ func (r *Request) GetRequestMapStrVar(kvMap ...map[string]interface{}) map[strin
 // the parameter <pointer> is a pointer to the struct object.
 // The optional parameter <mapping> is used to specify the key to attribute mapping.
 func (r *Request) GetRequestStruct(pointer interface{}, mapping ...map[string]string) error {
-	m := r.GetRequestMap()
-	if m == nil {
-		m = map[string]interface{}{}
+	data := r.GetRequestMap()
+	if data == nil {
+		data = map[string]interface{}{}
 	}
-	return gconv.Struct(m, pointer, mapping...)
+	if err := r.mergeDefaultStructValue(data, pointer); err != nil {
+		return nil
+	}
+	return gconv.Struct(data, pointer, mapping...)
 }
 
-// GetRequestToStruct is alias of GetRequestStruct. See GetRequestStruct.
-// Deprecated.
-func (r *Request) GetRequestToStruct(pointer interface{}, mapping ...map[string]string) error {
-	return r.GetRequestStruct(pointer, mapping...)
+// mergeDefaultStructValue merges the request parameters with default values from struct tag definition.
+func (r *Request) mergeDefaultStructValue(data map[string]interface{}, pointer interface{}) error {
+	tagFields, err := structs.TagFields(pointer, defaultValueTags)
+	if err != nil {
+		return err
+	}
+	if len(tagFields) > 0 {
+		var (
+			foundKey   string
+			foundValue interface{}
+		)
+		for _, field := range tagFields {
+			foundKey, foundValue = gutil.MapPossibleItemByKey(data, field.Name())
+			if foundKey == "" {
+				data[field.Name()] = field.TagValue
+			} else {
+				if empty.IsEmpty(foundValue) {
+					data[foundKey] = field.TagValue
+				}
+			}
+		}
+	}
+	return nil
 }

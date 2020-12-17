@@ -1,4 +1,4 @@
-// Copyright 2020 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -32,6 +32,10 @@ func (m *Model) Unscoped() *Model {
 // If there's no field name for storing creating time, it returns an empty string.
 // It checks the key with or without cases or chars '-'/'_'/'.'/' '.
 func (m *Model) getSoftFieldNameCreated(table ...string) string {
+	// It checks whether this feature disabled.
+	if m.db.GetConfig().TimeMaintainDisabled {
+		return ""
+	}
 	tableName := ""
 	if len(table) > 0 {
 		tableName = table[0]
@@ -40,7 +44,7 @@ func (m *Model) getSoftFieldNameCreated(table ...string) string {
 	}
 	config := m.db.GetConfig()
 	if config.CreatedAt != "" {
-		return m.getSoftFieldName(tableName, append([]string{config.CreatedAt}, createdFiledNames...))
+		return m.getSoftFieldName(tableName, []string{config.CreatedAt})
 	}
 	return m.getSoftFieldName(tableName, createdFiledNames)
 }
@@ -49,6 +53,10 @@ func (m *Model) getSoftFieldNameCreated(table ...string) string {
 // If there's no field name for storing updating time, it returns an empty string.
 // It checks the key with or without cases or chars '-'/'_'/'.'/' '.
 func (m *Model) getSoftFieldNameUpdated(table ...string) (field string) {
+	// It checks whether this feature disabled.
+	if m.db.GetConfig().TimeMaintainDisabled {
+		return ""
+	}
 	tableName := ""
 	if len(table) > 0 {
 		tableName = table[0]
@@ -57,7 +65,7 @@ func (m *Model) getSoftFieldNameUpdated(table ...string) (field string) {
 	}
 	config := m.db.GetConfig()
 	if config.UpdatedAt != "" {
-		return m.getSoftFieldName(tableName, append([]string{config.UpdatedAt}, updatedFiledNames...))
+		return m.getSoftFieldName(tableName, []string{config.UpdatedAt})
 	}
 	return m.getSoftFieldName(tableName, updatedFiledNames)
 }
@@ -66,6 +74,10 @@ func (m *Model) getSoftFieldNameUpdated(table ...string) (field string) {
 // If there's no field name for storing deleting time, it returns an empty string.
 // It checks the key with or without cases or chars '-'/'_'/'.'/' '.
 func (m *Model) getSoftFieldNameDeleted(table ...string) (field string) {
+	// It checks whether this feature disabled.
+	if m.db.GetConfig().TimeMaintainDisabled {
+		return ""
+	}
 	tableName := ""
 	if len(table) > 0 {
 		tableName = table[0]
@@ -74,7 +86,7 @@ func (m *Model) getSoftFieldNameDeleted(table ...string) (field string) {
 	}
 	config := m.db.GetConfig()
 	if config.UpdatedAt != "" {
-		return m.getSoftFieldName(tableName, append([]string{config.DeletedAt}, deletedFiledNames...))
+		return m.getSoftFieldName(tableName, []string{config.DeletedAt})
 	}
 	return m.getSoftFieldName(tableName, deletedFiledNames)
 }

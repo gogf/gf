@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -38,7 +38,7 @@ array = [1,2,3]
     cache = "127.0.0.1:6379,1"
 `
 	gtest.C(t, func(t *gtest.T) {
-		path := gcfg.DEFAULT_CONFIG_FILE
+		path := gcfg.DefaultConfigFile
 		err := gfile.PutContents(path, config)
 		t.Assert(err, nil)
 		defer gfile.Remove(path)
@@ -89,7 +89,7 @@ array = [1,2,3]
 func Test_Basic2(t *testing.T) {
 	config := `log-path = "logs"`
 	gtest.C(t, func(t *gtest.T) {
-		path := gcfg.DEFAULT_CONFIG_FILE
+		path := gcfg.DefaultConfigFile
 		err := gfile.PutContents(path, config)
 		t.Assert(err, nil)
 		defer func() {
@@ -243,7 +243,7 @@ v4 = "1.234"
 
 `
 	gtest.C(t, func(t *gtest.T) {
-		path := gcfg.DEFAULT_CONFIG_FILE
+		path := gcfg.DefaultConfigFile
 		err := gfile.PutContents(path, config)
 		t.Assert(err, nil)
 		defer func() {
@@ -357,7 +357,7 @@ func TestCfg_FilePath(t *testing.T) {
 func TestCfg_et(t *testing.T) {
 	config := `log-path = "logs"`
 	gtest.C(t, func(t *gtest.T) {
-		path := gcfg.DEFAULT_CONFIG_FILE
+		path := gcfg.DefaultConfigFile
 		err := gfile.PutContents(path, config)
 		t.Assert(err, nil)
 		defer gfile.Remove(path)
@@ -452,11 +452,17 @@ func TestCfg_Instance(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		pwd := gfile.Pwd()
-		gfile.Chdir(gfile.Join(gdebug.TestDataPath()))
+		gfile.Chdir(gdebug.TestDataPath())
 		defer gfile.Chdir(pwd)
 		t.Assert(gcfg.Instance("c1") != nil, true)
 		t.Assert(gcfg.Instance("c1").Get("my-config"), "1")
 		t.Assert(gcfg.Instance("folder1/c1").Get("my-config"), "2")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		pwd := gfile.Pwd()
+		gfile.Chdir(gdebug.TestDataPath("folder1"))
+		defer gfile.Chdir(pwd)
+		t.Assert(gcfg.Instance("c2").Get("my-config"), 2)
 	})
 }
 

@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -8,10 +8,11 @@
 package gdb
 
 import (
+	"context"
 	"database/sql"
-	"errors"
 	"fmt"
-	"github.com/gogf/gf/internal/cmdenv"
+	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/os/gcmd"
 	"time"
 
 	"github.com/gogf/gf/container/gvar"
@@ -41,6 +42,12 @@ type DB interface {
 	// Open creates a raw connection object for database with given node configuration.
 	// Note that it is not recommended using the this function manually.
 	Open(config *ConfigNode) (*sql.DB, error)
+
+	// Ctx is a chaining function, which creates and returns a new DB that is a shallow copy
+	// of current DB object and with given context in it.
+	// Note that this returned DB object can be used only once, so do not assign it to
+	// a global or package variable for long using.
+	Ctx(ctx context.Context) DB
 
 	// ===========================================================================
 	// Query APIs.
@@ -137,6 +144,7 @@ type DB interface {
 	// Utility methods.
 	// ===========================================================================
 
+	GetCtx() context.Context
 	GetChars() (charLeft string, charRight string)
 	GetMaster(schema ...string) (*sql.DB, error)
 	GetSlave(schema ...string) (*sql.DB, error)
@@ -154,28 +162,24 @@ type DB interface {
 	HandleSqlBeforeCommit(link Link, sql string, args []interface{}) (string, []interface{})
 
 	// ===========================================================================
-	// Internal methods.
+	// Internal methods, for internal usage purpose, you do not need consider it.
 	// ===========================================================================
 
 	mappingAndFilterData(schema, table string, data map[string]interface{}, filter bool) (map[string]interface{}, error)
-	convertValue(fieldValue interface{}, fieldType string) interface{}
-	rowsToResult(rows *sql.Rows) (Result, error)
+	convertFieldValueToLocalValue(fieldValue interface{}, fieldType string) interface{}
+	convertRowsToResult(rows *sql.Rows) (Result, error)
 }
 
 // Core is the base struct for database management.
 type Core struct {
-	DB               DB            // DB interface object.
-	group            string        // Configuration group name.
-	debug            *gtype.Bool   // Enable debug mode for the database.
-	cache            *gcache.Cache // Cache manager, SQL result cache only.
-	schema           *gtype.String // Custom schema for this object.
-	dryrun           *gtype.Bool   // Dry run.
-	prefix           string        // Table prefix.
-	logger           *glog.Logger  // Logger.
-	config           *ConfigNode   // Current config node.
-	maxIdleConnCount int           // Max idle connection count.
-	maxOpenConnCount int           // Max open connection count.
-	maxConnLifetime  time.Duration // Max TTL for a connection.
+	DB     DB              // DB interface object.
+	group  string          // Configuration group name.
+	debug  *gtype.Bool     // Enable debug mode for the database, which can be changed in runtime.
+	cache  *gcache.Cache   // Cache manager, SQL result cache only.
+	schema *gtype.String   // Custom schema for this object.
+	logger *glog.Logger    // Logger.
+	config *ConfigNode     // Current config node.
+	ctx    context.Context // Context for chaining operation only.
 }
 
 // Driver is the interface for integrating sql drivers into package gdb.
@@ -214,32 +218,30 @@ type Link interface {
 	Prepare(sql string) (*sql.Stmt, error)
 }
 
+// Counter  is the type for update count.
+type Counter struct {
+	Field string
+	Value float64
+}
+
 type (
-	// Value is the field value type.
-	Value = *gvar.Var
-
-	// Record is the row record of the table.
-	Record map[string]Value
-
-	// Result is the row record array.
-	Result []Record
-
-	// Map is alias of map[string]interface{},
-	// which is the most common usage map type.
-	Map = map[string]interface{}
-
-	// List is type of map array.
-	List = []Map
+	Raw    string                   // Raw is a raw sql that will not be treated as argument but as a direct sql part.
+	Value  = *gvar.Var              // Value is the field value type.
+	Record map[string]Value         // Record is the row record of the table.
+	Result []Record                 // Result is the row record array.
+	Map    = map[string]interface{} // Map is alias of map[string]interface{}, which is the most common usage map type.
+	List   = []Map                  // List is type of map array.
 )
 
 const (
-	gINSERT_OPTION_DEFAULT       = 0
-	gINSERT_OPTION_REPLACE       = 1
-	gINSERT_OPTION_SAVE          = 2
-	gINSERT_OPTION_IGNORE        = 3
-	gDEFAULT_BATCH_NUM           = 10 // Per count for batch insert/replace/save
-	gDEFAULT_CONN_MAX_IDLE_COUNT = 10 // Max idle connection count in pool.
-	gDEFAULT_CONN_MAX_LIFE_TIME  = 30 // Max life time for per connection in pool in seconds.
+	insertOptionDefault     = 0
+	insertOptionReplace     = 1
+	insertOptionSave        = 2
+	insertOptionIgnore      = 3
+	defaultBatchNumber      = 10               // Per count for batch insert/replace/save.
+	defaultMaxIdleConnCount = 10               // Max idle connection count in pool.
+	defaultMaxOpenConnCount = 100              // Max open connection count in pool.
+	defaultMaxConnLifeTime  = 30 * time.Second // Max life time for per connection in pool in seconds.
 )
 
 var (
@@ -264,7 +266,10 @@ var (
 
 	// regularFieldNameRegPattern is the regular expression pattern for a string
 	// which is a regular field name of table.
-	regularFieldNameRegPattern = `^[\w\.\-]+$`
+	regularFieldNameRegPattern = `^[\w\.\-\_]+$`
+
+	// internalCache is the memory cache for internal usage.
+	internalCache = gcache.New()
 
 	// allDryRun sets dry-run feature for all database connections.
 	// It is commonly used for command options for convenience.
@@ -273,7 +278,7 @@ var (
 
 func init() {
 	// allDryRun is initialized from environment or command options.
-	allDryRun = cmdenv.Get("gf.gdb.dryrun", false).Bool()
+	allDryRun = gcmd.GetWithEnv("gf.gdb.dryrun", false).Bool()
 }
 
 // Register registers custom database driver to gdb.
@@ -284,7 +289,7 @@ func Register(name string, driver Driver) error {
 
 // New creates and returns an ORM object with global configurations.
 // The parameter <name> specifies the configuration group name,
-// which is DEFAULT_GROUP_NAME in default.
+// which is DefaultGroupName in default.
 func New(group ...string) (db DB, err error) {
 	groupName := configs.group
 	if len(group) > 0 && group[0] != "" {
@@ -294,21 +299,17 @@ func New(group ...string) (db DB, err error) {
 	defer configs.RUnlock()
 
 	if len(configs.config) < 1 {
-		return nil, errors.New("empty database configuration")
+		return nil, gerror.New("empty database configuration")
 	}
 	if _, ok := configs.config[groupName]; ok {
 		if node, err := getConfigNodeByGroup(groupName, true); err == nil {
 			c := &Core{
-				group:            groupName,
-				debug:            gtype.NewBool(),
-				cache:            gcache.New(),
-				schema:           gtype.NewString(),
-				dryrun:           gtype.NewBool(),
-				logger:           glog.New(),
-				prefix:           node.Prefix,
-				config:           node,
-				maxIdleConnCount: gDEFAULT_CONN_MAX_IDLE_COUNT,
-				maxConnLifetime:  gDEFAULT_CONN_MAX_LIFE_TIME, // Default max connection life time if user does not configure.
+				group:  groupName,
+				debug:  gtype.NewBool(),
+				cache:  gcache.New(),
+				schema: gtype.NewString(),
+				logger: glog.New(),
+				config: node,
 			}
 			if v, ok := driverMap[node.Type]; ok {
 				c.DB, err = v.New(c, node)
@@ -317,19 +318,19 @@ func New(group ...string) (db DB, err error) {
 				}
 				return c.DB, nil
 			} else {
-				return nil, errors.New(fmt.Sprintf(`unsupported database type "%s"`, node.Type))
+				return nil, gerror.New(fmt.Sprintf(`unsupported database type "%s"`, node.Type))
 			}
 		} else {
 			return nil, err
 		}
 	} else {
-		return nil, errors.New(fmt.Sprintf(`database configuration node "%s" is not found`, groupName))
+		return nil, gerror.New(fmt.Sprintf(`database configuration node "%s" is not found`, groupName))
 	}
 }
 
 // Instance returns an instance for DB operations.
 // The parameter <name> specifies the configuration group name,
-// which is DEFAULT_GROUP_NAME in default.
+// which is DefaultGroupName in default.
 func Instance(name ...string) (db DB, err error) {
 	group := configs.group
 	if len(name) > 0 && name[0] != "" {
@@ -363,7 +364,7 @@ func getConfigNodeByGroup(group string, master bool) (*ConfigNode, error) {
 			}
 		}
 		if len(masterList) < 1 {
-			return nil, errors.New("at least one master node configuration's need to make sense")
+			return nil, gerror.New("at least one master node configuration's need to make sense")
 		}
 		if len(slaveList) < 1 {
 			slaveList = masterList
@@ -374,7 +375,7 @@ func getConfigNodeByGroup(group string, master bool) (*ConfigNode, error) {
 			return getConfigNodeByWeight(slaveList), nil
 		}
 	} else {
-		return nil, errors.New(fmt.Sprintf("empty database configuration for item name '%s'", group))
+		return nil, gerror.New(fmt.Sprintf("empty database configuration for item name '%s'", group))
 	}
 }
 
@@ -441,28 +442,32 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 		node = &n
 	}
 	// Cache the underlying connection pool object by node.
-	v, _ := gcache.GetOrSetFuncLock(node.String(), func() (interface{}, error) {
+	v, _ := internalCache.GetOrSetFuncLock(node.String(), func() (interface{}, error) {
 		sqlDb, err = c.DB.Open(node)
 		if err != nil {
 			intlog.Printf("DB open failed: %v, %+v", err, node)
 			return nil, err
 		}
-		if c.maxIdleConnCount > 0 {
-			sqlDb.SetMaxIdleConns(c.maxIdleConnCount)
-		} else if node.MaxIdleConnCount > 0 {
-			sqlDb.SetMaxIdleConns(node.MaxIdleConnCount)
+		if c.config.MaxIdleConnCount > 0 {
+			sqlDb.SetMaxIdleConns(c.config.MaxIdleConnCount)
+		} else {
+			sqlDb.SetMaxIdleConns(defaultMaxIdleConnCount)
 		}
-
-		if c.maxOpenConnCount > 0 {
-			sqlDb.SetMaxOpenConns(c.maxOpenConnCount)
-		} else if node.MaxOpenConnCount > 0 {
-			sqlDb.SetMaxOpenConns(node.MaxOpenConnCount)
+		if c.config.MaxOpenConnCount > 0 {
+			sqlDb.SetMaxOpenConns(c.config.MaxOpenConnCount)
+		} else {
+			sqlDb.SetMaxOpenConns(defaultMaxOpenConnCount)
 		}
-
-		if c.maxConnLifetime > 0 {
-			sqlDb.SetConnMaxLifetime(c.maxConnLifetime * time.Second)
-		} else if node.MaxConnLifetime > 0 {
-			sqlDb.SetConnMaxLifetime(node.MaxConnLifetime * time.Second)
+		if c.config.MaxConnLifetime > 0 {
+			// Automatically checks whether MaxConnLifetime is configured using string like: "30s", "60s", etc.
+			// Or else it is configured just using number, which means value in seconds.
+			if c.config.MaxConnLifetime > time.Second {
+				sqlDb.SetConnMaxLifetime(c.config.MaxConnLifetime)
+			} else {
+				sqlDb.SetConnMaxLifetime(c.config.MaxConnLifetime * time.Second)
+			}
+		} else {
+			sqlDb.SetConnMaxLifetime(defaultMaxConnLifeTime)
 		}
 		return sqlDb, nil
 	}, 0)

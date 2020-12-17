@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -24,27 +24,27 @@ import (
 	"math"
 	"time"
 
-	"github.com/gogf/gf/internal/cmdenv"
+	"github.com/gogf/gf/os/gcmd"
 )
 
 const (
-	STATUS_READY            = 0             // Job is ready for running.
-	STATUS_RUNNING          = 1             // Job is already running.
-	STATUS_STOPPED          = 2             // Job is stopped.
-	STATUS_RESET            = 3             // Job is reset.
-	STATUS_CLOSED           = -1            // Job is closed and waiting to be deleted.
-	gPANIC_EXIT             = "exit"        // Internal usage for custom job exit function with panic.
-	gDEFAULT_TIMES          = math.MaxInt32 // Default limit running times, a big number.
-	gDEFAULT_SLOT_NUMBER    = 10            // Default slot number.
-	gDEFAULT_WHEEL_INTERVAL = 50            // Default wheel interval.
-	gDEFAULT_WHEEL_LEVEL    = 6             // Default wheel level.
-	gCMDENV_KEY             = "gf.gtimer"   // Configuration key for command argument or environment.
+	StatusReady          = 0             // Job is ready for running.
+	StatusRunning        = 1             // Job is already running.
+	StatusStopped        = 2             // Job is stopped.
+	StatusReset          = 3             // Job is reset.
+	StatusClosed         = -1            // Job is closed and waiting to be deleted.
+	panicExit            = "exit"        // Internal usage for custom job exit function with panic.
+	defaultTimes         = math.MaxInt32 // Default limit running times, a big number.
+	defaultSlotNumber    = 10            // Default slot number.
+	defaultWheelInterval = 100           // Default wheel interval.
+	defaultWheelLevel    = 5             // Default wheel level.
+	cmdEnvKey            = "gf.gtimer"   // Configuration key for command argument or environment.
 )
 
 var (
-	defaultSlots    = cmdenv.Get(fmt.Sprintf("%s.slots", gCMDENV_KEY), gDEFAULT_SLOT_NUMBER).Int()
-	defaultLevel    = cmdenv.Get(fmt.Sprintf("%s.level", gCMDENV_KEY), gDEFAULT_WHEEL_LEVEL).Int()
-	defaultInterval = cmdenv.Get(fmt.Sprintf("%s.interval", gCMDENV_KEY), gDEFAULT_WHEEL_INTERVAL).Duration() * time.Millisecond
+	defaultSlots    = gcmd.GetWithEnv(fmt.Sprintf("%s.slots", cmdEnvKey), defaultSlotNumber).Int()
+	defaultLevel    = gcmd.GetWithEnv(fmt.Sprintf("%s.level", cmdEnvKey), defaultWheelLevel).Int()
+	defaultInterval = gcmd.GetWithEnv(fmt.Sprintf("%s.interval", cmdEnvKey), defaultWheelInterval).Duration() * time.Millisecond
 	defaultTimer    = New(defaultSlots, defaultInterval, defaultLevel)
 )
 
@@ -130,5 +130,5 @@ func DelayAddTimes(delay time.Duration, interval time.Duration, times int, job J
 // mechanism internally implementing this feature, which is designed for simplification
 // and convenience.
 func Exit() {
-	panic(gPANIC_EXIT)
+	panic(panicExit)
 }
