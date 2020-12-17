@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -228,14 +228,14 @@ func Test_Middleware_Hook_With_Static(t *testing.T) {
 	s := g.Server(p)
 	a := garray.New(true)
 	s.Group("/", func(group *ghttp.RouterGroup) {
-		group.Hook("/*", ghttp.HOOK_BEFORE_SERVE, func(r *ghttp.Request) {
+		group.Hook("/*", ghttp.HookBeforeServe, func(r *ghttp.Request) {
 			a.Append(1)
-			fmt.Println("HOOK_BEFORE_SERVE")
+			fmt.Println("HookBeforeServe")
 			r.Response.Write("a")
 		})
-		group.Hook("/*", ghttp.HOOK_AFTER_SERVE, func(r *ghttp.Request) {
+		group.Hook("/*", ghttp.HookAfterServe, func(r *ghttp.Request) {
 			a.Append(1)
-			fmt.Println("HOOK_AFTER_SERVE")
+			fmt.Println("HookAfterServe")
 			r.Response.Write("b")
 		})
 		group.Middleware(func(r *ghttp.Request) {
@@ -539,16 +539,16 @@ func Test_Hook_Middleware_Basic1(t *testing.T) {
 	s.BindHandler("/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test")
 	})
-	s.BindHookHandler("/*", ghttp.HOOK_BEFORE_SERVE, func(r *ghttp.Request) {
+	s.BindHookHandler("/*", ghttp.HookBeforeServe, func(r *ghttp.Request) {
 		r.Response.Write("a")
 	})
-	s.BindHookHandler("/*", ghttp.HOOK_AFTER_SERVE, func(r *ghttp.Request) {
+	s.BindHookHandler("/*", ghttp.HookAfterServe, func(r *ghttp.Request) {
 		r.Response.Write("b")
 	})
-	s.BindHookHandler("/*", ghttp.HOOK_BEFORE_SERVE, func(r *ghttp.Request) {
+	s.BindHookHandler("/*", ghttp.HookBeforeServe, func(r *ghttp.Request) {
 		r.Response.Write("c")
 	})
-	s.BindHookHandler("/*", ghttp.HOOK_AFTER_SERVE, func(r *ghttp.Request) {
+	s.BindHookHandler("/*", ghttp.HookAfterServe, func(r *ghttp.Request) {
 		r.Response.Write("d")
 	})
 	s.BindMiddlewareDefault(func(r *ghttp.Request) {

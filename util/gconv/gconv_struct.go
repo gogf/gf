@@ -54,7 +54,7 @@ func doStruct(params interface{}, pointer interface{}, mapping ...map[string]str
 	defer func() {
 		// Catch the panic, especially the reflect operation panics.
 		if e := recover(); e != nil {
-			err = gerror.NewfSkip(1, "%v", e)
+			err = gerror.NewSkipf(1, "%v", e)
 		}
 	}()
 

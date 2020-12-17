@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -69,7 +69,7 @@ func (s *Server) doBindController(
 		s.Logger().Fatal(err)
 		return
 	}
-	if strings.EqualFold(method, gDEFAULT_METHOD) {
+	if strings.EqualFold(method, defaultMethod) {
 		pattern = s.serveHandlerKey("", path, domain)
 	}
 	// Retrieve a list of methods, create construct corresponding URI.
@@ -110,7 +110,7 @@ func (s *Server) doBindController(
 		key := s.mergeBuildInNameToPattern(pattern, structName, methodName, true)
 		m[key] = &handlerItem{
 			itemName: fmt.Sprintf(`%s.%s.%s`, pkgPath, ctlName, methodName),
-			itemType: gHANDLER_TYPE_CONTROLLER,
+			itemType: handlerTypeController,
 			ctrlInfo: &handlerController{
 				name:    methodName,
 				reflect: v.Elem().Type(),
@@ -133,7 +133,7 @@ func (s *Server) doBindController(
 			}
 			m[k] = &handlerItem{
 				itemName: fmt.Sprintf(`%s.%s.%s`, pkgPath, ctlName, methodName),
-				itemType: gHANDLER_TYPE_CONTROLLER,
+				itemType: handlerTypeController,
 				ctrlInfo: &handlerController{
 					name:    methodName,
 					reflect: v.Elem().Type(),
@@ -179,7 +179,7 @@ func (s *Server) doBindControllerMethod(
 	key := s.mergeBuildInNameToPattern(pattern, structName, methodName, false)
 	m[key] = &handlerItem{
 		itemName: fmt.Sprintf(`%s.%s.%s`, pkgPath, ctlName, methodName),
-		itemType: gHANDLER_TYPE_CONTROLLER,
+		itemType: handlerTypeController,
 		ctrlInfo: &handlerController{
 			name:    methodName,
 			reflect: v.Elem().Type(),
@@ -219,7 +219,7 @@ func (s *Server) doBindControllerRest(
 		key := s.mergeBuildInNameToPattern(methodName+":"+pattern, structName, methodName, false)
 		m[key] = &handlerItem{
 			itemName: fmt.Sprintf(`%s.%s.%s`, pkgPath, ctlName, methodName),
-			itemType: gHANDLER_TYPE_CONTROLLER,
+			itemType: handlerTypeController,
 			ctrlInfo: &handlerController{
 				name:    methodName,
 				reflect: v.Elem().Type(),

@@ -94,11 +94,11 @@ func (l *Logger) rotateChecksTimely() {
 	}
 
 	// It here uses memory lock to guarantee the concurrent safety.
-	lockKey := "glog.rotateChecksTimely:" + l.config.Path
-	if !gmlock.TryLock(lockKey) {
+	memoryLockKey := "glog.rotateChecksTimely:" + l.config.Path
+	if !gmlock.TryLock(memoryLockKey) {
 		return
 	}
-	defer gmlock.Unlock(lockKey)
+	defer gmlock.Unlock(memoryLockKey)
 
 	var (
 		now      = time.Now()

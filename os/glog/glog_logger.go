@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -18,7 +18,6 @@ import (
 	"io"
 	"os"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/gogf/gf/debug/gdebug"
@@ -31,7 +30,6 @@ import (
 
 // Logger is the struct for logging management.
 type Logger struct {
-	rmu    sync.Mutex      // Mutex for rotation feature.
 	ctx    context.Context // Context for logging.
 	init   *gtype.Bool     // Initialized.
 	parent *Logger         // Parent logger, if it is not empty, it means the logger is used in chaining function.
@@ -178,11 +176,7 @@ func (l *Logger) print(std io.Writer, lead string, values ...interface{}) {
 		}
 	}
 	for _, v := range values {
-		if err, ok := v.(error); ok {
-			tempStr = fmt.Sprintf("%+v", err)
-		} else {
-			tempStr = gconv.String(v)
-		}
+		tempStr = gconv.String(v)
 		if len(valueStr) > 0 {
 			if valueStr[len(valueStr)-1] == '\n' {
 				// Remove one blank line(\n\n).
@@ -260,7 +254,7 @@ func (l *Logger) printToWriter(now time.Time, std io.Writer, buffer *bytes.Buffe
 func (l *Logger) printToFile(now time.Time, buffer *bytes.Buffer) {
 	var (
 		logFilePath   = l.getFilePath(now)
-		memoryLockKey = "glog.file.lock:" + logFilePath
+		memoryLockKey = "glog.printToFile:" + logFilePath
 	)
 	gmlock.Lock(memoryLockKey)
 	defer gmlock.Unlock(memoryLockKey)

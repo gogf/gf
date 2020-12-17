@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -71,17 +71,17 @@ func niceCallFunc(f func()) {
 	defer func() {
 		if e := recover(); e != nil {
 			switch e {
-			case gEXCEPTION_EXIT, gEXCEPTION_EXIT_ALL:
+			case exceptionExit, exceptionExitAll:
 				return
 			default:
-				if _, ok := e.(gerror.ApiStack); ok {
+				if _, ok := e.(errorStack); ok {
 					// It's already an error that has stack info.
 					panic(e)
 				} else {
 					// Create a new error with stack info.
 					// Note that there's a skip pointing the start stacktrace
 					// of the real error point.
-					panic(gerror.NewfSkip(1, "%v", e))
+					panic(gerror.NewSkipf(1, "%v", e))
 				}
 			}
 		}
