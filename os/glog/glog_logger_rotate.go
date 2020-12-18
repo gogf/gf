@@ -101,8 +101,9 @@ func (l *Logger) rotateChecksTimely() {
 	defer gmlock.Unlock(memoryLockKey)
 
 	var (
-		now      = time.Now()
-		pattern  = "*.log, *.gz"
+		now        = time.Now()
+		pattern    = "*.log, *.gz"
+		lastFiles_ []string
 		//files, _ = gfile.ScanDirFile(l.config.Path, pattern, true)
 		files, _ = gfile.ScanDirFile(l.config.Path, pattern, false)
 	)
@@ -112,9 +113,8 @@ func (l *Logger) rotateChecksTimely() {
 	// =============================================================
 	if l.config.RotateExpire > 0 {
 		var (
-			mtime         time.Time
-			subDuration   time.Duration
-			expireRotated bool
+			mtime       time.Time
+			subDuration time.Duration
 		)
 		for _, file := range files {
 			if gfile.ExtName(file) == "gz" {
@@ -123,21 +123,20 @@ func (l *Logger) rotateChecksTimely() {
 			mtime = gfile.MTime(file)
 			subDuration = now.Sub(mtime)
 			if subDuration > l.config.RotateExpire {
-				expireRotated = true
 				intlog.Printf(
 					`%v - %v = %v > %v, rotation expire logging file: %s`,
 					now, mtime, subDuration, l.config.RotateExpire, file,
 				)
-				if err := l.doRotateFile(file); err != nil {
-					intlog.Error(err)
+				if err := gfile.Remove(file); err != nil {
+					intlog.Print(err)
+					lastFiles_ = append(lastFiles_, file)
 				}
+			} else {
+				lastFiles_ = append(lastFiles_, file)
 			}
 		}
-		if expireRotated {
-			// Update the files array.
-			//files, _ = gfile.ScanDirFile(l.config.Path, pattern, true)
-			files, _ = gfile.ScanDirFile(l.config.Path, pattern, false)
-		}
+		files = lastFiles_[:]
+		lastFiles_ = lastFiles_[0:0]
 	}
 
 	// =============================================================
@@ -154,6 +153,8 @@ func (l *Logger) rotateChecksTimely() {
 			// access.20200326101301899002.log
 			if gregex.IsMatchString(`.+\.\d{20}\.log`, gfile.Basename(file)) {
 				needCompressFileArray.Append(file)
+			} else {
+				lastFiles_ = append(lastFiles_, file)
 			}
 		}
 		if needCompressFileArray.Len() > 0 {
@@ -163,16 +164,16 @@ func (l *Logger) rotateChecksTimely() {
 					intlog.Printf(`compressed done, remove original logging file: %s`, path)
 					if err = gfile.Remove(path); err != nil {
 						intlog.Print(err)
+						lastFiles_ = append(lastFiles_, path)
 					}
 				} else {
 					intlog.Print(err)
 				}
 				return true
 			})
-			// Update the files array.
-			//files, _ = gfile.ScanDirFile(l.config.Path, pattern, true)
-			files, _ = gfile.ScanDirFile(l.config.Path, pattern, false)
 		}
+		files = lastFiles_[:]
+		lastFiles_ = lastFiles_[0:0]
 	}
 
 	// =============================================================
