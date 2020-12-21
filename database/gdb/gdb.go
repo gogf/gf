@@ -438,7 +438,7 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 	if nodeSchema != "" {
 		// Value copy.
 		n := *node
-		n.Name = nodeSchema
+		//n.Name = nodeSchema
 		node = &n
 	}
 	// Cache the underlying connection pool object by node.
