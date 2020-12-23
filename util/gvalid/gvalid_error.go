@@ -168,10 +168,16 @@ func (e *Error) Strings() (errs []string) {
 		for _, v := range e.rules {
 			name, rule, _ := parseSequenceTag(v)
 			if m, ok := e.errors[name]; ok {
+				// validation error checks.
 				for _, rule := range strings.Split(rule, "|") {
-					array := strings.Split(rule, ":")
-					rule = strings.TrimSpace(array[0])
+					rule = strings.TrimSpace(strings.Split(rule, ":")[0])
 					if err, ok := m[rule]; ok {
+						errs = append(errs, err)
+					}
+				}
+				// internal error checks.
+				for k, _ := range internalErrKeyMap {
+					if err, ok := m[k]; ok {
 						errs = append(errs, err)
 					}
 				}
