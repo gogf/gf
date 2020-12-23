@@ -47,56 +47,9 @@ golang version >= 1.11
 
 # Performance
 
-Here's the most popular Golang frameworks and libraries performance testing result in `WEB Server`. Performance testing cases source codes are hosted at: https://github.com/gogf/gf-performance
+The `Web` component performance of `GoFrame`, please refer to third-party project: https://github.com/the-benchmarker/web-frameworks
 
-## Environment
 
-    OS   : Ubuntu 18.04 amd64
-    CPU  : AMD A8-6600K x 4
-    MEM  : 32GB
-    GO   : v1.13.4
-
-## Testing Tool
-
-`ab`: Apache HTTP server benchmarking tool.
-
-Command:
-```
-ab -t 10 -c 100 http://127.0.0.1:3000/hello
-ab -t 10 -c 100 http://127.0.0.1:3000/query?id=10000
-ab -t 10 -c 100 http://127.0.0.1:3000/json
-```
-The concurrency starts from `100` to `10000`.
-
-> Run `5` times for each case of each project and pick up the best testing result.
-
-## 1. Hello World
-<table>
-<tr>
-<th>Throughputs</th>
-<th>Mean Latency</th>
-<th>P99 Latency</th>
-</tr>
-<tr>
-<td width="30%"><img src="http://gfcdn.johng.cn/images/performance/throughputs1.jpeg"></td>
-<td width="30%"><img src="http://gfcdn.johng.cn/images/performance/meanlatency1.jpeg"></td>
-<td width="30%"><img src="http://gfcdn.johng.cn/images/performance/p99latency1.jpeg"></td>
-</tr>
-</table>
-
-## 2. Json Response
-<table>
-<tr>
-<th>Throughputs</th>
-<th>Mean Latency</th>
-<th>P99 Latency</th>
-</tr>
-<tr>
-<td width="30%"><img src="http://gfcdn.johng.cn/images/performance/throughputs3.jpeg"></td>
-<td width="30%"><img src="http://gfcdn.johng.cn/images/performance/meanlatency3.jpeg"></td>
-<td width="30%"><img src="http://gfcdn.johng.cn/images/performance/p99latency3.jpeg"></td>
-</tr>
-</table>
 
 # Documentation
 
@@ -137,7 +90,7 @@ This project exists thanks to all the people who contribute. [[Contributors](htt
 
 # Donators
 
-We currently accept donation by Alipay/WechatPay, please note your github/gitee account in your payment bill. If you like `GF`, why not [buy developer a cup of coffee](DONATOR.MD)?
+If you love `GF`, why not [buy developer a cup of coffee](https://itician.org/pages/viewpage.action?pageId=1115633)?
 
 # Sponsors
 We appreciate any kind of sponsorship for `GF` development. If you've got some interesting, please contact WeChat `389961817` / Email `john@goframe.org`.
