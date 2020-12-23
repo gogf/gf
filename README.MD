@@ -98,8 +98,8 @@ We appreciate any kind of sponsorship for `GF` development. If you've got some i
 
 
 # Thanks
-<a href="https://www.jetbrains.com/?from=GoFrame"><img src="https://goframe.org/images/jetbrains.png" width="100" alt="JetBrains"/></a>
-
+<a href="https://www.jetbrains.com/?from=GoFrame"><img src="https://itician.org/download/thumbnails/1114119/jetbrains.png?version=1&modificationDate=1608649325806&api=v2" height="120" alt="JetBrains"/></a>
+<a href="https://www.atlassian.com/?from=GoFrame"><img src="https://itician.org/download/thumbnails/1114119/u%3D605052180%2C3099422872%26fm%3D11%26gp%3D0.jpg?version=1&modificationDate=1608649343601&api=v2" height="120" alt="Atlassian"/></a>
 
 
 

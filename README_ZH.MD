@@ -114,5 +114,5 @@ golang版本 >= 1.11
 赞助支持`GF`框架的快速研发，如果您感兴趣，请联系 微信 `389961817` / 邮件 `john@goframe.org`。
 
 # 感谢
-<a href="https://www.jetbrains.com/?from=GoFrame"><img src="https://goframe.org/images/jetbrains.png" width="100" alt="JetBrains"/></a>
-
+<a href="https://www.jetbrains.com/?from=GoFrame"><img src="https://itician.org/download/thumbnails/1114119/jetbrains.png?version=1&modificationDate=1608649325806&api=v2" height="120" alt="JetBrains"/></a>
+<a href="https://www.atlassian.com/?from=GoFrame"><img src="https://itician.org/download/thumbnails/1114119/u%3D605052180%2C3099422872%26fm%3D11%26gp%3D0.jpg?version=1&modificationDate=1608649343601&api=v2" height="120" alt="Atlassian"/></a>
