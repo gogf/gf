@@ -33,7 +33,8 @@ func IsEmpty(value interface{}) bool {
 	if value == nil {
 		return true
 	}
-	// It firstly checks the variable as common types using assertion, and then reflection.
+	// It firstly checks the variable as common types using assertion to enhance the performance,
+	// and then using reflection.
 	switch value := value.(type) {
 	case int:
 		return value == 0
