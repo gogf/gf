@@ -59,6 +59,7 @@ func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType s
 		"big_int",
 		"bigint",
 		"bigserial":
+		"int8"
 		if gstr.ContainsI(fieldType, "unsigned") {
 			gconv.Uint64(gconv.String(fieldValue))
 		}
