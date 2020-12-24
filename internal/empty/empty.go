@@ -104,13 +104,40 @@ func IsEmpty(value interface{}) bool {
 		} else {
 			rv = reflect.ValueOf(value)
 		}
+
 		switch rv.Kind() {
+		case reflect.Bool:
+			return !rv.Bool()
+		case reflect.Int,
+			reflect.Int8,
+			reflect.Int16,
+			reflect.Int32,
+			reflect.Int64:
+			return rv.Int() == 0
+		case reflect.Uint,
+			reflect.Uint8,
+			reflect.Uint16,
+			reflect.Uint32,
+			reflect.Uint64,
+			reflect.Uintptr:
+			return rv.Uint() == 0
+		case reflect.Float32,
+			reflect.Float64:
+			return rv.Float() == 0
+		case reflect.String:
+			return rv.Len() == 0
+		case reflect.Struct:
+			for i := 0; i < rv.NumField(); i++ {
+				if !IsEmpty(rv) {
+					return false
+				}
+			}
+			return true
 		case reflect.Chan,
 			reflect.Map,
 			reflect.Slice,
 			reflect.Array:
 			return rv.Len() == 0
-
 		case reflect.Func,
 			reflect.Ptr,
 			reflect.Interface,
