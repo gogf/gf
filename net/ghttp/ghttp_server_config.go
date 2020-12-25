@@ -309,6 +309,7 @@ func (s *Server) SetConfigWithMap(m map[string]interface{}) error {
 		m[k] = gfile.StrToSize(gconv.String(v))
 	}
 	// Update the current configuration object.
+	// It only updates the configured keys not all the object.
 	if err := gconv.Struct(m, &s.config); err != nil {
 		return err
 	}

@@ -26,6 +26,11 @@ func (r *Request) GetCtx() context.Context {
 	return r.Context()
 }
 
+// SetCtx custom context for current request.
+func (r *Request) SetCtx(ctx context.Context) {
+	r.context = ctx
+}
+
 // GetCtxVar retrieves and returns a Var with given key name.
 // The optional parameter <def> specifies the default value of the Var if given <key>
 // does not exist in the context.
