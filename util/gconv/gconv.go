@@ -729,7 +729,8 @@ func Decimal(i interface{}) decimal.Decimal {
 	case float64:
 		return decimal.NewFromFloat(value)
 	case []byte:
-		return decimal.RequireFromString(string(value))
+		v, _ := decimal.NewFromString(string(value))
+		return v
 	default:
 		v, _ := strconv.ParseFloat(String(i), 64)
 		return decimal.NewFromFloat(v)
