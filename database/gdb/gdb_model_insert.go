@@ -25,6 +25,8 @@ func (m *Model) Batch(batch int) *Model {
 
 // Data sets the operation data for the model.
 // The parameter <data> can be type of string/map/gmap/slice/struct/*struct, etc.
+// Note that, it uses shallow value copying for `data` if `data` is type of map/slice
+// to avoid changing it inside function.
 // Eg:
 // Data("uid=10000")
 // Data("uid", 10000)
@@ -34,8 +36,7 @@ func (m *Model) Batch(batch int) *Model {
 func (m *Model) Data(data ...interface{}) *Model {
 	model := m.getModel()
 	if len(data) > 1 {
-		s := gconv.String(data[0])
-		if gstr.Contains(s, "?") {
+		if s := gconv.String(data[0]); gstr.Contains(s, "?") {
 			model.data = s
 			model.extraArgs = data[1:]
 		} else {
@@ -52,9 +53,13 @@ func (m *Model) Data(data ...interface{}) *Model {
 		case Record:
 			model.data = params.Map()
 		case List:
-			model.data = params
+			list := make(List, len(params))
+			for k, v := range params {
+				list[k] = gutil.MapCopy(v)
+			}
+			model.data = list
 		case Map:
-			model.data = params
+			model.data = gutil.MapCopy(params)
 		default:
 			var (
 				rv   = reflect.ValueOf(params)

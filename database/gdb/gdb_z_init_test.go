@@ -114,7 +114,7 @@ func createTableWithDb(db gdb.DB, table ...string) (name string) {
 	case "sqlite":
 		if _, err := db.Exec(fmt.Sprintf(`
 		CREATE TABLE %s (
-		   id bigint  NOT NULL,
+		   id bigint unsigned NOT NULL AUTO_INCREMENT,
 		   passport varchar(45),
 		   password char(32) NOT NULL,
 		   nickname varchar(45) NOT NULL,
