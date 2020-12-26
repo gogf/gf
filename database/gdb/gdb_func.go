@@ -326,7 +326,7 @@ func GetWhereConditionOfStruct(pointer interface{}) (where string, args []interf
 			return array[0], []interface{}{field.Value()}, nil
 		}
 		if len(where) > 0 {
-			where += " "
+			where += " AND "
 		}
 		where += field.TagValue + "=?"
 		args = append(args, field.Value())
