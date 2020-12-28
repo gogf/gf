@@ -44,7 +44,7 @@ type Config struct {
 // DefaultConfig returns the default configuration for logger.
 func DefaultConfig() Config {
 	c := Config{
-		File:                gDEFAULT_FILE_FORMAT,
+		File:                defaultFileFormat,
 		Flags:               F_TIME_STD,
 		Level:               LEVEL_ALL,
 		StStatus:            1,

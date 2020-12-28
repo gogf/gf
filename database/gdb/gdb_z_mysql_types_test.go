@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -16,7 +16,6 @@ import (
 )
 
 func Test_Types(t *testing.T) {
-
 	gtest.C(t, func(t *gtest.T) {
 		if _, err := db.Exec(fmt.Sprintf(`
     CREATE TABLE IF NOT EXISTS types (
@@ -32,8 +31,16 @@ func Test_Types(t *testing.T) {
         %s bool NOT NULL,
         PRIMARY KEY (id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-    `, "`blob`", "`binary`", "`date`", "`time`",
-			"`decimal`", "`double`", "`bit`", "`tinyint`", "`bool`")); err != nil {
+    `,
+			"`blob`",
+			"`binary`",
+			"`date`",
+			"`time`",
+			"`decimal`",
+			"`double`",
+			"`bit`",
+			"`tinyint`",
+			"`bool`")); err != nil {
 			gtest.Error(err)
 		}
 		defer dropTable("types")
@@ -41,7 +48,7 @@ func Test_Types(t *testing.T) {
 			"id":      1,
 			"blob":    "i love gf",
 			"binary":  []byte("abcdefgh"),
-			"date":    "2018-10-24",
+			"date":    "1880-10-24",
 			"time":    "10:00:01",
 			"decimal": -123.456,
 			"double":  -123.456,

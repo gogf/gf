@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -8,6 +8,8 @@ package gdb
 
 import (
 	"fmt"
+	"github.com/go-sql-driver/mysql"
+	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/os/gcmd"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/test/gtest"
@@ -45,7 +47,7 @@ func init() {
 		MaxOpenConnCount: 10,
 		MaxConnLifetime:  600,
 	}
-	AddConfigNode(DEFAULT_GROUP_NAME, configNode)
+	AddConfigNode(DefaultGroupName, configNode)
 	// Default db.
 	if r, err := New(); err != nil {
 		gtest.Error(err)
@@ -75,13 +77,13 @@ func Test_Func_FormatSqlWithArgs(t *testing.T) {
 	// mssql
 	gtest.C(t, func(t *gtest.T) {
 		var s string
-		s = FormatSqlWithArgs("select * from table where id>=@v1 and sex=@v2", []interface{}{100, 1})
+		s = FormatSqlWithArgs("select * from table where id>=@p1 and sex=@p2", []interface{}{100, 1})
 		t.Assert(s, "select * from table where id>=100 and sex=1")
 	})
 	// pgsql
 	gtest.C(t, func(t *gtest.T) {
 		var s string
-		s = FormatSqlWithArgs("select * from table where id>=$v1 and sex=$v2", []interface{}{100, 1})
+		s = FormatSqlWithArgs("select * from table where id>=$1 and sex=$2", []interface{}{100, 1})
 		t.Assert(s, "select * from table where id>=100 and sex=1")
 	})
 	// oracle
@@ -203,9 +205,9 @@ CREATE TABLE %s (
 
 	gtest.C(t, func(t *gtest.T) {
 		model := db.Table(table1)
-		gtest.Assert(model.getSoftFieldNameCreate(table2), "createat")
-		gtest.Assert(model.getSoftFieldNameUpdate(table2), "updateat")
-		gtest.Assert(model.getSoftFieldNameDelete(table2), "deleteat")
+		gtest.Assert(model.getSoftFieldNameCreated(table2), "createat")
+		gtest.Assert(model.getSoftFieldNameUpdated(table2), "updateat")
+		gtest.Assert(model.getSoftFieldNameDeleted(table2), "deleteat")
 	})
 }
 
@@ -287,5 +289,50 @@ CREATE TABLE %s (
 			model.getConditionForSoftDeleting(),
 			"`t1`.`delete_at` IS NULL AND `t2`.`deleteat` IS NULL AND `t3`.`deleteat` IS NULL",
 		)
+	})
+}
+
+// Fix issue: https://github.com/gogf/gf/issues/819
+func Test_Func_ConvertDataForTableRecord(t *testing.T) {
+	type Test struct {
+		ResetPasswordTokenAt mysql.NullTime `orm:"reset_password_token_at"`
+	}
+	gtest.C(t, func(t *gtest.T) {
+		m := ConvertDataForTableRecord(new(Test))
+		t.Assert(len(m), 1)
+		t.AssertNE(m["reset_password_token_at"], nil)
+		t.Assert(m["reset_password_token_at"], new(mysql.NullTime))
+	})
+}
+
+func Test_isSubQuery(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(isSubQuery("user"), false)
+		t.Assert(isSubQuery("user.uid"), false)
+		t.Assert(isSubQuery("u, user.uid"), false)
+		t.Assert(isSubQuery("select 1"), true)
+	})
+}
+
+func TestResult_Structs1(t *testing.T) {
+	type A struct {
+		Id int `orm:"id"`
+	}
+	type B struct {
+		*A
+		Name string
+	}
+	gtest.C(t, func(t *gtest.T) {
+		r := Result{
+			Record{"id": gvar.New(nil), "name": gvar.New("john")},
+			Record{"id": gvar.New(nil), "name": gvar.New("smith")},
+		}
+		array := make([]*B, 2)
+		err := r.Structs(&array)
+		t.Assert(err, nil)
+		t.Assert(array[0].Id, 0)
+		t.Assert(array[1].Id, 0)
+		t.Assert(array[0].Name, "john")
+		t.Assert(array[1].Name, "smith")
 	})
 }

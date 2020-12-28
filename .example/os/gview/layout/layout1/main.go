@@ -2,19 +2,18 @@ package main
 
 import (
 	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/frame/gmvc"
+	"github.com/gogf/gf/net/ghttp"
 )
 
-type Controller struct {
-	gmvc.Controller
-}
-
-func (c *Controller) Test() {
-	c.View.Display("layout.html")
-}
 func main() {
 	s := g.Server()
-	s.BindControllerMethod("/", new(Controller), "Test")
+	s.BindHandler("/", func(r *ghttp.Request) {
+		r.Response.WriteTpl("layout.html", g.Map{
+			"header":    "This is header",
+			"container": "This is container",
+			"footer":    "This is footer",
+		})
+	})
 	s.SetPort(8199)
 	s.Run()
 }

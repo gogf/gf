@@ -16,6 +16,7 @@ import (
 )
 
 func Test_New(t *testing.T) {
+	// time.Time
 	gtest.C(t, func(t *gtest.T) {
 		timeNow := time.Now()
 		timeTemp := gtime.New(timeNow)
@@ -23,6 +24,23 @@ func Test_New(t *testing.T) {
 
 		timeTemp1 := gtime.New()
 		t.Assert(timeTemp1.Time, time.Time{})
+	})
+	// string
+	gtest.C(t, func(t *gtest.T) {
+		timeNow := gtime.Now()
+		timeTemp := gtime.New(timeNow.String())
+		t.Assert(timeTemp.Time.Format("2006-01-02 15:04:05"), timeNow.Time.Format("2006-01-02 15:04:05"))
+	})
+	gtest.C(t, func(t *gtest.T) {
+		timeNow := gtime.Now()
+		timeTemp := gtime.New(timeNow.TimestampMicroStr())
+		t.Assert(timeTemp.Time.Format("2006-01-02 15:04:05"), timeNow.Time.Format("2006-01-02 15:04:05"))
+	})
+	// int64
+	gtest.C(t, func(t *gtest.T) {
+		timeNow := gtime.Now()
+		timeTemp := gtime.New(timeNow.TimestampMicro())
+		t.Assert(timeTemp.Time.Format("2006-01-02 15:04:05"), timeNow.Time.Format("2006-01-02 15:04:05"))
 	})
 }
 
@@ -42,7 +60,7 @@ func Test_NewFromStr(t *testing.T) {
 		timeTemp := gtime.NewFromStr("2006-01-02 15:04:05")
 		t.Assert(timeTemp.Format("Y-m-d H:i:s"), "2006-01-02 15:04:05")
 
-		timeTemp1 := gtime.NewFromStr("20060102")
+		timeTemp1 := gtime.NewFromStr("2006.0102")
 		if timeTemp1 != nil {
 			t.Error("test fail")
 		}
@@ -57,7 +75,7 @@ func Test_String(t *testing.T) {
 
 		t2 := *t1
 		t.Assert(t2.String(), "2006-01-02 15:04:05")
-		t.Assert(fmt.Sprintf("%s", t2), "{2006-01-02 15:04:05}")
+		t.Assert(fmt.Sprintf("{%s}", t2.String()), "{2006-01-02 15:04:05}")
 	})
 }
 
@@ -170,7 +188,7 @@ func Test_ToTime(t *testing.T) {
 func Test_Add(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.NewFromStr("2006-01-02 15:04:05")
-		timeTemp.Add(time.Second)
+		timeTemp = timeTemp.Add(time.Second)
 		t.Assert(timeTemp.Format("Y-m-d H:i:s"), "2006-01-02 15:04:06")
 	})
 }
@@ -178,15 +196,14 @@ func Test_Add(t *testing.T) {
 func Test_ToZone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.Now()
-		//
-		timeTemp.ToZone("America/Los_Angeles")
+		timeTemp, _ = timeTemp.ToZone("America/Los_Angeles")
 		t.Assert(timeTemp.Time.Location().String(), "America/Los_Angeles")
 
 		loc, err := time.LoadLocation("Asia/Shanghai")
 		if err != nil {
 			t.Error("test fail")
 		}
-		timeTemp.ToLocation(loc)
+		timeTemp = timeTemp.ToLocation(loc)
 		t.Assert(timeTemp.Time.Location().String(), "Asia/Shanghai")
 
 		timeTemp1, _ := timeTemp.ToZone("errZone")
@@ -199,7 +216,7 @@ func Test_ToZone(t *testing.T) {
 func Test_AddDate(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.NewFromStr("2006-01-02 15:04:05")
-		timeTemp.AddDate(1, 2, 3)
+		timeTemp = timeTemp.AddDate(1, 2, 3)
 		t.Assert(timeTemp.Format("Y-m-d H:i:s"), "2007-03-05 15:04:05")
 	})
 }
@@ -226,7 +243,7 @@ func Test_Round(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.Now()
 		timeTemp1 := timeTemp.Time
-		timeTemp.Round(time.Hour)
+		timeTemp = timeTemp.Round(time.Hour)
 		t.Assert(timeTemp.UnixNano(), timeTemp1.Round(time.Hour).UnixNano())
 	})
 }
@@ -235,7 +252,7 @@ func Test_Truncate(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timeTemp := gtime.Now()
 		timeTemp1 := timeTemp.Time
-		timeTemp.Truncate(time.Hour)
+		timeTemp = timeTemp.Truncate(time.Hour)
 		t.Assert(timeTemp.UnixNano(), timeTemp1.Truncate(time.Hour).UnixNano())
 	})
 }

@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -59,7 +59,7 @@ func (tx *TX) GetAll(sql string, args ...interface{}) (Result, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	return tx.db.rowsToResult(rows)
+	return tx.db.convertRowsToResult(rows)
 }
 
 // GetOne queries and returns one record from database.
@@ -115,7 +115,6 @@ func (tx *TX) GetScan(objPointer interface{}, sql string, args ...interface{}) e
 	default:
 		return fmt.Errorf("element type should be type of struct/slice, unsupported: %v", k)
 	}
-	return nil
 }
 
 // GetValue queries and returns the field value from database.
@@ -154,7 +153,10 @@ func (tx *TX) GetCount(sql string, args ...interface{}) (int, error) {
 //
 // The parameter <batch> specifies the batch operation count when given data is slice.
 func (tx *TX) Insert(table string, data interface{}, batch ...int) (sql.Result, error) {
-	return tx.db.DoInsert(tx.tx, table, data, gINSERT_OPTION_DEFAULT, batch...)
+	if len(batch) > 0 {
+		return tx.Model(table).Data(data).Batch(batch[0]).Insert()
+	}
+	return tx.Model(table).Data(data).Insert()
 }
 
 // InsertIgnore does "INSERT IGNORE INTO ..." statement for the table.
@@ -167,7 +169,10 @@ func (tx *TX) Insert(table string, data interface{}, batch ...int) (sql.Result, 
 //
 // The parameter <batch> specifies the batch operation count when given data is slice.
 func (tx *TX) InsertIgnore(table string, data interface{}, batch ...int) (sql.Result, error) {
-	return tx.db.DoInsert(tx.tx, table, data, gINSERT_OPTION_IGNORE, batch...)
+	if len(batch) > 0 {
+		return tx.Model(table).Data(data).Batch(batch[0]).InsertIgnore()
+	}
+	return tx.Model(table).Data(data).InsertIgnore()
 }
 
 // Replace does "REPLACE INTO ..." statement for the table.
@@ -183,7 +188,10 @@ func (tx *TX) InsertIgnore(table string, data interface{}, batch ...int) (sql.Re
 // If given data is type of slice, it then does batch replacing, and the optional parameter
 // <batch> specifies the batch operation count.
 func (tx *TX) Replace(table string, data interface{}, batch ...int) (sql.Result, error) {
-	return tx.db.DoInsert(tx.tx, table, data, gINSERT_OPTION_REPLACE, batch...)
+	if len(batch) > 0 {
+		return tx.Model(table).Data(data).Batch(batch[0]).Replace()
+	}
+	return tx.Model(table).Data(data).Replace()
 }
 
 // Save does "INSERT INTO ... ON DUPLICATE KEY UPDATE..." statement for the table.
@@ -198,31 +206,46 @@ func (tx *TX) Replace(table string, data interface{}, batch ...int) (sql.Result,
 // If given data is type of slice, it then does batch saving, and the optional parameter
 // <batch> specifies the batch operation count.
 func (tx *TX) Save(table string, data interface{}, batch ...int) (sql.Result, error) {
-	return tx.db.DoInsert(tx.tx, table, data, gINSERT_OPTION_SAVE, batch...)
+	if len(batch) > 0 {
+		return tx.Model(table).Data(data).Batch(batch[0]).Save()
+	}
+	return tx.Model(table).Data(data).Save()
 }
 
 // BatchInsert batch inserts data.
 // The parameter <list> must be type of slice of map or struct.
 func (tx *TX) BatchInsert(table string, list interface{}, batch ...int) (sql.Result, error) {
-	return tx.db.DoBatchInsert(tx.tx, table, list, gINSERT_OPTION_DEFAULT, batch...)
+	if len(batch) > 0 {
+		return tx.Model(table).Data(list).Batch(batch[0]).Insert()
+	}
+	return tx.Model(table).Data(list).Insert()
 }
 
 // BatchInsert batch inserts data with ignore option.
 // The parameter <list> must be type of slice of map or struct.
 func (tx *TX) BatchInsertIgnore(table string, list interface{}, batch ...int) (sql.Result, error) {
-	return tx.db.DoBatchInsert(tx.tx, table, list, gINSERT_OPTION_IGNORE, batch...)
+	if len(batch) > 0 {
+		return tx.Model(table).Data(list).Batch(batch[0]).InsertIgnore()
+	}
+	return tx.Model(table).Data(list).InsertIgnore()
 }
 
 // BatchReplace batch replaces data.
 // The parameter <list> must be type of slice of map or struct.
 func (tx *TX) BatchReplace(table string, list interface{}, batch ...int) (sql.Result, error) {
-	return tx.db.DoBatchInsert(tx.tx, table, list, gINSERT_OPTION_REPLACE, batch...)
+	if len(batch) > 0 {
+		return tx.Model(table).Data(list).Batch(batch[0]).Replace()
+	}
+	return tx.Model(table).Data(list).Replace()
 }
 
 // BatchSave batch replaces data.
 // The parameter <list> must be type of slice of map or struct.
 func (tx *TX) BatchSave(table string, list interface{}, batch ...int) (sql.Result, error) {
-	return tx.db.DoBatchInsert(tx.tx, table, list, gINSERT_OPTION_SAVE, batch...)
+	if len(batch) > 0 {
+		return tx.Model(table).Data(list).Batch(batch[0]).Save()
+	}
+	return tx.Model(table).Data(list).Save()
 }
 
 // Update does "UPDATE ... " statement for the table.
@@ -240,11 +263,7 @@ func (tx *TX) BatchSave(table string, list interface{}, batch ...int) (sql.Resul
 // "age IN(?,?)", 18, 50
 // User{ Id : 1, UserName : "john"}
 func (tx *TX) Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error) {
-	newWhere, newArgs := formatWhere(tx.db, condition, args, false)
-	if newWhere != "" {
-		newWhere = " WHERE " + newWhere
-	}
-	return tx.db.DoUpdate(tx.tx, table, data, newWhere, newArgs...)
+	return tx.Model(table).Data(data).Where(condition, args...).Update()
 }
 
 // Delete does "DELETE FROM ... " statement for the table.
@@ -259,9 +278,5 @@ func (tx *TX) Update(table string, data interface{}, condition interface{}, args
 // "age IN(?,?)", 18, 50
 // User{ Id : 1, UserName : "john"}
 func (tx *TX) Delete(table string, condition interface{}, args ...interface{}) (sql.Result, error) {
-	newWhere, newArgs := formatWhere(tx.db, condition, args, false)
-	if newWhere != "" {
-		newWhere = " WHERE " + newWhere
-	}
-	return tx.db.DoDelete(tx.tx, table, newWhere, newArgs...)
+	return tx.Model(table).Where(condition, args...).Delete()
 }

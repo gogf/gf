@@ -25,7 +25,7 @@ func Benchmark_TryCatch(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		TryCatch(func() {
 
-		}, func(err interface{}) {
+		}, func(err error) {
 
 		})
 	}

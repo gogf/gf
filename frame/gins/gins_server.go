@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -13,21 +13,21 @@ import (
 )
 
 const (
-	gFRAME_CORE_COMPONENT_NAME_SERVER = "gf.core.component.server"
-	gSERVER_NODE_NAME                 = "server"
+	frameCoreComponentNameServer = "gf.core.component.server"
+	configNodeNameServer         = "server"
 )
 
 // Server returns an instance of http server with specified name.
 func Server(name ...interface{}) *ghttp.Server {
-	instanceKey := fmt.Sprintf("%s.%v", gFRAME_CORE_COMPONENT_NAME_SERVER, name)
+	instanceKey := fmt.Sprintf("%s.%v", frameCoreComponentNameServer, name)
 	return instances.GetOrSetFuncLock(instanceKey, func() interface{} {
 		s := ghttp.GetServer(name...)
 		// To avoid file no found error while it's not necessary.
 		if Config().Available() {
 			var m map[string]interface{}
-			nodeKey, _ := gutil.MapPossibleItemByKey(Config().GetMap("."), gSERVER_NODE_NAME)
+			nodeKey, _ := gutil.MapPossibleItemByKey(Config().GetMap("."), configNodeNameServer)
 			if nodeKey == "" {
-				nodeKey = gSERVER_NODE_NAME
+				nodeKey = configNodeNameServer
 			}
 			m = Config().GetMap(fmt.Sprintf(`%s.%s`, nodeKey, s.GetName()))
 			if len(m) == 0 {

@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -57,7 +57,7 @@ func init() {
 	nodePrefix.Prefix = PREFIX1
 	gdb.AddConfigNode("test", configNode)
 	gdb.AddConfigNode("prefix", nodePrefix)
-	gdb.AddConfigNode(gdb.DEFAULT_GROUP_NAME, configNode)
+	gdb.AddConfigNode(gdb.DefaultGroupName, configNode)
 	// Default db.
 	if r, err := gdb.New(); err != nil {
 		gtest.Error(err)
@@ -114,7 +114,7 @@ func createTableWithDb(db gdb.DB, table ...string) (name string) {
 	case "sqlite":
 		if _, err := db.Exec(fmt.Sprintf(`
 		CREATE TABLE %s (
-		   id bigint  NOT NULL,
+		   id bigint unsigned NOT NULL AUTO_INCREMENT,
 		   passport varchar(45),
 		   password char(32) NOT NULL,
 		   nickname varchar(45) NOT NULL,

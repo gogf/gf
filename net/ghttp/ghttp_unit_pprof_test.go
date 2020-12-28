@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
 	. "github.com/gogf/gf/test/gtest"
 )
 
@@ -28,7 +27,7 @@ func TestServer_EnablePProf(t *testing.T) {
 		s.Start()
 		defer s.Shutdown()
 		time.Sleep(100 * time.Millisecond)
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		r, err := client.Get("/pprof/index")

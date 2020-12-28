@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -8,8 +8,8 @@ package gdb
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/text/gstr"
@@ -31,6 +31,7 @@ func (d *DriverMysql) New(core *Core, node *ConfigNode) (DB, error) {
 }
 
 // Open creates and returns a underlying sql.DB object for mysql.
+// Note that it converts time.Time argument to local timezone in default.
 func (d *DriverMysql) Open(config *ConfigNode) (*sql.DB, error) {
 	var source string
 	if config.LinkInfo != "" {
@@ -41,7 +42,7 @@ func (d *DriverMysql) Open(config *ConfigNode) (*sql.DB, error) {
 		}
 	} else {
 		source = fmt.Sprintf(
-			"%s:%s@tcp(%s:%s)/%s?charset=%s&multiStatements=true&parseTime=true&loc=Local",
+			"%s:%s@tcp(%s:%s)/%s?charset=%s&multiStatements=true&parseTime=true",
 			config.User, config.Pass, config.Host, config.Port, config.Name, config.Charset,
 		)
 	}
@@ -96,27 +97,29 @@ func (d *DriverMysql) TableFields(table string, schema ...string) (fields map[st
 	charL, charR := d.GetChars()
 	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
-		return nil, errors.New("function TableFields supports only single table operations")
+		return nil, gerror.New("function TableFields supports only single table operations")
 	}
 	checkSchema := d.schema.Val()
 	if len(schema) > 0 && schema[0] != "" {
 		checkSchema = schema[0]
 	}
-	v := d.cache.GetOrSetFunc(
-		fmt.Sprintf(`mysql_table_fields_%s_%s`, table, checkSchema),
-		func() interface{} {
-			var result Result
-			var link *sql.DB
+	v, _ := internalCache.GetOrSetFunc(
+		fmt.Sprintf(`mysql_table_fields_%s_%s@group:%s`, table, checkSchema, d.GetGroup()),
+		func() (interface{}, error) {
+			var (
+				result Result
+				link   *sql.DB
+			)
 			link, err = d.DB.GetSlave(checkSchema)
 			if err != nil {
-				return nil
+				return nil, err
 			}
 			result, err = d.DB.DoGetAll(
 				link,
 				fmt.Sprintf(`SHOW FULL COLUMNS FROM %s`, d.DB.QuoteWord(table)),
 			)
 			if err != nil {
-				return nil
+				return nil, err
 			}
 			fields = make(map[string]*TableField)
 			for i, m := range result {
@@ -131,7 +134,7 @@ func (d *DriverMysql) TableFields(table string, schema ...string) (fields map[st
 					Comment: m["Comment"].String(),
 				}
 			}
-			return fields
+			return fields, nil
 		}, 0)
 	if err == nil {
 		fields = v.(map[string]*TableField)

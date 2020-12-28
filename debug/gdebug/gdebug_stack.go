@@ -68,6 +68,7 @@ func StackWithFilters(filters []string, skip ...int) string {
 				file[0:len(goRootForFilter)] == goRootForFilter {
 				continue
 			}
+			// Custom filtering.
 			filtered = false
 			for _, filter := range filters {
 				if filter != "" && strings.Contains(file, filter) {

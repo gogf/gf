@@ -153,7 +153,7 @@ func (d *Domain) BindHookHandlerByMap(pattern string, hookmap map[string]Handler
 
 func (d *Domain) BindStatusHandler(status int, handler HandlerFunc) {
 	for domain, _ := range d.domains {
-		d.server.setStatusHandler(d.server.statusHandlerKey(status, domain), handler)
+		d.server.addStatusHandler(d.server.statusHandlerKey(status, domain), handler)
 	}
 }
 

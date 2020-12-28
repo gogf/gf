@@ -73,6 +73,28 @@ func Test_Basic(t *testing.T) {
 	})
 }
 
+func Test_TranslateFormat(t *testing.T) {
+	// Tf
+	gtest.C(t, func(t *gtest.T) {
+		i18n := gi18n.New(gi18n.Options{
+			Path: gdebug.TestDataPath("i18n"),
+		})
+		i18n.SetLanguage("none")
+		t.Assert(i18n.Tf("{#hello}{#world} %d", 2020), "{#hello}{#world} 2020")
+
+		i18n.SetLanguage("ja")
+		t.Assert(i18n.Tf("{#hello}{#world} %d", 2020), "こんにちは世界 2020")
+	})
+	// Tfl
+	gtest.C(t, func(t *gtest.T) {
+		i18n := gi18n.New(gi18n.Options{
+			Path: gdebug.TestDataPath("i18n"),
+		})
+		t.Assert(i18n.Tfl("ja", "{#hello}{#world} %d", 2020), "こんにちは世界 2020")
+		t.Assert(i18n.Tfl("zh-CN", "{#hello}{#world} %d", 2020), "你好世界 2020")
+	})
+}
+
 func Test_DefaultManager(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		err := gi18n.SetPath(gdebug.TestDataPath("i18n"))

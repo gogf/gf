@@ -33,6 +33,7 @@ func Scan(params interface{}, pointer interface{}, mapping ...map[string]string)
 // parameter <pointer> to implement the converting..
 // It calls function StructDeep if <pointer> is type of *struct/**struct to do the converting.
 // It calls function StructsDeep if <pointer> is type of *[]struct/*[]*struct to do the converting.
+// Deprecated, use Scan instead.
 func ScanDeep(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
 	t := reflect.TypeOf(pointer)
 	k := t.Kind()

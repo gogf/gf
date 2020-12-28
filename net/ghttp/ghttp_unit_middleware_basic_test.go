@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -50,7 +50,7 @@ func Test_BindMiddleware_Basic1(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent("/"), "Not Found")
@@ -77,7 +77,7 @@ func Test_BindMiddleware_Basic2(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent("/"), "12")
@@ -117,7 +117,7 @@ func Test_BindMiddleware_Basic3(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent("/"), "Not Found")
@@ -153,7 +153,7 @@ func Test_BindMiddleware_Basic4(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent("/"), "Not Found")
@@ -182,7 +182,7 @@ func Test_Middleware_With_Static(t *testing.T) {
 	defer s.Shutdown()
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent("/"), "index")
@@ -210,7 +210,7 @@ func Test_Middleware_Status(t *testing.T) {
 	defer s.Shutdown()
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent("/"), "Not Found")
@@ -228,14 +228,14 @@ func Test_Middleware_Hook_With_Static(t *testing.T) {
 	s := g.Server(p)
 	a := garray.New(true)
 	s.Group("/", func(group *ghttp.RouterGroup) {
-		group.Hook("/*", ghttp.HOOK_BEFORE_SERVE, func(r *ghttp.Request) {
+		group.Hook("/*", ghttp.HookBeforeServe, func(r *ghttp.Request) {
 			a.Append(1)
-			fmt.Println("HOOK_BEFORE_SERVE")
+			fmt.Println("HookBeforeServe")
 			r.Response.Write("a")
 		})
-		group.Hook("/*", ghttp.HOOK_AFTER_SERVE, func(r *ghttp.Request) {
+		group.Hook("/*", ghttp.HookAfterServe, func(r *ghttp.Request) {
 			a.Append(1)
-			fmt.Println("HOOK_AFTER_SERVE")
+			fmt.Println("HookAfterServe")
 			r.Response.Write("b")
 		})
 		group.Middleware(func(r *ghttp.Request) {
@@ -254,7 +254,7 @@ func Test_Middleware_Hook_With_Static(t *testing.T) {
 	defer s.Shutdown()
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		// The length assert sometimes fails, so I added time.Sleep here for debug purpose.
@@ -293,7 +293,7 @@ func Test_BindMiddleware_Status(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent("/"), "Not Found")
@@ -326,7 +326,7 @@ func Test_BindMiddlewareDefault_Basic1(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent("/"), "1342")
@@ -357,7 +357,7 @@ func Test_BindMiddlewareDefault_Basic2(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent("/"), "1342")
@@ -388,7 +388,7 @@ func Test_BindMiddlewareDefault_Basic3(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent("/"), "12")
@@ -417,7 +417,7 @@ func Test_BindMiddlewareDefault_Basic4(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent("/"), "21")
@@ -446,7 +446,7 @@ func Test_BindMiddlewareDefault_Basic5(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent("/"), "12")
@@ -470,7 +470,7 @@ func Test_BindMiddlewareDefault_Status(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent("/"), "Not Found")
@@ -521,7 +521,7 @@ func Test_BindMiddlewareDefault_Basic6(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent("/"), "13100Object Index20042")
@@ -539,16 +539,16 @@ func Test_Hook_Middleware_Basic1(t *testing.T) {
 	s.BindHandler("/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test")
 	})
-	s.BindHookHandler("/*", ghttp.HOOK_BEFORE_SERVE, func(r *ghttp.Request) {
+	s.BindHookHandler("/*", ghttp.HookBeforeServe, func(r *ghttp.Request) {
 		r.Response.Write("a")
 	})
-	s.BindHookHandler("/*", ghttp.HOOK_AFTER_SERVE, func(r *ghttp.Request) {
+	s.BindHookHandler("/*", ghttp.HookAfterServe, func(r *ghttp.Request) {
 		r.Response.Write("b")
 	})
-	s.BindHookHandler("/*", ghttp.HOOK_BEFORE_SERVE, func(r *ghttp.Request) {
+	s.BindHookHandler("/*", ghttp.HookBeforeServe, func(r *ghttp.Request) {
 		r.Response.Write("c")
 	})
-	s.BindHookHandler("/*", ghttp.HOOK_AFTER_SERVE, func(r *ghttp.Request) {
+	s.BindHookHandler("/*", ghttp.HookAfterServe, func(r *ghttp.Request) {
 		r.Response.Write("d")
 	})
 	s.BindMiddlewareDefault(func(r *ghttp.Request) {
@@ -568,7 +568,7 @@ func Test_Hook_Middleware_Basic1(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent("/"), "ac1342bd")
@@ -606,7 +606,7 @@ func Test_Middleware_CORSAndAuth(t *testing.T) {
 	defer s.Shutdown()
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		// Common Checks.
 		t.Assert(client.GetContent("/"), "Not Found")
@@ -671,7 +671,7 @@ func Test_Middleware_Scope(t *testing.T) {
 	defer s.Shutdown()
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent("/"), "Not Found")
@@ -706,7 +706,7 @@ func Test_Middleware_Panic(t *testing.T) {
 	defer s.Shutdown()
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent("/"), "error")

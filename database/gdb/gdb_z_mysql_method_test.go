@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -9,6 +9,7 @@ package gdb_test
 import (
 	"fmt"
 	"github.com/gogf/gf/container/garray"
+	"github.com/gogf/gf/encoding/gparser"
 	"testing"
 	"time"
 
@@ -180,6 +181,119 @@ func Test_DB_Insert(t *testing.T) {
 		t.Assert(one["password"].String(), "25d55ad283aa400af464c76d71qw07ad")
 		t.Assert(one["nickname"].String(), "T200")
 		t.Assert(one["create_time"].GTime().String(), timeStr)
+	})
+}
+
+// Fix issue: https://github.com/gogf/gf/issues/819
+func Test_DB_Insert_WithStructAndSliceAttribute(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		type Password struct {
+			Salt string `json:"salt"`
+			Pass string `json:"pass"`
+		}
+		data := g.Map{
+			"id":          1,
+			"passport":    "t1",
+			"password":    &Password{"123", "456"},
+			"nickname":    []string{"A", "B", "C"},
+			"create_time": gtime.Now().String(),
+		}
+		_, err := db.Insert(table, data)
+		t.Assert(err, nil)
+
+		one, err := db.GetOne(fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 1)
+		t.Assert(err, nil)
+		t.Assert(one["passport"], data["passport"])
+		t.Assert(one["create_time"], data["create_time"])
+		t.Assert(one["nickname"], gparser.MustToJson(data["nickname"]))
+	})
+}
+
+func Test_DB_Insert_KeyFieldNameMapping(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id         int
+			Passport   string
+			Password   string
+			Nickname   string
+			CreateTime string
+		}
+		data := User{
+			Id:         1,
+			Passport:   "user_1",
+			Password:   "pass_1",
+			Nickname:   "name_1",
+			CreateTime: "2020-10-10 12:00:01",
+		}
+		_, err := db.Insert(table, data)
+		t.Assert(err, nil)
+
+		one, err := db.GetOne(fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 1)
+		t.Assert(err, nil)
+		t.Assert(one["passport"], data.Passport)
+		t.Assert(one["create_time"], data.CreateTime)
+		t.Assert(one["nickname"], data.Nickname)
+	})
+}
+
+func Test_DB_Upadte_KeyFieldNameMapping(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id         int
+			Passport   string
+			Password   string
+			Nickname   string
+			CreateTime string
+		}
+		data := User{
+			Id:         1,
+			Passport:   "user_10",
+			Password:   "pass_10",
+			Nickname:   "name_10",
+			CreateTime: "2020-10-10 12:00:01",
+		}
+		_, err := db.Update(table, data, "id=1")
+		t.Assert(err, nil)
+
+		one, err := db.GetOne(fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 1)
+		t.Assert(err, nil)
+		t.Assert(one["passport"], data.Passport)
+		t.Assert(one["create_time"], data.CreateTime)
+		t.Assert(one["nickname"], data.Nickname)
+	})
+}
+
+func Test_DB_Insert_KeyFieldNameMapping_Error(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id             int
+			Passport       string
+			Password       string
+			Nickname       string
+			CreateTime     string
+			NoneExistField string
+		}
+		data := User{
+			Id:         1,
+			Passport:   "user_1",
+			Password:   "pass_1",
+			Nickname:   "name_1",
+			CreateTime: "2020-10-10 12:00:01",
+		}
+		_, err := db.Insert(table, data)
+		t.AssertNE(err, nil)
 	})
 }
 
@@ -605,7 +719,7 @@ func Test_DB_Delete(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Delete(table, nil)
+		result, err := db.Delete(table, 1)
 		t.Assert(err, nil)
 		n, _ := result.RowsAffected()
 		t.Assert(n, SIZE)
@@ -654,7 +768,7 @@ func Test_DB_Time(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Delete(table, nil)
+		result, err := db.Delete(table, 1)
 		t.Assert(err, nil)
 		n, _ := result.RowsAffected()
 		t.Assert(n, 2)
@@ -1289,5 +1403,69 @@ func Test_Empty_Slice_Argument(t *testing.T) {
 		result, err := db.GetAll(fmt.Sprintf(`select * from %s where id in(?)`, table), g.Slice{})
 		t.Assert(err, nil)
 		t.Assert(len(result), 0)
+	})
+}
+
+// update counter test
+func Test_DB_UpdateCounter(t *testing.T) {
+	tableName := "gf_update_counter_test_" + gtime.TimestampNanoStr()
+	_, err := db.Exec(fmt.Sprintf(`
+		CREATE TABLE IF NOT EXISTS %s (
+		id int(10) unsigned NOT NULL,
+		views  int(8) unsigned DEFAULT '0'  NOT NULL ,
+		updated_time int(10) unsigned DEFAULT '0' NOT NULL
+	) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+	`, tableName))
+	if err != nil {
+		gtest.Fatal(err)
+	}
+	defer dropTable(tableName)
+
+	gtest.C(t, func(t *gtest.T) {
+		insertData := g.Map{
+			"id":           1,
+			"views":        0,
+			"updated_time": 0,
+		}
+		_, err = db.Insert(tableName, insertData)
+		t.Assert(err, nil)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		gdbCounter := &gdb.Counter{
+			Field: "views",
+			Value: 1,
+		}
+		updateData := g.Map{
+			"views":        gdbCounter,
+			"updated_time": gtime.Now().Unix(),
+		}
+		result, err := db.Update(tableName, updateData, "id", 1)
+		t.Assert(err, nil)
+		n, _ := result.RowsAffected()
+		t.Assert(n, 1)
+		one, err := db.Table(tableName).Where("id", 1).One()
+		t.Assert(err, nil)
+		t.Assert(one["id"].Int(), 1)
+		t.Assert(one["views"].Int(), 1)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		gdbCounter := &gdb.Counter{
+			Field: "views",
+			Value: -1,
+		}
+		updateData := g.Map{
+			"views":        gdbCounter,
+			"updated_time": gtime.Now().Unix(),
+		}
+		result, err := db.Update(tableName, updateData, "id", 1)
+		t.Assert(err, nil)
+		n, _ := result.RowsAffected()
+		t.Assert(n, 1)
+		one, err := db.Table(tableName).Where("id", 1).One()
+		t.Assert(err, nil)
+		t.Assert(one["id"].Int(), 1)
+		t.Assert(one["views"].Int(), 0)
 	})
 }

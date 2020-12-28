@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -13,25 +13,25 @@ import (
 )
 
 const (
-	gFRAME_CORE_COMPONENT_NAME_VIEWER = "gf.core.component.viewer"
-	gVIEWER_NODE_NAME                 = "viewer"
+	frameCoreComponentNameViewer = "gf.core.component.viewer"
+	configNodeNameViewer         = "viewer"
 )
 
 // View returns an instance of View with default settings.
 // The parameter <name> is the name for the instance.
 func View(name ...string) *gview.View {
-	instanceName := gview.DEFAULT_NAME
+	instanceName := gview.DefaultName
 	if len(name) > 0 && name[0] != "" {
 		instanceName = name[0]
 	}
-	instanceKey := fmt.Sprintf("%s.%s", gFRAME_CORE_COMPONENT_NAME_VIEWER, instanceName)
+	instanceKey := fmt.Sprintf("%s.%s", frameCoreComponentNameViewer, instanceName)
 	return instances.GetOrSetFuncLock(instanceKey, func() interface{} {
 		return getViewInstance(instanceName)
 	}).(*gview.View)
 }
 
 func getViewInstance(name ...string) *gview.View {
-	instanceName := gview.DEFAULT_NAME
+	instanceName := gview.DefaultName
 	if len(name) > 0 && name[0] != "" {
 		instanceName = name[0]
 	}
@@ -39,9 +39,9 @@ func getViewInstance(name ...string) *gview.View {
 	// To avoid file no found error while it's not necessary.
 	if Config().Available() {
 		var m map[string]interface{}
-		nodeKey, _ := gutil.MapPossibleItemByKey(Config().GetMap("."), gVIEWER_NODE_NAME)
+		nodeKey, _ := gutil.MapPossibleItemByKey(Config().GetMap("."), configNodeNameViewer)
 		if nodeKey == "" {
-			nodeKey = gVIEWER_NODE_NAME
+			nodeKey = configNodeNameViewer
 		}
 		m = Config().GetMap(fmt.Sprintf(`%s.%s`, nodeKey, instanceName))
 		if len(m) == 0 {

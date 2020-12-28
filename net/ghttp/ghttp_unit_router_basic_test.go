@@ -41,7 +41,7 @@ func Test_Router_Basic1(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		t.Assert(client.GetContent("/john"), "")
 		t.Assert(client.GetContent("/john/update"), "john")
@@ -66,10 +66,37 @@ func Test_Router_Basic2(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		t.Assert(client.GetContent("/data"), "data")
 		t.Assert(client.GetContent("/data.json"), "json")
+	})
+}
+
+func Test_Router_Value(t *testing.T) {
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/{hash}", func(r *ghttp.Request) {
+		r.Response.Write(r.GetRouterString("hash"))
+	})
+	s.BindHandler("/{hash}.{type}", func(r *ghttp.Request) {
+		r.Response.Write(r.GetRouterString("type"))
+	})
+	s.BindHandler("/{hash}.{type}.map", func(r *ghttp.Request) {
+		r.Response.Write(r.GetRouterMap()["type"])
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		t.Assert(client.GetContent("/data"), "data")
+		t.Assert(client.GetContent("/data.json"), "json")
+		t.Assert(client.GetContent("/data.json.map"), "json")
 	})
 }
 
@@ -90,7 +117,7 @@ func Test_Router_Method(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		resp1, err := client.Get("/get")
@@ -131,12 +158,15 @@ func Test_Router_ExtraChar(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent("/api/test"), "test")
 		t.Assert(client.GetContent("/api/test/"), "test")
 		t.Assert(client.GetContent("/api/test//"), "test")
+		t.Assert(client.GetContent("//api/test//"), "test")
+		t.Assert(client.GetContent("//api//test//"), "test")
+		t.Assert(client.GetContent("///api///test///"), "test")
 	})
 }
 
@@ -163,7 +193,7 @@ func Test_Router_Status(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		resp1, err := client.Get("/200")
@@ -209,7 +239,7 @@ func Test_Router_CustomStatusHandler(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent("/"), "hello")
@@ -235,7 +265,7 @@ func Test_Router_404(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent("/"), "hello")
@@ -268,7 +298,7 @@ func Test_Router_Priority(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent("/admin"), "admin")

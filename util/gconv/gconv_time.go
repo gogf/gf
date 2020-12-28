@@ -37,7 +37,7 @@ func Duration(i interface{}) time.Duration {
 	}
 	s := String(i)
 	if !utils.IsNumeric(s) {
-		d, _ := time.ParseDuration(s)
+		d, _ := gtime.ParseDuration(s)
 		return d
 	}
 	return time.Duration(Int64(i))

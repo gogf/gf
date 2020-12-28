@@ -419,7 +419,7 @@ func Test_Basic(t *testing.T) {
 		j = gjson.New(`[1,2,3]`)
 		err = j.Remove("0.3")
 		t.Assert(err, nil)
-		t.Assert(len(j.Get("0").([]interface{})), 3)
+		t.Assert(j.Get("0"), 1)
 
 		j = gjson.New(`[1,2,3]`)
 		err = j.Remove("0.a")

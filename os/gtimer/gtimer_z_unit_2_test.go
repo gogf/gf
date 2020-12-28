@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -36,7 +36,7 @@ func TestEntry_Start_Stop_Close(t *testing.T) {
 		time.Sleep(250 * time.Millisecond)
 		t.Assert(array.Len(), 2)
 
-		t.Assert(entry.Status(), gtimer.STATUS_CLOSED)
+		t.Assert(entry.Status(), gtimer.StatusClosed)
 	})
 }
 

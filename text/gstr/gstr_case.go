@@ -14,6 +14,7 @@
 //   | DelimitedScreamingCase(s, '.')    | ANY.KIND.OF.STRING |
 //   | CamelCase(s)                      | AnyKindOfString    |
 //   | CamelLowerCase(s)                 | anyKindOfString    |
+//   | SnakeFirstUpperCase(RGBCodeMd5)   | rgb_code_md5       |
 
 package gstr
 
@@ -23,8 +24,9 @@ import (
 )
 
 var (
-	numberSequence    = regexp.MustCompile(`([a-zA-Z])(\d+)([a-zA-Z]?)`)
-	numberReplacement = []byte(`$1 $2 $3`)
+	numberSequence      = regexp.MustCompile(`([a-zA-Z]{0,1})(\d+)([a-zA-Z]{0,1})`)
+	firstCamelCaseStart = regexp.MustCompile(`([A-Z]+)([A-Z]?[_a-z\d]+)|$`)
+	firstCamelCaseEnd   = regexp.MustCompile(`([\w\W]*?)([_]?[A-Z]+)$`)
 )
 
 // CamelCase converts a string to CamelCase.
@@ -51,6 +53,35 @@ func SnakeCase(s string) string {
 // SnakeScreamingCase converts a string to SNAKE_CASE_SCREAMING.
 func SnakeScreamingCase(s string) string {
 	return DelimitedScreamingCase(s, '_', true)
+}
+
+// SnakeFirstUpperCase converts a string from RGBCodeMd5 to rgb_code_md5.
+// The length of word should not be too long
+// TODO for efficiency should change regexp to traversing string in future
+func SnakeFirstUpperCase(word string, underscore ...string) string {
+	replace := "_"
+	if len(underscore) > 0 {
+		replace = underscore[0]
+	}
+
+	m := firstCamelCaseEnd.FindAllStringSubmatch(word, 1)
+	if len(m) > 0 {
+		word = m[0][1] + replace + TrimLeft(ToLower(m[0][2]), replace)
+	}
+
+	for {
+		m := firstCamelCaseStart.FindAllStringSubmatch(word, 1)
+		if len(m) > 0 && m[0][1] != "" {
+			w := strings.ToLower(m[0][1])
+			w = string(w[:len(w)-1]) + replace + string(w[len(w)-1])
+
+			word = strings.Replace(word, m[0][1], w, 1)
+		} else {
+			break
+		}
+	}
+
+	return TrimLeft(word, replace)
 }
 
 // KebabCase converts a string to kebab-case
@@ -107,9 +138,21 @@ func DelimitedScreamingCase(s string, del uint8, screaming bool) string {
 }
 
 func addWordBoundariesToNumbers(s string) string {
-	b := []byte(s)
-	b = numberSequence.ReplaceAll(b, numberReplacement)
-	return string(b)
+	r := numberSequence.ReplaceAllFunc([]byte(s), func(bytes []byte) []byte {
+		var result []byte
+		match := numberSequence.FindSubmatch(bytes)
+		if len(match[1]) > 0 {
+			result = append(result, match[1]...)
+			result = append(result, []byte(" ")...)
+		}
+		result = append(result, match[2]...)
+		if len(match[3]) > 0 {
+			result = append(result, []byte(" ")...)
+			result = append(result, match[3]...)
+		}
+		return result
+	})
+	return string(r)
 }
 
 // Converts a string to CamelCase

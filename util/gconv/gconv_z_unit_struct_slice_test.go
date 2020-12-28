@@ -143,3 +143,57 @@ func Test_Struct_SliceWithTag(t *testing.T) {
 		t.Assert(users[1].NickName, "name2")
 	})
 }
+
+func Test_Structs_DirectReflectSet(t *testing.T) {
+	type A struct {
+		Id   int
+		Name string
+	}
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			a = []*A{
+				{Id: 1, Name: "john"},
+				{Id: 2, Name: "smith"},
+			}
+			b []*A
+		)
+		err := gconv.Structs(a, &b)
+		t.Assert(err, nil)
+		t.AssertEQ(a, b)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			a = []A{
+				{Id: 1, Name: "john"},
+				{Id: 2, Name: "smith"},
+			}
+			b []A
+		)
+		err := gconv.Structs(a, &b)
+		t.Assert(err, nil)
+		t.AssertEQ(a, b)
+	})
+}
+
+func Test_Structs_SliceIntAttribute(t *testing.T) {
+	type A struct {
+		Id []int
+	}
+	type B struct {
+		*A
+		Name string
+	}
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			array []*B
+		)
+		err := gconv.Structs(g.Slice{
+			g.Map{"id": nil, "name": "john"},
+			g.Map{"id": nil, "name": "smith"},
+		}, &array)
+		t.Assert(err, nil)
+		t.Assert(len(array), 2)
+		t.Assert(array[0].Name, "john")
+		t.Assert(array[1].Name, "smith")
+	})
+}

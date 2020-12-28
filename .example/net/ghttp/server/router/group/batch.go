@@ -27,7 +27,7 @@ func main() {
 	s := g.Server()
 	obj := new(Object)
 	s.Group("/api").Bind([]ghttp.GroupItem{
-		{"ALL", "*", HookHandler, ghttp.HOOK_BEFORE_SERVE},
+		{"ALL", "*", HookHandler, ghttp.HookBeforeServe},
 		{"ALL", "/handler", Handler},
 		{"ALL", "/obj", obj},
 		{"GET", "/obj/show", obj, "Show"},

@@ -189,11 +189,12 @@ func (r *Request) GetFormMapStrVar(kvMap ...map[string]interface{}) map[string]*
 // The optional parameter <mapping> is used to specify the key to attribute mapping.
 func (r *Request) GetFormStruct(pointer interface{}, mapping ...map[string]string) error {
 	r.parseForm()
-	return gconv.StructDeep(r.formMap, pointer, mapping...)
-}
-
-// GetFormToStruct is alias of GetFormStruct. See GetFormStruct.
-// Deprecated.
-func (r *Request) GetFormToStruct(pointer interface{}, mapping ...map[string]string) error {
-	return r.GetFormStruct(pointer, mapping...)
+	data := r.formMap
+	if data == nil {
+		data = map[string]interface{}{}
+	}
+	if err := r.mergeDefaultStructValue(data, pointer); err != nil {
+		return nil
+	}
+	return gconv.Struct(data, pointer, mapping...)
 }

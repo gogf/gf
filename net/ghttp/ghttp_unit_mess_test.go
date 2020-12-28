@@ -30,7 +30,7 @@ func Test_GetUrl(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
 		prefix := fmt.Sprintf("http://127.0.0.1:%d", p)
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetBrowserMode(true)
 		client.SetPrefix(prefix)
 

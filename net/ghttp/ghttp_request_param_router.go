@@ -8,6 +8,18 @@ package ghttp
 
 import "github.com/gogf/gf/container/gvar"
 
+// GetRouterMap retrieves and returns a copy of router map.
+func (r *Request) GetRouterMap() map[string]string {
+	if r.routerMap != nil {
+		m := make(map[string]string, len(r.routerMap))
+		for k, v := range r.routerMap {
+			m[k] = v
+		}
+		return m
+	}
+	return nil
+}
+
 // GetRouterValue retrieves and returns the router value with given key name <key>.
 // It returns <def> if <key> does not exist.
 func (r *Request) GetRouterValue(key string, def ...interface{}) interface{} {

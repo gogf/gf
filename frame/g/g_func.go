@@ -39,8 +39,15 @@ func Throw(exception interface{}) {
 	gutil.Throw(exception)
 }
 
-// TryCatch does the try...catch... mechanism.
-func TryCatch(try func(), catch ...func(exception interface{})) {
+// Try implements try... logistics using internal panic...recover.
+// It returns error if any exception occurs, or else it returns nil.
+func Try(try func()) (err error) {
+	return gutil.Try(try)
+}
+
+// TryCatch implements try...catch... logistics using internal panic...recover.
+// It automatically calls function <catch> if any exception occurs ans passes the exception as an error.
+func TryCatch(try func(), catch ...func(exception error)) {
 	gutil.TryCatch(try, catch...)
 }
 

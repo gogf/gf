@@ -54,7 +54,7 @@ func (m *IntIntMap) Iterator(f func(k int, v int) bool) {
 
 // Clone returns a new hash map with copy of current map data.
 func (m *IntIntMap) Clone() *IntIntMap {
-	return NewIntIntMapFrom(m.MapCopy(), !m.mu.IsSafe())
+	return NewIntIntMapFrom(m.MapCopy(), m.mu.IsSafe())
 }
 
 // Map returns the underlying data map.
@@ -424,6 +424,12 @@ func (m *IntIntMap) Merge(other *IntIntMap) {
 	for k, v := range other.data {
 		m.data[k] = v
 	}
+}
+
+// String returns the map as a string.
+func (m *IntIntMap) String() string {
+	b, _ := m.MarshalJSON()
+	return gconv.UnsafeBytesToStr(b)
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.

@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -32,7 +32,7 @@ type JobFunc = func()
 // addEntry adds a timing job to the wheel.
 func (w *wheel) addEntry(interval time.Duration, job JobFunc, singleton bool, times int, status int) *Entry {
 	if times <= 0 {
-		times = gDEFAULT_TIMES
+		times = defaultTimes
 	}
 	var (
 		ms  = interval.Nanoseconds() / 1e6
@@ -98,17 +98,22 @@ func (entry *Entry) SetStatus(status int) int {
 
 // Start starts the job.
 func (entry *Entry) Start() {
-	entry.status.Set(STATUS_READY)
+	entry.status.Set(StatusReady)
 }
 
 // Stop stops the job.
 func (entry *Entry) Stop() {
-	entry.status.Set(STATUS_STOPPED)
+	entry.status.Set(StatusStopped)
+}
+
+//Reset reset the job.
+func (entry *Entry) Reset() {
+	entry.status.Set(StatusReset)
 }
 
 // Close closes the job, and then it will be removed from the timer.
 func (entry *Entry) Close() {
-	entry.status.Set(STATUS_CLOSED)
+	entry.status.Set(StatusClosed)
 }
 
 // IsSingleton checks and returns whether the job in singleton mode.
@@ -134,10 +139,12 @@ func (entry *Entry) Run() {
 // check checks if the job should be run in given ticks and timestamp milliseconds.
 func (entry *Entry) check(nowTicks int64, nowMs int64) (runnable, addable bool) {
 	switch entry.status.Val() {
-	case STATUS_STOPPED:
+	case StatusStopped:
 		return false, true
-	case STATUS_CLOSED:
+	case StatusClosed:
 		return false, false
+	case StatusReset:
+		return false, true
 	}
 	// Firstly checks using the ticks, this may be low precision as one tick is a little bit long.
 	if diff := nowTicks - entry.create; diff > 0 && diff%entry.interval == 0 {
@@ -164,7 +171,7 @@ func (entry *Entry) check(nowTicks int64, nowMs int64) (runnable, addable bool) 
 		// Singleton mode check.
 		if entry.IsSingleton() {
 			// Note that it is atomic operation to ensure concurrent safety.
-			if entry.status.Set(STATUS_RUNNING) == STATUS_RUNNING {
+			if entry.status.Set(StatusRunning) == StatusRunning {
 				return false, true
 			}
 		}
@@ -172,14 +179,14 @@ func (entry *Entry) check(nowTicks int64, nowMs int64) (runnable, addable bool) 
 		times := entry.times.Add(-1)
 		if times <= 0 {
 			// Note that it is atomic operation to ensure concurrent safety.
-			if entry.status.Set(STATUS_CLOSED) == STATUS_CLOSED || times < 0 {
+			if entry.status.Set(StatusClosed) == StatusClosed || times < 0 {
 				return false, false
 			}
 		}
 		// This means it does not limit the running times.
 		// I know it's ugly, but it is surely high performance for running times limit.
 		if times < 2000000000 && times > 1000000000 {
-			entry.times.Set(gDEFAULT_TIMES)
+			entry.times.Set(defaultTimes)
 		}
 		return true, true
 	}

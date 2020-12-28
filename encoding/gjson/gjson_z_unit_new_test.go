@@ -47,3 +47,53 @@ func Test_Load_NewWithTag(t *testing.T) {
 		t.Assert(j.Get("addr-json"), nil)
 	})
 }
+
+func Test_Load_New_CustomStruct(t *testing.T) {
+	type Base struct {
+		Id int
+	}
+	type User struct {
+		Base
+		Name string
+	}
+	user := new(User)
+	user.Id = 1
+	user.Name = "john"
+
+	gtest.C(t, func(t *gtest.T) {
+		j := gjson.New(user)
+		t.AssertNE(j, nil)
+
+		s, err := j.ToJsonString()
+		t.Assert(err, nil)
+		t.Assert(s == `{"Id":1,"Name":"john"}` || s == `{"Name":"john","Id":1}`, true)
+	})
+}
+
+func Test_Load_New_HierarchicalStruct(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Me struct {
+			Name     string `json:"name"`
+			Score    int    `json:"score"`
+			Children []Me   `json:"children"`
+		}
+		me := Me{
+			Name:  "john",
+			Score: 100,
+			Children: []Me{
+				{
+					Name:  "Bean",
+					Score: 99,
+				},
+				{
+					Name:  "Sam",
+					Score: 98,
+				},
+			},
+		}
+		j := gjson.New(me)
+		t.Assert(j.Remove("children.0.score"), nil)
+		t.Assert(j.Remove("children.1.score"), nil)
+		t.Assert(j.MustToJsonString(), `{"children":[{"children":null,"name":"Bean"},{"children":null,"name":"Sam"}],"name":"john","score":100}`)
+	})
+}

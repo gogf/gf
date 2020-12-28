@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -9,6 +9,7 @@
 package gtimer_test
 
 import (
+	"github.com/gogf/gf/os/glog"
 	"testing"
 	"time"
 
@@ -70,6 +71,24 @@ func TestTimer_Start_Stop_Close(t *testing.T) {
 		timer.Close()
 		time.Sleep(1000 * time.Millisecond)
 		t.Assert(array.Len(), 2)
+	})
+}
+
+func TestTimer_Reset(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		timer := New()
+		array := garray.New(true)
+		glog.Printf("start time:%d", time.Now().Unix())
+		singleton := timer.AddSingleton(2*time.Second, func() {
+			timestamp := time.Now().Unix()
+			glog.Println(timestamp)
+			array.Append(timestamp)
+		})
+		time.Sleep(5 * time.Second)
+		glog.Printf("reset time:%d", time.Now().Unix())
+		singleton.Reset()
+		time.Sleep(10 * time.Second)
+		t.Assert(array.Len(), 6)
 	})
 }
 
@@ -143,7 +162,7 @@ func TestTimer_DelayAddEntry(t *testing.T) {
 		array := garray.New(true)
 		timer.DelayAddEntry(200*time.Millisecond, 200*time.Millisecond, func() {
 			array.Append(1)
-		}, false, 100, gtimer.STATUS_READY)
+		}, false, 100, gtimer.StatusReady)
 		time.Sleep(250 * time.Millisecond)
 		t.Assert(array.Len(), 0)
 		time.Sleep(250 * time.Millisecond)

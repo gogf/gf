@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,9 +7,9 @@
 package gdb_test
 
 import (
-	"errors"
 	"fmt"
 	"github.com/gogf/gf/database/gdb"
+	"github.com/gogf/gf/errors/gerror"
 	"testing"
 
 	"github.com/gogf/gf/frame/g"
@@ -676,7 +676,7 @@ func Test_TX_Delete(t *testing.T) {
 		if err != nil {
 			gtest.Error(err)
 		}
-		if _, err := tx.Delete(table, nil); err != nil {
+		if _, err := tx.Delete(table, 1); err != nil {
 			gtest.Error(err)
 		}
 		if err := tx.Commit(); err != nil {
@@ -696,7 +696,7 @@ func Test_TX_Delete(t *testing.T) {
 		if err != nil {
 			gtest.Error(err)
 		}
-		if _, err := tx.Delete(table, nil); err != nil {
+		if _, err := tx.Delete(table, 1); err != nil {
 			gtest.Error(err)
 		}
 		if n, err := tx.Table(table).Count(); err != nil {
@@ -731,7 +731,7 @@ func Test_Transaction(t *testing.T) {
 			}); err != nil {
 				t.Error(err)
 			}
-			return errors.New("error")
+			return gerror.New("error")
 		})
 		t.AssertNE(err, nil)
 
@@ -761,6 +761,34 @@ func Test_Transaction(t *testing.T) {
 			gtest.Error(err)
 		} else {
 			t.Assert(value.String(), "NAME_1")
+		}
+	})
+}
+
+func Test_Transaction_Panic(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		err := db.Transaction(func(tx *gdb.TX) error {
+			if _, err := tx.Replace(table, g.Map{
+				"id":          1,
+				"passport":    "USER_1",
+				"password":    "PASS_1",
+				"nickname":    "NAME_1",
+				"create_time": gtime.Now().String(),
+			}); err != nil {
+				t.Error(err)
+			}
+			panic("error")
+			return nil
+		})
+		t.AssertNE(err, nil)
+
+		if value, err := db.Table(table).Fields("nickname").Where("id", 1).Value(); err != nil {
+			gtest.Error(err)
+		} else {
+			t.Assert(value.String(), "name_1")
 		}
 	})
 }

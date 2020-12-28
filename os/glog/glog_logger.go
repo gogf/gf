@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/gogf/gf/container/gtype"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/os/gfpool"
 	"github.com/gogf/gf/os/gmlock"
@@ -17,7 +18,6 @@ import (
 	"io"
 	"os"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/gogf/gf/debug/gdebug"
@@ -30,18 +30,18 @@ import (
 
 // Logger is the struct for logging management.
 type Logger struct {
-	rmu    sync.Mutex      // Mutex for rotation feature.
 	ctx    context.Context // Context for logging.
+	init   *gtype.Bool     // Initialized.
 	parent *Logger         // Parent logger, if it is not empty, it means the logger is used in chaining function.
 	config Config          // Logger configuration.
 }
 
 const (
-	gDEFAULT_FILE_FORMAT = `{Y-m-d}.log`
-	gDEFAULT_FILE_FLAGS  = os.O_CREATE | os.O_WRONLY | os.O_APPEND
-	gDEFAULT_FILE_PERM   = os.FileMode(0666)
-	gDEFAULT_FILE_EXPIRE = time.Minute
-	gPATH_FILTER_KEY     = "/os/glog/glog"
+	defaultFileFormat = `{Y-m-d}.log`
+	defaultFileFlags  = os.O_CREATE | os.O_WRONLY | os.O_APPEND
+	defaultFilePerm   = os.FileMode(0666)
+	defaultFileExpire = time.Minute
+	pathFilterKey     = "/os/glog/glog"
 )
 
 const (
@@ -58,12 +58,9 @@ const (
 // New creates and returns a custom logger.
 func New() *Logger {
 	logger := &Logger{
+		init:   gtype.NewBool(),
 		config: DefaultConfig(),
 	}
-	// Initialize the internal handler after some delay.
-	gtimer.AddOnce(time.Second, func() {
-		gtimer.AddOnce(logger.config.RotateCheckInterval, logger.rotateChecksTimely)
-	})
 	return logger
 }
 
@@ -77,10 +74,11 @@ func NewWithWriter(writer io.Writer) *Logger {
 // Clone returns a new logger, which is the clone the current logger.
 // It's commonly used for chaining operations.
 func (l *Logger) Clone() *Logger {
-	logger := Logger{}
-	logger = *l
+	logger := New()
+	logger.ctx = l.ctx
+	logger.config = l.config
 	logger.parent = l
-	return &logger
+	return logger
 }
 
 // getFilePath returns the logging file path.
@@ -91,14 +89,26 @@ func (l *Logger) getFilePath(now time.Time) string {
 		return gtime.New(now).Format(strings.Trim(s, "{}"))
 	})
 	file = gfile.Join(l.config.Path, file)
-	if gfile.ExtName(file) != "log" {
-		file += ".log"
-	}
 	return file
 }
 
 // print prints <s> to defined writer, logging file or passed <std>.
 func (l *Logger) print(std io.Writer, lead string, values ...interface{}) {
+	// Lazy initialize for rotation feature.
+	// It uses atomic reading operation to enhance the performance checking.
+	// It here uses CAP for performance and concurrent safety.
+	p := l
+	if p.parent != nil {
+		p = p.parent
+	}
+	if !p.init.Val() && p.init.Cas(false, true) {
+		// It just initializes once for each logger.
+		if p.config.RotateSize > 0 || p.config.RotateExpire > 0 {
+			gtimer.AddOnce(p.config.RotateCheckInterval, p.rotateChecksTimely)
+			intlog.Printf("logger rotation initialized: every %s", p.config.RotateCheckInterval.String())
+		}
+	}
+
 	var (
 		now    = time.Now()
 		buffer = bytes.NewBuffer(nil)
@@ -128,7 +138,7 @@ func (l *Logger) print(std io.Writer, lead string, values ...interface{}) {
 		// Caller path and Fn name.
 		if l.config.Flags&(F_FILE_LONG|F_FILE_SHORT|F_CALLER_FN) > 0 {
 			callerPath := ""
-			callerFnName, path, line := gdebug.CallerWithFilter(gPATH_FILTER_KEY, l.config.StSkip)
+			callerFnName, path, line := gdebug.CallerWithFilter(pathFilterKey, l.config.StSkip)
 			if l.config.Flags&F_CALLER_FN > 0 {
 				buffer.WriteString(fmt.Sprintf(`[%s] `, callerFnName))
 			}
@@ -167,11 +177,7 @@ func (l *Logger) print(std io.Writer, lead string, values ...interface{}) {
 		}
 	}
 	for _, v := range values {
-		if err, ok := v.(error); ok {
-			tempStr = fmt.Sprintf("%+v", err)
-		} else {
-			tempStr = gconv.String(v)
-		}
+		tempStr = gconv.String(v)
 		if len(valueStr) > 0 {
 			if valueStr[len(valueStr)-1] == '\n' {
 				// Remove one blank line(\n\n).
@@ -215,7 +221,8 @@ func (l *Logger) printToWriter(now time.Time, std io.Writer, buffer *bytes.Buffe
 		}
 	} else {
 		if _, err := l.config.Writer.Write(buffer.Bytes()); err != nil {
-			panic(err)
+			// panic(err)
+			intlog.Error(err)
 		}
 	}
 }
@@ -224,26 +231,27 @@ func (l *Logger) printToWriter(now time.Time, std io.Writer, buffer *bytes.Buffe
 func (l *Logger) printToFile(now time.Time, buffer *bytes.Buffer) {
 	var (
 		logFilePath   = l.getFilePath(now)
-		memoryLockKey = "glog.file.lock:" + logFilePath
+		memoryLockKey = "glog.printToFile:" + logFilePath
 	)
 	gmlock.Lock(memoryLockKey)
 	defer gmlock.Unlock(memoryLockKey)
-	file := l.getFilePointer(logFilePath)
-	defer file.Close()
+
 	// Rotation file size checks.
 	if l.config.RotateSize > 0 {
-		stat, err := file.Stat()
-		if err != nil {
-			panic(err)
-		}
-		if stat.Size() > l.config.RotateSize {
+		if gfile.Size(logFilePath) > l.config.RotateSize {
 			l.rotateFileBySize(now)
-			file = l.getFilePointer(logFilePath)
-			defer file.Close()
 		}
 	}
-	if _, err := file.Write(buffer.Bytes()); err != nil {
-		panic(err)
+	// Logging content outputting to disk file.
+	if file := l.getFilePointer(logFilePath); file == nil {
+		intlog.Errorf(`got nil file pointer for: %s`, logFilePath)
+	} else {
+		if _, err := file.Write(buffer.Bytes()); err != nil {
+			intlog.Error(err)
+		}
+		if err := file.Close(); err != nil {
+			intlog.Error(err)
+		}
 	}
 }
 
@@ -251,12 +259,13 @@ func (l *Logger) printToFile(now time.Time, buffer *bytes.Buffer) {
 func (l *Logger) getFilePointer(path string) *gfpool.File {
 	file, err := gfpool.Open(
 		path,
-		gDEFAULT_FILE_FLAGS,
-		gDEFAULT_FILE_PERM,
-		gDEFAULT_FILE_EXPIRE,
+		defaultFileFlags,
+		defaultFilePerm,
+		defaultFileExpire,
 	)
 	if err != nil {
-		panic(err)
+		// panic(err)
+		intlog.Error(err)
 	}
 	return file
 }
@@ -299,7 +308,7 @@ func (l *Logger) GetStack(skip ...int) string {
 	if len(skip) > 0 {
 		stackSkip += skip[0]
 	}
-	filters := []string{gPATH_FILTER_KEY}
+	filters := []string{pathFilterKey}
 	if l.config.StFilter != "" {
 		filters = append(filters, l.config.StFilter)
 	}

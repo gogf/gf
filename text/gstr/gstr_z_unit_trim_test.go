@@ -27,6 +27,11 @@ func Test_TrimStr(t *testing.T) {
 		t.Assert(gstr.TrimStr("gogo我爱gogo", "go"), "我爱")
 	})
 	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.TrimStr("gogo我爱gogo", "go", 1), "go我爱go")
+		t.Assert(gstr.TrimStr("gogo我爱gogo", "go", 2), "我爱")
+		t.Assert(gstr.TrimStr("gogo我爱gogo", "go", -1), "我爱")
+	})
+	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gstr.TrimStr("啊我爱中国人啊", "啊"), "我爱中国人")
 	})
 }
@@ -42,6 +47,11 @@ func Test_TrimRightStr(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gstr.TrimRightStr("gogo我爱gogo", "go"), "gogo我爱")
 		t.Assert(gstr.TrimRightStr("gogo我爱gogo", "go我爱gogo"), "go")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.TrimRightStr("gogo我爱gogo", "go", 1), "gogo我爱go")
+		t.Assert(gstr.TrimRightStr("gogo我爱gogo", "go", 2), "gogo我爱")
+		t.Assert(gstr.TrimRightStr("gogo我爱gogo", "go", -1), "gogo我爱")
 	})
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gstr.TrimRightStr("我爱中国人", "人"), "我爱中国")
@@ -60,6 +70,11 @@ func Test_TrimLeftStr(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gstr.TrimLeftStr("gogo我爱gogo", "go"), "我爱gogo")
 		t.Assert(gstr.TrimLeftStr("gogo我爱gogo", "gogo我爱go"), "go")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.TrimLeftStr("gogo我爱gogo", "go", 1), "go我爱gogo")
+		t.Assert(gstr.TrimLeftStr("gogo我爱gogo", "go", 2), "我爱gogo")
+		t.Assert(gstr.TrimLeftStr("gogo我爱gogo", "go", -1), "我爱gogo")
 	})
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gstr.TrimLeftStr("我爱中国人", "我爱"), "中国人")

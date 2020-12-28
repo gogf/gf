@@ -19,12 +19,12 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
-const (
-	// Separator for file system.
-	Separator = string(filepath.Separator)
-)
-
 var (
+	// Separator for file system.
+	// It here defines the separator as variable
+	// to allow it modified by developer if necessary.
+	Separator = string(filepath.Separator)
+
 	// DefaultPerm is the default perm for file opening.
 	DefaultPermOpen = os.FileMode(0666)
 

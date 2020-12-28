@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -8,7 +8,7 @@ package gdb
 
 import (
 	"database/sql"
-	"errors"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
@@ -25,6 +25,8 @@ func (m *Model) Batch(batch int) *Model {
 
 // Data sets the operation data for the model.
 // The parameter <data> can be type of string/map/gmap/slice/struct/*struct, etc.
+// Note that, it uses shallow value copying for `data` if `data` is type of map/slice
+// to avoid changing it inside function.
 // Eg:
 // Data("uid=10000")
 // Data("uid", 10000)
@@ -34,8 +36,7 @@ func (m *Model) Batch(batch int) *Model {
 func (m *Model) Data(data ...interface{}) *Model {
 	model := m.getModel()
 	if len(data) > 1 {
-		s := gconv.String(data[0])
-		if gstr.Contains(s, "?") {
+		if s := gconv.String(data[0]); gstr.Contains(s, "?") {
 			model.data = s
 			model.extraArgs = data[1:]
 		} else {
@@ -52,12 +53,18 @@ func (m *Model) Data(data ...interface{}) *Model {
 		case Record:
 			model.data = params.Map()
 		case List:
-			model.data = params
+			list := make(List, len(params))
+			for k, v := range params {
+				list[k] = gutil.MapCopy(v)
+			}
+			model.data = list
 		case Map:
-			model.data = params
+			model.data = gutil.MapCopy(params)
 		default:
-			rv := reflect.ValueOf(params)
-			kind := rv.Kind()
+			var (
+				rv   = reflect.ValueOf(params)
+				kind = rv.Kind()
+			)
 			if kind == reflect.Ptr {
 				rv = rv.Elem()
 				kind = rv.Kind()
@@ -66,23 +73,23 @@ func (m *Model) Data(data ...interface{}) *Model {
 			case reflect.Slice, reflect.Array:
 				list := make(List, rv.Len())
 				for i := 0; i < rv.Len(); i++ {
-					list[i] = DataToMapDeep(rv.Index(i).Interface())
+					list[i] = ConvertDataForTableRecord(rv.Index(i).Interface())
 				}
 				model.data = list
 			case reflect.Map:
-				model.data = DataToMapDeep(data[0])
+				model.data = ConvertDataForTableRecord(data[0])
 			case reflect.Struct:
-				if v, ok := data[0].(apiMapStrAny); ok {
-					model.data = v.MapStrAny()
-				} else if v, ok := data[0].(apiInterfaces); ok {
-					array := v.Interfaces()
-					list := make(List, len(array))
+				if v, ok := data[0].(apiInterfaces); ok {
+					var (
+						array = v.Interfaces()
+						list  = make(List, len(array))
+					)
 					for i := 0; i < len(array); i++ {
-						list[i] = DataToMapDeep(array[i])
+						list[i] = ConvertDataForTableRecord(array[i])
 					}
 					model.data = list
 				} else {
-					model.data = DataToMapDeep(data[0])
+					model.data = ConvertDataForTableRecord(data[0])
 				}
 			default:
 				model.data = data[0]
@@ -99,7 +106,7 @@ func (m *Model) Insert(data ...interface{}) (result sql.Result, err error) {
 	if len(data) > 0 {
 		return m.Data(data...).Insert()
 	}
-	return m.doInsertWithOption(gINSERT_OPTION_DEFAULT, data...)
+	return m.doInsertWithOption(insertOptionDefault, data...)
 }
 
 // InsertIgnore does "INSERT IGNORE INTO ..." statement for the model.
@@ -107,9 +114,9 @@ func (m *Model) Insert(data ...interface{}) (result sql.Result, err error) {
 // see Model.Data.
 func (m *Model) InsertIgnore(data ...interface{}) (result sql.Result, err error) {
 	if len(data) > 0 {
-		return m.Data(data...).Insert()
+		return m.Data(data...).InsertIgnore()
 	}
-	return m.doInsertWithOption(gINSERT_OPTION_IGNORE, data...)
+	return m.doInsertWithOption(insertOptionIgnore, data...)
 }
 
 // Replace does "REPLACE INTO ..." statement for the model.
@@ -119,7 +126,7 @@ func (m *Model) Replace(data ...interface{}) (result sql.Result, err error) {
 	if len(data) > 0 {
 		return m.Data(data...).Replace()
 	}
-	return m.doInsertWithOption(gINSERT_OPTION_REPLACE, data...)
+	return m.doInsertWithOption(insertOptionReplace, data...)
 }
 
 // Save does "INSERT INTO ... ON DUPLICATE KEY UPDATE..." statement for the model.
@@ -132,7 +139,7 @@ func (m *Model) Save(data ...interface{}) (result sql.Result, err error) {
 	if len(data) > 0 {
 		return m.Data(data...).Save()
 	}
-	return m.doInsertWithOption(gINSERT_OPTION_SAVE, data...)
+	return m.doInsertWithOption(insertOptionSave, data...)
 }
 
 // doInsertWithOption inserts data with option parameter.
@@ -143,17 +150,17 @@ func (m *Model) doInsertWithOption(option int, data ...interface{}) (result sql.
 		}
 	}()
 	if m.data == nil {
-		return nil, errors.New("inserting into table with empty data")
+		return nil, gerror.New("inserting into table with empty data")
 	}
 	var (
 		nowString       = gtime.Now().String()
-		fieldNameCreate = m.getSoftFieldNameCreate()
-		fieldNameUpdate = m.getSoftFieldNameUpdate()
-		fieldNameDelete = m.getSoftFieldNameDelete()
+		fieldNameCreate = m.getSoftFieldNameCreated()
+		fieldNameUpdate = m.getSoftFieldNameUpdated()
+		fieldNameDelete = m.getSoftFieldNameDeleted()
 	)
 	// Batch operation.
 	if list, ok := m.data.(List); ok {
-		batch := gDEFAULT_BATCH_NUM
+		batch := defaultBatchNumber
 		if m.batch > 0 {
 			batch = m.batch
 		}
@@ -170,10 +177,14 @@ func (m *Model) doInsertWithOption(option int, data ...interface{}) (result sql.
 				list[k] = v
 			}
 		}
+		newData, err := m.filterDataForInsertOrUpdate(list)
+		if err != nil {
+			return nil, err
+		}
 		return m.db.DoBatchInsert(
 			m.getLink(true),
 			m.tables,
-			m.filterDataForInsertOrUpdate(list),
+			newData,
 			option,
 			batch,
 		)
@@ -190,12 +201,16 @@ func (m *Model) doInsertWithOption(option int, data ...interface{}) (result sql.
 				data[fieldNameUpdate] = nowString
 			}
 		}
+		newData, err := m.filterDataForInsertOrUpdate(data)
+		if err != nil {
+			return nil, err
+		}
 		return m.db.DoInsert(
 			m.getLink(true),
 			m.tables,
-			m.filterDataForInsertOrUpdate(data),
+			newData,
 			option,
 		)
 	}
-	return nil, errors.New("inserting into table with invalid data type")
+	return nil, gerror.New("inserting into table with invalid data type")
 }

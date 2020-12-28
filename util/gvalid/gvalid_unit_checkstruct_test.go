@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,6 +7,7 @@
 package gvalid_test
 
 import (
+	"github.com/gogf/gf/container/gvar"
 	"testing"
 
 	"github.com/gogf/gf/frame/g"
@@ -225,7 +226,7 @@ func Test_CheckStruct(t *testing.T) {
 	})
 }
 
-func Test_CheckStruct_With_Inherit(t *testing.T) {
+func Test_CheckStruct_With_EmbedObject(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Pass struct {
 			Pass1 string `valid:"password1@required|same:password2#请输入您的密码|您两次输入的密码不一致"`
@@ -234,7 +235,7 @@ func Test_CheckStruct_With_Inherit(t *testing.T) {
 		type User struct {
 			Id   int
 			Name string `valid:"name@required#请输入您的姓名"`
-			Pass Pass
+			Pass
 		}
 		user := &User{
 			Name: "",
@@ -248,5 +249,63 @@ func Test_CheckStruct_With_Inherit(t *testing.T) {
 		t.Assert(err.Maps()["name"], g.Map{"required": "请输入您的姓名"})
 		t.Assert(err.Maps()["password1"], g.Map{"same": "您两次输入的密码不一致"})
 		t.Assert(err.Maps()["password2"], g.Map{"same": "您两次输入的密码不一致"})
+	})
+}
+
+func Test_CheckStruct_Optional(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			Page      int    `v:"required|min:1         # page is required"`
+			Size      int    `v:"required|between:1,100 # size is required"`
+			ProjectId string `v:"between:1,10000        # project id must between :min, :max"`
+		}
+		obj := &Params{
+			Page: 1,
+			Size: 10,
+		}
+		err := gvalid.CheckStruct(obj, nil)
+		t.Assert(err, nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			Page      int       `v:"required|min:1         # page is required"`
+			Size      int       `v:"required|between:1,100 # size is required"`
+			ProjectId *gvar.Var `v:"between:1,10000        # project id must between :min, :max"`
+		}
+		obj := &Params{
+			Page: 1,
+			Size: 10,
+		}
+		err := gvalid.CheckStruct(obj, nil)
+		t.Assert(err, nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			Page      int `v:"required|min:1         # page is required"`
+			Size      int `v:"required|between:1,100 # size is required"`
+			ProjectId int `v:"between:1,10000        # project id must between :min, :max"`
+		}
+		obj := &Params{
+			Page: 1,
+			Size: 10,
+		}
+		err := gvalid.CheckStruct(obj, nil)
+		t.Assert(err.String(), "project id must between 1, 10000")
+	})
+}
+
+func Test_CheckStruct_NoTag(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			Page      int
+			Size      int
+			ProjectId string
+		}
+		obj := &Params{
+			Page: 1,
+			Size: 10,
+		}
+		err := gvalid.CheckStruct(obj, nil)
+		t.Assert(err, nil)
 	})
 }

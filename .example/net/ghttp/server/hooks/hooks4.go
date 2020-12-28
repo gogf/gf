@@ -11,7 +11,7 @@ func main() {
 	// 多事件回调示例，事件1
 	pattern1 := "/:name/info"
 	s.BindHookHandlerByMap(pattern1, map[string]ghttp.HandlerFunc{
-		ghttp.HOOK_BEFORE_SERVE: func(r *ghttp.Request) {
+		ghttp.HookBeforeServe: func(r *ghttp.Request) {
 			r.SetParam("uid", 1000)
 		},
 	})
@@ -22,7 +22,7 @@ func main() {
 	// 多事件回调示例，事件2
 	pattern2 := "/{object}/list/{page}.java"
 	s.BindHookHandlerByMap(pattern2, map[string]ghttp.HandlerFunc{
-		ghttp.HOOK_BEFORE_OUTPUT: func(r *ghttp.Request) {
+		ghttp.HookBeforeOutput: func(r *ghttp.Request) {
 			r.Response.SetBuffer([]byte(
 				fmt.Sprintf("通过事件修改输出内容, object:%s, page:%s", r.Get("object"), r.GetRouterString("page"))),
 			)

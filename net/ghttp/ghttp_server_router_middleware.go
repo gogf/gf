@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -22,7 +22,7 @@ const (
 func (s *Server) BindMiddleware(pattern string, handlers ...HandlerFunc) {
 	for _, handler := range handlers {
 		s.setHandler(pattern, &handlerItem{
-			itemType: gHANDLER_TYPE_MIDDLEWARE,
+			itemType: handlerTypeMiddleware,
 			itemName: gdebug.FuncPath(handler),
 			itemFunc: handler,
 		})
@@ -35,7 +35,7 @@ func (s *Server) BindMiddleware(pattern string, handlers ...HandlerFunc) {
 func (s *Server) BindMiddlewareDefault(handlers ...HandlerFunc) {
 	for _, handler := range handlers {
 		s.setHandler(gDEFAULT_MIDDLEWARE_PATTERN, &handlerItem{
-			itemType: gHANDLER_TYPE_MIDDLEWARE,
+			itemType: handlerTypeMiddleware,
 			itemName: gdebug.FuncPath(handler),
 			itemFunc: handler,
 		})
