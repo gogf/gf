@@ -78,11 +78,15 @@ func (c *Core) Query(sql string, args ...interface{}) (rows *sql.Rows, err error
 // DoQuery commits the sql string and its arguments to underlying driver
 // through given link object and returns the execution result.
 func (c *Core) DoQuery(link Link, sql string, args ...interface{}) (rows *sql.Rows, err error) {
+	ctx := c.DB.GetCtx()
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	sql, args = formatSql(sql, args)
 	sql, args = c.DB.HandleSqlBeforeCommit(link, sql, args)
 	if c.DB.GetDebug() {
 		mTime1 := gtime.TimestampMilli()
-		rows, err = link.Query(sql, args...)
+		rows, err = link.QueryContext(ctx, sql, args...)
 		mTime2 := gtime.TimestampMilli()
 		s := &Sql{
 			Sql:    sql,
@@ -95,7 +99,7 @@ func (c *Core) DoQuery(link Link, sql string, args ...interface{}) (rows *sql.Ro
 		}
 		c.writeSqlToLogger(s)
 	} else {
-		rows, err = link.Query(sql, args...)
+		rows, err = link.QueryContext(ctx, sql, args...)
 	}
 	if err == nil {
 		return rows, nil
@@ -118,12 +122,16 @@ func (c *Core) Exec(sql string, args ...interface{}) (result sql.Result, err err
 // DoExec commits the sql string and its arguments to underlying driver
 // through given link object and returns the execution result.
 func (c *Core) DoExec(link Link, sql string, args ...interface{}) (result sql.Result, err error) {
+	ctx := c.DB.GetCtx()
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	sql, args = formatSql(sql, args)
 	sql, args = c.DB.HandleSqlBeforeCommit(link, sql, args)
 	if c.DB.GetDebug() {
 		mTime1 := gtime.TimestampMilli()
 		if !c.DB.GetDryRun() {
-			result, err = link.Exec(sql, args...)
+			result, err = link.ExecContext(ctx, sql, args...)
 		} else {
 			result = new(SqlResult)
 		}
@@ -140,7 +148,7 @@ func (c *Core) DoExec(link Link, sql string, args ...interface{}) (result sql.Re
 		c.writeSqlToLogger(s)
 	} else {
 		if !c.DB.GetDryRun() {
-			result, err = link.Exec(sql, args...)
+			result, err = link.ExecContext(ctx, sql, args...)
 		} else {
 			result = new(SqlResult)
 		}
@@ -157,8 +165,10 @@ func (c *Core) DoExec(link Link, sql string, args ...interface{}) (result sql.Re
 // The parameter <execOnMaster> specifies whether executing the sql on master node,
 // or else it executes the sql on slave node if master-slave configured.
 func (c *Core) Prepare(sql string, execOnMaster ...bool) (*sql.Stmt, error) {
-	err := (error)(nil)
-	link := (Link)(nil)
+	var (
+		err  error
+		link Link
+	)
 	if len(execOnMaster) > 0 && execOnMaster[0] {
 		if link, err = c.DB.Master(); err != nil {
 			return nil, err
@@ -173,7 +183,11 @@ func (c *Core) Prepare(sql string, execOnMaster ...bool) (*sql.Stmt, error) {
 
 // doPrepare calls prepare function on given link object and returns the statement object.
 func (c *Core) DoPrepare(link Link, sql string) (*sql.Stmt, error) {
-	return link.Prepare(sql)
+	ctx := c.DB.GetCtx()
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return link.PrepareContext(ctx, sql)
 }
 
 // GetAll queries and returns data records from database.
