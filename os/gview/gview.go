@@ -16,7 +16,7 @@ import (
 
 	"github.com/gogf/gf"
 	"github.com/gogf/gf/container/garray"
-	"github.com/gogf/gf/internal/cmdenv"
+	"github.com/gogf/gf/os/gcmd"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/glog"
 )
@@ -71,7 +71,7 @@ func New(path ...string) *View {
 		}
 	} else {
 		// Customized dir path from env/cmd.
-		if envPath := cmdenv.Get("gf.gview.path").String(); envPath != "" {
+		if envPath := gcmd.GetWithEnv("gf.gview.path").String(); envPath != "" {
 			if gfile.Exists(envPath) {
 				if err := view.SetPath(envPath); err != nil {
 					intlog.Error(err)
@@ -107,34 +107,37 @@ func New(path ...string) *View {
 	}
 	// default build-in functions.
 	view.BindFuncMap(FuncMap{
-		"eq":         view.funcEq,
-		"ne":         view.funcNe,
-		"lt":         view.funcLt,
-		"le":         view.funcLe,
-		"gt":         view.funcGt,
-		"ge":         view.funcGe,
-		"text":       view.funcText,
-		"html":       view.funcHtmlEncode,
-		"htmlencode": view.funcHtmlEncode,
-		"htmldecode": view.funcHtmlDecode,
-		"encode":     view.funcHtmlEncode,
-		"decode":     view.funcHtmlDecode,
-		"url":        view.funcUrlEncode,
-		"urlencode":  view.funcUrlEncode,
-		"urldecode":  view.funcUrlDecode,
-		"date":       view.funcDate,
-		"substr":     view.funcSubStr,
-		"strlimit":   view.funcStrLimit,
-		"concat":     view.funcConcat,
-		"replace":    view.funcReplace,
-		"compare":    view.funcCompare,
-		"hidestr":    view.funcHideStr,
-		"highlight":  view.funcHighlight,
-		"toupper":    view.funcToUpper,
-		"tolower":    view.funcToLower,
-		"nl2br":      view.funcNl2Br,
-		"include":    view.funcInclude,
-		"dump":       view.funcDump,
+		"eq":         view.buildInFuncEq,
+		"ne":         view.buildInFuncNe,
+		"lt":         view.buildInFuncLt,
+		"le":         view.buildInFuncLe,
+		"gt":         view.buildInFuncGt,
+		"ge":         view.buildInFuncGe,
+		"text":       view.buildInFuncText,
+		"html":       view.buildInFuncHtmlEncode,
+		"htmlencode": view.buildInFuncHtmlEncode,
+		"htmldecode": view.buildInFuncHtmlDecode,
+		"encode":     view.buildInFuncHtmlEncode,
+		"decode":     view.buildInFuncHtmlDecode,
+		"url":        view.buildInFuncUrlEncode,
+		"urlencode":  view.buildInFuncUrlEncode,
+		"urldecode":  view.buildInFuncUrlDecode,
+		"date":       view.buildInFuncDate,
+		"substr":     view.buildInFuncSubStr,
+		"strlimit":   view.buildInFuncStrLimit,
+		"concat":     view.buildInFuncConcat,
+		"replace":    view.buildInFuncReplace,
+		"compare":    view.buildInFuncCompare,
+		"hidestr":    view.buildInFuncHideStr,
+		"highlight":  view.buildInFuncHighlight,
+		"toupper":    view.buildInFuncToUpper,
+		"tolower":    view.buildInFuncToLower,
+		"nl2br":      view.buildInFuncNl2Br,
+		"include":    view.buildInFuncInclude,
+		"dump":       view.buildInFuncDump,
+		"map":        view.buildInFuncMap,
+		"maps":       view.buildInFuncMaps,
+		"json":       view.buildInFuncJson,
 	})
 
 	return view

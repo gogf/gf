@@ -169,19 +169,7 @@ func GetBytesByTwoOffsetsByPath(path string, start int64, end int64) []byte {
 //
 // Note that the parameter passed to callback function might be an empty value, and the last non-empty line
 // will be passed to callback function <callback> even if it has no newline marker.
-func ReadLines(file string, callback func(text string)) error {
-	cb := func(bytes []byte) {
-		callback(gconv.UnsafeBytesToStr(bytes))
-	}
-	return ReadByteLines(file, cb)
-}
-
-// ReadByteLines reads file content line by line, which is passed to the callback function <callback> as []byte.
-// It matches each line of text, separated by chars '\r' or '\n', stripped any trailing end-of-line marker.
-//
-// Note that the parameter passed to callback function might be an empty value, and the last non-empty line
-// will be passed to callback function <callback> even if it has no newline marker.
-func ReadByteLines(file string, callback func(bytes []byte)) error {
+func ReadLines(file string, callback func(text string) error) error {
 	f, err := os.Open(file)
 	if err != nil {
 		return err
@@ -189,9 +177,42 @@ func ReadByteLines(file string, callback func(bytes []byte)) error {
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
-
 	for scanner.Scan() {
-		callback(scanner.Bytes())
+		if err = callback(scanner.Text()); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// ReadByteLines reads file content line by line, which is passed to the callback function <callback> as []byte.
+// It matches each line of text, separated by chars '\r' or '\n', stripped any trailing end-of-line marker.
+//
+// Note that the parameter passed to callback function might be an empty value, and the last non-empty line
+// will be passed to callback function <callback> even if it has no newline marker.
+//
+// Deprecated, use ReadLinesBytes instead.
+func ReadByteLines(file string, callback func(bytes []byte) error) error {
+	return ReadLinesBytes(file, callback)
+}
+
+// ReadLinesBytes reads file content line by line, which is passed to the callback function <callback> as []byte.
+// It matches each line of text, separated by chars '\r' or '\n', stripped any trailing end-of-line marker.
+//
+// Note that the parameter passed to callback function might be an empty value, and the last non-empty line
+// will be passed to callback function <callback> even if it has no newline marker.
+func ReadLinesBytes(file string, callback func(bytes []byte) error) error {
+	f, err := os.Open(file)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		if err = callback(scanner.Bytes()); err != nil {
+			return err
+		}
 	}
 	return nil
 }

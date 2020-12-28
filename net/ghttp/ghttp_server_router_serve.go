@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -44,13 +44,15 @@ func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*handlerParsedI
 		}
 	}
 	// Search and cache the router handlers.
-	value := s.serveCache.GetOrSetFunc(s.serveHandlerKey(method, r.URL.Path, r.GetHost()), func() interface{} {
-		parsedItems, hasHook, hasServe = s.searchHandlers(method, r.URL.Path, r.GetHost())
-		if parsedItems != nil {
-			return &handlerCacheItem{parsedItems, hasHook, hasServe}
-		}
-		return nil
-	}, gROUTE_CACHE_DURATION)
+	value, _ := s.serveCache.GetOrSetFunc(
+		s.serveHandlerKey(method, r.URL.Path, r.GetHost()),
+		func() (interface{}, error) {
+			parsedItems, hasHook, hasServe = s.searchHandlers(method, r.URL.Path, r.GetHost())
+			if parsedItems != nil {
+				return &handlerCacheItem{parsedItems, hasHook, hasServe}, nil
+			}
+			return nil, nil
+		}, routeCacheDuration)
 	if value != nil {
 		item := value.(*handlerCacheItem)
 		return item.parsedItems, item.hasHook, item.hasServe
@@ -64,6 +66,22 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 	if len(path) == 0 {
 		return nil, false, false
 	}
+	// In case of double '/' URI, for example:
+	// /user//index, //user/index, //user//index//
+	var previousIsSep = false
+	for i := 0; i < len(path); {
+		if path[i] == '/' {
+			if previousIsSep {
+				path = path[:i] + path[i+1:]
+				continue
+			} else {
+				previousIsSep = true
+			}
+		} else {
+			previousIsSep = false
+		}
+		i++
+	}
 	// Split the URL.path to separate parts.
 	var array []string
 	if strings.EqualFold("/", path) {
@@ -71,11 +89,14 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 	} else {
 		array = strings.Split(path[1:], "/")
 	}
-	parsedItemList := glist.New()
-	lastMiddlewareElem := (*glist.Element)(nil)
-	repeatHandlerCheckMap := make(map[int]struct{}, 16)
+	var (
+		lastMiddlewareElem    *glist.Element
+		parsedItemList        = glist.New()
+		repeatHandlerCheckMap = make(map[int]struct{}, 16)
+	)
+
 	// Default domain has the most priority when iteration.
-	for _, domain := range []string{gDEFAULT_DOMAIN, domain} {
+	for _, domain := range []string{defaultDomainName, domain} {
 		p, ok := s.serveTree[domain]
 		if !ok {
 			continue
@@ -83,10 +104,6 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 		// Make a list array with capacity of 16.
 		lists := make([]*glist.List, 0, 16)
 		for i, part := range array {
-			// In case of double '/' URI, eg: /user//index
-			if part == "" {
-				continue
-			}
 			// Add all list of each node to the list array.
 			if v, ok := p.(map[string]interface{})["*list"]; ok {
 				lists = append(lists, v.(*glist.List))
@@ -132,11 +149,11 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 				// Serving handler can only be added to the handler array just once.
 				if hasServe {
 					switch item.itemType {
-					case gHANDLER_TYPE_HANDLER, gHANDLER_TYPE_OBJECT, gHANDLER_TYPE_CONTROLLER:
+					case handlerTypeHandler, handlerTypeObject, handlerTypeController:
 						continue
 					}
 				}
-				if item.router.Method == gDEFAULT_METHOD || item.router.Method == method {
+				if item.router.Method == defaultMethod || item.router.Method == method {
 					// Note the rule having no fuzzy rules: len(match) == 1
 					if match, err := gregex.MatchString(item.router.RegRule, path); err == nil && len(match) > 0 {
 						parsedItem := &handlerParsedItem{item, nil}
@@ -153,14 +170,14 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 						}
 						switch item.itemType {
 						// The serving handler can be only added just once.
-						case gHANDLER_TYPE_HANDLER, gHANDLER_TYPE_OBJECT, gHANDLER_TYPE_CONTROLLER:
+						case handlerTypeHandler, handlerTypeObject, handlerTypeController:
 							hasServe = true
 							parsedItemList.PushBack(parsedItem)
 
 						// The middleware is inserted before the serving handler.
-						// If there're multiple middlewares, they're inserted into the result list by their registering order.
-						// The middlewares are also executed by their registering order.
-						case gHANDLER_TYPE_MIDDLEWARE:
+						// If there're multiple middleware, they're inserted into the result list by their registering order.
+						// The middleware are also executed by their registered order.
+						case handlerTypeMiddleware:
 							if lastMiddlewareElem == nil {
 								lastMiddlewareElem = parsedItemList.PushFront(parsedItem)
 							} else {
@@ -168,7 +185,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 							}
 
 						// HOOK handler, just push it back to the list.
-						case gHANDLER_TYPE_HOOK:
+						case handlerTypeHook:
 							hasHook = true
 							parsedItemList.PushBack(parsedItem)
 
@@ -194,7 +211,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (item *handlerItem) MarshalJSON() ([]byte, error) {
 	switch item.itemType {
-	case gHANDLER_TYPE_HOOK:
+	case handlerTypeHook:
 		return json.Marshal(
 			fmt.Sprintf(
 				`%s %s:%s (%s)`,
@@ -204,7 +221,7 @@ func (item *handlerItem) MarshalJSON() ([]byte, error) {
 				item.hookName,
 			),
 		)
-	case gHANDLER_TYPE_MIDDLEWARE:
+	case handlerTypeMiddleware:
 		return json.Marshal(
 			fmt.Sprintf(
 				`%s %s:%s (MIDDLEWARE)`,

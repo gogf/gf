@@ -32,7 +32,31 @@ func T(content string, language ...string) string {
 	return defaultManager.T(content, language...)
 }
 
-// Translate translates <content> with configured language.
+// Tf is alias of TranslateFormat for convenience.
+func Tf(format string, values ...interface{}) string {
+	return defaultManager.TranslateFormat(format, values...)
+}
+
+// Tfl is alias of TranslateFormatLang for convenience.
+func Tfl(language string, format string, values ...interface{}) string {
+	return defaultManager.TranslateFormatLang(language, format, values...)
+}
+
+// TranslateFormat translates, formats and returns the <format> with configured language
+// and given <values>.
+func TranslateFormat(format string, values ...interface{}) string {
+	return defaultManager.TranslateFormat(format, values...)
+}
+
+// TranslateFormatLang translates, formats and returns the <format> with configured language
+// and given <values>. The parameter <language> specifies custom translation language ignoring
+// configured language. If <language> is given empty string, it uses the default configured
+// language for the translation.
+func TranslateFormatLang(language string, format string, values ...interface{}) string {
+	return defaultManager.TranslateFormatLang(format, language, values...)
+}
+
+// Translate translates <content> with configured language and returns the translated content.
 // The parameter <language> specifies custom translation language ignoring configured language.
 func Translate(content string, language ...string) string {
 	return defaultManager.Translate(content, language...)

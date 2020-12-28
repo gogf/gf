@@ -30,7 +30,7 @@ func Test_Middleware_CORS1(t *testing.T) {
 	defer s.Shutdown()
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		// Common Checks.
 		t.Assert(client.GetContent("/"), "Not Found")
@@ -55,7 +55,7 @@ func Test_Middleware_CORS1(t *testing.T) {
 	})
 	// OPTIONS GET
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		client.SetHeader("Access-Control-Request-Method", "GET")
 		resp, err := client.Options("/api.v2/user/list")
@@ -67,7 +67,7 @@ func Test_Middleware_CORS1(t *testing.T) {
 	})
 	// OPTIONS POST
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		client.SetHeader("Access-Control-Request-Method", "POST")
 		resp, err := client.Options("/api.v2/user/list")
@@ -93,7 +93,7 @@ func Test_Middleware_CORS2(t *testing.T) {
 	defer s.Shutdown()
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		// Common Checks.
 		t.Assert(client.GetContent("/"), "Not Found")
@@ -111,7 +111,7 @@ func Test_Middleware_CORS2(t *testing.T) {
 	})
 	// OPTIONS GET None.
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		client.SetHeader("Access-Control-Request-Method", "GET")
 		resp, err := client.Options("/api.v2/user")
@@ -122,7 +122,7 @@ func Test_Middleware_CORS2(t *testing.T) {
 	})
 	// OPTIONS GET
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		client.SetHeader("Access-Control-Request-Method", "GET")
 		resp, err := client.Options("/api.v2/user/list/1")
@@ -133,7 +133,7 @@ func Test_Middleware_CORS2(t *testing.T) {
 	})
 	// OPTIONS POST
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		client.SetHeader("Access-Control-Request-Method", "POST")
 		resp, err := client.Options("/api.v2/user/list/1")

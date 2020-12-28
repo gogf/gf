@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -8,18 +8,50 @@
 package gdb
 
 import (
+	"context"
 	"database/sql"
-	"errors"
 	"fmt"
-	"github.com/gogf/gf/internal/utils"
+	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/text/gstr"
 	"reflect"
 	"strings"
+
+	"github.com/gogf/gf/internal/utils"
 
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/util/gconv"
 )
+
+// Ctx is a chaining function, which creates and returns a new DB that is a shallow copy
+// of current DB object and with given context in it.
+// Note that this returned DB object can be used only once, so do not assign it to
+// a global or package variable for long using.
+func (c *Core) Ctx(ctx context.Context) DB {
+	if ctx == nil {
+		return c.DB
+	}
+	var (
+		err        error
+		newCore    = &Core{}
+		configNode = c.DB.GetConfig()
+	)
+	*newCore = *c
+	newCore.ctx = ctx
+	newCore.DB, err = driverMap[configNode.Type].New(newCore, configNode)
+	// Seldom error, just log it.
+	if err != nil {
+		c.DB.GetLogger().Ctx(ctx).Error(err)
+	}
+	return newCore.DB
+}
+
+// GetCtx returns the context for current DB.
+// Note that it might be nil.
+func (c *Core) GetCtx() context.Context {
+	return c.ctx
+}
 
 // Master creates and returns a connection from master node if master-slave configured.
 // It returns the default connection if master-slave not configured.
@@ -59,6 +91,7 @@ func (c *Core) DoQuery(link Link, sql string, args ...interface{}) (rows *sql.Ro
 			Error:  err,
 			Start:  mTime1,
 			End:    mTime2,
+			Group:  c.DB.GetGroup(),
 		}
 		c.writeSqlToLogger(s)
 	} else {
@@ -102,6 +135,7 @@ func (c *Core) DoExec(link Link, sql string, args ...interface{}) (result sql.Re
 			Error:  err,
 			Start:  mTime1,
 			End:    mTime2,
+			Group:  c.DB.GetGroup(),
 		}
 		c.writeSqlToLogger(s)
 	} else {
@@ -160,7 +194,7 @@ func (c *Core) DoGetAll(link Link, sql string, args ...interface{}) (result Resu
 		return nil, err
 	}
 	defer rows.Close()
-	return c.DB.rowsToResult(rows)
+	return c.DB.convertRowsToResult(rows)
 }
 
 // GetOne queries and returns one record from database.
@@ -307,6 +341,11 @@ func (c *Core) Transaction(f func(tx *TX) error) (err error) {
 		return err
 	}
 	defer func() {
+		if err == nil {
+			if e := recover(); e != nil {
+				err = fmt.Errorf("%v", e)
+			}
+		}
 		if err != nil {
 			if e := tx.Rollback(); e != nil {
 				err = e
@@ -331,7 +370,10 @@ func (c *Core) Transaction(f func(tx *TX) error) (err error) {
 //
 // The parameter <batch> specifies the batch operation count when given data is slice.
 func (c *Core) Insert(table string, data interface{}, batch ...int) (sql.Result, error) {
-	return c.DB.DoInsert(nil, table, data, gINSERT_OPTION_DEFAULT, batch...)
+	if len(batch) > 0 {
+		return c.Model(table).Data(data).Batch(batch[0]).Insert()
+	}
+	return c.Model(table).Data(data).Insert()
 }
 
 // InsertIgnore does "INSERT IGNORE INTO ..." statement for the table.
@@ -344,7 +386,10 @@ func (c *Core) Insert(table string, data interface{}, batch ...int) (sql.Result,
 //
 // The parameter <batch> specifies the batch operation count when given data is slice.
 func (c *Core) InsertIgnore(table string, data interface{}, batch ...int) (sql.Result, error) {
-	return c.DB.DoInsert(nil, table, data, gINSERT_OPTION_IGNORE, batch...)
+	if len(batch) > 0 {
+		return c.Model(table).Data(data).Batch(batch[0]).InsertIgnore()
+	}
+	return c.Model(table).Data(data).InsertIgnore()
 }
 
 // Replace does "REPLACE INTO ..." statement for the table.
@@ -360,7 +405,10 @@ func (c *Core) InsertIgnore(table string, data interface{}, batch ...int) (sql.R
 // If given data is type of slice, it then does batch replacing, and the optional parameter
 // <batch> specifies the batch operation count.
 func (c *Core) Replace(table string, data interface{}, batch ...int) (sql.Result, error) {
-	return c.DB.DoInsert(nil, table, data, gINSERT_OPTION_REPLACE, batch...)
+	if len(batch) > 0 {
+		return c.Model(table).Data(data).Batch(batch[0]).Replace()
+	}
+	return c.Model(table).Data(data).Replace()
 }
 
 // Save does "INSERT INTO ... ON DUPLICATE KEY UPDATE..." statement for the table.
@@ -375,11 +423,14 @@ func (c *Core) Replace(table string, data interface{}, batch ...int) (sql.Result
 // If given data is type of slice, it then does batch saving, and the optional parameter
 // <batch> specifies the batch operation count.
 func (c *Core) Save(table string, data interface{}, batch ...int) (sql.Result, error) {
-	return c.DB.DoInsert(nil, table, data, gINSERT_OPTION_SAVE, batch...)
+	if len(batch) > 0 {
+		return c.Model(table).Data(data).Batch(batch[0]).Save()
+	}
+	return c.Model(table).Data(data).Save()
 }
 
 // doInsert inserts or updates data for given table.
-//
+// This function is usually used for custom interface definition, you do not need call it manually.
 // The parameter <data> can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
 // Eg:
 // Data(g.Map{"uid": 10000, "name":"john"})
@@ -407,13 +458,19 @@ func (c *Core) DoInsert(link Link, table string, data interface{}, option int, b
 	switch reflectKind {
 	case reflect.Slice, reflect.Array:
 		return c.DB.DoBatchInsert(link, table, data, option, batch...)
-	case reflect.Map, reflect.Struct:
-		dataMap = DataToMapDeep(data)
+	case reflect.Struct:
+		if _, ok := data.(apiInterfaces); ok {
+			return c.DB.DoBatchInsert(link, table, data, option, batch...)
+		} else {
+			dataMap = ConvertDataForTableRecord(data)
+		}
+	case reflect.Map:
+		dataMap = ConvertDataForTableRecord(data)
 	default:
-		return result, errors.New(fmt.Sprint("unsupported data type:", reflectKind))
+		return result, gerror.New(fmt.Sprint("unsupported data type:", reflectKind))
 	}
 	if len(dataMap) == 0 {
-		return nil, errors.New("data cannot be empty")
+		return nil, gerror.New("data cannot be empty")
 	}
 	var (
 		charL, charR = c.DB.GetChars()
@@ -422,14 +479,18 @@ func (c *Core) DoInsert(link Link, table string, data interface{}, option int, b
 	)
 	for k, v := range dataMap {
 		fields = append(fields, charL+k+charR)
-		values = append(values, "?")
-		params = append(params, v)
+		if s, ok := v.(Raw); ok {
+			values = append(values, gconv.String(s))
+		} else {
+			values = append(values, "?")
+			params = append(params, v)
+		}
 	}
-	if option == gINSERT_OPTION_SAVE {
+	if option == insertOptionSave {
 		for k, _ := range dataMap {
 			// If it's SAVE operation,
 			// do not automatically update the creating time.
-			if utils.EqualFoldWithoutChars(k, gSOFT_FIELD_NAME_CREATE) {
+			if c.isSoftCreatedFiledName(k) {
 				continue
 			}
 			if len(updateStr) > 0 {
@@ -462,45 +523,58 @@ func (c *Core) DoInsert(link Link, table string, data interface{}, option int, b
 // BatchInsert batch inserts data.
 // The parameter <list> must be type of slice of map or struct.
 func (c *Core) BatchInsert(table string, list interface{}, batch ...int) (sql.Result, error) {
-	return c.DB.DoBatchInsert(nil, table, list, gINSERT_OPTION_DEFAULT, batch...)
+	if len(batch) > 0 {
+		return c.Model(table).Data(list).Batch(batch[0]).Insert()
+	}
+	return c.Model(table).Data(list).Insert()
 }
 
-// BatchInsert batch inserts data with ignore option.
+// BatchInsertIgnore batch inserts data with ignore option.
 // The parameter <list> must be type of slice of map or struct.
 func (c *Core) BatchInsertIgnore(table string, list interface{}, batch ...int) (sql.Result, error) {
-	return c.DB.DoBatchInsert(nil, table, list, gINSERT_OPTION_IGNORE, batch...)
+	if len(batch) > 0 {
+		return c.Model(table).Data(list).Batch(batch[0]).InsertIgnore()
+	}
+	return c.Model(table).Data(list).InsertIgnore()
 }
 
 // BatchReplace batch replaces data.
 // The parameter <list> must be type of slice of map or struct.
 func (c *Core) BatchReplace(table string, list interface{}, batch ...int) (sql.Result, error) {
-	return c.DB.DoBatchInsert(nil, table, list, gINSERT_OPTION_REPLACE, batch...)
+	if len(batch) > 0 {
+		return c.Model(table).Data(list).Batch(batch[0]).Replace()
+	}
+	return c.Model(table).Data(list).Replace()
 }
 
 // BatchSave batch replaces data.
 // The parameter <list> must be type of slice of map or struct.
 func (c *Core) BatchSave(table string, list interface{}, batch ...int) (sql.Result, error) {
-	return c.DB.DoBatchInsert(nil, table, list, gINSERT_OPTION_SAVE, batch...)
+	if len(batch) > 0 {
+		return c.Model(table).Data(list).Batch(batch[0]).Save()
+	}
+	return c.Model(table).Data(list).Save()
 }
 
 // DoBatchInsert batch inserts/replaces/saves data.
+// This function is usually used for custom interface definition, you do not need call it manually.
 func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option int, batch ...int) (result sql.Result, err error) {
 	table = c.DB.QuotePrefixTableName(table)
 	var (
-		keys    []string
-		values  []string
-		params  []interface{}
-		listMap List
+		keys    []string      // Field names.
+		values  []string      // Value holder string array, like: (?,?,?)
+		params  []interface{} // Values that will be committed to underlying database driver.
+		listMap List          // The data list that passed from caller.
 	)
-	switch v := list.(type) {
+	switch value := list.(type) {
 	case Result:
-		listMap = v.List()
+		listMap = value.List()
 	case Record:
-		listMap = List{v.Map()}
+		listMap = List{value.Map()}
 	case List:
-		listMap = v
+		listMap = value
 	case Map:
-		listMap = List{v}
+		listMap = List{value}
 	default:
 		var (
 			rv   = reflect.ValueOf(list)
@@ -515,16 +589,29 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 		case reflect.Slice, reflect.Array:
 			listMap = make(List, rv.Len())
 			for i := 0; i < rv.Len(); i++ {
-				listMap[i] = DataToMapDeep(rv.Index(i).Interface())
+				listMap[i] = ConvertDataForTableRecord(rv.Index(i).Interface())
 			}
-		case reflect.Map, reflect.Struct:
-			listMap = List{DataToMapDeep(v)}
+		case reflect.Map:
+			listMap = List{ConvertDataForTableRecord(value)}
+		case reflect.Struct:
+			if v, ok := value.(apiInterfaces); ok {
+				var (
+					array = v.Interfaces()
+					list  = make(List, len(array))
+				)
+				for i := 0; i < len(array); i++ {
+					list[i] = ConvertDataForTableRecord(array[i])
+				}
+				listMap = list
+			} else {
+				listMap = List{ConvertDataForTableRecord(value)}
+			}
 		default:
-			return result, errors.New(fmt.Sprint("unsupported list type:", kind))
+			return result, gerror.New(fmt.Sprint("unsupported list type:", kind))
 		}
 	}
 	if len(listMap) < 1 {
-		return result, errors.New("data list cannot be empty")
+		return result, gerror.New("data list cannot be empty")
 	}
 	if link == nil {
 		if link, err = c.DB.Master(); err != nil {
@@ -532,25 +619,22 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 		}
 	}
 	// Handle the field names and place holders.
-	holders := []string(nil)
 	for k, _ := range listMap[0] {
 		keys = append(keys, k)
-		holders = append(holders, "?")
 	}
 	// Prepare the batch result pointer.
 	var (
-		charL, charR   = c.DB.GetChars()
-		batchResult    = new(SqlResult)
-		keysStr        = charL + strings.Join(keys, charR+","+charL) + charR
-		valueHolderStr = "(" + strings.Join(holders, ",") + ")"
-		operation      = GetInsertOperationByOption(option)
-		updateStr      = ""
+		charL, charR = c.DB.GetChars()
+		batchResult  = new(SqlResult)
+		keysStr      = charL + strings.Join(keys, charR+","+charL) + charR
+		operation    = GetInsertOperationByOption(option)
+		updateStr    = ""
 	)
-	if option == gINSERT_OPTION_SAVE {
+	if option == insertOptionSave {
 		for _, k := range keys {
 			// If it's SAVE operation,
 			// do not automatically update the creating time.
-			if utils.EqualFoldWithoutChars(k, gSOFT_FIELD_NAME_CREATE) {
+			if c.isSoftCreatedFiledName(k) {
 				continue
 			}
 			if len(updateStr) > 0 {
@@ -564,27 +648,34 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 		}
 		updateStr = fmt.Sprintf("ON DUPLICATE KEY UPDATE %s", updateStr)
 	}
-	batchNum := gDEFAULT_BATCH_NUM
+	batchNum := defaultBatchNumber
 	if len(batch) > 0 && batch[0] > 0 {
 		batchNum = batch[0]
 	}
-	listMapLen := len(listMap)
+	var (
+		listMapLen  = len(listMap)
+		valueHolder = make([]string, 0)
+	)
 	for i := 0; i < listMapLen; i++ {
+		values = values[:0]
 		// Note that the map type is unordered,
 		// so it should use slice+key to retrieve the value.
 		for _, k := range keys {
-			params = append(params, listMap[i][k])
+			if s, ok := listMap[i][k].(Raw); ok {
+				values = append(values, gconv.String(s))
+			} else {
+				values = append(values, "?")
+				params = append(params, listMap[i][k])
+			}
 		}
-		values = append(values, valueHolderStr)
+		valueHolder = append(valueHolder, "("+gstr.Join(values, ",")+")")
 		if len(values) == batchNum || (i == listMapLen-1 && len(values) > 0) {
 			r, err := c.DB.DoExec(
 				link,
 				fmt.Sprintf(
 					"%s INTO %s(%s) VALUES%s %s",
-					operation,
-					table,
-					keysStr,
-					strings.Join(values, ","),
+					operation, table, keysStr,
+					gstr.Join(valueHolder, ","),
 					updateStr,
 				),
 				params...,
@@ -599,7 +690,7 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 				batchResult.affected += n
 			}
 			params = params[:0]
-			values = values[:0]
+			valueHolder = valueHolder[:0]
 		}
 	}
 	return batchResult, nil
@@ -620,15 +711,11 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 // "age IN(?,?)", 18, 50
 // User{ Id : 1, UserName : "john"}
 func (c *Core) Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error) {
-	newWhere, newArgs := formatWhere(c.DB, condition, args, false)
-	if newWhere != "" {
-		newWhere = " WHERE " + newWhere
-	}
-	return c.DB.DoUpdate(nil, table, data, newWhere, newArgs...)
+	return c.Model(table).Data(data).Where(condition, args...).Update()
 }
 
 // doUpdate does "UPDATE ... " statement for the table.
-// Also see Update.
+// This function is usually used for custom interface definition, you do not need call it manually.
 func (c *Core) DoUpdate(link Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) {
 	table = c.DB.QuotePrefixTableName(table)
 	var (
@@ -647,18 +734,38 @@ func (c *Core) DoUpdate(link Link, table string, data interface{}, condition str
 	case reflect.Map, reflect.Struct:
 		var (
 			fields  []string
-			dataMap = DataToMapDeep(data)
+			dataMap = ConvertDataForTableRecord(data)
 		)
 		for k, v := range dataMap {
-			fields = append(fields, c.DB.QuoteWord(k)+"=?")
-			params = append(params, v)
+			switch value := v.(type) {
+			case *Counter:
+				if value.Value != 0 {
+					column := c.DB.QuoteWord(value.Field)
+					fields = append(fields, fmt.Sprintf("%s=%s+?", column, column))
+					params = append(params, value.Value)
+				}
+			case Counter:
+				if value.Value != 0 {
+					column := c.DB.QuoteWord(value.Field)
+					fields = append(fields, fmt.Sprintf("%s=%s+?", column, column))
+					params = append(params, value.Value)
+				}
+			default:
+				if s, ok := v.(Raw); ok {
+					fields = append(fields, c.DB.QuoteWord(k)+"="+gconv.String(s))
+				} else {
+					fields = append(fields, c.DB.QuoteWord(k)+"=?")
+					params = append(params, v)
+				}
+
+			}
 		}
 		updates = strings.Join(fields, ",")
 	default:
 		updates = gconv.String(data)
 	}
 	if len(updates) == 0 {
-		return nil, errors.New("data cannot be empty")
+		return nil, gerror.New("data cannot be empty")
 	}
 	if len(params) > 0 {
 		args = append(params, args...)
@@ -688,15 +795,11 @@ func (c *Core) DoUpdate(link Link, table string, data interface{}, condition str
 // "age IN(?,?)", 18, 50
 // User{ Id : 1, UserName : "john"}
 func (c *Core) Delete(table string, condition interface{}, args ...interface{}) (result sql.Result, err error) {
-	newWhere, newArgs := formatWhere(c.DB, condition, args, false)
-	if newWhere != "" {
-		newWhere = " WHERE " + newWhere
-	}
-	return c.DB.DoDelete(nil, table, newWhere, newArgs...)
+	return c.Model(table).Where(condition, args...).Delete()
 }
 
 // DoDelete does "DELETE FROM ... " statement for the table.
-// Also see Delete.
+// This function is usually used for custom interface definition, you do not need call it manually.
 func (c *Core) DoDelete(link Link, table string, condition string, args ...interface{}) (result sql.Result, err error) {
 	if link == nil {
 		if link, err = c.DB.Master(); err != nil {
@@ -707,8 +810,8 @@ func (c *Core) DoDelete(link Link, table string, condition string, args ...inter
 	return c.DB.DoExec(link, fmt.Sprintf("DELETE FROM %s%s", table, condition), args...)
 }
 
-// rowsToResult converts underlying data record type sql.Rows to Result type.
-func (c *Core) rowsToResult(rows *sql.Rows) (Result, error) {
+// convertRowsToResult converts underlying data record type sql.Rows to Result type.
+func (c *Core) convertRowsToResult(rows *sql.Rows) (Result, error) {
 	if !rows.Next() {
 		return nil, nil
 	}
@@ -724,7 +827,7 @@ func (c *Core) rowsToResult(rows *sql.Rows) (Result, error) {
 		columnNames[k] = v.Name()
 	}
 	var (
-		values   = make([]sql.RawBytes, len(columnNames))
+		values   = make([]interface{}, len(columnNames))
 		records  = make(Result, 0)
 		scanArgs = make([]interface{}, len(values))
 	)
@@ -735,19 +838,12 @@ func (c *Core) rowsToResult(rows *sql.Rows) (Result, error) {
 		if err := rows.Scan(scanArgs...); err != nil {
 			return records, err
 		}
-		// Creates a new row object.
 		row := make(Record)
-		// Note that the internal looping variable <value> is type of []byte,
-		// which points to the same memory address. So it should do a copy.
 		for i, value := range values {
 			if value == nil {
 				row[columnNames[i]] = gvar.New(nil)
 			} else {
-				// As sql.RawBytes is type of slice,
-				// it should do a copy of it.
-				v := make([]byte, len(value))
-				copy(v, value)
-				row[columnNames[i]] = gvar.New(c.DB.convertValue(v, columnTypes[i]))
+				row[columnNames[i]] = gvar.New(c.DB.convertFieldValueToLocalValue(value, columnTypes[i]))
 			}
 		}
 		records = append(records, row)
@@ -768,13 +864,46 @@ func (c *Core) MarshalJSON() ([]byte, error) {
 }
 
 // writeSqlToLogger outputs the sql object to logger.
-// It is enabled when configuration "debug" is true.
+// It is enabled only if configuration "debug" is true.
 func (c *Core) writeSqlToLogger(v *Sql) {
-	s := fmt.Sprintf("[%3d ms] %s", v.End-v.Start, v.Format)
+	s := fmt.Sprintf("[%3d ms] [%s] %s", v.End-v.Start, v.Group, v.Format)
 	if v.Error != nil {
 		s += "\nError: " + v.Error.Error()
-		c.logger.Error(s)
+		c.logger.Ctx(c.DB.GetCtx()).Error(s)
 	} else {
-		c.logger.Debug(s)
+		c.logger.Ctx(c.DB.GetCtx()).Debug(s)
 	}
+}
+
+// HasTable determine whether the table name exists in the database.
+func (c *Core) HasTable(name string) (bool, error) {
+	tableList, err := c.DB.Tables()
+	if err != nil {
+		return false, err
+	}
+	for _, table := range tableList {
+		if table == name {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// isSoftCreatedFiledName checks and returns whether given filed name is an automatic-filled created time.
+func (c *Core) isSoftCreatedFiledName(fieldName string) bool {
+	if fieldName == "" {
+		return false
+	}
+	if config := c.DB.GetConfig(); config.CreatedAt != "" {
+		if utils.EqualFoldWithoutChars(fieldName, config.CreatedAt) {
+			return true
+		}
+		return gstr.InArray(append([]string{config.CreatedAt}, createdFiledNames...), fieldName)
+	}
+	for _, v := range createdFiledNames {
+		if utils.EqualFoldWithoutChars(fieldName, v) {
+			return true
+		}
+	}
+	return false
 }

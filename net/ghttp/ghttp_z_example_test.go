@@ -10,13 +10,35 @@ import (
 	"fmt"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
+	"github.com/gogf/gf/os/gfile"
 	"time"
 )
 
-func ExampleGetServer() {
+func ExampleHelloWorld() {
 	s := g.Server()
 	s.BindHandler("/", func(r *ghttp.Request) {
 		r.Response.Write("hello world")
+	})
+	s.SetPort(8999)
+	s.Run()
+}
+
+// Custom saving file name.
+func ExampleUploadFile_Save() {
+	s := g.Server()
+	s.BindHandler("/upload", func(r *ghttp.Request) {
+		file := r.GetUploadFile("TestFile")
+		if file == nil {
+			r.Response.Write("empty file")
+			return
+		}
+		file.Filename = "MyCustomFileName.txt"
+		fileName, err := file.Save(gfile.TempDir())
+		if err != nil {
+			r.Response.Write(err)
+			return
+		}
+		r.Response.Write(fileName)
 	})
 	s.SetPort(8999)
 	s.Run()
@@ -36,7 +58,7 @@ func ExampleClientResponse_RawDump() {
 // socks5 proxy server listening on `127.0.0.1:1080`
 func ExampleClient_SetProxy() {
 	// connect to a http proxy server
-	client := ghttp.NewClient()
+	client := g.Client()
 	client.SetProxy("http://127.0.0.1:1081")
 	client.SetTimeout(5 * time.Second) // it's suggested to set http client timeout
 	response, err := client.Get("https://api.ip.sb/ip")
@@ -86,7 +108,7 @@ func ExampleClient_SetProxy() {
 // socks5 proxy server listening on `127.0.0.1:1080`
 // for more details, please refer to ExampleClient_SetProxy
 func ExampleClientChain_Proxy() {
-	client := ghttp.NewClient()
+	client := g.Client()
 	response, err := client.Proxy("http://127.0.0.1:1081").Get("https://api.ip.sb/ip")
 	if err != nil {
 		// err is not nil when your proxy server is down.
@@ -95,7 +117,7 @@ func ExampleClientChain_Proxy() {
 	}
 	fmt.Println(response.RawResponse())
 
-	client2 := ghttp.NewClient()
+	client2 := g.Client()
 	response, err = client2.Proxy("socks5://127.0.0.1:1080").Get("https://api.ip.sb/ip")
 	if err != nil {
 		// err is not nil when your proxy server is down.

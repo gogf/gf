@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -9,10 +9,11 @@
 package gcfg_test
 
 import (
-	"github.com/gogf/gf/debug/gdebug"
-	"github.com/gogf/gf/os/gtime"
 	"os"
 	"testing"
+
+	"github.com/gogf/gf/debug/gdebug"
+	"github.com/gogf/gf/os/gtime"
 
 	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/frame/g"
@@ -37,7 +38,7 @@ array = [1,2,3]
     cache = "127.0.0.1:6379,1"
 `
 	gtest.C(t, func(t *gtest.T) {
-		path := gcfg.DEFAULT_CONFIG_FILE
+		path := gcfg.DefaultConfigFile
 		err := gfile.PutContents(path, config)
 		t.Assert(err, nil)
 		defer gfile.Remove(path)
@@ -88,7 +89,7 @@ array = [1,2,3]
 func Test_Basic2(t *testing.T) {
 	config := `log-path = "logs"`
 	gtest.C(t, func(t *gtest.T) {
-		path := gcfg.DEFAULT_CONFIG_FILE
+		path := gcfg.DefaultConfigFile
 		err := gfile.PutContents(path, config)
 		t.Assert(err, nil)
 		defer func() {
@@ -230,24 +231,19 @@ func Test_SetFileName(t *testing.T) {
 
 func Test_Instance(t *testing.T) {
 	config := `
-{
-	"array": [
-		1,
-		2,
-		3
-	],
-	"redis": {
-		"cache": "127.0.0.1:6379,1",
-		"disk": "127.0.0.1:6379,0"
-	},
-	"v1": 1,
-	"v2": "true",
-	"v3": "off",
-	"v4": "1.234"
-}
+array = [1.0, 2.0, 3.0]
+v1 = 1.0
+v2 = "true"
+v3 = "off"
+v4 = "1.234"
+
+[redis]
+  cache = "127.0.0.1:6379,1"
+  disk = "127.0.0.1:6379,0"
+
 `
 	gtest.C(t, func(t *gtest.T) {
-		path := gcfg.DEFAULT_CONFIG_FILE
+		path := gcfg.DefaultConfigFile
 		err := gfile.PutContents(path, config)
 		t.Assert(err, nil)
 		defer func() {
@@ -361,7 +357,7 @@ func TestCfg_FilePath(t *testing.T) {
 func TestCfg_et(t *testing.T) {
 	config := `log-path = "logs"`
 	gtest.C(t, func(t *gtest.T) {
-		path := gcfg.DEFAULT_CONFIG_FILE
+		path := gcfg.DefaultConfigFile
 		err := gfile.PutContents(path, config)
 		t.Assert(err, nil)
 		defer gfile.Remove(path)
@@ -456,11 +452,17 @@ func TestCfg_Instance(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		pwd := gfile.Pwd()
-		gfile.Chdir(gfile.Join(gdebug.TestDataPath()))
+		gfile.Chdir(gdebug.TestDataPath())
 		defer gfile.Chdir(pwd)
 		t.Assert(gcfg.Instance("c1") != nil, true)
 		t.Assert(gcfg.Instance("c1").Get("my-config"), "1")
 		t.Assert(gcfg.Instance("folder1/c1").Get("my-config"), "2")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		pwd := gfile.Pwd()
+		gfile.Chdir(gdebug.TestDataPath("folder1"))
+		defer gfile.Chdir(pwd)
+		t.Assert(gcfg.Instance("c2").Get("my-config"), 2)
 	})
 }
 
@@ -473,5 +475,15 @@ func TestCfg_Config(t *testing.T) {
 		gcfg.RemoveContent("config.yml")
 		gcfg.ClearContent()
 		t.Assert(gcfg.GetContent("name"), "")
+	})
+}
+
+func TestCfg_With_UTF8_BOM(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		cfg := g.Cfg("test-cfg-with-utf8-bom")
+		t.Assert(cfg.SetPath("testdata"), nil)
+		cfg.SetFileName("cfg-with-utf8-bom.toml")
+		t.Assert(cfg.GetInt("test.testInt"), 1)
+		t.Assert(cfg.GetString("test.testStr"), "test")
 	})
 }

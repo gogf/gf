@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -13,8 +13,8 @@ package gdb
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/text/gstr"
 	"strings"
@@ -62,10 +62,10 @@ func (d *DriverPgsql) GetChars() (charLeft string, charRight string) {
 // HandleSqlBeforeCommit deals with the sql string before commits it to underlying sql driver.
 func (d *DriverPgsql) HandleSqlBeforeCommit(link Link, sql string, args []interface{}) (string, []interface{}) {
 	var index int
-	// Convert place holder char '?' to string "$vx".
+	// Convert place holder char '?' to string "$x".
 	sql, _ = gregex.ReplaceStringFunc("\\?", sql, func(s string) string {
 		index++
-		return fmt.Sprintf("$v%d", index)
+		return fmt.Sprintf("$%d", index)
 	})
 	sql, _ = gregex.ReplaceString(` LIMIT (\d+),\s*(\d+)`, ` LIMIT $2 OFFSET $1`, sql)
 	return sql, args
@@ -100,28 +100,35 @@ func (d *DriverPgsql) TableFields(table string, schema ...string) (fields map[st
 	charL, charR := d.GetChars()
 	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
-		return nil, errors.New("function TableFields supports only single table operations")
+		return nil, gerror.New("function TableFields supports only single table operations")
 	}
 	table, _ = gregex.ReplaceString("\"", "", table)
 	checkSchema := d.DB.GetSchema()
 	if len(schema) > 0 && schema[0] != "" {
 		checkSchema = schema[0]
 	}
-	v := d.DB.GetCache().GetOrSetFunc(
-		fmt.Sprintf(`pgsql_table_fields_%s_%s`, table, checkSchema), func() interface{} {
-			var result Result
-			var link *sql.DB
+	v, _ := internalCache.GetOrSetFunc(
+		fmt.Sprintf(`pgsql_table_fields_%s_%s@group:%s`, table, checkSchema, d.GetGroup()),
+		func() (interface{}, error) {
+			var (
+				result Result
+				link   *sql.DB
+			)
 			link, err = d.DB.GetSlave(checkSchema)
 			if err != nil {
-				return nil
+				return nil, err
 			}
-			result, err = d.DB.DoGetAll(link, fmt.Sprintf(`
-			SELECT a.attname AS field, t.typname AS type FROM pg_class c, pg_attribute a 
-	        LEFT OUTER JOIN pg_description b ON a.attrelid=b.objoid AND a.attnum = b.objsubid,pg_type t
-	        WHERE c.relname = '%s' and a.attnum > 0 and a.attrelid = c.oid and a.atttypid = t.oid 
-			ORDER BY a.attnum`, strings.ToLower(table)))
+			structureSql := fmt.Sprintf(`
+SELECT a.attname AS field, t.typname AS type FROM pg_class c, pg_attribute a 
+LEFT OUTER JOIN pg_description b ON a.attrelid=b.objoid AND a.attnum = b.objsubid,pg_type t
+WHERE c.relname = '%s' and a.attnum > 0 and a.attrelid = c.oid and a.atttypid = t.oid 
+ORDER BY a.attnum`,
+				strings.ToLower(table),
+			)
+			structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
+			result, err = d.DB.DoGetAll(link, structureSql)
 			if err != nil {
-				return nil
+				return nil, err
 			}
 
 			fields = make(map[string]*TableField)
@@ -132,7 +139,7 @@ func (d *DriverPgsql) TableFields(table string, schema ...string) (fields map[st
 					Type:  m["type"].String(),
 				}
 			}
-			return fields
+			return fields, nil
 		}, 0)
 	if err == nil {
 		fields = v.(map[string]*TableField)

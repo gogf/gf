@@ -56,7 +56,7 @@ func (m *StrAnyMap) Iterator(f func(k string, v interface{}) bool) {
 
 // Clone returns a new hash map with copy of current map data.
 func (m *StrAnyMap) Clone() *StrAnyMap {
-	return NewStrAnyMapFrom(m.MapCopy(), !m.mu.IsSafe())
+	return NewStrAnyMapFrom(m.MapCopy(), m.mu.IsSafe())
 }
 
 // Map returns the underlying data map.
@@ -449,6 +449,12 @@ func (m *StrAnyMap) Merge(other *StrAnyMap) {
 	for k, v := range other.data {
 		m.data[k] = v
 	}
+}
+
+// String returns the map as a string.
+func (m *StrAnyMap) String() string {
+	b, _ := m.MarshalJSON()
+	return gconv.UnsafeBytesToStr(b)
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.

@@ -41,7 +41,7 @@ func Test_Log(t *testing.T) {
 		defer s.Shutdown()
 		defer gfile.Remove(logDir)
 		time.Sleep(100 * time.Millisecond)
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent("/hello"), "hello")

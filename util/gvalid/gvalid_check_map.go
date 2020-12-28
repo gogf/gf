@@ -18,12 +18,9 @@ import (
 // if <rules> is type of []string.
 // The optional parameter <messages> specifies the custom error messages for specified keys and rules.
 func CheckMap(params interface{}, rules interface{}, messages ...CustomMsg) *Error {
-	data := gconv.Map(params)
-	if data == nil {
-		return newErrorStr(
-			"invalid_params",
-			"invalid params type: convert to map failed",
-		)
+	// If there's no validation rules, it does nothing and returns quickly.
+	if params == nil || rules == nil {
+		return nil
 	}
 	var (
 		checkRules = make(map[string]string)
@@ -69,6 +66,17 @@ func CheckMap(params interface{}, rules interface{}, messages ...CustomMsg) *Err
 	case map[string]string:
 		checkRules = v
 	}
+	// If there's no validation rules, it does nothing and returns quickly.
+	if len(checkRules) == 0 {
+		return nil
+	}
+	data := gconv.Map(params)
+	if data == nil {
+		return newErrorStr(
+			"invalid_params",
+			"invalid params type: convert to map failed",
+		)
+	}
 	if len(messages) > 0 && len(messages[0]) > 0 {
 		if len(customMsgs) > 0 {
 			for k, v := range messages[0] {
@@ -87,15 +95,24 @@ func CheckMap(params interface{}, rules interface{}, messages ...CustomMsg) *Err
 		if v, ok := data[key]; ok {
 			value = v
 		}
+		// It checks each rule and its value in loop.
 		if e := doCheck(key, value, rule, customMsgs[key], data); e != nil {
 			_, item := e.FirstItem()
-			// If value is nil or empty string and has no required* rules,
-			// clear the error message.
+			// ===========================================================
+			// Only in map and struct validations, if value is nil or empty
+			// string and has no required* rules, it clears the error message.
+			// ===========================================================
 			if gconv.String(value) == "" {
 				required := false
 				// rule => error
 				for k := range item {
+					// Default required rules.
 					if _, ok := mustCheckRulesEvenValueEmpty[k]; ok {
+						required = true
+						break
+					}
+					// Custom rules are also required in default.
+					if _, ok := customRuleFuncMap[k]; ok {
 						required = true
 						break
 					}

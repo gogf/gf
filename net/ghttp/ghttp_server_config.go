@@ -10,6 +10,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/os/gres"
 	"github.com/gogf/gf/util/gutil"
 	"net/http"
 	"strconv"
@@ -92,7 +93,7 @@ type ServerConfig struct {
 	// size of the request body.
 	//
 	// It can be configured in configuration file using string like: 1m, 10m, 500kb etc.
-	// It's 1024 bytes in default.
+	// It's 10240 bytes in default.
 	MaxHeaderBytes int
 
 	// KeepAlive enables HTTP keep-alive.
@@ -156,6 +157,9 @@ type ServerConfig struct {
 
 	// SessionIdName specifies the session id name.
 	SessionIdName string
+
+	// SessionCookieOutput specifies whether automatic outputting session id to cookie.
+	SessionCookieOutput bool
 
 	// SessionPath specifies the session storage directory path for storing session files.
 	// It only makes sense if the session storage is type of file storage.
@@ -231,50 +235,56 @@ type ServerConfig struct {
 	Graceful bool
 }
 
-// Config creates and returns a ServerConfig object with default configurations.
+// Deprecated. Use NewConfig instead.
+func Config() ServerConfig {
+	return NewConfig()
+}
+
+// NewConfig creates and returns a ServerConfig object with default configurations.
 // Note that, do not define this default configuration to local package variable, as there're
 // some pointer attributes that may be shared in different servers.
-func Config() ServerConfig {
+func NewConfig() ServerConfig {
 	return ServerConfig{
-		Address:           "",
-		HTTPSAddr:         "",
-		Handler:           nil,
-		ReadTimeout:       60 * time.Second,
-		WriteTimeout:      0, // No timeout.
-		IdleTimeout:       60 * time.Second,
-		MaxHeaderBytes:    10240, // 10KB
-		KeepAlive:         true,
-		IndexFiles:        []string{"index.html", "index.htm"},
-		IndexFolder:       false,
-		ServerAgent:       "GF HTTP Server",
-		ServerRoot:        "",
-		StaticPaths:       make([]staticPathItem, 0),
-		FileServerEnabled: false,
-		CookieMaxAge:      time.Hour * 24 * 365,
-		CookiePath:        "/",
-		CookieDomain:      "",
-		SessionMaxAge:     time.Hour * 24,
-		SessionIdName:     "gfsessionid",
-		SessionPath:       gsession.DefaultStorageFilePath,
-		Logger:            glog.New(),
-		LogStdout:         true,
-		ErrorStack:        true,
-		ErrorLogEnabled:   true,
-		ErrorLogPattern:   "error-{Ymd}.log",
-		AccessLogEnabled:  false,
-		AccessLogPattern:  "access-{Ymd}.log",
-		DumpRouterMap:     true,
-		ClientMaxBodySize: 8 * 1024 * 1024, // 8MB
-		FormParsingMemory: 1024 * 1024,     // 1MB
-		Rewrites:          make(map[string]string),
-		Graceful:          true,
+		Address:             "",
+		HTTPSAddr:           "",
+		Handler:             nil,
+		ReadTimeout:         60 * time.Second,
+		WriteTimeout:        0, // No timeout.
+		IdleTimeout:         60 * time.Second,
+		MaxHeaderBytes:      10240, // 10KB
+		KeepAlive:           true,
+		IndexFiles:          []string{"index.html", "index.htm"},
+		IndexFolder:         false,
+		ServerAgent:         "GF HTTP Server",
+		ServerRoot:          "",
+		StaticPaths:         make([]staticPathItem, 0),
+		FileServerEnabled:   false,
+		CookieMaxAge:        time.Hour * 24 * 365,
+		CookiePath:          "/",
+		CookieDomain:        "",
+		SessionMaxAge:       time.Hour * 24,
+		SessionIdName:       "gfsessionid",
+		SessionPath:         gsession.DefaultStorageFilePath,
+		SessionCookieOutput: true,
+		Logger:              glog.New(),
+		LogStdout:           true,
+		ErrorStack:          true,
+		ErrorLogEnabled:     true,
+		ErrorLogPattern:     "error-{Ymd}.log",
+		AccessLogEnabled:    false,
+		AccessLogPattern:    "access-{Ymd}.log",
+		DumpRouterMap:       true,
+		ClientMaxBodySize:   8 * 1024 * 1024, // 8MB
+		FormParsingMemory:   1024 * 1024,     // 1MB
+		Rewrites:            make(map[string]string),
+		Graceful:            false,
 	}
 }
 
 // ConfigFromMap creates and returns a ServerConfig object with given map and
 // default configuration object.
 func ConfigFromMap(m map[string]interface{}) (ServerConfig, error) {
-	config := Config()
+	config := NewConfig()
 	if err := gconv.Struct(m, &config); err != nil {
 		return config, err
 	}
@@ -299,6 +309,7 @@ func (s *Server) SetConfigWithMap(m map[string]interface{}) error {
 		m[k] = gfile.StrToSize(gconv.String(v))
 	}
 	// Update the current configuration object.
+	// It only updates the configured keys not all the object.
 	if err := gconv.Struct(m, &s.config); err != nil {
 		return err
 	}
@@ -377,6 +388,10 @@ func (s *Server) EnableHTTPS(certFile, keyFile string, tlsConfig ...*tls.Config)
 			certFileRealPath = gfile.RealPath(gfile.MainPkgPath() + gfile.Separator + certFile)
 		}
 	}
+	// Resource.
+	if certFileRealPath == "" && gres.Contains(certFile) {
+		certFileRealPath = certFile
+	}
 	if certFileRealPath == "" {
 		s.Logger().Fatal(fmt.Sprintf(`[ghttp] EnableHTTPS failed: certFile "%s" does not exist`, certFile))
 	}
@@ -386,6 +401,10 @@ func (s *Server) EnableHTTPS(certFile, keyFile string, tlsConfig ...*tls.Config)
 		if keyFileRealPath == "" {
 			keyFileRealPath = gfile.RealPath(gfile.MainPkgPath() + gfile.Separator + keyFile)
 		}
+	}
+	// Resource.
+	if keyFileRealPath == "" && gres.Contains(keyFile) {
+		keyFileRealPath = keyFile
 	}
 	if keyFileRealPath == "" {
 		s.Logger().Fatal(fmt.Sprintf(`[ghttp] EnableHTTPS failed: keyFile "%s" does not exist`, keyFile))

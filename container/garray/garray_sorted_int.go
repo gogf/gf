@@ -443,7 +443,7 @@ func (a *SortedIntArray) binSearch(value int, lock bool) (index int, result int)
 	mid := 0
 	cmp := -2
 	for min <= max {
-		mid = (min + max) / 2
+		mid = min + int((max-min)/2)
 		cmp = a.getComparator()(value, a.array[mid])
 		switch {
 		case cmp < 0:
@@ -496,7 +496,7 @@ func (a *SortedIntArray) Clone() (newArray *SortedIntArray) {
 	array := make([]int, len(a.array))
 	copy(array, a.array)
 	a.mu.RUnlock()
-	return NewSortedIntArrayFrom(array, !a.mu.IsSafe())
+	return NewSortedIntArrayFrom(array, a.mu.IsSafe())
 }
 
 // Clear deletes all items of current array.

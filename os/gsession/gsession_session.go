@@ -40,7 +40,7 @@ func (s *Session) init() {
 	if s.id != "" {
 		var err error
 		// Retrieve memory session data from manager.
-		if r := s.manager.sessionData.Get(s.id); r != nil {
+		if r, _ := s.manager.sessionData.Get(s.id); r != nil {
 			s.data = r.(*gmap.StrAnyMap)
 			intlog.Print("session init data:", s.data)
 		}
@@ -49,11 +49,6 @@ func (s *Session) init() {
 			if s.data, err = s.manager.storage.GetSession(s.id, s.manager.ttl, s.data); err != nil {
 				intlog.Errorf("session restoring failed for id '%s': %v", s.id, err)
 			}
-		}
-		// If it's an invalid or expired session id,
-		// it should create a new session id.
-		if s.data == nil {
-			s.id = ""
 		}
 	}
 	// Use custom session id creating function.
@@ -113,7 +108,13 @@ func (s *Session) Set(key string, value interface{}) error {
 }
 
 // Sets batch sets the session using map.
+// Deprecated, use SetMap instead.
 func (s *Session) Sets(data map[string]interface{}) error {
+	return s.SetMap(data)
+}
+
+// SetMap batch sets the session using map.
+func (s *Session) SetMap(data map[string]interface{}) error {
 	s.init()
 	if err := s.manager.storage.SetMap(s.id, data, s.manager.ttl); err != nil {
 		if err == ErrorDisabled {
@@ -127,16 +128,18 @@ func (s *Session) Sets(data map[string]interface{}) error {
 }
 
 // Remove removes key along with its value from this session.
-func (s *Session) Remove(key string) error {
+func (s *Session) Remove(keys ...string) error {
 	if s.id == "" {
 		return nil
 	}
 	s.init()
-	if err := s.manager.storage.Remove(s.id, key); err != nil {
-		if err == ErrorDisabled {
-			s.data.Remove(key)
-		} else {
-			return err
+	for _, key := range keys {
+		if err := s.manager.storage.Remove(s.id, key); err != nil {
+			if err == ErrorDisabled {
+				s.data.Remove(key)
+			} else {
+				return err
+			}
 		}
 	}
 	s.dirty = true
@@ -360,6 +363,7 @@ func (s *Session) GetStruct(key string, pointer interface{}, mapping ...map[stri
 	return gconv.Struct(s.Get(key), pointer, mapping...)
 }
 
+// Deprecated, use GetStruct instead.
 func (s *Session) GetStructDeep(key string, pointer interface{}, mapping ...map[string]string) error {
 	return gconv.StructDeep(s.Get(key), pointer, mapping...)
 }
@@ -368,6 +372,7 @@ func (s *Session) GetStructs(key string, pointer interface{}, mapping ...map[str
 	return gconv.Structs(s.Get(key), pointer, mapping...)
 }
 
+// Deprecated, use GetStructs instead.
 func (s *Session) GetStructsDeep(key string, pointer interface{}, mapping ...map[string]string) error {
 	return gconv.StructsDeep(s.Get(key), pointer, mapping...)
 }

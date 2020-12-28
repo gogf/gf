@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -20,10 +20,10 @@ func Test_Router_Exit(t *testing.T) {
 	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHookHandlerByMap("/*", map[string]ghttp.HandlerFunc{
-		ghttp.HOOK_BEFORE_SERVE:  func(r *ghttp.Request) { r.Response.Write("1") },
-		ghttp.HOOK_AFTER_SERVE:   func(r *ghttp.Request) { r.Response.Write("2") },
-		ghttp.HOOK_BEFORE_OUTPUT: func(r *ghttp.Request) { r.Response.Write("3") },
-		ghttp.HOOK_AFTER_OUTPUT:  func(r *ghttp.Request) { r.Response.Write("4") },
+		ghttp.HookBeforeServe:  func(r *ghttp.Request) { r.Response.Write("1") },
+		ghttp.HookAfterServe:   func(r *ghttp.Request) { r.Response.Write("2") },
+		ghttp.HookBeforeOutput: func(r *ghttp.Request) { r.Response.Write("3") },
+		ghttp.HookAfterOutput:  func(r *ghttp.Request) { r.Response.Write("4") },
 	})
 	s.BindHandler("/test/test", func(r *ghttp.Request) {
 		r.Response.Write("test-start")
@@ -37,7 +37,7 @@ func Test_Router_Exit(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent("/"), "123")
@@ -53,17 +53,17 @@ func Test_Router_ExitHook(t *testing.T) {
 	})
 
 	s.BindHookHandlerByMap("/priority/:name", map[string]ghttp.HandlerFunc{
-		ghttp.HOOK_BEFORE_SERVE: func(r *ghttp.Request) {
+		ghttp.HookBeforeServe: func(r *ghttp.Request) {
 			r.Response.Write("1")
 		},
 	})
 	s.BindHookHandlerByMap("/priority/*any", map[string]ghttp.HandlerFunc{
-		ghttp.HOOK_BEFORE_SERVE: func(r *ghttp.Request) {
+		ghttp.HookBeforeServe: func(r *ghttp.Request) {
 			r.Response.Write("2")
 		},
 	})
 	s.BindHookHandlerByMap("/priority/show", map[string]ghttp.HandlerFunc{
-		ghttp.HOOK_BEFORE_SERVE: func(r *ghttp.Request) {
+		ghttp.HookBeforeServe: func(r *ghttp.Request) {
 			r.Response.Write("3")
 			r.ExitHook()
 		},
@@ -75,7 +75,7 @@ func Test_Router_ExitHook(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent("/"), "Not Found")
@@ -91,17 +91,17 @@ func Test_Router_ExitAll(t *testing.T) {
 	})
 
 	s.BindHookHandlerByMap("/priority/:name", map[string]ghttp.HandlerFunc{
-		ghttp.HOOK_BEFORE_SERVE: func(r *ghttp.Request) {
+		ghttp.HookBeforeServe: func(r *ghttp.Request) {
 			r.Response.Write("1")
 		},
 	})
 	s.BindHookHandlerByMap("/priority/*any", map[string]ghttp.HandlerFunc{
-		ghttp.HOOK_BEFORE_SERVE: func(r *ghttp.Request) {
+		ghttp.HookBeforeServe: func(r *ghttp.Request) {
 			r.Response.Write("2")
 		},
 	})
 	s.BindHookHandlerByMap("/priority/show", map[string]ghttp.HandlerFunc{
-		ghttp.HOOK_BEFORE_SERVE: func(r *ghttp.Request) {
+		ghttp.HookBeforeServe: func(r *ghttp.Request) {
 			r.Response.Write("3")
 			r.ExitAll()
 		},
@@ -113,7 +113,7 @@ func Test_Router_ExitAll(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent("/"), "Not Found")

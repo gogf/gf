@@ -58,15 +58,17 @@ func Test_Limit1(t *testing.T) {
 
 func Test_Limit2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		wg := sync.WaitGroup{}
-		array := garray.NewArray(true)
-		size := 100
-		pool := grpool.New(1)
+		var (
+			wg    = sync.WaitGroup{}
+			array = garray.NewArray(true)
+			size  = 100
+			pool  = grpool.New(1)
+		)
 		wg.Add(size)
 		for i := 0; i < size; i++ {
 			pool.Add(func() {
+				defer wg.Done()
 				array.Append(1)
-				wg.Done()
 			})
 		}
 		wg.Wait()
@@ -97,6 +99,23 @@ func Test_Limit3(t *testing.T) {
 		t.Assert(array.Len(), 100)
 		t.Assert(pool.IsClosed(), true)
 		t.AssertNE(pool.Add(func() {}), nil)
+	})
+}
 
+func Test_AddWithRecover(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.NewArray(true)
+		grpool.AddWithRecover(func() {
+			array.Append(1)
+			panic(1)
+		}, func(err error) {
+			array.Append(1)
+		})
+		grpool.AddWithRecover(func() {
+			panic(1)
+			array.Append(1)
+		})
+		time.Sleep(500 * time.Millisecond)
+		t.Assert(array.Len(), 2)
 	})
 }

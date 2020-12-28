@@ -15,7 +15,6 @@ package gredis
 
 import (
 	"fmt"
-	"github.com/gogf/gf/util/gconv"
 	"time"
 
 	"github.com/gogf/gf/container/gmap"
@@ -46,6 +45,8 @@ type Config struct {
 	IdleTimeout     time.Duration // Maximum idle time for connection (default is 10 seconds, not allowed to be set to 0)
 	MaxConnLifetime time.Duration // Maximum lifetime of the connection (default is 30 seconds, not allowed to be set to 0)
 	ConnectTimeout  time.Duration // Dial connection timeout.
+	TLS             bool          // Specifies the config to use when a TLS connection is dialed.
+	TLSSkipVerify   bool          // Disables server name verification when connecting over TLS
 }
 
 // Pool statistics.
@@ -102,6 +103,8 @@ func New(config Config) *Redis {
 						"tcp",
 						fmt.Sprintf("%s:%d", config.Host, config.Port),
 						redis.DialConnectTimeout(config.ConnectTimeout),
+						redis.DialUseTLS(config.TLS),
+						redis.DialTLSSkipVerify(config.TLSSkipVerify),
 					)
 					if err != nil {
 						return nil, err
@@ -163,6 +166,7 @@ func (r *Redis) Conn() *Conn {
 }
 
 // Alias of Conn, see Conn.
+// Deprecated.
 func (r *Redis) GetConn() *Conn {
 	return r.Conn()
 }
@@ -204,21 +208,27 @@ func (r *Redis) Stats() *PoolStats {
 // Do sends a command to the server and returns the received reply.
 // Do automatically get a connection from pool, and close it when the reply received.
 // It does not really "close" the connection, but drops it back to the connection pool.
-func (r *Redis) Do(command string, args ...interface{}) (interface{}, error) {
+func (r *Redis) Do(commandName string, args ...interface{}) (interface{}, error) {
 	conn := &Conn{r.pool.Get()}
 	defer conn.Close()
-	return conn.Do(command, args...)
+	return conn.Do(commandName, args...)
+}
+
+// DoWithTimeout sends a command to the server and returns the received reply.
+// The timeout overrides the read timeout set when dialing the connection.
+func (r *Redis) DoWithTimeout(timeout time.Duration, commandName string, args ...interface{}) (interface{}, error) {
+	conn := &Conn{r.pool.Get()}
+	defer conn.Close()
+	return conn.DoWithTimeout(timeout, commandName, args...)
 }
 
 // DoVar returns value from Do as gvar.Var.
-func (r *Redis) DoVar(command string, args ...interface{}) (*gvar.Var, error) {
-	v, err := r.Do(command, args...)
-	if result, ok := v.([]byte); ok {
-		return gvar.New(gconv.UnsafeBytesToStr(result)), err
-	}
-	// It treats all returned slice as string slice.
-	if result, ok := v.([]interface{}); ok {
-		return gvar.New(gconv.Strings(result)), err
-	}
-	return gvar.New(v), err
+func (r *Redis) DoVar(commandName string, args ...interface{}) (*gvar.Var, error) {
+	return resultToVar(r.Do(commandName, args...))
+}
+
+// DoVarWithTimeout returns value from Do as gvar.Var.
+// The timeout overrides the read timeout set when dialing the connection.
+func (r *Redis) DoVarWithTimeout(timeout time.Duration, commandName string, args ...interface{}) (*gvar.Var, error) {
+	return resultToVar(r.DoWithTimeout(timeout, commandName, args...))
 }

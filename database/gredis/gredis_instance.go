@@ -17,7 +17,7 @@ var (
 // The <name> param is unnecessary, if <name> is not passed,
 // it returns a redis instance with default configuration group.
 func Instance(name ...string) *Redis {
-	group := DEFAULT_GROUP_NAME
+	group := DefaultGroupName
 	if len(name) > 0 && name[0] != "" {
 		group = name[0]
 	}

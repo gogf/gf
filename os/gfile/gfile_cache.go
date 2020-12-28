@@ -7,8 +7,8 @@
 package gfile
 
 import (
-	"github.com/gogf/gf/internal/cmdenv"
 	"github.com/gogf/gf/os/gcache"
+	"github.com/gogf/gf/os/gcmd"
 	"github.com/gogf/gf/os/gfsnotify"
 	"time"
 )
@@ -20,7 +20,10 @@ const (
 
 var (
 	// Default expire time for file content caching.
-	cacheExpire = cmdenv.Get("gf.gfcache.expire", gDEFAULT_CACHE_EXPIRE).Duration()
+	cacheExpire = gcmd.GetWithEnv("gf.gfile.cache", gDEFAULT_CACHE_EXPIRE).Duration()
+
+	// internalCache is the memory cache for internal usage.
+	internalCache = gcache.New()
 )
 
 // GetContents returns string content of given file by <path> from cache.
@@ -39,17 +42,17 @@ func GetBytesWithCache(path string, duration ...time.Duration) []byte {
 	if len(duration) > 0 {
 		expire = duration[0]
 	}
-	r := gcache.GetOrSetFuncLock(key, func() interface{} {
+	r, _ := internalCache.GetOrSetFuncLock(key, func() (interface{}, error) {
 		b := GetBytes(path)
 		if b != nil {
 			// Adding this <path> to gfsnotify,
 			// it will clear its cache if there's any changes of the file.
 			_, _ = gfsnotify.Add(path, func(event *gfsnotify.Event) {
-				gcache.Remove(key)
+				internalCache.Remove(key)
 				gfsnotify.Exit()
 			})
 		}
-		return b
+		return b, nil
 	}, expire)
 	if r != nil {
 		return r.([]byte)
@@ -59,5 +62,5 @@ func GetBytesWithCache(path string, duration ...time.Duration) []byte {
 
 // cacheKey produces the cache key for gcache.
 func cacheKey(path string) string {
-	return "gf.gfcache:" + path
+	return "gf.gfile.cache:" + path
 }

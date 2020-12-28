@@ -38,7 +38,7 @@ func Test_Template_Basic(t *testing.T) {
 		s.Start()
 		defer s.Shutdown()
 		time.Sleep(100 * time.Millisecond)
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent("/"), "Name:john")
@@ -64,7 +64,7 @@ func Test_Template_Encode(t *testing.T) {
 		s.Start()
 		defer s.Shutdown()
 		time.Sleep(100 * time.Millisecond)
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent("/"), "Name:john")
@@ -93,7 +93,7 @@ func Test_Template_Layout1(t *testing.T) {
 		s.Start()
 		defer s.Shutdown()
 		time.Sleep(100 * time.Millisecond)
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent("/"), "Not Found")
@@ -129,7 +129,7 @@ func Test_Template_Layout2(t *testing.T) {
 		s.Start()
 		defer s.Shutdown()
 		time.Sleep(100 * time.Millisecond)
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent("/"), "Not Found")
@@ -158,7 +158,7 @@ func Test_Template_XSS(t *testing.T) {
 		s.Start()
 		defer s.Shutdown()
 		time.Sleep(100 * time.Millisecond)
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent("/"), ghtml.Entities(c))

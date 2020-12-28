@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/gogf/gf/database/gdb"
-	"time"
+	"github.com/gogf/gf/frame/g"
 )
 
 func main() {
@@ -18,10 +18,9 @@ func main() {
 
 	db.SetDebug(true)
 
-	type User struct {
-		CreateTime time.Time `orm:"create_time"`
-	}
-	r, e := db.Table("user").Data(User{CreateTime: time.Now()}).Insert()
+	r, e := db.Table("user").Data(g.Map{
+		"create_at": "now()",
+	}).Unscoped().Insert()
 	if e != nil {
 		panic(e)
 	}

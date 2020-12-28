@@ -86,9 +86,7 @@ func Test_RFC822(t *testing.T) {
 
 func Test_StrToTime(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		//正常日期列表
-		//正则的原因，日期"06.01.02"，"2006.01"，"2006..01"无法覆盖gtime.go的百分百
-		var testDatetimes = []string{
+		var testDateTimes = []string{
 			"2006-01-02 15:04:05",
 			"2006/01/02 15:04:05",
 			"2006.01.02 15:04:05.000",
@@ -103,7 +101,7 @@ func Test_StrToTime(t *testing.T) {
 			"02.jan.2006:15:04:05",
 		}
 
-		for _, item := range testDatetimes {
+		for _, item := range testDateTimes {
 			timeTemp, err := gtime.StrToTime(item)
 			if err != nil {
 				t.Error("test fail")
@@ -155,7 +153,6 @@ func Test_StrToTime(t *testing.T) {
 		var testDatesFail = []string{
 			"2006.01",
 			"06..02",
-			"20060102",
 		}
 
 		for _, item := range testDatesFail {
@@ -220,9 +217,32 @@ func Test_ConvertZone(t *testing.T) {
 	})
 }
 
-func Test_StrToTimeFormat(t *testing.T) {
+func Test_ParseDuration(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-
+		d, err := gtime.ParseDuration("1d")
+		t.Assert(err, nil)
+		t.Assert(d.String(), "24h0m0s")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		d, err := gtime.ParseDuration("1d2h3m")
+		t.Assert(err, nil)
+		t.Assert(d.String(), "26h3m0s")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		d, err := gtime.ParseDuration("-1d2h3m")
+		t.Assert(err, nil)
+		t.Assert(d.String(), "-26h3m0s")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		d, err := gtime.ParseDuration("3m")
+		t.Assert(err, nil)
+		t.Assert(d.String(), "3m0s")
+	})
+	// error
+	gtest.C(t, func(t *gtest.T) {
+		d, err := gtime.ParseDuration("-1dd2h3m")
+		t.AssertNE(err, nil)
+		t.Assert(d.String(), "0s")
 	})
 }
 

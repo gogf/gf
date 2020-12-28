@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/text/gstr"
 	"os"
 	"runtime"
@@ -28,13 +29,13 @@ import (
 
 const (
 	// Allow executing management command after server starts after this interval in milliseconds.
-	gADMIN_ACTION_INTERVAL_LIMIT = 2000
-	gADMIN_ACTION_NONE           = 0
-	gADMIN_ACTION_RESTARTING     = 1
-	gADMIN_ACTION_SHUTINGDOWN    = 2
-	gADMIN_ACTION_RELOAD_ENVKEY  = "GF_SERVER_RELOAD"
-	gADMIN_ACTION_RESTART_ENVKEY = "GF_SERVER_RESTART"
-	gADMIN_GPROC_COMM_GROUP      = "GF_GPROC_HTTP_SERVER"
+	adminActionIntervalLimit = 2000
+	adminActionNone          = 0
+	adminActionRestarting    = 1
+	adminActionShuttingDown  = 2
+	adminActionReloadEnvKey  = "GF_SERVER_RELOAD"
+	adminActionRestartEnvKey = "GF_SERVER_RESTART"
+	adminGProcCommGroup      = "GF_GPROC_HTTP_SERVER"
 )
 
 // serverActionLocker is the locker for server administration operations.
@@ -49,6 +50,9 @@ var serverProcessStatus = gtype.NewInt()
 // RestartAllServer restarts all the servers of the process.
 // The optional parameter <newExeFilePath> specifies the new binary file for creating process.
 func RestartAllServer(newExeFilePath ...string) error {
+	if !gracefulEnabled {
+		return errors.New("graceful reload feature is disabled")
+	}
 	serverActionLocker.Lock()
 	defer serverActionLocker.Unlock()
 	if err := checkProcessStatus(); err != nil {
@@ -79,9 +83,9 @@ func checkProcessStatus() error {
 	status := serverProcessStatus.Val()
 	if status > 0 {
 		switch status {
-		case gADMIN_ACTION_RESTARTING:
+		case adminActionRestarting:
 			return errors.New("server is restarting")
-		case gADMIN_ACTION_SHUTINGDOWN:
+		case adminActionShuttingDown:
 			return errors.New("server is shutting down")
 		}
 	}
@@ -92,8 +96,8 @@ func checkProcessStatus() error {
 // It returns error if it is too frequency.
 func checkActionFrequency() error {
 	interval := gtime.TimestampMilli() - serverActionLastTime.Val()
-	if interval < gADMIN_ACTION_INTERVAL_LIMIT {
-		return errors.New(fmt.Sprintf("too frequent action, please retry in %d ms", gADMIN_ACTION_INTERVAL_LIMIT-interval))
+	if interval < adminActionIntervalLimit {
+		return errors.New(fmt.Sprintf("too frequent action, please retry in %d ms", adminActionIntervalLimit-interval))
 	}
 	serverActionLastTime.Set(gtime.TimestampMilli())
 	return nil
@@ -128,7 +132,7 @@ func forkReloadProcess(newExeFilePath ...string) error {
 		}
 	}
 	buffer, _ := gjson.Encode(sfm)
-	p.Env = append(p.Env, gADMIN_ACTION_RELOAD_ENVKEY+"="+string(buffer))
+	p.Env = append(p.Env, adminActionReloadEnvKey+"="+string(buffer))
 	if _, err := p.Start(); err != nil {
 		glog.Errorf("%d: fork process failed, error:%s, %s", gproc.Pid(), err.Error(), string(buffer))
 		return err
@@ -142,12 +146,12 @@ func forkRestartProcess(newExeFilePath ...string) error {
 	if len(newExeFilePath) > 0 {
 		path = newExeFilePath[0]
 	}
-	os.Unsetenv(gADMIN_ACTION_RELOAD_ENVKEY)
+	os.Unsetenv(adminActionReloadEnvKey)
 	env := os.Environ()
-	env = append(env, gADMIN_ACTION_RESTART_ENVKEY+"=1")
+	env = append(env, adminActionRestartEnvKey+"=1")
 	p := gproc.NewProcess(path, os.Args, env)
 	if _, err := p.Start(); err != nil {
-		glog.Errorf("%d: fork process failed, error:%s", gproc.Pid(), err.Error())
+		glog.Errorf(`%d: fork process failed, error:%s, are you running using "go run"?`, gproc.Pid(), err.Error())
 		return err
 	}
 	return nil
@@ -182,7 +186,7 @@ func bufferToServerFdMap(buffer []byte) map[string]listenerFdMap {
 
 // restartWebServers restarts all servers.
 func restartWebServers(signal string, newExeFilePath ...string) error {
-	serverProcessStatus.Set(gADMIN_ACTION_RESTARTING)
+	serverProcessStatus.Set(adminActionRestarting)
 	if runtime.GOOS == "windows" {
 		if len(signal) > 0 {
 			// Controlled by signal.
@@ -199,7 +203,7 @@ func restartWebServers(signal string, newExeFilePath ...string) error {
 	} else {
 		if err := forkReloadProcess(newExeFilePath...); err != nil {
 			glog.Printf("%d: server restarts failed", gproc.Pid())
-			serverProcessStatus.Set(gADMIN_ACTION_NONE)
+			serverProcessStatus.Set(adminActionNone)
 			return err
 		} else {
 			if len(signal) > 0 {
@@ -215,7 +219,7 @@ func restartWebServers(signal string, newExeFilePath ...string) error {
 
 // shutdownWebServers shuts down all servers.
 func shutdownWebServers(signal ...string) {
-	serverProcessStatus.Set(gADMIN_ACTION_SHUTINGDOWN)
+	serverProcessStatus.Set(adminActionShuttingDown)
 	if len(signal) > 0 {
 		glog.Printf("%d: server shutting down by signal: %s", gproc.Pid(), signal[0])
 		forceCloseWebServers()
@@ -255,10 +259,12 @@ func forceCloseWebServers() {
 // which are commonly used for graceful reloading feature.
 func handleProcessMessage() {
 	for {
-		if msg := gproc.Receive(gADMIN_GPROC_COMM_GROUP); msg != nil {
+		if msg := gproc.Receive(adminGProcCommGroup); msg != nil {
 			if bytes.EqualFold(msg.Data, []byte("exit")) {
+				intlog.Printf("%d: process message: exit", gproc.Pid())
 				gracefulShutdownWebServers()
 				allDoneChan <- struct{}{}
+				intlog.Printf("%d: process message: exit done", gproc.Pid())
 				return
 			}
 		}

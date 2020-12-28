@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -25,10 +25,10 @@ func Test_Router_Group_Hook1(t *testing.T) {
 	})
 	group.ALL("/handler", func(r *ghttp.Request) {
 		r.Response.Write("0")
-	}, ghttp.HOOK_BEFORE_SERVE)
+	}, ghttp.HookBeforeServe)
 	group.ALL("/handler", func(r *ghttp.Request) {
 		r.Response.Write("2")
-	}, ghttp.HOOK_AFTER_SERVE)
+	}, ghttp.HookAfterServe)
 
 	s.SetPort(p)
 	s.SetDumpRouterMap(false)
@@ -37,7 +37,7 @@ func Test_Router_Group_Hook1(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		t.Assert(client.GetContent("/api/handler"), "012")
 		t.Assert(client.PostContent("/api/handler"), "02")
@@ -48,16 +48,16 @@ func Test_Router_Group_Hook1(t *testing.T) {
 func Test_Router_Group_Hook2(t *testing.T) {
 	p, _ := ports.PopRand()
 	s := g.Server(p)
-	g := s.Group("/api")
-	g.GET("/handler", func(r *ghttp.Request) {
+	group := s.Group("/api")
+	group.GET("/handler", func(r *ghttp.Request) {
 		r.Response.Write("1")
 	})
-	g.GET("/*", func(r *ghttp.Request) {
+	group.GET("/*", func(r *ghttp.Request) {
 		r.Response.Write("0")
-	}, ghttp.HOOK_BEFORE_SERVE)
-	g.GET("/*", func(r *ghttp.Request) {
+	}, ghttp.HookBeforeServe)
+	group.GET("/*", func(r *ghttp.Request) {
 		r.Response.Write("2")
-	}, ghttp.HOOK_AFTER_SERVE)
+	}, ghttp.HookAfterServe)
 
 	s.SetPort(p)
 	s.SetDumpRouterMap(false)
@@ -66,7 +66,7 @@ func Test_Router_Group_Hook2(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		t.Assert(client.GetContent("/api/handler"), "012")
 		t.Assert(client.PostContent("/api/handler"), "Not Found")
@@ -84,10 +84,10 @@ func Test_Router_Group_Hook3(t *testing.T) {
 		}},
 		{"ALL", "/*", func(r *ghttp.Request) {
 			r.Response.Write("0")
-		}, ghttp.HOOK_BEFORE_SERVE},
+		}, ghttp.HookBeforeServe},
 		{"ALL", "/*", func(r *ghttp.Request) {
 			r.Response.Write("2")
-		}, ghttp.HOOK_AFTER_SERVE},
+		}, ghttp.HookAfterServe},
 	})
 
 	s.SetPort(p)
@@ -97,7 +97,7 @@ func Test_Router_Group_Hook3(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		t.Assert(client.GetContent("/api/handler"), "012")
 		t.Assert(client.PostContent("/api/handler"), "012")

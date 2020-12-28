@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -73,6 +73,13 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// Close the session, which automatically update the TTL
 		// of the session if it exists.
 		request.Session.Close()
+
+		// Close the request and response body
+		// to release the file descriptor in time.
+		request.Request.Body.Close()
+		if request.Request.Response != nil {
+			request.Request.Response.Body.Close()
+		}
 	}()
 
 	// ============================================================
@@ -98,7 +105,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// HOOK - BeforeServe
-	s.callHookHandler(HOOK_BEFORE_SERVE, request)
+	s.callHookHandler(HookBeforeServe, request)
 
 	// Core serving handling.
 	if !request.IsExited() {
@@ -126,12 +133,12 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// HOOK - AfterServe
 	if !request.IsExited() {
-		s.callHookHandler(HOOK_AFTER_SERVE, request)
+		s.callHookHandler(HookAfterServe, request)
 	}
 
 	// HOOK - BeforeOutput
 	if !request.IsExited() {
-		s.callHookHandler(HOOK_BEFORE_OUTPUT, request)
+		s.callHookHandler(HookBeforeOutput, request)
 	}
 
 	// HTTP status checking.
@@ -144,17 +151,23 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	// HTTP status handler.
 	if request.Response.Status != http.StatusOK {
-		if f := s.getStatusHandler(request.Response.Status, request); f != nil {
+		statusFuncArray := s.getStatusHandler(request.Response.Status, request)
+		for _, f := range statusFuncArray {
 			// Call custom status handler.
 			niceCallFunc(func() {
 				f(request)
 			})
+			if request.IsExited() {
+				break
+			}
 		}
 	}
 
 	// Automatically set the session id to cookie
 	// if it creates a new session id in this request.
-	if request.Session.IsDirty() && request.Session.Id() != request.GetSessionId() {
+	if s.config.SessionCookieOutput &&
+		request.Session.IsDirty() &&
+		request.Session.Id() != request.GetSessionId() {
 		request.Cookie.SetSessionId(request.Session.Id())
 	}
 	// Output the cookie content to client.
@@ -163,7 +176,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	request.Response.Flush()
 	// HOOK - AfterOutput
 	if !request.IsExited() {
-		s.callHookHandler(HOOK_AFTER_OUTPUT, request)
+		s.callHookHandler(HookAfterOutput, request)
 	}
 }
 

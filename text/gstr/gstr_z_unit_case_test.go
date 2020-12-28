@@ -4,8 +4,6 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// go test *.go -bench=".*"
-
 package gstr_test
 
 import (
@@ -132,6 +130,7 @@ func Test_SnakeScreamingCase(t *testing.T) {
 func Test_KebabCase(t *testing.T) {
 	cases := [][]string{
 		{"testCase", "test-case"},
+		{"optimization1.0.0", "optimization-1-0-0"},
 	}
 	for _, i := range cases {
 		in := i[0]
@@ -165,6 +164,29 @@ func Test_DelimitedScreamingCase(t *testing.T) {
 		in := i[0]
 		out := i[1]
 		result := gstr.DelimitedScreamingCase(in, '.', true)
+		if result != out {
+			t.Error("'" + result + "' != '" + out + "'")
+		}
+	}
+}
+
+func TestSnakeFirstUpperCase(t *testing.T) {
+	cases := [][]string{
+		{"RGBCodeMd5", "rgb_code_md5"},
+		{"testCase", "test_case"},
+		{"Md5", "md5"},
+		{"userID", "user_id"},
+		{"RGB", "rgb"},
+		{"RGBCode", "rgb_code"},
+		{"_ID", "id"},
+		{"User_ID", "user_id"},
+		{"user_id", "user_id"},
+		{"md5", "md5"},
+	}
+	for _, i := range cases {
+		in := i[0]
+		out := i[1]
+		result := gstr.SnakeFirstUpperCase(in)
 		if result != out {
 			t.Error("'" + result + "' != '" + out + "'")
 		}

@@ -6,6 +6,8 @@
 
 package gconv
 
+import "reflect"
+
 // SliceInt is alias of Ints.
 func SliceInt(i interface{}) []int {
 	return Ints(i)
@@ -28,6 +30,11 @@ func Ints(i interface{}) []int {
 	}
 	var array []int
 	switch value := i.(type) {
+	case string:
+		if value == "" {
+			return []int{}
+		}
+		return []int{Int(value)}
 	case []string:
 		array = make([]int, len(value))
 		for k, v := range value {
@@ -116,7 +123,18 @@ func Ints(i interface{}) []int {
 		if v, ok := i.(apiInterfaces); ok {
 			return Ints(v.Interfaces())
 		}
-		return []int{Int(i)}
+		// Use reflect feature at last.
+		rv := reflect.ValueOf(i)
+		switch rv.Kind() {
+		case reflect.Slice, reflect.Array:
+			length := rv.Len()
+			array = make([]int, length)
+			for n := 0; n < length; n++ {
+				array[n] = Int(rv.Index(n).Interface())
+			}
+		default:
+			return []int{Int(i)}
+		}
 	}
 	return array
 }
@@ -128,6 +146,11 @@ func Int32s(i interface{}) []int32 {
 	}
 	var array []int32
 	switch value := i.(type) {
+	case string:
+		if value == "" {
+			return []int32{}
+		}
+		return []int32{Int32(value)}
 	case []string:
 		array = make([]int32, len(value))
 		for k, v := range value {
@@ -228,6 +251,11 @@ func Int64s(i interface{}) []int64 {
 	}
 	var array []int64
 	switch value := i.(type) {
+	case string:
+		if value == "" {
+			return []int64{}
+		}
+		return []int64{Int64(value)}
 	case []string:
 		array = make([]int64, len(value))
 		for k, v := range value {

@@ -97,16 +97,16 @@ func (o *GroupObjRest) Head(r *ghttp.Request) {
 	r.Response.Header().Set("head-ok", "1")
 }
 
-func Test_Router_GroupRest(t *testing.T) {
+func Test_Router_GroupRest1(t *testing.T) {
 	p, _ := ports.PopRand()
 	s := g.Server(p)
-	g := s.Group("/api")
+	group := s.Group("/api")
 	ctl := new(GroupCtlRest)
 	obj := new(GroupObjRest)
-	g.REST("/ctl", ctl)
-	g.REST("/obj", obj)
-	g.REST("/{.struct}/{.method}", ctl)
-	g.REST("/{.struct}/{.method}", obj)
+	group.REST("/ctl", ctl)
+	group.REST("/obj", obj)
+	group.REST("/{.struct}/{.method}", ctl)
+	group.REST("/{.struct}/{.method}", obj)
 	s.SetPort(p)
 	s.SetDumpRouterMap(false)
 	s.Start()
@@ -114,7 +114,84 @@ func Test_Router_GroupRest(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		client := ghttp.NewClient()
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+
+		t.Assert(client.GetContent("/api/ctl"), "1Controller Get2")
+		t.Assert(client.PutContent("/api/ctl"), "1Controller Put2")
+		t.Assert(client.PostContent("/api/ctl"), "1Controller Post2")
+		t.Assert(client.DeleteContent("/api/ctl"), "1Controller Delete2")
+		t.Assert(client.PatchContent("/api/ctl"), "1Controller Patch2")
+		t.Assert(client.OptionsContent("/api/ctl"), "1Controller Options2")
+		resp1, err := client.Head("/api/ctl")
+		if err == nil {
+			defer resp1.Close()
+		}
+		t.Assert(err, nil)
+		t.Assert(resp1.Header.Get("head-ok"), "1")
+
+		t.Assert(client.GetContent("/api/obj"), "1Object Get2")
+		t.Assert(client.PutContent("/api/obj"), "1Object Put2")
+		t.Assert(client.PostContent("/api/obj"), "1Object Post2")
+		t.Assert(client.DeleteContent("/api/obj"), "1Object Delete2")
+		t.Assert(client.PatchContent("/api/obj"), "1Object Patch2")
+		t.Assert(client.OptionsContent("/api/obj"), "1Object Options2")
+		resp2, err := client.Head("/api/obj")
+		if err == nil {
+			defer resp2.Close()
+		}
+		t.Assert(err, nil)
+		t.Assert(resp2.Header.Get("head-ok"), "1")
+
+		t.Assert(client.GetContent("/api/group-ctl-rest"), "Not Found")
+		t.Assert(client.GetContent("/api/group-ctl-rest/get"), "1Controller Get2")
+		t.Assert(client.PutContent("/api/group-ctl-rest/put"), "1Controller Put2")
+		t.Assert(client.PostContent("/api/group-ctl-rest/post"), "1Controller Post2")
+		t.Assert(client.DeleteContent("/api/group-ctl-rest/delete"), "1Controller Delete2")
+		t.Assert(client.PatchContent("/api/group-ctl-rest/patch"), "1Controller Patch2")
+		t.Assert(client.OptionsContent("/api/group-ctl-rest/options"), "1Controller Options2")
+		resp3, err := client.Head("/api/group-ctl-rest/head")
+		if err == nil {
+			defer resp3.Close()
+		}
+		t.Assert(err, nil)
+		t.Assert(resp3.Header.Get("head-ok"), "1")
+
+		t.Assert(client.GetContent("/api/group-obj-rest"), "Not Found")
+		t.Assert(client.GetContent("/api/group-obj-rest/get"), "1Object Get2")
+		t.Assert(client.PutContent("/api/group-obj-rest/put"), "1Object Put2")
+		t.Assert(client.PostContent("/api/group-obj-rest/post"), "1Object Post2")
+		t.Assert(client.DeleteContent("/api/group-obj-rest/delete"), "1Object Delete2")
+		t.Assert(client.PatchContent("/api/group-obj-rest/patch"), "1Object Patch2")
+		t.Assert(client.OptionsContent("/api/group-obj-rest/options"), "1Object Options2")
+		resp4, err := client.Head("/api/group-obj-rest/head")
+		if err == nil {
+			defer resp4.Close()
+		}
+		t.Assert(err, nil)
+		t.Assert(resp4.Header.Get("head-ok"), "1")
+	})
+}
+
+func Test_Router_GroupRest2(t *testing.T) {
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	s.Group("/api", func(group *ghttp.RouterGroup) {
+		ctl := new(GroupCtlRest)
+		obj := new(GroupObjRest)
+		group.REST("/ctl", ctl)
+		group.REST("/obj", obj)
+		group.REST("/{.struct}/{.method}", ctl)
+		group.REST("/{.struct}/{.method}", obj)
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(client.GetContent("/api/ctl"), "1Controller Get2")

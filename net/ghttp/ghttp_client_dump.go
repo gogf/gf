@@ -18,7 +18,7 @@ import (
 
 // dumpTextFormat is the format of the dumped raw string
 const dumpTextFormat = `+---------------------------------------------+
-|                   %s                   |
+|                   %s                  |
 +---------------------------------------------+
 %s
 %s
@@ -50,7 +50,7 @@ func (r *ClientResponse) RawRequest() string {
 	}
 	return fmt.Sprintf(
 		dumpTextFormat,
-		"REQUEST",
+		"REQUEST ",
 		gconv.UnsafeBytesToStr(bs),
 		r.requestBody,
 	)

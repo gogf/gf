@@ -68,7 +68,7 @@ func NewBTreeFrom(m int, comparator func(v1, v2 interface{}) int, data map[inter
 
 // Clone returns a new tree with a copy of current tree.
 func (tree *BTree) Clone() *BTree {
-	newTree := NewBTree(tree.m, tree.comparator, !tree.mu.IsSafe())
+	newTree := NewBTree(tree.m, tree.comparator, tree.mu.IsSafe())
 	newTree.Sets(tree.Map())
 	return newTree
 }
@@ -620,7 +620,7 @@ func (tree *BTree) middle() int {
 func (tree *BTree) search(node *BTreeNode, key interface{}) (index int, found bool) {
 	low, mid, high := 0, 0, len(node.Entries)-1
 	for low <= high {
-		mid = (high + low) / 2
+		mid = low + int((high-low)/2)
 		compare := tree.getComparator()(key, node.Entries[mid].Key)
 		switch {
 		case compare > 0:

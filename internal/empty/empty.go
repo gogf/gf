@@ -33,6 +33,8 @@ func IsEmpty(value interface{}) bool {
 	if value == nil {
 		return true
 	}
+	// It firstly checks the variable as common types using assertion to enhance the performance,
+	// and then using reflection.
 	switch value := value.(type) {
 	case int:
 		return value == 0
@@ -66,15 +68,34 @@ func IsEmpty(value interface{}) bool {
 		return len(value) == 0
 	case []rune:
 		return len(value) == 0
+	case []int:
+		return len(value) == 0
+	case []string:
+		return len(value) == 0
+	case []float32:
+		return len(value) == 0
+	case []float64:
+		return len(value) == 0
+	case map[string]interface{}:
+		return len(value) == 0
 	default:
 		// Common interfaces checks.
 		if f, ok := value.(apiString); ok {
+			if f == nil {
+				return true
+			}
 			return f.String() == ""
 		}
 		if f, ok := value.(apiInterfaces); ok {
+			if f == nil {
+				return true
+			}
 			return len(f.Interfaces()) == 0
 		}
 		if f, ok := value.(apiMapStrAny); ok {
+			if f == nil {
+				return true
+			}
 			return len(f.MapStrAny()) == 0
 		}
 		// Finally using reflect.
@@ -84,13 +105,40 @@ func IsEmpty(value interface{}) bool {
 		} else {
 			rv = reflect.ValueOf(value)
 		}
+
 		switch rv.Kind() {
+		case reflect.Bool:
+			return !rv.Bool()
+		case reflect.Int,
+			reflect.Int8,
+			reflect.Int16,
+			reflect.Int32,
+			reflect.Int64:
+			return rv.Int() == 0
+		case reflect.Uint,
+			reflect.Uint8,
+			reflect.Uint16,
+			reflect.Uint32,
+			reflect.Uint64,
+			reflect.Uintptr:
+			return rv.Uint() == 0
+		case reflect.Float32,
+			reflect.Float64:
+			return rv.Float() == 0
+		case reflect.String:
+			return rv.Len() == 0
+		case reflect.Struct:
+			for i := 0; i < rv.NumField(); i++ {
+				if !IsEmpty(rv) {
+					return false
+				}
+			}
+			return true
 		case reflect.Chan,
 			reflect.Map,
 			reflect.Slice,
 			reflect.Array:
 			return rv.Len() == 0
-
 		case reflect.Func,
 			reflect.Ptr,
 			reflect.Interface,

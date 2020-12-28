@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -8,9 +8,9 @@ package gdb
 
 import (
 	"database/sql"
-	"errors"
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/encoding/gparser"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/util/gconv"
 	"reflect"
 )
@@ -52,24 +52,24 @@ func (r Record) Struct(pointer interface{}) error {
 	}
 	// Special handling for parameter type: reflect.Value
 	if _, ok := pointer.(reflect.Value); ok {
-		return mapToStruct(r.Map(), pointer)
+		return convertMapToStruct(r.Map(), pointer)
 	}
 	var (
 		reflectValue = reflect.ValueOf(pointer)
 		reflectKind  = reflectValue.Kind()
 	)
 	if reflectKind != reflect.Ptr {
-		return errors.New("parameter should be type of *struct/**struct")
+		return gerror.New("parameter should be type of *struct/**struct")
 	}
 	reflectValue = reflectValue.Elem()
 	reflectKind = reflectValue.Kind()
 	if reflectKind == reflect.Invalid {
-		return errors.New("parameter is an invalid pointer, maybe nil")
+		return gerror.New("parameter is an invalid pointer, maybe nil")
 	}
 	if reflectKind != reflect.Ptr && reflectKind != reflect.Struct {
-		return errors.New("parameter should be type of *struct/**struct")
+		return gerror.New("parameter should be type of *struct/**struct")
 	}
-	return mapToStruct(r.Map(), pointer)
+	return convertMapToStruct(r.Map(), pointer)
 }
 
 // IsEmpty checks and returns whether <r> is empty.
