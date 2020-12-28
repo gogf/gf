@@ -1,9 +1,13 @@
 
 # MySQL.
 [database]
-	debug   = true
-    link    = "mysql:root:12345678@tcp(127.0.0.1:3306)/test?parseTime=true"
-    MaxOpen = 100
+    [database.logger]
+        Level   = "all"
+        Stdout  = true
+        CtxKeys = ["Trace-Id"]
+    [database.default]
+        link   = "mysql:root:12345678@tcp(127.0.0.1:3306)/test"
+        debug  = true
 
 # Redis.
 [redis]

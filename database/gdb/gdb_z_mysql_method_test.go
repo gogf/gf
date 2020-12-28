@@ -7,9 +7,11 @@
 package gdb_test
 
 import (
+	"context"
 	"fmt"
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/encoding/gparser"
+	"github.com/gogf/gf/text/gstr"
 	"testing"
 	"time"
 
@@ -1466,5 +1468,24 @@ func Test_DB_UpdateCounter(t *testing.T) {
 		t.Assert(err, nil)
 		t.Assert(one["id"].Int(), 1)
 		t.Assert(one["views"].Int(), 0)
+	})
+}
+
+func Test_DB_Ctx(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		_, err := db.Ctx(ctx).Query("SELECT SLEEP(10)")
+		t.Assert(gstr.Contains(err.Error(), "deadline"), true)
+	})
+}
+
+func Test_DB_Ctx_Logger(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		defer db.SetDebug(db.GetDebug())
+		db.SetDebug(true)
+		ctx := context.WithValue(context.Background(), "Trace-Id", "123456789")
+		_, err := db.Ctx(ctx).Query("SELECT 1")
+		t.Assert(err, nil)
 	})
 }
