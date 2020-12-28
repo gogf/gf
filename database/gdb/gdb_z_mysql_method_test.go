@@ -1437,8 +1437,7 @@ func Test_DB_UpdateCounter(t *testing.T) {
 			Value: 1,
 		}
 		updateData := g.Map{
-			"views":        gdbCounter,
-			"updated_time": gtime.Now().Unix(),
+			"views": gdbCounter,
 		}
 		result, err := db.Update(tableName, updateData, "id", 1)
 		t.Assert(err, nil)
