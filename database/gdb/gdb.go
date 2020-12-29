@@ -213,6 +213,9 @@ type TableField struct {
 
 // Link is a common database function wrapper interface.
 type Link interface {
+	Query(sql string, args ...interface{}) (*sql.Rows, error)
+	Exec(sql string, args ...interface{}) (sql.Result, error)
+	Prepare(sql string) (*sql.Stmt, error)
 	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
 	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
 	PrepareContext(ctx context.Context, query string) (*sql.Stmt, error)
