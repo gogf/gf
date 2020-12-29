@@ -199,7 +199,7 @@ func Cause(err error) error {
 }
 
 // Stack returns the stack callers as string.
-// It returns an empty string if the <err> does not support stacks.
+// It returns the error string directly if the <err> does not support stacks.
 func Stack(err error) string {
 	if err == nil {
 		return ""
@@ -207,7 +207,7 @@ func Stack(err error) string {
 	if e, ok := err.(apiStack); ok {
 		return e.Stack()
 	}
-	return ""
+	return err.Error()
 }
 
 // Current creates and returns the current level error.
