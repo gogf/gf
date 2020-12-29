@@ -86,7 +86,7 @@ func RemoveConfig(name ...string) {
 // ConfigFromStr parses and returns config from given str.
 // Eg: host:port[,db,pass?maxIdle=x&maxActive=x&idleTimeout=x&maxConnLifetime=x]
 func ConfigFromStr(str string) (config Config, err error) {
-	array, _ := gregex.MatchString(`([^:]+):*(\d*),{0,1}(\d*),{0,1}(.*)\?(.+)`, str)
+	array, _ := gregex.MatchString(`([^:]+):*(\d*),{0,1}(\d*),{0,1}(.*)\?(.+?)`, str)
 	if len(array) == 6 {
 		parse, _ := gstr.Parse(array[5])
 		config = Config{
