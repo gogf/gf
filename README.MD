@@ -33,7 +33,7 @@ golang version >= 1.11
 
 # Architecture
 <div align=center>
-<img src="https://goframe.org/images/arch.png?v=12"/>
+<img src="https://itician.org/download/attachments/1114119/arch.png?version=1&modificationDate=1608537397031&api=v2"/>
 </div>
 
 # Packages
