@@ -106,7 +106,7 @@ func (m *Model) Insert(data ...interface{}) (result sql.Result, err error) {
 	if len(data) > 0 {
 		return m.Data(data...).Insert()
 	}
-	return m.doInsertWithOption(insertOptionDefault, data...)
+	return m.doInsertWithOption(insertOptionDefault)
 }
 
 // InsertIgnore does "INSERT IGNORE INTO ..." statement for the model.
@@ -116,7 +116,7 @@ func (m *Model) InsertIgnore(data ...interface{}) (result sql.Result, err error)
 	if len(data) > 0 {
 		return m.Data(data...).InsertIgnore()
 	}
-	return m.doInsertWithOption(insertOptionIgnore, data...)
+	return m.doInsertWithOption(insertOptionIgnore)
 }
 
 // Replace does "REPLACE INTO ..." statement for the model.
@@ -126,7 +126,7 @@ func (m *Model) Replace(data ...interface{}) (result sql.Result, err error) {
 	if len(data) > 0 {
 		return m.Data(data...).Replace()
 	}
-	return m.doInsertWithOption(insertOptionReplace, data...)
+	return m.doInsertWithOption(insertOptionReplace)
 }
 
 // Save does "INSERT INTO ... ON DUPLICATE KEY UPDATE..." statement for the model.
@@ -139,11 +139,11 @@ func (m *Model) Save(data ...interface{}) (result sql.Result, err error) {
 	if len(data) > 0 {
 		return m.Data(data...).Save()
 	}
-	return m.doInsertWithOption(insertOptionSave, data...)
+	return m.doInsertWithOption(insertOptionSave)
 }
 
 // doInsertWithOption inserts data with option parameter.
-func (m *Model) doInsertWithOption(option int, data ...interface{}) (result sql.Result, err error) {
+func (m *Model) doInsertWithOption(option int) (result sql.Result, err error) {
 	defer func() {
 		if err == nil {
 			m.checkAndRemoveCache()
