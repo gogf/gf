@@ -35,8 +35,12 @@ func Try(try func()) (err error) {
 // It automatically calls function <catch> if any exception occurs ans passes the exception as an error.
 func TryCatch(try func(), catch ...func(exception error)) {
 	defer func() {
-		if e := recover(); e != nil && len(catch) > 0 {
-			catch[0](fmt.Errorf(`%v`, e))
+		if exception := recover(); exception != nil && len(catch) > 0 {
+			if err, ok := exception.(error); ok {
+				catch[0](err)
+			} else {
+				catch[0](fmt.Errorf(`%v`, exception))
+			}
 		}
 	}()
 	try()

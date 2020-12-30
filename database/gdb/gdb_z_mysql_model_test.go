@@ -2974,23 +2974,48 @@ func Test_Model_Issue1002(t *testing.T) {
 		t.Assert(v.Int(), 1)
 	})
 	// where + time.Time arguments, UTC.
-	t1, _ := time.Parse("2006-01-02 15:04:05", "2020-10-27 19:03:32")
-	t2, _ := time.Parse("2006-01-02 15:04:05", "2020-10-27 19:03:34")
 	gtest.C(t, func(t *gtest.T) {
-		v, err := db.Table(table).Fields("id").Where("create_time>? and create_time<?", t1, t2).Value()
-		t.Assert(err, nil)
-		t.Assert(v.Int(), 1)
+		t1, _ := time.Parse("2006-01-02 15:04:05", "2020-10-27 19:03:32")
+		t2, _ := time.Parse("2006-01-02 15:04:05", "2020-10-27 19:03:34")
+		{
+			v, err := db.Table(table).Fields("id").Where("create_time>? and create_time<?", t1, t2).Value()
+			t.Assert(err, nil)
+			t.Assert(v.Int(), 1)
+		}
+		{
+			v, err := db.Table(table).Fields("id").Where("create_time>? and create_time<?", t1, t2).FindValue()
+			t.Assert(err, nil)
+			t.Assert(v.Int(), 1)
+		}
+		{
+			v, err := db.Table(table).Where("create_time>? and create_time<?", t1, t2).FindValue("id")
+			t.Assert(err, nil)
+			t.Assert(v.Int(), 1)
+		}
 	})
-	gtest.C(t, func(t *gtest.T) {
-		v, err := db.Table(table).Fields("id").Where("create_time>? and create_time<?", t1, t2).FindValue()
-		t.Assert(err, nil)
-		t.Assert(v.Int(), 1)
-	})
-	gtest.C(t, func(t *gtest.T) {
-		v, err := db.Table(table).Where("create_time>? and create_time<?", t1, t2).FindValue("id")
-		t.Assert(err, nil)
-		t.Assert(v.Int(), 1)
-	})
+	// where + time.Time arguments, +8.
+	//gtest.C(t, func(t *gtest.T) {
+	//	// Change current timezone to +8 zone.
+	//	location, err := time.LoadLocation("Asia/Shanghai")
+	//	t.Assert(err, nil)
+	//	t1, _ := time.ParseInLocation("2006-01-02 15:04:05", "2020-10-27 19:03:32", location)
+	//	t2, _ := time.ParseInLocation("2006-01-02 15:04:05", "2020-10-27 19:03:34", location)
+	//	{
+	//		v, err := db.Table(table).Fields("id").Where("create_time>? and create_time<?", t1, t2).Value()
+	//		t.Assert(err, nil)
+	//		t.Assert(v.Int(), 1)
+	//	}
+	//	{
+	//		v, err := db.Table(table).Fields("id").Where("create_time>? and create_time<?", t1, t2).FindValue()
+	//		t.Assert(err, nil)
+	//		t.Assert(v.Int(), 1)
+	//	}
+	//	{
+	//		v, err := db.Table(table).Where("create_time>? and create_time<?", t1, t2).FindValue("id")
+	//		t.Assert(err, nil)
+	//		t.Assert(v.Int(), 1)
+	//	}
+	//})
 }
 
 func createTableForTimeZoneTest() string {
