@@ -13,6 +13,7 @@ import (
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/gutil"
+	"math"
 	"reflect"
 )
 
@@ -20,6 +21,24 @@ import (
 func (m *Model) Batch(batch int) *Model {
 	model := m.getModel()
 	model.batch = batch
+	return model
+}
+
+func (m *Model) Inc(field string, step interface{}) *Model {
+	model := m.getModel()
+	model.Data(field, &Counter{
+		Field: field,
+		Value: math.Abs(gconv.Float64(step)),
+	})
+	return model
+}
+
+func (m *Model) Dec(field string, step interface{}) *Model {
+	model := m.getModel()
+	model.Data(field, &Counter{
+		Field: field,
+		Value: -math.Abs(gconv.Float64(step)),
+	})
 	return model
 }
 
