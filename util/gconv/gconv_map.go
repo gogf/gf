@@ -444,8 +444,12 @@ func doMapToMap(params interface{}, pointer interface{}, mapping ...map[string]s
 	}
 	defer func() {
 		// Catch the panic, especially the reflect operation panics.
-		if e := recover(); e != nil {
-			err = gerror.NewSkipf(1, "%v", e)
+		if exception := recover(); exception != nil {
+			if e, ok := exception.(errorStack); ok {
+				err = e
+			} else {
+				err = gerror.NewSkipf(1, "%v", exception)
+			}
 		}
 	}()
 	var (
@@ -544,8 +548,12 @@ func doMapToMaps(params interface{}, pointer interface{}, mapping ...map[string]
 	}
 	defer func() {
 		// Catch the panic, especially the reflect operation panics.
-		if e := recover(); e != nil {
-			err = gerror.NewSkipf(1, "%v", e)
+		if exception := recover(); exception != nil {
+			if e, ok := exception.(errorStack); ok {
+				err = e
+			} else {
+				err = gerror.NewSkipf(1, "%v", exception)
+			}
 		}
 	}()
 	var (

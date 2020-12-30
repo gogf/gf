@@ -45,8 +45,12 @@ func doStructs(params interface{}, pointer interface{}, mapping ...map[string]st
 
 	defer func() {
 		// Catch the panic, especially the reflect operation panics.
-		if e := recover(); e != nil {
-			err = gerror.NewSkipf(1, "%v", e)
+		if exception := recover(); exception != nil {
+			if e, ok := exception.(errorStack); ok {
+				err = e
+			} else {
+				err = gerror.NewSkipf(1, "%v", exception)
+			}
 		}
 	}()
 	// If given <params> is JSON, it then uses json.Unmarshal doing the converting.
