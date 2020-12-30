@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -26,6 +26,29 @@ func Test_Nil(t *testing.T) {
 	})
 }
 
+func Test_New(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		err := gerror.New("1")
+		t.AssertNE(err, nil)
+		t.Assert(err.Error(), "1")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err := gerror.Newf("%d", 1)
+		t.AssertNE(err, nil)
+		t.Assert(err.Error(), "1")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err := gerror.NewSkip(1, "1")
+		t.AssertNE(err, nil)
+		t.Assert(err.Error(), "1")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err := gerror.NewSkipf(1, "%d", 1)
+		t.AssertNE(err, nil)
+		t.Assert(err.Error(), "1")
+	})
+}
+
 func Test_Wrap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		err := errors.New("1")
@@ -44,6 +67,75 @@ func Test_Wrap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		err := gerror.New("1")
 		err = gerror.Wrap(err, "")
+		t.AssertNE(err, nil)
+		t.Assert(err.Error(), "1")
+	})
+}
+
+func Test_Wrapf(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		err := errors.New("1")
+		err = gerror.Wrapf(err, "%d", 2)
+		err = gerror.Wrapf(err, "%d", 3)
+		t.AssertNE(err, nil)
+		t.Assert(err.Error(), "3: 2: 1")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err := gerror.New("1")
+		err = gerror.Wrapf(err, "%d", 2)
+		err = gerror.Wrapf(err, "%d", 3)
+		t.AssertNE(err, nil)
+		t.Assert(err.Error(), "3: 2: 1")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err := gerror.New("1")
+		err = gerror.Wrapf(err, "")
+		t.AssertNE(err, nil)
+		t.Assert(err.Error(), "1")
+	})
+}
+
+func Test_WrapSkip(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		err := errors.New("1")
+		err = gerror.WrapSkip(1, err, "2")
+		err = gerror.WrapSkip(1, err, "3")
+		t.AssertNE(err, nil)
+		t.Assert(err.Error(), "3: 2: 1")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err := gerror.New("1")
+		err = gerror.WrapSkip(1, err, "2")
+		err = gerror.WrapSkip(1, err, "3")
+		t.AssertNE(err, nil)
+		t.Assert(err.Error(), "3: 2: 1")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err := gerror.New("1")
+		err = gerror.WrapSkip(1, err, "")
+		t.AssertNE(err, nil)
+		t.Assert(err.Error(), "1")
+	})
+}
+
+func Test_WrapSkipf(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		err := errors.New("1")
+		err = gerror.WrapSkipf(1, err, "2")
+		err = gerror.WrapSkipf(1, err, "3")
+		t.AssertNE(err, nil)
+		t.Assert(err.Error(), "3: 2: 1")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err := gerror.New("1")
+		err = gerror.WrapSkipf(1, err, "2")
+		err = gerror.WrapSkipf(1, err, "3")
+		t.AssertNE(err, nil)
+		t.Assert(err.Error(), "3: 2: 1")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err := gerror.New("1")
+		err = gerror.WrapSkipf(1, err, "")
 		t.AssertNE(err, nil)
 		t.Assert(err.Error(), "1")
 	})
@@ -198,6 +290,20 @@ func Test_Code(t *testing.T) {
 		err := errors.New("1")
 		err = gerror.Wrap(err, "2")
 		err = gerror.WrapCodef(1, err, "%s", "3")
+		t.Assert(gerror.Code(err), 1)
+		t.Assert(err.Error(), "3: 2: 1")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err := errors.New("1")
+		err = gerror.Wrap(err, "2")
+		err = gerror.WrapCodeSkip(1, 100, err, "3")
+		t.Assert(gerror.Code(err), 1)
+		t.Assert(err.Error(), "3: 2: 1")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err := errors.New("1")
+		err = gerror.Wrap(err, "2")
+		err = gerror.WrapCodeSkipf(1, 100, err, "%s", "3")
 		t.Assert(gerror.Code(err), 1)
 		t.Assert(err.Error(), "3: 2: 1")
 	})
