@@ -64,8 +64,7 @@ golang版本 >= 1.11
 
 
 # 性能
-
-`Web`组件的性能测试，请参考第三方性能测试评估：https://github.com/the-benchmarker/web-frameworks
+大家较为感兴趣的`Web`组件性能测试，请参考第三方性能测试评估：https://github.com/the-benchmarker/web-frameworks
 
 # 文档
 
