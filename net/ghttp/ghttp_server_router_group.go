@@ -179,12 +179,10 @@ func (g *RouterGroup) ALL(pattern string, object interface{}, params ...interfac
 }
 
 // ALLMap registers http handlers for http methods using map.
-func (g *RouterGroup) ALLMap(m map[string]interface{}) *RouterGroup {
-	var group *RouterGroup
+func (g *RouterGroup) ALLMap(m map[string]interface{}) {
 	for pattern, object := range m {
-		group = g.ALL(pattern, object)
+		g.ALL(pattern, object)
 	}
-	return group
 }
 
 // GET registers a http handler to given route pattern and http method: GET.
