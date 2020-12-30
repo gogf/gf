@@ -48,9 +48,12 @@ func (c *Core) Ctx(ctx context.Context) DB {
 }
 
 // GetCtx returns the context for current DB.
-// Note that it might be nil.
+// It returns `context.Background()` is there's no context previously set.
 func (c *Core) GetCtx() context.Context {
-	return c.ctx
+	if c.ctx != nil {
+		return c.ctx
+	}
+	return context.Background()
 }
 
 // Master creates and returns a connection from master node if master-slave configured.
@@ -78,15 +81,11 @@ func (c *Core) Query(sql string, args ...interface{}) (rows *sql.Rows, err error
 // DoQuery commits the sql string and its arguments to underlying driver
 // through given link object and returns the execution result.
 func (c *Core) DoQuery(link Link, sql string, args ...interface{}) (rows *sql.Rows, err error) {
-	ctx := c.DB.GetCtx()
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	sql, args = formatSql(sql, args)
 	sql, args = c.DB.HandleSqlBeforeCommit(link, sql, args)
 	if c.DB.GetDebug() {
 		mTime1 := gtime.TimestampMilli()
-		rows, err = link.QueryContext(ctx, sql, args...)
+		rows, err = link.QueryContext(c.DB.GetCtx(), sql, args...)
 		mTime2 := gtime.TimestampMilli()
 		s := &Sql{
 			Sql:    sql,
@@ -99,7 +98,7 @@ func (c *Core) DoQuery(link Link, sql string, args ...interface{}) (rows *sql.Ro
 		}
 		c.writeSqlToLogger(s)
 	} else {
-		rows, err = link.QueryContext(ctx, sql, args...)
+		rows, err = link.QueryContext(c.DB.GetCtx(), sql, args...)
 	}
 	if err == nil {
 		return rows, nil
@@ -122,16 +121,12 @@ func (c *Core) Exec(sql string, args ...interface{}) (result sql.Result, err err
 // DoExec commits the sql string and its arguments to underlying driver
 // through given link object and returns the execution result.
 func (c *Core) DoExec(link Link, sql string, args ...interface{}) (result sql.Result, err error) {
-	ctx := c.DB.GetCtx()
-	if ctx == nil {
-		ctx = context.Background()
-	}
 	sql, args = formatSql(sql, args)
 	sql, args = c.DB.HandleSqlBeforeCommit(link, sql, args)
 	if c.DB.GetDebug() {
 		mTime1 := gtime.TimestampMilli()
 		if !c.DB.GetDryRun() {
-			result, err = link.ExecContext(ctx, sql, args...)
+			result, err = link.ExecContext(c.DB.GetCtx(), sql, args...)
 		} else {
 			result = new(SqlResult)
 		}
@@ -148,7 +143,7 @@ func (c *Core) DoExec(link Link, sql string, args ...interface{}) (result sql.Re
 		c.writeSqlToLogger(s)
 	} else {
 		if !c.DB.GetDryRun() {
-			result, err = link.ExecContext(ctx, sql, args...)
+			result, err = link.ExecContext(c.DB.GetCtx(), sql, args...)
 		} else {
 			result = new(SqlResult)
 		}
@@ -183,11 +178,7 @@ func (c *Core) Prepare(sql string, execOnMaster ...bool) (*sql.Stmt, error) {
 
 // doPrepare calls prepare function on given link object and returns the statement object.
 func (c *Core) DoPrepare(link Link, sql string) (*sql.Stmt, error) {
-	ctx := c.DB.GetCtx()
-	if ctx == nil {
-		ctx = context.Background()
-	}
-	return link.PrepareContext(ctx, sql)
+	return link.PrepareContext(c.DB.GetCtx(), sql)
 }
 
 // GetAll queries and returns data records from database.
