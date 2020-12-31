@@ -25,6 +25,8 @@ func (m *Model) Batch(batch int) *Model {
 
 // Data sets the operation data for the model.
 // The parameter <data> can be type of string/map/gmap/slice/struct/*struct, etc.
+// Note that, it uses shallow value copying for `data` if `data` is type of map/slice
+// to avoid changing it inside function.
 // Eg:
 // Data("uid=10000")
 // Data("uid", 10000)
@@ -34,8 +36,7 @@ func (m *Model) Batch(batch int) *Model {
 func (m *Model) Data(data ...interface{}) *Model {
 	model := m.getModel()
 	if len(data) > 1 {
-		s := gconv.String(data[0])
-		if gstr.Contains(s, "?") {
+		if s := gconv.String(data[0]); gstr.Contains(s, "?") {
 			model.data = s
 			model.extraArgs = data[1:]
 		} else {
@@ -52,9 +53,13 @@ func (m *Model) Data(data ...interface{}) *Model {
 		case Record:
 			model.data = params.Map()
 		case List:
-			model.data = params
+			list := make(List, len(params))
+			for k, v := range params {
+				list[k] = gutil.MapCopy(v)
+			}
+			model.data = list
 		case Map:
-			model.data = params
+			model.data = gutil.MapCopy(params)
 		default:
 			var (
 				rv   = reflect.ValueOf(params)
@@ -101,7 +106,7 @@ func (m *Model) Insert(data ...interface{}) (result sql.Result, err error) {
 	if len(data) > 0 {
 		return m.Data(data...).Insert()
 	}
-	return m.doInsertWithOption(insertOptionDefault, data...)
+	return m.doInsertWithOption(insertOptionDefault)
 }
 
 // InsertIgnore does "INSERT IGNORE INTO ..." statement for the model.
@@ -111,7 +116,7 @@ func (m *Model) InsertIgnore(data ...interface{}) (result sql.Result, err error)
 	if len(data) > 0 {
 		return m.Data(data...).InsertIgnore()
 	}
-	return m.doInsertWithOption(insertOptionIgnore, data...)
+	return m.doInsertWithOption(insertOptionIgnore)
 }
 
 // Replace does "REPLACE INTO ..." statement for the model.
@@ -121,7 +126,7 @@ func (m *Model) Replace(data ...interface{}) (result sql.Result, err error) {
 	if len(data) > 0 {
 		return m.Data(data...).Replace()
 	}
-	return m.doInsertWithOption(insertOptionReplace, data...)
+	return m.doInsertWithOption(insertOptionReplace)
 }
 
 // Save does "INSERT INTO ... ON DUPLICATE KEY UPDATE..." statement for the model.
@@ -134,11 +139,11 @@ func (m *Model) Save(data ...interface{}) (result sql.Result, err error) {
 	if len(data) > 0 {
 		return m.Data(data...).Save()
 	}
-	return m.doInsertWithOption(insertOptionSave, data...)
+	return m.doInsertWithOption(insertOptionSave)
 }
 
 // doInsertWithOption inserts data with option parameter.
-func (m *Model) doInsertWithOption(option int, data ...interface{}) (result sql.Result, err error) {
+func (m *Model) doInsertWithOption(option int) (result sql.Result, err error) {
 	defer func() {
 		if err == nil {
 			m.checkAndRemoveCache()

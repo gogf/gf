@@ -99,6 +99,60 @@ func Test_Model_Insert(t *testing.T) {
 	})
 }
 
+// Using filter dose not affect the outside value inside function.
+func Test_Model_Insert_Filter(t *testing.T) {
+	// map
+	gtest.C(t, func(t *gtest.T) {
+		table := createTable()
+		defer dropTable(table)
+		data := g.Map{
+			"id":          1,
+			"uid":         1,
+			"passport":    "t1",
+			"password":    "25d55ad283aa400af464c76d713c07ad",
+			"nickname":    "name_1",
+			"create_time": gtime.Now().String(),
+		}
+		result, err := db.Table(table).Filter().Data(data).Insert()
+		t.Assert(err, nil)
+		n, _ := result.LastInsertId()
+		t.Assert(n, 1)
+
+		t.Assert(data["uid"], 1)
+	})
+	// slice
+	gtest.C(t, func(t *gtest.T) {
+		table := createTable()
+		defer dropTable(table)
+		data := g.List{
+			g.Map{
+				"id":          1,
+				"uid":         1,
+				"passport":    "t1",
+				"password":    "25d55ad283aa400af464c76d713c07ad",
+				"nickname":    "name_1",
+				"create_time": gtime.Now().String(),
+			},
+			g.Map{
+				"id":          2,
+				"uid":         2,
+				"passport":    "t1",
+				"password":    "25d55ad283aa400af464c76d713c07ad",
+				"nickname":    "name_1",
+				"create_time": gtime.Now().String(),
+			},
+		}
+
+		result, err := db.Table(table).Filter().Data(data).Insert()
+		t.Assert(err, nil)
+		n, _ := result.LastInsertId()
+		t.Assert(n, 2)
+
+		t.Assert(data[0]["uid"], 1)
+		t.Assert(data[1]["uid"], 2)
+	})
+}
+
 // Fix issue: https://github.com/gogf/gf/issues/819
 func Test_Model_Insert_WithStructAndSliceAttribute(t *testing.T) {
 	table := createTable()
@@ -285,7 +339,7 @@ func Test_Model_InsertIgnore(t *testing.T) {
 }
 
 func Test_Model_Batch(t *testing.T) {
-	// bacth insert
+	// batch insert
 	gtest.C(t, func(t *gtest.T) {
 		table := createTable()
 		defer dropTable(table)
@@ -312,6 +366,24 @@ func Test_Model_Batch(t *testing.T) {
 		}
 		n, _ := result.RowsAffected()
 		t.Assert(n, 2)
+	})
+
+	// batch insert, retrieving last insert auto-increment id.
+	gtest.C(t, func(t *gtest.T) {
+		table := createTable()
+		defer dropTable(table)
+		result, err := db.Table(table).Data(g.List{
+			{"passport": "t1"},
+			{"passport": "t2"},
+			{"passport": "t3"},
+			{"passport": "t4"},
+			{"passport": "t5"},
+		}).Batch(2).Insert()
+		if err != nil {
+			gtest.Error(err)
+		}
+		n, _ := result.RowsAffected()
+		t.Assert(n, 5)
 	})
 
 	// batch save
@@ -2902,23 +2974,48 @@ func Test_Model_Issue1002(t *testing.T) {
 		t.Assert(v.Int(), 1)
 	})
 	// where + time.Time arguments, UTC.
-	t1, _ := time.Parse("2006-01-02 15:04:05", "2020-10-27 19:03:32")
-	t2, _ := time.Parse("2006-01-02 15:04:05", "2020-10-27 19:03:34")
 	gtest.C(t, func(t *gtest.T) {
-		v, err := db.Table(table).Fields("id").Where("create_time>? and create_time<?", t1, t2).Value()
-		t.Assert(err, nil)
-		t.Assert(v.Int(), 1)
+		t1, _ := time.Parse("2006-01-02 15:04:05", "2020-10-27 19:03:32")
+		t2, _ := time.Parse("2006-01-02 15:04:05", "2020-10-27 19:03:34")
+		{
+			v, err := db.Table(table).Fields("id").Where("create_time>? and create_time<?", t1, t2).Value()
+			t.Assert(err, nil)
+			t.Assert(v.Int(), 1)
+		}
+		{
+			v, err := db.Table(table).Fields("id").Where("create_time>? and create_time<?", t1, t2).FindValue()
+			t.Assert(err, nil)
+			t.Assert(v.Int(), 1)
+		}
+		{
+			v, err := db.Table(table).Where("create_time>? and create_time<?", t1, t2).FindValue("id")
+			t.Assert(err, nil)
+			t.Assert(v.Int(), 1)
+		}
 	})
-	gtest.C(t, func(t *gtest.T) {
-		v, err := db.Table(table).Fields("id").Where("create_time>? and create_time<?", t1, t2).FindValue()
-		t.Assert(err, nil)
-		t.Assert(v.Int(), 1)
-	})
-	gtest.C(t, func(t *gtest.T) {
-		v, err := db.Table(table).Where("create_time>? and create_time<?", t1, t2).FindValue("id")
-		t.Assert(err, nil)
-		t.Assert(v.Int(), 1)
-	})
+	// where + time.Time arguments, +8.
+	//gtest.C(t, func(t *gtest.T) {
+	//	// Change current timezone to +8 zone.
+	//	location, err := time.LoadLocation("Asia/Shanghai")
+	//	t.Assert(err, nil)
+	//	t1, _ := time.ParseInLocation("2006-01-02 15:04:05", "2020-10-27 19:03:32", location)
+	//	t2, _ := time.ParseInLocation("2006-01-02 15:04:05", "2020-10-27 19:03:34", location)
+	//	{
+	//		v, err := db.Table(table).Fields("id").Where("create_time>? and create_time<?", t1, t2).Value()
+	//		t.Assert(err, nil)
+	//		t.Assert(v.Int(), 1)
+	//	}
+	//	{
+	//		v, err := db.Table(table).Fields("id").Where("create_time>? and create_time<?", t1, t2).FindValue()
+	//		t.Assert(err, nil)
+	//		t.Assert(v.Int(), 1)
+	//	}
+	//	{
+	//		v, err := db.Table(table).Where("create_time>? and create_time<?", t1, t2).FindValue("id")
+	//		t.Assert(err, nil)
+	//		t.Assert(v.Int(), 1)
+	//	}
+	//})
 }
 
 func createTableForTimeZoneTest() string {

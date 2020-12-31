@@ -8,7 +8,7 @@
 
 [English](README.MD) | 简体中文
 
-`GF(Go Frame)`是一款模块化、高性能、生产级的Go基础开发框架。
+`GF(Go Frame)`是一款模块化、高性能、企业级的Go基础开发框架。
 实现了比较完善的基础设施建设以及开发工具链，提供了常用的基础开发模块，
 如：缓存、日志、队列、数组、集合、容器、定时器、命令行、内存锁、对象池、
 配置管理、资源管理、数据校验、数据编码、定时任务、数据库ORM、TCP/UDP组件、进程管理/通信等等。
@@ -49,7 +49,7 @@ golang版本 >= 1.11
 
 # 架构
 <div align=center>
-<img src="https://goframe.org/images/arch.png?v=12"/>
+<img src="https://itician.org/download/attachments/1114119/arch.png?version=1&modificationDate=1608537397031&api=v2"/>
 </div>
 
 # 模块
@@ -64,59 +64,7 @@ golang版本 >= 1.11
 
 
 # 性能
-
-以下是目前最流行的`WEB Server` Golang框架/类库性能测试结果。
-性能测试用例源代码仓库: https://github.com/gogf/gf-performance
-
-## 环境:
-
-    OS   : Ubuntu 18.04 amd64
-    CPU  : AMD A8-6600K x 4
-    MEM  : 32GB
-    GO   : v1.13.4
-
-## 工具
-
-`ab`: Apache HTTP server benchmarking tool.
-
-测试命令:
-```
-ab -t 10 -c 100 http://127.0.0.1:3000/hello
-ab -t 10 -c 100 http://127.0.0.1:3000/query?id=10000
-ab -t 10 -c 100 http://127.0.0.1:3000/json
-```
-并发客户端数量从 `100` 递增到 `10000`。
-
-> 每个项目的每个用例均运行`5`次，取最优的结果展示。
-
-## 1. Hello World
-<table>
-<tr>
-<th>Throughputs</th>
-<th>Mean Latency</th>
-<th>P99 Latency</th>
-</tr>
-<tr>
-<td width="30%"><img src="http://gfcdn.johng.cn/images/performance/throughputs1.jpeg"></td>
-<td width="30%"><img src="http://gfcdn.johng.cn/images/performance/meanlatency1.jpeg"></td>
-<td width="30%"><img src="http://gfcdn.johng.cn/images/performance/p99latency1.jpeg"></td>
-</tr>
-</table>
-
-## 2. Json Response
-<table>
-<tr>
-<th>Throughputs</th>
-<th>Mean Latency</th>
-<th>P99 Latency</th>
-</tr>
-<tr>
-<td width="30%"><img src="http://gfcdn.johng.cn/images/performance/throughputs3.jpeg"></td>
-<td width="30%"><img src="http://gfcdn.johng.cn/images/performance/meanlatency3.jpeg"></td>
-<td width="30%"><img src="http://gfcdn.johng.cn/images/performance/p99latency3.jpeg"></td>
-</tr>
-</table>
-
+大家较为感兴趣的`Web`组件性能测试，请参考第三方性能测试评估：https://github.com/the-benchmarker/web-frameworks
 
 # 文档
 
@@ -157,7 +105,7 @@ ab -t 10 -c 100 http://127.0.0.1:3000/json
 
 # 捐赠
 
-如果您喜欢`GF`，要不[给开发者来杯咖啡吧](DONATOR.MD)！
+如果您喜欢`GF`，要不给开发者 [来杯咖啡](https://itician.org/pages/viewpage.action?pageId=1115633) 吧！
 请在捐赠时备注您的`github`/`gitee`账号名称。
 
 # 赞助
@@ -165,5 +113,5 @@ ab -t 10 -c 100 http://127.0.0.1:3000/json
 赞助支持`GF`框架的快速研发，如果您感兴趣，请联系 微信 `389961817` / 邮件 `john@goframe.org`。
 
 # 感谢
-<a href="https://www.jetbrains.com/?from=GoFrame"><img src="https://goframe.org/images/jetbrains.png" width="100" alt="JetBrains"/></a>
-
+<a href="https://www.jetbrains.com/?from=GoFrame"><img src="https://itician.org/download/thumbnails/1114119/jetbrains.png?version=1&modificationDate=1608649325806&api=v2" height="120" alt="JetBrains"/></a>
+<a href="https://www.atlassian.com/?from=GoFrame"><img src="https://itician.org/download/thumbnails/1114119/u%3D605052180%2C3099422872%26fm%3D11%26gp%3D0.jpg?version=1&modificationDate=1608649343601&api=v2" height="120" alt="Atlassian"/></a>

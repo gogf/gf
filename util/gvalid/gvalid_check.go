@@ -21,13 +21,22 @@ import (
 
 const (
 	// regular expression pattern for single validation rule.
-	gSINGLE_RULE_PATTERN = `^([\w-]+):{0,1}(.*)`
+	singleRulePattern   = `^([\w-]+):{0,1}(.*)`
+	invalidRulesErrKey  = "invalid_rules"
+	invalidParamsErrKey = "invalid_params"
+	invalidObjectErrKey = "invalid_object"
 )
 
 var (
+	// all internal error keys.
+	internalErrKeyMap = map[string]string{
+		invalidRulesErrKey:  invalidRulesErrKey,
+		invalidParamsErrKey: invalidParamsErrKey,
+		invalidObjectErrKey: invalidObjectErrKey,
+	}
 	// regular expression object for single rule
 	// which is compiled just once and of repeatable usage.
-	ruleRegex, _ = regexp.Compile(gSINGLE_RULE_PATTERN)
+	ruleRegex, _ = regexp.Compile(singleRulePattern)
 
 	// mustCheckRulesEvenValueEmpty specifies some rules that must be validated
 	// even the value is empty (nil or empty).
@@ -160,8 +169,8 @@ func doCheck(key string, value interface{}, rules string, messages interface{}, 
 				ruleItems = append(ruleItems[:i], ruleItems[i+1:]...)
 			} else {
 				return newErrorStr(
-					"invalid_rules",
-					"invalid rules: "+rules,
+					invalidRulesErrKey,
+					invalidRulesErrKey+": "+rules,
 				)
 			}
 		} else {
@@ -273,7 +282,7 @@ func doCheckBuildInRules(
 	case "regex":
 		// It here should check the rule as there might be special char '|' in it.
 		for i := index + 1; i < len(ruleItems); i++ {
-			if !gregex.IsMatchString(gSINGLE_RULE_PATTERN, ruleItems[i]) {
+			if !gregex.IsMatchString(singleRulePattern, ruleItems[i]) {
 				rulePattern += "|" + ruleItems[i]
 				index++
 			}
