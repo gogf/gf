@@ -85,6 +85,7 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 			updates := gconv.String(m.data)
 			for _, v := range counterData.Slice() {
 				c := v.(*Counter)
+				//add Counter to string data
 				updates += fmt.Sprintf(`,%s=%s+?`, c.Field, c.Field)
 				m.extraArgs = append(m.extraArgs, c.Value)
 			}
