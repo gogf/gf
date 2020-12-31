@@ -8,7 +8,7 @@ package gdb
 
 import (
 	"database/sql"
-	"github.com/gogf/gf/container/garray"
+	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gstr"
@@ -29,9 +29,9 @@ func (m *Model) Batch(batch int) *Model {
 func (m *Model) Inc(field string, step interface{}) *Model {
 	model := m.getModel()
 	if m.counter == nil {
-		m.counter = garray.New(true)
+		m.counter = gmap.NewStrAnyMap(true)
 	}
-	m.counter.Append(&Counter{
+	m.counter.Set(field, &Counter{
 		Field: field,
 		Value: gconv.Float64(step),
 	})
@@ -43,9 +43,9 @@ func (m *Model) Inc(field string, step interface{}) *Model {
 func (m *Model) Dec(field string, step interface{}) *Model {
 	model := m.getModel()
 	if m.counter == nil {
-		m.counter = garray.New(true)
+		m.counter = gmap.NewStrAnyMap(true)
 	}
-	m.counter.Append(&Counter{
+	m.counter.Set(field, &Counter{
 		Field: field,
 		Value: -gconv.Float64(step),
 	})

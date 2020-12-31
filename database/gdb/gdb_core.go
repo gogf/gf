@@ -752,7 +752,7 @@ func (c *Core) DoUpdate(link Link, table string, data interface{}, condition str
 			case Counter:
 				if value.Value != 0 {
 					column := c.DB.QuoteWord(value.Field)
-					fields = append(fields, fmt.Sprintf("%s=%s+?", column, column))
+					fields = append(fields, fmt.Sprintf("`%s`=`%s`+?", column, column))
 					params = append(params, value.Value)
 				}
 			default:

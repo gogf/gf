@@ -9,7 +9,7 @@ package gdb
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/container/garray"
+	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/text/gregex"
 	"time"
 
@@ -18,33 +18,33 @@ import (
 
 // Model is the DAO for ORM.
 type Model struct {
-	db            DB             // Underlying DB interface.
-	tx            *TX            // Underlying TX interface.
-	schema        string         // Custom database schema.
-	linkType      int            // Mark for operation on master or slave.
-	tablesInit    string         // Table names when model initialization.
-	tables        string         // Operation table names, which can be more than one table names and aliases, like: "user", "user u", "user u, user_detail ud".
-	fields        string         // Operation fields, multiple fields joined using char ','.
-	fieldsEx      string         // Excluded operation fields, multiple fields joined using char ','.
-	extraArgs     []interface{}  // Extra custom arguments for sql.
-	whereHolder   []*whereHolder // Condition strings for where operation.
-	groupBy       string         // Used for "group by" statement.
-	orderBy       string         // Used for "order by" statement.
-	having        []interface{}  // Used for "having..." statement.
-	start         int            // Used for "select ... start, limit ..." statement.
-	limit         int            // Used for "select ... start, limit ..." statement.
-	option        int            // Option for extra operation features.
-	offset        int            // Offset statement for some databases grammar.
-	data          interface{}    // Data for operation, which can be type of map/[]map/struct/*struct/string, etc.
-	batch         int            // Batch number for batch Insert/Replace/Save operations.
-	filter        bool           // Filter data and where key-value pairs according to the fields of the table.
-	lockInfo      string         // Lock for update or in shared lock.
-	cacheEnabled  bool           // Enable sql result cache feature.
-	cacheDuration time.Duration  // Cache TTL duration.
-	cacheName     string         // Cache name for custom operation.
-	unscoped      bool           // Disables soft deleting features when select/delete operations.
-	safe          bool           // If true, it clones and returns a new model object whenever operation done; or else it changes the attribute of current model.
-	counter       *garray.Array  // Counter List
+	db            DB              // Underlying DB interface.
+	tx            *TX             // Underlying TX interface.
+	schema        string          // Custom database schema.
+	linkType      int             // Mark for operation on master or slave.
+	tablesInit    string          // Table names when model initialization.
+	tables        string          // Operation table names, which can be more than one table names and aliases, like: "user", "user u", "user u, user_detail ud".
+	fields        string          // Operation fields, multiple fields joined using char ','.
+	fieldsEx      string          // Excluded operation fields, multiple fields joined using char ','.
+	extraArgs     []interface{}   // Extra custom arguments for sql.
+	whereHolder   []*whereHolder  // Condition strings for where operation.
+	groupBy       string          // Used for "group by" statement.
+	orderBy       string          // Used for "order by" statement.
+	having        []interface{}   // Used for "having..." statement.
+	start         int             // Used for "select ... start, limit ..." statement.
+	limit         int             // Used for "select ... start, limit ..." statement.
+	option        int             // Option for extra operation features.
+	offset        int             // Offset statement for some databases grammar.
+	data          interface{}     // Data for operation, which can be type of map/[]map/struct/*struct/string, etc.
+	batch         int             // Batch number for batch Insert/Replace/Save operations.
+	filter        bool            // Filter data and where key-value pairs according to the fields of the table.
+	lockInfo      string          // Lock for update or in shared lock.
+	cacheEnabled  bool            // Enable sql result cache feature.
+	cacheDuration time.Duration   // Cache TTL duration.
+	cacheName     string          // Cache name for custom operation.
+	unscoped      bool            // Disables soft deleting features when select/delete operations.
+	safe          bool            // If true, it clones and returns a new model object whenever operation done; or else it changes the attribute of current model.
+	counter       *gmap.StrAnyMap // Counter List
 }
 
 // whereHolder is the holder for where condition preparing.

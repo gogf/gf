@@ -83,10 +83,10 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 		switch refKind {
 		case reflect.String:
 			updates := gconv.String(m.data)
-			for _, v := range counterData.Slice() {
+			for _, v := range counterData.Map() {
 				c := v.(*Counter)
 				//add Counter to string data
-				updates += fmt.Sprintf(`,%s=%s+?`, c.Field, c.Field)
+				updates += fmt.Sprintf(",`%s`=`%s`+?", c.Field, c.Field)
 				m.extraArgs = append(m.extraArgs, c.Value)
 			}
 			newData = updates
@@ -94,7 +94,7 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 			if newData != nil {
 				newDataMap = gconv.Map(newData)
 			}
-			for _, v := range counterData.Slice() {
+			for _, v := range counterData.Map() {
 				c := v.(*Counter)
 				newDataMap[c.Field] = c
 			}
