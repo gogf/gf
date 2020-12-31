@@ -37,26 +37,27 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 			m.checkAndRemoveCache()
 		}
 	}()
-	if m.data == nil {
+	if m.data == nil && m.counter == nil {
 		return nil, gerror.New("updating table with empty data")
 	}
 	var (
 		updateData                                    = m.data
+		counterData                                   = m.counter
 		fieldNameCreate                               = m.getSoftFieldNameCreated()
 		fieldNameUpdate                               = m.getSoftFieldNameUpdated()
 		fieldNameDelete                               = m.getSoftFieldNameDeleted()
 		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(false, false)
 	)
+	var (
+		refValue = reflect.ValueOf(m.data)
+		refKind  = refValue.Kind()
+	)
+	if refKind == reflect.Ptr {
+		refValue = refValue.Elem()
+		refKind = refValue.Kind()
+	}
 	// Automatically update the record updating time.
 	if !m.unscoped && fieldNameUpdate != "" {
-		var (
-			refValue = reflect.ValueOf(m.data)
-			refKind  = refValue.Kind()
-		)
-		if refKind == reflect.Ptr {
-			refValue = refValue.Elem()
-			refKind = refValue.Kind()
-		}
 		switch refKind {
 		case reflect.Map, reflect.Struct:
 			dataMap := ConvertDataForTableRecord(m.data)
@@ -77,10 +78,33 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 	if err != nil {
 		return nil, err
 	}
+	if counterData != nil {
+		newDataMap := Map{}
+		switch refKind {
+		case reflect.String:
+			updates := gconv.String(m.data)
+			for _, v := range counterData.Slice() {
+				c := v.(*Counter)
+				updates += fmt.Sprintf(`,%s=%s+?`, c.Field, c.Field)
+				m.extraArgs = append(m.extraArgs, c.Value)
+			}
+			newData = updates
+		default:
+			if newData != nil {
+				newDataMap = gconv.Map(newData)
+			}
+			for _, v := range counterData.Slice() {
+				c := v.(*Counter)
+				newDataMap[c.Field] = c
+			}
+			newData = newDataMap
+		}
+	}
 	conditionStr := conditionWhere + conditionExtra
 	if !gstr.ContainsI(conditionStr, " WHERE ") {
 		return nil, gerror.New("there should be WHERE condition statement for UPDATE operation")
 	}
+
 	return m.db.DoUpdate(
 		m.getLink(true),
 		m.tables,

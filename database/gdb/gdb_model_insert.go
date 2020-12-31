@@ -8,12 +8,12 @@ package gdb
 
 import (
 	"database/sql"
+	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/gutil"
-	"math"
 	"reflect"
 )
 
@@ -24,20 +24,30 @@ func (m *Model) Batch(batch int) *Model {
 	return model
 }
 
+// Dec sets the increment data for the model.
+// Warning Reentry overlays and Update effective
 func (m *Model) Inc(field string, step interface{}) *Model {
 	model := m.getModel()
-	model.Data(field, &Counter{
+	if m.counter == nil {
+		m.counter = garray.New(true)
+	}
+	m.counter.Append(&Counter{
 		Field: field,
-		Value: math.Abs(gconv.Float64(step)),
+		Value: gconv.Float64(step),
 	})
 	return model
 }
 
+// Dec sets the decrement data for the model.
+// Warning Reentry overlays and Update effective
 func (m *Model) Dec(field string, step interface{}) *Model {
 	model := m.getModel()
-	model.Data(field, &Counter{
+	if m.counter == nil {
+		m.counter = garray.New(true)
+	}
+	m.counter.Append(&Counter{
 		Field: field,
-		Value: -math.Abs(gconv.Float64(step)),
+		Value: -gconv.Float64(step),
 	})
 	return model
 }

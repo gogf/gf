@@ -9,6 +9,7 @@ package gdb
 import (
 	"context"
 	"fmt"
+	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/text/gregex"
 	"time"
 
@@ -43,6 +44,7 @@ type Model struct {
 	cacheName     string         // Cache name for custom operation.
 	unscoped      bool           // Disables soft deleting features when select/delete operations.
 	safe          bool           // If true, it clones and returns a new model object whenever operation done; or else it changes the attribute of current model.
+	counter       *garray.Array  // Counter List
 }
 
 // whereHolder is the holder for where condition preparing.
