@@ -80,7 +80,7 @@ The `Web` component performance of `GoFrame`, please refer to third-party projec
 - [XiMaLaYa](https://www.ximalaya.com)
 - [ZYBang](https://www.zybang.com/)
 
-> We list part of the users here, if your company or products are using `GoFrame`, please let us know [here](https://github.com/gogf/gf/issues/168).
+> We list part of the users here, if your company or products are using `GoFrame`, please let us know [here](https://itician.org/pages/viewpage.action?pageId=1114415).
 
 
 # Contributors

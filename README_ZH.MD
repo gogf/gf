@@ -95,7 +95,7 @@ golang版本 >= 1.11
 - [喜马拉雅](https://www.ximalaya.com)
 - [作业帮](https://www.zybang.com/)
 
-> 在这里只列举了部分知名的用户，如果您的企业或者产品正在使用`GoFrame`，欢迎到 [这里](https://github.com/gogf/gf/issues/168) 留言。
+> 在这里只列举了部分知名的用户，如果您的企业或者产品正在使用`GoFrame`，欢迎到 [这里](https://itician.org/pages/viewpage.action?pageId=1114415) 留言。
 
 # 贡献
 
