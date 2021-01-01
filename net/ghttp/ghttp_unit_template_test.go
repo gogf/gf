@@ -139,6 +139,27 @@ func Test_Template_Layout2(t *testing.T) {
 	})
 }
 
+func Test_Template_BuildInVarRequest(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		p, _ := ports.PopRand()
+		s := g.Server(p)
+		s.BindHandler("/:table/test", func(r *ghttp.Request) {
+			err := r.Response.WriteTplContent("{{.Request.table}}")
+			t.Assert(err, nil)
+		})
+		s.SetDumpRouterMap(false)
+		s.SetPort(p)
+		s.Start()
+		defer s.Shutdown()
+		time.Sleep(100 * time.Millisecond)
+		client := g.Client()
+		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+
+		t.Assert(client.GetContent("/user/test"), "user")
+		t.Assert(client.GetContent("/order/test"), "order")
+	})
+}
+
 func Test_Template_XSS(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New()

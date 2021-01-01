@@ -84,6 +84,7 @@ func (r *Response) buildInVars(params ...map[string]interface{}) map[string]inte
 	gutil.MapMerge(m, map[string]interface{}{
 		"Form":    r.Request.GetFormMap(),
 		"Query":   r.Request.GetQueryMap(),
+		"Request": r.Request.GetMap(),
 		"Cookie":  r.Request.Cookie.Map(),
 		"Session": r.Request.Session.Map(),
 	})
