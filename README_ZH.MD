@@ -49,7 +49,7 @@ golang版本 >= 1.11
 
 # 架构
 <div align=center>
-<img src="https://itician.org/download/attachments/1114119/arch.png?version=1&modificationDate=1608537397031&api=v2"/>
+<img src="https://itician.org/download/attachments/1114119/image2021-1-2_0-49-28.png?version=1&modificationDate=1609519768943&api=v2"/>
 </div>
 
 # 模块
