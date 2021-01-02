@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -16,13 +16,13 @@ import (
 	"fmt"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
 	"reflect"
 	"strconv"
 	"strings"
-
-	"github.com/gogf/gf/text/gregex"
+	"time"
 )
 
 // DriverOracle is the driver for oracle database.
@@ -65,14 +65,8 @@ func (d *DriverOracle) GetChars() (charLeft string, charRight string) {
 }
 
 // HandleSqlBeforeCommit deals with the sql string before commits it to underlying sql driver.
-func (d *DriverOracle) HandleSqlBeforeCommit(link Link, sql string, args []interface{}) (string, []interface{}) {
+func (d *DriverOracle) HandleSqlBeforeCommit(link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}) {
 	var index int
-	// Convert place holder char '?' to string ":vx".
-	str, _ := gregex.ReplaceStringFunc("\\?", sql, func(s string) string {
-		index++
-		return fmt.Sprintf(":v%d", index)
-	})
-	str, _ = gregex.ReplaceString("\"", "", str)
 	// Change time string argument wrapping with TO_DATE function.
 	for i, v := range args {
 		if reflect.TypeOf(v).Kind() == reflect.String {
@@ -82,7 +76,25 @@ func (d *DriverOracle) HandleSqlBeforeCommit(link Link, sql string, args []inter
 			}
 		}
 	}
-	return d.parseSql(str), args
+	// Convert place holder char '?' to string ":vx".
+	newSql, _ = gregex.ReplaceStringFunc("\\?", sql, func(s string) string {
+		index++
+		return fmt.Sprintf(":v%d", index)
+	})
+	newSql, _ = gregex.ReplaceString("\"", "", newSql)
+	// Handle string datetime argument.
+	for i, v := range args {
+		if reflect.TypeOf(v).Kind() == reflect.String {
+			valueStr := gconv.String(v)
+			if gregex.IsMatchString(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$`, valueStr) {
+				//args[i] = fmt.Sprintf(`TO_DATE('%s','yyyy-MM-dd HH:MI:SS')`, valueStr)
+				args[i], _ = time.ParseInLocation("2006-01-02 15:04:05", valueStr, time.Local)
+			}
+		}
+	}
+	newSql = d.parseSql(newSql)
+	newArgs = args
+	return
 }
 
 // parseSql does some replacement of the sql before commits it to underlying driver,
@@ -232,20 +244,20 @@ func (d *DriverOracle) getTableUniqueIndex(table string) (fields map[string]map[
 }
 
 func (d *DriverOracle) DoInsert(link Link, table string, data interface{}, option int, batch ...int) (result sql.Result, err error) {
-	var fields []string
-	var values []string
-	var params []interface{}
-	var dataMap Map
-	rv := reflect.ValueOf(data)
-	kind := rv.Kind()
+	var (
+		fields  []string
+		values  []string
+		params  []interface{}
+		dataMap Map
+		rv      = reflect.ValueOf(data)
+		kind    = rv.Kind()
+	)
 	if kind == reflect.Ptr {
 		rv = rv.Elem()
 		kind = rv.Kind()
 	}
 	switch kind {
-	case reflect.Slice:
-		fallthrough
-	case reflect.Array:
+	case reflect.Slice, reflect.Array:
 		return d.DB.DoBatchInsert(link, table, data, option, batch...)
 	case reflect.Map:
 		fallthrough
@@ -254,10 +266,11 @@ func (d *DriverOracle) DoInsert(link Link, table string, data interface{}, optio
 	default:
 		return result, gerror.New(fmt.Sprint("unsupported data type:", kind))
 	}
-
-	indexs := make([]string, 0)
-	indexMap := make(map[string]string)
-	indexExists := false
+	var (
+		indexes     = make([]string, 0)
+		indexMap    = make(map[string]string)
+		indexExists = false
+	)
 	if option != insertOptionDefault {
 		index, err := d.getTableUniqueIndex(table)
 		if err != nil {
@@ -267,20 +280,19 @@ func (d *DriverOracle) DoInsert(link Link, table string, data interface{}, optio
 		if len(index) > 0 {
 			for _, v := range index {
 				for k, _ := range v {
-					indexs = append(indexs, k)
+					indexes = append(indexes, k)
 				}
 				indexMap = v
 				indexExists = true
 				break
 			}
 		}
-
 	}
-
-	subSqlStr := make([]string, 0)
-	onStr := make([]string, 0)
-	updateStr := make([]string, 0)
-
+	var (
+		subSqlStr = make([]string, 0)
+		onStr     = make([]string, 0)
+		updateStr = make([]string, 0)
+	)
 	charL, charR := d.DB.GetChars()
 	for k, v := range dataMap {
 		k = strings.ToUpper(k)
@@ -290,10 +302,8 @@ func (d *DriverOracle) DoInsert(link Link, table string, data interface{}, optio
 			fields = append(fields, tableAlias1+"."+charL+k+charR)
 			values = append(values, tableAlias2+"."+charL+k+charR)
 			params = append(params, v)
-
 			subSqlStr = append(subSqlStr, fmt.Sprintf("%s?%s %s", charL, charR, k))
-
-			//merge中的on子句中由唯一索引组成,update子句中不含唯一索引
+			//m erge中的on子句中由唯一索引组成, update子句中不含唯一索引
 			if _, ok := indexMap[k]; ok {
 				onStr = append(onStr, fmt.Sprintf("%s.%s = %s.%s ", tableAlias1, k, tableAlias2, k))
 			} else {
@@ -314,20 +324,21 @@ func (d *DriverOracle) DoInsert(link Link, table string, data interface{}, optio
 
 	if indexExists && option != insertOptionDefault {
 		switch option {
-		case insertOptionReplace:
-			fallthrough
-		case insertOptionSave:
+		case
+			insertOptionReplace,
+			insertOptionSave:
 			tmp := fmt.Sprintf(
 				"MERGE INTO %s %s USING(SELECT %s FROM DUAL) %s ON(%s) WHEN MATCHED THEN UPDATE SET %s WHEN NOT MATCHED THEN INSERT (%s) VALUES(%s)",
 				table, tableAlias1, strings.Join(subSqlStr, ","), tableAlias2,
 				strings.Join(onStr, "AND"), strings.Join(updateStr, ","), strings.Join(fields, ","), strings.Join(values, ","),
 			)
 			return d.DB.DoExec(link, tmp, params...)
+
 		case insertOptionIgnore:
 			return d.DB.DoExec(link,
 				fmt.Sprintf(
 					"INSERT /*+ IGNORE_ROW_ON_DUPKEY_INDEX(%s(%s)) */ INTO %s(%s) VALUES(%s)",
-					table, strings.Join(indexs, ","), table, strings.Join(fields, ","), strings.Join(values, ","),
+					table, strings.Join(indexes, ","), table, strings.Join(fields, ","), strings.Join(values, ","),
 				),
 				params...)
 		}
@@ -343,9 +354,11 @@ func (d *DriverOracle) DoInsert(link Link, table string, data interface{}, optio
 }
 
 func (d *DriverOracle) DoBatchInsert(link Link, table string, list interface{}, option int, batch ...int) (result sql.Result, err error) {
-	var keys []string
-	var values []string
-	var params []interface{}
+	var (
+		keys   []string
+		values []string
+		params []interface{}
+	)
 	listMap := (List)(nil)
 	switch v := list.(type) {
 	case Result:
@@ -357,17 +370,16 @@ func (d *DriverOracle) DoBatchInsert(link Link, table string, list interface{}, 
 	case Map:
 		listMap = List{v}
 	default:
-		rv := reflect.ValueOf(list)
-		kind := rv.Kind()
+		var (
+			rv   = reflect.ValueOf(list)
+			kind = rv.Kind()
+		)
 		if kind == reflect.Ptr {
 			rv = rv.Elem()
 			kind = rv.Kind()
 		}
 		switch kind {
-		// 如果是slice，那么转换为List类型
-		case reflect.Slice:
-			fallthrough
-		case reflect.Array:
+		case reflect.Slice, reflect.Array:
 			listMap = make(List, rv.Len())
 			for i := 0; i < rv.Len(); i++ {
 				listMap[i] = ConvertDataForTableRecord(rv.Index(i).Interface())
@@ -375,12 +387,11 @@ func (d *DriverOracle) DoBatchInsert(link Link, table string, list interface{}, 
 		case reflect.Map:
 			fallthrough
 		case reflect.Struct:
-			listMap = List{Map(ConvertDataForTableRecord(list))}
+			listMap = List{ConvertDataForTableRecord(list)}
 		default:
 			return result, gerror.New(fmt.Sprint("unsupported list type:", kind))
 		}
 	}
-	// 判断长度
 	if len(listMap) < 1 {
 		return result, gerror.New("empty data list")
 	}
@@ -389,18 +400,18 @@ func (d *DriverOracle) DoBatchInsert(link Link, table string, list interface{}, 
 			return
 		}
 	}
-	// 首先获取字段名称及记录长度
+	// Retrieve the table fields and length.
 	holders := []string(nil)
 	for k, _ := range listMap[0] {
 		keys = append(keys, k)
 		holders = append(holders, "?")
 	}
-	batchResult := new(SqlResult)
-	charL, charR := d.DB.GetChars()
-	keyStr := charL + strings.Join(keys, charL+","+charR) + charR
-	valueHolderStr := strings.Join(holders, ",")
-
-	// 当操作类型非insert时调用单笔的insert功能
+	var (
+		batchResult    = new(SqlResult)
+		charL, charR   = d.DB.GetChars()
+		keyStr         = charL + strings.Join(keys, charL+","+charR) + charR
+		valueHolderStr = strings.Join(holders, ",")
+	)
 	if option != insertOptionDefault {
 		for _, v := range listMap {
 			r, err := d.DB.DoInsert(link, table, v, option, 1)
@@ -418,13 +429,12 @@ func (d *DriverOracle) DoBatchInsert(link Link, table string, list interface{}, 
 		return batchResult, nil
 	}
 
-	// 构造批量写入数据格式(注意map的遍历是无序的)
 	batchNum := defaultBatchNumber
 	if len(batch) > 0 {
 		batchNum = batch[0]
 	}
-
-	intoStr := make([]string, 0) //组装into语句
+	// Format "INSERT...INTO..." statement.
+	intoStr := make([]string, 0)
 	for i := 0; i < len(listMap); i++ {
 		for _, k := range keys {
 			params = append(params, listMap[i][k])
@@ -446,7 +456,7 @@ func (d *DriverOracle) DoBatchInsert(link Link, table string, list interface{}, 
 			intoStr = intoStr[:0]
 		}
 	}
-	// 处理最后不构成指定批量的数据
+	// The leftover data.
 	if len(intoStr) > 0 {
 		r, err := d.DB.DoExec(link, fmt.Sprintf("INSERT ALL %s SELECT * FROM DUAL", strings.Join(intoStr, " ")), params...)
 		if err != nil {
