@@ -67,15 +67,6 @@ func (d *DriverOracle) GetChars() (charLeft string, charRight string) {
 // HandleSqlBeforeCommit deals with the sql string before commits it to underlying sql driver.
 func (d *DriverOracle) HandleSqlBeforeCommit(link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}) {
 	var index int
-	// Change time string argument wrapping with TO_DATE function.
-	for i, v := range args {
-		if reflect.TypeOf(v).Kind() == reflect.String {
-			valueStr := gconv.String(v)
-			if gregex.IsMatchString(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$`, valueStr) {
-				args[i] = fmt.Sprintf(`TO_DATE('%s','yyyy-MM-dd HH:MI:SS')`, valueStr)
-			}
-		}
-	}
 	// Convert place holder char '?' to string ":vx".
 	newSql, _ = gregex.ReplaceStringFunc("\\?", sql, func(s string) string {
 		index++
