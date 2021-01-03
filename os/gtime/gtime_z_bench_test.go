@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -8,6 +8,7 @@ package gtime_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/gogf/gf/os/gtime"
 )
@@ -39,6 +40,18 @@ func Benchmark_TimestampNano(b *testing.B) {
 func Benchmark_StrToTime(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		gtime.StrToTime("2018-02-09T20:46:17.897Z")
+	}
+}
+
+func Benchmark_StrToTime_Format(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		gtime.StrToTime("2018-02-09 20:46:17.897", "Y-m-d H:i:su")
+	}
+}
+
+func Benchmark_StrToTime_Layout(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		gtime.StrToTimeLayout("2018-02-09T20:46:17.897Z", time.RFC3339)
 	}
 }
 
