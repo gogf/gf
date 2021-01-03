@@ -175,6 +175,19 @@ func Test_Func(t *testing.T) {
 		t.Assert(err, nil)
 		t.Assert(result, `ILoveGoFrame`)
 	})
+	// eq: multiple values.
+	gtest.C(t, func(t *gtest.T) {
+		str := `{{eq 1 2 1 3 4 5}}`
+		result, err := gview.ParseContent(str, nil)
+		t.Assert(err != nil, false)
+		t.Assert(result, `true`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		str := `{{eq 6 2 1 3 4 5}}`
+		result, err := gview.ParseContent(str, nil)
+		t.Assert(err != nil, false)
+		t.Assert(result, `false`)
+	})
 }
 
 func Test_FuncNl2Br(t *testing.T) {
