@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -36,8 +36,24 @@ func New(param ...interface{}) *Time {
 		case *Time:
 			return r
 		case string:
+			if len(param) > 1 {
+				switch t := param[1].(type) {
+				case string:
+					return NewFromStrFormat(r, t)
+				case []byte:
+					return NewFromStrFormat(r, string(t))
+				}
+			}
 			return NewFromStr(r)
 		case []byte:
+			if len(param) > 1 {
+				switch t := param[1].(type) {
+				case string:
+					return NewFromStrFormat(string(r), t)
+				case []byte:
+					return NewFromStrFormat(string(r), string(t))
+				}
+			}
 			return NewFromStr(string(r))
 		case int:
 			return NewFromTimeStamp(int64(r))
