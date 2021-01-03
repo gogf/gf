@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -56,6 +56,7 @@ func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType s
 		return gconv.Int(gconv.String(fieldValue))
 
 	case
+		"int8", // For pgsql, int8 = bigint.
 		"big_int",
 		"bigint",
 		"bigserial":
