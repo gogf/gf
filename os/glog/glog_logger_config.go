@@ -9,6 +9,7 @@ package glog
 import (
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/util/gconv"
@@ -191,7 +192,7 @@ func (l *Logger) SetPath(path string) error {
 	if !gfile.Exists(path) {
 		if err := gfile.Mkdir(path); err != nil {
 			//fmt.Fprintln(os.Stderr, fmt.Sprintf(`[glog] mkdir "%s" failed: %s`, path, err.Error()))
-			return err
+			return gerror.Wrapf(err, `Mkdir "%s" failed in Pwd "%s"`, path, gfile.Pwd())
 		}
 	}
 	l.config.Path = strings.TrimRight(path, gfile.Separator)
