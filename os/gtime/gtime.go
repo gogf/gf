@@ -10,7 +10,6 @@
 package gtime
 
 import (
-	"errors"
 	"fmt"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/utils"
@@ -277,7 +276,7 @@ func StrToTime(str string, format ...string) (*Time, error) {
 		}
 		return NewFromTime(time.Date(0, time.Month(1), 1, hour, min, sec, nsec, local)), nil
 	} else {
-		return nil, errors.New("unsupported time format")
+		return nil, gerror.New("unsupported time format")
 	}
 
 	// Time
@@ -350,9 +349,9 @@ func StrToTime(str string, format ...string) (*Time, error) {
 			}
 		}
 	}
-	//if year <= 0 {
-	//	return nil, errors.New("invalid time string:" + str)
-	//}
+	if month <= 0 || day <= 0 {
+		return nil, gerror.New("invalid time string:" + str)
+	}
 	return NewFromTime(time.Date(year, time.Month(month), day, hour, min, sec, nsec, local)), nil
 }
 
