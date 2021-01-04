@@ -15,12 +15,10 @@ import (
 	"github.com/gogf/gf/test/gtest"
 )
 
-func init() {
-	gtime.SetTimeZone("Asia/Shanghai")
-}
 func Test_SetTimeZone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		t.Assert(time.Local.String(), "Asia/Shanghai")
+		t.Assert(gtime.SetTimeZone("Asia/Shanghai"), nil)
+		//t.Assert(time.Local.String(), "Asia/Shanghai")
 	})
 }
 

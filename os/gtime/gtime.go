@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/utils"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -102,18 +103,14 @@ var (
 // The parameter <zone> is an area string specifying corresponding time zone,
 // eg: Asia/Shanghai.
 //
-// Note that the time zone database needed by LoadLocation may not be
-// present on all systems, especially non-Unix systems.
-// LoadLocation looks in the directory or uncompressed zip file
-// named by the ZONEINFO environment variable, if any, then looks in
-// known installation locations on Unix systems,
-// and finally looks in $GOROOT/lib/time/zoneinfo.zip.
+// This should be called before package "time" import.
+// Please refer to issue: https://github.com/golang/go/issues/34814
 func SetTimeZone(zone string) error {
 	location, err := time.LoadLocation(zone)
-	if err == nil {
-		time.Local = location
+	if err != nil {
+		return err
 	}
-	return err
+	return os.Setenv("TZ", location.String())
 }
 
 // Timestamp retrieves and returns the timestamp in seconds.
