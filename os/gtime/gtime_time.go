@@ -235,22 +235,6 @@ func (t *Time) AddStr(duration string) (*Time, error) {
 	}
 }
 
-// ToLocation converts current time to specified location.
-func (t *Time) ToLocation(location *time.Location) *Time {
-	newTime := t.Clone()
-	newTime.Time = newTime.Time.In(location)
-	return newTime
-}
-
-// ToZone converts current time to specified zone like: Asia/Shanghai.
-func (t *Time) ToZone(zone string) (*Time, error) {
-	if l, err := time.LoadLocation(zone); err == nil {
-		return t.ToLocation(l), nil
-	} else {
-		return nil, err
-	}
-}
-
 // UTC converts current time to UTC timezone.
 func (t *Time) UTC() *Time {
 	newTime := t.Clone()
@@ -266,13 +250,6 @@ func (t *Time) ISO8601() string {
 // RFC822 formats the time as RFC822 and returns it as string.
 func (t *Time) RFC822() string {
 	return t.Layout("Mon, 02 Jan 06 15:04 MST")
-}
-
-// Local converts the time to local timezone.
-func (t *Time) Local() *Time {
-	newTime := t.Clone()
-	newTime.Time = newTime.Time.Local()
-	return newTime
 }
 
 // AddDate adds year, month and day to the time.
