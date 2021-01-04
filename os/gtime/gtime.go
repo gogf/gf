@@ -350,9 +350,9 @@ func StrToTime(str string, format ...string) (*Time, error) {
 			}
 		}
 	}
-	if year <= 0 {
-		return nil, errors.New("invalid time string:" + str)
-	}
+	//if year <= 0 {
+	//	return nil, errors.New("invalid time string:" + str)
+	//}
 	return NewFromTime(time.Date(year, time.Month(month), day, hour, min, sec, nsec, local)), nil
 }
 
@@ -367,7 +367,7 @@ func ConvertZone(strTime string, toZone string, fromZone ...string) (*Time, erro
 		if l, err := time.LoadLocation(fromZone[0]); err != nil {
 			return nil, err
 		} else {
-			t.Time = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Time.Second(), t.Time.Nanosecond(), l)
+			t.Time = time.Date(t.Year(), time.Month(t.Month()), t.Day(), t.Hour(), t.Minute(), t.Time.Second(), t.Time.Nanosecond(), l)
 		}
 	}
 	if l, err := time.LoadLocation(toZone); err != nil {

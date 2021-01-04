@@ -24,6 +24,20 @@ func Test_Time(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		s := "01:02:03.456"
+		t.AssertEQ(gconv.GTime(s).Hour(), 1)
+		t.AssertEQ(gconv.GTime(s).Minute(), 2)
+		t.AssertEQ(gconv.GTime(s).Second(), 3)
+		t.AssertEQ(gconv.GTime(s), gtime.NewFromStr(s))
+		t.AssertEQ(gconv.Time(s), gtime.NewFromStr(s).Time)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		s := "0000-01-01 01:02:03"
+		t.AssertEQ(gconv.GTime(s).Year(), 0)
+		t.AssertEQ(gconv.GTime(s).Month(), 1)
+		t.AssertEQ(gconv.GTime(s).Day(), 1)
+		t.AssertEQ(gconv.GTime(s).Hour(), 1)
+		t.AssertEQ(gconv.GTime(s).Minute(), 2)
+		t.AssertEQ(gconv.GTime(s).Second(), 3)
 		t.AssertEQ(gconv.GTime(s), gtime.NewFromStr(s))
 		t.AssertEQ(gconv.Time(s), gtime.NewFromStr(s).Time)
 	})
