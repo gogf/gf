@@ -8,6 +8,7 @@ package gins
 
 import (
 	"fmt"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gutil"
@@ -47,7 +48,25 @@ func Database(name ...string) gdb.DB {
 			configMap = Config().GetMap(configNodeKey)
 		}
 		if len(configMap) == 0 && !gdb.IsConfigured() {
-			panic(fmt.Sprintf(`database init failed: "%s" node not found, is config file or configuration missing?`, configNodeNameDatabase))
+			if !Config().Available() {
+				exampleFileName := "config.example.toml"
+				if Config().Available(exampleFileName) {
+					panic(gerror.Newf(
+						`configuration file "%s" not found, but found "%s", did you miss renaming the configuration example file?`,
+						Config().GetFileName(),
+						exampleFileName,
+					))
+				} else {
+					panic(gerror.Newf(
+						`configuration file "%s" not found, did you miss the configuration file or the file name setting?`,
+						Config().GetFileName(),
+					))
+				}
+			}
+			panic(gerror.Newf(
+				`database initialization failed: "%s" node not found, is configuration file or configuration node missing?`,
+				configNodeNameDatabase,
+			))
 		}
 		if len(configMap) == 0 {
 			configMap = make(map[string]interface{})
