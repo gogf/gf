@@ -14,7 +14,9 @@ branches:
   - staging
 
 env:
-- GF_DEBUG=1 GO111MODULE=on
+- TZ=Asia/Shanghai
+- GF_DEBUG=1
+- GO111MODULE=on
 
 services:
 - mysql
