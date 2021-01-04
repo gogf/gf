@@ -67,7 +67,7 @@ func Test_Types(t *testing.T) {
 		t.Assert(one["blob"].String(), data["blob"])
 		t.Assert(one["binary"].String(), data["binary"])
 		t.Assert(one["date"].String(), data["date"])
-		t.Assert(one["time"].String(), data["time"])
+		t.Assert(one["time"].String(), `0000-01-01 10:00:01`)
 		t.Assert(one["decimal"].String(), -123.46)
 		t.Assert(one["double"].String(), data["double"])
 		t.Assert(one["bit"].Int(), data["bit"])
