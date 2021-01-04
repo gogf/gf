@@ -179,6 +179,11 @@ func (t *Time) TimestampNanoStr() string {
 	return strconv.FormatInt(t.TimestampNano(), 10)
 }
 
+// Month returns the month of the year specified by t.
+func (t *Time) Month() int {
+	return int(t.Time.Month())
+}
+
 // Second returns the second offset within the minute specified by t,
 // in the range [0, 59].
 func (t *Time) Second() int {
