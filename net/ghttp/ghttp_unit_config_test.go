@@ -52,7 +52,7 @@ func Test_SetConfigWithMap(t *testing.T) {
 			"AccessLogEnabled": true,
 			"ErrorLogEnabled":  true,
 			"PProfEnabled":     true,
-			"LogPath":          "/var/log/MyServerLog",
+			"LogPath":          "/tmp/log/MyServerLog",
 			"SessionIdName":    "MySessionId",
 			"SessionPath":      "/tmp/MySessionStoragePath",
 			"SessionMaxAge":    24 * time.Hour,

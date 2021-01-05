@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -171,40 +171,21 @@ type ServerConfig struct {
 	// ==================================
 	// Logging.
 	// ==================================
-
-	// Logger specifies the logger for server.
-	Logger *glog.Logger
-
-	// LogPath specifies the directory for storing logging files.
-	LogPath string
-
-	// LogStdout specifies whether printing logging content to stdout.
-	LogStdout bool
-
-	// ErrorStack specifies whether logging stack information when error.
-	ErrorStack bool
-
-	// ErrorLogEnabled enables error logging content to files.
-	ErrorLogEnabled bool
-
-	// ErrorLogPattern specifies the error log file pattern like: error-{Ymd}.log
-	ErrorLogPattern string
-
-	// AccessLogEnabled enables access logging content to files.
-	AccessLogEnabled bool
-
-	// AccessLogPattern specifies the error log file pattern like: access-{Ymd}.log
-	AccessLogPattern string
+	Logger           *glog.Logger // Logger specifies the logger for server.
+	LogPath          string       // LogPath specifies the directory for storing logging files.
+	LogLevel         string       // LogLevel specifies the logging level for logger.
+	LogStdout        bool         // LogStdout specifies whether printing logging content to stdout.
+	ErrorStack       bool         // ErrorStack specifies whether logging stack information when error.
+	ErrorLogEnabled  bool         // ErrorLogEnabled enables error logging content to files.
+	ErrorLogPattern  string       // ErrorLogPattern specifies the error log file pattern like: error-{Ymd}.log
+	AccessLogEnabled bool         // AccessLogEnabled enables access logging content to files.
+	AccessLogPattern string       // AccessLogPattern specifies the error log file pattern like: access-{Ymd}.log
 
 	// ==================================
 	// PProf.
 	// ==================================
-
-	// PProfEnabled enables PProf feature.
-	PProfEnabled bool
-
-	// PProfPattern specifies the PProf service pattern for router.
-	PProfPattern string
+	PProfEnabled bool   // PProfEnabled enables PProf feature.
+	PProfPattern string // PProfPattern specifies the PProf service pattern for router.
 
 	// ==================================
 	// Other.
@@ -267,6 +248,7 @@ func NewConfig() ServerConfig {
 		SessionPath:         gsession.DefaultStorageFilePath,
 		SessionCookieOutput: true,
 		Logger:              glog.New(),
+		LogLevel:            "all",
 		LogStdout:           true,
 		ErrorStack:          true,
 		ErrorLogEnabled:     true,
@@ -334,6 +316,14 @@ func (s *Server) SetConfig(c ServerConfig) error {
 	if c.TLSConfig == nil && c.HTTPSCertPath != "" {
 		s.EnableHTTPS(c.HTTPSCertPath, c.HTTPSKeyPath)
 	}
+	// Logging.
+	if s.config.LogPath != "" && s.config.LogPath != s.config.Logger.GetPath() {
+		if err := s.config.Logger.SetPath(s.config.LogPath); err != nil {
+			return err
+		}
+	}
+	s.config.Logger.SetLevelStr(s.config.LogLevel)
+
 	SetGraceful(c.Graceful)
 	intlog.Printf("SetConfig: %+v", s.config)
 	return nil

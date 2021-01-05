@@ -192,7 +192,7 @@ func (l *Logger) SetPath(path string) error {
 	if !gfile.Exists(path) {
 		if err := gfile.Mkdir(path); err != nil {
 			//fmt.Fprintln(os.Stderr, fmt.Sprintf(`[glog] mkdir "%s" failed: %s`, path, err.Error()))
-			return gerror.Wrapf(err, `Mkdir "%s" failed in Pwd "%s"`, path, gfile.Pwd())
+			return gerror.Wrapf(err, `Mkdir "%s" failed in PWD "%s"`, path, gfile.Pwd())
 		}
 	}
 	l.config.Path = strings.TrimRight(path, gfile.Separator)
