@@ -343,6 +343,9 @@ func Wait() {
 
 // startServer starts the underlying server listening.
 func (s *Server) startServer(fdMap listenerFdMap) {
+	if !s.config.ListenAndServe {
+		return
+	}
 	var httpsEnabled bool
 	// HTTPS
 	if s.config.TLSConfig != nil || (s.config.HTTPSCertPath != "" && s.config.HTTPSKeyPath != "") {

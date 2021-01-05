@@ -233,6 +233,8 @@ type ServerConfig struct {
 
 	// Graceful enables graceful reload feature for all servers of the process.
 	Graceful bool
+
+	ListenAndServe bool
 }
 
 // Deprecated. Use NewConfig instead.
@@ -278,6 +280,7 @@ func NewConfig() ServerConfig {
 		FormParsingMemory:   1024 * 1024,     // 1MB
 		Rewrites:            make(map[string]string),
 		Graceful:            false,
+		ListenAndServe:      true,
 	}
 }
 
@@ -467,4 +470,8 @@ func (s *Server) Handler() http.Handler {
 		return s
 	}
 	return s.config.Handler
+}
+
+func (s *Server) SetListenAndServe(enabled bool) {
+	s.config.ListenAndServe = enabled
 }
