@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,7 +7,6 @@
 package gdb
 
 import (
-	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/util/gutil"
 	"strings"
 	"time"
@@ -56,6 +55,7 @@ func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType s
 		return gconv.Int(gconv.String(fieldValue))
 
 	case
+		"int8", // For pgsql, int8 = bigint.
 		"big_int",
 		"bigint",
 		"bigserial":
@@ -162,15 +162,11 @@ func (c *Core) mappingAndFilterData(schema, table string, data map[string]interf
 				if foundKey != "" {
 					data[foundKey] = dataValue
 					delete(data, dataKey)
-				} else if !filter {
-					if schema != "" {
-						return nil, gerror.Newf(`no column of name "%s" found for table "%s" in schema "%s"`, dataKey, table, schema)
-					}
-					return nil, gerror.Newf(`no column of name "%s" found for table "%s"`, dataKey, table)
 				}
 			}
 		}
 		// Data filtering.
+		// It deletes all key-value pairs that has incorrect field name.
 		if filter {
 			for dataKey, _ := range data {
 				if _, ok := fieldsMap[dataKey]; !ok {

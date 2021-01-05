@@ -8,6 +8,7 @@ package gdb_test
 
 import (
 	"fmt"
+	"github.com/gogf/gf/os/gtime"
 	"testing"
 
 	"github.com/gogf/gf/frame/g"
@@ -15,6 +16,7 @@ import (
 	"github.com/gogf/gf/test/gtest"
 )
 
+// All types testing.
 func Test_Types(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		if _, err := db.Exec(fmt.Sprintf(`
@@ -67,11 +69,34 @@ func Test_Types(t *testing.T) {
 		t.Assert(one["blob"].String(), data["blob"])
 		t.Assert(one["binary"].String(), data["binary"])
 		t.Assert(one["date"].String(), data["date"])
-		t.Assert(one["time"].String(), data["time"])
+		t.Assert(one["time"].String(), `0000-01-01 10:00:01`)
 		t.Assert(one["decimal"].String(), -123.46)
 		t.Assert(one["double"].String(), data["double"])
 		t.Assert(one["bit"].Int(), data["bit"])
 		t.Assert(one["tinyint"].Bool(), data["tinyint"])
-		t.Assert(one["tinyint"].Bool(), data["tinyint"])
+
+		type T struct {
+			Id      int
+			Blob    []byte
+			Binary  []byte
+			Date    *gtime.Time
+			Time    *gtime.Time
+			Decimal float64
+			Double  float64
+			Bit     int8
+			TinyInt bool
+		}
+		var obj *T
+		err = db.Table("types").Struct(&obj)
+		t.Assert(err, nil)
+		t.Assert(obj.Id, 1)
+		t.Assert(obj.Blob, data["blob"])
+		t.Assert(obj.Binary, data["binary"])
+		t.Assert(obj.Date.Format("Y-m-d"), data["date"])
+		t.Assert(obj.Time.String(), `0000-01-01 10:00:01`)
+		t.Assert(obj.Decimal, -123.46)
+		t.Assert(obj.Double, data["double"])
+		t.Assert(obj.Bit, data["bit"])
+		t.Assert(obj.TinyInt, data["tinyint"])
 	})
 }
