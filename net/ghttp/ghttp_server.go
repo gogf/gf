@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -128,9 +128,9 @@ func (s *Server) Start() error {
 	}
 
 	// Logging path setting check.
-	if s.config.LogPath != "" {
+	if s.config.LogPath != "" && s.config.LogPath != s.config.Logger.GetPath() {
 		if err := s.config.Logger.SetPath(s.config.LogPath); err != nil {
-			return gerror.Wrapf(err, `set logging path "%s" failed`, s.config.LogPath)
+			return err
 		}
 	}
 	// Default session storage.

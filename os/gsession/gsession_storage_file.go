@@ -56,7 +56,7 @@ func NewStorageFile(path ...string) *StorageFile {
 	}
 	if storagePath != "" {
 		if err := gfile.Mkdir(storagePath); err != nil {
-			panic(gerror.Wrapf(err, `Mkdir "%s" failed in Pwd "%s"`, path, gfile.Pwd()))
+			panic(gerror.Wrapf(err, `Mkdir "%s" failed in PWD "%s"`, path, gfile.Pwd()))
 		}
 	}
 	s := &StorageFile{
