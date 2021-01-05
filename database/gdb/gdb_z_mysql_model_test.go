@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -492,6 +492,16 @@ func Test_Model_Update(t *testing.T) {
 	// Update + Data(string)
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Table(table).Data("passport='user_33'").Where("passport='user_3'").Update()
+		t.Assert(err, nil)
+		n, _ := result.RowsAffected()
+		t.Assert(n, 1)
+	})
+	// Update + Fields(string)
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Table(table).Fields("passport").Data(g.Map{
+			"passport": "user_44",
+			"none":     "none",
+		}).Where("passport='user_4'").Update()
 		t.Assert(err, nil)
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)

@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -51,11 +51,11 @@ func (view *View) buildInFuncMaps(value ...interface{}) []map[string]interface{}
 func (view *View) buildInFuncEq(value interface{}, others ...interface{}) bool {
 	s := gconv.String(value)
 	for _, v := range others {
-		if strings.Compare(s, gconv.String(v)) != 0 {
-			return false
+		if strings.Compare(s, gconv.String(v)) == 0 {
+			return true
 		}
 	}
-	return true
+	return false
 }
 
 // buildInFuncNe implements build-in template function: ne
