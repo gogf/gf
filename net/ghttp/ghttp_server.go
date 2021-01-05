@@ -8,9 +8,8 @@ package ghttp
 
 import (
 	"bytes"
-	"errors"
-	"fmt"
 	"github.com/gogf/gf/debug/gdebug"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 	"net/http"
 	"os"
@@ -125,13 +124,13 @@ func (s *Server) Start() error {
 
 	// Server can only be run once.
 	if s.Status() == ServerStatusRunning {
-		return errors.New("[ghttp] server is already running")
+		return gerror.New("server is already running")
 	}
 
 	// Logging path setting check.
 	if s.config.LogPath != "" {
 		if err := s.config.Logger.SetPath(s.config.LogPath); err != nil {
-			return errors.New(fmt.Sprintf("[ghttp] set log path '%s' error: %v", s.config.LogPath, err))
+			return gerror.Wrapf(err, `set logging path "%s" failed`, s.config.LogPath)
 		}
 	}
 	// Default session storage.
@@ -141,7 +140,7 @@ func (s *Server) Start() error {
 			path = gfile.Join(s.config.SessionPath, s.name)
 			if !gfile.Exists(path) {
 				if err := gfile.Mkdir(path); err != nil {
-					return errors.New(fmt.Sprintf("[ghttp] mkdir failed for '%s': %v", path, err))
+					return gerror.Wrapf(err, `mkdir failed for "%s"`, path)
 				}
 			}
 		}
@@ -175,7 +174,7 @@ func (s *Server) Start() error {
 	// If there's no route registered  and no static service enabled,
 	// it then returns an error of invalid usage of server.
 	if len(s.routesMap) == 0 && !s.config.FileServerEnabled {
-		return errors.New(`[ghttp] there's no route set or static feature enabled, did you forget import the router?`)
+		return gerror.New(`there's no route set or static feature enabled, did you forget import the router?`)
 	}
 
 	// Start the HTTP server.
@@ -196,7 +195,7 @@ func (s *Server) Start() error {
 	if gproc.IsChild() {
 		gtimer.SetTimeout(2*time.Second, func() {
 			if err := gproc.Send(gproc.PPid(), []byte("exit"), adminGProcCommGroup); err != nil {
-				//glog.Error("[ghttp] server error in process communication:", err)
+				//glog.Error("server error in process communication:", err)
 			}
 		})
 	}
@@ -320,7 +319,7 @@ func (s *Server) Run() {
 			p.Remove()
 		}
 	}
-	s.Logger().Printf("[ghttp] %d: all servers shutdown", gproc.Pid())
+	s.Logger().Printf("%d: all servers shutdown", gproc.Pid())
 }
 
 // Wait blocks to wait for all servers done.
@@ -338,7 +337,7 @@ func Wait() {
 		}
 		return true
 	})
-	glog.Printf("[ghttp] %d: all servers shutdown", gproc.Pid())
+	glog.Printf("%d: all servers shutdown", gproc.Pid())
 }
 
 // startServer starts the underlying server listening.
