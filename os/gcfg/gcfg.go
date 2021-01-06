@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -49,6 +49,11 @@ func New(file ...string) *Config {
 	name := DefaultConfigFile
 	if len(file) > 0 {
 		name = file[0]
+	} else {
+		// Custom default configuration file name from command line or environment.
+		if customFile := gcmd.GetWithEnv(fmt.Sprintf("%s.file", cmdEnvKey)).String(); customFile != "" {
+			name = customFile
+		}
 	}
 	c := &Config{
 		name:  name,
@@ -56,12 +61,12 @@ func New(file ...string) *Config {
 		jsons: gmap.NewStrAnyMap(true),
 	}
 	// Customized dir path from env/cmd.
-	if envPath := gcmd.GetWithEnv(fmt.Sprintf("%s.path", cmdEnvKey)).String(); envPath != "" {
-		if gfile.Exists(envPath) {
-			_ = c.SetPath(envPath)
+	if customPath := gcmd.GetWithEnv(fmt.Sprintf("%s.path", cmdEnvKey)).String(); customPath != "" {
+		if gfile.Exists(customPath) {
+			_ = c.SetPath(customPath)
 		} else {
 			if errorPrint() {
-				glog.Errorf("Configuration directory path does not exist: %s", envPath)
+				glog.Errorf("Configuration directory path does not exist: %s", customPath)
 			}
 		}
 	} else {
