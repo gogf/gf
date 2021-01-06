@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -13,7 +13,7 @@ import (
 
 const (
 	// Default group name for instance usage.
-	DefaultName = "default"
+	DefaultName = "config"
 )
 
 var (
