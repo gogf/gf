@@ -981,6 +981,18 @@ func Test_Model_Struct(t *testing.T) {
 		err := db.Table(table).Where("id=-1").Struct(user)
 		t.Assert(err, sql.ErrNoRows)
 	})
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id         int
+			Passport   string
+			Password   string
+			NickName   string
+			CreateTime *gtime.Time
+		}
+		var user *User
+		err := db.Table(table).Where("id=-1").Struct(&user)
+		t.Assert(err, nil)
+	})
 }
 
 func Test_Model_Struct_CustomType(t *testing.T) {

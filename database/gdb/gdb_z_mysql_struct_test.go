@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -262,7 +262,8 @@ func Test_Struct_Empty(t *testing.T) {
 		one, err := db.Table(table).Where("id=100").One()
 		t.Assert(err, nil)
 		var user *User
-		t.AssertNE(one.Struct(&user), nil)
+		t.Assert(one.Struct(&user), nil)
+		t.Assert(user, nil)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
