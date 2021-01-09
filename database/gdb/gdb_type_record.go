@@ -48,8 +48,11 @@ func (r Record) GMap() *gmap.StrAnyMap {
 // Note that it returns sql.ErrNoRows if <r> is empty.
 func (r Record) Struct(pointer interface{}) error {
 	// If the record is empty, it returns error.
-	if r.IsEmpty() && !empty.IsNil(pointer, true) {
-		return sql.ErrNoRows
+	if r.IsEmpty() {
+		if !empty.IsNil(pointer, true) {
+			return sql.ErrNoRows
+		}
+		return nil
 	}
 	// Special handling for parameter type: reflect.Value
 	if _, ok := pointer.(reflect.Value); ok {
