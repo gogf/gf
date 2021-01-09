@@ -11,6 +11,7 @@ import (
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/encoding/gparser"
 	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/internal/empty"
 	"github.com/gogf/gf/util/gconv"
 	"reflect"
 )
@@ -47,7 +48,7 @@ func (r Record) GMap() *gmap.StrAnyMap {
 // Note that it returns sql.ErrNoRows if <r> is empty.
 func (r Record) Struct(pointer interface{}) error {
 	// If the record is empty, it returns error.
-	if r.IsEmpty() {
+	if r.IsEmpty() && !empty.IsNil(pointer, true) {
 		return sql.ErrNoRows
 	}
 	// Special handling for parameter type: reflect.Value

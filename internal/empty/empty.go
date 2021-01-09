@@ -1,10 +1,10 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame gf Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package empty provides functions for checking empty variables.
+// Package empty provides functions for checking empty/nil variables.
 package empty
 
 import (
@@ -152,8 +152,11 @@ func IsEmpty(value interface{}) bool {
 }
 
 // IsNil checks whether given <value> is nil.
+// Parameter <traceSource> is used for tracing to the source variable if given <value> is type
+// of a pinter that also points to a pointer. It returns nil if the source is nil when <traceSource>
+// is true.
 // Note that it might use reflect feature which affects performance a little bit.
-func IsNil(value interface{}) bool {
+func IsNil(value interface{}, traceSource ...bool) bool {
 	if value == nil {
 		return true
 	}
@@ -168,10 +171,24 @@ func IsNil(value interface{}) bool {
 		reflect.Map,
 		reflect.Slice,
 		reflect.Func,
-		reflect.Ptr,
 		reflect.Interface,
 		reflect.UnsafePointer:
-		return rv.IsNil()
+		return !rv.IsValid() || rv.IsNil()
+
+	case reflect.Ptr:
+		if len(traceSource) > 0 && traceSource[0] {
+			for rv.Kind() == reflect.Ptr {
+				rv = rv.Elem()
+			}
+			if !rv.IsValid() {
+				return true
+			}
+			if rv.Kind() == reflect.Ptr {
+				return rv.IsNil()
+			}
+		} else {
+			return !rv.IsValid() || rv.IsNil()
+		}
 	}
 	return false
 }
