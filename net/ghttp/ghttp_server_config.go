@@ -152,14 +152,11 @@ type ServerConfig struct {
 	// Session.
 	// ==================================
 
-	// SessionMaxAge specifies max TTL for session items.
-	SessionMaxAge time.Duration
-
 	// SessionIdName specifies the session id name.
 	SessionIdName string
 
-	// SessionCookieOutput specifies whether automatic outputting session id to cookie.
-	SessionCookieOutput bool
+	// SessionMaxAge specifies max TTL for session items.
+	SessionMaxAge time.Duration
 
 	// SessionPath specifies the session storage directory path for storing session files.
 	// It only makes sense if the session storage is type of file storage.
@@ -167,6 +164,13 @@ type ServerConfig struct {
 
 	// SessionStorage specifies the session storage.
 	SessionStorage gsession.Storage
+
+	// SessionCookieMaxAge specifies the cookie ttl for session id.
+	// It it is set 0, it means it expires along with browser session.
+	SessionCookieMaxAge time.Duration
+
+	// SessionCookieOutput specifies whether automatic outputting session id to cookie.
+	SessionCookieOutput bool
 
 	// ==================================
 	// Logging.
@@ -243,10 +247,11 @@ func NewConfig() ServerConfig {
 		CookieMaxAge:        time.Hour * 24 * 365,
 		CookiePath:          "/",
 		CookieDomain:        "",
-		SessionMaxAge:       time.Hour * 24,
 		SessionIdName:       "gfsessionid",
 		SessionPath:         gsession.DefaultStorageFilePath,
+		SessionMaxAge:       time.Hour * 24,
 		SessionCookieOutput: true,
+		SessionCookieMaxAge: time.Hour * 24,
 		Logger:              glog.New(),
 		LogLevel:            "all",
 		LogStdout:           true,
