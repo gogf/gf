@@ -27,30 +27,30 @@ type ConfigGroup []ConfigNode
 
 // ConfigNode is configuration for one node.
 type ConfigNode struct {
-	Host                 string        // Host of server, ip or domain like: 127.0.0.1, localhost
-	Port                 string        // Port, it's commonly 3306.
-	User                 string        // Authentication username.
-	Pass                 string        // Authentication password.
-	Name                 string        // Default used database name.
-	Type                 string        // Database type: mysql, sqlite, mssql, pgsql, oracle.
-	Role                 string        // (Optional, "master" in default) Node role, used for master-slave mode: master, slave.
-	Debug                bool          // (Optional) Debug mode enables debug information logging and output.
-	Prefix               string        // (Optional) Table prefix.
-	DryRun               bool          // (Optional) Dry run, which does SELECT but no INSERT/UPDATE/DELETE statements.
-	Weight               int           // (Optional) Weight for load balance calculating, it's useless if there's just one node.
-	Charset              string        // (Optional, "utf8mb4" in default) Custom charset when operating on database.
-	LinkInfo             string        `json:"link"`        // (Optional) Custom link information, when it is used, configuration Host/Port/User/Pass/Name are ignored.
-	MaxIdleConnCount     int           `json:"maxidle"`     // (Optional) Max idle connection configuration for underlying connection pool.
-	MaxOpenConnCount     int           `json:"maxopen"`     // (Optional) Max open connection configuration for underlying connection pool.
-	MaxConnLifetime      time.Duration `json:"maxlifetime"` // (Optional) Max connection TTL configuration for underlying connection pool.
-	QueryTimeout         time.Duration // (Optional) Max query time for per dql.
-	ExecTimeout          time.Duration // (Optional) Max exec time for dml.
-	TranTimeout          time.Duration // (Optional) Max exec time time for a transaction.
-	PrepareTimeout       time.Duration // (Optional) Max exec time time for prepare operation.
-	CreatedAt            string        // (Optional) The filed name of table for automatic-filled created datetime.
-	UpdatedAt            string        // (Optional) The filed name of table for automatic-filled updated datetime.
-	DeletedAt            string        // (Optional) The filed name of table for automatic-filled updated datetime.
-	TimeMaintainDisabled bool          // (Optional) Disable the automatic time maintaining feature.
+	Host                 string        `json:"host"`                 // Host of server, ip or domain like: 127.0.0.1, localhost
+	Port                 string        `json:"port"`                 // Port, it's commonly 3306.
+	User                 string        `json:"user"`                 // Authentication username.
+	Pass                 string        `json:"pass"`                 // Authentication password.
+	Name                 string        `json:"name"`                 // Default used database name.
+	Type                 string        `json:"type"`                 // Database type: mysql, sqlite, mssql, pgsql, oracle.
+	Role                 string        `json:"role"`                 // (Optional, "master" in default) Node role, used for master-slave mode: master, slave.
+	Debug                bool          `json:"debug"`                // (Optional) Debug mode enables debug information logging and output.
+	Prefix               string        `json:"prefix"`               // (Optional) Table prefix.
+	DryRun               bool          `json:"dryRun"`               // (Optional) Dry run, which does SELECT but no INSERT/UPDATE/DELETE statements.
+	Weight               int           `json:"weight"`               // (Optional) Weight for load balance calculating, it's useless if there's just one node.
+	Charset              string        `json:"charset"`              // (Optional, "utf8mb4" in default) Custom charset when operating on database.
+	LinkInfo             string        `json:"link"`                 // (Optional) Custom link information, when it is used, configuration Host/Port/User/Pass/Name are ignored.
+	MaxIdleConnCount     int           `json:"maxIdle"`              // (Optional) Max idle connection configuration for underlying connection pool.
+	MaxOpenConnCount     int           `json:"maxOpen"`              // (Optional) Max open connection configuration for underlying connection pool.
+	MaxConnLifetime      time.Duration `json:"maxLifetime"`          // (Optional) Max connection TTL configuration for underlying connection pool.
+	QueryTimeout         time.Duration `json:"queryTimeout"`         // (Optional) Max query time for per dql.
+	ExecTimeout          time.Duration `json:"execTimeout"`          // (Optional) Max exec time for dml.
+	TranTimeout          time.Duration `json:"tranTimeout"`          // (Optional) Max exec time time for a transaction.
+	PrepareTimeout       time.Duration `json:"prepareTimeout"`       // (Optional) Max exec time time for prepare operation.
+	CreatedAt            string        `json:"createdAt"`            // (Optional) The filed name of table for automatic-filled created datetime.
+	UpdatedAt            string        `json:"updatedAt"`            // (Optional) The filed name of table for automatic-filled updated datetime.
+	DeletedAt            string        `json:"deletedAt"`            // (Optional) The filed name of table for automatic-filled updated datetime.
+	TimeMaintainDisabled bool          `json:"timeMaintainDisabled"` // (Optional) Disable the automatic time maintaining feature.
 }
 
 // configs is internal used configuration object.

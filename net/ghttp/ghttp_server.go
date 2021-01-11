@@ -350,7 +350,7 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 				s.config.HTTPSAddr = s.config.Address
 				s.config.Address = ""
 			} else {
-				s.config.HTTPSAddr = gDEFAULT_HTTPS_ADDR
+				s.config.HTTPSAddr = defaultHttpsAddr
 			}
 		}
 		httpsEnabled = len(s.config.HTTPSAddr) > 0
@@ -385,7 +385,7 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 	}
 	// HTTP
 	if !httpsEnabled && len(s.config.Address) == 0 {
-		s.config.Address = gDEFAULT_HTTP_ADDR
+		s.config.Address = defaultHttpAddr
 	}
 	var array []string
 	if v, ok := fdMap["http"]; ok && len(v) > 0 {
