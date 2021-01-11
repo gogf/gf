@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -32,6 +32,11 @@ func (s *Server) SetSessionCookieOutput(enabled bool) {
 	s.config.SessionCookieOutput = enabled
 }
 
+// SetSessionCookieMaxAge sets the SessionCookieMaxAge for server.
+func (s *Server) SetSessionCookieMaxAge(maxAge time.Duration) {
+	s.config.SessionCookieMaxAge = maxAge
+}
+
 // GetSessionMaxAge returns the SessionMaxAge of server.
 func (s *Server) GetSessionMaxAge() time.Duration {
 	return s.config.SessionMaxAge
@@ -40,4 +45,9 @@ func (s *Server) GetSessionMaxAge() time.Duration {
 // GetSessionIdName returns the SessionIdName of server.
 func (s *Server) GetSessionIdName() string {
 	return s.config.SessionIdName
+}
+
+// GetSessionCookieMaxAge returns the SessionCookieMaxAge of server.
+func (s *Server) GetSessionCookieMaxAge() time.Duration {
+	return s.config.SessionCookieMaxAge
 }
