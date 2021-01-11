@@ -2147,6 +2147,27 @@ func Test_Model_Option_List(t *testing.T) {
 	})
 }
 
+func Test_Model_OmitEmpty(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		table := fmt.Sprintf(`table_%s`, gtime.TimestampNanoStr())
+		if _, err := db.Exec(fmt.Sprintf(`
+    CREATE TABLE IF NOT EXISTS %s (
+        id int(10) unsigned NOT NULL AUTO_INCREMENT,
+        name varchar(45) NOT NULL,
+        PRIMARY KEY (id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    `, table)); err != nil {
+			gtest.Error(err)
+		}
+		defer dropTable(table)
+		_, err := db.Table(table).OmitEmpty().Data(g.Map{
+			"id":   1,
+			"name": "",
+		}).Save()
+		t.AssertNE(err, nil)
+	})
+}
+
 func Test_Model_Option_Where(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		table := createInitTable()
