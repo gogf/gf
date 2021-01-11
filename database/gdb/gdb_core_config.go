@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -16,8 +16,7 @@ import (
 )
 
 const (
-	DEFAULT_GROUP_NAME = "default" // Deprecated, use DefaultGroupName instead.
-	DefaultGroupName   = "default" // Default group name.
+	DefaultGroupName = "default" // Default group name.
 )
 
 // Config is the configuration management object.
@@ -44,6 +43,10 @@ type ConfigNode struct {
 	MaxIdleConnCount     int           `json:"maxidle"`     // (Optional) Max idle connection configuration for underlying connection pool.
 	MaxOpenConnCount     int           `json:"maxopen"`     // (Optional) Max open connection configuration for underlying connection pool.
 	MaxConnLifetime      time.Duration `json:"maxlifetime"` // (Optional) Max connection TTL configuration for underlying connection pool.
+	QueryTimeout         time.Duration // (Optional) Max query time for per dql.
+	ExecTimeout          time.Duration // (Optional) Max exec time for dml.
+	TranTimeout          time.Duration // (Optional) Max exec time time for a transaction.
+	PrepareTimeout       time.Duration // (Optional) Max exec time time for prepare operation.
 	CreatedAt            string        // (Optional) The filed name of table for automatic-filled created datetime.
 	UpdatedAt            string        // (Optional) The filed name of table for automatic-filled updated datetime.
 	DeletedAt            string        // (Optional) The filed name of table for automatic-filled updated datetime.
