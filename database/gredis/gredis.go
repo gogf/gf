@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -36,17 +36,17 @@ type Conn struct {
 
 // Redis configuration.
 type Config struct {
-	Host            string
-	Port            int
-	Db              int
-	Pass            string        // Password for AUTH.
-	MaxIdle         int           // Maximum number of connections allowed to be idle (default is 10)
-	MaxActive       int           // Maximum number of connections limit (default is 0 means no limit).
-	IdleTimeout     time.Duration // Maximum idle time for connection (default is 10 seconds, not allowed to be set to 0)
-	MaxConnLifetime time.Duration // Maximum lifetime of the connection (default is 30 seconds, not allowed to be set to 0)
-	ConnectTimeout  time.Duration // Dial connection timeout.
-	TLS             bool          // Specifies the config to use when a TLS connection is dialed.
-	TLSSkipVerify   bool          // Disables server name verification when connecting over TLS
+	Host            string        `json:"host"`
+	Port            int           `json:"port"`
+	Db              int           `json:"db"`
+	Pass            string        `json:"pass"`            // Password for AUTH.
+	MaxIdle         int           `json:"maxIdle"`         // Maximum number of connections allowed to be idle (default is 10)
+	MaxActive       int           `json:"maxActive"`       // Maximum number of connections limit (default is 0 means no limit).
+	IdleTimeout     time.Duration `json:"idleTimeout"`     // Maximum idle time for connection (default is 10 seconds, not allowed to be set to 0)
+	MaxConnLifetime time.Duration `json:"maxConnLifetime"` // Maximum lifetime of the connection (default is 30 seconds, not allowed to be set to 0)
+	ConnectTimeout  time.Duration `json:"connectTimeout"`  // Dial connection timeout.
+	TLS             bool          `json:"tls"`             // Specifies the config to use when a TLS connection is dialed.
+	TLSSkipVerify   bool          `json:"tlsSkipVerify"`   // Disables server name verification when connecting over TLS
 }
 
 // Pool statistics.

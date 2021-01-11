@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -21,25 +21,25 @@ import (
 
 // Config is the configuration object for logger.
 type Config struct {
-	Writer               io.Writer      // Customized io.Writer.
-	Flags                int            // Extra flags for logging output features.
-	Path                 string         // Logging directory path.
-	File                 string         // Format for logging file.
-	Level                int            // Output level.
-	Prefix               string         // Prefix string for every logging content.
-	StSkip               int            // Skip count for stack.
-	StStatus             int            // Stack status(1: enabled - default; 0: disabled)
-	StFilter             string         // Stack string filter.
-	CtxKeys              []interface{}  // Context keys for logging, which is used for value retrieving from context.
-	HeaderPrint          bool           `c:"header"` // Print header or not(true in default).
-	StdoutPrint          bool           `c:"stdout"` // Output to stdout or not(true in default).
-	LevelPrefixes        map[int]string // Logging level to its prefix string mapping.
-	RotateSize           int64          // Rotate the logging file if its size > 0 in bytes.
-	RotateExpire         time.Duration  // Rotate the logging file if its mtime exceeds this duration.
-	RotateBackupLimit    int            // Max backup for rotated files, default is 0, means no backups.
-	RotateBackupExpire   time.Duration  // Max expire for rotated files, which is 0 in default, means no expiration.
-	RotateBackupCompress int            // Compress level for rotated files using gzip algorithm. It's 0 in default, means no compression.
-	RotateCheckInterval  time.Duration  // Asynchronizely checks the backups and expiration at intervals. It's 1 hour in default.
+	Writer               io.Writer      `json:"-"`                    // Customized io.Writer.
+	Flags                int            `json:"flags"`                // Extra flags for logging output features.
+	Path                 string         `json:"path"`                 // Logging directory path.
+	File                 string         `json:"file"`                 // Format for logging file.
+	Level                int            `json:"level"`                // Output level.
+	Prefix               string         `json:"prefix"`               // Prefix string for every logging content.
+	StSkip               int            `json:"stSkip"`               // Skip count for stack.
+	StStatus             int            `json:"stStatus"`             // Stack status(1: enabled - default; 0: disabled)
+	StFilter             string         `json:"stFilter"`             // Stack string filter.
+	CtxKeys              []interface{}  `json:"ctxKeys"`              // Context keys for logging, which is used for value retrieving from context.
+	HeaderPrint          bool           `json:"header"`               // Print header or not(true in default).
+	StdoutPrint          bool           `json:"stdout"`               // Output to stdout or not(true in default).
+	LevelPrefixes        map[int]string `json:"levelPrefixes"`        // Logging level to its prefix string mapping.
+	RotateSize           int64          `json:"rotateSize"`           // Rotate the logging file if its size > 0 in bytes.
+	RotateExpire         time.Duration  `json:"rotateExpire"`         // Rotate the logging file if its mtime exceeds this duration.
+	RotateBackupLimit    int            `json:"rotateBackupLimit"`    // Max backup for rotated files, default is 0, means no backups.
+	RotateBackupExpire   time.Duration  `json:"rotateBackupExpire"`   // Max expire for rotated files, which is 0 in default, means no expiration.
+	RotateBackupCompress int            `json:"rotateBackupCompress"` // Compress level for rotated files using gzip algorithm. It's 0 in default, means no compression.
+	RotateCheckInterval  time.Duration  `json:"rotateCheckInterval"`  // Asynchronizely checks the backups and expiration at intervals. It's 1 hour in default.
 }
 
 // DefaultConfig returns the default configuration for logger.
