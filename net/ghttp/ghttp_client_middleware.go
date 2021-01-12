@@ -5,9 +5,9 @@ import (
 	"net/http"
 )
 
-const gfHttpClientMiddlewareKey = "__gfHttpClientMiddlewareKey"
+const gfHTTPClientMiddlewareKey = "__gfHttpClientMiddlewareKey"
 
-var gfHttpClientMiddlewareAbort = gerror.New("http request abort")
+var gfHTTPClientMiddlewareAbort = gerror.New("http request abort")
 
 // Use Add middleware to client
 func (c *Client) Use(handlers ...ClientHandlerFunc) *Client {
@@ -23,7 +23,7 @@ func (c *Client) Use(handlers ...ClientHandlerFunc) *Client {
 // MiddlewareNext call next middleware
 // this is should only be call in ClientHandlerFunc
 func (c *Client) MiddlewareNext(req *http.Request) (*ClientResponse, error) {
-	m, ok := req.Context().Value(gfHttpClientMiddlewareKey).(*clientMiddleware)
+	m, ok := req.Context().Value(gfHTTPClientMiddlewareKey).(*clientMiddleware)
 	if ok {
 		resp, err := m.Next(c, req)
 		return resp, err
@@ -34,11 +34,12 @@ func (c *Client) MiddlewareNext(req *http.Request) (*ClientResponse, error) {
 // MiddlewareAbort stop call after all middleware, so it will not send http request
 // this is should only be call in ClientHandlerFunc
 func (c *Client) MiddlewareAbort(req *http.Request) (*ClientResponse, error) {
-	m := req.Context().Value(gfHttpClientMiddlewareKey).(*clientMiddleware)
+	m := req.Context().Value(gfHTTPClientMiddlewareKey).(*clientMiddleware)
 	m.Abort()
 	return m.resp, m.err
 }
 
+// ClientHandlerFunc middleware handler func
 type ClientHandlerFunc = func(c *Client, r *http.Request) (*ClientResponse, error)
 
 // clientMiddleware is the plugin for http client request workflow management.
@@ -67,6 +68,6 @@ func (m *clientMiddleware) Next(c *Client, req *http.Request) (resp *ClientRespo
 func (m *clientMiddleware) Abort() {
 	m.abort = true
 	if m.err == nil {
-		m.err = gfHttpClientMiddlewareAbort
+		m.err = gfHTTPClientMiddlewareAbort
 	}
 }
