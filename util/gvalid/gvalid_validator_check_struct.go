@@ -1,4 +1,4 @@
-// Copyright 2017-2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,10 +7,9 @@
 package gvalid
 
 import (
-	"strings"
-
 	"github.com/gogf/gf/internal/structs"
 	"github.com/gogf/gf/util/gconv"
+	"strings"
 )
 
 var (
@@ -24,7 +23,7 @@ var (
 // The parameter <rules> can be type of []string/map[string]string. It supports sequence in error result
 // if <rules> is type of []string.
 // The optional parameter <messages> specifies the custom error messages for specified keys and rules.
-func CheckStruct(object interface{}, rules interface{}, messages ...CustomMsg) *Error {
+func (v *Validator) CheckStruct(object interface{}, rules interface{}, messages ...CustomMsg) *Error {
 	// It here must use structs.TagFields not structs.MapField to ensure error sequence.
 	tagField, err := structs.TagFields(object, structTagPriority)
 	if err != nil {
@@ -166,7 +165,7 @@ func CheckStruct(object interface{}, rules interface{}, messages ...CustomMsg) *
 			value = v
 		}
 		// It checks each rule and its value in loop.
-		if e := doCheck(key, value, rule, customMessage[key], params); e != nil {
+		if e := v.doCheck(key, value, rule, customMessage[key], params); e != nil {
 			_, item := e.FirstItem()
 			// ===========================================================
 			// Only in map and struct validations, if value is nil or empty

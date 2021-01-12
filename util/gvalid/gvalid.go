@@ -1,4 +1,4 @@
-// Copyright 2017-2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -8,6 +8,7 @@
 package gvalid
 
 import (
+	"regexp"
 	"strings"
 
 	"github.com/gogf/gf/text/gregex"
@@ -61,6 +62,136 @@ import (
 // CustomMsg is the custom error message type,
 // like: map[field] => string|map[rule]string
 type CustomMsg = map[string]interface{}
+
+const (
+	// regular expression pattern for single validation rule.
+	singleRulePattern   = `^([\w-]+):{0,1}(.*)`
+	invalidRulesErrKey  = "invalid_rules"
+	invalidParamsErrKey = "invalid_params"
+	invalidObjectErrKey = "invalid_object"
+)
+
+var (
+	// defaultValidator is the default validator for package functions.
+	defaultValidator = New()
+
+	// all internal error keys.
+	internalErrKeyMap = map[string]string{
+		invalidRulesErrKey:  invalidRulesErrKey,
+		invalidParamsErrKey: invalidParamsErrKey,
+		invalidObjectErrKey: invalidObjectErrKey,
+	}
+	// regular expression object for single rule
+	// which is compiled just once and of repeatable usage.
+	ruleRegex, _ = regexp.Compile(singleRulePattern)
+
+	// mustCheckRulesEvenValueEmpty specifies some rules that must be validated
+	// even the value is empty (nil or empty).
+	mustCheckRulesEvenValueEmpty = map[string]struct{}{
+		"required":             {},
+		"required-if":          {},
+		"required-unless":      {},
+		"required-with":        {},
+		"required-with-all":    {},
+		"required-without":     {},
+		"required-without-all": {},
+		//"same":                 {},
+		//"different":            {},
+		//"in":                   {},
+		//"not-in":               {},
+		//"regex":                {},
+	}
+	// allSupportedRules defines all supported rules that is used for quick checks.
+	allSupportedRules = map[string]struct{}{
+		"required":             {},
+		"required-if":          {},
+		"required-unless":      {},
+		"required-with":        {},
+		"required-with-all":    {},
+		"required-without":     {},
+		"required-without-all": {},
+		"date":                 {},
+		"date-format":          {},
+		"email":                {},
+		"phone":                {},
+		"phone-loose":          {},
+		"telephone":            {},
+		"passport":             {},
+		"password":             {},
+		"password2":            {},
+		"password3":            {},
+		"postcode":             {},
+		"resident-id":          {},
+		"bank-card":            {},
+		"qq":                   {},
+		"ip":                   {},
+		"ipv4":                 {},
+		"ipv6":                 {},
+		"mac":                  {},
+		"url":                  {},
+		"domain":               {},
+		"length":               {},
+		"min-length":           {},
+		"max-length":           {},
+		"between":              {},
+		"min":                  {},
+		"max":                  {},
+		"json":                 {},
+		"integer":              {},
+		"float":                {},
+		"boolean":              {},
+		"same":                 {},
+		"different":            {},
+		"in":                   {},
+		"not-in":               {},
+		"regex":                {},
+	}
+	// boolMap defines the boolean values.
+	boolMap = map[string]struct{}{
+		"1":     {},
+		"true":  {},
+		"on":    {},
+		"yes":   {},
+		"":      {},
+		"0":     {},
+		"false": {},
+		"off":   {},
+		"no":    {},
+	}
+)
+
+// Check checks single value with specified rules.
+// It returns nil if successful validation.
+//
+// The parameter <value> can be any type of variable, which will be converted to string
+// for validation.
+// The parameter <rules> can be one or more rules, multiple rules joined using char '|'.
+// The parameter <messages> specifies the custom error messages, which can be type of:
+// string/map/struct/*struct.
+// The optional parameter <params> specifies the extra validation parameters for some rules
+// like: required-*、same、different, etc.
+func Check(value interface{}, rules string, messages interface{}, params ...interface{}) *Error {
+	return defaultValidator.Check(value, rules, messages, params...)
+}
+
+// CheckMap validates map and returns the error result. It returns nil if with successful validation.
+//
+// The parameter <rules> can be type of []string/map[string]string. It supports sequence in error result
+// if <rules> is type of []string.
+// The optional parameter <messages> specifies the custom error messages for specified keys and rules.
+func CheckMap(params interface{}, rules interface{}, messages ...CustomMsg) *Error {
+	return defaultValidator.CheckMap(params, rules, messages...)
+}
+
+// CheckStruct validates strcut and returns the error result.
+//
+// The parameter <object> should be type of struct/*struct.
+// The parameter <rules> can be type of []string/map[string]string. It supports sequence in error result
+// if <rules> is type of []string.
+// The optional parameter <messages> specifies the custom error messages for specified keys and rules.
+func CheckStruct(object interface{}, rules interface{}, messages ...CustomMsg) *Error {
+	return defaultValidator.CheckStruct(object, rules, messages...)
+}
 
 // parseSequenceTag parses one sequence tag to field, rule and error message.
 // The sequence tag is like: [alias@]rule[...#msg...]
