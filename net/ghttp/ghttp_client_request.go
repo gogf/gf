@@ -275,7 +275,7 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 	}
 
 	if len(c.middlewareHandler) > 0 {
-		mdlHandlers := make([]ClientHandlerFunc, 0, len(c.middlewareHandler) + 1)
+		mdlHandlers := make([]ClientHandlerFunc, 0, len(c.middlewareHandler)+1)
 		mdlHandlers = append(mdlHandlers, c.middlewareHandler...)
 
 		// last call internal handler
@@ -284,7 +284,7 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 		})
 
 		// call middleware
-		ctx := context.WithValue(req.Context(), gfHttpClientMiddlewareKey, &clientMiddleware{
+		ctx := context.WithValue(req.Context(), gfHTTPClientMiddlewareKey, &clientMiddleware{
 			handlers:     mdlHandlers,
 			handlerIndex: -1,
 		})
@@ -293,7 +293,6 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 	} else {
 		resp, err = c.callRequest(req)
 	}
-
 
 	// Auto saving cookie content.
 	if c.browserMode {
