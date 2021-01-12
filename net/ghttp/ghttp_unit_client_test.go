@@ -7,11 +7,14 @@
 package ghttp_test
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"github.com/gogf/gf/debug/gdebug"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/util/guid"
+	"io/ioutil"
+	"net/http"
 	"testing"
 	"time"
 
@@ -330,5 +333,75 @@ func Test_Client_File_And_Param(t *testing.T) {
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		t.Assert(c.PostContent("/", data), data["json"].(string)+gfile.GetContents(path))
+	})
+}
+
+func Test_Client_Middleware(t *testing.T) {
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	isServerHandler := false
+	respStr := "test resp str"
+	s.BindHandler("/", func(r *ghttp.Request) {
+		isServerHandler = true
+		r.Response.Write(respStr)
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		str := ""
+		str2 := "resp body"
+		c := ghttp.NewClient().SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p)).Use(func(c *ghttp.Client, r *http.Request) (resp *ghttp.ClientResponse, err error) {
+			str += "a"
+			resp, err = c.MiddlewareNext(r)
+			str += "b"
+			return
+		}).Use(func(c *ghttp.Client, r *http.Request) (resp *ghttp.ClientResponse, err error) {
+			str += "c"
+			resp, err = c.MiddlewareNext(r)
+			str += "d"
+			return
+		}).Use(func(c *ghttp.Client, r *http.Request) (resp *ghttp.ClientResponse, err error) {
+			str += "e"
+			resp, err = c.MiddlewareNext(r)
+			resp.Response.Body = ioutil.NopCloser(bytes.NewBufferString(str2))
+			str += "f"
+			return
+		})
+
+		resp, err := c.Get("/")
+		t.Assert(str, "acefdb")
+		t.Assert(err, nil)
+		t.Assert(resp.ReadAllString(), str2)
+		t.Assert(isServerHandler, true)
+
+		// test abort, abort will not send
+		str3 := ""
+		c = ghttp.NewClient().SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p)).Use(func(c *ghttp.Client, r *http.Request) (resp *ghttp.ClientResponse, err error) {
+			str3 += "a"
+			resp, err = c.MiddlewareNext(r)
+			str3 += "b"
+			return
+		}).Use(func(c *ghttp.Client, r *http.Request) (*ghttp.ClientResponse, error) {
+			str3 += "c"
+			resp, err := c.MiddlewareAbort(r)
+			str3 += "d"
+			resp, err = c.MiddlewareNext(r)
+			str3 += "e"
+			return resp, err
+		}).Use(func(c *ghttp.Client, r *http.Request) (resp *ghttp.ClientResponse, err error) {
+			str3 += "f"
+			resp, err = c.MiddlewareNext(r)
+			str3 += "g"
+			return
+		})
+		resp, err = c.Get("/")
+		t.Assert(str3, "acdeb")
+		t.Assert(err.Error(), "http request abort")
+		t.Assert(resp, nil)
 	})
 }

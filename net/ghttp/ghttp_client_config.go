@@ -33,6 +33,7 @@ type Client struct {
 	browserMode   bool              // Whether auto saving and sending cookie content.
 	retryCount    int               // Retry count when request fails.
 	retryInterval time.Duration     // Retry interval when request fails.
+	middlewareHandler []ClientHandlerFunc // Interceptor handlers
 }
 
 // NewClient creates and returns a new HTTP client object.
