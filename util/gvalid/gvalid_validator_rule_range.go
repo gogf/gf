@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -12,7 +12,7 @@ import (
 )
 
 // checkRange checks <value> using range rules.
-func checkRange(value, ruleKey, ruleVal string, customMsgMap map[string]string) string {
+func (v *Validator) checkRange(value, ruleKey, ruleVal string, customMsgMap map[string]string) string {
 	msg := ""
 	switch ruleKey {
 	// Value range.
@@ -30,9 +30,9 @@ func checkRange(value, ruleKey, ruleVal string, customMsgMap map[string]string) 
 				max = v
 			}
 		}
-		v, err := strconv.ParseFloat(value, 10)
-		if v < min || v > max || err != nil {
-			msg = getErrorMessageByRule(ruleKey, customMsgMap)
+		valueF, err := strconv.ParseFloat(value, 10)
+		if valueF < min || valueF > max || err != nil {
+			msg = v.getErrorMessageByRule(ruleKey, customMsgMap)
 			msg = strings.Replace(msg, ":min", strconv.FormatFloat(min, 'f', -1, 64), -1)
 			msg = strings.Replace(msg, ":max", strconv.FormatFloat(max, 'f', -1, 64), -1)
 		}
@@ -44,7 +44,7 @@ func checkRange(value, ruleKey, ruleVal string, customMsgMap map[string]string) 
 			valueN, err2 = strconv.ParseFloat(value, 10)
 		)
 		if valueN < min || err1 != nil || err2 != nil {
-			msg = getErrorMessageByRule(ruleKey, customMsgMap)
+			msg = v.getErrorMessageByRule(ruleKey, customMsgMap)
 			msg = strings.Replace(msg, ":min", strconv.FormatFloat(min, 'f', -1, 64), -1)
 		}
 
@@ -55,7 +55,7 @@ func checkRange(value, ruleKey, ruleVal string, customMsgMap map[string]string) 
 			valueN, err2 = strconv.ParseFloat(value, 10)
 		)
 		if valueN > max || err1 != nil || err2 != nil {
-			msg = getErrorMessageByRule(ruleKey, customMsgMap)
+			msg = v.getErrorMessageByRule(ruleKey, customMsgMap)
 			msg = strings.Replace(msg, ":max", strconv.FormatFloat(max, 'f', -1, 64), -1)
 		}
 
