@@ -8,6 +8,7 @@ package ghttp
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/internal/json"
@@ -82,14 +83,8 @@ func (c *Client) Trace(url string, data ...interface{}) (*ClientResponse, error)
 	return c.DoRequest("TRACE", url, data...)
 }
 
-// DoRequest sends request with given HTTP method and data and returns the response object.
-// Note that the response object MUST be closed if it'll be never used.
-//
-// Note that it uses "multipart/form-data" as its Content-Type if it contains file uploading,
-// else it uses "application/x-www-form-urlencoded". It also automatically detects the post
-// content for JSON format, and for that it automatically sets the Content-Type as
-// "application/json".
-func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *ClientResponse, err error) {
+// prepareRequest verify params and return http request
+func (c *Client) prepareRequest(method, url string, data ...interface{}) (req *http.Request, err error) {
 	method = strings.ToUpper(method)
 	if len(c.prefix) > 0 {
 		url = c.prefix + gstr.Trim(url)
@@ -123,7 +118,6 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 			param = BuildParams(data[0])
 		}
 	}
-	var req *http.Request
 	if method == "GET" {
 		// It appends the parameters to the url if http method is GET.
 		if param != "" {
@@ -203,6 +197,8 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 	// Context.
 	if c.ctx != nil {
 		req = req.WithContext(c.ctx)
+	} else {
+		req = req.WithContext(context.Background())
 	}
 	// Custom header.
 	if len(c.header) > 0 {
@@ -232,6 +228,11 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 	if len(c.authUser) > 0 {
 		req.SetBasicAuth(c.authUser, c.authPass)
 	}
+	return req, nil
+}
+
+// callRequest send http request, return *ClientResponse and error
+func (c *Client) callRequest(req *http.Request) (resp *ClientResponse, err error) {
 	resp = &ClientResponse{
 		request: req,
 	}
@@ -250,12 +251,49 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 				c.retryCount--
 				time.Sleep(c.retryInterval)
 			} else {
-				return resp, err
+				//return resp, err
+				break
 			}
 		} else {
 			break
 		}
 	}
+	return resp, err
+}
+
+// DoRequest sends request with given HTTP method and data and returns the response object.
+// Note that the response object MUST be closed if it'll be never used.
+//
+// Note that it uses "multipart/form-data" as its Content-Type if it contains file uploading,
+// else it uses "application/x-www-form-urlencoded". It also automatically detects the post
+// content for JSON format, and for that it automatically sets the Content-Type as
+// "application/json".
+func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *ClientResponse, err error) {
+	req, err := c.prepareRequest(method, url, data...)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(c.middlewareHandler) > 0 {
+		mdlHandlers := make([]ClientHandlerFunc, 0, len(c.middlewareHandler) + 1)
+		mdlHandlers = append(mdlHandlers, c.middlewareHandler...)
+
+		// last call internal handler
+		mdlHandlers = append(mdlHandlers, func(cli *Client, r *http.Request) (*ClientResponse, error) {
+			return cli.callRequest(r)
+		})
+
+		// call middleware
+		ctx := context.WithValue(req.Context(), gfHttpClientMiddlewareKey, &clientMiddleware{
+			handlers:     mdlHandlers,
+			handlerIndex: -1,
+		})
+		req = req.WithContext(ctx)
+		resp, err = c.MiddlewareNext(req)
+	} else {
+		resp, err = c.callRequest(req)
+	}
+
 
 	// Auto saving cookie content.
 	if c.browserMode {
@@ -268,5 +306,5 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 			}
 		}
 	}
-	return resp, nil
+	return resp, err
 }
