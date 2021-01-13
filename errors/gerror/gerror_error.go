@@ -169,6 +169,12 @@ func (err *Error) Next() error {
 	return err.error
 }
 
+// MarshalJSON implements the interface MarshalJSON for json.Marshal.
+// Note that do not use pointer as its receiver here.
+func (err *Error) MarshalJSON() ([]byte, error) {
+	return []byte(`"` + err.Error() + `"`), nil
+}
+
 // formatSubStack formats the stack for error.
 func formatSubStack(st stack, buffer *bytes.Buffer) {
 	index := 1

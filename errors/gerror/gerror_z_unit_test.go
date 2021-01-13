@@ -9,6 +9,7 @@ package gerror_test
 import (
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/internal/json"
 	"testing"
 
 	"github.com/gogf/gf/errors/gerror"
@@ -306,5 +307,14 @@ func Test_Code(t *testing.T) {
 		err = gerror.WrapCodeSkipf(1, 100, err, "%s", "3")
 		t.Assert(gerror.Code(err), 1)
 		t.Assert(err.Error(), "3: 2: 1")
+	})
+}
+
+func Test_Json(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		err := gerror.Wrap(gerror.New("1"), "2")
+		b, e := json.Marshal(err)
+		t.Assert(e, nil)
+		t.Assert(string(b), `"2: 1"`)
 	})
 }
