@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/util/gutil"
 )
 
 func Example_autoMarshalUnmarshalMap() {
@@ -101,7 +102,7 @@ func Example_autoMarshalUnmarshalStructSlice() {
 	fmt.Println(users2)
 }
 
-func Example_hashSet() {
+func Example_hSet() {
 	var (
 		err    error
 		result *gvar.Var
@@ -123,4 +124,55 @@ func Example_hashSet() {
 
 	// May Output:
 	// map[id:10000 name:john]
+}
+
+func Example_hMSet_Map() {
+	var (
+		key  = "user_100"
+		data = g.Map{
+			"name":  "gf",
+			"sex":   0,
+			"score": 100,
+		}
+	)
+	_, err := g.Redis().Do("HMSET", append(g.Slice{key}, gutil.MapToSlice(data)...)...)
+	if err != nil {
+		g.Log().Fatal(err)
+	}
+	v, err := g.Redis().DoVar("HMGET", key, "name")
+	if err != nil {
+		g.Log().Fatal(err)
+	}
+	fmt.Println(v.Slice())
+
+	// May Output:
+	// [gf]
+}
+
+func Example_hMSet_Struct() {
+	type User struct {
+		Name  string `json:"name"`
+		Sex   int    `json:"sex"`
+		Score int    `json:"score"`
+	}
+	var (
+		key  = "user_100"
+		data = &User{
+			Name:  "gf",
+			Sex:   0,
+			Score: 100,
+		}
+	)
+	_, err := g.Redis().Do("HMSET", append(g.Slice{key}, gutil.StructToSlice(data)...)...)
+	if err != nil {
+		g.Log().Fatal(err)
+	}
+	v, err := g.Redis().DoVar("HMGET", key, "name")
+	if err != nil {
+		g.Log().Fatal(err)
+	}
+	fmt.Println(v.Slice())
+
+	// May Output:
+	// ["gf"]
 }
