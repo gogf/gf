@@ -318,6 +318,108 @@ func (t *Time) Sub(u *Time) time.Duration {
 	return t.Time.Sub(u.Time)
 }
 
+// StartOfMinute Modify to start of current minute, seconds become 0
+func (t *Time) StartOfMinute() *Time {
+	newTime := t.Clone()
+	newTime.Time = newTime.Time.Truncate(time.Minute)
+	return newTime
+}
+
+// StartOfHour Modify to start of current hour, minutes and seconds become 0
+func (t *Time) StartOfHour() *Time {
+	y, m, d := t.Date()
+	newTime := t.Clone()
+	newTime.Time = time.Date(y, m, d, newTime.Time.Hour(), 0, 0, 0, newTime.Time.Location())
+	return newTime
+}
+
+// StartOfDay Resets the time to 00:00:00 start of day
+func (t *Time) StartOfDay() *Time {
+	y, m, d := t.Date()
+	newTime := t.Clone()
+	newTime.Time = time.Date(y, m, d, 0, 0, 0, 0, newTime.Time.Location())
+	return newTime
+}
+
+// StartOfWeek Resets the date to the first day of week and the time to 00:00:00
+func (t *Time) StartOfWeek() *Time {
+	weekday := int(t.Weekday())
+	return t.StartOfDay().AddDate(0, 0, -weekday)
+}
+
+// StartOfMonth Resets the date to the first day of the month and the time to 00:00:00
+func (t *Time) StartOfMonth() *Time {
+	y, m, _ := t.Date()
+	newTime := t.Clone()
+	newTime.Time = time.Date(y, m, 1, 0, 0, 0, 0, newTime.Time.Location())
+	return newTime
+}
+
+// StartOfQuarter Resets the date to the first day of the quarter and the time to 00:00:00
+func (t *Time) StartOfQuarter() *Time {
+	month := t.StartOfMonth()
+	offset := (int(month.Month()) - 1) % 3
+	return month.AddDate(0, -offset, 0)
+}
+
+// StartOfHalf Resets the date to the first day of the half year and the time to 00:00:00
+func (t *Time) StartOfHalf() *Time {
+	month := t.StartOfMonth()
+	offset := (int(month.Month()) - 1) % 6
+	return month.AddDate(0, -offset, 0)
+}
+
+// StartOfYear Resets the date to the first day of the year and the time to 00:00:00
+func (t *Time) StartOfYear() *Time {
+	y, _, _ := t.Date()
+	newTime := t.Clone()
+	newTime.Time = time.Date(y, time.January, 1, 0, 0, 0, 0, newTime.Time.Location())
+	return newTime
+}
+
+// EndOfMinute Modify to end of current minute, seconds become 59
+func (t *Time) EndOfMinute() *Time {
+	return t.StartOfMinute().Add(time.Minute - time.Nanosecond)
+}
+
+// EndOfHour Modify to end of current hour, minutes and seconds become 59
+func (t *Time) EndOfHour() *Time {
+	return t.StartOfHour().Add(time.Hour - time.Nanosecond)
+}
+
+// EndOfDay Resets the time to 23:59:59 end of day
+func (t *Time) EndOfDay() *Time {
+	y, m, d := t.Date()
+	newTime := t.Clone()
+	newTime.Time = time.Date(y, m, d, 23, 59, 59, int(time.Second-time.Nanosecond), newTime.Time.Location())
+	return newTime
+}
+
+// EndOfWeek Resets the date to end of week and time to 23:59:59
+func (t *Time) EndOfWeek() *Time {
+	return t.StartOfWeek().AddDate(0, 0, 7).Add(-time.Nanosecond)
+}
+
+// EndOfMonth Resets the date to end of the month and time to 23:59:59
+func (t *Time) EndOfMonth() *Time {
+	return t.StartOfMonth().AddDate(0, 1, 0).Add(-time.Nanosecond)
+}
+
+// EndOfQuarter Resets the date to end of the quarter and time to 23:59:59
+func (t *Time) EndOfQuarter() *Time {
+	return t.StartOfQuarter().AddDate(0, 3, 0).Add(-time.Nanosecond)
+}
+
+// EndOfHalf Resets the date to the end of the half year and the time to 23:59:59
+func (t *Time) EndOfHalf() *Time {
+	return t.StartOfHalf().AddDate(0, 6, 0).Add(-time.Nanosecond)
+}
+
+// EndOfYear Resets the date to end of the year and time to 23:59:59
+func (t *Time) EndOfYear() *Time {
+	return t.StartOfYear().AddDate(1, 0, 0).Add(-time.Nanosecond)
+}
+
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (t *Time) MarshalJSON() ([]byte, error) {
 	return []byte(`"` + t.String() + `"`), nil
