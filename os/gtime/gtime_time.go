@@ -318,14 +318,14 @@ func (t *Time) Sub(u *Time) time.Duration {
 	return t.Time.Sub(u.Time)
 }
 
-// StartOfMinute Modify to start of current minute, seconds become 0
+// StartOfMinute clones and returns a new time of which the seconds is set to 0.
 func (t *Time) StartOfMinute() *Time {
 	newTime := t.Clone()
 	newTime.Time = newTime.Time.Truncate(time.Minute)
 	return newTime
 }
 
-// StartOfHour Modify to start of current hour, minutes and seconds become 0
+// StartOfHour clones and returns a new time of which the hour, minutes and seconds are set to 0.
 func (t *Time) StartOfHour() *Time {
 	y, m, d := t.Date()
 	newTime := t.Clone()
@@ -333,7 +333,7 @@ func (t *Time) StartOfHour() *Time {
 	return newTime
 }
 
-// StartOfDay Resets the time to 00:00:00 start of day
+// StartOfDay clones and returns a new time which is the start of day, its time is set to 00:00:00.
 func (t *Time) StartOfDay() *Time {
 	y, m, d := t.Date()
 	newTime := t.Clone()
@@ -341,13 +341,15 @@ func (t *Time) StartOfDay() *Time {
 	return newTime
 }
 
-// StartOfWeek Resets the date to the first day of week and the time to 00:00:00
+// StartOfWeek clones and returns a new time which is the first day of week and its time is set to
+// 00:00:00.
 func (t *Time) StartOfWeek() *Time {
 	weekday := int(t.Weekday())
 	return t.StartOfDay().AddDate(0, 0, -weekday)
 }
 
-// StartOfMonth Resets the date to the first day of the month and the time to 00:00:00
+// StartOfMonth clones and returns a new time which is the first day of the month and its is set to
+// 00:00:00
 func (t *Time) StartOfMonth() *Time {
 	y, m, _ := t.Date()
 	newTime := t.Clone()
@@ -355,21 +357,24 @@ func (t *Time) StartOfMonth() *Time {
 	return newTime
 }
 
-// StartOfQuarter Resets the date to the first day of the quarter and the time to 00:00:00
+// StartOfQuarter clones and returns a new time which is the first day of the quarter and its time is set
+// to 00:00:00.
 func (t *Time) StartOfQuarter() *Time {
 	month := t.StartOfMonth()
 	offset := (int(month.Month()) - 1) % 3
 	return month.AddDate(0, -offset, 0)
 }
 
-// StartOfHalf Resets the date to the first day of the half year and the time to 00:00:00
+// StartOfHalf clones and returns a new time which is the first day of the half year and its time is set
+// to 00:00:00.
 func (t *Time) StartOfHalf() *Time {
 	month := t.StartOfMonth()
 	offset := (int(month.Month()) - 1) % 6
 	return month.AddDate(0, -offset, 0)
 }
 
-// StartOfYear Resets the date to the first day of the year and the time to 00:00:00
+// StartOfYear clones and returns a new time which is the first day of the year and its time is set to
+// 00:00:00.
 func (t *Time) StartOfYear() *Time {
 	y, _, _ := t.Date()
 	newTime := t.Clone()
@@ -377,17 +382,17 @@ func (t *Time) StartOfYear() *Time {
 	return newTime
 }
 
-// EndOfMinute Modify to end of current minute, seconds become 59
+// EndOfMinute clones and returns a new time of which the seconds is set to 59.
 func (t *Time) EndOfMinute() *Time {
 	return t.StartOfMinute().Add(time.Minute - time.Nanosecond)
 }
 
-// EndOfHour Modify to end of current hour, minutes and seconds become 59
+// EndOfHour clones and returns a new time of which the minutes and seconds are both set to 59.
 func (t *Time) EndOfHour() *Time {
 	return t.StartOfHour().Add(time.Hour - time.Nanosecond)
 }
 
-// EndOfDay Resets the time to 23:59:59 end of day
+// EndOfDay clones and returns a new time which is the end of day the and its time is set to 23:59:59.
 func (t *Time) EndOfDay() *Time {
 	y, m, d := t.Date()
 	newTime := t.Clone()
@@ -395,27 +400,27 @@ func (t *Time) EndOfDay() *Time {
 	return newTime
 }
 
-// EndOfWeek Resets the date to end of week and time to 23:59:59
+// EndOfWeek clones and returns a new time which is the end of week and its time is set to 23:59:59.
 func (t *Time) EndOfWeek() *Time {
 	return t.StartOfWeek().AddDate(0, 0, 7).Add(-time.Nanosecond)
 }
 
-// EndOfMonth Resets the date to end of the month and time to 23:59:59
+// EndOfMonth clones and returns a new time which is the end of the month and its time is set to 23:59:59.
 func (t *Time) EndOfMonth() *Time {
 	return t.StartOfMonth().AddDate(0, 1, 0).Add(-time.Nanosecond)
 }
 
-// EndOfQuarter Resets the date to end of the quarter and time to 23:59:59
+// EndOfQuarter clones and returns a new time which is end of the quarter and its time is set to 23:59:59.
 func (t *Time) EndOfQuarter() *Time {
 	return t.StartOfQuarter().AddDate(0, 3, 0).Add(-time.Nanosecond)
 }
 
-// EndOfHalf Resets the date to the end of the half year and the time to 23:59:59
+// EndOfHalf clones and returns a new time which is the end of the half year and its time is set to 23:59:59.
 func (t *Time) EndOfHalf() *Time {
 	return t.StartOfHalf().AddDate(0, 6, 0).Add(-time.Nanosecond)
 }
 
-// EndOfYear Resets the date to end of the year and time to 23:59:59
+// EndOfYear clones and returns a new time which is the end of the year and its time is set to 23:59:59.
 func (t *Time) EndOfYear() *Time {
 	return t.StartOfYear().AddDate(1, 0, 0).Add(-time.Nanosecond)
 }
