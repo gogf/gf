@@ -7,6 +7,7 @@
 package gstr_test
 
 import (
+	"github.com/gogf/gf/test/gtest"
 	"testing"
 
 	"github.com/gogf/gf/text/gstr"
@@ -182,13 +183,12 @@ func Test_CaseSnakeFirstUpper(t *testing.T) {
 		{"User_ID", "user_id"},
 		{"user_id", "user_id"},
 		{"md5", "md5"},
+		{"Numbers2And55With000", "numbers2_and55_with000"},
 	}
-	for _, i := range cases {
-		in := i[0]
-		out := i[1]
-		result := gstr.CaseSnakeFirstUpper(in)
-		if result != out {
-			t.Error("'" + result + "' != '" + out + "'")
+	gtest.C(t, func(t *gtest.T) {
+		for _, item := range cases {
+			t.Assert(gstr.CaseSnakeFirstUpper(item[0]), item[1])
 		}
-	}
+	})
+
 }
