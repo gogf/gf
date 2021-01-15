@@ -340,10 +340,10 @@ func Test_Client_Middleware(t *testing.T) {
 	p, _ := ports.PopRand()
 	s := g.Server(p)
 	isServerHandler := false
-	respStr := "test resp str"
+	//respStr := "test resp str"
 	s.BindHandler("/", func(r *ghttp.Request) {
 		isServerHandler = true
-		r.Response.Write(respStr)
+		//r.Response.Write(respStr)
 	})
 	s.SetPort(p)
 	s.SetDumpRouterMap(false)
