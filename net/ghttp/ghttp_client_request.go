@@ -231,7 +231,8 @@ func (c *Client) prepareRequest(method, url string, data ...interface{}) (req *h
 	return req, nil
 }
 
-// callRequest send http request, return *ClientResponse and error
+// callRequest sends request with give http.Request, and returns the responses object.
+// Note that the response object MUST be closed if it'll be never used.
 func (c *Client) callRequest(req *http.Request) (resp *ClientResponse, err error) {
 	resp = &ClientResponse{
 		request: req,
@@ -285,6 +286,7 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 
 		// call middleware
 		ctx := context.WithValue(req.Context(), gfHTTPClientMiddlewareKey, &clientMiddleware{
+			client:       c,
 			handlers:     mdlHandlers,
 			handlerIndex: -1,
 		})
