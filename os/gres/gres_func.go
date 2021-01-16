@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	gPACKAGE_TEMPLATE = `
+	packedGoSouceTemplate = `
 package %s
 
 import "github.com/gogf/gf/os/gres"
@@ -39,8 +39,10 @@ func init() {
 //
 // Note that parameter <srcPaths> supports multiple paths join with ','.
 func Pack(srcPaths string, keyPrefix ...string) ([]byte, error) {
-	buffer := bytes.NewBuffer(nil)
-	headerPrefix := ""
+	var (
+		buffer       = bytes.NewBuffer(nil)
+		headerPrefix = ""
+	)
 	if len(keyPrefix) > 0 && keyPrefix[0] != "" {
 		headerPrefix = keyPrefix[0]
 	}
@@ -79,7 +81,7 @@ func PackToGoFile(srcPath, goFilePath, pkgName string, keyPrefix ...string) erro
 	}
 	return gfile.PutContents(
 		goFilePath,
-		fmt.Sprintf(gstr.TrimLeft(gPACKAGE_TEMPLATE), pkgName, gbase64.EncodeToString(data)),
+		fmt.Sprintf(gstr.TrimLeft(packedGoSouceTemplate), pkgName, gbase64.EncodeToString(data)),
 	)
 }
 
