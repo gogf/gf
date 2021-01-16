@@ -70,16 +70,16 @@ func New(file ...string) *Config {
 			}
 		}
 	} else {
-		// Dir path of working dir.
-		_ = c.SetPath(gfile.Pwd())
-		// Dir path of binary.
-		if selfPath := gfile.SelfDir(); selfPath != "" && gfile.Exists(selfPath) {
-			_ = c.AddPath(selfPath)
-		}
 		// Dir path of main package.
 		if mainPath := gfile.MainPkgPath(); mainPath != "" && gfile.Exists(mainPath) {
 			_ = c.AddPath(mainPath)
 		}
+		// Dir path of binary.
+		if selfPath := gfile.SelfDir(); selfPath != "" && gfile.Exists(selfPath) {
+			_ = c.AddPath(selfPath)
+		}
+		// Dir path of working dir.
+		_ = c.AddPath(gfile.Pwd())
 	}
 	return c
 }
