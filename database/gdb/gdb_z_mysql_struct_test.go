@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,6 +7,7 @@
 package gdb_test
 
 import (
+	"database/sql"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/test/gtest"
@@ -252,24 +253,25 @@ func Test_Struct_Empty(t *testing.T) {
 	}
 
 	gtest.C(t, func(t *gtest.T) {
-		one, err := db.Table(table).Where("id=100").One()
-		t.Assert(err, nil)
 		user := new(User)
-		t.AssertNE(one.Struct(user), nil)
+		err := db.Table(table).Where("id=100").Struct(user)
+		t.Assert(err, sql.ErrNoRows)
+		t.AssertNE(user, nil)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
 		one, err := db.Table(table).Where("id=100").One()
 		t.Assert(err, nil)
 		var user *User
-		t.AssertNE(one.Struct(&user), nil)
+		t.Assert(one.Struct(&user), nil)
+		t.Assert(user, nil)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		one, err := db.Table(table).Where("id=100").One()
-		t.Assert(err, nil)
 		var user *User
-		t.AssertNE(one.Struct(user), nil)
+		err := db.Table(table).Where("id=100").Struct(&user)
+		t.Assert(err, nil)
+		t.Assert(user, nil)
 	})
 }
 

@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -48,9 +48,9 @@ type apiMapStrAny interface {
 }
 
 const (
-	ORM_TAG_FOR_STRUCT  = "orm"
-	ORM_TAG_FOR_UNIQUE  = "unique"
-	ORM_TAG_FOR_PRIMARY = "primary"
+	OrmTagForStruct  = "orm"
+	OrmTagForUnique  = "unique"
+	OrmTagForPrimary = "primary"
 )
 
 var (
@@ -58,7 +58,7 @@ var (
 	quoteWordReg = regexp.MustCompile(`^[a-zA-Z0-9\-_]+$`)
 
 	// Priority tags for struct converting for orm field mapping.
-	structTagPriority = append([]string{ORM_TAG_FOR_STRUCT}, gconv.StructTagPriority...)
+	structTagPriority = append([]string{OrmTagForStruct}, gconv.StructTagPriority...)
 )
 
 // ListItemValues retrieves and returns the elements of all item struct/map with key <key>.
@@ -315,14 +315,14 @@ func doQuoteString(s, charLeft, charRight string) string {
 // GetWhereConditionOfStruct returns the where condition sql and arguments by given struct pointer.
 // This function automatically retrieves primary or unique field and its attribute value as condition.
 func GetWhereConditionOfStruct(pointer interface{}) (where string, args []interface{}, err error) {
-	tagField, err := structs.TagFields(pointer, []string{ORM_TAG_FOR_STRUCT})
+	tagField, err := structs.TagFields(pointer, []string{OrmTagForStruct})
 	if err != nil {
 		return "", nil, err
 	}
 	array := ([]string)(nil)
 	for _, field := range tagField {
 		array = strings.Split(field.TagValue, ",")
-		if len(array) > 1 && gstr.InArray([]string{ORM_TAG_FOR_UNIQUE, ORM_TAG_FOR_PRIMARY}, array[1]) {
+		if len(array) > 1 && gstr.InArray([]string{OrmTagForUnique, OrmTagForPrimary}, array[1]) {
 			return array[0], []interface{}{field.Value()}, nil
 		}
 		if len(where) > 0 {
@@ -336,14 +336,14 @@ func GetWhereConditionOfStruct(pointer interface{}) (where string, args []interf
 
 // GetPrimaryKey retrieves and returns primary key field name from given struct.
 func GetPrimaryKey(pointer interface{}) (string, error) {
-	tagField, err := structs.TagFields(pointer, []string{ORM_TAG_FOR_STRUCT})
+	tagField, err := structs.TagFields(pointer, []string{OrmTagForStruct})
 	if err != nil {
 		return "", err
 	}
 	array := ([]string)(nil)
 	for _, field := range tagField {
 		array = strings.Split(field.TagValue, ",")
-		if len(array) > 1 && array[1] == ORM_TAG_FOR_PRIMARY {
+		if len(array) > 1 && array[1] == OrmTagForPrimary {
 			return array[0], nil
 		}
 	}
@@ -741,7 +741,7 @@ func FormatSqlWithArgs(sql string, args []interface{}) string {
 // convertMapToStruct maps the <data> to given struct.
 // Note that the given parameter <pointer> should be a pointer to s struct.
 func convertMapToStruct(data map[string]interface{}, pointer interface{}) error {
-	tagNameMap, err := structs.TagMapName(pointer, []string{ORM_TAG_FOR_STRUCT})
+	tagNameMap, err := structs.TagMapName(pointer, []string{OrmTagForStruct})
 	if err != nil {
 		return err
 	}

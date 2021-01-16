@@ -18,7 +18,7 @@ import (
 type utilPProf struct{}
 
 const (
-	gDEFAULT_PPROF_PATTERN = "/debug/pprof"
+	defaultPProfPattern = "/debug/pprof"
 )
 
 // EnablePProf enables PProf feature for server.
@@ -28,7 +28,7 @@ func (s *Server) EnablePProf(pattern ...string) {
 
 // EnablePProf enables PProf feature for server of specified domain.
 func (d *Domain) EnablePProf(pattern ...string) {
-	p := gDEFAULT_PPROF_PATTERN
+	p := defaultPProfPattern
 	if len(pattern) > 0 && pattern[0] != "" {
 		p = pattern[0]
 	}

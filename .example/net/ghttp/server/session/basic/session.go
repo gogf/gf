@@ -8,6 +8,7 @@ import (
 
 func main() {
 	s := g.Server()
+	s.SetSessionCookieMaxAge(0)
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.GET("/set", func(r *ghttp.Request) {
 			r.Session.Set("time", gtime.Timestamp())

@@ -318,6 +318,113 @@ func (t *Time) Sub(u *Time) time.Duration {
 	return t.Time.Sub(u.Time)
 }
 
+// StartOfMinute clones and returns a new time of which the seconds is set to 0.
+func (t *Time) StartOfMinute() *Time {
+	newTime := t.Clone()
+	newTime.Time = newTime.Time.Truncate(time.Minute)
+	return newTime
+}
+
+// StartOfHour clones and returns a new time of which the hour, minutes and seconds are set to 0.
+func (t *Time) StartOfHour() *Time {
+	y, m, d := t.Date()
+	newTime := t.Clone()
+	newTime.Time = time.Date(y, m, d, newTime.Time.Hour(), 0, 0, 0, newTime.Time.Location())
+	return newTime
+}
+
+// StartOfDay clones and returns a new time which is the start of day, its time is set to 00:00:00.
+func (t *Time) StartOfDay() *Time {
+	y, m, d := t.Date()
+	newTime := t.Clone()
+	newTime.Time = time.Date(y, m, d, 0, 0, 0, 0, newTime.Time.Location())
+	return newTime
+}
+
+// StartOfWeek clones and returns a new time which is the first day of week and its time is set to
+// 00:00:00.
+func (t *Time) StartOfWeek() *Time {
+	weekday := int(t.Weekday())
+	return t.StartOfDay().AddDate(0, 0, -weekday)
+}
+
+// StartOfMonth clones and returns a new time which is the first day of the month and its is set to
+// 00:00:00
+func (t *Time) StartOfMonth() *Time {
+	y, m, _ := t.Date()
+	newTime := t.Clone()
+	newTime.Time = time.Date(y, m, 1, 0, 0, 0, 0, newTime.Time.Location())
+	return newTime
+}
+
+// StartOfQuarter clones and returns a new time which is the first day of the quarter and its time is set
+// to 00:00:00.
+func (t *Time) StartOfQuarter() *Time {
+	month := t.StartOfMonth()
+	offset := (int(month.Month()) - 1) % 3
+	return month.AddDate(0, -offset, 0)
+}
+
+// StartOfHalf clones and returns a new time which is the first day of the half year and its time is set
+// to 00:00:00.
+func (t *Time) StartOfHalf() *Time {
+	month := t.StartOfMonth()
+	offset := (int(month.Month()) - 1) % 6
+	return month.AddDate(0, -offset, 0)
+}
+
+// StartOfYear clones and returns a new time which is the first day of the year and its time is set to
+// 00:00:00.
+func (t *Time) StartOfYear() *Time {
+	y, _, _ := t.Date()
+	newTime := t.Clone()
+	newTime.Time = time.Date(y, time.January, 1, 0, 0, 0, 0, newTime.Time.Location())
+	return newTime
+}
+
+// EndOfMinute clones and returns a new time of which the seconds is set to 59.
+func (t *Time) EndOfMinute() *Time {
+	return t.StartOfMinute().Add(time.Minute - time.Nanosecond)
+}
+
+// EndOfHour clones and returns a new time of which the minutes and seconds are both set to 59.
+func (t *Time) EndOfHour() *Time {
+	return t.StartOfHour().Add(time.Hour - time.Nanosecond)
+}
+
+// EndOfDay clones and returns a new time which is the end of day the and its time is set to 23:59:59.
+func (t *Time) EndOfDay() *Time {
+	y, m, d := t.Date()
+	newTime := t.Clone()
+	newTime.Time = time.Date(y, m, d, 23, 59, 59, int(time.Second-time.Nanosecond), newTime.Time.Location())
+	return newTime
+}
+
+// EndOfWeek clones and returns a new time which is the end of week and its time is set to 23:59:59.
+func (t *Time) EndOfWeek() *Time {
+	return t.StartOfWeek().AddDate(0, 0, 7).Add(-time.Nanosecond)
+}
+
+// EndOfMonth clones and returns a new time which is the end of the month and its time is set to 23:59:59.
+func (t *Time) EndOfMonth() *Time {
+	return t.StartOfMonth().AddDate(0, 1, 0).Add(-time.Nanosecond)
+}
+
+// EndOfQuarter clones and returns a new time which is end of the quarter and its time is set to 23:59:59.
+func (t *Time) EndOfQuarter() *Time {
+	return t.StartOfQuarter().AddDate(0, 3, 0).Add(-time.Nanosecond)
+}
+
+// EndOfHalf clones and returns a new time which is the end of the half year and its time is set to 23:59:59.
+func (t *Time) EndOfHalf() *Time {
+	return t.StartOfHalf().AddDate(0, 6, 0).Add(-time.Nanosecond)
+}
+
+// EndOfYear clones and returns a new time which is the end of the year and its time is set to 23:59:59.
+func (t *Time) EndOfYear() *Time {
+	return t.StartOfYear().AddDate(1, 0, 0).Add(-time.Nanosecond)
+}
+
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (t *Time) MarshalJSON() ([]byte, error) {
 	return []byte(`"` + t.String() + `"`), nil

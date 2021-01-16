@@ -1,4 +1,4 @@
-// Copyright 2017-2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -14,103 +14,8 @@ import (
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/util/gconv"
-	"regexp"
 	"strconv"
 	"strings"
-)
-
-const (
-	// regular expression pattern for single validation rule.
-	singleRulePattern   = `^([\w-]+):{0,1}(.*)`
-	invalidRulesErrKey  = "invalid_rules"
-	invalidParamsErrKey = "invalid_params"
-	invalidObjectErrKey = "invalid_object"
-)
-
-var (
-	// all internal error keys.
-	internalErrKeyMap = map[string]string{
-		invalidRulesErrKey:  invalidRulesErrKey,
-		invalidParamsErrKey: invalidParamsErrKey,
-		invalidObjectErrKey: invalidObjectErrKey,
-	}
-	// regular expression object for single rule
-	// which is compiled just once and of repeatable usage.
-	ruleRegex, _ = regexp.Compile(singleRulePattern)
-
-	// mustCheckRulesEvenValueEmpty specifies some rules that must be validated
-	// even the value is empty (nil or empty).
-	mustCheckRulesEvenValueEmpty = map[string]struct{}{
-		"required":             {},
-		"required-if":          {},
-		"required-unless":      {},
-		"required-with":        {},
-		"required-with-all":    {},
-		"required-without":     {},
-		"required-without-all": {},
-		//"same":                 {},
-		//"different":            {},
-		//"in":                   {},
-		//"not-in":               {},
-		//"regex":                {},
-	}
-	// allSupportedRules defines all supported rules that is used for quick checks.
-	allSupportedRules = map[string]struct{}{
-		"required":             {},
-		"required-if":          {},
-		"required-unless":      {},
-		"required-with":        {},
-		"required-with-all":    {},
-		"required-without":     {},
-		"required-without-all": {},
-		"date":                 {},
-		"date-format":          {},
-		"email":                {},
-		"phone":                {},
-		"phone-loose":          {},
-		"telephone":            {},
-		"passport":             {},
-		"password":             {},
-		"password2":            {},
-		"password3":            {},
-		"postcode":             {},
-		"resident-id":          {},
-		"bank-card":            {},
-		"qq":                   {},
-		"ip":                   {},
-		"ipv4":                 {},
-		"ipv6":                 {},
-		"mac":                  {},
-		"url":                  {},
-		"domain":               {},
-		"length":               {},
-		"min-length":           {},
-		"max-length":           {},
-		"between":              {},
-		"min":                  {},
-		"max":                  {},
-		"json":                 {},
-		"integer":              {},
-		"float":                {},
-		"boolean":              {},
-		"same":                 {},
-		"different":            {},
-		"in":                   {},
-		"not-in":               {},
-		"regex":                {},
-	}
-	// boolMap defines the boolean values.
-	boolMap = map[string]struct{}{
-		"1":     {},
-		"true":  {},
-		"on":    {},
-		"yes":   {},
-		"":      {},
-		"0":     {},
-		"false": {},
-		"off":   {},
-		"no":    {},
-	}
 )
 
 // Check checks single value with specified rules.
@@ -123,12 +28,12 @@ var (
 // string/map/struct/*struct.
 // The optional parameter <params> specifies the extra validation parameters for some rules
 // like: required-*、same、different, etc.
-func Check(value interface{}, rules string, messages interface{}, params ...interface{}) *Error {
-	return doCheck("", value, rules, messages, params...)
+func (v *Validator) Check(value interface{}, rules string, messages interface{}, params ...interface{}) *Error {
+	return v.doCheck("", value, rules, messages, params...)
 }
 
 // doCheck does the really rules validation for single key-value.
-func doCheck(key string, value interface{}, rules string, messages interface{}, params ...interface{}) *Error {
+func (v *Validator) doCheck(key string, value interface{}, rules string, messages interface{}, params ...interface{}) *Error {
 	// If there's no validation rules, it does nothing and returns quickly.
 	if rules == "" {
 		return nil
@@ -196,7 +101,7 @@ func doCheck(key string, value interface{}, rules string, messages interface{}, 
 			// It checks custom validation rules with most priority.
 			var (
 				dataMap map[string]interface{}
-				message = getErrorMessageByRule(ruleKey, customMsgMap)
+				message = v.getErrorMessageByRule(ruleKey, customMsgMap)
 			)
 			if len(params) > 0 {
 				dataMap = gconv.Map(params[0])
@@ -209,7 +114,7 @@ func doCheck(key string, value interface{}, rules string, messages interface{}, 
 			}
 		} else {
 			// It checks build-in validation rules if there's no custom rule.
-			match, err = doCheckBuildInRules(index, value, ruleKey, rulePattern, ruleItems, data, customMsgMap)
+			match, err = v.doCheckBuildInRules(index, value, ruleKey, rulePattern, ruleItems, data, customMsgMap)
 			if !match && err != nil {
 				errorMsgArray[ruleKey] = err.Error()
 			}
@@ -220,7 +125,7 @@ func doCheck(key string, value interface{}, rules string, messages interface{}, 
 			// It does nothing if the error message for this rule
 			// is already set in previous validation.
 			if _, ok := errorMsgArray[ruleKey]; !ok {
-				errorMsgArray[ruleKey] = getErrorMessageByRule(ruleKey, customMsgMap)
+				errorMsgArray[ruleKey] = v.getErrorMessageByRule(ruleKey, customMsgMap)
 			}
 		}
 		index++
@@ -233,7 +138,7 @@ func doCheck(key string, value interface{}, rules string, messages interface{}, 
 	return nil
 }
 
-func doCheckBuildInRules(
+func (v *Validator) doCheckBuildInRules(
 	index int,
 	value interface{},
 	ruleKey string,
@@ -253,7 +158,7 @@ func doCheckBuildInRules(
 		"required-with-all",
 		"required-without",
 		"required-without-all":
-		match = checkRequired(valueStr, ruleKey, rulePattern, dataMap)
+		match = v.checkRequired(valueStr, ruleKey, rulePattern, dataMap)
 
 	// Length rules.
 	// It also supports length of unicode string.
@@ -261,7 +166,7 @@ func doCheckBuildInRules(
 		"length",
 		"min-length",
 		"max-length":
-		if msg := checkLength(valueStr, ruleKey, rulePattern, customMsgMap); msg != "" {
+		if msg := v.checkLength(valueStr, ruleKey, rulePattern, customMsgMap); msg != "" {
 			return match, errors.New(msg)
 		} else {
 			match = true
@@ -272,7 +177,7 @@ func doCheckBuildInRules(
 		"min",
 		"max",
 		"between":
-		if msg := checkRange(valueStr, ruleKey, rulePattern, customMsgMap); msg != "" {
+		if msg := v.checkRange(valueStr, ruleKey, rulePattern, customMsgMap); msg != "" {
 			return match, errors.New(msg)
 		} else {
 			match = true
@@ -308,7 +213,7 @@ func doCheckBuildInRules(
 			match = true
 		} else {
 			var msg string
-			msg = getErrorMessageByRule(ruleKey, customMsgMap)
+			msg = v.getErrorMessageByRule(ruleKey, customMsgMap)
 			msg = strings.Replace(msg, ":format", rulePattern, -1)
 			return match, errors.New(msg)
 		}
@@ -322,7 +227,7 @@ func doCheckBuildInRules(
 		}
 		if !match {
 			var msg string
-			msg = getErrorMessageByRule(ruleKey, customMsgMap)
+			msg = v.getErrorMessageByRule(ruleKey, customMsgMap)
 			msg = strings.Replace(msg, ":field", rulePattern, -1)
 			return match, errors.New(msg)
 		}
@@ -337,7 +242,7 @@ func doCheckBuildInRules(
 		}
 		if !match {
 			var msg string
-			msg = getErrorMessageByRule(ruleKey, customMsgMap)
+			msg = v.getErrorMessageByRule(ruleKey, customMsgMap)
 			msg = strings.Replace(msg, ":field", rulePattern, -1)
 			return match, errors.New(msg)
 		}
@@ -430,11 +335,11 @@ func doCheckBuildInRules(
 	// 总：
 	// (^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$)|(^[1-9]\d{5}\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}$)
 	case "resident-id":
-		match = checkResidentId(valueStr)
+		match = v.checkResidentId(valueStr)
 
 	// Bank card number using LUHN algorithm.
 	case "bank-card":
-		match = checkLuHn(valueStr)
+		match = v.checkLuHn(valueStr)
 
 	// Universal passport format rule:
 	// Starting with letter, containing only numbers or underscores, length between 6 and 18.

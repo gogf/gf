@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -21,12 +21,12 @@ import (
 
 // Config is the configuration object for template engine.
 type Config struct {
-	Paths       []string               // Searching array for path, NOT concurrent-safe for performance purpose.
-	Data        map[string]interface{} // Global template variables including configuration.
-	DefaultFile string                 // Default template file for parsing.
-	Delimiters  []string               // Custom template delimiters.
-	AutoEncode  bool                   // Automatically encodes and provides safe html output, which is good for avoiding XSS.
-	I18nManager *gi18n.Manager         // I18n manager for the view.
+	Paths       []string               `json:"paths"`       // Searching array for path, NOT concurrent-safe for performance purpose.
+	Data        map[string]interface{} `json:"data"`        // Global template variables including configuration.
+	DefaultFile string                 `json:"defaultFile"` // Default template file for parsing.
+	Delimiters  []string               `json:"delimiters"`  // Custom template delimiters.
+	AutoEncode  bool                   `json:"autoEncode"`  // Automatically encodes and provides safe html output, which is good for avoiding XSS.
+	I18nManager *gi18n.Manager         `json:"-"`           // I18n manager for the view.
 }
 
 const (

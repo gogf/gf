@@ -283,6 +283,10 @@ func (c *Config) FilePath(file ...string) (path string) {
 			}
 		})
 	}
+	// Already found?
+	if path != "" {
+		return
+	}
 	// Searching the file system.
 	c.paths.RLockFunc(func(array []string) {
 		for _, prefix := range array {
