@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -63,18 +63,18 @@ var defaultMessages = map[string]string{
 // getErrorMessageByRule retrieves and returns the error message for specified rule.
 // It firstly retrieves the message from custom message map, and then checks i18n manager,
 // it returns the default error message if it's not found in custom message map or i18n manager.
-func getErrorMessageByRule(ruleKey string, customMsgMap map[string]string) string {
+func (v *Validator) getErrorMessageByRule(ruleKey string, customMsgMap map[string]string) string {
 	content := customMsgMap[ruleKey]
 	if content != "" {
 		return content
 	}
-	content = gi18n.GetContent(fmt.Sprintf(`gf.gvalid.rule.%s`, ruleKey))
+	content = gi18n.GetContent(fmt.Sprintf(`gf.gvalid.rule.%s`, ruleKey), v.i18nLang)
 	if content == "" {
 		content = defaultMessages[ruleKey]
 	}
 	// If there's no configured rule message, it uses default one.
 	if content == "" {
-		content = gi18n.GetContent(`gf.gvalid.rule.__default__`)
+		content = gi18n.GetContent(`gf.gvalid.rule.__default__`, v.i18nLang)
 		if content == "" {
 			content = defaultMessages["__default__"]
 		}

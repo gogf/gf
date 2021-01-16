@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -83,9 +83,13 @@ func (c *Core) Query(sql string, args ...interface{}) (rows *sql.Rows, err error
 func (c *Core) DoQuery(link Link, sql string, args ...interface{}) (rows *sql.Rows, err error) {
 	sql, args = formatSql(sql, args)
 	sql, args = c.DB.HandleSqlBeforeCommit(link, sql, args)
+	ctx := c.DB.GetCtx()
+	if c.GetConfig().QueryTimeout > 0 {
+		ctx, _ = context.WithTimeout(ctx, c.GetConfig().QueryTimeout)
+	}
 	if c.DB.GetDebug() {
 		mTime1 := gtime.TimestampMilli()
-		rows, err = link.QueryContext(c.DB.GetCtx(), sql, args...)
+		rows, err = link.QueryContext(ctx, sql, args...)
 		mTime2 := gtime.TimestampMilli()
 		s := &Sql{
 			Sql:    sql,
@@ -98,7 +102,7 @@ func (c *Core) DoQuery(link Link, sql string, args ...interface{}) (rows *sql.Ro
 		}
 		c.writeSqlToLogger(s)
 	} else {
-		rows, err = link.QueryContext(c.DB.GetCtx(), sql, args...)
+		rows, err = link.QueryContext(ctx, sql, args...)
 	}
 	if err == nil {
 		return rows, nil
@@ -123,10 +127,14 @@ func (c *Core) Exec(sql string, args ...interface{}) (result sql.Result, err err
 func (c *Core) DoExec(link Link, sql string, args ...interface{}) (result sql.Result, err error) {
 	sql, args = formatSql(sql, args)
 	sql, args = c.DB.HandleSqlBeforeCommit(link, sql, args)
+	ctx := c.DB.GetCtx()
+	if c.GetConfig().ExecTimeout > 0 {
+		ctx, _ = context.WithTimeout(ctx, c.GetConfig().ExecTimeout)
+	}
 	if c.DB.GetDebug() {
 		mTime1 := gtime.TimestampMilli()
 		if !c.DB.GetDryRun() {
-			result, err = link.ExecContext(c.DB.GetCtx(), sql, args...)
+			result, err = link.ExecContext(ctx, sql, args...)
 		} else {
 			result = new(SqlResult)
 		}
@@ -143,7 +151,7 @@ func (c *Core) DoExec(link Link, sql string, args ...interface{}) (result sql.Re
 		c.writeSqlToLogger(s)
 	} else {
 		if !c.DB.GetDryRun() {
-			result, err = link.ExecContext(c.DB.GetCtx(), sql, args...)
+			result, err = link.ExecContext(ctx, sql, args...)
 		} else {
 			result = new(SqlResult)
 		}
@@ -178,7 +186,11 @@ func (c *Core) Prepare(sql string, execOnMaster ...bool) (*sql.Stmt, error) {
 
 // doPrepare calls prepare function on given link object and returns the statement object.
 func (c *Core) DoPrepare(link Link, sql string) (*sql.Stmt, error) {
-	return link.PrepareContext(c.DB.GetCtx(), sql)
+	ctx := c.DB.GetCtx()
+	if c.GetConfig().QueryTimeout > 0 {
+		ctx, _ = context.WithTimeout(ctx, c.GetConfig().QueryTimeout)
+	}
+	return link.PrepareContext(ctx, sql)
 }
 
 // GetAll queries and returns data records from database.
@@ -320,7 +332,11 @@ func (c *Core) Begin() (*TX, error) {
 	if master, err := c.DB.Master(); err != nil {
 		return nil, err
 	} else {
-		if tx, err := master.Begin(); err == nil {
+		ctx := c.DB.GetCtx()
+		if c.GetConfig().TranTimeout > 0 {
+			ctx, _ = context.WithTimeout(ctx, c.GetConfig().TranTimeout)
+		}
+		if tx, err := master.BeginTx(ctx, nil); err == nil {
 			return &TX{
 				db:     c.DB,
 				tx:     tx,

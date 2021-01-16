@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -68,8 +68,10 @@ func NewStorageFile(path ...string) *StorageFile {
 	// Batch updates the TTL for session ids timely.
 	gtimer.AddSingleton(DefaultStorageFileLoopInterval, func() {
 		//intlog.Print("StorageFile.timer start")
-		var id string
-		var err error
+		var (
+			id  string
+			err error
+		)
 		for {
 			if id = s.updatingIdSet.Pop(); id == "" {
 				break
@@ -221,7 +223,7 @@ func (s *StorageFile) SetSession(id string, data *gmap.StrAnyMap, ttl time.Durat
 // It just adds the session id to the async handling queue.
 func (s *StorageFile) UpdateTTL(id string, ttl time.Duration) error {
 	intlog.Printf("StorageFile.UpdateTTL: %s, %v", id, ttl)
-	if ttl >= DefaultStorageRedisLoopInterval {
+	if ttl >= DefaultStorageFileLoopInterval {
 		s.updatingIdSet.Add(id)
 	}
 	return nil

@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -233,8 +233,13 @@ func shutdownWebServers(signal ...string) {
 	}
 }
 
-// gracefulShutdownWebServers gracefully shuts down all servers.
-func gracefulShutdownWebServers() {
+// shutdownWebServersGracefully gracefully shuts down all servers.
+func shutdownWebServersGracefully(signal ...string) {
+	if len(signal) > 0 {
+		glog.Printf("%d: server gracefully shutting down by signal: %s", gproc.Pid(), signal[0])
+	} else {
+		glog.Printf("%d: server gracefully shutting down by api", gproc.Pid())
+	}
 	serverMapping.RLockFunc(func(m map[string]interface{}) {
 		for _, v := range m {
 			for _, s := range v.(*Server).servers {
@@ -262,7 +267,7 @@ func handleProcessMessage() {
 		if msg := gproc.Receive(adminGProcCommGroup); msg != nil {
 			if bytes.EqualFold(msg.Data, []byte("exit")) {
 				intlog.Printf("%d: process message: exit", gproc.Pid())
-				gracefulShutdownWebServers()
+				shutdownWebServersGracefully()
 				allDoneChan <- struct{}{}
 				intlog.Printf("%d: process message: exit done", gproc.Pid())
 				return
