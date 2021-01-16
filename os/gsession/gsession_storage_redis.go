@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -26,7 +26,7 @@ type StorageRedis struct {
 var (
 	// DefaultStorageRedisLoopInterval is the interval updating TTL for session ids
 	// in last duration.
-	DefaultStorageRedisLoopInterval = time.Minute
+	DefaultStorageRedisLoopInterval = 10 * time.Second
 )
 
 // NewStorageRedis creates and returns a redis storage object for session.
@@ -45,9 +45,11 @@ func NewStorageRedis(redis *gredis.Redis, prefix ...string) *StorageRedis {
 	// Batch updates the TTL for session ids timely.
 	gtimer.AddSingleton(DefaultStorageRedisLoopInterval, func() {
 		intlog.Print("StorageRedis.timer start")
-		var id string
-		var err error
-		var ttlSeconds int
+		var (
+			id         string
+			err        error
+			ttlSeconds int
+		)
 		for {
 			if id, ttlSeconds = s.updatingIdMap.Pop(); id == "" {
 				break
