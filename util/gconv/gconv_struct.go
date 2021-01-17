@@ -291,9 +291,16 @@ func bindVarToStructAttr(elem reflect.Value, name string, value interface{}, map
 func bindVarToReflectValueWithInterfaceCheck(reflectValue reflect.Value, value interface{}) (err error, ok bool) {
 	var pointer interface{}
 	if reflectValue.Kind() != reflect.Ptr && reflectValue.CanAddr() {
+		reflectValueAddr := reflectValue.Addr()
+		if reflectValueAddr.IsNil() || !reflectValueAddr.IsValid() {
+			return nil, false
+		}
 		// Not a pointer, but can token address, that makes it can be unmarshalled.
 		pointer = reflectValue.Addr().Interface()
 	} else {
+		if reflectValue.IsNil() || !reflectValue.IsValid() {
+			return nil, false
+		}
 		pointer = reflectValue.Interface()
 	}
 	if v, ok := pointer.(apiUnmarshalValue); ok {
