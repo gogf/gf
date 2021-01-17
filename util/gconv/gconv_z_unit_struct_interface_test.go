@@ -48,6 +48,11 @@ func Test_Struct_UnmarshalValue1(t *testing.T) {
 		err := gconv.Struct(g.Map{"ServiceDate": nil}, st)
 		t.AssertNE(err, nil)
 	})
+	gtest.C(t, func(t *gtest.T) {
+		st := &MyTimeSt{}
+		err := gconv.Struct(g.Map{"ServiceDate": "error"}, st)
+		t.AssertNE(err, nil)
+	})
 }
 
 type Pkg struct {

@@ -119,11 +119,9 @@ func doStruct(params interface{}, pointer interface{}, mapping ...map[string]str
 		return nil
 	}
 
-	// UnmarshalValue.
-	// Assign value with interface UnmarshalValue.
-	// Note that only pointer can implement interface UnmarshalValue.
-	if v, ok := pointerReflectValue.Interface().(apiUnmarshalValue); ok {
-		return v.UnmarshalValue(params)
+	// Normal unmarshalling interfaces checks.
+	if err, ok := bindVarToReflectValueWithInterfaceCheck(pointerReflectValue, params); ok {
+		return err
 	}
 
 	// It automatically creates struct object if necessary.
@@ -133,8 +131,13 @@ func doStruct(params interface{}, pointer interface{}, mapping ...map[string]str
 			e := reflect.New(pointerElemReflectValue.Type().Elem()).Elem()
 			pointerElemReflectValue.Set(e.Addr())
 		}
-		if v, ok := pointerElemReflectValue.Interface().(apiUnmarshalValue); ok {
-			return v.UnmarshalValue(params)
+		fmt.Println(pointerElemReflectValue.Type())
+		//if v, ok := pointerElemReflectValue.Interface().(apiUnmarshalValue); ok {
+		//	return v.UnmarshalValue(params)
+		//}
+		// Note that it's `pointerElemReflectValue` here not `pointerReflectValue`.
+		if err, ok := bindVarToReflectValueWithInterfaceCheck(pointerElemReflectValue, params); ok {
+			return err
 		}
 		// Retrieve its element, may be struct at last.
 		pointerElemReflectValue = pointerElemReflectValue.Elem()
@@ -286,24 +289,28 @@ func bindVarToStructAttr(elem reflect.Value, name string, value interface{}, map
 }
 
 // bindVarToReflectValueWithInterfaceCheck does binding using common interfaces checks.
-func bindVarToReflectValueWithInterfaceCheck(structFieldValue reflect.Value, value interface{}) (err error, ok bool) {
-	if structFieldValue.CanAddr() {
-		pointer := structFieldValue.Addr().Interface()
-		if v, ok := pointer.(apiUnmarshalValue); ok {
-			return v.UnmarshalValue(value), ok
+func bindVarToReflectValueWithInterfaceCheck(reflectValue reflect.Value, value interface{}) (err error, ok bool) {
+	var pointer interface{}
+	if reflectValue.Kind() != reflect.Ptr && reflectValue.CanAddr() {
+		// Not a pointer, but can token address, that makes it can be unmarshalled.
+		pointer = reflectValue.Addr().Interface()
+	} else {
+		pointer = reflectValue.Interface()
+	}
+	if v, ok := pointer.(apiUnmarshalValue); ok {
+		return v.UnmarshalValue(value), ok
+	}
+	if v, ok := pointer.(apiUnmarshalText); ok {
+		if s, ok := value.(string); ok {
+			return v.UnmarshalText([]byte(s)), ok
 		}
-		if v, ok := pointer.(apiUnmarshalText); ok {
-			if s, ok := value.(string); ok {
-				return v.UnmarshalText([]byte(s)), ok
-			}
-			if b, ok := value.([]byte); ok {
-				return v.UnmarshalText(b), ok
-			}
+		if b, ok := value.([]byte); ok {
+			return v.UnmarshalText(b), ok
 		}
-		if v, ok := pointer.(apiSet); ok {
-			v.Set(value)
-			return nil, ok
-		}
+	}
+	if v, ok := pointer.(apiSet); ok {
+		v.Set(value)
+		return nil, ok
 	}
 	return nil, false
 }
