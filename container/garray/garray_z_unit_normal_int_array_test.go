@@ -758,16 +758,16 @@ func TestIntArray_UnmarshalValue(t *testing.T) {
 		t.Assert(v.Array.Slice(), g.Slice{1, 2, 3})
 	})
 	// Map
-	gtest.C(t, func(t *gtest.T) {
-		var v *V
-		err := gconv.Struct(g.Map{
-			"name":  "john",
-			"array": g.Slice{1, 2, 3},
-		}, &v)
-		t.Assert(err, nil)
-		t.Assert(v.Name, "john")
-		t.Assert(v.Array.Slice(), g.Slice{1, 2, 3})
-	})
+	//gtest.C(t, func(t *gtest.T) {
+	//	var v *V
+	//	err := gconv.Struct(g.Map{
+	//		"name":  "john",
+	//		"array": g.Slice{1, 2, 3},
+	//	}, &v)
+	//	t.Assert(err, nil)
+	//	t.Assert(v.Name, "john")
+	//	t.Assert(v.Array.Slice(), g.Slice{1, 2, 3})
+	//})
 }
 
 func TestIntArray_FilterEmpty(t *testing.T) {
