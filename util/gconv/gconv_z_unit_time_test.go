@@ -7,6 +7,7 @@
 package gconv_test
 
 import (
+	"github.com/gogf/gf/frame/g"
 	"testing"
 	"time"
 
@@ -40,5 +41,23 @@ func Test_Time(t *testing.T) {
 		t.AssertEQ(gconv.GTime(s).Second(), 3)
 		t.AssertEQ(gconv.GTime(s), gtime.NewFromStr(s))
 		t.AssertEQ(gconv.Time(s), gtime.NewFromStr(s).Time)
+	})
+}
+
+func Test_Time_Slice_Attribute(t *testing.T) {
+	type SelectReq struct {
+		Arr []*gtime.Time
+		One *gtime.Time
+	}
+	gtest.C(t, func(t *gtest.T) {
+		var s *SelectReq
+		err := gconv.Struct(g.Map{
+			"arr": g.Slice{"2021-01-12 12:34:56", "2021-01-12 12:34:57"},
+			"one": "2021-01-12 12:34:58",
+		}, &s)
+		t.Assert(err, nil)
+		t.Assert(s.One, "2021-01-12 12:34:58")
+		t.Assert(s.Arr[0], "2021-01-12 12:34:56")
+		t.Assert(s.Arr[1], "2021-01-12 12:34:57")
 	})
 }
