@@ -131,7 +131,6 @@ func doStruct(params interface{}, pointer interface{}, mapping ...map[string]str
 			e := reflect.New(pointerElemReflectValue.Type().Elem()).Elem()
 			pointerElemReflectValue.Set(e.Addr())
 		}
-		fmt.Println(pointerElemReflectValue.Type())
 		//if v, ok := pointerElemReflectValue.Interface().(apiUnmarshalValue); ok {
 		//	return v.UnmarshalValue(params)
 		//}

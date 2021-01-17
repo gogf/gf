@@ -8,6 +8,7 @@ package gtime
 
 import (
 	"bytes"
+	"github.com/gogf/gf/errors/gerror"
 	"strconv"
 	"time"
 )
@@ -444,11 +445,13 @@ func (t *Time) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-//// UnmarshalValue is an interface implement which sets any type of value for Time.
-//func (t *Time) UnmarshalValue(value interface{}) error {
-//	vTime := New(value)
-//	if vTime != nil {
-//		*t = *vTime
-//	}
-//	return gerror.Newf(`invalid time value: %v`, value)
-//}
+// UnmarshalText implements the encoding.TextUnmarshaler interface.
+// Note that it overwrites the same implementer of `time.Time`.
+func (t *Time) UnmarshalText(data []byte) error {
+	vTime := New(data)
+	if vTime != nil {
+		*t = *vTime
+		return nil
+	}
+	return gerror.Newf(`invalid time value: %s`, data)
+}
