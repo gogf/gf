@@ -443,3 +443,12 @@ func (t *Time) UnmarshalJSON(b []byte) error {
 	t.Time = newTime.Time
 	return nil
 }
+
+//// UnmarshalValue is an interface implement which sets any type of value for Time.
+//func (t *Time) UnmarshalValue(value interface{}) error {
+//	vTime := New(value)
+//	if vTime != nil {
+//		*t = *vTime
+//	}
+//	return gerror.Newf(`invalid time value: %v`, value)
+//}
