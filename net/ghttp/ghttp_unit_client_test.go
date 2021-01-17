@@ -10,13 +10,15 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/gogf/gf/debug/gdebug"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/util/guid"
 	"io/ioutil"
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/gogf/gf/debug/gdebug"
+	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/os/gfile"
+	"github.com/gogf/gf/util/guid"
 
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
@@ -340,10 +342,8 @@ func Test_Client_Middleware(t *testing.T) {
 	p, _ := ports.PopRand()
 	s := g.Server(p)
 	isServerHandler := false
-	//respStr := "test resp str"
 	s.BindHandler("/", func(r *ghttp.Request) {
 		isServerHandler = true
-		//r.Response.Write(respStr)
 	})
 	s.SetPort(p)
 	s.SetDumpRouterMap(false)
@@ -381,6 +381,7 @@ func Test_Client_Middleware(t *testing.T) {
 
 		// test abort, abort will not send
 		str3 := ""
+		abortStr := "abort request"
 		c = ghttp.NewClient().SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p)).Use(func(c *ghttp.Client, r *http.Request) (resp *ghttp.ClientResponse, err error) {
 			str3 += "a"
 			resp, err = c.MiddlewareNext(r)
@@ -388,11 +389,7 @@ func Test_Client_Middleware(t *testing.T) {
 			return
 		}).Use(func(c *ghttp.Client, r *http.Request) (*ghttp.ClientResponse, error) {
 			str3 += "c"
-			resp, err := c.MiddlewareAbort(r)
-			str3 += "d"
-			resp, err = c.MiddlewareNext(r)
-			str3 += "e"
-			return resp, err
+			return nil, gerror.New(abortStr)
 		}).Use(func(c *ghttp.Client, r *http.Request) (resp *ghttp.ClientResponse, err error) {
 			str3 += "f"
 			resp, err = c.MiddlewareNext(r)
@@ -400,8 +397,8 @@ func Test_Client_Middleware(t *testing.T) {
 			return
 		})
 		resp, err = c.Get("/")
-		t.Assert(str3, "acdeb")
-		t.Assert(err.Error(), "http request abort")
+		t.Assert(str3, "acb")
+		t.Assert(err.Error(), abortStr)
 		t.Assert(resp, nil)
 	})
 }
