@@ -112,11 +112,11 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 		if err != nil {
 			return err
 		}
-		if err = j.GetStructs(".", pointer); err != nil {
+		if err := j.GetStructs(".", pointer); err != nil {
 			return err
 		}
 		for i := 0; i < reflectVal2.Len(); i++ {
-			if err = gvalid.CheckStruct(reflectVal2.Index(i), nil); err != nil {
+			if err := gvalid.CheckStruct(reflectVal2.Index(i), nil); err != nil {
 				return err
 			}
 		}
