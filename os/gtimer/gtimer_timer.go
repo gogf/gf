@@ -198,8 +198,8 @@ func (t *Timer) doAddEntry(interval time.Duration, job JobFunc, singleton bool, 
 }
 
 // doAddEntryByParent adds a timing job to timer with parent entry for internal usage.
-func (t *Timer) doAddEntryByParent(jobRan bool, nowMs, interval int64, parent *Entry) *Entry {
-	return t.wheels[t.getLevelByIntervalMs(interval)].addEntryByParent(jobRan, nowMs, interval, parent)
+func (t *Timer) doAddEntryByParent(rollOn bool, nowMs, interval int64, parent *Entry) *Entry {
+	return t.wheels[t.getLevelByIntervalMs(interval)].addEntryByParent(rollOn, nowMs, interval, parent)
 }
 
 // getLevelByIntervalMs calculates and returns the level of timer wheel with given milliseconds.

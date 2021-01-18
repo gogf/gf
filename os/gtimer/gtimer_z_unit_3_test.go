@@ -4,54 +4,53 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Entry Operations
-
 package gtimer
 
 import (
+	"github.com/gogf/gf/test/gtest"
 	"testing"
 	"time"
 )
 
 func TestTimer(t *testing.T) {
-	timer := doNewWithoutAutoStart(10, 60*time.Millisecond, 4)
-	timer.AddOnce(2*time.Second, func() {
-		t.Log("2*time.Second")
-	})
-	timer.AddOnce(1*time.Minute, func() {
-		t.Log("1*time.Minute")
-	})
-	timer.AddOnce(5*time.Minute, func() {
-		t.Log("5*time.Minute")
-	})
-	timer.AddOnce(1*time.Hour, func() {
-		t.Log("1*time.Hour")
-	})
-	timer.AddOnce(100*time.Minute, func() {
-		t.Log("100*time.Minute")
-	})
-	timer.AddOnce(2*time.Hour, func() {
-		t.Log("2*time.Hour")
-	})
-	timer.AddOnce(1000*time.Minute, func() {
-		t.Log("1000*time.Minute")
-	})
-	entry1 := timer.AddOnce(1100*time.Minute, func() {
-		t.Log("1100*time.Minute")
-	})
-	entry1.name = "1"
-	entry2 := timer.AddOnce(1200*time.Minute, func() {
-		t.Log("1200*time.Minute")
-	})
-	entry2.name = "2"
-	for i := 0; i < 10000000; i++ {
-		timer.nowFunc = func() time.Time {
-			return time.Now().Add(time.Duration(i) * time.Millisecond * 60)
+	gtest.C(t, func(t *gtest.T) {
+		timer := doNewWithoutAutoStart(10, 60*time.Millisecond, 6)
+		slice := make([]int, 0)
+		timer.AddOnce(2*time.Second, func() {
+			slice = append(slice, 1)
+		})
+		timer.AddOnce(1*time.Minute, func() {
+			slice = append(slice, 2)
+		})
+		timer.AddOnce(5*time.Minute, func() {
+			slice = append(slice, 3)
+		})
+		timer.AddOnce(1*time.Hour, func() {
+			slice = append(slice, 4)
+		})
+		timer.AddOnce(100*time.Minute, func() {
+			slice = append(slice, 5)
+		})
+		timer.AddOnce(2*time.Hour, func() {
+			slice = append(slice, 6)
+		})
+		timer.AddOnce(1000*time.Minute, func() {
+			slice = append(slice, 7)
+		})
+		timer.AddOnce(1100*time.Minute, func() {
+			slice = append(slice, 8)
+		})
+		timer.AddOnce(1200*time.Minute, func() {
+			slice = append(slice, 9)
+		})
+		for i := 0; i < 2000000; i++ {
+			timer.nowFunc = func() time.Time {
+				return time.Now().Add(time.Duration(i) * time.Millisecond * 60)
+			}
+			timer.wheels[0].proceed()
+			time.Sleep(time.Microsecond)
 		}
-		timer.wheels[0].proceed()
-		time.Sleep(time.Microsecond)
-	}
-
-	t.Log("测试执行完成")
-	time.Sleep(time.Second)
+		time.Sleep(time.Second)
+		t.Assert(slice, []int{1, 2, 3, 4, 5, 6, 7, 8, 9})
+	})
 }

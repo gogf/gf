@@ -7,7 +7,6 @@
 package gtimer
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/gogf/gf/container/glist"
@@ -77,9 +76,6 @@ func (w *wheel) proceed() {
 								entry.SetStatus(StatusReady)
 							}
 						}()
-						if entry.wheel.level == 5 {
-							fmt.Println(entry.name, entry.wheel.level)
-						}
 						entry.job()
 					}(entry)
 				}
@@ -89,7 +85,7 @@ func (w *wheel) proceed() {
 					if entry.Status() == StatusReset {
 						entry.SetStatus(StatusReady)
 					}
-					entry.wheel.timer.doAddEntryByParent(runnable, nowMs, entry.intervalMs, entry)
+					entry.wheel.timer.doAddEntryByParent(!runnable, nowMs, entry.intervalMs, entry)
 				}
 			}
 		}(l, n)
