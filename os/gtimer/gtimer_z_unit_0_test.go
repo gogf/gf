@@ -31,11 +31,11 @@ func TestSetTimeout(t *testing.T) {
 func TestSetInterval(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.New(true)
-		gtimer.SetInterval(200*time.Millisecond, func() {
+		gtimer.SetInterval(300*time.Millisecond, func() {
 			array.Append(1)
 		})
-		time.Sleep(1100 * time.Millisecond)
-		t.Assert(array.Len(), 5)
+		time.Sleep(1000 * time.Millisecond)
+		t.Assert(array.Len(), 3)
 	})
 }
 
@@ -76,12 +76,12 @@ func TestAddTimes(t *testing.T) {
 func TestDelayAdd(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.New(true)
-		gtimer.DelayAdd(200*time.Millisecond, 200*time.Millisecond, func() {
+		gtimer.DelayAdd(500*time.Millisecond, 500*time.Millisecond, func() {
 			array.Append(1)
 		})
-		time.Sleep(300 * time.Millisecond)
+		time.Sleep(600 * time.Millisecond)
 		t.Assert(array.Len(), 0)
-		time.Sleep(200 * time.Millisecond)
+		time.Sleep(600 * time.Millisecond)
 		t.Assert(array.Len(), 1)
 	})
 }

@@ -16,11 +16,12 @@ import (
 
 // Timer is a Hierarchical Timing Wheel manager for timing jobs.
 type Timer struct {
-	status     *gtype.Int // Timer status.
-	wheels     []*wheel   // The underlying wheels.
-	length     int        // Max level of the wheels.
-	number     int        // Slot Number of each wheel.
-	intervalMs int64      // Interval of the slot in milliseconds.
+	status     *gtype.Int       // Timer status.
+	wheels     []*wheel         // The underlying wheels.
+	length     int              // Max level of the wheels.
+	number     int              // Slot Number of each wheel.
+	intervalMs int64            // Interval of the slot in milliseconds.
+	nowFunc    func() time.Time // nowFunc returns the current time, which can be custom.
 }
 
 // Wheel is a slot wrapper for timing job install and uninstall.
@@ -40,6 +41,12 @@ type wheel struct {
 // The optional parameter <level> specifies the wheels count of the timer,
 // which is defaultWheelLevel in default.
 func New(slot int, interval time.Duration, level ...int) *Timer {
+	t := doNewWithoutAutoStart(slot, interval, level...)
+	t.wheels[0].start()
+	return t
+}
+
+func doNewWithoutAutoStart(slot int, interval time.Duration, level ...int) *Timer {
 	if slot <= 0 {
 		panic(fmt.Sprintf("invalid slot number: %d", slot))
 	}
@@ -53,6 +60,9 @@ func New(slot int, interval time.Duration, level ...int) *Timer {
 		length:     length,
 		number:     slot,
 		intervalMs: interval.Nanoseconds() / 1e6,
+		nowFunc: func() time.Time {
+			return time.Now()
+		},
 	}
 	for i := 0; i < length; i++ {
 		if i > 0 {
@@ -63,11 +73,14 @@ func New(slot int, interval time.Duration, level ...int) *Timer {
 			w := t.newWheel(i, slot, n)
 			t.wheels[i] = w
 			t.wheels[i-1].addEntry(n, w.proceed, false, defaultTimes, StatusReady)
+			if i == length-1 {
+				t.wheels[i].addEntry(n, w.proceed, false, defaultTimes, StatusReady)
+			}
 		} else {
-			t.wheels[i] = t.newWheel(i, slot, interval)
+			w := t.newWheel(i, slot, interval)
+			t.wheels[i] = w
 		}
 	}
-	t.wheels[0].start()
 	return t
 }
 
@@ -185,8 +198,8 @@ func (t *Timer) doAddEntry(interval time.Duration, job JobFunc, singleton bool, 
 }
 
 // doAddEntryByParent adds a timing job to timer with parent entry for internal usage.
-func (t *Timer) doAddEntryByParent(interval int64, parent *Entry) *Entry {
-	return t.wheels[t.getLevelByIntervalMs(interval)].addEntryByParent(interval, parent)
+func (t *Timer) doAddEntryByParent(jobRan bool, nowMs, interval int64, parent *Entry) *Entry {
+	return t.wheels[t.getLevelByIntervalMs(interval)].addEntryByParent(jobRan, nowMs, interval, parent)
 }
 
 // getLevelByIntervalMs calculates and returns the level of timer wheel with given milliseconds.
