@@ -14,7 +14,7 @@ import (
 	"testing"
 )
 
-func Test_Json(t *testing.T) {
+func TestVar_Json(t *testing.T) {
 	// Marshal
 	gtest.C(t, func(t *gtest.T) {
 		s := "i love gf"

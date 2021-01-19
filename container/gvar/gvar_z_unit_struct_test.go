@@ -14,7 +14,7 @@ import (
 	"testing"
 )
 
-func Test_Struct(t *testing.T) {
+func TestVar_Struct(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type StTest struct {
 			Test int
@@ -42,7 +42,7 @@ func Test_Struct(t *testing.T) {
 	})
 }
 
-func Test_Var_Attribute_Struct(t *testing.T) {
+func TestVar_Var_Attribute_Struct(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Uid  int
