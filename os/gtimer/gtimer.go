@@ -36,7 +36,7 @@ const (
 	panicExit            = "exit"        // Internal usage for custom job exit function with panic.
 	defaultTimes         = math.MaxInt32 // Default limit running times, a big number.
 	defaultSlotNumber    = 10            // Default slot number.
-	defaultWheelInterval = 60            // Default wheel interval.
+	defaultWheelInterval = 60            // Default wheel interval, for better manually reading.
 	defaultWheelLevel    = 5             // Default wheel level.
 	cmdEnvKey            = "gf.gtimer"   // Configuration key for command argument or environment.
 )

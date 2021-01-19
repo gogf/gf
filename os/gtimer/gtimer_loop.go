@@ -85,7 +85,7 @@ func (w *wheel) proceed() {
 					if entry.Status() == StatusReset {
 						entry.SetStatus(StatusReady)
 					}
-					entry.wheel.timer.doAddEntryByParent(!runnable, nowMs, entry.intervalMs, entry)
+					entry.wheel.timer.doAddEntryByParent(!runnable, nowMs, entry.installIntervalMs, entry)
 				}
 			}
 		}(l, n)
