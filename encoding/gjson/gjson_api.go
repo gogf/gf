@@ -24,6 +24,11 @@ func (j *Json) Value() interface{} {
 	return *(j.p)
 }
 
+// Var returns the json value as *gvar.Var.
+func (j *Json) Var() *gvar.Var {
+	return gvar.New(j.Value())
+}
+
 // IsNil checks whether the value pointed by <j> is nil.
 func (j *Json) IsNil() bool {
 	j.mu.RLock()
