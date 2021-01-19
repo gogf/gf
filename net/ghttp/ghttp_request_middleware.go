@@ -14,8 +14,8 @@ import (
 	"github.com/gogf/gf/util/gutil"
 )
 
-// Middleware is the plugin for request workflow management.
-type Middleware struct {
+// middleware is the plugin for request workflow management.
+type middleware struct {
 	served         bool     // Is the request served, which is used for checking response status 404.
 	request        *Request // The request object pointer.
 	handlerIndex   int      // Index number for executing sequence purpose for handler items.
@@ -24,7 +24,7 @@ type Middleware struct {
 
 // Next calls the next workflow handler.
 // It's an important function controlling the workflow of the server request execution.
-func (m *Middleware) Next() {
+func (m *middleware) Next() {
 	var item *handlerParsedItem
 	var loop = true
 	for loop {

@@ -18,8 +18,17 @@ import (
 type utilPProf struct{}
 
 const (
-	defaultPProfPattern = "/debug/pprof"
+	defaultPProfServerName = "pprof-server"
+	defaultPProfPattern    = "/debug/pprof"
 )
+
+// StartPProfServer starts and runs a new server for pprof.
+func StartPProfServer(port int, pattern ...string) {
+	s := GetServer(defaultPProfServerName)
+	s.EnablePProf()
+	s.SetPort(port)
+	s.Run()
+}
 
 // EnablePProf enables PProf feature for server.
 func (s *Server) EnablePProf(pattern ...string) {
@@ -56,13 +65,18 @@ func (p *utilPProf) Index(r *Request) {
 		buffer, _ := gview.ParseContent(`
             <html>
             <head>
-                <title>gf ghttp pprof</title>
+                <title>GoFrame PProf</title>
             </head>
             {{$uri := .uri}}
             <body>
                 profiles:<br>
                 <table>
-                    {{range .profiles}}<tr><td align=right>{{.Count}}<td><a href="{{$uri}}{{.Name}}?debug=1">{{.Name}}</a>{{end}}
+                    {{range .profiles}}
+						<tr>
+							<td align=right>{{.Count}}</td>
+							<td><a href="{{$uri}}{{.Name}}?debug=1">{{.Name}}</a></td>
+						<tr>
+					{{end}}
                 </table>
                 <br><a href="{{$uri}}goroutine?debug=2">full goroutine stack dump</a><br>
             </body>
