@@ -642,6 +642,65 @@ func Test_Model_All(t *testing.T) {
 	})
 }
 
+func Test_Model_Fields(t *testing.T) {
+	tableName1 := createInitTable()
+	defer dropTable(tableName1)
+
+	tableName2 := "user_" + gtime.Now().TimestampNanoStr()
+	if _, err := db.Exec(fmt.Sprintf(`
+	    CREATE TABLE %s (
+	        id         int(10) unsigned NOT NULL AUTO_INCREMENT,
+	        name       varchar(45) NULL,
+			age        int(10) unsigned,
+	        PRIMARY KEY (id)
+	    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+	    `, tableName2,
+	)); err != nil {
+		gtest.Assert(err, nil)
+	}
+	defer dropTable(tableName2)
+
+	r, err := db.Insert(tableName2, g.Map{
+		"id":   1,
+		"name": "table2_1",
+		"age":  18,
+	})
+	gtest.Assert(err, nil)
+	n, _ := r.RowsAffected()
+	gtest.Assert(n, 1)
+
+	gtest.C(t, func(t *gtest.T) {
+		all, err := db.Table(tableName1).As("u").Fields("u.passport,u.id").Where("u.id<2").All()
+		t.Assert(err, nil)
+		t.Assert(len(all), 1)
+		t.Assert(len(all[0]), 2)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		all, err := db.Table(tableName1).As("u1").
+			LeftJoin(tableName1, "u2", "u2.id=u1.id").
+			Fields("u1.passport,u1.id,u2.id AS u2id").
+			Where("u1.id<2").
+			All()
+		t.Assert(err, nil)
+		t.Assert(len(all), 1)
+		t.Assert(len(all[0]), 3)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		all, err := db.Table(tableName1).As("u1").
+			LeftJoin(tableName2, "u2", "u2.id=u1.id").
+			Fields("u1.passport,u1.id,u2.name,u2.age").
+			Where("u1.id<2").
+			All()
+		t.Assert(err, nil)
+		t.Assert(len(all), 1)
+		t.Assert(len(all[0]), 4)
+		t.Assert(all[0]["id"], 1)
+		t.Assert(all[0]["age"], 18)
+		t.Assert(all[0]["name"], "table2_1")
+		t.Assert(all[0]["passport"], "user_1")
+	})
+}
+
 func Test_Model_FindAll(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
