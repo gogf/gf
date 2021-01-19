@@ -50,7 +50,7 @@ func TestTimer_Proceed(t *testing.T) {
 		})
 		for i := 0; i < 2000000; i++ {
 			timer.wheels[0].proceed()
-			time.Sleep(time.Microsecond)
+			time.Sleep(10 * time.Microsecond)
 		}
 		time.Sleep(time.Second)
 		t.Assert(slice, []int{1, 2, 3, 4, 5, 6, 7, 8, 9})
