@@ -45,14 +45,14 @@ func (w *wheel) start() {
 // according to its leftover interval in milliseconds.
 func (w *wheel) proceed() {
 	var (
-		n      = w.ticks.Add(1)
-		l      = w.slots[int(n%w.number)]
-		length = l.Len()
-		nowMs  = w.timer.nowFunc().UnixNano() / 1e6
+		nowTicks = w.ticks.Add(1)
+		list     = w.slots[int(nowTicks%w.number)]
+		length   = list.Len()
+		nowMs    = w.timer.nowFunc().UnixNano() / 1e6
 	)
 	if length > 0 {
 		go func(l *glist.List, nowTicks int64) {
-			entry := (*Entry)(nil)
+			var entry *Entry
 			for i := length; i > 0; i-- {
 				if v := l.PopFront(); v == nil {
 					break
@@ -88,6 +88,6 @@ func (w *wheel) proceed() {
 					entry.wheel.timer.doAddEntryByParent(!runnable, nowMs, entry.installIntervalMs, entry)
 				}
 			}
-		}(l, n)
+		}(list, nowTicks)
 	}
 }

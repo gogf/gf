@@ -7,15 +7,20 @@
 package gtimer
 
 import (
+	"github.com/gogf/gf/container/gtype"
 	"github.com/gogf/gf/test/gtest"
 	"testing"
 	"time"
 )
 
-func TestTimer(t *testing.T) {
+func TestTimer_Proceed(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		timer := doNewWithoutAutoStart(10, 60*time.Millisecond, 6)
+		index := gtype.NewInt()
 		slice := make([]int, 0)
+		timer := doNewWithoutAutoStart(10, 60*time.Millisecond, 6)
+		timer.nowFunc = func() time.Time {
+			return time.Now().Add(time.Duration(index.Add(1)) * time.Millisecond * 60)
+		}
 		timer.AddOnce(2*time.Second, func() {
 			slice = append(slice, 1)
 		})
@@ -44,9 +49,6 @@ func TestTimer(t *testing.T) {
 			slice = append(slice, 9)
 		})
 		for i := 0; i < 2000000; i++ {
-			timer.nowFunc = func() time.Time {
-				return time.Now().Add(time.Duration(i) * time.Millisecond * 60)
-			}
 			timer.wheels[0].proceed()
 			time.Sleep(time.Microsecond)
 		}
