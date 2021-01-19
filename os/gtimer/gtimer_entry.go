@@ -14,16 +14,17 @@ import (
 
 // Entry is the timing job entry to wheel.
 type Entry struct {
-	name          string
-	wheel         *wheel      // Belonged wheel.
-	job           JobFunc     // The job function.
-	singleton     *gtype.Bool // Singleton mode.
-	status        *gtype.Int  // Job status.
-	times         *gtype.Int  // Limit running times.
-	intervalTicks int64       // The interval ticks of the job.
-	createTicks   int64       // Timer ticks when the job installed.
-	createMs      int64       // The timestamp in milliseconds when job installed.
-	intervalMs    int64       // The interval milliseconds of the job.
+	name              string
+	wheel             *wheel      // Belonged wheel.
+	job               JobFunc     // The job function.
+	singleton         *gtype.Bool // Singleton mode.
+	status            *gtype.Int  // Job status.
+	times             *gtype.Int  // Limit running times.
+	intervalTicks     int64       // The interval ticks of the job.
+	createTicks       int64       // Timer ticks when the job installed.
+	createMs          int64       // The timestamp in milliseconds when job installed.
+	intervalMs        int64       // The interval milliseconds of the job.
+	installIntervalMs int64       // Interval when first installation in milliseconds.
 }
 
 // JobFunc is the job function.
@@ -47,15 +48,16 @@ func (w *wheel) addEntry(interval time.Duration, job JobFunc, singleton bool, ti
 		nowMs    = time.Now().UnixNano() / 1e6
 		nowTicks = w.ticks.Val()
 		entry    = &Entry{
-			wheel:         w,
-			job:           job,
-			times:         gtype.NewInt(times),
-			status:        gtype.NewInt(status),
-			createTicks:   nowTicks,
-			intervalTicks: intervalTicks,
-			singleton:     gtype.NewBool(singleton),
-			createMs:      nowMs,
-			intervalMs:    intervalMs,
+			wheel:             w,
+			job:               job,
+			times:             gtype.NewInt(times),
+			status:            gtype.NewInt(status),
+			createTicks:       nowTicks,
+			intervalTicks:     intervalTicks,
+			singleton:         gtype.NewBool(singleton),
+			createMs:          nowMs,
+			intervalMs:        intervalMs,
+			installIntervalMs: intervalMs,
 		}
 	)
 	// Install the job to the list of the slot.
@@ -73,16 +75,17 @@ func (w *wheel) addEntryByParent(rollOn bool, nowMs, interval int64, parent *Ent
 	}
 	nowTicks := w.ticks.Val()
 	entry := &Entry{
-		name:          parent.name,
-		wheel:         w,
-		job:           parent.job,
-		times:         parent.times,
-		status:        parent.status,
-		intervalTicks: intervalTicks,
-		singleton:     parent.singleton,
-		createTicks:   nowTicks,
-		createMs:      nowMs,
-		intervalMs:    interval,
+		name:              parent.name,
+		wheel:             w,
+		job:               parent.job,
+		times:             parent.times,
+		status:            parent.status,
+		intervalTicks:     intervalTicks,
+		singleton:         parent.singleton,
+		createTicks:       nowTicks,
+		createMs:          nowMs,
+		intervalMs:        interval,
+		installIntervalMs: parent.installIntervalMs,
 	}
 	if rollOn {
 		entry.createMs = parent.createMs
