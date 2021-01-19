@@ -62,8 +62,12 @@ func (l *Logger) doRotateFile(filePath string) error {
 			now   = gtime.Now()
 			micro = now.Microsecond() % 1000
 		)
-		for micro < 100 {
-			micro *= 10
+		if micro == 0 {
+			micro = 101
+		} else {
+			for micro < 100 {
+				micro *= 10
+			}
 		}
 		newFilePath = gfile.Join(
 			dirPath,
