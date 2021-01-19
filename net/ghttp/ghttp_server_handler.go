@@ -186,7 +186,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // searchStaticFile searches the file with given URI.
 // It returns a file struct specifying the file information.
-func (s *Server) searchStaticFile(uri string) *StaticFile {
+func (s *Server) searchStaticFile(uri string) *staticFile {
 	var file *gres.File
 	var path string
 	var dir bool
@@ -200,14 +200,14 @@ func (s *Server) searchStaticFile(uri string) *StaticFile {
 				}
 				file = gres.GetWithIndex(item.path+uri[len(item.prefix):], s.config.IndexFiles)
 				if file != nil {
-					return &StaticFile{
+					return &staticFile{
 						File:  file,
 						IsDir: file.FileInfo().IsDir(),
 					}
 				}
 				path, dir = gspath.Search(item.path, uri[len(item.prefix):], s.config.IndexFiles...)
 				if path != "" {
-					return &StaticFile{
+					return &staticFile{
 						Path:  path,
 						IsDir: dir,
 					}
@@ -221,13 +221,13 @@ func (s *Server) searchStaticFile(uri string) *StaticFile {
 		for _, p := range s.config.SearchPaths {
 			file = gres.GetWithIndex(p+uri, s.config.IndexFiles)
 			if file != nil {
-				return &StaticFile{
+				return &staticFile{
 					File:  file,
 					IsDir: file.FileInfo().IsDir(),
 				}
 			}
 			if path, dir = gspath.Search(p, uri, s.config.IndexFiles...); path != "" {
-				return &StaticFile{
+				return &staticFile{
 					Path:  path,
 					IsDir: dir,
 				}
@@ -237,7 +237,7 @@ func (s *Server) searchStaticFile(uri string) *StaticFile {
 	// Lastly search the resource manager.
 	if len(s.config.StaticPaths) == 0 && len(s.config.SearchPaths) == 0 {
 		if file = gres.GetWithIndex(uri, s.config.IndexFiles); file != nil {
-			return &StaticFile{
+			return &staticFile{
 				File:  file,
 				IsDir: file.FileInfo().IsDir(),
 			}
@@ -248,7 +248,7 @@ func (s *Server) searchStaticFile(uri string) *StaticFile {
 
 // serveFile serves the static file for client.
 // The optional parameter <allowIndex> specifies if allowing directory listing if <f> is directory.
-func (s *Server) serveFile(r *Request, f *StaticFile, allowIndex ...bool) {
+func (s *Server) serveFile(r *Request, f *staticFile, allowIndex ...bool) {
 	// Use resource file from memory.
 	if f.File != nil {
 		if f.IsDir {

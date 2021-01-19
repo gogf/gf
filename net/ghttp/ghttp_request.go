@@ -34,7 +34,7 @@ type Request struct {
 	EnterTime       int64                  // Request starting time in microseconds.
 	LeaveTime       int64                  // Request ending time in microseconds.
 	Middleware      *middleware            // Middleware manager.
-	StaticFile      *StaticFile            // Static file object for static file serving.
+	StaticFile      *staticFile            // Static file object for static file serving.
 	context         context.Context        // Custom context for internal usage purpose.
 	handlers        []*handlerParsedItem   // All matched handlers containing handler, hook and middleware for this request.
 	hasHookHandler  bool                   // A bool marking whether there's hook handler in the handlers for performance purpose.
@@ -57,8 +57,8 @@ type Request struct {
 	viewParams      gview.Params           // Custom template view variables for this response.
 }
 
-// StaticFile is the file struct for static file service.
-type StaticFile struct {
+// staticFile is the file struct for static file service.
+type staticFile struct {
 	File  *gres.File // Resource file object.
 	Path  string     // File path.
 	IsDir bool       // Is directory.
