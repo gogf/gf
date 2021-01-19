@@ -33,7 +33,7 @@ type Request struct {
 	Router          *Router                // Matched Router for this request. Note that it's not available in HOOK handler.
 	EnterTime       int64                  // Request starting time in microseconds.
 	LeaveTime       int64                  // Request ending time in microseconds.
-	Middleware      *Middleware            // Middleware manager.
+	Middleware      *middleware            // Middleware manager.
 	StaticFile      *StaticFile            // Static file object for static file serving.
 	context         context.Context        // Custom context for internal usage purpose.
 	handlers        []*handlerParsedItem   // All matched handlers containing handler, hook and middleware for this request.
@@ -75,7 +75,7 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 	request.Cookie = GetCookie(request)
 	request.Session = s.sessionManager.New(request.GetSessionId())
 	request.Response.Request = request
-	request.Middleware = &Middleware{
+	request.Middleware = &middleware{
 		request: request,
 	}
 	// Custom session id creating function.
