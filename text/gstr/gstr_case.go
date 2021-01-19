@@ -76,7 +76,7 @@ func SnakeScreamingCase(s string) string {
 
 // CaseSnakeScreaming converts a string to SNAKE_CASE_SCREAMING.
 func CaseSnakeScreaming(s string) string {
-	return DelimitedScreamingCase(s, '_', true)
+	return CaseDelimitedScreaming(s, '_', true)
 }
 
 // SnakeFirstUpperCase converts a string from RGBCodeMd5 to rgb_code_md5.
