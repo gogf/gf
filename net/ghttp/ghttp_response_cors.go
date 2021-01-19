@@ -45,7 +45,7 @@ func init() {
 func (r *Response) DefaultCORSOptions() CORSOptions {
 	options := CORSOptions{
 		AllowOrigin:      "*",
-		AllowMethods:     SupportedHttpMethods,
+		AllowMethods:     supportedHttpMethods,
 		AllowCredentials: "true",
 		AllowHeaders:     defaultAllowHeaders,
 		MaxAge:           3628800,
