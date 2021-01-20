@@ -3236,3 +3236,88 @@ func Test_Model_Fields_Map_Struct(t *testing.T) {
 		t.Assert(a.XXX_TYPE, 0)
 	})
 }
+
+func Test_Model_Fields_AutoFilterInJoinStatement(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var err error
+		table1 := "user"
+		table2 := "score"
+		table3 := "info"
+		if _, err := db.Exec(fmt.Sprintf(`
+		CREATE TABLE IF NOT EXISTS %s (
+		   id int(11) NOT NULL AUTO_INCREMENT,
+		   name varchar(500) NOT NULL DEFAULT '',
+		 PRIMARY KEY (id)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+	    `, table1,
+		)); err != nil {
+			t.Assert(err, nil)
+		}
+		defer dropTable(table1)
+		_, err = db.Table(table1).Insert(g.Map{
+			"id":   1,
+			"name": "john",
+		})
+		t.Assert(err, nil)
+
+		if _, err := db.Exec(fmt.Sprintf(`
+		CREATE TABLE IF NOT EXISTS %s (
+			id int(11) NOT NULL AUTO_INCREMENT,
+			user_id int(11) NOT NULL DEFAULT 0,
+		    number varchar(500) NOT NULL DEFAULT '',
+		 PRIMARY KEY (id)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+	    `, table2,
+		)); err != nil {
+			t.Assert(err, nil)
+		}
+		defer dropTable(table2)
+		_, err = db.Table(table2).Insert(g.Map{
+			"id":      1,
+			"user_id": 1,
+			"number":  "n",
+		})
+		t.Assert(err, nil)
+
+		if _, err := db.Exec(fmt.Sprintf(`
+		CREATE TABLE IF NOT EXISTS %s (
+			id int(11) NOT NULL AUTO_INCREMENT,
+			user_id int(11) NOT NULL DEFAULT 0,
+		    description varchar(500) NOT NULL DEFAULT '',
+		 PRIMARY KEY (id)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+	    `, table3,
+		)); err != nil {
+			t.Assert(err, nil)
+		}
+		defer dropTable(table3)
+		_, err = db.Table(table3).Insert(g.Map{
+			"id":          1,
+			"user_id":     1,
+			"description": "brief",
+		})
+		t.Assert(err, nil)
+
+		one, err := db.Table("user").
+			Where("user.id", 1).
+			Fields("score.number,user.name").
+			LeftJoin("score", "user.id=score.user_id").
+			LeftJoin("info", "info.id=info.user_id").
+			Order("user.id asc").
+			One()
+		t.Assert(err, nil)
+		t.Assert(len(one), 2)
+		t.Assert(one["name"].String(), "john")
+		t.Assert(one["number"].String(), "n")
+
+		one, err = db.Table("user").
+			LeftJoin("score", "user.id=score.user_id").
+			LeftJoin("info", "info.id=info.user_id").
+			Fields("score.number,user.name").
+			One()
+		t.Assert(err, nil)
+		t.Assert(len(one), 2)
+		t.Assert(one["name"].String(), "john")
+		t.Assert(one["number"].String(), "n")
+	})
+}

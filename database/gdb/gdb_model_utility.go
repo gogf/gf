@@ -44,10 +44,12 @@ func (m *Model) mappingAndFilterToTableFields(fields []string) []string {
 	}
 	for _, field := range inputFieldsArray {
 		if _, ok := fieldsKeyMap[field]; !ok {
-			if !gregex.IsMatchString(regularFieldNameRegPattern, field) {
+			if !gregex.IsMatchString(regularFieldNameWithoutDotRegPattern, field) {
+				// Eg: user.id, user.name
 				outputFieldsArray = append(outputFieldsArray, field)
 				continue
 			} else {
+				// Eg: id, name
 				if foundKey, _ := gutil.MapPossibleItemByKey(fieldsKeyMap, field); foundKey != "" {
 					outputFieldsArray = append(outputFieldsArray, foundKey)
 				}
