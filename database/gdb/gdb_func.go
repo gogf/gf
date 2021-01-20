@@ -467,14 +467,20 @@ func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool) (
 				newWhere = db.QuoteString(newWhere)
 				if len(newArgs) > 0 {
 					if utils.IsArray(newArgs[0]) {
-						// Eg: Where("id", []int{1,2,3})
+						// Eg:
+						// Where("id", []int{1,2,3})
+						// Where("user.id", []int{1,2,3})
 						newWhere += " IN (?)"
 					} else if empty.IsNil(newArgs[0]) {
-						// Eg: Where("id", nil)
+						// Eg:
+						// Where("id", nil)
+						// Where("user.id", nil)
 						newWhere += " IS NULL"
 						newArgs = nil
 					} else {
-						// Eg: Where/And/Or("uid", 1)
+						// Eg:
+						// Where/And/Or("uid", 1)
+						// Where/And/Or("user.uid", 1)
 						newWhere += "=?"
 					}
 				}
