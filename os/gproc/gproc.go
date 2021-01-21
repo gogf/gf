@@ -21,14 +21,12 @@ import (
 )
 
 const (
-	gPROC_ENV_KEY_PPID_KEY = "GPROC_PPID"
+	envKeyPPid = "GPROC_PPID"
 )
 
 var (
-	// processPid is the pid of current process.
-	processPid = os.Getpid()
-	// processStartTime is the start time of current process.
-	processStartTime = time.Now()
+	processPid       = os.Getpid() // processPid is the pid of current process.
+	processStartTime = time.Now()  // processStartTime is the start time of current process.
 )
 
 // Pid returns the pid of current process.
@@ -41,7 +39,7 @@ func PPid() int {
 	if !IsChild() {
 		return Pid()
 	}
-	ppidValue := os.Getenv(gPROC_ENV_KEY_PPID_KEY)
+	ppidValue := os.Getenv(envKeyPPid)
 	if ppidValue != "" && ppidValue != "0" {
 		return gconv.Int(ppidValue)
 	}
@@ -59,16 +57,16 @@ func PPidOS() int {
 // IsChild checks and returns whether current process is a child process.
 // A child process is forked by another gproc process.
 func IsChild() bool {
-	ppidValue := os.Getenv(gPROC_ENV_KEY_PPID_KEY)
+	ppidValue := os.Getenv(envKeyPPid)
 	return ppidValue != "" && ppidValue != "0"
 }
 
 // SetPPid sets custom parent pid for current process.
 func SetPPid(ppid int) error {
 	if ppid > 0 {
-		return os.Setenv(gPROC_ENV_KEY_PPID_KEY, gconv.String(ppid))
+		return os.Setenv(envKeyPPid, gconv.String(ppid))
 	} else {
-		return os.Unsetenv(gPROC_ENV_KEY_PPID_KEY)
+		return os.Unsetenv(envKeyPPid)
 	}
 }
 

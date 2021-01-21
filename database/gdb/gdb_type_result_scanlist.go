@@ -33,7 +33,7 @@ import (
 // ScanList(&users, "UserDetail", "User", "uid:Uid")
 // ScanList(&users, "UserScores", "User", "uid:Uid")
 //
-// The parameters "User"/"UserDetail"/"UserScores" in the example codes specify the target attribute struct
+// The parameters "User/UserDetail/UserScores" in the example codes specify the target attribute struct
 // that current result will be bound to.
 //
 // The "uid" in the example codes is the table field name of the result, and the "Uid" is the relational
@@ -236,12 +236,12 @@ func (r Result) ScanList(listPointer interface{}, attributeName string, relation
 			if len(relationDataMap) > 0 {
 				relationField = relationValue.FieldByName(relationAttrName)
 				if relationField.IsValid() {
-					v := relationDataMap[gconv.String(relationField.Interface())]
-					if v == nil {
+					relationDataItem := relationDataMap[gconv.String(relationField.Interface())]
+					if relationDataItem == nil {
 						// There's no relational data.
 						continue
 					}
-					if err = gconv.Struct(v, e); err != nil {
+					if err = gconv.Struct(relationDataItem, e); err != nil {
 						return err
 					}
 				} else {
@@ -249,12 +249,12 @@ func (r Result) ScanList(listPointer interface{}, attributeName string, relation
 					return fmt.Errorf(`invalid relation: "%s:%s"`, relation[0], relation[1])
 				}
 			} else {
-				v := r[i]
-				if v == nil {
+				relationDataItem := r[i]
+				if relationDataItem == nil {
 					// There's no relational data.
 					continue
 				}
-				if err = gconv.Struct(v, e); err != nil {
+				if err = gconv.Struct(relationDataItem, e); err != nil {
 					return err
 				}
 			}
