@@ -10,6 +10,7 @@ import (
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/internal/empty"
 	"github.com/gogf/gf/net/ghttp"
+	"github.com/gogf/gf/os/gproc"
 	"github.com/gogf/gf/util/gutil"
 )
 
@@ -18,9 +19,12 @@ func NewVar(i interface{}, safe ...bool) *Var {
 	return gvar.New(i, safe...)
 }
 
-// Wait blocks until all the web servers shutdown.
+// Wait blocks until:
+// 1. All the web servers shutdown, it does nothing if there's no running web server.
+// 2. Shutdown signals received and all registered shutdown handlers done.
 func Wait() {
 	ghttp.Wait()
+	gproc.Listen()
 }
 
 // Dump dumps a variable to stdout with more manually readable.

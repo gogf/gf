@@ -10,50 +10,28 @@ package ghttp
 
 import (
 	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/os/gproc"
 	"os"
-	"os/signal"
 	"syscall"
 )
 
-// procSignalChan is the channel for listening the signal.
-var procSignalChan = make(chan os.Signal)
+// registerSignalHandler handles all signal from system.
+func registerSignalHandler() {
+	gproc.AddSigHandler(func(sig os.Signal) {
+		// Shutdown the servers with force.
+		shutdownWebServers(sig.String())
+	}, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGABRT)
 
-// handleProcessSignal handles all signal from system.
-func handleProcessSignal() {
-	var sig os.Signal
-	signal.Notify(
-		procSignalChan,
-		syscall.SIGINT,
-		syscall.SIGQUIT,
-		syscall.SIGKILL,
-		syscall.SIGTERM,
-		syscall.SIGABRT,
-		syscall.SIGUSR1,
-		syscall.SIGUSR2,
-	)
-	for {
-		sig = <-procSignalChan
-		intlog.Printf(`signal received: %s`, sig.String())
-		switch sig {
-		// Shutdown the servers.
-		case syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGABRT:
-			shutdownWebServers(sig.String())
-			return
-
+	gproc.AddSigHandler(func(sig os.Signal) {
 		// Shutdown the servers gracefully.
 		// Especially from K8S when running server in POD.
-		case syscall.SIGTERM:
-			shutdownWebServersGracefully(sig.String())
-			return
+		shutdownWebServersGracefully(sig.String())
+	}, syscall.SIGTERM)
 
+	gproc.AddSigHandler(func(sig os.Signal) {
 		// Restart the servers.
-		case syscall.SIGUSR1:
-			if err := restartWebServers(sig.String()); err != nil {
-				intlog.Error(err)
-			}
-			return
-
-		default:
+		if err := restartWebServers(sig.String()); err != nil {
+			intlog.Error(err)
 		}
-	}
+	}, syscall.SIGUSR1)
 }

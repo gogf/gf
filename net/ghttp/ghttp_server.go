@@ -64,8 +64,8 @@ func serverProcessInit() {
 		}
 	}
 
-	// Signal handler.
-	go handleProcessSignal()
+	// Register signal handler.
+	registerSignalHandler()
 
 	// Process message handler.
 	// It's enabled only graceful feature is enabled.
