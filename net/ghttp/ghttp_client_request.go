@@ -11,6 +11,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/internal/utils"
 	"io"
@@ -83,7 +84,52 @@ func (c *Client) Trace(url string, data ...interface{}) (*ClientResponse, error)
 	return c.DoRequest("TRACE", url, data...)
 }
 
-// prepareRequest verify params and return http request
+// DoRequest sends request with given HTTP method and data and returns the response object.
+// Note that the response object MUST be closed if it'll be never used.
+//
+// Note that it uses "multipart/form-data" as its Content-Type if it contains file uploading,
+// else it uses "application/x-www-form-urlencoded". It also automatically detects the post
+// content for JSON format, and for that it automatically sets the Content-Type as
+// "application/json".
+func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *ClientResponse, err error) {
+	req, err := c.prepareRequest(method, url, data...)
+	if err != nil {
+		return nil, err
+	}
+
+	// Client middleware.
+	if len(c.middlewareHandler) > 0 {
+		mdlHandlers := make([]ClientHandlerFunc, 0, len(c.middlewareHandler)+1)
+		mdlHandlers = append(mdlHandlers, c.middlewareHandler...)
+		mdlHandlers = append(mdlHandlers, func(cli *Client, r *http.Request) (*ClientResponse, error) {
+			return cli.callRequest(r)
+		})
+		ctx := context.WithValue(req.Context(), clientMiddlewareKey, &clientMiddleware{
+			client:       c,
+			handlers:     mdlHandlers,
+			handlerIndex: -1,
+		})
+		req = req.WithContext(ctx)
+		resp, err = c.MiddlewareNext(req)
+	} else {
+		resp, err = c.callRequest(req)
+	}
+
+	// Auto saving cookie content.
+	if c.browserMode && resp != nil {
+		now := time.Now()
+		for _, v := range resp.Response.Cookies() {
+			if !v.Expires.IsZero() && v.Expires.UnixNano() < now.UnixNano() {
+				delete(c.cookies, v.Name)
+			} else {
+				c.cookies[v.Name] = v.Value
+			}
+		}
+	}
+	return resp, err
+}
+
+// prepareRequest verifies request parameters, builds and returns http request.
 func (c *Client) prepareRequest(method, url string, data ...interface{}) (req *http.Request, err error) {
 	method = strings.ToUpper(method)
 	if len(c.prefix) > 0 {
@@ -145,10 +191,14 @@ func (c *Client) prepareRequest(method, url string, data ...interface{}) (req *h
 					if file, err := writer.CreateFormFile(array[0], gfile.Basename(path)); err == nil {
 						if f, err := os.Open(path); err == nil {
 							if _, err = io.Copy(file, f); err != nil {
-								f.Close()
+								if err := f.Close(); err != nil {
+									intlog.Errorf(`%+v`, err)
+								}
 								return nil, err
 							}
-							f.Close()
+							if err := f.Close(); err != nil {
+								intlog.Errorf(`%+v`, err)
+							}
 						} else {
 							return nil, err
 						}
@@ -246,7 +296,9 @@ func (c *Client) callRequest(req *http.Request) (resp *ClientResponse, err error
 		if resp.Response, err = c.Do(req); err != nil {
 			// The response might not be nil when err != nil.
 			if resp.Response != nil {
-				resp.Response.Body.Close()
+				if err := resp.Response.Body.Close(); err != nil {
+					intlog.Errorf(`%+v`, err)
+				}
 			}
 			if c.retryCount > 0 {
 				c.retryCount--
@@ -257,54 +309,6 @@ func (c *Client) callRequest(req *http.Request) (resp *ClientResponse, err error
 			}
 		} else {
 			break
-		}
-	}
-	return resp, err
-}
-
-// DoRequest sends request with given HTTP method and data and returns the response object.
-// Note that the response object MUST be closed if it'll be never used.
-//
-// Note that it uses "multipart/form-data" as its Content-Type if it contains file uploading,
-// else it uses "application/x-www-form-urlencoded". It also automatically detects the post
-// content for JSON format, and for that it automatically sets the Content-Type as
-// "application/json".
-func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *ClientResponse, err error) {
-	req, err := c.prepareRequest(method, url, data...)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(c.middlewareHandler) > 0 {
-		mdlHandlers := make([]ClientHandlerFunc, 0, len(c.middlewareHandler)+1)
-		mdlHandlers = append(mdlHandlers, c.middlewareHandler...)
-
-		// last call internal handler
-		mdlHandlers = append(mdlHandlers, func(cli *Client, r *http.Request) (*ClientResponse, error) {
-			return cli.callRequest(r)
-		})
-
-		// call middleware
-		ctx := context.WithValue(req.Context(), gfHTTPClientMiddlewareKey, &clientMiddleware{
-			client:       c,
-			handlers:     mdlHandlers,
-			handlerIndex: -1,
-		})
-		req = req.WithContext(ctx)
-		resp, err = c.MiddlewareNext(req)
-	} else {
-		resp, err = c.callRequest(req)
-	}
-
-	// Auto saving cookie content.
-	if c.browserMode {
-		now := time.Now()
-		for _, v := range resp.Response.Cookies() {
-			if !v.Expires.IsZero() && v.Expires.UnixNano() < now.UnixNano() {
-				delete(c.cookies, v.Name)
-			} else {
-				c.cookies[v.Name] = v.Value
-			}
 		}
 	}
 	return resp, err
