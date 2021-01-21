@@ -316,7 +316,9 @@ func (s *Server) Run() {
 	if len(s.plugins) > 0 {
 		for _, p := range s.plugins {
 			intlog.Printf(`remove plugin: %s`, p.Name())
-			p.Remove()
+			if err := p.Remove(); err != nil {
+				intlog.Errorf("%+v", err)
+			}
 		}
 	}
 	s.Logger().Printf("%d: all servers shutdown", gproc.Pid())
