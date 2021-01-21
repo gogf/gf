@@ -22,17 +22,18 @@ import (
 
 // Client is the HTTP client for HTTP request management.
 type Client struct {
-	http.Client                     // Underlying HTTP Client.
-	ctx           context.Context   // Context for each request.
-	parent        *Client           // Parent http client, this is used for chaining operations.
-	header        map[string]string // Custom header map.
-	cookies       map[string]string // Custom cookie map.
-	prefix        string            // Prefix for request.
-	authUser      string            // HTTP basic authentication: user.
-	authPass      string            // HTTP basic authentication: pass.
-	browserMode   bool              // Whether auto saving and sending cookie content.
-	retryCount    int               // Retry count when request fails.
-	retryInterval time.Duration     // Retry interval when request fails.
+	http.Client                           // Underlying HTTP Client.
+	ctx               context.Context     // Context for each request.
+	parent            *Client             // Parent http client, this is used for chaining operations.
+	header            map[string]string   // Custom header map.
+	cookies           map[string]string   // Custom cookie map.
+	prefix            string              // Prefix for request.
+	authUser          string              // HTTP basic authentication: user.
+	authPass          string              // HTTP basic authentication: pass.
+	browserMode       bool                // Whether auto saving and sending cookie content.
+	retryCount        int                 // Retry count when request fails.
+	retryInterval     time.Duration       // Retry interval when request fails.
+	middlewareHandler []ClientHandlerFunc // Interceptor handlers
 }
 
 // NewClient creates and returns a new HTTP client object.
