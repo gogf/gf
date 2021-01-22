@@ -9,6 +9,8 @@ package ghttp
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
+	"github.com/gogf/gf"
 	"github.com/gogf/gf/text/gstr"
 	"golang.org/x/net/proxy"
 	"net"
@@ -24,6 +26,7 @@ import (
 type Client struct {
 	http.Client                           // Underlying HTTP Client.
 	ctx               context.Context     // Context for each request.
+	agent             string              // Client agent.
 	parent            *Client             // Parent http client, this is used for chaining operations.
 	header            map[string]string   // Custom header map.
 	cookies           map[string]string   // Custom cookie map.
@@ -35,6 +38,10 @@ type Client struct {
 	retryInterval     time.Duration       // Retry interval when request fails.
 	middlewareHandler []ClientHandlerFunc // Interceptor handlers
 }
+
+var (
+	defaultClientAgent = fmt.Sprintf(`GoFrameHTTPClient %s`, gf.VERSION)
+)
 
 // NewClient creates and returns a new HTTP client object.
 func NewClient() *Client {
@@ -50,6 +57,7 @@ func NewClient() *Client {
 		},
 		header:  make(map[string]string),
 		cookies: make(map[string]string),
+		agent:   defaultClientAgent,
 	}
 }
 
@@ -87,6 +95,12 @@ func (c *Client) SetHeaderMap(m map[string]string) *Client {
 	for k, v := range m {
 		c.header[k] = v
 	}
+	return c
+}
+
+// SetAgent sets the User-Agent header for client.
+func (c *Client) SetAgent(agent string) *Client {
+	c.header["User-Agent"] = agent
 	return c
 }
 
