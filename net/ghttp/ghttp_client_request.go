@@ -11,9 +11,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/internal/utils"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/trace"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
@@ -96,6 +100,19 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 	if err != nil {
 		return nil, err
 	}
+
+	// Tracing.
+	tr := otel.GetTracerProvider().Tracer(
+		"github.com/gogf/gf/net/ghttp.client",
+		trace.WithInstrumentationVersion(fmt.Sprintf(`%s`, gf.VERSION)),
+	)
+	ctx, span := tr.Start(req.Context(), req.URL.String())
+	defer span.End()
+	// Header (Cookie is in it).
+	if len(req.Header) > 0 {
+		span.SetAttributes(label.Any(`http.headers`, req.Header))
+	}
+	req = req.WithContext(ctx)
 
 	// Client middleware.
 	if len(c.middlewareHandler) > 0 {
@@ -277,6 +294,10 @@ func (c *Client) prepareRequest(method, url string, data ...interface{}) (req *h
 	// HTTP basic authentication.
 	if len(c.authUser) > 0 {
 		req.SetBasicAuth(c.authUser, c.authPass)
+	}
+	// Client agent.
+	if c.agent != "" {
+		req.Header.Set("User-Agent", c.agent)
 	}
 	return req, nil
 }
