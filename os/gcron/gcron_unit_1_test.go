@@ -7,6 +7,7 @@
 package gcron_test
 
 import (
+	"github.com/gogf/gf/os/glog"
 	"testing"
 	"time"
 
@@ -20,18 +21,19 @@ func TestCron_Add_Close(t *testing.T) {
 		cron := gcron.New()
 		array := garray.New(true)
 		_, err1 := cron.Add("* * * * * *", func() {
-			//glog.Println("cron1")
+			glog.Println("cron1")
 			array.Append(1)
 		})
 		_, err2 := cron.Add("* * * * * *", func() {
-			//glog.Println("cron2")
+			glog.Println("cron2")
 			array.Append(1)
 		}, "test")
 		_, err3 := cron.Add("* * * * * *", func() {
+			glog.Println("cron3")
 			array.Append(1)
 		}, "test")
 		_, err4 := cron.Add("@every 2s", func() {
-			//glog.Println("cron3")
+			glog.Println("cron4")
 			array.Append(1)
 		})
 		t.Assert(err1, nil)
@@ -39,7 +41,7 @@ func TestCron_Add_Close(t *testing.T) {
 		t.AssertNE(err3, nil)
 		t.Assert(err4, nil)
 		t.Assert(cron.Size(), 3)
-		time.Sleep(1200 * time.Millisecond)
+		time.Sleep(1300 * time.Millisecond)
 		t.Assert(array.Len(), 2)
 		time.Sleep(1400 * time.Millisecond)
 		t.Assert(array.Len(), 5)
