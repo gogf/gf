@@ -19,11 +19,16 @@ func NewVar(i interface{}, safe ...bool) *Var {
 	return gvar.New(i, safe...)
 }
 
-// Wait blocks until:
-// 1. All the web servers shutdown, it does nothing if there's no running web server.
-// 2. Shutdown signals received and all registered shutdown handlers done.
+// Wait is an alias of ghttp.Wait, which blocks until all the web servers shutdown.
+// It's commonly used in multiple servers situation.
 func Wait() {
 	ghttp.Wait()
+}
+
+// Listen is an alias of gproc.Listen, which handles the signals received and automatically
+// calls registered signal handler functions.
+// It blocks until shutdown signals received and all registered shutdown handlers done.
+func Listen() {
 	gproc.Listen()
 }
 
