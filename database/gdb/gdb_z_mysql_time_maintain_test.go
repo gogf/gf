@@ -51,7 +51,7 @@ CREATE TABLE %s (
 		t.Assert(oneInsert["name"].String(), "name_1")
 		t.Assert(oneInsert["delete_at"].String(), "")
 		t.AssertGE(oneInsert["create_at"].GTime().Timestamp(), gtime.Timestamp()-2)
-		t.AssertGE(oneInsert["update_at"].GTime().Timestamp(), gtime.Timestamp())
+		t.AssertGE(oneInsert["update_at"].GTime().Timestamp(), gtime.Timestamp()-2)
 
 		// For time asserting purpose.
 		time.Sleep(2 * time.Second)
@@ -73,7 +73,7 @@ CREATE TABLE %s (
 		t.Assert(oneSave["delete_at"].String(), "")
 		t.Assert(oneSave["create_at"].GTime().Timestamp(), oneInsert["create_at"].GTime().Timestamp())
 		t.AssertNE(oneSave["update_at"].GTime().Timestamp(), oneInsert["update_at"].GTime().Timestamp())
-		t.AssertGE(oneSave["update_at"].GTime().Timestamp(), gtime.Now().Timestamp()-2)
+		t.AssertGE(oneSave["update_at"].GTime().Timestamp(), gtime.Timestamp()-2)
 
 		// For time asserting purpose.
 		time.Sleep(2 * time.Second)
@@ -93,7 +93,7 @@ CREATE TABLE %s (
 		t.Assert(oneUpdate["name"].String(), "name_1000")
 		t.Assert(oneUpdate["delete_at"].String(), "")
 		t.Assert(oneUpdate["create_at"].GTime().Timestamp(), oneInsert["create_at"].GTime().Timestamp())
-		t.AssertGE(oneUpdate["update_at"].GTime().Timestamp(), gtime.Now().Timestamp()-2)
+		t.AssertGE(oneUpdate["update_at"].GTime().Timestamp(), gtime.Timestamp()-2)
 
 		// Replace
 		dataReplace := g.Map{
@@ -128,7 +128,7 @@ CREATE TABLE %s (
 		one5, err := db.Table(table).Unscoped().FindOne(1)
 		t.Assert(err, nil)
 		t.Assert(one5["id"].Int(), 1)
-		t.AssertGE(one5["delete_at"].GTime().Timestamp(), gtime.Now().Timestamp()-2)
+		t.AssertGE(one5["delete_at"].GTime().Timestamp(), gtime.Timestamp()-2)
 		// Delete Count
 		i, err := db.Table(table).FindCount()
 		t.Assert(err, nil)
@@ -185,7 +185,7 @@ CREATE TABLE %s (
 		t.Assert(oneInsert["name"].String(), "name_1")
 		t.Assert(oneInsert["deleted_at"].String(), "")
 		t.AssertGE(oneInsert["created_at"].GTime().Timestamp(), gtime.Timestamp()-2)
-		t.AssertGE(oneInsert["updated_at"].GTime().Timestamp(), gtime.Timestamp())
+		t.AssertGE(oneInsert["updated_at"].GTime().Timestamp(), gtime.Timestamp()-2)
 
 		// For time asserting purpose.
 		time.Sleep(2 * time.Second)
@@ -207,7 +207,7 @@ CREATE TABLE %s (
 		t.Assert(oneSave["deleted_at"].String(), "")
 		t.Assert(oneSave["created_at"].GTime().Timestamp(), oneInsert["created_at"].GTime().Timestamp())
 		t.AssertNE(oneSave["updated_at"].GTime().Timestamp(), oneInsert["updated_at"].GTime().Timestamp())
-		t.AssertGE(oneSave["updated_at"].GTime().Timestamp(), gtime.Now().Timestamp()-2)
+		t.AssertGE(oneSave["updated_at"].GTime().Timestamp(), gtime.Timestamp()-2)
 
 		// For time asserting purpose.
 		time.Sleep(2 * time.Second)
@@ -227,7 +227,7 @@ CREATE TABLE %s (
 		t.Assert(oneUpdate["name"].String(), "name_1000")
 		t.Assert(oneUpdate["deleted_at"].String(), "")
 		t.Assert(oneUpdate["created_at"].GTime().Timestamp(), oneInsert["created_at"].GTime().Timestamp())
-		t.AssertGE(oneUpdate["updated_at"].GTime().Timestamp(), gtime.Now().Timestamp()-2)
+		t.AssertGE(oneUpdate["updated_at"].GTime().Timestamp(), gtime.Timestamp()-2)
 
 		// Replace
 		dataReplace := g.Map{
@@ -262,7 +262,7 @@ CREATE TABLE %s (
 		one5, err := db.Table(table).Unscoped().FindOne(1)
 		t.Assert(err, nil)
 		t.Assert(one5["id"].Int(), 1)
-		t.AssertGE(one5["deleted_at"].GTime().Timestamp(), gtime.Now().Timestamp()-2)
+		t.AssertGE(one5["deleted_at"].GTime().Timestamp(), gtime.Timestamp()-2)
 		// Delete Count
 		i, err := db.Table(table).FindCount()
 		t.Assert(err, nil)
@@ -326,7 +326,7 @@ CREATE TABLE %s (
 		t.Assert(oneInsert["name"].String(), "name_1")
 		t.Assert(oneInsert["deleted_at"].String(), "")
 		t.AssertGE(oneInsert["created_at"].GTime().Timestamp(), gtime.Timestamp()-2)
-		t.AssertGE(oneInsert["updated_at"].GTime().Timestamp(), gtime.Timestamp())
+		t.AssertGE(oneInsert["updated_at"].GTime().Timestamp(), gtime.Timestamp()-2)
 
 		// For time asserting purpose.
 		time.Sleep(2 * time.Second)
@@ -348,7 +348,7 @@ CREATE TABLE %s (
 		t.Assert(oneSave["deleted_at"].String(), "")
 		t.Assert(oneSave["created_at"].GTime().Timestamp(), oneInsert["created_at"].GTime().Timestamp())
 		t.AssertNE(oneSave["updated_at"].GTime().Timestamp(), oneInsert["updated_at"].GTime().Timestamp())
-		t.AssertGE(oneSave["updated_at"].GTime().Timestamp(), gtime.Now().Timestamp()-2)
+		t.AssertGE(oneSave["updated_at"].GTime().Timestamp(), gtime.Timestamp()-2)
 
 		// For time asserting purpose.
 		time.Sleep(2 * time.Second)
@@ -368,7 +368,7 @@ CREATE TABLE %s (
 		t.Assert(oneUpdate["name"].String(), "name_1000")
 		t.Assert(oneUpdate["deleted_at"].String(), "")
 		t.Assert(oneUpdate["created_at"].GTime().Timestamp(), oneInsert["created_at"].GTime().Timestamp())
-		t.AssertGE(oneUpdate["updated_at"].GTime().Timestamp(), gtime.Now().Timestamp()-2)
+		t.AssertGE(oneUpdate["updated_at"].GTime().Timestamp(), gtime.Timestamp()-2)
 
 		// Replace
 		dataReplace := User{
@@ -403,7 +403,7 @@ CREATE TABLE %s (
 		one5, err := db.Table(table).Unscoped().FindOne(1)
 		t.Assert(err, nil)
 		t.Assert(one5["id"].Int(), 1)
-		t.AssertGE(one5["deleted_at"].GTime().Timestamp(), gtime.Now().Timestamp()-2)
+		t.AssertGE(one5["deleted_at"].GTime().Timestamp(), gtime.Timestamp()-2)
 		// Delete Count
 		i, err := db.Table(table).FindCount()
 		t.Assert(err, nil)
@@ -648,7 +648,7 @@ CREATE TABLE %s (
 		t.Assert(oneInsert["name"].String(), "name_1")
 		t.Assert(oneInsert["delete_at"].String(), "")
 		t.AssertGE(oneInsert["create_at"].GTime().Timestamp(), gtime.Timestamp()-2)
-		t.AssertGE(oneInsert["update_at"].GTime().Timestamp(), gtime.Timestamp())
+		t.AssertGE(oneInsert["update_at"].GTime().Timestamp(), gtime.Timestamp()-2)
 
 		time.Sleep(2 * time.Second)
 
@@ -672,7 +672,7 @@ CREATE TABLE %s (
 		t.Assert(oneSave["delete_at"].String(), "")
 		t.Assert(oneSave["create_at"].GTime().Timestamp(), oneInsert["create_at"].GTime().Timestamp())
 		t.AssertNE(oneSave["update_at"].GTime().Timestamp(), oneInsert["update_at"].GTime().Timestamp())
-		t.AssertGE(oneSave["update_at"].GTime().Timestamp(), gtime.Now().Timestamp()-2)
+		t.AssertGE(oneSave["update_at"].GTime().Timestamp(), gtime.Timestamp()-2)
 
 		time.Sleep(2 * time.Second)
 
@@ -695,7 +695,7 @@ CREATE TABLE %s (
 		t.Assert(oneUpdate["name"].String(), "name_1000")
 		t.Assert(oneUpdate["delete_at"].String(), "")
 		t.Assert(oneUpdate["create_at"].GTime().Timestamp(), oneInsert["create_at"].GTime().Timestamp())
-		t.AssertGE(oneUpdate["update_at"].GTime().Timestamp(), gtime.Now().Timestamp()-2)
+		t.AssertGE(oneUpdate["update_at"].GTime().Timestamp(), gtime.Timestamp()-2)
 
 		// Replace
 		dataReplace := &Entity{
@@ -732,7 +732,7 @@ CREATE TABLE %s (
 		one5, err := db.Table(table).Unscoped().FindOne(1)
 		t.Assert(err, nil)
 		t.Assert(one5["id"].Int(), 1)
-		t.AssertGE(one5["delete_at"].GTime().Timestamp(), gtime.Now().Timestamp()-2)
+		t.AssertGE(one5["delete_at"].GTime().Timestamp(), gtime.Timestamp()-2)
 		// Delete Count
 		i, err := db.Table(table).FindCount()
 		t.Assert(err, nil)
