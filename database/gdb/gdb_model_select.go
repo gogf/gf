@@ -402,7 +402,7 @@ func (m *Model) FindValue(fieldsAndWhere ...interface{}) (Value, error) {
 }
 
 // FindArray queries and returns data values as slice from database.
-// Note that if there're multiple columns in the result, it returns just one column values randomly.
+// Note that if there are multiple columns in the result, it returns just one column values randomly.
 // Also see Model.WherePri and Model.Value.
 func (m *Model) FindArray(fieldsAndWhere ...interface{}) ([]Value, error) {
 	if len(fieldsAndWhere) >= 2 {

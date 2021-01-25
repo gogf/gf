@@ -8,10 +8,30 @@ import (
 	sdkTrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
+type tracingApi struct{}
+
 const (
 	JaegerEndpoint = "http://localhost:14268/api/traces"
 	ServiceName    = "TracingHttpServerWithRedis"
 )
+
+func (api *tracingApi) Set(r *ghttp.Request) {
+	_, err := g.Redis().Ctx(r.Context()).Do("SET", r.GetString("key"), r.GetString("value"))
+	if err != nil {
+		r.Response.WriteExit(gerror.Current(err))
+	}
+	r.Response.Write("ok")
+}
+
+func (api *tracingApi) Get(r *ghttp.Request) {
+	value, err := g.Redis().Ctx(r.Context()).DoVar(
+		"GET", r.GetString("key"),
+	)
+	if err != nil {
+		r.Response.WriteExit(gerror.Current(err))
+	}
+	r.Response.Write(value.String())
+}
 
 // initTracer creates a new trace provider instance and registers it as global trace provider.
 func initTracer() func() {
@@ -36,28 +56,8 @@ func main() {
 	s := g.Server()
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(ghttp.MiddlewareServerTracing)
-		group.ALL("/redis", new(redisTracingApi))
+		group.ALL("/redis", new(tracingApi))
 	})
 	s.SetPort(8199)
 	s.Run()
-}
-
-type redisTracingApi struct{}
-
-func (api *redisTracingApi) Set(r *ghttp.Request) {
-	_, err := g.Redis().Ctx(r.Context()).Do("SET", r.GetString("key"), r.GetString("value"))
-	if err != nil {
-		r.Response.WriteExit(gerror.Current(err))
-	}
-	r.Response.Write("ok")
-}
-
-func (api *redisTracingApi) Get(r *ghttp.Request) {
-	value, err := g.Redis().Ctx(r.Context()).DoVar(
-		"GET", r.GetString("key"),
-	)
-	if err != nil {
-		r.Response.WriteExit(gerror.Current(err))
-	}
-	r.Response.Write(value.String())
 }

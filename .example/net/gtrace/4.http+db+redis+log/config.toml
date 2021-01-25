@@ -5,8 +5,8 @@
         level   = "all"
         stdout  = true
     [database.default]
-        link   = "mysql:root:12345678@tcp(127.0.0.1:3306)/test"
-        debug  = true
+        link    = "mysql:root:12345678@tcp(127.0.0.1:3306)/test"
+        debug   = true
 
 # Redis.
 [redis]

@@ -7,10 +7,8 @@
 package gredis
 
 import (
-	"github.com/gogf/gf/internal/intlog"
-	"time"
-
 	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/internal/intlog"
 
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/text/gregex"
@@ -98,26 +96,8 @@ func ConfigFromStr(str string) (config *Config, err error) {
 		if config.Port == 0 {
 			config.Port = DefaultRedisPort
 		}
-		if v, ok := parse["maxIdle"]; ok {
-			config.MaxIdle = gconv.Int(v)
-		}
-		if v, ok := parse["maxActive"]; ok {
-			config.MaxActive = gconv.Int(v)
-		}
-		if v, ok := parse["idleTimeout"]; ok {
-			config.IdleTimeout = gconv.Duration(v) * time.Second
-		}
-		if v, ok := parse["maxConnLifetime"]; ok {
-			config.MaxConnLifetime = gconv.Duration(v) * time.Second
-		}
-		if v, ok := parse["tls"]; ok {
-			config.TLS = gconv.Bool(v)
-		}
-		if v, ok := parse["skipVerify"]; ok {
-			config.TLSSkipVerify = gconv.Bool(v)
-		}
-		if v, ok := parse["tracing"]; ok {
-			config.Tracing = gconv.Bool(v)
+		if err = gconv.Struct(parse, config); err != nil {
+			return nil, err
 		}
 		return
 	}

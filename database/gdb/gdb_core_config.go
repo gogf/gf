@@ -51,7 +51,6 @@ type ConfigNode struct {
 	UpdatedAt            string        `json:"updatedAt"`            // (Optional) The filed name of table for automatic-filled updated datetime.
 	DeletedAt            string        `json:"deletedAt"`            // (Optional) The filed name of table for automatic-filled updated datetime.
 	TimeMaintainDisabled bool          `json:"timeMaintainDisabled"` // (Optional) Disable the automatic time maintaining feature.
-	Tracing              bool          `json:"tracing"`              // (Optional) Tracing enable the tracing feature for database.
 }
 
 // configs is internal used configuration object.
@@ -205,7 +204,7 @@ func (c *Core) SetDryRun(enabled bool) {
 // GetDryRun returns the DryRun value.
 // Deprecated, use GetConfig instead.
 func (c *Core) GetDryRun() bool {
-	return c.config.DryRun
+	return c.config.DryRun || allDryRun
 }
 
 // GetPrefix returns the table prefix string configured.
