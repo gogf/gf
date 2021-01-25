@@ -11,8 +11,13 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/gogf/gf"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/text/gstr"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/trace"
 	"reflect"
 	"strings"
 
@@ -85,24 +90,27 @@ func (c *Core) DoQuery(link Link, sql string, args ...interface{}) (rows *sql.Ro
 	sql, args = c.DB.HandleSqlBeforeCommit(link, sql, args)
 	ctx := c.DB.GetCtx()
 	if c.GetConfig().QueryTimeout > 0 {
-		ctx, _ = context.WithTimeout(ctx, c.GetConfig().QueryTimeout)
+		var cancelFunc context.CancelFunc
+		ctx, cancelFunc = context.WithTimeout(ctx, c.GetConfig().QueryTimeout)
+		defer cancelFunc()
 	}
+
+	mTime1 := gtime.TimestampMilli()
+	rows, err = link.QueryContext(ctx, sql, args...)
+	mTime2 := gtime.TimestampMilli()
+	sqlObj := &Sql{
+		Sql:    sql,
+		Type:   "DB.QueryContext",
+		Args:   args,
+		Format: FormatSqlWithArgs(sql, args),
+		Error:  err,
+		Start:  mTime1,
+		End:    mTime2,
+		Group:  c.DB.GetGroup(),
+	}
+	c.addSqlToTracing(ctx, sqlObj)
 	if c.DB.GetDebug() {
-		mTime1 := gtime.TimestampMilli()
-		rows, err = link.QueryContext(ctx, sql, args...)
-		mTime2 := gtime.TimestampMilli()
-		s := &Sql{
-			Sql:    sql,
-			Args:   args,
-			Format: FormatSqlWithArgs(sql, args),
-			Error:  err,
-			Start:  mTime1,
-			End:    mTime2,
-			Group:  c.DB.GetGroup(),
-		}
-		c.writeSqlToLogger(s)
-	} else {
-		rows, err = link.QueryContext(ctx, sql, args...)
+		c.writeSqlToLogger(sqlObj)
 	}
 	if err == nil {
 		return rows, nil
@@ -110,6 +118,48 @@ func (c *Core) DoQuery(link Link, sql string, args ...interface{}) (rows *sql.Ro
 		err = formatError(err, sql, args...)
 	}
 	return nil, err
+}
+
+func (c *Core) addSqlToTracing(ctx context.Context, sql *Sql) {
+	if !c.DB.GetConfig().Tracing {
+		return
+	}
+
+	tr := otel.GetTracerProvider().Tracer(
+		"github.com/gogf/gf/database/gdb",
+		trace.WithInstrumentationVersion(fmt.Sprintf(`%s`, gf.VERSION)),
+	)
+	ctx, span := tr.Start(ctx, sql.Type)
+	defer span.End()
+	if sql.Error != nil {
+		span.SetStatus(codes.Error, fmt.Sprintf(`%+v`, sql.Error))
+	}
+	labels := make([]label.KeyValue, 0)
+	labels = append(labels, label.String("db.type", c.DB.GetConfig().Type))
+	if c.DB.GetConfig().Host != "" {
+		labels = append(labels, label.String("db.host", c.DB.GetConfig().Host))
+	}
+	if c.DB.GetConfig().Port != "" {
+		labels = append(labels, label.String("db.port", c.DB.GetConfig().Port))
+	}
+	if c.DB.GetConfig().Name != "" {
+		labels = append(labels, label.String("db.name", c.DB.GetConfig().Name))
+	}
+	if c.DB.GetConfig().User != "" {
+		labels = append(labels, label.String("db.user", c.DB.GetConfig().User))
+	}
+	if filteredLinkInfo := c.DB.FilteredLinkInfo(); filteredLinkInfo != "" {
+		labels = append(labels, label.String("db.link", c.DB.FilteredLinkInfo()))
+	}
+	if group := c.DB.GetGroup(); group != "" {
+		labels = append(labels, label.String("db.group", group))
+	}
+	span.SetAttributes(labels...)
+	span.AddEvent("db.execution", trace.WithAttributes(
+		label.String(`db.execution.sql`, sql.Format),
+		label.String(`db.execution.cost`, fmt.Sprintf(`%d ms`, sql.End-sql.Start)),
+		label.String(`db.execution.type`, sql.Type),
+	))
 }
 
 // Exec commits one query SQL to underlying driver and returns the execution result.
@@ -129,32 +179,31 @@ func (c *Core) DoExec(link Link, sql string, args ...interface{}) (result sql.Re
 	sql, args = c.DB.HandleSqlBeforeCommit(link, sql, args)
 	ctx := c.DB.GetCtx()
 	if c.GetConfig().ExecTimeout > 0 {
-		ctx, _ = context.WithTimeout(ctx, c.GetConfig().ExecTimeout)
+		var cancelFunc context.CancelFunc
+		ctx, cancelFunc = context.WithTimeout(ctx, c.GetConfig().ExecTimeout)
+		defer cancelFunc()
 	}
-	if c.DB.GetDebug() {
-		mTime1 := gtime.TimestampMilli()
-		if !c.DB.GetDryRun() {
-			result, err = link.ExecContext(ctx, sql, args...)
-		} else {
-			result = new(SqlResult)
-		}
-		mTime2 := gtime.TimestampMilli()
-		s := &Sql{
-			Sql:    sql,
-			Args:   args,
-			Format: FormatSqlWithArgs(sql, args),
-			Error:  err,
-			Start:  mTime1,
-			End:    mTime2,
-			Group:  c.DB.GetGroup(),
-		}
-		c.writeSqlToLogger(s)
+
+	mTime1 := gtime.TimestampMilli()
+	if !c.DB.GetDryRun() {
+		result, err = link.ExecContext(ctx, sql, args...)
 	} else {
-		if !c.DB.GetDryRun() {
-			result, err = link.ExecContext(ctx, sql, args...)
-		} else {
-			result = new(SqlResult)
-		}
+		result = new(SqlResult)
+	}
+	mTime2 := gtime.TimestampMilli()
+	sqlObj := &Sql{
+		Sql:    sql,
+		Type:   "DB.ExecContext",
+		Args:   args,
+		Format: FormatSqlWithArgs(sql, args),
+		Error:  err,
+		Start:  mTime1,
+		End:    mTime2,
+		Group:  c.DB.GetGroup(),
+	}
+	c.addSqlToTracing(ctx, sqlObj)
+	if c.DB.GetDebug() {
+		c.writeSqlToLogger(sqlObj)
 	}
 	return result, formatError(err, sql, args...)
 }
@@ -167,7 +216,7 @@ func (c *Core) DoExec(link Link, sql string, args ...interface{}) (result sql.Re
 //
 // The parameter <execOnMaster> specifies whether executing the sql on master node,
 // or else it executes the sql on slave node if master-slave configured.
-func (c *Core) Prepare(sql string, execOnMaster ...bool) (*sql.Stmt, error) {
+func (c *Core) Prepare(sql string, execOnMaster ...bool) (*Stmt, error) {
 	var (
 		err  error
 		link Link
@@ -185,12 +234,37 @@ func (c *Core) Prepare(sql string, execOnMaster ...bool) (*sql.Stmt, error) {
 }
 
 // doPrepare calls prepare function on given link object and returns the statement object.
-func (c *Core) DoPrepare(link Link, sql string) (*sql.Stmt, error) {
+func (c *Core) DoPrepare(link Link, sql string) (*Stmt, error) {
 	ctx := c.DB.GetCtx()
-	if c.GetConfig().QueryTimeout > 0 {
-		ctx, _ = context.WithTimeout(ctx, c.GetConfig().QueryTimeout)
+	if c.GetConfig().PrepareTimeout > 0 {
+		var cancelFunc context.CancelFunc
+		ctx, cancelFunc = context.WithTimeout(ctx, c.GetConfig().PrepareTimeout)
+		defer cancelFunc()
 	}
-	return link.PrepareContext(ctx, sql)
+	var (
+		mTime1    = gtime.TimestampMilli()
+		stmt, err = link.PrepareContext(ctx, sql)
+		mTime2    = gtime.TimestampMilli()
+		sqlObj    = &Sql{
+			Sql:    sql,
+			Type:   "DB.PrepareContext",
+			Args:   nil,
+			Format: FormatSqlWithArgs(sql, nil),
+			Error:  err,
+			Start:  mTime1,
+			End:    mTime2,
+			Group:  c.DB.GetGroup(),
+		}
+	)
+	c.addSqlToTracing(ctx, sqlObj)
+	if c.DB.GetDebug() {
+		c.writeSqlToLogger(sqlObj)
+	}
+	return &Stmt{
+		Stmt: stmt,
+		core: c,
+		sql:  sql,
+	}, err
 }
 
 // GetAll queries and returns data records from database.
@@ -334,7 +408,9 @@ func (c *Core) Begin() (*TX, error) {
 	} else {
 		ctx := c.DB.GetCtx()
 		if c.GetConfig().TranTimeout > 0 {
-			ctx, _ = context.WithTimeout(ctx, c.GetConfig().TranTimeout)
+			var cancelFunc context.CancelFunc
+			ctx, cancelFunc = context.WithTimeout(ctx, c.GetConfig().TranTimeout)
+			defer cancelFunc()
 		}
 		if tx, err := master.BeginTx(ctx, nil); err == nil {
 			return &TX{

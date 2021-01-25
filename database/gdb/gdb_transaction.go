@@ -48,7 +48,7 @@ func (tx *TX) Exec(sql string, args ...interface{}) (sql.Result, error) {
 // returned statement.
 // The caller must call the statement's Close method
 // when the statement is no longer needed.
-func (tx *TX) Prepare(sql string) (*sql.Stmt, error) {
+func (tx *TX) Prepare(sql string) (*Stmt, error) {
 	return tx.db.DoPrepare(tx.tx, sql)
 }
 
