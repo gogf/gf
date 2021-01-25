@@ -8,6 +8,7 @@ package httputil
 
 import (
 	"github.com/gogf/gf/text/gstr"
+	"net/http"
 	"strings"
 
 	"github.com/gogf/gf/encoding/gurl"
@@ -63,4 +64,17 @@ func BuildParams(params interface{}, noUrlEncode ...bool) (encodedParamStr strin
 		encodedParamStr += k + "=" + s
 	}
 	return
+}
+
+// HeaderToMap coverts request headers to map.
+func HeaderToMap(header http.Header) map[string]interface{} {
+	m := make(map[string]interface{})
+	for k, v := range header {
+		if len(v) > 1 {
+			m[k] = v
+		} else {
+			m[k] = v[0]
+		}
+	}
+	return m
 }

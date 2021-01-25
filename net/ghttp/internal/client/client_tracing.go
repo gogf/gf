@@ -10,9 +10,11 @@ import (
 	"fmt"
 	"github.com/gogf/gf"
 	"github.com/gogf/gf/internal/utils"
+	"github.com/gogf/gf/net/ghttp/internal/httputil"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 	"io/ioutil"
 	"net/http"
@@ -20,7 +22,7 @@ import (
 )
 
 const (
-	maxContentLogSize = 512 * 1024 // Max log size for request and response body.
+	tracingMaxContentLogSize = 512 * 1024 // Max log size for request and response body.
 )
 
 // MiddlewareTracing is a client middleware that enables tracing feature using standards of OpenTelemetry.
@@ -31,6 +33,15 @@ func MiddlewareTracing(c *Client, r *http.Request) (response *Response, err erro
 	)
 	ctx, span := tr.Start(r.Context(), r.URL.String())
 	defer span.End()
+
+	// Inject tracing content into http header.
+	propagator := propagation.NewCompositeTextMapPropagator(
+		propagation.TraceContext{},
+		propagation.Baggage{},
+	)
+	propagator.Inject(ctx, r.Header)
+
+	// Continue client handler executing.
 	response, err = c.Next(
 		r.WithContext(
 			httptrace.WithClientTrace(
@@ -41,32 +52,21 @@ func MiddlewareTracing(c *Client, r *http.Request) (response *Response, err erro
 	if err != nil {
 		span.SetStatus(codes.Error, fmt.Sprintf(`%+v`, err))
 	}
+	if response == nil {
+		return
+	}
 	var resBodyContent string
-	if response.ContentLength <= maxContentLogSize {
+	if response.ContentLength <= tracingMaxContentLogSize {
 		reqBodyContentBytes, _ := ioutil.ReadAll(response.Body)
 		resBodyContent = string(reqBodyContentBytes)
 		response.Body = utils.NewReadCloser(reqBodyContentBytes, false)
 	} else {
-		resBodyContent = fmt.Sprintf("[Response Body Too Large For Logging, Max: %d bytes]", maxContentLogSize)
+		resBodyContent = fmt.Sprintf("[Response Body Too Large For Logging, Max: %d bytes]", tracingMaxContentLogSize)
 	}
-	if response != nil {
-		span.AddEvent("http.response", trace.WithAttributes(
-			label.Any(`http.response.headers`, headerToMap(response.Header)),
-			label.String(`http.response.body`, resBodyContent),
-		))
-	}
-	return
-}
 
-// headerToMap coverts request headers to map.
-func headerToMap(header http.Header) map[string]interface{} {
-	m := make(map[string]interface{})
-	for k, v := range header {
-		if len(v) > 1 {
-			m[k] = v
-		} else {
-			m[k] = v[0]
-		}
-	}
-	return m
+	span.AddEvent("http.response", trace.WithAttributes(
+		label.Any(`http.response.headers`, httputil.HeaderToMap(response.Header)),
+		label.String(`http.response.body`, resBodyContent),
+	))
+	return
 }
