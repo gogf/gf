@@ -131,7 +131,7 @@ func (ct *clientTracer) wroteHeaderField(k string, v []string) {
 }
 
 func (ct *clientTracer) wroteHeaders() {
-	if ct.request.ContentLength <= maxContentLogSize {
+	if ct.request.ContentLength <= tracingMaxContentLogSize {
 		reqBodyContent, _ := ioutil.ReadAll(ct.request.Body)
 		ct.requestBody = reqBodyContent
 		ct.request.Body = utils.NewReadCloser(reqBodyContent, false)
@@ -143,10 +143,10 @@ func (ct *clientTracer) wroteRequest(info httptrace.WroteRequestInfo) {
 		ct.span.SetStatus(codes.Error, fmt.Sprintf(`%+v`, info.Err))
 	}
 	var bodyContent string
-	if ct.request.ContentLength <= maxContentLogSize {
+	if ct.request.ContentLength <= tracingMaxContentLogSize {
 		bodyContent = string(ct.requestBody)
 	} else {
-		bodyContent = fmt.Sprintf("[Request Body Too Large For Logging, Max: %d bytes]", maxContentLogSize)
+		bodyContent = fmt.Sprintf("[Request Body Too Large For Logging, Max: %d bytes]", tracingMaxContentLogSize)
 	}
 	ct.span.AddEvent("http.request", trace.WithAttributes(
 		label.Any(`http.request.headers`, ct.headers),
@@ -163,7 +163,7 @@ func (ct *clientTracer) wait100Continue() {
 }
 
 func (ct *clientTracer) gotFirstResponseByte() {
-	ct.span.AddEvent("http.request.receive", trace.WithAttributes())
+
 }
 
 func (ct *clientTracer) got1xxResponse(code int, header textproto.MIMEHeader) error {
