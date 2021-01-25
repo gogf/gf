@@ -4,20 +4,17 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package ghttp
+package client
 
 import (
 	"bytes"
 	"context"
 	"errors"
 	"fmt"
-	"github.com/gogf/gf"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/internal/utils"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/label"
-	"go.opentelemetry.io/otel/trace"
+	"github.com/gogf/gf/net/ghttp/internal/httputil"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
@@ -36,55 +33,55 @@ import (
 
 // Get send GET request and returns the response object.
 // Note that the response object MUST be closed if it'll be never used.
-func (c *Client) Get(url string, data ...interface{}) (*ClientResponse, error) {
+func (c *Client) Get(url string, data ...interface{}) (*Response, error) {
 	return c.DoRequest("GET", url, data...)
 }
 
 // Put send PUT request and returns the response object.
 // Note that the response object MUST be closed if it'll be never used.
-func (c *Client) Put(url string, data ...interface{}) (*ClientResponse, error) {
+func (c *Client) Put(url string, data ...interface{}) (*Response, error) {
 	return c.DoRequest("PUT", url, data...)
 }
 
 // Post sends request using HTTP method POST and returns the response object.
 // Note that the response object MUST be closed if it'll be never used.
-func (c *Client) Post(url string, data ...interface{}) (*ClientResponse, error) {
+func (c *Client) Post(url string, data ...interface{}) (*Response, error) {
 	return c.DoRequest("POST", url, data...)
 }
 
 // Delete send DELETE request and returns the response object.
 // Note that the response object MUST be closed if it'll be never used.
-func (c *Client) Delete(url string, data ...interface{}) (*ClientResponse, error) {
+func (c *Client) Delete(url string, data ...interface{}) (*Response, error) {
 	return c.DoRequest("DELETE", url, data...)
 }
 
 // Head send HEAD request and returns the response object.
 // Note that the response object MUST be closed if it'll be never used.
-func (c *Client) Head(url string, data ...interface{}) (*ClientResponse, error) {
+func (c *Client) Head(url string, data ...interface{}) (*Response, error) {
 	return c.DoRequest("HEAD", url, data...)
 }
 
 // Patch send PATCH request and returns the response object.
 // Note that the response object MUST be closed if it'll be never used.
-func (c *Client) Patch(url string, data ...interface{}) (*ClientResponse, error) {
+func (c *Client) Patch(url string, data ...interface{}) (*Response, error) {
 	return c.DoRequest("PATCH", url, data...)
 }
 
 // Connect send CONNECT request and returns the response object.
 // Note that the response object MUST be closed if it'll be never used.
-func (c *Client) Connect(url string, data ...interface{}) (*ClientResponse, error) {
+func (c *Client) Connect(url string, data ...interface{}) (*Response, error) {
 	return c.DoRequest("CONNECT", url, data...)
 }
 
 // Options send OPTIONS request and returns the response object.
 // Note that the response object MUST be closed if it'll be never used.
-func (c *Client) Options(url string, data ...interface{}) (*ClientResponse, error) {
+func (c *Client) Options(url string, data ...interface{}) (*Response, error) {
 	return c.DoRequest("OPTIONS", url, data...)
 }
 
 // Trace send TRACE request and returns the response object.
 // Note that the response object MUST be closed if it'll be never used.
-func (c *Client) Trace(url string, data ...interface{}) (*ClientResponse, error) {
+func (c *Client) Trace(url string, data ...interface{}) (*Response, error) {
 	return c.DoRequest("TRACE", url, data...)
 }
 
@@ -95,30 +92,17 @@ func (c *Client) Trace(url string, data ...interface{}) (*ClientResponse, error)
 // else it uses "application/x-www-form-urlencoded". It also automatically detects the post
 // content for JSON format, and for that it automatically sets the Content-Type as
 // "application/json".
-func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *ClientResponse, err error) {
+func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Response, err error) {
 	req, err := c.prepareRequest(method, url, data...)
 	if err != nil {
 		return nil, err
 	}
 
-	// Tracing.
-	tr := otel.GetTracerProvider().Tracer(
-		"github.com/gogf/gf/net/ghttp.client",
-		trace.WithInstrumentationVersion(fmt.Sprintf(`%s`, gf.VERSION)),
-	)
-	ctx, span := tr.Start(req.Context(), req.URL.String())
-	defer span.End()
-	// Header (Cookie is in it).
-	if len(req.Header) > 0 {
-		span.SetAttributes(label.Any(`http.headers`, req.Header))
-	}
-	req = req.WithContext(ctx)
-
 	// Client middleware.
 	if len(c.middlewareHandler) > 0 {
-		mdlHandlers := make([]ClientHandlerFunc, 0, len(c.middlewareHandler)+1)
+		mdlHandlers := make([]HandlerFunc, 0, len(c.middlewareHandler)+1)
 		mdlHandlers = append(mdlHandlers, c.middlewareHandler...)
-		mdlHandlers = append(mdlHandlers, func(cli *Client, r *http.Request) (*ClientResponse, error) {
+		mdlHandlers = append(mdlHandlers, func(cli *Client, r *http.Request) (*Response, error) {
 			return cli.callRequest(r)
 		})
 		ctx := context.WithValue(req.Context(), clientMiddlewareKey, &clientMiddleware{
@@ -127,7 +111,7 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 			handlerIndex: -1,
 		})
 		req = req.WithContext(ctx)
-		resp, err = c.MiddlewareNext(req)
+		resp, err = c.Next(req)
 	} else {
 		resp, err = c.callRequest(req)
 	}
@@ -178,7 +162,7 @@ func (c *Client) prepareRequest(method, url string, data ...interface{}) (req *h
 				}
 			}
 		default:
-			param = BuildParams(data[0])
+			param = httputil.BuildParams(data[0])
 		}
 	}
 	if method == "GET" {
@@ -304,15 +288,18 @@ func (c *Client) prepareRequest(method, url string, data ...interface{}) (req *h
 
 // callRequest sends request with give http.Request, and returns the responses object.
 // Note that the response object MUST be closed if it'll be never used.
-func (c *Client) callRequest(req *http.Request) (resp *ClientResponse, err error) {
-	resp = &ClientResponse{
+func (c *Client) callRequest(req *http.Request) (resp *Response, err error) {
+	resp = &Response{
 		request: req,
 	}
+	// Dump feature.
 	// The request body can be reused for dumping
 	// raw HTTP request-response procedure.
-	reqBodyContent, _ := ioutil.ReadAll(req.Body)
-	resp.requestBody = reqBodyContent
-	req.Body = utils.NewReadCloser(reqBodyContent, false)
+	if c.dump {
+		reqBodyContent, _ := ioutil.ReadAll(req.Body)
+		resp.requestBody = reqBodyContent
+		req.Body = utils.NewReadCloser(reqBodyContent, false)
+	}
 	for {
 		if resp.Response, err = c.Do(req); err != nil {
 			// The response might not be nil when err != nil.

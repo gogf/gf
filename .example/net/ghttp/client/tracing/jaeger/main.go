@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/net/ghttp"
 	"go.opentelemetry.io/otel/exporters/trace/jaeger"
 	"go.opentelemetry.io/otel/trace"
 	"log"
@@ -57,16 +58,27 @@ func main() {
 	flush := initTracer()
 	defer flush()
 
-	ctx, span := otel.Tracer("component-main").Start(ctx, "foo")
+	ctx, span := otel.Tracer("test").Start(ctx, "test")
 	defer span.End()
 
-	content := g.Client().Ctx(ctx).Header(g.MapStrStr{
-		"test": "123",
-		"john": "smith",
-	}).Cookie(g.MapStrStr{
-		"cookieKey":"cookieValue",
-	}).GetContent("http://baidu.com/?q=goframe")
-	fmt.Println(content)
+	for i := 0; i < 20; i++ {
+		g.Client().Use(ghttp.MiddlewareClientTracing).Ctx(ctx).Header(g.MapStrStr{
+			"test": "123",
+			"john": "smith",
+		}).Cookie(g.MapStrStr{
+			"cookieKey": "cookieValue",
+		}).GetContent(fmt.Sprintf("http://baidu.com/?q=test_%d", i))
+	}
+	foo(ctx)
+}
+
+func foo(ctx context.Context) {
+	ctx, span := otel.Tracer("test").Start(ctx, "foo")
+	defer span.End()
+	span.AddEvent("Nice operation!", trace.WithAttributes(label.Int("bogons", 100)))
+	span.SetAttributes(label.String("test2", "123"))
+	time.Sleep(time.Second * 1)
+	bar(ctx)
 }
 
 func bar(ctx context.Context) {
@@ -74,6 +86,6 @@ func bar(ctx context.Context) {
 	defer span.End()
 	span.AddEvent("Nice operation!", trace.WithAttributes(label.Int("bogons", 100)))
 	span.SetAttributes(label.String("test2", "123"))
-	time.Sleep(time.Second * 2)
+	time.Sleep(time.Second * 1)
 	// Do bar...
 }

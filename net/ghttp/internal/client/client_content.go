@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package ghttp
+package client
 
 // GetContent is a convenience method for sending GET request, which retrieves and returns
 // the result content and automatically closes response object.

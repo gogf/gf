@@ -360,7 +360,7 @@ func Test_Client_Middleware(t *testing.T) {
 		c := g.Client().SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		c.Use(func(c *ghttp.Client, r *http.Request) (resp *ghttp.ClientResponse, err error) {
 			str1 += "a"
-			resp, err = c.MiddlewareNext(r)
+			resp, err = c.Next(r)
 			if err != nil {
 				return nil, err
 			}
@@ -369,7 +369,7 @@ func Test_Client_Middleware(t *testing.T) {
 		})
 		c.Use(func(c *ghttp.Client, r *http.Request) (resp *ghttp.ClientResponse, err error) {
 			str1 += "c"
-			resp, err = c.MiddlewareNext(r)
+			resp, err = c.Next(r)
 			if err != nil {
 				return nil, err
 			}
@@ -378,7 +378,7 @@ func Test_Client_Middleware(t *testing.T) {
 		})
 		c.Use(func(c *ghttp.Client, r *http.Request) (resp *ghttp.ClientResponse, err error) {
 			str1 += "e"
-			resp, err = c.MiddlewareNext(r)
+			resp, err = c.Next(r)
 			if err != nil {
 				return nil, err
 			}
@@ -401,7 +401,7 @@ func Test_Client_Middleware(t *testing.T) {
 		c = g.Client().SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		c.Use(func(c *ghttp.Client, r *http.Request) (resp *ghttp.ClientResponse, err error) {
 			str3 += "a"
-			resp, err = c.MiddlewareNext(r)
+			resp, err = c.Next(r)
 			str3 += "b"
 			return
 		})
@@ -411,7 +411,7 @@ func Test_Client_Middleware(t *testing.T) {
 		})
 		c.Use(func(c *ghttp.Client, r *http.Request) (resp *ghttp.ClientResponse, err error) {
 			str3 += "f"
-			resp, err = c.MiddlewareNext(r)
+			resp, err = c.Next(r)
 			str3 += "g"
 			return
 		})
