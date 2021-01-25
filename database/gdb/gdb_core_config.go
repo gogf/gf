@@ -51,7 +51,7 @@ type ConfigNode struct {
 	UpdatedAt            string        `json:"updatedAt"`            // (Optional) The filed name of table for automatic-filled updated datetime.
 	DeletedAt            string        `json:"deletedAt"`            // (Optional) The filed name of table for automatic-filled updated datetime.
 	TimeMaintainDisabled bool          `json:"timeMaintainDisabled"` // (Optional) Disable the automatic time maintaining feature.
-	Tracing              bool          `json:"tracing"`              // (Optional) Tracing enable the tracing feature of database.
+	Tracing              bool          `json:"tracing"`              // (Optional) Tracing enable the tracing feature for database.
 }
 
 // configs is internal used configuration object.
