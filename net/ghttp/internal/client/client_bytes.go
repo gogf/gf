@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package ghttp
+package client
 
 // GetBytes sends a GET request, retrieves and returns the result content as bytes.
 func (c *Client) GetBytes(url string, data ...interface{}) []byte {
