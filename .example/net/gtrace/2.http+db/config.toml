@@ -1,0 +1,20 @@
+
+# MySQL.
+[database]
+    [database.logger]
+        Level   = "all"
+        Stdout  = true
+        CtxKeys = ["Trace-Id"]
+    [database.default]
+        link   = "mysql:root:12345678@tcp(127.0.0.1:3306)/test"
+        debug  = true
+
+# Redis.
+[redis]
+    default = "127.0.0.1:6379,0"
+    cache   = "127.0.0.1:6379,1"
+
+
+
+
+

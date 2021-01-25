@@ -54,6 +54,21 @@ func (d *DriverMysql) Open(config *ConfigNode) (*sql.DB, error) {
 	}
 }
 
+// FilteredLinkInfo retrieves and returns filtered `linkInfo` that can be using for
+// logging or tracing purpose.
+func (d *DriverMysql) FilteredLinkInfo() string {
+	linkInfo := d.GetConfig().LinkInfo
+	if linkInfo == "" {
+		return ""
+	}
+	s, _ := gregex.ReplaceString(
+		`(.+?):(.+)@tcp(.+)`,
+		`$1:xxx@tcp$3`,
+		linkInfo,
+	)
+	return s
+}
+
 // GetChars returns the security char for this type of database.
 func (d *DriverMysql) GetChars() (charLeft string, charRight string) {
 	return "`", "`"

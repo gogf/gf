@@ -55,7 +55,7 @@ type DB interface {
 
 	Query(sql string, args ...interface{}) (*sql.Rows, error)
 	Exec(sql string, args ...interface{}) (sql.Result, error)
-	Prepare(sql string, execOnMaster ...bool) (*sql.Stmt, error)
+	Prepare(sql string, execOnMaster ...bool) (*Stmt, error)
 
 	// ===========================================================================
 	// Common APIs for CURD.
@@ -80,7 +80,7 @@ type DB interface {
 	DoQuery(link Link, sql string, args ...interface{}) (rows *sql.Rows, err error)
 	DoGetAll(link Link, sql string, args ...interface{}) (result Result, err error)
 	DoExec(link Link, sql string, args ...interface{}) (result sql.Result, err error)
-	DoPrepare(link Link, sql string) (*sql.Stmt, error)
+	DoPrepare(link Link, sql string) (*Stmt, error)
 	DoInsert(link Link, table string, data interface{}, option int, batch ...int) (result sql.Result, err error)
 	DoBatchInsert(link Link, table string, list interface{}, option int, batch ...int) (result sql.Result, err error)
 	DoUpdate(link Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error)
@@ -154,6 +154,7 @@ type DB interface {
 	Tables(schema ...string) (tables []string, err error)
 	TableFields(table string, schema ...string) (map[string]*TableField, error)
 	HasTable(name string) (bool, error)
+	FilteredLinkInfo() string
 
 	// HandleSqlBeforeCommit is a hook function, which deals with the sql string before
 	// it's committed to underlying driver. The parameter <link> specifies the current
@@ -191,6 +192,7 @@ type Driver interface {
 // Sql is the sql recording struct.
 type Sql struct {
 	Sql    string        // SQL string(may contain reserved char '?').
+	Type   string        // SQL operation type.
 	Args   []interface{} // Arguments for this sql.
 	Format string        // Formatted sql which contains arguments in the sql.
 	Error  error         // Execution result.
@@ -216,9 +218,9 @@ type Link interface {
 	Query(sql string, args ...interface{}) (*sql.Rows, error)
 	Exec(sql string, args ...interface{}) (sql.Result, error)
 	Prepare(sql string) (*sql.Stmt, error)
-	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
-	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
-	PrepareContext(ctx context.Context, query string) (*sql.Stmt, error)
+	QueryContext(ctx context.Context, sql string, args ...interface{}) (*sql.Rows, error)
+	ExecContext(ctx context.Context, sql string, args ...interface{}) (sql.Result, error)
+	PrepareContext(ctx context.Context, sql string) (*sql.Stmt, error)
 }
 
 // Counter  is the type for update count.
