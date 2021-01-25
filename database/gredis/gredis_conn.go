@@ -63,15 +63,24 @@ func (c *Conn) do(timeout time.Duration, commandName string, args ...interface{}
 	timestampMilli1 := gtime.TimestampMilli()
 	reply, err = c.Conn.Do(commandName, args...)
 	timestampMilli2 := gtime.TimestampMilli()
+
 	// Tracing.
-	if !c.redis.config.Tracing {
+	if c.ctx == nil {
+		return
+	}
+	spanCtx := trace.SpanContextFromContext(c.ctx)
+	if traceId := spanCtx.TraceID; !traceId.IsValid() {
 		return
 	}
 	tr := otel.GetTracerProvider().Tracer(
 		"github.com/gogf/gf/database/gredis",
 		trace.WithInstrumentationVersion(fmt.Sprintf(`%s`, gf.VERSION)),
 	)
-	_, span := tr.Start(c.ctx, commandName)
+	ctx := c.ctx
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	_, span := tr.Start(ctx, commandName)
 	defer span.End()
 	if err != nil {
 		span.SetStatus(codes.Error, fmt.Sprintf(`%+v`, err))

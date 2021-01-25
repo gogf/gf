@@ -7,6 +7,7 @@ require (
 	github.com/clbanning/mxj v1.8.5-0.20200714211355-ff02cfb8ea28
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/go-sql-driver/mysql v1.5.0
+	github.com/gogf/gcache-adapter v0.0.3
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/gorilla/websocket v1.4.1
 	github.com/grokify/html-strip-tags-go v0.0.0-20190921062105-daaa06bf1aaf

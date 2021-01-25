@@ -8,9 +8,30 @@ import (
 	sdkTrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
+type tracingApi struct{}
+
+func (api *tracingApi) Insert(r *ghttp.Request) {
+	result, err := g.Table("user").Ctx(r.Context()).Insert(g.Map{
+		"name": r.GetString("name"),
+	})
+	if err != nil {
+		r.Response.WriteExit(gerror.Current(err))
+	}
+	id, _ := result.LastInsertId()
+	r.Response.Write("id:", id)
+}
+
+func (api *tracingApi) Query(r *ghttp.Request) {
+	one, err := g.Table("user").Ctx(r.Context()).FindOne(r.GetInt("id"))
+	if err != nil {
+		r.Response.WriteExit(gerror.Current(err))
+	}
+	r.Response.Write("user:", one)
+}
+
 const (
 	JaegerEndpoint = "http://localhost:14268/api/traces"
-	ServiceName    = "TracingHttpServerWithDatabase"
+	ServiceName    = "TracingHttpServerWithDB"
 )
 
 // initTracer creates a new trace provider instance and registers it as global trace provider.
@@ -36,29 +57,8 @@ func main() {
 	s := g.Server()
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(ghttp.MiddlewareServerTracing)
-		group.ALL("/user", new(dbTracingApi))
+		group.ALL("/user", new(tracingApi))
 	})
 	s.SetPort(8199)
 	s.Run()
-}
-
-type dbTracingApi struct{}
-
-func (api *dbTracingApi) Insert(r *ghttp.Request) {
-	result, err := g.Table("user").Ctx(r.Context()).Insert(g.Map{
-		"name": r.GetString("name"),
-	})
-	if err != nil {
-		r.Response.WriteExit(gerror.Current(err))
-	}
-	id, _ := result.LastInsertId()
-	r.Response.Write("id:", id)
-}
-
-func (api *dbTracingApi) Query(r *ghttp.Request) {
-	one, err := g.Table("user").Ctx(r.Context()).FindOne(r.GetInt("id"))
-	if err != nil {
-		r.Response.WriteExit(gerror.Current(err))
-	}
-	r.Response.Write("user:", one)
 }

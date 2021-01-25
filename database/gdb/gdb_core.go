@@ -121,7 +121,11 @@ func (c *Core) DoQuery(link Link, sql string, args ...interface{}) (rows *sql.Ro
 }
 
 func (c *Core) addSqlToTracing(ctx context.Context, sql *Sql) {
-	if !c.DB.GetConfig().Tracing {
+	if ctx == nil {
+		return
+	}
+	spanCtx := trace.SpanContextFromContext(ctx)
+	if traceId := spanCtx.TraceID; !traceId.IsValid() {
 		return
 	}
 

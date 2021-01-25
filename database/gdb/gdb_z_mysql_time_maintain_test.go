@@ -368,7 +368,7 @@ CREATE TABLE %s (
 		t.Assert(oneUpdate["name"].String(), "name_1000")
 		t.Assert(oneUpdate["deleted_at"].String(), "")
 		t.Assert(oneUpdate["created_at"].GTime().Timestamp(), oneInsert["created_at"].GTime().Timestamp())
-		t.AssertGE(oneUpdate["updated_at"].GTime().Timestamp(), gtime.Timestamp()-2)
+		t.AssertGE(oneUpdate["updated_at"].GTime().Timestamp(), gtime.Timestamp()-4)
 
 		// Replace
 		dataReplace := User{

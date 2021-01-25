@@ -51,7 +51,6 @@ type Config struct {
 	ConnectTimeout  time.Duration `json:"connectTimeout"`  // Dial connection timeout.
 	TLS             bool          `json:"tls"`             // Specifies the config to use when a TLS connection is dialed.
 	TLSSkipVerify   bool          `json:"tlsSkipVerify"`   // Disables server name verification when connecting over TLS.
-	Tracing         bool          `json:"tracing"`         // Tracing enable the tracing feature for redis.
 }
 
 // Pool statistics.
