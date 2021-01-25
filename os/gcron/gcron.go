@@ -15,11 +15,11 @@ import (
 )
 
 const (
-	StatusReady    = gtimer.StatusReady
-	StatusRunning  = gtimer.StatusRunning
-	StatusStopped  = gtimer.StatusStopped
-	StatusClosed   = gtimer.StatusClosed
-	gDEFAULT_TIMES = math.MaxInt32
+	StatusReady   = gtimer.StatusReady
+	StatusRunning = gtimer.StatusRunning
+	StatusStopped = gtimer.StatusStopped
+	StatusClosed  = gtimer.StatusClosed
+	defaultTimes  = math.MaxInt32
 )
 
 var (

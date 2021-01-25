@@ -472,3 +472,119 @@ CREATE TABLE %s (
 		t.Assert(users[1].UserScores[4].Score, 5)
 	})
 }
+
+func Test_Table_Relation_EmbedStruct(t *testing.T) {
+	var (
+		tableUser       = "user_" + gtime.TimestampMicroStr()
+		tableUserDetail = "user_detail_" + gtime.TimestampMicroStr()
+		tableUserScores = "user_scores_" + gtime.TimestampMicroStr()
+	)
+	if _, err := db.Exec(fmt.Sprintf(`
+CREATE TABLE %s (
+  uid int(10) unsigned NOT NULL AUTO_INCREMENT,
+  name varchar(45) NOT NULL,
+  PRIMARY KEY (uid)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    `, tableUser)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(tableUser)
+
+	if _, err := db.Exec(fmt.Sprintf(`
+CREATE TABLE %s (
+  uid int(10) unsigned NOT NULL AUTO_INCREMENT,
+  address varchar(45) NOT NULL,
+  PRIMARY KEY (uid)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    `, tableUserDetail)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(tableUserDetail)
+
+	if _, err := db.Exec(fmt.Sprintf(`
+CREATE TABLE %s (
+  id int(10) unsigned NOT NULL AUTO_INCREMENT,
+  uid int(10) unsigned NOT NULL,
+  score int(10) unsigned NOT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    `, tableUserScores)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(tableUserScores)
+
+	type EntityUser struct {
+		Uid  int    `json:"uid"`
+		Name string `json:"name"`
+	}
+	type EntityUserDetail struct {
+		*EntityUser
+		Uid     int    `json:"uid"`
+		Address string `json:"address"`
+	}
+	type EntityUserScores struct {
+		*EntityUser
+		*EntityUserDetail
+		Id    int `json:"id"`
+		Uid   int `json:"uid"`
+		Score int `json:"score"`
+	}
+
+	// Initialize the data.
+	var err error
+	for i := 1; i <= 5; i++ {
+		// User.
+		_, err = db.Insert(tableUser, g.Map{
+			"uid":  i,
+			"name": fmt.Sprintf(`name_%d`, i),
+		})
+		gtest.Assert(err, nil)
+		// Detail.
+		_, err = db.Insert(tableUserDetail, g.Map{
+			"uid":     i,
+			"address": fmt.Sprintf(`address_%d`, i),
+		})
+		gtest.Assert(err, nil)
+		// Scores.
+		for j := 1; j <= 5; j++ {
+			_, err = db.Insert(tableUserScores, g.Map{
+				"uid":   i,
+				"score": j,
+			})
+			gtest.Assert(err, nil)
+		}
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err    error
+			scores []*EntityUserScores
+		)
+		// SELECT * FROM `user_scores`
+		err = db.Table(tableUserScores).Scan(&scores)
+		t.Assert(err, nil)
+
+		// SELECT * FROM `user_scores` WHERE `uid` IN(1,2,3,4,5)
+		err = db.Table(tableUser).
+			Where("uid", gdb.ListItemValuesUnique(&scores, "Uid")).
+			ScanList(&scores, "EntityUser", "uid:Uid")
+		t.Assert(err, nil)
+
+		// SELECT * FROM `user_detail` WHERE `uid` IN(1,2,3,4,5)
+		err = db.Table(tableUserDetail).
+			Where("uid", gdb.ListItemValuesUnique(&scores, "Uid")).
+			ScanList(&scores, "EntityUserDetail", "uid:Uid")
+		t.Assert(err, nil)
+
+		// Assertions.
+		t.Assert(len(scores), 25)
+		t.Assert(scores[0].Id, 1)
+		t.Assert(scores[0].Uid, 1)
+		t.Assert(scores[0].Name, "name_1")
+		t.Assert(scores[0].Address, "address_1")
+		t.Assert(scores[24].Id, 25)
+		t.Assert(scores[24].Uid, 5)
+		t.Assert(scores[24].Name, "name_5")
+		t.Assert(scores[24].Address, "address_5")
+	})
+}

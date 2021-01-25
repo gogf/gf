@@ -43,7 +43,7 @@ func (c *Cron) addEntry(pattern string, job func(), singleton bool, name ...stri
 		cron:     c,
 		schedule: schedule,
 		jobName:  runtime.FuncForPC(reflect.ValueOf(job).Pointer()).Name(),
-		times:    gtype.NewInt(gDEFAULT_TIMES),
+		times:    gtype.NewInt(defaultTimes),
 		Job:      job,
 		Time:     time.Now(),
 	}
@@ -130,7 +130,7 @@ func (entry *Entry) check() {
 				}
 			}
 			if times < 2000000000 && times > 1000000000 {
-				entry.times.Set(gDEFAULT_TIMES)
+				entry.times.Set(defaultTimes)
 			}
 			glog.Path(path).Level(level).Debugf("[gcron] %s(%s) %s start", entry.Name, entry.schedule.pattern, entry.jobName)
 			defer func() {
