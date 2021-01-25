@@ -690,7 +690,7 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 			}
 		}
 		valueHolder = append(valueHolder, "("+gstr.Join(values, ",")+")")
-		if len(values) == batchNum || (i == listMapLen-1 && len(values) > 0) {
+		if len(valueHolder) == batchNum || (i == listMapLen-1 && len(valueHolder) > 0) {
 			r, err := c.DB.DoExec(
 				link,
 				fmt.Sprintf(
