@@ -456,7 +456,7 @@ func (c *Config) ToMapToMapsDeep(pointer interface{}, mapping ...map[string]stri
 // Clear removes all parsed configuration files content cache,
 // which will force reload configuration content from file.
 func (c *Config) Clear() {
-	c.jsons.Clear()
+	c.jsonMap.Clear()
 }
 
 // Dump prints current Json object with more manually readable.

@@ -27,7 +27,7 @@ func SetContent(content string, file ...string) {
 	instances.LockFunc(func(m map[string]interface{}) {
 		if configs.Contains(name) {
 			for _, v := range m {
-				v.(*Config).jsons.Remove(name)
+				v.(*Config).jsonMap.Remove(name)
 			}
 		}
 		configs.Set(name, content)
@@ -55,7 +55,7 @@ func RemoveContent(file ...string) {
 	instances.LockFunc(func(m map[string]interface{}) {
 		if configs.Contains(name) {
 			for _, v := range m {
-				v.(*Config).jsons.Remove(name)
+				v.(*Config).jsonMap.Remove(name)
 			}
 			configs.Remove(name)
 		}
@@ -70,7 +70,7 @@ func ClearContent() {
 	// Clear cache for all instances.
 	instances.LockFunc(func(m map[string]interface{}) {
 		for _, v := range m {
-			v.(*Config).jsons.Clear()
+			v.(*Config).jsonMap.Clear()
 		}
 	})
 
