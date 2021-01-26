@@ -33,10 +33,10 @@ const (
 
 // Configuration struct.
 type Config struct {
-	name  string           // Default configuration file name.
-	paths *garray.StrArray // Searching path array.
-	jsons *gmap.StrAnyMap  // The pared JSON objects for configuration files.
-	vc    bool             // Whether do violence check in value index searching. It affects the performance when set true(false in default).
+	defaultName   string           // Default configuration file name.
+	searchPaths   *garray.StrArray // Searching path array.
+	jsonMap       *gmap.StrAnyMap  // The pared JSON objects for configuration files.
+	violenceCheck bool             // Whether do violence check in value index searching. It affects the performance when set true(false in default).
 }
 
 var (
@@ -57,9 +57,9 @@ func New(file ...string) *Config {
 		}
 	}
 	c := &Config{
-		name:  name,
-		paths: garray.NewStrArray(true),
-		jsons: gmap.NewStrAnyMap(true),
+		defaultName: name,
+		searchPaths: garray.NewStrArray(true),
+		jsonMap:     gmap.NewStrAnyMap(true),
 	}
 	// Customized dir path from env/cmd.
 	if customPath := gcmd.GetWithEnv(fmt.Sprintf("%s.path", cmdEnvKey)).String(); customPath != "" {
@@ -85,27 +85,42 @@ func New(file ...string) *Config {
 	return c
 }
 
+func (c *Config) getSearchPaths() []string {
+	var (
+		searchPaths = c.searchPaths.Slice()
+		mainPkgPath = gfile.MainPkgPath()
+	)
+	if mainPkgPath != "" {
+		if !gstr.InArray(searchPaths, mainPkgPath) {
+			searchPaths = append([]string{mainPkgPath}, searchPaths...)
+		}
+	}
+	return searchPaths
+}
+
 // filePath returns the absolute configuration file path for the given filename by <file>.
 func (c *Config) filePath(file ...string) (path string) {
-	name := c.name
+	name := c.defaultName
 	if len(file) > 0 {
 		name = file[0]
 	}
 	path = c.FilePath(name)
 	if path == "" {
-		buffer := bytes.NewBuffer(nil)
-		if c.paths.Len() > 0 {
+		var (
+			searchPaths = c.getSearchPaths()
+			buffer      = bytes.NewBuffer(nil)
+		)
+
+		if len(searchPaths) > 0 {
 			buffer.WriteString(fmt.Sprintf("[gcfg] cannot find config file \"%s\" in following paths:", name))
-			c.paths.RLockFunc(func(array []string) {
-				index := 1
-				for _, v := range array {
-					v = gstr.TrimRight(v, `\/`)
-					buffer.WriteString(fmt.Sprintf("\n%d. %s", index, v))
-					index++
-					buffer.WriteString(fmt.Sprintf("\n%d. %s", index, v+gfile.Separator+"config"))
-					index++
-				}
-			})
+			index := 1
+			for _, v := range searchPaths {
+				v = gstr.TrimRight(v, `\/`)
+				buffer.WriteString(fmt.Sprintf("\n%d. %s", index, v))
+				index++
+				buffer.WriteString(fmt.Sprintf("\n%d. %s", index, v+gfile.Separator+"config"))
+				index++
+			}
 		} else {
 			buffer.WriteString(fmt.Sprintf("[gcfg] cannot find config file \"%s\" with no path set/add", name))
 		}
@@ -132,7 +147,7 @@ func (c *Config) SetPath(path string) error {
 		realPath = gfile.RealPath(path)
 		if realPath == "" {
 			// Relative path.
-			c.paths.RLockFunc(func(array []string) {
+			c.searchPaths.RLockFunc(func(array []string) {
 				for _, v := range array {
 					if path, _ := gspath.Search(v, path); path != "" {
 						realPath = path
@@ -148,9 +163,9 @@ func (c *Config) SetPath(path string) error {
 	// Path not exist.
 	if realPath == "" {
 		buffer := bytes.NewBuffer(nil)
-		if c.paths.Len() > 0 {
+		if c.searchPaths.Len() > 0 {
 			buffer.WriteString(fmt.Sprintf("[gcfg] SetPath failed: cannot find directory \"%s\" in following paths:", path))
-			c.paths.RLockFunc(func(array []string) {
+			c.searchPaths.RLockFunc(func(array []string) {
 				for k, v := range array {
 					buffer.WriteString(fmt.Sprintf("\n%d. %s", k+1, v))
 				}
@@ -173,12 +188,12 @@ func (c *Config) SetPath(path string) error {
 		return err
 	}
 	// Repeated path check.
-	if c.paths.Search(realPath) != -1 {
+	if c.searchPaths.Search(realPath) != -1 {
 		return nil
 	}
-	c.jsons.Clear()
-	c.paths.Clear()
-	c.paths.Append(realPath)
+	c.jsonMap.Clear()
+	c.searchPaths.Clear()
+	c.searchPaths.Append(realPath)
 	intlog.Print("SetPath:", realPath)
 	return nil
 }
@@ -190,7 +205,7 @@ func (c *Config) SetPath(path string) error {
 // Note that, turning on this feature is quite expensive, and it is not recommended
 // to allow separators in the key names. It is best to avoid this on the application side.
 func (c *Config) SetViolenceCheck(check bool) {
-	c.vc = check
+	c.violenceCheck = check
 	c.Clear()
 }
 
@@ -210,7 +225,7 @@ func (c *Config) AddPath(path string) error {
 		realPath = gfile.RealPath(path)
 		if realPath == "" {
 			// Relative path.
-			c.paths.RLockFunc(func(array []string) {
+			c.searchPaths.RLockFunc(func(array []string) {
 				for _, v := range array {
 					if path, _ := gspath.Search(v, path); path != "" {
 						realPath = path
@@ -225,9 +240,9 @@ func (c *Config) AddPath(path string) error {
 	}
 	if realPath == "" {
 		buffer := bytes.NewBuffer(nil)
-		if c.paths.Len() > 0 {
+		if c.searchPaths.Len() > 0 {
 			buffer.WriteString(fmt.Sprintf("[gcfg] AddPath failed: cannot find directory \"%s\" in following paths:", path))
-			c.paths.RLockFunc(func(array []string) {
+			c.searchPaths.RLockFunc(func(array []string) {
 				for k, v := range array {
 					buffer.WriteString(fmt.Sprintf("\n%d. %s", k+1, v))
 				}
@@ -249,10 +264,10 @@ func (c *Config) AddPath(path string) error {
 		return err
 	}
 	// Repeated path check.
-	if c.paths.Search(realPath) != -1 {
+	if c.searchPaths.Search(realPath) != -1 {
 		return nil
 	}
-	c.paths.Append(realPath)
+	c.searchPaths.Append(realPath)
 	intlog.Print("AddPath:", realPath)
 	return nil
 }
@@ -262,10 +277,11 @@ func (c *Config) AddPath(path string) error {
 // If the specified configuration file does not exist,
 // an empty string is returned.
 func (c *Config) FilePath(file ...string) (path string) {
-	name := c.name
+	name := c.defaultName
 	if len(file) > 0 {
 		name = file[0]
 	}
+	searchPaths := c.getSearchPaths()
 	// Searching resource manager.
 	if !gres.IsEmpty() {
 		for _, v := range resourceTryFiles {
@@ -274,45 +290,37 @@ func (c *Config) FilePath(file ...string) (path string) {
 				return
 			}
 		}
-		c.paths.RLockFunc(func(array []string) {
-			for _, prefix := range array {
-				for _, v := range resourceTryFiles {
-					if file := gres.Get(prefix + v + name); file != nil {
-						path = file.Name()
-						return
-					}
+		for _, prefix := range searchPaths {
+			for _, v := range resourceTryFiles {
+				if file := gres.Get(prefix + v + name); file != nil {
+					path = file.Name()
+					return
 				}
 			}
-		})
-	}
-	// Already found?
-	if path != "" {
-		return
+		}
 	}
 	// Searching the file system.
-	c.paths.RLockFunc(func(array []string) {
-		for _, prefix := range array {
-			prefix = gstr.TrimRight(prefix, `\/`)
-			if path, _ = gspath.Search(prefix, name); path != "" {
-				return
-			}
-			if path, _ = gspath.Search(prefix+gfile.Separator+"config", name); path != "" {
-				return
-			}
+	for _, prefix := range searchPaths {
+		prefix = gstr.TrimRight(prefix, `\/`)
+		if path, _ = gspath.Search(prefix, name); path != "" {
+			return
 		}
-	})
+		if path, _ = gspath.Search(prefix+gfile.Separator+"config", name); path != "" {
+			return
+		}
+	}
 	return
 }
 
 // SetFileName sets the default configuration file name.
 func (c *Config) SetFileName(name string) *Config {
-	c.name = name
+	c.defaultName = name
 	return c
 }
 
 // GetFileName returns the default configuration file name.
 func (c *Config) GetFileName() string {
-	return c.name
+	return c.defaultName
 }
 
 // Available checks and returns whether configuration of given <file> is available.
@@ -321,7 +329,7 @@ func (c *Config) Available(file ...string) bool {
 	if len(file) > 0 && file[0] != "" {
 		name = file[0]
 	} else {
-		name = c.name
+		name = c.defaultName
 	}
 	if c.FilePath(name) != "" {
 		return true
@@ -339,9 +347,9 @@ func (c *Config) getJson(file ...string) *gjson.Json {
 	if len(file) > 0 && file[0] != "" {
 		name = file[0]
 	} else {
-		name = c.name
+		name = c.defaultName
 	}
-	r := c.jsons.GetOrSetFuncLock(name, func() interface{} {
+	r := c.jsonMap.GetOrSetFuncLock(name, func() interface{} {
 		var (
 			content  = ""
 			filePath = ""
@@ -372,12 +380,12 @@ func (c *Config) getJson(file ...string) *gjson.Json {
 			j, err = gjson.LoadContent(content, true)
 		}
 		if err == nil {
-			j.SetViolenceCheck(c.vc)
+			j.SetViolenceCheck(c.violenceCheck)
 			// Add monitor for this configuration file,
 			// any changes of this file will refresh its cache in Config object.
 			if filePath != "" && !gres.Contains(filePath) {
 				_, err = gfsnotify.Add(filePath, func(event *gfsnotify.Event) {
-					c.jsons.Remove(name)
+					c.jsonMap.Remove(name)
 				})
 				if err != nil && errorPrint() {
 					glog.Error(err)

@@ -11,12 +11,12 @@ import (
 )
 
 const (
-	// gERROR_PRINT_KEY is used to specify the key controlling error printing to stdout.
+	// errorPrintKey is used to specify the key controlling error printing to stdout.
 	// This error is designed not to be returned by functions.
-	gERROR_PRINT_KEY = "gf.gcfg.errorprint"
+	errorPrintKey = "gf.gcfg.errorprint"
 )
 
 // errorPrint checks whether printing error to stdout.
 func errorPrint() bool {
-	return gcmd.GetWithEnv(gERROR_PRINT_KEY, true).Bool()
+	return gcmd.GetWithEnv(errorPrintKey, true).Bool()
 }
