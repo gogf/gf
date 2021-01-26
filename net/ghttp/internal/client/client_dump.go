@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package ghttp
+package client
 
 import (
 	"fmt"
@@ -35,8 +35,8 @@ func getResponseBody(res *http.Response) string {
 }
 
 // RawRequest returns the raw content of the request.
-func (r *ClientResponse) RawRequest() string {
-	// ClientResponse can be nil.
+func (r *Response) RawRequest() string {
+	// Response can be nil.
 	if r == nil {
 		return ""
 	}
@@ -57,8 +57,8 @@ func (r *ClientResponse) RawRequest() string {
 }
 
 // RawResponse returns the raw content of the response.
-func (r *ClientResponse) RawResponse() string {
-	// ClientResponse can be nil.
+func (r *Response) RawResponse() string {
+	// Response can be nil.
 	if r == nil || r.Response == nil {
 		return ""
 	}
@@ -76,11 +76,11 @@ func (r *ClientResponse) RawResponse() string {
 }
 
 // Raw returns the raw text of the request and the response.
-func (r *ClientResponse) Raw() string {
+func (r *Response) Raw() string {
 	return fmt.Sprintf("%s\n%s", r.RawRequest(), r.RawResponse())
 }
 
 // RawDump outputs the raw text of the request and the response to stdout.
-func (r *ClientResponse) RawDump() {
+func (r *Response) RawDump() {
 	fmt.Println(r.Raw())
 }

@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/gogf/gf/container/gset"
 	"github.com/gogf/gf/container/gvar"
+	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
@@ -402,7 +403,7 @@ func (m *Model) FindValue(fieldsAndWhere ...interface{}) (Value, error) {
 }
 
 // FindArray queries and returns data values as slice from database.
-// Note that if there're multiple columns in the result, it returns just one column values randomly.
+// Note that if there are multiple columns in the result, it returns just one column values randomly.
 // Also see Model.WherePri and Model.Value.
 func (m *Model) FindArray(fieldsAndWhere ...interface{}) ([]Value, error) {
 	if len(fieldsAndWhere) >= 2 {
@@ -435,7 +436,7 @@ func (m *Model) FindScan(pointer interface{}, where ...interface{}) error {
 // doGetAllBySql does the select statement on the database.
 func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, err error) {
 	cacheKey := ""
-	cacheObj := m.db.GetCache()
+	cacheObj := m.db.GetCache().Ctx(m.db.GetCtx())
 	// Retrieve from cache.
 	if m.cacheEnabled && m.tx == nil {
 		cacheKey = m.cacheName
@@ -461,9 +462,13 @@ func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, e
 	// Cache the result.
 	if cacheKey != "" && err == nil {
 		if m.cacheDuration < 0 {
-			cacheObj.Remove(cacheKey)
+			if _, err := cacheObj.Remove(cacheKey); err != nil {
+				intlog.Error(err)
+			}
 		} else {
-			cacheObj.Set(cacheKey, result, m.cacheDuration)
+			if err := cacheObj.Set(cacheKey, result, m.cacheDuration); err != nil {
+				intlog.Error(err)
+			}
 		}
 	}
 	return result, err

@@ -9,6 +9,7 @@
 package gcache_test
 
 import (
+	"context"
 	"github.com/gogf/gf/util/guid"
 	"math"
 	"testing"
@@ -411,5 +412,16 @@ func TestCache_Basic(t *testing.T) {
 			n, _ = gcache.Size()
 			t.Assert(n, 0)
 		}
+	})
+}
+
+func TestCache_Ctx(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		cache := gcache.New()
+		cache.Ctx(context.Background()).Sets(g.MapAnyAny{1: 11, 2: 22}, 0)
+		b, _ := cache.Contains(1)
+		t.Assert(b, true)
+		v, _ := cache.Get(1)
+		t.Assert(v, 11)
 	})
 }

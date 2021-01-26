@@ -164,6 +164,11 @@ func (m *Model) doInsertWithOption(option int) (result sql.Result, err error) {
 		if m.batch > 0 {
 			batch = m.batch
 		}
+		newData, err := m.filterDataForInsertOrUpdate(list)
+		if err != nil {
+			return nil, err
+		}
+		list = newData.(List)
 		// Automatic handling for creating/updating time.
 		if !m.unscoped && (fieldNameCreate != "" || fieldNameUpdate != "") {
 			for k, v := range list {
@@ -177,10 +182,6 @@ func (m *Model) doInsertWithOption(option int) (result sql.Result, err error) {
 				list[k] = v
 			}
 		}
-		newData, err := m.filterDataForInsertOrUpdate(list)
-		if err != nil {
-			return nil, err
-		}
 		return m.db.DoBatchInsert(
 			m.getLink(true),
 			m.tables,
@@ -191,6 +192,11 @@ func (m *Model) doInsertWithOption(option int) (result sql.Result, err error) {
 	}
 	// Single operation.
 	if data, ok := m.data.(Map); ok {
+		newData, err := m.filterDataForInsertOrUpdate(data)
+		if err != nil {
+			return nil, err
+		}
+		data = newData.(Map)
 		// Automatic handling for creating/updating time.
 		if !m.unscoped && (fieldNameCreate != "" || fieldNameUpdate != "") {
 			gutil.MapDelete(data, fieldNameCreate, fieldNameUpdate, fieldNameDelete)
@@ -200,10 +206,6 @@ func (m *Model) doInsertWithOption(option int) (result sql.Result, err error) {
 			if fieldNameUpdate != "" {
 				data[fieldNameUpdate] = nowString
 			}
-		}
-		newData, err := m.filterDataForInsertOrUpdate(data)
-		if err != nil {
-			return nil, err
 		}
 		return m.db.DoInsert(
 			m.getLink(true),

@@ -88,29 +88,26 @@ func Test_TX_Rollback(t *testing.T) {
 }
 
 func Test_TX_Prepare(t *testing.T) {
-	tx, err := db.Begin()
-	if err != nil {
-		gtest.Error(err)
-	}
-	st, err := tx.Prepare("SELECT 100")
-	if err != nil {
-		gtest.Error(err)
-	}
-	rows, err := st.Query()
-	if err != nil {
-		gtest.Error(err)
-	}
-	array, err := rows.Columns()
-	if err != nil {
-		gtest.Error(err)
-	}
-	gtest.Assert(array[0], "100")
-	if err := rows.Close(); err != nil {
-		gtest.Error(err)
-	}
-	if err := tx.Commit(); err != nil {
-		gtest.Error(err)
-	}
+	gtest.C(t, func(t *gtest.T) {
+		tx, err := db.Begin()
+		t.Assert(err, nil)
+
+		st, err := tx.Prepare("SELECT 100")
+		t.Assert(err, nil)
+
+		rows, err := st.Query()
+		t.Assert(err, nil)
+
+		array, err := rows.Columns()
+		t.Assert(err, nil)
+		t.Assert(array[0], "100")
+
+		rows.Close()
+		t.Assert(err, nil)
+
+		tx.Commit()
+		t.Assert(err, nil)
+	})
 }
 
 func Test_TX_Insert(t *testing.T) {

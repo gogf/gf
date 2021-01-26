@@ -67,7 +67,7 @@ func (p *Process) Start() (int, error) {
 	if p.Process != nil {
 		return p.Pid(), nil
 	}
-	p.Env = append(p.Env, fmt.Sprintf("%s=%d", gPROC_ENV_KEY_PPID_KEY, p.PPid))
+	p.Env = append(p.Env, fmt.Sprintf("%s=%d", envKeyPPid, p.PPid))
 	if err := p.Cmd.Start(); err == nil {
 		if p.Manager != nil {
 			p.Manager.processes.Set(p.Process.Pid, p)

@@ -10,6 +10,7 @@ import (
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/internal/empty"
 	"github.com/gogf/gf/net/ghttp"
+	"github.com/gogf/gf/os/gproc"
 	"github.com/gogf/gf/util/gutil"
 )
 
@@ -18,9 +19,17 @@ func NewVar(i interface{}, safe ...bool) *Var {
 	return gvar.New(i, safe...)
 }
 
-// Wait blocks until all the web servers shutdown.
+// Wait is an alias of ghttp.Wait, which blocks until all the web servers shutdown.
+// It's commonly used in multiple servers situation.
 func Wait() {
 	ghttp.Wait()
+}
+
+// Listen is an alias of gproc.Listen, which handles the signals received and automatically
+// calls registered signal handler functions.
+// It blocks until shutdown signals received and all registered shutdown handlers done.
+func Listen() {
+	gproc.Listen()
 }
 
 // Dump dumps a variable to stdout with more manually readable.

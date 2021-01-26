@@ -15,6 +15,7 @@ import (
 	"github.com/gogf/gf/os/gfpool"
 	"github.com/gogf/gf/os/gmlock"
 	"github.com/gogf/gf/os/gtimer"
+	"go.opentelemetry.io/otel/trace"
 	"io"
 	"os"
 	"strings"
@@ -161,21 +162,30 @@ func (l *Logger) print(std io.Writer, lead string, values ...interface{}) {
 		tempStr  = ""
 		valueStr = ""
 	)
-	// Context values.
-	if l.ctx != nil && len(l.config.CtxKeys) > 0 {
-		ctxStr := ""
-		for _, key := range l.config.CtxKeys {
-			if v := l.ctx.Value(key); v != nil {
-				if ctxStr != "" {
-					ctxStr += ", "
+
+	if l.ctx != nil {
+		// Tracing values.
+		spanCtx := trace.SpanContextFromContext(l.ctx)
+		if traceId := spanCtx.TraceID; traceId.IsValid() {
+			buffer.WriteString(fmt.Sprintf("{TraceID:%s} ", traceId.String()))
+		}
+		// Context values.
+		if len(l.config.CtxKeys) > 0 {
+			ctxStr := ""
+			for _, key := range l.config.CtxKeys {
+				if v := l.ctx.Value(key); v != nil {
+					if ctxStr != "" {
+						ctxStr += ", "
+					}
+					ctxStr += fmt.Sprintf("%s: %+v", key, v)
 				}
-				ctxStr += fmt.Sprintf("%s: %+v", key, v)
+			}
+			if ctxStr != "" {
+				buffer.WriteString(fmt.Sprintf("{%s} ", ctxStr))
 			}
 		}
-		if ctxStr != "" {
-			buffer.WriteString(fmt.Sprintf("{%s} ", ctxStr))
-		}
 	}
+
 	for _, v := range values {
 		tempStr = gconv.String(v)
 		if len(valueStr) > 0 {

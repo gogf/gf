@@ -7,11 +7,19 @@
 package gredis
 
 import (
+	"context"
 	"errors"
+	"fmt"
+	"github.com/gogf/gf"
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/internal/json"
+	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gomodule/redigo/redis"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/trace"
 	"reflect"
 	"time"
 )
@@ -52,7 +60,49 @@ func (c *Conn) do(timeout time.Duration, commandName string, args ...interface{}
 		}
 		return conn.DoWithTimeout(timeout, commandName, args...)
 	}
-	return c.Conn.Do(commandName, args...)
+	timestampMilli1 := gtime.TimestampMilli()
+	reply, err = c.Conn.Do(commandName, args...)
+	timestampMilli2 := gtime.TimestampMilli()
+
+	// Tracing.
+	if c.ctx == nil {
+		return
+	}
+	spanCtx := trace.SpanContextFromContext(c.ctx)
+	if traceId := spanCtx.TraceID; !traceId.IsValid() {
+		return
+	}
+	tr := otel.GetTracerProvider().Tracer(
+		"github.com/gogf/gf/database/gredis",
+		trace.WithInstrumentationVersion(fmt.Sprintf(`%s`, gf.VERSION)),
+	)
+	ctx := c.ctx
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	_, span := tr.Start(ctx, "Redis."+commandName)
+	defer span.End()
+	if err != nil {
+		span.SetStatus(codes.Error, fmt.Sprintf(`%+v`, err))
+	}
+	span.SetAttributes(
+		label.String("redis.host", c.redis.config.Host),
+		label.Int("redis.port", c.redis.config.Port),
+		label.Int("redis.db", c.redis.config.Db),
+	)
+	jsonBytes, _ := json.Marshal(args)
+	span.AddEvent("redis.execution", trace.WithAttributes(
+		label.String(`redis.execution.command`, commandName),
+		label.String(`redis.execution.cost`, fmt.Sprintf(`%d ms`, timestampMilli2-timestampMilli1)),
+		label.String(`redis.execution.arguments`, string(jsonBytes)),
+	))
+	return
+}
+
+// Ctx is a channing function which sets the context for next operation.
+func (c *Conn) Ctx(ctx context.Context) *Conn {
+	c.ctx = ctx
+	return c
 }
 
 // Do sends a command to the server and returns the received reply.

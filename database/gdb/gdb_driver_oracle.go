@@ -49,7 +49,11 @@ func (d *DriverOracle) Open(config *ConfigNode) (*sql.DB, error) {
 	if config.LinkInfo != "" {
 		source = config.LinkInfo
 	} else {
-		source = fmt.Sprintf("%s/%s@%s", config.User, config.Pass, config.Name)
+		// 账号/密码@地址:端口/数据库名称
+		source = fmt.Sprintf(
+			"%s/%s@%s:%s/%s",
+			config.User, config.Pass, config.Host, config.Port, config.Name,
+		)
 	}
 	intlog.Printf("Open: %s", source)
 	if db, err := sql.Open("oci8", source); err == nil {
@@ -57,6 +61,21 @@ func (d *DriverOracle) Open(config *ConfigNode) (*sql.DB, error) {
 	} else {
 		return nil, err
 	}
+}
+
+// FilteredLinkInfo retrieves and returns filtered `linkInfo` that can be using for
+// logging or tracing purpose.
+func (d *DriverOracle) FilteredLinkInfo() string {
+	linkInfo := d.GetConfig().LinkInfo
+	if linkInfo == "" {
+		return ""
+	}
+	s, _ := gregex.ReplaceString(
+		`(.+?)\s*/\s*(.+)\s*@\s*(.+)\s*:\s*(\d+)\s*/\s*(.+)`,
+		`$1/xxx@$3:$4/$5`,
+		linkInfo,
+	)
+	return s
 }
 
 // GetChars returns the security char for this type of database.

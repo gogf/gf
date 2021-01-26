@@ -204,7 +204,7 @@ func (c *Core) SetDryRun(enabled bool) {
 // GetDryRun returns the DryRun value.
 // Deprecated, use GetConfig instead.
 func (c *Core) GetDryRun() bool {
-	return c.config.DryRun
+	return c.config.DryRun || allDryRun
 }
 
 // GetPrefix returns the table prefix string configured.

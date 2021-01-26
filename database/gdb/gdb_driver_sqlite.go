@@ -53,6 +53,12 @@ func (d *DriverSqlite) Open(config *ConfigNode) (*sql.DB, error) {
 	}
 }
 
+// FilteredLinkInfo retrieves and returns filtered `linkInfo` that can be using for
+// logging or tracing purpose.
+func (d *DriverSqlite) FilteredLinkInfo() string {
+	return d.GetConfig().LinkInfo
+}
+
 // GetChars returns the security char for this type of database.
 func (d *DriverSqlite) GetChars() (charLeft string, charRight string) {
 	return "`", "`"
