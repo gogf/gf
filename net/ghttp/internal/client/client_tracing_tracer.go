@@ -38,6 +38,11 @@ func newClientTrace(ctx context.Context, span trace.Span, request *http.Request)
 		request: request,
 		headers: make(map[string]interface{}),
 	}
+	if ct.request.ContentLength <= tracingMaxContentLogSize {
+		reqBodyContent, _ := ioutil.ReadAll(ct.request.Body)
+		ct.requestBody = reqBodyContent
+		ct.request.Body = utils.NewReadCloser(reqBodyContent, false)
+	}
 	return &httptrace.ClientTrace{
 		GetConn:              ct.getConn,
 		GotConn:              ct.gotConn,
@@ -131,11 +136,7 @@ func (ct *clientTracer) wroteHeaderField(k string, v []string) {
 }
 
 func (ct *clientTracer) wroteHeaders() {
-	if ct.request.ContentLength <= tracingMaxContentLogSize {
-		reqBodyContent, _ := ioutil.ReadAll(ct.request.Body)
-		ct.requestBody = reqBodyContent
-		ct.request.Body = utils.NewReadCloser(reqBodyContent, false)
-	}
+
 }
 
 func (ct *clientTracer) wroteRequest(info httptrace.WroteRequestInfo) {

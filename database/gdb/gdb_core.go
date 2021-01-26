@@ -11,13 +11,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/gogf/gf"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/text/gstr"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/label"
-	"go.opentelemetry.io/otel/trace"
 	"reflect"
 	"strings"
 
@@ -144,52 +139,6 @@ func (c *Core) DoQuery(link Link, sql string, args ...interface{}) (rows *sql.Ro
 		err = formatError(err, sql, args...)
 	}
 	return nil, err
-}
-
-func (c *Core) addSqlToTracing(ctx context.Context, sql *Sql) {
-	if ctx == nil {
-		return
-	}
-	spanCtx := trace.SpanContextFromContext(ctx)
-	if traceId := spanCtx.TraceID; !traceId.IsValid() {
-		return
-	}
-
-	tr := otel.GetTracerProvider().Tracer(
-		"github.com/gogf/gf/database/gdb",
-		trace.WithInstrumentationVersion(fmt.Sprintf(`%s`, gf.VERSION)),
-	)
-	ctx, span := tr.Start(ctx, sql.Type)
-	defer span.End()
-	if sql.Error != nil {
-		span.SetStatus(codes.Error, fmt.Sprintf(`%+v`, sql.Error))
-	}
-	labels := make([]label.KeyValue, 0)
-	labels = append(labels, label.String("db.type", c.DB.GetConfig().Type))
-	if c.DB.GetConfig().Host != "" {
-		labels = append(labels, label.String("db.host", c.DB.GetConfig().Host))
-	}
-	if c.DB.GetConfig().Port != "" {
-		labels = append(labels, label.String("db.port", c.DB.GetConfig().Port))
-	}
-	if c.DB.GetConfig().Name != "" {
-		labels = append(labels, label.String("db.name", c.DB.GetConfig().Name))
-	}
-	if c.DB.GetConfig().User != "" {
-		labels = append(labels, label.String("db.user", c.DB.GetConfig().User))
-	}
-	if filteredLinkInfo := c.DB.FilteredLinkInfo(); filteredLinkInfo != "" {
-		labels = append(labels, label.String("db.link", c.DB.FilteredLinkInfo()))
-	}
-	if group := c.DB.GetGroup(); group != "" {
-		labels = append(labels, label.String("db.group", group))
-	}
-	span.SetAttributes(labels...)
-	span.AddEvent("db.execution", trace.WithAttributes(
-		label.String(`db.execution.sql`, sql.Format),
-		label.String(`db.execution.cost`, fmt.Sprintf(`%d ms`, sql.End-sql.Start)),
-		label.String(`db.execution.type`, sql.Type),
-	))
 }
 
 // Exec commits one query SQL to underlying driver and returns the execution result.

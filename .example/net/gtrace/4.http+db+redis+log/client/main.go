@@ -5,9 +5,7 @@ import (
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
 	"github.com/gogf/gf/net/gtrace"
-	"go.opentelemetry.io/otel/baggage"
 	"go.opentelemetry.io/otel/exporters/trace/jaeger"
-	"go.opentelemetry.io/otel/label"
 	sdkTrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
@@ -36,11 +34,38 @@ func main() {
 	flush := initTracer()
 	defer flush()
 
-	ctx, span := gtrace.Tracer().Start(context.Background(), "test")
+	ctx, span := gtrace.Tracer().Start(context.Background(), "root")
 	defer span.End()
 
-	ctx = baggage.ContextWithValues(ctx, label.String("name", "john"))
 	client := g.Client().Use(ghttp.MiddlewareClientTracing)
-	content := client.Ctx(ctx).GetContent("http://127.0.0.1:8199/hello")
-	g.Log().Print(content)
+	//client := g.Client()
+	// Add user info.
+	idStr := client.Ctx(ctx).PostContent(
+		"http://127.0.0.1:8199/user/insert",
+		g.Map{
+			"name": "john",
+		},
+	)
+	if idStr == "" {
+		g.Log().Ctx(ctx).Fatal("retrieve empty id string")
+	}
+	g.Log().Ctx(ctx).Print("insert:", idStr)
+
+	// Query user info.
+	userJson := client.Ctx(ctx).GetContent(
+		"http://127.0.0.1:8199/user/query",
+		g.Map{
+			"id": idStr,
+		},
+	)
+	g.Log().Ctx(ctx).Print("query:", idStr, userJson)
+
+	// Delete user info.
+	deleteResult := client.Ctx(ctx).PostContent(
+		"http://127.0.0.1:8199/user/delete",
+		g.Map{
+			"id": idStr,
+		},
+	)
+	g.Log().Ctx(ctx).Print("delete:", idStr, deleteResult)
 }
