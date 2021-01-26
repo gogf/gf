@@ -36,7 +36,7 @@ type Adapter interface {
 	SetIfNotExist(key interface{}, value interface{}, duration time.Duration) (bool, error)
 
 	// Get retrieves and returns the associated value of given <key>.
-	// It returns nil if it does not exist or its value is nil.
+	// It returns nil if it does not exist, its value is nil or it's expired.
 	Get(key interface{}) (interface{}, error)
 
 	// GetOrSet retrieves and returns the value of <key>, or sets <key>-<value> pair and
