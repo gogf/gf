@@ -7,21 +7,23 @@
 package gcron_test
 
 import (
+	"github.com/gogf/gf/frame/g"
 	"testing"
 	"time"
 
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/os/gcron"
-	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/test/gtest"
 )
 
 func TestCron_Entry_Operations(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		cron := gcron.New()
-		array := garray.New(true)
+		var (
+			cron  = gcron.New()
+			array = garray.New(true)
+		)
 		cron.DelayAddTimes(500*time.Millisecond, "* * * * * *", 2, func() {
-			glog.Println("add times")
+			g.Log().Println("add times")
 			array.Append(1)
 		})
 		t.Assert(cron.Size(), 0)
@@ -34,25 +36,27 @@ func TestCron_Entry_Operations(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		cron := gcron.New()
-		array := garray.New(true)
+		var (
+			cron  = gcron.New()
+			array = garray.New(true)
+		)
 		entry, err1 := cron.Add("* * * * * *", func() {
-			glog.Println("add")
+			g.Log().Println("add")
 			array.Append(1)
 		})
 		t.Assert(err1, nil)
 		t.Assert(array.Len(), 0)
 		t.Assert(cron.Size(), 1)
-		time.Sleep(1200 * time.Millisecond)
+		time.Sleep(1300 * time.Millisecond)
 		t.Assert(array.Len(), 1)
 		t.Assert(cron.Size(), 1)
 		entry.Stop()
-		time.Sleep(2000 * time.Millisecond)
+		time.Sleep(5000 * time.Millisecond)
 		t.Assert(array.Len(), 1)
 		t.Assert(cron.Size(), 1)
 		entry.Start()
-		glog.Println("start")
-		time.Sleep(1200 * time.Millisecond)
+		g.Log().Println("start")
+		time.Sleep(1000 * time.Millisecond)
 		t.Assert(array.Len(), 2)
 		t.Assert(cron.Size(), 1)
 		entry.Close()

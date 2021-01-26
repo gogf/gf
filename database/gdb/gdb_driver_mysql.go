@@ -42,7 +42,7 @@ func (d *DriverMysql) Open(config *ConfigNode) (*sql.DB, error) {
 		}
 	} else {
 		source = fmt.Sprintf(
-			"%s:%s@tcp(%s:%s)/%s?charset=%s&multiStatements=true&parseTime=true",
+			"%s:%s@tcp(%s:%s)/%s?charset=%s",
 			config.User, config.Pass, config.Host, config.Port, config.Name, config.Charset,
 		)
 	}
@@ -52,6 +52,21 @@ func (d *DriverMysql) Open(config *ConfigNode) (*sql.DB, error) {
 	} else {
 		return nil, err
 	}
+}
+
+// FilteredLinkInfo retrieves and returns filtered `linkInfo` that can be using for
+// logging or tracing purpose.
+func (d *DriverMysql) FilteredLinkInfo() string {
+	linkInfo := d.GetConfig().LinkInfo
+	if linkInfo == "" {
+		return ""
+	}
+	s, _ := gregex.ReplaceString(
+		`(.+?):(.+)@tcp(.+)`,
+		`$1:xxx@tcp$3`,
+		linkInfo,
+	)
+	return s
 }
 
 // GetChars returns the security char for this type of database.

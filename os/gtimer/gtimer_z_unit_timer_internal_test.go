@@ -39,20 +39,11 @@ func TestTimer_Proceed(t *testing.T) {
 		timer.AddOnce(2*time.Hour, func() {
 			slice = append(slice, 6)
 		})
-		timer.AddOnce(1000*time.Minute, func() {
-			slice = append(slice, 7)
-		})
-		timer.AddOnce(1100*time.Minute, func() {
-			slice = append(slice, 8)
-		})
-		timer.AddOnce(1200*time.Minute, func() {
-			slice = append(slice, 9)
-		})
-		for i := 0; i < 2000000; i++ {
+		for i := 0; i < 500000; i++ {
 			timer.wheels[0].proceed()
 			time.Sleep(10 * time.Microsecond)
 		}
 		time.Sleep(time.Second)
-		t.Assert(slice, []int{1, 2, 3, 4, 5, 6, 7, 8, 9})
+		t.Assert(slice, []int{1, 2, 3, 4, 5, 6})
 	})
 }

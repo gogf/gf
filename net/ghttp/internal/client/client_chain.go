@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package ghttp
+package client
 
 import (
 	"context"
@@ -133,7 +133,22 @@ func (c *Client) Retry(retryCount int, retryInterval time.Duration) *Client {
 		newClient = c.Clone()
 	}
 	newClient.SetRetry(retryCount, retryInterval)
-	return c
+	return newClient
+}
+
+// Dump is a chaining function,
+// which enables/disables dump feature for this request.
+func (c *Client) Dump(dump ...bool) *Client {
+	newClient := c
+	if c.parent == nil {
+		newClient = c.Clone()
+	}
+	if len(dump) > 0 {
+		newClient.SetDump(dump[0])
+	} else {
+		newClient.SetDump(true)
+	}
+	return newClient
 }
 
 // Proxy is a chaining function,
@@ -147,7 +162,7 @@ func (c *Client) Proxy(proxyURL string) *Client {
 		newClient = c.Clone()
 	}
 	newClient.SetProxy(proxyURL)
-	return c
+	return newClient
 }
 
 // RedirectLimit is a chaining function,
@@ -158,5 +173,5 @@ func (c *Client) RedirectLimit(redirectLimit int) *Client {
 		newClient = c.Clone()
 	}
 	newClient.SetRedirectLimit(redirectLimit)
-	return c
+	return newClient
 }

@@ -56,6 +56,32 @@ func (c *Core) GetCtx() context.Context {
 	return context.Background()
 }
 
+// GetCtxTimeout returns the context and cancel function for specified timeout type.
+func (c *Core) GetCtxTimeout(timeoutType int, ctx context.Context) (context.Context, context.CancelFunc) {
+	if ctx == nil {
+		ctx = c.DB.GetCtx()
+	} else {
+		ctx = context.WithValue(ctx, "WrappedByGetCtxTimeout", nil)
+	}
+	switch timeoutType {
+	case ctxTimeoutTypeExec:
+		if c.DB.GetConfig().ExecTimeout > 0 {
+			return context.WithTimeout(ctx, c.DB.GetConfig().ExecTimeout)
+		}
+	case ctxTimeoutTypeQuery:
+		if c.DB.GetConfig().QueryTimeout > 0 {
+			return context.WithTimeout(ctx, c.DB.GetConfig().QueryTimeout)
+		}
+	case ctxTimeoutTypePrepare:
+		if c.DB.GetConfig().PrepareTimeout > 0 {
+			return context.WithTimeout(ctx, c.DB.GetConfig().PrepareTimeout)
+		}
+	default:
+		panic(gerror.Newf("invalid context timeout type: %d", timeoutType))
+	}
+	return ctx, func() {}
+}
+
 // Master creates and returns a connection from master node if master-slave configured.
 // It returns the default connection if master-slave not configured.
 func (c *Core) Master() (*sql.DB, error) {
@@ -85,24 +111,27 @@ func (c *Core) DoQuery(link Link, sql string, args ...interface{}) (rows *sql.Ro
 	sql, args = c.DB.HandleSqlBeforeCommit(link, sql, args)
 	ctx := c.DB.GetCtx()
 	if c.GetConfig().QueryTimeout > 0 {
-		ctx, _ = context.WithTimeout(ctx, c.GetConfig().QueryTimeout)
+		var cancelFunc context.CancelFunc
+		ctx, cancelFunc = context.WithTimeout(ctx, c.GetConfig().QueryTimeout)
+		defer cancelFunc()
 	}
+
+	mTime1 := gtime.TimestampMilli()
+	rows, err = link.QueryContext(ctx, sql, args...)
+	mTime2 := gtime.TimestampMilli()
+	sqlObj := &Sql{
+		Sql:    sql,
+		Type:   "DB.QueryContext",
+		Args:   args,
+		Format: FormatSqlWithArgs(sql, args),
+		Error:  err,
+		Start:  mTime1,
+		End:    mTime2,
+		Group:  c.DB.GetGroup(),
+	}
+	c.addSqlToTracing(ctx, sqlObj)
 	if c.DB.GetDebug() {
-		mTime1 := gtime.TimestampMilli()
-		rows, err = link.QueryContext(ctx, sql, args...)
-		mTime2 := gtime.TimestampMilli()
-		s := &Sql{
-			Sql:    sql,
-			Args:   args,
-			Format: FormatSqlWithArgs(sql, args),
-			Error:  err,
-			Start:  mTime1,
-			End:    mTime2,
-			Group:  c.DB.GetGroup(),
-		}
-		c.writeSqlToLogger(s)
-	} else {
-		rows, err = link.QueryContext(ctx, sql, args...)
+		c.writeSqlToLogger(sqlObj)
 	}
 	if err == nil {
 		return rows, nil
@@ -129,32 +158,31 @@ func (c *Core) DoExec(link Link, sql string, args ...interface{}) (result sql.Re
 	sql, args = c.DB.HandleSqlBeforeCommit(link, sql, args)
 	ctx := c.DB.GetCtx()
 	if c.GetConfig().ExecTimeout > 0 {
-		ctx, _ = context.WithTimeout(ctx, c.GetConfig().ExecTimeout)
+		var cancelFunc context.CancelFunc
+		ctx, cancelFunc = context.WithTimeout(ctx, c.GetConfig().ExecTimeout)
+		defer cancelFunc()
 	}
-	if c.DB.GetDebug() {
-		mTime1 := gtime.TimestampMilli()
-		if !c.DB.GetDryRun() {
-			result, err = link.ExecContext(ctx, sql, args...)
-		} else {
-			result = new(SqlResult)
-		}
-		mTime2 := gtime.TimestampMilli()
-		s := &Sql{
-			Sql:    sql,
-			Args:   args,
-			Format: FormatSqlWithArgs(sql, args),
-			Error:  err,
-			Start:  mTime1,
-			End:    mTime2,
-			Group:  c.DB.GetGroup(),
-		}
-		c.writeSqlToLogger(s)
+
+	mTime1 := gtime.TimestampMilli()
+	if !c.DB.GetDryRun() {
+		result, err = link.ExecContext(ctx, sql, args...)
 	} else {
-		if !c.DB.GetDryRun() {
-			result, err = link.ExecContext(ctx, sql, args...)
-		} else {
-			result = new(SqlResult)
-		}
+		result = new(SqlResult)
+	}
+	mTime2 := gtime.TimestampMilli()
+	sqlObj := &Sql{
+		Sql:    sql,
+		Type:   "DB.ExecContext",
+		Args:   args,
+		Format: FormatSqlWithArgs(sql, args),
+		Error:  err,
+		Start:  mTime1,
+		End:    mTime2,
+		Group:  c.DB.GetGroup(),
+	}
+	c.addSqlToTracing(ctx, sqlObj)
+	if c.DB.GetDebug() {
+		c.writeSqlToLogger(sqlObj)
 	}
 	return result, formatError(err, sql, args...)
 }
@@ -167,7 +195,7 @@ func (c *Core) DoExec(link Link, sql string, args ...interface{}) (result sql.Re
 //
 // The parameter <execOnMaster> specifies whether executing the sql on master node,
 // or else it executes the sql on slave node if master-slave configured.
-func (c *Core) Prepare(sql string, execOnMaster ...bool) (*sql.Stmt, error) {
+func (c *Core) Prepare(sql string, execOnMaster ...bool) (*Stmt, error) {
 	var (
 		err  error
 		link Link
@@ -185,12 +213,36 @@ func (c *Core) Prepare(sql string, execOnMaster ...bool) (*sql.Stmt, error) {
 }
 
 // doPrepare calls prepare function on given link object and returns the statement object.
-func (c *Core) DoPrepare(link Link, sql string) (*sql.Stmt, error) {
+func (c *Core) DoPrepare(link Link, sql string) (*Stmt, error) {
 	ctx := c.DB.GetCtx()
-	if c.GetConfig().QueryTimeout > 0 {
-		ctx, _ = context.WithTimeout(ctx, c.GetConfig().QueryTimeout)
+	if c.GetConfig().PrepareTimeout > 0 {
+		// DO NOT USE cancel function in prepare statement.
+		ctx, _ = context.WithTimeout(ctx, c.GetConfig().PrepareTimeout)
 	}
-	return link.PrepareContext(ctx, sql)
+	var (
+		mTime1    = gtime.TimestampMilli()
+		stmt, err = link.PrepareContext(ctx, sql)
+		mTime2    = gtime.TimestampMilli()
+		sqlObj    = &Sql{
+			Sql:    sql,
+			Type:   "DB.PrepareContext",
+			Args:   nil,
+			Format: FormatSqlWithArgs(sql, nil),
+			Error:  err,
+			Start:  mTime1,
+			End:    mTime2,
+			Group:  c.DB.GetGroup(),
+		}
+	)
+	c.addSqlToTracing(ctx, sqlObj)
+	if c.DB.GetDebug() {
+		c.writeSqlToLogger(sqlObj)
+	}
+	return &Stmt{
+		Stmt: stmt,
+		core: c,
+		sql:  sql,
+	}, err
 }
 
 // GetAll queries and returns data records from database.
@@ -334,7 +386,9 @@ func (c *Core) Begin() (*TX, error) {
 	} else {
 		ctx := c.DB.GetCtx()
 		if c.GetConfig().TranTimeout > 0 {
-			ctx, _ = context.WithTimeout(ctx, c.GetConfig().TranTimeout)
+			var cancelFunc context.CancelFunc
+			ctx, cancelFunc = context.WithTimeout(ctx, c.GetConfig().TranTimeout)
+			defer cancelFunc()
 		}
 		if tx, err := master.BeginTx(ctx, nil); err == nil {
 			return &TX{
@@ -690,7 +744,7 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 			}
 		}
 		valueHolder = append(valueHolder, "("+gstr.Join(values, ",")+")")
-		if len(values) == batchNum || (i == listMapLen-1 && len(values) > 0) {
+		if len(valueHolder) == batchNum || (i == listMapLen-1 && len(valueHolder) > 0) {
 			r, err := c.DB.DoExec(
 				link,
 				fmt.Sprintf(

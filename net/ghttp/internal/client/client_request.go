@@ -4,14 +4,17 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package ghttp
+package client
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/internal/utils"
+	"github.com/gogf/gf/net/ghttp/internal/httputil"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
@@ -30,55 +33,55 @@ import (
 
 // Get send GET request and returns the response object.
 // Note that the response object MUST be closed if it'll be never used.
-func (c *Client) Get(url string, data ...interface{}) (*ClientResponse, error) {
+func (c *Client) Get(url string, data ...interface{}) (*Response, error) {
 	return c.DoRequest("GET", url, data...)
 }
 
 // Put send PUT request and returns the response object.
 // Note that the response object MUST be closed if it'll be never used.
-func (c *Client) Put(url string, data ...interface{}) (*ClientResponse, error) {
+func (c *Client) Put(url string, data ...interface{}) (*Response, error) {
 	return c.DoRequest("PUT", url, data...)
 }
 
 // Post sends request using HTTP method POST and returns the response object.
 // Note that the response object MUST be closed if it'll be never used.
-func (c *Client) Post(url string, data ...interface{}) (*ClientResponse, error) {
+func (c *Client) Post(url string, data ...interface{}) (*Response, error) {
 	return c.DoRequest("POST", url, data...)
 }
 
 // Delete send DELETE request and returns the response object.
 // Note that the response object MUST be closed if it'll be never used.
-func (c *Client) Delete(url string, data ...interface{}) (*ClientResponse, error) {
+func (c *Client) Delete(url string, data ...interface{}) (*Response, error) {
 	return c.DoRequest("DELETE", url, data...)
 }
 
 // Head send HEAD request and returns the response object.
 // Note that the response object MUST be closed if it'll be never used.
-func (c *Client) Head(url string, data ...interface{}) (*ClientResponse, error) {
+func (c *Client) Head(url string, data ...interface{}) (*Response, error) {
 	return c.DoRequest("HEAD", url, data...)
 }
 
 // Patch send PATCH request and returns the response object.
 // Note that the response object MUST be closed if it'll be never used.
-func (c *Client) Patch(url string, data ...interface{}) (*ClientResponse, error) {
+func (c *Client) Patch(url string, data ...interface{}) (*Response, error) {
 	return c.DoRequest("PATCH", url, data...)
 }
 
 // Connect send CONNECT request and returns the response object.
 // Note that the response object MUST be closed if it'll be never used.
-func (c *Client) Connect(url string, data ...interface{}) (*ClientResponse, error) {
+func (c *Client) Connect(url string, data ...interface{}) (*Response, error) {
 	return c.DoRequest("CONNECT", url, data...)
 }
 
 // Options send OPTIONS request and returns the response object.
 // Note that the response object MUST be closed if it'll be never used.
-func (c *Client) Options(url string, data ...interface{}) (*ClientResponse, error) {
+func (c *Client) Options(url string, data ...interface{}) (*Response, error) {
 	return c.DoRequest("OPTIONS", url, data...)
 }
 
 // Trace send TRACE request and returns the response object.
 // Note that the response object MUST be closed if it'll be never used.
-func (c *Client) Trace(url string, data ...interface{}) (*ClientResponse, error) {
+func (c *Client) Trace(url string, data ...interface{}) (*Response, error) {
 	return c.DoRequest("TRACE", url, data...)
 }
 
@@ -89,7 +92,46 @@ func (c *Client) Trace(url string, data ...interface{}) (*ClientResponse, error)
 // else it uses "application/x-www-form-urlencoded". It also automatically detects the post
 // content for JSON format, and for that it automatically sets the Content-Type as
 // "application/json".
-func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *ClientResponse, err error) {
+func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Response, err error) {
+	req, err := c.prepareRequest(method, url, data...)
+	if err != nil {
+		return nil, err
+	}
+
+	// Client middleware.
+	if len(c.middlewareHandler) > 0 {
+		mdlHandlers := make([]HandlerFunc, 0, len(c.middlewareHandler)+1)
+		mdlHandlers = append(mdlHandlers, c.middlewareHandler...)
+		mdlHandlers = append(mdlHandlers, func(cli *Client, r *http.Request) (*Response, error) {
+			return cli.callRequest(r)
+		})
+		ctx := context.WithValue(req.Context(), clientMiddlewareKey, &clientMiddleware{
+			client:       c,
+			handlers:     mdlHandlers,
+			handlerIndex: -1,
+		})
+		req = req.WithContext(ctx)
+		resp, err = c.Next(req)
+	} else {
+		resp, err = c.callRequest(req)
+	}
+
+	// Auto saving cookie content.
+	if c.browserMode && resp != nil {
+		now := time.Now()
+		for _, v := range resp.Response.Cookies() {
+			if !v.Expires.IsZero() && v.Expires.UnixNano() < now.UnixNano() {
+				delete(c.cookies, v.Name)
+			} else {
+				c.cookies[v.Name] = v.Value
+			}
+		}
+	}
+	return resp, err
+}
+
+// prepareRequest verifies request parameters, builds and returns http request.
+func (c *Client) prepareRequest(method, url string, data ...interface{}) (req *http.Request, err error) {
 	method = strings.ToUpper(method)
 	if len(c.prefix) > 0 {
 		url = c.prefix + gstr.Trim(url)
@@ -120,10 +162,9 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 				}
 			}
 		default:
-			param = BuildParams(data[0])
+			param = httputil.BuildParams(data[0])
 		}
 	}
-	var req *http.Request
 	if method == "GET" {
 		// It appends the parameters to the url if http method is GET.
 		if param != "" {
@@ -151,10 +192,14 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 					if file, err := writer.CreateFormFile(array[0], gfile.Basename(path)); err == nil {
 						if f, err := os.Open(path); err == nil {
 							if _, err = io.Copy(file, f); err != nil {
-								f.Close()
+								if err := f.Close(); err != nil {
+									intlog.Errorf(`%+v`, err)
+								}
 								return nil, err
 							}
-							f.Close()
+							if err := f.Close(); err != nil {
+								intlog.Errorf(`%+v`, err)
+							}
 						} else {
 							return nil, err
 						}
@@ -203,6 +248,8 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 	// Context.
 	if c.ctx != nil {
 		req = req.WithContext(c.ctx)
+	} else {
+		req = req.WithContext(context.Background())
 	}
 	// Custom header.
 	if len(c.header) > 0 {
@@ -232,41 +279,45 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Clien
 	if len(c.authUser) > 0 {
 		req.SetBasicAuth(c.authUser, c.authPass)
 	}
-	resp = &ClientResponse{
+	// Client agent.
+	if c.agent != "" {
+		req.Header.Set("User-Agent", c.agent)
+	}
+	return req, nil
+}
+
+// callRequest sends request with give http.Request, and returns the responses object.
+// Note that the response object MUST be closed if it'll be never used.
+func (c *Client) callRequest(req *http.Request) (resp *Response, err error) {
+	resp = &Response{
 		request: req,
 	}
+	// Dump feature.
 	// The request body can be reused for dumping
 	// raw HTTP request-response procedure.
-	reqBodyContent, _ := ioutil.ReadAll(req.Body)
-	resp.requestBody = reqBodyContent
-	req.Body = utils.NewReadCloser(reqBodyContent, false)
+	if c.dump {
+		reqBodyContent, _ := ioutil.ReadAll(req.Body)
+		resp.requestBody = reqBodyContent
+		req.Body = utils.NewReadCloser(reqBodyContent, false)
+	}
 	for {
 		if resp.Response, err = c.Do(req); err != nil {
 			// The response might not be nil when err != nil.
 			if resp.Response != nil {
-				resp.Response.Body.Close()
+				if err := resp.Response.Body.Close(); err != nil {
+					intlog.Errorf(`%+v`, err)
+				}
 			}
 			if c.retryCount > 0 {
 				c.retryCount--
 				time.Sleep(c.retryInterval)
 			} else {
-				return resp, err
+				//return resp, err
+				break
 			}
 		} else {
 			break
 		}
 	}
-
-	// Auto saving cookie content.
-	if c.browserMode {
-		now := time.Now()
-		for _, v := range resp.Response.Cookies() {
-			if !v.Expires.IsZero() && v.Expires.UnixNano() < now.UnixNano() {
-				delete(c.cookies, v.Name)
-			} else {
-				c.cookies[v.Name] = v.Value
-			}
-		}
-	}
-	return resp, nil
+	return resp, err
 }

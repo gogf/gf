@@ -56,6 +56,21 @@ func (d *DriverMssql) Open(config *ConfigNode) (*sql.DB, error) {
 	}
 }
 
+// FilteredLinkInfo retrieves and returns filtered `linkInfo` that can be using for
+// logging or tracing purpose.
+func (d *DriverMssql) FilteredLinkInfo() string {
+	linkInfo := d.GetConfig().LinkInfo
+	if linkInfo == "" {
+		return ""
+	}
+	s, _ := gregex.ReplaceString(
+		`(.+);\s*password=(.+);\s*server=(.+)`,
+		`$1;password=xxx;server=$3`,
+		d.GetConfig().LinkInfo,
+	)
+	return s
+}
+
 // GetChars returns the security char for this type of database.
 func (d *DriverMssql) GetChars() (charLeft string, charRight string) {
 	return "\"", "\""

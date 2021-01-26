@@ -30,7 +30,7 @@ type MapIntBool = map[int]bool
 
 // Frequently-used slice type alias.
 type List = []Map
-type ListAnyAny = []Map
+type ListAnyAny = []MapAnyAny
 type ListAnyStr = []MapAnyStr
 type ListAnyInt = []MapAnyInt
 type ListStrAny = []MapStrAny

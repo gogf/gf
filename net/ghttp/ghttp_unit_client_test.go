@@ -7,13 +7,18 @@
 package ghttp_test
 
 import (
+	"bytes"
 	"context"
 	"fmt"
-	"github.com/gogf/gf/debug/gdebug"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/util/guid"
+	"io/ioutil"
+	"net/http"
 	"testing"
 	"time"
+
+	"github.com/gogf/gf/debug/gdebug"
+	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/os/gfile"
+	"github.com/gogf/gf/util/guid"
 
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
@@ -330,5 +335,89 @@ func Test_Client_File_And_Param(t *testing.T) {
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		t.Assert(c.PostContent("/", data), data["json"].(string)+gfile.GetContents(path))
+	})
+}
+
+func Test_Client_Middleware(t *testing.T) {
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	isServerHandler := false
+	s.BindHandler("/", func(r *ghttp.Request) {
+		isServerHandler = true
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			str1 = ""
+			str2 = "resp body"
+		)
+		c := g.Client().SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		c.Use(func(c *ghttp.Client, r *http.Request) (resp *ghttp.ClientResponse, err error) {
+			str1 += "a"
+			resp, err = c.Next(r)
+			if err != nil {
+				return nil, err
+			}
+			str1 += "b"
+			return
+		})
+		c.Use(func(c *ghttp.Client, r *http.Request) (resp *ghttp.ClientResponse, err error) {
+			str1 += "c"
+			resp, err = c.Next(r)
+			if err != nil {
+				return nil, err
+			}
+			str1 += "d"
+			return
+		})
+		c.Use(func(c *ghttp.Client, r *http.Request) (resp *ghttp.ClientResponse, err error) {
+			str1 += "e"
+			resp, err = c.Next(r)
+			if err != nil {
+				return nil, err
+			}
+			resp.Response.Body = ioutil.NopCloser(bytes.NewBufferString(str2))
+			str1 += "f"
+			return
+		})
+		resp, err := c.Get("/")
+		t.Assert(str1, "acefdb")
+		t.Assert(err, nil)
+		t.Assert(resp.ReadAllString(), str2)
+		t.Assert(isServerHandler, true)
+
+		// test abort, abort will not send
+		var (
+			str3     = ""
+			abortStr = "abort request"
+		)
+
+		c = g.Client().SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		c.Use(func(c *ghttp.Client, r *http.Request) (resp *ghttp.ClientResponse, err error) {
+			str3 += "a"
+			resp, err = c.Next(r)
+			str3 += "b"
+			return
+		})
+		c.Use(func(c *ghttp.Client, r *http.Request) (*ghttp.ClientResponse, error) {
+			str3 += "c"
+			return nil, gerror.New(abortStr)
+		})
+		c.Use(func(c *ghttp.Client, r *http.Request) (resp *ghttp.ClientResponse, err error) {
+			str3 += "f"
+			resp, err = c.Next(r)
+			str3 += "g"
+			return
+		})
+		resp, err = c.Get("/")
+		t.Assert(err, abortStr)
+		t.Assert(str3, "acb")
+		t.Assert(resp, nil)
 	})
 }

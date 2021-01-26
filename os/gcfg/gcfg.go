@@ -11,6 +11,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/os/gcmd"
 	"github.com/gogf/gf/text/gstr"
 
@@ -178,6 +179,7 @@ func (c *Config) SetPath(path string) error {
 	c.jsons.Clear()
 	c.paths.Clear()
 	c.paths.Append(realPath)
+	intlog.Print("SetPath:", realPath)
 	return nil
 }
 
@@ -251,7 +253,7 @@ func (c *Config) AddPath(path string) error {
 		return nil
 	}
 	c.paths.Append(realPath)
-	//glog.Debug("[gcfg] AddPath:", realPath)
+	intlog.Print("AddPath:", realPath)
 	return nil
 }
 

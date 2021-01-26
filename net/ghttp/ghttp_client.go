@@ -6,7 +6,21 @@
 
 package ghttp
 
-import "github.com/gogf/gf/container/gvar"
+import (
+	"github.com/gogf/gf/container/gvar"
+	"github.com/gogf/gf/net/ghttp/internal/client"
+)
+
+type (
+	Client            = client.Client
+	ClientResponse    = client.Response
+	ClientHandlerFunc = client.HandlerFunc
+)
+
+// New creates and returns a new HTTP client object.
+func NewClient() *Client {
+	return client.New()
+}
 
 // Get is a convenience method for sending GET request.
 // NOTE that remembers CLOSING the response object when it'll never be used.
@@ -75,7 +89,7 @@ func Trace(url string, data ...interface{}) (*ClientResponse, error) {
 // NOTE that remembers CLOSING the response object when it'll never be used.
 // Deprecated, please use g.Client().DoRequest or NewClient().DoRequest instead.
 func DoRequest(method, url string, data ...interface{}) (*ClientResponse, error) {
-	return NewClient().DoRequest(method, url, data...)
+	return client.New().DoRequest(method, url, data...)
 }
 
 // GetContent is a convenience method for sending GET request, which retrieves and returns
@@ -145,7 +159,7 @@ func TraceContent(url string, data ...interface{}) string {
 // retrieves and returns the result content and automatically closes response object.
 // Deprecated, please use g.Client().RequestContent or NewClient().RequestContent instead.
 func RequestContent(method string, url string, data ...interface{}) string {
-	return NewClient().RequestContent(method, url, data...)
+	return client.New().RequestContent(method, url, data...)
 }
 
 // GetBytes is a convenience method for sending GET request, which retrieves and returns
@@ -215,7 +229,7 @@ func TraceBytes(url string, data ...interface{}) []byte {
 // retrieves and returns the result content as bytes and automatically closes response object.
 // Deprecated, please use g.Client().RequestBytes or NewClient().RequestBytes instead.
 func RequestBytes(method string, url string, data ...interface{}) []byte {
-	return NewClient().RequestBytes(method, url, data...)
+	return client.New().RequestBytes(method, url, data...)
 }
 
 // GetVar sends a GET request, retrieves and converts the result content to specified pointer.
