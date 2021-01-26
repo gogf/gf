@@ -7,7 +7,7 @@
 package gfile
 
 import (
-	"os"
+	"github.com/gogf/gf/text/gstr"
 	"runtime"
 	"strings"
 
@@ -36,7 +36,7 @@ func init() {
 // Note2: When the method is called for the first time, if it is in an asynchronous goroutine,
 // the method may not get the main package path.
 func MainPkgPath() string {
-	// Only for source development environments.
+	// It is only for source development environments.
 	if goRootForFilter == "" {
 		return ""
 	}
@@ -44,38 +44,29 @@ func MainPkgPath() string {
 	if path != "" {
 		return path
 	}
-	lastFile := ""
 	for i := 1; i < 10000; i++ {
-		if _, file, _, ok := runtime.Caller(i); ok {
+		if pc, file, _, ok := runtime.Caller(i); ok {
 			if goRootForFilter != "" && len(file) >= len(goRootForFilter) && file[0:len(goRootForFilter)] == goRootForFilter {
 				continue
 			}
-			if gregex.IsMatchString(`/github.com/[^/]+/gf/`, file) &&
-				!gregex.IsMatchString(`/github.com/[^/]+/gf/\.example/`, file) {
-				continue
+			// Check if it is called in package initialization function,
+			// in which it here cannot retrieve main package path,
+			// it so just returns that can make next check.
+			if fn := runtime.FuncForPC(pc); fn != nil {
+				array := gstr.Split(fn.Name(), ".")
+				if array[0] != "main" {
+					continue
+				}
 			}
 			if Ext(file) != ".go" {
 				continue
 			}
-			lastFile = file
 			if gregex.IsMatchString(`package\s+main`, GetContents(file)) {
 				mainPkgPath.Set(Dir(file))
 				return Dir(file)
 			}
 		} else {
 			break
-		}
-	}
-	if lastFile != "" {
-		for path = Dir(lastFile); len(path) > 1 && Exists(path) && path[len(path)-1] != os.PathSeparator; {
-			files, _ := ScanDir(path, "*.go")
-			for _, v := range files {
-				if gregex.IsMatchString(`package\s+main`, GetContents(v)) {
-					mainPkgPath.Set(path)
-					return path
-				}
-			}
-			path = Dir(path)
 		}
 	}
 	return ""

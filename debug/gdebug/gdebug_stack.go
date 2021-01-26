@@ -53,7 +53,7 @@ func StackWithFilters(filters []string, skip ...int) string {
 		ok                    = true
 		pc, file, line, start = callerFromIndex(filters)
 	)
-	for i := start + number; i < gMAX_DEPTH; i++ {
+	for i := start + number; i < maxCallerDepth; i++ {
 		if i != start {
 			pc, file, line, ok = runtime.Caller(i)
 		}
@@ -79,7 +79,7 @@ func StackWithFilters(filters []string, skip ...int) string {
 			if filtered {
 				continue
 			}
-			if strings.Contains(file, gFILTER_KEY) {
+			if strings.Contains(file, stackFilterKey) {
 				continue
 			}
 			if fn := runtime.FuncForPC(pc); fn == nil {
