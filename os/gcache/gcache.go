@@ -9,12 +9,19 @@
 package gcache
 
 import (
+	"context"
 	"github.com/gogf/gf/container/gvar"
 	"time"
 )
 
 // Default cache object.
 var defaultCache = New()
+
+// Ctx is a chaining function, which shallowly clones current object and sets the context
+// for next operation.
+func Ctx(ctx context.Context) *Cache {
+	return defaultCache.Ctx(ctx)
+}
 
 // Set sets cache with <key>-<value> pair, which is expired after <duration>.
 // It does not expire if <duration> == 0.

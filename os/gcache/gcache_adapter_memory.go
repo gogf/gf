@@ -7,6 +7,7 @@
 package gcache
 
 import (
+	"context"
 	"math"
 	"time"
 
@@ -72,7 +73,7 @@ func newAdapterMemory(lruCap ...int) *adapterMemory {
 //
 // It does not expire if <duration> == 0.
 // It deletes the <key> if <duration> < 0.
-func (c *adapterMemory) Set(key interface{}, value interface{}, duration time.Duration) error {
+func (c *adapterMemory) Set(ctx context.Context, key interface{}, value interface{}, duration time.Duration) error {
 	expireTime := c.getInternalExpire(duration)
 	c.data.Set(key, adapterMemoryItem{
 		v: value,
@@ -90,7 +91,7 @@ func (c *adapterMemory) Set(key interface{}, value interface{}, duration time.Du
 //
 // It deletes the <key> if given <value> is nil.
 // It does nothing if <key> does not exist in the cache.
-func (c *adapterMemory) Update(key interface{}, value interface{}) (oldValue interface{}, exist bool, err error) {
+func (c *adapterMemory) Update(ctx context.Context, key interface{}, value interface{}) (oldValue interface{}, exist bool, err error) {
 	return c.data.Update(key, value)
 }
 
@@ -98,7 +99,7 @@ func (c *adapterMemory) Update(key interface{}, value interface{}) (oldValue int
 //
 // It returns -1 and does nothing if the <key> does not exist in the cache.
 // It deletes the <key> if <duration> < 0.
-func (c *adapterMemory) UpdateExpire(key interface{}, duration time.Duration) (oldDuration time.Duration, err error) {
+func (c *adapterMemory) UpdateExpire(ctx context.Context, key interface{}, duration time.Duration) (oldDuration time.Duration, err error) {
 	newExpireTime := c.getInternalExpire(duration)
 	oldDuration, err = c.data.UpdateExpire(key, newExpireTime)
 	if err != nil {
@@ -117,7 +118,7 @@ func (c *adapterMemory) UpdateExpire(key interface{}, duration time.Duration) (o
 //
 // It returns 0 if the <key> does not expire.
 // It returns -1 if the <key> does not exist in the cache.
-func (c *adapterMemory) GetExpire(key interface{}) (time.Duration, error) {
+func (c *adapterMemory) GetExpire(ctx context.Context, key interface{}) (time.Duration, error) {
 	if item, ok := c.data.Get(key); ok {
 		return time.Duration(item.e-gtime.TimestampMilli()) * time.Millisecond, nil
 	}
@@ -132,8 +133,8 @@ func (c *adapterMemory) GetExpire(key interface{}) (time.Duration, error) {
 //
 // It does not expire if <duration> == 0.
 // It deletes the <key> if <duration> < 0 or given <value> is nil.
-func (c *adapterMemory) SetIfNotExist(key interface{}, value interface{}, duration time.Duration) (bool, error) {
-	isContained, err := c.Contains(key)
+func (c *adapterMemory) SetIfNotExist(ctx context.Context, key interface{}, value interface{}, duration time.Duration) (bool, error) {
+	isContained, err := c.Contains(ctx, key)
 	if err != nil {
 		return false, err
 	}
@@ -151,7 +152,7 @@ func (c *adapterMemory) SetIfNotExist(key interface{}, value interface{}, durati
 //
 // It does not expire if <duration> == 0.
 // It deletes the keys of <data> if <duration> < 0 or given <value> is nil.
-func (c *adapterMemory) Sets(data map[interface{}]interface{}, duration time.Duration) error {
+func (c *adapterMemory) Sets(ctx context.Context, data map[interface{}]interface{}, duration time.Duration) error {
 	var (
 		expireTime = c.getInternalExpire(duration)
 		err        = c.data.Sets(data, expireTime)
@@ -170,7 +171,7 @@ func (c *adapterMemory) Sets(data map[interface{}]interface{}, duration time.Dur
 
 // Get retrieves and returns the associated value of given <key>.
 // It returns nil if it does not exist or its value is nil.
-func (c *adapterMemory) Get(key interface{}) (interface{}, error) {
+func (c *adapterMemory) Get(ctx context.Context, key interface{}) (interface{}, error) {
 	item, ok := c.data.Get(key)
 	if ok && !item.IsExpired() {
 		// Adding to LRU history if LRU feature is enabled.
@@ -189,8 +190,8 @@ func (c *adapterMemory) Get(key interface{}) (interface{}, error) {
 // It does not expire if <duration> == 0.
 // It deletes the <key> if <duration> < 0 or given <value> is nil, but it does nothing
 // if <value> is a function and the function result is nil.
-func (c *adapterMemory) GetOrSet(key interface{}, value interface{}, duration time.Duration) (interface{}, error) {
-	v, err := c.Get(key)
+func (c *adapterMemory) GetOrSet(ctx context.Context, key interface{}, value interface{}, duration time.Duration) (interface{}, error) {
+	v, err := c.Get(ctx, key)
 	if err != nil {
 		return nil, err
 	}
@@ -208,8 +209,8 @@ func (c *adapterMemory) GetOrSet(key interface{}, value interface{}, duration ti
 // It does not expire if <duration> == 0.
 // It deletes the <key> if <duration> < 0 or given <value> is nil, but it does nothing
 // if <value> is a function and the function result is nil.
-func (c *adapterMemory) GetOrSetFunc(key interface{}, f func() (interface{}, error), duration time.Duration) (interface{}, error) {
-	v, err := c.Get(key)
+func (c *adapterMemory) GetOrSetFunc(ctx context.Context, key interface{}, f func() (interface{}, error), duration time.Duration) (interface{}, error) {
+	v, err := c.Get(ctx, key)
 	if err != nil {
 		return nil, err
 	}
@@ -236,8 +237,8 @@ func (c *adapterMemory) GetOrSetFunc(key interface{}, f func() (interface{}, err
 //
 // Note that the function <f> should be executed within writing mutex lock for concurrent
 // safety purpose.
-func (c *adapterMemory) GetOrSetFuncLock(key interface{}, f func() (interface{}, error), duration time.Duration) (interface{}, error) {
-	v, err := c.Get(key)
+func (c *adapterMemory) GetOrSetFuncLock(ctx context.Context, key interface{}, f func() (interface{}, error), duration time.Duration) (interface{}, error) {
+	v, err := c.Get(ctx, key)
 	if err != nil {
 		return nil, err
 	}
@@ -249,8 +250,8 @@ func (c *adapterMemory) GetOrSetFuncLock(key interface{}, f func() (interface{},
 }
 
 // Contains returns true if <key> exists in the cache, or else returns false.
-func (c *adapterMemory) Contains(key interface{}) (bool, error) {
-	v, err := c.Get(key)
+func (c *adapterMemory) Contains(ctx context.Context, key interface{}) (bool, error) {
+	v, err := c.Get(ctx, key)
 	if err != nil {
 		return false, err
 	}
@@ -259,7 +260,7 @@ func (c *adapterMemory) Contains(key interface{}) (bool, error) {
 
 // Remove deletes the one or more keys from cache, and returns its value.
 // If multiple keys are given, it returns the value of the deleted last item.
-func (c *adapterMemory) Remove(keys ...interface{}) (value interface{}, err error) {
+func (c *adapterMemory) Remove(ctx context.Context, keys ...interface{}) (value interface{}, err error) {
 	var removedKeys []interface{}
 	removedKeys, value, err = c.data.Remove(keys...)
 	if err != nil {
@@ -275,33 +276,33 @@ func (c *adapterMemory) Remove(keys ...interface{}) (value interface{}, err erro
 }
 
 // Data returns a copy of all key-value pairs in the cache as map type.
-func (c *adapterMemory) Data() (map[interface{}]interface{}, error) {
+func (c *adapterMemory) Data(ctx context.Context) (map[interface{}]interface{}, error) {
 	return c.data.Data()
 }
 
 // Keys returns all keys in the cache as slice.
-func (c *adapterMemory) Keys() ([]interface{}, error) {
+func (c *adapterMemory) Keys(ctx context.Context) ([]interface{}, error) {
 	return c.data.Keys()
 }
 
 // Values returns all values in the cache as slice.
-func (c *adapterMemory) Values() ([]interface{}, error) {
+func (c *adapterMemory) Values(ctx context.Context) ([]interface{}, error) {
 	return c.data.Values()
 }
 
 // Size returns the size of the cache.
-func (c *adapterMemory) Size() (size int, err error) {
+func (c *adapterMemory) Size(ctx context.Context) (size int, err error) {
 	return c.data.Size()
 }
 
 // Clear clears all data of the cache.
 // Note that this function is sensitive and should be carefully used.
-func (c *adapterMemory) Clear() error {
+func (c *adapterMemory) Clear(ctx context.Context) error {
 	return c.data.Clear()
 }
 
 // Close closes the cache.
-func (c *adapterMemory) Close() error {
+func (c *adapterMemory) Close(ctx context.Context) error {
 	if c.cap > 0 {
 		c.lru.Close()
 	}
