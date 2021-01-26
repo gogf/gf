@@ -30,15 +30,11 @@ func initTracer() func() {
 	return flush
 }
 
-func main() {
-	flush := initTracer()
-	defer flush()
-
-	ctx, span := gtrace.Tracer().Start(context.Background(), "root")
+func StartRequests() {
+	ctx, span := gtrace.Tracer().Start(context.Background(), "StartRequests")
 	defer span.End()
 
 	client := g.Client().Use(ghttp.MiddlewareClientTracing)
-	//client := g.Client()
 	// Add user info.
 	idStr := client.Ctx(ctx).PostContent(
 		"http://127.0.0.1:8199/user/insert",
@@ -68,4 +64,11 @@ func main() {
 		},
 	)
 	g.Log().Ctx(ctx).Print("delete:", idStr, deleteResult)
+}
+
+func main() {
+	flush := initTracer()
+	defer flush()
+
+	StartRequests()
 }
