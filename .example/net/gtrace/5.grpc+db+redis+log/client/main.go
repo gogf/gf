@@ -2,16 +2,17 @@ package main
 
 import (
 	"context"
+	"github.com/gogf/gf/.example/net/gtrace/5.grpc+db+redis+log/protobuf/user"
 	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
 	"github.com/gogf/gf/net/gtrace"
 	"go.opentelemetry.io/otel/exporters/trace/jaeger"
 	sdkTrace "go.opentelemetry.io/otel/sdk/trace"
+	"google.golang.org/grpc"
 )
 
 const (
 	JaegerEndpoint = "http://localhost:14268/api/traces"
-	ServiceName    = "tracing-http-client"
+	ServiceName    = "tracing-grpc-client"
 )
 
 // initTracer creates a new trace provider instance and registers it as global trace provider.
@@ -34,36 +35,41 @@ func StartRequests() {
 	ctx, span := gtrace.Tracer().Start(context.Background(), "StartRequests")
 	defer span.End()
 
-	client := g.Client().Use(ghttp.MiddlewareClientTracing)
-	// Add user info.
-	idStr := client.Ctx(ctx).PostContent(
-		"http://127.0.0.1:8199/user/insert",
-		g.Map{
-			"name": "john",
-		},
-	)
-	if idStr == "" {
-		g.Log().Ctx(ctx).Fatal("retrieve empty id string")
+	conn, err := grpc.Dial(":8000", grpc.WithInsecure(), grpc.WithBlock())
+	if err != nil {
+		g.Log().Fatalf("did not connect: %v", err)
 	}
-	g.Log().Ctx(ctx).Print("insert:", idStr)
+	defer conn.Close()
 
-	// Query user info.
-	userJson := client.Ctx(ctx).GetContent(
-		"http://127.0.0.1:8199/user/query",
-		g.Map{
-			"id": idStr,
-		},
-	)
-	g.Log().Ctx(ctx).Print("query:", idStr, userJson)
+	client := user.NewUserClient(conn)
 
-	// Delete user info.
-	deleteResult := client.Ctx(ctx).PostContent(
-		"http://127.0.0.1:8199/user/delete",
-		g.Map{
-			"id": idStr,
-		},
-	)
-	g.Log().Ctx(ctx).Print("delete:", idStr, deleteResult)
+	// Insert.
+	insertRes, err := client.Insert(ctx, &user.InsertReq{
+		Name: "john",
+	})
+	if err != nil {
+		g.Log().Ctx(ctx).Fatalf(`%+v`, err)
+	}
+	g.Log().Ctx(ctx).Println("insert:", insertRes.Id)
+
+	// Query.
+	queryRes, err := client.Query(ctx, &user.QueryReq{
+		Id: insertRes.Id,
+	})
+	if err != nil {
+		g.Log().Ctx(ctx).Fatalf(`%+v`, err)
+	}
+	g.Log().Ctx(ctx).Println("query:", queryRes)
+
+	// Delete.
+	_, err = client.Delete(ctx, &user.DeleteReq{
+		Id: insertRes.Id,
+	})
+	if err != nil {
+		g.Log().Ctx(ctx).Fatalf(`%+v`, err)
+	}
+	g.Log().Ctx(ctx).Println("delete:", "ok")
+
 }
 
 func main() {

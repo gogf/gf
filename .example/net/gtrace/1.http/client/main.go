@@ -32,15 +32,20 @@ func initTracer() func() {
 	return flush
 }
 
-func main() {
-	flush := initTracer()
-	defer flush()
-
-	ctx, span := gtrace.Tracer().Start(context.Background(), "test")
+func StartRequests() {
+	ctx, span := gtrace.Tracer().Start(context.Background(), "StartRequests")
 	defer span.End()
 
 	ctx = baggage.ContextWithValues(ctx, label.String("name", "john"))
 	client := g.Client().Use(ghttp.MiddlewareClientTracing)
+
 	content := client.Ctx(ctx).GetContent("http://127.0.0.1:8199/hello")
-	g.Log().Print(content)
+	g.Log().Ctx(ctx).Print(content)
+}
+
+func main() {
+	flush := initTracer()
+	defer flush()
+
+	StartRequests()
 }
