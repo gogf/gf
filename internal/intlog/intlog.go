@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	gFILTER_KEY = "/internal/intlog"
+	stackFilterKey = "/internal/intlog"
 )
 
 var (
@@ -71,7 +71,7 @@ func Error(v ...interface{}) {
 		return
 	}
 	array := append([]interface{}{now(), "[INTE]", file()}, v...)
-	array = append(array, "\n"+gdebug.StackWithFilter(gFILTER_KEY))
+	array = append(array, "\n"+gdebug.StackWithFilter(stackFilterKey))
 	fmt.Println(array...)
 }
 
@@ -82,7 +82,7 @@ func Errorf(format string, v ...interface{}) {
 	}
 	fmt.Printf(
 		now()+" [INTE] "+file()+" "+format+"\n%s\n",
-		append(v, gdebug.StackWithFilter(gFILTER_KEY))...,
+		append(v, gdebug.StackWithFilter(stackFilterKey))...,
 	)
 }
 
@@ -93,6 +93,6 @@ func now() string {
 
 // file returns caller file name along with its line number.
 func file() string {
-	_, p, l := gdebug.CallerWithFilter(gFILTER_KEY)
+	_, p, l := gdebug.CallerWithFilter(stackFilterKey)
 	return fmt.Sprintf(`%s:%d`, filepath.Base(p), l)
 }

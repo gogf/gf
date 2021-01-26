@@ -248,7 +248,7 @@ func (g *RouterGroup) Middleware(handlers ...HandlerFunc) *RouterGroup {
 
 // preBindToLocalArray adds the route registering parameters to internal variable array for lazily registering feature.
 func (g *RouterGroup) preBindToLocalArray(bindType string, pattern string, object interface{}, params ...interface{}) *RouterGroup {
-	_, file, line := gdebug.CallerWithFilter(gFILTER_KEY)
+	_, file, line := gdebug.CallerWithFilter(stackFilterKey)
 	preBindItems = append(preBindItems, &preBindItem{
 		group:    g,
 		bindType: bindType,

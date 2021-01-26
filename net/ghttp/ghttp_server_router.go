@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	gFILTER_KEY = "/net/ghttp/ghttp"
+	stackFilterKey = "/net/ghttp/ghttp"
 )
 
 var (
@@ -68,7 +68,7 @@ func (s *Server) parsePattern(pattern string) (domain, method, path string, err 
 func (s *Server) setHandler(pattern string, handler *handlerItem) {
 	handler.itemId = handlerIdGenerator.Add(1)
 	if handler.source == "" {
-		_, file, line := gdebug.CallerWithFilter(gFILTER_KEY)
+		_, file, line := gdebug.CallerWithFilter(stackFilterKey)
 		handler.source = fmt.Sprintf(`%s:%d`, file, line)
 	}
 	domain, method, uri, err := s.parsePattern(pattern)
