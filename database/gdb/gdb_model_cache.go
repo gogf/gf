@@ -38,6 +38,6 @@ func (m *Model) Cache(duration time.Duration, name ...string) *Model {
 // cache feature is enabled.
 func (m *Model) checkAndRemoveCache() {
 	if m.cacheEnabled && m.cacheDuration < 0 && len(m.cacheName) > 0 {
-		m.db.GetCache().Remove(m.cacheName)
+		m.db.GetCache().Ctx(m.db.GetCtx()).Remove(m.cacheName)
 	}
 }
