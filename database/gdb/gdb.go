@@ -247,6 +247,9 @@ const (
 	defaultMaxIdleConnCount = 10               // Max idle connection count in pool.
 	defaultMaxOpenConnCount = 100              // Max open connection count in pool.
 	defaultMaxConnLifeTime  = 30 * time.Second // Max life time for per connection in pool in seconds.
+	ctxTimeoutTypeExec      = iota
+	ctxTimeoutTypeQuery
+	ctxTimeoutTypePrepare
 )
 
 var (

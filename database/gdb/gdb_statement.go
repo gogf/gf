@@ -9,6 +9,7 @@ package gdb
 import (
 	"context"
 	"database/sql"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/os/gtime"
 )
 
@@ -27,29 +28,47 @@ type Stmt struct {
 	sql  string
 }
 
-// ExecContext executes a prepared statement with the given arguments and
-// returns a Result summarizing the effect of the statement.
-func (s *Stmt) ExecContext(ctx context.Context, args ...interface{}) (sql.Result, error) {
-	var cancelFunc context.CancelFunc
-	ctx, cancelFunc = context.WithCancel(ctx)
-	defer cancelFunc()
-	if s.core.DB.GetConfig().ExecTimeout > 0 {
-		var cancelFuncForTimeout context.CancelFunc
-		ctx, cancelFuncForTimeout = context.WithTimeout(ctx, s.core.DB.GetConfig().ExecTimeout)
+const (
+	stmtTypeExecContext     = "Statement.ExecContext"
+	stmtTypeQueryContext    = "Statement.QueryContext"
+	stmtTypeQueryRowContext = "Statement.QueryRowContext"
+)
+
+// doStmtCommit commits statement according to given `stmtType`.
+func (s *Stmt) doStmtCommit(stmtType string, ctx context.Context, args ...interface{}) (result interface{}, err error) {
+	var (
+		cancelFuncForTimeout context.CancelFunc
+		timestampMilli1      = gtime.TimestampMilli()
+	)
+	switch stmtType {
+	case stmtTypeExecContext:
+		ctx, cancelFuncForTimeout = s.core.GetCtxTimeout(ctxTimeoutTypeExec, ctx)
 		defer cancelFuncForTimeout()
+		result, err = s.Stmt.ExecContext(ctx, args...)
+
+	case stmtTypeQueryContext:
+		ctx, cancelFuncForTimeout = s.core.GetCtxTimeout(ctxTimeoutTypeQuery, ctx)
+		defer cancelFuncForTimeout()
+		result, err = s.Stmt.QueryContext(ctx, args...)
+
+	case stmtTypeQueryRowContext:
+		ctx, cancelFuncForTimeout = s.core.GetCtxTimeout(ctxTimeoutTypeQuery, ctx)
+		defer cancelFuncForTimeout()
+		result = s.Stmt.QueryRowContext(ctx, args...)
+
+	default:
+		panic(gerror.Newf(`invalid stmtType: %s`, stmtType))
 	}
 	var (
-		mTime1      = gtime.TimestampMilli()
-		result, err = s.Stmt.ExecContext(ctx, args...)
-		mTime2      = gtime.TimestampMilli()
-		sqlObj      = &Sql{
+		timestampMilli2 = gtime.TimestampMilli()
+		sqlObj          = &Sql{
 			Sql:    s.sql,
-			Type:   "Statement.ExecContext",
+			Type:   stmtType,
 			Args:   args,
 			Format: FormatSqlWithArgs(s.sql, args),
 			Error:  err,
-			Start:  mTime1,
-			End:    mTime2,
+			Start:  timestampMilli1,
+			End:    timestampMilli2,
 			Group:  s.core.DB.GetGroup(),
 		}
 	)
@@ -60,37 +79,24 @@ func (s *Stmt) ExecContext(ctx context.Context, args ...interface{}) (sql.Result
 	return result, err
 }
 
+// ExecContext executes a prepared statement with the given arguments and
+// returns a Result summarizing the effect of the statement.
+func (s *Stmt) ExecContext(ctx context.Context, args ...interface{}) (sql.Result, error) {
+	result, err := s.doStmtCommit(stmtTypeExecContext, ctx, args...)
+	if result != nil {
+		return result.(sql.Result), err
+	}
+	return nil, err
+}
+
 // QueryContext executes a prepared query statement with the given arguments
 // and returns the query results as a *Rows.
 func (s *Stmt) QueryContext(ctx context.Context, args ...interface{}) (*sql.Rows, error) {
-	var cancelFunc context.CancelFunc
-	ctx, cancelFunc = context.WithCancel(ctx)
-	defer cancelFunc()
-	if s.core.DB.GetConfig().QueryTimeout > 0 {
-		var cancelFuncForTimeout context.CancelFunc
-		ctx, cancelFuncForTimeout = context.WithTimeout(ctx, s.core.DB.GetConfig().QueryTimeout)
-		defer cancelFuncForTimeout()
+	result, err := s.doStmtCommit(stmtTypeQueryContext, ctx, args...)
+	if result != nil {
+		return result.(*sql.Rows), err
 	}
-	var (
-		mTime1    = gtime.TimestampMilli()
-		rows, err = s.Stmt.QueryContext(ctx, args...)
-		mTime2    = gtime.TimestampMilli()
-		sqlObj    = &Sql{
-			Sql:    s.sql,
-			Type:   "Statement.QueryContext",
-			Args:   args,
-			Format: FormatSqlWithArgs(s.sql, args),
-			Error:  err,
-			Start:  mTime1,
-			End:    mTime2,
-			Group:  s.core.DB.GetGroup(),
-		}
-	)
-	s.core.addSqlToTracing(ctx, sqlObj)
-	if s.core.DB.GetDebug() {
-		s.core.writeSqlToLogger(sqlObj)
-	}
-	return rows, err
+	return nil, err
 }
 
 // QueryRowContext executes a prepared query statement with the given arguments.
@@ -100,40 +106,17 @@ func (s *Stmt) QueryContext(ctx context.Context, args ...interface{}) (*sql.Rows
 // Otherwise, the *Row's Scan scans the first selected row and discards
 // the rest.
 func (s *Stmt) QueryRowContext(ctx context.Context, args ...interface{}) *sql.Row {
-	var cancelFunc context.CancelFunc
-	ctx, cancelFunc = context.WithCancel(ctx)
-	defer cancelFunc()
-	if s.core.DB.GetConfig().QueryTimeout > 0 {
-		var cancelFuncForTimeout context.CancelFunc
-		ctx, cancelFuncForTimeout = context.WithTimeout(ctx, s.core.DB.GetConfig().QueryTimeout)
-		defer cancelFuncForTimeout()
+	result, _ := s.doStmtCommit(stmtTypeQueryRowContext, ctx, args...)
+	if result != nil {
+		return result.(*sql.Row)
 	}
-	var (
-		mTime1 = gtime.TimestampMilli()
-		row    = s.Stmt.QueryRowContext(ctx, args...)
-		mTime2 = gtime.TimestampMilli()
-		sqlObj = &Sql{
-			Sql:    s.sql,
-			Type:   "Statement.QueryRowContext",
-			Args:   args,
-			Format: FormatSqlWithArgs(s.sql, args),
-			Error:  nil,
-			Start:  mTime1,
-			End:    mTime2,
-			Group:  s.core.DB.GetGroup(),
-		}
-	)
-	s.core.addSqlToTracing(ctx, sqlObj)
-	if s.core.DB.GetDebug() {
-		s.core.writeSqlToLogger(sqlObj)
-	}
-	return row
+	return nil
 }
 
 // Exec executes a prepared statement with the given arguments and
 // returns a Result summarizing the effect of the statement.
 func (s *Stmt) Exec(args ...interface{}) (sql.Result, error) {
-	return s.ExecContext(context.Background(), args)
+	return s.ExecContext(context.Background(), args...)
 }
 
 // Query executes a prepared query statement with the given arguments

@@ -61,6 +61,32 @@ func (c *Core) GetCtx() context.Context {
 	return context.Background()
 }
 
+// GetCtxTimeout returns the context and cancel function for specified timeout type.
+func (c *Core) GetCtxTimeout(timeoutType int, ctx context.Context) (context.Context, context.CancelFunc) {
+	if ctx == nil {
+		ctx = c.DB.GetCtx()
+	} else {
+		ctx = context.WithValue(ctx, "WrappedByGetCtxTimeout", nil)
+	}
+	switch timeoutType {
+	case ctxTimeoutTypeExec:
+		if c.DB.GetConfig().ExecTimeout > 0 {
+			return context.WithTimeout(ctx, c.DB.GetConfig().ExecTimeout)
+		}
+	case ctxTimeoutTypeQuery:
+		if c.DB.GetConfig().QueryTimeout > 0 {
+			return context.WithTimeout(ctx, c.DB.GetConfig().QueryTimeout)
+		}
+	case ctxTimeoutTypePrepare:
+		if c.DB.GetConfig().PrepareTimeout > 0 {
+			return context.WithTimeout(ctx, c.DB.GetConfig().PrepareTimeout)
+		}
+	default:
+		panic(gerror.Newf("invalid context timeout type: %d", timeoutType))
+	}
+	return ctx, func() {}
+}
+
 // Master creates and returns a connection from master node if master-slave configured.
 // It returns the default connection if master-slave not configured.
 func (c *Core) Master() (*sql.DB, error) {
@@ -241,9 +267,8 @@ func (c *Core) Prepare(sql string, execOnMaster ...bool) (*Stmt, error) {
 func (c *Core) DoPrepare(link Link, sql string) (*Stmt, error) {
 	ctx := c.DB.GetCtx()
 	if c.GetConfig().PrepareTimeout > 0 {
-		var cancelFunc context.CancelFunc
-		ctx, cancelFunc = context.WithTimeout(ctx, c.GetConfig().PrepareTimeout)
-		defer cancelFunc()
+		// DO NOT USE cancel function in prepare statement.
+		ctx, _ = context.WithTimeout(ctx, c.GetConfig().PrepareTimeout)
 	}
 	var (
 		mTime1    = gtime.TimestampMilli()

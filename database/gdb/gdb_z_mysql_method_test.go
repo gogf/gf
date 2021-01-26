@@ -63,7 +63,7 @@ func Test_DB_Exec(t *testing.T) {
 
 func Test_DB_Prepare(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		st, err := db.Prepare("SELECT 1")
+		st, err := db.Prepare("SELECT 100")
 		t.Assert(err, nil)
 
 		rows, err := st.Query()
@@ -71,10 +71,10 @@ func Test_DB_Prepare(t *testing.T) {
 
 		array, err := rows.Columns()
 		t.Assert(err, nil)
-		t.Assert(array[0], "1")
+		t.Assert(array[0], "100")
 
-		//err = rows.Close()
-		//t.Assert(err, nil)
+		err = rows.Close()
+		t.Assert(err, nil)
 	})
 }
 
