@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/gogf/gcache-adapter/adapter"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/frame/g"
@@ -14,7 +15,7 @@ type tracingApi struct{}
 
 const (
 	JaegerEndpoint = "http://localhost:14268/api/traces"
-	ServiceName    = "TracingHttpServerWithDBRedisLog"
+	ServiceName    = "tracing-http-server"
 )
 
 // initTracer creates a new trace provider instance and registers it as global trace provider.
@@ -33,26 +34,76 @@ func initTracer() func() {
 	return flush
 }
 
+type userApiInsert struct {
+	Name string `v:"required#Please input user name."`
+}
+
+// Insert is a route handler for inserting user info into dtabase.
 func (api *tracingApi) Insert(r *ghttp.Request) {
+	var (
+		dataReq *userApiInsert
+	)
+	if err := r.Parse(&dataReq); err != nil {
+		r.Response.WriteExit(gerror.Current(err))
+	}
 	result, err := g.Table("user").Ctx(r.Context()).Insert(g.Map{
-		"name": r.GetString("name"),
+		"name": dataReq.Name,
 	})
 	if err != nil {
 		r.Response.WriteExit(gerror.Current(err))
 	}
 	id, _ := result.LastInsertId()
-	r.Response.Write("id:", id)
+	r.Response.Write(id)
 }
 
+type userApiQuery struct {
+	Id int `v:"min:1#User id is required for querying."`
+}
+
+// Query is a route handler for querying user info. It firstly retrieves the info from redis,
+// if there's nothing in the redis, it then does db select.
 func (api *tracingApi) Query(r *ghttp.Request) {
+	var (
+		dataReq *userApiQuery
+	)
+	if err := r.Parse(&dataReq); err != nil {
+		r.Response.WriteExit(gerror.Current(err))
+	}
 	one, err := g.Table("user").
 		Ctx(r.Context()).
-		Cache(5 * time.Second).
-		FindOne(r.GetInt("id"))
+		Cache(5*time.Second, api.userCacheKey(dataReq.Id)).
+		FindOne(dataReq.Id)
 	if err != nil {
 		r.Response.WriteExit(gerror.Current(err))
 	}
-	r.Response.Write("user:", one)
+	r.Response.WriteJson(one)
+}
+
+type userApiDelete struct {
+	Id int `v:"min:1#User id is required for deleting."`
+}
+
+// Delete is a route handler for deleting specified user info.
+func (api *tracingApi) Delete(r *ghttp.Request) {
+	var (
+		dataReq *userApiDelete
+	)
+	if err := r.Parse(&dataReq); err != nil {
+		r.Response.WriteExit(gerror.Current(err))
+	}
+	_, err := g.Table("user").
+		Ctx(r.Context()).
+		Cache(-1, api.userCacheKey(dataReq.Id)).
+		WherePri(dataReq.Id).
+		Delete()
+	if err != nil {
+		r.Response.WriteExit(gerror.Current(err))
+	}
+	r.Response.Write("ok")
+}
+
+func (api *tracingApi) userCacheKey(id int) string {
+	return fmt.Sprintf(`userInfo:%d`, id)
 }
 
 func main() {

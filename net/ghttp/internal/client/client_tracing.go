@@ -52,7 +52,7 @@ func MiddlewareTracing(c *Client, r *http.Request) (response *Response, err erro
 	if err != nil {
 		span.SetStatus(codes.Error, fmt.Sprintf(`%+v`, err))
 	}
-	if response == nil {
+	if response == nil || response.Response == nil {
 		return
 	}
 	var resBodyContent string

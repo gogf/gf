@@ -80,7 +80,7 @@ func (c *Conn) do(timeout time.Duration, commandName string, args ...interface{}
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	_, span := tr.Start(ctx, commandName)
+	_, span := tr.Start(ctx, "Redis."+commandName)
 	defer span.End()
 	if err != nil {
 		span.SetStatus(codes.Error, fmt.Sprintf(`%+v`, err))

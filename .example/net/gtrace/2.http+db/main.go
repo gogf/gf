@@ -10,6 +10,27 @@ import (
 
 type tracingApi struct{}
 
+const (
+	JaegerEndpoint = "http://localhost:14268/api/traces"
+	ServiceName    = "tracing-demo-db"
+)
+
+// initTracer creates a new trace provider instance and registers it as global trace provider.
+func initTracer() func() {
+	// Create and install Jaeger export pipeline.
+	flush, err := jaeger.InstallNewPipeline(
+		jaeger.WithCollectorEndpoint(JaegerEndpoint),
+		jaeger.WithProcess(jaeger.Process{
+			ServiceName: ServiceName,
+		}),
+		jaeger.WithSDK(&sdkTrace.Config{DefaultSampler: sdkTrace.AlwaysSample()}),
+	)
+	if err != nil {
+		g.Log().Fatal(err)
+	}
+	return flush
+}
+
 func (api *tracingApi) Insert(r *ghttp.Request) {
 	result, err := g.Table("user").Ctx(r.Context()).Insert(g.Map{
 		"name": r.GetString("name"),
@@ -27,27 +48,6 @@ func (api *tracingApi) Query(r *ghttp.Request) {
 		r.Response.WriteExit(gerror.Current(err))
 	}
 	r.Response.Write("user:", one)
-}
-
-const (
-	JaegerEndpoint = "http://localhost:14268/api/traces"
-	ServiceName    = "TracingHttpServerWithDB"
-)
-
-// initTracer creates a new trace provider instance and registers it as global trace provider.
-func initTracer() func() {
-	// Create and install Jaeger export pipeline.
-	flush, err := jaeger.InstallNewPipeline(
-		jaeger.WithCollectorEndpoint(JaegerEndpoint),
-		jaeger.WithProcess(jaeger.Process{
-			ServiceName: ServiceName,
-		}),
-		jaeger.WithSDK(&sdkTrace.Config{DefaultSampler: sdkTrace.AlwaysSample()}),
-	)
-	if err != nil {
-		g.Log().Fatal(err)
-	}
-	return flush
 }
 
 func main() {

@@ -12,7 +12,7 @@ type tracingApi struct{}
 
 const (
 	JaegerEndpoint = "http://localhost:14268/api/traces"
-	ServiceName    = "TracingHttpServerWithRedis"
+	ServiceName    = "tracing-demo-redis"
 )
 
 func (api *tracingApi) Set(r *ghttp.Request) {

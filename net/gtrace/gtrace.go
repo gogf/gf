@@ -25,6 +25,16 @@ func Tracer(name ...string) trace.Tracer {
 	return otel.Tracer(tracerName)
 }
 
+// GetTraceId retrieves and returns TraceId from context.
+func GetTraceId(ctx context.Context) string {
+	return trace.SpanContextFromContext(ctx).TraceID.String()
+}
+
+// GetSpanId retrieves and returns SpanId from context.
+func GetSpanId(ctx context.Context) string {
+	return trace.SpanContextFromContext(ctx).SpanID.String()
+}
+
 // SetBaggageValue is a convenient function for adding one key-value pair to baggage.
 // Note that it uses label.Any to set the key-value pair.
 func SetBaggageValue(ctx context.Context, key string, value interface{}) context.Context {

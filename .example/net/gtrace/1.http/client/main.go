@@ -13,7 +13,7 @@ import (
 
 const (
 	JaegerEndpoint = "http://localhost:14268/api/traces"
-	ServiceName    = "TracingHttpClient"
+	ServiceName    = "tracing-http-client"
 )
 
 // initTracer creates a new trace provider instance and registers it as global trace provider.
