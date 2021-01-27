@@ -11,6 +11,7 @@ import (
 	"context"
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/net/gipv4"
+	"github.com/gogf/gf/text/gstr"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/baggage"
 	"go.opentelemetry.io/otel/label"
@@ -32,7 +33,7 @@ func IsActivated(ctx context.Context) bool {
 // ip.intranet, hostname.
 func CommonLabels() []label.KeyValue {
 	return []label.KeyValue{
-		label.Array(`ip.intranet`, intranetIps),
+		label.String(`ip.intranet`, gstr.Join(intranetIps, ",")),
 		label.String(`hostname`, hostname),
 	}
 }
