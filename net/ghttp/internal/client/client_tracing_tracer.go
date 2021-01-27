@@ -69,8 +69,8 @@ func (ct *clientTracer) getConn(host string) {
 
 func (ct *clientTracer) gotConn(info httptrace.GotConnInfo) {
 	ct.span.SetAttributes(
-		label.String("http.connection.remote", info.Conn.RemoteAddr().String()),
-		label.String("http.connection.local", info.Conn.LocalAddr().String()),
+		label.String(tracingAttrHttpAddressRemote, info.Conn.RemoteAddr().String()),
+		label.String(tracingAttrHttpAddressLocal, info.Conn.LocalAddr().String()),
 	)
 }
 
@@ -82,7 +82,7 @@ func (ct *clientTracer) putIdleConn(err error) {
 
 func (ct *clientTracer) dnsStart(info httptrace.DNSStartInfo) {
 	ct.span.SetAttributes(
-		label.String("http.dns.start", info.Host),
+		label.String(tracingAttrHttpDnsStart, info.Host),
 	)
 }
 
@@ -98,13 +98,13 @@ func (ct *clientTracer) dnsDone(info httptrace.DNSDoneInfo) {
 		ct.span.SetStatus(codes.Error, fmt.Sprintf(`%+v`, info.Err))
 	}
 	ct.span.SetAttributes(
-		label.String("http.dns.done", buffer.String()),
+		label.String(tracingAttrHttpDnsDone, buffer.String()),
 	)
 }
 
 func (ct *clientTracer) connectStart(network, addr string) {
 	ct.span.SetAttributes(
-		label.String("http.connect.start", network+"@"+addr),
+		label.String(tracingAttrHttpConnectStart, network+"@"+addr),
 	)
 }
 
@@ -113,7 +113,7 @@ func (ct *clientTracer) connectDone(network, addr string, err error) {
 		ct.span.SetStatus(codes.Error, fmt.Sprintf(`%+v`, err))
 	}
 	ct.span.SetAttributes(
-		label.String("http.connect.done", network+"@"+addr),
+		label.String(tracingAttrHttpConnectDone, network+"@"+addr),
 	)
 }
 
@@ -147,11 +147,14 @@ func (ct *clientTracer) wroteRequest(info httptrace.WroteRequestInfo) {
 	if ct.request.ContentLength <= tracingMaxContentLogSize {
 		bodyContent = string(ct.requestBody)
 	} else {
-		bodyContent = fmt.Sprintf("[Request Body Too Large For Logging, Max: %d bytes]", tracingMaxContentLogSize)
+		bodyContent = fmt.Sprintf(
+			"[Request Body Too Large For Logging, Max: %d bytes]",
+			tracingMaxContentLogSize,
+		)
 	}
-	ct.span.AddEvent("http.request", trace.WithAttributes(
-		label.Any(`http.request.headers`, ct.headers),
-		label.String(`http.request.body`, bodyContent),
+	ct.span.AddEvent(tracingEventHttpRequest, trace.WithAttributes(
+		label.Any(tracingEventHttpRequestHeaders, ct.headers),
+		label.String(tracingEventHttpRequestBody, bodyContent),
 	))
 }
 
