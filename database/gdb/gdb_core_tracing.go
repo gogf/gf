@@ -20,14 +20,14 @@ import (
 
 // addSqlToTracing adds sql information to tracer if it's enabled.
 func (c *Core) addSqlToTracing(ctx context.Context, sql *Sql) {
-	if gtrace.IsActivated(ctx) {
+	if !gtrace.IsActivated(ctx) {
 		return
 	}
 	tr := otel.GetTracerProvider().Tracer(
 		"github.com/gogf/gf/database/gdb",
 		trace.WithInstrumentationVersion(fmt.Sprintf(`%s`, gf.VERSION)),
 	)
-	ctx, span := tr.Start(ctx, sql.Type)
+	ctx, span := tr.Start(ctx, sql.Type, trace.WithSpanKind(trace.SpanKindInternal))
 	defer span.End()
 
 	if sql.Error != nil {

@@ -66,7 +66,7 @@ func (c *Conn) do(timeout time.Duration, commandName string, args ...interface{}
 	timestampMilli2 := gtime.TimestampMilli()
 
 	// Tracing.
-	if gtrace.IsActivated(c.ctx) {
+	if !gtrace.IsActivated(c.ctx) {
 		return
 	}
 	tr := otel.GetTracerProvider().Tracer(
@@ -77,7 +77,7 @@ func (c *Conn) do(timeout time.Duration, commandName string, args ...interface{}
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	_, span := tr.Start(ctx, "Redis."+commandName)
+	_, span := tr.Start(ctx, "Redis."+commandName, trace.WithSpanKind(trace.SpanKindInternal))
 	defer span.End()
 	if err != nil {
 		span.SetStatus(codes.Error, fmt.Sprintf(`%+v`, err))
