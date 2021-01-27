@@ -82,6 +82,7 @@ func (c *Conn) do(timeout time.Duration, commandName string, args ...interface{}
 	if err != nil {
 		span.SetStatus(codes.Error, fmt.Sprintf(`%+v`, err))
 	}
+	span.SetAttributes(gtrace.CommonLabels()...)
 	span.SetAttributes(
 		label.String("redis.host", c.redis.config.Host),
 		label.Int("redis.port", c.redis.config.Port),
