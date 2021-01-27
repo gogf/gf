@@ -32,7 +32,7 @@ func MiddlewareTracing(c *Client, r *http.Request) (response *Response, err erro
 		"github.com/gogf/gf/net/ghttp.Client",
 		trace.WithInstrumentationVersion(fmt.Sprintf(`%s`, gf.VERSION)),
 	)
-	ctx, span := tr.Start(r.Context(), r.URL.String())
+	ctx, span := tr.Start(r.Context(), r.URL.String(), trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(gtrace.CommonLabels()...)
@@ -64,7 +64,10 @@ func MiddlewareTracing(c *Client, r *http.Request) (response *Response, err erro
 		resBodyContent = string(reqBodyContentBytes)
 		response.Body = utils.NewReadCloser(reqBodyContentBytes, false)
 	} else {
-		resBodyContent = fmt.Sprintf("[Response Body Too Large For Logging, Max: %d bytes]", tracingMaxContentLogSize)
+		resBodyContent = fmt.Sprintf(
+			"[Response Body Too Large For Tracing, Max: %d bytes]",
+			tracingMaxContentLogSize,
+		)
 	}
 
 	span.AddEvent("http.response", trace.WithAttributes(

@@ -43,7 +43,7 @@ func MiddlewareServerTracing(r *Request) {
 		propagation.Baggage{},
 	)
 	ctx := propagator.Extract(r.Context(), r.Header)
-	ctx, span := tr.Start(ctx, r.URL.String())
+	ctx, span := tr.Start(ctx, r.URL.String(), trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
 	span.SetAttributes(gtrace.CommonLabels()...)
@@ -59,7 +59,7 @@ func MiddlewareServerTracing(r *Request) {
 		reqBodyContent = string(reqBodyContentBytes)
 	} else {
 		reqBodyContent = fmt.Sprintf(
-			"[Request Body Too Large For Logging, Max: %d bytes]",
+			"[Request Body Too Large For Tracing, Max: %d bytes]",
 			tracingMaxContentLogSize,
 		)
 	}
@@ -80,7 +80,10 @@ func MiddlewareServerTracing(r *Request) {
 	if r.Response.BufferLength() <= tracingMaxContentLogSize {
 		resBodyContent = r.Response.BufferString()
 	} else {
-		resBodyContent = fmt.Sprintf("[Response Body Too Large For Logging, Max: %d bytes]", tracingMaxContentLogSize)
+		resBodyContent = fmt.Sprintf(
+			"[Response Body Too Large For Tracing, Max: %d bytes]",
+			tracingMaxContentLogSize,
+		)
 	}
 	span.AddEvent("http.response", trace.WithAttributes(
 		label.Any(`http.response.headers`, httputil.HeaderToMap(r.Response.Header())),
