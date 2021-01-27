@@ -275,6 +275,11 @@ func Test_ParseTimeFromContent(t *testing.T) {
 			t.Error("test fail")
 		}
 	})
+
+	gtest.C(t, func(t *gtest.T) {
+		timeStr := "2021-1-27 9:10:24"
+		t.Assert(gtime.ParseTimeFromContent(timeStr, "Y-n-d g:i:s").String(), "2021-01-27 09:10:24")
+	})
 }
 
 func Test_FuncCost(t *testing.T) {
