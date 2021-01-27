@@ -23,18 +23,21 @@ func (c *Core) addSqlToTracing(ctx context.Context, sql *Sql) {
 	if gtrace.IsActivated(ctx) {
 		return
 	}
-
 	tr := otel.GetTracerProvider().Tracer(
 		"github.com/gogf/gf/database/gdb",
 		trace.WithInstrumentationVersion(fmt.Sprintf(`%s`, gf.VERSION)),
 	)
 	ctx, span := tr.Start(ctx, sql.Type)
 	defer span.End()
+
 	if sql.Error != nil {
 		span.SetStatus(codes.Error, fmt.Sprintf(`%+v`, sql.Error))
 	}
 	labels := make([]label.KeyValue, 0)
-	labels = append(labels, label.String("db.type", c.DB.GetConfig().Type))
+	labels = append(labels, gtrace.CommonLabels()...)
+	labels = append(labels,
+		label.String("db.type", c.DB.GetConfig().Type),
+	)
 	if c.DB.GetConfig().Host != "" {
 		labels = append(labels, label.String("db.host", c.DB.GetConfig().Host))
 	}

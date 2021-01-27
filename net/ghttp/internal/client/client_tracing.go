@@ -11,6 +11,7 @@ import (
 	"github.com/gogf/gf"
 	"github.com/gogf/gf/internal/utils"
 	"github.com/gogf/gf/net/ghttp/internal/httputil"
+	"github.com/gogf/gf/net/gtrace"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/label"
@@ -33,6 +34,8 @@ func MiddlewareTracing(c *Client, r *http.Request) (response *Response, err erro
 	)
 	ctx, span := tr.Start(r.Context(), r.URL.String())
 	defer span.End()
+
+	span.SetAttributes(gtrace.CommonLabels()...)
 
 	// Inject tracing content into http header.
 	propagator := propagation.NewCompositeTextMapPropagator(
