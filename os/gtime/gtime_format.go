@@ -259,6 +259,7 @@ func formatToRegexPattern(format string) string {
 	s := gregex.Quote(formatToStdLayout(format))
 	s, _ = gregex.ReplaceString(`[0-9]`, `[0-9]`, s)
 	s, _ = gregex.ReplaceString(`[A-Za-z]`, `[A-Za-z]`, s)
+	s, _ = gregex.ReplaceString(`\s+`, `\s+`, s)
 	return s
 }
 
