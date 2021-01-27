@@ -13,6 +13,7 @@ import (
 	"github.com/gogf/gf"
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/internal/json"
+	"github.com/gogf/gf/net/gtrace"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gomodule/redigo/redis"
@@ -65,11 +66,7 @@ func (c *Conn) do(timeout time.Duration, commandName string, args ...interface{}
 	timestampMilli2 := gtime.TimestampMilli()
 
 	// Tracing.
-	if c.ctx == nil {
-		return
-	}
-	spanCtx := trace.SpanContextFromContext(c.ctx)
-	if traceId := spanCtx.TraceID; !traceId.IsValid() {
+	if gtrace.IsActivated(c.ctx) {
 		return
 	}
 	tr := otel.GetTracerProvider().Tracer(
