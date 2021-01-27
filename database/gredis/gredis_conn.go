@@ -9,18 +9,12 @@ package gredis
 import (
 	"context"
 	"errors"
-	"fmt"
-	"github.com/gogf/gf"
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/net/gtrace"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gomodule/redigo/redis"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/label"
-	"go.opentelemetry.io/otel/trace"
 	"reflect"
 	"time"
 )
@@ -66,34 +60,14 @@ func (c *Conn) do(timeout time.Duration, commandName string, args ...interface{}
 	timestampMilli2 := gtime.TimestampMilli()
 
 	// Tracing.
-	if !gtrace.IsActivated(c.ctx) {
-		return
+	if gtrace.IsActivated(c.ctx) {
+		c.addTracingItem(&tracingItem{
+			err:         err,
+			commandName: commandName,
+			arguments:   args,
+			costMilli:   timestampMilli2 - timestampMilli1,
+		})
 	}
-	tr := otel.GetTracerProvider().Tracer(
-		"github.com/gogf/gf/database/gredis",
-		trace.WithInstrumentationVersion(fmt.Sprintf(`%s`, gf.VERSION)),
-	)
-	ctx := c.ctx
-	if ctx == nil {
-		ctx = context.Background()
-	}
-	_, span := tr.Start(ctx, "Redis."+commandName, trace.WithSpanKind(trace.SpanKindInternal))
-	defer span.End()
-	if err != nil {
-		span.SetStatus(codes.Error, fmt.Sprintf(`%+v`, err))
-	}
-	span.SetAttributes(gtrace.CommonLabels()...)
-	span.SetAttributes(
-		label.String("redis.host", c.redis.config.Host),
-		label.Int("redis.port", c.redis.config.Port),
-		label.Int("redis.db", c.redis.config.Db),
-	)
-	jsonBytes, _ := json.Marshal(args)
-	span.AddEvent("redis.execution", trace.WithAttributes(
-		label.String(`redis.execution.command`, commandName),
-		label.String(`redis.execution.cost`, fmt.Sprintf(`%d ms`, timestampMilli2-timestampMilli1)),
-		label.String(`redis.execution.arguments`, string(jsonBytes)),
-	))
 	return
 }
 

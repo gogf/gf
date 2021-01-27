@@ -23,7 +23,13 @@ import (
 )
 
 const (
-	tracingMaxContentLogSize = 512 * 1024 // Max log size for request and response body.
+	tracingMaxContentLogSize        = 512 * 1024 // Max log size for request and response body.
+	tracingEventHttpRequest         = "http.request"
+	tracingEventHttpRequestHeaders  = "http.request.headers"
+	tracingEventHttpRequestBody     = "http.request.body"
+	tracingEventHttpResponse        = "http.response"
+	tracingEventHttpResponseHeaders = "http.response.headers"
+	tracingEventHttpResponseBody    = "http.response.body"
 )
 
 // MiddlewareClientTracing is a client middleware that enables tracing feature using standards of OpenTelemetry.
@@ -63,9 +69,9 @@ func MiddlewareServerTracing(r *Request) {
 			tracingMaxContentLogSize,
 		)
 	}
-	span.AddEvent("http.request", trace.WithAttributes(
-		label.Any(`http.request.headers`, httputil.HeaderToMap(r.Header)),
-		label.String(`http.request.body`, reqBodyContent),
+	span.AddEvent(tracingEventHttpRequest, trace.WithAttributes(
+		label.Any(tracingEventHttpRequestHeaders, httputil.HeaderToMap(r.Header)),
+		label.String(tracingEventHttpRequestBody, reqBodyContent),
 	))
 
 	// Continue executing.
@@ -85,9 +91,9 @@ func MiddlewareServerTracing(r *Request) {
 			tracingMaxContentLogSize,
 		)
 	}
-	span.AddEvent("http.response", trace.WithAttributes(
-		label.Any(`http.response.headers`, httputil.HeaderToMap(r.Response.Header())),
-		label.String(`http.response.body`, resBodyContent),
+	span.AddEvent(tracingEventHttpResponse, trace.WithAttributes(
+		label.Any(tracingEventHttpResponseHeaders, httputil.HeaderToMap(r.Response.Header())),
+		label.String(tracingEventHttpResponseBody, resBodyContent),
 	))
 	return
 }
