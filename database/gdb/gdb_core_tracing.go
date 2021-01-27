@@ -11,6 +11,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/gogf/gf"
+	"github.com/gogf/gf/net/gtrace"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/label"
@@ -19,11 +20,7 @@ import (
 
 // addSqlToTracing adds sql information to tracer if it's enabled.
 func (c *Core) addSqlToTracing(ctx context.Context, sql *Sql) {
-	if ctx == nil {
-		return
-	}
-	spanCtx := trace.SpanContextFromContext(ctx)
-	if traceId := spanCtx.TraceID; !traceId.IsValid() {
+	if gtrace.IsActivated(ctx) {
 		return
 	}
 
