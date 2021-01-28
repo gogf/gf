@@ -12,7 +12,10 @@ import (
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/text/gstr"
+	"golang.org/x/text/encoding/simplifiedchinese"
+	"golang.org/x/text/transform"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -144,6 +147,12 @@ func unZipFileWithReader(reader *zip.Reader, dest string, path ...string) error 
 	}
 	name := ""
 	for _, file := range reader.File {
+		if file.Flags == 0 {
+			i := bytes.NewReader([]byte(file.Name))
+			decoder := transform.NewReader(i, simplifiedchinese.GB18030.NewDecoder())
+			content, _ := ioutil.ReadAll(decoder)
+			file.Name = string(content)
+		}
 		name = gstr.Replace(file.Name, `\`, `/`)
 		name = gstr.Trim(name, "/")
 		if prefix != "" {
