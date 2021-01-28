@@ -72,7 +72,7 @@ func MiddlewareServerTracing(r *Request) {
 	}
 	span.AddEvent(tracingEventHttpRequest, trace.WithAttributes(
 		label.Any(tracingEventHttpRequestHeaders, httputil.HeaderToMap(r.Header)),
-		label.Any(tracingEventHttpRequestBaggage, gtrace.GetBaggageMap(ctx).Map()),
+		label.Any(tracingEventHttpRequestBaggage, gtrace.GetBaggageMap(ctx)),
 		label.String(tracingEventHttpRequestBody, reqBodyContent),
 	))
 
