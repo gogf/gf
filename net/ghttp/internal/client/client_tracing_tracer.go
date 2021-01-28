@@ -155,7 +155,7 @@ func (ct *clientTracer) wroteRequest(info httptrace.WroteRequestInfo) {
 	}
 	ct.span.AddEvent(tracingEventHttpRequest, trace.WithAttributes(
 		label.Any(tracingEventHttpRequestHeaders, ct.headers),
-		label.Any(tracingEventHttpRequestBaggage, gtrace.GetBaggageMap(ct.Context).Map()),
+		label.Any(tracingEventHttpRequestBaggage, gtrace.GetBaggageMap(ct.Context)),
 		label.String(tracingEventHttpRequestBody, bodyContent),
 	))
 }
