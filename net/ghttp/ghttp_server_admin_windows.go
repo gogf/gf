@@ -9,6 +9,6 @@
 package ghttp
 
 // registerSignalHandler does nothing on windows platform.
-func registerSignalHandler() {
+func handleProcessSignal() {
 
 }
