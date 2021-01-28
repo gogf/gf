@@ -9,14 +9,18 @@ package gtrace
 
 import (
 	"context"
+	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/net/gipv4"
 	"github.com/gogf/gf/text/gstr"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/baggage"
 	"go.opentelemetry.io/otel/label"
 	"go.opentelemetry.io/otel/trace"
 	"os"
+)
+
+const (
+	tracingCommonKeyIpIntranet = `ip.intranet`
+	tracingCommonKeyIpHostname = `hostname`
 )
 
 var (
@@ -33,18 +37,9 @@ func IsActivated(ctx context.Context) bool {
 // ip.intranet, hostname.
 func CommonLabels() []label.KeyValue {
 	return []label.KeyValue{
-		label.String(`ip.intranet`, gstr.Join(intranetIps, ",")),
-		label.String(`hostname`, hostname),
+		label.String(tracingCommonKeyIpIntranet, gstr.Join(intranetIps, ",")),
+		label.String(tracingCommonKeyIpHostname, hostname),
 	}
-}
-
-// Tracer is a short function for retrieve Tracer.
-func Tracer(name ...string) trace.Tracer {
-	tracerName := ""
-	if len(name) > 0 {
-		tracerName = name[0]
-	}
-	return otel.Tracer(tracerName)
 }
 
 // GetTraceId retrieves and returns TraceId from context.
@@ -76,30 +71,21 @@ func GetSpanId(ctx context.Context) string {
 // SetBaggageValue is a convenient function for adding one key-value pair to baggage.
 // Note that it uses label.Any to set the key-value pair.
 func SetBaggageValue(ctx context.Context, key string, value interface{}) context.Context {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-	return baggage.ContextWithValues(ctx, label.Any(key, value))
+	return NewBaggage(ctx).SetValue(key, value)
 }
 
 // SetBaggageMap is a convenient function for adding map key-value pairs to baggage.
 // Note that it uses label.Any to set the key-value pair.
 func SetBaggageMap(ctx context.Context, data map[string]interface{}) context.Context {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-	pairs := make([]label.KeyValue, 0)
-	for k, v := range data {
-		pairs = append(pairs, label.Any(k, v))
-	}
-	return baggage.ContextWithValues(ctx, pairs...)
+	return NewBaggage(ctx).SetMap(data)
+}
+
+// GetBaggageMap retrieves and returns the baggage values as map.
+func GetBaggageMap(ctx context.Context) *gmap.StrAnyMap {
+	return NewBaggage(ctx).GetMap()
 }
 
 // GetBaggageVar retrieves value and returns a *gvar.Var for specified key from baggage.
 func GetBaggageVar(ctx context.Context, key string) *gvar.Var {
-	if ctx == nil {
-		return gvar.New(nil)
-	}
-	value := baggage.Value(ctx, label.Key(key))
-	return gvar.New(value.AsInterface())
+	return NewBaggage(ctx).GetVar(key)
 }
