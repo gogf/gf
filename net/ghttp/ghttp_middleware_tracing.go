@@ -26,6 +26,7 @@ const (
 	tracingMaxContentLogSize        = 512 * 1024 // Max log size for request and response body.
 	tracingEventHttpRequest         = "http.request"
 	tracingEventHttpRequestHeaders  = "http.request.headers"
+	tracingEventHttpRequestBaggage  = "http.request.baggage"
 	tracingEventHttpRequestBody     = "http.request.body"
 	tracingEventHttpResponse        = "http.response"
 	tracingEventHttpResponseHeaders = "http.response.headers"
@@ -71,6 +72,7 @@ func MiddlewareServerTracing(r *Request) {
 	}
 	span.AddEvent(tracingEventHttpRequest, trace.WithAttributes(
 		label.Any(tracingEventHttpRequestHeaders, httputil.HeaderToMap(r.Header)),
+		label.Any(tracingEventHttpRequestBaggage, gtrace.GetBaggageMap(ctx).Map()),
 		label.String(tracingEventHttpRequestBody, reqBodyContent),
 	))
 
