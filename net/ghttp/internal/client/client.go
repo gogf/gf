@@ -27,7 +27,6 @@ type Client struct {
 	http.Client                         // Underlying HTTP Client.
 	ctx               context.Context   // Context for each request.
 	dump              bool              // Mark this request will be dumped.
-	agent             string            // Client agent.
 	parent            *Client           // Parent http client, this is used for chaining operations.
 	header            map[string]string // Custom header map.
 	cookies           map[string]string // Custom cookie map.
@@ -46,7 +45,7 @@ var (
 
 // New creates and returns a new HTTP client object.
 func New() *Client {
-	return &Client{
+	client := &Client{
 		Client: http.Client{
 			Transport: &http.Transport{
 				// No validation for https certification of the server in default.
@@ -58,11 +57,12 @@ func New() *Client {
 		},
 		header:  make(map[string]string),
 		cookies: make(map[string]string),
-		agent:   defaultClientAgent,
 	}
+	client.header["User-Agent"] = defaultClientAgent
+	return client
 }
 
-// Clone clones current client and returns a new one.
+// Clone deeply clones current client and returns a new one.
 func (c *Client) Clone() *Client {
 	newClient := New()
 	*newClient = *c
