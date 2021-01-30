@@ -421,3 +421,23 @@ func Test_Client_Middleware(t *testing.T) {
 		t.Assert(resp, nil)
 	})
 }
+
+func Test_Client_Agent(t *testing.T) {
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/", func(r *ghttp.Request) {
+		r.Response.Write(r.UserAgent())
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client().SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		c.SetAgent("test")
+		t.Assert(c.GetContent("/"), "test")
+	})
+}

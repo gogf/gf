@@ -251,10 +251,6 @@ func (c *Client) prepareRequest(method, url string, data ...interface{}) (req *h
 	} else {
 		req = req.WithContext(context.Background())
 	}
-	// Client agent.
-	if c.agent != "" {
-		req.Header.Set("User-Agent", c.agent)
-	}
 	// Custom header.
 	if len(c.header) > 0 {
 		for k, v := range c.header {
