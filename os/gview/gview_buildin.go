@@ -8,6 +8,7 @@ package gview
 
 import (
 	"fmt"
+	"github.com/gogf/gf/internal/empty"
 	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/util/gutil"
 	"strings"
@@ -222,4 +223,32 @@ func (view *View) buildInFuncNl2Br(str interface{}) string {
 func (view *View) buildInFuncJson(value interface{}) (string, error) {
 	b, err := json.Marshal(value)
 	return gconv.UnsafeBytesToStr(b), err
+}
+
+// or Returns the first non-null argument (nil,[],0,false, "",...) Otherwise, the last parameter is returned
+func (view *View) buildInFuncOr(arg0 interface{}, args ...interface{}) interface{} {
+	if !empty.IsEmpty(arg0) {
+		return arg0
+	}
+	for _, v := range args {
+		arg0 = v
+		if !empty.IsEmpty(v) {
+			return v
+		}
+	}
+	return arg0
+}
+
+// and evaluates each argument one by one, returning the first null argument, otherwise returning the last non-null argument
+func (view *View) buildInFuncAnd(arg0 interface{}, args ...interface{}) interface{} {
+	if empty.IsEmpty(arg0) {
+		return arg0
+	}
+	for _, v := range args {
+		arg0 = v
+		if empty.IsEmpty(v) {
+			return v
+		}
+	}
+	return arg0
 }
