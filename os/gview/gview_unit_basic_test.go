@@ -11,6 +11,7 @@ import (
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/util/gconv"
 	"io/ioutil"
+	"log"
 	"os"
 	"strings"
 	"testing"
@@ -423,5 +424,35 @@ func Test_BuildInFuncJson(t *testing.T) {
 		r, err := v.ParseContent("{{json .v}}")
 		t.Assert(err, nil)
 		t.Assert(r, `{"name":"john"}`)
+	})
+}
+
+func Test_BuildInFuncAnd(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		v := gview.New()
+		v.Assign("v", g.Map{
+			"v1": "",
+			"v2": 0,
+			"v3": "john4234",
+		})
+		r, err := v.ParseContent("{{and .v.v1 .v.v2 .v.v3}}")
+		log.Println(r)
+		t.Assert(err, nil)
+		t.Assert(r, "")
+	})
+}
+
+func Test_BuildInFuncOr(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		v := gview.New()
+		v.Assign("v", g.Map{
+			"v1": "",
+			"v2": 0,
+			"v3": "john",
+		})
+		r, err := v.ParseContent("{{or .v.v1 .v.v2 .v.v3}}")
+		log.Println(r)
+		t.Assert(err, nil)
+		t.Assert(r, "john")
 	})
 }

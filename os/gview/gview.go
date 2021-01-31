@@ -138,6 +138,8 @@ func New(path ...string) *View {
 		"map":        view.buildInFuncMap,
 		"maps":       view.buildInFuncMaps,
 		"json":       view.buildInFuncJson,
+		"or":         view.buildInFuncOr,
+		"and":        view.buildInFuncAnd,
 	})
 
 	return view
