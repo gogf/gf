@@ -11,6 +11,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"github.com/gogf/gf/internal/utils"
+	"github.com/gogf/gf/net/gtrace"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/label"
 	"go.opentelemetry.io/otel/trace"
@@ -154,6 +155,7 @@ func (ct *clientTracer) wroteRequest(info httptrace.WroteRequestInfo) {
 	}
 	ct.span.AddEvent(tracingEventHttpRequest, trace.WithAttributes(
 		label.Any(tracingEventHttpRequestHeaders, ct.headers),
+		label.Any(tracingEventHttpRequestBaggage, gtrace.GetBaggageMap(ct.Context)),
 		label.String(tracingEventHttpRequestBody, bodyContent),
 	))
 }
