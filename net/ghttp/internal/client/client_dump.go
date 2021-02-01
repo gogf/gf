@@ -58,7 +58,7 @@ func (r *Response) RawRequest() string {
 
 // RawResponse returns the raw content of the response.
 func (r *Response) RawResponse() string {
-	// Response can be nil.
+	// Response might be nil.
 	if r == nil || r.Response == nil {
 		return ""
 	}

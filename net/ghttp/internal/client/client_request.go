@@ -117,7 +117,7 @@ func (c *Client) DoRequest(method, url string, data ...interface{}) (resp *Respo
 	}
 
 	// Auto saving cookie content.
-	if c.browserMode && resp != nil {
+	if c.browserMode && resp != nil && resp.Response != nil {
 		now := time.Now()
 		for _, v := range resp.Response.Cookies() {
 			if !v.Expires.IsZero() && v.Expires.UnixNano() < now.UnixNano() {
