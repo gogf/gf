@@ -24,6 +24,7 @@ import (
 
 const (
 	tracingMaxContentLogSize        = 512 * 1024 // Max log size for request and response body.
+	tracingInstrumentName           = "github.com/gogf/gf/net/ghttp.Server"
 	tracingEventHttpRequest         = "http.request"
 	tracingEventHttpRequestHeaders  = "http.request.headers"
 	tracingEventHttpRequestBody     = "http.request.body"
@@ -39,10 +40,7 @@ func MiddlewareClientTracing(c *Client, r *http.Request) (*ClientResponse, error
 
 // MiddlewareServerTracing is a serer middleware that enables tracing feature using standards of OpenTelemetry.
 func MiddlewareServerTracing(r *Request) {
-	tr := otel.GetTracerProvider().Tracer(
-		"github.com/gogf/gf/net/ghttp.Server",
-		trace.WithInstrumentationVersion(fmt.Sprintf(`%s`, gf.VERSION)),
-	)
+	tr := otel.GetTracerProvider().Tracer(tracingInstrumentName, trace.WithInstrumentationVersion(gf.VERSION))
 	// Tracing content parsing, start root span.
 	propagator := propagation.NewCompositeTextMapPropagator(
 		propagation.TraceContext{},
