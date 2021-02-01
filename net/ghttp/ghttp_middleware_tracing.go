@@ -27,6 +27,7 @@ const (
 	tracingInstrumentName           = "github.com/gogf/gf/net/ghttp.Server"
 	tracingEventHttpRequest         = "http.request"
 	tracingEventHttpRequestHeaders  = "http.request.headers"
+	tracingEventHttpRequestBaggage  = "http.request.baggage"
 	tracingEventHttpRequestBody     = "http.request.body"
 	tracingEventHttpResponse        = "http.response"
 	tracingEventHttpResponseHeaders = "http.response.headers"
@@ -69,6 +70,7 @@ func MiddlewareServerTracing(r *Request) {
 	}
 	span.AddEvent(tracingEventHttpRequest, trace.WithAttributes(
 		label.Any(tracingEventHttpRequestHeaders, httputil.HeaderToMap(r.Header)),
+		label.Any(tracingEventHttpRequestBaggage, gtrace.GetBaggageMap(ctx)),
 		label.String(tracingEventHttpRequestBody, reqBodyContent),
 	))
 

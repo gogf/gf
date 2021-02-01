@@ -33,6 +33,7 @@ const (
 	tracingAttrHttpConnectDone      = "http.connect.done"
 	tracingEventHttpRequest         = "http.request"
 	tracingEventHttpRequestHeaders  = "http.request.headers"
+	tracingEventHttpRequestBaggage  = "http.request.baggage"
 	tracingEventHttpRequestBody     = "http.request.body"
 	tracingEventHttpResponse        = "http.response"
 	tracingEventHttpResponseHeaders = "http.response.headers"
