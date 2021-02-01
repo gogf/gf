@@ -11,31 +11,37 @@ import (
 	"context"
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/net/gipv4"
-	"github.com/gogf/gf/text/gstr"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/baggage"
 	"go.opentelemetry.io/otel/label"
 	"go.opentelemetry.io/otel/trace"
 	"os"
+	"strings"
+)
+
+const (
+	commonLabelHostname   = "hostname"
+	commonLabelIpIntranet = "ip.intranet"
 )
 
 var (
 	intranetIps, _ = gipv4.GetIntranetIpArray()
+	intranetIpStr  = strings.Join(intranetIps, ",")
 	hostname, _    = os.Hostname()
 )
-
-// IsActivated checks and returns if tracing feature is activated.
-func IsActivated(ctx context.Context) bool {
-	return GetTraceId(ctx) != ""
-}
 
 // CommonLabels returns common used attribute labels:
 // ip.intranet, hostname.
 func CommonLabels() []label.KeyValue {
 	return []label.KeyValue{
-		label.String(`ip.intranet`, gstr.Join(intranetIps, ",")),
-		label.String(`hostname`, hostname),
+		label.String(commonLabelHostname, hostname),
+		label.String(commonLabelIpIntranet, intranetIpStr),
 	}
+}
+
+// IsActivated checks and returns if tracing feature is activated.
+func IsActivated(ctx context.Context) bool {
+	return GetTraceId(ctx) != ""
 }
 
 // Tracer is a short function for retrieve Tracer.

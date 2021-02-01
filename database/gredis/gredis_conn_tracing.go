@@ -27,6 +27,7 @@ type tracingItem struct {
 }
 
 const (
+	tracingInstrumentName               = "github.com/gogf/gf/database/gredis"
 	tracingAttrRedisHost                = "redis.host"
 	tracingAttrRedisPort                = "redis.port"
 	tracingAttrRedisDb                  = "redis.db"
@@ -38,10 +39,7 @@ const (
 
 // addTracingItem checks and adds redis tracing information to OpenTelemetry.
 func (c *Conn) addTracingItem(item *tracingItem) {
-	tr := otel.GetTracerProvider().Tracer(
-		"github.com/gogf/gf/database/gredis",
-		trace.WithInstrumentationVersion(fmt.Sprintf(`%s`, gf.VERSION)),
-	)
+	tr := otel.GetTracerProvider().Tracer(tracingInstrumentName, trace.WithInstrumentationVersion(gf.VERSION))
 	ctx := c.ctx
 	if ctx == nil {
 		ctx = context.Background()
