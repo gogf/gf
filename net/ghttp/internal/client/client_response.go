@@ -49,6 +49,10 @@ func (r *Response) GetCookieMap() map[string]string {
 
 // ReadAll retrieves and returns the response content as []byte.
 func (r *Response) ReadAll() []byte {
+	// Response might be nil.
+	if r == nil || r.Response == nil {
+		return []byte{}
+	}
 	body, err := ioutil.ReadAll(r.Response.Body)
 	if err != nil {
 		return nil
