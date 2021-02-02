@@ -266,11 +266,11 @@ func formatToRegexPattern(format string) string {
 // formatMonthDaySuffixMap returns the short english word for current day.
 func formatMonthDaySuffixMap(day string) string {
 	switch day {
-	case "01":
+	case "01", "21", "31":
 		return "st"
-	case "02":
+	case "02", "22":
 		return "nd"
-	case "03":
+	case "03", "23":
 		return "rd"
 	default:
 		return "th"
