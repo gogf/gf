@@ -117,14 +117,20 @@ func GetArgAll() []string {
 	return defaultParsedArgs
 }
 
-// GetWithEnv returns the command line argument of the specified <key>.
+// GetWithEnv is alias of GetOptWithEnv.
+// Deprecated.
+func GetWithEnv(key string, def ...interface{}) *gvar.Var {
+	return GetOptWithEnv(key, def...)
+}
+
+// GetOptWithEnv returns the command line argument of the specified <key>.
 // If the argument does not exist, then it returns the environment variable with specified <key>.
 // It returns the default value <def> if none of them exists.
 //
 // Fetching Rules:
 // 1. Command line arguments are in lowercase format, eg: gf.<package name>.<variable name>;
 // 2. Environment arguments are in uppercase format, eg: GF_<package name>_<variable name>；
-func GetWithEnv(key string, def ...interface{}) *gvar.Var {
+func GetOptWithEnv(key string, def ...interface{}) *gvar.Var {
 	value := interface{}(nil)
 	if len(def) > 0 {
 		value = def[0]

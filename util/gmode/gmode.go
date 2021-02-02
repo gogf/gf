@@ -57,7 +57,7 @@ func SetProduct() {
 func Mode() string {
 	// If current mode is not set, do this auto check.
 	if currentMode == NOT_SET {
-		if v := gcmd.GetWithEnv(cmdEnvKey).String(); v != "" {
+		if v := gcmd.GetOptWithEnv(cmdEnvKey).String(); v != "" {
 			// Mode configured from command argument of environment.
 			currentMode = v
 		} else {

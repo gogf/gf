@@ -20,7 +20,7 @@ const (
 
 var (
 	// Default expire time for file content caching.
-	cacheExpire = gcmd.GetWithEnv("gf.gfile.cache", gDEFAULT_CACHE_EXPIRE).Duration()
+	cacheExpire = gcmd.GetOptWithEnv("gf.gfile.cache", gDEFAULT_CACHE_EXPIRE).Duration()
 
 	// internalCache is the memory cache for internal usage.
 	internalCache = gcache.New()

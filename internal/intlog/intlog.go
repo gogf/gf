@@ -26,7 +26,7 @@ var (
 
 func init() {
 	// Debugging configured.
-	if !gcmd.GetWithEnv("GF_DEBUG").IsEmpty() {
+	if !gcmd.GetOptWithEnv("GF_DEBUG").IsEmpty() {
 		isGFDebug = true
 		return
 	}

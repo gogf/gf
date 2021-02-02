@@ -26,7 +26,7 @@ var (
 )
 
 func init() {
-	defaultDebug = gcmd.GetWithEnv("gf.glog.debug", true).Bool()
+	defaultDebug = gcmd.GetOptWithEnv("gf.glog.debug", true).Bool()
 	SetDebug(defaultDebug)
 }
 
