@@ -71,7 +71,7 @@ func New(path ...string) *View {
 		}
 	} else {
 		// Customized dir path from env/cmd.
-		if envPath := gcmd.GetWithEnv("gf.gview.path").String(); envPath != "" {
+		if envPath := gcmd.GetOptWithEnv("gf.gview.path").String(); envPath != "" {
 			if gfile.Exists(envPath) {
 				if err := view.SetPath(envPath); err != nil {
 					intlog.Error(err)

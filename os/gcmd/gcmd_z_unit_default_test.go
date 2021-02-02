@@ -59,12 +59,12 @@ func Test_GetWithEnv(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		genv.Set("TEST", "1")
 		defer genv.Remove("TEST")
-		t.Assert(gcmd.GetWithEnv("test"), 1)
+		t.Assert(gcmd.GetOptWithEnv("test"), 1)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		genv.Set("TEST", "1")
 		defer genv.Remove("TEST")
 		gcmd.Init("-test", "2")
-		t.Assert(gcmd.GetWithEnv("test"), 2)
+		t.Assert(gcmd.GetOptWithEnv("test"), 2)
 	})
 }

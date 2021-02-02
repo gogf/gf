@@ -42,9 +42,9 @@ const (
 )
 
 var (
-	defaultSlots    = gcmd.GetWithEnv(fmt.Sprintf("%s.slots", cmdEnvKey), defaultSlotNumber).Int()
-	defaultLevel    = gcmd.GetWithEnv(fmt.Sprintf("%s.level", cmdEnvKey), defaultWheelLevel).Int()
-	defaultInterval = gcmd.GetWithEnv(fmt.Sprintf("%s.interval", cmdEnvKey), defaultWheelInterval).Duration() * time.Millisecond
+	defaultSlots    = gcmd.GetOptWithEnv(fmt.Sprintf("%s.slots", cmdEnvKey), defaultSlotNumber).Int()
+	defaultLevel    = gcmd.GetOptWithEnv(fmt.Sprintf("%s.level", cmdEnvKey), defaultWheelLevel).Int()
+	defaultInterval = gcmd.GetOptWithEnv(fmt.Sprintf("%s.interval", cmdEnvKey), defaultWheelInterval).Duration() * time.Millisecond
 	defaultTimer    = New(defaultSlots, defaultInterval, defaultLevel)
 )
 

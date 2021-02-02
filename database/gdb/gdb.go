@@ -291,7 +291,7 @@ var (
 
 func init() {
 	// allDryRun is initialized from environment or command options.
-	allDryRun = gcmd.GetWithEnv("gf.gdb.dryrun", false).Bool()
+	allDryRun = gcmd.GetOptWithEnv("gf.gdb.dryrun", false).Bool()
 }
 
 // Register registers custom database driver to gdb.

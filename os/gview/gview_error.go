@@ -18,5 +18,5 @@ const (
 
 // errorPrint checks whether printing error to stdout.
 func errorPrint() bool {
-	return gcmd.GetWithEnv(gERROR_PRINT_KEY, true).Bool()
+	return gcmd.GetOptWithEnv(gERROR_PRINT_KEY, true).Bool()
 }
