@@ -45,19 +45,7 @@ func (m *Model) doGetAll(limit1 bool, where ...interface{}) (Result, error) {
 	if len(where) > 0 {
 		return m.Where(where[0], where[1:]...).All()
 	}
-	var (
-		softDeletingCondition                         = m.getConditionForSoftDeleting()
-		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(limit1, false)
-	)
-	if !m.unscoped && softDeletingCondition != "" {
-		if conditionWhere == "" {
-			conditionWhere = " WHERE "
-		} else {
-			conditionWhere += " AND "
-		}
-		conditionWhere += softDeletingCondition
-	}
-
+	conditionWhere, conditionExtra, conditionArgs := m.formatCondition(limit1, false)
 	// DO NOT quote the m.fields where, in case of fields like:
 	// DISTINCT t.user_id uid
 	return m.doGetAllBySql(
@@ -343,19 +331,7 @@ func (m *Model) Count(where ...interface{}) (int, error) {
 		// DISTINCT t.user_id uid
 		countFields = fmt.Sprintf(`COUNT(%s)`, m.fields)
 	}
-	var (
-		softDeletingCondition                         = m.getConditionForSoftDeleting()
-		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(false, true)
-	)
-	if !m.unscoped && softDeletingCondition != "" {
-		if conditionWhere == "" {
-			conditionWhere = " WHERE "
-		} else {
-			conditionWhere += " AND "
-		}
-		conditionWhere += softDeletingCondition
-	}
-
+	conditionWhere, conditionExtra, conditionArgs := m.formatCondition(false, true)
 	s := fmt.Sprintf("SELECT %s FROM %s%s", countFields, m.tables, conditionWhere+conditionExtra)
 	if len(m.groupBy) > 0 {
 		s = fmt.Sprintf("SELECT COUNT(1) FROM (%s) count_alias", s)

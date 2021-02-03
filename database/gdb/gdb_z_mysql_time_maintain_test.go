@@ -605,6 +605,48 @@ CREATE TABLE %s (
 	})
 }
 
+func Test_SoftDelete_WhereAndOr(t *testing.T) {
+	table := "time_test_table"
+	if _, err := db.Exec(fmt.Sprintf(`
+CREATE TABLE %s (
+  id        int(11) NOT NULL,
+  name      varchar(45) DEFAULT NULL,
+  create_at datetime DEFAULT NULL,
+  update_at datetime DEFAULT NULL,
+  delete_at datetime DEFAULT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    `, table)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(table)
+	//db.SetDebug(true)
+	// Add datas.
+	gtest.C(t, func(t *gtest.T) {
+		for i := 1; i <= 10; i++ {
+			data := g.Map{
+				"id":   i,
+				"name": fmt.Sprintf("name_%d", i),
+			}
+			r, err := db.Table(table).Data(data).Insert()
+			t.Assert(err, nil)
+			n, _ := r.RowsAffected()
+			t.Assert(n, 1)
+		}
+	})
+	gtest.C(t, func(t *gtest.T) {
+		ids := g.SliceInt{1, 3, 5}
+		r, err := db.Table(table).Where("id", ids).Delete()
+		t.Assert(err, nil)
+		n, _ := r.RowsAffected()
+		t.Assert(n, 3)
+
+		count, err := db.Table(table).Where("id", 1).Or("id", 3).Count()
+		t.Assert(err, nil)
+		t.Assert(count, 0)
+	})
+}
+
 func Test_CreateUpdateTime_Struct(t *testing.T) {
 	table := "time_test_table"
 	if _, err := db.Exec(fmt.Sprintf(`
