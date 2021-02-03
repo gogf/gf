@@ -490,7 +490,7 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 	if node.Debug {
 		c.DB.SetDebug(node.Debug)
 	}
-	if node.Debug {
+	if node.DryRun {
 		c.DB.SetDryRun(node.DryRun)
 	}
 	return
