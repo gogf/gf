@@ -10,7 +10,7 @@ package intlog
 import (
 	"fmt"
 	"github.com/gogf/gf/debug/gdebug"
-	"github.com/gogf/gf/os/gcmd"
+	"github.com/gogf/gf/internal/utils"
 	"path/filepath"
 	"time"
 )
@@ -25,11 +25,7 @@ var (
 )
 
 func init() {
-	// Debugging configured.
-	if !gcmd.GetOptWithEnv("GF_DEBUG").IsEmpty() {
-		isGFDebug = true
-		return
-	}
+	isGFDebug = utils.IsDebugEnabled()
 }
 
 // SetEnabled enables/disables the internal logging manually.
