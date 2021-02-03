@@ -16,7 +16,6 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/label"
-	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 	"io/ioutil"
 	"net/http"
@@ -42,12 +41,7 @@ func MiddlewareClientTracing(c *Client, r *http.Request) (*ClientResponse, error
 // MiddlewareServerTracing is a serer middleware that enables tracing feature using standards of OpenTelemetry.
 func MiddlewareServerTracing(r *Request) {
 	tr := otel.GetTracerProvider().Tracer(tracingInstrumentName, trace.WithInstrumentationVersion(gf.VERSION))
-	// Tracing content parsing, start root span.
-	propagator := propagation.NewCompositeTextMapPropagator(
-		propagation.TraceContext{},
-		propagation.Baggage{},
-	)
-	ctx := propagator.Extract(r.Context(), r.Header)
+	ctx := gtrace.DefaultTextMapPropagator().Extract(r.Context(), r.Header)
 	ctx, span := tr.Start(ctx, r.URL.String(), trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 

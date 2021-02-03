@@ -15,7 +15,6 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/label"
-	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 	"io/ioutil"
 	"net/http"
@@ -49,11 +48,7 @@ func MiddlewareTracing(c *Client, r *http.Request) (response *Response, err erro
 	span.SetAttributes(gtrace.CommonLabels()...)
 
 	// Inject tracing content into http header.
-	propagator := propagation.NewCompositeTextMapPropagator(
-		propagation.TraceContext{},
-		propagation.Baggage{},
-	)
-	propagator.Inject(ctx, r.Header)
+	gtrace.DefaultTextMapPropagator().Inject(ctx, r.Header)
 
 	// Continue client handler executing.
 	response, err = c.Next(
