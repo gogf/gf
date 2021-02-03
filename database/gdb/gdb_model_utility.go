@@ -248,12 +248,24 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 			}
 		}
 	}
-	if conditionWhere != "" {
-		conditionWhere = " WHERE " + conditionWhere
+	// Soft deletion.
+	softDeletingCondition := m.getConditionForSoftDeleting()
+	if !m.unscoped && softDeletingCondition != "" {
+		if conditionWhere == "" {
+			conditionWhere = fmt.Sprintf(` WHERE %s`, softDeletingCondition)
+		} else {
+			conditionWhere = fmt.Sprintf(` WHERE (%s) AND %s`, conditionWhere, softDeletingCondition)
+		}
+	} else {
+		if conditionWhere != "" {
+			conditionWhere = " WHERE " + conditionWhere
+		}
 	}
+	// GROUP BY.
 	if m.groupBy != "" {
 		conditionExtra += " GROUP BY " + m.groupBy
 	}
+	// HAVING.
 	if len(m.having) > 0 {
 		havingStr, havingArgs := formatWhere(
 			m.db, m.having[0], gconv.Interfaces(m.having[1]), m.option&OPTION_OMITEMPTY > 0,
@@ -263,9 +275,11 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 			conditionArgs = append(conditionArgs, havingArgs...)
 		}
 	}
+	// ORDER BY.
 	if m.orderBy != "" {
 		conditionExtra += " ORDER BY " + m.orderBy
 	}
+	// LIMIT.
 	if !isCountStatement {
 		if m.limit != 0 {
 			if m.start >= 0 {
