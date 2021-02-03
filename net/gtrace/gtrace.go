@@ -13,6 +13,7 @@ import (
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/net/gipv4"
 	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 	"os"
 	"strings"
@@ -27,6 +28,11 @@ var (
 	intranetIps, _ = gipv4.GetIntranetIpArray()
 	intranetIpStr  = strings.Join(intranetIps, ",")
 	hostname, _    = os.Hostname()
+	// defaultTextMapPropagator is the default propagator for context propagation between peers.
+	defaultTextMapPropagator = propagation.NewCompositeTextMapPropagator(
+		propagation.TraceContext{},
+		propagation.Baggage{},
+	)
 )
 
 // CommonLabels returns common used attribute labels:
@@ -41,6 +47,11 @@ func CommonLabels() []label.KeyValue {
 // IsActivated checks and returns if tracing feature is activated.
 func IsActivated(ctx context.Context) bool {
 	return GetTraceId(ctx) != ""
+}
+
+// DefaultTextMapPropagator returns the default propagator for context propagation between peers.
+func DefaultTextMapPropagator() propagation.TextMapPropagator {
+	return defaultTextMapPropagator
 }
 
 // GetTraceId retrieves and returns TraceId from context.
