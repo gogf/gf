@@ -48,7 +48,7 @@ func MiddlewareTracing(c *Client, r *http.Request) (response *Response, err erro
 	span.SetAttributes(gtrace.CommonLabels()...)
 
 	// Inject tracing content into http header.
-	gtrace.DefaultTextMapPropagator().Inject(ctx, r.Header)
+	otel.GetTextMapPropagator().Inject(ctx, r.Header)
 
 	// Continue client handler executing.
 	response, err = c.Next(

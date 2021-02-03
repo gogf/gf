@@ -12,6 +12,7 @@ import (
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/net/gipv4"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/label"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
@@ -35,6 +36,10 @@ var (
 	)
 )
 
+func init() {
+	CheckSetDefaultTextMapPropagator()
+}
+
 // CommonLabels returns common used attribute labels:
 // ip.intranet, hostname.
 func CommonLabels() []label.KeyValue {
@@ -49,8 +54,16 @@ func IsActivated(ctx context.Context) bool {
 	return GetTraceId(ctx) != ""
 }
 
-// DefaultTextMapPropagator returns the default propagator for context propagation between peers.
-func DefaultTextMapPropagator() propagation.TextMapPropagator {
+// CheckSetDefaultTextMapPropagator sets the default TextMapPropagator if it is not set previously.
+func CheckSetDefaultTextMapPropagator() {
+	p := otel.GetTextMapPropagator()
+	if len(p.Fields()) == 0 {
+		otel.SetTextMapPropagator(GetDefaultTextMapPropagator())
+	}
+}
+
+// GetDefaultTextMapPropagator returns the default propagator for context propagation between peers.
+func GetDefaultTextMapPropagator() propagation.TextMapPropagator {
 	return defaultTextMapPropagator
 }
 
