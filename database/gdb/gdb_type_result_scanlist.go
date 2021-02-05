@@ -207,7 +207,12 @@ func (r Result) ScanList(listPointer interface{}, bindToAttrName string, relatio
 			}
 
 		case reflect.Ptr:
-			e := reflect.New(bindToAttrType.Elem()).Elem()
+			var element reflect.Value
+			if bindToAttrValue.IsNil() {
+				element = reflect.New(bindToAttrType.Elem()).Elem()
+			} else {
+				element = bindToAttrValue.Elem()
+			}
 			if len(relationDataMap) > 0 {
 				relationFromAttrField = relationFromAttrValue.FieldByName(relationBindToSubAttrName)
 				if relationFromAttrField.IsValid() {
@@ -216,7 +221,7 @@ func (r Result) ScanList(listPointer interface{}, bindToAttrName string, relatio
 						// There's no relational data.
 						continue
 					}
-					if err = gconv.Struct(v, e); err != nil {
+					if err = gconv.Struct(v, element); err != nil {
 						return err
 					}
 				} else {
@@ -229,14 +234,13 @@ func (r Result) ScanList(listPointer interface{}, bindToAttrName string, relatio
 					// There's no relational data.
 					continue
 				}
-				if err = gconv.Struct(v, e); err != nil {
+				if err = gconv.Struct(v, element); err != nil {
 					return err
 				}
 			}
-			bindToAttrValue.Set(e.Addr())
+			bindToAttrValue.Set(element.Addr())
 
 		case reflect.Struct:
-			e := reflect.New(bindToAttrType).Elem()
 			if len(relationDataMap) > 0 {
 				relationFromAttrField = relationFromAttrValue.FieldByName(relationBindToSubAttrName)
 				if relationFromAttrField.IsValid() {
@@ -245,7 +249,7 @@ func (r Result) ScanList(listPointer interface{}, bindToAttrName string, relatio
 						// There's no relational data.
 						continue
 					}
-					if err = gconv.Struct(relationDataItem, e); err != nil {
+					if err = gconv.Struct(relationDataItem, bindToAttrValue); err != nil {
 						return err
 					}
 				} else {
@@ -258,11 +262,10 @@ func (r Result) ScanList(listPointer interface{}, bindToAttrName string, relatio
 					// There's no relational data.
 					continue
 				}
-				if err = gconv.Struct(relationDataItem, e); err != nil {
+				if err = gconv.Struct(relationDataItem, bindToAttrValue); err != nil {
 					return err
 				}
 			}
-			bindToAttrValue.Set(e)
 
 		default:
 			return gerror.Newf(`unsupported attribute type: %s`, bindToAttrKind.String())

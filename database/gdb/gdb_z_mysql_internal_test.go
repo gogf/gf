@@ -336,3 +336,323 @@ func TestResult_Structs1(t *testing.T) {
 		t.Assert(array[1].Name, "smith")
 	})
 }
+
+// https://github.com/gogf/gf/issues/1159
+func Test_ScanList_NoRecreate_PtrAttribute(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type S1 struct {
+			Id    int
+			Name  string
+			Age   int
+			Score int
+		}
+		type S3 struct {
+			One *S1
+		}
+		var (
+			s   []*S3
+			err error
+		)
+		r1 := Result{
+			Record{
+				"id":   gvar.New(1),
+				"name": gvar.New("john"),
+				"age":  gvar.New(16),
+			},
+			Record{
+				"id":   gvar.New(2),
+				"name": gvar.New("smith"),
+				"age":  gvar.New(18),
+			},
+		}
+		err = r1.ScanList(&s, "One")
+		t.Assert(err, nil)
+		t.Assert(len(s), 2)
+		t.Assert(s[0].One.Name, "john")
+		t.Assert(s[0].One.Age, 16)
+		t.Assert(s[1].One.Name, "smith")
+		t.Assert(s[1].One.Age, 18)
+
+		r2 := Result{
+			Record{
+				"id":  gvar.New(1),
+				"age": gvar.New(20),
+			},
+			Record{
+				"id":  gvar.New(2),
+				"age": gvar.New(21),
+			},
+		}
+		err = r2.ScanList(&s, "One", "One", "id:Id")
+		t.Assert(err, nil)
+		t.Assert(len(s), 2)
+		t.Assert(s[0].One.Name, "john")
+		t.Assert(s[0].One.Age, 20)
+		t.Assert(s[1].One.Name, "smith")
+		t.Assert(s[1].One.Age, 21)
+	})
+}
+
+// https://github.com/gogf/gf/issues/1159
+func Test_ScanList_NoRecreate_StructAttribute(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type S1 struct {
+			Id    int
+			Name  string
+			Age   int
+			Score int
+		}
+		type S3 struct {
+			One S1
+		}
+		var (
+			s   []*S3
+			err error
+		)
+		r1 := Result{
+			Record{
+				"id":   gvar.New(1),
+				"name": gvar.New("john"),
+				"age":  gvar.New(16),
+			},
+			Record{
+				"id":   gvar.New(2),
+				"name": gvar.New("smith"),
+				"age":  gvar.New(18),
+			},
+		}
+		err = r1.ScanList(&s, "One")
+		t.Assert(err, nil)
+		t.Assert(len(s), 2)
+		t.Assert(s[0].One.Name, "john")
+		t.Assert(s[0].One.Age, 16)
+		t.Assert(s[1].One.Name, "smith")
+		t.Assert(s[1].One.Age, 18)
+
+		r2 := Result{
+			Record{
+				"id":  gvar.New(1),
+				"age": gvar.New(20),
+			},
+			Record{
+				"id":  gvar.New(2),
+				"age": gvar.New(21),
+			},
+		}
+		err = r2.ScanList(&s, "One", "One", "id:Id")
+		t.Assert(err, nil)
+		t.Assert(len(s), 2)
+		t.Assert(s[0].One.Name, "john")
+		t.Assert(s[0].One.Age, 20)
+		t.Assert(s[1].One.Name, "smith")
+		t.Assert(s[1].One.Age, 21)
+	})
+}
+
+// https://github.com/gogf/gf/issues/1159
+func Test_ScanList_NoRecreate_SliceAttribute_Ptr(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type S1 struct {
+			Id    int
+			Name  string
+			Age   int
+			Score int
+		}
+		type S2 struct {
+			Id    int
+			Pid   int
+			Name  string
+			Age   int
+			Score int
+		}
+		type S3 struct {
+			One  *S1
+			Many []*S2
+		}
+		var (
+			s   []*S3
+			err error
+		)
+		r1 := Result{
+			Record{
+				"id":   gvar.New(1),
+				"name": gvar.New("john"),
+				"age":  gvar.New(16),
+			},
+			Record{
+				"id":   gvar.New(2),
+				"name": gvar.New("smith"),
+				"age":  gvar.New(18),
+			},
+		}
+		err = r1.ScanList(&s, "One")
+		t.Assert(err, nil)
+		t.Assert(len(s), 2)
+		t.Assert(s[0].One.Name, "john")
+		t.Assert(s[0].One.Age, 16)
+		t.Assert(s[1].One.Name, "smith")
+		t.Assert(s[1].One.Age, 18)
+
+		r2 := Result{
+			Record{
+				"id":   gvar.New(100),
+				"pid":  gvar.New(1),
+				"age":  gvar.New(30),
+				"name": gvar.New("john"),
+			},
+			Record{
+				"id":   gvar.New(200),
+				"pid":  gvar.New(1),
+				"age":  gvar.New(31),
+				"name": gvar.New("smith"),
+			},
+		}
+		err = r2.ScanList(&s, "Many", "One", "pid:Id")
+		//fmt.Printf("%+v", err)
+		t.Assert(err, nil)
+		t.Assert(len(s), 2)
+		t.Assert(s[0].One.Name, "john")
+		t.Assert(s[0].One.Age, 16)
+		t.Assert(len(s[0].Many), 2)
+		t.Assert(s[0].Many[0].Name, "john")
+		t.Assert(s[0].Many[0].Age, 30)
+		t.Assert(s[0].Many[1].Name, "smith")
+		t.Assert(s[0].Many[1].Age, 31)
+
+		t.Assert(s[1].One.Name, "smith")
+		t.Assert(s[1].One.Age, 18)
+		t.Assert(len(s[1].Many), 0)
+
+		r3 := Result{
+			Record{
+				"id":  gvar.New(100),
+				"pid": gvar.New(1),
+				"age": gvar.New(40),
+			},
+			Record{
+				"id":  gvar.New(200),
+				"pid": gvar.New(1),
+				"age": gvar.New(41),
+			},
+		}
+		err = r3.ScanList(&s, "Many", "One", "pid:Id")
+		//fmt.Printf("%+v", err)
+		t.Assert(err, nil)
+		t.Assert(len(s), 2)
+		t.Assert(s[0].One.Name, "john")
+		t.Assert(s[0].One.Age, 16)
+		t.Assert(len(s[0].Many), 2)
+		t.Assert(s[0].Many[0].Name, "john")
+		t.Assert(s[0].Many[0].Age, 40)
+		t.Assert(s[0].Many[1].Name, "smith")
+		t.Assert(s[0].Many[1].Age, 41)
+
+		t.Assert(s[1].One.Name, "smith")
+		t.Assert(s[1].One.Age, 18)
+		t.Assert(len(s[1].Many), 0)
+	})
+}
+
+// https://github.com/gogf/gf/issues/1159
+func Test_ScanList_NoRecreate_SliceAttribute_Struct(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type S1 struct {
+			Id    int
+			Name  string
+			Age   int
+			Score int
+		}
+		type S2 struct {
+			Id    int
+			Pid   int
+			Name  string
+			Age   int
+			Score int
+		}
+		type S3 struct {
+			One  S1
+			Many []S2
+		}
+		var (
+			s   []S3
+			err error
+		)
+		r1 := Result{
+			Record{
+				"id":   gvar.New(1),
+				"name": gvar.New("john"),
+				"age":  gvar.New(16),
+			},
+			Record{
+				"id":   gvar.New(2),
+				"name": gvar.New("smith"),
+				"age":  gvar.New(18),
+			},
+		}
+		err = r1.ScanList(&s, "One")
+		t.Assert(err, nil)
+		t.Assert(len(s), 2)
+		t.Assert(s[0].One.Name, "john")
+		t.Assert(s[0].One.Age, 16)
+		t.Assert(s[1].One.Name, "smith")
+		t.Assert(s[1].One.Age, 18)
+
+		r2 := Result{
+			Record{
+				"id":   gvar.New(100),
+				"pid":  gvar.New(1),
+				"age":  gvar.New(30),
+				"name": gvar.New("john"),
+			},
+			Record{
+				"id":   gvar.New(200),
+				"pid":  gvar.New(1),
+				"age":  gvar.New(31),
+				"name": gvar.New("smith"),
+			},
+		}
+		err = r2.ScanList(&s, "Many", "One", "pid:Id")
+		//fmt.Printf("%+v", err)
+		t.Assert(err, nil)
+		t.Assert(len(s), 2)
+		t.Assert(s[0].One.Name, "john")
+		t.Assert(s[0].One.Age, 16)
+		t.Assert(len(s[0].Many), 2)
+		t.Assert(s[0].Many[0].Name, "john")
+		t.Assert(s[0].Many[0].Age, 30)
+		t.Assert(s[0].Many[1].Name, "smith")
+		t.Assert(s[0].Many[1].Age, 31)
+
+		t.Assert(s[1].One.Name, "smith")
+		t.Assert(s[1].One.Age, 18)
+		t.Assert(len(s[1].Many), 0)
+
+		r3 := Result{
+			Record{
+				"id":  gvar.New(100),
+				"pid": gvar.New(1),
+				"age": gvar.New(40),
+			},
+			Record{
+				"id":  gvar.New(200),
+				"pid": gvar.New(1),
+				"age": gvar.New(41),
+			},
+		}
+		err = r3.ScanList(&s, "Many", "One", "pid:Id")
+		//fmt.Printf("%+v", err)
+		t.Assert(err, nil)
+		t.Assert(len(s), 2)
+		t.Assert(s[0].One.Name, "john")
+		t.Assert(s[0].One.Age, 16)
+		t.Assert(len(s[0].Many), 2)
+		t.Assert(s[0].Many[0].Name, "john")
+		t.Assert(s[0].Many[0].Age, 40)
+		t.Assert(s[0].Many[1].Name, "smith")
+		t.Assert(s[0].Many[1].Age, 41)
+
+		t.Assert(s[1].One.Name, "smith")
+		t.Assert(s[1].One.Age, 18)
+		t.Assert(len(s[1].Many), 0)
+	})
+}

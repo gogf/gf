@@ -91,27 +91,42 @@ func doStructs(params interface{}, pointer interface{}, mapping ...map[string]st
 		return nil
 	}
 	var (
-		array    = reflect.MakeSlice(pointerRv.Type().Elem(), len(paramsMaps), len(paramsMaps))
-		itemType = array.Index(0).Type()
+		reflectElemArray = reflect.MakeSlice(pointerRv.Type().Elem(), len(paramsMaps), len(paramsMaps))
+		itemType         = reflectElemArray.Index(0).Type()
+		itemTypeKind     = itemType.Kind()
+		pointerRvElem    = pointerRv.Elem()
+		pointerRvLength  = pointerRvElem.Len()
 	)
-	for i := 0; i < len(paramsMaps); i++ {
-		if itemType.Kind() == reflect.Ptr {
-			// Slice element is type pointer.
-			e := reflect.New(itemType.Elem()).Elem()
-			if err = Struct(paramsMaps[i], e, mapping...); err != nil {
+	if itemTypeKind == reflect.Ptr {
+		// Pointer element.
+		for i := 0; i < len(paramsMaps); i++ {
+			var tempReflectValue reflect.Value
+			if i < pointerRvLength {
+				tempReflectValue = pointerRvElem.Index(i).Elem()
+			} else {
+				tempReflectValue = reflect.New(itemType.Elem()).Elem()
+			}
+			if err = Struct(paramsMaps[i], tempReflectValue, mapping...); err != nil {
 				return err
 			}
-			array.Index(i).Set(e.Addr())
-		} else {
-			// Slice element is not type of pointer.
-			e := reflect.New(itemType).Elem()
-			if err = Struct(paramsMaps[i], e, mapping...); err != nil {
+			reflectElemArray.Index(i).Set(tempReflectValue.Addr())
+		}
+	} else {
+		// Struct element.
+		for i := 0; i < len(paramsMaps); i++ {
+			var tempReflectValue reflect.Value
+			if i < pointerRvLength {
+				tempReflectValue = pointerRvElem.Index(i)
+			} else {
+				tempReflectValue = reflect.New(itemType).Elem()
+			}
+			if err = Struct(paramsMaps[i], tempReflectValue, mapping...); err != nil {
 				return err
 			}
-			array.Index(i).Set(e)
+			reflectElemArray.Index(i).Set(tempReflectValue)
 		}
 	}
-	pointerRv.Elem().Set(array)
+	pointerRv.Elem().Set(reflectElemArray)
 	return nil
 }
 
