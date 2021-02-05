@@ -9,32 +9,32 @@ package gconv
 import "reflect"
 
 // SliceFloat is alias of Floats.
-func SliceFloat(i interface{}) []float64 {
-	return Floats(i)
+func SliceFloat(any interface{}) []float64 {
+	return Floats(any)
 }
 
 // SliceFloat32 is alias of Float32s.
-func SliceFloat32(i interface{}) []float32 {
-	return Float32s(i)
+func SliceFloat32(any interface{}) []float32 {
+	return Float32s(any)
 }
 
 // SliceFloat64 is alias of Float64s.
-func SliceFloat64(i interface{}) []float64 {
-	return Floats(i)
+func SliceFloat64(any interface{}) []float64 {
+	return Floats(any)
 }
 
 // Floats converts <i> to []float64.
-func Floats(i interface{}) []float64 {
-	return Float64s(i)
+func Floats(any interface{}) []float64 {
+	return Float64s(any)
 }
 
 // Float32s converts <i> to []float32.
-func Float32s(i interface{}) []float32 {
-	if i == nil {
+func Float32s(any interface{}) []float32 {
+	if any == nil {
 		return nil
 	}
 	var array []float32
-	switch value := i.(type) {
+	switch value := any.(type) {
 	case string:
 		if value == "" {
 			return []float32{}
@@ -112,35 +112,49 @@ func Float32s(i interface{}) []float32 {
 			array[k] = Float32(v)
 		}
 	default:
-		if v, ok := i.(apiFloats); ok {
+		if v, ok := any.(apiFloats); ok {
 			return Float32s(v.Floats())
 		}
-		if v, ok := i.(apiInterfaces); ok {
+		if v, ok := any.(apiInterfaces); ok {
 			return Float32s(v.Interfaces())
 		}
-		// Use reflect feature at last.
-		rv := reflect.ValueOf(i)
-		switch rv.Kind() {
+		// Not a common type, it then uses reflection for conversion.
+		var reflectValue reflect.Value
+		if v, ok := value.(reflect.Value); ok {
+			reflectValue = v
+		} else {
+			reflectValue = reflect.ValueOf(value)
+		}
+		reflectKind := reflectValue.Kind()
+		for reflectKind == reflect.Ptr {
+			reflectValue = reflectValue.Elem()
+			reflectKind = reflectValue.Kind()
+		}
+		switch reflectKind {
 		case reflect.Slice, reflect.Array:
-			length := rv.Len()
-			array = make([]float32, length)
-			for n := 0; n < length; n++ {
-				array[n] = Float32(rv.Index(n).Interface())
+			var (
+				length = reflectValue.Len()
+				slice  = make([]float32, length)
+			)
+			for i := 0; i < length; i++ {
+				slice[i] = Float32(reflectValue.Index(i).Interface())
 			}
+			return slice
+
 		default:
-			return []float32{Float32(i)}
+			return []float32{Float32(any)}
 		}
 	}
 	return array
 }
 
 // Float64s converts <i> to []float64.
-func Float64s(i interface{}) []float64 {
-	if i == nil {
+func Float64s(any interface{}) []float64 {
+	if any == nil {
 		return nil
 	}
 	var array []float64
-	switch value := i.(type) {
+	switch value := any.(type) {
 	case string:
 		if value == "" {
 			return []float64{}
@@ -218,23 +232,37 @@ func Float64s(i interface{}) []float64 {
 			array[k] = Float64(v)
 		}
 	default:
-		if v, ok := i.(apiFloats); ok {
+		if v, ok := any.(apiFloats); ok {
 			return v.Floats()
 		}
-		if v, ok := i.(apiInterfaces); ok {
+		if v, ok := any.(apiInterfaces); ok {
 			return Floats(v.Interfaces())
 		}
-		// Use reflect feature at last.
-		rv := reflect.ValueOf(i)
-		switch rv.Kind() {
+		// Not a common type, it then uses reflection for conversion.
+		var reflectValue reflect.Value
+		if v, ok := value.(reflect.Value); ok {
+			reflectValue = v
+		} else {
+			reflectValue = reflect.ValueOf(value)
+		}
+		reflectKind := reflectValue.Kind()
+		for reflectKind == reflect.Ptr {
+			reflectValue = reflectValue.Elem()
+			reflectKind = reflectValue.Kind()
+		}
+		switch reflectKind {
 		case reflect.Slice, reflect.Array:
-			length := rv.Len()
-			array = make([]float64, length)
-			for n := 0; n < length; n++ {
-				array[n] = Float64(rv.Index(n).Interface())
+			var (
+				length = reflectValue.Len()
+				slice  = make([]float64, length)
+			)
+			for i := 0; i < length; i++ {
+				slice[i] = Float64(reflectValue.Index(i).Interface())
 			}
+			return slice
+
 		default:
-			return []float64{Float64(i)}
+			return []float64{Float64(any)}
 		}
 	}
 	return array

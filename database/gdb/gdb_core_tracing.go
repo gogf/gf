@@ -38,7 +38,10 @@ func (c *Core) addSqlToTracing(ctx context.Context, sql *Sql) {
 	if !gtrace.IsActivated(ctx) {
 		return
 	}
-	tr := otel.GetTracerProvider().Tracer(tracingInstrumentName, trace.WithInstrumentationVersion(gf.VERSION))
+	tr := otel.GetTracerProvider().Tracer(
+		tracingInstrumentName,
+		trace.WithInstrumentationVersion(gf.VERSION),
+	)
 	ctx, span := tr.Start(ctx, sql.Type, trace.WithSpanKind(trace.SpanKindInternal))
 	defer span.End()
 
