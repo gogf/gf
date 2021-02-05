@@ -11,13 +11,13 @@ import (
 )
 
 // SliceMap is alias of Maps.
-func SliceMap(i interface{}) []map[string]interface{} {
-	return Maps(i)
+func SliceMap(any interface{}) []map[string]interface{} {
+	return Maps(any)
 }
 
 // SliceMapDeep is alias of MapsDeep.
-func SliceMapDeep(i interface{}) []map[string]interface{} {
-	return MapsDeep(i)
+func SliceMapDeep(any interface{}) []map[string]interface{} {
+	return MapsDeep(any)
 }
 
 // SliceStruct is alias of Structs.

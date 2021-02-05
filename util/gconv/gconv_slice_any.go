@@ -11,22 +11,22 @@ import (
 )
 
 // SliceAny is alias of Interfaces.
-func SliceAny(i interface{}) []interface{} {
-	return Interfaces(i)
+func SliceAny(any interface{}) []interface{} {
+	return Interfaces(any)
 }
 
 // Interfaces converts <i> to []interface{}.
-func Interfaces(i interface{}) []interface{} {
-	if i == nil {
+func Interfaces(any interface{}) []interface{} {
+	if any == nil {
 		return nil
 	}
-	if r, ok := i.([]interface{}); ok {
+	if r, ok := any.([]interface{}); ok {
 		return r
-	} else if r, ok := i.(apiInterfaces); ok {
+	} else if r, ok := any.(apiInterfaces); ok {
 		return r.Interfaces()
 	} else {
 		var array []interface{}
-		switch value := i.(type) {
+		switch value := any.(type) {
 		case []string:
 			array = make([]interface{}, len(value))
 			for k, v := range value {
@@ -99,7 +99,7 @@ func Interfaces(i interface{}) []interface{} {
 		default:
 			// Finally we use reflection.
 			var (
-				reflectValue = reflect.ValueOf(i)
+				reflectValue = reflect.ValueOf(any)
 				reflectKind  = reflectValue.Kind()
 			)
 			for reflectKind == reflect.Ptr {
@@ -130,7 +130,7 @@ func Interfaces(i interface{}) []interface{} {
 			//		array = append(array, v)
 			//	}
 			default:
-				return []interface{}{i}
+				return []interface{}{any}
 			}
 		}
 		return array

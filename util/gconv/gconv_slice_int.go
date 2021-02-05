@@ -9,27 +9,27 @@ package gconv
 import "reflect"
 
 // SliceInt is alias of Ints.
-func SliceInt(i interface{}) []int {
-	return Ints(i)
+func SliceInt(any interface{}) []int {
+	return Ints(any)
 }
 
 // SliceInt32 is alias of Int32s.
-func SliceInt32(i interface{}) []int32 {
-	return Int32s(i)
+func SliceInt32(any interface{}) []int32 {
+	return Int32s(any)
 }
 
 // SliceInt is alias of Int64s.
-func SliceInt64(i interface{}) []int64 {
-	return Int64s(i)
+func SliceInt64(any interface{}) []int64 {
+	return Int64s(any)
 }
 
 // Ints converts <i> to []int.
-func Ints(i interface{}) []int {
-	if i == nil {
+func Ints(any interface{}) []int {
+	if any == nil {
 		return nil
 	}
 	var array []int
-	switch value := i.(type) {
+	switch value := any.(type) {
 	case string:
 		if value == "" {
 			return []int{}
@@ -117,35 +117,49 @@ func Ints(i interface{}) []int {
 			array[k] = Int(v)
 		}
 	default:
-		if v, ok := i.(apiInts); ok {
+		if v, ok := any.(apiInts); ok {
 			return v.Ints()
 		}
-		if v, ok := i.(apiInterfaces); ok {
+		if v, ok := any.(apiInterfaces); ok {
 			return Ints(v.Interfaces())
 		}
-		// Use reflect feature at last.
-		rv := reflect.ValueOf(i)
-		switch rv.Kind() {
+		// Not a common type, it then uses reflection for conversion.
+		var reflectValue reflect.Value
+		if v, ok := value.(reflect.Value); ok {
+			reflectValue = v
+		} else {
+			reflectValue = reflect.ValueOf(value)
+		}
+		reflectKind := reflectValue.Kind()
+		for reflectKind == reflect.Ptr {
+			reflectValue = reflectValue.Elem()
+			reflectKind = reflectValue.Kind()
+		}
+		switch reflectKind {
 		case reflect.Slice, reflect.Array:
-			length := rv.Len()
-			array = make([]int, length)
-			for n := 0; n < length; n++ {
-				array[n] = Int(rv.Index(n).Interface())
+			var (
+				length = reflectValue.Len()
+				slice  = make([]int, length)
+			)
+			for i := 0; i < length; i++ {
+				slice[i] = Int(reflectValue.Index(i).Interface())
 			}
+			return slice
+
 		default:
-			return []int{Int(i)}
+			return []int{Int(any)}
 		}
 	}
 	return array
 }
 
 // Int32s converts <i> to []int32.
-func Int32s(i interface{}) []int32 {
-	if i == nil {
+func Int32s(any interface{}) []int32 {
+	if any == nil {
 		return nil
 	}
 	var array []int32
-	switch value := i.(type) {
+	switch value := any.(type) {
 	case string:
 		if value == "" {
 			return []int32{}
@@ -233,24 +247,49 @@ func Int32s(i interface{}) []int32 {
 			array[k] = Int32(v)
 		}
 	default:
-		if v, ok := i.(apiInts); ok {
+		if v, ok := any.(apiInts); ok {
 			return Int32s(v.Ints())
 		}
-		if v, ok := i.(apiInterfaces); ok {
+		if v, ok := any.(apiInterfaces); ok {
 			return Int32s(v.Interfaces())
 		}
-		return []int32{Int32(i)}
+		// Not a common type, it then uses reflection for conversion.
+		var reflectValue reflect.Value
+		if v, ok := value.(reflect.Value); ok {
+			reflectValue = v
+		} else {
+			reflectValue = reflect.ValueOf(value)
+		}
+		reflectKind := reflectValue.Kind()
+		for reflectKind == reflect.Ptr {
+			reflectValue = reflectValue.Elem()
+			reflectKind = reflectValue.Kind()
+		}
+		switch reflectKind {
+		case reflect.Slice, reflect.Array:
+			var (
+				length = reflectValue.Len()
+				slice  = make([]int32, length)
+			)
+			for i := 0; i < length; i++ {
+				slice[i] = Int32(reflectValue.Index(i).Interface())
+			}
+			return slice
+
+		default:
+			return []int32{Int32(any)}
+		}
 	}
 	return array
 }
 
 // Int64s converts <i> to []int64.
-func Int64s(i interface{}) []int64 {
-	if i == nil {
+func Int64s(any interface{}) []int64 {
+	if any == nil {
 		return nil
 	}
 	var array []int64
-	switch value := i.(type) {
+	switch value := any.(type) {
 	case string:
 		if value == "" {
 			return []int64{}
@@ -338,13 +377,38 @@ func Int64s(i interface{}) []int64 {
 			array[k] = Int64(v)
 		}
 	default:
-		if v, ok := i.(apiInts); ok {
+		if v, ok := any.(apiInts); ok {
 			return Int64s(v.Ints())
 		}
-		if v, ok := i.(apiInterfaces); ok {
+		if v, ok := any.(apiInterfaces); ok {
 			return Int64s(v.Interfaces())
 		}
-		return []int64{Int64(i)}
+		// Not a common type, it then uses reflection for conversion.
+		var reflectValue reflect.Value
+		if v, ok := value.(reflect.Value); ok {
+			reflectValue = v
+		} else {
+			reflectValue = reflect.ValueOf(value)
+		}
+		reflectKind := reflectValue.Kind()
+		for reflectKind == reflect.Ptr {
+			reflectValue = reflectValue.Elem()
+			reflectKind = reflectValue.Kind()
+		}
+		switch reflectKind {
+		case reflect.Slice, reflect.Array:
+			var (
+				length = reflectValue.Len()
+				slice  = make([]int64, length)
+			)
+			for i := 0; i < length; i++ {
+				slice[i] = Int64(reflectValue.Index(i).Interface())
+			}
+			return slice
+
+		default:
+			return []int64{Int64(any)}
+		}
 	}
 	return array
 }
