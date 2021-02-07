@@ -92,7 +92,7 @@ func (m *Model) doMappingAndFilterForInsertOrUpdateDataMap(data Map, allowOmitEm
 		return nil, err
 	}
 	// Remove key-value pairs of which the value is empty.
-	if allowOmitEmpty && m.option&OPTION_OMITEMPTY > 0 {
+	if allowOmitEmpty && m.option&OptionOmitEmpty > 0 {
 		tempMap := make(Map, len(data))
 		for k, v := range data {
 			if empty.IsEmpty(v) {
@@ -206,7 +206,7 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 			case whereHolderWhere:
 				if conditionWhere == "" {
 					newWhere, newArgs := formatWhere(
-						m.db, v.where, v.args, m.option&OPTION_OMITEMPTY > 0,
+						m.db, v.where, v.args, m.option&OptionOmitEmpty > 0,
 					)
 					if len(newWhere) > 0 {
 						conditionWhere = newWhere
@@ -218,7 +218,7 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 
 			case whereHolderAnd:
 				newWhere, newArgs := formatWhere(
-					m.db, v.where, v.args, m.option&OPTION_OMITEMPTY > 0,
+					m.db, v.where, v.args, m.option&OptionOmitEmpty > 0,
 				)
 				if len(newWhere) > 0 {
 					if len(conditionWhere) == 0 {
@@ -233,7 +233,7 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 
 			case whereHolderOr:
 				newWhere, newArgs := formatWhere(
-					m.db, v.where, v.args, m.option&OPTION_OMITEMPTY > 0,
+					m.db, v.where, v.args, m.option&OptionOmitEmpty > 0,
 				)
 				if len(newWhere) > 0 {
 					if len(conditionWhere) == 0 {
@@ -268,7 +268,7 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 	// HAVING.
 	if len(m.having) > 0 {
 		havingStr, havingArgs := formatWhere(
-			m.db, m.having[0], gconv.Interfaces(m.having[1]), m.option&OPTION_OMITEMPTY > 0,
+			m.db, m.having[0], gconv.Interfaces(m.having[1]), m.option&OptionOmitEmpty > 0,
 		)
 		if len(havingStr) > 0 {
 			conditionExtra += " HAVING " + havingStr

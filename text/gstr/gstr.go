@@ -472,6 +472,15 @@ func Str(haystack string, needle string) string {
 	return haystack[idx+len([]byte(needle))-1:]
 }
 
+// StrEx returns part of <haystack> string starting from and excluding
+// the first occurrence of <needle> to the end of <haystack>.
+func StrEx(haystack string, needle string) string {
+	if s := Str(haystack, needle); s != "" {
+		return s[1:]
+	}
+	return ""
+}
+
 // Shuffle randomly shuffles a string.
 // It considers parameter <str> as unicode string.
 func Shuffle(str string) string {

@@ -13,6 +13,11 @@ import (
 	"reflect"
 )
 
+// Type wraps reflect.Type for additional features.
+type Type struct {
+	reflect.Type
+}
+
 // Field contains information of a struct field .
 type Field struct {
 	value reflect.Value

@@ -226,7 +226,6 @@ func (r Result) ScanList(listPointer interface{}, bindToAttrName string, relatio
 					)
 				} else {
 					relationBindToSubAttrName = key
-
 				}
 			}
 			relationBindToSubAttrNameChecked = true

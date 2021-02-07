@@ -92,15 +92,17 @@ func DB(name ...string) gdb.DB {
 }
 
 // Table is alias of Model.
-func Table(tables string, db ...string) *gdb.Model {
-	return DB(db...).Table(tables)
+// The database component is designed not only for
+// relational databases but also for NoSQL databases in the future. The name
+// "Table" is not proper for that purpose any more.
+// Deprecated, use Model instead.
+func Table(tables ...string) *gdb.Model {
+	return DB().Table(tables...)
 }
 
-// Model creates and returns a model from specified database or default database configuration.
-// The optional parameter <db> specifies the configuration group name of the database,
-// which is "default" in default.
-func Model(tables string, db ...string) *gdb.Model {
-	return DB(db...).Model(tables)
+// Model creates and returns a model based on configuration of default database group.
+func Model(tables ...string) *gdb.Model {
+	return DB().Model(tables...)
 }
 
 // Redis returns an instance of redis client with specified configuration group name.
