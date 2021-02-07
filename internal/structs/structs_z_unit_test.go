@@ -124,3 +124,39 @@ func Test_MapField(t *testing.T) {
 		t.Assert(ok, true)
 	})
 }
+
+func Test_StructType(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type B struct {
+			Name string
+		}
+		type A struct {
+			B
+		}
+		r, err := structs.StructType(new(A))
+		t.AssertNil(err)
+		t.Assert(r.Signature(), `github.com/gogf/gf/internal/structs_test/structs_test.A`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type B struct {
+			Name string
+		}
+		type A struct {
+			B
+		}
+		r, err := structs.StructType(new(A).B)
+		t.AssertNil(err)
+		t.Assert(r.Signature(), `github.com/gogf/gf/internal/structs_test/structs_test.B`)
+	})
+	// Error.
+	gtest.C(t, func(t *gtest.T) {
+		type B struct {
+			Name string
+		}
+		type A struct {
+			*B
+		}
+		_, err := structs.StructType(new(A).B)
+		t.AssertNE(err, nil)
+	})
+}

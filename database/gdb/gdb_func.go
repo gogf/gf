@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/internal/utils"
 	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/util/gmeta"
 	"github.com/gogf/gf/util/gutil"
 	"reflect"
 	"regexp"
@@ -47,10 +48,16 @@ type apiMapStrAny interface {
 	MapStrAny() map[string]interface{}
 }
 
+// apiTableName is the interface for retrieving table name fro struct.
+type apiTableName interface {
+	TableName() string
+}
+
 const (
-	OrmTagForStruct  = "orm"
-	OrmTagForUnique  = "unique"
-	OrmTagForPrimary = "primary"
+	OrmTagForStruct      = "orm"
+	OrmTagForUnique      = "unique"
+	OrmTagForPrimary     = "primary"
+	metaDataNameForTable = "table"
 )
 
 var (
@@ -60,6 +67,26 @@ var (
 	// Priority tags for struct converting for orm field mapping.
 	structTagPriority = append([]string{OrmTagForStruct}, gconv.StructTagPriority...)
 )
+
+// getTableNameFromObject retrieves and returns the table name from struct object.
+func getTableNameFromObject(object interface{}) string {
+	if r, ok := object.(apiTableName); ok {
+		// Use the interface value.
+		return r.TableName()
+	} else if table := gmeta.Get(object, metaDataNameForTable); !table.IsEmpty() {
+		// User meta data tag "table".
+		return table.String()
+	} else {
+		// Use the struct name of snake case.
+		if t, err := structs.StructType(object); err != nil {
+			panic(err)
+		} else {
+			return gstr.CaseSnakeFirstUpper(
+				gstr.StrEx(t.String(), "."),
+			)
+		}
+	}
+}
 
 // ListItemValues retrieves and returns the elements of all item struct/map with key <key>.
 // Note that the parameter <list> should be type of slice which contains elements of map or struct,
@@ -752,9 +779,16 @@ func convertMapToStruct(data map[string]interface{}, pointer interface{}) error 
 		return err
 	}
 	// It retrieves and returns the mapping between orm tag and the struct attribute name.
-	mapping := make(map[string]string)
+	var (
+		mapping      = make(map[string]string)
+		tagFieldName string
+	)
 	for tag, attr := range tagNameMap {
-		mapping[strings.Split(tag, ",")[0]] = attr
+		tagFieldName = strings.Split(tag, ",")[0]
+		if !gregex.IsMatchString(regularFieldNameRegPattern, tagFieldName) {
+			continue
+		}
+		mapping[tagFieldName] = attr
 	}
 	return gconv.Struct(data, pointer, mapping)
 }

@@ -35,6 +35,7 @@ type DB interface {
 	// The DB interface is designed not only for
 	// relational databases but also for NoSQL databases in the future. The name
 	// "Table" is not proper for that purpose any more.
+	// Deprecated, use Model instead.
 	Table(table ...string) *Model
 	Model(table ...string) *Model
 	Schema(schema string) *Schema

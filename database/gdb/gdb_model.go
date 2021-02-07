@@ -25,6 +25,7 @@ type Model struct {
 	tables        string         // Operation table names, which can be more than one table names and aliases, like: "user", "user u", "user u, user_detail ud".
 	fields        string         // Operation fields, multiple fields joined using char ','.
 	fieldsEx      string         // Excluded operation fields, multiple fields joined using char ','.
+	withArray     []interface{}  // Arguments for With feature.
 	extraArgs     []interface{}  // Extra custom arguments for sql.
 	whereHolder   []*whereHolder // Condition strings for where operation.
 	groupBy       string         // Used for "group by" statement.
@@ -53,9 +54,13 @@ type whereHolder struct {
 }
 
 const (
-	OPTION_OMITEMPTY  = 1
+	// Deprecated, use OptionOmitEmpty instead.
+	OPTION_OMITEMPTY = 1
+	// Deprecated, use OptionAllowEmpty instead..
 	OPTION_ALLOWEMPTY = 2
 
+	OptionOmitEmpty  = 1
+	OptionAllowEmpty = 2
 	linkTypeMaster   = 1
 	linkTypeSlave    = 2
 	whereHolderWhere = 1
@@ -63,15 +68,22 @@ const (
 	whereHolderOr    = 3
 )
 
-// Table creates and returns a new ORM model from given schema.
-// The parameter <table> can be more than one table names, and also alias name, like:
-// 1. Table names:
-//    Table("user")
-//    Table("user u")
-//    Table("user, user_detail")
-//    Table("user u, user_detail ud")
-// 2. Table name with alias: Table("user", "u")
+// Table is alias of Core.Model.
+// See Core.Model.
+// Deprecated, use Model instead.
 func (c *Core) Table(table ...string) *Model {
+	return c.DB.Model(table...)
+}
+
+// Model creates and returns a new ORM model from given schema.
+// The parameter <table> can be more than one table names, and also alias name, like:
+// 1. Model names:
+//    Model("user")
+//    Model("user u")
+//    Model("user, user_detail")
+//    Model("user u, user_detail ud")
+// 2. Model name with alias: Model("user", "u")
+func (c *Core) Model(table ...string) *Model {
 	tables := ""
 	if len(table) > 1 {
 		tables = fmt.Sprintf(
@@ -79,8 +91,6 @@ func (c *Core) Table(table ...string) *Model {
 		)
 	} else if len(table) == 1 {
 		tables = c.DB.QuotePrefixTableName(table[0])
-	} else {
-		panic("table cannot be empty")
 	}
 	return &Model{
 		db:         c.DB,
@@ -89,29 +99,23 @@ func (c *Core) Table(table ...string) *Model {
 		fields:     "*",
 		start:      -1,
 		offset:     -1,
-		option:     OPTION_ALLOWEMPTY,
+		option:     OptionAllowEmpty,
 	}
 }
 
-// Model is alias of Core.Table.
-// See Core.Table.
-func (c *Core) Model(table ...string) *Model {
-	return c.DB.Table(table...)
+// Table is alias of tx.Model.
+// Deprecated, use Model instead.
+func (tx *TX) Table(table ...string) *Model {
+	return tx.Model(table...)
 }
 
-// Table acts like Core.Table except it operates on transaction.
-// See Core.Table.
-func (tx *TX) Table(table ...string) *Model {
-	model := tx.db.Table(table...)
+// Model acts like Core.Model except it operates on transaction.
+// See Core.Model.
+func (tx *TX) Model(table ...string) *Model {
+	model := tx.db.Model(table...)
 	model.db = tx.db
 	model.tx = tx
 	return model
-}
-
-// Model is alias of tx.Table.
-// See tx.Table.
-func (tx *TX) Model(table ...string) *Model {
-	return tx.Table(table...)
 }
 
 // Ctx sets the context for current operation.
@@ -175,7 +179,7 @@ func (m *Model) Clone() *Model {
 		newModel = m.db.Table(m.tablesInit)
 	}
 	*newModel = *m
-	// Deep copy slice attributes.
+	// Shallow copy slice attributes.
 	if n := len(m.extraArgs); n > 0 {
 		newModel.extraArgs = make([]interface{}, n)
 		copy(newModel.extraArgs, m.extraArgs)
@@ -183,6 +187,10 @@ func (m *Model) Clone() *Model {
 	if n := len(m.whereHolder); n > 0 {
 		newModel.whereHolder = make([]*whereHolder, n)
 		copy(newModel.whereHolder, m.whereHolder)
+	}
+	if n := len(m.withArray); n > 0 {
+		newModel.withArray = make([]interface{}, n)
+		copy(newModel.withArray, m.withArray)
 	}
 	return newModel
 }
