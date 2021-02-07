@@ -19,7 +19,7 @@ func Test_Instance(t *testing.T) {
 		t.AssertNE(err, nil)
 
 		db, err := gdb.Instance()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		err1 := db.PingMaster()
 		err2 := db.PingSlave()
