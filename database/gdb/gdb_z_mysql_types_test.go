@@ -59,12 +59,12 @@ func Test_Types(t *testing.T) {
 			"bool":    false,
 		}
 		r, err := db.Table("types").Data(data).Insert()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		n, _ := r.RowsAffected()
 		t.Assert(n, 1)
 
 		one, err := db.Table("types").One()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(one["id"].Int(), 1)
 		t.Assert(one["blob"].String(), data["blob"])
 		t.Assert(one["binary"].String(), data["binary"])
@@ -88,7 +88,7 @@ func Test_Types(t *testing.T) {
 		}
 		var obj *T
 		err = db.Table("types").Struct(&obj)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(obj.Id, 1)
 		t.Assert(obj.Blob, data["blob"])
 		t.Assert(obj.Binary, data["binary"])

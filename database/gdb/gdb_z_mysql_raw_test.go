@@ -27,7 +27,7 @@ func Test_Insert_Raw(t *testing.T) {
 			"nickname":    "name_1",
 			"create_time": gdb.Raw("now()"),
 		}).Insert()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		n, _ := result.LastInsertId()
 		t.Assert(n, 2)
 	})
@@ -57,7 +57,7 @@ func Test_BatchInsert_Raw(t *testing.T) {
 				},
 			},
 		).Insert()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		n, _ := result.LastInsertId()
 		t.Assert(n, 4)
 	})
@@ -73,14 +73,14 @@ func Test_Update_Raw(t *testing.T) {
 			"id":          gdb.Raw("id+100"),
 			"create_time": gdb.Raw("now()"),
 		}).Where("id", 1).Update()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		user := db.Table(table)
 		n, err := user.Where("id", 101).Count()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(n, 1)
 	})
 }

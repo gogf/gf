@@ -90,23 +90,23 @@ func Test_TX_Rollback(t *testing.T) {
 func Test_TX_Prepare(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		tx, err := db.Begin()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		st, err := tx.Prepare("SELECT 100")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		rows, err := st.Query()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		array, err := rows.Columns()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(array[0], "100")
 
 		rows.Close()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		tx.Commit()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 	})
 }
 
@@ -752,7 +752,7 @@ func Test_Transaction(t *testing.T) {
 			}
 			return nil
 		})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		if value, err := db.Table(table).Fields("nickname").Where("id", 1).Value(); err != nil {
 			gtest.Error(err)

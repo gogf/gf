@@ -67,7 +67,7 @@ func Test_Custom_Driver(t *testing.T) {
 		t.Assert(latestSqlString.Val(), "")
 		sqlString := "select 10000"
 		value, err := g.DB("driver-test").GetValue(sqlString)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(value, 10000)
 		t.Assert(latestSqlString.Val(), sqlString)
 	})

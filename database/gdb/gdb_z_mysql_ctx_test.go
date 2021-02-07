@@ -17,7 +17,7 @@ import (
 func Test_Ctx(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		db, err := gdb.Instance()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		err1 := db.PingMaster()
 		err2 := db.PingSlave()
