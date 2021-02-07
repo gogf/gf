@@ -1,6 +1,6 @@
 # GoFrame
 [![Go Doc](https://godoc.org/github.com/gogf/gf?status.svg)](https://godoc.org/github.com/gogf/gf) 
-[![Build Status](https://travis-ci.org/gogf/gf.svg?branch=master)](https://travis-ci.org/gogf/gf) 
+[![Build Status](https://travis-ci.com/gogf/gf.svg?branch=master)](https://travis-ci.org/gogf/gf) 
 [![Go Report](https://goreportcard.com/badge/github.com/gogf/gf?v=1)](https://goreportcard.com/report/github.com/gogf/gf)
 [![Code Coverage](https://codecov.io/gh/gogf/gf/branch/master/graph/badge.svg)](https://codecov.io/gh/gogf/gf/branch/master)
 [![Production Ready](https://img.shields.io/badge/production-ready-blue.svg)](https://github.com/gogf/gf)
@@ -49,7 +49,7 @@ golang版本 >= 1.11
 
 # 架构
 <div align=center>
-<img src="https://itician.org/download/attachments/1114119/arch.png"/>
+<img src="https://goframe.org/download/attachments/1114119/arch.png"/>
 </div>
 
 # 模块
@@ -95,7 +95,7 @@ golang版本 >= 1.11
 - [喜马拉雅](https://www.ximalaya.com)
 - [作业帮](https://www.zybang.com/)
 
-> 在这里只列举了部分知名的用户，如果您的企业或者产品正在使用`GoFrame`，欢迎到 [这里](https://itician.org/pages/viewpage.action?pageId=1114415) 留言。
+> 在这里只列举了部分知名的用户，如果您的企业或者产品正在使用`GoFrame`，欢迎到 [这里](https://goframe.org/pages/viewpage.action?pageId=1114415) 留言。
 
 # 贡献
 
@@ -105,7 +105,7 @@ golang版本 >= 1.11
 
 # 捐赠
 
-如果您喜欢`GF`，要不给开发者 [来杯咖啡](https://itician.org/pages/viewpage.action?pageId=1115633) 吧！
+如果您喜欢`GF`，要不给开发者 [来杯咖啡](https://goframe.org/pages/viewpage.action?pageId=1115633) 吧！
 请在捐赠时备注您的`github`/`gitee`账号名称。
 
 # 赞助
@@ -113,6 +113,6 @@ golang版本 >= 1.11
 赞助支持`GF`框架的快速研发，如果您感兴趣，请联系 微信 `389961817` / 邮件 `john@goframe.org`。
 
 # 感谢
-<a href="https://www.jetbrains.com/?from=GoFrame"><img src="https://itician.org/download/thumbnails/1114119/jetbrains.png" height="120" alt="JetBrains"/></a>
+<a href="https://www.jetbrains.com/?from=GoFrame"><img src="https://goframe.org/download/thumbnails/1114119/jetbrains.png" height="120" alt="JetBrains"/></a>
 <a href="https://www.atlassian.com/?from=GoFrame"><img src="https://goframe.org/download/attachments/1114119/atlassian.jpg" height="120" alt="Atlassian"/></a>
 

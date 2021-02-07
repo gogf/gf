@@ -38,7 +38,7 @@ func init() {
 		"name": true,
 		"type": true,
 	}, false)
-	gtest.Assert(err, nil)
+	gtest.AssertNil(err)
 	configNode = gdb.ConfigNode{
 		Host:             "127.0.0.1",
 		Port:             "3306",
@@ -195,7 +195,7 @@ func createInitTableWithDb(db gdb.DB, table ...string) (name string) {
 	}
 
 	result, err := db.BatchInsert(name, array.Slice())
-	gtest.Assert(err, nil)
+	gtest.AssertNil(err)
 
 	n, e := result.RowsAffected()
 	gtest.Assert(e, nil)
