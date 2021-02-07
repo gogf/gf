@@ -11,6 +11,7 @@ import (
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/util/gutil"
 	"reflect"
 )
 
@@ -41,6 +42,9 @@ import (
 //
 // See the example or unit testing cases for clear understanding for this function.
 func (r Result) ScanList(listPointer interface{}, bindToAttrName string, relationKV ...string) (err error) {
+	if r.IsEmpty() {
+		return nil
+	}
 	// Necessary checks for parameters.
 	if bindToAttrName == "" {
 		return gerror.New(`bindToAttrName should not be empty`)
@@ -112,7 +116,13 @@ func (r Result) ScanList(listPointer interface{}, bindToAttrName string, relatio
 			relationFromAttrName = relationKV[0]
 			relationKVStr = relationKV[1]
 		}
-		array := gstr.SplitAndTrim(relationKVStr, ":")
+		// The relation key string of table filed name and attribute name
+		// can be joined with char '=' or ':'.
+		array := gstr.SplitAndTrim(relationKVStr, "=")
+		if len(array) == 1 {
+			// Compatible with old splitting char ':'.
+			array = gstr.SplitAndTrim(relationKVStr, ":")
+		}
 		if len(array) == 2 {
 			// Defined table field to relation attribute name.
 			// Like:
@@ -120,6 +130,15 @@ func (r Result) ScanList(listPointer interface{}, bindToAttrName string, relatio
 			// uid:UserId
 			relationResultFieldName = array[0]
 			relationBindToSubAttrName = array[1]
+			if key, _ := gutil.MapPossibleItemByKey(r[0].Map(), relationResultFieldName); key == "" {
+				return gerror.Newf(
+					`cannot find possible related table field name "%s" from given relation key "%s"`,
+					relationResultFieldName,
+					relationKVStr,
+				)
+			} else {
+				relationResultFieldName = key
+			}
 		} else {
 			return gerror.New(`parameter relationKV should be format of "ResultFieldName:BindToAttrName"`)
 		}
@@ -152,8 +171,9 @@ func (r Result) ScanList(listPointer interface{}, bindToAttrName string, relatio
 
 	// Bind to relation conditions.
 	var (
-		relationFromAttrValue reflect.Value
-		relationFromAttrField reflect.Value
+		relationFromAttrValue            reflect.Value
+		relationFromAttrField            reflect.Value
+		relationBindToSubAttrNameChecked bool
 	)
 	for i := 0; i < arrayValue.Len(); i++ {
 		arrayElemValue := arrayValue.Index(i)
@@ -186,6 +206,30 @@ func (r Result) ScanList(listPointer interface{}, bindToAttrName string, relatio
 		}
 		if len(relationDataMap) > 0 && !relationFromAttrValue.IsValid() {
 			return gerror.Newf(`invalid relation specified: "%v"`, relationKV)
+		}
+		// Check and find possible bind to attribute name.
+		if relationKVStr != "" && !relationBindToSubAttrNameChecked {
+			relationFromAttrField = relationFromAttrValue.FieldByName(relationBindToSubAttrName)
+			if !relationFromAttrField.IsValid() {
+				var (
+					relationFromAttrType = relationFromAttrValue.Type()
+					filedMap             = make(map[string]interface{})
+				)
+				for i := 0; i < relationFromAttrType.NumField(); i++ {
+					filedMap[relationFromAttrType.Field(i).Name] = struct{}{}
+				}
+				if key, _ := gutil.MapPossibleItemByKey(filedMap, relationBindToSubAttrName); key == "" {
+					return gerror.Newf(
+						`cannot find possible related attribute name "%s" from given relation key "%s"`,
+						relationBindToSubAttrName,
+						relationKVStr,
+					)
+				} else {
+					relationBindToSubAttrName = key
+
+				}
+			}
+			relationBindToSubAttrNameChecked = true
 		}
 		switch bindToAttrKind {
 		case reflect.Array, reflect.Slice:

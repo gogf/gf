@@ -32,7 +32,7 @@ func init() {
 		"name": true,
 		"type": true,
 	}, false)
-	gtest.Assert(err, nil)
+	gtest.AssertNil(err)
 	configNode = ConfigNode{
 		Host:             "127.0.0.1",
 		Port:             "3306",
@@ -329,7 +329,7 @@ func TestResult_Structs1(t *testing.T) {
 		}
 		array := make([]*B, 2)
 		err := r.Structs(&array)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(array[0].Id, 0)
 		t.Assert(array[1].Id, 0)
 		t.Assert(array[0].Name, "john")
@@ -366,7 +366,7 @@ func Test_ScanList_NoRecreate_PtrAttribute(t *testing.T) {
 			},
 		}
 		err = r1.ScanList(&s, "One")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(s), 2)
 		t.Assert(s[0].One.Name, "john")
 		t.Assert(s[0].One.Age, 16)
@@ -384,7 +384,7 @@ func Test_ScanList_NoRecreate_PtrAttribute(t *testing.T) {
 			},
 		}
 		err = r2.ScanList(&s, "One", "One", "id:Id")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(s), 2)
 		t.Assert(s[0].One.Name, "john")
 		t.Assert(s[0].One.Age, 20)
@@ -422,7 +422,7 @@ func Test_ScanList_NoRecreate_StructAttribute(t *testing.T) {
 			},
 		}
 		err = r1.ScanList(&s, "One")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(s), 2)
 		t.Assert(s[0].One.Name, "john")
 		t.Assert(s[0].One.Age, 16)
@@ -440,7 +440,7 @@ func Test_ScanList_NoRecreate_StructAttribute(t *testing.T) {
 			},
 		}
 		err = r2.ScanList(&s, "One", "One", "id:Id")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(s), 2)
 		t.Assert(s[0].One.Name, "john")
 		t.Assert(s[0].One.Age, 20)
@@ -486,7 +486,7 @@ func Test_ScanList_NoRecreate_SliceAttribute_Ptr(t *testing.T) {
 			},
 		}
 		err = r1.ScanList(&s, "One")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(s), 2)
 		t.Assert(s[0].One.Name, "john")
 		t.Assert(s[0].One.Age, 16)
@@ -509,7 +509,7 @@ func Test_ScanList_NoRecreate_SliceAttribute_Ptr(t *testing.T) {
 		}
 		err = r2.ScanList(&s, "Many", "One", "pid:Id")
 		//fmt.Printf("%+v", err)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(s), 2)
 		t.Assert(s[0].One.Name, "john")
 		t.Assert(s[0].One.Age, 16)
@@ -537,7 +537,7 @@ func Test_ScanList_NoRecreate_SliceAttribute_Ptr(t *testing.T) {
 		}
 		err = r3.ScanList(&s, "Many", "One", "pid:Id")
 		//fmt.Printf("%+v", err)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(s), 2)
 		t.Assert(s[0].One.Name, "john")
 		t.Assert(s[0].One.Age, 16)
@@ -590,7 +590,7 @@ func Test_ScanList_NoRecreate_SliceAttribute_Struct(t *testing.T) {
 			},
 		}
 		err = r1.ScanList(&s, "One")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(s), 2)
 		t.Assert(s[0].One.Name, "john")
 		t.Assert(s[0].One.Age, 16)
@@ -613,7 +613,7 @@ func Test_ScanList_NoRecreate_SliceAttribute_Struct(t *testing.T) {
 		}
 		err = r2.ScanList(&s, "Many", "One", "pid:Id")
 		//fmt.Printf("%+v", err)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(s), 2)
 		t.Assert(s[0].One.Name, "john")
 		t.Assert(s[0].One.Age, 16)
@@ -641,7 +641,7 @@ func Test_ScanList_NoRecreate_SliceAttribute_Struct(t *testing.T) {
 		}
 		err = r3.ScanList(&s, "Many", "One", "pid:Id")
 		//fmt.Printf("%+v", err)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(s), 2)
 		t.Assert(s[0].One.Name, "john")
 		t.Assert(s[0].One.Age, 16)

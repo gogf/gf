@@ -1,7 +1,7 @@
 # GoFrame
 
 [![Go Doc](https://godoc.org/github.com/gogf/gf?status.svg)](https://godoc.org/github.com/gogf/gf)
-[![Build Status](https://travis-ci.org/gogf/gf.svg?branch=master)](https://travis-ci.org/gogf/gf)
+[![Build Status](https://travis-ci.com/gogf/gf.svg?branch=master)](https://travis-ci.org/gogf/gf)
 [![Go Report](https://goreportcard.com/badge/github.com/gogf/gf?v=1)](https://goreportcard.com/report/github.com/gogf/gf)
 [![Code Coverage](https://codecov.io/gh/gogf/gf/branch/master/graph/badge.svg)](https://codecov.io/gh/gogf/gf/branch/master)
 [![Production Ready](https://img.shields.io/badge/production-ready-blue.svg)](https://github.com/gogf/gf)
@@ -33,7 +33,7 @@ golang version >= 1.11
 
 # Architecture
 <div align=center>
-<img src="https://itician.org/download/attachments/1114119/arch.png"/>
+<img src="https://goframe.org/download/attachments/1114119/arch.png"/>
 </div>
 
 # Packages
@@ -80,7 +80,7 @@ The `Web` component performance of `GoFrame`, please refer to third-party projec
 - [XiMaLaYa](https://www.ximalaya.com)
 - [ZYBang](https://www.zybang.com/)
 
-> We list part of the users here, if your company or products are using `GoFrame`, please let us know [here](https://itician.org/pages/viewpage.action?pageId=1114415).
+> We list part of the users here, if your company or products are using `GoFrame`, please let us know [here](https://goframe.org/pages/viewpage.action?pageId=1114415).
 
 
 # Contributors
@@ -90,7 +90,7 @@ This project exists thanks to all the people who contribute. [[Contributors](htt
 
 # Donators
 
-If you love `GF`, why not [buy developer a cup of coffee](https://itician.org/pages/viewpage.action?pageId=1115633)?
+If you love `GF`, why not [buy developer a cup of coffee](https://goframe.org/pages/viewpage.action?pageId=1115633)?
 
 # Sponsors
 We appreciate any kind of sponsorship for `GF` development. If you've got some interesting, please contact WeChat `389961817` / Email `john@goframe.org`.
@@ -98,7 +98,7 @@ We appreciate any kind of sponsorship for `GF` development. If you've got some i
 
 
 # Thanks
-<a href="https://www.jetbrains.com/?from=GoFrame"><img src="https://itician.org/download/thumbnails/1114119/jetbrains.png" height="120" alt="JetBrains"/></a>
+<a href="https://www.jetbrains.com/?from=GoFrame"><img src="https://goframe.org/download/thumbnails/1114119/jetbrains.png" height="120" alt="JetBrains"/></a>
 <a href="https://www.atlassian.com/?from=GoFrame"><img src="https://goframe.org/download/attachments/1114119/atlassian.jpg" height="120" alt="Atlassian"/></a>
 
 

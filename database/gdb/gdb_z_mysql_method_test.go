@@ -36,13 +36,13 @@ func Test_DB_Ping(t *testing.T) {
 func Test_DB_Query(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Query("SELECT ?", 1)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		_, err = db.Query("SELECT ?+?", 1, 2)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		_, err = db.Query("SELECT ?+?", g.Slice{1, 2})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		_, err = db.Query("ERROR")
 		t.AssertNE(err, nil)
@@ -53,7 +53,7 @@ func Test_DB_Query(t *testing.T) {
 func Test_DB_Exec(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Exec("SELECT ?", 1)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		_, err = db.Exec("ERROR")
 		t.AssertNE(err, nil)
@@ -64,17 +64,17 @@ func Test_DB_Exec(t *testing.T) {
 func Test_DB_Prepare(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		st, err := db.Prepare("SELECT 100")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		rows, err := st.Query()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		array, err := rows.Columns()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(array[0], "100")
 
 		err = rows.Close()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 	})
 }
 
@@ -90,7 +90,7 @@ func Test_DB_Insert(t *testing.T) {
 			"nickname":    "T1",
 			"create_time": gtime.Now().String(),
 		})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		// normal map
 		result, err := db.Insert(table, g.Map{
@@ -100,7 +100,7 @@ func Test_DB_Insert(t *testing.T) {
 			"nickname":    "name_2",
 			"create_time": gtime.Now().String(),
 		})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)
 
@@ -120,12 +120,12 @@ func Test_DB_Insert(t *testing.T) {
 			Nickname:   "name_3",
 			CreateTime: timeStr,
 		})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		n, _ = result.RowsAffected()
 		t.Assert(n, 1)
 
 		one, err := db.Table(table).Where("id", 3).One()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		t.Assert(one["id"].Int(), 3)
 		t.Assert(one["passport"].String(), "user_3")
@@ -142,12 +142,12 @@ func Test_DB_Insert(t *testing.T) {
 			Nickname:   "name_4",
 			CreateTime: timeStr,
 		})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		n, _ = result.RowsAffected()
 		t.Assert(n, 1)
 
 		one, err = db.Table(table).Where("id", 4).One()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(one["id"].Int(), 4)
 		t.Assert(one["passport"].String(), "t4")
 		t.Assert(one["password"].String(), "25d55ad283aa400af464c76d713c07ad")
@@ -172,12 +172,12 @@ func Test_DB_Insert(t *testing.T) {
 				"create_time": timeStr,
 			},
 		})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 2)
 
 		one, err = db.Table(table).Where("id", 200).One()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(one["id"].Int(), 200)
 		t.Assert(one["passport"].String(), "t200")
 		t.Assert(one["password"].String(), "25d55ad283aa400af464c76d71qw07ad")
@@ -204,10 +204,10 @@ func Test_DB_Insert_WithStructAndSliceAttribute(t *testing.T) {
 			"create_time": gtime.Now().String(),
 		}
 		_, err := db.Insert(table, data)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		one, err := db.GetOne(fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 1)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(one["passport"], data["passport"])
 		t.Assert(one["create_time"], data["create_time"])
 		t.Assert(one["nickname"], gparser.MustToJson(data["nickname"]))
@@ -234,10 +234,10 @@ func Test_DB_Insert_KeyFieldNameMapping(t *testing.T) {
 			CreateTime: "2020-10-10 12:00:01",
 		}
 		_, err := db.Insert(table, data)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		one, err := db.GetOne(fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 1)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(one["passport"], data.Passport)
 		t.Assert(one["create_time"], data.CreateTime)
 		t.Assert(one["nickname"], data.Nickname)
@@ -264,10 +264,10 @@ func Test_DB_Upadte_KeyFieldNameMapping(t *testing.T) {
 			CreateTime: "2020-10-10 12:00:01",
 		}
 		_, err := db.Update(table, data, "id=1")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		one, err := db.GetOne(fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 1)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(one["passport"], data.Passport)
 		t.Assert(one["create_time"], data.CreateTime)
 		t.Assert(one["nickname"], data.Nickname)
@@ -320,7 +320,7 @@ func Test_DB_InsertIgnore(t *testing.T) {
 			"nickname":    "T1",
 			"create_time": gtime.Now().String(),
 		})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 	})
 }
 
@@ -344,7 +344,7 @@ func Test_DB_BatchInsert(t *testing.T) {
 				"create_time": gtime.Now().String(),
 			},
 		}, 1)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		n, _ := r.RowsAffected()
 		t.Assert(n, 2)
 
@@ -372,7 +372,7 @@ func Test_DB_BatchInsert(t *testing.T) {
 				"create_time": gtime.Now().String(),
 			},
 		}, 1)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		n, _ := r.RowsAffected()
 		t.Assert(n, 2)
 	})
@@ -388,7 +388,7 @@ func Test_DB_BatchInsert(t *testing.T) {
 			"nickname":    "T1",
 			"create_time": gtime.Now().String(),
 		})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)
 	})
@@ -416,7 +416,7 @@ func Test_DB_BatchInsert_Struct(t *testing.T) {
 			CreateTime: gtime.Now(),
 		}
 		result, err := db.BatchInsert(table, user)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)
 	})
@@ -435,10 +435,10 @@ func Test_DB_Save(t *testing.T) {
 			"nickname":    "T11",
 			"create_time": timeStr,
 		})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		one, err := db.Table(table).Where("id", 1).One()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(one["id"].Int(), 1)
 		t.Assert(one["passport"].String(), "t1")
 		t.Assert(one["password"].String(), "25d55ad283aa400af464c76d713c07ad")
@@ -460,10 +460,10 @@ func Test_DB_Replace(t *testing.T) {
 			"nickname":    "T11",
 			"create_time": timeStr,
 		})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		one, err := db.Table(table).Where("id", 1).One()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(one["id"].Int(), 1)
 		t.Assert(one["passport"].String(), "t1")
 		t.Assert(one["password"].String(), "25d55ad283aa400af464c76d713c07ad")
@@ -478,12 +478,12 @@ func Test_DB_Update(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Update(table, "password='987654321'", "id=3")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)
 
 		one, err := db.Table(table).Where("id", 3).One()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(one["id"].Int(), 3)
 		t.Assert(one["passport"].String(), "user_3")
 		t.Assert(one["password"].String(), "987654321")
@@ -497,19 +497,19 @@ func Test_DB_GetAll(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.GetAll(fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 1)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(result), 1)
 		t.Assert(result[0]["id"].Int(), 1)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.GetAll(fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), g.Slice{1})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(result), 1)
 		t.Assert(result[0]["id"].Int(), 1)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.GetAll(fmt.Sprintf("SELECT * FROM %s WHERE id in(?)", table), g.Slice{1, 2, 3})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(result), 3)
 		t.Assert(result[0]["id"].Int(), 1)
 		t.Assert(result[1]["id"].Int(), 2)
@@ -517,7 +517,7 @@ func Test_DB_GetAll(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.GetAll(fmt.Sprintf("SELECT * FROM %s WHERE id in(?,?,?)", table), g.Slice{1, 2, 3})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(result), 3)
 		t.Assert(result[0]["id"].Int(), 1)
 		t.Assert(result[1]["id"].Int(), 2)
@@ -525,7 +525,7 @@ func Test_DB_GetAll(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.GetAll(fmt.Sprintf("SELECT * FROM %s WHERE id in(?,?,?)", table), g.Slice{1, 2, 3}...)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(result), 3)
 		t.Assert(result[0]["id"].Int(), 1)
 		t.Assert(result[1]["id"].Int(), 2)
@@ -533,7 +533,7 @@ func Test_DB_GetAll(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.GetAll(fmt.Sprintf("SELECT * FROM %s WHERE id>=? AND id <=?", table), g.Slice{1, 3})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(result), 3)
 		t.Assert(result[0]["id"].Int(), 1)
 		t.Assert(result[1]["id"].Int(), 2)
@@ -546,7 +546,7 @@ func Test_DB_GetOne(t *testing.T) {
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
 		record, err := db.GetOne(fmt.Sprintf("SELECT * FROM %s WHERE passport=?", table), "user_1")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(record["nickname"].String(), "name_1")
 	})
 }
@@ -556,7 +556,7 @@ func Test_DB_GetValue(t *testing.T) {
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
 		value, err := db.GetValue(fmt.Sprintf("SELECT id FROM %s WHERE passport=?", table), "user_3")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(value.Int(), 3)
 	})
 }
@@ -566,7 +566,7 @@ func Test_DB_GetCount(t *testing.T) {
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.GetCount(fmt.Sprintf("SELECT * FROM %s", table))
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(count, SIZE)
 	})
 }
@@ -584,7 +584,7 @@ func Test_DB_GetStruct(t *testing.T) {
 		}
 		user := new(User)
 		err := db.GetStruct(user, fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 3)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(user.NickName, "name_3")
 	})
 	gtest.C(t, func(t *gtest.T) {
@@ -597,7 +597,7 @@ func Test_DB_GetStruct(t *testing.T) {
 		}
 		user := new(User)
 		err := db.GetStruct(user, fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 3)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(user.NickName, "name_3")
 	})
 }
@@ -615,7 +615,7 @@ func Test_DB_GetStructs(t *testing.T) {
 		}
 		var users []User
 		err := db.GetStructs(&users, fmt.Sprintf("SELECT * FROM %s WHERE id>?", table), 1)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(users), SIZE-1)
 		t.Assert(users[0].Id, 2)
 		t.Assert(users[1].Id, 3)
@@ -635,7 +635,7 @@ func Test_DB_GetStructs(t *testing.T) {
 		}
 		var users []User
 		err := db.GetStructs(&users, fmt.Sprintf("SELECT * FROM %s WHERE id>?", table), 1)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(users), SIZE-1)
 		t.Assert(users[0].Id, 2)
 		t.Assert(users[1].Id, 3)
@@ -659,7 +659,7 @@ func Test_DB_GetScan(t *testing.T) {
 		}
 		user := new(User)
 		err := db.GetScan(user, fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 3)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(user.NickName, "name_3")
 	})
 	gtest.C(t, func(t *gtest.T) {
@@ -672,7 +672,7 @@ func Test_DB_GetScan(t *testing.T) {
 		}
 		user := new(User)
 		err := db.GetScan(user, fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 3)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(user.NickName, "name_3")
 	})
 
@@ -686,7 +686,7 @@ func Test_DB_GetScan(t *testing.T) {
 		}
 		var users []User
 		err := db.GetScan(&users, fmt.Sprintf("SELECT * FROM %s WHERE id>?", table), 1)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(users), SIZE-1)
 		t.Assert(users[0].Id, 2)
 		t.Assert(users[1].Id, 3)
@@ -706,7 +706,7 @@ func Test_DB_GetScan(t *testing.T) {
 		}
 		var users []User
 		err := db.GetScan(&users, fmt.Sprintf("SELECT * FROM %s WHERE id>?", table), 1)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(users), SIZE-1)
 		t.Assert(users[0].Id, 2)
 		t.Assert(users[1].Id, 3)
@@ -722,7 +722,7 @@ func Test_DB_Delete(t *testing.T) {
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Delete(table, 1)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		n, _ := result.RowsAffected()
 		t.Assert(n, SIZE)
 	})
@@ -746,7 +746,7 @@ func Test_DB_Time(t *testing.T) {
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)
 		value, err := db.GetValue(fmt.Sprintf("select `passport` from `%s` where id=?", table), 200)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(value.String(), "t200")
 	})
 
@@ -765,13 +765,13 @@ func Test_DB_Time(t *testing.T) {
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)
 		value, err := db.GetValue(fmt.Sprintf("select `passport` from `%s` where id=?", table), 300)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(value.String(), "t300")
 	})
 
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Delete(table, 1)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		n, _ := result.RowsAffected()
 		t.Assert(n, 2)
 	})
@@ -781,7 +781,7 @@ func Test_DB_ToJson(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	_, err := db.Update(table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
-	gtest.Assert(err, nil)
+	gtest.AssertNil(err)
 
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Table(table).Fields("*").Where("id =? ", 1).Select()
@@ -855,7 +855,7 @@ func Test_DB_ToXml(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	_, err := db.Update(table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
-	gtest.Assert(err, nil)
+	gtest.AssertNil(err)
 
 	gtest.C(t, func(t *gtest.T) {
 		record, err := db.Table(table).Fields("*").Where("id = ?", 1).One()
@@ -921,7 +921,7 @@ func Test_DB_ToStringMap(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	_, err := db.Update(table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
-	gtest.Assert(err, nil)
+	gtest.AssertNil(err)
 	gtest.C(t, func(t *gtest.T) {
 		id := "1"
 		result, err := db.Table(table).Fields("*").Where("id = ?", 1).Select()
@@ -957,7 +957,7 @@ func Test_DB_ToIntMap(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	_, err := db.Update(table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
-	gtest.Assert(err, nil)
+	gtest.AssertNil(err)
 
 	gtest.C(t, func(t *gtest.T) {
 		id := 1
@@ -993,7 +993,7 @@ func Test_DB_ToUintMap(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	_, err := db.Update(table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
-	gtest.Assert(err, nil)
+	gtest.AssertNil(err)
 
 	gtest.C(t, func(t *gtest.T) {
 		id := 1
@@ -1030,7 +1030,7 @@ func Test_DB_ToStringRecord(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	_, err := db.Update(table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
-	gtest.Assert(err, nil)
+	gtest.AssertNil(err)
 
 	gtest.C(t, func(t *gtest.T) {
 		id := 1
@@ -1068,7 +1068,7 @@ func Test_DB_ToIntRecord(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	_, err := db.Update(table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
-	gtest.Assert(err, nil)
+	gtest.AssertNil(err)
 
 	gtest.C(t, func(t *gtest.T) {
 		id := 1
@@ -1105,7 +1105,7 @@ func Test_DB_ToUintRecord(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 	_, err := db.Update(table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
-	gtest.Assert(err, nil)
+	gtest.AssertNil(err)
 
 	gtest.C(t, func(t *gtest.T) {
 		id := 1
@@ -1205,7 +1205,7 @@ func Test_DB_Prefix(t *testing.T) {
 			"nickname":    fmt.Sprintf(`name_%d`, id),
 			"create_time": gtime.NewFromStr("2018-10-24 10:00:00").String(),
 		})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		n, e := result.RowsAffected()
 		t.Assert(e, nil)
@@ -1221,7 +1221,7 @@ func Test_DB_Prefix(t *testing.T) {
 			"nickname":    fmt.Sprintf(`name_%d`, id),
 			"create_time": gtime.NewFromStr("2018-10-24 10:00:01").String(),
 		})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		n, e := result.RowsAffected()
 		t.Assert(e, nil)
@@ -1237,7 +1237,7 @@ func Test_DB_Prefix(t *testing.T) {
 			"nickname":    fmt.Sprintf(`name_%d`, id),
 			"create_time": gtime.NewFromStr("2018-10-24 10:00:02").String(),
 		})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		n, e := result.RowsAffected()
 		t.Assert(e, nil)
@@ -1253,7 +1253,7 @@ func Test_DB_Prefix(t *testing.T) {
 			"nickname":    fmt.Sprintf(`name_%d`, id),
 			"create_time": gtime.NewFromStr("2018-10-24 10:00:03").String(),
 		}, "id=?", id)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		n, e := result.RowsAffected()
 		t.Assert(e, nil)
@@ -1263,7 +1263,7 @@ func Test_DB_Prefix(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		id := 10000
 		result, err := db.Delete(name, "id=?", id)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		n, e := result.RowsAffected()
 		t.Assert(e, nil)
@@ -1283,7 +1283,7 @@ func Test_DB_Prefix(t *testing.T) {
 		}
 
 		result, err := db.BatchInsert(name, array.Slice())
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		n, e := result.RowsAffected()
 		t.Assert(e, nil)
@@ -1403,7 +1403,7 @@ func Test_Empty_Slice_Argument(t *testing.T) {
 	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.GetAll(fmt.Sprintf(`select * from %s where id in(?)`, table), g.Slice{})
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(len(result), 0)
 	})
 }
@@ -1430,7 +1430,7 @@ func Test_DB_UpdateCounter(t *testing.T) {
 			"updated_time": 0,
 		}
 		_, err = db.Insert(tableName, insertData)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -1442,11 +1442,11 @@ func Test_DB_UpdateCounter(t *testing.T) {
 			"views": gdbCounter,
 		}
 		result, err := db.Update(tableName, updateData, "id", 1)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)
 		one, err := db.Table(tableName).Where("id", 1).One()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(one["id"].Int(), 1)
 		t.Assert(one["views"].Int(), 1)
 	})
@@ -1461,11 +1461,11 @@ func Test_DB_UpdateCounter(t *testing.T) {
 			"updated_time": gtime.Now().Unix(),
 		}
 		result, err := db.Update(tableName, updateData, "id", 1)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)
 		one, err := db.Table(tableName).Where("id", 1).One()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(one["id"].Int(), 1)
 		t.Assert(one["views"].Int(), 0)
 	})
@@ -1486,6 +1486,6 @@ func Test_DB_Ctx_Logger(t *testing.T) {
 		db.SetDebug(true)
 		ctx := context.WithValue(context.Background(), "Trace-Id", "123456789")
 		_, err := db.Ctx(ctx).Query("SELECT 1")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 	})
 }
