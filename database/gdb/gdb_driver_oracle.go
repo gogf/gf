@@ -49,7 +49,6 @@ func (d *DriverOracle) Open(config *ConfigNode) (*sql.DB, error) {
 	if config.LinkInfo != "" {
 		source = config.LinkInfo
 	} else {
-		// 账号/密码@地址:端口/数据库名称
 		source = fmt.Sprintf(
 			"%s/%s@%s:%s/%s",
 			config.User, config.Pass, config.Host, config.Port, config.Name,
@@ -164,10 +163,10 @@ func (d *DriverOracle) parseSql(sql string) string {
 
 // Tables retrieves and returns the tables of current schema.
 // It's mainly used in cli tool chain for automatically generating the models.
-// Note that it ignores the parameter <schema> in oracle database, as it is not necessary.
+// Note that it ignores the parameter `schema` in oracle database, as it is not necessary.
 func (d *DriverOracle) Tables(schema ...string) (tables []string, err error) {
 	var result Result
-	result, err = d.DB.DoGetAll(nil, "SELECT TABLE_NAME FROM USER_TABLES ORDER BY TABLE_NAME")
+	result, err = d.db.DoGetAll(nil, "SELECT TABLE_NAME FROM USER_TABLES ORDER BY TABLE_NAME")
 	if err != nil {
 		return
 	}
@@ -186,7 +185,7 @@ func (d *DriverOracle) TableFields(table string, schema ...string) (fields map[s
 	if gstr.Contains(table, " ") {
 		return nil, gerror.New("function TableFields supports only single table operations")
 	}
-	checkSchema := d.DB.GetSchema()
+	checkSchema := d.db.GetSchema()
 	if len(schema) > 0 && schema[0] != "" {
 		checkSchema = schema[0]
 	}
@@ -205,7 +204,7 @@ FROM USER_TAB_COLUMNS WHERE TABLE_NAME = '%s' ORDER BY COLUMN_ID`,
 				strings.ToUpper(table),
 			)
 			structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
-			result, err = d.DB.GetAll(structureSql)
+			result, err = d.db.GetAll(structureSql)
 			if err != nil {
 				return nil, err
 			}
@@ -231,7 +230,7 @@ func (d *DriverOracle) getTableUniqueIndex(table string) (fields map[string]map[
 		"table_unique_index_"+table,
 		func() (interface{}, error) {
 			res := (Result)(nil)
-			res, err = d.DB.GetAll(fmt.Sprintf(`
+			res, err = d.db.GetAll(fmt.Sprintf(`
 		SELECT INDEX_NAME,COLUMN_NAME,CHAR_LENGTH FROM USER_IND_COLUMNS 
 		WHERE TABLE_NAME = '%s' 
 		AND INDEX_NAME IN(SELECT INDEX_NAME FROM USER_INDEXES WHERE TABLE_NAME='%s' AND UNIQUENESS='UNIQUE') 
@@ -268,7 +267,7 @@ func (d *DriverOracle) DoInsert(link Link, table string, data interface{}, optio
 	}
 	switch kind {
 	case reflect.Slice, reflect.Array:
-		return d.DB.DoBatchInsert(link, table, data, option, batch...)
+		return d.db.DoBatchInsert(link, table, data, option, batch...)
 	case reflect.Map:
 		fallthrough
 	case reflect.Struct:
@@ -303,7 +302,7 @@ func (d *DriverOracle) DoInsert(link Link, table string, data interface{}, optio
 		onStr     = make([]string, 0)
 		updateStr = make([]string, 0)
 	)
-	charL, charR := d.DB.GetChars()
+	charL, charR := d.db.GetChars()
 	for k, v := range dataMap {
 		k = strings.ToUpper(k)
 
@@ -327,7 +326,7 @@ func (d *DriverOracle) DoInsert(link Link, table string, data interface{}, optio
 	}
 
 	if link == nil {
-		if link, err = d.DB.Master(); err != nil {
+		if link, err = d.db.Master(); err != nil {
 			return nil, err
 		}
 	}
@@ -342,10 +341,10 @@ func (d *DriverOracle) DoInsert(link Link, table string, data interface{}, optio
 				table, tableAlias1, strings.Join(subSqlStr, ","), tableAlias2,
 				strings.Join(onStr, "AND"), strings.Join(updateStr, ","), strings.Join(fields, ","), strings.Join(values, ","),
 			)
-			return d.DB.DoExec(link, tmp, params...)
+			return d.db.DoExec(link, tmp, params...)
 
 		case insertOptionIgnore:
-			return d.DB.DoExec(link,
+			return d.db.DoExec(link,
 				fmt.Sprintf(
 					"INSERT /*+ IGNORE_ROW_ON_DUPKEY_INDEX(%s(%s)) */ INTO %s(%s) VALUES(%s)",
 					table, strings.Join(indexes, ","), table, strings.Join(fields, ","), strings.Join(values, ","),
@@ -354,7 +353,7 @@ func (d *DriverOracle) DoInsert(link Link, table string, data interface{}, optio
 		}
 	}
 
-	return d.DB.DoExec(
+	return d.db.DoExec(
 		link,
 		fmt.Sprintf(
 			"INSERT INTO %s(%s) VALUES(%s)",
@@ -406,7 +405,7 @@ func (d *DriverOracle) DoBatchInsert(link Link, table string, list interface{}, 
 		return result, gerror.New("empty data list")
 	}
 	if link == nil {
-		if link, err = d.DB.Master(); err != nil {
+		if link, err = d.db.Master(); err != nil {
 			return
 		}
 	}
@@ -418,13 +417,13 @@ func (d *DriverOracle) DoBatchInsert(link Link, table string, list interface{}, 
 	}
 	var (
 		batchResult    = new(SqlResult)
-		charL, charR   = d.DB.GetChars()
+		charL, charR   = d.db.GetChars()
 		keyStr         = charL + strings.Join(keys, charL+","+charR) + charR
 		valueHolderStr = strings.Join(holders, ",")
 	)
 	if option != insertOptionDefault {
 		for _, v := range listMap {
-			r, err := d.DB.DoInsert(link, table, v, option, 1)
+			r, err := d.db.DoInsert(link, table, v, option, 1)
 			if err != nil {
 				return r, err
 			}
@@ -452,7 +451,7 @@ func (d *DriverOracle) DoBatchInsert(link Link, table string, list interface{}, 
 		values = append(values, valueHolderStr)
 		intoStr = append(intoStr, fmt.Sprintf(" INTO %s(%s) VALUES(%s) ", table, keyStr, valueHolderStr))
 		if len(intoStr) == batchNum {
-			r, err := d.DB.DoExec(link, fmt.Sprintf("INSERT ALL %s SELECT * FROM DUAL", strings.Join(intoStr, " ")), params...)
+			r, err := d.db.DoExec(link, fmt.Sprintf("INSERT ALL %s SELECT * FROM DUAL", strings.Join(intoStr, " ")), params...)
 			if err != nil {
 				return r, err
 			}
@@ -468,7 +467,7 @@ func (d *DriverOracle) DoBatchInsert(link Link, table string, list interface{}, 
 	}
 	// The leftover data.
 	if len(intoStr) > 0 {
-		r, err := d.DB.DoExec(link, fmt.Sprintf("INSERT ALL %s SELECT * FROM DUAL", strings.Join(intoStr, " ")), params...)
+		r, err := d.db.DoExec(link, fmt.Sprintf("INSERT ALL %s SELECT * FROM DUAL", strings.Join(intoStr, " ")), params...)
 		if err != nil {
 			return r, err
 		}

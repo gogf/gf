@@ -20,13 +20,12 @@ func Pos(haystack, needle string, startOffset ...int) int {
 	if length == 0 || offset > length || -offset > length {
 		return -1
 	}
-
 	if offset < 0 {
 		offset += length
 	}
 	pos := strings.Index(haystack[offset:], needle)
-	if pos == -1 {
-		return -1
+	if pos == NotFoundIndex {
+		return NotFoundIndex
 	}
 	return pos + offset
 }

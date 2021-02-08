@@ -15,8 +15,8 @@ import (
 	"reflect"
 )
 
-// ScanList converts <r> to struct slice which contains other complex struct attributes.
-// Note that the parameter <listPointer> should be type of *[]struct/*[]*struct.
+// ScanList converts `r` to struct slice which contains other complex struct attributes.
+// Note that the parameter `listPointer` should be type of *[]struct/*[]*struct.
 // Usage example:
 //
 // type Entity struct {
@@ -38,7 +38,7 @@ import (
 // The "uid" in the example codes is the table field name of the result, and the "Uid" is the relational
 // struct attribute name - not the attribute name of the bound to target. In the example codes, it's attribute
 // name "Uid" of "User" of entity "Entity". It automatically calculates the HasOne/HasMany relationship with
-// given <relation> parameter.
+// given `relation` parameter.
 //
 // See the example or unit testing cases for clear understanding for this function.
 func (r Result) ScanList(listPointer interface{}, bindToAttrName string, relationKV ...string) (err error) {

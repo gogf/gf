@@ -16,9 +16,9 @@ import (
 
 func Test_Table_Relation_With(t *testing.T) {
 	var (
-		tableUser       = "user_with"
-		tableUserDetail = "user_detail_with"
-		tableUserScores = "user_scores_with"
+		tableUser       = "user"
+		tableUserDetail = "user_detail"
+		tableUserScores = "user_scores"
 	)
 	if _, err := db.Exec(fmt.Sprintf(`
 CREATE TABLE IF NOT EXISTS %s (
@@ -55,20 +55,20 @@ PRIMARY KEY (id)
 	defer dropTable(tableUserScores)
 
 	type UserDetail struct {
-		gmeta.Meta `table:"user_detail_with"`
+		gmeta.Meta `orm:"table:user_detail"`
 		Uid        int    `json:"uid"`
 		Address    string `json:"address"`
 	}
 
 	type UserScores struct {
-		gmeta.Meta `table:"user_scores_with"`
+		gmeta.Meta `orm:"table:user_scores"`
 		Id         int `json:"id"`
 		Uid        int `json:"uid"`
 		Score      int `json:"score"`
 	}
 
 	type User struct {
-		gmeta.Meta `table:"user_with"`
+		gmeta.Meta `orm:"table:user"`
 		Id         int           `json:"id"`
 		Name       string        `json:"name"`
 		UserDetail *UserDetail   `orm:"with:uid=id"`
@@ -101,8 +101,16 @@ PRIMARY KEY (id)
 	}
 	gtest.C(t, func(t *gtest.T) {
 		var user *User
-		err := db.Model().With(&user).Where("id", 3).Scan(&user)
+		db.SetDebug(true)
+		err := db.With(User{}).
+			With(User{}.UserDetail).
+			With(User{}.UserScores).
+			Where("id", 3).
+			Scan(&user)
 		t.AssertNil(err)
 		t.Assert(user.Id, 3)
+		t.AssertNE(user.UserDetail, nil)
+		t.Assert(user.UserDetail.Uid, 3)
+		t.Assert(user.UserDetail.Address, `address_3`)
 	})
 }

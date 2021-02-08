@@ -16,7 +16,7 @@ type Mutex struct {
 }
 
 // New creates and returns a new *Mutex.
-// The parameter <safe> is used to specify whether using this mutex in concurrent-safety,
+// The parameter `safe` is used to specify whether using this mutex in concurrent-safety,
 // which is false in default.
 func New(safe ...bool) *Mutex {
 	mu := new(Mutex)

@@ -75,7 +75,7 @@ func (tx *TX) GetOne(sql string, args ...interface{}) (Record, error) {
 }
 
 // GetStruct queries one record from database and converts it to given struct.
-// The parameter <pointer> should be a pointer to struct.
+// The parameter `pointer` should be a pointer to struct.
 func (tx *TX) GetStruct(obj interface{}, sql string, args ...interface{}) error {
 	one, err := tx.GetOne(sql, args...)
 	if err != nil {
@@ -85,7 +85,7 @@ func (tx *TX) GetStruct(obj interface{}, sql string, args ...interface{}) error 
 }
 
 // GetStructs queries records from database and converts them to given struct.
-// The parameter <pointer> should be type of struct slice: []struct/[]*struct.
+// The parameter `pointer` should be type of struct slice: []struct/[]*struct.
 func (tx *TX) GetStructs(objPointerSlice interface{}, sql string, args ...interface{}) error {
 	all, err := tx.GetAll(sql, args...)
 	if err != nil {
@@ -97,8 +97,8 @@ func (tx *TX) GetStructs(objPointerSlice interface{}, sql string, args ...interf
 // GetScan queries one or more records from database and converts them to given struct or
 // struct array.
 //
-// If parameter <pointer> is type of struct pointer, it calls GetStruct internally for
-// the conversion. If parameter <pointer> is type of slice, it calls GetStructs internally
+// If parameter `pointer` is type of struct pointer, it calls GetStruct internally for
+// the conversion. If parameter `pointer` is type of slice, it calls GetStructs internally
 // for conversion.
 func (tx *TX) GetScan(objPointer interface{}, sql string, args ...interface{}) error {
 	t := reflect.TypeOf(objPointer)
@@ -146,12 +146,12 @@ func (tx *TX) GetCount(sql string, args ...interface{}) (int, error) {
 // Insert does "INSERT INTO ..." statement for the table.
 // If there's already one unique record of the data in the table, it returns error.
 //
-// The parameter <data> can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
+// The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
 // Eg:
 // Data(g.Map{"uid": 10000, "name":"john"})
 // Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
 //
-// The parameter <batch> specifies the batch operation count when given data is slice.
+// The parameter `batch` specifies the batch operation count when given data is slice.
 func (tx *TX) Insert(table string, data interface{}, batch ...int) (sql.Result, error) {
 	if len(batch) > 0 {
 		return tx.Model(table).Data(data).Batch(batch[0]).Insert()
@@ -162,12 +162,12 @@ func (tx *TX) Insert(table string, data interface{}, batch ...int) (sql.Result, 
 // InsertIgnore does "INSERT IGNORE INTO ..." statement for the table.
 // If there's already one unique record of the data in the table, it ignores the inserting.
 //
-// The parameter <data> can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
+// The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
 // Eg:
 // Data(g.Map{"uid": 10000, "name":"john"})
 // Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
 //
-// The parameter <batch> specifies the batch operation count when given data is slice.
+// The parameter `batch` specifies the batch operation count when given data is slice.
 func (tx *TX) InsertIgnore(table string, data interface{}, batch ...int) (sql.Result, error) {
 	if len(batch) > 0 {
 		return tx.Model(table).Data(data).Batch(batch[0]).InsertIgnore()
@@ -179,14 +179,14 @@ func (tx *TX) InsertIgnore(table string, data interface{}, batch ...int) (sql.Re
 // If there's already one unique record of the data in the table, it deletes the record
 // and inserts a new one.
 //
-// The parameter <data> can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
+// The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
 // Eg:
 // Data(g.Map{"uid": 10000, "name":"john"})
 // Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
 //
-// The parameter <data> can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
+// The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
 // If given data is type of slice, it then does batch replacing, and the optional parameter
-// <batch> specifies the batch operation count.
+// `batch` specifies the batch operation count.
 func (tx *TX) Replace(table string, data interface{}, batch ...int) (sql.Result, error) {
 	if len(batch) > 0 {
 		return tx.Model(table).Data(data).Batch(batch[0]).Replace()
@@ -198,13 +198,13 @@ func (tx *TX) Replace(table string, data interface{}, batch ...int) (sql.Result,
 // It updates the record if there's primary or unique index in the saving data,
 // or else it inserts a new record into the table.
 //
-// The parameter <data> can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
+// The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
 // Eg:
 // Data(g.Map{"uid": 10000, "name":"john"})
 // Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
 //
 // If given data is type of slice, it then does batch saving, and the optional parameter
-// <batch> specifies the batch operation count.
+// `batch` specifies the batch operation count.
 func (tx *TX) Save(table string, data interface{}, batch ...int) (sql.Result, error) {
 	if len(batch) > 0 {
 		return tx.Model(table).Data(data).Batch(batch[0]).Save()
@@ -213,7 +213,7 @@ func (tx *TX) Save(table string, data interface{}, batch ...int) (sql.Result, er
 }
 
 // BatchInsert batch inserts data.
-// The parameter <list> must be type of slice of map or struct.
+// The parameter `list` must be type of slice of map or struct.
 func (tx *TX) BatchInsert(table string, list interface{}, batch ...int) (sql.Result, error) {
 	if len(batch) > 0 {
 		return tx.Model(table).Data(list).Batch(batch[0]).Insert()
@@ -222,7 +222,7 @@ func (tx *TX) BatchInsert(table string, list interface{}, batch ...int) (sql.Res
 }
 
 // BatchInsert batch inserts data with ignore option.
-// The parameter <list> must be type of slice of map or struct.
+// The parameter `list` must be type of slice of map or struct.
 func (tx *TX) BatchInsertIgnore(table string, list interface{}, batch ...int) (sql.Result, error) {
 	if len(batch) > 0 {
 		return tx.Model(table).Data(list).Batch(batch[0]).InsertIgnore()
@@ -231,7 +231,7 @@ func (tx *TX) BatchInsertIgnore(table string, list interface{}, batch ...int) (s
 }
 
 // BatchReplace batch replaces data.
-// The parameter <list> must be type of slice of map or struct.
+// The parameter `list` must be type of slice of map or struct.
 func (tx *TX) BatchReplace(table string, list interface{}, batch ...int) (sql.Result, error) {
 	if len(batch) > 0 {
 		return tx.Model(table).Data(list).Batch(batch[0]).Replace()
@@ -240,7 +240,7 @@ func (tx *TX) BatchReplace(table string, list interface{}, batch ...int) (sql.Re
 }
 
 // BatchSave batch replaces data.
-// The parameter <list> must be type of slice of map or struct.
+// The parameter `list` must be type of slice of map or struct.
 func (tx *TX) BatchSave(table string, list interface{}, batch ...int) (sql.Result, error) {
 	if len(batch) > 0 {
 		return tx.Model(table).Data(list).Batch(batch[0]).Save()
@@ -250,11 +250,11 @@ func (tx *TX) BatchSave(table string, list interface{}, batch ...int) (sql.Resul
 
 // Update does "UPDATE ... " statement for the table.
 //
-// The parameter <data> can be type of string/map/gmap/struct/*struct, etc.
+// The parameter `data` can be type of string/map/gmap/struct/*struct, etc.
 // Eg: "uid=10000", "uid", 10000, g.Map{"uid": 10000, "name":"john"}
 //
-// The parameter <condition> can be type of string/map/gmap/slice/struct/*struct, etc.
-// It is commonly used with parameter <args>.
+// The parameter `condition` can be type of string/map/gmap/slice/struct/*struct, etc.
+// It is commonly used with parameter `args`.
 // Eg:
 // "uid=10000",
 // "uid", 10000
@@ -268,8 +268,8 @@ func (tx *TX) Update(table string, data interface{}, condition interface{}, args
 
 // Delete does "DELETE FROM ... " statement for the table.
 //
-// The parameter <condition> can be type of string/map/gmap/slice/struct/*struct, etc.
-// It is commonly used with parameter <args>.
+// The parameter `condition` can be type of string/map/gmap/slice/struct/*struct, etc.
+// It is commonly used with parameter `args`.
 // Eg:
 // "uid=10000",
 // "uid", 10000

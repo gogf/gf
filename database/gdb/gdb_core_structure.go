@@ -24,8 +24,8 @@ import (
 // convertFieldValueToLocalValue automatically checks and converts field value from database type
 // to golang variable type.
 func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType string) interface{} {
-	// If there's no type retrieved, it returns the <fieldValue> directly
-	// to use its original data type, as <fieldValue> is type of interface{}.
+	// If there's no type retrieved, it returns the `fieldValue` directly
+	// to use its original data type, as `fieldValue` is type of interface{}.
 	if fieldType == "" {
 		return fieldValue
 	}
@@ -149,7 +149,7 @@ func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType s
 // mappingAndFilterData automatically mappings the map key to table field and removes
 // all key-value pairs that are not the field of given table.
 func (c *Core) mappingAndFilterData(schema, table string, data map[string]interface{}, filter bool) (map[string]interface{}, error) {
-	if fieldsMap, err := c.DB.TableFields(table, schema); err == nil {
+	if fieldsMap, err := c.db.TableFields(table, schema); err == nil {
 		fieldsKeyMap := make(map[string]interface{}, len(fieldsMap))
 		for k, _ := range fieldsMap {
 			fieldsKeyMap[k] = nil
@@ -182,7 +182,7 @@ func (c *Core) mappingAndFilterData(schema, table string, data map[string]interf
 //func (c *Core) filterFields(schema, table string, data map[string]interface{}) map[string]interface{} {
 //	// It must use data copy here to avoid its changing the origin data map.
 //	newDataMap := make(map[string]interface{}, len(data))
-//	if fields, err := c.DB.TableFields(table, schema); err == nil {
+//	if fields, err := c.db.TableFields(table, schema); err == nil {
 //		for k, v := range data {
 //			if _, ok := fields[k]; ok {
 //				newDataMap[k] = v

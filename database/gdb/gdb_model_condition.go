@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-// Where sets the condition statement for the model. The parameter <where> can be type of
+// Where sets the condition statement for the model. The parameter `where` can be type of
 // string/map/gmap/slice/struct/*struct, etc. Note that, if it's called more than one times,
 // multiple conditions will be joined into where statement using "AND".
 // Eg:
@@ -45,9 +45,9 @@ func (m *Model) Having(having interface{}, args ...interface{}) *Model {
 	return model
 }
 
-// WherePri does the same logic as Model.Where except that if the parameter <where>
+// WherePri does the same logic as Model.Where except that if the parameter `where`
 // is a single condition like int/string/float/slice, it treats the condition as the primary
-// key value. That is, if primary key is "id" and given <where> parameter as "123", the
+// key value. That is, if primary key is "id" and given `where` parameter as "123", the
 // WherePri function treats the condition as "id=123", but Model.Where treats the condition
 // as string "123".
 func (m *Model) WherePri(where interface{}, args ...interface{}) *Model {
@@ -115,7 +115,7 @@ func (m *Model) OrderBy(orderBy string) *Model {
 }
 
 // Limit sets the "LIMIT" statement for the model.
-// The parameter <limit> can be either one or two number, if passed two number is passed,
+// The parameter `limit` can be either one or two number, if passed two number is passed,
 // it then sets "LIMIT limit[0],limit[1]" statement for the model, or else it sets "LIMIT limit[0]"
 // statement.
 func (m *Model) Limit(limit ...int) *Model {
@@ -139,7 +139,7 @@ func (m *Model) Offset(offset int) *Model {
 }
 
 // Page sets the paging number for the model.
-// The parameter <page> is started from 1 for paging.
+// The parameter `page` is started from 1 for paging.
 // Note that, it differs that the Limit function starts from 0 for "LIMIT" statement.
 func (m *Model) Page(page, limit int) *Model {
 	model := m.getModel()

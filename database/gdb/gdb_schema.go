@@ -16,7 +16,7 @@ type Schema struct {
 // Schema creates and returns a schema.
 func (c *Core) Schema(schema string) *Schema {
 	return &Schema{
-		db:     c.DB,
+		db:     c.db,
 		schema: schema,
 	}
 }
@@ -31,7 +31,7 @@ func (tx *TX) Schema(schema string) *Schema {
 }
 
 // Table creates and returns a new ORM model.
-// The parameter <tables> can be more than one table names, like :
+// The parameter `tables` can be more than one table names, like :
 // "user", "user u", "user, user_detail", "user u, user_detail ud"
 func (s *Schema) Table(table string) *Model {
 	var m *Model

@@ -24,7 +24,7 @@ func (m *Model) Batch(batch int) *Model {
 }
 
 // Data sets the operation data for the model.
-// The parameter <data> can be type of string/map/gmap/slice/struct/*struct, etc.
+// The parameter `data` can be type of string/map/gmap/slice/struct/*struct, etc.
 // Note that, it uses shallow value copying for `data` if `data` is type of map/slice
 // to avoid changing it inside function.
 // Eg:
@@ -100,7 +100,7 @@ func (m *Model) Data(data ...interface{}) *Model {
 }
 
 // Insert does "INSERT INTO ..." statement for the model.
-// The optional parameter <data> is the same as the parameter of Model.Data function,
+// The optional parameter `data` is the same as the parameter of Model.Data function,
 // see Model.Data.
 func (m *Model) Insert(data ...interface{}) (result sql.Result, err error) {
 	if len(data) > 0 {
@@ -110,7 +110,7 @@ func (m *Model) Insert(data ...interface{}) (result sql.Result, err error) {
 }
 
 // InsertIgnore does "INSERT IGNORE INTO ..." statement for the model.
-// The optional parameter <data> is the same as the parameter of Model.Data function,
+// The optional parameter `data` is the same as the parameter of Model.Data function,
 // see Model.Data.
 func (m *Model) InsertIgnore(data ...interface{}) (result sql.Result, err error) {
 	if len(data) > 0 {
@@ -120,7 +120,7 @@ func (m *Model) InsertIgnore(data ...interface{}) (result sql.Result, err error)
 }
 
 // Replace does "REPLACE INTO ..." statement for the model.
-// The optional parameter <data> is the same as the parameter of Model.Data function,
+// The optional parameter `data` is the same as the parameter of Model.Data function,
 // see Model.Data.
 func (m *Model) Replace(data ...interface{}) (result sql.Result, err error) {
 	if len(data) > 0 {
@@ -130,7 +130,7 @@ func (m *Model) Replace(data ...interface{}) (result sql.Result, err error) {
 }
 
 // Save does "INSERT INTO ... ON DUPLICATE KEY UPDATE..." statement for the model.
-// The optional parameter <data> is the same as the parameter of Model.Data function,
+// The optional parameter `data` is the same as the parameter of Model.Data function,
 // see Model.Data.
 //
 // It updates the record if there's primary or unique index in the saving data,

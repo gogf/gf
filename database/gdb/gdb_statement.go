@@ -69,11 +69,11 @@ func (s *Stmt) doStmtCommit(stmtType string, ctx context.Context, args ...interf
 			Error:  err,
 			Start:  timestampMilli1,
 			End:    timestampMilli2,
-			Group:  s.core.DB.GetGroup(),
+			Group:  s.core.db.GetGroup(),
 		}
 	)
 	s.core.addSqlToTracing(ctx, sqlObj)
-	if s.core.DB.GetDebug() {
+	if s.core.db.GetDebug() {
 		s.core.writeSqlToLogger(sqlObj)
 	}
 	return result, err

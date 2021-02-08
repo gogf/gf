@@ -28,11 +28,11 @@ var (
 // Trim strips whitespace (or other characters) from the beginning and end of a string.
 // The optional parameter <characterMask> specifies the additional stripped characters.
 func Trim(str string, characterMask ...string) string {
-	if len(characterMask) == 0 {
-		return strings.Trim(str, defaultTrimChars)
-	} else {
-		return strings.Trim(str, defaultTrimChars+characterMask[0])
+	trimChars := defaultTrimChars
+	if len(characterMask) > 0 {
+		trimChars += characterMask[0]
 	}
+	return strings.Trim(str, trimChars)
 }
 
 // TrimStr strips all of the given <cut> string from the beginning and end of a string.
@@ -43,11 +43,11 @@ func TrimStr(str string, cut string, count ...int) string {
 
 // TrimLeft strips whitespace (or other characters) from the beginning of a string.
 func TrimLeft(str string, characterMask ...string) string {
-	if len(characterMask) == 0 {
-		return strings.TrimLeft(str, defaultTrimChars)
-	} else {
-		return strings.TrimLeft(str, defaultTrimChars+characterMask[0])
+	trimChars := defaultTrimChars
+	if len(characterMask) > 0 {
+		trimChars += characterMask[0]
 	}
+	return strings.TrimLeft(str, trimChars)
 }
 
 // TrimLeftStr strips all of the given <cut> string from the beginning of a string.
@@ -69,11 +69,11 @@ func TrimLeftStr(str string, cut string, count ...int) string {
 
 // TrimRight strips whitespace (or other characters) from the end of a string.
 func TrimRight(str string, characterMask ...string) string {
-	if len(characterMask) == 0 {
-		return strings.TrimRight(str, defaultTrimChars)
-	} else {
-		return strings.TrimRight(str, defaultTrimChars+characterMask[0])
+	trimChars := defaultTrimChars
+	if len(characterMask) > 0 {
+		trimChars += characterMask[0]
 	}
+	return strings.TrimRight(str, trimChars)
 }
 
 // TrimRightStr strips all of the given <cut> string from the end of a string.
@@ -93,4 +93,29 @@ func TrimRightStr(str string, cut string, count ...int) string {
 		}
 	}
 	return str
+}
+
+// TrimAll trims all characters in string `str`.
+func TrimAll(str string, characterMask ...string) string {
+	trimChars := defaultTrimChars
+	if len(characterMask) > 0 {
+		trimChars += characterMask[0]
+	}
+	var (
+		filtered bool
+		slice    = make([]rune, 0, len(str))
+	)
+	for _, char := range str {
+		filtered = false
+		for _, trimChar := range trimChars {
+			if char == trimChar {
+				filtered = true
+				break
+			}
+		}
+		if !filtered {
+			slice = append(slice, char)
+		}
+	}
+	return string(slice)
 }
