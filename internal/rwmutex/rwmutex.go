@@ -17,7 +17,7 @@ type RWMutex struct {
 }
 
 // New creates and returns a new *RWMutex.
-// The parameter <safe> is used to specify whether using this mutex in concurrent safety,
+// The parameter `safe` is used to specify whether using this mutex in concurrent safety,
 // which is false in default.
 func New(safe ...bool) *RWMutex {
 	mu := Create(safe...)
@@ -25,7 +25,7 @@ func New(safe ...bool) *RWMutex {
 }
 
 // Create creates and returns a new RWMutex object.
-// The parameter <safe> is used to specify whether using this mutex in concurrent safety,
+// The parameter `safe` is used to specify whether using this mutex in concurrent safety,
 // which is false in default.
 func Create(safe ...bool) RWMutex {
 	mu := RWMutex{}

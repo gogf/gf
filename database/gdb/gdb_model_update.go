@@ -19,7 +19,7 @@ import (
 
 // Update does "UPDATE ... " statement for the model.
 //
-// If the optional parameter <dataAndWhere> is given, the dataAndWhere[0] is the updated data field,
+// If the optional parameter `dataAndWhere` is given, the dataAndWhere[0] is the updated data field,
 // and dataAndWhere[1:] is treated as where condition fields.
 // Also see Model.Data and Model.Where functions.
 func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err error) {

@@ -26,7 +26,7 @@ func (m *Model) Filter() *Model {
 }
 
 // Fields sets the operation fields of the model, multiple fields joined using char ','.
-// The parameter <fieldNamesOrMapStruct> can be type of string/map/*map/struct/*struct.
+// The parameter `fieldNamesOrMapStruct` can be type of string/map/*map/struct/*struct.
 func (m *Model) Fields(fieldNamesOrMapStruct ...interface{}) *Model {
 	length := len(fieldNamesOrMapStruct)
 	if length == 0 {
@@ -56,7 +56,7 @@ func (m *Model) Fields(fieldNamesOrMapStruct ...interface{}) *Model {
 
 // FieldsEx sets the excluded operation fields of the model, multiple fields joined using char ','.
 // Note that this function supports only single table operations.
-// The parameter <fieldNamesOrMapStruct> can be type of string/map/*map/struct/*struct.
+// The parameter `fieldNamesOrMapStruct` can be type of string/map/*map/struct/*struct.
 func (m *Model) FieldsEx(fieldNamesOrMapStruct ...interface{}) *Model {
 	length := len(fieldNamesOrMapStruct)
 	if length == 0 {
@@ -88,7 +88,7 @@ func (m *Model) FieldsStr(prefix ...string) string {
 }
 
 // FieldsStr retrieves and returns all fields from the table, joined with char ','.
-// The optional parameter <prefix> specifies the prefix for each field, eg: FieldsStr("u.").
+// The optional parameter `prefix` specifies the prefix for each field, eg: FieldsStr("u.").
 func (m *Model) GetFieldsStr(prefix ...string) string {
 	prefixStr := ""
 	if len(prefix) > 0 {
@@ -122,10 +122,10 @@ func (m *Model) FieldsExStr(fields string, prefix ...string) string {
 	return m.GetFieldsExStr(fields, prefix...)
 }
 
-// FieldsExStr retrieves and returns fields which are not in parameter <fields> from the table,
+// FieldsExStr retrieves and returns fields which are not in parameter `fields` from the table,
 // joined with char ','.
-// The parameter <fields> specifies the fields that are excluded.
-// The optional parameter <prefix> specifies the prefix for each field, eg: FieldsExStr("id", "u.").
+// The parameter `fields` specifies the fields that are excluded.
+// The optional parameter `prefix` specifies the prefix for each field, eg: FieldsExStr("id", "u.").
 func (m *Model) GetFieldsExStr(fields string, prefix ...string) string {
 	prefixStr := ""
 	if len(prefix) > 0 {

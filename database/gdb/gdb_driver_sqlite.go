@@ -75,12 +75,12 @@ func (d *DriverSqlite) HandleSqlBeforeCommit(link Link, sql string, args []inter
 // It's mainly used in cli tool chain for automatically generating the models.
 func (d *DriverSqlite) Tables(schema ...string) (tables []string, err error) {
 	var result Result
-	link, err := d.DB.GetSlave(schema...)
+	link, err := d.db.GetSlave(schema...)
 	if err != nil {
 		return nil, err
 	}
 
-	result, err = d.DB.DoGetAll(link, `SELECT NAME FROM SQLITE_MASTER WHERE TYPE='table' ORDER BY NAME`)
+	result, err = d.db.DoGetAll(link, `SELECT NAME FROM SQLITE_MASTER WHERE TYPE='table' ORDER BY NAME`)
 	if err != nil {
 		return
 	}
@@ -99,7 +99,7 @@ func (d *DriverSqlite) TableFields(table string, schema ...string) (fields map[s
 	if gstr.Contains(table, " ") {
 		return nil, gerror.New("function TableFields supports only single table operations")
 	}
-	checkSchema := d.DB.GetSchema()
+	checkSchema := d.db.GetSchema()
 	if len(schema) > 0 && schema[0] != "" {
 		checkSchema = schema[0]
 	}
@@ -110,11 +110,11 @@ func (d *DriverSqlite) TableFields(table string, schema ...string) (fields map[s
 				result Result
 				link   *sql.DB
 			)
-			link, err = d.DB.GetSlave(checkSchema)
+			link, err = d.db.GetSlave(checkSchema)
 			if err != nil {
 				return nil, err
 			}
-			result, err = d.DB.DoGetAll(link, fmt.Sprintf(`PRAGMA TABLE_INFO(%s)`, table))
+			result, err = d.db.DoGetAll(link, fmt.Sprintf(`PRAGMA TABLE_INFO(%s)`, table))
 			if err != nil {
 				return nil, err
 			}

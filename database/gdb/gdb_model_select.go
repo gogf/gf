@@ -28,7 +28,7 @@ func (m *Model) Select(where ...interface{}) (Result, error) {
 // It retrieves the records from table and returns the result as slice type.
 // It returns nil if there's no record retrieved with the given conditions from table.
 //
-// The optional parameter <where> is the same as the parameter of Model.Where function,
+// The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
 func (m *Model) All(where ...interface{}) (Result, error) {
 	return m.doGetAll(false, where...)
@@ -38,8 +38,8 @@ func (m *Model) All(where ...interface{}) (Result, error) {
 // It retrieves the records from table and returns the result as slice type.
 // It returns nil if there's no record retrieved with the given conditions from table.
 //
-// The parameter <limit1> specifies whether limits querying only one record if m.limit is not set.
-// The optional parameter <where> is the same as the parameter of Model.Where function,
+// The parameter `limit1` specifies whether limits querying only one record if m.limit is not set.
+// The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
 func (m *Model) doGetAll(limit1 bool, where ...interface{}) (Result, error) {
 	if len(where) > 0 {
@@ -139,7 +139,7 @@ func (m *Model) Chunk(limit int, callback func(result Result, err error) bool) {
 // One retrieves one record from table and returns the result as map type.
 // It returns nil if there's no record retrieved with the given conditions from table.
 //
-// The optional parameter <where> is the same as the parameter of Model.Where function,
+// The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
 func (m *Model) One(where ...interface{}) (Record, error) {
 	if len(where) > 0 {
@@ -158,7 +158,7 @@ func (m *Model) One(where ...interface{}) (Record, error) {
 // Value retrieves a specified record value from table and returns the result as interface type.
 // It returns nil if there's no record found with the given conditions from table.
 //
-// If the optional parameter <fieldsAndWhere> is given, the fieldsAndWhere[0] is the selected fields
+// If the optional parameter `fieldsAndWhere` is given, the fieldsAndWhere[0] is the selected fields
 // and fieldsAndWhere[1:] is treated as where condition fields.
 // Also see Model.Fields and Model.Where functions.
 func (m *Model) Value(fieldsAndWhere ...interface{}) (Value, error) {
@@ -184,7 +184,7 @@ func (m *Model) Value(fieldsAndWhere ...interface{}) (Value, error) {
 // Array queries and returns data values as slice from database.
 // Note that if there're multiple columns in the result, it returns just one column values randomly.
 //
-// If the optional parameter <fieldsAndWhere> is given, the fieldsAndWhere[0] is the selected fields
+// If the optional parameter `fieldsAndWhere` is given, the fieldsAndWhere[0] is the selected fields
 // and fieldsAndWhere[1:] is treated as where condition fields.
 // Also see Model.Fields and Model.Where functions.
 func (m *Model) Array(fieldsAndWhere ...interface{}) ([]Value, error) {
@@ -205,14 +205,14 @@ func (m *Model) Array(fieldsAndWhere ...interface{}) ([]Value, error) {
 }
 
 // Struct retrieves one record from table and converts it into given struct.
-// The parameter <pointer> should be type of *struct/**struct. If type **struct is given,
+// The parameter `pointer` should be type of *struct/**struct. If type **struct is given,
 // it can create the struct internally during converting.
 //
-// The optional parameter <where> is the same as the parameter of Model.Where function,
+// The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
 //
 // Note that it returns sql.ErrNoRows if there's no record retrieved with the given conditions
-// from table and <pointer> is not nil.
+// from table and `pointer` is not nil.
 //
 // Eg:
 // user := new(User)
@@ -225,18 +225,21 @@ func (m *Model) Struct(pointer interface{}, where ...interface{}) error {
 	if err != nil {
 		return err
 	}
-	return one.Struct(pointer)
+	if err = one.Struct(pointer); err != nil {
+		return err
+	}
+	return m.doWithScan(pointer)
 }
 
 // Structs retrieves records from table and converts them into given struct slice.
-// The parameter <pointer> should be type of *[]struct/*[]*struct. It can create and fill the struct
+// The parameter `pointer` should be type of *[]struct/*[]*struct. It can create and fill the struct
 // slice internally during converting.
 //
-// The optional parameter <where> is the same as the parameter of Model.Where function,
+// The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
 //
 // Note that it returns sql.ErrNoRows if there's no record retrieved with the given conditions
-// from table and <pointer> is not empty.
+// from table and `pointer` is not empty.
 //
 // Eg:
 // users := ([]User)(nil)
@@ -252,11 +255,11 @@ func (m *Model) Structs(pointer interface{}, where ...interface{}) error {
 	return all.Structs(pointer)
 }
 
-// Scan automatically calls Struct or Structs function according to the type of parameter <pointer>.
-// It calls function Struct if <pointer> is type of *struct/**struct.
-// It calls function Structs if <pointer> is type of *[]struct/*[]*struct.
+// Scan automatically calls Struct or Structs function according to the type of parameter `pointer`.
+// It calls function Struct if `pointer` is type of *struct/**struct.
+// It calls function Structs if `pointer` is type of *[]struct/*[]*struct.
 //
-// The optional parameter <where> is the same as the parameter of Model.Where function,
+// The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
 //
 // Note that it returns sql.ErrNoRows if there's no record retrieved with the given conditions
@@ -275,21 +278,20 @@ func (m *Model) Structs(pointer interface{}, where ...interface{}) error {
 // users := ([]*User)(nil)
 // err   := db.Model("user").Scan(&users)
 func (m *Model) Scan(pointer interface{}, where ...interface{}) error {
-	t := reflect.TypeOf(pointer)
-	k := t.Kind()
-	if k != reflect.Ptr {
-		return fmt.Errorf("params should be type of pointer, but got: %v", k)
+	var reflectType reflect.Type
+	if v, ok := pointer.(reflect.Value); ok {
+		reflectType = v.Type()
+	} else {
+		reflectType = reflect.TypeOf(pointer)
 	}
-	switch t.Elem().Kind() {
-	case reflect.Array, reflect.Slice:
+	if gstr.Contains(reflectType.String(), "[]") {
 		return m.Structs(pointer, where...)
-	default:
-		return m.Struct(pointer, where...)
 	}
+	return m.Struct(pointer, where...)
 }
 
-// ScanList converts <r> to struct slice which contains other complex struct attributes.
-// Note that the parameter <listPointer> should be type of *[]struct/*[]*struct.
+// ScanList converts `r` to struct slice which contains other complex struct attributes.
+// Note that the parameter `listPointer` should be type of *[]struct/*[]*struct.
 // Usage example:
 //
 // type Entity struct {
@@ -307,7 +309,7 @@ func (m *Model) Scan(pointer interface{}, where ...interface{}) error {
 // The parameters "User"/"UserDetail"/"UserScores" in the example codes specify the target attribute struct
 // that current result will be bound to.
 // The "uid" in the example codes is the table field name of the result, and the "Uid" is the relational
-// struct attribute name. It automatically calculates the HasOne/HasMany relationship with given <relation>
+// struct attribute name. It automatically calculates the HasOne/HasMany relationship with given `relation`
 // parameter.
 // See the example or unit testing cases for clear understanding for this function.
 func (m *Model) ScanList(listPointer interface{}, attributeName string, relation ...string) (err error) {
@@ -319,7 +321,7 @@ func (m *Model) ScanList(listPointer interface{}, attributeName string, relation
 }
 
 // Count does "SELECT COUNT(x) FROM ..." statement for the model.
-// The optional parameter <where> is the same as the parameter of Model.Where function,
+// The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
 func (m *Model) Count(where ...interface{}) (int, error) {
 	if len(where) > 0 {

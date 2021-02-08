@@ -14,13 +14,13 @@ import (
 // if there's another same sql request, it just reads and returns the result from cache, it
 // but not committed and executed into the database.
 //
-// If the parameter <duration> < 0, which means it clear the cache with given <name>.
-// If the parameter <duration> = 0, which means it never expires.
-// If the parameter <duration> > 0, which means it expires after <duration>.
+// If the parameter `duration` < 0, which means it clear the cache with given `name`.
+// If the parameter `duration` = 0, which means it never expires.
+// If the parameter `duration` > 0, which means it expires after `duration`.
 //
-// The optional parameter <name> is used to bind a name to the cache, which means you can
-// later control the cache like changing the <duration> or clearing the cache with specified
-// <name>.
+// The optional parameter `name` is used to bind a name to the cache, which means you can
+// later control the cache like changing the `duration` or clearing the cache with specified
+// `name`.
 //
 // Note that, the cache feature is disabled if the model is performing select statement
 // on a transaction.

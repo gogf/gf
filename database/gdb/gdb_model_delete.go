@@ -15,7 +15,7 @@ import (
 )
 
 // Delete does "DELETE FROM ... " statement for the model.
-// The optional parameter <where> is the same as the parameter of Model.Where function,
+// The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
 func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 	if len(where) > 0 {

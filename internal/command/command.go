@@ -59,7 +59,7 @@ func Init(args ...string) {
 	}
 }
 
-// GetOpt returns the option value named <name>.
+// GetOpt returns the option value named `name`.
 func GetOpt(name string, def ...string) string {
 	Init()
 	if v, ok := defaultParsedOptions[name]; ok {
@@ -77,14 +77,14 @@ func GetOptAll() map[string]string {
 	return defaultParsedOptions
 }
 
-// ContainsOpt checks whether option named <name> exist in the arguments.
+// ContainsOpt checks whether option named `name` exist in the arguments.
 func ContainsOpt(name string) bool {
 	Init()
 	_, ok := defaultParsedOptions[name]
 	return ok
 }
 
-// GetArg returns the argument at <index>.
+// GetArg returns the argument at `index`.
 func GetArg(index int, def ...string) string {
 	Init()
 	if index < len(defaultParsedArgs) {
@@ -102,9 +102,9 @@ func GetArgAll() []string {
 	return defaultParsedArgs
 }
 
-// GetOptWithEnv returns the command line argument of the specified <key>.
-// If the argument does not exist, then it returns the environment variable with specified <key>.
-// It returns the default value <def> if none of them exists.
+// GetOptWithEnv returns the command line argument of the specified `key`.
+// If the argument does not exist, then it returns the environment variable with specified `key`.
+// It returns the default value `def` if none of them exists.
 //
 // Fetching Rules:
 // 1. Command line arguments are in lowercase format, eg: gf.<package name>.<variable name>;

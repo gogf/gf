@@ -83,11 +83,11 @@ func (d *DriverMysql) HandleSqlBeforeCommit(link Link, sql string, args []interf
 // It's mainly used in cli tool chain for automatically generating the models.
 func (d *DriverMysql) Tables(schema ...string) (tables []string, err error) {
 	var result Result
-	link, err := d.DB.GetSlave(schema...)
+	link, err := d.db.GetSlave(schema...)
 	if err != nil {
 		return nil, err
 	}
-	result, err = d.DB.DoGetAll(link, `SHOW TABLES`)
+	result, err = d.db.DoGetAll(link, `SHOW TABLES`)
 	if err != nil {
 		return
 	}
@@ -125,13 +125,13 @@ func (d *DriverMysql) TableFields(table string, schema ...string) (fields map[st
 				result Result
 				link   *sql.DB
 			)
-			link, err = d.DB.GetSlave(checkSchema)
+			link, err = d.db.GetSlave(checkSchema)
 			if err != nil {
 				return nil, err
 			}
-			result, err = d.DB.DoGetAll(
+			result, err = d.db.DoGetAll(
 				link,
-				fmt.Sprintf(`SHOW FULL COLUMNS FROM %s`, d.DB.QuoteWord(table)),
+				fmt.Sprintf(`SHOW FULL COLUMNS FROM %s`, d.db.QuoteWord(table)),
 			)
 			if err != nil {
 				return nil, err

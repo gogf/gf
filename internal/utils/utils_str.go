@@ -67,7 +67,7 @@ func UcFirst(s string) string {
 	return s
 }
 
-// ReplaceByMap returns a copy of <origin>,
+// ReplaceByMap returns a copy of `origin`,
 // which is replaced by a map in unordered way, case-sensitively.
 func ReplaceByMap(origin string, replaces map[string]string) string {
 	for k, v := range replaces {
@@ -87,7 +87,7 @@ func RemoveSymbols(s string) string {
 	return string(b)
 }
 
-// EqualFoldWithoutChars checks string <s1> and <s2> equal case-insensitively,
+// EqualFoldWithoutChars checks string `s1` and `s2` equal case-insensitively,
 // with/without chars '-'/'_'/'.'/' '.
 func EqualFoldWithoutChars(s1, s2 string) bool {
 	return strings.EqualFold(RemoveSymbols(s1), RemoveSymbols(s2))

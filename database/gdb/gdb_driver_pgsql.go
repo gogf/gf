@@ -90,7 +90,7 @@ func (d *DriverPgsql) HandleSqlBeforeCommit(link Link, sql string, args []interf
 // It's mainly used in cli tool chain for automatically generating the models.
 func (d *DriverPgsql) Tables(schema ...string) (tables []string, err error) {
 	var result Result
-	link, err := d.DB.GetSlave(schema...)
+	link, err := d.db.GetSlave(schema...)
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +98,7 @@ func (d *DriverPgsql) Tables(schema ...string) (tables []string, err error) {
 	if len(schema) > 0 && schema[0] != "" {
 		query = fmt.Sprintf("SELECT TABLENAME FROM PG_TABLES WHERE SCHEMANAME = '%s' ORDER BY TABLENAME", schema[0])
 	}
-	result, err = d.DB.DoGetAll(link, query)
+	result, err = d.db.DoGetAll(link, query)
 	if err != nil {
 		return
 	}
@@ -118,7 +118,7 @@ func (d *DriverPgsql) TableFields(table string, schema ...string) (fields map[st
 		return nil, gerror.New("function TableFields supports only single table operations")
 	}
 	table, _ = gregex.ReplaceString("\"", "", table)
-	checkSchema := d.DB.GetSchema()
+	checkSchema := d.db.GetSchema()
 	if len(schema) > 0 && schema[0] != "" {
 		checkSchema = schema[0]
 	}
@@ -129,7 +129,7 @@ func (d *DriverPgsql) TableFields(table string, schema ...string) (fields map[st
 				result Result
 				link   *sql.DB
 			)
-			link, err = d.DB.GetSlave(checkSchema)
+			link, err = d.db.GetSlave(checkSchema)
 			if err != nil {
 				return nil, err
 			}
@@ -141,7 +141,7 @@ ORDER BY a.attnum`,
 				strings.ToLower(table),
 			)
 			structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
-			result, err = d.DB.DoGetAll(link, structureSql)
+			result, err = d.db.DoGetAll(link, structureSql)
 			if err != nil {
 				return nil, err
 			}

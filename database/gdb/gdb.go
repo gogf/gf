@@ -37,8 +37,22 @@ type DB interface {
 	// "Table" is not proper for that purpose any more.
 	// Deprecated, use Model instead.
 	Table(table ...string) *Model
+
+	// Model creates and returns a new ORM model from given schema.
+	// The parameter `table` can be more than one table names, and also alias name, like:
+	// 1. Model names:
+	//    Model("user")
+	//    Model("user u")
+	//    Model("user, user_detail")
+	//    Model("user u, user_detail ud")
+	// 2. Model name with alias: Model("user", "u")
 	Model(table ...string) *Model
+
+	// Schema creates and returns a schema.
 	Schema(schema string) *Schema
+
+	// With creates and returns an ORM model based on meta data of given object.
+	With(object interface{}) *Model
 
 	// Open creates a raw connection object for database with given node configuration.
 	// Note that it is not recommended using the this function manually.
@@ -158,9 +172,9 @@ type DB interface {
 	FilteredLinkInfo() string
 
 	// HandleSqlBeforeCommit is a hook function, which deals with the sql string before
-	// it's committed to underlying driver. The parameter <link> specifies the current
-	// database connection operation object. You can modify the sql string <sql> and its
-	// arguments <args> as you wish before they're committed to driver.
+	// it's committed to underlying driver. The parameter `link` specifies the current
+	// database connection operation object. You can modify the sql string `sql` and its
+	// arguments `args` as you wish before they're committed to driver.
 	HandleSqlBeforeCommit(link Link, sql string, args []interface{}) (string, []interface{})
 
 	// ===========================================================================
@@ -174,14 +188,14 @@ type DB interface {
 
 // Core is the base struct for database management.
 type Core struct {
-	DB     DB              // DB interface object.
+	db     DB              // DB interface object.
+	ctx    context.Context // Context for chaining operation only.
 	group  string          // Configuration group name.
 	debug  *gtype.Bool     // Enable debug mode for the database, which can be changed in runtime.
 	cache  *gcache.Cache   // Cache manager, SQL result cache only.
 	schema *gtype.String   // Custom schema for this object.
 	logger *glog.Logger    // Logger.
 	config *ConfigNode     // Current config node.
-	ctx    context.Context // Context for chaining operation only.
 }
 
 // Driver is the interface for integrating sql drivers into package gdb.
@@ -302,7 +316,7 @@ func Register(name string, driver Driver) error {
 }
 
 // New creates and returns an ORM object with global configurations.
-// The parameter <name> specifies the configuration group name,
+// The parameter `name` specifies the configuration group name,
 // which is DefaultGroupName in default.
 func New(group ...string) (db DB, err error) {
 	groupName := configs.group
@@ -326,11 +340,11 @@ func New(group ...string) (db DB, err error) {
 				config: node,
 			}
 			if v, ok := driverMap[node.Type]; ok {
-				c.DB, err = v.New(c, node)
+				c.db, err = v.New(c, node)
 				if err != nil {
 					return nil, err
 				}
-				return c.DB, nil
+				return c.db, nil
 			} else {
 				return nil, gerror.New(fmt.Sprintf(`unsupported database type "%s"`, node.Type))
 			}
@@ -343,7 +357,7 @@ func New(group ...string) (db DB, err error) {
 }
 
 // Instance returns an instance for DB operations.
-// The parameter <name> specifies the configuration group name,
+// The parameter `name` specifies the configuration group name,
 // which is DefaultGroupName in default.
 func Instance(name ...string) (db DB, err error) {
 	group := configs.group
@@ -363,7 +377,7 @@ func Instance(name ...string) (db DB, err error) {
 // getConfigNodeByGroup calculates and returns a configuration node of given group. It
 // calculates the value internally using weight algorithm for load balance.
 //
-// The parameter <master> specifies whether retrieving a master node, or else a slave node
+// The parameter `master` specifies whether retrieving a master node, or else a slave node
 // if master-slave configured.
 func getConfigNodeByGroup(group string, master bool) (*ConfigNode, error) {
 	if list, ok := configs.config[group]; ok {
@@ -432,7 +446,7 @@ func getConfigNodeByWeight(cg ConfigGroup) *ConfigNode {
 }
 
 // getSqlDb retrieves and returns a underlying database connection object.
-// The parameter <master> specifies whether retrieves master node connection if
+// The parameter `master` specifies whether retrieves master node connection if
 // master-slave nodes are configured.
 func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error) {
 	// Load balance.
@@ -457,7 +471,7 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 	}
 	// Cache the underlying connection pool object by node.
 	v, _ := internalCache.GetOrSetFuncLock(node.String(), func() (interface{}, error) {
-		sqlDb, err = c.DB.Open(node)
+		sqlDb, err = c.db.Open(node)
 		if err != nil {
 			intlog.Printf("DB open failed: %v, %+v", err, node)
 			return nil, err
@@ -489,10 +503,10 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 		sqlDb = v.(*sql.DB)
 	}
 	if node.Debug {
-		c.DB.SetDebug(node.Debug)
+		c.db.SetDebug(node.Debug)
 	}
 	if node.DryRun {
-		c.DB.SetDryRun(node.DryRun)
+		c.db.SetDryRun(node.DryRun)
 	}
 	return
 }

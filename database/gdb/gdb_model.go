@@ -54,29 +54,26 @@ type whereHolder struct {
 }
 
 const (
-	// Deprecated, use OptionOmitEmpty instead.
-	OPTION_OMITEMPTY = 1
-	// Deprecated, use OptionAllowEmpty instead..
-	OPTION_ALLOWEMPTY = 2
-
-	OptionOmitEmpty  = 1
-	OptionAllowEmpty = 2
-	linkTypeMaster   = 1
-	linkTypeSlave    = 2
-	whereHolderWhere = 1
-	whereHolderAnd   = 2
-	whereHolderOr    = 3
+	OPTION_OMITEMPTY  = 1 // Deprecated, use OptionOmitEmpty instead.
+	OPTION_ALLOWEMPTY = 2 // Deprecated, use OptionAllowEmpty instead.
+	OptionOmitEmpty   = 1
+	OptionAllowEmpty  = 2
+	linkTypeMaster    = 1
+	linkTypeSlave     = 2
+	whereHolderWhere  = 1
+	whereHolderAnd    = 2
+	whereHolderOr     = 3
 )
 
 // Table is alias of Core.Model.
 // See Core.Model.
 // Deprecated, use Model instead.
 func (c *Core) Table(table ...string) *Model {
-	return c.DB.Model(table...)
+	return c.db.Model(table...)
 }
 
 // Model creates and returns a new ORM model from given schema.
-// The parameter <table> can be more than one table names, and also alias name, like:
+// The parameter `table` can be more than one table names, and also alias name, like:
 // 1. Model names:
 //    Model("user")
 //    Model("user u")
@@ -87,13 +84,13 @@ func (c *Core) Model(table ...string) *Model {
 	tables := ""
 	if len(table) > 1 {
 		tables = fmt.Sprintf(
-			`%s AS %s`, c.DB.QuotePrefixTableName(table[0]), c.DB.QuoteWord(table[1]),
+			`%s AS %s`, c.db.QuotePrefixTableName(table[0]), c.db.QuoteWord(table[1]),
 		)
 	} else if len(table) == 1 {
-		tables = c.DB.QuotePrefixTableName(table[0])
+		tables = c.db.QuotePrefixTableName(table[0])
 	}
 	return &Model{
-		db:         c.DB,
+		db:         c.db,
 		tablesInit: tables,
 		tables:     tables,
 		fields:     "*",
@@ -101,6 +98,11 @@ func (c *Core) Model(table ...string) *Model {
 		offset:     -1,
 		option:     OptionAllowEmpty,
 	}
+}
+
+// With creates and returns an ORM model based on meta data of given object.
+func (c *Core) With(object interface{}) *Model {
+	return c.db.Model().With(object)
 }
 
 // Table is alias of tx.Model.
@@ -116,6 +118,12 @@ func (tx *TX) Model(table ...string) *Model {
 	model.db = tx.db
 	model.tx = tx
 	return model
+}
+
+// With acts like Core.With except it operates on transaction.
+// See Core.With.
+func (tx *TX) With(object interface{}) *Model {
+	return tx.Model().With(object)
 }
 
 // Ctx sets the context for current operation.

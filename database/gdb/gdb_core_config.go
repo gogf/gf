@@ -152,7 +152,7 @@ func (c *Core) SetMaxOpenConnCount(n int) {
 }
 
 // SetMaxConnLifetime sets the connection TTL for underlying connection pool.
-// If parameter <d> <= 0, it means the connection never expires.
+// If parameter `d` <= 0, it means the connection never expires.
 func (c *Core) SetMaxConnLifetime(d time.Duration) {
 	c.config.MaxConnLifetime = d
 }

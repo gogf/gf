@@ -26,8 +26,8 @@ type apiMapStrAny interface {
 	MapStrAny() map[string]interface{}
 }
 
-// IsEmpty checks whether given <value> empty.
-// It returns true if <value> is in: 0, nil, false, "", len(slice/map/chan) == 0,
+// IsEmpty checks whether given `value` empty.
+// It returns true if `value` is in: 0, nil, false, "", len(slice/map/chan) == 0,
 // or else it returns false.
 func IsEmpty(value interface{}) bool {
 	if value == nil {
@@ -151,9 +151,9 @@ func IsEmpty(value interface{}) bool {
 	return false
 }
 
-// IsNil checks whether given <value> is nil.
-// Parameter <traceSource> is used for tracing to the source variable if given <value> is type
-// of a pinter that also points to a pointer. It returns nil if the source is nil when <traceSource>
+// IsNil checks whether given `value` is nil.
+// Parameter `traceSource` is used for tracing to the source variable if given `value` is type
+// of a pinter that also points to a pointer. It returns nil if the source is nil when `traceSource`
 // is true.
 // Note that it might use reflect feature which affects performance a little bit.
 func IsNil(value interface{}, traceSource ...bool) bool {
