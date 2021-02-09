@@ -296,7 +296,7 @@ func Test_Structs_Empty(t *testing.T) {
 		all, err := db.Table(table).Where("id>100").All()
 		t.AssertNil(err)
 		users := make([]User, 10)
-		t.AssertNE(all.Structs(&users), nil)
+		t.Assert(all.Structs(&users), nil)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		all, err := db.Table(table).Where("id>100").All()

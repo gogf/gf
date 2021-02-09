@@ -228,7 +228,7 @@ func (m *Model) Struct(pointer interface{}, where ...interface{}) error {
 	if err = one.Struct(pointer); err != nil {
 		return err
 	}
-	return m.doWithScan(pointer)
+	return m.doWithScanStruct(pointer)
 }
 
 // Structs retrieves records from table and converts them into given struct slice.
@@ -252,7 +252,10 @@ func (m *Model) Structs(pointer interface{}, where ...interface{}) error {
 	if err != nil {
 		return err
 	}
-	return all.Structs(pointer)
+	if err = all.Structs(pointer); err != nil {
+		return err
+	}
+	return m.doWithScanStructs(pointer)
 }
 
 // Scan automatically calls Struct or Structs function according to the type of parameter `pointer`.

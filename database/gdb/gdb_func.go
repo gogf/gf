@@ -783,25 +783,3 @@ func FormatSqlWithArgs(sql string, args []interface{}) string {
 		})
 	return newQuery
 }
-
-// convertMapToStruct maps the `data` to given struct.
-// Note that the given parameter `pointer` should be a pointer to s struct.
-func convertMapToStruct(data map[string]interface{}, pointer interface{}) error {
-	tagNameMap, err := structs.TagMapName(pointer, []string{OrmTagForStruct})
-	if err != nil {
-		return err
-	}
-	// It retrieves and returns the mapping between orm tag and the struct attribute name.
-	var (
-		mapping      = make(map[string]string)
-		tagFieldName string
-	)
-	for tag, attr := range tagNameMap {
-		tagFieldName = strings.Split(tag, ",")[0]
-		if !gregex.IsMatchString(regularFieldNameRegPattern, tagFieldName) {
-			continue
-		}
-		mapping[tagFieldName] = attr
-	}
-	return gconv.Struct(data, pointer, mapping)
-}

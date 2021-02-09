@@ -32,17 +32,32 @@ import (
 //    in mapping procedure to do the matching.
 //    It ignores the map key, if it does not match.
 func Struct(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
-	return doStruct(params, pointer, mapping...)
+	var keyToAttributeNameMapping map[string]string
+	if len(mapping) > 0 {
+		keyToAttributeNameMapping = mapping[0]
+	}
+	return doStruct(params, pointer, keyToAttributeNameMapping, "")
+}
+
+// StructTag acts as Struct but also with support for priority tag feature, which retrieves the
+// specified tags for `params` key-value items to struct attribute names mapping.
+// The parameter `priorityTag` supports multiple tags that can be joined with char ','.
+func StructTag(params interface{}, pointer interface{}, priorityTag string) (err error) {
+	return doStruct(params, pointer, nil, priorityTag)
 }
 
 // StructDeep do Struct function recursively.
 // Deprecated, use Struct instead.
 func StructDeep(params interface{}, pointer interface{}, mapping ...map[string]string) error {
-	return doStruct(params, pointer, mapping...)
+	var keyToAttributeNameMapping map[string]string
+	if len(mapping) > 0 {
+		keyToAttributeNameMapping = mapping[0]
+	}
+	return doStruct(params, pointer, keyToAttributeNameMapping, "")
 }
 
 // doStruct is the core internal converting function for any data to struct.
-func doStruct(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
+func doStruct(params interface{}, pointer interface{}, mapping map[string]string, priorityTag string) (err error) {
 	if params == nil {
 		// If <params> is nil, no conversion.
 		return nil
@@ -179,7 +194,7 @@ func doStruct(params interface{}, pointer interface{}, mapping ...map[string]str
 					continue
 				}
 			}
-			if err = doStruct(paramsMap, elemFieldValue, mapping...); err != nil {
+			if err = doStruct(paramsMap, elemFieldValue, mapping, priorityTag); err != nil {
 				return err
 			}
 		} else {
@@ -193,13 +208,26 @@ func doStruct(params interface{}, pointer interface{}, mapping ...map[string]str
 
 	// The key of the tagMap is the attribute name of the struct,
 	// and the value is its replaced tag name for later comparison to improve performance.
-	tagMap := make(map[string]string)
-	tagToNameMap, err := structs.TagMapName(pointerElemReflectValue, StructTagPriority)
+	var (
+		tagMap           = make(map[string]string)
+		priorityTagArray []string
+	)
+	if priorityTag != "" {
+		priorityTagArray = append(utils.SplitAndTrim(priorityTag, ","), StructTagPriority...)
+	} else {
+		priorityTagArray = StructTagPriority
+	}
+	tagToNameMap, err := structs.TagMapName(pointerElemReflectValue, priorityTagArray)
 	if err != nil {
 		return err
 	}
-	for k, v := range tagToNameMap {
-		tagMap[v] = utils.RemoveSymbols(k)
+	for tagName, attributeName := range tagToNameMap {
+		// If there's something else in the tag string,
+		// it uses the first part which is split using char ','.
+		// Eg:
+		// orm:"id, priority"
+		// orm:"name, with:uid=id"
+		tagMap[attributeName] = utils.RemoveSymbols(strings.Split(tagName, ",")[0])
 	}
 
 	var (
@@ -209,8 +237,8 @@ func doStruct(params interface{}, pointer interface{}, mapping ...map[string]str
 	for mapK, mapV := range paramsMap {
 		attrName = ""
 		// It firstly checks the passed mapping rules.
-		if len(mapping) > 0 && len(mapping[0]) > 0 {
-			if passedAttrKey, ok := mapping[0][mapK]; ok {
+		if len(mapping) > 0 {
+			if passedAttrKey, ok := mapping[mapK]; ok {
 				attrName = passedAttrKey
 			}
 		}
@@ -254,7 +282,7 @@ func doStruct(params interface{}, pointer interface{}, mapping ...map[string]str
 		}
 		// Mark it done.
 		doneMap[attrName] = struct{}{}
-		if err := bindVarToStructAttr(pointerElemReflectValue, attrName, mapV, mapping...); err != nil {
+		if err := bindVarToStructAttr(pointerElemReflectValue, attrName, mapV, mapping, priorityTag); err != nil {
 			return err
 		}
 	}
@@ -262,7 +290,7 @@ func doStruct(params interface{}, pointer interface{}, mapping ...map[string]str
 }
 
 // bindVarToStructAttr sets value to struct object attribute by name.
-func bindVarToStructAttr(elem reflect.Value, name string, value interface{}, mapping ...map[string]string) (err error) {
+func bindVarToStructAttr(elem reflect.Value, name string, value interface{}, mapping map[string]string, priorityTag string) (err error) {
 	structFieldValue := elem.FieldByName(name)
 	if !structFieldValue.IsValid() {
 		return nil
@@ -273,7 +301,7 @@ func bindVarToStructAttr(elem reflect.Value, name string, value interface{}, map
 	}
 	defer func() {
 		if e := recover(); e != nil {
-			if err = bindVarToReflectValue(structFieldValue, value, mapping...); err != nil {
+			if err = bindVarToReflectValue(structFieldValue, value, mapping, priorityTag); err != nil {
 				err = gerror.Wrapf(err, `error binding value to attribute "%s"`, name)
 			}
 		}
@@ -322,7 +350,7 @@ func bindVarToReflectValueWithInterfaceCheck(reflectValue reflect.Value, value i
 }
 
 // bindVarToReflectValue sets <value> to reflect value object <structFieldValue>.
-func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, mapping ...map[string]string) (err error) {
+func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, mapping map[string]string, priorityTag string) (err error) {
 	if err, ok := bindVarToReflectValueWithInterfaceCheck(structFieldValue, value); ok {
 		return err
 	}
@@ -342,7 +370,7 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, ma
 	switch kind {
 	case reflect.Struct:
 		// Recursively converting for struct attribute.
-		if err := doStruct(value, structFieldValue); err != nil {
+		if err := doStruct(value, structFieldValue, nil, ""); err != nil {
 			// Note there's reflect conversion mechanism here.
 			structFieldValue.Set(reflect.ValueOf(value).Convert(structFieldValue.Type()))
 		}
@@ -359,14 +387,14 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, ma
 				for i := 0; i < v.Len(); i++ {
 					if t.Kind() == reflect.Ptr {
 						e := reflect.New(t.Elem()).Elem()
-						if err := doStruct(v.Index(i).Interface(), e); err != nil {
+						if err := doStruct(v.Index(i).Interface(), e, nil, ""); err != nil {
 							// Note there's reflect conversion mechanism here.
 							e.Set(reflect.ValueOf(v.Index(i).Interface()).Convert(t))
 						}
 						a.Index(i).Set(e.Addr())
 					} else {
 						e := reflect.New(t).Elem()
-						if err := doStruct(v.Index(i).Interface(), e); err != nil {
+						if err := doStruct(v.Index(i).Interface(), e, nil, ""); err != nil {
 							// Note there's reflect conversion mechanism here.
 							e.Set(reflect.ValueOf(v.Index(i).Interface()).Convert(t))
 						}
@@ -379,14 +407,14 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, ma
 			t := a.Index(0).Type()
 			if t.Kind() == reflect.Ptr {
 				e := reflect.New(t.Elem()).Elem()
-				if err := doStruct(value, e); err != nil {
+				if err := doStruct(value, e, nil, ""); err != nil {
 					// Note there's reflect conversion mechanism here.
 					e.Set(reflect.ValueOf(value).Convert(t))
 				}
 				a.Index(0).Set(e.Addr())
 			} else {
 				e := reflect.New(t).Elem()
-				if err := doStruct(value, e); err != nil {
+				if err := doStruct(value, e, nil, ""); err != nil {
 					// Note there's reflect conversion mechanism here.
 					e.Set(reflect.ValueOf(value).Convert(t))
 				}
@@ -402,7 +430,7 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, ma
 			return err
 		}
 		elem := item.Elem()
-		if err = bindVarToReflectValue(elem, value, mapping...); err == nil {
+		if err = bindVarToReflectValue(elem, value, mapping, priorityTag); err == nil {
 			structFieldValue.Set(elem.Addr())
 		}
 

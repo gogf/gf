@@ -91,12 +91,11 @@ func TagMapName(pointer interface{}, priority []string) (map[string]string, erro
 }
 
 // TagMapField retrieves struct tags as map[tag]*Field from `pointer`, and returns it.
-//
-// The parameter `pointer` should be type of struct/*struct.
+// The parameter `object` should be either type of struct/*struct/[]struct/[]*struct.
 //
 // Note that it only retrieves the exported attributes with first letter up-case from struct.
-func TagMapField(pointer interface{}, priority []string) (map[string]*Field, error) {
-	fields, err := TagFields(pointer, priority)
+func TagMapField(object interface{}, priority []string) (map[string]*Field, error) {
+	fields, err := TagFields(object, priority)
 	if err != nil {
 		return nil, err
 	}
@@ -120,19 +119,31 @@ func getFieldValues(value interface{}) ([]*Field, error) {
 		reflectValue = reflect.ValueOf(value)
 		reflectKind = reflectValue.Kind()
 	}
-
-	for reflectKind == reflect.Ptr {
-		if !reflectValue.IsValid() || reflectValue.IsNil() {
-			// If pointer is type of *struct and nil, then automatically create a temporary struct.
+	for {
+		switch reflectKind {
+		case reflect.Ptr:
+			if !reflectValue.IsValid() || reflectValue.IsNil() {
+				// If pointer is type of *struct and nil, then automatically create a temporary struct.
+				reflectValue = reflect.New(reflectValue.Type().Elem()).Elem()
+				reflectKind = reflectValue.Kind()
+			} else {
+				reflectValue = reflectValue.Elem()
+				reflectKind = reflectValue.Kind()
+			}
+		case reflect.Array, reflect.Slice:
 			reflectValue = reflect.New(reflectValue.Type().Elem()).Elem()
 			reflectKind = reflectValue.Kind()
-		} else {
-			reflectValue = reflectValue.Elem()
-			reflectKind = reflectValue.Kind()
+		default:
+			goto exitLoop
 		}
 	}
+exitLoop:
+	for reflectKind == reflect.Ptr {
+		reflectValue = reflectValue.Elem()
+		reflectKind = reflectValue.Kind()
+	}
 	if reflectKind != reflect.Struct {
-		return nil, errors.New("given value should be type of struct/*struct")
+		return nil, errors.New("given value should be either type of struct/*struct/[]struct/[]*struct")
 	}
 	var (
 		structType = reflectValue.Type()

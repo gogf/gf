@@ -14,90 +14,7 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
-func Test_Struct_Slice(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		type User struct {
-			Scores []int
-		}
-		user := new(User)
-		array := g.Slice{1, 2, 3}
-		err := gconv.Struct(g.Map{"scores": array}, user)
-		t.Assert(err, nil)
-		t.Assert(user.Scores, array)
-	})
-	gtest.C(t, func(t *gtest.T) {
-		type User struct {
-			Scores []int32
-		}
-		user := new(User)
-		array := g.Slice{1, 2, 3}
-		err := gconv.Struct(g.Map{"scores": array}, user)
-		t.Assert(err, nil)
-		t.Assert(user.Scores, array)
-	})
-	gtest.C(t, func(t *gtest.T) {
-		type User struct {
-			Scores []int64
-		}
-		user := new(User)
-		array := g.Slice{1, 2, 3}
-		err := gconv.Struct(g.Map{"scores": array}, user)
-		t.Assert(err, nil)
-		t.Assert(user.Scores, array)
-	})
-	gtest.C(t, func(t *gtest.T) {
-		type User struct {
-			Scores []uint
-		}
-		user := new(User)
-		array := g.Slice{1, 2, 3}
-		err := gconv.Struct(g.Map{"scores": array}, user)
-		t.Assert(err, nil)
-		t.Assert(user.Scores, array)
-	})
-	gtest.C(t, func(t *gtest.T) {
-		type User struct {
-			Scores []uint32
-		}
-		user := new(User)
-		array := g.Slice{1, 2, 3}
-		err := gconv.Struct(g.Map{"scores": array}, user)
-		t.Assert(err, nil)
-		t.Assert(user.Scores, array)
-	})
-	gtest.C(t, func(t *gtest.T) {
-		type User struct {
-			Scores []uint64
-		}
-		user := new(User)
-		array := g.Slice{1, 2, 3}
-		err := gconv.Struct(g.Map{"scores": array}, user)
-		t.Assert(err, nil)
-		t.Assert(user.Scores, array)
-	})
-	gtest.C(t, func(t *gtest.T) {
-		type User struct {
-			Scores []float32
-		}
-		user := new(User)
-		array := g.Slice{1, 2, 3}
-		err := gconv.Struct(g.Map{"scores": array}, user)
-		t.Assert(err, nil)
-		t.Assert(user.Scores, array)
-	})
-	gtest.C(t, func(t *gtest.T) {
-		type User struct {
-			Scores []float64
-		}
-		user := new(User)
-		array := g.Slice{1, 2, 3}
-		err := gconv.Struct(g.Map{"scores": array}, user)
-		t.Assert(err, nil)
-		t.Assert(user.Scores, array)
-	})
-}
-
-func Test_Struct_SliceWithTag(t *testing.T) {
+func Test_Structs_WithTag(t *testing.T) {
 	type User struct {
 		Uid      int    `json:"id"`
 		NickName string `json:"name"`
@@ -144,6 +61,97 @@ func Test_Struct_SliceWithTag(t *testing.T) {
 	})
 }
 
+func Test_Structs_WithoutTag(t *testing.T) {
+	type User struct {
+		Uid      int
+		NickName string
+	}
+	gtest.C(t, func(t *gtest.T) {
+		var users []User
+		params := g.Slice{
+			g.Map{
+				"uid":       1,
+				"nick-name": "name1",
+			},
+			g.Map{
+				"uid":       2,
+				"nick-name": "name2",
+			},
+		}
+		err := gconv.Structs(params, &users)
+		t.Assert(err, nil)
+		t.Assert(len(users), 2)
+		t.Assert(users[0].Uid, 1)
+		t.Assert(users[0].NickName, "name1")
+		t.Assert(users[1].Uid, 2)
+		t.Assert(users[1].NickName, "name2")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var users []*User
+		params := g.Slice{
+			g.Map{
+				"uid":       1,
+				"nick-name": "name1",
+			},
+			g.Map{
+				"uid":       2,
+				"nick-name": "name2",
+			},
+		}
+		err := gconv.Structs(params, &users)
+		t.Assert(err, nil)
+		t.Assert(len(users), 2)
+		t.Assert(users[0].Uid, 1)
+		t.Assert(users[0].NickName, "name1")
+		t.Assert(users[1].Uid, 2)
+		t.Assert(users[1].NickName, "name2")
+	})
+}
+
+func Test_Structs_SliceParameter(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Uid      int
+			NickName string
+		}
+		var users []User
+		params := g.Slice{
+			g.Map{
+				"uid":       1,
+				"nick-name": "name1",
+			},
+			g.Map{
+				"uid":       2,
+				"nick-name": "name2",
+			},
+		}
+		err := gconv.Structs(params, users)
+		t.AssertNE(err, nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Uid      int
+			NickName string
+		}
+		type A struct {
+			Users []User
+		}
+		var a A
+		params := g.Slice{
+			g.Map{
+				"uid":       1,
+				"nick-name": "name1",
+			},
+			g.Map{
+				"uid":       2,
+				"nick-name": "name2",
+			},
+		}
+		err := gconv.Structs(params, a.Users)
+		t.AssertNE(err, nil)
+	})
+}
+
 func Test_Structs_DirectReflectSet(t *testing.T) {
 	type A struct {
 		Id   int
@@ -175,7 +183,7 @@ func Test_Structs_DirectReflectSet(t *testing.T) {
 	})
 }
 
-func Test_Structs_SliceIntAttribute(t *testing.T) {
+func Test_Structs_IntSliceAttribute(t *testing.T) {
 	type A struct {
 		Id []int
 	}

@@ -232,7 +232,7 @@ func doMapConvertForMapOrStructValue(isRoot bool, value interface{}, recursive b
 			rvField     reflect.Value
 			dataMap     = make(map[string]interface{}) // result map.
 			reflectType = reflectValue.Type()          // attribute value type.
-			name        = ""                           // name may be the tag name or the struct attribute name.
+			mapKey      = ""                           // mapKey may be the tag name or the struct attribute name.
 		)
 		for i := 0; i < reflectValue.NumField(); i++ {
 			rtField = reflectType.Field(i)
@@ -242,32 +242,32 @@ func doMapConvertForMapOrStructValue(isRoot bool, value interface{}, recursive b
 			if !utils.IsLetterUpper(fieldName[0]) {
 				continue
 			}
-			name = ""
+			mapKey = ""
 			fieldTag := rtField.Tag
 			for _, tag := range tags {
-				if name = fieldTag.Get(tag); name != "" {
+				if mapKey = fieldTag.Get(tag); mapKey != "" {
 					break
 				}
 			}
-			if name == "" {
-				name = fieldName
+			if mapKey == "" {
+				mapKey = fieldName
 			} else {
 				// Support json tag feature: -, omitempty
-				name = strings.TrimSpace(name)
-				if name == "-" {
+				mapKey = strings.TrimSpace(mapKey)
+				if mapKey == "-" {
 					continue
 				}
-				array := strings.Split(name, ",")
+				array := strings.Split(mapKey, ",")
 				if len(array) > 1 {
 					switch strings.TrimSpace(array[1]) {
 					case "omitempty":
 						if empty.IsEmpty(rvField.Interface()) {
 							continue
 						} else {
-							name = strings.TrimSpace(array[0])
+							mapKey = strings.TrimSpace(array[0])
 						}
 					default:
-						name = strings.TrimSpace(array[0])
+						mapKey = strings.TrimSpace(array[0])
 					}
 				}
 			}
@@ -284,7 +284,7 @@ func doMapConvertForMapOrStructValue(isRoot bool, value interface{}, recursive b
 				switch rvAttrKind {
 				case reflect.Struct:
 					var (
-						hasNoTag        = name == fieldName
+						hasNoTag        = mapKey == fieldName
 						rvAttrInterface = rvAttrField.Interface()
 					)
 					if hasNoTag && rtField.Anonymous {
@@ -296,41 +296,41 @@ func doMapConvertForMapOrStructValue(isRoot bool, value interface{}, recursive b
 								dataMap[k] = v
 							}
 						} else {
-							dataMap[name] = rvAttrInterface
+							dataMap[mapKey] = rvAttrInterface
 						}
 					} else if !hasNoTag && rtField.Anonymous {
 						// It means this attribute field has desired tag.
-						dataMap[name] = doMapConvertForMapOrStructValue(false, rvAttrInterface, true, tags...)
+						dataMap[mapKey] = doMapConvertForMapOrStructValue(false, rvAttrInterface, true, tags...)
 					} else {
-						dataMap[name] = doMapConvertForMapOrStructValue(false, rvAttrInterface, false, tags...)
+						dataMap[mapKey] = doMapConvertForMapOrStructValue(false, rvAttrInterface, false, tags...)
 					}
 
 				// The struct attribute is type of slice.
 				case reflect.Array, reflect.Slice:
 					length := rvField.Len()
 					if length == 0 {
-						dataMap[name] = rvField.Interface()
+						dataMap[mapKey] = rvField.Interface()
 						break
 					}
 					array := make([]interface{}, length)
 					for i := 0; i < length; i++ {
 						array[i] = doMapConvertForMapOrStructValue(false, rvField.Index(i), recursive, tags...)
 					}
-					dataMap[name] = array
+					dataMap[mapKey] = array
 
 				default:
 					if rvField.IsValid() {
-						dataMap[name] = reflectValue.Field(i).Interface()
+						dataMap[mapKey] = reflectValue.Field(i).Interface()
 					} else {
-						dataMap[name] = nil
+						dataMap[mapKey] = nil
 					}
 				}
 			} else {
 				// No recursive map value converting
 				if rvField.IsValid() {
-					dataMap[name] = reflectValue.Field(i).Interface()
+					dataMap[mapKey] = reflectValue.Field(i).Interface()
 				} else {
-					dataMap[name] = nil
+					dataMap[mapKey] = nil
 				}
 			}
 		}
