@@ -7,32 +7,14 @@
 package gstr
 
 import (
+	"github.com/gogf/gf/internal/utils"
 	"strings"
-)
-
-var (
-	// defaultTrimChars are the characters which are stripped by Trim* functions in default.
-	defaultTrimChars = string([]byte{
-		'\t', // Tab.
-		'\v', // Vertical tab.
-		'\n', // New line (line feed).
-		'\r', // Carriage return.
-		'\f', // New page.
-		' ',  // Ordinary space.
-		0x00, // NUL-byte.
-		0x85, // Delete.
-		0xA0, // Non-breaking space.
-	})
 )
 
 // Trim strips whitespace (or other characters) from the beginning and end of a string.
 // The optional parameter <characterMask> specifies the additional stripped characters.
 func Trim(str string, characterMask ...string) string {
-	trimChars := defaultTrimChars
-	if len(characterMask) > 0 {
-		trimChars += characterMask[0]
-	}
-	return strings.Trim(str, trimChars)
+	return utils.Trim(str, characterMask...)
 }
 
 // TrimStr strips all of the given <cut> string from the beginning and end of a string.
@@ -43,7 +25,7 @@ func TrimStr(str string, cut string, count ...int) string {
 
 // TrimLeft strips whitespace (or other characters) from the beginning of a string.
 func TrimLeft(str string, characterMask ...string) string {
-	trimChars := defaultTrimChars
+	trimChars := utils.DefaultTrimChars
 	if len(characterMask) > 0 {
 		trimChars += characterMask[0]
 	}
@@ -69,7 +51,7 @@ func TrimLeftStr(str string, cut string, count ...int) string {
 
 // TrimRight strips whitespace (or other characters) from the end of a string.
 func TrimRight(str string, characterMask ...string) string {
-	trimChars := defaultTrimChars
+	trimChars := utils.DefaultTrimChars
 	if len(characterMask) > 0 {
 		trimChars += characterMask[0]
 	}
@@ -97,7 +79,7 @@ func TrimRightStr(str string, cut string, count ...int) string {
 
 // TrimAll trims all characters in string `str`.
 func TrimAll(str string, characterMask ...string) string {
-	trimChars := defaultTrimChars
+	trimChars := utils.DefaultTrimChars
 	if len(characterMask) > 0 {
 		trimChars += characterMask[0]
 	}

@@ -55,7 +55,7 @@ func Test_Time_Slice_Attribute(t *testing.T) {
 			"arr": g.Slice{"2021-01-12 12:34:56", "2021-01-12 12:34:57"},
 			"one": "2021-01-12 12:34:58",
 		}, &s)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(s.One, "2021-01-12 12:34:58")
 		t.Assert(s.Arr[0], "2021-01-12 12:34:56")
 		t.Assert(s.Arr[1], "2021-01-12 12:34:57")

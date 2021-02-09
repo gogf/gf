@@ -12,6 +12,7 @@ import (
 )
 
 // StructType retrieves and returns the struct Type of specified struct/*struct.
+// The parameter `object` should be either type of struct/*struct/[]struct/[]*struct.
 func StructType(object interface{}) (*Type, error) {
 	var (
 		reflectValue reflect.Value

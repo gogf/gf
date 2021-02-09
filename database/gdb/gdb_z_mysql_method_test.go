@@ -821,7 +821,7 @@ func Test_DB_ToJson(t *testing.T) {
 
 		result = nil
 		err = result.Structs(&users)
-		t.AssertNE(err, nil)
+		t.AssertNil(err)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
