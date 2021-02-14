@@ -11,7 +11,6 @@ import (
 	"errors"
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/net/gtrace"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gomodule/redigo/redis"
@@ -60,14 +59,12 @@ func (c *Conn) do(timeout time.Duration, commandName string, args ...interface{}
 	timestampMilli2 := gtime.TimestampMilli()
 
 	// Tracing.
-	if gtrace.IsActivated(c.ctx) {
-		c.addTracingItem(&tracingItem{
-			err:         err,
-			commandName: commandName,
-			arguments:   args,
-			costMilli:   timestampMilli2 - timestampMilli1,
-		})
-	}
+	c.addTracingItem(&tracingItem{
+		err:         err,
+		commandName: commandName,
+		arguments:   args,
+		costMilli:   timestampMilli2 - timestampMilli1,
+	})
 	return
 }
 
