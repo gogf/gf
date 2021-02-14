@@ -12,6 +12,7 @@ import (
 	"github.com/gogf/gf"
 	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/net/gtrace"
+	"github.com/gogf/gf/os/gcmd"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/label"
@@ -37,9 +38,25 @@ const (
 	tracingEventRedisExecutionArguments = "redis.execution.arguments"
 )
 
+var (
+	// tracingInternal enables tracing for internal type spans.
+	// It's true in default.
+	tracingInternal = true
+)
+
+func init() {
+	tracingInternal = gcmd.GetOptWithEnv("gf.tracing.internal", true).Bool()
+}
+
 // addTracingItem checks and adds redis tracing information to OpenTelemetry.
 func (c *Conn) addTracingItem(item *tracingItem) {
-	tr := otel.GetTracerProvider().Tracer(tracingInstrumentName, trace.WithInstrumentationVersion(gf.VERSION))
+	if !tracingInternal || !gtrace.IsActivated(c.ctx) {
+		return
+	}
+	tr := otel.GetTracerProvider().Tracer(
+		tracingInstrumentName,
+		trace.WithInstrumentationVersion(gf.VERSION),
+	)
 	ctx := c.ctx
 	if ctx == nil {
 		ctx = context.Background()
