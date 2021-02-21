@@ -42,6 +42,12 @@ func Test_New(t *testing.T) {
 		timeTemp := gtime.New(timeNow.TimestampMicro())
 		t.Assert(timeTemp.Time.Format("2006-01-02 15:04:05"), timeNow.Time.Format("2006-01-02 15:04:05"))
 	})
+	// short datetime.
+	gtest.C(t, func(t *gtest.T) {
+		timeTemp := gtime.New("2021-2-9 08:01:21")
+		t.Assert(timeTemp.Format("Y-m-d H:i:s"), "2021-02-09 08:01:21")
+		t.Assert(timeTemp.Time.Format("2006-01-02 15:04:05"), "2021-02-09 08:01:21")
+	})
 }
 
 func Test_Nil(t *testing.T) {
