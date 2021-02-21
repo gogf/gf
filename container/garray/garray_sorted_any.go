@@ -788,3 +788,12 @@ func (a *SortedArray) getComparator() func(a, b interface{}) int {
 	}
 	return a.comparator
 }
+
+// Immutable would clone the Array first and create a immutable one which only supports the read method.
+// Since it's immutable, we don't require the Array be safe.
+func (a *SortedArray) Immutable() ImmutableArray {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+
+	return NewImmutableArray(a.array...)
+}

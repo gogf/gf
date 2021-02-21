@@ -497,3 +497,11 @@ func (m *AnyAnyMap) UnmarshalValue(value interface{}) (err error) {
 	}
 	return
 }
+
+// Immutable would make the map unmodifiable.
+func (m *AnyAnyMap) Immutable() ImmutableAnyAnyMap {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	return NewImmutableAnyAnyMap(m.data)
+}

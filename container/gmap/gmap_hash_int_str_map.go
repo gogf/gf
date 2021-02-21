@@ -469,3 +469,11 @@ func (m *IntStrMap) UnmarshalValue(value interface{}) (err error) {
 	}
 	return
 }
+
+// Immutable would make the map unmodifiable.
+func (m *IntStrMap) Immutable() ImmutableIntStrMap {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	return NewImmutableIntStrMap(m.data)
+}

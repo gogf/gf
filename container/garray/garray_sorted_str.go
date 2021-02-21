@@ -747,3 +747,12 @@ func (a *SortedStrArray) getComparator() func(a, b string) int {
 	}
 	return a.comparator
 }
+
+// Immutable would clone the StrArray first and create a immutable one which only supports the read method.
+// Since it's immutable, we don't require the StrArray be safe.
+func (a *SortedStrArray) Immutable() ImmutableStrArray {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+
+	return NewImmutableStrArray(a.array...)
+}

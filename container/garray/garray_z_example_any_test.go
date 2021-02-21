@@ -279,3 +279,12 @@ func ExampleArray_FilterNil() {
 	// []interface {}{0, 1, 2, "", []interface {}{}, "john"}
 	// []interface {}{1, 2, "john"}
 }
+
+func ExampleArray_Immutable() {
+	array1 := garray.NewFrom(g.Slice{0, 1, 2, nil, "", g.Slice{}, "john"})
+	array2 := array1.FilterEmpty().Immutable()
+	fmt.Printf("%#v\n", array2.Slice())
+
+	// Output:
+	// []interface {}{1, 2, "john"}
+}

@@ -8,8 +8,17 @@
 package gmap
 
 type (
-	Map     = AnyAnyMap // Map is alias of AnyAnyMap.
-	HashMap = AnyAnyMap // HashMap is alias of AnyAnyMap.
+	// Map is alias of AnyAnyMap.
+	Map = AnyAnyMap
+
+	// HashMap is alias of AnyAnyMap.
+	HashMap = AnyAnyMap
+
+	// ImmutableMap is alias of ImmutableAnyAnyMap.
+	ImmutableMap = ImmutableAnyAnyMap
+
+	// ImmutableHashMap is alias of ImmutableAnyAnyMap.
+	ImmutableHashMap = ImmutableAnyAnyMap
 )
 
 // New creates and returns an empty hash map.
@@ -42,4 +51,9 @@ func NewHashMap(safe ...bool) *Map {
 // which is false in default.
 func NewHashMapFrom(data map[interface{}]interface{}, safe ...bool) *Map {
 	return NewAnyAnyMapFrom(data, safe...)
+}
+
+// NewImmutable creates and return a immutable map by the given map.
+func NewImmutable(data map[interface{}]interface{}) ImmutableMap {
+	return NewImmutableAnyAnyMap(data)
 }

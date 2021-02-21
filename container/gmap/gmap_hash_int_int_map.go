@@ -469,3 +469,11 @@ func (m *IntIntMap) UnmarshalValue(value interface{}) (err error) {
 	}
 	return
 }
+
+// Immutable would make the map unmodifiable.
+func (m *IntIntMap) Immutable() ImmutableIntIntMap {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	return NewImmutableIntIntMap(m.data)
+}

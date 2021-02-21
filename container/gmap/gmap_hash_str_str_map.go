@@ -3,7 +3,6 @@
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with gm file,
 // You can obtain one at https://github.com/gogf/gf.
-//
 
 package gmap
 
@@ -461,4 +460,12 @@ func (m *StrStrMap) UnmarshalValue(value interface{}) (err error) {
 	defer m.mu.Unlock()
 	m.data = gconv.MapStrStr(value)
 	return
+}
+
+// Immutable would make the map unmodifiable.
+func (m *StrStrMap) Immutable() ImmutableStrStrMap {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	return NewImmutableStrStrMap(m.data)
 }

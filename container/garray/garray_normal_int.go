@@ -782,3 +782,12 @@ func (a *IntArray) Walk(f func(value int) int) *IntArray {
 func (a *IntArray) IsEmpty() bool {
 	return a.Len() == 0
 }
+
+// Immutable would clone the IntArray first and create a immutable one which only supports the read method.
+// Since it's immutable, we don't require the Array be safe.
+func (a *IntArray) Immutable() ImmutableIntArray {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+
+	return NewImmutableIntArray(a.array...)
+}

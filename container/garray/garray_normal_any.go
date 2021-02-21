@@ -798,3 +798,12 @@ func (a *Array) Walk(f func(value interface{}) interface{}) *Array {
 func (a *Array) IsEmpty() bool {
 	return a.Len() == 0
 }
+
+// Immutable would clone the Array first and create a immutable one which only supports the read method.
+// Since it's immutable, we don't require the Array be safe.
+func (a *Array) Immutable() ImmutableArray {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+
+	return NewImmutableArray(a.array...)
+}

@@ -85,7 +85,14 @@ func (m *ListMap) IteratorDesc(f func(key interface{}, value interface{}) bool) 
 
 // Clone returns a new link map with copy of current map data.
 func (m *ListMap) Clone(safe ...bool) *ListMap {
-	return NewListMapFrom(m.Map(), safe...)
+	r := NewListMap(safe...)
+	m.list.IteratorAsc(func(e *glist.Element) bool {
+		node := e.Value.(*gListMapNode)
+		r.Set(node.key, node.value)
+		return true
+	})
+
+	return r
 }
 
 // Clear deletes all data of the map, it will remake a new underlying data map.
@@ -559,4 +566,10 @@ func (m *ListMap) UnmarshalValue(value interface{}) (err error) {
 		}
 	}
 	return
+}
+
+// Immutable would make the map unmodifiable.
+func (m *ListMap) Immutable() ImmutableListMap {
+	// Make sure the order is still.
+	return m.Clone(false)
 }
