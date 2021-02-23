@@ -173,13 +173,13 @@ func ExampleRegisterRule_OverwriteRequired() {
 		return nil
 	})
 	fmt.Println(gvalid.Check("", "required", "It's required"))
-	fmt.Println(gvalid.Check([]string{}, "required", "It's required"))
-	fmt.Println(gvalid.Check(map[string]int{}, "required", "It's required"))
+	fmt.Println(gvalid.Check(0, "required", "It's required"))
+	fmt.Println(gvalid.Check(false, "required", "It's required"))
 	gvalid.DeleteRule(rule)
 	fmt.Println("rule deleted")
 	fmt.Println(gvalid.Check("", "required", "It's required"))
-	fmt.Println(gvalid.Check([]string{}, "required", "It's required"))
-	fmt.Println(gvalid.Check(map[string]int{}, "required", "It's required"))
+	fmt.Println(gvalid.Check(0, "required", "It's required"))
+	fmt.Println(gvalid.Check(false, "required", "It's required"))
 	// Output:
 	// It's required
 	// It's required

@@ -158,7 +158,7 @@ func (v *Validator) doCheckBuildInRules(
 		"required-with-all",
 		"required-without",
 		"required-without-all":
-		match = v.checkRequired(valueStr, ruleKey, rulePattern, dataMap)
+		match = v.checkRequired(value, ruleKey, rulePattern, dataMap)
 
 	// Length rules.
 	// It also supports length of unicode string.
