@@ -59,7 +59,7 @@ func Get(name string, def ...interface{}) interface{} {
 	return nil
 }
 
-// Get retrieves and returns the build-in binary variable of given name as gvar.Var.
+// GetVar retrieves and returns the build-in binary variable of given name as gvar.Var.
 func GetVar(name string, def ...interface{}) *gvar.Var {
 	return gvar.New(Get(name, def...))
 }
