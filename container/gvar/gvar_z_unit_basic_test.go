@@ -245,12 +245,57 @@ func Test_Duration(t *testing.T) {
 	})
 }
 
-func Test_UnmarshalValue(t *testing.T) {
-	type V struct {
-		Name string
-		Var  *gvar.Var
-	}
+func Test_UnmarshalJson(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
+		type V struct {
+			Name string
+			Var  *gvar.Var
+		}
+		var v *V
+		err := gconv.Struct(map[string]interface{}{
+			"name": "john",
+			"var":  "v",
+		}, &v)
+		t.Assert(err, nil)
+		t.Assert(v.Name, "john")
+		t.Assert(v.Var.String(), "v")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type V struct {
+			Name string
+			Var  gvar.Var
+		}
+		var v *V
+		err := gconv.Struct(map[string]interface{}{
+			"name": "john",
+			"var":  "v",
+		}, &v)
+		t.Assert(err, nil)
+		t.Assert(v.Name, "john")
+		t.Assert(v.Var.String(), "v")
+	})
+}
+
+func Test_UnmarshalValue(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type V struct {
+			Name string
+			Var  *gvar.Var
+		}
+		var v *V
+		err := gconv.Struct(map[string]interface{}{
+			"name": "john",
+			"var":  "v",
+		}, &v)
+		t.Assert(err, nil)
+		t.Assert(v.Name, "john")
+		t.Assert(v.Var.String(), "v")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type V struct {
+			Name string
+			Var  gvar.Var
+		}
 		var v *V
 		err := gconv.Struct(map[string]interface{}{
 			"name": "john",

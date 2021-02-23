@@ -258,8 +258,8 @@ func (c *Client) prepareRequest(method, url string, data ...interface{}) (req *h
 		}
 	}
 	// It's necessary set the req.Host if you want to custom the host value of the request.
-	// It uses the "Host" value from header if it's not set in the request.
-	if host := req.Header.Get("Host"); host != "" && req.Host == "" {
+	// It uses the "Host" value from header if it's not empty.
+	if host := req.Header.Get("Host"); host != "" {
 		req.Host = host
 	}
 	// Custom Cookie.

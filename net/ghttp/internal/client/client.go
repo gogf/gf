@@ -8,9 +8,12 @@ package client
 
 import (
 	"context"
+	"crypto/rand"
 	"crypto/tls"
 	"fmt"
 	"github.com/gogf/gf"
+	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/text/gstr"
 	"golang.org/x/net/proxy"
 	"net"
@@ -198,8 +201,8 @@ func (c *Client) SetProxy(proxyURL string) {
 		return
 	}
 	if _proxy.Scheme == "http" {
-		if _, ok := c.Transport.(*http.Transport); ok {
-			c.Transport.(*http.Transport).Proxy = http.ProxyURL(_proxy)
+		if v, ok := c.Transport.(*http.Transport); ok {
+			v.Proxy = http.ProxyURL(_proxy)
 		}
 	} else {
 		var auth = &proxy.Auth{}
@@ -227,11 +230,55 @@ func (c *Client) SetProxy(proxyURL string) {
 		if err != nil {
 			return
 		}
-		if _, ok := c.Transport.(*http.Transport); ok {
-			c.Transport.(*http.Transport).DialContext = func(ctx context.Context, network, addr string) (conn net.Conn, e error) {
+		if v, ok := c.Transport.(*http.Transport); ok {
+			v.DialContext = func(ctx context.Context, network, addr string) (conn net.Conn, e error) {
 				return dialer.Dial(network, addr)
 			}
 		}
 		//c.SetTimeout(10*time.Second)
 	}
+}
+
+// SetTlsKeyCrt sets the certificate and key file for TLS configuration of client.
+func (c *Client) SetTLSKeyCrt(crtFile, keyFile string) error {
+	tlsConfig, err := LoadKeyCrt(crtFile, keyFile)
+	if err != nil {
+		return err
+	}
+	if v, ok := c.Transport.(*http.Transport); ok {
+		tlsConfig.InsecureSkipVerify = true
+		v.TLSClientConfig = tlsConfig
+		return nil
+	}
+	return gerror.New(`cannot set TLSClientConfig for custom Transport of the client`)
+}
+
+// SetTlsConfig sets the TLS configuration of client.
+func (c *Client) SetTLSConfig(tlsConfig *tls.Config) error {
+	if v, ok := c.Transport.(*http.Transport); ok {
+		v.TLSClientConfig = tlsConfig
+		return nil
+	}
+	return gerror.New(`cannot set TLSClientConfig for custom Transport of the client`)
+}
+
+// LoadKeyCrt creates and returns a TLS configuration object with given certificate and key files.
+func LoadKeyCrt(crtFile, keyFile string) (*tls.Config, error) {
+	crtPath, err := gfile.Search(crtFile)
+	if err != nil {
+		return nil, err
+	}
+	keyPath, err := gfile.Search(keyFile)
+	if err != nil {
+		return nil, err
+	}
+	crt, err := tls.LoadX509KeyPair(crtPath, keyPath)
+	if err != nil {
+		return nil, err
+	}
+	tlsConfig := &tls.Config{}
+	tlsConfig.Certificates = []tls.Certificate{crt}
+	tlsConfig.Time = time.Now
+	tlsConfig.Rand = rand.Reader
+	return tlsConfig, nil
 }
