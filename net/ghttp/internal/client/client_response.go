@@ -25,8 +25,11 @@ type Response struct {
 func (r *Response) initCookie() {
 	if r.cookies == nil {
 		r.cookies = make(map[string]string)
-		for _, v := range r.Cookies() {
-			r.cookies[v.Name] = v.Value
+		// Response might be nil.
+		if r != nil && r.Response != nil {
+			for _, v := range r.Cookies() {
+				r.cookies[v.Name] = v.Value
+			}
 		}
 	}
 }
