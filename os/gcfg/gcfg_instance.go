@@ -32,10 +32,15 @@ func Instance(name ...string) *Config {
 	}
 	return instances.GetOrSetFuncLock(key, func() interface{} {
 		c := New()
-		for _, fileType := range supportedFileTypes {
-			if file := fmt.Sprintf(`%s.%s`, key, fileType); c.Available(file) {
-				c.SetFileName(file)
-				break
+		// If it's not using default configuration or its configuration file is not available,
+		// it searches the possible configuration file according to the name and all supported
+		// file types.
+		if key != DefaultName || !c.Available() {
+			for _, fileType := range supportedFileTypes {
+				if file := fmt.Sprintf(`%s.%s`, key, fileType); c.Available(file) {
+					c.SetFileName(file)
+					break
+				}
 			}
 		}
 		return c

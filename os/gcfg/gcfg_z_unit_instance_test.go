@@ -78,7 +78,6 @@ v4 = "1.234"
 			"cache": "127.0.0.1:6379,1",
 		})
 		t.AssertEQ(c.FilePath(), gfile.Pwd()+gfile.Separator+path)
-
 	})
 }
 
@@ -89,7 +88,7 @@ func Test_Instance_AutoLocateConfigFile(t *testing.T) {
 	// Automatically locate the configuration file with supported file extensions.
 	gtest.C(t, func(t *gtest.T) {
 		pwd := gfile.Pwd()
-		gfile.Chdir(gdebug.TestDataPath())
+		t.AssertNil(gfile.Chdir(gdebug.TestDataPath()))
 		defer gfile.Chdir(pwd)
 		t.Assert(Instance("c1") != nil, true)
 		t.Assert(Instance("c1").Get("my-config"), "1")
@@ -98,9 +97,22 @@ func Test_Instance_AutoLocateConfigFile(t *testing.T) {
 	// Automatically locate the configuration file with supported file extensions.
 	gtest.C(t, func(t *gtest.T) {
 		pwd := gfile.Pwd()
-		gfile.Chdir(gdebug.TestDataPath("folder1"))
+		t.AssertNil(gfile.Chdir(gdebug.TestDataPath("folder1")))
 		defer gfile.Chdir(pwd)
 		t.Assert(Instance("c2").Get("my-config"), 2)
+	})
+	// Default configuration file.
+	gtest.C(t, func(t *gtest.T) {
+		instances.Clear()
+		pwd := gfile.Pwd()
+		t.AssertNil(gfile.Chdir(gdebug.TestDataPath("default")))
+		defer gfile.Chdir(pwd)
+		t.Assert(Instance().Get("my-config"), 1)
+
+		instances.Clear()
+		t.AssertNil(genv.Set("GF_GCFG_FILE", "config.json"))
+		defer genv.Set("GF_GCFG_FILE", "")
+		t.Assert(Instance().Get("my-config"), 2)
 	})
 }
 
