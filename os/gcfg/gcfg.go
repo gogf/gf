@@ -40,7 +40,7 @@ type Config struct {
 }
 
 var (
-	supportedFileTypes = []string{"toml", "yaml", "json", "ini", "xml"}
+	supportedFileTypes = []string{"toml", "yaml", "yml", "json", "ini", "xml"}
 	resourceTryFiles   = []string{"", "/", "config/", "config", "/config", "/config/"}
 )
 
