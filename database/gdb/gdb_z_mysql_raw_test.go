@@ -19,7 +19,7 @@ func Test_Insert_Raw(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		user := db.Table(table)
+		user := db.Model(table)
 		result, err := user.Filter().Data(g.Map{
 			"id":          gdb.Raw("id+2"),
 			"passport":    "port_1",
@@ -38,7 +38,7 @@ func Test_BatchInsert_Raw(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		user := db.Table(table)
+		user := db.Model(table)
 		result, err := user.Filter().Data(
 			g.List{
 				g.Map{
@@ -68,7 +68,7 @@ func Test_Update_Raw(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		user := db.Table(table)
+		user := db.Model(table)
 		result, err := user.Data(g.Map{
 			"id":          gdb.Raw("id+100"),
 			"create_time": gdb.Raw("now()"),
@@ -78,7 +78,7 @@ func Test_Update_Raw(t *testing.T) {
 		t.Assert(n, 1)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		user := db.Table(table)
+		user := db.Model(table)
 		n, err := user.Where("id", 101).Count()
 		t.AssertNil(err)
 		t.Assert(n, 1)

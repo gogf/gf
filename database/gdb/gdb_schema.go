@@ -36,9 +36,9 @@ func (tx *TX) Schema(schema string) *Schema {
 func (s *Schema) Table(table string) *Model {
 	var m *Model
 	if s.tx != nil {
-		m = s.tx.Table(table)
+		m = s.tx.Model(table)
 	} else {
-		m = s.db.Table(table)
+		m = s.db.Model(table)
 	}
 	// Do not change the schema of the original db,
 	// it here creates a new db and changes its schema.

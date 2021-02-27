@@ -183,9 +183,9 @@ func (m *Model) Schema(schema string) *Model {
 func (m *Model) Clone() *Model {
 	newModel := (*Model)(nil)
 	if m.tx != nil {
-		newModel = m.tx.Table(m.tablesInit)
+		newModel = m.tx.Model(m.tablesInit)
 	} else {
-		newModel = m.db.Table(m.tablesInit)
+		newModel = m.db.Model(m.tablesInit)
 	}
 	*newModel = *m
 	// Shallow copy slice attributes.

@@ -17,9 +17,9 @@ import (
 )
 
 const (
-	SCHEMA = "test_internal"
-	USER   = "root"
-	PASS   = "12345678"
+	SCHEMA     = "test_internal"
+	TestDbUser = "root"
+	TestDbPass = "12345678"
 )
 
 var (
@@ -36,8 +36,8 @@ func init() {
 	configNode = ConfigNode{
 		Host:             "127.0.0.1",
 		Port:             "3306",
-		User:             USER,
-		Pass:             PASS,
+		User:             TestDbUser,
+		Pass:             TestDbPass,
 		Name:             parser.GetOpt("name", ""),
 		Type:             parser.GetOpt("type", "mysql"),
 		Role:             "master",
@@ -204,7 +204,7 @@ CREATE TABLE %s (
 	defer dropTable(table2)
 
 	gtest.C(t, func(t *gtest.T) {
-		model := db.Table(table1)
+		model := db.Model(table1)
 		gtest.Assert(model.getSoftFieldNameCreated(table2), "createat")
 		gtest.Assert(model.getSoftFieldNameUpdated(table2), "updateat")
 		gtest.Assert(model.getSoftFieldNameDeleted(table2), "deleteat")
@@ -243,48 +243,48 @@ CREATE TABLE %s (
 	defer dropTable(table2)
 
 	gtest.C(t, func(t *gtest.T) {
-		model := db.Table(table1)
+		model := db.Model(table1)
 		t.Assert(model.getConditionForSoftDeleting(), "`delete_at` IS NULL")
 	})
 	gtest.C(t, func(t *gtest.T) {
-		model := db.Table(fmt.Sprintf(`%s as t`, table1))
+		model := db.Model(fmt.Sprintf(`%s as t`, table1))
 		t.Assert(model.getConditionForSoftDeleting(), "`delete_at` IS NULL")
 	})
 	gtest.C(t, func(t *gtest.T) {
-		model := db.Table(fmt.Sprintf(`%s, %s`, table1, table2))
+		model := db.Model(fmt.Sprintf(`%s, %s`, table1, table2))
 		t.Assert(model.getConditionForSoftDeleting(), fmt.Sprintf(
 			"`%s`.`delete_at` IS NULL AND `%s`.`deleteat` IS NULL",
 			table1, table2,
 		))
 	})
 	gtest.C(t, func(t *gtest.T) {
-		model := db.Table(fmt.Sprintf(`%s t1, %s as t2`, table1, table2))
+		model := db.Model(fmt.Sprintf(`%s t1, %s as t2`, table1, table2))
 		t.Assert(model.getConditionForSoftDeleting(), "`t1`.`delete_at` IS NULL AND `t2`.`deleteat` IS NULL")
 	})
 	gtest.C(t, func(t *gtest.T) {
-		model := db.Table(fmt.Sprintf(`%s as t1, %s as t2`, table1, table2))
+		model := db.Model(fmt.Sprintf(`%s as t1, %s as t2`, table1, table2))
 		t.Assert(model.getConditionForSoftDeleting(), "`t1`.`delete_at` IS NULL AND `t2`.`deleteat` IS NULL")
 	})
 	gtest.C(t, func(t *gtest.T) {
-		model := db.Table(fmt.Sprintf(`%s as t1`, table1)).LeftJoin(table2+" t2", "t2.id2=t1.id1")
+		model := db.Model(fmt.Sprintf(`%s as t1`, table1)).LeftJoin(table2+" t2", "t2.id2=t1.id1")
 		t.Assert(model.getConditionForSoftDeleting(), "`t1`.`delete_at` IS NULL AND `t2`.`deleteat` IS NULL")
 	})
 	gtest.C(t, func(t *gtest.T) {
-		model := db.Table(fmt.Sprintf(`%s`, table1)).LeftJoin(table2, "t2.id2=t1.id1")
+		model := db.Model(fmt.Sprintf(`%s`, table1)).LeftJoin(table2, "t2.id2=t1.id1")
 		t.Assert(model.getConditionForSoftDeleting(), fmt.Sprintf(
 			"`%s`.`delete_at` IS NULL AND `%s`.`deleteat` IS NULL",
 			table1, table2,
 		))
 	})
 	gtest.C(t, func(t *gtest.T) {
-		model := db.Table(fmt.Sprintf(`%s`, table1)).LeftJoin(table2, "t2.id2=t1.id1").RightJoin(table2, "t2.id2=t1.id1")
+		model := db.Model(fmt.Sprintf(`%s`, table1)).LeftJoin(table2, "t2.id2=t1.id1").RightJoin(table2, "t2.id2=t1.id1")
 		t.Assert(model.getConditionForSoftDeleting(), fmt.Sprintf(
 			"`%s`.`delete_at` IS NULL AND `%s`.`deleteat` IS NULL AND `%s`.`deleteat` IS NULL",
 			table1, table2, table2,
 		))
 	})
 	gtest.C(t, func(t *gtest.T) {
-		model := db.Table(table1+" as t1").LeftJoin(table2+" as t2", "t2.id2=t1.id1").RightJoin(table2+" as t3 ", "t2.id2=t1.id1")
+		model := db.Model(table1+" as t1").LeftJoin(table2+" as t2", "t2.id2=t1.id1").RightJoin(table2+" as t3 ", "t2.id2=t1.id1")
 		t.Assert(
 			model.getConditionForSoftDeleting(),
 			"`t1`.`delete_at` IS NULL AND `t2`.`deleteat` IS NULL AND `t3`.`deleteat` IS NULL",

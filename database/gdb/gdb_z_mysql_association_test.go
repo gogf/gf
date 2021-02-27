@@ -112,19 +112,19 @@ CREATE TABLE %s (
 	})
 	// Data check.
 	gtest.C(t, func(t *gtest.T) {
-		r, err := db.Table(tableUser).All()
+		r, err := db.Model(tableUser).All()
 		t.AssertNil(err)
 		t.Assert(r.Len(), 1)
 		t.Assert(r[0]["uid"].Int(), 1)
 		t.Assert(r[0]["name"].String(), "john")
 
-		r, err = db.Table(tableUserDetail).Where("uid", r[0]["uid"].Int()).All()
+		r, err = db.Model(tableUserDetail).Where("uid", r[0]["uid"].Int()).All()
 		t.AssertNil(err)
 		t.Assert(r.Len(), 1)
 		t.Assert(r[0]["uid"].Int(), 1)
 		t.Assert(r[0]["address"].String(), `Beijing DongZhiMen #66`)
 
-		r, err = db.Table(tableUserScores).Where("uid", r[0]["uid"].Int()).All()
+		r, err = db.Model(tableUserScores).Where("uid", r[0]["uid"].Int()).All()
 		t.AssertNil(err)
 		t.Assert(r.Len(), 2)
 		t.Assert(r[0]["uid"].Int(), 1)
@@ -136,15 +136,15 @@ CREATE TABLE %s (
 	gtest.C(t, func(t *gtest.T) {
 		var user Entity
 		// SELECT * FROM `user` WHERE `name`='john'
-		err := db.Table(tableUser).Scan(&user.User, "name", "john")
+		err := db.Model(tableUser).Scan(&user.User, "name", "john")
 		t.AssertNil(err)
 
 		// SELECT * FROM `user_detail` WHERE `uid`=1
-		err = db.Table(tableUserDetail).Scan(&user.UserDetail, "uid", user.User.Uid)
+		err = db.Model(tableUserDetail).Scan(&user.UserDetail, "uid", user.User.Uid)
 		t.AssertNil(err)
 
 		// SELECT * FROM `user_scores` WHERE `uid`=1
-		err = db.Table(tableUserScores).Scan(&user.UserScores, "uid", user.User.Uid)
+		err = db.Model(tableUserScores).Scan(&user.UserScores, "uid", user.User.Uid)
 		t.AssertNil(err)
 
 		t.Assert(user.User, EntityUser{
@@ -250,13 +250,13 @@ CREATE TABLE %s (
 
 	// MapKeyValue.
 	gtest.C(t, func(t *gtest.T) {
-		all, err := db.Table(tableUser).Where("uid", g.Slice{3, 4}).Order("uid asc").All()
+		all, err := db.Model(tableUser).Where("uid", g.Slice{3, 4}).Order("uid asc").All()
 		t.AssertNil(err)
 		t.Assert(all.Len(), 2)
 		t.Assert(len(all.MapKeyValue("uid")), 2)
 		t.Assert(all.MapKeyValue("uid")["3"].Map()["uid"], 3)
 		t.Assert(all.MapKeyValue("uid")["4"].Map()["uid"], 4)
-		all, err = db.Table(tableUserScores).Where("uid", g.Slice{3, 4}).Order("id asc").All()
+		all, err = db.Model(tableUserScores).Where("uid", g.Slice{3, 4}).Order("id asc").All()
 		t.AssertNil(err)
 		t.Assert(all.Len(), 10)
 		t.Assert(len(all.MapKeyValue("uid")), 2)
@@ -271,7 +271,7 @@ CREATE TABLE %s (
 	gtest.C(t, func(t *gtest.T) {
 		var users []Entity
 		// User
-		all, err := db.Table(tableUser).Where("uid", g.Slice{3, 4}).Order("uid asc").All()
+		all, err := db.Model(tableUser).Where("uid", g.Slice{3, 4}).Order("uid asc").All()
 		t.AssertNil(err)
 		err = all.ScanList(&users, "User")
 		t.AssertNil(err)
@@ -279,14 +279,14 @@ CREATE TABLE %s (
 		t.Assert(users[0].User, &EntityUser{3, "name_3"})
 		t.Assert(users[1].User, &EntityUser{4, "name_4"})
 		// Detail
-		all, err = db.Table(tableUserDetail).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("uid asc").All()
+		all, err = db.Model(tableUserDetail).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("uid asc").All()
 		t.AssertNil(err)
 		err = all.ScanList(&users, "UserDetail", "User", "uid:Uid")
 		t.AssertNil(err)
 		t.Assert(users[0].UserDetail, &EntityUserDetail{3, "address_3"})
 		t.Assert(users[1].UserDetail, &EntityUserDetail{4, "address_4"})
 		// Scores
-		all, err = db.Table(tableUserScores).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("id asc").All()
+		all, err = db.Model(tableUserScores).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("id asc").All()
 		t.AssertNil(err)
 		err = all.ScanList(&users, "UserScores", "User", "uid:Uid")
 		t.AssertNil(err)
@@ -304,7 +304,7 @@ CREATE TABLE %s (
 	gtest.C(t, func(t *gtest.T) {
 		var users []*Entity
 		// User
-		all, err := db.Table(tableUser).Where("uid", g.Slice{3, 4}).Order("uid asc").All()
+		all, err := db.Model(tableUser).Where("uid", g.Slice{3, 4}).Order("uid asc").All()
 		t.AssertNil(err)
 		err = all.ScanList(&users, "User")
 		t.AssertNil(err)
@@ -312,14 +312,14 @@ CREATE TABLE %s (
 		t.Assert(users[0].User, &EntityUser{3, "name_3"})
 		t.Assert(users[1].User, &EntityUser{4, "name_4"})
 		// Detail
-		all, err = db.Table(tableUserDetail).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("uid asc").All()
+		all, err = db.Model(tableUserDetail).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("uid asc").All()
 		t.AssertNil(err)
 		err = all.ScanList(&users, "UserDetail", "User", "uid:Uid")
 		t.AssertNil(err)
 		t.Assert(users[0].UserDetail, &EntityUserDetail{3, "address_3"})
 		t.Assert(users[1].UserDetail, &EntityUserDetail{4, "address_4"})
 		// Scores
-		all, err = db.Table(tableUserScores).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("id asc").All()
+		all, err = db.Model(tableUserScores).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("id asc").All()
 		t.AssertNil(err)
 		err = all.ScanList(&users, "UserScores", "User", "uid:Uid")
 		t.AssertNil(err)
@@ -355,7 +355,7 @@ CREATE TABLE %s (
 		}
 		var users []Entity
 		// User
-		all, err := db.Table(tableUser).Where("uid", g.Slice{3, 4}).Order("uid asc").All()
+		all, err := db.Model(tableUser).Where("uid", g.Slice{3, 4}).Order("uid asc").All()
 		t.AssertNil(err)
 		err = all.ScanList(&users, "User")
 		t.AssertNil(err)
@@ -363,14 +363,14 @@ CREATE TABLE %s (
 		t.Assert(users[0].User, &EntityUser{3, "name_3"})
 		t.Assert(users[1].User, &EntityUser{4, "name_4"})
 		// Detail
-		all, err = db.Table(tableUserDetail).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("uid asc").All()
+		all, err = db.Model(tableUserDetail).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("uid asc").All()
 		t.AssertNil(err)
 		err = all.ScanList(&users, "UserDetail", "User", "uid:Uid")
 		t.AssertNil(err)
 		t.Assert(users[0].UserDetail, &EntityUserDetail{3, "address_3"})
 		t.Assert(users[1].UserDetail, &EntityUserDetail{4, "address_4"})
 		// Scores
-		all, err = db.Table(tableUserScores).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("id asc").All()
+		all, err = db.Model(tableUserScores).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("id asc").All()
 		t.AssertNil(err)
 		err = all.ScanList(&users, "UserScores", "User", "uid:Uid")
 		t.AssertNil(err)
@@ -407,7 +407,7 @@ CREATE TABLE %s (
 		var users []*Entity
 
 		// User
-		all, err := db.Table(tableUser).Where("uid", g.Slice{3, 4}).Order("uid asc").All()
+		all, err := db.Model(tableUser).Where("uid", g.Slice{3, 4}).Order("uid asc").All()
 		t.AssertNil(err)
 		err = all.ScanList(&users, "User")
 		t.AssertNil(err)
@@ -415,14 +415,14 @@ CREATE TABLE %s (
 		t.Assert(users[0].User, &EntityUser{3, "name_3"})
 		t.Assert(users[1].User, &EntityUser{4, "name_4"})
 		// Detail
-		all, err = db.Table(tableUserDetail).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("uid asc").All()
+		all, err = db.Model(tableUserDetail).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("uid asc").All()
 		t.AssertNil(err)
 		err = all.ScanList(&users, "UserDetail", "User", "uid:Uid")
 		t.AssertNil(err)
 		t.Assert(users[0].UserDetail, &EntityUserDetail{3, "address_3"})
 		t.Assert(users[1].UserDetail, &EntityUserDetail{4, "address_4"})
 		// Scores
-		all, err = db.Table(tableUserScores).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("id asc").All()
+		all, err = db.Model(tableUserScores).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("id asc").All()
 		t.AssertNil(err)
 		err = all.ScanList(&users, "UserScores", "User", "uid:Uid")
 		t.AssertNil(err)
@@ -440,19 +440,19 @@ CREATE TABLE %s (
 	gtest.C(t, func(t *gtest.T) {
 		var users []*Entity
 		// User
-		err := db.Table(tableUser).
+		err := db.Model(tableUser).
 			Where("uid", g.Slice{3, 4}).
 			Order("uid asc").
 			ScanList(&users, "User")
 		t.AssertNil(err)
 		// Detail
-		err = db.Table(tableUserDetail).
+		err = db.Model(tableUserDetail).
 			Where("uid", gdb.ListItemValues(users, "User", "Uid")).
 			Order("uid asc").
 			ScanList(&users, "UserDetail", "User", "uid:Uid")
 		t.AssertNil(err)
 		// Scores
-		err = db.Table(tableUserScores).
+		err = db.Model(tableUserScores).
 			Where("uid", gdb.ListItemValues(users, "User", "Uid")).
 			Order("id asc").
 			ScanList(&users, "UserScores", "User", "uid:Uid")
@@ -564,13 +564,13 @@ CREATE TABLE %s (
 
 	// MapKeyValue.
 	gtest.C(t, func(t *gtest.T) {
-		all, err := db.Table(tableUser).Where("uid", g.Slice{3, 4}).Order("uid asc").All()
+		all, err := db.Model(tableUser).Where("uid", g.Slice{3, 4}).Order("uid asc").All()
 		t.AssertNil(err)
 		t.Assert(all.Len(), 2)
 		t.Assert(len(all.MapKeyValue("uid")), 2)
 		t.Assert(all.MapKeyValue("uid")["3"].Map()["uid"], 3)
 		t.Assert(all.MapKeyValue("uid")["4"].Map()["uid"], 4)
-		all, err = db.Table(tableUserScores).Where("uid", g.Slice{3, 4}).Order("id asc").All()
+		all, err = db.Model(tableUserScores).Where("uid", g.Slice{3, 4}).Order("id asc").All()
 		t.AssertNil(err)
 		t.Assert(all.Len(), 10)
 		t.Assert(len(all.MapKeyValue("uid")), 2)
@@ -585,7 +585,7 @@ CREATE TABLE %s (
 	gtest.C(t, func(t *gtest.T) {
 		var users []Entity
 		// User
-		all, err := db.Table(tableUser).Where("uid", g.Slice{3, 4}).Order("uid asc").All()
+		all, err := db.Model(tableUser).Where("uid", g.Slice{3, 4}).Order("uid asc").All()
 		t.AssertNil(err)
 		err = all.ScanList(&users, "User")
 		t.AssertNil(err)
@@ -593,14 +593,14 @@ CREATE TABLE %s (
 		t.Assert(users[0].User, &EntityUser{3, "name_3"})
 		t.Assert(users[1].User, &EntityUser{4, "name_4"})
 		// Detail
-		all, err = db.Table(tableUserDetail).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("uid asc").All()
+		all, err = db.Model(tableUserDetail).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("uid asc").All()
 		t.AssertNil(err)
 		err = all.ScanList(&users, "UserDetail", "User", "uid:uid")
 		t.AssertNil(err)
 		t.Assert(users[0].UserDetail, &EntityUserDetail{3, "address_3"})
 		t.Assert(users[1].UserDetail, &EntityUserDetail{4, "address_4"})
 		// Scores
-		all, err = db.Table(tableUserScores).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("id asc").All()
+		all, err = db.Model(tableUserScores).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("id asc").All()
 		t.AssertNil(err)
 		err = all.ScanList(&users, "UserScores", "User", "uid:uid")
 		t.AssertNil(err)
@@ -618,7 +618,7 @@ CREATE TABLE %s (
 	gtest.C(t, func(t *gtest.T) {
 		var users []*Entity
 		// User
-		all, err := db.Table(tableUser).Where("uid", g.Slice{3, 4}).Order("uid asc").All()
+		all, err := db.Model(tableUser).Where("uid", g.Slice{3, 4}).Order("uid asc").All()
 		t.AssertNil(err)
 		err = all.ScanList(&users, "User")
 		t.AssertNil(err)
@@ -626,14 +626,14 @@ CREATE TABLE %s (
 		t.Assert(users[0].User, &EntityUser{3, "name_3"})
 		t.Assert(users[1].User, &EntityUser{4, "name_4"})
 		// Detail
-		all, err = db.Table(tableUserDetail).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("uid asc").All()
+		all, err = db.Model(tableUserDetail).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("uid asc").All()
 		t.AssertNil(err)
 		err = all.ScanList(&users, "UserDetail", "User", "Uid:UID")
 		t.AssertNil(err)
 		t.Assert(users[0].UserDetail, &EntityUserDetail{3, "address_3"})
 		t.Assert(users[1].UserDetail, &EntityUserDetail{4, "address_4"})
 		// Scores
-		all, err = db.Table(tableUserScores).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("id asc").All()
+		all, err = db.Model(tableUserScores).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("id asc").All()
 		t.AssertNil(err)
 		err = all.ScanList(&users, "UserScores", "User", "Uid:UID")
 		t.AssertNil(err)
@@ -669,7 +669,7 @@ CREATE TABLE %s (
 		}
 		var users []Entity
 		// User
-		all, err := db.Table(tableUser).Where("uid", g.Slice{3, 4}).Order("uid asc").All()
+		all, err := db.Model(tableUser).Where("uid", g.Slice{3, 4}).Order("uid asc").All()
 		t.AssertNil(err)
 		err = all.ScanList(&users, "User")
 		t.AssertNil(err)
@@ -677,14 +677,14 @@ CREATE TABLE %s (
 		t.Assert(users[0].User, &EntityUser{3, "name_3"})
 		t.Assert(users[1].User, &EntityUser{4, "name_4"})
 		// Detail
-		all, err = db.Table(tableUserDetail).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("uid asc").All()
+		all, err = db.Model(tableUserDetail).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("uid asc").All()
 		t.AssertNil(err)
 		err = all.ScanList(&users, "UserDetail", "User", "uid:UId")
 		t.AssertNil(err)
 		t.Assert(users[0].UserDetail, &EntityUserDetail{3, "address_3"})
 		t.Assert(users[1].UserDetail, &EntityUserDetail{4, "address_4"})
 		// Scores
-		all, err = db.Table(tableUserScores).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("id asc").All()
+		all, err = db.Model(tableUserScores).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("id asc").All()
 		t.AssertNil(err)
 		err = all.ScanList(&users, "UserScores", "User", "UId:Uid")
 		t.AssertNil(err)
@@ -721,7 +721,7 @@ CREATE TABLE %s (
 		var users []*Entity
 
 		// User
-		all, err := db.Table(tableUser).Where("uid", g.Slice{3, 4}).Order("uid asc").All()
+		all, err := db.Model(tableUser).Where("uid", g.Slice{3, 4}).Order("uid asc").All()
 		t.AssertNil(err)
 		err = all.ScanList(&users, "User")
 		t.AssertNil(err)
@@ -729,14 +729,14 @@ CREATE TABLE %s (
 		t.Assert(users[0].User, &EntityUser{3, "name_3"})
 		t.Assert(users[1].User, &EntityUser{4, "name_4"})
 		// Detail
-		all, err = db.Table(tableUserDetail).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("uid asc").All()
+		all, err = db.Model(tableUserDetail).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("uid asc").All()
 		t.AssertNil(err)
 		err = all.ScanList(&users, "UserDetail", "User", "uid:Uid")
 		t.AssertNil(err)
 		t.Assert(users[0].UserDetail, &EntityUserDetail{3, "address_3"})
 		t.Assert(users[1].UserDetail, &EntityUserDetail{4, "address_4"})
 		// Scores
-		all, err = db.Table(tableUserScores).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("id asc").All()
+		all, err = db.Model(tableUserScores).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("id asc").All()
 		t.AssertNil(err)
 		err = all.ScanList(&users, "UserScores", "User", "UID:Uid")
 		t.AssertNil(err)
@@ -754,19 +754,19 @@ CREATE TABLE %s (
 	gtest.C(t, func(t *gtest.T) {
 		var users []*Entity
 		// User
-		err := db.Table(tableUser).
+		err := db.Model(tableUser).
 			Where("uid", g.Slice{3, 4}).
 			Order("uid asc").
 			ScanList(&users, "User")
 		t.AssertNil(err)
 		// Detail
-		err = db.Table(tableUserDetail).
+		err = db.Model(tableUserDetail).
 			Where("uid", gdb.ListItemValues(users, "User", "Uid")).
 			Order("uid asc").
 			ScanList(&users, "UserDetail", "User", "uid:Uid")
 		t.AssertNil(err)
 		// Scores
-		err = db.Table(tableUserScores).
+		err = db.Model(tableUserScores).
 			Where("uid", gdb.ListItemValues(users, "User", "Uid")).
 			Order("id asc").
 			ScanList(&users, "UserScores", "User", "uid:Uid")
@@ -851,22 +851,21 @@ CREATE TABLE %s (
 
 	// Result ScanList with struct elements and pointer attributes.
 	gtest.C(t, func(t *gtest.T) {
-		db.SetDebug(true)
 		var users []Entity
 		// User
-		all, err := db.Table(tableUser).Where("uid", g.Slice{3, 4}).Order("uid asc").All()
+		all, err := db.Model(tableUser).Where("uid", g.Slice{3, 4}).Order("uid asc").All()
 		t.AssertNil(err)
 		err = all.ScanList(&users, "User")
 		t.AssertNil(err)
 		t.Assert(len(users), 0)
 		// Detail
-		all, err = db.Table(tableUserDetail).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("uid asc").All()
+		all, err = db.Model(tableUserDetail).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("uid asc").All()
 		t.AssertNil(err)
 		err = all.ScanList(&users, "UserDetail", "User", "uid:uid")
 		t.AssertNil(err)
 
 		// Scores
-		all, err = db.Table(tableUserScores).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("id asc").All()
+		all, err = db.Model(tableUserScores).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("id asc").All()
 		t.AssertNil(err)
 		err = all.ScanList(&users, "UserScores", "User", "uid:uid")
 		t.AssertNil(err)
@@ -876,20 +875,20 @@ CREATE TABLE %s (
 	gtest.C(t, func(t *gtest.T) {
 		var users []*Entity
 		// User
-		all, err := db.Table(tableUser).Where("uid", g.Slice{3, 4}).Order("uid asc").All()
+		all, err := db.Model(tableUser).Where("uid", g.Slice{3, 4}).Order("uid asc").All()
 		t.AssertNil(err)
 		err = all.ScanList(&users, "User")
 		t.AssertNil(err)
 		t.Assert(len(users), 0)
 
 		// Detail
-		all, err = db.Table(tableUserDetail).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("uid asc").All()
+		all, err = db.Model(tableUserDetail).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("uid asc").All()
 		t.AssertNil(err)
 		err = all.ScanList(&users, "UserDetail", "User", "Uid:UID")
 		t.AssertNil(err)
 
 		// Scores
-		all, err = db.Table(tableUserScores).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("id asc").All()
+		all, err = db.Model(tableUserScores).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("id asc").All()
 		t.AssertNil(err)
 		err = all.ScanList(&users, "UserScores", "User", "Uid:UID")
 		t.AssertNil(err)
@@ -917,19 +916,19 @@ CREATE TABLE %s (
 		}
 		var users []Entity
 		// User
-		all, err := db.Table(tableUser).Where("uid", g.Slice{3, 4}).Order("uid asc").All()
+		all, err := db.Model(tableUser).Where("uid", g.Slice{3, 4}).Order("uid asc").All()
 		t.AssertNil(err)
 		err = all.ScanList(&users, "User")
 		t.AssertNil(err)
 
 		// Detail
-		all, err = db.Table(tableUserDetail).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("uid asc").All()
+		all, err = db.Model(tableUserDetail).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("uid asc").All()
 		t.AssertNil(err)
 		err = all.ScanList(&users, "UserDetail", "User", "uid:UId")
 		t.AssertNil(err)
 
 		// Scores
-		all, err = db.Table(tableUserScores).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("id asc").All()
+		all, err = db.Model(tableUserScores).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("id asc").All()
 		t.AssertNil(err)
 		err = all.ScanList(&users, "UserScores", "User", "UId:Uid")
 		t.AssertNil(err)
@@ -958,19 +957,19 @@ CREATE TABLE %s (
 		var users []*Entity
 
 		// User
-		all, err := db.Table(tableUser).Where("uid", g.Slice{3, 4}).Order("uid asc").All()
+		all, err := db.Model(tableUser).Where("uid", g.Slice{3, 4}).Order("uid asc").All()
 		t.AssertNil(err)
 		err = all.ScanList(&users, "User")
 		t.AssertNil(err)
 		t.Assert(len(users), 0)
 		// Detail
-		all, err = db.Table(tableUserDetail).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("uid asc").All()
+		all, err = db.Model(tableUserDetail).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("uid asc").All()
 		t.AssertNil(err)
 		err = all.ScanList(&users, "UserDetail", "User", "uid:Uid")
 		t.AssertNil(err)
 
 		// Scores
-		all, err = db.Table(tableUserScores).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("id asc").All()
+		all, err = db.Model(tableUserScores).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("id asc").All()
 		t.AssertNil(err)
 		err = all.ScanList(&users, "UserScores", "User", "UID:Uid")
 		t.AssertNil(err)
@@ -980,19 +979,19 @@ CREATE TABLE %s (
 	gtest.C(t, func(t *gtest.T) {
 		var users []*Entity
 		// User
-		err := db.Table(tableUser).
+		err := db.Model(tableUser).
 			Where("uid", g.Slice{3, 4}).
 			Order("uid asc").
 			ScanList(&users, "User")
 		t.AssertNil(err)
 		// Detail
-		err = db.Table(tableUserDetail).
+		err = db.Model(tableUserDetail).
 			Where("uid", gdb.ListItemValues(users, "User", "Uid")).
 			Order("uid asc").
 			ScanList(&users, "UserDetail", "User", "uid:Uid")
 		t.AssertNil(err)
 		// Scores
-		err = db.Table(tableUserScores).
+		err = db.Model(tableUserScores).
 			Where("uid", gdb.ListItemValues(users, "User", "Uid")).
 			Order("id asc").
 			ScanList(&users, "UserScores", "User", "uid:Uid")
@@ -1092,17 +1091,17 @@ CREATE TABLE %s (
 			scores []*EntityUserScores
 		)
 		// SELECT * FROM `user_scores`
-		err = db.Table(tableUserScores).Scan(&scores)
+		err = db.Model(tableUserScores).Scan(&scores)
 		t.AssertNil(err)
 
 		// SELECT * FROM `user_scores` WHERE `uid` IN(1,2,3,4,5)
-		err = db.Table(tableUser).
+		err = db.Model(tableUser).
 			Where("uid", gdb.ListItemValuesUnique(&scores, "Uid")).
 			ScanList(&scores, "EntityUser", "uid:Uid")
 		t.AssertNil(err)
 
 		// SELECT * FROM `user_detail` WHERE `uid` IN(1,2,3,4,5)
-		err = db.Table(tableUserDetail).
+		err = db.Model(tableUserDetail).
 			Where("uid", gdb.ListItemValuesUnique(&scores, "Uid")).
 			ScanList(&scores, "EntityUserDetail", "uid:Uid")
 		t.AssertNil(err)
