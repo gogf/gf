@@ -409,13 +409,12 @@ func (c *Config) getJson(file ...string) *gjson.Json {
 				}
 			}
 			return j
-		} else {
-			if errorPrint() {
-				if filePath != "" {
-					glog.Criticalf(`[gcfg] Load config file "%s" failed: %s`, filePath, err.Error())
-				} else {
-					glog.Criticalf(`[gcfg] Load configuration failed: %s`, err.Error())
-				}
+		}
+		if errorPrint() {
+			if filePath != "" {
+				glog.Criticalf(`[gcfg] Load config file "%s" failed: %s`, filePath, err.Error())
+			} else {
+				glog.Criticalf(`[gcfg] Load configuration failed: %s`, err.Error())
 			}
 		}
 		return nil

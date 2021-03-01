@@ -37,11 +37,6 @@ func SetEnabled(enabled bool) {
 	}
 }
 
-// IsEnabled checks and returns whether current process is in GF development.
-func IsEnabled() bool {
-	return isGFDebug
-}
-
 // Print prints `v` with newline using fmt.Println.
 // The parameter `v` can be multiple variables.
 func Print(v ...interface{}) {
