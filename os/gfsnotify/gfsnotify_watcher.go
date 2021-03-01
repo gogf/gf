@@ -95,7 +95,8 @@ func (w *Watcher) addWithCallbackFunc(name, path string, callbackFunc func(event
 	if err := w.watcher.Add(path); err != nil {
 		intlog.Error(err)
 	} else {
-		intlog.Printf("watcher adds monitor for: %s", path)
+		// It uses `Errorf` as it needs trace stack information here.
+		intlog.Errorf("watcher adds monitor for: %s", path)
 	}
 	// Add the callback to global callback map.
 	callbackIdMap.Set(callback.Id, callback)
