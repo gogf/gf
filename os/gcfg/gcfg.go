@@ -73,14 +73,22 @@ func New(file ...string) *Config {
 	} else {
 		// Dir path of main package.
 		if mainPath := gfile.MainPkgPath(); mainPath != "" && gfile.Exists(mainPath) {
-			_ = c.AddPath(mainPath)
+			if err := c.AddPath(mainPath); err != nil {
+				intlog.Error(err)
+			}
 		}
+
+		// Dir path of working dir.
+		if err := c.AddPath(gfile.Pwd()); err != nil {
+			intlog.Error(err)
+		}
+
 		// Dir path of binary.
 		if selfPath := gfile.SelfDir(); selfPath != "" && gfile.Exists(selfPath) {
-			_ = c.AddPath(selfPath)
+			if err := c.AddPath(selfPath); err != nil {
+				intlog.Error(err)
+			}
 		}
-		// Dir path of working dir.
-		_ = c.AddPath(gfile.Pwd())
 	}
 	return c
 }
