@@ -85,7 +85,16 @@ func New(file ...string) *Config {
 	return c
 }
 
+// getSearchPaths is used for checking and using `MainPkgPath` purpose.
+// As the `MainPkgPath` is retrieved only by main goroutine,
+// it should be checked multiple times when used in configuration file searching.
+// It only makes sense in source development environment.
 func (c *Config) getSearchPaths() []string {
+	// Custom configuration directory path.
+	if !gcmd.GetOptWithEnv(fmt.Sprintf("%s.path", cmdEnvKey)).IsEmpty() {
+		return c.searchPaths.Slice()
+	}
+
 	var (
 		searchPaths = c.searchPaths.Slice()
 		mainPkgPath = gfile.MainPkgPath()
