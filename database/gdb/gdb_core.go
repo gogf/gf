@@ -111,9 +111,7 @@ func (c *Core) DoQuery(link Link, sql string, args ...interface{}) (rows *sql.Ro
 	sql, args = c.db.HandleSqlBeforeCommit(link, sql, args)
 	ctx := c.db.GetCtx()
 	if c.GetConfig().QueryTimeout > 0 {
-		var cancelFunc context.CancelFunc
-		ctx, cancelFunc = context.WithTimeout(ctx, c.GetConfig().QueryTimeout)
-		defer cancelFunc()
+		ctx, _ = context.WithTimeout(ctx, c.GetConfig().QueryTimeout)
 	}
 
 	mTime1 := gtime.TimestampMilli()
