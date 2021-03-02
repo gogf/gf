@@ -272,6 +272,10 @@ func (r Result) ScanList(listPointer interface{}, bindToAttrName string, relatio
 					return gerror.Newf(`invalid relation specified: "%v"`, relationKV)
 				}
 			} else {
+				if i >= len(r) {
+					// There's no relational data.
+					continue
+				}
 				v := r[i]
 				if v == nil {
 					// There's no relational data.
@@ -300,6 +304,10 @@ func (r Result) ScanList(listPointer interface{}, bindToAttrName string, relatio
 					return gerror.Newf(`invalid relation specified: "%v"`, relationKV)
 				}
 			} else {
+				if i >= len(r) {
+					// There's no relational data.
+					continue
+				}
 				relationDataItem := r[i]
 				if relationDataItem == nil {
 					// There's no relational data.
