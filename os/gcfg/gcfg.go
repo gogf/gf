@@ -71,16 +71,16 @@ func New(file ...string) *Config {
 			}
 		}
 	} else {
+		// Dir path of working dir.
+		if err := c.AddPath(gfile.Pwd()); err != nil {
+			intlog.Error(err)
+		}
+
 		// Dir path of main package.
 		if mainPath := gfile.MainPkgPath(); mainPath != "" && gfile.Exists(mainPath) {
 			if err := c.AddPath(mainPath); err != nil {
 				intlog.Error(err)
 			}
-		}
-
-		// Dir path of working dir.
-		if err := c.AddPath(gfile.Pwd()); err != nil {
-			intlog.Error(err)
 		}
 
 		// Dir path of binary.
@@ -93,28 +93,6 @@ func New(file ...string) *Config {
 	return c
 }
 
-// getSearchPaths is used for checking and using `MainPkgPath` purpose.
-// As the `MainPkgPath` is retrieved only by main goroutine,
-// it should be checked multiple times when used in configuration file searching.
-// It only makes sense in source development environment.
-func (c *Config) getSearchPaths() []string {
-	// Custom configuration directory path.
-	if !gcmd.GetOptWithEnv(fmt.Sprintf("%s.path", cmdEnvKey)).IsEmpty() {
-		return c.searchPaths.Slice()
-	}
-
-	var (
-		searchPaths = c.searchPaths.Slice()
-		mainPkgPath = gfile.MainPkgPath()
-	)
-	if mainPkgPath != "" {
-		if !gstr.InArray(searchPaths, mainPkgPath) {
-			searchPaths = append([]string{mainPkgPath}, searchPaths...)
-		}
-	}
-	return searchPaths
-}
-
 // filePath returns the absolute configuration file path for the given filename by <file>.
 func (c *Config) filePath(file ...string) (path string) {
 	name := c.defaultName
@@ -124,20 +102,21 @@ func (c *Config) filePath(file ...string) (path string) {
 	path = c.FilePath(name)
 	if path == "" {
 		var (
-			searchPaths = c.getSearchPaths()
-			buffer      = bytes.NewBuffer(nil)
+			buffer = bytes.NewBuffer(nil)
 		)
-
-		if len(searchPaths) > 0 {
+		if c.searchPaths.Len() > 0 {
 			buffer.WriteString(fmt.Sprintf("[gcfg] cannot find config file \"%s\" in following paths:", name))
-			index := 1
-			for _, v := range searchPaths {
-				v = gstr.TrimRight(v, `\/`)
-				buffer.WriteString(fmt.Sprintf("\n%d. %s", index, v))
-				index++
-				buffer.WriteString(fmt.Sprintf("\n%d. %s", index, v+gfile.Separator+"config"))
-				index++
-			}
+			c.searchPaths.RLockFunc(func(array []string) {
+				index := 1
+				for _, v := range array {
+					v = gstr.TrimRight(v, `\/`)
+					buffer.WriteString(fmt.Sprintf("\n%d. %s", index, v))
+					index++
+					buffer.WriteString(fmt.Sprintf("\n%d. %s", index, v+gfile.Separator+"config"))
+					index++
+				}
+			})
+
 		} else {
 			buffer.WriteString(fmt.Sprintf("[gcfg] cannot find config file \"%s\" with no path set/add", name))
 		}
@@ -298,7 +277,6 @@ func (c *Config) FilePath(file ...string) (path string) {
 	if len(file) > 0 {
 		name = file[0]
 	}
-	searchPaths := c.getSearchPaths()
 	// Searching resource manager.
 	if !gres.IsEmpty() {
 		for _, v := range resourceTryFiles {
@@ -307,25 +285,29 @@ func (c *Config) FilePath(file ...string) (path string) {
 				return
 			}
 		}
-		for _, prefix := range searchPaths {
-			for _, v := range resourceTryFiles {
-				if file := gres.Get(prefix + v + name); file != nil {
-					path = file.Name()
-					return
+		c.searchPaths.RLockFunc(func(array []string) {
+			for _, prefix := range array {
+				for _, v := range resourceTryFiles {
+					if file := gres.Get(prefix + v + name); file != nil {
+						path = file.Name()
+						return
+					}
 				}
 			}
-		}
+		})
 	}
 	// Searching the file system.
-	for _, prefix := range searchPaths {
-		prefix = gstr.TrimRight(prefix, `\/`)
-		if path, _ = gspath.Search(prefix, name); path != "" {
-			return
+	c.searchPaths.RLockFunc(func(array []string) {
+		for _, prefix := range array {
+			prefix = gstr.TrimRight(prefix, `\/`)
+			if path, _ = gspath.Search(prefix, name); path != "" {
+				return
+			}
+			if path, _ = gspath.Search(prefix+gfile.Separator+"config", name); path != "" {
+				return
+			}
 		}
-		if path, _ = gspath.Search(prefix+gfile.Separator+"config", name); path != "" {
-			return
-		}
-	}
+	})
 	return
 }
 
