@@ -123,6 +123,10 @@ func (r Result) ScanList(listPointer interface{}, bindToAttrName string, relatio
 			// Compatible with old splitting char ':'.
 			array = gstr.SplitAndTrim(relationKVStr, ":")
 		}
+		if len(array) == 1 {
+			// The relation names are the same.
+			array = []string{relationKVStr, relationKVStr}
+		}
 		if len(array) == 2 {
 			// Defined table field to relation attribute name.
 			// Like:

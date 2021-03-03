@@ -85,7 +85,7 @@ CREATE TABLE %s (
 	var err error
 	gtest.C(t, func(t *gtest.T) {
 		err = db.Transaction(func(tx *gdb.TX) error {
-			r, err := tx.Table(tableUser).Save(EntityUser{
+			r, err := tx.Model(tableUser).Save(EntityUser{
 				Name: "john",
 			})
 			if err != nil {
@@ -95,14 +95,14 @@ CREATE TABLE %s (
 			if err != nil {
 				return err
 			}
-			_, err = tx.Table(tableUserDetail).Save(EntityUserDetail{
+			_, err = tx.Model(tableUserDetail).Save(EntityUserDetail{
 				Uid:     int(uid),
 				Address: "Beijing DongZhiMen #66",
 			})
 			if err != nil {
 				return err
 			}
-			_, err = tx.Table(tableUserScores).Save(g.Slice{
+			_, err = tx.Model(tableUserScores).Save(g.Slice{
 				EntityUserScores{Uid: int(uid), Score: 100, Course: "math"},
 				EntityUserScores{Uid: int(uid), Score: 99, Course: "physics"},
 			})
@@ -790,6 +790,301 @@ CREATE TABLE %s (
 	})
 }
 
+func Test_Table_Relation_Many_TheSameRelationNames(t *testing.T) {
+	var (
+		tableUser       = "user_" + gtime.TimestampMicroStr()
+		tableUserDetail = "user_detail_" + gtime.TimestampMicroStr()
+		tableUserScores = "user_scores_" + gtime.TimestampMicroStr()
+	)
+	if _, err := db.Exec(fmt.Sprintf(`
+CREATE TABLE %s (
+  uid int(10) unsigned NOT NULL AUTO_INCREMENT,
+  name varchar(45) NOT NULL,
+  PRIMARY KEY (uid)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    `, tableUser)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(tableUser)
+
+	if _, err := db.Exec(fmt.Sprintf(`
+CREATE TABLE %s (
+  uid int(10) unsigned NOT NULL AUTO_INCREMENT,
+  address varchar(45) NOT NULL,
+  PRIMARY KEY (uid)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    `, tableUserDetail)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(tableUserDetail)
+
+	if _, err := db.Exec(fmt.Sprintf(`
+CREATE TABLE %s (
+  id int(10) unsigned NOT NULL AUTO_INCREMENT,
+  uid int(10) unsigned NOT NULL,
+  score int(10) unsigned NOT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    `, tableUserScores)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(tableUserScores)
+
+	type EntityUser struct {
+		Uid  int    `json:"uid"`
+		Name string `json:"name"`
+	}
+	type EntityUserDetail struct {
+		Uid     int    `json:"uid"`
+		Address string `json:"address"`
+	}
+	type EntityUserScores struct {
+		Id    int `json:"id"`
+		Uid   int `json:"uid"`
+		Score int `json:"score"`
+	}
+	type Entity struct {
+		User       *EntityUser
+		UserDetail *EntityUserDetail
+		UserScores []*EntityUserScores
+	}
+
+	// Initialize the data.
+	gtest.C(t, func(t *gtest.T) {
+		var err error
+		for i := 1; i <= 5; i++ {
+			// User.
+			_, err = db.Insert(tableUser, g.Map{
+				"uid":  i,
+				"name": fmt.Sprintf(`name_%d`, i),
+			})
+			t.AssertNil(err)
+			// Detail.
+			_, err = db.Insert(tableUserDetail, g.Map{
+				"uid":     i,
+				"address": fmt.Sprintf(`address_%d`, i),
+			})
+			t.AssertNil(err)
+			// Scores.
+			for j := 1; j <= 5; j++ {
+				_, err = db.Insert(tableUserScores, g.Map{
+					"uid":   i,
+					"score": j,
+				})
+				t.AssertNil(err)
+			}
+		}
+	})
+
+	// Result ScanList with struct elements and pointer attributes.
+	gtest.C(t, func(t *gtest.T) {
+		var users []Entity
+		// User
+		all, err := db.Model(tableUser).Where("uid", g.Slice{3, 4}).Order("uid asc").All()
+		t.AssertNil(err)
+		err = all.ScanList(&users, "User")
+		t.AssertNil(err)
+		t.Assert(len(users), 2)
+		t.Assert(users[0].User, &EntityUser{3, "name_3"})
+		t.Assert(users[1].User, &EntityUser{4, "name_4"})
+		// Detail
+		all, err = db.Model(tableUserDetail).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("uid asc").All()
+		t.AssertNil(err)
+		err = all.ScanList(&users, "UserDetail", "User", "uid")
+		t.AssertNil(err)
+		t.Assert(users[0].UserDetail, &EntityUserDetail{3, "address_3"})
+		t.Assert(users[1].UserDetail, &EntityUserDetail{4, "address_4"})
+		// Scores
+		all, err = db.Model(tableUserScores).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("id asc").All()
+		t.AssertNil(err)
+		err = all.ScanList(&users, "UserScores", "User", "uid")
+		t.AssertNil(err)
+		t.Assert(len(users[0].UserScores), 5)
+		t.Assert(len(users[1].UserScores), 5)
+		t.Assert(users[0].UserScores[0].Uid, 3)
+		t.Assert(users[0].UserScores[0].Score, 1)
+		t.Assert(users[0].UserScores[4].Score, 5)
+		t.Assert(users[1].UserScores[0].Uid, 4)
+		t.Assert(users[1].UserScores[0].Score, 1)
+		t.Assert(users[1].UserScores[4].Score, 5)
+	})
+
+	// Result ScanList with pointer elements and pointer attributes.
+	gtest.C(t, func(t *gtest.T) {
+		var users []*Entity
+		// User
+		all, err := db.Model(tableUser).Where("uid", g.Slice{3, 4}).Order("uid asc").All()
+		t.AssertNil(err)
+		err = all.ScanList(&users, "User")
+		t.AssertNil(err)
+		t.Assert(len(users), 2)
+		t.Assert(users[0].User, &EntityUser{3, "name_3"})
+		t.Assert(users[1].User, &EntityUser{4, "name_4"})
+		// Detail
+		all, err = db.Model(tableUserDetail).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("uid asc").All()
+		t.AssertNil(err)
+		err = all.ScanList(&users, "UserDetail", "User", "Uid")
+		t.AssertNil(err)
+		t.Assert(users[0].UserDetail, &EntityUserDetail{3, "address_3"})
+		t.Assert(users[1].UserDetail, &EntityUserDetail{4, "address_4"})
+		// Scores
+		all, err = db.Model(tableUserScores).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("id asc").All()
+		t.AssertNil(err)
+		err = all.ScanList(&users, "UserScores", "User", "UID")
+		t.AssertNil(err)
+		t.Assert(len(users[0].UserScores), 5)
+		t.Assert(len(users[1].UserScores), 5)
+		t.Assert(users[0].UserScores[0].Uid, 3)
+		t.Assert(users[0].UserScores[0].Score, 1)
+		t.Assert(users[0].UserScores[4].Score, 5)
+		t.Assert(users[1].UserScores[0].Uid, 4)
+		t.Assert(users[1].UserScores[0].Score, 1)
+		t.Assert(users[1].UserScores[4].Score, 5)
+	})
+
+	// Result ScanList with struct elements and struct attributes.
+	gtest.C(t, func(t *gtest.T) {
+		type EntityUser struct {
+			Uid  int    `json:"uid"`
+			Name string `json:"name"`
+		}
+		type EntityUserDetail struct {
+			Uid     int    `json:"uid"`
+			Address string `json:"address"`
+		}
+		type EntityUserScores struct {
+			Id    int `json:"id"`
+			Uid   int `json:"uid"`
+			Score int `json:"score"`
+		}
+		type Entity struct {
+			User       EntityUser
+			UserDetail EntityUserDetail
+			UserScores []EntityUserScores
+		}
+		var users []Entity
+		// User
+		all, err := db.Model(tableUser).Where("uid", g.Slice{3, 4}).Order("uid asc").All()
+		t.AssertNil(err)
+		err = all.ScanList(&users, "User")
+		t.AssertNil(err)
+		t.Assert(len(users), 2)
+		t.Assert(users[0].User, &EntityUser{3, "name_3"})
+		t.Assert(users[1].User, &EntityUser{4, "name_4"})
+		// Detail
+		all, err = db.Model(tableUserDetail).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("uid asc").All()
+		t.AssertNil(err)
+		err = all.ScanList(&users, "UserDetail", "User", "UId")
+		t.AssertNil(err)
+		t.Assert(users[0].UserDetail, &EntityUserDetail{3, "address_3"})
+		t.Assert(users[1].UserDetail, &EntityUserDetail{4, "address_4"})
+		// Scores
+		all, err = db.Model(tableUserScores).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("id asc").All()
+		t.AssertNil(err)
+		err = all.ScanList(&users, "UserScores", "User", "Uid")
+		t.AssertNil(err)
+		t.Assert(len(users[0].UserScores), 5)
+		t.Assert(len(users[1].UserScores), 5)
+		t.Assert(users[0].UserScores[0].Uid, 3)
+		t.Assert(users[0].UserScores[0].Score, 1)
+		t.Assert(users[0].UserScores[4].Score, 5)
+		t.Assert(users[1].UserScores[0].Uid, 4)
+		t.Assert(users[1].UserScores[0].Score, 1)
+		t.Assert(users[1].UserScores[4].Score, 5)
+	})
+
+	// Result ScanList with pointer elements and struct attributes.
+	gtest.C(t, func(t *gtest.T) {
+		type EntityUser struct {
+			Uid  int    `json:"uid"`
+			Name string `json:"name"`
+		}
+		type EntityUserDetail struct {
+			Uid     int    `json:"uid"`
+			Address string `json:"address"`
+		}
+		type EntityUserScores struct {
+			Id    int `json:"id"`
+			Uid   int `json:"uid"`
+			Score int `json:"score"`
+		}
+		type Entity struct {
+			User       EntityUser
+			UserDetail EntityUserDetail
+			UserScores []EntityUserScores
+		}
+		var users []*Entity
+
+		// User
+		all, err := db.Model(tableUser).Where("uid", g.Slice{3, 4}).Order("uid asc").All()
+		t.AssertNil(err)
+		err = all.ScanList(&users, "User")
+		t.AssertNil(err)
+		t.Assert(len(users), 2)
+		t.Assert(users[0].User, &EntityUser{3, "name_3"})
+		t.Assert(users[1].User, &EntityUser{4, "name_4"})
+		// Detail
+		all, err = db.Model(tableUserDetail).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("uid asc").All()
+		t.AssertNil(err)
+		err = all.ScanList(&users, "UserDetail", "User", "uid")
+		t.AssertNil(err)
+		t.Assert(users[0].UserDetail, &EntityUserDetail{3, "address_3"})
+		t.Assert(users[1].UserDetail, &EntityUserDetail{4, "address_4"})
+		// Scores
+		all, err = db.Model(tableUserScores).Where("uid", gdb.ListItemValues(users, "User", "Uid")).Order("id asc").All()
+		t.AssertNil(err)
+		err = all.ScanList(&users, "UserScores", "User", "UID")
+		t.AssertNil(err)
+		t.Assert(len(users[0].UserScores), 5)
+		t.Assert(len(users[1].UserScores), 5)
+		t.Assert(users[0].UserScores[0].Uid, 3)
+		t.Assert(users[0].UserScores[0].Score, 1)
+		t.Assert(users[0].UserScores[4].Score, 5)
+		t.Assert(users[1].UserScores[0].Uid, 4)
+		t.Assert(users[1].UserScores[0].Score, 1)
+		t.Assert(users[1].UserScores[4].Score, 5)
+	})
+
+	// Model ScanList with pointer elements and pointer attributes.
+	gtest.C(t, func(t *gtest.T) {
+		var users []*Entity
+		// User
+		err := db.Model(tableUser).
+			Where("uid", g.Slice{3, 4}).
+			Order("uid asc").
+			ScanList(&users, "User")
+		t.AssertNil(err)
+		// Detail
+		err = db.Model(tableUserDetail).
+			Where("uid", gdb.ListItemValues(users, "User", "Uid")).
+			Order("uid asc").
+			ScanList(&users, "UserDetail", "User", "uid")
+		t.AssertNil(err)
+		// Scores
+		err = db.Model(tableUserScores).
+			Where("uid", gdb.ListItemValues(users, "User", "Uid")).
+			Order("id asc").
+			ScanList(&users, "UserScores", "User", "uid")
+		t.AssertNil(err)
+
+		t.Assert(len(users), 2)
+		t.Assert(users[0].User, &EntityUser{3, "name_3"})
+		t.Assert(users[1].User, &EntityUser{4, "name_4"})
+
+		t.Assert(users[0].UserDetail, &EntityUserDetail{3, "address_3"})
+		t.Assert(users[1].UserDetail, &EntityUserDetail{4, "address_4"})
+
+		t.Assert(len(users[0].UserScores), 5)
+		t.Assert(len(users[1].UserScores), 5)
+		t.Assert(users[0].UserScores[0].Uid, 3)
+		t.Assert(users[0].UserScores[0].Score, 1)
+		t.Assert(users[0].UserScores[4].Score, 5)
+		t.Assert(users[1].UserScores[0].Uid, 4)
+		t.Assert(users[1].UserScores[0].Score, 1)
+		t.Assert(users[1].UserScores[4].Score, 5)
+	})
+}
+
 func Test_Table_Relation_EmptyData(t *testing.T) {
 	var (
 		tableUser       = "user_" + gtime.TimestampMicroStr()
@@ -1001,7 +1296,7 @@ CREATE TABLE %s (
 	})
 }
 
-func Test_Table_Relation_EmbedStruct(t *testing.T) {
+func Test_Table_Relation_EmbeddedStruct(t *testing.T) {
 	var (
 		tableUser       = "user_" + gtime.TimestampMicroStr()
 		tableUserDetail = "user_detail_" + gtime.TimestampMicroStr()
