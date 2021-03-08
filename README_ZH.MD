@@ -8,12 +8,7 @@
 
 [English](README.MD) | 简体中文
 
-`GF(Go Frame)`是一款模块化、高性能、企业级的Go基础开发框架。
-实现了比较完善的基础设施建设以及开发工具链，提供了常用的基础开发模块，
-如：缓存、日志、队列、数组、集合、容器、定时器、命令行、内存锁、对象池、
-配置管理、资源管理、数据校验、数据编码、定时任务、数据库ORM、TCP/UDP组件、进程管理/通信等等。
-并提供了Web服务开发的系列核心组件，如：Router、Cookie、Session、Middleware、服务注册、模板引擎等等，
-支持热重启、热更新、域名绑定、TLS/HTTPS、Rewrite等特性。
+`GoFrame`是一款模块化、高性能、企业级的Go基础开发框架。
 
 > 如果您初识`Go`语言，您可以将`GoFrame`类似于`PHP`中的`Laravel`, `Java`中的`SpringBoot`或者`Python`中的`Django`。
 
