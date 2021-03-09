@@ -136,53 +136,67 @@ func (c *Client) prepareRequest(method, url string, data ...interface{}) (req *h
 	if len(c.prefix) > 0 {
 		url = c.prefix + gstr.Trim(url)
 	}
-	param := ""
+	var params string
 	if len(data) > 0 {
 		switch c.header["Content-Type"] {
 		case "application/json":
 			switch data[0].(type) {
 			case string, []byte:
-				param = gconv.String(data[0])
+				params = gconv.String(data[0])
 			default:
 				if b, err := json.Marshal(data[0]); err != nil {
 					return nil, err
 				} else {
-					param = gconv.UnsafeBytesToStr(b)
+					params = string(b)
 				}
 			}
 		case "application/xml":
 			switch data[0].(type) {
 			case string, []byte:
-				param = gconv.String(data[0])
+				params = gconv.String(data[0])
 			default:
 				if b, err := gparser.VarToXml(data[0]); err != nil {
 					return nil, err
 				} else {
-					param = gconv.UnsafeBytesToStr(b)
+					params = string(b)
 				}
 			}
 		default:
-			param = httputil.BuildParams(data[0])
+			params = httputil.BuildParams(data[0])
 		}
 	}
 	if method == "GET" {
-		// It appends the parameters to the url if http method is GET.
-		if param != "" {
-			if gstr.Contains(url, "?") {
-				url = url + "&" + param
-			} else {
-				url = url + "?" + param
+		var bodyBuffer *bytes.Buffer
+		if params != "" {
+			switch c.header["Content-Type"] {
+			case
+				"application/json",
+				"application/xml":
+				bodyBuffer = bytes.NewBuffer([]byte(params))
+			default:
+				// It appends the parameters to the url
+				// if http method is GET and Content-Type is not specified.
+				if gstr.Contains(url, "?") {
+					url = url + "&" + params
+				} else {
+					url = url + "?" + params
+				}
+				bodyBuffer = bytes.NewBuffer(nil)
 			}
+		} else {
+			bodyBuffer = bytes.NewBuffer(nil)
 		}
-		if req, err = http.NewRequest(method, url, bytes.NewBuffer(nil)); err != nil {
+		if req, err = http.NewRequest(method, url, bodyBuffer); err != nil {
 			return nil, err
 		}
 	} else {
-		if strings.Contains(param, "@file:") {
+		if strings.Contains(params, "@file:") {
 			// File uploading request.
-			buffer := new(bytes.Buffer)
-			writer := multipart.NewWriter(buffer)
-			for _, item := range strings.Split(param, "&") {
+			var (
+				buffer = bytes.NewBuffer(nil)
+				writer = multipart.NewWriter(buffer)
+			)
+			for _, item := range strings.Split(params, "&") {
 				array := strings.Split(item, "=")
 				if len(array[1]) > 6 && strings.Compare(array[1][0:6], "@file:") == 0 {
 					path := array[1][6:]
@@ -225,7 +239,7 @@ func (c *Client) prepareRequest(method, url string, data ...interface{}) (req *h
 			}
 		} else {
 			// Normal request.
-			paramBytes := []byte(param)
+			paramBytes := []byte(params)
 			if req, err = http.NewRequest(method, url, bytes.NewReader(paramBytes)); err != nil {
 				return nil, err
 			} else {
@@ -236,7 +250,7 @@ func (c *Client) prepareRequest(method, url string, data ...interface{}) (req *h
 					if (paramBytes[0] == '[' || paramBytes[0] == '{') && json.Valid(paramBytes) {
 						// Auto detecting and setting the post content format: JSON.
 						req.Header.Set("Content-Type", "application/json")
-					} else if gregex.IsMatchString(`^[\w\[\]]+=.+`, param) {
+					} else if gregex.IsMatchString(`^[\w\[\]]+=.+`, params) {
 						// If the parameters passed like "name=value", it then uses form type.
 						req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 					}
