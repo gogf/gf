@@ -226,7 +226,7 @@ func Test_CheckStruct(t *testing.T) {
 	})
 }
 
-func Test_CheckStruct_With_EmbedObject(t *testing.T) {
+func Test_CheckStruct_With_EmbeddedObject(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Pass struct {
 			Pass1 string `valid:"password1@required|same:password2#请输入您的密码|您两次输入的密码不一致"`
@@ -240,6 +240,32 @@ func Test_CheckStruct_With_EmbedObject(t *testing.T) {
 		user := &User{
 			Name: "",
 			Pass: Pass{
+				Pass1: "1",
+				Pass2: "2",
+			},
+		}
+		err := gvalid.CheckStruct(user, nil)
+		t.AssertNE(err, nil)
+		t.Assert(err.Maps()["name"], g.Map{"required": "请输入您的姓名"})
+		t.Assert(err.Maps()["password1"], g.Map{"same": "您两次输入的密码不一致"})
+		t.Assert(err.Maps()["password2"], g.Map{"same": "您两次输入的密码不一致"})
+	})
+}
+
+func Test_CheckStruct_With_StructAttribute(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Pass struct {
+			Pass1 string `valid:"password1@required|same:password2#请输入您的密码|您两次输入的密码不一致"`
+			Pass2 string `valid:"password2@required|same:password1#请再次输入您的密码|您两次输入的密码不一致"`
+		}
+		type User struct {
+			Id        int
+			Name      string `valid:"name@required#请输入您的姓名"`
+			Passwords Pass
+		}
+		user := &User{
+			Name: "",
+			Passwords: Pass{
 				Pass1: "1",
 				Pass2: "2",
 			},

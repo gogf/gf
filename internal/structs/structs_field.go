@@ -6,6 +6,8 @@
 
 package structs
 
+import "reflect"
+
 // Tag returns the value associated with key in the tag string. If there is no
 // such key in the tag, Tag returns the empty string.
 func (f *Field) Tag(key string) string {
@@ -32,6 +34,24 @@ func (f *Field) Type() Type {
 	return Type{
 		Type: f.Field.Type,
 	}
+}
+
+// Kind returns the reflect.Kind for Value of Field `f`.
+func (f *Field) Kind() reflect.Kind {
+	return f.Value.Kind()
+}
+
+// OriginalKind retrieves and returns the original reflect.Kind for Value of Field `f`.
+func (f *Field) OriginalKind() reflect.Kind {
+	var (
+		kind  = f.Value.Kind()
+		value = f.Value
+	)
+	for kind == reflect.Ptr {
+		value = value.Elem()
+		kind = value.Kind()
+	}
+	return kind
 }
 
 // FieldMap retrieves and returns struct field as map[name/tag]*Field from `pointer`.
