@@ -12,13 +12,13 @@ import (
 
 const (
 	// Buffer size for uint32 random number.
-	gBUFFER_SIZE = 10000
+	bufferChanSize = 10000
 )
 
 var (
 	// bufferChan is the buffer for random bytes,
 	// every item storing 4 bytes.
-	bufferChan = make(chan []byte, gBUFFER_SIZE)
+	bufferChan = make(chan []byte, bufferChanSize)
 )
 
 func init() {
