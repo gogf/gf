@@ -9,6 +9,7 @@ package grand
 
 import (
 	"encoding/binary"
+	"time"
 	"unsafe"
 )
 
@@ -95,6 +96,20 @@ func S(n int, symbols ...bool) string {
 		}
 	}
 	return *(*string)(unsafe.Pointer(&b))
+}
+
+// D returns a random time.Duration between min and max: [min, max].
+func D(min, max time.Duration) time.Duration {
+	multiple := 1
+	if min != 0 {
+		for min%10 == 0 {
+			multiple *= 10
+			min /= 10
+			max /= 10
+		}
+	}
+	n := N(int(min), int(max))
+	return time.Duration(n * multiple)
 }
 
 // Str randomly picks and returns <n> count of chars from given string <s>.

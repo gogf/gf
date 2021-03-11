@@ -7,11 +7,11 @@
 package gsession
 
 import (
-	"fmt"
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/internal/json"
+	"github.com/gogf/gf/util/grand"
 	"os"
 	"time"
 
@@ -36,10 +36,12 @@ type StorageFile struct {
 }
 
 var (
-	DefaultStorageFilePath          = gfile.TempDir("gsessions")
-	DefaultStorageFileCryptoKey     = []byte("Session storage file crypto key!")
-	DefaultStorageFileCryptoEnabled = false
-	DefaultStorageFileLoopInterval  = 10 * time.Second
+	DefaultStorageFilePath              = gfile.TempDir("gsessions")
+	DefaultStorageFileCryptoKey         = []byte("Session storage file crypto key!")
+	DefaultStorageFileCryptoEnabled     = false
+	DefaultStorageFileLoopInterval      = 10 * time.Second
+	DefaultStorageFileRemoveIntervalMin = time.Hour
+	DefaultStorageFileRemoveIntervalMax = time.Hour * 24
 )
 
 // NewStorageFile creates and returns a file storage object for session.
@@ -48,10 +50,10 @@ func NewStorageFile(path ...string) *StorageFile {
 	if len(path) > 0 && path[0] != "" {
 		storagePath, _ = gfile.Search(path[0])
 		if storagePath == "" {
-			panic(fmt.Sprintf("'%s' does not exist", path[0]))
+			panic(gerror.Newf("'%s' does not exist", path[0]))
 		}
 		if !gfile.IsWritable(storagePath) {
-			panic(fmt.Sprintf("'%s' is not writable", path[0]))
+			panic(gerror.Newf("'%s' is not writable", path[0]))
 		}
 	}
 	if storagePath != "" {
@@ -65,24 +67,61 @@ func NewStorageFile(path ...string) *StorageFile {
 		cryptoEnabled: DefaultStorageFileCryptoEnabled,
 		updatingIdSet: gset.NewStrSet(true),
 	}
-	// Batch updates the TTL for session ids timely.
-	gtimer.AddSingleton(DefaultStorageFileLoopInterval, func() {
-		//intlog.Print("StorageFile.timer start")
-		var (
-			id  string
-			err error
-		)
-		for {
-			if id = s.updatingIdSet.Pop(); id == "" {
-				break
-			}
-			if err = s.doUpdateTTL(id); err != nil {
-				intlog.Error(err)
+
+	gtimer.AddSingleton(DefaultStorageFileLoopInterval, s.updateSessionTimely)
+	gtimer.AddOnce(
+		grand.D(DefaultStorageFileRemoveIntervalMin, DefaultStorageFileRemoveIntervalMax),
+		s.checkAndRemoveSessionTimely,
+	)
+	return s
+}
+
+// updateSessionTimely batch updates the TTL for sessions timely.
+func (s *StorageFile) updateSessionTimely() {
+	var (
+		id  string
+		err error
+	)
+	// Batch updating sessions.
+	for {
+		if id = s.updatingIdSet.Pop(); id == "" {
+			break
+		}
+		if err = s.updateSessionTTl(id); err != nil {
+			intlog.Error(err)
+		}
+	}
+}
+
+// checkAndRemoveSessionTimely checks the session storage directory path and removes the expired session files.
+func (s *StorageFile) checkAndRemoveSessionTimely() {
+	defer gtimer.AddOnce(
+		grand.D(DefaultStorageFileRemoveIntervalMin, DefaultStorageFileRemoveIntervalMax),
+		s.checkAndRemoveSessionTimely,
+	)
+
+	var (
+		timestampMilliFile  int64
+		timestampMilliNow   = gtime.Now().TimestampMilli()
+		files, _            = gfile.ScanDirFile(s.path, "*")
+		timestampMilliBytes = make([]byte, 8)
+	)
+	for _, path := range files {
+		file, err := gfile.OpenWithFlag(path, os.O_RDONLY)
+		if err != nil {
+			continue
+		}
+		if _, err := file.Read(timestampMilliBytes); err == nil {
+			timestampMilliFile = gbinary.DecodeToInt64(timestampMilliBytes)
+			if timestampMilliNow >= timestampMilliFile {
+				intlog.Printf(
+					"remove expired session file: %s, result:%v",
+					path, gfile.Remove(path),
+				)
 			}
 		}
-		//intlog.Print("StorageFile.timer end")
-	})
-	return s
+		file.Close()
+	}
 }
 
 // SetCryptoKey sets the crypto key for session storage.
@@ -229,9 +268,9 @@ func (s *StorageFile) UpdateTTL(id string, ttl time.Duration) error {
 	return nil
 }
 
-// doUpdateTTL updates the TTL for session id.
-func (s *StorageFile) doUpdateTTL(id string) error {
-	intlog.Printf("StorageFile.doUpdateTTL: %s", id)
+// updateSessionTTL updates the TTL for specified session id.
+func (s *StorageFile) updateSessionTTl(id string) error {
+	intlog.Printf("StorageFile.updateSession: %s", id)
 	path := s.sessionFilePath(id)
 	file, err := gfile.OpenWithFlag(path, os.O_WRONLY)
 	if err != nil {
