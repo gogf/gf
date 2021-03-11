@@ -100,7 +100,7 @@ func S(n int, symbols ...bool) string {
 
 // D returns a random time.Duration between min and max: [min, max].
 func D(min, max time.Duration) time.Duration {
-	multiple := 1
+	multiple := int64(1)
 	if min != 0 {
 		for min%10 == 0 {
 			multiple *= 10
@@ -108,7 +108,7 @@ func D(min, max time.Duration) time.Duration {
 			max /= 10
 		}
 	}
-	n := N(int(min), int(max))
+	n := int64(N(int(min), int(max)))
 	return time.Duration(n * multiple)
 }
 
