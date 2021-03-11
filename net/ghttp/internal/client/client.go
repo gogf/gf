@@ -18,6 +18,7 @@ import (
 	"golang.org/x/net/proxy"
 	"net"
 	"net/http"
+	"net/http/cookiejar"
 	"net/url"
 	"strings"
 	"time"
@@ -36,7 +37,6 @@ type Client struct {
 	prefix            string            // Prefix for request.
 	authUser          string            // HTTP basic authentication: user.
 	authPass          string            // HTTP basic authentication: pass.
-	browserMode       bool              // Whether auto saving and sending cookie content.
 	retryCount        int               // Retry count when request fails.
 	retryInterval     time.Duration     // Retry interval when request fails.
 	middlewareHandler []HandlerFunc     // Interceptor handlers
@@ -84,7 +84,10 @@ func (c *Client) Clone() *Client {
 // When browser mode is enabled, it automatically saves and sends cookie content
 // from and to server.
 func (c *Client) SetBrowserMode(enabled bool) *Client {
-	c.browserMode = enabled
+	if enabled {
+		jar, _ := cookiejar.New(nil)
+		c.Jar = jar
+	}
 	return c
 }
 
