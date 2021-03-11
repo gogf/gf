@@ -11,7 +11,6 @@ import (
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/util/grand"
 	"os"
 	"time"
 
@@ -36,12 +35,10 @@ type StorageFile struct {
 }
 
 var (
-	DefaultStorageFilePath              = gfile.TempDir("gsessions")
-	DefaultStorageFileCryptoKey         = []byte("Session storage file crypto key!")
-	DefaultStorageFileCryptoEnabled     = false
-	DefaultStorageFileLoopInterval      = 10 * time.Second
-	DefaultStorageFileRemoveIntervalMin = time.Hour
-	DefaultStorageFileRemoveIntervalMax = time.Hour * 24
+	DefaultStorageFilePath          = gfile.TempDir("gsessions")
+	DefaultStorageFileCryptoKey     = []byte("Session storage file crypto key!")
+	DefaultStorageFileCryptoEnabled = false
+	DefaultStorageFileLoopInterval  = 10 * time.Second
 )
 
 // NewStorageFile creates and returns a file storage object for session.
@@ -69,10 +66,6 @@ func NewStorageFile(path ...string) *StorageFile {
 	}
 
 	gtimer.AddSingleton(DefaultStorageFileLoopInterval, s.updateSessionTimely)
-	gtimer.AddOnce(
-		grand.D(DefaultStorageFileRemoveIntervalMin, DefaultStorageFileRemoveIntervalMax),
-		s.checkAndRemoveSessionTimely,
-	)
 	return s
 }
 
@@ -90,37 +83,6 @@ func (s *StorageFile) updateSessionTimely() {
 		if err = s.updateSessionTTl(id); err != nil {
 			intlog.Error(err)
 		}
-	}
-}
-
-// checkAndRemoveSessionTimely checks the session storage directory path and removes the expired session files.
-func (s *StorageFile) checkAndRemoveSessionTimely() {
-	defer gtimer.AddOnce(
-		grand.D(DefaultStorageFileRemoveIntervalMin, DefaultStorageFileRemoveIntervalMax),
-		s.checkAndRemoveSessionTimely,
-	)
-
-	var (
-		timestampMilliFile  int64
-		timestampMilliNow   = gtime.Now().TimestampMilli()
-		files, _            = gfile.ScanDirFile(s.path, "*")
-		timestampMilliBytes = make([]byte, 8)
-	)
-	for _, path := range files {
-		file, err := gfile.OpenWithFlag(path, os.O_RDONLY)
-		if err != nil {
-			continue
-		}
-		if _, err := file.Read(timestampMilliBytes); err == nil {
-			timestampMilliFile = gbinary.DecodeToInt64(timestampMilliBytes)
-			if timestampMilliNow >= timestampMilliFile {
-				intlog.Printf(
-					"remove expired session file: %s, result:%v",
-					path, gfile.Remove(path),
-				)
-			}
-		}
-		file.Close()
 	}
 }
 
