@@ -52,7 +52,5 @@ func Test_Client_Request_13_Dump(t *testing.T) {
 		t.Assert(gstr.Contains(dumpedText3, "test_for_request_body"), true)
 		dumpedText4 := r2.RawResponse()
 		t.Assert(gstr.Contains(dumpedText4, "test_for_request_body"), false)
-
 	})
-
 }
