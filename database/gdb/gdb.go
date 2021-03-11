@@ -473,9 +473,13 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 	v, _ := internalCache.GetOrSetFuncLock(node.String(), func() (interface{}, error) {
 		sqlDb, err = c.db.Open(node)
 		if err != nil {
-			intlog.Printf("DB open failed: %v, %+v", err, node)
+			intlog.Printf(`db open failed: %v, %+v`, err, node)
 			return nil, err
 		}
+		intlog.Printf(
+			`open new connection, master:%v, config:%+v, node:%+v`,
+			master, c.config, node,
+		)
 		if c.config.MaxIdleConnCount > 0 {
 			sqlDb.SetMaxIdleConns(c.config.MaxIdleConnCount)
 		} else {
