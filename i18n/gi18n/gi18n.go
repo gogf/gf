@@ -53,7 +53,7 @@ func TranslateFormat(format string, values ...interface{}) string {
 // configured language. If <language> is given empty string, it uses the default configured
 // language for the translation.
 func TranslateFormatLang(language string, format string, values ...interface{}) string {
-	return defaultManager.TranslateFormatLang(format, language, values...)
+	return defaultManager.TranslateFormatLang(language, format, values...)
 }
 
 // Translate translates <content> with configured language and returns the translated content.

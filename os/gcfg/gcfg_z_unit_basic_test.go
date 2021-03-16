@@ -81,7 +81,8 @@ array = [1,2,3]
 			"disk":  "127.0.0.1:6379,0",
 			"cache": "127.0.0.1:6379,1",
 		})
-		t.AssertEQ(c.FilePath(), gfile.Pwd()+gfile.Separator+path)
+		filepath, _ := c.GetFilePath()
+		t.AssertEQ(filepath, gfile.Pwd()+gfile.Separator+path)
 	})
 }
 
@@ -223,8 +224,8 @@ func Test_SetFileName(t *testing.T) {
 			"disk":  "127.0.0.1:6379,0",
 			"cache": "127.0.0.1:6379,1",
 		})
-		t.AssertEQ(c.FilePath(), gfile.Pwd()+gfile.Separator+path)
-
+		filepath, _ := c.GetFilePath()
+		t.AssertEQ(filepath, gfile.Pwd()+gfile.Separator+path)
 	})
 }
 
@@ -281,9 +282,9 @@ func TestCfg_AddPath(t *testing.T) {
 func TestCfg_FilePath(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		c := gcfg.New("config.yml")
-		path := c.FilePath("tmp")
+		path, _ := c.GetFilePath("tmp")
 		t.Assert(path, "")
-		path = c.FilePath("tmp")
+		path, _ = c.GetFilePath("tmp")
 		t.Assert(path, "")
 	})
 }
