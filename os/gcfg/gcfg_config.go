@@ -16,14 +16,14 @@ var (
 	configs = gmap.NewStrStrMap(true)
 )
 
-// SetContent sets customized configuration content for specified <file>.
-// The <file> is unnecessary param, default is DefaultConfigFile.
+// SetContent sets customized configuration content for specified `file`.
+// The `file` is unnecessary param, default is DefaultConfigFile.
 func SetContent(content string, file ...string) {
 	name := DefaultConfigFile
 	if len(file) > 0 {
 		name = file[0]
 	}
-	// Clear file cache for instances which cached <name>.
+	// Clear file cache for instances which cached `name`.
 	instances.LockFunc(func(m map[string]interface{}) {
 		if configs.Contains(name) {
 			for _, v := range m {
@@ -34,8 +34,8 @@ func SetContent(content string, file ...string) {
 	})
 }
 
-// GetContent returns customized configuration content for specified <file>.
-// The <file> is unnecessary param, default is DefaultConfigFile.
+// GetContent returns customized configuration content for specified `file`.
+// The `file` is unnecessary param, default is DefaultConfigFile.
 func GetContent(file ...string) string {
 	name := DefaultConfigFile
 	if len(file) > 0 {
@@ -44,14 +44,14 @@ func GetContent(file ...string) string {
 	return configs.Get(name)
 }
 
-// RemoveContent removes the global configuration with specified <file>.
-// If <name> is not passed, it removes configuration of the default group name.
+// RemoveContent removes the global configuration with specified `file`.
+// If `name` is not passed, it removes configuration of the default group name.
 func RemoveContent(file ...string) {
 	name := DefaultConfigFile
 	if len(file) > 0 {
 		name = file[0]
 	}
-	// Clear file cache for instances which cached <name>.
+	// Clear file cache for instances which cached `name`.
 	instances.LockFunc(func(m map[string]interface{}) {
 		if configs.Contains(name) {
 			for _, v := range m {

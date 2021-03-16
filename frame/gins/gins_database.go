@@ -48,22 +48,26 @@ func Database(name ...string) gdb.DB {
 			configMap = Config().GetMap(configNodeKey)
 		}
 		if len(configMap) == 0 && !gdb.IsConfigured() {
-			if !Config().Available() {
+			configFilePath, err := Config().GetFilePath()
+			if configFilePath == "" {
 				exampleFileName := "config.example.toml"
-				if Config().Available(exampleFileName) {
-					panic(gerror.Newf(
+				if exampleConfigFilePath, _ := Config().GetFilePath(exampleFileName); exampleConfigFilePath != "" {
+					panic(gerror.Wrapf(
+						err,
 						`configuration file "%s" not found, but found "%s", did you miss renaming the configuration example file?`,
 						Config().GetFileName(),
 						exampleFileName,
 					))
 				} else {
-					panic(gerror.Newf(
+					panic(gerror.Wrapf(
+						err,
 						`configuration file "%s" not found, did you miss the configuration file or the file name setting?`,
 						Config().GetFileName(),
 					))
 				}
 			}
-			panic(gerror.Newf(
+			panic(gerror.Wrapf(
+				err,
 				`database initialization failed: "%s" node not found, is configuration file or configuration node missing?`,
 				configNodeNameDatabase,
 			))

@@ -22,7 +22,7 @@ var (
 )
 
 // Instance returns an instance of Config with default settings.
-// The parameter <name> is the name for the instance. But very note that, if the file "name.toml"
+// The parameter `name` is the name for the instance. But very note that, if the file "name.toml"
 // exists in the configuration directory, it then sets it as the default configuration file. The
 // toml file type is the default configuration file type.
 func Instance(name ...string) *Config {

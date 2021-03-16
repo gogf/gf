@@ -11,6 +11,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/os/gcmd"
 	"github.com/gogf/gf/text/gstr"
@@ -45,7 +46,7 @@ var (
 )
 
 // New returns a new configuration management object.
-// The parameter <file> specifies the default configuration file name for reading.
+// The parameter `file` specifies the default configuration file name for reading.
 func New(file ...string) *Config {
 	name := DefaultConfigFile
 	if len(file) > 0 {
@@ -67,7 +68,7 @@ func New(file ...string) *Config {
 			_ = c.SetPath(customPath)
 		} else {
 			if errorPrint() {
-				glog.Errorf("Configuration directory path does not exist: %s", customPath)
+				glog.Errorf("[gcfg] Configuration directory path does not exist: %s", customPath)
 			}
 		}
 	} else {
@@ -93,42 +94,8 @@ func New(file ...string) *Config {
 	return c
 }
 
-// filePath returns the absolute configuration file path for the given filename by <file>.
-func (c *Config) filePath(file ...string) (path string) {
-	name := c.defaultName
-	if len(file) > 0 {
-		name = file[0]
-	}
-	path = c.FilePath(name)
-	if path == "" {
-		var (
-			buffer = bytes.NewBuffer(nil)
-		)
-		if c.searchPaths.Len() > 0 {
-			buffer.WriteString(fmt.Sprintf("[gcfg] cannot find config file \"%s\" in following paths:", name))
-			c.searchPaths.RLockFunc(func(array []string) {
-				index := 1
-				for _, v := range array {
-					v = gstr.TrimRight(v, `\/`)
-					buffer.WriteString(fmt.Sprintf("\n%d. %s", index, v))
-					index++
-					buffer.WriteString(fmt.Sprintf("\n%d. %s", index, v+gfile.Separator+"config"))
-					index++
-				}
-			})
-
-		} else {
-			buffer.WriteString(fmt.Sprintf("[gcfg] cannot find config file \"%s\" with no path set/add", name))
-		}
-		if errorPrint() {
-			glog.Error(buffer.String())
-		}
-	}
-	return path
-}
-
 // SetPath sets the configuration directory path for file search.
-// The parameter <path> can be absolute or relative path,
+// The parameter `path` can be absolute or relative path,
 // but absolute path is strongly recommended.
 func (c *Config) SetPath(path string) error {
 	var (
@@ -246,14 +213,14 @@ func (c *Config) AddPath(path string) error {
 		} else {
 			buffer.WriteString(fmt.Sprintf(`[gcfg] AddPath failed: path "%s" does not exist`, path))
 		}
-		err := errors.New(buffer.String())
+		err := gerror.New(buffer.String())
 		if errorPrint() {
 			glog.Error(err)
 		}
 		return err
 	}
 	if !isDir {
-		err := fmt.Errorf(`[gcfg] AddPath failed: path "%s" should be directory type`, path)
+		err := gerror.Newf(`[gcfg] AddPath failed: path "%s" should be directory type`, path)
 		if errorPrint() {
 			glog.Error(err)
 		}
@@ -268,11 +235,38 @@ func (c *Config) AddPath(path string) error {
 	return nil
 }
 
-// GetFilePath returns the absolute path of the specified configuration file.
-// If <file> is not passed, it returns the configuration file path of the default name.
-// If the specified configuration file does not exist,
-// an empty string is returned.
-func (c *Config) FilePath(file ...string) (path string) {
+// SetFileName sets the default configuration file name.
+func (c *Config) SetFileName(name string) *Config {
+	c.defaultName = name
+	return c
+}
+
+// GetFileName returns the default configuration file name.
+func (c *Config) GetFileName() string {
+	return c.defaultName
+}
+
+// Available checks and returns whether configuration of given `file` is available.
+func (c *Config) Available(file ...string) bool {
+	var name string
+	if len(file) > 0 && file[0] != "" {
+		name = file[0]
+	} else {
+		name = c.defaultName
+	}
+	if path, _ := c.GetFilePath(name); path != "" {
+		return true
+	}
+	if GetContent(name) != "" {
+		return true
+	}
+	return false
+}
+
+// GetFilePath returns the absolute configuration file path for the given filename by `file`.
+// If `file` is not passed, it returns the configuration file path of the default name.
+// It returns an empty `path` string and an error if the given `file` does not exist.
+func (c *Config) GetFilePath(file ...string) (path string, err error) {
 	name := c.defaultName
 	if len(file) > 0 {
 		name = file[0]
@@ -308,38 +302,32 @@ func (c *Config) FilePath(file ...string) (path string) {
 			}
 		}
 	})
+	// If it cannot find the path of `file`, it formats and returns a detailed error.
+	if path == "" {
+		var (
+			buffer = bytes.NewBuffer(nil)
+		)
+		if c.searchPaths.Len() > 0 {
+			buffer.WriteString(fmt.Sprintf(`[gcfg] cannot find config file "%s" in resource manager or the following paths:`, name))
+			c.searchPaths.RLockFunc(func(array []string) {
+				index := 1
+				for _, v := range array {
+					v = gstr.TrimRight(v, `\/`)
+					buffer.WriteString(fmt.Sprintf("\n%d. %s", index, v))
+					index++
+					buffer.WriteString(fmt.Sprintf("\n%d. %s", index, v+gfile.Separator+"config"))
+					index++
+				}
+			})
+		} else {
+			buffer.WriteString(fmt.Sprintf("[gcfg] cannot find config file \"%s\" with no path configured", name))
+		}
+		err = gerror.New(buffer.String())
+	}
 	return
 }
 
-// SetFileName sets the default configuration file name.
-func (c *Config) SetFileName(name string) *Config {
-	c.defaultName = name
-	return c
-}
-
-// GetFileName returns the default configuration file name.
-func (c *Config) GetFileName() string {
-	return c.defaultName
-}
-
-// Available checks and returns whether configuration of given <file> is available.
-func (c *Config) Available(file ...string) bool {
-	var name string
-	if len(file) > 0 && file[0] != "" {
-		name = file[0]
-	} else {
-		name = c.defaultName
-	}
-	if c.FilePath(name) != "" {
-		return true
-	}
-	if GetContent(name) != "" {
-		return true
-	}
-	return false
-}
-
-// getJson returns a *gjson.Json object for the specified <file> content.
+// getJson returns a *gjson.Json object for the specified `file` content.
 // It would print error if file reading fails. It return nil if any error occurs.
 func (c *Config) getJson(file ...string) *gjson.Json {
 	var name string
@@ -350,14 +338,18 @@ func (c *Config) getJson(file ...string) *gjson.Json {
 	}
 	r := c.jsonMap.GetOrSetFuncLock(name, func() interface{} {
 		var (
-			content  = ""
-			filePath = ""
+			err      error
+			content  string
+			filePath string
 		)
 		// The configured content can be any kind of data type different from its file type.
 		isFromConfigContent := true
 		if content = GetContent(name); content == "" {
 			isFromConfigContent = false
-			filePath = c.filePath(name)
+			filePath, err = c.GetFilePath(name)
+			if err != nil && errorPrint() {
+				glog.Error(err)
+			}
 			if filePath == "" {
 				return nil
 			}
@@ -369,8 +361,7 @@ func (c *Config) getJson(file ...string) *gjson.Json {
 		}
 		// Note that the underlying configuration json object operations are concurrent safe.
 		var (
-			j   *gjson.Json
-			err error
+			j *gjson.Json
 		)
 		dataType := gfile.ExtName(name)
 		if gjson.IsValidDataType(dataType) && !isFromConfigContent {
@@ -394,9 +385,9 @@ func (c *Config) getJson(file ...string) *gjson.Json {
 		}
 		if errorPrint() {
 			if filePath != "" {
-				glog.Criticalf(`[gcfg] Load config file "%s" failed: %s`, filePath, err.Error())
+				glog.Criticalf(`[gcfg] load config file "%s" failed: %s`, filePath, err.Error())
 			} else {
-				glog.Criticalf(`[gcfg] Load configuration failed: %s`, err.Error())
+				glog.Criticalf(`[gcfg] load configuration failed: %s`, err.Error())
 			}
 		}
 		return nil

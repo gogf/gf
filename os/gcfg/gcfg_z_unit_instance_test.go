@@ -77,7 +77,8 @@ v4 = "1.234"
 			"disk":  "127.0.0.1:6379,0",
 			"cache": "127.0.0.1:6379,1",
 		})
-		t.AssertEQ(c.FilePath(), gfile.Pwd()+gfile.Separator+path)
+		filepath, _ := c.GetFilePath()
+		t.AssertEQ(filepath, gfile.Pwd()+gfile.Separator+path)
 	})
 }
 

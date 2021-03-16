@@ -16,7 +16,7 @@ import (
 	"github.com/gogf/gf/os/gtime"
 )
 
-// Set sets value with specified <pattern>.
+// Set sets value with specified `pattern`.
 // It supports hierarchical data access by char separator, which is '.' in default.
 // It is commonly used for updates certain configuration value in runtime.
 func (c *Config) Set(pattern string, value interface{}) error {
@@ -26,14 +26,14 @@ func (c *Config) Set(pattern string, value interface{}) error {
 	return nil
 }
 
-// Get retrieves and returns value by specified <pattern>.
-// It returns all values of current Json object if <pattern> is given empty or string ".".
-// It returns nil if no value found by <pattern>.
+// Get retrieves and returns value by specified `pattern`.
+// It returns all values of current Json object if `pattern` is given empty or string ".".
+// It returns nil if no value found by `pattern`.
 //
-// We can also access slice item by its index number in <pattern> like:
+// We can also access slice item by its index number in `pattern` like:
 // "list.10", "array.0.name", "array.0.1.id".
 //
-// It returns a default value specified by <def> if value for <pattern> is not found.
+// It returns a default value specified by `def` if value for `pattern` is not found.
 func (c *Config) Get(pattern string, def ...interface{}) interface{} {
 	if j := c.getJson(); j != nil {
 		return j.Get(pattern, def...)
@@ -41,7 +41,7 @@ func (c *Config) Get(pattern string, def ...interface{}) interface{} {
 	return nil
 }
 
-// GetVar returns a gvar.Var with value by given <pattern>.
+// GetVar returns a gvar.Var with value by given `pattern`.
 func (c *Config) GetVar(pattern string, def ...interface{}) *gvar.Var {
 	if j := c.getJson(); j != nil {
 		return j.GetVar(pattern, def...)
@@ -49,7 +49,7 @@ func (c *Config) GetVar(pattern string, def ...interface{}) *gvar.Var {
 	return gvar.New(nil)
 }
 
-// Contains checks whether the value by specified <pattern> exist.
+// Contains checks whether the value by specified `pattern` exist.
 func (c *Config) Contains(pattern string) bool {
 	if j := c.getJson(); j != nil {
 		return j.Contains(pattern)
@@ -57,7 +57,7 @@ func (c *Config) Contains(pattern string) bool {
 	return false
 }
 
-// GetMap retrieves and returns the value by specified <pattern> as map[string]interface{}.
+// GetMap retrieves and returns the value by specified `pattern` as map[string]interface{}.
 func (c *Config) GetMap(pattern string, def ...interface{}) map[string]interface{} {
 	if j := c.getJson(); j != nil {
 		return j.GetMap(pattern, def...)
@@ -65,7 +65,7 @@ func (c *Config) GetMap(pattern string, def ...interface{}) map[string]interface
 	return nil
 }
 
-// GetMapStrStr retrieves and returns the value by specified <pattern> as map[string]string.
+// GetMapStrStr retrieves and returns the value by specified `pattern` as map[string]string.
 func (c *Config) GetMapStrStr(pattern string, def ...interface{}) map[string]string {
 	if j := c.getJson(); j != nil {
 		return j.GetMapStrStr(pattern, def...)
@@ -73,7 +73,7 @@ func (c *Config) GetMapStrStr(pattern string, def ...interface{}) map[string]str
 	return nil
 }
 
-// GetArray retrieves the value by specified <pattern>,
+// GetArray retrieves the value by specified `pattern`,
 // and converts it to a slice of []interface{}.
 func (c *Config) GetArray(pattern string, def ...interface{}) []interface{} {
 	if j := c.getJson(); j != nil {
@@ -82,7 +82,7 @@ func (c *Config) GetArray(pattern string, def ...interface{}) []interface{} {
 	return nil
 }
 
-// GetBytes retrieves the value by specified <pattern> and converts it to []byte.
+// GetBytes retrieves the value by specified `pattern` and converts it to []byte.
 func (c *Config) GetBytes(pattern string, def ...interface{}) []byte {
 	if j := c.getJson(); j != nil {
 		return j.GetBytes(pattern, def...)
@@ -90,7 +90,7 @@ func (c *Config) GetBytes(pattern string, def ...interface{}) []byte {
 	return nil
 }
 
-// GetString retrieves the value by specified <pattern> and converts it to string.
+// GetString retrieves the value by specified `pattern` and converts it to string.
 func (c *Config) GetString(pattern string, def ...interface{}) string {
 	if j := c.getJson(); j != nil {
 		return j.GetString(pattern, def...)
@@ -98,7 +98,7 @@ func (c *Config) GetString(pattern string, def ...interface{}) string {
 	return ""
 }
 
-// GetStrings retrieves the value by specified <pattern> and converts it to []string.
+// GetStrings retrieves the value by specified `pattern` and converts it to []string.
 func (c *Config) GetStrings(pattern string, def ...interface{}) []string {
 	if j := c.getJson(); j != nil {
 		return j.GetStrings(pattern, def...)
@@ -115,7 +115,7 @@ func (c *Config) GetInterfaces(pattern string, def ...interface{}) []interface{}
 	return nil
 }
 
-// GetBool retrieves the value by specified <pattern>,
+// GetBool retrieves the value by specified `pattern`,
 // converts and returns it as bool.
 // It returns false when value is: "", 0, false, off, nil;
 // or returns true instead.
@@ -126,7 +126,7 @@ func (c *Config) GetBool(pattern string, def ...interface{}) bool {
 	return false
 }
 
-// GetFloat32 retrieves the value by specified <pattern> and converts it to float32.
+// GetFloat32 retrieves the value by specified `pattern` and converts it to float32.
 func (c *Config) GetFloat32(pattern string, def ...interface{}) float32 {
 	if j := c.getJson(); j != nil {
 		return j.GetFloat32(pattern, def...)
@@ -134,7 +134,7 @@ func (c *Config) GetFloat32(pattern string, def ...interface{}) float32 {
 	return 0
 }
 
-// GetFloat64 retrieves the value by specified <pattern> and converts it to float64.
+// GetFloat64 retrieves the value by specified `pattern` and converts it to float64.
 func (c *Config) GetFloat64(pattern string, def ...interface{}) float64 {
 	if j := c.getJson(); j != nil {
 		return j.GetFloat64(pattern, def...)
@@ -142,7 +142,7 @@ func (c *Config) GetFloat64(pattern string, def ...interface{}) float64 {
 	return 0
 }
 
-// GetFloats retrieves the value by specified <pattern> and converts it to []float64.
+// GetFloats retrieves the value by specified `pattern` and converts it to []float64.
 func (c *Config) GetFloats(pattern string, def ...interface{}) []float64 {
 	if j := c.getJson(); j != nil {
 		return j.GetFloats(pattern, def...)
@@ -150,7 +150,7 @@ func (c *Config) GetFloats(pattern string, def ...interface{}) []float64 {
 	return nil
 }
 
-// GetInt retrieves the value by specified <pattern> and converts it to int.
+// GetInt retrieves the value by specified `pattern` and converts it to int.
 func (c *Config) GetInt(pattern string, def ...interface{}) int {
 	if j := c.getJson(); j != nil {
 		return j.GetInt(pattern, def...)
@@ -158,7 +158,7 @@ func (c *Config) GetInt(pattern string, def ...interface{}) int {
 	return 0
 }
 
-// GetInt8 retrieves the value by specified <pattern> and converts it to int8.
+// GetInt8 retrieves the value by specified `pattern` and converts it to int8.
 func (c *Config) GetInt8(pattern string, def ...interface{}) int8 {
 	if j := c.getJson(); j != nil {
 		return j.GetInt8(pattern, def...)
@@ -166,7 +166,7 @@ func (c *Config) GetInt8(pattern string, def ...interface{}) int8 {
 	return 0
 }
 
-// GetInt16 retrieves the value by specified <pattern> and converts it to int16.
+// GetInt16 retrieves the value by specified `pattern` and converts it to int16.
 func (c *Config) GetInt16(pattern string, def ...interface{}) int16 {
 	if j := c.getJson(); j != nil {
 		return j.GetInt16(pattern, def...)
@@ -174,7 +174,7 @@ func (c *Config) GetInt16(pattern string, def ...interface{}) int16 {
 	return 0
 }
 
-// GetInt32 retrieves the value by specified <pattern> and converts it to int32.
+// GetInt32 retrieves the value by specified `pattern` and converts it to int32.
 func (c *Config) GetInt32(pattern string, def ...interface{}) int32 {
 	if j := c.getJson(); j != nil {
 		return j.GetInt32(pattern, def...)
@@ -182,7 +182,7 @@ func (c *Config) GetInt32(pattern string, def ...interface{}) int32 {
 	return 0
 }
 
-// GetInt64 retrieves the value by specified <pattern> and converts it to int64.
+// GetInt64 retrieves the value by specified `pattern` and converts it to int64.
 func (c *Config) GetInt64(pattern string, def ...interface{}) int64 {
 	if j := c.getJson(); j != nil {
 		return j.GetInt64(pattern, def...)
@@ -190,7 +190,7 @@ func (c *Config) GetInt64(pattern string, def ...interface{}) int64 {
 	return 0
 }
 
-// GetInts retrieves the value by specified <pattern> and converts it to []int.
+// GetInts retrieves the value by specified `pattern` and converts it to []int.
 func (c *Config) GetInts(pattern string, def ...interface{}) []int {
 	if j := c.getJson(); j != nil {
 		return j.GetInts(pattern, def...)
@@ -198,7 +198,7 @@ func (c *Config) GetInts(pattern string, def ...interface{}) []int {
 	return nil
 }
 
-// GetUint retrieves the value by specified <pattern> and converts it to uint.
+// GetUint retrieves the value by specified `pattern` and converts it to uint.
 func (c *Config) GetUint(pattern string, def ...interface{}) uint {
 	if j := c.getJson(); j != nil {
 		return j.GetUint(pattern, def...)
@@ -206,7 +206,7 @@ func (c *Config) GetUint(pattern string, def ...interface{}) uint {
 	return 0
 }
 
-// GetUint8 retrieves the value by specified <pattern> and converts it to uint8.
+// GetUint8 retrieves the value by specified `pattern` and converts it to uint8.
 func (c *Config) GetUint8(pattern string, def ...interface{}) uint8 {
 	if j := c.getJson(); j != nil {
 		return j.GetUint8(pattern, def...)
@@ -214,7 +214,7 @@ func (c *Config) GetUint8(pattern string, def ...interface{}) uint8 {
 	return 0
 }
 
-// GetUint16 retrieves the value by specified <pattern> and converts it to uint16.
+// GetUint16 retrieves the value by specified `pattern` and converts it to uint16.
 func (c *Config) GetUint16(pattern string, def ...interface{}) uint16 {
 	if j := c.getJson(); j != nil {
 		return j.GetUint16(pattern, def...)
@@ -222,7 +222,7 @@ func (c *Config) GetUint16(pattern string, def ...interface{}) uint16 {
 	return 0
 }
 
-// GetUint32 retrieves the value by specified <pattern> and converts it to uint32.
+// GetUint32 retrieves the value by specified `pattern` and converts it to uint32.
 func (c *Config) GetUint32(pattern string, def ...interface{}) uint32 {
 	if j := c.getJson(); j != nil {
 		return j.GetUint32(pattern, def...)
@@ -230,7 +230,7 @@ func (c *Config) GetUint32(pattern string, def ...interface{}) uint32 {
 	return 0
 }
 
-// GetUint64 retrieves the value by specified <pattern> and converts it to uint64.
+// GetUint64 retrieves the value by specified `pattern` and converts it to uint64.
 func (c *Config) GetUint64(pattern string, def ...interface{}) uint64 {
 	if j := c.getJson(); j != nil {
 		return j.GetUint64(pattern, def...)
@@ -238,7 +238,7 @@ func (c *Config) GetUint64(pattern string, def ...interface{}) uint64 {
 	return 0
 }
 
-// GetTime retrieves the value by specified <pattern> and converts it to time.Time.
+// GetTime retrieves the value by specified `pattern` and converts it to time.Time.
 func (c *Config) GetTime(pattern string, format ...string) time.Time {
 	if j := c.getJson(); j != nil {
 		return j.GetTime(pattern, format...)
@@ -246,7 +246,7 @@ func (c *Config) GetTime(pattern string, format ...string) time.Time {
 	return time.Time{}
 }
 
-// GetDuration retrieves the value by specified <pattern> and converts it to time.Duration.
+// GetDuration retrieves the value by specified `pattern` and converts it to time.Duration.
 func (c *Config) GetDuration(pattern string, def ...interface{}) time.Duration {
 	if j := c.getJson(); j != nil {
 		return j.GetDuration(pattern, def...)
@@ -254,7 +254,7 @@ func (c *Config) GetDuration(pattern string, def ...interface{}) time.Duration {
 	return 0
 }
 
-// GetGTime retrieves the value by specified <pattern> and converts it to *gtime.Time.
+// GetGTime retrieves the value by specified `pattern` and converts it to *gtime.Time.
 func (c *Config) GetGTime(pattern string, format ...string) *gtime.Time {
 	if j := c.getJson(); j != nil {
 		return j.GetGTime(pattern, format...)
@@ -262,7 +262,7 @@ func (c *Config) GetGTime(pattern string, format ...string) *gtime.Time {
 	return nil
 }
 
-// GetJson gets the value by specified <pattern>,
+// GetJson gets the value by specified `pattern`,
 // and converts it to a un-concurrent-safe Json object.
 func (c *Config) GetJson(pattern string, def ...interface{}) *gjson.Json {
 	if j := c.getJson(); j != nil {
@@ -271,7 +271,7 @@ func (c *Config) GetJson(pattern string, def ...interface{}) *gjson.Json {
 	return nil
 }
 
-// GetJsons gets the value by specified <pattern>,
+// GetJsons gets the value by specified `pattern`,
 // and converts it to a slice of un-concurrent-safe Json object.
 func (c *Config) GetJsons(pattern string, def ...interface{}) []*gjson.Json {
 	if j := c.getJson(); j != nil {
@@ -280,7 +280,7 @@ func (c *Config) GetJsons(pattern string, def ...interface{}) []*gjson.Json {
 	return nil
 }
 
-// GetJsonMap gets the value by specified <pattern>,
+// GetJsonMap gets the value by specified `pattern`,
 // and converts it to a map of un-concurrent-safe Json object.
 func (c *Config) GetJsonMap(pattern string, def ...interface{}) map[string]*gjson.Json {
 	if j := c.getJson(); j != nil {
@@ -289,8 +289,8 @@ func (c *Config) GetJsonMap(pattern string, def ...interface{}) map[string]*gjso
 	return nil
 }
 
-// GetStruct retrieves the value by specified <pattern> and converts it to specified object
-// <pointer>. The <pointer> should be the pointer to an object.
+// GetStruct retrieves the value by specified `pattern` and converts it to specified object
+// `pointer`. The `pointer` should be the pointer to an object.
 func (c *Config) GetStruct(pattern string, pointer interface{}, mapping ...map[string]string) error {
 	if j := c.getJson(); j != nil {
 		return j.GetStruct(pattern, pointer, mapping...)
@@ -324,7 +324,7 @@ func (c *Config) GetStructsDeep(pattern string, pointer interface{}, mapping ...
 	return errors.New("configuration not found")
 }
 
-// GetMapToMap retrieves the value by specified <pattern> and converts it to specified map variable.
+// GetMapToMap retrieves the value by specified `pattern` and converts it to specified map variable.
 // See gconv.MapToMap.
 func (c *Config) GetMapToMap(pattern string, pointer interface{}, mapping ...map[string]string) error {
 	if j := c.getJson(); j != nil {
@@ -333,7 +333,7 @@ func (c *Config) GetMapToMap(pattern string, pointer interface{}, mapping ...map
 	return errors.New("configuration not found")
 }
 
-// GetMapToMapDeep retrieves the value by specified <pattern> and converts it to specified map
+// GetMapToMapDeep retrieves the value by specified `pattern` and converts it to specified map
 // variable recursively.
 // See gconv.MapToMapDeep.
 func (c *Config) GetMapToMapDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
@@ -343,7 +343,7 @@ func (c *Config) GetMapToMapDeep(pattern string, pointer interface{}, mapping ..
 	return errors.New("configuration not found")
 }
 
-// GetMapToMaps retrieves the value by specified <pattern> and converts it to specified map slice
+// GetMapToMaps retrieves the value by specified `pattern` and converts it to specified map slice
 // variable.
 // See gconv.MapToMaps.
 func (c *Config) GetMapToMaps(pattern string, pointer interface{}, mapping ...map[string]string) error {
@@ -353,7 +353,7 @@ func (c *Config) GetMapToMaps(pattern string, pointer interface{}, mapping ...ma
 	return errors.New("configuration not found")
 }
 
-// GetMapToMapsDeep retrieves the value by specified <pattern> and converts it to specified map slice
+// GetMapToMapsDeep retrieves the value by specified `pattern` and converts it to specified map slice
 // variable recursively.
 // See gconv.MapToMapsDeep.
 func (c *Config) GetMapToMapsDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
@@ -382,7 +382,7 @@ func (c *Config) ToArray() []interface{} {
 }
 
 // ToStruct converts current Json object to specified object.
-// The <pointer> should be a pointer type of *struct.
+// The `pointer` should be a pointer type of *struct.
 func (c *Config) ToStruct(pointer interface{}, mapping ...map[string]string) error {
 	if j := c.getJson(); j != nil {
 		return j.ToStruct(pointer, mapping...)
@@ -391,7 +391,7 @@ func (c *Config) ToStruct(pointer interface{}, mapping ...map[string]string) err
 }
 
 // ToStructDeep converts current Json object to specified object recursively.
-// The <pointer> should be a pointer type of *struct.
+// The `pointer` should be a pointer type of *struct.
 func (c *Config) ToStructDeep(pointer interface{}, mapping ...map[string]string) error {
 	if j := c.getJson(); j != nil {
 		return j.ToStructDeep(pointer, mapping...)
@@ -400,7 +400,7 @@ func (c *Config) ToStructDeep(pointer interface{}, mapping ...map[string]string)
 }
 
 // ToStructs converts current Json object to specified object slice.
-// The <pointer> should be a pointer type of []struct/*struct.
+// The `pointer` should be a pointer type of []struct/*struct.
 func (c *Config) ToStructs(pointer interface{}, mapping ...map[string]string) error {
 	if j := c.getJson(); j != nil {
 		return j.ToStructs(pointer, mapping...)
@@ -409,7 +409,7 @@ func (c *Config) ToStructs(pointer interface{}, mapping ...map[string]string) er
 }
 
 // ToStructsDeep converts current Json object to specified object slice recursively.
-// The <pointer> should be a pointer type of []struct/*struct.
+// The `pointer` should be a pointer type of []struct/*struct.
 func (c *Config) ToStructsDeep(pointer interface{}, mapping ...map[string]string) error {
 	if j := c.getJson(); j != nil {
 		return j.ToStructsDeep(pointer, mapping...)
@@ -418,7 +418,7 @@ func (c *Config) ToStructsDeep(pointer interface{}, mapping ...map[string]string
 }
 
 // ToMapToMap converts current Json object to specified map variable.
-// The parameter of <pointer> should be type of *map.
+// The parameter of `pointer` should be type of *map.
 func (c *Config) ToMapToMap(pointer interface{}, mapping ...map[string]string) error {
 	if j := c.getJson(); j != nil {
 		return j.ToMapToMap(pointer, mapping...)
@@ -427,7 +427,7 @@ func (c *Config) ToMapToMap(pointer interface{}, mapping ...map[string]string) e
 }
 
 // ToMapToMapDeep converts current Json object to specified map variable recursively.
-// The parameter of <pointer> should be type of *map.
+// The parameter of `pointer` should be type of *map.
 func (c *Config) ToMapToMapDeep(pointer interface{}, mapping ...map[string]string) error {
 	if j := c.getJson(); j != nil {
 		return j.ToMapToMapDeep(pointer, mapping...)
@@ -436,7 +436,7 @@ func (c *Config) ToMapToMapDeep(pointer interface{}, mapping ...map[string]strin
 }
 
 // ToMapToMaps converts current Json object to specified map variable slice.
-// The parameter of <pointer> should be type of []map/*map.
+// The parameter of `pointer` should be type of []map/*map.
 func (c *Config) ToMapToMaps(pointer interface{}, mapping ...map[string]string) error {
 	if j := c.getJson(); j != nil {
 		return j.ToMapToMaps(pointer, mapping...)
@@ -445,7 +445,7 @@ func (c *Config) ToMapToMaps(pointer interface{}, mapping ...map[string]string) 
 }
 
 // ToMapToMapsDeep converts current Json object to specified map variable slice recursively.
-// The parameter of <pointer> should be type of []map/*map.
+// The parameter of `pointer` should be type of []map/*map.
 func (c *Config) ToMapToMapsDeep(pointer interface{}, mapping ...map[string]string) error {
 	if j := c.getJson(); j != nil {
 		return j.ToMapToMapsDeep(pointer, mapping...)
