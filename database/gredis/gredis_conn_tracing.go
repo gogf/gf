@@ -14,8 +14,8 @@ import (
 	"github.com/gogf/gf/net/gtrace"
 	"github.com/gogf/gf/os/gcmd"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/label"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -68,14 +68,14 @@ func (c *Conn) addTracingItem(item *tracingItem) {
 	}
 	span.SetAttributes(gtrace.CommonLabels()...)
 	span.SetAttributes(
-		label.String(tracingAttrRedisHost, c.redis.config.Host),
-		label.Int(tracingAttrRedisPort, c.redis.config.Port),
-		label.Int(tracingAttrRedisDb, c.redis.config.Db),
+		attribute.String(tracingAttrRedisHost, c.redis.config.Host),
+		attribute.Int(tracingAttrRedisPort, c.redis.config.Port),
+		attribute.Int(tracingAttrRedisDb, c.redis.config.Db),
 	)
 	jsonBytes, _ := json.Marshal(item.arguments)
 	span.AddEvent(tracingEventRedisExecution, trace.WithAttributes(
-		label.String(tracingEventRedisExecutionCommand, item.commandName),
-		label.String(tracingEventRedisExecutionCost, fmt.Sprintf(`%d ms`, item.costMilli)),
-		label.String(tracingEventRedisExecutionArguments, string(jsonBytes)),
+		attribute.String(tracingEventRedisExecutionCommand, item.commandName),
+		attribute.String(tracingEventRedisExecutionCost, fmt.Sprintf(`%d ms`, item.costMilli)),
+		attribute.String(tracingEventRedisExecutionArguments, string(jsonBytes)),
 	))
 }

@@ -13,16 +13,17 @@ import (
 	"github.com/gogf/gf/net/ghttp/internal/client"
 	"github.com/gogf/gf/net/ghttp/internal/httputil"
 	"github.com/gogf/gf/net/gtrace"
+	"github.com/gogf/gf/text/gstr"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 	"io/ioutil"
 	"net/http"
 )
 
 const (
-	tracingMaxContentLogSize        = 512 * 1024 // Max log size for request and response body.
 	tracingInstrumentName           = "github.com/gogf/gf/net/ghttp.Server"
 	tracingEventHttpRequest         = "http.request"
 	tracingEventHttpRequestHeaders  = "http.request.headers"
@@ -41,7 +42,7 @@ func MiddlewareClientTracing(c *Client, r *http.Request) (*ClientResponse, error
 // MiddlewareServerTracing is a serer middleware that enables tracing feature using standards of OpenTelemetry.
 func MiddlewareServerTracing(r *Request) {
 	tr := otel.GetTracerProvider().Tracer(tracingInstrumentName, trace.WithInstrumentationVersion(gf.VERSION))
-	ctx := otel.GetTextMapPropagator().Extract(r.Context(), r.Header)
+	ctx := otel.GetTextMapPropagator().Extract(r.Context(), propagation.HeaderCarrier(r.Header))
 	ctx, span := tr.Start(ctx, r.URL.String(), trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
@@ -51,21 +52,17 @@ func MiddlewareServerTracing(r *Request) {
 	r.SetCtx(ctx)
 
 	// Request content logging.
-	var reqBodyContent string
-	if r.ContentLength <= tracingMaxContentLogSize {
-		reqBodyContentBytes, _ := ioutil.ReadAll(r.Body)
-		r.Body = utils.NewReadCloser(reqBodyContentBytes, false)
-		reqBodyContent = string(reqBodyContentBytes)
-	} else {
-		reqBodyContent = fmt.Sprintf(
-			"[Request Body Too Large For Tracing, Max: %d bytes]",
-			tracingMaxContentLogSize,
-		)
-	}
+	reqBodyContentBytes, _ := ioutil.ReadAll(r.Body)
+	r.Body = utils.NewReadCloser(reqBodyContentBytes, false)
+
 	span.AddEvent(tracingEventHttpRequest, trace.WithAttributes(
-		label.Any(tracingEventHttpRequestHeaders, httputil.HeaderToMap(r.Header)),
-		label.Any(tracingEventHttpRequestBaggage, gtrace.GetBaggageMap(ctx)),
-		label.String(tracingEventHttpRequestBody, reqBodyContent),
+		attribute.Any(tracingEventHttpRequestHeaders, httputil.HeaderToMap(r.Header)),
+		attribute.Any(tracingEventHttpRequestBaggage, gtrace.GetBaggageMap(ctx)),
+		attribute.String(tracingEventHttpRequestBody, gstr.StrLimit(
+			string(reqBodyContentBytes),
+			gtrace.MaxContentLogSize(),
+			"...",
+		)),
 	))
 
 	// Continue executing.
@@ -77,17 +74,16 @@ func MiddlewareServerTracing(r *Request) {
 	}
 	// Response content logging.
 	var resBodyContent string
-	if r.Response.BufferLength() <= tracingMaxContentLogSize {
-		resBodyContent = r.Response.BufferString()
-	} else {
-		resBodyContent = fmt.Sprintf(
-			"[Response Body Too Large For Tracing, Max: %d bytes]",
-			tracingMaxContentLogSize,
-		)
-	}
+	resBodyContent = r.Response.BufferString()
+	resBodyContent = gstr.StrLimit(
+		r.Response.BufferString(),
+		gtrace.MaxContentLogSize(),
+		"...",
+	)
+
 	span.AddEvent(tracingEventHttpResponse, trace.WithAttributes(
-		label.Any(tracingEventHttpResponseHeaders, httputil.HeaderToMap(r.Response.Header())),
-		label.String(tracingEventHttpResponseBody, resBodyContent),
+		attribute.Any(tracingEventHttpResponseHeaders, httputil.HeaderToMap(r.Response.Header())),
+		attribute.String(tracingEventHttpResponseBody, resBodyContent),
 	))
 	return
 }

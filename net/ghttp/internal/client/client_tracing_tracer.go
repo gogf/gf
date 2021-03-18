@@ -12,8 +12,9 @@ import (
 	"fmt"
 	"github.com/gogf/gf/internal/utils"
 	"github.com/gogf/gf/net/gtrace"
+	"github.com/gogf/gf/text/gstr"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/label"
 	"go.opentelemetry.io/otel/trace"
 	"io/ioutil"
 	"net/http"
@@ -39,11 +40,11 @@ func newClientTrace(ctx context.Context, span trace.Span, request *http.Request)
 		request: request,
 		headers: make(map[string]interface{}),
 	}
-	if ct.request.ContentLength <= tracingMaxContentLogSize {
-		reqBodyContent, _ := ioutil.ReadAll(ct.request.Body)
-		ct.requestBody = reqBodyContent
-		ct.request.Body = utils.NewReadCloser(reqBodyContent, false)
-	}
+
+	reqBodyContent, _ := ioutil.ReadAll(ct.request.Body)
+	ct.requestBody = reqBodyContent
+	ct.request.Body = utils.NewReadCloser(reqBodyContent, false)
+
 	return &httptrace.ClientTrace{
 		GetConn:              ct.getConn,
 		GotConn:              ct.gotConn,
@@ -70,8 +71,8 @@ func (ct *clientTracer) getConn(host string) {
 
 func (ct *clientTracer) gotConn(info httptrace.GotConnInfo) {
 	ct.span.SetAttributes(
-		label.String(tracingAttrHttpAddressRemote, info.Conn.RemoteAddr().String()),
-		label.String(tracingAttrHttpAddressLocal, info.Conn.LocalAddr().String()),
+		attribute.String(tracingAttrHttpAddressRemote, info.Conn.RemoteAddr().String()),
+		attribute.String(tracingAttrHttpAddressLocal, info.Conn.LocalAddr().String()),
 	)
 }
 
@@ -83,7 +84,7 @@ func (ct *clientTracer) putIdleConn(err error) {
 
 func (ct *clientTracer) dnsStart(info httptrace.DNSStartInfo) {
 	ct.span.SetAttributes(
-		label.String(tracingAttrHttpDnsStart, info.Host),
+		attribute.String(tracingAttrHttpDnsStart, info.Host),
 	)
 }
 
@@ -99,13 +100,13 @@ func (ct *clientTracer) dnsDone(info httptrace.DNSDoneInfo) {
 		ct.span.SetStatus(codes.Error, fmt.Sprintf(`%+v`, info.Err))
 	}
 	ct.span.SetAttributes(
-		label.String(tracingAttrHttpDnsDone, buffer.String()),
+		attribute.String(tracingAttrHttpDnsDone, buffer.String()),
 	)
 }
 
 func (ct *clientTracer) connectStart(network, addr string) {
 	ct.span.SetAttributes(
-		label.String(tracingAttrHttpConnectStart, network+"@"+addr),
+		attribute.String(tracingAttrHttpConnectStart, network+"@"+addr),
 	)
 }
 
@@ -114,7 +115,7 @@ func (ct *clientTracer) connectDone(network, addr string, err error) {
 		ct.span.SetStatus(codes.Error, fmt.Sprintf(`%+v`, err))
 	}
 	ct.span.SetAttributes(
-		label.String(tracingAttrHttpConnectDone, network+"@"+addr),
+		attribute.String(tracingAttrHttpConnectDone, network+"@"+addr),
 	)
 }
 
@@ -144,19 +145,15 @@ func (ct *clientTracer) wroteRequest(info httptrace.WroteRequestInfo) {
 	if info.Err != nil {
 		ct.span.SetStatus(codes.Error, fmt.Sprintf(`%+v`, info.Err))
 	}
-	var bodyContent string
-	if ct.request.ContentLength <= tracingMaxContentLogSize {
-		bodyContent = string(ct.requestBody)
-	} else {
-		bodyContent = fmt.Sprintf(
-			"[Request Body Too Large For Logging, Max: %d bytes]",
-			tracingMaxContentLogSize,
-		)
-	}
+
 	ct.span.AddEvent(tracingEventHttpRequest, trace.WithAttributes(
-		label.Any(tracingEventHttpRequestHeaders, ct.headers),
-		label.Any(tracingEventHttpRequestBaggage, gtrace.GetBaggageMap(ct.Context)),
-		label.String(tracingEventHttpRequestBody, bodyContent),
+		attribute.Any(tracingEventHttpRequestHeaders, ct.headers),
+		attribute.Any(tracingEventHttpRequestBaggage, gtrace.GetBaggageMap(ct.Context)),
+		attribute.String(tracingEventHttpRequestBody, gstr.StrLimit(
+			string(ct.requestBody),
+			gtrace.MaxContentLogSize(),
+			"...",
+		)),
 	))
 }
 

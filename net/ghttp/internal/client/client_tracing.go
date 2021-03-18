@@ -12,9 +12,11 @@ import (
 	"github.com/gogf/gf/internal/utils"
 	"github.com/gogf/gf/net/ghttp/internal/httputil"
 	"github.com/gogf/gf/net/gtrace"
+	"github.com/gogf/gf/text/gstr"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 	"io/ioutil"
 	"net/http"
@@ -22,7 +24,6 @@ import (
 )
 
 const (
-	tracingMaxContentLogSize        = 512 * 1024 // Max log size for request and response body.
 	tracingInstrumentName           = "github.com/gogf/gf/net/ghttp.Client"
 	tracingAttrHttpAddressRemote    = "http.address.remote"
 	tracingAttrHttpAddressLocal     = "http.address.local"
@@ -48,7 +49,7 @@ func MiddlewareTracing(c *Client, r *http.Request) (response *Response, err erro
 	span.SetAttributes(gtrace.CommonLabels()...)
 
 	// Inject tracing content into http header.
-	otel.GetTextMapPropagator().Inject(ctx, r.Header)
+	otel.GetTextMapPropagator().Inject(ctx, propagation.HeaderCarrier(r.Header))
 
 	// Continue client handler executing.
 	response, err = c.Next(
@@ -64,21 +65,17 @@ func MiddlewareTracing(c *Client, r *http.Request) (response *Response, err erro
 	if response == nil || response.Response == nil {
 		return
 	}
-	var resBodyContent string
-	if response.ContentLength <= tracingMaxContentLogSize {
-		reqBodyContentBytes, _ := ioutil.ReadAll(response.Body)
-		resBodyContent = string(reqBodyContentBytes)
-		response.Body = utils.NewReadCloser(reqBodyContentBytes, false)
-	} else {
-		resBodyContent = fmt.Sprintf(
-			"[Response Body Too Large For Tracing, Max: %d bytes]",
-			tracingMaxContentLogSize,
-		)
-	}
+
+	reqBodyContentBytes, _ := ioutil.ReadAll(response.Body)
+	response.Body = utils.NewReadCloser(reqBodyContentBytes, false)
 
 	span.AddEvent(tracingEventHttpResponse, trace.WithAttributes(
-		label.Any(tracingEventHttpResponseHeaders, httputil.HeaderToMap(response.Header)),
-		label.String(tracingEventHttpResponseBody, resBodyContent),
+		attribute.Any(tracingEventHttpResponseHeaders, httputil.HeaderToMap(response.Header)),
+		attribute.String(tracingEventHttpResponseBody, gstr.StrLimit(
+			string(reqBodyContentBytes),
+			gtrace.MaxContentLogSize(),
+			"...",
+		)),
 	))
 	return
 }

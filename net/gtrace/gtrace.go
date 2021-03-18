@@ -9,11 +9,13 @@ package gtrace
 
 import (
 	"context"
+	"fmt"
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/net/gipv4"
+	"github.com/gogf/gf/os/gcmd"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 	"os"
@@ -23,12 +25,14 @@ import (
 const (
 	tracingCommonKeyIpIntranet = `ip.intranet`
 	tracingCommonKeyIpHostname = `hostname`
+	cmdEnvKey                  = "gf.gtrace" // Configuration key for command argument or environment.
 )
 
 var (
-	intranetIps, _ = gipv4.GetIntranetIpArray()
-	intranetIpStr  = strings.Join(intranetIps, ",")
-	hostname, _    = os.Hostname()
+	intranetIps, _           = gipv4.GetIntranetIpArray()
+	intranetIpStr            = strings.Join(intranetIps, ",")
+	hostname, _              = os.Hostname()
+	tracingMaxContentLogSize = 256 * 1024 // Max log size for request and response body, especially for HTTP/RPC request.
 	// defaultTextMapPropagator is the default propagator for context propagation between peers.
 	defaultTextMapPropagator = propagation.NewCompositeTextMapPropagator(
 		propagation.TraceContext{},
@@ -37,15 +41,23 @@ var (
 )
 
 func init() {
+	if maxContentLogSize := gcmd.GetOptWithEnv(fmt.Sprintf("%s.maxlogsize", cmdEnvKey)).Int(); maxContentLogSize > 0 {
+		tracingMaxContentLogSize = maxContentLogSize
+	}
 	CheckSetDefaultTextMapPropagator()
+}
+
+// MaxContentLogSize returns the max log size for request and response body, especially for HTTP/RPC request.
+func MaxContentLogSize() int {
+	return tracingMaxContentLogSize
 }
 
 // CommonLabels returns common used attribute labels:
 // ip.intranet, hostname.
-func CommonLabels() []label.KeyValue {
-	return []label.KeyValue{
-		label.String(tracingCommonKeyIpHostname, hostname),
-		label.String(tracingCommonKeyIpIntranet, intranetIpStr),
+func CommonLabels() []attribute.KeyValue {
+	return []attribute.KeyValue{
+		attribute.String(tracingCommonKeyIpHostname, hostname),
+		attribute.String(tracingCommonKeyIpIntranet, intranetIpStr),
 	}
 }
 
@@ -94,13 +106,13 @@ func GetSpanId(ctx context.Context) string {
 }
 
 // SetBaggageValue is a convenient function for adding one key-value pair to baggage.
-// Note that it uses label.Any to set the key-value pair.
+// Note that it uses attribute.Any to set the key-value pair.
 func SetBaggageValue(ctx context.Context, key string, value interface{}) context.Context {
 	return NewBaggage(ctx).SetValue(key, value)
 }
 
 // SetBaggageMap is a convenient function for adding map key-value pairs to baggage.
-// Note that it uses label.Any to set the key-value pair.
+// Note that it uses attribute.Any to set the key-value pair.
 func SetBaggageMap(ctx context.Context, data map[string]interface{}) context.Context {
 	return NewBaggage(ctx).SetMap(data)
 }
