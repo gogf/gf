@@ -41,7 +41,7 @@ var (
 )
 
 func init() {
-	if maxContentLogSize := gcmd.GetOptWithEnv(fmt.Sprintf("%s.maxlogsize", cmdEnvKey)).Int(); maxContentLogSize > 0 {
+	if maxContentLogSize := gcmd.GetOptWithEnv(fmt.Sprintf("%s.maxcontentlogsize", cmdEnvKey)).Int(); maxContentLogSize > 0 {
 		tracingMaxContentLogSize = maxContentLogSize
 	}
 	CheckSetDefaultTextMapPropagator()
