@@ -11,9 +11,39 @@ type apiString interface {
 	String() string
 }
 
+// apiBool is used for type assert api for Bool().
+type apiBool interface {
+	Bool() bool
+}
+
+// apiInt64 is used for type assert api for Int64().
+type apiInt64 interface {
+	Int64() int64
+}
+
+// apiUint64 is used for type assert api for Uint64().
+type apiUint64 interface {
+	Uint64() uint64
+}
+
+// apiFloat32 is used for type assert api for Float32().
+type apiFloat32 interface {
+	Float32() float32
+}
+
+// apiFloat64 is used for type assert api for Float64().
+type apiFloat64 interface {
+	Float64() float64
+}
+
 // apiError is used for type assert api for Error().
 type apiError interface {
 	Error() string
+}
+
+// apiBytes is used for type assert api for Bytes().
+type apiBytes interface {
+	Bytes() []byte
 }
 
 // apiInterfaces is used for type assert api for Interfaces().
