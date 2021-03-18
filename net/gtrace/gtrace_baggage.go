@@ -10,8 +10,8 @@ import (
 	"context"
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/container/gvar"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/baggage"
-	"go.opentelemetry.io/otel/label"
 )
 
 // Baggage holds the data through all tracing spans.
@@ -35,18 +35,18 @@ func (b *Baggage) Ctx() context.Context {
 }
 
 // SetValue is a convenient function for adding one key-value pair to baggage.
-// Note that it uses label.Any to set the key-value pair.
+// Note that it uses attribute.Any to set the key-value pair.
 func (b *Baggage) SetValue(key string, value interface{}) context.Context {
-	b.ctx = baggage.ContextWithValues(b.ctx, label.Any(key, value))
+	b.ctx = baggage.ContextWithValues(b.ctx, attribute.Any(key, value))
 	return b.ctx
 }
 
 // SetMap is a convenient function for adding map key-value pairs to baggage.
-// Note that it uses label.Any to set the key-value pair.
+// Note that it uses attribute.Any to set the key-value pair.
 func (b *Baggage) SetMap(data map[string]interface{}) context.Context {
-	pairs := make([]label.KeyValue, 0)
+	pairs := make([]attribute.KeyValue, 0)
 	for k, v := range data {
-		pairs = append(pairs, label.Any(k, v))
+		pairs = append(pairs, attribute.Any(k, v))
 	}
 	b.ctx = baggage.ContextWithValues(b.ctx, pairs...)
 	return b.ctx
@@ -70,6 +70,6 @@ func (b *Baggage) GetMap() *gmap.StrAnyMap {
 
 // GetVar retrieves value and returns a *gvar.Var for specified key from baggage.
 func (b *Baggage) GetVar(key string) *gvar.Var {
-	value := baggage.Value(b.ctx, label.Key(key))
+	value := baggage.Value(b.ctx, attribute.Key(key))
 	return gvar.New(value.AsInterface())
 }

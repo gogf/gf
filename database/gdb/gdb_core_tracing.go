@@ -14,8 +14,8 @@ import (
 	"github.com/gogf/gf/net/gtrace"
 	"github.com/gogf/gf/os/gcmd"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/label"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -59,33 +59,33 @@ func (c *Core) addSqlToTracing(ctx context.Context, sql *Sql) {
 	if sql.Error != nil {
 		span.SetStatus(codes.Error, fmt.Sprintf(`%+v`, sql.Error))
 	}
-	labels := make([]label.KeyValue, 0)
+	labels := make([]attribute.KeyValue, 0)
 	labels = append(labels, gtrace.CommonLabels()...)
 	labels = append(labels,
-		label.String(tracingAttrDbType, c.db.GetConfig().Type),
+		attribute.String(tracingAttrDbType, c.db.GetConfig().Type),
 	)
 	if c.db.GetConfig().Host != "" {
-		labels = append(labels, label.String(tracingAttrDbHost, c.db.GetConfig().Host))
+		labels = append(labels, attribute.String(tracingAttrDbHost, c.db.GetConfig().Host))
 	}
 	if c.db.GetConfig().Port != "" {
-		labels = append(labels, label.String(tracingAttrDbPort, c.db.GetConfig().Port))
+		labels = append(labels, attribute.String(tracingAttrDbPort, c.db.GetConfig().Port))
 	}
 	if c.db.GetConfig().Name != "" {
-		labels = append(labels, label.String(tracingAttrDbName, c.db.GetConfig().Name))
+		labels = append(labels, attribute.String(tracingAttrDbName, c.db.GetConfig().Name))
 	}
 	if c.db.GetConfig().User != "" {
-		labels = append(labels, label.String(tracingAttrDbUser, c.db.GetConfig().User))
+		labels = append(labels, attribute.String(tracingAttrDbUser, c.db.GetConfig().User))
 	}
 	if filteredLinkInfo := c.db.FilteredLinkInfo(); filteredLinkInfo != "" {
-		labels = append(labels, label.String(tracingAttrDbLink, c.db.FilteredLinkInfo()))
+		labels = append(labels, attribute.String(tracingAttrDbLink, c.db.FilteredLinkInfo()))
 	}
 	if group := c.db.GetGroup(); group != "" {
-		labels = append(labels, label.String(tracingAttrDbGroup, group))
+		labels = append(labels, attribute.String(tracingAttrDbGroup, group))
 	}
 	span.SetAttributes(labels...)
 	span.AddEvent(tracingEventDbExecution, trace.WithAttributes(
-		label.String(tracingEventDbExecutionSql, sql.Format),
-		label.String(tracingEventDbExecutionCost, fmt.Sprintf(`%d ms`, sql.End-sql.Start)),
-		label.String(tracingEventDbExecutionType, sql.Type),
+		attribute.String(tracingEventDbExecutionSql, sql.Format),
+		attribute.String(tracingEventDbExecutionCost, fmt.Sprintf(`%d ms`, sql.End-sql.Start)),
+		attribute.String(tracingEventDbExecutionType, sql.Type),
 	))
 }

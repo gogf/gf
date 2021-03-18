@@ -343,10 +343,14 @@ func Name(path string) string {
 // Dir returns all but the last element of path, typically the path's directory.
 // After dropping the final element, Dir calls Clean on the path and trailing
 // slashes are removed.
-// If the path is empty, Dir returns ".".
-// If the path consists entirely of separators, Dir returns a single separator.
+// If the `path` is empty, Dir returns ".".
+// If the `path` is ".", Dir treats the path as current working directory.
+// If the `path` consists entirely of separators, Dir returns a single separator.
 // The returned path does not end in a separator unless it is the root directory.
 func Dir(path string) string {
+	if path == "." {
+		return filepath.Dir(RealPath(path))
+	}
 	return filepath.Dir(path)
 }
 

@@ -11,41 +11,49 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
-type Carrier struct {
-	data map[string]interface{}
-}
+// Carrier is the storage medium used by a TextMapPropagator.
+type Carrier map[string]interface{}
 
-func NewCarrier(data ...map[string]interface{}) *Carrier {
-	carrier := &Carrier{}
+func NewCarrier(data ...map[string]interface{}) Carrier {
 	if len(data) > 0 && data[0] != nil {
-		carrier.data = data[0]
+		return data[0]
 	} else {
-		carrier.data = make(map[string]interface{})
+		return make(map[string]interface{})
 	}
-	return carrier
 }
 
-func (c *Carrier) Get(k string) string {
-	return gconv.String(c.data[k])
+// Get returns the value associated with the passed key.
+func (c Carrier) Get(k string) string {
+	return gconv.String(c[k])
 }
 
-func (c *Carrier) Set(k, v string) {
-	c.data[k] = v
+// Set stores the key-value pair.
+func (c Carrier) Set(k, v string) {
+	c[k] = v
 }
 
-func (c *Carrier) MustMarshal() []byte {
-	b, err := json.Marshal(c.data)
+// Keys lists the keys stored in this carrier.
+func (c Carrier) Keys() []string {
+	keys := make([]string, 0, len(c))
+	for k := range c {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
+func (c Carrier) MustMarshal() []byte {
+	b, err := json.Marshal(c)
 	if err != nil {
 		panic(err)
 	}
 	return b
 }
 
-func (c *Carrier) String() string {
+func (c Carrier) String() string {
 	return string(c.MustMarshal())
 }
 
-func (c *Carrier) UnmarshalJSON(b []byte) error {
+func (c Carrier) UnmarshalJSON(b []byte) error {
 	carrier := NewCarrier(nil)
-	return json.Unmarshal(b, carrier.data)
+	return json.Unmarshal(b, carrier)
 }
