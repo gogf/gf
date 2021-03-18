@@ -296,6 +296,9 @@ func Bytes(any interface{}) []byte {
 	case []byte:
 		return value
 	default:
+		if f, ok := value.(apiBytes); ok {
+			return f.Bytes()
+		}
 		return gbinary.Encode(any)
 	}
 }
@@ -439,6 +442,9 @@ func Bool(any interface{}) bool {
 		}
 		return true
 	default:
+		if f, ok := value.(apiBool); ok {
+			return f.Bool()
+		}
 		rv := reflect.ValueOf(any)
 		switch rv.Kind() {
 		case reflect.Ptr:
@@ -543,6 +549,9 @@ func Int64(any interface{}) int64 {
 	case []byte:
 		return gbinary.DecodeToInt64(value)
 	default:
+		if f, ok := value.(apiInt64); ok {
+			return f.Int64()
+		}
 		s := String(value)
 		isMinus := false
 		if len(s) > 0 {
@@ -665,6 +674,9 @@ func Uint64(any interface{}) uint64 {
 	case []byte:
 		return gbinary.DecodeToUint64(value)
 	default:
+		if f, ok := value.(apiUint64); ok {
+			return f.Uint64()
+		}
 		s := String(value)
 		// Hexadecimal
 		if len(s) > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X') {
@@ -700,6 +712,9 @@ func Float32(any interface{}) float32 {
 	case []byte:
 		return gbinary.DecodeToFloat32(value)
 	default:
+		if f, ok := value.(apiFloat32); ok {
+			return f.Float32()
+		}
 		v, _ := strconv.ParseFloat(String(any), 64)
 		return float32(v)
 	}
@@ -718,6 +733,9 @@ func Float64(any interface{}) float64 {
 	case []byte:
 		return gbinary.DecodeToFloat64(value)
 	default:
+		if f, ok := value.(apiFloat64); ok {
+			return f.Float64()
+		}
 		v, _ := strconv.ParseFloat(String(any), 64)
 		return v
 	}

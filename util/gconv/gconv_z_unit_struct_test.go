@@ -7,6 +7,7 @@
 package gconv_test
 
 import (
+	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/os/gtime"
@@ -1138,4 +1139,28 @@ func Test_Struct_JsonParam(t *testing.T) {
 		t.Assert(a.Id, 1)
 		t.Assert(a.Name, "john")
 	})
+}
+
+func Test_Struct_GVarAttribute(t *testing.T) {
+	type A struct {
+		Id     int    `json:"id"`
+		Name   string `json:"name"`
+		Status bool   `json:"status"`
+	}
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			a    = A{}
+			data = g.Map{
+				"id":     100,
+				"name":   "john",
+				"status": gvar.New(false),
+			}
+		)
+		err := gconv.Struct(data, &a)
+		t.Assert(err, nil)
+		t.Assert(a.Id, data["id"])
+		t.Assert(a.Name, data["name"])
+		t.Assert(a.Status, data["status"])
+	})
+
 }
