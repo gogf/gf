@@ -8,6 +8,7 @@ package gfile
 
 import (
 	"github.com/gogf/gf/text/gstr"
+	"os"
 	"runtime"
 	"strings"
 
@@ -44,6 +45,7 @@ func MainPkgPath() string {
 	if path != "" {
 		return path
 	}
+	var lastFile string
 	for i := 1; i < 10000; i++ {
 		if pc, file, _, ok := runtime.Caller(i); ok {
 			if goRootForFilter != "" && len(file) >= len(goRootForFilter) && file[0:len(goRootForFilter)] == goRootForFilter {
@@ -61,12 +63,28 @@ func MainPkgPath() string {
 			if Ext(file) != ".go" {
 				continue
 			}
+			lastFile = file
 			if gregex.IsMatchString(`package\s+main`, GetContents(file)) {
 				mainPkgPath.Set(Dir(file))
 				return Dir(file)
 			}
 		} else {
 			break
+		}
+	}
+	// If it still cannot find the path of the package main,
+	// it recursively searches the directory and its parents directory of the last go file.
+	// It's usually necessary for uint testing cases of business project.
+	if lastFile != "" {
+		for path = Dir(lastFile); len(path) > 1 && Exists(path) && path[len(path)-1] != os.PathSeparator; {
+			files, _ := ScanDir(path, "*.go")
+			for _, v := range files {
+				if gregex.IsMatchString(`package\s+main`, GetContents(v)) {
+					mainPkgPath.Set(path)
+					return path
+				}
+			}
+			path = Dir(path)
 		}
 	}
 	return ""
