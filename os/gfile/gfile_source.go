@@ -64,7 +64,7 @@ func MainPkgPath() string {
 					continue
 				}
 			}
-			if gregex.IsMatchString(`package\s+main`, GetContents(file)) {
+			if gregex.IsMatchString(`package\s+main\s+{`, GetContents(file)) {
 				mainPkgPath.Set(Dir(file))
 				return Dir(file)
 			}
@@ -79,7 +79,7 @@ func MainPkgPath() string {
 		for path = Dir(lastFile); len(path) > 1 && Exists(path) && path[len(path)-1] != os.PathSeparator; {
 			files, _ := ScanDir(path, "*.go")
 			for _, v := range files {
-				if gregex.IsMatchString(`package\s+main`, GetContents(v)) {
+				if gregex.IsMatchString(`package\s+main\s+{`, GetContents(v)) {
 					mainPkgPath.Set(path)
 					return path
 				}
