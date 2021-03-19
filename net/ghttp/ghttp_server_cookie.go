@@ -160,14 +160,14 @@ func (c *Cookie) Remove(key string) {
 		"",
 		c.request.Server.GetCookieDomain(),
 		c.request.Server.GetCookiePath(),
-		-86400,
+		-24*time.Hour,
 	)
 }
 
 // RemoveCookie deletes specified key and its value from cookie using given domain and path.
 // It actually tells the http client that the cookie is expired, do not send it to server next time.
 func (c *Cookie) RemoveCookie(key, domain, path string) {
-	c.SetCookie(key, "", domain, path, -86400)
+	c.SetCookie(key, "", domain, path, -24*time.Hour)
 }
 
 // Flush outputs the cookie items to client.
