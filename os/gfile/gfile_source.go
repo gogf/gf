@@ -51,6 +51,10 @@ func MainPkgPath() string {
 			if goRootForFilter != "" && len(file) >= len(goRootForFilter) && file[0:len(goRootForFilter)] == goRootForFilter {
 				continue
 			}
+			if Ext(file) != ".go" {
+				continue
+			}
+			lastFile = file
 			// Check if it is called in package initialization function,
 			// in which it here cannot retrieve main package path,
 			// it so just returns that can make next check.
@@ -60,10 +64,6 @@ func MainPkgPath() string {
 					continue
 				}
 			}
-			if Ext(file) != ".go" {
-				continue
-			}
-			lastFile = file
 			if gregex.IsMatchString(`package\s+main`, GetContents(file)) {
 				mainPkgPath.Set(Dir(file))
 				return Dir(file)
