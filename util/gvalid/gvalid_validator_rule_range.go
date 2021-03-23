@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-// checkRange checks <value> using range rules.
+// checkRange checks `value` using range rules.
 func (v *Validator) checkRange(value, ruleKey, ruleVal string, customMsgMap map[string]string) string {
 	msg := ""
 	switch ruleKey {

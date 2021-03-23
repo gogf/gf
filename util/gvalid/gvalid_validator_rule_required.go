@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-// checkRequired checks <value> using required rules.
+// checkRequired checks `value` using required rules.
 // It also supports require checks for `value` of type: slice, map.
 func (v *Validator) checkRequired(value interface{}, ruleKey, rulePattern string, params map[string]string) bool {
 	required := false

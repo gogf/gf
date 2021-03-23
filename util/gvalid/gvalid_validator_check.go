@@ -21,12 +21,12 @@ import (
 // Check checks single value with specified rules.
 // It returns nil if successful validation.
 //
-// The parameter <value> can be any type of variable, which will be converted to string
+// The parameter `value` can be any type of variable, which will be converted to string
 // for validation.
-// The parameter <rules> can be one or more rules, multiple rules joined using char '|'.
-// The parameter <messages> specifies the custom error messages, which can be type of:
+// The parameter `rules` can be one or more rules, multiple rules joined using char '|'.
+// The parameter `messages` specifies the custom error messages, which can be type of:
 // string/map/struct/*struct.
-// The optional parameter <params> specifies the extra validation parameters for some rules
+// The optional parameter `params` specifies the extra validation parameters for some rules
 // like: required-*、same、different, etc.
 func (v *Validator) Check(value interface{}, rules string, messages interface{}, params ...interface{}) *Error {
 	return v.doCheck("", value, rules, messages, params...)

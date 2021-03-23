@@ -71,13 +71,6 @@ func (v *Var) MapToMap(pointer interface{}, mapping ...map[string]string) (err e
 	return gconv.MapToMap(v.Val(), pointer, mapping...)
 }
 
-// MapToMapDeep converts any map type variable <params> to another map type variable
-// <pointer> recursively.
-// See gconv.MapToMapDeep.
-func (v *Var) MapToMapDeep(pointer interface{}, mapping ...map[string]string) (err error) {
-	return gconv.MapToMapDeep(v.Val(), pointer, mapping...)
-}
-
 // MapToMaps converts any map type variable <params> to another map type variable <pointer>.
 // See gconv.MapToMaps.
 func (v *Var) MapToMaps(pointer interface{}, mapping ...map[string]string) (err error) {

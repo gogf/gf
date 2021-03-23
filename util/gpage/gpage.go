@@ -21,9 +21,9 @@ type Page struct {
 	TotalPage      int    // Total page, which is automatically calculated.
 	CurrentPage    int    // Current page number >= 1.
 	UrlTemplate    string // Custom url template for page url producing.
-	LinkStyle      string // CSS style name for HTML link tag <a>.
-	SpanStyle      string // CSS style name for HTML span tag <span>, which is used for first, current and last page tag.
-	SelectStyle    string // CSS style name for HTML select tag <select>.
+	LinkStyle      string // CSS style name for HTML link tag `a`.
+	SpanStyle      string // CSS style name for HTML span tag `span`, which is used for first, current and last page tag.
+	SelectStyle    string // CSS style name for HTML select tag `select`.
 	NextPageTag    string // Tag name for next p.
 	PrevPageTag    string // Tag name for prev p.
 	FirstPageTag   string // Tag name for first p.
@@ -40,9 +40,9 @@ const (
 )
 
 // New creates and returns a pagination manager.
-// Note that the parameter <urlTemplate> specifies the URL producing template, like:
+// Note that the parameter `urlTemplate` specifies the URL producing template, like:
 // /user/list/{.page}, /user/list/{.page}.html, /user/list?page={.page}&type=1, etc.
-// The build-in variable in <urlTemplate> "{.page}" specifies the page number, which will be replaced by certain
+// The build-in variable in `urlTemplate` "{.page}" specifies the page number, which will be replaced by certain
 // page number when producing.
 func New(totalSize, pageSize, currentPage int, urlTemplate string) *Page {
 	p := &Page{
@@ -209,7 +209,7 @@ func (p *Page) GetUrl(page int) string {
 	return gstr.Replace(p.UrlTemplate, PAGE_PLACE_HOLDER, gconv.String(page))
 }
 
-// GetLink returns the HTML link tag <a> content for given page number.
+// GetLink returns the HTML link tag `a` content for given page number.
 func (p *Page) GetLink(page int, text, title string) string {
 	if len(p.AjaxActionName) > 0 {
 		return fmt.Sprintf(

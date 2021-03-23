@@ -333,16 +333,6 @@ func (c *Config) GetMapToMap(pattern string, pointer interface{}, mapping ...map
 	return errors.New("configuration not found")
 }
 
-// GetMapToMapDeep retrieves the value by specified `pattern` and converts it to specified map
-// variable recursively.
-// See gconv.MapToMapDeep.
-func (c *Config) GetMapToMapDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
-	if j := c.getJson(); j != nil {
-		return j.GetMapToMapDeep(pattern, pointer, mapping...)
-	}
-	return errors.New("configuration not found")
-}
-
 // GetMapToMaps retrieves the value by specified `pattern` and converts it to specified map slice
 // variable.
 // See gconv.MapToMaps.
@@ -422,15 +412,6 @@ func (c *Config) ToStructsDeep(pointer interface{}, mapping ...map[string]string
 func (c *Config) ToMapToMap(pointer interface{}, mapping ...map[string]string) error {
 	if j := c.getJson(); j != nil {
 		return j.ToMapToMap(pointer, mapping...)
-	}
-	return errors.New("configuration not found")
-}
-
-// ToMapToMapDeep converts current Json object to specified map variable recursively.
-// The parameter of `pointer` should be type of *map.
-func (c *Config) ToMapToMapDeep(pointer interface{}, mapping ...map[string]string) error {
-	if j := c.getJson(); j != nil {
-		return j.ToMapToMapDeep(pointer, mapping...)
 	}
 	return errors.New("configuration not found")
 }

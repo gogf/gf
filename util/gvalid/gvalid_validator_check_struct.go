@@ -20,10 +20,10 @@ var (
 
 // CheckStruct validates struct and returns the error result.
 //
-// The parameter <object> should be type of struct/*struct.
-// The parameter <rules> can be type of []string/map[string]string. It supports sequence in error result
-// if <rules> is type of []string.
-// The optional parameter <messages> specifies the custom error messages for specified keys and rules.
+// The parameter `object` should be type of struct/*struct.
+// The parameter `rules` can be type of []string/map[string]string. It supports sequence in error result
+// if `rules` is type of []string.
+// The optional parameter `messages` specifies the custom error messages for specified keys and rules.
 func (v *Validator) CheckStruct(object interface{}, rules interface{}, messages ...CustomMsg) *Error {
 	var (
 		errorMaps = make(ErrorMap) // Returned error.
@@ -56,7 +56,7 @@ func (v *Validator) CheckStruct(object interface{}, rules interface{}, messages 
 		params        = make(map[string]interface{})
 		checkRules    = make(map[string]string)
 		customMessage = make(CustomMsg)
-		fieldAliases  = make(map[string]string) // Alias names for <messages> overwriting struct tag names.
+		fieldAliases  = make(map[string]string) // Alias names for `messages` overwriting struct tag names.
 		errorRules    = make([]string, 0)       // Sequence rules.
 	)
 	switch v := rules.(type) {
@@ -159,7 +159,7 @@ func (v *Validator) CheckStruct(object interface{}, rules interface{}, messages 
 	}
 
 	// Custom error messages,
-	// which have the most priority than <rules> and struct tag.
+	// which have the most priority than `rules` and struct tag.
 	if len(messages) > 0 && len(messages[0]) > 0 {
 		for k, v := range messages[0] {
 			if a, ok := fieldAliases[k]; ok {

@@ -13,7 +13,7 @@ import (
 	"testing"
 )
 
-func Test_Scan(t *testing.T) {
+func Test_Scan_StructStructs(t *testing.T) {
 	type User struct {
 		Uid   int
 		Name  string
@@ -76,7 +76,7 @@ func Test_Scan(t *testing.T) {
 	})
 }
 
-func Test_ScanStr(t *testing.T) {
+func Test_Scan_StructStr(t *testing.T) {
 	type User struct {
 		Uid   int
 		Name  string
@@ -119,6 +119,76 @@ func Test_ScanStr(t *testing.T) {
 				Name:  "john2",
 				Pass1: "333",
 				Pass2: "444",
+			},
+		})
+	})
+}
+
+func Test_Scan_Map(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var m map[string]string
+		data := g.Map{
+			"k1": "v1",
+			"k2": "v2",
+		}
+		err := gconv.Scan(data, &m)
+		t.AssertNil(err)
+		t.Assert(data, m)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var m map[int]int
+		data := g.Map{
+			"1": "11",
+			"2": "22",
+		}
+		err := gconv.Scan(data, &m)
+		t.AssertNil(err)
+		t.Assert(data, m)
+	})
+	// json string parameter.
+	gtest.C(t, func(t *gtest.T) {
+		var m map[string]string
+		data := `{"k1":"v1","k2":"v2"}`
+		err := gconv.Scan(data, &m)
+		t.AssertNil(err)
+		t.Assert(m, g.Map{
+			"k1": "v1",
+			"k2": "v2",
+		})
+	})
+}
+
+func Test_Scan_Maps(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var maps []map[string]string
+		data := g.Slice{
+			g.Map{
+				"k1": "v1",
+				"k2": "v2",
+			},
+			g.Map{
+				"k3": "v3",
+				"k4": "v4",
+			},
+		}
+		err := gconv.Scan(data, &maps)
+		t.AssertNil(err)
+		t.Assert(data, maps)
+	})
+	// json string parameter.
+	gtest.C(t, func(t *gtest.T) {
+		var maps []map[string]string
+		data := `[{"k1":"v1","k2":"v2"},{"k3":"v3","k4":"v4"}]`
+		err := gconv.Scan(data, &maps)
+		t.AssertNil(err)
+		t.Assert(maps, g.Slice{
+			g.Map{
+				"k1": "v1",
+				"k2": "v2",
+			},
+			g.Map{
+				"k3": "v3",
+				"k4": "v4",
 			},
 		})
 	})

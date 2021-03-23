@@ -15,7 +15,7 @@ func SliceAny(any interface{}) []interface{} {
 	return Interfaces(any)
 }
 
-// Interfaces converts <i> to []interface{}.
+// Interfaces converts `i` to []interface{}.
 func Interfaces(any interface{}) []interface{} {
 	if any == nil {
 		return nil

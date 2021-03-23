@@ -143,184 +143,46 @@ func Test_MapToMapDeep(t *testing.T) {
 	})
 }
 
-func Test_MapToMaps1(t *testing.T) {
+func Test_MapToMaps(t *testing.T) {
+	params := g.Slice{
+		g.Map{"id": 1, "name": "john"},
+		g.Map{"id": 2, "name": "smith"},
+	}
+	gtest.C(t, func(t *gtest.T) {
+		var s []g.Map
+		err := gconv.MapToMaps(params, &s)
+		t.AssertNil(err)
+		t.Assert(len(s), 2)
+		t.Assert(s, params)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var s []*g.Map
+		err := gconv.MapToMaps(params, &s)
+		t.AssertNil(err)
+		t.Assert(len(s), 2)
+		t.Assert(s, params)
+	})
+}
+
+func Test_MapToMaps_StructParams(t *testing.T) {
 	type User struct {
 		Id   int
-		Name int
-	}
-	params := g.Map{
-		"key1": g.Slice{
-			g.Map{"id": 1, "name": "john"},
-			g.Map{"id": 2, "name": "smith"},
-		},
-		"key2": g.Slice{
-			g.Map{"id": 3, "name": "green"},
-			g.Map{"id": 4, "name": "jim"},
-		},
-	}
-	gtest.C(t, func(t *gtest.T) {
-		m := make(map[string][]User)
-		err := gconv.MapToMaps(params, &m)
-		t.Assert(err, nil)
-		t.Assert(len(m), 2)
-		t.Assert(m["key1"][0].Id, 1)
-		t.Assert(m["key1"][1].Id, 2)
-		t.Assert(m["key2"][0].Id, 3)
-		t.Assert(m["key2"][1].Id, 4)
-	})
-	gtest.C(t, func(t *gtest.T) {
-		m := (map[string][]User)(nil)
-		err := gconv.MapToMaps(params, &m)
-		t.Assert(err, nil)
-		t.Assert(len(m), 2)
-		t.Assert(m["key1"][0].Id, 1)
-		t.Assert(m["key1"][1].Id, 2)
-		t.Assert(m["key2"][0].Id, 3)
-		t.Assert(m["key2"][1].Id, 4)
-	})
-	gtest.C(t, func(t *gtest.T) {
-		m := make(map[string][]*User)
-		err := gconv.MapToMaps(params, &m)
-		t.Assert(err, nil)
-		t.Assert(len(m), 2)
-		t.Assert(m["key1"][0].Id, 1)
-		t.Assert(m["key1"][1].Id, 2)
-		t.Assert(m["key2"][0].Id, 3)
-		t.Assert(m["key2"][1].Id, 4)
-	})
-	gtest.C(t, func(t *gtest.T) {
-		m := (map[string][]*User)(nil)
-		err := gconv.MapToMaps(params, &m)
-		t.Assert(err, nil)
-		t.Assert(len(m), 2)
-		t.Assert(m["key1"][0].Id, 1)
-		t.Assert(m["key1"][1].Id, 2)
-		t.Assert(m["key2"][0].Id, 3)
-		t.Assert(m["key2"][1].Id, 4)
-	})
-}
-
-func Test_MapToMaps2(t *testing.T) {
-	type User struct {
-		Id   int
-		Name int
-	}
-	params := g.MapIntAny{
-		100: g.Slice{
-			g.Map{"id": 1, "name": "john"},
-			g.Map{"id": 2, "name": "smith"},
-		},
-		200: g.Slice{
-			g.Map{"id": 3, "name": "green"},
-			g.Map{"id": 4, "name": "jim"},
-		},
-	}
-	gtest.C(t, func(t *gtest.T) {
-		m := make(map[int][]User)
-		err := gconv.MapToMaps(params, &m)
-		t.Assert(err, nil)
-		t.Assert(len(m), 2)
-		t.Assert(m[100][0].Id, 1)
-		t.Assert(m[100][1].Id, 2)
-		t.Assert(m[200][0].Id, 3)
-		t.Assert(m[200][1].Id, 4)
-	})
-	gtest.C(t, func(t *gtest.T) {
-		m := make(map[int][]*User)
-		err := gconv.MapToMaps(params, &m)
-		t.Assert(err, nil)
-		t.Assert(len(m), 2)
-		t.Assert(m[100][0].Id, 1)
-		t.Assert(m[100][1].Id, 2)
-		t.Assert(m[200][0].Id, 3)
-		t.Assert(m[200][1].Id, 4)
-	})
-	gtest.C(t, func(t *gtest.T) {
-		m := make(map[string][]*User)
-		err := gconv.MapToMaps(params, &m)
-		t.Assert(err, nil)
-		t.Assert(len(m), 2)
-		t.Assert(m["100"][0].Id, 1)
-		t.Assert(m["100"][1].Id, 2)
-		t.Assert(m["200"][0].Id, 3)
-		t.Assert(m["200"][1].Id, 4)
-	})
-}
-
-func Test_MapToMaps3(t *testing.T) {
-	type Ids struct {
-		Id  int
-		Uid int
-	}
-	type Base struct {
-		Ids
-		Time string
-	}
-	type User struct {
-		Base
 		Name string
 	}
-	params := g.MapIntAny{
-		100: g.Slice{
-			g.Map{"id": 1, "name": "john"},
-			g.Map{"id": 2, "name": "smith"},
-		},
-		200: g.Slice{
-			g.Map{"id": 3, "name": "green"},
-			g.Map{"id": 4, "name": "jim"},
-		},
+	params := g.Slice{
+		User{1, "name1"},
+		User{2, "name2"},
 	}
 	gtest.C(t, func(t *gtest.T) {
-		m := make(map[string][]*User)
-		err := gconv.MapToMaps(params, &m)
-		t.Assert(err, nil)
-		t.Assert(len(m), 2)
-		t.Assert(m["100"][0].Id, 1)
-		t.Assert(m["100"][1].Id, 2)
-		t.Assert(m["100"][0].Name, "john")
-		t.Assert(m["100"][1].Name, "smith")
-		t.Assert(m["200"][0].Id, 3)
-		t.Assert(m["200"][1].Id, 4)
-		t.Assert(m["200"][0].Name, "green")
-		t.Assert(m["200"][1].Name, "jim")
+		var s []g.Map
+		err := gconv.MapToMaps(params, &s)
+		t.AssertNil(err)
+		t.Assert(len(s), 2)
 	})
-}
-
-func Test_MapToMapsWithTag(t *testing.T) {
-	type Ids struct {
-		Id  int
-		Uid int
-	}
-	type Base struct {
-		Ids  `json:"ids"`
-		Time string
-	}
-	type User struct {
-		Base `json:"base"`
-		Name string
-	}
-	params := g.MapIntAny{
-		100: g.Slice{
-			g.Map{"id": 1, "name": "john"},
-			g.Map{"id": 2, "name": "smith"},
-		},
-		200: g.Slice{
-			g.Map{"id": 3, "name": "green"},
-			g.Map{"id": 4, "name": "jim"},
-		},
-	}
 	gtest.C(t, func(t *gtest.T) {
-		m := make(map[string][]*User)
-		err := gconv.MapToMaps(params, &m)
-		t.Assert(err, nil)
-		t.Assert(len(m), 2)
-		t.Assert(m["100"][0].Id, 1)
-		t.Assert(m["100"][1].Id, 2)
-		t.Assert(m["100"][0].Name, "john")
-		t.Assert(m["100"][1].Name, "smith")
-		t.Assert(m["200"][0].Id, 3)
-		t.Assert(m["200"][1].Id, 4)
-		t.Assert(m["200"][0].Name, "green")
-		t.Assert(m["200"][1].Name, "jim")
+		var s []*g.Map
+		err := gconv.MapToMaps(params, &s)
+		t.AssertNil(err)
+		t.Assert(len(s), 2)
 	})
 }

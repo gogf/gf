@@ -354,13 +354,6 @@ func (j *Json) GetMapToMap(pattern string, pointer interface{}, mapping ...map[s
 	return gconv.MapToMap(j.Get(pattern), pointer, mapping...)
 }
 
-// GetMapToMapDeep retrieves the value by specified <pattern> and converts it to specified map
-// variable recursively.
-// See gconv.MapToMapDeep.
-func (j *Json) GetMapToMapDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
-	return gconv.MapToMapDeep(j.Get(pattern), pointer, mapping...)
-}
-
 // GetMapToMaps retrieves the value by specified <pattern> and converts it to specified map slice
 // variable.
 // See gconv.MapToMaps.

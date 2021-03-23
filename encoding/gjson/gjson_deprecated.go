@@ -85,15 +85,6 @@ func (j *Json) ToMapToMap(pointer interface{}, mapping ...map[string]string) err
 	return gconv.MapToMap(*(j.p), pointer, mapping...)
 }
 
-// ToMapToMapDeep converts current Json object to specified map variable recursively.
-// The parameter of <pointer> should be type of *map.
-// Deprecated, use MapToMap instead.
-func (j *Json) ToMapToMapDeep(pointer interface{}, mapping ...map[string]string) error {
-	j.mu.RLock()
-	defer j.mu.RUnlock()
-	return gconv.MapToMapDeep(*(j.p), pointer, mapping...)
-}
-
 // ToMapToMaps converts current Json object to specified map variable slice.
 // The parameter of <pointer> should be type of []map/*map.
 // Deprecated, use MapToMaps instead.
