@@ -36,18 +36,18 @@ func (m *Model) Fields(fieldNamesOrMapStruct ...interface{}) *Model {
 	// String slice.
 	case length >= 2:
 		model := m.getModel()
-		model.fields = gstr.Join(m.mappingAndFilterToTableFields(gconv.Strings(fieldNamesOrMapStruct)), ",")
+		model.fields = gstr.Join(m.mappingAndFilterToTableFields(gconv.Strings(fieldNamesOrMapStruct), true), ",")
 		return model
 	// It need type asserting.
 	case length == 1:
 		model := m.getModel()
 		switch r := fieldNamesOrMapStruct[0].(type) {
 		case string:
-			model.fields = gstr.Join(m.mappingAndFilterToTableFields([]string{r}), ",")
+			model.fields = gstr.Join(m.mappingAndFilterToTableFields([]string{r}, false), ",")
 		case []string:
-			model.fields = gstr.Join(m.mappingAndFilterToTableFields(r), ",")
+			model.fields = gstr.Join(m.mappingAndFilterToTableFields(r, true), ",")
 		default:
-			model.fields = gstr.Join(m.mappingAndFilterToTableFields(gutil.Keys(r)), ",")
+			model.fields = gstr.Join(m.mappingAndFilterToTableFields(gutil.Keys(r), true), ",")
 		}
 		return model
 	}
@@ -65,16 +65,16 @@ func (m *Model) FieldsEx(fieldNamesOrMapStruct ...interface{}) *Model {
 	model := m.getModel()
 	switch {
 	case length >= 2:
-		model.fieldsEx = gstr.Join(m.mappingAndFilterToTableFields(gconv.Strings(fieldNamesOrMapStruct)), ",")
+		model.fieldsEx = gstr.Join(m.mappingAndFilterToTableFields(gconv.Strings(fieldNamesOrMapStruct), true), ",")
 		return model
 	case length == 1:
 		switch r := fieldNamesOrMapStruct[0].(type) {
 		case string:
-			model.fieldsEx = gstr.Join(m.mappingAndFilterToTableFields([]string{r}), ",")
+			model.fieldsEx = gstr.Join(m.mappingAndFilterToTableFields([]string{r}, false), ",")
 		case []string:
-			model.fieldsEx = gstr.Join(m.mappingAndFilterToTableFields(r), ",")
+			model.fieldsEx = gstr.Join(m.mappingAndFilterToTableFields(r, true), ",")
 		default:
-			model.fieldsEx = gstr.Join(m.mappingAndFilterToTableFields(gutil.Keys(r)), ",")
+			model.fieldsEx = gstr.Join(m.mappingAndFilterToTableFields(gutil.Keys(r), true), ",")
 		}
 		return model
 	}

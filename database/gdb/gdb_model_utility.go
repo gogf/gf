@@ -29,7 +29,10 @@ func (m *Model) getModel() *Model {
 }
 
 // mappingAndFilterToTableFields mappings and changes given field name to really table field name.
-func (m *Model) mappingAndFilterToTableFields(fields []string) []string {
+// Eg:
+// ID        -> id
+// NICK_Name -> nickname
+func (m *Model) mappingAndFilterToTableFields(fields []string, filter bool) []string {
 	fieldsMap, err := m.db.TableFields(m.tables)
 	if err != nil || len(fieldsMap) == 0 {
 		return fields
@@ -52,6 +55,8 @@ func (m *Model) mappingAndFilterToTableFields(fields []string) []string {
 				// Eg: id, name
 				if foundKey, _ := gutil.MapPossibleItemByKey(fieldsKeyMap, field); foundKey != "" {
 					outputFieldsArray = append(outputFieldsArray, foundKey)
+				} else if !filter {
+					outputFieldsArray = append(outputFieldsArray, field)
 				}
 			}
 		} else {
