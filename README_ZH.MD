@@ -81,7 +81,7 @@ golang版本 >= 1.11
 # 用户
 
 - [腾讯科技](https://www.tencent.com/)
-- [中兴科技](https://www.zte.com.cn/china/)
+- [中兴通讯](https://www.zte.com.cn/china/)
 - [蚂蚁金服](https://www.antfin.com/)
 - [医联科技](https://www.medlinker.com/)
 - [库币科技](https://www.kucoin.io/)
