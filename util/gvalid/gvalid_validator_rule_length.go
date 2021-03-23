@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-// checkLength checks <value> using length rules.
+// checkLength checks `value` using length rules.
 // The length is calculated using unicode string, which means one chinese character or letter
 // both has the length of 1.
 func (v *Validator) checkLength(value, ruleKey, ruleVal string, customMsgMap map[string]string) string {

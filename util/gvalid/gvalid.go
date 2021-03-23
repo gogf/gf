@@ -163,12 +163,12 @@ var (
 // Check checks single value with specified rules.
 // It returns nil if successful validation.
 //
-// The parameter <value> can be any type of variable, which will be converted to string
+// The parameter `value` can be any type of variable, which will be converted to string
 // for validation.
-// The parameter <rules> can be one or more rules, multiple rules joined using char '|'.
-// The parameter <messages> specifies the custom error messages, which can be type of:
+// The parameter `rules` can be one or more rules, multiple rules joined using char '|'.
+// The parameter `messages` specifies the custom error messages, which can be type of:
 // string/map/struct/*struct.
-// The optional parameter <params> specifies the extra validation parameters for some rules
+// The optional parameter `params` specifies the extra validation parameters for some rules
 // like: required-*、same、different, etc.
 func Check(value interface{}, rules string, messages interface{}, params ...interface{}) *Error {
 	return defaultValidator.Check(value, rules, messages, params...)
@@ -176,19 +176,19 @@ func Check(value interface{}, rules string, messages interface{}, params ...inte
 
 // CheckMap validates map and returns the error result. It returns nil if with successful validation.
 //
-// The parameter <rules> can be type of []string/map[string]string. It supports sequence in error result
-// if <rules> is type of []string.
-// The optional parameter <messages> specifies the custom error messages for specified keys and rules.
+// The parameter `rules` can be type of []string/map[string]string. It supports sequence in error result
+// if `rules` is type of []string.
+// The optional parameter `messages` specifies the custom error messages for specified keys and rules.
 func CheckMap(params interface{}, rules interface{}, messages ...CustomMsg) *Error {
 	return defaultValidator.CheckMap(params, rules, messages...)
 }
 
 // CheckStruct validates strcut and returns the error result.
 //
-// The parameter <object> should be type of struct/*struct.
-// The parameter <rules> can be type of []string/map[string]string. It supports sequence in error result
-// if <rules> is type of []string.
-// The optional parameter <messages> specifies the custom error messages for specified keys and rules.
+// The parameter `object` should be type of struct/*struct.
+// The parameter `rules` can be type of []string/map[string]string. It supports sequence in error result
+// if `rules` is type of []string.
+// The optional parameter `messages` specifies the custom error messages for specified keys and rules.
 func CheckStruct(object interface{}, rules interface{}, messages ...CustomMsg) *Error {
 	return defaultValidator.CheckStruct(object, rules, messages...)
 }

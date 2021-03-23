@@ -40,14 +40,14 @@ func StructsDeep(params interface{}, pointer interface{}, mapping ...map[string]
 
 // doStructs converts any slice to given struct slice.
 //
-// It automatically checks and converts json string to []map if <params> is string/[]byte.
+// It automatically checks and converts json string to []map if `params` is string/[]byte.
 //
-// The parameter <pointer> should be type of pointer to slice of struct.
-// Note that if <pointer> is a pointer to another pointer of type of slice of struct,
+// The parameter `pointer` should be type of pointer to slice of struct.
+// Note that if `pointer` is a pointer to another pointer of type of slice of struct,
 // it will create the struct/pointer internally.
 func doStructs(params interface{}, pointer interface{}, mapping map[string]string, priorityTag string) (err error) {
 	if params == nil {
-		// If <params> is nil, no conversion.
+		// If `params` is nil, no conversion.
 		return nil
 	}
 	if pointer == nil {
@@ -68,7 +68,7 @@ func doStructs(params interface{}, pointer interface{}, mapping map[string]strin
 			}
 		}
 	}()
-	// If given <params> is JSON, it then uses json.Unmarshal doing the converting.
+	// If given `params` is JSON, it then uses json.Unmarshal doing the converting.
 	switch r := params.(type) {
 	case []byte:
 		if json.Valid(r) {
@@ -99,9 +99,9 @@ func doStructs(params interface{}, pointer interface{}, mapping map[string]strin
 			return gerror.Newf("pointer should be type of pointer, but got: %v", kind)
 		}
 	}
-	// Converting <params> to map slice.
+	// Converting `params` to map slice.
 	paramsMaps := Maps(params)
-	// If <params> is an empty slice, no conversion.
+	// If `params` is an empty slice, no conversion.
 	if len(paramsMaps) == 0 {
 		return nil
 	}

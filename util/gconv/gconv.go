@@ -45,8 +45,8 @@ var (
 	StructTagPriority = []string{"gconv", "param", "params", "c", "p", "json"}
 )
 
-// Convert converts the variable <i> to the type <t>, the type <t> is specified by string.
-// The optional parameter <params> is used for additional necessary parameter for this conversion.
+// Convert converts the variable `i` to the type `t`, the type `t` is specified by string.
+// The optional parameter `params` is used for additional necessary parameter for this conversion.
 // It supports common types conversion as its conversion based on type name string.
 func Convert(any interface{}, t string, params ...interface{}) interface{} {
 	switch t {
@@ -277,7 +277,7 @@ func Convert(any interface{}, t string, params ...interface{}) interface{} {
 	}
 }
 
-// Byte converts <i> to byte.
+// Byte converts `i` to byte.
 func Byte(any interface{}) byte {
 	if v, ok := any.(byte); ok {
 		return v
@@ -285,7 +285,7 @@ func Byte(any interface{}) byte {
 	return Uint8(any)
 }
 
-// Bytes converts <i> to []byte.
+// Bytes converts `i` to []byte.
 func Bytes(any interface{}) []byte {
 	if any == nil {
 		return nil
@@ -303,7 +303,7 @@ func Bytes(any interface{}) []byte {
 	}
 }
 
-// Rune converts <i> to rune.
+// Rune converts `i` to rune.
 func Rune(any interface{}) rune {
 	if v, ok := any.(rune); ok {
 		return v
@@ -311,7 +311,7 @@ func Rune(any interface{}) rune {
 	return rune(Int32(any))
 }
 
-// Runes converts <i> to []rune.
+// Runes converts `i` to []rune.
 func Runes(any interface{}) []rune {
 	if v, ok := any.([]rune); ok {
 		return v
@@ -319,7 +319,7 @@ func Runes(any interface{}) []rune {
 	return []rune(String(any))
 }
 
-// String converts <i> to string.
+// String converts `i` to string.
 // It's most common used converting function.
 func String(any interface{}) string {
 	if any == nil {
@@ -422,8 +422,8 @@ func String(any interface{}) string {
 	}
 }
 
-// Bool converts <i> to bool.
-// It returns false if <i> is: false, "", 0, "false", "off", "no", empty slice/map.
+// Bool converts `i` to bool.
+// It returns false if `i` is: false, "", 0, "false", "off", "no", empty slice/map.
 func Bool(any interface{}) bool {
 	if any == nil {
 		return false
@@ -467,7 +467,7 @@ func Bool(any interface{}) bool {
 	}
 }
 
-// Int converts <i> to int.
+// Int converts `i` to int.
 func Int(any interface{}) int {
 	if any == nil {
 		return 0
@@ -478,7 +478,7 @@ func Int(any interface{}) int {
 	return int(Int64(any))
 }
 
-// Int8 converts <i> to int8.
+// Int8 converts `i` to int8.
 func Int8(any interface{}) int8 {
 	if any == nil {
 		return 0
@@ -489,7 +489,7 @@ func Int8(any interface{}) int8 {
 	return int8(Int64(any))
 }
 
-// Int16 converts <i> to int16.
+// Int16 converts `i` to int16.
 func Int16(any interface{}) int16 {
 	if any == nil {
 		return 0
@@ -500,7 +500,7 @@ func Int16(any interface{}) int16 {
 	return int16(Int64(any))
 }
 
-// Int32 converts <i> to int32.
+// Int32 converts `i` to int32.
 func Int32(any interface{}) int32 {
 	if any == nil {
 		return 0
@@ -511,7 +511,7 @@ func Int32(any interface{}) int32 {
 	return int32(Int64(any))
 }
 
-// Int64 converts <i> to int64.
+// Int64 converts `i` to int64.
 func Int64(any interface{}) int64 {
 	if any == nil {
 		return 0
@@ -592,7 +592,7 @@ func Int64(any interface{}) int64 {
 	}
 }
 
-// Uint converts <i> to uint.
+// Uint converts `i` to uint.
 func Uint(any interface{}) uint {
 	if any == nil {
 		return 0
@@ -603,7 +603,7 @@ func Uint(any interface{}) uint {
 	return uint(Uint64(any))
 }
 
-// Uint8 converts <i> to uint8.
+// Uint8 converts `i` to uint8.
 func Uint8(any interface{}) uint8 {
 	if any == nil {
 		return 0
@@ -614,7 +614,7 @@ func Uint8(any interface{}) uint8 {
 	return uint8(Uint64(any))
 }
 
-// Uint16 converts <i> to uint16.
+// Uint16 converts `i` to uint16.
 func Uint16(any interface{}) uint16 {
 	if any == nil {
 		return 0
@@ -625,7 +625,7 @@ func Uint16(any interface{}) uint16 {
 	return uint16(Uint64(any))
 }
 
-// Uint32 converts <i> to uint32.
+// Uint32 converts `i` to uint32.
 func Uint32(any interface{}) uint32 {
 	if any == nil {
 		return 0
@@ -636,7 +636,7 @@ func Uint32(any interface{}) uint32 {
 	return uint32(Uint64(any))
 }
 
-// Uint64 converts <i> to uint64.
+// Uint64 converts `i` to uint64.
 func Uint64(any interface{}) uint64 {
 	if any == nil {
 		return 0
@@ -699,7 +699,7 @@ func Uint64(any interface{}) uint64 {
 	}
 }
 
-// Float32 converts <i> to float32.
+// Float32 converts `i` to float32.
 func Float32(any interface{}) float32 {
 	if any == nil {
 		return 0
@@ -720,7 +720,7 @@ func Float32(any interface{}) float32 {
 	}
 }
 
-// Float64 converts <i> to float64.
+// Float64 converts `i` to float64.
 func Float64(any interface{}) float64 {
 	if any == nil {
 		return 0

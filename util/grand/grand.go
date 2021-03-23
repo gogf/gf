@@ -23,8 +23,8 @@ var (
 // Intn returns a int number which is between 0 and max: [0, max).
 //
 // Note that:
-// 1. The <max> can only be greater than 0, or else it returns <max> directly;
-// 2. The result is greater than or equal to 0, but less than <max>;
+// 1. The `max` can only be greater than 0, or else it returns `max` directly;
+// 2. The result is greater than or equal to 0, but less than `max`;
 // 3. The result number is 32bit and less than math.MaxUint32.
 func Intn(max int) int {
 	if max <= 0 {
@@ -37,7 +37,7 @@ func Intn(max int) int {
 	return n
 }
 
-// B retrieves and returns random bytes of given length <n>.
+// B retrieves and returns random bytes of given length `n`.
 func B(n int) []byte {
 	if n <= 0 {
 		return nil
@@ -55,7 +55,7 @@ func B(n int) []byte {
 }
 
 // N returns a random int between min and max: [min, max].
-// The <min> and <max> also support negative numbers.
+// The `min` and `max` also support negative numbers.
 func N(min, max int) int {
 	if min >= max {
 		return min
@@ -77,8 +77,8 @@ func N(min, max int) int {
 	return 0
 }
 
-// S returns a random string which contains digits and letters, and its length is <n>.
-// The optional parameter <symbols> specifies whether the result could contain symbols,
+// S returns a random string which contains digits and letters, and its length is `n`.
+// The optional parameter `symbols` specifies whether the result could contain symbols,
 // which is false in default.
 func S(n int, symbols ...bool) string {
 	if n <= 0 {
@@ -112,7 +112,7 @@ func D(min, max time.Duration) time.Duration {
 	return time.Duration(n * multiple)
 }
 
-// Str randomly picks and returns <n> count of chars from given string <s>.
+// Str randomly picks and returns `n` count of chars from given string `s`.
 // It also supports unicode string like Chinese/Russian/Japanese, etc.
 func Str(s string, n int) string {
 	if n <= 0 {
@@ -135,7 +135,7 @@ func Str(s string, n int) string {
 	return string(b)
 }
 
-// Digits returns a random string which contains only digits, and its length is <n>.
+// Digits returns a random string which contains only digits, and its length is `n`.
 func Digits(n int) string {
 	if n <= 0 {
 		return ""
@@ -150,7 +150,7 @@ func Digits(n int) string {
 	return *(*string)(unsafe.Pointer(&b))
 }
 
-// Letters returns a random string which contains only letters, and its length is <n>.
+// Letters returns a random string which contains only letters, and its length is `n`.
 func Letters(n int) string {
 	if n <= 0 {
 		return ""
@@ -165,7 +165,7 @@ func Letters(n int) string {
 	return *(*string)(unsafe.Pointer(&b))
 }
 
-// Symbols returns a random string which contains only symbols, and its length is <n>.
+// Symbols returns a random string which contains only symbols, and its length is `n`.
 func Symbols(n int) string {
 	if n <= 0 {
 		return ""
@@ -192,7 +192,7 @@ func Perm(n int) []int {
 	return m
 }
 
-// Meet randomly calculate whether the given probability <num>/<total> is met.
+// Meet randomly calculate whether the given probability `num`/`total` is met.
 func Meet(num, total int) bool {
 	return Intn(total) < num
 }

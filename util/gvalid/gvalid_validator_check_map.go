@@ -13,9 +13,9 @@ import (
 
 // CheckMap validates map and returns the error result. It returns nil if with successful validation.
 //
-// The parameter <rules> can be type of []string/map[string]string. It supports sequence in error result
-// if <rules> is type of []string.
-// The optional parameter <messages> specifies the custom error messages for specified keys and rules.
+// The parameter `rules` can be type of []string/map[string]string. It supports sequence in error result
+// if `rules` is type of []string.
+// The optional parameter `messages` specifies the custom error messages for specified keys and rules.
 func (v *Validator) CheckMap(params interface{}, rules interface{}, messages ...CustomMsg) *Error {
 	// If there's no validation rules, it does nothing and returns quickly.
 	if params == nil || rules == nil {

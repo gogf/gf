@@ -11,7 +11,7 @@ import (
 	"reflect"
 )
 
-// SliceCopy does a shallow copy of slice <data> for most commonly used slice type
+// SliceCopy does a shallow copy of slice `data` for most commonly used slice type
 // []interface{}.
 func SliceCopy(data []interface{}) []interface{} {
 	newData := make([]interface{}, len(data))
@@ -19,8 +19,8 @@ func SliceCopy(data []interface{}) []interface{} {
 	return newData
 }
 
-// SliceDelete deletes an element at <index> and returns the new slice.
-// It does nothing if the given <index> is invalid.
+// SliceDelete deletes an element at `index` and returns the new slice.
+// It does nothing if the given `index` is invalid.
 func SliceDelete(data []interface{}, index int) (newSlice []interface{}) {
 	if index < 0 || index >= len(data) {
 		return data

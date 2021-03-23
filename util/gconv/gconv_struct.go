@@ -19,15 +19,15 @@ import (
 )
 
 // Struct maps the params key-value pairs to the corresponding struct object's attributes.
-// The third parameter <mapping> is unnecessary, indicating the mapping rules between the
+// The third parameter `mapping` is unnecessary, indicating the mapping rules between the
 // custom key name and the attribute name(case sensitive).
 //
 // Note:
-// 1. The <params> can be any type of map/struct, usually a map.
-// 2. The <pointer> should be type of *struct/**struct, which is a pointer to struct object
+// 1. The `params` can be any type of map/struct, usually a map.
+// 2. The `pointer` should be type of *struct/**struct, which is a pointer to struct object
 //    or struct pointer.
 // 3. Only the public attributes of struct object can be mapped.
-// 4. If <params> is a map, the key of the map <params> can be lowercase.
+// 4. If `params` is a map, the key of the map `params` can be lowercase.
 //    It will automatically convert the first letter of the key to uppercase
 //    in mapping procedure to do the matching.
 //    It ignores the map key, if it does not match.
@@ -59,7 +59,7 @@ func StructDeep(params interface{}, pointer interface{}, mapping ...map[string]s
 // doStruct is the core internal converting function for any data to struct.
 func doStruct(params interface{}, pointer interface{}, mapping map[string]string, priorityTag string) (err error) {
 	if params == nil {
-		// If <params> is nil, no conversion.
+		// If `params` is nil, no conversion.
 		return nil
 	}
 	if pointer == nil {
@@ -77,7 +77,7 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 		}
 	}()
 
-	// If given <params> is JSON, it then uses json.Unmarshal doing the converting.
+	// If given `params` is JSON, it then uses json.Unmarshal doing the converting.
 	switch r := params.(type) {
 	case []byte:
 		if json.Valid(r) {
@@ -140,7 +140,7 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 	}
 
 	// It automatically creates struct object if necessary.
-	// For example, if <pointer> is **User, then <elem> is *User, which is a pointer to User.
+	// For example, if `pointer` is **User, then `elem` is *User, which is a pointer to User.
 	if pointerElemReflectValue.Kind() == reflect.Ptr {
 		if !pointerElemReflectValue.IsValid() || pointerElemReflectValue.IsNil() {
 			e := reflect.New(pointerElemReflectValue.Type().Elem()).Elem()
@@ -249,7 +249,7 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 			// string cases and chars like '-'/'_'/'.'/' '.
 
 			// Matching the parameters to struct tag names.
-			// The <tagV> is the attribute name of the struct.
+			// The `tagV` is the attribute name of the struct.
 			for attrKey, cmpKey := range tagMap {
 				if strings.EqualFold(checkName, cmpKey) {
 					attrName = attrKey
@@ -349,7 +349,7 @@ func bindVarToReflectValueWithInterfaceCheck(reflectValue reflect.Value, value i
 	return nil, false
 }
 
-// bindVarToReflectValue sets <value> to reflect value object <structFieldValue>.
+// bindVarToReflectValue sets `value` to reflect value object `structFieldValue`.
 func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, mapping map[string]string, priorityTag string) (err error) {
 	if err, ok := bindVarToReflectValueWithInterfaceCheck(structFieldValue, value); ok {
 		return err
@@ -455,7 +455,7 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, ma
 				)
 			}
 		}()
-		// It here uses reflect converting <value> to type of the attribute and assigns
+		// It here uses reflect converting `value` to type of the attribute and assigns
 		// the result value to the attribute. It might fail and panic if the usual Go
 		// conversion rules do not allow conversion.
 		structFieldValue.Set(reflect.ValueOf(value).Convert(structFieldValue.Type()))

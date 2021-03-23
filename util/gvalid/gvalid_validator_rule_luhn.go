@@ -6,7 +6,7 @@
 
 package gvalid
 
-// checkLuHn checks <value> with LUHN algorithm.
+// checkLuHn checks `value` with LUHN algorithm.
 // It's usually used for bank card number validation.
 func (v *Validator) checkLuHn(value string) bool {
 	var (

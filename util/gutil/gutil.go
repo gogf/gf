@@ -32,7 +32,7 @@ func Try(try func()) (err error) {
 }
 
 // TryCatch implements try...catch... logistics using internal panic...recover.
-// It automatically calls function <catch> if any exception occurs ans passes the exception as an error.
+// It automatically calls function `catch` if any exception occurs ans passes the exception as an error.
 func TryCatch(try func(), catch ...func(exception error)) {
 	defer func() {
 		if exception := recover(); exception != nil && len(catch) > 0 {
@@ -46,8 +46,8 @@ func TryCatch(try func(), catch ...func(exception error)) {
 	try()
 }
 
-// IsEmpty checks given <value> empty or not.
-// It returns false if <value> is: integer(0), bool(false), slice/map(len=0), nil;
+// IsEmpty checks given `value` empty or not.
+// It returns false if `value` is: integer(0), bool(false), slice/map(len=0), nil;
 // or else returns true.
 func IsEmpty(value interface{}) bool {
 	return empty.IsEmpty(value)
