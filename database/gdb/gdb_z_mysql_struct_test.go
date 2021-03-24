@@ -363,6 +363,30 @@ func Test_Model_Scan_CustomType_Time(t *testing.T) {
 	})
 }
 
+func Test_Model_Scan_CustomType_String(t *testing.T) {
+	type MyString string
+
+	type MyStringSt struct {
+		Passport MyString
+	}
+
+	table := createInitTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		st := new(MyStringSt)
+		err := db.Model(table).Fields("Passport").WherePri(1).Scan(st)
+		t.AssertNil(err)
+		t.Assert(st.Passport, "user_1")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var sts []MyStringSt
+		err := db.Model(table).Fields("Passport").Order("id asc").Scan(&sts)
+		t.AssertNil(err)
+		t.Assert(len(sts), TableSize)
+		t.Assert(sts[0], "user_1")
+	})
+}
+
 type User struct {
 	Id         int
 	Passport   string
