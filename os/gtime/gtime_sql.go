@@ -13,5 +13,8 @@ func (t *Time) Scan(value interface{}) error {
 
 //add valuer
 func (t *Time) Value() (driver.Value, error) {
+	if t == nil {
+		return nil, nil
+	}
 	return t.Time, nil
 }
