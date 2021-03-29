@@ -166,7 +166,7 @@ func (l *Logger) print(std io.Writer, lead string, values ...interface{}) {
 	if l.ctx != nil {
 		// Tracing values.
 		spanCtx := trace.SpanContextFromContext(l.ctx)
-		if traceId := spanCtx.TraceID; traceId.IsValid() {
+		if traceId := spanCtx.TraceID(); traceId.IsValid() {
 			buffer.WriteString(fmt.Sprintf("{TraceID:%s} ", traceId.String()))
 		}
 		// Context values.
