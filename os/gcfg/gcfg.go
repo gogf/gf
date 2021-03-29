@@ -15,6 +15,7 @@ import (
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/os/gcmd"
 	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/util/gmode"
 
 	"github.com/gogf/gf/os/gres"
 
@@ -290,6 +291,7 @@ func (c *Config) GetFilePath(file ...string) (path string, err error) {
 			}
 		})
 	}
+	c.autoCheckAndAddMainPkgPathToSearchPaths()
 	// Searching the file system.
 	c.searchPaths.RLockFunc(func(array []string) {
 		for _, prefix := range array {
@@ -325,6 +327,19 @@ func (c *Config) GetFilePath(file ...string) (path string, err error) {
 		err = gerror.New(buffer.String())
 	}
 	return
+}
+
+// autoCheckAndAddMainPkgPathToSearchPaths automatically checks and adds directory path of package main
+// to the searching path list if it's currently in development environment.
+func (c *Config) autoCheckAndAddMainPkgPathToSearchPaths() {
+	if gmode.IsDevelop() {
+		mainPkgPath := gfile.MainPkgPath()
+		if mainPkgPath != "" {
+			if !c.searchPaths.Contains(mainPkgPath) {
+				c.searchPaths.Append(mainPkgPath)
+			}
+		}
+	}
 }
 
 // getJson returns a *gjson.Json object for the specified `file` content.
