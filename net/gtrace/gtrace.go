@@ -85,7 +85,7 @@ func GetTraceId(ctx context.Context) string {
 	if ctx == nil {
 		return ""
 	}
-	traceId := trace.SpanContextFromContext(ctx).TraceID
+	traceId := trace.SpanContextFromContext(ctx).TraceID()
 	if traceId.IsValid() {
 		return traceId.String()
 	}
@@ -98,7 +98,7 @@ func GetSpanId(ctx context.Context) string {
 	if ctx == nil {
 		return ""
 	}
-	spanId := trace.SpanContextFromContext(ctx).SpanID
+	spanId := trace.SpanContextFromContext(ctx).SpanID()
 	if spanId.IsValid() {
 		return spanId.String()
 	}
