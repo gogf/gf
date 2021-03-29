@@ -46,11 +46,11 @@ func mustSpanIDFromHex(s string) (t trace.SpanID) {
 
 func TestNewCarrier(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		ctx := trace.ContextWithRemoteSpanContext(context.Background(), trace.SpanContext{
+		ctx := trace.ContextWithRemoteSpanContext(context.Background(), trace.NewSpanContext(trace.SpanContextConfig{
 			TraceID:    traceID,
 			SpanID:     spanID,
 			TraceFlags: trace.FlagsSampled,
-		})
+		}))
 		ctx, _ = oteltest.DefaultTracer().Start(ctx, "inject")
 		carrier1 := gtrace.NewCarrier()
 		otel.GetTextMapPropagator().Inject(ctx, carrier1)
@@ -58,7 +58,7 @@ func TestNewCarrier(t *testing.T) {
 
 		ctx = otel.GetTextMapPropagator().Extract(ctx, carrier1)
 		gotSc := trace.RemoteSpanContextFromContext(ctx)
-		t.Assert(gotSc.TraceID.String(), traceID.String())
-		t.Assert(gotSc.SpanID.String(), "0000000000000002")
+		t.Assert(gotSc.TraceID().String(), traceID.String())
+		t.Assert(gotSc.SpanID().String(), "0000000000000002")
 	})
 }
