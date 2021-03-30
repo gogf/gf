@@ -67,7 +67,7 @@ func GetArgAll() []string {
 }
 
 // GetWithEnv is alias of GetOptWithEnv.
-// Deprecated.
+// Deprecated, use GetOptWithEnv instead.
 func GetWithEnv(key string, def ...interface{}) *gvar.Var {
 	return GetOptWithEnv(key, def...)
 }

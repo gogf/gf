@@ -540,7 +540,7 @@ func SplitAndTrim(str, delimiter string, characterMask ...string) []string {
 
 // SplitAndTrimSpace splits string <str> by a string <delimiter> to an array,
 // and calls TrimSpace to every element of this array.
-// Deprecated.
+// Deprecated, use SplitAndTrim instead.
 func SplitAndTrimSpace(str, delimiter string) []string {
 	array := make([]string, 0)
 	for _, v := range strings.Split(str, delimiter) {

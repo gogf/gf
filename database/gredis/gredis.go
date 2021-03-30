@@ -190,7 +190,7 @@ func (r *Redis) Conn() *Conn {
 }
 
 // Alias of Conn, see Conn.
-// Deprecated.
+// Deprecated, use Conn instead.
 func (r *Redis) GetConn() *Conn {
 	return r.Conn()
 }

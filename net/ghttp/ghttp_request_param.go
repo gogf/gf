@@ -139,14 +139,14 @@ func (r *Request) GetVar(key string, def ...interface{}) *gvar.Var {
 
 // GetRaw is alias of GetBody.
 // See GetBody.
-// Deprecated.
+// Deprecated, use GetBody instead.
 func (r *Request) GetRaw() []byte {
 	return r.GetBody()
 }
 
 // GetRawString is alias of GetBodyString.
 // See GetBodyString.
-// Deprecated.
+// Deprecated, use GetBodyString instead.
 func (r *Request) GetRawString() string {
 	return r.GetBodyString()
 }
