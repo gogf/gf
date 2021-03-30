@@ -1,6 +1,6 @@
 <p align="center">
 <a href="https://goframe.org" target="_blank">
-<img src="https://goframe.org/download/thumbnails/3670188/logo.png" width="100">
+<img src="https://goframe.org/download/thumbnails/3670188/logo.png" width="200">
 </a></p>
 
 <p align="center">
