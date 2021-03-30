@@ -11,7 +11,7 @@ require (
 	github.com/gorilla/websocket v1.4.1
 	github.com/grokify/html-strip-tags-go v0.0.0-20190921062105-daaa06bf1aaf
 	github.com/mattn/go-runewidth v0.0.10 // indirect
-	github.com/olekukonko/tablewriter v0.0.1
+	github.com/olekukonko/tablewriter v0.0.5
 	go.opentelemetry.io/otel v0.19.0
 	go.opentelemetry.io/otel/oteltest v0.19.0
 	go.opentelemetry.io/otel/trace v0.19.0
