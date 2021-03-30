@@ -6,22 +6,22 @@
 
 package gdb
 
-// Deprecated.
+// Deprecated, use Json instead.
 func (r Record) ToJson() string {
 	return r.Json()
 }
 
-// Deprecated.
+// Deprecated, use Xml instead.
 func (r Record) ToXml(rootTag ...string) string {
 	return r.Xml(rootTag...)
 }
 
-// Deprecated.
+// Deprecated, use Map instead.
 func (r Record) ToMap() Map {
 	return r.Map()
 }
 
-// Deprecated.
+// Deprecated, use Struct instead.
 func (r Record) ToStruct(pointer interface{}) error {
 	return r.Struct(pointer)
 }

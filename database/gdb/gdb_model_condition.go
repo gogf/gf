@@ -95,7 +95,7 @@ func (m *Model) Group(groupBy string) *Model {
 
 // GroupBy is alias of Model.Group.
 // See Model.Group.
-// Deprecated.
+// Deprecated, use Group instead.
 func (m *Model) GroupBy(groupBy string) *Model {
 	return m.Group(groupBy)
 }
@@ -109,7 +109,7 @@ func (m *Model) Order(orderBy ...string) *Model {
 
 // OrderBy is alias of Model.Order.
 // See Model.Order.
-// Deprecated.
+// Deprecated, use Order instead.
 func (m *Model) OrderBy(orderBy string) *Model {
 	return m.Order(orderBy)
 }
@@ -153,7 +153,7 @@ func (m *Model) Page(page, limit int) *Model {
 
 // ForPage is alias of Model.Page.
 // See Model.Page.
-// Deprecated.
+// Deprecated, use Page instead.
 func (m *Model) ForPage(page, limit int) *Model {
 	return m.Page(page, limit)
 }
