@@ -1,20 +1,11 @@
-<p align="center">
-<a href="https://goframe.org" target="_blank">
-<img src="https://goframe.org/download/thumbnails/3670188/logo.png" width="150">
-</a>
-</p>
-
-<p align="center">
-<a href="https://godoc.org/github.com/gogf/gf"><img src="https://godoc.org/github.com/gogf/gf?status.svg" alt="Go Doc"></a>
-<a href="https://travis-ci.com/github/gogf/gf"><img src="https://travis-ci.com/gogf/gf.svg?branch=master" alt="Build Status"></a>
-<a href="https://goreportcard.com/report/github.com/gogf/gf"><img src="https://goreportcard.com/badge/github.com/gogf/gf?v=1" alt="Go Report"></a>
-<a href="https://codecov.io/gh/gogf/gf/branch/master"><img src="https://codecov.io/gh/gogf/gf/branch/master/graph/badge.svg" alt="Code Coverage"></a>
-<a href="https://github.com/gogf/gf"><img src="https://img.shields.io/badge/production-ready-blue.svg" alt="Production Ready"></a>
-<a href="https://github.com/gogf/gf"><img src="https://img.shields.io/github/license/gogf/gf.svg?style=flat" alt="License"></a>
-</p>
-
-
 # GoFrame
+
+[![Go Doc](https://godoc.org/github.com/gogf/gf?status.svg)](https://godoc.org/github.com/gogf/gf)
+[![Build Status](https://travis-ci.com/gogf/gf.svg?branch=master)](https://travis-ci.org/gogf/gf)
+[![Go Report](https://goreportcard.com/badge/github.com/gogf/gf?v=1)](https://goreportcard.com/report/github.com/gogf/gf)
+[![Code Coverage](https://codecov.io/gh/gogf/gf/branch/master/graph/badge.svg)](https://codecov.io/gh/gogf/gf/branch/master)
+[![Production Ready](https://img.shields.io/badge/production-ready-blue.svg)](https://github.com/gogf/gf)
+[![License](https://img.shields.io/github/license/gogf/gf.svg?style=flat)](https://github.com/gogf/gf)
 
 English | [简体中文](README_ZH.MD)
 
