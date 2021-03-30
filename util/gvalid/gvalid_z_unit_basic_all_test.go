@@ -8,7 +8,9 @@ package gvalid_test
 
 import (
 	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/os/gtime"
 	"testing"
+	"time"
 
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/test/gtest"
@@ -204,6 +206,14 @@ func Test_DateFormat(t *testing.T) {
 		t.Assert(err4, nil)
 		t.Assert(err5, nil)
 		t.AssertNE(err6, nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		t1 := gtime.Now()
+		t2 := time.Time{}
+		err1 := gvalid.Check(t1, "date-format:Y", nil)
+		err2 := gvalid.Check(t2, "date-format:Y", nil)
+		t.Assert(err1, nil)
+		t.AssertNE(err2, nil)
 	})
 }
 
