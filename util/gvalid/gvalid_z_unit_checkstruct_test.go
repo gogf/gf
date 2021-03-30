@@ -335,3 +335,20 @@ func Test_CheckStruct_NoTag(t *testing.T) {
 		t.Assert(err, nil)
 	})
 }
+
+func Test_CheckStruct_InvalidRule(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			Name  string
+			Age   uint
+			Phone string `v:"mobile"`
+		}
+		obj := &Params{
+			Name:  "john",
+			Age:   18,
+			Phone: "123",
+		}
+		err := gvalid.CheckStruct(obj, nil)
+		t.AssertNE(err, nil)
+	})
+}
