@@ -2,6 +2,9 @@
 <a href="https://goframe.org" target="_blank">
 <img src="https://goframe.org/download/thumbnails/3670188/logo.png" width="150">
 </a>
+</p>
+
+<p align="center">
 <a href="https://godoc.org/github.com/gogf/gf"><img src="https://godoc.org/github.com/gogf/gf?status.svg" alt="Go Doc"></a>
 <a href="https://travis-ci.com/github/gogf/gf"><img src="https://travis-ci.com/gogf/gf.svg?branch=master" alt="Build Status"></a>
 <a href="https://goreportcard.com/report/github.com/gogf/gf"><img src="https://goreportcard.com/badge/github.com/gogf/gf?v=1" alt="Go Report"></a>
