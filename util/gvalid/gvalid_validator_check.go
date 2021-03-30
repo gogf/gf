@@ -16,7 +16,13 @@ import (
 	"github.com/gogf/gf/util/gconv"
 	"strconv"
 	"strings"
+	"time"
 )
+
+type apiTime interface {
+	Date() (year int, month time.Month, day int)
+	IsZero() bool
+}
 
 // Check checks single value with specified rules.
 // It returns nil if successful validation.
@@ -196,6 +202,10 @@ func (v *Validator) doCheckBuildInRules(
 
 	// Date rules.
 	case "date":
+		// support for time value, eg: gtime.Time/*gtime.Time, time.Time/*time.Time.
+		if v, ok := value.(apiTime); ok {
+			return !v.IsZero(), nil
+		}
 		// Standard date string, which must contain char '-' or '.'.
 		if _, err := gtime.StrToTime(valueStr); err == nil {
 			match = true
@@ -209,6 +219,10 @@ func (v *Validator) doCheckBuildInRules(
 
 	// Date rule with specified format.
 	case "date-format":
+		// support for time value, eg: gtime.Time/*gtime.Time, time.Time/*time.Time.
+		if v, ok := value.(apiTime); ok {
+			return !v.IsZero(), nil
+		}
 		if _, err := gtime.StrToTimeFormat(valueStr, rulePattern); err == nil {
 			match = true
 		} else {
