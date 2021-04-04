@@ -179,7 +179,9 @@ func (d *DriverOracle) Tables(schema ...string) (tables []string, err error) {
 }
 
 // TableFields retrieves and returns the fields information of specified table of current schema.
-func (d *DriverOracle) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
+//
+// Also see DriverMysql.TableFields.
+func (d *DriverOracle) TableFields(link Link, table string, schema ...string) (fields map[string]*TableField, err error) {
 	charL, charR := d.GetChars()
 	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
@@ -189,11 +191,14 @@ func (d *DriverOracle) TableFields(table string, schema ...string) (fields map[s
 	if len(schema) > 0 && schema[0] != "" {
 		checkSchema = schema[0]
 	}
-	v, _ := internalCache.GetOrSetFunc(
-		fmt.Sprintf(`oracle_table_fields_%s_%s@group:%s`, table, checkSchema, d.GetGroup()),
-		func() (interface{}, error) {
-			result := (Result)(nil)
-			structureSql := fmt.Sprintf(`
+	tableFieldsCacheKey := fmt.Sprintf(
+		`oracle_table_fields_%s_%s@group:%s`,
+		table, checkSchema, d.GetGroup(),
+	)
+	v := tableFieldsMap.GetOrSetFuncLock(tableFieldsCacheKey, func() interface{} {
+		var (
+			result       Result
+			structureSql = fmt.Sprintf(`
 SELECT 
 	COLUMN_NAME AS FIELD, 
 	CASE DATA_TYPE  
@@ -203,22 +208,29 @@ SELECT
 FROM USER_TAB_COLUMNS WHERE TABLE_NAME = '%s' ORDER BY COLUMN_ID`,
 				strings.ToUpper(table),
 			)
-			structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
-			result, err = d.db.GetAll(structureSql)
+		)
+		structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
+		if link == nil {
+			link, err = d.db.GetSlave(checkSchema)
 			if err != nil {
-				return nil, err
+				return nil
 			}
-			fields = make(map[string]*TableField)
-			for i, m := range result {
-				fields[strings.ToLower(m["FIELD"].String())] = &TableField{
-					Index: i,
-					Name:  strings.ToLower(m["FIELD"].String()),
-					Type:  strings.ToLower(m["TYPE"].String()),
-				}
+		}
+		result, err = d.db.DoGetAll(link, structureSql)
+		if err != nil {
+			return nil
+		}
+		fields = make(map[string]*TableField)
+		for i, m := range result {
+			fields[strings.ToLower(m["FIELD"].String())] = &TableField{
+				Index: i,
+				Name:  strings.ToLower(m["FIELD"].String()),
+				Type:  strings.ToLower(m["TYPE"].String()),
 			}
-			return fields, nil
-		}, 0)
-	if err == nil {
+		}
+		return fields
+	})
+	if v != nil {
 		fields = v.(map[string]*TableField)
 	}
 	return

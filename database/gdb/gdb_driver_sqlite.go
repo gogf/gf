@@ -93,7 +93,9 @@ func (d *DriverSqlite) Tables(schema ...string) (tables []string, err error) {
 }
 
 // TableFields retrieves and returns the fields information of specified table of current schema.
-func (d *DriverSqlite) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
+//
+// Also see DriverMysql.TableFields.
+func (d *DriverSqlite) TableFields(link Link, table string, schema ...string) (fields map[string]*TableField, err error) {
 	charL, charR := d.GetChars()
 	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
@@ -103,32 +105,35 @@ func (d *DriverSqlite) TableFields(table string, schema ...string) (fields map[s
 	if len(schema) > 0 && schema[0] != "" {
 		checkSchema = schema[0]
 	}
-	v, _ := internalCache.GetOrSetFunc(
-		fmt.Sprintf(`sqlite_table_fields_%s_%s@group:%s`, table, checkSchema, d.GetGroup()),
-		func() (interface{}, error) {
-			var (
-				result Result
-				link   *sql.DB
-			)
+	tableFieldsCacheKey := fmt.Sprintf(
+		`sqlite_table_fields_%s_%s@group:%s`,
+		table, checkSchema, d.GetGroup(),
+	)
+	v := tableFieldsMap.GetOrSetFuncLock(tableFieldsCacheKey, func() interface{} {
+		var (
+			result Result
+		)
+		if link == nil {
 			link, err = d.db.GetSlave(checkSchema)
 			if err != nil {
-				return nil, err
+				return nil
 			}
-			result, err = d.db.DoGetAll(link, fmt.Sprintf(`PRAGMA TABLE_INFO(%s)`, table))
-			if err != nil {
-				return nil, err
+		}
+		result, err = d.db.DoGetAll(link, fmt.Sprintf(`PRAGMA TABLE_INFO(%s)`, table))
+		if err != nil {
+			return nil
+		}
+		fields = make(map[string]*TableField)
+		for i, m := range result {
+			fields[strings.ToLower(m["name"].String())] = &TableField{
+				Index: i,
+				Name:  strings.ToLower(m["name"].String()),
+				Type:  strings.ToLower(m["type"].String()),
 			}
-			fields = make(map[string]*TableField)
-			for i, m := range result {
-				fields[strings.ToLower(m["name"].String())] = &TableField{
-					Index: i,
-					Name:  strings.ToLower(m["name"].String()),
-					Type:  strings.ToLower(m["type"].String()),
-				}
-			}
-			return fields, nil
-		}, 0)
-	if err == nil {
+		}
+		return fields
+	})
+	if v != nil {
 		fields = v.(map[string]*TableField)
 	}
 	return

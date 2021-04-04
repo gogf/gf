@@ -84,7 +84,7 @@ func (m *Model) getFieldsFiltered() string {
 			panic("function FieldsEx supports only single table operations")
 		}
 		// Filter table fields with fieldEx.
-		tableFields, err := m.db.TableFields(m.tables)
+		tableFields, err := m.TableFields(m.tables)
 		if err != nil {
 			panic(err)
 		}
