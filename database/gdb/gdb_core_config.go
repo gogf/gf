@@ -42,7 +42,6 @@ type ConfigNode struct {
 	LinkInfo             string        `json:"link"`                 // (Optional) Custom link information, when it is used, configuration Host/Port/User/Pass/Name are ignored.
 	MaxIdleConnCount     int           `json:"maxIdle"`              // (Optional) Max idle connection configuration for underlying connection pool.
 	MaxOpenConnCount     int           `json:"maxOpen"`              // (Optional) Max open connection configuration for underlying connection pool.
-	MaxConnIdleTime      time.Duration `json:"maxIdleTime"`          // (Optional) Max connection TTL configuration for underlying connection pool.
 	MaxConnLifeTime      time.Duration `json:"maxLifeTime"`          // (Optional) Max amount of time a connection may be idle before being closed.
 	QueryTimeout         time.Duration `json:"queryTimeout"`         // (Optional) Max query time for per dql.
 	ExecTimeout          time.Duration `json:"execTimeout"`          // (Optional) Max exec time for dml.
@@ -168,15 +167,6 @@ func (c *Core) SetMaxOpenConnCount(n int) {
 	c.config.MaxOpenConnCount = n
 }
 
-// SetMaxConnIdleTime sets the maximum amount of time a connection may be idle.
-//
-// Expired connections may be closed lazily before reuse.
-//
-// If d <= 0, connections are not closed due to a connection's idle time.
-func (c *Core) SetMaxConnIdleTime(d time.Duration) {
-	c.config.MaxConnIdleTime = d
-}
-
 // SetMaxConnLifeTime sets the maximum amount of time a connection may be reused.
 //
 // Expired connections may be closed lazily before reuse.
@@ -189,12 +179,11 @@ func (c *Core) SetMaxConnLifeTime(d time.Duration) {
 // String returns the node as string.
 func (node *ConfigNode) String() string {
 	return fmt.Sprintf(
-		`%s@%s:%s,%s,%s,%s,%s,%v,%d-%d-%d-%d#%s`,
+		`%s@%s:%s,%s,%s,%s,%s,%v,%d-%d-%d#%s`,
 		node.User, node.Host, node.Port,
 		node.Name, node.Type, node.Role, node.Charset, node.Debug,
 		node.MaxIdleConnCount,
 		node.MaxOpenConnCount,
-		node.MaxConnIdleTime,
 		node.MaxConnLifeTime,
 		node.LinkInfo,
 	)
