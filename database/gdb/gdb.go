@@ -160,7 +160,6 @@ type DB interface {
 	SetMaxIdleConnCount(n int)          // See Core.SetMaxIdleConnCount.
 	SetMaxOpenConnCount(n int)          // See Core.SetMaxOpenConnCount.
 	SetMaxConnLifeTime(d time.Duration) // See Core.SetMaxConnLifeTime.
-	SetMaxConnIdleTime(d time.Duration) // See Core.SetMaxConnIdleTime
 
 	// ===========================================================================
 	// Utility methods.
@@ -522,13 +521,6 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 			}
 		} else {
 			sqlDb.SetConnMaxLifetime(defaultMaxConnLifeTime)
-		}
-		if c.config.MaxConnIdleTime > 0 {
-			if c.config.MaxConnIdleTime > time.Second {
-				sqlDb.SetConnMaxIdleTime(c.config.MaxConnIdleTime)
-			} else {
-				sqlDb.SetConnMaxIdleTime(c.config.MaxConnIdleTime * time.Second)
-			}
 		}
 		return sqlDb, nil
 	}, 0)
