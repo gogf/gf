@@ -45,7 +45,7 @@ func init() {
 		Weight:           1,
 		MaxIdleConnCount: 10,
 		MaxOpenConnCount: 10,
-		MaxConnLifetime:  600,
+		MaxConnLifeTime:  600,
 	}
 	AddConfigNode(DefaultGroupName, configNode)
 	// Default db.

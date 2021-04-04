@@ -102,13 +102,16 @@ func (d *DriverMysql) Tables(schema ...string) (tables []string, err error) {
 // TableFields retrieves and returns the fields information of specified table of current
 // schema.
 //
+// The parameter `link` is optional, if given nil it automatically retrieves a raw sql connection
+// as its link to proceed necessary sql query.
+//
 // Note that it returns a map containing the field name and its corresponding fields.
 // As a map is unsorted, the TableField struct has a "Index" field marks its sequence in
 // the fields.
 //
 // It's using cache feature to enhance the performance, which is never expired util the
 // process restarts.
-func (d *DriverMysql) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
+func (d *DriverMysql) TableFields(link Link, table string, schema ...string) (fields map[string]*TableField, err error) {
 	charL, charR := d.GetChars()
 	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
@@ -118,40 +121,43 @@ func (d *DriverMysql) TableFields(table string, schema ...string) (fields map[st
 	if len(schema) > 0 && schema[0] != "" {
 		checkSchema = schema[0]
 	}
-	v, _ := internalCache.GetOrSetFunc(
-		fmt.Sprintf(`mysql_table_fields_%s_%s@group:%s`, table, checkSchema, d.GetGroup()),
-		func() (interface{}, error) {
-			var (
-				result Result
-				link   *sql.DB
-			)
+	tableFieldsCacheKey := fmt.Sprintf(
+		`mysql_table_fields_%s_%s@group:%s`,
+		table, checkSchema, d.GetGroup(),
+	)
+	v := tableFieldsMap.GetOrSetFuncLock(tableFieldsCacheKey, func() interface{} {
+		var (
+			result Result
+		)
+		if link == nil {
 			link, err = d.db.GetSlave(checkSchema)
 			if err != nil {
-				return nil, err
+				return nil
 			}
-			result, err = d.db.DoGetAll(
-				link,
-				fmt.Sprintf(`SHOW FULL COLUMNS FROM %s`, d.db.QuoteWord(table)),
-			)
-			if err != nil {
-				return nil, err
+		}
+		result, err = d.db.DoGetAll(
+			link,
+			fmt.Sprintf(`SHOW FULL COLUMNS FROM %s`, d.db.QuoteWord(table)),
+		)
+		if err != nil {
+			return nil
+		}
+		fields = make(map[string]*TableField)
+		for i, m := range result {
+			fields[m["Field"].String()] = &TableField{
+				Index:   i,
+				Name:    m["Field"].String(),
+				Type:    m["Type"].String(),
+				Null:    m["Null"].Bool(),
+				Key:     m["Key"].String(),
+				Default: m["Default"].Val(),
+				Extra:   m["Extra"].String(),
+				Comment: m["Comment"].String(),
 			}
-			fields = make(map[string]*TableField)
-			for i, m := range result {
-				fields[m["Field"].String()] = &TableField{
-					Index:   i,
-					Name:    m["Field"].String(),
-					Type:    m["Type"].String(),
-					Null:    m["Null"].Bool(),
-					Key:     m["Key"].String(),
-					Default: m["Default"].Val(),
-					Extra:   m["Extra"].String(),
-					Comment: m["Comment"].String(),
-				}
-			}
-			return fields, nil
-		}, 0)
-	if err == nil {
+		}
+		return fields
+	})
+	if v != nil {
 		fields = v.(map[string]*TableField)
 	}
 	return

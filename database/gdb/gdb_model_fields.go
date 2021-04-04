@@ -94,7 +94,7 @@ func (m *Model) GetFieldsStr(prefix ...string) string {
 	if len(prefix) > 0 {
 		prefixStr = prefix[0]
 	}
-	tableFields, err := m.db.TableFields(m.tables)
+	tableFields, err := m.TableFields(m.tables)
 	if err != nil {
 		panic(err)
 	}
@@ -131,7 +131,7 @@ func (m *Model) GetFieldsExStr(fields string, prefix ...string) string {
 	if len(prefix) > 0 {
 		prefixStr = prefix[0]
 	}
-	tableFields, err := m.db.TableFields(m.tables)
+	tableFields, err := m.TableFields(m.tables)
 	if err != nil {
 		panic(err)
 	}
@@ -159,7 +159,7 @@ func (m *Model) GetFieldsExStr(fields string, prefix ...string) string {
 
 // HasField determine whether the field exists in the table.
 func (m *Model) HasField(field string) (bool, error) {
-	tableFields, err := m.db.TableFields(m.tables)
+	tableFields, err := m.TableFields(m.tables)
 	if err != nil {
 		return false, err
 	}

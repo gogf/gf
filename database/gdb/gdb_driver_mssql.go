@@ -203,7 +203,9 @@ func (d *DriverMssql) Tables(schema ...string) (tables []string, err error) {
 }
 
 // TableFields retrieves and returns the fields information of specified table of current schema.
-func (d *DriverMssql) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
+//
+// Also see DriverMysql.TableFields.
+func (d *DriverMssql) TableFields(link Link, table string, schema ...string) (fields map[string]*TableField, err error) {
 	charL, charR := d.GetChars()
 	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
@@ -213,18 +215,21 @@ func (d *DriverMssql) TableFields(table string, schema ...string) (fields map[st
 	if len(schema) > 0 && schema[0] != "" {
 		checkSchema = schema[0]
 	}
-	v, _ := internalCache.GetOrSetFunc(
-		fmt.Sprintf(`mssql_table_fields_%s_%s@group:%s`, table, checkSchema, d.GetGroup()),
-		func() (interface{}, error) {
-			var (
-				result Result
-				link   *sql.DB
-			)
+	tableFieldsCacheKey := fmt.Sprintf(
+		`mssql_table_fields_%s_%s@group:%s`,
+		table, checkSchema, d.GetGroup(),
+	)
+	v := tableFieldsMap.GetOrSetFuncLock(tableFieldsCacheKey, func() interface{} {
+		var (
+			result Result
+		)
+		if link == nil {
 			link, err = d.db.GetSlave(checkSchema)
 			if err != nil {
-				return nil, err
+				return nil
 			}
-			structureSql := fmt.Sprintf(`
+		}
+		structureSql := fmt.Sprintf(`
 SELECT 
 	a.name Field,
 	CASE b.name 
@@ -252,29 +257,29 @@ LEFT JOIN sys.extended_properties g ON a.id=g.major_id AND a.colid=g.minor_id
 LEFT JOIN sys.extended_properties f ON d.id=f.major_id AND f.minor_id =0
 WHERE d.name='%s'
 ORDER BY a.id,a.colorder`,
-				strings.ToUpper(table),
-			)
-			structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
-			result, err = d.db.DoGetAll(link, structureSql)
-			if err != nil {
-				return nil, err
+			strings.ToUpper(table),
+		)
+		structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
+		result, err = d.db.DoGetAll(link, structureSql)
+		if err != nil {
+			return nil
+		}
+		fields = make(map[string]*TableField)
+		for i, m := range result {
+			fields[strings.ToLower(m["Field"].String())] = &TableField{
+				Index:   i,
+				Name:    strings.ToLower(m["Field"].String()),
+				Type:    strings.ToLower(m["Type"].String()),
+				Null:    m["Null"].Bool(),
+				Key:     m["Key"].String(),
+				Default: m["Default"].Val(),
+				Extra:   m["Extra"].String(),
+				Comment: m["Comment"].String(),
 			}
-			fields = make(map[string]*TableField)
-			for i, m := range result {
-				fields[strings.ToLower(m["Field"].String())] = &TableField{
-					Index:   i,
-					Name:    strings.ToLower(m["Field"].String()),
-					Type:    strings.ToLower(m["Type"].String()),
-					Null:    m["Null"].Bool(),
-					Key:     m["Key"].String(),
-					Default: m["Default"].Val(),
-					Extra:   m["Extra"].String(),
-					Comment: m["Comment"].String(),
-				}
-			}
-			return fields, nil
-		}, 0)
-	if err == nil {
+		}
+		return fields
+	})
+	if v != nil {
 		fields = v.(map[string]*TableField)
 	}
 	return

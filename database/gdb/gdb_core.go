@@ -113,7 +113,6 @@ func (c *Core) DoQuery(link Link, sql string, args ...interface{}) (rows *sql.Ro
 	if c.GetConfig().QueryTimeout > 0 {
 		ctx, _ = context.WithTimeout(ctx, c.GetConfig().QueryTimeout)
 	}
-
 	mTime1 := gtime.TimestampMilli()
 	rows, err = link.QueryContext(ctx, sql, args...)
 	mTime2 := gtime.TimestampMilli()
@@ -277,7 +276,7 @@ func (c *Core) GetOne(sql string, args ...interface{}) (Record, error) {
 }
 
 // GetArray queries and returns data values as slice from database.
-// Note that if there're multiple columns in the result, it returns just one column values randomly.
+// Note that if there are multiple columns in the result, it returns just one column values randomly.
 func (c *Core) GetArray(sql string, args ...interface{}) ([]Value, error) {
 	all, err := c.db.DoGetAll(nil, sql, args...)
 	if err != nil {
@@ -382,13 +381,13 @@ func (c *Core) Begin() (*TX, error) {
 	if master, err := c.db.Master(); err != nil {
 		return nil, err
 	} else {
-		ctx := c.db.GetCtx()
-		if c.GetConfig().TranTimeout > 0 {
-			var cancelFunc context.CancelFunc
-			ctx, cancelFunc = context.WithTimeout(ctx, c.GetConfig().TranTimeout)
-			defer cancelFunc()
-		}
-		if tx, err := master.BeginTx(ctx, nil); err == nil {
+		//ctx := c.db.GetCtx()
+		//if c.GetConfig().TranTimeout > 0 {
+		//	var cancelFunc context.CancelFunc
+		//	ctx, cancelFunc = context.WithTimeout(ctx, c.GetConfig().TranTimeout)
+		//	defer cancelFunc()
+		//}
+		if tx, err := master.Begin(); err == nil {
 			return &TX{
 				db:     c.db,
 				tx:     tx,

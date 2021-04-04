@@ -111,7 +111,9 @@ func (d *DriverPgsql) Tables(schema ...string) (tables []string, err error) {
 }
 
 // TableFields retrieves and returns the fields information of specified table of current schema.
-func (d *DriverPgsql) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
+//
+// Also see DriverMysql.TableFields.
+func (d *DriverPgsql) TableFields(link Link, table string, schema ...string) (fields map[string]*TableField, err error) {
 	charL, charR := d.GetChars()
 	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
@@ -122,41 +124,43 @@ func (d *DriverPgsql) TableFields(table string, schema ...string) (fields map[st
 	if len(schema) > 0 && schema[0] != "" {
 		checkSchema = schema[0]
 	}
-	v, _ := internalCache.GetOrSetFunc(
-		fmt.Sprintf(`pgsql_table_fields_%s_%s@group:%s`, table, checkSchema, d.GetGroup()),
-		func() (interface{}, error) {
-			var (
-				result Result
-				link   *sql.DB
-			)
-			link, err = d.db.GetSlave(checkSchema)
-			if err != nil {
-				return nil, err
-			}
-			structureSql := fmt.Sprintf(`
+	tableFieldsCacheKey := fmt.Sprintf(
+		`pgsql_table_fields_%s_%s@group:%s`,
+		table, checkSchema, d.GetGroup(),
+	)
+	v := tableFieldsMap.GetOrSetFuncLock(tableFieldsCacheKey, func() interface{} {
+		var (
+			result       Result
+			structureSql = fmt.Sprintf(`
 SELECT a.attname AS field, t.typname AS type FROM pg_class c, pg_attribute a 
 LEFT OUTER JOIN pg_description b ON a.attrelid=b.objoid AND a.attnum = b.objsubid,pg_type t
 WHERE c.relname = '%s' and a.attnum > 0 and a.attrelid = c.oid and a.atttypid = t.oid 
 ORDER BY a.attnum`,
 				strings.ToLower(table),
 			)
-			structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
-			result, err = d.db.DoGetAll(link, structureSql)
+		)
+		structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
+		if link == nil {
+			link, err = d.db.GetSlave(checkSchema)
 			if err != nil {
-				return nil, err
+				return nil
 			}
-
-			fields = make(map[string]*TableField)
-			for i, m := range result {
-				fields[m["field"].String()] = &TableField{
-					Index: i,
-					Name:  m["field"].String(),
-					Type:  m["type"].String(),
-				}
+		}
+		result, err = d.db.DoGetAll(link, structureSql)
+		if err != nil {
+			return nil
+		}
+		fields = make(map[string]*TableField)
+		for i, m := range result {
+			fields[m["field"].String()] = &TableField{
+				Index: i,
+				Name:  m["field"].String(),
+				Type:  m["type"].String(),
 			}
-			return fields, nil
-		}, 0)
-	if err == nil {
+		}
+		return fields
+	})
+	if v != nil {
 		fields = v.(map[string]*TableField)
 	}
 	return
