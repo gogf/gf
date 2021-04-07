@@ -268,7 +268,7 @@ func NewConfig() ServerConfig {
 		FormParsingMemory:   1024 * 1024,     // 1MB
 		Rewrites:            make(map[string]string),
 		Graceful:            false,
-		GracefulTimeout:     2,            	  // seconds
+		GracefulTimeout:     2, // seconds
 	}
 }
 
