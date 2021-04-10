@@ -218,6 +218,9 @@ type ServerConfig struct {
 
 	// Graceful enables graceful reload feature for all servers of the process.
 	Graceful bool `json:"graceful"`
+
+	// GracefulTimeout set the maximum survival time (seconds) of the parent process.
+	GracefulTimeout uint8 `json:"gracefulTimeout"`
 }
 
 // Deprecated. Use NewConfig instead.
@@ -265,6 +268,7 @@ func NewConfig() ServerConfig {
 		FormParsingMemory:   1024 * 1024,     // 1MB
 		Rewrites:            make(map[string]string),
 		Graceful:            false,
+		GracefulTimeout:     2, // seconds
 	}
 }
 
