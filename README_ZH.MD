@@ -13,14 +13,16 @@
 > 如果您初识`Go`语言，您可以将`GoFrame`类似于`PHP`中的`Laravel`, `Java`中的`SpringBoot`或者`Python`中的`Django`。
 
 # 特点
-* 模块化、松耦合设计；
-* 模块丰富、开箱即用；
-* 简便易用、易于维护；
-* 高代码质量、高单元测试覆盖率；
-* 社区活跃，大牛谦逊低调脾气好；
-* 详尽的开发文档及示例；
-* 完善的本地中文化支持；
-* 设计为团队及企业使用；
+*   模块化、松耦合
+*   模块丰富、开箱即用
+*   简洁易用、快速接入
+*   文档详尽、易于维护
+*   自顶向下、体系化设计
+*   统一框架、统一组件、降低选择成本
+*   开发规范、设计模式、代码分层模型
+*   强大便捷的开发工具链
+*   完善的本地中文化支持
+*   设计为团队及企业使用
 
 # 地址
 - **主库**：https://github.com/gogf/gf 
@@ -68,9 +70,15 @@ golang版本 >= 1.11
 接口文档：https://godoc.org/github.com/gogf/gf
 
 # 帮助
-- QQ交流群：[116707870](//shang.qq.com/wpa/qunwpa?idkey=195f91eceeb5d7fa76009b7cd5a4641f70bf4897b7f5a520635eb26ff17adfe7)
-- WX交流群：微信添加`389961817`备注`GF`
-- 主库ISSUE：https://github.com/gogf/gf/issues
+*   QQ交流群：扫描或群号搜索添加
+
+    <table class="confluenceTable"><colgroup><col><col></colgroup><tbody><tr><th style="text-align: center;" class="confluenceTh"><div class="content-wrapper"><p>GoFrame实战1群(满)</p></div></th><th style="text-align: center;" class="confluenceTh">GoFrame实战2群</th></tr><tr><td class="confluenceTd"><div class="content-wrapper"><p><span class="confluence-embedded-file-wrapper image-center-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-thumbnail image-center" height="150" src="https://gfcdn.johng.cn/download/thumbnails/1114119/1618482270275.png?version=1&amp;modificationDate=1618482279553&amp;api=v2" data-image-src="https://gfcdn.johng.cn/download/attachments/1114119/1618482270275.png?version=1&amp;modificationDate=1618482279553&amp;api=v2" data-unresolved-comment-count="0" data-linked-resource-id="7296919" data-linked-resource-version="1" data-linked-resource-type="attachment" data-linked-resource-default-alias="1618482270275.png" data-base-url="https://goframe.org" data-linked-resource-content-type="image/png" data-linked-resource-container-id="1114119" data-linked-resource-container-version="68"></span></p><p style="text-align: center;">116707870</p></div></td><td class="confluenceTd"><div class="content-wrapper"><p><span class="confluence-embedded-file-wrapper image-center-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-thumbnail image-center" height="150" src="https://gfcdn.johng.cn/download/thumbnails/1114119/1618482221516.png?version=1&amp;modificationDate=1618482239045&amp;api=v2" data-image-src="https://gfcdn.johng.cn/download/attachments/1114119/1618482221516.png?version=1&amp;modificationDate=1618482239045&amp;api=v2" data-unresolved-comment-count="0" data-linked-resource-id="7296918" data-linked-resource-version="1" data-linked-resource-type="attachment" data-linked-resource-default-alias="1618482221516.png" data-base-url="https://goframe.org" data-linked-resource-content-type="image/png" data-linked-resource-container-id="1114119" data-linked-resource-container-version="68"></span></p><p style="text-align: center;">74341849</p></div></td></tr></tbody></table>
+
+*   微信交流群：扫描或微信添加`389961817`备注`GF`加群
+
+    <table class="confluenceTable"><colgroup><col></colgroup><tbody><tr><th style="text-align: center;" class="confluenceTh"><div class="content-wrapper"><p>添加后拉群</p></div></th></tr><tr><td class="confluenceTd"><div class="content-wrapper"><p><span class="confluence-embedded-file-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-thumbnail" width="150" src="https://gfcdn.johng.cn/download/thumbnails/1114119/image2021-4-15_19-23-42.png?version=1&amp;modificationDate=1618485986477&amp;api=v2" data-image-src="https://gfcdn.johng.cn/download/attachments/1114119/image2021-4-15_19-23-42.png?version=1&amp;modificationDate=1618485986477&amp;api=v2" data-unresolved-comment-count="0" data-linked-resource-id="7296922" data-linked-resource-version="1" data-linked-resource-type="attachment" data-linked-resource-default-alias="image2021-4-15_19-23-42.png" data-base-url="https://goframe.org" data-linked-resource-content-type="image/png" data-linked-resource-container-id="1114119" data-linked-resource-container-version="68"></span></p></div></td></tr></tbody></table>
+
+*   主库ISSUE：[https://github.com/gogf/gf/issues](https://github.com/gogf/gf/issues)
 
 > 建议通过阅读`GoFrame`的源码以及API文档深度学习`GoFrame`，了解更多的精妙设计。
 
