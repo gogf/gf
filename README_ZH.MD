@@ -65,22 +65,10 @@ golang版本 >= 1.11
 
 # 文档
 
-开发文档：https://goframe.org
+官方站点：https://goframe.org
 
 接口文档：https://godoc.org/github.com/gogf/gf
 
-# 帮助
-*   QQ交流群：扫描或群号搜索添加
-
-    <table class="confluenceTable"><colgroup><col><col></colgroup><tbody><tr><th style="text-align: center;" class="confluenceTh"><div class="content-wrapper"><p>GoFrame实战1群(满)</p></div></th><th style="text-align: center;" class="confluenceTh">GoFrame实战2群</th></tr><tr><td class="confluenceTd"><div class="content-wrapper"><p><span class="confluence-embedded-file-wrapper image-center-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-thumbnail image-center" height="150" src="https://gfcdn.johng.cn/download/thumbnails/1114119/1618482270275.png?version=1&amp;modificationDate=1618482279553&amp;api=v2" data-image-src="https://gfcdn.johng.cn/download/attachments/1114119/1618482270275.png?version=1&amp;modificationDate=1618482279553&amp;api=v2" data-unresolved-comment-count="0" data-linked-resource-id="7296919" data-linked-resource-version="1" data-linked-resource-type="attachment" data-linked-resource-default-alias="1618482270275.png" data-base-url="https://goframe.org" data-linked-resource-content-type="image/png" data-linked-resource-container-id="1114119" data-linked-resource-container-version="68"></span></p><p style="text-align: center;">116707870</p></div></td><td class="confluenceTd"><div class="content-wrapper"><p><span class="confluence-embedded-file-wrapper image-center-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-thumbnail image-center" height="150" src="https://gfcdn.johng.cn/download/thumbnails/1114119/1618482221516.png?version=1&amp;modificationDate=1618482239045&amp;api=v2" data-image-src="https://gfcdn.johng.cn/download/attachments/1114119/1618482221516.png?version=1&amp;modificationDate=1618482239045&amp;api=v2" data-unresolved-comment-count="0" data-linked-resource-id="7296918" data-linked-resource-version="1" data-linked-resource-type="attachment" data-linked-resource-default-alias="1618482221516.png" data-base-url="https://goframe.org" data-linked-resource-content-type="image/png" data-linked-resource-container-id="1114119" data-linked-resource-container-version="68"></span></p><p style="text-align: center;">74341849</p></div></td></tr></tbody></table>
-
-*   微信交流群：扫描或微信添加`389961817`备注`GF`加群
-
-    <table class="confluenceTable"><colgroup><col></colgroup><tbody><tr><th style="text-align: center;" class="confluenceTh"><div class="content-wrapper"><p>添加后拉群</p></div></th></tr><tr><td class="confluenceTd"><div class="content-wrapper"><p><span class="confluence-embedded-file-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-thumbnail" width="150" src="https://gfcdn.johng.cn/download/thumbnails/1114119/image2021-4-15_19-23-42.png?version=1&amp;modificationDate=1618485986477&amp;api=v2" data-image-src="https://gfcdn.johng.cn/download/attachments/1114119/image2021-4-15_19-23-42.png?version=1&amp;modificationDate=1618485986477&amp;api=v2" data-unresolved-comment-count="0" data-linked-resource-id="7296922" data-linked-resource-version="1" data-linked-resource-type="attachment" data-linked-resource-default-alias="image2021-4-15_19-23-42.png" data-base-url="https://goframe.org" data-linked-resource-content-type="image/png" data-linked-resource-container-id="1114119" data-linked-resource-container-version="68"></span></p></div></td></tr></tbody></table>
-
-*   主库ISSUE：[https://github.com/gogf/gf/issues](https://github.com/gogf/gf/issues)
-
-> 建议通过阅读`GoFrame`的源码以及API文档深度学习`GoFrame`，了解更多的精妙设计。
 
 # 协议
 
