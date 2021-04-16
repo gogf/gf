@@ -65,9 +65,9 @@ golang版本 >= 1.11
 
 # 文档
 
-官方站点：https://goframe.org
+官方站点：[https://goframe.org](https://goframe.org/display/gf)
 
-接口文档：https://godoc.org/github.com/gogf/gf
+接口文档：[https://pkg.go.dev/github.com/gogf/gf](https://pkg.go.dev/github.com/gogf/gf)
 
 
 # 协议
