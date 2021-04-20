@@ -8,14 +8,15 @@ package gres
 
 import (
 	"archive/zip"
-	"github.com/gogf/gf/internal/fileinfo"
-	"github.com/gogf/gf/internal/intlog"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/text/gregex"
 	"io"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/gogf/gf/internal/fileinfo"
+	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/os/gfile"
+	"github.com/gogf/gf/text/gregex"
 )
 
 // ZipPathWriter compresses <paths> to <writer> using zip compressing algorithm.
@@ -68,12 +69,19 @@ func doZipPathWriter(path string, exclude string, zipWriter *zip.Writer, prefix 
 		headerPrefix = gfile.Basename(path)
 	}
 	headerPrefix = strings.Replace(headerPrefix, "//", "/", -1)
+	pathlen := len(path)
 	for _, file := range files {
 		if exclude == file {
 			intlog.Printf(`exclude file path: %s`, file)
 			continue
 		}
-		err = zipFile(file, headerPrefix+gfile.Dir(file[len(path):]), zipWriter)
+
+		fp := file[pathlen:]
+		if fp != "" {
+			fp = gfile.Dir(fp)
+		}
+
+		err = zipFile(file, headerPrefix+fp, zipWriter)
 		if err != nil {
 			return err
 		}
