@@ -47,13 +47,11 @@ func (v *Validator) doCheck(key string, value interface{}, rules string, message
 	// It converts value to string and then does the validation.
 	var (
 		// Do not trim it as the space is also part of the value.
-		data          = make(map[string]string)
+		data          = make(map[string]interface{})
 		errorMsgArray = make(map[string]string)
 	)
 	if len(params) > 0 {
-		for k, v := range gconv.Map(params[0]) {
-			data[k] = gconv.String(v)
-		}
+		data = gconv.Map(params[0])
 	}
 	// Custom error messages handling.
 	var (
@@ -150,7 +148,7 @@ func (v *Validator) doCheckBuildInRules(
 	ruleKey string,
 	rulePattern string,
 	ruleItems []string,
-	dataMap map[string]string,
+	dataMap map[string]interface{},
 	customMsgMap map[string]string,
 ) (match bool, err error) {
 	valueStr := gconv.String(value)
@@ -235,7 +233,7 @@ func (v *Validator) doCheckBuildInRules(
 	// Values of two fields should be equal as string.
 	case "same":
 		if v, ok := dataMap[rulePattern]; ok {
-			if strings.Compare(valueStr, v) == 0 {
+			if strings.Compare(valueStr, gconv.String(v)) == 0 {
 				match = true
 			}
 		}
@@ -250,7 +248,7 @@ func (v *Validator) doCheckBuildInRules(
 	case "different":
 		match = true
 		if v, ok := dataMap[rulePattern]; ok {
-			if strings.Compare(valueStr, v) == 0 {
+			if strings.Compare(valueStr, gconv.String(v)) == 0 {
 				match = false
 			}
 		}

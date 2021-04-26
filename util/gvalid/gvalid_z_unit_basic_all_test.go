@@ -88,6 +88,72 @@ func Test_RequiredWith(t *testing.T) {
 		t.AssertNE(err2, nil)
 		t.AssertNE(err3, nil)
 	})
+	// time.Time
+	gtest.C(t, func(t *gtest.T) {
+		rule := "required-with:id,time"
+		val1 := ""
+		params1 := g.Map{
+			"age": 18,
+		}
+		params2 := g.Map{
+			"id": 100,
+		}
+		params3 := g.Map{
+			"time": time.Time{},
+		}
+		err1 := gvalid.Check(val1, rule, nil, params1)
+		err2 := gvalid.Check(val1, rule, nil, params2)
+		err3 := gvalid.Check(val1, rule, nil, params3)
+		t.Assert(err1, nil)
+		t.AssertNE(err2, nil)
+		t.Assert(err3, nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		rule := "required-with:id,time"
+		val1 := ""
+		params1 := g.Map{
+			"age": 18,
+		}
+		params2 := g.Map{
+			"id": 100,
+		}
+		params3 := g.Map{
+			"time": time.Now(),
+		}
+		err1 := gvalid.Check(val1, rule, nil, params1)
+		err2 := gvalid.Check(val1, rule, nil, params2)
+		err3 := gvalid.Check(val1, rule, nil, params3)
+		t.Assert(err1, nil)
+		t.AssertNE(err2, nil)
+		t.AssertNE(err3, nil)
+	})
+	// gtime.Time
+	gtest.C(t, func(t *gtest.T) {
+		type UserApiSearch struct {
+			Uid       int64       `json:"uid"`
+			Nickname  string      `json:"nickname" v:"required-with:Uid"`
+			StartTime *gtime.Time `json:"start_time" v:"required-with:EndTime"`
+			EndTime   *gtime.Time `json:"end_time" v:"required-with:StartTime"`
+		}
+		data := UserApiSearch{
+			StartTime: nil,
+			EndTime:   nil,
+		}
+		t.Assert(gvalid.CheckStruct(data, nil), nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type UserApiSearch struct {
+			Uid       int64       `json:"uid"`
+			Nickname  string      `json:"nickname" v:"required-with:Uid"`
+			StartTime *gtime.Time `json:"start_time" v:"required-with:EndTime"`
+			EndTime   *gtime.Time `json:"end_time" v:"required-with:StartTime"`
+		}
+		data := UserApiSearch{
+			StartTime: nil,
+			EndTime:   gtime.Now(),
+		}
+		t.AssertNE(gvalid.CheckStruct(data, nil), nil)
+	})
 }
 
 func Test_RequiredWithAll(t *testing.T) {
