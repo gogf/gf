@@ -220,6 +220,15 @@ func (t *Time) String() string {
 	return t.Format("Y-m-d H:i:s")
 }
 
+// IsZero reports whether t represents the zero time instant,
+// January 1, year 1, 00:00:00 UTC.
+func (t *Time) IsZero() bool {
+	if t == nil {
+		return true
+	}
+	return t.Time.IsZero()
+}
+
 // Clone returns a new Time object which is a clone of current time object.
 func (t *Time) Clone() *Time {
 	return New(t.Time)

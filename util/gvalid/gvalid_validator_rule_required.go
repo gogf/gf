@@ -7,6 +7,7 @@
 package gvalid
 
 import (
+	"github.com/gogf/gf/internal/empty"
 	"github.com/gogf/gf/util/gconv"
 	"reflect"
 	"strings"
@@ -14,7 +15,7 @@ import (
 
 // checkRequired checks `value` using required rules.
 // It also supports require checks for `value` of type: slice, map.
-func (v *Validator) checkRequired(value interface{}, ruleKey, rulePattern string, params map[string]string) bool {
+func (v *Validator) checkRequired(value interface{}, ruleKey, rulePattern string, dataMap map[string]interface{}) bool {
 	required := false
 	switch ruleKey {
 	// Required.
@@ -31,8 +32,8 @@ func (v *Validator) checkRequired(value interface{}, ruleKey, rulePattern string
 			for i := 0; i < len(array); {
 				tk := array[i]
 				tv := array[i+1]
-				if v, ok := params[tk]; ok {
-					if strings.Compare(tv, v) == 0 {
+				if v, ok := dataMap[tk]; ok {
+					if strings.Compare(tv, gconv.String(v)) == 0 {
 						required = true
 						break
 					}
@@ -51,8 +52,8 @@ func (v *Validator) checkRequired(value interface{}, ruleKey, rulePattern string
 			for i := 0; i < len(array); {
 				tk := array[i]
 				tv := array[i+1]
-				if v, ok := params[tk]; ok {
-					if strings.Compare(tv, v) == 0 {
+				if v, ok := dataMap[tk]; ok {
+					if strings.Compare(tv, gconv.String(v)) == 0 {
 						required = false
 						break
 					}
@@ -67,7 +68,7 @@ func (v *Validator) checkRequired(value interface{}, ruleKey, rulePattern string
 		required = false
 		array := strings.Split(rulePattern, ",")
 		for i := 0; i < len(array); i++ {
-			if params[array[i]] != "" {
+			if !empty.IsEmpty(dataMap[array[i]]) {
 				required = true
 				break
 			}
@@ -79,7 +80,7 @@ func (v *Validator) checkRequired(value interface{}, ruleKey, rulePattern string
 		required = true
 		array := strings.Split(rulePattern, ",")
 		for i := 0; i < len(array); i++ {
-			if params[array[i]] == "" {
+			if empty.IsEmpty(dataMap[array[i]]) {
 				required = false
 				break
 			}
@@ -91,7 +92,7 @@ func (v *Validator) checkRequired(value interface{}, ruleKey, rulePattern string
 		required = false
 		array := strings.Split(rulePattern, ",")
 		for i := 0; i < len(array); i++ {
-			if params[array[i]] == "" {
+			if empty.IsEmpty(dataMap[array[i]]) {
 				required = true
 				break
 			}
@@ -103,7 +104,7 @@ func (v *Validator) checkRequired(value interface{}, ruleKey, rulePattern string
 		required = true
 		array := strings.Split(rulePattern, ",")
 		for i := 0; i < len(array); i++ {
-			if params[array[i]] != "" {
+			if !empty.IsEmpty(dataMap[array[i]]) {
 				required = false
 				break
 			}
