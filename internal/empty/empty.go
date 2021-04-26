@@ -9,6 +9,7 @@ package empty
 
 import (
 	"reflect"
+	"time"
 )
 
 // apiString is used for type assert api for String().
@@ -24,6 +25,11 @@ type apiInterfaces interface {
 // apiMapStrAny is the interface support for converting struct parameter to map.
 type apiMapStrAny interface {
 	MapStrAny() map[string]interface{}
+}
+
+type apiTime interface {
+	Date() (year int, month time.Month, day int)
+	IsZero() bool
 }
 
 // IsEmpty checks whether given `value` empty.
@@ -80,6 +86,12 @@ func IsEmpty(value interface{}) bool {
 		return len(value) == 0
 	default:
 		// Common interfaces checks.
+		if f, ok := value.(apiTime); ok {
+			if f == nil {
+				return true
+			}
+			return f.IsZero()
+		}
 		if f, ok := value.(apiString); ok {
 			if f == nil {
 				return true
