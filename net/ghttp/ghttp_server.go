@@ -263,12 +263,12 @@ func (s *Server) GetRouterArray() []RouterItem {
 			if len(item.handler.middleware) > 0 {
 				for _, v := range item.handler.middleware {
 					if item.Middleware != "" {
-						item.Middleware += ","
+						item.Middleware += "\n"
 					}
 					item.Middleware += gdebug.FuncName(v)
 				}
 			}
-			// If the domain does not exist in the dump map, it create the map.
+			// If the domain does not exist in the dump map, it creates the map.
 			// The value of the map is a custom sorted array.
 			if _, ok := m[item.Domain]; !ok {
 				// Sort in ASC order.
