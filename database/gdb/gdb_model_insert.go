@@ -109,6 +109,18 @@ func (m *Model) Insert(data ...interface{}) (result sql.Result, err error) {
 	return m.doInsertWithOption(insertOptionDefault)
 }
 
+// InsertAndGetId performs action Insert and returns the last insert id that automatically generated.
+func (m *Model) InsertAndGetId(data ...interface{}) (lastInsertId int64, err error) {
+	if len(data) > 0 {
+		return m.Data(data...).InsertAndGetId()
+	}
+	result, err := m.doInsertWithOption(insertOptionDefault)
+	if err != nil {
+		return 0, err
+	}
+	return result.LastInsertId()
+}
+
 // InsertIgnore does "INSERT IGNORE INTO ..." statement for the model.
 // The optional parameter `data` is the same as the parameter of Model.Data function,
 // see Model.Data.

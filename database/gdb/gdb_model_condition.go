@@ -7,6 +7,7 @@
 package gdb
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -58,7 +59,125 @@ func (m *Model) WherePri(where interface{}, args ...interface{}) *Model {
 	return m.Where(newWhere[0], newWhere[1:]...)
 }
 
+// WhereBetween builds `xxx BETWEEN x AND y` statement.
+func (m *Model) WhereBetween(column string, min, max interface{}) *Model {
+	return m.Where(fmt.Sprintf(`%s BETWEEN ? AND ?`, m.db.QuoteWord(column)), min, max)
+}
+
+// WhereLike builds `xxx LIKE x` statement.
+func (m *Model) WhereLike(column string, like interface{}) *Model {
+	return m.Where(fmt.Sprintf(`%s LIKE ?`, m.db.QuoteWord(column)), like)
+}
+
+// WhereIn builds `xxx IN (x)` statement.
+func (m *Model) WhereIn(column string, in interface{}) *Model {
+	return m.Where(fmt.Sprintf(`%s IN (?)`, m.db.QuoteWord(column)), in)
+}
+
+// WhereNull builds `xxx IS NULL` statement.
+func (m *Model) WhereNull(columns ...string) *Model {
+	model := m
+	for _, column := range columns {
+		model = m.Where(fmt.Sprintf(`%s IS NULL`, m.db.QuoteWord(column)))
+	}
+	return model
+}
+
+// WhereNotBetween builds `xxx NOT BETWEEN x AND y` statement.
+func (m *Model) WhereNotBetween(column string, min, max interface{}) *Model {
+	return m.Where(fmt.Sprintf(`%s NOT BETWEEN ? AND ?`, m.db.QuoteWord(column)), min, max)
+}
+
+// WhereNotLike builds `xxx NOT LIKE x` statement.
+func (m *Model) WhereNotLike(column string, like interface{}) *Model {
+	return m.Where(fmt.Sprintf(`%s NOT LIKE ?`, m.db.QuoteWord(column)), like)
+}
+
+// WhereNotIn builds `xxx NOT IN (x)` statement.
+func (m *Model) WhereNotIn(column string, in interface{}) *Model {
+	return m.Where(fmt.Sprintf(`%s NOT IN (?)`, m.db.QuoteWord(column)), in)
+}
+
+// WhereNotNull builds `xxx IS NOT NULL` statement.
+func (m *Model) WhereNotNull(columns ...string) *Model {
+	model := m
+	for _, column := range columns {
+		model = m.Where(fmt.Sprintf(`%s IS NOT NULL`, m.db.QuoteWord(column)))
+	}
+	return model
+}
+
+// WhereOr adds "OR" condition to the where statement.
+func (m *Model) WhereOr(where interface{}, args ...interface{}) *Model {
+	model := m.getModel()
+	if model.whereHolder == nil {
+		model.whereHolder = make([]*whereHolder, 0)
+	}
+	model.whereHolder = append(model.whereHolder, &whereHolder{
+		operator: whereHolderOr,
+		where:    where,
+		args:     args,
+	})
+	return model
+}
+
+// WhereOrBetween builds `xxx BETWEEN x AND y` statement in `OR` conditions.
+func (m *Model) WhereOrBetween(column string, min, max interface{}) *Model {
+	return m.WhereOr(fmt.Sprintf(`%s BETWEEN ? AND ?`, m.db.QuoteWord(column)), min, max)
+}
+
+// WhereOrLike builds `xxx LIKE x` statement in `OR` conditions.
+func (m *Model) WhereOrLike(column string, like interface{}) *Model {
+	return m.WhereOr(fmt.Sprintf(`%s LIKE ?`, m.db.QuoteWord(column)), like)
+}
+
+// WhereOrIn builds `xxx IN (x)` statement in `OR` conditions.
+func (m *Model) WhereOrIn(column string, in interface{}) *Model {
+	return m.WhereOr(fmt.Sprintf(`%s IN (?)`, m.db.QuoteWord(column)), in)
+}
+
+// WhereOrNull builds `xxx IS NULL` statement in `OR` conditions.
+func (m *Model) WhereOrNull(columns ...string) *Model {
+	model := m
+	for _, column := range columns {
+		model = m.WhereOr(fmt.Sprintf(`%s IS NULL`, m.db.QuoteWord(column)))
+	}
+	return model
+}
+
+// WhereOrNotBetween builds `xxx NOT BETWEEN x AND y` statement in `OR` conditions.
+func (m *Model) WhereOrNotBetween(column string, min, max interface{}) *Model {
+	return m.WhereOr(fmt.Sprintf(`%s NOT BETWEEN ? AND ?`, m.db.QuoteWord(column)), min, max)
+}
+
+// WhereOrNotLike builds `xxx NOT LIKE x` statement in `OR` conditions.
+func (m *Model) WhereOrNotLike(column string, like interface{}) *Model {
+	return m.WhereOr(fmt.Sprintf(`%s NOT LIKE ?`, m.db.QuoteWord(column)), like)
+}
+
+// WhereOrNotIn builds `xxx NOT IN (x)` statement.
+func (m *Model) WhereOrNotIn(column string, in interface{}) *Model {
+	return m.WhereOr(fmt.Sprintf(`%s NOT IN (?)`, m.db.QuoteWord(column)), in)
+}
+
+// WhereOrNotNull builds `xxx IS NOT NULL` statement in `OR` conditions.
+func (m *Model) WhereOrNotNull(columns ...string) *Model {
+	model := m
+	for _, column := range columns {
+		model = m.WhereOr(fmt.Sprintf(`%s IS NOT NULL`, m.db.QuoteWord(column)))
+	}
+	return model
+}
+
+// Group sets the "GROUP BY" statement for the model.
+func (m *Model) Group(groupBy string) *Model {
+	model := m.getModel()
+	model.groupBy = m.db.QuoteString(groupBy)
+	return model
+}
+
 // And adds "AND" condition to the where statement.
+// Deprecated, use Where instead.
 func (m *Model) And(where interface{}, args ...interface{}) *Model {
 	model := m.getModel()
 	if model.whereHolder == nil {
@@ -73,24 +192,9 @@ func (m *Model) And(where interface{}, args ...interface{}) *Model {
 }
 
 // Or adds "OR" condition to the where statement.
+// Deprecated, use WhereOr instead.
 func (m *Model) Or(where interface{}, args ...interface{}) *Model {
-	model := m.getModel()
-	if model.whereHolder == nil {
-		model.whereHolder = make([]*whereHolder, 0)
-	}
-	model.whereHolder = append(model.whereHolder, &whereHolder{
-		operator: whereHolderOr,
-		where:    where,
-		args:     args,
-	})
-	return model
-}
-
-// Group sets the "GROUP BY" statement for the model.
-func (m *Model) Group(groupBy string) *Model {
-	model := m.getModel()
-	model.groupBy = m.db.QuoteString(groupBy)
-	return model
+	return m.WhereOr(where, args...)
 }
 
 // GroupBy is alias of Model.Group.
@@ -102,8 +206,38 @@ func (m *Model) GroupBy(groupBy string) *Model {
 
 // Order sets the "ORDER BY" statement for the model.
 func (m *Model) Order(orderBy ...string) *Model {
+	if len(orderBy) == 0 {
+		return m
+	}
 	model := m.getModel()
 	model.orderBy = m.db.QuoteString(strings.Join(orderBy, " "))
+	return model
+}
+
+// OrderAsc sets the "ORDER BY xxx ASC" statement for the model.
+func (m *Model) OrderAsc(column string) *Model {
+	if len(column) == 0 {
+		return m
+	}
+	model := m.getModel()
+	model.orderBy = m.db.QuoteWord(column) + " ASC"
+	return model
+}
+
+// OrderDesc sets the "ORDER BY xxx DESC" statement for the model.
+func (m *Model) OrderDesc(column string) *Model {
+	if len(column) == 0 {
+		return m
+	}
+	model := m.getModel()
+	model.orderBy = m.db.QuoteWord(column) + " DESC"
+	return model
+}
+
+// OrderRandom sets the "ORDER BY RANDOM()" statement for the model.
+func (m *Model) OrderRandom(orderBy ...string) *Model {
+	model := m.getModel()
+	model.orderBy = "RAND()"
 	return model
 }
 
@@ -135,6 +269,13 @@ func (m *Model) Limit(limit ...int) *Model {
 func (m *Model) Offset(offset int) *Model {
 	model := m.getModel()
 	model.offset = offset
+	return model
+}
+
+// Distinct forces the query to only return distinct results.
+func (m *Model) Distinct() *Model {
+	model := m.getModel()
+	model.distinct = "DISTINCT "
 	return model
 }
 

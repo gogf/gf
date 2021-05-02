@@ -2778,6 +2778,11 @@ func Test_Model_Distinct(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(len(all), 2)
 	})
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Where("id > 1").Distinct().Count()
+		t.AssertNil(err)
+		t.Assert(count, 9)
+	})
 }
 
 func Test_Model_Min_Max(t *testing.T) {
@@ -3319,5 +3324,294 @@ func Test_Model_Fields_AutoFilterInJoinStatement(t *testing.T) {
 		t.Assert(len(one), 2)
 		t.Assert(one["name"].String(), "john")
 		t.Assert(one["number"].String(), "n")
+	})
+}
+
+func Test_Model_WhereIn(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).WhereIn("id", g.Slice{1, 2, 3, 4}).WhereIn("id", g.Slice{3, 4, 5}).OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(result), 2)
+		t.Assert(result[0]["id"], 3)
+		t.Assert(result[1]["id"], 4)
+	})
+}
+
+func Test_Model_WhereNotIn(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).WhereNotIn("id", g.Slice{1, 2, 3, 4}).WhereNotIn("id", g.Slice{3, 4, 5}).OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(result), 5)
+		t.Assert(result[0]["id"], 6)
+		t.Assert(result[1]["id"], 7)
+	})
+}
+
+func Test_Model_WhereOrIn(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).WhereOrIn("id", g.Slice{1, 2, 3, 4}).WhereOrIn("id", g.Slice{3, 4, 5}).OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(result), 5)
+		t.Assert(result[0]["id"], 1)
+		t.Assert(result[4]["id"], 5)
+	})
+}
+
+func Test_Model_WhereOrNotIn(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).WhereOrNotIn("id", g.Slice{1, 2, 3, 4}).WhereOrNotIn("id", g.Slice{3, 4, 5}).OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(result), 8)
+		t.Assert(result[0]["id"], 1)
+		t.Assert(result[4]["id"], 7)
+	})
+}
+
+func Test_Model_WhereBetween(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).WhereBetween("id", 1, 4).WhereBetween("id", 3, 5).OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(result), 2)
+		t.Assert(result[0]["id"], 3)
+		t.Assert(result[1]["id"], 4)
+	})
+}
+
+func Test_Model_WhereNotBetween(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).WhereNotBetween("id", 2, 8).WhereNotBetween("id", 3, 100).OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(result), 1)
+		t.Assert(result[0]["id"], 1)
+	})
+}
+
+func Test_Model_WhereOrBetween(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).WhereOrBetween("id", 1, 4).WhereOrBetween("id", 3, 5).OrderDesc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(result), 5)
+		t.Assert(result[0]["id"], 5)
+		t.Assert(result[4]["id"], 1)
+	})
+}
+
+func Test_Model_WhereOrNotBetween(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	//db.SetDebug(true)
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).WhereOrNotBetween("id", 1, 4).WhereOrNotBetween("id", 3, 5).OrderDesc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(result), 8)
+		t.Assert(result[0]["id"], 10)
+		t.Assert(result[4]["id"], 6)
+	})
+}
+
+func Test_Model_WhereLike(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).WhereLike("nickname", "name%").OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(result), TableSize)
+		t.Assert(result[0]["id"], 1)
+		t.Assert(result[TableSize-1]["id"], TableSize)
+	})
+}
+
+func Test_Model_WhereNotLike(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).WhereNotLike("nickname", "name%").OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(result), 0)
+	})
+}
+
+func Test_Model_WhereOrLike(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).WhereOrLike("nickname", "namexxx%").WhereOrLike("nickname", "name%").OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(result), TableSize)
+		t.Assert(result[0]["id"], 1)
+		t.Assert(result[TableSize-1]["id"], TableSize)
+	})
+}
+
+func Test_Model_WhereOrNotLike(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).WhereOrNotLike("nickname", "namexxx%").WhereOrNotLike("nickname", "name%").OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(result), TableSize)
+		t.Assert(result[0]["id"], 1)
+		t.Assert(result[TableSize-1]["id"], TableSize)
+	})
+}
+
+func Test_Model_WhereNull(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).WhereNull("nickname").WhereNull("passport").OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(result), 0)
+	})
+}
+
+func Test_Model_WhereNotNull(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).WhereNotNull("nickname").WhereNotNull("passport").OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(result), TableSize)
+		t.Assert(result[0]["id"], 1)
+		t.Assert(result[TableSize-1]["id"], TableSize)
+	})
+}
+
+func Test_Model_WhereOrNull(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).WhereOrNull("nickname").WhereOrNull("passport").OrderAsc("id").OrderRandom().All()
+		t.AssertNil(err)
+		t.Assert(len(result), 0)
+	})
+}
+
+func Test_Model_WhereOrNotNull(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).WhereOrNotNull("nickname").WhereOrNotNull("passport").OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(result), TableSize)
+		t.Assert(result[0]["id"], 1)
+		t.Assert(result[TableSize-1]["id"], TableSize)
+	})
+}
+
+func Test_Model_Min_Max_Avg_Sum(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).Min("id")
+		t.AssertNil(err)
+		t.Assert(result, 1)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).Max("id")
+		t.AssertNil(err)
+		t.Assert(result, TableSize)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).Avg("id")
+		t.AssertNil(err)
+		t.Assert(result, 5.5)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).Sum("id")
+		t.AssertNil(err)
+		t.Assert(result, 55)
+	})
+}
+
+func Test_Model_CountColumn(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).CountColumn("id")
+		t.AssertNil(err)
+		t.Assert(result, TableSize)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).WhereIn("id", g.Slice{1, 2, 3}).CountColumn("id")
+		t.AssertNil(err)
+		t.Assert(result, 3)
+	})
+}
+
+func Test_Model_InsertAndGetId(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		id, err := db.Model(table).Data(g.Map{
+			"id":       1,
+			"passport": "user_1",
+			"password": "pass_1",
+			"nickname": "name_1",
+		}).InsertAndGetId()
+		t.AssertNil(err)
+		t.Assert(id, 1)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		id, err := db.Model(table).Data(g.Map{
+			"passport": "user_2",
+			"password": "pass_2",
+			"nickname": "name_2",
+		}).InsertAndGetId()
+		t.AssertNil(err)
+		t.Assert(id, 2)
+	})
+}
+
+func Test_Model_Increment_Decrement(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).Where("id", 1).Increment("id", 100)
+		t.AssertNil(err)
+		rows, _ := result.RowsAffected()
+		t.Assert(rows, 1)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).Where("id", 101).Decrement("id", 10)
+		t.AssertNil(err)
+		rows, _ := result.RowsAffected()
+		t.Assert(rows, 1)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Where("id", 91).Count()
+		t.AssertNil(err)
+		t.Assert(count, 1)
 	})
 }

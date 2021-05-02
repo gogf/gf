@@ -812,13 +812,19 @@ func (c *Core) DoUpdate(link Link, table string, data interface{}, condition str
 			switch value := v.(type) {
 			case *Counter:
 				if value.Value != 0 {
-					column := c.db.QuoteWord(value.Field)
+					column := k
+					if value.Field != "" {
+						column = c.db.QuoteWord(value.Field)
+					}
 					fields = append(fields, fmt.Sprintf("%s=%s+?", column, column))
 					params = append(params, value.Value)
 				}
 			case Counter:
 				if value.Value != 0 {
-					column := c.db.QuoteWord(value.Field)
+					column := k
+					if value.Field != "" {
+						column = c.db.QuoteWord(value.Field)
+					}
 					fields = append(fields, fmt.Sprintf("%s=%s+?", column, column))
 					params = append(params, value.Value)
 				}
@@ -829,7 +835,6 @@ func (c *Core) DoUpdate(link Link, table string, data interface{}, condition str
 					fields = append(fields, c.db.QuoteWord(k)+"=?")
 					params = append(params, v)
 				}
-
 			}
 		}
 		updates = strings.Join(fields, ",")

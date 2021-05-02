@@ -39,6 +39,7 @@ type Model struct {
 	data          interface{}    // Data for operation, which can be type of map/[]map/struct/*struct/string, etc.
 	batch         int            // Batch number for batch Insert/Replace/Save operations.
 	filter        bool           // Filter data and where key-value pairs according to the fields of the table.
+	distinct      string         // Force the query to only return distinct results.
 	lockInfo      string         // Lock for update or in shared lock.
 	cacheEnabled  bool           // Enable sql result cache feature.
 	cacheDuration time.Duration  // Cache TTL duration.

@@ -89,3 +89,19 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 		m.mergeArguments(conditionArgs)...,
 	)
 }
+
+// Increment increments a column's value by a given amount.
+func (m *Model) Increment(column string, amount float64) (sql.Result, error) {
+	return m.getModel().Data(column, &Counter{
+		Field: column,
+		Value: amount,
+	}).Update()
+}
+
+// Decrement decrements a column's value by a given amount.
+func (m *Model) Decrement(column string, amount float64) (sql.Result, error) {
+	return m.getModel().Data(column, &Counter{
+		Field: column,
+		Value: -amount,
+	}).Update()
+}
