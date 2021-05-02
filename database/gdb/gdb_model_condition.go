@@ -235,7 +235,7 @@ func (m *Model) OrderDesc(column string) *Model {
 }
 
 // OrderRandom sets the "ORDER BY RANDOM()" statement for the model.
-func (m *Model) OrderRandom(orderBy ...string) *Model {
+func (m *Model) OrderRandom() *Model {
 	model := m.getModel()
 	model.orderBy = "RAND()"
 	return model
