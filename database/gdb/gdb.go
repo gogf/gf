@@ -32,11 +32,11 @@ type DB interface {
 	// Model creation.
 	// ===========================================================================
 
+	// Table function is deprecated, use Model instead.
 	// The DB interface is designed not only for
 	// relational databases but also for NoSQL databases in the future. The name
 	// "Table" is not proper for that purpose any more.
-	// Also see  Core.Table.
-	// Deprecated, use Model instead.
+	// Also see Core.Table.
 	Table(table ...string) *Model
 
 	// Model creates and returns a new ORM model from given schema.
@@ -191,6 +191,8 @@ type DB interface {
 	mappingAndFilterData(schema, table string, data map[string]interface{}, filter bool) (map[string]interface{}, error) // See Core.mappingAndFilterData.
 	convertFieldValueToLocalValue(fieldValue interface{}, fieldType string) interface{}                                  // See Core.convertFieldValueToLocalValue.
 	convertRowsToResult(rows *sql.Rows) (Result, error)                                                                  // See Core.convertRowsToResult.
+	addSqlToTracing(ctx context.Context, sql *Sql)                                                                       // See Core.addSqlToTracing.
+	writeSqlToLogger(v *Sql)                                                                                             // See Core.writeSqlToLogger.
 }
 
 // Core is the base struct for database management.

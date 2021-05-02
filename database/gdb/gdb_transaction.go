@@ -9,6 +9,7 @@ package gdb
 import (
 	"database/sql"
 	"fmt"
+	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/util/gconv"
 	"reflect"
 
@@ -36,7 +37,27 @@ func (tx *TX) Commit() error {
 		_, err := tx.Exec("RELEASE SAVEPOINT " + tx.transactionKey())
 		return err
 	}
-	return tx.tx.Commit()
+	var (
+		sqlStr = "COMMIT"
+		mTime1 = gtime.TimestampMilli()
+		err    = tx.tx.Commit()
+		mTime2 = gtime.TimestampMilli()
+		sqlObj = &Sql{
+			Sql:    sqlStr,
+			Type:   "TX.Commit",
+			Args:   nil,
+			Format: sqlStr,
+			Error:  err,
+			Start:  mTime1,
+			End:    mTime2,
+			Group:  tx.db.GetGroup(),
+		}
+	)
+	tx.db.addSqlToTracing(tx.db.GetCtx(), sqlObj)
+	if tx.db.GetDebug() {
+		tx.db.writeSqlToLogger(sqlObj)
+	}
+	return err
 }
 
 // Rollback aborts current transaction.
@@ -48,7 +69,27 @@ func (tx *TX) Rollback() error {
 		_, err := tx.Exec("ROLLBACK TO SAVEPOINT " + tx.transactionKey())
 		return err
 	}
-	return tx.tx.Rollback()
+	var (
+		sqlStr = "ROLLBACK"
+		mTime1 = gtime.TimestampMilli()
+		err    = tx.tx.Rollback()
+		mTime2 = gtime.TimestampMilli()
+		sqlObj = &Sql{
+			Sql:    sqlStr,
+			Type:   "TX.Rollback",
+			Args:   nil,
+			Format: sqlStr,
+			Error:  err,
+			Start:  mTime1,
+			End:    mTime2,
+			Group:  tx.db.GetGroup(),
+		}
+	)
+	tx.db.addSqlToTracing(tx.db.GetCtx(), sqlObj)
+	if tx.db.GetDebug() {
+		tx.db.writeSqlToLogger(sqlObj)
+	}
+	return err
 }
 
 // Begin starts a nested transaction procedure.
