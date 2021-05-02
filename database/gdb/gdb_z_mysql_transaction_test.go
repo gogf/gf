@@ -789,3 +789,137 @@ func Test_Transaction_Panic(t *testing.T) {
 		}
 	})
 }
+
+func Test_Transaction_Nested_Begin_Rollback_Commit(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		tx, err := db.Begin()
+		t.AssertNil(err)
+		// tx begin.
+		err = tx.Begin()
+		t.AssertNil(err)
+		// tx rollback.
+		_, err = tx.Model(table).Data(g.Map{
+			"id":       1,
+			"passport": "user_1",
+			"password": "pass_1",
+			"nickname": "name_1",
+		}).Insert()
+		err = tx.Rollback()
+		t.AssertNil(err)
+		// tx commit.
+		_, err = tx.Model(table).Data(g.Map{
+			"id":       2,
+			"passport": "user_2",
+			"password": "pass_2",
+			"nickname": "name_2",
+		}).Insert()
+		err = tx.Commit()
+		t.AssertNil(err)
+		// check data.
+		all, err := db.Model(table).All()
+		t.AssertNil(err)
+		t.Assert(len(all), 1)
+		t.Assert(all[0]["id"], 2)
+	})
+}
+
+func Test_Transaction_Nested_TX_Transaction(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		var err error
+		err = db.Transaction(func(tx *gdb.TX) error {
+			// commit
+			err = tx.Transaction(func(tx *gdb.TX) error {
+				err = tx.Transaction(func(tx *gdb.TX) error {
+					err = tx.Transaction(func(tx *gdb.TX) error {
+						err = tx.Transaction(func(tx *gdb.TX) error {
+							err = tx.Transaction(func(tx *gdb.TX) error {
+								_, err = tx.Model(table).Data(g.Map{
+									"id":          1,
+									"passport":    "USER_1",
+									"password":    "PASS_1",
+									"nickname":    "NAME_1",
+									"create_time": gtime.Now().String(),
+								}).Insert()
+								t.AssertNil(err)
+								return err
+							})
+							t.AssertNil(err)
+							return err
+						})
+						t.AssertNil(err)
+						return err
+					})
+					t.AssertNil(err)
+					return err
+				})
+				t.AssertNil(err)
+				return err
+			})
+			t.AssertNil(err)
+			// rollback
+			err = tx.Transaction(func(tx *gdb.TX) error {
+				_, err = tx.Model(table).Data(g.Map{
+					"id":          2,
+					"passport":    "USER_2",
+					"password":    "PASS_2",
+					"nickname":    "NAME_2",
+					"create_time": gtime.Now().String(),
+				}).Insert()
+				t.AssertNil(err)
+				panic("error")
+				return err
+			})
+			t.AssertNE(err, nil)
+			return nil
+		})
+		t.AssertNil(err)
+
+		all, err := db.Model(table).All()
+		t.AssertNil(err)
+		t.Assert(len(all), 1)
+		t.Assert(all[0]["id"], 1)
+	})
+}
+
+func Test_Transaction_Nested_SavePoint_RollbackTo(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		tx, err := db.Begin()
+		t.AssertNil(err)
+		// tx save point.
+		_, err = tx.Model(table).Data(g.Map{
+			"id":       1,
+			"passport": "user_1",
+			"password": "pass_1",
+			"nickname": "name_1",
+		}).Insert()
+		err = tx.SavePoint("MyPoint")
+		t.AssertNil(err)
+		_, err = tx.Model(table).Data(g.Map{
+			"id":       2,
+			"passport": "user_2",
+			"password": "pass_2",
+			"nickname": "name_2",
+		}).Insert()
+		// tx rollback to.
+		err = tx.RollbackTo("MyPoint")
+		t.AssertNil(err)
+		// tx commit.
+		err = tx.Commit()
+		t.AssertNil(err)
+
+		// check data.
+		all, err := db.Model(table).All()
+		t.AssertNil(err)
+		t.Assert(len(all), 1)
+		t.Assert(all[0]["id"], 1)
+	})
+}
