@@ -32,13 +32,17 @@ import (
 //     db.With(User{}.UserDetail).With(User{}.UserDetail).Scan(xxx)
 // Or:
 //     db.With(UserDetail{}).With(UserDetail{}).Scan(xxx)
-func (m *Model) With(object interface{}) *Model {
+// Or:
+//     db.With(UserDetail{}, UserDetail{}).Scan(xxx)
+func (m *Model) With(objects ...interface{}) *Model {
 	model := m.getModel()
-	if m.tables == "" {
-		m.tables = m.db.QuotePrefixTableName(getTableNameFromOrmTag(object))
-		return model
+	for _, object := range objects {
+		if m.tables == "" {
+			m.tables = m.db.QuotePrefixTableName(getTableNameFromOrmTag(object))
+			return model
+		}
+		model.withArray = append(model.withArray, object)
 	}
-	model.withArray = append(model.withArray, object)
 	return model
 }
 

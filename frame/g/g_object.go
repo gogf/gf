@@ -97,18 +97,13 @@ func DB(name ...string) gdb.DB {
 // relational databases but also for NoSQL databases in the future. The name
 // "Table" is not proper for that purpose any more.
 // Deprecated, use Model instead.
-func Table(tables ...string) *gdb.Model {
-	return DB().Model(tables...)
+func Table(tableNameOrStruct ...interface{}) *gdb.Model {
+	return DB().Model(tableNameOrStruct...)
 }
 
 // Model creates and returns a model based on configuration of default database group.
-func Model(tables ...string) *gdb.Model {
-	return DB().Model(tables...)
-}
-
-// With creates and returns an ORM model based on meta data of given object.
-func With(object interface{}) *gdb.Model {
-	return DB().With(object)
+func Model(tableNameOrStruct ...interface{}) *gdb.Model {
+	return DB().Model(tableNameOrStruct...)
 }
 
 // Redis returns an instance of redis client with specified configuration group name.

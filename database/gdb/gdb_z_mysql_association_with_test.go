@@ -18,7 +18,7 @@ func Test_Table_Relation_With_Scan(t *testing.T) {
 	var (
 		tableUser       = "user"
 		tableUserDetail = "user_detail"
-		tableUserScores = "user_scores"
+		tableUserScores = "user_score"
 	)
 	if _, err := db.Exec(fmt.Sprintf(`
 CREATE TABLE IF NOT EXISTS %s (
@@ -60,8 +60,8 @@ PRIMARY KEY (id)
 		Address    string `json:"address"`
 	}
 
-	type UserScores struct {
-		gmeta.Meta `orm:"table:user_scores"`
+	type UserScore struct {
+		gmeta.Meta `orm:"table:user_score"`
 		Id         int `json:"id"`
 		Uid        int `json:"uid"`
 		Score      int `json:"score"`
@@ -69,34 +69,61 @@ PRIMARY KEY (id)
 
 	type User struct {
 		gmeta.Meta `orm:"table:user"`
-		Id         int           `json:"id"`
-		Name       string        `json:"name"`
-		UserDetail *UserDetail   `orm:"with:uid=id"`
-		UserScores []*UserScores `orm:"with:uid=id"`
+		Id         int          `json:"id"`
+		Name       string       `json:"name"`
+		UserDetail *UserDetail  `orm:"with:uid=id"`
+		UserScores []*UserScore `orm:"with:uid=id"`
 	}
 
 	// Initialize the data.
-	var err error
+	gtest.C(t, func(t *gtest.T) {
+		for i := 1; i <= 5; i++ {
+			// User.
+			user := User{
+				Name: fmt.Sprintf(`name_%d`, i),
+			}
+			lastInsertId, err := db.Model(user).Data(user).OmitEmpty().InsertAndGetId()
+			t.AssertNil(err)
+			// Detail.
+			userDetail := UserDetail{
+				Uid:     int(lastInsertId),
+				Address: fmt.Sprintf(`address_%d`, lastInsertId),
+			}
+			_, err = db.Model(userDetail).Data(userDetail).OmitEmpty().Insert()
+			t.AssertNil(err)
+			// Scores.
+			for j := 1; j <= 5; j++ {
+				userScore := UserScore{
+					Uid:   int(lastInsertId),
+					Score: j,
+				}
+				_, err = db.Model(userScore).Data(userScore).OmitEmpty().Insert()
+				t.AssertNil(err)
+			}
+		}
+	})
 	for i := 1; i <= 5; i++ {
 		// User.
-		_, err = db.Insert(tableUser, g.Map{
-			"id":   i,
-			"name": fmt.Sprintf(`name_%d`, i),
-		})
-		gtest.Assert(err, nil)
+		user := User{
+			Name: fmt.Sprintf(`name_%d`, i),
+		}
+		lastInsertId, err := db.Model(user).Data(user).OmitEmpty().InsertAndGetId()
+		gtest.AssertNil(err)
 		// Detail.
-		_, err = db.Insert(tableUserDetail, g.Map{
-			"uid":     i,
-			"address": fmt.Sprintf(`address_%d`, i),
-		})
-		gtest.Assert(err, nil)
+		userDetail := UserDetail{
+			Uid:     int(lastInsertId),
+			Address: fmt.Sprintf(`address_%d`, lastInsertId),
+		}
+		_, err = db.Model(userDetail).Data(userDetail).Insert()
+		gtest.AssertNil(err)
 		// Scores.
 		for j := 1; j <= 5; j++ {
-			_, err = db.Insert(tableUserScores, g.Map{
-				"uid":   i,
-				"score": j,
-			})
-			gtest.Assert(err, nil)
+			userScore := UserScore{
+				Uid:   int(lastInsertId),
+				Score: j,
+			}
+			_, err = db.Model(userScore).Data(userScore).Insert()
+			gtest.AssertNil(err)
 		}
 	}
 	gtest.C(t, func(t *gtest.T) {
@@ -139,7 +166,7 @@ PRIMARY KEY (id)
 		var user *User
 		err := db.With(User{}).
 			With(UserDetail{}).
-			With(UserScores{}).
+			With(UserScore{}).
 			Where("id", 4).
 			Scan(&user)
 		t.AssertNil(err)

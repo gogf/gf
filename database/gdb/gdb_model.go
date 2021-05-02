@@ -70,53 +70,71 @@ const (
 // Table is alias of Core.Model.
 // See Core.Model.
 // Deprecated, use Model instead.
-func (c *Core) Table(table ...string) *Model {
-	return c.db.Model(table...)
+func (c *Core) Table(tableNameOrStruct ...interface{}) *Model {
+	return c.db.Model(tableNameOrStruct...)
 }
 
 // Model creates and returns a new ORM model from given schema.
-// The parameter `table` can be more than one table names, and also alias name, like:
+// The parameter `tableNameOrStruct` can be more than one table names, and also alias name, like:
 // 1. Model names:
 //    Model("user")
 //    Model("user u")
 //    Model("user, user_detail")
 //    Model("user u, user_detail ud")
 // 2. Model name with alias: Model("user", "u")
-func (c *Core) Model(table ...string) *Model {
-	tables := ""
-	if len(table) > 1 {
-		tables = fmt.Sprintf(
-			`%s AS %s`, c.db.QuotePrefixTableName(table[0]), c.db.QuoteWord(table[1]),
+func (c *Core) Model(tableNameOrStruct ...interface{}) *Model {
+	// With feature checks.
+	if len(tableNameOrStruct) > 0 {
+		if _, ok := tableNameOrStruct[0].(string); !ok {
+			return c.With(tableNameOrStruct...)
+		}
+	}
+	// Normal model creation.
+	var (
+		tableStr   = ""
+		tableNames = make([]string, len(tableNameOrStruct))
+	)
+	for k, v := range tableNameOrStruct {
+		if s, ok := v.(string); ok {
+			tableNames[k] = s
+			continue
+		}
+	}
+
+	if len(tableNames) > 1 {
+		tableStr = fmt.Sprintf(
+			`%s AS %s`, c.db.QuotePrefixTableName(tableNames[0]), c.db.QuoteWord(tableNames[1]),
 		)
-	} else if len(table) == 1 {
-		tables = c.db.QuotePrefixTableName(table[0])
+	} else if len(tableNames) == 1 {
+		tableStr = c.db.QuotePrefixTableName(tableNames[0])
 	}
 	return &Model{
 		db:         c.db,
-		tablesInit: tables,
-		tables:     tables,
+		tablesInit: tableStr,
+		tables:     tableStr,
 		fields:     "*",
 		start:      -1,
 		offset:     -1,
 		option:     OptionAllowEmpty,
+		filter:     true,
 	}
 }
 
 // With creates and returns an ORM model based on meta data of given object.
-func (c *Core) With(object interface{}) *Model {
-	return c.db.Model().With(object)
+func (c *Core) With(objects ...interface{}) *Model {
+	return c.db.Model().With(objects...)
 }
 
 // Table is alias of tx.Model.
 // Deprecated, use Model instead.
-func (tx *TX) Table(table ...string) *Model {
-	return tx.Model(table...)
+func (tx *TX) Table(tableNameOrStruct ...interface{}) *Model {
+	return tx.Model(tableNameOrStruct...)
 }
 
 // Model acts like Core.Model except it operates on transaction.
 // See Core.Model.
-func (tx *TX) Model(table ...string) *Model {
-	model := tx.db.Model(table...)
+func (tx *TX) Model(tableNameOrStruct ...interface{}) *Model {
+	model := tx.db.Model(tableNameOrStruct...)
 	model.db = tx.db
 	model.tx = tx
 	return model
