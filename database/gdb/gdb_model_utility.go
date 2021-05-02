@@ -18,16 +18,6 @@ import (
 	"time"
 )
 
-// getModel creates and returns a cloned model of current model if `safe` is true, or else it returns
-// the current model.
-func (m *Model) getModel() *Model {
-	if !m.safe {
-		return m
-	} else {
-		return m.Clone()
-	}
-}
-
 // TableFields retrieves and returns the fields information of specified table of current
 // schema.
 //
@@ -45,6 +35,16 @@ func (m *Model) TableFields(table string, schema ...string) (fields map[string]*
 		}
 	}
 	return m.db.TableFields(link, table, schema...)
+}
+
+// getModel creates and returns a cloned model of current model if `safe` is true, or else it returns
+// the current model.
+func (m *Model) getModel() *Model {
+	if !m.safe {
+		return m
+	} else {
+		return m.Clone()
+	}
 }
 
 // mappingAndFilterToTableFields mappings and changes given field name to really table field name.

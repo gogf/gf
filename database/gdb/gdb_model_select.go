@@ -19,7 +19,7 @@ import (
 
 // Select is alias of Model.All.
 // See Model.All.
-// Deprecated.
+// Deprecated, use All instead.
 func (m *Model) Select(where ...interface{}) (Result, error) {
 	return m.All(where...)
 }
@@ -50,7 +50,8 @@ func (m *Model) doGetAll(limit1 bool, where ...interface{}) (Result, error) {
 	// DISTINCT t.user_id uid
 	return m.doGetAllBySql(
 		fmt.Sprintf(
-			"SELECT %s FROM %s%s",
+			"SELECT %s%s FROM %s%s",
+			m.distinct,
 			m.getFieldsFiltered(),
 			m.tables,
 			conditionWhere+conditionExtra,
@@ -182,7 +183,7 @@ func (m *Model) Value(fieldsAndWhere ...interface{}) (Value, error) {
 }
 
 // Array queries and returns data values as slice from database.
-// Note that if there're multiple columns in the result, it returns just one column values randomly.
+// Note that if there are multiple columns in the result, it returns just one column values randomly.
 //
 // If the optional parameter `fieldsAndWhere` is given, the fieldsAndWhere[0] is the selected fields
 // and fieldsAndWhere[1:] is treated as where condition fields.
@@ -334,7 +335,7 @@ func (m *Model) Count(where ...interface{}) (int, error) {
 	if m.fields != "" && m.fields != "*" {
 		// DO NOT quote the m.fields here, in case of fields like:
 		// DISTINCT t.user_id uid
-		countFields = fmt.Sprintf(`COUNT(%s)`, m.fields)
+		countFields = fmt.Sprintf(`COUNT(%s%s)`, m.distinct, m.fields)
 	}
 	conditionWhere, conditionExtra, conditionArgs := m.formatCondition(false, true)
 	s := fmt.Sprintf("SELECT %s FROM %s%s", countFields, m.tables, conditionWhere+conditionExtra)
@@ -351,6 +352,62 @@ func (m *Model) Count(where ...interface{}) (int, error) {
 		}
 	}
 	return 0, nil
+}
+
+// CountColumn does "SELECT COUNT(x) FROM ..." statement for the model.
+func (m *Model) CountColumn(column string) (int, error) {
+	if len(column) == 0 {
+		return 0, nil
+	}
+	return m.Fields(column).Count()
+}
+
+// Min does "SELECT MIN(x) FROM ..." statement for the model.
+func (m *Model) Min(column string) (float64, error) {
+	if len(column) == 0 {
+		return 0, nil
+	}
+	value, err := m.Fields(fmt.Sprintf(`MIN(%s)`, m.db.QuoteWord(column))).Value()
+	if err != nil {
+		return 0, err
+	}
+	return value.Float64(), err
+}
+
+// Max does "SELECT MAX(x) FROM ..." statement for the model.
+func (m *Model) Max(column string) (float64, error) {
+	if len(column) == 0 {
+		return 0, nil
+	}
+	value, err := m.Fields(fmt.Sprintf(`MAX(%s)`, m.db.QuoteWord(column))).Value()
+	if err != nil {
+		return 0, err
+	}
+	return value.Float64(), err
+}
+
+// Avg does "SELECT AVG(x) FROM ..." statement for the model.
+func (m *Model) Avg(column string) (float64, error) {
+	if len(column) == 0 {
+		return 0, nil
+	}
+	value, err := m.Fields(fmt.Sprintf(`AVG(%s)`, m.db.QuoteWord(column))).Value()
+	if err != nil {
+		return 0, err
+	}
+	return value.Float64(), err
+}
+
+// Sum does "SELECT SUM(x) FROM ..." statement for the model.
+func (m *Model) Sum(column string) (float64, error) {
+	if len(column) == 0 {
+		return 0, nil
+	}
+	value, err := m.Fields(fmt.Sprintf(`SUM(%s)`, m.db.QuoteWord(column))).Value()
+	if err != nil {
+		return 0, err
+	}
+	return value.Float64(), err
 }
 
 // FindOne retrieves and returns a single Record by Model.WherePri and Model.One.
