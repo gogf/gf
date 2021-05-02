@@ -83,21 +83,16 @@ func (c *Core) Table(tableNameOrStruct ...interface{}) *Model {
 //    Model("user u, user_detail ud")
 // 2. Model name with alias: Model("user", "u")
 func (c *Core) Model(tableNameOrStruct ...interface{}) *Model {
-	// With feature checks.
-	if len(tableNameOrStruct) > 0 {
-		if _, ok := tableNameOrStruct[0].(string); !ok {
-			return c.With(tableNameOrStruct...)
-		}
-	}
-	// Normal model creation.
 	var (
 		tableStr   = ""
+		tableName  = ""
 		tableNames = make([]string, len(tableNameOrStruct))
 	)
 	for k, v := range tableNameOrStruct {
 		if s, ok := v.(string); ok {
 			tableNames[k] = s
-			continue
+		} else if tableName = getTableNameFromOrmTag(v); tableName != "" {
+			tableNames[k] = tableName
 		}
 	}
 
