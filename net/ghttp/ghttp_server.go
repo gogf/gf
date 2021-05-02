@@ -263,7 +263,7 @@ func (s *Server) GetRouterArray() []RouterItem {
 			if len(item.handler.middleware) > 0 {
 				for _, v := range item.handler.middleware {
 					if item.Middleware != "" {
-						item.Middleware += "\n"
+						item.Middleware += ","
 					}
 					item.Middleware += gdebug.FuncName(v)
 				}

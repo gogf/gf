@@ -80,9 +80,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		// Close the request and response body
 		// to release the file descriptor in time.
-		request.Request.Body.Close()
+		_ = request.Request.Body.Close()
 		if request.Request.Response != nil {
-			request.Request.Response.Body.Close()
+			_ = request.Request.Response.Body.Close()
 		}
 	}()
 
@@ -168,7 +168,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Automatically set the session id to cookie
-	// if it creates a new session id in this request.
+	// if it creates a new session id in this request
+	// and SessionCookieOutput is enabled.
 	if s.config.SessionCookieOutput &&
 		request.Session.IsDirty() &&
 		request.Session.Id() != request.GetSessionId() {
