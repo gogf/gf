@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -30,7 +30,7 @@ type Cron struct {
 func New() *Cron {
 	return &Cron{
 		idGen:    gtype.NewInt64(),
-		status:   gtype.NewInt(STATUS_RUNNING),
+		status:   gtype.NewInt(StatusRunning),
 		entries:  gmap.NewStrAnyMap(true),
 		logPath:  gtype.NewString(),
 		logLevel: gtype.NewInt(glog.LEVEL_PROD),
@@ -162,7 +162,7 @@ func (c *Cron) Start(name ...string) {
 			}
 		}
 	} else {
-		c.status.Set(STATUS_READY)
+		c.status.Set(StatusReady)
 	}
 }
 
@@ -175,7 +175,7 @@ func (c *Cron) Stop(name ...string) {
 			}
 		}
 	} else {
-		c.status.Set(STATUS_STOPPED)
+		c.status.Set(StatusStopped)
 	}
 }
 
@@ -188,7 +188,7 @@ func (c *Cron) Remove(name string) {
 
 // Close stops and closes current cron.
 func (c *Cron) Close() {
-	c.status.Set(STATUS_CLOSED)
+	c.status.Set(StatusClosed)
 }
 
 // Size returns the size of the timed tasks.

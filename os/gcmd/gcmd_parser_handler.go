@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -19,6 +19,17 @@ func (p *Parser) BindHandle(cmd string, f func()) error {
 		p.commandFuncMap[cmd] = f
 	}
 	return nil
+}
+
+// BindHandle registers callback function with map <m>.
+func (p *Parser) BindHandleMap(m map[string]func()) error {
+	var err error
+	for k, v := range m {
+		if err = p.BindHandle(k, v); err != nil {
+			return err
+		}
+	}
+	return err
 }
 
 // RunHandle executes the callback function registered by <cmd>.

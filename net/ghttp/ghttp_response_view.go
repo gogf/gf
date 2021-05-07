@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -8,14 +8,19 @@
 package ghttp
 
 import (
-	"github.com/gogf/gf/frame/gins"
+	"github.com/gogf/gf/os/gcfg"
 	"github.com/gogf/gf/os/gview"
+	"github.com/gogf/gf/util/gmode"
+	"github.com/gogf/gf/util/gutil"
 )
 
-// 展示模板，可以给定模板参数，及临时的自定义模板函数
+// WriteTpl parses and responses given template file.
+// The parameter <params> specifies the template variables for parsing.
 func (r *Response) WriteTpl(tpl string, params ...gview.Params) error {
 	if b, err := r.ParseTpl(tpl, params...); err != nil {
-		r.Write("Template Parsing Error: " + err.Error())
+		if !gmode.IsProduct() {
+			r.Write("Template Parsing Error: " + err.Error())
+		}
 		return err
 	} else {
 		r.Write(b)
@@ -23,10 +28,27 @@ func (r *Response) WriteTpl(tpl string, params ...gview.Params) error {
 	return nil
 }
 
-// 展示模板内容，可以给定模板参数，及临时的自定义模板函数
+// WriteTplDefault parses and responses the default template file.
+// The parameter <params> specifies the template variables for parsing.
+func (r *Response) WriteTplDefault(params ...gview.Params) error {
+	if b, err := r.ParseTplDefault(params...); err != nil {
+		if !gmode.IsProduct() {
+			r.Write("Template Parsing Error: " + err.Error())
+		}
+		return err
+	} else {
+		r.Write(b)
+	}
+	return nil
+}
+
+// WriteTplContent parses and responses the template content.
+// The parameter <params> specifies the template variables for parsing.
 func (r *Response) WriteTplContent(content string, params ...gview.Params) error {
 	if b, err := r.ParseTplContent(content, params...); err != nil {
-		r.Write("Template Parsing Error: " + err.Error())
+		if !gmode.IsProduct() {
+			r.Write("Template Parsing Error: " + err.Error())
+		}
 		return err
 	} else {
 		r.Write(b)
@@ -34,37 +56,42 @@ func (r *Response) WriteTplContent(content string, params ...gview.Params) error
 	return nil
 }
 
-// 解析模板文件，并返回模板内容
+// ParseTpl parses given template file <tpl> with given template variables <params>
+// and returns the parsed template content.
 func (r *Response) ParseTpl(tpl string, params ...gview.Params) (string, error) {
-	if r.Server.config.View != nil {
-		return r.Server.config.View.Parse(tpl, r.buildInVars(params...))
-	}
-	return gview.Instance().Parse(tpl, r.buildInVars(params...))
+	return r.Request.GetView().Parse(tpl, r.buildInVars(params...))
 }
 
-// 解析并返回模板内容
+// ParseDefault parses the default template file with params.
+func (r *Response) ParseTplDefault(params ...gview.Params) (string, error) {
+	return r.Request.GetView().ParseDefault(r.buildInVars(params...))
+}
+
+// ParseTplContent parses given template file <file> with given template parameters <params>
+// and returns the parsed template content.
 func (r *Response) ParseTplContent(content string, params ...gview.Params) (string, error) {
-	if r.Server.config.View != nil {
-		return r.Server.config.View.ParseContent(content, r.buildInVars(params...))
-	}
-	return gview.Instance().ParseContent(content, r.buildInVars(params...))
+	return r.Request.GetView().ParseContent(content, r.buildInVars(params...))
 }
 
-// 内置变量/对象
+// buildInVars merges build-in variables into <params> and returns the new template variables.
+// TODO performance improving.
 func (r *Response) buildInVars(params ...map[string]interface{}) map[string]interface{} {
-	vars := map[string]interface{}(nil)
+	m := gutil.MapMergeCopy(r.Request.viewParams)
 	if len(params) > 0 {
-		vars = params[0]
-	} else {
-		vars = make(map[string]interface{})
+		gutil.MapMerge(m, params[0])
 	}
-	// 当配置文件不存在时就不赋值该模板变量，不然会报错
-	if c := gins.Config(); c.FilePath() != "" {
-		vars["Config"] = c.GetMap("")
+	// Retrieve custom template variables from request object.
+	gutil.MapMerge(m, map[string]interface{}{
+		"Form":    r.Request.GetFormMap(),
+		"Query":   r.Request.GetQueryMap(),
+		"Request": r.Request.GetMap(),
+		"Cookie":  r.Request.Cookie.Map(),
+		"Session": r.Request.Session.Map(),
+	})
+	// Note that it should assign no Config variable to template
+	// if there's no configuration file.
+	if c := gcfg.Instance(); c.Available() {
+		m["Config"] = c.GetMap(".")
 	}
-	vars["Cookie"] = r.request.Cookie.Map()
-	vars["Session"] = r.request.Session.Map()
-	vars["Get"] = r.request.GetQueryMap()
-	vars["Post"] = r.request.GetPostMap()
-	return vars
+	return m
 }

@@ -1,12 +1,13 @@
 package main
 
 import (
+	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
 )
 
 func main() {
-	s := ghttp.GetServer()
-	s.EnablePprof()
+	s := g.Server()
+	s.Domain("localhost").EnablePProf()
 	s.BindHandler("/", func(r *ghttp.Request) {
 		r.Response.Writeln("哈喽世界！")
 	})

@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -10,7 +10,7 @@ import "github.com/gogf/gf/container/gmap"
 
 const (
 	// Default group name for instance usage.
-	DEFAULT_NAME = "default"
+	DefaultName = "default"
 )
 
 var (
@@ -21,7 +21,7 @@ var (
 // Instance returns an instance of Resource.
 // The parameter <name> is the name for the instance.
 func Instance(name ...string) *Resource {
-	key := DEFAULT_NAME
+	key := DefaultName
 	if len(name) > 0 && name[0] != "" {
 		key = name[0]
 	}

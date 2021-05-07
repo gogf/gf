@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -17,26 +17,26 @@ type boolStruct struct {
 }
 
 func Test_Bool(t *testing.T) {
-	gtest.Case(t, func() {
-		var i interface{} = nil
-		gtest.AssertEQ(gconv.Bool(i), false)
-		gtest.AssertEQ(gconv.Bool(false), false)
-		gtest.AssertEQ(gconv.Bool(nil), false)
-		gtest.AssertEQ(gconv.Bool(0), false)
-		gtest.AssertEQ(gconv.Bool("0"), false)
-		gtest.AssertEQ(gconv.Bool(""), false)
-		gtest.AssertEQ(gconv.Bool("false"), false)
-		gtest.AssertEQ(gconv.Bool("off"), false)
-		gtest.AssertEQ(gconv.Bool([]byte{}), false)
-		gtest.AssertEQ(gconv.Bool([]string{}), false)
-		gtest.AssertEQ(gconv.Bool([]interface{}{}), false)
-		gtest.AssertEQ(gconv.Bool([]map[int]int{}), false)
+	gtest.C(t, func(t *gtest.T) {
+		var any interface{} = nil
+		t.AssertEQ(gconv.Bool(any), false)
+		t.AssertEQ(gconv.Bool(false), false)
+		t.AssertEQ(gconv.Bool(nil), false)
+		t.AssertEQ(gconv.Bool(0), false)
+		t.AssertEQ(gconv.Bool("0"), false)
+		t.AssertEQ(gconv.Bool(""), false)
+		t.AssertEQ(gconv.Bool("false"), false)
+		t.AssertEQ(gconv.Bool("off"), false)
+		t.AssertEQ(gconv.Bool([]byte{}), false)
+		t.AssertEQ(gconv.Bool([]string{}), false)
+		t.AssertEQ(gconv.Bool([]interface{}{}), false)
+		t.AssertEQ(gconv.Bool([]map[int]int{}), false)
 
-		gtest.AssertEQ(gconv.Bool("1"), true)
-		gtest.AssertEQ(gconv.Bool("on"), true)
-		gtest.AssertEQ(gconv.Bool(1), true)
-		gtest.AssertEQ(gconv.Bool(123.456), true)
-		gtest.AssertEQ(gconv.Bool(boolStruct{}), true)
-		gtest.AssertEQ(gconv.Bool(&boolStruct{}), true)
+		t.AssertEQ(gconv.Bool("1"), true)
+		t.AssertEQ(gconv.Bool("on"), true)
+		t.AssertEQ(gconv.Bool(1), true)
+		t.AssertEQ(gconv.Bool(123.456), true)
+		t.AssertEQ(gconv.Bool(boolStruct{}), true)
+		t.AssertEQ(gconv.Bool(&boolStruct{}), true)
 	})
 }

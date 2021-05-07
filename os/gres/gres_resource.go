@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -8,6 +8,7 @@ package gres
 
 import (
 	"fmt"
+	"github.com/gogf/gf/internal/intlog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -38,9 +39,10 @@ func New() *Resource {
 // Add unpacks and adds the <content> into current resource object.
 // The unnecessary parameter <prefix> indicates the prefix
 // for each file storing into current resource object.
-func (r *Resource) Add(content []byte, prefix ...string) error {
+func (r *Resource) Add(content string, prefix ...string) error {
 	files, err := UnpackContent(content)
 	if err != nil {
+		intlog.Printf("Add resource files failed: %v", err)
 		return err
 	}
 	namePrefix := ""
@@ -51,6 +53,7 @@ func (r *Resource) Add(content []byte, prefix ...string) error {
 		files[i].resource = r
 		r.tree.Set(namePrefix+files[i].file.Name, files[i])
 	}
+	intlog.Printf("Add %d files to resource manager", r.tree.Size())
 	return nil
 }
 
@@ -62,7 +65,7 @@ func (r *Resource) Load(path string, prefix ...string) error {
 	if err != nil {
 		return err
 	}
-	return r.Add(gfile.GetBytes(realPath), prefix...)
+	return r.Add(gfile.GetContents(realPath), prefix...)
 }
 
 // Get returns the file with given path.
@@ -71,6 +74,7 @@ func (r *Resource) Get(path string) *File {
 		return nil
 	}
 	path = strings.Replace(path, "\\", "/", -1)
+	path = strings.Replace(path, "//", "/", -1)
 	if path != "/" {
 		for path[len(path)-1] == '/' {
 			path = path[:len(path)-1]
@@ -88,7 +92,9 @@ func (r *Resource) Get(path string) *File {
 //
 // GetWithIndex is usually used for http static file service.
 func (r *Resource) GetWithIndex(path string, indexFiles []string) *File {
+	// Necessary for double char '/' replacement in prefix.
 	path = strings.Replace(path, "\\", "/", -1)
+	path = strings.Replace(path, "//", "/", -1)
 	if path != "/" {
 		for path[len(path)-1] == '/' {
 			path = path[:len(path)-1]
@@ -110,7 +116,6 @@ func (r *Resource) GetWithIndex(path string, indexFiles []string) *File {
 
 // GetContent directly returns the content of <path>.
 func (r *Resource) GetContent(path string) []byte {
-	path = strings.Replace(path, "\\", "/", -1)
 	file := r.Get(path)
 	if file != nil {
 		return file.Content()
@@ -165,15 +170,18 @@ func (r *Resource) ScanDirFile(path string, pattern string, recursive ...bool) [
 // It scans directory recursively if given parameter <recursive> is true.
 func (r *Resource) doScanDir(path string, pattern string, recursive bool, onlyFile bool) []*File {
 	path = strings.Replace(path, "\\", "/", -1)
+	path = strings.Replace(path, "//", "/", -1)
 	if path != "/" {
 		for path[len(path)-1] == '/' {
 			path = path[:len(path)-1]
 		}
 	}
-	name := ""
-	files := make([]*File, 0)
-	length := len(path)
-	patterns := strings.Split(pattern, ",")
+	var (
+		name     = ""
+		files    = make([]*File, 0)
+		length   = len(path)
+		patterns = strings.Split(pattern, ",")
+	)
 	for i := 0; i < len(patterns); i++ {
 		patterns[i] = strings.TrimSpace(patterns[i])
 	}

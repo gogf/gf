@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/internal/rwmutex"
 )
 
+// Ring is a struct of ring structure.
 type Ring struct {
 	mu    *rwmutex.RWMutex
 	ring  *ring.Ring  // Underlying ring.
@@ -22,6 +23,9 @@ type Ring struct {
 	dirty *gtype.Bool // Dirty, which means the len and cap should be recalculated. It's marked dirty when the size of ring changes.
 }
 
+// New creates and returns a Ring structure of <cap> elements.
+// The optional parameter <safe> specifies whether using this structure in concurrent safety,
+// which is false in default.
 func New(cap int, safe ...bool) *Ring {
 	return &Ring{
 		mu:    rwmutex.New(safe...),

@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,32 +7,43 @@
 package ghttp
 
 import (
-	"reflect"
-	"runtime"
+	"github.com/gogf/gf/debug/gdebug"
 )
 
 const (
+	// The default route pattern for global middleware.
 	gDEFAULT_MIDDLEWARE_PATTERN = "/*"
 )
 
-// 注册中间件，绑定到指定的路由规则上，中间件参数支持多个。
+// BindMiddleware registers one or more global middleware to the server.
+// Global middleware can be used standalone without service handler, which intercepts all dynamic requests
+// before or after service handler. The parameter <pattern> specifies what route pattern the middleware intercepts,
+// which is usually a "fuzzy" pattern like "/:name", "/*any" or "/{field}".
 func (s *Server) BindMiddleware(pattern string, handlers ...HandlerFunc) {
 	for _, handler := range handlers {
 		s.setHandler(pattern, &handlerItem{
-			itemType: gHANDLER_TYPE_MIDDLEWARE,
-			itemName: runtime.FuncForPC(reflect.ValueOf(handler).Pointer()).Name(),
+			itemType: handlerTypeMiddleware,
+			itemName: gdebug.FuncPath(handler),
 			itemFunc: handler,
 		})
 	}
 }
 
-// 注册中间件，绑定到全局路由规则("/*")上，中间件参数支持多个。
-func (s *Server) AddMiddleware(handlers ...HandlerFunc) {
+// BindMiddlewareDefault registers one or more global middleware to the server using default pattern "/*".
+// Global middleware can be used standalone without service handler, which intercepts all dynamic requests
+// before or after service handler.
+func (s *Server) BindMiddlewareDefault(handlers ...HandlerFunc) {
 	for _, handler := range handlers {
 		s.setHandler(gDEFAULT_MIDDLEWARE_PATTERN, &handlerItem{
-			itemType: gHANDLER_TYPE_MIDDLEWARE,
-			itemName: runtime.FuncForPC(reflect.ValueOf(handler).Pointer()).Name(),
+			itemType: handlerTypeMiddleware,
+			itemName: gdebug.FuncPath(handler),
 			itemFunc: handler,
 		})
 	}
+}
+
+// Use is alias of BindMiddlewareDefault.
+// See BindMiddlewareDefault.
+func (s *Server) Use(handlers ...HandlerFunc) {
+	s.BindMiddlewareDefault(handlers...)
 }

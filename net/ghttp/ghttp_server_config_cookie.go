@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,47 +7,35 @@
 package ghttp
 
 import (
-	"github.com/gogf/gf/os/glog"
+	"time"
 )
 
-// 设置http server参数 - CookieMaxAge
-func (s *Server) SetCookieMaxAge(age int64) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
-	s.config.CookieMaxAge = age
+// SetCookieMaxAge sets the CookieMaxAge for server.
+func (s *Server) SetCookieMaxAge(ttl time.Duration) {
+	s.config.CookieMaxAge = ttl
 }
 
-// 设置http server参数 - CookiePath
+// SetCookiePath sets the CookiePath for server.
 func (s *Server) SetCookiePath(path string) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
 	s.config.CookiePath = path
 }
 
-// 设置http server参数 - CookieDomain
+// SetCookieDomain sets the CookieDomain for server.
 func (s *Server) SetCookieDomain(domain string) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
 	s.config.CookieDomain = domain
 }
 
-// 获取http server参数 - CookieMaxAge
-func (s *Server) GetCookieMaxAge() int64 {
+// GetCookieMaxAge returns the CookieMaxAge of server.
+func (s *Server) GetCookieMaxAge() time.Duration {
 	return s.config.CookieMaxAge
 }
 
-// 获取http server参数 - CookiePath
+// GetCookiePath returns the CookiePath of server.
 func (s *Server) GetCookiePath() string {
 	return s.config.CookiePath
 }
 
-// 获取http server参数 - CookieDomain
+// GetCookieDomain returns CookieDomain of server.
 func (s *Server) GetCookieDomain() string {
 	return s.config.CookieDomain
 }

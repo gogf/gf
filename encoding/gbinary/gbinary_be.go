@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -13,9 +13,12 @@ import (
 	"math"
 )
 
-// 针对基本类型进行二进制打包，支持的基本数据类型包括:
-// int/8/16/32/64、uint/8/16/32/64、float32/64、bool、string、[]byte。
-// 其他未知类型使用 fmt.Sprintf("%v", value) 转换为字符串之后处理。
+// BeEncode encodes one or multiple <values> into bytes using BigEndian.
+// It uses type asserting checking the type of each value of <values> and internally
+// calls corresponding converting function do the bytes converting.
+//
+// It supports common variable type asserting, and finally it uses fmt.Sprintf converting
+// value to string and then to bytes.
 func BeEncode(values ...interface{}) []byte {
 	buf := new(bytes.Buffer)
 	for i := 0; i < len(values); i++ {
@@ -135,7 +138,7 @@ func BeEncodeInt8(i int8) []byte {
 }
 
 func BeEncodeUint8(i uint8) []byte {
-	return []byte{byte(i)}
+	return []byte{i}
 }
 
 func BeEncodeInt16(i int16) []byte {
@@ -266,8 +269,10 @@ func BeDecodeToFloat64(b []byte) float64 {
 	return math.Float64frombits(binary.BigEndian.Uint64(BeFillUpSize(b, 8)))
 }
 
-// 当b位数不够时，进行低位补0。
-// 注意这里为了不影响原有输入参数，是采用的值复制设计。
+// BeFillUpSize fills up the bytes <b> to given length <l> using big BigEndian.
+//
+// Note that it creates a new bytes slice by copying the original one to avoid changing
+// the original parameter bytes.
 func BeFillUpSize(b []byte, l int) []byte {
 	if len(b) >= l {
 		return b[:l]

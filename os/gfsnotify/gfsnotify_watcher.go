@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -9,50 +9,77 @@ package gfsnotify
 import (
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/internal/intlog"
 
 	"github.com/gogf/gf/container/glist"
 )
 
-// 添加监控，path参数支持文件或者目录路径，recursive为非必需参数，默认为递归监控(当path为目录时)。
-// 如果添加目录，这里只会返回目录的callback，按照callback删除时会递归删除。
+// Add monitors <path> with callback function <callbackFunc> to the watcher.
+// The optional parameter <recursive> specifies whether monitoring the <path> recursively,
+// which is true in default.
 func (w *Watcher) Add(path string, callbackFunc func(event *Event), recursive ...bool) (callback *Callback, err error) {
-	// 首先添加这个文件/目录
-	callback, err = w.addWithCallbackFunc(path, callbackFunc, recursive...)
-	if err != nil {
-		return nil, err
-	}
-	// 如果需要递归，那么递归添加其下的子级目录，
-	// 注意!!
-	// 1、这里只递归添加**目录**, 而非文件，因为监控了目录即监控了其下一级的文件;
-	// 2、这里只是添加底层监控对象对**子级所有目录**的监控，没有任何回调函数的设置，在事件产生时会回溯查找父级的回调函数；
-	if fileIsDir(path) && (len(recursive) == 0 || recursive[0]) {
-		for _, subPath := range fileAllDirs(path) {
-			if fileIsDir(subPath) {
-				w.watcher.Add(subPath)
+	return w.AddOnce("", path, callbackFunc, recursive...)
+}
+
+// AddOnce monitors <path> with callback function <callbackFunc> only once using unique name
+// <name> to the watcher. If AddOnce is called multiple times with the same <name> parameter,
+// <path> is only added to monitor once.
+// It returns error if it's called twice with the same <name>.
+//
+// The optional parameter <recursive> specifies whether monitoring the <path> recursively,
+// which is true in default.
+func (w *Watcher) AddOnce(name, path string, callbackFunc func(event *Event), recursive ...bool) (callback *Callback, err error) {
+	w.nameSet.AddIfNotExistFuncLock(name, func() bool {
+		// Firstly add the path to watcher.
+		callback, err = w.addWithCallbackFunc(name, path, callbackFunc, recursive...)
+		if err != nil {
+			return false
+		}
+		// If it's recursive adding, it then adds all sub-folders to the monitor.
+		// NOTE:
+		// 1. It only recursively adds **folders** to the monitor, NOT files,
+		//    because if the folders are monitored and their sub-files are also monitored.
+		// 2. It bounds no callbacks to the folders, because it will search the callbacks
+		//    from its parent recursively if any event produced.
+		if fileIsDir(path) && (len(recursive) == 0 || recursive[0]) {
+			for _, subPath := range fileAllDirs(path) {
+				if fileIsDir(subPath) {
+					if err := w.watcher.Add(subPath); err != nil {
+						intlog.Error(err)
+					} else {
+						intlog.Printf("watcher adds monitor for: %s", subPath)
+					}
+				}
 			}
 		}
-	}
+		if name == "" {
+			return false
+		}
+		return true
+	})
 	return
 }
 
-// 添加对指定文件/目录的监听，并给定回调函数
-func (w *Watcher) addWithCallbackFunc(path string, callbackFunc func(event *Event), recursive ...bool) (callback *Callback, err error) {
-	// 这里统一转换为当前系统的绝对路径，便于统一监控文件名称
+// addWithCallbackFunc adds the path to underlying monitor, creates and returns a callback object.
+func (w *Watcher) addWithCallbackFunc(name, path string, callbackFunc func(event *Event), recursive ...bool) (callback *Callback, err error) {
+	// Check and convert the given path to absolute path.
 	if t := fileRealPath(path); t == "" {
 		return nil, errors.New(fmt.Sprintf(`"%s" does not exist`, path))
 	} else {
 		path = t
 	}
+	// Create callback object.
 	callback = &Callback{
 		Id:        callbackIdGenerator.Add(1),
 		Func:      callbackFunc,
 		Path:      path,
+		name:      name,
 		recursive: true,
 	}
 	if len(recursive) > 0 {
 		callback.recursive = recursive[0]
 	}
-	// 注册回调函数
+	// Register the callback to watcher.
 	w.callbacks.LockFunc(func(m map[string]interface{}) {
 		list := (*glist.List)(nil)
 		if v, ok := m[path]; !ok {
@@ -63,23 +90,31 @@ func (w *Watcher) addWithCallbackFunc(path string, callbackFunc func(event *Even
 		}
 		callback.elem = list.PushBack(callback)
 	})
-	// 添加底层监听
-	w.watcher.Add(path)
-	// 添加成功后会注册该callback id到全局的哈希表
+	// Add the path to underlying monitor.
+	if err := w.watcher.Add(path); err != nil {
+		intlog.Error(err)
+	} else {
+		intlog.Printf("watcher adds monitor for: %s", path)
+	}
+	// Add the callback to global callback map.
 	callbackIdMap.Set(callback.Id, callback)
+
+	//intlog.Print("addWithCallbackFunc", name, path, callback.recursive)
 	return
 }
 
-// 关闭监听管理对象
+// Close closes the watcher.
 func (w *Watcher) Close() {
 	w.events.Close()
-	w.watcher.Close()
+	if err := w.watcher.Close(); err != nil {
+		intlog.Error(err)
+	}
 	close(w.closeChan)
 }
 
-// 递归移除对指定文件/目录的所有监听回调
+// Remove removes monitor and all callbacks associated with the <path> recursively.
 func (w *Watcher) Remove(path string) error {
-	// 首先移除path注册的回调注册，以及callbackIdMap中的ID
+	// Firstly remove the callbacks of the path.
 	if r := w.callbacks.Remove(path); r != nil {
 		list := r.(*glist.List)
 		for {
@@ -90,36 +125,49 @@ func (w *Watcher) Remove(path string) error {
 			}
 		}
 	}
-	// 其次递归判断所有的子级是否可删除监听
+	// Secondly remove monitor of all sub-files which have no callbacks.
 	if subPaths, err := fileScanDir(path, "*", true); err == nil && len(subPaths) > 0 {
 		for _, subPath := range subPaths {
 			if w.checkPathCanBeRemoved(subPath) {
-				w.watcher.Remove(subPath)
+				if err := w.watcher.Remove(subPath); err != nil {
+					intlog.Error(err)
+				}
 			}
 		}
 	}
-	// 最后移除底层的监听
+	// Lastly remove the monitor of the path from underlying monitor.
 	return w.watcher.Remove(path)
 }
 
-// 判断给定的路径是否可以删除监听(只有所有回调函数都没有了才能删除)
+// checkPathCanBeRemoved checks whether the given path have no callbacks bound.
 func (w *Watcher) checkPathCanBeRemoved(path string) bool {
-	// 首先检索path对应的回调函数
+	// Firstly check the callbacks in the watcher directly.
 	if v := w.callbacks.Get(path); v != nil {
 		return false
 	}
-	// 其次查找父级目录有无回调注册
+	// Secondly check its parent whether has callbacks.
 	dirPath := fileDir(path)
 	if v := w.callbacks.Get(dirPath); v != nil {
+		for _, c := range v.(*glist.List).FrontAll() {
+			if c.(*Callback).recursive {
+				return false
+			}
+		}
 		return false
 	}
-	// 最后回溯查找递归回调函数
+	// Recursively check its parent.
+	parentDirPath := ""
 	for {
-		parentDirPath := fileDir(dirPath)
+		parentDirPath = fileDir(dirPath)
 		if parentDirPath == dirPath {
 			break
 		}
 		if v := w.callbacks.Get(parentDirPath); v != nil {
+			for _, c := range v.(*glist.List).FrontAll() {
+				if c.(*Callback).recursive {
+					return false
+				}
+			}
 			return false
 		}
 		dirPath = parentDirPath
@@ -127,7 +175,7 @@ func (w *Watcher) checkPathCanBeRemoved(path string) bool {
 	return true
 }
 
-// 根据指定的回调函数ID，移出指定的inotify回调函数
+// RemoveCallback removes callback with given callback id from watcher.
 func (w *Watcher) RemoveCallback(callbackId int) {
 	callback := (*Callback)(nil)
 	if r := callbackIdMap.Get(callbackId); r != nil {
@@ -138,5 +186,8 @@ func (w *Watcher) RemoveCallback(callbackId int) {
 			r.(*glist.List).Remove(callback.elem)
 		}
 		callbackIdMap.Remove(callbackId)
+		if callback.name != "" {
+			w.nameSet.Remove(callback.name)
+		}
 	}
 }

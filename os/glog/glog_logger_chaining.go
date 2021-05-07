@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,10 +7,31 @@
 package glog
 
 import (
+	"context"
+	"github.com/gogf/gf/internal/intlog"
 	"io"
 
 	"github.com/gogf/gf/os/gfile"
 )
+
+// Ctx is a chaining function,
+// which sets the context for current logging.
+func (l *Logger) Ctx(ctx context.Context, keys ...interface{}) *Logger {
+	if ctx == nil {
+		return l
+	}
+	logger := (*Logger)(nil)
+	if l.parent == nil {
+		logger = l.Clone()
+	} else {
+		logger = l
+	}
+	logger.ctx = ctx
+	if len(keys) > 0 {
+		logger.SetCtxKeys(keys...)
+	}
+	return logger
+}
 
 // To is a chaining function,
 // which redirects current logging content output to the specified <writer>.
@@ -27,6 +48,8 @@ func (l *Logger) To(writer io.Writer) *Logger {
 
 // Path is a chaining function,
 // which sets the directory path to <path> for current logging content output.
+//
+// Note that the parameter <path> is a directory path, not a file path.
 func (l *Logger) Path(path string) *Logger {
 	logger := (*Logger)(nil)
 	if l.parent == nil {
@@ -35,7 +58,10 @@ func (l *Logger) Path(path string) *Logger {
 		logger = l
 	}
 	if path != "" {
-		logger.SetPath(path)
+		if err := logger.SetPath(path); err != nil {
+			// panic(err)
+			intlog.Error(err)
+		}
 	}
 	return logger
 }
@@ -50,8 +76,11 @@ func (l *Logger) Cat(category string) *Logger {
 	} else {
 		logger = l
 	}
-	if logger.path != "" {
-		logger.SetPath(logger.path + gfile.Separator + category)
+	if logger.config.Path != "" {
+		if err := logger.SetPath(gfile.Join(logger.config.Path, category)); err != nil {
+			// panic(err)
+			intlog.Error(err)
+		}
 	}
 	return logger
 }
@@ -79,6 +108,22 @@ func (l *Logger) Level(level int) *Logger {
 		logger = l
 	}
 	logger.SetLevel(level)
+	return logger
+}
+
+// LevelStr is a chaining function,
+// which sets logging level for the current logging content output using level string.
+func (l *Logger) LevelStr(levelStr string) *Logger {
+	logger := (*Logger)(nil)
+	if l.parent == nil {
+		logger = l.Clone()
+	} else {
+		logger = l
+	}
+	if err := logger.SetLevelStr(levelStr); err != nil {
+		// panic(err)
+		intlog.Error(err)
+	}
 	return logger
 }
 
@@ -138,9 +183,9 @@ func (l *Logger) Stdout(enabled ...bool) *Logger {
 	}
 	// stdout printing is enabled if <enabled> is not passed.
 	if len(enabled) > 0 && !enabled[0] {
-		logger.stdoutPrint = false
+		logger.config.StdoutPrint = false
 	} else {
-		logger.stdoutPrint = true
+		logger.config.StdoutPrint = true
 	}
 	return logger
 }
@@ -176,9 +221,9 @@ func (l *Logger) Line(long ...bool) *Logger {
 		logger = l
 	}
 	if len(long) > 0 && long[0] {
-		logger.flags |= F_FILE_LONG
+		logger.config.Flags |= F_FILE_LONG
 	} else {
-		logger.flags |= F_FILE_SHORT
+		logger.config.Flags |= F_FILE_SHORT
 	}
 	return logger
 }

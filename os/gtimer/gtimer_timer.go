@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,61 +7,84 @@
 package gtimer
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/gogf/gf/container/glist"
 	"github.com/gogf/gf/container/gtype"
 )
 
-// 定时器/分层时间轮
+// Timer is a Hierarchical Timing Wheel manager for timing jobs.
 type Timer struct {
-	status     *gtype.Int // 定时器状态
-	wheels     []*wheel   // 分层时间轮对象
-	length     int        // 分层层数
-	number     int        // 每一层Slot Number
-	intervalMs int64      // 最小时间刻度(毫秒)
+	status     *gtype.Int       // Timer status.
+	wheels     []*wheel         // The underlying wheels.
+	length     int              // Max level of the wheels.
+	number     int              // Slot Number of each wheel.
+	intervalMs int64            // Interval of the slot in milliseconds.
+	nowFunc    func() time.Time // nowFunc returns the current time, which can be custom.
 }
 
-// 单层时间轮
+// Wheel is a slot wrapper for timing job install and uninstall.
 type wheel struct {
-	timer      *Timer        // 所属定时器
-	level      int           // 所属分层索引号
-	slots      []*glist.List // 所有的循环任务项, 按照Slot Number进行分组
-	number     int64         // Slot Number=len(slots)
-	ticks      *gtype.Int64  // 当前时间轮已转动的刻度数量
-	totalMs    int64         // 整个时间轮的时间长度(毫秒)=number*interval
-	createMs   int64         // 创建时间(毫秒)
-	intervalMs int64         // 时间间隔(slot时间长度, 毫秒)
+	timer      *Timer        // Belonged timer.
+	level      int           // The level in the timer.
+	slots      []*glist.List // Slot array.
+	number     int64         // Slot Number=len(slots).
+	ticks      *gtype.Int64  // Ticked count of the wheel, one tick is one of its interval passed.
+	totalMs    int64         // Total duration in milliseconds=number*interval.
+	createMs   int64         // Created timestamp in milliseconds.
+	intervalMs int64         // Interval in milliseconds, which is the duration of one slot.
 }
 
-// 创建分层时间轮
+// New creates and returns a Hierarchical Timing Wheel designed timer.
+// The parameter <interval> specifies the interval of the timer.
+// The optional parameter <level> specifies the wheels count of the timer,
+// which is defaultWheelLevel in default.
 func New(slot int, interval time.Duration, level ...int) *Timer {
-	length := gDEFAULT_WHEEL_LEVEL
-	if len(level) > 0 {
-		length = level[0]
-	}
-	t := &Timer{
-		status:     gtype.NewInt(STATUS_RUNNING),
-		wheels:     make([]*wheel, length),
-		length:     length,
-		number:     slot,
-		intervalMs: interval.Nanoseconds() / 1e6,
-	}
-	for i := 0; i < length; i++ {
-		if i > 0 {
-			n := time.Duration(t.wheels[i-1].totalMs) * time.Millisecond
-			w := t.newWheel(i, slot, n)
-			t.wheels[i] = w
-			t.wheels[i-1].addEntry(n, w.proceed, false, gDEFAULT_TIMES, STATUS_READY)
-		} else {
-			t.wheels[i] = t.newWheel(i, slot, interval)
-		}
-	}
+	t := doNewWithoutAutoStart(slot, interval, level...)
 	t.wheels[0].start()
 	return t
 }
 
-// 创建自定义的循环任务管理对象
+func doNewWithoutAutoStart(slot int, interval time.Duration, level ...int) *Timer {
+	if slot <= 0 {
+		panic(fmt.Sprintf("invalid slot number: %d", slot))
+	}
+	length := defaultWheelLevel
+	if len(level) > 0 {
+		length = level[0]
+	}
+	t := &Timer{
+		status:     gtype.NewInt(StatusRunning),
+		wheels:     make([]*wheel, length),
+		length:     length,
+		number:     slot,
+		intervalMs: interval.Nanoseconds() / 1e6,
+		nowFunc: func() time.Time {
+			return time.Now()
+		},
+	}
+	for i := 0; i < length; i++ {
+		if i > 0 {
+			n := time.Duration(t.wheels[i-1].totalMs) * time.Millisecond
+			if n <= 0 {
+				panic(fmt.Sprintf(`inteval is too large with level: %dms x %d`, interval, length))
+			}
+			w := t.newWheel(i, slot, n)
+			t.wheels[i] = w
+			t.wheels[i-1].addEntry(n, w.proceed, false, defaultTimes, StatusReady)
+			if i == length-1 {
+				t.wheels[i].addEntry(n, w.proceed, false, defaultTimes, StatusReady)
+			}
+		} else {
+			w := t.newWheel(i, slot, interval)
+			t.wheels[i] = w
+		}
+	}
+	return t
+}
+
+// newWheel creates and returns a single wheel.
 func (t *Timer) newWheel(level int, slot int, interval time.Duration) *wheel {
 	w := &wheel{
 		timer:      t,
@@ -79,99 +102,118 @@ func (t *Timer) newWheel(level int, slot int, interval time.Duration) *wheel {
 	return w
 }
 
-// 添加循环任务
+// Add adds a timing job to the timer, which runs in interval of <interval>.
 func (t *Timer) Add(interval time.Duration, job JobFunc) *Entry {
-	return t.doAddEntry(interval, job, false, gDEFAULT_TIMES, STATUS_READY)
+	return t.doAddEntry(interval, job, false, defaultTimes, StatusReady)
 }
 
-// 添加定时任务
+// AddEntry adds a timing job to the timer with detailed parameters.
+//
+// The parameter <interval> specifies the running interval of the job.
+//
+// The parameter <singleton> specifies whether the job running in singleton mode.
+// There's only one of the same job is allowed running when its a singleton mode job.
+//
+// The parameter <times> specifies limit for the job running times, which means the job
+// exits if its run times exceeds the <times>.
+//
+// The parameter <status> specifies the job status when it's firstly added to the timer.
 func (t *Timer) AddEntry(interval time.Duration, job JobFunc, singleton bool, times int, status int) *Entry {
 	return t.doAddEntry(interval, job, singleton, times, status)
 }
 
-// 添加单例运行循环任务
+// AddSingleton is a convenience function for add singleton mode job.
 func (t *Timer) AddSingleton(interval time.Duration, job JobFunc) *Entry {
-	return t.doAddEntry(interval, job, true, gDEFAULT_TIMES, STATUS_READY)
+	return t.doAddEntry(interval, job, true, defaultTimes, StatusReady)
 }
 
-// 添加只运行一次的循环任务
+// AddOnce is a convenience function for adding a job which only runs once and then exits.
 func (t *Timer) AddOnce(interval time.Duration, job JobFunc) *Entry {
-	return t.doAddEntry(interval, job, true, 1, STATUS_READY)
+	return t.doAddEntry(interval, job, true, 1, StatusReady)
 }
 
-// 添加运行指定次数的循环任务。
+// AddTimes is a convenience function for adding a job which is limited running times.
 func (t *Timer) AddTimes(interval time.Duration, times int, job JobFunc) *Entry {
-	return t.doAddEntry(interval, job, true, times, STATUS_READY)
+	return t.doAddEntry(interval, job, true, times, StatusReady)
 }
 
-// 延迟添加循环任务。
+// DelayAdd adds a timing job after delay of <interval> duration.
+// Also see Add.
 func (t *Timer) DelayAdd(delay time.Duration, interval time.Duration, job JobFunc) {
 	t.AddOnce(delay, func() {
 		t.Add(interval, job)
 	})
 }
 
-// 延迟添加循环任务, 支持完整的参数。
+// DelayAddEntry adds a timing job after delay of <interval> duration.
+// Also see AddEntry.
 func (t *Timer) DelayAddEntry(delay time.Duration, interval time.Duration, job JobFunc, singleton bool, times int, status int) {
 	t.AddOnce(delay, func() {
 		t.AddEntry(interval, job, singleton, times, status)
 	})
 }
 
-// 延迟添加单例循环任务
+// DelayAddSingleton adds a timing job after delay of <interval> duration.
+// Also see AddSingleton.
 func (t *Timer) DelayAddSingleton(delay time.Duration, interval time.Duration, job JobFunc) {
 	t.AddOnce(delay, func() {
 		t.AddSingleton(interval, job)
 	})
 }
 
-// 延迟添加只运行一次的循环任务
+// DelayAddOnce adds a timing job after delay of <interval> duration.
+// Also see AddOnce.
 func (t *Timer) DelayAddOnce(delay time.Duration, interval time.Duration, job JobFunc) {
 	t.AddOnce(delay, func() {
 		t.AddOnce(interval, job)
 	})
 }
 
-// 延迟添加只运行一次的循环任务
+// DelayAddTimes adds a timing job after delay of <interval> duration.
+// Also see AddTimes.
 func (t *Timer) DelayAddTimes(delay time.Duration, interval time.Duration, times int, job JobFunc) {
 	t.AddOnce(delay, func() {
 		t.AddTimes(interval, times, job)
 	})
 }
 
-// 启动定时器
+// Start starts the timer.
 func (t *Timer) Start() {
-	t.status.Set(STATUS_RUNNING)
+	t.status.Set(StatusRunning)
 }
 
-// 定制定时器
+// Stop stops the timer.
 func (t *Timer) Stop() {
-	t.status.Set(STATUS_STOPPED)
+	t.status.Set(StatusStopped)
 }
 
-// 关闭定时器
+// Close closes the timer.
 func (t *Timer) Close() {
-	t.status.Set(STATUS_CLOSED)
+	t.status.Set(StatusClosed)
 }
 
-// 添加定时任务
+// doAddEntry adds a timing job to timer for internal usage.
 func (t *Timer) doAddEntry(interval time.Duration, job JobFunc, singleton bool, times int, status int) *Entry {
 	return t.wheels[t.getLevelByIntervalMs(interval.Nanoseconds()/1e6)].addEntry(interval, job, singleton, times, status)
 }
 
-// 添加定时任务，给定父级Entry, 间隔参数参数为毫秒数.
-func (t *Timer) doAddEntryByParent(interval int64, parent *Entry) *Entry {
-	return t.wheels[t.getLevelByIntervalMs(interval)].addEntryByParent(interval, parent)
+// doAddEntryByParent adds a timing job to timer with parent entry for internal usage.
+func (t *Timer) doAddEntryByParent(rollOn bool, nowMs, interval int64, parent *Entry) *Entry {
+	return t.wheels[t.getLevelByIntervalMs(interval)].addEntryByParent(rollOn, nowMs, interval, parent)
 }
 
-// 根据intervalMs计算添加的分层索引
+// getLevelByIntervalMs calculates and returns the level of timer wheel with given milliseconds.
 func (t *Timer) getLevelByIntervalMs(intervalMs int64) int {
 	pos, cmp := t.binSearchIndex(intervalMs)
 	switch cmp {
-	// intervalMs与最后匹配值相等, 不添加到匹配得层，而是向下一层添加
+	// If equals to the last comparison value, do not add it directly to this wheel,
+	// but loop and continue comparison from the index to the first level,
+	// and add it to the proper level wheel.
 	case 0:
 		fallthrough
-	// intervalMs比最后匹配值小
+	// If lesser than the last comparison value,
+	// loop and continue comparison from the index to the first level,
+	// and add it to the proper level wheel.
 	case -1:
 		i := pos
 		for ; i > 0; i-- {
@@ -181,7 +223,9 @@ func (t *Timer) getLevelByIntervalMs(intervalMs int64) int {
 		}
 		return i
 
-	// intervalMs比最后匹配值大
+	// If greater than the last comparison value,
+	// loop and continue comparison from the index to the last level,
+	// and add it to the proper level wheel.
 	case 1:
 		i := pos
 		for ; i < t.length-1; i++ {
@@ -194,14 +238,15 @@ func (t *Timer) getLevelByIntervalMs(intervalMs int64) int {
 	return 0
 }
 
-// 二分查找当前任务可以添加的时间轮对象索引.
+// binSearchIndex uses binary search algorithm for finding the possible level of the wheel
+// for the interval value.
 func (t *Timer) binSearchIndex(n int64) (index int, result int) {
 	min := 0
 	max := t.length - 1
 	mid := 0
 	cmp := -2
 	for min <= max {
-		mid = int((min + max) / 2)
+		mid = min + int((max-min)/2)
 		switch {
 		case t.wheels[mid].intervalMs == n:
 			cmp = 0

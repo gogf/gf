@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -16,11 +16,16 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/gogf/gf/internal/utilstr"
+	"github.com/gogf/gf/internal/utils"
 
 	"github.com/gogf/gf/util/gconv"
 
 	"github.com/gogf/gf/util/grand"
+)
+
+const (
+	// NotFoundIndex is the position index for string not found in searching functions.
+	NotFoundIndex = -1
 )
 
 // Replace returns a copy of the string <origin>
@@ -43,8 +48,10 @@ func ReplaceI(origin, search, replace string, count ...int) string {
 	if n == 0 {
 		return origin
 	}
-	length := len(search)
-	searchLower := strings.ToLower(search)
+	var (
+		length      = len(search)
+		searchLower = strings.ToLower(search)
+	)
 	for {
 		originLower := strings.ToLower(origin)
 		if pos := strings.Index(originLower, searchLower); pos != -1 {
@@ -98,7 +105,7 @@ func ReplaceIByArray(origin string, array []string) string {
 // ReplaceByMap returns a copy of <origin>,
 // which is replaced by a map in unordered way, case-sensitively.
 func ReplaceByMap(origin string, replaces map[string]string) string {
-	return utilstr.ReplaceByMap(origin, replaces)
+	return utils.ReplaceByMap(origin, replaces)
 }
 
 // ReplaceIByMap returns a copy of <origin>,
@@ -122,7 +129,7 @@ func ToUpper(s string) string {
 
 // UcFirst returns a copy of the string s with the first letter mapped to its upper case.
 func UcFirst(s string) string {
-	return utilstr.UcFirst(s)
+	return utils.UcFirst(s)
 }
 
 // LcFirst returns a copy of the string s with the first letter mapped to its lower case.
@@ -143,24 +150,50 @@ func UcWords(str string) string {
 
 // IsLetterLower tests whether the given byte b is in lower case.
 func IsLetterLower(b byte) bool {
-	return utilstr.IsLetterLower(b)
+	return utils.IsLetterLower(b)
 }
 
 // IsLetterUpper tests whether the given byte b is in upper case.
 func IsLetterUpper(b byte) bool {
-	return utilstr.IsLetterUpper(b)
+	return utils.IsLetterUpper(b)
 }
 
 // IsNumeric tests whether the given string s is numeric.
 func IsNumeric(s string) bool {
-	return utilstr.IsNumeric(s)
+	return utils.IsNumeric(s)
 }
 
 // SubStr returns a portion of string <str> specified by the <start> and <length> parameters.
 func SubStr(str string, start int, length ...int) (substr string) {
+	lth := len(str)
+
+	// Simple border checks.
+	if start < 0 {
+		start = 0
+	}
+	if start >= lth {
+		start = lth
+	}
+	end := lth
+	if len(length) > 0 {
+		end = start + length[0]
+		if end < start {
+			end = lth
+		}
+	}
+	if end > lth {
+		end = lth
+	}
+	return str[start:end]
+}
+
+// SubStrRune returns a portion of string <str> specified by the <start> and <length> parameters.
+// SubStrRune considers parameter <str> as unicode string.
+func SubStrRune(str string, start int, length ...int) (substr string) {
 	// Converting to []rune to support unicode.
 	rs := []rune(str)
 	lth := len(rs)
+
 	// Simple border checks.
 	if start < 0 {
 		start = 0
@@ -181,12 +214,25 @@ func SubStr(str string, start int, length ...int) (substr string) {
 	return string(rs[start:end])
 }
 
-// StrLimit returns a portion of string <str> specified by <length> parameters,
-// if the length of <str> is greater than <length>,
-// then the <suffix> will be appended to the result string.
+// StrLimit returns a portion of string <str> specified by <length> parameters, if the length
+// of <str> is greater than <length>, then the <suffix> will be appended to the result string.
 func StrLimit(str string, length int, suffix ...string) string {
-	rs := []rune(str)
 	if len(str) < length {
+		return str
+	}
+	addStr := "..."
+	if len(suffix) > 0 {
+		addStr = suffix[0]
+	}
+	return str[0:length] + addStr
+}
+
+// StrLimitRune returns a portion of string <str> specified by <length> parameters, if the length
+// of <str> is greater than <length>, then the <suffix> will be appended to the result string.
+// StrLimitRune considers parameter <str> as unicode string.
+func StrLimitRune(str string, length int, suffix ...string) string {
+	rs := []rune(str)
+	if len(rs) < length {
 		return str
 	}
 	addStr := "..."
@@ -255,6 +301,7 @@ func NumberFormat(number float64, decimals int, decPoint, thousandsSep string) s
 // Can be used to split a string into smaller chunks which is useful for
 // e.g. converting BASE64 string output to match RFC 2045 semantics.
 // It inserts end every chunkLen characters.
+// It considers parameter <body> and <end> as unicode string.
 func ChunkSplit(body string, chunkLen int, end string) string {
 	if end == "" {
 		end = "\r\n"
@@ -293,22 +340,18 @@ func Fields(str string) []string {
 	return strings.Fields(str)
 }
 
-// Contains reports whether <substr> is within <str>, case-sensitively.
-func Contains(str, substr string) bool {
-	return strings.Contains(str, substr)
+// HasPrefix tests whether the string s begins with prefix.
+func HasPrefix(s, prefix string) bool {
+	return strings.HasPrefix(s, prefix)
 }
 
-// ContainsI reports whether substr is within str, case-insensitively.
-func ContainsI(str, substr string) bool {
-	return PosI(str, substr) != -1
-}
-
-// ContainsAny reports whether any Unicode code points in <chars> are within <s>.
-func ContainsAny(s, chars string) bool {
-	return strings.ContainsAny(s, chars)
+// HasSuffix tests whether the string s ends with suffix.
+func HasSuffix(s, suffix string) bool {
+	return strings.HasSuffix(s, suffix)
 }
 
 // CountWords returns information about words' count used in a string.
+// It considers parameter <str> as unicode string.
 func CountWords(str string) map[string]int {
 	m := make(map[string]int)
 	buffer := bytes.NewBuffer(nil)
@@ -329,6 +372,7 @@ func CountWords(str string) map[string]int {
 }
 
 // CountChars returns information about chars' count used in a string.
+// It considers parameter <str> as unicode string.
 func CountChars(str string, noSpace ...bool) map[string]int {
 	m := make(map[string]int)
 	countSpace := true
@@ -345,16 +389,18 @@ func CountChars(str string, noSpace ...bool) map[string]int {
 }
 
 // WordWrap wraps a string to a given number of characters.
-// TODO: Enable cut param, see http://php.net/manual/en/function.wordwrap.php.
+// TODO: Enable cut parameter, see http://php.net/manual/en/function.wordwrap.php.
 func WordWrap(str string, width int, br string) string {
 	if br == "" {
 		br = "\n"
 	}
-	init := make([]byte, 0, len(str))
-	buf := bytes.NewBuffer(init)
-	var current int
-	var wordBuf, spaceBuf bytes.Buffer
-	for _, char := range str {
+	var (
+		current           int
+		wordBuf, spaceBuf bytes.Buffer
+		init              = make([]byte, 0, len(str))
+		buf               = bytes.NewBuffer(init)
+	)
+	for _, char := range []rune(str) {
 		if char == '\n' {
 			if wordBuf.Len() == 0 {
 				if current+spaceBuf.Len() > width {
@@ -404,7 +450,13 @@ func WordWrap(str string, width int, br string) string {
 }
 
 // RuneLen returns string length of unicode.
+// Deprecated, use LenRune instead.
 func RuneLen(str string) int {
+	return LenRune(str)
+}
+
+// LenRune returns string length of unicode.
+func LenRune(str string) int {
 	return utf8.RuneCountInString(str)
 }
 
@@ -420,14 +472,44 @@ func Str(haystack string, needle string) string {
 	if needle == "" {
 		return ""
 	}
-	idx := strings.Index(haystack, needle)
-	if idx == -1 {
+	pos := strings.Index(haystack, needle)
+	if pos == NotFoundIndex {
 		return ""
 	}
-	return haystack[idx+len([]byte(needle))-1:]
+	return haystack[pos+len([]byte(needle))-1:]
+}
+
+// StrEx returns part of <haystack> string starting from and excluding
+// the first occurrence of <needle> to the end of <haystack>.
+func StrEx(haystack string, needle string) string {
+	if s := Str(haystack, needle); s != "" {
+		return s[1:]
+	}
+	return ""
+}
+
+// StrTill returns part of <haystack> string ending to and including
+// the first occurrence of <needle> from the start of <haystack>.
+func StrTill(haystack string, needle string) string {
+	pos := strings.Index(haystack, needle)
+	if pos == NotFoundIndex || pos == 0 {
+		return ""
+	}
+	return haystack[:pos+1]
+}
+
+// StrTillEx returns part of <haystack> string ending to and excluding
+// the first occurrence of <needle> from the start of <haystack>.
+func StrTillEx(haystack string, needle string) string {
+	pos := strings.Index(haystack, needle)
+	if pos == NotFoundIndex || pos == 0 {
+		return ""
+	}
+	return haystack[:pos]
 }
 
 // Shuffle randomly shuffles a string.
+// It considers parameter <str> as unicode string.
 func Shuffle(str string) string {
 	runes := []rune(str)
 	s := make([]rune, len(runes))
@@ -443,35 +525,43 @@ func Split(str, delimiter string) []string {
 }
 
 // SplitAndTrim splits string <str> by a string <delimiter> to an array,
-// and calls Trim to every element of this array.
-func SplitAndTrim(str, delimiter, cut string) []string {
-	array := strings.Split(str, delimiter)
-	for k, v := range array {
-		array[k] = strings.Trim(v, cut)
+// and calls Trim to every element of this array. It ignores the elements
+// which are empty after Trim.
+func SplitAndTrim(str, delimiter string, characterMask ...string) []string {
+	array := make([]string, 0)
+	for _, v := range strings.Split(str, delimiter) {
+		v = Trim(v, characterMask...)
+		if v != "" {
+			array = append(array, v)
+		}
 	}
 	return array
 }
 
 // SplitAndTrimSpace splits string <str> by a string <delimiter> to an array,
 // and calls TrimSpace to every element of this array.
+// Deprecated, use SplitAndTrim instead.
 func SplitAndTrimSpace(str, delimiter string) []string {
-	array := strings.Split(str, delimiter)
-	for k, v := range array {
-		array[k] = strings.TrimSpace(v)
+	array := make([]string, 0)
+	for _, v := range strings.Split(str, delimiter) {
+		v = strings.TrimSpace(v)
+		if v != "" {
+			array = append(array, v)
+		}
 	}
 	return array
 }
 
-// Join concatenates the elements of a to create a single string. The separator string
-// sep is placed between elements in the resulting string.
+// Join concatenates the elements of <array> to create a single string. The separator string
+// <sep> is placed between elements in the resulting string.
 func Join(array []string, sep string) string {
 	return strings.Join(array, sep)
 }
 
-// JoinAny concatenates the elements of a to create a single string. The separator string
-// sep is placed between elements in the resulting string.
+// JoinAny concatenates the elements of <array> to create a single string. The separator string
+// <sep> is placed between elements in the resulting string.
 //
-// The parameter <array> can be any type of slice.
+// The parameter <array> can be any type of slice, which be converted to string array.
 func JoinAny(array interface{}, sep string) string {
 	return strings.Join(gconv.Strings(array), sep)
 }
@@ -499,19 +589,22 @@ func Ord(char string) int {
 }
 
 // HideStr replaces part of the the string <str> to <hide> by <percentage> from the <middle>.
+// It considers parameter <str> as unicode string.
 func HideStr(str string, percent int, hide string) string {
 	array := strings.Split(str, "@")
 	if len(array) > 1 {
 		str = array[0]
 	}
-	rs := []rune(str)
-	length := len(rs)
-	mid := math.Floor(float64(length / 2))
-	hideLen := int(math.Floor(float64(length) * (float64(percent) / 100)))
-	start := int(mid - math.Floor(float64(hideLen)/2))
-	hideStr := []rune("")
-	hideRune := []rune(hide)
-	for i := 0; i < int(hideLen); i++ {
+	var (
+		rs       = []rune(str)
+		length   = len(rs)
+		mid      = math.Floor(float64(length / 2))
+		hideLen  = int(math.Floor(float64(length) * (float64(percent) / 100)))
+		start    = int(mid - math.Floor(float64(hideLen)/2))
+		hideStr  = []rune("")
+		hideRune = []rune(hide)
+	)
+	for i := 0; i < hideLen; i++ {
 		hideStr = append(hideStr, hideRune...)
 	}
 	buffer := bytes.NewBuffer(nil)
@@ -526,6 +619,7 @@ func HideStr(str string, percent int, hide string) string {
 
 // Nl2Br inserts HTML line breaks(<br>|<br />) before all newlines in a string:
 // \n\r, \r\n, \r, \n.
+// It considers parameter <str> as unicode string.
 func Nl2Br(str string, isXhtml ...bool) string {
 	r, n, runes := '\r', '\n', []rune(str)
 	var br []byte
@@ -620,42 +714,10 @@ func SearchArray(a []string, s string) int {
 			return i
 		}
 	}
-	return -1
+	return NotFoundIndex
 }
 
 // InArray checks whether string <s> in slice <a>.
 func InArray(a []string, s string) bool {
-	return SearchArray(a, s) != -1
-}
-
-// CompareVersion compares <a> and <b> as standard golang version.
-// Golang standard version is as: 1.0.0, v1.0.1, v2.10.8, 10.2.0 etc.
-func CompareVersion(a, b string) int {
-	if a[0] == 'v' {
-		a = a[1:]
-	}
-	if b[0] == 'v' {
-		b = b[1:]
-	}
-	array1 := strings.Split(a, ".")
-	array2 := strings.Split(b, ".")
-	for i := 0; i < len(array2)-len(array1); i++ {
-		array1 = append(array1, "")
-	}
-	for i := 0; i < len(array1)-len(array2); i++ {
-		array2 = append(array2, "")
-	}
-	v1 := 0
-	v2 := 0
-	for i := 0; i < len(array1); i++ {
-		v1 = gconv.Int(array1[i])
-		v2 = gconv.Int(array2[i])
-		if v1 > v2 {
-			return 1
-		}
-		if v1 < v2 {
-			return -1
-		}
-	}
-	return 0
+	return SearchArray(a, s) != NotFoundIndex
 }

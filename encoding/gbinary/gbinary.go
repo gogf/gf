@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -6,7 +6,7 @@
 
 // Package gbinary provides useful API for handling binary/bytes data.
 //
-// 注意gbinary模块默认使用LittleEndian进行编码。
+// Note that package gbinary encodes the data using LittleEndian in default.
 package gbinary
 
 func Encode(values ...interface{}) []byte {

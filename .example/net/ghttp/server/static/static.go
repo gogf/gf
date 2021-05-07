@@ -6,8 +6,10 @@ import "github.com/gogf/gf/frame/g"
 func main() {
 	s := g.Server()
 	s.SetIndexFolder(true)
-	s.SetServerRoot("/Users/john/Temp")
-	s.AddSearchPath("/Users/john/Documents")
+	s.SetServerRoot("/Users/john/Downloads")
+	//s.AddSearchPath("/Users/john/Documents")
+	s.SetErrorLogEnabled(true)
+	s.SetAccessLogEnabled(true)
 	s.SetPort(8199)
 	s.Run()
 }

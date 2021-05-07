@@ -1,14 +1,14 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// 基本路由功能以及优先级测试
 package ghttp_test
 
 import (
 	"fmt"
+	"github.com/gogf/gf/internal/intlog"
 	"testing"
 	"time"
 
@@ -17,9 +17,8 @@ import (
 	"github.com/gogf/gf/test/gtest"
 )
 
-// 基本路由功能测试
 func Test_Router_DomainBasic(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	d := s.Domain("localhost, local")
 	d.BindHandler("/:name", func(r *ghttp.Request) {
@@ -38,41 +37,39 @@ func Test_Router_DomainBasic(t *testing.T) {
 		r.Response.Write(r.Get("field"))
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
-	// 等待启动完成
-	time.Sleep(200 * time.Millisecond)
-	gtest.Case(t, func() {
-		client := ghttp.NewClient()
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		gtest.Assert(client.GetContent("/john"), "Not Found")
-		gtest.Assert(client.GetContent("/john/update"), "Not Found")
-		gtest.Assert(client.GetContent("/john/edit"), "Not Found")
-		gtest.Assert(client.GetContent("/user/list/100.html"), "Not Found")
+		t.Assert(client.GetContent("/john"), "Not Found")
+		t.Assert(client.GetContent("/john/update"), "Not Found")
+		t.Assert(client.GetContent("/john/edit"), "Not Found")
+		t.Assert(client.GetContent("/user/list/100.html"), "Not Found")
 	})
-	gtest.Case(t, func() {
-		client := ghttp.NewClient()
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://localhost:%d", p))
-		gtest.Assert(client.GetContent("/john"), "")
-		gtest.Assert(client.GetContent("/john/update"), "john")
-		gtest.Assert(client.GetContent("/john/edit"), "edit")
-		gtest.Assert(client.GetContent("/user/list/100.html"), "100")
+		t.Assert(client.GetContent("/john"), "")
+		t.Assert(client.GetContent("/john/update"), "john")
+		t.Assert(client.GetContent("/john/edit"), "edit")
+		t.Assert(client.GetContent("/user/list/100.html"), "100")
 	})
-	gtest.Case(t, func() {
-		client := ghttp.NewClient()
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://local:%d", p))
-		gtest.Assert(client.GetContent("/john"), "")
-		gtest.Assert(client.GetContent("/john/update"), "john")
-		gtest.Assert(client.GetContent("/john/edit"), "edit")
-		gtest.Assert(client.GetContent("/user/list/100.html"), "100")
+		t.Assert(client.GetContent("/john"), "")
+		t.Assert(client.GetContent("/john/update"), "john")
+		t.Assert(client.GetContent("/john/edit"), "edit")
+		t.Assert(client.GetContent("/user/list/100.html"), "100")
 	})
 }
 
-// 测试HTTP Method注册.
 func Test_Router_DomainMethod(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	d := s.Domain("localhost, local")
 	d.BindHandler("GET:/get", func(r *ghttp.Request) {
@@ -82,91 +79,89 @@ func Test_Router_DomainMethod(t *testing.T) {
 
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
-	// 等待启动完成
-	time.Sleep(200 * time.Millisecond)
-	gtest.Case(t, func() {
-		client := ghttp.NewClient()
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		resp1, err := client.Get("/get")
 		defer resp1.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp1.StatusCode, 404)
+		t.Assert(err, nil)
+		t.Assert(resp1.StatusCode, 404)
 
 		resp2, err := client.Post("/get")
 		defer resp2.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp2.StatusCode, 404)
+		t.Assert(err, nil)
+		t.Assert(resp2.StatusCode, 404)
 
 		resp3, err := client.Get("/post")
 		defer resp3.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp3.StatusCode, 404)
+		t.Assert(err, nil)
+		t.Assert(resp3.StatusCode, 404)
 
 		resp4, err := client.Post("/post")
 		defer resp4.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp4.StatusCode, 404)
+		t.Assert(err, nil)
+		t.Assert(resp4.StatusCode, 404)
 	})
 
-	gtest.Case(t, func() {
-		client := ghttp.NewClient()
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://localhost:%d", p))
 
 		resp1, err := client.Get("/get")
 		defer resp1.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp1.StatusCode, 200)
+		t.Assert(err, nil)
+		t.Assert(resp1.StatusCode, 200)
 
 		resp2, err := client.Post("/get")
 		defer resp2.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp2.StatusCode, 404)
+		t.Assert(err, nil)
+		t.Assert(resp2.StatusCode, 404)
 
 		resp3, err := client.Get("/post")
 		defer resp3.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp3.StatusCode, 404)
+		t.Assert(err, nil)
+		t.Assert(resp3.StatusCode, 404)
 
 		resp4, err := client.Post("/post")
 		defer resp4.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp4.StatusCode, 200)
+		t.Assert(err, nil)
+		t.Assert(resp4.StatusCode, 200)
 	})
 
-	gtest.Case(t, func() {
-		client := ghttp.NewClient()
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://local:%d", p))
 
 		resp1, err := client.Get("/get")
 		defer resp1.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp1.StatusCode, 200)
+		t.Assert(err, nil)
+		t.Assert(resp1.StatusCode, 200)
 
 		resp2, err := client.Post("/get")
 		defer resp2.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp2.StatusCode, 404)
+		t.Assert(err, nil)
+		t.Assert(resp2.StatusCode, 404)
 
 		resp3, err := client.Get("/post")
 		defer resp3.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp3.StatusCode, 404)
+		t.Assert(err, nil)
+		t.Assert(resp3.StatusCode, 404)
 
 		resp4, err := client.Post("/post")
 		defer resp4.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp4.StatusCode, 200)
+		t.Assert(err, nil)
+		t.Assert(resp4.StatusCode, 200)
 	})
 }
 
-// 测试状态返回.
 func Test_Router_DomainStatus(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	d := s.Domain("localhost, local")
 	d.BindHandler("/200", func(r *ghttp.Request) {
@@ -182,89 +177,87 @@ func Test_Router_DomainStatus(t *testing.T) {
 		r.Response.WriteStatus(500)
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
-	// 等待启动完成
-	time.Sleep(200 * time.Millisecond)
-	gtest.Case(t, func() {
-		client := ghttp.NewClient()
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		resp1, err := client.Get("/200")
 		defer resp1.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp1.StatusCode, 404)
+		t.Assert(err, nil)
+		t.Assert(resp1.StatusCode, 404)
 
 		resp2, err := client.Get("/300")
 		defer resp2.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp2.StatusCode, 404)
+		t.Assert(err, nil)
+		t.Assert(resp2.StatusCode, 404)
 
 		resp3, err := client.Get("/400")
 		defer resp3.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp3.StatusCode, 404)
+		t.Assert(err, nil)
+		t.Assert(resp3.StatusCode, 404)
 
 		resp4, err := client.Get("/500")
 		defer resp4.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp4.StatusCode, 404)
+		t.Assert(err, nil)
+		t.Assert(resp4.StatusCode, 404)
 	})
-	gtest.Case(t, func() {
-		client := ghttp.NewClient()
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://localhost:%d", p))
 
 		resp1, err := client.Get("/200")
 		defer resp1.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp1.StatusCode, 200)
+		t.Assert(err, nil)
+		t.Assert(resp1.StatusCode, 200)
 
 		resp2, err := client.Get("/300")
 		defer resp2.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp2.StatusCode, 300)
+		t.Assert(err, nil)
+		t.Assert(resp2.StatusCode, 300)
 
 		resp3, err := client.Get("/400")
 		defer resp3.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp3.StatusCode, 400)
+		t.Assert(err, nil)
+		t.Assert(resp3.StatusCode, 400)
 
 		resp4, err := client.Get("/500")
 		defer resp4.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp4.StatusCode, 500)
+		t.Assert(err, nil)
+		t.Assert(resp4.StatusCode, 500)
 	})
-	gtest.Case(t, func() {
-		client := ghttp.NewClient()
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://local:%d", p))
 
 		resp1, err := client.Get("/200")
 		defer resp1.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp1.StatusCode, 200)
+		t.Assert(err, nil)
+		t.Assert(resp1.StatusCode, 200)
 
 		resp2, err := client.Get("/300")
 		defer resp2.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp2.StatusCode, 300)
+		t.Assert(err, nil)
+		t.Assert(resp2.StatusCode, 300)
 
 		resp3, err := client.Get("/400")
 		defer resp3.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp3.StatusCode, 400)
+		t.Assert(err, nil)
+		t.Assert(resp3.StatusCode, 400)
 
 		resp4, err := client.Get("/500")
 		defer resp4.Close()
-		gtest.Assert(err, nil)
-		gtest.Assert(resp4.StatusCode, 500)
+		t.Assert(err, nil)
+		t.Assert(resp4.StatusCode, 500)
 	})
 }
 
-// 自定义状态码处理.
 func Test_Router_DomainCustomStatusHandler(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	d := s.Domain("localhost, local")
 	d.BindHandler("/", func(r *ghttp.Request) {
@@ -274,66 +267,110 @@ func Test_Router_DomainCustomStatusHandler(t *testing.T) {
 		r.Response.Write("404 page")
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
-	// 等待启动完成
-	time.Sleep(200 * time.Millisecond)
-	gtest.Case(t, func() {
-		client := ghttp.NewClient()
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "Not Found")
-		gtest.Assert(client.GetContent("/ThisDoesNotExist"), "Not Found")
+		t.Assert(client.GetContent("/"), "Not Found")
+		t.Assert(client.GetContent("/ThisDoesNotExist"), "Not Found")
 	})
-	gtest.Case(t, func() {
-		client := ghttp.NewClient()
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://localhost:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "hello")
-		gtest.Assert(client.GetContent("/ThisDoesNotExist"), "404 page")
+		t.Assert(client.GetContent("/"), "hello")
+		t.Assert(client.GetContent("/ThisDoesNotExist"), "404 page")
 	})
-	gtest.Case(t, func() {
-		client := ghttp.NewClient()
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://local:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "hello")
-		gtest.Assert(client.GetContent("/ThisDoesNotExist"), "404 page")
+		t.Assert(client.GetContent("/"), "hello")
+		t.Assert(client.GetContent("/ThisDoesNotExist"), "404 page")
 	})
 }
 
-// 测试不存在的路由.
 func Test_Router_Domain404(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	d := s.Domain("localhost, local")
 	d.BindHandler("/", func(r *ghttp.Request) {
 		r.Response.Write("hello")
 	})
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
-	// 等待启动完成
-	time.Sleep(200 * time.Millisecond)
-	gtest.Case(t, func() {
-		client := ghttp.NewClient()
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "Not Found")
+		t.Assert(client.GetContent("/"), "Not Found")
 	})
-	gtest.Case(t, func() {
-		client := ghttp.NewClient()
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://localhost:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "hello")
+		t.Assert(client.GetContent("/"), "hello")
 	})
-	gtest.Case(t, func() {
-		client := ghttp.NewClient()
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://local:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "hello")
+		t.Assert(client.GetContent("/"), "hello")
+	})
+}
+
+func Test_Router_DomainGroup(t *testing.T) {
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	d := s.Domain("localhost, local")
+	d.Group("/", func(group *ghttp.RouterGroup) {
+		group.Group("/app", func(gApp *ghttp.RouterGroup) {
+			gApp.GET("/{table}/list/{page}.html", func(r *ghttp.Request) {
+				intlog.Print("/{table}/list/{page}.html")
+				r.Response.Write(r.Get("table"), "&", r.Get("page"))
+			})
+			gApp.GET("/order/info/{order_id}", func(r *ghttp.Request) {
+				intlog.Print("/order/info/{order_id}")
+				r.Response.Write(r.Get("order_id"))
+			})
+			gApp.DELETE("/comment/{id}", func(r *ghttp.Request) {
+				intlog.Print("/comment/{id}")
+				r.Response.Write(r.Get("id"))
+			})
+		})
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		client1 := g.Client()
+		client1.SetPrefix(fmt.Sprintf("http://local:%d", p))
+
+		client2 := g.Client()
+		client2.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+
+		t.Assert(client1.GetContent("/app/t/list/2.html"), "t&2")
+		t.Assert(client2.GetContent("/app/t/list/2.html"), "Not Found")
+
+		t.Assert(client1.GetContent("/app/order/info/2"), "2")
+		t.Assert(client2.GetContent("/app/order/info/2"), "Not Found")
+
+		t.Assert(client1.GetContent("/app/comment/20"), "Not Found")
+		t.Assert(client2.GetContent("/app/comment/20"), "Not Found")
+
+		t.Assert(client1.DeleteContent("/app/comment/20"), "20")
+		t.Assert(client2.DeleteContent("/app/comment/20"), "Not Found")
 	})
 }

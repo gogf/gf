@@ -1,9 +1,8 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
-// pprof封装.
 
 package ghttp
 
@@ -11,6 +10,8 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/text/gstr"
 	"os"
 	"runtime"
 	"strings"
@@ -27,95 +28,96 @@ import (
 )
 
 const (
-	gADMIN_ACTION_INTERVAL_LIMIT = 2000 // (毫秒)服务开启后允许执行管理操作的间隔限制
-	gADMIN_ACTION_NONE           = 0
-	gADMIN_ACTION_RESTARTING     = 1
-	gADMIN_ACTION_SHUTINGDOWN    = 2
-	gADMIN_ACTION_RELOAD_ENVKEY  = "GF_SERVER_RELOAD"
-	gADMIN_ACTION_RESTART_ENVKEY = "GF_SERVER_RESTART"
-	gADMIN_GPROC_COMM_GROUP      = "GF_GPROC_HTTP_SERVER"
+	// Allow executing management command after server starts after this interval in milliseconds.
+	adminActionIntervalLimit = 2000
+	adminActionNone          = 0
+	adminActionRestarting    = 1
+	adminActionShuttingDown  = 2
+	adminActionReloadEnvKey  = "GF_SERVER_RELOAD"
+	adminActionRestartEnvKey = "GF_SERVER_RESTART"
+	adminGProcCommGroup      = "GF_GPROC_HTTP_SERVER"
 )
 
-// 用于服务管理的对象
-type utilAdmin struct{}
-
-// (进程级别)用于Web Server管理操作的互斥锁，保证管理操作的原子性
+// serverActionLocker is the locker for server administration operations.
 var serverActionLocker sync.Mutex
 
-// (进程级别)用于记录上一次操作的时间(毫秒)
-var serverActionLastTime = gtype.NewInt64(gtime.Millisecond())
+// serverActionLastTime is timestamp in milliseconds of last administration operation.
+var serverActionLastTime = gtype.NewInt64(gtime.TimestampMilli())
 
-// 当前服务进程所处的互斥管理操作状态
+// serverProcessStatus is the server status for operation of current process.
 var serverProcessStatus = gtype.NewInt()
 
-// 重启Web Server，参数支持自定义重启的可执行文件路径，不传递时默认和原有可执行文件路径一致。
-// 针对*niux系统: 平滑重启
-// 针对windows : 完整重启
+// RestartAllServer restarts all the servers of the process.
+// The optional parameter <newExeFilePath> specifies the new binary file for creating process.
 func RestartAllServer(newExeFilePath ...string) error {
+	if !gracefulEnabled {
+		return errors.New("graceful reload feature is disabled")
+	}
 	serverActionLocker.Lock()
 	defer serverActionLocker.Unlock()
 	if err := checkProcessStatus(); err != nil {
 		return err
 	}
-	if err := checkActionFrequence(); err != nil {
+	if err := checkActionFrequency(); err != nil {
 		return err
 	}
 	return restartWebServers("", newExeFilePath...)
 }
 
-// 关闭所有的WebServer
+// ShutdownAllServer shuts down all servers of current process.
 func ShutdownAllServer() error {
 	serverActionLocker.Lock()
 	defer serverActionLocker.Unlock()
 	if err := checkProcessStatus(); err != nil {
 		return err
 	}
-	if err := checkActionFrequence(); err != nil {
+	if err := checkActionFrequency(); err != nil {
 		return err
 	}
 	shutdownWebServers()
 	return nil
 }
 
-// 检查当前服务进程的状态
+// checkProcessStatus checks the server status of current process.
 func checkProcessStatus() error {
 	status := serverProcessStatus.Val()
 	if status > 0 {
 		switch status {
-		case gADMIN_ACTION_RESTARTING:
+		case adminActionRestarting:
 			return errors.New("server is restarting")
-		case gADMIN_ACTION_SHUTINGDOWN:
+		case adminActionShuttingDown:
 			return errors.New("server is shutting down")
 		}
 	}
 	return nil
 }
 
-// 检测当前操作的频繁度
-func checkActionFrequence() error {
-	interval := gtime.Millisecond() - serverActionLastTime.Val()
-	if interval < gADMIN_ACTION_INTERVAL_LIMIT {
-		return errors.New(fmt.Sprintf("too frequent action, please retry in %d ms", gADMIN_ACTION_INTERVAL_LIMIT-interval))
+// checkActionFrequency checks the operation frequency.
+// It returns error if it is too frequency.
+func checkActionFrequency() error {
+	interval := gtime.TimestampMilli() - serverActionLastTime.Val()
+	if interval < adminActionIntervalLimit {
+		return errors.New(fmt.Sprintf("too frequent action, please retry in %d ms", adminActionIntervalLimit-interval))
 	}
-	serverActionLastTime.Set(gtime.Millisecond())
+	serverActionLastTime.Set(gtime.TimestampMilli())
 	return nil
 }
 
-// 平滑重启：创建一个子进程，通过环境变量传参
+// forkReloadProcess creates a new child process and copies the fd to child process.
 func forkReloadProcess(newExeFilePath ...string) error {
 	path := os.Args[0]
 	if len(newExeFilePath) > 0 {
 		path = newExeFilePath[0]
 	}
-	p := gproc.NewProcess(path, os.Args, os.Environ())
-	// 创建新的服务进程，子进程自动从父进程复制文件描述来监听同样的端口
-	sfm := getServerFdMap()
-	// 将sfm中的fd按照子进程创建时的文件描述符顺序进行整理，以便子进程获取到正确的fd
+	var (
+		p   = gproc.NewProcess(path, os.Args, os.Environ())
+		sfm = getServerFdMap()
+	)
 	for name, m := range sfm {
 		for fdk, fdv := range m {
 			if len(fdv) > 0 {
 				s := ""
-				for _, item := range strings.Split(fdv, ",") {
+				for _, item := range gstr.SplitAndTrim(fdv, ",") {
 					array := strings.Split(item, "#")
 					fd := uintptr(gconv.Uint(array[1]))
 					if fd > 0 {
@@ -130,7 +132,7 @@ func forkReloadProcess(newExeFilePath ...string) error {
 		}
 	}
 	buffer, _ := gjson.Encode(sfm)
-	p.Env = append(p.Env, gADMIN_ACTION_RELOAD_ENVKEY+"="+string(buffer))
+	p.Env = append(p.Env, adminActionReloadEnvKey+"="+string(buffer))
 	if _, err := p.Start(); err != nil {
 		glog.Errorf("%d: fork process failed, error:%s, %s", gproc.Pid(), err.Error(), string(buffer))
 		return err
@@ -138,25 +140,24 @@ func forkReloadProcess(newExeFilePath ...string) error {
 	return nil
 }
 
-// 完整重启：创建一个新的子进程
+// forkRestartProcess creates a new server process.
 func forkRestartProcess(newExeFilePath ...string) error {
 	path := os.Args[0]
 	if len(newExeFilePath) > 0 {
 		path = newExeFilePath[0]
 	}
-	// 去掉平滑重启的环境变量参数
-	os.Unsetenv(gADMIN_ACTION_RELOAD_ENVKEY)
+	os.Unsetenv(adminActionReloadEnvKey)
 	env := os.Environ()
-	env = append(env, gADMIN_ACTION_RESTART_ENVKEY+"=1")
+	env = append(env, adminActionRestartEnvKey+"=1")
 	p := gproc.NewProcess(path, os.Args, env)
 	if _, err := p.Start(); err != nil {
-		glog.Errorf("%d: fork process failed, error:%s", gproc.Pid(), err.Error())
+		glog.Errorf(`%d: fork process failed, error:%s, are you running using "go run"?`, gproc.Pid(), err.Error())
 		return err
 	}
 	return nil
 }
 
-// 获取所有Web Server的文件描述符map
+// getServerFdMap returns all the servers name to file descriptor mapping as map.
 func getServerFdMap() map[string]listenerFdMap {
 	sfm := make(map[string]listenerFdMap)
 	serverMapping.RLockFunc(func(m map[string]interface{}) {
@@ -167,7 +168,7 @@ func getServerFdMap() map[string]listenerFdMap {
 	return sfm
 }
 
-// 二进制转换为FdMap
+// bufferToServerFdMap converts binary content to fd map.
 func bufferToServerFdMap(buffer []byte) map[string]listenerFdMap {
 	sfm := make(map[string]listenerFdMap)
 	if len(buffer) > 0 {
@@ -183,16 +184,17 @@ func bufferToServerFdMap(buffer []byte) map[string]listenerFdMap {
 	return sfm
 }
 
-// Web Server重启
+// restartWebServers restarts all servers.
 func restartWebServers(signal string, newExeFilePath ...string) error {
-	serverProcessStatus.Set(gADMIN_ACTION_RESTARTING)
+	serverProcessStatus.Set(adminActionRestarting)
 	if runtime.GOOS == "windows" {
 		if len(signal) > 0 {
-			// 在终端信号下，立即执行重启操作
+			// Controlled by signal.
 			forceCloseWebServers()
 			forkRestartProcess(newExeFilePath...)
 		} else {
-			// 非终端信号下，异步1秒后再执行重启，目的是让接口能够正确返回结果，否则接口会报错(因为web server关闭了)
+			// Controlled by web page.
+			// It should ensure the response wrote to client and then close all servers gracefully.
 			gtimer.SetTimeout(time.Second, func() {
 				forceCloseWebServers()
 				forkRestartProcess(newExeFilePath...)
@@ -201,7 +203,7 @@ func restartWebServers(signal string, newExeFilePath ...string) error {
 	} else {
 		if err := forkReloadProcess(newExeFilePath...); err != nil {
 			glog.Printf("%d: server restarts failed", gproc.Pid())
-			serverProcessStatus.Set(gADMIN_ACTION_NONE)
+			serverProcessStatus.Set(adminActionNone)
 			return err
 		} else {
 			if len(signal) > 0 {
@@ -215,18 +217,15 @@ func restartWebServers(signal string, newExeFilePath ...string) error {
 	return nil
 }
 
-// 关闭所有Web Server
+// shutdownWebServers shuts down all servers.
 func shutdownWebServers(signal ...string) {
-	serverProcessStatus.Set(gADMIN_ACTION_SHUTINGDOWN)
+	serverProcessStatus.Set(adminActionShuttingDown)
 	if len(signal) > 0 {
 		glog.Printf("%d: server shutting down by signal: %s", gproc.Pid(), signal[0])
-		// 在终端信号下，立即执行关闭操作
 		forceCloseWebServers()
 		allDoneChan <- struct{}{}
 	} else {
 		glog.Printf("%d: server shutting down by api", gproc.Pid())
-		// 非终端信号下，异步1秒后再执行关闭，
-		// 目的是让接口能够正确返回结果，否则接口会报错(因为web server关闭了)
 		gtimer.SetTimeout(time.Second, func() {
 			forceCloseWebServers()
 			allDoneChan <- struct{}{}
@@ -234,9 +233,13 @@ func shutdownWebServers(signal ...string) {
 	}
 }
 
-// 关优雅闭进程所有端口的Web Server服务
-// 注意，只是关闭Web Server服务，并不是退出进程
-func gracefulShutdownWebServers() {
+// shutdownWebServersGracefully gracefully shuts down all servers.
+func shutdownWebServersGracefully(signal ...string) {
+	if len(signal) > 0 {
+		glog.Printf("%d: server gracefully shutting down by signal: %s", gproc.Pid(), signal[0])
+	} else {
+		glog.Printf("%d: server gracefully shutting down by api", gproc.Pid())
+	}
 	serverMapping.RLockFunc(func(m map[string]interface{}) {
 		for _, v := range m {
 			for _, s := range v.(*Server).servers {
@@ -246,8 +249,7 @@ func gracefulShutdownWebServers() {
 	})
 }
 
-// 强制关闭进程所有端口的Web Server服务
-// 注意，只是关闭Web Server服务，并不是退出进程
+// forceCloseWebServers forced shuts down all servers.
 func forceCloseWebServers() {
 	serverMapping.RLockFunc(func(m map[string]interface{}) {
 		for _, v := range m {
@@ -258,13 +260,16 @@ func forceCloseWebServers() {
 	})
 }
 
-// 异步监听进程间消息
+// handleProcessMessage receives and handles the message from processes,
+// which are commonly used for graceful reloading feature.
 func handleProcessMessage() {
 	for {
-		if msg := gproc.Receive(gADMIN_GPROC_COMM_GROUP); msg != nil {
+		if msg := gproc.Receive(adminGProcCommGroup); msg != nil {
 			if bytes.EqualFold(msg.Data, []byte("exit")) {
-				gracefulShutdownWebServers()
+				intlog.Printf("%d: process message: exit", gproc.Pid())
+				shutdownWebServersGracefully()
 				allDoneChan <- struct{}{}
+				intlog.Printf("%d: process message: exit done", gproc.Pid())
 				return
 			}
 		}

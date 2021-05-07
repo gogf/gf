@@ -6,7 +6,7 @@
 .idea/
 .settings/
 .vscode/
-vender/
+vendor/
 composer.lock
 gitpush.sh
 pkg/
@@ -14,3 +14,4 @@ bin/
 cbuild
 **/.DS_Store
 .vscode/
+.example/other/

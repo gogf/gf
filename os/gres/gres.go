@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -20,7 +20,7 @@ var (
 // Add unpacks and adds the <content> into the default resource object.
 // The unnecessary parameter <prefix> indicates the prefix
 // for each file storing into current resource object.
-func Add(content []byte, prefix ...string) error {
+func Add(content string, prefix ...string) error {
 	return defaultResource.Add(content, prefix...)
 }
 

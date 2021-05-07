@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -8,27 +8,26 @@
 package gyaml
 
 import (
-	"encoding/json"
+	"github.com/gogf/gf/internal/json"
+	"gopkg.in/yaml.v3"
 
 	"github.com/gogf/gf/util/gconv"
-
-	yaml3 "gopkg.in/yaml.v3"
 )
 
 func Encode(v interface{}) ([]byte, error) {
-	return yaml3.Marshal(v)
+	return yaml.Marshal(v)
 }
 
 func Decode(v []byte) (interface{}, error) {
 	var result map[string]interface{}
-	if err := yaml3.Unmarshal(v, &result); err != nil {
+	if err := yaml.Unmarshal(v, &result); err != nil {
 		return nil, err
 	}
-	return gconv.Map(result), nil
+	return gconv.MapDeep(result), nil
 }
 
 func DecodeTo(v []byte, result interface{}) error {
-	return yaml3.Unmarshal(v, result)
+	return yaml.Unmarshal(v, result)
 }
 
 func ToJson(v []byte) ([]byte, error) {

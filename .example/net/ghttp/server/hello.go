@@ -7,10 +7,9 @@ import (
 
 func main() {
 	s := g.Server()
-	s.SetIndexFolder(true)
 	s.BindHandler("/", func(r *ghttp.Request) {
-		r.Response.Write("hello world")
+		r.Response.Write("Hello World")
 	})
-	s.SetPort(8199)
+	s.SetPort(8999)
 	s.Run()
 }

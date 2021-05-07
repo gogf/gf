@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,7 +7,7 @@
 package gview
 
 import (
-	"github.com/gogf/gf/internal/cmdenv"
+	"github.com/gogf/gf/os/gcmd"
 )
 
 const (
@@ -18,5 +18,5 @@ const (
 
 // errorPrint checks whether printing error to stdout.
 func errorPrint() bool {
-	return cmdenv.Get(gERROR_PRINT_KEY, true).Bool()
+	return gcmd.GetOptWithEnv(gERROR_PRINT_KEY, true).Bool()
 }

@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -8,6 +8,9 @@ package gjson_test
 
 import (
 	"bytes"
+	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/text/gstr"
 	"testing"
 
 	"github.com/gogf/gf/encoding/gjson"
@@ -31,17 +34,13 @@ func Test_Set1(t *testing.T) {
 }
 
 func Test_Set2(t *testing.T) {
-	e := []byte(`[[null,1]]`)
-	p := gjson.New([]string{"a"})
-	p.Set("0.1", 1)
-	if c, err := p.ToJson(); err == nil {
-
-		if bytes.Compare(c, e) != 0 {
-			t.Error("expect:", string(e))
-		}
-	} else {
-		t.Error(err)
-	}
+	gtest.C(t, func(t *gtest.T) {
+		e := `[[null,1]]`
+		p := gjson.New([]string{"a"})
+		p.Set("0.1", 1)
+		s := p.MustToJsonString()
+		t.Assert(s, e)
+	})
 }
 
 func Test_Set3(t *testing.T) {
@@ -51,7 +50,6 @@ func Test_Set3(t *testing.T) {
 		"k1": "v1",
 	})
 	if c, err := p.ToJson(); err == nil {
-
 		if bytes.Compare(c, e) != 0 {
 			t.Error("expect:", string(e))
 		}
@@ -226,4 +224,108 @@ func Test_Set14(t *testing.T) {
 	} else {
 		t.Error(err)
 	}
+}
+
+func Test_Set15(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		j := gjson.New(nil)
+
+		t.Assert(j.Set("root.0.k1", "v1"), nil)
+		t.Assert(j.Set("root.1.k2", "v2"), nil)
+		t.Assert(j.Set("k", "v"), nil)
+
+		s, err := j.ToJsonString()
+		t.Assert(err, nil)
+		t.Assert(
+			gstr.Contains(s, `"root":[{"k1":"v1"},{"k2":"v2"}`) ||
+				gstr.Contains(s, `"root":[{"k2":"v2"},{"k1":"v1"}`),
+			true,
+		)
+		t.Assert(
+			gstr.Contains(s, `{"k":"v"`) ||
+				gstr.Contains(s, `"k":"v"}`),
+			true,
+		)
+	})
+}
+
+func Test_Set16(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		j := gjson.New(nil)
+
+		t.Assert(j.Set("processors.0.set.0value", "1"), nil)
+		t.Assert(j.Set("processors.0.set.0field", "2"), nil)
+		t.Assert(j.Set("description", "3"), nil)
+
+		s, err := j.ToJsonString()
+		t.Assert(err, nil)
+		t.Assert(
+			gstr.Contains(s, `"processors":[{"set":{"0field":"2","0value":"1"}}]`) ||
+				gstr.Contains(s, `"processors":[{"set":{"0value":"1","0field":"2"}}]`),
+			true,
+		)
+		t.Assert(
+			gstr.Contains(s, `{"description":"3"`) || gstr.Contains(s, `"description":"3"}`),
+			true,
+		)
+	})
+}
+
+func Test_Set17(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		j := gjson.New(nil)
+
+		t.Assert(j.Set("0.k1", "v1"), nil)
+		t.Assert(j.Set("1.k2", "v2"), nil)
+		// overwrite the previous slice.
+		t.Assert(j.Set("k", "v"), nil)
+
+		s, err := j.ToJsonString()
+		t.Assert(err, nil)
+		t.Assert(s, `{"k":"v"}`)
+	})
+}
+
+func Test_Set18(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		j := gjson.New(nil)
+
+		t.Assert(j.Set("0.1.k1", "v1"), nil)
+		t.Assert(j.Set("0.2.k2", "v2"), nil)
+		s, err := j.ToJsonString()
+		t.Assert(err, nil)
+		t.Assert(s, `[[null,{"k1":"v1"},{"k2":"v2"}]]`)
+	})
+}
+
+func Test_Set19(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		j := gjson.New(nil)
+
+		t.Assert(j.Set("0.1.1.k1", "v1"), nil)
+		t.Assert(j.Set("0.2.1.k2", "v2"), nil)
+		s, err := j.ToJsonString()
+		t.Assert(err, nil)
+		t.Assert(s, `[[null,[null,{"k1":"v1"}],[null,{"k2":"v2"}]]]`)
+	})
+}
+
+func Test_Set20(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		j := gjson.New(nil)
+
+		t.Assert(j.Set("k1", "v1"), nil)
+		t.Assert(j.Set("k2", g.Slice{1, 2, 3}), nil)
+		t.Assert(j.Set("k2.1", 20), nil)
+		t.Assert(j.Set("k2.2", g.Map{"k3": "v3"}), nil)
+		s, err := j.ToJsonString()
+		t.Assert(err, nil)
+		t.Assert(gstr.InArray(
+			g.SliceStr{
+				`{"k1":"v1","k2":[1,20,{"k3":"v3"}]}`,
+				`{"k2":[1,20,{"k3":"v3"}],"k1":"v1"}`,
+			},
+			s,
+		), true)
+	})
 }

@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,20 +7,30 @@
 
 package gcmd
 
-import "fmt"
+import (
+	"bufio"
+	"fmt"
+	"os"
+
+	"github.com/gogf/gf/text/gstr"
+)
 
 // Scan prints <info> to stdout, reads and returns user input, which stops by '\n'.
 func Scan(info ...interface{}) string {
-	var s string
 	fmt.Print(info...)
-	fmt.Scan(&s)
-	return s
+	return readline()
 }
 
 // Scanf prints <info> to stdout with <format>, reads and returns user input, which stops by '\n'.
 func Scanf(format string, info ...interface{}) string {
-	var s string
 	fmt.Printf(format, info...)
-	fmt.Scan(&s)
+	return readline()
+}
+
+func readline() string {
+	var s string
+	reader := bufio.NewReader(os.Stdin)
+	s, _ = reader.ReadString('\n')
+	s = gstr.Trim(s)
 	return s
 }

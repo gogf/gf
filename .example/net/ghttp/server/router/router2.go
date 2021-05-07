@@ -1,9 +1,12 @@
 package main
 
-import "github.com/gogf/gf/net/ghttp"
+import (
+	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/net/ghttp"
+)
 
 func main() {
-	s := ghttp.GetServer()
+	s := g.Server()
 	s.BindHandler("/user/:name", func(r *ghttp.Request) {
 		r.Response.Writeln(r.Router.Uri)
 	})

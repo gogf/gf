@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -8,7 +8,6 @@
 package gxml
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/clbanning/mxj"
@@ -16,7 +15,7 @@ import (
 	"github.com/gogf/gf/text/gregex"
 )
 
-// 将XML内容解析为map变量
+// Decode parses <content> into and returns as map.
 func Decode(content []byte) (map[string]interface{}, error) {
 	res, err := convert(content)
 	if err != nil {
@@ -25,23 +24,42 @@ func Decode(content []byte) (map[string]interface{}, error) {
 	return mxj.NewMapXml(res)
 }
 
-// 将map变量解析为XML格式内容
-func Encode(v map[string]interface{}, rootTag ...string) ([]byte, error) {
-	return mxj.Map(v).Xml(rootTag...)
+// DecodeWithoutRoot parses <content> into a map, and returns the map without root level.
+func DecodeWithoutRoot(content []byte) (map[string]interface{}, error) {
+	res, err := convert(content)
+	if err != nil {
+		return nil, err
+	}
+	m, err := mxj.NewMapXml(res)
+	if err != nil {
+		return nil, err
+	}
+	for _, v := range m {
+		if r, ok := v.(map[string]interface{}); ok {
+			return r, nil
+		}
+	}
+	return m, nil
 }
 
-func EncodeWithIndent(v map[string]interface{}, rootTag ...string) ([]byte, error) {
-	return mxj.Map(v).XmlIndent("", "\t", rootTag...)
+// Encode encodes map <m> to a XML format content as bytes.
+// The optional parameter <rootTag> is used to specify the XML root tag.
+func Encode(m map[string]interface{}, rootTag ...string) ([]byte, error) {
+	return mxj.Map(m).Xml(rootTag...)
 }
 
-// XML格式内容直接转换为JSON格式内容
+// Encode encodes map <m> to a XML format content as bytes with indent.
+// The optional parameter <rootTag> is used to specify the XML root tag.
+func EncodeWithIndent(m map[string]interface{}, rootTag ...string) ([]byte, error) {
+	return mxj.Map(m).XmlIndent("", "\t", rootTag...)
+}
+
+// ToJson converts <content> as XML format into JSON format bytes.
 func ToJson(content []byte) ([]byte, error) {
 	res, err := convert(content)
 	if err != nil {
-		fmt.Println("convert error. ", err)
 		return nil, err
 	}
-
 	mv, err := mxj.NewMapXml(res)
 	if err == nil {
 		return mv.Json()
@@ -50,7 +68,7 @@ func ToJson(content []byte) ([]byte, error) {
 	}
 }
 
-// XML字符集预处理
+// convert converts the encoding of given XML content from XML root tag into UTF-8 encoding content.
 func convert(xml []byte) (res []byte, err error) {
 	patten := `<\?xml.*encoding\s*=\s*['|"](.*?)['|"].*\?>`
 	matchStr, err := gregex.MatchString(patten, string(xml))

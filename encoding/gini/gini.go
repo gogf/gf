@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -10,8 +10,9 @@ package gini
 import (
 	"bufio"
 	"bytes"
-	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/gogf/gf/internal/json"
 	"io"
 	"strings"
 )
@@ -22,9 +23,7 @@ func Decode(data []byte) (res map[string]interface{}, err error) {
 	fieldMap := make(map[string]interface{})
 
 	a := bytes.NewReader(data)
-
 	r := bufio.NewReader(a)
-
 	var section string
 	var lastSection string
 	var haveSection bool
@@ -65,13 +64,14 @@ func Decode(data []byte) (res map[string]interface{}, err error) {
 
 		if strings.Contains(lineStr, "=") && haveSection {
 			values := strings.Split(lineStr, "=")
-
 			fieldMap[strings.TrimSpace(values[0])] = strings.TrimSpace(strings.Join(values[1:], ""))
 			res[section] = fieldMap
 		}
-
 	}
 
+	if haveSection == false {
+		return nil, errors.New("failed to parse INI file, section not found")
+	}
 	return res, nil
 }
 
@@ -79,13 +79,12 @@ func Decode(data []byte) (res map[string]interface{}, err error) {
 func Encode(data map[string]interface{}) (res []byte, err error) {
 	w := new(bytes.Buffer)
 
-	w.WriteString(";gini\n")
+	w.WriteString("; this ini file is produced by package gini\n")
 	for k, v := range data {
 		n, err := w.WriteString(fmt.Sprintf("[%s]\n", k))
 		if err != nil || n == 0 {
 			return nil, fmt.Errorf("write data failed. %v", err)
 		}
-
 		for kk, vv := range v.(map[string]interface{}) {
 			n, err := w.WriteString(fmt.Sprintf("%s=%s\n", kk, vv.(string)))
 			if err != nil || n == 0 {

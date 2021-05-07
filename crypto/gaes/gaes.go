@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -14,8 +14,10 @@ import (
 	"errors"
 )
 
-const (
-	ivDefValue = "I Love Go Frame!"
+var (
+	// IVDefaultValue is the default value for IV.
+	// This can be changed globally.
+	IVDefaultValue = "I Love Go Frame!"
 )
 
 // Encrypt is alias of EncryptCBC.
@@ -28,7 +30,9 @@ func Decrypt(cipherText []byte, key []byte, iv ...[]byte) ([]byte, error) {
 	return DecryptCBC(cipherText, key, iv...)
 }
 
-// AES加密, 使用CBC模式，注意key必须为16/24/32位长度，iv初始化向量为非必需参数。
+// EncryptCBC encrypts <plainText> using CBC mode.
+// Note that the key must be 16/24/32 bit length.
+// The parameter <iv> initialization vector is unnecessary.
 func EncryptCBC(plainText []byte, key []byte, iv ...[]byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -40,7 +44,7 @@ func EncryptCBC(plainText []byte, key []byte, iv ...[]byte) ([]byte, error) {
 	if len(iv) > 0 {
 		ivValue = iv[0]
 	} else {
-		ivValue = []byte(ivDefValue)
+		ivValue = []byte(IVDefaultValue)
 	}
 	blockMode := cipher.NewCBCEncrypter(block, ivValue)
 	cipherText := make([]byte, len(plainText))
@@ -49,7 +53,9 @@ func EncryptCBC(plainText []byte, key []byte, iv ...[]byte) ([]byte, error) {
 	return cipherText, nil
 }
 
-// AES解密, 使用CBC模式，注意key必须为16/24/32位长度，iv初始化向量为非必需参数
+// DecryptCBC decrypts <cipherText> using CBC mode.
+// Note that the key must be 16/24/32 bit length.
+// The parameter <iv> initialization vector is unnecessary.
 func DecryptCBC(cipherText []byte, key []byte, iv ...[]byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -63,7 +69,7 @@ func DecryptCBC(cipherText []byte, key []byte, iv ...[]byte) ([]byte, error) {
 	if len(iv) > 0 {
 		ivValue = iv[0]
 	} else {
-		ivValue = []byte(ivDefValue)
+		ivValue = []byte(IVDefaultValue)
 	}
 	if len(cipherText)%blockSize != 0 {
 		return nil, errors.New("cipherText is not a multiple of the block size")
@@ -109,20 +115,21 @@ func PKCS5UnPadding(src []byte, blockSize int) ([]byte, error) {
 	return src[:(length - unpadding)], nil
 }
 
-// AES加密, 使用CFB模式。
-// 注意key必须为16/24/32位长度，padding返回补位长度，iv初始化向量为非必需参数。
+// EncryptCFB encrypts <plainText> using CFB mode.
+// Note that the key must be 16/24/32 bit length.
+// The parameter <iv> initialization vector is unnecessary.
 func EncryptCFB(plainText []byte, key []byte, padding *int, iv ...[]byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
 	}
 	blockSize := block.BlockSize()
-	plainText, *padding = ZeroPadding(plainText, blockSize) //补位0
+	plainText, *padding = ZeroPadding(plainText, blockSize)
 	ivValue := ([]byte)(nil)
 	if len(iv) > 0 {
 		ivValue = iv[0]
 	} else {
-		ivValue = []byte(ivDefValue)
+		ivValue = []byte(IVDefaultValue)
 	}
 	stream := cipher.NewCFBEncrypter(block, ivValue)
 	cipherText := make([]byte, len(plainText))
@@ -130,9 +137,10 @@ func EncryptCFB(plainText []byte, key []byte, padding *int, iv ...[]byte) ([]byt
 	return cipherText, nil
 }
 
-// AES解密, 使用CFB模式。
-// 注意key必须为16/24/32位长度，unpadding为去补位长度，iv初始化向量为非必需参数。
-func DecryptCFB(cipherText []byte, key []byte, unpadding int, iv ...[]byte) ([]byte, error) {
+// DecryptCFB decrypts <plainText> using CFB mode.
+// Note that the key must be 16/24/32 bit length.
+// The parameter <iv> initialization vector is unnecessary.
+func DecryptCFB(cipherText []byte, key []byte, unPadding int, iv ...[]byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
@@ -144,22 +152,22 @@ func DecryptCFB(cipherText []byte, key []byte, unpadding int, iv ...[]byte) ([]b
 	if len(iv) > 0 {
 		ivValue = iv[0]
 	} else {
-		ivValue = []byte(ivDefValue)
+		ivValue = []byte(IVDefaultValue)
 	}
 	stream := cipher.NewCFBDecrypter(block, ivValue)
 	plainText := make([]byte, len(cipherText))
 	stream.XORKeyStream(plainText, cipherText)
-	plainText = ZeroUnPadding(plainText, unpadding) //去补位0
+	plainText = ZeroUnPadding(plainText, unPadding)
 	return plainText, nil
 }
 
-func ZeroPadding(ciphertext []byte, blockSize int) ([]byte, int) {
-	padding := blockSize - len(ciphertext)%blockSize
-	padtext := bytes.Repeat([]byte{byte(0)}, padding)
-	return append(ciphertext, padtext...), padding
+func ZeroPadding(cipherText []byte, blockSize int) ([]byte, int) {
+	padding := blockSize - len(cipherText)%blockSize
+	padText := bytes.Repeat([]byte{byte(0)}, padding)
+	return append(cipherText, padText...), padding
 }
 
-func ZeroUnPadding(plaintext []byte, unpadding int) []byte {
+func ZeroUnPadding(plaintext []byte, unPadding int) []byte {
 	length := len(plaintext)
-	return plaintext[:(length - unpadding)]
+	return plaintext[:(length - unPadding)]
 }

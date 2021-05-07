@@ -7,7 +7,7 @@ import (
 
 func main() {
 	s := g.Server()
-	s.SetNameToUriType(ghttp.NAME_TO_URI_TYPE_FULLNAME)
+	s.SetNameToUriType(ghttp.URI_TYPE_FULLNAME)
 	s.EnableAdmin()
 	s.BindHandler("/", func(r *ghttp.Request) {
 		r.Response.Write("hello world")

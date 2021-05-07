@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -16,7 +16,7 @@ import (
 
 // The high level Mutex, which implements more rich features for mutex.
 type Mutex struct {
-	state   *gtype.Int32  // Indicates the state of mutex.
+	state   *gtype.Int32  // Indicates the state of mutex. -1: writing locked; > 1 reading locked.
 	writer  *gtype.Int32  // Pending writer count.
 	reader  *gtype.Int32  // Pending reader count.
 	writing chan struct{} // Channel for writer blocking.
@@ -50,13 +50,13 @@ func (m *Mutex) Lock() {
 }
 
 // Unlock unlocks writing lock on the mutex.
-// It is safe to be called multiple times if there's any locks or not.
+// It is safe to be called multiple times even there's no locks.
 func (m *Mutex) Unlock() {
 	if m.state.Cas(-1, 0) {
 		// Note that there might be more than one goroutines can enter this block.
 		var n int32
 		// Writing lock unlocks, then first check the blocked readers.
-		// If there're readers blocked, it unlocks them with preemption.
+		// If there are readers blocked, it unlocks them with preemption.
 		for {
 			if n = m.reader.Val(); n > 0 {
 				if m.reader.Cas(n, 0) {
@@ -91,7 +91,7 @@ func (m *Mutex) TryLock() bool {
 	return false
 }
 
-// RLock locks mutex for reading purpose purpose.
+// RLock locks mutex for reading purpose.
 // If the mutex is already locked for writing,
 // it blocks until the lock is available.
 func (m *Mutex) RLock() {
@@ -113,7 +113,7 @@ func (m *Mutex) RLock() {
 }
 
 // RUnlock unlocks the reading lock on the mutex.
-// It is safe to be called multiple times if there's any locks or not.
+// It is safe to be called multiple times even there's no locks.
 func (m *Mutex) RUnlock() {
 	var n int32
 	for {

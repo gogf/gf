@@ -1,9 +1,8 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
-// 状态码回调函数注册.
 
 package ghttp
 
@@ -11,9 +10,9 @@ import (
 	"fmt"
 )
 
-// 查询状态码回调函数
-func (s *Server) getStatusHandler(status int, r *Request) HandlerFunc {
-	domains := []string{r.GetHost(), gDEFAULT_DOMAIN}
+// getStatusHandler retrieves and returns the handler for given status code.
+func (s *Server) getStatusHandler(status int, r *Request) []HandlerFunc {
+	domains := []string{r.GetHost(), defaultDomainName}
 	for _, domain := range domains {
 		if f, ok := s.statusHandlerMap[s.statusHandlerKey(status, domain)]; ok {
 			return f
@@ -22,23 +21,26 @@ func (s *Server) getStatusHandler(status int, r *Request) HandlerFunc {
 	return nil
 }
 
-// 不同状态码下的回调方法处理
-// pattern格式：domain#status
-func (s *Server) setStatusHandler(pattern string, handler HandlerFunc) {
-	s.statusHandlerMap[pattern] = handler
+// addStatusHandler sets the handler for given status code.
+// The parameter <pattern> is like: domain#status
+func (s *Server) addStatusHandler(pattern string, handler HandlerFunc) {
+	if s.statusHandlerMap[pattern] == nil {
+		s.statusHandlerMap[pattern] = make([]HandlerFunc, 0)
+	}
+	s.statusHandlerMap[pattern] = append(s.statusHandlerMap[pattern], handler)
 }
 
-// 生成状态码回调函数map存储键名
+// statusHandlerKey creates and returns key for given status and domain.
 func (s *Server) statusHandlerKey(status int, domain string) string {
 	return fmt.Sprintf("%s#%d", domain, status)
 }
 
-// 绑定指定的状态码回调函数
+// BindStatusHandler registers handler for given status code.
 func (s *Server) BindStatusHandler(status int, handler HandlerFunc) {
-	s.setStatusHandler(s.statusHandlerKey(status, gDEFAULT_DOMAIN), handler)
+	s.addStatusHandler(s.statusHandlerKey(status, defaultDomainName), handler)
 }
 
-// 通过map批量绑定状态码回调函数
+// BindStatusHandlerByMap registers handler for given status code using map.
 func (s *Server) BindStatusHandlerByMap(handlerMap map[int]HandlerFunc) {
 	for k, v := range handlerMap {
 		s.BindStatusHandler(k, v)

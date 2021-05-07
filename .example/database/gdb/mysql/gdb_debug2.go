@@ -6,6 +6,7 @@ import (
 
 func main() {
 	db := g.DB()
+
 	// 执行3条SQL查询
 	for i := 1; i <= 3; i++ {
 		db.Table("user").Where("id=?", i).One()

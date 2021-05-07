@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -55,69 +55,68 @@ func (o *DomainObjectRest) Head(r *ghttp.Request) {
 }
 
 func Test_Router_DomainObjectRest(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	d := s.Domain("localhost, local")
 	d.BindObjectRest("/", new(DomainObjectRest))
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
-	// 等待启动完成
-	time.Sleep(200 * time.Millisecond)
-	gtest.Case(t, func() {
-		client := ghttp.NewClient()
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "Not Found")
-		gtest.Assert(client.PutContent("/"), "Not Found")
-		gtest.Assert(client.PostContent("/"), "Not Found")
-		gtest.Assert(client.DeleteContent("/"), "Not Found")
-		gtest.Assert(client.PatchContent("/"), "Not Found")
-		gtest.Assert(client.OptionsContent("/"), "Not Found")
+		t.Assert(client.GetContent("/"), "Not Found")
+		t.Assert(client.PutContent("/"), "Not Found")
+		t.Assert(client.PostContent("/"), "Not Found")
+		t.Assert(client.DeleteContent("/"), "Not Found")
+		t.Assert(client.PatchContent("/"), "Not Found")
+		t.Assert(client.OptionsContent("/"), "Not Found")
 		resp1, err := client.Head("/")
 		if err == nil {
 			defer resp1.Close()
 		}
-		gtest.Assert(err, nil)
-		gtest.Assert(resp1.Header.Get("head-ok"), "")
-		gtest.Assert(client.GetContent("/none-exist"), "Not Found")
+		t.Assert(err, nil)
+		t.Assert(resp1.Header.Get("head-ok"), "")
+		t.Assert(client.GetContent("/none-exist"), "Not Found")
 	})
-	gtest.Case(t, func() {
-		client := ghttp.NewClient()
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://localhost:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "1Object Get2")
-		gtest.Assert(client.PutContent("/"), "1Object Put2")
-		gtest.Assert(client.PostContent("/"), "1Object Post2")
-		gtest.Assert(client.DeleteContent("/"), "1Object Delete2")
-		gtest.Assert(client.PatchContent("/"), "1Object Patch2")
-		gtest.Assert(client.OptionsContent("/"), "1Object Options2")
+		t.Assert(client.GetContent("/"), "1Object Get2")
+		t.Assert(client.PutContent("/"), "1Object Put2")
+		t.Assert(client.PostContent("/"), "1Object Post2")
+		t.Assert(client.DeleteContent("/"), "1Object Delete2")
+		t.Assert(client.PatchContent("/"), "1Object Patch2")
+		t.Assert(client.OptionsContent("/"), "1Object Options2")
 		resp1, err := client.Head("/")
 		if err == nil {
 			defer resp1.Close()
 		}
-		gtest.Assert(err, nil)
-		gtest.Assert(resp1.Header.Get("head-ok"), "1")
-		gtest.Assert(client.GetContent("/none-exist"), "Not Found")
+		t.Assert(err, nil)
+		t.Assert(resp1.Header.Get("head-ok"), "1")
+		t.Assert(client.GetContent("/none-exist"), "Not Found")
 	})
-	gtest.Case(t, func() {
-		client := ghttp.NewClient()
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://local:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "1Object Get2")
-		gtest.Assert(client.PutContent("/"), "1Object Put2")
-		gtest.Assert(client.PostContent("/"), "1Object Post2")
-		gtest.Assert(client.DeleteContent("/"), "1Object Delete2")
-		gtest.Assert(client.PatchContent("/"), "1Object Patch2")
-		gtest.Assert(client.OptionsContent("/"), "1Object Options2")
+		t.Assert(client.GetContent("/"), "1Object Get2")
+		t.Assert(client.PutContent("/"), "1Object Put2")
+		t.Assert(client.PostContent("/"), "1Object Post2")
+		t.Assert(client.DeleteContent("/"), "1Object Delete2")
+		t.Assert(client.PatchContent("/"), "1Object Patch2")
+		t.Assert(client.OptionsContent("/"), "1Object Options2")
 		resp1, err := client.Head("/")
 		if err == nil {
 			defer resp1.Close()
 		}
-		gtest.Assert(err, nil)
-		gtest.Assert(resp1.Header.Get("head-ok"), "1")
-		gtest.Assert(client.GetContent("/none-exist"), "Not Found")
+		t.Assert(err, nil)
+		t.Assert(resp1.Header.Get("head-ok"), "1")
+		t.Assert(client.GetContent("/none-exist"), "Not Found")
 	})
 }

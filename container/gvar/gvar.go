@@ -1,4 +1,4 @@
-// Copyright 2018-2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -8,27 +8,39 @@
 package gvar
 
 import (
-	"encoding/json"
+	"github.com/gogf/gf/internal/json"
 	"time"
-
-	"github.com/gogf/gf/internal/empty"
 
 	"github.com/gogf/gf/container/gtype"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/util/gconv"
 )
 
-// Var is an universal variable type.
+// Var is an universal variable type implementer.
 type Var struct {
 	value interface{} // Underlying value.
 	safe  bool        // Concurrent safe or not.
 }
 
-// New returns a new Var with given <value>.
-// The parameter <safe> used to specify whether using Var in concurrent-safety,
+// New creates and returns a new Var with given <value>.
+// The optional parameter <safe> specifies whether Var is used in concurrent-safety,
 // which is false in default.
 func New(value interface{}, safe ...bool) *Var {
-	v := &Var{}
+	v := Var{}
+	if len(safe) > 0 && !safe[0] {
+		v.safe = true
+		v.value = gtype.NewInterface(value)
+	} else {
+		v.value = value
+	}
+	return &v
+}
+
+// Create creates and returns a new Var with given <value>.
+// The optional parameter <safe> specifies whether Var is used in concurrent-safety,
+// which is false in default.
+func Create(value interface{}, safe ...bool) Var {
+	v := Var{}
 	if len(safe) > 0 && !safe[0] {
 		v.safe = true
 		v.value = gtype.NewInterface(value)
@@ -38,26 +50,33 @@ func New(value interface{}, safe ...bool) *Var {
 	return v
 }
 
-// MarshalJSON implements the interface MarshalJSON for json.Marshal.
-func (v *Var) MarshalJSON() ([]byte, error) {
-	return json.Marshal(v.Val())
+// Clone does a shallow copy of current Var and returns a pointer to this Var.
+func (v *Var) Clone() *Var {
+	return New(v.Val(), v.safe)
 }
 
 // Set sets <value> to <v>, and returns the old value.
 func (v *Var) Set(value interface{}) (old interface{}) {
 	if v.safe {
-		old = v.value.(*gtype.Interface).Set(value)
-	} else {
-		old = v.value
-		v.value = value
+		if t, ok := v.value.(*gtype.Interface); ok {
+			old = t.Set(value)
+			return
+		}
 	}
+	old = v.value
+	v.value = value
 	return
 }
 
 // Val returns the current value of <v>.
 func (v *Var) Val() interface{} {
+	if v == nil {
+		return nil
+	}
 	if v.safe {
-		return v.value.(*gtype.Interface).Val()
+		if t, ok := v.value.(*gtype.Interface); ok {
+			return t.Val()
+		}
 	}
 	return v.value
 }
@@ -65,16 +84,6 @@ func (v *Var) Val() interface{} {
 // Interface is alias of Val.
 func (v *Var) Interface() interface{} {
 	return v.Val()
-}
-
-// IsNil checks whether <v> is nil.
-func (v *Var) IsNil() bool {
-	return v.Val() == nil
-}
-
-// IsEmpty checks whether <v> is empty.
-func (v *Var) IsEmpty() bool {
-	return empty.IsEmpty(v.Val())
 }
 
 // Bytes converts and returns <v> as []byte.
@@ -152,49 +161,6 @@ func (v *Var) Float64() float64 {
 	return gconv.Float64(v.Val())
 }
 
-// Ints converts and returns <v> as []int.
-func (v *Var) Ints() []int {
-	return gconv.Ints(v.Val())
-}
-
-// Floats converts and returns <v> as []float64.
-func (v *Var) Floats() []float64 {
-	return gconv.Floats(v.Val())
-}
-
-// Strings converts and returns <v> as []string.
-func (v *Var) Strings() []string {
-	return gconv.Strings(v.Val())
-}
-
-// Interfaces converts and returns <v> as []interfaces{}.
-func (v *Var) Interfaces() []interface{} {
-	return gconv.Interfaces(v.Val())
-}
-
-// Slice is alias of Interfaces.
-func (v *Var) Slice() []interface{} {
-	return v.Interfaces()
-}
-
-// Array is alias of Interfaces.
-func (v *Var) Array() []interface{} {
-	return v.Interfaces()
-}
-
-// Vars converts and returns <v> as []*Var.
-func (v *Var) Vars() []*Var {
-	array := gconv.Interfaces(v.Val())
-	if len(array) == 0 {
-		return nil
-	}
-	vars := make([]*Var, len(array))
-	for k, v := range array {
-		vars[k] = New(v)
-	}
-	return vars
-}
-
 // Time converts and returns <v> as time.Time.
 // The parameter <format> specifies the format of the time string using gtime,
 // eg: Y-m-d H:i:s.
@@ -215,60 +181,24 @@ func (v *Var) GTime(format ...string) *gtime.Time {
 	return gconv.GTime(v.Val(), format...)
 }
 
-// Map converts <v> to map[string]interface{}.
-func (v *Var) Map(tags ...string) map[string]interface{} {
-	return gconv.Map(v.Val(), tags...)
+// MarshalJSON implements the interface MarshalJSON for json.Marshal.
+func (v *Var) MarshalJSON() ([]byte, error) {
+	return json.Marshal(v.Val())
 }
 
-// MapDeep converts <v> to map[string]interface{} recursively.
-func (v *Var) MapDeep(tags ...string) map[string]interface{} {
-	return gconv.MapDeep(v.Val(), tags...)
+// UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
+func (v *Var) UnmarshalJSON(b []byte) error {
+	var i interface{}
+	err := json.Unmarshal(b, &i)
+	if err != nil {
+		return err
+	}
+	v.Set(i)
+	return nil
 }
 
-// Struct maps value of <v> to <pointer>.
-// The parameter <pointer> should be a pointer to a struct instance.
-// The parameter <mapping> is used to specify the key-to-attribute mapping rules.
-func (v *Var) Struct(pointer interface{}, mapping ...map[string]string) error {
-	return gconv.Struct(v.Val(), pointer, mapping...)
-}
-
-// Struct maps value of <v> to <pointer> recursively.
-// The parameter <pointer> should be a pointer to a struct instance.
-// The parameter <mapping> is used to specify the key-to-attribute mapping rules.
-func (v *Var) StructDeep(pointer interface{}, mapping ...map[string]string) error {
-	return gconv.StructDeep(v.Val(), pointer, mapping...)
-}
-
-// Structs converts <v> to given struct slice.
-func (v *Var) Structs(pointer interface{}, mapping ...map[string]string) (err error) {
-	return gconv.Structs(v.Val(), pointer, mapping...)
-}
-
-// StructsDeep converts <v> to given struct slice recursively.
-func (v *Var) StructsDeep(pointer interface{}, mapping ...map[string]string) (err error) {
-	return gconv.StructsDeep(v.Val(), pointer, mapping...)
-}
-
-// MapStruct converts map type variable <params> to another map type variable <pointer>.
-// The elements of <pointer> should be type of struct/*struct.
-func (v *Var) MapStruct(pointer interface{}, mapping ...map[string]string) (err error) {
-	return gconv.MapStruct(v.Val(), pointer, mapping...)
-}
-
-// MapStructDeep recursively converts map type variable <params> to another map type variable <pointer>.
-// The elements of <pointer> should be type of struct/*struct.
-func (v *Var) MapStructDeep(pointer interface{}, mapping ...map[string]string) (err error) {
-	return gconv.MapStructDeep(v.Val(), pointer, mapping...)
-}
-
-// MapStructs converts map type variable <params> to another map type variable <pointer>.
-// The elements of <pointer> should be type of []struct/[]*struct.
-func (v *Var) MapStructs(pointer interface{}, mapping ...map[string]string) (err error) {
-	return gconv.MapStructs(v.Val(), pointer, mapping...)
-}
-
-// MapStructsDeep recursively converts map type variable <params> to another map type variable <pointer>.
-// The elements of <pointer> should be type of []struct/[]*struct.
-func (v *Var) MapStructsDeep(pointer interface{}, mapping ...map[string]string) (err error) {
-	return gconv.MapStructsDeep(v.Val(), pointer, mapping...)
+// UnmarshalValue is an interface implement which sets any type of value for Var.
+func (v *Var) UnmarshalValue(value interface{}) error {
+	v.Set(value)
+	return nil
 }

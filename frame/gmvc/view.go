@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,30 +7,35 @@
 package gmvc
 
 import (
+	"github.com/gogf/gf/frame/gins"
 	"sync"
+
+	"github.com/gogf/gf/util/gmode"
 
 	"github.com/gogf/gf/net/ghttp"
 	"github.com/gogf/gf/os/gview"
 )
 
-// 基于控制器注册的MVC视图基类(一个请求一个视图对象，用完即销毁)
+// View is the view object for controller.
+// It's initialized when controller request initializes and destroyed
+// when the controller request closes.
 type View struct {
-	mu       sync.RWMutex    // 并发互斥锁
-	view     *gview.View     // 底层视图对象
-	data     gview.Params    // 视图数据/模板变量
-	response *ghttp.Response // 数据返回对象
+	mu       sync.RWMutex
+	view     *gview.View
+	data     gview.Params
+	response *ghttp.Response
 }
 
-// 创建一个MVC请求中使用的视图对象
+// NewView creates and returns a controller view object.
 func NewView(w *ghttp.Response) *View {
 	return &View{
-		view:     gview.New(),
+		view:     gins.View(),
 		data:     make(gview.Params),
 		response: w,
 	}
 }
 
-// 批量绑定模板变量，即调用之后每个线程都会生效，因此有并发安全控制
+// Assigns assigns template variables to this view object.
 func (view *View) Assigns(data gview.Params) {
 	view.mu.Lock()
 	for k, v := range data {
@@ -39,14 +44,15 @@ func (view *View) Assigns(data gview.Params) {
 	view.mu.Unlock()
 }
 
-// 绑定模板变量，即调用之后每个线程都会生效，因此有并发安全控制
+// Assign assigns one template variable to this view object.
 func (view *View) Assign(key string, value interface{}) {
 	view.mu.Lock()
 	view.data[key] = value
 	view.mu.Unlock()
 }
 
-// 解析模板，并返回解析后的内容
+// Parse parses given template file <tpl> with assigned template variables
+// and returns the parsed template content.
 func (view *View) Parse(file string) (string, error) {
 	view.mu.RLock()
 	defer view.mu.RUnlock()
@@ -54,7 +60,8 @@ func (view *View) Parse(file string) (string, error) {
 	return buffer, err
 }
 
-// 直接解析模板内容，并返回解析后的内容
+// ParseContent parses given template file <file> with assigned template variables
+// and returns the parsed template content.
 func (view *View) ParseContent(content string) (string, error) {
 	view.mu.RLock()
 	defer view.mu.RUnlock()
@@ -62,14 +69,14 @@ func (view *View) ParseContent(content string) (string, error) {
 	return buffer, err
 }
 
-// 使用自定义方法对模板变量执行加锁修改操作
+// LockFunc locks writing for template variables by callback function <f>.
 func (view *View) LockFunc(f func(data gview.Params)) {
 	view.mu.Lock()
 	defer view.mu.Unlock()
 	f(view.data)
 }
 
-// 使用自定义方法对模板变量执行加锁读取操作
+// LockFunc locks reading for template variables by callback function <f>.
 func (view *View) RLockFunc(f func(data gview.Params)) {
 	view.mu.RLock()
 	defer view.mu.RUnlock()
@@ -90,23 +97,29 @@ func (view *View) BindFuncMap(funcMap gview.FuncMap) {
 	view.view.BindFuncMap(funcMap)
 }
 
-// 解析并显示指定模板
-func (view *View) Display(file ...string) {
-	name := "index.tpl"
+// Display parses and writes the parsed template file content to http response.
+func (view *View) Display(file ...string) error {
+	name := view.view.GetDefaultFile()
 	if len(file) > 0 {
 		name = file[0]
 	}
 	if content, err := view.Parse(name); err != nil {
-		view.response.Write("Tpl Parsing Error: " + err.Error())
+		if !gmode.IsProduct() {
+			view.response.Write("Tpl Parsing Error: " + err.Error())
+		}
+		return err
 	} else {
 		view.response.Write(content)
 	}
+	return nil
 }
 
-// 解析并显示模板内容
+// DisplayContent parses and writes the parsed content to http response.
 func (view *View) DisplayContent(content string) error {
 	if content, err := view.ParseContent(content); err != nil {
-		view.response.Write("Tpl Parsing Error: " + err.Error())
+		if !gmode.IsProduct() {
+			view.response.Write("Tpl Parsing Error: " + err.Error())
+		}
 		return err
 	} else {
 		view.response.Write(content)
