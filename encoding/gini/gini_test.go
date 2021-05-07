@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,7 +7,6 @@
 package gini_test
 
 import (
-	"fmt"
 	"github.com/gogf/gf/encoding/gini"
 	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/test/gtest"
@@ -34,23 +33,31 @@ enable=true
 `
 
 func TestDecode(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		res, err := gini.Decode([]byte(iniContent))
 		if err != nil {
 			gtest.Fatal(err)
 		}
-		fmt.Println(res)
-		gtest.Assert(res["addr"].(map[string]interface{})["ip"], "127.0.0.1")
-		gtest.Assert(res["addr"].(map[string]interface{})["port"], "9001")
-		gtest.Assert(res["DBINFO"].(map[string]interface{})["user"], "root")
-		gtest.Assert(res["DBINFO"].(map[string]interface{})["type"], "mysql")
-		gtest.Assert(res["键"].(map[string]interface{})["呵呵"], "值")
+		t.Assert(res["addr"].(map[string]interface{})["ip"], "127.0.0.1")
+		t.Assert(res["addr"].(map[string]interface{})["port"], "9001")
+		t.Assert(res["DBINFO"].(map[string]interface{})["user"], "root")
+		t.Assert(res["DBINFO"].(map[string]interface{})["type"], "mysql")
+		t.Assert(res["键"].(map[string]interface{})["呵呵"], "值")
 	})
 
+	gtest.C(t, func(t *gtest.T) {
+		errContent := `
+		a = b
+`
+		_, err := gini.Decode([]byte(errContent))
+		if err == nil {
+			gtest.Fatal(err)
+		}
+	})
 }
 
 func TestEncode(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		iniMap, err := gini.Decode([]byte(iniContent))
 		if err != nil {
 			gtest.Fatal(err)
@@ -66,16 +73,16 @@ func TestEncode(t *testing.T) {
 			gtest.Fatal(err)
 		}
 
-		gtest.Assert(res["addr"].(map[string]interface{})["ip"], "127.0.0.1")
-		gtest.Assert(res["addr"].(map[string]interface{})["port"], "9001")
-		gtest.Assert(res["DBINFO"].(map[string]interface{})["user"], "root")
-		gtest.Assert(res["DBINFO"].(map[string]interface{})["type"], "mysql")
+		t.Assert(res["addr"].(map[string]interface{})["ip"], "127.0.0.1")
+		t.Assert(res["addr"].(map[string]interface{})["port"], "9001")
+		t.Assert(res["DBINFO"].(map[string]interface{})["user"], "root")
+		t.Assert(res["DBINFO"].(map[string]interface{})["type"], "mysql")
 
 	})
 }
 
 func TestToJson(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		jsonStr, err := gini.ToJson([]byte(iniContent))
 		if err != nil {
 			gtest.Fatal(err)
@@ -87,11 +94,11 @@ func TestToJson(t *testing.T) {
 		}
 
 		iniMap, err := gini.Decode([]byte(iniContent))
-		gtest.Assert(err, nil)
+		t.Assert(err, nil)
 
-		gtest.Assert(iniMap["addr"].(map[string]interface{})["ip"], json.GetString("addr.ip"))
-		gtest.Assert(iniMap["addr"].(map[string]interface{})["port"], json.GetString("addr.port"))
-		gtest.Assert(iniMap["DBINFO"].(map[string]interface{})["user"], json.GetString("DBINFO.user"))
-		gtest.Assert(iniMap["DBINFO"].(map[string]interface{})["type"], json.GetString("DBINFO.type"))
+		t.Assert(iniMap["addr"].(map[string]interface{})["ip"], json.GetString("addr.ip"))
+		t.Assert(iniMap["addr"].(map[string]interface{})["port"], json.GetString("addr.port"))
+		t.Assert(iniMap["DBINFO"].(map[string]interface{})["user"], json.GetString("DBINFO.user"))
+		t.Assert(iniMap["DBINFO"].(map[string]interface{})["type"], json.GetString("DBINFO.type"))
 	})
 }

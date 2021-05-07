@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -14,16 +14,19 @@ import (
 
 // Parse parses the string into map[string]interface{}.
 //
-// f1=m&f2=n           -> map[f1:m f2:n]
-// f[a]=m&f[b]=n       -> map[f:map[a:m b:n]]
-// f[a][a]=m&f[a][b]=n -> map[f:map[a:map[a:m b:n]]]
-// f[]=m&f[]=n         -> map[f:[m n]]
-// f[a][]=m&f[a][]=n   -> map[f:map[a:[m n]]]
-// f[][]=m&f[][]=n     -> map[f:[map[]]] // Currently does not support nested slice.
-// f=m&f[a]=n          -> error
+// v1=m&v2=n           -> map[v1:m v2:n]
+// v[a]=m&v[b]=n       -> map[v:map[a:m b:n]]
+// v[a][a]=m&v[a][b]=n -> map[v:map[a:map[a:m b:n]]]
+// v[]=m&v[]=n         -> map[v:[m n]]
+// v[a][]=m&v[a][]=n   -> map[v:map[a:[m n]]]
+// v[][]=m&v[][]=n     -> map[v:[map[]]] // Currently does not support nested slice.
+// v=m&v[a]=n          -> error
 // a .[[b=c            -> map[a___[b:c]
 //
 func Parse(s string) (result map[string]interface{}, err error) {
+	if s == "" {
+		return nil, nil
+	}
 	result = make(map[string]interface{})
 	parts := strings.Split(s, "&")
 	for _, part := range parts {
@@ -102,7 +105,7 @@ func build(result map[string]interface{}, keys []string, value interface{}) erro
 
 	// The end is slice. like f[], f[a][]
 	if keys[1] == "" && length == 2 {
-		// todo nested slice
+		// TODO nested slice
 		if key == "" {
 			return nil
 		}
@@ -119,7 +122,7 @@ func build(result map[string]interface{}, keys []string, value interface{}) erro
 		return nil
 	}
 
-	// The end is slice + map. like f[][a]
+	// The end is slice + map. like v[][a]
 	if keys[1] == "" && length > 2 && keys[2] != "" {
 		val, ok := result[key]
 		if !ok {
@@ -144,7 +147,7 @@ func build(result map[string]interface{}, keys []string, value interface{}) erro
 		return nil
 	}
 
-	// map. like f[a], f[a][b]
+	// map, like v[a], v[a][b]
 	val, ok := result[key]
 	if !ok {
 		result[key] = map[string]interface{}{}

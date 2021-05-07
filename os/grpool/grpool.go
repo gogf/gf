@@ -1,4 +1,4 @@
-// Copyright 2017-2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -9,6 +9,7 @@ package grpool
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/gogf/gf/container/glist"
 	"github.com/gogf/gf/container/gtype"
@@ -47,6 +48,14 @@ func Add(f func()) error {
 	return pool.Add(f)
 }
 
+// AddWithRecover pushes a new job to the pool with specified recover function.
+// The optional <recoverFunc> is called when any panic during executing of <userFunc>.
+// If <recoverFunc> is not passed or given nil, it ignores the panic from <userFunc>.
+// The job will be executed asynchronously.
+func AddWithRecover(userFunc func(), recoverFunc ...func(err error)) error {
+	return pool.AddWithRecover(userFunc, recoverFunc...)
+}
+
 // Size returns current goroutine count of default goroutine pool.
 func Size() int {
 	return pool.Size()
@@ -64,13 +73,16 @@ func (p *Pool) Add(f func()) error {
 		return errors.New("pool closed")
 	}
 	p.list.PushFront(f)
+	// Check whether fork new goroutine or not.
 	var n int
 	for {
 		n = p.count.Val()
 		if p.limit != -1 && n >= p.limit {
+			// No need fork new goroutine.
 			return nil
 		}
 		if p.count.Cas(n, n+1) {
+			// Use CAS to guarantee atomicity.
 			break
 		}
 	}
@@ -78,9 +90,26 @@ func (p *Pool) Add(f func()) error {
 	return nil
 }
 
+// AddWithRecover pushes a new job to the pool with specified recover function.
+// The optional <recoverFunc> is called when any panic during executing of <userFunc>.
+// If <recoverFunc> is not passed or given nil, it ignores the panic from <userFunc>.
+// The job will be executed asynchronously.
+func (p *Pool) AddWithRecover(userFunc func(), recoverFunc ...func(err error)) error {
+	return p.Add(func() {
+		defer func() {
+			if err := recover(); err != nil {
+				if len(recoverFunc) > 0 && recoverFunc[0] != nil {
+					recoverFunc[0](errors.New(fmt.Sprintf(`%v`, err)))
+				}
+			}
+		}()
+		userFunc()
+	})
+}
+
 // Cap returns the capacity of the pool.
 // This capacity is defined when pool is created.
-// If it returns -1 means no limit.
+// It returns -1 if there's no limit.
 func (p *Pool) Cap() int {
 	return p.limit
 }
@@ -91,15 +120,18 @@ func (p *Pool) Size() int {
 }
 
 // Jobs returns current job count of the pool.
+// Note that, it does not return worker/goroutine count but the job/task count.
 func (p *Pool) Jobs() int {
 	return p.list.Size()
 }
 
-// fork creates a new goroutine pool.
+// fork creates a new goroutine worker.
+// Note that the worker dies if the job function panics.
 func (p *Pool) fork() {
 	go func() {
 		defer p.count.Add(-1)
-		job := (interface{})(nil)
+
+		var job interface{}
 		for !p.closed.Val() {
 			if job = p.list.PopBack(); job != nil {
 				job.(func())()

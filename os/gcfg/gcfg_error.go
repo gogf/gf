@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,16 +7,16 @@
 package gcfg
 
 import (
-	"github.com/gogf/gf/internal/cmdenv"
+	"github.com/gogf/gf/os/gcmd"
 )
 
 const (
-	// gERROR_PRINT_KEY is used to specify the key controlling error printing to stdout.
+	// errorPrintKey is used to specify the key controlling error printing to stdout.
 	// This error is designed not to be returned by functions.
-	gERROR_PRINT_KEY = "gf.gcfg.errorprint"
+	errorPrintKey = "gf.gcfg.errorprint"
 )
 
 // errorPrint checks whether printing error to stdout.
 func errorPrint() bool {
-	return cmdenv.Get(gERROR_PRINT_KEY, true).Bool()
+	return gcmd.GetOptWithEnv(errorPrintKey, true).Bool()
 }

@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -13,7 +13,6 @@ import (
 	"io"
 	"os"
 
-	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/util/gconv"
 )
 
@@ -30,13 +29,21 @@ func EncryptFile(path string) (encrypt string, err error) {
 	if err != nil {
 		return "", err
 	}
-	defer func() {
-		err = gerror.Wrap(f.Close(), "file closing error")
-	}()
+	defer f.Close()
 	h := sha1.New()
 	_, err = io.Copy(h, f)
 	if err != nil {
 		return "", err
 	}
 	return hex.EncodeToString(h.Sum(nil)), nil
+}
+
+// MustEncryptFile encrypts file content of <path> using SHA1 algorithms.
+// It panics if any error occurs.
+func MustEncryptFile(path string) string {
+	result, err := EncryptFile(path)
+	if err != nil {
+		panic(err)
+	}
+	return result
 }

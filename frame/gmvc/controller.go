@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -11,17 +11,17 @@ import (
 	"github.com/gogf/gf/net/ghttp"
 )
 
-// 控制器基类
+// Controller is used for controller register of ghttp.Server.
 type Controller struct {
-	Request  *ghttp.Request  // 请求数据对象
-	Response *ghttp.Response // 返回数据对象(r.Response)
-	Server   *ghttp.Server   // Web Server对象(r.Server)
-	Cookie   *ghttp.Cookie   // COOKIE操作对象(r.Cookie)
-	Session  *ghttp.Session  // SESSION操作对象
-	View     *View           // 视图对象
+	Request  *ghttp.Request
+	Response *ghttp.Response
+	Server   *ghttp.Server
+	Cookie   *ghttp.Cookie
+	Session  *ghttp.Session
+	View     *View
 }
 
-// 控制器初始化接口方法
+// Init is the callback function for each request initialization.
 func (c *Controller) Init(r *ghttp.Request) {
 	c.Request = r
 	c.Response = r.Response
@@ -31,12 +31,12 @@ func (c *Controller) Init(r *ghttp.Request) {
 	c.Session = r.Session
 }
 
-// 控制器结束请求接口方法
+// Shut is the callback function for each request close.
 func (c *Controller) Shut() {
 
 }
 
-// 退出请求执行
+// Exit equals to function Request.Exit().
 func (c *Controller) Exit() {
 	c.Request.Exit()
 }

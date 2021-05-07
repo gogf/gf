@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -14,7 +14,9 @@ import (
 var (
 	regexMu = sync.RWMutex{}
 	// Cache for regex object.
-	// TODO There's no expiring logic for this map.
+	// Note that:
+	// 1. It uses sync.RWMutex ensuring the concurrent safety.
+	// 2. There's no expiring logic for this map.
 	regexMap = make(map[string]*regexp.Regexp)
 )
 
@@ -22,29 +24,25 @@ var (
 // It uses cache to enhance the performance for compiling regular expression pattern,
 // which means, it will return the same *regexp.Regexp object with the same regular
 // expression pattern.
-func getRegexp(pattern string) (*regexp.Regexp, error) {
-	if r := getCache(pattern); r != nil {
-		return r, nil
-	}
-	if r, err := regexp.Compile(pattern); err == nil {
-		setCache(pattern, r)
-		return r, nil
-	} else {
-		return nil, err
-	}
-}
-
-// getCache returns *regexp.Regexp object from cache by given <pattern>, for internal usage.
-func getCache(pattern string) (regex *regexp.Regexp) {
+//
+// It is concurrent-safe for multiple goroutines.
+func getRegexp(pattern string) (regex *regexp.Regexp, err error) {
+	// Retrieve the regular expression object using reading lock.
 	regexMu.RLock()
 	regex = regexMap[pattern]
 	regexMu.RUnlock()
-	return
-}
-
-// setCache stores *regexp.Regexp object into cache, for internal usage.
-func setCache(pattern string, regex *regexp.Regexp) {
+	if regex != nil {
+		return
+	}
+	// If it does not exist in the cache,
+	// it compiles the pattern and creates one.
+	regex, err = regexp.Compile(pattern)
+	if err != nil {
+		return
+	}
+	// Cache the result object using writing lock.
 	regexMu.Lock()
 	regexMap[pattern] = regex
 	regexMu.Unlock()
+	return
 }

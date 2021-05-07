@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -43,161 +43,158 @@ func (c *DomainController) Info() {
 }
 
 func Test_Router_DomainController1(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.Domain("localhost, local").BindController("/", new(DomainController))
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
-	// 等待启动完成
-	time.Sleep(200 * time.Millisecond)
-	gtest.Case(t, func() {
-		client := ghttp.NewClient()
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "Not Found")
-		gtest.Assert(client.GetContent("/init"), "Not Found")
-		gtest.Assert(client.GetContent("/shut"), "Not Found")
-		gtest.Assert(client.GetContent("/index"), "Not Found")
-		gtest.Assert(client.GetContent("/show"), "Not Found")
-		gtest.Assert(client.GetContent("/info"), "Not Found")
-		gtest.Assert(client.GetContent("/none-exist"), "Not Found")
+		t.Assert(client.GetContent("/"), "Not Found")
+		t.Assert(client.GetContent("/init"), "Not Found")
+		t.Assert(client.GetContent("/shut"), "Not Found")
+		t.Assert(client.GetContent("/index"), "Not Found")
+		t.Assert(client.GetContent("/show"), "Not Found")
+		t.Assert(client.GetContent("/info"), "Not Found")
+		t.Assert(client.GetContent("/none-exist"), "Not Found")
 	})
 
-	gtest.Case(t, func() {
-		client := ghttp.NewClient()
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://localhost:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "1Controller Index2")
-		gtest.Assert(client.GetContent("/init"), "Not Found")
-		gtest.Assert(client.GetContent("/shut"), "Not Found")
-		gtest.Assert(client.GetContent("/index"), "1Controller Index2")
-		gtest.Assert(client.GetContent("/show"), "1Controller Show2")
-		gtest.Assert(client.GetContent("/info"), "1Controller Info2")
-		gtest.Assert(client.GetContent("/none-exist"), "Not Found")
+		t.Assert(client.GetContent("/"), "1Controller Index2")
+		t.Assert(client.GetContent("/init"), "Not Found")
+		t.Assert(client.GetContent("/shut"), "Not Found")
+		t.Assert(client.GetContent("/index"), "1Controller Index2")
+		t.Assert(client.GetContent("/show"), "1Controller Show2")
+		t.Assert(client.GetContent("/info"), "1Controller Info2")
+		t.Assert(client.GetContent("/none-exist"), "Not Found")
 	})
 
-	gtest.Case(t, func() {
-		client := ghttp.NewClient()
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://local:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "1Controller Index2")
-		gtest.Assert(client.GetContent("/init"), "Not Found")
-		gtest.Assert(client.GetContent("/shut"), "Not Found")
-		gtest.Assert(client.GetContent("/index"), "1Controller Index2")
-		gtest.Assert(client.GetContent("/show"), "1Controller Show2")
-		gtest.Assert(client.GetContent("/info"), "1Controller Info2")
-		gtest.Assert(client.GetContent("/none-exist"), "Not Found")
+		t.Assert(client.GetContent("/"), "1Controller Index2")
+		t.Assert(client.GetContent("/init"), "Not Found")
+		t.Assert(client.GetContent("/shut"), "Not Found")
+		t.Assert(client.GetContent("/index"), "1Controller Index2")
+		t.Assert(client.GetContent("/show"), "1Controller Show2")
+		t.Assert(client.GetContent("/info"), "1Controller Info2")
+		t.Assert(client.GetContent("/none-exist"), "Not Found")
 	})
 }
 
 func Test_Router_DomainController2(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.Domain("localhost, local").BindController("/controller", new(DomainController), "Show, Info")
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
-	// 等待启动完成
-	time.Sleep(200 * time.Millisecond)
-	gtest.Case(t, func() {
-		client := ghttp.NewClient()
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "Not Found")
-		gtest.Assert(client.GetContent("/controller"), "Not Found")
-		gtest.Assert(client.GetContent("/controller/init"), "Not Found")
-		gtest.Assert(client.GetContent("/controller/shut"), "Not Found")
-		gtest.Assert(client.GetContent("/controller/index"), "Not Found")
-		gtest.Assert(client.GetContent("/controller/show"), "Not Found")
-		gtest.Assert(client.GetContent("/controller/info"), "Not Found")
-		gtest.Assert(client.GetContent("/none-exist"), "Not Found")
+		t.Assert(client.GetContent("/"), "Not Found")
+		t.Assert(client.GetContent("/controller"), "Not Found")
+		t.Assert(client.GetContent("/controller/init"), "Not Found")
+		t.Assert(client.GetContent("/controller/shut"), "Not Found")
+		t.Assert(client.GetContent("/controller/index"), "Not Found")
+		t.Assert(client.GetContent("/controller/show"), "Not Found")
+		t.Assert(client.GetContent("/controller/info"), "Not Found")
+		t.Assert(client.GetContent("/none-exist"), "Not Found")
 	})
 
-	gtest.Case(t, func() {
-		client := ghttp.NewClient()
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://localhost:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "Not Found")
-		gtest.Assert(client.GetContent("/controller"), "Not Found")
-		gtest.Assert(client.GetContent("/controller/init"), "Not Found")
-		gtest.Assert(client.GetContent("/controller/shut"), "Not Found")
-		gtest.Assert(client.GetContent("/controller/index"), "Not Found")
-		gtest.Assert(client.GetContent("/controller/show"), "1Controller Show2")
-		gtest.Assert(client.GetContent("/controller/info"), "1Controller Info2")
-		gtest.Assert(client.GetContent("/none-exist"), "Not Found")
+		t.Assert(client.GetContent("/"), "Not Found")
+		t.Assert(client.GetContent("/controller"), "Not Found")
+		t.Assert(client.GetContent("/controller/init"), "Not Found")
+		t.Assert(client.GetContent("/controller/shut"), "Not Found")
+		t.Assert(client.GetContent("/controller/index"), "Not Found")
+		t.Assert(client.GetContent("/controller/show"), "1Controller Show2")
+		t.Assert(client.GetContent("/controller/info"), "1Controller Info2")
+		t.Assert(client.GetContent("/none-exist"), "Not Found")
 	})
 
-	gtest.Case(t, func() {
-		client := ghttp.NewClient()
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://local:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "Not Found")
-		gtest.Assert(client.GetContent("/controller"), "Not Found")
-		gtest.Assert(client.GetContent("/controller/init"), "Not Found")
-		gtest.Assert(client.GetContent("/controller/shut"), "Not Found")
-		gtest.Assert(client.GetContent("/controller/index"), "Not Found")
-		gtest.Assert(client.GetContent("/controller/show"), "1Controller Show2")
-		gtest.Assert(client.GetContent("/controller/info"), "1Controller Info2")
-		gtest.Assert(client.GetContent("/none-exist"), "Not Found")
+		t.Assert(client.GetContent("/"), "Not Found")
+		t.Assert(client.GetContent("/controller"), "Not Found")
+		t.Assert(client.GetContent("/controller/init"), "Not Found")
+		t.Assert(client.GetContent("/controller/shut"), "Not Found")
+		t.Assert(client.GetContent("/controller/index"), "Not Found")
+		t.Assert(client.GetContent("/controller/show"), "1Controller Show2")
+		t.Assert(client.GetContent("/controller/info"), "1Controller Info2")
+		t.Assert(client.GetContent("/none-exist"), "Not Found")
 	})
 }
 
 func Test_Router_DomainControllerMethod(t *testing.T) {
-	p := ports.PopRand()
+	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.Domain("localhost, local").BindControllerMethod("/controller-info", new(DomainController), "Info")
 	s.SetPort(p)
-	s.SetDumpRouteMap(false)
+	s.SetDumpRouterMap(false)
 	s.Start()
 	defer s.Shutdown()
 
-	// 等待启动完成
-	time.Sleep(200 * time.Millisecond)
-	gtest.Case(t, func() {
-		client := ghttp.NewClient()
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "Not Found")
-		gtest.Assert(client.GetContent("/controller"), "Not Found")
-		gtest.Assert(client.GetContent("/controller/init"), "Not Found")
-		gtest.Assert(client.GetContent("/controller/shut"), "Not Found")
-		gtest.Assert(client.GetContent("/controller/index"), "Not Found")
-		gtest.Assert(client.GetContent("/controller/show"), "Not Found")
-		gtest.Assert(client.GetContent("/controller/info"), "Not Found")
-		gtest.Assert(client.GetContent("/controller-info"), "Not Found")
-		gtest.Assert(client.GetContent("/none-exist"), "Not Found")
+		t.Assert(client.GetContent("/"), "Not Found")
+		t.Assert(client.GetContent("/controller"), "Not Found")
+		t.Assert(client.GetContent("/controller/init"), "Not Found")
+		t.Assert(client.GetContent("/controller/shut"), "Not Found")
+		t.Assert(client.GetContent("/controller/index"), "Not Found")
+		t.Assert(client.GetContent("/controller/show"), "Not Found")
+		t.Assert(client.GetContent("/controller/info"), "Not Found")
+		t.Assert(client.GetContent("/controller-info"), "Not Found")
+		t.Assert(client.GetContent("/none-exist"), "Not Found")
 	})
-	gtest.Case(t, func() {
-		client := ghttp.NewClient()
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://localhost:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "Not Found")
-		gtest.Assert(client.GetContent("/controller"), "Not Found")
-		gtest.Assert(client.GetContent("/controller/init"), "Not Found")
-		gtest.Assert(client.GetContent("/controller/shut"), "Not Found")
-		gtest.Assert(client.GetContent("/controller/index"), "Not Found")
-		gtest.Assert(client.GetContent("/controller/show"), "Not Found")
-		gtest.Assert(client.GetContent("/controller/info"), "Not Found")
-		gtest.Assert(client.GetContent("/controller-info"), "1Controller Info2")
-		gtest.Assert(client.GetContent("/none-exist"), "Not Found")
+		t.Assert(client.GetContent("/"), "Not Found")
+		t.Assert(client.GetContent("/controller"), "Not Found")
+		t.Assert(client.GetContent("/controller/init"), "Not Found")
+		t.Assert(client.GetContent("/controller/shut"), "Not Found")
+		t.Assert(client.GetContent("/controller/index"), "Not Found")
+		t.Assert(client.GetContent("/controller/show"), "Not Found")
+		t.Assert(client.GetContent("/controller/info"), "Not Found")
+		t.Assert(client.GetContent("/controller-info"), "1Controller Info2")
+		t.Assert(client.GetContent("/none-exist"), "Not Found")
 	})
-	gtest.Case(t, func() {
-		client := ghttp.NewClient()
+	gtest.C(t, func(t *gtest.T) {
+		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://local:%d", p))
 
-		gtest.Assert(client.GetContent("/"), "Not Found")
-		gtest.Assert(client.GetContent("/controller"), "Not Found")
-		gtest.Assert(client.GetContent("/controller/init"), "Not Found")
-		gtest.Assert(client.GetContent("/controller/shut"), "Not Found")
-		gtest.Assert(client.GetContent("/controller/index"), "Not Found")
-		gtest.Assert(client.GetContent("/controller/show"), "Not Found")
-		gtest.Assert(client.GetContent("/controller/info"), "Not Found")
-		gtest.Assert(client.GetContent("/controller-info"), "1Controller Info2")
-		gtest.Assert(client.GetContent("/none-exist"), "Not Found")
+		t.Assert(client.GetContent("/"), "Not Found")
+		t.Assert(client.GetContent("/controller"), "Not Found")
+		t.Assert(client.GetContent("/controller/init"), "Not Found")
+		t.Assert(client.GetContent("/controller/shut"), "Not Found")
+		t.Assert(client.GetContent("/controller/index"), "Not Found")
+		t.Assert(client.GetContent("/controller/show"), "Not Found")
+		t.Assert(client.GetContent("/controller/info"), "Not Found")
+		t.Assert(client.GetContent("/controller-info"), "1Controller Info2")
+		t.Assert(client.GetContent("/none-exist"), "Not Found")
 	})
 }

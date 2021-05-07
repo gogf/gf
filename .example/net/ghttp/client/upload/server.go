@@ -3,29 +3,24 @@ package main
 import (
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/os/gfile"
 )
 
-// 执行文件上传处理，上传到系统临时目录 /tmp
+// Upload uploads files to /tmp .
 func Upload(r *ghttp.Request) {
-	if f, h, e := r.FormFile("upload-file"); e == nil {
-		defer f.Close()
-		name := gfile.Basename(h.Filename)
-		buffer := make([]byte, h.Size)
-		f.Read(buffer)
-		gfile.PutBytes("/tmp/"+name, buffer)
-		r.Response.Write(name + " uploaded successly")
-	} else {
-		r.Response.Write(e.Error())
+	saveDirPath := "/tmp/"
+	files := r.GetUploadFiles("file")
+	if _, err := files.Save(saveDirPath); err != nil {
+		r.Response.WriteExit(err)
 	}
+	r.Response.WriteExit("upload successfully")
 }
 
-// 展示文件上传页面
+// UploadShow shows uploading simgle file page.
 func UploadShow(r *ghttp.Request) {
 	r.Response.Write(`
     <html>
     <head>
-        <title>上传文件</title>
+        <title>GF Upload File Demo</title>
     </head>
         <body>
             <form enctype="multipart/form-data" action="/upload" method="post">
@@ -37,10 +32,31 @@ func UploadShow(r *ghttp.Request) {
     `)
 }
 
+// UploadShowBatch shows uploading multiple files page.
+func UploadShowBatch(r *ghttp.Request) {
+	r.Response.Write(`
+    <html>
+    <head>
+        <title>GF Upload Files Demo</title>
+    </head>
+        <body>
+            <form enctype="multipart/form-data" action="/upload" method="post">
+                <input type="file" name="upload-file" />
+                <input type="file" name="upload-file" />
+                <input type="submit" value="upload" />
+            </form>
+        </body>
+    </html>
+    `)
+}
+
 func main() {
 	s := g.Server()
-	s.BindHandler("/upload", Upload)
-	s.BindHandler("/upload/show", UploadShow)
+	s.Group("/upload", func(group *ghttp.RouterGroup) {
+		group.POST("/", Upload)
+		group.ALL("/show", UploadShow)
+		group.ALL("/batch", UploadShowBatch)
+	})
 	s.SetPort(8199)
 	s.Run()
 }

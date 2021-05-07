@@ -12,18 +12,18 @@ import (
 func main() {
 	gres.Dump()
 
-	v := g.View()
-	v.SetPath("template/layout1")
+	//v := g.View()
+	//v.SetPath("template/layout1")
 
 	s := g.Server()
 	s.SetIndexFolder(true)
 	s.SetServerRoot("root")
-	s.BindHookHandler("/*", ghttp.HOOK_BEFORE_SERVE, func(r *ghttp.Request) {
+	s.BindHookHandler("/*", ghttp.HookBeforeServe, func(r *ghttp.Request) {
 		fmt.Println(r.URL.Path, r.IsFileRequest())
 	})
 	s.BindHandler("/template", func(r *ghttp.Request) {
-		r.Response.WriteTpl("layout.html")
+		r.Response.WriteTpl("layout1/layout.html")
 	})
-	s.SetPort(8199)
+	s.SetPort(8198)
 	s.Run()
 }

@@ -11,12 +11,10 @@ func main() {
 	p := "/:name/info/{uid}"
 	s := g.Server()
 	s.BindHookHandlerByMap(p, map[string]ghttp.HandlerFunc{
-		"BeforeServe":  func(r *ghttp.Request) { glog.Println("BeforeServe") },
-		"AfterServe":   func(r *ghttp.Request) { glog.Println("AfterServe") },
-		"BeforeOutput": func(r *ghttp.Request) { glog.Println("BeforeOutput") },
-		"AfterOutput":  func(r *ghttp.Request) { glog.Println("AfterOutput") },
-		"BeforeClose":  func(r *ghttp.Request) { glog.Println("BeforeClose") },
-		"AfterClose":   func(r *ghttp.Request) { glog.Println("AfterClose") },
+		ghttp.HookBeforeServe:  func(r *ghttp.Request) { glog.Println(ghttp.HookBeforeServe) },
+		ghttp.HookAfterServe:   func(r *ghttp.Request) { glog.Println(ghttp.HookAfterServe) },
+		ghttp.HookBeforeOutput: func(r *ghttp.Request) { glog.Println(ghttp.HookBeforeOutput) },
+		ghttp.HookAfterOutput:  func(r *ghttp.Request) { glog.Println(ghttp.HookAfterOutput) },
 	})
 	s.BindHandler(p, func(r *ghttp.Request) {
 		r.Response.Write("用户:", r.Get("name"), ", uid:", r.Get("uid"))

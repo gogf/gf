@@ -1,42 +1,33 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
-//
-// HTTP Cookie管理对象，
-// 由于Cookie是和HTTP请求挂钩的，因此被包含到 ghttp 包中进行管理。
 
 package ghttp
 
 import (
 	"net/http"
 	"time"
-
-	"github.com/gogf/gf/os/gtime"
 )
 
-// COOKIE对象，非并发安全。
+// Cookie for HTTP COOKIE management.
 type Cookie struct {
-	data     map[string]CookieItem // 数据项
-	path     string                // 默认的cookie path
-	domain   string                // 默认的cookie domain
-	maxage   int64                 // 默认的cookie maxage
-	server   *Server               // 所属Server
-	request  *Request              // 所属HTTP请求对象
-	response *Response             // 所属HTTP返回对象
+	data     map[string]*cookieItem // Underlying cookie items.
+	server   *Server                // Belonged HTTP server
+	request  *Request               // Belonged HTTP request.
+	response *Response              // Belonged HTTP response.
 }
 
-// cookie项
-type CookieItem struct {
-	value    string
-	domain   string // 有效域名
-	path     string // 有效路径
-	expire   int64  // 过期时间
-	httpOnly bool
+// cookieItem is the item stored in Cookie.
+type cookieItem struct {
+	*http.Cookie      // Underlying cookie items.
+	FromClient   bool // Mark this cookie received from client.
 }
 
-// 获取或者创建一个COOKIE对象，与传入的请求对应(延迟初始化)
+// GetCookie creates or retrieves a cookie object with given request.
+// It retrieves and returns an existing cookie object if it already exists with given request.
+// It creates and returns a new cookie object if it does not exist with given request.
 func GetCookie(r *Request) *Cookie {
 	if r.Cookie != nil {
 		return r.Cookie
@@ -47,80 +38,112 @@ func GetCookie(r *Request) *Cookie {
 	}
 }
 
-// 从请求流中初始化，无锁，延迟初始化
+// init does lazy initialization for cookie object.
 func (c *Cookie) init() {
-	if c.data == nil {
-		c.data = make(map[string]CookieItem)
-		c.path = c.request.Server.GetCookiePath()
-		c.domain = c.request.Server.GetCookieDomain()
-		c.maxage = c.request.Server.GetCookieMaxAge()
-		c.response = c.request.Response
-		// 如果没有设置COOKIE有效域名，那么设置HOST为默认有效域名
-		if c.domain == "" {
-			c.domain = c.request.GetHost()
-		}
-		for _, v := range c.request.Cookies() {
-			c.data[v.Name] = CookieItem{
-				v.Value, v.Domain, v.Path, int64(v.Expires.Second()), v.HttpOnly,
-			}
+	if c.data != nil {
+		return
+	}
+	c.data = make(map[string]*cookieItem)
+	c.response = c.request.Response
+	// DO NOT ADD ANY DEFAULT COOKIE DOMAIN!
+	//if c.request.Server.GetCookieDomain() == "" {
+	//	c.request.Server.GetCookieDomain() = c.request.GetHost()
+	//}
+	for _, v := range c.request.Cookies() {
+		c.data[v.Name] = &cookieItem{
+			Cookie:     v,
+			FromClient: true,
 		}
 	}
 }
 
-// 获取所有的Cookie并构造成map[string]string返回.
+// Map returns the cookie items as map[string]string.
 func (c *Cookie) Map() map[string]string {
 	c.init()
 	m := make(map[string]string)
 	for k, v := range c.data {
-		m[k] = v.value
+		m[k] = v.Value
 	}
 	return m
 }
 
-// 判断Cookie中是否存在制定键名(并且没有过期)
+// Contains checks if given key exists and not expired in cookie.
 func (c *Cookie) Contains(key string) bool {
 	c.init()
 	if r, ok := c.data[key]; ok {
-		if r.expire >= 0 {
+		if r.Expires.IsZero() || r.Expires.After(time.Now()) {
 			return true
 		}
 	}
 	return false
 }
 
-// 设置cookie，使用默认参数
+// Set sets cookie item with default domain, path and expiration age.
 func (c *Cookie) Set(key, value string) {
-	c.SetCookie(key, value, c.domain, c.path, c.server.GetCookieMaxAge())
+	c.SetCookie(
+		key,
+		value,
+		c.request.Server.GetCookieDomain(),
+		c.request.Server.GetCookiePath(),
+		c.request.Server.GetCookieMaxAge(),
+	)
 }
 
-// 设置cookie，带详细cookie参数
-func (c *Cookie) SetCookie(key, value, domain, path string, maxAge int64, httpOnly ...bool) {
+// SetCookie sets cookie item given given domain, path and expiration age.
+// The optional parameter <httpOnly> specifies if the cookie item is only available in HTTP,
+// which is usually empty.
+func (c *Cookie) SetCookie(key, value, domain, path string, maxAge time.Duration, httpOnly ...bool) {
 	c.init()
 	isHttpOnly := false
 	if len(httpOnly) > 0 {
 		isHttpOnly = httpOnly[0]
 	}
-	c.data[key] = CookieItem{
-		value, domain, path, gtime.Second() + maxAge, isHttpOnly,
+	httpCookie := &http.Cookie{
+		Name:     key,
+		Value:    value,
+		Path:     path,
+		Domain:   domain,
+		HttpOnly: isHttpOnly,
+	}
+	if maxAge != 0 {
+		httpCookie.Expires = time.Now().Add(maxAge)
+	}
+	c.data[key] = &cookieItem{
+		Cookie: httpCookie,
 	}
 }
 
-// 获得客户端提交的SessionId
+// SetHttpCookie sets cookie with *http.Cookie.
+func (c *Cookie) SetHttpCookie(httpCookie *http.Cookie) {
+	c.init()
+	c.data[httpCookie.Name] = &cookieItem{
+		Cookie: httpCookie,
+	}
+}
+
+// GetSessionId retrieves and returns the session id from cookie.
 func (c *Cookie) GetSessionId() string {
 	return c.Get(c.server.GetSessionIdName())
 }
 
-// 设置SessionId
+// SetSessionId sets session id in the cookie.
 func (c *Cookie) SetSessionId(id string) {
-	c.Set(c.server.GetSessionIdName(), id)
+	c.SetCookie(
+		c.server.GetSessionIdName(),
+		id,
+		c.request.Server.GetCookieDomain(),
+		c.request.Server.GetCookiePath(),
+		c.server.GetSessionCookieMaxAge(),
+	)
 }
 
-// 查询cookie
+// Get retrieves and returns the value with specified key.
+// It returns <def> if specified key does not exist and <def> is given.
 func (c *Cookie) Get(key string, def ...string) string {
 	c.init()
 	if r, ok := c.data[key]; ok {
-		if r.expire >= 0 {
-			return r.value
+		if r.Expires.IsZero() || r.Expires.After(time.Now()) {
+			return r.Value
 		}
 	}
 	if len(def) > 0 {
@@ -129,37 +152,33 @@ func (c *Cookie) Get(key string, def ...string) string {
 	return ""
 }
 
-// 删除COOKIE，使用默认的domain&path
+// Remove deletes specified key and its value from cookie using default domain and path.
+// It actually tells the http client that the cookie is expired, do not send it to server next time.
 func (c *Cookie) Remove(key string) {
-	c.SetCookie(key, "", c.domain, c.path, -86400)
+	c.SetCookie(
+		key,
+		"",
+		c.request.Server.GetCookieDomain(),
+		c.request.Server.GetCookiePath(),
+		-24*time.Hour,
+	)
 }
 
-// 标记该cookie在对应的域名和路径失效
-// 删除cookie的重点是需要通知浏览器客户端cookie已过期
+// RemoveCookie deletes specified key and its value from cookie using given domain and path.
+// It actually tells the http client that the cookie is expired, do not send it to server next time.
 func (c *Cookie) RemoveCookie(key, domain, path string) {
-	c.SetCookie(key, "", domain, path, -86400)
+	c.SetCookie(key, "", domain, path, -24*time.Hour)
 }
 
-// 输出到客户端
-func (c *Cookie) Output() {
+// Flush outputs the cookie items to client.
+func (c *Cookie) Flush() {
 	if len(c.data) == 0 {
 		return
 	}
-	for k, v := range c.data {
-		// 只有 expire != 0 的才是服务端在本次请求中设置的cookie
-		if v.expire == 0 {
+	for _, v := range c.data {
+		if v.FromClient {
 			continue
 		}
-		http.SetCookie(
-			c.response.Writer,
-			&http.Cookie{
-				Name:     k,
-				Value:    v.value,
-				Domain:   v.domain,
-				Path:     v.path,
-				Expires:  time.Unix(int64(v.expire), 0),
-				HttpOnly: v.httpOnly,
-			},
-		)
+		http.SetCookie(c.response.Writer, v.Cookie)
 	}
 }

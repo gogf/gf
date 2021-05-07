@@ -2,14 +2,14 @@ package main
 
 import (
 	"fmt"
-
-	"github.com/gogf/gf/i18n/gi18n"
+	"github.com/gogf/gf/frame/g"
 )
 
 func main() {
-	t := gi18n.New()
-	t.SetLanguage("ja")
-	fmt.Println(t.Translate(`hello`))
-	fmt.Println(t.Translate(`{#hello}{#world}!`))
-
+	var (
+		orderId     = 865271654
+		orderAmount = 99.8
+	)
+	fmt.Println(g.I18n().Tfl(`en`, `{#OrderPaid}`, orderId, orderAmount))
+	fmt.Println(g.I18n().Tfl(`zh-CN`, `{#OrderPaid}`, orderId, orderAmount))
 }

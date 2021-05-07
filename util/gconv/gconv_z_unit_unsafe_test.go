@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -13,13 +13,13 @@ import (
 )
 
 func Test_Unsafe(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		s := "I love 小泽玛利亚"
-		gtest.AssertEQ(gconv.UnsafeStrToBytes(s), []byte(s))
+		t.AssertEQ(gconv.UnsafeStrToBytes(s), []byte(s))
 	})
 
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		b := []byte("I love 小泽玛利亚")
-		gtest.AssertEQ(gconv.UnsafeBytesToStr(b), string(b))
+		t.AssertEQ(gconv.UnsafeBytesToStr(b), string(b))
 	})
 }

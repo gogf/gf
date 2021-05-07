@@ -9,7 +9,7 @@ import (
 func main() {
 	s := g.Server()
 	s.SetServerRoot("public")
-	s.SetNameToUriType(ghttp.NAME_TO_URI_TYPE_ALLLOWER)
+	s.SetNameToUriType(ghttp.URI_TYPE_ALLLOWER)
 	s.SetErrorLogEnabled(true)
 	s.SetAccessLogEnabled(true)
 	s.SetPort(2333)

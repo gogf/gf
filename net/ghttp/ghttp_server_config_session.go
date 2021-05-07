@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,57 +7,47 @@
 package ghttp
 
 import (
-	"fmt"
+	"time"
 
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/os/gsession"
 )
 
-// 设置http server参数 - SessionMaxAge
-func (s *Server) SetSessionMaxAge(age int64) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
-	s.config.SessionMaxAge = age
+// SetSessionMaxAge sets the SessionMaxAge for server.
+func (s *Server) SetSessionMaxAge(ttl time.Duration) {
+	s.config.SessionMaxAge = ttl
 }
 
-// 设置http server参数 - SessionIdName
+// SetSessionIdName sets the SessionIdName for server.
 func (s *Server) SetSessionIdName(name string) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
 	s.config.SessionIdName = name
 }
 
-// 设置http server参数 - SessionStoragePath
-func (s *Server) SetSessionStoragePath(path string) {
-	if s.Status() == SERVER_STATUS_RUNNING {
-		glog.Error(gCHANGE_CONFIG_WHILE_RUNNING_ERROR)
-		return
-	}
-	realPath, _ := gfile.Search(path)
-	if realPath != "" {
-		glog.Fatal(fmt.Sprintf(`[ghttp] SetSessionStoragePath failed: '%s' does not exist`, path))
-	}
-	s.config.SessionStoragePath = realPath
-	if err := s.sessionStorage.SetPath(realPath); err != nil {
-		glog.Fatal(fmt.Sprintf(`[ghttp] SetSessionStoragePath failed: %s`, err.Error()))
-	}
+// SetSessionStorage sets the SessionStorage for server.
+func (s *Server) SetSessionStorage(storage gsession.Storage) {
+	s.config.SessionStorage = storage
 }
 
-// 获取http server参数 - SessionMaxAge
-func (s *Server) GetSessionMaxAge() int64 {
+// SetSessionCookieOutput sets the SetSessionCookieOutput for server.
+func (s *Server) SetSessionCookieOutput(enabled bool) {
+	s.config.SessionCookieOutput = enabled
+}
+
+// SetSessionCookieMaxAge sets the SessionCookieMaxAge for server.
+func (s *Server) SetSessionCookieMaxAge(maxAge time.Duration) {
+	s.config.SessionCookieMaxAge = maxAge
+}
+
+// GetSessionMaxAge returns the SessionMaxAge of server.
+func (s *Server) GetSessionMaxAge() time.Duration {
 	return s.config.SessionMaxAge
 }
 
-// 获取http server参数 - SessionIdName
+// GetSessionIdName returns the SessionIdName of server.
 func (s *Server) GetSessionIdName() string {
 	return s.config.SessionIdName
 }
 
-// 获取http server参数 - SessionStoragePath
-func (s *Server) GetSessionStoragePath() string {
-	return s.config.SessionStoragePath
+// GetSessionCookieMaxAge returns the SessionCookieMaxAge of server.
+func (s *Server) GetSessionCookieMaxAge() time.Duration {
+	return s.config.SessionCookieMaxAge
 }

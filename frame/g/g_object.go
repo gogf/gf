@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -15,13 +15,19 @@ import (
 	"github.com/gogf/gf/net/gtcp"
 	"github.com/gogf/gf/net/gudp"
 	"github.com/gogf/gf/os/gcfg"
+	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/os/gres"
 	"github.com/gogf/gf/os/gview"
 )
 
+// Client is a convenience function, that creates and returns a new HTTP client.
+func Client() *ghttp.Client {
+	return ghttp.NewClient()
+}
+
 // Server returns an instance of http server with specified name.
 func Server(name ...interface{}) *ghttp.Server {
-	return ghttp.GetServer(name...)
+	return gins.Server(name...)
 }
 
 // TCPServer returns an instance of tcp server with specified name.
@@ -68,15 +74,36 @@ func Res(name ...string) *gres.Resource {
 	return Resource(name...)
 }
 
-// Database returns an instance of database ORM object with specified configuration group name.
+// Log returns an instance of glog.Logger.
+// The parameter <name> is the name for the instance.
+func Log(name ...string) *glog.Logger {
+	return gins.Log(name...)
+}
+
+// Database is alias of DB.
+// See DB.
+// Deprecated, use DB instead.
 func Database(name ...string) gdb.DB {
 	return gins.Database(name...)
 }
 
-// DB is alias of Database.
-// See Database.
+// DB returns an instance of database ORM object with specified configuration group name.
 func DB(name ...string) gdb.DB {
 	return gins.Database(name...)
+}
+
+// Table is alias of Model.
+// The database component is designed not only for
+// relational databases but also for NoSQL databases in the future. The name
+// "Table" is not proper for that purpose any more.
+// Deprecated, use Model instead.
+func Table(tableNameOrStruct ...interface{}) *gdb.Model {
+	return DB().Model(tableNameOrStruct...)
+}
+
+// Model creates and returns a model based on configuration of default database group.
+func Model(tableNameOrStruct ...interface{}) *gdb.Model {
+	return DB().Model(tableNameOrStruct...)
 }
 
 // Redis returns an instance of redis client with specified configuration group name.

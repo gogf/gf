@@ -1,4 +1,4 @@
-// Copyright 2017-2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,248 +7,396 @@
 package gconv
 
 import (
-	"errors"
 	"fmt"
+	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/internal/empty"
+	"github.com/gogf/gf/internal/json"
+	"github.com/gogf/gf/internal/structs"
 	"reflect"
 	"strings"
 
-	"github.com/gogf/gf/internal/structs"
-	"github.com/gogf/gf/internal/utilstr"
+	"github.com/gogf/gf/internal/utils"
 )
 
-// Struct maps the params key-value pairs to the corresponding struct object's properties.
-// The third parameter <mapping> is unnecessary, indicating the mapping rules between the custom key name
-// and the attribute name(case sensitive).
+// Struct maps the params key-value pairs to the corresponding struct object's attributes.
+// The third parameter `mapping` is unnecessary, indicating the mapping rules between the
+// custom key name and the attribute name(case sensitive).
 //
 // Note:
-// 1. The <params> can be any type of map/struct, usually a map.
-// 2. The second parameter <pointer> should be a pointer to the struct object.
+// 1. The `params` can be any type of map/struct, usually a map.
+// 2. The `pointer` should be type of *struct/**struct, which is a pointer to struct object
+//    or struct pointer.
 // 3. Only the public attributes of struct object can be mapped.
-// 4. If <params> is a map, the key of the map <params> can be lowercase.
+// 4. If `params` is a map, the key of the map `params` can be lowercase.
 //    It will automatically convert the first letter of the key to uppercase
 //    in mapping procedure to do the matching.
 //    It ignores the map key, if it does not match.
-func Struct(params interface{}, pointer interface{}, mapping ...map[string]string) error {
+func Struct(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
+	var keyToAttributeNameMapping map[string]string
+	if len(mapping) > 0 {
+		keyToAttributeNameMapping = mapping[0]
+	}
+	return doStruct(params, pointer, keyToAttributeNameMapping, "")
+}
+
+// StructTag acts as Struct but also with support for priority tag feature, which retrieves the
+// specified tags for `params` key-value items to struct attribute names mapping.
+// The parameter `priorityTag` supports multiple tags that can be joined with char ','.
+func StructTag(params interface{}, pointer interface{}, priorityTag string) (err error) {
+	return doStruct(params, pointer, nil, priorityTag)
+}
+
+// StructDeep do Struct function recursively.
+// Deprecated, use Struct instead.
+func StructDeep(params interface{}, pointer interface{}, mapping ...map[string]string) error {
+	var keyToAttributeNameMapping map[string]string
+	if len(mapping) > 0 {
+		keyToAttributeNameMapping = mapping[0]
+	}
+	return doStruct(params, pointer, keyToAttributeNameMapping, "")
+}
+
+// doStruct is the core internal converting function for any data to struct.
+func doStruct(params interface{}, pointer interface{}, mapping map[string]string, priorityTag string) (err error) {
 	if params == nil {
-		return errors.New("params cannot be nil")
+		// If `params` is nil, no conversion.
+		return nil
 	}
 	if pointer == nil {
-		return errors.New("object pointer cannot be nil")
+		return gerror.New("object pointer cannot be nil")
 	}
-	paramsMap := Map(params)
-	if paramsMap == nil {
-		return fmt.Errorf("invalid params: %v", params)
+
+	defer func() {
+		// Catch the panic, especially the reflect operation panics.
+		if exception := recover(); exception != nil {
+			if e, ok := exception.(errorStack); ok {
+				err = e
+			} else {
+				err = gerror.NewSkipf(1, "%v", exception)
+			}
+		}
+	}()
+
+	// If given `params` is JSON, it then uses json.Unmarshal doing the converting.
+	switch r := params.(type) {
+	case []byte:
+		if json.Valid(r) {
+			if rv, ok := pointer.(reflect.Value); ok {
+				if rv.Kind() == reflect.Ptr {
+					return json.Unmarshal(r, rv.Interface())
+				}
+			} else {
+				return json.Unmarshal(r, pointer)
+			}
+		}
+	case string:
+		if paramsBytes := []byte(r); json.Valid(paramsBytes) {
+			if rv, ok := pointer.(reflect.Value); ok {
+				if rv.Kind() == reflect.Ptr {
+					return json.Unmarshal(paramsBytes, rv.Interface())
+				}
+			} else {
+				return json.Unmarshal(paramsBytes, pointer)
+			}
+		}
 	}
-	// Using reflect to do the converting,
-	// it also supports type of reflect.Value for <pointer>(always in internal usage).
-	elem, ok := pointer.(reflect.Value)
-	if !ok {
-		rv := reflect.ValueOf(pointer)
-		if kind := rv.Kind(); kind != reflect.Ptr {
-			return fmt.Errorf("object pointer should be type of: %v", kind)
+
+	var (
+		paramsReflectValue      reflect.Value
+		pointerReflectValue     reflect.Value
+		pointerReflectKind      reflect.Kind
+		pointerElemReflectValue reflect.Value // The pointed element.
+	)
+	if v, ok := params.(reflect.Value); ok {
+		paramsReflectValue = v
+	} else {
+		paramsReflectValue = reflect.ValueOf(params)
+	}
+	if v, ok := pointer.(reflect.Value); ok {
+		pointerReflectValue = v
+		pointerElemReflectValue = v
+	} else {
+		pointerReflectValue = reflect.ValueOf(pointer)
+		pointerReflectKind = pointerReflectValue.Kind()
+		if pointerReflectKind != reflect.Ptr {
+			return gerror.Newf("object pointer should be type of '*struct', but got '%v'", pointerReflectKind)
 		}
 		// Using IsNil on reflect.Ptr variable is OK.
-		if !rv.IsValid() || rv.IsNil() {
-			return errors.New("object pointer cannot be nil")
+		if !pointerReflectValue.IsValid() || pointerReflectValue.IsNil() {
+			return gerror.New("object pointer cannot be nil")
 		}
-		elem = rv.Elem()
+		pointerElemReflectValue = pointerReflectValue.Elem()
 	}
-	// Auto create struct object.
-	// For example, if <pointer> is **User, then <elem> is *User, which is a pointer to User.
-	if elem.Type().Kind() == reflect.Ptr && (!elem.IsValid() || elem.IsNil()) {
-		e := reflect.New(elem.Type().Elem()).Elem()
-		elem.Set(e.Addr())
-		elem = e
+	// If `params` and `pointer` are the same type, the do directly assignment.
+	// For performance enhancement purpose.
+	if pointerElemReflectValue.IsValid() && pointerElemReflectValue.Type() == paramsReflectValue.Type() {
+		pointerElemReflectValue.Set(paramsReflectValue)
+		return nil
 	}
+
+	// Normal unmarshalling interfaces checks.
+	if err, ok := bindVarToReflectValueWithInterfaceCheck(pointerReflectValue, params); ok {
+		return err
+	}
+
+	// It automatically creates struct object if necessary.
+	// For example, if `pointer` is **User, then `elem` is *User, which is a pointer to User.
+	if pointerElemReflectValue.Kind() == reflect.Ptr {
+		if !pointerElemReflectValue.IsValid() || pointerElemReflectValue.IsNil() {
+			e := reflect.New(pointerElemReflectValue.Type().Elem()).Elem()
+			pointerElemReflectValue.Set(e.Addr())
+		}
+		//if v, ok := pointerElemReflectValue.Interface().(apiUnmarshalValue); ok {
+		//	return v.UnmarshalValue(params)
+		//}
+		// Note that it's `pointerElemReflectValue` here not `pointerReflectValue`.
+		if err, ok := bindVarToReflectValueWithInterfaceCheck(pointerElemReflectValue, params); ok {
+			return err
+		}
+		// Retrieve its element, may be struct at last.
+		pointerElemReflectValue = pointerElemReflectValue.Elem()
+	}
+
+	// paramsMap is the map[string]interface{} type variable for params.
+	// DO NOT use MapDeep here.
+	paramsMap := Map(params)
+	if paramsMap == nil {
+		return gerror.Newf("convert params to map failed: %v", params)
+	}
+
 	// It only performs one converting to the same attribute.
-	// doneMap is used to check repeated converting.
-	doneMap := make(map[string]bool)
-	// It first checks the passed mapping rules.
-	if len(mapping) > 0 && len(mapping[0]) > 0 {
-		for mapK, mapV := range mapping[0] {
-			if v, ok := paramsMap[mapK]; ok {
-				doneMap[mapV] = true
-				if err := bindVarToStructAttr(elem, mapV, v); err != nil {
-					return err
-				}
-			}
-		}
-	}
-	// It secondly checks the tags of attributes.
-	tagMap := structs.TagMapName(pointer, structTagPriority, true)
-	for tagK, tagV := range tagMap {
-		if _, ok := doneMap[tagV]; ok {
+	// doneMap is used to check repeated converting, its key is the real attribute name
+	// of the struct.
+	doneMap := make(map[string]struct{})
+
+	// The key of the attrMap is the attribute name of the struct,
+	// and the value is its replaced name for later comparison to improve performance.
+	var (
+		tempName       string
+		elemFieldType  reflect.StructField
+		elemFieldValue reflect.Value
+		elemType       = pointerElemReflectValue.Type()
+		attrMap        = make(map[string]string)
+	)
+	for i := 0; i < pointerElemReflectValue.NumField(); i++ {
+		elemFieldType = elemType.Field(i)
+		// Only do converting to public attributes.
+		if !utils.IsLetterUpper(elemFieldType.Name[0]) {
 			continue
 		}
-		if v, ok := paramsMap[tagK]; ok {
-			doneMap[tagV] = true
-			if err := bindVarToStructAttr(elem, tagV, v); err != nil {
+		// Maybe it's struct/*struct embedded.
+		if elemFieldType.Anonymous {
+			elemFieldValue = pointerElemReflectValue.Field(i)
+			// Ignore the interface attribute if it's nil.
+			if elemFieldValue.Kind() == reflect.Interface {
+				elemFieldValue = elemFieldValue.Elem()
+				if !elemFieldValue.IsValid() {
+					continue
+				}
+			}
+			if err = doStruct(paramsMap, elemFieldValue, mapping, priorityTag); err != nil {
 				return err
 			}
+		} else {
+			tempName = elemFieldType.Name
+			attrMap[tempName] = utils.RemoveSymbols(tempName)
 		}
 	}
-	// It finally do the converting with default rules.
-	attrMap := make(map[string]struct{})
-	elemType := elem.Type()
-	for i := 0; i < elem.NumField(); i++ {
-		// Only do converting to public attributes.
-		if !utilstr.IsLetterUpper(elemType.Field(i).Name[0]) {
-			continue
-		}
-		attrMap[elemType.Field(i).Name] = struct{}{}
+	if len(attrMap) == 0 {
+		return nil
 	}
+
+	// The key of the tagMap is the attribute name of the struct,
+	// and the value is its replaced tag name for later comparison to improve performance.
+	var (
+		tagMap           = make(map[string]string)
+		priorityTagArray []string
+	)
+	if priorityTag != "" {
+		priorityTagArray = append(utils.SplitAndTrim(priorityTag, ","), StructTagPriority...)
+	} else {
+		priorityTagArray = StructTagPriority
+	}
+	tagToNameMap, err := structs.TagMapName(pointerElemReflectValue, priorityTagArray)
+	if err != nil {
+		return err
+	}
+	for tagName, attributeName := range tagToNameMap {
+		// If there's something else in the tag string,
+		// it uses the first part which is split using char ','.
+		// Eg:
+		// orm:"id, priority"
+		// orm:"name, with:uid=id"
+		tagMap[attributeName] = utils.RemoveSymbols(strings.Split(tagName, ",")[0])
+	}
+
+	var (
+		attrName  string
+		checkName string
+	)
 	for mapK, mapV := range paramsMap {
-		name := ""
-		for _, checkName := range []string{
-			utilstr.UcFirst(mapK),
-			utilstr.ReplaceByMap(mapK, map[string]string{
-				"_": "",
-				"-": "",
-				" ": "",
-			})} {
-			if _, ok := doneMap[checkName]; ok {
-				continue
-			}
-			if _, ok := tagMap[checkName]; ok {
-				continue
-			}
-			// Loop to find the matched attribute name.
-			for value, _ := range attrMap {
-				if strings.EqualFold(checkName, value) {
-					name = value
-					break
-				}
-				if strings.EqualFold(checkName, strings.Replace(value, "_", "", -1)) {
-					name = value
-					break
-				}
-			}
-			doneMap[checkName] = true
-			if name != "" {
-				break
+		attrName = ""
+		// It firstly checks the passed mapping rules.
+		if len(mapping) > 0 {
+			if passedAttrKey, ok := mapping[mapK]; ok {
+				attrName = passedAttrKey
 			}
 		}
-		// No matching, give up this attribute converting.
-		if name == "" {
+		// It secondly checks the predefined tags and matching rules.
+		if attrName == "" {
+			checkName = utils.RemoveSymbols(mapK)
+			// Loop to find the matched attribute name with or without
+			// string cases and chars like '-'/'_'/'.'/' '.
+
+			// Matching the parameters to struct tag names.
+			// The `tagV` is the attribute name of the struct.
+			for attrKey, cmpKey := range tagMap {
+				if strings.EqualFold(checkName, cmpKey) {
+					attrName = attrKey
+					break
+				}
+			}
+			// Matching the parameters to struct attributes.
+			if attrName == "" {
+				for attrKey, cmpKey := range attrMap {
+					// Eg:
+					// UserName  eq user_name
+					// User-Name eq username
+					// username  eq userName
+					// etc.
+					if strings.EqualFold(checkName, cmpKey) {
+						attrName = attrKey
+						break
+					}
+				}
+			}
+		}
+
+		// No matching, it gives up this attribute converting.
+		if attrName == "" {
 			continue
 		}
-		if err := bindVarToStructAttr(elem, name, mapV); err != nil {
+		// If the attribute name is already checked converting, then skip it.
+		if _, ok := doneMap[attrName]; ok {
+			continue
+		}
+		// Mark it done.
+		doneMap[attrName] = struct{}{}
+		if err := bindVarToStructAttr(pointerElemReflectValue, attrName, mapV, mapping, priorityTag); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-// StructDeep do Struct function recursively.
-// See Struct.
-func StructDeep(params interface{}, pointer interface{}, mapping ...map[string]string) error {
-	if err := Struct(params, pointer, mapping...); err != nil {
-		return err
+// bindVarToStructAttr sets value to struct object attribute by name.
+func bindVarToStructAttr(elem reflect.Value, name string, value interface{}, mapping map[string]string, priorityTag string) (err error) {
+	structFieldValue := elem.FieldByName(name)
+	if !structFieldValue.IsValid() {
+		return nil
+	}
+	// CanSet checks whether attribute is public accessible.
+	if !structFieldValue.CanSet() {
+		return nil
+	}
+	defer func() {
+		if e := recover(); e != nil {
+			if err = bindVarToReflectValue(structFieldValue, value, mapping, priorityTag); err != nil {
+				err = gerror.Wrapf(err, `error binding value to attribute "%s"`, name)
+			}
+		}
+	}()
+	// Directly converting.
+	if empty.IsNil(value) {
+		structFieldValue.Set(reflect.Zero(structFieldValue.Type()))
 	} else {
-		rv, ok := pointer.(reflect.Value)
-		if !ok {
-			rv = reflect.ValueOf(pointer)
+		structFieldValue.Set(reflect.ValueOf(Convert(value, structFieldValue.Type().String())))
+	}
+	return nil
+}
+
+// bindVarToReflectValueWithInterfaceCheck does binding using common interfaces checks.
+func bindVarToReflectValueWithInterfaceCheck(reflectValue reflect.Value, value interface{}) (err error, ok bool) {
+	var pointer interface{}
+	if reflectValue.Kind() != reflect.Ptr && reflectValue.CanAddr() {
+		reflectValueAddr := reflectValue.Addr()
+		if reflectValueAddr.IsNil() || !reflectValueAddr.IsValid() {
+			return nil, false
 		}
-		kind := rv.Kind()
-		for kind == reflect.Ptr {
-			rv = rv.Elem()
-			kind = rv.Kind()
+		// Not a pointer, but can token address, that makes it can be unmarshalled.
+		pointer = reflectValue.Addr().Interface()
+	} else {
+		if reflectValue.IsNil() || !reflectValue.IsValid() {
+			return nil, false
 		}
-		switch kind {
-		case reflect.Struct:
-			rt := rv.Type()
-			for i := 0; i < rv.NumField(); i++ {
-				// Only do converting to public attributes.
-				if !utilstr.IsLetterUpper(rt.Field(i).Name[0]) {
-					continue
-				}
-				trv := rv.Field(i)
-				switch trv.Kind() {
-				case reflect.Struct:
-					if err := StructDeep(params, trv, mapping...); err != nil {
-						return err
-					}
-				}
+		pointer = reflectValue.Interface()
+	}
+	if v, ok := pointer.(apiUnmarshalValue); ok {
+		return v.UnmarshalValue(value), ok
+	}
+	if v, ok := pointer.(apiUnmarshalText); ok {
+		if s, ok := value.(string); ok {
+			return v.UnmarshalText([]byte(s)), ok
+		}
+		if b, ok := value.([]byte); ok {
+			return v.UnmarshalText(b), ok
+		}
+	}
+	if v, ok := pointer.(apiSet); ok {
+		v.Set(value)
+		return nil, ok
+	}
+	return nil, false
+}
+
+// bindVarToReflectValue sets `value` to reflect value object `structFieldValue`.
+func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, mapping map[string]string, priorityTag string) (err error) {
+	if err, ok := bindVarToReflectValueWithInterfaceCheck(structFieldValue, value); ok {
+		return err
+	}
+	kind := structFieldValue.Kind()
+	// Converting using interface, for some kinds.
+	switch kind {
+	case reflect.Slice, reflect.Array, reflect.Ptr, reflect.Interface:
+		if !structFieldValue.IsNil() {
+			if v, ok := structFieldValue.Interface().(apiSet); ok {
+				v.Set(value)
+				return nil
 			}
 		}
 	}
-	return nil
-}
 
-// 将参数值绑定到对象指定名称的属性上
-func bindVarToStructAttr(elem reflect.Value, name string, value interface{}) (err error) {
-	structFieldValue := elem.FieldByName(name)
-	// 键名与对象属性匹配检测，map中如果有struct不存在的属性，那么不做处理，直接return
-	if !structFieldValue.IsValid() {
-		return nil
-	}
-	// CanSet的属性必须为公开属性(首字母大写)
-	if !structFieldValue.CanSet() {
-		return nil
-	}
-	// 必须将value转换为struct属性的数据类型，这里必须用到gconv包
-	defer func() {
-		// 如果转换失败，那么可能是类型不匹配造成(例如属性包含自定义类型)，那么执行递归转换
-		if recover() != nil {
-			err = bindVarToReflectValue(structFieldValue, value)
-		}
-	}()
-	structFieldValue.Set(reflect.ValueOf(Convert(value, structFieldValue.Type().String())))
-	return nil
-}
-
-// 将参数值绑定到对象指定索引位置的属性上
-func bindVarToStructByIndex(elem reflect.Value, index int, value interface{}) (err error) {
-	structFieldValue := elem.FieldByIndex([]int{index})
-	// 键名与对象属性匹配检测
-	if !structFieldValue.IsValid() {
-		return nil
-	}
-	// CanSet的属性必须为公开属性(首字母大写)
-	if !structFieldValue.CanSet() {
-		return nil
-	}
-	// 必须将value转换为struct属性的数据类型，这里必须用到gconv包
-	defer func() {
-		// 如果转换失败，那么可能是类型不匹配造成(例如属性包含自定义类型)，那么执行递归转换
-		if recover() != nil {
-			err = bindVarToReflectValue(structFieldValue, value)
-		}
-	}()
-	structFieldValue.Set(reflect.ValueOf(Convert(value, structFieldValue.Type().String())))
-	return nil
-}
-
-// 当默认的基本类型转换失败时，通过recover判断后执行反射类型转换(处理复杂类型)
-func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}) error {
-	switch structFieldValue.Kind() {
-	// 属性为结构体
+	// Converting by kind.
+	switch kind {
 	case reflect.Struct:
-		if err := Struct(value, structFieldValue); err != nil {
-			structFieldValue.Set(reflect.ValueOf(value))
+		// Recursively converting for struct attribute.
+		if err := doStruct(value, structFieldValue, nil, ""); err != nil {
+			// Note there's reflect conversion mechanism here.
+			structFieldValue.Set(reflect.ValueOf(value).Convert(structFieldValue.Type()))
 		}
 
-	// 属性为数组类型
-	case reflect.Slice:
-		fallthrough
-	case reflect.Array:
+	// Note that the slice element might be type of struct,
+	// so it uses Struct function doing the converting internally.
+	case reflect.Slice, reflect.Array:
 		a := reflect.Value{}
 		v := reflect.ValueOf(value)
 		if v.Kind() == reflect.Slice || v.Kind() == reflect.Array {
+			a = reflect.MakeSlice(structFieldValue.Type(), v.Len(), v.Len())
 			if v.Len() > 0 {
-				a = reflect.MakeSlice(structFieldValue.Type(), v.Len(), v.Len())
 				t := a.Index(0).Type()
 				for i := 0; i < v.Len(); i++ {
 					if t.Kind() == reflect.Ptr {
 						e := reflect.New(t.Elem()).Elem()
-						if err := Struct(v.Index(i).Interface(), e); err != nil {
-							e.Set(reflect.ValueOf(v.Index(i).Interface()))
+						if err := doStruct(v.Index(i).Interface(), e, nil, ""); err != nil {
+							// Note there's reflect conversion mechanism here.
+							e.Set(reflect.ValueOf(v.Index(i).Interface()).Convert(t))
 						}
 						a.Index(i).Set(e.Addr())
 					} else {
 						e := reflect.New(t).Elem()
-						if err := Struct(v.Index(i).Interface(), e); err != nil {
-							e.Set(reflect.ValueOf(v.Index(i).Interface()))
+						if err := doStruct(v.Index(i).Interface(), e, nil, ""); err != nil {
+							// Note there's reflect conversion mechanism here.
+							e.Set(reflect.ValueOf(v.Index(i).Interface()).Convert(t))
 						}
 						a.Index(i).Set(e)
 					}
@@ -259,41 +407,58 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}) er
 			t := a.Index(0).Type()
 			if t.Kind() == reflect.Ptr {
 				e := reflect.New(t.Elem()).Elem()
-				if err := Struct(value, e); err != nil {
-					e.Set(reflect.ValueOf(value))
+				if err := doStruct(value, e, nil, ""); err != nil {
+					// Note there's reflect conversion mechanism here.
+					e.Set(reflect.ValueOf(value).Convert(t))
 				}
 				a.Index(0).Set(e.Addr())
 			} else {
 				e := reflect.New(t).Elem()
-				if err := Struct(value, e); err != nil {
-					e.Set(reflect.ValueOf(value))
+				if err := doStruct(value, e, nil, ""); err != nil {
+					// Note there's reflect conversion mechanism here.
+					e.Set(reflect.ValueOf(value).Convert(t))
 				}
 				a.Index(0).Set(e)
 			}
 		}
 		structFieldValue.Set(a)
 
-	// 属性为指针类型
 	case reflect.Ptr:
-		e := reflect.New(structFieldValue.Type().Elem()).Elem()
-		if err := Struct(value, e); err != nil {
-			e.Set(reflect.ValueOf(value))
+		item := reflect.New(structFieldValue.Type().Elem())
+		if err, ok := bindVarToReflectValueWithInterfaceCheck(item, value); ok {
+			structFieldValue.Set(item)
+			return err
 		}
-		structFieldValue.Set(e.Addr())
+		elem := item.Elem()
+		if err = bindVarToReflectValue(elem, value, mapping, priorityTag); err == nil {
+			structFieldValue.Set(elem.Addr())
+		}
 
+	// It mainly and specially handles the interface of nil value.
 	case reflect.Interface:
 		if value == nil {
+			// Specially.
 			structFieldValue.Set(reflect.ValueOf((*interface{})(nil)))
 		} else {
-			structFieldValue.Set(reflect.ValueOf(value))
+			// Note there's reflect conversion mechanism here.
+			structFieldValue.Set(reflect.ValueOf(value).Convert(structFieldValue.Type()))
 		}
 
 	default:
-		return errors.New(
-			fmt.Sprintf(`cannot convert to type "%s"`,
-				structFieldValue.Type().String(),
-			),
-		)
+		defer func() {
+			if e := recover(); e != nil {
+				err = gerror.New(
+					fmt.Sprintf(`cannot convert value "%+v" to type "%s"`,
+						value,
+						structFieldValue.Type().String(),
+					),
+				)
+			}
+		}()
+		// It here uses reflect converting `value` to type of the attribute and assigns
+		// the result value to the attribute. It might fail and panic if the usual Go
+		// conversion rules do not allow conversion.
+		structFieldValue.Set(reflect.ValueOf(value).Convert(structFieldValue.Type()))
 	}
 	return nil
 }

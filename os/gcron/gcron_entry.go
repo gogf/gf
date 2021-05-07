@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -43,7 +43,7 @@ func (c *Cron) addEntry(pattern string, job func(), singleton bool, name ...stri
 		cron:     c,
 		schedule: schedule,
 		jobName:  runtime.FuncForPC(reflect.ValueOf(job).Pointer()).Name(),
-		times:    gtype.NewInt(gDEFAULT_TIMES),
+		times:    gtype.NewInt(defaultTimes),
 		Job:      job,
 		Time:     time.Now(),
 	}
@@ -57,7 +57,7 @@ func (c *Cron) addEntry(pattern string, job func(), singleton bool, name ...stri
 	// It should start running after the entry is added to the entries map,
 	// to avoid the task from running during adding where the entries
 	// does not have the entry information, which might cause panic.
-	entry.entry = gtimer.AddEntry(time.Second, entry.check, singleton, -1, gtimer.STATUS_STOPPED)
+	entry.entry = gtimer.AddEntry(time.Second, entry.check, singleton, -1, gtimer.StatusStopped)
 	c.entries.Set(entry.Name, entry)
 	entry.entry.Start()
 	return entry, nil
@@ -112,25 +112,25 @@ func (entry *Entry) check() {
 		path := entry.cron.GetLogPath()
 		level := entry.cron.GetLogLevel()
 		switch entry.cron.status.Val() {
-		case STATUS_STOPPED:
+		case StatusStopped:
 			return
 
-		case STATUS_CLOSED:
+		case StatusClosed:
 			glog.Path(path).Level(level).Debugf("[gcron] %s(%s) %s removed", entry.Name, entry.schedule.pattern, entry.jobName)
 			entry.Close()
 
-		case STATUS_READY:
+		case StatusReady:
 			fallthrough
-		case STATUS_RUNNING:
+		case StatusRunning:
 			// Running times check.
 			times := entry.times.Add(-1)
 			if times <= 0 {
-				if entry.entry.SetStatus(STATUS_CLOSED) == STATUS_CLOSED || times < 0 {
+				if entry.entry.SetStatus(StatusClosed) == StatusClosed || times < 0 {
 					return
 				}
 			}
 			if times < 2000000000 && times > 1000000000 {
-				entry.times.Set(gDEFAULT_TIMES)
+				entry.times.Set(defaultTimes)
 			}
 			glog.Path(path).Level(level).Debugf("[gcron] %s(%s) %s start", entry.Name, entry.schedule.pattern, entry.jobName)
 			defer func() {
@@ -139,7 +139,7 @@ func (entry *Entry) check() {
 				} else {
 					glog.Path(path).Level(level).Debugf("[gcron] %s(%s) %s end", entry.Name, entry.schedule.pattern, entry.jobName)
 				}
-				if entry.entry.Status() == STATUS_CLOSED {
+				if entry.entry.Status() == StatusClosed {
 					entry.Close()
 				}
 			}()

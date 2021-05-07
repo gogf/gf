@@ -9,7 +9,7 @@ import (
 
 func main() {
 	// 创建一个对象池，过期时间为1000毫秒
-	p := gpool.New(1000, nil)
+	p := gpool.New(1000*time.Millisecond, nil)
 
 	// 从池中取一个对象，返回nil及错误信息
 	fmt.Println(p.Get())

@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -12,19 +12,24 @@ import (
 	"github.com/gogf/gf/container/glist"
 )
 
-// 开始循环
+// start starts the ticker using a standalone goroutine.
 func (w *wheel) start() {
 	go func() {
-		ticker := time.NewTicker(time.Duration(w.intervalMs) * time.Millisecond)
+		var (
+			tickDuration = time.Duration(w.intervalMs) * time.Millisecond
+			ticker       = time.NewTicker(tickDuration)
+		)
 		for {
 			select {
 			case <-ticker.C:
 				switch w.timer.status.Val() {
-				case STATUS_RUNNING:
+				case StatusRunning:
 					w.proceed()
 
-				case STATUS_STOPPED:
-				case STATUS_CLOSED:
+				case StatusStopped:
+					// Do nothing.
+
+				case StatusClosed:
 					ticker.Stop()
 					return
 				}
@@ -34,46 +39,55 @@ func (w *wheel) start() {
 	}()
 }
 
-// 执行时间轮刻度逻辑
+// proceed checks and rolls on the job.
+// If a timing job is time for running, it runs in an asynchronous goroutine,
+// or else it removes from current slot and re-installs the job to another wheel and slot
+// according to its leftover interval in milliseconds.
 func (w *wheel) proceed() {
-	n := w.ticks.Add(1)
-	l := w.slots[int(n%w.number)]
-	length := l.Len()
+	var (
+		nowTicks = w.ticks.Add(1)
+		list     = w.slots[int(nowTicks%w.number)]
+		length   = list.Len()
+		nowMs    = w.timer.nowFunc().UnixNano() / 1e6
+	)
 	if length > 0 {
 		go func(l *glist.List, nowTicks int64) {
-			entry := (*Entry)(nil)
-			nowMs := time.Now().UnixNano() / 1e6
+			var entry *Entry
 			for i := length; i > 0; i-- {
 				if v := l.PopFront(); v == nil {
 					break
 				} else {
 					entry = v.(*Entry)
 				}
-				// 是否满足运行条件
+				// Checks whether the time for running.
 				runnable, addable := entry.check(nowTicks, nowMs)
 				if runnable {
-					// 异步执行运行
+					// Just run it in another goroutine.
 					go func(entry *Entry) {
 						defer func() {
 							if err := recover(); err != nil {
-								if err != gPANIC_EXIT {
+								if err != panicExit {
 									panic(err)
 								} else {
 									entry.Close()
 								}
 							}
-							if entry.Status() == STATUS_RUNNING {
-								entry.SetStatus(STATUS_READY)
+							if entry.Status() == StatusRunning {
+								entry.SetStatus(StatusReady)
 							}
 						}()
 						entry.job()
 					}(entry)
 				}
-				// 是否继续添运行, 滚动任务
+				// Add job again, which make the job continuous running.
 				if addable {
-					entry.wheel.timer.doAddEntryByParent(entry.rawIntervalMs, entry)
+					// If StatusReset, reset to runnable state.
+					if entry.Status() == StatusReset {
+						entry.SetStatus(StatusReady)
+					}
+					entry.wheel.timer.doAddEntryByParent(!runnable, nowMs, entry.installIntervalMs, entry)
 				}
 			}
-		}(l, n)
+		}(list, nowTicks)
 	}
 }

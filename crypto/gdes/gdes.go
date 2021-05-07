@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -19,9 +19,9 @@ const (
 	PKCS5PADDING
 )
 
-// ECB模式DES加密
-func DesECBEncrypt(key []byte, clearText []byte, padding int) ([]byte, error) {
-	text, err := Padding(clearText, padding)
+// EncryptECB encrypts <plainText> using ECB mode.
+func EncryptECB(plainText []byte, key []byte, padding int) ([]byte, error) {
+	text, err := Padding(plainText, padding)
 	if err != nil {
 		return nil, err
 	}
@@ -41,8 +41,8 @@ func DesECBEncrypt(key []byte, clearText []byte, padding int) ([]byte, error) {
 	return cipherText, nil
 }
 
-// ECB模式DES解密
-func DesECBDecrypt(key []byte, cipherText []byte, padding int) ([]byte, error) {
+// DecryptECB decrypts <cipherText> using ECB mode.
+func DecryptECB(cipherText []byte, key []byte, padding int) ([]byte, error) {
 	text := make([]byte, len(cipherText))
 	block, err := des.NewCipher(key)
 	if err != nil {
@@ -55,20 +55,21 @@ func DesECBDecrypt(key []byte, cipherText []byte, padding int) ([]byte, error) {
 		block.Decrypt(text[begin:end], cipherText[begin:end])
 	}
 
-	clearText, err := UnPadding(text, padding)
+	plainText, err := UnPadding(text, padding)
 	if err != nil {
 		return nil, err
 	}
-	return clearText, nil
+	return plainText, nil
 }
 
-// ECB模式3DES加密，密钥长度可以是16或24位长
-func TripleDesECBEncrypt(key []byte, clearText []byte, padding int) ([]byte, error) {
+// EncryptECBTriple encrypts <plainText> using TripleDES and ECB mode.
+// The length of the <key> should be either 16 or 24 bytes.
+func EncryptECBTriple(plainText []byte, key []byte, padding int) ([]byte, error) {
 	if len(key) != 16 && len(key) != 24 {
 		return nil, errors.New("key length error")
 	}
 
-	text, err := Padding(clearText, padding)
+	text, err := Padding(plainText, padding)
 	if err != nil {
 		return nil, err
 	}
@@ -95,8 +96,9 @@ func TripleDesECBEncrypt(key []byte, clearText []byte, padding int) ([]byte, err
 	return cipherText, nil
 }
 
-// ECB模式3DES解密，密钥长度可以是16或24位长
-func TripleDesECBDecrypt(key []byte, cipherText []byte, padding int) ([]byte, error) {
+// DecryptECBTriple decrypts <cipherText> using TripleDES and ECB mode.
+// The length of the <key> should be either 16 or 24 bytes.
+func DecryptECBTriple(cipherText []byte, key []byte, padding int) ([]byte, error) {
 	if len(key) != 16 && len(key) != 24 {
 		return nil, errors.New("key length error")
 	}
@@ -121,15 +123,15 @@ func TripleDesECBDecrypt(key []byte, cipherText []byte, padding int) ([]byte, er
 		block.Decrypt(text[begin:end], cipherText[begin:end])
 	}
 
-	clearText, err := UnPadding(text, padding)
+	plainText, err := UnPadding(text, padding)
 	if err != nil {
 		return nil, err
 	}
-	return clearText, nil
+	return plainText, nil
 }
 
-// CBC模式DES加密
-func DesCBCEncrypt(key []byte, clearText []byte, iv []byte, padding int) ([]byte, error) {
+// EncryptCBC encrypts <plainText> using CBC mode.
+func EncryptCBC(plainText []byte, key []byte, iv []byte, padding int) ([]byte, error) {
 	block, err := des.NewCipher(key)
 	if err != nil {
 		return nil, err
@@ -139,7 +141,7 @@ func DesCBCEncrypt(key []byte, clearText []byte, iv []byte, padding int) ([]byte
 		return nil, errors.New("iv length invalid")
 	}
 
-	text, err := Padding(clearText, padding)
+	text, err := Padding(plainText, padding)
 	if err != nil {
 		return nil, err
 	}
@@ -151,8 +153,8 @@ func DesCBCEncrypt(key []byte, clearText []byte, iv []byte, padding int) ([]byte
 	return cipherText, nil
 }
 
-// CBC模式DES解密
-func DesCBCDecrypt(key []byte, cipherText []byte, iv []byte, padding int) ([]byte, error) {
+// DecryptCBC decrypts <cipherText> using CBC mode.
+func DecryptCBC(cipherText []byte, key []byte, iv []byte, padding int) ([]byte, error) {
 	block, err := des.NewCipher(key)
 	if err != nil {
 		return nil, err
@@ -166,16 +168,16 @@ func DesCBCDecrypt(key []byte, cipherText []byte, iv []byte, padding int) ([]byt
 	decrypter := cipher.NewCBCDecrypter(block, iv)
 	decrypter.CryptBlocks(text, cipherText)
 
-	clearText, err := UnPadding(text, padding)
+	plainText, err := UnPadding(text, padding)
 	if err != nil {
 		return nil, err
 	}
 
-	return clearText, nil
+	return plainText, nil
 }
 
-// CBC模式3DES加密
-func TripleDesCBCEncrypt(key []byte, clearText []byte, iv []byte, padding int) ([]byte, error) {
+// EncryptCBCTriple encrypts <plainText> using TripleDES and CBC mode.
+func EncryptCBCTriple(plainText []byte, key []byte, iv []byte, padding int) ([]byte, error) {
 	if len(key) != 16 && len(key) != 24 {
 		return nil, errors.New("key length invalid")
 	}
@@ -197,7 +199,7 @@ func TripleDesCBCEncrypt(key []byte, clearText []byte, iv []byte, padding int) (
 		return nil, errors.New("iv length invalid")
 	}
 
-	text, err := Padding(clearText, padding)
+	text, err := Padding(plainText, padding)
 	if err != nil {
 		return nil, err
 	}
@@ -209,8 +211,8 @@ func TripleDesCBCEncrypt(key []byte, clearText []byte, iv []byte, padding int) (
 	return cipherText, nil
 }
 
-// CBC模式3DES解密
-func TripleDesCBCDecrypt(key []byte, cipherText []byte, iv []byte, padding int) ([]byte, error) {
+// DecryptCBCTriple decrypts <cipherText> using TripleDES and CBC mode.
+func DecryptCBCTriple(cipherText []byte, key []byte, iv []byte, padding int) ([]byte, error) {
 	if len(key) != 16 && len(key) != 24 {
 		return nil, errors.New("key length invalid")
 	}
@@ -236,29 +238,26 @@ func TripleDesCBCDecrypt(key []byte, cipherText []byte, iv []byte, padding int) 
 	decrypter := cipher.NewCBCDecrypter(block, iv)
 	decrypter.CryptBlocks(text, cipherText)
 
-	clearText, err := UnPadding(text, padding)
+	plainText, err := UnPadding(text, padding)
 	if err != nil {
 		return nil, err
 	}
 
-	return clearText, nil
+	return plainText, nil
 }
 
-// PKCS5补位
-func PKCS5Padding(text []byte, blockSize int) []byte {
+func PaddingPKCS5(text []byte, blockSize int) []byte {
 	padding := blockSize - len(text)%blockSize
-	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
-	return append(text, padtext...)
+	padText := bytes.Repeat([]byte{byte(padding)}, padding)
+	return append(text, padText...)
 }
 
-// 去除PKCS5补位
-func PKCS5Unpadding(text []byte) []byte {
+func UnPaddingPKCS5(text []byte) []byte {
 	length := len(text)
-	padtext := int(text[length-1])
-	return text[:(length - padtext)]
+	padText := int(text[length-1])
+	return text[:(length - padText)]
 }
 
-// 补位方法
 func Padding(text []byte, padding int) ([]byte, error) {
 	switch padding {
 	case NOPADDING:
@@ -266,7 +265,7 @@ func Padding(text []byte, padding int) ([]byte, error) {
 			return nil, errors.New("text length invalid")
 		}
 	case PKCS5PADDING:
-		return PKCS5Padding(text, 8), nil
+		return PaddingPKCS5(text, 8), nil
 	default:
 		return nil, errors.New("padding type error")
 	}
@@ -274,7 +273,6 @@ func Padding(text []byte, padding int) ([]byte, error) {
 	return text, nil
 }
 
-// 去除补位方法
 func UnPadding(text []byte, padding int) ([]byte, error) {
 	switch padding {
 	case NOPADDING:
@@ -282,9 +280,9 @@ func UnPadding(text []byte, padding int) ([]byte, error) {
 			return nil, errors.New("text length invalid")
 		}
 	case PKCS5PADDING:
-		return PKCS5Unpadding(text), nil
+		return UnPaddingPKCS5(text), nil
 	default:
-		return nil, errors.New("padding type error.")
+		return nil, errors.New("padding type error")
 	}
 	return text, nil
 }

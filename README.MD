@@ -1,7 +1,7 @@
 # GoFrame
 
-[![Go Doc](https://godoc.org/github.com/gogf/gf?status.svg)](https://godoc.org/github.com/gogf/gf/g#pkg-subdirectories)
-[![Build Status](https://travis-ci.org/gogf/gf.svg?branch=master)](https://travis-ci.org/gogf/gf)
+[![Go Doc](https://godoc.org/github.com/gogf/gf?status.svg)](https://godoc.org/github.com/gogf/gf)
+[![Build Status](https://travis-ci.com/gogf/gf.svg?branch=master)](https://travis-ci.org/gogf/gf)
 [![Go Report](https://goreportcard.com/badge/github.com/gogf/gf?v=1)](https://goreportcard.com/report/github.com/gogf/gf)
 [![Code Coverage](https://codecov.io/gh/gogf/gf/branch/master/graph/badge.svg)](https://codecov.io/gh/gogf/gf/branch/master)
 [![Production Ready](https://img.shields.io/badge/production-ready-blue.svg)](https://github.com/gogf/gf)
@@ -9,12 +9,14 @@
 
 English | [简体中文](README_ZH.MD)
 
-`GF(GoFrame)` is a modular, full-featured and production-ready application development framework of golang. Providing a series of core components and dozens of practical modules, such as: memcache, configure, validator, logging, array/queue/set/map containers, timer/timing tasks, file/memory lock, object pool, database ORM, etc. Supporting web server integrated with router, cookie, session, middleware, logger, template, https, hooks, rewrites and many more features.
+`GoFrame` is a modular, powerful, high-performance and enterprise-class application development framework 
+of Golang. 
 
+> If you're a newbie to `Go`, you may consider `GoFrame` easy and great as `Laravel` in `PHP`, `SpringBoot` in `Java` or `Django` in `Python`.
 
 # Installation
 ```
-go get -u github.com/gogf/gf
+go get -u -v github.com/gogf/gf
 ```
 suggested using `go.mod`:
 ```
@@ -23,248 +25,78 @@ require github.com/gogf/gf latest
 
 # Limitation
 ```
-golang version >= 1.10
+golang version >= 1.11
 ```
-
-# Documentation
-
-* [APIDoc](https://godoc.org/github.com/gogf/gf)
-* [中文文档](https://goframe.org)
 
 # Architecture
 <div align=center>
-<img src="https://goframe.org/images/arch.png?v=10"/>
+<img src="https://goframe.org/download/attachments/1114119/arch.png"/>
 </div>
 
-# Quick Start
+# Packages
+1. **Primary Package**
 
-## Hello World
-```go
-package main
+    The `gf` repository maintains some basic and most commonly used packages, keeping it as lightweight and simple as possible. 
 
-import (
-    "github.com/gogf/gf/frame/g"
-    "github.com/gogf/gf/net/ghttp"
-)
+1. **Community Package**
 
-func main() {
-    s := g.Server()
-    s.BindHandler("/", func(r *ghttp.Request) {
-        r.Response.Write("Hello World")
-    })
-    s.Run()
-}
-```
-## Router & Middleware
-```go
-package main
+    The community packages are contributed and maintained by community members, which are hosted in `gogf` organization. Some of the community packages are separated from the `gf` repository, which are not of common usage or are with heavy dependencies. 
 
-import (
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
-)
+# Performance
 
-func main() {
-    s := g.Server()
-    s.Group("/api.v2", func(g *ghttp.RouterGroup) {
-        g.Middleware(func(r *ghttp.Request) {
-            r.Response.Write("start")
-            r.Middleware.Next()
-            r.Response.Write("end")
-        })
-        g.Group("/order", func(g *ghttp.RouterGroup) {
-            g.GET("/list", func(r *ghttp.Request) {
-                r.Response.Write("list")
-            })
-        })
-        g.Group("/user", func(g *ghttp.RouterGroup) {
-            g.GET("/info", func(r *ghttp.Request) {
-                r.Response.Write("info")
-            })
-            g.POST("/edit", func(r *ghttp.Request) {
-                r.Response.Write("edit")
-            })
-        })
-        g.Group("/hook", func(g *ghttp.RouterGroup) {
-            g.Hook("/*", ghttp.HOOK_BEFORE_SERVE, func(r *ghttp.Request) {
-                r.Response.Write("hook any")
-            })
-            g.Hook("/:name", ghttp.HOOK_BEFORE_SERVE, func(r *ghttp.Request) {
-                r.Response.Write("hook name")
-            })
-        })
-    })
-    s.SetPort(8199)
-    s.Run()
-}
-```
+The `Web` component performance of `GoFrame`, please refer to third-party project: https://github.com/the-benchmarker/web-frameworks
 
-## Multi ports & domains
-```go
-package main
 
-import (
-    "github.com/gogf/gf/frame/g"
-    "github.com/gogf/gf/net/ghttp"
-)
 
-func Hello1(r *ghttp.Request) {
-    r.Response.Write("127.0.0.1: Hello1!")
-}
+# Documentation
 
-func Hello2(r *ghttp.Request) {
-    r.Response.Write("localhost: Hello2!")
-}
-
-func main() {
-    s := g.Server()
-    s.Domain("127.0.0.1").BindHandler("/", Hello1)
-    s.Domain("localhost").BindHandler("/", Hello2)
-    s.SetPort(8100, 8200, 8300)
-    s.Run()
-}
-```
-## Template Engine
-```go
-package main
-
-import (
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
-)
-
-func main() {
-    s := g.Server()
-    s.BindHandler("/template", func(r *ghttp.Request) {
-        r.Response.WriteTpl("index.tpl", g.Map{
-            "id":   123,
-            "name": "john",
-        })
-    })
-    s.SetPort(8199)
-    s.Run()
-}
-```
-## File Uploading
-```go
-func Upload(r *ghttp.Request) {
-    if f, h, e := r.FormFile("upload-file"); e == nil {
-        defer f.Close()
-        name   := gfile.Basename(h.Filename)
-        buffer := make([]byte, h.Size)
-        f.Read(buffer)
-        gfile.PutBytes("/tmp/" + name, buffer)
-        r.Response.Write(name + " uploaded successly")
-    } else {
-        r.Response.Write(e.Error())
-    }
-}
-```
-
-## ORM Operations
-
-### 1. Retrieving instance
-```go
-db := g.DB()
-db := g.DB("user-center")
-```
-### 2. Chaining Operations
-
-`Where + string`
-```go
-// SELECT * FROM user WHERE uid>1 LIMIT 0,10
-r, err := db.Table("user").Where("uid > ?", 1).Limit(0, 10).Select()
-
-// SELECT uid,name FROM user WHERE uid>1 LIMIT 0,10
-r, err := db.Table("user").Fileds("uid,name").Where("uid > ?", 1).Limit(0, 10).Select()
-
-// SELECT * FROM user WHERE uid=1
-r, err := db.Table("user").Where("u.uid=1",).One()
-r, err := db.Table("user").Where("u.uid", 1).One()
-r, err := db.Table("user").Where("u.uid=?", 1).One()
-// SELECT * FROM user WHERE (uid=1) AND (name='john')
-r, err := db.Table("user").Where("uid", 1).Where("name", "john").One()
-r, err := db.Table("user").Where("uid=?", 1).And("name=?", "john").One()
-// SELECT * FROM user WHERE (uid=1) OR (name='john')
-r, err := db.Table("user").Where("uid=?", 1).Or("name=?", "john").One()
-```
-`Where + map`
-```go
-// SELECT * FROM user WHERE uid=1 AND name='john'
-r, err := db.Table("user").Where(g.Map{"uid" : 1, "name" : "john"}).One()
-// SELECT * FROM user WHERE uid=1 AND age>18
-r, err := db.Table("user").Where(g.Map{"uid" : 1, "age>" : 18}).One()
-```
-`Where + struct/*struct`
-```go
-type User struct {
-    Id       int    `json:"uid"`
-    UserName string `gconv:"name"`
-}
-// SELECT * FROM user WHERE uid =1 AND name='john'
-r, err := db.Table("user").Where(User{ Id : 1, UserName : "john"}).One()
-// SELECT * FROM user WHERE uid =1
-r, err := db.Table("user").Where(&User{ Id : 1}).One()
-```
-### 3. Update & Delete
-```go
-// UPDATE user SET name='john guo' WHERE name='john'
-r, err := db.Table("user").Data(gdb.Map{"name" : "john guo"}).Where("name=?", "john").Update()
-r, err := db.Table("user").Data("name='john guo'").Where("name=?", "john").Update()
-// UPDATE user SET status=1 ORDER BY login_time asc LIMIT 10
-r, err := db.Table("user").Data("status", 1).OrderBy("login_time asc").Limit(10).Update
-
-// DELETE FROM user WHERE uid=10
-r, err := db.Table("user").Where("uid=?", 10).Delete()
-// DELETE FROM user ORDER BY login_time asc LIMIT 10
-r, err := db.Table("user").OrderBy("login_time asc").Limit(10).Delete()
-```
-### 4. Insert & Replace & Save
-```go
-r, err := db.Table("user").Data(g.Map{"name": "john"}).Insert()
-r, err := db.Table("user").Data(g.Map{"uid": 10000, "name": "john"}).Replace()
-r, err := db.Table("user").Data(g.Map{"uid": 10001, "name": "john"}).Save()
-```
-### 5. Transaction
-```go
-if tx, err := db.Begin(); err == nil {
-    r, err := tx.Save("user", g.Map{
-        "uid"  :  1,
-        "name" : "john",
-    })
-    tx.Commit()
-}
-```
-### 6. Error Handling
-```go
-func GetOrderInfo(id int) (order *Order, err error) {
-    err = g.DB().Table("order").Where("id", id).Struct(&order)
-    if err != nil && err == sql.ErrNoRows {
-        err = nil
-    }
-    return
-}
-```
-
-[More Features...](https://goframe.org/start/index)
+* 中文官网: [https://goframe.org](https://goframe.org/display/gf)
+* GoDoc API: [https://pkg.go.dev/github.com/gogf/gf](https://pkg.go.dev/github.com/gogf/gf)
 
 
 # License
 
 `GF` is licensed under the [MIT License](LICENSE), 100% free and open-source, forever.
 
+# Part Of Users
+
+- [Tencent](https://www.tencent.com/)
+- [ZTE](https://www.zte.com.cn/china/)
+- [Ant Financial Services](https://www.antfin.com/)
+- [MedLinker](https://www.medlinker.com/)
+- [KuCoin](https://www.kucoin.io/)
+- [LeYouJia](https://www.leyoujia.com/)
+- [IGG](https://igg.com)
+- [XiMaLaYa](https://www.ximalaya.com)
+- [ZYBang](https://www.zybang.com/)
+
+> We list part of the users here, if your company or products are using `GoFrame`, please let us know [here](https://goframe.org/pages/viewpage.action?pageId=1114415).
+
+
+# Contributors
+This project exists thanks to all the people who contribute. [[Contributors](https://github.com/gogf/gf/graphs/contributors)].
+<a href="https://github.com/gogf/gf/graphs/contributors"><img src="https://opencollective.com/goframe/contributors.svg?width=890&button=false" /></a>
+
+
 # Donators
 
-We currently accept donation by Alipay/WechatPay, please note your github/gitee account in your payment bill. If you like `GF`, why not [buy developer a cup of coffee](DONATOR.MD)?
+If you love `GF`, why not [buy developer a cup of coffee](https://goframe.org/pages/viewpage.action?pageId=1115633)?
+
+# Sponsors
+We appreciate any kind of sponsorship for `GF` development. If you've got some interesting, please contact WeChat `389961817` / Email `john@goframe.org`.
+
+
 
 # Thanks
-<a href="https://www.jetbrains.com/?from=GoFrame"><img src="https://goframe.org/images/jetbrains.png" width="100" alt="JetBrains"/></a>
+<a href="https://www.jetbrains.com/?from=GoFrame"><img src="https://goframe.org/download/thumbnails/1114119/jetbrains.png" height="120" alt="JetBrains"/></a>
+<a href="https://www.atlassian.com/?from=GoFrame"><img src="https://goframe.org/download/attachments/1114119/atlassian.jpg" height="120" alt="Atlassian"/></a>
 
 
-<!--
-# Sponsor
-We appreciate any kind of sponsorship for `GF` development. If you've got some interested, please contact john@goframe.org.
--->
+
+
+
+
+
 
 
 

@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,47 +7,39 @@
 package ghttp
 
 import (
-	"strings"
-
-	"github.com/gogf/gf/encoding/gurl"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/net/ghttp/internal/httputil"
 )
 
-// 构建请求参数，参数支持任意数据类型，常见参数类型为string/map。
-// 如果参数为map类型，参数值将会进行urlencode编码；可以通过 noUrlEncode:true 参数取消编码。
+// BuildParams builds the request string for the http client. The <params> can be type of:
+// string/[]byte/map/struct/*struct.
+//
+// The optional parameter <noUrlEncode> specifies whether ignore the url encoding for the data.
 func BuildParams(params interface{}, noUrlEncode ...bool) (encodedParamStr string) {
-	m, urlEncode := gconv.Map(params), true
-	if len(m) == 0 {
-		return gconv.String(params)
-	}
-	if len(noUrlEncode) == 1 {
-		urlEncode = !noUrlEncode[0]
-	}
-	s := ""
-	for k, v := range m {
-		if len(encodedParamStr) > 0 {
-			encodedParamStr += "&"
-		}
-		s = gconv.String(v)
-		if urlEncode && len(s) > 6 && strings.Compare(s[0:6], "@file:") != 0 {
-			s = gurl.Encode(s)
-		}
-		encodedParamStr += k + "=" + s
-	}
-	return
+	return httputil.BuildParams(params, noUrlEncode...)
 }
 
-// 友好地调用方法
+// niceCallFunc calls function <f> with exception capture logic.
 func niceCallFunc(f func()) {
 	defer func() {
-		if err := recover(); err != nil {
-			switch err {
-			case gEXCEPTION_EXIT:
-				fallthrough
-			case gEXCEPTION_EXIT_ALL:
+		if exception := recover(); exception != nil {
+			switch exception {
+			case exceptionExit, exceptionExitAll:
 				return
 			default:
-				panic(err)
+				if _, ok := exception.(errorStack); ok {
+					// It's already an error that has stack info.
+					panic(exception)
+				} else {
+					// Create a new error with stack info.
+					// Note that there's a skip pointing the start stacktrace
+					// of the real error point.
+					if err, ok := exception.(error); ok {
+						panic(gerror.Wrap(err, ""))
+					} else {
+						panic(gerror.NewSkipf(1, "%v", exception))
+					}
+				}
 			}
 		}
 	}()

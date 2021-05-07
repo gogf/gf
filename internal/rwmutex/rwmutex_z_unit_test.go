@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -16,29 +16,29 @@ import (
 )
 
 func TestRwmutexIsSafe(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		lock := rwmutex.New()
-		gtest.Assert(lock.IsSafe(), false)
+		t.Assert(lock.IsSafe(), false)
 
 		lock = rwmutex.New(false)
-		gtest.Assert(lock.IsSafe(), false)
+		t.Assert(lock.IsSafe(), false)
 
 		lock = rwmutex.New(false, false)
-		gtest.Assert(lock.IsSafe(), false)
+		t.Assert(lock.IsSafe(), false)
 
 		lock = rwmutex.New(true, false)
-		gtest.Assert(lock.IsSafe(), true)
+		t.Assert(lock.IsSafe(), true)
 
 		lock = rwmutex.New(true, true)
-		gtest.Assert(lock.IsSafe(), true)
+		t.Assert(lock.IsSafe(), true)
 
 		lock = rwmutex.New(true)
-		gtest.Assert(lock.IsSafe(), true)
+		t.Assert(lock.IsSafe(), true)
 	})
 }
 
 func TestSafeRwmutex(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		safeLock := rwmutex.New(true)
 		array := garray.New(true)
 
@@ -58,18 +58,18 @@ func TestSafeRwmutex(t *testing.T) {
 			safeLock.Unlock()
 		}()
 		time.Sleep(50 * time.Millisecond)
-		gtest.Assert(array.Len(), 1)
+		t.Assert(array.Len(), 1)
 		time.Sleep(80 * time.Millisecond)
-		gtest.Assert(array.Len(), 3)
+		t.Assert(array.Len(), 3)
 		time.Sleep(100 * time.Millisecond)
-		gtest.Assert(array.Len(), 3)
+		t.Assert(array.Len(), 3)
 		time.Sleep(100 * time.Millisecond)
-		gtest.Assert(array.Len(), 4)
+		t.Assert(array.Len(), 4)
 	})
 }
 
 func TestSafeReaderRwmutex(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		safeLock := rwmutex.New(true)
 		array := garray.New(true)
 
@@ -97,18 +97,18 @@ func TestSafeReaderRwmutex(t *testing.T) {
 			safeLock.Unlock()
 		}()
 		time.Sleep(50 * time.Millisecond)
-		gtest.Assert(array.Len(), 2)
+		t.Assert(array.Len(), 2)
 		time.Sleep(100 * time.Millisecond)
-		gtest.Assert(array.Len(), 3)
+		t.Assert(array.Len(), 3)
 		time.Sleep(100 * time.Millisecond)
-		gtest.Assert(array.Len(), 4)
+		t.Assert(array.Len(), 4)
 		time.Sleep(100 * time.Millisecond)
-		gtest.Assert(array.Len(), 6)
+		t.Assert(array.Len(), 6)
 	})
 }
 
 func TestUnsafeRwmutex(t *testing.T) {
-	gtest.Case(t, func() {
+	gtest.C(t, func(t *gtest.T) {
 		unsafeLock := rwmutex.New()
 		array := garray.New(true)
 
@@ -128,12 +128,12 @@ func TestUnsafeRwmutex(t *testing.T) {
 			unsafeLock.Unlock()
 		}()
 		time.Sleep(50 * time.Millisecond)
-		gtest.Assert(array.Len(), 2)
+		t.Assert(array.Len(), 2)
 		time.Sleep(100 * time.Millisecond)
-		gtest.Assert(array.Len(), 3)
+		t.Assert(array.Len(), 3)
 		time.Sleep(50 * time.Millisecond)
-		gtest.Assert(array.Len(), 3)
+		t.Assert(array.Len(), 3)
 		time.Sleep(100 * time.Millisecond)
-		gtest.Assert(array.Len(), 4)
+		t.Assert(array.Len(), 4)
 	})
 }

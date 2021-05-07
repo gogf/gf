@@ -1,17 +1,19 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package gfsnotify provides a platform-independent interface for file system notifications.
-//
-// 文件监控.
 package gfsnotify
 
 import (
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/container/gset"
+	"github.com/gogf/gf/internal/intlog"
+	"sync"
+	"time"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/gogf/gf/container/glist"
@@ -21,36 +23,37 @@ import (
 	"github.com/gogf/gf/os/gcache"
 )
 
-// 监听管理对象
+// Watcher is the monitor for file changes.
 type Watcher struct {
-	watcher   *fsnotify.Watcher // 底层fsnotify对象
-	events    *gqueue.Queue     // 过滤后的事件通知，不会出现重复事件
-	cache     *gcache.Cache     // 缓存对象，主要用于事件重复过滤
-	callbacks *gmap.StrAnyMap   // 注册的所有绝对路径(文件/目录)及其对应的回调函数列表map
-	closeChan chan struct{}     // 关闭事件
+	watcher   *fsnotify.Watcher // Underlying fsnotify object.
+	events    *gqueue.Queue     // Used for internal event management.
+	cache     *gcache.Cache     // Used for repeated event filter.
+	nameSet   *gset.StrSet      // Used for AddOnce feature.
+	callbacks *gmap.StrAnyMap   // Path(file/folder) to callbacks mapping.
+	closeChan chan struct{}     // Used for watcher closing notification.
 }
 
-// 注册的监听回调方法
+// Callback is the callback function for Watcher.
 type Callback struct {
-	Id        int                // 唯一ID
-	Func      func(event *Event) // 回调方法
-	Path      string             // 监听的文件/目录
-	elem      *glist.Element     // 指向回调函数链表中的元素项位置(便于删除)
-	recursive bool               // 当目录时，是否递归监听(使用在子文件/目录回溯查找回调函数时)
+	Id        int                // Unique id for callback object.
+	Func      func(event *Event) // Callback function.
+	Path      string             // Bound file path (absolute).
+	name      string             // Registered name for AddOnce.
+	elem      *glist.Element     // Element in the callbacks of watcher.
+	recursive bool               // Is bound to path recursively or not.
 }
 
-// 监听事件对象
+// Event is the event produced by underlying fsnotify.
 type Event struct {
-	event   fsnotify.Event // 底层事件对象
-	Path    string         // 文件绝对路径
-	Op      Op             // 触发监听的文件操作
-	Watcher *Watcher       // 事件对应的监听对象
+	event   fsnotify.Event // Underlying event.
+	Path    string         // Absolute file path.
+	Op      Op             // File operation.
+	Watcher *Watcher       // Parent watcher.
 }
 
-// 按位进行识别的操作集合
+// Op is the bits union for file operations.
 type Op uint32
 
-// 必须放到一个const分组里面
 const (
 	CREATE Op = 1 << iota
 	WRITE
@@ -60,32 +63,32 @@ const (
 )
 
 const (
-	REPEAT_EVENT_FILTER_INTERVAL = 1      // (毫秒)重复事件过滤间隔
-	gFSNOTIFY_EVENT_EXIT         = "exit" // 是否退出回调执行
+	repeatEventFilterDuration = time.Millisecond // Duration for repeated event filter.
+	callbackExitEventPanicStr = "exit"           // Custom exit event for internal usage.
 )
 
 var (
-	// 默认的Watcher对象
-	defaultWatcher, _ = New()
-	// 默认的watchers是否初始化，使用时才创建
-	watcherInited = gtype.NewBool()
-	// 回调方法ID与对象指针的映射哈希表，用于根据ID快速查找回调对象
-	callbackIdMap = gmap.NewIntAnyMap(true)
-	// 回调函数的ID生成器(原子操作)
-	callbackIdGenerator = gtype.NewInt()
+	mu                  sync.Mutex                // Mutex for concurrent safety of defaultWatcher.
+	defaultWatcher      *Watcher                  // Default watcher.
+	callbackIdMap       = gmap.NewIntAnyMap(true) // Id to callback mapping.
+	callbackIdGenerator = gtype.NewInt()          // Atomic id generator for callback.
 )
 
-// 创建监听管理对象，主要注意的是创建监听对象会占用系统的inotify句柄数量，受到 fs.inotify.max_user_instances 的限制
+// New creates and returns a new watcher.
+// Note that the watcher number is limited by the file handle setting of the system.
+// Eg: fs.inotify.max_user_instances system variable in linux systems.
 func New() (*Watcher, error) {
 	w := &Watcher{
 		cache:     gcache.New(),
 		events:    gqueue.New(),
+		nameSet:   gset.NewStrSet(true),
 		closeChan: make(chan struct{}),
 		callbacks: gmap.NewStrAnyMap(true),
 	}
 	if watcher, err := fsnotify.NewWatcher(); err == nil {
 		w.watcher = watcher
 	} else {
+		intlog.Printf("New watcher failed: %v", err)
 		return nil, err
 	}
 	w.startWatchLoop()
@@ -93,18 +96,44 @@ func New() (*Watcher, error) {
 	return w, nil
 }
 
-// 添加对指定文件/目录的监听，并给定回调函数；如果给定的是一个目录，默认递归监控。
+// Add monitors <path> using default watcher with callback function <callbackFunc>.
+// The optional parameter <recursive> specifies whether monitoring the <path> recursively, which is true in default.
 func Add(path string, callbackFunc func(event *Event), recursive ...bool) (callback *Callback, err error) {
-	return defaultWatcher.Add(path, callbackFunc, recursive...)
+	w, err := getDefaultWatcher()
+	if err != nil {
+		return nil, err
+	}
+	return w.Add(path, callbackFunc, recursive...)
 }
 
-// 递归移除对指定文件/目录的所有监听回调
+// AddOnce monitors <path> using default watcher with callback function <callbackFunc> only once using unique name <name>.
+// If AddOnce is called multiple times with the same <name> parameter, <path> is only added to monitor once. It returns error
+// if it's called twice with the same <name>.
+//
+// The optional parameter <recursive> specifies whether monitoring the <path> recursively, which is true in default.
+func AddOnce(name, path string, callbackFunc func(event *Event), recursive ...bool) (callback *Callback, err error) {
+	w, err := getDefaultWatcher()
+	if err != nil {
+		return nil, err
+	}
+	return w.AddOnce(name, path, callbackFunc, recursive...)
+}
+
+// Remove removes all monitoring callbacks of given <path> from watcher recursively.
 func Remove(path string) error {
-	return defaultWatcher.Remove(path)
+	w, err := getDefaultWatcher()
+	if err != nil {
+		return err
+	}
+	return w.Remove(path)
 }
 
-// 根据指定的回调函数ID，移出指定的inotify回调函数
+// RemoveCallback removes specified callback with given id from watcher.
 func RemoveCallback(callbackId int) error {
+	w, err := getDefaultWatcher()
+	if err != nil {
+		return err
+	}
 	callback := (*Callback)(nil)
 	if r := callbackIdMap.Get(callbackId); r != nil {
 		callback = r.(*Callback)
@@ -112,11 +141,25 @@ func RemoveCallback(callbackId int) error {
 	if callback == nil {
 		return errors.New(fmt.Sprintf(`callback for id %d not found`, callbackId))
 	}
-	defaultWatcher.RemoveCallback(callbackId)
+	w.RemoveCallback(callbackId)
 	return nil
 }
 
-// 在回调方法中调用该方法退出回调注册
+// Exit is only used in the callback function, which can be used to remove current callback
+// of itself from the watcher.
 func Exit() {
-	panic(gFSNOTIFY_EVENT_EXIT)
+	panic(callbackExitEventPanicStr)
+}
+
+// getDefaultWatcher creates and returns the default watcher.
+// This is used for lazy initialization purpose.
+func getDefaultWatcher() (*Watcher, error) {
+	mu.Lock()
+	defer mu.Unlock()
+	if defaultWatcher != nil {
+		return defaultWatcher, nil
+	}
+	var err error
+	defaultWatcher, err = New()
+	return defaultWatcher, err
 }

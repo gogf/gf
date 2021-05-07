@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -8,8 +8,8 @@
 package gcmd
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/gogf/gf/internal/json"
 	"os"
 	"strings"
 
@@ -24,10 +24,11 @@ import (
 
 // Parser for arguments.
 type Parser struct {
+	strict           bool              // Whether stops parsing and returns error if invalid option passed.
 	parsedArgs       []string          // As name described.
 	parsedOptions    map[string]string // As name described.
 	passedOptions    map[string]bool   // User passed supported options.
-	supportedOptions map[string]bool   // Option [option name : need argument]
+	supportedOptions map[string]bool   // Option [option name : need argument].
 	commandFuncMap   map[string]func() // Command function map for function handler.
 }
 
@@ -35,16 +36,25 @@ type Parser struct {
 //
 // Note that the parameter <supportedOptions> is as [option name: need argument], which means
 // the value item of <supportedOptions> indicates whether corresponding option name needs argument or not.
-func Parse(supportedOptions map[string]bool) (*Parser, error) {
-	return ParseWithArgs(os.Args, supportedOptions)
+//
+// The optional parameter <strict> specifies whether stops parsing and returns error if invalid option passed.
+func Parse(supportedOptions map[string]bool, strict ...bool) (*Parser, error) {
+	return ParseWithArgs(os.Args, supportedOptions, strict...)
 }
 
 // ParseWithArgs creates and returns a new Parser with given arguments and supported options.
 //
 // Note that the parameter <supportedOptions> is as [option name: need argument], which means
 // the value item of <supportedOptions> indicates whether corresponding option name needs argument or not.
-func ParseWithArgs(args []string, supportedOptions map[string]bool) (*Parser, error) {
+//
+// The optional parameter <strict> specifies whether stops parsing and returns error if invalid option passed.
+func ParseWithArgs(args []string, supportedOptions map[string]bool, strict ...bool) (*Parser, error) {
+	strictParsing := false
+	if len(strict) > 0 {
+		strictParsing = strict[0]
+	}
 	parser := &Parser{
+		strict:           strictParsing,
 		parsedArgs:       make([]string, 0),
 		parsedOptions:    make(map[string]string),
 		passedOptions:    supportedOptions,
@@ -67,7 +77,7 @@ func ParseWithArgs(args []string, supportedOptions map[string]bool) (*Parser, er
 			} else {
 				if parser.isOptionValid(option) {
 					if parser.isOptionNeedArgument(option) {
-						if i+1 < len(args) {
+						if i < len(args)-1 {
 							parser.setOptionValue(option, args[i+1])
 							i += 2
 							continue
@@ -85,7 +95,7 @@ func ParseWithArgs(args []string, supportedOptions map[string]bool) (*Parser, er
 						}
 						i++
 						continue
-					} else {
+					} else if parser.strict {
 						return nil, errors.New(fmt.Sprintf(`invalid option '%s'`, args[i]))
 					}
 				}
@@ -98,7 +108,7 @@ func ParseWithArgs(args []string, supportedOptions map[string]bool) (*Parser, er
 	return parser, nil
 }
 
-// parseMultiOption parses options to multiple valid options.
+// parseMultiOption parses option to multiple valid options like: --dav.
 // It returns nil if given option is not multi-option.
 func (p *Parser) parseMultiOption(option string) []string {
 	for i := 1; i <= len(option); i++ {
@@ -137,7 +147,7 @@ func (p *Parser) isOptionNeedArgument(name string) bool {
 // setOptionValue sets the option value for name and according alias.
 func (p *Parser) setOptionValue(name, value string) {
 	for optionName, _ := range p.passedOptions {
-		array := gstr.SplitAndTrimSpace(optionName, ",")
+		array := gstr.SplitAndTrim(optionName, ",")
 		for _, v := range array {
 			if strings.EqualFold(v, name) {
 				for _, v := range array {
@@ -160,9 +170,15 @@ func (p *Parser) GetOpt(name string, def ...string) string {
 	return ""
 }
 
-// GetOptVar returns the option value named <name> as *gvar.Var.
-func (p *Parser) GetOptVar(name string, def ...string) *gvar.Var {
-	return gvar.New(p.GetOpt(name, def...))
+// GetOptVar returns the option value named <name> as gvar.Var.
+func (p *Parser) GetOptVar(name string, def ...interface{}) *gvar.Var {
+	if p.ContainsOpt(name) {
+		return gvar.New(p.GetOpt(name))
+	}
+	if len(def) > 0 {
+		return gvar.New(def[0])
+	}
+	return gvar.New(nil)
 }
 
 // GetOptAll returns all parsed options.
@@ -171,7 +187,7 @@ func (p *Parser) GetOptAll() map[string]string {
 }
 
 // ContainsOpt checks whether option named <name> exist in the arguments.
-func (p *Parser) ContainsOpt(name string, def ...string) bool {
+func (p *Parser) ContainsOpt(name string) bool {
 	_, ok := p.parsedOptions[name]
 	return ok
 }
@@ -187,7 +203,7 @@ func (p *Parser) GetArg(index int, def ...string) string {
 	return ""
 }
 
-// GetArgVar returns the argument at <index> as *gvar.Var.
+// GetArgVar returns the argument at <index> as gvar.Var.
 func (p *Parser) GetArgVar(index int, def ...string) *gvar.Var {
 	return gvar.New(p.GetArg(index, def...))
 }
