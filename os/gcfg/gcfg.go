@@ -290,6 +290,9 @@ func (c *Config) GetFilePath(file ...string) (path string, err error) {
 				}
 			}
 		})
+		if path != "" {
+			return
+		}
 	}
 	c.autoCheckAndAddMainPkgPathToSearchPaths()
 	// Searching the file system.
