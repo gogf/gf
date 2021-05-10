@@ -11,6 +11,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"time"
 	"github.com/gogf/gf/os/gproc"
 	"github.com/gogf/gf/os/gres"
 	"github.com/gogf/gf/text/gstr"
@@ -184,7 +185,11 @@ func (s *gracefulServer) shutdown() {
 	if s.status == ServerStatusStopped {
 		return
 	}
-	if err := s.httpServer.Shutdown(context.Background()); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(s.server.config.GracefulTimeout)*time.Second)
+    defer func() {
+        cancel()
+    }()
+	if err := s.httpServer.Shutdown(ctx); err != nil {
 		s.server.Logger().Errorf(
 			"%d: %s server [%s] shutdown error: %v",
 			gproc.Pid(), s.getProto(), s.address, err,

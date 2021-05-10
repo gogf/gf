@@ -26,7 +26,7 @@ import (
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/os/gproc"
-	"github.com/gogf/gf/os/gtimer"
+	//"github.com/gogf/gf/os/gtimer"
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/olekukonko/tablewriter"
@@ -193,11 +193,9 @@ func (s *Server) Start() error {
 
 	// If this is a child process, it then notifies its parent exit.
 	if gproc.IsChild() {
-		gtimer.SetTimeout(time.Duration(s.config.GracefulTimeout)*time.Second, func() {
-			if err := gproc.Send(gproc.PPid(), []byte("exit"), adminGProcCommGroup); err != nil {
-				//glog.Error("server error in process communication:", err)
-			}
-		})
+		if err := gproc.Send(gproc.PPid(), []byte("exit"), adminGProcCommGroup); err != nil {
+			//glog.Error("server error in process communication:", err)
+		}
 	}
 	s.dumpRouterMap()
 	return nil
@@ -432,11 +430,18 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 				s.Logger().Fatal(err)
 			}
 			// If all the underlying servers shutdown, the process exits.
-			if s.serverCount.Add(-1) < 1 {
-				s.closeChan <- struct{}{}
-				if serverRunning.Add(-1) < 1 {
-					serverMapping.Remove(s.name)
-					allDoneChan <- struct{}{}
+			ticker := time.NewTicker(200 * time.Millisecond)
+			defer ticker.Stop()
+			for {
+				if s.serverCount.Val() < 1 {
+					s.closeChan <- struct{}{}
+					if serverRunning.Add(-1) < 1 {
+						serverMapping.Remove(s.name)
+						allDoneChan <- struct{}{}
+					}
+					select {
+						case <-ticker.C:
+					}
 				}
 			}
 		}(v)
