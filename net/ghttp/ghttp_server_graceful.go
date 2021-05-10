@@ -11,7 +11,6 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"time"
 	"github.com/gogf/gf/os/gproc"
 	"github.com/gogf/gf/os/gres"
 	"github.com/gogf/gf/text/gstr"
@@ -19,6 +18,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"time"
 )
 
 // gracefulServer wraps the net/http.Server with graceful reload/restart feature.
@@ -186,11 +186,11 @@ func (s *gracefulServer) shutdown() {
 		return
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(s.server.config.GracefulTimeout)*time.Second)
-        defer func() {
-            cancel()
-        }()
+	defer func() {
+		cancel()
+	}()
 	if err := s.httpServer.Shutdown(ctx); err != nil {
-	        s.server.Logger().Errorf(
+		s.server.Logger().Errorf(
 			"%d: %s server [%s] shutdown error: %v",
 			gproc.Pid(), s.getProto(), s.address, err,
 		)

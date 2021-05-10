@@ -440,7 +440,7 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 						allDoneChan <- struct{}{}
 					}
 					select {
-						case <-ticker.C:
+					case <-ticker.C:
 					}
 				}
 			}
