@@ -110,7 +110,7 @@ func Test_FieldMap(t *testing.T) {
 			Pass string `my-tag1:"pass1" my-tag2:"pass2" params:"pass"`
 		}
 		var user *User
-		m, _ := structs.FieldMap(user, []string{"params"})
+		m, _ := structs.FieldMap(user, []string{"params"}, true)
 		t.Assert(len(m), 3)
 		_, ok := m["Id"]
 		t.Assert(ok, true)
@@ -130,7 +130,7 @@ func Test_FieldMap(t *testing.T) {
 			Pass string `my-tag1:"pass1" my-tag2:"pass2" params:"pass"`
 		}
 		var user *User
-		m, _ := structs.FieldMap(user, nil)
+		m, _ := structs.FieldMap(user, nil, true)
 		t.Assert(len(m), 3)
 		_, ok := m["Id"]
 		t.Assert(ok, true)

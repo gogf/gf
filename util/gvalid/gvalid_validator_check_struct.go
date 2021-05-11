@@ -28,7 +28,7 @@ func (v *Validator) CheckStruct(object interface{}, rules interface{}, messages 
 	var (
 		errorMaps = make(ErrorMap) // Returned error.
 	)
-	mapField, err := structs.FieldMap(object, aliasNameTagPriority)
+	mapField, err := structs.FieldMap(object, aliasNameTagPriority, true)
 	if err != nil {
 		return newErrorStr("invalid_object", err.Error())
 	}
