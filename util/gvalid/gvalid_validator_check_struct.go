@@ -9,10 +9,18 @@ package gvalid
 import (
 	"github.com/gogf/gf/internal/structs"
 	"github.com/gogf/gf/util/gconv"
-	"github.com/gogf/gf/util/gutil"
 	"reflect"
 	"strings"
 )
+
+// doCheckStructWithParamMapInput is used for struct validation for internal function.
+type doCheckStructWithParamMapInput struct {
+	Object                interface{} // Can be type of struct/*struct.
+	ParamMap              interface{} // Validation parameter map. Note that it acts different according attribute `ParamMapStrict`.
+	ParamMapStrict        bool        // Strictly using `ParamMap` as its validation source. If false, it ignores `ParamMap` and retrieves values from `Object`.
+	CustomRules           interface{} // Custom validation rules.
+	CustomErrorMessageMap CustomMsg   // Custom error message map for validation rules.
+}
 
 var (
 	structTagPriority    = []string{"gvalid", "valid", "v"} // structTagPriority specifies the validation tag priority array.
@@ -25,8 +33,18 @@ var (
 // The parameter `rules` can be type of []string/map[string]string. It supports sequence in error result
 // if `rules` is type of []string.
 // The optional parameter `messages` specifies the custom error messages for specified keys and rules.
-func (v *Validator) CheckStruct(object interface{}, rules interface{}, messages ...CustomMsg) *Error {
-	return v.CheckStructWithParamMap(object, nil, rules, messages...)
+func (v *Validator) CheckStruct(object interface{}, customRules interface{}, customErrorMessageMap ...CustomMsg) *Error {
+	var message CustomMsg
+	if len(customErrorMessageMap) > 0 {
+		message = customErrorMessageMap[0]
+	}
+	return v.doCheckStructWithParamMap(&doCheckStructWithParamMapInput{
+		Object:                object,
+		ParamMap:              nil,
+		ParamMapStrict:        false,
+		CustomRules:           customRules,
+		CustomErrorMessageMap: message,
+	})
 }
 
 // CheckStructWithParamMap validates struct with given parameter map and returns the error result.
@@ -35,18 +53,32 @@ func (v *Validator) CheckStruct(object interface{}, rules interface{}, messages 
 // The parameter `rules` can be type of []string/map[string]string. It supports sequence in error result
 // if `rules` is type of []string.
 // The optional parameter `messages` specifies the custom error messages for specified keys and rules.
-func (v *Validator) CheckStructWithParamMap(object interface{}, paramMap interface{}, rules interface{}, messages ...CustomMsg) *Error {
+func (v *Validator) CheckStructWithParamMap(object interface{}, paramMap interface{}, customRules interface{}, customErrorMessageMap ...CustomMsg) *Error {
+	var message CustomMsg
+	if len(customErrorMessageMap) > 0 {
+		message = customErrorMessageMap[0]
+	}
+	return v.doCheckStructWithParamMap(&doCheckStructWithParamMapInput{
+		Object:                object,
+		ParamMap:              paramMap,
+		ParamMapStrict:        true,
+		CustomRules:           customRules,
+		CustomErrorMessageMap: message,
+	})
+}
+
+func (v *Validator) doCheckStructWithParamMap(input *doCheckStructWithParamMapInput) *Error {
 	var (
 		errorMaps = make(ErrorMap) // Returning error.
 	)
-	fieldMap, err := structs.FieldMap(object, aliasNameTagPriority)
+	fieldMap, err := structs.FieldMap(input.Object, aliasNameTagPriority)
 	if err != nil {
 		return newErrorStr("invalid_object", err.Error())
 	}
 	// It checks the struct recursively the its attribute is also a struct.
 	for _, field := range fieldMap {
 		if field.OriginalKind() == reflect.Struct {
-			if err := v.CheckStruct(field.Value, rules, messages...); err != nil {
+			if err := v.CheckStruct(field.Value, input.CustomRules, input.CustomErrorMessageMap); err != nil {
 				// It merges the errors into single error map.
 				for k, m := range err.errors {
 					errorMaps[k] = m
@@ -55,12 +87,12 @@ func (v *Validator) CheckStructWithParamMap(object interface{}, paramMap interfa
 		}
 	}
 	// It here must use structs.TagFields not structs.FieldMap to ensure error sequence.
-	tagField, err := structs.TagFields(object, structTagPriority)
+	tagField, err := structs.TagFields(input.Object, structTagPriority)
 	if err != nil {
 		return newErrorStr("invalid_object", err.Error())
 	}
 	// If there's no struct tag and validation rules, it does nothing and returns quickly.
-	if len(tagField) == 0 && rules == nil {
+	if len(tagField) == 0 && input.CustomRules == nil {
 		return nil
 	}
 
@@ -71,12 +103,7 @@ func (v *Validator) CheckStructWithParamMap(object interface{}, paramMap interfa
 		fieldAliases  = make(map[string]string) // Alias names for `messages` overwriting struct tag names.
 		errorRules    = make([]string, 0)       // Sequence rules.
 	)
-	if paramMap == nil {
-		inputParamMap = make(map[string]interface{})
-	} else {
-		inputParamMap = gconv.Map(paramMap)
-	}
-	switch v := rules.(type) {
+	switch v := input.CustomRules.(type) {
 	// Sequence tag: []sequence tag
 	// Sequence has order for error results.
 	case []string:
@@ -119,21 +146,22 @@ func (v *Validator) CheckStructWithParamMap(object interface{}, paramMap interfa
 	if len(tagField) == 0 && len(checkRules) == 0 {
 		return nil
 	}
+	// Input parameter map handling.
+	if input.ParamMap == nil || !input.ParamMapStrict {
+		inputParamMap = make(map[string]interface{})
+	} else {
+		inputParamMap = gconv.Map(input.ParamMap)
+	}
 	// Checks and extends the parameters map with struct alias tag.
-	for nameOrTag, field := range fieldMap {
-		if _, ok := inputParamMap[nameOrTag]; !ok {
-			if foundKey, foundValue := gutil.MapPossibleItemByKey(inputParamMap, nameOrTag); foundKey != "" {
-				inputParamMap[nameOrTag] = foundValue
-				inputParamMap[field.Name()] = foundValue
-			} else {
-				// If the custom tag alias name is quite different from the attribute name,
-				// it just uses the value of the attribute.
-				// Note that the attribute may have default value according to its type.
-				inputParamMap[nameOrTag] = field.Value.Interface()
+	if !input.ParamMapStrict {
+		for nameOrTag, field := range fieldMap {
+			inputParamMap[nameOrTag] = field.Value.Interface()
+			if nameOrTag != field.Name() {
 				inputParamMap[field.Name()] = field.Value.Interface()
 			}
 		}
 	}
+
 	for _, field := range tagField {
 		fieldName := field.Name()
 		// sequence tag == struct tag
@@ -187,8 +215,8 @@ func (v *Validator) CheckStructWithParamMap(object interface{}, paramMap interfa
 
 	// Custom error messages,
 	// which have the most priority than `rules` and struct tag.
-	if len(messages) > 0 && len(messages[0]) > 0 {
-		for k, v := range messages[0] {
+	if len(input.CustomErrorMessageMap) > 0 {
+		for k, v := range input.CustomErrorMessageMap {
 			if a, ok := fieldAliases[k]; ok {
 				// Overwrite the key of field name.
 				customMessage[a] = v
