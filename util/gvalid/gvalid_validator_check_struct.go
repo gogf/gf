@@ -9,17 +9,18 @@ package gvalid
 import (
 	"github.com/gogf/gf/internal/structs"
 	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/util/gutil"
 	"reflect"
 	"strings"
 )
 
 // doCheckStructWithParamMapInput is used for struct validation for internal function.
 type doCheckStructWithParamMapInput struct {
-	Object                interface{} // Can be type of struct/*struct.
-	ParamMap              interface{} // Validation parameter map. Note that it acts different according attribute `ParamMapStrict`.
-	ParamMapStrict        bool        // Strictly using `ParamMap` as its validation source. If false, it ignores `ParamMap` and retrieves values from `Object`.
-	CustomRules           interface{} // Custom validation rules.
-	CustomErrorMessageMap CustomMsg   // Custom error message map for validation rules.
+	Object                          interface{} // Can be type of struct/*struct.
+	ParamMap                        interface{} // Validation parameter map. Note that it acts different according attribute `UseParamMapInsteadOfObjectValue`.
+	UseParamMapInsteadOfObjectValue bool        // Using `ParamMap` as its validation source instead of values from `Object`.
+	CustomRules                     interface{} // Custom validation rules.
+	CustomErrorMessageMap           CustomMsg   // Custom error message map for validation rules.
 }
 
 var (
@@ -39,11 +40,11 @@ func (v *Validator) CheckStruct(object interface{}, customRules interface{}, cus
 		message = customErrorMessageMap[0]
 	}
 	return v.doCheckStructWithParamMap(&doCheckStructWithParamMapInput{
-		Object:                object,
-		ParamMap:              nil,
-		ParamMapStrict:        false,
-		CustomRules:           customRules,
-		CustomErrorMessageMap: message,
+		Object:                          object,
+		ParamMap:                        nil,
+		UseParamMapInsteadOfObjectValue: false,
+		CustomRules:                     customRules,
+		CustomErrorMessageMap:           message,
 	})
 }
 
@@ -59,11 +60,11 @@ func (v *Validator) CheckStructWithParamMap(object interface{}, paramMap interfa
 		message = customErrorMessageMap[0]
 	}
 	return v.doCheckStructWithParamMap(&doCheckStructWithParamMapInput{
-		Object:                object,
-		ParamMap:              paramMap,
-		ParamMapStrict:        true,
-		CustomRules:           customRules,
-		CustomErrorMessageMap: message,
+		Object:                          object,
+		ParamMap:                        paramMap,
+		UseParamMapInsteadOfObjectValue: true,
+		CustomRules:                     customRules,
+		CustomErrorMessageMap:           message,
 	})
 }
 
@@ -147,13 +148,13 @@ func (v *Validator) doCheckStructWithParamMap(input *doCheckStructWithParamMapIn
 		return nil
 	}
 	// Input parameter map handling.
-	if input.ParamMap == nil || !input.ParamMapStrict {
+	if input.ParamMap == nil || !input.UseParamMapInsteadOfObjectValue {
 		inputParamMap = make(map[string]interface{})
 	} else {
 		inputParamMap = gconv.Map(input.ParamMap)
 	}
 	// Checks and extends the parameters map with struct alias tag.
-	if !input.ParamMapStrict {
+	if !input.UseParamMapInsteadOfObjectValue {
 		for nameOrTag, field := range fieldMap {
 			inputParamMap[nameOrTag] = field.Value.Interface()
 			if nameOrTag != field.Name() {
@@ -174,7 +175,9 @@ func (v *Validator) doCheckStructWithParamMap(input *doCheckStructWithParamMapIn
 		}
 		// It here extends the params map using alias names.
 		if _, ok := inputParamMap[name]; !ok {
-			inputParamMap[name] = field.Value.Interface()
+			if !input.UseParamMapInsteadOfObjectValue {
+				inputParamMap[name] = field.Value.Interface()
+			}
 		}
 		if _, ok := checkRules[name]; !ok {
 			if _, ok := checkRules[fieldName]; ok {
@@ -187,7 +190,7 @@ func (v *Validator) doCheckStructWithParamMap(input *doCheckStructWithParamMapIn
 			}
 			errorRules = append(errorRules, name+"@"+rule)
 		} else {
-			// The passed rules can overwrite the rules in struct tag.
+			// The input rules can overwrite the rules in struct tag.
 			continue
 		}
 		if len(msg) > 0 {
@@ -229,10 +232,7 @@ func (v *Validator) doCheckStructWithParamMap(input *doCheckStructWithParamMapIn
 	// The following logic is the same as some of CheckMap.
 	var value interface{}
 	for key, rule := range checkRules {
-		value = nil
-		if v, ok := inputParamMap[key]; ok {
-			value = v
-		}
+		_, value = gutil.MapPossibleItemByKey(inputParamMap, key)
 		// It checks each rule and its value in loop.
 		if e := v.doCheck(key, value, rule, customMessage[key], inputParamMap); e != nil {
 			_, item := e.FirstItem()

@@ -270,14 +270,19 @@ func (r *Request) GetRequestMapStrVar(kvMap ...map[string]interface{}) map[strin
 // the parameter <pointer> is a pointer to the struct object.
 // The optional parameter <mapping> is used to specify the key to attribute mapping.
 func (r *Request) GetRequestStruct(pointer interface{}, mapping ...map[string]string) error {
-	data := r.GetRequestMap()
+	_, err := r.doGetRequestStruct(pointer, mapping...)
+	return err
+}
+
+func (r *Request) doGetRequestStruct(pointer interface{}, mapping ...map[string]string) (data map[string]interface{}, err error) {
+	data = r.GetRequestMap()
 	if data == nil {
 		data = map[string]interface{}{}
 	}
 	if err := r.mergeDefaultStructValue(data, pointer); err != nil {
-		return nil
+		return data, nil
 	}
-	return gconv.Struct(data, pointer, mapping...)
+	return data, gconv.Struct(data, pointer, mapping...)
 }
 
 // mergeDefaultStructValue merges the request parameters with default values from struct tag definition.
