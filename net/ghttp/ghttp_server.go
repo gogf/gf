@@ -440,9 +440,9 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 						serverMapping.Remove(s.name)
 						allDoneChan <- struct{}{}
 					}
-					select {
-					case <-ticker.C:
-					}
+				}
+				select {
+				case <-ticker.C:
 				}
 			}
 		}(v)
