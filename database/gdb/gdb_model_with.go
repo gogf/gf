@@ -55,7 +55,7 @@ func (m *Model) WithAll() *Model {
 
 // getWithTagObjectArrayFrom retrieves and returns object array that have "with" tag in the struct.
 func (m *Model) getWithTagObjectArrayFrom(pointer interface{}) ([]interface{}, error) {
-	fieldMap, err := structs.FieldMap(pointer, nil)
+	fieldMap, err := structs.FieldMap(pointer, nil, false)
 	if err != nil {
 		return nil, err
 	}
@@ -86,6 +86,7 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 		err       error
 		withArray = m.withArray
 	)
+	// If with all feature is enabled, it then retrieves all the attributes which have with tag defined.
 	if m.withAll {
 		withArray, err = m.getWithTagObjectArrayFrom(pointer)
 		if err != nil {
@@ -95,10 +96,11 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 	if len(withArray) == 0 {
 		return nil
 	}
-	fieldMap, err := structs.FieldMap(pointer, nil)
+	fieldMap, err := structs.FieldMap(pointer, nil, false)
 	if err != nil {
 		return err
 	}
+	// Check the with array and automatically call the ScanList to complete association querying.
 	for withIndex, withItem := range withArray {
 		withItemReflectValueType, err := structs.StructType(withItem)
 		if err != nil {
@@ -110,6 +112,7 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 				fieldType    = fieldValue.Type()
 				fieldTypeStr = gstr.TrimAll(fieldType.String(), "*[]")
 			)
+			// It does select operation if the field type is in the specified with type array.
 			if gstr.Compare(fieldTypeStr, withItemReflectValueTypeStr) == 0 {
 				var (
 					withTag  string
@@ -174,6 +177,7 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 }
 
 // doWithScanStructs handles model association operations feature for struct slice.
+// Also see doWithScanStruct.
 func (m *Model) doWithScanStructs(pointer interface{}) error {
 	var (
 		err       error
@@ -188,7 +192,7 @@ func (m *Model) doWithScanStructs(pointer interface{}) error {
 	if len(withArray) == 0 {
 		return nil
 	}
-	fieldMap, err := structs.FieldMap(pointer, nil)
+	fieldMap, err := structs.FieldMap(pointer, nil, false)
 	if err != nil {
 		return err
 	}

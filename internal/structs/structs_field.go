@@ -61,8 +61,11 @@ func (f *Field) OriginalKind() reflect.Kind {
 // The parameter `priority` specifies the priority tag array for retrieving from high to low.
 // If it's given `nil`, it returns map[name]*Field, of which the `name` is attribute name.
 //
+// The parameter `recursive` specifies the whether retrieving the fields recursively if the attribute
+// is an embedded struct.
+//
 // Note that it only retrieves the exported attributes with first letter up-case from struct.
-func FieldMap(pointer interface{}, priority []string) (map[string]*Field, error) {
+func FieldMap(pointer interface{}, priority []string, recursive bool) (map[string]*Field, error) {
 	fields, err := getFieldValues(pointer)
 	if err != nil {
 		return nil, err
@@ -88,8 +91,8 @@ func FieldMap(pointer interface{}, priority []string) (map[string]*Field, error)
 		if tagValue != "" {
 			mapField[tagValue] = tempField
 		} else {
-			if field.IsEmbedded() {
-				m, err := FieldMap(field.Value, priority)
+			if recursive && field.IsEmbedded() {
+				m, err := FieldMap(field.Value, priority, recursive)
 				if err != nil {
 					return nil, err
 				}
