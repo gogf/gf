@@ -8,6 +8,7 @@ package gvalid_test
 
 import (
 	"github.com/gogf/gf/container/gvar"
+	"github.com/gogf/gf/os/gtime"
 	"testing"
 
 	"github.com/gogf/gf/frame/g"
@@ -350,5 +351,53 @@ func Test_CheckStruct_InvalidRule(t *testing.T) {
 		}
 		err := gvalid.CheckStruct(obj, nil)
 		t.AssertNE(err, nil)
+	})
+}
+
+func TestValidator_CheckStructWithParamMap(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type UserApiSearch struct {
+			Uid      int64  `json:"uid" v:"required"`
+			Nickname string `json:"nickname" v:"required-with:Uid"`
+		}
+		data := UserApiSearch{}
+		t.Assert(gvalid.CheckStructWithParamMap(data, g.Map{}, nil), nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type UserApiSearch struct {
+			Uid      int64  `json:"uid" v:"required"`
+			Nickname string `json:"nickname" v:"required-with:Uid"`
+		}
+		data := UserApiSearch{
+			Uid: 1,
+		}
+		t.AssertNE(gvalid.CheckStructWithParamMap(data, g.Map{}, nil), nil)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		type UserApiSearch struct {
+			Uid       int64       `json:"uid"`
+			Nickname  string      `json:"nickname" v:"required-with:Uid"`
+			StartTime *gtime.Time `json:"start_time" v:"required-with:EndTime"`
+			EndTime   *gtime.Time `json:"end_time" v:"required-with:StartTime"`
+		}
+		data := UserApiSearch{
+			StartTime: nil,
+			EndTime:   nil,
+		}
+		t.Assert(gvalid.CheckStructWithParamMap(data, g.Map{}, nil), nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type UserApiSearch struct {
+			Uid       int64       `json:"uid"`
+			Nickname  string      `json:"nickname" v:"required-with:Uid"`
+			StartTime *gtime.Time `json:"start_time" v:"required-with:EndTime"`
+			EndTime   *gtime.Time `json:"end_time" v:"required-with:StartTime"`
+		}
+		data := UserApiSearch{
+			StartTime: gtime.Now(),
+			EndTime:   nil,
+		}
+		t.AssertNE(gvalid.CheckStructWithParamMap(data, g.Map{}, nil), nil)
 	})
 }
