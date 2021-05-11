@@ -193,6 +193,16 @@ func CheckStruct(object interface{}, rules interface{}, messages ...CustomMsg) *
 	return defaultValidator.CheckStruct(object, rules, messages...)
 }
 
+// CheckStructWithParamMap validates struct with given parameter map and returns the error result.
+//
+// The parameter `object` should be type of struct/*struct.
+// The parameter `rules` can be type of []string/map[string]string. It supports sequence in error result
+// if `rules` is type of []string.
+// The optional parameter `messages` specifies the custom error messages for specified keys and rules.
+func CheckStructWithParamMap(object interface{}, paramMap interface{}, rules interface{}, messages ...CustomMsg) *Error {
+	return defaultValidator.CheckStructWithParamMap(object, paramMap, rules, messages...)
+}
+
 // parseSequenceTag parses one sequence tag to field, rule and error message.
 // The sequence tag is like: [alias@]rule[...#msg...]
 func parseSequenceTag(tag string) (field, rule, msg string) {

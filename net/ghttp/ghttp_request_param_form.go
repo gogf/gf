@@ -188,13 +188,18 @@ func (r *Request) GetFormMapStrVar(kvMap ...map[string]interface{}) map[string]*
 // given struct object. Note that the parameter <pointer> is a pointer to the struct object.
 // The optional parameter <mapping> is used to specify the key to attribute mapping.
 func (r *Request) GetFormStruct(pointer interface{}, mapping ...map[string]string) error {
+	_, err := r.doGetFormStruct(pointer, mapping...)
+	return err
+}
+
+func (r *Request) doGetFormStruct(pointer interface{}, mapping ...map[string]string) (data map[string]interface{}, err error) {
 	r.parseForm()
-	data := r.formMap
+	data = r.formMap
 	if data == nil {
 		data = map[string]interface{}{}
 	}
 	if err := r.mergeDefaultStructValue(data, pointer); err != nil {
-		return nil
+		return data, nil
 	}
-	return gconv.Struct(data, pointer, mapping...)
+	return data, gconv.Struct(data, pointer, mapping...)
 }

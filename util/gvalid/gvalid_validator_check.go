@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/util/gutil"
 	"strconv"
 	"strings"
 	"time"
@@ -34,12 +35,12 @@ type apiTime interface {
 // string/map/struct/*struct.
 // The optional parameter `params` specifies the extra validation parameters for some rules
 // like: required-*、same、different, etc.
-func (v *Validator) Check(value interface{}, rules string, messages interface{}, params ...interface{}) *Error {
-	return v.doCheck("", value, rules, messages, params...)
+func (v *Validator) Check(value interface{}, rules string, messages interface{}, paramMap ...interface{}) *Error {
+	return v.doCheck("", value, rules, messages, paramMap...)
 }
 
 // doCheck does the really rules validation for single key-value.
-func (v *Validator) doCheck(key string, value interface{}, rules string, messages interface{}, params ...interface{}) *Error {
+func (v *Validator) doCheck(key string, value interface{}, rules string, messages interface{}, paramMap ...interface{}) *Error {
 	// If there's no validation rules, it does nothing and returns quickly.
 	if rules == "" {
 		return nil
@@ -50,8 +51,8 @@ func (v *Validator) doCheck(key string, value interface{}, rules string, message
 		data          = make(map[string]interface{})
 		errorMsgArray = make(map[string]string)
 	)
-	if len(params) > 0 {
-		data = gconv.Map(params[0])
+	if len(paramMap) > 0 {
+		data = gconv.Map(paramMap[0])
 	}
 	// Custom error messages handling.
 	var (
@@ -107,8 +108,8 @@ func (v *Validator) doCheck(key string, value interface{}, rules string, message
 				dataMap map[string]interface{}
 				message = v.getErrorMessageByRule(ruleKey, customMsgMap)
 			)
-			if len(params) > 0 {
-				dataMap = gconv.Map(params[0])
+			if len(paramMap) > 0 {
+				dataMap = gconv.Map(paramMap[0])
 			}
 			if err := f(ruleItems[index], value, message, dataMap); err != nil {
 				match = false
@@ -232,8 +233,9 @@ func (v *Validator) doCheckBuildInRules(
 
 	// Values of two fields should be equal as string.
 	case "same":
-		if v, ok := dataMap[rulePattern]; ok {
-			if strings.Compare(valueStr, gconv.String(v)) == 0 {
+		_, foundValue := gutil.MapPossibleItemByKey(dataMap, rulePattern)
+		if foundValue != nil {
+			if strings.Compare(valueStr, gconv.String(foundValue)) == 0 {
 				match = true
 			}
 		}
@@ -247,8 +249,9 @@ func (v *Validator) doCheckBuildInRules(
 	// Values of two fields should not be equal as string.
 	case "different":
 		match = true
-		if v, ok := dataMap[rulePattern]; ok {
-			if strings.Compare(valueStr, gconv.String(v)) == 0 {
+		_, foundValue := gutil.MapPossibleItemByKey(dataMap, rulePattern)
+		if foundValue != nil {
+			if strings.Compare(valueStr, gconv.String(foundValue)) == 0 {
 				match = false
 			}
 		}
@@ -302,6 +305,7 @@ func (v *Validator) doCheckBuildInRules(
 	//    16x, 19x
 	case "phone":
 		match = gregex.IsMatchString(`^13[\d]{9}$|^14[5,7]{1}\d{8}$|^15[^4]{1}\d{8}$|^16[\d]{9}$|^17[0,2,3,5,6,7,8]{1}\d{8}$|^18[\d]{9}$|^19[\d]{9}$`, valueStr)
+
 	// Loose mobile phone number verification(宽松的手机号验证)
 	// As long as the 11 digit numbers beginning with
 	// 13, 14, 15, 16, 17, 18, 19 can pass the verification (只要满足 13、14、15、16、17、18、19开头的11位数字都可以通过验证)
