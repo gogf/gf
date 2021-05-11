@@ -357,11 +357,22 @@ func Test_CheckStruct_InvalidRule(t *testing.T) {
 func TestValidator_CheckStructWithParamMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type UserApiSearch struct {
-			Uid      int64  `json:"uid" v:"required"`
-			Nickname string `json:"nickname" v:"required-with:Uid"`
+			Uid      int64  `v:"required"`
+			Nickname string `v:"required-with:uid"`
+		}
+		data := UserApiSearch{
+			Uid:      1,
+			Nickname: "john",
+		}
+		t.Assert(gvalid.CheckStructWithParamMap(data, g.Map{"uid": 1, "nickname": "john"}, nil), nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type UserApiSearch struct {
+			Uid      int64  `v:"required"`
+			Nickname string `v:"required-with:uid"`
 		}
 		data := UserApiSearch{}
-		t.Assert(gvalid.CheckStructWithParamMap(data, g.Map{}, nil), nil)
+		t.AssertNE(gvalid.CheckStructWithParamMap(data, g.Map{}, nil), nil)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type UserApiSearch struct {
@@ -398,6 +409,6 @@ func TestValidator_CheckStructWithParamMap(t *testing.T) {
 			StartTime: gtime.Now(),
 			EndTime:   nil,
 		}
-		t.AssertNE(gvalid.CheckStructWithParamMap(data, g.Map{}, nil), nil)
+		t.AssertNE(gvalid.CheckStructWithParamMap(data, g.Map{"start_time": gtime.Now()}, nil), nil)
 	})
 }
