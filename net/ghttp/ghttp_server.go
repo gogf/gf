@@ -193,6 +193,7 @@ func (s *Server) Start() error {
 
 	// If this is a child process, it then notifies its parent exit.
 	if gproc.IsChild() {
+		// Let the parent process call Shutdown(ctx)
 		if err := gproc.Send(gproc.PPid(), []byte("exit"), adminGProcCommGroup); err != nil {
 			//glog.Error("server error in process communication:", err)
 		}
