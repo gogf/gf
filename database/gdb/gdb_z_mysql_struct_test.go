@@ -15,7 +15,7 @@ import (
 	"testing"
 )
 
-func Test_Model_Inherit_Insert(t *testing.T) {
+func Test_Model_Embedded_Insert(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -31,7 +31,7 @@ func Test_Model_Inherit_Insert(t *testing.T) {
 			Password string `json:"password"`
 			Nickname string `json:"nickname"`
 		}
-		result, err := db.Model(table).Filter().Data(User{
+		result, err := db.Model(table).Data(User{
 			Passport: "john-test",
 			Password: "123456",
 			Nickname: "John",
@@ -50,7 +50,7 @@ func Test_Model_Inherit_Insert(t *testing.T) {
 	})
 }
 
-func Test_Model_Inherit_MapToStruct(t *testing.T) {
+func Test_Model_Embedded_MapToStruct(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -77,7 +77,7 @@ func Test_Model_Inherit_MapToStruct(t *testing.T) {
 			"nickname":    "T1",
 			"create_time": gtime.Now().String(),
 		}
-		result, err := db.Model(table).Filter().Data(data).Insert()
+		result, err := db.Model(table).Data(data).Insert()
 		t.AssertNil(err)
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)
