@@ -6,36 +6,34 @@
 
 package gvalid
 
-import "context"
+import (
+	"context"
+	"github.com/gogf/gf/i18n/gi18n"
+)
 
 // Validator is the validation manager.
 type Validator struct {
-	i18nLang string          // I18n language.
-	ctx      context.Context // Context containing custom context variables.
+	ctx         context.Context // Context containing custom context variables.
+	i18nManager *gi18n.Manager  // I18n manager for error message translation.
+
 }
 
 // New creates and returns a new Validator.
 func New() *Validator {
-	return &Validator{}
+	return &Validator{
+		ctx:         context.TODO(),
+		i18nManager: gi18n.Instance(),
+	}
 }
 
-// Clone creates and returns a new Validator which is a shallow copy of current one.
-func (v *Validator) Clone() *Validator {
-	newValidator := New()
-	*newValidator = *v
-	return newValidator
-}
-
-// I18n is a chaining operation function which sets the I18n language for next validation.
-func (v *Validator) I18n(language string) *Validator {
-	newValidator := v.Clone()
-	newValidator.i18nLang = language
-	return newValidator
+// I18n sets the i18n manager for the validator.
+func (v *Validator) I18n(i18nManager *gi18n.Manager) *Validator {
+	v.i18nManager = i18nManager
+	return v
 }
 
 // Ctx is a chaining operation function which sets the context for next validation.
 func (v *Validator) Ctx(ctx context.Context) *Validator {
-	newValidator := v.Clone()
-	newValidator.ctx = ctx
-	return newValidator
+	v.ctx = ctx
+	return v
 }
