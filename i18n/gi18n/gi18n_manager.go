@@ -7,6 +7,7 @@
 package gi18n
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/internal/intlog"
@@ -25,7 +26,7 @@ import (
 	"github.com/gogf/gf/os/gres"
 )
 
-// Manager, it is concurrent safe, supporting hot reload.
+// Manager for i18n contents, it is concurrent safe, supporting hot reload.
 type Manager struct {
 	mu      sync.RWMutex
 	data    map[string]map[string]string // Translating map.
@@ -36,13 +37,13 @@ type Manager struct {
 // Options is used for i18n object configuration.
 type Options struct {
 	Path       string   // I18n files storage path.
-	Language   string   // Local language.
+	Language   string   // Default local language.
 	Delimiters []string // Delimiters for variable parsing.
 }
 
 var (
-	// defaultDelimiters defines the default key variable delimiters.
-	defaultDelimiters = []string{"{#", "}"}
+	defaultLanguage   = "en"                // defaultDelimiters defines the default language if user does not specified in options.
+	defaultDelimiters = []string{"{#", "}"} // defaultDelimiters defines the default key variable delimiters.
 )
 
 // New creates and returns a new i18n manager.
@@ -54,6 +55,9 @@ func New(options ...Options) *Manager {
 		opts = options[0]
 	} else {
 		opts = DefaultOptions()
+	}
+	if len(opts.Language) == 0 {
+		opts.Language = defaultLanguage
 	}
 	if len(opts.Delimiters) == 0 {
 		opts.Delimiters = defaultDelimiters
@@ -118,45 +122,30 @@ func (m *Manager) SetDelimiters(left, right string) {
 }
 
 // T is alias of Translate for convenience.
-func (m *Manager) T(content string, language ...string) string {
-	return m.Translate(content, language...)
+func (m *Manager) T(ctx context.Context, content string) string {
+	return m.Translate(ctx, content)
 }
 
 // Tf is alias of TranslateFormat for convenience.
-func (m *Manager) Tf(format string, values ...interface{}) string {
-	return m.TranslateFormat(format, values...)
-}
-
-// Tfl is alias of TranslateFormatLang for convenience.
-func (m *Manager) Tfl(language string, format string, values ...interface{}) string {
-	return m.TranslateFormatLang(language, format, values...)
+func (m *Manager) Tf(ctx context.Context, format string, values ...interface{}) string {
+	return m.TranslateFormat(ctx, format, values...)
 }
 
 // TranslateFormat translates, formats and returns the <format> with configured language
 // and given <values>.
-func (m *Manager) TranslateFormat(format string, values ...interface{}) string {
-	return fmt.Sprintf(m.Translate(format), values...)
-}
-
-// TranslateFormatLang translates, formats and returns the <format> with configured language
-// and given <values>. The parameter <language> specifies custom translation language ignoring
-// configured language. If <language> is given empty string, it uses the default configured
-// language for the translation.
-func (m *Manager) TranslateFormatLang(language string, format string, values ...interface{}) string {
-	return fmt.Sprintf(m.Translate(format, language), values...)
+func (m *Manager) TranslateFormat(ctx context.Context, format string, values ...interface{}) string {
+	return fmt.Sprintf(m.Translate(ctx, format), values...)
 }
 
 // Translate translates <content> with configured language.
 // The parameter <language> specifies custom translation language ignoring configured language.
-func (m *Manager) Translate(content string, language ...string) string {
+func (m *Manager) Translate(ctx context.Context, content string) string {
 	m.init()
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	transLang := m.options.Language
-	if len(language) > 0 && language[0] != "" {
-		transLang = language[0]
-	} else {
-		transLang = m.options.Language
+	if lang := LanguageFromCtx(ctx); lang != "" {
+		transLang = lang
 	}
 	data := m.data[transLang]
 	if data == nil {
@@ -179,17 +168,15 @@ func (m *Manager) Translate(content string, language ...string) string {
 	return result
 }
 
-// GetValue retrieves and returns the configured content for given key and specified language.
+// GetContent retrieves and returns the configured content for given key and specified language.
 // It returns an empty string if not found.
-func (m *Manager) GetContent(key string, language ...string) string {
+func (m *Manager) GetContent(ctx context.Context, key string) string {
 	m.init()
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	transLang := m.options.Language
-	if len(language) > 0 && language[0] != "" {
-		transLang = language[0]
-	} else {
-		transLang = m.options.Language
+	if lang := LanguageFromCtx(ctx); lang != "" {
+		transLang = lang
 	}
 	if data, ok := m.data[transLang]; ok {
 		return data[key]

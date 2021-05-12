@@ -6,9 +6,8 @@
 
 package gvalid
 
-import (
-	"fmt"
-	"github.com/gogf/gf/i18n/gi18n"
+const (
+	ruleMessagePrefixForI18n = "gf.gvalid.rule."
 )
 
 // defaultMessages is the default error messages.
@@ -66,15 +65,21 @@ var defaultMessages = map[string]string{
 func (v *Validator) getErrorMessageByRule(ruleKey string, customMsgMap map[string]string) string {
 	content := customMsgMap[ruleKey]
 	if content != "" {
+		// I18n translation.
+		i18nContent := v.i18nManager.GetContent(v.ctx, content)
+		if i18nContent != "" {
+			return i18nContent
+		}
 		return content
 	}
-	content = gi18n.GetContent(fmt.Sprintf(`gf.gvalid.rule.%s`, ruleKey), v.i18nLang)
+	// Retrieve default message according to certain rule.
+	content = v.i18nManager.GetContent(v.ctx, ruleMessagePrefixForI18n+ruleKey)
 	if content == "" {
 		content = defaultMessages[ruleKey]
 	}
 	// If there's no configured rule message, it uses default one.
 	if content == "" {
-		content = gi18n.GetContent(`gf.gvalid.rule.__default__`, v.i18nLang)
+		content = v.i18nManager.GetContent(v.ctx, `gf.gvalid.rule.__default__`)
 		if content == "" {
 			content = defaultMessages["__default__"]
 		}

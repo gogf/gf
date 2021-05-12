@@ -9,6 +9,7 @@ package gvalid
 import (
 	"errors"
 	"github.com/gogf/gf/text/gregex"
+	"github.com/gogf/gf/text/gstr"
 	"strings"
 )
 
@@ -29,7 +30,9 @@ func newError(rules []string, errors map[string]map[string]string) *Error {
 	for field, m := range errors {
 		for k, v := range m {
 			v = strings.Replace(v, ":attribute", field, -1)
-			m[k], _ = gregex.ReplaceString(`\s{2,}`, ` `, v)
+			v, _ = gregex.ReplaceString(`\s{2,}`, ` `, v)
+			v = gstr.Trim(v)
+			m[k] = v
 		}
 		errors[field] = m
 	}

@@ -26,7 +26,7 @@ func (p *utilAdmin) Index(r *Request) {
 		"path": gfile.SelfPath(),
 		"uri":  strings.TrimRight(r.URL.Path, "/"),
 	}
-	buffer, _ := gview.ParseContent(`
+	buffer, _ := gview.ParseContent(r.Context(), `
             <html>
             <head>
                 <title>GoFrame Web Server Admin</title>

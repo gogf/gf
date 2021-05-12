@@ -7,6 +7,7 @@
 package gview
 
 import (
+	"context"
 	"fmt"
 	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/util/gutil"
@@ -115,7 +116,7 @@ func (view *View) buildInFuncInclude(file interface{}, data ...map[string]interf
 		return ""
 	}
 	// It will search the file internally.
-	content, err := view.Parse(path, m)
+	content, err := view.Parse(context.TODO(), path, m)
 	if err != nil {
 		return htmltpl.HTML(err.Error())
 	}
