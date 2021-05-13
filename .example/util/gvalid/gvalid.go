@@ -1,31 +1,32 @@
 package main
 
 import (
+	"context"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/util/gvalid"
 )
 
 func main() {
 	//rule := "length:6,16"
-	//if m := gvalid.Check("123456", rule, nil);  m != nil {
+	//if m := gvalid.Check(context.TODO(), "123456", rule, nil);  m != nil {
 	//    fmt.Println(m)
 	//}
-	//if m := gvalid.Check("12345", rule, nil);  m != nil {
+	//if m := gvalid.Check(context.TODO(), "12345", rule, nil);  m != nil {
 	//    fmt.Println(m)
 	//    // map[length:字段长度为6到16个字符]
 	//}
 
 	//rule := "integer|between:6,16"
 	//msgs := "请输入一个整数|参数大小不对啊老铁"
-	//fmt.Println(gvalid.Check("5.66", rule, msgs))
+	//fmt.Println(gvalid.Check(context.TODO(), "5.66", rule, msgs))
 	//// map[integer:请输入一个整数 between:参数大小不对啊老铁]
 
 	//// 参数长度至少为6个数字或者6个字母，但是总长度不能超过16个字符
 	//rule := `regex:\d{6,}|\D{6,}|max-length:16`
-	//if m := gvalid.Check("123456", rule, nil);  m != nil {
+	//if m := gvalid.Check(context.TODO(), "123456", rule, nil);  m != nil {
 	//    fmt.Println(m)
 	//}
-	//if m := gvalid.Check("abcde6", rule, nil);  m != nil {
+	//if m := gvalid.Check(context.TODO(), "abcde6", rule, nil);  m != nil {
 	//    fmt.Println(m)
 	//    // map[regex:字段值不合法]
 	//}
@@ -40,7 +41,7 @@ func main() {
 	//    "password"  : "required|length:6,16|same:password2",
 	//    "password2" : "required|length:6,16",
 	//}
-	//fmt.Println(gvalid.CheckMap(params, rules))
+	//fmt.Println(gvalid.CheckMap(context.TODO(), params, rules))
 	//// map[passport:map[length:字段长度为6到16个字符] password:map[same:字段值不合法]]
 
 	params := map[string]interface{}{
@@ -60,7 +61,7 @@ func main() {
 			"same":     "两次密码输入不相等",
 		},
 	}
-	if e := gvalid.CheckMap(params, rules, msgs); e != nil {
+	if e := gvalid.CheckMap(context.TODO(), params, rules, msgs); e != nil {
 		g.Dump(e.Maps())
 	}
 	// map[passport:map[length:账号长度应当在6到16之间] password:map[same:两次密码输入不相等]]

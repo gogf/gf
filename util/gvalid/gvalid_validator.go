@@ -21,8 +21,8 @@ type Validator struct {
 // New creates and returns a new Validator.
 func New() *Validator {
 	return &Validator{
-		ctx:         context.TODO(),
-		i18nManager: gi18n.Instance(),
+		ctx:         context.TODO(),   // Initialize an empty context.
+		i18nManager: gi18n.Instance(), // Use default i18n manager.
 	}
 }
 

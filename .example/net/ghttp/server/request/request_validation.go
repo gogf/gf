@@ -18,13 +18,13 @@ func main() {
 	s.Group("/", func(rgroup *ghttp.RouterGroup) {
 		rgroup.ALL("/user", func(r *ghttp.Request) {
 			user := new(User)
-			if err := r.GetToStruct(user); err != nil {
+			if err := r.GetStruct(user); err != nil {
 				r.Response.WriteJsonExit(g.Map{
 					"message": err,
 					"errcode": 1,
 				})
 			}
-			if err := gvalid.CheckStruct(user, nil); err != nil {
+			if err := gvalid.CheckStruct(r.Context(), user, nil); err != nil {
 				r.Response.WriteJsonExit(g.Map{
 					"message": err.Maps(),
 					"errcode": 1,
