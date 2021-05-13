@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/util/gvalid"
 )
@@ -20,7 +21,7 @@ func main() {
 	}
 
 	// 使用结构体定义的校验规则和错误提示进行校验
-	g.Dump(gvalid.CheckStruct(user, nil).Map())
+	g.Dump(gvalid.CheckStruct(context.TODO(), user, nil).Map())
 
 	// 自定义校验规则和错误提示，对定义的特定校验规则和错误提示进行覆盖
 	rules := map[string]string{
@@ -31,5 +32,5 @@ func main() {
 			"password3": "名称不能为空",
 		},
 	}
-	g.Dump(gvalid.CheckStruct(user, rules, msgs).Map())
+	g.Dump(gvalid.CheckStruct(context.TODO(), user, rules, msgs).Map())
 }

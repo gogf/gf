@@ -102,7 +102,7 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 			}
 		}
 		// Validation.
-		if err := gvalid.CheckStructWithParamMap(pointer, data, nil); err != nil {
+		if err := gvalid.CheckStructWithParamMap(r.Context(), pointer, data, nil); err != nil {
 			return err
 		}
 
@@ -120,6 +120,7 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 		}
 		for i := 0; i < reflectVal2.Len(); i++ {
 			if err := gvalid.CheckStructWithParamMap(
+				r.Context(),
 				reflectVal2.Index(i),
 				j.GetMap(gconv.String(i)),
 				nil,

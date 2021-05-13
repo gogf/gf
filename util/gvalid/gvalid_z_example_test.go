@@ -7,6 +7,7 @@
 package gvalid_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/container/gvar"
@@ -28,7 +29,7 @@ func ExampleCheckMap() {
 		"password@required|length:6,16|same:password2#密码不能为空|密码长度应当在:min到:max之间|两次密码输入不相等",
 		"password2@required|length:6,16#",
 	}
-	if e := gvalid.CheckMap(params, rules); e != nil {
+	if e := gvalid.CheckMap(context.TODO(), params, rules); e != nil {
 		fmt.Println(e.Map())
 		fmt.Println(e.FirstItem())
 		fmt.Println(e.FirstString())
@@ -50,7 +51,7 @@ func ExampleCheckMap2() {
 		"password@required|length:6,16|same:password2#密码不能为空|密码长度应当在:min到:max之间|两次密码输入不相等",
 		"password2@required|length:6,16#",
 	}
-	if e := gvalid.CheckMap(params, rules); e != nil {
+	if e := gvalid.CheckMap(context.TODO(), params, rules); e != nil {
 		fmt.Println(e.Map())
 		fmt.Println(e.FirstItem())
 		fmt.Println(e.FirstString())
@@ -72,7 +73,7 @@ func ExampleCheckStruct() {
 		Page: 1,
 		Size: 10,
 	}
-	err := gvalid.CheckStruct(obj, nil)
+	err := gvalid.CheckStruct(context.TODO(), obj, nil)
 	fmt.Println(err == nil)
 	// Output:
 	// true
@@ -89,7 +90,7 @@ func ExampleCheckStruct2() {
 		Page: 1,
 		Size: 10,
 	}
-	err := gvalid.CheckStruct(obj, nil)
+	err := gvalid.CheckStruct(context.TODO(), obj, nil)
 	fmt.Println(err == nil)
 	// Output:
 	// true
@@ -106,7 +107,7 @@ func ExampleCheckStruct3() {
 		Page: 1,
 		Size: 10,
 	}
-	err := gvalid.CheckStruct(obj, nil)
+	err := gvalid.CheckStruct(context.TODO(), obj, nil)
 	fmt.Println(err)
 	// Output:
 	// project id must between 1, 10000
@@ -138,7 +139,7 @@ func ExampleRegisterRule() {
 		Name: "john",
 		Pass: "123456",
 	}
-	err := gvalid.CheckStruct(user, nil)
+	err := gvalid.CheckStruct(context.TODO(), user, nil)
 	fmt.Println(err.Error())
 	// May Output:
 	// 用户名称已被占用
@@ -172,14 +173,14 @@ func ExampleRegisterRule_OverwriteRequired() {
 		}
 		return nil
 	})
-	fmt.Println(gvalid.Check("", "required", "It's required"))
-	fmt.Println(gvalid.Check(0, "required", "It's required"))
-	fmt.Println(gvalid.Check(false, "required", "It's required"))
+	fmt.Println(gvalid.Check(context.TODO(), "", "required", "It's required"))
+	fmt.Println(gvalid.Check(context.TODO(), 0, "required", "It's required"))
+	fmt.Println(gvalid.Check(context.TODO(), false, "required", "It's required"))
 	gvalid.DeleteRule(rule)
 	fmt.Println("rule deleted")
-	fmt.Println(gvalid.Check("", "required", "It's required"))
-	fmt.Println(gvalid.Check(0, "required", "It's required"))
-	fmt.Println(gvalid.Check(false, "required", "It's required"))
+	fmt.Println(gvalid.Check(context.TODO(), "", "required", "It's required"))
+	fmt.Println(gvalid.Check(context.TODO(), 0, "required", "It's required"))
+	fmt.Println(gvalid.Check(context.TODO(), false, "required", "It's required"))
 	// Output:
 	// It's required
 	// It's required
