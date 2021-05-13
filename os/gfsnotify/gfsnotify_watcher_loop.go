@@ -52,10 +52,11 @@ func (w *Watcher) getCallbacks(path string) (callbacks []*Callback) {
 	}
 	// Secondly searches its parent for callbacks.
 	dirPath := fileDir(path)
+	pathIsDir := fileIsDir(path)
 	if v := w.callbacks.Get(dirPath); v != nil {
 		for _, v := range v.(*glist.List).FrontAll() {
 			callback := v.(*Callback)
-			if callback.recursive {
+			if callback.recursive || !pathIsDir {
 				callbacks = append(callbacks, callback)
 			}
 		}
