@@ -39,7 +39,7 @@ func Test_Bytes_JSON(t *testing.T) {
 		t.Assert(b1, b2)
 
 		i2 := gtype.NewBytes()
-		err := json.Unmarshal(b2, &i2)
+		err := json.UnmarshalUseNumber(b2, &i2)
 		t.Assert(err, nil)
 		t.Assert(i2.Val(), b)
 	})

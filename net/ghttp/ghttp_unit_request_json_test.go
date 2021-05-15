@@ -144,7 +144,7 @@ func Test_Params_Json_Response(t *testing.T) {
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		map1 := make(map[string]interface{})
-		err1 := json.Unmarshal([]byte(client.GetContent("/json1")), &map1)
+		err1 := json.UnmarshalUseNumber([]byte(client.GetContent("/json1")), &map1)
 		t.Assert(err1, nil)
 		t.Assert(len(map1), 4)
 		t.Assert(map1["Name"], "john")
@@ -153,7 +153,7 @@ func Test_Params_Json_Response(t *testing.T) {
 		t.Assert(map1["password2"], "456")
 
 		map2 := make(map[string]interface{})
-		err2 := json.Unmarshal([]byte(client.GetContent("/json2")), &map2)
+		err2 := json.UnmarshalUseNumber([]byte(client.GetContent("/json2")), &map2)
 		t.Assert(err2, nil)
 		t.Assert(len(map2), 4)
 		t.Assert(map2["Name"], "john")
@@ -162,14 +162,14 @@ func Test_Params_Json_Response(t *testing.T) {
 		t.Assert(map2["password2"], "456")
 
 		map3 := make(map[string]interface{})
-		err3 := json.Unmarshal([]byte(client.GetContent("/json3")), &map3)
+		err3 := json.UnmarshalUseNumber([]byte(client.GetContent("/json3")), &map3)
 		t.Assert(err3, nil)
 		t.Assert(len(map3), 2)
 		t.Assert(map3["success"], "true")
 		t.Assert(map3["message"], g.Map{"body": "测试", "code": 3, "error": "error"})
 
 		map4 := make(map[string]interface{})
-		err4 := json.Unmarshal([]byte(client.GetContent("/json4")), &map4)
+		err4 := json.UnmarshalUseNumber([]byte(client.GetContent("/json4")), &map4)
 		t.Assert(err4, nil)
 		t.Assert(len(map4), 2)
 		t.Assert(map4["success"], "true")

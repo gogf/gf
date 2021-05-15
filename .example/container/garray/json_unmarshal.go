@@ -14,6 +14,6 @@ func main() {
 		Scores *garray.IntArray
 	}
 	s := Student{}
-	json.Unmarshal(b, &s)
+	json.UnmarshalUseNumber(b, &s)
 	fmt.Println(s)
 }

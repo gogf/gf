@@ -55,5 +55,5 @@ func (c Carrier) String() string {
 
 func (c Carrier) UnmarshalJSON(b []byte) error {
 	carrier := NewCarrier(nil)
-	return json.Unmarshal(b, carrier)
+	return json.UnmarshalUseNumber(b, carrier)
 }

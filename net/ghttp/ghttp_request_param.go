@@ -320,7 +320,7 @@ func (r *Request) parseBody() {
 		body = bytes.TrimSpace(body)
 		// JSON format checks.
 		if body[0] == '{' && body[len(body)-1] == '}' {
-			_ = json.Unmarshal(body, &r.bodyMap)
+			_ = json.UnmarshalUseNumber(body, &r.bodyMap)
 		}
 		// XML format checks.
 		if len(body) > 5 && bytes.EqualFold(body[:5], xmlHeaderBytes) {

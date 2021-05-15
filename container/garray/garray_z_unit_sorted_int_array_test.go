@@ -557,11 +557,11 @@ func TestSortedIntArray_Json(t *testing.T) {
 		t.Assert(err1, err2)
 
 		a2 := garray.NewSortedIntArray()
-		err1 = json.Unmarshal(b2, &a2)
+		err1 = json.UnmarshalUseNumber(b2, &a2)
 		t.Assert(a2.Slice(), s2)
 
 		var a3 garray.SortedIntArray
-		err := json.Unmarshal(b2, &a3)
+		err := json.UnmarshalUseNumber(b2, &a3)
 		t.Assert(err, nil)
 		t.Assert(a3.Slice(), s1)
 	})
@@ -576,11 +576,11 @@ func TestSortedIntArray_Json(t *testing.T) {
 		t.Assert(err1, err2)
 
 		a2 := garray.NewSortedIntArray()
-		err1 = json.Unmarshal(b2, &a2)
+		err1 = json.UnmarshalUseNumber(b2, &a2)
 		t.Assert(a2.Slice(), s2)
 
 		var a3 garray.SortedIntArray
-		err := json.Unmarshal(b2, &a3)
+		err := json.UnmarshalUseNumber(b2, &a3)
 		t.Assert(err, nil)
 		t.Assert(a3.Slice(), s1)
 	})
@@ -598,7 +598,7 @@ func TestSortedIntArray_Json(t *testing.T) {
 		t.Assert(err, nil)
 
 		user := new(User)
-		err = json.Unmarshal(b, user)
+		err = json.UnmarshalUseNumber(b, user)
 		t.Assert(err, nil)
 		t.Assert(user.Name, data["Name"])
 		t.Assert(user.Scores, []int{98, 99, 100})
@@ -617,7 +617,7 @@ func TestSortedIntArray_Json(t *testing.T) {
 		t.Assert(err, nil)
 
 		user := new(User)
-		err = json.Unmarshal(b, user)
+		err = json.UnmarshalUseNumber(b, user)
 		t.Assert(err, nil)
 		t.Assert(user.Name, data["Name"])
 		t.Assert(user.Scores, []int{98, 99, 100})

@@ -750,7 +750,7 @@ func (a *StrArray) UnmarshalJSON(b []byte) error {
 	}
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	if err := json.Unmarshal(b, &a.array); err != nil {
+	if err := json.UnmarshalUseNumber(b, &a.array); err != nil {
 		return err
 	}
 	return nil
@@ -762,7 +762,7 @@ func (a *StrArray) UnmarshalValue(value interface{}) error {
 	defer a.mu.Unlock()
 	switch value.(type) {
 	case string, []byte:
-		return json.Unmarshal(gconv.Bytes(value), &a.array)
+		return json.UnmarshalUseNumber(gconv.Bytes(value), &a.array)
 	default:
 		a.array = gconv.SliceStr(value)
 	}

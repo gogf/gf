@@ -42,22 +42,22 @@ func New(data interface{}, safe ...bool) *Json {
 // The parameter <safe> specifies whether using this Json object in concurrent-safe context, which
 // is false in default.
 func NewWithTag(data interface{}, tags string, safe ...bool) *Json {
-	option := Option{
+	option := Options{
 		Tags: tags,
 	}
 	if len(safe) > 0 && safe[0] {
 		option.Safe = true
 	}
-	return NewWithOption(data, option)
+	return NewWithOptions(data, option)
 }
 
-// NewWithOption creates a Json object with any variable type of <data>, but <data> should be a map
+// NewWithOptions creates a Json object with any variable type of <data>, but <data> should be a map
 // or slice for data access reason, or it will make no sense.
-func NewWithOption(data interface{}, option Option) *Json {
+func NewWithOptions(data interface{}, options Options) *Json {
 	var j *Json
 	switch data.(type) {
 	case string, []byte:
-		if r, err := loadContentWithOption(data, option); err == nil {
+		if r, err := loadContentWithOptions(data, options); err == nil {
 			j = r
 		} else {
 			j = &Json{
@@ -86,7 +86,7 @@ func NewWithOption(data interface{}, option Option) *Json {
 			}
 		case reflect.Map, reflect.Struct:
 			i := interface{}(nil)
-			i = gconv.MapDeep(data, option.Tags)
+			i = gconv.MapDeep(data, options.Tags)
 			j = &Json{
 				p:  &i,
 				c:  byte(defaultSplitChar),
@@ -100,7 +100,7 @@ func NewWithOption(data interface{}, option Option) *Json {
 			}
 		}
 	}
-	j.mu = rwmutex.New(option.Safe)
+	j.mu = rwmutex.New(options.Safe)
 	return j
 }
 
@@ -111,56 +111,56 @@ func Load(path string, safe ...bool) (*Json, error) {
 	} else {
 		path = p
 	}
-	option := Option{}
+	option := Options{}
 	if len(safe) > 0 && safe[0] {
 		option.Safe = true
 	}
-	return doLoadContentWithOption(gfile.Ext(path), gfile.GetBytesWithCache(path), option)
+	return doLoadContentWithOptions(gfile.Ext(path), gfile.GetBytesWithCache(path), option)
 }
 
 // LoadJson creates a Json object from given JSON format content.
 func LoadJson(data interface{}, safe ...bool) (*Json, error) {
-	option := Option{}
+	option := Options{}
 	if len(safe) > 0 && safe[0] {
 		option.Safe = true
 	}
-	return doLoadContentWithOption("json", gconv.Bytes(data), option)
+	return doLoadContentWithOptions("json", gconv.Bytes(data), option)
 }
 
 // LoadXml creates a Json object from given XML format content.
 func LoadXml(data interface{}, safe ...bool) (*Json, error) {
-	option := Option{}
+	option := Options{}
 	if len(safe) > 0 && safe[0] {
 		option.Safe = true
 	}
-	return doLoadContentWithOption("xml", gconv.Bytes(data), option)
+	return doLoadContentWithOptions("xml", gconv.Bytes(data), option)
 }
 
 // LoadIni creates a Json object from given INI format content.
 func LoadIni(data interface{}, safe ...bool) (*Json, error) {
-	option := Option{}
+	option := Options{}
 	if len(safe) > 0 && safe[0] {
 		option.Safe = true
 	}
-	return doLoadContentWithOption("ini", gconv.Bytes(data), option)
+	return doLoadContentWithOptions("ini", gconv.Bytes(data), option)
 }
 
 // LoadYaml creates a Json object from given YAML format content.
 func LoadYaml(data interface{}, safe ...bool) (*Json, error) {
-	option := Option{}
+	option := Options{}
 	if len(safe) > 0 && safe[0] {
 		option.Safe = true
 	}
-	return doLoadContentWithOption("yaml", gconv.Bytes(data), option)
+	return doLoadContentWithOptions("yaml", gconv.Bytes(data), option)
 }
 
 // LoadToml creates a Json object from given TOML format content.
 func LoadToml(data interface{}, safe ...bool) (*Json, error) {
-	option := Option{}
+	option := Options{}
 	if len(safe) > 0 && safe[0] {
 		option.Safe = true
 	}
-	return doLoadContentWithOption("toml", gconv.Bytes(data), option)
+	return doLoadContentWithOptions("toml", gconv.Bytes(data), option)
 }
 
 // LoadContent creates a Json object from given content, it checks the data type of <content>
@@ -186,11 +186,11 @@ func LoadContentType(dataType string, data interface{}, safe ...bool) (*Json, er
 	if content[0] == 0xEF && content[1] == 0xBB && content[2] == 0xBF {
 		content = content[3:]
 	}
-	option := Option{}
+	option := Options{}
 	if len(safe) > 0 && safe[0] {
 		option.Safe = true
 	}
-	return doLoadContentWithOption(dataType, content, option)
+	return doLoadContentWithOptions(dataType, content, option)
 }
 
 // IsValidDataType checks and returns whether given <dataType> a valid data type for loading.
@@ -208,36 +208,36 @@ func IsValidDataType(dataType string) bool {
 	return false
 }
 
-func loadContentWithOption(data interface{}, option Option) (*Json, error) {
+func loadContentWithOptions(data interface{}, options Options) (*Json, error) {
 	content := gconv.Bytes(data)
 	if len(content) == 0 {
-		return NewWithOption(nil, option), nil
+		return NewWithOptions(nil, options), nil
 	}
-	return loadContentTypeWithOption(checkDataType(content), content, option)
+	return loadContentTypeWithOptions(checkDataType(content), content, options)
 }
 
-func loadContentTypeWithOption(dataType string, data interface{}, option Option) (*Json, error) {
+func loadContentTypeWithOptions(dataType string, data interface{}, options Options) (*Json, error) {
 	content := gconv.Bytes(data)
 	if len(content) == 0 {
-		return NewWithOption(nil, option), nil
+		return NewWithOptions(nil, options), nil
 	}
 	//ignore UTF8-BOM
 	if content[0] == 0xEF && content[1] == 0xBB && content[2] == 0xBF {
 		content = content[3:]
 	}
-	return doLoadContentWithOption(dataType, content, option)
+	return doLoadContentWithOptions(dataType, content, options)
 }
 
 // doLoadContent creates a Json object from given content.
 // It supports data content type as follows:
 // JSON, XML, INI, YAML and TOML.
-func doLoadContentWithOption(dataType string, data []byte, option Option) (*Json, error) {
+func doLoadContentWithOptions(dataType string, data []byte, options Options) (*Json, error) {
 	var (
 		err    error
 		result interface{}
 	)
 	if len(data) == 0 {
-		return NewWithOption(nil, option), nil
+		return NewWithOptions(nil, options), nil
 	}
 	if dataType == "" {
 		dataType = checkDataType(data)
@@ -270,7 +270,7 @@ func doLoadContentWithOption(dataType string, data []byte, option Option) (*Json
 		return nil, err
 	}
 	decoder := json.NewDecoder(bytes.NewReader(data))
-	if option.StrNumber {
+	if options.StrNumber {
 		decoder.UseNumber()
 	}
 	if err := decoder.Decode(&result); err != nil {
@@ -280,7 +280,7 @@ func doLoadContentWithOption(dataType string, data []byte, option Option) (*Json
 	case string, []byte:
 		return nil, fmt.Errorf(`json decoding failed for content: %s`, string(data))
 	}
-	return NewWithOption(result, option), nil
+	return NewWithOptions(result, options), nil
 }
 
 // checkDataType automatically checks and returns the data type for <content>.
@@ -291,7 +291,8 @@ func checkDataType(content []byte) string {
 		return "json"
 	} else if gregex.IsMatch(`^<.+>[\S\s]+<.+>\s*$`, content) {
 		return "xml"
-	} else if !gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*"""[\s\S]+"""`, content) && !gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*'''[\s\S]+'''`, content) &&
+	} else if !gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*"""[\s\S]+"""`, content) &&
+		!gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*'''[\s\S]+'''`, content) &&
 		((gregex.IsMatch(`^[\n\r]*[\w\-\s\t]+\s*:\s*".+"`, content) || gregex.IsMatch(`^[\n\r]*[\w\-\s\t]+\s*:\s*\w+`, content)) ||
 			(gregex.IsMatch(`[\n\r]+[\w\-\s\t]+\s*:\s*".+"`, content) || gregex.IsMatch(`[\n\r]+[\w\-\s\t]+\s*:\s*\w+`, content))) {
 		return "yml"

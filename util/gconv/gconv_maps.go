@@ -33,7 +33,7 @@ func Maps(value interface{}, tags ...string) []map[string]interface{} {
 	case string:
 		list := make([]map[string]interface{}, 0)
 		if len(r) > 0 && r[0] == '[' && r[len(r)-1] == ']' {
-			if err := json.Unmarshal([]byte(r), &list); err != nil {
+			if err := json.UnmarshalUseNumber([]byte(r), &list); err != nil {
 				return nil
 			}
 			return list
@@ -44,7 +44,7 @@ func Maps(value interface{}, tags ...string) []map[string]interface{} {
 	case []byte:
 		list := make([]map[string]interface{}, 0)
 		if len(r) > 0 && r[0] == '[' && r[len(r)-1] == ']' {
-			if err := json.Unmarshal(r, &list); err != nil {
+			if err := json.UnmarshalUseNumber(r, &list); err != nil {
 				return nil
 			}
 			return list
@@ -79,7 +79,7 @@ func MapsDeep(value interface{}, tags ...string) []map[string]interface{} {
 	case string:
 		list := make([]map[string]interface{}, 0)
 		if len(r) > 0 && r[0] == '[' && r[len(r)-1] == ']' {
-			if err := json.Unmarshal([]byte(r), &list); err != nil {
+			if err := json.UnmarshalUseNumber([]byte(r), &list); err != nil {
 				return nil
 			}
 			return list
@@ -90,7 +90,7 @@ func MapsDeep(value interface{}, tags ...string) []map[string]interface{} {
 	case []byte:
 		list := make([]map[string]interface{}, 0)
 		if len(r) > 0 && r[0] == '[' && r[len(r)-1] == ']' {
-			if err := json.Unmarshal(r, &list); err != nil {
+			if err := json.UnmarshalUseNumber(r, &list); err != nil {
 				return nil
 			}
 			return list
