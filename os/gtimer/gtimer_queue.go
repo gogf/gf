@@ -63,7 +63,11 @@ func (q *priorityQueue) LatestPriority() int64 {
 // The lesser the `priority` value the higher priority of the `value`.
 func (q *priorityQueue) Push(value interface{}, priority int64) {
 	q.mu.Lock()
-	defer q.mu.Unlock()
+	heap.Push(q.heap, priorityQueueItem{
+		value:    value,
+		priority: priority,
+	})
+	q.mu.Unlock()
 	// Update the minimum priority using atomic operation.
 	for {
 		latestPriority := q.latestPriority.Val()
@@ -74,18 +78,27 @@ func (q *priorityQueue) Push(value interface{}, priority int64) {
 			break
 		}
 	}
-	heap.Push(q.heap, priorityQueueItem{
-		value:    value,
-		priority: priority,
-	})
 }
 
 // Pop retrieves, removes and returns the most high priority value from the queue.
 func (q *priorityQueue) Pop() interface{} {
 	q.mu.Lock()
-	defer q.mu.Unlock()
-	if item := heap.Pop(q.heap); item != nil {
-		return item.(priorityQueueItem).value
+	if v := heap.Pop(q.heap); v != nil {
+		item := v.(priorityQueueItem)
+		q.mu.Unlock()
+		// Update the minimum priority using atomic operation.
+		for {
+			latestPriority := q.latestPriority.Val()
+			if item.priority >= latestPriority {
+				break
+			}
+			if q.latestPriority.Cas(latestPriority, item.priority) {
+				break
+			}
+		}
+		return item.value
+	} else {
+		q.mu.Unlock()
 	}
 	return nil
 }
