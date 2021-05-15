@@ -39,10 +39,10 @@ func TestSetInterval(t *testing.T) {
 	})
 }
 
-func TestAddEntry(t *testing.T) {
+func TestAddJob(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.New(true)
-		gtimer.AddEntry(200*time.Millisecond, func() {
+		gtimer.AddJob(200*time.Millisecond, func() {
 			array.Append(1)
 		}, false, 2, gtimer.StatusReady)
 		time.Sleep(1100 * time.Millisecond)
@@ -86,10 +86,10 @@ func TestDelayAdd(t *testing.T) {
 	})
 }
 
-func TestDelayAddEntry(t *testing.T) {
+func TestDelayAddJob(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.New(true)
-		gtimer.DelayAddEntry(200*time.Millisecond, 200*time.Millisecond, func() {
+		gtimer.DelayAddJob(200*time.Millisecond, 200*time.Millisecond, func() {
 			array.Append(1)
 		}, false, 2, gtimer.StatusReady)
 		time.Sleep(300 * time.Millisecond)
