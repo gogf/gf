@@ -41,7 +41,7 @@ func TestVar_Json(t *testing.T) {
 		b, err := json.Marshal(s)
 		t.Assert(err, nil)
 
-		err = json.Unmarshal(b, v)
+		err = json.UnmarshalUseNumber(b, v)
 		t.Assert(err, nil)
 		t.Assert(v.String(), s)
 	})
@@ -52,7 +52,7 @@ func TestVar_Json(t *testing.T) {
 		b, err := json.Marshal(s)
 		t.Assert(err, nil)
 
-		err = json.Unmarshal(b, &v)
+		err = json.UnmarshalUseNumber(b, &v)
 		t.Assert(err, nil)
 		t.Assert(v.String(), s)
 	})

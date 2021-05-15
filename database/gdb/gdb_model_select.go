@@ -488,7 +488,7 @@ func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, e
 			} else {
 				// Other cache, it needs conversion.
 				var result Result
-				if err = json.Unmarshal(v.Bytes(), &result); err != nil {
+				if err = json.UnmarshalUseNumber(v.Bytes(), &result); err != nil {
 					return nil, err
 				} else {
 					return result, nil

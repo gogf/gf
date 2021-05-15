@@ -24,7 +24,7 @@ var (
 
 func init() {
 	if builtInVarStr != "" {
-		err := json.Unmarshal(gbase64.MustDecodeString(builtInVarStr), &builtInVarMap)
+		err := json.UnmarshalUseNumber(gbase64.MustDecodeString(builtInVarStr), &builtInVarMap)
 		if err != nil {
 			intlog.Error(err)
 		}

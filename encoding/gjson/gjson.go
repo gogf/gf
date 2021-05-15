@@ -22,7 +22,7 @@ const (
 	defaultSplitChar = '.'
 )
 
-// The customized JSON struct.
+// Json is the customized JSON struct.
 type Json struct {
 	mu *rwmutex.RWMutex
 	p  *interface{} // Pointer for hierarchical data access, it's the root of data in default.
@@ -30,8 +30,8 @@ type Json struct {
 	vc bool         // Violence Check(false in default), which is used to access data when the hierarchical data key contains separator char.
 }
 
-// Option for Json object creating.
-type Option struct {
+// Options for Json object creating.
+type Options struct {
 	Safe      bool   // Mark this object is for in concurrent-safe usage.
 	Tags      string // Custom priority tags for decoding.
 	StrNumber bool   // StrNumber causes the Decoder to unmarshal a number into an interface{} as a string instead of as a float64.

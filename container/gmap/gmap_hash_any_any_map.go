@@ -476,7 +476,7 @@ func (m *AnyAnyMap) UnmarshalJSON(b []byte) error {
 		m.data = make(map[interface{}]interface{})
 	}
 	var data map[string]interface{}
-	if err := json.Unmarshal(b, &data); err != nil {
+	if err := json.UnmarshalUseNumber(b, &data); err != nil {
 		return err
 	}
 	for k, v := range data {

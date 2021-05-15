@@ -251,7 +251,7 @@ func Test_IntIntMap_Json(t *testing.T) {
 		t.Assert(err, nil)
 
 		m := gmap.NewIntIntMap()
-		err = json.Unmarshal(b, m)
+		err = json.UnmarshalUseNumber(b, m)
 		t.Assert(err, nil)
 		t.Assert(m.Get(1), data[1])
 		t.Assert(m.Get(2), data[2])
