@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	timer = gtimer.New(5, 30*time.Millisecond)
+	timer = gtimer.New()
 )
 
 func Benchmark_Add(b *testing.B) {
