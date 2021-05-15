@@ -54,21 +54,20 @@ func TestTimer_Start_Stop_Close(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timer := New()
 		array := garray.New(true)
-		timer.Add(200*time.Millisecond, func() {
-			//glog.Println("add...")
+		timer.Add(1000*time.Millisecond, func() {
 			array.Append(1)
 		})
 		t.Assert(array.Len(), 0)
-		time.Sleep(300 * time.Millisecond)
+		time.Sleep(1200 * time.Millisecond)
 		t.Assert(array.Len(), 1)
 		timer.Stop()
-		time.Sleep(1000 * time.Millisecond)
+		time.Sleep(1200 * time.Millisecond)
 		t.Assert(array.Len(), 1)
 		timer.Start()
-		time.Sleep(200 * time.Millisecond)
+		time.Sleep(1200 * time.Millisecond)
 		t.Assert(array.Len(), 2)
 		timer.Close()
-		time.Sleep(1000 * time.Millisecond)
+		time.Sleep(1200 * time.Millisecond)
 		t.Assert(array.Len(), 2)
 	})
 }
