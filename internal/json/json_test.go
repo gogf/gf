@@ -23,7 +23,6 @@ var (
 		Id:   1265476890672672808,
 		Name: "john",
 	}
-	userBytes, _ = json.Marshal(user)
 )
 
 func TestMarshal(t *testing.T) {
