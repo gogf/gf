@@ -14,6 +14,6 @@ func main() {
 		Scores *glist.List
 	}
 	s := Student{}
-	json.UnmarshalUseNumber(b, &s)
+	json.Unmarshal(b, &s)
 	fmt.Println(s)
 }

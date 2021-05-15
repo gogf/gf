@@ -140,7 +140,7 @@ var data = `{
 
 func main() {
 	struct1 := new(XinYanModel)
-	err := json.UnmarshalUseNumber([]byte(data), struct1)
+	err := json.Unmarshal([]byte(data), struct1)
 	fmt.Println(err)
 	fmt.Println(struct1)
 

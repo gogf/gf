@@ -30,7 +30,7 @@ func RecvPkg(conn *gtcp.Conn) (msg *types.Msg, err error) {
 		return nil, err
 	} else {
 		msg = &types.Msg{}
-		err = json.UnmarshalUseNumber(data, msg)
+		err = json.Unmarshal(data, msg)
 		if err != nil {
 			return nil, fmt.Errorf("invalid package structure: %s", err.Error())
 		}
