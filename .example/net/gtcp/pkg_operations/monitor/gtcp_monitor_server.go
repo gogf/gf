@@ -21,7 +21,7 @@ func main() {
 				break
 			}
 			info := &types.NodeInfo{}
-			if err := json.UnmarshalUseNumber(data, info); err != nil {
+			if err := json.Unmarshal(data, info); err != nil {
 				glog.Errorf("invalid package structure: %s", err.Error())
 			} else {
 				glog.Println(info)
