@@ -212,8 +212,9 @@ func TestWatcher_WatchFolderWithoutRecursively(t *testing.T) {
 		time.Sleep(time.Millisecond * 100)
 		t.Assert(array.Len(), 0)
 
-		err = gfile.PutContents(gfile.Join(dirPath, "1"), "1")
+		f, err := gfile.Create(gfile.Join(dirPath, "1"))
 		t.AssertNil(err)
+		t.AssertNil(f.Close())
 		time.Sleep(time.Millisecond * 100)
 		t.Assert(array.Len(), 1)
 	})
