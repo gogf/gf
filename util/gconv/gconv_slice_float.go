@@ -23,12 +23,12 @@ func SliceFloat64(any interface{}) []float64 {
 	return Floats(any)
 }
 
-// Floats converts `i` to []float64.
+// Floats converts `any` to []float64.
 func Floats(any interface{}) []float64 {
 	return Float64s(any)
 }
 
-// Float32s converts `i` to []float32.
+// Float32s converts `any` to []float32.
 func Float32s(any interface{}) []float32 {
 	if any == nil {
 		return nil
@@ -148,7 +148,7 @@ func Float32s(any interface{}) []float32 {
 	return array
 }
 
-// Float64s converts `i` to []float64.
+// Float64s converts `any` to []float64.
 func Float64s(any interface{}) []float64 {
 	if any == nil {
 		return nil
