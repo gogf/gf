@@ -10,22 +10,7 @@ import (
 	"github.com/gogf/gf/internal/structs"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/gutil"
-	"reflect"
 	"strings"
-)
-
-// doCheckStructWithParamMapInput is used for struct validation for internal function.
-type doCheckStructWithParamMapInput struct {
-	Object                          interface{} // Can be type of struct/*struct.
-	ParamMap                        interface{} // Validation parameter map. Note that it acts different according attribute `UseParamMapInsteadOfObjectValue`.
-	UseParamMapInsteadOfObjectValue bool        // Using `ParamMap` as its validation source instead of values from `Object`.
-	CustomRules                     interface{} // Custom validation rules.
-	CustomErrorMessageMap           CustomMsg   // Custom error message map for validation rules.
-}
-
-var (
-	structTagPriority    = []string{"gvalid", "valid", "v"} // structTagPriority specifies the validation tag priority array.
-	aliasNameTagPriority = []string{"param", "params", "p"} // aliasNameTagPriority specifies the alias tag priority array.
 )
 
 // CheckStruct validates struct and returns the error result.
@@ -70,16 +55,27 @@ func (v *Validator) CheckStructWithParamMap(object interface{}, paramMap interfa
 
 func (v *Validator) doCheckStructWithParamMap(input *doCheckStructWithParamMapInput) *Error {
 	var (
-		errorMaps = make(ErrorMap) // Returning error.
+		// Returning error.
+		errorMaps = make(ErrorMap)
 	)
 	fieldMap, err := structs.FieldMap(input.Object, aliasNameTagPriority, true)
 	if err != nil {
 		return newErrorStr("invalid_object", err.Error())
 	}
-	// It checks the struct recursively the its attribute is also a struct.
+	// It checks the struct recursively the its attribute is an embedded struct.
 	for _, field := range fieldMap {
-		if field.OriginalKind() == reflect.Struct {
-			if err := v.CheckStruct(field.Value, input.CustomRules, input.CustomErrorMessageMap); err != nil {
+		if field.IsEmbedded() {
+			// No validation interface implements check.
+			if _, ok := field.Value.Interface().(apiNoValidation); ok {
+				continue
+			}
+			if _, ok := field.TagLookup(noValidationTagName); ok {
+				continue
+			}
+			recursiveInput := doCheckStructWithParamMapInput{}
+			recursiveInput = *input
+			recursiveInput.Object = field.Value
+			if err := v.doCheckStructWithParamMap(&recursiveInput); err != nil {
 				// It merges the errors into single error map.
 				for k, m := range err.errors {
 					errorMaps[k] = m

@@ -14,6 +14,16 @@ func (f *Field) Tag(key string) string {
 	return f.Field.Tag.Get(key)
 }
 
+// TagLookup returns the value associated with key in the tag string.
+// If the key is present in the tag the value (which may be empty)
+// is returned. Otherwise the returned value will be the empty string.
+// The ok return value reports whether the value was explicitly set in
+// the tag string. If the tag does not have the conventional format,
+// the value returned by Lookup is unspecified.
+func (f *Field) TagLookup(key string) (value string, ok bool) {
+	return f.Field.Tag.Lookup(key)
+}
+
 // IsEmbedded returns true if the given field is an anonymous field (embedded)
 func (f *Field) IsEmbedded() bool {
 	return f.Field.Anonymous

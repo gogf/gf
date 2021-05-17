@@ -228,6 +228,57 @@ func Test_CheckStruct(t *testing.T) {
 	})
 }
 
+func Test_CheckStruct_EmbeddedObject_Attribute(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Base struct {
+			Time *gtime.Time
+		}
+		type Object struct {
+			Base
+			Name string
+			Type int
+		}
+		rules := map[string]string{
+			"Name": "required",
+			"Type": "required",
+		}
+		ruleMsg := map[string]interface{}{
+			"Name": "名称必填",
+			"Type": "类型必填",
+		}
+		obj := &Object{}
+		obj.Type = 1
+		obj.Name = "john"
+		obj.Time = gtime.Now()
+		err := gvalid.CheckStruct(context.TODO(), obj, rules, ruleMsg)
+		t.Assert(err, nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Base struct {
+			Name string
+			Type int
+		}
+		type Object struct {
+			Base Base
+			Name string
+			Type int
+		}
+		rules := map[string]string{
+			"Name": "required",
+			"Type": "required",
+		}
+		ruleMsg := map[string]interface{}{
+			"Name": "名称必填",
+			"Type": "类型必填",
+		}
+		obj := &Object{}
+		obj.Type = 1
+		obj.Name = "john"
+		err := gvalid.CheckStruct(context.TODO(), obj, rules, ruleMsg)
+		t.Assert(err, nil)
+	})
+}
+
 func Test_CheckStruct_With_EmbeddedObject(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Pass struct {
@@ -261,13 +312,13 @@ func Test_CheckStruct_With_StructAttribute(t *testing.T) {
 			Pass2 string `valid:"password2@required|same:password1#请再次输入您的密码|您两次输入的密码不一致"`
 		}
 		type User struct {
-			Id        int
-			Name      string `valid:"name@required#请输入您的姓名"`
-			Passwords Pass
+			Pass
+			Id   int
+			Name string `valid:"name@required#请输入您的姓名"`
 		}
 		user := &User{
 			Name: "",
-			Passwords: Pass{
+			Pass: Pass{
 				Pass1: "1",
 				Pass2: "2",
 			},
