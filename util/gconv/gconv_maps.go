@@ -23,7 +23,7 @@ func SliceStruct(params interface{}, pointer interface{}, mapping ...map[string]
 	return Structs(params, pointer, mapping...)
 }
 
-// Maps converts `i` to []map[string]interface{}.
+// Maps converts `value` to []map[string]interface{}.
 // Note that it automatically checks and converts json string to []map if `value` is string/[]byte.
 func Maps(value interface{}, tags ...string) []map[string]interface{} {
 	if value == nil {
@@ -68,7 +68,7 @@ func Maps(value interface{}, tags ...string) []map[string]interface{} {
 	}
 }
 
-// MapsDeep converts `i` to []map[string]interface{} recursively.
+// MapsDeep converts `value` to []map[string]interface{} recursively.
 //
 // TODO completely implement the recursive converting for all types.
 func MapsDeep(value interface{}, tags ...string) []map[string]interface{} {

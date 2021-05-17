@@ -7,7 +7,6 @@
 package gfsnotify_test
 
 import (
-	"fmt"
 	"github.com/gogf/gf/container/garray"
 	"testing"
 	"time"
@@ -205,7 +204,7 @@ func TestWatcher_WatchFolderWithoutRecursively(t *testing.T) {
 		t.AssertNil(err)
 
 		_, err = gfsnotify.Add(dirPath, func(event *gfsnotify.Event) {
-			fmt.Println(event.String())
+			//fmt.Println(event.String())
 			array.Append(1)
 		}, false)
 		t.AssertNil(err)

@@ -53,7 +53,7 @@ func AddSigHandlerShutdown(handler SigHandler) {
 	}
 }
 
-// ListenSignal blocks and does signal listening and handling.
+// Listen blocks and does signal listening and handling.
 func Listen() {
 	signals := make([]os.Signal, 0)
 	for sig, _ := range signalHandlerMap {
