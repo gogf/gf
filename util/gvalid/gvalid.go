@@ -64,17 +64,35 @@ import (
 // like: map[field] => string|map[rule]string
 type CustomMsg = map[string]interface{}
 
+// doCheckStructWithParamMapInput is used for struct validation for internal function.
+type doCheckStructWithParamMapInput struct {
+	Object                          interface{} // Can be type of struct/*struct.
+	ParamMap                        interface{} // Validation parameter map. Note that it acts different according attribute `UseParamMapInsteadOfObjectValue`.
+	UseParamMapInsteadOfObjectValue bool        // Using `ParamMap` as its validation source instead of values from `Object`.
+	CustomRules                     interface{} // Custom validation rules.
+	CustomErrorMessageMap           CustomMsg   // Custom error message map for validation rules.
+}
+
+// apiNoValidation is an interface that marks current struct not validated by package `gvalid`.
+type apiNoValidation interface {
+	NoValidation()
+}
+
 const (
 	// regular expression pattern for single validation rule.
 	singleRulePattern   = `^([\w-]+):{0,1}(.*)`
 	invalidRulesErrKey  = "invalid_rules"
 	invalidParamsErrKey = "invalid_params"
 	invalidObjectErrKey = "invalid_object"
+
+	// no validation tag name for struct attribute.
+	noValidationTagName = "nv"
 )
 
 var (
-	// defaultValidator is the default validator for package functions.
-	defaultValidator = New()
+	defaultValidator     = New()                            // defaultValidator is the default validator for package functions.
+	structTagPriority    = []string{"gvalid", "valid", "v"} // structTagPriority specifies the validation tag priority array.
+	aliasNameTagPriority = []string{"param", "params", "p"} // aliasNameTagPriority specifies the alias tag priority array.
 
 	// all internal error keys.
 	internalErrKeyMap = map[string]string{
