@@ -41,7 +41,6 @@ func TranslateFormat(ctx context.Context, format string, values ...interface{}) 
 }
 
 // Translate translates <content> with configured language and returns the translated content.
-// The parameter <language> specifies custom translation language ignoring configured language.
 func Translate(ctx context.Context, content string) string {
 	return Instance().Translate(ctx, content)
 }

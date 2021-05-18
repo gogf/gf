@@ -339,7 +339,7 @@ func New(group ...string) (db DB, err error) {
 	defer configs.RUnlock()
 
 	if len(configs.config) < 1 {
-		return nil, gerror.New("empty database configuration")
+		return nil, gerror.New("database configuration is empty, please set the database configuration before using")
 	}
 	if _, ok := configs.config[groupName]; ok {
 		if node, err := getConfigNodeByGroup(groupName, true); err == nil {
@@ -358,13 +358,19 @@ func New(group ...string) (db DB, err error) {
 				}
 				return c.db, nil
 			} else {
-				return nil, gerror.New(fmt.Sprintf(`unsupported database type "%s"`, node.Type))
+				return nil, gerror.Newf(
+					`cannot find database driver for specified database type "%s", did you misspell type name "%s" or forget importing the database driver?`,
+					node.Type, node.Type,
+				)
 			}
 		} else {
 			return nil, err
 		}
 	} else {
-		return nil, gerror.New(fmt.Sprintf(`database configuration node "%s" is not found`, groupName))
+		return nil, gerror.Newf(
+			`database configuration node "%s" is not found, did you misspell group name "%s" or miss the database configuration?`,
+			groupName, groupName,
+		)
 	}
 }
 

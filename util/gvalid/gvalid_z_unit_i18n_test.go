@@ -18,7 +18,7 @@ import (
 
 func TestValidator_I18n(t *testing.T) {
 	var (
-		err         *gvalid.Error
+		err         gvalid.Error
 		i18nManager = gi18n.New(gi18n.Options{Path: gdebug.TestDataPath("i18n")})
 		ctxCn       = gi18n.WithLanguage(context.TODO(), "cn")
 		validator   = gvalid.New().I18n(i18nManager)

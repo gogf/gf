@@ -16,10 +16,10 @@ import (
 // CheckStruct validates struct and returns the error result.
 //
 // The parameter `object` should be type of struct/*struct.
-// The parameter `rules` can be type of []string/map[string]string. It supports sequence in error result
+// The parameter `customRules` can be type of []string/map[string]string. It supports sequence in error result
 // if `rules` is type of []string.
-// The optional parameter `messages` specifies the custom error messages for specified keys and rules.
-func (v *Validator) CheckStruct(object interface{}, customRules interface{}, customErrorMessageMap ...CustomMsg) *Error {
+// The optional parameter `customErrorMessageMap` specifies the custom error messages for specified keys and rules.
+func (v *Validator) CheckStruct(object interface{}, customRules interface{}, customErrorMessageMap ...CustomMsg) Error {
 	var message CustomMsg
 	if len(customErrorMessageMap) > 0 {
 		message = customErrorMessageMap[0]
@@ -36,10 +36,11 @@ func (v *Validator) CheckStruct(object interface{}, customRules interface{}, cus
 // CheckStructWithParamMap validates struct with given parameter map and returns the error result.
 //
 // The parameter `object` should be type of struct/*struct.
-// The parameter `rules` can be type of []string/map[string]string. It supports sequence in error result
+// The parameter `paramMap` should be type of map, which specifies the parameter map used in validation.
+// The parameter `customRules` can be type of []string/map[string]string. It supports sequence in error result
 // if `rules` is type of []string.
-// The optional parameter `messages` specifies the custom error messages for specified keys and rules.
-func (v *Validator) CheckStructWithParamMap(object interface{}, paramMap interface{}, customRules interface{}, customErrorMessageMap ...CustomMsg) *Error {
+// The optional parameter `customErrorMessageMap` specifies the custom error messages for specified keys and rules.
+func (v *Validator) CheckStructWithParamMap(object interface{}, paramMap interface{}, customRules interface{}, customErrorMessageMap ...CustomMsg) Error {
 	var message CustomMsg
 	if len(customErrorMessageMap) > 0 {
 		message = customErrorMessageMap[0]
@@ -53,10 +54,10 @@ func (v *Validator) CheckStructWithParamMap(object interface{}, paramMap interfa
 	})
 }
 
-func (v *Validator) doCheckStructWithParamMap(input *doCheckStructWithParamMapInput) *Error {
+func (v *Validator) doCheckStructWithParamMap(input *doCheckStructWithParamMapInput) Error {
 	var (
 		// Returning error.
-		errorMaps = make(ErrorMap)
+		errorMaps = make(map[string]map[string]string)
 	)
 	fieldMap, err := structs.FieldMap(input.Object, aliasNameTagPriority, true)
 	if err != nil {
@@ -77,7 +78,7 @@ func (v *Validator) doCheckStructWithParamMap(input *doCheckStructWithParamMapIn
 			recursiveInput.Object = field.Value
 			if err := v.doCheckStructWithParamMap(&recursiveInput); err != nil {
 				// It merges the errors into single error map.
-				for k, m := range err.errors {
+				for k, m := range err.(*validationError).errors {
 					errorMaps[k] = m
 				}
 			}
@@ -158,7 +159,8 @@ func (v *Validator) doCheckStructWithParamMap(input *doCheckStructWithParamMapIn
 			}
 		}
 	}
-
+	// Merge the custom validation rules with rules in struct tag.
+	// The custom rules has the most high priority that can overwrite the struct tag rules.
 	for _, field := range tagField {
 		fieldName := field.Name()
 		// sequence tag == struct tag

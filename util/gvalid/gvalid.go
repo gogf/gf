@@ -189,7 +189,7 @@ var (
 // string/map/struct/*struct.
 // The optional parameter `params` specifies the extra validation parameters for some rules
 // like: required-*、same、different, etc.
-func Check(ctx context.Context, value interface{}, rules string, messages interface{}, params ...interface{}) *Error {
+func Check(ctx context.Context, value interface{}, rules string, messages interface{}, params ...interface{}) Error {
 	return defaultValidator.Ctx(ctx).Check(value, rules, messages, params...)
 }
 
@@ -198,7 +198,7 @@ func Check(ctx context.Context, value interface{}, rules string, messages interf
 // The parameter `rules` can be type of []string/map[string]string. It supports sequence in error result
 // if `rules` is type of []string.
 // The optional parameter `messages` specifies the custom error messages for specified keys and rules.
-func CheckMap(ctx context.Context, params interface{}, rules interface{}, messages ...CustomMsg) *Error {
+func CheckMap(ctx context.Context, params interface{}, rules interface{}, messages ...CustomMsg) Error {
 	return defaultValidator.Ctx(ctx).CheckMap(params, rules, messages...)
 }
 
@@ -208,7 +208,7 @@ func CheckMap(ctx context.Context, params interface{}, rules interface{}, messag
 // The parameter `rules` can be type of []string/map[string]string. It supports sequence in error result
 // if `rules` is type of []string.
 // The optional parameter `messages` specifies the custom error messages for specified keys and rules.
-func CheckStruct(ctx context.Context, object interface{}, rules interface{}, messages ...CustomMsg) *Error {
+func CheckStruct(ctx context.Context, object interface{}, rules interface{}, messages ...CustomMsg) Error {
 	return defaultValidator.Ctx(ctx).CheckStruct(object, rules, messages...)
 }
 
@@ -218,7 +218,7 @@ func CheckStruct(ctx context.Context, object interface{}, rules interface{}, mes
 // The parameter `rules` can be type of []string/map[string]string. It supports sequence in error result
 // if `rules` is type of []string.
 // The optional parameter `messages` specifies the custom error messages for specified keys and rules.
-func CheckStructWithParamMap(ctx context.Context, object interface{}, paramMap interface{}, rules interface{}, messages ...CustomMsg) *Error {
+func CheckStructWithParamMap(ctx context.Context, object interface{}, paramMap interface{}, rules interface{}, messages ...CustomMsg) Error {
 	return defaultValidator.Ctx(ctx).CheckStructWithParamMap(object, paramMap, rules, messages...)
 }
 

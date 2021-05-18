@@ -14,19 +14,28 @@ import (
 )
 
 // Error is the validation error for validation result.
-type Error struct {
-	rules     []string          // Rules by sequence, which is used for keeping error sequence.
-	errors    ErrorMap          // Error map.
-	firstKey  string            // The first error rule key(nil in default).
-	firstItem map[string]string // The first error rule value(nil in default).
+type Error interface {
+	Current() error
+	Error() string
+	FirstItem() (key string, messages map[string]string)
+	FirstRule() (rule string, err string)
+	FirstString() (err string)
+	Map() map[string]string
+	Maps() map[string]map[string]string
+	String() string
+	Strings() (errs []string)
 }
 
-// ErrorMap is the validation error map:
-// map[field]map[rule]message
-type ErrorMap map[string]map[string]string
+// validationError is the validation error for validation result.
+type validationError struct {
+	rules     []string                     // Rules by sequence, which is used for keeping error sequence.
+	errors    map[string]map[string]string // Error map:map[field]map[rule]message
+	firstKey  string                       // The first error rule key(nil in default).
+	firstItem map[string]string            // The first error rule value(nil in default).
+}
 
 // newError creates and returns a validation error.
-func newError(rules []string, errors map[string]map[string]string) *Error {
+func newError(rules []string, errors map[string]map[string]string) *validationError {
 	for field, m := range errors {
 		for k, v := range m {
 			v = strings.Replace(v, ":attribute", field, -1)
@@ -36,14 +45,14 @@ func newError(rules []string, errors map[string]map[string]string) *Error {
 		}
 		errors[field] = m
 	}
-	return &Error{
+	return &validationError{
 		rules:  rules,
 		errors: errors,
 	}
 }
 
 // newErrorStr creates and returns a validation error by string.
-func newErrorStr(key, err string) *Error {
+func newErrorStr(key, err string) *validationError {
 	return newError(nil, map[string]map[string]string{
 		"__gvalid__": {
 			key: err,
@@ -52,7 +61,7 @@ func newErrorStr(key, err string) *Error {
 }
 
 // Map returns the first error message as map.
-func (e *Error) Map() map[string]string {
+func (e *validationError) Map() map[string]string {
 	if e == nil {
 		return map[string]string{}
 	}
@@ -61,7 +70,7 @@ func (e *Error) Map() map[string]string {
 }
 
 // Maps returns all error messages as map.
-func (e *Error) Maps() ErrorMap {
+func (e *validationError) Maps() map[string]map[string]string {
 	if e == nil {
 		return nil
 	}
@@ -69,7 +78,7 @@ func (e *Error) Maps() ErrorMap {
 }
 
 // FirstItem returns the field name and error messages for the first validation rule error.
-func (e *Error) FirstItem() (key string, messages map[string]string) {
+func (e *validationError) FirstItem() (key string, messages map[string]string) {
 	if e == nil {
 		return "", map[string]string{}
 	}
@@ -97,7 +106,7 @@ func (e *Error) FirstItem() (key string, messages map[string]string) {
 }
 
 // FirstRule returns the first error rule and message string.
-func (e *Error) FirstRule() (rule string, err string) {
+func (e *validationError) FirstRule() (rule string, err string) {
 	if e == nil {
 		return "", ""
 	}
@@ -127,7 +136,7 @@ func (e *Error) FirstRule() (rule string, err string) {
 
 // FirstString returns the first error message as string.
 // Note that the returned message might be different if it has no sequence.
-func (e *Error) FirstString() (err string) {
+func (e *validationError) FirstString() (err string) {
 	if e == nil {
 		return ""
 	}
@@ -136,7 +145,7 @@ func (e *Error) FirstString() (err string) {
 }
 
 // Current is alis of FirstString, which implements interface gerror.ApiCurrent.
-func (e *Error) Current() error {
+func (e *validationError) Current() error {
 	if e == nil {
 		return nil
 	}
@@ -145,7 +154,7 @@ func (e *Error) Current() error {
 }
 
 // String returns all error messages as string, multiple error messages joined using char ';'.
-func (e *Error) String() string {
+func (e *validationError) String() string {
 	if e == nil {
 		return ""
 	}
@@ -153,7 +162,7 @@ func (e *Error) String() string {
 }
 
 // Error implements interface of error.Error.
-func (e *Error) Error() string {
+func (e *validationError) Error() string {
 	if e == nil {
 		return ""
 	}
@@ -161,7 +170,7 @@ func (e *Error) Error() string {
 }
 
 // Strings returns all error messages as string array.
-func (e *Error) Strings() (errs []string) {
+func (e *validationError) Strings() (errs []string) {
 	if e == nil {
 		return []string{}
 	}
