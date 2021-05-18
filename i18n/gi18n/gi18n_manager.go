@@ -138,7 +138,6 @@ func (m *Manager) TranslateFormat(ctx context.Context, format string, values ...
 }
 
 // Translate translates <content> with configured language.
-// The parameter <language> specifies custom translation language ignoring configured language.
 func (m *Manager) Translate(ctx context.Context, content string) string {
 	m.init()
 	m.mu.RLock()

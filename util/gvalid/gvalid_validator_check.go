@@ -35,12 +35,12 @@ type apiTime interface {
 // string/map/struct/*struct.
 // The optional parameter `params` specifies the extra validation parameters for some rules
 // like: required-*、same、different, etc.
-func (v *Validator) Check(value interface{}, rules string, messages interface{}, paramMap ...interface{}) *Error {
+func (v *Validator) Check(value interface{}, rules string, messages interface{}, paramMap ...interface{}) Error {
 	return v.doCheck("", value, rules, messages, paramMap...)
 }
 
 // doCheck does the really rules validation for single key-value.
-func (v *Validator) doCheck(key string, value interface{}, rules string, messages interface{}, paramMap ...interface{}) *Error {
+func (v *Validator) doCheck(key string, value interface{}, rules string, messages interface{}, paramMap ...interface{}) Error {
 	// If there's no validation rules, it does nothing and returns quickly.
 	if rules == "" {
 		return nil
@@ -136,7 +136,7 @@ func (v *Validator) doCheck(key string, value interface{}, rules string, message
 		index++
 	}
 	if len(errorMsgArray) > 0 {
-		return newError([]string{rules}, ErrorMap{
+		return newError([]string{rules}, map[string]map[string]string{
 			key: errorMsgArray,
 		})
 	}

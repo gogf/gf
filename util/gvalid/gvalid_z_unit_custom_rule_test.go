@@ -78,7 +78,7 @@ func Test_CustomRule2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		errStr := "data map should not be empty"
 		t.Assert(gvalid.Check(context.TODO(), g.Map{}, rule, errStr).String(), errStr)
-		t.Assert(gvalid.Check(context.TODO(), g.Map{"k": "v"}, rule, errStr).String(), nil)
+		t.Assert(gvalid.Check(context.TODO(), g.Map{"k": "v"}, rule, errStr), nil)
 	})
 	// Error with struct validation.
 	gtest.C(t, func(t *gtest.T) {
@@ -121,8 +121,8 @@ func Test_CustomRule_AllowEmpty(t *testing.T) {
 	// Check.
 	gtest.C(t, func(t *gtest.T) {
 		errStr := "error"
-		t.Assert(gvalid.Check(context.TODO(), "", rule, errStr).String(), "")
-		t.Assert(gvalid.Check(context.TODO(), "gf", rule, errStr).String(), "")
+		t.Assert(gvalid.Check(context.TODO(), "", rule, errStr), nil)
+		t.Assert(gvalid.Check(context.TODO(), "gf", rule, errStr), nil)
 		t.Assert(gvalid.Check(context.TODO(), "gf2", rule, errStr).String(), errStr)
 	})
 	// Error with struct validation.
@@ -136,7 +136,7 @@ func Test_CustomRule_AllowEmpty(t *testing.T) {
 			Data:  "123456",
 		}
 		err := gvalid.CheckStruct(context.TODO(), st, nil)
-		t.Assert(err.String(), "")
+		t.Assert(err, nil)
 	})
 	// No error with struct validation.
 	gtest.C(t, func(t *gtest.T) {

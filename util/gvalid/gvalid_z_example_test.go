@@ -187,4 +187,6 @@ func ExampleRegisterRule_OverwriteRequired() {
 	// It's required
 	// rule deleted
 	// It's required
+	// <nil>
+	// <nil>
 }
