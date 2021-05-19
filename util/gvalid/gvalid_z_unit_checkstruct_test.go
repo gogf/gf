@@ -406,7 +406,7 @@ func Test_CheckStruct_InvalidRule(t *testing.T) {
 	})
 }
 
-func TestValidator_CheckStructWithParamMap(t *testing.T) {
+func TestValidator_CheckStructWithData(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type UserApiSearch struct {
 			Uid      int64  `v:"required"`
@@ -416,7 +416,7 @@ func TestValidator_CheckStructWithParamMap(t *testing.T) {
 			Uid:      1,
 			Nickname: "john",
 		}
-		t.Assert(gvalid.CheckStructWithParamMap(context.TODO(), data, g.Map{"uid": 1, "nickname": "john"}, nil), nil)
+		t.Assert(gvalid.CheckStructWithData(context.TODO(), data, g.Map{"uid": 1, "nickname": "john"}, nil), nil)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type UserApiSearch struct {
@@ -424,7 +424,7 @@ func TestValidator_CheckStructWithParamMap(t *testing.T) {
 			Nickname string `v:"required-with:uid"`
 		}
 		data := UserApiSearch{}
-		t.AssertNE(gvalid.CheckStructWithParamMap(context.TODO(), data, g.Map{}, nil), nil)
+		t.AssertNE(gvalid.CheckStructWithData(context.TODO(), data, g.Map{}, nil), nil)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type UserApiSearch struct {
@@ -434,7 +434,7 @@ func TestValidator_CheckStructWithParamMap(t *testing.T) {
 		data := UserApiSearch{
 			Uid: 1,
 		}
-		t.AssertNE(gvalid.CheckStructWithParamMap(context.TODO(), data, g.Map{}, nil), nil)
+		t.AssertNE(gvalid.CheckStructWithData(context.TODO(), data, g.Map{}, nil), nil)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -448,7 +448,7 @@ func TestValidator_CheckStructWithParamMap(t *testing.T) {
 			StartTime: nil,
 			EndTime:   nil,
 		}
-		t.Assert(gvalid.CheckStructWithParamMap(context.TODO(), data, g.Map{}, nil), nil)
+		t.Assert(gvalid.CheckStructWithData(context.TODO(), data, g.Map{}, nil), nil)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type UserApiSearch struct {
@@ -461,6 +461,6 @@ func TestValidator_CheckStructWithParamMap(t *testing.T) {
 			StartTime: gtime.Now(),
 			EndTime:   nil,
 		}
-		t.AssertNE(gvalid.CheckStructWithParamMap(context.TODO(), data, g.Map{"start_time": gtime.Now()}, nil), nil)
+		t.AssertNE(gvalid.CheckStructWithData(context.TODO(), data, g.Map{"start_time": gtime.Now()}, nil), nil)
 	})
 }

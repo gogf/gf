@@ -18,9 +18,10 @@ import (
 	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/os/gres"
 	"github.com/gogf/gf/os/gview"
+	"github.com/gogf/gf/util/gvalid"
 )
 
-// Client is a convenience function, that creates and returns a new HTTP client.
+// Client is a convenience function, which creates and returns a new HTTP client.
 func Client() *ghttp.Client {
 	return ghttp.NewClient()
 }
@@ -109,4 +110,9 @@ func Model(tableNameOrStruct ...interface{}) *gdb.Model {
 // Redis returns an instance of redis client with specified configuration group name.
 func Redis(name ...string) *gredis.Redis {
 	return gins.Redis(name...)
+}
+
+// Validator is a convenience function, which creates and returns a new validation manager object.
+func Validator() *gvalid.Validator {
+	return gvalid.New()
 }
