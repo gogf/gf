@@ -191,6 +191,11 @@ func Test_Sequence(t *testing.T) {
 		t.Assert(err.Map()["length"], "账号长度应当在6到16之间")
 		t.Assert(len(err.Maps()), 2)
 
+		t.Assert(len(err.Items()), 2)
+		t.Assert(err.Items()[0]["passport"]["length"], "账号长度应当在6到16之间")
+		t.Assert(err.Items()[0]["passport"]["required"], "账号不能为空")
+		t.Assert(err.Items()[1]["password"]["same"], "两次密码输入不相等")
+
 		t.Assert(err.String(), "账号不能为空; 账号长度应当在6到16之间; 两次密码输入不相等")
 		t.Assert(err.Strings(), []string{"账号不能为空", "账号长度应当在6到16之间", "两次密码输入不相等"})
 
