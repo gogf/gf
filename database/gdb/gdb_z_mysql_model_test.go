@@ -7,16 +7,18 @@
 package gdb_test
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/debug/gdebug"
 	"github.com/gogf/gf/encoding/gparser"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/util/gutil"
-	"testing"
-	"time"
 
 	"github.com/gogf/gf/database/gdb"
 
@@ -2618,8 +2620,8 @@ func Test_Model_Cache(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(n, 1)
 
-		err = db.Transaction(func(tx *gdb.TX) error {
-			one, err := tx.Table(table).Cache(time.Second, "test3").FindOne(3)
+		err = db.Transaction(context.TODO(), func(ctx context.Context, tx *gdb.TX) error {
+			one, err := tx.Model(table).Cache(time.Second, "test3").FindOne(3)
 			t.AssertNil(err)
 			t.Assert(one["passport"], "user_300")
 			return nil
@@ -2642,13 +2644,13 @@ func Test_Model_Cache(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(n, 1)
 
-		err = db.Transaction(func(tx *gdb.TX) error {
+		err = db.Transaction(context.TODO(), func(ctx context.Context, tx *gdb.TX) error {
 			// Cache feature disabled.
-			one, err := tx.Table(table).Cache(time.Second, "test4").FindOne(4)
+			one, err := tx.Model(table).Cache(time.Second, "test4").FindOne(4)
 			t.AssertNil(err)
 			t.Assert(one["passport"], "user_400")
 			// Update the cache.
-			r, err := tx.Table(table).Data("passport", "user_4000").
+			r, err := tx.Model(table).Data("passport", "user_4000").
 				Cache(-1, "test4").WherePri(4).Update()
 			t.AssertNil(err)
 			n, err := r.RowsAffected()

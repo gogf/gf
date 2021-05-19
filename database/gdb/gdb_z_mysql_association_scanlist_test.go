@@ -7,11 +7,13 @@
 package gdb_test
 
 import (
+	"context"
 	"fmt"
+	"testing"
+
 	"github.com/gogf/gf/database/gdb"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/util/gconv"
-	"testing"
 
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/test/gtest"
@@ -84,7 +86,7 @@ CREATE TABLE %s (
 	// Initialize the data.
 	var err error
 	gtest.C(t, func(t *gtest.T) {
-		err = db.Transaction(func(tx *gdb.TX) error {
+		err = db.Transaction(context.TODO(), func(ctx context.Context, tx *gdb.TX) error {
 			r, err := tx.Model(tableUser).Save(EntityUser{
 				Name: "john",
 			})

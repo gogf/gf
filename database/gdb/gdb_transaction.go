@@ -7,11 +7,13 @@
 package gdb
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
+	"reflect"
+
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/util/gconv"
-	"reflect"
 
 	"github.com/gogf/gf/text/gregex"
 )
@@ -26,7 +28,26 @@ type TX struct {
 
 const (
 	transactionPointerPrefix = "transaction"
+	contextTransactionKey    = "TransactionObject"
 )
+
+// WithTX injects given transaction object into context and returns a new context.
+func WithTX(ctx context.Context, tx *TX) context.Context {
+	return context.WithValue(ctx, contextTransactionKey, tx)
+}
+
+// TXFromCtx retrieves and returns transaction object from context.
+// It is usually used in nested transaction feature, and it returns nil if it is not set previously.
+func TXFromCtx(ctx context.Context) *TX {
+	if ctx == nil {
+		return nil
+	}
+	v := ctx.Value(contextTransactionKey)
+	if v != nil {
+		return v.(*TX)
+	}
+	return nil
+}
 
 // Commit commits current transaction.
 // Note that it releases previous saved transaction point if it's in a nested transaction procedure,
@@ -128,7 +149,7 @@ func (tx *TX) transactionKey() string {
 //
 // Note that, you should not Commit or Rollback the transaction in function `f`
 // as it is automatically handled by this function.
-func (tx *TX) Transaction(f func(tx *TX) error) (err error) {
+func (tx *TX) Transaction(ctx context.Context, f func(ctx context.Context, tx *TX) error) (err error) {
 	err = tx.Begin()
 	if err != nil {
 		return err
@@ -149,7 +170,7 @@ func (tx *TX) Transaction(f func(tx *TX) error) (err error) {
 			}
 		}
 	}()
-	err = f(tx)
+	err = f(ctx, tx)
 	return
 }
 
@@ -295,6 +316,14 @@ func (tx *TX) InsertIgnore(table string, data interface{}, batch ...int) (sql.Re
 		return tx.Model(table).Data(data).Batch(batch[0]).InsertIgnore()
 	}
 	return tx.Model(table).Data(data).InsertIgnore()
+}
+
+// InsertAndGetId performs action Insert and returns the last insert id that automatically generated.
+func (tx *TX) InsertAndGetId(table string, data interface{}, batch ...int) (int64, error) {
+	if len(batch) > 0 {
+		return tx.Model(table).Data(data).Batch(batch[0]).InsertAndGetId()
+	}
+	return tx.Model(table).Data(data).InsertAndGetId()
 }
 
 // Replace does "REPLACE INTO ..." statement for the table.

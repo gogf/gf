@@ -54,7 +54,7 @@ func (c *Core) GetCtx() context.Context {
 	if c.ctx != nil {
 		return c.ctx
 	}
-	return context.Background()
+	return context.TODO()
 }
 
 // GetCtxTimeout returns the context and cancel function for specified timeout type.
@@ -426,12 +426,19 @@ func (c *Core) Begin() (*TX, error) {
 //
 // Note that, you should not Commit or Rollback the transaction in function `f`
 // as it is automatically handled by this function.
-func (c *Core) Transaction(f func(tx *TX) error) (err error) {
+func (c *Core) Transaction(ctx context.Context, f func(ctx context.Context, tx *TX) error) (err error) {
 	var tx *TX
+	// Check transaction object from context.
+	tx = TXFromCtx(ctx)
+	if tx != nil {
+		return tx.Transaction(ctx, f)
+	}
 	tx, err = c.db.Begin()
 	if err != nil {
 		return err
 	}
+	// Inject transaction object into context.
+	ctx = WithTX(ctx, tx)
 	defer func() {
 		if err == nil {
 			if e := recover(); e != nil {
@@ -448,7 +455,7 @@ func (c *Core) Transaction(f func(tx *TX) error) (err error) {
 			}
 		}
 	}()
-	err = f(tx)
+	err = f(ctx, tx)
 	return
 }
 
