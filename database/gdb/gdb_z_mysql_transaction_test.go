@@ -8,9 +8,10 @@ package gdb_test
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/gogf/gf/database/gdb"
 	"github.com/gogf/gf/errors/gerror"
-	"testing"
 
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gtime"
@@ -119,7 +120,7 @@ func Test_TX_Insert(t *testing.T) {
 		if err != nil {
 			gtest.Error(err)
 		}
-		user := tx.Table(table)
+		user := tx.Model(table)
 		if _, err := user.Data(g.Map{
 			"id":          1,
 			"passport":    "t1",
@@ -129,7 +130,6 @@ func Test_TX_Insert(t *testing.T) {
 		}).Insert(); err != nil {
 			gtest.Error(err)
 		}
-
 		if _, err := tx.Insert(table, g.Map{
 			"id":          2,
 			"passport":    "t1",
@@ -140,7 +140,7 @@ func Test_TX_Insert(t *testing.T) {
 			gtest.Error(err)
 		}
 
-		if n, err := tx.Table(table).Count(); err != nil {
+		if n, err := tx.Model(table).Count(); err != nil {
 			gtest.Error(err)
 		} else {
 			t.Assert(n, 2)

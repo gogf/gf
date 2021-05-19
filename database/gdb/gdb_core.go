@@ -11,10 +11,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/text/gstr"
 	"reflect"
 	"strings"
+
+	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/text/gstr"
 
 	"github.com/gogf/gf/internal/utils"
 
@@ -387,15 +388,34 @@ func (c *Core) Begin() (*TX, error) {
 		//	ctx, cancelFunc = context.WithTimeout(ctx, c.GetConfig().TranTimeout)
 		//	defer cancelFunc()
 		//}
-		if tx, err := master.Begin(); err == nil {
+		var (
+			sqlStr     = "BEGIN"
+			mTime1     = gtime.TimestampMilli()
+			rawTx, err = master.Begin()
+			mTime2     = gtime.TimestampMilli()
+			sqlObj     = &Sql{
+				Sql:    sqlStr,
+				Type:   "DB.Begin",
+				Args:   nil,
+				Format: sqlStr,
+				Error:  err,
+				Start:  mTime1,
+				End:    mTime2,
+				Group:  c.db.GetGroup(),
+			}
+		)
+		c.db.addSqlToTracing(c.db.GetCtx(), sqlObj)
+		if c.db.GetDebug() {
+			c.db.writeSqlToLogger(sqlObj)
+		}
+		if err == nil {
 			return &TX{
 				db:     c.db,
-				tx:     tx,
+				tx:     rawTx,
 				master: master,
 			}, nil
-		} else {
-			return nil, err
 		}
+		return nil, err
 	}
 }
 
@@ -462,6 +482,14 @@ func (c *Core) InsertIgnore(table string, data interface{}, batch ...int) (sql.R
 		return c.Model(table).Data(data).Batch(batch[0]).InsertIgnore()
 	}
 	return c.Model(table).Data(data).InsertIgnore()
+}
+
+// InsertAndGetId performs action Insert and returns the last insert id that automatically generated.
+func (c *Core) InsertAndGetId(table string, data interface{}, batch ...int) (int64, error) {
+	if len(batch) > 0 {
+		return c.Model(table).Data(data).Batch(batch[0]).InsertAndGetId()
+	}
+	return c.Model(table).Data(data).InsertAndGetId()
 }
 
 // Replace does "REPLACE INTO ..." statement for the table.
