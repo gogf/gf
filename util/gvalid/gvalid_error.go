@@ -148,7 +148,7 @@ func (e *validationError) FirstRule() (rule string, err string) {
 					array := strings.Split(ruleItem, ":")
 					ruleItem = strings.TrimSpace(array[0])
 					if err, ok = errorItemMap[ruleItem]; ok {
-						return ruleStr, err
+						return ruleItem, err
 					}
 				}
 			}
