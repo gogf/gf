@@ -84,6 +84,7 @@ type DB interface {
 
 	Insert(table string, data interface{}, batch ...int) (sql.Result, error)       // See Core.Insert.
 	InsertIgnore(table string, data interface{}, batch ...int) (sql.Result, error) // See Core.InsertIgnore.
+	InsertAndGetId(table string, data interface{}, batch ...int) (int64, error)    // See Core.InsertAndGetId.
 	Replace(table string, data interface{}, batch ...int) (sql.Result, error)      // See Core.Replace.
 	Save(table string, data interface{}, batch ...int) (sql.Result, error)         // See Core.Save.
 
