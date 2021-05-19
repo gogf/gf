@@ -12,13 +12,14 @@ import (
 )
 
 // CheckMap validates map and returns the error result. It returns nil if with successful validation.
-//
-// The parameter `rules` can be type of []string/map[string]string. It supports sequence in error result
-// if `rules` is type of []string.
-// The optional parameter `messages` specifies the custom error messages for specified keys and rules.
-func (v *Validator) CheckMap(params interface{}, rules interface{}, messages ...CustomMsg) Error {
+// The parameter `params` should be type of map.
+func (v *Validator) CheckMap(params interface{}) Error {
+	return v.doCheckMap(params)
+}
+
+func (v *Validator) doCheckMap(params interface{}) Error {
 	// If there's no validation rules, it does nothing and returns quickly.
-	if params == nil || rules == nil {
+	if params == nil || v.rules == nil {
 		return nil
 	}
 	var (
@@ -27,7 +28,7 @@ func (v *Validator) CheckMap(params interface{}, rules interface{}, messages ...
 		errorRules = make([]string, 0)
 		errorMaps  = make(map[string]map[string]string)
 	)
-	switch v := rules.(type) {
+	switch v := v.rules.(type) {
 	// Sequence tag: []sequence tag
 	// Sequence has order for error results.
 	case []string:
@@ -76,13 +77,13 @@ func (v *Validator) CheckMap(params interface{}, rules interface{}, messages ...
 			"invalid params type: convert to map failed",
 		)
 	}
-	if len(messages) > 0 && len(messages[0]) > 0 {
+	if msg, ok := v.messages.(CustomMsg); ok && len(msg) > 0 {
 		if len(customMsgs) > 0 {
-			for k, v := range messages[0] {
+			for k, v := range msg {
 				customMsgs[k] = v
 			}
 		} else {
-			customMsgs = messages[0]
+			customMsgs = msg
 		}
 	}
 	var value interface{}
@@ -95,7 +96,7 @@ func (v *Validator) CheckMap(params interface{}, rules interface{}, messages ...
 			value = v
 		}
 		// It checks each rule and its value in loop.
-		if e := v.doCheck(key, value, rule, customMsgs[key], data); e != nil {
+		if e := v.doCheckValue(key, value, rule, customMsgs[key], data); e != nil {
 			_, item := e.FirstItem()
 			// ===========================================================
 			// Only in map and struct validations, if value is nil or empty

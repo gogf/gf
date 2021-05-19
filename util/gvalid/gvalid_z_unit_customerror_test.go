@@ -20,7 +20,7 @@ func Test_Map(t *testing.T) {
 		var (
 			rule = "ipv4"
 			val  = "0.0.0"
-			err  = gvalid.Check(context.TODO(), val, rule, nil)
+			err  = gvalid.CheckValue(context.TODO(), val, rule, nil)
 			msg  = map[string]string{
 				"ipv4": "The value must be a valid IPv4 address",
 			}
@@ -34,7 +34,7 @@ func Test_FirstString(t *testing.T) {
 		var (
 			rule = "ipv4"
 			val  = "0.0.0"
-			err  = gvalid.Check(context.TODO(), val, rule, nil)
+			err  = gvalid.CheckValue(context.TODO(), val, rule, nil)
 			n    = err.FirstString()
 		)
 		t.Assert(n, "The value must be a valid IPv4 address")
@@ -47,7 +47,7 @@ func Test_CustomError1(t *testing.T) {
 		"integer": "请输入一个整数",
 		"length":  "参数长度不对啊老铁",
 	}
-	e := gvalid.Check(context.TODO(), "6.66", rule, msgs)
+	e := gvalid.CheckValue(context.TODO(), "6.66", rule, msgs)
 	if e == nil || len(e.Map()) != 2 {
 		t.Error("规则校验失败")
 	} else {
@@ -67,7 +67,7 @@ func Test_CustomError1(t *testing.T) {
 func Test_CustomError2(t *testing.T) {
 	rule := "integer|length:6,16"
 	msgs := "请输入一个整数|参数长度不对啊老铁"
-	e := gvalid.Check(context.TODO(), "6.66", rule, msgs)
+	e := gvalid.CheckValue(context.TODO(), "6.66", rule, msgs)
 	if e == nil || len(e.Map()) != 2 {
 		t.Error("规则校验失败")
 	} else {

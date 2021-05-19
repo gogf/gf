@@ -64,15 +64,6 @@ import (
 // like: map[field] => string|map[rule]string
 type CustomMsg = map[string]interface{}
 
-// doCheckStructWithParamMapInput is used for struct validation for internal function.
-type doCheckStructWithParamMapInput struct {
-	Object                          interface{} // Can be type of struct/*struct.
-	ParamMap                        interface{} // Validation parameter map. Note that it acts different according attribute `UseParamMapInsteadOfObjectValue`.
-	UseParamMapInsteadOfObjectValue bool        // Using `ParamMap` as its validation source instead of values from `Object`.
-	CustomRules                     interface{} // Custom validation rules.
-	CustomErrorMessageMap           CustomMsg   // Custom error message map for validation rules.
-}
-
 // apiNoValidation is an interface that marks current struct not validated by package `gvalid`.
 type apiNoValidation interface {
 	NoValidation()
@@ -179,7 +170,7 @@ var (
 	}
 )
 
-// Check checks single value with specified rules.
+// CheckValue checks single value with specified rules.
 // It returns nil if successful validation.
 //
 // The parameter `value` can be any type of variable, which will be converted to string
@@ -189,8 +180,12 @@ var (
 // string/map/struct/*struct.
 // The optional parameter `params` specifies the extra validation parameters for some rules
 // like: required-*、same、different, etc.
-func Check(ctx context.Context, value interface{}, rules string, messages interface{}, params ...interface{}) Error {
-	return defaultValidator.Ctx(ctx).Check(value, rules, messages, params...)
+func CheckValue(ctx context.Context, value interface{}, rules string, messages interface{}, params ...interface{}) Error {
+	var data interface{}
+	if len(params) > 0 {
+		data = params[0]
+	}
+	return defaultValidator.Ctx(ctx).Rules(rules).Data(data).Messages(messages).CheckValue(value)
 }
 
 // CheckMap validates map and returns the error result. It returns nil if with successful validation.
@@ -199,27 +194,39 @@ func Check(ctx context.Context, value interface{}, rules string, messages interf
 // if `rules` is type of []string.
 // The optional parameter `messages` specifies the custom error messages for specified keys and rules.
 func CheckMap(ctx context.Context, params interface{}, rules interface{}, messages ...CustomMsg) Error {
-	return defaultValidator.Ctx(ctx).CheckMap(params, rules, messages...)
+	var customErrorMessages CustomMsg
+	if len(messages) > 0 {
+		customErrorMessages = messages[0]
+	}
+	return defaultValidator.Ctx(ctx).Rules(rules).Messages(customErrorMessages).CheckMap(params)
 }
 
-// CheckStruct validates strcut and returns the error result.
+// CheckStruct validates struct and returns the error result.
 //
 // The parameter `object` should be type of struct/*struct.
 // The parameter `rules` can be type of []string/map[string]string. It supports sequence in error result
 // if `rules` is type of []string.
 // The optional parameter `messages` specifies the custom error messages for specified keys and rules.
 func CheckStruct(ctx context.Context, object interface{}, rules interface{}, messages ...CustomMsg) Error {
-	return defaultValidator.Ctx(ctx).CheckStruct(object, rules, messages...)
+	var customErrorMessages CustomMsg
+	if len(messages) > 0 {
+		customErrorMessages = messages[0]
+	}
+	return defaultValidator.Ctx(ctx).Rules(rules).Messages(customErrorMessages).CheckStruct(object)
 }
 
-// CheckStructWithParamMap validates struct with given parameter map and returns the error result.
+// CheckStructWithData validates struct with given parameter map and returns the error result.
 //
 // The parameter `object` should be type of struct/*struct.
 // The parameter `rules` can be type of []string/map[string]string. It supports sequence in error result
 // if `rules` is type of []string.
 // The optional parameter `messages` specifies the custom error messages for specified keys and rules.
-func CheckStructWithParamMap(ctx context.Context, object interface{}, paramMap interface{}, rules interface{}, messages ...CustomMsg) Error {
-	return defaultValidator.Ctx(ctx).CheckStructWithParamMap(object, paramMap, rules, messages...)
+func CheckStructWithData(ctx context.Context, object interface{}, data interface{}, rules interface{}, messages ...CustomMsg) Error {
+	var customErrorMessages CustomMsg
+	if len(messages) > 0 {
+		customErrorMessages = messages[0]
+	}
+	return defaultValidator.Ctx(ctx).Data(data).Rules(rules).Messages(customErrorMessages).CheckStruct(object)
 }
 
 // parseSequenceTag parses one sequence tag to field, rule and error message.

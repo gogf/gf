@@ -25,22 +25,14 @@ type apiTime interface {
 	IsZero() bool
 }
 
-// Check checks single value with specified rules.
+// CheckValue checks single value with specified rules.
 // It returns nil if successful validation.
-//
-// The parameter `value` can be any type of variable, which will be converted to string
-// for validation.
-// The parameter `rules` can be one or more rules, multiple rules joined using char '|'.
-// The parameter `messages` specifies the custom error messages, which can be type of:
-// string/map/struct/*struct.
-// The optional parameter `params` specifies the extra validation parameters for some rules
-// like: required-*、same、different, etc.
-func (v *Validator) Check(value interface{}, rules string, messages interface{}, paramMap ...interface{}) Error {
-	return v.doCheck("", value, rules, messages, paramMap...)
+func (v *Validator) CheckValue(value interface{}) Error {
+	return v.doCheckValue("", value, gconv.String(v.rules), v.messages, v.data)
 }
 
-// doCheck does the really rules validation for single key-value.
-func (v *Validator) doCheck(key string, value interface{}, rules string, messages interface{}, paramMap ...interface{}) Error {
+// doCheckSingleValue does the really rules validation for single key-value.
+func (v *Validator) doCheckValue(key string, value interface{}, rules string, messages interface{}, paramMap ...interface{}) Error {
 	// If there's no validation rules, it does nothing and returns quickly.
 	if rules == "" {
 		return nil
@@ -51,7 +43,7 @@ func (v *Validator) doCheck(key string, value interface{}, rules string, message
 		data          = make(map[string]interface{})
 		errorMsgArray = make(map[string]string)
 	)
-	if len(paramMap) > 0 {
+	if len(paramMap) > 0 && paramMap[0] != nil {
 		data = gconv.Map(paramMap[0])
 	}
 	// Custom error messages handling.
@@ -108,7 +100,7 @@ func (v *Validator) doCheck(key string, value interface{}, rules string, message
 				dataMap map[string]interface{}
 				message = v.getErrorMessageByRule(ruleKey, customMsgMap)
 			)
-			if len(paramMap) > 0 {
+			if len(paramMap) > 0 && paramMap[0] != nil {
 				dataMap = gconv.Map(paramMap[0])
 			}
 			if err := f(ruleItems[index], value, message, dataMap); err != nil {

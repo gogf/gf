@@ -173,14 +173,14 @@ func ExampleRegisterRule_OverwriteRequired() {
 		}
 		return nil
 	})
-	fmt.Println(gvalid.Check(context.TODO(), "", "required", "It's required"))
-	fmt.Println(gvalid.Check(context.TODO(), 0, "required", "It's required"))
-	fmt.Println(gvalid.Check(context.TODO(), false, "required", "It's required"))
+	fmt.Println(gvalid.CheckValue(context.TODO(), "", "required", "It's required"))
+	fmt.Println(gvalid.CheckValue(context.TODO(), 0, "required", "It's required"))
+	fmt.Println(gvalid.CheckValue(context.TODO(), false, "required", "It's required"))
 	gvalid.DeleteRule(rule)
 	fmt.Println("rule deleted")
-	fmt.Println(gvalid.Check(context.TODO(), "", "required", "It's required"))
-	fmt.Println(gvalid.Check(context.TODO(), 0, "required", "It's required"))
-	fmt.Println(gvalid.Check(context.TODO(), false, "required", "It's required"))
+	fmt.Println(gvalid.CheckValue(context.TODO(), "", "required", "It's required"))
+	fmt.Println(gvalid.CheckValue(context.TODO(), 0, "required", "It's required"))
+	fmt.Println(gvalid.CheckValue(context.TODO(), false, "required", "It's required"))
 	// Output:
 	// It's required
 	// It's required
