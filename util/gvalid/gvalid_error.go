@@ -20,6 +20,7 @@ type Error interface {
 	FirstItem() (key string, messages map[string]string)
 	FirstRule() (rule string, err string)
 	FirstString() (err string)
+	Items() (items []map[string]map[string]string)
 	Map() map[string]string
 	Maps() map[string]map[string]string
 	String() string
@@ -30,7 +31,7 @@ type Error interface {
 type validationError struct {
 	rules     []string                     // Rules by sequence, which is used for keeping error sequence.
 	errors    map[string]map[string]string // Error map:map[field]map[rule]message
-	firstKey  string                       // The first error rule key(nil in default).
+	firstKey  string                       // The first error rule key(empty in default).
 	firstItem map[string]string            // The first error rule value(nil in default).
 }
 
@@ -54,7 +55,7 @@ func newError(rules []string, errors map[string]map[string]string) *validationEr
 // newErrorStr creates and returns a validation error by string.
 func newErrorStr(key, err string) *validationError {
 	return newError(nil, map[string]map[string]string{
-		"__gvalid__": {
+		internalErrorMapKey: {
 			key: err,
 		},
 	})
@@ -77,6 +78,34 @@ func (e *validationError) Maps() map[string]map[string]string {
 	return e.errors
 }
 
+// Items retrieves and returns error items array in sequence if possible,
+// or else it returns error items with no sequence .
+func (e *validationError) Items() (items []map[string]map[string]string) {
+	if e == nil {
+		return []map[string]map[string]string{}
+	}
+	items = make([]map[string]map[string]string, 0)
+	// By sequence.
+	if len(e.rules) > 0 {
+		for _, v := range e.rules {
+			name, _, _ := parseSequenceTag(v)
+			if errorItemMap, ok := e.errors[name]; ok {
+				items = append(items, map[string]map[string]string{
+					name: errorItemMap,
+				})
+			}
+		}
+		return items
+	}
+	// No sequence.
+	for name, errorRuleMap := range e.errors {
+		items = append(items, map[string]map[string]string{
+			name: errorRuleMap,
+		})
+	}
+	return
+}
+
 // FirstItem returns the field name and error messages for the first validation rule error.
 func (e *validationError) FirstItem() (key string, messages map[string]string) {
 	if e == nil {
@@ -89,10 +118,10 @@ func (e *validationError) FirstItem() (key string, messages map[string]string) {
 	if len(e.rules) > 0 {
 		for _, v := range e.rules {
 			name, _, _ := parseSequenceTag(v)
-			if m, ok := e.errors[name]; ok {
+			if errorItemMap, ok := e.errors[name]; ok {
 				e.firstKey = name
-				e.firstItem = m
-				return name, m
+				e.firstItem = errorItemMap
+				return name, errorItemMap
 			}
 		}
 	}
@@ -113,21 +142,21 @@ func (e *validationError) FirstRule() (rule string, err string) {
 	// By sequence.
 	if len(e.rules) > 0 {
 		for _, v := range e.rules {
-			name, rule, _ := parseSequenceTag(v)
-			if m, ok := e.errors[name]; ok {
-				for _, rule := range strings.Split(rule, "|") {
-					array := strings.Split(rule, ":")
-					rule = strings.TrimSpace(array[0])
-					if err, ok := m[rule]; ok {
-						return rule, err
+			name, ruleStr, _ := parseSequenceTag(v)
+			if errorItemMap, ok := e.errors[name]; ok {
+				for _, ruleItem := range strings.Split(ruleStr, "|") {
+					array := strings.Split(ruleItem, ":")
+					ruleItem = strings.TrimSpace(array[0])
+					if err, ok = errorItemMap[ruleItem]; ok {
+						return ruleStr, err
 					}
 				}
 			}
 		}
 	}
 	// No sequence.
-	for _, m := range e.errors {
-		for k, v := range m {
+	for _, errorItemMap := range e.errors {
+		for k, v := range errorItemMap {
 			return k, v
 		}
 	}
@@ -178,18 +207,18 @@ func (e *validationError) Strings() (errs []string) {
 	// By sequence.
 	if len(e.rules) > 0 {
 		for _, v := range e.rules {
-			name, rule, _ := parseSequenceTag(v)
-			if m, ok := e.errors[name]; ok {
+			name, ruleStr, _ := parseSequenceTag(v)
+			if errorItemMap, ok := e.errors[name]; ok {
 				// validation error checks.
-				for _, rule := range strings.Split(rule, "|") {
-					rule = strings.TrimSpace(strings.Split(rule, ":")[0])
-					if err, ok := m[rule]; ok {
+				for _, ruleItem := range strings.Split(ruleStr, "|") {
+					ruleItem = strings.TrimSpace(strings.Split(ruleItem, ":")[0])
+					if err, ok := errorItemMap[ruleItem]; ok {
 						errs = append(errs, err)
 					}
 				}
 				// internal error checks.
 				for k, _ := range internalErrKeyMap {
-					if err, ok := m[k]; ok {
+					if err, ok := errorItemMap[k]; ok {
 						errs = append(errs, err)
 					}
 				}
@@ -198,8 +227,8 @@ func (e *validationError) Strings() (errs []string) {
 		return errs
 	}
 	// No sequence.
-	for _, m := range e.errors {
-		for _, err := range m {
+	for _, errorItemMap := range e.errors {
+		for _, err := range errorItemMap {
 			errs = append(errs, err)
 		}
 	}

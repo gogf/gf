@@ -71,8 +71,8 @@ func (v *Validator) doCheckValue(key string, value interface{}, rules string, me
 				ruleItems = append(ruleItems[:i], ruleItems[i+1:]...)
 			} else {
 				return newErrorStr(
-					invalidRulesErrKey,
-					invalidRulesErrKey+": "+rules,
+					internalRulesErrRuleName,
+					internalRulesErrRuleName+": "+rules,
 				)
 			}
 		} else {
