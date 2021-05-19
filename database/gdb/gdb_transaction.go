@@ -150,6 +150,11 @@ func (tx *TX) transactionKey() string {
 // Note that, you should not Commit or Rollback the transaction in function `f`
 // as it is automatically handled by this function.
 func (tx *TX) Transaction(ctx context.Context, f func(ctx context.Context, tx *TX) error) (err error) {
+	// Check transaction object from context.
+	if TXFromCtx(ctx) == nil {
+		// Inject transaction object into context.
+		ctx = WithTX(ctx, tx)
+	}
 	err = tx.Begin()
 	if err != nil {
 		return err
