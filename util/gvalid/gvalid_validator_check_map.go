@@ -73,7 +73,7 @@ func (v *Validator) doCheckMap(params interface{}) Error {
 	data := gconv.Map(params)
 	if data == nil {
 		return newErrorStr(
-			"invalid_params",
+			internalParamsErrRuleName,
 			"invalid params type: convert to map failed",
 		)
 	}

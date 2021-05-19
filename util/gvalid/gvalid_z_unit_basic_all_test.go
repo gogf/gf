@@ -27,9 +27,9 @@ func Test_Check(t *testing.T) {
 		err1 := gvalid.CheckValue(context.TODO(), val1, rule, nil)
 		err2 := gvalid.CheckValue(context.TODO(), val2, rule, nil)
 		err3 := gvalid.CheckValue(context.TODO(), val3, rule, nil)
-		t.Assert(err1, "invalid_rules: abc:6,16")
-		t.Assert(err2, "invalid_rules: abc:6,16")
-		t.Assert(err3, "invalid_rules: abc:6,16")
+		t.Assert(err1, "InvalidRules: abc:6,16")
+		t.Assert(err2, "InvalidRules: abc:6,16")
+		t.Assert(err3, "InvalidRules: abc:6,16")
 	})
 }
 
@@ -995,9 +995,9 @@ func Test_InternalError_String(t *testing.T) {
 		aa := a{Name: "2"}
 		err := gvalid.CheckStruct(context.TODO(), &aa, nil)
 
-		t.Assert(err.String(), "invalid_rules: hh")
-		t.Assert(err.Strings(), g.Slice{"invalid_rules: hh"})
-		t.Assert(err.FirstString(), "invalid_rules: hh")
-		t.Assert(gerror.Current(err), "invalid_rules: hh")
+		t.Assert(err.String(), "InvalidRules: hh")
+		t.Assert(err.Strings(), g.Slice{"InvalidRules: hh"})
+		t.Assert(err.FirstString(), "InvalidRules: hh")
+		t.Assert(gerror.Current(err), "InvalidRules: hh")
 	})
 }

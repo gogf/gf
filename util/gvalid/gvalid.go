@@ -70,14 +70,14 @@ type apiNoValidation interface {
 }
 
 const (
-	// regular expression pattern for single validation rule.
-	singleRulePattern   = `^([\w-]+):{0,1}(.*)`
-	invalidRulesErrKey  = "invalid_rules"
-	invalidParamsErrKey = "invalid_params"
-	invalidObjectErrKey = "invalid_object"
-
-	// no validation tag name for struct attribute.
-	noValidationTagName = "nv"
+	singleRulePattern         = `^([\w-]+):{0,1}(.*)` // regular expression pattern for single validation rule.
+	internalRulesErrRuleName  = "InvalidRules"        // rule name for internal invalid rules validation error.
+	internalParamsErrRuleName = "InvalidParams"       // rule name for internal invalid params validation error.
+	internalObjectErrRuleName = "InvalidObject"       // rule name for internal invalid object validation error.
+	internalErrorMapKey       = "__InternalError__"   // error map key for internal errors.
+	internalDefaultRuleName   = "__default__"         // default rule name for i18n error message format if no i18n message found for specified error rule.
+	ruleMessagePrefixForI18n  = "gf.gvalid.rule."     // prefix string for each rule configuration in i18n content.
+	noValidationTagName       = "nv"                  // no validation tag name for struct attribute.
 )
 
 var (
@@ -87,9 +87,9 @@ var (
 
 	// all internal error keys.
 	internalErrKeyMap = map[string]string{
-		invalidRulesErrKey:  invalidRulesErrKey,
-		invalidParamsErrKey: invalidParamsErrKey,
-		invalidObjectErrKey: invalidObjectErrKey,
+		internalRulesErrRuleName:  internalRulesErrRuleName,
+		internalParamsErrRuleName: internalParamsErrRuleName,
+		internalObjectErrRuleName: internalObjectErrRuleName,
 	}
 	// regular expression object for single rule
 	// which is compiled just once and of repeatable usage.
@@ -167,6 +167,54 @@ var (
 		"false": {},
 		"off":   {},
 		"no":    {},
+	}
+	// defaultMessages is the default error messages.
+	// Note that these messages are synchronized from ./i18n/en/validation.toml .
+	defaultMessages = map[string]string{
+		"required":              "The :attribute field is required",
+		"required-if":           "The :attribute field is required",
+		"required-unless":       "The :attribute field is required",
+		"required-with":         "The :attribute field is required",
+		"required-with-all":     "The :attribute field is required",
+		"required-without":      "The :attribute field is required",
+		"required-without-all":  "The :attribute field is required",
+		"date":                  "The :attribute value is not a valid date",
+		"date-format":           "The :attribute value does not match the format :format",
+		"email":                 "The :attribute value must be a valid email address",
+		"phone":                 "The :attribute value must be a valid phone number",
+		"telephone":             "The :attribute value must be a valid telephone number",
+		"passport":              "The :attribute value is not a valid passport format",
+		"password":              "The :attribute value is not a valid passport format",
+		"password2":             "The :attribute value is not a valid passport format",
+		"password3":             "The :attribute value is not a valid passport format",
+		"postcode":              "The :attribute value is not a valid passport format",
+		"resident-id":           "The :attribute value is not a valid resident id number",
+		"bank-card":             "The :attribute value must be a valid bank card number",
+		"qq":                    "The :attribute value must be a valid QQ number",
+		"ip":                    "The :attribute value must be a valid IP address",
+		"ipv4":                  "The :attribute value must be a valid IPv4 address",
+		"ipv6":                  "The :attribute value must be a valid IPv6 address",
+		"mac":                   "The :attribute value must be a valid MAC address",
+		"url":                   "The :attribute value must be a valid URL address",
+		"domain":                "The :attribute value must be a valid domain format",
+		"length":                "The :attribute value length must be between :min and :max",
+		"min-length":            "The :attribute value length must be equal or greater than :min",
+		"max-length":            "The :attribute value length must be equal or lesser than :max",
+		"between":               "The :attribute value must be between :min and :max",
+		"min":                   "The :attribute value must be equal or greater than :min",
+		"max":                   "The :attribute value must be equal or lesser than :max",
+		"json":                  "The :attribute value must be a valid JSON string",
+		"xml":                   "The :attribute value must be a valid XML string",
+		"array":                 "The :attribute value must be an array",
+		"integer":               "The :attribute value must be an integer",
+		"float":                 "The :attribute value must be a float",
+		"boolean":               "The :attribute value field must be true or false",
+		"same":                  "The :attribute value must be the same as field :field",
+		"different":             "The :attribute value must be different from field :field",
+		"in":                    "The :attribute value is not in acceptable range",
+		"not-in":                "The :attribute value is not in acceptable range",
+		"regex":                 "The :attribute value is invalid",
+		internalDefaultRuleName: "The :attribute value is invalid",
 	}
 )
 

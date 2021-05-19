@@ -26,7 +26,7 @@ func (v *Validator) doCheckStruct(object interface{}) Error {
 	)
 	fieldMap, err := structs.FieldMap(object, aliasNameTagPriority, true)
 	if err != nil {
-		return newErrorStr("invalid_object", err.Error())
+		return newErrorStr(internalObjectErrRuleName, err.Error())
 	}
 	// It checks the struct recursively the its attribute is an embedded struct.
 	for _, field := range fieldMap {
@@ -49,7 +49,7 @@ func (v *Validator) doCheckStruct(object interface{}) Error {
 	// It here must use structs.TagFields not structs.FieldMap to ensure error sequence.
 	tagField, err := structs.TagFields(object, structTagPriority)
 	if err != nil {
-		return newErrorStr("invalid_object", err.Error())
+		return newErrorStr(internalObjectErrRuleName, err.Error())
 	}
 	// If there's no struct tag and validation rules, it does nothing and returns quickly.
 	if len(tagField) == 0 && v.messages == nil {
