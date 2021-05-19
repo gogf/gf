@@ -93,6 +93,11 @@ func (m *Model) WhereNotLike(column string, like interface{}) *Model {
 	return m.Where(fmt.Sprintf(`%s NOT LIKE ?`, m.db.QuoteWord(column)), like)
 }
 
+// WhereNot builds `xxx != x` statement.
+func (m *Model) WhereNot(column string, value interface{}) *Model {
+	return m.Where(fmt.Sprintf(`%s != ?`, m.db.QuoteWord(column)), value)
+}
+
 // WhereNotIn builds `xxx NOT IN (x)` statement.
 func (m *Model) WhereNotIn(column string, in interface{}) *Model {
 	return m.Where(fmt.Sprintf(`%s NOT IN (?)`, m.db.QuoteWord(column)), in)

@@ -8,6 +8,10 @@ package gvalid
 
 import (
 	"errors"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/net/gipv4"
 	"github.com/gogf/gf/net/gipv6"
@@ -15,9 +19,6 @@ import (
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/gutil"
-	"strconv"
-	"strings"
-	"time"
 )
 
 type apiTime interface {
@@ -103,7 +104,7 @@ func (v *Validator) doCheckValue(key string, value interface{}, rules string, me
 			if len(paramMap) > 0 && paramMap[0] != nil {
 				dataMap = gconv.Map(paramMap[0])
 			}
-			if err := f(ruleItems[index], value, message, dataMap); err != nil {
+			if err := f(v.ctx, ruleItems[index], value, message, dataMap); err != nil {
 				match = false
 				errorMsgArray[ruleKey] = err.Error()
 			} else {
