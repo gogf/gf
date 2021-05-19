@@ -9,9 +9,10 @@ package gvalid_test
 import (
 	"context"
 	"errors"
+	"testing"
+
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/util/gconv"
-	"testing"
 
 	"github.com/gogf/gf/test/gtest"
 	"github.com/gogf/gf/util/gvalid"
@@ -19,7 +20,7 @@ import (
 
 func Test_CustomRule1(t *testing.T) {
 	rule := "custom"
-	err := gvalid.RegisterRule(rule, func(rule string, value interface{}, message string, params map[string]interface{}) error {
+	err := gvalid.RegisterRule(rule, func(ctx context.Context, rule string, value interface{}, message string, params map[string]interface{}) error {
 		pass := gconv.String(value)
 		if len(pass) != 6 {
 			return errors.New(message)
@@ -66,7 +67,7 @@ func Test_CustomRule1(t *testing.T) {
 
 func Test_CustomRule2(t *testing.T) {
 	rule := "required-map"
-	err := gvalid.RegisterRule(rule, func(rule string, value interface{}, message string, params map[string]interface{}) error {
+	err := gvalid.RegisterRule(rule, func(ctx context.Context, rule string, value interface{}, message string, params map[string]interface{}) error {
 		m := gconv.Map(value)
 		if len(m) == 0 {
 			return errors.New(message)
@@ -110,7 +111,7 @@ func Test_CustomRule2(t *testing.T) {
 
 func Test_CustomRule_AllowEmpty(t *testing.T) {
 	rule := "allow-empty-str"
-	err := gvalid.RegisterRule(rule, func(rule string, value interface{}, message string, params map[string]interface{}) error {
+	err := gvalid.RegisterRule(rule, func(ctx context.Context, rule string, value interface{}, message string, params map[string]interface{}) error {
 		s := gconv.String(value)
 		if len(s) == 0 || s == "gf" {
 			return nil
