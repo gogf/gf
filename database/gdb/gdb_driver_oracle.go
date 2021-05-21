@@ -189,13 +189,13 @@ func (d *DriverOracle) TableFields(ctx context.Context, link Link, table string,
 	if gstr.Contains(table, " ") {
 		return nil, gerror.New("function TableFields supports only single table operations")
 	}
-	checkSchema := d.db.GetSchema()
+	useSchema := d.db.GetSchema()
 	if len(schema) > 0 && schema[0] != "" {
-		checkSchema = schema[0]
+		useSchema = schema[0]
 	}
 	tableFieldsCacheKey := fmt.Sprintf(
 		`oracle_table_fields_%s_%s@group:%s`,
-		table, checkSchema, d.GetGroup(),
+		table, useSchema, d.GetGroup(),
 	)
 	v := tableFieldsMap.GetOrSetFuncLock(tableFieldsCacheKey, func() interface{} {
 		var (
@@ -213,7 +213,7 @@ FROM USER_TAB_COLUMNS WHERE TABLE_NAME = '%s' ORDER BY COLUMN_ID`,
 		)
 		structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
 		if link == nil {
-			link, err = d.GetSlave(checkSchema)
+			link, err = d.SlaveLink(useSchema)
 			if err != nil {
 				return nil
 			}
@@ -340,7 +340,7 @@ func (d *DriverOracle) DoInsert(ctx context.Context, link Link, table string, da
 	}
 
 	if link == nil {
-		if link, err = d.db.Master(); err != nil {
+		if link, err = d.MasterLink(); err != nil {
 			return nil, err
 		}
 	}
@@ -416,7 +416,7 @@ func (d *DriverOracle) DoBatchInsert(ctx context.Context, link Link, table strin
 		return result, gerror.New("empty data list")
 	}
 	if link == nil {
-		if link, err = d.db.Master(); err != nil {
+		if link, err = d.MasterLink(); err != nil {
 			return
 		}
 	}

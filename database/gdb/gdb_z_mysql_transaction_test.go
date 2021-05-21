@@ -833,7 +833,10 @@ func Test_Transaction_Nested_Begin_Rollback_Commit(t *testing.T) {
 func Test_Transaction_Nested_TX_Transaction_UseTX(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
+
 	db.SetDebug(true)
+	defer db.SetDebug(false)
+
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			err error
@@ -887,17 +890,75 @@ func Test_Transaction_Nested_TX_Transaction_UseTX(t *testing.T) {
 		})
 		t.AssertNil(err)
 
-		all, err := db.Model(table).All()
+		all, err := db.Ctx(ctx).Model(table).All()
 		t.AssertNil(err)
 		t.Assert(len(all), 1)
 		t.Assert(all[0]["id"], 1)
+
+		// another record.
+		err = db.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+			// commit
+			err = tx.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+				err = tx.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+					err = tx.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+						err = tx.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+							err = tx.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+								_, err = tx.Model(table).Data(g.Map{
+									"id":          3,
+									"passport":    "USER_1",
+									"password":    "PASS_1",
+									"nickname":    "NAME_1",
+									"create_time": gtime.Now().String(),
+								}).Insert()
+								t.AssertNil(err)
+								return err
+							})
+							t.AssertNil(err)
+							return err
+						})
+						t.AssertNil(err)
+						return err
+					})
+					t.AssertNil(err)
+					return err
+				})
+				t.AssertNil(err)
+				return err
+			})
+			t.AssertNil(err)
+			// rollback
+			err = tx.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+				_, err = tx.Model(table).Data(g.Map{
+					"id":          4,
+					"passport":    "USER_2",
+					"password":    "PASS_2",
+					"nickname":    "NAME_2",
+					"create_time": gtime.Now().String(),
+				}).Insert()
+				t.AssertNil(err)
+				panic("error")
+				return err
+			})
+			t.AssertNE(err, nil)
+			return nil
+		})
+		t.AssertNil(err)
+
+		all, err = db.Ctx(ctx).Model(table).All()
+		t.AssertNil(err)
+		t.Assert(len(all), 2)
+		t.Assert(all[0]["id"], 1)
+		t.Assert(all[1]["id"], 3)
 	})
 }
 
 func Test_Transaction_Nested_TX_Transaction_UseDB(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
+
 	db.SetDebug(true)
+	defer db.SetDebug(false)
+
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			err error
@@ -952,11 +1013,66 @@ func Test_Transaction_Nested_TX_Transaction_UseDB(t *testing.T) {
 			return nil
 		})
 		t.AssertNil(err)
-
 		all, err := db.Model(table).All()
 		t.AssertNil(err)
 		t.Assert(len(all), 1)
 		t.Assert(all[0]["id"], 1)
+
+		err = db.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+			// commit
+			err = db.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+				err = db.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+					err = db.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+						err = db.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+							err = db.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+								_, err = db.Model(table).Ctx(ctx).Data(g.Map{
+									"id":          3,
+									"passport":    "USER_1",
+									"password":    "PASS_1",
+									"nickname":    "NAME_1",
+									"create_time": gtime.Now().String(),
+								}).Insert()
+								t.AssertNil(err)
+								return err
+							})
+							t.AssertNil(err)
+							return err
+						})
+						t.AssertNil(err)
+						return err
+					})
+					t.AssertNil(err)
+					return err
+				})
+				t.AssertNil(err)
+				return err
+			})
+			t.AssertNil(err)
+
+			// rollback
+			err = db.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+				_, err = tx.Model(table).Ctx(ctx).Data(g.Map{
+					"id":          4,
+					"passport":    "USER_2",
+					"password":    "PASS_2",
+					"nickname":    "NAME_2",
+					"create_time": gtime.Now().String(),
+				}).Insert()
+				t.AssertNil(err)
+				// panic makes this transaction rollback.
+				panic("error")
+				return err
+			})
+			t.AssertNE(err, nil)
+			return nil
+		})
+		t.AssertNil(err)
+
+		all, err = db.Model(table).All()
+		t.AssertNil(err)
+		t.Assert(len(all), 2)
+		t.Assert(all[0]["id"], 1)
+		t.Assert(all[1]["id"], 3)
 	})
 }
 
