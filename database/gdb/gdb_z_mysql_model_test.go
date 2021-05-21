@@ -2910,13 +2910,13 @@ func Test_Model_HasTable(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.HasTable(table)
+		result, err := db.GetCore().HasTable(table)
 		t.Assert(result, true)
 		t.AssertNil(err)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.HasTable("table12321")
+		result, err := db.GetCore().HasTable("table12321")
 		t.Assert(result, false)
 		t.AssertNil(err)
 	})

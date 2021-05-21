@@ -9,8 +9,9 @@ package gdb
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/text/gregex"
 	"time"
+
+	"github.com/gogf/gf/text/gregex"
 
 	"github.com/gogf/gf/text/gstr"
 )
@@ -98,10 +99,10 @@ func (c *Core) Model(tableNameOrStruct ...interface{}) *Model {
 
 	if len(tableNames) > 1 {
 		tableStr = fmt.Sprintf(
-			`%s AS %s`, c.db.QuotePrefixTableName(tableNames[0]), c.db.QuoteWord(tableNames[1]),
+			`%s AS %s`, c.QuotePrefixTableName(tableNames[0]), c.QuoteWord(tableNames[1]),
 		)
 	} else if len(tableNames) == 1 {
-		tableStr = c.db.QuotePrefixTableName(tableNames[0])
+		tableStr = c.QuotePrefixTableName(tableNames[0])
 	}
 	return &Model{
 		db:         c.db,
@@ -148,7 +149,19 @@ func (m *Model) Ctx(ctx context.Context) *Model {
 	}
 	model := m.getModel()
 	model.db = model.db.Ctx(ctx)
+	if m.tx != nil {
+		model.tx = model.tx.Ctx(ctx)
+	}
 	return model
+}
+
+// GetCtx returns the context for current Model.
+// It returns `context.Background()` is there's no context previously set.
+func (m *Model) GetCtx() context.Context {
+	if m.tx != nil && m.tx.ctx != nil {
+		return m.tx.ctx
+	}
+	return m.db.GetCtx()
 }
 
 // As sets an alias name for current table.

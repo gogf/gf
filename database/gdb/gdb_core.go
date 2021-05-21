@@ -15,15 +15,18 @@ import (
 	"strings"
 
 	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/text/gstr"
-
 	"github.com/gogf/gf/internal/utils"
+	"github.com/gogf/gf/text/gstr"
 
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/util/gconv"
 )
+
+func (c *Core) GetCore() *Core {
+	return c
+}
 
 // Ctx is a chaining function, which creates and returns a new DB that is a shallow copy
 // of current DB object and with given context in it.
@@ -33,6 +36,11 @@ func (c *Core) Ctx(ctx context.Context) DB {
 	if ctx == nil {
 		return c.db
 	}
+	// It is already set context in previous chaining operation.
+	if c.ctx != nil {
+		return c.db
+	}
+	// It makes a shallow copy of current db and changes its context for next chaining operation.
 	var (
 		err        error
 		newCore    = &Core{}
@@ -41,9 +49,10 @@ func (c *Core) Ctx(ctx context.Context) DB {
 	*newCore = *c
 	newCore.ctx = ctx
 	newCore.db, err = driverMap[configNode.Type].New(newCore, configNode)
-	// Seldom error, just log it.
 	if err != nil {
-		c.db.GetLogger().Ctx(ctx).Error(err)
+		// It is really a serious error here.
+		// Do not let it continue.
+		panic(err)
 	}
 	return newCore.db
 }
@@ -60,7 +69,7 @@ func (c *Core) GetCtx() context.Context {
 // GetCtxTimeout returns the context and cancel function for specified timeout type.
 func (c *Core) GetCtxTimeout(timeoutType int, ctx context.Context) (context.Context, context.CancelFunc) {
 	if ctx == nil {
-		ctx = c.db.GetCtx()
+		ctx = c.GetCtx()
 	} else {
 		ctx = context.WithValue(ctx, "WrappedByGetCtxTimeout", nil)
 	}
@@ -102,15 +111,14 @@ func (c *Core) Query(sql string, args ...interface{}) (rows *sql.Rows, err error
 	if err != nil {
 		return nil, err
 	}
-	return c.db.DoQuery(link, sql, args...)
+	return c.DoQuery(c.GetCtx(), link, sql, args...)
 }
 
 // DoQuery commits the sql string and its arguments to underlying driver
 // through given link object and returns the execution result.
-func (c *Core) DoQuery(link Link, sql string, args ...interface{}) (rows *sql.Rows, err error) {
+func (c *Core) DoQuery(ctx context.Context, link Link, sql string, args ...interface{}) (rows *sql.Rows, err error) {
 	sql, args = formatSql(sql, args)
-	sql, args = c.db.HandleSqlBeforeCommit(link, sql, args)
-	ctx := c.db.GetCtx()
+	sql, args = c.db.HandleSqlBeforeCommit(ctx, link, sql, args)
 	if c.GetConfig().QueryTimeout > 0 {
 		ctx, _ = context.WithTimeout(ctx, c.GetConfig().QueryTimeout)
 	}
@@ -127,9 +135,10 @@ func (c *Core) DoQuery(link Link, sql string, args ...interface{}) (rows *sql.Ro
 		End:    mTime2,
 		Group:  c.db.GetGroup(),
 	}
+	// Tracing and logging.
 	c.addSqlToTracing(ctx, sqlObj)
 	if c.db.GetDebug() {
-		c.writeSqlToLogger(sqlObj)
+		c.writeSqlToLogger(ctx, sqlObj)
 	}
 	if err == nil {
 		return rows, nil
@@ -146,15 +155,14 @@ func (c *Core) Exec(sql string, args ...interface{}) (result sql.Result, err err
 	if err != nil {
 		return nil, err
 	}
-	return c.db.DoExec(link, sql, args...)
+	return c.DoExec(c.GetCtx(), link, sql, args...)
 }
 
 // DoExec commits the sql string and its arguments to underlying driver
 // through given link object and returns the execution result.
-func (c *Core) DoExec(link Link, sql string, args ...interface{}) (result sql.Result, err error) {
+func (c *Core) DoExec(ctx context.Context, link Link, sql string, args ...interface{}) (result sql.Result, err error) {
 	sql, args = formatSql(sql, args)
-	sql, args = c.db.HandleSqlBeforeCommit(link, sql, args)
-	ctx := c.db.GetCtx()
+	sql, args = c.db.HandleSqlBeforeCommit(ctx, link, sql, args)
 	if c.GetConfig().ExecTimeout > 0 {
 		var cancelFunc context.CancelFunc
 		ctx, cancelFunc = context.WithTimeout(ctx, c.GetConfig().ExecTimeout)
@@ -178,9 +186,10 @@ func (c *Core) DoExec(link Link, sql string, args ...interface{}) (result sql.Re
 		End:    mTime2,
 		Group:  c.db.GetGroup(),
 	}
+	// Tracing and logging.
 	c.addSqlToTracing(ctx, sqlObj)
 	if c.db.GetDebug() {
-		c.writeSqlToLogger(sqlObj)
+		c.writeSqlToLogger(ctx, sqlObj)
 	}
 	return result, formatError(err, sql, args...)
 }
@@ -207,12 +216,11 @@ func (c *Core) Prepare(sql string, execOnMaster ...bool) (*Stmt, error) {
 			return nil, err
 		}
 	}
-	return c.db.DoPrepare(link, sql)
+	return c.DoPrepare(c.GetCtx(), link, sql)
 }
 
-// doPrepare calls prepare function on given link object and returns the statement object.
-func (c *Core) DoPrepare(link Link, sql string) (*Stmt, error) {
-	ctx := c.db.GetCtx()
+// DoPrepare calls prepare function on given link object and returns the statement object.
+func (c *Core) DoPrepare(ctx context.Context, link Link, sql string) (*Stmt, error) {
 	if c.GetConfig().PrepareTimeout > 0 {
 		// DO NOT USE cancel function in prepare statement.
 		ctx, _ = context.WithTimeout(ctx, c.GetConfig().PrepareTimeout)
@@ -232,9 +240,10 @@ func (c *Core) DoPrepare(link Link, sql string) (*Stmt, error) {
 			Group:  c.db.GetGroup(),
 		}
 	)
+	// Tracing and logging.
 	c.addSqlToTracing(ctx, sqlObj)
 	if c.db.GetDebug() {
-		c.writeSqlToLogger(sqlObj)
+		c.writeSqlToLogger(ctx, sqlObj)
 	}
 	return &Stmt{
 		Stmt: stmt,
@@ -245,23 +254,23 @@ func (c *Core) DoPrepare(link Link, sql string) (*Stmt, error) {
 
 // GetAll queries and returns data records from database.
 func (c *Core) GetAll(sql string, args ...interface{}) (Result, error) {
-	return c.db.DoGetAll(nil, sql, args...)
+	return c.DoGetAll(c.GetCtx(), nil, sql, args...)
 }
 
 // DoGetAll queries and returns data records from database.
-func (c *Core) DoGetAll(link Link, sql string, args ...interface{}) (result Result, err error) {
+func (c *Core) DoGetAll(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error) {
 	if link == nil {
 		link, err = c.db.Slave()
 		if err != nil {
 			return nil, err
 		}
 	}
-	rows, err := c.db.DoQuery(link, sql, args...)
+	rows, err := c.DoQuery(ctx, link, sql, args...)
 	if err != nil || rows == nil {
 		return nil, err
 	}
 	defer rows.Close()
-	return c.db.convertRowsToResult(rows)
+	return c.convertRowsToResult(rows)
 }
 
 // GetOne queries and returns one record from database.
@@ -279,7 +288,7 @@ func (c *Core) GetOne(sql string, args ...interface{}) (Record, error) {
 // GetArray queries and returns data values as slice from database.
 // Note that if there are multiple columns in the result, it returns just one column values randomly.
 func (c *Core) GetArray(sql string, args ...interface{}) ([]Value, error) {
-	all, err := c.db.DoGetAll(nil, sql, args...)
+	all, err := c.DoGetAll(c.GetCtx(), nil, sql, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -374,91 +383,6 @@ func (c *Core) PingSlave() error {
 	}
 }
 
-// Begin starts and returns the transaction object.
-// You should call Commit or Rollback functions of the transaction object
-// if you no longer use the transaction. Commit or Rollback functions will also
-// close the transaction automatically.
-func (c *Core) Begin() (*TX, error) {
-	if master, err := c.db.Master(); err != nil {
-		return nil, err
-	} else {
-		//ctx := c.db.GetCtx()
-		//if c.GetConfig().TranTimeout > 0 {
-		//	var cancelFunc context.CancelFunc
-		//	ctx, cancelFunc = context.WithTimeout(ctx, c.GetConfig().TranTimeout)
-		//	defer cancelFunc()
-		//}
-		var (
-			sqlStr     = "BEGIN"
-			mTime1     = gtime.TimestampMilli()
-			rawTx, err = master.Begin()
-			mTime2     = gtime.TimestampMilli()
-			sqlObj     = &Sql{
-				Sql:    sqlStr,
-				Type:   "DB.Begin",
-				Args:   nil,
-				Format: sqlStr,
-				Error:  err,
-				Start:  mTime1,
-				End:    mTime2,
-				Group:  c.db.GetGroup(),
-			}
-		)
-		c.db.addSqlToTracing(c.db.GetCtx(), sqlObj)
-		if c.db.GetDebug() {
-			c.db.writeSqlToLogger(sqlObj)
-		}
-		if err == nil {
-			return &TX{
-				db:     c.db,
-				tx:     rawTx,
-				master: master,
-			}, nil
-		}
-		return nil, err
-	}
-}
-
-// Transaction wraps the transaction logic using function `f`.
-// It rollbacks the transaction and returns the error from function `f` if
-// it returns non-nil error. It commits the transaction and returns nil if
-// function `f` returns nil.
-//
-// Note that, you should not Commit or Rollback the transaction in function `f`
-// as it is automatically handled by this function.
-func (c *Core) Transaction(ctx context.Context, f func(ctx context.Context, tx *TX) error) (err error) {
-	var tx *TX
-	// Check transaction object from context.
-	tx = TXFromCtx(ctx)
-	if tx != nil {
-		return tx.Transaction(ctx, f)
-	}
-	tx, err = c.db.Begin()
-	if err != nil {
-		return err
-	}
-	// Inject transaction object into context.
-	ctx = WithTX(ctx, tx)
-	defer func() {
-		if err == nil {
-			if e := recover(); e != nil {
-				err = fmt.Errorf("%v", e)
-			}
-		}
-		if err != nil {
-			if e := tx.Rollback(); e != nil {
-				err = e
-			}
-		} else {
-			if e := tx.Commit(); e != nil {
-				err = e
-			}
-		}
-	}()
-	err = f(ctx, tx)
-	return
-}
-
 // Insert does "INSERT INTO ..." statement for the table.
 // If there's already one unique record of the data in the table, it returns error.
 //
@@ -536,7 +460,7 @@ func (c *Core) Save(table string, data interface{}, batch ...int) (sql.Result, e
 	return c.Model(table).Data(data).Save()
 }
 
-// doInsert inserts or updates data for given table.
+// DoInsert inserts or updates data for given table.
 // This function is usually used for custom interface definition, you do not need call it manually.
 // The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
 // Eg:
@@ -548,8 +472,8 @@ func (c *Core) Save(table string, data interface{}, batch ...int) (sql.Result, e
 // 1: replace: if there's unique/primary key in the data, it deletes it from table and inserts a new one;
 // 2: save:    if there's unique/primary key in the data, it updates it or else inserts a new one;
 // 3: ignore:  if there's unique/primary key in the data, it ignores the inserting;
-func (c *Core) DoInsert(link Link, table string, data interface{}, option int, batch ...int) (result sql.Result, err error) {
-	table = c.db.QuotePrefixTableName(table)
+func (c *Core) DoInsert(ctx context.Context, link Link, table string, data interface{}, option int, batch ...int) (result sql.Result, err error) {
+	table = c.QuotePrefixTableName(table)
 	var (
 		fields       []string
 		values       []string
@@ -564,10 +488,10 @@ func (c *Core) DoInsert(link Link, table string, data interface{}, option int, b
 	}
 	switch reflectKind {
 	case reflect.Slice, reflect.Array:
-		return c.db.DoBatchInsert(link, table, data, option, batch...)
+		return c.DoBatchInsert(ctx, link, table, data, option, batch...)
 	case reflect.Struct:
 		if _, ok := data.(apiInterfaces); ok {
-			return c.db.DoBatchInsert(link, table, data, option, batch...)
+			return c.DoBatchInsert(ctx, link, table, data, option, batch...)
 		} else {
 			dataMap = ConvertDataForTableRecord(data)
 		}
@@ -616,15 +540,11 @@ func (c *Core) DoInsert(link Link, table string, data interface{}, option int, b
 			return nil, err
 		}
 	}
-	return c.db.DoExec(
-		link,
-		fmt.Sprintf(
-			"%s INTO %s(%s) VALUES(%s) %s",
-			operation, table, strings.Join(fields, ","),
-			strings.Join(values, ","), updateStr,
-		),
-		params...,
-	)
+	return c.DoExec(ctx, link, fmt.Sprintf(
+		"%s INTO %s(%s) VALUES(%s) %s",
+		operation, table, strings.Join(fields, ","),
+		strings.Join(values, ","), updateStr,
+	), params...)
 }
 
 // BatchInsert batch inserts data.
@@ -665,8 +585,8 @@ func (c *Core) BatchSave(table string, list interface{}, batch ...int) (sql.Resu
 
 // DoBatchInsert batch inserts/replaces/saves data.
 // This function is usually used for custom interface definition, you do not need call it manually.
-func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option int, batch ...int) (result sql.Result, err error) {
-	table = c.db.QuotePrefixTableName(table)
+func (c *Core) DoBatchInsert(ctx context.Context, link Link, table string, list interface{}, option int, batch ...int) (result sql.Result, err error) {
+	table = c.QuotePrefixTableName(table)
 	var (
 		keys    []string      // Field names.
 		values  []string      // Value holder string array, like: (?,?,?)
@@ -777,16 +697,12 @@ func (c *Core) DoBatchInsert(link Link, table string, list interface{}, option i
 		}
 		valueHolder = append(valueHolder, "("+gstr.Join(values, ",")+")")
 		if len(valueHolder) == batchNum || (i == listMapLen-1 && len(valueHolder) > 0) {
-			r, err := c.db.DoExec(
-				link,
-				fmt.Sprintf(
-					"%s INTO %s(%s) VALUES%s %s",
-					operation, table, keysStr,
-					gstr.Join(valueHolder, ","),
-					updateStr,
-				),
-				params...,
-			)
+			r, err := c.DoExec(ctx, link, fmt.Sprintf(
+				"%s INTO %s(%s) VALUES%s %s",
+				operation, table, keysStr,
+				gstr.Join(valueHolder, ","),
+				updateStr,
+			), params...)
 			if err != nil {
 				return r, err
 			}
@@ -821,10 +737,10 @@ func (c *Core) Update(table string, data interface{}, condition interface{}, arg
 	return c.Model(table).Data(data).Where(condition, args...).Update()
 }
 
-// doUpdate does "UPDATE ... " statement for the table.
+// DoUpdate does "UPDATE ... " statement for the table.
 // This function is usually used for custom interface definition, you do not need call it manually.
-func (c *Core) DoUpdate(link Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) {
-	table = c.db.QuotePrefixTableName(table)
+func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) {
+	table = c.QuotePrefixTableName(table)
 	var (
 		rv   = reflect.ValueOf(data)
 		kind = rv.Kind()
@@ -849,7 +765,7 @@ func (c *Core) DoUpdate(link Link, table string, data interface{}, condition str
 				if value.Value != 0 {
 					column := k
 					if value.Field != "" {
-						column = c.db.QuoteWord(value.Field)
+						column = c.QuoteWord(value.Field)
 					}
 					fields = append(fields, fmt.Sprintf("%s=%s+?", column, column))
 					params = append(params, value.Value)
@@ -858,16 +774,16 @@ func (c *Core) DoUpdate(link Link, table string, data interface{}, condition str
 				if value.Value != 0 {
 					column := k
 					if value.Field != "" {
-						column = c.db.QuoteWord(value.Field)
+						column = c.QuoteWord(value.Field)
 					}
 					fields = append(fields, fmt.Sprintf("%s=%s+?", column, column))
 					params = append(params, value.Value)
 				}
 			default:
 				if s, ok := v.(Raw); ok {
-					fields = append(fields, c.db.QuoteWord(k)+"="+gconv.String(s))
+					fields = append(fields, c.QuoteWord(k)+"="+gconv.String(s))
 				} else {
-					fields = append(fields, c.db.QuoteWord(k)+"=?")
+					fields = append(fields, c.QuoteWord(k)+"=?")
 					params = append(params, v)
 				}
 			}
@@ -888,11 +804,7 @@ func (c *Core) DoUpdate(link Link, table string, data interface{}, condition str
 			return nil, err
 		}
 	}
-	return c.db.DoExec(
-		link,
-		fmt.Sprintf("UPDATE %s SET %s%s", table, updates, condition),
-		args...,
-	)
+	return c.DoExec(ctx, link, fmt.Sprintf("UPDATE %s SET %s%s", table, updates, condition), args...)
 }
 
 // Delete does "DELETE FROM ... " statement for the table.
@@ -912,14 +824,14 @@ func (c *Core) Delete(table string, condition interface{}, args ...interface{}) 
 
 // DoDelete does "DELETE FROM ... " statement for the table.
 // This function is usually used for custom interface definition, you do not need call it manually.
-func (c *Core) DoDelete(link Link, table string, condition string, args ...interface{}) (result sql.Result, err error) {
+func (c *Core) DoDelete(ctx context.Context, link Link, table string, condition string, args ...interface{}) (result sql.Result, err error) {
 	if link == nil {
 		if link, err = c.db.Master(); err != nil {
 			return nil, err
 		}
 	}
-	table = c.db.QuotePrefixTableName(table)
-	return c.db.DoExec(link, fmt.Sprintf("DELETE FROM %s%s", table, condition), args...)
+	table = c.QuotePrefixTableName(table)
+	return c.DoExec(ctx, link, fmt.Sprintf("DELETE FROM %s%s", table, condition), args...)
 }
 
 // convertRowsToResult converts underlying data record type sql.Rows to Result type.
@@ -955,7 +867,7 @@ func (c *Core) convertRowsToResult(rows *sql.Rows) (Result, error) {
 			if value == nil {
 				row[columnNames[i]] = gvar.New(nil)
 			} else {
-				row[columnNames[i]] = gvar.New(c.db.convertFieldValueToLocalValue(value, columnTypes[i]))
+				row[columnNames[i]] = gvar.New(c.convertFieldValueToLocalValue(value, columnTypes[i]))
 			}
 		}
 		records = append(records, row)
@@ -977,19 +889,23 @@ func (c *Core) MarshalJSON() ([]byte, error) {
 
 // writeSqlToLogger outputs the sql object to logger.
 // It is enabled only if configuration "debug" is true.
-func (c *Core) writeSqlToLogger(v *Sql) {
-	s := fmt.Sprintf("[%3d ms] [%s] %s", v.End-v.Start, v.Group, v.Format)
-	if v.Error != nil {
-		s += "\nError: " + v.Error.Error()
-		c.logger.Ctx(c.db.GetCtx()).Error(s)
+func (c *Core) writeSqlToLogger(ctx context.Context, sql *Sql) {
+	var transactionIdStr string
+	if v := ctx.Value(transactionIdForLoggerCtx); v != nil {
+		transactionIdStr = fmt.Sprintf(`[%d] `, v.(uint64))
+	}
+	s := fmt.Sprintf("[%3d ms] [%s] %s%s", sql.End-sql.Start, sql.Group, transactionIdStr, sql.Format)
+	if sql.Error != nil {
+		s += "\nError: " + sql.Error.Error()
+		c.logger.Ctx(ctx).Error(s)
 	} else {
-		c.logger.Ctx(c.db.GetCtx()).Debug(s)
+		c.logger.Ctx(ctx).Debug(s)
 	}
 }
 
 // HasTable determine whether the table name exists in the database.
 func (c *Core) HasTable(name string) (bool, error) {
-	tableList, err := c.db.Tables()
+	tableList, err := c.db.Tables(c.GetCtx())
 	if err != nil {
 		return false, err
 	}

@@ -8,6 +8,7 @@ package gdb
 
 import (
 	"fmt"
+
 	"github.com/gogf/gf/text/gstr"
 )
 
@@ -72,13 +73,13 @@ func (m *Model) doJoin(operator string, table ...string) *Model {
 				joinStr = "(" + joinStr + ")"
 			}
 		} else {
-			joinStr = m.db.QuotePrefixTableName(table[0])
+			joinStr = m.db.GetCore().QuotePrefixTableName(table[0])
 		}
 	}
 	if len(table) > 2 {
 		model.tables += fmt.Sprintf(
 			" %s JOIN %s AS %s ON (%s)",
-			operator, joinStr, m.db.QuoteWord(table[1]), table[2],
+			operator, joinStr, m.db.GetCore().QuoteWord(table[1]), table[2],
 		)
 	} else if len(table) == 2 {
 		model.tables += fmt.Sprintf(

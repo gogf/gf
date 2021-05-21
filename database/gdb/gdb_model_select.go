@@ -8,13 +8,14 @@ package gdb
 
 import (
 	"fmt"
+	"reflect"
+
 	"github.com/gogf/gf/container/gset"
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
-	"reflect"
 )
 
 // Select is alias of Model.All.
@@ -66,7 +67,7 @@ func (m *Model) getFieldsFiltered() string {
 	if m.fieldsEx == "" {
 		// No filtering.
 		if !gstr.Contains(m.fields, ".") && !gstr.Contains(m.fields, " ") {
-			return m.db.QuoteString(m.fields)
+			return m.db.GetCore().QuoteString(m.fields)
 		}
 		return m.fields
 	}
@@ -105,7 +106,7 @@ func (m *Model) getFieldsFiltered() string {
 		if len(newFields) > 0 {
 			newFields += ","
 		}
-		newFields += m.db.QuoteWord(k)
+		newFields += m.db.GetCore().QuoteWord(k)
 	}
 	return newFields
 }
@@ -367,7 +368,7 @@ func (m *Model) Min(column string) (float64, error) {
 	if len(column) == 0 {
 		return 0, nil
 	}
-	value, err := m.Fields(fmt.Sprintf(`MIN(%s)`, m.db.QuoteWord(column))).Value()
+	value, err := m.Fields(fmt.Sprintf(`MIN(%s)`, m.db.GetCore().QuoteWord(column))).Value()
 	if err != nil {
 		return 0, err
 	}
@@ -379,7 +380,7 @@ func (m *Model) Max(column string) (float64, error) {
 	if len(column) == 0 {
 		return 0, nil
 	}
-	value, err := m.Fields(fmt.Sprintf(`MAX(%s)`, m.db.QuoteWord(column))).Value()
+	value, err := m.Fields(fmt.Sprintf(`MAX(%s)`, m.db.GetCore().QuoteWord(column))).Value()
 	if err != nil {
 		return 0, err
 	}
@@ -391,7 +392,7 @@ func (m *Model) Avg(column string) (float64, error) {
 	if len(column) == 0 {
 		return 0, nil
 	}
-	value, err := m.Fields(fmt.Sprintf(`AVG(%s)`, m.db.QuoteWord(column))).Value()
+	value, err := m.Fields(fmt.Sprintf(`AVG(%s)`, m.db.GetCore().QuoteWord(column))).Value()
 	if err != nil {
 		return 0, err
 	}
@@ -403,7 +404,7 @@ func (m *Model) Sum(column string) (float64, error) {
 	if len(column) == 0 {
 		return 0, nil
 	}
-	value, err := m.Fields(fmt.Sprintf(`SUM(%s)`, m.db.QuoteWord(column))).Value()
+	value, err := m.Fields(fmt.Sprintf(`SUM(%s)`, m.db.GetCore().QuoteWord(column))).Value()
 	if err != nil {
 		return 0, err
 	}
@@ -474,7 +475,7 @@ func (m *Model) FindScan(pointer interface{}, where ...interface{}) error {
 // doGetAllBySql does the select statement on the database.
 func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, err error) {
 	cacheKey := ""
-	cacheObj := m.db.GetCache().Ctx(m.db.GetCtx())
+	cacheObj := m.db.GetCache().Ctx(m.GetCtx())
 	// Retrieve from cache.
 	if m.cacheEnabled && m.tx == nil {
 		cacheKey = m.cacheName
@@ -496,7 +497,7 @@ func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, e
 			}
 		}
 	}
-	result, err = m.db.DoGetAll(m.getLink(false), sql, m.mergeArguments(args)...)
+	result, err = m.db.GetCore().DoGetAll(m.GetCtx(), m.getLink(false), sql, m.mergeArguments(args)...)
 	// Cache the result.
 	if cacheKey != "" && err == nil {
 		if m.cacheDuration < 0 {

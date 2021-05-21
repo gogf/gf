@@ -7,9 +7,10 @@
 package gdb
 
 import (
-	"github.com/gogf/gf/util/gutil"
 	"strings"
 	"time"
+
+	"github.com/gogf/gf/util/gutil"
 
 	"github.com/gogf/gf/text/gstr"
 
@@ -149,7 +150,7 @@ func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType s
 // mappingAndFilterData automatically mappings the map key to table field and removes
 // all key-value pairs that are not the field of given table.
 func (c *Core) mappingAndFilterData(schema, table string, data map[string]interface{}, filter bool) (map[string]interface{}, error) {
-	if fieldsMap, err := c.db.TableFields(nil, table, schema); err == nil {
+	if fieldsMap, err := c.db.TableFields(c.GetCtx(), nil, table, schema); err == nil {
 		fieldsKeyMap := make(map[string]interface{}, len(fieldsMap))
 		for k, _ := range fieldsMap {
 			fieldsKeyMap[k] = nil
