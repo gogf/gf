@@ -92,7 +92,7 @@ func (d *DriverPgsql) HandleSqlBeforeCommit(ctx context.Context, link Link, sql 
 // It's mainly used in cli tool chain for automatically generating the models.
 func (d *DriverPgsql) Tables(ctx context.Context, schema ...string) (tables []string, err error) {
 	var result Result
-	link, err := d.GetSlave(schema...)
+	link, err := d.SlaveLink(schema...)
 	if err != nil {
 		return nil, err
 	}
@@ -122,13 +122,13 @@ func (d *DriverPgsql) TableFields(ctx context.Context, link Link, table string, 
 		return nil, gerror.New("function TableFields supports only single table operations")
 	}
 	table, _ = gregex.ReplaceString("\"", "", table)
-	checkSchema := d.db.GetSchema()
+	useSchema := d.db.GetSchema()
 	if len(schema) > 0 && schema[0] != "" {
-		checkSchema = schema[0]
+		useSchema = schema[0]
 	}
 	tableFieldsCacheKey := fmt.Sprintf(
 		`pgsql_table_fields_%s_%s@group:%s`,
-		table, checkSchema, d.GetGroup(),
+		table, useSchema, d.GetGroup(),
 	)
 	v := tableFieldsMap.GetOrSetFuncLock(tableFieldsCacheKey, func() interface{} {
 		var (
@@ -143,7 +143,7 @@ ORDER BY a.attnum`,
 		)
 		structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
 		if link == nil {
-			link, err = d.GetSlave(checkSchema)
+			link, err = d.SlaveLink(useSchema)
 			if err != nil {
 				return nil
 			}

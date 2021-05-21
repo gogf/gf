@@ -28,9 +28,9 @@ func (m *Model) TableFields(table string, schema ...string) (fields map[string]*
 		link Link
 	)
 	if m.tx != nil {
-		link = m.tx.tx
+		link = &txLink{m.tx.tx}
 	} else {
-		link, err = m.db.GetCore().GetSlave(schema...)
+		link, err = m.db.GetCore().SlaveLink(schema...)
 		if err != nil {
 			return
 		}
@@ -176,7 +176,7 @@ func (m *Model) doMappingAndFilterForInsertOrUpdateDataMap(data Map, allowOmitEm
 // The parameter `master` specifies whether using the master node if master-slave configured.
 func (m *Model) getLink(master bool) Link {
 	if m.tx != nil {
-		return m.tx.tx
+		return &txLink{m.tx.tx}
 	}
 	linkType := m.linkType
 	if linkType == 0 {
@@ -188,13 +188,13 @@ func (m *Model) getLink(master bool) Link {
 	}
 	switch linkType {
 	case linkTypeMaster:
-		link, err := m.db.GetCore().GetMaster(m.schema)
+		link, err := m.db.GetCore().MasterLink(m.schema)
 		if err != nil {
 			panic(err)
 		}
 		return link
 	case linkTypeSlave:
-		link, err := m.db.GetCore().GetSlave(m.schema)
+		link, err := m.db.GetCore().SlaveLink(m.schema)
 		if err != nil {
 			panic(err)
 		}

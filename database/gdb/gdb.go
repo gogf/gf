@@ -113,8 +113,8 @@ type DB interface {
 	// Master/Slave specification support.
 	// ===========================================================================
 
-	Master() (*sql.DB, error) // See Core.Master.
-	Slave() (*sql.DB, error)  // See Core.Slave.
+	Master(schema ...string) (*sql.DB, error) // See Core.Master.
+	Slave(schema ...string) (*sql.DB, error)  // See Core.Slave.
 
 	// ===========================================================================
 	// Ping-Pong.
@@ -187,16 +187,28 @@ type Driver interface {
 	New(core *Core, node *ConfigNode) (DB, error)
 }
 
+// Link is a common database function wrapper interface.
+type Link interface {
+	Query(sql string, args ...interface{}) (*sql.Rows, error)
+	Exec(sql string, args ...interface{}) (sql.Result, error)
+	Prepare(sql string) (*sql.Stmt, error)
+	QueryContext(ctx context.Context, sql string, args ...interface{}) (*sql.Rows, error)
+	ExecContext(ctx context.Context, sql string, args ...interface{}) (sql.Result, error)
+	PrepareContext(ctx context.Context, sql string) (*sql.Stmt, error)
+	IsTransaction() bool
+}
+
 // Sql is the sql recording struct.
 type Sql struct {
-	Sql    string        // SQL string(may contain reserved char '?').
-	Type   string        // SQL operation type.
-	Args   []interface{} // Arguments for this sql.
-	Format string        // Formatted sql which contains arguments in the sql.
-	Error  error         // Execution result.
-	Start  int64         // Start execution timestamp in milliseconds.
-	End    int64         // End execution timestamp in milliseconds.
-	Group  string        // Group is the group name of the configuration that the sql is executed from.
+	Sql           string        // SQL string(may contain reserved char '?').
+	Type          string        // SQL operation type.
+	Args          []interface{} // Arguments for this sql.
+	Format        string        // Formatted sql which contains arguments in the sql.
+	Error         error         // Execution result.
+	Start         int64         // Start execution timestamp in milliseconds.
+	End           int64         // End execution timestamp in milliseconds.
+	Group         string        // Group is the group name of the configuration that the sql is executed from.
+	IsTransaction bool          // IsTransaction marks whether this sql is executed in transaction.
 }
 
 // TableField is the struct for table field.
@@ -209,16 +221,6 @@ type TableField struct {
 	Default interface{} // Default value for the field.
 	Extra   string      // Extra information.
 	Comment string      // Comment.
-}
-
-// Link is a common database function wrapper interface.
-type Link interface {
-	Query(sql string, args ...interface{}) (*sql.Rows, error)
-	Exec(sql string, args ...interface{}) (sql.Result, error)
-	Prepare(sql string) (*sql.Stmt, error)
-	QueryContext(ctx context.Context, sql string, args ...interface{}) (*sql.Rows, error)
-	ExecContext(ctx context.Context, sql string, args ...interface{}) (sql.Result, error)
-	PrepareContext(ctx context.Context, sql string) (*sql.Stmt, error)
 }
 
 // Counter  is the type for update count.

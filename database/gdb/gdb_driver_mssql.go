@@ -187,7 +187,7 @@ func (d *DriverMssql) parseSql(sql string) string {
 // It's mainly used in cli tool chain for automatically generating the models.
 func (d *DriverMssql) Tables(ctx context.Context, schema ...string) (tables []string, err error) {
 	var result Result
-	link, err := d.GetSlave(schema...)
+	link, err := d.SlaveLink(schema...)
 	if err != nil {
 		return nil, err
 	}
@@ -213,20 +213,20 @@ func (d *DriverMssql) TableFields(ctx context.Context, link Link, table string, 
 	if gstr.Contains(table, " ") {
 		return nil, gerror.New("function TableFields supports only single table operations")
 	}
-	checkSchema := d.db.GetSchema()
+	useSchema := d.db.GetSchema()
 	if len(schema) > 0 && schema[0] != "" {
-		checkSchema = schema[0]
+		useSchema = schema[0]
 	}
 	tableFieldsCacheKey := fmt.Sprintf(
 		`mssql_table_fields_%s_%s@group:%s`,
-		table, checkSchema, d.GetGroup(),
+		table, useSchema, d.GetGroup(),
 	)
 	v := tableFieldsMap.GetOrSetFuncLock(tableFieldsCacheKey, func() interface{} {
 		var (
 			result Result
 		)
 		if link == nil {
-			link, err = d.GetSlave(checkSchema)
+			link, err = d.SlaveLink(useSchema)
 			if err != nil {
 				return nil
 			}

@@ -26,6 +26,7 @@ import (
 type Stmt struct {
 	*sql.Stmt
 	core *Core
+	link Link
 	sql  string
 }
 
@@ -63,14 +64,15 @@ func (s *Stmt) doStmtCommit(stmtType string, ctx context.Context, args ...interf
 	var (
 		timestampMilli2 = gtime.TimestampMilli()
 		sqlObj          = &Sql{
-			Sql:    s.sql,
-			Type:   stmtType,
-			Args:   args,
-			Format: FormatSqlWithArgs(s.sql, args),
-			Error:  err,
-			Start:  timestampMilli1,
-			End:    timestampMilli2,
-			Group:  s.core.db.GetGroup(),
+			Sql:           s.sql,
+			Type:          stmtType,
+			Args:          args,
+			Format:        FormatSqlWithArgs(s.sql, args),
+			Error:         err,
+			Start:         timestampMilli1,
+			End:           timestampMilli2,
+			Group:         s.core.db.GetGroup(),
+			IsTransaction: s.link.IsTransaction(),
 		}
 	)
 	// Tracing and logging.
