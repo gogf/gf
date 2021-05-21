@@ -23,6 +23,7 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
+// GetCore returns the underlying *Core object.
 func (c *Core) GetCore() *Core {
 	return c
 }
@@ -122,12 +123,6 @@ func (c *Core) GetAll(sql string, args ...interface{}) (Result, error) {
 
 // DoGetAll queries and returns data records from database.
 func (c *Core) DoGetAll(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error) {
-	if link == nil {
-		link, err = c.SlaveLink()
-		if err != nil {
-			return nil, err
-		}
-	}
 	rows, err := c.DoQuery(ctx, link, sql, args...)
 	if err != nil || rows == nil {
 		return nil, err

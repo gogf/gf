@@ -24,18 +24,7 @@ import (
 //
 // Also see DriverMysql.TableFields.
 func (m *Model) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
-	var (
-		link Link
-	)
-	if m.tx != nil {
-		link = &txLink{m.tx.tx}
-	} else {
-		link, err = m.db.GetCore().SlaveLink(schema...)
-		if err != nil {
-			return
-		}
-	}
-	return m.db.TableFields(m.GetCtx(), link, table, schema...)
+	return m.db.TableFields(m.GetCtx(), m.getLink(false), table, schema...)
 }
 
 // getModel creates and returns a cloned model of current model if `safe` is true, or else it returns
