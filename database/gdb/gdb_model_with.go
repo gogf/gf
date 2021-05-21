@@ -8,12 +8,13 @@ package gdb
 
 import (
 	"fmt"
+	"reflect"
+
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/structs"
 	"github.com/gogf/gf/internal/utils"
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/text/gstr"
-	"reflect"
 )
 
 // With creates and returns an ORM model based on meta data of given object.
@@ -38,7 +39,7 @@ func (m *Model) With(objects ...interface{}) *Model {
 	model := m.getModel()
 	for _, object := range objects {
 		if m.tables == "" {
-			m.tables = m.db.QuotePrefixTableName(getTableNameFromOrmTag(object))
+			m.tables = m.db.GetCore().QuotePrefixTableName(getTableNameFromOrmTag(object))
 			return model
 		}
 		model.withArray = append(model.withArray, object)

@@ -114,7 +114,7 @@ func (m *Model) GetFieldsStr(prefix ...string) string {
 		}
 		newFields += prefixStr + k
 	}
-	newFields = m.db.QuoteString(newFields)
+	newFields = m.db.GetCore().QuoteString(newFields)
 	return newFields
 }
 
@@ -158,7 +158,7 @@ func (m *Model) GetFieldsExStr(fields string, prefix ...string) string {
 		}
 		newFields += prefixStr + k
 	}
-	newFields = m.db.QuoteString(newFields)
+	newFields = m.db.GetCore().QuoteString(newFields)
 	return newFields
 }
 

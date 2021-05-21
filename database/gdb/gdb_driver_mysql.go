@@ -7,8 +7,10 @@
 package gdb
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
+
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/text/gregex"
@@ -75,19 +77,19 @@ func (d *DriverMysql) GetChars() (charLeft string, charRight string) {
 }
 
 // HandleSqlBeforeCommit handles the sql before posts it to database.
-func (d *DriverMysql) HandleSqlBeforeCommit(link Link, sql string, args []interface{}) (string, []interface{}) {
+func (d *DriverMysql) HandleSqlBeforeCommit(ctx context.Context, link Link, sql string, args []interface{}) (string, []interface{}) {
 	return sql, args
 }
 
 // Tables retrieves and returns the tables of current schema.
 // It's mainly used in cli tool chain for automatically generating the models.
-func (d *DriverMysql) Tables(schema ...string) (tables []string, err error) {
+func (d *DriverMysql) Tables(ctx context.Context, schema ...string) (tables []string, err error) {
 	var result Result
-	link, err := d.db.GetSlave(schema...)
+	link, err := d.GetSlave(schema...)
 	if err != nil {
 		return nil, err
 	}
-	result, err = d.db.DoGetAll(link, `SHOW TABLES`)
+	result, err = d.DoGetAll(ctx, link, `SHOW TABLES`)
 	if err != nil {
 		return
 	}
@@ -111,7 +113,7 @@ func (d *DriverMysql) Tables(schema ...string) (tables []string, err error) {
 //
 // It's using cache feature to enhance the performance, which is never expired util the
 // process restarts.
-func (d *DriverMysql) TableFields(link Link, table string, schema ...string) (fields map[string]*TableField, err error) {
+func (d *DriverMysql) TableFields(ctx context.Context, link Link, table string, schema ...string) (fields map[string]*TableField, err error) {
 	charL, charR := d.GetChars()
 	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
@@ -130,14 +132,13 @@ func (d *DriverMysql) TableFields(link Link, table string, schema ...string) (fi
 			result Result
 		)
 		if link == nil {
-			link, err = d.db.GetSlave(checkSchema)
+			link, err = d.GetSlave(checkSchema)
 			if err != nil {
 				return nil
 			}
 		}
-		result, err = d.db.DoGetAll(
-			link,
-			fmt.Sprintf(`SHOW FULL COLUMNS FROM %s`, d.db.QuoteWord(table)),
+		result, err = d.DoGetAll(ctx, link,
+			fmt.Sprintf(`SHOW FULL COLUMNS FROM %s`, d.QuoteWord(table)),
 		)
 		if err != nil {
 			return nil

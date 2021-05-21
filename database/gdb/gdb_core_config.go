@@ -8,15 +8,12 @@ package gdb
 
 import (
 	"fmt"
-	"github.com/gogf/gf/os/gcache"
 	"sync"
 	"time"
 
-	"github.com/gogf/gf/os/glog"
-)
+	"github.com/gogf/gf/os/gcache"
 
-const (
-	DefaultGroupName = "default" // Default group name.
+	"github.com/gogf/gf/os/glog"
 )
 
 // Config is the configuration management object.
@@ -52,6 +49,10 @@ type ConfigNode struct {
 	DeletedAt            string        `json:"deletedAt"`            // (Optional) The filed name of table for automatic-filled updated datetime.
 	TimeMaintainDisabled bool          `json:"timeMaintainDisabled"` // (Optional) Disable the automatic time maintaining feature.
 }
+
+const (
+	DefaultGroupName = "default" // Default group name.
+)
 
 // configs is internal used configuration object.
 var configs struct {
