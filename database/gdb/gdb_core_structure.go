@@ -100,7 +100,8 @@ func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType s
 
 	case
 		"datetime",
-		"timestamp":
+		"timestamp",
+		"timestamptz":
 		if t, ok := fieldValue.(time.Time); ok {
 			return gtime.NewFromTime(t)
 		}
