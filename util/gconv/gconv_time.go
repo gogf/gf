@@ -13,7 +13,7 @@ import (
 	"github.com/gogf/gf/os/gtime"
 )
 
-// Time converts `i` to time.Time.
+// Time converts `any` to time.Time.
 func Time(any interface{}, format ...string) time.Time {
 	// It's already this type.
 	if len(format) == 0 {
@@ -27,9 +27,9 @@ func Time(any interface{}, format ...string) time.Time {
 	return time.Time{}
 }
 
-// Duration converts `i` to time.Duration.
-// If `i` is string, then it uses time.ParseDuration to convert it.
-// If `i` is numeric, then it converts `i` as nanoseconds.
+// Duration converts `any` to time.Duration.
+// If `any` is string, then it uses time.ParseDuration to convert it.
+// If `any` is numeric, then it converts `any` as nanoseconds.
 func Duration(any interface{}) time.Duration {
 	// It's already this type.
 	if v, ok := any.(time.Duration); ok {
@@ -43,10 +43,10 @@ func Duration(any interface{}) time.Duration {
 	return time.Duration(Int64(any))
 }
 
-// GTime converts `i` to *gtime.Time.
-// The parameter `format` can be used to specify the format of `i`.
-// If no `format` given, it converts `i` using gtime.NewFromTimeStamp if `i` is numeric,
-// or using gtime.StrToTime if `i` is string.
+// GTime converts `any` to *gtime.Time.
+// The parameter `format` can be used to specify the format of `any`.
+// If no `format` given, it converts `any` using gtime.NewFromTimeStamp if `any` is numeric,
+// or using gtime.StrToTime if `any` is string.
 func GTime(any interface{}, format ...string) *gtime.Time {
 	if any == nil {
 		return nil

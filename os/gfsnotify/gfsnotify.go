@@ -91,8 +91,8 @@ func New() (*Watcher, error) {
 		intlog.Printf("New watcher failed: %v", err)
 		return nil, err
 	}
-	w.startWatchLoop()
-	w.startEventLoop()
+	w.watchLoop()
+	w.eventLoop()
 	return w, nil
 }
 

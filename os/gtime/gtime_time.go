@@ -464,3 +464,8 @@ func (t *Time) UnmarshalText(data []byte) error {
 	}
 	return gerror.Newf(`invalid time value: %s`, data)
 }
+
+// NoValidation marks this struct object will not be validated by package gvalid.
+func (t *Time) NoValidation() {
+
+}

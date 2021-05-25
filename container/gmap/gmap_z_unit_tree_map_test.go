@@ -188,7 +188,7 @@ func Test_TreeMap_Json(t *testing.T) {
 		t.Assert(err, nil)
 
 		m := gmap.NewTreeMap(gutil.ComparatorString)
-		err = json.Unmarshal(b, m)
+		err = json.UnmarshalUseNumber(b, m)
 		t.Assert(err, nil)
 		t.Assert(m.Get("k1"), data["k1"])
 		t.Assert(m.Get("k2"), data["k2"])
@@ -202,7 +202,7 @@ func Test_TreeMap_Json(t *testing.T) {
 		t.Assert(err, nil)
 
 		var m gmap.TreeMap
-		err = json.Unmarshal(b, &m)
+		err = json.UnmarshalUseNumber(b, &m)
 		t.Assert(err, nil)
 		t.Assert(m.Get("k1"), data["k1"])
 		t.Assert(m.Get("k2"), data["k2"])

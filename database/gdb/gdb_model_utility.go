@@ -8,6 +8,8 @@ package gdb
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/gogf/gf/container/gset"
 	"github.com/gogf/gf/internal/empty"
 	"github.com/gogf/gf/os/gtime"
@@ -15,7 +17,6 @@ import (
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/gutil"
-	"time"
 )
 
 // TableFields retrieves and returns the fields information of specified table of current
@@ -23,18 +24,7 @@ import (
 //
 // Also see DriverMysql.TableFields.
 func (m *Model) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
-	var (
-		link Link
-	)
-	if m.tx != nil {
-		link = m.tx.tx
-	} else {
-		link, err = m.db.GetSlave(schema...)
-		if err != nil {
-			return
-		}
-	}
-	return m.db.TableFields(link, table, schema...)
+	return m.db.TableFields(m.GetCtx(), m.getLink(false), table, schema...)
 }
 
 // getModel creates and returns a cloned model of current model if `safe` is true, or else it returns
@@ -111,7 +101,7 @@ func (m *Model) filterDataForInsertOrUpdate(data interface{}) (interface{}, erro
 // Note that, it does not filter list item, which is also type of map, for "omit empty" feature.
 func (m *Model) doMappingAndFilterForInsertOrUpdateDataMap(data Map, allowOmitEmpty bool) (Map, error) {
 	var err error
-	data, err = m.db.mappingAndFilterData(m.schema, m.tables, data, m.filter)
+	data, err = m.db.GetCore().mappingAndFilterData(m.schema, m.tables, data, m.filter)
 	if err != nil {
 		return nil, err
 	}
@@ -175,7 +165,7 @@ func (m *Model) doMappingAndFilterForInsertOrUpdateDataMap(data Map, allowOmitEm
 // The parameter `master` specifies whether using the master node if master-slave configured.
 func (m *Model) getLink(master bool) Link {
 	if m.tx != nil {
-		return m.tx.tx
+		return &txLink{m.tx.tx}
 	}
 	linkType := m.linkType
 	if linkType == 0 {
@@ -187,13 +177,13 @@ func (m *Model) getLink(master bool) Link {
 	}
 	switch linkType {
 	case linkTypeMaster:
-		link, err := m.db.GetMaster(m.schema)
+		link, err := m.db.GetCore().MasterLink(m.schema)
 		if err != nil {
 			panic(err)
 		}
 		return link
 	case linkTypeSlave:
-		link, err := m.db.GetSlave(m.schema)
+		link, err := m.db.GetCore().SlaveLink(m.schema)
 		if err != nil {
 			panic(err)
 		}

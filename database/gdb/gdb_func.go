@@ -9,6 +9,11 @@ package gdb
 import (
 	"bytes"
 	"fmt"
+	"reflect"
+	"regexp"
+	"strings"
+	"time"
+
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/empty"
 	"github.com/gogf/gf/internal/json"
@@ -16,10 +21,6 @@ import (
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/util/gmeta"
 	"github.com/gogf/gf/util/gutil"
-	"reflect"
-	"regexp"
-	"strings"
-	"time"
 
 	"github.com/gogf/gf/internal/structs"
 
@@ -504,7 +505,7 @@ func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool) (
 				// Eg: Where/And/Or("uid>=", 1)
 				newWhere += "?"
 			} else if gregex.IsMatchString(regularFieldNameRegPattern, newWhere) {
-				newWhere = db.QuoteString(newWhere)
+				newWhere = db.GetCore().QuoteString(newWhere)
 				if len(newArgs) > 0 {
 					if utils.IsArray(newArgs[0]) {
 						// Eg:
@@ -543,9 +544,9 @@ func formatWhereInterfaces(db DB, where []interface{}, buffer *bytes.Buffer, new
 	for i := 0; i < len(where); i += 2 {
 		str = gconv.String(where[i])
 		if buffer.Len() > 0 {
-			buffer.WriteString(" AND " + db.QuoteWord(str) + "=?")
+			buffer.WriteString(" AND " + db.GetCore().QuoteWord(str) + "=?")
 		} else {
-			buffer.WriteString(db.QuoteWord(str) + "=?")
+			buffer.WriteString(db.GetCore().QuoteWord(str) + "=?")
 		}
 		if s, ok := where[i+1].(Raw); ok {
 			buffer.WriteString(gconv.String(s))
@@ -558,7 +559,7 @@ func formatWhereInterfaces(db DB, where []interface{}, buffer *bytes.Buffer, new
 
 // formatWhereKeyValue handles each key-value pair of the parameter map.
 func formatWhereKeyValue(db DB, buffer *bytes.Buffer, newArgs []interface{}, key string, value interface{}) []interface{} {
-	quotedKey := db.QuoteWord(key)
+	quotedKey := db.GetCore().QuoteWord(key)
 	if buffer.Len() > 0 {
 		buffer.WriteString(" AND ")
 	}

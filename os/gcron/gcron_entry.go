@@ -18,28 +18,28 @@ import (
 )
 
 // Timed task entry.
-type Entry struct {
+type Job struct {
 	cron     *Cron         // Cron object belonged to.
-	entry    *gtimer.Entry // Associated gtimer.Entry.
+	job      *gtimer.Job   // Associated gtimer.Job.
 	schedule *cronSchedule // Timed schedule object.
 	jobName  string        // Callback function name(address info).
 	times    *gtype.Int    // Running times limit.
-	Name     string        // Entry name.
+	Name     string        // Job name.
 	Job      func()        `json:"-"` // Callback function.
 	Time     time.Time     // Registered time.
 }
 
-// addEntry creates and returns a new Entry object.
+// addJob creates and returns a new Job object.
 // Param <job> is the callback function for timed task execution.
 // Param <singleton> specifies whether timed task executing in singleton mode.
 // Param <name> names this entry for manual control.
-func (c *Cron) addEntry(pattern string, job func(), singleton bool, name ...string) (*Entry, error) {
+func (c *Cron) addJob(pattern string, job func(), singleton bool, name ...string) (*Job, error) {
 	schedule, err := newSchedule(pattern)
 	if err != nil {
 		return nil, err
 	}
 	// No limit for <times>, for gtimer checking scheduling every second.
-	entry := &Entry{
+	entry := &Job{
 		cron:     c,
 		schedule: schedule,
 		jobName:  runtime.FuncForPC(reflect.ValueOf(job).Pointer()).Name(),
@@ -57,57 +57,57 @@ func (c *Cron) addEntry(pattern string, job func(), singleton bool, name ...stri
 	// It should start running after the entry is added to the entries map,
 	// to avoid the task from running during adding where the entries
 	// does not have the entry information, which might cause panic.
-	entry.entry = gtimer.AddEntry(time.Second, entry.check, singleton, -1, gtimer.StatusStopped)
+	entry.job = gtimer.AddJob(time.Second, entry.check, singleton, -1, gtimer.StatusStopped)
 	c.entries.Set(entry.Name, entry)
-	entry.entry.Start()
+	entry.job.Start()
 	return entry, nil
 }
 
 // IsSingleton return whether this entry is a singleton timed task.
-func (entry *Entry) IsSingleton() bool {
-	return entry.entry.IsSingleton()
+func (entry *Job) IsSingleton() bool {
+	return entry.job.IsSingleton()
 }
 
 // SetSingleton sets the entry running in singleton mode.
-func (entry *Entry) SetSingleton(enabled bool) {
-	entry.entry.SetSingleton(true)
+func (entry *Job) SetSingleton(enabled bool) {
+	entry.job.SetSingleton(true)
 }
 
 // SetTimes sets the times which the entry can run.
-func (entry *Entry) SetTimes(times int) {
+func (entry *Job) SetTimes(times int) {
 	entry.times.Set(times)
 }
 
 // Status returns the status of entry.
-func (entry *Entry) Status() int {
-	return entry.entry.Status()
+func (entry *Job) Status() int {
+	return entry.job.Status()
 }
 
 // SetStatus sets the status of the entry.
-func (entry *Entry) SetStatus(status int) int {
-	return entry.entry.SetStatus(status)
+func (entry *Job) SetStatus(status int) int {
+	return entry.job.SetStatus(status)
 }
 
 // Start starts running the entry.
-func (entry *Entry) Start() {
-	entry.entry.Start()
+func (entry *Job) Start() {
+	entry.job.Start()
 }
 
 // Stop stops running the entry.
-func (entry *Entry) Stop() {
-	entry.entry.Stop()
+func (entry *Job) Stop() {
+	entry.job.Stop()
 }
 
 // Close stops and removes the entry from cron.
-func (entry *Entry) Close() {
+func (entry *Job) Close() {
 	entry.cron.entries.Remove(entry.Name)
-	entry.entry.Close()
+	entry.job.Close()
 }
 
 // Timed task check execution.
-// The running times limits feature is implemented by gcron.Entry and cannot be implemented by gtimer.Entry.
-// gcron.Entry relies on gtimer to implement a scheduled task check for gcron.Entry per second.
-func (entry *Entry) check() {
+// The running times limits feature is implemented by gcron.Job and cannot be implemented by gtimer.Job.
+// gcron.Job relies on gtimer to implement a scheduled task check for gcron.Job per second.
+func (entry *Job) check() {
 	if entry.schedule.meet(time.Now()) {
 		path := entry.cron.GetLogPath()
 		level := entry.cron.GetLogLevel()
@@ -125,7 +125,7 @@ func (entry *Entry) check() {
 			// Running times check.
 			times := entry.times.Add(-1)
 			if times <= 0 {
-				if entry.entry.SetStatus(StatusClosed) == StatusClosed || times < 0 {
+				if entry.job.SetStatus(StatusClosed) == StatusClosed || times < 0 {
 					return
 				}
 			}
@@ -139,7 +139,7 @@ func (entry *Entry) check() {
 				} else {
 					glog.Path(path).Level(level).Debugf("[gcron] %s(%s) %s end", entry.Name, entry.schedule.pattern, entry.jobName)
 				}
-				if entry.entry.Status() == StatusClosed {
+				if entry.job.Status() == StatusClosed {
 					entry.Close()
 				}
 			}()

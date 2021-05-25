@@ -14,6 +14,16 @@ func (f *Field) Tag(key string) string {
 	return f.Field.Tag.Get(key)
 }
 
+// TagLookup returns the value associated with key in the tag string.
+// If the key is present in the tag the value (which may be empty)
+// is returned. Otherwise the returned value will be the empty string.
+// The ok return value reports whether the value was explicitly set in
+// the tag string. If the tag does not have the conventional format,
+// the value returned by Lookup is unspecified.
+func (f *Field) TagLookup(key string) (value string, ok bool) {
+	return f.Field.Tag.Lookup(key)
+}
+
 // IsEmbedded returns true if the given field is an anonymous field (embedded)
 func (f *Field) IsEmbedded() bool {
 	return f.Field.Anonymous
@@ -61,8 +71,11 @@ func (f *Field) OriginalKind() reflect.Kind {
 // The parameter `priority` specifies the priority tag array for retrieving from high to low.
 // If it's given `nil`, it returns map[name]*Field, of which the `name` is attribute name.
 //
+// The parameter `recursive` specifies the whether retrieving the fields recursively if the attribute
+// is an embedded struct.
+//
 // Note that it only retrieves the exported attributes with first letter up-case from struct.
-func FieldMap(pointer interface{}, priority []string) (map[string]*Field, error) {
+func FieldMap(pointer interface{}, priority []string, recursive bool) (map[string]*Field, error) {
 	fields, err := getFieldValues(pointer)
 	if err != nil {
 		return nil, err
@@ -88,8 +101,8 @@ func FieldMap(pointer interface{}, priority []string) (map[string]*Field, error)
 		if tagValue != "" {
 			mapField[tagValue] = tempField
 		} else {
-			if field.IsEmbedded() {
-				m, err := FieldMap(field.Value, priority)
+			if recursive && field.IsEmbedded() {
+				m, err := FieldMap(field.Value, priority, recursive)
 				if err != nil {
 					return nil, err
 				}

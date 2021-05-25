@@ -78,7 +78,7 @@ func serverProcessInit() {
 
 	// It's an ugly calling for better initializing the main package path
 	// in source development environment. It is useful only be used in main goroutine.
-	// It fails retrieving the main package path in asynchronized goroutines.
+	// It fails retrieving the main package path in asynchronous goroutines.
 	gfile.MainPkgPath()
 }
 
@@ -416,7 +416,7 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 			s.servers = append(s.servers, s.newGracefulServer(itemFunc))
 		}
 	}
-	// Start listening asynchronizedly.
+	// Start listening asynchronously.
 	serverRunning.Add(1)
 	for _, v := range s.servers {
 		go func(server *gracefulServer) {

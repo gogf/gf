@@ -519,7 +519,7 @@ func (l *List) UnmarshalJSON(b []byte) error {
 		l.list = list.New()
 	}
 	var array []interface{}
-	if err := json.Unmarshal(b, &array); err != nil {
+	if err := json.UnmarshalUseNumber(b, &array); err != nil {
 		return err
 	}
 	l.PushBacks(array)
@@ -536,7 +536,7 @@ func (l *List) UnmarshalValue(value interface{}) (err error) {
 	var array []interface{}
 	switch value.(type) {
 	case string, []byte:
-		err = json.Unmarshal(gconv.Bytes(value), &array)
+		err = json.UnmarshalUseNumber(gconv.Bytes(value), &array)
 	default:
 		array = gconv.SliceAny(value)
 	}

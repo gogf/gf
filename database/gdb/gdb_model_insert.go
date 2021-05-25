@@ -8,12 +8,13 @@ package gdb
 
 import (
 	"database/sql"
+	"reflect"
+
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/gutil"
-	"reflect"
 )
 
 // Batch sets the batch operation number for the model.
@@ -194,7 +195,8 @@ func (m *Model) doInsertWithOption(option int) (result sql.Result, err error) {
 				list[k] = v
 			}
 		}
-		return m.db.DoBatchInsert(
+		return m.db.GetCore().DoBatchInsert(
+			m.GetCtx(),
 			m.getLink(true),
 			m.tables,
 			newData,
@@ -219,7 +221,8 @@ func (m *Model) doInsertWithOption(option int) (result sql.Result, err error) {
 				data[fieldNameUpdate] = nowString
 			}
 		}
-		return m.db.DoInsert(
+		return m.db.GetCore().DoInsert(
+			m.GetCtx(),
 			m.getLink(true),
 			m.tables,
 			newData,

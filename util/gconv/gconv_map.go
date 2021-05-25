@@ -56,7 +56,7 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 	case string:
 		// If it is a JSON string, automatically unmarshal it!
 		if len(r) > 0 && r[0] == '{' && r[len(r)-1] == '}' {
-			if err := json.Unmarshal([]byte(r), &dataMap); err != nil {
+			if err := json.UnmarshalUseNumber([]byte(r), &dataMap); err != nil {
 				return nil
 			}
 		} else {
@@ -65,7 +65,7 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 	case []byte:
 		// If it is a JSON string, automatically unmarshal it!
 		if len(r) > 0 && r[0] == '{' && r[len(r)-1] == '}' {
-			if err := json.Unmarshal(r, &dataMap); err != nil {
+			if err := json.UnmarshalUseNumber(r, &dataMap); err != nil {
 				return nil
 			}
 		} else {

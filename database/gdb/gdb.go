@@ -11,9 +11,10 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
+
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/os/gcmd"
-	"time"
 
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/internal/intlog"
@@ -84,6 +85,7 @@ type DB interface {
 
 	Insert(table string, data interface{}, batch ...int) (sql.Result, error)       // See Core.Insert.
 	InsertIgnore(table string, data interface{}, batch ...int) (sql.Result, error) // See Core.InsertIgnore.
+	InsertAndGetId(table string, data interface{}, batch ...int) (int64, error)    // See Core.InsertAndGetId.
 	Replace(table string, data interface{}, batch ...int) (sql.Result, error)      // See Core.Replace.
 	Save(table string, data interface{}, batch ...int) (sql.Result, error)         // See Core.Save.
 
@@ -93,19 +95,6 @@ type DB interface {
 
 	Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error) // See Core.Update.
 	Delete(table string, condition interface{}, args ...interface{}) (sql.Result, error)                   // See Core.Delete.
-
-	// ===========================================================================
-	// Internal APIs for CURD, which can be overwrote for custom CURD implements.
-	// ===========================================================================
-
-	DoQuery(link Link, sql string, args ...interface{}) (rows *sql.Rows, err error)                                           // See Core.DoQuery.
-	DoGetAll(link Link, sql string, args ...interface{}) (result Result, err error)                                           // See Core.DoGetAll.
-	DoExec(link Link, sql string, args ...interface{}) (result sql.Result, err error)                                         // See Core.DoExec.
-	DoPrepare(link Link, sql string) (*Stmt, error)                                                                           // See Core.DoPrepare.
-	DoInsert(link Link, table string, data interface{}, option int, batch ...int) (result sql.Result, err error)              // See Core.DoInsert.
-	DoBatchInsert(link Link, table string, list interface{}, option int, batch ...int) (result sql.Result, err error)         // See Core.DoBatchInsert.
-	DoUpdate(link Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) // See Core.DoUpdate.
-	DoDelete(link Link, table string, condition string, args ...interface{}) (result sql.Result, err error)                   // See Core.DoDelete.
 
 	// ===========================================================================
 	// Query APIs for convenience purpose.
@@ -124,8 +113,8 @@ type DB interface {
 	// Master/Slave specification support.
 	// ===========================================================================
 
-	Master() (*sql.DB, error) // See Core.Master.
-	Slave() (*sql.DB, error)  // See Core.Slave.
+	Master(schema ...string) (*sql.DB, error) // See Core.Master.
+	Slave(schema ...string) (*sql.DB, error)  // See Core.Slave.
 
 	// ===========================================================================
 	// Ping-Pong.
@@ -138,8 +127,8 @@ type DB interface {
 	// Transaction.
 	// ===========================================================================
 
-	Begin() (*TX, error)                          // See Core.Begin.
-	Transaction(f func(tx *TX) error) (err error) // See Core.Transaction.
+	Begin() (*TX, error)                                                              // See Core.Begin.
+	Transaction(ctx context.Context, f func(ctx context.Context, tx *TX) error) error // See Core.Transaction.
 
 	// ===========================================================================
 	// Configuration methods.
@@ -165,40 +154,25 @@ type DB interface {
 	// Utility methods.
 	// ===========================================================================
 
-	GetCtx() context.Context                                                               // See Core.GetCtx.
-	GetChars() (charLeft string, charRight string)                                         // See Core.GetChars.
-	GetMaster(schema ...string) (*sql.DB, error)                                           // See Core.GetMaster.
-	GetSlave(schema ...string) (*sql.DB, error)                                            // See Core.GetSlave.
-	QuoteWord(s string) string                                                             // See Core.QuoteWord.
-	QuoteString(s string) string                                                           // See Core.QuoteString.
-	QuotePrefixTableName(table string) string                                              // See Core.QuotePrefixTableName.
-	Tables(schema ...string) (tables []string, err error)                                  // See Core.Tables.
-	TableFields(link Link, table string, schema ...string) (map[string]*TableField, error) // See Core.TableFields.
-	HasTable(name string) (bool, error)                                                    // See Core.HasTable.
-	FilteredLinkInfo() string                                                              // See Core.FilteredLinkInfo.
+	GetCtx() context.Context                                                                                    // See Core.GetCtx.
+	GetCore() *Core                                                                                             // See Core.GetCore
+	GetChars() (charLeft string, charRight string)                                                              // See Core.GetChars.
+	Tables(ctx context.Context, schema ...string) (tables []string, err error)                                  // See Core.Tables.
+	TableFields(ctx context.Context, link Link, table string, schema ...string) (map[string]*TableField, error) // See Core.TableFields.
+	FilteredLinkInfo() string                                                                                   // See Core.FilteredLinkInfo.
 
 	// HandleSqlBeforeCommit is a hook function, which deals with the sql string before
 	// it's committed to underlying driver. The parameter `link` specifies the current
 	// database connection operation object. You can modify the sql string `sql` and its
 	// arguments `args` as you wish before they're committed to driver.
 	// Also see Core.HandleSqlBeforeCommit.
-	HandleSqlBeforeCommit(link Link, sql string, args []interface{}) (string, []interface{})
-
-	// ===========================================================================
-	// Internal methods, for internal usage purpose, you do not need consider it.
-	// ===========================================================================
-
-	mappingAndFilterData(schema, table string, data map[string]interface{}, filter bool) (map[string]interface{}, error) // See Core.mappingAndFilterData.
-	convertFieldValueToLocalValue(fieldValue interface{}, fieldType string) interface{}                                  // See Core.convertFieldValueToLocalValue.
-	convertRowsToResult(rows *sql.Rows) (Result, error)                                                                  // See Core.convertRowsToResult.
-	addSqlToTracing(ctx context.Context, sql *Sql)                                                                       // See Core.addSqlToTracing.
-	writeSqlToLogger(v *Sql)                                                                                             // See Core.writeSqlToLogger.
+	HandleSqlBeforeCommit(ctx context.Context, link Link, sql string, args []interface{}) (string, []interface{})
 }
 
 // Core is the base struct for database management.
 type Core struct {
 	db     DB              // DB interface object.
-	ctx    context.Context // Context for chaining operation only.
+	ctx    context.Context // Context for chaining operation only. Do not set a default value in Core initialization.
 	group  string          // Configuration group name.
 	debug  *gtype.Bool     // Enable debug mode for the database, which can be changed in runtime.
 	cache  *gcache.Cache   // Cache manager, SQL result cache only.
@@ -213,16 +187,28 @@ type Driver interface {
 	New(core *Core, node *ConfigNode) (DB, error)
 }
 
+// Link is a common database function wrapper interface.
+type Link interface {
+	Query(sql string, args ...interface{}) (*sql.Rows, error)
+	Exec(sql string, args ...interface{}) (sql.Result, error)
+	Prepare(sql string) (*sql.Stmt, error)
+	QueryContext(ctx context.Context, sql string, args ...interface{}) (*sql.Rows, error)
+	ExecContext(ctx context.Context, sql string, args ...interface{}) (sql.Result, error)
+	PrepareContext(ctx context.Context, sql string) (*sql.Stmt, error)
+	IsTransaction() bool
+}
+
 // Sql is the sql recording struct.
 type Sql struct {
-	Sql    string        // SQL string(may contain reserved char '?').
-	Type   string        // SQL operation type.
-	Args   []interface{} // Arguments for this sql.
-	Format string        // Formatted sql which contains arguments in the sql.
-	Error  error         // Execution result.
-	Start  int64         // Start execution timestamp in milliseconds.
-	End    int64         // End execution timestamp in milliseconds.
-	Group  string        // Group is the group name of the configuration that the sql is executed from.
+	Sql           string        // SQL string(may contain reserved char '?').
+	Type          string        // SQL operation type.
+	Args          []interface{} // Arguments for this sql.
+	Format        string        // Formatted sql which contains arguments in the sql.
+	Error         error         // Execution result.
+	Start         int64         // Start execution timestamp in milliseconds.
+	End           int64         // End execution timestamp in milliseconds.
+	Group         string        // Group is the group name of the configuration that the sql is executed from.
+	IsTransaction bool          // IsTransaction marks whether this sql is executed in transaction.
 }
 
 // TableField is the struct for table field.
@@ -235,16 +221,6 @@ type TableField struct {
 	Default interface{} // Default value for the field.
 	Extra   string      // Extra information.
 	Comment string      // Comment.
-}
-
-// Link is a common database function wrapper interface.
-type Link interface {
-	Query(sql string, args ...interface{}) (*sql.Rows, error)
-	Exec(sql string, args ...interface{}) (sql.Result, error)
-	Prepare(sql string) (*sql.Stmt, error)
-	QueryContext(ctx context.Context, sql string, args ...interface{}) (*sql.Rows, error)
-	ExecContext(ctx context.Context, sql string, args ...interface{}) (sql.Result, error)
-	PrepareContext(ctx context.Context, sql string) (*sql.Stmt, error)
 }
 
 // Counter  is the type for update count.
@@ -339,7 +315,7 @@ func New(group ...string) (db DB, err error) {
 	defer configs.RUnlock()
 
 	if len(configs.config) < 1 {
-		return nil, gerror.New("empty database configuration")
+		return nil, gerror.New("database configuration is empty, please set the database configuration before using")
 	}
 	if _, ok := configs.config[groupName]; ok {
 		if node, err := getConfigNodeByGroup(groupName, true); err == nil {
@@ -358,13 +334,19 @@ func New(group ...string) (db DB, err error) {
 				}
 				return c.db, nil
 			} else {
-				return nil, gerror.New(fmt.Sprintf(`unsupported database type "%s"`, node.Type))
+				return nil, gerror.Newf(
+					`cannot find database driver for specified database type "%s", did you misspell type name "%s" or forget importing the database driver?`,
+					node.Type, node.Type,
+				)
 			}
 		} else {
 			return nil, err
 		}
 	} else {
-		return nil, gerror.New(fmt.Sprintf(`database configuration node "%s" is not found`, groupName))
+		return nil, gerror.Newf(
+			`database configuration node "%s" is not found, did you misspell group name "%s" or miss the database configuration?`,
+			groupName, groupName,
+		)
 	}
 }
 
