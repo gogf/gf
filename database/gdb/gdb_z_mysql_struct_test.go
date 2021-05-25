@@ -429,3 +429,26 @@ func Test_Model_Scan_UnmarshalValue(t *testing.T) {
 		t.Assert(users[9].CreateTime.String(), CreateTime)
 	})
 }
+
+func Test_Model_Scan_Map(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		var users []*User
+		err := db.Model(table).Order("id asc").Scan(&users)
+		t.AssertNil(err)
+		t.Assert(len(users), TableSize)
+		t.Assert(users[0].Id, 1)
+		t.Assert(users[0].Passport, "user_1")
+		t.Assert(users[0].Password, "")
+		t.Assert(users[0].Nickname, "name_1")
+		t.Assert(users[0].CreateTime.String(), CreateTime)
+
+		t.Assert(users[9].Id, 10)
+		t.Assert(users[9].Passport, "user_10")
+		t.Assert(users[9].Password, "")
+		t.Assert(users[9].Nickname, "name_10")
+		t.Assert(users[9].CreateTime.String(), CreateTime)
+	})
+}
