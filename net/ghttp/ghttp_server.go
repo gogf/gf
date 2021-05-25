@@ -26,7 +26,7 @@ import (
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/os/gproc"
-	//"github.com/gogf/gf/os/gtimer"
+	"github.com/gogf/gf/os/gtimer"
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/olekukonko/tablewriter"
@@ -193,10 +193,11 @@ func (s *Server) Start() error {
 
 	// If this is a child process, it then notifies its parent exit.
 	if gproc.IsChild() {
-		// Let the parent process call Shutdown(ctx)
-		if err := gproc.Send(gproc.PPid(), []byte("exit"), adminGProcCommGroup); err != nil {
-			//glog.Error("server error in process communication:", err)
-		}
+		gtimer.SetTimeout(time.Duration(s.config.GracefulTimeout)*time.Second, func() {
+			if err := gproc.Send(gproc.PPid(), []byte("exit"), adminGProcCommGroup); err != nil {
+				//glog.Error("server error in process communication:", err)
+			}
+		})
 	}
 	s.dumpRouterMap()
 	return nil

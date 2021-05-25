@@ -185,7 +185,7 @@ func (s *gracefulServer) shutdown() {
 	if s.status == ServerStatusStopped {
 		return
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(s.server.config.GracefulTimeout)*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(s.server.config.ShutdownTimeout)*time.Second)
 	defer func() {
 		cancel()
 	}()
