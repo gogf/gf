@@ -79,10 +79,10 @@ func ComparatorUint64(a, b interface{}) int {
 func ComparatorFloat32(a, b interface{}) int {
 	aFloat := gconv.Float64(a)
 	bFloat := gconv.Float64(b)
-	if aFloat == bFloat{
+	if aFloat == bFloat {
 		return 0
 	}
-	if aFloat > bFloat{
+	if aFloat > bFloat {
 		return 1
 	}
 	return -1
@@ -92,10 +92,10 @@ func ComparatorFloat32(a, b interface{}) int {
 func ComparatorFloat64(a, b interface{}) int {
 	aFloat := gconv.Float64(a)
 	bFloat := gconv.Float64(b)
-	if aFloat == bFloat{
+	if aFloat == bFloat {
 		return 0
 	}
-	if aFloat > bFloat{
+	if aFloat > bFloat {
 		return 1
 	}
 	return -1
