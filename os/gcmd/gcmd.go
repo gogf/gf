@@ -15,11 +15,17 @@ import (
 	"strings"
 )
 
+const (
+	helpOptionName      = "help"
+	helpOptionNameShort = "h"
+	maxLineChars        = 100
+)
+
 var (
 	defaultCommandFuncMap = make(map[string]func())
 )
 
-// Custom initialization.
+// Init does custom initialization.
 func Init(args ...string) {
 	command.Init(args...)
 }

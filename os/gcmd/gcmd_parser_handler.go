@@ -21,7 +21,7 @@ func (p *Parser) BindHandle(cmd string, f func()) error {
 	return nil
 }
 
-// BindHandle registers callback function with map <m>.
+// BindHandleMap registers callback function with map <m>.
 func (p *Parser) BindHandleMap(m map[string]func()) error {
 	var err error
 	for k, v := range m {
