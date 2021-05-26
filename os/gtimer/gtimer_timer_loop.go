@@ -50,19 +50,19 @@ func (t *Timer) proceed(currentTimerTicks int64) {
 		if value == nil {
 			break
 		}
-		job := value.(*Job)
+		entry := value.(*Entry)
 		// It checks if it meets the ticks requirement.
-		if jobNextTicks := job.nextTicks.Val(); currentTimerTicks < jobNextTicks {
+		if jobNextTicks := entry.nextTicks.Val(); currentTimerTicks < jobNextTicks {
 			// It push the job back if current ticks does not meet its running ticks requirement.
-			t.queue.Push(job, job.nextTicks.Val())
+			t.queue.Push(entry, entry.nextTicks.Val())
 			break
 		}
 		// It checks the job running requirements and then does asynchronous running.
-		job.doCheckAndRunByTicks(currentTimerTicks)
+		entry.doCheckAndRunByTicks(currentTimerTicks)
 		// Status check: push back or ignore it.
-		if job.Status() != StatusClosed {
+		if entry.Status() != StatusClosed {
 			// It pushes the job back to queue for next running.
-			t.queue.Push(job, job.nextTicks.Val())
+			t.queue.Push(entry, entry.nextTicks.Val())
 		}
 	}
 }

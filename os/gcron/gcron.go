@@ -50,7 +50,7 @@ func GetLogLevel() int {
 // Add adds a timed task to default cron object.
 // A unique <name> can be bound with the timed task.
 // It returns and error if the <name> is already used.
-func Add(pattern string, job func(), name ...string) (*Job, error) {
+func Add(pattern string, job func(), name ...string) (*Entry, error) {
 	return defaultCron.Add(pattern, job, name...)
 }
 
@@ -58,21 +58,21 @@ func Add(pattern string, job func(), name ...string) (*Job, error) {
 // A singleton timed task is that can only be running one single instance at the same time.
 // A unique <name> can be bound with the timed task.
 // It returns and error if the <name> is already used.
-func AddSingleton(pattern string, job func(), name ...string) (*Job, error) {
+func AddSingleton(pattern string, job func(), name ...string) (*Entry, error) {
 	return defaultCron.AddSingleton(pattern, job, name...)
 }
 
 // AddOnce adds a timed task which can be run only once, to default cron object.
 // A unique <name> can be bound with the timed task.
 // It returns and error if the <name> is already used.
-func AddOnce(pattern string, job func(), name ...string) (*Job, error) {
+func AddOnce(pattern string, job func(), name ...string) (*Entry, error) {
 	return defaultCron.AddOnce(pattern, job, name...)
 }
 
 // AddTimes adds a timed task which can be run specified times, to default cron object.
 // A unique <name> can be bound with the timed task.
 // It returns and error if the <name> is already used.
-func AddTimes(pattern string, times int, job func(), name ...string) (*Job, error) {
+func AddTimes(pattern string, times int, job func(), name ...string) (*Entry, error) {
 	return defaultCron.AddTimes(pattern, times, job, name...)
 }
 
@@ -100,7 +100,7 @@ func DelayAddTimes(delay time.Duration, pattern string, times int, job func(), n
 
 // Search returns a scheduled task with the specified <name>.
 // It returns nil if no found.
-func Search(name string) *Job {
+func Search(name string) *Entry {
 	return defaultCron.Search(name)
 }
 
@@ -115,7 +115,7 @@ func Size() int {
 }
 
 // Entries return all timed tasks as slice.
-func Entries() []*Job {
+func Entries() []*Entry {
 	return defaultCron.Entries()
 }
 

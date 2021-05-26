@@ -80,11 +80,11 @@ func SetInterval(interval time.Duration, job JobFunc) {
 }
 
 // Add adds a timing job to the default timer, which runs in interval of <interval>.
-func Add(interval time.Duration, job JobFunc) *Job {
+func Add(interval time.Duration, job JobFunc) *Entry {
 	return defaultTimer.Add(interval, job)
 }
 
-// AddJob adds a timing job to the default timer with detailed parameters.
+// AddEntry adds a timing job to the default timer with detailed parameters.
 //
 // The parameter <interval> specifies the running interval of the job.
 //
@@ -95,22 +95,22 @@ func Add(interval time.Duration, job JobFunc) *Job {
 // exits if its run times exceeds the <times>.
 //
 // The parameter <status> specifies the job status when it's firstly added to the timer.
-func AddJob(interval time.Duration, job JobFunc, singleton bool, times int, status int) *Job {
-	return defaultTimer.AddJob(interval, job, singleton, times, status)
+func AddEntry(interval time.Duration, job JobFunc, singleton bool, times int, status int) *Entry {
+	return defaultTimer.AddEntry(interval, job, singleton, times, status)
 }
 
 // AddSingleton is a convenience function for add singleton mode job.
-func AddSingleton(interval time.Duration, job JobFunc) *Job {
+func AddSingleton(interval time.Duration, job JobFunc) *Entry {
 	return defaultTimer.AddSingleton(interval, job)
 }
 
 // AddOnce is a convenience function for adding a job which only runs once and then exits.
-func AddOnce(interval time.Duration, job JobFunc) *Job {
+func AddOnce(interval time.Duration, job JobFunc) *Entry {
 	return defaultTimer.AddOnce(interval, job)
 }
 
 // AddTimes is a convenience function for adding a job which is limited running times.
-func AddTimes(interval time.Duration, times int, job JobFunc) *Job {
+func AddTimes(interval time.Duration, times int, job JobFunc) *Entry {
 	return defaultTimer.AddTimes(interval, times, job)
 }
 
@@ -120,10 +120,10 @@ func DelayAdd(delay time.Duration, interval time.Duration, job JobFunc) {
 	defaultTimer.DelayAdd(delay, interval, job)
 }
 
-// DelayAddJob adds a timing job after delay of <interval> duration.
-// Also see AddJob.
-func DelayAddJob(delay time.Duration, interval time.Duration, job JobFunc, singleton bool, times int, status int) {
-	defaultTimer.DelayAddJob(delay, interval, job, singleton, times, status)
+// DelayAddEntry adds a timing job after delay of <interval> duration.
+// Also see AddEntry.
+func DelayAddEntry(delay time.Duration, interval time.Duration, job JobFunc, singleton bool, times int, status int) {
+	defaultTimer.DelayAddEntry(delay, interval, job, singleton, times, status)
 }
 
 // DelayAddSingleton adds a timing job after delay of <interval> duration.
