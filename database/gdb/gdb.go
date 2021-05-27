@@ -274,12 +274,12 @@ var (
 
 	// regularFieldNameRegPattern is the regular expression pattern for a string
 	// which is a regular field name of table.
-	regularFieldNameRegPattern = `^[\w\.\-\_]+$`
+	regularFieldNameRegPattern = `^[\w\.\-]+$`
 
 	// regularFieldNameWithoutDotRegPattern is similar to regularFieldNameRegPattern but not allows '.'.
 	// Note that, although some databases allow char '.' in the field name, but it here does not allow '.'
 	// in the field name as it conflicts with "db.table.field" pattern in SOME situations.
-	regularFieldNameWithoutDotRegPattern = `^[\w\-\_]+$`
+	regularFieldNameWithoutDotRegPattern = `^[\w\-]+$`
 
 	// internalCache is the memory cache for internal usage.
 	internalCache = gcache.New()
