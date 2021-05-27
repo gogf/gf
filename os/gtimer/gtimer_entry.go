@@ -33,13 +33,13 @@ func (entry *Entry) Status() int {
 // Run runs the timer job asynchronously.
 func (entry *Entry) Run() {
 	leftRunningTimes := entry.times.Add(-1)
+	// Running times exceeding checks.
 	if leftRunningTimes < 0 {
 		entry.status.Set(StatusClosed)
 		return
 	}
 	// This means it does not limit the running times.
-	// I know it's ugly, but it is surely high performance for running times limit.
-	if leftRunningTimes < 2000000000 && leftRunningTimes > 1000000000 {
+	if leftRunningTimes == math.MaxInt32-1 {
 		entry.times.Set(math.MaxInt32)
 	}
 	go func() {
