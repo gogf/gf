@@ -9,6 +9,7 @@ package gdb
 import (
 	"context"
 	"fmt"
+	"github.com/gogf/gf/util/gconv"
 	"time"
 
 	"github.com/gogf/gf/text/gregex"
@@ -28,7 +29,7 @@ type Model struct {
 	fieldsEx      string         // Excluded operation fields, multiple fields joined using char ','.
 	withArray     []interface{}  // Arguments for With feature.
 	withAll       bool           // Enable model association operations on all objects that have "with" tag in the struct.
-	extraArgs     []interface{}  // Extra custom arguments for sql.
+	extraArgs     []interface{}  // Extra custom arguments for sql, which are prepended to the arguments before sql committed to underlying driver.
 	whereHolder   []*whereHolder // Condition strings for where operation.
 	groupBy       string         // Used for "group by" statement.
 	orderBy       string         // Used for "order by" statement.
@@ -57,52 +58,63 @@ type whereHolder struct {
 }
 
 const (
-	OPTION_OMITEMPTY  = 1 // Deprecated, use OptionOmitEmpty instead.
-	OPTION_ALLOWEMPTY = 2 // Deprecated, use OptionAllowEmpty instead.
-	OptionOmitEmpty   = 1
-	OptionAllowEmpty  = 2
-	linkTypeMaster    = 1
-	linkTypeSlave     = 2
-	whereHolderWhere  = 1
-	whereHolderAnd    = 2
-	whereHolderOr     = 3
+	OptionOmitEmpty  = 1
+	OptionAllowEmpty = 2
+	linkTypeMaster   = 1
+	linkTypeSlave    = 2
+	whereHolderWhere = 1
+	whereHolderAnd   = 2
+	whereHolderOr    = 3
 )
 
 // Table is alias of Core.Model.
 // See Core.Model.
 // Deprecated, use Model instead.
-func (c *Core) Table(tableNameOrStruct ...interface{}) *Model {
-	return c.db.Model(tableNameOrStruct...)
+func (c *Core) Table(tableNameQueryOrStruct ...interface{}) *Model {
+	return c.db.Model(tableNameQueryOrStruct...)
 }
 
 // Model creates and returns a new ORM model from given schema.
-// The parameter `tableNameOrStruct` can be more than one table names, and also alias name, like:
+// The parameter `tableNameQueryOrStruct` can be more than one table names, and also alias name, like:
 // 1. Model names:
 //    Model("user")
 //    Model("user u")
 //    Model("user, user_detail")
 //    Model("user u, user_detail ud")
 // 2. Model name with alias: Model("user", "u")
-func (c *Core) Model(tableNameOrStruct ...interface{}) *Model {
+func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 	var (
-		tableStr   = ""
-		tableName  = ""
-		tableNames = make([]string, len(tableNameOrStruct))
+		tableStr   string
+		tableName  string
+		extraArgs  []interface{}
+		tableNames = make([]string, len(tableNameQueryOrStruct))
 	)
-	for k, v := range tableNameOrStruct {
-		if s, ok := v.(string); ok {
-			tableNames[k] = s
-		} else if tableName = getTableNameFromOrmTag(v); tableName != "" {
-			tableNames[k] = tableName
+	// Model creation with sub-query.
+	if len(tableNameQueryOrStruct) > 1 {
+		conditionStr := gconv.String(tableNameQueryOrStruct[0])
+		if gstr.Contains(conditionStr, "?") {
+			tableStr, extraArgs = formatWhere(
+				c.db, conditionStr, tableNameQueryOrStruct[1:], false,
+			)
 		}
 	}
+	// Normal model creation.
+	if tableStr == "" {
+		for k, v := range tableNameQueryOrStruct {
+			if s, ok := v.(string); ok {
+				tableNames[k] = s
+			} else if tableName = getTableNameFromOrmTag(v); tableName != "" {
+				tableNames[k] = tableName
+			}
+		}
 
-	if len(tableNames) > 1 {
-		tableStr = fmt.Sprintf(
-			`%s AS %s`, c.QuotePrefixTableName(tableNames[0]), c.QuoteWord(tableNames[1]),
-		)
-	} else if len(tableNames) == 1 {
-		tableStr = c.QuotePrefixTableName(tableNames[0])
+		if len(tableNames) > 1 {
+			tableStr = fmt.Sprintf(
+				`%s AS %s`, c.QuotePrefixTableName(tableNames[0]), c.QuoteWord(tableNames[1]),
+			)
+		} else if len(tableNames) == 1 {
+			tableStr = c.QuotePrefixTableName(tableNames[0])
+		}
 	}
 	return &Model{
 		db:         c.db,
@@ -113,6 +125,7 @@ func (c *Core) Model(tableNameOrStruct ...interface{}) *Model {
 		offset:     -1,
 		option:     OptionAllowEmpty,
 		filter:     true,
+		extraArgs:  extraArgs,
 	}
 }
 
@@ -123,14 +136,14 @@ func (c *Core) With(objects ...interface{}) *Model {
 
 // Table is alias of tx.Model.
 // Deprecated, use Model instead.
-func (tx *TX) Table(tableNameOrStruct ...interface{}) *Model {
-	return tx.Model(tableNameOrStruct...)
+func (tx *TX) Table(tableNameQueryOrStruct ...interface{}) *Model {
+	return tx.Model(tableNameQueryOrStruct...)
 }
 
 // Model acts like Core.Model except it operates on transaction.
 // See Core.Model.
-func (tx *TX) Model(tableNameOrStruct ...interface{}) *Model {
-	model := tx.db.Model(tableNameOrStruct...)
+func (tx *TX) Model(tableNameQueryOrStruct ...interface{}) *Model {
+	model := tx.db.Model(tableNameQueryOrStruct...)
 	model.db = tx.db
 	model.tx = tx
 	return model
