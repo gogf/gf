@@ -702,6 +702,16 @@ func Test_MaxLength(t *testing.T) {
 	}
 }
 
+func Test_Size(t *testing.T) {
+	rule := "size:5"
+	if m := gvalid.CheckValue(context.TODO(), "12345", rule, nil); m != nil {
+		t.Error(m)
+	}
+	if m := gvalid.CheckValue(context.TODO(), "123456", rule, nil); m == nil {
+		t.Error("长度校验失败")
+	}
+}
+
 func Test_Between(t *testing.T) {
 	rule := "between:6.01, 10.01"
 	if m := gvalid.CheckValue(context.TODO(), 10, rule, nil); m != nil {
