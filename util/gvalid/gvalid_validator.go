@@ -13,21 +13,23 @@ import (
 
 // Validator is the validation manager for chaining operations.
 type Validator struct {
-	ctx                              context.Context // Context containing custom context variables.
-	i18nManager                      *gi18n.Manager  // I18n manager for error message translation.
-	key                              string          // Single validation key.
-	value                            interface{}     // Single validation value.
-	data                             interface{}     // Validation data, which is usually a map.
-	rules                            interface{}     // Custom validation data.
-	messages                         interface{}     // Custom validation error messages, which can be string or type of CustomMsg.
-	useDataInsteadOfObjectAttributes bool            // Using `data` as its validation source instead of attribute values from `Object`.
+	ctx                              context.Context     // Context containing custom context variables.
+	i18nManager                      *gi18n.Manager      // I18n manager for error message translation.
+	key                              string              // Single validation key.
+	value                            interface{}         // Single validation value.
+	data                             interface{}         // Validation data, which is usually a map.
+	rules                            interface{}         // Custom validation data.
+	messages                         interface{}         // Custom validation error messages, which can be string or type of CustomMsg.
+	ruleFuncMap                      map[string]RuleFunc // ruleFuncMap stores custom rule functions for current Validator.
+	useDataInsteadOfObjectAttributes bool                // Using `data` as its validation source instead of attribute values from `Object`.
 }
 
 // New creates and returns a new Validator.
 func New() *Validator {
 	return &Validator{
-		ctx:         context.TODO(),   // Initialize an empty context.
-		i18nManager: gi18n.Instance(), // Use default i18n manager.
+		ctx:         context.TODO(),            // Initialize an empty context.
+		i18nManager: gi18n.Instance(),          // Use default i18n manager.
+		ruleFuncMap: make(map[string]RuleFunc), // Custom rule function storing map.
 	}
 }
 
@@ -76,4 +78,29 @@ func (v *Validator) Messages(messages interface{}) *Validator {
 	newValidator := v.Clone()
 	newValidator.messages = messages
 	return newValidator
+}
+
+// RuleFunc registers one custom rule function to current Validator.
+func (v *Validator) RuleFunc(rule string, f RuleFunc) *Validator {
+	newValidator := v.Clone()
+	newValidator.ruleFuncMap[rule] = f
+	return newValidator
+}
+
+// RuleFuncMap registers multiple custom rule functions to current Validator.
+func (v *Validator) RuleFuncMap(m map[string]RuleFunc) *Validator {
+	newValidator := v.Clone()
+	for k, v := range m {
+		newValidator.ruleFuncMap[k] = v
+	}
+	return newValidator
+}
+
+// getRuleFunc retrieves and returns the custom rule function for specified rule.
+func (v *Validator) getRuleFunc(rule string) RuleFunc {
+	ruleFunc := v.ruleFuncMap[rule]
+	if ruleFunc == nil {
+		ruleFunc = customRuleFuncMap[rule]
+	}
+	return ruleFunc
 }
