@@ -1,0 +1,14 @@
+
+
+
+# MySQL.
+[database]
+    [database.default]
+        link   = "mysql:root:12345678@tcp(127.0.0.1:3306)/test"
+        debug  = true
+
+
+
+
+
+
