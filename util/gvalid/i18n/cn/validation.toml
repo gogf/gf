@@ -28,6 +28,7 @@
 "gf.gvalid.rule.length"               = ":attribute 字段长度为:min到:max个字符"
 "gf.gvalid.rule.min-length"           = ":attribute 字段最小长度为:min"
 "gf.gvalid.rule.max-length"           = ":attribute 字段最大长度为:max"
+"gf.gvalid.rule.size"                 = ":attribute 字段长度必须为:size"
 "gf.gvalid.rule.between"              = ":attribute 字段大小为:min到:max"
 "gf.gvalid.rule.min"                  = ":attribute 字段最小值为:min"
 "gf.gvalid.rule.max"                  = ":attribute 字段最大值为:max"

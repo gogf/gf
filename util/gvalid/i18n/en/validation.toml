@@ -28,6 +28,7 @@
 "gf.gvalid.rule.length"               = "The :attribute value length must be between :min and :max"
 "gf.gvalid.rule.min-length"           = "The :attribute value length must be equal or greater than :min"
 "gf.gvalid.rule.max-length"           = "The :attribute value length must be equal or lesser than :max"
+"gf.gvalid.rule.size"                 = "The :attribute value length must be :size"
 "gf.gvalid.rule.between"              = "The :attribute value must be between :min and :max"
 "gf.gvalid.rule.min"                  = "The :attribute value must be equal or greater than :min"
 "gf.gvalid.rule.max"                  = "The :attribute value must be equal or lesser than :max"
