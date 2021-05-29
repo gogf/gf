@@ -31,6 +31,8 @@ func (v *Validator) checkLength(value, ruleKey, ruleVal string, customMsgMap map
 		if len(array) > 0 {
 			if v, err := strconv.Atoi(strings.TrimSpace(array[0])); err == nil {
 				min = v
+				// compatible with only one parameter
+				max = v
 			}
 		}
 		if len(array) > 1 {
