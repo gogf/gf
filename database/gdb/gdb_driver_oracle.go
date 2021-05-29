@@ -183,7 +183,7 @@ func (d *DriverOracle) Tables(ctx context.Context, schema ...string) (tables []s
 // TableFields retrieves and returns the fields information of specified table of current schema.
 //
 // Also see DriverMysql.TableFields.
-func (d *DriverOracle) TableFields(ctx context.Context, link Link, table string, schema ...string) (fields map[string]*TableField, err error) {
+func (d *DriverOracle) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*TableField, err error) {
 	charL, charR := d.GetChars()
 	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
@@ -200,6 +200,7 @@ func (d *DriverOracle) TableFields(ctx context.Context, link Link, table string,
 	v := tableFieldsMap.GetOrSetFuncLock(tableFieldsCacheKey, func() interface{} {
 		var (
 			result       Result
+			link, err    = d.SlaveLink(useSchema)
 			structureSql = fmt.Sprintf(`
 SELECT 
 	COLUMN_NAME AS FIELD, 
@@ -211,13 +212,10 @@ FROM USER_TAB_COLUMNS WHERE TABLE_NAME = '%s' ORDER BY COLUMN_ID`,
 				strings.ToUpper(table),
 			)
 		)
-		structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
-		if link == nil {
-			link, err = d.SlaveLink(useSchema)
-			if err != nil {
-				return nil
-			}
+		if err != nil {
+			return nil
 		}
+		structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
 		result, err = d.DoGetAll(ctx, link, structureSql)
 		if err != nil {
 			return nil

@@ -113,7 +113,7 @@ func (d *DriverMysql) Tables(ctx context.Context, schema ...string) (tables []st
 //
 // It's using cache feature to enhance the performance, which is never expired util the
 // process restarts.
-func (d *DriverMysql) TableFields(ctx context.Context, link Link, table string, schema ...string) (fields map[string]*TableField, err error) {
+func (d *DriverMysql) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*TableField, err error) {
 	charL, charR := d.GetChars()
 	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
@@ -129,17 +129,13 @@ func (d *DriverMysql) TableFields(ctx context.Context, link Link, table string, 
 	)
 	v := tableFieldsMap.GetOrSetFuncLock(tableFieldsCacheKey, func() interface{} {
 		var (
-			result Result
-		)
-		if link == nil {
+			result    Result
 			link, err = d.SlaveLink(useSchema)
-			if err != nil {
-				return nil
-			}
-		}
-		result, err = d.DoGetAll(ctx, link,
-			fmt.Sprintf(`SHOW FULL COLUMNS FROM %s`, d.QuoteWord(table)),
 		)
+		if err != nil {
+			return nil
+		}
+		result, err = d.DoGetAll(ctx, link, fmt.Sprintf(`SHOW FULL COLUMNS FROM %s`, d.QuoteWord(table)))
 		if err != nil {
 			return nil
 		}

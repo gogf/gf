@@ -29,7 +29,7 @@ func (m *Model) TableFields(table string, schema ...string) (fields map[string]*
 	if !gregex.IsMatchString(regularFieldNameRegPattern, table) {
 		return nil, nil
 	}
-	return m.db.TableFields(m.GetCtx(), m.getLink(false), table, schema...)
+	return m.db.TableFields(m.GetCtx(), table, schema...)
 }
 
 // getModel creates and returns a cloned model of current model if `safe` is true, or else it returns
