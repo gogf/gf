@@ -10,12 +10,14 @@ import (
 
 func main() {
 	type User struct {
-		Name string `v:"required#ReuiredUserName"`
-		Type int    `v:"required#ReuiredUserType"`
+		Name    string `v:"required#ReuiredUserName"`
+		Type    int    `v:"required#ReuiredUserType"`
+		Project string `v:"size:10#MustSize"`
 	}
 	var (
 		data = g.Map{
-			"name": "john",
+			"name":    "john",
+			"project": "gf",
 		}
 		user  = User{}
 		ctxEn = gi18n.WithLanguage(context.TODO(), "en")
