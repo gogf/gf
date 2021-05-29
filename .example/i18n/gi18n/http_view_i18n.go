@@ -10,7 +10,7 @@ func main() {
 	s := g.Server()
 	s.Group("/", func(group *ghttp.RouterGroup) {
 		group.Middleware(func(r *ghttp.Request) {
-			r.SetCtx(gi18n.WithLanguage(r.Context(), "zh-CN"))
+			r.SetCtx(gi18n.WithLanguage(r.Context(), r.GetString("lang", "zh-CN")))
 			r.Middleware.Next()
 		})
 		group.ALL("/", func(r *ghttp.Request) {
