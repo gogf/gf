@@ -29,11 +29,24 @@ type apiTime interface {
 // CheckValue checks single value with specified rules.
 // It returns nil if successful validation.
 func (v *Validator) CheckValue(value interface{}) Error {
-	return v.doCheckValue("", value, gconv.String(v.rules), v.messages, v.data)
+	return v.doCheckValue("", value, gconv.String(v.rules), v.messages, v.data, gconv.Map(v.data))
 }
 
 // doCheckSingleValue does the really rules validation for single key-value.
-func (v *Validator) doCheckValue(key string, value interface{}, rules string, messages interface{}, paramMap ...interface{}) Error {
+//
+// The parameter `rules` specifies the validation rules string, like "required", "required|between:1,100", etc.
+// The parameter `value` specifies the value for this rules to be validated.
+// The parameter `messages` specifies the custom error messages for this rule, which is usually type of map/slice.
+// The parameter `dataRaw` specifies the `raw data` which is passed to the Validator. It might be type of map/struct or a nil value.
+// The parameter `dataMap` specifies the map that is converted from `dataRaw`. It is usually used internally
+func (v *Validator) doCheckValue(
+	key string,
+	value interface{},
+	rules string,
+	messages interface{},
+	dataRaw interface{},
+	dataMap map[string]interface{},
+) Error {
 	// If there's no validation rules, it does nothing and returns quickly.
 	if rules == "" {
 		return nil
@@ -41,12 +54,8 @@ func (v *Validator) doCheckValue(key string, value interface{}, rules string, me
 	// It converts value to string and then does the validation.
 	var (
 		// Do not trim it as the space is also part of the value.
-		data          = make(map[string]interface{})
 		errorMsgArray = make(map[string]string)
 	)
-	if len(paramMap) > 0 && paramMap[0] != nil {
-		data = gconv.Map(paramMap[0])
-	}
 	// Custom error messages handling.
 	var (
 		msgArray     = make([]string, 0)
@@ -66,7 +75,7 @@ func (v *Validator) doCheckValue(key string, value interface{}, rules string, me
 	for i := 0; ; {
 		array := strings.Split(ruleItems[i], ":")
 		_, ok := allSupportedRules[array[0]]
-		if !ok && customRuleFuncMap[array[0]] == nil {
+		if !ok && v.getRuleFunc(array[0]) == nil {
 			if i > 0 && ruleItems[i-1][:5] == "regex" {
 				ruleItems[i-1] += "|" + ruleItems[i]
 				ruleItems = append(ruleItems[:i], ruleItems[i+1:]...)
@@ -85,26 +94,26 @@ func (v *Validator) doCheckValue(key string, value interface{}, rules string, me
 	}
 	for index := 0; index < len(ruleItems); {
 		var (
-			err         error
-			match       = false
-			results     = ruleRegex.FindStringSubmatch(ruleItems[index])
-			ruleKey     = strings.TrimSpace(results[1])
-			rulePattern = strings.TrimSpace(results[2])
+			err            error
+			match          = false
+			results        = ruleRegex.FindStringSubmatch(ruleItems[index])
+			ruleKey        = strings.TrimSpace(results[1])
+			rulePattern    = strings.TrimSpace(results[2])
+			customRuleFunc RuleFunc
 		)
 		if len(msgArray) > index {
 			customMsgMap[ruleKey] = strings.TrimSpace(msgArray[index])
 		}
 
-		if f, ok := customRuleFuncMap[ruleKey]; ok {
+		// Custom rule handling.
+		// 1. It firstly checks and uses the custom registered rules functions in the current Validator.
+		// 2. It secondly checks and uses the globally registered rules functions.
+		// 3. It finally checks and uses the build-in rules functions.
+		customRuleFunc = v.getRuleFunc(ruleKey)
+		if customRuleFunc != nil {
 			// It checks custom validation rules with most priority.
-			var (
-				dataMap map[string]interface{}
-				message = v.getErrorMessageByRule(ruleKey, customMsgMap)
-			)
-			if len(paramMap) > 0 && paramMap[0] != nil {
-				dataMap = gconv.Map(paramMap[0])
-			}
-			if err := f(v.ctx, ruleItems[index], value, message, dataMap); err != nil {
+			message := v.getErrorMessageByRule(ruleKey, customMsgMap)
+			if err := customRuleFunc(v.ctx, ruleItems[index], value, message, dataRaw); err != nil {
 				match = false
 				errorMsgArray[ruleKey] = err.Error()
 			} else {
@@ -112,7 +121,7 @@ func (v *Validator) doCheckValue(key string, value interface{}, rules string, me
 			}
 		} else {
 			// It checks build-in validation rules if there's no custom rule.
-			match, err = v.doCheckBuildInRules(index, value, ruleKey, rulePattern, ruleItems, data, customMsgMap)
+			match, err = v.doCheckBuildInRules(index, value, ruleKey, rulePattern, ruleItems, dataMap, customMsgMap)
 			if !match && err != nil {
 				errorMsgArray[ruleKey] = err.Error()
 			}

@@ -115,21 +115,6 @@ func ExampleCheckStruct3() {
 }
 
 func ExampleRegisterRule() {
-	rule := "unique-name"
-	gvalid.RegisterRule(rule, func(ctx context.Context, rule string, value interface{}, message string, params map[string]interface{}) error {
-		var (
-			id   = gconv.Int(params["Id"])
-			name = gconv.String(value)
-		)
-		n, err := g.Table("user").Where("id != ? and name = ?", id, name).Count()
-		if err != nil {
-			return err
-		}
-		if n > 0 {
-			return errors.New(message)
-		}
-		return nil
-	})
 	type User struct {
 		Id   int
 		Name string `v:"required|unique-name # 请输入用户名称|用户名称已被占用"`
@@ -140,6 +125,22 @@ func ExampleRegisterRule() {
 		Name: "john",
 		Pass: "123456",
 	}
+
+	rule := "unique-name"
+	gvalid.RegisterRule(rule, func(ctx context.Context, rule string, value interface{}, message string, data interface{}) error {
+		var (
+			id   = data.(*User).Id
+			name = gconv.String(value)
+		)
+		n, err := g.Model("user").Where("id != ? and name = ?", id, name).Count()
+		if err != nil {
+			return err
+		}
+		if n > 0 {
+			return errors.New(message)
+		}
+		return nil
+	})
 	err := gvalid.CheckStruct(context.TODO(), user, nil)
 	fmt.Println(err.Error())
 	// May Output:
@@ -148,7 +149,7 @@ func ExampleRegisterRule() {
 
 func ExampleRegisterRule_OverwriteRequired() {
 	rule := "required"
-	gvalid.RegisterRule(rule, func(ctx context.Context, rule string, value interface{}, message string, params map[string]interface{}) error {
+	gvalid.RegisterRule(rule, func(ctx context.Context, rule string, value interface{}, message string, data interface{}) error {
 		reflectValue := reflect.ValueOf(value)
 		if reflectValue.Kind() == reflect.Ptr {
 			reflectValue = reflectValue.Elem()
