@@ -47,7 +47,7 @@ import (
 // length               format: length:min,max                        brief: Length between :min and :max. The length is calculated using unicode string, which means one chinese character or letter both has the length of 1.
 // min-length           format: min-length:min                        brief: Length is equal or greater than :min. The length is calculated using unicode string, which means one chinese character or letter both has the length of 1.
 // max-length           format: max-length:max                        brief: Length is equal or lesser than :max. The length is calculated using unicode string, which means one chinese character or letter both has the length of 1.
-// size                 format: size								  brief: Length must be :size. The length is calculated using unicode string, which means one chinese character or letter both has the length of 1.
+// size                 format: size:size							  brief: Length must be :size. The length is calculated using unicode string, which means one chinese character or letter both has the length of 1.
 // between              format: between:min,max                       brief: Range between :min and :max. It supports both integer and float.
 // min                  format: min:min                               brief: Equal or greater than :min. It supports both integer and float.
 // max                  format: max:max                               brief: Equal or lesser than :max. It supports both integer and float.
