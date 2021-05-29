@@ -172,7 +172,8 @@ func (v *Validator) doCheckBuildInRules(
 	case
 		"length",
 		"min-length",
-		"max-length":
+		"max-length",
+		"size":
 		if msg := v.checkLength(valueStr, ruleKey, rulePattern, customMsgMap); msg != "" {
 			return match, errors.New(msg)
 		} else {

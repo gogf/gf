@@ -48,11 +48,13 @@ func main() {
 		"passport":  "john",
 		"password":  "123456",
 		"password2": "1234567",
+		"name":      "gf",
 	}
 	rules := map[string]string{
 		"passport":  "required|length:6,16",
 		"password":  "required|length:6,16|same:password2",
 		"password2": "required|length:6,16",
+		"name":      "size:5",
 	}
 	msgs := map[string]interface{}{
 		"passport": "账号不能为空|账号长度应当在:min到:max之间",
@@ -60,6 +62,7 @@ func main() {
 			"required": "密码不能为空",
 			"same":     "两次密码输入不相等",
 		},
+		"name": "名字长度必须为:size",
 	}
 	if e := gvalid.CheckMap(context.TODO(), params, rules, msgs); e != nil {
 		g.Dump(e.Maps())
