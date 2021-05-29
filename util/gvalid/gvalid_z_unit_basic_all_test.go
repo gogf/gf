@@ -658,17 +658,6 @@ func Test_Length(t *testing.T) {
 	if m := gvalid.CheckValue(context.TODO(), "12345", rule, nil); m == nil {
 		t.Error("长度校验失败")
 	}
-	// only one parameter
-	rule2 := "length:5"
-	if m := gvalid.CheckValue(context.TODO(), "1234", rule2, nil); m == nil {
-		t.Error(m)
-	}
-	if m := gvalid.CheckValue(context.TODO(), "12345", rule2, nil); m != nil {
-		t.Error(m)
-	}
-	if m := gvalid.CheckValue(context.TODO(), "123456", rule2, nil); m == nil {
-		t.Error("长度校验失败")
-	}
 }
 
 func Test_MinLength(t *testing.T) {
@@ -709,6 +698,16 @@ func Test_MaxLength(t *testing.T) {
 
 	rule2 := "max-length:abc"
 	if m := gvalid.CheckValue(context.TODO(), "123456", rule2, nil); m == nil {
+		t.Error("长度校验失败")
+	}
+}
+
+func Test_Size(t *testing.T) {
+	rule := "size:5"
+	if m := gvalid.CheckValue(context.TODO(), "12345", rule, nil); m != nil {
+		t.Error(m)
+	}
+	if m := gvalid.CheckValue(context.TODO(), "123456", rule, nil); m == nil {
 		t.Error("长度校验失败")
 	}
 }
