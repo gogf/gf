@@ -57,12 +57,16 @@ func (v *Validator) doCheckStruct(object interface{}) Error {
 	}
 
 	var (
-		inputParamMap map[string]interface{}
-		checkRules    = make(map[string]string)
-		customMessage = make(CustomMsg)
-		fieldAliases  = make(map[string]string) // Alias names for `messages` overwriting struct tag names.
-		errorRules    = make([]string, 0)       // Sequence rules.
+		inputParamMap  map[string]interface{}
+		checkRules     = make(map[string]string)
+		customMessage  = make(CustomMsg)
+		checkValueData = v.data
+		fieldAliases   = make(map[string]string) // Alias names for `messages` overwriting struct tag names.
+		errorRules     = make([]string, 0)       // Sequence rules.
 	)
+	if checkValueData == nil {
+		checkValueData = object
+	}
 	switch v := v.rules.(type) {
 	// Sequence tag: []sequence tag
 	// Sequence has order for error results.
@@ -194,7 +198,7 @@ func (v *Validator) doCheckStruct(object interface{}) Error {
 	for key, rule := range checkRules {
 		_, value = gutil.MapPossibleItemByKey(inputParamMap, key)
 		// It checks each rule and its value in loop.
-		if e := v.doCheckValue(key, value, rule, customMessage[key], inputParamMap); e != nil {
+		if e := v.doCheckValue(key, value, rule, customMessage[key], checkValueData, inputParamMap); e != nil {
 			_, item := e.FirstItem()
 			// ===================================================================
 			// Only in map and struct validations, if value is nil or empty string
@@ -210,7 +214,7 @@ func (v *Validator) doCheckStruct(object interface{}) Error {
 						break
 					}
 					// Custom rules are also required in default.
-					if _, ok := customRuleFuncMap[k]; ok {
+					if f := v.getRuleFunc(k); f != nil {
 						required = true
 						break
 					}
