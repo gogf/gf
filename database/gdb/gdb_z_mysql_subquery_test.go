@@ -53,7 +53,7 @@ func Test_Model_SubQuery_Having(t *testing.T) {
 func Test_Model_SubQuery_Model(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
-	db.SetDebug(true)
+
 	gtest.C(t, func(t *gtest.T) {
 		subQuery1 := db.Model(table).Where("id", g.Slice{1, 3, 5})
 		subQuery2 := db.Model(table).Where("id", g.Slice{5, 7, 9})

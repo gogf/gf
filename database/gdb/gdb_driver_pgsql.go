@@ -115,7 +115,7 @@ func (d *DriverPgsql) Tables(ctx context.Context, schema ...string) (tables []st
 // TableFields retrieves and returns the fields information of specified table of current schema.
 //
 // Also see DriverMysql.TableFields.
-func (d *DriverPgsql) TableFields(ctx context.Context, link Link, table string, schema ...string) (fields map[string]*TableField, err error) {
+func (d *DriverPgsql) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*TableField, err error) {
 	charL, charR := d.GetChars()
 	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
@@ -133,6 +133,7 @@ func (d *DriverPgsql) TableFields(ctx context.Context, link Link, table string, 
 	v := tableFieldsMap.GetOrSetFuncLock(tableFieldsCacheKey, func() interface{} {
 		var (
 			result       Result
+			link, err    = d.SlaveLink(useSchema)
 			structureSql = fmt.Sprintf(`
 SELECT a.attname AS field, t.typname AS type FROM pg_class c, pg_attribute a 
 LEFT OUTER JOIN pg_description b ON a.attrelid=b.objoid AND a.attnum = b.objsubid,pg_type t
@@ -141,13 +142,10 @@ ORDER BY a.attnum`,
 				strings.ToLower(table),
 			)
 		)
-		structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
-		if link == nil {
-			link, err = d.SlaveLink(useSchema)
-			if err != nil {
-				return nil
-			}
+		if err != nil {
+			return nil
 		}
+		structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
 		result, err = d.DoGetAll(ctx, link, structureSql)
 		if err != nil {
 			return nil
