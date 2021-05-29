@@ -5,6 +5,7 @@
 
 "ReuiredUserName" = "Please input user name"
 "ReuiredUserType" = "Please select user type"
+"MustSize"        = "Size of :attribute must be :size"
 
 
 
