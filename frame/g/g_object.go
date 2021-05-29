@@ -81,13 +81,6 @@ func Log(name ...string) *glog.Logger {
 	return gins.Log(name...)
 }
 
-// Database is alias of DB.
-// See DB.
-// Deprecated, use DB instead.
-func Database(name ...string) gdb.DB {
-	return gins.Database(name...)
-}
-
 // DB returns an instance of database ORM object with specified configuration group name.
 func DB(name ...string) gdb.DB {
 	return gins.Database(name...)
