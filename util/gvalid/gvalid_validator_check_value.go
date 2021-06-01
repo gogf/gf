@@ -208,16 +208,7 @@ func (v *Validator) doCheckBuildInRules(
 		if v, ok := value.(apiTime); ok {
 			return !v.IsZero(), nil
 		}
-		// Standard date string, which must contain char '-' or '.'.
-		if _, err := gtime.StrToTime(valueStr); err == nil {
-			match = true
-			break
-		}
-		// Date that not contains char '-' or '.'.
-		if _, err := gtime.StrToTime(valueStr, "Ymd"); err == nil {
-			match = true
-			break
-		}
+		match = gregex.IsMatchString(`\d{4}[\.\-\_/]{0,1}\d{2}[\.\-\_/]{0,1}\d{2}`, valueStr)
 
 	// Date rule with specified format.
 	case "date-format":
