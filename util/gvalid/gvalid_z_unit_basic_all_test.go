@@ -236,6 +236,7 @@ func Test_Date(t *testing.T) {
 		val5 := "2010.11.01"
 		val6 := "2010/11/01"
 		val7 := "2010=11=01"
+		val8 := "123"
 		err1 := gvalid.CheckValue(context.TODO(), val1, rule, nil)
 		err2 := gvalid.CheckValue(context.TODO(), val2, rule, nil)
 		err3 := gvalid.CheckValue(context.TODO(), val3, rule, nil)
@@ -243,13 +244,15 @@ func Test_Date(t *testing.T) {
 		err5 := gvalid.CheckValue(context.TODO(), val5, rule, nil)
 		err6 := gvalid.CheckValue(context.TODO(), val6, rule, nil)
 		err7 := gvalid.CheckValue(context.TODO(), val7, rule, nil)
-		t.Assert(err1, nil)
-		t.Assert(err2, nil)
+		err8 := gvalid.CheckValue(context.TODO(), val8, rule, nil)
+		t.AssertNE(err1, nil)
+		t.AssertNE(err2, nil)
 		t.Assert(err3, nil)
 		t.Assert(err4, nil)
 		t.Assert(err5, nil)
 		t.Assert(err6, nil)
 		t.AssertNE(err7, nil)
+		t.AssertNE(err8, nil)
 	})
 }
 
