@@ -18,6 +18,7 @@ func Printf(format string, v ...interface{}) {
 	logger.Printf(format, v...)
 }
 
+// Println is alias of Print.
 // See Print.
 func Println(v ...interface{}) {
 	logger.Println(v...)

@@ -148,3 +148,8 @@ func SetLevelPrefixes(prefixes map[int]string) {
 func GetLevelPrefix(level int) string {
 	return logger.GetLevelPrefix(level)
 }
+
+// SetHandlers sets the logging handlers for default logger.
+func SetHandlers(handlers ...Handler) {
+	logger.SetHandlers(handlers...)
+}
