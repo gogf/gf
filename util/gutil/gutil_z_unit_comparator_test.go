@@ -172,8 +172,8 @@ func Test_ComparatorFloat32OfFixed(t *testing.T) {
 func Test_ComparatorFloat64OfFixed(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
-		t.Assert(gutil.ComparatorFloat32(0.1, 0.1), 0)
-		t.Assert(gutil.ComparatorFloat32(1.1, 2.1), -1)
-		t.Assert(gutil.ComparatorFloat32(2.1, 1.1), 1)
+		t.Assert(gutil.ComparatorFloat64(0.1, 0.1), 0)
+		t.Assert(gutil.ComparatorFloat64(1.1, 2.1), -1)
+		t.Assert(gutil.ComparatorFloat64(2.1, 1.1), 1)
 	})
 }
