@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/util/gvalid"
 )
@@ -15,5 +16,5 @@ func main() {
 		Pass: "1",
 	}
 
-	g.Dump(gvalid.CheckStruct(user, nil).Maps())
+	g.Dump(gvalid.CheckStruct(context.TODO(), user, nil).Maps())
 }

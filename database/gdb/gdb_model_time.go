@@ -140,7 +140,7 @@ func (m *Model) getConditionForSoftDeleting() string {
 	}
 	// Only one table.
 	if fieldName := m.getSoftFieldNameDeleted(); fieldName != "" {
-		return fmt.Sprintf(`%s IS NULL`, m.db.QuoteWord(fieldName))
+		return fmt.Sprintf(`%s IS NULL`, m.db.GetCore().QuoteWord(fieldName))
 	}
 	return ""
 }
@@ -163,12 +163,12 @@ func (m *Model) getConditionOfTableStringForSoftDeleting(s string) string {
 		return ""
 	}
 	if len(array1) >= 3 {
-		return fmt.Sprintf(`%s.%s IS NULL`, m.db.QuoteWord(array1[2]), m.db.QuoteWord(field))
+		return fmt.Sprintf(`%s.%s IS NULL`, m.db.GetCore().QuoteWord(array1[2]), m.db.GetCore().QuoteWord(field))
 	}
 	if len(array1) >= 2 {
-		return fmt.Sprintf(`%s.%s IS NULL`, m.db.QuoteWord(array1[1]), m.db.QuoteWord(field))
+		return fmt.Sprintf(`%s.%s IS NULL`, m.db.GetCore().QuoteWord(array1[1]), m.db.GetCore().QuoteWord(field))
 	}
-	return fmt.Sprintf(`%s.%s IS NULL`, m.db.QuoteWord(table), m.db.QuoteWord(field))
+	return fmt.Sprintf(`%s.%s IS NULL`, m.db.GetCore().QuoteWord(table), m.db.GetCore().QuoteWord(field))
 }
 
 // getPrimaryTableName parses and returns the primary table name.

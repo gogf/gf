@@ -9,8 +9,10 @@ package gdb
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/text/gregex"
+	"github.com/gogf/gf/util/gconv"
 	"time"
+
+	"github.com/gogf/gf/text/gregex"
 
 	"github.com/gogf/gf/text/gstr"
 )
@@ -27,7 +29,7 @@ type Model struct {
 	fieldsEx      string         // Excluded operation fields, multiple fields joined using char ','.
 	withArray     []interface{}  // Arguments for With feature.
 	withAll       bool           // Enable model association operations on all objects that have "with" tag in the struct.
-	extraArgs     []interface{}  // Extra custom arguments for sql.
+	extraArgs     []interface{}  // Extra custom arguments for sql, which are prepended to the arguments before sql committed to underlying driver.
 	whereHolder   []*whereHolder // Condition strings for where operation.
 	groupBy       string         // Used for "group by" statement.
 	orderBy       string         // Used for "order by" statement.
@@ -39,6 +41,7 @@ type Model struct {
 	data          interface{}    // Data for operation, which can be type of map/[]map/struct/*struct/string, etc.
 	batch         int            // Batch number for batch Insert/Replace/Save operations.
 	filter        bool           // Filter data and where key-value pairs according to the fields of the table.
+	distinct      string         // Force the query to only return distinct results.
 	lockInfo      string         // Lock for update or in shared lock.
 	cacheEnabled  bool           // Enable sql result cache feature.
 	cacheDuration time.Duration  // Cache TTL duration.
@@ -55,67 +58,92 @@ type whereHolder struct {
 }
 
 const (
-	OPTION_OMITEMPTY  = 1 // Deprecated, use OptionOmitEmpty instead.
-	OPTION_ALLOWEMPTY = 2 // Deprecated, use OptionAllowEmpty instead.
-	OptionOmitEmpty   = 1
-	OptionAllowEmpty  = 2
-	linkTypeMaster    = 1
-	linkTypeSlave     = 2
-	whereHolderWhere  = 1
-	whereHolderAnd    = 2
-	whereHolderOr     = 3
+	OptionOmitEmpty  = 1
+	OptionAllowEmpty = 2
+	linkTypeMaster   = 1
+	linkTypeSlave    = 2
+	whereHolderWhere = 1
+	whereHolderAnd   = 2
+	whereHolderOr    = 3
 )
 
 // Table is alias of Core.Model.
 // See Core.Model.
 // Deprecated, use Model instead.
-func (c *Core) Table(table ...string) *Model {
-	return c.db.Model(table...)
+func (c *Core) Table(tableNameQueryOrStruct ...interface{}) *Model {
+	return c.db.Model(tableNameQueryOrStruct...)
 }
 
 // Model creates and returns a new ORM model from given schema.
-// The parameter `table` can be more than one table names, and also alias name, like:
+// The parameter `tableNameQueryOrStruct` can be more than one table names, and also alias name, like:
 // 1. Model names:
 //    Model("user")
 //    Model("user u")
 //    Model("user, user_detail")
 //    Model("user u, user_detail ud")
 // 2. Model name with alias: Model("user", "u")
-func (c *Core) Model(table ...string) *Model {
-	tables := ""
-	if len(table) > 1 {
-		tables = fmt.Sprintf(
-			`%s AS %s`, c.db.QuotePrefixTableName(table[0]), c.db.QuoteWord(table[1]),
-		)
-	} else if len(table) == 1 {
-		tables = c.db.QuotePrefixTableName(table[0])
+func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
+	var (
+		tableStr   string
+		tableName  string
+		extraArgs  []interface{}
+		tableNames = make([]string, len(tableNameQueryOrStruct))
+	)
+	// Model creation with sub-query.
+	if len(tableNameQueryOrStruct) > 1 {
+		conditionStr := gconv.String(tableNameQueryOrStruct[0])
+		if gstr.Contains(conditionStr, "?") {
+			tableStr, extraArgs = formatWhere(
+				c.db, conditionStr, tableNameQueryOrStruct[1:], false,
+			)
+		}
+	}
+	// Normal model creation.
+	if tableStr == "" {
+		for k, v := range tableNameQueryOrStruct {
+			if s, ok := v.(string); ok {
+				tableNames[k] = s
+			} else if tableName = getTableNameFromOrmTag(v); tableName != "" {
+				tableNames[k] = tableName
+			}
+		}
+
+		if len(tableNames) > 1 {
+			tableStr = fmt.Sprintf(
+				`%s AS %s`, c.QuotePrefixTableName(tableNames[0]), c.QuoteWord(tableNames[1]),
+			)
+		} else if len(tableNames) == 1 {
+			tableStr = c.QuotePrefixTableName(tableNames[0])
+		}
 	}
 	return &Model{
 		db:         c.db,
-		tablesInit: tables,
-		tables:     tables,
+		tablesInit: tableStr,
+		tables:     tableStr,
 		fields:     "*",
 		start:      -1,
 		offset:     -1,
 		option:     OptionAllowEmpty,
+		filter:     true,
+		extraArgs:  extraArgs,
 	}
 }
 
 // With creates and returns an ORM model based on meta data of given object.
-func (c *Core) With(object interface{}) *Model {
-	return c.db.Model().With(object)
+func (c *Core) With(objects ...interface{}) *Model {
+	return c.db.Model().With(objects...)
 }
 
 // Table is alias of tx.Model.
 // Deprecated, use Model instead.
-func (tx *TX) Table(table ...string) *Model {
-	return tx.Model(table...)
+func (tx *TX) Table(tableNameQueryOrStruct ...interface{}) *Model {
+	return tx.Model(tableNameQueryOrStruct...)
 }
 
 // Model acts like Core.Model except it operates on transaction.
 // See Core.Model.
-func (tx *TX) Model(table ...string) *Model {
-	model := tx.db.Model(table...)
+func (tx *TX) Model(tableNameQueryOrStruct ...interface{}) *Model {
+	model := tx.db.Model(tableNameQueryOrStruct...)
 	model.db = tx.db
 	model.tx = tx
 	return model
@@ -134,7 +162,19 @@ func (m *Model) Ctx(ctx context.Context) *Model {
 	}
 	model := m.getModel()
 	model.db = model.db.Ctx(ctx)
+	if m.tx != nil {
+		model.tx = model.tx.Ctx(ctx)
+	}
 	return model
+}
+
+// GetCtx returns the context for current Model.
+// It returns `context.Background()` is there's no context previously set.
+func (m *Model) GetCtx() context.Context {
+	if m.tx != nil && m.tx.ctx != nil {
+		return m.tx.ctx
+	}
+	return m.db.GetCtx()
 }
 
 // As sets an alias name for current table.

@@ -8,12 +8,13 @@ package gdb
 
 import (
 	"database/sql"
+	"reflect"
+
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/gutil"
-	"reflect"
 )
 
 // Batch sets the batch operation number for the model.
@@ -109,6 +110,18 @@ func (m *Model) Insert(data ...interface{}) (result sql.Result, err error) {
 	return m.doInsertWithOption(insertOptionDefault)
 }
 
+// InsertAndGetId performs action Insert and returns the last insert id that automatically generated.
+func (m *Model) InsertAndGetId(data ...interface{}) (lastInsertId int64, err error) {
+	if len(data) > 0 {
+		return m.Data(data...).InsertAndGetId()
+	}
+	result, err := m.doInsertWithOption(insertOptionDefault)
+	if err != nil {
+		return 0, err
+	}
+	return result.LastInsertId()
+}
+
 // InsertIgnore does "INSERT IGNORE INTO ..." statement for the model.
 // The optional parameter `data` is the same as the parameter of Model.Data function,
 // see Model.Data.
@@ -182,7 +195,8 @@ func (m *Model) doInsertWithOption(option int) (result sql.Result, err error) {
 				list[k] = v
 			}
 		}
-		return m.db.DoBatchInsert(
+		return m.db.GetCore().DoBatchInsert(
+			m.GetCtx(),
 			m.getLink(true),
 			m.tables,
 			newData,
@@ -207,7 +221,8 @@ func (m *Model) doInsertWithOption(option int) (result sql.Result, err error) {
 				data[fieldNameUpdate] = nowString
 			}
 		}
-		return m.db.DoInsert(
+		return m.db.GetCore().DoInsert(
+			m.GetCtx(),
 			m.getLink(true),
 			m.tables,
 			newData,

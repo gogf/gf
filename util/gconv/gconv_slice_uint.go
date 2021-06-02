@@ -23,7 +23,7 @@ func SliceUint64(any interface{}) []uint64 {
 	return Uint64s(any)
 }
 
-// Uints converts `i` to []uint.
+// Uints converts `any` to []uint.
 func Uints(any interface{}) []uint {
 	if any == nil {
 		return nil
@@ -149,7 +149,7 @@ func Uints(any interface{}) []uint {
 	return array
 }
 
-// Uint32s converts `i` to []uint32.
+// Uint32s converts `any` to []uint32.
 func Uint32s(any interface{}) []uint32 {
 	if any == nil {
 		return nil
@@ -274,7 +274,7 @@ func Uint32s(any interface{}) []uint32 {
 	return array
 }
 
-// Uint64s converts `i` to []uint64.
+// Uint64s converts `any` to []uint64.
 func Uint64s(any interface{}) []uint64 {
 	if any == nil {
 		return nil

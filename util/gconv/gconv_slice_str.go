@@ -13,7 +13,7 @@ func SliceStr(any interface{}) []string {
 	return Strings(any)
 }
 
-// Strings converts `i` to []string.
+// Strings converts `any` to []string.
 func Strings(any interface{}) []string {
 	if any == nil {
 		return nil

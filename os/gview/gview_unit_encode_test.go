@@ -7,6 +7,7 @@
 package gview_test
 
 import (
+	"context"
 	"github.com/gogf/gf/debug/gdebug"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gfile"
@@ -20,7 +21,7 @@ func Test_Encode_Parse(t *testing.T) {
 		v := gview.New()
 		v.SetPath(gdebug.TestDataPath("tpl"))
 		v.SetAutoEncode(true)
-		result, err := v.Parse("encode.tpl", g.Map{
+		result, err := v.Parse(context.TODO(), "encode.tpl", g.Map{
 			"title": "<b>my title</b>",
 		})
 		t.Assert(err, nil)
@@ -33,7 +34,7 @@ func Test_Encode_ParseContent(t *testing.T) {
 		v := gview.New()
 		tplContent := gfile.GetContents(gdebug.TestDataPath("tpl", "encode.tpl"))
 		v.SetAutoEncode(true)
-		result, err := v.ParseContent(tplContent, g.Map{
+		result, err := v.ParseContent(context.TODO(), tplContent, g.Map{
 			"title": "<b>my title</b>",
 		})
 		t.Assert(err, nil)

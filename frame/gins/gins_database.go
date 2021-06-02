@@ -54,14 +54,14 @@ func Database(name ...string) gdb.DB {
 				if exampleConfigFilePath, _ := Config().GetFilePath(exampleFileName); exampleConfigFilePath != "" {
 					panic(gerror.Wrapf(
 						err,
-						`configuration file "%s" not found, but found "%s", did you miss renaming the configuration example file?`,
+						`configuration file "%s" not found, but found "%s", did you miss renaming the example configuration file?`,
 						Config().GetFileName(),
 						exampleFileName,
 					))
 				} else {
 					panic(gerror.Wrapf(
 						err,
-						`configuration file "%s" not found, did you miss the configuration file or the file name setting?`,
+						`configuration file "%s" not found, did you miss the configuration file or the misspell the configuration file name?`,
 						Config().GetFileName(),
 					))
 				}

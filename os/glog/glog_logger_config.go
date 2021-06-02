@@ -9,14 +9,15 @@ package glog
 import (
 	"errors"
 	"fmt"
+	"io"
+	"strings"
+	"time"
+
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/gutil"
-	"io"
-	"strings"
-	"time"
 )
 
 // Config is the configuration object for logger.
@@ -163,6 +164,24 @@ func (l *Logger) SetStackFilter(filter string) {
 // Note that multiple calls of this function will overwrite the previous set context keys.
 func (l *Logger) SetCtxKeys(keys ...interface{}) {
 	l.config.CtxKeys = keys
+}
+
+// AppendCtxKeys appends extra keys to logger.
+// It ignores the key if it is already appended to the logger previously.
+func (l *Logger) AppendCtxKeys(keys ...interface{}) {
+	var isExist bool
+	for _, key := range keys {
+		isExist = false
+		for _, ctxKey := range l.config.CtxKeys {
+			if ctxKey == key {
+				isExist = true
+				break
+			}
+		}
+		if !isExist {
+			l.config.CtxKeys = append(l.config.CtxKeys, key)
+		}
+	}
 }
 
 // GetCtxKeys retrieves and returns the context keys for logging.

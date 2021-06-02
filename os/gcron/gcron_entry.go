@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
-// Timed task entry.
+// Entry is timing task entry.
 type Entry struct {
 	cron     *Cron         // Cron object belonged to.
 	entry    *gtimer.Entry // Associated gtimer.Entry.
@@ -104,7 +104,7 @@ func (entry *Entry) Close() {
 	entry.entry.Close()
 }
 
-// Timed task check execution.
+// Timing task check execution.
 // The running times limits feature is implemented by gcron.Entry and cannot be implemented by gtimer.Entry.
 // gcron.Entry relies on gtimer to implement a scheduled task check for gcron.Entry per second.
 func (entry *Entry) check() {

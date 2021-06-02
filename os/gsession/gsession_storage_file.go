@@ -175,7 +175,7 @@ func (s *StorageFile) GetSession(id string, ttl time.Duration, data *gmap.StrAny
 			}
 		}
 		var m map[string]interface{}
-		if err = json.Unmarshal(content, &m); err != nil {
+		if err = json.UnmarshalUseNumber(content, &m); err != nil {
 			return nil, err
 		}
 		if m == nil {
