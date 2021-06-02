@@ -63,6 +63,7 @@ func (i *HandlerInput) Buffer() *bytes.Buffer {
 	if i.Content != "" {
 		i.addStringToBuffer(buffer, i.Content)
 	}
+	i.addStringToBuffer(buffer, "\n")
 	return buffer
 }
 
