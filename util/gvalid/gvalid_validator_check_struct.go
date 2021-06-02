@@ -21,8 +21,8 @@ func (v *Validator) CheckStruct(object interface{}) Error {
 
 func (v *Validator) doCheckStruct(object interface{}) Error {
 	var (
-		// Returning error.
-		errorMaps = make(map[string]map[string]string)
+		errorMaps           = make(map[string]map[string]string) // Returning error.
+		fieldToAliasNameMap = make(map[string]string)            // Field name to alias name map.
 	)
 	fieldMap, err := structs.FieldMap(object, aliasNameTagPriority, true)
 	if err != nil {
@@ -44,6 +44,10 @@ func (v *Validator) doCheckStruct(object interface{}) Error {
 					errorMaps[k] = m
 				}
 			}
+		} else {
+			if field.TagValue != "" {
+				fieldToAliasNameMap[field.Name()] = field.TagValue
+			}
 		}
 	}
 	// It here must use structs.TagFields not structs.FieldMap to ensure error sequence.
@@ -61,8 +65,7 @@ func (v *Validator) doCheckStruct(object interface{}) Error {
 		checkRules     = make(map[string]string)
 		customMessage  = make(CustomMsg)
 		checkValueData = v.data
-		fieldAliases   = make(map[string]string) // Alias names for `messages` overwriting struct tag names.
-		errorRules     = make([]string, 0)       // Sequence rules.
+		errorRules     = make([]string, 0) // Sequence rules.
 	)
 	if checkValueData == nil {
 		checkValueData = object
@@ -128,19 +131,33 @@ func (v *Validator) doCheckStruct(object interface{}) Error {
 	// Merge the custom validation rules with rules in struct tag.
 	// The custom rules has the most high priority that can overwrite the struct tag rules.
 	for _, field := range tagField {
-		fieldName := field.Name()
-		// sequence tag == struct tag
-		// The name here is alias of field name.
-		name, rule, msg := parseSequenceTag(field.TagValue)
+		var (
+			fieldName       = field.Name()                     // Attribute name.
+			name, rule, msg = parseSequenceTag(field.TagValue) // The `name` is different from `attribute alias`, which is used for validation only.
+		)
 		if len(name) == 0 {
-			name = fieldName
+			if v, ok := fieldToAliasNameMap[fieldName]; ok {
+				// It uses alias name of the attribute if its alias name tag exists.
+				name = v
+			} else {
+				// It or else uses the attribute name directly.
+				name = fieldName
+			}
 		} else {
-			fieldAliases[fieldName] = name
+			// It uses the alias name from validation rule.
+			fieldToAliasNameMap[fieldName] = name
 		}
 		// It here extends the params map using alias names.
+		// Note that the variable `name` might be alias name or attribute name.
 		if _, ok := inputParamMap[name]; !ok {
 			if !v.useDataInsteadOfObjectAttributes {
 				inputParamMap[name] = field.Value.Interface()
+			} else {
+				if name != fieldName {
+					if foundKey, foundValue := gutil.MapPossibleItemByKey(inputParamMap, fieldName); foundKey != "" {
+						inputParamMap[name] = foundValue
+					}
+				}
 			}
 		}
 		if _, ok := checkRules[name]; !ok {
@@ -184,7 +201,7 @@ func (v *Validator) doCheckStruct(object interface{}) Error {
 	// which have the most priority than `rules` and struct tag.
 	if msg, ok := v.messages.(CustomMsg); ok && len(msg) > 0 {
 		for k, v := range msg {
-			if a, ok := fieldAliases[k]; ok {
+			if a, ok := fieldToAliasNameMap[k]; ok {
 				// Overwrite the key of field name.
 				customMessage[a] = v
 			} else {
