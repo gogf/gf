@@ -126,7 +126,7 @@ func (s *StorageRedis) GetSession(id string, ttl time.Duration, data *gmap.StrAn
 		return nil, nil
 	}
 	var m map[string]interface{}
-	if err = json.Unmarshal(content, &m); err != nil {
+	if err = json.UnmarshalUseNumber(content, &m); err != nil {
 		return nil, err
 	}
 	if m == nil {

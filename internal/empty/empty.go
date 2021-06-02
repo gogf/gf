@@ -9,6 +9,7 @@ package empty
 
 import (
 	"reflect"
+	"time"
 )
 
 // apiString is used for type assert api for String().
@@ -24,6 +25,11 @@ type apiInterfaces interface {
 // apiMapStrAny is the interface support for converting struct parameter to map.
 type apiMapStrAny interface {
 	MapStrAny() map[string]interface{}
+}
+
+type apiTime interface {
+	Date() (year int, month time.Month, day int)
+	IsZero() bool
 }
 
 // IsEmpty checks whether given `value` empty.
@@ -79,7 +85,15 @@ func IsEmpty(value interface{}) bool {
 	case map[string]interface{}:
 		return len(value) == 0
 	default:
+		// =========================
 		// Common interfaces checks.
+		// =========================
+		if f, ok := value.(apiTime); ok {
+			if f == nil {
+				return true
+			}
+			return f.IsZero()
+		}
 		if f, ok := value.(apiString); ok {
 			if f == nil {
 				return true
@@ -150,6 +164,126 @@ func IsEmpty(value interface{}) bool {
 	}
 	return false
 }
+
+// IsEmptyLength checks whether given `value` is empty length.
+// It returns true if `value` is in: nil, "", len(slice/map/chan) == 0,
+// or else it returns false.
+//func IsEmptyLength(value interface{}) bool {
+//	if value == nil {
+//		return true
+//	}
+//	// It firstly checks the variable as common types using assertion to enhance the performance,
+//	// and then using reflection.
+//	switch value := value.(type) {
+//	case
+//		int,
+//		int8,
+//		int16,
+//		int32,
+//		int64,
+//		uint,
+//		uint8,
+//		uint16,
+//		uint32,
+//		uint64,
+//		float32,
+//		float64,
+//		bool:
+//		return false
+//	case string:
+//		return value == ""
+//	case []byte:
+//		return len(value) == 0
+//	case []rune:
+//		return len(value) == 0
+//	case []int:
+//		return len(value) == 0
+//	case []string:
+//		return len(value) == 0
+//	case []float32:
+//		return len(value) == 0
+//	case []float64:
+//		return len(value) == 0
+//	case map[string]interface{}:
+//		return len(value) == 0
+//	default:
+//		// =========================
+//		// Common interfaces checks.
+//		// =========================
+//		if f, ok := value.(apiTime); ok {
+//			if f == nil {
+//				return true
+//			}
+//			return f.IsZero()
+//		}
+//		if f, ok := value.(apiString); ok {
+//			if f == nil {
+//				return true
+//			}
+//			return f.String() == ""
+//		}
+//		if f, ok := value.(apiInterfaces); ok {
+//			if f == nil {
+//				return true
+//			}
+//			return len(f.Interfaces()) == 0
+//		}
+//		if f, ok := value.(apiMapStrAny); ok {
+//			if f == nil {
+//				return true
+//			}
+//			return len(f.MapStrAny()) == 0
+//		}
+//		// Finally using reflect.
+//		var rv reflect.Value
+//		if v, ok := value.(reflect.Value); ok {
+//			rv = v
+//		} else {
+//			rv = reflect.ValueOf(value)
+//		}
+//
+//		switch rv.Kind() {
+//		case
+//			reflect.Int,
+//			reflect.Int8,
+//			reflect.Int16,
+//			reflect.Int32,
+//			reflect.Int64,
+//			reflect.Uint,
+//			reflect.Uint8,
+//			reflect.Uint16,
+//			reflect.Uint32,
+//			reflect.Uint64,
+//			reflect.Uintptr,
+//			reflect.Float32,
+//			reflect.Float64,
+//			reflect.Bool:
+//			return false
+//		case reflect.String:
+//			return rv.Len() == 0
+//		case reflect.Struct:
+//			for i := 0; i < rv.NumField(); i++ {
+//				if !IsEmpty(rv) {
+//					return false
+//				}
+//			}
+//			return true
+//		case reflect.Chan,
+//			reflect.Map,
+//			reflect.Slice,
+//			reflect.Array:
+//			return rv.Len() == 0
+//		case reflect.Func,
+//			reflect.Ptr,
+//			reflect.Interface,
+//			reflect.UnsafePointer:
+//			if rv.IsNil() {
+//				return true
+//			}
+//		}
+//	}
+//	return false
+//}
 
 // IsNil checks whether given `value` is nil.
 // Parameter `traceSource` is used for tracing to the source variable if given `value` is type

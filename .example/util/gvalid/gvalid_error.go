@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/util/gvalid"
 )
@@ -17,7 +18,7 @@ func main() {
 		ConfiemPassword: "",
 	}
 
-	e := gvalid.CheckStruct(user, nil)
+	e := gvalid.CheckStruct(context.TODO(), user, nil)
 	g.Dump(e.Map())
 	g.Dump(e.Maps())
 	g.Dump(e.String())

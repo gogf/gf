@@ -471,7 +471,7 @@ func (m *StrAnyMap) UnmarshalJSON(b []byte) error {
 	if m.data == nil {
 		m.data = make(map[string]interface{})
 	}
-	if err := json.Unmarshal(b, &m.data); err != nil {
+	if err := json.UnmarshalUseNumber(b, &m.data); err != nil {
 		return err
 	}
 	return nil

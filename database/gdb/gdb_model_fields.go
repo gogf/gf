@@ -14,17 +14,6 @@ import (
 	"github.com/gogf/gf/util/gutil"
 )
 
-// Filter marks filtering the fields which does not exist in the fields of the operated table.
-// Note that this function supports only single table operations.
-func (m *Model) Filter() *Model {
-	if gstr.Contains(m.tables, " ") {
-		panic("function Filter supports only single table operations")
-	}
-	model := m.getModel()
-	model.filter = true
-	return model
-}
-
 // Fields sets the operation fields of the model, multiple fields joined using char ','.
 // The parameter `fieldNamesOrMapStruct` can be type of string/map/*map/struct/*struct.
 func (m *Model) Fields(fieldNamesOrMapStruct ...interface{}) *Model {
@@ -81,13 +70,26 @@ func (m *Model) FieldsEx(fieldNamesOrMapStruct ...interface{}) *Model {
 	return m
 }
 
+// Filter marks filtering the fields which does not exist in the fields of the operated table.
+// Note that this function supports only single table operations.
+// Deprecated, filter feature is automatically enabled from GoFrame v1.16.0, it is so no longer used.
+func (m *Model) Filter() *Model {
+	if gstr.Contains(m.tables, " ") {
+		panic("function Filter supports only single table operations")
+	}
+	model := m.getModel()
+	model.filter = true
+	return model
+}
+
+// FieldsStr retrieves and returns all fields from the table, joined with char ','.
+// The optional parameter `prefix` specifies the prefix for each field, eg: FieldsStr("u.").
 // Deprecated, use GetFieldsStr instead.
-// This function name confuses the user that it was a chaining function.
 func (m *Model) FieldsStr(prefix ...string) string {
 	return m.GetFieldsStr(prefix...)
 }
 
-// FieldsStr retrieves and returns all fields from the table, joined with char ','.
+// GetFieldsStr retrieves and returns all fields from the table, joined with char ','.
 // The optional parameter `prefix` specifies the prefix for each field, eg: FieldsStr("u.").
 func (m *Model) GetFieldsStr(prefix ...string) string {
 	prefixStr := ""
@@ -112,17 +114,20 @@ func (m *Model) GetFieldsStr(prefix ...string) string {
 		}
 		newFields += prefixStr + k
 	}
-	newFields = m.db.QuoteString(newFields)
+	newFields = m.db.GetCore().QuoteString(newFields)
 	return newFields
 }
 
+// FieldsExStr retrieves and returns fields which are not in parameter `fields` from the table,
+// joined with char ','.
+// The parameter `fields` specifies the fields that are excluded.
+// The optional parameter `prefix` specifies the prefix for each field, eg: FieldsExStr("id", "u.").
 // Deprecated, use GetFieldsExStr instead.
-// This function name confuses the user that it was a chaining function.
 func (m *Model) FieldsExStr(fields string, prefix ...string) string {
 	return m.GetFieldsExStr(fields, prefix...)
 }
 
-// FieldsExStr retrieves and returns fields which are not in parameter `fields` from the table,
+// GetFieldsExStr retrieves and returns fields which are not in parameter `fields` from the table,
 // joined with char ','.
 // The parameter `fields` specifies the fields that are excluded.
 // The optional parameter `prefix` specifies the prefix for each field, eg: FieldsExStr("id", "u.").
@@ -153,7 +158,7 @@ func (m *Model) GetFieldsExStr(fields string, prefix ...string) string {
 		}
 		newFields += prefixStr + k
 	}
-	newFields = m.db.QuoteString(newFields)
+	newFields = m.db.GetCore().QuoteString(newFields)
 	return newFields
 }
 

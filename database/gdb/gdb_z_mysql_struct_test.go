@@ -15,7 +15,7 @@ import (
 	"testing"
 )
 
-func Test_Model_Inherit_Insert(t *testing.T) {
+func Test_Model_Embedded_Insert(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -31,7 +31,7 @@ func Test_Model_Inherit_Insert(t *testing.T) {
 			Password string `json:"password"`
 			Nickname string `json:"nickname"`
 		}
-		result, err := db.Model(table).Filter().Data(User{
+		result, err := db.Model(table).Data(User{
 			Passport: "john-test",
 			Password: "123456",
 			Nickname: "John",
@@ -50,7 +50,7 @@ func Test_Model_Inherit_Insert(t *testing.T) {
 	})
 }
 
-func Test_Model_Inherit_MapToStruct(t *testing.T) {
+func Test_Model_Embedded_MapToStruct(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
@@ -77,7 +77,7 @@ func Test_Model_Inherit_MapToStruct(t *testing.T) {
 			"nickname":    "T1",
 			"create_time": gtime.Now().String(),
 		}
-		result, err := db.Model(table).Filter().Data(data).Insert()
+		result, err := db.Model(table).Data(data).Insert()
 		t.AssertNil(err)
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)
@@ -411,6 +411,29 @@ func (user *User) UnmarshalValue(value interface{}) error {
 func Test_Model_Scan_UnmarshalValue(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
+	gtest.C(t, func(t *gtest.T) {
+		var users []*User
+		err := db.Model(table).Order("id asc").Scan(&users)
+		t.AssertNil(err)
+		t.Assert(len(users), TableSize)
+		t.Assert(users[0].Id, 1)
+		t.Assert(users[0].Passport, "user_1")
+		t.Assert(users[0].Password, "")
+		t.Assert(users[0].Nickname, "name_1")
+		t.Assert(users[0].CreateTime.String(), CreateTime)
+
+		t.Assert(users[9].Id, 10)
+		t.Assert(users[9].Passport, "user_10")
+		t.Assert(users[9].Password, "")
+		t.Assert(users[9].Nickname, "name_10")
+		t.Assert(users[9].CreateTime.String(), CreateTime)
+	})
+}
+
+func Test_Model_Scan_Map(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
 	gtest.C(t, func(t *gtest.T) {
 		var users []*User
 		err := db.Model(table).Order("id asc").Scan(&users)

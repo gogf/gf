@@ -89,7 +89,7 @@ func receiveTcpHandler(conn *gtcp.Conn) {
 		if len(buffer) > 0 {
 			// Package decoding.
 			msg := new(MsgRequest)
-			if err := json.Unmarshal(buffer, msg); err != nil {
+			if err := json.UnmarshalUseNumber(buffer, msg); err != nil {
 				//glog.Error(err)
 				continue
 			}

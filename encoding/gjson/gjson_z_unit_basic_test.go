@@ -474,7 +474,7 @@ func TestJson_Var(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		data := []byte("[9223372036854775807, 9223372036854775806]")
-		array := gjson.NewWithOption(data, gjson.Option{StrNumber: true}).Var().Array()
+		array := gjson.NewWithOptions(data, gjson.Options{StrNumber: true}).Var().Array()
 		t.Assert(array, []uint64{9223372036854775807, 9223372036854775806})
 	})
 }

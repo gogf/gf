@@ -7,12 +7,14 @@
 package gdb_test
 
 import (
+	"context"
+
 	"github.com/gogf/gf/database/gdb"
 	"github.com/gogf/gf/frame/g"
 )
 
 func Example_transaction() {
-	db.Transaction(func(tx *gdb.TX) error {
+	db.Transaction(context.TODO(), func(ctx context.Context, tx *gdb.TX) error {
 		// user
 		result, err := tx.Insert("user", g.Map{
 			"passport": "john",

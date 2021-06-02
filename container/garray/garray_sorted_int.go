@@ -658,7 +658,7 @@ func (a *SortedIntArray) UnmarshalJSON(b []byte) error {
 	}
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	if err := json.Unmarshal(b, &a.array); err != nil {
+	if err := json.UnmarshalUseNumber(b, &a.array); err != nil {
 		return err
 	}
 	if a.array != nil {
@@ -676,7 +676,7 @@ func (a *SortedIntArray) UnmarshalValue(value interface{}) (err error) {
 	defer a.mu.Unlock()
 	switch value.(type) {
 	case string, []byte:
-		err = json.Unmarshal(gconv.Bytes(value), &a.array)
+		err = json.UnmarshalUseNumber(gconv.Bytes(value), &a.array)
 	default:
 		a.array = gconv.SliceInt(value)
 	}

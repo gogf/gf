@@ -59,18 +59,18 @@ func (r *Response) WriteTplContent(content string, params ...gview.Params) error
 // ParseTpl parses given template file <tpl> with given template variables <params>
 // and returns the parsed template content.
 func (r *Response) ParseTpl(tpl string, params ...gview.Params) (string, error) {
-	return r.Request.GetView().Parse(tpl, r.buildInVars(params...))
+	return r.Request.GetView().Parse(r.Request.Context(), tpl, r.buildInVars(params...))
 }
 
 // ParseDefault parses the default template file with params.
 func (r *Response) ParseTplDefault(params ...gview.Params) (string, error) {
-	return r.Request.GetView().ParseDefault(r.buildInVars(params...))
+	return r.Request.GetView().ParseDefault(r.Request.Context(), r.buildInVars(params...))
 }
 
 // ParseTplContent parses given template file <file> with given template parameters <params>
 // and returns the parsed template content.
 func (r *Response) ParseTplContent(content string, params ...gview.Params) (string, error) {
-	return r.Request.GetView().ParseContent(content, r.buildInVars(params...))
+	return r.Request.GetView().ParseContent(r.Request.Context(), content, r.buildInVars(params...))
 }
 
 // buildInVars merges build-in variables into <params> and returns the new template variables.
