@@ -30,14 +30,14 @@ type StrArray struct {
 }
 
 // NewStrArray creates and returns an empty array.
-// The parameter <safe> is used to specify whether using array in concurrent-safety,
+// The parameter `safe` is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewStrArray(safe ...bool) *StrArray {
 	return NewStrArraySize(0, 0, safe...)
 }
 
 // NewStrArraySize create and returns an array with given size and cap.
-// The parameter <safe> is used to specify whether using array in concurrent-safety,
+// The parameter `safe` is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewStrArraySize(size int, cap int, safe ...bool) *StrArray {
 	return &StrArray{
@@ -46,8 +46,8 @@ func NewStrArraySize(size int, cap int, safe ...bool) *StrArray {
 	}
 }
 
-// NewStrArrayFrom creates and returns an array with given slice <array>.
-// The parameter <safe> is used to specify whether using array in concurrent-safety,
+// NewStrArrayFrom creates and returns an array with given slice `array`.
+// The parameter `safe` is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewStrArrayFrom(array []string, safe ...bool) *StrArray {
 	return &StrArray{
@@ -56,8 +56,8 @@ func NewStrArrayFrom(array []string, safe ...bool) *StrArray {
 	}
 }
 
-// NewStrArrayFromCopy creates and returns an array from a copy of given slice <array>.
-// The parameter <safe> is used to specify whether using array in concurrent-safety,
+// NewStrArrayFromCopy creates and returns an array from a copy of given slice `array`.
+// The parameter `safe` is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewStrArrayFromCopy(array []string, safe ...bool) *StrArray {
 	newArray := make([]string, len(array))
@@ -68,8 +68,15 @@ func NewStrArrayFromCopy(array []string, safe ...bool) *StrArray {
 	}
 }
 
+// At returns the value by the specified index.
+// If the given `index` is out of range of the array, it returns an empty string.
+func (a *StrArray) At(index int) (value string) {
+	value, _ = a.Get(index)
+	return
+}
+
 // Get returns the value by the specified index.
-// If the given <index> is out of range of the array, the <found> is false.
+// If the given `index` is out of range of the array, the `found` is false.
 func (a *StrArray) Get(index int) (value string, found bool) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
@@ -90,7 +97,7 @@ func (a *StrArray) Set(index int, value string) error {
 	return nil
 }
 
-// SetArray sets the underlying slice array with the given <array>.
+// SetArray sets the underlying slice array with the given `array`.
 func (a *StrArray) SetArray(array []string) *StrArray {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -98,7 +105,7 @@ func (a *StrArray) SetArray(array []string) *StrArray {
 	return a
 }
 
-// Replace replaces the array items by given <array> from the beginning of array.
+// Replace replaces the array items by given `array` from the beginning of array.
 func (a *StrArray) Replace(array []string) *StrArray {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -123,7 +130,7 @@ func (a *StrArray) Sum() (sum int) {
 }
 
 // Sort sorts the array in increasing order.
-// The parameter <reverse> controls whether sort
+// The parameter `reverse` controls whether sort
 // in increasing order(default) or decreasing order
 func (a *StrArray) Sort(reverse ...bool) *StrArray {
 	a.mu.Lock()
@@ -141,7 +148,7 @@ func (a *StrArray) Sort(reverse ...bool) *StrArray {
 	return a
 }
 
-// SortFunc sorts the array by custom function <less>.
+// SortFunc sorts the array by custom function `less`.
 func (a *StrArray) SortFunc(less func(v1, v2 string) bool) *StrArray {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -151,7 +158,7 @@ func (a *StrArray) SortFunc(less func(v1, v2 string) bool) *StrArray {
 	return a
 }
 
-// InsertBefore inserts the <value> to the front of <index>.
+// InsertBefore inserts the `value` to the front of `index`.
 func (a *StrArray) InsertBefore(index int, value string) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -164,7 +171,7 @@ func (a *StrArray) InsertBefore(index int, value string) error {
 	return nil
 }
 
-// InsertAfter inserts the <value> to the back of <index>.
+// InsertAfter inserts the `value` to the back of `index`.
 func (a *StrArray) InsertAfter(index int, value string) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -178,7 +185,7 @@ func (a *StrArray) InsertAfter(index int, value string) error {
 }
 
 // Remove removes an item by index.
-// If the given <index> is out of range of the array, the <found> is false.
+// If the given `index` is out of range of the array, the `found` is false.
 func (a *StrArray) Remove(index int) (value string, found bool) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -236,7 +243,7 @@ func (a *StrArray) PushRight(value ...string) *StrArray {
 }
 
 // PopLeft pops and returns an item from the beginning of array.
-// Note that if the array is empty, the <found> is false.
+// Note that if the array is empty, the `found` is false.
 func (a *StrArray) PopLeft() (value string, found bool) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -249,7 +256,7 @@ func (a *StrArray) PopLeft() (value string, found bool) {
 }
 
 // PopRight pops and returns an item from the end of array.
-// Note that if the array is empty, the <found> is false.
+// Note that if the array is empty, the `found` is false.
 func (a *StrArray) PopRight() (value string, found bool) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -263,16 +270,16 @@ func (a *StrArray) PopRight() (value string, found bool) {
 }
 
 // PopRand randomly pops and return an item out of array.
-// Note that if the array is empty, the <found> is false.
+// Note that if the array is empty, the `found` is false.
 func (a *StrArray) PopRand() (value string, found bool) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	return a.doRemoveWithoutLock(grand.Intn(len(a.array)))
 }
 
-// PopRands randomly pops and returns <size> items out of array.
-// If the given <size> is greater than size of the array, it returns all elements of the array.
-// Note that if given <size> <= 0 or the array is empty, it returns nil.
+// PopRands randomly pops and returns `size` items out of array.
+// If the given `size` is greater than size of the array, it returns all elements of the array.
+// Note that if given `size` <= 0 or the array is empty, it returns nil.
 func (a *StrArray) PopRands(size int) []string {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -289,9 +296,9 @@ func (a *StrArray) PopRands(size int) []string {
 	return array
 }
 
-// PopLefts pops and returns <size> items from the beginning of array.
-// If the given <size> is greater than size of the array, it returns all elements of the array.
-// Note that if given <size> <= 0 or the array is empty, it returns nil.
+// PopLefts pops and returns `size` items from the beginning of array.
+// If the given `size` is greater than size of the array, it returns all elements of the array.
+// Note that if given `size` <= 0 or the array is empty, it returns nil.
 func (a *StrArray) PopLefts(size int) []string {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -308,9 +315,9 @@ func (a *StrArray) PopLefts(size int) []string {
 	return value
 }
 
-// PopRights pops and returns <size> items from the end of array.
-// If the given <size> is greater than size of the array, it returns all elements of the array.
-// Note that if given <size> <= 0 or the array is empty, it returns nil.
+// PopRights pops and returns `size` items from the end of array.
+// If the given `size` is greater than size of the array, it returns all elements of the array.
+// Note that if given `size` <= 0 or the array is empty, it returns nil.
 func (a *StrArray) PopRights(size int) []string {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -332,8 +339,8 @@ func (a *StrArray) PopRights(size int) []string {
 // Notice, if in concurrent-safe usage, it returns a copy of slice;
 // else a pointer to the underlying data.
 //
-// If <end> is negative, then the offset will start from the end of array.
-// If <end> is omitted, then the sequence will have everything from start up
+// If `end` is negative, then the offset will start from the end of array.
+// If `end` is omitted, then the sequence will have everything from start up
 // until the end of the array.
 func (a *StrArray) Range(start int, end ...int) []string {
 	a.mu.RLock()
@@ -359,7 +366,7 @@ func (a *StrArray) Range(start int, end ...int) []string {
 }
 
 // SubSlice returns a slice of elements from the array as specified
-// by the <offset> and <size> parameters.
+// by the `offset` and `size` parameters.
 // If in concurrent safe usage, it returns a copy of the slice; else a pointer.
 //
 // If offset is non-negative, the sequence will start at that offset in the array.
@@ -491,7 +498,7 @@ func (a *StrArray) ContainsI(value string) bool {
 	return false
 }
 
-// Search searches array by <value>, returns the index of <value>,
+// Search searches array by `value`, returns the index of `value`,
 // or returns -1 if not exists.
 func (a *StrArray) Search(value string) int {
 	a.mu.RLock()
@@ -526,7 +533,7 @@ func (a *StrArray) Unique() *StrArray {
 	return a
 }
 
-// LockFunc locks writing by callback function <f>.
+// LockFunc locks writing by callback function `f`.
 func (a *StrArray) LockFunc(f func(array []string)) *StrArray {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -534,7 +541,7 @@ func (a *StrArray) LockFunc(f func(array []string)) *StrArray {
 	return a
 }
 
-// RLockFunc locks reading by callback function <f>.
+// RLockFunc locks reading by callback function `f`.
 func (a *StrArray) RLockFunc(f func(array []string)) *StrArray {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
@@ -542,16 +549,16 @@ func (a *StrArray) RLockFunc(f func(array []string)) *StrArray {
 	return a
 }
 
-// Merge merges <array> into current array.
-// The parameter <array> can be any garray or slice type.
+// Merge merges `array` into current array.
+// The parameter `array` can be any garray or slice type.
 // The difference between Merge and Append is Append supports only specified slice type,
 // but Merge supports more parameter types.
 func (a *StrArray) Merge(array interface{}) *StrArray {
 	return a.Append(gconv.Strings(array)...)
 }
 
-// Fill fills an array with num entries of the value <value>,
-// keys starting at the <startIndex> parameter.
+// Fill fills an array with num entries of the value `value`,
+// keys starting at the `startIndex` parameter.
 func (a *StrArray) Fill(startIndex int, num int, value string) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -569,7 +576,7 @@ func (a *StrArray) Fill(startIndex int, num int, value string) error {
 }
 
 // Chunk splits an array into multiple arrays,
-// the size of each array is determined by <size>.
+// the size of each array is determined by `size`.
 // The last chunk may contain less than size elements.
 func (a *StrArray) Chunk(size int) [][]string {
 	if size < 1 {
@@ -591,9 +598,9 @@ func (a *StrArray) Chunk(size int) [][]string {
 	return n
 }
 
-// Pad pads array to the specified length with <value>.
+// Pad pads array to the specified length with `value`.
 // If size is positive then the array is padded on the right, or negative on the left.
-// If the absolute value of <size> is less than or equal to the length of the array
+// If the absolute value of `size` is less than or equal to the length of the array
 // then no padding takes place.
 func (a *StrArray) Pad(size int, value string) *StrArray {
 	a.mu.Lock()
@@ -628,7 +635,7 @@ func (a *StrArray) Rand() (value string, found bool) {
 	return a.array[grand.Intn(len(a.array))], true
 }
 
-// Rands randomly returns <size> items from array(no deleting).
+// Rands randomly returns `size` items from array(no deleting).
 func (a *StrArray) Rands(size int) []string {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
@@ -662,7 +669,7 @@ func (a *StrArray) Reverse() *StrArray {
 	return a
 }
 
-// Join joins array elements with a string <glue>.
+// Join joins array elements with a string `glue`.
 func (a *StrArray) Join(glue string) string {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
@@ -695,8 +702,8 @@ func (a *StrArray) Iterator(f func(k int, v string) bool) {
 	a.IteratorAsc(f)
 }
 
-// IteratorAsc iterates the array readonly in ascending order with given callback function <f>.
-// If <f> returns true, then it continues iterating; or false to stop.
+// IteratorAsc iterates the array readonly in ascending order with given callback function `f`.
+// If `f` returns true, then it continues iterating; or false to stop.
 func (a *StrArray) IteratorAsc(f func(k int, v string) bool) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
@@ -707,8 +714,8 @@ func (a *StrArray) IteratorAsc(f func(k int, v string) bool) {
 	}
 }
 
-// IteratorDesc iterates the array readonly in descending order with given callback function <f>.
-// If <f> returns true, then it continues iterating; or false to stop.
+// IteratorDesc iterates the array readonly in descending order with given callback function `f`.
+// If `f` returns true, then it continues iterating; or false to stop.
 func (a *StrArray) IteratorDesc(f func(k int, v string) bool) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
@@ -783,7 +790,7 @@ func (a *StrArray) FilterEmpty() *StrArray {
 	return a
 }
 
-// Walk applies a user supplied function <f> to every item of array.
+// Walk applies a user supplied function `f` to every item of array.
 func (a *StrArray) Walk(f func(value string) string) *StrArray {
 	a.mu.Lock()
 	defer a.mu.Unlock()
