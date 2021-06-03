@@ -16,7 +16,7 @@ import (
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/text/gstr"
 
-	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/gogf/mysql"
 )
 
 // DriverMysql is the driver for mysql database.
