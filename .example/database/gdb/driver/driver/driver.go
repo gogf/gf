@@ -1,12 +1,7 @@
-// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
-//
-// This Source Code Form is subject to the terms of the MIT License.
-// If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
-
 package driver
 
 import (
+	"context"
 	"database/sql"
 	"github.com/gogf/gf/database/gdb"
 	"github.com/gogf/gf/os/gtime"
@@ -47,9 +42,9 @@ func (d *MyDriver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
 
 // DoQuery commits the sql string and its arguments to underlying driver
 // through given link object and returns the execution result.
-func (d *MyDriver) DoQuery(link gdb.Link, sql string, args ...interface{}) (rows *sql.Rows, err error) {
+func (d *MyDriver) DoQuery(ctx context.Context, link gdb.Link, sql string, args ...interface{}) (rows *sql.Rows, err error) {
 	tsMilli := gtime.TimestampMilli()
-	rows, err = d.DriverMysql.DoQuery(link, sql, args...)
+	rows, err = d.DriverMysql.DoQuery(ctx, link, sql, args...)
 	link.Exec(
 		"INSERT INTO `monitor`(`sql`,`cost`,`time`,`error`) VALUES(?,?,?,?)",
 		gdb.FormatSqlWithArgs(sql, args),
@@ -62,9 +57,9 @@ func (d *MyDriver) DoQuery(link gdb.Link, sql string, args ...interface{}) (rows
 
 // DoExec commits the query string and its arguments to underlying driver
 // through given link object and returns the execution result.
-func (d *MyDriver) DoExec(link gdb.Link, sql string, args ...interface{}) (result sql.Result, err error) {
+func (d *MyDriver) DoExec(ctx context.Context, link gdb.Link, sql string, args ...interface{}) (result sql.Result, err error) {
 	tsMilli := gtime.TimestampMilli()
-	result, err = d.DriverMysql.DoExec(link, sql, args...)
+	result, err = d.DriverMysql.DoExec(ctx, link, sql, args...)
 	link.Exec(
 		"INSERT INTO `monitor`(`sql`,`cost`,`time`,`error`) VALUES(?,?,?,?)",
 		gdb.FormatSqlWithArgs(sql, args),

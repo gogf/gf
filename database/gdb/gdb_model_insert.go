@@ -195,7 +195,7 @@ func (m *Model) doInsertWithOption(option int) (result sql.Result, err error) {
 				list[k] = v
 			}
 		}
-		return m.db.GetCore().DoBatchInsert(
+		return m.db.DoBatchInsert(
 			m.GetCtx(),
 			m.getLink(true),
 			m.tables,
@@ -221,7 +221,7 @@ func (m *Model) doInsertWithOption(option int) (result sql.Result, err error) {
 				data[fieldNameUpdate] = nowString
 			}
 		}
-		return m.db.GetCore().DoInsert(
+		return m.db.DoInsert(
 			m.GetCtx(),
 			m.getLink(true),
 			m.tables,

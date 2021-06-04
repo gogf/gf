@@ -17,7 +17,7 @@ import (
 // Query commits one query SQL to underlying driver and returns the execution result.
 // It is most commonly used for data querying.
 func (c *Core) Query(sql string, args ...interface{}) (rows *sql.Rows, err error) {
-	return c.DoQuery(c.GetCtx(), nil, sql, args...)
+	return c.db.DoQuery(c.GetCtx(), nil, sql, args...)
 }
 
 // DoQuery commits the sql string and its arguments to underlying driver
@@ -69,7 +69,7 @@ func (c *Core) DoQuery(ctx context.Context, link Link, sql string, args ...inter
 // Exec commits one query SQL to underlying driver and returns the execution result.
 // It is most commonly used for data inserting and updating.
 func (c *Core) Exec(sql string, args ...interface{}) (result sql.Result, err error) {
-	return c.DoExec(c.GetCtx(), nil, sql, args...)
+	return c.db.DoExec(c.GetCtx(), nil, sql, args...)
 }
 
 // DoExec commits the sql string and its arguments to underlying driver
@@ -142,7 +142,7 @@ func (c *Core) Prepare(sql string, execOnMaster ...bool) (*Stmt, error) {
 			return nil, err
 		}
 	}
-	return c.DoPrepare(c.GetCtx(), link, sql)
+	return c.db.DoPrepare(c.GetCtx(), link, sql)
 }
 
 // DoPrepare calls prepare function on given link object and returns the statement object.
