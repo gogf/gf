@@ -82,7 +82,7 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 	if !gstr.ContainsI(conditionStr, " WHERE ") {
 		return nil, gerror.New("there should be WHERE condition statement for UPDATE operation")
 	}
-	return m.db.GetCore().DoUpdate(
+	return m.db.DoUpdate(
 		m.GetCtx(),
 		m.getLink(true),
 		m.tables,

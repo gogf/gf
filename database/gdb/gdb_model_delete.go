@@ -33,7 +33,7 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 	)
 	// Soft deleting.
 	if !m.unscoped && fieldNameDelete != "" {
-		return m.db.GetCore().DoUpdate(
+		return m.db.DoUpdate(
 			m.GetCtx(),
 			m.getLink(true),
 			m.tables,
@@ -46,5 +46,5 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 	if !gstr.ContainsI(conditionStr, " WHERE ") {
 		return nil, gerror.New("there should be WHERE condition statement for DELETE operation")
 	}
-	return m.db.GetCore().DoDelete(m.GetCtx(), m.getLink(true), m.tables, conditionStr, conditionArgs...)
+	return m.db.DoDelete(m.GetCtx(), m.getLink(true), m.tables, conditionStr, conditionArgs...)
 }

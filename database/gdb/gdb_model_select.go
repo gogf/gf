@@ -483,7 +483,7 @@ func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, e
 			}
 		}
 	}
-	result, err = m.db.GetCore().DoGetAll(
+	result, err = m.db.DoGetAll(
 		m.GetCtx(), m.getLink(false), sql, m.mergeArguments(args)...,
 	)
 	// Cache the result.

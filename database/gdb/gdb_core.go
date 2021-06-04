@@ -119,12 +119,12 @@ func (c *Core) Slave(schema ...string) (*sql.DB, error) {
 
 // GetAll queries and returns data records from database.
 func (c *Core) GetAll(sql string, args ...interface{}) (Result, error) {
-	return c.DoGetAll(c.GetCtx(), nil, sql, args...)
+	return c.db.DoGetAll(c.GetCtx(), nil, sql, args...)
 }
 
 // DoGetAll queries and returns data records from database.
 func (c *Core) DoGetAll(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error) {
-	rows, err := c.DoQuery(ctx, link, sql, args...)
+	rows, err := c.db.DoQuery(ctx, link, sql, args...)
 	if err != nil || rows == nil {
 		return nil, err
 	}
@@ -147,7 +147,7 @@ func (c *Core) GetOne(sql string, args ...interface{}) (Record, error) {
 // GetArray queries and returns data values as slice from database.
 // Note that if there are multiple columns in the result, it returns just one column values randomly.
 func (c *Core) GetArray(sql string, args ...interface{}) ([]Value, error) {
-	all, err := c.DoGetAll(c.GetCtx(), nil, sql, args...)
+	all, err := c.db.DoGetAll(c.GetCtx(), nil, sql, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -347,10 +347,10 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, data inter
 	}
 	switch reflectKind {
 	case reflect.Slice, reflect.Array:
-		return c.DoBatchInsert(ctx, link, table, data, option, batch...)
+		return c.db.DoBatchInsert(ctx, link, table, data, option, batch...)
 	case reflect.Struct:
 		if _, ok := data.(apiInterfaces); ok {
-			return c.DoBatchInsert(ctx, link, table, data, option, batch...)
+			return c.db.DoBatchInsert(ctx, link, table, data, option, batch...)
 		} else {
 			dataMap = ConvertDataForTableRecord(data)
 		}
@@ -399,7 +399,7 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, data inter
 			return nil, err
 		}
 	}
-	return c.DoExec(ctx, link, fmt.Sprintf(
+	return c.db.DoExec(ctx, link, fmt.Sprintf(
 		"%s INTO %s(%s) VALUES(%s) %s",
 		operation, table, strings.Join(fields, ","),
 		strings.Join(values, ","), updateStr,
@@ -556,7 +556,7 @@ func (c *Core) DoBatchInsert(ctx context.Context, link Link, table string, list 
 		}
 		valueHolder = append(valueHolder, "("+gstr.Join(values, ",")+")")
 		if len(valueHolder) == batchNum || (i == listMapLen-1 && len(valueHolder) > 0) {
-			r, err := c.DoExec(ctx, link, fmt.Sprintf(
+			r, err := c.db.DoExec(ctx, link, fmt.Sprintf(
 				"%s INTO %s(%s) VALUES%s %s",
 				operation, table, keysStr,
 				gstr.Join(valueHolder, ","),
@@ -663,7 +663,7 @@ func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data inter
 			return nil, err
 		}
 	}
-	return c.DoExec(ctx, link, fmt.Sprintf("UPDATE %s SET %s%s", table, updates, condition), args...)
+	return c.db.DoExec(ctx, link, fmt.Sprintf("UPDATE %s SET %s%s", table, updates, condition), args...)
 }
 
 // Delete does "DELETE FROM ... " statement for the table.
@@ -690,7 +690,7 @@ func (c *Core) DoDelete(ctx context.Context, link Link, table string, condition 
 		}
 	}
 	table = c.QuotePrefixTableName(table)
-	return c.DoExec(ctx, link, fmt.Sprintf("DELETE FROM %s%s", table, condition), args...)
+	return c.db.DoExec(ctx, link, fmt.Sprintf("DELETE FROM %s%s", table, condition), args...)
 }
 
 // convertRowsToResult converts underlying data record type sql.Rows to Result type.
