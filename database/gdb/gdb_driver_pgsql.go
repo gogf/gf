@@ -47,6 +47,9 @@ func (d *DriverPgsql) Open(config *ConfigNode) (*sql.DB, error) {
 			"user=%s password=%s host=%s port=%s dbname=%s sslmode=disable",
 			config.User, config.Pass, config.Host, config.Port, config.Name,
 		)
+		if config.Timezone != "" {
+			source = fmt.Sprintf("%s timezone=%s", source, config.Timezone)
+		}
 	}
 	intlog.Printf("Open: %s", source)
 	if db, err := sql.Open("postgres", source); err == nil {
@@ -135,9 +138,9 @@ func (d *DriverPgsql) TableFields(ctx context.Context, table string, schema ...s
 			result       Result
 			link, err    = d.SlaveLink(useSchema)
 			structureSql = fmt.Sprintf(`
-SELECT a.attname AS field, t.typname AS type FROM pg_class c, pg_attribute a 
+SELECT a.attname AS field, t.typname AS type FROM pg_class c, pg_attribute a
 LEFT OUTER JOIN pg_description b ON a.attrelid=b.objoid AND a.attnum = b.objsubid,pg_type t
-WHERE c.relname = '%s' and a.attnum > 0 and a.attrelid = c.oid and a.atttypid = t.oid 
+WHERE c.relname = '%s' and a.attnum > 0 and a.attrelid = c.oid and a.atttypid = t.oid
 ORDER BY a.attnum`,
 				strings.ToLower(table),
 			)
