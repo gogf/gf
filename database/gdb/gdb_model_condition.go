@@ -8,6 +8,7 @@ package gdb
 
 import (
 	"fmt"
+	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
 	"strings"
 )
@@ -60,55 +61,84 @@ func (m *Model) WherePri(where interface{}, args ...interface{}) *Model {
 	return m.Where(newWhere[0], newWhere[1:]...)
 }
 
-// WhereBetween builds `xxx BETWEEN x AND y` statement.
+// Wheref builds condition string using fmt.Sprintf and arguments.
+func (m *Model) Wheref(format string, args ...interface{}) *Model {
+	var (
+		placeHolderCount = gstr.Count(format, "?")
+		conditionStr     = fmt.Sprintf(format, args[:len(args)-placeHolderCount]...)
+	)
+	return m.Where(conditionStr, args[len(args)-placeHolderCount:]...)
+}
+
+// WhereLT builds `column < value` statement.
+func (m *Model) WhereLT(column string, value interface{}) *Model {
+	return m.Wheref(`%s < ?`, column, value)
+}
+
+// WhereLTE builds `column <= value` statement.
+func (m *Model) WhereLTE(column string, value interface{}) *Model {
+	return m.Wheref(`%s <= ?`, column, value)
+}
+
+// WhereGT builds `column > value` statement.
+func (m *Model) WhereGT(column string, value interface{}) *Model {
+	return m.Wheref(`%s > ?`, column, value)
+}
+
+// WhereGTE builds `column >= value` statement.
+func (m *Model) WhereGTE(column string, value interface{}) *Model {
+	return m.Wheref(`%s >= ?`, column, value)
+}
+
+// WhereBetween builds `column BETWEEN min AND max` statement.
 func (m *Model) WhereBetween(column string, min, max interface{}) *Model {
-	return m.Where(fmt.Sprintf(`%s BETWEEN ? AND ?`, m.db.GetCore().QuoteWord(column)), min, max)
+	return m.Wheref(`%s BETWEEN ? AND ?`, m.db.GetCore().QuoteWord(column), min, max)
 }
 
-// WhereLike builds `xxx LIKE x` statement.
+// WhereLike builds `column LIKE like` statement.
 func (m *Model) WhereLike(column string, like interface{}) *Model {
-	return m.Where(fmt.Sprintf(`%s LIKE ?`, m.db.GetCore().QuoteWord(column)), like)
+	return m.Wheref(`%s LIKE ?`, m.db.GetCore().QuoteWord(column), like)
 }
 
-// WhereIn builds `xxx IN (x)` statement.
+// WhereIn builds `column IN (in)` statement.
 func (m *Model) WhereIn(column string, in interface{}) *Model {
-	return m.Where(fmt.Sprintf(`%s IN (?)`, m.db.GetCore().QuoteWord(column)), in)
+	return m.Wheref(`%s IN (?)`, m.db.GetCore().QuoteWord(column), in)
 }
 
-// WhereNull builds `xxx IS NULL` statement.
+// WhereNull builds `columns[0] IS NULL AND columns[1] IS NULL ...` statement.
 func (m *Model) WhereNull(columns ...string) *Model {
 	model := m
 	for _, column := range columns {
-		model = m.Where(fmt.Sprintf(`%s IS NULL`, m.db.GetCore().QuoteWord(column)))
+		model = m.Wheref(`%s IS NULL`, m.db.GetCore().QuoteWord(column))
 	}
 	return model
 }
 
-// WhereNotBetween builds `xxx NOT BETWEEN x AND y` statement.
+// WhereNotBetween builds `column NOT BETWEEN min AND max` statement.
 func (m *Model) WhereNotBetween(column string, min, max interface{}) *Model {
-	return m.Where(fmt.Sprintf(`%s NOT BETWEEN ? AND ?`, m.db.GetCore().QuoteWord(column)), min, max)
+	return m.Wheref(`%s NOT BETWEEN ? AND ?`, m.db.GetCore().QuoteWord(column), min, max)
 }
 
-// WhereNotLike builds `xxx NOT LIKE x` statement.
+// WhereNotLike builds `column NOT LIKE like` statement.
 func (m *Model) WhereNotLike(column string, like interface{}) *Model {
-	return m.Where(fmt.Sprintf(`%s NOT LIKE ?`, m.db.GetCore().QuoteWord(column)), like)
+	return m.Wheref(`%s NOT LIKE ?`, m.db.GetCore().QuoteWord(column), like)
 }
 
-// WhereNot builds `xxx != x` statement.
+// WhereNot builds `column != value` statement.
 func (m *Model) WhereNot(column string, value interface{}) *Model {
-	return m.Where(fmt.Sprintf(`%s != ?`, m.db.GetCore().QuoteWord(column)), value)
+	return m.Wheref(`%s != ?`, m.db.GetCore().QuoteWord(column), value)
 }
 
-// WhereNotIn builds `xxx NOT IN (x)` statement.
+// WhereNotIn builds `column NOT IN (in)` statement.
 func (m *Model) WhereNotIn(column string, in interface{}) *Model {
-	return m.Where(fmt.Sprintf(`%s NOT IN (?)`, m.db.GetCore().QuoteWord(column)), in)
+	return m.Wheref(`%s NOT IN (?)`, m.db.GetCore().QuoteWord(column), in)
 }
 
-// WhereNotNull builds `xxx IS NOT NULL` statement.
+// WhereNotNull builds `columns[0] IS NOT NULL AND columns[1] IS NOT NULL ...` statement.
 func (m *Model) WhereNotNull(columns ...string) *Model {
 	model := m
 	for _, column := range columns {
-		model = m.Where(fmt.Sprintf(`%s IS NOT NULL`, m.db.GetCore().QuoteWord(column)))
+		model = m.Wheref(`%s IS NOT NULL`, m.db.GetCore().QuoteWord(column))
 	}
 	return model
 }
@@ -127,50 +157,79 @@ func (m *Model) WhereOr(where interface{}, args ...interface{}) *Model {
 	return model
 }
 
-// WhereOrBetween builds `xxx BETWEEN x AND y` statement in `OR` conditions.
+// WhereOrf builds `OR` condition string using fmt.Sprintf and arguments.
+func (m *Model) WhereOrf(format string, args ...interface{}) *Model {
+	var (
+		placeHolderCount = gstr.Count(format, "?")
+		conditionStr     = fmt.Sprintf(format, args[:len(args)-placeHolderCount]...)
+	)
+	return m.WhereOr(conditionStr, args[len(args)-placeHolderCount:]...)
+}
+
+// WhereOrLT builds `column < value` statement in `OR` conditions..
+func (m *Model) WhereOrLT(column string, value interface{}) *Model {
+	return m.WhereOrf(`%s < ?`, column, value)
+}
+
+// WhereOrLTE builds `column <= value` statement in `OR` conditions..
+func (m *Model) WhereOrLTE(column string, value interface{}) *Model {
+	return m.WhereOrf(`%s <= ?`, column, value)
+}
+
+// WhereOrGT builds `column > value` statement in `OR` conditions..
+func (m *Model) WhereOrGT(column string, value interface{}) *Model {
+	return m.WhereOrf(`%s > ?`, column, value)
+}
+
+// WhereOrGTE builds `column >= value` statement in `OR` conditions..
+func (m *Model) WhereOrGTE(column string, value interface{}) *Model {
+	return m.WhereOrf(`%s >= ?`, column, value)
+}
+
+// WhereOrBetween builds `column BETWEEN min AND max` statement in `OR` conditions.
 func (m *Model) WhereOrBetween(column string, min, max interface{}) *Model {
-	return m.WhereOr(fmt.Sprintf(`%s BETWEEN ? AND ?`, m.db.GetCore().QuoteWord(column)), min, max)
+	return m.WhereOrf(`%s BETWEEN ? AND ?`, m.db.GetCore().QuoteWord(column), min, max)
 }
 
-// WhereOrLike builds `xxx LIKE x` statement in `OR` conditions.
+// WhereOrLike builds `column LIKE like` statement in `OR` conditions.
 func (m *Model) WhereOrLike(column string, like interface{}) *Model {
-	return m.WhereOr(fmt.Sprintf(`%s LIKE ?`, m.db.GetCore().QuoteWord(column)), like)
+	return m.WhereOrf(`%s LIKE ?`, m.db.GetCore().QuoteWord(column), like)
 }
 
-// WhereOrIn builds `xxx IN (x)` statement in `OR` conditions.
+// WhereOrIn builds `column IN (in)` statement in `OR` conditions.
 func (m *Model) WhereOrIn(column string, in interface{}) *Model {
-	return m.WhereOr(fmt.Sprintf(`%s IN (?)`, m.db.GetCore().QuoteWord(column)), in)
+	return m.WhereOrf(`%s IN (?)`, m.db.GetCore().QuoteWord(column), in)
 }
 
-// WhereOrNull builds `xxx IS NULL` statement in `OR` conditions.
+// WhereOrNull builds `columns[0] IS NULL OR columns[1] IS NULL ...` statement in `OR` conditions.
 func (m *Model) WhereOrNull(columns ...string) *Model {
 	model := m
 	for _, column := range columns {
-		model = m.WhereOr(fmt.Sprintf(`%s IS NULL`, m.db.GetCore().QuoteWord(column)))
+		model = m.WhereOrf(`%s IS NULL`, m.db.GetCore().QuoteWord(column))
 	}
 	return model
 }
 
-// WhereOrNotBetween builds `xxx NOT BETWEEN x AND y` statement in `OR` conditions.
+// WhereOrNotBetween builds `column NOT BETWEEN min AND max` statement in `OR` conditions.
 func (m *Model) WhereOrNotBetween(column string, min, max interface{}) *Model {
-	return m.WhereOr(fmt.Sprintf(`%s NOT BETWEEN ? AND ?`, m.db.GetCore().QuoteWord(column)), min, max)
+	return m.WhereOrf(`%s NOT BETWEEN ? AND ?`, m.db.GetCore().QuoteWord(column), min, max)
 }
 
-// WhereOrNotLike builds `xxx NOT LIKE x` statement in `OR` conditions.
+// WhereOrNotLike builds `column NOT LIKE like` statement in `OR` conditions.
 func (m *Model) WhereOrNotLike(column string, like interface{}) *Model {
-	return m.WhereOr(fmt.Sprintf(`%s NOT LIKE ?`, m.db.GetCore().QuoteWord(column)), like)
+	return m.WhereOrf(`%s NOT LIKE ?`, m.db.GetCore().QuoteWord(column), like)
 }
 
-// WhereOrNotIn builds `xxx NOT IN (x)` statement.
+// WhereOrNotIn builds `column NOT IN (in)` statement.
 func (m *Model) WhereOrNotIn(column string, in interface{}) *Model {
-	return m.WhereOr(fmt.Sprintf(`%s NOT IN (?)`, m.db.GetCore().QuoteWord(column)), in)
+	return m.WhereOrf(`%s NOT IN (?)`, m.db.GetCore().QuoteWord(column), in)
 }
 
-// WhereOrNotNull builds `xxx IS NOT NULL` statement in `OR` conditions.
+// WhereOrNotNull builds `columns[0] IS NOT NULL OR columns[1] IS NOT NULL ...` statement in `OR` conditions.
 func (m *Model) WhereOrNotNull(columns ...string) *Model {
 	model := m
 	for _, column := range columns {
-		model = m.WhereOr(fmt.Sprintf(`%s IS NOT NULL`, m.db.GetCore().QuoteWord(column)))
+		model = m.WhereOrf(`%s IS NOT NULL`, m.db.GetCore().QuoteWord(column))
 	}
 	return model
 }
