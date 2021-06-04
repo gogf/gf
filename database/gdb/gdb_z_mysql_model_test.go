@@ -3366,6 +3366,104 @@ func Test_Model_WhereOrNotNull(t *testing.T) {
 	})
 }
 
+func Test_Model_WhereLT(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).WhereLT("id", 3).OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(result), 2)
+		t.Assert(result[0]["id"], 1)
+	})
+}
+
+func Test_Model_WhereLTE(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).WhereLTE("id", 3).OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(result), 3)
+		t.Assert(result[0]["id"], 1)
+	})
+}
+
+func Test_Model_WhereGT(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).WhereGT("id", 8).OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(result), 2)
+		t.Assert(result[0]["id"], 9)
+	})
+}
+
+func Test_Model_WhereGTE(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).WhereGTE("id", 8).OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(result), 3)
+		t.Assert(result[0]["id"], 8)
+	})
+}
+
+func Test_Model_WhereOrLT(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).WhereLT("id", 3).WhereOrLT("id", 4).OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(result), 3)
+		t.Assert(result[0]["id"], 1)
+		t.Assert(result[2]["id"], 3)
+	})
+}
+
+func Test_Model_WhereOrLTE(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).WhereLTE("id", 3).WhereOrLTE("id", 4).OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(result), 4)
+		t.Assert(result[0]["id"], 1)
+		t.Assert(result[3]["id"], 4)
+	})
+}
+
+func Test_Model_WhereOrGT(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).WhereGT("id", 8).WhereOrGT("id", 7).OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(result), 3)
+		t.Assert(result[0]["id"], 8)
+	})
+}
+
+func Test_Model_WhereOrGTE(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).WhereGTE("id", 8).WhereOrGTE("id", 7).OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(result), 4)
+		t.Assert(result[0]["id"], 7)
+	})
+}
+
 func Test_Model_Min_Max_Avg_Sum(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
