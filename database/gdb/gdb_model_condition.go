@@ -62,6 +62,8 @@ func (m *Model) WherePri(where interface{}, args ...interface{}) *Model {
 }
 
 // Wheref builds condition string using fmt.Sprintf and arguments.
+// Note that if the number of `args` is more than the place holder in `format`,
+// the extra `args` will be used as the where condition arguments of the Model.
 func (m *Model) Wheref(format string, args ...interface{}) *Model {
 	var (
 		placeHolderCount = gstr.Count(format, "?")

@@ -18,11 +18,6 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
-const (
-	queryTypeNormal = "NormalQuery"
-	queryTypeCount  = "CountQuery"
-)
-
 // Select is alias of Model.All.
 // See Model.All.
 // Deprecated, use All instead.
@@ -458,6 +453,16 @@ func (m *Model) FindScan(pointer interface{}, where ...interface{}) error {
 	return m.Scan(pointer)
 }
 
+// Union does "(SELECT xxx FROM xxx) UNION (SELECT xxx FROM xxx) ..." statement for the model.
+func (m *Model) Union(unions ...*Model) *Model {
+	return m.db.Union(unions...)
+}
+
+// UnionAll does "(SELECT xxx FROM xxx) UNION ALL (SELECT xxx FROM xxx) ..." statement for the model.
+func (m *Model) UnionAll(unions ...*Model) *Model {
+	return m.db.UnionAll(unions...)
+}
+
 // doGetAllBySql does the select statement on the database.
 func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, err error) {
 	cacheKey := ""
@@ -501,7 +506,7 @@ func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, e
 	return result, err
 }
 
-func (m *Model) getFormattedSqlAndArgs(queryType string, limit1 bool) (sqlWithHolder string, holderArgs []interface{}) {
+func (m *Model) getFormattedSqlAndArgs(queryType int, limit1 bool) (sqlWithHolder string, holderArgs []interface{}) {
 	switch queryType {
 	case queryTypeCount:
 		countFields := "COUNT(1)"
@@ -519,6 +524,15 @@ func (m *Model) getFormattedSqlAndArgs(queryType string, limit1 bool) (sqlWithHo
 
 	default:
 		conditionWhere, conditionExtra, conditionArgs := m.formatCondition(limit1, false)
+		// Raw SQL Model, especially for UNION/UNION ALL featured SQL.
+		if m.rawSql != "" {
+			sqlWithHolder = fmt.Sprintf(
+				"%s%s",
+				m.rawSql,
+				conditionWhere+conditionExtra,
+			)
+			return sqlWithHolder, conditionArgs
+		}
 		// DO NOT quote the m.fields where, in case of fields like:
 		// DISTINCT t.user_id uid
 		sqlWithHolder = fmt.Sprintf(

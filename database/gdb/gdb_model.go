@@ -17,10 +17,11 @@ import (
 	"github.com/gogf/gf/text/gstr"
 )
 
-// Model is the DAO for ORM.
+// Model is core struct implementing the DAO for ORM.
 type Model struct {
 	db            DB             // Underlying DB interface.
 	tx            *TX            // Underlying TX interface.
+	rawSql        string         // rawSql is the raw SQL string which marks  a raw SQL based Model not a table based Model.
 	schema        string         // Custom database schema.
 	linkType      int            // Mark for operation on master or slave.
 	tablesInit    string         // Table names when model initialization.

@@ -121,6 +121,8 @@ type DB interface {
 	GetStruct(objPointer interface{}, sql string, args ...interface{}) error       // See Core.GetStruct.
 	GetStructs(objPointerSlice interface{}, sql string, args ...interface{}) error // See Core.GetStructs.
 	GetScan(objPointer interface{}, sql string, args ...interface{}) error         // See Core.GetScan.
+	Union(unions ...*Model) *Model                                                 // See Core.Union.
+	UnionAll(unions ...*Model) *Model                                              // See Core.UnionAll.
 
 	// ===========================================================================
 	// Master/Slave specification support.
@@ -252,6 +254,10 @@ type (
 )
 
 const (
+	queryTypeNormal         = 0
+	queryTypeCount          = 1
+	unionTypeNormal         = 0
+	unionTypeAll            = 1
 	insertOptionDefault     = 0
 	insertOptionReplace     = 1
 	insertOptionSave        = 2
