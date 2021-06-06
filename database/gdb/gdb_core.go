@@ -224,6 +224,42 @@ func (c *Core) GetCount(sql string, args ...interface{}) (int, error) {
 	return value.Int(), nil
 }
 
+// Union does "(SELECT xxx FROM xxx) UNION (SELECT xxx FROM xxx) ..." statement.
+func (c *Core) Union(unions ...*Model) *Model {
+	return c.doUnion(unionTypeNormal, unions...)
+}
+
+// UnionAll does "(SELECT xxx FROM xxx) UNION ALL (SELECT xxx FROM xxx) ..." statement.
+func (c *Core) UnionAll(unions ...*Model) *Model {
+	return c.doUnion(unionTypeAll, unions...)
+}
+
+func (c *Core) doUnion(unionType int, unions ...*Model) *Model {
+	var (
+		unionTypeStr   string
+		composedSqlStr string
+		composedArgs   = make([]interface{}, 0)
+	)
+	if unionType == unionTypeAll {
+		unionTypeStr = "UNION ALL"
+	} else {
+		unionTypeStr = "UNION"
+	}
+	for _, v := range unions {
+		sqlWithHolder, holderArgs := v.getFormattedSqlAndArgs(queryTypeNormal, false)
+		if composedSqlStr == "" {
+			composedSqlStr += fmt.Sprintf(`(%s)`, sqlWithHolder)
+		} else {
+			composedSqlStr += fmt.Sprintf(` %s (%s)`, unionTypeStr, sqlWithHolder)
+		}
+		composedArgs = append(composedArgs, holderArgs...)
+	}
+	model := c.db.Model()
+	model.rawSql = composedSqlStr
+	model.extraArgs = composedArgs
+	return model
+}
+
 // PingMaster pings the master node to check authentication or keeps the connection alive.
 func (c *Core) PingMaster() error {
 	if master, err := c.db.Master(); err != nil {
