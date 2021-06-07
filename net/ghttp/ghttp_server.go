@@ -115,7 +115,7 @@ func GetServer(name ...interface{}) *Server {
 
 // Start starts listening on configured port.
 // This function does not block the process, you can use function Wait blocking the process.
-func (s *Server) Start() error {
+func (s *Server) Start(listen ...bool) error {
 	// Register group routes.
 	s.handlePreBindItems()
 
@@ -176,7 +176,11 @@ func (s *Server) Start() error {
 	if len(s.routesMap) == 0 && !s.config.FileServerEnabled {
 		return gerror.New(`there's no route set or static feature enabled, did you forget import the router?`)
 	}
-
+	//Only init ghttpserver not listen
+	if listen != nil && len(listen) == 1 && listen[0] == false {
+		s.dumpRouterMap()
+		return nil
+	}
 	// Start the HTTP server.
 	reloaded := false
 	fdMapStr := genv.Get(adminActionReloadEnvKey)
