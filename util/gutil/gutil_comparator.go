@@ -77,8 +77,8 @@ func ComparatorUint64(a, b interface{}) int {
 
 // ComparatorFloat32 provides a basic comparison on float32.
 func ComparatorFloat32(a, b interface{}) int {
-	aFloat := gconv.Float64(a)
-	bFloat := gconv.Float64(b)
+	aFloat := gconv.Float32(a)
+	bFloat := gconv.Float32(b)
 	if aFloat == bFloat {
 		return 0
 	}
