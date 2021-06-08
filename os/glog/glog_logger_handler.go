@@ -75,5 +75,8 @@ func (i *HandlerInput) Next() {
 	if len(i.logger.config.Handlers)-1 > i.index {
 		i.index++
 		i.logger.config.Handlers[i.index](i.Ctx, i)
+	} else {
+		// The last handler is the default handler.
+		defaultHandler(i.Ctx, i)
 	}
 }

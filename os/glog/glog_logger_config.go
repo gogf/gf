@@ -250,5 +250,5 @@ func (l *Logger) SetPrefix(prefix string) {
 
 // SetHandlers sets the logging handlers for current logger.
 func (l *Logger) SetHandlers(handlers ...Handler) {
-	l.config.Handlers = append(handlers, defaultHandler)
+	l.config.Handlers = handlers
 }
