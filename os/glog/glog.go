@@ -30,7 +30,7 @@ func init() {
 	SetDebug(defaultDebug)
 }
 
-// Default returns the default logger.
+// DefaultLogger returns the default logger.
 func DefaultLogger() *Logger {
 	return logger
 }

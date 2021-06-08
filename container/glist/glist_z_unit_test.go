@@ -711,7 +711,7 @@ func TestList_Json(t *testing.T) {
 		b, err := json.Marshal(a)
 		t.Assert(err, nil)
 
-		err = json.Unmarshal(b, l)
+		err = json.UnmarshalUseNumber(b, l)
 		t.Assert(err, nil)
 		t.Assert(l.FrontAll(), a)
 	})
@@ -721,7 +721,7 @@ func TestList_Json(t *testing.T) {
 		b, err := json.Marshal(a)
 		t.Assert(err, nil)
 
-		err = json.Unmarshal(b, &l)
+		err = json.UnmarshalUseNumber(b, &l)
 		t.Assert(err, nil)
 		t.Assert(l.FrontAll(), a)
 	})

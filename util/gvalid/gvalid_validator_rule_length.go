@@ -58,6 +58,13 @@ func (v *Validator) checkLength(value, ruleKey, ruleVal string, customMsgMap map
 			msg = v.getErrorMessageByRule(ruleKey, customMsgMap)
 			msg = strings.Replace(msg, ":max", strconv.Itoa(max), -1)
 		}
+
+	case "size":
+		size, err := strconv.Atoi(ruleVal)
+		if valueLen != size || err != nil {
+			msg = v.getErrorMessageByRule(ruleKey, customMsgMap)
+			msg = strings.Replace(msg, ":size", strconv.Itoa(size), -1)
+		}
 	}
 	return msg
 }

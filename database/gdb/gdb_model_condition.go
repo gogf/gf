@@ -7,6 +7,9 @@
 package gdb
 
 import (
+	"fmt"
+	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/util/gconv"
 	"strings"
 )
 
@@ -58,7 +61,188 @@ func (m *Model) WherePri(where interface{}, args ...interface{}) *Model {
 	return m.Where(newWhere[0], newWhere[1:]...)
 }
 
+// Wheref builds condition string using fmt.Sprintf and arguments.
+func (m *Model) Wheref(format string, args ...interface{}) *Model {
+	var (
+		placeHolderCount = gstr.Count(format, "?")
+		conditionStr     = fmt.Sprintf(format, args[:len(args)-placeHolderCount]...)
+	)
+	return m.Where(conditionStr, args[len(args)-placeHolderCount:]...)
+}
+
+// WhereLT builds `column < value` statement.
+func (m *Model) WhereLT(column string, value interface{}) *Model {
+	return m.Wheref(`%s < ?`, column, value)
+}
+
+// WhereLTE builds `column <= value` statement.
+func (m *Model) WhereLTE(column string, value interface{}) *Model {
+	return m.Wheref(`%s <= ?`, column, value)
+}
+
+// WhereGT builds `column > value` statement.
+func (m *Model) WhereGT(column string, value interface{}) *Model {
+	return m.Wheref(`%s > ?`, column, value)
+}
+
+// WhereGTE builds `column >= value` statement.
+func (m *Model) WhereGTE(column string, value interface{}) *Model {
+	return m.Wheref(`%s >= ?`, column, value)
+}
+
+// WhereBetween builds `column BETWEEN min AND max` statement.
+func (m *Model) WhereBetween(column string, min, max interface{}) *Model {
+	return m.Wheref(`%s BETWEEN ? AND ?`, m.db.GetCore().QuoteWord(column), min, max)
+}
+
+// WhereLike builds `column LIKE like` statement.
+func (m *Model) WhereLike(column string, like interface{}) *Model {
+	return m.Wheref(`%s LIKE ?`, m.db.GetCore().QuoteWord(column), like)
+}
+
+// WhereIn builds `column IN (in)` statement.
+func (m *Model) WhereIn(column string, in interface{}) *Model {
+	return m.Wheref(`%s IN (?)`, m.db.GetCore().QuoteWord(column), in)
+}
+
+// WhereNull builds `columns[0] IS NULL AND columns[1] IS NULL ...` statement.
+func (m *Model) WhereNull(columns ...string) *Model {
+	model := m
+	for _, column := range columns {
+		model = m.Wheref(`%s IS NULL`, m.db.GetCore().QuoteWord(column))
+	}
+	return model
+}
+
+// WhereNotBetween builds `column NOT BETWEEN min AND max` statement.
+func (m *Model) WhereNotBetween(column string, min, max interface{}) *Model {
+	return m.Wheref(`%s NOT BETWEEN ? AND ?`, m.db.GetCore().QuoteWord(column), min, max)
+}
+
+// WhereNotLike builds `column NOT LIKE like` statement.
+func (m *Model) WhereNotLike(column string, like interface{}) *Model {
+	return m.Wheref(`%s NOT LIKE ?`, m.db.GetCore().QuoteWord(column), like)
+}
+
+// WhereNot builds `column != value` statement.
+func (m *Model) WhereNot(column string, value interface{}) *Model {
+	return m.Wheref(`%s != ?`, m.db.GetCore().QuoteWord(column), value)
+}
+
+// WhereNotIn builds `column NOT IN (in)` statement.
+func (m *Model) WhereNotIn(column string, in interface{}) *Model {
+	return m.Wheref(`%s NOT IN (?)`, m.db.GetCore().QuoteWord(column), in)
+}
+
+// WhereNotNull builds `columns[0] IS NOT NULL AND columns[1] IS NOT NULL ...` statement.
+func (m *Model) WhereNotNull(columns ...string) *Model {
+	model := m
+	for _, column := range columns {
+		model = m.Wheref(`%s IS NOT NULL`, m.db.GetCore().QuoteWord(column))
+	}
+	return model
+}
+
+// WhereOr adds "OR" condition to the where statement.
+func (m *Model) WhereOr(where interface{}, args ...interface{}) *Model {
+	model := m.getModel()
+	if model.whereHolder == nil {
+		model.whereHolder = make([]*whereHolder, 0)
+	}
+	model.whereHolder = append(model.whereHolder, &whereHolder{
+		operator: whereHolderOr,
+		where:    where,
+		args:     args,
+	})
+	return model
+}
+
+// WhereOrf builds `OR` condition string using fmt.Sprintf and arguments.
+func (m *Model) WhereOrf(format string, args ...interface{}) *Model {
+	var (
+		placeHolderCount = gstr.Count(format, "?")
+		conditionStr     = fmt.Sprintf(format, args[:len(args)-placeHolderCount]...)
+	)
+	return m.WhereOr(conditionStr, args[len(args)-placeHolderCount:]...)
+}
+
+// WhereOrLT builds `column < value` statement in `OR` conditions..
+func (m *Model) WhereOrLT(column string, value interface{}) *Model {
+	return m.WhereOrf(`%s < ?`, column, value)
+}
+
+// WhereOrLTE builds `column <= value` statement in `OR` conditions..
+func (m *Model) WhereOrLTE(column string, value interface{}) *Model {
+	return m.WhereOrf(`%s <= ?`, column, value)
+}
+
+// WhereOrGT builds `column > value` statement in `OR` conditions..
+func (m *Model) WhereOrGT(column string, value interface{}) *Model {
+	return m.WhereOrf(`%s > ?`, column, value)
+}
+
+// WhereOrGTE builds `column >= value` statement in `OR` conditions..
+func (m *Model) WhereOrGTE(column string, value interface{}) *Model {
+	return m.WhereOrf(`%s >= ?`, column, value)
+}
+
+// WhereOrBetween builds `column BETWEEN min AND max` statement in `OR` conditions.
+func (m *Model) WhereOrBetween(column string, min, max interface{}) *Model {
+	return m.WhereOrf(`%s BETWEEN ? AND ?`, m.db.GetCore().QuoteWord(column), min, max)
+}
+
+// WhereOrLike builds `column LIKE like` statement in `OR` conditions.
+func (m *Model) WhereOrLike(column string, like interface{}) *Model {
+	return m.WhereOrf(`%s LIKE ?`, m.db.GetCore().QuoteWord(column), like)
+}
+
+// WhereOrIn builds `column IN (in)` statement in `OR` conditions.
+func (m *Model) WhereOrIn(column string, in interface{}) *Model {
+	return m.WhereOrf(`%s IN (?)`, m.db.GetCore().QuoteWord(column), in)
+}
+
+// WhereOrNull builds `columns[0] IS NULL OR columns[1] IS NULL ...` statement in `OR` conditions.
+func (m *Model) WhereOrNull(columns ...string) *Model {
+	model := m
+	for _, column := range columns {
+		model = m.WhereOrf(`%s IS NULL`, m.db.GetCore().QuoteWord(column))
+	}
+	return model
+}
+
+// WhereOrNotBetween builds `column NOT BETWEEN min AND max` statement in `OR` conditions.
+func (m *Model) WhereOrNotBetween(column string, min, max interface{}) *Model {
+	return m.WhereOrf(`%s NOT BETWEEN ? AND ?`, m.db.GetCore().QuoteWord(column), min, max)
+}
+
+// WhereOrNotLike builds `column NOT LIKE like` statement in `OR` conditions.
+func (m *Model) WhereOrNotLike(column string, like interface{}) *Model {
+	return m.WhereOrf(`%s NOT LIKE ?`, m.db.GetCore().QuoteWord(column), like)
+}
+
+// WhereOrNotIn builds `column NOT IN (in)` statement.
+func (m *Model) WhereOrNotIn(column string, in interface{}) *Model {
+	return m.WhereOrf(`%s NOT IN (?)`, m.db.GetCore().QuoteWord(column), in)
+}
+
+// WhereOrNotNull builds `columns[0] IS NOT NULL OR columns[1] IS NOT NULL ...` statement in `OR` conditions.
+func (m *Model) WhereOrNotNull(columns ...string) *Model {
+	model := m
+	for _, column := range columns {
+		model = m.WhereOrf(`%s IS NOT NULL`, m.db.GetCore().QuoteWord(column))
+	}
+	return model
+}
+
+// Group sets the "GROUP BY" statement for the model.
+func (m *Model) Group(groupBy string) *Model {
+	model := m.getModel()
+	model.groupBy = m.db.GetCore().QuoteString(groupBy)
+	return model
+}
+
 // And adds "AND" condition to the where statement.
+// Deprecated, use Where instead.
 func (m *Model) And(where interface{}, args ...interface{}) *Model {
 	model := m.getModel()
 	if model.whereHolder == nil {
@@ -73,24 +257,9 @@ func (m *Model) And(where interface{}, args ...interface{}) *Model {
 }
 
 // Or adds "OR" condition to the where statement.
+// Deprecated, use WhereOr instead.
 func (m *Model) Or(where interface{}, args ...interface{}) *Model {
-	model := m.getModel()
-	if model.whereHolder == nil {
-		model.whereHolder = make([]*whereHolder, 0)
-	}
-	model.whereHolder = append(model.whereHolder, &whereHolder{
-		operator: whereHolderOr,
-		where:    where,
-		args:     args,
-	})
-	return model
-}
-
-// Group sets the "GROUP BY" statement for the model.
-func (m *Model) Group(groupBy string) *Model {
-	model := m.getModel()
-	model.groupBy = m.db.QuoteString(groupBy)
-	return model
+	return m.WhereOr(where, args...)
 }
 
 // GroupBy is alias of Model.Group.
@@ -102,8 +271,38 @@ func (m *Model) GroupBy(groupBy string) *Model {
 
 // Order sets the "ORDER BY" statement for the model.
 func (m *Model) Order(orderBy ...string) *Model {
+	if len(orderBy) == 0 {
+		return m
+	}
 	model := m.getModel()
-	model.orderBy = m.db.QuoteString(strings.Join(orderBy, " "))
+	model.orderBy = m.db.GetCore().QuoteString(strings.Join(orderBy, " "))
+	return model
+}
+
+// OrderAsc sets the "ORDER BY xxx ASC" statement for the model.
+func (m *Model) OrderAsc(column string) *Model {
+	if len(column) == 0 {
+		return m
+	}
+	model := m.getModel()
+	model.orderBy = m.db.GetCore().QuoteWord(column) + " ASC"
+	return model
+}
+
+// OrderDesc sets the "ORDER BY xxx DESC" statement for the model.
+func (m *Model) OrderDesc(column string) *Model {
+	if len(column) == 0 {
+		return m
+	}
+	model := m.getModel()
+	model.orderBy = m.db.GetCore().QuoteWord(column) + " DESC"
+	return model
+}
+
+// OrderRandom sets the "ORDER BY RANDOM()" statement for the model.
+func (m *Model) OrderRandom() *Model {
+	model := m.getModel()
+	model.orderBy = "RAND()"
 	return model
 }
 
@@ -138,6 +337,13 @@ func (m *Model) Offset(offset int) *Model {
 	return model
 }
 
+// Distinct forces the query to only return distinct results.
+func (m *Model) Distinct() *Model {
+	model := m.getModel()
+	model.distinct = "DISTINCT "
+	return model
+}
+
 // Page sets the paging number for the model.
 // The parameter `page` is started from 1 for paging.
 // Note that, it differs that the Limit function starts from 0 for "LIMIT" statement.
@@ -156,4 +362,111 @@ func (m *Model) Page(page, limit int) *Model {
 // Deprecated, use Page instead.
 func (m *Model) ForPage(page, limit int) *Model {
 	return m.Page(page, limit)
+}
+
+// formatCondition formats where arguments of the model and returns a new condition sql and its arguments.
+// Note that this function does not change any attribute value of the `m`.
+//
+// The parameter `limit1` specifies whether limits querying only one record if m.limit is not set.
+func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWhere string, conditionExtra string, conditionArgs []interface{}) {
+	if len(m.whereHolder) > 0 {
+		for _, v := range m.whereHolder {
+			switch v.operator {
+			case whereHolderWhere:
+				if conditionWhere == "" {
+					newWhere, newArgs := formatWhere(
+						m.db, v.where, v.args, m.option&OptionOmitEmpty > 0,
+					)
+					if len(newWhere) > 0 {
+						conditionWhere = newWhere
+						conditionArgs = newArgs
+					}
+					continue
+				}
+				fallthrough
+
+			case whereHolderAnd:
+				newWhere, newArgs := formatWhere(
+					m.db, v.where, v.args, m.option&OptionOmitEmpty > 0,
+				)
+				if len(newWhere) > 0 {
+					if len(conditionWhere) == 0 {
+						conditionWhere = newWhere
+					} else if conditionWhere[0] == '(' {
+						conditionWhere = fmt.Sprintf(`%s AND (%s)`, conditionWhere, newWhere)
+					} else {
+						conditionWhere = fmt.Sprintf(`(%s) AND (%s)`, conditionWhere, newWhere)
+					}
+					conditionArgs = append(conditionArgs, newArgs...)
+				}
+
+			case whereHolderOr:
+				newWhere, newArgs := formatWhere(
+					m.db, v.where, v.args, m.option&OptionOmitEmpty > 0,
+				)
+				if len(newWhere) > 0 {
+					if len(conditionWhere) == 0 {
+						conditionWhere = newWhere
+					} else if conditionWhere[0] == '(' {
+						conditionWhere = fmt.Sprintf(`%s OR (%s)`, conditionWhere, newWhere)
+					} else {
+						conditionWhere = fmt.Sprintf(`(%s) OR (%s)`, conditionWhere, newWhere)
+					}
+					conditionArgs = append(conditionArgs, newArgs...)
+				}
+			}
+		}
+	}
+	// Soft deletion.
+	softDeletingCondition := m.getConditionForSoftDeleting()
+	if !m.unscoped && softDeletingCondition != "" {
+		if conditionWhere == "" {
+			conditionWhere = fmt.Sprintf(` WHERE %s`, softDeletingCondition)
+		} else {
+			conditionWhere = fmt.Sprintf(` WHERE (%s) AND %s`, conditionWhere, softDeletingCondition)
+		}
+	} else {
+		if conditionWhere != "" {
+			conditionWhere = " WHERE " + conditionWhere
+		}
+	}
+	// GROUP BY.
+	if m.groupBy != "" {
+		conditionExtra += " GROUP BY " + m.groupBy
+	}
+	// HAVING.
+	if len(m.having) > 0 {
+		havingStr, havingArgs := formatWhere(
+			m.db, m.having[0], gconv.Interfaces(m.having[1]), m.option&OptionOmitEmpty > 0,
+		)
+		if len(havingStr) > 0 {
+			conditionExtra += " HAVING " + havingStr
+			conditionArgs = append(conditionArgs, havingArgs...)
+		}
+	}
+	// ORDER BY.
+	if m.orderBy != "" {
+		conditionExtra += " ORDER BY " + m.orderBy
+	}
+	// LIMIT.
+	if !isCountStatement {
+		if m.limit != 0 {
+			if m.start >= 0 {
+				conditionExtra += fmt.Sprintf(" LIMIT %d,%d", m.start, m.limit)
+			} else {
+				conditionExtra += fmt.Sprintf(" LIMIT %d", m.limit)
+			}
+		} else if limit1 {
+			conditionExtra += " LIMIT 1"
+		}
+
+		if m.offset >= 0 {
+			conditionExtra += fmt.Sprintf(" OFFSET %d", m.offset)
+		}
+	}
+
+	if m.lockInfo != "" {
+		conditionExtra += " " + m.lockInfo
+	}
+	return
 }

@@ -50,16 +50,9 @@ The `Web` component performance of `GoFrame`, please refer to third-party projec
 
 # Documentation
 
-* 中文官网: https://goframe.org
-* GoDoc API: https://godoc.org/github.com/gogf/gf
+* 中文官网: [https://goframe.org](https://goframe.org/display/gf)
+* GoDoc API: [https://pkg.go.dev/github.com/gogf/gf](https://pkg.go.dev/github.com/gogf/gf)
 
-
-# Discussion
-- QQ Group：[116707870](//shang.qq.com/wpa/qunwpa?idkey=195f91eceeb5d7fa76009b7cd5a4641f70bf4897b7f5a520635eb26ff17adfe7)
-- WX Group：Add friend`389961817` in WeChat, commenting `GF`
-- Issues：https://github.com/gogf/gf/issues
-
-> It's recommended learning `GoFrame` through its awesome source codes and API reference.
 
 # License
 

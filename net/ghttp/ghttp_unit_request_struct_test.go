@@ -395,7 +395,7 @@ func Test_Params_Struct(t *testing.T) {
 		Name  string
 		Time  *time.Time
 		Pass1 string `p:"password1"`
-		Pass2 string `p:"password2" v:"passwd1 @required|length:2,20|password3#||密码强度不足"`
+		Pass2 string `p:"password2" v:"password2 @required|length:2,20|password3#||密码强度不足"`
 	}
 	p, _ := ports.PopRand()
 	s := g.Server(p)
@@ -425,7 +425,7 @@ func Test_Params_Struct(t *testing.T) {
 			if err := r.GetStruct(user); err != nil {
 				r.Response.WriteExit(err)
 			}
-			if err := gvalid.CheckStruct(user, nil); err != nil {
+			if err := gvalid.CheckStruct(r.Context(), user, nil); err != nil {
 				r.Response.WriteExit(err)
 			}
 		}
@@ -452,8 +452,8 @@ func Test_Params_Struct(t *testing.T) {
 		t.Assert(client.PostContent("/struct1", `id=1&name=john&password1=123&password2=456`), `1john123456`)
 		t.Assert(client.PostContent("/struct2", `id=1&name=john&password1=123&password2=456`), `1john123456`)
 		t.Assert(client.PostContent("/struct2", ``), ``)
-		t.Assert(client.PostContent("/struct-valid", `id=1&name=john&password1=123&password2=0`), `The passwd1 value length must be between 2 and 20; 密码强度不足`)
-		t.Assert(client.PostContent("/parse", `id=1&name=john&password1=123&password2=0`), `The passwd1 value length must be between 2 and 20; 密码强度不足`)
+		t.Assert(client.PostContent("/struct-valid", `id=1&name=john&password1=123&password2=0`), `The password2 value length must be between 2 and 20; 密码强度不足`)
+		t.Assert(client.PostContent("/parse", `id=1&name=john&password1=123&password2=0`), `The password2 value length must be between 2 and 20; 密码强度不足`)
 		t.Assert(client.PostContent("/parse", `{"id":1,"name":"john","password1":"123Abc!@#","password2":"123Abc!@#"}`), `1john123Abc!@#123Abc!@#`)
 	})
 }
@@ -464,7 +464,7 @@ func Test_Params_Structs(t *testing.T) {
 		Name  string
 		Time  *time.Time
 		Pass1 string `p:"password1"`
-		Pass2 string `p:"password2" v:"passwd1 @required|length:2,20|password3#||密码强度不足"`
+		Pass2 string `p:"password2" v:"password2 @required|length:2,20|password3#||密码强度不足"`
 	}
 	p, _ := ports.PopRand()
 	s := g.Server(p)
@@ -489,5 +489,41 @@ func Test_Params_Structs(t *testing.T) {
 			`[{"id":1,"name":"john","password1":"123Abc!@#","password2":"123Abc!@#"}, {"id":2,"name":"john","password1":"123Abc!@#","password2":"123Abc!@#"}]`),
 			`12`,
 		)
+	})
+}
+
+func Test_Params_Struct_Validation(t *testing.T) {
+	type User struct {
+		Id   int    `v:"required"`
+		Name string `v:"name@required-with:id"`
+	}
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.ALL("/", func(r *ghttp.Request) {
+			var (
+				err  error
+				user *User
+			)
+			err = r.Parse(&user)
+			if err != nil {
+				r.Response.WriteExit(err)
+			}
+			r.Response.WriteExit(user.Id, user.Name)
+		})
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		t.Assert(c.GetContent("/", ``), `The Id field is required`)
+		t.Assert(c.GetContent("/", `id=1&name=john`), `1john`)
+		t.Assert(c.PostContent("/", `id=1&name=john&password1=123&password2=456`), `1john`)
+		t.Assert(c.PostContent("/", `id=1`), `The name field is required`)
 	})
 }

@@ -477,7 +477,7 @@ func (set *Set) UnmarshalJSON(b []byte) error {
 		set.data = make(map[interface{}]struct{})
 	}
 	var array []interface{}
-	if err := json.Unmarshal(b, &array); err != nil {
+	if err := json.UnmarshalUseNumber(b, &array); err != nil {
 		return err
 	}
 	for _, v := range array {
@@ -496,7 +496,7 @@ func (set *Set) UnmarshalValue(value interface{}) (err error) {
 	var array []interface{}
 	switch value.(type) {
 	case string, []byte:
-		err = json.Unmarshal(gconv.Bytes(value), &array)
+		err = json.UnmarshalUseNumber(gconv.Bytes(value), &array)
 	default:
 		array = gconv.SliceAny(value)
 	}

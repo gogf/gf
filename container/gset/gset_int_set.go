@@ -437,7 +437,7 @@ func (set *IntSet) UnmarshalJSON(b []byte) error {
 		set.data = make(map[int]struct{})
 	}
 	var array []int
-	if err := json.Unmarshal(b, &array); err != nil {
+	if err := json.UnmarshalUseNumber(b, &array); err != nil {
 		return err
 	}
 	for _, v := range array {
@@ -456,7 +456,7 @@ func (set *IntSet) UnmarshalValue(value interface{}) (err error) {
 	var array []int
 	switch value.(type) {
 	case string, []byte:
-		err = json.Unmarshal(gconv.Bytes(value), &array)
+		err = json.UnmarshalUseNumber(gconv.Bytes(value), &array)
 	default:
 		array = gconv.SliceInt(value)
 	}

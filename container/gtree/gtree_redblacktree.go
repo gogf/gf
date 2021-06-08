@@ -937,7 +937,7 @@ func (tree *RedBlackTree) UnmarshalJSON(b []byte) error {
 		tree.comparator = gutil.ComparatorString
 	}
 	var data map[string]interface{}
-	if err := json.Unmarshal(b, &data); err != nil {
+	if err := json.UnmarshalUseNumber(b, &data); err != nil {
 		return err
 	}
 	for k, v := range data {

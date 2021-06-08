@@ -9,6 +9,11 @@ package gdb
 import (
 	"bytes"
 	"fmt"
+	"reflect"
+	"regexp"
+	"strings"
+	"time"
+
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/empty"
 	"github.com/gogf/gf/internal/json"
@@ -16,10 +21,6 @@ import (
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/util/gmeta"
 	"github.com/gogf/gf/util/gutil"
-	"reflect"
-	"regexp"
-	"strings"
-	"time"
 
 	"github.com/gogf/gf/internal/structs"
 
@@ -235,7 +236,7 @@ func DataToMapDeep(value interface{}) map[string]interface{} {
 		name = ""
 		fieldTag = rtField.Tag
 		for _, tag := range structTagPriority {
-			if s := fieldTag.Get(tag); s != "" {
+			if s := fieldTag.Get(tag); s != "" && gregex.IsMatchString(regularFieldNameWithoutDotRegPattern, s) {
 				name = s
 				break
 			}
@@ -443,14 +444,14 @@ func formatSql(sql string, args []interface{}) (newSql string, newArgs []interfa
 	return handleArguments(sql, args)
 }
 
-// formatWhere formats where statement and its arguments.
+// formatWhere formats where statement and its arguments for `Where` and `Having` statements.
 func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool) (newWhere string, newArgs []interface{}) {
 	var (
 		buffer = bytes.NewBuffer(nil)
 		rv     = reflect.ValueOf(where)
 		kind   = rv.Kind()
 	)
-	if kind == reflect.Ptr {
+	for kind == reflect.Ptr {
 		rv = rv.Elem()
 		kind = rv.Kind()
 	}
@@ -490,7 +491,36 @@ func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool) (
 		}
 
 	default:
-		buffer.WriteString(gconv.String(where))
+		// Usually a string.
+		var (
+			i        = 0
+			whereStr = gconv.String(where)
+		)
+		for {
+			if i >= len(args) {
+				break
+			}
+			// Sub query, which is always used along with a string condition.
+			if model, ok := args[i].(*Model); ok {
+				var (
+					index = -1
+				)
+				whereStr, _ = gregex.ReplaceStringFunc(`(\?)`, whereStr, func(s string) string {
+					index++
+					if i+len(newArgs) == index {
+						sqlWithHolder, holderArgs := model.getFormattedSqlAndArgs(queryTypeNormal, false)
+						newArgs = append(newArgs, holderArgs...)
+						// Automatically adding the brackets.
+						return "(" + sqlWithHolder + ")"
+					}
+					return s
+				})
+				args = gutil.SliceDelete(args, i)
+				continue
+			}
+			i++
+		}
+		buffer.WriteString(whereStr)
 	}
 
 	if buffer.Len() == 0 {
@@ -504,7 +534,7 @@ func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool) (
 				// Eg: Where/And/Or("uid>=", 1)
 				newWhere += "?"
 			} else if gregex.IsMatchString(regularFieldNameRegPattern, newWhere) {
-				newWhere = db.QuoteString(newWhere)
+				newWhere = db.GetCore().QuoteString(newWhere)
 				if len(newArgs) > 0 {
 					if utils.IsArray(newArgs[0]) {
 						// Eg:
@@ -543,9 +573,9 @@ func formatWhereInterfaces(db DB, where []interface{}, buffer *bytes.Buffer, new
 	for i := 0; i < len(where); i += 2 {
 		str = gconv.String(where[i])
 		if buffer.Len() > 0 {
-			buffer.WriteString(" AND " + db.QuoteWord(str) + "=?")
+			buffer.WriteString(" AND " + db.GetCore().QuoteWord(str) + "=?")
 		} else {
-			buffer.WriteString(db.QuoteWord(str) + "=?")
+			buffer.WriteString(db.GetCore().QuoteWord(str) + "=?")
 		}
 		if s, ok := where[i+1].(Raw); ok {
 			buffer.WriteString(gconv.String(s))
@@ -558,7 +588,7 @@ func formatWhereInterfaces(db DB, where []interface{}, buffer *bytes.Buffer, new
 
 // formatWhereKeyValue handles each key-value pair of the parameter map.
 func formatWhereKeyValue(db DB, buffer *bytes.Buffer, newArgs []interface{}, key string, value interface{}) []interface{} {
-	quotedKey := db.QuoteWord(key)
+	quotedKey := db.GetCore().QuoteWord(key)
 	if buffer.Len() > 0 {
 		buffer.WriteString(" AND ")
 	}
