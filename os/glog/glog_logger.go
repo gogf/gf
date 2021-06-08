@@ -62,7 +62,6 @@ func New() *Logger {
 		init:   gtype.NewBool(),
 		config: DefaultConfig(),
 	}
-	logger.config.Handlers = []Handler{defaultHandler}
 	return logger
 }
 
