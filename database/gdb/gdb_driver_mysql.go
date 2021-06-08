@@ -10,6 +10,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net/url"
 
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
@@ -47,6 +48,9 @@ func (d *DriverMysql) Open(config *ConfigNode) (*sql.DB, error) {
 			"%s:%s@tcp(%s:%s)/%s?charset=%s",
 			config.User, config.Pass, config.Host, config.Port, config.Name, config.Charset,
 		)
+		if config.Timezone != "" {
+			source = fmt.Sprintf("%s&loc=%s", source, url.QueryEscape(config.Timezone))
+		}
 	}
 	intlog.Printf("Open: %s", source)
 	if db, err := sql.Open("mysql", source); err == nil {
