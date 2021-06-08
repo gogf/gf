@@ -35,7 +35,7 @@ func (c *Core) DoQuery(ctx context.Context, link Link, sql string, args ...inter
 	}
 	// Link execution.
 	sql, args = formatSql(sql, args)
-	sql, args = c.db.HandleSqlBeforeCommit(ctx, link, sql, args)
+	sql, args = c.db.DoCommit(ctx, link, sql, args)
 	if c.GetConfig().QueryTimeout > 0 {
 		ctx, _ = context.WithTimeout(ctx, c.GetConfig().QueryTimeout)
 	}
@@ -87,7 +87,7 @@ func (c *Core) DoExec(ctx context.Context, link Link, sql string, args ...interf
 	}
 	// Link execution.
 	sql, args = formatSql(sql, args)
-	sql, args = c.db.HandleSqlBeforeCommit(ctx, link, sql, args)
+	sql, args = c.db.DoCommit(ctx, link, sql, args)
 	if c.GetConfig().ExecTimeout > 0 {
 		var cancelFunc context.CancelFunc
 		ctx, cancelFunc = context.WithTimeout(ctx, c.GetConfig().ExecTimeout)

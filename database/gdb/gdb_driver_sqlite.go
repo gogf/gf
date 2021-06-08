@@ -66,10 +66,10 @@ func (d *DriverSqlite) GetChars() (charLeft string, charRight string) {
 	return "`", "`"
 }
 
-// HandleSqlBeforeCommit deals with the sql string before commits it to underlying sql driver.
+// DoCommit deals with the sql string before commits it to underlying sql driver.
 // TODO 需要增加对Save方法的支持，可使用正则来实现替换，
 // TODO 将ON DUPLICATE KEY UPDATE触发器修改为两条SQL语句(INSERT OR IGNORE & UPDATE)
-func (d *DriverSqlite) HandleSqlBeforeCommit(ctx context.Context, link Link, sql string, args []interface{}) (string, []interface{}) {
+func (d *DriverSqlite) DoCommit(ctx context.Context, link Link, sql string, args []interface{}) (string, []interface{}) {
 	return sql, args
 }
 
