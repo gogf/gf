@@ -42,13 +42,13 @@ func init() {
 	}
 }
 
-// CallerPath returns the function name and the absolute file path along with its line
+// Caller returns the function name and the absolute file path along with its line
 // number of the caller.
 func Caller(skip ...int) (function string, path string, line int) {
 	return CallerWithFilter("", skip...)
 }
 
-// CallerPathWithFilter returns the function name and the absolute file path along with
+// CallerWithFilter returns the function name and the absolute file path along with
 // its line number of the caller.
 //
 // The parameter <filter> is used to filter the path of the caller.

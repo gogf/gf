@@ -9,6 +9,7 @@ package gdb
 import (
 	"database/sql"
 	"fmt"
+
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gstr"
@@ -33,9 +34,10 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 	// Soft deleting.
 	if !m.unscoped && fieldNameDelete != "" {
 		return m.db.DoUpdate(
+			m.GetCtx(),
 			m.getLink(true),
 			m.tables,
-			fmt.Sprintf(`%s=?`, m.db.QuoteString(fieldNameDelete)),
+			fmt.Sprintf(`%s=?`, m.db.GetCore().QuoteString(fieldNameDelete)),
 			conditionWhere+conditionExtra,
 			append([]interface{}{gtime.Now().String()}, conditionArgs...),
 		)
@@ -44,5 +46,5 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 	if !gstr.ContainsI(conditionStr, " WHERE ") {
 		return nil, gerror.New("there should be WHERE condition statement for DELETE operation")
 	}
-	return m.db.DoDelete(m.getLink(true), m.tables, conditionStr, conditionArgs...)
+	return m.db.DoDelete(m.GetCtx(), m.getLink(true), m.tables, conditionStr, conditionArgs...)
 }

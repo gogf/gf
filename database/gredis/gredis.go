@@ -32,14 +32,14 @@ type Redis struct {
 	ctx    context.Context // Context.
 }
 
-// Redis connection.
+// Conn is redis connection.
 type Conn struct {
 	redis.Conn
 	ctx   context.Context
 	redis *Redis
 }
 
-// Redis configuration.
+// Config is redis configuration.
 type Config struct {
 	Host            string        `json:"host"`
 	Port            int           `json:"port"`
@@ -54,7 +54,7 @@ type Config struct {
 	TLSSkipVerify   bool          `json:"tlsSkipVerify"`   // Disables server name verification when connecting over TLS.
 }
 
-// Pool statistics.
+// PoolStats is statistics of redis connection pool.
 type PoolStats struct {
 	redis.PoolStats
 }
@@ -189,7 +189,7 @@ func (r *Redis) Conn() *Conn {
 	}
 }
 
-// Alias of Conn, see Conn.
+// GetConn is alias of Conn, see Conn.
 // Deprecated, use Conn instead.
 func (r *Redis) GetConn() *Conn {
 	return r.Conn()

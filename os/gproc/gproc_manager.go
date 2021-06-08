@@ -12,26 +12,27 @@ import (
 	"github.com/gogf/gf/container/gmap"
 )
 
-// 进程管理器
+// Manager is a process manager maintaining multiple processes.
 type Manager struct {
-	processes *gmap.IntAnyMap // 所管理的子进程map
+	processes *gmap.IntAnyMap // Process id to Process object mapping.
 }
 
-// 创建一个进程管理器
+// NewManager creates and returns a new process manager.
 func NewManager() *Manager {
 	return &Manager{
 		processes: gmap.NewIntAnyMap(true),
 	}
 }
 
-// 创建一个进程(不执行)
+// NewProcess creates and returns a Process object.
 func (m *Manager) NewProcess(path string, args []string, environment []string) *Process {
 	p := NewProcess(path, args, environment)
 	p.Manager = m
 	return p
 }
 
-// 获取当前进程管理器中的一个进程
+// GetProcess retrieves and returns a Process object.
+// It returns nil if it does not find the process with given `pid`.
 func (m *Manager) GetProcess(pid int) *Process {
 	if v := m.processes.Get(pid); v != nil {
 		return v.(*Process)
@@ -39,7 +40,8 @@ func (m *Manager) GetProcess(pid int) *Process {
 	return nil
 }
 
-// 添加一个已存在进程到进程管理器中
+// AddProcess adds a process to current manager.
+// It does nothing if the process with given `pid` does not exist.
 func (m *Manager) AddProcess(pid int) {
 	if m.processes.Get(pid) == nil {
 		if process, err := os.FindProcess(pid); err == nil {
@@ -50,12 +52,12 @@ func (m *Manager) AddProcess(pid int) {
 	}
 }
 
-// 移除进程管理器中的指定进程
+// RemoveProcess removes a process from current manager.
 func (m *Manager) RemoveProcess(pid int) {
 	m.processes.Remove(pid)
 }
 
-// 获取所有的进程对象，构成列表返回
+// Processes retrieves and returns all processes in current manager.
 func (m *Manager) Processes() []*Process {
 	processes := make([]*Process, 0)
 	m.processes.RLockFunc(func(m map[int]interface{}) {
@@ -66,12 +68,12 @@ func (m *Manager) Processes() []*Process {
 	return processes
 }
 
-// 获取所有的进程pid，构成列表返回
+// Pids retrieves and returns all process id array in current manager.
 func (m *Manager) Pids() []int {
 	return m.processes.Keys()
 }
 
-// 等待所有子进程结束
+// WaitAll waits until all process exit.
 func (m *Manager) WaitAll() {
 	processes := m.Processes()
 	if len(processes) > 0 {
@@ -81,7 +83,7 @@ func (m *Manager) WaitAll() {
 	}
 }
 
-// 关闭所有的进程
+// KillAll kills all processes in current manager.
 func (m *Manager) KillAll() error {
 	for _, p := range m.Processes() {
 		if err := p.Kill(); err != nil {
@@ -91,7 +93,7 @@ func (m *Manager) KillAll() error {
 	return nil
 }
 
-// 向所有进程发送信号量
+// SignalAll sends a signal `sig` to all processes in current manager.
 func (m *Manager) SignalAll(sig os.Signal) error {
 	for _, p := range m.Processes() {
 		if err := p.Signal(sig); err != nil {
@@ -101,24 +103,24 @@ func (m *Manager) SignalAll(sig os.Signal) error {
 	return nil
 }
 
-// 向所有进程发送消息
+// Send sends data bytes to all processes in current manager.
 func (m *Manager) Send(data []byte) {
 	for _, p := range m.Processes() {
 		p.Send(data)
 	}
 }
 
-// 向指定进程发送消息
+// SendTo sneds data bytes to specified processe in current manager.
 func (m *Manager) SendTo(pid int, data []byte) error {
 	return Send(pid, data)
 }
 
-// 清空管理器
+// Clear removes all processes in current manager.
 func (m *Manager) Clear() {
 	m.processes.Clear()
 }
 
-// 当前进程总数
+// Size returns the size of processes in current manager.
 func (m *Manager) Size() int {
 	return m.processes.Size()
 }

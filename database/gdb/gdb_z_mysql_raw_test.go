@@ -20,7 +20,7 @@ func Test_Insert_Raw(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		user := db.Model(table)
-		result, err := user.Filter().Data(g.Map{
+		result, err := user.Data(g.Map{
 			"id":          gdb.Raw("id+2"),
 			"passport":    "port_1",
 			"password":    "pass_1",
@@ -39,7 +39,7 @@ func Test_BatchInsert_Raw(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		user := db.Model(table)
-		result, err := user.Filter().Data(
+		result, err := user.Data(
 			g.List{
 				g.Map{
 					"id":          gdb.Raw("id+2"),

@@ -530,7 +530,7 @@ func (m *ListMap) UnmarshalJSON(b []byte) error {
 		m.list = glist.New()
 	}
 	var data map[string]interface{}
-	if err := json.Unmarshal(b, &data); err != nil {
+	if err := json.UnmarshalUseNumber(b, &data); err != nil {
 		return err
 	}
 	for key, value := range data {

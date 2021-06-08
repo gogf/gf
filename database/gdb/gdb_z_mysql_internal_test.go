@@ -8,11 +8,11 @@ package gdb
 
 import (
 	"fmt"
-	"github.com/go-sql-driver/mysql"
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/os/gcmd"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/mysql"
 	"testing"
 )
 
@@ -45,7 +45,7 @@ func init() {
 		Weight:           1,
 		MaxIdleConnCount: 10,
 		MaxOpenConnCount: 10,
-		MaxConnLifetime:  600,
+		MaxConnLifeTime:  600,
 	}
 	AddConfigNode(DefaultGroupName, configNode)
 	// Default db.

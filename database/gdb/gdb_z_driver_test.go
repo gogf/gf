@@ -7,11 +7,13 @@
 package gdb_test
 
 import (
+	"context"
+	"testing"
+
 	"github.com/gogf/gf/container/gtype"
 	"github.com/gogf/gf/database/gdb"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/test/gtest"
-	"testing"
 )
 
 // MyDriver is a custom database driver, which is used for testing only.
@@ -41,9 +43,9 @@ func (d *MyDriver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
 
 // HandleSqlBeforeCommit handles the sql before posts it to database.
 // It here overwrites the same method of gdb.DriverMysql and makes some custom changes.
-func (d *MyDriver) HandleSqlBeforeCommit(link gdb.Link, sql string, args []interface{}) (string, []interface{}) {
+func (d *MyDriver) HandleSqlBeforeCommit(ctx context.Context, link gdb.Link, sql string, args []interface{}) (string, []interface{}) {
 	latestSqlString.Set(sql)
-	return d.DriverMysql.HandleSqlBeforeCommit(link, sql, args)
+	return d.DriverMysql.HandleSqlBeforeCommit(ctx, link, sql, args)
 }
 
 func init() {

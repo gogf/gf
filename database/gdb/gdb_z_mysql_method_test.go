@@ -274,30 +274,31 @@ func Test_DB_Upadte_KeyFieldNameMapping(t *testing.T) {
 	})
 }
 
-func Test_DB_Insert_KeyFieldNameMapping_Error(t *testing.T) {
-	table := createTable()
-	defer dropTable(table)
-
-	gtest.C(t, func(t *gtest.T) {
-		type User struct {
-			Id             int
-			Passport       string
-			Password       string
-			Nickname       string
-			CreateTime     string
-			NoneExistField string
-		}
-		data := User{
-			Id:         1,
-			Passport:   "user_1",
-			Password:   "pass_1",
-			Nickname:   "name_1",
-			CreateTime: "2020-10-10 12:00:01",
-		}
-		_, err := db.Insert(table, data)
-		t.AssertNE(err, nil)
-	})
-}
+// This is no longer used as the filter feature is automatically enabled from GoFrame v1.16.0.
+//func Test_DB_Insert_KeyFieldNameMapping_Error(t *testing.T) {
+//	table := createTable()
+//	defer dropTable(table)
+//
+//	gtest.C(t, func(t *gtest.T) {
+//		type User struct {
+//			Id             int
+//			Passport       string
+//			Password       string
+//			Nickname       string
+//			CreateTime     string
+//			NoneExistField string
+//		}
+//		data := User{
+//			Id:         1,
+//			Passport:   "user_1",
+//			Password:   "pass_1",
+//			Nickname:   "name_1",
+//			CreateTime: "2020-10-10 12:00:01",
+//		}
+//		_, err := db.Insert(table, data)
+//		t.AssertNE(err, nil)
+//	})
+//}
 
 func Test_DB_InsertIgnore(t *testing.T) {
 	table := createInitTable()

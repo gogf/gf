@@ -204,7 +204,7 @@ func Test_ListMap_Json(t *testing.T) {
 		t.Assert(err, nil)
 
 		m := gmap.NewListMap()
-		err = json.Unmarshal(b, m)
+		err = json.UnmarshalUseNumber(b, m)
 		t.Assert(err, nil)
 		t.Assert(m.Get("k1"), data["k1"])
 		t.Assert(m.Get("k2"), data["k2"])
@@ -219,7 +219,7 @@ func Test_ListMap_Json(t *testing.T) {
 		t.Assert(err, nil)
 
 		var m gmap.ListMap
-		err = json.Unmarshal(b, &m)
+		err = json.UnmarshalUseNumber(b, &m)
 		t.Assert(err, nil)
 		t.Assert(m.Get("k1"), data["k1"])
 		t.Assert(m.Get("k2"), data["k2"])

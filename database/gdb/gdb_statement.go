@@ -9,6 +9,7 @@ package gdb
 import (
 	"context"
 	"database/sql"
+
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/os/gtime"
 )
@@ -25,6 +26,7 @@ import (
 type Stmt struct {
 	*sql.Stmt
 	core *Core
+	link Link
 	sql  string
 }
 
@@ -62,19 +64,21 @@ func (s *Stmt) doStmtCommit(stmtType string, ctx context.Context, args ...interf
 	var (
 		timestampMilli2 = gtime.TimestampMilli()
 		sqlObj          = &Sql{
-			Sql:    s.sql,
-			Type:   stmtType,
-			Args:   args,
-			Format: FormatSqlWithArgs(s.sql, args),
-			Error:  err,
-			Start:  timestampMilli1,
-			End:    timestampMilli2,
-			Group:  s.core.db.GetGroup(),
+			Sql:           s.sql,
+			Type:          stmtType,
+			Args:          args,
+			Format:        FormatSqlWithArgs(s.sql, args),
+			Error:         err,
+			Start:         timestampMilli1,
+			End:           timestampMilli2,
+			Group:         s.core.db.GetGroup(),
+			IsTransaction: s.link.IsTransaction(),
 		}
 	)
+	// Tracing and logging.
 	s.core.addSqlToTracing(ctx, sqlObj)
 	if s.core.db.GetDebug() {
-		s.core.writeSqlToLogger(sqlObj)
+		s.core.writeSqlToLogger(ctx, sqlObj)
 	}
 	return result, err
 }

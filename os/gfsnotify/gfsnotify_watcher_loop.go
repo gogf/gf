@@ -11,8 +11,8 @@ import (
 	"github.com/gogf/gf/internal/intlog"
 )
 
-// startWatchLoop starts the loop for event listening fro underlying inotify monitor.
-func (w *Watcher) startWatchLoop() {
+// watchLoop starts the loop for event listening fro underlying inotify monitor.
+func (w *Watcher) watchLoop() {
 	go func() {
 		for {
 			select {
@@ -40,47 +40,8 @@ func (w *Watcher) startWatchLoop() {
 	}()
 }
 
-// getCallbacks searches and returns all callbacks with given <path>.
-// It also searches its parent for callbacks if they're recursive.
-func (w *Watcher) getCallbacks(path string) (callbacks []*Callback) {
-	// Firstly add the callbacks of itself.
-	if v := w.callbacks.Get(path); v != nil {
-		for _, v := range v.(*glist.List).FrontAll() {
-			callback := v.(*Callback)
-			callbacks = append(callbacks, callback)
-		}
-	}
-	// Secondly searches its parent for callbacks.
-	dirPath := fileDir(path)
-	if v := w.callbacks.Get(dirPath); v != nil {
-		for _, v := range v.(*glist.List).FrontAll() {
-			callback := v.(*Callback)
-			if callback.recursive {
-				callbacks = append(callbacks, callback)
-			}
-		}
-	}
-	// Lastly searches the parent recursively for callbacks.
-	for {
-		parentDirPath := fileDir(dirPath)
-		if parentDirPath == dirPath {
-			break
-		}
-		if v := w.callbacks.Get(parentDirPath); v != nil {
-			for _, v := range v.(*glist.List).FrontAll() {
-				callback := v.(*Callback)
-				if callback.recursive {
-					callbacks = append(callbacks, callback)
-				}
-			}
-		}
-		dirPath = parentDirPath
-	}
-	return
-}
-
-// startEventLoop is the core event handler.
-func (w *Watcher) startEventLoop() {
+// eventLoop is the core event handler.
+func (w *Watcher) eventLoop() {
 	go func() {
 		for {
 			if v := w.events.Pop(); v != nil {
@@ -170,4 +131,43 @@ func (w *Watcher) startEventLoop() {
 			}
 		}
 	}()
+}
+
+// getCallbacks searches and returns all callbacks with given <path>.
+// It also searches its parents for callbacks if they're recursive.
+func (w *Watcher) getCallbacks(path string) (callbacks []*Callback) {
+	// Firstly add the callbacks of itself.
+	if v := w.callbacks.Get(path); v != nil {
+		for _, v := range v.(*glist.List).FrontAll() {
+			callback := v.(*Callback)
+			callbacks = append(callbacks, callback)
+		}
+	}
+	// Secondly searches its direct parent for callbacks.
+	// It is special handling here, which is the different between `recursive` and `not recursive` logic
+	// for direct parent folder of `path` that events are from.
+	dirPath := fileDir(path)
+	if v := w.callbacks.Get(dirPath); v != nil {
+		for _, v := range v.(*glist.List).FrontAll() {
+			callback := v.(*Callback)
+			callbacks = append(callbacks, callback)
+		}
+	}
+	// Lastly searches all the parents of directory of `path` recursively for callbacks.
+	for {
+		parentDirPath := fileDir(dirPath)
+		if parentDirPath == dirPath {
+			break
+		}
+		if v := w.callbacks.Get(parentDirPath); v != nil {
+			for _, v := range v.(*glist.List).FrontAll() {
+				callback := v.(*Callback)
+				if callback.recursive {
+					callbacks = append(callbacks, callback)
+				}
+			}
+		}
+		dirPath = parentDirPath
+	}
+	return
 }

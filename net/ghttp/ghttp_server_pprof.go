@@ -62,7 +62,7 @@ func (p *utilPProf) Index(r *Request) {
 		"profiles": profiles,
 	}
 	if len(action) == 0 {
-		buffer, _ := gview.ParseContent(`
+		buffer, _ := gview.ParseContent(r.Context(), `
             <html>
             <head>
                 <title>GoFrame PProf</title>

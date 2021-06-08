@@ -78,7 +78,7 @@ func serverProcessInit() {
 
 	// It's an ugly calling for better initializing the main package path
 	// in source development environment. It is useful only be used in main goroutine.
-	// It fails retrieving the main package path in asynchronized goroutines.
+	// It fails retrieving the main package path in asynchronous goroutines.
 	gfile.MainPkgPath()
 }
 
@@ -193,7 +193,7 @@ func (s *Server) Start() error {
 
 	// If this is a child process, it then notifies its parent exit.
 	if gproc.IsChild() {
-		gtimer.SetTimeout(2*time.Second, func() {
+		gtimer.SetTimeout(time.Duration(s.config.GracefulTimeout)*time.Second, func() {
 			if err := gproc.Send(gproc.PPid(), []byte("exit"), adminGProcCommGroup); err != nil {
 				//glog.Error("server error in process communication:", err)
 			}
@@ -268,7 +268,7 @@ func (s *Server) GetRouterArray() []RouterItem {
 					item.Middleware += gdebug.FuncName(v)
 				}
 			}
-			// If the domain does not exist in the dump map, it create the map.
+			// If the domain does not exist in the dump map, it creates the map.
 			// The value of the map is a custom sorted array.
 			if _, ok := m[item.Domain]; !ok {
 				// Sort in ASC order.
@@ -416,7 +416,7 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 			s.servers = append(s.servers, s.newGracefulServer(itemFunc))
 		}
 	}
-	// Start listening asynchronizedly.
+	// Start listening asynchronously.
 	serverRunning.Add(1)
 	for _, v := range s.servers {
 		go func(server *gracefulServer) {

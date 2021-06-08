@@ -647,13 +647,6 @@ func Test_Convert_All(t *testing.T) {
 	})
 }
 
-func Test_Time_All(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		t.AssertEQ(gconv.Duration(""), time.Duration(int64(0)))
-		t.AssertEQ(gconv.GTime(""), gtime.New())
-	})
-}
-
 func Test_Slice_All(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		value := 123.456

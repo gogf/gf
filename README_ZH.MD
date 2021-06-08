@@ -13,14 +13,16 @@
 > 如果您初识`Go`语言，您可以将`GoFrame`类似于`PHP`中的`Laravel`, `Java`中的`SpringBoot`或者`Python`中的`Django`。
 
 # 特点
-* 模块化、松耦合设计；
-* 模块丰富、开箱即用；
-* 简便易用、易于维护；
-* 高代码质量、高单元测试覆盖率；
-* 社区活跃，大牛谦逊低调脾气好；
-* 详尽的开发文档及示例；
-* 完善的本地中文化支持；
-* 设计为团队及企业使用；
+*   模块化、松耦合
+*   模块丰富、开箱即用
+*   简洁易用、快速接入
+*   文档详尽、易于维护
+*   自顶向下、体系化设计
+*   统一框架、统一组件、降低选择成本
+*   开发规范、设计模式、代码分层模型
+*   强大便捷的开发工具链
+*   完善的本地中文化支持
+*   设计为团队及企业使用
 
 # 地址
 - **主库**：https://github.com/gogf/gf 
@@ -63,16 +65,10 @@ golang版本 >= 1.11
 
 # 文档
 
-开发文档：https://goframe.org
+官方站点：[https://goframe.org](https://goframe.org/display/gf)
 
-接口文档：https://godoc.org/github.com/gogf/gf
+接口文档：[https://pkg.go.dev/github.com/gogf/gf](https://pkg.go.dev/github.com/gogf/gf)
 
-# 帮助
-- QQ交流群：[116707870](//shang.qq.com/wpa/qunwpa?idkey=195f91eceeb5d7fa76009b7cd5a4641f70bf4897b7f5a520635eb26ff17adfe7)
-- WX交流群：微信添加`389961817`备注`GF`
-- 主库ISSUE：https://github.com/gogf/gf/issues
-
-> 建议通过阅读`GoFrame`的源码以及API文档深度学习`GoFrame`，了解更多的精妙设计。
 
 # 协议
 

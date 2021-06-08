@@ -11,6 +11,7 @@
 package gview
 
 import (
+	"context"
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/internal/intlog"
 
@@ -50,9 +51,9 @@ func checkAndInitDefaultView() {
 
 // ParseContent parses the template content directly using the default view object
 // and returns the parsed content.
-func ParseContent(content string, params ...Params) (string, error) {
+func ParseContent(ctx context.Context, content string, params ...Params) (string, error) {
 	checkAndInitDefaultView()
-	return defaultViewObj.ParseContent(content, params...)
+	return defaultViewObj.ParseContent(ctx, content, params...)
 }
 
 // New returns a new view object.

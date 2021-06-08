@@ -817,7 +817,7 @@ func Test_Struct_Complex(t *testing.T) {
     "errorMsg": null
 }`
 		m := make(g.Map)
-		err := json.Unmarshal([]byte(data), &m)
+		err := json.UnmarshalUseNumber([]byte(data), &m)
 		t.Assert(err, nil)
 
 		model := new(XinYanModel)

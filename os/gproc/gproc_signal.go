@@ -47,13 +47,15 @@ func AddSigHandler(handler SigHandler, signals ...os.Signal) {
 // syscall.SIGKILL,
 // syscall.SIGTERM,
 // syscall.SIGABRT.
-func AddSigHandlerShutdown(handler SigHandler) {
-	for sig, _ := range shutdownSignalMap {
-		signalHandlerMap[sig] = append(signalHandlerMap[sig], handler)
+func AddSigHandlerShutdown(handler ...SigHandler) {
+	for _, h := range handler {
+		for sig, _ := range shutdownSignalMap {
+			signalHandlerMap[sig] = append(signalHandlerMap[sig], h)
+		}
 	}
 }
 
-// ListenSignal blocks and does signal listening and handling.
+// Listen blocks and does signal listening and handling.
 func Listen() {
 	signals := make([]os.Signal, 0)
 	for sig, _ := range signalHandlerMap {

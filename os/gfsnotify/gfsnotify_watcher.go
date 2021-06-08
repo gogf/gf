@@ -61,6 +61,7 @@ func (w *Watcher) AddOnce(name, path string, callbackFunc func(event *Event), re
 }
 
 // addWithCallbackFunc adds the path to underlying monitor, creates and returns a callback object.
+// Very note that if it calls multiple times with the same `path`, the latest one will overwrite the previous one.
 func (w *Watcher) addWithCallbackFunc(name, path string, callbackFunc func(event *Event), recursive ...bool) (callback *Callback, err error) {
 	// Check and convert the given path to absolute path.
 	if t := fileRealPath(path); t == "" {

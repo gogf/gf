@@ -404,7 +404,7 @@ func TestStrSet_Json(t *testing.T) {
 		t.Assert(err1, err2)
 
 		a2 := gset.NewStrSet()
-		err2 = json.Unmarshal(b2, &a2)
+		err2 = json.UnmarshalUseNumber(b2, &a2)
 		t.Assert(err2, nil)
 		t.Assert(a2.Contains("a"), true)
 		t.Assert(a2.Contains("b"), true)
@@ -413,7 +413,7 @@ func TestStrSet_Json(t *testing.T) {
 		t.Assert(a2.Contains("e"), false)
 
 		var a3 gset.StrSet
-		err := json.Unmarshal(b2, &a3)
+		err := json.UnmarshalUseNumber(b2, &a3)
 		t.Assert(err, nil)
 		t.Assert(a3.Contains("a"), true)
 		t.Assert(a3.Contains("b"), true)
