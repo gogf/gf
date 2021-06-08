@@ -142,8 +142,8 @@ func GetInsertOperationByOption(option int) string {
 // ConvertDataForTableRecord is a very important function, which does converting for any data that
 // will be inserted into table as a record.
 //
-// The parameter `obj` should be type of *map/map/*struct/struct.
-// It supports inherit struct definition for struct.
+// The parameter `value` should be type of *map/map/*struct/struct.
+// It supports embedded struct definition for struct.
 func ConvertDataForTableRecord(value interface{}) map[string]interface{} {
 	var (
 		rvValue reflect.Value
@@ -186,7 +186,7 @@ func ConvertDataForTableRecord(value interface{}) map[string]interface{} {
 
 // DataToMapDeep converts `value` to map type recursively.
 // The parameter `value` should be type of *map/map/*struct/struct.
-// It supports inherit struct definition for struct.
+// It supports embedded struct definition for struct.
 func DataToMapDeep(value interface{}) map[string]interface{} {
 	if v, ok := value.(apiMapStrAny); ok {
 		return v.MapStrAny()

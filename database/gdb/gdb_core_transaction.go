@@ -503,42 +503,6 @@ func (tx *TX) Save(table string, data interface{}, batch ...int) (sql.Result, er
 	return tx.Model(table).Ctx(tx.ctx).Data(data).Save()
 }
 
-// BatchInsert batch inserts data.
-// The parameter `list` must be type of slice of map or struct.
-func (tx *TX) BatchInsert(table string, list interface{}, batch ...int) (sql.Result, error) {
-	if len(batch) > 0 {
-		return tx.Model(table).Ctx(tx.ctx).Data(list).Batch(batch[0]).Insert()
-	}
-	return tx.Model(table).Ctx(tx.ctx).Data(list).Insert()
-}
-
-// BatchInsertIgnore batch inserts data with ignore option.
-// The parameter `list` must be type of slice of map or struct.
-func (tx *TX) BatchInsertIgnore(table string, list interface{}, batch ...int) (sql.Result, error) {
-	if len(batch) > 0 {
-		return tx.Model(table).Ctx(tx.ctx).Data(list).Batch(batch[0]).InsertIgnore()
-	}
-	return tx.Model(table).Ctx(tx.ctx).Data(list).InsertIgnore()
-}
-
-// BatchReplace batch replaces data.
-// The parameter `list` must be type of slice of map or struct.
-func (tx *TX) BatchReplace(table string, list interface{}, batch ...int) (sql.Result, error) {
-	if len(batch) > 0 {
-		return tx.Model(table).Ctx(tx.ctx).Data(list).Batch(batch[0]).Replace()
-	}
-	return tx.Model(table).Ctx(tx.ctx).Data(list).Replace()
-}
-
-// BatchSave batch replaces data.
-// The parameter `list` must be type of slice of map or struct.
-func (tx *TX) BatchSave(table string, list interface{}, batch ...int) (sql.Result, error) {
-	if len(batch) > 0 {
-		return tx.Model(table).Ctx(tx.ctx).Data(list).Batch(batch[0]).Save()
-	}
-	return tx.Model(table).Ctx(tx.ctx).Data(list).Save()
-}
-
 // Update does "UPDATE ... " statement for the table.
 //
 // The parameter `data` can be type of string/map/gmap/struct/*struct, etc.

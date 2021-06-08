@@ -367,120 +367,7 @@ func (c *Core) Save(table string, data interface{}, batch ...int) (sql.Result, e
 // 1: replace: if there's unique/primary key in the data, it deletes it from table and inserts a new one;
 // 2: save:    if there's unique/primary key in the data, it updates it or else inserts a new one;
 // 3: ignore:  if there's unique/primary key in the data, it ignores the inserting;
-func (c *Core) DoInsert(ctx context.Context, link Link, table string, data interface{}, option int, batch ...int) (result sql.Result, err error) {
-	table = c.QuotePrefixTableName(table)
-	var (
-		fields       []string
-		values       []string
-		params       []interface{}
-		dataMap      Map
-		reflectValue = reflect.ValueOf(data)
-		reflectKind  = reflectValue.Kind()
-	)
-	if reflectKind == reflect.Ptr {
-		reflectValue = reflectValue.Elem()
-		reflectKind = reflectValue.Kind()
-	}
-	switch reflectKind {
-	case reflect.Slice, reflect.Array:
-		return c.db.DoBatchInsert(ctx, link, table, data, option, batch...)
-	case reflect.Struct:
-		if _, ok := data.(apiInterfaces); ok {
-			return c.db.DoBatchInsert(ctx, link, table, data, option, batch...)
-		} else {
-			dataMap = ConvertDataForTableRecord(data)
-		}
-	case reflect.Map:
-		dataMap = ConvertDataForTableRecord(data)
-	default:
-		return result, gerror.New(fmt.Sprint("unsupported data type:", reflectKind))
-	}
-	if len(dataMap) == 0 {
-		return nil, gerror.New("data cannot be empty")
-	}
-	var (
-		charL, charR = c.db.GetChars()
-		operation    = GetInsertOperationByOption(option)
-		updateStr    = ""
-	)
-	for k, v := range dataMap {
-		fields = append(fields, charL+k+charR)
-		if s, ok := v.(Raw); ok {
-			values = append(values, gconv.String(s))
-		} else {
-			values = append(values, "?")
-			params = append(params, v)
-		}
-	}
-	if option == insertOptionSave {
-		for k, _ := range dataMap {
-			// If it's SAVE operation,
-			// do not automatically update the creating time.
-			if c.isSoftCreatedFiledName(k) {
-				continue
-			}
-			if len(updateStr) > 0 {
-				updateStr += ","
-			}
-			updateStr += fmt.Sprintf(
-				"%s%s%s=VALUES(%s%s%s)",
-				charL, k, charR,
-				charL, k, charR,
-			)
-		}
-		updateStr = fmt.Sprintf("ON DUPLICATE KEY UPDATE %s", updateStr)
-	}
-	if link == nil {
-		if link, err = c.MasterLink(); err != nil {
-			return nil, err
-		}
-	}
-	return c.db.DoExec(ctx, link, fmt.Sprintf(
-		"%s INTO %s(%s) VALUES(%s) %s",
-		operation, table, strings.Join(fields, ","),
-		strings.Join(values, ","), updateStr,
-	), params...)
-}
-
-// BatchInsert batch inserts data.
-// The parameter `list` must be type of slice of map or struct.
-func (c *Core) BatchInsert(table string, list interface{}, batch ...int) (sql.Result, error) {
-	if len(batch) > 0 {
-		return c.Model(table).Data(list).Batch(batch[0]).Insert()
-	}
-	return c.Model(table).Data(list).Insert()
-}
-
-// BatchInsertIgnore batch inserts data with ignore option.
-// The parameter `list` must be type of slice of map or struct.
-func (c *Core) BatchInsertIgnore(table string, list interface{}, batch ...int) (sql.Result, error) {
-	if len(batch) > 0 {
-		return c.Model(table).Data(list).Batch(batch[0]).InsertIgnore()
-	}
-	return c.Model(table).Data(list).InsertIgnore()
-}
-
-// BatchReplace batch replaces data.
-// The parameter `list` must be type of slice of map or struct.
-func (c *Core) BatchReplace(table string, list interface{}, batch ...int) (sql.Result, error) {
-	if len(batch) > 0 {
-		return c.Model(table).Data(list).Batch(batch[0]).Replace()
-	}
-	return c.Model(table).Data(list).Replace()
-}
-
-// BatchSave batch replaces data.
-// The parameter `list` must be type of slice of map or struct.
-func (c *Core) BatchSave(table string, list interface{}, batch ...int) (sql.Result, error) {
-	if len(batch) > 0 {
-		return c.Model(table).Data(list).Batch(batch[0]).Save()
-	}
-	return c.Model(table).Data(list).Save()
-}
-
-// DoBatchInsert batch inserts/replaces/saves data.
-// This function is usually used for custom interface definition, you do not need call it manually.
-func (c *Core) DoBatchInsert(ctx context.Context, link Link, table string, list interface{}, option int, batch ...int) (result sql.Result, err error) {
+func (c *Core) DoInsert(ctx context.Context, link Link, table string, data interface{}, option int, batch int) (result sql.Result, err error) {
 	table = c.QuotePrefixTableName(table)
 	var (
 		keys    []string      // Field names.
@@ -488,18 +375,25 @@ func (c *Core) DoBatchInsert(ctx context.Context, link Link, table string, list 
 		params  []interface{} // Values that will be committed to underlying database driver.
 		listMap List          // The data list that passed from caller.
 	)
-	switch value := list.(type) {
+	switch value := data.(type) {
 	case Result:
 		listMap = value.List()
+
 	case Record:
 		listMap = List{value.Map()}
+
 	case List:
 		listMap = value
+		for i, v := range listMap {
+			listMap[i] = ConvertDataForTableRecord(v)
+		}
+
 	case Map:
-		listMap = List{value}
+		listMap = List{ConvertDataForTableRecord(value)}
+
 	default:
 		var (
-			rv   = reflect.ValueOf(list)
+			rv   = reflect.ValueOf(data)
 			kind = rv.Kind()
 		)
 		if kind == reflect.Ptr {
@@ -513,8 +407,10 @@ func (c *Core) DoBatchInsert(ctx context.Context, link Link, table string, list 
 			for i := 0; i < rv.Len(); i++ {
 				listMap[i] = ConvertDataForTableRecord(rv.Index(i).Interface())
 			}
+
 		case reflect.Map:
 			listMap = List{ConvertDataForTableRecord(value)}
+
 		case reflect.Struct:
 			if v, ok := value.(apiInterfaces); ok {
 				var (
@@ -528,6 +424,7 @@ func (c *Core) DoBatchInsert(ctx context.Context, link Link, table string, list 
 			} else {
 				listMap = List{ConvertDataForTableRecord(value)}
 			}
+
 		default:
 			return result, gerror.New(fmt.Sprint("unsupported list type:", kind))
 		}
@@ -570,9 +467,8 @@ func (c *Core) DoBatchInsert(ctx context.Context, link Link, table string, list 
 		}
 		updateStr = fmt.Sprintf("ON DUPLICATE KEY UPDATE %s", updateStr)
 	}
-	batchNum := defaultBatchNumber
-	if len(batch) > 0 && batch[0] > 0 {
-		batchNum = batch[0]
+	if batch <= 0 {
+		batch = defaultBatchNumber
 	}
 	var (
 		listMapLen  = len(listMap)
@@ -591,7 +487,8 @@ func (c *Core) DoBatchInsert(ctx context.Context, link Link, table string, list 
 			}
 		}
 		valueHolder = append(valueHolder, "("+gstr.Join(values, ",")+")")
-		if len(valueHolder) == batchNum || (i == listMapLen-1 && len(valueHolder) > 0) {
+		// Batch package checks: It meets the batch number or it is the last element.
+		if len(valueHolder) == batch || (i == listMapLen-1 && len(valueHolder) > 0) {
 			r, err := c.db.DoExec(ctx, link, fmt.Sprintf(
 				"%s INTO %s(%s) VALUES%s %s",
 				operation, table, keysStr,

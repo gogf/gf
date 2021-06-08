@@ -163,7 +163,7 @@ func Test_TX_BatchInsert(t *testing.T) {
 		if err != nil {
 			gtest.Error(err)
 		}
-		if _, err := tx.BatchInsert(table, g.List{
+		if _, err := tx.Insert(table, g.List{
 			{
 				"id":          2,
 				"passport":    "t",
@@ -201,7 +201,7 @@ func Test_TX_BatchReplace(t *testing.T) {
 		if err != nil {
 			gtest.Error(err)
 		}
-		if _, err := tx.BatchReplace(table, g.List{
+		if _, err := tx.Replace(table, g.List{
 			{
 				"id":          2,
 				"passport":    "USER_2",
@@ -244,7 +244,7 @@ func Test_TX_BatchSave(t *testing.T) {
 		if err != nil {
 			gtest.Error(err)
 		}
-		if _, err := tx.BatchSave(table, g.List{
+		if _, err := tx.Save(table, g.List{
 			{
 				"id":          4,
 				"passport":    "USER_4",
@@ -956,8 +956,8 @@ func Test_Transaction_Nested_TX_Transaction_UseDB(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
-	db.SetDebug(true)
-	defer db.SetDebug(false)
+	//db.SetDebug(true)
+	//defer db.SetDebug(false)
 
 	gtest.C(t, func(t *gtest.T) {
 		var (
