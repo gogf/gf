@@ -83,16 +83,11 @@ type DB interface {
 	// Common APIs for CURD.
 	// ===========================================================================
 
-	Insert(table string, data interface{}, batch ...int) (sql.Result, error)       // See Core.Insert.
-	InsertIgnore(table string, data interface{}, batch ...int) (sql.Result, error) // See Core.InsertIgnore.
-	InsertAndGetId(table string, data interface{}, batch ...int) (int64, error)    // See Core.InsertAndGetId.
-	Replace(table string, data interface{}, batch ...int) (sql.Result, error)      // See Core.Replace.
-	Save(table string, data interface{}, batch ...int) (sql.Result, error)         // See Core.Save.
-
-	BatchInsert(table string, list interface{}, batch ...int) (sql.Result, error)  // See Core.BatchInsert.
-	BatchReplace(table string, list interface{}, batch ...int) (sql.Result, error) // See Core.BatchReplace.
-	BatchSave(table string, list interface{}, batch ...int) (sql.Result, error)    // See Core.BatchSave.
-
+	Insert(table string, data interface{}, batch ...int) (sql.Result, error)                               // See Core.Insert.
+	InsertIgnore(table string, data interface{}, batch ...int) (sql.Result, error)                         // See Core.InsertIgnore.
+	InsertAndGetId(table string, data interface{}, batch ...int) (int64, error)                            // See Core.InsertAndGetId.
+	Replace(table string, data interface{}, batch ...int) (sql.Result, error)                              // See Core.Replace.
+	Save(table string, data interface{}, batch ...int) (sql.Result, error)                                 // See Core.Save.
 	Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error) // See Core.Update.
 	Delete(table string, condition interface{}, args ...interface{}) (sql.Result, error)                   // See Core.Delete.
 
@@ -104,8 +99,7 @@ type DB interface {
 	DoExec(ctx context.Context, link Link, sql string, args ...interface{}) (result sql.Result, err error)                                         // See Core.DoExec.
 	DoPrepare(ctx context.Context, link Link, sql string) (*Stmt, error)                                                                           // See Core.DoPrepare.
 	DoGetAll(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error)                                           // See Core.DoGetAll.
-	DoInsert(ctx context.Context, link Link, table string, data interface{}, option int, batch ...int) (result sql.Result, err error)              // See Core.DoInsert.
-	DoBatchInsert(ctx context.Context, link Link, table string, list interface{}, option int, batch ...int) (result sql.Result, err error)         // See Core.DoBatchInsert.
+	DoInsert(ctx context.Context, link Link, table string, data interface{}, option int, batch int) (result sql.Result, err error)                 // See Core.DoInsert.
 	DoUpdate(ctx context.Context, link Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) // See Core.DoUpdate.
 	DoDelete(ctx context.Context, link Link, table string, condition string, args ...interface{}) (result sql.Result, err error)                   // See Core.DoDelete.
 

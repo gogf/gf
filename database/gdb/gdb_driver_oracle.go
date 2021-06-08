@@ -264,114 +264,7 @@ func (d *DriverOracle) getTableUniqueIndex(table string) (fields map[string]map[
 	return
 }
 
-func (d *DriverOracle) DoInsert(ctx context.Context, link Link, table string, data interface{}, option int, batch ...int) (result sql.Result, err error) {
-	var (
-		fields  []string
-		values  []string
-		params  []interface{}
-		dataMap Map
-		rv      = reflect.ValueOf(data)
-		kind    = rv.Kind()
-	)
-	if kind == reflect.Ptr {
-		rv = rv.Elem()
-		kind = rv.Kind()
-	}
-	switch kind {
-	case reflect.Slice, reflect.Array:
-		return d.DoBatchInsert(ctx, link, table, data, option, batch...)
-	case reflect.Map:
-		fallthrough
-	case reflect.Struct:
-		dataMap = ConvertDataForTableRecord(data)
-	default:
-		return result, gerror.New(fmt.Sprint("unsupported data type:", kind))
-	}
-	var (
-		indexes     = make([]string, 0)
-		indexMap    = make(map[string]string)
-		indexExists = false
-	)
-	if option != insertOptionDefault {
-		index, err := d.getTableUniqueIndex(table)
-		if err != nil {
-			return nil, err
-		}
-
-		if len(index) > 0 {
-			for _, v := range index {
-				for k, _ := range v {
-					indexes = append(indexes, k)
-				}
-				indexMap = v
-				indexExists = true
-				break
-			}
-		}
-	}
-	var (
-		subSqlStr = make([]string, 0)
-		onStr     = make([]string, 0)
-		updateStr = make([]string, 0)
-	)
-	charL, charR := d.db.GetChars()
-	for k, v := range dataMap {
-		k = strings.ToUpper(k)
-
-		// 操作类型为REPLACE/SAVE时且存在唯一索引才使用merge，否则使用insert
-		if (option == insertOptionReplace || option == insertOptionSave) && indexExists {
-			fields = append(fields, tableAlias1+"."+charL+k+charR)
-			values = append(values, tableAlias2+"."+charL+k+charR)
-			params = append(params, v)
-			subSqlStr = append(subSqlStr, fmt.Sprintf("%s?%s %s", charL, charR, k))
-			//m erge中的on子句中由唯一索引组成, update子句中不含唯一索引
-			if _, ok := indexMap[k]; ok {
-				onStr = append(onStr, fmt.Sprintf("%s.%s = %s.%s ", tableAlias1, k, tableAlias2, k))
-			} else {
-				updateStr = append(updateStr, fmt.Sprintf("%s.%s = %s.%s ", tableAlias1, k, tableAlias2, k))
-			}
-		} else {
-			fields = append(fields, charL+k+charR)
-			values = append(values, "?")
-			params = append(params, v)
-		}
-	}
-
-	if link == nil {
-		if link, err = d.MasterLink(); err != nil {
-			return nil, err
-		}
-	}
-
-	if indexExists && option != insertOptionDefault {
-		switch option {
-		case
-			insertOptionReplace,
-			insertOptionSave:
-			tmp := fmt.Sprintf(
-				"MERGE INTO %s %s USING(SELECT %s FROM DUAL) %s ON(%s) WHEN MATCHED THEN UPDATE SET %s WHEN NOT MATCHED THEN INSERT (%s) VALUES(%s)",
-				table, tableAlias1, strings.Join(subSqlStr, ","), tableAlias2,
-				strings.Join(onStr, "AND"), strings.Join(updateStr, ","), strings.Join(fields, ","), strings.Join(values, ","),
-			)
-			return d.DoExec(ctx, link, tmp, params...)
-
-		case insertOptionIgnore:
-			return d.DoExec(ctx, link, fmt.Sprintf(
-				"INSERT /*+ IGNORE_ROW_ON_DUPKEY_INDEX(%s(%s)) */ INTO %s(%s) VALUES(%s)",
-				table, strings.Join(indexes, ","), table, strings.Join(fields, ","), strings.Join(values, ","),
-			), params...)
-		}
-	}
-
-	return d.DoExec(ctx, link,
-		fmt.Sprintf(
-			"INSERT INTO %s(%s) VALUES(%s)",
-			table, strings.Join(fields, ","), strings.Join(values, ","),
-		),
-		params...)
-}
-
-func (d *DriverOracle) DoBatchInsert(ctx context.Context, link Link, table string, list interface{}, option int, batch ...int) (result sql.Result, err error) {
+func (d *DriverOracle) DoInsert(ctx context.Context, link Link, table string, list interface{}, option int, batch int) (result sql.Result, err error) {
 	var (
 		keys   []string
 		values []string
@@ -447,9 +340,8 @@ func (d *DriverOracle) DoBatchInsert(ctx context.Context, link Link, table strin
 		return batchResult, nil
 	}
 
-	batchNum := defaultBatchNumber
-	if len(batch) > 0 {
-		batchNum = batch[0]
+	if batch <= 0 {
+		batch = defaultBatchNumber
 	}
 	// Format "INSERT...INTO..." statement.
 	intoStr := make([]string, 0)
@@ -459,7 +351,7 @@ func (d *DriverOracle) DoBatchInsert(ctx context.Context, link Link, table strin
 		}
 		values = append(values, valueHolderStr)
 		intoStr = append(intoStr, fmt.Sprintf(" INTO %s(%s) VALUES(%s) ", table, keyStr, valueHolderStr))
-		if len(intoStr) == batchNum {
+		if len(intoStr) == batch {
 			r, err := d.DoExec(ctx, link, fmt.Sprintf("INSERT ALL %s SELECT * FROM DUAL", strings.Join(intoStr, " ")), params...)
 			if err != nil {
 				return r, err
