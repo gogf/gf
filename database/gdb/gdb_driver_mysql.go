@@ -80,8 +80,8 @@ func (d *DriverMysql) GetChars() (charLeft string, charRight string) {
 	return "`", "`"
 }
 
-// HandleSqlBeforeCommit handles the sql before posts it to database.
-func (d *DriverMysql) HandleSqlBeforeCommit(ctx context.Context, link Link, sql string, args []interface{}) (string, []interface{}) {
+// DoCommit handles the sql before posts it to database.
+func (d *DriverMysql) DoCommit(ctx context.Context, link Link, sql string, args []interface{}) (string, []interface{}) {
 	return sql, args
 }
 

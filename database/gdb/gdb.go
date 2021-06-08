@@ -95,13 +95,14 @@ type DB interface {
 	// Internal APIs for CURD, which can be overwrote for custom CURD implements.
 	// ===========================================================================
 
-	DoQuery(ctx context.Context, link Link, sql string, args ...interface{}) (rows *sql.Rows, err error)                                           // See Core.DoQuery.
-	DoExec(ctx context.Context, link Link, sql string, args ...interface{}) (result sql.Result, err error)                                         // See Core.DoExec.
-	DoPrepare(ctx context.Context, link Link, sql string) (*Stmt, error)                                                                           // See Core.DoPrepare.
 	DoGetAll(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error)                                           // See Core.DoGetAll.
 	DoInsert(ctx context.Context, link Link, table string, data interface{}, option int, batch int) (result sql.Result, err error)                 // See Core.DoInsert.
 	DoUpdate(ctx context.Context, link Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) // See Core.DoUpdate.
 	DoDelete(ctx context.Context, link Link, table string, condition string, args ...interface{}) (result sql.Result, err error)                   // See Core.DoDelete.
+	DoQuery(ctx context.Context, link Link, sql string, args ...interface{}) (rows *sql.Rows, err error)                                           // See Core.DoQuery.
+	DoExec(ctx context.Context, link Link, sql string, args ...interface{}) (result sql.Result, err error)                                         // See Core.DoExec.
+	DoCommit(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{})                                // See Core.DoCommit.
+	DoPrepare(ctx context.Context, link Link, sql string) (*Stmt, error)                                                                           // See Core.DoPrepare.
 
 	// ===========================================================================
 	// Query APIs for convenience purpose.
@@ -169,13 +170,6 @@ type DB interface {
 	Tables(ctx context.Context, schema ...string) (tables []string, err error)                       // See Core.Tables.
 	TableFields(ctx context.Context, table string, schema ...string) (map[string]*TableField, error) // See Core.TableFields.
 	FilteredLinkInfo() string                                                                        // See Core.FilteredLinkInfo.
-
-	// HandleSqlBeforeCommit is a hook function, which deals with the sql string before
-	// it's committed to underlying driver. The parameter `link` specifies the current
-	// database connection operation object. You can modify the sql string `sql` and its
-	// arguments `args` as you wish before they're committed to driver.
-	// Also see Core.HandleSqlBeforeCommit.
-	HandleSqlBeforeCommit(ctx context.Context, link Link, sql string, args []interface{}) (string, []interface{})
 }
 
 // Core is the base struct for database management.
