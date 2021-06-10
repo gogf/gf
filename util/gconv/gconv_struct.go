@@ -84,6 +84,8 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 			if rv, ok := pointer.(reflect.Value); ok {
 				if rv.Kind() == reflect.Ptr {
 					return json.UnmarshalUseNumber(r, rv.Interface())
+				} else if rv.CanAddr() {
+					return json.UnmarshalUseNumber(r, rv.Addr().Interface())
 				}
 			} else {
 				return json.UnmarshalUseNumber(r, pointer)
@@ -94,6 +96,8 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 			if rv, ok := pointer.(reflect.Value); ok {
 				if rv.Kind() == reflect.Ptr {
 					return json.UnmarshalUseNumber(paramsBytes, rv.Interface())
+				} else if rv.CanAddr() {
+					return json.UnmarshalUseNumber(paramsBytes, rv.Addr().Interface())
 				}
 			} else {
 				return json.UnmarshalUseNumber(paramsBytes, pointer)
