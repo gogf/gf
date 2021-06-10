@@ -237,7 +237,7 @@ func WrapCodeSkipf(code, skip int, err error, format string, args ...interface{}
 	}
 }
 
-// Cause returns the error code of current error.
+// Code returns the error code of current error.
 // It returns -1 if it has no error code or it does not implements interface Code.
 func Code(err error) int {
 	if err != nil {
