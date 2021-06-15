@@ -18,18 +18,19 @@ import (
 // The parameter `fieldNamesOrMapStruct` can be type of string/map/*map/struct/*struct.
 func (m *Model) Fields(fieldNamesOrMapStruct ...interface{}) *Model {
 	length := len(fieldNamesOrMapStruct)
-	if length == 0 {
+	if length == 0 || m.useFieldsEx {
 		return m
 	}
+	m.withFields = true
+	model := m.getModel()
+	
 	switch {
 	// String slice.
 	case length >= 2:
-		model := m.getModel()
 		model.fields = gstr.Join(m.mappingAndFilterToTableFields(gconv.Strings(fieldNamesOrMapStruct), true), ",")
 		return model
 	// It need type asserting.
 	case length == 1:
-		model := m.getModel()
 		switch r := fieldNamesOrMapStruct[0].(type) {
 		case string:
 			model.fields = gstr.Join(m.mappingAndFilterToTableFields([]string{r}, false), ",")
@@ -48,10 +49,12 @@ func (m *Model) Fields(fieldNamesOrMapStruct ...interface{}) *Model {
 // The parameter `fieldNamesOrMapStruct` can be type of string/map/*map/struct/*struct.
 func (m *Model) FieldsEx(fieldNamesOrMapStruct ...interface{}) *Model {
 	length := len(fieldNamesOrMapStruct)
-	if length == 0 {
+	if length == 0 || m.useFields {
 		return m
 	}
+	m.withFieldsEx = true
 	model := m.getModel()
+	
 	switch {
 	case length >= 2:
 		model.fieldsEx = gstr.Join(m.mappingAndFilterToTableFields(gconv.Strings(fieldNamesOrMapStruct), true), ",")
