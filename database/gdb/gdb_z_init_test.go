@@ -195,7 +195,7 @@ func createInitTableWithDb(db gdb.DB, table ...string) (name string) {
 		})
 	}
 
-	result, err := db.BatchInsert(name, array.Slice())
+	result, err := db.Insert(name, array.Slice())
 	gtest.AssertNil(err)
 
 	n, e := result.RowsAffected()

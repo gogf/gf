@@ -586,3 +586,38 @@ func Test_Params_Parse_DefaultValueTag(t *testing.T) {
 		t.Assert(client.PostContent("/parse", `{"name":"smith", "score":100}`), `{"Name":"smith","Score":100}`)
 	})
 }
+
+func Test_Params_Parse_Validation(t *testing.T) {
+	type RegisterReq struct {
+		Name  string `p:"username"  v:"required|length:6,30#请输入账号|账号长度为:min到:max位"`
+		Pass  string `p:"password1" v:"required|length:6,30#请输入密码|密码长度不够"`
+		Pass2 string `p:"password2" v:"required|length:6,30|same:password1#请确认密码|密码长度不够|两次密码不一致"`
+	}
+
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/parse", func(r *ghttp.Request) {
+		var req *RegisterReq
+		if err := r.Parse(&req); err != nil {
+			r.Response.Write(err)
+		} else {
+			r.Response.Write("ok")
+		}
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		prefix := fmt.Sprintf("http://127.0.0.1:%d", p)
+		client := g.Client()
+		client.SetPrefix(prefix)
+
+		t.Assert(client.GetContent("/parse"), `请输入账号; 账号长度为6到30位; 请输入密码; 密码长度不够; 请确认密码; 密码长度不够; 两次密码不一致`)
+		t.Assert(client.GetContent("/parse?name=john11&password1=123456&password2=123"), `密码长度不够; 两次密码不一致`)
+		t.Assert(client.GetContent("/parse?name=john&password1=123456&password2=123456"), `账号长度为6到30位`)
+		t.Assert(client.GetContent("/parse?name=john11&password1=123456&password2=123456"), `ok`)
+	})
+}

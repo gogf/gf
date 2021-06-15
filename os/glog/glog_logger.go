@@ -94,7 +94,7 @@ func (l *Logger) getFilePath(now time.Time) string {
 }
 
 // print prints <s> to defined writer, logging file or passed <std>.
-func (l *Logger) print(std io.Writer, lead string, values ...interface{}) {
+func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
 	// Lazy initialize for rotation feature.
 	// It uses atomic reading operation to enhance the performance checking.
 	// It here uses CAP for performance and concurrent safety.
@@ -111,69 +111,70 @@ func (l *Logger) print(std io.Writer, lead string, values ...interface{}) {
 	}
 
 	var (
-		now    = time.Now()
-		buffer = bytes.NewBuffer(nil)
+		now   = time.Now()
+		input = &HandlerInput{
+			logger: l,
+			index:  -1,
+			Ctx:    ctx,
+			Time:   now,
+			Level:  level,
+		}
 	)
 	if l.config.HeaderPrint {
 		// Time.
 		timeFormat := ""
 		if l.config.Flags&F_TIME_DATE > 0 {
-			timeFormat += "2006-01-02 "
+			timeFormat += "2006-01-02"
 		}
 		if l.config.Flags&F_TIME_TIME > 0 {
-			timeFormat += "15:04:05 "
+			if timeFormat != "" {
+				timeFormat += " "
+			}
+			timeFormat += "15:04:05"
 		}
 		if l.config.Flags&F_TIME_MILLI > 0 {
-			timeFormat += "15:04:05.000 "
+			if timeFormat != "" {
+				timeFormat += " "
+			}
+			timeFormat += "15:04:05.000"
 		}
 		if len(timeFormat) > 0 {
-			buffer.WriteString(now.Format(timeFormat))
+			input.TimeFormat = now.Format(timeFormat)
 		}
-		// Lead string.
-		if len(lead) > 0 {
-			buffer.WriteString(lead)
-			if len(values) > 0 {
-				buffer.WriteByte(' ')
-			}
-		}
+
+		// Level string.
+		input.LevelFormat = l.getLevelPrefixWithBrackets(level)
+
 		// Caller path and Fn name.
 		if l.config.Flags&(F_FILE_LONG|F_FILE_SHORT|F_CALLER_FN) > 0 {
-			callerPath := ""
 			callerFnName, path, line := gdebug.CallerWithFilter(pathFilterKey, l.config.StSkip)
 			if l.config.Flags&F_CALLER_FN > 0 {
-				buffer.WriteString(fmt.Sprintf(`[%s] `, callerFnName))
+				input.CallerFunc = fmt.Sprintf(`[%s]`, callerFnName)
 			}
 			if l.config.Flags&F_FILE_LONG > 0 {
-				callerPath = fmt.Sprintf(`%s:%d: `, path, line)
+				input.CallerPath = fmt.Sprintf(`%s:%d:`, path, line)
 			}
 			if l.config.Flags&F_FILE_SHORT > 0 {
-				callerPath = fmt.Sprintf(`%s:%d: `, gfile.Basename(path), line)
+				input.CallerPath = fmt.Sprintf(`%s:%d:`, gfile.Basename(path), line)
 			}
-			buffer.WriteString(callerPath)
-
 		}
 		// Prefix.
 		if len(l.config.Prefix) > 0 {
-			buffer.WriteString(l.config.Prefix + " ")
+			input.Prefix = l.config.Prefix
 		}
 	}
 	// Convert value to string.
-	var (
-		tempStr  = ""
-		valueStr = ""
-	)
-
-	if l.ctx != nil {
+	if ctx != nil {
 		// Tracing values.
-		spanCtx := trace.SpanContextFromContext(l.ctx)
+		spanCtx := trace.SpanContextFromContext(ctx)
 		if traceId := spanCtx.TraceID(); traceId.IsValid() {
-			buffer.WriteString(fmt.Sprintf("{TraceID:%s} ", traceId.String()))
+			input.CtxStr = "{TraceID:" + traceId.String() + "}"
 		}
 		// Context values.
 		if len(l.config.CtxKeys) > 0 {
 			ctxStr := ""
 			for _, key := range l.config.CtxKeys {
-				if v := l.ctx.Value(key); v != nil {
+				if v := ctx.Value(key); v != nil {
 					if ctxStr != "" {
 						ctxStr += ", "
 					}
@@ -181,51 +182,52 @@ func (l *Logger) print(std io.Writer, lead string, values ...interface{}) {
 				}
 			}
 			if ctxStr != "" {
-				buffer.WriteString(fmt.Sprintf("{%s} ", ctxStr))
+				input.CtxStr += "{" + ctxStr + "}"
 			}
 		}
 	}
-
+	var tempStr string
 	for _, v := range values {
 		tempStr = gconv.String(v)
-		if len(valueStr) > 0 {
-			if valueStr[len(valueStr)-1] == '\n' {
+		if len(input.Content) > 0 {
+			if input.Content[len(input.Content)-1] == '\n' {
 				// Remove one blank line(\n\n).
 				if tempStr[0] == '\n' {
-					valueStr += tempStr[1:]
+					input.Content += tempStr[1:]
 				} else {
-					valueStr += tempStr
+					input.Content += tempStr
 				}
 			} else {
-				valueStr += " " + tempStr
+				input.Content += " " + tempStr
 			}
 		} else {
-			valueStr = tempStr
+			input.Content = tempStr
 		}
 	}
-	buffer.WriteString(valueStr + "\n")
 	if l.config.Flags&F_ASYNC > 0 {
+		input.IsAsync = true
 		err := asyncPool.Add(func() {
-			l.printToWriter(now, std, buffer)
+			input.Next()
 		})
 		if err != nil {
 			intlog.Error(err)
 		}
 	} else {
-		l.printToWriter(now, std, buffer)
+		input.Next()
 	}
 }
 
 // printToWriter writes buffer to writer.
-func (l *Logger) printToWriter(now time.Time, std io.Writer, buffer *bytes.Buffer) {
+func (l *Logger) printToWriter(ctx context.Context, input *HandlerInput) {
+	buffer := input.Buffer()
 	if l.config.Writer == nil {
 		// Output content to disk file.
 		if l.config.Path != "" {
-			l.printToFile(now, buffer)
+			l.printToFile(input.Time, buffer)
 		}
 		// Allow output to stdout?
 		if l.config.StdoutPrint {
-			if _, err := std.Write(buffer.Bytes()); err != nil {
+			if _, err := os.Stdout.Write(buffer.Bytes()); err != nil {
 				intlog.Error(err)
 			}
 		}
@@ -238,9 +240,9 @@ func (l *Logger) printToWriter(now time.Time, std io.Writer, buffer *bytes.Buffe
 }
 
 // printToFile outputs logging content to disk file.
-func (l *Logger) printToFile(now time.Time, buffer *bytes.Buffer) {
+func (l *Logger) printToFile(t time.Time, buffer *bytes.Buffer) {
 	var (
-		logFilePath   = l.getFilePath(now)
+		logFilePath   = l.getFilePath(t)
 		memoryLockKey = "glog.printToFile:" + logFilePath
 	)
 	gmlock.Lock(memoryLockKey)
@@ -249,7 +251,7 @@ func (l *Logger) printToFile(now time.Time, buffer *bytes.Buffer) {
 	// Rotation file size checks.
 	if l.config.RotateSize > 0 {
 		if gfile.Size(logFilePath) > l.config.RotateSize {
-			l.rotateFileBySize(now)
+			l.rotateFileBySize(t)
 		}
 	}
 	// Logging content outputting to disk file.
@@ -280,20 +282,29 @@ func (l *Logger) getFilePointer(path string) *gfpool.File {
 	return file
 }
 
+// getCtx returns the context which is set through chaining operations.
+// It returns an empty context if no context set previously.
+func (l *Logger) getCtx() context.Context {
+	if l.ctx != nil {
+		return l.ctx
+	}
+	return context.TODO()
+}
+
 // printStd prints content <s> without stack.
-func (l *Logger) printStd(lead string, value ...interface{}) {
-	l.print(os.Stdout, lead, value...)
+func (l *Logger) printStd(level int, value ...interface{}) {
+	l.print(l.getCtx(), level, value...)
 }
 
 // printStd prints content <s> with stack check.
-func (l *Logger) printErr(lead string, value ...interface{}) {
+func (l *Logger) printErr(level int, value ...interface{}) {
 	if l.config.StStatus == 1 {
 		if s := l.GetStack(); s != "" {
 			value = append(value, "\nStack:\n"+s)
 		}
 	}
 	// In matter of sequence, do not use stderr here, but use the same stdout.
-	l.print(os.Stdout, lead, value...)
+	l.print(l.getCtx(), level, value...)
 }
 
 // format formats <values> using fmt.Sprintf.

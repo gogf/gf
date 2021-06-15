@@ -317,13 +317,13 @@ func (tx *TX) Transaction(ctx context.Context, f func(ctx context.Context, tx *T
 // Query does query operation on transaction.
 // See Core.Query.
 func (tx *TX) Query(sql string, args ...interface{}) (rows *sql.Rows, err error) {
-	return tx.db.GetCore().DoQuery(tx.ctx, &txLink{tx.tx}, sql, args...)
+	return tx.db.DoQuery(tx.ctx, &txLink{tx.tx}, sql, args...)
 }
 
 // Exec does none query operation on transaction.
 // See Core.Exec.
 func (tx *TX) Exec(sql string, args ...interface{}) (sql.Result, error) {
-	return tx.db.GetCore().DoExec(tx.ctx, &txLink{tx.tx}, sql, args...)
+	return tx.db.DoExec(tx.ctx, &txLink{tx.tx}, sql, args...)
 }
 
 // Prepare creates a prepared statement for later queries or executions.
@@ -332,7 +332,7 @@ func (tx *TX) Exec(sql string, args ...interface{}) (sql.Result, error) {
 // The caller must call the statement's Close method
 // when the statement is no longer needed.
 func (tx *TX) Prepare(sql string) (*Stmt, error) {
-	return tx.db.GetCore().DoPrepare(tx.ctx, &txLink{tx.tx}, sql)
+	return tx.db.DoPrepare(tx.ctx, &txLink{tx.tx}, sql)
 }
 
 // GetAll queries and returns data records from database.
@@ -501,42 +501,6 @@ func (tx *TX) Save(table string, data interface{}, batch ...int) (sql.Result, er
 		return tx.Model(table).Ctx(tx.ctx).Data(data).Batch(batch[0]).Save()
 	}
 	return tx.Model(table).Ctx(tx.ctx).Data(data).Save()
-}
-
-// BatchInsert batch inserts data.
-// The parameter `list` must be type of slice of map or struct.
-func (tx *TX) BatchInsert(table string, list interface{}, batch ...int) (sql.Result, error) {
-	if len(batch) > 0 {
-		return tx.Model(table).Ctx(tx.ctx).Data(list).Batch(batch[0]).Insert()
-	}
-	return tx.Model(table).Ctx(tx.ctx).Data(list).Insert()
-}
-
-// BatchInsertIgnore batch inserts data with ignore option.
-// The parameter `list` must be type of slice of map or struct.
-func (tx *TX) BatchInsertIgnore(table string, list interface{}, batch ...int) (sql.Result, error) {
-	if len(batch) > 0 {
-		return tx.Model(table).Ctx(tx.ctx).Data(list).Batch(batch[0]).InsertIgnore()
-	}
-	return tx.Model(table).Ctx(tx.ctx).Data(list).InsertIgnore()
-}
-
-// BatchReplace batch replaces data.
-// The parameter `list` must be type of slice of map or struct.
-func (tx *TX) BatchReplace(table string, list interface{}, batch ...int) (sql.Result, error) {
-	if len(batch) > 0 {
-		return tx.Model(table).Ctx(tx.ctx).Data(list).Batch(batch[0]).Replace()
-	}
-	return tx.Model(table).Ctx(tx.ctx).Data(list).Replace()
-}
-
-// BatchSave batch replaces data.
-// The parameter `list` must be type of slice of map or struct.
-func (tx *TX) BatchSave(table string, list interface{}, batch ...int) (sql.Result, error) {
-	if len(batch) > 0 {
-		return tx.Model(table).Ctx(tx.ctx).Data(list).Batch(batch[0]).Save()
-	}
-	return tx.Model(table).Ctx(tx.ctx).Data(list).Save()
 }
 
 // Update does "UPDATE ... " statement for the table.

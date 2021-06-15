@@ -158,7 +158,7 @@ func TestTimer_DelayAddJob(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timer := New()
 		array := garray.New(true)
-		timer.DelayAddJob(200*time.Millisecond, 200*time.Millisecond, func() {
+		timer.DelayAddEntry(200*time.Millisecond, 200*time.Millisecond, func() {
 			array.Append(1)
 		}, false, 100, gtimer.StatusReady)
 		time.Sleep(250 * time.Millisecond)

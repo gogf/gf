@@ -7,7 +7,6 @@
 package gdb
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/gogf/gf/container/gset"
@@ -15,7 +14,6 @@ import (
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/gutil"
 )
 
@@ -24,7 +22,14 @@ import (
 //
 // Also see DriverMysql.TableFields.
 func (m *Model) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
-	return m.db.TableFields(m.GetCtx(), m.getLink(false), table, schema...)
+	charL, charR := m.db.GetChars()
+	if charL != "" || charR != "" {
+		table = gstr.Trim(table, charL+charR)
+	}
+	if !gregex.IsMatchString(regularFieldNameRegPattern, table) {
+		return nil, nil
+	}
+	return m.db.TableFields(m.GetCtx(), table, schema...)
 }
 
 // getModel creates and returns a cloned model of current model if `safe` is true, or else it returns
@@ -207,113 +212,6 @@ func (m *Model) getPrimaryKey() string {
 		}
 	}
 	return ""
-}
-
-// formatCondition formats where arguments of the model and returns a new condition sql and its arguments.
-// Note that this function does not change any attribute value of the `m`.
-//
-// The parameter `limit1` specifies whether limits querying only one record if m.limit is not set.
-func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWhere string, conditionExtra string, conditionArgs []interface{}) {
-	if len(m.whereHolder) > 0 {
-		for _, v := range m.whereHolder {
-			switch v.operator {
-			case whereHolderWhere:
-				if conditionWhere == "" {
-					newWhere, newArgs := formatWhere(
-						m.db, v.where, v.args, m.option&OptionOmitEmpty > 0,
-					)
-					if len(newWhere) > 0 {
-						conditionWhere = newWhere
-						conditionArgs = newArgs
-					}
-					continue
-				}
-				fallthrough
-
-			case whereHolderAnd:
-				newWhere, newArgs := formatWhere(
-					m.db, v.where, v.args, m.option&OptionOmitEmpty > 0,
-				)
-				if len(newWhere) > 0 {
-					if len(conditionWhere) == 0 {
-						conditionWhere = newWhere
-					} else if conditionWhere[0] == '(' {
-						conditionWhere = fmt.Sprintf(`%s AND (%s)`, conditionWhere, newWhere)
-					} else {
-						conditionWhere = fmt.Sprintf(`(%s) AND (%s)`, conditionWhere, newWhere)
-					}
-					conditionArgs = append(conditionArgs, newArgs...)
-				}
-
-			case whereHolderOr:
-				newWhere, newArgs := formatWhere(
-					m.db, v.where, v.args, m.option&OptionOmitEmpty > 0,
-				)
-				if len(newWhere) > 0 {
-					if len(conditionWhere) == 0 {
-						conditionWhere = newWhere
-					} else if conditionWhere[0] == '(' {
-						conditionWhere = fmt.Sprintf(`%s OR (%s)`, conditionWhere, newWhere)
-					} else {
-						conditionWhere = fmt.Sprintf(`(%s) OR (%s)`, conditionWhere, newWhere)
-					}
-					conditionArgs = append(conditionArgs, newArgs...)
-				}
-			}
-		}
-	}
-	// Soft deletion.
-	softDeletingCondition := m.getConditionForSoftDeleting()
-	if !m.unscoped && softDeletingCondition != "" {
-		if conditionWhere == "" {
-			conditionWhere = fmt.Sprintf(` WHERE %s`, softDeletingCondition)
-		} else {
-			conditionWhere = fmt.Sprintf(` WHERE (%s) AND %s`, conditionWhere, softDeletingCondition)
-		}
-	} else {
-		if conditionWhere != "" {
-			conditionWhere = " WHERE " + conditionWhere
-		}
-	}
-	// GROUP BY.
-	if m.groupBy != "" {
-		conditionExtra += " GROUP BY " + m.groupBy
-	}
-	// HAVING.
-	if len(m.having) > 0 {
-		havingStr, havingArgs := formatWhere(
-			m.db, m.having[0], gconv.Interfaces(m.having[1]), m.option&OptionOmitEmpty > 0,
-		)
-		if len(havingStr) > 0 {
-			conditionExtra += " HAVING " + havingStr
-			conditionArgs = append(conditionArgs, havingArgs...)
-		}
-	}
-	// ORDER BY.
-	if m.orderBy != "" {
-		conditionExtra += " ORDER BY " + m.orderBy
-	}
-	// LIMIT.
-	if !isCountStatement {
-		if m.limit != 0 {
-			if m.start >= 0 {
-				conditionExtra += fmt.Sprintf(" LIMIT %d,%d", m.start, m.limit)
-			} else {
-				conditionExtra += fmt.Sprintf(" LIMIT %d", m.limit)
-			}
-		} else if limit1 {
-			conditionExtra += " LIMIT 1"
-		}
-
-		if m.offset >= 0 {
-			conditionExtra += fmt.Sprintf(" OFFSET %d", m.offset)
-		}
-	}
-
-	if m.lockInfo != "" {
-		conditionExtra += " " + m.lockInfo
-	}
-	return
 }
 
 // mergeArguments creates and returns new arguments by merging <m.extraArgs> and given `args`.

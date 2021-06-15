@@ -22,6 +22,7 @@ import (
 
 // Config is the configuration object for logger.
 type Config struct {
+	Handlers             []Handler      `json:"-"`                    // Logger handlers which implement feature similar as middleware.
 	Writer               io.Writer      `json:"-"`                    // Customized io.Writer.
 	Flags                int            `json:"flags"`                // Extra flags for logging output features.
 	Path                 string         `json:"path"`                 // Logging directory path.
@@ -245,4 +246,9 @@ func (l *Logger) SetHeaderPrint(enabled bool) {
 // Prefix is part of header, which means if header output is shut, no prefix will be output.
 func (l *Logger) SetPrefix(prefix string) {
 	l.config.Prefix = prefix
+}
+
+// SetHandlers sets the logging handlers for current logger.
+func (l *Logger) SetHandlers(handlers ...Handler) {
+	l.config.Handlers = handlers
 }

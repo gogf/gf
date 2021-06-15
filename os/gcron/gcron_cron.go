@@ -60,20 +60,20 @@ func (c *Cron) GetLogLevel() int {
 // Add adds a timed task.
 // A unique <name> can be bound with the timed task.
 // It returns and error if the <name> is already used.
-func (c *Cron) Add(pattern string, job func(), name ...string) (*Job, error) {
+func (c *Cron) Add(pattern string, job func(), name ...string) (*Entry, error) {
 	if len(name) > 0 {
 		if c.Search(name[0]) != nil {
 			return nil, errors.New(fmt.Sprintf(`cron job "%s" already exists`, name[0]))
 		}
 	}
-	return c.addJob(pattern, job, false, name...)
+	return c.addEntry(pattern, job, false, name...)
 }
 
 // AddSingleton adds a singleton timed task.
 // A singleton timed task is that can only be running one single instance at the same time.
 // A unique <name> can be bound with the timed task.
 // It returns and error if the <name> is already used.
-func (c *Cron) AddSingleton(pattern string, job func(), name ...string) (*Job, error) {
+func (c *Cron) AddSingleton(pattern string, job func(), name ...string) (*Entry, error) {
 	if entry, err := c.Add(pattern, job, name...); err != nil {
 		return nil, err
 	} else {
@@ -85,7 +85,7 @@ func (c *Cron) AddSingleton(pattern string, job func(), name ...string) (*Job, e
 // AddOnce adds a timed task which can be run only once.
 // A unique <name> can be bound with the timed task.
 // It returns and error if the <name> is already used.
-func (c *Cron) AddOnce(pattern string, job func(), name ...string) (*Job, error) {
+func (c *Cron) AddOnce(pattern string, job func(), name ...string) (*Entry, error) {
 	if entry, err := c.Add(pattern, job, name...); err != nil {
 		return nil, err
 	} else {
@@ -97,7 +97,7 @@ func (c *Cron) AddOnce(pattern string, job func(), name ...string) (*Job, error)
 // AddTimes adds a timed task which can be run specified times.
 // A unique <name> can be bound with the timed task.
 // It returns and error if the <name> is already used.
-func (c *Cron) AddTimes(pattern string, times int, job func(), name ...string) (*Job, error) {
+func (c *Cron) AddTimes(pattern string, times int, job func(), name ...string) (*Entry, error) {
 	if entry, err := c.Add(pattern, job, name...); err != nil {
 		return nil, err
 	} else {
@@ -146,9 +146,9 @@ func (c *Cron) DelayAddTimes(delay time.Duration, pattern string, times int, job
 
 // Search returns a scheduled task with the specified <name>.
 // It returns nil if no found.
-func (c *Cron) Search(name string) *Job {
+func (c *Cron) Search(name string) *Entry {
 	if v := c.entries.Get(name); v != nil {
-		return v.(*Job)
+		return v.(*Entry)
 	}
 	return nil
 }
@@ -182,7 +182,7 @@ func (c *Cron) Stop(name ...string) {
 // Remove deletes scheduled task which named <name>.
 func (c *Cron) Remove(name string) {
 	if v := c.entries.Get(name); v != nil {
-		v.(*Job).Close()
+		v.(*Entry).Close()
 	}
 }
 
@@ -197,10 +197,10 @@ func (c *Cron) Size() int {
 }
 
 // Entries return all timed tasks as slice(order by registered time asc).
-func (c *Cron) Entries() []*Job {
+func (c *Cron) Entries() []*Entry {
 	array := garray.NewSortedArraySize(c.entries.Size(), func(v1, v2 interface{}) int {
-		entry1 := v1.(*Job)
-		entry2 := v2.(*Job)
+		entry1 := v1.(*Entry)
+		entry2 := v2.(*Entry)
 		if entry1.Time.Nanosecond() > entry2.Time.Nanosecond() {
 			return 1
 		}
@@ -208,13 +208,13 @@ func (c *Cron) Entries() []*Job {
 	}, true)
 	c.entries.RLockFunc(func(m map[string]interface{}) {
 		for _, v := range m {
-			array.Add(v.(*Job))
+			array.Add(v.(*Entry))
 		}
 	})
-	entries := make([]*Job, array.Len())
+	entries := make([]*Entry, array.Len())
 	array.RLockFunc(func(array []interface{}) {
 		for k, v := range array {
-			entries[k] = v.(*Job)
+			entries[k] = v.(*Entry)
 		}
 	})
 	return entries

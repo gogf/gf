@@ -96,7 +96,7 @@ func (v *Validator) doCheckMap(params interface{}) Error {
 			value = v
 		}
 		// It checks each rule and its value in loop.
-		if e := v.doCheckValue(key, value, rule, customMsgs[key], data); e != nil {
+		if e := v.doCheckValue(key, value, rule, customMsgs[key], params, data); e != nil {
 			_, item := e.FirstItem()
 			// ===========================================================
 			// Only in map and struct validations, if value is nil or empty
@@ -112,7 +112,7 @@ func (v *Validator) doCheckMap(params interface{}) Error {
 						break
 					}
 					// Custom rules are also required in default.
-					if _, ok := customRuleFuncMap[k]; ok {
+					if f := v.getRuleFunc(k); f != nil {
 						required = true
 						break
 					}

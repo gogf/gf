@@ -166,68 +166,47 @@ func (m *Model) doInsertWithOption(option int) (result sql.Result, err error) {
 		return nil, gerror.New("inserting into table with empty data")
 	}
 	var (
+		list            List
 		nowString       = gtime.Now().String()
 		fieldNameCreate = m.getSoftFieldNameCreated()
 		fieldNameUpdate = m.getSoftFieldNameUpdated()
 		fieldNameDelete = m.getSoftFieldNameDeleted()
 	)
-	// Batch operation.
-	if list, ok := m.data.(List); ok {
-		batch := defaultBatchNumber
-		if m.batch > 0 {
-			batch = m.batch
-		}
-		newData, err := m.filterDataForInsertOrUpdate(list)
-		if err != nil {
-			return nil, err
-		}
-		list = newData.(List)
-		// Automatic handling for creating/updating time.
-		if !m.unscoped && (fieldNameCreate != "" || fieldNameUpdate != "") {
-			for k, v := range list {
-				gutil.MapDelete(v, fieldNameCreate, fieldNameUpdate, fieldNameDelete)
-				if fieldNameCreate != "" {
-					v[fieldNameCreate] = nowString
-				}
-				if fieldNameUpdate != "" {
-					v[fieldNameUpdate] = nowString
-				}
-				list[k] = v
-			}
-		}
-		return m.db.GetCore().DoBatchInsert(
-			m.GetCtx(),
-			m.getLink(true),
-			m.tables,
-			newData,
-			option,
-			batch,
-		)
+	newData, err := m.filterDataForInsertOrUpdate(m.data)
+	if err != nil {
+		return nil, err
 	}
-	// Single operation.
-	if data, ok := m.data.(Map); ok {
-		newData, err := m.filterDataForInsertOrUpdate(data)
-		if err != nil {
-			return nil, err
-		}
-		data = newData.(Map)
-		// Automatic handling for creating/updating time.
-		if !m.unscoped && (fieldNameCreate != "" || fieldNameUpdate != "") {
-			gutil.MapDelete(data, fieldNameCreate, fieldNameUpdate, fieldNameDelete)
+	// It converts any data to List type for inserting.
+	switch newData.(type) {
+	case Map:
+		list = List{newData.(Map)}
+
+	case List:
+		list = newData.(List)
+
+	default:
+		return nil, gerror.New("inserting into table with invalid data type")
+	}
+	// Automatic handling for creating/updating time.
+	if !m.unscoped && (fieldNameCreate != "" || fieldNameUpdate != "") {
+		for k, v := range list {
+			gutil.MapDelete(v, fieldNameCreate, fieldNameUpdate, fieldNameDelete)
 			if fieldNameCreate != "" {
-				data[fieldNameCreate] = nowString
+				v[fieldNameCreate] = nowString
 			}
 			if fieldNameUpdate != "" {
-				data[fieldNameUpdate] = nowString
+				v[fieldNameUpdate] = nowString
 			}
+			list[k] = v
 		}
-		return m.db.GetCore().DoInsert(
-			m.GetCtx(),
-			m.getLink(true),
-			m.tables,
-			newData,
-			option,
-		)
 	}
-	return nil, gerror.New("inserting into table with invalid data type")
+	return m.db.DoInsert(m.GetCtx(), m.getLink(true), m.tables, list, option, m.getBatch())
+}
+
+func (m *Model) getBatch() int {
+	batch := defaultBatchNumber
+	if m.batch > 0 {
+		batch = m.batch
+	}
+	return batch
 }

@@ -11,8 +11,8 @@ import (
 	"math"
 )
 
-// Job is the timing job.
-type Job struct {
+// Entry is the timing job.
+type Entry struct {
 	job       JobFunc      // The job function.
 	timer     *Timer       // Belonged timer.
 	ticks     int64        // The job runs every ticks.
@@ -26,21 +26,21 @@ type Job struct {
 type JobFunc = func()
 
 // Status returns the status of the job.
-func (j *Job) Status() int {
-	return j.status.Val()
+func (entry *Entry) Status() int {
+	return entry.status.Val()
 }
 
 // Run runs the timer job asynchronously.
-func (j *Job) Run() {
-	leftRunningTimes := j.times.Add(-1)
+func (entry *Entry) Run() {
+	leftRunningTimes := entry.times.Add(-1)
+	// Running times exceeding checks.
 	if leftRunningTimes < 0 {
-		j.status.Set(StatusClosed)
+		entry.status.Set(StatusClosed)
 		return
 	}
 	// This means it does not limit the running times.
-	// I know it's ugly, but it is surely high performance for running times limit.
-	if leftRunningTimes < 2000000000 && leftRunningTimes > 1000000000 {
-		j.times.Set(math.MaxInt32)
+	if leftRunningTimes == math.MaxInt32-1 {
+		entry.times.Set(math.MaxInt32)
 	}
 	go func() {
 		defer func() {
@@ -48,35 +48,35 @@ func (j *Job) Run() {
 				if err != panicExit {
 					panic(err)
 				} else {
-					j.Close()
+					entry.Close()
 					return
 				}
 			}
-			if j.Status() == StatusRunning {
-				j.SetStatus(StatusReady)
+			if entry.Status() == StatusRunning {
+				entry.SetStatus(StatusReady)
 			}
 		}()
-		j.job()
+		entry.job()
 	}()
 }
 
 // doCheckAndRunByTicks checks the if job can run in given timer ticks,
 // it runs asynchronously if the given `currentTimerTicks` meets or else
 // it increments its ticks and waits for next running check.
-func (j *Job) doCheckAndRunByTicks(currentTimerTicks int64) {
+func (entry *Entry) doCheckAndRunByTicks(currentTimerTicks int64) {
 	// Ticks check.
-	if currentTimerTicks < j.nextTicks.Val() {
+	if currentTimerTicks < entry.nextTicks.Val() {
 		return
 	}
-	j.nextTicks.Set(currentTimerTicks + j.ticks)
+	entry.nextTicks.Set(currentTimerTicks + entry.ticks)
 	// Perform job checking.
-	switch j.status.Val() {
+	switch entry.status.Val() {
 	case StatusRunning:
-		if j.IsSingleton() {
+		if entry.IsSingleton() {
 			return
 		}
 	case StatusReady:
-		if !j.status.Cas(StatusReady, StatusRunning) {
+		if !entry.status.Cas(StatusReady, StatusRunning) {
 			return
 		}
 	case StatusStopped:
@@ -85,50 +85,50 @@ func (j *Job) doCheckAndRunByTicks(currentTimerTicks int64) {
 		return
 	}
 	// Perform job running.
-	j.Run()
+	entry.Run()
 }
 
 // SetStatus custom sets the status for the job.
-func (j *Job) SetStatus(status int) int {
-	return j.status.Set(status)
+func (entry *Entry) SetStatus(status int) int {
+	return entry.status.Set(status)
 }
 
 // Start starts the job.
-func (j *Job) Start() {
-	j.status.Set(StatusReady)
+func (entry *Entry) Start() {
+	entry.status.Set(StatusReady)
 }
 
 // Stop stops the job.
-func (j *Job) Stop() {
-	j.status.Set(StatusStopped)
+func (entry *Entry) Stop() {
+	entry.status.Set(StatusStopped)
 }
 
 // Close closes the job, and then it will be removed from the timer.
-func (j *Job) Close() {
-	j.status.Set(StatusClosed)
+func (entry *Entry) Close() {
+	entry.status.Set(StatusClosed)
 }
 
 // Reset reset the job, which resets its ticks for next running.
-func (j *Job) Reset() {
-	j.nextTicks.Set(j.timer.ticks.Val() + j.ticks)
+func (entry *Entry) Reset() {
+	entry.nextTicks.Set(entry.timer.ticks.Val() + entry.ticks)
 }
 
 // IsSingleton checks and returns whether the job in singleton mode.
-func (j *Job) IsSingleton() bool {
-	return j.singleton.Val()
+func (entry *Entry) IsSingleton() bool {
+	return entry.singleton.Val()
 }
 
 // SetSingleton sets the job singleton mode.
-func (j *Job) SetSingleton(enabled bool) {
-	j.singleton.Set(enabled)
+func (entry *Entry) SetSingleton(enabled bool) {
+	entry.singleton.Set(enabled)
 }
 
 // Job returns the job function of this job.
-func (j *Job) Job() JobFunc {
-	return j.job
+func (entry *Entry) Job() JobFunc {
+	return entry.job
 }
 
 // SetTimes sets the limit running times for the job.
-func (j *Job) SetTimes(times int) {
-	j.times.Set(times)
+func (entry *Entry) SetTimes(times int) {
+	entry.times.Set(times)
 }

@@ -47,6 +47,9 @@ func (d *DriverPgsql) Open(config *ConfigNode) (*sql.DB, error) {
 			"user=%s password=%s host=%s port=%s dbname=%s sslmode=disable",
 			config.User, config.Pass, config.Host, config.Port, config.Name,
 		)
+		if config.Timezone != "" {
+			source = fmt.Sprintf("%s timezone=%s", source, config.Timezone)
+		}
 	}
 	intlog.Printf("Open: %s", source)
 	if db, err := sql.Open("postgres", source); err == nil {
@@ -76,8 +79,8 @@ func (d *DriverPgsql) GetChars() (charLeft string, charRight string) {
 	return "\"", "\""
 }
 
-// HandleSqlBeforeCommit deals with the sql string before commits it to underlying sql driver.
-func (d *DriverPgsql) HandleSqlBeforeCommit(ctx context.Context, link Link, sql string, args []interface{}) (string, []interface{}) {
+// DoCommit deals with the sql string before commits it to underlying sql driver.
+func (d *DriverPgsql) DoCommit(ctx context.Context, link Link, sql string, args []interface{}) (string, []interface{}) {
 	var index int
 	// Convert place holder char '?' to string "$x".
 	sql, _ = gregex.ReplaceStringFunc("\\?", sql, func(s string) string {
@@ -115,7 +118,7 @@ func (d *DriverPgsql) Tables(ctx context.Context, schema ...string) (tables []st
 // TableFields retrieves and returns the fields information of specified table of current schema.
 //
 // Also see DriverMysql.TableFields.
-func (d *DriverPgsql) TableFields(ctx context.Context, link Link, table string, schema ...string) (fields map[string]*TableField, err error) {
+func (d *DriverPgsql) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*TableField, err error) {
 	charL, charR := d.GetChars()
 	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
@@ -133,21 +136,19 @@ func (d *DriverPgsql) TableFields(ctx context.Context, link Link, table string, 
 	v := tableFieldsMap.GetOrSetFuncLock(tableFieldsCacheKey, func() interface{} {
 		var (
 			result       Result
+			link, err    = d.SlaveLink(useSchema)
 			structureSql = fmt.Sprintf(`
-SELECT a.attname AS field, t.typname AS type FROM pg_class c, pg_attribute a 
+SELECT a.attname AS field, t.typname AS type FROM pg_class c, pg_attribute a
 LEFT OUTER JOIN pg_description b ON a.attrelid=b.objoid AND a.attnum = b.objsubid,pg_type t
-WHERE c.relname = '%s' and a.attnum > 0 and a.attrelid = c.oid and a.atttypid = t.oid 
+WHERE c.relname = '%s' and a.attnum > 0 and a.attrelid = c.oid and a.atttypid = t.oid
 ORDER BY a.attnum`,
 				strings.ToLower(table),
 			)
 		)
-		structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
-		if link == nil {
-			link, err = d.SlaveLink(useSchema)
-			if err != nil {
-				return nil
-			}
+		if err != nil {
+			return nil
 		}
+		structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
 		result, err = d.DoGetAll(ctx, link, structureSql)
 		if err != nil {
 			return nil

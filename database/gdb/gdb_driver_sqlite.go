@@ -66,10 +66,10 @@ func (d *DriverSqlite) GetChars() (charLeft string, charRight string) {
 	return "`", "`"
 }
 
-// HandleSqlBeforeCommit deals with the sql string before commits it to underlying sql driver.
+// DoCommit deals with the sql string before commits it to underlying sql driver.
 // TODO 需要增加对Save方法的支持，可使用正则来实现替换，
 // TODO 将ON DUPLICATE KEY UPDATE触发器修改为两条SQL语句(INSERT OR IGNORE & UPDATE)
-func (d *DriverSqlite) HandleSqlBeforeCommit(ctx context.Context, link Link, sql string, args []interface{}) (string, []interface{}) {
+func (d *DriverSqlite) DoCommit(ctx context.Context, link Link, sql string, args []interface{}) (string, []interface{}) {
 	return sql, args
 }
 
@@ -97,7 +97,7 @@ func (d *DriverSqlite) Tables(ctx context.Context, schema ...string) (tables []s
 // TableFields retrieves and returns the fields information of specified table of current schema.
 //
 // Also see DriverMysql.TableFields.
-func (d *DriverSqlite) TableFields(ctx context.Context, link Link, table string, schema ...string) (fields map[string]*TableField, err error) {
+func (d *DriverSqlite) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*TableField, err error) {
 	charL, charR := d.GetChars()
 	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
@@ -113,13 +113,11 @@ func (d *DriverSqlite) TableFields(ctx context.Context, link Link, table string,
 	)
 	v := tableFieldsMap.GetOrSetFuncLock(tableFieldsCacheKey, func() interface{} {
 		var (
-			result Result
-		)
-		if link == nil {
+			result    Result
 			link, err = d.SlaveLink(useSchema)
-			if err != nil {
-				return nil
-			}
+		)
+		if err != nil {
+			return nil
 		}
 		result, err = d.DoGetAll(ctx, link, fmt.Sprintf(`PRAGMA TABLE_INFO(%s)`, table))
 		if err != nil {

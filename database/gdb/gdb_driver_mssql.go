@@ -78,8 +78,8 @@ func (d *DriverMssql) GetChars() (charLeft string, charRight string) {
 	return "\"", "\""
 }
 
-// HandleSqlBeforeCommit deals with the sql string before commits it to underlying sql driver.
-func (d *DriverMssql) HandleSqlBeforeCommit(ctx context.Context, link Link, sql string, args []interface{}) (string, []interface{}) {
+// DoCommit deals with the sql string before commits it to underlying sql driver.
+func (d *DriverMssql) DoCommit(ctx context.Context, link Link, sql string, args []interface{}) (string, []interface{}) {
 	var index int
 	// Convert place holder char '?' to string "@px".
 	str, _ := gregex.ReplaceStringFunc("\\?", sql, func(s string) string {
@@ -207,7 +207,7 @@ func (d *DriverMssql) Tables(ctx context.Context, schema ...string) (tables []st
 // TableFields retrieves and returns the fields information of specified table of current schema.
 //
 // Also see DriverMysql.TableFields.
-func (d *DriverMssql) TableFields(ctx context.Context, link Link, table string, schema ...string) (fields map[string]*TableField, err error) {
+func (d *DriverMssql) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*TableField, err error) {
 	charL, charR := d.GetChars()
 	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
@@ -223,13 +223,11 @@ func (d *DriverMssql) TableFields(ctx context.Context, link Link, table string, 
 	)
 	v := tableFieldsMap.GetOrSetFuncLock(tableFieldsCacheKey, func() interface{} {
 		var (
-			result Result
-		)
-		if link == nil {
+			result    Result
 			link, err = d.SlaveLink(useSchema)
-			if err != nil {
-				return nil
-			}
+		)
+		if err != nil {
+			return nil
 		}
 		structureSql := fmt.Sprintf(`
 SELECT 

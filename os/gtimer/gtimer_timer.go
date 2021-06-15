@@ -27,11 +27,11 @@ func New(options ...TimerOptions) *Timer {
 }
 
 // Add adds a timing job to the timer, which runs in interval of <interval>.
-func (t *Timer) Add(interval time.Duration, job JobFunc) *Job {
-	return t.createJob(interval, job, false, defaultTimes, StatusReady)
+func (t *Timer) Add(interval time.Duration, job JobFunc) *Entry {
+	return t.createEntry(interval, job, false, defaultTimes, StatusReady)
 }
 
-// AddJob adds a timing job to the timer with detailed parameters.
+// AddEntry adds a timing job to the timer with detailed parameters.
 //
 // The parameter <interval> specifies the running interval of the job.
 //
@@ -42,23 +42,23 @@ func (t *Timer) Add(interval time.Duration, job JobFunc) *Job {
 // exits if its run times exceeds the <times>.
 //
 // The parameter <status> specifies the job status when it's firstly added to the timer.
-func (t *Timer) AddJob(interval time.Duration, job JobFunc, singleton bool, times int, status int) *Job {
-	return t.createJob(interval, job, singleton, times, status)
+func (t *Timer) AddEntry(interval time.Duration, job JobFunc, singleton bool, times int, status int) *Entry {
+	return t.createEntry(interval, job, singleton, times, status)
 }
 
 // AddSingleton is a convenience function for add singleton mode job.
-func (t *Timer) AddSingleton(interval time.Duration, job JobFunc) *Job {
-	return t.createJob(interval, job, true, defaultTimes, StatusReady)
+func (t *Timer) AddSingleton(interval time.Duration, job JobFunc) *Entry {
+	return t.createEntry(interval, job, true, defaultTimes, StatusReady)
 }
 
 // AddOnce is a convenience function for adding a job which only runs once and then exits.
-func (t *Timer) AddOnce(interval time.Duration, job JobFunc) *Job {
-	return t.createJob(interval, job, true, 1, StatusReady)
+func (t *Timer) AddOnce(interval time.Duration, job JobFunc) *Entry {
+	return t.createEntry(interval, job, true, 1, StatusReady)
 }
 
 // AddTimes is a convenience function for adding a job which is limited running times.
-func (t *Timer) AddTimes(interval time.Duration, times int, job JobFunc) *Job {
-	return t.createJob(interval, job, true, times, StatusReady)
+func (t *Timer) AddTimes(interval time.Duration, times int, job JobFunc) *Entry {
+	return t.createEntry(interval, job, true, times, StatusReady)
 }
 
 // DelayAdd adds a timing job after delay of <interval> duration.
@@ -69,11 +69,11 @@ func (t *Timer) DelayAdd(delay time.Duration, interval time.Duration, job JobFun
 	})
 }
 
-// DelayAddJob adds a timing job after delay of <interval> duration.
-// Also see AddJob.
-func (t *Timer) DelayAddJob(delay time.Duration, interval time.Duration, job JobFunc, singleton bool, times int, status int) {
+// DelayAddEntry adds a timing job after delay of <interval> duration.
+// Also see AddEntry.
+func (t *Timer) DelayAddEntry(delay time.Duration, interval time.Duration, job JobFunc, singleton bool, times int, status int) {
 	t.AddOnce(delay, func() {
-		t.AddJob(interval, job, singleton, times, status)
+		t.AddEntry(interval, job, singleton, times, status)
 	})
 }
 
@@ -116,8 +116,8 @@ func (t *Timer) Close() {
 	t.status.Set(StatusClosed)
 }
 
-// createJob creates and adds a timing job to the timer.
-func (t *Timer) createJob(interval time.Duration, job JobFunc, singleton bool, times int, status int) *Job {
+// createEntry creates and adds a timing job to the timer.
+func (t *Timer) createEntry(interval time.Duration, job JobFunc, singleton bool, times int, status int) *Entry {
 	if times <= 0 {
 		times = defaultTimes
 	}
@@ -130,7 +130,7 @@ func (t *Timer) createJob(interval time.Duration, job JobFunc, singleton bool, t
 		intervalTicksOfJob = 1
 	}
 	nextTicks := t.ticks.Val() + intervalTicksOfJob
-	j := &Job{
+	entry := &Entry{
 		job:       job,
 		timer:     t,
 		ticks:     intervalTicksOfJob,
@@ -139,6 +139,6 @@ func (t *Timer) createJob(interval time.Duration, job JobFunc, singleton bool, t
 		singleton: gtype.NewBool(singleton),
 		nextTicks: gtype.NewInt64(nextTicks),
 	}
-	t.queue.Push(j, nextTicks)
-	return j
+	t.queue.Push(entry, nextTicks)
+	return entry
 }

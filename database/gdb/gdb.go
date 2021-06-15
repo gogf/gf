@@ -83,18 +83,26 @@ type DB interface {
 	// Common APIs for CURD.
 	// ===========================================================================
 
-	Insert(table string, data interface{}, batch ...int) (sql.Result, error)       // See Core.Insert.
-	InsertIgnore(table string, data interface{}, batch ...int) (sql.Result, error) // See Core.InsertIgnore.
-	InsertAndGetId(table string, data interface{}, batch ...int) (int64, error)    // See Core.InsertAndGetId.
-	Replace(table string, data interface{}, batch ...int) (sql.Result, error)      // See Core.Replace.
-	Save(table string, data interface{}, batch ...int) (sql.Result, error)         // See Core.Save.
-
-	BatchInsert(table string, list interface{}, batch ...int) (sql.Result, error)  // See Core.BatchInsert.
-	BatchReplace(table string, list interface{}, batch ...int) (sql.Result, error) // See Core.BatchReplace.
-	BatchSave(table string, list interface{}, batch ...int) (sql.Result, error)    // See Core.BatchSave.
-
+	Insert(table string, data interface{}, batch ...int) (sql.Result, error)                               // See Core.Insert.
+	InsertIgnore(table string, data interface{}, batch ...int) (sql.Result, error)                         // See Core.InsertIgnore.
+	InsertAndGetId(table string, data interface{}, batch ...int) (int64, error)                            // See Core.InsertAndGetId.
+	Replace(table string, data interface{}, batch ...int) (sql.Result, error)                              // See Core.Replace.
+	Save(table string, data interface{}, batch ...int) (sql.Result, error)                                 // See Core.Save.
 	Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error) // See Core.Update.
 	Delete(table string, condition interface{}, args ...interface{}) (sql.Result, error)                   // See Core.Delete.
+
+	// ===========================================================================
+	// Internal APIs for CURD, which can be overwrote for custom CURD implements.
+	// ===========================================================================
+
+	DoGetAll(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error)                                           // See Core.DoGetAll.
+	DoInsert(ctx context.Context, link Link, table string, data interface{}, option int, batch int) (result sql.Result, err error)                 // See Core.DoInsert.
+	DoUpdate(ctx context.Context, link Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) // See Core.DoUpdate.
+	DoDelete(ctx context.Context, link Link, table string, condition string, args ...interface{}) (result sql.Result, err error)                   // See Core.DoDelete.
+	DoQuery(ctx context.Context, link Link, sql string, args ...interface{}) (rows *sql.Rows, err error)                                           // See Core.DoQuery.
+	DoExec(ctx context.Context, link Link, sql string, args ...interface{}) (result sql.Result, err error)                                         // See Core.DoExec.
+	DoCommit(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{})                                // See Core.DoCommit.
+	DoPrepare(ctx context.Context, link Link, sql string) (*Stmt, error)                                                                           // See Core.DoPrepare.
 
 	// ===========================================================================
 	// Query APIs for convenience purpose.
@@ -108,6 +116,8 @@ type DB interface {
 	GetStruct(objPointer interface{}, sql string, args ...interface{}) error       // See Core.GetStruct.
 	GetStructs(objPointerSlice interface{}, sql string, args ...interface{}) error // See Core.GetStructs.
 	GetScan(objPointer interface{}, sql string, args ...interface{}) error         // See Core.GetScan.
+	Union(unions ...*Model) *Model                                                 // See Core.Union.
+	UnionAll(unions ...*Model) *Model                                              // See Core.UnionAll.
 
 	// ===========================================================================
 	// Master/Slave specification support.
@@ -154,19 +164,12 @@ type DB interface {
 	// Utility methods.
 	// ===========================================================================
 
-	GetCtx() context.Context                                                                                    // See Core.GetCtx.
-	GetCore() *Core                                                                                             // See Core.GetCore
-	GetChars() (charLeft string, charRight string)                                                              // See Core.GetChars.
-	Tables(ctx context.Context, schema ...string) (tables []string, err error)                                  // See Core.Tables.
-	TableFields(ctx context.Context, link Link, table string, schema ...string) (map[string]*TableField, error) // See Core.TableFields.
-	FilteredLinkInfo() string                                                                                   // See Core.FilteredLinkInfo.
-
-	// HandleSqlBeforeCommit is a hook function, which deals with the sql string before
-	// it's committed to underlying driver. The parameter `link` specifies the current
-	// database connection operation object. You can modify the sql string `sql` and its
-	// arguments `args` as you wish before they're committed to driver.
-	// Also see Core.HandleSqlBeforeCommit.
-	HandleSqlBeforeCommit(ctx context.Context, link Link, sql string, args []interface{}) (string, []interface{})
+	GetCtx() context.Context                                                                         // See Core.GetCtx.
+	GetCore() *Core                                                                                  // See Core.GetCore
+	GetChars() (charLeft string, charRight string)                                                   // See Core.GetChars.
+	Tables(ctx context.Context, schema ...string) (tables []string, err error)                       // See Core.Tables.
+	TableFields(ctx context.Context, table string, schema ...string) (map[string]*TableField, error) // See Core.TableFields.
+	FilteredLinkInfo() string                                                                        // See Core.FilteredLinkInfo.
 }
 
 // Core is the base struct for database management.
@@ -239,6 +242,10 @@ type (
 )
 
 const (
+	queryTypeNormal         = 0
+	queryTypeCount          = 1
+	unionTypeNormal         = 0
+	unionTypeAll            = 1
 	insertOptionDefault     = 0
 	insertOptionReplace     = 1
 	insertOptionSave        = 2
@@ -274,12 +281,12 @@ var (
 
 	// regularFieldNameRegPattern is the regular expression pattern for a string
 	// which is a regular field name of table.
-	regularFieldNameRegPattern = `^[\w\.\-\_]+$`
+	regularFieldNameRegPattern = `^[\w\.\-]+$`
 
 	// regularFieldNameWithoutDotRegPattern is similar to regularFieldNameRegPattern but not allows '.'.
 	// Note that, although some databases allow char '.' in the field name, but it here does not allow '.'
 	// in the field name as it conflicts with "db.table.field" pattern in SOME situations.
-	regularFieldNameWithoutDotRegPattern = `^[\w\-\_]+$`
+	regularFieldNameWithoutDotRegPattern = `^[\w\-]+$`
 
 	// internalCache is the memory cache for internal usage.
 	internalCache = gcache.New()

@@ -142,8 +142,8 @@ func GetInsertOperationByOption(option int) string {
 // ConvertDataForTableRecord is a very important function, which does converting for any data that
 // will be inserted into table as a record.
 //
-// The parameter `obj` should be type of *map/map/*struct/struct.
-// It supports inherit struct definition for struct.
+// The parameter `value` should be type of *map/map/*struct/struct.
+// It supports embedded struct definition for struct.
 func ConvertDataForTableRecord(value interface{}) map[string]interface{} {
 	var (
 		rvValue reflect.Value
@@ -186,7 +186,7 @@ func ConvertDataForTableRecord(value interface{}) map[string]interface{} {
 
 // DataToMapDeep converts `value` to map type recursively.
 // The parameter `value` should be type of *map/map/*struct/struct.
-// It supports inherit struct definition for struct.
+// It supports embedded struct definition for struct.
 func DataToMapDeep(value interface{}) map[string]interface{} {
 	if v, ok := value.(apiMapStrAny); ok {
 		return v.MapStrAny()
@@ -444,14 +444,14 @@ func formatSql(sql string, args []interface{}) (newSql string, newArgs []interfa
 	return handleArguments(sql, args)
 }
 
-// formatWhere formats where statement and its arguments.
+// formatWhere formats where statement and its arguments for `Where` and `Having` statements.
 func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool) (newWhere string, newArgs []interface{}) {
 	var (
 		buffer = bytes.NewBuffer(nil)
 		rv     = reflect.ValueOf(where)
 		kind   = rv.Kind()
 	)
-	if kind == reflect.Ptr {
+	for kind == reflect.Ptr {
 		rv = rv.Elem()
 		kind = rv.Kind()
 	}
@@ -491,7 +491,36 @@ func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool) (
 		}
 
 	default:
-		buffer.WriteString(gconv.String(where))
+		// Usually a string.
+		var (
+			i        = 0
+			whereStr = gconv.String(where)
+		)
+		for {
+			if i >= len(args) {
+				break
+			}
+			// Sub query, which is always used along with a string condition.
+			if model, ok := args[i].(*Model); ok {
+				var (
+					index = -1
+				)
+				whereStr, _ = gregex.ReplaceStringFunc(`(\?)`, whereStr, func(s string) string {
+					index++
+					if i+len(newArgs) == index {
+						sqlWithHolder, holderArgs := model.getFormattedSqlAndArgs(queryTypeNormal, false)
+						newArgs = append(newArgs, holderArgs...)
+						// Automatically adding the brackets.
+						return "(" + sqlWithHolder + ")"
+					}
+					return s
+				})
+				args = gutil.SliceDelete(args, i)
+				continue
+			}
+			i++
+		}
+		buffer.WriteString(whereStr)
 	}
 
 	if buffer.Len() == 0 {

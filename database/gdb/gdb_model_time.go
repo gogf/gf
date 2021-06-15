@@ -173,6 +173,9 @@ func (m *Model) getConditionOfTableStringForSoftDeleting(s string) string {
 
 // getPrimaryTableName parses and returns the primary table name.
 func (m *Model) getPrimaryTableName() string {
+	if m.tables == "" {
+		return ""
+	}
 	array1 := gstr.SplitAndTrim(m.tables, ",")
 	array2 := gstr.SplitAndTrim(array1[0], " ")
 	array3 := gstr.SplitAndTrim(array2[0], ".")

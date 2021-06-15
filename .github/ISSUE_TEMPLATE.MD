@@ -1,5 +1,10 @@
 <!-- Please answer these questions before submitting your issue. Thanks! -->
 
+<!-- 为高效处理您的疑问，如果觉得是BUG类问题，请您务必提供可复现该问题的最小可运行代码！ -->
+<!-- 为高效处理您的疑问，如果觉得是BUG类问题，请您务必提供可复现该问题的最小可运行代码！ -->
+<!-- 为高效处理您的疑问，如果觉得是BUG类问题，请您务必提供可复现该问题的最小可运行代码！ -->
+<!-- 重要的事情说三遍！ -->
+
 ### 1. What version of `Go` and system type/arch are you using?
 
 <!-- 
@@ -13,7 +18,7 @@ What expect to see is like: `go 1.12, linux/amd64`
 <!-- You can find the GF version from your `go.mod`, or from the `version.go` in `GF` -->
 
 
-### 3. Can this issue be reproduced with the latest release?
+### 3. Can this issue be re-produced with the latest release?
 
 
 
