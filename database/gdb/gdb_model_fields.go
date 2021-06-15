@@ -23,7 +23,7 @@ func (m *Model) Fields(fieldNamesOrMapStruct ...interface{}) *Model {
 	}
 	m.withFields = true
 	model := m.getModel()
-	
+
 	switch {
 	// String slice.
 	case length >= 2:
@@ -54,7 +54,7 @@ func (m *Model) FieldsEx(fieldNamesOrMapStruct ...interface{}) *Model {
 	}
 	m.withFieldsEx = true
 	model := m.getModel()
-	
+
 	switch {
 	case length >= 2:
 		model.fieldsEx = gstr.Join(m.mappingAndFilterToTableFields(gconv.Strings(fieldNamesOrMapStruct), true), ",")

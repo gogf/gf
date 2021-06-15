@@ -28,7 +28,7 @@ type Model struct {
 	fields        string         // Operation fields, multiple fields joined using char ','.
 	fieldsEx      string         // Excluded operation fields, multiple fields joined using char ','.
 	useFields     bool           // Mark for Fields usage
-        useFieldsEx   bool           // Mark for FieldsEx usage
+	useFieldsEx   bool           // Mark for FieldsEx usage
 	withArray     []interface{}  // Arguments for With feature.
 	withAll       bool           // Enable model association operations on all objects that have "with" tag in the struct.
 	extraArgs     []interface{}  // Extra custom arguments for sql, which are prepended to the arguments before sql committed to underlying driver.
