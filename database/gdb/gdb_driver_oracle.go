@@ -48,8 +48,8 @@ func (d *DriverOracle) New(core *Core, node *ConfigNode) (DB, error) {
 // Open creates and returns a underlying sql.DB object for oracle.
 func (d *DriverOracle) Open(config *ConfigNode) (*sql.DB, error) {
 	var source string
-	if config.LinkInfo != "" {
-		source = config.LinkInfo
+	if config.Link != "" {
+		source = config.Link
 	} else {
 		source = fmt.Sprintf(
 			"%s/%s@%s:%s/%s",
@@ -64,10 +64,10 @@ func (d *DriverOracle) Open(config *ConfigNode) (*sql.DB, error) {
 	}
 }
 
-// FilteredLinkInfo retrieves and returns filtered `linkInfo` that can be using for
+// FilteredLink retrieves and returns filtered `linkInfo` that can be using for
 // logging or tracing purpose.
-func (d *DriverOracle) FilteredLinkInfo() string {
-	linkInfo := d.GetConfig().LinkInfo
+func (d *DriverOracle) FilteredLink() string {
+	linkInfo := d.GetConfig().Link
 	if linkInfo == "" {
 		return ""
 	}
