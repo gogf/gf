@@ -169,7 +169,7 @@ type DB interface {
 	GetChars() (charLeft string, charRight string)                                                   // See Core.GetChars.
 	Tables(ctx context.Context, schema ...string) (tables []string, err error)                       // See Core.Tables.
 	TableFields(ctx context.Context, table string, schema ...string) (map[string]*TableField, error) // See Core.TableFields.
-	FilteredLinkInfo() string                                                                        // See Core.FilteredLinkInfo.
+	FilteredLink() string
 }
 
 // Core is the base struct for database management.

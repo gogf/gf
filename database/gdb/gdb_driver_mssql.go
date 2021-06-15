@@ -42,8 +42,8 @@ func (d *DriverMssql) New(core *Core, node *ConfigNode) (DB, error) {
 // Open creates and returns a underlying sql.DB object for mssql.
 func (d *DriverMssql) Open(config *ConfigNode) (*sql.DB, error) {
 	source := ""
-	if config.LinkInfo != "" {
-		source = config.LinkInfo
+	if config.Link != "" {
+		source = config.Link
 	} else {
 		source = fmt.Sprintf(
 			"user id=%s;password=%s;server=%s;port=%s;database=%s;encrypt=disable",
@@ -58,17 +58,17 @@ func (d *DriverMssql) Open(config *ConfigNode) (*sql.DB, error) {
 	}
 }
 
-// FilteredLinkInfo retrieves and returns filtered `linkInfo` that can be using for
+// FilteredLink retrieves and returns filtered `linkInfo` that can be using for
 // logging or tracing purpose.
-func (d *DriverMssql) FilteredLinkInfo() string {
-	linkInfo := d.GetConfig().LinkInfo
+func (d *DriverMssql) FilteredLink() string {
+	linkInfo := d.GetConfig().Link
 	if linkInfo == "" {
 		return ""
 	}
 	s, _ := gregex.ReplaceString(
 		`(.+);\s*password=(.+);\s*server=(.+)`,
 		`$1;password=xxx;server=$3`,
-		d.GetConfig().LinkInfo,
+		d.GetConfig().Link,
 	)
 	return s
 }

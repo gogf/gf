@@ -76,8 +76,8 @@ func (c *Core) addSqlToTracing(ctx context.Context, sql *Sql) {
 	if c.db.GetConfig().User != "" {
 		labels = append(labels, attribute.String(tracingAttrDbUser, c.db.GetConfig().User))
 	}
-	if filteredLinkInfo := c.db.FilteredLinkInfo(); filteredLinkInfo != "" {
-		labels = append(labels, attribute.String(tracingAttrDbLink, c.db.FilteredLinkInfo()))
+	if filteredLink := c.db.FilteredLink(); filteredLink != "" {
+		labels = append(labels, attribute.String(tracingAttrDbLink, c.db.FilteredLink()))
 	}
 	if group := c.db.GetGroup(); group != "" {
 		labels = append(labels, attribute.String(tracingAttrDbGroup, group))

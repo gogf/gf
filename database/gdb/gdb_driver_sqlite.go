@@ -38,8 +38,8 @@ func (d *DriverSqlite) New(core *Core, node *ConfigNode) (DB, error) {
 // Open creates and returns a underlying sql.DB object for sqlite.
 func (d *DriverSqlite) Open(config *ConfigNode) (*sql.DB, error) {
 	var source string
-	if config.LinkInfo != "" {
-		source = config.LinkInfo
+	if config.Link != "" {
+		source = config.Link
 	} else {
 		source = config.Name
 	}
@@ -55,10 +55,10 @@ func (d *DriverSqlite) Open(config *ConfigNode) (*sql.DB, error) {
 	}
 }
 
-// FilteredLinkInfo retrieves and returns filtered `linkInfo` that can be using for
+// FilteredLink retrieves and returns filtered `linkInfo` that can be using for
 // logging or tracing purpose.
-func (d *DriverSqlite) FilteredLinkInfo() string {
-	return d.GetConfig().LinkInfo
+func (d *DriverSqlite) FilteredLink() string {
+	return d.GetConfig().Link
 }
 
 // GetChars returns the security char for this type of database.
