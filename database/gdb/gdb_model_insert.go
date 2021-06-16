@@ -8,6 +8,8 @@ package gdb
 
 import (
 	"database/sql"
+	"fmt"
+	"github.com/gogf/gf/container/gset"
 	"reflect"
 
 	"github.com/gogf/gf/errors/gerror"
@@ -51,16 +53,20 @@ func (m *Model) Data(data ...interface{}) *Model {
 		switch params := data[0].(type) {
 		case Result:
 			model.data = params.List()
+
 		case Record:
 			model.data = params.Map()
+
 		case List:
 			list := make(List, len(params))
 			for k, v := range params {
 				list[k] = gutil.MapCopy(v)
 			}
 			model.data = list
+
 		case Map:
 			model.data = gutil.MapCopy(params)
+
 		default:
 			var (
 				rv   = reflect.ValueOf(params)
@@ -97,6 +103,24 @@ func (m *Model) Data(data ...interface{}) *Model {
 			}
 		}
 	}
+	return model
+}
+
+// OnDuplicate sets the operations when columns conflicts occurs.
+// In MySQL, this is used for "ON DUPLICATE KEY UPDATE" statement.
+// The parameter `onDuplicate` can be type of string/Raw/*Raw/map/slice.
+func (m *Model) OnDuplicate(onDuplicate interface{}) *Model {
+	model := m.getModel()
+	model.onDuplicate = onDuplicate
+	return model
+}
+
+// OnDuplicateEx sets the excluding columns for operations when columns conflicts occurs.
+// In MySQL, this is used for "ON DUPLICATE KEY UPDATE" statement.
+// The parameter `onDuplicateEx` can be type of string/Raw/*Raw/map/slice.
+func (m *Model) OnDuplicateEx(onDuplicateEx interface{}) *Model {
+	model := m.getModel()
+	model.onDuplicateEx = onDuplicateEx
 	return model
 }
 
@@ -156,7 +180,7 @@ func (m *Model) Save(data ...interface{}) (result sql.Result, err error) {
 }
 
 // doInsertWithOption inserts data with option parameter.
-func (m *Model) doInsertWithOption(option int) (result sql.Result, err error) {
+func (m *Model) doInsertWithOption(insertOption int) (result sql.Result, err error) {
 	defer func() {
 		if err == nil {
 			m.checkAndRemoveCache()
@@ -176,17 +200,66 @@ func (m *Model) doInsertWithOption(option int) (result sql.Result, err error) {
 	if err != nil {
 		return nil, err
 	}
+
 	// It converts any data to List type for inserting.
-	switch newData.(type) {
-	case Map:
-		list = List{newData.(Map)}
+	switch value := newData.(type) {
+	case Result:
+		list = value.List()
+
+	case Record:
+		list = List{value.Map()}
 
 	case List:
-		list = newData.(List)
+		list = value
+		for i, v := range list {
+			list[i] = ConvertDataForTableRecord(v)
+		}
+
+	case Map:
+		list = List{ConvertDataForTableRecord(value)}
 
 	default:
-		return nil, gerror.New("inserting into table with invalid data type")
+		var (
+			rv   = reflect.ValueOf(newData)
+			kind = rv.Kind()
+		)
+		if kind == reflect.Ptr {
+			rv = rv.Elem()
+			kind = rv.Kind()
+		}
+		switch kind {
+		// If it's slice type, it then converts it to List type.
+		case reflect.Slice, reflect.Array:
+			list = make(List, rv.Len())
+			for i := 0; i < rv.Len(); i++ {
+				list[i] = ConvertDataForTableRecord(rv.Index(i).Interface())
+			}
+
+		case reflect.Map:
+			list = List{ConvertDataForTableRecord(value)}
+
+		case reflect.Struct:
+			if v, ok := value.(apiInterfaces); ok {
+				var (
+					array = v.Interfaces()
+				)
+				list = make(List, len(array))
+				for i := 0; i < len(array); i++ {
+					list[i] = ConvertDataForTableRecord(array[i])
+				}
+			} else {
+				list = List{ConvertDataForTableRecord(value)}
+			}
+
+		default:
+			return result, gerror.New(fmt.Sprint("unsupported list type:", kind))
+		}
 	}
+
+	if len(list) < 1 {
+		return result, gerror.New("data list cannot be empty")
+	}
+
 	// Automatic handling for creating/updating time.
 	if !m.unscoped && (fieldNameCreate != "" || fieldNameUpdate != "") {
 		for k, v := range list {
@@ -200,7 +273,117 @@ func (m *Model) doInsertWithOption(option int) (result sql.Result, err error) {
 			list[k] = v
 		}
 	}
-	return m.db.DoInsert(m.GetCtx(), m.getLink(true), m.tables, list, option, m.getBatch())
+	// Format DoInsertOption, especially for "ON DUPLICATE KEY UPDATE" statement.
+	columnNames := make([]string, 0, len(list[0]))
+	for k, _ := range list[0] {
+		columnNames = append(columnNames, k)
+	}
+	doInsertOption, err := m.formatDoInsertOption(insertOption, columnNames)
+	if err != nil {
+		return result, err
+	}
+
+	return m.db.DoInsert(m.GetCtx(), m.getLink(true), m.tables, list, doInsertOption)
+}
+
+func (m *Model) formatDoInsertOption(insertOption int, columnNames []string) (option DoInsertOption, err error) {
+	option = DoInsertOption{
+		InsertOption: insertOption,
+		BatchCount:   m.getBatch(),
+	}
+	if insertOption == insertOptionSave {
+		onDuplicateExKeys, err := m.formatOnDuplicateExKeys(m.onDuplicateEx)
+		if err != nil {
+			return option, err
+		}
+		var (
+			onDuplicateExKeySet = gset.NewStrSetFrom(onDuplicateExKeys)
+		)
+		if m.onDuplicate != nil {
+			switch m.onDuplicate.(type) {
+			case Raw, *Raw:
+				option.OnDuplicateStr = gconv.String(m.onDuplicate)
+
+			default:
+				var (
+					reflectValue = reflect.ValueOf(m.onDuplicate)
+					reflectKind  = reflectValue.Kind()
+				)
+				for reflectKind == reflect.Ptr {
+					reflectValue = reflectValue.Elem()
+					reflectKind = reflectValue.Kind()
+				}
+				switch reflectKind {
+				case reflect.String:
+					option.OnDuplicateMap = make(map[string]interface{})
+					for _, v := range gstr.SplitAndTrim(reflectValue.String(), ",") {
+						if onDuplicateExKeySet.Contains(v) {
+							continue
+						}
+						option.OnDuplicateMap[v] = v
+					}
+
+				case reflect.Map:
+					option.OnDuplicateMap = make(map[string]interface{})
+					for k, v := range gconv.Map(m.onDuplicate) {
+						if onDuplicateExKeySet.Contains(k) {
+							continue
+						}
+						option.OnDuplicateMap[k] = v
+					}
+
+				case reflect.Slice, reflect.Array:
+					option.OnDuplicateMap = make(map[string]interface{})
+					for _, v := range gconv.Strings(m.onDuplicate) {
+						if onDuplicateExKeySet.Contains(v) {
+							continue
+						}
+						option.OnDuplicateMap[v] = v
+					}
+
+				default:
+					return option, gerror.Newf(`unsupported OnDuplicate parameter type "%s"`, reflect.TypeOf(m.onDuplicate))
+				}
+			}
+		} else if onDuplicateExKeySet.Size() > 0 {
+			option.OnDuplicateMap = make(map[string]interface{})
+			for _, v := range columnNames {
+				if onDuplicateExKeySet.Contains(v) {
+					continue
+				}
+				option.OnDuplicateMap[v] = v
+			}
+		}
+	}
+	return
+}
+
+func (m *Model) formatOnDuplicateExKeys(onDuplicateEx interface{}) ([]string, error) {
+	if onDuplicateEx == nil {
+		return nil, nil
+	}
+
+	var (
+		reflectValue = reflect.ValueOf(onDuplicateEx)
+		reflectKind  = reflectValue.Kind()
+	)
+	for reflectKind == reflect.Ptr {
+		reflectValue = reflectValue.Elem()
+		reflectKind = reflectValue.Kind()
+	}
+	switch reflectKind {
+	case reflect.String:
+		return gstr.SplitAndTrim(reflectValue.String(), ","), nil
+
+	case reflect.Map:
+		return gutil.Keys(onDuplicateEx), nil
+
+	case reflect.Slice, reflect.Array:
+		return gconv.Strings(onDuplicateEx), nil
+
+	default:
+		return nil, gerror.Newf(`unsupported OnDuplicateEx parameter type "%s"`, reflect.TypeOf(onDuplicateEx))
+	}
 }
 
 func (m *Model) getBatch() int {

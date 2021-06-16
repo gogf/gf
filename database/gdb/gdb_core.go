@@ -367,78 +367,15 @@ func (c *Core) Save(table string, data interface{}, batch ...int) (sql.Result, e
 // 1: replace: if there's unique/primary key in the data, it deletes it from table and inserts a new one;
 // 2: save:    if there's unique/primary key in the data, it updates it or else inserts a new one;
 // 3: ignore:  if there's unique/primary key in the data, it ignores the inserting;
-func (c *Core) DoInsert(ctx context.Context, link Link, table string, data interface{}, option int, batch int) (result sql.Result, err error) {
-	table = c.QuotePrefixTableName(table)
+func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List, option DoInsertOption) (result sql.Result, err error) {
 	var (
-		keys    []string      // Field names.
-		values  []string      // Value holder string array, like: (?,?,?)
-		params  []interface{} // Values that will be committed to underlying database driver.
-		listMap List          // The data list that passed from caller.
+		keys           []string      // Field names.
+		values         []string      // Value holder string array, like: (?,?,?)
+		params         []interface{} // Values that will be committed to underlying database driver.
+		onDuplicateStr string        // onDuplicateStr is used in "ON DUPLICATE KEY UPDATE" statement.
 	)
-	switch value := data.(type) {
-	case Result:
-		listMap = value.List()
-
-	case Record:
-		listMap = List{value.Map()}
-
-	case List:
-		listMap = value
-		for i, v := range listMap {
-			listMap[i] = ConvertDataForTableRecord(v)
-		}
-
-	case Map:
-		listMap = List{ConvertDataForTableRecord(value)}
-
-	default:
-		var (
-			rv   = reflect.ValueOf(data)
-			kind = rv.Kind()
-		)
-		if kind == reflect.Ptr {
-			rv = rv.Elem()
-			kind = rv.Kind()
-		}
-		switch kind {
-		// If it's slice type, it then converts it to List type.
-		case reflect.Slice, reflect.Array:
-			listMap = make(List, rv.Len())
-			for i := 0; i < rv.Len(); i++ {
-				listMap[i] = ConvertDataForTableRecord(rv.Index(i).Interface())
-			}
-
-		case reflect.Map:
-			listMap = List{ConvertDataForTableRecord(value)}
-
-		case reflect.Struct:
-			if v, ok := value.(apiInterfaces); ok {
-				var (
-					array = v.Interfaces()
-					list  = make(List, len(array))
-				)
-				for i := 0; i < len(array); i++ {
-					list[i] = ConvertDataForTableRecord(array[i])
-				}
-				listMap = list
-			} else {
-				listMap = List{ConvertDataForTableRecord(value)}
-			}
-
-		default:
-			return result, gerror.New(fmt.Sprint("unsupported list type:", kind))
-		}
-	}
-	if len(listMap) < 1 {
-		return result, gerror.New("data list cannot be empty")
-	}
-	if link == nil {
-		if link, err = c.MasterLink(); err != nil {
-			return
-		}
-	}
 	// Handle the field names and place holders.
-	for k, _ := range listMap[0] {
+	for k, _ := range list[0] {
 		keys = append(keys, k)
 	}
 	// Prepare the batch result pointer.
@@ -446,54 +383,35 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, data inter
 		charL, charR = c.db.GetChars()
 		batchResult  = new(SqlResult)
 		keysStr      = charL + strings.Join(keys, charR+","+charL) + charR
-		operation    = GetInsertOperationByOption(option)
-		updateStr    = ""
+		operation    = GetInsertOperationByOption(option.InsertOption)
 	)
-	if option == insertOptionSave {
-		for _, k := range keys {
-			// If it's SAVE operation,
-			// do not automatically update the creating time.
-			if c.isSoftCreatedFiledName(k) {
-				continue
-			}
-			if len(updateStr) > 0 {
-				updateStr += ","
-			}
-			updateStr += fmt.Sprintf(
-				"%s%s%s=VALUES(%s%s%s)",
-				charL, k, charR,
-				charL, k, charR,
-			)
-		}
-		updateStr = fmt.Sprintf("ON DUPLICATE KEY UPDATE %s", updateStr)
-	}
-	if batch <= 0 {
-		batch = defaultBatchNumber
+	if option.InsertOption == insertOptionSave {
+		onDuplicateStr = c.formatOnDuplicate(keys, option)
 	}
 	var (
-		listMapLen  = len(listMap)
+		listLength  = len(list)
 		valueHolder = make([]string, 0)
 	)
-	for i := 0; i < listMapLen; i++ {
+	for i := 0; i < listLength; i++ {
 		values = values[:0]
 		// Note that the map type is unordered,
 		// so it should use slice+key to retrieve the value.
 		for _, k := range keys {
-			if s, ok := listMap[i][k].(Raw); ok {
+			if s, ok := list[i][k].(Raw); ok {
 				values = append(values, gconv.String(s))
 			} else {
 				values = append(values, "?")
-				params = append(params, listMap[i][k])
+				params = append(params, list[i][k])
 			}
 		}
 		valueHolder = append(valueHolder, "("+gstr.Join(values, ",")+")")
 		// Batch package checks: It meets the batch number or it is the last element.
-		if len(valueHolder) == batch || (i == listMapLen-1 && len(valueHolder) > 0) {
+		if len(valueHolder) == option.BatchCount || (i == listLength-1 && len(valueHolder) > 0) {
 			r, err := c.db.DoExec(ctx, link, fmt.Sprintf(
 				"%s INTO %s(%s) VALUES%s %s",
-				operation, table, keysStr,
+				operation, c.QuotePrefixTableName(table), keysStr,
 				gstr.Join(valueHolder, ","),
-				updateStr,
+				onDuplicateStr,
 			), params...)
 			if err != nil {
 				return r, err
@@ -509,6 +427,52 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, data inter
 		}
 	}
 	return batchResult, nil
+}
+
+func (c *Core) formatOnDuplicate(columns []string, option DoInsertOption) string {
+	var (
+		onDuplicateStr string
+	)
+	if option.OnDuplicateStr != "" {
+		onDuplicateStr = option.OnDuplicateStr
+	} else if len(option.OnDuplicateMap) > 0 {
+		for k, v := range option.OnDuplicateMap {
+			if len(onDuplicateStr) > 0 {
+				onDuplicateStr += ","
+			}
+			switch v.(type) {
+			case Raw, *Raw:
+				onDuplicateStr += fmt.Sprintf(
+					"%s=%s",
+					c.QuoteWord(k),
+					v,
+				)
+			default:
+				onDuplicateStr += fmt.Sprintf(
+					"%s=VALUES(%s)",
+					c.QuoteWord(k),
+					c.QuoteWord(gconv.String(v)),
+				)
+			}
+		}
+	} else {
+		for _, column := range columns {
+			// If it's SAVE operation,
+			// do not automatically update the creating time.
+			if c.isSoftCreatedFilledName(column) {
+				continue
+			}
+			if len(onDuplicateStr) > 0 {
+				onDuplicateStr += ","
+			}
+			onDuplicateStr += fmt.Sprintf(
+				"%s=VALUES(%s)",
+				c.QuoteWord(column),
+				c.QuoteWord(column),
+			)
+		}
+	}
+	return fmt.Sprintf("ON DUPLICATE KEY UPDATE %s", onDuplicateStr)
 }
 
 // Update does "UPDATE ... " statement for the table.
@@ -711,8 +675,8 @@ func (c *Core) HasTable(name string) (bool, error) {
 	return false, nil
 }
 
-// isSoftCreatedFiledName checks and returns whether given filed name is an automatic-filled created time.
-func (c *Core) isSoftCreatedFiledName(fieldName string) bool {
+// isSoftCreatedFilledName checks and returns whether given filed name is an automatic-filled created time.
+func (c *Core) isSoftCreatedFilledName(fieldName string) bool {
 	if fieldName == "" {
 		return false
 	}

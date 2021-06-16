@@ -164,12 +164,15 @@ func ConvertDataForTableRecord(value interface{}) map[string]interface{} {
 				// Convert the value to JSON.
 				data[k], _ = json.Marshal(v)
 			}
+
 		case reflect.Struct:
 			switch v.(type) {
 			case time.Time, *time.Time, gtime.Time, *gtime.Time:
 				continue
+
 			case Counter, *Counter:
 				continue
+
 			default:
 				// Use string conversion in default.
 				if s, ok := v.(apiString); ok {
