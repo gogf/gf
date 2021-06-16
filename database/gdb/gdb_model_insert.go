@@ -109,18 +109,42 @@ func (m *Model) Data(data ...interface{}) *Model {
 // OnDuplicate sets the operations when columns conflicts occurs.
 // In MySQL, this is used for "ON DUPLICATE KEY UPDATE" statement.
 // The parameter `onDuplicate` can be type of string/Raw/*Raw/map/slice.
-func (m *Model) OnDuplicate(onDuplicate interface{}) *Model {
+// Example:
+// OnDuplicate("nickname, age")
+// OnDuplicate("nickname", "age")
+// OnDuplicate(g.Map{
+//     "nickname": gdb.Raw("CONCAT('name_', VALUES(`nickname`))"),
+// })
+// OnDuplicate(g.Map{
+//     "nickname": "passport",
+// })
+func (m *Model) OnDuplicate(onDuplicate ...interface{}) *Model {
 	model := m.getModel()
-	model.onDuplicate = onDuplicate
+	if len(onDuplicate) > 1 {
+		model.onDuplicate = onDuplicate
+	} else {
+		model.onDuplicate = onDuplicate[0]
+	}
 	return model
 }
 
 // OnDuplicateEx sets the excluding columns for operations when columns conflicts occurs.
 // In MySQL, this is used for "ON DUPLICATE KEY UPDATE" statement.
-// The parameter `onDuplicateEx` can be type of string/Raw/*Raw/map/slice.
-func (m *Model) OnDuplicateEx(onDuplicateEx interface{}) *Model {
+// The parameter `onDuplicateEx` can be type of string/map/slice.
+// Example:
+// OnDuplicateEx("passport, password")
+// OnDuplicateEx("passport", "password")
+// OnDuplicateEx(g.Map{
+//     "passport": "",
+//     "password": "",
+// })
+func (m *Model) OnDuplicateEx(onDuplicateEx ...interface{}) *Model {
 	model := m.getModel()
-	model.onDuplicateEx = onDuplicateEx
+	if len(onDuplicateEx) > 1 {
+		model.onDuplicateEx = onDuplicateEx
+	} else {
+		model.onDuplicateEx = onDuplicateEx[0]
+	}
 	return model
 }
 
