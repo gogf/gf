@@ -49,6 +49,8 @@ type Model struct {
 	cacheName     string         // Cache name for custom operation.
 	unscoped      bool           // Disables soft deleting features when select/delete operations.
 	safe          bool           // If true, it clones and returns a new model object whenever operation done; or else it changes the attribute of current model.
+	onDuplicate   interface{}    // onDuplicate is used for ON "DUPLICATE KEY UPDATE" statement.
+	onDuplicateEx interface{}    // onDuplicateEx is used for excluding some columns ON "DUPLICATE KEY UPDATE" statement.
 }
 
 // whereHolder is the holder for where condition preparing.

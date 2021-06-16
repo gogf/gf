@@ -21,7 +21,7 @@ type StrSet struct {
 	data map[string]struct{}
 }
 
-// New create and returns a new set, which contains un-repeated items.
+// NewStrSet create and returns a new set, which contains un-repeated items.
 // The parameter <safe> is used to specify whether using set in concurrent-safety,
 // which is false in default.
 func NewStrSet(safe ...bool) *StrSet {

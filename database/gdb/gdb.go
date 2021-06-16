@@ -96,7 +96,7 @@ type DB interface {
 	// ===========================================================================
 
 	DoGetAll(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error)                                           // See Core.DoGetAll.
-	DoInsert(ctx context.Context, link Link, table string, data interface{}, option int, batch int) (result sql.Result, err error)                 // See Core.DoInsert.
+	DoInsert(ctx context.Context, link Link, table string, data List, option DoInsertOption) (result sql.Result, err error)                        // See Core.DoInsert.
 	DoUpdate(ctx context.Context, link Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) // See Core.DoUpdate.
 	DoDelete(ctx context.Context, link Link, table string, condition string, args ...interface{}) (result sql.Result, err error)                   // See Core.DoDelete.
 	DoQuery(ctx context.Context, link Link, sql string, args ...interface{}) (rows *sql.Rows, err error)                                           // See Core.DoQuery.
@@ -212,6 +212,14 @@ type Sql struct {
 	End           int64         // End execution timestamp in milliseconds.
 	Group         string        // Group is the group name of the configuration that the sql is executed from.
 	IsTransaction bool          // IsTransaction marks whether this sql is executed in transaction.
+}
+
+// DoInsertOption is the input struct for function DoInsert.
+type DoInsertOption struct {
+	OnDuplicateStr string
+	OnDuplicateMap map[string]interface{}
+	InsertOption   int // Insert operation.
+	BatchCount     int // Batch count for batch inserting.
 }
 
 // TableField is the struct for table field.

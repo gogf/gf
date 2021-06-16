@@ -3551,3 +3551,148 @@ func Test_Model_Increment_Decrement(t *testing.T) {
 		t.Assert(count, 1)
 	})
 }
+
+func Test_Model_OnDuplicate(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	// string.
+	gtest.C(t, func(t *gtest.T) {
+		data := g.Map{
+			"id":          1,
+			"passport":    "pp1",
+			"password":    "pw1",
+			"nickname":    "n1",
+			"create_time": "2016-06-06",
+		}
+		_, err := db.Model(table).OnDuplicate("passport,password").Data(data).Save()
+		t.AssertNil(err)
+		one, err := db.Model(table).FindOne(1)
+		t.AssertNil(err)
+		t.Assert(one["passport"], data["passport"])
+		t.Assert(one["password"], data["password"])
+		t.Assert(one["nickname"], "name_1")
+	})
+
+	// slice.
+	gtest.C(t, func(t *gtest.T) {
+		data := g.Map{
+			"id":          1,
+			"passport":    "pp1",
+			"password":    "pw1",
+			"nickname":    "n1",
+			"create_time": "2016-06-06",
+		}
+		_, err := db.Model(table).OnDuplicate(g.Slice{"passport", "password"}).Data(data).Save()
+		t.AssertNil(err)
+		one, err := db.Model(table).FindOne(1)
+		t.AssertNil(err)
+		t.Assert(one["passport"], data["passport"])
+		t.Assert(one["password"], data["password"])
+		t.Assert(one["nickname"], "name_1")
+	})
+
+	// map.
+	gtest.C(t, func(t *gtest.T) {
+		data := g.Map{
+			"id":          1,
+			"passport":    "pp1",
+			"password":    "pw1",
+			"nickname":    "n1",
+			"create_time": "2016-06-06",
+		}
+		_, err := db.Model(table).OnDuplicate(g.Map{
+			"passport": "nickname",
+			"password": "nickname",
+		}).Data(data).Save()
+		t.AssertNil(err)
+		one, err := db.Model(table).FindOne(1)
+		t.AssertNil(err)
+		t.Assert(one["passport"], data["nickname"])
+		t.Assert(one["password"], data["nickname"])
+		t.Assert(one["nickname"], "name_1")
+	})
+
+	// map+raw.
+	gtest.C(t, func(t *gtest.T) {
+		data := g.MapStrStr{
+			"id":          "1",
+			"passport":    "pp1",
+			"password":    "pw1",
+			"nickname":    "n1",
+			"create_time": "2016-06-06",
+		}
+		_, err := db.Model(table).OnDuplicate(g.Map{
+			"passport": gdb.Raw("CONCAT(VALUES(`passport`), '1')"),
+			"password": gdb.Raw("CONCAT(VALUES(`password`), '2')"),
+		}).Data(data).Save()
+		t.AssertNil(err)
+		one, err := db.Model(table).FindOne(1)
+		t.AssertNil(err)
+		t.Assert(one["passport"], data["passport"]+"1")
+		t.Assert(one["password"], data["password"]+"2")
+		t.Assert(one["nickname"], "name_1")
+	})
+}
+
+func Test_Model_OnDuplicateEx(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	// string.
+	gtest.C(t, func(t *gtest.T) {
+		data := g.Map{
+			"id":          1,
+			"passport":    "pp1",
+			"password":    "pw1",
+			"nickname":    "n1",
+			"create_time": "2016-06-06",
+		}
+		_, err := db.Model(table).OnDuplicateEx("nickname,create_time").Data(data).Save()
+		t.AssertNil(err)
+		one, err := db.Model(table).FindOne(1)
+		t.AssertNil(err)
+		t.Assert(one["passport"], data["passport"])
+		t.Assert(one["password"], data["password"])
+		t.Assert(one["nickname"], "name_1")
+	})
+
+	// slice.
+	gtest.C(t, func(t *gtest.T) {
+		data := g.Map{
+			"id":          1,
+			"passport":    "pp1",
+			"password":    "pw1",
+			"nickname":    "n1",
+			"create_time": "2016-06-06",
+		}
+		_, err := db.Model(table).OnDuplicateEx(g.Slice{"nickname", "create_time"}).Data(data).Save()
+		t.AssertNil(err)
+		one, err := db.Model(table).FindOne(1)
+		t.AssertNil(err)
+		t.Assert(one["passport"], data["passport"])
+		t.Assert(one["password"], data["password"])
+		t.Assert(one["nickname"], "name_1")
+	})
+
+	// map.
+	gtest.C(t, func(t *gtest.T) {
+		data := g.Map{
+			"id":          1,
+			"passport":    "pp1",
+			"password":    "pw1",
+			"nickname":    "n1",
+			"create_time": "2016-06-06",
+		}
+		_, err := db.Model(table).OnDuplicateEx(g.Map{
+			"nickname":    "nickname",
+			"create_time": "nickname",
+		}).Data(data).Save()
+		t.AssertNil(err)
+		one, err := db.Model(table).FindOne(1)
+		t.AssertNil(err)
+		t.Assert(one["passport"], data["passport"])
+		t.Assert(one["password"], data["password"])
+		t.Assert(one["nickname"], "name_1")
+	})
+}
