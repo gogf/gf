@@ -421,7 +421,13 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 	}
 	// Soft deletion.
 	softDeletingCondition := m.getConditionForSoftDeleting()
-	if !m.unscoped && softDeletingCondition != "" {
+	if m.rawSql != "" && conditionWhere != "" {
+		if gstr.ContainsI(m.rawSql, " WHERE ") {
+			conditionWhere = " AND " + conditionWhere
+		} else {
+			conditionWhere = " WHERE " + conditionWhere
+		}
+	} else if !m.unscoped && softDeletingCondition != "" {
 		if conditionWhere == "" {
 			conditionWhere = fmt.Sprintf(` WHERE %s`, softDeletingCondition)
 		} else {
@@ -432,6 +438,7 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 			conditionWhere = " WHERE " + conditionWhere
 		}
 	}
+
 	// GROUP BY.
 	if m.groupBy != "" {
 		conditionExtra += " GROUP BY " + m.groupBy

@@ -38,6 +38,7 @@ type DB interface {
 	// relational databases but also for NoSQL databases in the future. The name
 	// "Table" is not proper for that purpose any more.
 	// Also see Core.Table.
+	// Deprecated.
 	Table(tableNameOrStruct ...interface{}) *Model
 
 	// Model creates and returns a new ORM model from given schema.
@@ -50,6 +51,9 @@ type DB interface {
 	// 2. Model name with alias: Model("user", "u")
 	// Also see Core.Model.
 	Model(tableNameOrStruct ...interface{}) *Model
+
+	// Raw creates and returns a model based on a raw sql not a table.
+	Raw(rawSql string, args ...interface{}) *Model
 
 	// Schema creates and returns a schema.
 	// Also see Core.Schema.
