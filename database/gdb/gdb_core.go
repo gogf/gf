@@ -254,10 +254,7 @@ func (c *Core) doUnion(unionType int, unions ...*Model) *Model {
 		}
 		composedArgs = append(composedArgs, holderArgs...)
 	}
-	model := c.db.Model()
-	model.rawSql = composedSqlStr
-	model.extraArgs = composedArgs
-	return model
+	return c.db.Raw(composedSqlStr, composedArgs...)
 }
 
 // PingMaster pings the master node to check authentication or keeps the connection alive.

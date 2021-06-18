@@ -21,7 +21,7 @@ import (
 type Model struct {
 	db            DB             // Underlying DB interface.
 	tx            *TX            // Underlying TX interface.
-	rawSql        string         // rawSql is the raw SQL string which marks  a raw SQL based Model not a table based Model.
+	rawSql        string         // rawSql is the raw SQL string which marks a raw SQL based Model not a table based Model.
 	schema        string         // Custom database schema.
 	linkType      int            // Mark for operation on master or slave.
 	tablesInit    string         // Table names when model initialization.
@@ -80,11 +80,14 @@ func (c *Core) Table(tableNameQueryOrStruct ...interface{}) *Model {
 // Model creates and returns a new ORM model from given schema.
 // The parameter `tableNameQueryOrStruct` can be more than one table names, and also alias name, like:
 // 1. Model names:
-//    Model("user")
-//    Model("user u")
-//    Model("user, user_detail")
-//    Model("user u, user_detail ud")
-// 2. Model name with alias: Model("user", "u")
+//    db.Model("user")
+//    db.Model("user u")
+//    db.Model("user, user_detail")
+//    db.Model("user u, user_detail ud")
+// 2. Model name with alias:
+//    db.Model("user", "u")
+// 3. Model name with sub-query:
+//    db.Model("? AS a, ? AS b", subQuery1, subQuery2)
 func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 	var (
 		tableStr   string
@@ -130,6 +133,16 @@ func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 		filter:     true,
 		extraArgs:  extraArgs,
 	}
+}
+
+// Raw creates and returns a model based on a raw sql not a table.
+// Example:
+//     db.Raw("SELECT * FROM `user` WHERE `name` = ?", "john").Scan(&result)
+func (c *Core) Raw(rawSql string, args ...interface{}) *Model {
+	model := c.Model()
+	model.rawSql = rawSql
+	model.extraArgs = args
+	return model
 }
 
 // With creates and returns an ORM model based on meta data of given object.
