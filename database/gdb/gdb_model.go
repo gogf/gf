@@ -90,10 +90,9 @@ func (c *Core) Table(tableNameQueryOrStruct ...interface{}) *Model {
 //    db.Model("? AS a, ? AS b", subQuery1, subQuery2)
 func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 	var (
-		tableStr   string
-		tableName  string
-		extraArgs  []interface{}
-		tableNames = make([]string, len(tableNameQueryOrStruct))
+		tableStr  string
+		tableName string
+		extraArgs []interface{}
 	)
 	// Model creation with sub-query.
 	if len(tableNameQueryOrStruct) > 1 {
@@ -106,6 +105,7 @@ func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 	}
 	// Normal model creation.
 	if tableStr == "" {
+		tableNames := make([]string, len(tableNameQueryOrStruct))
 		for k, v := range tableNameQueryOrStruct {
 			if s, ok := v.(string); ok {
 				tableNames[k] = s
@@ -113,7 +113,6 @@ func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 				tableNames[k] = tableName
 			}
 		}
-
 		if len(tableNames) > 1 {
 			tableStr = fmt.Sprintf(
 				`%s AS %s`, c.QuotePrefixTableName(tableNames[0]), c.QuoteWord(tableNames[1]),
@@ -145,15 +144,24 @@ func (c *Core) Raw(rawSql string, args ...interface{}) *Model {
 	return model
 }
 
+// Raw creates and returns a model based on a raw sql not a table.
+// Example:
+//     db.Raw("SELECT * FROM `user` WHERE `name` = ?", "john").Scan(&result)
+// See Core.Raw.
+func (m *Model) Raw(rawSql string, args ...interface{}) *Model {
+	model := m.db.Raw(rawSql, args...)
+	model.db = m.db
+	model.tx = m.tx
+	return model
+}
+
+func (tx *TX) Raw(rawSql string, args ...interface{}) *Model {
+	return tx.Model().Raw(rawSql, args...)
+}
+
 // With creates and returns an ORM model based on meta data of given object.
 func (c *Core) With(objects ...interface{}) *Model {
 	return c.db.Model().With(objects...)
-}
-
-// Table is alias of tx.Model.
-// Deprecated, use Model instead.
-func (tx *TX) Table(tableNameQueryOrStruct ...interface{}) *Model {
-	return tx.Model(tableNameQueryOrStruct...)
 }
 
 // Model acts like Core.Model except it operates on transaction.
