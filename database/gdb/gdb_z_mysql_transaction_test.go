@@ -349,7 +349,7 @@ func Test_TX_Update(t *testing.T) {
 		if err := tx.Commit(); err != nil {
 			gtest.Error(err)
 		}
-		_, err = tx.Table(table).Fields("create_time").Where("id", 3).Value()
+		_, err = tx.Model(table).Fields("create_time").Where("id", 3).Value()
 		t.AssertNE(err, nil)
 
 		if value, err := db.Model(table).Fields("create_time").Where("id", 3).Value(); err != nil {
@@ -697,7 +697,7 @@ func Test_TX_Delete(t *testing.T) {
 		if _, err := tx.Delete(table, 1); err != nil {
 			gtest.Error(err)
 		}
-		if n, err := tx.Table(table).Count(); err != nil {
+		if n, err := tx.Model(table).Count(); err != nil {
 			gtest.Error(err)
 		} else {
 			t.Assert(n, 0)
