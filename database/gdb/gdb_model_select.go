@@ -515,6 +515,11 @@ func (m *Model) getFormattedSqlAndArgs(queryType int, limit1 bool) (sqlWithHolde
 			// DISTINCT t.user_id uid
 			countFields = fmt.Sprintf(`COUNT(%s%s)`, m.distinct, m.fields)
 		}
+		// Raw SQL Model.
+		if m.rawSql != "" {
+			sqlWithHolder = fmt.Sprintf("SELECT %s FROM (%s) AS T", countFields, m.rawSql)
+			return sqlWithHolder, nil
+		}
 		conditionWhere, conditionExtra, conditionArgs := m.formatCondition(false, true)
 		sqlWithHolder = fmt.Sprintf("SELECT %s FROM %s%s", countFields, m.tables, conditionWhere+conditionExtra)
 		if len(m.groupBy) > 0 {

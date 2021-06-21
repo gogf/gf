@@ -3714,4 +3714,16 @@ func Test_Model_Raw(t *testing.T) {
 		t.Assert(all[0]["id"], 7)
 		t.Assert(all[1]["id"], 5)
 	})
+
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.
+			Raw(fmt.Sprintf("select * from %s where id in (?)", table), g.Slice{1, 5, 7, 8, 9, 10}).
+			WhereLT("id", 8).
+			WhereIn("id", g.Slice{1, 2, 3, 4, 5, 6, 7}).
+			OrderDesc("id").
+			Limit(2).
+			Count()
+		t.AssertNil(err)
+		t.Assert(count, 6)
+	})
 }
