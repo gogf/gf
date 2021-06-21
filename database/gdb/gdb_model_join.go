@@ -56,9 +56,9 @@ func (m *Model) InnerJoin(table ...string) *Model {
 // doJoin does "LEFT/RIGHT/INNER JOIN ... ON ..." statement on the model.
 // The parameter `table` can be joined table and its joined condition,
 // and also with its alias name, like:
-// Table("user").InnerJoin("user_detail", "user_detail.uid=user.uid")
-// Table("user", "u").InnerJoin("user_detail", "ud", "ud.uid=u.uid")
-// Table("user", "u").InnerJoin("SELECT xxx FROM xxx AS a", "a.uid=u.uid")
+//     Model("user").InnerJoin("user_detail", "user_detail.uid=user.uid")
+//     Model("user", "u").InnerJoin("user_detail", "ud", "ud.uid=u.uid")
+//     Model("user", "u").InnerJoin("SELECT xxx FROM xxx AS a", "a.uid=u.uid")
 // Related issues:
 // https://github.com/gogf/gf/issues/1024
 func (m *Model) doJoin(operator string, table ...string) *Model {
