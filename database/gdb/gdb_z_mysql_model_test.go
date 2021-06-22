@@ -899,7 +899,7 @@ func Test_Model_Struct(t *testing.T) {
 			CreateTime gtime.Time
 		}
 		user := new(User)
-		err := db.Model(table).Where("id=1").Struct(user)
+		err := db.Model(table).Where("id=1").Scan(user)
 		t.AssertNil(err)
 		t.Assert(user.NickName, "name_1")
 		t.Assert(user.CreateTime.String(), "2018-10-24 10:00:00")
@@ -913,7 +913,7 @@ func Test_Model_Struct(t *testing.T) {
 			CreateTime *gtime.Time
 		}
 		user := new(User)
-		err := db.Model(table).Where("id=1").Struct(user)
+		err := db.Model(table).Where("id=1").Scan(user)
 		t.AssertNil(err)
 		t.Assert(user.NickName, "name_1")
 		t.Assert(user.CreateTime.String(), "2018-10-24 10:00:00")
@@ -928,7 +928,7 @@ func Test_Model_Struct(t *testing.T) {
 			CreateTime *gtime.Time
 		}
 		user := (*User)(nil)
-		err := db.Model(table).Where("id=1").Struct(&user)
+		err := db.Model(table).Where("id=1").Scan(&user)
 		t.AssertNil(err)
 		t.Assert(user.NickName, "name_1")
 		t.Assert(user.CreateTime.String(), "2018-10-24 10:00:00")
@@ -960,7 +960,7 @@ func Test_Model_Struct(t *testing.T) {
 			CreateTime *gtime.Time
 		}
 		user := new(User)
-		err := db.Model(table).Where("id=-1").Struct(user)
+		err := db.Model(table).Where("id=-1").Scan(user)
 		t.Assert(err, sql.ErrNoRows)
 	})
 	gtest.C(t, func(t *gtest.T) {
@@ -972,7 +972,7 @@ func Test_Model_Struct(t *testing.T) {
 			CreateTime *gtime.Time
 		}
 		var user *User
-		err := db.Model(table).Where("id=-1").Struct(&user)
+		err := db.Model(table).Where("id=-1").Scan(&user)
 		t.AssertNil(err)
 	})
 }
@@ -992,7 +992,7 @@ func Test_Model_Struct_CustomType(t *testing.T) {
 			CreateTime gtime.Time
 		}
 		user := new(User)
-		err := db.Model(table).Where("id=1").Struct(user)
+		err := db.Model(table).Where("id=1").Scan(user)
 		t.AssertNil(err)
 		t.Assert(user.NickName, "name_1")
 		t.Assert(user.CreateTime.String(), "2018-10-24 10:00:00")
@@ -1012,7 +1012,7 @@ func Test_Model_Structs(t *testing.T) {
 			CreateTime gtime.Time
 		}
 		var users []User
-		err := db.Model(table).Order("id asc").Structs(&users)
+		err := db.Model(table).Order("id asc").Scan(&users)
 		if err != nil {
 			gtest.Error(err)
 		}
@@ -1035,7 +1035,7 @@ func Test_Model_Structs(t *testing.T) {
 			CreateTime *gtime.Time
 		}
 		var users []*User
-		err := db.Model(table).Order("id asc").Structs(&users)
+		err := db.Model(table).Order("id asc").Scan(&users)
 		if err != nil {
 			gtest.Error(err)
 		}
@@ -1081,38 +1081,40 @@ func Test_Model_Structs(t *testing.T) {
 			CreateTime *gtime.Time
 		}
 		var users []*User
-		err := db.Model(table).Where("id<0").Structs(&users)
+		err := db.Model(table).Where("id<0").Scan(&users)
 		t.AssertNil(err)
 	})
 }
 
-func Test_Model_StructsWithJsonTag(t *testing.T) {
-	table := createInitTable()
-	defer dropTable(table)
-
-	gtest.C(t, func(t *gtest.T) {
-		type User struct {
-			Uid      int `json:"id"`
-			Passport string
-			Password string
-			Name     string     `json:"nick_name"`
-			Time     gtime.Time `json:"create_time"`
-		}
-		var users []User
-		err := db.Model(table).Order("id asc").Structs(&users)
-		if err != nil {
-			gtest.Error(err)
-		}
-		t.Assert(len(users), TableSize)
-		t.Assert(users[0].Uid, 1)
-		t.Assert(users[1].Uid, 2)
-		t.Assert(users[2].Uid, 3)
-		t.Assert(users[0].Name, "name_1")
-		t.Assert(users[1].Name, "name_2")
-		t.Assert(users[2].Name, "name_3")
-		t.Assert(users[0].Time.String(), "2018-10-24 10:00:00")
-	})
-}
+// JSON tag is only used for JSON Marshal/Unmarshal, DO NOT use it in multiple purposes!
+//func Test_Model_StructsWithJsonTag(t *testing.T) {
+//	table := createInitTable()
+//	defer dropTable(table)
+//
+//	db.SetDebug(true)
+//	gtest.C(t, func(t *gtest.T) {
+//		type User struct {
+//			Uid      int `json:"id"`
+//			Passport string
+//			Password string
+//			Name     string     `json:"nick_name"`
+//			Time     gtime.Time `json:"create_time"`
+//		}
+//		var users []User
+//		err := db.Model(table).Order("id asc").Scan(&users)
+//		if err != nil {
+//			gtest.Error(err)
+//		}
+//		t.Assert(len(users), TableSize)
+//		t.Assert(users[0].Uid, 1)
+//		t.Assert(users[1].Uid, 2)
+//		t.Assert(users[2].Uid, 3)
+//		t.Assert(users[0].Name, "name_1")
+//		t.Assert(users[1].Name, "name_2")
+//		t.Assert(users[2].Name, "name_3")
+//		t.Assert(users[0].Time.String(), "2018-10-24 10:00:00")
+//	})
+//}
 
 func Test_Model_Scan(t *testing.T) {
 	table := createInitTable()
@@ -3098,7 +3100,7 @@ func Test_TimeZoneInsert(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		_, _ = db.Model(tableName).Unscoped().Insert(u)
 		userEntity := &User{}
-		err := db.Model(tableName).Where("id", 1).Unscoped().Struct(&userEntity)
+		err := db.Model(tableName).Where("id", 1).Unscoped().Scan(&userEntity)
 		t.AssertNil(err)
 		t.Assert(userEntity.CreatedAt.String(), "2020-11-22 04:23:45")
 		t.Assert(userEntity.UpdatedAt.String(), "2020-11-22 05:23:45")
@@ -3129,7 +3131,7 @@ func Test_Model_Fields_Map_Struct(t *testing.T) {
 			XXX_TYPE int
 		}
 		var a = A{}
-		err := db.Model(table).Fields(a).Where("id", 1).Struct(&a)
+		err := db.Model(table).Fields(a).Where("id", 1).Scan(&a)
 		t.AssertNil(err)
 		t.Assert(a.ID, 1)
 		t.Assert(a.PASSPORT, "user_1")
@@ -3143,7 +3145,7 @@ func Test_Model_Fields_Map_Struct(t *testing.T) {
 			XXX_TYPE int
 		}
 		var a *A
-		err := db.Model(table).Fields(a).Where("id", 1).Struct(&a)
+		err := db.Model(table).Fields(a).Where("id", 1).Scan(&a)
 		t.AssertNil(err)
 		t.Assert(a.ID, 1)
 		t.Assert(a.PASSPORT, "user_1")
@@ -3157,7 +3159,7 @@ func Test_Model_Fields_Map_Struct(t *testing.T) {
 			XXX_TYPE int
 		}
 		var a *A
-		err := db.Model(table).Fields(&a).Where("id", 1).Struct(&a)
+		err := db.Model(table).Fields(&a).Where("id", 1).Scan(&a)
 		t.AssertNil(err)
 		t.Assert(a.ID, 1)
 		t.Assert(a.PASSPORT, "user_1")
