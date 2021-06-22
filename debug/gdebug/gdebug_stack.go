@@ -80,14 +80,17 @@ func StackWithFilters(filters []string, skip ...int) string {
 			if filtered {
 				continue
 			}
-			if strings.Contains(file, stackFilterKey) {
-				continue
-			}
+
 			if !utils.IsDebugEnabled() {
 				if strings.Contains(file, utils.StackFilterKeyForGoFrame) {
 					continue
 				}
+			} else {
+				if strings.Contains(file, stackFilterKey) {
+					continue
+				}
 			}
+
 			if fn := runtime.FuncForPC(pc); fn == nil {
 				name = "unknown"
 			} else {

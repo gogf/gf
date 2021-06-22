@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	debugKey                 = "gf.debug"             // Debug key for checking if in debug mode.
-	StackFilterKeyForGoFrame = "/github.com/gogf/gf/" // Stack filtering key for all GoFrame module paths.
+	debugKey                 = "gf.debug"            // Debug key for checking if in debug mode.
+	StackFilterKeyForGoFrame = "github.com/gogf/gf/" // Stack filtering key for all GoFrame module paths.
 )
 
 var (
