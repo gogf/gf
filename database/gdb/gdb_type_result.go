@@ -153,7 +153,7 @@ func (r Result) MapKeyUint(key string) map[uint]Map {
 	return m
 }
 
-// RecordKeyInt converts `r` to a map[int]Record of which key is specified by `key`.
+// RecordKeyStr converts `r` to a map[string]Record of which key is specified by `key`.
 func (r Result) RecordKeyStr(key string) map[string]Record {
 	m := make(map[string]Record)
 	for _, item := range r {
