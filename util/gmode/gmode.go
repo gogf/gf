@@ -25,6 +25,7 @@ const (
 )
 
 var (
+	// Note that `currentMode` is not concurrent safe.
 	currentMode = NOT_SET
 )
 

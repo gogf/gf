@@ -8,6 +8,7 @@ package gdebug
 
 import (
 	"fmt"
+	"github.com/gogf/gf/internal/utils"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -53,11 +54,13 @@ func Caller(skip ...int) (function string, path string, line int) {
 //
 // The parameter <filter> is used to filter the path of the caller.
 func CallerWithFilter(filter string, skip ...int) (function string, path string, line int) {
-	number := 0
+	var (
+		number = 0
+		ok     = true
+	)
 	if len(skip) > 0 {
 		number = skip[0]
 	}
-	ok := true
 	pc, file, line, start := callerFromIndex([]string{filter})
 	if start != -1 {
 		for i := start + number; i < maxCallerDepth; i++ {
@@ -65,12 +68,6 @@ func CallerWithFilter(filter string, skip ...int) (function string, path string,
 				pc, file, line, ok = runtime.Caller(i)
 			}
 			if ok {
-				if filter != "" && strings.Contains(file, filter) {
-					continue
-				}
-				if strings.Contains(file, stackFilterKey) {
-					continue
-				}
 				function := ""
 				if fn := runtime.FuncForPC(pc); fn == nil {
 					function = "unknown"
@@ -104,8 +101,14 @@ func callerFromIndex(filters []string) (pc uintptr, file string, line int, index
 			if filtered {
 				continue
 			}
-			if strings.Contains(file, stackFilterKey) {
-				continue
+			if !utils.IsDebugEnabled() {
+				if strings.Contains(file, utils.StackFilterKeyForGoFrame) {
+					continue
+				}
+			} else {
+				if strings.Contains(file, stackFilterKey) {
+					continue
+				}
 			}
 			if index > 0 {
 				index--
