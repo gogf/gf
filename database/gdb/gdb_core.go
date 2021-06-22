@@ -605,7 +605,7 @@ func (c *Core) convertRowsToResult(rows *sql.Rows) (Result, error) {
 	}
 	var (
 		values   = make([]interface{}, len(columnNames))
-		records  = make(Result, 0)
+		result   = make(Result, 0)
 		scanArgs = make([]interface{}, len(values))
 	)
 	for i := range values {
@@ -613,22 +613,22 @@ func (c *Core) convertRowsToResult(rows *sql.Rows) (Result, error) {
 	}
 	for {
 		if err := rows.Scan(scanArgs...); err != nil {
-			return records, err
+			return result, err
 		}
-		row := make(Record)
+		record := Record{}
 		for i, value := range values {
 			if value == nil {
-				row[columnNames[i]] = gvar.New(nil)
+				record[columnNames[i]] = gvar.New(nil)
 			} else {
-				row[columnNames[i]] = gvar.New(c.convertFieldValueToLocalValue(value, columnTypes[i]))
+				record[columnNames[i]] = gvar.New(c.convertFieldValueToLocalValue(value, columnTypes[i]))
 			}
 		}
-		records = append(records, row)
+		result = append(result, record)
 		if !rows.Next() {
 			break
 		}
 	}
-	return records, nil
+	return result, nil
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
