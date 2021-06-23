@@ -277,6 +277,9 @@ func (m *Model) Order(orderBy ...string) *Model {
 		return m
 	}
 	model := m.getModel()
+	if model.orderBy != "" {
+		model.orderBy += ","
+	}
 	model.orderBy = m.db.GetCore().QuoteString(strings.Join(orderBy, " "))
 	return model
 }
@@ -287,6 +290,9 @@ func (m *Model) OrderAsc(column string) *Model {
 		return m
 	}
 	model := m.getModel()
+	if model.orderBy != "" {
+		model.orderBy += ","
+	}
 	model.orderBy = m.db.GetCore().QuoteWord(column) + " ASC"
 	return model
 }
@@ -297,6 +303,9 @@ func (m *Model) OrderDesc(column string) *Model {
 		return m
 	}
 	model := m.getModel()
+	if model.orderBy != "" {
+		model.orderBy += ","
+	}
 	model.orderBy = m.db.GetCore().QuoteWord(column) + " DESC"
 	return model
 }
