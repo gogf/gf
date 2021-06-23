@@ -99,7 +99,7 @@ func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 		conditionStr := gconv.String(tableNameQueryOrStruct[0])
 		if gstr.Contains(conditionStr, "?") {
 			tableStr, extraArgs = formatWhere(
-				c.db, conditionStr, tableNameQueryOrStruct[1:], false,
+				c.db, conditionStr, tableNameQueryOrStruct[1:], false, "", "",
 			)
 		}
 	}
