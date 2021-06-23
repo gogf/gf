@@ -448,7 +448,7 @@ func formatSql(sql string, args []interface{}) (newSql string, newArgs []interfa
 }
 
 // formatWhere formats where statement and its arguments for `Where` and `Having` statements.
-func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool) (newWhere string, newArgs []interface{}) {
+func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool, schema, table string) (newWhere string, newArgs []interface{}) {
 	var (
 		buffer = bytes.NewBuffer(nil)
 		rv     = reflect.ValueOf(where)
@@ -486,7 +486,12 @@ func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool) (
 			})
 			break
 		}
-		for key, value := range DataToMapDeep(where) {
+		// Automatically mapping and filtering the struct attribute.
+		data := DataToMapDeep(where)
+		if table != "" {
+			data, _ = db.GetCore().mappingAndFilterData(schema, table, data, true)
+		}
+		for key, value := range data {
 			if omitEmpty && empty.IsEmpty(value) {
 				continue
 			}

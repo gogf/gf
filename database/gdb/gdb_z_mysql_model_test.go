@@ -1471,11 +1471,11 @@ func Test_Model_Where(t *testing.T) {
 		t.Assert(len(result), 3)
 		t.Assert(result[0]["id"].Int(), 1)
 	})
-	// struct
+	// struct, automatic mapping and filtering.
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
-			Id       int    `json:"id"`
-			Nickname string `gconv:"nickname"`
+			Id       int
+			Nickname string
 		}
 		result, err := db.Model(table).Where(User{3, "name_3"}).One()
 		t.AssertNil(err)
