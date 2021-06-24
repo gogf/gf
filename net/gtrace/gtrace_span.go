@@ -16,7 +16,7 @@ type Span struct {
 }
 
 // NewSpan creates a span using default tracer.
-func NewSpan(ctx context.Context, spanName string, opts ...trace.SpanOption) (context.Context, *Span) {
+func NewSpan(ctx context.Context, spanName string, opts ...trace.SpanStartOption) (context.Context, *Span) {
 	ctx, span := NewTracer().Start(ctx, spanName, opts...)
 	return ctx, &Span{
 		Span: span,
