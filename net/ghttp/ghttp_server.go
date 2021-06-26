@@ -195,7 +195,7 @@ func (s *Server) Start() error {
 	if gproc.IsChild() {
 		gtimer.SetTimeout(time.Duration(s.config.GracefulTimeout)*time.Second, func() {
 			if err := gproc.Send(gproc.PPid(), []byte("exit"), adminGProcCommGroup); err != nil {
-				//glog.Error("server error in process communication:", err)
+				intlog.Error("server error in process communication:", err)
 			}
 		})
 	}
