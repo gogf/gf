@@ -41,7 +41,7 @@ type Config struct {
 	RotateBackupLimit    int            `json:"rotateBackupLimit"`    // Max backup for rotated files, default is 0, means no backups.
 	RotateBackupExpire   time.Duration  `json:"rotateBackupExpire"`   // Max expire for rotated files, which is 0 in default, means no expiration.
 	RotateBackupCompress int            `json:"rotateBackupCompress"` // Compress level for rotated files using gzip algorithm. It's 0 in default, means no compression.
-	RotateCheckInterval  time.Duration  `json:"rotateCheckInterval"`  // Asynchronizely checks the backups and expiration at intervals. It's 1 hour in default.
+	RotateCheckInterval  time.Duration  `json:"rotateCheckInterval"`  // Asynchronous checks the backups and expiration at intervals. It's 1 hour in default.
 }
 
 // DefaultConfig returns the default configuration for logger.
@@ -104,8 +104,7 @@ func (l *Logger) SetConfigWithMap(m map[string]interface{}) error {
 			return errors.New(fmt.Sprintf(`invalid rotate size: %v`, rotateSizeValue))
 		}
 	}
-	err := gconv.Struct(m, &l.config)
-	if err != nil {
+	if err := gconv.Struct(m, &l.config); err != nil {
 		return err
 	}
 	return l.SetConfig(l.config)
