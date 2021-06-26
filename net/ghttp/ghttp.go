@@ -19,11 +19,11 @@ import (
 )
 
 type (
-	// Server wraps the http.Server and provides more feature.
+	// Server wraps the http.Server and provides more rich features.
 	Server struct {
 		name             string                           // Unique name for instance management.
 		config           ServerConfig                     // Configuration.
-		plugins          []Plugin                         // Plugin array.
+		plugins          []Plugin                         // Plugin array to extends server functionality.
 		servers          []*gracefulServer                // Underlying http.Server array.
 		serverCount      *gtype.Int                       // Underlying http.Server count.
 		closeChan        chan struct{}                    // Used for underlying server closing event notification.
@@ -44,7 +44,7 @@ type (
 		Priority int      // Just for reference.
 	}
 
-	// Router item just for route dumps.
+	// RouterItem is just for route dumps.
 	RouterItem struct {
 		Server           string       // Server name.
 		Address          string       // Listening address.
@@ -98,7 +98,7 @@ type (
 		Stack() string
 	}
 
-	// Request handler function.
+	// HandlerFunc is request handler function.
 	HandlerFunc = func(r *Request)
 
 	// Listening file descriptor mapping.
@@ -107,10 +107,6 @@ type (
 )
 
 const (
-	HOOK_BEFORE_SERVE     = "HOOK_BEFORE_SERVE"  // Deprecated, use HookBeforeServe instead.
-	HOOK_AFTER_SERVE      = "HOOK_AFTER_SERVE"   // Deprecated, use HookAfterServe instead.
-	HOOK_BEFORE_OUTPUT    = "HOOK_BEFORE_OUTPUT" // Deprecated, use HookBeforeOutput instead.
-	HOOK_AFTER_OUTPUT     = "HOOK_AFTER_OUTPUT"  // Deprecated, use HookAfterOutput instead.
 	HookBeforeServe       = "HOOK_BEFORE_SERVE"
 	HookAfterServe        = "HOOK_AFTER_SERVE"
 	HookBeforeOutput      = "HOOK_BEFORE_OUTPUT"
