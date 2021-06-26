@@ -9,7 +9,6 @@ package gtrace
 
 import (
 	"context"
-	"fmt"
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/net/gipv4"
@@ -23,15 +22,17 @@ import (
 )
 
 const (
-	tracingCommonKeyIpIntranet = `ip.intranet`
-	tracingCommonKeyIpHostname = `hostname`
-	cmdEnvKey                  = "gf.gtrace" // Configuration key for command argument or environment.
+	tracingCommonKeyIpIntranet        = `ip.intranet`
+	tracingCommonKeyIpHostname        = `hostname`
+	commandEnvKeyForMaxContentLogSize = "gf.gtrace.maxcontentlogsize"
+	commandEnvKeyForTracingInternal   = "gf.gtrace.tracinginternal"
 )
 
 var (
 	intranetIps, _           = gipv4.GetIntranetIpArray()
 	intranetIpStr            = strings.Join(intranetIps, ",")
 	hostname, _              = os.Hostname()
+	tracingInternal          = true       // tracingInternal enables tracing for internal type spans.
 	tracingMaxContentLogSize = 256 * 1024 // Max log size for request and response body, especially for HTTP/RPC request.
 	// defaultTextMapPropagator is the default propagator for context propagation between peers.
 	defaultTextMapPropagator = propagation.NewCompositeTextMapPropagator(
@@ -41,10 +42,16 @@ var (
 )
 
 func init() {
-	if maxContentLogSize := gcmd.GetOptWithEnv(fmt.Sprintf("%s.maxcontentlogsize", cmdEnvKey)).Int(); maxContentLogSize > 0 {
+	tracingInternal = gcmd.GetOptWithEnv(commandEnvKeyForTracingInternal, true).Bool()
+	if maxContentLogSize := gcmd.GetOptWithEnv(commandEnvKeyForMaxContentLogSize).Int(); maxContentLogSize > 0 {
 		tracingMaxContentLogSize = maxContentLogSize
 	}
 	CheckSetDefaultTextMapPropagator()
+}
+
+// IsTracingInternal returns whether tracing spans of internal components.
+func IsTracingInternal() bool {
+	return tracingInternal
 }
 
 // MaxContentLogSize returns the max log size for request and response body, especially for HTTP/RPC request.

@@ -33,7 +33,7 @@ func New(file ...string) *Config {
 		name = file[0]
 	} else {
 		// Custom default configuration file name from command line or environment.
-		if customFile := gcmd.GetOptWithEnv(fmt.Sprintf("%s.file", cmdEnvKey)).String(); customFile != "" {
+		if customFile := gcmd.GetOptWithEnv(commandEnvKeyForFile).String(); customFile != "" {
 			name = customFile
 		}
 	}
@@ -43,7 +43,7 @@ func New(file ...string) *Config {
 		jsonMap:     gmap.NewStrAnyMap(true),
 	}
 	// Customized dir path from env/cmd.
-	if customPath := gcmd.GetOptWithEnv(fmt.Sprintf("%s.path", cmdEnvKey)).String(); customPath != "" {
+	if customPath := gcmd.GetOptWithEnv(commandEnvKeyForPath).String(); customPath != "" {
 		if gfile.Exists(customPath) {
 			_ = c.SetPath(customPath)
 		} else {
