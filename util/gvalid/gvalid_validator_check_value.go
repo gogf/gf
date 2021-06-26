@@ -7,7 +7,7 @@
 package gvalid
 
 import (
-	"github.com/gogf/gf/errors/gerror"
+	"errors"
 	"strconv"
 	"strings"
 	"time"
@@ -175,7 +175,7 @@ func (v *Validator) doCheckBuildInRules(
 		"max-length",
 		"size":
 		if msg := v.checkLength(valueStr, ruleKey, rulePattern, customMsgMap); msg != "" {
-			return match, gerror.New(msg)
+			return match, errors.New(msg)
 		} else {
 			match = true
 		}
@@ -186,7 +186,7 @@ func (v *Validator) doCheckBuildInRules(
 		"max",
 		"between":
 		if msg := v.checkRange(valueStr, ruleKey, rulePattern, customMsgMap); msg != "" {
-			return match, gerror.New(msg)
+			return match, errors.New(msg)
 		} else {
 			match = true
 		}
@@ -222,7 +222,7 @@ func (v *Validator) doCheckBuildInRules(
 			var msg string
 			msg = v.getErrorMessageByRule(ruleKey, customMsgMap)
 			msg = strings.Replace(msg, ":format", rulePattern, -1)
-			return match, gerror.New(msg)
+			return match, errors.New(msg)
 		}
 
 	// Values of two fields should be equal as string.
@@ -237,7 +237,7 @@ func (v *Validator) doCheckBuildInRules(
 			var msg string
 			msg = v.getErrorMessageByRule(ruleKey, customMsgMap)
 			msg = strings.Replace(msg, ":field", rulePattern, -1)
-			return match, gerror.New(msg)
+			return match, errors.New(msg)
 		}
 
 	// Values of two fields should not be equal as string.
@@ -253,7 +253,7 @@ func (v *Validator) doCheckBuildInRules(
 			var msg string
 			msg = v.getErrorMessageByRule(ruleKey, customMsgMap)
 			msg = strings.Replace(msg, ":field", rulePattern, -1)
-			return match, gerror.New(msg)
+			return match, errors.New(msg)
 		}
 
 	// Field value should be in range of.
@@ -436,7 +436,7 @@ func (v *Validator) doCheckBuildInRules(
 		match = gregex.IsMatchString(`^([0-9A-Fa-f]{2}[\-:]){5}[0-9A-Fa-f]{2}$`, valueStr)
 
 	default:
-		return match, gerror.New("Invalid rule name: " + ruleKey)
+		return match, errors.New("Invalid rule name: " + ruleKey)
 	}
 	return match, nil
 }
