@@ -63,14 +63,6 @@ func (c *Core) GetChars() (charLeft string, charRight string) {
 	return "", ""
 }
 
-// DoCommit is a hook function, which deals with the sql string before it's committed to underlying driver.
-// The parameter `link` specifies the current database connection operation object. You can modify the sql
-// string `sql` and its arguments `args` as you wish before they're committed to driver.
-// Also see Core.DoCommit.
-func (c *Core) DoCommit(sql string) string {
-	return sql
-}
-
 // Tables retrieves and returns the tables of current schema.
 // It's mainly used in cli tool chain for automatically generating the models.
 //

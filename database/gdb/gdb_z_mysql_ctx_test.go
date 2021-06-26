@@ -62,3 +62,23 @@ func Test_Ctx_Model(t *testing.T) {
 		db.Model(table).All()
 	})
 }
+
+func Test_Ctx_Strict(t *testing.T) {
+	table := createInitTableWithDb(dbCtxStrict)
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		_, err := dbCtxStrict.Query("select 1")
+		t.AssertNE(err, nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		r, err := dbCtxStrict.Model(table).All()
+		t.AssertNE(err, nil)
+		t.Assert(len(r), 0)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		r, err := dbCtxStrict.Model(table).Ctx(context.TODO()).All()
+		t.AssertNil(err)
+		t.Assert(len(r), TableSize)
+	})
+}
