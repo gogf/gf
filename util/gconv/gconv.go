@@ -53,6 +53,7 @@ type doConvertInput struct {
 	Extra      []interface{} // Extra values for implementing the converting.
 }
 
+// doConvert does common used types converting.
 func doConvert(input doConvertInput) interface{} {
 	switch input.ToTypeName {
 	case "int":
@@ -191,6 +192,8 @@ func doConvert(input doConvertInput) interface{} {
 		return Int64s(input.FromValue)
 	case "[]uint":
 		return Uints(input.FromValue)
+	case "[]uint8":
+		return Bytes(input.FromValue)
 	case "[]uint32":
 		return Uint32s(input.FromValue)
 	case "[]uint64":
@@ -276,7 +279,7 @@ func doConvert(input doConvertInput) interface{} {
 			}
 			input.ToTypeName = referReflectValue.Kind().String()
 			input.ReferValue = nil
-			return doConvert(input)
+			return reflect.ValueOf(doConvert(input)).Convert(referReflectValue.Type()).Interface()
 		}
 		return input.FromValue
 	}
