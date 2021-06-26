@@ -269,6 +269,7 @@ const (
 	ctxTimeoutTypeExec      = iota
 	ctxTimeoutTypeQuery
 	ctxTimeoutTypePrepare
+	commandEnvKeyForDryRun = "gf.gdb.dryrun"
 )
 
 var (
@@ -313,7 +314,7 @@ var (
 
 func init() {
 	// allDryRun is initialized from environment or command options.
-	allDryRun = gcmd.GetOptWithEnv("gf.gdb.dryrun", false).Bool()
+	allDryRun = gcmd.GetOptWithEnv(commandEnvKeyForDryRun, false).Bool()
 }
 
 // Register registers custom database driver to gdb.

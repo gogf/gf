@@ -36,6 +36,10 @@ type (
 	FuncMap = map[string]interface{} // FuncMap is type for custom template functions.
 )
 
+const (
+	commandEnvKeyForPath = "gf.gview.path"
+)
+
 var (
 	// Default view object.
 	defaultViewObj *View
@@ -72,7 +76,7 @@ func New(path ...string) *View {
 		}
 	} else {
 		// Customized dir path from env/cmd.
-		if envPath := gcmd.GetOptWithEnv("gf.gview.path").String(); envPath != "" {
+		if envPath := gcmd.GetOptWithEnv(commandEnvKeyForPath).String(); envPath != "" {
 			if gfile.Exists(envPath) {
 				if err := view.SetPath(envPath); err != nil {
 					intlog.Error(err)

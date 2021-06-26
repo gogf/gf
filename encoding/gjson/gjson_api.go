@@ -319,21 +319,9 @@ func (j *Json) GetStruct(pattern string, pointer interface{}, mapping ...map[str
 	return gconv.Struct(j.Get(pattern), pointer, mapping...)
 }
 
-// GetStructDeep does GetStruct recursively.
-// Deprecated, use GetStruct instead.
-func (j *Json) GetStructDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
-	return gconv.StructDeep(j.Get(pattern), pointer, mapping...)
-}
-
 // GetStructs converts any slice to given struct slice.
 func (j *Json) GetStructs(pattern string, pointer interface{}, mapping ...map[string]string) error {
 	return gconv.Structs(j.Get(pattern), pointer, mapping...)
-}
-
-// GetStructsDeep converts any slice to given struct slice recursively.
-// Deprecated, use GetStructs instead.
-func (j *Json) GetStructsDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
-	return gconv.StructsDeep(j.Get(pattern), pointer, mapping...)
 }
 
 // GetScan automatically calls Struct or Structs function according to the type of parameter
