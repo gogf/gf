@@ -7,6 +7,7 @@
 package gview
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/i18n/gi18n"
@@ -67,7 +68,7 @@ func (view *View) SetConfig(config Config) error {
 	// It's just cache, do not hesitate clearing it.
 	templates.Clear()
 
-	intlog.Printf("SetConfig: %+v", view.config)
+	intlog.Printf(context.TODO(), "SetConfig: %+v", view.config)
 	return nil
 }
 

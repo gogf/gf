@@ -486,14 +486,16 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 	// Cache the underlying connection pool object by node.
 	v, _ := internalCache.GetOrSetFuncLock(node.String(), func() (interface{}, error) {
 		intlog.Printf(
+			c.db.GetCtx(),
 			`open new connection, master:%#v, config:%#v, node:%#v`,
 			master, c.config, node,
 		)
 		defer func() {
 			if err != nil {
-				intlog.Printf(`open new connection failed: %v, %#v`, err, node)
+				intlog.Printf(c.db.GetCtx(), `open new connection failed: %v, %#v`, err, node)
 			} else {
 				intlog.Printf(
+					c.db.GetCtx(),
 					`open new connection success, master:%#v, config:%#v, node:%#v`,
 					master, c.config, node,
 				)

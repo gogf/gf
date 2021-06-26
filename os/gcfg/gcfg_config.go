@@ -8,6 +8,7 @@ package gcfg
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/container/garray"
@@ -54,20 +55,20 @@ func New(file ...string) *Config {
 	} else {
 		// Dir path of working dir.
 		if err := c.AddPath(gfile.Pwd()); err != nil {
-			intlog.Error(err)
+			intlog.Error(context.TODO(), err)
 		}
 
 		// Dir path of main package.
 		if mainPath := gfile.MainPkgPath(); mainPath != "" && gfile.Exists(mainPath) {
 			if err := c.AddPath(mainPath); err != nil {
-				intlog.Error(err)
+				intlog.Error(context.TODO(), err)
 			}
 		}
 
 		// Dir path of binary.
 		if selfPath := gfile.SelfDir(); selfPath != "" && gfile.Exists(selfPath) {
 			if err := c.AddPath(selfPath); err != nil {
-				intlog.Error(err)
+				intlog.Error(context.TODO(), err)
 			}
 		}
 	}
@@ -163,7 +164,7 @@ func (c *Config) SetPath(path string) error {
 	c.jsonMap.Clear()
 	c.searchPaths.Clear()
 	c.searchPaths.Append(realPath)
-	intlog.Print("SetPath:", realPath)
+	intlog.Print(context.TODO(), "SetPath:", realPath)
 	return nil
 }
 
@@ -237,7 +238,7 @@ func (c *Config) AddPath(path string) error {
 		return nil
 	}
 	c.searchPaths.Append(realPath)
-	intlog.Print("AddPath:", realPath)
+	intlog.Print(context.TODO(), "AddPath:", realPath)
 	return nil
 }
 

@@ -7,6 +7,7 @@
 package gres
 
 import (
+	"context"
 	"fmt"
 	"github.com/gogf/gf/internal/intlog"
 	"os"
@@ -42,7 +43,7 @@ func New() *Resource {
 func (r *Resource) Add(content string, prefix ...string) error {
 	files, err := UnpackContent(content)
 	if err != nil {
-		intlog.Printf("Add resource files failed: %v", err)
+		intlog.Printf(context.TODO(), "Add resource files failed: %v", err)
 		return err
 	}
 	namePrefix := ""
@@ -53,7 +54,7 @@ func (r *Resource) Add(content string, prefix ...string) error {
 		files[i].resource = r
 		r.tree.Set(namePrefix+files[i].file.Name, files[i])
 	}
-	intlog.Printf("Add %d files to resource manager", r.tree.Size())
+	intlog.Printf(context.TODO(), "Add %d files to resource manager", r.tree.Size())
 	return nil
 }
 

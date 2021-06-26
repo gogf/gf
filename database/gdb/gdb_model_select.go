@@ -546,11 +546,11 @@ func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, e
 	if cacheKey != "" && err == nil {
 		if m.cacheDuration < 0 {
 			if _, err := cacheObj.Remove(cacheKey); err != nil {
-				intlog.Error(err)
+				intlog.Error(m.GetCtx(), err)
 			}
 		} else {
 			if err := cacheObj.Set(cacheKey, result, m.cacheDuration); err != nil {
-				intlog.Error(err)
+				intlog.Error(m.GetCtx(), err)
 			}
 		}
 	}

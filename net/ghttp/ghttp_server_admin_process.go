@@ -8,6 +8,7 @@ package ghttp
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/internal/intlog"
@@ -266,10 +267,10 @@ func handleProcessMessage() {
 	for {
 		if msg := gproc.Receive(adminGProcCommGroup); msg != nil {
 			if bytes.EqualFold(msg.Data, []byte("exit")) {
-				intlog.Printf("%d: process message: exit", gproc.Pid())
+				intlog.Printf(context.TODO(), "%d: process message: exit", gproc.Pid())
 				shutdownWebServersGracefully()
 				allDoneChan <- struct{}{}
-				intlog.Printf("%d: process message: exit done", gproc.Pid())
+				intlog.Printf(context.TODO(), "%d: process message: exit done", gproc.Pid())
 				return
 			}
 		}

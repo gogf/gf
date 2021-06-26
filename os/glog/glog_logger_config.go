@@ -71,11 +71,11 @@ func (l *Logger) SetConfig(config Config) error {
 	// Necessary validation.
 	if config.Path != "" {
 		if err := l.SetPath(config.Path); err != nil {
-			intlog.Error(err)
+			intlog.Error(l.ctx, err)
 			return err
 		}
 	}
-	intlog.Printf("SetConfig: %+v", l.config)
+	intlog.Printf(l.ctx, "SetConfig: %+v", l.config)
 	return nil
 }
 

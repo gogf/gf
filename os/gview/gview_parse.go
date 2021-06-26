@@ -83,7 +83,7 @@ func (view *View) Parse(ctx context.Context, file string, params ...Params) (res
 				templates.Clear()
 				gfsnotify.Exit()
 			}); err != nil {
-				intlog.Error(err)
+				intlog.Error(ctx, err)
 			}
 		}
 		return &fileCacheItem{

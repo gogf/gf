@@ -7,6 +7,7 @@
 package gsession
 
 import (
+	"context"
 	"errors"
 	"github.com/gogf/gf/internal/intlog"
 	"time"
@@ -17,10 +18,12 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
-// Session struct for storing single session data,
-// which is bound to a single request.
+// Session struct for storing single session data, which is bound to a single request.
+// The Session struct is the interface with user, but the Storage is the underlying adapter designed interface
+// for functionality implements.
 type Session struct {
 	id      string          // Session id.
+	ctx     context.Context // Context for current session, note that: one session one context.
 	data    *gmap.StrAnyMap // Session data.
 	dirty   bool            // Used to mark session is modified.
 	start   bool            // Used to mark session is started.
@@ -42,12 +45,12 @@ func (s *Session) init() {
 		// Retrieve memory session data from manager.
 		if r, _ := s.manager.sessionData.Get(s.id); r != nil {
 			s.data = r.(*gmap.StrAnyMap)
-			intlog.Print("session init data:", s.data)
+			intlog.Print(s.ctx, "session init data:", s.data)
 		}
 		// Retrieve stored session data from storage.
 		if s.manager.storage != nil {
-			if s.data, err = s.manager.storage.GetSession(s.id, s.manager.ttl, s.data); err != nil {
-				intlog.Errorf("session restoring failed for id '%s': %v", s.id, err)
+			if s.data, err = s.manager.storage.GetSession(s.ctx, s.id, s.manager.ttl, s.data); err != nil {
+				intlog.Errorf(s.ctx, "session restoring failed for id '%s': %v", s.id, err)
 			}
 		}
 	}
@@ -57,7 +60,7 @@ func (s *Session) init() {
 	}
 	// Use default session id creating function of storage.
 	if s.id == "" {
-		s.id = s.manager.storage.New(s.manager.ttl)
+		s.id = s.manager.storage.New(s.ctx, s.manager.ttl)
 	}
 	// Use default session id creating function.
 	if s.id == "" {
@@ -78,11 +81,11 @@ func (s *Session) Close() {
 		size := s.data.Size()
 		if s.manager.storage != nil {
 			if s.dirty {
-				if err := s.manager.storage.SetSession(s.id, s.data, s.manager.ttl); err != nil {
+				if err := s.manager.storage.SetSession(s.ctx, s.id, s.data, s.manager.ttl); err != nil {
 					panic(err)
 				}
 			} else if size > 0 {
-				if err := s.manager.storage.UpdateTTL(s.id, s.manager.ttl); err != nil {
+				if err := s.manager.storage.UpdateTTL(s.ctx, s.id, s.manager.ttl); err != nil {
 					panic(err)
 				}
 			}
@@ -96,7 +99,7 @@ func (s *Session) Close() {
 // Set sets key-value pair to this session.
 func (s *Session) Set(key string, value interface{}) error {
 	s.init()
-	if err := s.manager.storage.Set(s.id, key, value, s.manager.ttl); err != nil {
+	if err := s.manager.storage.Set(s.ctx, s.id, key, value, s.manager.ttl); err != nil {
 		if err == ErrorDisabled {
 			s.data.Set(key, value)
 		} else {
@@ -116,7 +119,7 @@ func (s *Session) Sets(data map[string]interface{}) error {
 // SetMap batch sets the session using map.
 func (s *Session) SetMap(data map[string]interface{}) error {
 	s.init()
-	if err := s.manager.storage.SetMap(s.id, data, s.manager.ttl); err != nil {
+	if err := s.manager.storage.SetMap(s.ctx, s.id, data, s.manager.ttl); err != nil {
 		if err == ErrorDisabled {
 			s.data.Sets(data)
 		} else {
@@ -134,7 +137,7 @@ func (s *Session) Remove(keys ...string) error {
 	}
 	s.init()
 	for _, key := range keys {
-		if err := s.manager.storage.Remove(s.id, key); err != nil {
+		if err := s.manager.storage.Remove(s.ctx, s.id, key); err != nil {
 			if err == ErrorDisabled {
 				s.data.Remove(key)
 			} else {
@@ -157,7 +160,7 @@ func (s *Session) RemoveAll() error {
 		return nil
 	}
 	s.init()
-	if err := s.manager.storage.RemoveAll(s.id); err != nil {
+	if err := s.manager.storage.RemoveAll(s.ctx, s.id); err != nil {
 		if err == ErrorDisabled {
 			s.data.Clear()
 		} else {
@@ -200,7 +203,7 @@ func (s *Session) SetIdFunc(f func(ttl time.Duration) string) error {
 func (s *Session) Map() map[string]interface{} {
 	if s.id != "" {
 		s.init()
-		if data := s.manager.storage.GetMap(s.id); data != nil {
+		if data := s.manager.storage.GetMap(s.ctx, s.id); data != nil {
 			return data
 		}
 		return s.data.Map()
@@ -212,7 +215,7 @@ func (s *Session) Map() map[string]interface{} {
 func (s *Session) Size() int {
 	if s.id != "" {
 		s.init()
-		if size := s.manager.storage.GetSize(s.id); size >= 0 {
+		if size := s.manager.storage.GetSize(s.ctx, s.id); size >= 0 {
 			return size
 		}
 		return s.data.Size()
@@ -239,7 +242,7 @@ func (s *Session) Get(key string, def ...interface{}) interface{} {
 		return nil
 	}
 	s.init()
-	if v := s.manager.storage.Get(s.id, key); v != nil {
+	if v := s.manager.storage.Get(s.ctx, s.id, key); v != nil {
 		return v
 	}
 	if v := s.data.Get(key); v != nil {
@@ -363,16 +366,6 @@ func (s *Session) GetStruct(key string, pointer interface{}, mapping ...map[stri
 	return gconv.Struct(s.Get(key), pointer, mapping...)
 }
 
-// Deprecated, use GetStruct instead.
-func (s *Session) GetStructDeep(key string, pointer interface{}, mapping ...map[string]string) error {
-	return gconv.StructDeep(s.Get(key), pointer, mapping...)
-}
-
 func (s *Session) GetStructs(key string, pointer interface{}, mapping ...map[string]string) error {
 	return gconv.Structs(s.Get(key), pointer, mapping...)
-}
-
-// Deprecated, use GetStructs instead.
-func (s *Session) GetStructsDeep(key string, pointer interface{}, mapping ...map[string]string) error {
-	return gconv.StructsDeep(s.Get(key), pointer, mapping...)
 }

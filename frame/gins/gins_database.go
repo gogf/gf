@@ -7,6 +7,7 @@
 package gins
 
 import (
+	"context"
 	"fmt"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
@@ -92,11 +93,11 @@ func Database(name ...string) gdb.DB {
 			}
 			if len(cg) > 0 {
 				if gdb.GetConfig(group) == nil {
-					intlog.Printf("add configuration for group: %s, %#v", g, cg)
+					intlog.Printf(context.TODO(), "add configuration for group: %s, %#v", g, cg)
 					gdb.SetConfigGroup(g, cg)
 				} else {
-					intlog.Printf("ignore configuration as it already exists for group: %s, %#v", g, cg)
-					intlog.Printf("%s, %#v", g, cg)
+					intlog.Printf(context.TODO(), "ignore configuration as it already exists for group: %s, %#v", g, cg)
+					intlog.Printf(context.TODO(), "%s, %#v", g, cg)
 				}
 			}
 		}
@@ -110,11 +111,11 @@ func Database(name ...string) gdb.DB {
 
 			if len(cg) > 0 {
 				if gdb.GetConfig(group) == nil {
-					intlog.Printf("add configuration for group: %s, %#v", gdb.DefaultGroupName, cg)
+					intlog.Printf(context.TODO(), "add configuration for group: %s, %#v", gdb.DefaultGroupName, cg)
 					gdb.SetConfigGroup(gdb.DefaultGroupName, cg)
 				} else {
-					intlog.Printf("ignore configuration as it already exists for group: %s, %#v", gdb.DefaultGroupName, cg)
-					intlog.Printf("%s, %#v", gdb.DefaultGroupName, cg)
+					intlog.Printf(context.TODO(), "ignore configuration as it already exists for group: %s, %#v", gdb.DefaultGroupName, cg)
+					intlog.Printf(context.TODO(), "%s, %#v", gdb.DefaultGroupName, cg)
 				}
 			}
 		}

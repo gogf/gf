@@ -46,236 +46,252 @@ var (
 	StructTagPriority = []string{"gconv", "param", "params", "c", "p", "json"}
 )
 
-// Convert converts the variable `any` to the type `t`, the type `t` is specified by string.
-// The optional parameter `params` is used for additional necessary parameter for this conversion.
-// It supports common types conversion as its conversion based on type name string.
-func Convert(any interface{}, t string, params ...interface{}) interface{} {
-	switch t {
+type doConvertInput struct {
+	FromValue  interface{}   // Value that is converted from.
+	ToTypeName string        // Target value type name in string.
+	ReferValue interface{}   // Referred value, a value in type `ToTypeName`.
+	Extra      []interface{} // Extra values for implementing the converting.
+}
+
+func doConvert(input doConvertInput) interface{} {
+	switch input.ToTypeName {
 	case "int":
-		return Int(any)
+		return Int(input.FromValue)
 	case "*int":
-		if _, ok := any.(*int); ok {
-			return any
+		if _, ok := input.FromValue.(*int); ok {
+			return input.FromValue
 		}
-		v := Int(any)
+		v := Int(input.FromValue)
 		return &v
 
 	case "int8":
-		return Int8(any)
+		return Int8(input.FromValue)
 	case "*int8":
-		if _, ok := any.(*int8); ok {
-			return any
+		if _, ok := input.FromValue.(*int8); ok {
+			return input.FromValue
 		}
-		v := Int8(any)
+		v := Int8(input.FromValue)
 		return &v
 
 	case "int16":
-		return Int16(any)
+		return Int16(input.FromValue)
 	case "*int16":
-		if _, ok := any.(*int16); ok {
-			return any
+		if _, ok := input.FromValue.(*int16); ok {
+			return input.FromValue
 		}
-		v := Int16(any)
+		v := Int16(input.FromValue)
 		return &v
 
 	case "int32":
-		return Int32(any)
+		return Int32(input.FromValue)
 	case "*int32":
-		if _, ok := any.(*int32); ok {
-			return any
+		if _, ok := input.FromValue.(*int32); ok {
+			return input.FromValue
 		}
-		v := Int32(any)
+		v := Int32(input.FromValue)
 		return &v
 
 	case "int64":
-		return Int64(any)
+		return Int64(input.FromValue)
 	case "*int64":
-		if _, ok := any.(*int64); ok {
-			return any
+		if _, ok := input.FromValue.(*int64); ok {
+			return input.FromValue
 		}
-		v := Int64(any)
+		v := Int64(input.FromValue)
 		return &v
 
 	case "uint":
-		return Uint(any)
+		return Uint(input.FromValue)
 	case "*uint":
-		if _, ok := any.(*uint); ok {
-			return any
+		if _, ok := input.FromValue.(*uint); ok {
+			return input.FromValue
 		}
-		v := Uint(any)
+		v := Uint(input.FromValue)
 		return &v
 
 	case "uint8":
-		return Uint8(any)
+		return Uint8(input.FromValue)
 	case "*uint8":
-		if _, ok := any.(*uint8); ok {
-			return any
+		if _, ok := input.FromValue.(*uint8); ok {
+			return input.FromValue
 		}
-		v := Uint8(any)
+		v := Uint8(input.FromValue)
 		return &v
 
 	case "uint16":
-		return Uint16(any)
+		return Uint16(input.FromValue)
 	case "*uint16":
-		if _, ok := any.(*uint16); ok {
-			return any
+		if _, ok := input.FromValue.(*uint16); ok {
+			return input.FromValue
 		}
-		v := Uint16(any)
+		v := Uint16(input.FromValue)
 		return &v
 
 	case "uint32":
-		return Uint32(any)
+		return Uint32(input.FromValue)
 	case "*uint32":
-		if _, ok := any.(*uint32); ok {
-			return any
+		if _, ok := input.FromValue.(*uint32); ok {
+			return input.FromValue
 		}
-		v := Uint32(any)
+		v := Uint32(input.FromValue)
 		return &v
 
 	case "uint64":
-		return Uint64(any)
+		return Uint64(input.FromValue)
 	case "*uint64":
-		if _, ok := any.(*uint64); ok {
-			return any
+		if _, ok := input.FromValue.(*uint64); ok {
+			return input.FromValue
 		}
-		v := Uint64(any)
+		v := Uint64(input.FromValue)
 		return &v
 
 	case "float32":
-		return Float32(any)
+		return Float32(input.FromValue)
 	case "*float32":
-		if _, ok := any.(*float32); ok {
-			return any
+		if _, ok := input.FromValue.(*float32); ok {
+			return input.FromValue
 		}
-		v := Float32(any)
+		v := Float32(input.FromValue)
 		return &v
 
 	case "float64":
-		return Float64(any)
+		return Float64(input.FromValue)
 	case "*float64":
-		if _, ok := any.(*float64); ok {
-			return any
+		if _, ok := input.FromValue.(*float64); ok {
+			return input.FromValue
 		}
-		v := Float64(any)
+		v := Float64(input.FromValue)
 		return &v
 
 	case "bool":
-		return Bool(any)
+		return Bool(input.FromValue)
 	case "*bool":
-		if _, ok := any.(*bool); ok {
-			return any
+		if _, ok := input.FromValue.(*bool); ok {
+			return input.FromValue
 		}
-		v := Bool(any)
+		v := Bool(input.FromValue)
 		return &v
 
 	case "string":
-		return String(any)
+		return String(input.FromValue)
 	case "*string":
-		if _, ok := any.(*string); ok {
-			return any
+		if _, ok := input.FromValue.(*string); ok {
+			return input.FromValue
 		}
-		v := String(any)
+		v := String(input.FromValue)
 		return &v
 
 	case "[]byte":
-		return Bytes(any)
+		return Bytes(input.FromValue)
 	case "[]int":
-		return Ints(any)
+		return Ints(input.FromValue)
 	case "[]int32":
-		return Int32s(any)
+		return Int32s(input.FromValue)
 	case "[]int64":
-		return Int64s(any)
+		return Int64s(input.FromValue)
 	case "[]uint":
-		return Uints(any)
+		return Uints(input.FromValue)
 	case "[]uint32":
-		return Uint32s(any)
+		return Uint32s(input.FromValue)
 	case "[]uint64":
-		return Uint64s(any)
+		return Uint64s(input.FromValue)
 	case "[]float32":
-		return Float32s(any)
+		return Float32s(input.FromValue)
 	case "[]float64":
-		return Float64s(any)
+		return Float64s(input.FromValue)
 	case "[]string":
-		return Strings(any)
+		return Strings(input.FromValue)
 
 	case "Time", "time.Time":
-		if len(params) > 0 {
-			return Time(any, String(params[0]))
+		if len(input.Extra) > 0 {
+			return Time(input.FromValue, String(input.Extra[0]))
 		}
-		return Time(any)
+		return Time(input.FromValue)
 	case "*time.Time":
 		var v interface{}
-		if len(params) > 0 {
-			v = Time(any, String(params[0]))
+		if len(input.Extra) > 0 {
+			v = Time(input.FromValue, String(input.Extra[0]))
 		} else {
-			if _, ok := any.(*time.Time); ok {
-				return any
+			if _, ok := input.FromValue.(*time.Time); ok {
+				return input.FromValue
 			}
-			v = Time(any)
+			v = Time(input.FromValue)
 		}
 		return &v
 
 	case "GTime", "gtime.Time":
-		if len(params) > 0 {
-			if v := GTime(any, String(params[0])); v != nil {
+		if len(input.Extra) > 0 {
+			if v := GTime(input.FromValue, String(input.Extra[0])); v != nil {
 				return *v
 			} else {
 				return *gtime.New()
 			}
 		}
-		if v := GTime(any); v != nil {
+		if v := GTime(input.FromValue); v != nil {
 			return *v
 		} else {
 			return *gtime.New()
 		}
 	case "*gtime.Time":
-		if len(params) > 0 {
-			if v := GTime(any, String(params[0])); v != nil {
+		if len(input.Extra) > 0 {
+			if v := GTime(input.FromValue, String(input.Extra[0])); v != nil {
 				return v
 			} else {
 				return gtime.New()
 			}
 		}
-		if v := GTime(any); v != nil {
+		if v := GTime(input.FromValue); v != nil {
 			return v
 		} else {
 			return gtime.New()
 		}
 
 	case "Duration", "time.Duration":
-		return Duration(any)
+		return Duration(input.FromValue)
 	case "*time.Duration":
-		if _, ok := any.(*time.Duration); ok {
-			return any
+		if _, ok := input.FromValue.(*time.Duration); ok {
+			return input.FromValue
 		}
-		v := Duration(any)
+		v := Duration(input.FromValue)
 		return &v
 
 	case "map[string]string":
-		return MapStrStr(any)
+		return MapStrStr(input.FromValue)
 
 	case "map[string]interface{}":
-		return Map(any)
+		return Map(input.FromValue)
 
 	case "[]map[string]interface{}":
-		return Maps(any)
-
-	//case "gvar.Var":
-	//	// TODO remove reflect usage to create gvar.Var, considering using unsafe pointer
-	//	rv := reflect.New(intstore.ReflectTypeVarImp)
-	//	ri := rv.Interface()
-	//	if v, ok := ri.(apiSet); ok {
-	//		v.Set(any)
-	//	} else if v, ok := ri.(apiUnmarshalValue); ok {
-	//		v.UnmarshalValue(any)
-	//	} else {
-	//		rv.Set(reflect.ValueOf(any))
-	//	}
-	//	return ri
+		return Maps(input.FromValue)
 
 	default:
-		return any
+		if input.ReferValue != nil {
+			var (
+				referReflectValue reflect.Value
+			)
+			if v, ok := input.ReferValue.(reflect.Value); ok {
+				referReflectValue = v
+			} else {
+				referReflectValue = reflect.ValueOf(input.ReferValue)
+			}
+			input.ToTypeName = referReflectValue.Kind().String()
+			input.ReferValue = nil
+			return doConvert(input)
+		}
+		return input.FromValue
 	}
+}
+
+// Convert converts the variable `fromValue` to the type `toTypeName`, the type `toTypeName` is specified by string.
+// The optional parameter `extraParams` is used for additional necessary parameter for this conversion.
+// It supports common types conversion as its conversion based on type name string.
+func Convert(fromValue interface{}, toTypeName string, extraParams ...interface{}) interface{} {
+	return doConvert(doConvertInput{
+		FromValue:  fromValue,
+		ToTypeName: toTypeName,
+		ReferValue: nil,
+		Extra:      extraParams,
+	})
 }
 
 // Byte converts `any` to byte.

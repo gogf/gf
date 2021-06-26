@@ -7,6 +7,7 @@
 package ghttp
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"github.com/gogf/gf/internal/intlog"
@@ -333,11 +334,11 @@ func (s *Server) SetConfig(c ServerConfig) error {
 		}
 	}
 	if err := s.config.Logger.SetLevelStr(s.config.LogLevel); err != nil {
-		intlog.Error(err)
+		intlog.Error(context.TODO(), err)
 	}
 
 	SetGraceful(c.Graceful)
-	intlog.Printf("SetConfig: %+v", s.config)
+	intlog.Printf(context.TODO(), "SetConfig: %+v", s.config)
 	return nil
 }
 

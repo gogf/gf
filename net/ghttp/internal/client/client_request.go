@@ -195,12 +195,12 @@ func (c *Client) prepareRequest(method, url string, data ...interface{}) (req *h
 						if f, err := os.Open(path); err == nil {
 							if _, err = io.Copy(file, f); err != nil {
 								if err := f.Close(); err != nil {
-									intlog.Errorf(`%+v`, err)
+									intlog.Errorf(c.ctx, `%+v`, err)
 								}
 								return nil, err
 							}
 							if err := f.Close(); err != nil {
-								intlog.Errorf(`%+v`, err)
+								intlog.Errorf(c.ctx, `%+v`, err)
 							}
 						} else {
 							return nil, err
@@ -303,7 +303,7 @@ func (c *Client) callRequest(req *http.Request) (resp *Response, err error) {
 			// The response might not be nil when err != nil.
 			if resp.Response != nil {
 				if err := resp.Response.Body.Close(); err != nil {
-					intlog.Errorf(`%+v`, err)
+					intlog.Errorf(c.ctx, `%+v`, err)
 				}
 			}
 			if c.retryCount > 0 {

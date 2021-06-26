@@ -56,7 +56,7 @@ func (d *DriverOracle) Open(config *ConfigNode) (*sql.DB, error) {
 			config.User, config.Pass, config.Host, config.Port, config.Name,
 		)
 	}
-	intlog.Printf("Open: %s", source)
+	intlog.Printf(d.GetCtx(), "Open: %s", source)
 	if db, err := sql.Open("oci8", source); err == nil {
 		return db, nil
 	} else {

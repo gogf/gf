@@ -7,6 +7,7 @@
 package gfsnotify
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/internal/intlog"
@@ -45,9 +46,9 @@ func (w *Watcher) AddOnce(name, path string, callbackFunc func(event *Event), re
 			for _, subPath := range fileAllDirs(path) {
 				if fileIsDir(subPath) {
 					if err := w.watcher.Add(subPath); err != nil {
-						intlog.Error(err)
+						intlog.Error(context.TODO(), err)
 					} else {
-						intlog.Printf("watcher adds monitor for: %s", subPath)
+						intlog.Printf(context.TODO(), "watcher adds monitor for: %s", subPath)
 					}
 				}
 			}
@@ -93,9 +94,9 @@ func (w *Watcher) addWithCallbackFunc(name, path string, callbackFunc func(event
 	})
 	// Add the path to underlying monitor.
 	if err := w.watcher.Add(path); err != nil {
-		intlog.Error(err)
+		intlog.Error(context.TODO(), err)
 	} else {
-		intlog.Printf("watcher adds monitor for: %s", path)
+		intlog.Printf(context.TODO(), "watcher adds monitor for: %s", path)
 	}
 	// Add the callback to global callback map.
 	callbackIdMap.Set(callback.Id, callback)
@@ -108,7 +109,7 @@ func (w *Watcher) addWithCallbackFunc(name, path string, callbackFunc func(event
 func (w *Watcher) Close() {
 	w.events.Close()
 	if err := w.watcher.Close(); err != nil {
-		intlog.Error(err)
+		intlog.Error(context.TODO(), err)
 	}
 	close(w.closeChan)
 }
@@ -131,7 +132,7 @@ func (w *Watcher) Remove(path string) error {
 		for _, subPath := range subPaths {
 			if w.checkPathCanBeRemoved(subPath) {
 				if err := w.watcher.Remove(subPath); err != nil {
-					intlog.Error(err)
+					intlog.Error(context.TODO(), err)
 				}
 			}
 		}
