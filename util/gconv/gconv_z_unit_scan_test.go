@@ -58,7 +58,7 @@ func Test_Scan_StructStructs(t *testing.T) {
 			}
 		)
 		err := gconv.Scan(params, &users)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(users, g.Slice{
 			&User{
 				Uid:   1,

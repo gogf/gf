@@ -12,6 +12,7 @@
 package gspath
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/internal/intlog"
@@ -113,7 +114,7 @@ func (sp *SPath) Set(path string) (realPath string, err error) {
 				sp.removeMonitorByPath(v)
 			}
 		}
-		intlog.Print("paths clear:", sp.paths)
+		intlog.Print(context.TODO(), "paths clear:", sp.paths)
 		sp.paths.Clear()
 		if sp.cache != nil {
 			sp.cache.Clear()

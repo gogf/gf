@@ -8,6 +8,7 @@
 package gcfg
 
 import (
+	"context"
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/internal/intlog"
@@ -82,7 +83,7 @@ func RemoveContent(file ...string) {
 		}
 	})
 
-	intlog.Printf(`RemoveContent: %s`, name)
+	intlog.Printf(context.TODO(), `RemoveContent: %s`, name)
 }
 
 // ClearContent removes all global configuration contents.
@@ -95,7 +96,7 @@ func ClearContent() {
 		}
 	})
 
-	intlog.Print(`RemoveConfig`)
+	intlog.Print(context.TODO(), `RemoveConfig`)
 }
 
 // errorPrint checks whether printing error to stdout.

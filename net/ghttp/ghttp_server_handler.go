@@ -83,12 +83,12 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// to release the file descriptor in time.
 		err := request.Request.Body.Close()
 		if err != nil {
-			intlog.Error(err)
+			intlog.Error(request.Context(), err)
 		}
 		if request.Request.Response != nil {
 			err = request.Request.Response.Body.Close()
 			if err != nil {
-				intlog.Error(err)
+				intlog.Error(request.Context(), err)
 			}
 		}
 	}()

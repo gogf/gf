@@ -8,10 +8,13 @@ package gdb_test
 
 import (
 	"database/sql"
+	"github.com/gogf/gf/database/gdb"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/test/gtest"
 	"github.com/gogf/gf/util/gconv"
+	"reflect"
 	"testing"
 )
 
@@ -395,17 +398,17 @@ type User struct {
 }
 
 func (user *User) UnmarshalValue(value interface{}) error {
-	switch result := value.(type) {
-	case map[string]interface{}:
-		user.Id = result["id"].(int)
-		user.Passport = result["passport"].(string)
-		user.Password = ""
-		user.Nickname = result["nickname"].(string)
-		user.CreateTime = gtime.New(result["create_time"])
+	if record, ok := value.(gdb.Record); ok {
+		*user = User{
+			Id:         record["id"].Int(),
+			Passport:   record["passport"].String(),
+			Password:   "",
+			Nickname:   record["nickname"].String(),
+			CreateTime: record["create_time"].GTime(),
+		}
 		return nil
-	default:
-		return gconv.Struct(value, user)
 	}
+	return gerror.Newf(`unsupported value type for UnmarshalValue: %v`, reflect.TypeOf(value))
 }
 
 func Test_Model_Scan_UnmarshalValue(t *testing.T) {

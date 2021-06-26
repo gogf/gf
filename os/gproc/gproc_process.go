@@ -7,6 +7,7 @@
 package gproc
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/internal/intlog"
@@ -118,12 +119,11 @@ func (p *Process) Kill() error {
 		}
 		if runtime.GOOS != "windows" {
 			if err = p.Process.Release(); err != nil {
-				intlog.Error(err)
-				//return err
+				intlog.Error(context.TODO(), err)
 			}
 		}
 		_, err = p.Process.Wait()
-		intlog.Error(err)
+		intlog.Error(context.TODO(), err)
 		//return err
 		return nil
 	} else {

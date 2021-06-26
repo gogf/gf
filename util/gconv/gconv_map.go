@@ -166,7 +166,7 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 					dataMap[String(reflectValue.Index(i).Interface())] = nil
 				}
 			}
-		case reflect.Map, reflect.Struct:
+		case reflect.Map, reflect.Struct, reflect.Interface:
 			convertedValue := doMapConvertForMapOrStructValue(true, value, recursive, newTags...)
 			if m, ok := convertedValue.(map[string]interface{}); ok {
 				return m

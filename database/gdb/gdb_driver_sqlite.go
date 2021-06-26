@@ -47,7 +47,7 @@ func (d *DriverSqlite) Open(config *ConfigNode) (*sql.DB, error) {
 	if absolutePath, _ := gfile.Search(source); absolutePath != "" {
 		source = absolutePath
 	}
-	intlog.Printf("Open: %s", source)
+	intlog.Printf(d.GetCtx(), "Open: %s", source)
 	if db, err := sql.Open("sqlite3", source); err == nil {
 		return db, nil
 	} else {

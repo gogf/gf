@@ -7,7 +7,9 @@
 package ghttp
 
 import (
+	"context"
 	"errors"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/gtime"
@@ -21,6 +23,7 @@ import (
 // UploadFile wraps the multipart uploading file with more and convenient features.
 type UploadFile struct {
 	*multipart.FileHeader
+	ctx context.Context
 }
 
 // UploadFiles is array type for *UploadFile.
@@ -40,7 +43,7 @@ func (f *UploadFile) Save(dirPath string, randomlyRename ...bool) (filename stri
 			return
 		}
 	} else if !gfile.IsDir(dirPath) {
-		return "", errors.New(`parameter "dirPath" should be a directory path`)
+		return "", gerror.New(`parameter "dirPath" should be a directory path`)
 	}
 
 	file, err := f.Open()
@@ -60,7 +63,7 @@ func (f *UploadFile) Save(dirPath string, randomlyRename ...bool) (filename stri
 		return "", err
 	}
 	defer newFile.Close()
-	intlog.Printf(`save upload file: %s`, filePath)
+	intlog.Printf(f.ctx, `save upload file: %s`, filePath)
 	if _, err := io.Copy(newFile, file); err != nil {
 		return "", err
 	}
@@ -114,6 +117,7 @@ func (r *Request) GetUploadFiles(name string) UploadFiles {
 		uploadFiles := make(UploadFiles, len(multipartFiles))
 		for k, v := range multipartFiles {
 			uploadFiles[k] = &UploadFile{
+				ctx:        r.Context(),
 				FileHeader: v,
 			}
 		}

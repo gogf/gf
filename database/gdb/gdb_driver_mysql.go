@@ -52,7 +52,7 @@ func (d *DriverMysql) Open(config *ConfigNode) (*sql.DB, error) {
 			source = fmt.Sprintf("%s&loc=%s", source, url.QueryEscape(config.Timezone))
 		}
 	}
-	intlog.Printf("Open: %s", source)
+	intlog.Printf(d.GetCtx(), "Open: %s", source)
 	if db, err := sql.Open("mysql", source); err == nil {
 		return db, nil
 	} else {

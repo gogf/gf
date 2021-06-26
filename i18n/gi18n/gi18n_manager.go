@@ -70,7 +70,7 @@ func New(options ...Options) *Manager {
 			gregex.Quote(opts.Delimiters[1]),
 		),
 	}
-	intlog.Printf(`New: %#v`, m)
+	intlog.Printf(context.TODO(), `New: %#v`, m)
 	return m
 }
 
@@ -105,20 +105,20 @@ func (m *Manager) SetPath(path string) error {
 		}
 		m.options.Path = realPath
 	}
-	intlog.Printf(`SetPath: %s`, m.options.Path)
+	intlog.Printf(context.TODO(), `SetPath: %s`, m.options.Path)
 	return nil
 }
 
 // SetLanguage sets the language for translator.
 func (m *Manager) SetLanguage(language string) {
 	m.options.Language = language
-	intlog.Printf(`SetLanguage: %s`, m.options.Language)
+	intlog.Printf(context.TODO(), `SetLanguage: %s`, m.options.Language)
 }
 
 // SetDelimiters sets the delimiters for translator.
 func (m *Manager) SetDelimiters(left, right string) {
 	m.pattern = fmt.Sprintf(`%s(\w+)%s`, gregex.Quote(left), gregex.Quote(right))
-	intlog.Printf(`SetDelimiters: %v`, m.pattern)
+	intlog.Printf(context.TODO(), `SetDelimiters: %v`, m.pattern)
 }
 
 // T is alias of Translate for convenience.
@@ -139,7 +139,7 @@ func (m *Manager) TranslateFormat(ctx context.Context, format string, values ...
 
 // Translate translates <content> with configured language.
 func (m *Manager) Translate(ctx context.Context, content string) string {
-	m.init()
+	m.init(ctx)
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	transLang := m.options.Language
@@ -163,14 +163,14 @@ func (m *Manager) Translate(ctx context.Context, content string) string {
 			}
 			return match[0]
 		})
-	intlog.Printf(`Translate for language: %s`, transLang)
+	intlog.Printf(ctx, `Translate for language: %s`, transLang)
 	return result
 }
 
 // GetContent retrieves and returns the configured content for given key and specified language.
 // It returns an empty string if not found.
 func (m *Manager) GetContent(ctx context.Context, key string) string {
-	m.init()
+	m.init(ctx)
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	transLang := m.options.Language
@@ -185,7 +185,7 @@ func (m *Manager) GetContent(ctx context.Context, key string) string {
 
 // init initializes the manager for lazy initialization design.
 // The i18n manager is only initialized once.
-func (m *Manager) init() {
+func (m *Manager) init(ctx context.Context) {
 	m.mu.RLock()
 	// If the data is not nil, means it's already initialized.
 	if m.data != nil {
@@ -223,17 +223,13 @@ func (m *Manager) init() {
 						m.data[lang][k] = gconv.String(v)
 					}
 				} else {
-					intlog.Errorf("load i18n file '%s' failed: %v", name, err)
+					intlog.Errorf(ctx, "load i18n file '%s' failed: %v", name, err)
 				}
 			}
 		}
 	} else if m.options.Path != "" {
 		files, _ := gfile.ScanDirFile(m.options.Path, "*.*", true)
 		if len(files) == 0 {
-			//intlog.Printf(
-			//	"no i18n files found in configured directory: %s",
-			//	m.options.Path,
-			//)
 			return
 		}
 		var (
@@ -258,7 +254,7 @@ func (m *Manager) init() {
 					m.data[lang][k] = gconv.String(v)
 				}
 			} else {
-				intlog.Errorf("load i18n file '%s' failed: %v", file, err)
+				intlog.Errorf(ctx, "load i18n file '%s' failed: %v", file, err)
 			}
 		}
 		// Monitor changes of i18n files for hot reload feature.
