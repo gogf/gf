@@ -7,9 +7,9 @@
 package ghttp
 
 import (
-	"errors"
 	"fmt"
 	"github.com/gogf/gf/container/gtype"
+	"github.com/gogf/gf/errors/gerror"
 	"strings"
 
 	"github.com/gogf/gf/debug/gdebug"
@@ -53,7 +53,7 @@ func (s *Server) parsePattern(pattern string) (domain, method, path string, err 
 		}
 	}
 	if path == "" {
-		err = errors.New("invalid pattern: URI should not be empty")
+		err = gerror.New("invalid pattern: URI should not be empty")
 	}
 	if path != "/" {
 		path = strings.TrimRight(path, "/")

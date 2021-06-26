@@ -9,8 +9,8 @@ package ghttp
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/text/gstr"
 	"os"
@@ -52,7 +52,7 @@ var serverProcessStatus = gtype.NewInt()
 // The optional parameter <newExeFilePath> specifies the new binary file for creating process.
 func RestartAllServer(newExeFilePath ...string) error {
 	if !gracefulEnabled {
-		return errors.New("graceful reload feature is disabled")
+		return gerror.New("graceful reload feature is disabled")
 	}
 	serverActionLocker.Lock()
 	defer serverActionLocker.Unlock()
@@ -85,9 +85,9 @@ func checkProcessStatus() error {
 	if status > 0 {
 		switch status {
 		case adminActionRestarting:
-			return errors.New("server is restarting")
+			return gerror.New("server is restarting")
 		case adminActionShuttingDown:
-			return errors.New("server is shutting down")
+			return gerror.New("server is shutting down")
 		}
 	}
 	return nil
@@ -98,7 +98,7 @@ func checkProcessStatus() error {
 func checkActionFrequency() error {
 	interval := gtime.TimestampMilli() - serverActionLastTime.Val()
 	if interval < adminActionIntervalLimit {
-		return errors.New(fmt.Sprintf("too frequent action, please retry in %d ms", adminActionIntervalLimit-interval))
+		return gerror.Newf("too frequent action, please retry in %d ms", adminActionIntervalLimit-interval)
 	}
 	serverActionLastTime.Set(gtime.TimestampMilli())
 	return nil

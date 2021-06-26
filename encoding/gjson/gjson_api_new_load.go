@@ -8,8 +8,8 @@ package gjson
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
+	"github.com/gogf/gf/errors/gerror"
 	"reflect"
 
 	"github.com/gogf/gf/internal/json"
@@ -264,7 +264,7 @@ func doLoadContentWithOptions(dataType string, data []byte, options Options) (*J
 			return nil, err
 		}
 	default:
-		err = errors.New("unsupported type for loading")
+		err = gerror.New("unsupported type for loading")
 	}
 	if err != nil {
 		return nil, err

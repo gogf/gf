@@ -9,7 +9,6 @@ package gcfg
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/container/gmap"
@@ -143,7 +142,7 @@ func (c *Config) SetPath(path string) error {
 		} else {
 			buffer.WriteString(fmt.Sprintf(`[gcfg] SetPath failed: path "%s" does not exist`, path))
 		}
-		err := errors.New(buffer.String())
+		err := gerror.New(buffer.String())
 		if errorPrint() {
 			glog.Error(err)
 		}

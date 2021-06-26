@@ -7,7 +7,7 @@
 package gproc
 
 import (
-	"errors"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/net/gtcp"
 	"io"
@@ -46,7 +46,7 @@ func Send(pid int, data []byte, group ...string) error {
 		err = json.UnmarshalUseNumber(result, response)
 		if err == nil {
 			if response.Code != 1 {
-				err = errors.New(response.Message)
+				err = gerror.New(response.Message)
 			}
 		}
 	}

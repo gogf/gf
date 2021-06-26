@@ -9,8 +9,7 @@ package client
 import (
 	"bytes"
 	"context"
-	"errors"
-	"fmt"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/internal/utils"
@@ -189,7 +188,7 @@ func (c *Client) prepareRequest(method, url string, data ...interface{}) (req *h
 				if len(array[1]) > 6 && strings.Compare(array[1][0:6], "@file:") == 0 {
 					path := array[1][6:]
 					if !gfile.Exists(path) {
-						return nil, errors.New(fmt.Sprintf(`"%s" does not exist`, path))
+						return nil, gerror.Newf(`"%s" does not exist`, path)
 					}
 					if file, err := writer.CreateFormFile(array[0], gfile.Basename(path)); err == nil {
 						if f, err := os.Open(path); err == nil {

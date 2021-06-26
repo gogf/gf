@@ -7,9 +7,9 @@
 package gproc
 
 import (
-	"errors"
 	"fmt"
 	"github.com/gogf/gf/container/gmap"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/net/gtcp"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/util/gconv"
@@ -65,7 +65,7 @@ func getConnByPid(pid int) (*gtcp.PoolConn, error) {
 			return nil, err
 		}
 	}
-	return nil, errors.New(fmt.Sprintf("could not find port for pid: %d", pid))
+	return nil, gerror.Newf("could not find port for pid: %d", pid)
 }
 
 // getPortByPid returns the listening port for specified pid.

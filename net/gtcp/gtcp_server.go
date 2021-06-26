@@ -8,7 +8,7 @@ package gtcp
 
 import (
 	"crypto/tls"
-	"errors"
+	"github.com/gogf/gf/errors/gerror"
 	"net"
 	"sync"
 
@@ -116,7 +116,7 @@ func (s *Server) Close() error {
 // Run starts running the TCP Server.
 func (s *Server) Run() (err error) {
 	if s.handler == nil {
-		err = errors.New("start running failed: socket handler not defined")
+		err = gerror.New("start running failed: socket handler not defined")
 		glog.Error(err)
 		return
 	}

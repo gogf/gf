@@ -7,7 +7,7 @@
 package gudp
 
 import (
-	"errors"
+	"github.com/gogf/gf/errors/gerror"
 	"net"
 
 	"github.com/gogf/gf/container/gmap"
@@ -78,7 +78,7 @@ func (s *Server) Close() error {
 // Run starts listening UDP connection.
 func (s *Server) Run() error {
 	if s.handler == nil {
-		err := errors.New("start running failed: socket handler not defined")
+		err := gerror.New("start running failed: socket handler not defined")
 		glog.Error(err)
 		return err
 	}
