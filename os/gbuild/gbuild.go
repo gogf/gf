@@ -8,6 +8,7 @@
 package gbuild
 
 import (
+	"context"
 	"github.com/gogf/gf"
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/encoding/gbase64"
@@ -26,13 +27,13 @@ func init() {
 	if builtInVarStr != "" {
 		err := json.UnmarshalUseNumber(gbase64.MustDecodeString(builtInVarStr), &builtInVarMap)
 		if err != nil {
-			intlog.Error(err)
+			intlog.Error(context.TODO(), err)
 		}
 		builtInVarMap["gfVersion"] = gf.VERSION
 		builtInVarMap["goVersion"] = runtime.Version()
-		intlog.Printf("build variables: %+v", builtInVarMap)
+		intlog.Printf(context.TODO(), "build variables: %+v", builtInVarMap)
 	} else {
-		intlog.Print("no build variables")
+		intlog.Print(context.TODO(), "no build variables")
 	}
 }
 
