@@ -8,8 +8,8 @@ package garray
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/json"
 	"math"
 	"sort"
@@ -104,7 +104,7 @@ func (a *IntArray) Set(index int, value int) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if index < 0 || index >= len(a.array) {
-		return errors.New(fmt.Sprintf("index %d out of array range %d", index, len(a.array)))
+		return gerror.Newf("index %d out of array range %d", index, len(a.array))
 	}
 	a.array[index] = value
 	return nil
@@ -175,7 +175,7 @@ func (a *IntArray) InsertBefore(index int, value int) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if index < 0 || index >= len(a.array) {
-		return errors.New(fmt.Sprintf("index %d out of array range %d", index, len(a.array)))
+		return gerror.Newf("index %d out of array range %d", index, len(a.array))
 	}
 	rear := append([]int{}, a.array[index:]...)
 	a.array = append(a.array[0:index], value)
@@ -188,7 +188,7 @@ func (a *IntArray) InsertAfter(index int, value int) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if index < 0 || index >= len(a.array) {
-		return errors.New(fmt.Sprintf("index %d out of array range %d", index, len(a.array)))
+		return gerror.Newf("index %d out of array range %d", index, len(a.array))
 	}
 	rear := append([]int{}, a.array[index+1:]...)
 	a.array = append(a.array[0:index+1], value)
@@ -559,7 +559,7 @@ func (a *IntArray) Fill(startIndex int, num int, value int) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if startIndex < 0 || startIndex > len(a.array) {
-		return errors.New(fmt.Sprintf("index %d out of array range %d", startIndex, len(a.array)))
+		return gerror.Newf("index %d out of array range %d", startIndex, len(a.array))
 	}
 	for i := startIndex; i < startIndex+num; i++ {
 		if i > len(a.array)-1 {

@@ -7,8 +7,6 @@
 package glog
 
 import (
-	"errors"
-	"fmt"
 	"io"
 	"strings"
 	"time"
@@ -82,7 +80,7 @@ func (l *Logger) SetConfig(config Config) error {
 // SetConfigWithMap set configurations with map for the logger.
 func (l *Logger) SetConfigWithMap(m map[string]interface{}) error {
 	if m == nil || len(m) == 0 {
-		return errors.New("configuration cannot be empty")
+		return gerror.New("configuration cannot be empty")
 	}
 	// The m now is a shallow copy of m.
 	// A little tricky, isn't it?
@@ -93,7 +91,7 @@ func (l *Logger) SetConfigWithMap(m map[string]interface{}) error {
 		if level, ok := levelStringMap[strings.ToUpper(gconv.String(levelValue))]; ok {
 			m[levelKey] = level
 		} else {
-			return errors.New(fmt.Sprintf(`invalid level string: %v`, levelValue))
+			return gerror.Newf(`invalid level string: %v`, levelValue)
 		}
 	}
 	// Change string configuration to int value for file rotation size.
@@ -101,7 +99,7 @@ func (l *Logger) SetConfigWithMap(m map[string]interface{}) error {
 	if rotateSizeValue != nil {
 		m[rotateSizeKey] = gfile.StrToSize(gconv.String(rotateSizeValue))
 		if m[rotateSizeKey] == -1 {
-			return errors.New(fmt.Sprintf(`invalid rotate size: %v`, rotateSizeValue))
+			return gerror.Newf(`invalid rotate size: %v`, rotateSizeValue)
 		}
 	}
 	if err := gconv.Struct(m, &l.config); err != nil {
@@ -206,7 +204,7 @@ func (l *Logger) GetWriter() io.Writer {
 // SetPath sets the directory path for file logging.
 func (l *Logger) SetPath(path string) error {
 	if path == "" {
-		return errors.New("logging path is empty")
+		return gerror.New("logging path is empty")
 	}
 	if !gfile.Exists(path) {
 		if err := gfile.Mkdir(path); err != nil {

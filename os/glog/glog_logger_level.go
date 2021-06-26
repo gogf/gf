@@ -7,8 +7,7 @@
 package glog
 
 import (
-	"errors"
-	"fmt"
+	"github.com/gogf/gf/errors/gerror"
 	"strings"
 )
 
@@ -78,7 +77,7 @@ func (l *Logger) SetLevelStr(levelStr string) error {
 	if level, ok := levelStringMap[strings.ToUpper(levelStr)]; ok {
 		l.config.Level = level
 	} else {
-		return errors.New(fmt.Sprintf(`invalid level string: %s`, levelStr))
+		return gerror.Newf(`invalid level string: %s`, levelStr)
 	}
 	return nil
 }

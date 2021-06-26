@@ -9,9 +9,8 @@ package gfsnotify
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"github.com/gogf/gf/container/gset"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 	"sync"
 	"time"
@@ -140,7 +139,7 @@ func RemoveCallback(callbackId int) error {
 		callback = r.(*Callback)
 	}
 	if callback == nil {
-		return errors.New(fmt.Sprintf(`callback for id %d not found`, callbackId))
+		return gerror.Newf(`callback for id %d not found`, callbackId)
 	}
 	w.RemoveCallback(callbackId)
 	return nil

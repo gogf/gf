@@ -9,7 +9,6 @@ package gview
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"github.com/gogf/gf/encoding/ghash"
 	"github.com/gogf/gf/errors/gerror"
@@ -377,7 +376,7 @@ func (view *View) searchFile(file string) (path string, folder string, resource 
 		if errorPrint() {
 			glog.Error(buffer.String())
 		}
-		err = errors.New(fmt.Sprintf(`template file "%s" not found`, file))
+		err = gerror.Newf(`template file "%s" not found`, file)
 	}
 	return
 }

@@ -8,7 +8,7 @@ package gsession
 
 import (
 	"context"
-	"errors"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 	"time"
 
@@ -182,7 +182,7 @@ func (s *Session) Id() string {
 // It returns error if it is called after session starts.
 func (s *Session) SetId(id string) error {
 	if s.start {
-		return errors.New("session already started")
+		return gerror.New("session already started")
 	}
 	s.id = id
 	return nil
@@ -192,7 +192,7 @@ func (s *Session) SetId(id string) error {
 // It returns error if it is called after session starts.
 func (s *Session) SetIdFunc(f func(ttl time.Duration) string) error {
 	if s.start {
-		return errors.New("session already started")
+		return gerror.New("session already started")
 	}
 	s.idFunc = f
 	return nil

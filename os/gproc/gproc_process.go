@@ -8,8 +8,8 @@ package gproc
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 	"os"
 	"os/exec"
@@ -101,7 +101,7 @@ func (p *Process) Send(data []byte) error {
 	if p.Process != nil {
 		return Send(p.Process.Pid, data)
 	}
-	return errors.New("invalid process")
+	return gerror.New("invalid process")
 }
 
 // Release releases any resources associated with the Process p,
