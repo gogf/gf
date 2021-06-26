@@ -32,11 +32,6 @@ type DriverOracle struct {
 	*Core
 }
 
-const (
-	tableAlias1 = "GFORM1"
-	tableAlias2 = "GFORM2"
-)
-
 // New creates and returns a database object for oracle.
 // It implements the interface of gdb.Driver for extra database driver installation.
 func (d *DriverOracle) New(core *Core, node *ConfigNode) (DB, error) {
@@ -85,7 +80,11 @@ func (d *DriverOracle) GetChars() (charLeft string, charRight string) {
 }
 
 // DoCommit deals with the sql string before commits it to underlying sql driver.
-func (d *DriverOracle) DoCommit(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}) {
+func (d *DriverOracle) DoCommit(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
+	defer func() {
+		newSql, newArgs, err = d.Core.DoCommit(ctx, link, newSql, newArgs)
+	}()
+
 	var index int
 	// Convert place holder char '?' to string ":vx".
 	newSql, _ = gregex.ReplaceStringFunc("\\?", sql, func(s string) string {

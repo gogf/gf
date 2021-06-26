@@ -70,8 +70,6 @@ type DB interface {
 
 	// Ctx is a chaining function, which creates and returns a new DB that is a shallow copy
 	// of current DB object and with given context in it.
-	// Note that this returned DB object can be used only once, so do not assign it to
-	// a global or package variable for long using.
 	// Also see Core.Ctx.
 	Ctx(ctx context.Context) DB
 
@@ -105,23 +103,21 @@ type DB interface {
 	DoDelete(ctx context.Context, link Link, table string, condition string, args ...interface{}) (result sql.Result, err error)                   // See Core.DoDelete.
 	DoQuery(ctx context.Context, link Link, sql string, args ...interface{}) (rows *sql.Rows, err error)                                           // See Core.DoQuery.
 	DoExec(ctx context.Context, link Link, sql string, args ...interface{}) (result sql.Result, err error)                                         // See Core.DoExec.
-	DoCommit(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{})                                // See Core.DoCommit.
+	DoCommit(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error)                     // See Core.DoCommit.
 	DoPrepare(ctx context.Context, link Link, sql string) (*Stmt, error)                                                                           // See Core.DoPrepare.
 
 	// ===========================================================================
 	// Query APIs for convenience purpose.
 	// ===========================================================================
 
-	GetAll(sql string, args ...interface{}) (Result, error)                        // See Core.GetAll.
-	GetOne(sql string, args ...interface{}) (Record, error)                        // See Core.GetOne.
-	GetValue(sql string, args ...interface{}) (Value, error)                       // See Core.GetValue.
-	GetArray(sql string, args ...interface{}) ([]Value, error)                     // See Core.GetArray.
-	GetCount(sql string, args ...interface{}) (int, error)                         // See Core.GetCount.
-	GetStruct(objPointer interface{}, sql string, args ...interface{}) error       // See Core.GetStruct.
-	GetStructs(objPointerSlice interface{}, sql string, args ...interface{}) error // See Core.GetStructs.
-	GetScan(objPointer interface{}, sql string, args ...interface{}) error         // See Core.GetScan.
-	Union(unions ...*Model) *Model                                                 // See Core.Union.
-	UnionAll(unions ...*Model) *Model                                              // See Core.UnionAll.
+	GetAll(sql string, args ...interface{}) (Result, error)                // See Core.GetAll.
+	GetOne(sql string, args ...interface{}) (Record, error)                // See Core.GetOne.
+	GetValue(sql string, args ...interface{}) (Value, error)               // See Core.GetValue.
+	GetArray(sql string, args ...interface{}) ([]Value, error)             // See Core.GetArray.
+	GetCount(sql string, args ...interface{}) (int, error)                 // See Core.GetCount.
+	GetScan(objPointer interface{}, sql string, args ...interface{}) error // See Core.GetScan.
+	Union(unions ...*Model) *Model                                         // See Core.Union.
+	UnionAll(unions ...*Model) *Model                                      // See Core.UnionAll.
 
 	// ===========================================================================
 	// Master/Slave specification support.
@@ -173,7 +169,7 @@ type DB interface {
 	GetChars() (charLeft string, charRight string)                                                   // See Core.GetChars.
 	Tables(ctx context.Context, schema ...string) (tables []string, err error)                       // See Core.Tables.
 	TableFields(ctx context.Context, table string, schema ...string) (map[string]*TableField, error) // See Core.TableFields.
-	FilteredLink() string
+	FilteredLink() string                                                                            // FilteredLink is used for filtering sensitive information in `Link` configuration before output it to tracing server.
 }
 
 // Core is the base struct for database management.
@@ -270,6 +266,8 @@ const (
 	ctxTimeoutTypeQuery
 	ctxTimeoutTypePrepare
 	commandEnvKeyForDryRun = "gf.gdb.dryrun"
+	ctxStrictKeyName       = "gf.gdb.CtxStrictEnabled"
+	ctxStrictErrorStr      = "context is required for database operation, did you missing call function Ctx"
 )
 
 var (

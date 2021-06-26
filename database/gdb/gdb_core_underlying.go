@@ -10,6 +10,7 @@ package gdb
 import (
 	"context"
 	"database/sql"
+	"github.com/gogf/gf/errors/gerror"
 
 	"github.com/gogf/gf/os/gtime"
 )
@@ -33,11 +34,16 @@ func (c *Core) DoQuery(ctx context.Context, link Link, sql string, args ...inter
 			link = &txLink{tx.tx}
 		}
 	}
-	// Link execution.
-	sql, args = formatSql(sql, args)
-	sql, args = c.db.DoCommit(ctx, link, sql, args)
+
 	if c.GetConfig().QueryTimeout > 0 {
 		ctx, _ = context.WithTimeout(ctx, c.GetConfig().QueryTimeout)
+	}
+
+	// Link execution.
+	sql, args = formatSql(sql, args)
+	sql, args, err = c.db.DoCommit(ctx, link, sql, args)
+	if err != nil {
+		return nil, err
 	}
 	mTime1 := gtime.TimestampMilli()
 	rows, err = link.QueryContext(ctx, sql, args...)
@@ -85,15 +91,19 @@ func (c *Core) DoExec(ctx context.Context, link Link, sql string, args ...interf
 			link = &txLink{tx.tx}
 		}
 	}
-	// Link execution.
-	sql, args = formatSql(sql, args)
-	sql, args = c.db.DoCommit(ctx, link, sql, args)
+
 	if c.GetConfig().ExecTimeout > 0 {
 		var cancelFunc context.CancelFunc
 		ctx, cancelFunc = context.WithTimeout(ctx, c.GetConfig().ExecTimeout)
 		defer cancelFunc()
 	}
 
+	// Link execution.
+	sql, args = formatSql(sql, args)
+	sql, args, err = c.db.DoCommit(ctx, link, sql, args)
+	if err != nil {
+		return nil, err
+	}
 	mTime1 := gtime.TimestampMilli()
 	if !c.db.GetDryRun() {
 		result, err = link.ExecContext(ctx, sql, args...)
@@ -118,6 +128,18 @@ func (c *Core) DoExec(ctx context.Context, link Link, sql string, args ...interf
 		c.writeSqlToLogger(ctx, sqlObj)
 	}
 	return result, formatError(err, sql, args...)
+}
+
+// DoCommit is a hook function, which deals with the sql string before it's committed to underlying driver.
+// The parameter `link` specifies the current database connection operation object. You can modify the sql
+// string `sql` and its arguments `args` as you wish before they're committed to driver.
+func (c *Core) DoCommit(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
+	if c.db.GetConfig().CtxStrict {
+		if v := ctx.Value(ctxStrictKeyName); v == nil {
+			return sql, args, gerror.New(ctxStrictErrorStr)
+		}
+	}
+	return sql, args, nil
 }
 
 // Prepare creates a prepared statement for later queries or executions.
@@ -156,6 +178,13 @@ func (c *Core) DoPrepare(ctx context.Context, link Link, sql string) (*Stmt, err
 		// DO NOT USE cancel function in prepare statement.
 		ctx, _ = context.WithTimeout(ctx, c.GetConfig().PrepareTimeout)
 	}
+
+	if c.db.GetConfig().CtxStrict {
+		if v := ctx.Value(ctxStrictKeyName); v == nil {
+			return nil, gerror.New(ctxStrictErrorStr)
+		}
+	}
+
 	var (
 		mTime1    = gtime.TimestampMilli()
 		stmt, err = link.PrepareContext(ctx, sql)
