@@ -43,7 +43,7 @@ const (
 	defaultFilePerm   = os.FileMode(0666)
 	defaultFileExpire = time.Minute
 	pathFilterKey     = "/os/glog/glog"
-	bufferStdOut	  = "stdOut"
+	bufferStdOut      = "stdOut"
 )
 
 const (
