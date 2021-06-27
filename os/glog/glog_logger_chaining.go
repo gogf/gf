@@ -245,3 +245,14 @@ func (l *Logger) Async(enabled ...bool) *Logger {
 	}
 	return logger
 }
+
+func (l *Logger) Color(color logColor) *Logger {
+	logger := (*Logger)(nil)
+	if l.parent == nil {
+		logger = l.Clone()
+	} else {
+		logger = l
+	}
+	logger.SetColor(color)
+	return logger
+}

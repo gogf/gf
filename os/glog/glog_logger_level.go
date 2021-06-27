@@ -29,6 +29,19 @@ const (
 	LEVEL_FATA             // 1024
 )
 
+type logColor int
+
+const (
+	COLOR_BLACK logColor = 30 + iota
+	COLOR_RED
+	COLOR_GREEN
+	COLOR_YELLOW
+	COLOR_BLUE
+	COLOR_MAGENTA
+	COLOR_CYAN
+	COLOR_WHITE
+)
+
 // defaultLevelPrefixes defines the default level and its mapping prefix string.
 var defaultLevelPrefixes = map[int]string{
 	LEVEL_DEBU: "DEBU",
@@ -39,6 +52,18 @@ var defaultLevelPrefixes = map[int]string{
 	LEVEL_CRIT: "CRIT",
 	LEVEL_PANI: "PANI",
 	LEVEL_FATA: "FATA",
+}
+
+// defaultLevelColor defines the default level and its mapping prefix string.
+var defaultLevelColor = map[int]logColor{
+	LEVEL_DEBU: COLOR_YELLOW,
+	LEVEL_INFO: COLOR_GREEN,
+	LEVEL_NOTI: COLOR_CYAN,
+	LEVEL_WARN: COLOR_YELLOW,
+	LEVEL_ERRO: COLOR_RED,
+	LEVEL_CRIT: COLOR_RED,
+	LEVEL_PANI: COLOR_RED,
+	LEVEL_FATA: COLOR_RED,
 }
 
 // levelStringMap defines level string name to its level mapping.

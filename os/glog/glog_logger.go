@@ -43,6 +43,7 @@ const (
 	defaultFilePerm   = os.FileMode(0666)
 	defaultFileExpire = time.Minute
 	pathFilterKey     = "/os/glog/glog"
+	bufferStdOut	  = "stdOut"
 )
 
 const (
@@ -220,20 +221,19 @@ func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
 
 // printToWriter writes buffer to writer.
 func (l *Logger) printToWriter(ctx context.Context, input *HandlerInput) {
-	buffer := input.Buffer()
 	if l.config.Writer == nil {
 		// Output content to disk file.
 		if l.config.Path != "" {
-			l.printToFile(input.Time, buffer)
+			l.printToFile(input.Time, input.Buffer())
 		}
 		// Allow output to stdout?
 		if l.config.StdoutPrint {
-			if _, err := os.Stdout.Write(buffer.Bytes()); err != nil {
+			if _, err := os.Stdout.Write(input.Buffer(bufferStdOut).Bytes()); err != nil {
 				intlog.Error(err)
 			}
 		}
 	} else {
-		if _, err := l.config.Writer.Write(buffer.Bytes()); err != nil {
+		if _, err := l.config.Writer.Write(input.Buffer().Bytes()); err != nil {
 			// panic(err)
 			intlog.Error(err)
 		}

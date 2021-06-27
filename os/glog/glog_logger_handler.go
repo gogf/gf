@@ -9,6 +9,7 @@ package glog
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"time"
 )
 
@@ -42,11 +43,15 @@ func (i *HandlerInput) addStringToBuffer(buffer *bytes.Buffer, s string) {
 	buffer.WriteString(s)
 }
 
-func (i *HandlerInput) Buffer() *bytes.Buffer {
+func (i *HandlerInput) Buffer(bufferType ...string) *bytes.Buffer {
 	buffer := bytes.NewBuffer(nil)
 	buffer.WriteString(i.TimeFormat)
 	if i.LevelFormat != "" {
-		i.addStringToBuffer(buffer, i.LevelFormat)
+		if len(bufferType) > 0 && bufferType[0] == bufferStdOut {
+			i.addStringToBuffer(buffer, i.getLevelFormatWithColor())
+		} else {
+			i.addStringToBuffer(buffer, i.LevelFormat)
+		}
 	}
 	if i.CallerFunc != "" {
 		i.addStringToBuffer(buffer, i.CallerFunc)
@@ -65,6 +70,16 @@ func (i *HandlerInput) Buffer() *bytes.Buffer {
 	}
 	i.addStringToBuffer(buffer, "\n")
 	return buffer
+}
+
+// getLevelFormatWithColor returns the prefix string with color.
+func (i *HandlerInput) getLevelFormatWithColor() string {
+	s := i.LevelFormat
+	color := defaultLevelColor[i.Level]
+	if i.logger.config.color != 0 {
+		color = i.logger.config.color
+	}
+	return fmt.Sprintf("\x1b[0;%dm%s\x1b[0m", color, s)
 }
 
 func (i *HandlerInput) String() string {
