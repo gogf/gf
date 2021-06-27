@@ -43,11 +43,11 @@ func (i *HandlerInput) addStringToBuffer(buffer *bytes.Buffer, s string) {
 	buffer.WriteString(s)
 }
 
-func (i *HandlerInput) Buffer(bufferType ...string) *bytes.Buffer {
+func (i *HandlerInput) Buffer(withColor ...bool) *bytes.Buffer {
 	buffer := bytes.NewBuffer(nil)
 	buffer.WriteString(i.TimeFormat)
 	if i.LevelFormat != "" {
-		if len(bufferType) > 0 && bufferType[0] == bufferStdOut {
+		if i.logger.config.FileColor || (len(withColor) > 0 && withColor[0] == mustWithColor) {
 			i.addStringToBuffer(buffer, i.getLevelFormatWithColor())
 		} else {
 			i.addStringToBuffer(buffer, i.LevelFormat)
