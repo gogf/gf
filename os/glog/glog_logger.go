@@ -43,7 +43,7 @@ const (
 	defaultFilePerm   = os.FileMode(0666)
 	defaultFileExpire = time.Minute
 	pathFilterKey     = "/os/glog/glog"
-	bufferStdOut      = "stdOut"
+	mustWithColor     = true
 )
 
 const (
@@ -228,7 +228,7 @@ func (l *Logger) printToWriter(ctx context.Context, input *HandlerInput) {
 		}
 		// Allow output to stdout?
 		if l.config.StdoutPrint {
-			if _, err := os.Stdout.Write(input.Buffer(bufferStdOut).Bytes()); err != nil {
+			if _, err := os.Stdout.Write(input.Buffer(mustWithColor).Bytes()); err != nil {
 				intlog.Error(err)
 			}
 		}
