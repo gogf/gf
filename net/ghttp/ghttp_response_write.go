@@ -8,8 +8,10 @@
 package ghttp
 
 import (
+	"errors"
 	"fmt"
 	"github.com/gogf/gf/internal/json"
+	"github.com/golang/protobuf/proto"
 	"net/http"
 
 	"github.com/gogf/gf/encoding/gparser"
@@ -197,6 +199,35 @@ func (r *Response) WriteXml(content interface{}, rootTag ...string) error {
 // of return statement in the handler, for convenience.
 func (r *Response) WriteXmlExit(content interface{}, rootTag ...string) error {
 	if err := r.WriteXml(content, rootTag...); err != nil {
+		return err
+	}
+	r.Request.Exit()
+	return nil
+}
+
+// WriteProtoBuf writes <content> to the response with Protobuf format.
+func (r *Response) WriteProtoBuf(content interface{}) error {
+	switch content.(type) {
+	case []byte:
+		r.Header().Set("Content-Type", "application/x-protobuf")
+		r.Write(content)
+		return nil
+	case proto.Message:
+		if b, err := proto.Marshal(content.(proto.Message)); err != nil {
+			return err
+		} else {
+			r.Header().Set("Content-Type", "application/x-protobuf")
+			r.Write(b)
+		}
+	}
+	return errors.New("not available proto message")
+}
+
+// WriteProtoBufExit writes <content> to the response with Protobuf format and exits executing
+// of current handler if success. The "Exit" feature is commonly used to replace usage
+// of return statement in the handler, for convenience.
+func (r *Response) WriteProtoBufExit(content interface{}) error {
+	if err := r.WriteProtoBuf(content); err != nil {
 		return err
 	}
 	r.Request.Exit()
