@@ -32,6 +32,7 @@ func Scan(params interface{}, pointer interface{}, mapping ...map[string]string)
 	switch pointerElemKind {
 	case reflect.Map:
 		return MapToMap(params, pointer, mapping...)
+
 	case reflect.Array, reflect.Slice:
 		var (
 			sliceElem     = pointerElem.Elem()

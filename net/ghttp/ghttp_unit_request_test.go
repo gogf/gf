@@ -621,3 +621,89 @@ func Test_Params_Parse_Validation(t *testing.T) {
 		t.Assert(client.GetContent("/parse?name=john11&password1=123456&password2=123456"), `ok`)
 	})
 }
+
+func Test_Params_Parse_EmbeddedWithAliasName1(t *testing.T) {
+	// 获取内容列表
+	type ContentGetListInput struct {
+		Type       string
+		CategoryId uint
+		Page       int
+		Size       int
+		Sort       int
+		UserId     uint
+	}
+	// 获取内容列表
+	type ContentGetListReq struct {
+		ContentGetListInput
+		CategoryId uint `p:"cate"`
+		Page       int  `d:"1"  v:"min:0#分页号码错误"`
+		Size       int  `d:"10" v:"max:50#分页数量最大50条"`
+	}
+
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/parse", func(r *ghttp.Request) {
+		var req *ContentGetListReq
+		if err := r.Parse(&req); err != nil {
+			r.Response.Write(err)
+		} else {
+			r.Response.Write(req.ContentGetListInput)
+		}
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		prefix := fmt.Sprintf("http://127.0.0.1:%d", p)
+		client := g.Client()
+		client.SetPrefix(prefix)
+
+		t.Assert(client.GetContent("/parse?cate=1&page=2&size=10"), `{"Type":"","CategoryId":0,"Page":2,"Size":10,"Sort":0,"UserId":0}`)
+	})
+}
+
+func Test_Params_Parse_EmbeddedWithAliasName2(t *testing.T) {
+	// 获取内容列表
+	type ContentGetListInput struct {
+		Type       string
+		CategoryId uint `p:"cate"`
+		Page       int
+		Size       int
+		Sort       int
+		UserId     uint
+	}
+	// 获取内容列表
+	type ContentGetListReq struct {
+		ContentGetListInput
+		CategoryId uint `p:"cate"`
+		Page       int  `d:"1"  v:"min:0#分页号码错误"`
+		Size       int  `d:"10" v:"max:50#分页数量最大50条"`
+	}
+
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/parse", func(r *ghttp.Request) {
+		var req *ContentGetListReq
+		if err := r.Parse(&req); err != nil {
+			r.Response.Write(err)
+		} else {
+			r.Response.Write(req.ContentGetListInput)
+		}
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		prefix := fmt.Sprintf("http://127.0.0.1:%d", p)
+		client := g.Client()
+		client.SetPrefix(prefix)
+
+		t.Assert(client.GetContent("/parse?cate=1&page=2&size=10"), `{"Type":"","CategoryId":1,"Page":2,"Size":10,"Sort":0,"UserId":0}`)
+	})
+}

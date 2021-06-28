@@ -52,7 +52,7 @@ func (d *DriverMysql) Open(config *ConfigNode) (*sql.DB, error) {
 			source = fmt.Sprintf("%s&loc=%s", source, url.QueryEscape(config.Timezone))
 		}
 	}
-	intlog.Printf("Open: %s", source)
+	intlog.Printf(d.GetCtx(), "Open: %s", source)
 	if db, err := sql.Open("mysql", source); err == nil {
 		return db, nil
 	} else {
@@ -81,8 +81,8 @@ func (d *DriverMysql) GetChars() (charLeft string, charRight string) {
 }
 
 // DoCommit handles the sql before posts it to database.
-func (d *DriverMysql) DoCommit(ctx context.Context, link Link, sql string, args []interface{}) (string, []interface{}) {
-	return sql, args
+func (d *DriverMysql) DoCommit(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
+	return d.Core.DoCommit(ctx, link, sql, args)
 }
 
 // Tables retrieves and returns the tables of current schema.

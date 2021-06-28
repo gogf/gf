@@ -8,8 +8,7 @@
 package grpool
 
 import (
-	"errors"
-	"fmt"
+	"github.com/gogf/gf/errors/gerror"
 
 	"github.com/gogf/gf/container/glist"
 	"github.com/gogf/gf/container/gtype"
@@ -70,7 +69,7 @@ func Jobs() int {
 // The job will be executed asynchronously.
 func (p *Pool) Add(f func()) error {
 	for p.closed.Val() {
-		return errors.New("pool closed")
+		return gerror.New("pool closed")
 	}
 	p.list.PushFront(f)
 	// Check whether fork new goroutine or not.
@@ -99,7 +98,7 @@ func (p *Pool) AddWithRecover(userFunc func(), recoverFunc ...func(err error)) e
 		defer func() {
 			if err := recover(); err != nil {
 				if len(recoverFunc) > 0 && recoverFunc[0] != nil {
-					recoverFunc[0](errors.New(fmt.Sprintf(`%v`, err)))
+					recoverFunc[0](gerror.Newf(`%v`, err))
 				}
 			}
 		}()

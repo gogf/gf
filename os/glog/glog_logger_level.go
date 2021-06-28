@@ -7,8 +7,7 @@
 package glog
 
 import (
-	"errors"
-	"fmt"
+	"github.com/gogf/gf/errors/gerror"
 	"strings"
 )
 
@@ -62,8 +61,10 @@ var levelStringMap = map[string]int{
 }
 
 // SetLevel sets the logging level.
+// Note that levels ` LEVEL_CRIT | LEVEL_PANI | LEVEL_FATA ` cannot be removed for logging content,
+// which are automatically added to levels.
 func (l *Logger) SetLevel(level int) {
-	l.config.Level = level
+	l.config.Level = level | LEVEL_CRIT | LEVEL_PANI | LEVEL_FATA
 }
 
 // GetLevel returns the logging level value.
@@ -76,7 +77,7 @@ func (l *Logger) SetLevelStr(levelStr string) error {
 	if level, ok := levelStringMap[strings.ToUpper(levelStr)]; ok {
 		l.config.Level = level
 	} else {
-		return errors.New(fmt.Sprintf(`invalid level string: %s`, levelStr))
+		return gerror.Newf(`invalid level string: %s`, levelStr)
 	}
 	return nil
 }

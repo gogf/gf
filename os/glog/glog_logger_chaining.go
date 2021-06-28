@@ -60,7 +60,7 @@ func (l *Logger) Path(path string) *Logger {
 	if path != "" {
 		if err := logger.SetPath(path); err != nil {
 			// panic(err)
-			intlog.Error(err)
+			intlog.Error(l.getCtx(), err)
 		}
 	}
 	return logger
@@ -79,7 +79,7 @@ func (l *Logger) Cat(category string) *Logger {
 	if logger.config.Path != "" {
 		if err := logger.SetPath(gfile.Join(logger.config.Path, category)); err != nil {
 			// panic(err)
-			intlog.Error(err)
+			intlog.Error(l.getCtx(), err)
 		}
 	}
 	return logger
@@ -122,7 +122,7 @@ func (l *Logger) LevelStr(levelStr string) *Logger {
 	}
 	if err := logger.SetLevelStr(levelStr); err != nil {
 		// panic(err)
-		intlog.Error(err)
+		intlog.Error(l.getCtx(), err)
 	}
 	return logger
 }

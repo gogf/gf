@@ -61,7 +61,7 @@ func Test_MapAttributeConvert(t *testing.T) {
 			Title map[string]interface{}
 		}{}
 
-		err = j.ToStruct(&tx)
+		err = j.Struct(&tx)
 		gtest.Assert(err, nil)
 		t.Assert(tx.Title, g.Map{
 			"l1": "标签1", "l2": "标签2",
@@ -76,7 +76,7 @@ func Test_MapAttributeConvert(t *testing.T) {
 			Title map[string]string
 		}{}
 
-		err = j.ToStruct(&tx)
+		err = j.Struct(&tx)
 		gtest.Assert(err, nil)
 		t.Assert(tx.Title, g.Map{
 			"l1": "标签1", "l2": "标签2",

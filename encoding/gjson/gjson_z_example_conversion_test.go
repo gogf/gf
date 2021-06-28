@@ -100,7 +100,7 @@ func Example_conversionToStruct() {
 			Array []string
 		}
 		users := new(Users)
-		if err := j.ToStruct(users); err != nil {
+		if err := j.Struct(users); err != nil {
 			panic(err)
 		}
 		fmt.Printf(`%+v`, users)

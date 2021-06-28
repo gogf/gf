@@ -51,7 +51,7 @@ func (d *DriverPgsql) Open(config *ConfigNode) (*sql.DB, error) {
 			source = fmt.Sprintf("%s timezone=%s", source, config.Timezone)
 		}
 	}
-	intlog.Printf("Open: %s", source)
+	intlog.Printf(d.GetCtx(), "Open: %s", source)
 	if db, err := sql.Open("postgres", source); err == nil {
 		return db, nil
 	} else {
@@ -80,15 +80,19 @@ func (d *DriverPgsql) GetChars() (charLeft string, charRight string) {
 }
 
 // DoCommit deals with the sql string before commits it to underlying sql driver.
-func (d *DriverPgsql) DoCommit(ctx context.Context, link Link, sql string, args []interface{}) (string, []interface{}) {
+func (d *DriverPgsql) DoCommit(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
+	defer func() {
+		newSql, newArgs, err = d.Core.DoCommit(ctx, link, newSql, newArgs)
+	}()
+
 	var index int
 	// Convert place holder char '?' to string "$x".
 	sql, _ = gregex.ReplaceStringFunc("\\?", sql, func(s string) string {
 		index++
 		return fmt.Sprintf("$%d", index)
 	})
-	sql, _ = gregex.ReplaceString(` LIMIT (\d+),\s*(\d+)`, ` LIMIT $2 OFFSET $1`, sql)
-	return sql, args
+	newSql, _ = gregex.ReplaceString(` LIMIT (\d+),\s*(\d+)`, ` LIMIT $2 OFFSET $1`, sql)
+	return newSql, args, nil
 }
 
 // Tables retrieves and returns the tables of current schema.
