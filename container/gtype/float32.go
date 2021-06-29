@@ -7,11 +7,12 @@
 package gtype
 
 import (
-	"github.com/gogf/gf/util/gconv"
 	"math"
 	"strconv"
 	"sync/atomic"
 	"unsafe"
+
+	"github.com/gogf/gf/util/gconv"
 )
 
 // Float32 is a struct for concurrent-safe operation for type float32.
