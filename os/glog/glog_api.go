@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -18,6 +18,7 @@ func Printf(format string, v ...interface{}) {
 	logger.Printf(format, v...)
 }
 
+// Println is alias of Print.
 // See Print.
 func Println(v ...interface{}) {
 	logger.Println(v...)

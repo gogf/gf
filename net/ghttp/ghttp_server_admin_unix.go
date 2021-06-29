@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -9,6 +9,7 @@
 package ghttp
 
 import (
+	"context"
 	"github.com/gogf/gf/internal/intlog"
 	"os"
 	"os/signal"
@@ -33,16 +34,24 @@ func handleProcessSignal() {
 	)
 	for {
 		sig = <-procSignalChan
-		intlog.Printf(`signal received: %s`, sig.String())
+		intlog.Printf(context.TODO(), `signal received: %s`, sig.String())
 		switch sig {
-		// Stop the servers.
-		case syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGTERM, syscall.SIGABRT:
+		// Shutdown the servers.
+		case syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGABRT:
 			shutdownWebServers(sig.String())
+			return
+
+		// Shutdown the servers gracefully.
+		// Especially from K8S when running server in POD.
+		case syscall.SIGTERM:
+			shutdownWebServersGracefully(sig.String())
 			return
 
 		// Restart the servers.
 		case syscall.SIGUSR1:
-			restartWebServers(sig.String())
+			if err := restartWebServers(sig.String()); err != nil {
+				intlog.Error(context.TODO(), err)
+			}
 			return
 
 		default:

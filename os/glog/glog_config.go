@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -147,4 +147,9 @@ func SetLevelPrefixes(prefixes map[int]string) {
 // GetLevelPrefix returns the prefix string for specified level.
 func GetLevelPrefix(level int) string {
 	return logger.GetLevelPrefix(level)
+}
+
+// SetHandlers sets the logging handlers for default logger.
+func SetHandlers(handlers ...Handler) {
+	logger.SetHandlers(handlers...)
 }

@@ -1,4 +1,4 @@
-// Copyright 2020 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -14,7 +14,7 @@ import (
 	"testing"
 )
 
-func Test_Json(t *testing.T) {
+func TestVar_Json(t *testing.T) {
 	// Marshal
 	gtest.C(t, func(t *gtest.T) {
 		s := "i love gf"
@@ -41,7 +41,7 @@ func Test_Json(t *testing.T) {
 		b, err := json.Marshal(s)
 		t.Assert(err, nil)
 
-		err = json.Unmarshal(b, v)
+		err = json.UnmarshalUseNumber(b, v)
 		t.Assert(err, nil)
 		t.Assert(v.String(), s)
 	})
@@ -52,7 +52,7 @@ func Test_Json(t *testing.T) {
 		b, err := json.Marshal(s)
 		t.Assert(err, nil)
 
-		err = json.Unmarshal(b, &v)
+		err = json.UnmarshalUseNumber(b, &v)
 		t.Assert(err, nil)
 		t.Assert(v.String(), s)
 	})

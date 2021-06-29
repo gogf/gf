@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -12,8 +12,8 @@
 package gspath
 
 import (
-	"errors"
-	"fmt"
+	"context"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 	"os"
 	"sort"
@@ -59,7 +59,7 @@ func New(path string, cache bool) *SPath {
 }
 
 // Get creates and returns a instance of searching manager for given path.
-// The parameter <cache> specifies whether using cache feature for this manager.
+// The parameter `cache` specifies whether using cache feature for this manager.
 // If cache feature is enabled, it asynchronously and recursively scans the path
 // and updates all sub files/folders to the cache using package gfsnotify.
 func Get(root string, cache bool) *SPath {
@@ -71,24 +71,24 @@ func Get(root string, cache bool) *SPath {
 	}).(*SPath)
 }
 
-// Search searches file <name> under path <root>.
-// The parameter <root> should be a absolute path. It will not automatically
-// convert <root> to absolute path for performance reason.
-// The optional parameter <indexFiles> specifies the searching index files when the result is a directory.
-// For example, if the result <a> is a directory, and <indexFiles> is [index.html, main.html], it will also
-// search [index.html, main.html] under <a>. It returns the absolute file path if any of them found,
-// or else it returns <a>.
+// Search searches file `name` under path `root`.
+// The parameter `root` should be a absolute path. It will not automatically
+// convert `root` to absolute path for performance reason.
+// The optional parameter `indexFiles` specifies the searching index files when the result is a directory.
+// For example, if the result `filePath` is a directory, and `indexFiles` is [index.html, main.html], it will also
+// search [index.html, main.html] under `filePath`. It returns the absolute file path if any of them found,
+// or else it returns `filePath`.
 func Search(root string, name string, indexFiles ...string) (filePath string, isDir bool) {
 	return Get(root, false).Search(name, indexFiles...)
 }
 
-// SearchWithCache searches file <name> under path <root> with cache feature enabled.
-// The parameter <root> should be a absolute path. It will not automatically
-// convert <root> to absolute path for performance reason.
-// The optional parameter <indexFiles> specifies the searching index files when the result is a directory.
-// For example, if the result <a> is a directory, and <indexFiles> is [index.html, main.html], it will also
-// search [index.html, main.html] under <a>. It returns the absolute file path if any of them found,
-// or else it returns <a>.
+// SearchWithCache searches file `name` under path `root` with cache feature enabled.
+// The parameter `root` should be a absolute path. It will not automatically
+// convert `root` to absolute path for performance reason.
+// The optional parameter `indexFiles` specifies the searching index files when the result is a directory.
+// For example, if the result `filePath` is a directory, and `indexFiles` is [index.html, main.html], it will also
+// search [index.html, main.html] under `filePath`. It returns the absolute file path if any of them found,
+// or else it returns `filePath`.
 func SearchWithCache(root string, name string, indexFiles ...string) (filePath string, isDir bool) {
 	return Get(root, true).Search(name, indexFiles...)
 }
@@ -103,7 +103,7 @@ func (sp *SPath) Set(path string) (realPath string, err error) {
 		}
 	}
 	if realPath == "" {
-		return realPath, errors.New(fmt.Sprintf(`path "%s" does not exist`, path))
+		return realPath, gerror.Newf(`path "%s" does not exist`, path)
 	}
 	// The set path must be a directory.
 	if gfile.IsDir(realPath) {
@@ -113,7 +113,7 @@ func (sp *SPath) Set(path string) (realPath string, err error) {
 				sp.removeMonitorByPath(v)
 			}
 		}
-		intlog.Print("paths clear:", sp.paths)
+		intlog.Print(context.TODO(), "paths clear:", sp.paths)
 		sp.paths.Clear()
 		if sp.cache != nil {
 			sp.cache.Clear()
@@ -123,7 +123,7 @@ func (sp *SPath) Set(path string) (realPath string, err error) {
 		sp.addMonitorByPath(realPath)
 		return realPath, nil
 	} else {
-		return "", errors.New(path + " should be a folder")
+		return "", gerror.New(path + " should be a folder")
 	}
 }
 
@@ -138,7 +138,7 @@ func (sp *SPath) Add(path string) (realPath string, err error) {
 		}
 	}
 	if realPath == "" {
-		return realPath, errors.New(fmt.Sprintf(`path "%s" does not exist`, path))
+		return realPath, gerror.Newf(`path "%s" does not exist`, path)
 	}
 	// The added path must be a directory.
 	if gfile.IsDir(realPath) {
@@ -152,15 +152,15 @@ func (sp *SPath) Add(path string) (realPath string, err error) {
 		}
 		return realPath, nil
 	} else {
-		return "", errors.New(path + " should be a folder")
+		return "", gerror.New(path + " should be a folder")
 	}
 }
 
-// Search searches file <name> in the manager.
-// The optional parameter <indexFiles> specifies the searching index files when the result is a directory.
-// For example, if the result <a> is a directory, and <indexFiles> is [index.html, main.html], it will also
-// search [index.html, main.html] under <a>. It returns the absolute file path if any of them found,
-// or else it returns <a>.
+// Search searches file `name` in the manager.
+// The optional parameter `indexFiles` specifies the searching index files when the result is a directory.
+// For example, if the result `filePath` is a directory, and `indexFiles` is [index.html, main.html], it will also
+// search [index.html, main.html] under `filePath`. It returns the absolute file path if any of them found,
+// or else it returns `filePath`.
 func (sp *SPath) Search(name string, indexFiles ...string) (filePath string, isDir bool) {
 	// No cache enabled.
 	if sp.cache == nil {
@@ -213,8 +213,8 @@ func (sp *SPath) Search(name string, indexFiles ...string) (filePath string, isD
 	return
 }
 
-// Remove deletes the <path> from cache files of the manager.
-// The parameter <path> can be either a absolute path or just a relative file name.
+// Remove deletes the `path` from cache files of the manager.
+// The parameter `path` can be either a absolute path or just a relative file name.
 func (sp *SPath) Remove(path string) {
 	if sp.cache == nil {
 		return

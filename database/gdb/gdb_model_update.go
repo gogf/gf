@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -9,17 +9,18 @@ package gdb
 import (
 	"database/sql"
 	"fmt"
+	"reflect"
+
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/gutil"
-	"reflect"
 )
 
 // Update does "UPDATE ... " statement for the model.
 //
-// If the optional parameter <dataAndWhere> is given, the dataAndWhere[0] is the updated data field,
+// If the optional parameter `dataAndWhere` is given, the dataAndWhere[0] is the updated data field,
 // and dataAndWhere[1:] is treated as where condition fields.
 // Also see Model.Data and Model.Where functions.
 func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err error) {
@@ -82,10 +83,29 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 		return nil, gerror.New("there should be WHERE condition statement for UPDATE operation")
 	}
 	return m.db.DoUpdate(
+		m.GetCtx(),
 		m.getLink(true),
 		m.tables,
 		newData,
 		conditionStr,
 		m.mergeArguments(conditionArgs)...,
 	)
+}
+
+// Increment increments a column's value by a given amount.
+// The parameter `amount` can be type of float or integer.
+func (m *Model) Increment(column string, amount interface{}) (sql.Result, error) {
+	return m.getModel().Data(column, &Counter{
+		Field: column,
+		Value: gconv.Float64(amount),
+	}).Update()
+}
+
+// Decrement decrements a column's value by a given amount.
+// The parameter `amount` can be type of float or integer.
+func (m *Model) Decrement(column string, amount interface{}) (sql.Result, error) {
+	return m.getModel().Data(column, &Counter{
+		Field: column,
+		Value: -gconv.Float64(amount),
+	}).Update()
 }

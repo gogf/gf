@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,8 +7,7 @@
 package glog
 
 import (
-	"errors"
-	"fmt"
+	"github.com/gogf/gf/errors/gerror"
 	"strings"
 )
 
@@ -18,6 +17,7 @@ const (
 	LEVEL_ALL  = LEVEL_DEBU | LEVEL_INFO | LEVEL_NOTI | LEVEL_WARN | LEVEL_ERRO | LEVEL_CRIT
 	LEVEL_DEV  = LEVEL_ALL
 	LEVEL_PROD = LEVEL_WARN | LEVEL_ERRO | LEVEL_CRIT
+	LEVEL_NONE = 0
 	LEVEL_DEBU = 1 << iota // 8
 	LEVEL_INFO             // 16
 	LEVEL_NOTI             // 32
@@ -61,8 +61,10 @@ var levelStringMap = map[string]int{
 }
 
 // SetLevel sets the logging level.
+// Note that levels ` LEVEL_CRIT | LEVEL_PANI | LEVEL_FATA ` cannot be removed for logging content,
+// which are automatically added to levels.
 func (l *Logger) SetLevel(level int) {
-	l.config.Level = level
+	l.config.Level = level | LEVEL_CRIT | LEVEL_PANI | LEVEL_FATA
 }
 
 // GetLevel returns the logging level value.
@@ -75,7 +77,7 @@ func (l *Logger) SetLevelStr(levelStr string) error {
 	if level, ok := levelStringMap[strings.ToUpper(levelStr)]; ok {
 		l.config.Level = level
 	} else {
-		return errors.New(fmt.Sprintf(`invalid level string: %s`, levelStr))
+		return gerror.Newf(`invalid level string: %s`, levelStr)
 	}
 	return nil
 }

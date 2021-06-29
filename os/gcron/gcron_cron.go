@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,8 +7,7 @@
 package gcron
 
 import (
-	"errors"
-	"fmt"
+	"github.com/gogf/gf/errors/gerror"
 	"time"
 
 	"github.com/gogf/gf/container/garray"
@@ -63,7 +62,7 @@ func (c *Cron) GetLogLevel() int {
 func (c *Cron) Add(pattern string, job func(), name ...string) (*Entry, error) {
 	if len(name) > 0 {
 		if c.Search(name[0]) != nil {
-			return nil, errors.New(fmt.Sprintf(`cron job "%s" already exists`, name[0]))
+			return nil, gerror.Newf(`cron job "%s" already exists`, name[0])
 		}
 	}
 	return c.addEntry(pattern, job, false, name...)

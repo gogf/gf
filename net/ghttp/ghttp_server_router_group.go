@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -179,12 +179,10 @@ func (g *RouterGroup) ALL(pattern string, object interface{}, params ...interfac
 }
 
 // ALLMap registers http handlers for http methods using map.
-func (g *RouterGroup) ALLMap(m map[string]interface{}) *RouterGroup {
-	var group *RouterGroup
+func (g *RouterGroup) ALLMap(m map[string]interface{}) {
 	for pattern, object := range m {
-		group = g.ALL(pattern, object)
+		g.ALL(pattern, object)
 	}
-	return group
 }
 
 // GET registers a http handler to given route pattern and http method: GET.
@@ -250,7 +248,7 @@ func (g *RouterGroup) Middleware(handlers ...HandlerFunc) *RouterGroup {
 
 // preBindToLocalArray adds the route registering parameters to internal variable array for lazily registering feature.
 func (g *RouterGroup) preBindToLocalArray(bindType string, pattern string, object interface{}, params ...interface{}) *RouterGroup {
-	_, file, line := gdebug.CallerWithFilter(gFILTER_KEY)
+	_, file, line := gdebug.CallerWithFilter(stackFilterKey)
 	preBindItems = append(preBindItems, &preBindItem{
 		group:    g,
 		bindType: bindType,

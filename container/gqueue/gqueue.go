@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -35,10 +35,8 @@ type Queue struct {
 }
 
 const (
-	// Size for queue buffer.
-	gDEFAULT_QUEUE_SIZE = 10000
-	// Max batch size per-fetching from list.
-	gDEFAULT_MAX_BATCH_SIZE = 10
+	defaultQueueSize = 10000 // Size for queue buffer.
+	defaultBatchSize = 10    // Max batch size per-fetching from list.
 )
 
 // New returns an empty queue object.
@@ -54,7 +52,7 @@ func New(limit ...int) *Queue {
 	} else {
 		q.list = glist.New(true)
 		q.events = make(chan struct{}, math.MaxInt32)
-		q.C = make(chan interface{}, gDEFAULT_QUEUE_SIZE)
+		q.C = make(chan interface{}, defaultQueueSize)
 		go q.asyncLoopFromListToChannel()
 	}
 	return q
@@ -72,8 +70,8 @@ func (q *Queue) asyncLoopFromListToChannel() {
 		<-q.events
 		for !q.closed.Val() {
 			if length := q.list.Len(); length > 0 {
-				if length > gDEFAULT_MAX_BATCH_SIZE {
-					length = gDEFAULT_MAX_BATCH_SIZE
+				if length > defaultBatchSize {
+					length = defaultBatchSize
 				}
 				for _, v := range q.list.PopFronts(length) {
 					// When q.C is closed, it will panic here, especially q.C is being blocked for writing.
@@ -101,7 +99,7 @@ func (q *Queue) Push(v interface{}) {
 		q.C <- v
 	} else {
 		q.list.PushBack(v)
-		if len(q.events) < gDEFAULT_QUEUE_SIZE {
+		if len(q.events) < defaultQueueSize {
 			q.events <- struct{}{}
 		}
 	}
@@ -124,14 +122,14 @@ func (q *Queue) Close() {
 	if q.limit > 0 {
 		close(q.C)
 	}
-	for i := 0; i < gDEFAULT_MAX_BATCH_SIZE; i++ {
+	for i := 0; i < defaultBatchSize; i++ {
 		q.Pop()
 	}
 }
 
 // Len returns the length of the queue.
 // Note that the result might not be accurate as there's a
-// asynchronize channel reading the list constantly.
+// asynchronous channel reading the list constantly.
 func (q *Queue) Len() (length int) {
 	if q.list != nil {
 		length += q.list.Len()

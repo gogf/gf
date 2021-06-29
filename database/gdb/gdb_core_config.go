@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -8,16 +8,12 @@ package gdb
 
 import (
 	"fmt"
-	"github.com/gogf/gf/os/gcache"
 	"sync"
 	"time"
 
-	"github.com/gogf/gf/os/glog"
-)
+	"github.com/gogf/gf/os/gcache"
 
-const (
-	DEFAULT_GROUP_NAME = "default" // Deprecated, use DefaultGroupName instead.
-	DefaultGroupName   = "default" // Default group name.
+	"github.com/gogf/gf/os/glog"
 )
 
 // Config is the configuration management object.
@@ -28,27 +24,37 @@ type ConfigGroup []ConfigNode
 
 // ConfigNode is configuration for one node.
 type ConfigNode struct {
-	Host                 string        // Host of server, ip or domain like: 127.0.0.1, localhost
-	Port                 string        // Port, it's commonly 3306.
-	User                 string        // Authentication username.
-	Pass                 string        // Authentication password.
-	Name                 string        // Default used database name.
-	Type                 string        // Database type: mysql, sqlite, mssql, pgsql, oracle.
-	Role                 string        // (Optional, "master" in default) Node role, used for master-slave mode: master, slave.
-	Debug                bool          // (Optional) Debug mode enables debug information logging and output.
-	Prefix               string        // (Optional) Table prefix.
-	DryRun               bool          // (Optional) Dry run, which does SELECT but no INSERT/UPDATE/DELETE statements.
-	Weight               int           // (Optional) Weight for load balance calculating, it's useless if there's just one node.
-	Charset              string        // (Optional, "utf8mb4" in default) Custom charset when operating on database.
-	LinkInfo             string        `json:"link"`        // (Optional) Custom link information, when it is used, configuration Host/Port/User/Pass/Name are ignored.
-	MaxIdleConnCount     int           `json:"maxidle"`     // (Optional) Max idle connection configuration for underlying connection pool.
-	MaxOpenConnCount     int           `json:"maxopen"`     // (Optional) Max open connection configuration for underlying connection pool.
-	MaxConnLifetime      time.Duration `json:"maxlifetime"` // (Optional) Max connection TTL configuration for underlying connection pool.
-	CreatedAt            string        // (Optional) The filed name of table for automatic-filled created datetime.
-	UpdatedAt            string        // (Optional) The filed name of table for automatic-filled updated datetime.
-	DeletedAt            string        // (Optional) The filed name of table for automatic-filled updated datetime.
-	TimeMaintainDisabled bool          // (Optional) Disable the automatic time maintaining feature.
+	Host                 string        `json:"host"`                 // Host of server, ip or domain like: 127.0.0.1, localhost
+	Port                 string        `json:"port"`                 // Port, it's commonly 3306.
+	User                 string        `json:"user"`                 // Authentication username.
+	Pass                 string        `json:"pass"`                 // Authentication password.
+	Name                 string        `json:"name"`                 // Default used database name.
+	Type                 string        `json:"type"`                 // Database type: mysql, sqlite, mssql, pgsql, oracle.
+	Link                 string        `json:"link"`                 // (Optional) Custom link information, when it is used, configuration Host/Port/User/Pass/Name are ignored.
+	Role                 string        `json:"role"`                 // (Optional, "master" in default) Node role, used for master-slave mode: master, slave.
+	Debug                bool          `json:"debug"`                // (Optional) Debug mode enables debug information logging and output.
+	Prefix               string        `json:"prefix"`               // (Optional) Table prefix.
+	DryRun               bool          `json:"dryRun"`               // (Optional) Dry run, which does SELECT but no INSERT/UPDATE/DELETE statements.
+	Weight               int           `json:"weight"`               // (Optional) Weight for load balance calculating, it's useless if there's just one node.
+	Charset              string        `json:"charset"`              // (Optional, "utf8mb4" in default) Custom charset when operating on database.
+	Timezone             string        `json:"timezone"`             // (Optional) Sets the time zone for displaying and interpreting time stamps.
+	MaxIdleConnCount     int           `json:"maxIdle"`              // (Optional) Max idle connection configuration for underlying connection pool.
+	MaxOpenConnCount     int           `json:"maxOpen"`              // (Optional) Max open connection configuration for underlying connection pool.
+	MaxConnLifeTime      time.Duration `json:"maxLifeTime"`          // (Optional) Max amount of time a connection may be idle before being closed.
+	QueryTimeout         time.Duration `json:"queryTimeout"`         // (Optional) Max query time for per dql.
+	ExecTimeout          time.Duration `json:"execTimeout"`          // (Optional) Max exec time for dml.
+	TranTimeout          time.Duration `json:"tranTimeout"`          // (Optional) Max exec time time for a transaction.
+	PrepareTimeout       time.Duration `json:"prepareTimeout"`       // (Optional) Max exec time time for prepare operation.
+	CreatedAt            string        `json:"createdAt"`            // (Optional) The filed name of table for automatic-filled created datetime.
+	UpdatedAt            string        `json:"updatedAt"`            // (Optional) The filed name of table for automatic-filled updated datetime.
+	DeletedAt            string        `json:"deletedAt"`            // (Optional) The filed name of table for automatic-filled updated datetime.
+	TimeMaintainDisabled bool          `json:"timeMaintainDisabled"` // (Optional) Disable the automatic time maintaining feature.
+	CtxStrict            bool          `json:"ctxStrict"`            // (Optional) Strictly require context input for all database operations.
 }
+
+const (
+	DefaultGroupName = "default" // Default group name.
+)
 
 // configs is internal used configuration object.
 var configs struct {
@@ -138,20 +144,39 @@ func (c *Core) GetLogger() *glog.Logger {
 	return c.logger
 }
 
-// SetMaxIdleConnCount sets the max idle connection count for underlying connection pool.
+// SetMaxIdleConnCount sets the maximum number of connections in the idle
+// connection pool.
+//
+// If MaxOpenConns is greater than 0 but less than the new MaxIdleConns,
+// then the new MaxIdleConns will be reduced to match the MaxOpenConns limit.
+//
+// If n <= 0, no idle connections are retained.
+//
+// The default max idle connections is currently 2. This may change in
+// a future release.
 func (c *Core) SetMaxIdleConnCount(n int) {
 	c.config.MaxIdleConnCount = n
 }
 
-// SetMaxOpenConnCount sets the max open connection count for underlying connection pool.
+// SetMaxOpenConnCount sets the maximum number of open connections to the database.
+//
+// If MaxIdleConns is greater than 0 and the new MaxOpenConns is less than
+// MaxIdleConns, then MaxIdleConns will be reduced to match the new
+// MaxOpenConns limit.
+//
+// If n <= 0, then there is no limit on the number of open connections.
+// The default is 0 (unlimited).
 func (c *Core) SetMaxOpenConnCount(n int) {
 	c.config.MaxOpenConnCount = n
 }
 
-// SetMaxConnLifetime sets the connection TTL for underlying connection pool.
-// If parameter <d> <= 0, it means the connection never expires.
-func (c *Core) SetMaxConnLifetime(d time.Duration) {
-	c.config.MaxConnLifetime = d
+// SetMaxConnLifeTime sets the maximum amount of time a connection may be reused.
+//
+// Expired connections may be closed lazily before reuse.
+//
+// If d <= 0, connections are not closed due to a connection's age.
+func (c *Core) SetMaxConnLifeTime(d time.Duration) {
+	c.config.MaxConnLifeTime = d
 }
 
 // String returns the node as string.
@@ -162,8 +187,8 @@ func (node *ConfigNode) String() string {
 		node.Name, node.Type, node.Role, node.Charset, node.Debug,
 		node.MaxIdleConnCount,
 		node.MaxOpenConnCount,
-		node.MaxConnLifetime,
-		node.LinkInfo,
+		node.MaxConnLifeTime,
+		node.Link,
 	)
 }
 
@@ -201,7 +226,7 @@ func (c *Core) SetDryRun(enabled bool) {
 // GetDryRun returns the DryRun value.
 // Deprecated, use GetConfig instead.
 func (c *Core) GetDryRun() bool {
-	return c.config.DryRun
+	return c.config.DryRun || allDryRun
 }
 
 // GetPrefix returns the table prefix string configured.

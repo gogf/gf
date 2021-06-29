@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -18,8 +18,8 @@ type boolStruct struct {
 
 func Test_Bool(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var i interface{} = nil
-		t.AssertEQ(gconv.Bool(i), false)
+		var any interface{} = nil
+		t.AssertEQ(gconv.Bool(any), false)
 		t.AssertEQ(gconv.Bool(false), false)
 		t.AssertEQ(gconv.Bool(nil), false)
 		t.AssertEQ(gconv.Bool(0), false)

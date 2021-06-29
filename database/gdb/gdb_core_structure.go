@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/util/gutil"
 
 	"github.com/gogf/gf/text/gstr"
@@ -26,8 +25,8 @@ import (
 // convertFieldValueToLocalValue automatically checks and converts field value from database type
 // to golang variable type.
 func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType string) interface{} {
-	// If there's no type retrieved, it returns the <fieldValue> directly
-	// to use its original data type, as <fieldValue> is type of interface{}.
+	// If there's no type retrieved, it returns the `fieldValue` directly
+	// to use its original data type, as `fieldValue` is type of interface{}.
 	if fieldType == "" {
 		return fieldValue
 	}
@@ -57,6 +56,7 @@ func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType s
 		return gconv.Int(gconv.String(fieldValue))
 
 	case
+		"int8", // For pgsql, int8 = bigint.
 		"big_int",
 		"bigint",
 		"bigserial":
@@ -103,7 +103,8 @@ func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType s
 
 	case
 		"datetime",
-		"timestamp":
+		"timestamp",
+		"timestamptz":
 		if t, ok := fieldValue.(time.Time); ok {
 			return gtime.NewFromTime(t)
 		}
@@ -153,7 +154,7 @@ func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType s
 // mappingAndFilterData automatically mappings the map key to table field and removes
 // all key-value pairs that are not the field of given table.
 func (c *Core) mappingAndFilterData(schema, table string, data map[string]interface{}, filter bool) (map[string]interface{}, error) {
-	if fieldsMap, err := c.DB.TableFields(table, schema); err == nil {
+	if fieldsMap, err := c.db.TableFields(c.GetCtx(), table, schema); err == nil {
 		fieldsKeyMap := make(map[string]interface{}, len(fieldsMap))
 		for k, _ := range fieldsMap {
 			fieldsKeyMap[k] = nil
@@ -166,15 +167,11 @@ func (c *Core) mappingAndFilterData(schema, table string, data map[string]interf
 				if foundKey != "" {
 					data[foundKey] = dataValue
 					delete(data, dataKey)
-				} else if !filter {
-					if schema != "" {
-						return nil, gerror.Newf(`no column of name "%s" found for table "%s" in schema "%s"`, dataKey, table, schema)
-					}
-					return nil, gerror.Newf(`no column of name "%s" found for table "%s"`, dataKey, table)
 				}
 			}
 		}
 		// Data filtering.
+		// It deletes all key-value pairs that has incorrect field name.
 		if filter {
 			for dataKey, _ := range data {
 				if _, ok := fieldsMap[dataKey]; !ok {
@@ -190,7 +187,7 @@ func (c *Core) mappingAndFilterData(schema, table string, data map[string]interf
 //func (c *Core) filterFields(schema, table string, data map[string]interface{}) map[string]interface{} {
 //	// It must use data copy here to avoid its changing the origin data map.
 //	newDataMap := make(map[string]interface{}, len(data))
-//	if fields, err := c.DB.TableFields(table, schema); err == nil {
+//	if fields, err := c.db.TableFields(table, schema); err == nil {
 //		for k, v := range data {
 //			if _, ok := fields[k]; ok {
 //				newDataMap[k] = v

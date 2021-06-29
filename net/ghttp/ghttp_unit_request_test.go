@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -584,5 +584,126 @@ func Test_Params_Parse_DefaultValueTag(t *testing.T) {
 		t.Assert(client.PostContent("/parse"), `{"Name":"john","Score":60}`)
 		t.Assert(client.PostContent("/parse", `{"name":"smith"}`), `{"Name":"smith","Score":60}`)
 		t.Assert(client.PostContent("/parse", `{"name":"smith", "score":100}`), `{"Name":"smith","Score":100}`)
+	})
+}
+
+func Test_Params_Parse_Validation(t *testing.T) {
+	type RegisterReq struct {
+		Name  string `p:"username"  v:"required|length:6,30#请输入账号|账号长度为:min到:max位"`
+		Pass  string `p:"password1" v:"required|length:6,30#请输入密码|密码长度不够"`
+		Pass2 string `p:"password2" v:"required|length:6,30|same:password1#请确认密码|密码长度不够|两次密码不一致"`
+	}
+
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/parse", func(r *ghttp.Request) {
+		var req *RegisterReq
+		if err := r.Parse(&req); err != nil {
+			r.Response.Write(err)
+		} else {
+			r.Response.Write("ok")
+		}
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		prefix := fmt.Sprintf("http://127.0.0.1:%d", p)
+		client := g.Client()
+		client.SetPrefix(prefix)
+
+		t.Assert(client.GetContent("/parse"), `请输入账号; 账号长度为6到30位; 请输入密码; 密码长度不够; 请确认密码; 密码长度不够; 两次密码不一致`)
+		t.Assert(client.GetContent("/parse?name=john11&password1=123456&password2=123"), `密码长度不够; 两次密码不一致`)
+		t.Assert(client.GetContent("/parse?name=john&password1=123456&password2=123456"), `账号长度为6到30位`)
+		t.Assert(client.GetContent("/parse?name=john11&password1=123456&password2=123456"), `ok`)
+	})
+}
+
+func Test_Params_Parse_EmbeddedWithAliasName1(t *testing.T) {
+	// 获取内容列表
+	type ContentGetListInput struct {
+		Type       string
+		CategoryId uint
+		Page       int
+		Size       int
+		Sort       int
+		UserId     uint
+	}
+	// 获取内容列表
+	type ContentGetListReq struct {
+		ContentGetListInput
+		CategoryId uint `p:"cate"`
+		Page       int  `d:"1"  v:"min:0#分页号码错误"`
+		Size       int  `d:"10" v:"max:50#分页数量最大50条"`
+	}
+
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/parse", func(r *ghttp.Request) {
+		var req *ContentGetListReq
+		if err := r.Parse(&req); err != nil {
+			r.Response.Write(err)
+		} else {
+			r.Response.Write(req.ContentGetListInput)
+		}
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		prefix := fmt.Sprintf("http://127.0.0.1:%d", p)
+		client := g.Client()
+		client.SetPrefix(prefix)
+
+		t.Assert(client.GetContent("/parse?cate=1&page=2&size=10"), `{"Type":"","CategoryId":0,"Page":2,"Size":10,"Sort":0,"UserId":0}`)
+	})
+}
+
+func Test_Params_Parse_EmbeddedWithAliasName2(t *testing.T) {
+	// 获取内容列表
+	type ContentGetListInput struct {
+		Type       string
+		CategoryId uint `p:"cate"`
+		Page       int
+		Size       int
+		Sort       int
+		UserId     uint
+	}
+	// 获取内容列表
+	type ContentGetListReq struct {
+		ContentGetListInput
+		CategoryId uint `p:"cate"`
+		Page       int  `d:"1"  v:"min:0#分页号码错误"`
+		Size       int  `d:"10" v:"max:50#分页数量最大50条"`
+	}
+
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/parse", func(r *ghttp.Request) {
+		var req *ContentGetListReq
+		if err := r.Parse(&req); err != nil {
+			r.Response.Write(err)
+		} else {
+			r.Response.Write(req.ContentGetListInput)
+		}
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		prefix := fmt.Sprintf("http://127.0.0.1:%d", p)
+		client := g.Client()
+		client.SetPrefix(prefix)
+
+		t.Assert(client.GetContent("/parse?cate=1&page=2&size=10"), `{"Type":"","CategoryId":1,"Page":2,"Size":10,"Sort":0,"UserId":0}`)
 	})
 }

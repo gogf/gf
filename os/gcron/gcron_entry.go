@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -17,7 +17,7 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
-// Timed task entry.
+// Entry is timing task entry.
 type Entry struct {
 	cron     *Cron         // Cron object belonged to.
 	entry    *gtimer.Entry // Associated gtimer.Entry.
@@ -43,7 +43,7 @@ func (c *Cron) addEntry(pattern string, job func(), singleton bool, name ...stri
 		cron:     c,
 		schedule: schedule,
 		jobName:  runtime.FuncForPC(reflect.ValueOf(job).Pointer()).Name(),
-		times:    gtype.NewInt(gDEFAULT_TIMES),
+		times:    gtype.NewInt(defaultTimes),
 		Job:      job,
 		Time:     time.Now(),
 	}
@@ -104,7 +104,7 @@ func (entry *Entry) Close() {
 	entry.entry.Close()
 }
 
-// Timed task check execution.
+// Timing task check execution.
 // The running times limits feature is implemented by gcron.Entry and cannot be implemented by gtimer.Entry.
 // gcron.Entry relies on gtimer to implement a scheduled task check for gcron.Entry per second.
 func (entry *Entry) check() {
@@ -130,7 +130,7 @@ func (entry *Entry) check() {
 				}
 			}
 			if times < 2000000000 && times > 1000000000 {
-				entry.times.Set(gDEFAULT_TIMES)
+				entry.times.Set(defaultTimes)
 			}
 			glog.Path(path).Level(level).Debugf("[gcron] %s(%s) %s start", entry.Name, entry.schedule.pattern, entry.jobName)
 			defer func() {

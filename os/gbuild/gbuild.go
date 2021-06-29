@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -8,6 +8,7 @@
 package gbuild
 
 import (
+	"context"
 	"github.com/gogf/gf"
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/encoding/gbase64"
@@ -24,15 +25,15 @@ var (
 
 func init() {
 	if builtInVarStr != "" {
-		err := json.Unmarshal(gbase64.MustDecodeString(builtInVarStr), &builtInVarMap)
+		err := json.UnmarshalUseNumber(gbase64.MustDecodeString(builtInVarStr), &builtInVarMap)
 		if err != nil {
-			intlog.Error(err)
+			intlog.Error(context.TODO(), err)
 		}
 		builtInVarMap["gfVersion"] = gf.VERSION
 		builtInVarMap["goVersion"] = runtime.Version()
-		intlog.Printf("build variables: %+v", builtInVarMap)
+		intlog.Printf(context.TODO(), "build variables: %+v", builtInVarMap)
 	} else {
-		intlog.Print("no build variables")
+		intlog.Print(context.TODO(), "no build variables")
 	}
 }
 
@@ -59,7 +60,7 @@ func Get(name string, def ...interface{}) interface{} {
 	return nil
 }
 
-// Get retrieves and returns the build-in binary variable of given name as gvar.Var.
+// GetVar retrieves and returns the build-in binary variable of given name as gvar.Var.
 func GetVar(name string, def ...interface{}) *gvar.Var {
 	return gvar.New(Get(name, def...))
 }

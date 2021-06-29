@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -9,8 +9,8 @@ package ghttp
 import (
 	"context"
 	"crypto/tls"
-	"errors"
 	"fmt"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/os/gproc"
 	"github.com/gogf/gf/os/gres"
 	"github.com/gogf/gf/text/gstr"
@@ -122,7 +122,7 @@ func (s *gracefulServer) ListenAndServeTLS(certFile, keyFile string, tlsConfig .
 
 	}
 	if err != nil {
-		return errors.New(fmt.Sprintf(`open cert file "%s","%s" failed: %s`, certFile, keyFile, err.Error()))
+		return gerror.Newf(`open cert file "%s","%s" failed: %s`, certFile, keyFile, err.Error())
 	}
 	ln, err := s.getNetListener()
 	if err != nil {

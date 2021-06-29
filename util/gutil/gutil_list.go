@@ -1,4 +1,4 @@
-// Copyright 2020 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -10,16 +10,16 @@ import (
 	"reflect"
 )
 
-// ListItemValues retrieves and returns the elements of all item struct/map with key <key>.
-// Note that the parameter <list> should be type of slice which contains elements of map or struct,
+// ListItemValues retrieves and returns the elements of all item struct/map with key `key`.
+// Note that the parameter `list` should be type of slice which contains elements of map or struct,
 // or else it returns an empty slice.
 //
-// The parameter <list> supports types like:
+// The parameter `list` supports types like:
 // []map[string]interface{}
 // []map[string]sub-map
 // []struct
 // []struct:sub-struct
-// Note that the sub-map/sub-struct makes sense only if the optional parameter <subKey> is given.
+// Note that the sub-map/sub-struct makes sense only if the optional parameter `subKey` is given.
 func ListItemValues(list interface{}, key interface{}, subKey ...interface{}) (values []interface{}) {
 	var reflectValue reflect.Value
 	if v, ok := list.(reflect.Value); ok {
@@ -58,8 +58,8 @@ func ListItemValues(list interface{}, key interface{}, subKey ...interface{}) (v
 	return
 }
 
-// ItemValue retrieves and returns its value of which name/attribute specified by <key>.
-// The parameter <item> can be type of map/*map/struct/*struct.
+// ItemValue retrieves and returns its value of which name/attribute specified by `key`.
+// The parameter `item` can be type of map/*map/struct/*struct.
 func ItemValue(item interface{}, key interface{}) (value interface{}, found bool) {
 	var reflectValue reflect.Value
 	if v, ok := item.(reflect.Value); ok {
@@ -84,7 +84,7 @@ func ItemValue(item interface{}, key interface{}) (value interface{}, found bool
 	}
 	switch reflectKind {
 	case reflect.Array, reflect.Slice:
-		// The <key> must be type of string.
+		// The `key` must be type of string.
 		values := ListItemValues(reflectValue, keyValue.String())
 		if values == nil {
 			return nil, false
@@ -99,7 +99,7 @@ func ItemValue(item interface{}, key interface{}) (value interface{}, found bool
 		}
 
 	case reflect.Struct:
-		// The <mapKey> must be type of string.
+		// The `mapKey` must be type of string.
 		v := reflectValue.FieldByName(keyValue.String())
 		if v.IsValid() {
 			found = true
@@ -109,8 +109,8 @@ func ItemValue(item interface{}, key interface{}) (value interface{}, found bool
 	return
 }
 
-// ListItemValuesUnique retrieves and returns the unique elements of all struct/map with key <key>.
-// Note that the parameter <list> should be type of slice which contains elements of map or struct,
+// ListItemValuesUnique retrieves and returns the unique elements of all struct/map with key `key`.
+// Note that the parameter `list` should be type of slice which contains elements of map or struct,
 // or else it returns an empty slice.
 func ListItemValuesUnique(list interface{}, key string, subKey ...interface{}) []interface{} {
 	values := ListItemValues(list, key, subKey...)

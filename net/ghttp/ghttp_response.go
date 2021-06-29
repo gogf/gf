@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -41,9 +41,9 @@ func newResponse(s *Server, w http.ResponseWriter) *Response {
 
 // ServeFile serves the file to the response.
 func (r *Response) ServeFile(path string, allowIndex ...bool) {
-	serveFile := (*StaticFile)(nil)
+	serveFile := (*staticFile)(nil)
 	if file := gres.Get(path); file != nil {
-		serveFile = &StaticFile{
+		serveFile = &staticFile{
 			File:  file,
 			IsDir: file.FileInfo().IsDir(),
 		}
@@ -53,20 +53,20 @@ func (r *Response) ServeFile(path string, allowIndex ...bool) {
 			r.WriteStatus(http.StatusNotFound)
 			return
 		}
-		serveFile = &StaticFile{Path: path}
+		serveFile = &staticFile{Path: path}
 	}
 	r.Server.serveFile(r.Request, serveFile, allowIndex...)
 }
 
 // ServeFileDownload serves file downloading to the response.
 func (r *Response) ServeFileDownload(path string, name ...string) {
-	serveFile := (*StaticFile)(nil)
+	serveFile := (*staticFile)(nil)
 	downloadName := ""
 	if len(name) > 0 {
 		downloadName = name[0]
 	}
 	if file := gres.Get(path); file != nil {
-		serveFile = &StaticFile{
+		serveFile = &staticFile{
 			File:  file,
 			IsDir: file.FileInfo().IsDir(),
 		}
@@ -79,7 +79,7 @@ func (r *Response) ServeFileDownload(path string, name ...string) {
 			r.WriteStatus(http.StatusNotFound)
 			return
 		}
-		serveFile = &StaticFile{Path: path}
+		serveFile = &staticFile{Path: path}
 		if downloadName == "" {
 			downloadName = gfile.Basename(path)
 		}

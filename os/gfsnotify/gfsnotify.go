@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -8,9 +8,9 @@
 package gfsnotify
 
 import (
-	"errors"
-	"fmt"
+	"context"
 	"github.com/gogf/gf/container/gset"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 	"sync"
 	"time"
@@ -88,11 +88,11 @@ func New() (*Watcher, error) {
 	if watcher, err := fsnotify.NewWatcher(); err == nil {
 		w.watcher = watcher
 	} else {
-		intlog.Printf("New watcher failed: %v", err)
+		intlog.Printf(context.TODO(), "New watcher failed: %v", err)
 		return nil, err
 	}
-	w.startWatchLoop()
-	w.startEventLoop()
+	w.watchLoop()
+	w.eventLoop()
 	return w, nil
 }
 
@@ -139,7 +139,7 @@ func RemoveCallback(callbackId int) error {
 		callback = r.(*Callback)
 	}
 	if callback == nil {
-		return errors.New(fmt.Sprintf(`callback for id %d not found`, callbackId))
+		return gerror.Newf(`callback for id %d not found`, callbackId)
 	}
 	w.RemoveCallback(callbackId)
 	return nil

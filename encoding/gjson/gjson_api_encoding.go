@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -70,7 +70,7 @@ func (j *Json) MustToJsonIndentString() string {
 // ========================================================================
 
 func (j *Json) ToXml(rootTag ...string) ([]byte, error) {
-	return gxml.Encode(j.ToMap(), rootTag...)
+	return gxml.Encode(j.Map(), rootTag...)
 }
 
 func (j *Json) ToXmlString(rootTag ...string) (string, error) {
@@ -79,7 +79,7 @@ func (j *Json) ToXmlString(rootTag ...string) (string, error) {
 }
 
 func (j *Json) ToXmlIndent(rootTag ...string) ([]byte, error) {
-	return gxml.EncodeWithIndent(j.ToMap(), rootTag...)
+	return gxml.EncodeWithIndent(j.Map(), rootTag...)
 }
 
 func (j *Json) ToXmlIndentString(rootTag ...string) (string, error) {

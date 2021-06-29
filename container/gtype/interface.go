@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -58,7 +58,7 @@ func (v *Interface) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (v *Interface) UnmarshalJSON(b []byte) error {
 	var i interface{}
-	err := json.Unmarshal(b, &i)
+	err := json.UnmarshalUseNumber(b, &i)
 	if err != nil {
 		return err
 	}

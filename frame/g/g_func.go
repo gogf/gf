@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -10,6 +10,7 @@ import (
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/internal/empty"
 	"github.com/gogf/gf/net/ghttp"
+	"github.com/gogf/gf/os/gproc"
 	"github.com/gogf/gf/util/gutil"
 )
 
@@ -18,9 +19,17 @@ func NewVar(i interface{}, safe ...bool) *Var {
 	return gvar.New(i, safe...)
 }
 
-// Wait blocks until all the web servers shutdown.
+// Wait is an alias of ghttp.Wait, which blocks until all the web servers shutdown.
+// It's commonly used in multiple servers situation.
 func Wait() {
 	ghttp.Wait()
+}
+
+// Listen is an alias of gproc.Listen, which handles the signals received and automatically
+// calls registered signal handler functions.
+// It blocks until shutdown signals received and all registered shutdown handlers done.
+func Listen() {
+	gproc.Listen()
 }
 
 // Dump dumps a variable to stdout with more manually readable.
@@ -52,9 +61,12 @@ func TryCatch(try func(), catch ...func(exception error)) {
 }
 
 // IsNil checks whether given <value> is nil.
+// Parameter <traceSource> is used for tracing to the source variable if given <value> is type
+// of a pinter that also points to a pointer. It returns nil if the source is nil when <traceSource>
+// is true.
 // Note that it might use reflect feature which affects performance a little bit.
-func IsNil(value interface{}) bool {
-	return empty.IsNil(value)
+func IsNil(value interface{}, traceSource ...bool) bool {
+	return empty.IsNil(value, traceSource...)
 }
 
 // IsEmpty checks whether given <value> empty.

@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with gm file,
@@ -475,7 +475,7 @@ func (m *IntAnyMap) UnmarshalJSON(b []byte) error {
 	if m.data == nil {
 		m.data = make(map[int]interface{})
 	}
-	if err := json.Unmarshal(b, &m.data); err != nil {
+	if err := json.UnmarshalUseNumber(b, &m.data); err != nil {
 		return err
 	}
 	return nil
@@ -490,7 +490,7 @@ func (m *IntAnyMap) UnmarshalValue(value interface{}) (err error) {
 	}
 	switch value.(type) {
 	case string, []byte:
-		return json.Unmarshal(gconv.Bytes(value), &m.data)
+		return json.UnmarshalUseNumber(gconv.Bytes(value), &m.data)
 	default:
 		for k, v := range gconv.Map(value) {
 			m.data[gconv.Int(k)] = v

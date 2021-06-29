@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,6 +7,7 @@
 package gsession
 
 import (
+	"context"
 	"github.com/gogf/gf/container/gmap"
 	"time"
 )
@@ -21,45 +22,45 @@ func NewStorageMemory() *StorageMemory {
 
 // New creates a session id.
 // This function can be used for custom session creation.
-func (s *StorageMemory) New(ttl time.Duration) (id string) {
+func (s *StorageMemory) New(ctx context.Context, ttl time.Duration) (id string) {
 	return ""
 }
 
 // Get retrieves session value with given key.
 // It returns nil if the key does not exist in the session.
-func (s *StorageMemory) Get(id string, key string) interface{} {
+func (s *StorageMemory) Get(ctx context.Context, id string, key string) interface{} {
 	return nil
 }
 
 // GetMap retrieves all key-value pairs as map from storage.
-func (s *StorageMemory) GetMap(id string) map[string]interface{} {
+func (s *StorageMemory) GetMap(ctx context.Context, id string) map[string]interface{} {
 	return nil
 }
 
 // GetSize retrieves the size of key-value pairs from storage.
-func (s *StorageMemory) GetSize(id string) int {
+func (s *StorageMemory) GetSize(ctx context.Context, id string) int {
 	return -1
 }
 
 // Set sets key-value session pair to the storage.
 // The parameter <ttl> specifies the TTL for the session id (not for the key-value pair).
-func (s *StorageMemory) Set(id string, key string, value interface{}, ttl time.Duration) error {
+func (s *StorageMemory) Set(ctx context.Context, id string, key string, value interface{}, ttl time.Duration) error {
 	return ErrorDisabled
 }
 
 // SetMap batch sets key-value session pairs with map to the storage.
 // The parameter <ttl> specifies the TTL for the session id(not for the key-value pair).
-func (s *StorageMemory) SetMap(id string, data map[string]interface{}, ttl time.Duration) error {
+func (s *StorageMemory) SetMap(ctx context.Context, id string, data map[string]interface{}, ttl time.Duration) error {
 	return ErrorDisabled
 }
 
 // Remove deletes key with its value from storage.
-func (s *StorageMemory) Remove(id string, key string) error {
+func (s *StorageMemory) Remove(ctx context.Context, id string, key string) error {
 	return ErrorDisabled
 }
 
 // RemoveAll deletes all key-value pairs from storage.
-func (s *StorageMemory) RemoveAll(id string) error {
+func (s *StorageMemory) RemoveAll(ctx context.Context, id string) error {
 	return ErrorDisabled
 }
 
@@ -70,25 +71,20 @@ func (s *StorageMemory) RemoveAll(id string) error {
 // and for some storage it might be nil if memory storage is disabled.
 //
 // This function is called ever when session starts.
-func (s *StorageMemory) GetSession(id string, ttl time.Duration, data *gmap.StrAnyMap) (*gmap.StrAnyMap, error) {
+func (s *StorageMemory) GetSession(ctx context.Context, id string, ttl time.Duration, data *gmap.StrAnyMap) (*gmap.StrAnyMap, error) {
 	return data, nil
 }
 
 // SetSession updates the data map for specified session id.
 // This function is called ever after session, which is changed dirty, is closed.
 // This copy all session data map from memory to storage.
-func (s *StorageMemory) SetSession(id string, data *gmap.StrAnyMap, ttl time.Duration) error {
+func (s *StorageMemory) SetSession(ctx context.Context, id string, data *gmap.StrAnyMap, ttl time.Duration) error {
 	return nil
 }
 
 // UpdateTTL updates the TTL for specified session id.
 // This function is called ever after session, which is not dirty, is closed.
 // It just adds the session id to the async handling queue.
-func (s *StorageMemory) UpdateTTL(id string, ttl time.Duration) error {
-	return nil
-}
-
-// doUpdateTTL updates the TTL for session id.
-func (s *StorageMemory) doUpdateTTL(id string) error {
+func (s *StorageMemory) UpdateTTL(ctx context.Context, id string, ttl time.Duration) error {
 	return nil
 }

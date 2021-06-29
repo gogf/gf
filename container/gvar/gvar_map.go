@@ -1,4 +1,4 @@
-// Copyright 2020 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -69,13 +69,6 @@ func (v *Var) Maps(tags ...string) []map[string]interface{} {
 // See gconv.MapToMap.
 func (v *Var) MapToMap(pointer interface{}, mapping ...map[string]string) (err error) {
 	return gconv.MapToMap(v.Val(), pointer, mapping...)
-}
-
-// MapToMapDeep converts any map type variable <params> to another map type variable
-// <pointer> recursively.
-// See gconv.MapToMapDeep.
-func (v *Var) MapToMapDeep(pointer interface{}, mapping ...map[string]string) (err error) {
-	return gconv.MapToMapDeep(v.Val(), pointer, mapping...)
 }
 
 // MapToMaps converts any map type variable <params> to another map type variable <pointer>.

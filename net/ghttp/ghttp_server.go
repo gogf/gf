@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -8,9 +8,9 @@ package ghttp
 
 import (
 	"bytes"
-	"errors"
-	"fmt"
+	"context"
 	"github.com/gogf/gf/debug/gdebug"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 	"net/http"
 	"os"
@@ -35,7 +35,7 @@ import (
 
 func init() {
 	// Initialize the methods map.
-	for _, v := range strings.Split(SupportedHttpMethods, ",") {
+	for _, v := range strings.Split(supportedHttpMethods, ",") {
 		methodsMap[v] = struct{}{}
 	}
 }
@@ -71,15 +71,15 @@ func serverProcessInit() {
 	// Process message handler.
 	// It's enabled only graceful feature is enabled.
 	if gracefulEnabled {
-		intlog.Printf("%d: graceful reload feature is enabled", gproc.Pid())
+		intlog.Printf(context.TODO(), "%d: graceful reload feature is enabled", gproc.Pid())
 		go handleProcessMessage()
 	} else {
-		intlog.Printf("%d: graceful reload feature is disabled", gproc.Pid())
+		intlog.Printf(context.TODO(), "%d: graceful reload feature is disabled", gproc.Pid())
 	}
 
 	// It's an ugly calling for better initializing the main package path
 	// in source development environment. It is useful only be used in main goroutine.
-	// It fails retrieving the main package path in asynchronized goroutines.
+	// It fails retrieving the main package path in asynchronous goroutines.
 	gfile.MainPkgPath()
 }
 
@@ -125,13 +125,13 @@ func (s *Server) Start() error {
 
 	// Server can only be run once.
 	if s.Status() == ServerStatusRunning {
-		return errors.New("[ghttp] server is already running")
+		return gerror.New("server is already running")
 	}
 
 	// Logging path setting check.
-	if s.config.LogPath != "" {
+	if s.config.LogPath != "" && s.config.LogPath != s.config.Logger.GetPath() {
 		if err := s.config.Logger.SetPath(s.config.LogPath); err != nil {
-			return errors.New(fmt.Sprintf("[ghttp] set log path '%s' error: %v", s.config.LogPath, err))
+			return err
 		}
 	}
 	// Default session storage.
@@ -141,7 +141,7 @@ func (s *Server) Start() error {
 			path = gfile.Join(s.config.SessionPath, s.name)
 			if !gfile.Exists(path) {
 				if err := gfile.Mkdir(path); err != nil {
-					return errors.New(fmt.Sprintf("[ghttp] mkdir failed for '%s': %v", path, err))
+					return gerror.Wrapf(err, `mkdir failed for "%s"`, path)
 				}
 			}
 		}
@@ -175,7 +175,7 @@ func (s *Server) Start() error {
 	// If there's no route registered  and no static service enabled,
 	// it then returns an error of invalid usage of server.
 	if len(s.routesMap) == 0 && !s.config.FileServerEnabled {
-		return errors.New(`[ghttp] there's no route set or static feature enabled, did you forget import the router?`)
+		return gerror.New(`there's no route set or static feature enabled, did you forget import the router?`)
 	}
 
 	// Start the HTTP server.
@@ -194,9 +194,9 @@ func (s *Server) Start() error {
 
 	// If this is a child process, it then notifies its parent exit.
 	if gproc.IsChild() {
-		gtimer.SetTimeout(2*time.Second, func() {
+		gtimer.SetTimeout(time.Duration(s.config.GracefulTimeout)*time.Second, func() {
 			if err := gproc.Send(gproc.PPid(), []byte("exit"), adminGProcCommGroup); err != nil {
-				//glog.Error("[ghttp] server error in process communication:", err)
+				intlog.Error(context.TODO(), "server error in process communication:", err)
 			}
 		})
 	}
@@ -269,7 +269,7 @@ func (s *Server) GetRouterArray() []RouterItem {
 					item.Middleware += gdebug.FuncName(v)
 				}
 			}
-			// If the domain does not exist in the dump map, it create the map.
+			// If the domain does not exist in the dump map, it creates the map.
 			// The value of the map is a custom sorted array.
 			if _, ok := m[item.Domain]; !ok {
 				// Sort in ASC order.
@@ -316,11 +316,13 @@ func (s *Server) Run() {
 	// Remove plugins.
 	if len(s.plugins) > 0 {
 		for _, p := range s.plugins {
-			intlog.Printf(`remove plugin: %s`, p.Name())
-			p.Remove()
+			intlog.Printf(context.TODO(), `remove plugin: %s`, p.Name())
+			if err := p.Remove(); err != nil {
+				intlog.Errorf(context.TODO(), "%+v", err)
+			}
 		}
 	}
-	s.Logger().Printf("[ghttp] %d: all servers shutdown", gproc.Pid())
+	s.Logger().Printf("%d: all servers shutdown", gproc.Pid())
 }
 
 // Wait blocks to wait for all servers done.
@@ -332,13 +334,13 @@ func Wait() {
 		s := v.(*Server)
 		if len(s.plugins) > 0 {
 			for _, p := range s.plugins {
-				intlog.Printf(`remove plugin: %s`, p.Name())
+				intlog.Printf(context.TODO(), `remove plugin: %s`, p.Name())
 				p.Remove()
 			}
 		}
 		return true
 	})
-	glog.Printf("[ghttp] %d: all servers shutdown", gproc.Pid())
+	glog.Printf("%d: all servers shutdown", gproc.Pid())
 }
 
 // startServer starts the underlying server listening.
@@ -351,7 +353,7 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 				s.config.HTTPSAddr = s.config.Address
 				s.config.Address = ""
 			} else {
-				s.config.HTTPSAddr = gDEFAULT_HTTPS_ADDR
+				s.config.HTTPSAddr = defaultHttpsAddr
 			}
 		}
 		httpsEnabled = len(s.config.HTTPSAddr) > 0
@@ -386,7 +388,7 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 	}
 	// HTTP
 	if !httpsEnabled && len(s.config.Address) == 0 {
-		s.config.Address = gDEFAULT_HTTP_ADDR
+		s.config.Address = defaultHttpAddr
 	}
 	var array []string
 	if v, ok := fdMap["http"]; ok && len(v) > 0 {
@@ -415,7 +417,7 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 			s.servers = append(s.servers, s.newGracefulServer(itemFunc))
 		}
 	}
-	// Start listening asynchronizedly.
+	// Start listening asynchronously.
 	serverRunning.Add(1)
 	for _, v := range s.servers {
 		go func(server *gracefulServer) {

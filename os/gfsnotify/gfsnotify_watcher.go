@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,8 +7,8 @@
 package gfsnotify
 
 import (
-	"errors"
-	"fmt"
+	"context"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 
 	"github.com/gogf/gf/container/glist"
@@ -45,9 +45,9 @@ func (w *Watcher) AddOnce(name, path string, callbackFunc func(event *Event), re
 			for _, subPath := range fileAllDirs(path) {
 				if fileIsDir(subPath) {
 					if err := w.watcher.Add(subPath); err != nil {
-						intlog.Error(err)
+						intlog.Error(context.TODO(), err)
 					} else {
-						intlog.Printf("watcher adds monitor for: %s", subPath)
+						intlog.Printf(context.TODO(), "watcher adds monitor for: %s", subPath)
 					}
 				}
 			}
@@ -61,10 +61,11 @@ func (w *Watcher) AddOnce(name, path string, callbackFunc func(event *Event), re
 }
 
 // addWithCallbackFunc adds the path to underlying monitor, creates and returns a callback object.
+// Very note that if it calls multiple times with the same `path`, the latest one will overwrite the previous one.
 func (w *Watcher) addWithCallbackFunc(name, path string, callbackFunc func(event *Event), recursive ...bool) (callback *Callback, err error) {
 	// Check and convert the given path to absolute path.
 	if t := fileRealPath(path); t == "" {
-		return nil, errors.New(fmt.Sprintf(`"%s" does not exist`, path))
+		return nil, gerror.Newf(`"%s" does not exist`, path)
 	} else {
 		path = t
 	}
@@ -92,9 +93,9 @@ func (w *Watcher) addWithCallbackFunc(name, path string, callbackFunc func(event
 	})
 	// Add the path to underlying monitor.
 	if err := w.watcher.Add(path); err != nil {
-		intlog.Error(err)
+		intlog.Error(context.TODO(), err)
 	} else {
-		intlog.Printf("watcher adds monitor for: %s", path)
+		intlog.Printf(context.TODO(), "watcher adds monitor for: %s", path)
 	}
 	// Add the callback to global callback map.
 	callbackIdMap.Set(callback.Id, callback)
@@ -107,7 +108,7 @@ func (w *Watcher) addWithCallbackFunc(name, path string, callbackFunc func(event
 func (w *Watcher) Close() {
 	w.events.Close()
 	if err := w.watcher.Close(); err != nil {
-		intlog.Error(err)
+		intlog.Error(context.TODO(), err)
 	}
 	close(w.closeChan)
 }
@@ -130,7 +131,7 @@ func (w *Watcher) Remove(path string) error {
 		for _, subPath := range subPaths {
 			if w.checkPathCanBeRemoved(subPath) {
 				if err := w.watcher.Remove(subPath); err != nil {
-					intlog.Error(err)
+					intlog.Error(context.TODO(), err)
 				}
 			}
 		}

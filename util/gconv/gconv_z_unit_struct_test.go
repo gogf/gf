@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,14 +7,14 @@
 package gconv_test
 
 import (
-	"github.com/gogf/gf/internal/json"
-	"testing"
-	"time"
-
+	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/test/gtest"
 	"github.com/gogf/gf/util/gconv"
+	"testing"
+	"time"
 )
 
 func Test_Struct_Basic1(t *testing.T) {
@@ -817,7 +817,7 @@ func Test_Struct_Complex(t *testing.T) {
     "errorMsg": null
 }`
 		m := make(g.Map)
-		err := json.Unmarshal([]byte(data), &m)
+		err := json.UnmarshalUseNumber([]byte(data), &m)
 		t.Assert(err, nil)
 
 		model := new(XinYanModel)
@@ -901,6 +901,89 @@ func Test_Struct_Embedded(t *testing.T) {
 		err := gconv.Struct(v2, &v1)
 		t.Assert(err, nil)
 		t.Assert(v1.TestInterface, nil)
+	})
+}
+
+func Test_Struct_Slice(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Scores []int
+		}
+		user := new(User)
+		array := g.Slice{1, 2, 3}
+		err := gconv.Struct(g.Map{"scores": array}, user)
+		t.Assert(err, nil)
+		t.Assert(user.Scores, array)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Scores []int32
+		}
+		user := new(User)
+		array := g.Slice{1, 2, 3}
+		err := gconv.Struct(g.Map{"scores": array}, user)
+		t.Assert(err, nil)
+		t.Assert(user.Scores, array)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Scores []int64
+		}
+		user := new(User)
+		array := g.Slice{1, 2, 3}
+		err := gconv.Struct(g.Map{"scores": array}, user)
+		t.Assert(err, nil)
+		t.Assert(user.Scores, array)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Scores []uint
+		}
+		user := new(User)
+		array := g.Slice{1, 2, 3}
+		err := gconv.Struct(g.Map{"scores": array}, user)
+		t.Assert(err, nil)
+		t.Assert(user.Scores, array)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Scores []uint32
+		}
+		user := new(User)
+		array := g.Slice{1, 2, 3}
+		err := gconv.Struct(g.Map{"scores": array}, user)
+		t.Assert(err, nil)
+		t.Assert(user.Scores, array)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Scores []uint64
+		}
+		user := new(User)
+		array := g.Slice{1, 2, 3}
+		err := gconv.Struct(g.Map{"scores": array}, user)
+		t.Assert(err, nil)
+		t.Assert(user.Scores, array)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Scores []float32
+		}
+		user := new(User)
+		array := g.Slice{1, 2, 3}
+		err := gconv.Struct(g.Map{"scores": array}, user)
+		t.Assert(err, nil)
+		t.Assert(user.Scores, array)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Scores []float64
+		}
+		user := new(User)
+		array := g.Slice{1, 2, 3}
+		err := gconv.Struct(g.Map{"scores": array}, user)
+		t.Assert(err, nil)
+		t.Assert(user.Scores, array)
 	})
 }
 
@@ -1056,4 +1139,28 @@ func Test_Struct_JsonParam(t *testing.T) {
 		t.Assert(a.Id, 1)
 		t.Assert(a.Name, "john")
 	})
+}
+
+func Test_Struct_GVarAttribute(t *testing.T) {
+	type A struct {
+		Id     int    `json:"id"`
+		Name   string `json:"name"`
+		Status bool   `json:"status"`
+	}
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			a    = A{}
+			data = g.Map{
+				"id":     100,
+				"name":   "john",
+				"status": gvar.New(false),
+			}
+		)
+		err := gconv.Struct(data, &a)
+		t.Assert(err, nil)
+		t.Assert(a.Id, data["id"])
+		t.Assert(a.Name, data["name"])
+		t.Assert(a.Status, data["status"])
+	})
+
 }

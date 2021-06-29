@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -26,7 +26,7 @@ func (p *utilAdmin) Index(r *Request) {
 		"path": gfile.SelfPath(),
 		"uri":  strings.TrimRight(r.URL.Path, "/"),
 	}
-	buffer, _ := gview.ParseContent(`
+	buffer, _ := gview.ParseContent(r.Context(), `
             <html>
             <head>
                 <title>GoFrame Web Server Admin</title>

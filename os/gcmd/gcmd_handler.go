@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -8,13 +8,13 @@
 package gcmd
 
 import (
-	"errors"
+	"github.com/gogf/gf/errors/gerror"
 )
 
 // BindHandle registers callback function <f> with <cmd>.
 func BindHandle(cmd string, f func()) error {
 	if _, ok := defaultCommandFuncMap[cmd]; ok {
-		return errors.New("duplicated handle for command:" + cmd)
+		return gerror.New("duplicated handle for command:" + cmd)
 	} else {
 		defaultCommandFuncMap[cmd] = f
 	}
@@ -37,7 +37,7 @@ func RunHandle(cmd string) error {
 	if handle, ok := defaultCommandFuncMap[cmd]; ok {
 		handle()
 	} else {
-		return errors.New("no handle found for command:" + cmd)
+		return gerror.New("no handle found for command:" + cmd)
 	}
 	return nil
 }
@@ -49,10 +49,10 @@ func AutoRun() error {
 		if handle, ok := defaultCommandFuncMap[cmd]; ok {
 			handle()
 		} else {
-			return errors.New("no handle found for command:" + cmd)
+			return gerror.New("no handle found for command:" + cmd)
 		}
 	} else {
-		return errors.New("no command found")
+		return gerror.New("no command found")
 	}
 	return nil
 }

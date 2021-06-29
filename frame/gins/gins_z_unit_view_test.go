@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,6 +7,7 @@
 package gins
 
 import (
+	"context"
 	"fmt"
 	"github.com/gogf/gf/debug/gdebug"
 	"github.com/gogf/gf/os/gcfg"
@@ -20,7 +21,7 @@ import (
 func Test_View(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertNE(View(), nil)
-		b, e := View().ParseContent(`{{"我是中国人" | substr 2 -1}}`, nil)
+		b, e := View().ParseContent(context.TODO(), `{{"我是中国人" | substr 2 -1}}`, nil)
 		t.Assert(e, nil)
 		t.Assert(b, "中国人")
 	})
@@ -30,7 +31,7 @@ func Test_View(t *testing.T) {
 		t.Assert(err, nil)
 		defer gfile.Remove(tpl)
 
-		b, e := View().Parse("t.tpl", nil)
+		b, e := View().Parse(context.TODO(), "t.tpl", nil)
 		t.Assert(e, nil)
 		t.Assert(b, "中国人")
 	})
@@ -43,7 +44,7 @@ func Test_View(t *testing.T) {
 		err = View().AddPath(path)
 		t.Assert(err, nil)
 
-		b, e := View().Parse("t.tpl", nil)
+		b, e := View().Parse(context.TODO(), "t.tpl", nil)
 		t.Assert(e, nil)
 		t.Assert(b, "中国人")
 	})
@@ -64,11 +65,11 @@ func Test_View_Config(t *testing.T) {
 
 		str := `hello ${.name},version:${.version}`
 		view.Assigns(map[string]interface{}{"version": "1.9.0"})
-		result, err := view.ParseContent(str, nil)
+		result, err := view.ParseContent(context.TODO(), str, nil)
 		t.Assert(err, nil)
 		t.Assert(result, "hello test1,version:1.9.0")
 
-		result, err = view.ParseDefault()
+		result, err = view.ParseDefault(context.TODO())
 		t.Assert(err, nil)
 		t.Assert(result, "test1:test1")
 	})
@@ -86,11 +87,11 @@ func Test_View_Config(t *testing.T) {
 
 		str := `hello #{.name},version:#{.version}`
 		view.Assigns(map[string]interface{}{"version": "1.9.0"})
-		result, err := view.ParseContent(str, nil)
+		result, err := view.ParseContent(context.TODO(), str, nil)
 		t.Assert(err, nil)
 		t.Assert(result, "hello test2,version:1.9.0")
 
-		result, err = view.ParseDefault()
+		result, err = view.ParseDefault(context.TODO())
 		t.Assert(err, nil)
 		t.Assert(result, "test2:test2")
 	})
@@ -108,11 +109,11 @@ func Test_View_Config(t *testing.T) {
 
 		str := `hello {.name},version:{.version}`
 		view.Assigns(map[string]interface{}{"version": "1.9.0"})
-		result, err := view.ParseContent(str, nil)
+		result, err := view.ParseContent(context.TODO(), str, nil)
 		t.Assert(err, nil)
 		t.Assert(result, "hello test,version:1.9.0")
 
-		result, err = view.ParseDefault()
+		result, err = view.ParseDefault(context.TODO())
 		t.Assert(err, nil)
 		t.Assert(result, "test:test")
 	})
@@ -130,11 +131,11 @@ func Test_View_Config(t *testing.T) {
 
 		str := `hello {.name},version:{.version}`
 		view.Assigns(map[string]interface{}{"version": "1.9.0"})
-		result, err := view.ParseContent(str, nil)
+		result, err := view.ParseContent(context.TODO(), str, nil)
 		t.Assert(err, nil)
 		t.Assert(result, "hello test,version:1.9.0")
 
-		result, err = view.ParseDefault()
+		result, err = view.ParseDefault(context.TODO())
 		t.Assert(err, nil)
 		t.Assert(result, "test:test")
 	})

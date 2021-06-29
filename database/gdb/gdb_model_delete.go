@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -9,13 +9,14 @@ package gdb
 import (
 	"database/sql"
 	"fmt"
+
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gstr"
 )
 
 // Delete does "DELETE FROM ... " statement for the model.
-// The optional parameter <where> is the same as the parameter of Model.Where function,
+// The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
 func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 	if len(where) > 0 {
@@ -33,9 +34,10 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 	// Soft deleting.
 	if !m.unscoped && fieldNameDelete != "" {
 		return m.db.DoUpdate(
+			m.GetCtx(),
 			m.getLink(true),
 			m.tables,
-			fmt.Sprintf(`%s=?`, m.db.QuoteString(fieldNameDelete)),
+			fmt.Sprintf(`%s=?`, m.db.GetCore().QuoteString(fieldNameDelete)),
 			conditionWhere+conditionExtra,
 			append([]interface{}{gtime.Now().String()}, conditionArgs...),
 		)
@@ -44,5 +46,5 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 	if !gstr.ContainsI(conditionStr, " WHERE ") {
 		return nil, gerror.New("there should be WHERE condition statement for DELETE operation")
 	}
-	return m.db.DoDelete(m.getLink(true), m.tables, conditionStr, conditionArgs...)
+	return m.db.DoDelete(m.GetCtx(), m.getLink(true), m.tables, conditionStr, conditionArgs...)
 }

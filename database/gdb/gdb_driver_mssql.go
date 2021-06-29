@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -12,11 +12,13 @@
 package gdb
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
-	"github.com/gogf/gf/errors/gerror"
 	"strconv"
 	"strings"
+
+	"github.com/gogf/gf/errors/gerror"
 
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/text/gstr"
@@ -40,15 +42,15 @@ func (d *DriverMssql) New(core *Core, node *ConfigNode) (DB, error) {
 // Open creates and returns a underlying sql.DB object for mssql.
 func (d *DriverMssql) Open(config *ConfigNode) (*sql.DB, error) {
 	source := ""
-	if config.LinkInfo != "" {
-		source = config.LinkInfo
+	if config.Link != "" {
+		source = config.Link
 	} else {
 		source = fmt.Sprintf(
 			"user id=%s;password=%s;server=%s;port=%s;database=%s;encrypt=disable",
 			config.User, config.Pass, config.Host, config.Port, config.Name,
 		)
 	}
-	intlog.Printf("Open: %s", source)
+	intlog.Printf(d.GetCtx(), "Open: %s", source)
 	if db, err := sql.Open("sqlserver", source); err == nil {
 		return db, nil
 	} else {
@@ -56,13 +58,31 @@ func (d *DriverMssql) Open(config *ConfigNode) (*sql.DB, error) {
 	}
 }
 
+// FilteredLink retrieves and returns filtered `linkInfo` that can be using for
+// logging or tracing purpose.
+func (d *DriverMssql) FilteredLink() string {
+	linkInfo := d.GetConfig().Link
+	if linkInfo == "" {
+		return ""
+	}
+	s, _ := gregex.ReplaceString(
+		`(.+);\s*password=(.+);\s*server=(.+)`,
+		`$1;password=xxx;server=$3`,
+		d.GetConfig().Link,
+	)
+	return s
+}
+
 // GetChars returns the security char for this type of database.
 func (d *DriverMssql) GetChars() (charLeft string, charRight string) {
 	return "\"", "\""
 }
 
-// HandleSqlBeforeCommit deals with the sql string before commits it to underlying sql driver.
-func (d *DriverMssql) HandleSqlBeforeCommit(link Link, sql string, args []interface{}) (string, []interface{}) {
+// DoCommit deals with the sql string before commits it to underlying sql driver.
+func (d *DriverMssql) DoCommit(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
+	defer func() {
+		newSql, newArgs, err = d.Core.DoCommit(ctx, link, newSql, newArgs)
+	}()
 	var index int
 	// Convert place holder char '?' to string "@px".
 	str, _ := gregex.ReplaceStringFunc("\\?", sql, func(s string) string {
@@ -70,7 +90,7 @@ func (d *DriverMssql) HandleSqlBeforeCommit(link Link, sql string, args []interf
 		return fmt.Sprintf("@p%d", index)
 	})
 	str, _ = gregex.ReplaceString("\"", "", str)
-	return d.parseSql(str), args
+	return d.parseSql(str), args, nil
 }
 
 // parseSql does some replacement of the sql before commits it to underlying driver,
@@ -168,14 +188,14 @@ func (d *DriverMssql) parseSql(sql string) string {
 
 // Tables retrieves and returns the tables of current schema.
 // It's mainly used in cli tool chain for automatically generating the models.
-func (d *DriverMssql) Tables(schema ...string) (tables []string, err error) {
+func (d *DriverMssql) Tables(ctx context.Context, schema ...string) (tables []string, err error) {
 	var result Result
-	link, err := d.DB.GetSlave(schema...)
+	link, err := d.SlaveLink(schema...)
 	if err != nil {
 		return nil, err
 	}
 
-	result, err = d.DB.DoGetAll(link, `SELECT NAME FROM SYSOBJECTS WHERE XTYPE='U' AND STATUS >= 0 ORDER BY NAME`)
+	result, err = d.DoGetAll(ctx, link, `SELECT NAME FROM SYSOBJECTS WHERE XTYPE='U' AND STATUS >= 0 ORDER BY NAME`)
 	if err != nil {
 		return
 	}
@@ -188,28 +208,31 @@ func (d *DriverMssql) Tables(schema ...string) (tables []string, err error) {
 }
 
 // TableFields retrieves and returns the fields information of specified table of current schema.
-func (d *DriverMssql) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
+//
+// Also see DriverMysql.TableFields.
+func (d *DriverMssql) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*TableField, err error) {
 	charL, charR := d.GetChars()
 	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
 		return nil, gerror.New("function TableFields supports only single table operations")
 	}
-	checkSchema := d.DB.GetSchema()
+	useSchema := d.db.GetSchema()
 	if len(schema) > 0 && schema[0] != "" {
-		checkSchema = schema[0]
+		useSchema = schema[0]
 	}
-	v, _ := internalCache.GetOrSetFunc(
-		fmt.Sprintf(`mssql_table_fields_%s_%s@group:%s`, table, checkSchema, d.GetGroup()),
-		func() (interface{}, error) {
-			var (
-				result Result
-				link   *sql.DB
-			)
-			link, err = d.DB.GetSlave(checkSchema)
-			if err != nil {
-				return nil, err
-			}
-			structureSql := fmt.Sprintf(`
+	tableFieldsCacheKey := fmt.Sprintf(
+		`mssql_table_fields_%s_%s@group:%s`,
+		table, useSchema, d.GetGroup(),
+	)
+	v := tableFieldsMap.GetOrSetFuncLock(tableFieldsCacheKey, func() interface{} {
+		var (
+			result    Result
+			link, err = d.SlaveLink(useSchema)
+		)
+		if err != nil {
+			return nil
+		}
+		structureSql := fmt.Sprintf(`
 SELECT 
 	a.name Field,
 	CASE b.name 
@@ -237,29 +260,29 @@ LEFT JOIN sys.extended_properties g ON a.id=g.major_id AND a.colid=g.minor_id
 LEFT JOIN sys.extended_properties f ON d.id=f.major_id AND f.minor_id =0
 WHERE d.name='%s'
 ORDER BY a.id,a.colorder`,
-				strings.ToUpper(table),
-			)
-			structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
-			result, err = d.DB.DoGetAll(link, structureSql)
-			if err != nil {
-				return nil, err
+			strings.ToUpper(table),
+		)
+		structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
+		result, err = d.DoGetAll(ctx, link, structureSql)
+		if err != nil {
+			return nil
+		}
+		fields = make(map[string]*TableField)
+		for i, m := range result {
+			fields[strings.ToLower(m["Field"].String())] = &TableField{
+				Index:   i,
+				Name:    strings.ToLower(m["Field"].String()),
+				Type:    strings.ToLower(m["Type"].String()),
+				Null:    m["Null"].Bool(),
+				Key:     m["Key"].String(),
+				Default: m["Default"].Val(),
+				Extra:   m["Extra"].String(),
+				Comment: m["Comment"].String(),
 			}
-			fields = make(map[string]*TableField)
-			for i, m := range result {
-				fields[strings.ToLower(m["Field"].String())] = &TableField{
-					Index:   i,
-					Name:    strings.ToLower(m["Field"].String()),
-					Type:    strings.ToLower(m["Type"].String()),
-					Null:    m["Null"].Bool(),
-					Key:     m["Key"].String(),
-					Default: m["Default"].Val(),
-					Extra:   m["Extra"].String(),
-					Comment: m["Comment"].String(),
-				}
-			}
-			return fields, nil
-		}, 0)
-	if err == nil {
+		}
+		return fields
+	})
+	if v != nil {
 		fields = v.(map[string]*TableField)
 	}
 	return

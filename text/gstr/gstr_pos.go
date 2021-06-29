@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -20,13 +20,12 @@ func Pos(haystack, needle string, startOffset ...int) int {
 	if length == 0 || offset > length || -offset > length {
 		return -1
 	}
-
 	if offset < 0 {
 		offset += length
 	}
 	pos := strings.Index(haystack[offset:], needle)
-	if pos == -1 {
-		return -1
+	if pos == NotFoundIndex {
+		return NotFoundIndex
 	}
 	return pos + offset
 }

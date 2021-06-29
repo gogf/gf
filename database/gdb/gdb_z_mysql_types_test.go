@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -8,6 +8,7 @@ package gdb_test
 
 import (
 	"fmt"
+	"github.com/gogf/gf/os/gtime"
 	"testing"
 
 	"github.com/gogf/gf/frame/g"
@@ -15,6 +16,7 @@ import (
 	"github.com/gogf/gf/test/gtest"
 )
 
+// All types testing.
 func Test_Types(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		if _, err := db.Exec(fmt.Sprintf(`
@@ -56,22 +58,45 @@ func Test_Types(t *testing.T) {
 			"tinyint": true,
 			"bool":    false,
 		}
-		r, err := db.Table("types").Data(data).Insert()
-		t.Assert(err, nil)
+		r, err := db.Model("types").Data(data).Insert()
+		t.AssertNil(err)
 		n, _ := r.RowsAffected()
 		t.Assert(n, 1)
 
-		one, err := db.Table("types").One()
-		t.Assert(err, nil)
+		one, err := db.Model("types").One()
+		t.AssertNil(err)
 		t.Assert(one["id"].Int(), 1)
 		t.Assert(one["blob"].String(), data["blob"])
 		t.Assert(one["binary"].String(), data["binary"])
 		t.Assert(one["date"].String(), data["date"])
-		t.Assert(one["time"].String(), data["time"])
+		t.Assert(one["time"].String(), `0000-01-01 10:00:01`)
 		t.Assert(one["decimal"].String(), -123.46)
 		t.Assert(one["double"].String(), data["double"])
 		t.Assert(one["bit"].Int(), data["bit"])
 		t.Assert(one["tinyint"].Bool(), data["tinyint"])
-		t.Assert(one["tinyint"].Bool(), data["tinyint"])
+
+		type T struct {
+			Id      int
+			Blob    []byte
+			Binary  []byte
+			Date    *gtime.Time
+			Time    *gtime.Time
+			Decimal float64
+			Double  float64
+			Bit     int8
+			TinyInt bool
+		}
+		var obj *T
+		err = db.Model("types").Scan(&obj)
+		t.AssertNil(err)
+		t.Assert(obj.Id, 1)
+		t.Assert(obj.Blob, data["blob"])
+		t.Assert(obj.Binary, data["binary"])
+		t.Assert(obj.Date.Format("Y-m-d"), data["date"])
+		t.Assert(obj.Time.String(), `0000-01-01 10:00:01`)
+		t.Assert(obj.Decimal, -123.46)
+		t.Assert(obj.Double, data["double"])
+		t.Assert(obj.Bit, data["bit"])
+		t.Assert(obj.TinyInt, data["tinyint"])
 	})
 }

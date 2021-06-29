@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,6 +7,7 @@
 package gsession
 
 import (
+	"context"
 	"time"
 
 	"github.com/gogf/gf/container/gmap"
@@ -38,14 +39,14 @@ func NewStorageRedisHashTable(redis *gredis.Redis, prefix ...string) *StorageRed
 
 // New creates a session id.
 // This function can be used for custom session creation.
-func (s *StorageRedisHashTable) New(ttl time.Duration) (id string) {
+func (s *StorageRedisHashTable) New(ctx context.Context, ttl time.Duration) (id string) {
 	return ""
 }
 
 // Get retrieves session value with given key.
 // It returns nil if the key does not exist in the session.
-func (s *StorageRedisHashTable) Get(id string, key string) interface{} {
-	r, _ := s.redis.Do("HGET", s.key(id), key)
+func (s *StorageRedisHashTable) Get(ctx context.Context, id string, key string) interface{} {
+	r, _ := s.redis.Ctx(ctx).Do("HGET", s.key(id), key)
 	if r != nil {
 		return gconv.String(r)
 	}
@@ -53,8 +54,8 @@ func (s *StorageRedisHashTable) Get(id string, key string) interface{} {
 }
 
 // GetMap retrieves all key-value pairs as map from storage.
-func (s *StorageRedisHashTable) GetMap(id string) map[string]interface{} {
-	r, err := s.redis.DoVar("HGETALL", s.key(id))
+func (s *StorageRedisHashTable) GetMap(ctx context.Context, id string) map[string]interface{} {
+	r, err := s.redis.Ctx(ctx).DoVar("HGETALL", s.key(id))
 	if err != nil {
 		return nil
 	}
@@ -71,21 +72,21 @@ func (s *StorageRedisHashTable) GetMap(id string) map[string]interface{} {
 }
 
 // GetSize retrieves the size of key-value pairs from storage.
-func (s *StorageRedisHashTable) GetSize(id string) int {
-	r, _ := s.redis.DoVar("HLEN", s.key(id))
+func (s *StorageRedisHashTable) GetSize(ctx context.Context, id string) int {
+	r, _ := s.redis.Ctx(ctx).DoVar("HLEN", s.key(id))
 	return r.Int()
 }
 
 // Set sets key-value session pair to the storage.
 // The parameter <ttl> specifies the TTL for the session id (not for the key-value pair).
-func (s *StorageRedisHashTable) Set(id string, key string, value interface{}, ttl time.Duration) error {
-	_, err := s.redis.Do("HSET", s.key(id), key, value)
+func (s *StorageRedisHashTable) Set(ctx context.Context, id string, key string, value interface{}, ttl time.Duration) error {
+	_, err := s.redis.Ctx(ctx).Do("HSET", s.key(id), key, value)
 	return err
 }
 
 // SetMap batch sets key-value session pairs with map to the storage.
 // The parameter <ttl> specifies the TTL for the session id(not for the key-value pair).
-func (s *StorageRedisHashTable) SetMap(id string, data map[string]interface{}, ttl time.Duration) error {
+func (s *StorageRedisHashTable) SetMap(ctx context.Context, id string, data map[string]interface{}, ttl time.Duration) error {
 	array := make([]interface{}, len(data)*2+1)
 	array[0] = s.key(id)
 
@@ -95,19 +96,19 @@ func (s *StorageRedisHashTable) SetMap(id string, data map[string]interface{}, t
 		array[index+1] = v
 		index += 2
 	}
-	_, err := s.redis.Do("HMSET", array...)
+	_, err := s.redis.Ctx(ctx).Do("HMSET", array...)
 	return err
 }
 
 // Remove deletes key with its value from storage.
-func (s *StorageRedisHashTable) Remove(id string, key string) error {
-	_, err := s.redis.Do("HDEL", s.key(id), key)
+func (s *StorageRedisHashTable) Remove(ctx context.Context, id string, key string) error {
+	_, err := s.redis.Ctx(ctx).Do("HDEL", s.key(id), key)
 	return err
 }
 
 // RemoveAll deletes all key-value pairs from storage.
-func (s *StorageRedisHashTable) RemoveAll(id string) error {
-	_, err := s.redis.Do("DEL", s.key(id))
+func (s *StorageRedisHashTable) RemoveAll(ctx context.Context, id string) error {
+	_, err := s.redis.Ctx(ctx).Do("DEL", s.key(id))
 	return err
 }
 
@@ -118,9 +119,9 @@ func (s *StorageRedisHashTable) RemoveAll(id string) error {
 // and for some storage it might be nil if memory storage is disabled.
 //
 // This function is called ever when session starts.
-func (s *StorageRedisHashTable) GetSession(id string, ttl time.Duration, data *gmap.StrAnyMap) (*gmap.StrAnyMap, error) {
-	intlog.Printf("StorageRedisHashTable.GetSession: %s, %v", id, ttl)
-	r, err := s.redis.DoVar("EXISTS", s.key(id))
+func (s *StorageRedisHashTable) GetSession(ctx context.Context, id string, ttl time.Duration, data *gmap.StrAnyMap) (*gmap.StrAnyMap, error) {
+	intlog.Printf(ctx, "StorageRedisHashTable.GetSession: %s, %v", id, ttl)
+	r, err := s.redis.Ctx(ctx).DoVar("EXISTS", s.key(id))
 	if err != nil {
 		return nil, err
 	}
@@ -133,17 +134,17 @@ func (s *StorageRedisHashTable) GetSession(id string, ttl time.Duration, data *g
 // SetSession updates the data map for specified session id.
 // This function is called ever after session, which is changed dirty, is closed.
 // This copy all session data map from memory to storage.
-func (s *StorageRedisHashTable) SetSession(id string, data *gmap.StrAnyMap, ttl time.Duration) error {
-	intlog.Printf("StorageRedisHashTable.SetSession: %s, %v", id, ttl)
-	_, err := s.redis.Do("EXPIRE", s.key(id), int64(ttl.Seconds()))
+func (s *StorageRedisHashTable) SetSession(ctx context.Context, id string, data *gmap.StrAnyMap, ttl time.Duration) error {
+	intlog.Printf(ctx, "StorageRedisHashTable.SetSession: %s, %v", id, ttl)
+	_, err := s.redis.Ctx(ctx).Do("EXPIRE", s.key(id), int64(ttl.Seconds()))
 	return err
 }
 
 // UpdateTTL updates the TTL for specified session id.
 // This function is called ever after session, which is not dirty, is closed.
 // It just adds the session id to the async handling queue.
-func (s *StorageRedisHashTable) UpdateTTL(id string, ttl time.Duration) error {
-	intlog.Printf("StorageRedisHashTable.UpdateTTL: %s, %v", id, ttl)
+func (s *StorageRedisHashTable) UpdateTTL(ctx context.Context, id string, ttl time.Duration) error {
+	intlog.Printf(ctx, "StorageRedisHashTable.UpdateTTL: %s, %v", id, ttl)
 	_, err := s.redis.Do("EXPIRE", s.key(id), int64(ttl.Seconds()))
 	return err
 }

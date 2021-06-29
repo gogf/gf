@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -34,8 +34,8 @@ type SortedArray struct {
 }
 
 // NewSortedArray creates and returns an empty sorted array.
-// The parameter <safe> is used to specify whether using array in concurrent-safety, which is false in default.
-// The parameter <comparator> used to compare values to sort in array,
+// The parameter `safe` is used to specify whether using array in concurrent-safety, which is false in default.
+// The parameter `comparator` used to compare values to sort in array,
 // if it returns value < 0, means v1 < v2; the v1 will be inserted before v2;
 // if it returns value = 0, means v1 = v2; the v1 will be replaced by v2;
 // if it returns value > 0, means v1 > v2; the v1 will be inserted after v2;
@@ -44,7 +44,7 @@ func NewSortedArray(comparator func(a, b interface{}) int, safe ...bool) *Sorted
 }
 
 // NewSortedArraySize create and returns an sorted array with given size and cap.
-// The parameter <safe> is used to specify whether using array in concurrent-safety,
+// The parameter `safe` is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewSortedArraySize(cap int, comparator func(a, b interface{}) int, safe ...bool) *SortedArray {
 	return &SortedArray{
@@ -54,8 +54,8 @@ func NewSortedArraySize(cap int, comparator func(a, b interface{}) int, safe ...
 	}
 }
 
-// NewSortedArrayRange creates and returns a array by a range from <start> to <end>
-// with step value <step>.
+// NewSortedArrayRange creates and returns a array by a range from `start` to `end`
+// with step value `step`.
 func NewSortedArrayRange(start, end, step int, comparator func(a, b interface{}) int, safe ...bool) *SortedArray {
 	if step == 0 {
 		panic(fmt.Sprintf(`invalid step value: %d`, step))
@@ -69,8 +69,8 @@ func NewSortedArrayRange(start, end, step int, comparator func(a, b interface{})
 	return NewSortedArrayFrom(slice, comparator, safe...)
 }
 
-// NewSortedArrayFrom creates and returns an sorted array with given slice <array>.
-// The parameter <safe> is used to specify whether using array in concurrent-safety,
+// NewSortedArrayFrom creates and returns an sorted array with given slice `array`.
+// The parameter `safe` is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewSortedArrayFrom(array []interface{}, comparator func(a, b interface{}) int, safe ...bool) *SortedArray {
 	a := NewSortedArraySize(0, comparator, safe...)
@@ -81,8 +81,8 @@ func NewSortedArrayFrom(array []interface{}, comparator func(a, b interface{}) i
 	return a
 }
 
-// NewSortedArrayFromCopy creates and returns an sorted array from a copy of given slice <array>.
-// The parameter <safe> is used to specify whether using array in concurrent-safety,
+// NewSortedArrayFromCopy creates and returns an sorted array from a copy of given slice `array`.
+// The parameter `safe` is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewSortedArrayFromCopy(array []interface{}, comparator func(a, b interface{}) int, safe ...bool) *SortedArray {
 	newArray := make([]interface{}, len(array))
@@ -90,7 +90,14 @@ func NewSortedArrayFromCopy(array []interface{}, comparator func(a, b interface{
 	return NewSortedArrayFrom(newArray, comparator, safe...)
 }
 
-// SetArray sets the underlying slice array with the given <array>.
+// At returns the value by the specified index.
+// If the given `index` is out of range of the array, it returns `nil`.
+func (a *SortedArray) At(index int) (value interface{}) {
+	value, _ = a.Get(index)
+	return
+}
+
+// SetArray sets the underlying slice array with the given `array`.
 func (a *SortedArray) SetArray(array []interface{}) *SortedArray {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -113,7 +120,7 @@ func (a *SortedArray) SetComparator(comparator func(a, b interface{}) int) {
 }
 
 // Sort sorts the array in increasing order.
-// The parameter <reverse> controls whether sort
+// The parameter `reverse` controls whether sort
 // in increasing order(default) or decreasing order
 func (a *SortedArray) Sort() *SortedArray {
 	a.mu.Lock()
@@ -157,7 +164,7 @@ func (a *SortedArray) Append(values ...interface{}) *SortedArray {
 }
 
 // Get returns the value by the specified index.
-// If the given <index> is out of range of the array, the <found> is false.
+// If the given `index` is out of range of the array, the `found` is false.
 func (a *SortedArray) Get(index int) (value interface{}, found bool) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
@@ -168,7 +175,7 @@ func (a *SortedArray) Get(index int) (value interface{}, found bool) {
 }
 
 // Remove removes an item by index.
-// If the given <index> is out of range of the array, the <found> is false.
+// If the given `index` is out of range of the array, the `found` is false.
 func (a *SortedArray) Remove(index int) (value interface{}, found bool) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -209,7 +216,7 @@ func (a *SortedArray) RemoveValue(value interface{}) bool {
 }
 
 // PopLeft pops and returns an item from the beginning of array.
-// Note that if the array is empty, the <found> is false.
+// Note that if the array is empty, the `found` is false.
 func (a *SortedArray) PopLeft() (value interface{}, found bool) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -222,7 +229,7 @@ func (a *SortedArray) PopLeft() (value interface{}, found bool) {
 }
 
 // PopRight pops and returns an item from the end of array.
-// Note that if the array is empty, the <found> is false.
+// Note that if the array is empty, the `found` is false.
 func (a *SortedArray) PopRight() (value interface{}, found bool) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -236,14 +243,14 @@ func (a *SortedArray) PopRight() (value interface{}, found bool) {
 }
 
 // PopRand randomly pops and return an item out of array.
-// Note that if the array is empty, the <found> is false.
+// Note that if the array is empty, the `found` is false.
 func (a *SortedArray) PopRand() (value interface{}, found bool) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	return a.doRemoveWithoutLock(grand.Intn(len(a.array)))
 }
 
-// PopRands randomly pops and returns <size> items out of array.
+// PopRands randomly pops and returns `size` items out of array.
 func (a *SortedArray) PopRands(size int) []interface{} {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -260,7 +267,7 @@ func (a *SortedArray) PopRands(size int) []interface{} {
 	return array
 }
 
-// PopLefts pops and returns <size> items from the beginning of array.
+// PopLefts pops and returns `size` items from the beginning of array.
 func (a *SortedArray) PopLefts(size int) []interface{} {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -277,7 +284,7 @@ func (a *SortedArray) PopLefts(size int) []interface{} {
 	return value
 }
 
-// PopRights pops and returns <size> items from the end of array.
+// PopRights pops and returns `size` items from the end of array.
 func (a *SortedArray) PopRights(size int) []interface{} {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -299,8 +306,8 @@ func (a *SortedArray) PopRights(size int) []interface{} {
 // Notice, if in concurrent-safe usage, it returns a copy of slice;
 // else a pointer to the underlying data.
 //
-// If <end> is negative, then the offset will start from the end of array.
-// If <end> is omitted, then the sequence will have everything from start up
+// If `end` is negative, then the offset will start from the end of array.
+// If `end` is omitted, then the sequence will have everything from start up
 // until the end of the array.
 func (a *SortedArray) Range(start int, end ...int) []interface{} {
 	a.mu.RLock()
@@ -326,7 +333,7 @@ func (a *SortedArray) Range(start int, end ...int) []interface{} {
 }
 
 // SubSlice returns a slice of elements from the array as specified
-// by the <offset> and <size> parameters.
+// by the `offset` and `size` parameters.
 // If in concurrent safe usage, it returns a copy of the slice; else a pointer.
 //
 // If offset is non-negative, the sequence will start at that offset in the array.
@@ -419,7 +426,7 @@ func (a *SortedArray) Contains(value interface{}) bool {
 	return a.Search(value) != -1
 }
 
-// Search searches array by <value>, returns the index of <value>,
+// Search searches array by `value`, returns the index of `value`,
 // or returns -1 if not exists.
 func (a *SortedArray) Search(value interface{}) (index int) {
 	if i, r := a.binSearch(value, true); r == 0 {
@@ -430,9 +437,9 @@ func (a *SortedArray) Search(value interface{}) (index int) {
 
 // Binary search.
 // It returns the last compared index and the result.
-// If <result> equals to 0, it means the value at <index> is equals to <value>.
-// If <result> lesser than 0, it means the value at <index> is lesser than <value>.
-// If <result> greater than 0, it means the value at <index> is greater than <value>.
+// If `result` equals to 0, it means the value at `index` is equals to `value`.
+// If `result` lesser than 0, it means the value at `index` is lesser than `value`.
+// If `result` greater than 0, it means the value at `index` is greater than `value`.
 func (a *SortedArray) binSearch(value interface{}, lock bool) (index int, result int) {
 	if lock {
 		a.mu.RLock()
@@ -512,7 +519,7 @@ func (a *SortedArray) Clear() *SortedArray {
 	return a
 }
 
-// LockFunc locks writing by callback function <f>.
+// LockFunc locks writing by callback function `f`.
 func (a *SortedArray) LockFunc(f func(array []interface{})) *SortedArray {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -526,7 +533,7 @@ func (a *SortedArray) LockFunc(f func(array []interface{})) *SortedArray {
 	return a
 }
 
-// RLockFunc locks reading by callback function <f>.
+// RLockFunc locks reading by callback function `f`.
 func (a *SortedArray) RLockFunc(f func(array []interface{})) *SortedArray {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
@@ -534,8 +541,8 @@ func (a *SortedArray) RLockFunc(f func(array []interface{})) *SortedArray {
 	return a
 }
 
-// Merge merges <array> into current array.
-// The parameter <array> can be any garray or slice type.
+// Merge merges `array` into current array.
+// The parameter `array` can be any garray or slice type.
 // The difference between Merge and Append is Append supports only specified slice type,
 // but Merge supports more parameter types.
 func (a *SortedArray) Merge(array interface{}) *SortedArray {
@@ -543,7 +550,7 @@ func (a *SortedArray) Merge(array interface{}) *SortedArray {
 }
 
 // Chunk splits an array into multiple arrays,
-// the size of each array is determined by <size>.
+// the size of each array is determined by `size`.
 // The last chunk may contain less than size elements.
 func (a *SortedArray) Chunk(size int) [][]interface{} {
 	if size < 1 {
@@ -575,7 +582,7 @@ func (a *SortedArray) Rand() (value interface{}, found bool) {
 	return a.array[grand.Intn(len(a.array))], true
 }
 
-// Rands randomly returns <size> items from array(no deleting).
+// Rands randomly returns `size` items from array(no deleting).
 func (a *SortedArray) Rands(size int) []interface{} {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
@@ -589,7 +596,7 @@ func (a *SortedArray) Rands(size int) []interface{} {
 	return array
 }
 
-// Join joins array elements with a string <glue>.
+// Join joins array elements with a string `glue`.
 func (a *SortedArray) Join(glue string) string {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
@@ -622,8 +629,8 @@ func (a *SortedArray) Iterator(f func(k int, v interface{}) bool) {
 	a.IteratorAsc(f)
 }
 
-// IteratorAsc iterates the array readonly in ascending order with given callback function <f>.
-// If <f> returns true, then it continues iterating; or false to stop.
+// IteratorAsc iterates the array readonly in ascending order with given callback function `f`.
+// If `f` returns true, then it continues iterating; or false to stop.
 func (a *SortedArray) IteratorAsc(f func(k int, v interface{}) bool) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
@@ -634,8 +641,8 @@ func (a *SortedArray) IteratorAsc(f func(k int, v interface{}) bool) {
 	}
 }
 
-// IteratorDesc iterates the array readonly in descending order with given callback function <f>.
-// If <f> returns true, then it continues iterating; or false to stop.
+// IteratorDesc iterates the array readonly in descending order with given callback function `f`.
+// If `f` returns true, then it continues iterating; or false to stop.
 func (a *SortedArray) IteratorDesc(f func(k int, v interface{}) bool) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
@@ -685,7 +692,7 @@ func (a *SortedArray) UnmarshalJSON(b []byte) error {
 	}
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	if err := json.Unmarshal(b, &a.array); err != nil {
+	if err := json.UnmarshalUseNumber(b, &a.array); err != nil {
 		return err
 	}
 	if a.comparator != nil && a.array != nil {
@@ -706,7 +713,7 @@ func (a *SortedArray) UnmarshalValue(value interface{}) (err error) {
 	defer a.mu.Unlock()
 	switch value.(type) {
 	case string, []byte:
-		err = json.Unmarshal(gconv.Bytes(value), &a.array)
+		err = json.UnmarshalUseNumber(gconv.Bytes(value), &a.array)
 	default:
 		a.array = gconv.SliceAny(value)
 	}
@@ -761,7 +768,7 @@ func (a *SortedArray) FilterEmpty() *SortedArray {
 	return a
 }
 
-// Walk applies a user supplied function <f> to every item of array.
+// Walk applies a user supplied function `f` to every item of array.
 func (a *SortedArray) Walk(f func(value interface{}) interface{}) *SortedArray {
 	a.mu.Lock()
 	defer a.mu.Unlock()

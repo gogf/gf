@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,6 +7,7 @@
 package gsession_test
 
 import (
+	"context"
 	"github.com/gogf/gf/database/gredis"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gsession"
@@ -26,7 +27,7 @@ func Test_StorageRedisHashTable(t *testing.T) {
 	manager := gsession.New(time.Second, storage)
 	sessionId := ""
 	gtest.C(t, func(t *gtest.T) {
-		s := manager.New()
+		s := manager.New(context.TODO())
 		defer s.Close()
 		s.Set("k1", "v1")
 		s.Set("k2", "v2")
@@ -38,7 +39,7 @@ func Test_StorageRedisHashTable(t *testing.T) {
 		sessionId = s.Id()
 	})
 	gtest.C(t, func(t *gtest.T) {
-		s := manager.New(sessionId)
+		s := manager.New(context.TODO(), sessionId)
 		t.Assert(s.Get("k1"), "v1")
 		t.Assert(s.Get("k2"), "v2")
 		t.Assert(s.Get("k3"), "v3")
@@ -71,7 +72,7 @@ func Test_StorageRedisHashTable(t *testing.T) {
 
 	time.Sleep(1500 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		s := manager.New(sessionId)
+		s := manager.New(context.TODO(), sessionId)
 		t.Assert(s.Size(), 0)
 		t.Assert(s.Get("k5"), nil)
 		t.Assert(s.Get("k6"), nil)
@@ -89,7 +90,7 @@ func Test_StorageRedisHashTablePrefix(t *testing.T) {
 	manager := gsession.New(time.Second, storage)
 	sessionId := ""
 	gtest.C(t, func(t *gtest.T) {
-		s := manager.New()
+		s := manager.New(context.TODO())
 		defer s.Close()
 		s.Set("k1", "v1")
 		s.Set("k2", "v2")
@@ -101,7 +102,7 @@ func Test_StorageRedisHashTablePrefix(t *testing.T) {
 		sessionId = s.Id()
 	})
 	gtest.C(t, func(t *gtest.T) {
-		s := manager.New(sessionId)
+		s := manager.New(context.TODO(), sessionId)
 		t.Assert(s.Get("k1"), "v1")
 		t.Assert(s.Get("k2"), "v2")
 		t.Assert(s.Get("k3"), "v3")
@@ -134,7 +135,7 @@ func Test_StorageRedisHashTablePrefix(t *testing.T) {
 
 	time.Sleep(1500 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		s := manager.New(sessionId)
+		s := manager.New(context.TODO(), sessionId)
 		t.Assert(s.Size(), 0)
 		t.Assert(s.Get("k5"), nil)
 		t.Assert(s.Get("k6"), nil)

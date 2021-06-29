@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -10,10 +10,10 @@
 package gtime
 
 import (
-	"errors"
 	"fmt"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/utils"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -45,7 +45,7 @@ const (
 	// "2018/10/31 - 16:38:46"
 	// "2018-02-09",
 	// "2018.02.09",
-	TIME_REAGEX_PATTERN1 = `(\d{4}[-/\.]\d{2}[-/\.]\d{2})[:\sT-]*(\d{0,2}:{0,1}\d{0,2}:{0,1}\d{0,2}){0,1}\.{0,1}(\d{0,9})([\sZ]{0,1})([\+-]{0,1})([:\d]*)`
+	timeRegexPattern1 = `(\d{4}[-/\.]\d{1,2}[-/\.]\d{1,2})[:\sT-]*(\d{0,2}:{0,1}\d{0,2}:{0,1}\d{0,2}){0,1}\.{0,1}(\d{0,9})([\sZ]{0,1})([\+-]{0,1})([:\d]*)`
 
 	// Regular expression2(datetime separator supports '-', '/', '.').
 	// Eg:
@@ -53,14 +53,21 @@ const (
 	// 01/Nov/2018 11:50:28
 	// 01.Nov.2018 11:50:28
 	// 01.Nov.2018:11:50:28
-	TIME_REAGEX_PATTERN2 = `(\d{1,2}[-/\.][A-Za-z]{3,}[-/\.]\d{4})[:\sT-]*(\d{0,2}:{0,1}\d{0,2}:{0,1}\d{0,2}){0,1}\.{0,1}(\d{0,9})([\sZ]{0,1})([\+-]{0,1})([:\d]*)`
+	timeRegexPattern2 = `(\d{1,2}[-/\.][A-Za-z]{3,}[-/\.]\d{4})[:\sT-]*(\d{0,2}:{0,1}\d{0,2}:{0,1}\d{0,2}){0,1}\.{0,1}(\d{0,9})([\sZ]{0,1})([\+-]{0,1})([:\d]*)`
+
+	// Regular expression3(time).
+	// Eg:
+	// 11:50:28
+	// 11:50:28.897
+	timeRegexPattern3 = `(\d{2}):(\d{2}):(\d{2})\.{0,1}(\d{0,9})`
 )
 
 var (
 	// It's more high performance using regular expression
 	// than time.ParseInLocation to parse the datetime string.
-	timeRegex1, _ = regexp.Compile(TIME_REAGEX_PATTERN1)
-	timeRegex2, _ = regexp.Compile(TIME_REAGEX_PATTERN2)
+	timeRegex1, _ = regexp.Compile(timeRegexPattern1)
+	timeRegex2, _ = regexp.Compile(timeRegexPattern2)
+	timeRegex3, _ = regexp.Compile(timeRegexPattern3)
 
 	// Month words to arabic numerals mapping.
 	monthMap = map[string]int{
@@ -95,18 +102,14 @@ var (
 // The parameter <zone> is an area string specifying corresponding time zone,
 // eg: Asia/Shanghai.
 //
-// Note that the time zone database needed by LoadLocation may not be
-// present on all systems, especially non-Unix systems.
-// LoadLocation looks in the directory or uncompressed zip file
-// named by the ZONEINFO environment variable, if any, then looks in
-// known installation locations on Unix systems,
-// and finally looks in $GOROOT/lib/time/zoneinfo.zip.
+// This should be called before package "time" import.
+// Please refer to issue: https://github.com/golang/go/issues/34814
 func SetTimeZone(zone string) error {
 	location, err := time.LoadLocation(zone)
-	if err == nil {
-		time.Local = location
+	if err != nil {
+		return err
 	}
-	return err
+	return os.Setenv("TZ", location.String())
 }
 
 // Timestamp retrieves and returns the timestamp in seconds.
@@ -247,17 +250,33 @@ func StrToTime(str string, format ...string) (*Time, error) {
 		local                = time.Local
 	)
 	if match = timeRegex1.FindStringSubmatch(str); len(match) > 0 && match[1] != "" {
-		for k, v := range match {
-			match[k] = strings.TrimSpace(v)
-		}
+		//for k, v := range match {
+		//	match[k] = strings.TrimSpace(v)
+		//}
 		year, month, day = parseDateStr(match[1])
 	} else if match = timeRegex2.FindStringSubmatch(str); len(match) > 0 && match[1] != "" {
-		for k, v := range match {
-			match[k] = strings.TrimSpace(v)
-		}
+		//for k, v := range match {
+		//	match[k] = strings.TrimSpace(v)
+		//}
 		year, month, day = parseDateStr(match[1])
+	} else if match = timeRegex3.FindStringSubmatch(str); len(match) > 0 && match[1] != "" {
+		//for k, v := range match {
+		//	match[k] = strings.TrimSpace(v)
+		//}
+		s := strings.Replace(match[2], ":", "", -1)
+		if len(s) < 6 {
+			s += strings.Repeat("0", 6-len(s))
+		}
+		hour, _ = strconv.Atoi(match[1])
+		min, _ = strconv.Atoi(match[2])
+		sec, _ = strconv.Atoi(match[3])
+		nsec, _ = strconv.Atoi(match[4])
+		for i := 0; i < 9-len(match[4]); i++ {
+			nsec *= 10
+		}
+		return NewFromTime(time.Date(0, time.Month(1), 1, hour, min, sec, nsec, local)), nil
 	} else {
-		return nil, errors.New("unsupported time format")
+		return nil, gerror.New("unsupported time format")
 	}
 
 	// Time
@@ -330,8 +349,8 @@ func StrToTime(str string, format ...string) (*Time, error) {
 			}
 		}
 	}
-	if year <= 0 {
-		return nil, errors.New("invalid time string:" + str)
+	if month <= 0 || day <= 0 {
+		return nil, gerror.New("invalid time string:" + str)
 	}
 	return NewFromTime(time.Date(year, time.Month(month), day, hour, min, sec, nsec, local)), nil
 }
@@ -347,7 +366,7 @@ func ConvertZone(strTime string, toZone string, fromZone ...string) (*Time, erro
 		if l, err := time.LoadLocation(fromZone[0]); err != nil {
 			return nil, err
 		} else {
-			t.Time = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Time.Second(), t.Time.Nanosecond(), l)
+			t.Time = time.Date(t.Year(), time.Month(t.Month()), t.Day(), t.Hour(), t.Minute(), t.Time.Second(), t.Time.Nanosecond(), l)
 		}
 	}
 	if l, err := time.LoadLocation(toZone); err != nil {
@@ -386,6 +405,8 @@ func ParseTimeFromContent(content string, format ...string) *Time {
 		if match := timeRegex1.FindStringSubmatch(content); len(match) >= 1 {
 			return NewFromStr(strings.Trim(match[0], "./_- \n\r"))
 		} else if match := timeRegex2.FindStringSubmatch(content); len(match) >= 1 {
+			return NewFromStr(strings.Trim(match[0], "./_- \n\r"))
+		} else if match := timeRegex3.FindStringSubmatch(content); len(match) >= 1 {
 			return NewFromStr(strings.Trim(match[0], "./_- \n\r"))
 		}
 	}

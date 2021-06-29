@@ -1,4 +1,4 @@
-// Copyright 2020 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -14,25 +14,40 @@ import (
 
 // Structs converts any slice to given struct slice.
 func Structs(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
-	return doStructs(params, pointer, mapping...)
+	var keyToAttributeNameMapping map[string]string
+	if len(mapping) > 0 {
+		keyToAttributeNameMapping = mapping[0]
+	}
+	return doStructs(params, pointer, keyToAttributeNameMapping, "")
+}
+
+// StructsTag acts as Structs but also with support for priority tag feature, which retrieves the
+// specified tags for `params` key-value items to struct attribute names mapping.
+// The parameter `priorityTag` supports multiple tags that can be joined with char ','.
+func StructsTag(params interface{}, pointer interface{}, priorityTag string) (err error) {
+	return doStructs(params, pointer, nil, priorityTag)
 }
 
 // StructsDeep converts any slice to given struct slice recursively.
 // Deprecated, use Structs instead.
 func StructsDeep(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
-	return doStructs(params, pointer, mapping...)
+	var keyToAttributeNameMapping map[string]string
+	if len(mapping) > 0 {
+		keyToAttributeNameMapping = mapping[0]
+	}
+	return doStructs(params, pointer, keyToAttributeNameMapping, "")
 }
 
 // doStructs converts any slice to given struct slice.
 //
-// It automatically checks and converts json string to []map if <params> is string/[]byte.
+// It automatically checks and converts json string to []map if `params` is string/[]byte.
 //
-// The parameter <pointer> should be type of pointer to slice of struct.
-// Note that if <pointer> is a pointer to another pointer of type of slice of struct,
+// The parameter `pointer` should be type of pointer to slice of struct.
+// Note that if `pointer` is a pointer to another pointer of type of slice of struct,
 // it will create the struct/pointer internally.
-func doStructs(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
+func doStructs(params interface{}, pointer interface{}, mapping map[string]string, priorityTag string) (err error) {
 	if params == nil {
-		// If <params> is nil, no conversion.
+		// If `params` is nil, no conversion.
 		return nil
 	}
 	if pointer == nil {
@@ -45,30 +60,34 @@ func doStructs(params interface{}, pointer interface{}, mapping ...map[string]st
 
 	defer func() {
 		// Catch the panic, especially the reflect operation panics.
-		if e := recover(); e != nil {
-			err = gerror.NewSkipf(1, "%v", e)
+		if exception := recover(); exception != nil {
+			if e, ok := exception.(errorStack); ok {
+				err = e
+			} else {
+				err = gerror.NewSkipf(1, "%v", exception)
+			}
 		}
 	}()
-	// If given <params> is JSON, it then uses json.Unmarshal doing the converting.
+	// If given `params` is JSON, it then uses json.Unmarshal doing the converting.
 	switch r := params.(type) {
 	case []byte:
 		if json.Valid(r) {
 			if rv, ok := pointer.(reflect.Value); ok {
 				if rv.Kind() == reflect.Ptr {
-					return json.Unmarshal(r, rv.Interface())
+					return json.UnmarshalUseNumber(r, rv.Interface())
 				}
 			} else {
-				return json.Unmarshal(r, pointer)
+				return json.UnmarshalUseNumber(r, pointer)
 			}
 		}
 	case string:
 		if paramsBytes := []byte(r); json.Valid(paramsBytes) {
 			if rv, ok := pointer.(reflect.Value); ok {
 				if rv.Kind() == reflect.Ptr {
-					return json.Unmarshal(paramsBytes, rv.Interface())
+					return json.UnmarshalUseNumber(paramsBytes, rv.Interface())
 				}
 			} else {
-				return json.Unmarshal(paramsBytes, pointer)
+				return json.UnmarshalUseNumber(paramsBytes, pointer)
 			}
 		}
 	}
@@ -80,34 +99,72 @@ func doStructs(params interface{}, pointer interface{}, mapping ...map[string]st
 			return gerror.Newf("pointer should be type of pointer, but got: %v", kind)
 		}
 	}
-	// Converting <params> to map slice.
-	paramsMaps := Maps(params)
-	// If <params> is an empty slice, no conversion.
-	if len(paramsMaps) == 0 {
+	// Converting `params` to map slice.
+	var (
+		paramsList []interface{}
+		paramsRv   = reflect.ValueOf(params)
+		paramsKind = paramsRv.Kind()
+	)
+	for paramsKind == reflect.Ptr {
+		paramsRv = paramsRv.Elem()
+		paramsKind = paramsRv.Kind()
+	}
+	switch paramsKind {
+	case reflect.Slice, reflect.Array:
+		paramsList = make([]interface{}, paramsRv.Len())
+		for i := 0; i < paramsRv.Len(); i++ {
+			paramsList[i] = paramsRv.Index(i)
+		}
+	default:
+		var paramsMaps = Maps(params)
+		paramsList = make([]interface{}, len(paramsMaps))
+		for i := 0; i < len(paramsMaps); i++ {
+			paramsList[i] = paramsMaps[i]
+		}
+	}
+	// If `params` is an empty slice, no conversion.
+	if len(paramsList) == 0 {
 		return nil
 	}
 	var (
-		array    = reflect.MakeSlice(pointerRv.Type().Elem(), len(paramsMaps), len(paramsMaps))
-		itemType = array.Index(0).Type()
+		reflectElemArray = reflect.MakeSlice(pointerRv.Type().Elem(), len(paramsList), len(paramsList))
+		itemType         = reflectElemArray.Index(0).Type()
+		itemTypeKind     = itemType.Kind()
+		pointerRvElem    = pointerRv.Elem()
+		pointerRvLength  = pointerRvElem.Len()
 	)
-	for i := 0; i < len(paramsMaps); i++ {
-		if itemType.Kind() == reflect.Ptr {
-			// Slice element is type pointer.
-			e := reflect.New(itemType.Elem()).Elem()
-			if err = Struct(paramsMaps[i], e, mapping...); err != nil {
+	if itemTypeKind == reflect.Ptr {
+		// Pointer element.
+		for i := 0; i < len(paramsList); i++ {
+			var tempReflectValue reflect.Value
+			if i < pointerRvLength {
+				// Might be nil.
+				tempReflectValue = pointerRvElem.Index(i).Elem()
+			}
+			if !tempReflectValue.IsValid() {
+				tempReflectValue = reflect.New(itemType.Elem()).Elem()
+			}
+			if err = doStruct(paramsList[i], tempReflectValue, mapping, priorityTag); err != nil {
 				return err
 			}
-			array.Index(i).Set(e.Addr())
-		} else {
-			// Slice element is not type of pointer.
-			e := reflect.New(itemType).Elem()
-			if err = Struct(paramsMaps[i], e, mapping...); err != nil {
+			reflectElemArray.Index(i).Set(tempReflectValue.Addr())
+		}
+	} else {
+		// Struct element.
+		for i := 0; i < len(paramsList); i++ {
+			var tempReflectValue reflect.Value
+			if i < pointerRvLength {
+				tempReflectValue = pointerRvElem.Index(i)
+			} else {
+				tempReflectValue = reflect.New(itemType).Elem()
+			}
+			if err = doStruct(paramsList[i], tempReflectValue, mapping, priorityTag); err != nil {
 				return err
 			}
-			array.Index(i).Set(e)
+			reflectElemArray.Index(i).Set(tempReflectValue)
 		}
 	}
-	pointerRv.Elem().Set(array)
+	pointerRv.Elem().Set(reflectElemArray)
 	return nil
 }
 

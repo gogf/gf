@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -14,7 +14,9 @@
 package gredis
 
 import (
+	"context"
 	"fmt"
+	"github.com/gogf/gf/internal/intlog"
 	"time"
 
 	"github.com/gogf/gf/container/gmap"
@@ -24,42 +26,45 @@ import (
 
 // Redis client.
 type Redis struct {
-	pool   *redis.Pool // Underlying connection pool.
-	group  string      // Configuration group.
-	config Config      // Configuration.
+	pool   *redis.Pool     // Underlying connection pool.
+	group  string          // Configuration group.
+	config *Config         // Configuration.
+	ctx    context.Context // Context.
 }
 
-// Redis connection.
+// Conn is redis connection.
 type Conn struct {
 	redis.Conn
+	ctx   context.Context
+	redis *Redis
 }
 
-// Redis configuration.
+// Config is redis configuration.
 type Config struct {
-	Host            string
-	Port            int
-	Db              int
-	Pass            string        // Password for AUTH.
-	MaxIdle         int           // Maximum number of connections allowed to be idle (default is 10)
-	MaxActive       int           // Maximum number of connections limit (default is 0 means no limit).
-	IdleTimeout     time.Duration // Maximum idle time for connection (default is 10 seconds, not allowed to be set to 0)
-	MaxConnLifetime time.Duration // Maximum lifetime of the connection (default is 30 seconds, not allowed to be set to 0)
-	ConnectTimeout  time.Duration // Dial connection timeout.
-	TLS             bool          // Specifies the config to use when a TLS connection is dialed.
-	TLSSkipVerify   bool          // Disables server name verification when connecting over TLS
+	Host            string        `json:"host"`
+	Port            int           `json:"port"`
+	Db              int           `json:"db"`
+	Pass            string        `json:"pass"`            // Password for AUTH.
+	MaxIdle         int           `json:"maxIdle"`         // Maximum number of connections allowed to be idle (default is 10)
+	MaxActive       int           `json:"maxActive"`       // Maximum number of connections limit (default is 0 means no limit).
+	IdleTimeout     time.Duration `json:"idleTimeout"`     // Maximum idle time for connection (default is 10 seconds, not allowed to be set to 0)
+	MaxConnLifetime time.Duration `json:"maxConnLifetime"` // Maximum lifetime of the connection (default is 30 seconds, not allowed to be set to 0)
+	ConnectTimeout  time.Duration `json:"connectTimeout"`  // Dial connection timeout.
+	TLS             bool          `json:"tls"`             // Specifies the config to use when a TLS connection is dialed.
+	TLSSkipVerify   bool          `json:"tlsSkipVerify"`   // Disables server name verification when connecting over TLS.
 }
 
-// Pool statistics.
+// PoolStats is statistics of redis connection pool.
 type PoolStats struct {
 	redis.PoolStats
 }
 
 const (
-	gDEFAULT_POOL_IDLE_TIMEOUT  = 10 * time.Second
-	gDEFAULT_POOL_CONN_TIMEOUT  = 10 * time.Second
-	gDEFAULT_POOL_MAX_IDLE      = 10
-	gDEFAULT_POOL_MAX_ACTIVE    = 100
-	gDEFAULT_POOL_MAX_LIFE_TIME = 30 * time.Second
+	defaultPoolIdleTimeout = 10 * time.Second
+	defaultPoolConnTimeout = 10 * time.Second
+	defaultPoolMaxIdle     = 10
+	defaultPoolMaxActive   = 100
+	defaultPoolMaxLifeTime = 30 * time.Second
 )
 
 var (
@@ -69,25 +74,25 @@ var (
 
 // New creates a redis client object with given configuration.
 // Redis client maintains a connection pool automatically.
-func New(config Config) *Redis {
+func New(config *Config) *Redis {
 	// The MaxIdle is the most important attribute of the connection pool.
 	// Only if this attribute is set, the created connections from client
 	// can not exceed the limit of the server.
 	if config.MaxIdle == 0 {
-		config.MaxIdle = gDEFAULT_POOL_MAX_IDLE
+		config.MaxIdle = defaultPoolMaxIdle
 	}
 	// This value SHOULD NOT exceed the connection limit of redis server.
 	if config.MaxActive == 0 {
-		config.MaxActive = gDEFAULT_POOL_MAX_ACTIVE
+		config.MaxActive = defaultPoolMaxActive
 	}
 	if config.IdleTimeout == 0 {
-		config.IdleTimeout = gDEFAULT_POOL_IDLE_TIMEOUT
+		config.IdleTimeout = defaultPoolIdleTimeout
 	}
 	if config.ConnectTimeout == 0 {
-		config.ConnectTimeout = gDEFAULT_POOL_CONN_TIMEOUT
+		config.ConnectTimeout = defaultPoolConnTimeout
 	}
 	if config.MaxConnLifetime == 0 {
-		config.MaxConnLifetime = gDEFAULT_POOL_MAX_LIFE_TIME
+		config.MaxConnLifetime = defaultPoolMaxLifeTime
 	}
 	return &Redis{
 		config: config,
@@ -109,6 +114,7 @@ func New(config Config) *Redis {
 					if err != nil {
 						return nil, err
 					}
+					intlog.Printf(context.TODO(), `open new connection, config:%+v`, config)
 					// AUTH
 					if len(config.Pass) > 0 {
 						if _, err := c.Do("AUTH", config.Pass); err != nil {
@@ -158,15 +164,33 @@ func (r *Redis) Close() error {
 	return r.pool.Close()
 }
 
+// Clone clones and returns a new Redis object, which is a shallow copy of current one.
+func (r *Redis) Clone() *Redis {
+	newRedis := New(r.config)
+	*newRedis = *r
+	return newRedis
+}
+
+// Ctx is a channing function which sets the context for next operation.
+func (r *Redis) Ctx(ctx context.Context) *Redis {
+	newRedis := r.Clone()
+	newRedis.ctx = ctx
+	return newRedis
+}
+
 // Conn returns a raw underlying connection object,
 // which expose more methods to communicate with server.
 // **You should call Close function manually if you do not use this connection any further.**
 func (r *Redis) Conn() *Conn {
-	return &Conn{r.pool.Get()}
+	return &Conn{
+		Conn:  r.pool.Get(),
+		ctx:   r.ctx,
+		redis: r,
+	}
 }
 
-// Alias of Conn, see Conn.
-// Deprecated.
+// GetConn is alias of Conn, see Conn.
+// Deprecated, use Conn instead.
 func (r *Redis) GetConn() *Conn {
 	return r.Conn()
 }
@@ -209,7 +233,11 @@ func (r *Redis) Stats() *PoolStats {
 // Do automatically get a connection from pool, and close it when the reply received.
 // It does not really "close" the connection, but drops it back to the connection pool.
 func (r *Redis) Do(commandName string, args ...interface{}) (interface{}, error) {
-	conn := &Conn{r.pool.Get()}
+	conn := &Conn{
+		Conn:  r.pool.Get(),
+		ctx:   r.ctx,
+		redis: r,
+	}
 	defer conn.Close()
 	return conn.Do(commandName, args...)
 }
@@ -217,7 +245,11 @@ func (r *Redis) Do(commandName string, args ...interface{}) (interface{}, error)
 // DoWithTimeout sends a command to the server and returns the received reply.
 // The timeout overrides the read timeout set when dialing the connection.
 func (r *Redis) DoWithTimeout(timeout time.Duration, commandName string, args ...interface{}) (interface{}, error) {
-	conn := &Conn{r.pool.Get()}
+	conn := &Conn{
+		Conn:  r.pool.Get(),
+		ctx:   r.ctx,
+		redis: r,
+	}
 	defer conn.Close()
 	return conn.DoWithTimeout(timeout, commandName, args...)
 }

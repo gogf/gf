@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -10,6 +10,7 @@ import (
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/util/guid"
+	"github.com/gogf/gf/util/gutil"
 	"testing"
 	"time"
 
@@ -21,7 +22,7 @@ import (
 )
 
 var (
-	config = gredis.Config{
+	config = &gredis.Config{
 		Host: "127.0.0.1",
 		Port: 6379,
 		Db:   1,
@@ -138,7 +139,7 @@ func Test_Instance(t *testing.T) {
 
 func Test_Error(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		config1 := gredis.Config{
+		config1 := &gredis.Config{
 			Host:           "127.0.0.2",
 			Port:           6379,
 			Db:             1,
@@ -148,7 +149,7 @@ func Test_Error(t *testing.T) {
 		_, err := redis.Do("info")
 		t.AssertNE(err, nil)
 
-		config1 = gredis.Config{
+		config1 = &gredis.Config{
 			Host: "127.0.0.1",
 			Port: 6379,
 			Db:   1,
@@ -158,7 +159,7 @@ func Test_Error(t *testing.T) {
 		_, err = redis.Do("info")
 		t.AssertNE(err, nil)
 
-		config1 = gredis.Config{
+		config1 = &gredis.Config{
 			Host: "127.0.0.1",
 			Port: 6379,
 			Db:   100,
@@ -255,9 +256,11 @@ func Test_HSet(t *testing.T) {
 
 func Test_HGetAll1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var err error
-		redis := gredis.New(config)
-		key := guid.S()
+		var (
+			err   error
+			key   = guid.S()
+			redis = gredis.New(config)
+		)
 		defer redis.Do("DEL", key)
 
 		_, err = redis.Do("HSET", key, "id", 100)
@@ -293,6 +296,54 @@ func Test_HGetAll2(t *testing.T) {
 
 		t.Assert(gconv.Uint(result.MapStrVar()["id"]), 100)
 		t.Assert(result.MapStrVar()["id"].Uint(), 100)
+	})
+}
+
+func Test_HMSet(t *testing.T) {
+	// map
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err   error
+			key   = guid.S()
+			redis = gredis.New(config)
+			data  = g.Map{
+				"name":  "gf",
+				"sex":   0,
+				"score": 100,
+			}
+		)
+		defer redis.Do("DEL", key)
+
+		_, err = redis.Do("HMSET", append(g.Slice{key}, gutil.MapToSlice(data)...)...)
+		t.Assert(err, nil)
+		v, err := redis.DoVar("HMGET", key, "name")
+		t.Assert(err, nil)
+		t.Assert(v.Slice(), g.Slice{data["name"]})
+	})
+	// struct
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Name  string `json:"name"`
+			Sex   int    `json:"sex"`
+			Score int    `json:"score"`
+		}
+		var (
+			err   error
+			key   = guid.S()
+			redis = gredis.New(config)
+			data  = &User{
+				Name:  "gf",
+				Sex:   0,
+				Score: 100,
+			}
+		)
+		defer redis.Do("DEL", key)
+
+		_, err = redis.Do("HMSET", append(g.Slice{key}, gutil.StructToSlice(data)...)...)
+		t.Assert(err, nil)
+		v, err := redis.DoVar("HMGET", key, "name")
+		t.Assert(err, nil)
+		t.Assert(v.Slice(), g.Slice{data.Name})
 	})
 }
 

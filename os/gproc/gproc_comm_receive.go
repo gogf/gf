@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -89,7 +89,7 @@ func receiveTcpHandler(conn *gtcp.Conn) {
 		if len(buffer) > 0 {
 			// Package decoding.
 			msg := new(MsgRequest)
-			if err := json.Unmarshal(buffer, msg); err != nil {
+			if err := json.UnmarshalUseNumber(buffer, msg); err != nil {
 				//glog.Error(err)
 				continue
 			}

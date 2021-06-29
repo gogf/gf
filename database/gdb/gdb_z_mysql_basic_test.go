@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -19,7 +19,7 @@ func Test_Instance(t *testing.T) {
 		t.AssertNE(err, nil)
 
 		db, err := gdb.Instance()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		err1 := db.PingMaster()
 		err2 := db.PingSlave()

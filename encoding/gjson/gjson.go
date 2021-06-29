@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -19,15 +19,22 @@ import (
 
 const (
 	// Separator char for hierarchical data access.
-	gDEFAULT_SPLIT_CHAR = '.'
+	defaultSplitChar = '.'
 )
 
-// The customized JSON struct.
+// Json is the customized JSON struct.
 type Json struct {
 	mu *rwmutex.RWMutex
 	p  *interface{} // Pointer for hierarchical data access, it's the root of data in default.
 	c  byte         // Char separator('.' in default).
 	vc bool         // Violence Check(false in default), which is used to access data when the hierarchical data key contains separator char.
+}
+
+// Options for Json object creating.
+type Options struct {
+	Safe      bool   // Mark this object is for in concurrent-safe usage.
+	Tags      string // Custom priority tags for decoding.
+	StrNumber bool   // StrNumber causes the Decoder to unmarshal a number into an interface{} as a string instead of as a float64.
 }
 
 // setValue sets <value> to <j> by <pattern>.

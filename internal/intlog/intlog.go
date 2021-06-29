@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -8,15 +8,18 @@
 package intlog
 
 import (
+	"bytes"
+	"context"
 	"fmt"
 	"github.com/gogf/gf/debug/gdebug"
-	"github.com/gogf/gf/os/gcmd"
+	"github.com/gogf/gf/internal/utils"
+	"go.opentelemetry.io/otel/trace"
 	"path/filepath"
 	"time"
 )
 
 const (
-	gFILTER_KEY = "/internal/intlog"
+	stackFilterKey = "/internal/intlog"
 )
 
 var (
@@ -25,65 +28,70 @@ var (
 )
 
 func init() {
-	// Debugging configured.
-	if !gcmd.GetWithEnv("GF_DEBUG").IsEmpty() {
-		isGFDebug = true
-		return
-	}
+	isGFDebug = utils.IsDebugEnabled()
 }
 
 // SetEnabled enables/disables the internal logging manually.
 // Note that this function is not concurrent safe, be aware of the DATA RACE.
 func SetEnabled(enabled bool) {
-	// If they're the same, it does not write the <isGFDebug> but only reading operation.
+	// If they're the same, it does not write the `isGFDebug` but only reading operation.
 	if isGFDebug != enabled {
 		isGFDebug = enabled
 	}
 }
 
-// IsEnabled checks and returns whether current process is in GF development.
-func IsEnabled() bool {
-	return isGFDebug
+// Print prints `v` with newline using fmt.Println.
+// The parameter `v` can be multiple variables.
+func Print(ctx context.Context, v ...interface{}) {
+	doPrint(ctx, fmt.Sprint(v...), false)
 }
 
-// Print prints <v> with newline using fmt.Println.
-// The parameter <v> can be multiple variables.
-func Print(v ...interface{}) {
+// Printf prints `v` with format `format` using fmt.Printf.
+// The parameter `v` can be multiple variables.
+func Printf(ctx context.Context, format string, v ...interface{}) {
+	doPrint(ctx, fmt.Sprintf(format, v...), false)
+}
+
+// Error prints `v` with newline using fmt.Println.
+// The parameter `v` can be multiple variables.
+func Error(ctx context.Context, v ...interface{}) {
+	doPrint(ctx, fmt.Sprint(v...), true)
+}
+
+// Errorf prints `v` with format `format` using fmt.Printf.
+func Errorf(ctx context.Context, format string, v ...interface{}) {
+	doPrint(ctx, fmt.Sprintf(format, v...), true)
+}
+
+func doPrint(ctx context.Context, content string, stack bool) {
 	if !isGFDebug {
 		return
 	}
-	fmt.Println(append([]interface{}{now(), "[INTE]", file()}, v...)...)
+	buffer := bytes.NewBuffer(nil)
+	buffer.WriteString(now())
+	buffer.WriteString(" [INTE] ")
+	buffer.WriteString(file())
+	if s := traceIdStr(ctx); s != "" {
+		buffer.WriteString(" " + s)
+	}
+	buffer.WriteString(content)
+	buffer.WriteString("\n")
+	if stack {
+		buffer.WriteString(gdebug.StackWithFilter(stackFilterKey))
+	}
+	fmt.Print(buffer.String())
 }
 
-// Printf prints <v> with format <format> using fmt.Printf.
-// The parameter <v> can be multiple variables.
-func Printf(format string, v ...interface{}) {
-	if !isGFDebug {
-		return
+// traceIdStr retrieves and returns the trace id string for logging output.
+func traceIdStr(ctx context.Context) string {
+	if ctx == nil {
+		return ""
 	}
-	fmt.Printf(now()+" [INTE] "+file()+" "+format+"\n", v...)
-}
-
-// Error prints <v> with newline using fmt.Println.
-// The parameter <v> can be multiple variables.
-func Error(v ...interface{}) {
-	if !isGFDebug {
-		return
+	spanCtx := trace.SpanContextFromContext(ctx)
+	if traceId := spanCtx.TraceID(); traceId.IsValid() {
+		return "{" + traceId.String() + "}"
 	}
-	array := append([]interface{}{now(), "[INTE]", file()}, v...)
-	array = append(array, "\n"+gdebug.StackWithFilter(gFILTER_KEY))
-	fmt.Println(array...)
-}
-
-// Errorf prints <v> with format <format> using fmt.Printf.
-func Errorf(format string, v ...interface{}) {
-	if !isGFDebug {
-		return
-	}
-	fmt.Printf(
-		now()+" [INTE] "+file()+" "+format+"\n%s\n",
-		append(v, gdebug.StackWithFilter(gFILTER_KEY))...,
-	)
+	return ""
 }
 
 // now returns current time string.
@@ -93,6 +101,6 @@ func now() string {
 
 // file returns caller file name along with its line number.
 func file() string {
-	_, p, l := gdebug.CallerWithFilter(gFILTER_KEY)
+	_, p, l := gdebug.CallerWithFilter(stackFilterKey)
 	return fmt.Sprintf(`%s:%d`, filepath.Base(p), l)
 }

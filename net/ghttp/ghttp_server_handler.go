@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,6 +7,7 @@
 package ghttp
 
 import (
+	"github.com/gogf/gf/internal/intlog"
 	"net/http"
 	"os"
 	"sort"
@@ -65,7 +66,11 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		} else {
 			if exception := recover(); exception != nil {
 				request.Response.WriteStatus(http.StatusInternalServerError)
-				s.handleErrorLog(gerror.Newf("%v", exception), request)
+				if err, ok := exception.(error); ok {
+					s.handleErrorLog(gerror.Wrap(err, ""), request)
+				} else {
+					s.handleErrorLog(gerror.Newf("%v", exception), request)
+				}
 			}
 		}
 		// access log handling.
@@ -76,9 +81,15 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		// Close the request and response body
 		// to release the file descriptor in time.
-		request.Request.Body.Close()
+		err := request.Request.Body.Close()
+		if err != nil {
+			intlog.Error(request.Context(), err)
+		}
 		if request.Request.Response != nil {
-			request.Request.Response.Body.Close()
+			err = request.Request.Response.Body.Close()
+			if err != nil {
+				intlog.Error(request.Context(), err)
+			}
 		}
 	}()
 
@@ -164,7 +175,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Automatically set the session id to cookie
-	// if it creates a new session id in this request.
+	// if it creates a new session id in this request
+	// and SessionCookieOutput is enabled.
 	if s.config.SessionCookieOutput &&
 		request.Session.IsDirty() &&
 		request.Session.Id() != request.GetSessionId() {
@@ -182,10 +194,12 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // searchStaticFile searches the file with given URI.
 // It returns a file struct specifying the file information.
-func (s *Server) searchStaticFile(uri string) *StaticFile {
-	var file *gres.File
-	var path string
-	var dir bool
+func (s *Server) searchStaticFile(uri string) *staticFile {
+	var (
+		file *gres.File
+		path string
+		dir  bool
+	)
 	// Firstly search the StaticPaths mapping.
 	if len(s.config.StaticPaths) > 0 {
 		for _, item := range s.config.StaticPaths {
@@ -196,14 +210,14 @@ func (s *Server) searchStaticFile(uri string) *StaticFile {
 				}
 				file = gres.GetWithIndex(item.path+uri[len(item.prefix):], s.config.IndexFiles)
 				if file != nil {
-					return &StaticFile{
+					return &staticFile{
 						File:  file,
 						IsDir: file.FileInfo().IsDir(),
 					}
 				}
 				path, dir = gspath.Search(item.path, uri[len(item.prefix):], s.config.IndexFiles...)
 				if path != "" {
-					return &StaticFile{
+					return &staticFile{
 						Path:  path,
 						IsDir: dir,
 					}
@@ -217,13 +231,13 @@ func (s *Server) searchStaticFile(uri string) *StaticFile {
 		for _, p := range s.config.SearchPaths {
 			file = gres.GetWithIndex(p+uri, s.config.IndexFiles)
 			if file != nil {
-				return &StaticFile{
+				return &staticFile{
 					File:  file,
 					IsDir: file.FileInfo().IsDir(),
 				}
 			}
 			if path, dir = gspath.Search(p, uri, s.config.IndexFiles...); path != "" {
-				return &StaticFile{
+				return &staticFile{
 					Path:  path,
 					IsDir: dir,
 				}
@@ -233,7 +247,7 @@ func (s *Server) searchStaticFile(uri string) *StaticFile {
 	// Lastly search the resource manager.
 	if len(s.config.StaticPaths) == 0 && len(s.config.SearchPaths) == 0 {
 		if file = gres.GetWithIndex(uri, s.config.IndexFiles); file != nil {
-			return &StaticFile{
+			return &staticFile{
 				File:  file,
 				IsDir: file.FileInfo().IsDir(),
 			}
@@ -244,7 +258,7 @@ func (s *Server) searchStaticFile(uri string) *StaticFile {
 
 // serveFile serves the static file for client.
 // The optional parameter <allowIndex> specifies if allowing directory listing if <f> is directory.
-func (s *Server) serveFile(r *Request, f *StaticFile, allowIndex ...bool) {
+func (s *Server) serveFile(r *Request, f *staticFile, allowIndex ...bool) {
 	// Use resource file from memory.
 	if f.File != nil {
 		if f.IsDir {

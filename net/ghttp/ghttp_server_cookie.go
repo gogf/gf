@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -14,9 +14,6 @@ import (
 // Cookie for HTTP COOKIE management.
 type Cookie struct {
 	data     map[string]*cookieItem // Underlying cookie items.
-	path     string                 // The default cookie path.
-	domain   string                 // The default cookie domain
-	maxAge   time.Duration          // The default cookie max age.
 	server   *Server                // Belonged HTTP server
 	request  *Request               // Belonged HTTP request.
 	response *Response              // Belonged HTTP response.
@@ -47,13 +44,10 @@ func (c *Cookie) init() {
 		return
 	}
 	c.data = make(map[string]*cookieItem)
-	c.path = c.request.Server.GetCookiePath()
-	c.domain = c.request.Server.GetCookieDomain()
-	c.maxAge = c.request.Server.GetCookieMaxAge()
 	c.response = c.request.Response
 	// DO NOT ADD ANY DEFAULT COOKIE DOMAIN!
-	//if c.domain == "" {
-	//	c.domain = c.request.GetHost()
+	//if c.request.Server.GetCookieDomain() == "" {
+	//	c.request.Server.GetCookieDomain() = c.request.GetHost()
 	//}
 	for _, v := range c.request.Cookies() {
 		c.data[v.Name] = &cookieItem{
@@ -86,7 +80,13 @@ func (c *Cookie) Contains(key string) bool {
 
 // Set sets cookie item with default domain, path and expiration age.
 func (c *Cookie) Set(key, value string) {
-	c.SetCookie(key, value, c.domain, c.path, c.maxAge)
+	c.SetCookie(
+		key,
+		value,
+		c.request.Server.GetCookieDomain(),
+		c.request.Server.GetCookiePath(),
+		c.request.Server.GetCookieMaxAge(),
+	)
 }
 
 // SetCookie sets cookie item given given domain, path and expiration age.
@@ -128,7 +128,13 @@ func (c *Cookie) GetSessionId() string {
 
 // SetSessionId sets session id in the cookie.
 func (c *Cookie) SetSessionId(id string) {
-	c.Set(c.server.GetSessionIdName(), id)
+	c.SetCookie(
+		c.server.GetSessionIdName(),
+		id,
+		c.request.Server.GetCookieDomain(),
+		c.request.Server.GetCookiePath(),
+		c.server.GetSessionCookieMaxAge(),
+	)
 }
 
 // Get retrieves and returns the value with specified key.
@@ -149,13 +155,19 @@ func (c *Cookie) Get(key string, def ...string) string {
 // Remove deletes specified key and its value from cookie using default domain and path.
 // It actually tells the http client that the cookie is expired, do not send it to server next time.
 func (c *Cookie) Remove(key string) {
-	c.SetCookie(key, "", c.domain, c.path, -86400)
+	c.SetCookie(
+		key,
+		"",
+		c.request.Server.GetCookieDomain(),
+		c.request.Server.GetCookiePath(),
+		-24*time.Hour,
+	)
 }
 
 // RemoveCookie deletes specified key and its value from cookie using given domain and path.
 // It actually tells the http client that the cookie is expired, do not send it to server next time.
 func (c *Cookie) RemoveCookie(key, domain, path string) {
-	c.SetCookie(key, "", domain, path, -86400)
+	c.SetCookie(key, "", domain, path, -24*time.Hour)
 }
 
 // Flush outputs the cookie items to client.

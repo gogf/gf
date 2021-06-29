@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -14,8 +14,8 @@ import (
 	"github.com/gogf/gf/util/gutil"
 )
 
-// Middleware is the plugin for request workflow management.
-type Middleware struct {
+// middleware is the plugin for request workflow management.
+type middleware struct {
 	served         bool     // Is the request served, which is used for checking response status 404.
 	request        *Request // The request object pointer.
 	handlerIndex   int      // Index number for executing sequence purpose for handler items.
@@ -24,7 +24,7 @@ type Middleware struct {
 
 // Next calls the next workflow handler.
 // It's an important function controlling the workflow of the server request execution.
-func (m *Middleware) Next() {
+func (m *middleware) Next() {
 	var item *handlerParsedItem
 	var loop = true
 	for loop {
@@ -128,7 +128,7 @@ func (m *Middleware) Next() {
 				// Create a new error with stack info.
 				// Note that there's a skip pointing the start stacktrace
 				// of the real error point.
-				m.request.error = gerror.NewSkip(1, exception.Error())
+				m.request.error = gerror.WrapSkip(1, exception, "")
 			}
 			m.request.Response.WriteStatus(http.StatusInternalServerError, exception)
 			loop = false

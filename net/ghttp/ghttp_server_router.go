@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,9 +7,9 @@
 package ghttp
 
 import (
-	"errors"
 	"fmt"
 	"github.com/gogf/gf/container/gtype"
+	"github.com/gogf/gf/errors/gerror"
 	"strings"
 
 	"github.com/gogf/gf/debug/gdebug"
@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	gFILTER_KEY = "/net/ghttp/ghttp"
+	stackFilterKey = "/net/ghttp/ghttp"
 )
 
 var (
@@ -53,7 +53,7 @@ func (s *Server) parsePattern(pattern string) (domain, method, path string, err 
 		}
 	}
 	if path == "" {
-		err = errors.New("invalid pattern: URI should not be empty")
+		err = gerror.New("invalid pattern: URI should not be empty")
 	}
 	if path != "/" {
 		path = strings.TrimRight(path, "/")
@@ -68,7 +68,7 @@ func (s *Server) parsePattern(pattern string) (domain, method, path string, err 
 func (s *Server) setHandler(pattern string, handler *handlerItem) {
 	handler.itemId = handlerIdGenerator.Add(1)
 	if handler.source == "" {
-		_, file, line := gdebug.CallerWithFilter(gFILTER_KEY)
+		_, file, line := gdebug.CallerWithFilter(stackFilterKey)
 		handler.source = fmt.Sprintf(`%s:%d`, file, line)
 	}
 	domain, method, uri, err := s.parsePattern(pattern)

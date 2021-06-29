@@ -1,4 +1,4 @@
-// Copyright 2019-2020 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -9,6 +9,7 @@ package gdebug
 import (
 	"bytes"
 	"fmt"
+	"github.com/gogf/gf/internal/utils"
 	"runtime"
 	"strings"
 )
@@ -53,7 +54,7 @@ func StackWithFilters(filters []string, skip ...int) string {
 		ok                    = true
 		pc, file, line, start = callerFromIndex(filters)
 	)
-	for i := start + number; i < gMAX_DEPTH; i++ {
+	for i := start + number; i < maxCallerDepth; i++ {
 		if i != start {
 			pc, file, line, ok = runtime.Caller(i)
 		}
@@ -79,9 +80,17 @@ func StackWithFilters(filters []string, skip ...int) string {
 			if filtered {
 				continue
 			}
-			if strings.Contains(file, gFILTER_KEY) {
-				continue
+
+			if !utils.IsDebugEnabled() {
+				if strings.Contains(file, utils.StackFilterKeyForGoFrame) {
+					continue
+				}
+			} else {
+				if strings.Contains(file, stackFilterKey) {
+					continue
+				}
 			}
+
 			if fn := runtime.FuncForPC(pc); fn == nil {
 				name = "unknown"
 			} else {

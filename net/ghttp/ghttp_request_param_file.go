@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,7 +7,8 @@
 package ghttp
 
 import (
-	"errors"
+	"context"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/gtime"
@@ -21,6 +22,7 @@ import (
 // UploadFile wraps the multipart uploading file with more and convenient features.
 type UploadFile struct {
 	*multipart.FileHeader
+	ctx context.Context
 }
 
 // UploadFiles is array type for *UploadFile.
@@ -33,14 +35,14 @@ type UploadFiles []*UploadFile
 // Note that it will OVERWRITE the target file if there's already a same name file exist.
 func (f *UploadFile) Save(dirPath string, randomlyRename ...bool) (filename string, err error) {
 	if f == nil {
-		return "", errors.New("file is empty, maybe you retrieve it from invalid field name or form enctype")
+		return "", gerror.New("file is empty, maybe you retrieve it from invalid field name or form enctype")
 	}
 	if !gfile.Exists(dirPath) {
 		if err = gfile.Mkdir(dirPath); err != nil {
 			return
 		}
 	} else if !gfile.IsDir(dirPath) {
-		return "", errors.New(`parameter "dirPath" should be a directory path`)
+		return "", gerror.New(`parameter "dirPath" should be a directory path`)
 	}
 
 	file, err := f.Open()
@@ -60,7 +62,7 @@ func (f *UploadFile) Save(dirPath string, randomlyRename ...bool) (filename stri
 		return "", err
 	}
 	defer newFile.Close()
-	intlog.Printf(`save upload file: %s`, filePath)
+	intlog.Printf(f.ctx, `save upload file: %s`, filePath)
 	if _, err := io.Copy(newFile, file); err != nil {
 		return "", err
 	}
@@ -74,7 +76,7 @@ func (f *UploadFile) Save(dirPath string, randomlyRename ...bool) (filename stri
 // The parameter <randomlyRename> specifies whether randomly renames all the file names.
 func (fs UploadFiles) Save(dirPath string, randomlyRename ...bool) (filenames []string, err error) {
 	if len(fs) == 0 {
-		return nil, errors.New("file array is empty, maybe you retrieve it from invalid field name or form enctype")
+		return nil, gerror.New("file array is empty, maybe you retrieve it from invalid field name or form enctype")
 	}
 	for _, f := range fs {
 		if filename, err := f.Save(dirPath, randomlyRename...); err != nil {
@@ -114,6 +116,7 @@ func (r *Request) GetUploadFiles(name string) UploadFiles {
 		uploadFiles := make(UploadFiles, len(multipartFiles))
 		for k, v := range multipartFiles {
 			uploadFiles[k] = &UploadFile{
+				ctx:        r.Context(),
 				FileHeader: v,
 			}
 		}

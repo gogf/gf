@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -23,6 +23,11 @@ import (
 	"github.com/gogf/gf/util/grand"
 )
 
+const (
+	// NotFoundIndex is the position index for string not found in searching functions.
+	NotFoundIndex = -1
+)
+
 // Replace returns a copy of the string <origin>
 // in which string <search> replaced by <replace> case-sensitively.
 func Replace(origin, search, replace string, count ...int) string {
@@ -43,8 +48,10 @@ func ReplaceI(origin, search, replace string, count ...int) string {
 	if n == 0 {
 		return origin
 	}
-	length := len(search)
-	searchLower := strings.ToLower(search)
+	var (
+		length      = len(search)
+		searchLower = strings.ToLower(search)
+	)
 	for {
 		originLower := strings.ToLower(origin)
 		if pos := strings.Index(originLower, searchLower); pos != -1 {
@@ -465,11 +472,40 @@ func Str(haystack string, needle string) string {
 	if needle == "" {
 		return ""
 	}
-	idx := strings.Index(haystack, needle)
-	if idx == -1 {
+	pos := strings.Index(haystack, needle)
+	if pos == NotFoundIndex {
 		return ""
 	}
-	return haystack[idx+len([]byte(needle))-1:]
+	return haystack[pos+len([]byte(needle))-1:]
+}
+
+// StrEx returns part of <haystack> string starting from and excluding
+// the first occurrence of <needle> to the end of <haystack>.
+func StrEx(haystack string, needle string) string {
+	if s := Str(haystack, needle); s != "" {
+		return s[1:]
+	}
+	return ""
+}
+
+// StrTill returns part of <haystack> string ending to and including
+// the first occurrence of <needle> from the start of <haystack>.
+func StrTill(haystack string, needle string) string {
+	pos := strings.Index(haystack, needle)
+	if pos == NotFoundIndex || pos == 0 {
+		return ""
+	}
+	return haystack[:pos+1]
+}
+
+// StrTillEx returns part of <haystack> string ending to and excluding
+// the first occurrence of <needle> from the start of <haystack>.
+func StrTillEx(haystack string, needle string) string {
+	pos := strings.Index(haystack, needle)
+	if pos == NotFoundIndex || pos == 0 {
+		return ""
+	}
+	return haystack[:pos]
 }
 
 // Shuffle randomly shuffles a string.
@@ -504,7 +540,7 @@ func SplitAndTrim(str, delimiter string, characterMask ...string) []string {
 
 // SplitAndTrimSpace splits string <str> by a string <delimiter> to an array,
 // and calls TrimSpace to every element of this array.
-// Deprecated.
+// Deprecated, use SplitAndTrim instead.
 func SplitAndTrimSpace(str, delimiter string) []string {
 	array := make([]string, 0)
 	for _, v := range strings.Split(str, delimiter) {
@@ -678,10 +714,10 @@ func SearchArray(a []string, s string) int {
 			return i
 		}
 	}
-	return -1
+	return NotFoundIndex
 }
 
 // InArray checks whether string <s> in slice <a>.
 func InArray(a []string, s string) bool {
-	return SearchArray(a, s) != -1
+	return SearchArray(a, s) != NotFoundIndex
 }

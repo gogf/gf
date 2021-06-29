@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,6 +7,7 @@
 package gsession
 
 import (
+	"context"
 	"github.com/gogf/gf/container/gmap"
 	"time"
 
@@ -15,9 +16,13 @@ import (
 
 // Manager for sessions.
 type Manager struct {
-	ttl         time.Duration // TTL for sessions.
-	storage     Storage       // Storage interface for session storage.
-	sessionData *gcache.Cache // Session data cache for session TTL.
+	ttl     time.Duration // TTL for sessions.
+	storage Storage       // Storage interface for session storage.
+
+	// sessionData is the memory data cache for session TTL,
+	// which is available only if the Storage does not stores any session data in synchronizing.
+	// Please refer to the implements of StorageFile, StorageMemory and StorageRedis.
+	sessionData *gcache.Cache
 }
 
 // New creates and returns a new session manager.
@@ -37,13 +42,14 @@ func New(ttl time.Duration, storage ...Storage) *Manager {
 // New creates or fetches the session for given session id.
 // The parameter <sessionId> is optional, it creates a new one if not it's passed
 // depending on Storage.New.
-func (m *Manager) New(sessionId ...string) *Session {
+func (m *Manager) New(ctx context.Context, sessionId ...string) *Session {
 	var id string
 	if len(sessionId) > 0 && sessionId[0] != "" {
 		id = sessionId[0]
 	}
 	return &Session{
 		id:      id,
+		ctx:     ctx,
 		manager: m,
 	}
 }

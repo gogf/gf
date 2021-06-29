@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -11,8 +11,8 @@ import (
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/os/gcmd"
 	"os"
+	"strings"
 )
-import "strings"
 
 // All returns a copy of strings representing the environment,
 // in the form "key=value".

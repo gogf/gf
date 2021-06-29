@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -102,7 +102,7 @@ func Test_StructOfNilPointer(t *testing.T) {
 	})
 }
 
-func Test_MapField(t *testing.T) {
+func Test_FieldMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
 			Id   int
@@ -110,7 +110,7 @@ func Test_MapField(t *testing.T) {
 			Pass string `my-tag1:"pass1" my-tag2:"pass2" params:"pass"`
 		}
 		var user *User
-		m, _ := structs.MapField(user, []string{"params"})
+		m, _ := structs.FieldMap(user, []string{"params"}, true)
 		t.Assert(len(m), 3)
 		_, ok := m["Id"]
 		t.Assert(ok, true)
@@ -122,5 +122,124 @@ func Test_MapField(t *testing.T) {
 		t.Assert(ok, false)
 		_, ok = m["pass"]
 		t.Assert(ok, true)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id   int
+			Name string `params:"name"`
+			Pass string `my-tag1:"pass1" my-tag2:"pass2" params:"pass"`
+		}
+		var user *User
+		m, _ := structs.FieldMap(user, nil, true)
+		t.Assert(len(m), 3)
+		_, ok := m["Id"]
+		t.Assert(ok, true)
+		_, ok = m["Name"]
+		t.Assert(ok, true)
+		_, ok = m["name"]
+		t.Assert(ok, false)
+		_, ok = m["Pass"]
+		t.Assert(ok, true)
+		_, ok = m["pass"]
+		t.Assert(ok, false)
+	})
+}
+
+func Test_StructType(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type B struct {
+			Name string
+		}
+		type A struct {
+			B
+		}
+		r, err := structs.StructType(new(A))
+		t.AssertNil(err)
+		t.Assert(r.Signature(), `github.com/gogf/gf/internal/structs_test/structs_test.A`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type B struct {
+			Name string
+		}
+		type A struct {
+			B
+		}
+		r, err := structs.StructType(new(A).B)
+		t.AssertNil(err)
+		t.Assert(r.Signature(), `github.com/gogf/gf/internal/structs_test/structs_test.B`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type B struct {
+			Name string
+		}
+		type A struct {
+			*B
+		}
+		r, err := structs.StructType(new(A).B)
+		t.AssertNil(err)
+		t.Assert(r.String(), `structs_test.B`)
+	})
+	// Error.
+	gtest.C(t, func(t *gtest.T) {
+		type B struct {
+			Name string
+		}
+		type A struct {
+			*B
+			Id int
+		}
+		_, err := structs.StructType(new(A).Id)
+		t.AssertNE(err, nil)
+	})
+}
+
+func Test_StructTypeBySlice(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type B struct {
+			Name string
+		}
+		type A struct {
+			Array []*B
+		}
+		r, err := structs.StructType(new(A).Array)
+		t.AssertNil(err)
+		t.Assert(r.Signature(), `github.com/gogf/gf/internal/structs_test/structs_test.B`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type B struct {
+			Name string
+		}
+		type A struct {
+			Array []B
+		}
+		r, err := structs.StructType(new(A).Array)
+		t.AssertNil(err)
+		t.Assert(r.Signature(), `github.com/gogf/gf/internal/structs_test/structs_test.B`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type B struct {
+			Name string
+		}
+		type A struct {
+			Array *[]B
+		}
+		r, err := structs.StructType(new(A).Array)
+		t.AssertNil(err)
+		t.Assert(r.Signature(), `github.com/gogf/gf/internal/structs_test/structs_test.B`)
+	})
+}
+
+func TestType_FieldKeys(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type B struct {
+			Id   int
+			Name string
+		}
+		type A struct {
+			Array []*B
+		}
+		r, err := structs.StructType(new(A).Array)
+		t.AssertNil(err)
+		t.Assert(r.FieldKeys(), g.Slice{"Id", "Name"})
 	})
 }

@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -12,12 +12,14 @@
 package gdb
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
+	"strings"
+
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/text/gstr"
-	"strings"
 
 	"github.com/gogf/gf/text/gregex"
 )
@@ -38,15 +40,18 @@ func (d *DriverPgsql) New(core *Core, node *ConfigNode) (DB, error) {
 // Open creates and returns a underlying sql.DB object for pgsql.
 func (d *DriverPgsql) Open(config *ConfigNode) (*sql.DB, error) {
 	var source string
-	if config.LinkInfo != "" {
-		source = config.LinkInfo
+	if config.Link != "" {
+		source = config.Link
 	} else {
 		source = fmt.Sprintf(
 			"user=%s password=%s host=%s port=%s dbname=%s sslmode=disable",
 			config.User, config.Pass, config.Host, config.Port, config.Name,
 		)
+		if config.Timezone != "" {
+			source = fmt.Sprintf("%s timezone=%s", source, config.Timezone)
+		}
 	}
-	intlog.Printf("Open: %s", source)
+	intlog.Printf(d.GetCtx(), "Open: %s", source)
 	if db, err := sql.Open("postgres", source); err == nil {
 		return db, nil
 	} else {
@@ -54,28 +59,47 @@ func (d *DriverPgsql) Open(config *ConfigNode) (*sql.DB, error) {
 	}
 }
 
+// FilteredLink retrieves and returns filtered `linkInfo` that can be using for
+// logging or tracing purpose.
+func (d *DriverPgsql) FilteredLink() string {
+	linkInfo := d.GetConfig().Link
+	if linkInfo == "" {
+		return ""
+	}
+	s, _ := gregex.ReplaceString(
+		`(.+?)\s*password=(.+)\s*host=(.+)`,
+		`$1 password=xxx host=$3`,
+		linkInfo,
+	)
+	return s
+}
+
 // GetChars returns the security char for this type of database.
 func (d *DriverPgsql) GetChars() (charLeft string, charRight string) {
 	return "\"", "\""
 }
 
-// HandleSqlBeforeCommit deals with the sql string before commits it to underlying sql driver.
-func (d *DriverPgsql) HandleSqlBeforeCommit(link Link, sql string, args []interface{}) (string, []interface{}) {
+// DoCommit deals with the sql string before commits it to underlying sql driver.
+func (d *DriverPgsql) DoCommit(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
+	defer func() {
+		newSql, newArgs, err = d.Core.DoCommit(ctx, link, newSql, newArgs)
+	}()
+
 	var index int
 	// Convert place holder char '?' to string "$x".
 	sql, _ = gregex.ReplaceStringFunc("\\?", sql, func(s string) string {
 		index++
 		return fmt.Sprintf("$%d", index)
 	})
-	sql, _ = gregex.ReplaceString(` LIMIT (\d+),\s*(\d+)`, ` LIMIT $2 OFFSET $1`, sql)
-	return sql, args
+	newSql, _ = gregex.ReplaceString(` LIMIT (\d+),\s*(\d+)`, ` LIMIT $2 OFFSET $1`, sql)
+	return newSql, args, nil
 }
 
 // Tables retrieves and returns the tables of current schema.
 // It's mainly used in cli tool chain for automatically generating the models.
-func (d *DriverPgsql) Tables(schema ...string) (tables []string, err error) {
+func (d *DriverPgsql) Tables(ctx context.Context, schema ...string) (tables []string, err error) {
 	var result Result
-	link, err := d.DB.GetSlave(schema...)
+	link, err := d.SlaveLink(schema...)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +107,7 @@ func (d *DriverPgsql) Tables(schema ...string) (tables []string, err error) {
 	if len(schema) > 0 && schema[0] != "" {
 		query = fmt.Sprintf("SELECT TABLENAME FROM PG_TABLES WHERE SCHEMANAME = '%s' ORDER BY TABLENAME", schema[0])
 	}
-	result, err = d.DB.DoGetAll(link, query)
+	result, err = d.DoGetAll(ctx, link, query)
 	if err != nil {
 		return
 	}
@@ -96,52 +120,54 @@ func (d *DriverPgsql) Tables(schema ...string) (tables []string, err error) {
 }
 
 // TableFields retrieves and returns the fields information of specified table of current schema.
-func (d *DriverPgsql) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
+//
+// Also see DriverMysql.TableFields.
+func (d *DriverPgsql) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*TableField, err error) {
 	charL, charR := d.GetChars()
 	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
 		return nil, gerror.New("function TableFields supports only single table operations")
 	}
 	table, _ = gregex.ReplaceString("\"", "", table)
-	checkSchema := d.DB.GetSchema()
+	useSchema := d.db.GetSchema()
 	if len(schema) > 0 && schema[0] != "" {
-		checkSchema = schema[0]
+		useSchema = schema[0]
 	}
-	v, _ := internalCache.GetOrSetFunc(
-		fmt.Sprintf(`pgsql_table_fields_%s_%s@group:%s`, table, checkSchema, d.GetGroup()),
-		func() (interface{}, error) {
-			var (
-				result Result
-				link   *sql.DB
-			)
-			link, err = d.DB.GetSlave(checkSchema)
-			if err != nil {
-				return nil, err
-			}
-			structureSql := fmt.Sprintf(`
-SELECT a.attname AS field, t.typname AS type FROM pg_class c, pg_attribute a 
+	tableFieldsCacheKey := fmt.Sprintf(
+		`pgsql_table_fields_%s_%s@group:%s`,
+		table, useSchema, d.GetGroup(),
+	)
+	v := tableFieldsMap.GetOrSetFuncLock(tableFieldsCacheKey, func() interface{} {
+		var (
+			result       Result
+			link, err    = d.SlaveLink(useSchema)
+			structureSql = fmt.Sprintf(`
+SELECT a.attname AS field, t.typname AS type FROM pg_class c, pg_attribute a
 LEFT OUTER JOIN pg_description b ON a.attrelid=b.objoid AND a.attnum = b.objsubid,pg_type t
-WHERE c.relname = '%s' and a.attnum > 0 and a.attrelid = c.oid and a.atttypid = t.oid 
+WHERE c.relname = '%s' and a.attnum > 0 and a.attrelid = c.oid and a.atttypid = t.oid
 ORDER BY a.attnum`,
 				strings.ToLower(table),
 			)
-			structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
-			result, err = d.DB.DoGetAll(link, structureSql)
-			if err != nil {
-				return nil, err
+		)
+		if err != nil {
+			return nil
+		}
+		structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
+		result, err = d.DoGetAll(ctx, link, structureSql)
+		if err != nil {
+			return nil
+		}
+		fields = make(map[string]*TableField)
+		for i, m := range result {
+			fields[m["field"].String()] = &TableField{
+				Index: i,
+				Name:  m["field"].String(),
+				Type:  m["type"].String(),
 			}
-
-			fields = make(map[string]*TableField)
-			for i, m := range result {
-				fields[m["field"].String()] = &TableField{
-					Index: i,
-					Name:  m["field"].String(),
-					Type:  m["type"].String(),
-				}
-			}
-			return fields, nil
-		}, 0)
-	if err == nil {
+		}
+		return fields
+	})
+	if v != nil {
 		fields = v.(map[string]*TableField)
 	}
 	return
