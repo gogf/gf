@@ -57,7 +57,7 @@ func TestNewCarrier(t *testing.T) {
 		t.Assert(carrier1.String(), `{"traceparent":"00-4bf92f3577b34da6a3ce929d0e0e4736-0000000000000002-01","tracestate":""}`)
 
 		ctx = otel.GetTextMapPropagator().Extract(ctx, carrier1)
-		gotSc := trace.RemoteSpanContextFromContext(ctx)
+		gotSc := trace.SpanContextFromContext(ctx)
 		t.Assert(gotSc.TraceID().String(), traceID.String())
 		t.Assert(gotSc.SpanID().String(), "0000000000000002")
 	})
