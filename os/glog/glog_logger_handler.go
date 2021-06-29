@@ -9,7 +9,7 @@ package glog
 import (
 	"bytes"
 	"context"
-	"fmt"
+	"github.com/fatih/color"
 	"time"
 )
 
@@ -47,7 +47,7 @@ func (i *HandlerInput) Buffer(withColor ...bool) *bytes.Buffer {
 	buffer := bytes.NewBuffer(nil)
 	buffer.WriteString(i.TimeFormat)
 	if i.LevelFormat != "" {
-		if i.logger.config.FileColor || (len(withColor) > 0 && withColor[0] == mustWithColor) {
+		if i.logger.config.FileColorEnable || (len(withColor) > 0 && withColor[0] == mustWithColor) {
 			i.addStringToBuffer(buffer, i.getLevelFormatWithColor())
 		} else {
 			i.addStringToBuffer(buffer, i.LevelFormat)
@@ -75,11 +75,11 @@ func (i *HandlerInput) Buffer(withColor ...bool) *bytes.Buffer {
 // getLevelFormatWithColor returns the prefix string with color.
 func (i *HandlerInput) getLevelFormatWithColor() string {
 	s := i.LevelFormat
-	color := defaultLevelColor[i.Level]
-	if i.logger.config.color != 0 {
-		color = i.logger.config.color
+	fg := defaultLevelColor[i.Level]
+	if i.logger.config.currentColor != 0 {
+		fg = i.logger.config.currentColor
 	}
-	return fmt.Sprintf("\x1b[0;%dm%s\x1b[0m", color, s)
+	return color.New(fg).Sprint(s)
 }
 
 func (i *HandlerInput) String() string {

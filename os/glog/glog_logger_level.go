@@ -9,6 +9,7 @@ package glog
 import (
 	"errors"
 	"fmt"
+	"github.com/fatih/color"
 	"strings"
 )
 
@@ -29,10 +30,8 @@ const (
 	LEVEL_FATA             // 1024
 )
 
-type logColor int
-
 const (
-	COLOR_BLACK logColor = 30 + iota
+	COLOR_BLACK = 30 + iota
 	COLOR_RED
 	COLOR_GREEN
 	COLOR_YELLOW
@@ -55,7 +54,7 @@ var defaultLevelPrefixes = map[int]string{
 }
 
 // defaultLevelColor defines the default level and its mapping prefix string.
-var defaultLevelColor = map[int]logColor{
+var defaultLevelColor = map[int]color.Attribute{
 	LEVEL_DEBU: COLOR_YELLOW,
 	LEVEL_INFO: COLOR_GREEN,
 	LEVEL_NOTI: COLOR_CYAN,
