@@ -1,17 +1,22 @@
-# GF-CLI
-English | [简体中文](README_ZH.MD)
+# GoFrame CLI Tool
 
-`gf` is a powerful CLI tool for building [GoFrame](https://goframe.org) application with convenience.
+Powerful CLI tool for building [GoFrame](https://goframe.org) application with convenience.
 
 ## 1. Install
 
 > You might need setting the goproxy to make through building.
 
 1. Latest version
+   > Go version >= v1.16
     ```
     go install github.com/gogf/gf/tool/gf@latest
     ```
+   > Go version < v1.16
+    ```
+    go install github.com/gogf/gf/tool/gf
+    ```
 1. Specified version
+   > Go version >= v1.16
     ```
     go install github.com/gogf/gf/tool/gf@v1.16.0
     ```
@@ -35,8 +40,7 @@ COMMAND
     build      cross-building go project for lots of platforms...
     docker     create a docker image for current GF project...
     swagger    swagger feature for current project...
-    update     update current gf binary to latest one (might need root/admin permission)
-    install    install gf binary to system (might need root/admin permission)
+    update     update current gf binary to latest one
     version    show current binary version info
 
 OPTION

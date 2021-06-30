@@ -1,26 +1,23 @@
 package main
 
 import (
-	"fmt"
+	_ "github.com/gogf/gf/tool/gf/boot"
+
 	"github.com/gogf/gf"
 	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/text/gregex"
-	"github.com/gogf/gf/tool/gf/commands/env"
-	"github.com/gogf/gf/tool/gf/commands/mod"
-	"strings"
-
 	"github.com/gogf/gf/os/gbuild"
 	"github.com/gogf/gf/os/gcmd"
 	"github.com/gogf/gf/os/gfile"
+	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/text/gstr"
-	_ "github.com/gogf/gf/tool/gf/boot"
 	"github.com/gogf/gf/tool/gf/commands/build"
 	"github.com/gogf/gf/tool/gf/commands/docker"
+	"github.com/gogf/gf/tool/gf/commands/env"
 	"github.com/gogf/gf/tool/gf/commands/fix"
 	"github.com/gogf/gf/tool/gf/commands/gen"
 	"github.com/gogf/gf/tool/gf/commands/get"
 	"github.com/gogf/gf/tool/gf/commands/initialize"
-	"github.com/gogf/gf/tool/gf/commands/install"
+	"github.com/gogf/gf/tool/gf/commands/mod"
 	"github.com/gogf/gf/tool/gf/commands/pack"
 	"github.com/gogf/gf/tool/gf/commands/run"
 	"github.com/gogf/gf/tool/gf/commands/swagger"
@@ -52,8 +49,7 @@ COMMAND
     build      cross-building go project for lots of platforms...
     docker     create a docker image for current GF project...
     swagger    swagger feature for current project...
-    update     update current gf binary to latest one (might need root/admin permission)
-    install    install gf binary to system (might need root/admin permission)
+    update     update current gf binary to latest one
     version    show current binary version info
 
 OPTION
@@ -111,8 +107,6 @@ func main() {
 		swagger.Run()
 	case "update":
 		update.Run()
-	case "install":
-		install.Run()
 	case "build":
 		build.Run()
 	case "run":
@@ -125,16 +119,6 @@ func main() {
 				return
 			case "i", "v":
 				version()
-				return
-			}
-		}
-		// No argument or option, do installation checks.
-		if !install.IsInstalled() {
-			mlog.Print("hi, it seams it's the first time you installing gf cli.")
-			s := gcmd.Scanf("do you want to install gf binary to your system? [y/n]: ")
-			if strings.EqualFold(s, "y") {
-				install.Run()
-				gcmd.Scan("press <Enter> to exit...")
 				return
 			}
 		}
@@ -183,18 +167,6 @@ func version() {
 	}
 	mlog.Printf(`GoFrame Version: %s`, gfVersion)
 	mlog.Printf(`CLI Installed At: %s`, gfile.SelfPath())
-	if info["gf"] == "" {
-		mlog.Print(`Current is a custom installed version, no installation information.`)
-		return
-	}
-
-	mlog.Print(gstr.Trim(fmt.Sprintf(`
-CLI Built Detail:
-  Go Version:  %s
-  GF Version:  %s
-  Git Commit:  %s
-  Build Time:  %s
-`, info["go"], info["gf"], info["git"], info["time"])))
 }
 
 // getGFVersionOfCurrentProject checks and returns the GoFrame version current project using.
@@ -210,6 +182,6 @@ func getGFVersionOfCurrentProject() (string, error) {
 		}
 		return "", gerror.New("cannot find goframe requirement in go.mod")
 	} else {
-		return "", gerror.New("cannot find go.mod")
+		return "", gerror.New("cannot find go.mod in current directory")
 	}
 }
