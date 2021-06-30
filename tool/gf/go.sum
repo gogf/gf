@@ -15,6 +15,10 @@ github.com/go-sql-driver/mysql v1.5.0/go.mod h1:DCzpHaOWr8IXmIStZouvnhqoel9Qv2LB
 github.com/gogf/gf v1.13.8-0.20201010060010-09ce105eeeab/go.mod h1:nGAMjE4ohU2bwj4Gk3h25K6rEkPZMDdvsmyifpFcuMQ=
 github.com/gogf/gf v1.16.1 h1:J2kcf8ufbuIIGrbeXfMH/CCkH+hUyC9lrQKrLXZrKVg=
 github.com/gogf/gf v1.16.1/go.mod h1:5eEgE9fWeRQW8dJE3GLpCy0KkNitXh6POesdJiBE/lw=
+github.com/gogf/gf v1.16.4 h1:1Y8/P1UMp9BmrtUn0wAg3g6ElRAO0R9QHCdUNt9Z5L4=
+github.com/gogf/gf v1.16.4/go.mod h1:EjnxZXddTwfFoLPofDE3NokFWx+immofINtSyFCj280=
+github.com/gogf/mysql v1.6.1-0.20210603073548-16164ae25579 h1:pP/uEy52biKDytlgK/ug8kiYPAiYu6KajKVUHfGrtyw=
+github.com/gogf/mysql v1.6.1-0.20210603073548-16164ae25579/go.mod h1:52e6mXyNnHAsFrXrSnj5JPRSKsZKpHylVtA3j4AtMz8=
 github.com/gogf/swagger v1.0.4 h1:MILniFKPh52/26s+z8taSh8thn1tq2RaeWM7rYX1dRw=
 github.com/gogf/swagger v1.0.4/go.mod h1:4rD12TCoDz60jmgtuFnx7ZBWUM92tXc/qtrIrkBIp5Q=
 github.com/golang-sql/civil v0.0.0-20190719163853-cb61b32ac6fe h1:lXe2qZdvpiX5WZkZR4hgp4KJVfY3nMkvmwbVkpv1rVY=

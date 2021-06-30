@@ -7,6 +7,7 @@ Powerful CLI tool for building [GoFrame](https://goframe.org) application with c
 > You might need setting the goproxy to make through building.
 
 1. Latest version
+   
    > Go version >= v1.16
     ```
     go install github.com/gogf/gf/tool/gf@latest
@@ -15,7 +16,9 @@ Powerful CLI tool for building [GoFrame](https://goframe.org) application with c
     ```
     go install github.com/gogf/gf/tool/gf
     ```
+   
 1. Specified version
+   
    > Go version >= v1.16
     ```
     go install github.com/gogf/gf/tool/gf@v1.16.0
