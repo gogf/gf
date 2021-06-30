@@ -12,7 +12,7 @@ Powerful CLI tool for building [GoFrame](https://goframe.org) application with c
     ```
     go install github.com/gogf/gf/tool/gf@latest
     ```
-   > Go version < v1.16
+   > Go version <= v1.15
     ```
     go install github.com/gogf/gf/tool/gf
     ```
