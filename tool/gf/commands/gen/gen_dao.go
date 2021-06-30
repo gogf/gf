@@ -214,8 +214,8 @@ func doGenDaoForArray(index int, parser *gcmd.Parser) {
 		match, _ := gregex.MatchString(`([a-z]+):(.+)`, linkInfo)
 		if len(match) == 3 {
 			gdb.AddConfigNode(tempGroup, gdb.ConfigNode{
-				Type:     gstr.Trim(match[1]),
-				LinkInfo: gstr.Trim(match[2]),
+				Type: gstr.Trim(match[1]),
+				Link: gstr.Trim(match[2]),
 			})
 			db, _ = gdb.Instance(tempGroup)
 		}

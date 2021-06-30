@@ -4,7 +4,7 @@ go 1.11
 
 require (
 	github.com/denisenkom/go-mssqldb v0.0.0-20200206145737-bbfc9a55622e
-	github.com/gogf/gf v1.16.1
+	github.com/gogf/gf v1.16.4
 	github.com/gogf/swagger v1.0.4
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/grokify/html-strip-tags-go v0.0.0-20200322061010-ea0c1cf2f119 // indirect
