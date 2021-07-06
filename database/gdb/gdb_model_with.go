@@ -39,7 +39,10 @@ func (m *Model) With(objects ...interface{}) *Model {
 	model := m.getModel()
 	for _, object := range objects {
 		if m.tables == "" {
-			m.tables = m.db.GetCore().QuotePrefixTableName(getTableNameFromOrmTag(object))
+			m.tablesInit = m.db.GetCore().QuotePrefixTableName(
+				getTableNameFromOrmTag(object),
+			)
+			m.tables = m.tablesInit
 			return model
 		}
 		model.withArray = append(model.withArray, object)

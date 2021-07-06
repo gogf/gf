@@ -47,7 +47,7 @@ func (m *Model) getModel() *Model {
 // ID        -> id
 // NICK_Name -> nickname
 func (m *Model) mappingAndFilterToTableFields(fields []string, filter bool) []string {
-	fieldsMap, err := m.TableFields(m.tables)
+	fieldsMap, err := m.TableFields(m.tablesInit)
 	if err != nil || len(fieldsMap) == 0 {
 		return fields
 	}
@@ -201,7 +201,7 @@ func (m *Model) getLink(master bool) Link {
 // It parses m.tables to retrieve the primary table name, supporting m.tables like:
 // "user", "user u", "user as u, user_detail as ud".
 func (m *Model) getPrimaryKey() string {
-	table := gstr.SplitAndTrim(m.tables, " ")[0]
+	table := gstr.SplitAndTrim(m.tablesInit, " ")[0]
 	tableFields, err := m.TableFields(table)
 	if err != nil {
 		return ""
