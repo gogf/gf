@@ -40,7 +40,7 @@ func (m *Model) getSoftFieldNameCreated(table ...string) string {
 	if len(table) > 0 {
 		tableName = table[0]
 	} else {
-		tableName = m.getPrimaryTableName()
+		tableName = m.tablesInit
 	}
 	config := m.db.GetConfig()
 	if config.CreatedAt != "" {
@@ -61,7 +61,7 @@ func (m *Model) getSoftFieldNameUpdated(table ...string) (field string) {
 	if len(table) > 0 {
 		tableName = table[0]
 	} else {
-		tableName = m.getPrimaryTableName()
+		tableName = m.tablesInit
 	}
 	config := m.db.GetConfig()
 	if config.UpdatedAt != "" {
@@ -82,7 +82,7 @@ func (m *Model) getSoftFieldNameDeleted(table ...string) (field string) {
 	if len(table) > 0 {
 		tableName = table[0]
 	} else {
-		tableName = m.getPrimaryTableName()
+		tableName = m.tablesInit
 	}
 	config := m.db.GetConfig()
 	if config.UpdatedAt != "" {
@@ -169,18 +169,4 @@ func (m *Model) getConditionOfTableStringForSoftDeleting(s string) string {
 		return fmt.Sprintf(`%s.%s IS NULL`, m.db.GetCore().QuoteWord(array1[1]), m.db.GetCore().QuoteWord(field))
 	}
 	return fmt.Sprintf(`%s.%s IS NULL`, m.db.GetCore().QuoteWord(table), m.db.GetCore().QuoteWord(field))
-}
-
-// getPrimaryTableName parses and returns the primary table name.
-func (m *Model) getPrimaryTableName() string {
-	if m.tables == "" {
-		return ""
-	}
-	array1 := gstr.SplitAndTrim(m.tables, ",")
-	array2 := gstr.SplitAndTrim(array1[0], " ")
-	array3 := gstr.SplitAndTrim(array2[0], ".")
-	if len(array3) >= 2 {
-		return array3[1]
-	}
-	return array3[0]
 }

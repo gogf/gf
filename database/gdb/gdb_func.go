@@ -70,6 +70,31 @@ var (
 	structTagPriority = append([]string{OrmTagForStruct}, gconv.StructTagPriority...)
 )
 
+// guessPrimaryTableName parses and returns the primary table name.
+func (m *Model) guessPrimaryTableName(tableStr string) string {
+	if tableStr == "" {
+		return ""
+	}
+	var (
+		guessedTableName = ""
+		array1           = gstr.SplitAndTrim(tableStr, ",")
+		array2           = gstr.SplitAndTrim(array1[0], " ")
+		array3           = gstr.SplitAndTrim(array2[0], ".")
+	)
+	if len(array3) >= 2 {
+		guessedTableName = array3[1]
+	}
+	guessedTableName = array3[0]
+	charL, charR := m.db.GetChars()
+	if charL != "" || charR != "" {
+		guessedTableName = gstr.Trim(guessedTableName, charL+charR)
+	}
+	if !gregex.IsMatchString(regularFieldNameRegPattern, guessedTableName) {
+		return ""
+	}
+	return guessedTableName
+}
+
 // getTableNameFromOrmTag retrieves and returns the table name from struct object.
 func getTableNameFromOrmTag(object interface{}) string {
 	var tableName string

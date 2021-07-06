@@ -136,7 +136,7 @@ func (m *Model) GetFieldsExStr(fields string, prefix ...string) string {
 	if len(prefix) > 0 {
 		prefixStr = prefix[0]
 	}
-	tableFields, err := m.TableFields(m.tables)
+	tableFields, err := m.TableFields(m.tablesInit)
 	if err != nil {
 		panic(err)
 	}
