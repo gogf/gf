@@ -21,15 +21,12 @@ import (
 // schema.
 //
 // Also see DriverMysql.TableFields.
-func (m *Model) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
-	charL, charR := m.db.GetChars()
-	if charL != "" || charR != "" {
-		table = gstr.Trim(table, charL+charR)
+func (m *Model) TableFields(tableStr string, schema ...string) (fields map[string]*TableField, err error) {
+	useSchema := m.schema
+	if len(schema) > 0 && schema[0] != "" {
+		useSchema = schema[0]
 	}
-	if !gregex.IsMatchString(regularFieldNameRegPattern, table) {
-		return nil, nil
-	}
-	return m.db.TableFields(m.GetCtx(), table, schema...)
+	return m.db.TableFields(m.GetCtx(), m.guessPrimaryTableName(tableStr), useSchema)
 }
 
 // getModel creates and returns a cloned model of current model if `safe` is true, or else it returns

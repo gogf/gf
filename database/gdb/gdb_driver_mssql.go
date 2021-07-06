@@ -287,3 +287,17 @@ ORDER BY a.id,a.colorder`,
 	}
 	return
 }
+
+// DoInsert is not supported in mssql.
+func (d *DriverMssql) DoInsert(ctx context.Context, link Link, table string, list List, option DoInsertOption) (result sql.Result, err error) {
+	switch option.InsertOption {
+	case insertOptionSave:
+		return nil, gerror.New(`Save operation is not supported by mssql driver`)
+
+	case insertOptionReplace:
+		return nil, gerror.New(`Replace operation is not supported by mssql driver`)
+
+	default:
+		return d.Core.DoInsert(ctx, link, table, list, option)
+	}
+}
