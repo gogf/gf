@@ -264,7 +264,7 @@ func DataToMapDeep(value interface{}) map[string]interface{} {
 		name = ""
 		fieldTag = rtField.Tag
 		for _, tag := range structTagPriority {
-			if s := fieldTag.Get(tag); s != "" && gregex.IsMatchString(regularFieldNameWithoutDotRegPattern, s) {
+			if s := fieldTag.Get(tag); s != "" {
 				name = s
 				break
 			}
