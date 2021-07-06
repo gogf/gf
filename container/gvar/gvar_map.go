@@ -41,7 +41,7 @@ func (v *Var) MapDeep(tags ...string) map[string]interface{} {
 	return gconv.MapDeep(v.Val(), tags...)
 }
 
-// MapDeep converts and returns <v> as map[string]string recursively.
+// MapStrStrDeep converts and returns <v> as map[string]string recursively.
 func (v *Var) MapStrStrDeep(tags ...string) map[string]string {
 	return gconv.MapStrStrDeep(v.Val(), tags...)
 }
