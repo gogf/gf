@@ -90,7 +90,7 @@ func (m *Model) FieldsStr(prefix ...string) string {
 }
 
 // GetFieldsStr retrieves and returns all fields from the table, joined with char ','.
-// The optional parameter `prefix` specifies the prefix for each field, eg: FieldsStr("u.").
+// The optional parameter `prefix` specifies the prefix for each field, eg: GetFieldsStr("u.").
 func (m *Model) GetFieldsStr(prefix ...string) string {
 	prefixStr := ""
 	if len(prefix) > 0 {
