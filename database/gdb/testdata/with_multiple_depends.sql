@@ -1,7 +1,7 @@
 
 CREATE TABLE `table_a`  (
     `id` int(11) NOT NULL AUTO_INCREMENT,
-    `alias` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT '',
+    `alias` varchar(255) NULL DEFAULT '',
     PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB;
 
@@ -11,7 +11,7 @@ INSERT INTO `table_a` VALUES (2, 'table_a_test2');
 CREATE TABLE `table_b`  (
     `id` int(11) NOT NULL AUTO_INCREMENT,
     `table_a_id` int(11) NOT NULL,
-    `alias` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT '',
+    `alias` varchar(255) NULL DEFAULT '',
     PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB;
 
@@ -23,7 +23,7 @@ INSERT INTO `table_b` VALUES (40, 2, 'table_b_test4');
 CREATE TABLE `table_c`  (
     `id` int(11) NOT NULL AUTO_INCREMENT,
     `table_b_id` int(11) NOT NULL,
-    `alias` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT '',
+    `alias` varchar(255) NULL DEFAULT '',
     PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB;
 
