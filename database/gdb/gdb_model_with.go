@@ -166,6 +166,10 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 // doWithScanStructs handles model association operations feature for struct slice.
 // Also see doWithScanStruct.
 func (m *Model) doWithScanStructs(pointer interface{}) error {
+	if v, ok := pointer.(reflect.Value); ok {
+		pointer = v.Interface()
+	}
+
 	var (
 		err                 error
 		allowedTypeStrArray = make([]string, 0)
