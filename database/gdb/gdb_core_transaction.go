@@ -182,6 +182,11 @@ func (tx *TX) transactionKeyForNestedPoint() string {
 	return tx.db.GetCore().QuoteWord(transactionPointerPrefix + gconv.String(tx.transactionCount))
 }
 
+// GetCtx returns the context for current transaction.
+func (tx *TX) GetCtx() context.Context {
+	return tx.ctx
+}
+
 // Ctx sets the context for current transaction.
 func (tx *TX) Ctx(ctx context.Context) *TX {
 	tx.ctx = ctx
