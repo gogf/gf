@@ -1350,3 +1350,74 @@ func Test_Table_Relation_With_MultipleDepends2(t *testing.T) {
 		t.Assert(tableA[1].TableB[1].TableC, nil)
 	})
 }
+func Test_Table_Relation_With_MultipleDepends_Embedded(t *testing.T) {
+	defer func() {
+		dropTable("table_a")
+		dropTable("table_b")
+		dropTable("table_c")
+	}()
+	for _, v := range gstr.SplitAndTrim(gfile.GetContents(gdebug.TestDataPath("with_multiple_depends.sql")), ";") {
+		if _, err := db.Exec(v); err != nil {
+			gtest.Error(err)
+		}
+	}
+
+	type TableC struct {
+		gmeta.Meta `orm:"table_c"`
+		Id         int `orm:"id,primary" json:"id"`
+		TableBId   int `orm:"table_b_id" json:"table_b_id"`
+	}
+
+	type TableB struct {
+		gmeta.Meta `orm:"table_b"`
+		Id         int `orm:"id,primary" json:"id"`
+		TableAId   int `orm:"table_a_id" json:"table_a_id"`
+		*TableC    `orm:"with:table_b_id=id"  json:"table_c"`
+	}
+
+	type TableA struct {
+		gmeta.Meta `orm:"table_a"`
+		Id         int `orm:"id,primary" json:"id"`
+		*TableB    `orm:"with:table_a_id=id" json:"table_b"`
+	}
+
+	db.SetDebug(true)
+	defer db.SetDebug(false)
+
+	// Struct.
+	gtest.C(t, func(t *gtest.T) {
+		var tableA *TableA
+		err := db.Model("table_a").WithAll().Scan(&tableA)
+		//g.Dump(tableA)
+		t.AssertNil(err)
+		t.AssertNE(tableA, nil)
+		t.Assert(tableA.Id, 1)
+
+		t.AssertNE(tableA.TableB, nil)
+		t.AssertNE(tableA.TableB.TableC, nil)
+		t.Assert(tableA.TableB.TableAId, 1)
+		t.Assert(tableA.TableB.TableC.Id, 100)
+		t.Assert(tableA.TableB.TableC.TableBId, 10)
+	})
+
+	// Structs
+	gtest.C(t, func(t *gtest.T) {
+		var tableA []*TableA
+		err := db.Model("table_a").WithAll().OrderAsc("id").Scan(&tableA)
+		//g.Dump(tableA)
+		t.AssertNil(err)
+		t.Assert(len(tableA), 2)
+		t.AssertNE(tableA[0].TableB, nil)
+		t.AssertNE(tableA[1].TableB, nil)
+		t.AssertNE(tableA[0].TableB.TableC, nil)
+		t.AssertNE(tableA[1].TableB.TableC, nil)
+
+		t.Assert(tableA[0].Id, 1)
+		t.Assert(tableA[0].TableB.Id, 10)
+		t.Assert(tableA[0].TableB.TableC.Id, 100)
+
+		t.Assert(tableA[1].Id, 2)
+		t.Assert(tableA[1].TableB.Id, 20)
+		t.Assert(tableA[1].TableB.TableC.Id, 300)
+	})
+}
