@@ -14,6 +14,11 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
+// Interface converts and returns `r` as type of interface{}.
+func (r Record) Interface() interface{} {
+	return r
+}
+
 // Json converts `r` to JSON format content.
 func (r Record) Json() string {
 	content, _ := gparser.VarToJson(r.Map())
