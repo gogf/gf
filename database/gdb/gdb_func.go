@@ -814,7 +814,9 @@ func formatError(err error, sql string, args ...interface{}) error {
 func FormatSqlWithArgs(sql string, args []interface{}) string {
 	index := -1
 	newQuery, _ := gregex.ReplaceStringFunc(
-		`(\?|:v\d+|\$\d+|@p\d+)`, sql, func(s string) string {
+		`(\?|:v\d+|\$\d+|@p\d+)`,
+		sql,
+		func(s string) string {
 			index++
 			if len(args) > index {
 				if args[index] == nil {
@@ -834,6 +836,7 @@ func FormatSqlWithArgs(sql string, args []interface{}) string {
 				switch kind {
 				case reflect.String, reflect.Map, reflect.Slice, reflect.Array:
 					return `'` + gstr.QuoteMeta(gconv.String(args[index]), `'`) + `'`
+
 				case reflect.Struct:
 					if t, ok := args[index].(time.Time); ok {
 						return `'` + t.Format(`2006-01-02 15:04:05`) + `'`
