@@ -245,6 +245,7 @@ func shutdownWebServersGracefully(signal ...string) {
 		for _, v := range m {
 			for _, s := range v.(*Server).servers {
 				s.shutdown()
+				v.(*Server).serverCount.Add(-1)
 			}
 		}
 	})

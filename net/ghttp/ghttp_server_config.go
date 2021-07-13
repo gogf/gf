@@ -222,6 +222,9 @@ type ServerConfig struct {
 
 	// GracefulTimeout set the maximum survival time (seconds) of the parent process.
 	GracefulTimeout uint8 `json:"gracefulTimeout"`
+
+	// ShutdownTimeout set the maximum survival time (seconds) of the shutdown context.
+	ShutdownTimeout uint8 `json:"shutdownTimeout"`
 }
 
 // Config creates and returns a ServerConfig object with default configurations.
@@ -271,6 +274,7 @@ func NewConfig() ServerConfig {
 		Rewrites:            make(map[string]string),
 		Graceful:            false,
 		GracefulTimeout:     2, // seconds
+		ShutdownTimeout:     2, // seconds
 	}
 }
 

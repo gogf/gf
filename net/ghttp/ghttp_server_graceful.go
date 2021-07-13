@@ -18,6 +18,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"time"
 )
 
 // gracefulServer wraps the net/http.Server with graceful reload/restart feature.
@@ -184,7 +185,11 @@ func (s *gracefulServer) shutdown() {
 	if s.status == ServerStatusStopped {
 		return
 	}
-	if err := s.httpServer.Shutdown(context.Background()); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(s.server.config.ShutdownTimeout)*time.Second)
+	defer func() {
+		cancel()
+	}()
+	if err := s.httpServer.Shutdown(ctx); err != nil {
 		s.server.Logger().Errorf(
 			"%d: %s server [%s] shutdown error: %v",
 			gproc.Pid(), s.getProto(), s.address, err,

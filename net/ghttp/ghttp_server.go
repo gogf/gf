@@ -433,11 +433,18 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 				s.Logger().Fatal(err)
 			}
 			// If all the underlying servers shutdown, the process exits.
-			if s.serverCount.Add(-1) < 1 {
-				s.closeChan <- struct{}{}
-				if serverRunning.Add(-1) < 1 {
-					serverMapping.Remove(s.name)
-					allDoneChan <- struct{}{}
+			ticker := time.NewTicker(200 * time.Millisecond)
+			defer ticker.Stop()
+			for {
+				if s.serverCount.Val() < 1 {
+					s.closeChan <- struct{}{}
+					if serverRunning.Add(-1) < 1 {
+						serverMapping.Remove(s.name)
+						allDoneChan <- struct{}{}
+					}
+				}
+				select {
+				case <-ticker.C:
 				}
 			}
 		}(v)
