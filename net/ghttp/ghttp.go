@@ -58,20 +58,30 @@ type (
 		handler          *handlerItem // The handler.
 	}
 
+	// HandlerFunc is request handler function.
+	HandlerFunc = func(r *Request)
+
+	// handlerFuncInfo contains the HandlerFunc address and its reflect type.
+	handlerFuncInfo struct {
+		Func  HandlerFunc   // Handler function address.
+		Type  reflect.Type  // Reflect type information for current handler, which is used for extension of handler feature.
+		Value reflect.Value // Reflect value information for current handler, which is used for extension of handler feature.
+	}
+
 	// handlerItem is the registered handler for route handling,
 	// including middleware and hook functions.
 	handlerItem struct {
 		itemId     int                // Unique handler item id mark.
 		itemName   string             // Handler name, which is automatically retrieved from runtime stack when registered.
 		itemType   int                // Handler type: object/handler/controller/middleware/hook.
-		itemFunc   HandlerFunc        // Handler address.
-		initFunc   HandlerFunc        // Initialization function when request enters the object(only available for object register type).
-		shutFunc   HandlerFunc        // Shutdown function when request leaves out the object(only available for object register type).
+		itemInfo   handlerFuncInfo    // Handler function information.
+		initFunc   HandlerFunc        // Initialization function when request enters the object (only available for object register type).
+		shutFunc   HandlerFunc        // Shutdown function when request leaves out the object (only available for object register type).
 		middleware []HandlerFunc      // Bound middleware array.
 		ctrlInfo   *handlerController // Controller information for reflect usage.
-		hookName   string             // Hook type name.
+		hookName   string             // Hook type name, only available for hook type.
 		router     *Router            // Router object.
-		source     string             // Source file path:line when registering.
+		source     string             // Registering source file `path:line`.
 	}
 
 	// handlerParsedItem is the item parsed from URL.Path.
@@ -98,9 +108,6 @@ type (
 		Stack() string
 	}
 
-	// HandlerFunc is request handler function.
-	HandlerFunc = func(r *Request)
-
 	// Listening file descriptor mapping.
 	// The key is either "http" or "https" and the value is its FD.
 	listenerFdMap = map[string]string
@@ -126,6 +133,10 @@ const (
 	exceptionExitAll      = "exit_all"
 	exceptionExitHook     = "exit_hook"
 	routeCacheDuration    = time.Hour
+	methodNameInit        = "Init"
+	methodNameShut        = "Shut"
+	methodNameExit        = "Exit"
+	ctxKeyForRequest      = "gHttpRequestObject"
 )
 
 var (

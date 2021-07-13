@@ -7,6 +7,7 @@
 package ghttp
 
 import (
+	"context"
 	"github.com/gogf/gf/errors/gerror"
 	"net/http"
 	"reflect"
@@ -91,9 +92,7 @@ func (m *middleware) Next() {
 					})
 				}
 				if !m.request.IsExited() {
-					niceCallFunc(func() {
-						item.handler.itemFunc(m.request)
-					})
+					m.callHandlerFunc(item.handler.itemInfo)
 				}
 				if !m.request.IsExited() && item.handler.shutFunc != nil {
 					niceCallFunc(func() {
@@ -108,13 +107,13 @@ func (m *middleware) Next() {
 					break
 				}
 				niceCallFunc(func() {
-					item.handler.itemFunc(m.request)
+					m.callHandlerFunc(item.handler.itemInfo)
 				})
 
 			// Global middleware array.
 			case handlerTypeMiddleware:
 				niceCallFunc(func() {
-					item.handler.itemFunc(m.request)
+					item.handler.itemInfo.Func(m.request)
 				})
 				// It does not continue calling next middleware after another middleware done.
 				// There should be a "Next" function to be called in the middleware in order to manage the workflow.
@@ -144,4 +143,49 @@ func (m *middleware) Next() {
 			}
 		}
 	}
+}
+
+func (m *middleware) callHandlerFunc(funcInfo handlerFuncInfo) {
+	niceCallFunc(func() {
+		if funcInfo.Func != nil {
+			funcInfo.Func(m.request)
+		} else {
+			var inputValues = []reflect.Value{
+				reflect.ValueOf(context.WithValue(
+					m.request.Context(), ctxKeyForRequest, m.request,
+				)),
+			}
+			if funcInfo.Type.NumIn() == 2 {
+				var (
+					request reflect.Value
+				)
+				if funcInfo.Type.In(1).Kind() == reflect.Ptr {
+					request = reflect.New(funcInfo.Type.In(1).Elem())
+					m.request.handlerResponse.Error = m.request.Parse(request.Interface())
+				} else {
+					request = reflect.New(funcInfo.Type.In(1).Elem()).Elem()
+					m.request.handlerResponse.Error = m.request.Parse(request.Addr().Interface())
+				}
+				if m.request.handlerResponse.Error != nil {
+					return
+				}
+				inputValues = append(inputValues, request)
+			}
+
+			// Call handler with dynamic created parameter values.
+			results := funcInfo.Value.Call(inputValues)
+			switch len(results) {
+			case 1:
+				m.request.handlerResponse.Error = results[0].Interface().(error)
+
+			case 2:
+				m.request.handlerResponse.Object = results[0].Interface()
+				if !results[1].IsNil() {
+					if v := results[1].Interface(); v != nil {
+						m.request.handlerResponse.Error = v.(error)
+					}
+				}
+			}
+		}
+	})
 }
