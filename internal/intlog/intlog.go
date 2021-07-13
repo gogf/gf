@@ -71,8 +71,9 @@ func doPrint(ctx context.Context, content string, stack bool) {
 	buffer.WriteString(now())
 	buffer.WriteString(" [INTE] ")
 	buffer.WriteString(file())
+	buffer.WriteString(" ")
 	if s := traceIdStr(ctx); s != "" {
-		buffer.WriteString(" " + s)
+		buffer.WriteString(s + " ")
 	}
 	buffer.WriteString(content)
 	buffer.WriteString("\n")
