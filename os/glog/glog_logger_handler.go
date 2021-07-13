@@ -47,7 +47,12 @@ func (i *HandlerInput) addStringToBuffer(buffer *bytes.Buffer, s string) {
 func (i *HandlerInput) Buffer() *bytes.Buffer {
 	buffer := bytes.NewBuffer(nil)
 	buffer.WriteString(i.TimeFormat)
-	i.addStringToBuffer(buffer, i.LevelFormat)
+	levelString := i.LevelFormat
+	if i.logger.config.FileColorEnable {
+		fg := i.getLevelFormatColor()
+		levelString = color.New(fg).Sprintf(i.LevelFormat)
+	}
+	i.addStringToBuffer(buffer, levelString)
 	msg := i.GetContent()
 	i.addStringToBuffer(buffer, msg.String())
 	return buffer
