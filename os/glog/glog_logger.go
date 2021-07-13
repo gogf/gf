@@ -228,9 +228,7 @@ func (l *Logger) printToWriter(ctx context.Context, input *HandlerInput) {
 		}
 		// Allow output to stdout?
 		if l.config.StdoutPrint {
-			if _, err := os.Stdout.Write(input.Buffer(mustWithColor).Bytes()); err != nil {
-				intlog.Error(err)
-			}
+			input.Stdout()
 		}
 	} else {
 		if _, err := l.config.Writer.Write(input.Buffer().Bytes()); err != nil {

@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"context"
 	"github.com/fatih/color"
+	"os"
 	"time"
 )
 
@@ -43,16 +44,27 @@ func (i *HandlerInput) addStringToBuffer(buffer *bytes.Buffer, s string) {
 	buffer.WriteString(s)
 }
 
-func (i *HandlerInput) Buffer(withColor ...bool) *bytes.Buffer {
+func (i *HandlerInput) Buffer() *bytes.Buffer {
 	buffer := bytes.NewBuffer(nil)
 	buffer.WriteString(i.TimeFormat)
-	if i.LevelFormat != "" {
-		if i.logger.config.FileColorEnable || (len(withColor) > 0 && withColor[0] == mustWithColor) {
-			i.addStringToBuffer(buffer, i.getLevelFormatWithColor())
-		} else {
-			i.addStringToBuffer(buffer, i.LevelFormat)
-		}
-	}
+	i.addStringToBuffer(buffer, i.LevelFormat)
+	msg := i.GetContent()
+	i.addStringToBuffer(buffer, msg.String())
+	return buffer
+}
+
+// Stdout print log to console
+func (i *HandlerInput) Stdout() {
+	_, _ = os.Stdout.Write([]byte(i.TimeFormat))
+	fg := i.getLevelFormatColor()
+	_, _ = color.New(fg).Print(" " + i.LevelFormat + " ")
+	msg := i.GetContent()
+	_, _ = os.Stdout.Write(msg.Bytes())
+}
+
+// GetContent returns the primary content.
+func (i *HandlerInput) GetContent() *bytes.Buffer {
+	buffer := bytes.NewBuffer(nil)
 	if i.CallerFunc != "" {
 		i.addStringToBuffer(buffer, i.CallerFunc)
 	}
@@ -72,14 +84,13 @@ func (i *HandlerInput) Buffer(withColor ...bool) *bytes.Buffer {
 	return buffer
 }
 
-// getLevelFormatWithColor returns the prefix string with color.
-func (i *HandlerInput) getLevelFormatWithColor() string {
-	s := i.LevelFormat
+// getLevelFormatColor returns the prefix string color.
+func (i *HandlerInput) getLevelFormatColor() color.Attribute {
 	fg := defaultLevelColor[i.Level]
 	if i.logger.config.currentColor != 0 {
 		fg = i.logger.config.currentColor
 	}
-	return color.New(fg).Sprint(s)
+	return fg
 }
 
 func (i *HandlerInput) String() string {
