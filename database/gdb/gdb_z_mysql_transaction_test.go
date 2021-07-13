@@ -769,6 +769,68 @@ func Test_Transaction(t *testing.T) {
 	})
 }
 
+func Test_Transaction_Hook(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		ctx := context.TODO()
+		rollbacked := false
+		err := db.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+			tx.HookAfterRollback(func(ctx context.Context) {
+				rollbacked = true
+			})
+			if _, err := tx.Ctx(ctx).Replace(table, g.Map{
+				"id":          1,
+				"passport":    "USER_1",
+				"password":    "PASS_1",
+				"nickname":    "NAME_1",
+				"create_time": gtime.Now().String(),
+			}); err != nil {
+				t.Error(err)
+			}
+			t.Assert(tx.IsClosed(), false)
+			return gerror.New("error")
+		})
+		t.AssertNE(err, nil)
+		t.Assert(rollbacked, true)
+
+		if value, err := db.Model(table).Ctx(ctx).Fields("nickname").Where("id", 1).Value(); err != nil {
+			gtest.Error(err)
+		} else {
+			t.Assert(value.String(), "name_1")
+		}
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		ctx := context.TODO()
+		commited := false
+		err := db.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
+			tx.HookAfterCommit(func(ctx context.Context) {
+				commited = true
+			})
+			if _, err := tx.Replace(table, g.Map{
+				"id":          1,
+				"passport":    "USER_1",
+				"password":    "PASS_1",
+				"nickname":    "NAME_1",
+				"create_time": gtime.Now().String(),
+			}); err != nil {
+				t.Error(err)
+			}
+			return nil
+		})
+		t.AssertNil(err)
+		t.Assert(commited, true)
+
+		if value, err := db.Model(table).Fields("nickname").Where("id", 1).Value(); err != nil {
+			gtest.Error(err)
+		} else {
+			t.Assert(value.String(), "NAME_1")
+		}
+	})
+}
+
 func Test_Transaction_Panic(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
