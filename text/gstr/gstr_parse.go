@@ -30,9 +30,10 @@ func Parse(s string) (result map[string]interface{}, err error) {
 	result = make(map[string]interface{})
 	parts := strings.Split(s, "&")
 	for _, part := range parts {
+		var key string
 		pos := strings.Index(part, "=")
 		if pos <= 0 {
-			continue
+			pos = len(part)
 		}
 		key, err := url.QueryUnescape(part[:pos])
 		if err != nil {
@@ -44,6 +45,11 @@ func Parse(s string) (result map[string]interface{}, err error) {
 		if key == "" || key[0] == '[' {
 			continue
 		}
+		if pos >= len(part) {
+			result[key] = ""
+			continue
+		}
+
 		value, err := url.QueryUnescape(part[pos+1:])
 		if err != nil {
 			return nil, err
