@@ -155,8 +155,10 @@ func (g *RouterGroup) Bind(items []GroupItem) *RouterGroup {
 		switch bindType {
 		case "REST":
 			group.preBindToLocalArray("REST", gconv.String(item[0])+":"+gconv.String(item[1]), item[2])
+
 		case "MIDDLEWARE":
 			group.preBindToLocalArray("MIDDLEWARE", gconv.String(item[0])+":"+gconv.String(item[1]), item[2])
+
 		default:
 			if strings.EqualFold(bindType, "ALL") {
 				bindType = ""
@@ -309,11 +311,16 @@ func (g *RouterGroup) doBindRoutersToServer(item *preBindItem) *RouterGroup {
 	}
 	switch bindType {
 	case "HANDLER":
-		if h, ok := object.(HandlerFunc); ok {
+		if reflect.ValueOf(object).Kind() == reflect.Func {
+			funcInfo, err := g.server.checkAndCreateFuncInfo(object, "", "", "")
+			if err != nil {
+				g.server.Logger().Error(err.Error())
+				return g
+			}
 			if g.server != nil {
-				g.server.doBindHandler(pattern, h, g.middleware, source)
+				g.server.doBindHandler(pattern, funcInfo, g.middleware, source)
 			} else {
-				g.domain.doBindHandler(pattern, h, g.middleware, source)
+				g.domain.doBindHandler(pattern, funcInfo, g.middleware, source)
 			}
 		} else if g.isController(object) {
 			if len(extras) > 0 {
@@ -373,6 +380,7 @@ func (g *RouterGroup) doBindRoutersToServer(item *preBindItem) *RouterGroup {
 					}
 				}
 			} else {
+				// At last, it treats the `object` as Object registering type.
 				if g.server != nil {
 					g.server.doBindObject(pattern, object, "", g.middleware, source)
 				} else {
@@ -380,6 +388,7 @@ func (g *RouterGroup) doBindRoutersToServer(item *preBindItem) *RouterGroup {
 				}
 			}
 		}
+
 	case "REST":
 		if g.isController(object) {
 			if g.server != nil {
@@ -398,6 +407,7 @@ func (g *RouterGroup) doBindRoutersToServer(item *preBindItem) *RouterGroup {
 				g.domain.doBindObjectRest(pattern, object, g.middleware, source)
 			}
 		}
+
 	case "HOOK":
 		if h, ok := object.(HandlerFunc); ok {
 			if g.server != nil {
@@ -414,6 +424,7 @@ func (g *RouterGroup) doBindRoutersToServer(item *preBindItem) *RouterGroup {
 
 // isController checks and returns whether given <value> is a controller.
 // A controller should contains attributes: Request/Response/Server/Cookie/Session/View.
+// Deprecated.
 func (g *RouterGroup) isController(value interface{}) bool {
 	// Whether implements interface Controller.
 	if _, ok := value.(Controller); !ok {

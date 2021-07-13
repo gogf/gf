@@ -234,7 +234,7 @@ func (s *Server) compareRouterPriority(newItem *handlerItem, oldItem *handlerIte
 	// Compare the length of their URI,
 	// but the fuzzy and named parts of the URI are not calculated to the result.
 
-	// Eg:
+	// Example:
 	// /admin-goods-{page} > /admin-{page}
 	// /{hash}.{type}      > /{hash}
 	var uriNew, uriOld string
@@ -252,7 +252,7 @@ func (s *Server) compareRouterPriority(newItem *handlerItem, oldItem *handlerIte
 	}
 
 	// Route type checks: {xxx} > :xxx > *xxx.
-	// Eg:
+	// Example:
 	// /name/act > /{name}/:act
 	var (
 		fuzzyCountFieldNew int
@@ -321,9 +321,7 @@ func (s *Server) compareRouterPriority(newItem *handlerItem, oldItem *handlerIte
 
 	// If they have different router type,
 	// the new router item has more priority than the other one.
-	if newItem.itemType == handlerTypeHandler ||
-		newItem.itemType == handlerTypeObject ||
-		newItem.itemType == handlerTypeController {
+	if newItem.itemType == handlerTypeHandler || newItem.itemType == handlerTypeObject || newItem.itemType == handlerTypeController {
 		return true
 	}
 
