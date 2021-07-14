@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"context"
 	"github.com/fatih/color"
+	"github.com/gogf/gf/internal/intlog"
 	"os"
 	"time"
 )
@@ -59,12 +60,22 @@ func (i *HandlerInput) Buffer() *bytes.Buffer {
 }
 
 // Stdout print log to console
-func (i *HandlerInput) Stdout() {
-	_, _ = os.Stdout.Write([]byte(i.TimeFormat))
+func (i *HandlerInput) Stdout() error {
+	if _, err := os.Stdout.Write([]byte(i.TimeFormat)); err != nil {
+		intlog.Error(i.Ctx, err)
+		return err
+	}
 	fg := i.getLevelFormatColor()
-	_, _ = color.New(fg).Print(" " + i.LevelFormat + " ")
+	if _, err := color.New(fg).Print(" " + i.LevelFormat + " "); err != nil {
+		intlog.Error(i.Ctx, err)
+		return err
+	}
 	msg := i.GetContent()
-	_, _ = os.Stdout.Write(msg.Bytes())
+	if _, err := os.Stdout.Write(msg.Bytes()); err != nil {
+		intlog.Error(i.Ctx, err)
+		return err
+	}
+	return nil
 }
 
 // GetContent returns the primary content.
