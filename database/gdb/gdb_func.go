@@ -142,8 +142,8 @@ func GetInsertOperationByOption(option int) string {
 // ConvertDataForTableRecord is a very important function, which does converting for any data that
 // will be inserted into table as a record.
 //
-// The parameter `obj` should be type of *map/map/*struct/struct.
-// It supports inherit struct definition for struct.
+// The parameter `value` should be type of *map/map/*struct/struct.
+// It supports embedded struct definition for struct.
 func ConvertDataForTableRecord(value interface{}) map[string]interface{} {
 	var (
 		rvValue reflect.Value
@@ -164,12 +164,15 @@ func ConvertDataForTableRecord(value interface{}) map[string]interface{} {
 				// Convert the value to JSON.
 				data[k], _ = json.Marshal(v)
 			}
+
 		case reflect.Struct:
 			switch v.(type) {
 			case time.Time, *time.Time, gtime.Time, *gtime.Time:
 				continue
+
 			case Counter, *Counter:
 				continue
+
 			default:
 				// Use string conversion in default.
 				if s, ok := v.(apiString); ok {
@@ -186,7 +189,7 @@ func ConvertDataForTableRecord(value interface{}) map[string]interface{} {
 
 // DataToMapDeep converts `value` to map type recursively.
 // The parameter `value` should be type of *map/map/*struct/struct.
-// It supports inherit struct definition for struct.
+// It supports embedded struct definition for struct.
 func DataToMapDeep(value interface{}) map[string]interface{} {
 	if v, ok := value.(apiMapStrAny); ok {
 		return v.MapStrAny()
@@ -445,7 +448,7 @@ func formatSql(sql string, args []interface{}) (newSql string, newArgs []interfa
 }
 
 // formatWhere formats where statement and its arguments for `Where` and `Having` statements.
-func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool) (newWhere string, newArgs []interface{}) {
+func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool, schema, table string) (newWhere string, newArgs []interface{}) {
 	var (
 		buffer = bytes.NewBuffer(nil)
 		rv     = reflect.ValueOf(where)
@@ -483,7 +486,12 @@ func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool) (
 			})
 			break
 		}
-		for key, value := range DataToMapDeep(where) {
+		// Automatically mapping and filtering the struct attribute.
+		data := DataToMapDeep(where)
+		if table != "" {
+			data, _ = db.GetCore().mappingAndFilterData(schema, table, data, true)
+		}
+		for key, value := range data {
 			if omitEmpty && empty.IsEmpty(value) {
 				continue
 			}

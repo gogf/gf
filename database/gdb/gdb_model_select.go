@@ -8,6 +8,7 @@ package gdb
 
 import (
 	"fmt"
+	"github.com/gogf/gf/errors/gerror"
 	"reflect"
 
 	"github.com/gogf/gf/container/gset"
@@ -16,11 +17,6 @@ import (
 	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
-)
-
-const (
-	queryTypeNormal = "NormalQuery"
-	queryTypeCount  = "CountQuery"
 )
 
 // Select is alias of Model.All.
@@ -204,27 +200,50 @@ func (m *Model) Array(fieldsAndWhere ...interface{}) ([]Value, error) {
 // The parameter `pointer` should be type of *struct/**struct. If type **struct is given,
 // it can create the struct internally during converting.
 //
+// Deprecated, use Scan instead.
+func (m *Model) Struct(pointer interface{}, where ...interface{}) error {
+	return m.doStruct(pointer, where...)
+}
+
+// Struct retrieves one record from table and converts it into given struct.
+// The parameter `pointer` should be type of *struct/**struct. If type **struct is given,
+// it can create the struct internally during converting.
+//
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
 //
-// Note that it returns sql.ErrNoRows if there's no record retrieved with the given conditions
-// from table and `pointer` is not nil.
+// Note that it returns sql.ErrNoRows if the given parameter `pointer` pointed to a variable that has
+// default value and there's no record retrieved with the given conditions from table.
 //
-// Eg:
+// Example:
 // user := new(User)
-// err  := db.Model("user").Where("id", 1).Struct(user)
+// err  := db.Model("user").Where("id", 1).Scan(user)
 //
 // user := (*User)(nil)
-// err  := db.Model("user").Where("id", 1).Struct(&user)
-func (m *Model) Struct(pointer interface{}, where ...interface{}) error {
-	one, err := m.One(where...)
+// err  := db.Model("user").Where("id", 1).Scan(&user)
+func (m *Model) doStruct(pointer interface{}, where ...interface{}) error {
+	model := m
+	// Auto selecting fields by struct attributes.
+	if model.fieldsEx == "" && (model.fields == "" || model.fields == "*") {
+		model = m.Fields(pointer)
+	}
+	one, err := model.One(where...)
 	if err != nil {
 		return err
 	}
 	if err = one.Struct(pointer); err != nil {
 		return err
 	}
-	return m.doWithScanStruct(pointer)
+	return model.doWithScanStruct(pointer)
+}
+
+// Structs retrieves records from table and converts them into given struct slice.
+// The parameter `pointer` should be type of *[]struct/*[]*struct. It can create and fill the struct
+// slice internally during converting.
+//
+// Deprecated, use Scan instead.
+func (m *Model) Structs(pointer interface{}, where ...interface{}) error {
+	return m.doStructs(pointer, where...)
 }
 
 // Structs retrieves records from table and converts them into given struct slice.
@@ -234,37 +253,45 @@ func (m *Model) Struct(pointer interface{}, where ...interface{}) error {
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
 //
-// Note that it returns sql.ErrNoRows if there's no record retrieved with the given conditions
-// from table and `pointer` is not empty.
+// Note that it returns sql.ErrNoRows if the given parameter `pointer` pointed to a variable that has
+// default value and there's no record retrieved with the given conditions from table.
 //
-// Eg:
+// Example:
 // users := ([]User)(nil)
-// err   := db.Model("user").Structs(&users)
+// err   := db.Model("user").Scan(&users)
 //
 // users := ([]*User)(nil)
-// err   := db.Model("user").Structs(&users)
-func (m *Model) Structs(pointer interface{}, where ...interface{}) error {
-	all, err := m.All(where...)
+// err   := db.Model("user").Scan(&users)
+func (m *Model) doStructs(pointer interface{}, where ...interface{}) error {
+	model := m
+	// Auto selecting fields by struct attributes.
+	if model.fieldsEx == "" && (model.fields == "" || model.fields == "*") {
+		model = m.Fields(
+			reflect.New(
+				reflect.ValueOf(pointer).Elem().Type().Elem(),
+			).Interface(),
+		)
+	}
+	all, err := model.All(where...)
 	if err != nil {
 		return err
 	}
 	if err = all.Structs(pointer); err != nil {
 		return err
 	}
-	return m.doWithScanStructs(pointer)
+	return model.doWithScanStructs(pointer)
 }
 
 // Scan automatically calls Struct or Structs function according to the type of parameter `pointer`.
-// It calls function Struct if `pointer` is type of *struct/**struct.
-// It calls function Structs if `pointer` is type of *[]struct/*[]*struct.
+// It calls function doStruct if `pointer` is type of *struct/**struct.
+// It calls function doStructs if `pointer` is type of *[]struct/*[]*struct.
 //
-// The optional parameter `where` is the same as the parameter of Model.Where function,
-// see Model.Where.
+// The optional parameter `where` is the same as the parameter of Model.Where function,  see Model.Where.
 //
-// Note that it returns sql.ErrNoRows if there's no record retrieved with the given conditions
-// from table.
+// Note that it returns sql.ErrNoRows if the given parameter `pointer` pointed to a variable that has
+// default value and there's no record retrieved with the given conditions from table.
 //
-// Eg:
+// Example:
 // user := new(User)
 // err  := db.Model("user").Where("id", 1).Scan(user)
 //
@@ -277,16 +304,35 @@ func (m *Model) Structs(pointer interface{}, where ...interface{}) error {
 // users := ([]*User)(nil)
 // err   := db.Model("user").Scan(&users)
 func (m *Model) Scan(pointer interface{}, where ...interface{}) error {
-	var reflectType reflect.Type
+	var (
+		reflectValue reflect.Value
+		reflectKind  reflect.Kind
+	)
 	if v, ok := pointer.(reflect.Value); ok {
-		reflectType = v.Type()
+		reflectValue = v
 	} else {
-		reflectType = reflect.TypeOf(pointer)
+		reflectValue = reflect.ValueOf(pointer)
 	}
-	if gstr.Contains(reflectType.String(), "[]") {
-		return m.Structs(pointer, where...)
+
+	reflectKind = reflectValue.Kind()
+	if reflectKind != reflect.Ptr {
+		return gerror.New(`the parameter "pointer" for function Scan should type of pointer`)
 	}
-	return m.Struct(pointer, where...)
+	for reflectKind == reflect.Ptr {
+		reflectValue = reflectValue.Elem()
+		reflectKind = reflectValue.Kind()
+	}
+
+	switch reflectKind {
+	case reflect.Slice, reflect.Array:
+		return m.doStructs(pointer, where...)
+
+	case reflect.Struct, reflect.Invalid:
+		return m.doStruct(pointer, where...)
+
+	default:
+		return gerror.New(`element of parameter "pointer" for function Scan should type of struct/*struct/[]struct/[]*struct`)
+	}
 }
 
 // ScanList converts `r` to struct slice which contains other complex struct attributes.
@@ -458,6 +504,16 @@ func (m *Model) FindScan(pointer interface{}, where ...interface{}) error {
 	return m.Scan(pointer)
 }
 
+// Union does "(SELECT xxx FROM xxx) UNION (SELECT xxx FROM xxx) ..." statement for the model.
+func (m *Model) Union(unions ...*Model) *Model {
+	return m.db.Union(unions...)
+}
+
+// UnionAll does "(SELECT xxx FROM xxx) UNION ALL (SELECT xxx FROM xxx) ..." statement for the model.
+func (m *Model) UnionAll(unions ...*Model) *Model {
+	return m.db.UnionAll(unions...)
+}
+
 // doGetAllBySql does the select statement on the database.
 func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, err error) {
 	cacheKey := ""
@@ -490,18 +546,18 @@ func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, e
 	if cacheKey != "" && err == nil {
 		if m.cacheDuration < 0 {
 			if _, err := cacheObj.Remove(cacheKey); err != nil {
-				intlog.Error(err)
+				intlog.Error(m.GetCtx(), err)
 			}
 		} else {
 			if err := cacheObj.Set(cacheKey, result, m.cacheDuration); err != nil {
-				intlog.Error(err)
+				intlog.Error(m.GetCtx(), err)
 			}
 		}
 	}
 	return result, err
 }
 
-func (m *Model) getFormattedSqlAndArgs(queryType string, limit1 bool) (sqlWithHolder string, holderArgs []interface{}) {
+func (m *Model) getFormattedSqlAndArgs(queryType int, limit1 bool) (sqlWithHolder string, holderArgs []interface{}) {
 	switch queryType {
 	case queryTypeCount:
 		countFields := "COUNT(1)"
@@ -509,6 +565,11 @@ func (m *Model) getFormattedSqlAndArgs(queryType string, limit1 bool) (sqlWithHo
 			// DO NOT quote the m.fields here, in case of fields like:
 			// DISTINCT t.user_id uid
 			countFields = fmt.Sprintf(`COUNT(%s%s)`, m.distinct, m.fields)
+		}
+		// Raw SQL Model.
+		if m.rawSql != "" {
+			sqlWithHolder = fmt.Sprintf("SELECT %s FROM (%s) AS T", countFields, m.rawSql)
+			return sqlWithHolder, nil
 		}
 		conditionWhere, conditionExtra, conditionArgs := m.formatCondition(false, true)
 		sqlWithHolder = fmt.Sprintf("SELECT %s FROM %s%s", countFields, m.tables, conditionWhere+conditionExtra)
@@ -519,6 +580,15 @@ func (m *Model) getFormattedSqlAndArgs(queryType string, limit1 bool) (sqlWithHo
 
 	default:
 		conditionWhere, conditionExtra, conditionArgs := m.formatCondition(limit1, false)
+		// Raw SQL Model, especially for UNION/UNION ALL featured SQL.
+		if m.rawSql != "" {
+			sqlWithHolder = fmt.Sprintf(
+				"%s%s",
+				m.rawSql,
+				conditionWhere+conditionExtra,
+			)
+			return sqlWithHolder, conditionArgs
+		}
 		// DO NOT quote the m.fields where, in case of fields like:
 		// DISTINCT t.user_id uid
 		sqlWithHolder = fmt.Sprintf(

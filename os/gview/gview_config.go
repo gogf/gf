@@ -7,8 +7,8 @@
 package gview
 
 import (
-	"errors"
-	"fmt"
+	"context"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/i18n/gi18n"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/os/gfile"
@@ -67,14 +67,14 @@ func (view *View) SetConfig(config Config) error {
 	// It's just cache, do not hesitate clearing it.
 	templates.Clear()
 
-	intlog.Printf("SetConfig: %+v", view.config)
+	intlog.Printf(context.TODO(), "SetConfig: %+v", view.config)
 	return nil
 }
 
 // SetConfigWithMap set configurations with map for the view.
 func (view *View) SetConfigWithMap(m map[string]interface{}) error {
 	if m == nil || len(m) == 0 {
-		return errors.New("configuration cannot be empty")
+		return gerror.New("configuration cannot be empty")
 	}
 	// The m now is a shallow copy of m.
 	// Any changes to m does not affect the original one.
@@ -123,7 +123,7 @@ func (view *View) SetPath(path string) error {
 	}
 	// Path not exist.
 	if realPath == "" {
-		err := errors.New(fmt.Sprintf(`[gview] SetPath failed: path "%s" does not exist`, path))
+		err := gerror.Newf(`[gview] SetPath failed: path "%s" does not exist`, path)
 		if errorPrint() {
 			glog.Error(err)
 		}
@@ -131,7 +131,7 @@ func (view *View) SetPath(path string) error {
 	}
 	// Should be a directory.
 	if !isDir {
-		err := errors.New(fmt.Sprintf(`[gview] SetPath failed: path "%s" should be directory type`, path))
+		err := gerror.Newf(`[gview] SetPath failed: path "%s" should be directory type`, path)
 		if errorPrint() {
 			glog.Error(err)
 		}
@@ -177,7 +177,7 @@ func (view *View) AddPath(path string) error {
 	}
 	// Path not exist.
 	if realPath == "" {
-		err := errors.New(fmt.Sprintf(`[gview] AddPath failed: path "%s" does not exist`, path))
+		err := gerror.Newf(`[gview] AddPath failed: path "%s" does not exist`, path)
 		if errorPrint() {
 			glog.Error(err)
 		}
@@ -185,7 +185,7 @@ func (view *View) AddPath(path string) error {
 	}
 	// realPath should be type of folder.
 	if !isDir {
-		err := errors.New(fmt.Sprintf(`[gview] AddPath failed: path "%s" should be directory type`, path))
+		err := gerror.Newf(`[gview] AddPath failed: path "%s" should be directory type`, path)
 		if errorPrint() {
 			glog.Error(err)
 		}

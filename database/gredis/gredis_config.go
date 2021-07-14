@@ -7,6 +7,7 @@
 package gredis
 
 import (
+	"context"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 
@@ -36,7 +37,7 @@ func SetConfig(config *Config, name ...string) {
 	configs.Set(group, config)
 	instances.Remove(group)
 
-	intlog.Printf(`SetConfig for group "%s": %+v`, group, config)
+	intlog.Printf(context.TODO(), `SetConfig for group "%s": %+v`, group, config)
 }
 
 // SetConfigByStr sets the global configuration for specified group with string.
@@ -78,7 +79,7 @@ func RemoveConfig(name ...string) {
 	configs.Remove(group)
 	instances.Remove(group)
 
-	intlog.Printf(`RemoveConfig: %s`, group)
+	intlog.Printf(context.TODO(), `RemoveConfig: %s`, group)
 }
 
 // ConfigFromStr parses and returns config from given str.

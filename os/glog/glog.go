@@ -12,12 +12,16 @@ import (
 	"github.com/gogf/gf/os/grpool"
 )
 
+const (
+	commandEnvKeyForDebug = "gf.glog.debug"
+)
+
 var (
 	// Default logger object, for package method usage.
 	logger = New()
 
 	// Goroutine pool for async logging output.
-	// It uses only one asynchronize worker to ensure log sequence.
+	// It uses only one asynchronous worker to ensure log sequence.
 	asyncPool = grpool.New(1)
 
 	// defaultDebug enables debug level or not in default,
@@ -26,7 +30,7 @@ var (
 )
 
 func init() {
-	defaultDebug = gcmd.GetOptWithEnv("gf.glog.debug", true).Bool()
+	defaultDebug = gcmd.GetOptWithEnv(commandEnvKeyForDebug, true).Bool()
 	SetDebug(defaultDebug)
 }
 

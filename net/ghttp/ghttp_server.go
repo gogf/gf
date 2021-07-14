@@ -8,6 +8,7 @@ package ghttp
 
 import (
 	"bytes"
+	"context"
 	"github.com/gogf/gf/debug/gdebug"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
@@ -70,10 +71,10 @@ func serverProcessInit() {
 	// Process message handler.
 	// It's enabled only graceful feature is enabled.
 	if gracefulEnabled {
-		intlog.Printf("%d: graceful reload feature is enabled", gproc.Pid())
+		intlog.Printf(context.TODO(), "%d: graceful reload feature is enabled", gproc.Pid())
 		go handleProcessMessage()
 	} else {
-		intlog.Printf("%d: graceful reload feature is disabled", gproc.Pid())
+		intlog.Printf(context.TODO(), "%d: graceful reload feature is disabled", gproc.Pid())
 	}
 
 	// It's an ugly calling for better initializing the main package path
@@ -195,7 +196,7 @@ func (s *Server) Start() error {
 	if gproc.IsChild() {
 		gtimer.SetTimeout(time.Duration(s.config.GracefulTimeout)*time.Second, func() {
 			if err := gproc.Send(gproc.PPid(), []byte("exit"), adminGProcCommGroup); err != nil {
-				//glog.Error("server error in process communication:", err)
+				intlog.Error(context.TODO(), "server error in process communication:", err)
 			}
 		})
 	}
@@ -315,9 +316,9 @@ func (s *Server) Run() {
 	// Remove plugins.
 	if len(s.plugins) > 0 {
 		for _, p := range s.plugins {
-			intlog.Printf(`remove plugin: %s`, p.Name())
+			intlog.Printf(context.TODO(), `remove plugin: %s`, p.Name())
 			if err := p.Remove(); err != nil {
-				intlog.Errorf("%+v", err)
+				intlog.Errorf(context.TODO(), "%+v", err)
 			}
 		}
 	}
@@ -333,7 +334,7 @@ func Wait() {
 		s := v.(*Server)
 		if len(s.plugins) > 0 {
 			for _, p := range s.plugins {
-				intlog.Printf(`remove plugin: %s`, p.Name())
+				intlog.Printf(context.TODO(), `remove plugin: %s`, p.Name())
 				p.Remove()
 			}
 		}

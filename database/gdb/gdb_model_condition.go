@@ -62,6 +62,8 @@ func (m *Model) WherePri(where interface{}, args ...interface{}) *Model {
 }
 
 // Wheref builds condition string using fmt.Sprintf and arguments.
+// Note that if the number of `args` is more than the place holder in `format`,
+// the extra `args` will be used as the where condition arguments of the Model.
 func (m *Model) Wheref(format string, args ...interface{}) *Model {
 	var (
 		placeHolderCount = gstr.Count(format, "?")
@@ -275,6 +277,9 @@ func (m *Model) Order(orderBy ...string) *Model {
 		return m
 	}
 	model := m.getModel()
+	if model.orderBy != "" {
+		model.orderBy += ","
+	}
 	model.orderBy = m.db.GetCore().QuoteString(strings.Join(orderBy, " "))
 	return model
 }
@@ -285,6 +290,9 @@ func (m *Model) OrderAsc(column string) *Model {
 		return m
 	}
 	model := m.getModel()
+	if model.orderBy != "" {
+		model.orderBy += ","
+	}
 	model.orderBy = m.db.GetCore().QuoteWord(column) + " ASC"
 	return model
 }
@@ -295,6 +303,9 @@ func (m *Model) OrderDesc(column string) *Model {
 		return m
 	}
 	model := m.getModel()
+	if model.orderBy != "" {
+		model.orderBy += ","
+	}
 	model.orderBy = m.db.GetCore().QuoteWord(column) + " DESC"
 	return model
 }
@@ -375,7 +386,7 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 			case whereHolderWhere:
 				if conditionWhere == "" {
 					newWhere, newArgs := formatWhere(
-						m.db, v.where, v.args, m.option&OptionOmitEmpty > 0,
+						m.db, v.where, v.args, m.option&OptionOmitEmpty > 0, m.schema, m.tables,
 					)
 					if len(newWhere) > 0 {
 						conditionWhere = newWhere
@@ -387,7 +398,7 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 
 			case whereHolderAnd:
 				newWhere, newArgs := formatWhere(
-					m.db, v.where, v.args, m.option&OptionOmitEmpty > 0,
+					m.db, v.where, v.args, m.option&OptionOmitEmpty > 0, m.schema, m.tables,
 				)
 				if len(newWhere) > 0 {
 					if len(conditionWhere) == 0 {
@@ -402,7 +413,7 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 
 			case whereHolderOr:
 				newWhere, newArgs := formatWhere(
-					m.db, v.where, v.args, m.option&OptionOmitEmpty > 0,
+					m.db, v.where, v.args, m.option&OptionOmitEmpty > 0, m.schema, m.tables,
 				)
 				if len(newWhere) > 0 {
 					if len(conditionWhere) == 0 {
@@ -419,7 +430,13 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 	}
 	// Soft deletion.
 	softDeletingCondition := m.getConditionForSoftDeleting()
-	if !m.unscoped && softDeletingCondition != "" {
+	if m.rawSql != "" && conditionWhere != "" {
+		if gstr.ContainsI(m.rawSql, " WHERE ") {
+			conditionWhere = " AND " + conditionWhere
+		} else {
+			conditionWhere = " WHERE " + conditionWhere
+		}
+	} else if !m.unscoped && softDeletingCondition != "" {
 		if conditionWhere == "" {
 			conditionWhere = fmt.Sprintf(` WHERE %s`, softDeletingCondition)
 		} else {
@@ -430,6 +447,7 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 			conditionWhere = " WHERE " + conditionWhere
 		}
 	}
+
 	// GROUP BY.
 	if m.groupBy != "" {
 		conditionExtra += " GROUP BY " + m.groupBy
@@ -437,7 +455,7 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 	// HAVING.
 	if len(m.having) > 0 {
 		havingStr, havingArgs := formatWhere(
-			m.db, m.having[0], gconv.Interfaces(m.having[1]), m.option&OptionOmitEmpty > 0,
+			m.db, m.having[0], gconv.Interfaces(m.having[1]), m.option&OptionOmitEmpty > 0, m.schema, m.tables,
 		)
 		if len(havingStr) > 0 {
 			conditionExtra += " HAVING " + havingStr

@@ -38,12 +38,13 @@ type Logger struct {
 }
 
 const (
-	defaultFileFormat = `{Y-m-d}.log`
-	defaultFileFlags  = os.O_CREATE | os.O_WRONLY | os.O_APPEND
-	defaultFilePerm   = os.FileMode(0666)
-	defaultFileExpire = time.Minute
-	pathFilterKey     = "/os/glog/glog"
-	mustWithColor     = true
+	defaultFileFormat                 = `{Y-m-d}.log`
+	defaultFileFlags                  = os.O_CREATE | os.O_WRONLY | os.O_APPEND
+	defaultFilePerm                   = os.FileMode(0666)
+	defaultFileExpire                 = time.Minute
+	pathFilterKey                     = "/os/glog/glog"
+	memoryLockPrefixForPrintingToFile = "glog.printToFile:"
+	mustWithColor                     = true
 )
 
 const (
@@ -63,7 +64,6 @@ func New() *Logger {
 		init:   gtype.NewBool(),
 		config: DefaultConfig(),
 	}
-	logger.config.Handlers = []Handler{defaultHandler}
 	return logger
 }
 
@@ -104,11 +104,11 @@ func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
 	if p.parent != nil {
 		p = p.parent
 	}
-	if !p.init.Val() && p.init.Cas(false, true) {
-		// It just initializes once for each logger.
-		if p.config.RotateSize > 0 || p.config.RotateExpire > 0 {
+	// It just initializes once for each logger.
+	if p.config.RotateSize > 0 || p.config.RotateExpire > 0 {
+		if !p.init.Val() && p.init.Cas(false, true) {
 			gtimer.AddOnce(p.config.RotateCheckInterval, p.rotateChecksTimely)
-			intlog.Printf("logger rotation initialized: every %s", p.config.RotateCheckInterval.String())
+			intlog.Printf(ctx, "logger rotation initialized: every %s", p.config.RotateCheckInterval.String())
 		}
 	}
 
@@ -170,7 +170,7 @@ func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
 		// Tracing values.
 		spanCtx := trace.SpanContextFromContext(ctx)
 		if traceId := spanCtx.TraceID(); traceId.IsValid() {
-			input.CtxStr = "{TraceID:" + traceId.String() + "}"
+			input.CtxStr = "{" + traceId.String() + "}"
 		}
 		// Context values.
 		if len(l.config.CtxKeys) > 0 {
@@ -212,7 +212,7 @@ func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
 			input.Next()
 		})
 		if err != nil {
-			intlog.Error(err)
+			intlog.Error(ctx, err)
 		}
 	} else {
 		input.Next()
@@ -224,7 +224,7 @@ func (l *Logger) printToWriter(ctx context.Context, input *HandlerInput) {
 	if l.config.Writer == nil {
 		// Output content to disk file.
 		if l.config.Path != "" {
-			l.printToFile(input.Time, input.Buffer())
+			l.printToFile(ctx, input.Time, input.Buffer())
 		}
 		// Allow output to stdout?
 		if l.config.StdoutPrint {
@@ -233,16 +233,16 @@ func (l *Logger) printToWriter(ctx context.Context, input *HandlerInput) {
 	} else {
 		if _, err := l.config.Writer.Write(input.Buffer().Bytes()); err != nil {
 			// panic(err)
-			intlog.Error(err)
+			intlog.Error(ctx, err)
 		}
 	}
 }
 
 // printToFile outputs logging content to disk file.
-func (l *Logger) printToFile(t time.Time, buffer *bytes.Buffer) {
+func (l *Logger) printToFile(ctx context.Context, t time.Time, buffer *bytes.Buffer) {
 	var (
 		logFilePath   = l.getFilePath(t)
-		memoryLockKey = "glog.printToFile:" + logFilePath
+		memoryLockKey = memoryLockPrefixForPrintingToFile + logFilePath
 	)
 	gmlock.Lock(memoryLockKey)
 	defer gmlock.Unlock(memoryLockKey)
@@ -254,20 +254,20 @@ func (l *Logger) printToFile(t time.Time, buffer *bytes.Buffer) {
 		}
 	}
 	// Logging content outputting to disk file.
-	if file := l.getFilePointer(logFilePath); file == nil {
-		intlog.Errorf(`got nil file pointer for: %s`, logFilePath)
+	if file := l.getFilePointer(ctx, logFilePath); file == nil {
+		intlog.Errorf(ctx, `got nil file pointer for: %s`, logFilePath)
 	} else {
 		if _, err := file.Write(buffer.Bytes()); err != nil {
-			intlog.Error(err)
+			intlog.Error(ctx, err)
 		}
 		if err := file.Close(); err != nil {
-			intlog.Error(err)
+			intlog.Error(ctx, err)
 		}
 	}
 }
 
 // getFilePointer retrieves and returns a file pointer from file pool.
-func (l *Logger) getFilePointer(path string) *gfpool.File {
+func (l *Logger) getFilePointer(ctx context.Context, path string) *gfpool.File {
 	file, err := gfpool.Open(
 		path,
 		defaultFileFlags,
@@ -276,7 +276,7 @@ func (l *Logger) getFilePointer(path string) *gfpool.File {
 	)
 	if err != nil {
 		// panic(err)
-		intlog.Error(err)
+		intlog.Error(ctx, err)
 	}
 	return file
 }

@@ -73,7 +73,10 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 		EnterTime: gtime.TimestampMilli(),
 	}
 	request.Cookie = GetCookie(request)
-	request.Session = s.sessionManager.New(request.GetSessionId())
+	request.Session = s.sessionManager.New(
+		r.Context(),
+		request.GetSessionId(),
+	)
 	request.Response.Request = request
 	request.Middleware = &middleware{
 		request: request,
@@ -84,7 +87,7 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 			address = request.RemoteAddr
 			header  = fmt.Sprintf("%v", request.Header)
 		)
-		intlog.Print(address, header)
+		intlog.Print(r.Context(), address, header)
 		return guid.S([]byte(address), []byte(header))
 	})
 	if err != nil {

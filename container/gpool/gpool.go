@@ -8,7 +8,7 @@
 package gpool
 
 import (
-	"errors"
+	"github.com/gogf/gf/errors/gerror"
 	"time"
 
 	"github.com/gogf/gf/container/glist"
@@ -66,7 +66,7 @@ func New(ttl time.Duration, newFunc NewFunc, expireFunc ...ExpireFunc) *Pool {
 // Put puts an item to pool.
 func (p *Pool) Put(value interface{}) error {
 	if p.closed.Val() {
-		return errors.New("pool is closed")
+		return gerror.New("pool is closed")
 	}
 	item := &poolItem{
 		value: value,
@@ -117,7 +117,7 @@ func (p *Pool) Get() (interface{}, error) {
 	if p.NewFunc != nil {
 		return p.NewFunc()
 	}
-	return nil, errors.New("pool is empty")
+	return nil, gerror.New("pool is empty")
 }
 
 // Size returns the count of available items of pool.

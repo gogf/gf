@@ -7,6 +7,7 @@
 package gsession_test
 
 import (
+	"context"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gsession"
 	"testing"
@@ -20,7 +21,7 @@ func Test_StorageMemory(t *testing.T) {
 	manager := gsession.New(time.Second, storage)
 	sessionId := ""
 	gtest.C(t, func(t *gtest.T) {
-		s := manager.New()
+		s := manager.New(context.TODO())
 		defer s.Close()
 		s.Set("k1", "v1")
 		s.Set("k2", "v2")
@@ -34,7 +35,7 @@ func Test_StorageMemory(t *testing.T) {
 
 	time.Sleep(500 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		s := manager.New(sessionId)
+		s := manager.New(context.TODO(), sessionId)
 		t.Assert(s.Get("k1"), "v1")
 		t.Assert(s.Get("k2"), "v2")
 		t.Assert(s.Get("k3"), "v3")
@@ -66,7 +67,7 @@ func Test_StorageMemory(t *testing.T) {
 
 	time.Sleep(1000 * time.Millisecond)
 	gtest.C(t, func(t *gtest.T) {
-		s := manager.New(sessionId)
+		s := manager.New(context.TODO(), sessionId)
 		t.Assert(s.Size(), 0)
 		t.Assert(s.Get("k5"), nil)
 		t.Assert(s.Get("k6"), nil)

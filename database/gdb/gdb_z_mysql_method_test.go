@@ -329,7 +329,7 @@ func Test_DB_BatchInsert(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		table := createTable()
 		defer dropTable(table)
-		r, err := db.BatchInsert(table, g.List{
+		r, err := db.Insert(table, g.List{
 			{
 				"id":          2,
 				"passport":    "t2",
@@ -357,7 +357,7 @@ func Test_DB_BatchInsert(t *testing.T) {
 		table := createTable()
 		defer dropTable(table)
 		// []interface{}
-		r, err := db.BatchInsert(table, g.Slice{
+		r, err := db.Insert(table, g.Slice{
 			g.Map{
 				"id":          2,
 				"passport":    "t2",
@@ -382,7 +382,7 @@ func Test_DB_BatchInsert(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		table := createTable()
 		defer dropTable(table)
-		result, err := db.BatchInsert(table, g.Map{
+		result, err := db.Insert(table, g.Map{
 			"id":          1,
 			"passport":    "t1",
 			"password":    "p1",
@@ -416,7 +416,7 @@ func Test_DB_BatchInsert_Struct(t *testing.T) {
 			NickName:   "T1",
 			CreateTime: gtime.Now(),
 		}
-		result, err := db.BatchInsert(table, user)
+		result, err := db.Insert(table, user)
 		t.AssertNil(err)
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)
@@ -584,7 +584,7 @@ func Test_DB_GetStruct(t *testing.T) {
 			CreateTime gtime.Time
 		}
 		user := new(User)
-		err := db.GetStruct(user, fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 3)
+		err := db.GetScan(user, fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 3)
 		t.AssertNil(err)
 		t.Assert(user.NickName, "name_3")
 	})
@@ -597,7 +597,7 @@ func Test_DB_GetStruct(t *testing.T) {
 			CreateTime *gtime.Time
 		}
 		user := new(User)
-		err := db.GetStruct(user, fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 3)
+		err := db.GetScan(user, fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 3)
 		t.AssertNil(err)
 		t.Assert(user.NickName, "name_3")
 	})
@@ -615,7 +615,7 @@ func Test_DB_GetStructs(t *testing.T) {
 			CreateTime gtime.Time
 		}
 		var users []User
-		err := db.GetStructs(&users, fmt.Sprintf("SELECT * FROM %s WHERE id>?", table), 1)
+		err := db.GetScan(&users, fmt.Sprintf("SELECT * FROM %s WHERE id>?", table), 1)
 		t.AssertNil(err)
 		t.Assert(len(users), TableSize-1)
 		t.Assert(users[0].Id, 2)
@@ -635,7 +635,7 @@ func Test_DB_GetStructs(t *testing.T) {
 			CreateTime *gtime.Time
 		}
 		var users []User
-		err := db.GetStructs(&users, fmt.Sprintf("SELECT * FROM %s WHERE id>?", table), 1)
+		err := db.GetScan(&users, fmt.Sprintf("SELECT * FROM %s WHERE id>?", table), 1)
 		t.AssertNil(err)
 		t.Assert(len(users), TableSize-1)
 		t.Assert(users[0].Id, 2)
@@ -1283,7 +1283,7 @@ func Test_DB_Prefix(t *testing.T) {
 			})
 		}
 
-		result, err := db.BatchInsert(name, array.Slice())
+		result, err := db.Insert(name, array.Slice())
 		t.AssertNil(err)
 
 		n, e := result.RowsAffected()
