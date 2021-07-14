@@ -335,15 +335,15 @@ func Test_Router_DomainGroup(t *testing.T) {
 	d.Group("/", func(group *ghttp.RouterGroup) {
 		group.Group("/app", func(gApp *ghttp.RouterGroup) {
 			gApp.GET("/{table}/list/{page}.html", func(r *ghttp.Request) {
-				intlog.Print("/{table}/list/{page}.html")
+				intlog.Print(r.Context(), "/{table}/list/{page}.html")
 				r.Response.Write(r.Get("table"), "&", r.Get("page"))
 			})
 			gApp.GET("/order/info/{order_id}", func(r *ghttp.Request) {
-				intlog.Print("/order/info/{order_id}")
+				intlog.Print(r.Context(), "/order/info/{order_id}")
 				r.Response.Write(r.Get("order_id"))
 			})
 			gApp.DELETE("/comment/{id}", func(r *ghttp.Request) {
-				intlog.Print("/comment/{id}")
+				intlog.Print(r.Context(), "/comment/{id}")
 				r.Response.Write(r.Get("id"))
 			})
 		})

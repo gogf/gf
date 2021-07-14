@@ -114,7 +114,7 @@ func New(config *Config) *Redis {
 					if err != nil {
 						return nil, err
 					}
-					intlog.Printf(`open new connection, config:%+v`, config)
+					intlog.Printf(context.TODO(), `open new connection, config:%+v`, config)
 					// AUTH
 					if len(config.Pass) > 0 {
 						if _, err := c.Do("AUTH", config.Pass); err != nil {

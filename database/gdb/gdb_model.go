@@ -17,10 +17,11 @@ import (
 	"github.com/gogf/gf/text/gstr"
 )
 
-// Model is the DAO for ORM.
+// Model is core struct implementing the DAO for ORM.
 type Model struct {
 	db            DB             // Underlying DB interface.
 	tx            *TX            // Underlying TX interface.
+	rawSql        string         // rawSql is the raw SQL string which marks a raw SQL based Model not a table based Model.
 	schema        string         // Custom database schema.
 	linkType      int            // Mark for operation on master or slave.
 	tablesInit    string         // Table names when model initialization.
@@ -48,6 +49,8 @@ type Model struct {
 	cacheName     string         // Cache name for custom operation.
 	unscoped      bool           // Disables soft deleting features when select/delete operations.
 	safe          bool           // If true, it clones and returns a new model object whenever operation done; or else it changes the attribute of current model.
+	onDuplicate   interface{}    // onDuplicate is used for ON "DUPLICATE KEY UPDATE" statement.
+	onDuplicateEx interface{}    // onDuplicateEx is used for excluding some columns ON "DUPLICATE KEY UPDATE" statement.
 }
 
 // whereHolder is the holder for where condition preparing.
@@ -77,29 +80,32 @@ func (c *Core) Table(tableNameQueryOrStruct ...interface{}) *Model {
 // Model creates and returns a new ORM model from given schema.
 // The parameter `tableNameQueryOrStruct` can be more than one table names, and also alias name, like:
 // 1. Model names:
-//    Model("user")
-//    Model("user u")
-//    Model("user, user_detail")
-//    Model("user u, user_detail ud")
-// 2. Model name with alias: Model("user", "u")
+//    db.Model("user")
+//    db.Model("user u")
+//    db.Model("user, user_detail")
+//    db.Model("user u, user_detail ud")
+// 2. Model name with alias:
+//    db.Model("user", "u")
+// 3. Model name with sub-query:
+//    db.Model("? AS a, ? AS b", subQuery1, subQuery2)
 func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 	var (
-		tableStr   string
-		tableName  string
-		extraArgs  []interface{}
-		tableNames = make([]string, len(tableNameQueryOrStruct))
+		tableStr  string
+		tableName string
+		extraArgs []interface{}
 	)
 	// Model creation with sub-query.
 	if len(tableNameQueryOrStruct) > 1 {
 		conditionStr := gconv.String(tableNameQueryOrStruct[0])
 		if gstr.Contains(conditionStr, "?") {
 			tableStr, extraArgs = formatWhere(
-				c.db, conditionStr, tableNameQueryOrStruct[1:], false,
+				c.db, conditionStr, tableNameQueryOrStruct[1:], false, "", "",
 			)
 		}
 	}
 	// Normal model creation.
 	if tableStr == "" {
+		tableNames := make([]string, len(tableNameQueryOrStruct))
 		for k, v := range tableNameQueryOrStruct {
 			if s, ok := v.(string); ok {
 				tableNames[k] = s
@@ -107,7 +113,6 @@ func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 				tableNames[k] = tableName
 			}
 		}
-
 		if len(tableNames) > 1 {
 			tableStr = fmt.Sprintf(
 				`%s AS %s`, c.QuotePrefixTableName(tableNames[0]), c.QuoteWord(tableNames[1]),
@@ -129,15 +134,34 @@ func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 	}
 }
 
+// Raw creates and returns a model based on a raw sql not a table.
+// Example:
+//     db.Raw("SELECT * FROM `user` WHERE `name` = ?", "john").Scan(&result)
+func (c *Core) Raw(rawSql string, args ...interface{}) *Model {
+	model := c.Model()
+	model.rawSql = rawSql
+	model.extraArgs = args
+	return model
+}
+
+// Raw creates and returns a model based on a raw sql not a table.
+// Example:
+//     db.Raw("SELECT * FROM `user` WHERE `name` = ?", "john").Scan(&result)
+// See Core.Raw.
+func (m *Model) Raw(rawSql string, args ...interface{}) *Model {
+	model := m.db.Raw(rawSql, args...)
+	model.db = m.db
+	model.tx = m.tx
+	return model
+}
+
+func (tx *TX) Raw(rawSql string, args ...interface{}) *Model {
+	return tx.Model().Raw(rawSql, args...)
+}
+
 // With creates and returns an ORM model based on meta data of given object.
 func (c *Core) With(objects ...interface{}) *Model {
 	return c.db.Model().With(objects...)
-}
-
-// Table is alias of tx.Model.
-// Deprecated, use Model instead.
-func (tx *TX) Table(tableNameQueryOrStruct ...interface{}) *Model {
-	return tx.Model(tableNameQueryOrStruct...)
 }
 
 // Model acts like Core.Model except it operates on transaction.

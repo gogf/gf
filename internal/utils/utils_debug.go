@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	debugKey                 = "gf.debug"             // Debug key for checking if in debug mode.
-	StackFilterKeyForGoFrame = "/github.com/gogf/gf/" // Stack filtering key for all GoFrame module paths.
+	commandEnvKeyForDebugKey = "gf.debug"            // Debug key for checking if in debug mode.
+	StackFilterKeyForGoFrame = "github.com/gogf/gf@" // Stack filtering key for all GoFrame module paths.
 )
 
 var (
@@ -22,7 +22,7 @@ var (
 
 func init() {
 	// Debugging configured.
-	value := command.GetOptWithEnv(debugKey)
+	value := command.GetOptWithEnv(commandEnvKeyForDebugKey)
 	if value == "" || value == "0" || value == "false" {
 		isDebugEnabled = false
 	} else {

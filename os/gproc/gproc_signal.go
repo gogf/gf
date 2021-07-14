@@ -7,6 +7,7 @@
 package gproc
 
 import (
+	"context"
 	"github.com/gogf/gf/internal/intlog"
 	"os"
 	"os/signal"
@@ -67,7 +68,7 @@ func Listen() {
 	for {
 		wg := sync.WaitGroup{}
 		sig = <-sigChan
-		intlog.Printf(`signal received: %s`, sig.String())
+		intlog.Printf(context.TODO(), `signal received: %s`, sig.String())
 		if handlers, ok := signalHandlerMap[sig]; ok {
 			for _, handler := range handlers {
 				wg.Add(1)

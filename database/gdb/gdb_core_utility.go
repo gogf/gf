@@ -63,12 +63,6 @@ func (c *Core) GetChars() (charLeft string, charRight string) {
 	return "", ""
 }
 
-// HandleSqlBeforeCommit handles the sql before posts it to database.
-// It does nothing in default.
-func (c *Core) HandleSqlBeforeCommit(sql string) string {
-	return sql
-}
-
 // Tables retrieves and returns the tables of current schema.
 // It's mainly used in cli tool chain for automatically generating the models.
 //

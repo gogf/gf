@@ -10,6 +10,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net/url"
 
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
@@ -36,8 +37,8 @@ func (d *DriverMysql) New(core *Core, node *ConfigNode) (DB, error) {
 // Note that it converts time.Time argument to local timezone in default.
 func (d *DriverMysql) Open(config *ConfigNode) (*sql.DB, error) {
 	var source string
-	if config.LinkInfo != "" {
-		source = config.LinkInfo
+	if config.Link != "" {
+		source = config.Link
 		// Custom changing the schema in runtime.
 		if config.Name != "" {
 			source, _ = gregex.ReplaceString(`/([\w\.\-]+)+`, "/"+config.Name, source)
@@ -47,8 +48,11 @@ func (d *DriverMysql) Open(config *ConfigNode) (*sql.DB, error) {
 			"%s:%s@tcp(%s:%s)/%s?charset=%s",
 			config.User, config.Pass, config.Host, config.Port, config.Name, config.Charset,
 		)
+		if config.Timezone != "" {
+			source = fmt.Sprintf("%s&loc=%s", source, url.QueryEscape(config.Timezone))
+		}
 	}
-	intlog.Printf("Open: %s", source)
+	intlog.Printf(d.GetCtx(), "Open: %s", source)
 	if db, err := sql.Open("mysql", source); err == nil {
 		return db, nil
 	} else {
@@ -56,10 +60,10 @@ func (d *DriverMysql) Open(config *ConfigNode) (*sql.DB, error) {
 	}
 }
 
-// FilteredLinkInfo retrieves and returns filtered `linkInfo` that can be using for
+// FilteredLink retrieves and returns filtered `linkInfo` that can be using for
 // logging or tracing purpose.
-func (d *DriverMysql) FilteredLinkInfo() string {
-	linkInfo := d.GetConfig().LinkInfo
+func (d *DriverMysql) FilteredLink() string {
+	linkInfo := d.GetConfig().Link
 	if linkInfo == "" {
 		return ""
 	}
@@ -76,9 +80,9 @@ func (d *DriverMysql) GetChars() (charLeft string, charRight string) {
 	return "`", "`"
 }
 
-// HandleSqlBeforeCommit handles the sql before posts it to database.
-func (d *DriverMysql) HandleSqlBeforeCommit(ctx context.Context, link Link, sql string, args []interface{}) (string, []interface{}) {
-	return sql, args
+// DoCommit handles the sql before posts it to database.
+func (d *DriverMysql) DoCommit(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
+	return d.Core.DoCommit(ctx, link, sql, args)
 }
 
 // Tables retrieves and returns the tables of current schema.

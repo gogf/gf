@@ -10,9 +10,9 @@ func main() {
 	//db := g.DB()
 
 	gdb.AddDefaultConfigNode(gdb.ConfigNode{
-		LinkInfo: "root:12345678@tcp(127.0.0.1:3306)/test?parseTime=true&loc=Local",
-		Type:     "mysql",
-		Charset:  "utf8",
+		Link:    "root:12345678@tcp(127.0.0.1:3306)/test?parseTime=true&loc=Local",
+		Type:    "mysql",
+		Charset: "utf8",
 	})
 	db, _ := gdb.New()
 

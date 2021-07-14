@@ -8,10 +8,13 @@ package gdb_test
 
 import (
 	"database/sql"
+	"github.com/gogf/gf/database/gdb"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/test/gtest"
 	"github.com/gogf/gf/util/gconv"
+	"reflect"
 	"testing"
 )
 
@@ -121,7 +124,7 @@ func Test_Struct_Pointer_Attribute(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		user := new(User)
-		err := db.Model(table).Struct(user, "id=1")
+		err := db.Model(table).Scan(user, "id=1")
 		t.AssertNil(err)
 		t.Assert(*user.Id, 1)
 		t.Assert(*user.Passport, "user_1")
@@ -130,7 +133,7 @@ func Test_Struct_Pointer_Attribute(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		var user *User
-		err := db.Model(table).Struct(&user, "id=1")
+		err := db.Model(table).Scan(&user, "id=1")
 		t.AssertNil(err)
 		t.Assert(*user.Id, 1)
 		t.Assert(*user.Passport, "user_1")
@@ -201,7 +204,7 @@ func Test_Structs_Pointer_Attribute(t *testing.T) {
 	// Structs
 	gtest.C(t, func(t *gtest.T) {
 		users := make([]User, 0)
-		err := db.Model(table).Structs(&users, "id < 3")
+		err := db.Model(table).Scan(&users, "id < 3")
 		t.AssertNil(err)
 		t.Assert(len(users), 2)
 		t.Assert(*users[0].Id, 1)
@@ -211,7 +214,7 @@ func Test_Structs_Pointer_Attribute(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		users := make([]*User, 0)
-		err := db.Model(table).Structs(&users, "id < 3")
+		err := db.Model(table).Scan(&users, "id < 3")
 		t.AssertNil(err)
 		t.Assert(len(users), 2)
 		t.Assert(*users[0].Id, 1)
@@ -221,7 +224,7 @@ func Test_Structs_Pointer_Attribute(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		var users []User
-		err := db.Model(table).Structs(&users, "id < 3")
+		err := db.Model(table).Scan(&users, "id < 3")
 		t.AssertNil(err)
 		t.Assert(len(users), 2)
 		t.Assert(*users[0].Id, 1)
@@ -231,7 +234,7 @@ func Test_Structs_Pointer_Attribute(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		var users []*User
-		err := db.Model(table).Structs(&users, "id < 3")
+		err := db.Model(table).Scan(&users, "id < 3")
 		t.AssertNil(err)
 		t.Assert(len(users), 2)
 		t.Assert(*users[0].Id, 1)
@@ -254,7 +257,7 @@ func Test_Struct_Empty(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		user := new(User)
-		err := db.Model(table).Where("id=100").Struct(user)
+		err := db.Model(table).Where("id=100").Scan(user)
 		t.Assert(err, sql.ErrNoRows)
 		t.AssertNE(user, nil)
 	})
@@ -269,7 +272,7 @@ func Test_Struct_Empty(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		var user *User
-		err := db.Model(table).Where("id=100").Struct(&user)
+		err := db.Model(table).Where("id=100").Scan(&user)
 		t.AssertNil(err)
 		t.Assert(user, nil)
 	})
@@ -395,17 +398,17 @@ type User struct {
 }
 
 func (user *User) UnmarshalValue(value interface{}) error {
-	switch result := value.(type) {
-	case map[string]interface{}:
-		user.Id = result["id"].(int)
-		user.Passport = result["passport"].(string)
-		user.Password = ""
-		user.Nickname = result["nickname"].(string)
-		user.CreateTime = gtime.New(result["create_time"])
+	if record, ok := value.(gdb.Record); ok {
+		*user = User{
+			Id:         record["id"].Int(),
+			Passport:   record["passport"].String(),
+			Password:   "",
+			Nickname:   record["nickname"].String(),
+			CreateTime: record["create_time"].GTime(),
+		}
 		return nil
-	default:
-		return gconv.Struct(value, user)
 	}
+	return gerror.Newf(`unsupported value type for UnmarshalValue: %v`, reflect.TypeOf(value))
 }
 
 func Test_Model_Scan_UnmarshalValue(t *testing.T) {
@@ -450,5 +453,29 @@ func Test_Model_Scan_Map(t *testing.T) {
 		t.Assert(users[9].Password, "")
 		t.Assert(users[9].Nickname, "name_10")
 		t.Assert(users[9].CreateTime.String(), CreateTime)
+	})
+}
+
+func Test_Scan_AutoFilteringByStructAttributes(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	type User struct {
+		Id       int
+		Passport string
+	}
+	//db.SetDebug(true)
+	gtest.C(t, func(t *gtest.T) {
+		var user *User
+		err := db.Model(table).OrderAsc("id").Scan(&user)
+		t.AssertNil(err)
+		t.Assert(user.Id, 1)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var users []User
+		err := db.Model(table).OrderAsc("id").Scan(&users)
+		t.AssertNil(err)
+		t.Assert(len(users), TableSize)
+		t.Assert(users[0].Id, 1)
 	})
 }

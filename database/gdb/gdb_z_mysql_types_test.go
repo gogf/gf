@@ -87,7 +87,7 @@ func Test_Types(t *testing.T) {
 			TinyInt bool
 		}
 		var obj *T
-		err = db.Model("types").Struct(&obj)
+		err = db.Model("types").Scan(&obj)
 		t.AssertNil(err)
 		t.Assert(obj.Id, 1)
 		t.Assert(obj.Blob, data["blob"])

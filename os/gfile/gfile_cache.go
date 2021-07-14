@@ -14,19 +14,19 @@ import (
 )
 
 const (
-	// Default expire time for file content caching in seconds.
-	gDEFAULT_CACHE_EXPIRE = time.Minute
+	defaultCacheExpire    = time.Minute      // defaultCacheExpire is the expire time for file content caching in seconds.
+	commandEnvKeyForCache = "gf.gfile.cache" // commandEnvKeyForCache is the configuration key for command argument or environment configuring cache expire duration.
 )
 
 var (
 	// Default expire time for file content caching.
-	cacheExpire = gcmd.GetOptWithEnv("gf.gfile.cache", gDEFAULT_CACHE_EXPIRE).Duration()
+	cacheExpire = gcmd.GetOptWithEnv(commandEnvKeyForCache, defaultCacheExpire).Duration()
 
 	// internalCache is the memory cache for internal usage.
 	internalCache = gcache.New()
 )
 
-// GetContents returns string content of given file by <path> from cache.
+// GetContentsWithCache returns string content of given file by <path> from cache.
 // If there's no content in the cache, it will read it from disk file specified by <path>.
 // The parameter <expire> specifies the caching time for this file content in seconds.
 func GetContentsWithCache(path string, duration ...time.Duration) string {
@@ -62,5 +62,5 @@ func GetBytesWithCache(path string, duration ...time.Duration) []byte {
 
 // cacheKey produces the cache key for gcache.
 func cacheKey(path string) string {
-	return "gf.gfile.cache:" + path
+	return commandEnvKeyForCache + path
 }

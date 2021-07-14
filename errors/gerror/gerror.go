@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package errors provides simple functions to manipulate errors.
+// Package gerror provides simple functions to manipulate errors.
 //
 // Very note that, this package is quite a base package, which should not import extra
 // packages except standard packages, to avoid cycle imports.
@@ -237,7 +237,7 @@ func WrapCodeSkipf(code, skip int, err error, format string, args ...interface{}
 	}
 }
 
-// Cause returns the error code of current error.
+// Code returns the error code of current error.
 // It returns -1 if it has no error code or it does not implements interface Code.
 func Code(err error) int {
 	if err != nil {

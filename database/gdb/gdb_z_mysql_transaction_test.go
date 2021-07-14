@@ -163,7 +163,7 @@ func Test_TX_BatchInsert(t *testing.T) {
 		if err != nil {
 			gtest.Error(err)
 		}
-		if _, err := tx.BatchInsert(table, g.List{
+		if _, err := tx.Insert(table, g.List{
 			{
 				"id":          2,
 				"passport":    "t",
@@ -201,7 +201,7 @@ func Test_TX_BatchReplace(t *testing.T) {
 		if err != nil {
 			gtest.Error(err)
 		}
-		if _, err := tx.BatchReplace(table, g.List{
+		if _, err := tx.Replace(table, g.List{
 			{
 				"id":          2,
 				"passport":    "USER_2",
@@ -244,7 +244,7 @@ func Test_TX_BatchSave(t *testing.T) {
 		if err != nil {
 			gtest.Error(err)
 		}
-		if _, err := tx.BatchSave(table, g.List{
+		if _, err := tx.Save(table, g.List{
 			{
 				"id":          4,
 				"passport":    "USER_4",
@@ -349,7 +349,7 @@ func Test_TX_Update(t *testing.T) {
 		if err := tx.Commit(); err != nil {
 			gtest.Error(err)
 		}
-		_, err = tx.Table(table).Fields("create_time").Where("id", 3).Value()
+		_, err = tx.Model(table).Fields("create_time").Where("id", 3).Value()
 		t.AssertNE(err, nil)
 
 		if value, err := db.Model(table).Fields("create_time").Where("id", 3).Value(); err != nil {
@@ -666,7 +666,6 @@ func Test_TX_GetScan(t *testing.T) {
 }
 
 func Test_TX_Delete(t *testing.T) {
-
 	gtest.C(t, func(t *gtest.T) {
 		table := createInitTable()
 		defer dropTable(table)
@@ -685,6 +684,8 @@ func Test_TX_Delete(t *testing.T) {
 		} else {
 			t.Assert(n, 0)
 		}
+
+		t.Assert(tx.IsClosed(), true)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -697,7 +698,7 @@ func Test_TX_Delete(t *testing.T) {
 		if _, err := tx.Delete(table, 1); err != nil {
 			gtest.Error(err)
 		}
-		if n, err := tx.Table(table).Count(); err != nil {
+		if n, err := tx.Model(table).Count(); err != nil {
 			gtest.Error(err)
 		} else {
 			t.Assert(n, 0)
@@ -711,6 +712,8 @@ func Test_TX_Delete(t *testing.T) {
 			t.Assert(n, TableSize)
 			t.AssertNE(n, 0)
 		}
+
+		t.Assert(tx.IsClosed(), true)
 	})
 }
 
@@ -721,7 +724,7 @@ func Test_Transaction(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		ctx := context.TODO()
 		err := db.Transaction(ctx, func(ctx context.Context, tx *gdb.TX) error {
-			if _, err := tx.Replace(table, g.Map{
+			if _, err := tx.Ctx(ctx).Replace(table, g.Map{
 				"id":          1,
 				"passport":    "USER_1",
 				"password":    "PASS_1",
@@ -730,11 +733,12 @@ func Test_Transaction(t *testing.T) {
 			}); err != nil {
 				t.Error(err)
 			}
+			t.Assert(tx.IsClosed(), false)
 			return gerror.New("error")
 		})
 		t.AssertNE(err, nil)
 
-		if value, err := db.Model(table).Fields("nickname").Where("id", 1).Value(); err != nil {
+		if value, err := db.Model(table).Ctx(ctx).Fields("nickname").Where("id", 1).Value(); err != nil {
 			gtest.Error(err)
 		} else {
 			t.Assert(value.String(), "name_1")
@@ -956,8 +960,8 @@ func Test_Transaction_Nested_TX_Transaction_UseDB(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
-	db.SetDebug(true)
-	defer db.SetDebug(false)
+	//db.SetDebug(true)
+	//defer db.SetDebug(false)
 
 	gtest.C(t, func(t *gtest.T) {
 		var (

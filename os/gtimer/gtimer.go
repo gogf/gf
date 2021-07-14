@@ -19,7 +19,6 @@
 package gtimer
 
 import (
-	"fmt"
 	"github.com/gogf/gf/container/gtype"
 	"math"
 	"sync"
@@ -43,21 +42,19 @@ type TimerOptions struct {
 }
 
 const (
-	StatusReady          = 0             // Job or Timer is ready for running.
-	StatusRunning        = 1             // Job or Timer is already running.
-	StatusStopped        = 2             // Job or Timer is stopped.
-	StatusClosed         = -1            // Job or Timer is closed and waiting to be deleted.
-	panicExit            = "exit"        // panicExit is used for custom job exit with panic.
-	defaultTimes         = math.MaxInt32 // defaultTimes is the default limit running times, a big number.
-	defaultTimerInterval = 100           // defaultTimerInterval is the default timer interval in milliseconds.
-	cmdEnvKey            = "gf.gtimer"   // Configuration key for command argument or environment.
+	StatusReady              = 0                    // Job or Timer is ready for running.
+	StatusRunning            = 1                    // Job or Timer is already running.
+	StatusStopped            = 2                    // Job or Timer is stopped.
+	StatusClosed             = -1                   // Job or Timer is closed and waiting to be deleted.
+	panicExit                = "exit"               // panicExit is used for custom job exit with panic.
+	defaultTimes             = math.MaxInt32        // defaultTimes is the default limit running times, a big number.
+	defaultTimerInterval     = 100                  // defaultTimerInterval is the default timer interval in milliseconds.
+	commandEnvKeyForInterval = "gf.gtimer.interval" // commandEnvKeyForInterval is the key for command argument or environment configuring default interval duration for timer.
 )
 
 var (
 	defaultTimer    = New()
-	defaultInterval = gcmd.GetOptWithEnv(
-		fmt.Sprintf("%s.interval", cmdEnvKey), defaultTimerInterval,
-	).Duration() * time.Millisecond
+	defaultInterval = gcmd.GetOptWithEnv(commandEnvKeyForInterval, defaultTimerInterval).Duration() * time.Millisecond
 )
 
 // DefaultOptions creates and returns a default options object for Timer creation.
