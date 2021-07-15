@@ -7,6 +7,7 @@
 package glog
 
 import (
+	"github.com/fatih/color"
 	"io"
 	"strings"
 	"time"
@@ -20,26 +21,28 @@ import (
 
 // Config is the configuration object for logger.
 type Config struct {
-	Handlers             []Handler      `json:"-"`                    // Logger handlers which implement feature similar as middleware.
-	Writer               io.Writer      `json:"-"`                    // Customized io.Writer.
-	Flags                int            `json:"flags"`                // Extra flags for logging output features.
-	Path                 string         `json:"path"`                 // Logging directory path.
-	File                 string         `json:"file"`                 // Format for logging file.
-	Level                int            `json:"level"`                // Output level.
-	Prefix               string         `json:"prefix"`               // Prefix string for every logging content.
-	StSkip               int            `json:"stSkip"`               // Skip count for stack.
-	StStatus             int            `json:"stStatus"`             // Stack status(1: enabled - default; 0: disabled)
-	StFilter             string         `json:"stFilter"`             // Stack string filter.
-	CtxKeys              []interface{}  `json:"ctxKeys"`              // Context keys for logging, which is used for value retrieving from context.
-	HeaderPrint          bool           `json:"header"`               // Print header or not(true in default).
-	StdoutPrint          bool           `json:"stdout"`               // Output to stdout or not(true in default).
-	LevelPrefixes        map[int]string `json:"levelPrefixes"`        // Logging level to its prefix string mapping.
-	RotateSize           int64          `json:"rotateSize"`           // Rotate the logging file if its size > 0 in bytes.
-	RotateExpire         time.Duration  `json:"rotateExpire"`         // Rotate the logging file if its mtime exceeds this duration.
-	RotateBackupLimit    int            `json:"rotateBackupLimit"`    // Max backup for rotated files, default is 0, means no backups.
-	RotateBackupExpire   time.Duration  `json:"rotateBackupExpire"`   // Max expire for rotated files, which is 0 in default, means no expiration.
-	RotateBackupCompress int            `json:"rotateBackupCompress"` // Compress level for rotated files using gzip algorithm. It's 0 in default, means no compression.
-	RotateCheckInterval  time.Duration  `json:"rotateCheckInterval"`  // Asynchronous checks the backups and expiration at intervals. It's 1 hour in default.
+	Handlers             []Handler       `json:"-"`                    // Logger handlers which implement feature similar as middleware.
+	Writer               io.Writer       `json:"-"`                    // Customized io.Writer.
+	Flags                int             `json:"flags"`                // Extra flags for logging output features.
+	Path                 string          `json:"path"`                 // Logging directory path.
+	File                 string          `json:"file"`                 // Format for logging file.
+	Level                int             `json:"level"`                // Output level.
+	Prefix               string          `json:"prefix"`               // Prefix string for every logging content.
+	StSkip               int             `json:"stSkip"`               // Skip count for stack.
+	StStatus             int             `json:"stStatus"`             // Stack status(1: enabled - default; 0: disabled)
+	StFilter             string          `json:"stFilter"`             // Stack string filter.
+	CtxKeys              []interface{}   `json:"ctxKeys"`              // Context keys for logging, which is used for value retrieving from context.
+	HeaderPrint          bool            `json:"header"`               // Print header or not(true in default).
+	StdoutPrint          bool            `json:"stdout"`               // Output to stdout or not(true in default).
+	LevelPrefixes        map[int]string  `json:"levelPrefixes"`        // Logging level to its prefix string mapping.
+	RotateSize           int64           `json:"rotateSize"`           // Rotate the logging file if its size > 0 in bytes.
+	RotateExpire         time.Duration   `json:"rotateExpire"`         // Rotate the logging file if its mtime exceeds this duration.
+	RotateBackupLimit    int             `json:"rotateBackupLimit"`    // Max backup for rotated files, default is 0, means no backups.
+	RotateBackupExpire   time.Duration   `json:"rotateBackupExpire"`   // Max expire for rotated files, which is 0 in default, means no expiration.
+	RotateBackupCompress int             `json:"rotateBackupCompress"` // Compress level for rotated files using gzip algorithm. It's 0 in default, means no compression.
+	RotateCheckInterval  time.Duration   `json:"rotateCheckInterval"`  // Asynchronizely checks the backups and expiration at intervals. It's 1 hour in default.
+	FileColorEnable      bool            `json:"fileColorEnable"`      // Logging level prefix with color or not (false in default).
+	currentColor         color.Attribute `json:"-"`
 }
 
 // DefaultConfig returns the default configuration for logger.

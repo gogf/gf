@@ -9,6 +9,9 @@ package glog
 import (
 	"bytes"
 	"context"
+	"github.com/fatih/color"
+	"github.com/gogf/gf/internal/intlog"
+	"os"
 	"time"
 )
 
@@ -45,9 +48,39 @@ func (i *HandlerInput) addStringToBuffer(buffer *bytes.Buffer, s string) {
 func (i *HandlerInput) Buffer() *bytes.Buffer {
 	buffer := bytes.NewBuffer(nil)
 	buffer.WriteString(i.TimeFormat)
-	if i.LevelFormat != "" {
-		i.addStringToBuffer(buffer, i.LevelFormat)
+	levelString := i.LevelFormat
+	if i.logger.config.FileColorEnable {
+		fg := i.getLevelFormatColor()
+		levelString = color.New(fg).Sprintf(i.LevelFormat)
 	}
+	i.addStringToBuffer(buffer, levelString)
+	msg := i.GetContent()
+	i.addStringToBuffer(buffer, msg.String())
+	return buffer
+}
+
+// Stdout print log to console
+func (i *HandlerInput) Stdout() error {
+	if _, err := os.Stdout.Write([]byte(i.TimeFormat)); err != nil {
+		intlog.Error(i.Ctx, err)
+		return err
+	}
+	fg := i.getLevelFormatColor()
+	if _, err := color.New(fg).Print(" " + i.LevelFormat + " "); err != nil {
+		intlog.Error(i.Ctx, err)
+		return err
+	}
+	msg := i.GetContent()
+	if _, err := os.Stdout.Write(msg.Bytes()); err != nil {
+		intlog.Error(i.Ctx, err)
+		return err
+	}
+	return nil
+}
+
+// GetContent returns the primary content.
+func (i *HandlerInput) GetContent() *bytes.Buffer {
+	buffer := bytes.NewBuffer(nil)
 	if i.CallerFunc != "" {
 		i.addStringToBuffer(buffer, i.CallerFunc)
 	}
@@ -65,6 +98,15 @@ func (i *HandlerInput) Buffer() *bytes.Buffer {
 	}
 	i.addStringToBuffer(buffer, "\n")
 	return buffer
+}
+
+// getLevelFormatColor returns the prefix string color.
+func (i *HandlerInput) getLevelFormatColor() color.Attribute {
+	fg := defaultLevelColor[i.Level]
+	if i.logger.config.currentColor != 0 {
+		fg = i.logger.config.currentColor
+	}
+	return fg
 }
 
 func (i *HandlerInput) String() string {
