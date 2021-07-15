@@ -8,7 +8,6 @@ package glog
 
 import (
 	"context"
-	"github.com/fatih/color"
 	"github.com/gogf/gf/internal/intlog"
 	"io"
 
@@ -244,18 +243,5 @@ func (l *Logger) Async(enabled ...bool) *Logger {
 	} else {
 		logger.SetAsync(true)
 	}
-	return logger
-}
-
-// Color is a chaining function,
-// which set level prefix color logging output feature.
-func (l *Logger) Color(color color.Attribute) *Logger {
-	logger := (*Logger)(nil)
-	if l.parent == nil {
-		logger = l.Clone()
-	} else {
-		logger = l
-	}
-	logger.config.currentColor = color
 	return logger
 }

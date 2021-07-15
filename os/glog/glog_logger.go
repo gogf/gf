@@ -7,7 +7,6 @@
 package glog
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"github.com/gogf/gf/container/gtype"
@@ -119,6 +118,7 @@ func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
 			index:  -1,
 			Ctx:    ctx,
 			Time:   now,
+			Color:  defaultLevelColor[level],
 			Level:  level,
 		}
 	)
@@ -219,30 +219,48 @@ func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
 	}
 }
 
-// printToWriter writes buffer to writer.
-func (l *Logger) printToWriter(ctx context.Context, input *HandlerInput) {
+// doPrint outputs the logging content according configuration.
+func (l *Logger) doPrint(ctx context.Context, input *HandlerInput) {
 	if l.config.Writer == nil {
 		// Output content to disk file.
 		if l.config.Path != "" {
-			l.printToFile(ctx, input.Time, input.Buffer())
+			l.printToFile(ctx, input.Time, input)
 		}
 		// Allow output to stdout?
 		if l.config.StdoutPrint {
-			if err := input.Stdout(); err != nil {
-				intlog.Error(ctx, err)
-			}
+			l.printToStdout(ctx, input)
 		}
 	} else {
-		if _, err := l.config.Writer.Write(input.Buffer().Bytes()); err != nil {
-			// panic(err)
+		// Output to custom writer.
+		l.printToWriter(ctx, input)
+	}
+}
+
+// printToWriter writes buffer to writer.
+func (l *Logger) printToWriter(ctx context.Context, input *HandlerInput) {
+	if l.config.Writer != nil {
+		var (
+			buffer = input.getBuffer(l.config.WriterColorEnable)
+		)
+		if _, err := l.config.Writer.Write(buffer.Bytes()); err != nil {
+			intlog.Error(ctx, err)
+		}
+	}
+}
+
+// printToStdout outputs logging content to stdout.
+func (l *Logger) printToStdout(ctx context.Context, input *HandlerInput) {
+	if l.config.StdoutPrint {
+		if _, err := os.Stdout.Write(input.getBuffer(true).Bytes()); err != nil {
 			intlog.Error(ctx, err)
 		}
 	}
 }
 
 // printToFile outputs logging content to disk file.
-func (l *Logger) printToFile(ctx context.Context, t time.Time, buffer *bytes.Buffer) {
+func (l *Logger) printToFile(ctx context.Context, t time.Time, input *HandlerInput) {
 	var (
+		buffer        = input.getBuffer(l.config.WriterColorEnable)
 		logFilePath   = l.getFilePath(t)
 		memoryLockKey = memoryLockPrefixForPrintingToFile + logFilePath
 	)
