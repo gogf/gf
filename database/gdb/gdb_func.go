@@ -83,8 +83,9 @@ func (m *Model) guessPrimaryTableName(tableStr string) string {
 	)
 	if len(array3) >= 2 {
 		guessedTableName = array3[1]
+	} else {
+		guessedTableName = array3[0]
 	}
-	guessedTableName = array3[0]
 	charL, charR := m.db.GetChars()
 	if charL != "" || charR != "" {
 		guessedTableName = gstr.Trim(guessedTableName, charL+charR)

@@ -103,7 +103,9 @@ func (m *Model) filterDataForInsertOrUpdate(data interface{}) (interface{}, erro
 // Note that, it does not filter list item, which is also type of map, for "omit empty" feature.
 func (m *Model) doMappingAndFilterForInsertOrUpdateDataMap(data Map, allowOmitEmpty bool) (Map, error) {
 	var err error
-	data, err = m.db.GetCore().mappingAndFilterData(m.schema, m.tables, data, m.filter)
+	data, err = m.db.GetCore().mappingAndFilterData(
+		m.schema, m.guessPrimaryTableName(m.tablesInit), data, m.filter,
+	)
 	if err != nil {
 		return nil, err
 	}
