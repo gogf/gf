@@ -9,7 +9,7 @@ package glog
 import "github.com/gogf/gf/container/gmap"
 
 const (
-	// Default group name for instance usage.
+	// DefaultName is the default group name for instance usage.
 	DefaultName = "default"
 )
 
