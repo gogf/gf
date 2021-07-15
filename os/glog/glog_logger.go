@@ -43,7 +43,6 @@ const (
 	defaultFileExpire                 = time.Minute
 	pathFilterKey                     = "/os/glog/glog"
 	memoryLockPrefixForPrintingToFile = "glog.printToFile:"
-	mustWithColor                     = true
 )
 
 const (
