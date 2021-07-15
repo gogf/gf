@@ -7,8 +7,13 @@
 package gtimer
 
 import (
+	"context"
+	"fmt"
 	"github.com/gogf/gf/container/gtype"
+	"github.com/gogf/gf/internal/intlog"
 	"math"
+	"reflect"
+	"runtime"
 )
 
 // Entry is the timing job.
@@ -56,7 +61,13 @@ func (entry *Entry) Run() {
 				entry.SetStatus(StatusReady)
 			}
 		}()
+		intlog.PrintFunc(context.TODO(), func() string {
+			return fmt.Sprintf(`job start: %s`, runtime.FuncForPC(reflect.ValueOf(entry.job).Pointer()).Name())
+		})
 		entry.job()
+		intlog.PrintFunc(context.TODO(), func() string {
+			return fmt.Sprintf(`job  done: %s`, runtime.FuncForPC(reflect.ValueOf(entry.job).Pointer()).Name())
+		})
 	}()
 }
 
