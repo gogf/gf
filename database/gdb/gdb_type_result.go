@@ -13,6 +13,11 @@ import (
 	"math"
 )
 
+// Interface converts and returns `r` as type of interface{}.
+func (r Result) Interface() interface{} {
+	return r
+}
+
 // IsEmpty checks and returns whether `r` is empty.
 func (r Result) IsEmpty() bool {
 	return r.Len() == 0

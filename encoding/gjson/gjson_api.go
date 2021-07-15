@@ -18,7 +18,13 @@ import (
 )
 
 // Value returns the json value.
+// Deprecated, use Interface instead.
 func (j *Json) Value() interface{} {
+	return j.Interface()
+}
+
+// Interface returns the json value.
+func (j *Json) Interface() interface{} {
 	j.mu.RLock()
 	defer j.mu.RUnlock()
 	return *(j.p)

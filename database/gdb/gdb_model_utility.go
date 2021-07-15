@@ -21,15 +21,12 @@ import (
 // schema.
 //
 // Also see DriverMysql.TableFields.
-func (m *Model) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
-	charL, charR := m.db.GetChars()
-	if charL != "" || charR != "" {
-		table = gstr.Trim(table, charL+charR)
+func (m *Model) TableFields(tableStr string, schema ...string) (fields map[string]*TableField, err error) {
+	useSchema := m.schema
+	if len(schema) > 0 && schema[0] != "" {
+		useSchema = schema[0]
 	}
-	if !gregex.IsMatchString(regularFieldNameRegPattern, table) {
-		return nil, nil
-	}
-	return m.db.TableFields(m.GetCtx(), table, schema...)
+	return m.db.TableFields(m.GetCtx(), m.guessPrimaryTableName(tableStr), useSchema)
 }
 
 // getModel creates and returns a cloned model of current model if `safe` is true, or else it returns
@@ -47,7 +44,7 @@ func (m *Model) getModel() *Model {
 // ID        -> id
 // NICK_Name -> nickname
 func (m *Model) mappingAndFilterToTableFields(fields []string, filter bool) []string {
-	fieldsMap, err := m.TableFields(m.tables)
+	fieldsMap, err := m.TableFields(m.tablesInit)
 	if err != nil || len(fieldsMap) == 0 {
 		return fields
 	}
@@ -201,7 +198,7 @@ func (m *Model) getLink(master bool) Link {
 // It parses m.tables to retrieve the primary table name, supporting m.tables like:
 // "user", "user u", "user as u, user_detail as ud".
 func (m *Model) getPrimaryKey() string {
-	table := gstr.SplitAndTrim(m.tables, " ")[0]
+	table := gstr.SplitAndTrim(m.tablesInit, " ")[0]
 	tableFields, err := m.TableFields(table)
 	if err != nil {
 		return ""

@@ -96,8 +96,8 @@ func New() (*Watcher, error) {
 	return w, nil
 }
 
-// Add monitors <path> using default watcher with callback function <callbackFunc>.
-// The optional parameter <recursive> specifies whether monitoring the <path> recursively, which is true in default.
+// Add monitors `path` using default watcher with callback function `callbackFunc`.
+// The optional parameter `recursive` specifies whether monitoring the `path` recursively, which is true in default.
 func Add(path string, callbackFunc func(event *Event), recursive ...bool) (callback *Callback, err error) {
 	w, err := getDefaultWatcher()
 	if err != nil {
@@ -106,11 +106,11 @@ func Add(path string, callbackFunc func(event *Event), recursive ...bool) (callb
 	return w.Add(path, callbackFunc, recursive...)
 }
 
-// AddOnce monitors <path> using default watcher with callback function <callbackFunc> only once using unique name <name>.
-// If AddOnce is called multiple times with the same <name> parameter, <path> is only added to monitor once. It returns error
-// if it's called twice with the same <name>.
+// AddOnce monitors `path` using default watcher with callback function `callbackFunc` only once using unique name `name`.
+// If AddOnce is called multiple times with the same `name` parameter, `path` is only added to monitor once. It returns error
+// if it's called twice with the same `name`.
 //
-// The optional parameter <recursive> specifies whether monitoring the <path> recursively, which is true in default.
+// The optional parameter `recursive` specifies whether monitoring the `path` recursively, which is true in default.
 func AddOnce(name, path string, callbackFunc func(event *Event), recursive ...bool) (callback *Callback, err error) {
 	w, err := getDefaultWatcher()
 	if err != nil {
@@ -119,7 +119,7 @@ func AddOnce(name, path string, callbackFunc func(event *Event), recursive ...bo
 	return w.AddOnce(name, path, callbackFunc, recursive...)
 }
 
-// Remove removes all monitoring callbacks of given <path> from watcher recursively.
+// Remove removes all monitoring callbacks of given `path` from watcher recursively.
 func Remove(path string) error {
 	w, err := getDefaultWatcher()
 	if err != nil {

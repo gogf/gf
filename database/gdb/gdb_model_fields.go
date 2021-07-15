@@ -90,13 +90,13 @@ func (m *Model) FieldsStr(prefix ...string) string {
 }
 
 // GetFieldsStr retrieves and returns all fields from the table, joined with char ','.
-// The optional parameter `prefix` specifies the prefix for each field, eg: FieldsStr("u.").
+// The optional parameter `prefix` specifies the prefix for each field, eg: GetFieldsStr("u.").
 func (m *Model) GetFieldsStr(prefix ...string) string {
 	prefixStr := ""
 	if len(prefix) > 0 {
 		prefixStr = prefix[0]
 	}
-	tableFields, err := m.TableFields(m.tables)
+	tableFields, err := m.TableFields(m.tablesInit)
 	if err != nil {
 		panic(err)
 	}
@@ -136,7 +136,7 @@ func (m *Model) GetFieldsExStr(fields string, prefix ...string) string {
 	if len(prefix) > 0 {
 		prefixStr = prefix[0]
 	}
-	tableFields, err := m.TableFields(m.tables)
+	tableFields, err := m.TableFields(m.tablesInit)
 	if err != nil {
 		panic(err)
 	}
@@ -164,7 +164,7 @@ func (m *Model) GetFieldsExStr(fields string, prefix ...string) string {
 
 // HasField determine whether the field exists in the table.
 func (m *Model) HasField(field string) (bool, error) {
-	tableFields, err := m.TableFields(m.tables)
+	tableFields, err := m.TableFields(m.tablesInit)
 	if err != nil {
 		return false, err
 	}

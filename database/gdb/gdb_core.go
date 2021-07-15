@@ -353,7 +353,7 @@ func (c *Core) Save(table string, data interface{}, batch ...int) (sql.Result, e
 	return c.Model(table).Data(data).Save()
 }
 
-// DoInsert inserts or updates data for given table.
+// DoInsert inserts or updates data forF given table.
 // This function is usually used for custom interface definition, you do not need call it manually.
 // The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
 // Eg:
@@ -510,29 +510,34 @@ func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data inter
 	switch kind {
 	case reflect.Map, reflect.Struct:
 		var (
-			fields  []string
-			dataMap = ConvertDataForTableRecord(data)
+			fields         []string
+			dataMap        = ConvertDataForTableRecord(data)
+			counterHandler = func(column string, counter Counter) {
+				if counter.Value != 0 {
+					var (
+						column    = c.QuoteWord(column)
+						columnRef = c.QuoteWord(counter.Field)
+						columnVal = counter.Value
+						operator  = "+"
+					)
+					if columnVal < 0 {
+						operator = "-"
+						columnVal = -columnVal
+					}
+					fields = append(fields, fmt.Sprintf("%s=%s%s?", column, columnRef, operator))
+					params = append(params, columnVal)
+				}
+			}
 		)
+
 		for k, v := range dataMap {
 			switch value := v.(type) {
 			case *Counter:
-				if value.Value != 0 {
-					column := k
-					if value.Field != "" {
-						column = c.QuoteWord(value.Field)
-					}
-					fields = append(fields, fmt.Sprintf("%s=%s+?", column, column))
-					params = append(params, value.Value)
-				}
+				counterHandler(k, *value)
+
 			case Counter:
-				if value.Value != 0 {
-					column := k
-					if value.Field != "" {
-						column = c.QuoteWord(value.Field)
-					}
-					fields = append(fields, fmt.Sprintf("%s=%s+?", column, column))
-					params = append(params, value.Value)
-				}
+				counterHandler(k, value)
+
 			default:
 				if s, ok := v.(Raw); ok {
 					fields = append(fields, c.QuoteWord(k)+"="+gconv.String(s))
@@ -543,6 +548,7 @@ func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data inter
 			}
 		}
 		updates = strings.Join(fields, ",")
+
 	default:
 		updates = gconv.String(data)
 	}

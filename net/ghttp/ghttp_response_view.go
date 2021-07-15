@@ -10,6 +10,7 @@ package ghttp
 import (
 	"github.com/gogf/gf/os/gcfg"
 	"github.com/gogf/gf/os/gview"
+	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/gmode"
 	"github.com/gogf/gf/util/gutil"
 )
@@ -62,7 +63,7 @@ func (r *Response) ParseTpl(tpl string, params ...gview.Params) (string, error) 
 	return r.Request.GetView().Parse(r.Request.Context(), tpl, r.buildInVars(params...))
 }
 
-// ParseDefault parses the default template file with params.
+// ParseTplDefault parses the default template file with params.
 func (r *Response) ParseTplDefault(params ...gview.Params) (string, error) {
 	return r.Request.GetView().ParseDefault(r.Request.Context(), r.buildInVars(params...))
 }
@@ -81,17 +82,18 @@ func (r *Response) buildInVars(params ...map[string]interface{}) map[string]inte
 		gutil.MapMerge(m, params[0])
 	}
 	// Retrieve custom template variables from request object.
+	sessionMap := gconv.MapDeep(r.Request.Session.Map())
 	gutil.MapMerge(m, map[string]interface{}{
 		"Form":    r.Request.GetFormMap(),
 		"Query":   r.Request.GetQueryMap(),
 		"Request": r.Request.GetMap(),
 		"Cookie":  r.Request.Cookie.Map(),
-		"Session": r.Request.Session.Map(),
+		"Session": sessionMap,
 	})
 	// Note that it should assign no Config variable to template
 	// if there's no configuration file.
 	if c := gcfg.Instance(); c.Available() {
-		m["Config"] = c.GetMap(".")
+		m["Config"] = c.Map()
 	}
 	return m
 }

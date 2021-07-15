@@ -7,92 +7,45 @@
 package gvar
 
 import (
-	"github.com/gogf/gf/internal/empty"
-	"reflect"
+	"github.com/gogf/gf/internal/utils"
 )
 
-// IsNil checks whether <v> is nil.
+// IsNil checks whether `v` is nil.
 func (v *Var) IsNil() bool {
-	return v.Val() == nil
+	return utils.IsNil(v.Val())
 }
 
-// IsEmpty checks whether <v> is empty.
+// IsEmpty checks whether `v` is empty.
 func (v *Var) IsEmpty() bool {
-	return empty.IsEmpty(v.Val())
+	return utils.IsEmpty(v.Val())
 }
 
-// IsInt checks whether <v> is type of int.
+// IsInt checks whether `v` is type of int.
 func (v *Var) IsInt() bool {
-	switch v.Val().(type) {
-	case int, *int, int8, *int8, int16, *int16, int32, *int32, int64, *int64:
-		return true
-	}
-	return false
+	return utils.IsInt(v.Val())
 }
 
-// IsUint checks whether <v> is type of uint.
+// IsUint checks whether `v` is type of uint.
 func (v *Var) IsUint() bool {
-	switch v.Val().(type) {
-	case uint, *uint, uint8, *uint8, uint16, *uint16, uint32, *uint32, uint64, *uint64:
-		return true
-	}
-	return false
+	return utils.IsUint(v.Val())
 }
 
-// IsFloat checks whether <v> is type of float.
+// IsFloat checks whether `v` is type of float.
 func (v *Var) IsFloat() bool {
-	switch v.Val().(type) {
-	case float32, *float32, float64, *float64:
-		return true
-	}
-	return false
+	return utils.IsFloat(v.Val())
 }
 
-// IsSlice checks whether <v> is type of slice.
+// IsSlice checks whether `v` is type of slice.
 func (v *Var) IsSlice() bool {
-	var (
-		reflectValue = reflect.ValueOf(v.Val())
-		reflectKind  = reflectValue.Kind()
-	)
-	for reflectKind == reflect.Ptr {
-		reflectValue = reflectValue.Elem()
-	}
-	switch reflectKind {
-	case reflect.Slice, reflect.Array:
-		return true
-	}
-	return false
+	return utils.IsSlice(v.Val())
 }
 
-// IsMap checks whether <v> is type of map.
+// IsMap checks whether `v` is type of map.
 func (v *Var) IsMap() bool {
-	var (
-		reflectValue = reflect.ValueOf(v.Val())
-		reflectKind  = reflectValue.Kind()
-	)
-	for reflectKind == reflect.Ptr {
-		reflectValue = reflectValue.Elem()
-	}
-	switch reflectKind {
-	case reflect.Map:
-		return true
-	}
-	return false
+	return utils.IsMap(v.Val())
 }
 
-// IsStruct checks whether <v> is type of struct.
+// IsStruct checks whether `v` is type of struct.
 func (v *Var) IsStruct() bool {
-	var (
-		reflectValue = reflect.ValueOf(v.Val())
-		reflectKind  = reflectValue.Kind()
-	)
-	for reflectKind == reflect.Ptr {
-		reflectValue = reflectValue.Elem()
-		reflectKind = reflectValue.Kind()
-	}
-	switch reflectKind {
-	case reflect.Struct:
-		return true
-	}
-	return false
+	return utils.IsStruct(v.Val())
 }
