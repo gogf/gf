@@ -70,6 +70,31 @@ var (
 	structTagPriority = append([]string{OrmTagForStruct}, gconv.StructTagPriority...)
 )
 
+// guessPrimaryTableName parses and returns the primary table name.
+func (m *Model) guessPrimaryTableName(tableStr string) string {
+	if tableStr == "" {
+		return ""
+	}
+	var (
+		guessedTableName = ""
+		array1           = gstr.SplitAndTrim(tableStr, ",")
+		array2           = gstr.SplitAndTrim(array1[0], " ")
+		array3           = gstr.SplitAndTrim(array2[0], ".")
+	)
+	if len(array3) >= 2 {
+		guessedTableName = array3[1]
+	}
+	guessedTableName = array3[0]
+	charL, charR := m.db.GetChars()
+	if charL != "" || charR != "" {
+		guessedTableName = gstr.Trim(guessedTableName, charL+charR)
+	}
+	if !gregex.IsMatchString(regularFieldNameRegPattern, guessedTableName) {
+		return ""
+	}
+	return guessedTableName
+}
+
 // getTableNameFromOrmTag retrieves and returns the table name from struct object.
 func getTableNameFromOrmTag(object interface{}) string {
 	var tableName string
@@ -239,7 +264,7 @@ func DataToMapDeep(value interface{}) map[string]interface{} {
 		name = ""
 		fieldTag = rtField.Tag
 		for _, tag := range structTagPriority {
-			if s := fieldTag.Get(tag); s != "" && gregex.IsMatchString(regularFieldNameWithoutDotRegPattern, s) {
+			if s := fieldTag.Get(tag); s != "" {
 				name = s
 				break
 			}
@@ -789,7 +814,9 @@ func formatError(err error, sql string, args ...interface{}) error {
 func FormatSqlWithArgs(sql string, args []interface{}) string {
 	index := -1
 	newQuery, _ := gregex.ReplaceStringFunc(
-		`(\?|:v\d+|\$\d+|@p\d+)`, sql, func(s string) string {
+		`(\?|:v\d+|\$\d+|@p\d+)`,
+		sql,
+		func(s string) string {
 			index++
 			if len(args) > index {
 				if args[index] == nil {
@@ -809,6 +836,7 @@ func FormatSqlWithArgs(sql string, args []interface{}) string {
 				switch kind {
 				case reflect.String, reflect.Map, reflect.Slice, reflect.Array:
 					return `'` + gstr.QuoteMeta(gconv.String(args[index]), `'`) + `'`
+
 				case reflect.Struct:
 					if t, ok := args[index].(time.Time); ok {
 						return `'` + t.Format(`2006-01-02 15:04:05`) + `'`

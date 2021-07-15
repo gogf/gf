@@ -134,7 +134,7 @@ func (w *Watcher) eventLoop() {
 	}()
 }
 
-// getCallbacks searches and returns all callbacks with given <path>.
+// getCallbacks searches and returns all callbacks with given `path`.
 // It also searches its parents for callbacks if they're recursive.
 func (w *Watcher) getCallbacks(path string) (callbacks []*Callback) {
 	// Firstly add the callbacks of itself.

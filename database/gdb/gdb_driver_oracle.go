@@ -263,7 +263,27 @@ func (d *DriverOracle) getTableUniqueIndex(table string) (fields map[string]map[
 	return
 }
 
+// DoInsert inserts or updates data for given table.
+// This function is usually used for custom interface definition, you do not need call it manually.
+// The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
+// Eg:
+// Data(g.Map{"uid": 10000, "name":"john"})
+// Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
+//
+// The parameter `option` values are as follows:
+// 0: insert:  just insert, if there's unique/primary key in the data, it returns error;
+// 1: replace: if there's unique/primary key in the data, it deletes it from table and inserts a new one;
+// 2: save:    if there's unique/primary key in the data, it updates it or else inserts a new one;
+// 3: ignore:  if there's unique/primary key in the data, it ignores the inserting;
 func (d *DriverOracle) DoInsert(ctx context.Context, link Link, table string, list List, option DoInsertOption) (result sql.Result, err error) {
+	switch option.InsertOption {
+	case insertOptionSave:
+		return nil, gerror.New(`Save operation is not supported by mssql driver`)
+
+	case insertOptionReplace:
+		return nil, gerror.New(`Replace operation is not supported by mssql driver`)
+	}
+
 	var (
 		keys   []string
 		values []string

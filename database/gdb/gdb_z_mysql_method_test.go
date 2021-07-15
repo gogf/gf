@@ -1436,7 +1436,7 @@ func Test_DB_UpdateCounter(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		gdbCounter := &gdb.Counter{
-			Field: "views",
+			Field: "id",
 			Value: 1,
 		}
 		updateData := g.Map{
@@ -1449,7 +1449,7 @@ func Test_DB_UpdateCounter(t *testing.T) {
 		one, err := db.Model(tableName).Where("id", 1).One()
 		t.AssertNil(err)
 		t.Assert(one["id"].Int(), 1)
-		t.Assert(one["views"].Int(), 1)
+		t.Assert(one["views"].Int(), 2)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -1468,7 +1468,7 @@ func Test_DB_UpdateCounter(t *testing.T) {
 		one, err := db.Model(tableName).Where("id", 1).One()
 		t.AssertNil(err)
 		t.Assert(one["id"].Int(), 1)
-		t.Assert(one["views"].Int(), 0)
+		t.Assert(one["views"].Int(), 1)
 	})
 }
 

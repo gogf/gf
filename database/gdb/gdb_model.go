@@ -206,7 +206,7 @@ func (m *Model) As(as string) *Model {
 	if m.tables != "" {
 		model := m.getModel()
 		split := " JOIN "
-		if gstr.Contains(model.tables, split) {
+		if gstr.ContainsI(model.tables, split) {
 			// For join table.
 			array := gstr.Split(model.tables, split)
 			array[len(array)-1], _ = gregex.ReplaceString(`(.+) ON`, fmt.Sprintf(`$1 AS %s ON`, as), array[len(array)-1])

@@ -136,3 +136,17 @@ func (d *DriverSqlite) TableFields(ctx context.Context, table string, schema ...
 	}
 	return
 }
+
+// DoInsert is not supported in sqlite.
+func (d *DriverSqlite) DoInsert(ctx context.Context, link Link, table string, list List, option DoInsertOption) (result sql.Result, err error) {
+	switch option.InsertOption {
+	case insertOptionSave:
+		return nil, gerror.New(`Save operation is not supported by sqlite driver`)
+
+	case insertOptionReplace:
+		return nil, gerror.New(`Replace operation is not supported by sqlite driver`)
+
+	default:
+		return d.Core.DoInsert(ctx, link, table, list, option)
+	}
+}

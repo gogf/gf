@@ -76,7 +76,7 @@ func (m *Model) getFieldsFiltered() string {
 			panic("function FieldsEx supports only single table operations")
 		}
 		// Filter table fields with fieldEx.
-		tableFields, err := m.TableFields(m.tables)
+		tableFields, err := m.TableFields(m.tablesInit)
 		if err != nil {
 			panic(err)
 		}
@@ -358,11 +358,11 @@ func (m *Model) Scan(pointer interface{}, where ...interface{}) error {
 // parameter.
 // See the example or unit testing cases for clear understanding for this function.
 func (m *Model) ScanList(listPointer interface{}, attributeName string, relation ...string) (err error) {
-	all, err := m.All()
+	result, err := m.All()
 	if err != nil {
 		return err
 	}
-	return all.ScanList(listPointer, attributeName, relation...)
+	return doScanList(m, result, listPointer, attributeName, relation...)
 }
 
 // Count does "SELECT COUNT(x) FROM ..." statement for the model.

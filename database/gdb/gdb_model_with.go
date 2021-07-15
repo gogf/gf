@@ -39,7 +39,10 @@ func (m *Model) With(objects ...interface{}) *Model {
 	model := m.getModel()
 	for _, object := range objects {
 		if m.tables == "" {
-			m.tables = m.db.GetCore().QuotePrefixTableName(getTableNameFromOrmTag(object))
+			m.tablesInit = m.db.GetCore().QuotePrefixTableName(
+				getTableNameFromOrmTag(object),
+			)
+			m.tables = m.tablesInit
 			return model
 		}
 		model.withArray = append(model.withArray, object)
@@ -163,6 +166,10 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 // doWithScanStructs handles model association operations feature for struct slice.
 // Also see doWithScanStruct.
 func (m *Model) doWithScanStructs(pointer interface{}) error {
+	if v, ok := pointer.(reflect.Value); ok {
+		pointer = v.Interface()
+	}
+
 	var (
 		err                 error
 		allowedTypeStrArray = make([]string, 0)
