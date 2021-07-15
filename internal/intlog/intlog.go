@@ -69,7 +69,11 @@ func PrintFunc(ctx context.Context, f func() string) {
 	if !isGFDebug {
 		return
 	}
-	doPrint(ctx, fmt.Sprint(f()), false)
+	s := f()
+	if s == "" {
+		return
+	}
+	doPrint(ctx, s, false)
 }
 
 // ErrorFunc prints the output from function `f`.
@@ -78,7 +82,11 @@ func ErrorFunc(ctx context.Context, f func() string) {
 	if !isGFDebug {
 		return
 	}
-	doPrint(ctx, fmt.Sprint(f()), true)
+	s := f()
+	if s == "" {
+		return
+	}
+	doPrint(ctx, s, true)
 }
 
 func doPrint(ctx context.Context, content string, stack bool) {
