@@ -73,18 +73,20 @@ func (s *Server) doBindController(
 		pattern = s.serveHandlerKey("", path, domain)
 	}
 	// Retrieve a list of methods, create construct corresponding URI.
-	m := make(map[string]*handlerItem)
-	v := reflect.ValueOf(controller)
-	t := v.Type()
-	pkgPath := t.Elem().PkgPath()
-	pkgName := gfile.Basename(pkgPath)
-	structName := t.Elem().Name()
+	var (
+		m          = make(map[string]*handlerItem)
+		v          = reflect.ValueOf(controller)
+		t          = v.Type()
+		pkgPath    = t.Elem().PkgPath()
+		pkgName    = gfile.Basename(pkgPath)
+		structName = t.Elem().Name()
+	)
 	for i := 0; i < v.NumMethod(); i++ {
 		methodName := t.Method(i).Name
 		if methodMap != nil && !methodMap[methodName] {
 			continue
 		}
-		if methodName == "Init" || methodName == "Shut" || methodName == "Exit" {
+		if methodName == methodNameInit || methodName == methodNameShut || methodName == methodNameExit {
 			continue
 		}
 		ctlName := gstr.Replace(t.String(), fmt.Sprintf(`%s.`, pkgName), "")
@@ -153,12 +155,14 @@ func (s *Server) doBindControllerMethod(
 	middleware []HandlerFunc,
 	source string,
 ) {
-	m := make(map[string]*handlerItem)
-	v := reflect.ValueOf(controller)
-	t := v.Type()
-	structName := t.Elem().Name()
-	methodName := strings.TrimSpace(method)
-	methodValue := v.MethodByName(methodName)
+	var (
+		m           = make(map[string]*handlerItem)
+		v           = reflect.ValueOf(controller)
+		t           = v.Type()
+		structName  = t.Elem().Name()
+		methodName  = strings.TrimSpace(method)
+		methodValue = v.MethodByName(methodName)
+	)
 	if !methodValue.IsValid() {
 		s.Logger().Fatal("invalid method name: " + methodName)
 		return
@@ -194,11 +198,13 @@ func (s *Server) doBindControllerRest(
 	pattern string, controller Controller,
 	middleware []HandlerFunc, source string,
 ) {
-	m := make(map[string]*handlerItem)
-	v := reflect.ValueOf(controller)
-	t := v.Type()
-	pkgPath := t.Elem().PkgPath()
-	structName := t.Elem().Name()
+	var (
+		m          = make(map[string]*handlerItem)
+		v          = reflect.ValueOf(controller)
+		t          = v.Type()
+		pkgPath    = t.Elem().PkgPath()
+		structName = t.Elem().Name()
+	)
 	for i := 0; i < v.NumMethod(); i++ {
 		methodName := t.Method(i).Name
 		if _, ok := methodsMap[strings.ToUpper(methodName)]; !ok {

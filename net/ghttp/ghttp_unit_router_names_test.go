@@ -88,7 +88,7 @@ func Test_NameToUri_Camel(t *testing.T) {
 func Test_NameToUri_Default(t *testing.T) {
 	p, _ := ports.PopRand()
 	s := g.Server(p)
-	s.SetNameToUriType(ghttp.URI_TYPE_DEFAULT)
+	s.SetNameToUriType(ghttp.UriTypeDefault)
 	s.BindObject("/{.struct}/{.method}", new(NamesObject))
 	s.SetPort(p)
 	s.SetDumpRouterMap(false)
