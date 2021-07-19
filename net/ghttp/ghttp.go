@@ -71,35 +71,35 @@ type (
 	// handlerItem is the registered handler for route handling,
 	// including middleware and hook functions.
 	handlerItem struct {
-		itemId     int                // Unique handler item id mark.
-		itemName   string             // Handler name, which is automatically retrieved from runtime stack when registered.
-		itemType   int                // Handler type: object/handler/controller/middleware/hook.
-		itemInfo   handlerFuncInfo    // Handler function information.
-		initFunc   HandlerFunc        // Initialization function when request enters the object (only available for object register type).
-		shutFunc   HandlerFunc        // Shutdown function when request leaves out the object (only available for object register type).
-		middleware []HandlerFunc      // Bound middleware array.
-		ctrlInfo   *handlerController // Controller information for reflect usage.
-		hookName   string             // Hook type name, only available for hook type.
-		router     *Router            // Router object.
-		source     string             // Registering source file `path:line`.
+		Id         int                // Unique handler item id mark.
+		Name       string             // Handler name, which is automatically retrieved from runtime stack when registered.
+		Type       int                // Handler type: object/handler/controller/middleware/hook.
+		Info       handlerFuncInfo    // Handler function information.
+		InitFunc   HandlerFunc        // Initialization function when request enters the object (only available for object register type).
+		ShutFunc   HandlerFunc        // Shutdown function when request leaves out the object (only available for object register type).
+		Middleware []HandlerFunc      // Bound middleware array.
+		CtrlInfo   *handlerController // Controller information for reflect usage.
+		HookName   string             // Hook type name, only available for hook type.
+		Router     *Router            // Router object.
+		Source     string             // Registering source file `path:line`.
 	}
 
 	// handlerParsedItem is the item parsed from URL.Path.
 	handlerParsedItem struct {
-		handler *handlerItem      // Handler information.
-		values  map[string]string // Router values parsed from URL.Path.
+		Handler *handlerItem      // Handler information.
+		Values  map[string]string // Router values parsed from URL.Path.
 	}
 
 	// handlerController is the controller information used for reflect.
 	handlerController struct {
-		name    string       // Handler method name.
-		reflect reflect.Type // Reflect type of the controller.
+		Name string       // Handler method name.
+		Type reflect.Type // Reflect type of the controller.
 	}
 
 	// registeredRouteItem stores the information of the router and is used for route map.
 	registeredRouteItem struct {
-		source  string       // Source file path and its line number.
-		handler *handlerItem // Handler object.
+		Source  string       // Source file path and its line number.
+		Handler *handlerItem // Handler object.
 	}
 
 	// errorStack is the interface for Stack feature.

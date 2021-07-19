@@ -76,7 +76,7 @@ func Test_Router_Handler_Extended_Handler_WithObject(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/test?age=18&name=john"), `{"Id":1,"Age":18,"Name":"john"}`)
-		t.Assert(client.GetContent("/test/error"), `{"code":-1,"message":"error"}`)
+		t.Assert(client.GetContent("/test?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Age":18,"Name":"john"}}`)
+		t.Assert(client.GetContent("/test/error"), `{"code":-1,"message":"error","data":null}`)
 	})
 }

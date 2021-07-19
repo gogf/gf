@@ -37,11 +37,11 @@ func (s *Server) BindHandler(pattern string, handler interface{}) {
 // /user/list, put:/user, delete:/user, post:/user@goframe.org
 func (s *Server) doBindHandler(pattern string, funcInfo handlerFuncInfo, middleware []HandlerFunc, source string) {
 	s.setHandler(pattern, &handlerItem{
-		itemName:   gdebug.FuncPath(funcInfo.Func),
-		itemType:   handlerTypeHandler,
-		itemInfo:   funcInfo,
-		middleware: middleware,
-		source:     source,
+		Name:       gdebug.FuncPath(funcInfo.Func),
+		Type:       handlerTypeHandler,
+		Info:       funcInfo,
+		Middleware: middleware,
+		Source:     source,
 	})
 }
 
