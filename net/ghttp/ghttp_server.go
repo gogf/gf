@@ -221,7 +221,7 @@ func (s *Server) dumpRouterMap() {
 			data[2] = item.Address
 			data[3] = item.Method
 			data[4] = item.Route
-			data[5] = item.handler.itemName
+			data[5] = item.handler.Name
 			data[6] = item.Middleware
 			table.Append(data)
 		}
@@ -248,21 +248,21 @@ func (s *Server) GetRouterArray() []RouterItem {
 				Server:     s.name,
 				Address:    address,
 				Domain:     array[4],
-				Type:       registeredItem.handler.itemType,
+				Type:       registeredItem.Handler.Type,
 				Middleware: array[1],
 				Method:     array[2],
 				Route:      array[3],
 				Priority:   len(registeredItems) - index - 1,
-				handler:    registeredItem.handler,
+				handler:    registeredItem.Handler,
 			}
-			switch item.handler.itemType {
+			switch item.handler.Type {
 			case handlerTypeController, handlerTypeObject, handlerTypeHandler:
 				item.IsServiceHandler = true
 			case handlerTypeMiddleware:
 				item.Middleware = "GLOBAL MIDDLEWARE"
 			}
-			if len(item.handler.middleware) > 0 {
-				for _, v := range item.handler.middleware {
+			if len(item.handler.Middleware) > 0 {
+				for _, v := range item.handler.Middleware {
 					if item.Middleware != "" {
 						item.Middleware += ","
 					}
@@ -280,9 +280,9 @@ func (s *Server) GetRouterArray() []RouterItem {
 					if r = strings.Compare(item1.Domain, item2.Domain); r == 0 {
 						if r = strings.Compare(item1.Route, item2.Route); r == 0 {
 							if r = strings.Compare(item1.Method, item2.Method); r == 0 {
-								if item1.handler.itemType == handlerTypeMiddleware && item2.handler.itemType != handlerTypeMiddleware {
+								if item1.handler.Type == handlerTypeMiddleware && item2.handler.Type != handlerTypeMiddleware {
 									return -1
-								} else if item1.handler.itemType == handlerTypeMiddleware && item2.handler.itemType == handlerTypeMiddleware {
+								} else if item1.handler.Type == handlerTypeMiddleware && item2.handler.Type == handlerTypeMiddleware {
 									return 1
 								} else if r = strings.Compare(item1.Middleware, item2.Middleware); r == 0 {
 									r = item2.Priority - item1.Priority

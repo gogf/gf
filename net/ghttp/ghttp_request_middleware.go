@@ -35,20 +35,20 @@ func (m *middleware) Next() {
 		}
 		item = m.request.handlers[m.handlerIndex]
 		// Filter the HOOK handlers, which are designed to be called in another standalone procedure.
-		if item.handler.itemType == handlerTypeHook {
+		if item.Handler.Type == handlerTypeHook {
 			m.handlerIndex++
 			continue
 		}
 		// Current router switching.
-		m.request.Router = item.handler.router
+		m.request.Router = item.Handler.Router
 
 		// Router values switching.
-		m.request.routerMap = item.values
+		m.request.routerMap = item.Values
 
 		gutil.TryCatch(func() {
 			// Execute bound middleware array of the item if it's not empty.
-			if m.handlerMDIndex < len(item.handler.middleware) {
-				md := item.handler.middleware[m.handlerMDIndex]
+			if m.handlerMDIndex < len(item.Handler.Middleware) {
+				md := item.Handler.Middleware[m.handlerMDIndex]
 				m.handlerMDIndex++
 				niceCallFunc(func() {
 					md(m.request)
@@ -58,20 +58,20 @@ func (m *middleware) Next() {
 			}
 			m.handlerIndex++
 
-			switch item.handler.itemType {
+			switch item.Handler.Type {
 			// Service controller.
 			case handlerTypeController:
 				m.served = true
 				if m.request.IsExited() {
 					break
 				}
-				c := reflect.New(item.handler.ctrlInfo.reflect)
+				c := reflect.New(item.Handler.CtrlInfo.Type)
 				niceCallFunc(func() {
 					c.MethodByName("Init").Call([]reflect.Value{reflect.ValueOf(m.request)})
 				})
 				if !m.request.IsExited() {
 					niceCallFunc(func() {
-						c.MethodByName(item.handler.ctrlInfo.name).Call(nil)
+						c.MethodByName(item.Handler.CtrlInfo.Name).Call(nil)
 					})
 				}
 				if !m.request.IsExited() {
@@ -86,17 +86,17 @@ func (m *middleware) Next() {
 				if m.request.IsExited() {
 					break
 				}
-				if item.handler.initFunc != nil {
+				if item.Handler.InitFunc != nil {
 					niceCallFunc(func() {
-						item.handler.initFunc(m.request)
+						item.Handler.InitFunc(m.request)
 					})
 				}
 				if !m.request.IsExited() {
-					m.callHandlerFunc(item.handler.itemInfo)
+					m.callHandlerFunc(item.Handler.Info)
 				}
-				if !m.request.IsExited() && item.handler.shutFunc != nil {
+				if !m.request.IsExited() && item.Handler.ShutFunc != nil {
 					niceCallFunc(func() {
-						item.handler.shutFunc(m.request)
+						item.Handler.ShutFunc(m.request)
 					})
 				}
 
@@ -107,13 +107,13 @@ func (m *middleware) Next() {
 					break
 				}
 				niceCallFunc(func() {
-					m.callHandlerFunc(item.handler.itemInfo)
+					m.callHandlerFunc(item.Handler.Info)
 				})
 
 			// Global middleware array.
 			case handlerTypeMiddleware:
 				niceCallFunc(func() {
-					item.handler.itemInfo.Func(m.request)
+					item.Handler.Info.Func(m.request)
 				})
 				// It does not continue calling next middleware after another middleware done.
 				// There should be a "Next" function to be called in the middleware in order to manage the workflow.

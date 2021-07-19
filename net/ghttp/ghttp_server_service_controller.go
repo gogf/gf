@@ -111,14 +111,14 @@ func (s *Server) doBindController(
 		}
 		key := s.mergeBuildInNameToPattern(pattern, structName, methodName, true)
 		m[key] = &handlerItem{
-			itemName: fmt.Sprintf(`%s.%s.%s`, pkgPath, ctlName, methodName),
-			itemType: handlerTypeController,
-			ctrlInfo: &handlerController{
-				name:    methodName,
-				reflect: v.Elem().Type(),
+			Name: fmt.Sprintf(`%s.%s.%s`, pkgPath, ctlName, methodName),
+			Type: handlerTypeController,
+			CtrlInfo: &handlerController{
+				Name: methodName,
+				Type: v.Elem().Type(),
 			},
-			middleware: middleware,
-			source:     source,
+			Middleware: middleware,
+			Source:     source,
 		}
 		// If there's "Index" method, then an additional route is automatically added
 		// to match the main URI, for example:
@@ -134,14 +134,14 @@ func (s *Server) doBindController(
 				k = "/" + k
 			}
 			m[k] = &handlerItem{
-				itemName: fmt.Sprintf(`%s.%s.%s`, pkgPath, ctlName, methodName),
-				itemType: handlerTypeController,
-				ctrlInfo: &handlerController{
-					name:    methodName,
-					reflect: v.Elem().Type(),
+				Name: fmt.Sprintf(`%s.%s.%s`, pkgPath, ctlName, methodName),
+				Type: handlerTypeController,
+				CtrlInfo: &handlerController{
+					Name: methodName,
+					Type: v.Elem().Type(),
 				},
-				middleware: middleware,
-				source:     source,
+				Middleware: middleware,
+				Source:     source,
 			}
 		}
 	}
@@ -182,14 +182,14 @@ func (s *Server) doBindControllerMethod(
 	}
 	key := s.mergeBuildInNameToPattern(pattern, structName, methodName, false)
 	m[key] = &handlerItem{
-		itemName: fmt.Sprintf(`%s.%s.%s`, pkgPath, ctlName, methodName),
-		itemType: handlerTypeController,
-		ctrlInfo: &handlerController{
-			name:    methodName,
-			reflect: v.Elem().Type(),
+		Name: fmt.Sprintf(`%s.%s.%s`, pkgPath, ctlName, methodName),
+		Type: handlerTypeController,
+		CtrlInfo: &handlerController{
+			Name: methodName,
+			Type: v.Elem().Type(),
 		},
-		middleware: middleware,
-		source:     source,
+		Middleware: middleware,
+		Source:     source,
 	}
 	s.bindHandlerByMap(m)
 }
@@ -224,14 +224,14 @@ func (s *Server) doBindControllerRest(
 		}
 		key := s.mergeBuildInNameToPattern(methodName+":"+pattern, structName, methodName, false)
 		m[key] = &handlerItem{
-			itemName: fmt.Sprintf(`%s.%s.%s`, pkgPath, ctlName, methodName),
-			itemType: handlerTypeController,
-			ctrlInfo: &handlerController{
-				name:    methodName,
-				reflect: v.Elem().Type(),
+			Name: fmt.Sprintf(`%s.%s.%s`, pkgPath, ctlName, methodName),
+			Type: handlerTypeController,
+			CtrlInfo: &handlerController{
+				Name: methodName,
+				Type: v.Elem().Type(),
 			},
-			middleware: middleware,
-			source:     source,
+			Middleware: middleware,
+			Source:     source,
 		}
 	}
 	s.bindHandlerByMap(m)

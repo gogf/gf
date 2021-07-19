@@ -11,19 +11,38 @@ import (
 	"github.com/gogf/gf/internal/intlog"
 )
 
+type DefaultHandlerResponse struct {
+	Code    int         `json:"code"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"`
+}
+
 // MiddlewareHandlerResponse is the default middleware handling handler response object and its error.
 func MiddlewareHandlerResponse(r *Request) {
 	r.Middleware.Next()
-	res, err := r.GetHandlerResponse()
+	var (
+		err         error
+		res         interface{}
+		internalErr error
+	)
+	res, err = r.GetHandlerResponse()
 	if err != nil {
-		r.Response.Writef(
-			`{"code":%d,"message":"%s"}`,
-			gerror.Code(err),
-			err.Error(),
-		)
+		internalErr = r.Response.WriteJson(DefaultHandlerResponse{
+			Code:    gerror.Code(err),
+			Message: err.Error(),
+			Data:    nil,
+		})
+		if internalErr != nil {
+			intlog.Error(r.Context(), internalErr)
+		}
 		return
 	}
-	if exception := r.Response.WriteJson(res); exception != nil {
-		intlog.Error(r.Context(), exception)
+	internalErr = r.Response.WriteJson(DefaultHandlerResponse{
+		Code:    0,
+		Message: "",
+		Data:    res,
+	})
+	if internalErr != nil {
+		intlog.Error(r.Context(), internalErr)
 	}
 }

@@ -19,14 +19,14 @@ func (s *Server) BindHookHandler(pattern string, hook string, handler HandlerFun
 
 func (s *Server) doBindHookHandler(pattern string, hook string, handler HandlerFunc, source string) {
 	s.setHandler(pattern, &handlerItem{
-		itemType: handlerTypeHook,
-		itemName: gdebug.FuncPath(handler),
-		itemInfo: handlerFuncInfo{
+		Type: handlerTypeHook,
+		Name: gdebug.FuncPath(handler),
+		Info: handlerFuncInfo{
 			Func: handler,
 			Type: reflect.TypeOf(handler),
 		},
-		hookName: hook,
-		source:   source,
+		HookName: hook,
+		Source:   source,
 	})
 }
 
@@ -43,11 +43,11 @@ func (s *Server) callHookHandler(hook string, r *Request) {
 		// Backup the old router variable map.
 		oldRouterMap := r.routerMap
 		for _, item := range hookItems {
-			r.routerMap = item.values
+			r.routerMap = item.Values
 			// DO NOT USE the router of the hook handler,
 			// which can overwrite the router of serving handler.
 			// r.Router = item.handler.router
-			if err := s.niceCallHookHandler(item.handler.itemInfo.Func, r); err != nil {
+			if err := s.niceCallHookHandler(item.Handler.Info.Func, r); err != nil {
 				switch err {
 				case exceptionExit:
 					break
@@ -73,7 +73,7 @@ func (r *Request) getHookHandlers(hook string) []*handlerParsedItem {
 	}
 	parsedItems := make([]*handlerParsedItem, 0, 4)
 	for _, v := range r.handlers {
-		if v.handler.hookName != hook {
+		if v.Handler.HookName != hook {
 			continue
 		}
 		item := v
