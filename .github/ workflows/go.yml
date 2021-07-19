@@ -1,0 +1,77 @@
+name: Go
+
+on:
+  push:
+    branches: 
+      - master
+      - main
+      - develop
+      - staging
+  pull_request:
+    branches: [ master ]
+env:
+  GF_DEBUG: 1
+  
+jobs:
+
+  code-test:
+    runs-on: ubuntu-latest
+    # Service containers to run with `code-test`
+    services:
+      redis:
+        # Docker Hub image
+        image: redis
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          # Maps tcp port 6379 on service container to the host
+          - 6379:6379
+      postgres:
+        image: postgres:9
+        # Provide the password for postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          # Maps tcp port 5432 on service container to the host
+          - 5432:5432
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_ROOT_PASSWORD: 12345678
+          MYSQL_DATABASE: test
+        ports:
+          # Maps tcp port 3306 on service container to the host
+          - 3306:3306
+    steps:
+
+    # - uses: szenius/set-timezone@v1.0
+    #   with:
+    #     timezoneLinux: "Asia/Shanghai"
+
+    - uses: actions/checkout@v2
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.16
+
+    - name: Before script
+      run: |
+        find . -name "*.go" | xargs gofmt -w
+        git diff --name-only --exit-code || exit 1
+        sudo echo "127.0.0.1   local" | sudo tee -a /etc/hosts
+
+    # - name: Build
+    #   run: go build -v ./...
+
+    - name: Test
+      run: go test -v ./...
