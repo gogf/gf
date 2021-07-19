@@ -9,6 +9,7 @@ package ghttp
 import (
 	"github.com/gogf/gf/debug/gdebug"
 	"net/http"
+	"reflect"
 )
 
 // BindHookHandler registers handler for specified hook.
@@ -20,7 +21,10 @@ func (s *Server) doBindHookHandler(pattern string, hook string, handler HandlerF
 	s.setHandler(pattern, &handlerItem{
 		itemType: handlerTypeHook,
 		itemName: gdebug.FuncPath(handler),
-		itemFunc: handler,
+		itemInfo: handlerFuncInfo{
+			Func: handler,
+			Type: reflect.TypeOf(handler),
+		},
 		hookName: hook,
 		source:   source,
 	})
@@ -43,7 +47,7 @@ func (s *Server) callHookHandler(hook string, r *Request) {
 			// DO NOT USE the router of the hook handler,
 			// which can overwrite the router of serving handler.
 			// r.Router = item.handler.router
-			if err := s.niceCallHookHandler(item.handler.itemFunc, r); err != nil {
+			if err := s.niceCallHookHandler(item.handler.itemInfo.Func, r); err != nil {
 				switch err {
 				case exceptionExit:
 					break
