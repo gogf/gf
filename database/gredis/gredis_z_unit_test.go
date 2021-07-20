@@ -139,24 +139,24 @@ func Test_Instance(t *testing.T) {
 
 func Test_Error(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		config1 := &gredis.Config{
-			Host:           "127.0.0.2",
-			Port:           6379,
-			Db:             1,
-			ConnectTimeout: time.Second,
-		}
-		redis := gredis.New(config1)
-		_, err := redis.Do("info")
-		t.AssertNE(err, nil)
+		//config1 := &gredis.Config{
+		//	Host:           "127.0.0.2",
+		//	Port:           6379,
+		//	Db:             1,
+		//	ConnectTimeout: time.Second,
+		//}
+		//redis := gredis.New(config1)
+		//_, err := redis.Do("info")
+		//t.AssertNE(err, nil)
 
-		config1 = &gredis.Config{
+		config1 := &gredis.Config{
 			Host: "127.0.0.1",
 			Port: 6379,
 			Db:   1,
 			Pass: "666666",
 		}
-		redis = gredis.New(config1)
-		_, err = redis.Do("info")
+		redis := gredis.New(config1)
+		_, err := redis.Do("info")
 		t.AssertNE(err, nil)
 
 		config1 = &gredis.Config{
