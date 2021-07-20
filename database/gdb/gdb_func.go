@@ -805,7 +805,7 @@ func handleArguments(sql string, args []interface{}) (newSql string, newArgs []i
 // formatError customizes and returns the SQL error.
 func formatError(err error, sql string, args ...interface{}) error {
 	if err != nil && err != ErrNoRows {
-		return gerror.New(fmt.Sprintf("%s, %s\n", err.Error(), FormatSqlWithArgs(sql, args)))
+		return gerror.NewCodef(gerror.CodeDbOperationError, "%s, %s\n", err.Error(), FormatSqlWithArgs(sql, args))
 	}
 	return err
 }

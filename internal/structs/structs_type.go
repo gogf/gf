@@ -7,7 +7,8 @@
 package structs
 
 import (
-	"github.com/gogf/gf/errors/gerror"
+	"errors"
+	"fmt"
 	"reflect"
 )
 
@@ -49,9 +50,11 @@ exitLoop:
 		reflectKind = reflectValue.Kind()
 	}
 	if reflectKind != reflect.Struct {
-		return nil, gerror.Newf(
-			`invalid object kind "%s", kind of "struct" is required`,
-			reflectKind,
+		return nil, errors.New(
+			fmt.Sprintf(
+				`invalid object kind "%s", kind of "struct" is required`,
+				reflectKind,
+			),
 		)
 	}
 	reflectType = reflectValue.Type()

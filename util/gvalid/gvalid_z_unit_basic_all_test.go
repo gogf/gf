@@ -1014,3 +1014,16 @@ func Test_InternalError_String(t *testing.T) {
 		t.Assert(gerror.Current(err), "InvalidRules: hh")
 	})
 }
+
+func Test_Code(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		err := g.Validator().Rules("required").CheckValue("")
+		t.AssertNE(err, nil)
+		t.Assert(gerror.Code(err), gerror.CodeValidationFailed)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		err := g.Validator().Rules("none-exist-rule").CheckValue("")
+		t.AssertNE(err, nil)
+		t.Assert(gerror.Code(err), gerror.CodeInternalError)
+	})
+}

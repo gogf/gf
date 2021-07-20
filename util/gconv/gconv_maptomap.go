@@ -86,7 +86,7 @@ func doMapToMap(params interface{}, pointer interface{}, mapping ...map[string]s
 		pointerKind = pointerRv.Kind()
 	}
 	if pointerKind != reflect.Map {
-		return gerror.Newf("pointer should be type of *map, but got:%s", pointerKind)
+		return gerror.NewCodef(gerror.CodeInvalidParameter, "pointer should be type of *map, but got:%s", pointerKind)
 	}
 	defer func() {
 		// Catch the panic, especially the reflect operation panics.
@@ -94,7 +94,7 @@ func doMapToMap(params interface{}, pointer interface{}, mapping ...map[string]s
 			if e, ok := exception.(errorStack); ok {
 				err = e
 			} else {
-				err = gerror.NewSkipf(1, "%v", exception)
+				err = gerror.NewCodeSkipf(gerror.CodeInternalError, 1, "%v", exception)
 			}
 		}
 	}()

@@ -51,7 +51,7 @@ func doStructs(params interface{}, pointer interface{}, mapping map[string]strin
 		return nil
 	}
 	if pointer == nil {
-		return gerror.New("object pointer cannot be nil")
+		return gerror.NewCode(gerror.CodeInvalidParameter, "object pointer cannot be nil")
 	}
 
 	if doStructsByDirectReflectSet(params, pointer) {
@@ -64,7 +64,7 @@ func doStructs(params interface{}, pointer interface{}, mapping map[string]strin
 			if e, ok := exception.(errorStack); ok {
 				err = e
 			} else {
-				err = gerror.NewSkipf(1, "%v", exception)
+				err = gerror.NewCodeSkipf(gerror.CodeInternalError, 1, "%v", exception)
 			}
 		}
 	}()
@@ -96,7 +96,7 @@ func doStructs(params interface{}, pointer interface{}, mapping map[string]strin
 	if !ok {
 		pointerRv = reflect.ValueOf(pointer)
 		if kind := pointerRv.Kind(); kind != reflect.Ptr {
-			return gerror.Newf("pointer should be type of pointer, but got: %v", kind)
+			return gerror.NewCodef(gerror.CodeInvalidParameter, "pointer should be type of pointer, but got: %v", kind)
 		}
 	}
 	// Converting `params` to map slice.

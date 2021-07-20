@@ -67,9 +67,13 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			if exception := recover(); exception != nil {
 				request.Response.WriteStatus(http.StatusInternalServerError)
 				if err, ok := exception.(error); ok {
-					s.handleErrorLog(gerror.Wrap(err, ""), request)
+					if code := gerror.Code(err); code != gerror.CodeNil {
+						s.handleErrorLog(gerror.Wrap(err, ""), request)
+					} else {
+						s.handleErrorLog(gerror.WrapCode(gerror.CodeInternalError, err, ""), request)
+					}
 				} else {
-					s.handleErrorLog(gerror.Newf("%v", exception), request)
+					s.handleErrorLog(gerror.NewCodef(gerror.CodeInternalError, "%v", exception), request)
 				}
 			}
 		}

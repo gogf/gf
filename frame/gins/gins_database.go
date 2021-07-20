@@ -53,21 +53,24 @@ func Database(name ...string) gdb.DB {
 			if configFilePath == "" {
 				exampleFileName := "config.example.toml"
 				if exampleConfigFilePath, _ := Config().GetFilePath(exampleFileName); exampleConfigFilePath != "" {
-					panic(gerror.Wrapf(
+					panic(gerror.WrapCodef(
+						gerror.CodeMissingConfiguration,
 						err,
 						`configuration file "%s" not found, but found "%s", did you miss renaming the example configuration file?`,
 						Config().GetFileName(),
 						exampleFileName,
 					))
 				} else {
-					panic(gerror.Wrapf(
+					panic(gerror.WrapCodef(
+						gerror.CodeMissingConfiguration,
 						err,
 						`configuration file "%s" not found, did you miss the configuration file or the misspell the configuration file name?`,
 						Config().GetFileName(),
 					))
 				}
 			}
-			panic(gerror.Wrapf(
+			panic(gerror.WrapCodef(
+				gerror.CodeMissingConfiguration,
 				err,
 				`database initialization failed: "%s" node not found, is configuration file or configuration node missing?`,
 				configNodeNameDatabase,

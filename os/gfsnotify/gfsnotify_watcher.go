@@ -66,7 +66,7 @@ func (w *Watcher) AddOnce(name, path string, callbackFunc func(event *Event), re
 func (w *Watcher) addWithCallbackFunc(name, path string, callbackFunc func(event *Event), recursive ...bool) (callback *Callback, err error) {
 	// Check and convert the given path to absolute path.
 	if t := fileRealPath(path); t == "" {
-		return nil, gerror.Newf(`"%s" does not exist`, path)
+		return nil, gerror.NewCodef(gerror.CodeInvalidParameter, `"%s" does not exist`, path)
 	} else {
 		path = t
 	}

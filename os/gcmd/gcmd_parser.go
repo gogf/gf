@@ -94,7 +94,7 @@ func ParseWithArgs(args []string, supportedOptions map[string]bool, strict ...bo
 						i++
 						continue
 					} else if parser.strict {
-						return nil, gerror.Newf(`invalid option '%s'`, args[i])
+						return nil, gerror.NewCodef(gerror.CodeInvalidParameter, `invalid option '%s'`, args[i])
 					}
 				}
 			}

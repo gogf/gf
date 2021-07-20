@@ -179,6 +179,9 @@ func (err *Error) MarshalJSON() ([]byte, error) {
 
 // formatSubStack formats the stack for error.
 func formatSubStack(st stack, buffer *bytes.Buffer) {
+	if st == nil {
+		return
+	}
 	index := 1
 	space := "  "
 	for _, p := range st {

@@ -59,7 +59,7 @@ func (s *Stmt) doStmtCommit(ctx context.Context, stmtType string, args ...interf
 		result = s.Stmt.QueryRowContext(ctx, args...)
 
 	default:
-		panic(gerror.Newf(`invalid stmtType: %s`, stmtType))
+		panic(gerror.NewCodef(gerror.CodeInvalidParameter, `invalid stmtType: %s`, stmtType))
 	}
 	var (
 		timestampMilli2 = gtime.TimestampMilli()

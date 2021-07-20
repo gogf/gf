@@ -99,7 +99,7 @@ func (d *DriverSqlite) TableFields(ctx context.Context, table string, schema ...
 	charL, charR := d.GetChars()
 	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
-		return nil, gerror.New("function TableFields supports only single table operations")
+		return nil, gerror.NewCode(gerror.CodeInvalidParameter, "function TableFields supports only single table operations")
 	}
 	useSchema := d.db.GetSchema()
 	if len(schema) > 0 && schema[0] != "" {
@@ -141,10 +141,10 @@ func (d *DriverSqlite) TableFields(ctx context.Context, table string, schema ...
 func (d *DriverSqlite) DoInsert(ctx context.Context, link Link, table string, list List, option DoInsertOption) (result sql.Result, err error) {
 	switch option.InsertOption {
 	case insertOptionSave:
-		return nil, gerror.New(`Save operation is not supported by sqlite driver`)
+		return nil, gerror.NewCode(gerror.CodeNotSupported, `Save operation is not supported by sqlite driver`)
 
 	case insertOptionReplace:
-		return nil, gerror.New(`Replace operation is not supported by sqlite driver`)
+		return nil, gerror.NewCode(gerror.CodeNotSupported, `Replace operation is not supported by sqlite driver`)
 
 	default:
 		return d.Core.DoInsert(ctx, link, table, list, option)

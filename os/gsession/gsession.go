@@ -8,12 +8,15 @@
 package gsession
 
 import (
-	"errors"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/util/guid"
 )
 
 var (
-	ErrorDisabled = errors.New("this feature is disabled in this storage")
+	ErrorDisabled = gerror.NewOption(gerror.Option{
+		Text: "this feature is disabled in this storage",
+		Code: gerror.CodeNotSupported,
+	})
 )
 
 // NewSessionId creates and returns a new and unique session id string,

@@ -122,7 +122,7 @@ func (s *gracefulServer) ListenAndServeTLS(certFile, keyFile string, tlsConfig .
 
 	}
 	if err != nil {
-		return gerror.Newf(`open cert file "%s","%s" failed: %s`, certFile, keyFile, err.Error())
+		return gerror.WrapCodef(gerror.CodeInternalError, err, `open cert file "%s","%s" failed`, certFile, keyFile)
 	}
 	ln, err := s.getNetListener()
 	if err != nil {

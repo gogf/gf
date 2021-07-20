@@ -69,7 +69,7 @@ func Jobs() int {
 // The job will be executed asynchronously.
 func (p *Pool) Add(f func()) error {
 	for p.closed.Val() {
-		return gerror.New("pool closed")
+		return gerror.NewCode(gerror.CodeInvalidOperation, "pool closed")
 	}
 	p.list.PushFront(f)
 	// Check whether fork new goroutine or not.
@@ -96,9 +96,13 @@ func (p *Pool) Add(f func()) error {
 func (p *Pool) AddWithRecover(userFunc func(), recoverFunc ...func(err error)) error {
 	return p.Add(func() {
 		defer func() {
-			if err := recover(); err != nil {
+			if exception := recover(); exception != nil {
 				if len(recoverFunc) > 0 && recoverFunc[0] != nil {
-					recoverFunc[0](gerror.Newf(`%v`, err))
+					if err, ok := exception.(error); ok {
+						recoverFunc[0](err)
+					} else {
+						recoverFunc[0](gerror.NewCodef(gerror.CodeInternalError, `%v`, exception))
+					}
 				}
 			}
 		}()

@@ -121,7 +121,7 @@ func (d *DriverMysql) TableFields(ctx context.Context, table string, schema ...s
 	charL, charR := d.GetChars()
 	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
-		return nil, gerror.New("function TableFields supports only single table operations")
+		return nil, gerror.NewCode(gerror.CodeInvalidParameter, "function TableFields supports only single table operations")
 	}
 	useSchema := d.schema.Val()
 	if len(schema) > 0 && schema[0] != "" {

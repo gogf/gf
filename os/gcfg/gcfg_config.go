@@ -142,7 +142,7 @@ func (c *Config) SetPath(path string) error {
 		} else {
 			buffer.WriteString(fmt.Sprintf(`[gcfg] SetPath failed: path "%s" does not exist`, path))
 		}
-		err := gerror.New(buffer.String())
+		err := gerror.NewCode(gerror.CodeOperationFailed, buffer.String())
 		if errorPrint() {
 			glog.Error(err)
 		}
@@ -219,14 +219,14 @@ func (c *Config) AddPath(path string) error {
 		} else {
 			buffer.WriteString(fmt.Sprintf(`[gcfg] AddPath failed: path "%s" does not exist`, path))
 		}
-		err := gerror.New(buffer.String())
+		err := gerror.NewCode(gerror.CodeOperationFailed, buffer.String())
 		if errorPrint() {
 			glog.Error(err)
 		}
 		return err
 	}
 	if !isDir {
-		err := gerror.Newf(`[gcfg] AddPath failed: path "%s" should be directory type`, path)
+		err := gerror.NewCodef(gerror.CodeInvalidParameter, `[gcfg] AddPath failed: path "%s" should be directory type`, path)
 		if errorPrint() {
 			glog.Error(err)
 		}
@@ -329,7 +329,7 @@ func (c *Config) GetFilePath(file ...string) (path string, err error) {
 		} else {
 			buffer.WriteString(fmt.Sprintf("[gcfg] cannot find config file \"%s\" with no path configured", name))
 		}
-		err = gerror.New(buffer.String())
+		err = gerror.NewCode(gerror.CodeOperationFailed, buffer.String())
 	}
 	return
 }

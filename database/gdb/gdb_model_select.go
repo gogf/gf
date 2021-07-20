@@ -316,7 +316,7 @@ func (m *Model) Scan(pointer interface{}, where ...interface{}) error {
 
 	reflectKind = reflectValue.Kind()
 	if reflectKind != reflect.Ptr {
-		return gerror.New(`the parameter "pointer" for function Scan should type of pointer`)
+		return gerror.NewCode(gerror.CodeInvalidParameter, `the parameter "pointer" for function Scan should type of pointer`)
 	}
 	for reflectKind == reflect.Ptr {
 		reflectValue = reflectValue.Elem()
@@ -331,7 +331,10 @@ func (m *Model) Scan(pointer interface{}, where ...interface{}) error {
 		return m.doStruct(pointer, where...)
 
 	default:
-		return gerror.New(`element of parameter "pointer" for function Scan should type of struct/*struct/[]struct/[]*struct`)
+		return gerror.NewCode(
+			gerror.CodeInvalidParameter,
+			`element of parameter "pointer" for function Scan should type of struct/*struct/[]struct/[]*struct`,
+		)
 	}
 }
 
