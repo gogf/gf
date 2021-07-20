@@ -112,7 +112,7 @@ func (view *View) Parse(ctx context.Context, file string, params ...Params) (res
 			tpl, err = tpl.(*texttpl.Template).Parse(item.content)
 		}
 		if err != nil && item.path != "" {
-			err = gerror.Wrap(err, item.path)
+			err = gerror.WrapCode(gerror.CodeInternalError, err, item.path)
 		}
 	})
 	if err != nil {
@@ -298,7 +298,7 @@ func (view *View) getTemplate(filePath, folderPath, pattern string) (tpl interfa
 // formatTemplateObjectCreatingError formats the error that creted from creating template object.
 func (view *View) formatTemplateObjectCreatingError(filePath, tplName string, err error) error {
 	if err != nil {
-		return gerror.NewSkip(1, gstr.Replace(err.Error(), tplName, filePath))
+		return gerror.NewCodeSkip(gerror.CodeInternalError, 1, gstr.Replace(err.Error(), tplName, filePath))
 	}
 	return nil
 }
@@ -376,7 +376,7 @@ func (view *View) searchFile(file string) (path string, folder string, resource 
 		if errorPrint() {
 			glog.Error(buffer.String())
 		}
-		err = gerror.Newf(`template file "%s" not found`, file)
+		err = gerror.NewCodef(gerror.CodeInvalidParameter, `template file "%s" not found`, file)
 	}
 	return
 }

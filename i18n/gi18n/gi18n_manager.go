@@ -101,7 +101,7 @@ func (m *Manager) SetPath(path string) error {
 	} else {
 		realPath, _ := gfile.Search(path)
 		if realPath == "" {
-			return gerror.Newf(`%s does not exist`, path)
+			return gerror.NewCodef(gerror.CodeInvalidParameter, `%s does not exist`, path)
 		}
 		m.options.Path = realPath
 	}

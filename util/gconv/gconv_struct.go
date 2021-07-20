@@ -7,7 +7,6 @@
 package gconv
 
 import (
-	"fmt"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/empty"
 	"github.com/gogf/gf/internal/json"
@@ -63,7 +62,7 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 		return nil
 	}
 	if pointer == nil {
-		return gerror.New("object pointer cannot be nil")
+		return gerror.NewCode(gerror.CodeInvalidParameter, "object pointer cannot be nil")
 	}
 
 	defer func() {
@@ -72,7 +71,7 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 			if e, ok := exception.(errorStack); ok {
 				err = e
 			} else {
-				err = gerror.NewSkipf(1, "%v", exception)
+				err = gerror.NewCodeSkipf(gerror.CodeInternalError, 1, "%v", exception)
 			}
 		}
 	}()
@@ -125,11 +124,11 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 		pointerReflectValue = reflect.ValueOf(pointer)
 		pointerReflectKind = pointerReflectValue.Kind()
 		if pointerReflectKind != reflect.Ptr {
-			return gerror.Newf("object pointer should be type of '*struct', but got '%v'", pointerReflectKind)
+			return gerror.NewCodef(gerror.CodeInvalidParameter, "object pointer should be type of '*struct', but got '%v'", pointerReflectKind)
 		}
 		// Using IsNil on reflect.Ptr variable is OK.
 		if !pointerReflectValue.IsValid() || pointerReflectValue.IsNil() {
-			return gerror.New("object pointer cannot be nil")
+			return gerror.NewCode(gerror.CodeInvalidParameter, "object pointer cannot be nil")
 		}
 		pointerElemReflectValue = pointerReflectValue.Elem()
 	}
@@ -167,7 +166,7 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 	// DO NOT use MapDeep here.
 	paramsMap := Map(paramsInterface)
 	if paramsMap == nil {
-		return gerror.Newf("convert params to map failed: %v", params)
+		return gerror.NewCodef(gerror.CodeInvalidParameter, "convert params to map failed: %v", params)
 	}
 
 	// It only performs one converting to the same attribute.
@@ -308,7 +307,7 @@ func bindVarToStructAttr(elem reflect.Value, name string, value interface{}, map
 	defer func() {
 		if exception := recover(); exception != nil {
 			if err = bindVarToReflectValue(structFieldValue, value, mapping, priorityTag); err != nil {
-				err = gerror.Wrapf(err, `error binding value to attribute "%s"`, name)
+				err = gerror.WrapCodef(gerror.CodeInternalError, err, `error binding value to attribute "%s"`, name)
 			}
 		}
 	}()
@@ -461,12 +460,12 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, ma
 	default:
 		defer func() {
 			if exception := recover(); exception != nil {
-				err = gerror.New(
-					fmt.Sprintf(`cannot convert value "%+v" to type "%s":%+v`,
-						value,
-						structFieldValue.Type().String(),
-						exception,
-					),
+				err = gerror.NewCodef(
+					gerror.CodeInternalError,
+					`cannot convert value "%+v" to type "%s":%+v`,
+					value,
+					structFieldValue.Type().String(),
+					exception,
 				)
 			}
 		}()

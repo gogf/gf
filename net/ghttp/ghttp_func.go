@@ -26,6 +26,7 @@ func niceCallFunc(f func()) {
 			switch exception {
 			case exceptionExit, exceptionExitAll:
 				return
+
 			default:
 				if _, ok := exception.(errorStack); ok {
 					// It's already an error that has stack info.
@@ -35,9 +36,13 @@ func niceCallFunc(f func()) {
 					// Note that there's a skip pointing the start stacktrace
 					// of the real error point.
 					if err, ok := exception.(error); ok {
-						panic(gerror.Wrap(err, ""))
+						if gerror.Code(err) != gerror.CodeNil {
+							panic(gerror.Wrap(err, ""))
+						} else {
+							panic(gerror.WrapCode(gerror.CodeInternalError, err, ""))
+						}
 					} else {
-						panic(gerror.NewSkipf(1, "%v", exception))
+						panic(gerror.NewCodeSkipf(gerror.CodeInternalError, 1, "%v", exception))
 					}
 				}
 			}

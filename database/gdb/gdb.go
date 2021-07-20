@@ -10,7 +10,6 @@ package gdb
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"time"
 
 	"github.com/gogf/gf/errors/gerror"
@@ -333,7 +332,10 @@ func New(group ...string) (db DB, err error) {
 	defer configs.RUnlock()
 
 	if len(configs.config) < 1 {
-		return nil, gerror.New("database configuration is empty, please set the database configuration before using")
+		return nil, gerror.NewCode(
+			gerror.CodeInvalidConfiguration,
+			"database configuration is empty, please set the database configuration before using",
+		)
 	}
 	if _, ok := configs.config[groupName]; ok {
 		if node, err := getConfigNodeByGroup(groupName, true); err == nil {
@@ -352,7 +354,8 @@ func New(group ...string) (db DB, err error) {
 				}
 				return c.db, nil
 			} else {
-				return nil, gerror.Newf(
+				return nil, gerror.NewCodef(
+					gerror.CodeInvalidConfiguration,
 					`cannot find database driver for specified database type "%s", did you misspell type name "%s" or forget importing the database driver?`,
 					node.Type, node.Type,
 				)
@@ -361,7 +364,8 @@ func New(group ...string) (db DB, err error) {
 			return nil, err
 		}
 	} else {
-		return nil, gerror.Newf(
+		return nil, gerror.NewCodef(
+			gerror.CodeInvalidConfiguration,
 			`database configuration node "%s" is not found, did you misspell group name "%s" or miss the database configuration?`,
 			groupName, groupName,
 		)
@@ -404,7 +408,7 @@ func getConfigNodeByGroup(group string, master bool) (*ConfigNode, error) {
 			}
 		}
 		if len(masterList) < 1 {
-			return nil, gerror.New("at least one master node configuration's need to make sense")
+			return nil, gerror.NewCode(gerror.CodeInvalidConfiguration, "at least one master node configuration's need to make sense")
 		}
 		if len(slaveList) < 1 {
 			slaveList = masterList
@@ -415,7 +419,7 @@ func getConfigNodeByGroup(group string, master bool) (*ConfigNode, error) {
 			return getConfigNodeByWeight(slaveList), nil
 		}
 	} else {
-		return nil, gerror.New(fmt.Sprintf("empty database configuration for item name '%s'", group))
+		return nil, gerror.NewCodef(gerror.CodeInvalidConfiguration, "empty database configuration for item name '%s'", group)
 	}
 }
 

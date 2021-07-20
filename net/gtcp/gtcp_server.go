@@ -116,7 +116,7 @@ func (s *Server) Close() error {
 // Run starts running the TCP Server.
 func (s *Server) Run() (err error) {
 	if s.handler == nil {
-		err = gerror.New("start running failed: socket handler not defined")
+		err = gerror.NewCode(gerror.CodeMissingConfiguration, "start running failed: socket handler not defined")
 		glog.Error(err)
 		return
 	}

@@ -8,7 +8,6 @@ package gdb
 
 import (
 	"database/sql"
-	"fmt"
 	"github.com/gogf/gf/container/gset"
 	"reflect"
 
@@ -211,7 +210,7 @@ func (m *Model) doInsertWithOption(insertOption int) (result sql.Result, err err
 		}
 	}()
 	if m.data == nil {
-		return nil, gerror.New("inserting into table with empty data")
+		return nil, gerror.NewCode(gerror.CodeMissingParameter, "inserting into table with empty data")
 	}
 	var (
 		list            List
@@ -276,12 +275,12 @@ func (m *Model) doInsertWithOption(insertOption int) (result sql.Result, err err
 			}
 
 		default:
-			return result, gerror.New(fmt.Sprint("unsupported list type:", kind))
+			return result, gerror.NewCodef(gerror.CodeInvalidParameter, "unsupported list type:%v", kind)
 		}
 	}
 
 	if len(list) < 1 {
-		return result, gerror.New("data list cannot be empty")
+		return result, gerror.NewCode(gerror.CodeMissingParameter, "data list cannot be empty")
 	}
 
 	// Automatic handling for creating/updating time.
@@ -366,7 +365,11 @@ func (m *Model) formatDoInsertOption(insertOption int, columnNames []string) (op
 					}
 
 				default:
-					return option, gerror.Newf(`unsupported OnDuplicate parameter type "%s"`, reflect.TypeOf(m.onDuplicate))
+					return option, gerror.NewCodef(
+						gerror.CodeInvalidParameter,
+						`unsupported OnDuplicate parameter type "%s"`,
+						reflect.TypeOf(m.onDuplicate),
+					)
 				}
 			}
 		} else if onDuplicateExKeySet.Size() > 0 {
@@ -406,7 +409,11 @@ func (m *Model) formatOnDuplicateExKeys(onDuplicateEx interface{}) ([]string, er
 		return gconv.Strings(onDuplicateEx), nil
 
 	default:
-		return nil, gerror.Newf(`unsupported OnDuplicateEx parameter type "%s"`, reflect.TypeOf(onDuplicateEx))
+		return nil, gerror.NewCodef(
+			gerror.CodeInvalidParameter,
+			`unsupported OnDuplicateEx parameter type "%s"`,
+			reflect.TypeOf(onDuplicateEx),
+		)
 	}
 }
 

@@ -53,7 +53,7 @@ func (s *Server) parsePattern(pattern string) (domain, method, path string, err 
 		}
 	}
 	if path == "" {
-		err = gerror.New("invalid pattern: URI should not be empty")
+		err = gerror.NewCode(gerror.CodeInvalidParameter, "invalid pattern: URI should not be empty")
 	}
 	if path != "/" {
 		path = strings.TrimRight(path, "/")

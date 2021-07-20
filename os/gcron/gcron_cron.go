@@ -62,7 +62,7 @@ func (c *Cron) GetLogLevel() int {
 func (c *Cron) Add(pattern string, job func(), name ...string) (*Entry, error) {
 	if len(name) > 0 {
 		if c.Search(name[0]) != nil {
-			return nil, gerror.Newf(`cron job "%s" already exists`, name[0])
+			return nil, gerror.NewCodef(gerror.CodeInvalidOperation, `cron job "%s" already exists`, name[0])
 		}
 	}
 	return c.addEntry(pattern, job, false, name...)

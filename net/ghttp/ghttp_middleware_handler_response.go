@@ -27,8 +27,12 @@ func MiddlewareHandlerResponse(r *Request) {
 	)
 	res, err = r.GetHandlerResponse()
 	if err != nil {
+		code := gerror.Code(err)
+		if code == gerror.CodeNil {
+			code = gerror.CodeInternalError
+		}
 		internalErr = r.Response.WriteJson(DefaultHandlerResponse{
-			Code:    gerror.Code(err),
+			Code:    code,
 			Message: err.Error(),
 			Data:    nil,
 		})
@@ -38,7 +42,7 @@ func MiddlewareHandlerResponse(r *Request) {
 		return
 	}
 	internalErr = r.Response.WriteJson(DefaultHandlerResponse{
-		Code:    0,
+		Code:    gerror.CodeOk,
 		Message: "",
 		Data:    res,
 	})

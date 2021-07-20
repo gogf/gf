@@ -101,7 +101,7 @@ func (p *Process) Send(data []byte) error {
 	if p.Process != nil {
 		return Send(p.Process.Pid, data)
 	}
-	return gerror.New("invalid process")
+	return gerror.NewCode(gerror.CodeInvalidParameter, "invalid process")
 }
 
 // Release releases any resources associated with the Process p,

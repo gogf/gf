@@ -126,7 +126,8 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 			}
 		}
 		if relatedFieldValue == nil {
-			return gerror.Newf(
+			return gerror.NewCodef(
+				gerror.CodeInvalidParameter,
 				`cannot find the related value for attribute name "%s" of with tag "%s"`,
 				relatedAttrName, withTag,
 			)
@@ -238,7 +239,8 @@ func (m *Model) doWithScanStructs(pointer interface{}) error {
 			}
 		}
 		if relatedFieldValue == nil {
-			return gerror.Newf(
+			return gerror.NewCodef(
+				gerror.CodeInvalidParameter,
 				`cannot find the related value for attribute name "%s" of with tag "%s"`,
 				relatedAttrName, withTag,
 			)

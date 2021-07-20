@@ -39,7 +39,7 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 		}
 	}()
 	if m.data == nil {
-		return nil, gerror.New("updating table with empty data")
+		return nil, gerror.NewCode(gerror.CodeMissingParameter, "updating table with empty data")
 	}
 	var (
 		updateData                                    = m.data
@@ -80,7 +80,7 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 	}
 	conditionStr := conditionWhere + conditionExtra
 	if !gstr.ContainsI(conditionStr, " WHERE ") {
-		return nil, gerror.New("there should be WHERE condition statement for UPDATE operation")
+		return nil, gerror.NewCode(gerror.CodeMissingParameter, "there should be WHERE condition statement for UPDATE operation")
 	}
 	return m.db.DoUpdate(
 		m.GetCtx(),

@@ -74,7 +74,7 @@ func (view *View) SetConfig(config Config) error {
 // SetConfigWithMap set configurations with map for the view.
 func (view *View) SetConfigWithMap(m map[string]interface{}) error {
 	if m == nil || len(m) == 0 {
-		return gerror.New("configuration cannot be empty")
+		return gerror.NewCode(gerror.CodeInvalidParameter, "configuration cannot be empty")
 	}
 	// The m now is a shallow copy of m.
 	// Any changes to m does not affect the original one.
@@ -123,7 +123,7 @@ func (view *View) SetPath(path string) error {
 	}
 	// Path not exist.
 	if realPath == "" {
-		err := gerror.Newf(`[gview] SetPath failed: path "%s" does not exist`, path)
+		err := gerror.NewCodef(gerror.CodeInvalidParameter, `[gview] SetPath failed: path "%s" does not exist`, path)
 		if errorPrint() {
 			glog.Error(err)
 		}
@@ -131,7 +131,7 @@ func (view *View) SetPath(path string) error {
 	}
 	// Should be a directory.
 	if !isDir {
-		err := gerror.Newf(`[gview] SetPath failed: path "%s" should be directory type`, path)
+		err := gerror.NewCodef(gerror.CodeInvalidParameter, `[gview] SetPath failed: path "%s" should be directory type`, path)
 		if errorPrint() {
 			glog.Error(err)
 		}
@@ -177,7 +177,7 @@ func (view *View) AddPath(path string) error {
 	}
 	// Path not exist.
 	if realPath == "" {
-		err := gerror.Newf(`[gview] AddPath failed: path "%s" does not exist`, path)
+		err := gerror.NewCodef(gerror.CodeInvalidParameter, `[gview] AddPath failed: path "%s" does not exist`, path)
 		if errorPrint() {
 			glog.Error(err)
 		}
@@ -185,7 +185,7 @@ func (view *View) AddPath(path string) error {
 	}
 	// realPath should be type of folder.
 	if !isDir {
-		err := gerror.Newf(`[gview] AddPath failed: path "%s" should be directory type`, path)
+		err := gerror.NewCodef(gerror.CodeInvalidParameter, `[gview] AddPath failed: path "%s" should be directory type`, path)
 		if errorPrint() {
 			glog.Error(err)
 		}

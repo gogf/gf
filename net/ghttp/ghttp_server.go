@@ -125,7 +125,7 @@ func (s *Server) Start() error {
 
 	// Server can only be run once.
 	if s.Status() == ServerStatusRunning {
-		return gerror.New("server is already running")
+		return gerror.NewCode(gerror.CodeInvalidOperation, "server is already running")
 	}
 
 	// Logging path setting check.
@@ -141,7 +141,7 @@ func (s *Server) Start() error {
 			path = gfile.Join(s.config.SessionPath, s.name)
 			if !gfile.Exists(path) {
 				if err := gfile.Mkdir(path); err != nil {
-					return gerror.Wrapf(err, `mkdir failed for "%s"`, path)
+					return gerror.WrapCodef(gerror.CodeInternalError, err, `mkdir failed for "%s"`, path)
 				}
 			}
 		}
@@ -175,7 +175,10 @@ func (s *Server) Start() error {
 	// If there's no route registered  and no static service enabled,
 	// it then returns an error of invalid usage of server.
 	if len(s.routesMap) == 0 && !s.config.FileServerEnabled {
-		return gerror.New(`there's no route set or static feature enabled, did you forget import the router?`)
+		return gerror.NewCode(
+			gerror.CodeInvalidOperation,
+			`there's no route set or static feature enabled, did you forget import the router?`,
+		)
 	}
 
 	// Start the HTTP server.

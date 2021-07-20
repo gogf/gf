@@ -408,7 +408,7 @@ func (user *User) UnmarshalValue(value interface{}) error {
 		}
 		return nil
 	}
-	return gerror.Newf(`unsupported value type for UnmarshalValue: %v`, reflect.TypeOf(value))
+	return gerror.NewCodef(gerror.CodeInvalidParameter, `unsupported value type for UnmarshalValue: %v`, reflect.TypeOf(value))
 }
 
 func Test_Model_Scan_UnmarshalValue(t *testing.T) {

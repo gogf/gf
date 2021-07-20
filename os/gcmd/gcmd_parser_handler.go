@@ -14,7 +14,7 @@ import (
 // BindHandle registers callback function <f> with <cmd>.
 func (p *Parser) BindHandle(cmd string, f func()) error {
 	if _, ok := p.commandFuncMap[cmd]; ok {
-		return gerror.New("duplicated handle for command:" + cmd)
+		return gerror.NewCode(gerror.CodeInvalidOperation, "duplicated handle for command:"+cmd)
 	} else {
 		p.commandFuncMap[cmd] = f
 	}
@@ -37,7 +37,7 @@ func (p *Parser) RunHandle(cmd string) error {
 	if handle, ok := p.commandFuncMap[cmd]; ok {
 		handle()
 	} else {
-		return gerror.New("no handle found for command:" + cmd)
+		return gerror.NewCode(gerror.CodeMissingConfiguration, "no handle found for command:"+cmd)
 	}
 	return nil
 }
@@ -49,10 +49,10 @@ func (p *Parser) AutoRun() error {
 		if handle, ok := p.commandFuncMap[cmd]; ok {
 			handle()
 		} else {
-			return gerror.New("no handle found for command:" + cmd)
+			return gerror.NewCode(gerror.CodeMissingConfiguration, "no handle found for command:"+cmd)
 		}
 	} else {
-		return gerror.New("no command found")
+		return gerror.NewCode(gerror.CodeMissingParameter, "no command found")
 	}
 	return nil
 }

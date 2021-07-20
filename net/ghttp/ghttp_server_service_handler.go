@@ -128,12 +128,14 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, objName, methodN
 		reflectType := reflect.TypeOf(f)
 		if reflectType.NumIn() == 0 || reflectType.NumIn() > 2 || reflectType.NumOut() > 2 {
 			if pkgPath != "" {
-				err = gerror.Newf(
+				err = gerror.NewCodef(
+					gerror.CodeInvalidParameter,
 					`invalid handler: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" or "func(context.Context)/func(context.Context,Request)/func(context.Context,Request) error/func(context.Context,Request)(Response,error)" is required`,
 					pkgPath, objName, methodName, reflect.TypeOf(f).String(),
 				)
 			} else {
-				err = gerror.Newf(
+				err = gerror.NewCodef(
+					gerror.CodeInvalidParameter,
 					`invalid handler: defined as "%s", but "func(*ghttp.Request)" or "func(context.Context)/func(context.Context,Request)/func(context.Context,Request) error/func(context.Context,Request)(Response,error)" is required`,
 					reflect.TypeOf(f).String(),
 				)
@@ -142,7 +144,8 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, objName, methodN
 		}
 
 		if reflectType.In(0).String() != "context.Context" {
-			err = gerror.Newf(
+			err = gerror.NewCodef(
+				gerror.CodeInvalidParameter,
 				`invalid handler: defined as "%s", but the first input parameter should be type of "context.Context"`,
 				reflect.TypeOf(f).String(),
 			)
@@ -150,7 +153,8 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, objName, methodN
 		}
 
 		if reflectType.NumOut() > 0 && reflectType.Out(reflectType.NumOut()-1).String() != "error" {
-			err = gerror.Newf(
+			err = gerror.NewCodef(
+				gerror.CodeInvalidParameter,
 				`invalid handler: defined as "%s", but the last output parameter should be type of "error"`,
 				reflect.TypeOf(f).String(),
 			)

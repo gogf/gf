@@ -139,7 +139,7 @@ func RemoveCallback(callbackId int) error {
 		callback = r.(*Callback)
 	}
 	if callback == nil {
-		return gerror.Newf(`callback for id %d not found`, callbackId)
+		return gerror.NewCodef(gerror.CodeInvalidParameter, `callback for id %d not found`, callbackId)
 	}
 	w.RemoveCallback(callbackId)
 	return nil

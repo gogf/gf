@@ -7,7 +7,7 @@
 package gvalid
 
 import (
-	"errors"
+	"github.com/gogf/gf/errors/gerror"
 	"strconv"
 	"strings"
 	"time"
@@ -138,7 +138,7 @@ func (v *Validator) doCheckValue(
 		index++
 	}
 	if len(errorMsgArray) > 0 {
-		return newError([]string{rules}, map[string]map[string]string{
+		return newError(gerror.CodeValidationFailed, []string{rules}, map[string]map[string]string{
 			key: errorMsgArray,
 		})
 	}
@@ -175,7 +175,10 @@ func (v *Validator) doCheckBuildInRules(
 		"max-length",
 		"size":
 		if msg := v.checkLength(valueStr, ruleKey, rulePattern, customMsgMap); msg != "" {
-			return match, errors.New(msg)
+			return match, gerror.NewOption(gerror.Option{
+				Text: msg,
+				Code: gerror.CodeValidationFailed,
+			})
 		} else {
 			match = true
 		}
@@ -186,7 +189,10 @@ func (v *Validator) doCheckBuildInRules(
 		"max",
 		"between":
 		if msg := v.checkRange(valueStr, ruleKey, rulePattern, customMsgMap); msg != "" {
-			return match, errors.New(msg)
+			return match, gerror.NewOption(gerror.Option{
+				Text: msg,
+				Code: gerror.CodeValidationFailed,
+			})
 		} else {
 			match = true
 		}
@@ -222,7 +228,10 @@ func (v *Validator) doCheckBuildInRules(
 			var msg string
 			msg = v.getErrorMessageByRule(ruleKey, customMsgMap)
 			msg = strings.Replace(msg, ":format", rulePattern, -1)
-			return match, errors.New(msg)
+			return match, gerror.NewOption(gerror.Option{
+				Text: msg,
+				Code: gerror.CodeValidationFailed,
+			})
 		}
 
 	// Values of two fields should be equal as string.
@@ -237,7 +246,10 @@ func (v *Validator) doCheckBuildInRules(
 			var msg string
 			msg = v.getErrorMessageByRule(ruleKey, customMsgMap)
 			msg = strings.Replace(msg, ":field", rulePattern, -1)
-			return match, errors.New(msg)
+			return match, gerror.NewOption(gerror.Option{
+				Text: msg,
+				Code: gerror.CodeValidationFailed,
+			})
 		}
 
 	// Values of two fields should not be equal as string.
@@ -253,7 +265,10 @@ func (v *Validator) doCheckBuildInRules(
 			var msg string
 			msg = v.getErrorMessageByRule(ruleKey, customMsgMap)
 			msg = strings.Replace(msg, ":field", rulePattern, -1)
-			return match, errors.New(msg)
+			return match, gerror.NewOption(gerror.Option{
+				Text: msg,
+				Code: gerror.CodeValidationFailed,
+			})
 		}
 
 	// Field value should be in range of.
@@ -436,7 +451,10 @@ func (v *Validator) doCheckBuildInRules(
 		match = gregex.IsMatchString(`^([0-9A-Fa-f]{2}[\-:]){5}[0-9A-Fa-f]{2}$`, valueStr)
 
 	default:
-		return match, errors.New("Invalid rule name: " + ruleKey)
+		return match, gerror.NewOption(gerror.Option{
+			Text: "Invalid rule name: " + ruleKey,
+			Code: gerror.CodeInvalidParameter,
+		})
 	}
 	return match, nil
 }

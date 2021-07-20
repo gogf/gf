@@ -77,7 +77,7 @@ func (l *Logger) SetLevelStr(levelStr string) error {
 	if level, ok := levelStringMap[strings.ToUpper(levelStr)]; ok {
 		l.config.Level = level
 	} else {
-		return gerror.Newf(`invalid level string: %s`, levelStr)
+		return gerror.NewCodef(gerror.CodeInvalidParameter, `invalid level string: %s`, levelStr)
 	}
 	return nil
 }

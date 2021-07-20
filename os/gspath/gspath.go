@@ -103,7 +103,7 @@ func (sp *SPath) Set(path string) (realPath string, err error) {
 		}
 	}
 	if realPath == "" {
-		return realPath, gerror.Newf(`path "%s" does not exist`, path)
+		return realPath, gerror.NewCodef(gerror.CodeInvalidParameter, `path "%s" does not exist`, path)
 	}
 	// The set path must be a directory.
 	if gfile.IsDir(realPath) {
@@ -123,7 +123,7 @@ func (sp *SPath) Set(path string) (realPath string, err error) {
 		sp.addMonitorByPath(realPath)
 		return realPath, nil
 	} else {
-		return "", gerror.New(path + " should be a folder")
+		return "", gerror.NewCode(gerror.CodeInvalidParameter, path+" should be a folder")
 	}
 }
 
@@ -138,7 +138,7 @@ func (sp *SPath) Add(path string) (realPath string, err error) {
 		}
 	}
 	if realPath == "" {
-		return realPath, gerror.Newf(`path "%s" does not exist`, path)
+		return realPath, gerror.NewCodef(gerror.CodeInvalidParameter, `path "%s" does not exist`, path)
 	}
 	// The added path must be a directory.
 	if gfile.IsDir(realPath) {
@@ -152,7 +152,7 @@ func (sp *SPath) Add(path string) (realPath string, err error) {
 		}
 		return realPath, nil
 	} else {
-		return "", gerror.New(path + " should be a folder")
+		return "", gerror.NewCode(gerror.CodeInvalidParameter, path+" should be a folder")
 	}
 }
 

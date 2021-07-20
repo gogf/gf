@@ -38,7 +38,7 @@ func GetIntranetIp() (ip string, err error) {
 		return "", err
 	}
 	if len(ips) == 0 {
-		return "", gerror.New("no intranet ip found")
+		return "", gerror.NewCode(gerror.CodeOperationFailed, "no intranet ip found")
 	}
 	return ips[0], nil
 }

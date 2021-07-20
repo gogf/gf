@@ -55,7 +55,7 @@ func doScanList(model *Model, result Result, listPointer interface{}, bindToAttr
 	}
 	// Necessary checks for parameters.
 	if bindToAttrName == "" {
-		return gerror.New(`bindToAttrName should not be empty`)
+		return gerror.NewCode(gerror.CodeInvalidParameter, `bindToAttrName should not be empty`)
 	}
 
 	var (
@@ -67,12 +67,12 @@ func doScanList(model *Model, result Result, listPointer interface{}, bindToAttr
 		reflectKind = reflectValue.Kind()
 	}
 	if reflectKind != reflect.Ptr {
-		return gerror.Newf("listPointer should be type of *[]struct/*[]*struct, but got: %v", reflectKind)
+		return gerror.NewCodef(gerror.CodeInvalidParameter, "listPointer should be type of *[]struct/*[]*struct, but got: %v", reflectKind)
 	}
 	reflectValue = reflectValue.Elem()
 	reflectKind = reflectValue.Kind()
 	if reflectKind != reflect.Slice && reflectKind != reflect.Array {
-		return gerror.Newf("listPointer should be type of *[]struct/*[]*struct, but got: %v", reflectKind)
+		return gerror.NewCodef(gerror.CodeInvalidParameter, "listPointer should be type of *[]struct/*[]*struct, but got: %v", reflectKind)
 	}
 	length := len(result)
 	if length == 0 {
@@ -135,7 +135,8 @@ func doScanList(model *Model, result Result, listPointer interface{}, bindToAttr
 			relationResultFieldName = array[0]
 			relationBindToSubAttrName = array[1]
 			if key, _ := gutil.MapPossibleItemByKey(result[0].Map(), relationResultFieldName); key == "" {
-				return gerror.Newf(
+				return gerror.NewCodef(
+					gerror.CodeInvalidParameter,
 					`cannot find possible related table field name "%s" from given relation key "%s"`,
 					relationResultFieldName,
 					relationKVStr,
@@ -144,14 +145,14 @@ func doScanList(model *Model, result Result, listPointer interface{}, bindToAttr
 				relationResultFieldName = key
 			}
 		} else {
-			return gerror.New(`parameter relationKV should be format of "ResultFieldName:BindToAttrName"`)
+			return gerror.NewCode(gerror.CodeInvalidParameter, `parameter relationKV should be format of "ResultFieldName:BindToAttrName"`)
 		}
 		if relationResultFieldName != "" {
 			// Note that the value might be type of slice.
 			relationDataMap = result.MapKeyValue(relationResultFieldName)
 		}
 		if len(relationDataMap) == 0 {
-			return gerror.Newf(`cannot find the relation data map, maybe invalid relation given "%v"`, relationKV)
+			return gerror.NewCodef(gerror.CodeInvalidParameter, `cannot find the relation data map, maybe invalid relation given "%v"`, relationKV)
 		}
 	}
 	// Bind to target attribute.
@@ -164,11 +165,19 @@ func doScanList(model *Model, result Result, listPointer interface{}, bindToAttr
 	)
 	if arrayItemType.Kind() == reflect.Ptr {
 		if bindToAttrField, ok = arrayItemType.Elem().FieldByName(bindToAttrName); !ok {
-			return gerror.Newf(`invalid parameter bindToAttrName: cannot find attribute with name "%s" from slice element`, bindToAttrName)
+			return gerror.NewCodef(
+				gerror.CodeInvalidParameter,
+				`invalid parameter bindToAttrName: cannot find attribute with name "%s" from slice element`,
+				bindToAttrName,
+			)
 		}
 	} else {
 		if bindToAttrField, ok = arrayItemType.FieldByName(bindToAttrName); !ok {
-			return gerror.Newf(`invalid parameter bindToAttrName: cannot find attribute with name "%s" from slice element`, bindToAttrName)
+			return gerror.NewCodef(
+				gerror.CodeInvalidParameter,
+				`invalid parameter bindToAttrName: cannot find attribute with name "%s" from slice element`,
+				bindToAttrName,
+			)
 		}
 	}
 	bindToAttrType = bindToAttrField.Type
@@ -210,7 +219,7 @@ func doScanList(model *Model, result Result, listPointer interface{}, bindToAttr
 			relationFromAttrValue = arrayElemValue
 		}
 		if len(relationDataMap) > 0 && !relationFromAttrValue.IsValid() {
-			return gerror.Newf(`invalid relation specified: "%v"`, relationKV)
+			return gerror.NewCodef(gerror.CodeInvalidParameter, `invalid relation specified: "%v"`, relationKV)
 		}
 		// Check and find possible bind to attribute name.
 		if relationKVStr != "" && !relationBindToSubAttrNameChecked {
@@ -224,7 +233,8 @@ func doScanList(model *Model, result Result, listPointer interface{}, bindToAttr
 					filedMap[relationFromAttrType.Field(i).Name] = struct{}{}
 				}
 				if key, _ := gutil.MapPossibleItemByKey(filedMap, relationBindToSubAttrName); key == "" {
-					return gerror.Newf(
+					return gerror.NewCodef(
+						gerror.CodeInvalidParameter,
 						`cannot find possible related attribute name "%s" from given relation key "%s"`,
 						relationBindToSubAttrName,
 						relationKVStr,
@@ -255,10 +265,14 @@ func doScanList(model *Model, result Result, listPointer interface{}, bindToAttr
 					}
 				} else {
 					// May be the attribute does not exist yet.
-					return gerror.Newf(`invalid relation specified: "%v"`, relationKV)
+					return gerror.NewCodef(gerror.CodeInvalidParameter, `invalid relation specified: "%v"`, relationKV)
 				}
 			} else {
-				return gerror.Newf(`relationKey should not be empty as field "%s" is slice`, bindToAttrName)
+				return gerror.NewCodef(
+					gerror.CodeInvalidParameter,
+					`relationKey should not be empty as field "%s" is slice`,
+					bindToAttrName,
+				)
 			}
 
 		case reflect.Ptr:
@@ -287,7 +301,7 @@ func doScanList(model *Model, result Result, listPointer interface{}, bindToAttr
 					}
 				} else {
 					// May be the attribute does not exist yet.
-					return gerror.Newf(`invalid relation specified: "%v"`, relationKV)
+					return gerror.NewCodef(gerror.CodeInvalidParameter, `invalid relation specified: "%v"`, relationKV)
 				}
 			} else {
 				if i >= len(result) {
@@ -331,7 +345,7 @@ func doScanList(model *Model, result Result, listPointer interface{}, bindToAttr
 					}
 				} else {
 					// May be the attribute does not exist yet.
-					return gerror.Newf(`invalid relation specified: "%v"`, relationKV)
+					return gerror.NewCodef(gerror.CodeInvalidParameter, `invalid relation specified: "%v"`, relationKV)
 				}
 			} else {
 				if i >= len(result) {
@@ -355,7 +369,7 @@ func doScanList(model *Model, result Result, listPointer interface{}, bindToAttr
 			}
 
 		default:
-			return gerror.Newf(`unsupported attribute type: %s`, bindToAttrKind.String())
+			return gerror.NewCodef(gerror.CodeInvalidParameter, `unsupported attribute type: %s`, bindToAttrKind.String())
 		}
 	}
 	reflect.ValueOf(listPointer).Elem().Set(arrayValue)

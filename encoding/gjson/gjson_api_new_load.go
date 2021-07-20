@@ -264,7 +264,7 @@ func doLoadContentWithOptions(dataType string, data []byte, options Options) (*J
 			return nil, err
 		}
 	default:
-		err = gerror.New("unsupported type for loading")
+		err = gerror.NewCode(gerror.CodeInvalidParameter, "unsupported type for loading")
 	}
 	if err != nil {
 		return nil, err

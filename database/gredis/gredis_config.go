@@ -114,7 +114,7 @@ func ConfigFromStr(str string) (config *Config, err error) {
 			config.Port = DefaultRedisPort
 		}
 	} else {
-		err = gerror.Newf(`invalid redis configuration: "%s"`, str)
+		err = gerror.NewCodef(gerror.CodeInvalidConfiguration, `invalid redis configuration: "%s"`, str)
 	}
 	return
 }

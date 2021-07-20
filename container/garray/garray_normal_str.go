@@ -90,7 +90,7 @@ func (a *StrArray) Set(index int, value string) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if index < 0 || index >= len(a.array) {
-		return gerror.Newf("index %d out of array range %d", index, len(a.array))
+		return gerror.NewCodef(gerror.CodeInvalidParameter, "index %d out of array range %d", index, len(a.array))
 	}
 	a.array[index] = value
 	return nil
@@ -162,7 +162,7 @@ func (a *StrArray) InsertBefore(index int, value string) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if index < 0 || index >= len(a.array) {
-		return gerror.Newf("index %d out of array range %d", index, len(a.array))
+		return gerror.NewCodef(gerror.CodeInvalidParameter, "index %d out of array range %d", index, len(a.array))
 	}
 	rear := append([]string{}, a.array[index:]...)
 	a.array = append(a.array[0:index], value)
@@ -175,7 +175,7 @@ func (a *StrArray) InsertAfter(index int, value string) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if index < 0 || index >= len(a.array) {
-		return gerror.Newf("index %d out of array range %d", index, len(a.array))
+		return gerror.NewCodef(gerror.CodeInvalidParameter, "index %d out of array range %d", index, len(a.array))
 	}
 	rear := append([]string{}, a.array[index+1:]...)
 	a.array = append(a.array[0:index+1], value)
@@ -562,7 +562,7 @@ func (a *StrArray) Fill(startIndex int, num int, value string) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if startIndex < 0 || startIndex > len(a.array) {
-		return gerror.Newf("index %d out of array range %d", startIndex, len(a.array))
+		return gerror.NewCodef(gerror.CodeInvalidParameter, "index %d out of array range %d", startIndex, len(a.array))
 	}
 	for i := startIndex; i < startIndex+num; i++ {
 		if i > len(a.array)-1 {

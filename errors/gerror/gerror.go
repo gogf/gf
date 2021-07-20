@@ -49,7 +49,7 @@ func New(text string) error {
 	return &Error{
 		stack: callers(),
 		text:  text,
-		code:  -1,
+		code:  CodeNil,
 	}
 }
 
@@ -58,7 +58,7 @@ func Newf(format string, args ...interface{}) error {
 	return &Error{
 		stack: callers(),
 		text:  fmt.Sprintf(format, args...),
-		code:  -1,
+		code:  CodeNil,
 	}
 }
 
@@ -68,7 +68,7 @@ func NewSkip(skip int, text string) error {
 	return &Error{
 		stack: callers(skip),
 		text:  text,
-		code:  -1,
+		code:  CodeNil,
 	}
 }
 
@@ -78,7 +78,7 @@ func NewSkipf(skip int, format string, args ...interface{}) error {
 	return &Error{
 		stack: callers(skip),
 		text:  fmt.Sprintf(format, args...),
-		code:  -1,
+		code:  CodeNil,
 	}
 }
 

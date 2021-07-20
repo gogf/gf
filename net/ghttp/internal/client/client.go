@@ -242,27 +242,27 @@ func (c *Client) SetProxy(proxyURL string) {
 	}
 }
 
-// SetTlsKeyCrt sets the certificate and key file for TLS configuration of client.
+// SetTLSKeyCrt sets the certificate and key file for TLS configuration of client.
 func (c *Client) SetTLSKeyCrt(crtFile, keyFile string) error {
 	tlsConfig, err := LoadKeyCrt(crtFile, keyFile)
 	if err != nil {
-		return err
+		return gerror.WrapCode(gerror.CodeInternalError, err, "LoadKeyCrt failed")
 	}
 	if v, ok := c.Transport.(*http.Transport); ok {
 		tlsConfig.InsecureSkipVerify = true
 		v.TLSClientConfig = tlsConfig
 		return nil
 	}
-	return gerror.New(`cannot set TLSClientConfig for custom Transport of the client`)
+	return gerror.NewCode(gerror.CodeInternalError, `cannot set TLSClientConfig for custom Transport of the client`)
 }
 
-// SetTlsConfig sets the TLS configuration of client.
+// SetTLSConfig sets the TLS configuration of client.
 func (c *Client) SetTLSConfig(tlsConfig *tls.Config) error {
 	if v, ok := c.Transport.(*http.Transport); ok {
 		v.TLSClientConfig = tlsConfig
 		return nil
 	}
-	return gerror.New(`cannot set TLSClientConfig for custom Transport of the client`)
+	return gerror.NewCode(gerror.CodeInternalError, `cannot set TLSClientConfig for custom Transport of the client`)
 }
 
 // LoadKeyCrt creates and returns a TLS configuration object with given certificate and key files.

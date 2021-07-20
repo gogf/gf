@@ -7,7 +7,7 @@
 package gvalid
 
 import (
-	"errors"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/text/gstr"
 	"strings"
@@ -15,6 +15,7 @@ import (
 
 // Error is the validation error for validation result.
 type Error interface {
+	Code() int
 	Current() error
 	Error() string
 	FirstItem() (key string, messages map[string]string)
@@ -29,6 +30,7 @@ type Error interface {
 
 // validationError is the validation error for validation result.
 type validationError struct {
+	code      int                          // Error code.
 	rules     []string                     // Rules by sequence, which is used for keeping error sequence.
 	errors    map[string]map[string]string // Error map:map[field]map[rule]message
 	firstKey  string                       // The first error rule key(empty in default).
@@ -36,7 +38,7 @@ type validationError struct {
 }
 
 // newError creates and returns a validation error.
-func newError(rules []string, errors map[string]map[string]string) *validationError {
+func newError(code int, rules []string, errors map[string]map[string]string) *validationError {
 	for field, m := range errors {
 		for k, v := range m {
 			v = strings.Replace(v, ":attribute", field, -1)
@@ -47,6 +49,7 @@ func newError(rules []string, errors map[string]map[string]string) *validationEr
 		errors[field] = m
 	}
 	return &validationError{
+		code:   code,
 		rules:  rules,
 		errors: errors,
 	}
@@ -54,11 +57,19 @@ func newError(rules []string, errors map[string]map[string]string) *validationEr
 
 // newErrorStr creates and returns a validation error by string.
 func newErrorStr(key, err string) *validationError {
-	return newError(nil, map[string]map[string]string{
+	return newError(gerror.CodeInternalError, nil, map[string]map[string]string{
 		internalErrorMapKey: {
 			key: err,
 		},
 	})
+}
+
+// Code returns the error code of current validation error.
+func (e *validationError) Code() int {
+	if e == nil {
+		return gerror.CodeNil
+	}
+	return e.code
 }
 
 // Map returns the first error message as map.
@@ -179,7 +190,7 @@ func (e *validationError) Current() error {
 		return nil
 	}
 	_, err := e.FirstRule()
-	return errors.New(err)
+	return gerror.NewCode(e.code, err)
 }
 
 // String returns all error messages as string, multiple error messages joined using char ';'.
