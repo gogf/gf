@@ -2,7 +2,7 @@ name: Go
 
 on:
   push:
-    branches: 
+    branches:
       - master
       - main
       - develop
@@ -11,7 +11,7 @@ on:
     branches: [ master ]
 env:
   GF_DEBUG: 1
-  
+
 jobs:
 
   code-test:
@@ -74,5 +74,12 @@ jobs:
     # - name: Build
     #   run: go build -v ./...
 
-    - name: Test
-      run: go test -v ./...
+    - name: 386 mode Test
+      run: GOARCH=386 go test -v ./... || exit 1
+
+    - name: amd64 mode Test
+      run: GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic
+
+    - name: report coverage
+      run: bash <(curl -s https://codecov.io/bash)
+
