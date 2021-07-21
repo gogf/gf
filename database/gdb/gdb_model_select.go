@@ -552,6 +552,10 @@ func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, e
 				intlog.Error(m.GetCtx(), err)
 			}
 		} else {
+			// In case of Cache Penetration.
+			if result == nil {
+				result = Result{}
+			}
 			if err := cacheObj.Set(cacheKey, result, m.cacheDuration); err != nil {
 				intlog.Error(m.GetCtx(), err)
 			}
