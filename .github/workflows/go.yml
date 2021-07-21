@@ -19,7 +19,6 @@ jobs:
     # Service containers to run with `code-test`
     services:
       redis:
-        # Docker Hub image
         image: redis
         options: >-
           --health-cmd "redis-cli ping"
