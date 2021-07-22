@@ -50,6 +50,12 @@ jobs:
         ports:
           # Maps tcp port 3306 on service container to the host
           - 3306:3306
+
+    # strategy set
+    strategy:
+      matrix:
+        go: [ '1.13', '1.14','1.15','1.16' ]
+
     steps:
 
     - uses: szenius/set-timezone@v1.0
@@ -61,7 +67,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
-        go-version: 1.16
+        go-version: ${{ matrix.go }}
 
     - name: Before script
       run: |
