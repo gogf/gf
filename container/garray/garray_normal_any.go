@@ -36,7 +36,7 @@ func New(safe ...bool) *Array {
 	return NewArraySize(0, 0, safe...)
 }
 
-// See New.
+// NewArray See New.
 func NewArray(safe ...bool) *Array {
 	return NewArraySize(0, 0, safe...)
 }
@@ -422,7 +422,7 @@ func (a *Array) SubSlice(offset int, length ...int) []interface{} {
 	}
 }
 
-// See PushRight.
+// Append See PushRight.
 func (a *Array) Append(value ...interface{}) *Array {
 	a.PushRight(value...)
 	return a
