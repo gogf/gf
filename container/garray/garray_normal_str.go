@@ -136,10 +136,7 @@ func (a *StrArray) Sort(reverse ...bool) *StrArray {
 	defer a.mu.Unlock()
 	if len(reverse) > 0 && reverse[0] {
 		sort.Slice(a.array, func(i, j int) bool {
-			if strings.Compare(a.array[i], a.array[j]) < 0 {
-				return false
-			}
-			return true
+			return strings.Compare(a.array[i], a.array[j]) >= 0
 		})
 	} else {
 		sort.Strings(a.array)
@@ -414,7 +411,7 @@ func (a *StrArray) SubSlice(offset int, length ...int) []string {
 	}
 }
 
-// See PushRight.
+// Append See PushRight.
 func (a *StrArray) Append(value ...string) *StrArray {
 	a.mu.Lock()
 	a.array = append(a.array, value...)
