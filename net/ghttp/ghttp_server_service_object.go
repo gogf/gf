@@ -145,10 +145,7 @@ func (s *Server) doBindObject(pattern string, object interface{}, method string,
 	s.bindHandlerByMap(m)
 }
 
-func (s *Server) doBindObjectMethod(
-	pattern string, object interface{}, method string,
-	middleware []HandlerFunc, source string,
-) {
+func (s *Server) doBindObjectMethod(pattern string, object interface{}, method string, middleware []HandlerFunc, source string) {
 	var (
 		m        = make(map[string]*handlerItem)
 		v        = reflect.ValueOf(object)
