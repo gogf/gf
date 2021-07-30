@@ -78,6 +78,12 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 		Response:  newResponse(s, w),
 		EnterTime: gtime.TimestampMilli(),
 	}
+	// Inject Request object into context.
+	request.context = context.WithValue(
+		request.Context(),
+		ctxKeyForRequest,
+		request,
+	)
 	request.Cookie = GetCookie(request)
 	request.Session = s.sessionManager.New(
 		r.Context(),
