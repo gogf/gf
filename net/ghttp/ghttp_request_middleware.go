@@ -59,27 +59,6 @@ func (m *middleware) Next() {
 			m.handlerIndex++
 
 			switch item.Handler.Type {
-			// Service controller.
-			case handlerTypeController:
-				m.served = true
-				if m.request.IsExited() {
-					break
-				}
-				c := reflect.New(item.Handler.CtrlInfo.Type)
-				niceCallFunc(func() {
-					c.MethodByName("Init").Call([]reflect.Value{reflect.ValueOf(m.request)})
-				})
-				if !m.request.IsExited() {
-					niceCallFunc(func() {
-						c.MethodByName(item.Handler.CtrlInfo.Name).Call(nil)
-					})
-				}
-				if !m.request.IsExited() {
-					niceCallFunc(func() {
-						c.MethodByName("Shut").Call(nil)
-					})
-				}
-
 			// Service object.
 			case handlerTypeObject:
 				m.served = true
