@@ -61,8 +61,6 @@ type whereHolder struct {
 }
 
 const (
-	OptionOmitEmpty  = 1
-	OptionAllowEmpty = 2
 	linkTypeMaster   = 1
 	linkTypeSlave    = 2
 	whereHolderWhere = 1
@@ -128,7 +126,6 @@ func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 		fields:     "*",
 		start:      -1,
 		offset:     -1,
-		option:     OptionAllowEmpty,
 		filter:     true,
 		extraArgs:  extraArgs,
 	}
