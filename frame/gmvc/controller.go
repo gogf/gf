@@ -5,6 +5,7 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package gmvc provides basic object classes for MVC.
+// Deprecated, no longer suggested.
 package gmvc
 
 import (
@@ -12,6 +13,7 @@ import (
 )
 
 // Controller is used for controller register of ghttp.Server.
+// Deprecated, no longer suggested.
 type Controller struct {
 	Request  *ghttp.Request
 	Response *ghttp.Response

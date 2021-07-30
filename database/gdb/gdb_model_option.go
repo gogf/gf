@@ -6,22 +6,40 @@
 
 package gdb
 
+const (
+	optionOmitEmpty      = optionOmitEmptyWhere | optionOmitEmptyData
+	optionOmitEmptyWhere = 1 << iota // 8
+	optionOmitEmptyData              // 16
+)
+
 // Option adds extra operation option for the model.
+// Deprecated, use separate operations instead.
 func (m *Model) Option(option int) *Model {
 	model := m.getModel()
 	model.option = model.option | option
 	return model
 }
 
-// OptionOmitEmpty sets OptionOmitEmpty option for the model, which automatically filers
-// the data and where attributes for empty values.
-// Deprecated, use OmitEmpty instead.
-func (m *Model) OptionOmitEmpty() *Model {
-	return m.Option(OptionOmitEmpty)
+// OmitEmpty sets OmitEmpty option for the model, which automatically filers
+// the data and where parameters for `empty` values.
+func (m *Model) OmitEmpty() *Model {
+	model := m.getModel()
+	model.option = model.option | optionOmitEmpty
+	return model
 }
 
-// OmitEmpty sets OptionOmitEmpty option for the model, which automatically filers
-// the data and where attributes for empty values.
-func (m *Model) OmitEmpty() *Model {
-	return m.Option(OptionOmitEmpty)
+// OmitEmptyWhere sets OmitEmptyWhere option for the model, which automatically filers
+// the Where/Having parameters for `empty` values.
+func (m *Model) OmitEmptyWhere() *Model {
+	model := m.getModel()
+	model.option = model.option | optionOmitEmptyWhere
+	return model
+}
+
+// OmitEmptyData sets OmitEmptyData option for the model, which automatically filers
+// the Data parameters for `empty` values.
+func (m *Model) OmitEmptyData() *Model {
+	model := m.getModel()
+	model.option = model.option | optionOmitEmptyData
+	return model
 }

@@ -1938,7 +1938,7 @@ func Test_Model_Option_Map(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		table := createTable()
 		defer dropTable(table)
-		r, err := db.Model(table).Option(gdb.OptionOmitEmpty).Data(g.Map{
+		r, err := db.Model(table).OmitEmptyData().Data(g.Map{
 			"id":       1,
 			"passport": 0,
 			"password": 0,
@@ -1958,7 +1958,7 @@ func Test_Model_Option_Map(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		table := createInitTable()
 		defer dropTable(table)
-		_, err := db.Model(table).Option(gdb.OptionOmitEmpty).Data(g.Map{
+		_, err := db.Model(table).OmitEmptyData().Data(g.Map{
 			"id":       1,
 			"passport": 0,
 			"password": 0,
@@ -1994,7 +1994,7 @@ func Test_Model_Option_Map(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		table := createTable()
 		defer dropTable(table)
-		_, err := db.Model(table).Option(gdb.OptionOmitEmpty).Data(g.Map{
+		_, err := db.Model(table).OmitEmptyData().Data(g.Map{
 			"id":       1,
 			"passport": 0,
 			"password": 0,
@@ -2031,7 +2031,7 @@ func Test_Model_Option_Map(t *testing.T) {
 		n, _ := r.RowsAffected()
 		t.Assert(n, 1)
 
-		_, err = db.Model(table).Option(gdb.OptionOmitEmpty).Data(g.Map{"nickname": ""}).Where("id", 2).Update()
+		_, err = db.Model(table).OmitEmptyData().Data(g.Map{"nickname": ""}).Where("id", 2).Update()
 		t.AssertNE(err, nil)
 
 		r, err = db.Model(table).OmitEmpty().Data(g.Map{"nickname": "", "password": "123"}).Where("id", 3).Update()

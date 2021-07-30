@@ -110,7 +110,7 @@ func (m *Model) doMappingAndFilterForInsertOrUpdateDataMap(data Map, allowOmitEm
 		return nil, err
 	}
 	// Remove key-value pairs of which the value is empty.
-	if allowOmitEmpty && m.option&OptionOmitEmpty > 0 {
+	if allowOmitEmpty && m.option&optionOmitEmptyData > 0 {
 		tempMap := make(Map, len(data))
 		for k, v := range data {
 			if empty.IsEmpty(v) {
