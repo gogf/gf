@@ -7,7 +7,6 @@
 package ghttp
 
 import (
-	"context"
 	"github.com/gogf/gf/errors/gerror"
 	"net/http"
 	"reflect"
@@ -130,9 +129,7 @@ func (m *middleware) callHandlerFunc(funcInfo handlerFuncInfo) {
 			funcInfo.Func(m.request)
 		} else {
 			var inputValues = []reflect.Value{
-				reflect.ValueOf(context.WithValue(
-					m.request.Context(), ctxKeyForRequest, m.request,
-				)),
+				reflect.ValueOf(m.request.Context()),
 			}
 			if funcInfo.Type.NumIn() == 2 {
 				var (
