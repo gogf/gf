@@ -140,7 +140,7 @@ func Test_StackWithFilter(t *testing.T) {
 		t.Assert(err, nil)
 		defer gfile.Remove(path)
 
-		Path(path).File(file).StackWithFilter("gogf").Stdout(false).Error(1, 2, 3)
+		Path(path).File(file).StackWithFilter("/gf/").Stdout(false).Error(1, 2, 3)
 		content := gfile.GetContents(gfile.Join(path, file))
 		t.Assert(gstr.Count(content, defaultLevelPrefixes[LEVEL_ERRO]), 1)
 		t.Assert(gstr.Count(content, "1 2 3"), 1)

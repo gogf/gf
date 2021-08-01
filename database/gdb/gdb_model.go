@@ -56,6 +56,10 @@ type Model struct {
 // ModelHandler is a function that handles given Model and returns a new Model that is custom modified.
 type ModelHandler func(m *Model) *Model
 
+// ChunkHandler is a function that is used in function Chunk, which handles given Result and error.
+// It returns true if it wants continue chunking, or else it returns false to stop chunking.
+type ChunkHandler func(result Result, err error) bool
+
 // whereHolder is the holder for where condition preparing.
 type whereHolder struct {
 	operator int           // Operator for this holder.
