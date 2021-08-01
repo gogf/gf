@@ -55,11 +55,13 @@ type apiTableName interface {
 }
 
 const (
-	OrmTagForStruct  = "orm"
-	OrmTagForUnique  = "unique"
-	OrmTagForPrimary = "primary"
-	OrmTagForTable   = "table"
-	OrmTagForWith    = "with"
+	OrmTagForStruct    = "orm"
+	OrmTagForUnique    = "unique"
+	OrmTagForPrimary   = "primary"
+	OrmTagForTable     = "table"
+	OrmTagForWith      = "with"
+	OrmTagForWithWhere = "where"
+	OrmTagForWithOrder = "order"
 )
 
 var (
