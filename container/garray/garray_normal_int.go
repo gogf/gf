@@ -149,7 +149,7 @@ func (a *IntArray) Sort(reverse ...bool) *IntArray {
 	defer a.mu.Unlock()
 	if len(reverse) > 0 && reverse[0] {
 		sort.Slice(a.array, func(i, j int) bool {
-			return a.array[i] > a.array[j]
+			return a.array[i] >= a.array[j]
 		})
 	} else {
 		sort.Ints(a.array)
