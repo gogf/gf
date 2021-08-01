@@ -145,6 +145,8 @@ func Test_StackWithFilter(t *testing.T) {
 		t.Assert(gstr.Count(content, defaultLevelPrefixes[LEVEL_ERRO]), 1)
 		t.Assert(gstr.Count(content, "1 2 3"), 1)
 		t.Assert(gstr.Count(content, "Stack"), 0)
+		fmt.Println("Content:")
+		fmt.Println(content)
 	})
 }
 

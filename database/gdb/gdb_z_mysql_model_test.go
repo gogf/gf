@@ -3729,3 +3729,27 @@ func Test_Model_Raw(t *testing.T) {
 		t.Assert(count, 6)
 	})
 }
+
+func Test_Model_Handler(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		m := db.Model(table).Safe().Handler(
+			func(m *gdb.Model) *gdb.Model {
+				return m.Page(0, 3)
+			},
+			func(m *gdb.Model) *gdb.Model {
+				return m.Where("id", g.Slice{1, 2, 3, 4, 5, 6})
+			},
+			func(m *gdb.Model) *gdb.Model {
+				return m.OrderDesc("id")
+			},
+		)
+		all, err := m.All()
+		t.AssertNil(err)
+		t.Assert(len(all), 3)
+		t.Assert(all[0]["id"], 6)
+		t.Assert(all[2]["id"], 4)
+	})
+}
