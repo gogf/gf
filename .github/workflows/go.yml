@@ -1,0 +1,90 @@
+name: Go
+
+on:
+  push:
+    branches:
+      - master
+      - main
+      - develop
+      - staging
+  pull_request:
+    branches: [ master ]
+env:
+  GF_DEBUG: 1
+
+jobs:
+
+  code-test:
+    runs-on: ubuntu-latest
+    # Service containers to run with `code-test`
+    services:
+      redis:
+        image: redis
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          # Maps tcp port 6379 on service container to the host
+          - 6379:6379
+      postgres:
+        image: postgres:9
+        # Provide the password for postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          # Maps tcp port 5432 on service container to the host
+          - 5432:5432
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_ROOT_PASSWORD: 12345678
+          MYSQL_DATABASE: test
+        ports:
+          # Maps tcp port 3306 on service container to the host
+          - 3306:3306
+
+    # strategy set
+    strategy:
+      matrix:
+        go: [ '1.13', '1.14','1.15','1.16' ]
+
+    steps:
+
+    - uses: szenius/set-timezone@v1.0
+      with:
+        timezoneLinux: "Asia/Shanghai"
+
+    - uses: actions/checkout@v2
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: ${{ matrix.go }}
+
+    - name: Before script
+      run: |
+        date
+        find . -name "*.go" | xargs gofmt -w
+        git diff --name-only --exit-code || exit 1
+        sudo echo "127.0.0.1   local" | sudo tee -a /etc/hosts
+
+    # - name: Build
+    #   run: go build -v ./...
+
+    - name: 386 mode Test
+      run: GOARCH=386 go test -v ./... || exit 1
+
+    - name: amd64 mode Test
+      run: GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic
+
+    - name: report coverage
+      run: bash <(curl -s https://codecov.io/bash)
+

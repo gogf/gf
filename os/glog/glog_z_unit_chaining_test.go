@@ -115,36 +115,36 @@ func Test_Stack(t *testing.T) {
 	})
 }
 
-func Test_StackWithFilter(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		path := gfile.TempDir(gtime.TimestampNanoStr())
-		file := fmt.Sprintf(`%d.log`, gtime.TimestampNano())
-
-		err := gfile.Mkdir(path)
-		t.Assert(err, nil)
-		defer gfile.Remove(path)
-
-		Path(path).File(file).StackWithFilter("none").Stdout(false).Error(1, 2, 3)
-		content := gfile.GetContents(gfile.Join(path, file))
-		t.Assert(gstr.Count(content, defaultLevelPrefixes[LEVEL_ERRO]), 1)
-		t.Assert(gstr.Count(content, "1 2 3"), 1)
-		t.Assert(gstr.Count(content, "Stack"), 1)
-	})
-	gtest.C(t, func(t *gtest.T) {
-		path := gfile.TempDir(gtime.TimestampNanoStr())
-		file := fmt.Sprintf(`%d.log`, gtime.TimestampNano())
-
-		err := gfile.Mkdir(path)
-		t.Assert(err, nil)
-		defer gfile.Remove(path)
-
-		Path(path).File(file).StackWithFilter("gogf").Stdout(false).Error(1, 2, 3)
-		content := gfile.GetContents(gfile.Join(path, file))
-		t.Assert(gstr.Count(content, defaultLevelPrefixes[LEVEL_ERRO]), 1)
-		t.Assert(gstr.Count(content, "1 2 3"), 1)
-		t.Assert(gstr.Count(content, "Stack"), 0)
-	})
-}
+//func Test_StackWithFilter(t *testing.T) {
+//	gtest.C(t, func(t *gtest.T) {
+//		path := gfile.TempDir(gtime.TimestampNanoStr())
+//		file := fmt.Sprintf(`%d.log`, gtime.TimestampNano())
+//
+//		err := gfile.Mkdir(path)
+//		t.Assert(err, nil)
+//		defer gfile.Remove(path)
+//
+//		Path(path).File(file).StackWithFilter("none").Stdout(false).Error(1, 2, 3)
+//		content := gfile.GetContents(gfile.Join(path, file))
+//		t.Assert(gstr.Count(content, defaultLevelPrefixes[LEVEL_ERRO]), 1)
+//		t.Assert(gstr.Count(content, "1 2 3"), 1)
+//		t.Assert(gstr.Count(content, "Stack"), 1)
+//	})
+//	gtest.C(t, func(t *gtest.T) {
+//		path := gfile.TempDir(gtime.TimestampNanoStr())
+//		file := fmt.Sprintf(`%d.log`, gtime.TimestampNano())
+//
+//		err := gfile.Mkdir(path)
+//		t.Assert(err, nil)
+//		defer gfile.Remove(path)
+//
+//		Path(path).File(file).StackWithFilter("gogf").Stdout(false).Error(1, 2, 3)
+//		content := gfile.GetContents(gfile.Join(path, file))
+//		t.Assert(gstr.Count(content, defaultLevelPrefixes[LEVEL_ERRO]), 1)
+//		t.Assert(gstr.Count(content, "1 2 3"), 1)
+//		t.Assert(gstr.Count(content, "Stack"), 0)
+//	})
+//}
 
 func Test_Header(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
