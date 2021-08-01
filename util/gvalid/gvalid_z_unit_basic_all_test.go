@@ -1027,3 +1027,54 @@ func Test_Code(t *testing.T) {
 		t.Assert(gerror.Code(err), gerror.CodeInternalError)
 	})
 }
+
+func Test_Bail(t *testing.T) {
+	// check value with no bail
+	gtest.C(t, func(t *gtest.T) {
+		err := g.Validator().
+			Rules("required|min:1|between:1,100").
+			Messages("|min number is 1|size is between 1 and 100").
+			CheckValue(-1)
+		t.AssertNE(err, nil)
+		t.Assert(err.Error(), "min number is 1; size is between 1 and 100")
+	})
+
+	// check value with bail
+	gtest.C(t, func(t *gtest.T) {
+		err := g.Validator().
+			Rules("bail|required|min:1|between:1,100").
+			Messages("||min number is 1|size is between 1 and 100").
+			CheckValue(-1)
+		t.AssertNE(err, nil)
+		t.Assert(err.Error(), "min number is 1")
+	})
+
+	// struct with no bail
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			Page int `v:"required|min:1"`
+			Size int `v:"required|min:1|between:1,100 # |min number is 1|size is between 1 and 100"`
+		}
+		obj := &Params{
+			Page: 1,
+			Size: -1,
+		}
+		err := g.Validator().CheckStruct(obj)
+		t.AssertNE(err, nil)
+		t.Assert(err.Error(), "min number is 1; size is between 1 and 100")
+	})
+	// struct with bail
+	gtest.C(t, func(t *gtest.T) {
+		type Params struct {
+			Page int `v:"required|min:1"`
+			Size int `v:"bail|required|min:1|between:1,100 # ||min number is 1|size is between 1 and 100"`
+		}
+		obj := &Params{
+			Page: 1,
+			Size: -1,
+		}
+		err := g.Validator().CheckStruct(obj)
+		t.AssertNE(err, nil)
+		t.Assert(err.Error(), "min number is 1")
+	})
+}

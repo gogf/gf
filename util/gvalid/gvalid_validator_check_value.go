@@ -34,13 +34,14 @@ func (v *Validator) CheckValue(value interface{}) Error {
 
 // doCheckSingleValue does the really rules validation for single key-value.
 //
-// The parameter `rules` specifies the validation rules string, like "required", "required|between:1,100", etc.
+// The parameter `name` specifies the name of parameter `value`.
 // The parameter `value` specifies the value for this rules to be validated.
+// The parameter `rules` specifies the validation rules string, like "required", "required|between:1,100", etc.
 // The parameter `messages` specifies the custom error messages for this rule, which is usually type of map/slice.
 // The parameter `dataRaw` specifies the `raw data` which is passed to the Validator. It might be type of map/struct or a nil value.
 // The parameter `dataMap` specifies the map that is converted from `dataRaw`. It is usually used internally
 func (v *Validator) doCheckValue(
-	key string,
+	name string,
 	value interface{},
 	rules string,
 	messages interface{},
@@ -92,15 +93,29 @@ func (v *Validator) doCheckValue(
 			break
 		}
 	}
+	var (
+		hasBailRule = false
+	)
 	for index := 0; index < len(ruleItems); {
 		var (
 			err            error
-			match          = false
-			results        = ruleRegex.FindStringSubmatch(ruleItems[index])
-			ruleKey        = strings.TrimSpace(results[1])
-			rulePattern    = strings.TrimSpace(results[2])
+			match          = false                                          // whether this rule is matched(has no error)
+			results        = ruleRegex.FindStringSubmatch(ruleItems[index]) // split single rule.
+			ruleKey        = strings.TrimSpace(results[1])                  // rule name like "max" in rule "max: 6"
+			rulePattern    = strings.TrimSpace(results[2])                  // rule value if any like "6" in rule:"max:6"
 			customRuleFunc RuleFunc
 		)
+
+		if !hasBailRule && ruleKey == bailRuleName {
+			hasBailRule = true
+		}
+
+		// Ignore logic executing for marked rules.
+		if markedRuleMap[ruleKey] {
+			index++
+			continue
+		}
+
 		if len(msgArray) > index {
 			customMsgMap[ruleKey] = strings.TrimSpace(msgArray[index])
 		}
@@ -134,12 +149,17 @@ func (v *Validator) doCheckValue(
 			if _, ok := errorMsgArray[ruleKey]; !ok {
 				errorMsgArray[ruleKey] = v.getErrorMessageByRule(ruleKey, customMsgMap)
 			}
+			// If it is with error and there's bail rule,
+			// it then does not continue validating for left rules.
+			if hasBailRule {
+				break
+			}
 		}
 		index++
 	}
 	if len(errorMsgArray) > 0 {
 		return newError(gerror.CodeValidationFailed, []string{rules}, map[string]map[string]string{
-			key: errorMsgArray,
+			name: errorMsgArray,
 		})
 	}
 	return nil
