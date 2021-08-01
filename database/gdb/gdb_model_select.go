@@ -101,27 +101,27 @@ func (m *Model) getFieldsFiltered() string {
 	return newFields
 }
 
-// Chunk iterates the query result with given size and callback function.
-func (m *Model) Chunk(limit int, callback func(result Result, err error) bool) {
+// Chunk iterates the query result with given `size` and `handler` function.
+func (m *Model) Chunk(size int, handler ChunkHandler) {
 	page := m.start
 	if page <= 0 {
 		page = 1
 	}
 	model := m
 	for {
-		model = model.Page(page, limit)
+		model = model.Page(page, size)
 		data, err := model.All()
 		if err != nil {
-			callback(nil, err)
+			handler(nil, err)
 			break
 		}
 		if len(data) == 0 {
 			break
 		}
-		if callback(data, err) == false {
+		if handler(data, err) == false {
 			break
 		}
-		if len(data) < limit {
+		if len(data) < size {
 			break
 		}
 		page++

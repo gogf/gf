@@ -77,6 +77,7 @@ func (r Result) List() List {
 
 // Array retrieves and returns specified column values as slice.
 // The parameter `field` is optional is the column field is only one.
+// The default `field` is the first field name of the first item in `Result` if parameter `field` is not given.
 func (r Result) Array(field ...string) []Value {
 	array := make([]Value, len(r))
 	if len(r) == 0 {
