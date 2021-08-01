@@ -53,6 +53,9 @@ type Model struct {
 	onDuplicateEx interface{}    // onDuplicateEx is used for excluding some columns ON "DUPLICATE KEY UPDATE" statement.
 }
 
+// ModelHandler is a function that handles given Model and returns a new Model that is custom modified.
+type ModelHandler func(m *Model) *Model
+
 // whereHolder is the holder for where condition preparing.
 type whereHolder struct {
 	operator int           // Operator for this holder.
@@ -295,5 +298,15 @@ func (m *Model) Safe(safe ...bool) *Model {
 func (m *Model) Args(args ...interface{}) *Model {
 	model := m.getModel()
 	model.extraArgs = append(model.extraArgs, args)
+	return model
+}
+
+// Handler calls each of `handlers` on current Model and returns a new Model.
+// ModelHandler is a function that handles given Model and returns a new Model that is custom modified.
+func (m *Model) Handler(handlers ...ModelHandler) *Model {
+	model := m.getModel()
+	for _, handler := range handlers {
+		model = handler(model)
+	}
 	return model
 }
