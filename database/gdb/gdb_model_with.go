@@ -88,28 +88,20 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 	}
 	for _, field := range fieldMap {
 		var (
-			withTag      string
-			ormTag       = field.Tag(OrmTagForStruct)
-			fieldTypeStr = gstr.TrimAll(field.Type().String(), "*[]")
-			match, _     = gregex.MatchString(
-				fmt.Sprintf(`%s\s*:\s*([^,]+)`, OrmTagForWith),
-				ormTag,
-			)
+			fieldTypeStr    = gstr.TrimAll(field.Type().String(), "*[]")
+			parsedTagOutput = m.parseWithTagInFieldStruct(field)
 		)
-		if len(match) > 1 {
-			withTag = match[1]
-		}
-		if withTag == "" {
+		if parsedTagOutput.With == "" {
 			continue
 		}
 		if !m.withAll && !gstr.InArray(allowedTypeStrArray, fieldTypeStr) {
 			continue
 		}
-		array := gstr.SplitAndTrim(withTag, "=")
+		array := gstr.SplitAndTrim(parsedTagOutput.With, "=")
 		if len(array) == 1 {
 			// It supports using only one column name
 			// if both tables associates using the same column name.
-			array = append(array, withTag)
+			array = append(array, parsedTagOutput.With)
 		}
 		var (
 			model             *Model
@@ -129,7 +121,7 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 			return gerror.NewCodef(
 				gerror.CodeInvalidParameter,
 				`cannot find the related value for attribute name "%s" of with tag "%s"`,
-				relatedAttrName, withTag,
+				relatedAttrName, parsedTagOutput.With,
 			)
 		}
 		bindToReflectValue := field.Value
@@ -153,6 +145,12 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 			model = model.WithAll()
 		} else {
 			model = model.With(m.withArray...)
+		}
+		if parsedTagOutput.Where != "" {
+			model = model.Where(parsedTagOutput.Where)
+		}
+		if parsedTagOutput.Order != "" {
+			model = model.Order(parsedTagOutput.Order)
 		}
 
 		err = model.Fields(fieldKeys).Where(relatedFieldName, relatedFieldValue).Scan(bindToReflectValue)
@@ -201,28 +199,20 @@ func (m *Model) doWithScanStructs(pointer interface{}) error {
 
 	for fieldName, field := range fieldMap {
 		var (
-			withTag      string
-			ormTag       = field.Tag(OrmTagForStruct)
-			fieldTypeStr = gstr.TrimAll(field.Type().String(), "*[]")
-			match, _     = gregex.MatchString(
-				fmt.Sprintf(`%s\s*:\s*([^,]+)`, OrmTagForWith),
-				ormTag,
-			)
+			fieldTypeStr    = gstr.TrimAll(field.Type().String(), "*[]")
+			parsedTagOutput = m.parseWithTagInFieldStruct(field)
 		)
-		if len(match) > 1 {
-			withTag = match[1]
-		}
-		if withTag == "" {
+		if parsedTagOutput.With == "" {
 			continue
 		}
 		if !m.withAll && !gstr.InArray(allowedTypeStrArray, fieldTypeStr) {
 			continue
 		}
-		array := gstr.SplitAndTrim(withTag, "=")
+		array := gstr.SplitAndTrim(parsedTagOutput.With, "=")
 		if len(array) == 1 {
 			// It supports using only one column name
 			// if both tables associates using the same column name.
-			array = append(array, withTag)
+			array = append(array, parsedTagOutput.With)
 		}
 		var (
 			model             *Model
@@ -242,7 +232,7 @@ func (m *Model) doWithScanStructs(pointer interface{}) error {
 			return gerror.NewCodef(
 				gerror.CodeInvalidParameter,
 				`cannot find the related value for attribute name "%s" of with tag "%s"`,
-				relatedAttrName, withTag,
+				relatedAttrName, parsedTagOutput.With,
 			)
 		}
 
@@ -260,11 +250,58 @@ func (m *Model) doWithScanStructs(pointer interface{}) error {
 		} else {
 			model = model.With(m.withArray...)
 		}
+		if parsedTagOutput.Where != "" {
+			model = model.Where(parsedTagOutput.Where)
+		}
+		if parsedTagOutput.Order != "" {
+			model = model.Order(parsedTagOutput.Order)
+		}
 
-		err = model.Fields(fieldKeys).Where(relatedFieldName, relatedFieldValue).ScanList(pointer, fieldName, withTag)
+		err = model.Fields(fieldKeys).Where(relatedFieldName, relatedFieldValue).ScanList(pointer, fieldName, parsedTagOutput.With)
 		if err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+type parseWithTagInFieldStructOutput struct {
+	With  string
+	Where string
+	Order string
+}
+
+func (m *Model) parseWithTagInFieldStruct(field *structs.Field) (output parseWithTagInFieldStructOutput) {
+	var (
+		match  []string
+		ormTag = field.Tag(OrmTagForStruct)
+	)
+	// with tag.
+	match, _ = gregex.MatchString(
+		fmt.Sprintf(`%s\s*:\s*([^,]+),{0,1}`, OrmTagForWith),
+		ormTag,
+	)
+	if len(match) > 1 {
+		output.With = match[1]
+	}
+	if len(match) > 2 {
+		output.Where = gstr.Trim(match[2])
+	}
+	// where string.
+	match, _ = gregex.MatchString(
+		fmt.Sprintf(`%s\s*:.+,\s*%s:\s*([^,]+),{0,1}`, OrmTagForWith, OrmTagForWithWhere),
+		ormTag,
+	)
+	if len(match) > 1 {
+		output.Where = gstr.Trim(match[1])
+	}
+	// order string.
+	match, _ = gregex.MatchString(
+		fmt.Sprintf(`%s\s*:.+,\s*%s:\s*([^,]+),{0,1}`, OrmTagForWith, OrmTagForWithOrder),
+		ormTag,
+	)
+	if len(match) > 1 {
+		output.Order = gstr.Trim(match[1])
+	}
+	return
 }
