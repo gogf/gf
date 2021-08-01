@@ -78,12 +78,6 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 		Response:  newResponse(s, w),
 		EnterTime: gtime.TimestampMilli(),
 	}
-	// Inject Request object into context.
-	request.context = context.WithValue(
-		request.Context(),
-		ctxKeyForRequest,
-		request,
-	)
 	request.Cookie = GetCookie(request)
 	request.Session = s.sessionManager.New(
 		r.Context(),
@@ -106,15 +100,6 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 		panic(err)
 	}
 	return request
-}
-
-// RequestFromCtx retrieves and returns the Request object from context.
-func RequestFromCtx(ctx context.Context) *Request {
-	result := ctx.Value(ctxKeyForRequest)
-	if result != nil {
-		return result.(*Request)
-	}
-	return nil
 }
 
 // WebSocket upgrades current request as a websocket request.
