@@ -62,11 +62,11 @@ func (v *Validator) doCheckStruct(object interface{}) Error {
 	}
 
 	var (
-		inputParamMap  map[string]interface{}
-		checkRules     = make(map[string]string)
-		customMessage  = make(CustomMsg)
-		checkValueData = v.data
-		errorRules     = make([]string, 0) // Sequence rules.
+		inputParamMap   map[string]interface{}
+		checkRuleStrMap = make(map[string]string) // Complete rules map of struct: map[name]rule, the rule is complete pattern like: Name@RuleStr#Message
+		customMessage   = make(CustomMsg)         // Custom rule error message map.
+		checkValueData  = v.data                  // Ready to be validated data, which can be type of .
+		errorRules      = make([]string, 0)       // Sequence rules.
 	)
 	if checkValueData == nil {
 		checkValueData = object
@@ -101,17 +101,17 @@ func (v *Validator) doCheckStruct(object interface{}) Error {
 					customMessage[name].(map[string]string)[strings.TrimSpace(array[0])] = strings.TrimSpace(msgArray[k])
 				}
 			}
-			checkRules[name] = rule
+			checkRuleStrMap[name] = rule
 			errorRules = append(errorRules, name+"@"+rule)
 		}
 
 	// Map type rules does not support sequence.
 	// Format: map[key]rule
 	case map[string]string:
-		checkRules = v
+		checkRuleStrMap = v
 	}
 	// If there's no struct tag and validation rules, it does nothing and returns quickly.
-	if len(tagField) == 0 && len(checkRules) == 0 {
+	if len(tagField) == 0 && len(checkRuleStrMap) == 0 {
 		return nil
 	}
 	// Input parameter map handling.
@@ -161,14 +161,14 @@ func (v *Validator) doCheckStruct(object interface{}) Error {
 				}
 			}
 		}
-		if _, ok := checkRules[name]; !ok {
-			if _, ok := checkRules[fieldName]; ok {
+		if _, ok := checkRuleStrMap[name]; !ok {
+			if _, ok := checkRuleStrMap[fieldName]; ok {
 				// If there's alias name,
 				// use alias name as its key and remove the field name key.
-				checkRules[name] = checkRules[fieldName]
-				delete(checkRules, fieldName)
+				checkRuleStrMap[name] = checkRuleStrMap[fieldName]
+				delete(checkRuleStrMap, fieldName)
 			} else {
-				checkRules[name] = rule
+				checkRuleStrMap[name] = rule
 			}
 			errorRules = append(errorRules, name+"@"+rule)
 		} else {
@@ -211,13 +211,16 @@ func (v *Validator) doCheckStruct(object interface{}) Error {
 		}
 	}
 
-	// The following logic is the same as some of CheckMap.
-	var value interface{}
-	for key, rule := range checkRules {
+	// The following logic is the same as some of CheckMap but with sequence support.
+	var (
+		value       interface{}
+		hasBailRule bool
+	)
+	for key, rule := range checkRuleStrMap {
 		_, value = gutil.MapPossibleItemByKey(inputParamMap, key)
 		// It checks each rule and its value in loop.
-		if e := v.doCheckValue(key, value, rule, customMessage[key], checkValueData, inputParamMap); e != nil {
-			_, item := e.FirstItem()
+		if validatedError := v.doCheckValue(key, value, rule, customMessage[key], checkValueData, inputParamMap); validatedError != nil {
+			_, item := validatedError.FirstItem()
 			// ===================================================================
 			// Only in map and struct validations, if value is nil or empty string
 			// and has no required* rules, it clears the error message.
@@ -246,6 +249,9 @@ func (v *Validator) doCheckStruct(object interface{}) Error {
 			}
 			for k, v := range item {
 				errorMaps[key][k] = v
+			}
+			if hasBailRule {
+				break
 			}
 		}
 	}
