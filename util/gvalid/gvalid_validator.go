@@ -22,6 +22,7 @@ type Validator struct {
 	messages                         interface{}         // Custom validation error messages, which can be string or type of CustomMsg.
 	ruleFuncMap                      map[string]RuleFunc // ruleFuncMap stores custom rule functions for current Validator.
 	useDataInsteadOfObjectAttributes bool                // Using `data` as its validation source instead of attribute values from `Object`.
+	bail                             bool                // Stop validation after the first validation error.
 }
 
 // New creates and returns a new Validator.
@@ -51,6 +52,13 @@ func (v *Validator) I18n(i18nManager *gi18n.Manager) *Validator {
 func (v *Validator) Ctx(ctx context.Context) *Validator {
 	newValidator := v.Clone()
 	newValidator.ctx = ctx
+	return newValidator
+}
+
+// Bail sets the mark for stopping validation after the first validation error.
+func (v *Validator) Bail() *Validator {
+	newValidator := v.Clone()
+	newValidator.bail = true
 	return newValidator
 }
 

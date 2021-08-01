@@ -68,6 +68,12 @@ import (
 // like: map[field] => string|map[rule]string
 type CustomMsg = map[string]interface{}
 
+// fieldRule defined the alias name and rule string for specified field.
+type fieldRule struct {
+	Name string // Alias name for the field.
+	Rule string // Rule string like: "max:6"
+}
+
 // apiNoValidation is an interface that marks current struct not validated by package `gvalid`.
 type apiNoValidation interface {
 	NoValidation()
@@ -228,7 +234,7 @@ var (
 	// nor error messages.
 	markedRuleMap = map[string]bool{
 		bailRuleName: true,
-		"nullable":   true,
+		//"nullable":   true,
 	}
 )
 
