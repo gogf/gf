@@ -2289,6 +2289,21 @@ func Test_Model_Prefix(t *testing.T) {
 		t.Assert(r[0]["id"], "1")
 		t.Assert(r[1]["id"], "2")
 	})
+	// Select with alias to struct.
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id       int
+			Passport string
+			Password string
+			NickName string
+		}
+		var users []User
+		err := db.Model(table+" u").Where("u.id in (?)", g.Slice{1, 5}).Order("u.id asc").Scan(&users)
+		t.AssertNil(err)
+		t.Assert(len(users), 2)
+		t.Assert(users[0].Id, 1)
+		t.Assert(users[1].Id, 5)
+	})
 	// Select with alias and join statement.
 	gtest.C(t, func(t *gtest.T) {
 		r, err := db.Model(table+" as u1").LeftJoin(table+" as u2", "u2.id=u1.id").Where("u1.id in (?)", g.Slice{1, 2}).Order("u1.id asc").All()
