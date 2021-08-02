@@ -54,7 +54,7 @@ func TestNewCarrier(t *testing.T) {
 		ctx, _ = oteltest.DefaultTracer().Start(ctx, "inject")
 		carrier1 := gtrace.NewCarrier()
 		otel.GetTextMapPropagator().Inject(ctx, carrier1)
-		t.Assert(carrier1.String(), `{"traceparent":"00-4bf92f3577b34da6a3ce929d0e0e4736-0000000000000002-01","tracestate":""}`)
+		t.Assert(carrier1.String(), `{"traceparent":"00-4bf92f3577b34da6a3ce929d0e0e4736-0000000000000002-01"}`)
 
 		ctx = otel.GetTextMapPropagator().Extract(ctx, carrier1)
 		gotSc := trace.SpanContextFromContext(ctx)
