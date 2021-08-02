@@ -61,14 +61,14 @@ func doZipPathWriter(path string, exclude string, zipWriter *zip.Writer, prefix 
 	if len(prefix) > 0 && prefix[0] != "" {
 		headerPrefix = prefix[0]
 	}
-	headerPrefix = strings.TrimRight(headerPrefix, "\\/")
+	headerPrefix = strings.TrimRight(headerPrefix, `\/`)
 	if len(headerPrefix) > 0 && gfile.IsDir(path) {
 		headerPrefix += "/"
 	}
 	if headerPrefix == "" {
 		headerPrefix = gfile.Basename(path)
 	}
-	headerPrefix = strings.Replace(headerPrefix, "//", "/", -1)
+	headerPrefix = strings.Replace(headerPrefix, `//`, `/`, -1)
 	for _, file := range files {
 		if exclude == file {
 			intlog.Printf(context.TODO(), `exclude file path: %s`, file)
@@ -84,14 +84,14 @@ func doZipPathWriter(path string, exclude string, zipWriter *zip.Writer, prefix 
 		var name string
 		path = headerPrefix
 		for {
-			name = gfile.Basename(path)
+			name = strings.Replace(gfile.Basename(path), `\`, `/`, -1)
 			err = zipFileVirtual(
 				fileinfo.New(name, 0, os.ModeDir|os.ModePerm, time.Now()), path, zipWriter,
 			)
 			if err != nil {
 				return err
 			}
-			if path == "/" || !strings.Contains(path, "/") {
+			if path == `/` || !strings.Contains(path, `/`) {
 				break
 			}
 			path = gfile.Dir(path)
@@ -103,7 +103,7 @@ func doZipPathWriter(path string, exclude string, zipWriter *zip.Writer, prefix 
 // zipFile compresses the file of given <path> and writes the content to <zw>.
 // The parameter <prefix> indicates the path prefix for zip file.
 func zipFile(path string, prefix string, zw *zip.Writer) error {
-	prefix = strings.Replace(prefix, "//", "/", -1)
+	prefix = strings.Replace(prefix, `//`, `/`, -1)
 	file, err := os.Open(path)
 	if err != nil {
 		return nil

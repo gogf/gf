@@ -154,7 +154,7 @@ func (c *Client) SetPrefix(prefix string) *Client {
 	return c
 }
 
-// SetTimeOut sets the request timeout for the client.
+// SetTimeout sets the request timeout for the client.
 func (c *Client) SetTimeout(t time.Duration) *Client {
 	c.Client.Timeout = t
 	return c
