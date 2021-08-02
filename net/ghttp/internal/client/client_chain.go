@@ -33,7 +33,7 @@ func (c *Client) Header(m map[string]string) *Client {
 	return newClient
 }
 
-// Header is a chaining function,
+// HeaderRaw is a chaining function,
 // which sets custom HTTP header using raw string for next request.
 func (c *Client) HeaderRaw(headers string) *Client {
 	newClient := c
@@ -92,7 +92,7 @@ func (c *Client) ContentXml() *Client {
 	return newClient
 }
 
-// TimeOut is a chaining function,
+// Timeout is a chaining function,
 // which sets the timeout for next request.
 func (c *Client) Timeout(t time.Duration) *Client {
 	newClient := c
