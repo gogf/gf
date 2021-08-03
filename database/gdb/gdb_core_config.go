@@ -12,8 +12,6 @@ import (
 	"time"
 
 	"github.com/gogf/gf/os/gcache"
-
-	"github.com/gogf/gf/os/glog"
 )
 
 // Config is the configuration management object.
@@ -135,12 +133,12 @@ func IsConfigured() bool {
 }
 
 // SetLogger sets the logger for orm.
-func (c *Core) SetLogger(logger *glog.Logger) {
+func (c *Core) SetLogger(logger Logger) {
 	c.logger = logger
 }
 
 // GetLogger returns the logger of the orm.
-func (c *Core) GetLogger() *glog.Logger {
+func (c *Core) GetLogger() Logger {
 	return c.logger
 }
 
