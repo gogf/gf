@@ -1,7 +1,7 @@
 # GoFrame
 
 [![Go Doc](https://godoc.org/github.com/gogf/gf?status.svg)](https://godoc.org/github.com/gogf/gf)
-[![Build Status](https://travis-ci.com/gogf/gf.svg?branch=master)](https://travis-ci.org/gogf/gf)
+[![GoFrame CI](https://github.com/gogf/gf/actions/workflows/go.yml/badge.svg)](https://github.com/gogf/gf/actions/workflows/go.yml)
 [![Go Report](https://goreportcard.com/badge/github.com/gogf/gf?v=1)](https://goreportcard.com/report/github.com/gogf/gf)
 [![Code Coverage](https://codecov.io/gh/gogf/gf/branch/master/graph/badge.svg)](https://codecov.io/gh/gogf/gf/branch/master)
 [![Production Ready](https://img.shields.io/badge/production-ready-blue.svg)](https://github.com/gogf/gf)
