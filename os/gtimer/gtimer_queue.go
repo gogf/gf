@@ -18,7 +18,7 @@ import (
 // high priority is served before an element with low priority.
 // priorityQueue is based on heap structure.
 type priorityQueue struct {
-	mu             sync.RWMutex
+	mu             sync.Mutex         // use sync.Mutex instead of sync.RWMutex for performance purpose.
 	heap           *priorityQueueHeap // the underlying queue items manager using heap.
 	latestPriority *gtype.Int64       // latestPriority stores the most priority value of the heap, which is used to check if necessary to call the Pop of heap by Timer.
 }
@@ -30,8 +30,8 @@ type priorityQueueHeap struct {
 
 // priorityQueueItem stores the queue item which has a `priority` attribute to sort itself in heap.
 type priorityQueueItem struct {
-	value    interface{}
-	priority int64
+	value    interface{} // queue value.
+	priority int64       // The lesser the `priority` value the higher priority of the `value`, for example: priority of 0 is greater than priority of  1.
 }
 
 // newPriorityQueue creates and returns a priority queue.
@@ -48,8 +48,8 @@ func newPriorityQueue() *priorityQueue {
 
 // Len retrieves and returns the length of the queue.
 func (q *priorityQueue) Len() int {
-	q.mu.RLock()
-	defer q.mu.RUnlock()
+	q.mu.Lock()
+	defer q.mu.Unlock()
 	return q.heap.Len()
 }
 
@@ -63,42 +63,27 @@ func (q *priorityQueue) LatestPriority() int64 {
 // The lesser the `priority` value the higher priority of the `value`.
 func (q *priorityQueue) Push(value interface{}, priority int64) {
 	q.mu.Lock()
+	defer q.mu.Unlock()
 	heap.Push(q.heap, priorityQueueItem{
 		value:    value,
 		priority: priority,
 	})
-	q.mu.Unlock()
+
 	// Update the minimum priority using atomic operation.
-	for {
-		latestPriority := q.latestPriority.Val()
-		if priority >= latestPriority {
-			break
-		}
-		if q.latestPriority.Cas(latestPriority, priority) {
-			break
-		}
+	if priority < q.latestPriority.Val() {
+		q.latestPriority.Set(priority)
 	}
 }
 
 // Pop retrieves, removes and returns the most high priority value from the queue.
 func (q *priorityQueue) Pop() interface{} {
 	q.mu.Lock()
+	defer q.mu.Unlock()
 	if v := heap.Pop(q.heap); v != nil {
 		item := v.(priorityQueueItem)
-		q.mu.Unlock()
 		// Update the minimum priority using atomic operation.
-		for {
-			latestPriority := q.latestPriority.Val()
-			if item.priority >= latestPriority {
-				break
-			}
-			if q.latestPriority.Cas(latestPriority, item.priority) {
-				break
-			}
-		}
+		q.latestPriority.Set(item.priority)
 		return item.value
-	} else {
-		q.mu.Unlock()
 	}
 	return nil
 }
