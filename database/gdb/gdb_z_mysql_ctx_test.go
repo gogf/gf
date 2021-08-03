@@ -30,7 +30,7 @@ func Test_Ctx(t *testing.T) {
 }
 
 func Test_Ctx_Query(t *testing.T) {
-	db.GetLogger().SetCtxKeys("SpanId", "TraceId")
+	db.GetLogger().(gdb.LoggerImp).SetCtxKeys("SpanId", "TraceId")
 	gtest.C(t, func(t *gtest.T) {
 		db.SetDebug(true)
 		defer db.SetDebug(false)
@@ -48,7 +48,7 @@ func Test_Ctx_Query(t *testing.T) {
 func Test_Ctx_Model(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
-	db.GetLogger().SetCtxKeys("SpanId", "TraceId")
+	db.GetLogger().(gdb.LoggerImp).SetCtxKeys("SpanId", "TraceId")
 	gtest.C(t, func(t *gtest.T) {
 		db.SetDebug(true)
 		defer db.SetDebug(false)

@@ -659,9 +659,9 @@ func (c *Core) writeSqlToLogger(ctx context.Context, sql *Sql) {
 	s := fmt.Sprintf("[%3d ms] [%s] %s%s", sql.End-sql.Start, sql.Group, transactionIdStr, sql.Format)
 	if sql.Error != nil {
 		s += "\nError: " + sql.Error.Error()
-		c.logger.Ctx(ctx).Error(s)
+		c.logger.Error(ctx, s)
 	} else {
-		c.logger.Ctx(ctx).Debug(s)
+		c.logger.Debug(ctx, s)
 	}
 }
 

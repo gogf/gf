@@ -8,6 +8,7 @@ package gdb
 
 import (
 	"bytes"
+	"database/sql"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -805,9 +806,9 @@ func handleArguments(sql string, args []interface{}) (newSql string, newArgs []i
 }
 
 // formatError customizes and returns the SQL error.
-func formatError(err error, sql string, args ...interface{}) error {
-	if err != nil && err != ErrNoRows {
-		return gerror.NewCodef(gerror.CodeDbOperationError, "%s, %s\n", err.Error(), FormatSqlWithArgs(sql, args))
+func formatError(err error, s string, args ...interface{}) error {
+	if err != nil && err != sql.ErrNoRows {
+		return gerror.NewCodef(gerror.CodeDbOperationError, "%s, %s\n", err.Error(), FormatSqlWithArgs(s, args))
 	}
 	return err
 }

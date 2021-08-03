@@ -152,8 +152,8 @@ type DB interface {
 	GetGroup() string                   // See Core.GetGroup.
 	SetDryRun(enabled bool)             // See Core.SetDryRun.
 	GetDryRun() bool                    // See Core.GetDryRun.
-	SetLogger(logger *glog.Logger)      // See Core.SetLogger.
-	GetLogger() *glog.Logger            // See Core.GetLogger.
+	SetLogger(logger Logger)            // See Core.SetLogger.
+	GetLogger() Logger                  // See Core.GetLogger.
 	GetConfig() *ConfigNode             // See Core.GetConfig.
 	SetMaxIdleConnCount(n int)          // See Core.SetMaxIdleConnCount.
 	SetMaxOpenConnCount(n int)          // See Core.SetMaxOpenConnCount.
@@ -179,7 +179,7 @@ type Core struct {
 	debug  *gtype.Bool     // Enable debug mode for the database, which can be changed in runtime.
 	cache  *gcache.Cache   // Cache manager, SQL result cache only.
 	schema *gtype.String   // Custom schema for this object.
-	logger *glog.Logger    // Logger.
+	logger Logger          // Logger for logging functionality.
 	config *ConfigNode     // Current config node.
 }
 
@@ -198,6 +198,12 @@ type Link interface {
 	ExecContext(ctx context.Context, sql string, args ...interface{}) (sql.Result, error)
 	PrepareContext(ctx context.Context, sql string) (*sql.Stmt, error)
 	IsTransaction() bool
+}
+
+// Logger is the logging interface for DB.
+type Logger interface {
+	Error(ctx context.Context, s string)
+	Debug(ctx context.Context, s string)
 }
 
 // Sql is the sql recording struct.
@@ -270,9 +276,6 @@ const (
 )
 
 var (
-	// ErrNoRows is alias of sql.ErrNoRows.
-	ErrNoRows = sql.ErrNoRows
-
 	// instances is the management map for instances.
 	instances = gmap.NewStrAnyMap(true)
 
@@ -344,7 +347,7 @@ func New(group ...string) (db DB, err error) {
 				debug:  gtype.NewBool(),
 				cache:  gcache.New(),
 				schema: gtype.NewString(),
-				logger: glog.New(),
+				logger: LoggerImp{glog.New()},
 				config: node,
 			}
 			if v, ok := driverMap[node.Type]; ok {
