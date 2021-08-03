@@ -29,6 +29,11 @@ func (f *Field) IsEmbedded() bool {
 	return f.Field.Anonymous
 }
 
+// TagStr returns the tag string of the field.
+func (f *Field) TagStr() string {
+	return string(f.Field.Tag)
+}
+
 // IsExported returns true if the given field is exported.
 func (f *Field) IsExported() bool {
 	return f.Field.PkgPath == ""
@@ -64,6 +69,25 @@ func (f *Field) OriginalKind() reflect.Kind {
 	return kind
 }
 
+const (
+	RecursiveOptionNone          = 0 // No recursively retrieving fields as map if the field is an embedded struct.
+	RecursiveOptionEmbedded      = 1 // Recursively retrieving fields as map if the field is an embedded struct.
+	RecursiveOptionEmbeddedNoTag = 2 // Recursively retrieving fields as map if the field is an embedded struct and the field has no tag.
+)
+
+type FieldMapInput struct {
+	// Pointer should be type of struct/*struct.
+	Pointer interface{}
+
+	// PriorityTagArray specifies the priority tag array for retrieving from high to low.
+	// If it's given `nil`, it returns map[name]*Field, of which the `name` is attribute name.
+	PriorityTagArray []string
+
+	// RecursiveOption specifies the way retrieving the fields recursively if the attribute
+	// is an embedded struct. It is RecursiveOptionNone in default.
+	RecursiveOption int
+}
+
 // FieldMap retrieves and returns struct field as map[name/tag]*Field from `pointer`.
 //
 // The parameter `pointer` should be type of struct/*struct.
@@ -75,8 +99,8 @@ func (f *Field) OriginalKind() reflect.Kind {
 // is an embedded struct.
 //
 // Note that it only retrieves the exported attributes with first letter up-case from struct.
-func FieldMap(pointer interface{}, priority []string, recursive bool) (map[string]*Field, error) {
-	fields, err := getFieldValues(pointer)
+func FieldMap(input FieldMapInput) (map[string]*Field, error) {
+	fields, err := getFieldValues(input.Pointer)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +114,7 @@ func FieldMap(pointer interface{}, priority []string, recursive bool) (map[strin
 			continue
 		}
 		tagValue = ""
-		for _, p := range priority {
+		for _, p := range input.PriorityTagArray {
 			tagValue = field.Tag(p)
 			if tagValue != "" && tagValue != "-" {
 				break
@@ -101,15 +125,28 @@ func FieldMap(pointer interface{}, priority []string, recursive bool) (map[strin
 		if tagValue != "" {
 			mapField[tagValue] = tempField
 		} else {
-			if recursive && field.IsEmbedded() {
-				m, err := FieldMap(field.Value, priority, recursive)
-				if err != nil {
-					return nil, err
-				}
-				for k, v := range m {
-					if _, ok := mapField[k]; !ok {
-						tempV := v
-						mapField[k] = tempV
+			if input.RecursiveOption != RecursiveOptionNone && field.IsEmbedded() {
+				switch input.RecursiveOption {
+				case RecursiveOptionEmbeddedNoTag:
+					if field.TagStr() != "" {
+						mapField[field.Name()] = tempField
+						break
+					}
+					fallthrough
+				case RecursiveOptionEmbedded:
+					m, err := FieldMap(FieldMapInput{
+						Pointer:          field.Value,
+						PriorityTagArray: input.PriorityTagArray,
+						RecursiveOption:  input.RecursiveOption,
+					})
+					if err != nil {
+						return nil, err
+					}
+					for k, v := range m {
+						if _, ok := mapField[k]; !ok {
+							tempV := v
+							mapField[k] = tempV
+						}
 					}
 				}
 			} else {

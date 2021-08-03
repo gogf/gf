@@ -25,7 +25,11 @@ func (v *Validator) doCheckStruct(object interface{}) Error {
 		errorMaps           = make(map[string]map[string]string) // Returning error.
 		fieldToAliasNameMap = make(map[string]string)            // Field name to alias name map.
 	)
-	fieldMap, err := structs.FieldMap(object, aliasNameTagPriority, true)
+	fieldMap, err := structs.FieldMap(structs.FieldMapInput{
+		Pointer:          object,
+		PriorityTagArray: aliasNameTagPriority,
+		RecursiveOption:  structs.RecursiveOptionEmbedded,
+	})
 	if err != nil {
 		return newErrorStr(internalObjectErrRuleName, err.Error())
 	}

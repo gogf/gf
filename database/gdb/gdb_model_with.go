@@ -63,7 +63,11 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 		err                 error
 		allowedTypeStrArray = make([]string, 0)
 	)
-	fieldMap, err := structs.FieldMap(pointer, nil, false)
+	fieldMap, err := structs.FieldMap(structs.FieldMapInput{
+		Pointer:          pointer,
+		PriorityTagArray: nil,
+		RecursiveOption:  structs.RecursiveOptionEmbeddedNoTag,
+	})
 	if err != nil {
 		return err
 	}
@@ -79,7 +83,7 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 					fieldTypeStr                = gstr.TrimAll(field.Type().String(), "*[]")
 					withItemReflectValueTypeStr = gstr.TrimAll(withItemReflectValueType.String(), "*[]")
 				)
-				// It does select operation if the field type is in the specified with type array.
+				// It does select operation if the field type is in the specified "with" type array.
 				if gstr.Compare(fieldTypeStr, withItemReflectValueTypeStr) == 0 {
 					allowedTypeStrArray = append(allowedTypeStrArray, fieldTypeStr)
 				}
@@ -94,6 +98,7 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 		if parsedTagOutput.With == "" {
 			continue
 		}
+		// Just handler "with" type attribute struct.
 		if !m.withAll && !gstr.InArray(allowedTypeStrArray, fieldTypeStr) {
 			continue
 		}
@@ -120,8 +125,8 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 		if relatedFieldValue == nil {
 			return gerror.NewCodef(
 				gerror.CodeInvalidParameter,
-				`cannot find the related value for attribute name "%s" of with tag "%s"`,
-				relatedAttrName, parsedTagOutput.With,
+				`cannot find the related value of attribute name "%s" in with tag "%s" for attribute "%s.%s"`,
+				relatedAttrName, parsedTagOutput.With, reflect.TypeOf(pointer).Elem(), field.Name(),
 			)
 		}
 		bindToReflectValue := field.Value
@@ -173,7 +178,11 @@ func (m *Model) doWithScanStructs(pointer interface{}) error {
 		err                 error
 		allowedTypeStrArray = make([]string, 0)
 	)
-	fieldMap, err := structs.FieldMap(pointer, nil, false)
+	fieldMap, err := structs.FieldMap(structs.FieldMapInput{
+		Pointer:          pointer,
+		PriorityTagArray: nil,
+		RecursiveOption:  structs.RecursiveOptionEmbeddedNoTag,
+	})
 	if err != nil {
 		return err
 	}
