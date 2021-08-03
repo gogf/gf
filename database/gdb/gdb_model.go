@@ -19,38 +19,38 @@ import (
 
 // Model is core struct implementing the DAO for ORM.
 type Model struct {
-	db            DB             // Underlying DB interface.
-	tx            *TX            // Underlying TX interface.
-	rawSql        string         // rawSql is the raw SQL string which marks a raw SQL based Model not a table based Model.
-	schema        string         // Custom database schema.
-	linkType      int            // Mark for operation on master or slave.
-	tablesInit    string         // Table names when model initialization.
-	tables        string         // Operation table names, which can be more than one table names and aliases, like: "user", "user u", "user u, user_detail ud".
-	fields        string         // Operation fields, multiple fields joined using char ','.
-	fieldsEx      string         // Excluded operation fields, multiple fields joined using char ','.
-	withArray     []interface{}  // Arguments for With feature.
-	withAll       bool           // Enable model association operations on all objects that have "with" tag in the struct.
-	extraArgs     []interface{}  // Extra custom arguments for sql, which are prepended to the arguments before sql committed to underlying driver.
-	whereHolder   []*whereHolder // Condition strings for where operation.
-	groupBy       string         // Used for "group by" statement.
-	orderBy       string         // Used for "order by" statement.
-	having        []interface{}  // Used for "having..." statement.
-	start         int            // Used for "select ... start, limit ..." statement.
-	limit         int            // Used for "select ... start, limit ..." statement.
-	option        int            // Option for extra operation features.
-	offset        int            // Offset statement for some databases grammar.
-	data          interface{}    // Data for operation, which can be type of map/[]map/struct/*struct/string, etc.
-	batch         int            // Batch number for batch Insert/Replace/Save operations.
-	filter        bool           // Filter data and where key-value pairs according to the fields of the table.
-	distinct      string         // Force the query to only return distinct results.
-	lockInfo      string         // Lock for update or in shared lock.
-	cacheEnabled  bool           // Enable sql result cache feature.
-	cacheDuration time.Duration  // Cache TTL duration.
-	cacheName     string         // Cache name for custom operation.
-	unscoped      bool           // Disables soft deleting features when select/delete operations.
-	safe          bool           // If true, it clones and returns a new model object whenever operation done; or else it changes the attribute of current model.
-	onDuplicate   interface{}    // onDuplicate is used for ON "DUPLICATE KEY UPDATE" statement.
-	onDuplicateEx interface{}    // onDuplicateEx is used for excluding some columns ON "DUPLICATE KEY UPDATE" statement.
+	db            DB                 // Underlying DB interface.
+	tx            *TX                // Underlying TX interface.
+	rawSql        string             // rawSql is the raw SQL string which marks a raw SQL based Model not a table based Model.
+	schema        string             // Custom database schema.
+	linkType      int                // Mark for operation on master or slave.
+	tablesInit    string             // Table names when model initialization.
+	tables        string             // Operation table names, which can be more than one table names and aliases, like: "user", "user u", "user u, user_detail ud".
+	fields        string             // Operation fields, multiple fields joined using char ','.
+	fieldsEx      string             // Excluded operation fields, multiple fields joined using char ','.
+	withArray     []interface{}      // Arguments for With feature.
+	withAll       bool               // Enable model association operations on all objects that have "with" tag in the struct.
+	extraArgs     []interface{}      // Extra custom arguments for sql, which are prepended to the arguments before sql committed to underlying driver.
+	whereHolder   []ModelWhereHolder // Condition strings for where operation.
+	groupBy       string             // Used for "group by" statement.
+	orderBy       string             // Used for "order by" statement.
+	having        []interface{}      // Used for "having..." statement.
+	start         int                // Used for "select ... start, limit ..." statement.
+	limit         int                // Used for "select ... start, limit ..." statement.
+	option        int                // Option for extra operation features.
+	offset        int                // Offset statement for some databases grammar.
+	data          interface{}        // Data for operation, which can be type of map/[]map/struct/*struct/string, etc.
+	batch         int                // Batch number for batch Insert/Replace/Save operations.
+	filter        bool               // Filter data and where key-value pairs according to the fields of the table.
+	distinct      string             // Force the query to only return distinct results.
+	lockInfo      string             // Lock for update or in shared lock.
+	cacheEnabled  bool               // Enable sql result cache feature.
+	cacheDuration time.Duration      // Cache TTL duration (< 1 for removing cache, >= 0 for saving cache).
+	cacheName     string             // Cache name for custom operation.
+	unscoped      bool               // Disables soft deleting features when select/delete operations.
+	safe          bool               // If true, it clones and returns a new model object whenever operation done; or else it changes the attribute of current model.
+	onDuplicate   interface{}        // onDuplicate is used for ON "DUPLICATE KEY UPDATE" statement.
+	onDuplicateEx interface{}        // onDuplicateEx is used for excluding some columns ON "DUPLICATE KEY UPDATE" statement.
 }
 
 // ModelHandler is a function that handles given Model and returns a new Model that is custom modified.
@@ -60,19 +60,19 @@ type ModelHandler func(m *Model) *Model
 // It returns true if it wants continue chunking, or else it returns false to stop chunking.
 type ChunkHandler func(result Result, err error) bool
 
-// whereHolder is the holder for where condition preparing.
-type whereHolder struct {
-	operator int           // Operator for this holder.
-	where    interface{}   // Where parameter.
-	args     []interface{} // Arguments for where parameter.
+// ModelWhereHolder is the holder for where condition preparing.
+type ModelWhereHolder struct {
+	Operator int           // Operator for this holder.
+	Where    interface{}   // Where parameter, which can commonly be type of string/map/struct.
+	Args     []interface{} // Arguments for where parameter.
 }
 
 const (
-	linkTypeMaster   = 1
-	linkTypeSlave    = 2
-	whereHolderWhere = 1
-	whereHolderAnd   = 2
-	whereHolderOr    = 3
+	linkTypeMaster           = 1
+	linkTypeSlave            = 2
+	whereHolderOperatorWhere = 1
+	whereHolderOperatorAnd   = 2
+	whereHolderOperatorOr    = 3
 )
 
 // Table is alias of Core.Model.
@@ -262,7 +262,7 @@ func (m *Model) Clone() *Model {
 		copy(newModel.extraArgs, m.extraArgs)
 	}
 	if n := len(m.whereHolder); n > 0 {
-		newModel.whereHolder = make([]*whereHolder, n)
+		newModel.whereHolder = make([]ModelWhereHolder, n)
 		copy(newModel.whereHolder, m.whereHolder)
 	}
 	if n := len(m.withArray); n > 0 {
