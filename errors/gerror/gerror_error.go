@@ -57,10 +57,10 @@ func (err *Error) Error() string {
 }
 
 // Code returns the error code.
-// It returns -1 if it has no error code.
+// It returns CodeNil if it has no error code.
 func (err *Error) Code() int {
 	if err == nil {
-		return -1
+		return CodeNil
 	}
 	return err.code
 }
@@ -159,6 +159,7 @@ func (err *Error) Current() error {
 		error: nil,
 		stack: err.stack,
 		text:  err.text,
+		code:  err.code,
 	}
 }
 
