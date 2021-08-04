@@ -53,7 +53,7 @@ type doConvertInput struct {
 	Extra      []interface{} // Extra values for implementing the converting.
 }
 
-// doConvert does common used types converting.
+// doConvert does commonly used types converting.
 func doConvert(input doConvertInput) interface{} {
 	switch input.ToTypeName {
 	case "int":
@@ -366,7 +366,7 @@ func Runes(any interface{}) []rune {
 }
 
 // String converts `any` to string.
-// It's most common used converting function.
+// It's most commonly used converting function.
 func String(any interface{}) string {
 	if any == nil {
 		return ""
@@ -459,7 +459,7 @@ func String(any interface{}) string {
 		if kind == reflect.Ptr {
 			return String(rv.Elem().Interface())
 		}
-		// Finally we use json.Marshal to convert.
+		// Finally, we use json.Marshal to convert.
 		if jsonContent, err := json.Marshal(value); err != nil {
 			return fmt.Sprint(value)
 		} else {

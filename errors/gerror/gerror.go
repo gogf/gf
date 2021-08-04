@@ -142,10 +142,14 @@ func WrapSkipf(skip int, err error, format string, args ...interface{}) error {
 }
 
 // NewCode creates and returns an error that has error code and given text.
-func NewCode(code int, text string) error {
+func NewCode(code int, text ...string) error {
+	errText := ""
+	if len(text) > 0 {
+		errText = text[0]
+	}
 	return &Error{
 		stack: callers(),
-		text:  text,
+		text:  errText,
 		code:  code,
 	}
 }
@@ -238,14 +242,24 @@ func WrapCodeSkipf(code, skip int, err error, format string, args ...interface{}
 }
 
 // Code returns the error code of current error.
-// It returns -1 if it has no error code or it does not implements interface Code.
+// It returns CodeNil if it has no error code or it does not implements interface Code.
 func Code(err error) int {
 	if err != nil {
 		if e, ok := err.(apiCode); ok {
 			return e.Code()
 		}
 	}
-	return -1
+	return CodeNil
+}
+
+// CodeMessage retrieves and returns the error code message from given error.
+func CodeMessage(err error) string {
+	return Message(Code(err))
+}
+
+// Message returns the message string for specified code.
+func Message(code int) string {
+	return codeMessageMap[code]
 }
 
 // Cause returns the root cause error of <err>.
