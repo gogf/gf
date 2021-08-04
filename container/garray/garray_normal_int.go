@@ -424,7 +424,7 @@ func (a *IntArray) SubSlice(offset int, length ...int) []int {
 	}
 }
 
-// Append See PushRight.
+// Append is alias of PushRight,please See PushRight.
 func (a *IntArray) Append(value ...int) *IntArray {
 	a.mu.Lock()
 	a.array = append(a.array, value...)
