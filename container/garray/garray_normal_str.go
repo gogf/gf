@@ -411,7 +411,7 @@ func (a *StrArray) SubSlice(offset int, length ...int) []string {
 	}
 }
 
-// Append See PushRight.
+// Append is alias of PushRight,please See PushRight.
 func (a *StrArray) Append(value ...string) *StrArray {
 	a.mu.Lock()
 	a.array = append(a.array, value...)
