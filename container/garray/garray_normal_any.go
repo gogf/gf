@@ -36,7 +36,7 @@ func New(safe ...bool) *Array {
 	return NewArraySize(0, 0, safe...)
 }
 
-// See New.
+// NewArray is alias of New, please see New.
 func NewArray(safe ...bool) *Array {
 	return NewArraySize(0, 0, safe...)
 }
@@ -422,7 +422,7 @@ func (a *Array) SubSlice(offset int, length ...int) []interface{} {
 	}
 }
 
-// See PushRight.
+// Append is alias of PushRight, please See PushRight.
 func (a *Array) Append(value ...interface{}) *Array {
 	a.PushRight(value...)
 	return a
