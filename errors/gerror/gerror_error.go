@@ -47,6 +47,9 @@ func (err *Error) Error() string {
 		return ""
 	}
 	errStr := err.text
+	if errStr == "" {
+		errStr = Message(err.code)
+	}
 	if err.error != nil {
 		if err.text != "" {
 			errStr += ": "
