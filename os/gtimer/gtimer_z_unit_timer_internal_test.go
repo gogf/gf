@@ -62,3 +62,22 @@ func TestTimer_PriorityQueue(t *testing.T) {
 		t.Assert(queue.Pop(), 5)
 	})
 }
+
+func TestTimer_PriorityQueue_FirstOneInArrayIsTheLeast(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			size  = 1000000
+			array = garray.NewIntArrayRange(0, size, 1)
+		)
+		array.Shuffle()
+		queue := newPriorityQueue()
+		array.Iterator(func(k int, v int) bool {
+			queue.Push(v, int64(v))
+			return true
+		})
+		for i := 0; i < size; i++ {
+			t.Assert(queue.Pop(), i)
+			t.Assert(queue.heap.array[0].priority, i+1)
+		}
+	})
+}
