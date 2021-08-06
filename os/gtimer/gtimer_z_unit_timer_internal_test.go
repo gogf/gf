@@ -46,3 +46,19 @@ func TestTimer_Proceed(t *testing.T) {
 		t.Assert(array.Len(), 2)
 	})
 }
+
+func TestTimer_PriorityQueue(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		queue := newPriorityQueue()
+		queue.Push(1, 1)
+		queue.Push(4, 4)
+		queue.Push(5, 5)
+		queue.Push(2, 2)
+		queue.Push(3, 3)
+		t.Assert(queue.Pop(), 1)
+		t.Assert(queue.Pop(), 2)
+		t.Assert(queue.Pop(), 3)
+		t.Assert(queue.Pop(), 4)
+		t.Assert(queue.Pop(), 5)
+	})
+}

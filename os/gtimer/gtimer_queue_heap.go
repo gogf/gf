@@ -12,6 +12,7 @@ func (h *priorityQueueHeap) Len() int {
 }
 
 // Less is used to implement the interface of sort.Interface.
+// The least one is placed to the top of the heap.
 func (h *priorityQueueHeap) Less(i, j int) bool {
 	return h.array[i].priority < h.array[j].priority
 }
