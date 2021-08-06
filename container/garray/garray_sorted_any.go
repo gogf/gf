@@ -156,9 +156,7 @@ func (a *SortedArray) Append(values ...interface{}) *SortedArray {
 		if cmp > 0 {
 			index++
 		}
-		rear := append([]interface{}{}, a.array[index:]...)
-		a.array = append(a.array[0:index], value)
-		a.array = append(a.array, rear...)
+		a.array = append(a.array[:index], append([]interface{}{value}, a.array[index:]...)...)
 	}
 	return a
 }

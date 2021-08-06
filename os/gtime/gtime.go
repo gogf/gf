@@ -24,6 +24,7 @@ import (
 
 const (
 	// Short writes for common usage durations.
+
 	D  = 24 * time.Hour
 	H  = time.Hour
 	M  = time.Minute
