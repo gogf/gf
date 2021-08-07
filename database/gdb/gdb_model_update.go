@@ -15,7 +15,6 @@ import (
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
-	"github.com/gogf/gf/util/gutil"
 )
 
 // Update does "UPDATE ... " statement for the model.
@@ -43,9 +42,7 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 	}
 	var (
 		updateData                                    = m.data
-		fieldNameCreate                               = m.getSoftFieldNameCreated()
 		fieldNameUpdate                               = m.getSoftFieldNameUpdated()
-		fieldNameDelete                               = m.getSoftFieldNameDeleted()
 		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(false, false)
 	)
 	// Automatically update the record updating time.
@@ -61,7 +58,6 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 		switch refKind {
 		case reflect.Map, reflect.Struct:
 			dataMap := ConvertDataForTableRecord(m.data)
-			gutil.MapDelete(dataMap, fieldNameCreate, fieldNameUpdate, fieldNameDelete)
 			if fieldNameUpdate != "" {
 				dataMap[fieldNameUpdate] = gtime.Now().String()
 			}

@@ -217,7 +217,6 @@ func (m *Model) doInsertWithOption(insertOption int) (result sql.Result, err err
 		nowString       = gtime.Now().String()
 		fieldNameCreate = m.getSoftFieldNameCreated()
 		fieldNameUpdate = m.getSoftFieldNameUpdated()
-		fieldNameDelete = m.getSoftFieldNameDeleted()
 	)
 	newData, err := m.filterDataForInsertOrUpdate(m.data)
 	if err != nil {
@@ -286,7 +285,6 @@ func (m *Model) doInsertWithOption(insertOption int) (result sql.Result, err err
 	// Automatic handling for creating/updating time.
 	if !m.unscoped && (fieldNameCreate != "" || fieldNameUpdate != "") {
 		for k, v := range list {
-			gutil.MapDelete(v, fieldNameCreate, fieldNameUpdate, fieldNameDelete)
 			if fieldNameCreate != "" {
 				v[fieldNameCreate] = nowString
 			}
