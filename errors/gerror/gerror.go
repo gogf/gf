@@ -165,10 +165,14 @@ func NewCodef(code int, format string, args ...interface{}) error {
 
 // NewCodeSkip creates and returns an error which has error code and is formatted from given text.
 // The parameter <skip> specifies the stack callers skipped amount.
-func NewCodeSkip(code, skip int, text string) error {
+func NewCodeSkip(code, skip int, text ...string) error {
+	errText := ""
+	if len(text) > 0 {
+		errText = text[0]
+	}
 	return &Error{
 		stack: callers(skip),
-		text:  text,
+		text:  errText,
 		code:  code,
 	}
 }
@@ -185,14 +189,18 @@ func NewCodeSkipf(code, skip int, format string, args ...interface{}) error {
 
 // WrapCode wraps error with code and text.
 // It returns nil if given err is nil.
-func WrapCode(code int, err error, text string) error {
+func WrapCode(code int, err error, text ...string) error {
 	if err == nil {
 		return nil
+	}
+	errText := ""
+	if len(text) > 0 {
+		errText = text[0]
 	}
 	return &Error{
 		error: err,
 		stack: callers(),
-		text:  text,
+		text:  errText,
 		code:  code,
 	}
 }
@@ -214,14 +222,18 @@ func WrapCodef(code int, err error, format string, args ...interface{}) error {
 // WrapCodeSkip wraps error with code and text.
 // It returns nil if given err is nil.
 // The parameter <skip> specifies the stack callers skipped amount.
-func WrapCodeSkip(code, skip int, err error, text string) error {
+func WrapCodeSkip(code, skip int, err error, text ...string) error {
 	if err == nil {
 		return nil
+	}
+	errText := ""
+	if len(text) > 0 {
+		errText = text[0]
 	}
 	return &Error{
 		error: err,
 		stack: callers(skip),
-		text:  text,
+		text:  errText,
 		code:  code,
 	}
 }

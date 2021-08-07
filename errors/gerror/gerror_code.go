@@ -27,6 +27,7 @@ const (
 	CodeServerBusy               = 63  // Server is busy, please try again later.
 	CodeUnknown                  = 64  // Unknown error.
 	CodeResourceNotExist         = 65  // Resource does not exist.
+	CodeInvalidRequest           = 66  // Invalid request.
 	CodeBusinessValidationFailed = 300 // Business validation failed.
 )
 
@@ -51,6 +52,7 @@ var (
 		CodeServerBusy:               "Server Is Busy",
 		CodeUnknown:                  "Unknown Error",
 		CodeResourceNotExist:         "Resource Not Exist",
+		CodeInvalidRequest:           "Invalid Request",
 		CodeBusinessValidationFailed: "Business Validation Failed",
 	}
 )

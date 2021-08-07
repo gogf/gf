@@ -107,7 +107,7 @@ func GetServer(name ...interface{}) *Server {
 	}
 	// Initialize the server using default configurations.
 	if err := s.SetConfig(NewConfig()); err != nil {
-		panic(err)
+		panic(gerror.WrapCode(gerror.CodeInvalidConfiguration, err, ""))
 	}
 	// Record the server to internal server mapping by name.
 	serverMapping.Set(serverName, s)

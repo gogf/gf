@@ -17,13 +17,15 @@ import (
 // NOTE THAT the page parameter name from client is constantly defined as gpage.DefaultPageName
 // for simplification and convenience.
 func (r *Request) GetPage(totalSize, pageSize int) *gpage.Page {
-	// It must has Router object attribute.
+	// It must have Router object attribute.
 	if r.Router == nil {
 		panic("Router object not found")
 	}
-	url := *r.URL
-	urlTemplate := url.Path
-	uriHasPageName := false
+	var (
+		url            = *r.URL
+		urlTemplate    = url.Path
+		uriHasPageName = false
+	)
 	// Check the page variable in the URI.
 	if len(r.Router.RegNames) > 0 {
 		for _, name := range r.Router.RegNames {
@@ -39,12 +41,17 @@ func (r *Request) GetPage(totalSize, pageSize int) *gpage.Page {
 					for i, name := range r.Router.RegNames {
 						rule := fmt.Sprintf(`[:\*]%s|\{%s\}`, name, name)
 						if name == gpage.DefaultPageName {
-							urlTemplate, _ = gregex.ReplaceString(rule, gpage.DefaultPagePlaceHolder, urlTemplate)
+							urlTemplate, err = gregex.ReplaceString(rule, gpage.DefaultPagePlaceHolder, urlTemplate)
 						} else {
-							urlTemplate, _ = gregex.ReplaceString(rule, match[i+1], urlTemplate)
+							urlTemplate, err = gregex.ReplaceString(rule, match[i+1], urlTemplate)
+						}
+						if err != nil {
+							panic(err)
 						}
 					}
 				}
+			} else {
+				panic(err)
 			}
 		}
 	}
