@@ -663,6 +663,9 @@ CREATE TABLE %s (
 	}
 	defer dropTable(table)
 
+	//db.SetDebug(true)
+	//defer db.SetDebug(false)
+
 	type Entity struct {
 		Id       uint64      `orm:"id,primary" json:"id"`
 		Name     string      `orm:"name"       json:"name"`
@@ -679,7 +682,7 @@ CREATE TABLE %s (
 			UpdateAt: nil,
 			DeleteAt: nil,
 		}
-		r, err := db.Model(table).Data(dataInsert).Insert()
+		r, err := db.Model(table).Data(dataInsert).OmitEmpty().Insert()
 		t.AssertNil(err)
 		n, _ := r.RowsAffected()
 		t.Assert(n, 1)
@@ -702,7 +705,7 @@ CREATE TABLE %s (
 			UpdateAt: nil,
 			DeleteAt: nil,
 		}
-		r, err = db.Model(table).Data(dataSave).Save()
+		r, err = db.Model(table).Data(dataSave).OmitEmpty().Save()
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 2)
@@ -726,7 +729,7 @@ CREATE TABLE %s (
 			UpdateAt: nil,
 			DeleteAt: nil,
 		}
-		r, err = db.Model(table).Data(dataUpdate).WherePri(1).Update()
+		r, err = db.Model(table).Data(dataUpdate).WherePri(1).OmitEmpty().Update()
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 1)
@@ -747,7 +750,7 @@ CREATE TABLE %s (
 			UpdateAt: nil,
 			DeleteAt: nil,
 		}
-		r, err = db.Model(table).Data(dataReplace).Replace()
+		r, err = db.Model(table).Data(dataReplace).OmitEmpty().Replace()
 		t.AssertNil(err)
 		n, _ = r.RowsAffected()
 		t.Assert(n, 2)

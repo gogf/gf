@@ -43,6 +43,13 @@ func (l *Logger) doRotateFile(filePath string) error {
 	}
 	defer gmlock.Unlock(memoryLockKey)
 
+	intlog.PrintFunc(l.ctx, func() string {
+		return fmt.Sprintf(`start rotating file by size: %s, file: %s`, gfile.SizeFormat(filePath), filePath)
+	})
+	defer intlog.PrintFunc(l.ctx, func() string {
+		return fmt.Sprintf(`done rotating file by size: %s, size: %s`, gfile.SizeFormat(filePath), filePath)
+	})
+
 	// No backups, it then just removes the current logging file.
 	if l.config.RotateBackupLimit == 0 {
 		if err := gfile.Remove(filePath); err != nil {
@@ -90,6 +97,7 @@ func (l *Logger) doRotateFile(filePath string) error {
 			intlog.Printf(l.ctx, `rotation file exists, continue: %s`, newFilePath)
 		}
 	}
+	intlog.Printf(l.ctx, "rotating file by size from %s to %s", filePath, newFilePath)
 	if err := gfile.Rename(filePath, newFilePath); err != nil {
 		return err
 	}
