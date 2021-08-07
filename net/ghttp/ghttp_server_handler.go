@@ -68,12 +68,12 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				request.Response.WriteStatus(http.StatusInternalServerError)
 				if err, ok := exception.(error); ok {
 					if code := gerror.Code(err); code != gerror.CodeNil {
-						s.handleErrorLog(gerror.Wrap(err, ""), request)
+						s.handleErrorLog(err, request)
 					} else {
-						s.handleErrorLog(gerror.WrapCode(gerror.CodeInternalError, err, ""), request)
+						s.handleErrorLog(gerror.WrapCodeSkip(gerror.CodeInternalError, 1, err, ""), request)
 					}
 				} else {
-					s.handleErrorLog(gerror.NewCodef(gerror.CodeInternalError, "%v", exception), request)
+					s.handleErrorLog(gerror.NewCodeSkipf(gerror.CodeInternalError, 1, "%+v", exception), request)
 				}
 			}
 		}

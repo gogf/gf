@@ -37,12 +37,12 @@ func niceCallFunc(f func()) {
 					// of the real error point.
 					if err, ok := exception.(error); ok {
 						if gerror.Code(err) != gerror.CodeNil {
-							panic(gerror.Wrap(err, ""))
+							panic(err)
 						} else {
-							panic(gerror.WrapCode(gerror.CodeInternalError, err, ""))
+							panic(gerror.WrapCodeSkip(gerror.CodeInternalError, 1, err, ""))
 						}
 					} else {
-						panic(gerror.NewCodeSkipf(gerror.CodeInternalError, 1, "%v", exception))
+						panic(gerror.NewCodeSkipf(gerror.CodeInternalError, 1, "%+v", exception))
 					}
 				}
 			}

@@ -51,7 +51,7 @@ func (err *Error) Error() string {
 		errStr = Message(err.code)
 	}
 	if err.error != nil {
-		if err.text != "" {
+		if errStr != "" {
 			errStr += ": "
 		}
 		errStr += err.error.Error()

@@ -8,6 +8,7 @@ package ghttp
 
 import (
 	"fmt"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/json"
 	"strings"
 
@@ -175,8 +176,8 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 							parsedItemList.PushBack(parsedItem)
 
 						// The middleware is inserted before the serving handler.
-						// If there're multiple middleware, they're inserted into the result list by their registering order.
-						// The middleware are also executed by their registered order.
+						// If there are multiple middleware, they're inserted into the result list by their registering order.
+						// The middleware is also executed by their registered order.
 						case handlerTypeMiddleware:
 							if lastMiddlewareElem == nil {
 								lastMiddlewareElem = parsedItemList.PushFront(parsedItem)
@@ -190,7 +191,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 							parsedItemList.PushBack(parsedItem)
 
 						default:
-							panic(fmt.Sprintf(`invalid handler type %d`, item.Type))
+							panic(gerror.NewCodef(gerror.CodeInternalError, `invalid handler type %d`, item.Type))
 						}
 					}
 				}
