@@ -33,6 +33,25 @@ func Test_Size(t *testing.T) {
 	})
 }
 
+func Test_SizeFormat(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			paths1 = "/testfile_t1.txt"
+			sizes  string
+		)
+
+		createTestFile(paths1, "abcdefghijklmn")
+		defer delTestFiles(paths1)
+
+		sizes = gfile.SizeFormat(testpath() + paths1)
+		t.Assert(sizes, "14.00B")
+
+		sizes = gfile.SizeFormat("")
+		t.Assert(sizes, "0.00B")
+
+	})
+}
+
 func Test_StrToSize(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gfile.StrToSize("0.00B"), 0)
