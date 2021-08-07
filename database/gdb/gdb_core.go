@@ -455,9 +455,8 @@ func (c *Core) formatOnDuplicate(columns []string, option DoInsertOption) string
 		}
 	} else {
 		for _, column := range columns {
-			// If it's SAVE operation,
-			// do not automatically update the creating time.
-			if c.isSoftCreatedFilledName(column) {
+			// If it's SAVE operation, do not automatically update the creating time.
+			if c.isSoftCreatedFieldName(column) {
 				continue
 			}
 			if len(onDuplicateStr) > 0 {
@@ -679,8 +678,8 @@ func (c *Core) HasTable(name string) (bool, error) {
 	return false, nil
 }
 
-// isSoftCreatedFilledName checks and returns whether given filed name is an automatic-filled created time.
-func (c *Core) isSoftCreatedFilledName(fieldName string) bool {
+// isSoftCreatedFieldName checks and returns whether given filed name is an automatic-filled created time.
+func (c *Core) isSoftCreatedFieldName(fieldName string) bool {
 	if fieldName == "" {
 		return false
 	}
