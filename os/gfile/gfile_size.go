@@ -22,6 +22,11 @@ func Size(path string) int64 {
 	return s.Size()
 }
 
+// SizeFormat returns the size of file specified by <path> in format string.
+func SizeFormat(path string) string {
+	return FormatSize(Size(path))
+}
+
 // ReadableSize formats size of file given by <path>, for more human readable.
 func ReadableSize(path string) string {
 	return FormatSize(Size(path))
