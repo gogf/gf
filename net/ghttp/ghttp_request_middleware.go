@@ -133,33 +133,33 @@ func (m *middleware) callHandlerFunc(funcInfo handlerFuncInfo) {
 			}
 			if funcInfo.Type.NumIn() == 2 {
 				var (
-					request reflect.Value
+					inputObject reflect.Value
 				)
 				if funcInfo.Type.In(1).Kind() == reflect.Ptr {
-					request = reflect.New(funcInfo.Type.In(1).Elem())
-					m.request.handlerResponse.Error = m.request.Parse(request.Interface())
+					inputObject = reflect.New(funcInfo.Type.In(1).Elem())
+					m.request.handlerResponse.Error = m.request.Parse(inputObject.Interface())
 				} else {
-					request = reflect.New(funcInfo.Type.In(1).Elem()).Elem()
-					m.request.handlerResponse.Error = m.request.Parse(request.Addr().Interface())
+					inputObject = reflect.New(funcInfo.Type.In(1).Elem()).Elem()
+					m.request.handlerResponse.Error = m.request.Parse(inputObject.Addr().Interface())
 				}
 				if m.request.handlerResponse.Error != nil {
 					return
 				}
-				inputValues = append(inputValues, request)
+				inputValues = append(inputValues, inputObject)
 			}
 
 			// Call handler with dynamic created parameter values.
 			results := funcInfo.Value.Call(inputValues)
 			switch len(results) {
 			case 1:
-				m.request.handlerResponse.Error = results[0].Interface().(error)
+				if !results[0].IsNil() {
+					m.request.handlerResponse.Error = results[0].Interface().(error)
+				}
 
 			case 2:
 				m.request.handlerResponse.Object = results[0].Interface()
 				if !results[1].IsNil() {
-					if v := results[1].Interface(); v != nil {
-						m.request.handlerResponse.Error = v.(error)
-					}
+					m.request.handlerResponse.Error = results[1].Interface().(error)
 				}
 			}
 		}

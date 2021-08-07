@@ -71,7 +71,7 @@ func (r *Response) WritefExit(format string, params ...interface{}) {
 	r.Request.Exit()
 }
 
-// Writef writes the response with <content> and new line.
+// Writeln writes the response with <content> and new line.
 func (r *Response) Writeln(content ...interface{}) {
 	if len(content) == 0 {
 		r.Write("\n")
