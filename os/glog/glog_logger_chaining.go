@@ -34,7 +34,7 @@ func (l *Logger) Ctx(ctx context.Context, keys ...interface{}) *Logger {
 }
 
 // To is a chaining function,
-// which redirects current logging content output to the specified <writer>.
+// which redirects current logging content output to the specified `writer`.
 func (l *Logger) To(writer io.Writer) *Logger {
 	logger := (*Logger)(nil)
 	if l.parent == nil {
@@ -47,9 +47,9 @@ func (l *Logger) To(writer io.Writer) *Logger {
 }
 
 // Path is a chaining function,
-// which sets the directory path to <path> for current logging content output.
+// which sets the directory path to `path` for current logging content output.
 //
-// Note that the parameter <path> is a directory path, not a file path.
+// Note that the parameter `path` is a directory path, not a file path.
 func (l *Logger) Path(path string) *Logger {
 	logger := (*Logger)(nil)
 	if l.parent == nil {
@@ -67,8 +67,8 @@ func (l *Logger) Path(path string) *Logger {
 }
 
 // Cat is a chaining function,
-// which sets the category to <category> for current logging content output.
-// Param <category> can be hierarchical, eg: module/user.
+// which sets the category to `category` for current logging content output.
+// Param `category` can be hierarchical, eg: module/user.
 func (l *Logger) Cat(category string) *Logger {
 	logger := (*Logger)(nil)
 	if l.parent == nil {
@@ -86,7 +86,7 @@ func (l *Logger) Cat(category string) *Logger {
 }
 
 // File is a chaining function,
-// which sets file name <pattern> for the current logging content output.
+// which sets file name `pattern` for the current logging content output.
 func (l *Logger) File(file string) *Logger {
 	logger := (*Logger)(nil)
 	if l.parent == nil {
@@ -181,7 +181,7 @@ func (l *Logger) Stdout(enabled ...bool) *Logger {
 	} else {
 		logger = l
 	}
-	// stdout printing is enabled if <enabled> is not passed.
+	// stdout printing is enabled if `enabled` is not passed.
 	if len(enabled) > 0 && !enabled[0] {
 		logger.config.StdoutPrint = false
 	} else {
@@ -200,7 +200,7 @@ func (l *Logger) Header(enabled ...bool) *Logger {
 	} else {
 		logger = l
 	}
-	// header is enabled if <enabled> is not passed.
+	// header is enabled if `enabled` is not passed.
 	if len(enabled) > 0 && !enabled[0] {
 		logger.SetHeaderPrint(false)
 	} else {
@@ -211,7 +211,7 @@ func (l *Logger) Header(enabled ...bool) *Logger {
 
 // Line is a chaining function,
 // which enables/disables printing its caller file path along with its line number.
-// The parameter <long> specified whether print the long absolute file path, eg: /a/b/c/d.go:23,
+// The parameter `long` specified whether print the long absolute file path, eg: /a/b/c/d.go:23,
 // or else short one: d.go:23.
 func (l *Logger) Line(long ...bool) *Logger {
 	logger := (*Logger)(nil)
@@ -237,7 +237,7 @@ func (l *Logger) Async(enabled ...bool) *Logger {
 	} else {
 		logger = l
 	}
-	// async feature is enabled if <enabled> is not passed.
+	// async feature is enabled if `enabled` is not passed.
 	if len(enabled) > 0 && !enabled[0] {
 		logger.SetAsync(false)
 	} else {

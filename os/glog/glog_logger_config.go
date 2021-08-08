@@ -188,9 +188,9 @@ func (l *Logger) GetCtxKeys() []interface{} {
 	return l.config.CtxKeys
 }
 
-// SetWriter sets the customized logging <writer> for logging.
-// The <writer> object should implements the io.Writer interface.
-// Developer can use customized logging <writer> to redirect logging output to another service,
+// SetWriter sets the customized logging `writer` for logging.
+// The `writer` object should implements the io.Writer interface.
+// Developer can use customized logging `writer` to redirect logging output to another service,
 // eg: kafka, mysql, mongodb, etc.
 func (l *Logger) SetWriter(writer io.Writer) {
 	l.config.Writer = writer
@@ -222,8 +222,8 @@ func (l *Logger) GetPath() string {
 	return l.config.Path
 }
 
-// SetFile sets the file name <pattern> for file logging.
-// Datetime pattern can be used in <pattern>, eg: access-{Ymd}.log.
+// SetFile sets the file name `pattern` for file logging.
+// Datetime pattern can be used in `pattern`, eg: access-{Ymd}.log.
 // The default file name pattern is: Y-m-d.log, eg: 2018-01-01.log
 func (l *Logger) SetFile(pattern string) {
 	l.config.File = pattern

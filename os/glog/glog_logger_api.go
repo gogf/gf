@@ -11,14 +11,14 @@ import (
 	"os"
 )
 
-// Print prints <v> with newline using fmt.Sprintln.
-// The parameter <v> can be multiple variables.
+// Print prints `v` with newline using fmt.Sprintln.
+// The parameter `v` can be multiple variables.
 func (l *Logger) Print(v ...interface{}) {
 	l.printStd(LEVEL_NONE, v...)
 }
 
-// Printf prints <v> with format <format> using fmt.Sprintf.
-// The parameter <v> can be multiple variables.
+// Printf prints `v` with format `format` using fmt.Sprintf.
+// The parameter `v` can be multiple variables.
 func (l *Logger) Printf(format string, v ...interface{}) {
 	l.printStd(LEVEL_NONE, l.format(format, v...))
 }
@@ -145,7 +145,7 @@ func (l *Logger) Criticalf(format string, v ...interface{}) {
 	}
 }
 
-// checkLevel checks whether the given <level> could be output.
+// checkLevel checks whether the given `level` could be output.
 func (l *Logger) checkLevel(level int) bool {
 	return l.config.Level&level > 0
 }
