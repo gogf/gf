@@ -31,7 +31,7 @@ type cronSchedule struct {
 
 const (
 	// regular expression for cron pattern, which contains 6 parts of time units.
-	gREGEX_FOR_CRON = `^([\-/\d\*\?,]+)\s+([\-/\d\*\?,]+)\s+([\-/\d\*\?,]+)\s+([\-/\d\*\?,]+)\s+([\-/\d\*\?,A-Za-z]+)\s+([\-/\d\*\?,A-Za-z]+)$`
+	regexForCron = `^([\-/\d\*\?,]+)\s+([\-/\d\*\?,]+)\s+([\-/\d\*\?,]+)\s+([\-/\d\*\?,]+)\s+([\-/\d\*\?,A-Za-z]+)\s+([\-/\d\*\?,A-Za-z]+)$`
 )
 
 var (
@@ -95,7 +95,7 @@ func newSchedule(pattern string) (*cronSchedule, error) {
 	}
 	// Handle the common cron pattern, like:
 	// 0 0 0 1 1 2
-	if match, _ := gregex.MatchString(gREGEX_FOR_CRON, pattern); len(match) == 7 {
+	if match, _ := gregex.MatchString(regexForCron, pattern); len(match) == 7 {
 		schedule := &cronSchedule{
 			create:  time.Now().Unix(),
 			every:   0,

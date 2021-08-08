@@ -6,14 +6,14 @@
 
 package glog
 
-// Print prints <v> with newline using fmt.Sprintln.
-// The parameter <v> can be multiple variables.
+// Print prints `v` with newline using fmt.Sprintln.
+// The parameter `v` can be multiple variables.
 func Print(v ...interface{}) {
 	logger.Print(v...)
 }
 
-// Printf prints <v> with format <format> using fmt.Sprintf.
-// The parameter <v> can be multiple variables.
+// Printf prints `v` with format `format` using fmt.Sprintf.
+// The parameter `v` can be multiple variables.
 func Printf(format string, v ...interface{}) {
 	logger.Printf(format, v...)
 }

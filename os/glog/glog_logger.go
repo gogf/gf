@@ -93,7 +93,7 @@ func (l *Logger) getFilePath(now time.Time) string {
 	return file
 }
 
-// print prints <s> to defined writer, logging file or passed <std>.
+// print prints `s` to defined writer, logging file or passed `std`.
 func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
 	// Lazy initialize for rotation feature.
 	// It uses atomic reading operation to enhance the performance checking.
@@ -309,12 +309,12 @@ func (l *Logger) getCtx() context.Context {
 	return context.TODO()
 }
 
-// printStd prints content <s> without stack.
+// printStd prints content `s` without stack.
 func (l *Logger) printStd(level int, value ...interface{}) {
 	l.print(l.getCtx(), level, value...)
 }
 
-// printStd prints content <s> with stack check.
+// printStd prints content `s` with stack check.
 func (l *Logger) printErr(level int, value ...interface{}) {
 	if l.config.StStatus == 1 {
 		if s := l.GetStack(); s != "" {
@@ -325,13 +325,13 @@ func (l *Logger) printErr(level int, value ...interface{}) {
 	l.print(l.getCtx(), level, value...)
 }
 
-// format formats <values> using fmt.Sprintf.
+// format formats `values` using fmt.Sprintf.
 func (l *Logger) format(format string, value ...interface{}) string {
 	return fmt.Sprintf(format, value...)
 }
 
 // PrintStack prints the caller stack,
-// the optional parameter <skip> specify the skipped stack offset from the end point.
+// the optional parameter `skip` specify the skipped stack offset from the end point.
 func (l *Logger) PrintStack(skip ...int) {
 	if s := l.GetStack(skip...); s != "" {
 		l.Println("Stack:\n" + s)
@@ -341,7 +341,7 @@ func (l *Logger) PrintStack(skip ...int) {
 }
 
 // GetStack returns the caller stack content,
-// the optional parameter <skip> specify the skipped stack offset from the end point.
+// the optional parameter `skip` specify the skipped stack offset from the end point.
 func (l *Logger) GetStack(skip ...int) string {
 	stackSkip := l.config.StSkip
 	if len(skip) > 0 {
