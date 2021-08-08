@@ -53,7 +53,7 @@ func ParseTag(tag string) map[string]string {
 		if i >= len(tag) {
 			break
 		}
-		quotedValue := string(tag[:i+1])
+		quotedValue := tag[:i+1]
 		tag = tag[i+1:]
 		value, err := strconv.Unquote(quotedValue)
 		if err != nil {
@@ -137,6 +137,7 @@ func getFieldValues(value interface{}) ([]*Field, error) {
 			goto exitLoop
 		}
 	}
+
 exitLoop:
 	for reflectKind == reflect.Ptr {
 		reflectValue = reflectValue.Elem()

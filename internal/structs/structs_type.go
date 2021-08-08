@@ -37,13 +37,16 @@ func StructType(object interface{}) (*Type, error) {
 				reflectValue = reflectValue.Elem()
 				reflectKind = reflectValue.Kind()
 			}
+
 		case reflect.Array, reflect.Slice:
 			reflectValue = reflect.New(reflectValue.Type().Elem()).Elem()
 			reflectKind = reflectValue.Kind()
+
 		default:
 			goto exitLoop
 		}
 	}
+
 exitLoop:
 	for reflectKind == reflect.Ptr {
 		reflectValue = reflectValue.Elem()
@@ -63,7 +66,7 @@ exitLoop:
 	}, nil
 }
 
-// Signature returns an unique string as this type.
+// Signature returns a unique string as this type.
 func (t Type) Signature() string {
 	return t.PkgPath() + "/" + t.String()
 }

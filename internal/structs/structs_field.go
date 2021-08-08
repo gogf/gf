@@ -16,7 +16,7 @@ func (f *Field) Tag(key string) string {
 
 // TagLookup returns the value associated with key in the tag string.
 // If the key is present in the tag the value (which may be empty)
-// is returned. Otherwise the returned value will be the empty string.
+// is returned. Otherwise, the returned value will be the empty string.
 // The ok return value reports whether the value was explicitly set in
 // the tag string. If the tag does not have the conventional format,
 // the value returned by Lookup is unspecified.
