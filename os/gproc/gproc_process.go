@@ -88,7 +88,7 @@ func (p *Process) Run() error {
 	}
 }
 
-// PID
+// Pid retrieves and returns the PID for the process.
 func (p *Process) Pid() int {
 	if p.Process != nil {
 		return p.Process.Pid
@@ -96,7 +96,7 @@ func (p *Process) Pid() int {
 	return 0
 }
 
-// Send send custom data to the process.
+// Send sends custom data to the process.
 func (p *Process) Send(data []byte) error {
 	if p.Process != nil {
 		return Send(p.Process.Pid, data)

@@ -31,9 +31,9 @@ type MsgResponse struct {
 }
 
 const (
-	gPROC_COMM_DEFAULT_GRUOP_NAME = ""    // Default group name.
-	gPROC_DEFAULT_TCP_PORT        = 10000 // Starting port number for receiver listening.
-	gPROC_MSG_QUEUE_MAX_LENGTH    = 10000 // Max size for each message queue of the group.
+	defaultGroupNameFoProcComm = ""    // Default group name.
+	defaultTcpPortForProcComm  = 10000 // Starting port number for receiver listening.
+	maxLengthForProcMsgQueue   = 10000 // Max size for each message queue of the group.
 )
 
 var (

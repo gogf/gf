@@ -35,10 +35,10 @@ func Receive(group ...string) *MsgRequest {
 	if len(group) > 0 {
 		groupName = group[0]
 	} else {
-		groupName = gPROC_COMM_DEFAULT_GRUOP_NAME
+		groupName = defaultGroupNameFoProcComm
 	}
 	queue := commReceiveQueues.GetOrSetFuncLock(groupName, func() interface{} {
-		return gqueue.New(gPROC_MSG_QUEUE_MAX_LENGTH)
+		return gqueue.New(maxLengthForProcMsgQueue)
 	}).(*gqueue.Queue)
 
 	// Blocking receiving.
@@ -52,7 +52,7 @@ func Receive(group ...string) *MsgRequest {
 func receiveTcpListening() {
 	var listen *net.TCPListener
 	// Scan the available port for listening.
-	for i := gPROC_DEFAULT_TCP_PORT; ; i++ {
+	for i := defaultTcpPortForProcComm; ; i++ {
 		addr, err := net.ResolveTCPAddr("tcp", fmt.Sprintf("127.0.0.1:%d", i))
 		if err != nil {
 			continue

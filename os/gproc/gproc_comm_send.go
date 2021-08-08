@@ -18,7 +18,7 @@ func Send(pid int, data []byte, group ...string) error {
 	msg := MsgRequest{
 		SendPid: Pid(),
 		RecvPid: pid,
-		Group:   gPROC_COMM_DEFAULT_GRUOP_NAME,
+		Group:   defaultGroupNameFoProcComm,
 		Data:    data,
 	}
 	if len(group) > 0 {
