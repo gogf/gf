@@ -251,7 +251,7 @@ func (l *Logger) printToWriter(ctx context.Context, input *HandlerInput) {
 // printToStdout outputs logging content to stdout.
 func (l *Logger) printToStdout(ctx context.Context, input *HandlerInput) {
 	if l.config.StdoutPrint {
-		if _, err := fmt.Fprintf(color.Output, input.getBuffer(true).String()) ; err != nil {
+		if _, err := fmt.Fprintf(color.Output, input.getBuffer(true).String()); err != nil {
 			intlog.Error(ctx, err)
 		}
 	}
