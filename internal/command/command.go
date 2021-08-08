@@ -20,7 +20,7 @@ var (
 	argumentRegex        = regexp.MustCompile(`^\-{1,2}([\w\?\.\-]+)(=){0,1}(.*)$`)
 )
 
-// Custom initialization.
+// Init does custom initialization.
 func Init(args ...string) {
 	if len(args) == 0 {
 		if len(defaultParsedArgs) == 0 && len(defaultParsedOptions) == 0 {

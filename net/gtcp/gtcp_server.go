@@ -18,11 +18,11 @@ import (
 )
 
 const (
-	// Default TCP server name.
-	gDEFAULT_SERVER = "default"
+	// defaultServer is the default TCP server name.
+	defaultServer = "default"
 )
 
-// TCP Server.
+// Server is a TCP server.
 type Server struct {
 	mu        sync.Mutex   // Used for Server.listen concurrent safety.
 	listen    net.Listener // Listener.
@@ -38,7 +38,7 @@ var serverMapping = gmap.NewStrAnyMap(true)
 // or it returns a new normal TCP server named <name> if it does not exist.
 // The parameter <name> is used to specify the TCP server
 func GetServer(name ...interface{}) *Server {
-	serverName := gDEFAULT_SERVER
+	serverName := defaultServer
 	if len(name) > 0 && name[0] != "" {
 		serverName = gconv.String(name[0])
 	}
@@ -88,7 +88,7 @@ func (s *Server) SetHandler(handler func(*Conn)) {
 	s.handler = handler
 }
 
-// SetTlsKeyCrt sets the certificate and key file for TLS configuration of server.
+// SetTLSKeyCrt sets the certificate and key file for TLS configuration of server.
 func (s *Server) SetTLSKeyCrt(crtFile, keyFile string) error {
 	tlsConfig, err := LoadKeyCrt(crtFile, keyFile)
 	if err != nil {
@@ -98,7 +98,7 @@ func (s *Server) SetTLSKeyCrt(crtFile, keyFile string) error {
 	return nil
 }
 
-// SetTlsConfig sets the TLS configuration of server.
+// SetTLSConfig sets the TLS configuration of server.
 func (s *Server) SetTLSConfig(tlsConfig *tls.Config) {
 	s.tlsConfig = tlsConfig
 }

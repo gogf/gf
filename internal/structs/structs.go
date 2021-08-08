@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package structs provides functions for struct conversion.
+// Package structs provides functions for struct information retrieving and struct conversion.
 //
 // Inspired and improved from: https://github.com/fatih/structs
 package structs

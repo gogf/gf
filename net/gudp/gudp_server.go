@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	gDEFAULT_SERVER = "default"
+	defaultServer = "default"
 )
 
 // Server is the UDP server.
@@ -33,7 +33,7 @@ var (
 
 // GetServer creates and returns a UDP server instance with given name.
 func GetServer(name ...interface{}) *Server {
-	serverName := gDEFAULT_SERVER
+	serverName := defaultServer
 	if len(name) > 0 && name[0] != "" {
 		serverName = gconv.String(name[0])
 	}
