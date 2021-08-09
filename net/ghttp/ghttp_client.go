@@ -17,7 +17,7 @@ type (
 	ClientHandlerFunc = client.HandlerFunc
 )
 
-// New creates and returns a new HTTP client object.
+// NewClient creates and returns a new HTTP client object.
 func NewClient() *Client {
 	return client.New()
 }
