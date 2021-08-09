@@ -251,8 +251,9 @@ func (l *Logger) printToWriter(ctx context.Context, input *HandlerInput) {
 // printToStdout outputs logging content to stdout.
 func (l *Logger) printToStdout(ctx context.Context, input *HandlerInput) {
 	if l.config.StdoutPrint {
+		// This will lose color in Windows os system.
 		// if _, err := os.Stdout.Write(input.getBuffer(true).Bytes()); err != nil {
-		// For color in windows.
+		// This will print color in Windows os system.
 		if _, err := fmt.Fprintf(color.Output, input.getBuffer(true).String()); err != nil {
 			intlog.Error(ctx, err)
 		}
