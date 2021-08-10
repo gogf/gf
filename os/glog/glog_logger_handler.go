@@ -61,17 +61,17 @@ func (i *HandlerInput) getBuffer(withColor bool) *bytes.Buffer {
 			i.addStringToBuffer(buffer, i.LevelFormat)
 		}
 	}
-	if i.CallerFunc != "" {
-		i.addStringToBuffer(buffer, i.CallerFunc)
-	}
-	if i.CallerPath != "" {
-		i.addStringToBuffer(buffer, i.CallerPath)
-	}
 	if i.Prefix != "" {
 		i.addStringToBuffer(buffer, i.Prefix)
 	}
 	if i.CtxStr != "" {
 		i.addStringToBuffer(buffer, i.CtxStr)
+	}
+	if i.CallerFunc != "" {
+		i.addStringToBuffer(buffer, i.CallerFunc)
+	}
+	if i.CallerPath != "" {
+		i.addStringToBuffer(buffer, i.CallerPath)
 	}
 	if i.Content != "" {
 		i.addStringToBuffer(buffer, i.Content)
