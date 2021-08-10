@@ -13,17 +13,21 @@ import (
 
 // Entry is the timing job.
 type Entry struct {
-	job       JobFunc      // The job function.
-	timer     *Timer       // Belonged timer.
-	ticks     int64        // The job runs every ticks.
-	times     *gtype.Int   // Limit running times.
-	status    *gtype.Int   // Job status.
-	singleton *gtype.Bool  // Singleton mode.
-	nextTicks *gtype.Int64 // Next run ticks of the job.
+	job          JobFunc      // The job function.
+	timedJobFunc TimedJobFunc // The timed job function accepting the scheduled time parameter
+	timer        *Timer       // Belonged timer.
+	ticks        int64        // The job runs every ticks.
+	times        *gtype.Int   // Limit running times.
+	status       *gtype.Int   // Job status.
+	singleton    *gtype.Bool  // Singleton mode.
+	nextTicks    *gtype.Int64 // Next run ticks of the job.
 }
 
 // JobFunc is the job function.
 type JobFunc = func()
+
+// TimedJobFunc is the job function with the scheduled time parameter
+type TimedJobFunc = func(scheduledTime int64)
 
 // Status returns the status of the job.
 func (entry *Entry) Status() int {
@@ -31,7 +35,7 @@ func (entry *Entry) Status() int {
 }
 
 // Run runs the timer job asynchronously.
-func (entry *Entry) Run() {
+func (entry *Entry) Run(ticks int64) {
 	leftRunningTimes := entry.times.Add(-1)
 	// It checks its running times exceeding.
 	if leftRunningTimes < 0 {
@@ -56,7 +60,13 @@ func (entry *Entry) Run() {
 				entry.SetStatus(StatusReady)
 			}
 		}()
-		entry.job()
+		// Run either timed job func which now accepts the schedule time or regular job function which doesn't need this
+		// as input
+		if entry.timedJobFunc != nil {
+			entry.timedJobFunc(ticks)
+		} else {
+			entry.job()
+		}
 	}()
 }
 
@@ -85,7 +95,7 @@ func (entry *Entry) doCheckAndRunByTicks(currentTimerTicks int64) {
 		return
 	}
 	// Perform job running.
-	entry.Run()
+	entry.Run(entry.nextTicks.Val())
 }
 
 // SetStatus custom sets the status for the job.

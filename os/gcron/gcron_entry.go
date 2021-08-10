@@ -26,6 +26,7 @@ type Entry struct {
 	times    *gtype.Int    // Running times limit.
 	Name     string        // Entry name.
 	Job      func()        `json:"-"` // Callback function.
+	TimedJob func(int64)   `json:"-"` // Callback function accepting the schedule time.
 	Time     time.Time     // Registered time.
 }
 
@@ -34,6 +35,46 @@ type Entry struct {
 // Param <singleton> specifies whether timed task executing in singleton mode.
 // Param <name> names this entry for manual control.
 func (c *Cron) addEntry(pattern string, job func(), singleton bool, name ...string) (*Entry, error) {
+	entry, err := c.addEntryCommon(pattern, singleton, name...)
+	if err != nil {
+		return nil, err
+	}
+	// When you add a scheduled task, you cannot allow it to run.
+	// It cannot start running when added to gtimer.
+	// It should start running after the entry is added to the entries map,
+	// to avoid the task from running during adding where the entries
+	// does not have the entry information, which might cause panic.
+	entry.entry = gtimer.AddEntry(time.Second, entry.check, singleton, -1, gtimer.StatusStopped)
+	entry.jobName = runtime.FuncForPC(reflect.ValueOf(job).Pointer()).Name()
+	entry.Job = job
+	entry.entry.Start()
+
+	return entry, nil
+}
+
+
+// addTimedJobEntry creates and returns a new Entry object.
+// Param <timedJob> is the callback function for timed task execution which accepts the triggered tick as parameter
+// Param <singleton> specifies whether timed task executing in singleton mode.
+// Param <name> names this entry for manual control.
+func (c *Cron) addTimedJobEntry(pattern string, timedJob func(int64), singleton bool, name ...string) (*Entry, error) {
+	entry, err := c.addEntryCommon(pattern, singleton, name...)
+	if err != nil {
+		return nil, err
+	}
+	// When you add a scheduled task, you cannot allow it to run.
+	// It cannot start running when added to gtimer.
+	// It should start running after the entry is added to the entries map,
+	// to avoid the task from running during adding where the entries
+	// does not have the entry information, which might cause panic.
+	entry.entry = gtimer.AddTimedJobEntry(time.Second, entry.checkTimedJob, singleton, -1, gtimer.StatusStopped)
+	entry.jobName = runtime.FuncForPC(reflect.ValueOf(timedJob).Pointer()).Name()
+	entry.TimedJob = timedJob
+	entry.entry.Start()
+	return entry, nil
+}
+
+func (c *Cron) addEntryCommon(pattern string, singleton bool, name ...string) (*Entry, error) {
 	schedule, err := newSchedule(pattern)
 	if err != nil {
 		return nil, err
@@ -42,9 +83,7 @@ func (c *Cron) addEntry(pattern string, job func(), singleton bool, name ...stri
 	entry := &Entry{
 		cron:     c,
 		schedule: schedule,
-		jobName:  runtime.FuncForPC(reflect.ValueOf(job).Pointer()).Name(),
 		times:    gtype.NewInt(defaultTimes),
-		Job:      job,
 		Time:     time.Now(),
 	}
 	if len(name) > 0 {
@@ -52,14 +91,7 @@ func (c *Cron) addEntry(pattern string, job func(), singleton bool, name ...stri
 	} else {
 		entry.Name = "gcron-" + gconv.String(c.idGen.Add(1))
 	}
-	// When you add a scheduled task, you cannot allow it to run.
-	// It cannot start running when added to gtimer.
-	// It should start running after the entry is added to the entries map,
-	// to avoid the task from running during adding where the entries
-	// does not have the entry information, which might cause panic.
-	entry.entry = gtimer.AddEntry(time.Second, entry.check, singleton, -1, gtimer.StatusStopped)
 	c.entries.Set(entry.Name, entry)
-	entry.entry.Start()
 	return entry, nil
 }
 
@@ -104,57 +136,73 @@ func (entry *Entry) Close() {
 	entry.entry.Close()
 }
 
-// Timing task check execution.
-// The running times limits feature is implemented by gcron.Entry and cannot be implemented by gtimer.Entry.
-// gcron.Entry relies on gtimer to implement a scheduled task check for gcron.Entry per second.
+// check verifies if the job can be run and if yes, runs it after the checks are successful
 func (entry *Entry) check() {
-	if entry.schedule.meet(time.Now()) {
-		var (
-			path  = entry.cron.GetLogPath()
-			level = entry.cron.GetLogLevel()
-		)
-		switch entry.cron.status.Val() {
-		case StatusStopped:
-			return
-
-		case StatusClosed:
-			glog.Path(path).Level(level).Debugf("[gcron] %s(%s) %s removed", entry.Name, entry.schedule.pattern, entry.jobName)
-			entry.Close()
-
-		case StatusReady:
-			fallthrough
-		case StatusRunning:
-			defer func() {
-				if err := recover(); err != nil {
-					glog.Path(path).Level(level).Errorf(
-						"[gcron] %s(%s) %s end with error: %+v",
-						entry.Name, entry.schedule.pattern, entry.jobName, err,
-					)
-				} else {
-					glog.Path(path).Level(level).Debugf(
-						"[gcron] %s(%s) %s end",
-						entry.Name, entry.schedule.pattern, entry.jobName,
-					)
-				}
-				if entry.entry.Status() == StatusClosed {
-					entry.Close()
-				}
-			}()
-
-			// Running times check.
-			times := entry.times.Add(-1)
-			if times <= 0 {
-				if entry.entry.SetStatus(StatusClosed) == StatusClosed || times < 0 {
-					return
-				}
-			}
-			if times < 2000000000 && times > 1000000000 {
-				entry.times.Set(defaultTimes)
-			}
-			glog.Path(path).Level(level).Debugf("[gcron] %s(%s) %s start", entry.Name, entry.schedule.pattern, entry.jobName)
-
-			entry.Job()
-
-		}
+	if entry.canRunJob() {
+		entry.Job()
 	}
 }
+
+// checkTimedJob verifies if the timedJob can be run and if yes, runs it after the checks are successful
+func (entry *Entry) checkTimedJob(ticks int64) {
+	if entry.canRunJob() {
+		entry.TimedJob(ticks)
+	}
+}
+
+// canRunJob checks if the timing task can run the job function.
+// The running times limits feature is implemented by gcron.Entry and cannot be implemented by gtimer.Entry.
+// gcron.Entry relies on gtimer to implement a scheduled task check for gcron.Entry per second.
+func (entry *Entry) canRunJob() bool {
+	if !entry.schedule.meet(time.Now()) {
+		return false
+	}
+
+	var (
+		path  = entry.cron.GetLogPath()
+		level = entry.cron.GetLogLevel()
+	)
+	switch entry.cron.status.Val() {
+	case StatusStopped:
+		return false
+
+	case StatusClosed:
+		glog.Path(path).Level(level).Debugf("[gcron] %s(%s) %s removed", entry.Name, entry.schedule.pattern, entry.jobName)
+		entry.Close()
+
+	case StatusReady:
+		fallthrough
+	case StatusRunning:
+		defer func() {
+			if err := recover(); err != nil {
+				glog.Path(path).Level(level).Errorf(
+					"[gcron] %s(%s) %s end with error: %+v",
+					entry.Name, entry.schedule.pattern, entry.jobName, err,
+				)
+			} else {
+				glog.Path(path).Level(level).Debugf(
+					"[gcron] %s(%s) %s end",
+					entry.Name, entry.schedule.pattern, entry.jobName,
+				)
+			}
+			if entry.entry.Status() == StatusClosed {
+				entry.Close()
+			}
+		}()
+
+		// Running times check.
+		times := entry.times.Add(-1)
+		if times <= 0 {
+			if entry.entry.SetStatus(StatusClosed) == StatusClosed || times < 0 {
+				return false
+			}
+		}
+		if times < 2000000000 && times > 1000000000 {
+			entry.times.Set(defaultTimes)
+		}
+		glog.Path(path).Level(level).Debugf("[gcron] %s(%s) %s start", entry.Name, entry.schedule.pattern, entry.jobName)
+		return true
+	}
+	return false
+}
+

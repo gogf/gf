@@ -68,12 +68,37 @@ func (c *Cron) Add(pattern string, job func(), name ...string) (*Entry, error) {
 	return c.addEntry(pattern, job, false, name...)
 }
 
+// AddTimedJob adds a timed task which accepts triggered tick as parameter
+// A unique <name> can be bound with the timed task.
+// It returns and error if the <name> is already used.
+func (c *Cron) AddTimedJob(pattern string, timedJob func(int64), name ...string) (*Entry, error) {
+	if len(name) > 0 {
+		if c.Search(name[0]) != nil {
+			return nil, gerror.NewCodef(gerror.CodeInvalidOperation, `cron job "%s" already exists`, name[0])
+		}
+	}
+	return c.addTimedJobEntry(pattern, timedJob, false, name...)
+}
+
 // AddSingleton adds a singleton timed task.
 // A singleton timed task is that can only be running one single instance at the same time.
 // A unique <name> can be bound with the timed task.
 // It returns and error if the <name> is already used.
 func (c *Cron) AddSingleton(pattern string, job func(), name ...string) (*Entry, error) {
 	if entry, err := c.Add(pattern, job, name...); err != nil {
+		return nil, err
+	} else {
+		entry.SetSingleton(true)
+		return entry, nil
+	}
+}
+
+// AddTimedJobSingleton adds a singleton timed task which accepts triggered tick as parameter.
+// A singleton timed task is that can only be running one single instance at the same time.
+// A unique <name> can be bound with the timed task.
+// It returns and error if the <name> is already used.
+func (c *Cron) AddTimedJobSingleton(pattern string, timedJob func(int64), name ...string) (*Entry, error) {
+	if entry, err := c.AddTimedJob(pattern, timedJob, name...); err != nil {
 		return nil, err
 	} else {
 		entry.SetSingleton(true)
@@ -93,11 +118,35 @@ func (c *Cron) AddOnce(pattern string, job func(), name ...string) (*Entry, erro
 	}
 }
 
+// AddTimedJobOnce adds a timed task which can be run only once which accepts triggered tick as parameter.
+// A unique <name> can be bound with the timed task.
+// It returns and error if the <name> is already used.
+func (c *Cron) AddTimedJobOnce(pattern string, timedJob func(int64), name ...string) (*Entry, error) {
+	if entry, err := c.AddTimedJob(pattern, timedJob, name...); err != nil {
+		return nil, err
+	} else {
+		entry.SetTimes(1)
+		return entry, nil
+	}
+}
+
 // AddTimes adds a timed task which can be run specified times.
 // A unique <name> can be bound with the timed task.
 // It returns and error if the <name> is already used.
 func (c *Cron) AddTimes(pattern string, times int, job func(), name ...string) (*Entry, error) {
 	if entry, err := c.Add(pattern, job, name...); err != nil {
+		return nil, err
+	} else {
+		entry.SetTimes(times)
+		return entry, nil
+	}
+}
+
+// AddTimedJobTimes adds a timed task which can be run specified times and which accepts triggered tick as parameter.
+// A unique <name> can be bound with the timed task.
+// It returns and error if the <name> is already used.
+func (c *Cron) AddTimedJobTimes(pattern string, times int, timedJob func(int64), name ...string) (*Entry, error) {
+	if entry, err := c.AddTimedJob(pattern, timedJob, name...); err != nil {
 		return nil, err
 	} else {
 		entry.SetTimes(times)

@@ -81,6 +81,12 @@ func Add(interval time.Duration, job JobFunc) *Entry {
 	return defaultTimer.Add(interval, job)
 }
 
+
+// AddTimedJob adds a timing job to the default timer, which runs in interval of <interval>.
+func AddTimedJob(interval time.Duration, timedJOb TimedJobFunc) *Entry {
+	return defaultTimer.AddTimedJob(interval, timedJOb)
+}
+
 // AddEntry adds a timing job to the default timer with detailed parameters.
 //
 // The parameter <interval> specifies the running interval of the job.
@@ -94,6 +100,10 @@ func Add(interval time.Duration, job JobFunc) *Entry {
 // The parameter <status> specifies the job status when it's firstly added to the timer.
 func AddEntry(interval time.Duration, job JobFunc, singleton bool, times int, status int) *Entry {
 	return defaultTimer.AddEntry(interval, job, singleton, times, status)
+}
+
+func AddTimedJobEntry(interval time.Duration, timedJob TimedJobFunc, singleton bool, times int, status int) *Entry {
+	return defaultTimer.AddTimedJobEntry(interval, timedJob, singleton, times, status)
 }
 
 // AddSingleton is a convenience function for add singleton mode job.

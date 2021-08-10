@@ -54,11 +54,26 @@ func Add(pattern string, job func(), name ...string) (*Entry, error) {
 	return defaultCron.Add(pattern, job, name...)
 }
 
+// AddTimedJob adds a timed task to default cron object which accepts triggered tick as parameter.
+// A unique <name> can be bound with the timed task.
+// It returns and error if the <name> is already used.
+func AddTimedJob(pattern string, timedJob func(int64), name ...string) (*Entry, error) {
+	return defaultCron.AddTimedJob(pattern, timedJob, name...)
+}
+
 // AddSingleton adds a singleton timed task, to default cron object.
 // A singleton timed task is that can only be running one single instance at the same time.
 // A unique <name> can be bound with the timed task.
 // It returns and error if the <name> is already used.
 func AddSingleton(pattern string, job func(), name ...string) (*Entry, error) {
+	return defaultCron.AddSingleton(pattern, job, name...)
+}
+
+// AddTimedJobSingleton adds a singleton timed task, to default cron object which accepts triggered tick as parameter.
+// A singleton timed task is that can only be running one single instance at the same time.
+// A unique <name> can be bound with the timed task.
+// It returns and error if the <name> is already used.
+func AddTimedJobSingleton(pattern string, job func(), name ...string) (*Entry, error) {
 	return defaultCron.AddSingleton(pattern, job, name...)
 }
 
@@ -68,6 +83,15 @@ func AddSingleton(pattern string, job func(), name ...string) (*Entry, error) {
 func AddOnce(pattern string, job func(), name ...string) (*Entry, error) {
 	return defaultCron.AddOnce(pattern, job, name...)
 }
+
+
+// AddTimedJobOnce adds a timed task which can be run only once, to default cron object.
+// A unique <name> can be bound with the timed task.
+// It returns and error if the <name> is already used.
+func AddTimedJobOnce(pattern string, timedJob func(int64), name ...string) (*Entry, error) {
+	return defaultCron.AddTimedJob(pattern, timedJob, name...)
+}
+
 
 // AddTimes adds a timed task which can be run specified times, to default cron object.
 // A unique <name> can be bound with the timed task.
