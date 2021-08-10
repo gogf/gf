@@ -28,7 +28,7 @@ func Stack(skip ...int) string {
 // StackWithFilter returns a formatted stack trace of the goroutine that calls it.
 // It calls runtime.Stack with a large enough buffer to capture the entire trace.
 //
-// The parameter <filter> is used to filter the path of the caller.
+// The parameter `filter` is used to filter the path of the caller.
 func StackWithFilter(filter string, skip ...int) string {
 	return StackWithFilters([]string{filter}, skip...)
 }
@@ -36,7 +36,7 @@ func StackWithFilter(filter string, skip ...int) string {
 // StackWithFilters returns a formatted stack trace of the goroutine that calls it.
 // It calls runtime.Stack with a large enough buffer to capture the entire trace.
 //
-// The parameter <filters> is a slice of strings, which are used to filter the path of the
+// The parameter `filters` is a slice of strings, which are used to filter the path of the
 // caller.
 //
 // TODO Improve the performance using debug.Stack.

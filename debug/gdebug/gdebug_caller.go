@@ -52,7 +52,7 @@ func Caller(skip ...int) (function string, path string, line int) {
 // CallerWithFilter returns the function name and the absolute file path along with
 // its line number of the caller.
 //
-// The parameter <filter> is used to filter the path of the caller.
+// The parameter `filter` is used to filter the path of the caller.
 func CallerWithFilter(filter string, skip ...int) (function string, path string, line int) {
 	var (
 		number = 0
@@ -166,12 +166,12 @@ func CallerFileLineShort() string {
 	return fmt.Sprintf(`%s:%d`, filepath.Base(path), line)
 }
 
-// FuncPath returns the complete function path of given <f>.
+// FuncPath returns the complete function path of given `f`.
 func FuncPath(f interface{}) string {
 	return runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name()
 }
 
-// FuncName returns the function name of given <f>.
+// FuncName returns the function name of given `f`.
 func FuncName(f interface{}) string {
 	path := FuncPath(f)
 	if path == "" {
