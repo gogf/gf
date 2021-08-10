@@ -8,6 +8,7 @@ package gdb
 
 import (
 	"fmt"
+	"github.com/gogf/gf/os/glog"
 	"sync"
 	"time"
 
@@ -133,12 +134,12 @@ func IsConfigured() bool {
 }
 
 // SetLogger sets the logger for orm.
-func (c *Core) SetLogger(logger Logger) {
+func (c *Core) SetLogger(logger *glog.Logger) {
 	c.logger = logger
 }
 
-// GetLogger returns the logger of the orm.
-func (c *Core) GetLogger() Logger {
+// GetLogger returns the (logger) of the orm.
+func (c *Core) GetLogger() *glog.Logger {
 	return c.logger
 }
 

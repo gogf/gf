@@ -152,8 +152,8 @@ type DB interface {
 	GetGroup() string                   // See Core.GetGroup.
 	SetDryRun(enabled bool)             // See Core.SetDryRun.
 	GetDryRun() bool                    // See Core.GetDryRun.
-	SetLogger(logger Logger)            // See Core.SetLogger.
-	GetLogger() Logger                  // See Core.GetLogger.
+	SetLogger(logger *glog.Logger)      // See Core.SetLogger.
+	GetLogger() *glog.Logger            // See Core.GetLogger.
 	GetConfig() *ConfigNode             // See Core.GetConfig.
 	SetMaxIdleConnCount(n int)          // See Core.SetMaxIdleConnCount.
 	SetMaxOpenConnCount(n int)          // See Core.SetMaxOpenConnCount.
@@ -179,7 +179,7 @@ type Core struct {
 	debug  *gtype.Bool     // Enable debug mode for the database, which can be changed in runtime.
 	cache  *gcache.Cache   // Cache manager, SQL result cache only.
 	schema *gtype.String   // Custom schema for this object.
-	logger Logger          // Logger for logging functionality.
+	logger *glog.Logger    // Logger for logging functionality.
 	config *ConfigNode     // Current config node.
 }
 
@@ -347,7 +347,7 @@ func New(group ...string) (db DB, err error) {
 				debug:  gtype.NewBool(),
 				cache:  gcache.New(),
 				schema: gtype.NewString(),
-				logger: LoggerImp{glog.New()},
+				logger: glog.New(),
 				config: node,
 			}
 			if v, ok := driverMap[node.Type]; ok {
