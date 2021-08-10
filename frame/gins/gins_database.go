@@ -132,10 +132,8 @@ func Database(name ...string) gdb.DB {
 					loggerConfigMap = Config().GetMap(configNodeKey)
 				}
 				if len(loggerConfigMap) > 0 {
-					if logger, ok := db.GetLogger().(gdb.LoggerImp); ok {
-						if err := logger.SetConfigWithMap(loggerConfigMap); err != nil {
-							panic(err)
-						}
+					if err := db.GetLogger().SetConfigWithMap(loggerConfigMap); err != nil {
+						panic(err)
 					}
 				}
 			}
