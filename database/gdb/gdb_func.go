@@ -195,8 +195,20 @@ func ConvertDataForTableRecord(value interface{}) map[string]interface{} {
 			}
 
 		case reflect.Struct:
-			switch v.(type) {
-			case time.Time, *time.Time, gtime.Time, *gtime.Time:
+			switch r := v.(type) {
+			// If the time is zero, it then updates it to nil,
+			// which will insert/update the value to database as "null".
+			case time.Time:
+				if r.IsZero() {
+					data[k] = nil
+				}
+
+			case gtime.Time:
+				if r.IsZero() {
+					data[k] = nil
+				}
+
+			case *time.Time, *gtime.Time:
 				continue
 
 			case Counter, *Counter:
