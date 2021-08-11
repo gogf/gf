@@ -12,6 +12,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/gogf/gf/container/gtype"
 	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/os/gctx"
 	"github.com/gogf/gf/os/gfpool"
 	"github.com/gogf/gf/os/gmlock"
 	"github.com/gogf/gf/os/gtimer"
@@ -175,12 +176,16 @@ func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
 		// Context values.
 		if len(l.config.CtxKeys) > 0 {
 			ctxStr := ""
-			for _, key := range l.config.CtxKeys {
-				if v := ctx.Value(key); v != nil {
+			for _, ctxKey := range l.config.CtxKeys {
+				var ctxValue interface{}
+				if ctxValue = ctx.Value(ctxKey); ctxValue == nil {
+					ctxValue = ctx.Value(gctx.StrKey(gconv.String(ctxKey)))
+				}
+				if ctxValue != nil {
 					if ctxStr != "" {
 						ctxStr += ", "
 					}
-					ctxStr += fmt.Sprintf("%s: %+v", key, v)
+					ctxStr += fmt.Sprintf("%s: %+v", ctxKey, ctxValue)
 				}
 			}
 			if ctxStr != "" {
