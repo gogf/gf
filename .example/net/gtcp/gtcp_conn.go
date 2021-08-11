@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/gogf/gf/net/gtcp"
-	"github.com/gogf/gf/util/gconv"
+	"strconv"
 )
 
 func main() {
@@ -16,7 +16,7 @@ func main() {
 	}
 	defer conn.Close()
 
-	if err := conn.Send([]byte("GET / HTTP/1.1\n\n")); err != nil {
+	if err := conn.Send([]byte("GET / HTTP/1.1\r\n\r\n")); err != nil {
 		panic(err)
 	}
 
@@ -30,13 +30,17 @@ func main() {
 			array := bytes.Split(data, []byte(": "))
 			// 获得页面内容长度
 			if contentLength == 0 && len(array) == 2 && bytes.EqualFold([]byte("Content-Length"), array[0]) {
-				contentLength = gconv.Int(array[1])
+				// http 以\r\n换行，需要把\r也去掉
+				contentLength, err = strconv.Atoi(string(array[1][:len(array[1])-1]))
+                		if err != nil {
+                    			fmt.Println(err)
+                		}
 			}
 			header = append(header, data...)
 			header = append(header, '\n')
 		}
-		// header读取完毕，读取文本内容
-		if contentLength > 0 && len(data) == 0 {
+		// header读取完毕，读取文本内容, 1为\r
+		if contentLength > 0 && len(data) == 1 {
 			content, _ = conn.Recv(contentLength)
 			break
 		}
