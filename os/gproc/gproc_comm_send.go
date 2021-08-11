@@ -7,7 +7,7 @@
 package gproc
 
 import (
-	"errors"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/net/gtcp"
 	"io"
@@ -18,7 +18,7 @@ func Send(pid int, data []byte, group ...string) error {
 	msg := MsgRequest{
 		SendPid: Pid(),
 		RecvPid: pid,
-		Group:   gPROC_COMM_DEFAULT_GRUOP_NAME,
+		Group:   defaultGroupNameFoProcComm,
 		Data:    data,
 	}
 	if len(group) > 0 {
@@ -43,10 +43,9 @@ func Send(pid int, data []byte, group ...string) error {
 	})
 	if len(result) > 0 {
 		response := new(MsgResponse)
-		err = json.UnmarshalUseNumber(result, response)
-		if err == nil {
+		if err = json.UnmarshalUseNumber(result, response); err == nil {
 			if response.Code != 1 {
-				err = errors.New(response.Message)
+				err = gerror.New(response.Message)
 			}
 		}
 	}

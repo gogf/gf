@@ -8,6 +8,7 @@
 package gcfg
 
 import (
+	"context"
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/internal/intlog"
@@ -23,10 +24,11 @@ type Config struct {
 }
 
 const (
-	DefaultName       = "config"             // DefaultName is the default group name for instance usage.
-	DefaultConfigFile = "config.toml"        // DefaultConfigFile is the default configuration file name.
-	cmdEnvKey         = "gf.gcfg"            // cmdEnvKey is the configuration key for command argument or environment.
-	errorPrintKey     = "gf.gcfg.errorprint" // errorPrintKey is used to specify the key controlling error printing to stdout.
+	DefaultName                = "config"             // DefaultName is the default group name for instance usage.
+	DefaultConfigFile          = "config.toml"        // DefaultConfigFile is the default configuration file name.
+	commandEnvKeyForFile       = "gf.gcfg.file"       // commandEnvKeyForFile is the configuration key for command argument or environment configuring file name.
+	commandEnvKeyForPath       = "gf.gcfg.path"       // commandEnvKeyForPath is the configuration key for command argument or environment configuring directory path.
+	commandEnvKeyForErrorPrint = "gf.gcfg.errorprint" // commandEnvKeyForErrorPrint is used to specify the key controlling error printing to stdout.
 )
 
 var (
@@ -81,7 +83,7 @@ func RemoveContent(file ...string) {
 		}
 	})
 
-	intlog.Printf(`RemoveContent: %s`, name)
+	intlog.Printf(context.TODO(), `RemoveContent: %s`, name)
 }
 
 // ClearContent removes all global configuration contents.
@@ -94,10 +96,10 @@ func ClearContent() {
 		}
 	})
 
-	intlog.Print(`RemoveConfig`)
+	intlog.Print(context.TODO(), `RemoveConfig`)
 }
 
 // errorPrint checks whether printing error to stdout.
 func errorPrint() bool {
-	return gcmd.GetOptWithEnv(errorPrintKey, true).Bool()
+	return gcmd.GetOptWithEnv(commandEnvKeyForErrorPrint, true).Bool()
 }

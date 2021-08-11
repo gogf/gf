@@ -10,8 +10,8 @@ package gini
 import (
 	"bufio"
 	"bytes"
-	"errors"
 	"fmt"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/json"
 	"io"
 	"strings"
@@ -70,7 +70,7 @@ func Decode(data []byte) (res map[string]interface{}, err error) {
 	}
 
 	if haveSection == false {
-		return nil, errors.New("failed to parse INI file, section not found")
+		return nil, gerror.NewCode(gerror.CodeInvalidParameter, "failed to parse INI file, section not found")
 	}
 	return res, nil
 }

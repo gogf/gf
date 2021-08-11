@@ -18,9 +18,9 @@ import (
 // high priority is served before an element with low priority.
 // priorityQueue is based on heap structure.
 type priorityQueue struct {
-	mu             sync.RWMutex
-	heap           *priorityQueueHeap // the underlying queue items manager using heap.
-	latestPriority *gtype.Int64       // latestPriority stores the most priority value of the heap, which is used to check if necessary to call the Pop of heap by Timer.
+	mu           sync.Mutex
+	heap         *priorityQueueHeap // the underlying queue items manager using heap.
+	nextPriority *gtype.Int64       // nextPriority stores the next priority value of the heap, which is used to check if necessary to call the Pop of heap by Timer.
 }
 
 // priorityQueueHeap is a heap manager, of which the underlying `array` is a array implementing a heap structure.
@@ -37,25 +37,16 @@ type priorityQueueItem struct {
 // newPriorityQueue creates and returns a priority queue.
 func newPriorityQueue() *priorityQueue {
 	queue := &priorityQueue{
-		heap: &priorityQueueHeap{
-			array: make([]priorityQueueItem, 0),
-		},
-		latestPriority: gtype.NewInt64(math.MaxInt64),
+		heap:         &priorityQueueHeap{array: make([]priorityQueueItem, 0)},
+		nextPriority: gtype.NewInt64(math.MaxInt64),
 	}
 	heap.Init(queue.heap)
 	return queue
 }
 
-// Len retrieves and returns the length of the queue.
-func (q *priorityQueue) Len() int {
-	q.mu.RLock()
-	defer q.mu.RUnlock()
-	return q.heap.Len()
-}
-
-// LatestPriority retrieves and returns the minimum and the most priority value of the queue.
-func (q *priorityQueue) LatestPriority() int64 {
-	return q.latestPriority.Val()
+// NextPriority retrieves and returns the minimum and the most priority value of the queue.
+func (q *priorityQueue) NextPriority() int64 {
+	return q.nextPriority.Val()
 }
 
 // Push pushes a value to the queue.
@@ -63,42 +54,30 @@ func (q *priorityQueue) LatestPriority() int64 {
 // The lesser the `priority` value the higher priority of the `value`.
 func (q *priorityQueue) Push(value interface{}, priority int64) {
 	q.mu.Lock()
+	defer q.mu.Unlock()
 	heap.Push(q.heap, priorityQueueItem{
 		value:    value,
 		priority: priority,
 	})
-	q.mu.Unlock()
 	// Update the minimum priority using atomic operation.
-	for {
-		latestPriority := q.latestPriority.Val()
-		if priority >= latestPriority {
-			break
-		}
-		if q.latestPriority.Cas(latestPriority, priority) {
-			break
-		}
+	nextPriority := q.nextPriority.Val()
+	if priority >= nextPriority {
+		return
 	}
+	q.nextPriority.Set(priority)
 }
 
 // Pop retrieves, removes and returns the most high priority value from the queue.
 func (q *priorityQueue) Pop() interface{} {
 	q.mu.Lock()
+	defer q.mu.Unlock()
 	if v := heap.Pop(q.heap); v != nil {
-		item := v.(priorityQueueItem)
-		q.mu.Unlock()
-		// Update the minimum priority using atomic operation.
-		for {
-			latestPriority := q.latestPriority.Val()
-			if item.priority >= latestPriority {
-				break
-			}
-			if q.latestPriority.Cas(latestPriority, item.priority) {
-				break
-			}
+		var nextPriority int64 = math.MaxInt64
+		if len(q.heap.array) > 0 {
+			nextPriority = q.heap.array[0].priority
 		}
-		return item.value
-	} else {
-		q.mu.Unlock()
+		q.nextPriority.Set(nextPriority)
+		return v.(priorityQueueItem).value
 	}
 	return nil
 }

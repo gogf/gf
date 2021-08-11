@@ -13,7 +13,7 @@ import (
 // SendPkg sends a package containing <data> to the connection.
 // The optional parameter <option> specifies the package options for sending.
 func (c *PoolConn) SendPkg(data []byte, option ...PkgOption) (err error) {
-	if err = c.Conn.SendPkg(data, option...); err != nil && c.status == gCONN_STATUS_UNKNOWN {
+	if err = c.Conn.SendPkg(data, option...); err != nil && c.status == connStatusUnknown {
 		if v, e := c.pool.NewFunc(); e == nil {
 			c.Conn = v.(*PoolConn).Conn
 			err = c.Conn.SendPkg(data, option...)
@@ -22,9 +22,9 @@ func (c *PoolConn) SendPkg(data []byte, option ...PkgOption) (err error) {
 		}
 	}
 	if err != nil {
-		c.status = gCONN_STATUS_ERROR
+		c.status = connStatusError
 	} else {
-		c.status = gCONN_STATUS_ACTIVE
+		c.status = connStatusActive
 	}
 	return err
 }
@@ -34,19 +34,19 @@ func (c *PoolConn) SendPkg(data []byte, option ...PkgOption) (err error) {
 func (c *PoolConn) RecvPkg(option ...PkgOption) ([]byte, error) {
 	data, err := c.Conn.RecvPkg(option...)
 	if err != nil {
-		c.status = gCONN_STATUS_ERROR
+		c.status = connStatusError
 	} else {
-		c.status = gCONN_STATUS_ACTIVE
+		c.status = connStatusActive
 	}
 	return data, err
 }
 
 // RecvPkgWithTimeout reads data from connection with timeout using simple package protocol.
 func (c *PoolConn) RecvPkgWithTimeout(timeout time.Duration, option ...PkgOption) (data []byte, err error) {
-	if err := c.SetRecvDeadline(time.Now().Add(timeout)); err != nil {
+	if err := c.SetreceiveDeadline(time.Now().Add(timeout)); err != nil {
 		return nil, err
 	}
-	defer c.SetRecvDeadline(time.Time{})
+	defer c.SetreceiveDeadline(time.Time{})
 	data, err = c.RecvPkg(option...)
 	return
 }
@@ -70,7 +70,7 @@ func (c *PoolConn) SendRecvPkg(data []byte, option ...PkgOption) ([]byte, error)
 	}
 }
 
-// RecvPkgWithTimeout reads data from connection with timeout using simple package protocol.
+// SendRecvPkgWithTimeout reads data from connection with timeout using simple package protocol.
 func (c *PoolConn) SendRecvPkgWithTimeout(data []byte, timeout time.Duration, option ...PkgOption) ([]byte, error) {
 	if err := c.SendPkg(data, option...); err == nil {
 		return c.RecvPkgWithTimeout(timeout, option...)

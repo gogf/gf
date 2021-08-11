@@ -20,6 +20,7 @@ type HandlerInput struct {
 	Ctx         context.Context
 	Time        time.Time
 	TimeFormat  string
+	Color       int
 	Level       int
 	LevelFormat string
 	CallerFunc  string
@@ -32,33 +33,45 @@ type HandlerInput struct {
 
 // defaultHandler is the default handler for logger.
 func defaultHandler(ctx context.Context, input *HandlerInput) {
-	input.logger.printToWriter(ctx, input)
+	input.logger.doPrint(ctx, input)
 }
 
-func (i *HandlerInput) addStringToBuffer(buffer *bytes.Buffer, s string) {
-	if buffer.Len() > 0 {
-		buffer.WriteByte(' ')
+func (i *HandlerInput) addStringToBuffer(buffer *bytes.Buffer, strings ...string) {
+	for _, s := range strings {
+		if buffer.Len() > 0 {
+			buffer.WriteByte(' ')
+		}
+		buffer.WriteString(s)
 	}
-	buffer.WriteString(s)
 }
 
 func (i *HandlerInput) Buffer() *bytes.Buffer {
+	return i.getBuffer(false)
+}
+
+func (i *HandlerInput) getBuffer(withColor bool) *bytes.Buffer {
 	buffer := bytes.NewBuffer(nil)
 	buffer.WriteString(i.TimeFormat)
 	if i.LevelFormat != "" {
-		i.addStringToBuffer(buffer, i.LevelFormat)
-	}
-	if i.CallerFunc != "" {
-		i.addStringToBuffer(buffer, i.CallerFunc)
-	}
-	if i.CallerPath != "" {
-		i.addStringToBuffer(buffer, i.CallerPath)
+		if withColor {
+			i.addStringToBuffer(buffer, i.logger.getColoredStr(
+				i.logger.getColorByLevel(i.Level), i.LevelFormat,
+			))
+		} else {
+			i.addStringToBuffer(buffer, i.LevelFormat)
+		}
 	}
 	if i.Prefix != "" {
 		i.addStringToBuffer(buffer, i.Prefix)
 	}
 	if i.CtxStr != "" {
 		i.addStringToBuffer(buffer, i.CtxStr)
+	}
+	if i.CallerFunc != "" {
+		i.addStringToBuffer(buffer, i.CallerFunc)
+	}
+	if i.CallerPath != "" {
+		i.addStringToBuffer(buffer, i.CallerPath)
 	}
 	if i.Content != "" {
 		i.addStringToBuffer(buffer, i.Content)

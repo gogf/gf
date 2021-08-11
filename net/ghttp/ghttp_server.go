@@ -8,6 +8,7 @@ package ghttp
 
 import (
 	"bytes"
+	"context"
 	"github.com/gogf/gf/debug/gdebug"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
@@ -70,10 +71,10 @@ func serverProcessInit() {
 	// Process message handler.
 	// It's enabled only graceful feature is enabled.
 	if gracefulEnabled {
-		intlog.Printf("%d: graceful reload feature is enabled", gproc.Pid())
+		intlog.Printf(context.TODO(), "%d: graceful reload feature is enabled", gproc.Pid())
 		go handleProcessMessage()
 	} else {
-		intlog.Printf("%d: graceful reload feature is disabled", gproc.Pid())
+		intlog.Printf(context.TODO(), "%d: graceful reload feature is disabled", gproc.Pid())
 	}
 
 	// It's an ugly calling for better initializing the main package path
@@ -106,7 +107,7 @@ func GetServer(name ...interface{}) *Server {
 	}
 	// Initialize the server using default configurations.
 	if err := s.SetConfig(NewConfig()); err != nil {
-		panic(err)
+		panic(gerror.WrapCode(gerror.CodeInvalidConfiguration, err, ""))
 	}
 	// Record the server to internal server mapping by name.
 	serverMapping.Set(serverName, s)
@@ -124,7 +125,7 @@ func (s *Server) Start() error {
 
 	// Server can only be run once.
 	if s.Status() == ServerStatusRunning {
-		return gerror.New("server is already running")
+		return gerror.NewCode(gerror.CodeInvalidOperation, "server is already running")
 	}
 
 	// Logging path setting check.
@@ -140,7 +141,7 @@ func (s *Server) Start() error {
 			path = gfile.Join(s.config.SessionPath, s.name)
 			if !gfile.Exists(path) {
 				if err := gfile.Mkdir(path); err != nil {
-					return gerror.Wrapf(err, `mkdir failed for "%s"`, path)
+					return gerror.WrapCodef(gerror.CodeInternalError, err, `mkdir failed for "%s"`, path)
 				}
 			}
 		}
@@ -174,7 +175,10 @@ func (s *Server) Start() error {
 	// If there's no route registered  and no static service enabled,
 	// it then returns an error of invalid usage of server.
 	if len(s.routesMap) == 0 && !s.config.FileServerEnabled {
-		return gerror.New(`there's no route set or static feature enabled, did you forget import the router?`)
+		return gerror.NewCode(
+			gerror.CodeInvalidOperation,
+			`there's no route set or static feature enabled, did you forget import the router?`,
+		)
 	}
 
 	// Start the HTTP server.
@@ -195,7 +199,7 @@ func (s *Server) Start() error {
 	if gproc.IsChild() {
 		gtimer.SetTimeout(time.Duration(s.config.GracefulTimeout)*time.Second, func() {
 			if err := gproc.Send(gproc.PPid(), []byte("exit"), adminGProcCommGroup); err != nil {
-				//glog.Error("server error in process communication:", err)
+				intlog.Error(context.TODO(), "server error in process communication:", err)
 			}
 		})
 	}
@@ -220,7 +224,7 @@ func (s *Server) dumpRouterMap() {
 			data[2] = item.Address
 			data[3] = item.Method
 			data[4] = item.Route
-			data[5] = item.handler.itemName
+			data[5] = item.handler.Name
 			data[6] = item.Middleware
 			table.Append(data)
 		}
@@ -247,21 +251,21 @@ func (s *Server) GetRouterArray() []RouterItem {
 				Server:     s.name,
 				Address:    address,
 				Domain:     array[4],
-				Type:       registeredItem.handler.itemType,
+				Type:       registeredItem.Handler.Type,
 				Middleware: array[1],
 				Method:     array[2],
 				Route:      array[3],
 				Priority:   len(registeredItems) - index - 1,
-				handler:    registeredItem.handler,
+				handler:    registeredItem.Handler,
 			}
-			switch item.handler.itemType {
+			switch item.handler.Type {
 			case handlerTypeController, handlerTypeObject, handlerTypeHandler:
 				item.IsServiceHandler = true
 			case handlerTypeMiddleware:
 				item.Middleware = "GLOBAL MIDDLEWARE"
 			}
-			if len(item.handler.middleware) > 0 {
-				for _, v := range item.handler.middleware {
+			if len(item.handler.Middleware) > 0 {
+				for _, v := range item.handler.Middleware {
 					if item.Middleware != "" {
 						item.Middleware += ","
 					}
@@ -279,9 +283,9 @@ func (s *Server) GetRouterArray() []RouterItem {
 					if r = strings.Compare(item1.Domain, item2.Domain); r == 0 {
 						if r = strings.Compare(item1.Route, item2.Route); r == 0 {
 							if r = strings.Compare(item1.Method, item2.Method); r == 0 {
-								if item1.handler.itemType == handlerTypeMiddleware && item2.handler.itemType != handlerTypeMiddleware {
+								if item1.handler.Type == handlerTypeMiddleware && item2.handler.Type != handlerTypeMiddleware {
 									return -1
-								} else if item1.handler.itemType == handlerTypeMiddleware && item2.handler.itemType == handlerTypeMiddleware {
+								} else if item1.handler.Type == handlerTypeMiddleware && item2.handler.Type == handlerTypeMiddleware {
 									return 1
 								} else if r = strings.Compare(item1.Middleware, item2.Middleware); r == 0 {
 									r = item2.Priority - item1.Priority
@@ -315,9 +319,9 @@ func (s *Server) Run() {
 	// Remove plugins.
 	if len(s.plugins) > 0 {
 		for _, p := range s.plugins {
-			intlog.Printf(`remove plugin: %s`, p.Name())
+			intlog.Printf(context.TODO(), `remove plugin: %s`, p.Name())
 			if err := p.Remove(); err != nil {
-				intlog.Errorf("%+v", err)
+				intlog.Errorf(context.TODO(), "%+v", err)
 			}
 		}
 	}
@@ -333,7 +337,7 @@ func Wait() {
 		s := v.(*Server)
 		if len(s.plugins) > 0 {
 			for _, p := range s.plugins {
-				intlog.Printf(`remove plugin: %s`, p.Name())
+				intlog.Printf(context.TODO(), `remove plugin: %s`, p.Name())
 				p.Remove()
 			}
 		}

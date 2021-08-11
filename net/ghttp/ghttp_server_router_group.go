@@ -155,8 +155,10 @@ func (g *RouterGroup) Bind(items []GroupItem) *RouterGroup {
 		switch bindType {
 		case "REST":
 			group.preBindToLocalArray("REST", gconv.String(item[0])+":"+gconv.String(item[1]), item[2])
+
 		case "MIDDLEWARE":
 			group.preBindToLocalArray("MIDDLEWARE", gconv.String(item[0])+":"+gconv.String(item[1]), item[2])
+
 		default:
 			if strings.EqualFold(bindType, "ALL") {
 				bindType = ""
@@ -309,45 +311,16 @@ func (g *RouterGroup) doBindRoutersToServer(item *preBindItem) *RouterGroup {
 	}
 	switch bindType {
 	case "HANDLER":
-		if h, ok := object.(HandlerFunc); ok {
-			if g.server != nil {
-				g.server.doBindHandler(pattern, h, g.middleware, source)
-			} else {
-				g.domain.doBindHandler(pattern, h, g.middleware, source)
+		if reflect.ValueOf(object).Kind() == reflect.Func {
+			funcInfo, err := g.server.checkAndCreateFuncInfo(object, "", "", "")
+			if err != nil {
+				g.server.Logger().Error(err.Error())
+				return g
 			}
-		} else if g.isController(object) {
-			if len(extras) > 0 {
-				if g.server != nil {
-					if gstr.Contains(extras[0], ",") {
-						g.server.doBindController(
-							pattern, object.(Controller), extras[0], g.middleware, source,
-						)
-					} else {
-						g.server.doBindControllerMethod(
-							pattern, object.(Controller), extras[0], g.middleware, source,
-						)
-					}
-				} else {
-					if gstr.Contains(extras[0], ",") {
-						g.domain.doBindController(
-							pattern, object.(Controller), extras[0], g.middleware, source,
-						)
-					} else {
-						g.domain.doBindControllerMethod(
-							pattern, object.(Controller), extras[0], g.middleware, source,
-						)
-					}
-				}
+			if g.server != nil {
+				g.server.doBindHandler(pattern, funcInfo, g.middleware, source)
 			} else {
-				if g.server != nil {
-					g.server.doBindController(
-						pattern, object.(Controller), "", g.middleware, source,
-					)
-				} else {
-					g.domain.doBindController(
-						pattern, object.(Controller), "", g.middleware, source,
-					)
-				}
+				g.domain.doBindHandler(pattern, funcInfo, g.middleware, source)
 			}
 		} else {
 			if len(extras) > 0 {
@@ -373,6 +346,7 @@ func (g *RouterGroup) doBindRoutersToServer(item *preBindItem) *RouterGroup {
 					}
 				}
 			} else {
+				// At last, it treats the `object` as Object registering type.
 				if g.server != nil {
 					g.server.doBindObject(pattern, object, "", g.middleware, source)
 				} else {
@@ -380,24 +354,14 @@ func (g *RouterGroup) doBindRoutersToServer(item *preBindItem) *RouterGroup {
 				}
 			}
 		}
+
 	case "REST":
-		if g.isController(object) {
-			if g.server != nil {
-				g.server.doBindControllerRest(
-					pattern, object.(Controller), g.middleware, source,
-				)
-			} else {
-				g.domain.doBindControllerRest(
-					pattern, object.(Controller), g.middleware, source,
-				)
-			}
+		if g.server != nil {
+			g.server.doBindObjectRest(pattern, object, g.middleware, source)
 		} else {
-			if g.server != nil {
-				g.server.doBindObjectRest(pattern, object, g.middleware, source)
-			} else {
-				g.domain.doBindObjectRest(pattern, object, g.middleware, source)
-			}
+			g.domain.doBindObjectRest(pattern, object, g.middleware, source)
 		}
+
 	case "HOOK":
 		if h, ok := object.(HandlerFunc); ok {
 			if g.server != nil {
@@ -410,27 +374,4 @@ func (g *RouterGroup) doBindRoutersToServer(item *preBindItem) *RouterGroup {
 		}
 	}
 	return g
-}
-
-// isController checks and returns whether given <value> is a controller.
-// A controller should contains attributes: Request/Response/Server/Cookie/Session/View.
-func (g *RouterGroup) isController(value interface{}) bool {
-	// Whether implements interface Controller.
-	if _, ok := value.(Controller); !ok {
-		return false
-	}
-	// Check the necessary attributes.
-	v := reflect.ValueOf(value)
-	if v.Kind() == reflect.Ptr {
-		v = v.Elem()
-	}
-	if v.FieldByName("Request").IsValid() &&
-		v.FieldByName("Response").IsValid() &&
-		v.FieldByName("Server").IsValid() &&
-		v.FieldByName("Cookie").IsValid() &&
-		v.FieldByName("Session").IsValid() &&
-		v.FieldByName("View").IsValid() {
-		return true
-	}
-	return false
 }

@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	// Buffer size for reading file content.
+	// DefaultReadBuffer is the buffer size for reading file content.
 	DefaultReadBuffer = 1024
 )
 

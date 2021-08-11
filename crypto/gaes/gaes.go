@@ -11,7 +11,7 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
-	"errors"
+	"github.com/gogf/gf/errors/gerror"
 )
 
 var (
@@ -63,7 +63,7 @@ func DecryptCBC(cipherText []byte, key []byte, iv ...[]byte) ([]byte, error) {
 	}
 	blockSize := block.BlockSize()
 	if len(cipherText) < blockSize {
-		return nil, errors.New("cipherText too short")
+		return nil, gerror.NewCode(gerror.CodeInvalidParameter, "cipherText too short")
 	}
 	ivValue := ([]byte)(nil)
 	if len(iv) > 0 {
@@ -72,7 +72,7 @@ func DecryptCBC(cipherText []byte, key []byte, iv ...[]byte) ([]byte, error) {
 		ivValue = []byte(IVDefaultValue)
 	}
 	if len(cipherText)%blockSize != 0 {
-		return nil, errors.New("cipherText is not a multiple of the block size")
+		return nil, gerror.NewCode(gerror.CodeInvalidParameter, "cipherText is not a multiple of the block size")
 	}
 	blockModel := cipher.NewCBCDecrypter(block, ivValue)
 	plainText := make([]byte, len(cipherText))
@@ -93,22 +93,22 @@ func PKCS5Padding(src []byte, blockSize int) []byte {
 func PKCS5UnPadding(src []byte, blockSize int) ([]byte, error) {
 	length := len(src)
 	if blockSize <= 0 {
-		return nil, errors.New("invalid blocklen")
+		return nil, gerror.NewCode(gerror.CodeInvalidParameter, "invalid blocklen")
 	}
 
 	if length%blockSize != 0 || length == 0 {
-		return nil, errors.New("invalid data len")
+		return nil, gerror.NewCode(gerror.CodeInvalidParameter, "invalid data len")
 	}
 
 	unpadding := int(src[length-1])
 	if unpadding > blockSize || unpadding == 0 {
-		return nil, errors.New("invalid padding")
+		return nil, gerror.NewCode(gerror.CodeInvalidParameter, "invalid padding")
 	}
 
 	padding := src[length-unpadding:]
 	for i := 0; i < unpadding; i++ {
 		if padding[i] != byte(unpadding) {
-			return nil, errors.New("invalid padding")
+			return nil, gerror.NewCode(gerror.CodeInvalidParameter, "invalid padding")
 		}
 	}
 
@@ -146,7 +146,7 @@ func DecryptCFB(cipherText []byte, key []byte, unPadding int, iv ...[]byte) ([]b
 		return nil, err
 	}
 	if len(cipherText) < aes.BlockSize {
-		return nil, errors.New("cipherText too short")
+		return nil, gerror.NewCode(gerror.CodeInvalidParameter, "cipherText too short")
 	}
 	ivValue := ([]byte)(nil)
 	if len(iv) > 0 {

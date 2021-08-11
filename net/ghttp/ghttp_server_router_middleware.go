@@ -8,11 +8,12 @@ package ghttp
 
 import (
 	"github.com/gogf/gf/debug/gdebug"
+	"reflect"
 )
 
 const (
 	// The default route pattern for global middleware.
-	gDEFAULT_MIDDLEWARE_PATTERN = "/*"
+	defaultMiddlewarePattern = "/*"
 )
 
 // BindMiddleware registers one or more global middleware to the server.
@@ -22,9 +23,12 @@ const (
 func (s *Server) BindMiddleware(pattern string, handlers ...HandlerFunc) {
 	for _, handler := range handlers {
 		s.setHandler(pattern, &handlerItem{
-			itemType: handlerTypeMiddleware,
-			itemName: gdebug.FuncPath(handler),
-			itemFunc: handler,
+			Type: handlerTypeMiddleware,
+			Name: gdebug.FuncPath(handler),
+			Info: handlerFuncInfo{
+				Func: handler,
+				Type: reflect.TypeOf(handler),
+			},
 		})
 	}
 }
@@ -34,10 +38,13 @@ func (s *Server) BindMiddleware(pattern string, handlers ...HandlerFunc) {
 // before or after service handler.
 func (s *Server) BindMiddlewareDefault(handlers ...HandlerFunc) {
 	for _, handler := range handlers {
-		s.setHandler(gDEFAULT_MIDDLEWARE_PATTERN, &handlerItem{
-			itemType: handlerTypeMiddleware,
-			itemName: gdebug.FuncPath(handler),
-			itemFunc: handler,
+		s.setHandler(defaultMiddlewarePattern, &handlerItem{
+			Type: handlerTypeMiddleware,
+			Name: gdebug.FuncPath(handler),
+			Info: handlerFuncInfo{
+				Func: handler,
+				Type: reflect.TypeOf(handler),
+			},
 		})
 	}
 }

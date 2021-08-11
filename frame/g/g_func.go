@@ -7,6 +7,7 @@
 package g
 
 import (
+	"context"
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/internal/empty"
 	"github.com/gogf/gf/net/ghttp"
@@ -74,4 +75,9 @@ func IsNil(value interface{}, traceSource ...bool) bool {
 // Or else it returns true.
 func IsEmpty(value interface{}) bool {
 	return empty.IsEmpty(value)
+}
+
+// RequestFromCtx retrieves and returns the Request object from context.
+func RequestFromCtx(ctx context.Context) *ghttp.Request {
+	return ghttp.RequestFromCtx(ctx)
 }

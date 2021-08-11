@@ -7,7 +7,7 @@
 package gvalid
 
 import (
-	"errors"
+	"github.com/gogf/gf/errors/gerror"
 	"strconv"
 	"strings"
 	"time"
@@ -29,26 +29,29 @@ type apiTime interface {
 // CheckValue checks single value with specified rules.
 // It returns nil if successful validation.
 func (v *Validator) CheckValue(value interface{}) Error {
-	return v.doCheckValue("", value, gconv.String(v.rules), v.messages, v.data, gconv.Map(v.data))
+	return v.doCheckValue(doCheckValueInput{
+		Name:     "",
+		Value:    value,
+		Rule:     gconv.String(v.rules),
+		Messages: v.messages,
+		DataRaw:  v.data,
+		DataMap:  gconv.Map(v.data),
+	})
+}
+
+type doCheckValueInput struct {
+	Name     string                 // Name specifies the name of parameter `value`.
+	Value    interface{}            // Value specifies the value for this rules to be validated.
+	Rule     string                 // Rule specifies the validation rules string, like "required", "required|between:1,100", etc.
+	Messages interface{}            // Messages specifies the custom error messages for this rule, which is usually type of map/slice.
+	DataRaw  interface{}            // DataRaw specifies the `raw data` which is passed to the Validator. It might be type of map/struct or a nil value.
+	DataMap  map[string]interface{} // DataMap specifies the map that is converted from `dataRaw`. It is usually used internally
 }
 
 // doCheckSingleValue does the really rules validation for single key-value.
-//
-// The parameter `rules` specifies the validation rules string, like "required", "required|between:1,100", etc.
-// The parameter `value` specifies the value for this rules to be validated.
-// The parameter `messages` specifies the custom error messages for this rule, which is usually type of map/slice.
-// The parameter `dataRaw` specifies the `raw data` which is passed to the Validator. It might be type of map/struct or a nil value.
-// The parameter `dataMap` specifies the map that is converted from `dataRaw`. It is usually used internally
-func (v *Validator) doCheckValue(
-	key string,
-	value interface{},
-	rules string,
-	messages interface{},
-	dataRaw interface{},
-	dataMap map[string]interface{},
-) Error {
+func (v *Validator) doCheckValue(input doCheckValueInput) Error {
 	// If there's no validation rules, it does nothing and returns quickly.
-	if rules == "" {
+	if input.Rule == "" {
 		return nil
 	}
 	// It converts value to string and then does the validation.
@@ -61,17 +64,17 @@ func (v *Validator) doCheckValue(
 		msgArray     = make([]string, 0)
 		customMsgMap = make(map[string]string)
 	)
-	switch v := messages.(type) {
+	switch v := input.Messages.(type) {
 	case string:
 		msgArray = strings.Split(v, "|")
 	default:
-		for k, v := range gconv.Map(messages) {
+		for k, v := range gconv.Map(input.Messages) {
 			customMsgMap[k] = gconv.String(v)
 		}
 	}
 	// Handle the char '|' in the rule,
 	// which makes this rule separated into multiple rules.
-	ruleItems := strings.Split(strings.TrimSpace(rules), "|")
+	ruleItems := strings.Split(strings.TrimSpace(input.Rule), "|")
 	for i := 0; ; {
 		array := strings.Split(ruleItems[i], ":")
 		_, ok := allSupportedRules[array[0]]
@@ -82,7 +85,7 @@ func (v *Validator) doCheckValue(
 			} else {
 				return newErrorStr(
 					internalRulesErrRuleName,
-					internalRulesErrRuleName+": "+rules,
+					internalRulesErrRuleName+": "+input.Rule,
 				)
 			}
 		} else {
@@ -92,15 +95,29 @@ func (v *Validator) doCheckValue(
 			break
 		}
 	}
+	var (
+		hasBailRule = false
+	)
 	for index := 0; index < len(ruleItems); {
 		var (
 			err            error
-			match          = false
-			results        = ruleRegex.FindStringSubmatch(ruleItems[index])
-			ruleKey        = strings.TrimSpace(results[1])
-			rulePattern    = strings.TrimSpace(results[2])
+			match          = false                                          // whether this rule is matched(has no error)
+			results        = ruleRegex.FindStringSubmatch(ruleItems[index]) // split single rule.
+			ruleKey        = strings.TrimSpace(results[1])                  // rule name like "max" in rule "max: 6"
+			rulePattern    = strings.TrimSpace(results[2])                  // rule value if any like "6" in rule:"max:6"
 			customRuleFunc RuleFunc
 		)
+
+		if !hasBailRule && ruleKey == bailRuleName {
+			hasBailRule = true
+		}
+
+		// Ignore logic executing for marked rules.
+		if markedRuleMap[ruleKey] {
+			index++
+			continue
+		}
+
 		if len(msgArray) > index {
 			customMsgMap[ruleKey] = strings.TrimSpace(msgArray[index])
 		}
@@ -113,7 +130,7 @@ func (v *Validator) doCheckValue(
 		if customRuleFunc != nil {
 			// It checks custom validation rules with most priority.
 			message := v.getErrorMessageByRule(ruleKey, customMsgMap)
-			if err := customRuleFunc(v.ctx, ruleItems[index], value, message, dataRaw); err != nil {
+			if err := customRuleFunc(v.ctx, ruleItems[index], input.Value, message, input.DataRaw); err != nil {
 				match = false
 				errorMsgArray[ruleKey] = err.Error()
 			} else {
@@ -121,7 +138,15 @@ func (v *Validator) doCheckValue(
 			}
 		} else {
 			// It checks build-in validation rules if there's no custom rule.
-			match, err = v.doCheckBuildInRules(index, value, ruleKey, rulePattern, ruleItems, dataMap, customMsgMap)
+			match, err = v.doCheckBuildInRules(doCheckBuildInRulesInput{
+				Index:        index,
+				Value:        input.Value,
+				RuleKey:      ruleKey,
+				RulePattern:  rulePattern,
+				RuleItems:    ruleItems,
+				DataMap:      input.DataMap,
+				CustomMsgMap: customMsgMap,
+			})
 			if !match && err != nil {
 				errorMsgArray[ruleKey] = err.Error()
 			}
@@ -134,28 +159,35 @@ func (v *Validator) doCheckValue(
 			if _, ok := errorMsgArray[ruleKey]; !ok {
 				errorMsgArray[ruleKey] = v.getErrorMessageByRule(ruleKey, customMsgMap)
 			}
+			// If it is with error and there's bail rule,
+			// it then does not continue validating for left rules.
+			if hasBailRule {
+				break
+			}
 		}
 		index++
 	}
 	if len(errorMsgArray) > 0 {
-		return newError([]string{rules}, map[string]map[string]string{
-			key: errorMsgArray,
+		return newError(gerror.CodeValidationFailed, []fieldRule{{Name: input.Name, Rule: input.Rule}}, map[string]map[string]string{
+			input.Name: errorMsgArray,
 		})
 	}
 	return nil
 }
 
-func (v *Validator) doCheckBuildInRules(
-	index int,
-	value interface{},
-	ruleKey string,
-	rulePattern string,
-	ruleItems []string,
-	dataMap map[string]interface{},
-	customMsgMap map[string]string,
-) (match bool, err error) {
-	valueStr := gconv.String(value)
-	switch ruleKey {
+type doCheckBuildInRulesInput struct {
+	Index        int
+	Value        interface{}
+	RuleKey      string
+	RulePattern  string
+	RuleItems    []string
+	DataMap      map[string]interface{}
+	CustomMsgMap map[string]string
+}
+
+func (v *Validator) doCheckBuildInRules(input doCheckBuildInRulesInput) (match bool, err error) {
+	valueStr := gconv.String(input.Value)
+	switch input.RuleKey {
 	// Required rules.
 	case
 		"required",
@@ -165,7 +197,7 @@ func (v *Validator) doCheckBuildInRules(
 		"required-with-all",
 		"required-without",
 		"required-without-all":
-		match = v.checkRequired(value, ruleKey, rulePattern, dataMap)
+		match = v.checkRequired(input.Value, input.RuleKey, input.RulePattern, input.DataMap)
 
 	// Length rules.
 	// It also supports length of unicode string.
@@ -174,8 +206,11 @@ func (v *Validator) doCheckBuildInRules(
 		"min-length",
 		"max-length",
 		"size":
-		if msg := v.checkLength(valueStr, ruleKey, rulePattern, customMsgMap); msg != "" {
-			return match, errors.New(msg)
+		if msg := v.checkLength(valueStr, input.RuleKey, input.RulePattern, input.CustomMsgMap); msg != "" {
+			return match, gerror.NewOption(gerror.Option{
+				Text: msg,
+				Code: gerror.CodeValidationFailed,
+			})
 		} else {
 			match = true
 		}
@@ -185,8 +220,11 @@ func (v *Validator) doCheckBuildInRules(
 		"min",
 		"max",
 		"between":
-		if msg := v.checkRange(valueStr, ruleKey, rulePattern, customMsgMap); msg != "" {
-			return match, errors.New(msg)
+		if msg := v.checkRange(valueStr, input.RuleKey, input.RulePattern, input.CustomMsgMap); msg != "" {
+			return match, gerror.NewOption(gerror.Option{
+				Text: msg,
+				Code: gerror.CodeValidationFailed,
+			})
 		} else {
 			match = true
 		}
@@ -194,18 +232,18 @@ func (v *Validator) doCheckBuildInRules(
 	// Custom regular expression.
 	case "regex":
 		// It here should check the rule as there might be special char '|' in it.
-		for i := index + 1; i < len(ruleItems); i++ {
-			if !gregex.IsMatchString(singleRulePattern, ruleItems[i]) {
-				rulePattern += "|" + ruleItems[i]
-				index++
+		for i := input.Index + 1; i < len(input.RuleItems); i++ {
+			if !gregex.IsMatchString(singleRulePattern, input.RuleItems[i]) {
+				input.RulePattern += "|" + input.RuleItems[i]
+				input.Index++
 			}
 		}
-		match = gregex.IsMatchString(rulePattern, valueStr)
+		match = gregex.IsMatchString(input.RulePattern, valueStr)
 
 	// Date rules.
 	case "date":
 		// support for time value, eg: gtime.Time/*gtime.Time, time.Time/*time.Time.
-		if v, ok := value.(apiTime); ok {
+		if v, ok := input.Value.(apiTime); ok {
 			return !v.IsZero(), nil
 		}
 		match = gregex.IsMatchString(`\d{4}[\.\-\_/]{0,1}\d{2}[\.\-\_/]{0,1}\d{2}`, valueStr)
@@ -213,21 +251,24 @@ func (v *Validator) doCheckBuildInRules(
 	// Date rule with specified format.
 	case "date-format":
 		// support for time value, eg: gtime.Time/*gtime.Time, time.Time/*time.Time.
-		if v, ok := value.(apiTime); ok {
+		if v, ok := input.Value.(apiTime); ok {
 			return !v.IsZero(), nil
 		}
-		if _, err := gtime.StrToTimeFormat(valueStr, rulePattern); err == nil {
+		if _, err := gtime.StrToTimeFormat(valueStr, input.RulePattern); err == nil {
 			match = true
 		} else {
 			var msg string
-			msg = v.getErrorMessageByRule(ruleKey, customMsgMap)
-			msg = strings.Replace(msg, ":format", rulePattern, -1)
-			return match, errors.New(msg)
+			msg = v.getErrorMessageByRule(input.RuleKey, input.CustomMsgMap)
+			msg = strings.Replace(msg, ":format", input.RulePattern, -1)
+			return match, gerror.NewOption(gerror.Option{
+				Text: msg,
+				Code: gerror.CodeValidationFailed,
+			})
 		}
 
 	// Values of two fields should be equal as string.
 	case "same":
-		_, foundValue := gutil.MapPossibleItemByKey(dataMap, rulePattern)
+		_, foundValue := gutil.MapPossibleItemByKey(input.DataMap, input.RulePattern)
 		if foundValue != nil {
 			if strings.Compare(valueStr, gconv.String(foundValue)) == 0 {
 				match = true
@@ -235,15 +276,18 @@ func (v *Validator) doCheckBuildInRules(
 		}
 		if !match {
 			var msg string
-			msg = v.getErrorMessageByRule(ruleKey, customMsgMap)
-			msg = strings.Replace(msg, ":field", rulePattern, -1)
-			return match, errors.New(msg)
+			msg = v.getErrorMessageByRule(input.RuleKey, input.CustomMsgMap)
+			msg = strings.Replace(msg, ":field", input.RulePattern, -1)
+			return match, gerror.NewOption(gerror.Option{
+				Text: msg,
+				Code: gerror.CodeValidationFailed,
+			})
 		}
 
 	// Values of two fields should not be equal as string.
 	case "different":
 		match = true
-		_, foundValue := gutil.MapPossibleItemByKey(dataMap, rulePattern)
+		_, foundValue := gutil.MapPossibleItemByKey(input.DataMap, input.RulePattern)
 		if foundValue != nil {
 			if strings.Compare(valueStr, gconv.String(foundValue)) == 0 {
 				match = false
@@ -251,14 +295,17 @@ func (v *Validator) doCheckBuildInRules(
 		}
 		if !match {
 			var msg string
-			msg = v.getErrorMessageByRule(ruleKey, customMsgMap)
-			msg = strings.Replace(msg, ":field", rulePattern, -1)
-			return match, errors.New(msg)
+			msg = v.getErrorMessageByRule(input.RuleKey, input.CustomMsgMap)
+			msg = strings.Replace(msg, ":field", input.RulePattern, -1)
+			return match, gerror.NewOption(gerror.Option{
+				Text: msg,
+				Code: gerror.CodeValidationFailed,
+			})
 		}
 
 	// Field value should be in range of.
 	case "in":
-		array := strings.Split(rulePattern, ",")
+		array := strings.Split(input.RulePattern, ",")
 		for _, v := range array {
 			if strings.Compare(valueStr, strings.TrimSpace(v)) == 0 {
 				match = true
@@ -269,7 +316,7 @@ func (v *Validator) doCheckBuildInRules(
 	// Field value should not be in range of.
 	case "not-in":
 		match = true
-		array := strings.Split(rulePattern, ",")
+		array := strings.Split(input.RulePattern, ",")
 		for _, v := range array {
 			if strings.Compare(valueStr, strings.TrimSpace(v)) == 0 {
 				match = false
@@ -436,7 +483,10 @@ func (v *Validator) doCheckBuildInRules(
 		match = gregex.IsMatchString(`^([0-9A-Fa-f]{2}[\-:]){5}[0-9A-Fa-f]{2}$`, valueStr)
 
 	default:
-		return match, errors.New("Invalid rule name: " + ruleKey)
+		return match, gerror.NewOption(gerror.Option{
+			Text: "Invalid rule name: " + input.RuleKey,
+			Code: gerror.CodeInvalidParameter,
+		})
 	}
 	return match, nil
 }

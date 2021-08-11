@@ -8,6 +8,7 @@ package gdb
 
 import (
 	"bytes"
+	"database/sql"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -55,11 +56,13 @@ type apiTableName interface {
 }
 
 const (
-	OrmTagForStruct  = "orm"
-	OrmTagForUnique  = "unique"
-	OrmTagForPrimary = "primary"
-	OrmTagForTable   = "table"
-	OrmTagForWith    = "with"
+	OrmTagForStruct    = "orm"
+	OrmTagForUnique    = "unique"
+	OrmTagForPrimary   = "primary"
+	OrmTagForTable     = "table"
+	OrmTagForWith      = "with"
+	OrmTagForWithWhere = "where"
+	OrmTagForWithOrder = "order"
 )
 
 var (
@@ -69,6 +72,32 @@ var (
 	// Priority tags for struct converting for orm field mapping.
 	structTagPriority = append([]string{OrmTagForStruct}, gconv.StructTagPriority...)
 )
+
+// guessPrimaryTableName parses and returns the primary table name.
+func (m *Model) guessPrimaryTableName(tableStr string) string {
+	if tableStr == "" {
+		return ""
+	}
+	var (
+		guessedTableName = ""
+		array1           = gstr.SplitAndTrim(tableStr, ",")
+		array2           = gstr.SplitAndTrim(array1[0], " ")
+		array3           = gstr.SplitAndTrim(array2[0], ".")
+	)
+	if len(array3) >= 2 {
+		guessedTableName = array3[1]
+	} else {
+		guessedTableName = array3[0]
+	}
+	charL, charR := m.db.GetChars()
+	if charL != "" || charR != "" {
+		guessedTableName = gstr.Trim(guessedTableName, charL+charR)
+	}
+	if !gregex.IsMatchString(regularFieldNameRegPattern, guessedTableName) {
+		return ""
+	}
+	return guessedTableName
+}
 
 // getTableNameFromOrmTag retrieves and returns the table name from struct object.
 func getTableNameFromOrmTag(object interface{}) string {
@@ -164,12 +193,27 @@ func ConvertDataForTableRecord(value interface{}) map[string]interface{} {
 				// Convert the value to JSON.
 				data[k], _ = json.Marshal(v)
 			}
+
 		case reflect.Struct:
-			switch v.(type) {
-			case time.Time, *time.Time, gtime.Time, *gtime.Time:
+			switch r := v.(type) {
+			// If the time is zero, it then updates it to nil,
+			// which will insert/update the value to database as "null".
+			case time.Time:
+				if r.IsZero() {
+					data[k] = nil
+				}
+
+			case gtime.Time:
+				if r.IsZero() {
+					data[k] = nil
+				}
+
+			case *time.Time, *gtime.Time:
 				continue
+
 			case Counter, *Counter:
 				continue
+
 			default:
 				// Use string conversion in default.
 				if s, ok := v.(apiString); ok {
@@ -236,7 +280,7 @@ func DataToMapDeep(value interface{}) map[string]interface{} {
 		name = ""
 		fieldTag = rtField.Tag
 		for _, tag := range structTagPriority {
-			if s := fieldTag.Get(tag); s != "" && gregex.IsMatchString(regularFieldNameWithoutDotRegPattern, s) {
+			if s := fieldTag.Get(tag); s != "" {
 				name = s
 				break
 			}
@@ -325,14 +369,15 @@ func doQuoteWord(s, charLeft, charRight string) string {
 	return s
 }
 
-// doQuoteString quotes string with quote chars. It handles strings like:
-// "user",
-// "user u",
-// "user,user_detail",
-// "user u, user_detail ut",
-// "user.user u, user.user_detail ut",
-// "u.id, u.name, u.age",
-// "u.id asc".
+// doQuoteString quotes string with quote chars.
+// For example, if quote char is '`':
+// "user"                             => "`user`"
+// "user u"                           => "`user` u"
+// "user,user_detail"                 => "`user`,`user_detail`"
+// "user u, user_detail ut"           => "`user` u,`user_detail` ut"
+// "user.user u, user.user_detail ut" => "`user`.`user` u,`user`.`user_detail` ut"
+// "u.id, u.name, u.age"              => "`u`.`id`,`u`.`name`,`u`.`age`"
+// "u.id asc"                         => "`u`.`id` asc"
 func doQuoteString(s, charLeft, charRight string) string {
 	array1 := gstr.SplitAndTrim(s, ",")
 	for k1, v1 := range array1 {
@@ -445,7 +490,7 @@ func formatSql(sql string, args []interface{}) (newSql string, newArgs []interfa
 }
 
 // formatWhere formats where statement and its arguments for `Where` and `Having` statements.
-func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool) (newWhere string, newArgs []interface{}) {
+func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool, schema, table string) (newWhere string, newArgs []interface{}) {
 	var (
 		buffer = bytes.NewBuffer(nil)
 		rv     = reflect.ValueOf(where)
@@ -483,7 +528,12 @@ func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool) (
 			})
 			break
 		}
-		for key, value := range DataToMapDeep(where) {
+		// Automatically mapping and filtering the struct attribute.
+		data := DataToMapDeep(where)
+		if table != "" {
+			data, _ = db.GetCore().mappingAndFilterData(schema, table, data, true)
+		}
+		for key, value := range data {
 			if omitEmpty && empty.IsEmpty(value) {
 				continue
 			}
@@ -769,9 +819,9 @@ func handleArguments(sql string, args []interface{}) (newSql string, newArgs []i
 }
 
 // formatError customizes and returns the SQL error.
-func formatError(err error, sql string, args ...interface{}) error {
-	if err != nil && err != ErrNoRows {
-		return gerror.New(fmt.Sprintf("%s, %s\n", err.Error(), FormatSqlWithArgs(sql, args)))
+func formatError(err error, s string, args ...interface{}) error {
+	if err != nil && err != sql.ErrNoRows {
+		return gerror.NewCodef(gerror.CodeDbOperationError, "%s, %s\n", err.Error(), FormatSqlWithArgs(s, args))
 	}
 	return err
 }
@@ -781,7 +831,9 @@ func formatError(err error, sql string, args ...interface{}) error {
 func FormatSqlWithArgs(sql string, args []interface{}) string {
 	index := -1
 	newQuery, _ := gregex.ReplaceStringFunc(
-		`(\?|:v\d+|\$\d+|@p\d+)`, sql, func(s string) string {
+		`(\?|:v\d+|\$\d+|@p\d+)`,
+		sql,
+		func(s string) string {
 			index++
 			if len(args) > index {
 				if args[index] == nil {
@@ -801,6 +853,7 @@ func FormatSqlWithArgs(sql string, args []interface{}) string {
 				switch kind {
 				case reflect.String, reflect.Map, reflect.Slice, reflect.Array:
 					return `'` + gstr.QuoteMeta(gconv.String(args[index]), `'`) + `'`
+
 				case reflect.Struct:
 					if t, ok := args[index].(time.Time); ok {
 						return `'` + t.Format(`2006-01-02 15:04:05`) + `'`

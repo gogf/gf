@@ -28,18 +28,15 @@ func (s *Server) Domain(domains string) *Domain {
 	return d
 }
 
-func (d *Domain) BindHandler(pattern string, handler HandlerFunc) {
+func (d *Domain) BindHandler(pattern string, handler interface{}) {
 	for domain, _ := range d.domains {
 		d.server.BindHandler(pattern+"@"+domain, handler)
 	}
 }
 
-func (d *Domain) doBindHandler(
-	pattern string, handler HandlerFunc,
-	middleware []HandlerFunc, source string,
-) {
+func (d *Domain) doBindHandler(pattern string, funcInfo handlerFuncInfo, middleware []HandlerFunc, source string) {
 	for domain, _ := range d.domains {
-		d.server.doBindHandler(pattern+"@"+domain, handler, middleware, source)
+		d.server.doBindHandler(pattern+"@"+domain, funcInfo, middleware, source)
 	}
 }
 
@@ -49,10 +46,7 @@ func (d *Domain) BindObject(pattern string, obj interface{}, methods ...string) 
 	}
 }
 
-func (d *Domain) doBindObject(
-	pattern string, obj interface{}, methods string,
-	middleware []HandlerFunc, source string,
-) {
+func (d *Domain) doBindObject(pattern string, obj interface{}, methods string, middleware []HandlerFunc, source string) {
 	for domain, _ := range d.domains {
 		d.server.doBindObject(pattern+"@"+domain, obj, methods, middleware, source)
 	}
@@ -79,57 +73,9 @@ func (d *Domain) BindObjectRest(pattern string, obj interface{}) {
 	}
 }
 
-func (d *Domain) doBindObjectRest(
-	pattern string, obj interface{},
-	middleware []HandlerFunc, source string,
-) {
+func (d *Domain) doBindObjectRest(pattern string, obj interface{}, middleware []HandlerFunc, source string) {
 	for domain, _ := range d.domains {
 		d.server.doBindObjectRest(pattern+"@"+domain, obj, middleware, source)
-	}
-}
-
-func (d *Domain) BindController(pattern string, c Controller, methods ...string) {
-	for domain, _ := range d.domains {
-		d.server.BindController(pattern+"@"+domain, c, methods...)
-	}
-}
-
-func (d *Domain) doBindController(
-	pattern string, c Controller, methods string,
-	middleware []HandlerFunc, source string,
-) {
-	for domain, _ := range d.domains {
-		d.server.doBindController(pattern+"@"+domain, c, methods, middleware, source)
-	}
-}
-
-func (d *Domain) BindControllerMethod(pattern string, c Controller, method string) {
-	for domain, _ := range d.domains {
-		d.server.BindControllerMethod(pattern+"@"+domain, c, method)
-	}
-}
-
-func (d *Domain) doBindControllerMethod(
-	pattern string, c Controller, method string,
-	middleware []HandlerFunc, source string,
-) {
-	for domain, _ := range d.domains {
-		d.server.doBindControllerMethod(pattern+"@"+domain, c, method, middleware, source)
-	}
-}
-
-func (d *Domain) BindControllerRest(pattern string, c Controller) {
-	for domain, _ := range d.domains {
-		d.server.BindControllerRest(pattern+"@"+domain, c)
-	}
-}
-
-func (d *Domain) doBindControllerRest(
-	pattern string, c Controller,
-	middleware []HandlerFunc, source string,
-) {
-	for domain, _ := range d.domains {
-		d.server.doBindControllerRest(pattern+"@"+domain, c, middleware, source)
 	}
 }
 
@@ -171,7 +117,7 @@ func (d *Domain) BindMiddleware(pattern string, handlers ...HandlerFunc) {
 
 func (d *Domain) BindMiddlewareDefault(handlers ...HandlerFunc) {
 	for domain, _ := range d.domains {
-		d.server.BindMiddleware(gDEFAULT_MIDDLEWARE_PATTERN+"@"+domain, handlers...)
+		d.server.BindMiddleware(defaultMiddlewarePattern+"@"+domain, handlers...)
 	}
 }
 

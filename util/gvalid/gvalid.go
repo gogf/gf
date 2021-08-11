@@ -15,7 +15,9 @@ import (
 	"github.com/gogf/gf/text/gregex"
 )
 
-// Refer to Laravel validation: https://laravel.com/docs/5.5/validation#available-validation-rules
+// Refer to Laravel validation:
+// https://laravel.com/docs/5.5/validation#available-validation-rules
+// https://learnku.com/docs/laravel/5.4/validation
 //
 // All supported rules:
 // required             format: required                              brief: Required.
@@ -25,6 +27,7 @@ import (
 // required-with-all    format: required-with-all:field1,field2,...   brief: Required if all of given fields are not empty.
 // required-without     format: required-without:field1,field2,...    brief: Required if any of given fields are empty.
 // required-without-all format: required-without-all:field1,field2,...brief: Required if all of given fields are empty.
+// bail                 format: bail                                  brief: Stop validating when this field's validation failed.
 // date                 format: date                                  brief: Standard date, like: 2006-01-02, 20060102, 2006.01.02
 // date-format          format: date-format:format                    brief: Custom date format.
 // email                format: email                                 brief: Email address.
@@ -65,6 +68,12 @@ import (
 // like: map[field] => string|map[rule]string
 type CustomMsg = map[string]interface{}
 
+// fieldRule defined the alias name and rule string for specified field.
+type fieldRule struct {
+	Name string // Alias name for the field.
+	Rule string // Rule string like: "max:6"
+}
+
 // apiNoValidation is an interface that marks current struct not validated by package `gvalid`.
 type apiNoValidation interface {
 	NoValidation()
@@ -79,6 +88,7 @@ const (
 	internalDefaultRuleName   = "__default__"         // default rule name for i18n error message format if no i18n message found for specified error rule.
 	ruleMessagePrefixForI18n  = "gf.gvalid.rule."     // prefix string for each rule configuration in i18n content.
 	noValidationTagName       = "nv"                  // no validation tag name for struct attribute.
+	bailRuleName              = "bail"                // the name for rule "bail"
 )
 
 var (
@@ -121,6 +131,7 @@ var (
 		"required-with-all":    {},
 		"required-without":     {},
 		"required-without-all": {},
+		"bail":                 {},
 		"date":                 {},
 		"date-format":          {},
 		"email":                {},
@@ -218,6 +229,12 @@ var (
 		"not-in":                "The :attribute value is not in acceptable range",
 		"regex":                 "The :attribute value is invalid",
 		internalDefaultRuleName: "The :attribute value is invalid",
+	}
+	// markedRuleMap defines all rules that are just marked rules which have neither functional meaning
+	// nor error messages.
+	markedRuleMap = map[string]bool{
+		bailRuleName: true,
+		//"nullable":   true,
 	}
 )
 

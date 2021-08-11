@@ -10,7 +10,6 @@ package gdb
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"time"
 
 	"github.com/gogf/gf/errors/gerror"
@@ -38,6 +37,7 @@ type DB interface {
 	// relational databases but also for NoSQL databases in the future. The name
 	// "Table" is not proper for that purpose any more.
 	// Also see Core.Table.
+	// Deprecated.
 	Table(tableNameOrStruct ...interface{}) *Model
 
 	// Model creates and returns a new ORM model from given schema.
@@ -50,6 +50,9 @@ type DB interface {
 	// 2. Model name with alias: Model("user", "u")
 	// Also see Core.Model.
 	Model(tableNameOrStruct ...interface{}) *Model
+
+	// Raw creates and returns a model based on a raw sql not a table.
+	Raw(rawSql string, args ...interface{}) *Model
 
 	// Schema creates and returns a schema.
 	// Also see Core.Schema.
@@ -66,8 +69,6 @@ type DB interface {
 
 	// Ctx is a chaining function, which creates and returns a new DB that is a shallow copy
 	// of current DB object and with given context in it.
-	// Note that this returned DB object can be used only once, so do not assign it to
-	// a global or package variable for long using.
 	// Also see Core.Ctx.
 	Ctx(ctx context.Context) DB
 
@@ -96,28 +97,26 @@ type DB interface {
 	// ===========================================================================
 
 	DoGetAll(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error)                                           // See Core.DoGetAll.
-	DoInsert(ctx context.Context, link Link, table string, data interface{}, option int, batch int) (result sql.Result, err error)                 // See Core.DoInsert.
+	DoInsert(ctx context.Context, link Link, table string, data List, option DoInsertOption) (result sql.Result, err error)                        // See Core.DoInsert.
 	DoUpdate(ctx context.Context, link Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) // See Core.DoUpdate.
 	DoDelete(ctx context.Context, link Link, table string, condition string, args ...interface{}) (result sql.Result, err error)                   // See Core.DoDelete.
 	DoQuery(ctx context.Context, link Link, sql string, args ...interface{}) (rows *sql.Rows, err error)                                           // See Core.DoQuery.
 	DoExec(ctx context.Context, link Link, sql string, args ...interface{}) (result sql.Result, err error)                                         // See Core.DoExec.
-	DoCommit(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{})                                // See Core.DoCommit.
+	DoCommit(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error)                     // See Core.DoCommit.
 	DoPrepare(ctx context.Context, link Link, sql string) (*Stmt, error)                                                                           // See Core.DoPrepare.
 
 	// ===========================================================================
 	// Query APIs for convenience purpose.
 	// ===========================================================================
 
-	GetAll(sql string, args ...interface{}) (Result, error)                        // See Core.GetAll.
-	GetOne(sql string, args ...interface{}) (Record, error)                        // See Core.GetOne.
-	GetValue(sql string, args ...interface{}) (Value, error)                       // See Core.GetValue.
-	GetArray(sql string, args ...interface{}) ([]Value, error)                     // See Core.GetArray.
-	GetCount(sql string, args ...interface{}) (int, error)                         // See Core.GetCount.
-	GetStruct(objPointer interface{}, sql string, args ...interface{}) error       // See Core.GetStruct.
-	GetStructs(objPointerSlice interface{}, sql string, args ...interface{}) error // See Core.GetStructs.
-	GetScan(objPointer interface{}, sql string, args ...interface{}) error         // See Core.GetScan.
-	Union(unions ...*Model) *Model                                                 // See Core.Union.
-	UnionAll(unions ...*Model) *Model                                              // See Core.UnionAll.
+	GetAll(sql string, args ...interface{}) (Result, error)                // See Core.GetAll.
+	GetOne(sql string, args ...interface{}) (Record, error)                // See Core.GetOne.
+	GetValue(sql string, args ...interface{}) (Value, error)               // See Core.GetValue.
+	GetArray(sql string, args ...interface{}) ([]Value, error)             // See Core.GetArray.
+	GetCount(sql string, args ...interface{}) (int, error)                 // See Core.GetCount.
+	GetScan(objPointer interface{}, sql string, args ...interface{}) error // See Core.GetScan.
+	Union(unions ...*Model) *Model                                         // See Core.Union.
+	UnionAll(unions ...*Model) *Model                                      // See Core.UnionAll.
 
 	// ===========================================================================
 	// Master/Slave specification support.
@@ -169,7 +168,7 @@ type DB interface {
 	GetChars() (charLeft string, charRight string)                                                   // See Core.GetChars.
 	Tables(ctx context.Context, schema ...string) (tables []string, err error)                       // See Core.Tables.
 	TableFields(ctx context.Context, table string, schema ...string) (map[string]*TableField, error) // See Core.TableFields.
-	FilteredLinkInfo() string                                                                        // See Core.FilteredLinkInfo.
+	FilteredLink() string                                                                            // FilteredLink is used for filtering sensitive information in `Link` configuration before output it to tracing server.
 }
 
 // Core is the base struct for database management.
@@ -180,7 +179,7 @@ type Core struct {
 	debug  *gtype.Bool     // Enable debug mode for the database, which can be changed in runtime.
 	cache  *gcache.Cache   // Cache manager, SQL result cache only.
 	schema *gtype.String   // Custom schema for this object.
-	logger *glog.Logger    // Logger.
+	logger *glog.Logger    // Logger for logging functionality.
 	config *ConfigNode     // Current config node.
 }
 
@@ -201,6 +200,12 @@ type Link interface {
 	IsTransaction() bool
 }
 
+// Logger is the logging interface for DB.
+type Logger interface {
+	Error(ctx context.Context, s string)
+	Debug(ctx context.Context, s string)
+}
+
 // Sql is the sql recording struct.
 type Sql struct {
 	Sql           string        // SQL string(may contain reserved char '?').
@@ -212,6 +217,14 @@ type Sql struct {
 	End           int64         // End execution timestamp in milliseconds.
 	Group         string        // Group is the group name of the configuration that the sql is executed from.
 	IsTransaction bool          // IsTransaction marks whether this sql is executed in transaction.
+}
+
+// DoInsertOption is the input struct for function DoInsert.
+type DoInsertOption struct {
+	OnDuplicateStr string
+	OnDuplicateMap map[string]interface{}
+	InsertOption   int // Insert operation.
+	BatchCount     int // Batch count for batch inserting.
 }
 
 // TableField is the struct for table field.
@@ -257,12 +270,12 @@ const (
 	ctxTimeoutTypeExec      = iota
 	ctxTimeoutTypeQuery
 	ctxTimeoutTypePrepare
+	commandEnvKeyForDryRun = "gf.gdb.dryrun"
+	ctxStrictKeyName       = "gf.gdb.CtxStrictEnabled"
+	ctxStrictErrorStr      = "context is required for database operation, did you missing call function Ctx"
 )
 
 var (
-	// ErrNoRows is alias of sql.ErrNoRows.
-	ErrNoRows = sql.ErrNoRows
-
 	// instances is the management map for instances.
 	instances = gmap.NewStrAnyMap(true)
 
@@ -301,7 +314,7 @@ var (
 
 func init() {
 	// allDryRun is initialized from environment or command options.
-	allDryRun = gcmd.GetOptWithEnv("gf.gdb.dryrun", false).Bool()
+	allDryRun = gcmd.GetOptWithEnv(commandEnvKeyForDryRun, false).Bool()
 }
 
 // Register registers custom database driver to gdb.
@@ -322,7 +335,10 @@ func New(group ...string) (db DB, err error) {
 	defer configs.RUnlock()
 
 	if len(configs.config) < 1 {
-		return nil, gerror.New("database configuration is empty, please set the database configuration before using")
+		return nil, gerror.NewCode(
+			gerror.CodeInvalidConfiguration,
+			"database configuration is empty, please set the database configuration before using",
+		)
 	}
 	if _, ok := configs.config[groupName]; ok {
 		if node, err := getConfigNodeByGroup(groupName, true); err == nil {
@@ -341,7 +357,8 @@ func New(group ...string) (db DB, err error) {
 				}
 				return c.db, nil
 			} else {
-				return nil, gerror.Newf(
+				return nil, gerror.NewCodef(
+					gerror.CodeInvalidConfiguration,
 					`cannot find database driver for specified database type "%s", did you misspell type name "%s" or forget importing the database driver?`,
 					node.Type, node.Type,
 				)
@@ -350,7 +367,8 @@ func New(group ...string) (db DB, err error) {
 			return nil, err
 		}
 	} else {
-		return nil, gerror.Newf(
+		return nil, gerror.NewCodef(
+			gerror.CodeInvalidConfiguration,
 			`database configuration node "%s" is not found, did you misspell group name "%s" or miss the database configuration?`,
 			groupName, groupName,
 		)
@@ -393,7 +411,7 @@ func getConfigNodeByGroup(group string, master bool) (*ConfigNode, error) {
 			}
 		}
 		if len(masterList) < 1 {
-			return nil, gerror.New("at least one master node configuration's need to make sense")
+			return nil, gerror.NewCode(gerror.CodeInvalidConfiguration, "at least one master node configuration's need to make sense")
 		}
 		if len(slaveList) < 1 {
 			slaveList = masterList
@@ -404,7 +422,7 @@ func getConfigNodeByGroup(group string, master bool) (*ConfigNode, error) {
 			return getConfigNodeByWeight(slaveList), nil
 		}
 	} else {
-		return nil, gerror.New(fmt.Sprintf("empty database configuration for item name '%s'", group))
+		return nil, gerror.NewCodef(gerror.CodeInvalidConfiguration, "empty database configuration for item name '%s'", group)
 	}
 }
 
@@ -473,14 +491,16 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 	// Cache the underlying connection pool object by node.
 	v, _ := internalCache.GetOrSetFuncLock(node.String(), func() (interface{}, error) {
 		intlog.Printf(
+			c.db.GetCtx(),
 			`open new connection, master:%#v, config:%#v, node:%#v`,
 			master, c.config, node,
 		)
 		defer func() {
 			if err != nil {
-				intlog.Printf(`open new connection failed: %v, %#v`, err, node)
+				intlog.Printf(c.db.GetCtx(), `open new connection failed: %v, %#v`, err, node)
 			} else {
 				intlog.Printf(
+					c.db.GetCtx(),
 					`open new connection success, master:%#v, config:%#v, node:%#v`,
 					master, c.config, node,
 				)

@@ -8,7 +8,7 @@ package gfile
 
 import (
 	"bytes"
-	"errors"
+	"github.com/gogf/gf/errors/gerror"
 	"os"
 	"os/exec"
 	"os/user"
@@ -56,7 +56,7 @@ func homeUnix() (string, error) {
 
 	result := strings.TrimSpace(stdout.String())
 	if result == "" {
-		return "", errors.New("blank output when reading home directory")
+		return "", gerror.NewCode(gerror.CodeInternalError, "blank output when reading home directory")
 	}
 
 	return result, nil
@@ -73,7 +73,7 @@ func homeWindows() (string, error) {
 		home = os.Getenv("USERPROFILE")
 	}
 	if home == "" {
-		return "", errors.New("HOMEDRIVE, HOMEPATH, and USERPROFILE are blank")
+		return "", gerror.NewCode(gerror.CodeOperationFailed, "HOMEDRIVE, HOMEPATH, and USERPROFILE are blank")
 	}
 
 	return home, nil

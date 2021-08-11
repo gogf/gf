@@ -44,7 +44,7 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 	}
 	conditionStr := conditionWhere + conditionExtra
 	if !gstr.ContainsI(conditionStr, " WHERE ") {
-		return nil, gerror.New("there should be WHERE condition statement for DELETE operation")
+		return nil, gerror.NewCode(gerror.CodeMissingParameter, "there should be WHERE condition statement for DELETE operation")
 	}
 	return m.db.DoDelete(m.GetCtx(), m.getLink(true), m.tables, conditionStr, conditionArgs...)
 }

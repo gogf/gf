@@ -7,8 +7,9 @@
 package gproc
 
 import (
-	"errors"
+	"context"
 	"fmt"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 	"os"
 	"os/exec"
@@ -87,7 +88,7 @@ func (p *Process) Run() error {
 	}
 }
 
-// PID
+// Pid retrieves and returns the PID for the process.
 func (p *Process) Pid() int {
 	if p.Process != nil {
 		return p.Process.Pid
@@ -95,12 +96,12 @@ func (p *Process) Pid() int {
 	return 0
 }
 
-// Send send custom data to the process.
+// Send sends custom data to the process.
 func (p *Process) Send(data []byte) error {
 	if p.Process != nil {
 		return Send(p.Process.Pid, data)
 	}
-	return errors.New("invalid process")
+	return gerror.NewCode(gerror.CodeInvalidParameter, "invalid process")
 }
 
 // Release releases any resources associated with the Process p,
@@ -118,12 +119,11 @@ func (p *Process) Kill() error {
 		}
 		if runtime.GOOS != "windows" {
 			if err = p.Process.Release(); err != nil {
-				intlog.Error(err)
-				//return err
+				intlog.Error(context.TODO(), err)
 			}
 		}
 		_, err = p.Process.Wait()
-		intlog.Error(err)
+		intlog.Error(context.TODO(), err)
 		//return err
 		return nil
 	} else {

@@ -37,6 +37,7 @@ type Request struct {
 	StaticFile      *staticFile            // Static file object for static file serving.
 	context         context.Context        // Custom context for internal usage purpose.
 	handlers        []*handlerParsedItem   // All matched handlers containing handler, hook and middleware for this request.
+	handlerResponse handlerResponse        // Handler response object and its error value.
 	hasHookHandler  bool                   // A bool marking whether there's hook handler in the handlers for performance purpose.
 	hasServeHandler bool                   // A bool marking whether there's serving handler in the handlers for performance purpose.
 	parsedQuery     bool                   // A bool marking whether the GET parameters parsed.
@@ -57,6 +58,11 @@ type Request struct {
 	viewParams      gview.Params           // Custom template view variables for this response.
 }
 
+type handlerResponse struct {
+	Object interface{}
+	Error  error
+}
+
 // staticFile is the file struct for static file service.
 type staticFile struct {
 	File  *gres.File // Resource file object.
@@ -73,7 +79,10 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 		EnterTime: gtime.TimestampMilli(),
 	}
 	request.Cookie = GetCookie(request)
-	request.Session = s.sessionManager.New(request.GetSessionId())
+	request.Session = s.sessionManager.New(
+		r.Context(),
+		request.GetSessionId(),
+	)
 	request.Response.Request = request
 	request.Middleware = &middleware{
 		request: request,
@@ -84,7 +93,7 @@ func newRequest(s *Server, r *http.Request, w http.ResponseWriter) *Request {
 			address = request.RemoteAddr
 			header  = fmt.Sprintf("%v", request.Header)
 		)
-		intlog.Print(address, header)
+		intlog.Print(r.Context(), address, header)
 		return guid.S([]byte(address), []byte(header))
 	})
 	if err != nil {
@@ -232,4 +241,9 @@ func (r *Request) ReloadParam() {
 	r.parsedForm = false
 	r.parsedQuery = false
 	r.bodyContent = nil
+}
+
+// GetHandlerResponse retrieves and returns the handler response object and its error.
+func (r *Request) GetHandlerResponse() (res interface{}, err error) {
+	return r.handlerResponse.Object, r.handlerResponse.Error
 }

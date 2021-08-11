@@ -8,14 +8,12 @@
 package gcmd
 
 import (
-	"fmt"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/json"
 	"os"
 	"strings"
 
 	"github.com/gogf/gf/text/gstr"
-
-	"errors"
 
 	"github.com/gogf/gf/container/gvar"
 
@@ -96,7 +94,7 @@ func ParseWithArgs(args []string, supportedOptions map[string]bool, strict ...bo
 						i++
 						continue
 					} else if parser.strict {
-						return nil, errors.New(fmt.Sprintf(`invalid option '%s'`, args[i]))
+						return nil, gerror.NewCodef(gerror.CodeInvalidParameter, `invalid option '%s'`, args[i])
 					}
 				}
 			}

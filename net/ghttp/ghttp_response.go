@@ -110,7 +110,7 @@ func (r *Response) RedirectBack(code ...int) {
 	r.RedirectTo(r.Request.GetReferer(), code...)
 }
 
-// BufferString returns the buffered content as []byte.
+// Buffer returns the buffered content as []byte.
 func (r *Response) Buffer() []byte {
 	return r.buffer.Bytes()
 }
@@ -136,7 +136,7 @@ func (r *Response) ClearBuffer() {
 	r.buffer.Reset()
 }
 
-// Output outputs the buffer content to the client and clears the buffer.
+// Flush outputs the buffer content to the client and clears the buffer.
 func (r *Response) Flush() {
 	if r.Server.config.ServerAgent != "" {
 		r.Header().Set("Server", r.Server.config.ServerAgent)

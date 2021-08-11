@@ -19,6 +19,7 @@ import (
 // View is the view object for controller.
 // It's initialized when controller request initializes and destroyed
 // when the controller request closes.
+// Deprecated, no longer suggested.
 type View struct {
 	mu       sync.RWMutex
 	view     *gview.View
@@ -27,6 +28,7 @@ type View struct {
 }
 
 // NewView creates and returns a controller view object.
+// Deprecated, no longer suggested.
 func NewView(w *ghttp.Response) *View {
 	return &View{
 		view:     gins.View(),
@@ -76,7 +78,7 @@ func (view *View) LockFunc(f func(data gview.Params)) {
 	f(view.data)
 }
 
-// LockFunc locks reading for template variables by callback function <f>.
+// RLockFunc locks reading for template variables by callback function <f>.
 func (view *View) RLockFunc(f func(data gview.Params)) {
 	view.mu.RLock()
 	defer view.mu.RUnlock()

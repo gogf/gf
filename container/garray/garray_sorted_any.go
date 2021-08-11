@@ -156,9 +156,7 @@ func (a *SortedArray) Append(values ...interface{}) *SortedArray {
 		if cmp > 0 {
 			index++
 		}
-		rear := append([]interface{}{}, a.array[index:]...)
-		a.array = append(a.array[0:index], value)
-		a.array = append(a.array, rear...)
+		a.array = append(a.array[:index], append([]interface{}{value}, a.array[index:]...)...)
 	}
 	return a
 }
@@ -453,7 +451,7 @@ func (a *SortedArray) binSearch(value interface{}, lock bool) (index int, result
 	mid := 0
 	cmp := -2
 	for min <= max {
-		mid = min + int((max-min)/2)
+		mid = min + (max-min)/2
 		cmp = a.getComparator()(value, a.array[mid])
 		switch {
 		case cmp < 0:

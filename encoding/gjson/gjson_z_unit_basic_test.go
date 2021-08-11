@@ -353,7 +353,7 @@ func Test_Convert2(t *testing.T) {
 		t.Assert(j.GetGTime("time").Format("Y-m-d"), "2019-06-12")
 		t.Assert(j.GetDuration("time").String(), "0s")
 
-		err := j.ToStruct(&name)
+		err := j.Struct(&name)
 		t.Assert(err, nil)
 		t.Assert(name.Name, "gf")
 		//j.Dump()
@@ -369,7 +369,7 @@ func Test_Convert2(t *testing.T) {
 		t.Assert(err, nil)
 
 		j = gjson.New(`[1,2,3]`)
-		t.Assert(len(j.ToArray()), 3)
+		t.Assert(len(j.Array()), 3)
 	})
 }
 
@@ -400,7 +400,7 @@ func Test_Basic(t *testing.T) {
 		err = j.Remove("1")
 		t.Assert(err, nil)
 		t.Assert(j.Get("0"), 1)
-		t.Assert(len(j.ToArray()), 2)
+		t.Assert(len(j.Array()), 2)
 
 		j = gjson.New(`[1,2,3]`)
 		// If index 0 is delete, its next item will be at index 0.
@@ -408,13 +408,13 @@ func Test_Basic(t *testing.T) {
 		t.Assert(j.Remove("0"), nil)
 		t.Assert(j.Remove("0"), nil)
 		t.Assert(j.Get("0"), nil)
-		t.Assert(len(j.ToArray()), 0)
+		t.Assert(len(j.Array()), 0)
 
 		j = gjson.New(`[1,2,3]`)
 		err = j.Remove("3")
 		t.Assert(err, nil)
 		t.Assert(j.Get("0"), 1)
-		t.Assert(len(j.ToArray()), 3)
+		t.Assert(len(j.Array()), 3)
 
 		j = gjson.New(`[1,2,3]`)
 		err = j.Remove("0.3")
@@ -483,5 +483,19 @@ func TestJson_IsNil(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		j := gjson.New(nil)
 		t.Assert(j.IsNil(), true)
+	})
+}
+
+func TestJson_Set_With_Struct(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		v := gjson.New(g.Map{
+			"user1": g.Map{"name": "user1"},
+			"user2": g.Map{"name": "user2"},
+			"user3": g.Map{"name": "user3"},
+		})
+		user1 := v.GetJson("user1")
+		user1.Set("id", 111)
+		v.Set("user1", user1)
+		t.Assert(v.Get("user1.id"), 111)
 	})
 }

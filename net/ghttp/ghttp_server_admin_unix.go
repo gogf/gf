@@ -9,6 +9,7 @@
 package ghttp
 
 import (
+	"context"
 	"github.com/gogf/gf/internal/intlog"
 	"os"
 	"os/signal"
@@ -33,7 +34,7 @@ func handleProcessSignal() {
 	)
 	for {
 		sig = <-procSignalChan
-		intlog.Printf(`signal received: %s`, sig.String())
+		intlog.Printf(context.TODO(), `signal received: %s`, sig.String())
 		switch sig {
 		// Shutdown the servers.
 		case syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGABRT:
@@ -49,7 +50,7 @@ func handleProcessSignal() {
 		// Restart the servers.
 		case syscall.SIGUSR1:
 			if err := restartWebServers(sig.String()); err != nil {
-				intlog.Error(err)
+				intlog.Error(context.TODO(), err)
 			}
 			return
 

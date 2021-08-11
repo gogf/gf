@@ -32,11 +32,6 @@ type DriverOracle struct {
 	*Core
 }
 
-const (
-	tableAlias1 = "GFORM1"
-	tableAlias2 = "GFORM2"
-)
-
 // New creates and returns a database object for oracle.
 // It implements the interface of gdb.Driver for extra database driver installation.
 func (d *DriverOracle) New(core *Core, node *ConfigNode) (DB, error) {
@@ -48,15 +43,15 @@ func (d *DriverOracle) New(core *Core, node *ConfigNode) (DB, error) {
 // Open creates and returns a underlying sql.DB object for oracle.
 func (d *DriverOracle) Open(config *ConfigNode) (*sql.DB, error) {
 	var source string
-	if config.LinkInfo != "" {
-		source = config.LinkInfo
+	if config.Link != "" {
+		source = config.Link
 	} else {
 		source = fmt.Sprintf(
 			"%s/%s@%s:%s/%s",
 			config.User, config.Pass, config.Host, config.Port, config.Name,
 		)
 	}
-	intlog.Printf("Open: %s", source)
+	intlog.Printf(d.GetCtx(), "Open: %s", source)
 	if db, err := sql.Open("oci8", source); err == nil {
 		return db, nil
 	} else {
@@ -64,10 +59,10 @@ func (d *DriverOracle) Open(config *ConfigNode) (*sql.DB, error) {
 	}
 }
 
-// FilteredLinkInfo retrieves and returns filtered `linkInfo` that can be using for
+// FilteredLink retrieves and returns filtered `linkInfo` that can be using for
 // logging or tracing purpose.
-func (d *DriverOracle) FilteredLinkInfo() string {
-	linkInfo := d.GetConfig().LinkInfo
+func (d *DriverOracle) FilteredLink() string {
+	linkInfo := d.GetConfig().Link
 	if linkInfo == "" {
 		return ""
 	}
@@ -85,7 +80,11 @@ func (d *DriverOracle) GetChars() (charLeft string, charRight string) {
 }
 
 // DoCommit deals with the sql string before commits it to underlying sql driver.
-func (d *DriverOracle) DoCommit(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}) {
+func (d *DriverOracle) DoCommit(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
+	defer func() {
+		newSql, newArgs, err = d.Core.DoCommit(ctx, link, newSql, newArgs)
+	}()
+
 	var index int
 	// Convert place holder char '?' to string ":vx".
 	newSql, _ = gregex.ReplaceStringFunc("\\?", sql, func(s string) string {
@@ -187,7 +186,7 @@ func (d *DriverOracle) TableFields(ctx context.Context, table string, schema ...
 	charL, charR := d.GetChars()
 	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
-		return nil, gerror.New("function TableFields supports only single table operations")
+		return nil, gerror.NewCode(gerror.CodeInvalidParameter, "function TableFields supports only single table operations")
 	}
 	useSchema := d.db.GetSchema()
 	if len(schema) > 0 && schema[0] != "" {
@@ -264,95 +263,60 @@ func (d *DriverOracle) getTableUniqueIndex(table string) (fields map[string]map[
 	return
 }
 
-func (d *DriverOracle) DoInsert(ctx context.Context, link Link, table string, list interface{}, option int, batch int) (result sql.Result, err error) {
+// DoInsert inserts or updates data for given table.
+// This function is usually used for custom interface definition, you do not need call it manually.
+// The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
+// Eg:
+// Data(g.Map{"uid": 10000, "name":"john"})
+// Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
+//
+// The parameter `option` values are as follows:
+// 0: insert:  just insert, if there's unique/primary key in the data, it returns error;
+// 1: replace: if there's unique/primary key in the data, it deletes it from table and inserts a new one;
+// 2: save:    if there's unique/primary key in the data, it updates it or else inserts a new one;
+// 3: ignore:  if there's unique/primary key in the data, it ignores the inserting;
+func (d *DriverOracle) DoInsert(ctx context.Context, link Link, table string, list List, option DoInsertOption) (result sql.Result, err error) {
+	switch option.InsertOption {
+	case insertOptionSave:
+		return nil, gerror.NewCode(gerror.CodeNotSupported, `Save operation is not supported by mssql driver`)
+
+	case insertOptionReplace:
+		return nil, gerror.NewCode(gerror.CodeNotSupported, `Replace operation is not supported by mssql driver`)
+	}
+
 	var (
 		keys   []string
 		values []string
 		params []interface{}
 	)
-	listMap := (List)(nil)
-	switch v := list.(type) {
-	case Result:
-		listMap = v.List()
-	case Record:
-		listMap = List{v.Map()}
-	case List:
-		listMap = v
-	case Map:
-		listMap = List{v}
-	default:
-		var (
-			rv   = reflect.ValueOf(list)
-			kind = rv.Kind()
-		)
-		if kind == reflect.Ptr {
-			rv = rv.Elem()
-			kind = rv.Kind()
-		}
-		switch kind {
-		case reflect.Slice, reflect.Array:
-			listMap = make(List, rv.Len())
-			for i := 0; i < rv.Len(); i++ {
-				listMap[i] = ConvertDataForTableRecord(rv.Index(i).Interface())
-			}
-		case reflect.Map:
-			fallthrough
-		case reflect.Struct:
-			listMap = List{ConvertDataForTableRecord(list)}
-		default:
-			return result, gerror.New(fmt.Sprint("unsupported list type:", kind))
-		}
-	}
-	if len(listMap) < 1 {
-		return result, gerror.New("empty data list")
-	}
-	if link == nil {
-		if link, err = d.MasterLink(); err != nil {
-			return
-		}
-	}
 	// Retrieve the table fields and length.
-	holders := []string(nil)
-	for k, _ := range listMap[0] {
+	var (
+		listLength  = len(list)
+		valueHolder = make([]string, 0)
+	)
+	for k, _ := range list[0] {
 		keys = append(keys, k)
-		holders = append(holders, "?")
+		valueHolder = append(valueHolder, "?")
 	}
 	var (
 		batchResult    = new(SqlResult)
 		charL, charR   = d.db.GetChars()
 		keyStr         = charL + strings.Join(keys, charL+","+charR) + charR
-		valueHolderStr = strings.Join(holders, ",")
+		valueHolderStr = strings.Join(valueHolder, ",")
 	)
-	if option != insertOptionDefault {
-		for _, v := range listMap {
-			r, err := d.DoInsert(ctx, link, table, v, option, 1)
-			if err != nil {
-				return r, err
-			}
-
-			if n, err := r.RowsAffected(); err != nil {
-				return r, err
-			} else {
-				batchResult.result = r
-				batchResult.affected += n
-			}
-		}
-		return batchResult, nil
-	}
-
-	if batch <= 0 {
-		batch = defaultBatchNumber
-	}
 	// Format "INSERT...INTO..." statement.
 	intoStr := make([]string, 0)
-	for i := 0; i < len(listMap); i++ {
+	for i := 0; i < len(list); i++ {
 		for _, k := range keys {
-			params = append(params, listMap[i][k])
+			params = append(params, list[i][k])
 		}
 		values = append(values, valueHolderStr)
-		intoStr = append(intoStr, fmt.Sprintf(" INTO %s(%s) VALUES(%s) ", table, keyStr, valueHolderStr))
-		if len(intoStr) == batch {
-			r, err := d.DoExec(ctx, link, fmt.Sprintf("INSERT ALL %s SELECT * FROM DUAL", strings.Join(intoStr, " ")), params...)
+		intoStr = append(intoStr, fmt.Sprintf("INTO %s(%s) VALUES(%s)", table, keyStr, valueHolderStr))
+		if len(intoStr) == option.BatchCount || (i == listLength-1 && len(valueHolder) > 0) {
+			r, err := d.DoExec(ctx, link, fmt.Sprintf(
+				"INSERT ALL %s SELECT * FROM DUAL",
+				strings.Join(intoStr, " "),
+			), params...)
 			if err != nil {
 				return r, err
 			}
@@ -364,19 +328,6 @@ func (d *DriverOracle) DoInsert(ctx context.Context, link Link, table string, li
 			}
 			params = params[:0]
 			intoStr = intoStr[:0]
-		}
-	}
-	// The leftover data.
-	if len(intoStr) > 0 {
-		r, err := d.DoExec(ctx, link, fmt.Sprintf("INSERT ALL %s SELECT * FROM DUAL", strings.Join(intoStr, " ")), params...)
-		if err != nil {
-			return r, err
-		}
-		if n, err := r.RowsAffected(); err != nil {
-			return r, err
-		} else {
-			batchResult.result = r
-			batchResult.affected += n
 		}
 	}
 	return batchResult, nil

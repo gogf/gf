@@ -7,7 +7,7 @@
 package gcfg
 
 import (
-	"errors"
+	"github.com/gogf/gf/errors/gerror"
 	"time"
 
 	"github.com/gogf/gf/encoding/gjson"
@@ -295,16 +295,7 @@ func (c *Config) GetStruct(pattern string, pointer interface{}, mapping ...map[s
 	if j := c.getJson(); j != nil {
 		return j.GetStruct(pattern, pointer, mapping...)
 	}
-	return errors.New("configuration not found")
-}
-
-// GetStructDeep does GetStruct recursively.
-// Deprecated, use GetStruct instead.
-func (c *Config) GetStructDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
-	if j := c.getJson(); j != nil {
-		return j.GetStructDeep(pattern, pointer, mapping...)
-	}
-	return errors.New("configuration not found")
+	return gerror.NewCode(gerror.CodeMissingConfiguration, "configuration not found")
 }
 
 // GetStructs converts any slice to given struct slice.
@@ -312,16 +303,7 @@ func (c *Config) GetStructs(pattern string, pointer interface{}, mapping ...map[
 	if j := c.getJson(); j != nil {
 		return j.GetStructs(pattern, pointer, mapping...)
 	}
-	return errors.New("configuration not found")
-}
-
-// GetStructsDeep converts any slice to given struct slice recursively.
-// Deprecated, use GetStructs instead.
-func (c *Config) GetStructsDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
-	if j := c.getJson(); j != nil {
-		return j.GetStructsDeep(pattern, pointer, mapping...)
-	}
-	return errors.New("configuration not found")
+	return gerror.NewCode(gerror.CodeMissingConfiguration, "configuration not found")
 }
 
 // GetMapToMap retrieves the value by specified `pattern` and converts it to specified map variable.
@@ -330,7 +312,7 @@ func (c *Config) GetMapToMap(pattern string, pointer interface{}, mapping ...map
 	if j := c.getJson(); j != nil {
 		return j.GetMapToMap(pattern, pointer, mapping...)
 	}
-	return errors.New("configuration not found")
+	return gerror.NewCode(gerror.CodeMissingConfiguration, "configuration not found")
 }
 
 // GetMapToMaps retrieves the value by specified `pattern` and converts it to specified map slice
@@ -340,7 +322,7 @@ func (c *Config) GetMapToMaps(pattern string, pointer interface{}, mapping ...ma
 	if j := c.getJson(); j != nil {
 		return j.GetMapToMaps(pattern, pointer, mapping...)
 	}
-	return errors.New("configuration not found")
+	return gerror.NewCode(gerror.CodeMissingConfiguration, "configuration not found")
 }
 
 // GetMapToMapsDeep retrieves the value by specified `pattern` and converts it to specified map slice
@@ -350,88 +332,60 @@ func (c *Config) GetMapToMapsDeep(pattern string, pointer interface{}, mapping .
 	if j := c.getJson(); j != nil {
 		return j.GetMapToMapsDeep(pattern, pointer, mapping...)
 	}
-	return errors.New("configuration not found")
+	return gerror.NewCode(gerror.CodeMissingConfiguration, "configuration not found")
 }
 
-// ToMap converts current Json object to map[string]interface{}.
-// It returns nil if fails.
-func (c *Config) ToMap() map[string]interface{} {
+// Map converts current Json object to map[string]interface{}. It returns nil if fails.
+func (c *Config) Map() map[string]interface{} {
 	if j := c.getJson(); j != nil {
-		return j.ToMap()
+		return j.Map()
 	}
 	return nil
 }
 
-// ToArray converts current Json object to []interface{}.
+// Array converts current Json object to []interface{}.
 // It returns nil if fails.
-func (c *Config) ToArray() []interface{} {
+func (c *Config) Array() []interface{} {
 	if j := c.getJson(); j != nil {
-		return j.ToArray()
+		return j.Array()
 	}
 	return nil
 }
 
-// ToStruct converts current Json object to specified object.
+// Struct converts current Json object to specified object.
 // The `pointer` should be a pointer type of *struct.
-func (c *Config) ToStruct(pointer interface{}, mapping ...map[string]string) error {
+func (c *Config) Struct(pointer interface{}, mapping ...map[string]string) error {
 	if j := c.getJson(); j != nil {
-		return j.ToStruct(pointer, mapping...)
+		return j.Struct(pointer, mapping...)
 	}
-	return errors.New("configuration not found")
+	return gerror.NewCode(gerror.CodeMissingConfiguration, "configuration not found")
 }
 
-// ToStructDeep converts current Json object to specified object recursively.
-// The `pointer` should be a pointer type of *struct.
-func (c *Config) ToStructDeep(pointer interface{}, mapping ...map[string]string) error {
-	if j := c.getJson(); j != nil {
-		return j.ToStructDeep(pointer, mapping...)
-	}
-	return errors.New("configuration not found")
-}
-
-// ToStructs converts current Json object to specified object slice.
+// Structs converts current Json object to specified object slice.
 // The `pointer` should be a pointer type of []struct/*struct.
-func (c *Config) ToStructs(pointer interface{}, mapping ...map[string]string) error {
+func (c *Config) Structs(pointer interface{}, mapping ...map[string]string) error {
 	if j := c.getJson(); j != nil {
-		return j.ToStructs(pointer, mapping...)
+		return j.Structs(pointer, mapping...)
 	}
-	return errors.New("configuration not found")
+	return gerror.NewCode(gerror.CodeMissingConfiguration, "configuration not found")
 }
 
-// ToStructsDeep converts current Json object to specified object slice recursively.
-// The `pointer` should be a pointer type of []struct/*struct.
-func (c *Config) ToStructsDeep(pointer interface{}, mapping ...map[string]string) error {
-	if j := c.getJson(); j != nil {
-		return j.ToStructsDeep(pointer, mapping...)
-	}
-	return errors.New("configuration not found")
-}
-
-// ToMapToMap converts current Json object to specified map variable.
+// MapToMap converts current Json object to specified map variable.
 // The parameter of `pointer` should be type of *map.
-func (c *Config) ToMapToMap(pointer interface{}, mapping ...map[string]string) error {
+func (c *Config) MapToMap(pointer interface{}, mapping ...map[string]string) error {
 	if j := c.getJson(); j != nil {
-		return j.ToMapToMap(pointer, mapping...)
+		return j.MapToMap(pointer, mapping...)
 	}
-	return errors.New("configuration not found")
+	return gerror.NewCode(gerror.CodeMissingConfiguration, "configuration not found")
 }
 
-// ToMapToMaps converts current Json object to specified map variable slice.
+// MapToMaps converts current Json object to specified map variable slice.
 // The parameter of `pointer` should be type of []map/*map.
-func (c *Config) ToMapToMaps(pointer interface{}, mapping ...map[string]string) error {
+func (c *Config) MapToMaps(pointer interface{}, mapping ...map[string]string) error {
 	if j := c.getJson(); j != nil {
-		return j.ToMapToMaps(pointer, mapping...)
+		return j.MapToMaps(pointer, mapping...)
 	}
-	return errors.New("configuration not found")
-}
-
-// ToMapToMapsDeep converts current Json object to specified map variable slice recursively.
-// The parameter of `pointer` should be type of []map/*map.
-func (c *Config) ToMapToMapsDeep(pointer interface{}, mapping ...map[string]string) error {
-	if j := c.getJson(); j != nil {
-		return j.ToMapToMapsDeep(pointer, mapping...)
-	}
-	return errors.New("configuration not found")
+	return gerror.NewCode(gerror.CodeMissingConfiguration, "configuration not found")
 }
 
 // Clear removes all parsed configuration files content cache,

@@ -8,7 +8,7 @@
 package gipv4
 
 import (
-	"errors"
+	"github.com/gogf/gf/errors/gerror"
 	"net"
 	"strconv"
 	"strings"
@@ -38,7 +38,7 @@ func GetIntranetIp() (ip string, err error) {
 		return "", err
 	}
 	if len(ips) == 0 {
-		return "", errors.New("no intranet ip found")
+		return "", gerror.NewCode(gerror.CodeOperationFailed, "no intranet ip found")
 	}
 	return ips[0], nil
 }

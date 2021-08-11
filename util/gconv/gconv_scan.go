@@ -23,7 +23,7 @@ func Scan(params interface{}, pointer interface{}, mapping ...map[string]string)
 		pointerKind = pointerType.Kind()
 	)
 	if pointerKind != reflect.Ptr {
-		return gerror.Newf("params should be type of pointer, but got: %v", pointerKind)
+		return gerror.NewCodef(gerror.CodeInvalidParameter, "params should be type of pointer, but got: %v", pointerKind)
 	}
 	var (
 		pointerElem     = pointerType.Elem()
@@ -32,6 +32,7 @@ func Scan(params interface{}, pointer interface{}, mapping ...map[string]string)
 	switch pointerElemKind {
 	case reflect.Map:
 		return MapToMap(params, pointer, mapping...)
+
 	case reflect.Array, reflect.Slice:
 		var (
 			sliceElem     = pointerElem.Elem()
@@ -59,7 +60,7 @@ func ScanDeep(params interface{}, pointer interface{}, mapping ...map[string]str
 	t := reflect.TypeOf(pointer)
 	k := t.Kind()
 	if k != reflect.Ptr {
-		return gerror.Newf("params should be type of pointer, but got: %v", k)
+		return gerror.NewCodef(gerror.CodeInvalidParameter, "params should be type of pointer, but got: %v", k)
 	}
 	switch t.Elem().Kind() {
 	case reflect.Array, reflect.Slice:

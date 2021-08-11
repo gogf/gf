@@ -7,6 +7,7 @@
 package gins
 
 import (
+	"context"
 	"fmt"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
@@ -52,21 +53,24 @@ func Database(name ...string) gdb.DB {
 			if configFilePath == "" {
 				exampleFileName := "config.example.toml"
 				if exampleConfigFilePath, _ := Config().GetFilePath(exampleFileName); exampleConfigFilePath != "" {
-					panic(gerror.Wrapf(
+					panic(gerror.WrapCodef(
+						gerror.CodeMissingConfiguration,
 						err,
 						`configuration file "%s" not found, but found "%s", did you miss renaming the example configuration file?`,
 						Config().GetFileName(),
 						exampleFileName,
 					))
 				} else {
-					panic(gerror.Wrapf(
+					panic(gerror.WrapCodef(
+						gerror.CodeMissingConfiguration,
 						err,
 						`configuration file "%s" not found, did you miss the configuration file or the misspell the configuration file name?`,
 						Config().GetFileName(),
 					))
 				}
 			}
-			panic(gerror.Wrapf(
+			panic(gerror.WrapCodef(
+				gerror.CodeMissingConfiguration,
 				err,
 				`database initialization failed: "%s" node not found, is configuration file or configuration node missing?`,
 				configNodeNameDatabase,
@@ -92,11 +96,11 @@ func Database(name ...string) gdb.DB {
 			}
 			if len(cg) > 0 {
 				if gdb.GetConfig(group) == nil {
-					intlog.Printf("add configuration for group: %s, %#v", g, cg)
+					intlog.Printf(context.TODO(), "add configuration for group: %s, %#v", g, cg)
 					gdb.SetConfigGroup(g, cg)
 				} else {
-					intlog.Printf("ignore configuration as it already exists for group: %s, %#v", g, cg)
-					intlog.Printf("%s, %#v", g, cg)
+					intlog.Printf(context.TODO(), "ignore configuration as it already exists for group: %s, %#v", g, cg)
+					intlog.Printf(context.TODO(), "%s, %#v", g, cg)
 				}
 			}
 		}
@@ -104,17 +108,17 @@ func Database(name ...string) gdb.DB {
 		// which is the default group configuration.
 		if node := parseDBConfigNode(configMap); node != nil {
 			cg := gdb.ConfigGroup{}
-			if node.LinkInfo != "" || node.Host != "" {
+			if node.Link != "" || node.Host != "" {
 				cg = append(cg, *node)
 			}
 
 			if len(cg) > 0 {
 				if gdb.GetConfig(group) == nil {
-					intlog.Printf("add configuration for group: %s, %#v", gdb.DefaultGroupName, cg)
+					intlog.Printf(context.TODO(), "add configuration for group: %s, %#v", gdb.DefaultGroupName, cg)
 					gdb.SetConfigGroup(gdb.DefaultGroupName, cg)
 				} else {
-					intlog.Printf("ignore configuration as it already exists for group: %s, %#v", gdb.DefaultGroupName, cg)
-					intlog.Printf("%s, %#v", gdb.DefaultGroupName, cg)
+					intlog.Printf(context.TODO(), "ignore configuration as it already exists for group: %s, %#v", gdb.DefaultGroupName, cg)
+					intlog.Printf(context.TODO(), "%s, %#v", gdb.DefaultGroupName, cg)
 				}
 			}
 		}
@@ -135,7 +139,7 @@ func Database(name ...string) gdb.DB {
 			}
 			return db
 		} else {
-			// It panics often because it dose not find its configuration for given group.
+			// If panics, often because it does not find its configuration for given group.
 			panic(err)
 		}
 		return nil
@@ -156,15 +160,19 @@ func parseDBConfigNode(value interface{}) *gdb.ConfigNode {
 	if err != nil {
 		panic(err)
 	}
-	if _, v := gutil.MapPossibleItemByKey(nodeMap, "link"); v != nil {
-		node.LinkInfo = gconv.String(v)
+	// To be compatible with old version.
+	if _, v := gutil.MapPossibleItemByKey(nodeMap, "LinkInfo"); v != nil {
+		node.Link = gconv.String(v)
+	}
+	if _, v := gutil.MapPossibleItemByKey(nodeMap, "Link"); v != nil {
+		node.Link = gconv.String(v)
 	}
 	// Parse link syntax.
-	if node.LinkInfo != "" && node.Type == "" {
-		match, _ := gregex.MatchString(`([a-z]+):(.+)`, node.LinkInfo)
+	if node.Link != "" && node.Type == "" {
+		match, _ := gregex.MatchString(`([a-z]+):(.+)`, node.Link)
 		if len(match) == 3 {
 			node.Type = gstr.Trim(match[1])
-			node.LinkInfo = gstr.Trim(match[2])
+			node.Link = gstr.Trim(match[2])
 		}
 	}
 	return node

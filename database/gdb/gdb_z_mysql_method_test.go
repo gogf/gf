@@ -584,7 +584,7 @@ func Test_DB_GetStruct(t *testing.T) {
 			CreateTime gtime.Time
 		}
 		user := new(User)
-		err := db.GetStruct(user, fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 3)
+		err := db.GetScan(user, fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 3)
 		t.AssertNil(err)
 		t.Assert(user.NickName, "name_3")
 	})
@@ -597,7 +597,7 @@ func Test_DB_GetStruct(t *testing.T) {
 			CreateTime *gtime.Time
 		}
 		user := new(User)
-		err := db.GetStruct(user, fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 3)
+		err := db.GetScan(user, fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 3)
 		t.AssertNil(err)
 		t.Assert(user.NickName, "name_3")
 	})
@@ -615,7 +615,7 @@ func Test_DB_GetStructs(t *testing.T) {
 			CreateTime gtime.Time
 		}
 		var users []User
-		err := db.GetStructs(&users, fmt.Sprintf("SELECT * FROM %s WHERE id>?", table), 1)
+		err := db.GetScan(&users, fmt.Sprintf("SELECT * FROM %s WHERE id>?", table), 1)
 		t.AssertNil(err)
 		t.Assert(len(users), TableSize-1)
 		t.Assert(users[0].Id, 2)
@@ -635,7 +635,7 @@ func Test_DB_GetStructs(t *testing.T) {
 			CreateTime *gtime.Time
 		}
 		var users []User
-		err := db.GetStructs(&users, fmt.Sprintf("SELECT * FROM %s WHERE id>?", table), 1)
+		err := db.GetScan(&users, fmt.Sprintf("SELECT * FROM %s WHERE id>?", table), 1)
 		t.AssertNil(err)
 		t.Assert(len(users), TableSize-1)
 		t.Assert(users[0].Id, 2)
@@ -1436,7 +1436,7 @@ func Test_DB_UpdateCounter(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		gdbCounter := &gdb.Counter{
-			Field: "views",
+			Field: "id",
 			Value: 1,
 		}
 		updateData := g.Map{
@@ -1449,7 +1449,7 @@ func Test_DB_UpdateCounter(t *testing.T) {
 		one, err := db.Model(tableName).Where("id", 1).One()
 		t.AssertNil(err)
 		t.Assert(one["id"].Int(), 1)
-		t.Assert(one["views"].Int(), 1)
+		t.Assert(one["views"].Int(), 2)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -1468,7 +1468,7 @@ func Test_DB_UpdateCounter(t *testing.T) {
 		one, err := db.Model(tableName).Where("id", 1).One()
 		t.AssertNil(err)
 		t.Assert(one["id"].Int(), 1)
-		t.Assert(one["views"].Int(), 0)
+		t.Assert(one["views"].Int(), 1)
 	})
 }
 

@@ -8,12 +8,11 @@ package gdb
 
 import (
 	"fmt"
+	"github.com/gogf/gf/os/glog"
 	"sync"
 	"time"
 
 	"github.com/gogf/gf/os/gcache"
-
-	"github.com/gogf/gf/os/glog"
 )
 
 // Config is the configuration management object.
@@ -30,6 +29,7 @@ type ConfigNode struct {
 	Pass                 string        `json:"pass"`                 // Authentication password.
 	Name                 string        `json:"name"`                 // Default used database name.
 	Type                 string        `json:"type"`                 // Database type: mysql, sqlite, mssql, pgsql, oracle.
+	Link                 string        `json:"link"`                 // (Optional) Custom link information, when it is used, configuration Host/Port/User/Pass/Name are ignored.
 	Role                 string        `json:"role"`                 // (Optional, "master" in default) Node role, used for master-slave mode: master, slave.
 	Debug                bool          `json:"debug"`                // (Optional) Debug mode enables debug information logging and output.
 	Prefix               string        `json:"prefix"`               // (Optional) Table prefix.
@@ -37,7 +37,6 @@ type ConfigNode struct {
 	Weight               int           `json:"weight"`               // (Optional) Weight for load balance calculating, it's useless if there's just one node.
 	Charset              string        `json:"charset"`              // (Optional, "utf8mb4" in default) Custom charset when operating on database.
 	Timezone             string        `json:"timezone"`             // (Optional) Sets the time zone for displaying and interpreting time stamps.
-	LinkInfo             string        `json:"link"`                 // (Optional) Custom link information, when it is used, configuration Host/Port/User/Pass/Name are ignored.
 	MaxIdleConnCount     int           `json:"maxIdle"`              // (Optional) Max idle connection configuration for underlying connection pool.
 	MaxOpenConnCount     int           `json:"maxOpen"`              // (Optional) Max open connection configuration for underlying connection pool.
 	MaxConnLifeTime      time.Duration `json:"maxLifeTime"`          // (Optional) Max amount of time a connection may be idle before being closed.
@@ -49,6 +48,7 @@ type ConfigNode struct {
 	UpdatedAt            string        `json:"updatedAt"`            // (Optional) The filed name of table for automatic-filled updated datetime.
 	DeletedAt            string        `json:"deletedAt"`            // (Optional) The filed name of table for automatic-filled updated datetime.
 	TimeMaintainDisabled bool          `json:"timeMaintainDisabled"` // (Optional) Disable the automatic time maintaining feature.
+	CtxStrict            bool          `json:"ctxStrict"`            // (Optional) Strictly require context input for all database operations.
 }
 
 const (
@@ -138,7 +138,7 @@ func (c *Core) SetLogger(logger *glog.Logger) {
 	c.logger = logger
 }
 
-// GetLogger returns the logger of the orm.
+// GetLogger returns the (logger) of the orm.
 func (c *Core) GetLogger() *glog.Logger {
 	return c.logger
 }
@@ -187,7 +187,7 @@ func (node *ConfigNode) String() string {
 		node.MaxIdleConnCount,
 		node.MaxOpenConnCount,
 		node.MaxConnLifeTime,
-		node.LinkInfo,
+		node.Link,
 	)
 }
 

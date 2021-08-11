@@ -9,29 +9,39 @@ package ghttp
 import (
 	"bytes"
 	"github.com/gogf/gf/debug/gdebug"
+	"github.com/gogf/gf/errors/gerror"
+	"reflect"
 	"strings"
 
 	"github.com/gogf/gf/text/gstr"
 )
 
 // BindHandler registers a handler function to server with given pattern.
-func (s *Server) BindHandler(pattern string, handler HandlerFunc) {
-	s.doBindHandler(pattern, handler, nil, "")
+// The parameter `handler` can be type of:
+// func(*ghttp.Request)
+// func(context.Context)
+// func(context.Context,TypeRequest)
+// func(context.Context,TypeRequest) error
+// func(context.Context,TypeRequest)(TypeResponse,error)
+func (s *Server) BindHandler(pattern string, handler interface{}) {
+	funcInfo, err := s.checkAndCreateFuncInfo(handler, "", "", "")
+	if err != nil {
+		s.Logger().Error(err.Error())
+		return
+	}
+	s.doBindHandler(pattern, funcInfo, nil, "")
 }
 
 // doBindHandler registers a handler function to server with given pattern.
 // The parameter <pattern> is like:
 // /user/list, put:/user, delete:/user, post:/user@goframe.org
-func (s *Server) doBindHandler(
-	pattern string, handler HandlerFunc,
-	middleware []HandlerFunc, source string,
-) {
+func (s *Server) doBindHandler(pattern string, funcInfo handlerFuncInfo, middleware []HandlerFunc, source string) {
 	s.setHandler(pattern, &handlerItem{
-		itemName:   gdebug.FuncPath(handler),
-		itemType:   handlerTypeHandler,
-		itemFunc:   handler,
-		middleware: middleware,
-		source:     source,
+		Name:       gdebug.FuncPath(funcInfo.Func),
+		Type:       handlerTypeHandler,
+		Info:       funcInfo,
+		Middleware: middleware,
+		Source:     source,
 	})
 }
 
@@ -77,13 +87,13 @@ func (s *Server) mergeBuildInNameToPattern(pattern string, structName, methodNam
 // Rule 3: Use camel case naming.
 func (s *Server) nameToUri(name string) string {
 	switch s.config.NameToUriType {
-	case URI_TYPE_FULLNAME:
+	case UriTypeFullName:
 		return name
 
-	case URI_TYPE_ALLLOWER:
+	case UriTypeAllLower:
 		return strings.ToLower(name)
 
-	case URI_TYPE_CAMEL:
+	case UriTypeCamel:
 		part := bytes.NewBuffer(nil)
 		if gstr.IsLetterUpper(name[0]) {
 			part.WriteByte(name[0] + 32)
@@ -93,8 +103,9 @@ func (s *Server) nameToUri(name string) string {
 		part.WriteString(name[1:])
 		return part.String()
 
-	case URI_TYPE_DEFAULT:
+	case UriTypeDefault:
 		fallthrough
+
 	default:
 		part := bytes.NewBuffer(nil)
 		for i := 0; i < len(name); i++ {
@@ -109,4 +120,49 @@ func (s *Server) nameToUri(name string) string {
 		}
 		return part.String()
 	}
+}
+
+func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, objName, methodName string) (info handlerFuncInfo, err error) {
+	handlerFunc, ok := f.(HandlerFunc)
+	if !ok {
+		reflectType := reflect.TypeOf(f)
+		if reflectType.NumIn() == 0 || reflectType.NumIn() > 2 || reflectType.NumOut() > 2 {
+			if pkgPath != "" {
+				err = gerror.NewCodef(
+					gerror.CodeInvalidParameter,
+					`invalid handler: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" or "func(context.Context)/func(context.Context,Request)/func(context.Context,Request) error/func(context.Context,Request)(Response,error)" is required`,
+					pkgPath, objName, methodName, reflect.TypeOf(f).String(),
+				)
+			} else {
+				err = gerror.NewCodef(
+					gerror.CodeInvalidParameter,
+					`invalid handler: defined as "%s", but "func(*ghttp.Request)" or "func(context.Context)/func(context.Context,Request)/func(context.Context,Request) error/func(context.Context,Request)(Response,error)" is required`,
+					reflect.TypeOf(f).String(),
+				)
+			}
+			return
+		}
+
+		if reflectType.In(0).String() != "context.Context" {
+			err = gerror.NewCodef(
+				gerror.CodeInvalidParameter,
+				`invalid handler: defined as "%s", but the first input parameter should be type of "context.Context"`,
+				reflect.TypeOf(f).String(),
+			)
+			return
+		}
+
+		if reflectType.NumOut() > 0 && reflectType.Out(reflectType.NumOut()-1).String() != "error" {
+			err = gerror.NewCodef(
+				gerror.CodeInvalidParameter,
+				`invalid handler: defined as "%s", but the last output parameter should be type of "error"`,
+				reflect.TypeOf(f).String(),
+			)
+			return
+		}
+	}
+	info.Func = handlerFunc
+	info.Type = reflect.TypeOf(f)
+	info.Value = reflect.ValueOf(f)
+	return
 }

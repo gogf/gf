@@ -39,7 +39,10 @@ func (m *Model) With(objects ...interface{}) *Model {
 	model := m.getModel()
 	for _, object := range objects {
 		if m.tables == "" {
-			m.tables = m.db.GetCore().QuotePrefixTableName(getTableNameFromOrmTag(object))
+			m.tablesInit = m.db.GetCore().QuotePrefixTableName(
+				getTableNameFromOrmTag(object),
+			)
+			m.tables = m.tablesInit
 			return model
 		}
 		model.withArray = append(model.withArray, object)
@@ -60,7 +63,11 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 		err                 error
 		allowedTypeStrArray = make([]string, 0)
 	)
-	fieldMap, err := structs.FieldMap(pointer, nil, false)
+	fieldMap, err := structs.FieldMap(structs.FieldMapInput{
+		Pointer:          pointer,
+		PriorityTagArray: nil,
+		RecursiveOption:  structs.RecursiveOptionEmbeddedNoTag,
+	})
 	if err != nil {
 		return err
 	}
@@ -76,7 +83,7 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 					fieldTypeStr                = gstr.TrimAll(field.Type().String(), "*[]")
 					withItemReflectValueTypeStr = gstr.TrimAll(withItemReflectValueType.String(), "*[]")
 				)
-				// It does select operation if the field type is in the specified with type array.
+				// It does select operation if the field type is in the specified "with" type array.
 				if gstr.Compare(fieldTypeStr, withItemReflectValueTypeStr) == 0 {
 					allowedTypeStrArray = append(allowedTypeStrArray, fieldTypeStr)
 				}
@@ -85,28 +92,21 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 	}
 	for _, field := range fieldMap {
 		var (
-			withTag      string
-			ormTag       = field.Tag(OrmTagForStruct)
-			fieldTypeStr = gstr.TrimAll(field.Type().String(), "*[]")
-			match, _     = gregex.MatchString(
-				fmt.Sprintf(`%s\s*:\s*([^,]+)`, OrmTagForWith),
-				ormTag,
-			)
+			fieldTypeStr    = gstr.TrimAll(field.Type().String(), "*[]")
+			parsedTagOutput = m.parseWithTagInFieldStruct(field)
 		)
-		if len(match) > 1 {
-			withTag = match[1]
-		}
-		if withTag == "" {
+		if parsedTagOutput.With == "" {
 			continue
 		}
+		// Just handler "with" type attribute struct.
 		if !m.withAll && !gstr.InArray(allowedTypeStrArray, fieldTypeStr) {
 			continue
 		}
-		array := gstr.SplitAndTrim(withTag, "=")
+		array := gstr.SplitAndTrim(parsedTagOutput.With, "=")
 		if len(array) == 1 {
 			// It supports using only one column name
 			// if both tables associates using the same column name.
-			array = append(array, withTag)
+			array = append(array, parsedTagOutput.With)
 		}
 		var (
 			model             *Model
@@ -123,9 +123,10 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 			}
 		}
 		if relatedFieldValue == nil {
-			return gerror.Newf(
-				`cannot find the related value for attribute name "%s" of with tag "%s"`,
-				relatedAttrName, withTag,
+			return gerror.NewCodef(
+				gerror.CodeInvalidParameter,
+				`cannot find the related value of attribute name "%s" in with tag "%s" for attribute "%s.%s"`,
+				relatedAttrName, parsedTagOutput.With, reflect.TypeOf(pointer).Elem(), field.Name(),
 			)
 		}
 		bindToReflectValue := field.Value
@@ -150,6 +151,12 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 		} else {
 			model = model.With(m.withArray...)
 		}
+		if parsedTagOutput.Where != "" {
+			model = model.Where(parsedTagOutput.Where)
+		}
+		if parsedTagOutput.Order != "" {
+			model = model.Order(parsedTagOutput.Order)
+		}
 
 		err = model.Fields(fieldKeys).Where(relatedFieldName, relatedFieldValue).Scan(bindToReflectValue)
 		if err != nil {
@@ -163,11 +170,19 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 // doWithScanStructs handles model association operations feature for struct slice.
 // Also see doWithScanStruct.
 func (m *Model) doWithScanStructs(pointer interface{}) error {
+	if v, ok := pointer.(reflect.Value); ok {
+		pointer = v.Interface()
+	}
+
 	var (
 		err                 error
 		allowedTypeStrArray = make([]string, 0)
 	)
-	fieldMap, err := structs.FieldMap(pointer, nil, false)
+	fieldMap, err := structs.FieldMap(structs.FieldMapInput{
+		Pointer:          pointer,
+		PriorityTagArray: nil,
+		RecursiveOption:  structs.RecursiveOptionEmbeddedNoTag,
+	})
 	if err != nil {
 		return err
 	}
@@ -193,28 +208,20 @@ func (m *Model) doWithScanStructs(pointer interface{}) error {
 
 	for fieldName, field := range fieldMap {
 		var (
-			withTag      string
-			ormTag       = field.Tag(OrmTagForStruct)
-			fieldTypeStr = gstr.TrimAll(field.Type().String(), "*[]")
-			match, _     = gregex.MatchString(
-				fmt.Sprintf(`%s\s*:\s*([^,]+)`, OrmTagForWith),
-				ormTag,
-			)
+			fieldTypeStr    = gstr.TrimAll(field.Type().String(), "*[]")
+			parsedTagOutput = m.parseWithTagInFieldStruct(field)
 		)
-		if len(match) > 1 {
-			withTag = match[1]
-		}
-		if withTag == "" {
+		if parsedTagOutput.With == "" {
 			continue
 		}
 		if !m.withAll && !gstr.InArray(allowedTypeStrArray, fieldTypeStr) {
 			continue
 		}
-		array := gstr.SplitAndTrim(withTag, "=")
+		array := gstr.SplitAndTrim(parsedTagOutput.With, "=")
 		if len(array) == 1 {
 			// It supports using only one column name
 			// if both tables associates using the same column name.
-			array = append(array, withTag)
+			array = append(array, parsedTagOutput.With)
 		}
 		var (
 			model             *Model
@@ -231,9 +238,10 @@ func (m *Model) doWithScanStructs(pointer interface{}) error {
 			}
 		}
 		if relatedFieldValue == nil {
-			return gerror.Newf(
+			return gerror.NewCodef(
+				gerror.CodeInvalidParameter,
 				`cannot find the related value for attribute name "%s" of with tag "%s"`,
-				relatedAttrName, withTag,
+				relatedAttrName, parsedTagOutput.With,
 			)
 		}
 
@@ -251,11 +259,58 @@ func (m *Model) doWithScanStructs(pointer interface{}) error {
 		} else {
 			model = model.With(m.withArray...)
 		}
+		if parsedTagOutput.Where != "" {
+			model = model.Where(parsedTagOutput.Where)
+		}
+		if parsedTagOutput.Order != "" {
+			model = model.Order(parsedTagOutput.Order)
+		}
 
-		err = model.Fields(fieldKeys).Where(relatedFieldName, relatedFieldValue).ScanList(pointer, fieldName, withTag)
+		err = model.Fields(fieldKeys).Where(relatedFieldName, relatedFieldValue).ScanList(pointer, fieldName, parsedTagOutput.With)
 		if err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+type parseWithTagInFieldStructOutput struct {
+	With  string
+	Where string
+	Order string
+}
+
+func (m *Model) parseWithTagInFieldStruct(field *structs.Field) (output parseWithTagInFieldStructOutput) {
+	var (
+		match  []string
+		ormTag = field.Tag(OrmTagForStruct)
+	)
+	// with tag.
+	match, _ = gregex.MatchString(
+		fmt.Sprintf(`%s\s*:\s*([^,]+),{0,1}`, OrmTagForWith),
+		ormTag,
+	)
+	if len(match) > 1 {
+		output.With = match[1]
+	}
+	if len(match) > 2 {
+		output.Where = gstr.Trim(match[2])
+	}
+	// where string.
+	match, _ = gregex.MatchString(
+		fmt.Sprintf(`%s\s*:.+,\s*%s:\s*([^,]+),{0,1}`, OrmTagForWith, OrmTagForWithWhere),
+		ormTag,
+	)
+	if len(match) > 1 {
+		output.Where = gstr.Trim(match[1])
+	}
+	// order string.
+	match, _ = gregex.MatchString(
+		fmt.Sprintf(`%s\s*:.+,\s*%s:\s*([^,]+),{0,1}`, OrmTagForWith, OrmTagForWithOrder),
+		ormTag,
+	)
+	if len(match) > 1 {
+		output.Order = gstr.Trim(match[1])
+	}
+	return
 }

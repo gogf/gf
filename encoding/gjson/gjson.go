@@ -8,6 +8,7 @@
 package gjson
 
 import (
+	"github.com/gogf/gf/internal/utils"
 	"reflect"
 	"strconv"
 	"strings"
@@ -37,11 +38,23 @@ type Options struct {
 	StrNumber bool   // StrNumber causes the Decoder to unmarshal a number into an interface{} as a string instead of as a float64.
 }
 
+// apiInterface is used for type assert api for Interface().
+type apiInterface interface {
+	Interface() interface{}
+}
+
 // setValue sets <value> to <j> by <pattern>.
 // Note:
 // 1. If value is nil and removed is true, means deleting this value;
 // 2. It's quite complicated in hierarchical data search, node creating and data assignment;
 func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
+	if value != nil {
+		if utils.IsStruct(value) {
+			if v, ok := value.(apiInterface); ok {
+				value = v.Interface()
+			}
+		}
+	}
 	array := strings.Split(pattern, string(j.c))
 	length := len(array)
 	value = j.convertValue(value)

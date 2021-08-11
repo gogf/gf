@@ -13,6 +13,11 @@ import (
 	"math"
 )
 
+// Interface converts and returns `r` as type of interface{}.
+func (r Result) Interface() interface{} {
+	return r
+}
+
 // IsEmpty checks and returns whether `r` is empty.
 func (r Result) IsEmpty() bool {
 	return r.Len() == 0
@@ -72,6 +77,7 @@ func (r Result) List() List {
 
 // Array retrieves and returns specified column values as slice.
 // The parameter `field` is optional is the column field is only one.
+// The default `field` is the first field name of the first item in `Result` if parameter `field` is not given.
 func (r Result) Array(field ...string) []Value {
 	array := make([]Value, len(r))
 	if len(r) == 0 {
@@ -153,7 +159,7 @@ func (r Result) MapKeyUint(key string) map[uint]Map {
 	return m
 }
 
-// RecordKeyInt converts `r` to a map[int]Record of which key is specified by `key`.
+// RecordKeyStr converts `r` to a map[string]Record of which key is specified by `key`.
 func (r Result) RecordKeyStr(key string) map[string]Record {
 	m := make(map[string]Record)
 	for _, item := range r {
@@ -189,5 +195,5 @@ func (r Result) RecordKeyUint(key string) map[uint]Record {
 // Structs converts `r` to struct slice.
 // Note that the parameter `pointer` should be type of *[]struct/*[]*struct.
 func (r Result) Structs(pointer interface{}) (err error) {
-	return gconv.StructsTag(r.List(), pointer, OrmTagForStruct)
+	return gconv.StructsTag(r, pointer, OrmTagForStruct)
 }

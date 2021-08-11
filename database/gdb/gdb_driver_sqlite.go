@@ -38,8 +38,8 @@ func (d *DriverSqlite) New(core *Core, node *ConfigNode) (DB, error) {
 // Open creates and returns a underlying sql.DB object for sqlite.
 func (d *DriverSqlite) Open(config *ConfigNode) (*sql.DB, error) {
 	var source string
-	if config.LinkInfo != "" {
-		source = config.LinkInfo
+	if config.Link != "" {
+		source = config.Link
 	} else {
 		source = config.Name
 	}
@@ -47,7 +47,7 @@ func (d *DriverSqlite) Open(config *ConfigNode) (*sql.DB, error) {
 	if absolutePath, _ := gfile.Search(source); absolutePath != "" {
 		source = absolutePath
 	}
-	intlog.Printf("Open: %s", source)
+	intlog.Printf(d.GetCtx(), "Open: %s", source)
 	if db, err := sql.Open("sqlite3", source); err == nil {
 		return db, nil
 	} else {
@@ -55,10 +55,10 @@ func (d *DriverSqlite) Open(config *ConfigNode) (*sql.DB, error) {
 	}
 }
 
-// FilteredLinkInfo retrieves and returns filtered `linkInfo` that can be using for
+// FilteredLink retrieves and returns filtered `linkInfo` that can be using for
 // logging or tracing purpose.
-func (d *DriverSqlite) FilteredLinkInfo() string {
-	return d.GetConfig().LinkInfo
+func (d *DriverSqlite) FilteredLink() string {
+	return d.GetConfig().Link
 }
 
 // GetChars returns the security char for this type of database.
@@ -67,10 +67,8 @@ func (d *DriverSqlite) GetChars() (charLeft string, charRight string) {
 }
 
 // DoCommit deals with the sql string before commits it to underlying sql driver.
-// TODO 需要增加对Save方法的支持，可使用正则来实现替换，
-// TODO 将ON DUPLICATE KEY UPDATE触发器修改为两条SQL语句(INSERT OR IGNORE & UPDATE)
-func (d *DriverSqlite) DoCommit(ctx context.Context, link Link, sql string, args []interface{}) (string, []interface{}) {
-	return sql, args
+func (d *DriverSqlite) DoCommit(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
+	return d.Core.DoCommit(ctx, link, sql, args)
 }
 
 // Tables retrieves and returns the tables of current schema.
@@ -101,7 +99,7 @@ func (d *DriverSqlite) TableFields(ctx context.Context, table string, schema ...
 	charL, charR := d.GetChars()
 	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
-		return nil, gerror.New("function TableFields supports only single table operations")
+		return nil, gerror.NewCode(gerror.CodeInvalidParameter, "function TableFields supports only single table operations")
 	}
 	useSchema := d.db.GetSchema()
 	if len(schema) > 0 && schema[0] != "" {
@@ -137,4 +135,18 @@ func (d *DriverSqlite) TableFields(ctx context.Context, table string, schema ...
 		fields = v.(map[string]*TableField)
 	}
 	return
+}
+
+// DoInsert is not supported in sqlite.
+func (d *DriverSqlite) DoInsert(ctx context.Context, link Link, table string, list List, option DoInsertOption) (result sql.Result, err error) {
+	switch option.InsertOption {
+	case insertOptionSave:
+		return nil, gerror.NewCode(gerror.CodeNotSupported, `Save operation is not supported by sqlite driver`)
+
+	case insertOptionReplace:
+		return nil, gerror.NewCode(gerror.CodeNotSupported, `Replace operation is not supported by sqlite driver`)
+
+	default:
+		return d.Core.DoInsert(ctx, link, table, list, option)
+	}
 }

@@ -110,7 +110,11 @@ func Test_FieldMap(t *testing.T) {
 			Pass string `my-tag1:"pass1" my-tag2:"pass2" params:"pass"`
 		}
 		var user *User
-		m, _ := structs.FieldMap(user, []string{"params"}, true)
+		m, _ := structs.FieldMap(structs.FieldMapInput{
+			Pointer:          user,
+			PriorityTagArray: []string{"params"},
+			RecursiveOption:  structs.RecursiveOptionEmbedded,
+		})
 		t.Assert(len(m), 3)
 		_, ok := m["Id"]
 		t.Assert(ok, true)
@@ -130,7 +134,11 @@ func Test_FieldMap(t *testing.T) {
 			Pass string `my-tag1:"pass1" my-tag2:"pass2" params:"pass"`
 		}
 		var user *User
-		m, _ := structs.FieldMap(user, nil, true)
+		m, _ := structs.FieldMap(structs.FieldMapInput{
+			Pointer:          user,
+			PriorityTagArray: nil,
+			RecursiveOption:  structs.RecursiveOptionEmbedded,
+		})
 		t.Assert(len(m), 3)
 		_, ok := m["Id"]
 		t.Assert(ok, true)

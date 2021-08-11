@@ -47,8 +47,11 @@ func (err *Error) Error() string {
 		return ""
 	}
 	errStr := err.text
+	if errStr == "" {
+		errStr = Message(err.code)
+	}
 	if err.error != nil {
-		if err.text != "" {
+		if errStr != "" {
 			errStr += ": "
 		}
 		errStr += err.error.Error()
@@ -57,10 +60,10 @@ func (err *Error) Error() string {
 }
 
 // Code returns the error code.
-// It returns -1 if it has no error code.
+// It returns CodeNil if it has no error code.
 func (err *Error) Code() int {
 	if err == nil {
-		return -1
+		return CodeNil
 	}
 	return err.code
 }
@@ -159,6 +162,7 @@ func (err *Error) Current() error {
 		error: nil,
 		stack: err.stack,
 		text:  err.text,
+		code:  err.code,
 	}
 }
 
@@ -179,6 +183,9 @@ func (err *Error) MarshalJSON() ([]byte, error) {
 
 // formatSubStack formats the stack for error.
 func formatSubStack(st stack, buffer *bytes.Buffer) {
+	if st == nil {
+		return
+	}
 	index := 1
 	space := "  "
 	for _, p := range st {

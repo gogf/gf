@@ -27,12 +27,12 @@ import (
 func (m *Model) Where(where interface{}, args ...interface{}) *Model {
 	model := m.getModel()
 	if model.whereHolder == nil {
-		model.whereHolder = make([]*whereHolder, 0)
+		model.whereHolder = make([]ModelWhereHolder, 0)
 	}
-	model.whereHolder = append(model.whereHolder, &whereHolder{
-		operator: whereHolderWhere,
-		where:    where,
-		args:     args,
+	model.whereHolder = append(model.whereHolder, ModelWhereHolder{
+		Operator: whereHolderOperatorWhere,
+		Where:    where,
+		Args:     args,
 	})
 	return model
 }
@@ -149,12 +149,12 @@ func (m *Model) WhereNotNull(columns ...string) *Model {
 func (m *Model) WhereOr(where interface{}, args ...interface{}) *Model {
 	model := m.getModel()
 	if model.whereHolder == nil {
-		model.whereHolder = make([]*whereHolder, 0)
+		model.whereHolder = make([]ModelWhereHolder, 0)
 	}
-	model.whereHolder = append(model.whereHolder, &whereHolder{
-		operator: whereHolderOr,
-		where:    where,
-		args:     args,
+	model.whereHolder = append(model.whereHolder, ModelWhereHolder{
+		Operator: whereHolderOperatorOr,
+		Where:    where,
+		Args:     args,
 	})
 	return model
 }
@@ -248,12 +248,12 @@ func (m *Model) Group(groupBy string) *Model {
 func (m *Model) And(where interface{}, args ...interface{}) *Model {
 	model := m.getModel()
 	if model.whereHolder == nil {
-		model.whereHolder = make([]*whereHolder, 0)
+		model.whereHolder = make([]ModelWhereHolder, 0)
 	}
-	model.whereHolder = append(model.whereHolder, &whereHolder{
-		operator: whereHolderAnd,
-		where:    where,
-		args:     args,
+	model.whereHolder = append(model.whereHolder, ModelWhereHolder{
+		Operator: whereHolderOperatorAnd,
+		Where:    where,
+		Args:     args,
 	})
 	return model
 }
@@ -277,6 +277,9 @@ func (m *Model) Order(orderBy ...string) *Model {
 		return m
 	}
 	model := m.getModel()
+	if model.orderBy != "" {
+		model.orderBy += ","
+	}
 	model.orderBy = m.db.GetCore().QuoteString(strings.Join(orderBy, " "))
 	return model
 }
@@ -287,6 +290,9 @@ func (m *Model) OrderAsc(column string) *Model {
 		return m
 	}
 	model := m.getModel()
+	if model.orderBy != "" {
+		model.orderBy += ","
+	}
 	model.orderBy = m.db.GetCore().QuoteWord(column) + " ASC"
 	return model
 }
@@ -297,6 +303,9 @@ func (m *Model) OrderDesc(column string) *Model {
 		return m
 	}
 	model := m.getModel()
+	if model.orderBy != "" {
+		model.orderBy += ","
+	}
 	model.orderBy = m.db.GetCore().QuoteWord(column) + " DESC"
 	return model
 }
@@ -373,11 +382,11 @@ func (m *Model) ForPage(page, limit int) *Model {
 func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWhere string, conditionExtra string, conditionArgs []interface{}) {
 	if len(m.whereHolder) > 0 {
 		for _, v := range m.whereHolder {
-			switch v.operator {
-			case whereHolderWhere:
+			switch v.Operator {
+			case whereHolderOperatorWhere:
 				if conditionWhere == "" {
 					newWhere, newArgs := formatWhere(
-						m.db, v.where, v.args, m.option&OptionOmitEmpty > 0,
+						m.db, v.Where, v.Args, m.option&optionOmitEmptyWhere > 0, m.schema, m.tables,
 					)
 					if len(newWhere) > 0 {
 						conditionWhere = newWhere
@@ -387,9 +396,9 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 				}
 				fallthrough
 
-			case whereHolderAnd:
+			case whereHolderOperatorAnd:
 				newWhere, newArgs := formatWhere(
-					m.db, v.where, v.args, m.option&OptionOmitEmpty > 0,
+					m.db, v.Where, v.Args, m.option&optionOmitEmptyWhere > 0, m.schema, m.tables,
 				)
 				if len(newWhere) > 0 {
 					if len(conditionWhere) == 0 {
@@ -402,9 +411,9 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 					conditionArgs = append(conditionArgs, newArgs...)
 				}
 
-			case whereHolderOr:
+			case whereHolderOperatorOr:
 				newWhere, newArgs := formatWhere(
-					m.db, v.where, v.args, m.option&OptionOmitEmpty > 0,
+					m.db, v.Where, v.Args, m.option&optionOmitEmptyWhere > 0, m.schema, m.tables,
 				)
 				if len(newWhere) > 0 {
 					if len(conditionWhere) == 0 {
@@ -421,7 +430,13 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 	}
 	// Soft deletion.
 	softDeletingCondition := m.getConditionForSoftDeleting()
-	if !m.unscoped && softDeletingCondition != "" {
+	if m.rawSql != "" && conditionWhere != "" {
+		if gstr.ContainsI(m.rawSql, " WHERE ") {
+			conditionWhere = " AND " + conditionWhere
+		} else {
+			conditionWhere = " WHERE " + conditionWhere
+		}
+	} else if !m.unscoped && softDeletingCondition != "" {
 		if conditionWhere == "" {
 			conditionWhere = fmt.Sprintf(` WHERE %s`, softDeletingCondition)
 		} else {
@@ -432,6 +447,7 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 			conditionWhere = " WHERE " + conditionWhere
 		}
 	}
+
 	// GROUP BY.
 	if m.groupBy != "" {
 		conditionExtra += " GROUP BY " + m.groupBy
@@ -439,7 +455,7 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 	// HAVING.
 	if len(m.having) > 0 {
 		havingStr, havingArgs := formatWhere(
-			m.db, m.having[0], gconv.Interfaces(m.having[1]), m.option&OptionOmitEmpty > 0,
+			m.db, m.having[0], gconv.Interfaces(m.having[1]), m.option&optionOmitEmptyWhere > 0, m.schema, m.tables,
 		)
 		if len(havingStr) > 0 {
 			conditionExtra += " HAVING " + havingStr

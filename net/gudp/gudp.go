@@ -4,5 +4,5 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gtcp provides UDP server and client implementations.
+// Package gudp provides UDP server and client implementations.
 package gudp

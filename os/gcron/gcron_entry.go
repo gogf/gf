@@ -109,8 +109,10 @@ func (entry *Entry) Close() {
 // gcron.Entry relies on gtimer to implement a scheduled task check for gcron.Entry per second.
 func (entry *Entry) check() {
 	if entry.schedule.meet(time.Now()) {
-		path := entry.cron.GetLogPath()
-		level := entry.cron.GetLogLevel()
+		var (
+			path  = entry.cron.GetLogPath()
+			level = entry.cron.GetLogLevel()
+		)
 		switch entry.cron.status.Val() {
 		case StatusStopped:
 			return
@@ -122,6 +124,23 @@ func (entry *Entry) check() {
 		case StatusReady:
 			fallthrough
 		case StatusRunning:
+			defer func() {
+				if err := recover(); err != nil {
+					glog.Path(path).Level(level).Errorf(
+						"[gcron] %s(%s) %s end with error: %+v",
+						entry.Name, entry.schedule.pattern, entry.jobName, err,
+					)
+				} else {
+					glog.Path(path).Level(level).Debugf(
+						"[gcron] %s(%s) %s end",
+						entry.Name, entry.schedule.pattern, entry.jobName,
+					)
+				}
+				if entry.entry.Status() == StatusClosed {
+					entry.Close()
+				}
+			}()
+
 			// Running times check.
 			times := entry.times.Add(-1)
 			if times <= 0 {
@@ -133,16 +152,7 @@ func (entry *Entry) check() {
 				entry.times.Set(defaultTimes)
 			}
 			glog.Path(path).Level(level).Debugf("[gcron] %s(%s) %s start", entry.Name, entry.schedule.pattern, entry.jobName)
-			defer func() {
-				if err := recover(); err != nil {
-					glog.Path(path).Level(level).Errorf("[gcron] %s(%s) %s end with error: %v", entry.Name, entry.schedule.pattern, entry.jobName, err)
-				} else {
-					glog.Path(path).Level(level).Debugf("[gcron] %s(%s) %s end", entry.Name, entry.schedule.pattern, entry.jobName)
-				}
-				if entry.entry.Status() == StatusClosed {
-					entry.Close()
-				}
-			}()
+
 			entry.Job()
 
 		}
