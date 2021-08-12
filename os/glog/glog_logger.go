@@ -7,6 +7,7 @@
 package glog
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"github.com/fatih/color"
@@ -77,11 +78,11 @@ func NewWithWriter(writer io.Writer) *Logger {
 // Clone returns a new logger, which is the clone the current logger.
 // It's commonly used for chaining operations.
 func (l *Logger) Clone() *Logger {
-	logger := New()
-	logger.ctx = l.ctx
-	logger.config = l.config
-	logger.parent = l
-	return logger
+	newLogger := New()
+	newLogger.ctx = l.ctx
+	newLogger.config = l.config
+	newLogger.parent = l
+	return newLogger
 }
 
 // getFilePath returns the logging file path.
@@ -115,12 +116,13 @@ func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
 	var (
 		now   = time.Now()
 		input = &HandlerInput{
-			logger: l,
-			index:  -1,
-			Ctx:    ctx,
-			Time:   now,
-			Color:  defaultLevelColor[level],
-			Level:  level,
+			Logger:       l,
+			Buffer:       bytes.NewBuffer(nil),
+			Ctx:          ctx,
+			Time:         now,
+			Color:        defaultLevelColor[level],
+			Level:        level,
+			handlerIndex: -1,
 		}
 	)
 	if l.config.HeaderPrint {
@@ -224,8 +226,8 @@ func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
 	}
 }
 
-// doPrint outputs the logging content according configuration.
-func (l *Logger) doPrint(ctx context.Context, input *HandlerInput) {
+// doDefaultPrint outputs the logging content according configuration.
+func (l *Logger) doDefaultPrint(ctx context.Context, input *HandlerInput) {
 	if l.config.Writer == nil {
 		// Output content to disk file.
 		if l.config.Path != "" {
@@ -245,7 +247,7 @@ func (l *Logger) doPrint(ctx context.Context, input *HandlerInput) {
 func (l *Logger) printToWriter(ctx context.Context, input *HandlerInput) {
 	if l.config.Writer != nil {
 		var (
-			buffer = input.getBuffer(l.config.WriterColorEnable)
+			buffer = input.getRealBuffer(l.config.WriterColorEnable)
 		)
 		if _, err := l.config.Writer.Write(buffer.Bytes()); err != nil {
 			intlog.Error(ctx, err)
@@ -257,18 +259,18 @@ func (l *Logger) printToWriter(ctx context.Context, input *HandlerInput) {
 func (l *Logger) printToStdout(ctx context.Context, input *HandlerInput) {
 	if l.config.StdoutPrint {
 		// This will lose color in Windows os system.
-		// if _, err := os.Stdout.Write(input.getBuffer(true).Bytes()); err != nil {
+		// if _, err := os.Stdout.Write(input.getRealBuffer(true).Bytes()); err != nil {
 		// This will print color in Windows os system.
-		if _, err := fmt.Fprintf(color.Output, input.getBuffer(true).String()); err != nil {
+		if _, err := fmt.Fprintf(color.Output, input.getRealBuffer(true).String()); err != nil {
 			intlog.Error(ctx, err)
 		}
 	}
 }
 
 // printToFile outputs logging content to disk file.
-func (l *Logger) printToFile(ctx context.Context, t time.Time, input *HandlerInput) {
+func (l *Logger) printToFile(ctx context.Context, t time.Time, in *HandlerInput) {
 	var (
-		buffer        = input.getBuffer(l.config.WriterColorEnable)
+		buffer        = in.getRealBuffer(l.config.WriterColorEnable)
 		logFilePath   = l.getFilePath(t)
 		memoryLockKey = memoryLockPrefixForPrintingToFile + logFilePath
 	)
@@ -361,4 +363,9 @@ func (l *Logger) GetStack(skip ...int) string {
 		filters = append(filters, l.config.StFilter)
 	}
 	return gdebug.StackWithFilters(filters, stackSkip)
+}
+
+// GetConfig returns the configuration of current Logger.
+func (l *Logger) GetConfig() Config {
+	return l.config
 }

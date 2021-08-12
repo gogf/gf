@@ -10,8 +10,10 @@ import (
 
 // 内存锁基本使用
 func main() {
-	key := "lock"
-	wg := sync.WaitGroup{}
+	var (
+		key = "lock"
+		wg  = sync.WaitGroup{}
+	)
 	for i := 0; i < 10; i++ {
 		wg.Add(1)
 		go func(i int) {

@@ -24,10 +24,10 @@ type Config struct {
 	Writer               io.Writer      `json:"-"`                    // Customized io.Writer.
 	Flags                int            `json:"flags"`                // Extra flags for logging output features.
 	Path                 string         `json:"path"`                 // Logging directory path.
-	File                 string         `json:"file"`                 // Format for logging file.
+	File                 string         `json:"file"`                 // Format pattern for logging file.
 	Level                int            `json:"level"`                // Output level.
 	Prefix               string         `json:"prefix"`               // Prefix string for every logging content.
-	StSkip               int            `json:"stSkip"`               // Skip count for stack.
+	StSkip               int            `json:"stSkip"`               // Skipping count for stack.
 	StStatus             int            `json:"stStatus"`             // Stack status(1: enabled - default; 0: disabled)
 	StFilter             string         `json:"stFilter"`             // Stack string filter.
 	CtxKeys              []interface{}  `json:"ctxKeys"`              // Context keys for logging, which is used for value retrieving from context.

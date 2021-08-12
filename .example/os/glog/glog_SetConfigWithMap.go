@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	err := glog.SetConfigWithMap(g.Map{
+	err := g.Log().SetConfigWithMap(g.Map{
 		"prefix": "[TEST]",
 	})
 	if err != nil {

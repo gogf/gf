@@ -11,12 +11,13 @@ import (
 
 // 测试Locker是否会产生死锁
 func main() {
-	l := gmlock.New()
-	wg := sync.WaitGroup{}
-	key := "test"
-	event := make(chan int)
-	number := 100000
-
+	var (
+		l      = gmlock.New()
+		wg     = sync.WaitGroup{}
+		key    = "test"
+		event  = make(chan int)
+		number = 100000
+	)
 	for i := 0; i < number; i++ {
 		wg.Add(1)
 		go func() {

@@ -19,7 +19,7 @@ import (
 var arrayForHandlerTest1 = garray.NewStrArray()
 
 func customHandler1(ctx context.Context, input *glog.HandlerInput) {
-	arrayForHandlerTest1.Append(input.String())
+	arrayForHandlerTest1.Append(input.String(false))
 	input.Next()
 }
 
@@ -51,7 +51,7 @@ func TestLogger_SetHandlers1(t *testing.T) {
 var arrayForHandlerTest2 = garray.NewStrArray()
 
 func customHandler2(ctx context.Context, input *glog.HandlerInput) {
-	arrayForHandlerTest2.Append(input.String())
+	arrayForHandlerTest2.Append(input.String(false))
 }
 
 func TestLogger_SetHandlers2(t *testing.T) {
