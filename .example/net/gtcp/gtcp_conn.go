@@ -32,9 +32,9 @@ func main() {
 			if contentLength == 0 && len(array) == 2 && bytes.EqualFold([]byte("Content-Length"), array[0]) {
 				// http 以\r\n换行，需要把\r也去掉
 				contentLength, err = strconv.Atoi(string(array[1][:len(array[1])-1]))
-                		if err != nil {
-                    			fmt.Println(err)
-                		}
+				if err != nil {
+					fmt.Println(err)
+				}
 			}
 			header = append(header, data...)
 			header = append(header, '\n')
