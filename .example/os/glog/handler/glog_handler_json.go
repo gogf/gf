@@ -16,7 +16,7 @@ type JsonOutputsForLogger struct {
 	Content string `json:"content"`
 }
 
-// LoggingJsonHandler is a example handler for logging JSON format content.
+// LoggingJsonHandler is an example handler for logging JSON format content.
 var LoggingJsonHandler glog.Handler = func(ctx context.Context, in *glog.HandlerInput) {
 	jsonForLogger := JsonOutputsForLogger{
 		Time:    in.TimeFormat,

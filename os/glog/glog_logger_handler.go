@@ -95,7 +95,10 @@ func (i *HandlerInput) getRealBuffer(withColor bool) *bytes.Buffer {
 
 // defaultHandler is the default handler for logger.
 func defaultHandler(ctx context.Context, in *HandlerInput) {
-	in.Logger.doDefaultPrint(ctx, in)
+	buffer := in.Logger.doDefaultPrint(ctx, in)
+	if in.Buffer.Len() == 0 {
+		in.Buffer = buffer
+	}
 }
 
 func (i *HandlerInput) addStringToBuffer(buffer *bytes.Buffer, strings ...string) {

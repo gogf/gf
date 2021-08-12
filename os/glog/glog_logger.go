@@ -227,24 +227,33 @@ func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
 }
 
 // doDefaultPrint outputs the logging content according configuration.
-func (l *Logger) doDefaultPrint(ctx context.Context, input *HandlerInput) {
+func (l *Logger) doDefaultPrint(ctx context.Context, input *HandlerInput) *bytes.Buffer {
+	var buffer *bytes.Buffer
 	if l.config.Writer == nil {
-		// Output content to disk file.
-		if l.config.Path != "" {
-			l.printToFile(ctx, input.Time, input)
-		}
 		// Allow output to stdout?
 		if l.config.StdoutPrint {
-			l.printToStdout(ctx, input)
+			if buf := l.printToStdout(ctx, input); buf != nil {
+				buffer = buf
+			}
+		}
+
+		// Output content to disk file.
+		if l.config.Path != "" {
+			if buf := l.printToFile(ctx, input.Time, input); buf != nil {
+				buffer = buf
+			}
 		}
 	} else {
 		// Output to custom writer.
-		l.printToWriter(ctx, input)
+		if buf := l.printToWriter(ctx, input); buf != nil {
+			buffer = buf
+		}
 	}
+	return buffer
 }
 
 // printToWriter writes buffer to writer.
-func (l *Logger) printToWriter(ctx context.Context, input *HandlerInput) {
+func (l *Logger) printToWriter(ctx context.Context, input *HandlerInput) *bytes.Buffer {
 	if l.config.Writer != nil {
 		var (
 			buffer = input.getRealBuffer(l.config.WriterColorEnable)
@@ -252,23 +261,30 @@ func (l *Logger) printToWriter(ctx context.Context, input *HandlerInput) {
 		if _, err := l.config.Writer.Write(buffer.Bytes()); err != nil {
 			intlog.Error(ctx, err)
 		}
+		return buffer
 	}
+	return nil
 }
 
 // printToStdout outputs logging content to stdout.
-func (l *Logger) printToStdout(ctx context.Context, input *HandlerInput) {
+func (l *Logger) printToStdout(ctx context.Context, input *HandlerInput) *bytes.Buffer {
 	if l.config.StdoutPrint {
+		var (
+			buffer = input.getRealBuffer(true)
+		)
 		// This will lose color in Windows os system.
 		// if _, err := os.Stdout.Write(input.getRealBuffer(true).Bytes()); err != nil {
 		// This will print color in Windows os system.
-		if _, err := fmt.Fprintf(color.Output, input.getRealBuffer(true).String()); err != nil {
+		if _, err := fmt.Fprintf(color.Output, buffer.String()); err != nil {
 			intlog.Error(ctx, err)
 		}
+		return buffer
 	}
+	return nil
 }
 
 // printToFile outputs logging content to disk file.
-func (l *Logger) printToFile(ctx context.Context, t time.Time, in *HandlerInput) {
+func (l *Logger) printToFile(ctx context.Context, t time.Time, in *HandlerInput) *bytes.Buffer {
 	var (
 		buffer        = in.getRealBuffer(l.config.WriterColorEnable)
 		logFilePath   = l.getFilePath(t)
@@ -294,6 +310,7 @@ func (l *Logger) printToFile(ctx context.Context, t time.Time, in *HandlerInput)
 			intlog.Error(ctx, err)
 		}
 	}
+	return buffer
 }
 
 // getFilePointer retrieves and returns a file pointer from file pool.
