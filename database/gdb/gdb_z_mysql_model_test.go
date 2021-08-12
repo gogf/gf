@@ -3768,3 +3768,55 @@ func Test_Model_Handler(t *testing.T) {
 		t.Assert(all[2]["id"], 4)
 	})
 }
+
+func Test_Model_FieldCount(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		all, err := db.Model(table).Fields("id").FieldCount("id", "total").Group("id").OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(all), TableSize)
+		t.Assert(all[0]["id"], 1)
+		t.Assert(all[0]["total"], 1)
+	})
+}
+
+func Test_Model_FieldMax(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		all, err := db.Model(table).Fields("id").FieldMax("id", "total").Group("id").OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(all), TableSize)
+		t.Assert(all[0]["id"], 1)
+		t.Assert(all[0]["total"], 1)
+	})
+}
+
+func Test_Model_FieldMin(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		all, err := db.Model(table).Fields("id").FieldMin("id", "total").Group("id").OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(all), TableSize)
+		t.Assert(all[0]["id"], 1)
+		t.Assert(all[0]["total"], 1)
+	})
+}
+
+func Test_Model_FieldAvg(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		all, err := db.Model(table).Fields("id").FieldAvg("id", "total").Group("id").OrderAsc("id").All()
+		t.AssertNil(err)
+		t.Assert(len(all), TableSize)
+		t.Assert(all[0]["id"], 1)
+		t.Assert(all[0]["total"], 1)
+	})
+}

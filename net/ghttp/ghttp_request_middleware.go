@@ -153,13 +153,17 @@ func (m *middleware) callHandlerFunc(funcInfo handlerFuncInfo) {
 			switch len(results) {
 			case 1:
 				if !results[0].IsNil() {
-					m.request.handlerResponse.Error = results[0].Interface().(error)
+					if err, ok := results[0].Interface().(error); ok {
+						m.request.handlerResponse.Error = err
+					}
 				}
 
 			case 2:
 				m.request.handlerResponse.Object = results[0].Interface()
 				if !results[1].IsNil() {
-					m.request.handlerResponse.Error = results[1].Interface().(error)
+					if err, ok := results[1].Interface().(error); ok {
+						m.request.handlerResponse.Error = err
+					}
 				}
 			}
 		}

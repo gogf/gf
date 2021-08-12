@@ -73,6 +73,7 @@ const (
 	whereHolderOperatorWhere = 1
 	whereHolderOperatorAnd   = 2
 	whereHolderOperatorOr    = 3
+	defaultFields            = "*"
 )
 
 // Table is alias of Core.Model.
@@ -130,7 +131,7 @@ func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 		db:         c.db,
 		tablesInit: tableStr,
 		tables:     tableStr,
-		fields:     "*",
+		fields:     defaultFields,
 		start:      -1,
 		offset:     -1,
 		filter:     true,

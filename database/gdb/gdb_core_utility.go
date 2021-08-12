@@ -31,6 +31,7 @@ func (c *Core) SlaveLink(schema ...string) (Link, error) {
 
 // QuoteWord checks given string `s` a word, if true quotes it with security chars of the database
 // and returns the quoted string; or else return `s` without any change.
+// The meaning of a `word` can be considered as a column name.
 func (c *Core) QuoteWord(s string) string {
 	charLeft, charRight := c.db.GetChars()
 	return doQuoteWord(s, charLeft, charRight)
@@ -38,6 +39,7 @@ func (c *Core) QuoteWord(s string) string {
 
 // QuoteString quotes string with quote chars. Strings like:
 // "user", "user u", "user,user_detail", "user u, user_detail ut", "u.id asc".
+// The meaning of a `string` can be considered as part of a statement string including columns.
 func (c *Core) QuoteString(s string) string {
 	charLeft, charRight := c.db.GetChars()
 	return doQuoteString(s, charLeft, charRight)

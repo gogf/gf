@@ -237,10 +237,13 @@ func (m *Model) WhereOrNotNull(columns ...string) *Model {
 }
 
 // Group sets the "GROUP BY" statement for the model.
-func (m *Model) Group(groupBy string) *Model {
-	model := m.getModel()
-	model.groupBy = m.db.GetCore().QuoteString(groupBy)
-	return model
+func (m *Model) Group(groupBy ...string) *Model {
+	if len(groupBy) > 0 {
+		model := m.getModel()
+		model.groupBy = m.db.GetCore().QuoteString(gstr.Join(groupBy, ","))
+		return model
+	}
+	return m
 }
 
 // And adds "AND" condition to the where statement.
