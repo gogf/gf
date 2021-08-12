@@ -24,9 +24,9 @@ import (
 // required-if          format: required-if:field,value,...           brief: Required unless all given field and its value are equal.
 // required-unless      format: required-unless:field,value,...       brief: Required unless all given field and its value are not equal.
 // required-with        format: required-with:field1,field2,...       brief: Required if any of given fields are not empty.
-// required-with-all    format: required-with-all:field1,field2,...   brief: Required if all of given fields are not empty.
+// required-with-all    format: required-with-all:field1,field2,...   brief: Required if all given fields are not empty.
 // required-without     format: required-without:field1,field2,...    brief: Required if any of given fields are empty.
-// required-without-all format: required-without-all:field1,field2,...brief: Required if all of given fields are empty.
+// required-without-all format: required-without-all:field1,field2,...brief: Required if all given fields are empty.
 // bail                 format: bail                                  brief: Stop validating when this field's validation failed.
 // date                 format: date                                  brief: Standard date, like: 2006-01-02, 20060102, 2006.01.02
 // date-format          format: date-format:format                    brief: Custom date format.
