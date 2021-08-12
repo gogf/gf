@@ -12,28 +12,29 @@ import (
 	"time"
 )
 
-type Handler func(ctx context.Context, input *HandlerInput)
+// Handler is function handler for custom logging content outputs.
+type Handler func(ctx context.Context, in *HandlerInput)
 
 type HandlerInput struct {
-	logger      *Logger
-	index       int
-	Ctx         context.Context
-	Time        time.Time
-	TimeFormat  string
-	Color       int
-	Level       int
-	LevelFormat string
-	CallerFunc  string
-	CallerPath  string
-	CtxStr      string
-	Prefix      string
-	Content     string
-	IsAsync     bool
+	logger      *Logger         // Logger.
+	index       int             // Middleware handling index for internal usage.
+	Ctx         context.Context // Context.
+	Time        time.Time       // Logging time, which is the time that logging triggers.
+	TimeFormat  string          // Formatted time string, like "2016-01-09 12:00:00".
+	Color       int             // Using color, like COLOR_RED, COLOR_BLUE, etc.
+	Level       int             // Using level, like LEVEL_INFO, LEVEL_ERRO, etc.
+	LevelFormat string          // Formatted level string, like "DEBU", "ERRO", etc.
+	CallerFunc  string          // The source function name that calls logging.
+	CallerPath  string          // The source file path and its line number that calls logging.
+	CtxStr      string          // The retrieved context value string from context.
+	Prefix      string          // Custom prefix string for logging content.
+	Content     string          // Content is the main logging content that passed by you.
+	IsAsync     bool            // IsAsync marks it is in asynchronous logging.
 }
 
 // defaultHandler is the default handler for logger.
-func defaultHandler(ctx context.Context, input *HandlerInput) {
-	input.logger.doPrint(ctx, input)
+func defaultHandler(ctx context.Context, in *HandlerInput) {
+	in.logger.doPrint(ctx, in)
 }
 
 func (i *HandlerInput) addStringToBuffer(buffer *bytes.Buffer, strings ...string) {
@@ -45,13 +46,16 @@ func (i *HandlerInput) addStringToBuffer(buffer *bytes.Buffer, strings ...string
 	}
 }
 
+// Buffer creates and returns a buffer that handled by default logging content handler.
 func (i *HandlerInput) Buffer() *bytes.Buffer {
 	return i.getBuffer(false)
 }
 
 func (i *HandlerInput) getBuffer(withColor bool) *bytes.Buffer {
 	buffer := bytes.NewBuffer(nil)
-	buffer.WriteString(i.TimeFormat)
+	if i.TimeFormat != "" {
+		buffer.WriteString(i.TimeFormat)
+	}
 	if i.LevelFormat != "" {
 		if withColor {
 			i.addStringToBuffer(buffer, i.logger.getColoredStr(
@@ -80,10 +84,12 @@ func (i *HandlerInput) getBuffer(withColor bool) *bytes.Buffer {
 	return buffer
 }
 
+// String retrieves and returns the logging content handled by default handler.
 func (i *HandlerInput) String() string {
 	return i.Buffer().String()
 }
 
+// Next calls the next logging handler in middleware way.
 func (i *HandlerInput) Next() {
 	if len(i.logger.config.Handlers)-1 > i.index {
 		i.index++
