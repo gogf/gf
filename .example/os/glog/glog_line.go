@@ -1,10 +1,10 @@
 package main
 
 import (
-	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/frame/g"
 )
 
 func main() {
-	glog.Line().Debug("this is the short file name with its line number")
-	glog.Line(true).Debug("lone file name with line number")
+	g.Log().Line().Debug("this is the short file name with its line number")
+	g.Log().Line(true).Debug("lone file name with line number")
 }

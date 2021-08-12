@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/gogf/gf/frame/g"
 
-	"github.com/gogf/gf/net/ghttp"
 	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/text/gregex"
 )
@@ -16,7 +16,7 @@ func (w *MyWriter) Write(p []byte) (n int, err error) {
 	s := string(p)
 	if gregex.IsMatchString(`\[(PANI|FATA)\]`, s) {
 		fmt.Println("SERIOUS ISSUE OCCURRED!! I'd better tell monitor in first time!")
-		ghttp.PostContent("http://monitor.mydomain.com", s)
+		g.Client().PostContent("http://monitor.mydomain.com", s)
 	}
 	return w.logger.Write(p)
 }
