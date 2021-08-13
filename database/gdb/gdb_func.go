@@ -489,11 +489,20 @@ func formatSql(sql string, args []interface{}) (newSql string, newArgs []interfa
 	return handleArguments(sql, args)
 }
 
+type formatWhereInput struct {
+	Where     interface{}
+	Args      []interface{}
+	OmitNil   bool
+	OmitEmpty bool
+	Schema    string
+	Table     string
+}
+
 // formatWhere formats where statement and its arguments for `Where` and `Having` statements.
-func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool, schema, table string) (newWhere string, newArgs []interface{}) {
+func formatWhere(db DB, in formatWhereInput) (newWhere string, newArgs []interface{}) {
 	var (
 		buffer = bytes.NewBuffer(nil)
-		rv     = reflect.ValueOf(where)
+		rv     = reflect.ValueOf(in.Where)
 		kind   = rv.Kind()
 	)
 	for kind == reflect.Ptr {
@@ -502,12 +511,17 @@ func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool, s
 	}
 	switch kind {
 	case reflect.Array, reflect.Slice:
-		newArgs = formatWhereInterfaces(db, gconv.Interfaces(where), buffer, newArgs)
+		newArgs = formatWhereInterfaces(db, gconv.Interfaces(in.Where), buffer, newArgs)
 
 	case reflect.Map:
-		for key, value := range DataToMapDeep(where) {
-			if gregex.IsMatchString(regularFieldNameRegPattern, key) && omitEmpty && empty.IsEmpty(value) {
-				continue
+		for key, value := range DataToMapDeep(in.Where) {
+			if gregex.IsMatchString(regularFieldNameRegPattern, key) {
+				if in.OmitNil && empty.IsNil(value) {
+					continue
+				}
+				if in.OmitEmpty && empty.IsEmpty(value) {
+					continue
+				}
 			}
 			newArgs = formatWhereKeyValue(db, buffer, newArgs, key, value)
 		}
@@ -517,11 +531,16 @@ func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool, s
 		// it then uses its Iterate function to iterates its key-value pairs.
 		// For example, ListMap and TreeMap are ordered map,
 		// which implement apiIterator interface and are index-friendly for where conditions.
-		if iterator, ok := where.(apiIterator); ok {
+		if iterator, ok := in.Where.(apiIterator); ok {
 			iterator.Iterator(func(key, value interface{}) bool {
 				ketStr := gconv.String(key)
-				if gregex.IsMatchString(regularFieldNameRegPattern, ketStr) && omitEmpty && empty.IsEmpty(value) {
-					return true
+				if gregex.IsMatchString(regularFieldNameRegPattern, ketStr) {
+					if in.OmitNil && empty.IsNil(value) {
+						return true
+					}
+					if in.OmitEmpty && empty.IsEmpty(value) {
+						return true
+					}
 				}
 				newArgs = formatWhereKeyValue(db, buffer, newArgs, ketStr, value)
 				return true
@@ -529,12 +548,15 @@ func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool, s
 			break
 		}
 		// Automatically mapping and filtering the struct attribute.
-		data := DataToMapDeep(where)
-		if table != "" {
-			data, _ = db.GetCore().mappingAndFilterData(schema, table, data, true)
+		data := DataToMapDeep(in.Where)
+		if in.Table != "" {
+			data, _ = db.GetCore().mappingAndFilterData(in.Schema, in.Table, data, true)
 		}
 		for key, value := range data {
-			if omitEmpty && empty.IsEmpty(value) {
+			if in.OmitNil && empty.IsNil(value) {
+				continue
+			}
+			if in.OmitEmpty && empty.IsEmpty(value) {
 				continue
 			}
 			newArgs = formatWhereKeyValue(db, buffer, newArgs, key, value)
@@ -544,14 +566,14 @@ func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool, s
 		// Usually a string.
 		var (
 			i        = 0
-			whereStr = gconv.String(where)
+			whereStr = gconv.String(in.Where)
 		)
 		for {
-			if i >= len(args) {
+			if i >= len(in.Args) {
 				break
 			}
 			// Sub query, which is always used along with a string condition.
-			if model, ok := args[i].(*Model); ok {
+			if model, ok := in.Args[i].(*Model); ok {
 				var (
 					index = -1
 				)
@@ -565,7 +587,7 @@ func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool, s
 					}
 					return s
 				})
-				args = gutil.SliceDelete(args, i)
+				in.Args = gutil.SliceDelete(in.Args, i)
 				continue
 			}
 			i++
@@ -574,9 +596,9 @@ func formatWhere(db DB, where interface{}, args []interface{}, omitEmpty bool, s
 	}
 
 	if buffer.Len() == 0 {
-		return "", args
+		return "", in.Args
 	}
-	newArgs = append(newArgs, args...)
+	newArgs = append(newArgs, in.Args...)
 	newWhere = buffer.String()
 	if len(newArgs) > 0 {
 		if gstr.Pos(newWhere, "?") == -1 {

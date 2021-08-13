@@ -2132,23 +2132,74 @@ func Test_Model_Option_List(t *testing.T) {
 }
 
 func Test_Model_OmitEmpty(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		table := fmt.Sprintf(`table_%s`, gtime.TimestampNanoStr())
-		if _, err := db.Exec(fmt.Sprintf(`
+	table := fmt.Sprintf(`table_%s`, gtime.TimestampNanoStr())
+	if _, err := db.Exec(fmt.Sprintf(`
     CREATE TABLE IF NOT EXISTS %s (
         id int(10) unsigned NOT NULL AUTO_INCREMENT,
         name varchar(45) NOT NULL,
         PRIMARY KEY (id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
     `, table)); err != nil {
-			gtest.Error(err)
-		}
-		defer dropTable(table)
+		gtest.Error(err)
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
 		_, err := db.Model(table).OmitEmpty().Data(g.Map{
 			"id":   1,
 			"name": "",
 		}).Save()
 		t.AssertNE(err, nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		_, err := db.Model(table).OmitEmptyData().Data(g.Map{
+			"id":   1,
+			"name": "",
+		}).Save()
+		t.AssertNE(err, nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		_, err := db.Model(table).OmitEmptyWhere().Data(g.Map{
+			"id":   1,
+			"name": "",
+		}).Save()
+		t.Assert(err, nil)
+	})
+}
+
+func Test_Model_OmitNil(t *testing.T) {
+	table := fmt.Sprintf(`table_%s`, gtime.TimestampNanoStr())
+	if _, err := db.Exec(fmt.Sprintf(`
+    CREATE TABLE IF NOT EXISTS %s (
+        id int(10) unsigned NOT NULL AUTO_INCREMENT,
+        name varchar(45) NOT NULL,
+        PRIMARY KEY (id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    `, table)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		_, err := db.Model(table).OmitNil().Data(g.Map{
+			"id":   1,
+			"name": nil,
+		}).Save()
+		t.AssertNE(err, nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		_, err := db.Model(table).OmitNil().Data(g.Map{
+			"id":   1,
+			"name": "",
+		}).Save()
+		t.Assert(err, nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		_, err := db.Model(table).OmitNilWhere().Data(g.Map{
+			"id":   1,
+			"name": "",
+		}).Save()
+		t.Assert(err, nil)
 	})
 }
 
