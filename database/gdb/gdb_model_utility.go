@@ -109,6 +109,18 @@ func (m *Model) doMappingAndFilterForInsertOrUpdateDataMap(data Map, allowOmitEm
 	if err != nil {
 		return nil, err
 	}
+	// Remove key-value pairs of which the value is nil.
+	if allowOmitEmpty && m.option&optionOmitNilData > 0 {
+		tempMap := make(Map, len(data))
+		for k, v := range data {
+			if empty.IsNil(v) {
+				continue
+			}
+			tempMap[k] = v
+		}
+		data = tempMap
+	}
+
 	// Remove key-value pairs of which the value is empty.
 	if allowOmitEmpty && m.option&optionOmitEmptyData > 0 {
 		tempMap := make(Map, len(data))

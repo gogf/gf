@@ -388,9 +388,14 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 			switch v.Operator {
 			case whereHolderOperatorWhere:
 				if conditionWhere == "" {
-					newWhere, newArgs := formatWhere(
-						m.db, v.Where, v.Args, m.option&optionOmitEmptyWhere > 0, m.schema, m.tables,
-					)
+					newWhere, newArgs := formatWhere(m.db, formatWhereInput{
+						Where:     v.Where,
+						Args:      v.Args,
+						OmitNil:   m.option&optionOmitNilWhere > 0,
+						OmitEmpty: m.option&optionOmitEmptyWhere > 0,
+						Schema:    m.schema,
+						Table:     m.tables,
+					})
 					if len(newWhere) > 0 {
 						conditionWhere = newWhere
 						conditionArgs = newArgs
@@ -400,9 +405,14 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 				fallthrough
 
 			case whereHolderOperatorAnd:
-				newWhere, newArgs := formatWhere(
-					m.db, v.Where, v.Args, m.option&optionOmitEmptyWhere > 0, m.schema, m.tables,
-				)
+				newWhere, newArgs := formatWhere(m.db, formatWhereInput{
+					Where:     v.Where,
+					Args:      v.Args,
+					OmitNil:   m.option&optionOmitNilWhere > 0,
+					OmitEmpty: m.option&optionOmitEmptyWhere > 0,
+					Schema:    m.schema,
+					Table:     m.tables,
+				})
 				if len(newWhere) > 0 {
 					if len(conditionWhere) == 0 {
 						conditionWhere = newWhere
@@ -415,9 +425,14 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 				}
 
 			case whereHolderOperatorOr:
-				newWhere, newArgs := formatWhere(
-					m.db, v.Where, v.Args, m.option&optionOmitEmptyWhere > 0, m.schema, m.tables,
-				)
+				newWhere, newArgs := formatWhere(m.db, formatWhereInput{
+					Where:     v.Where,
+					Args:      v.Args,
+					OmitNil:   m.option&optionOmitNilWhere > 0,
+					OmitEmpty: m.option&optionOmitEmptyWhere > 0,
+					Schema:    m.schema,
+					Table:     m.tables,
+				})
 				if len(newWhere) > 0 {
 					if len(conditionWhere) == 0 {
 						conditionWhere = newWhere
@@ -457,9 +472,14 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 	}
 	// HAVING.
 	if len(m.having) > 0 {
-		havingStr, havingArgs := formatWhere(
-			m.db, m.having[0], gconv.Interfaces(m.having[1]), m.option&optionOmitEmptyWhere > 0, m.schema, m.tables,
-		)
+		havingStr, havingArgs := formatWhere(m.db, formatWhereInput{
+			Where:     m.having[0],
+			Args:      gconv.Interfaces(m.having[1]),
+			OmitNil:   m.option&optionOmitNilWhere > 0,
+			OmitEmpty: m.option&optionOmitEmptyWhere > 0,
+			Schema:    m.schema,
+			Table:     m.tables,
+		})
 		if len(havingStr) > 0 {
 			conditionExtra += " HAVING " + havingStr
 			conditionArgs = append(conditionArgs, havingArgs...)

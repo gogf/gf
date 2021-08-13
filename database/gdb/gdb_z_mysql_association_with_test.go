@@ -368,6 +368,7 @@ PRIMARY KEY (id)
 			gtest.Assert(err, nil)
 		}
 	}
+
 	gtest.C(t, func(t *gtest.T) {
 		var users []*User
 		err := db.With(User{}).
