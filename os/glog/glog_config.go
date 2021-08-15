@@ -153,3 +153,8 @@ func GetLevelPrefix(level int) string {
 func SetHandlers(handlers ...Handler) {
 	logger.SetHandlers(handlers...)
 }
+
+//SetWriterColorEnable sets the file logging with color
+func SetWriterColorEnable(enabled bool) {
+	logger.SetWriterColorEnable(enabled)
+}
