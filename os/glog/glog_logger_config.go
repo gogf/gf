@@ -249,3 +249,8 @@ func (l *Logger) SetPrefix(prefix string) {
 func (l *Logger) SetHandlers(handlers ...Handler) {
 	l.config.Handlers = handlers
 }
+
+//SetWriterColorEnable sets the file logging with color
+func (l *Logger) SetWriterColorEnable(enabled bool) {
+	l.config.WriterColorEnable = enabled
+}
