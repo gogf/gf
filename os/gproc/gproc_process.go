@@ -28,8 +28,8 @@ type Process struct {
 func NewProcess(path string, args []string, environment ...[]string) *Process {
 	env := os.Environ()
 	if len(environment) > 0 {
-		for k, v := range environment[0] {
-			env[k] = v
+		for _, v := range environment[0] {
+			env = append(env, v)
 		}
 	}
 	process := &Process{
