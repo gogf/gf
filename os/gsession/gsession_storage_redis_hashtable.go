@@ -39,53 +39,56 @@ func NewStorageRedisHashTable(redis *gredis.Redis, prefix ...string) *StorageRed
 
 // New creates a session id.
 // This function can be used for custom session creation.
-func (s *StorageRedisHashTable) New(ctx context.Context, ttl time.Duration) (id string) {
-	return ""
+func (s *StorageRedisHashTable) New(ctx context.Context, ttl time.Duration) (id string, err error) {
+	return "", ErrorDisabled
 }
 
 // Get retrieves session value with given key.
 // It returns nil if the key does not exist in the session.
-func (s *StorageRedisHashTable) Get(ctx context.Context, id string, key string) interface{} {
-	r, _ := s.redis.Ctx(ctx).Do("HGET", s.key(id), key)
-	if r != nil {
-		return gconv.String(r)
+func (s *StorageRedisHashTable) Get(ctx context.Context, id string, key string) (value interface{}, err error) {
+	value, err = s.redis.Ctx(ctx).Do("HGET", s.key(id), key)
+	if value != nil {
+		value = gconv.String(value)
 	}
-	return r
+	return
 }
 
 // GetMap retrieves all key-value pairs as map from storage.
-func (s *StorageRedisHashTable) GetMap(ctx context.Context, id string) map[string]interface{} {
+func (s *StorageRedisHashTable) GetMap(ctx context.Context, id string) (data map[string]interface{}, err error) {
 	r, err := s.redis.Ctx(ctx).DoVar("HGETALL", s.key(id))
 	if err != nil {
-		return nil
+		return nil, err
 	}
+	data = make(map[string]interface{})
 	array := r.Interfaces()
-	m := make(map[string]interface{})
 	for i := 0; i < len(array); i += 2 {
 		if array[i+1] != nil {
-			m[gconv.String(array[i])] = gconv.String(array[i+1])
+			data[gconv.String(array[i])] = gconv.String(array[i+1])
 		} else {
-			m[gconv.String(array[i])] = array[i+1]
+			data[gconv.String(array[i])] = array[i+1]
 		}
 	}
-	return m
+	return data, nil
 }
 
 // GetSize retrieves the size of key-value pairs from storage.
-func (s *StorageRedisHashTable) GetSize(ctx context.Context, id string) int {
-	r, _ := s.redis.Ctx(ctx).DoVar("HLEN", s.key(id))
-	return r.Int()
+func (s *StorageRedisHashTable) GetSize(ctx context.Context, id string) (size int, err error) {
+	r, err := s.redis.Ctx(ctx).DoVar("HLEN", s.key(id))
+	if err != nil {
+		return -1, err
+	}
+	return r.Int(), nil
 }
 
 // Set sets key-value session pair to the storage.
-// The parameter <ttl> specifies the TTL for the session id (not for the key-value pair).
+// The parameter `ttl` specifies the TTL for the session id (not for the key-value pair).
 func (s *StorageRedisHashTable) Set(ctx context.Context, id string, key string, value interface{}, ttl time.Duration) error {
 	_, err := s.redis.Ctx(ctx).Do("HSET", s.key(id), key, value)
 	return err
 }
 
 // SetMap batch sets key-value session pairs with map to the storage.
-// The parameter <ttl> specifies the TTL for the session id(not for the key-value pair).
+// The parameter `ttl` specifies the TTL for the session id(not for the key-value pair).
 func (s *StorageRedisHashTable) SetMap(ctx context.Context, id string, data map[string]interface{}, ttl time.Duration) error {
 	array := make([]interface{}, len(data)*2+1)
 	array[0] = s.key(id)
@@ -114,8 +117,8 @@ func (s *StorageRedisHashTable) RemoveAll(ctx context.Context, id string) error 
 
 // GetSession returns the session data as *gmap.StrAnyMap for given session id from storage.
 //
-// The parameter <ttl> specifies the TTL for this session, and it returns nil if the TTL is exceeded.
-// The parameter <data> is the current old session data stored in memory,
+// The parameter `ttl` specifies the TTL for this session, and it returns nil if the TTL is exceeded.
+// The parameter `data` is the current old session data stored in memory,
 // and for some storage it might be nil if memory storage is disabled.
 //
 // This function is called ever when session starts.

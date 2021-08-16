@@ -67,34 +67,34 @@ func NewStorageRedis(redis *gredis.Redis, prefix ...string) *StorageRedis {
 
 // New creates a session id.
 // This function can be used for custom session creation.
-func (s *StorageRedis) New(ctx context.Context, ttl time.Duration) (id string) {
-	return ""
+func (s *StorageRedis) New(ctx context.Context, ttl time.Duration) (id string, err error) {
+	return "", ErrorDisabled
 }
 
 // Get retrieves session value with given key.
 // It returns nil if the key does not exist in the session.
-func (s *StorageRedis) Get(ctx context.Context, id string, key string) interface{} {
-	return nil
+func (s *StorageRedis) Get(ctx context.Context, id string, key string) (value interface{}, err error) {
+	return nil, ErrorDisabled
 }
 
 // GetMap retrieves all key-value pairs as map from storage.
-func (s *StorageRedis) GetMap(ctx context.Context, id string) map[string]interface{} {
-	return nil
+func (s *StorageRedis) GetMap(ctx context.Context, id string) (data map[string]interface{}, err error) {
+	return nil, ErrorDisabled
 }
 
 // GetSize retrieves the size of key-value pairs from storage.
-func (s *StorageRedis) GetSize(ctx context.Context, id string) int {
-	return -1
+func (s *StorageRedis) GetSize(ctx context.Context, id string) (size int, err error) {
+	return -1, ErrorDisabled
 }
 
 // Set sets key-value session pair to the storage.
-// The parameter <ttl> specifies the TTL for the session id (not for the key-value pair).
+// The parameter `ttl` specifies the TTL for the session id (not for the key-value pair).
 func (s *StorageRedis) Set(ctx context.Context, id string, key string, value interface{}, ttl time.Duration) error {
 	return ErrorDisabled
 }
 
 // SetMap batch sets key-value session pairs with map to the storage.
-// The parameter <ttl> specifies the TTL for the session id(not for the key-value pair).
+// The parameter `ttl` specifies the TTL for the session id(not for the key-value pair).
 func (s *StorageRedis) SetMap(ctx context.Context, id string, data map[string]interface{}, ttl time.Duration) error {
 	return ErrorDisabled
 }
@@ -111,8 +111,8 @@ func (s *StorageRedis) RemoveAll(ctx context.Context, id string) error {
 
 // GetSession returns the session data as *gmap.StrAnyMap for given session id from storage.
 //
-// The parameter <ttl> specifies the TTL for this session, and it returns nil if the TTL is exceeded.
-// The parameter <data> is the current old session data stored in memory,
+// The parameter `ttl` specifies the TTL for this session, and it returns nil if the TTL is exceeded.
+// The parameter `data` is the current old session data stored in memory,
 // and for some storage it might be nil if memory storage is disabled.
 //
 // This function is called ever when session starts.
