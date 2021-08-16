@@ -13,6 +13,7 @@ import (
 
 // Scan automatically calls MapToMap, MapToMaps, Struct or Structs function according to
 // the type of parameter `pointer` to implement the converting.
+//
 // It calls function MapToMap if `pointer` is type of *map to do the converting.
 // It calls function MapToMaps if `pointer` is type of *[]map/*[]*map to do the converting.
 // It calls function Struct if `pointer` is type of *struct/**struct to do the converting.
@@ -52,7 +53,8 @@ func Scan(params interface{}, pointer interface{}, mapping ...map[string]string)
 }
 
 // ScanDeep automatically calls StructDeep or StructsDeep function according to the type of
-// parameter `pointer` to implement the converting..
+// parameter `pointer` to implement the converting.
+//
 // It calls function StructDeep if `pointer` is type of *struct/**struct to do the converting.
 // It calls function StructsDeep if `pointer` is type of *[]struct/*[]*struct to do the converting.
 // Deprecated, use Scan instead.

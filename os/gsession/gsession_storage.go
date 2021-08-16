@@ -16,24 +16,24 @@ import (
 type Storage interface {
 	// New creates a custom session id.
 	// This function can be used for custom session creation.
-	New(ctx context.Context, ttl time.Duration) (id string)
+	New(ctx context.Context, ttl time.Duration) (id string, err error)
 
 	// Get retrieves and returns session value with given key.
 	// It returns nil if the key does not exist in the session.
-	Get(ctx context.Context, id string, key string) interface{}
+	Get(ctx context.Context, id string, key string) (value interface{}, err error)
 
 	// GetMap retrieves all key-value pairs as map from storage.
-	GetMap(ctx context.Context, id string) map[string]interface{}
+	GetMap(ctx context.Context, id string) (data map[string]interface{}, err error)
 
 	// GetSize retrieves and returns the size of key-value pairs from storage.
-	GetSize(ctx context.Context, id string) int
+	GetSize(ctx context.Context, id string) (size int, err error)
 
 	// Set sets one key-value session pair to the storage.
-	// The parameter <ttl> specifies the TTL for the session id.
+	// The parameter `ttl` specifies the TTL for the session id.
 	Set(ctx context.Context, id string, key string, value interface{}, ttl time.Duration) error
 
 	// SetMap batch sets key-value session pairs as map to the storage.
-	// The parameter <ttl> specifies the TTL for the session id.
+	// The parameter `ttl` specifies the TTL for the session id.
 	SetMap(ctx context.Context, id string, data map[string]interface{}, ttl time.Duration) error
 
 	// Remove deletes key with its value from storage.
@@ -42,10 +42,10 @@ type Storage interface {
 	// RemoveAll deletes all key-value pairs from storage.
 	RemoveAll(ctx context.Context, id string) error
 
-	// GetSession returns the session data as *gmap.StrAnyMap for given session id from storage.
+	// GetSession returns the session data as `*gmap.StrAnyMap` for given session id from storage.
 	//
-	// The parameter <ttl> specifies the TTL for this session.
-	// The parameter <data> is the current old session data stored in memory,
+	// The parameter `ttl` specifies the TTL for this session.
+	// The parameter `data` is the current old session data stored in memory,
 	// and for some storage it might be nil if memory storage is disabled.
 	//
 	// This function is called ever when session starts. It returns nil if the TTL is exceeded.
