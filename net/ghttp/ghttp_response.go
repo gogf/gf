@@ -41,14 +41,16 @@ func newResponse(s *Server, w http.ResponseWriter) *Response {
 
 // ServeFile serves the file to the response.
 func (r *Response) ServeFile(path string, allowIndex ...bool) {
-	serveFile := (*staticFile)(nil)
+	var (
+		serveFile *staticFile
+	)
 	if file := gres.Get(path); file != nil {
 		serveFile = &staticFile{
 			File:  file,
 			IsDir: file.FileInfo().IsDir(),
 		}
 	} else {
-		path = gfile.RealPath(path)
+		path, _ = gfile.Search(path)
 		if path == "" {
 			r.WriteStatus(http.StatusNotFound)
 			return
@@ -60,7 +62,9 @@ func (r *Response) ServeFile(path string, allowIndex ...bool) {
 
 // ServeFileDownload serves file downloading to the response.
 func (r *Response) ServeFileDownload(path string, name ...string) {
-	serveFile := (*staticFile)(nil)
+	var (
+		serveFile *staticFile
+	)
 	downloadName := ""
 	if len(name) > 0 {
 		downloadName = name[0]
@@ -74,7 +78,7 @@ func (r *Response) ServeFileDownload(path string, name ...string) {
 			downloadName = gfile.Basename(file.Name())
 		}
 	} else {
-		path = gfile.RealPath(path)
+		path, _ = gfile.Search(path)
 		if path == "" {
 			r.WriteStatus(http.StatusNotFound)
 			return
