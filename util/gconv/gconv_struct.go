@@ -355,6 +355,15 @@ func bindVarToReflectValueWithInterfaceCheck(reflectValue reflect.Value, value i
 			return v.UnmarshalText(b), ok
 		}
 	}
+	// UnmarshalJSON.
+	if v, ok := pointer.(apiUnmarshalJSON); ok {
+		if s, ok := value.(string); ok {
+			return v.UnmarshalJSON([]byte(s)), ok
+		}
+		if b, ok := value.([]byte); ok {
+			return v.UnmarshalJSON(b), ok
+		}
+	}
 	if v, ok := pointer.(apiSet); ok {
 		v.Set(value)
 		return nil, ok

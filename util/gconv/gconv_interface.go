@@ -90,6 +90,12 @@ type apiUnmarshalText interface {
 	UnmarshalText(text []byte) error
 }
 
+// apiUnmarshalText is the interface for custom defined types customizing value assignment.
+// Note that only pointer can implement interface apiUnmarshalJSON.
+type apiUnmarshalJSON interface {
+	UnmarshalJSON(b []byte) error
+}
+
 // apiSet is the interface for custom value assignment.
 type apiSet interface {
 	Set(value interface{}) (old interface{})
