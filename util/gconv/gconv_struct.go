@@ -348,20 +348,35 @@ func bindVarToReflectValueWithInterfaceCheck(reflectValue reflect.Value, value i
 	}
 	// UnmarshalText.
 	if v, ok := pointer.(apiUnmarshalText); ok {
-		if s, ok := value.(string); ok {
-			return v.UnmarshalText([]byte(s)), ok
-		}
+		var valueBytes []byte
 		if b, ok := value.([]byte); ok {
-			return v.UnmarshalText(b), ok
+			valueBytes = b
+		} else if s, ok := value.(string); ok {
+			valueBytes = []byte(s)
+		}
+		if len(valueBytes) > 0 {
+			return v.UnmarshalText(valueBytes), ok
 		}
 	}
 	// UnmarshalJSON.
 	if v, ok := pointer.(apiUnmarshalJSON); ok {
-		if s, ok := value.(string); ok {
-			return v.UnmarshalJSON([]byte(s)), ok
-		}
+		var valueBytes []byte
 		if b, ok := value.([]byte); ok {
-			return v.UnmarshalJSON(b), ok
+			valueBytes = b
+		} else if s, ok := value.(string); ok {
+			valueBytes = []byte(s)
+		}
+
+		if len(valueBytes) > 0 {
+			// If it is not a valid JSON string, it then adds char `"` on its both sides to make it is.
+			if !json.Valid(valueBytes) {
+				newValueBytes := make([]byte, len(valueBytes)+2)
+				newValueBytes[0] = '"'
+				newValueBytes[len(newValueBytes)-1] = '"'
+				copy(newValueBytes[1:], valueBytes)
+				valueBytes = newValueBytes
+			}
+			return v.UnmarshalJSON(valueBytes), ok
 		}
 	}
 	if v, ok := pointer.(apiSet); ok {

@@ -360,6 +360,45 @@ func Test_Struct_Attr_CustomType2(t *testing.T) {
 	})
 }
 
+// From: k8s.io/apimachinery@v0.22.0/pkg/apis/meta/v1/duration.go
+type MyDuration struct {
+	time.Duration
+}
+
+// UnmarshalJSON implements the json.Unmarshaller interface.
+func (d *MyDuration) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err != nil {
+		return err
+	}
+
+	pd, err := time.ParseDuration(str)
+	if err != nil {
+		return err
+	}
+	d.Duration = pd
+	return nil
+}
+
+func Test_Struct_Attr_CustomType3(t *testing.T) {
+	type Config struct {
+		D MyDuration
+	}
+	gtest.C(t, func(t *gtest.T) {
+		config := new(Config)
+		err := gconv.Struct(g.Map{"d": "15s"}, config)
+		t.AssertNil(err)
+		t.Assert(config.D, "15s")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		config := new(Config)
+		err := gconv.Struct(g.Map{"d": `"15s"`}, config)
+		t.AssertNil(err)
+		t.Assert(config.D, "15s")
+	})
+}
+
 func Test_Struct_PrivateAttribute(t *testing.T) {
 	type User struct {
 		Id   int
