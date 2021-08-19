@@ -25,9 +25,7 @@ func Test_Ctx(t *testing.T) {
 		ctx = context.WithValue(ctx, "Span-Id", "abcdefg")
 
 		l.Ctx(ctx).Print(1, 2, 3)
-		t.Assert(gstr.Count(w.String(), "Trace-Id"), 1)
 		t.Assert(gstr.Count(w.String(), "1234567890"), 1)
-		t.Assert(gstr.Count(w.String(), "Span-Id"), 1)
 		t.Assert(gstr.Count(w.String(), "abcdefg"), 1)
 		t.Assert(gstr.Count(w.String(), "1 2 3"), 1)
 	})
@@ -46,9 +44,7 @@ func Test_Ctx_Config(t *testing.T) {
 		ctx = context.WithValue(ctx, "Span-Id", "abcdefg")
 
 		l.Ctx(ctx).Print(1, 2, 3)
-		t.Assert(gstr.Count(w.String(), "Trace-Id"), 1)
 		t.Assert(gstr.Count(w.String(), "1234567890"), 1)
-		t.Assert(gstr.Count(w.String(), "Span-Id"), 1)
 		t.Assert(gstr.Count(w.String(), "abcdefg"), 1)
 		t.Assert(gstr.Count(w.String(), "1 2 3"), 1)
 	})
