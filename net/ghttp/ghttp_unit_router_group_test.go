@@ -191,3 +191,33 @@ func Test_Router_Group_MultiServer(t *testing.T) {
 		t.Assert(c2.PostContent("/post"), "post2")
 	})
 }
+
+func Test_Router_Group_Map(t *testing.T) {
+	testFuncGet := func(r *ghttp.Request) {
+		r.Response.Write("get")
+	}
+	testFuncPost := func(r *ghttp.Request) {
+		r.Response.Write("post")
+	}
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.Map(map[string]interface{}{
+			"Get: /test": testFuncGet,
+			"Post:/test": testFuncPost,
+		})
+	})
+	s.SetPort(p)
+	//s.SetDumpRouterMap(false)
+	gtest.Assert(s.Start(), nil)
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+
+		t.Assert(c.GetContent("/test"), "get")
+		t.Assert(c.PostContent("/test"), "post")
+	})
+}
