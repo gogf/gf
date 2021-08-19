@@ -31,11 +31,7 @@ import (
 //    in mapping procedure to do the matching.
 //    It ignores the map key, if it does not match.
 func Struct(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
-	var keyToAttributeNameMapping map[string]string
-	if len(mapping) > 0 {
-		keyToAttributeNameMapping = mapping[0]
-	}
-	return doStruct(params, pointer, keyToAttributeNameMapping, "")
+	return Scan(params, pointer, mapping...)
 }
 
 // StructTag acts as Struct but also with support for priority tag feature, which retrieves the
@@ -405,6 +401,9 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, ma
 
 	// Converting by kind.
 	switch kind {
+	case reflect.Map:
+		return doMapToMap(value, structFieldValue, mapping)
+
 	case reflect.Struct:
 		// Recursively converting for struct attribute.
 		if err := doStruct(value, structFieldValue, nil, ""); err != nil {

@@ -1203,3 +1203,28 @@ func Test_Struct_GVarAttribute(t *testing.T) {
 	})
 
 }
+
+func Test_Struct_MapAttribute(t *testing.T) {
+	type NodeStatus struct {
+		ID int
+	}
+	type Nodes map[string]NodeStatus
+	type Output struct {
+		Nodes Nodes
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			out  = Output{}
+			data = g.Map{
+				"nodes": g.Map{
+					"name": g.Map{
+						"id": 10000,
+					},
+				},
+			}
+		)
+		err := gconv.Struct(data, &out)
+		t.AssertNil(err)
+	})
+}

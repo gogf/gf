@@ -13,12 +13,9 @@ import (
 )
 
 // Structs converts any slice to given struct slice.
+// Also see Scan, Struct.
 func Structs(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
-	var keyToAttributeNameMapping map[string]string
-	if len(mapping) > 0 {
-		keyToAttributeNameMapping = mapping[0]
-	}
-	return doStructs(params, pointer, keyToAttributeNameMapping, "")
+	return Scan(params, pointer, mapping...)
 }
 
 // StructsTag acts as Structs but also with support for priority tag feature, which retrieves the
