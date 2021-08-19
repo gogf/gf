@@ -187,7 +187,7 @@ func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
 					if ctxStr != "" {
 						ctxStr += ", "
 					}
-					ctxStr += fmt.Sprintf("%s: %+v", ctxKey, ctxValue)
+					ctxStr += gconv.String(ctxValue)
 				}
 			}
 			if ctxStr != "" {
