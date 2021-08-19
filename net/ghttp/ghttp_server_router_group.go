@@ -273,7 +273,7 @@ func (g *RouterGroup) getPrefix() string {
 	return prefix
 }
 
-// doBindRoutersToServer does really registering for the group.
+// doBindRoutersToServer does really register for the group.
 func (g *RouterGroup) doBindRoutersToServer(item *preBindItem) *RouterGroup {
 	var (
 		bindType = item.bindType
@@ -289,7 +289,7 @@ func (g *RouterGroup) doBindRoutersToServer(item *preBindItem) *RouterGroup {
 		if err != nil {
 			g.server.Logger().Fatalf("invalid pattern: %s", pattern)
 		}
-		// If there'a already a domain, unset the domain field in the pattern.
+		// If there is already a domain, unset the domain field in the pattern.
 		if g.domain != nil {
 			domain = ""
 		}

@@ -54,9 +54,8 @@ func (c *Cron) addEntry(pattern string, job func(), singleton bool, name ...stri
 	}
 	// When you add a scheduled task, you cannot allow it to run.
 	// It cannot start running when added to gtimer.
-	// It should start running after the entry is added to the entries map,
-	// to avoid the task from running during adding where the entries
-	// does not have the entry information, which might cause panic.
+	// It should start running after the entry is added to the Cron entries map, to avoid the task
+	// from running during adding where the entries do not have the entry information, which might cause panic.
 	entry.entry = gtimer.AddEntry(time.Second, entry.check, singleton, -1, gtimer.StatusStopped)
 	c.entries.Set(entry.Name, entry)
 	entry.entry.Start()
@@ -70,7 +69,7 @@ func (entry *Entry) IsSingleton() bool {
 
 // SetSingleton sets the entry running in singleton mode.
 func (entry *Entry) SetSingleton(enabled bool) {
-	entry.entry.SetSingleton(true)
+	entry.entry.SetSingleton(enabled)
 }
 
 // SetTimes sets the times which the entry can run.

@@ -548,6 +548,7 @@ func formatWhere(db DB, in formatWhereInput) (newWhere string, newArgs []interfa
 			break
 		}
 		// Automatically mapping and filtering the struct attribute.
+		// TODO struct fields in sequence
 		data := DataToMapDeep(in.Where)
 		if in.Table != "" {
 			data, _ = db.GetCore().mappingAndFilterData(in.Schema, in.Table, data, true)
