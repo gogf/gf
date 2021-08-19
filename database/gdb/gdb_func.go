@@ -480,6 +480,7 @@ func formatWhere(db DB, in formatWhereInput) (newWhere string, newArgs []interfa
 		if in.Table != "" {
 			data, _ = db.GetCore().mappingAndFilterData(in.Schema, in.Table, data, true)
 		}
+		// Put the struct attributes in sequence in Where statement.
 		for i := 0; i < reflectType.NumField(); i++ {
 			structField = reflectType.Field(i)
 			foundKey, foundValue := gutil.MapPossibleItemByKey(data, structField.Name)
