@@ -44,7 +44,7 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 	newTags := StructTagPriority
 	switch len(tags) {
 	case 0:
-		// No need handle.
+		// No need handling.
 	case 1:
 		newTags = append(strings.Split(tags[0], ","), StructTagPriority...)
 	default:
