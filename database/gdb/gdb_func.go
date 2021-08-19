@@ -228,102 +228,26 @@ func ConvertDataForTableRecord(value interface{}) map[string]interface{} {
 	return data
 }
 
-// DataToMapDeep converts `value` to map type recursively.
+// DataToMapDeep converts `value` to map type recursively(if attribute struct is embedded).
 // The parameter `value` should be type of *map/map/*struct/struct.
 // It supports embedded struct definition for struct.
 func DataToMapDeep(value interface{}) map[string]interface{} {
-	if v, ok := value.(apiMapStrAny); ok {
-		return v.MapStrAny()
-	}
-	var (
-		rvValue reflect.Value
-		rvField reflect.Value
-		rvKind  reflect.Kind
-		rtField reflect.StructField
-	)
-	if v, ok := value.(reflect.Value); ok {
-		rvValue = v
-	} else {
-		rvValue = reflect.ValueOf(value)
-	}
-	rvKind = rvValue.Kind()
-	if rvKind == reflect.Ptr {
-		rvValue = rvValue.Elem()
-		rvKind = rvValue.Kind()
-	}
-	// If given `value` is not a struct, it uses gconv.Map for converting.
-	if rvKind != reflect.Struct {
-		return gconv.Map(value, structTagPriority...)
-	}
-	// Struct handling.
-	var (
-		fieldTag reflect.StructTag
-		rvType   = rvValue.Type()
-		name     = ""
-		data     = make(map[string]interface{})
-	)
-	for i := 0; i < rvValue.NumField(); i++ {
-		rtField = rvType.Field(i)
-		rvField = rvValue.Field(i)
-		fieldName := rtField.Name
-		if !utils.IsLetterUpper(fieldName[0]) {
-			continue
-		}
-		// Struct attribute inherit
-		if rtField.Anonymous {
-			for k, v := range DataToMapDeep(rvField) {
-				data[k] = v
-			}
-			continue
-		}
-		// Other attributes.
-		name = ""
-		fieldTag = rtField.Tag
-		for _, tag := range structTagPriority {
-			if s := fieldTag.Get(tag); s != "" {
-				name = s
-				break
-			}
-		}
-		if name == "" {
-			name = fieldName
-		} else {
-			// The "orm" tag supports json tag feature: -, omitempty
-			// The "orm" tag would be like: "id,priority", so it should use splitting handling.
-			name = gstr.Trim(name)
-			if name == "-" {
-				continue
-			}
-			array := gstr.SplitAndTrim(name, ",")
-			if len(array) > 1 {
-				switch array[1] {
-				case "omitempty":
-					if empty.IsEmpty(rvField.Interface()) {
-						continue
-					} else {
-						name = array[0]
-					}
-				default:
-					name = array[0]
-				}
-			}
-		}
-
-		// The underlying driver supports time.Time/*time.Time types.
-		fieldValue := rvField.Interface()
-		switch fieldValue.(type) {
+	m := gconv.Map(value, structTagPriority...)
+	for k, v := range m {
+		switch v.(type) {
 		case time.Time, *time.Time, gtime.Time, *gtime.Time:
-			data[name] = fieldValue
+			m[k] = v
+
 		default:
 			// Use string conversion in default.
-			if s, ok := fieldValue.(apiString); ok {
-				data[name] = s.String()
+			if s, ok := v.(apiString); ok {
+				m[k] = s.String()
 			} else {
-				data[name] = fieldValue
+				m[k] = v
 			}
 		}
 	}
-	return data
+	return m
 }
 
 // doHandleTableName adds prefix string and quote chars for the table. It handles table string like:
@@ -501,15 +425,15 @@ type formatWhereInput struct {
 // formatWhere formats where statement and its arguments for `Where` and `Having` statements.
 func formatWhere(db DB, in formatWhereInput) (newWhere string, newArgs []interface{}) {
 	var (
-		buffer = bytes.NewBuffer(nil)
-		rv     = reflect.ValueOf(in.Where)
-		kind   = rv.Kind()
+		buffer       = bytes.NewBuffer(nil)
+		reflectValue = reflect.ValueOf(in.Where)
+		reflectKind  = reflectValue.Kind()
 	)
-	for kind == reflect.Ptr {
-		rv = rv.Elem()
-		kind = rv.Kind()
+	for reflectKind == reflect.Ptr {
+		reflectValue = reflectValue.Elem()
+		reflectKind = reflectValue.Kind()
 	}
-	switch kind {
+	switch reflectKind {
 	case reflect.Array, reflect.Slice:
 		newArgs = formatWhereInterfaces(db, gconv.Interfaces(in.Where), buffer, newArgs)
 
@@ -528,7 +452,7 @@ func formatWhere(db DB, in formatWhereInput) (newWhere string, newArgs []interfa
 
 	case reflect.Struct:
 		// If `where` struct implements apiIterator interface,
-		// it then uses its Iterate function to iterates its key-value pairs.
+		// it then uses its Iterate function to iterate its key-value pairs.
 		// For example, ListMap and TreeMap are ordered map,
 		// which implement apiIterator interface and are index-friendly for where conditions.
 		if iterator, ok := in.Where.(apiIterator); ok {
@@ -548,19 +472,26 @@ func formatWhere(db DB, in formatWhereInput) (newWhere string, newArgs []interfa
 			break
 		}
 		// Automatically mapping and filtering the struct attribute.
-		// TODO struct fields in sequence
+		var (
+			reflectType = reflectValue.Type()
+			structField reflect.StructField
+		)
 		data := DataToMapDeep(in.Where)
 		if in.Table != "" {
 			data, _ = db.GetCore().mappingAndFilterData(in.Schema, in.Table, data, true)
 		}
-		for key, value := range data {
-			if in.OmitNil && empty.IsNil(value) {
-				continue
+		for i := 0; i < reflectType.NumField(); i++ {
+			structField = reflectType.Field(i)
+			foundKey, foundValue := gutil.MapPossibleItemByKey(data, structField.Name)
+			if foundKey != "" {
+				if in.OmitNil && empty.IsNil(foundValue) {
+					continue
+				}
+				if in.OmitEmpty && empty.IsEmpty(foundValue) {
+					continue
+				}
+				newArgs = formatWhereKeyValue(db, buffer, newArgs, foundKey, foundValue)
 			}
-			if in.OmitEmpty && empty.IsEmpty(value) {
-				continue
-			}
-			newArgs = formatWhereKeyValue(db, buffer, newArgs, key, value)
 		}
 
 	default:
