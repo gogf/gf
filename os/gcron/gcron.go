@@ -8,7 +8,7 @@
 package gcron
 
 import (
-	"math"
+	"github.com/gogf/gf/os/glog"
 	"time"
 
 	"github.com/gogf/gf/os/gtimer"
@@ -19,7 +19,6 @@ const (
 	StatusRunning = gtimer.StatusRunning
 	StatusStopped = gtimer.StatusStopped
 	StatusClosed  = gtimer.StatusClosed
-	defaultTimes  = math.MaxInt32
 )
 
 var (
@@ -27,22 +26,36 @@ var (
 	defaultCron = New()
 )
 
+// SetLogger sets the logger for cron.
+func SetLogger(logger *glog.Logger) {
+	defaultCron.SetLogger(logger)
+}
+
+// GetLogger returns the logger in the cron.
+func GetLogger() *glog.Logger {
+	return defaultCron.GetLogger()
+}
+
 // SetLogPath sets the logging folder path for default cron object.
+// Deprecated, use SetLogger instead.
 func SetLogPath(path string) {
 	defaultCron.SetLogPath(path)
 }
 
 // GetLogPath returns the logging folder path of default cron object.
+// Deprecated, use GetLogger instead.
 func GetLogPath() string {
 	return defaultCron.GetLogPath()
 }
 
 // SetLogLevel sets the logging level for default cron object.
+// Deprecated, use SetLogger instead.
 func SetLogLevel(level int) {
 	defaultCron.SetLogLevel(level)
 }
 
 // GetLogLevel returns the logging level for default cron object.
+// Deprecated, use GetLogger instead.
 func GetLogLevel() int {
 	return defaultCron.GetLogLevel()
 }

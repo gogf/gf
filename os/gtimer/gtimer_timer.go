@@ -28,7 +28,7 @@ func New(options ...TimerOptions) *Timer {
 
 // Add adds a timing job to the timer, which runs in interval of <interval>.
 func (t *Timer) Add(interval time.Duration, job JobFunc) *Entry {
-	return t.createEntry(interval, job, false, defaultTimes, StatusReady)
+	return t.createEntry(interval, job, false, -1, StatusReady)
 }
 
 // AddEntry adds a timing job to the timer with detailed parameters.
@@ -48,7 +48,7 @@ func (t *Timer) AddEntry(interval time.Duration, job JobFunc, singleton bool, ti
 
 // AddSingleton is a convenience function for add singleton mode job.
 func (t *Timer) AddSingleton(interval time.Duration, job JobFunc) *Entry {
-	return t.createEntry(interval, job, true, defaultTimes, StatusReady)
+	return t.createEntry(interval, job, true, -1, StatusReady)
 }
 
 // AddOnce is a convenience function for adding a job which only runs once and then exits.
