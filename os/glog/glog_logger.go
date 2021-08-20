@@ -154,13 +154,17 @@ func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
 		if l.config.Flags&(F_FILE_LONG|F_FILE_SHORT|F_CALLER_FN) > 0 {
 			callerFnName, path, line := gdebug.CallerWithFilter(pathFilterKey, l.config.StSkip)
 			if l.config.Flags&F_CALLER_FN > 0 {
-				input.CallerFunc = fmt.Sprintf(`[%s]`, callerFnName)
+				if len(callerFnName) > 2 {
+					input.CallerFunc = fmt.Sprintf(`[%s]`, callerFnName)
+				}
 			}
-			if l.config.Flags&F_FILE_LONG > 0 {
-				input.CallerPath = fmt.Sprintf(`%s:%d:`, path, line)
-			}
-			if l.config.Flags&F_FILE_SHORT > 0 {
-				input.CallerPath = fmt.Sprintf(`%s:%d:`, gfile.Basename(path), line)
+			if line >= 0 && len(path) > 1 {
+				if l.config.Flags&F_FILE_LONG > 0 {
+					input.CallerPath = fmt.Sprintf(`%s:%d:`, path, line)
+				}
+				if l.config.Flags&F_FILE_SHORT > 0 {
+					input.CallerPath = fmt.Sprintf(`%s:%d:`, gfile.Basename(path), line)
+				}
 			}
 		}
 		// Prefix.
@@ -173,26 +177,25 @@ func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
 		// Tracing values.
 		spanCtx := trace.SpanContextFromContext(ctx)
 		if traceId := spanCtx.TraceID(); traceId.IsValid() {
-			input.CtxStr = "{" + traceId.String() + "}"
+			input.CtxStr = traceId.String()
 		}
 		// Context values.
 		if len(l.config.CtxKeys) > 0 {
-			ctxStr := ""
 			for _, ctxKey := range l.config.CtxKeys {
 				var ctxValue interface{}
 				if ctxValue = ctx.Value(ctxKey); ctxValue == nil {
 					ctxValue = ctx.Value(gctx.StrKey(gconv.String(ctxKey)))
 				}
 				if ctxValue != nil {
-					if ctxStr != "" {
-						ctxStr += ", "
+					if input.CtxStr != "" {
+						input.CtxStr += ", "
 					}
-					ctxStr += gconv.String(ctxValue)
+					input.CtxStr += gconv.String(ctxValue)
 				}
 			}
-			if ctxStr != "" {
-				input.CtxStr += "{" + ctxStr + "}"
-			}
+		}
+		if input.CtxStr != "" {
+			input.CtxStr = "{" + input.CtxStr + "}"
 		}
 	}
 	var tempStr string
