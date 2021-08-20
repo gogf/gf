@@ -223,7 +223,7 @@ func parseItemValue(value string, fieldType byte) (int, error) {
 	return 0, gerror.NewCodef(gerror.CodeInvalidParameter, `invalid pattern value: "%s"`, value)
 }
 
-// meet checks if the given time <t> meets the runnable point for the job.
+// meet checks if the given time `t` meets the runnable point for the job.
 func (s *cronSchedule) meet(t time.Time) bool {
 	if s.every != 0 {
 		// It checks using interval.

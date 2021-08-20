@@ -8,18 +8,18 @@ package gtimer
 
 import (
 	"github.com/gogf/gf/container/gtype"
-	"math"
 )
 
 // Entry is the timing job.
 type Entry struct {
 	job       JobFunc      // The job function.
 	timer     *Timer       // Belonged timer.
-	ticks     int64        // The job runs every ticks.
+	ticks     int64        // The job runs every tick.
 	times     *gtype.Int   // Limit running times.
 	status    *gtype.Int   // Job status.
 	singleton *gtype.Bool  // Singleton mode.
 	nextTicks *gtype.Int64 // Next run ticks of the job.
+	infinite  *gtype.Bool  // No times limit.
 }
 
 // JobFunc is the job function.
@@ -32,15 +32,13 @@ func (entry *Entry) Status() int {
 
 // Run runs the timer job asynchronously.
 func (entry *Entry) Run() {
-	leftRunningTimes := entry.times.Add(-1)
-	// It checks its running times exceeding.
-	if leftRunningTimes < 0 {
-		entry.status.Set(StatusClosed)
-		return
-	}
-	// This means it has no limit in running times.
-	if leftRunningTimes == math.MaxInt32-1 {
-		entry.times.Set(math.MaxInt32)
+	if !entry.infinite.Val() {
+		leftRunningTimes := entry.times.Add(-1)
+		// It checks its running times exceeding.
+		if leftRunningTimes < 0 {
+			entry.status.Set(StatusClosed)
+			return
+		}
 	}
 	go func() {
 		defer func() {
@@ -108,7 +106,7 @@ func (entry *Entry) Close() {
 	entry.status.Set(StatusClosed)
 }
 
-// Reset reset the job, which resets its ticks for next running.
+// Reset resets the job, which resets its ticks for next running.
 func (entry *Entry) Reset() {
 	entry.nextTicks.Set(entry.timer.ticks.Val() + entry.ticks)
 }
@@ -131,4 +129,5 @@ func (entry *Entry) Job() JobFunc {
 // SetTimes sets the limit running times for the job.
 func (entry *Entry) SetTimes(times int) {
 	entry.times.Set(times)
+	entry.infinite.Set(false)
 }
