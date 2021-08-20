@@ -20,7 +20,6 @@ package gtimer
 
 import (
 	"github.com/gogf/gf/container/gtype"
-	"math"
 	"sync"
 	"time"
 
@@ -47,7 +46,6 @@ const (
 	StatusStopped            = 2                    // Job or Timer is stopped.
 	StatusClosed             = -1                   // Job or Timer is closed and waiting to be deleted.
 	panicExit                = "exit"               // panicExit is used for custom job exit with panic.
-	defaultTimes             = math.MaxInt32        // defaultTimes is the default limit running times, a big number.
 	defaultTimerInterval     = 100                  // defaultTimerInterval is the default timer interval in milliseconds.
 	commandEnvKeyForInterval = "gf.gtimer.interval" // commandEnvKeyForInterval is the key for command argument or environment configuring default interval duration for timer.
 )
