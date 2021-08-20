@@ -128,10 +128,7 @@ func (entry *Entry) check() {
 			return
 
 		case StatusClosed:
-			entry.logDebugf(
-				"[gcron] %s(%s) %s removed",
-				entry.Name, entry.schedule.pattern, entry.jobName,
-			)
+			entry.logDebugf("[gcron] %s %s removed", entry.schedule.pattern, entry.jobName)
 			entry.Close()
 
 		case StatusReady:
@@ -139,15 +136,9 @@ func (entry *Entry) check() {
 		case StatusRunning:
 			defer func() {
 				if err := recover(); err != nil {
-					entry.logErrorf(
-						"[gcron] %s(%s) %s end with error: %+v",
-						entry.Name, entry.schedule.pattern, entry.jobName, err,
-					)
+					entry.logErrorf("[gcron] %s %s end with error: %+v", entry.schedule.pattern, entry.jobName, err)
 				} else {
-					entry.logDebugf(
-						"[gcron] %s(%s) %s end",
-						entry.Name, entry.schedule.pattern, entry.jobName,
-					)
+					entry.logDebugf("[gcron] %s %s end", entry.schedule.pattern, entry.jobName)
 				}
 
 				if entry.timerEntry.Status() == StatusClosed {
@@ -164,10 +155,7 @@ func (entry *Entry) check() {
 					}
 				}
 			}
-			entry.logDebugf(
-				"[gcron] %s(%s) %s start",
-				entry.Name, entry.schedule.pattern, entry.jobName,
-			)
+			entry.logDebugf("[gcron] %s %s start", entry.schedule.pattern, entry.jobName)
 
 			entry.Job()
 		}
