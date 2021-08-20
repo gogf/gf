@@ -118,8 +118,11 @@ func (t *Timer) Close() {
 
 // createEntry creates and adds a timing job to the timer.
 func (t *Timer) createEntry(interval time.Duration, job JobFunc, singleton bool, times int, status int) *Entry {
+	var (
+		infinite = false
+	)
 	if times <= 0 {
-		times = defaultTimes
+		infinite = true
 	}
 	var (
 		intervalTicksOfJob = int64(interval / t.options.Interval)
@@ -129,16 +132,19 @@ func (t *Timer) createEntry(interval time.Duration, job JobFunc, singleton bool,
 		// then sets it to one tick, which means it will be run in one interval.
 		intervalTicksOfJob = 1
 	}
-	nextTicks := t.ticks.Val() + intervalTicksOfJob
-	entry := &Entry{
-		job:       job,
-		timer:     t,
-		ticks:     intervalTicksOfJob,
-		times:     gtype.NewInt(times),
-		status:    gtype.NewInt(status),
-		singleton: gtype.NewBool(singleton),
-		nextTicks: gtype.NewInt64(nextTicks),
-	}
+	var (
+		nextTicks = t.ticks.Val() + intervalTicksOfJob
+		entry     = &Entry{
+			job:       job,
+			timer:     t,
+			ticks:     intervalTicksOfJob,
+			times:     gtype.NewInt(times),
+			status:    gtype.NewInt(status),
+			singleton: gtype.NewBool(singleton),
+			nextTicks: gtype.NewInt64(nextTicks),
+			infinite:  gtype.NewBool(infinite),
+		}
+	)
 	t.queue.Push(entry, nextTicks)
 	return entry
 }
