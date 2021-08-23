@@ -7,11 +7,12 @@
 package gcron
 
 import (
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/os/gtime"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/os/gtime"
 
 	"github.com/gogf/gf/text/gregex"
 )
@@ -181,7 +182,9 @@ func parseItem(item string, min int, max int, allowQuestionMark bool) (map[int]s
 					return nil, gerror.NewCodef(gerror.CodeInvalidParameter, `invalid pattern item: "%s"`, item)
 				} else {
 					rangeMin = i
-					rangeMax = i
+					if len(intervalArray) == 1 {
+						rangeMax = i
+					}
 				}
 			}
 			if len(rangeArray) == 2 {
@@ -189,6 +192,7 @@ func parseItem(item string, min int, max int, allowQuestionMark bool) (map[int]s
 					return nil, gerror.NewCodef(gerror.CodeInvalidParameter, `invalid pattern item: "%s"`, item)
 				} else {
 					rangeMax = i
+
 				}
 			}
 			for i := rangeMin; i <= rangeMax; i += interval {
@@ -254,4 +258,116 @@ func (s *cronSchedule) meet(t time.Time) bool {
 		}
 		return true
 	}
+}
+
+// 参考 robfig/cron的方法计算 github.com/robfi/cron/v3@v3.0.0/spec.go
+// https://github.com/robfig/cron/blob/master/spec_test.go
+func (s *cronSchedule) Next(t time.Time) time.Time {
+
+	if s.every != 0 {
+
+		diff := t.Unix() - s.create
+		cnt := diff/s.every + 1
+		return t.Add(time.Duration(cnt*s.every) * time.Second)
+	}
+
+	// Start at the earliest possible time (the upcoming second).
+	t = t.Add(1*time.Second - time.Duration(t.Nanosecond())*time.Nanosecond)
+
+	loc := t.Location()
+	added := false
+	yearLimit := t.Year() + 5
+	// fmt.Printf("%+v \n", s)
+
+WRAP:
+	if t.Year() > yearLimit {
+		return t // who will care the job that run in five years later
+	}
+
+	for !match(s.month, int(t.Month())) {
+		if !added {
+			added = true
+			t = time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, loc)
+		}
+		t = t.AddDate(0, 1, 0)
+		// need recheck
+		if t.Month() == time.January {
+			goto WRAP
+		}
+	}
+
+	for !s.dayMatcher(t) {
+		if !added {
+			added = true
+			t = time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, loc)
+		}
+		t = t.AddDate(0, 0, 1)
+
+		// Notice if the hour is no longer midnight due to DST.
+		// Add an hour if it's 23, subtract an hour if it's 1.
+		if t.Hour() != 0 {
+			if t.Hour() > 12 {
+				t = t.Add(time.Duration(24-t.Hour()) * time.Hour)
+			} else {
+				t = t.Add(time.Duration(-t.Hour()) * time.Hour)
+			}
+		}
+
+		// fmt.Printf("%v %v\n", t, t.Weekday())
+		if t.Day() == 1 {
+			goto WRAP
+		}
+	}
+
+	for !match(s.hour, t.Hour()) {
+		if !added {
+			added = true
+			t = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), 0, 0, 0, loc)
+		}
+		t = t.Add(time.Hour)
+		// need recheck
+		if t.Hour() == 0 {
+			goto WRAP
+		}
+	}
+
+	for !match(s.minute, t.Minute()) {
+		if !added {
+			added = true
+			t = t.Truncate(time.Minute)
+		}
+		t = t.Add(1 * time.Minute)
+
+		if t.Minute() == 0 {
+			goto WRAP
+		}
+	}
+
+	for !match(s.second, t.Second()) {
+		if !added {
+			added = true
+			t = t.Truncate(time.Second)
+		}
+		t = t.Add(1 * time.Second)
+
+		// fmt.Printf("%v\n", t)
+		if t.Second() == 0 {
+			goto WRAP
+		}
+	}
+	return t.In(loc)
+
+}
+
+func (s *cronSchedule) dayMatcher(t time.Time) bool {
+
+	_, ok1 := s.day[t.Day()]
+	_, ok2 := s.week[int(t.Weekday())]
+
+	return ok1 && ok2
+}
+
+func match(m map[int]struct{}, key int) bool {
+	_, ok := m[key]
+	return ok
 }
