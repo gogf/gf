@@ -7,6 +7,7 @@
 package gvalid
 
 import (
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"strconv"
 	"strings"
@@ -168,7 +169,7 @@ func (v *Validator) doCheckValue(input doCheckValueInput) Error {
 		index++
 	}
 	if len(errorMsgArray) > 0 {
-		return newError(gerror.CodeValidationFailed, []fieldRule{{Name: input.Name, Rule: input.Rule}}, map[string]map[string]string{
+		return newError(gcode.CodeValidationFailed, []fieldRule{{Name: input.Name, Rule: input.Rule}}, map[string]map[string]string{
 			input.Name: errorMsgArray,
 		})
 	}
@@ -209,7 +210,7 @@ func (v *Validator) doCheckBuildInRules(input doCheckBuildInRulesInput) (match b
 		if msg := v.checkLength(valueStr, input.RuleKey, input.RulePattern, input.CustomMsgMap); msg != "" {
 			return match, gerror.NewOption(gerror.Option{
 				Text: msg,
-				Code: gerror.CodeValidationFailed,
+				Code: gcode.CodeValidationFailed,
 			})
 		} else {
 			match = true
@@ -223,7 +224,7 @@ func (v *Validator) doCheckBuildInRules(input doCheckBuildInRulesInput) (match b
 		if msg := v.checkRange(valueStr, input.RuleKey, input.RulePattern, input.CustomMsgMap); msg != "" {
 			return match, gerror.NewOption(gerror.Option{
 				Text: msg,
-				Code: gerror.CodeValidationFailed,
+				Code: gcode.CodeValidationFailed,
 			})
 		} else {
 			match = true
@@ -262,7 +263,7 @@ func (v *Validator) doCheckBuildInRules(input doCheckBuildInRulesInput) (match b
 			msg = strings.Replace(msg, ":format", input.RulePattern, -1)
 			return match, gerror.NewOption(gerror.Option{
 				Text: msg,
-				Code: gerror.CodeValidationFailed,
+				Code: gcode.CodeValidationFailed,
 			})
 		}
 
@@ -280,7 +281,7 @@ func (v *Validator) doCheckBuildInRules(input doCheckBuildInRulesInput) (match b
 			msg = strings.Replace(msg, ":field", input.RulePattern, -1)
 			return match, gerror.NewOption(gerror.Option{
 				Text: msg,
-				Code: gerror.CodeValidationFailed,
+				Code: gcode.CodeValidationFailed,
 			})
 		}
 
@@ -299,7 +300,7 @@ func (v *Validator) doCheckBuildInRules(input doCheckBuildInRulesInput) (match b
 			msg = strings.Replace(msg, ":field", input.RulePattern, -1)
 			return match, gerror.NewOption(gerror.Option{
 				Text: msg,
-				Code: gerror.CodeValidationFailed,
+				Code: gcode.CodeValidationFailed,
 			})
 		}
 
@@ -485,7 +486,7 @@ func (v *Validator) doCheckBuildInRules(input doCheckBuildInRulesInput) (match b
 	default:
 		return match, gerror.NewOption(gerror.Option{
 			Text: "Invalid rule name: " + input.RuleKey,
-			Code: gerror.CodeInvalidParameter,
+			Code: gcode.CodeInvalidParameter,
 		})
 	}
 	return match, nil

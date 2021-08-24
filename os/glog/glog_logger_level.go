@@ -7,6 +7,7 @@
 package glog
 
 import (
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"strings"
 )
@@ -77,7 +78,7 @@ func (l *Logger) SetLevelStr(levelStr string) error {
 	if level, ok := levelStringMap[strings.ToUpper(levelStr)]; ok {
 		l.config.Level = level
 	} else {
-		return gerror.NewCodef(gerror.CodeInvalidParameter, `invalid level string: %s`, levelStr)
+		return gerror.NewCodef(gcode.CodeInvalidParameter, `invalid level string: %s`, levelStr)
 	}
 	return nil
 }

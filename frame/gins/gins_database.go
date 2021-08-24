@@ -9,6 +9,7 @@ package gins
 import (
 	"context"
 	"fmt"
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/text/gstr"
@@ -54,7 +55,7 @@ func Database(name ...string) gdb.DB {
 				exampleFileName := "config.example.toml"
 				if exampleConfigFilePath, _ := Config().GetFilePath(exampleFileName); exampleConfigFilePath != "" {
 					panic(gerror.WrapCodef(
-						gerror.CodeMissingConfiguration,
+						gcode.CodeMissingConfiguration,
 						err,
 						`configuration file "%s" not found, but found "%s", did you miss renaming the example configuration file?`,
 						Config().GetFileName(),
@@ -62,7 +63,7 @@ func Database(name ...string) gdb.DB {
 					))
 				} else {
 					panic(gerror.WrapCodef(
-						gerror.CodeMissingConfiguration,
+						gcode.CodeMissingConfiguration,
 						err,
 						`configuration file "%s" not found, did you miss the configuration file or the misspell the configuration file name?`,
 						Config().GetFileName(),
@@ -70,7 +71,7 @@ func Database(name ...string) gdb.DB {
 				}
 			}
 			panic(gerror.WrapCodef(
-				gerror.CodeMissingConfiguration,
+				gcode.CodeMissingConfiguration,
 				err,
 				`database initialization failed: "%s" node not found, is configuration file or configuration node missing?`,
 				configNodeNameDatabase,

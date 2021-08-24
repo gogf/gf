@@ -8,6 +8,7 @@
 package gcmd
 
 import (
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/json"
 	"os"
@@ -94,7 +95,7 @@ func ParseWithArgs(args []string, supportedOptions map[string]bool, strict ...bo
 						i++
 						continue
 					} else if parser.strict {
-						return nil, gerror.NewCodef(gerror.CodeInvalidParameter, `invalid option '%s'`, args[i])
+						return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid option '%s'`, args[i])
 					}
 				}
 			}

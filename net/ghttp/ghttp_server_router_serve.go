@@ -8,6 +8,7 @@ package ghttp
 
 import (
 	"fmt"
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/json"
 	"strings"
@@ -191,7 +192,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 							parsedItemList.PushBack(parsedItem)
 
 						default:
-							panic(gerror.NewCodef(gerror.CodeInternalError, `invalid handler type %d`, item.Type))
+							panic(gerror.NewCodef(gcode.CodeInternalError, `invalid handler type %d`, item.Type))
 						}
 					}
 				}
