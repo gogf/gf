@@ -8,6 +8,7 @@ package gvalid_test
 
 import (
 	"context"
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/os/gtime"
 	"testing"
@@ -1021,6 +1022,7 @@ func Test_Code(t *testing.T) {
 		t.AssertNE(err, nil)
 		t.Assert(gerror.Code(err), gcode.CodeValidationFailed)
 	})
+
 	gtest.C(t, func(t *gtest.T) {
 		err := g.Validator().Rules("none-exist-rule").CheckValue("")
 		t.AssertNE(err, nil)

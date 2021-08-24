@@ -11,6 +11,7 @@ import (
 	"bytes"
 	"crypto/cipher"
 	"crypto/des"
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 )
 
