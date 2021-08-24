@@ -11,6 +11,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/gogf/gf/errors/gcode"
 	"reflect"
 	"strings"
 
@@ -89,7 +90,7 @@ func (c *Core) GetCtxTimeout(timeoutType int, ctx context.Context) (context.Cont
 			return context.WithTimeout(ctx, c.db.GetConfig().PrepareTimeout)
 		}
 	default:
-		panic(gerror.NewCodef(gerror.CodeInvalidParameter, "invalid context timeout type: %d", timeoutType))
+		panic(gerror.NewCodef(gcode.CodeInvalidParameter, "invalid context timeout type: %d", timeoutType))
 	}
 	return ctx, func() {}
 }
@@ -552,7 +553,7 @@ func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data inter
 		updates = gconv.String(data)
 	}
 	if len(updates) == 0 {
-		return nil, gerror.NewCode(gerror.CodeMissingParameter, "data cannot be empty")
+		return nil, gerror.NewCode(gcode.CodeMissingParameter, "data cannot be empty")
 	}
 	if len(params) > 0 {
 		args = append(params, args...)

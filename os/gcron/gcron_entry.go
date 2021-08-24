@@ -43,7 +43,7 @@ type addEntryInput struct {
 func (c *Cron) doAddEntry(in addEntryInput) (*Entry, error) {
 	if in.Name != "" {
 		if c.Search(in.Name) != nil {
-			return nil, gerror.NewCodef(gerror.CodeInvalidOperation, `cron job "%s" already exists`, in.Name)
+			return nil, gerror.NewCodef(gcode.CodeInvalidOperation, `cron job "%s" already exists`, in.Name)
 		}
 	}
 

@@ -1019,12 +1019,12 @@ func Test_Code(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		err := g.Validator().Rules("required").CheckValue("")
 		t.AssertNE(err, nil)
-		t.Assert(gerror.Code(err), gerror.CodeValidationFailed)
+		t.Assert(gerror.Code(err), gcode.CodeValidationFailed)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		err := g.Validator().Rules("none-exist-rule").CheckValue("")
 		t.AssertNE(err, nil)
-		t.Assert(gerror.Code(err), gerror.CodeInternalError)
+		t.Assert(gerror.Code(err), gcode.CodeInternalError)
 	})
 }
 

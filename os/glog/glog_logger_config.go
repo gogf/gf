@@ -7,6 +7,7 @@
 package glog
 
 import (
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/os/gctx"
 	"io"
 	"strings"
@@ -83,7 +84,7 @@ func (l *Logger) SetConfig(config Config) error {
 // SetConfigWithMap set configurations with map for the logger.
 func (l *Logger) SetConfigWithMap(m map[string]interface{}) error {
 	if m == nil || len(m) == 0 {
-		return gerror.NewCode(gerror.CodeInvalidParameter, "configuration cannot be empty")
+		return gerror.NewCode(gcode.CodeInvalidParameter, "configuration cannot be empty")
 	}
 	// The m now is a shallow copy of m.
 	// A little tricky, isn't it?
@@ -94,7 +95,7 @@ func (l *Logger) SetConfigWithMap(m map[string]interface{}) error {
 		if level, ok := levelStringMap[strings.ToUpper(gconv.String(levelValue))]; ok {
 			m[levelKey] = level
 		} else {
-			return gerror.NewCodef(gerror.CodeInvalidParameter, `invalid level string: %v`, levelValue)
+			return gerror.NewCodef(gcode.CodeInvalidParameter, `invalid level string: %v`, levelValue)
 		}
 	}
 	// Change string configuration to int value for file rotation size.
@@ -102,7 +103,7 @@ func (l *Logger) SetConfigWithMap(m map[string]interface{}) error {
 	if rotateSizeValue != nil {
 		m[rotateSizeKey] = gfile.StrToSize(gconv.String(rotateSizeValue))
 		if m[rotateSizeKey] == -1 {
-			return gerror.NewCodef(gerror.CodeInvalidConfiguration, `invalid rotate size: %v`, rotateSizeValue)
+			return gerror.NewCodef(gcode.CodeInvalidConfiguration, `invalid rotate size: %v`, rotateSizeValue)
 		}
 	}
 	if err := gconv.Struct(m, &l.config); err != nil {
@@ -208,11 +209,11 @@ func (l *Logger) GetWriter() io.Writer {
 // SetPath sets the directory path for file logging.
 func (l *Logger) SetPath(path string) error {
 	if path == "" {
-		return gerror.NewCode(gerror.CodeInvalidParameter, "logging path is empty")
+		return gerror.NewCode(gcode.CodeInvalidParameter, "logging path is empty")
 	}
 	if !gfile.Exists(path) {
 		if err := gfile.Mkdir(path); err != nil {
-			return gerror.WrapCodef(gerror.CodeOperationFailed, err, `Mkdir "%s" failed in PWD "%s"`, path, gfile.Pwd())
+			return gerror.WrapCodef(gcode.CodeOperationFailed, err, `Mkdir "%s" failed in PWD "%s"`, path, gfile.Pwd())
 		}
 	}
 	l.config.Path = strings.TrimRight(path, gfile.Separator)

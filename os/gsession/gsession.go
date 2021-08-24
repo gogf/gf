@@ -8,6 +8,7 @@
 package gsession
 
 import (
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/util/guid"
 )
@@ -15,7 +16,7 @@ import (
 var (
 	ErrorDisabled = gerror.NewOption(gerror.Option{
 		Text: "this feature is disabled in this storage",
-		Code: gerror.CodeNotSupported,
+		Code: gcode.CodeNotSupported,
 	})
 )
 

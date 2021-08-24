@@ -8,6 +8,7 @@ package gredis
 
 import (
 	"context"
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 
@@ -114,7 +115,7 @@ func ConfigFromStr(str string) (config *Config, err error) {
 			config.Port = DefaultRedisPort
 		}
 	} else {
-		err = gerror.NewCodef(gerror.CodeInvalidConfiguration, `invalid redis configuration: "%s"`, str)
+		err = gerror.NewCodef(gcode.CodeInvalidConfiguration, `invalid redis configuration: "%s"`, str)
 	}
 	return
 }

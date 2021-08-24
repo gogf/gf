@@ -10,6 +10,7 @@ package gfsnotify
 import (
 	"context"
 	"github.com/gogf/gf/container/gset"
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 	"sync"
@@ -139,7 +140,7 @@ func RemoveCallback(callbackId int) error {
 		callback = r.(*Callback)
 	}
 	if callback == nil {
-		return gerror.NewCodef(gerror.CodeInvalidParameter, `callback for id %d not found`, callbackId)
+		return gerror.NewCodef(gcode.CodeInvalidParameter, `callback for id %d not found`, callbackId)
 	}
 	w.RemoveCallback(callbackId)
 	return nil

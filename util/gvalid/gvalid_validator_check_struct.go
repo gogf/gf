@@ -7,7 +7,7 @@
 package gvalid
 
 import (
-	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/internal/structs"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/gutil"
@@ -288,7 +288,7 @@ func (v *Validator) doCheckStruct(object interface{}) Error {
 		}
 	}
 	if len(errorMaps) > 0 {
-		return newError(gerror.CodeValidationFailed, checkRules, errorMaps)
+		return newError(gcode.CodeValidationFailed, checkRules, errorMaps)
 	}
 	return nil
 }

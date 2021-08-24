@@ -10,6 +10,7 @@ package gdb
 import (
 	"context"
 	"database/sql"
+	"github.com/gogf/gf/errors/gcode"
 	"time"
 
 	"github.com/gogf/gf/errors/gerror"
@@ -336,7 +337,7 @@ func New(group ...string) (db DB, err error) {
 
 	if len(configs.config) < 1 {
 		return nil, gerror.NewCode(
-			gerror.CodeInvalidConfiguration,
+			gcode.CodeInvalidConfiguration,
 			"database configuration is empty, please set the database configuration before using",
 		)
 	}
@@ -358,7 +359,7 @@ func New(group ...string) (db DB, err error) {
 				return c.db, nil
 			} else {
 				return nil, gerror.NewCodef(
-					gerror.CodeInvalidConfiguration,
+					gcode.CodeInvalidConfiguration,
 					`cannot find database driver for specified database type "%s", did you misspell type name "%s" or forget importing the database driver?`,
 					node.Type, node.Type,
 				)
@@ -368,7 +369,7 @@ func New(group ...string) (db DB, err error) {
 		}
 	} else {
 		return nil, gerror.NewCodef(
-			gerror.CodeInvalidConfiguration,
+			gcode.CodeInvalidConfiguration,
 			`database configuration node "%s" is not found, did you misspell group name "%s" or miss the database configuration?`,
 			groupName, groupName,
 		)
@@ -411,7 +412,7 @@ func getConfigNodeByGroup(group string, master bool) (*ConfigNode, error) {
 			}
 		}
 		if len(masterList) < 1 {
-			return nil, gerror.NewCode(gerror.CodeInvalidConfiguration, "at least one master node configuration's need to make sense")
+			return nil, gerror.NewCode(gcode.CodeInvalidConfiguration, "at least one master node configuration's need to make sense")
 		}
 		if len(slaveList) < 1 {
 			slaveList = masterList
@@ -422,7 +423,7 @@ func getConfigNodeByGroup(group string, master bool) (*ConfigNode, error) {
 			return getConfigNodeByWeight(slaveList), nil
 		}
 	} else {
-		return nil, gerror.NewCodef(gerror.CodeInvalidConfiguration, "empty database configuration for item name '%s'", group)
+		return nil, gerror.NewCodef(gcode.CodeInvalidConfiguration, "empty database configuration for item name '%s'", group)
 	}
 }
 

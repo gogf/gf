@@ -66,7 +66,7 @@ func DecryptECB(cipherText []byte, key []byte, padding int) ([]byte, error) {
 // The length of the <key> should be either 16 or 24 bytes.
 func EncryptECBTriple(plainText []byte, key []byte, padding int) ([]byte, error) {
 	if len(key) != 16 && len(key) != 24 {
-		return nil, gerror.NewCode(gerror.CodeInvalidParameter, "key length error")
+		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "key length error")
 	}
 
 	text, err := Padding(plainText, padding)
@@ -100,7 +100,7 @@ func EncryptECBTriple(plainText []byte, key []byte, padding int) ([]byte, error)
 // The length of the <key> should be either 16 or 24 bytes.
 func DecryptECBTriple(cipherText []byte, key []byte, padding int) ([]byte, error) {
 	if len(key) != 16 && len(key) != 24 {
-		return nil, gerror.NewCode(gerror.CodeInvalidParameter, "key length error")
+		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "key length error")
 	}
 
 	var newKey []byte
@@ -138,7 +138,7 @@ func EncryptCBC(plainText []byte, key []byte, iv []byte, padding int) ([]byte, e
 	}
 
 	if len(iv) != block.BlockSize() {
-		return nil, gerror.NewCode(gerror.CodeInvalidParameter, "iv length invalid")
+		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "iv length invalid")
 	}
 
 	text, err := Padding(plainText, padding)
@@ -161,7 +161,7 @@ func DecryptCBC(cipherText []byte, key []byte, iv []byte, padding int) ([]byte, 
 	}
 
 	if len(iv) != block.BlockSize() {
-		return nil, gerror.NewCode(gerror.CodeInvalidParameter, "iv length invalid")
+		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "iv length invalid")
 	}
 
 	text := make([]byte, len(cipherText))
@@ -179,7 +179,7 @@ func DecryptCBC(cipherText []byte, key []byte, iv []byte, padding int) ([]byte, 
 // EncryptCBCTriple encrypts <plainText> using TripleDES and CBC mode.
 func EncryptCBCTriple(plainText []byte, key []byte, iv []byte, padding int) ([]byte, error) {
 	if len(key) != 16 && len(key) != 24 {
-		return nil, gerror.NewCode(gerror.CodeInvalidParameter, "key length invalid")
+		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "key length invalid")
 	}
 
 	var newKey []byte
@@ -196,7 +196,7 @@ func EncryptCBCTriple(plainText []byte, key []byte, iv []byte, padding int) ([]b
 	}
 
 	if len(iv) != block.BlockSize() {
-		return nil, gerror.NewCode(gerror.CodeInvalidParameter, "iv length invalid")
+		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "iv length invalid")
 	}
 
 	text, err := Padding(plainText, padding)
@@ -214,7 +214,7 @@ func EncryptCBCTriple(plainText []byte, key []byte, iv []byte, padding int) ([]b
 // DecryptCBCTriple decrypts <cipherText> using TripleDES and CBC mode.
 func DecryptCBCTriple(cipherText []byte, key []byte, iv []byte, padding int) ([]byte, error) {
 	if len(key) != 16 && len(key) != 24 {
-		return nil, gerror.NewCode(gerror.CodeInvalidParameter, "key length invalid")
+		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "key length invalid")
 	}
 
 	var newKey []byte
@@ -231,7 +231,7 @@ func DecryptCBCTriple(cipherText []byte, key []byte, iv []byte, padding int) ([]
 	}
 
 	if len(iv) != block.BlockSize() {
-		return nil, gerror.NewCode(gerror.CodeInvalidParameter, "iv length invalid")
+		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "iv length invalid")
 	}
 
 	text := make([]byte, len(cipherText))
@@ -262,12 +262,12 @@ func Padding(text []byte, padding int) ([]byte, error) {
 	switch padding {
 	case NOPADDING:
 		if len(text)%8 != 0 {
-			return nil, gerror.NewCode(gerror.CodeInvalidParameter, "text length invalid")
+			return nil, gerror.NewCode(gcode.CodeInvalidParameter, "text length invalid")
 		}
 	case PKCS5PADDING:
 		return PaddingPKCS5(text, 8), nil
 	default:
-		return nil, gerror.NewCode(gerror.CodeInvalidParameter, "padding type error")
+		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "padding type error")
 	}
 
 	return text, nil
@@ -277,12 +277,12 @@ func UnPadding(text []byte, padding int) ([]byte, error) {
 	switch padding {
 	case NOPADDING:
 		if len(text)%8 != 0 {
-			return nil, gerror.NewCode(gerror.CodeInvalidParameter, "text length invalid")
+			return nil, gerror.NewCode(gcode.CodeInvalidParameter, "text length invalid")
 		}
 	case PKCS5PADDING:
 		return UnPaddingPKCS5(text), nil
 	default:
-		return nil, gerror.NewCode(gerror.CodeInvalidParameter, "padding type error")
+		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "padding type error")
 	}
 	return text, nil
 }

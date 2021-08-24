@@ -9,6 +9,7 @@ package gproc
 import (
 	"context"
 	"fmt"
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 	"os"
@@ -101,7 +102,7 @@ func (p *Process) Send(data []byte) error {
 	if p.Process != nil {
 		return Send(p.Process.Pid, data)
 	}
-	return gerror.NewCode(gerror.CodeInvalidParameter, "invalid process")
+	return gerror.NewCode(gcode.CodeInvalidParameter, "invalid process")
 }
 
 // Release releases any resources associated with the Process p,
