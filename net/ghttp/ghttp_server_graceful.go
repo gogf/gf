@@ -10,6 +10,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/os/gproc"
 	"github.com/gogf/gf/os/gres"
@@ -122,7 +123,7 @@ func (s *gracefulServer) ListenAndServeTLS(certFile, keyFile string, tlsConfig .
 
 	}
 	if err != nil {
-		return gerror.WrapCodef(gerror.CodeInternalError, err, `open cert file "%s","%s" failed`, certFile, keyFile)
+		return gerror.WrapCodef(gcode.CodeInternalError, err, `open cert file "%s","%s" failed`, certFile, keyFile)
 	}
 	ln, err := s.getNetListener()
 	if err != nil {

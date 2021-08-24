@@ -10,6 +10,7 @@ package gdb
 import (
 	"context"
 	"database/sql"
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 
 	"github.com/gogf/gf/os/gtime"
@@ -136,7 +137,7 @@ func (c *Core) DoExec(ctx context.Context, link Link, sql string, args ...interf
 func (c *Core) DoCommit(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
 	if c.db.GetConfig().CtxStrict {
 		if v := ctx.Value(ctxStrictKeyName); v == nil {
-			return sql, args, gerror.NewCode(gerror.CodeMissingParameter, ctxStrictErrorStr)
+			return sql, args, gerror.NewCode(gcode.CodeMissingParameter, ctxStrictErrorStr)
 		}
 	}
 	return sql, args, nil
@@ -181,7 +182,7 @@ func (c *Core) DoPrepare(ctx context.Context, link Link, sql string) (*Stmt, err
 
 	if c.db.GetConfig().CtxStrict {
 		if v := ctx.Value(ctxStrictKeyName); v == nil {
-			return nil, gerror.NewCode(gerror.CodeMissingParameter, ctxStrictErrorStr)
+			return nil, gerror.NewCode(gcode.CodeMissingParameter, ctxStrictErrorStr)
 		}
 	}
 

@@ -8,6 +8,7 @@ package gdb
 
 import (
 	"fmt"
+	"github.com/gogf/gf/errors/gcode"
 	"reflect"
 
 	"github.com/gogf/gf/errors/gerror"
@@ -124,7 +125,7 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 		}
 		if relatedFieldValue == nil {
 			return gerror.NewCodef(
-				gerror.CodeInvalidParameter,
+				gcode.CodeInvalidParameter,
 				`cannot find the related value of attribute name "%s" in with tag "%s" for attribute "%s.%s"`,
 				relatedAttrName, parsedTagOutput.With, reflect.TypeOf(pointer).Elem(), field.Name(),
 			)
@@ -239,7 +240,7 @@ func (m *Model) doWithScanStructs(pointer interface{}) error {
 		}
 		if relatedFieldValue == nil {
 			return gerror.NewCodef(
-				gerror.CodeInvalidParameter,
+				gcode.CodeInvalidParameter,
 				`cannot find the related value for attribute name "%s" of with tag "%s"`,
 				relatedAttrName, parsedTagOutput.With,
 			)

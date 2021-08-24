@@ -7,7 +7,7 @@
 package gvalid
 
 import (
-	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/util/gconv"
 	"strings"
 )
@@ -149,7 +149,7 @@ func (v *Validator) doCheckMap(params interface{}) Error {
 		}
 	}
 	if len(errorMaps) > 0 {
-		return newError(gerror.CodeValidationFailed, checkRules, errorMaps)
+		return newError(gcode.CodeValidationFailed, checkRules, errorMaps)
 	}
 	return nil
 }

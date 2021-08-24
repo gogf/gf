@@ -7,6 +7,7 @@
 package gvalid
 
 import (
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/text/gstr"
@@ -15,7 +16,7 @@ import (
 
 // Error is the validation error for validation result.
 type Error interface {
-	Code() int
+	Code() gcode.Code
 	Current() error
 	Error() string
 	FirstItem() (key string, messages map[string]string)
@@ -30,7 +31,7 @@ type Error interface {
 
 // validationError is the validation error for validation result.
 type validationError struct {
-	code      int                          // Error code.
+	code      gcode.Code                   // Error code.
 	rules     []fieldRule                  // Rules by sequence, which is used for keeping error sequence.
 	errors    map[string]map[string]string // Error map:map[field]map[rule]message
 	firstKey  string                       // The first error rule key(empty in default).
@@ -38,7 +39,7 @@ type validationError struct {
 }
 
 // newError creates and returns a validation error.
-func newError(code int, rules []fieldRule, errors map[string]map[string]string) *validationError {
+func newError(code gcode.Code, rules []fieldRule, errors map[string]map[string]string) *validationError {
 	for field, m := range errors {
 		for k, v := range m {
 			v = strings.Replace(v, ":attribute", field, -1)
@@ -57,7 +58,7 @@ func newError(code int, rules []fieldRule, errors map[string]map[string]string) 
 
 // newErrorStr creates and returns a validation error by string.
 func newErrorStr(key, err string) *validationError {
-	return newError(gerror.CodeInternalError, nil, map[string]map[string]string{
+	return newError(gcode.CodeInternalError, nil, map[string]map[string]string{
 		internalErrorMapKey: {
 			key: err,
 		},
@@ -65,9 +66,9 @@ func newErrorStr(key, err string) *validationError {
 }
 
 // Code returns the error code of current validation error.
-func (e *validationError) Code() int {
+func (e *validationError) Code() gcode.Code {
 	if e == nil {
-		return gerror.CodeNil
+		return gcode.CodeNil
 	}
 	return e.code
 }

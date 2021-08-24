@@ -9,6 +9,7 @@ package gredis
 import (
 	"context"
 	"github.com/gogf/gf/container/gvar"
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/os/gtime"
@@ -50,7 +51,7 @@ func (c *Conn) do(timeout time.Duration, commandName string, args ...interface{}
 	if timeout > 0 {
 		conn, ok := c.Conn.(redis.ConnWithTimeout)
 		if !ok {
-			return gvar.New(nil), gerror.NewCode(gerror.CodeNotSupported, `current connection does not support "ConnWithTimeout"`)
+			return gvar.New(nil), gerror.NewCode(gcode.CodeNotSupported, `current connection does not support "ConnWithTimeout"`)
 		}
 		return conn.DoWithTimeout(timeout, commandName, args...)
 	}
@@ -107,7 +108,7 @@ func (c *Conn) ReceiveVar() (*gvar.Var, error) {
 func (c *Conn) ReceiveVarWithTimeout(timeout time.Duration) (*gvar.Var, error) {
 	conn, ok := c.Conn.(redis.ConnWithTimeout)
 	if !ok {
-		return gvar.New(nil), gerror.NewCode(gerror.CodeNotSupported, `current connection does not support "ConnWithTimeout"`)
+		return gvar.New(nil), gerror.NewCode(gcode.CodeNotSupported, `current connection does not support "ConnWithTimeout"`)
 	}
 	return resultToVar(conn.ReceiveWithTimeout(timeout))
 }

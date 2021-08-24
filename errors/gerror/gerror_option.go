@@ -6,12 +6,14 @@
 
 package gerror
 
+import "github.com/gogf/gf/errors/gcode"
+
 // Option is option for creating error.
 type Option struct {
-	Error error  // Wrapped error if any.
-	Stack bool   // Whether recording stack information into error.
-	Text  string // Error text, which is created by New* functions.
-	Code  int    // Error code if necessary.
+	Error error      // Wrapped error if any.
+	Stack bool       // Whether recording stack information into error.
+	Text  string     // Error text, which is created by New* functions.
+	Code  gcode.Code // Error code if necessary.
 }
 
 // NewOption creates and returns an error with Option.

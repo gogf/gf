@@ -10,6 +10,7 @@ package ghttp_test
 
 import (
 	"fmt"
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/net/ghttp"
 	"testing"
@@ -30,7 +31,7 @@ func Test_Error_Code(t *testing.T) {
 				r.Response.Write(gerror.Code(r.GetError()))
 			})
 			group.ALL("/", func(r *ghttp.Request) {
-				panic(gerror.NewCode(10000, "test error"))
+				panic(gerror.NewCode(gcode.New(10000, "", nil), "test error"))
 			})
 		})
 		s.SetPort(p)
