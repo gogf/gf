@@ -48,8 +48,8 @@ func Example_conversionNormalFormats() {
 	// YAML:
 	// users:
 	//     array:
-	//       - John
-	//       - Ming
+	//         - John
+	//         - Ming
 	//     count: 1
 	//
 	// ======================
