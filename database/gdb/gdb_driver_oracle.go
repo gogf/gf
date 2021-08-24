@@ -236,34 +236,6 @@ FROM USER_TAB_COLUMNS WHERE TABLE_NAME = '%s' ORDER BY COLUMN_ID`,
 	return
 }
 
-func (d *DriverOracle) getTableUniqueIndex(table string) (fields map[string]map[string]string, err error) {
-	table = strings.ToUpper(table)
-	v, _ := internalCache.GetOrSetFunc(
-		"table_unique_index_"+table,
-		func() (interface{}, error) {
-			res := (Result)(nil)
-			res, err = d.db.GetAll(fmt.Sprintf(`
-		SELECT INDEX_NAME,COLUMN_NAME,CHAR_LENGTH FROM USER_IND_COLUMNS 
-		WHERE TABLE_NAME = '%s' 
-		AND INDEX_NAME IN(SELECT INDEX_NAME FROM USER_INDEXES WHERE TABLE_NAME='%s' AND UNIQUENESS='UNIQUE') 
-		ORDER BY INDEX_NAME,COLUMN_POSITION`, table, table))
-			if err != nil {
-				return nil, err
-			}
-			fields := make(map[string]map[string]string)
-			for _, v := range res {
-				mm := make(map[string]string)
-				mm[v["COLUMN_NAME"].String()] = v["CHAR_LENGTH"].String()
-				fields[v["INDEX_NAME"].String()] = mm
-			}
-			return fields, nil
-		}, 0)
-	if err == nil {
-		fields = v.(map[string]map[string]string)
-	}
-	return
-}
-
 // DoInsert inserts or updates data for given table.
 // This function is usually used for custom interface definition, you do not need call it manually.
 // The parameter `data` can be type of map/gmap/struct/*struct/[]map/[]struct, etc.
