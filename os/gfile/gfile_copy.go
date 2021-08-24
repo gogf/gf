@@ -8,6 +8,7 @@ package gfile
 
 import (
 	"fmt"
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"io"
 	"io/ioutil"
@@ -21,10 +22,10 @@ import (
 // or else it calls CopyDir.
 func Copy(src string, dst string) error {
 	if src == "" {
-		return gerror.NewCode(gerror.CodeInvalidParameter, "source path cannot be empty")
+		return gerror.NewCode(gcode.CodeInvalidParameter, "source path cannot be empty")
 	}
 	if dst == "" {
-		return gerror.NewCode(gerror.CodeInvalidParameter, "destination path cannot be empty")
+		return gerror.NewCode(gcode.CodeInvalidParameter, "destination path cannot be empty")
 	}
 	if IsFile(src) {
 		return CopyFile(src, dst)
@@ -40,10 +41,10 @@ func Copy(src string, dst string) error {
 // Thanks: https://gist.github.com/r0l1/92462b38df26839a3ca324697c8cba04
 func CopyFile(src, dst string) (err error) {
 	if src == "" {
-		return gerror.NewCode(gerror.CodeInvalidParameter, "source file cannot be empty")
+		return gerror.NewCode(gcode.CodeInvalidParameter, "source file cannot be empty")
 	}
 	if dst == "" {
-		return gerror.NewCode(gerror.CodeInvalidParameter, "destination file cannot be empty")
+		return gerror.NewCode(gcode.CodeInvalidParameter, "destination file cannot be empty")
 	}
 	// If src and dst are the same path, it does nothing.
 	if src == dst {
@@ -87,10 +88,10 @@ func CopyFile(src, dst string) (err error) {
 // Note that, the Source directory must exist and symlinks are ignored and skipped.
 func CopyDir(src string, dst string) (err error) {
 	if src == "" {
-		return gerror.NewCode(gerror.CodeInvalidParameter, "source directory cannot be empty")
+		return gerror.NewCode(gcode.CodeInvalidParameter, "source directory cannot be empty")
 	}
 	if dst == "" {
-		return gerror.NewCode(gerror.CodeInvalidParameter, "destination directory cannot be empty")
+		return gerror.NewCode(gcode.CodeInvalidParameter, "destination directory cannot be empty")
 	}
 	// If src and dst are the same path, it does nothing.
 	if src == dst {

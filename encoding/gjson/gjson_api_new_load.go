@@ -9,6 +9,7 @@ package gjson
 import (
 	"bytes"
 	"fmt"
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"reflect"
 
@@ -264,7 +265,7 @@ func doLoadContentWithOptions(dataType string, data []byte, options Options) (*J
 			return nil, err
 		}
 	default:
-		err = gerror.NewCode(gerror.CodeInvalidParameter, "unsupported type for loading")
+		err = gerror.NewCode(gcode.CodeInvalidParameter, "unsupported type for loading")
 	}
 	if err != nil {
 		return nil, err

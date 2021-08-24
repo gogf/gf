@@ -13,6 +13,7 @@ package gspath
 
 import (
 	"context"
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 	"os"
@@ -103,7 +104,7 @@ func (sp *SPath) Set(path string) (realPath string, err error) {
 		}
 	}
 	if realPath == "" {
-		return realPath, gerror.NewCodef(gerror.CodeInvalidParameter, `path "%s" does not exist`, path)
+		return realPath, gerror.NewCodef(gcode.CodeInvalidParameter, `path "%s" does not exist`, path)
 	}
 	// The set path must be a directory.
 	if gfile.IsDir(realPath) {
@@ -123,7 +124,7 @@ func (sp *SPath) Set(path string) (realPath string, err error) {
 		sp.addMonitorByPath(realPath)
 		return realPath, nil
 	} else {
-		return "", gerror.NewCode(gerror.CodeInvalidParameter, path+" should be a folder")
+		return "", gerror.NewCode(gcode.CodeInvalidParameter, path+" should be a folder")
 	}
 }
 
@@ -138,7 +139,7 @@ func (sp *SPath) Add(path string) (realPath string, err error) {
 		}
 	}
 	if realPath == "" {
-		return realPath, gerror.NewCodef(gerror.CodeInvalidParameter, `path "%s" does not exist`, path)
+		return realPath, gerror.NewCodef(gcode.CodeInvalidParameter, `path "%s" does not exist`, path)
 	}
 	// The added path must be a directory.
 	if gfile.IsDir(realPath) {
@@ -152,7 +153,7 @@ func (sp *SPath) Add(path string) (realPath string, err error) {
 		}
 		return realPath, nil
 	} else {
-		return "", gerror.NewCode(gerror.CodeInvalidParameter, path+" should be a folder")
+		return "", gerror.NewCode(gcode.CodeInvalidParameter, path+" should be a folder")
 	}
 }
 

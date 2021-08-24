@@ -7,6 +7,7 @@
 package gconv
 
 import (
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"reflect"
 )
@@ -29,11 +30,11 @@ func Scan(params interface{}, pointer interface{}, mapping ...map[string]string)
 		pointerType = reflect.TypeOf(pointer)
 	}
 	if pointerType == nil {
-		return gerror.NewCode(gerror.CodeInvalidParameter, "parameter pointer should not be nil")
+		return gerror.NewCode(gcode.CodeInvalidParameter, "parameter pointer should not be nil")
 	}
 	pointerKind = pointerType.Kind()
 	if pointerKind != reflect.Ptr {
-		return gerror.NewCodef(gerror.CodeInvalidParameter, "params should be type of pointer, but got type: %v", pointerKind)
+		return gerror.NewCodef(gcode.CodeInvalidParameter, "params should be type of pointer, but got type: %v", pointerKind)
 	}
 	var (
 		pointerElem               = pointerType.Elem()
@@ -77,7 +78,7 @@ func ScanDeep(params interface{}, pointer interface{}, mapping ...map[string]str
 	t := reflect.TypeOf(pointer)
 	k := t.Kind()
 	if k != reflect.Ptr {
-		return gerror.NewCodef(gerror.CodeInvalidParameter, "params should be type of pointer, but got: %v", k)
+		return gerror.NewCodef(gcode.CodeInvalidParameter, "params should be type of pointer, but got: %v", k)
 	}
 	switch t.Elem().Kind() {
 	case reflect.Array, reflect.Slice:

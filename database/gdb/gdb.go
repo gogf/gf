@@ -10,6 +10,7 @@ package gdb
 import (
 	"context"
 	"database/sql"
+	"github.com/gogf/gf/errors/gcode"
 	"time"
 
 	"github.com/gogf/gf/errors/gerror"
@@ -72,6 +73,14 @@ type DB interface {
 	// Also see Core.Ctx.
 	Ctx(ctx context.Context) DB
 
+	// Close closes the database and prevents new queries from starting.
+	// Close then waits for all queries that have started processing on the server
+	// to finish.
+	//
+	// It is rare to Close a DB, as the DB handle is meant to be
+	// long-lived and shared between many goroutines.
+	Close(ctx context.Context) error
+
 	// ===========================================================================
 	// Query APIs.
 	// ===========================================================================
@@ -93,7 +102,7 @@ type DB interface {
 	Delete(table string, condition interface{}, args ...interface{}) (sql.Result, error)                   // See Core.Delete.
 
 	// ===========================================================================
-	// Internal APIs for CURD, which can be overwrote for custom CURD implements.
+	// Internal APIs for CURD, which can be overwritten by custom CURD implements.
 	// ===========================================================================
 
 	DoGetAll(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error)                                           // See Core.DoGetAll.
@@ -178,6 +187,7 @@ type Core struct {
 	group  string          // Configuration group name.
 	debug  *gtype.Bool     // Enable debug mode for the database, which can be changed in runtime.
 	cache  *gcache.Cache   // Cache manager, SQL result cache only.
+	links  *gmap.StrAnyMap // links caches all created links by node.
 	schema *gtype.String   // Custom schema for this object.
 	logger *glog.Logger    // Logger for logging functionality.
 	config *ConfigNode     // Current config node.
@@ -301,9 +311,6 @@ var (
 	// in the field name as it conflicts with "db.table.field" pattern in SOME situations.
 	regularFieldNameWithoutDotRegPattern = `^[\w\-]+$`
 
-	// internalCache is the memory cache for internal usage.
-	internalCache = gcache.New()
-
 	// tableFieldsMap caches the table information retrived from database.
 	tableFieldsMap = gmap.New(true)
 
@@ -336,7 +343,7 @@ func New(group ...string) (db DB, err error) {
 
 	if len(configs.config) < 1 {
 		return nil, gerror.NewCode(
-			gerror.CodeInvalidConfiguration,
+			gcode.CodeInvalidConfiguration,
 			"database configuration is empty, please set the database configuration before using",
 		)
 	}
@@ -346,6 +353,7 @@ func New(group ...string) (db DB, err error) {
 				group:  groupName,
 				debug:  gtype.NewBool(),
 				cache:  gcache.New(),
+				links:  gmap.NewStrAnyMap(true),
 				schema: gtype.NewString(),
 				logger: glog.New(),
 				config: node,
@@ -358,7 +366,7 @@ func New(group ...string) (db DB, err error) {
 				return c.db, nil
 			} else {
 				return nil, gerror.NewCodef(
-					gerror.CodeInvalidConfiguration,
+					gcode.CodeInvalidConfiguration,
 					`cannot find database driver for specified database type "%s", did you misspell type name "%s" or forget importing the database driver?`,
 					node.Type, node.Type,
 				)
@@ -368,7 +376,7 @@ func New(group ...string) (db DB, err error) {
 		}
 	} else {
 		return nil, gerror.NewCodef(
-			gerror.CodeInvalidConfiguration,
+			gcode.CodeInvalidConfiguration,
 			`database configuration node "%s" is not found, did you misspell group name "%s" or miss the database configuration?`,
 			groupName, groupName,
 		)
@@ -411,7 +419,7 @@ func getConfigNodeByGroup(group string, master bool) (*ConfigNode, error) {
 			}
 		}
 		if len(masterList) < 1 {
-			return nil, gerror.NewCode(gerror.CodeInvalidConfiguration, "at least one master node configuration's need to make sense")
+			return nil, gerror.NewCode(gcode.CodeInvalidConfiguration, "at least one master node configuration's need to make sense")
 		}
 		if len(slaveList) < 1 {
 			slaveList = masterList
@@ -422,7 +430,7 @@ func getConfigNodeByGroup(group string, master bool) (*ConfigNode, error) {
 			return getConfigNodeByWeight(slaveList), nil
 		}
 	} else {
-		return nil, gerror.NewCodef(gerror.CodeInvalidConfiguration, "empty database configuration for item name '%s'", group)
+		return nil, gerror.NewCodef(gcode.CodeInvalidConfiguration, "empty database configuration for item name '%s'", group)
 	}
 }
 
@@ -440,7 +448,7 @@ func getConfigNodeByWeight(cg ConfigGroup) *ConfigNode {
 	for i := 0; i < len(cg); i++ {
 		total += cg[i].Weight * 100
 	}
-	// If total is 0 means all of the nodes have no weight attribute configured.
+	// If total is 0 means all the nodes have no weight attribute configured.
 	// It then defaults each node's weight attribute to 1.
 	if total == 0 {
 		for i := 0; i < len(cg); i++ {
@@ -489,7 +497,7 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 		node = &n
 	}
 	// Cache the underlying connection pool object by node.
-	v, _ := internalCache.GetOrSetFuncLock(node.String(), func() (interface{}, error) {
+	v := c.links.GetOrSetFuncLock(node.String(), func() interface{} {
 		intlog.Printf(
 			c.db.GetCtx(),
 			`open new connection, master:%#v, config:%#v, node:%#v`,
@@ -509,7 +517,7 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 
 		sqlDb, err = c.db.Open(node)
 		if err != nil {
-			return nil, err
+			return nil
 		}
 
 		if c.config.MaxIdleConnCount > 0 {
@@ -533,8 +541,8 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 		} else {
 			sqlDb.SetConnMaxLifetime(defaultMaxConnLifeTime)
 		}
-		return sqlDb, nil
-	}, 0)
+		return sqlDb
+	})
 	if v != nil && sqlDb == nil {
 		sqlDb = v.(*sql.DB)
 	}
