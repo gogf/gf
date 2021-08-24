@@ -12,6 +12,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/gogf/gf/errors/gcode"
+	"github.com/gogf/gf/internal/intlog"
 	"reflect"
 	"strings"
 
@@ -93,6 +94,27 @@ func (c *Core) GetCtxTimeout(timeoutType int, ctx context.Context) (context.Cont
 		panic(gerror.NewCodef(gcode.CodeInvalidParameter, "invalid context timeout type: %d", timeoutType))
 	}
 	return ctx, func() {}
+}
+
+// Close closes the database and prevents new queries from starting.
+// Close then waits for all queries that have started processing on the server
+// to finish.
+//
+// It is rare to Close a DB, as the DB handle is meant to be
+// long-lived and shared between many goroutines.
+func (c *Core) Close(ctx context.Context) (err error) {
+	c.links.LockFunc(func(m map[string]interface{}) {
+		for k, v := range m {
+			if db, ok := v.(*sql.DB); ok {
+				err = db.Close()
+				intlog.Printf(ctx, `close link: %s, err: %v`, k, err)
+				if err != nil {
+					return
+				}
+			}
+		}
+	})
+	return
 }
 
 // Master creates and returns a connection from master node if master-slave configured.
