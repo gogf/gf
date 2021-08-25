@@ -7,8 +7,6 @@
 // Package gcode provides universal error code definition and common error codes implements.
 package gcode
 
-import "fmt"
-
 // Code is universal error code interface definition.
 type Code interface {
 	// Code returns the integer number of current error code.
@@ -20,13 +18,6 @@ type Code interface {
 	// Detail returns the detailed information of current error code,
 	// which is mainly designed as an extension field for error code.
 	Detail() interface{}
-}
-
-// localCode is an implementer for interface Code for internal usage only.
-type localCode struct {
-	code    int         // Error code, usually an integer.
-	message string      // Brief message for this error code.
-	detail  interface{} // As type of interface, it is mainly designed as an extension field for error code.
 }
 
 // ================================================================================================================
@@ -52,7 +43,7 @@ var (
 	CodeSecurityReason           = localCode{62, "Security Reason", nil}             // Security Reason.
 	CodeServerBusy               = localCode{63, "Server Is Busy", nil}              // Server is busy, please try again later.
 	CodeUnknown                  = localCode{64, "Unknown Error", nil}               // Unknown error.
-	CodeResourceNotExist         = localCode{65, "Resource Not Exist", nil}          // Resource does not exist.
+	CodeNotFound                 = localCode{65, "Not Found", nil}                   // Resource does not exist.
 	CodeInvalidRequest           = localCode{66, "Invalid Request", nil}             // Invalid request.
 	CodeBusinessValidationFailed = localCode{300, "Business Validation Failed", nil} // Business validation failed.
 )
@@ -65,31 +56,4 @@ func New(code int, message string, detail interface{}) Code {
 		message: message,
 		detail:  detail,
 	}
-}
-
-// Code returns the integer number of current error code.
-func (c localCode) Code() int {
-	return c.code
-}
-
-// Message returns the brief message for current error code.
-func (c localCode) Message() string {
-	return c.message
-}
-
-// Detail returns the detailed information of current error code,
-// which is mainly designed as an extension field for error code.
-func (c localCode) Detail() interface{} {
-	return c.detail
-}
-
-// String returns current error code as a string.
-func (c localCode) String() string {
-	if c.detail != nil {
-		return fmt.Sprintf(`%d:%s %v`, c.code, c.message, c.detail)
-	}
-	if c.message != "" {
-		return fmt.Sprintf(`%d:%s`, c.code, c.message)
-	}
-	return fmt.Sprintf(`%d`, c.code)
 }

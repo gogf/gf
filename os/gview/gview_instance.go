@@ -19,7 +19,7 @@ var (
 )
 
 // Instance returns an instance of View with default settings.
-// The parameter <name> is the name for the instance.
+// The parameter `name` is the name for the instance.
 func Instance(name ...string) *View {
 	key := DefaultName
 	if len(name) > 0 && name[0] != "" {
