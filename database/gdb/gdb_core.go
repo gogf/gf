@@ -111,6 +111,7 @@ func (c *Core) Close(ctx context.Context) (err error) {
 				if err != nil {
 					return
 				}
+				delete(m, k)
 			}
 		}
 	})
