@@ -13,6 +13,7 @@ import (
 	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/encoding/gurl"
 	"github.com/gogf/gf/encoding/gxml"
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/internal/utils"
@@ -300,7 +301,7 @@ func (r *Request) parseQuery() {
 		var err error
 		r.queryMap, err = gstr.Parse(r.URL.RawQuery)
 		if err != nil {
-			panic(gerror.WrapCode(gerror.CodeInvalidParameter, err, ""))
+			panic(gerror.WrapCode(gcode.CodeInvalidParameter, err, ""))
 		}
 	}
 }
@@ -355,12 +356,12 @@ func (r *Request) parseForm() {
 		if gstr.Contains(contentType, "multipart/") {
 			// multipart/form-data, multipart/mixed
 			if err = r.ParseMultipartForm(r.Server.config.FormParsingMemory); err != nil {
-				panic(gerror.WrapCode(gerror.CodeInvalidRequest, err, ""))
+				panic(gerror.WrapCode(gcode.CodeInvalidRequest, err, ""))
 			}
 		} else if gstr.Contains(contentType, "form") {
 			// application/x-www-form-urlencoded
 			if err = r.Request.ParseForm(); err != nil {
-				panic(gerror.WrapCode(gerror.CodeInvalidRequest, err, ""))
+				panic(gerror.WrapCode(gcode.CodeInvalidRequest, err, ""))
 			}
 		}
 		if len(r.PostForm) > 0 {
@@ -403,7 +404,7 @@ func (r *Request) parseForm() {
 			}
 			if params != "" {
 				if r.formMap, err = gstr.Parse(params); err != nil {
-					panic(gerror.WrapCode(gerror.CodeInvalidParameter, err, ""))
+					panic(gerror.WrapCode(gcode.CodeInvalidParameter, err, ""))
 				}
 			}
 		}

@@ -12,6 +12,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"github.com/gogf/gf"
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/text/gstr"
@@ -246,14 +247,14 @@ func (c *Client) SetProxy(proxyURL string) {
 func (c *Client) SetTLSKeyCrt(crtFile, keyFile string) error {
 	tlsConfig, err := LoadKeyCrt(crtFile, keyFile)
 	if err != nil {
-		return gerror.WrapCode(gerror.CodeInternalError, err, "LoadKeyCrt failed")
+		return gerror.WrapCode(gcode.CodeInternalError, err, "LoadKeyCrt failed")
 	}
 	if v, ok := c.Transport.(*http.Transport); ok {
 		tlsConfig.InsecureSkipVerify = true
 		v.TLSClientConfig = tlsConfig
 		return nil
 	}
-	return gerror.NewCode(gerror.CodeInternalError, `cannot set TLSClientConfig for custom Transport of the client`)
+	return gerror.NewCode(gcode.CodeInternalError, `cannot set TLSClientConfig for custom Transport of the client`)
 }
 
 // SetTLSConfig sets the TLS configuration of client.
@@ -262,7 +263,7 @@ func (c *Client) SetTLSConfig(tlsConfig *tls.Config) error {
 		v.TLSClientConfig = tlsConfig
 		return nil
 	}
-	return gerror.NewCode(gerror.CodeInternalError, `cannot set TLSClientConfig for custom Transport of the client`)
+	return gerror.NewCode(gcode.CodeInternalError, `cannot set TLSClientConfig for custom Transport of the client`)
 }
 
 // LoadKeyCrt creates and returns a TLS configuration object with given certificate and key files.

@@ -8,13 +8,14 @@
 package gcmd
 
 import (
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 )
 
 // BindHandle registers callback function <f> with <cmd>.
 func BindHandle(cmd string, f func()) error {
 	if _, ok := defaultCommandFuncMap[cmd]; ok {
-		return gerror.NewCode(gerror.CodeInvalidOperation, "duplicated handle for command:"+cmd)
+		return gerror.NewCode(gcode.CodeInvalidOperation, "duplicated handle for command:"+cmd)
 	} else {
 		defaultCommandFuncMap[cmd] = f
 	}
@@ -37,7 +38,7 @@ func RunHandle(cmd string) error {
 	if handle, ok := defaultCommandFuncMap[cmd]; ok {
 		handle()
 	} else {
-		return gerror.NewCode(gerror.CodeMissingConfiguration, "no handle found for command:"+cmd)
+		return gerror.NewCode(gcode.CodeMissingConfiguration, "no handle found for command:"+cmd)
 	}
 	return nil
 }
@@ -49,10 +50,10 @@ func AutoRun() error {
 		if handle, ok := defaultCommandFuncMap[cmd]; ok {
 			handle()
 		} else {
-			return gerror.NewCode(gerror.CodeMissingConfiguration, "no handle found for command:"+cmd)
+			return gerror.NewCode(gcode.CodeMissingConfiguration, "no handle found for command:"+cmd)
 		}
 	} else {
-		return gerror.NewCode(gerror.CodeMissingParameter, "no command found")
+		return gerror.NewCode(gcode.CodeMissingParameter, "no command found")
 	}
 	return nil
 }

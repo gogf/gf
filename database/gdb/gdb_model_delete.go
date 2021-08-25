@@ -9,6 +9,7 @@ package gdb
 import (
 	"database/sql"
 	"fmt"
+	"github.com/gogf/gf/errors/gcode"
 
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/os/gtime"
@@ -44,7 +45,7 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 	}
 	conditionStr := conditionWhere + conditionExtra
 	if !gstr.ContainsI(conditionStr, " WHERE ") {
-		return nil, gerror.NewCode(gerror.CodeMissingParameter, "there should be WHERE condition statement for DELETE operation")
+		return nil, gerror.NewCode(gcode.CodeMissingParameter, "there should be WHERE condition statement for DELETE operation")
 	}
 	return m.db.DoDelete(m.GetCtx(), m.getLink(true), m.tables, conditionStr, conditionArgs...)
 }

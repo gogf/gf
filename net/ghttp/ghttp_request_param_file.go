@@ -8,6 +8,7 @@ package ghttp
 
 import (
 	"context"
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/os/gfile"
@@ -36,7 +37,7 @@ type UploadFiles []*UploadFile
 func (f *UploadFile) Save(dirPath string, randomlyRename ...bool) (filename string, err error) {
 	if f == nil {
 		return "", gerror.NewCode(
-			gerror.CodeMissingParameter,
+			gcode.CodeMissingParameter,
 			"file is empty, maybe you retrieve it from invalid field name or form enctype",
 		)
 	}
@@ -45,7 +46,7 @@ func (f *UploadFile) Save(dirPath string, randomlyRename ...bool) (filename stri
 			return
 		}
 	} else if !gfile.IsDir(dirPath) {
-		return "", gerror.NewCode(gerror.CodeInvalidParameter, `parameter "dirPath" should be a directory path`)
+		return "", gerror.NewCode(gcode.CodeInvalidParameter, `parameter "dirPath" should be a directory path`)
 	}
 
 	file, err := f.Open()
@@ -80,7 +81,7 @@ func (f *UploadFile) Save(dirPath string, randomlyRename ...bool) (filename stri
 func (fs UploadFiles) Save(dirPath string, randomlyRename ...bool) (filenames []string, err error) {
 	if len(fs) == 0 {
 		return nil, gerror.NewCode(
-			gerror.CodeMissingParameter,
+			gcode.CodeMissingParameter,
 			"file array is empty, maybe you retrieve it from invalid field name or form enctype",
 		)
 	}

@@ -9,6 +9,7 @@ package gsession
 import (
 	"context"
 	"github.com/gogf/gf/container/gmap"
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/internal/json"
@@ -48,15 +49,15 @@ func NewStorageFile(path ...string) *StorageFile {
 	if len(path) > 0 && path[0] != "" {
 		storagePath, _ = gfile.Search(path[0])
 		if storagePath == "" {
-			panic(gerror.NewCodef(gerror.CodeInvalidParameter, `"%s" does not exist`, path[0]))
+			panic(gerror.NewCodef(gcode.CodeInvalidParameter, `"%s" does not exist`, path[0]))
 		}
 		if !gfile.IsWritable(storagePath) {
-			panic(gerror.NewCodef(gerror.CodeInvalidParameter, `"%s" is not writable`, path[0]))
+			panic(gerror.NewCodef(gcode.CodeInvalidParameter, `"%s" is not writable`, path[0]))
 		}
 	}
 	if storagePath != "" {
 		if err := gfile.Mkdir(storagePath); err != nil {
-			panic(gerror.WrapCodef(gerror.CodeInternalError, err, `Mkdir "%s" failed in PWD "%s"`, path, gfile.Pwd()))
+			panic(gerror.WrapCodef(gcode.CodeInternalError, err, `Mkdir "%s" failed in PWD "%s"`, path, gfile.Pwd()))
 		}
 	}
 	s := &StorageFile{

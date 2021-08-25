@@ -9,6 +9,7 @@ package gerror_test
 import (
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/internal/json"
 	"testing"
 
@@ -261,51 +262,51 @@ func Test_Code(t *testing.T) {
 		t.Assert(err.Error(), "123")
 	})
 	gtest.C(t, func(t *gtest.T) {
-		err := gerror.NewCode(gerror.CodeUnknown, "123")
-		t.Assert(gerror.Code(err), gerror.CodeUnknown)
+		err := gerror.NewCode(gcode.CodeUnknown, "123")
+		t.Assert(gerror.Code(err), gcode.CodeUnknown)
 		t.Assert(err.Error(), "123")
 	})
 	gtest.C(t, func(t *gtest.T) {
-		err := gerror.NewCodef(1, "%s", "123")
-		t.Assert(gerror.Code(err), 1)
+		err := gerror.NewCodef(gcode.New(1, "", nil), "%s", "123")
+		t.Assert(gerror.Code(err).Code(), 1)
 		t.Assert(err.Error(), "123")
 	})
 	gtest.C(t, func(t *gtest.T) {
-		err := gerror.NewCodeSkip(1, 0, "123")
-		t.Assert(gerror.Code(err), 1)
+		err := gerror.NewCodeSkip(gcode.New(1, "", nil), 0, "123")
+		t.Assert(gerror.Code(err).Code(), 1)
 		t.Assert(err.Error(), "123")
 	})
 	gtest.C(t, func(t *gtest.T) {
-		err := gerror.NewCodeSkipf(1, 0, "%s", "123")
-		t.Assert(gerror.Code(err), 1)
+		err := gerror.NewCodeSkipf(gcode.New(1, "", nil), 0, "%s", "123")
+		t.Assert(gerror.Code(err).Code(), 1)
 		t.Assert(err.Error(), "123")
 	})
 	gtest.C(t, func(t *gtest.T) {
 		err := errors.New("1")
 		err = gerror.Wrap(err, "2")
-		err = gerror.WrapCode(1, err, "3")
-		t.Assert(gerror.Code(err), 1)
+		err = gerror.WrapCode(gcode.New(1, "", nil), err, "3")
+		t.Assert(gerror.Code(err).Code(), 1)
 		t.Assert(err.Error(), "3: 2: 1")
 	})
 	gtest.C(t, func(t *gtest.T) {
 		err := errors.New("1")
 		err = gerror.Wrap(err, "2")
-		err = gerror.WrapCodef(1, err, "%s", "3")
-		t.Assert(gerror.Code(err), 1)
+		err = gerror.WrapCodef(gcode.New(1, "", nil), err, "%s", "3")
+		t.Assert(gerror.Code(err).Code(), 1)
 		t.Assert(err.Error(), "3: 2: 1")
 	})
 	gtest.C(t, func(t *gtest.T) {
 		err := errors.New("1")
 		err = gerror.Wrap(err, "2")
-		err = gerror.WrapCodeSkip(1, 100, err, "3")
-		t.Assert(gerror.Code(err), 1)
+		err = gerror.WrapCodeSkip(gcode.New(1, "", nil), 100, err, "3")
+		t.Assert(gerror.Code(err).Code(), 1)
 		t.Assert(err.Error(), "3: 2: 1")
 	})
 	gtest.C(t, func(t *gtest.T) {
 		err := errors.New("1")
 		err = gerror.Wrap(err, "2")
-		err = gerror.WrapCodeSkipf(1, 100, err, "%s", "3")
-		t.Assert(gerror.Code(err), 1)
+		err = gerror.WrapCodeSkipf(gcode.New(1, "", nil), 100, err, "%s", "3")
+		t.Assert(gerror.Code(err).Code(), 1)
 		t.Assert(err.Error(), "3: 2: 1")
 	})
 }
@@ -316,38 +317,5 @@ func Test_Json(t *testing.T) {
 		b, e := json.Marshal(err)
 		t.Assert(e, nil)
 		t.Assert(string(b), `"2: 1"`)
-	})
-}
-
-func Test_Message(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		t.Assert(gerror.Message(-100), ``)
-		t.Assert(gerror.Message(gerror.CodeNil), ``)
-		t.Assert(gerror.Message(gerror.CodeOk), `OK`)
-	})
-}
-
-func Test_CodeMessage(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		err := gerror.NewCode(gerror.CodeUnknown)
-		t.Assert(gerror.CodeMessage(err), `Unknown Error`)
-	})
-}
-
-func Test_RegisterCode(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		gerror.RegisterCode(10086, "MobileTelecom")
-		t.Assert(gerror.Message(10086), `MobileTelecom`)
-	})
-}
-
-func Test_RegisterCodeMap(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		gerror.RegisterCodeMap(map[int]string{
-			10087: "MobileTelecom 10087",
-			10088: "MobileTelecom 10088",
-		})
-		t.Assert(gerror.Message(10087), `MobileTelecom 10087`)
-		t.Assert(gerror.Message(10088), `MobileTelecom 10088`)
 	})
 }

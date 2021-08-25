@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
+	"github.com/gogf/gf/errors/gcode"
 	"reflect"
 	"regexp"
 	"strings"
@@ -776,7 +777,7 @@ func handleArguments(sql string, args []interface{}) (newSql string, newArgs []i
 // formatError customizes and returns the SQL error.
 func formatError(err error, s string, args ...interface{}) error {
 	if err != nil && err != sql.ErrNoRows {
-		return gerror.NewCodef(gerror.CodeDbOperationError, "%s, %s\n", err.Error(), FormatSqlWithArgs(s, args))
+		return gerror.NewCodef(gcode.CodeDbOperationError, "%s, %s\n", err.Error(), FormatSqlWithArgs(s, args))
 	}
 	return err
 }

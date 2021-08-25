@@ -9,6 +9,7 @@ package garray
 import (
 	"bytes"
 	"fmt"
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/empty"
 	"github.com/gogf/gf/internal/json"
@@ -123,7 +124,7 @@ func (a *Array) Set(index int, value interface{}) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if index < 0 || index >= len(a.array) {
-		return gerror.NewCodef(gerror.CodeInvalidParameter, "index %d out of array range %d", index, len(a.array))
+		return gerror.NewCodef(gcode.CodeInvalidParameter, "index %d out of array range %d", index, len(a.array))
 	}
 	a.array[index] = value
 	return nil
@@ -176,7 +177,7 @@ func (a *Array) InsertBefore(index int, value interface{}) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if index < 0 || index >= len(a.array) {
-		return gerror.NewCodef(gerror.CodeInvalidParameter, "index %d out of array range %d", index, len(a.array))
+		return gerror.NewCodef(gcode.CodeInvalidParameter, "index %d out of array range %d", index, len(a.array))
 	}
 	rear := append([]interface{}{}, a.array[index:]...)
 	a.array = append(a.array[0:index], value)
@@ -189,7 +190,7 @@ func (a *Array) InsertAfter(index int, value interface{}) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if index < 0 || index >= len(a.array) {
-		return gerror.NewCodef(gerror.CodeInvalidParameter, "index %d out of array range %d", index, len(a.array))
+		return gerror.NewCodef(gcode.CodeInvalidParameter, "index %d out of array range %d", index, len(a.array))
 	}
 	rear := append([]interface{}{}, a.array[index+1:]...)
 	a.array = append(a.array[0:index+1], value)
@@ -545,7 +546,7 @@ func (a *Array) Fill(startIndex int, num int, value interface{}) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if startIndex < 0 || startIndex > len(a.array) {
-		return gerror.NewCodef(gerror.CodeInvalidParameter, "index %d out of array range %d", startIndex, len(a.array))
+		return gerror.NewCodef(gcode.CodeInvalidParameter, "index %d out of array range %d", startIndex, len(a.array))
 	}
 	for i := startIndex; i < startIndex+num; i++ {
 		if i > len(a.array)-1 {

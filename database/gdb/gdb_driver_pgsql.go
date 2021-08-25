@@ -15,6 +15,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/gogf/gf/errors/gcode"
 	"strings"
 
 	"github.com/gogf/gf/errors/gerror"
@@ -126,7 +127,7 @@ func (d *DriverPgsql) TableFields(ctx context.Context, table string, schema ...s
 	charL, charR := d.GetChars()
 	table = gstr.Trim(table, charL+charR)
 	if gstr.Contains(table, " ") {
-		return nil, gerror.NewCode(gerror.CodeInvalidParameter, "function TableFields supports only single table operations")
+		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "function TableFields supports only single table operations")
 	}
 	table, _ = gregex.ReplaceString("\"", "", table)
 	useSchema := d.db.GetSchema()
@@ -190,10 +191,10 @@ ORDER BY a.attnum`,
 func (d *DriverPgsql) DoInsert(ctx context.Context, link Link, table string, list List, option DoInsertOption) (result sql.Result, err error) {
 	switch option.InsertOption {
 	case insertOptionSave:
-		return nil, gerror.NewCode(gerror.CodeNotSupported, `Save operation is not supported by pgsql driver`)
+		return nil, gerror.NewCode(gcode.CodeNotSupported, `Save operation is not supported by pgsql driver`)
 
 	case insertOptionReplace:
-		return nil, gerror.NewCode(gerror.CodeNotSupported, `Replace operation is not supported by pgsql driver`)
+		return nil, gerror.NewCode(gcode.CodeNotSupported, `Replace operation is not supported by pgsql driver`)
 
 	default:
 		return d.Core.DoInsert(ctx, link, table, list, option)
