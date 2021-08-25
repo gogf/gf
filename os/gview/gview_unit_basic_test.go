@@ -9,6 +9,7 @@ package gview_test
 import (
 	"context"
 	"github.com/gogf/gf/encoding/ghtml"
+	"github.com/gogf/gf/os/gctx"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/util/gconv"
 	"io/ioutil"
@@ -424,5 +425,41 @@ func Test_BuildInFuncJson(t *testing.T) {
 		r, err := v.ParseContent(context.TODO(), "{{json .v}}")
 		t.Assert(err, nil)
 		t.Assert(r, `{"name":"john"}`)
+	})
+}
+
+func Test_BuildInFuncPlus(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		v := gview.New()
+		r, err := v.ParseContent(gctx.New(), "{{plus 1 2 3}}")
+		t.Assert(err, nil)
+		t.Assert(r, `6`)
+	})
+}
+
+func Test_BuildInFuncMinus(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		v := gview.New()
+		r, err := v.ParseContent(gctx.New(), "{{minus 1 2 3}}")
+		t.Assert(err, nil)
+		t.Assert(r, `-4`)
+	})
+}
+
+func Test_BuildInFuncTimes(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		v := gview.New()
+		r, err := v.ParseContent(gctx.New(), "{{times 1 2 3 4}}")
+		t.Assert(err, nil)
+		t.Assert(r, `24`)
+	})
+}
+
+func Test_BuildInFuncDivide(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		v := gview.New()
+		r, err := v.ParseContent(gctx.New(), "{{divide 8 2 2}}")
+		t.Assert(err, nil)
+		t.Assert(r, `2`)
 	})
 }

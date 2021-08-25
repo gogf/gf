@@ -61,7 +61,7 @@ func ParseContent(ctx context.Context, content string, params ...Params) (string
 }
 
 // New returns a new view object.
-// The parameter <path> specifies the template directory path to load template files.
+// The parameter `path` specifies the template directory path to load template files.
 func New(path ...string) *View {
 	view := &View{
 		paths:        garray.NewStrArray(),
@@ -143,6 +143,10 @@ func New(path ...string) *View {
 		"map":        view.buildInFuncMap,
 		"maps":       view.buildInFuncMaps,
 		"json":       view.buildInFuncJson,
+		"plus":       view.buildInFuncPlus,
+		"minus":      view.buildInFuncMinus,
+		"times":      view.buildInFuncTimes,
+		"divide":     view.buildInFuncDivide,
 	})
 
 	return view
