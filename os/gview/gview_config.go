@@ -95,7 +95,7 @@ func (view *View) SetConfigWithMap(m map[string]interface{}) error {
 }
 
 // SetPath sets the template directory path for template file search.
-// The parameter <path> can be absolute or relative path, but absolute path is suggested.
+// The parameter `path` can be absolute or relative path, but absolute path is suggested.
 func (view *View) SetPath(path string) error {
 	var (
 		isDir    = false
@@ -239,9 +239,9 @@ func (view *View) SetAutoEncode(enable bool) {
 	view.config.AutoEncode = enable
 }
 
-// BindFunc registers customized global template function named <name>
-// with given function <function> to current view object.
-// The <name> is the function name which can be called in template content.
+// BindFunc registers customized global template function named `name`
+// with given function `function` to current view object.
+// The `name` is the function name which can be called in template content.
 func (view *View) BindFunc(name string, function interface{}) {
 	view.funcMap[name] = function
 	// Clear global template object cache.

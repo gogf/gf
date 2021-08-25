@@ -53,7 +53,7 @@ var (
 	resourceTryFolders = []string{"template/", "template", "/template", "/template/"}
 )
 
-// Parse parses given template file <file> with given template variables <params>
+// Parse parses given template file `file` with given template variables `params`
 // and returns the parsed template content.
 func (view *View) Parse(ctx context.Context, file string, params ...Params) (result string, err error) {
 	var tpl interface{}
@@ -65,7 +65,7 @@ func (view *View) Parse(ctx context.Context, file string, params ...Params) (res
 			content  string
 			resource *gres.File
 		)
-		// Searching the absolute file path for <file>.
+		// Searching the absolute file path for `file`.
 		path, folder, resource, err = view.searchFile(file)
 		if err != nil {
 			return nil
@@ -100,7 +100,7 @@ func (view *View) Parse(ctx context.Context, file string, params ...Params) (res
 	if item.content == "" {
 		return "", nil
 	}
-	// Get the template object instance for <folder>.
+	// Get the template object instance for `folder`.
 	tpl, err = view.getTemplate(item.path, item.folder, fmt.Sprintf(`*%s`, gfile.Ext(item.path)))
 	if err != nil {
 		return "", err
@@ -120,7 +120,7 @@ func (view *View) Parse(ctx context.Context, file string, params ...Params) (res
 		return "", err
 	}
 	// Note that the template variable assignment cannot change the value
-	// of the existing <params> or view.data because both variables are pointers.
+	// of the existing `params` or view.data because both variables are pointers.
 	// It needs to merge the values of the two maps into a new map.
 	variables := gutil.MapMergeCopy(params...)
 	if len(view.data) > 0 {
@@ -154,7 +154,7 @@ func (view *View) ParseDefault(ctx context.Context, params ...Params) (result st
 	return view.Parse(ctx, view.config.DefaultFile, params...)
 }
 
-// ParseContent parses given template content <content>  with template variables <params>
+// ParseContent parses given template content `content`  with template variables `params`
 // and returns the parsed content in []byte.
 func (view *View) ParseContent(ctx context.Context, content string, params ...Params) (string, error) {
 	// It's not necessary continuing parsing if template content is empty.
@@ -188,7 +188,7 @@ func (view *View) ParseContent(ctx context.Context, content string, params ...Pa
 		return "", err
 	}
 	// Note that the template variable assignment cannot change the value
-	// of the existing <params> or view.data because both variables are pointers.
+	// of the existing `params` or view.data because both variables are pointers.
 	// It needs to merge the values of the two maps into a new map.
 	variables := gutil.MapMergeCopy(params...)
 	if len(view.data) > 0 {
@@ -216,10 +216,10 @@ func (view *View) ParseContent(ctx context.Context, content string, params ...Pa
 	return result, nil
 }
 
-// getTemplate returns the template object associated with given template file <path>.
+// getTemplate returns the template object associated with given template file `path`.
 // It uses template cache to enhance performance, that is, it will return the same template object
-// with the same given <path>. It will also automatically refresh the template cache
-// if the template files under <path> changes (recursively).
+// with the same given `path`. It will also automatically refresh the template cache
+// if the template files under `path` changes (recursively).
 func (view *View) getTemplate(filePath, folderPath, pattern string) (tpl interface{}, err error) {
 	// Key for template cache.
 	key := fmt.Sprintf("%s_%v", filePath, view.config.Delimiters)
@@ -304,9 +304,9 @@ func (view *View) formatTemplateObjectCreatingError(filePath, tplName string, er
 	return nil
 }
 
-// searchFile returns the found absolute path for <file> and its template folder path.
-// Note that, the returned <folder> is the template folder path, but not the folder of
-// the returned template file <path>.
+// searchFile returns the found absolute path for `file` and its template folder path.
+// Note that, the returned `folder` is the template folder path, but not the folder of
+// the returned template file `path`.
 func (view *View) searchFile(file string) (path string, folder string, resource *gres.File, err error) {
 	// Firstly checking the resource manager.
 	if !gres.IsEmpty() {
