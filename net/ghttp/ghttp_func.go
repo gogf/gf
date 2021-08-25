@@ -7,6 +7,7 @@
 package ghttp
 
 import (
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/net/ghttp/internal/httputil"
 )
@@ -36,13 +37,13 @@ func niceCallFunc(f func()) {
 					// Note that there's a skip pointing the start stacktrace
 					// of the real error point.
 					if err, ok := exception.(error); ok {
-						if gerror.Code(err) != gerror.CodeNil {
+						if gerror.Code(err) != gcode.CodeNil {
 							panic(err)
 						} else {
-							panic(gerror.WrapCodeSkip(gerror.CodeInternalError, 1, err, ""))
+							panic(gerror.WrapCodeSkip(gcode.CodeInternalError, 1, err, ""))
 						}
 					} else {
-						panic(gerror.NewCodeSkipf(gerror.CodeInternalError, 1, "%+v", exception))
+						panic(gerror.NewCodeSkipf(gcode.CodeInternalError, 1, "%+v", exception))
 					}
 				}
 			}

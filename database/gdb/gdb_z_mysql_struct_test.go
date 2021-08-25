@@ -9,6 +9,7 @@ package gdb_test
 import (
 	"database/sql"
 	"github.com/gogf/gf/database/gdb"
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gtime"
@@ -408,7 +409,7 @@ func (user *User) UnmarshalValue(value interface{}) error {
 		}
 		return nil
 	}
-	return gerror.NewCodef(gerror.CodeInvalidParameter, `unsupported value type for UnmarshalValue: %v`, reflect.TypeOf(value))
+	return gerror.NewCodef(gcode.CodeInvalidParameter, `unsupported value type for UnmarshalValue: %v`, reflect.TypeOf(value))
 }
 
 func Test_Model_Scan_UnmarshalValue(t *testing.T) {

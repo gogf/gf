@@ -7,6 +7,7 @@
 package ghttp
 
 import (
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"net/http"
 	"reflect"
@@ -105,7 +106,7 @@ func (m *middleware) Next() {
 				// Create a new error with stack info.
 				// Note that there's a skip pointing the start stacktrace
 				// of the real error point.
-				m.request.error = gerror.WrapCodeSkip(gerror.CodeInternalError, 1, exception, "")
+				m.request.error = gerror.WrapCodeSkip(gcode.CodeInternalError, 1, exception, "")
 			}
 			m.request.Response.WriteStatus(http.StatusInternalServerError, exception)
 			loop = false

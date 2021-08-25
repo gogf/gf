@@ -7,6 +7,7 @@
 package ghttp
 
 import (
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 )
@@ -28,11 +29,11 @@ func MiddlewareHandlerResponse(r *Request) {
 	res, err = r.GetHandlerResponse()
 	if err != nil {
 		code := gerror.Code(err)
-		if code == gerror.CodeNil {
-			code = gerror.CodeInternalError
+		if code == gcode.CodeNil {
+			code = gcode.CodeInternalError
 		}
 		internalErr = r.Response.WriteJson(DefaultHandlerResponse{
-			Code:    code,
+			Code:    code.Code(),
 			Message: err.Error(),
 			Data:    nil,
 		})
@@ -42,7 +43,7 @@ func MiddlewareHandlerResponse(r *Request) {
 		return
 	}
 	internalErr = r.Response.WriteJson(DefaultHandlerResponse{
-		Code:    gerror.CodeOk,
+		Code:    gcode.CodeOK.Code(),
 		Message: "",
 		Data:    res,
 	})

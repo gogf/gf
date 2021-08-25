@@ -8,6 +8,7 @@ package gdb
 
 import (
 	"fmt"
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"reflect"
 
@@ -316,7 +317,7 @@ func (m *Model) Scan(pointer interface{}, where ...interface{}) error {
 
 	reflectKind = reflectValue.Kind()
 	if reflectKind != reflect.Ptr {
-		return gerror.NewCode(gerror.CodeInvalidParameter, `the parameter "pointer" for function Scan should type of pointer`)
+		return gerror.NewCode(gcode.CodeInvalidParameter, `the parameter "pointer" for function Scan should type of pointer`)
 	}
 	for reflectKind == reflect.Ptr {
 		reflectValue = reflectValue.Elem()
@@ -332,7 +333,7 @@ func (m *Model) Scan(pointer interface{}, where ...interface{}) error {
 
 	default:
 		return gerror.NewCode(
-			gerror.CodeInvalidParameter,
+			gcode.CodeInvalidParameter,
 			`element of parameter "pointer" for function Scan should type of struct/*struct/[]struct/[]*struct`,
 		)
 	}

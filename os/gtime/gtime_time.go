@@ -8,6 +8,7 @@ package gtime
 
 import (
 	"bytes"
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"strconv"
 	"time"
@@ -462,7 +463,7 @@ func (t *Time) UnmarshalText(data []byte) error {
 		*t = *vTime
 		return nil
 	}
-	return gerror.NewCodef(gerror.CodeInvalidParameter, `invalid time value: %s`, data)
+	return gerror.NewCodef(gcode.CodeInvalidParameter, `invalid time value: %s`, data)
 }
 
 // NoValidation marks this struct object will not be validated by package gvalid.

@@ -9,6 +9,7 @@ package gdb
 import (
 	"context"
 	"database/sql"
+	"github.com/gogf/gf/errors/gcode"
 
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/os/gtime"
@@ -59,7 +60,7 @@ func (s *Stmt) doStmtCommit(ctx context.Context, stmtType string, args ...interf
 		result = s.Stmt.QueryRowContext(ctx, args...)
 
 	default:
-		panic(gerror.NewCodef(gerror.CodeInvalidParameter, `invalid stmtType: %s`, stmtType))
+		panic(gerror.NewCodef(gcode.CodeInvalidParameter, `invalid stmtType: %s`, stmtType))
 	}
 	var (
 		timestampMilli2 = gtime.TimestampMilli()

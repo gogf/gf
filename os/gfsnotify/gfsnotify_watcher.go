@@ -8,6 +8,7 @@ package gfsnotify
 
 import (
 	"context"
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 
@@ -66,7 +67,7 @@ func (w *Watcher) AddOnce(name, path string, callbackFunc func(event *Event), re
 func (w *Watcher) addWithCallbackFunc(name, path string, callbackFunc func(event *Event), recursive ...bool) (callback *Callback, err error) {
 	// Check and convert the given path to absolute path.
 	if t := fileRealPath(path); t == "" {
-		return nil, gerror.NewCodef(gerror.CodeInvalidParameter, `"%s" does not exist`, path)
+		return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `"%s" does not exist`, path)
 	} else {
 		path = t
 	}

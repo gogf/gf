@@ -7,6 +7,7 @@
 package gcfg
 
 import (
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"time"
 
@@ -295,7 +296,7 @@ func (c *Config) GetStruct(pattern string, pointer interface{}, mapping ...map[s
 	if j := c.getJson(); j != nil {
 		return j.GetStruct(pattern, pointer, mapping...)
 	}
-	return gerror.NewCode(gerror.CodeMissingConfiguration, "configuration not found")
+	return gerror.NewCode(gcode.CodeMissingConfiguration, "configuration not found")
 }
 
 // GetStructs converts any slice to given struct slice.
@@ -303,7 +304,7 @@ func (c *Config) GetStructs(pattern string, pointer interface{}, mapping ...map[
 	if j := c.getJson(); j != nil {
 		return j.GetStructs(pattern, pointer, mapping...)
 	}
-	return gerror.NewCode(gerror.CodeMissingConfiguration, "configuration not found")
+	return gerror.NewCode(gcode.CodeMissingConfiguration, "configuration not found")
 }
 
 // GetMapToMap retrieves the value by specified `pattern` and converts it to specified map variable.
@@ -312,7 +313,7 @@ func (c *Config) GetMapToMap(pattern string, pointer interface{}, mapping ...map
 	if j := c.getJson(); j != nil {
 		return j.GetMapToMap(pattern, pointer, mapping...)
 	}
-	return gerror.NewCode(gerror.CodeMissingConfiguration, "configuration not found")
+	return gerror.NewCode(gcode.CodeMissingConfiguration, "configuration not found")
 }
 
 // GetMapToMaps retrieves the value by specified `pattern` and converts it to specified map slice
@@ -322,7 +323,7 @@ func (c *Config) GetMapToMaps(pattern string, pointer interface{}, mapping ...ma
 	if j := c.getJson(); j != nil {
 		return j.GetMapToMaps(pattern, pointer, mapping...)
 	}
-	return gerror.NewCode(gerror.CodeMissingConfiguration, "configuration not found")
+	return gerror.NewCode(gcode.CodeMissingConfiguration, "configuration not found")
 }
 
 // GetMapToMapsDeep retrieves the value by specified `pattern` and converts it to specified map slice
@@ -332,7 +333,7 @@ func (c *Config) GetMapToMapsDeep(pattern string, pointer interface{}, mapping .
 	if j := c.getJson(); j != nil {
 		return j.GetMapToMapsDeep(pattern, pointer, mapping...)
 	}
-	return gerror.NewCode(gerror.CodeMissingConfiguration, "configuration not found")
+	return gerror.NewCode(gcode.CodeMissingConfiguration, "configuration not found")
 }
 
 // Map converts current Json object to map[string]interface{}. It returns nil if fails.
@@ -358,7 +359,7 @@ func (c *Config) Struct(pointer interface{}, mapping ...map[string]string) error
 	if j := c.getJson(); j != nil {
 		return j.Struct(pointer, mapping...)
 	}
-	return gerror.NewCode(gerror.CodeMissingConfiguration, "configuration not found")
+	return gerror.NewCode(gcode.CodeMissingConfiguration, "configuration not found")
 }
 
 // Structs converts current Json object to specified object slice.
@@ -367,7 +368,7 @@ func (c *Config) Structs(pointer interface{}, mapping ...map[string]string) erro
 	if j := c.getJson(); j != nil {
 		return j.Structs(pointer, mapping...)
 	}
-	return gerror.NewCode(gerror.CodeMissingConfiguration, "configuration not found")
+	return gerror.NewCode(gcode.CodeMissingConfiguration, "configuration not found")
 }
 
 // MapToMap converts current Json object to specified map variable.
@@ -376,7 +377,7 @@ func (c *Config) MapToMap(pointer interface{}, mapping ...map[string]string) err
 	if j := c.getJson(); j != nil {
 		return j.MapToMap(pointer, mapping...)
 	}
-	return gerror.NewCode(gerror.CodeMissingConfiguration, "configuration not found")
+	return gerror.NewCode(gcode.CodeMissingConfiguration, "configuration not found")
 }
 
 // MapToMaps converts current Json object to specified map variable slice.
@@ -385,7 +386,7 @@ func (c *Config) MapToMaps(pointer interface{}, mapping ...map[string]string) er
 	if j := c.getJson(); j != nil {
 		return j.MapToMaps(pointer, mapping...)
 	}
-	return gerror.NewCode(gerror.CodeMissingConfiguration, "configuration not found")
+	return gerror.NewCode(gcode.CodeMissingConfiguration, "configuration not found")
 }
 
 // Clear removes all parsed configuration files content cache,

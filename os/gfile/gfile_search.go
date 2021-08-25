@@ -9,6 +9,7 @@ package gfile
 import (
 	"bytes"
 	"fmt"
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 
 	"github.com/gogf/gf/container/garray"
@@ -52,7 +53,7 @@ func Search(name string, prioritySearchPaths ...string) (realPath string, err er
 				buffer.WriteString(fmt.Sprintf("\n%d. %s", k+1, v))
 			}
 		})
-		err = gerror.NewCode(gerror.CodeOperationFailed, buffer.String())
+		err = gerror.NewCode(gcode.CodeOperationFailed, buffer.String())
 	}
 	return
 }

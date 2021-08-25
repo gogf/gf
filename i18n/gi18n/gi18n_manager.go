@@ -9,6 +9,7 @@ package gi18n
 import (
 	"context"
 	"fmt"
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 	"strings"
@@ -101,7 +102,7 @@ func (m *Manager) SetPath(path string) error {
 	} else {
 		realPath, _ := gfile.Search(path)
 		if realPath == "" {
-			return gerror.NewCodef(gerror.CodeInvalidParameter, `%s does not exist`, path)
+			return gerror.NewCodef(gcode.CodeInvalidParameter, `%s does not exist`, path)
 		}
 		m.options.Path = realPath
 	}
