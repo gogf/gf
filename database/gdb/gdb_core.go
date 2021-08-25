@@ -38,10 +38,6 @@ func (c *Core) Ctx(ctx context.Context) DB {
 	if ctx == nil {
 		return c.db
 	}
-	// It is already set context in previous chaining operation.
-	if c.ctx != nil {
-		return c.db
-	}
 	ctx = context.WithValue(ctx, ctxStrictKeyName, 1)
 	// It makes a shallow copy of current db and changes its context for next chaining operation.
 	var (
