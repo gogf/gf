@@ -27,10 +27,15 @@ func (c *Core) Query(sql string, args ...interface{}) (rows *sql.Rows, err error
 func (c *Core) DoQuery(ctx context.Context, link Link, sql string, args ...interface{}) (rows *sql.Rows, err error) {
 	// Transaction checks.
 	if link == nil {
-		if link, err = c.SlaveLink(); err != nil {
+		if tx := TXFromCtx(ctx, c.db.GetGroup()); tx != nil {
+			// Firstly, check and retrieve transaction link from context.
+			link = &txLink{tx.tx}
+		} else if link, err = c.SlaveLink(); err != nil {
+			// Or else it creates one from master node.
 			return nil, err
 		}
 	} else if !link.IsTransaction() {
+		// If current link is not transaction link, it checks and retrieves transaction from context.
 		if tx := TXFromCtx(ctx, c.db.GetGroup()); tx != nil {
 			link = &txLink{tx.tx}
 		}
@@ -84,10 +89,15 @@ func (c *Core) Exec(sql string, args ...interface{}) (result sql.Result, err err
 func (c *Core) DoExec(ctx context.Context, link Link, sql string, args ...interface{}) (result sql.Result, err error) {
 	// Transaction checks.
 	if link == nil {
-		if link, err = c.MasterLink(); err != nil {
+		if tx := TXFromCtx(ctx, c.db.GetGroup()); tx != nil {
+			// Firstly, check and retrieve transaction link from context.
+			link = &txLink{tx.tx}
+		} else if link, err = c.MasterLink(); err != nil {
+			// Or else it creates one from master node.
 			return nil, err
 		}
 	} else if !link.IsTransaction() {
+		// If current link is not transaction link, it checks and retrieves transaction from context.
 		if tx := TXFromCtx(ctx, c.db.GetGroup()); tx != nil {
 			link = &txLink{tx.tx}
 		}
@@ -170,11 +180,25 @@ func (c *Core) Prepare(sql string, execOnMaster ...bool) (*Stmt, error) {
 
 // DoPrepare calls prepare function on given link object and returns the statement object.
 func (c *Core) DoPrepare(ctx context.Context, link Link, sql string) (*Stmt, error) {
-	if link != nil && !link.IsTransaction() {
+	// Transaction checks.
+	if link == nil {
+		if tx := TXFromCtx(ctx, c.db.GetGroup()); tx != nil {
+			// Firstly, check and retrieve transaction link from context.
+			link = &txLink{tx.tx}
+		} else {
+			// Or else it creates one from master node.
+			var err error
+			if link, err = c.MasterLink(); err != nil {
+				return nil, err
+			}
+		}
+	} else if !link.IsTransaction() {
+		// If current link is not transaction link, it checks and retrieves transaction from context.
 		if tx := TXFromCtx(ctx, c.db.GetGroup()); tx != nil {
 			link = &txLink{tx.tx}
 		}
 	}
+
 	if c.GetConfig().PrepareTimeout > 0 {
 		// DO NOT USE cancel function in prepare statement.
 		ctx, _ = context.WithTimeout(ctx, c.GetConfig().PrepareTimeout)

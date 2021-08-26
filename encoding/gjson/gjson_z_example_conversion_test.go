@@ -19,6 +19,7 @@ func Example_conversionNormalFormats() {
             "array" : ["John", "Ming"]
         }
     }`
+
 	if j, err := gjson.DecodeToJson(data); err != nil {
 		panic(err)
 	} else {
