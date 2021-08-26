@@ -27,10 +27,10 @@ func (c *Cache) Sets(data map[interface{}]interface{}, duration time.Duration) e
 }
 
 // SetIfNotExist sets cache with `key`-`value` pair which is expired after `duration`
-// if `key` does not exist in the cache. It returns true the `key` dose not exist in the
+// if `key` does not exist in the cache. It returns true the `key` does not exist in the
 // cache, and it sets `value` successfully to the cache, or else it returns false.
 //
-// The parameter `value` can be type of <func() interface{}>, but it dose nothing if its
+// The parameter `value` can be type of <func() interface{}>, but it does nothing if its
 // result is nil.
 //
 // It does not expire if `duration` == 0.
@@ -122,7 +122,7 @@ func (c *Cache) Size() (size int, err error) {
 }
 
 // Data returns a copy of all key-value pairs in the cache as map type.
-// Note that this function may leads lots of memory usage, you can implement this function
+// Note that this function may lead lots of memory usage, you can implement this function
 // if necessary.
 func (c *Cache) Data() (map[interface{}]interface{}, error) {
 	return c.adapter.Data(c.getCtx())
