@@ -33,6 +33,10 @@ type cronSchedule struct {
 const (
 	// regular expression for cron pattern, which contains 6 parts of time units.
 	regexForCron = `^([\-/\d\*\?,]+)\s+([\-/\d\*\?,]+)\s+([\-/\d\*\?,]+)\s+([\-/\d\*\?,]+)\s+([\-/\d\*\?,A-Za-z]+)\s+([\-/\d\*\?,A-Za-z]+)$`
+
+	patternItemTypeUnknown = iota
+	patternItemTypeWeek
+	patternItemTypeMonth
 )
 
 var (
@@ -103,37 +107,37 @@ func newSchedule(pattern string) (*cronSchedule, error) {
 			pattern: pattern,
 		}
 		// Second.
-		if m, err := parseItem(match[1], 0, 59, false); err != nil {
+		if m, err := parsePatternItem(match[1], 0, 59, false); err != nil {
 			return nil, err
 		} else {
 			schedule.second = m
 		}
 		// Minute.
-		if m, err := parseItem(match[2], 0, 59, false); err != nil {
+		if m, err := parsePatternItem(match[2], 0, 59, false); err != nil {
 			return nil, err
 		} else {
 			schedule.minute = m
 		}
 		// Hour.
-		if m, err := parseItem(match[3], 0, 23, false); err != nil {
+		if m, err := parsePatternItem(match[3], 0, 23, false); err != nil {
 			return nil, err
 		} else {
 			schedule.hour = m
 		}
 		// Day.
-		if m, err := parseItem(match[4], 1, 31, true); err != nil {
+		if m, err := parsePatternItem(match[4], 1, 31, true); err != nil {
 			return nil, err
 		} else {
 			schedule.day = m
 		}
 		// Month.
-		if m, err := parseItem(match[5], 1, 12, false); err != nil {
+		if m, err := parsePatternItem(match[5], 1, 12, false); err != nil {
 			return nil, err
 		} else {
 			schedule.month = m
 		}
 		// Week.
-		if m, err := parseItem(match[6], 0, 6, true); err != nil {
+		if m, err := parsePatternItem(match[6], 0, 6, true); err != nil {
 			return nil, err
 		} else {
 			schedule.week = m
@@ -144,55 +148,57 @@ func newSchedule(pattern string) (*cronSchedule, error) {
 	}
 }
 
-// parseItem parses every item in the pattern and returns the result as map.
-func parseItem(item string, min int, max int, allowQuestionMark bool) (map[int]struct{}, error) {
+// parsePatternItem parses every item in the pattern and returns the result as map, which is used for indexing.
+func parsePatternItem(item string, min int, max int, allowQuestionMark bool) (map[int]struct{}, error) {
 	m := make(map[int]struct{}, max-min+1)
 	if item == "*" || (allowQuestionMark && item == "?") {
 		for i := min; i <= max; i++ {
 			m[i] = struct{}{}
 		}
 	} else {
+		// Like: MON,FRI
 		for _, item := range strings.Split(item, ",") {
-			interval := 1
-			intervalArray := strings.Split(item, "/")
+			var (
+				interval      = 1
+				intervalArray = strings.Split(item, "/")
+			)
 			if len(intervalArray) == 2 {
-				if i, err := strconv.Atoi(intervalArray[1]); err != nil {
+				if number, err := strconv.Atoi(intervalArray[1]); err != nil {
 					return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid pattern item: "%s"`, item)
 				} else {
-					interval = i
+					interval = number
 				}
 			}
 			var (
 				rangeMin   = min
 				rangeMax   = max
-				fieldType  = byte(0)
+				itemType   = patternItemTypeUnknown
 				rangeArray = strings.Split(intervalArray[0], "-") // Like: 1-30, JAN-DEC
 			)
 			switch max {
 			case 6:
 				// It's checking week field.
-				fieldType = 'w'
+				itemType = patternItemTypeWeek
 			case 12:
 				// It's checking month field.
-				fieldType = 'm'
+				itemType = patternItemTypeMonth
 			}
 			// Eg: */5
 			if rangeArray[0] != "*" {
-				if i, err := parseItemValue(rangeArray[0], fieldType); err != nil {
+				if number, err := parsePatternItemValue(rangeArray[0], itemType); err != nil {
 					return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid pattern item: "%s"`, item)
 				} else {
-					rangeMin = i
+					rangeMin = number
 					if len(intervalArray) == 1 {
-						rangeMax = i
+						rangeMax = number
 					}
 				}
 			}
 			if len(rangeArray) == 2 {
-				if i, err := parseItemValue(rangeArray[1], fieldType); err != nil {
+				if number, err := parsePatternItemValue(rangeArray[1], itemType); err != nil {
 					return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid pattern item: "%s"`, item)
 				} else {
-					rangeMax = i
-
+					rangeMax = number
 				}
 			}
 			for i := rangeMin; i <= rangeMax; i += interval {
@@ -203,24 +209,24 @@ func parseItem(item string, min int, max int, allowQuestionMark bool) (map[int]s
 	return m, nil
 }
 
-// parseItemValue parses the field value to a number according to its field type.
-func parseItemValue(value string, fieldType byte) (int, error) {
+// parsePatternItemValue parses the field value to a number according to its field type.
+func parsePatternItemValue(value string, itemType int) (int, error) {
 	if gregex.IsMatchString(`^\d+$`, value) {
-		// Pure number.
-		if i, err := strconv.Atoi(value); err == nil {
-			return i, nil
+		// It is pure number.
+		if number, err := strconv.Atoi(value); err == nil {
+			return number, nil
 		}
 	} else {
-		// Check if contains letter,
+		// Check if it contains letter,
 		// it converts the value to number according to predefined map.
-		switch fieldType {
-		case 'm':
-			if i, ok := monthMap[strings.ToLower(value)]; ok {
-				return i, nil
+		switch itemType {
+		case patternItemTypeWeek:
+			if number, ok := monthMap[strings.ToLower(value)]; ok {
+				return number, nil
 			}
-		case 'w':
-			if i, ok := weekMap[strings.ToLower(value)]; ok {
-				return i, nil
+		case patternItemTypeMonth:
+			if number, ok := weekMap[strings.ToLower(value)]; ok {
+				return number, nil
 			}
 		}
 	}

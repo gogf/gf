@@ -9,6 +9,7 @@ package gdb_test
 import (
 	"context"
 	"fmt"
+	"github.com/gogf/gf/os/gctx"
 	"testing"
 
 	"github.com/gogf/gf/database/gdb"
@@ -1114,5 +1115,36 @@ func Test_Transaction_Nested_SavePoint_RollbackTo(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(len(all), 1)
 		t.Assert(all[0]["id"], 1)
+	})
+}
+
+func Test_Transaction_Method(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		var err error
+		err = db.Transaction(gctx.New(), func(ctx context.Context, tx *gdb.TX) error {
+			_, err = db.Model(table).Ctx(ctx).Data(g.Map{
+				"id":          1,
+				"passport":    "t1",
+				"password":    "25d55ad283aa400af464c76d713c07ad",
+				"nickname":    "T1",
+				"create_time": gtime.Now().String(),
+			}).Insert()
+			t.AssertNil(err)
+
+			_, err = db.Ctx(ctx).Exec(fmt.Sprintf(
+				"insert into %s(`passport`,`password`,`nickname`,`create_time`,`id`) "+
+					"VALUES('t2','25d55ad283aa400af464c76d713c07ad','T2','2021-08-25 21:53:00',2) ",
+				table))
+			t.AssertNil(err)
+			return gerror.New("rollback")
+		})
+		t.AssertNE(err, nil)
+
+		count, err := db.Model(table).Count()
+		t.AssertNil(err)
+		t.Assert(count, 0)
 	})
 }

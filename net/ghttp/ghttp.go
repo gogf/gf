@@ -23,12 +23,12 @@ type (
 	Server struct {
 		name             string                           // Unique name for instance management.
 		config           ServerConfig                     // Configuration.
-		plugins          []Plugin                         // Plugin array to extends server functionality.
+		plugins          []Plugin                         // Plugin array to extend server functionality.
 		servers          []*gracefulServer                // Underlying http.Server array.
 		serverCount      *gtype.Int                       // Underlying http.Server count.
 		closeChan        chan struct{}                    // Used for underlying server closing event notification.
 		serveTree        map[string]interface{}           // The route map tree.
-		serveCache       *gcache.Cache                    // Server cache for internal usage.
+		serveCache       *gcache.Cache                    // Server caches for internal usage.
 		routesMap        map[string][]registeredRouteItem // Route map mainly for route dumps and repeated route checks.
 		statusHandlerMap map[string][]HandlerFunc         // Custom status handler map.
 		sessionManager   *gsession.Manager                // Session manager.
@@ -142,7 +142,7 @@ var (
 	serverMapping = gmap.NewStrAnyMap(true)
 
 	// serverRunning marks the running server count.
-	// If there no successful server running or all servers shutdown, this value is 0.
+	// If there is no successful server running or all servers' shutdown, this value is 0.
 	serverRunning = gtype.NewInt()
 
 	// wsUpGrader is the default up-grader configuration for websocket.
