@@ -11,12 +11,11 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/gogf/gf/errors/gcode"
-	"net/url"
-
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/text/gstr"
+	"net/url"
 
 	_ "github.com/go-sql-driver/mysql"
 )
