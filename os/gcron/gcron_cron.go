@@ -184,6 +184,7 @@ func (c *Cron) Search(name string) *Entry {
 }
 
 // Start starts running the specified timed task named `name`.
+// If no`name` specified, it starts the entire cron.
 func (c *Cron) Start(name ...string) {
 	if len(name) > 0 {
 		for _, v := range name {
@@ -197,6 +198,7 @@ func (c *Cron) Start(name ...string) {
 }
 
 // Stop stops running the specified timed task named `name`.
+// If no`name` specified, it stops the entire cron.
 func (c *Cron) Stop(name ...string) {
 	if len(name) > 0 {
 		for _, v := range name {

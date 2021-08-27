@@ -1867,3 +1867,127 @@ func Test_Table_Relation_With_MultipleDepends_Embedded(t *testing.T) {
 		t.Assert(tableA[1].TableB.TableC.Id, 300)
 	})
 }
+
+func Test_Table_Relation_WithAll_Embedded_Meta_NameMatchingRule(t *testing.T) {
+	var (
+		tableUser       = "user1"
+		tableUserDetail = "user_detail1"
+		tableUserScores = "user_scores1"
+	)
+	if _, err := db.Exec(fmt.Sprintf(`
+CREATE TABLE IF NOT EXISTS %s (
+id int(10) unsigned NOT NULL AUTO_INCREMENT,
+name varchar(45) NOT NULL,
+PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+ `, tableUser)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(tableUser)
+
+	if _, err := db.Exec(fmt.Sprintf(`
+CREATE TABLE IF NOT EXISTS %s (
+user_id int(10) unsigned NOT NULL,
+address varchar(45) NOT NULL,
+PRIMARY KEY (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+ `, tableUserDetail)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(tableUserDetail)
+
+	if _, err := db.Exec(fmt.Sprintf(`
+CREATE TABLE IF NOT EXISTS %s (
+id int(10) unsigned NOT NULL AUTO_INCREMENT,
+user_id int(10) unsigned NOT NULL,
+score int(10) unsigned NOT NULL,
+PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+ `, tableUserScores)); err != nil {
+		gtest.Error(err)
+	}
+	defer dropTable(tableUserScores)
+
+	type UserDetail struct {
+		gmeta.Meta `orm:"table:user_detail1"`
+		UserID     int    `json:"user_id"`
+		Address    string `json:"address"`
+	}
+
+	type UserScores struct {
+		gmeta.Meta `orm:"table:user_scores1"`
+		ID         int `json:"id"`
+		UserID     int `json:"user_id"`
+		Score      int `json:"score"`
+	}
+
+	// For Test Only
+	type UserEmbedded struct {
+		ID   int    `json:"id"`
+		Name string `json:"name"`
+	}
+
+	type User struct {
+		gmeta.Meta `orm:"table:user1"`
+		UserEmbedded
+		UserDetail UserDetail    `orm:"with:user_id=id"`
+		UserScores []*UserScores `orm:"with:user_id=id"`
+	}
+
+	// Initialize the data.
+	var err error
+	for i := 1; i <= 5; i++ {
+		// User.
+		_, err = db.Insert(tableUser, g.Map{
+			"id":   i,
+			"name": fmt.Sprintf(`name_%d`, i),
+		})
+		gtest.AssertNil(err)
+		// Detail.
+		_, err = db.Insert(tableUserDetail, g.Map{
+			"user_id": i,
+			"address": fmt.Sprintf(`address_%d`, i),
+		})
+		gtest.AssertNil(err)
+		// Scores.
+		for j := 1; j <= 5; j++ {
+			_, err = db.Insert(tableUserScores, g.Map{
+				"user_id": i,
+				"score":   j,
+			})
+			gtest.AssertNil(err)
+		}
+	}
+
+	db.SetDebug(true)
+	defer db.SetDebug(false)
+
+	gtest.C(t, func(t *gtest.T) {
+		var user *User
+		err := db.Model(tableUser).WithAll().Where("id", 3).Scan(&user)
+		t.AssertNil(err)
+		t.Assert(user.ID, 3)
+		t.AssertNE(user.UserDetail, nil)
+		t.Assert(user.UserDetail.UserID, 3)
+		t.Assert(user.UserDetail.Address, `address_3`)
+		t.Assert(len(user.UserScores), 5)
+		t.Assert(user.UserScores[0].UserID, 3)
+		t.Assert(user.UserScores[0].Score, 1)
+		t.Assert(user.UserScores[4].UserID, 3)
+		t.Assert(user.UserScores[4].Score, 5)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var user User
+		err := db.Model(tableUser).WithAll().Where("id", 4).Scan(&user)
+		t.AssertNil(err)
+		t.Assert(user.ID, 4)
+		t.AssertNE(user.UserDetail, nil)
+		t.Assert(user.UserDetail.UserID, 4)
+		t.Assert(user.UserDetail.Address, `address_4`)
+		t.Assert(len(user.UserScores), 5)
+		t.Assert(user.UserScores[0].UserID, 4)
+		t.Assert(user.UserScores[0].Score, 1)
+		t.Assert(user.UserScores[4].UserID, 4)
+		t.Assert(user.UserScores[4].Score, 5)
+	})
+}
