@@ -12,7 +12,7 @@ import (
 	"github.com/gogf/gf/os/gcmd"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/test/gtest"
-	"github.com/gogf/mysql"
+	"github.com/go-sql-driver/mysql"
 	"testing"
 )
 
