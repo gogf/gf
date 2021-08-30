@@ -639,6 +639,22 @@ func Test_Struct_Time(t *testing.T) {
 	})
 }
 
+func Test_Struct_GTime(t *testing.T) {
+	// https://github.com/gogf/gf/issues/1387
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Name       string
+			CreateTime *gtime.Time
+		}
+		var user *User
+		err := gconv.Struct(`{"Name":"John","CreateTime":""}`, &user)
+		t.AssertNil(err)
+		t.AssertNE(user, nil)
+		t.Assert(user.Name, `John`)
+		t.Assert(user.CreateTime, nil)
+	})
+}
+
 // Auto create struct when given pointer.
 func Test_Struct_Create(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {

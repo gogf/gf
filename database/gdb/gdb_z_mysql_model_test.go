@@ -3871,3 +3871,44 @@ func Test_Model_FieldAvg(t *testing.T) {
 		t.Assert(all[0]["total"], 1)
 	})
 }
+
+// https://github.com/gogf/gf/issues/1387
+func Test_Model_GTime_DefaultValue(t *testing.T) {
+	table := createTable()
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id         int
+			Passport   string
+			Password   string
+			Nickname   string
+			CreateTime *gtime.Time
+		}
+		data := User{
+			Id:       1,
+			Passport: "user_1",
+			Password: "pass_1",
+			Nickname: "name_1",
+		}
+		// Insert
+		_, err := db.Model(table).Data(data).Insert()
+		t.AssertNil(err)
+
+		// Select
+		var (
+			user *User
+		)
+		err = db.Model(table).Scan(&user)
+		t.AssertNil(err)
+		t.Assert(user.Passport, data.Passport)
+		t.Assert(user.Password, data.Password)
+		t.Assert(user.CreateTime, data.CreateTime)
+		t.Assert(user.Nickname, data.Nickname)
+
+		// Insert
+		user.Id = 2
+		_, err = db.Model(table).Data(user).Insert()
+		t.AssertNil(err)
+	})
+}

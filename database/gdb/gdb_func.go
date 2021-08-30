@@ -209,7 +209,12 @@ func ConvertDataForTableRecord(value interface{}) map[string]interface{} {
 					data[k] = nil
 				}
 
-			case *time.Time, *gtime.Time:
+			case *gtime.Time:
+				if r.IsZero() {
+					data[k] = nil
+				}
+
+			case *time.Time:
 				continue
 
 			case Counter, *Counter:

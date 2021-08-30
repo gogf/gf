@@ -33,10 +33,13 @@ func New(param ...interface{}) *Time {
 			return NewFromTime(r)
 		case *time.Time:
 			return NewFromTime(*r)
+
 		case Time:
 			return &r
+
 		case *Time:
 			return r
+
 		case string:
 			if len(param) > 1 {
 				switch t := param[1].(type) {
@@ -47,6 +50,7 @@ func New(param ...interface{}) *Time {
 				}
 			}
 			return NewFromStr(r)
+
 		case []byte:
 			if len(param) > 1 {
 				switch t := param[1].(type) {
@@ -57,10 +61,13 @@ func New(param ...interface{}) *Time {
 				}
 			}
 			return NewFromStr(string(r))
+
 		case int:
 			return NewFromTimeStamp(int64(r))
+
 		case int64:
 			return NewFromTimeStamp(r)
+
 		default:
 			if v, ok := r.(apiUnixNano); ok {
 				return NewFromTimeStamp(v.UnixNano())
