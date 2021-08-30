@@ -46,7 +46,8 @@ func Test_Struct_UnmarshalValue1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		st := &MyTimeSt{}
 		err := gconv.Struct(g.Map{"ServiceDate": nil}, st)
-		t.AssertNE(err, nil)
+		t.AssertNil(err)
+		t.Assert(st.ServiceDate.Time.IsZero(), true)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		st := &MyTimeSt{}
