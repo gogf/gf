@@ -12,7 +12,7 @@ import (
 	"github.com/gogf/gf/internal/intlog"
 )
 
-// watchLoop starts the loop for event listening fro underlying inotify monitor.
+// watchLoop starts the loop for event listening from underlying inotify monitor.
 func (w *Watcher) watchLoop() {
 	go func() {
 		for {
