@@ -35,7 +35,7 @@ func Receive(group ...string) *MsgRequest {
 	if len(group) > 0 {
 		groupName = group[0]
 	} else {
-		groupName = defaultGroupNameFoProcComm
+		groupName = defaultGroupNameForProcComm
 	}
 	queue := commReceiveQueues.GetOrSetFuncLock(groupName, func() interface{} {
 		return gqueue.New(maxLengthForProcMsgQueue)
@@ -79,8 +79,10 @@ func receiveTcpListening() {
 
 // receiveTcpHandler is the connection handler for receiving data.
 func receiveTcpHandler(conn *gtcp.Conn) {
-	var result []byte
-	var response MsgResponse
+	var (
+		result   []byte
+		response MsgResponse
+	)
 	for {
 		response.Code = 0
 		response.Message = ""

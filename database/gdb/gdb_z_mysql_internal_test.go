@@ -12,7 +12,6 @@ import (
 	"github.com/gogf/gf/os/gcmd"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/test/gtest"
-	"github.com/gogf/mysql"
 	"testing"
 )
 
@@ -289,19 +288,6 @@ CREATE TABLE %s (
 			model.getConditionForSoftDeleting(),
 			"`t1`.`delete_at` IS NULL AND `t2`.`deleteat` IS NULL AND `t3`.`deleteat` IS NULL",
 		)
-	})
-}
-
-// Fix issue: https://github.com/gogf/gf/issues/819
-func Test_Func_ConvertDataForTableRecord(t *testing.T) {
-	type Test struct {
-		ResetPasswordTokenAt mysql.NullTime `orm:"reset_password_token_at"`
-	}
-	gtest.C(t, func(t *gtest.T) {
-		m := ConvertDataForTableRecord(new(Test))
-		t.Assert(len(m), 1)
-		t.AssertNE(m["reset_password_token_at"], nil)
-		t.Assert(m["reset_password_token_at"], new(mysql.NullTime))
 	})
 }
 

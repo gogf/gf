@@ -28,93 +28,20 @@ const (
 	NotFoundIndex = -1
 )
 
-// Replace returns a copy of the string <origin>
-// in which string <search> replaced by <replace> case-sensitively.
-func Replace(origin, search, replace string, count ...int) string {
-	n := -1
-	if len(count) > 0 {
-		n = count[0]
-	}
-	return strings.Replace(origin, search, replace, n)
-}
+const (
+	defaultSuffixForStrLimit = "..."
+)
 
-// Replace returns a copy of the string <origin>
-// in which string <search> replaced by <replace> case-insensitively.
-func ReplaceI(origin, search, replace string, count ...int) string {
-	n := -1
-	if len(count) > 0 {
-		n = count[0]
-	}
-	if n == 0 {
-		return origin
-	}
-	var (
-		length      = len(search)
-		searchLower = strings.ToLower(search)
-	)
-	for {
-		originLower := strings.ToLower(origin)
-		if pos := strings.Index(originLower, searchLower); pos != -1 {
-			origin = origin[:pos] + replace + origin[pos+length:]
-			if n--; n == 0 {
-				break
-			}
-		} else {
-			break
-		}
-	}
-	return origin
-}
-
-// Count counts the number of <substr> appears in <s>.
-// It returns 0 if no <substr> found in <s>.
+// Count counts the number of `substr` appears in `s`.
+// It returns 0 if no `substr` found in `s`.
 func Count(s, substr string) int {
 	return strings.Count(s, substr)
 }
 
-// CountI counts the number of <substr> appears in <s>, case-insensitively.
-// It returns 0 if no <substr> found in <s>.
+// CountI counts the number of `substr` appears in `s`, case-insensitively.
+// It returns 0 if no `substr` found in `s`.
 func CountI(s, substr string) int {
 	return strings.Count(ToLower(s), ToLower(substr))
-}
-
-// ReplaceByArray returns a copy of <origin>,
-// which is replaced by a slice in order, case-sensitively.
-func ReplaceByArray(origin string, array []string) string {
-	for i := 0; i < len(array); i += 2 {
-		if i+1 >= len(array) {
-			break
-		}
-		origin = Replace(origin, array[i], array[i+1])
-	}
-	return origin
-}
-
-// ReplaceIByArray returns a copy of <origin>,
-// which is replaced by a slice in order, case-insensitively.
-func ReplaceIByArray(origin string, array []string) string {
-	for i := 0; i < len(array); i += 2 {
-		if i+1 >= len(array) {
-			break
-		}
-		origin = ReplaceI(origin, array[i], array[i+1])
-	}
-	return origin
-}
-
-// ReplaceByMap returns a copy of <origin>,
-// which is replaced by a map in unordered way, case-sensitively.
-func ReplaceByMap(origin string, replaces map[string]string) string {
-	return utils.ReplaceByMap(origin, replaces)
-}
-
-// ReplaceIByMap returns a copy of <origin>,
-// which is replaced by a map in unordered way, case-insensitively.
-func ReplaceIByMap(origin string, replaces map[string]string) string {
-	for k, v := range replaces {
-		origin = ReplaceI(origin, k, v)
-	}
-	return origin
 }
 
 // ToLower returns a copy of the string s with all Unicode letters mapped to their lower case.
@@ -163,86 +90,7 @@ func IsNumeric(s string) bool {
 	return utils.IsNumeric(s)
 }
 
-// SubStr returns a portion of string <str> specified by the <start> and <length> parameters.
-func SubStr(str string, start int, length ...int) (substr string) {
-	lth := len(str)
-
-	// Simple border checks.
-	if start < 0 {
-		start = 0
-	}
-	if start >= lth {
-		start = lth
-	}
-	end := lth
-	if len(length) > 0 {
-		end = start + length[0]
-		if end < start {
-			end = lth
-		}
-	}
-	if end > lth {
-		end = lth
-	}
-	return str[start:end]
-}
-
-// SubStrRune returns a portion of string <str> specified by the <start> and <length> parameters.
-// SubStrRune considers parameter <str> as unicode string.
-func SubStrRune(str string, start int, length ...int) (substr string) {
-	// Converting to []rune to support unicode.
-	rs := []rune(str)
-	lth := len(rs)
-
-	// Simple border checks.
-	if start < 0 {
-		start = 0
-	}
-	if start >= lth {
-		start = lth
-	}
-	end := lth
-	if len(length) > 0 {
-		end = start + length[0]
-		if end < start {
-			end = lth
-		}
-	}
-	if end > lth {
-		end = lth
-	}
-	return string(rs[start:end])
-}
-
-// StrLimit returns a portion of string <str> specified by <length> parameters, if the length
-// of <str> is greater than <length>, then the <suffix> will be appended to the result string.
-func StrLimit(str string, length int, suffix ...string) string {
-	if len(str) < length {
-		return str
-	}
-	addStr := "..."
-	if len(suffix) > 0 {
-		addStr = suffix[0]
-	}
-	return str[0:length] + addStr
-}
-
-// StrLimitRune returns a portion of string <str> specified by <length> parameters, if the length
-// of <str> is greater than <length>, then the <suffix> will be appended to the result string.
-// StrLimitRune considers parameter <str> as unicode string.
-func StrLimitRune(str string, length int, suffix ...string) string {
-	rs := []rune(str)
-	if len(rs) < length {
-		return str
-	}
-	addStr := "..."
-	if len(suffix) > 0 {
-		addStr = suffix[0]
-	}
-	return string(rs[0:length]) + addStr
-}
-
-// Reverse returns a string which is the reverse of <str>.
+// Reverse returns a string which is the reverse of `str`.
 func Reverse(str string) string {
 	runes := []rune(str)
 	for i, j := 0, len(runes)-1; i < j; i, j = i+1, j-1 {
@@ -252,9 +100,9 @@ func Reverse(str string) string {
 }
 
 // NumberFormat formats a number with grouped thousands.
-// <decimals>: Sets the number of decimal points.
-// <decPoint>: Sets the separator for the decimal point.
-// <thousandsSep>: Sets the thousands separator.
+// `decimals`: Sets the number of decimal points.
+// `decPoint`: Sets the separator for the decimal point.
+// `thousandsSep`: Sets the thousands' separator.
 // See http://php.net/manual/en/function.number-format.php.
 func NumberFormat(number float64, decimals int, decPoint, thousandsSep string) string {
 	neg := false
@@ -301,7 +149,7 @@ func NumberFormat(number float64, decimals int, decPoint, thousandsSep string) s
 // Can be used to split a string into smaller chunks which is useful for
 // e.g. converting BASE64 string output to match RFC 2045 semantics.
 // It inserts end every chunkLen characters.
-// It considers parameter <body> and <end> as unicode string.
+// It considers parameter `body` and `end` as unicode string.
 func ChunkSplit(body string, chunkLen int, end string) string {
 	if end == "" {
 		end = "\r\n"
@@ -329,7 +177,7 @@ func Compare(a, b string) int {
 	return strings.Compare(a, b)
 }
 
-// Equal reports whether <a> and <b>, interpreted as UTF-8 strings,
+// Equal reports whether `a` and `b`, interpreted as UTF-8 strings,
 // are equal under Unicode case-folding, case-insensitively.
 func Equal(a, b string) bool {
 	return strings.EqualFold(a, b)
@@ -351,7 +199,7 @@ func HasSuffix(s, suffix string) bool {
 }
 
 // CountWords returns information about words' count used in a string.
-// It considers parameter <str> as unicode string.
+// It considers parameter `str` as unicode string.
 func CountWords(str string) map[string]int {
 	m := make(map[string]int)
 	buffer := bytes.NewBuffer(nil)
@@ -372,7 +220,7 @@ func CountWords(str string) map[string]int {
 }
 
 // CountChars returns information about chars' count used in a string.
-// It considers parameter <str> as unicode string.
+// It considers parameter `str` as unicode string.
 func CountChars(str string, noSpace ...bool) map[string]int {
 	m := make(map[string]int)
 	countSpace := true
@@ -465,51 +313,8 @@ func Repeat(input string, multiplier int) string {
 	return strings.Repeat(input, multiplier)
 }
 
-// Str returns part of <haystack> string starting from and including
-// the first occurrence of <needle> to the end of <haystack>.
-// See http://php.net/manual/en/function.strstr.php.
-func Str(haystack string, needle string) string {
-	if needle == "" {
-		return ""
-	}
-	pos := strings.Index(haystack, needle)
-	if pos == NotFoundIndex {
-		return ""
-	}
-	return haystack[pos+len([]byte(needle))-1:]
-}
-
-// StrEx returns part of <haystack> string starting from and excluding
-// the first occurrence of <needle> to the end of <haystack>.
-func StrEx(haystack string, needle string) string {
-	if s := Str(haystack, needle); s != "" {
-		return s[1:]
-	}
-	return ""
-}
-
-// StrTill returns part of <haystack> string ending to and including
-// the first occurrence of <needle> from the start of <haystack>.
-func StrTill(haystack string, needle string) string {
-	pos := strings.Index(haystack, needle)
-	if pos == NotFoundIndex || pos == 0 {
-		return ""
-	}
-	return haystack[:pos+1]
-}
-
-// StrTillEx returns part of <haystack> string ending to and excluding
-// the first occurrence of <needle> from the start of <haystack>.
-func StrTillEx(haystack string, needle string) string {
-	pos := strings.Index(haystack, needle)
-	if pos == NotFoundIndex || pos == 0 {
-		return ""
-	}
-	return haystack[:pos]
-}
-
 // Shuffle randomly shuffles a string.
-// It considers parameter <str> as unicode string.
+// It considers parameter `str` as unicode string.
 func Shuffle(str string) string {
 	runes := []rune(str)
 	s := make([]rune, len(runes))
@@ -519,12 +324,12 @@ func Shuffle(str string) string {
 	return string(s)
 }
 
-// Split splits string <str> by a string <delimiter>, to an array.
+// Split splits string `str` by a string `delimiter`, to an array.
 func Split(str, delimiter string) []string {
 	return strings.Split(str, delimiter)
 }
 
-// SplitAndTrim splits string <str> by a string <delimiter> to an array,
+// SplitAndTrim splits string `str` by a string `delimiter` to an array,
 // and calls Trim to every element of this array. It ignores the elements
 // which are empty after Trim.
 func SplitAndTrim(str, delimiter string, characterMask ...string) []string {
@@ -538,7 +343,7 @@ func SplitAndTrim(str, delimiter string, characterMask ...string) []string {
 	return array
 }
 
-// SplitAndTrimSpace splits string <str> by a string <delimiter> to an array,
+// SplitAndTrimSpace splits string `str` by a string `delimiter` to an array,
 // and calls TrimSpace to every element of this array.
 // Deprecated, use SplitAndTrim instead.
 func SplitAndTrimSpace(str, delimiter string) []string {
@@ -552,27 +357,27 @@ func SplitAndTrimSpace(str, delimiter string) []string {
 	return array
 }
 
-// Join concatenates the elements of <array> to create a single string. The separator string
-// <sep> is placed between elements in the resulting string.
+// Join concatenates the elements of `array` to create a single string. The separator string
+// `sep` is placed between elements in the resulting string.
 func Join(array []string, sep string) string {
 	return strings.Join(array, sep)
 }
 
-// JoinAny concatenates the elements of <array> to create a single string. The separator string
-// <sep> is placed between elements in the resulting string.
+// JoinAny concatenates the elements of `array` to create a single string. The separator string
+// `sep` is placed between elements in the resulting string.
 //
-// The parameter <array> can be any type of slice, which be converted to string array.
+// The parameter `array` can be any type of slice, which be converted to string array.
 func JoinAny(array interface{}, sep string) string {
 	return strings.Join(gconv.Strings(array), sep)
 }
 
-// Explode splits string <str> by a string <delimiter>, to an array.
+// Explode splits string `str` by a string `delimiter`, to an array.
 // See http://php.net/manual/en/function.explode.php.
 func Explode(delimiter, str string) []string {
 	return Split(str, delimiter)
 }
 
-// Implode joins array elements <pieces> with a string <glue>.
+// Implode joins array elements `pieces` with a string `glue`.
 // http://php.net/manual/en/function.implode.php
 func Implode(glue string, pieces []string) string {
 	return strings.Join(pieces, glue)
@@ -588,8 +393,8 @@ func Ord(char string) int {
 	return int(char[0])
 }
 
-// HideStr replaces part of the the string <str> to <hide> by <percentage> from the <middle>.
-// It considers parameter <str> as unicode string.
+// HideStr replaces part of the string `str` to `hide` by `percentage` from the `middle`.
+// It considers parameter `str` as unicode string.
 func HideStr(str string, percent int, hide string) string {
 	array := strings.Split(str, "@")
 	if len(array) > 1 {
@@ -619,7 +424,7 @@ func HideStr(str string, percent int, hide string) string {
 
 // Nl2Br inserts HTML line breaks(<br>|<br />) before all newlines in a string:
 // \n\r, \r\n, \r, \n.
-// It considers parameter <str> as unicode string.
+// It considers parameter `str` as unicode string.
 func Nl2Br(str string, isXhtml ...bool) string {
 	r, n, runes := '\r', '\n', []rune(str)
 	var br []byte
@@ -705,9 +510,9 @@ func QuoteMeta(str string, chars ...string) string {
 	return buf.String()
 }
 
-// SearchArray searches string <s> in string slice <a> case-sensitively,
-// returns its index in <a>.
-// If <s> is not found in <a>, it returns -1.
+// SearchArray searches string `s` in string slice `a` case-sensitively,
+// returns its index in `a`.
+// If `s` is not found in `a`, it returns -1.
 func SearchArray(a []string, s string) int {
 	for i, v := range a {
 		if s == v {
@@ -717,7 +522,7 @@ func SearchArray(a []string, s string) int {
 	return NotFoundIndex
 }
 
-// InArray checks whether string <s> in slice <a>.
+// InArray checks whether string `s` in slice `a`.
 func InArray(a []string, s string) bool {
 	return SearchArray(a, s) != NotFoundIndex
 }

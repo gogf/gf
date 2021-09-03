@@ -8,8 +8,8 @@ package gstr
 
 import "strings"
 
-// Pos returns the position of the first occurrence of <needle>
-// in <haystack> from <startOffset>, case-sensitively.
+// Pos returns the position of the first occurrence of `needle`
+// in `haystack` from <startOffset>, case-sensitively.
 // It returns -1, if not found.
 func Pos(haystack, needle string, startOffset ...int) int {
 	length := len(haystack)
