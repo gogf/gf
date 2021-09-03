@@ -83,8 +83,10 @@ func (m *Model) Data(data ...interface{}) *Model {
 					list[i] = ConvertDataForTableRecord(rv.Index(i).Interface())
 				}
 				model.data = list
+
 			case reflect.Map:
 				model.data = ConvertDataForTableRecord(data[0])
+
 			case reflect.Struct:
 				if v, ok := data[0].(apiInterfaces); ok {
 					var (
@@ -98,6 +100,7 @@ func (m *Model) Data(data ...interface{}) *Model {
 				} else {
 					model.data = ConvertDataForTableRecord(data[0])
 				}
+
 			default:
 				model.data = data[0]
 			}

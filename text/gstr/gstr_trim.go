@@ -17,8 +17,8 @@ func Trim(str string, characterMask ...string) string {
 	return utils.Trim(str, characterMask...)
 }
 
-// TrimStr strips all of the given <cut> string from the beginning and end of a string.
-// Note that it does not strips the whitespaces of its beginning or end.
+// TrimStr strips all the given <cut> string from the beginning and end of a string.
+// Note that it does not strip the whitespaces of its beginning or end.
 func TrimStr(str string, cut string, count ...int) string {
 	return TrimLeftStr(TrimRightStr(str, cut, count...), cut, count...)
 }
@@ -32,8 +32,8 @@ func TrimLeft(str string, characterMask ...string) string {
 	return strings.TrimLeft(str, trimChars)
 }
 
-// TrimLeftStr strips all of the given <cut> string from the beginning of a string.
-// Note that it does not strips the whitespaces of its beginning.
+// TrimLeftStr strips all the given <cut> string from the beginning of a string.
+// Note that it does not strip the whitespaces of its beginning.
 func TrimLeftStr(str string, cut string, count ...int) string {
 	var (
 		lenCut   = len(cut)
@@ -58,8 +58,8 @@ func TrimRight(str string, characterMask ...string) string {
 	return strings.TrimRight(str, trimChars)
 }
 
-// TrimRightStr strips all of the given <cut> string from the end of a string.
-// Note that it does not strips the whitespaces of its end.
+// TrimRightStr strips all the given <cut> string from the end of a string.
+// Note that it does not strip the whitespaces of its end.
 func TrimRightStr(str string, cut string, count ...int) string {
 	var (
 		lenStr   = len(str)

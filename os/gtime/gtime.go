@@ -197,7 +197,7 @@ func ISO8601() string {
 	return time.Now().Format("2006-01-02T15:04:05-07:00")
 }
 
-// ISO8601 returns current datetime in RFC822 format like "Mon, 02 Jan 06 15:04 MST".
+// RFC822 returns current datetime in RFC822 format like "Mon, 02 Jan 06 15:04 MST".
 func RFC822() string {
 	return time.Now().Format("Mon, 02 Jan 06 15:04 MST")
 }
@@ -238,6 +238,9 @@ func parseDateStr(s string) (year, month, day int) {
 // If <format> is not given, it converts string as a "standard" datetime string.
 // Note that, it fails and returns error if there's no date string in <str>.
 func StrToTime(str string, format ...string) (*Time, error) {
+	if str == "" {
+		return &Time{wrapper{time.Time{}}}, nil
+	}
 	if len(format) > 0 {
 		return StrToTimeFormat(str, format[0])
 	}

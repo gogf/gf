@@ -33,7 +33,7 @@ func GetContentsWithCache(path string, duration ...time.Duration) string {
 	return string(GetBytesWithCache(path, duration...))
 }
 
-// GetBinContents returns []byte content of given file by <path> from cache.
+// GetBytesWithCache returns []byte content of given file by <path> from cache.
 // If there's no content in the cache, it will read it from disk file specified by <path>.
 // The parameter <expire> specifies the caching time for this file content in seconds.
 func GetBytesWithCache(path string, duration ...time.Duration) []byte {

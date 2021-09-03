@@ -11,14 +11,13 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/gogf/gf/errors/gcode"
-	"net/url"
-
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/text/gstr"
+	"net/url"
 
-	_ "github.com/gogf/mysql"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 // DriverMysql is the driver for mysql database.
@@ -34,7 +33,7 @@ func (d *DriverMysql) New(core *Core, node *ConfigNode) (DB, error) {
 	}, nil
 }
 
-// Open creates and returns a underlying sql.DB object for mysql.
+// Open creates and returns an underlying sql.DB object for mysql.
 // Note that it converts time.Time argument to local timezone in default.
 func (d *DriverMysql) Open(config *ConfigNode) (*sql.DB, error) {
 	var source string

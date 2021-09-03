@@ -133,11 +133,13 @@ func Entries() []*Entry {
 }
 
 // Start starts running the specified timed task named `name`.
-func Start(name string) {
-	defaultCron.Start(name)
+// If no`name` specified, it starts the entire cron.
+func Start(name ...string) {
+	defaultCron.Start(name...)
 }
 
 // Stop stops running the specified timed task named `name`.
-func Stop(name string) {
-	defaultCron.Stop(name)
+// If no`name` specified, it stops the entire cron.
+func Stop(name ...string) {
+	defaultCron.Stop(name...)
 }
