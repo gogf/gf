@@ -7,14 +7,13 @@
 package gcron
 
 import (
-
 	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/text/gregex"
 	"strconv"
 	"strings"
 	"time"
-	"github.com/gogf/gf/text/gregex"
 )
 
 // cronSchedule is the schedule for cron job.
