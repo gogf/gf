@@ -65,6 +65,7 @@ func (r *Ring) checkAndUpdateLenAndCap() {
 	emptyLen := 0
 	if r.ring != nil {
 		r.mu.RLock()
+		totalLen++
 		for p := r.ring.Next(); p != r.ring; p = p.Next() {
 			if p.Value == nil {
 				emptyLen++
