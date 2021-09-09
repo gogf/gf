@@ -96,7 +96,9 @@ func TestRing_Unlink(t *testing.T) {
 		// 重新计算s len
 		s := r.Unlink(2) // 2 3
 		t.Assert(s.Val(), 2)
-		t.Assert(s.Len(), 1)
+		t.Assert(s.Len(), 2)
+		t.Assert(r.Val(), 1)
+		t.Assert(r.Len(), 3)
 	})
 }
 
