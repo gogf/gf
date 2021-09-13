@@ -169,14 +169,16 @@ func (j *Json) MustToTomlString() string {
 // INI
 // ========================================================================
 
+// ToIni json to ini
 func (j *Json) ToIni() ([]byte, error) {
 	j.mu.RLock()
 	defer j.mu.RUnlock()
 	return gini.Encode((*(j.p)).(map[string]interface{}))
 }
 
+// ToIniString ini to string
 func (j *Json) ToIniString() (string, error) {
-	b, e := j.ToToml()
+	b, e := j.ToIni()
 	return string(b), e
 }
 
@@ -188,6 +190,7 @@ func (j *Json) MustToIni() []byte {
 	return result
 }
 
+// MustToIniString .
 func (j *Json) MustToIniString() string {
 	return gconv.UnsafeBytesToStr(j.MustToIni())
 }
