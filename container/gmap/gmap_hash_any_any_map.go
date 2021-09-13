@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with gm file,
@@ -476,7 +476,7 @@ func (m *AnyAnyMap) UnmarshalJSON(b []byte) error {
 		m.data = make(map[interface{}]interface{})
 	}
 	var data map[string]interface{}
-	if err := json.Unmarshal(b, &data); err != nil {
+	if err := json.UnmarshalUseNumber(b, &data); err != nil {
 		return err
 	}
 	for k, v := range data {

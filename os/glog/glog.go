@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -12,12 +12,16 @@ import (
 	"github.com/gogf/gf/os/grpool"
 )
 
+const (
+	commandEnvKeyForDebug = "gf.glog.debug"
+)
+
 var (
 	// Default logger object, for package method usage.
 	logger = New()
 
 	// Goroutine pool for async logging output.
-	// It uses only one asynchronize worker to ensure log sequence.
+	// It uses only one asynchronous worker to ensure log sequence.
 	asyncPool = grpool.New(1)
 
 	// defaultDebug enables debug level or not in default,
@@ -26,11 +30,11 @@ var (
 )
 
 func init() {
-	defaultDebug = gcmd.GetWithEnv("gf.glog.debug", true).Bool()
+	defaultDebug = gcmd.GetOptWithEnv(commandEnvKeyForDebug, true).Bool()
 	SetDebug(defaultDebug)
 }
 
-// Default returns the default logger.
+// DefaultLogger returns the default logger.
 func DefaultLogger() *Logger {
 	return logger
 }

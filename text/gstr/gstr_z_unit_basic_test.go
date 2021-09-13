@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -292,6 +292,30 @@ func Test_Str(t *testing.T) {
 		t.Assert(gstr.Str("name@example.com", "@"), "@example.com")
 		t.Assert(gstr.Str("name@example.com", ""), "")
 		t.Assert(gstr.Str("name@example.com", "z"), "")
+	})
+}
+
+func Test_StrEx(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.StrEx("name@example.com", "@"), "example.com")
+		t.Assert(gstr.StrEx("name@example.com", ""), "")
+		t.Assert(gstr.StrEx("name@example.com", "z"), "")
+	})
+}
+
+func Test_StrTill(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.StrTill("name@example.com", "@"), "name@")
+		t.Assert(gstr.StrTill("name@example.com", ""), "")
+		t.Assert(gstr.StrTill("name@example.com", "z"), "")
+	})
+}
+
+func Test_StrTillEx(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.StrTillEx("name@example.com", "@"), "name")
+		t.Assert(gstr.StrTillEx("name@example.com", ""), "")
+		t.Assert(gstr.StrTillEx("name@example.com", "z"), "")
 	})
 }
 

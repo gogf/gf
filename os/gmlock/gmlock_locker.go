@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -11,9 +11,9 @@ import (
 	"github.com/gogf/gf/os/gmutex"
 )
 
-// Memory locker.
+// Locker is a memory based locker.
 // Note that there's no cache expire mechanism for mutex in locker.
-// You need remove certain mutex manually when you do not want use it any more.
+// You need remove certain mutex manually when you do not want use it anymore.
 type Locker struct {
 	m *gmap.StrAnyMap
 }
@@ -28,7 +28,7 @@ func New() *Locker {
 
 // Lock locks the <key> with writing lock.
 // If there's a write/reading lock the <key>,
-// it will blocks until the lock is released.
+// it will block until the lock is released.
 func (l *Locker) Lock(key string) {
 	l.getOrNewMutex(key).Lock()
 }
@@ -68,7 +68,7 @@ func (l *Locker) RUnlock(key string) {
 
 // LockFunc locks the <key> with writing lock and callback function <f>.
 // If there's a write/reading lock the <key>,
-// it will blocks until the lock is released.
+// it will block until the lock is released.
 //
 // It releases the lock after <f> is executed.
 func (l *Locker) LockFunc(key string, f func()) {
@@ -79,7 +79,7 @@ func (l *Locker) LockFunc(key string, f func()) {
 
 // RLockFunc locks the <key> with reading lock and callback function <f>.
 // If there's a writing lock the <key>,
-// it will blocks until the lock is released.
+// it will block until the lock is released.
 //
 // It releases the lock after <f> is executed.
 func (l *Locker) RLockFunc(key string, f func()) {

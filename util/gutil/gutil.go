@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -32,18 +32,22 @@ func Try(try func()) (err error) {
 }
 
 // TryCatch implements try...catch... logistics using internal panic...recover.
-// It automatically calls function <catch> if any exception occurs ans passes the exception as an error.
+// It automatically calls function `catch` if any exception occurs ans passes the exception as an error.
 func TryCatch(try func(), catch ...func(exception error)) {
 	defer func() {
-		if e := recover(); e != nil && len(catch) > 0 {
-			catch[0](fmt.Errorf(`%v`, e))
+		if exception := recover(); exception != nil && len(catch) > 0 {
+			if err, ok := exception.(error); ok {
+				catch[0](err)
+			} else {
+				catch[0](fmt.Errorf(`%v`, exception))
+			}
 		}
 	}()
 	try()
 }
 
-// IsEmpty checks given <value> empty or not.
-// It returns false if <value> is: integer(0), bool(false), slice/map(len=0), nil;
+// IsEmpty checks given `value` empty or not.
+// It returns false if `value` is: integer(0), bool(false), slice/map(len=0), nil;
 // or else returns true.
 func IsEmpty(value interface{}) bool {
 	return empty.IsEmpty(value)

@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -259,17 +259,18 @@ func formatToRegexPattern(format string) string {
 	s := gregex.Quote(formatToStdLayout(format))
 	s, _ = gregex.ReplaceString(`[0-9]`, `[0-9]`, s)
 	s, _ = gregex.ReplaceString(`[A-Za-z]`, `[A-Za-z]`, s)
+	s, _ = gregex.ReplaceString(`\s+`, `\s+`, s)
 	return s
 }
 
 // formatMonthDaySuffixMap returns the short english word for current day.
 func formatMonthDaySuffixMap(day string) string {
 	switch day {
-	case "01":
+	case "01", "21", "31":
 		return "st"
-	case "02":
+	case "02", "22":
 		return "nd"
-	case "03":
+	case "03", "23":
 		return "rd"
 	default:
 		return "th"

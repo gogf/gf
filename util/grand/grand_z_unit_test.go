@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -11,6 +11,7 @@ package grand_test
 import (
 	"github.com/gogf/gf/text/gstr"
 	"testing"
+	"time"
 
 	"github.com/gogf/gf/test/gtest"
 	"github.com/gogf/gf/util/grand"
@@ -69,6 +70,23 @@ func Test_N(t *testing.T) {
 		}
 		for i := 0; i < 100; i++ {
 			t.AssertIN(grand.N(1, 2), []int{1, 2})
+		}
+	})
+}
+
+func Test_D(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		for i := 0; i < 100; i++ {
+			t.Assert(grand.D(time.Second, time.Second), time.Second)
+		}
+		for i := 0; i < 100; i++ {
+			t.Assert(grand.D(0, 0), time.Duration(0))
+		}
+		for i := 0; i < 100; i++ {
+			t.AssertIN(
+				grand.D(1*time.Second, 3*time.Second),
+				[]time.Duration{1 * time.Second, 2 * time.Second, 3 * time.Second},
+			)
 		}
 	})
 }

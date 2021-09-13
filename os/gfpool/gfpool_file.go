@@ -1,4 +1,4 @@
-// Copyright 2017-2020 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,8 +7,9 @@
 package gfpool
 
 import (
-	"errors"
 	"fmt"
+	"github.com/gogf/gf/errors/gcode"
+	"github.com/gogf/gf/errors/gerror"
 	"os"
 	"time"
 )
@@ -41,7 +42,7 @@ func Open(path string, flag int, perm os.FileMode, ttl ...time.Duration) (file *
 // Stat returns the FileInfo structure describing file.
 func (f *File) Stat() (os.FileInfo, error) {
 	if f.stat == nil {
-		return nil, errors.New("file stat is empty")
+		return nil, gerror.NewCode(gcode.CodeInternalError, "file stat is empty")
 	}
 	return f.stat, nil
 }

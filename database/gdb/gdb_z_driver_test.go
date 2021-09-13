@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,18 +7,20 @@
 package gdb_test
 
 import (
+	"context"
+	"testing"
+
 	"github.com/gogf/gf/container/gtype"
 	"github.com/gogf/gf/database/gdb"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/test/gtest"
-	"testing"
 )
 
 // MyDriver is a custom database driver, which is used for testing only.
 // For simplifying the unit testing case purpose, MyDriver struct inherits the mysql driver
-// gdb.DriverMysql and overwrites its function HandleSqlBeforeCommit.
-// So if there's any sql execution, it goes through MyDriver.HandleSqlBeforeCommit firstly and
-// then gdb.DriverMysql.HandleSqlBeforeCommit.
+// gdb.DriverMysql and overwrites its function DoCommit.
+// So if there's any sql execution, it goes through MyDriver.DoCommit firstly and
+// then gdb.DriverMysql.DoCommit.
 // You can call it sql "HOOK" or "HiJack" as your will.
 type MyDriver struct {
 	*gdb.DriverMysql
@@ -39,11 +41,11 @@ func (d *MyDriver) New(core *gdb.Core, node *gdb.ConfigNode) (gdb.DB, error) {
 	}, nil
 }
 
-// HandleSqlBeforeCommit handles the sql before posts it to database.
+// DoCommit handles the sql before posts it to database.
 // It here overwrites the same method of gdb.DriverMysql and makes some custom changes.
-func (d *MyDriver) HandleSqlBeforeCommit(link gdb.Link, sql string, args []interface{}) (string, []interface{}) {
+func (d *MyDriver) DoCommit(ctx context.Context, link gdb.Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error) {
 	latestSqlString.Set(sql)
-	return d.DriverMysql.HandleSqlBeforeCommit(link, sql, args)
+	return d.DriverMysql.DoCommit(ctx, link, sql, args)
 }
 
 func init() {
@@ -56,8 +58,8 @@ func Test_Custom_Driver(t *testing.T) {
 	gdb.AddConfigNode("driver-test", gdb.ConfigNode{
 		Host:    "127.0.0.1",
 		Port:    "3306",
-		User:    USER,
-		Pass:    PASS,
+		User:    TestDbUser,
+		Pass:    TestDbPass,
 		Name:    "test",
 		Type:    customDriverName,
 		Role:    "master",
@@ -67,7 +69,7 @@ func Test_Custom_Driver(t *testing.T) {
 		t.Assert(latestSqlString.Val(), "")
 		sqlString := "select 10000"
 		value, err := g.DB("driver-test").GetValue(sqlString)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(value, 10000)
 		t.Assert(latestSqlString.Val(), sqlString)
 	})

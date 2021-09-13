@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -16,7 +16,7 @@ type Schema struct {
 // Schema creates and returns a schema.
 func (c *Core) Schema(schema string) *Schema {
 	return &Schema{
-		db:     c.DB,
+		db:     c.db,
 		schema: schema,
 	}
 }
@@ -31,14 +31,14 @@ func (tx *TX) Schema(schema string) *Schema {
 }
 
 // Table creates and returns a new ORM model.
-// The parameter <tables> can be more than one table names, like :
+// The parameter `tables` can be more than one table names, like :
 // "user", "user u", "user, user_detail", "user u, user_detail ud"
 func (s *Schema) Table(table string) *Model {
 	var m *Model
 	if s.tx != nil {
-		m = s.tx.Table(table)
+		m = s.tx.Model(table)
 	} else {
-		m = s.db.Table(table)
+		m = s.db.Model(table)
 	}
 	// Do not change the schema of the original db,
 	// it here creates a new db and changes its schema.

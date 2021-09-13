@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -12,13 +12,13 @@ import (
 
 const (
 	// Buffer size for uint32 random number.
-	gBUFFER_SIZE = 10000
+	bufferChanSize = 10000
 )
 
 var (
 	// bufferChan is the buffer for random bytes,
 	// every item storing 4 bytes.
-	bufferChan = make(chan []byte, gBUFFER_SIZE)
+	bufferChan = make(chan []byte, bufferChanSize)
 )
 
 func init() {

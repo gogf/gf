@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,8 +7,9 @@
 package gfile
 
 import (
-	"errors"
 	"fmt"
+	"github.com/gogf/gf/errors/gcode"
+	"github.com/gogf/gf/errors/gerror"
 	"io"
 	"io/ioutil"
 	"os"
@@ -21,10 +22,10 @@ import (
 // or else it calls CopyDir.
 func Copy(src string, dst string) error {
 	if src == "" {
-		return errors.New("source path cannot be empty")
+		return gerror.NewCode(gcode.CodeInvalidParameter, "source path cannot be empty")
 	}
 	if dst == "" {
-		return errors.New("destination path cannot be empty")
+		return gerror.NewCode(gcode.CodeInvalidParameter, "destination path cannot be empty")
 	}
 	if IsFile(src) {
 		return CopyFile(src, dst)
@@ -40,10 +41,10 @@ func Copy(src string, dst string) error {
 // Thanks: https://gist.github.com/r0l1/92462b38df26839a3ca324697c8cba04
 func CopyFile(src, dst string) (err error) {
 	if src == "" {
-		return errors.New("source file cannot be empty")
+		return gerror.NewCode(gcode.CodeInvalidParameter, "source file cannot be empty")
 	}
 	if dst == "" {
-		return errors.New("destination file cannot be empty")
+		return gerror.NewCode(gcode.CodeInvalidParameter, "destination file cannot be empty")
 	}
 	// If src and dst are the same path, it does nothing.
 	if src == dst {
@@ -87,10 +88,10 @@ func CopyFile(src, dst string) (err error) {
 // Note that, the Source directory must exist and symlinks are ignored and skipped.
 func CopyDir(src string, dst string) (err error) {
 	if src == "" {
-		return errors.New("source directory cannot be empty")
+		return gerror.NewCode(gcode.CodeInvalidParameter, "source directory cannot be empty")
 	}
 	if dst == "" {
-		return errors.New("destination directory cannot be empty")
+		return gerror.NewCode(gcode.CodeInvalidParameter, "destination directory cannot be empty")
 	}
 	// If src and dst are the same path, it does nothing.
 	if src == dst {

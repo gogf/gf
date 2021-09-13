@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -35,10 +35,10 @@ func Receive(group ...string) *MsgRequest {
 	if len(group) > 0 {
 		groupName = group[0]
 	} else {
-		groupName = gPROC_COMM_DEFAULT_GRUOP_NAME
+		groupName = defaultGroupNameForProcComm
 	}
 	queue := commReceiveQueues.GetOrSetFuncLock(groupName, func() interface{} {
-		return gqueue.New(gPROC_MSG_QUEUE_MAX_LENGTH)
+		return gqueue.New(maxLengthForProcMsgQueue)
 	}).(*gqueue.Queue)
 
 	// Blocking receiving.
@@ -52,7 +52,7 @@ func Receive(group ...string) *MsgRequest {
 func receiveTcpListening() {
 	var listen *net.TCPListener
 	// Scan the available port for listening.
-	for i := gPROC_DEFAULT_TCP_PORT; ; i++ {
+	for i := defaultTcpPortForProcComm; ; i++ {
 		addr, err := net.ResolveTCPAddr("tcp", fmt.Sprintf("127.0.0.1:%d", i))
 		if err != nil {
 			continue
@@ -79,8 +79,10 @@ func receiveTcpListening() {
 
 // receiveTcpHandler is the connection handler for receiving data.
 func receiveTcpHandler(conn *gtcp.Conn) {
-	var result []byte
-	var response MsgResponse
+	var (
+		result   []byte
+		response MsgResponse
+	)
 	for {
 		response.Code = 0
 		response.Message = ""
@@ -89,7 +91,7 @@ func receiveTcpHandler(conn *gtcp.Conn) {
 		if len(buffer) > 0 {
 			// Package decoding.
 			msg := new(MsgRequest)
-			if err := json.Unmarshal(buffer, msg); err != nil {
+			if err := json.UnmarshalUseNumber(buffer, msg); err != nil {
 				//glog.Error(err)
 				continue
 			}

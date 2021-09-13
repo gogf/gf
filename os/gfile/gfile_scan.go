@@ -1,4 +1,4 @@
-// Copyright 2017-2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,6 +7,7 @@
 package gfile
 
 import (
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/text/gstr"
 	"os"
@@ -16,7 +17,7 @@ import (
 
 const (
 	// Max recursive depth for directory scanning.
-	gMAX_SCAN_DEPTH = 100000
+	maxScanDepth = 100000
 )
 
 // ScanDir returns all sub-files with absolute paths of given <path>,
@@ -136,8 +137,8 @@ func ScanDirFileFunc(path string, pattern string, recursive bool, handler func(p
 // the <path> and its sub-folders. It ignores the sub-file path if <handler> returns an empty
 // string, or else it appends the sub-file path to result slice.
 func doScanDir(depth int, path string, pattern string, recursive bool, handler func(path string) string) ([]string, error) {
-	if depth >= gMAX_SCAN_DEPTH {
-		return nil, gerror.Newf("directory scanning exceeds max recursive depth: %d", gMAX_SCAN_DEPTH)
+	if depth >= maxScanDepth {
+		return nil, gerror.NewCodef(gcode.CodeOperationFailed, "directory scanning exceeds max recursive depth: %d", maxScanDepth)
 	}
 	list := ([]string)(nil)
 	file, err := os.Open(path)

@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -11,12 +11,24 @@ import (
 	"github.com/gogf/gf/container/gvar"
 )
 
+// RequestFromCtx retrieves and returns the Request object from context.
+func RequestFromCtx(ctx context.Context) *Request {
+	if v := ctx.Value(ctxKeyForRequest); v != nil {
+		return v.(*Request)
+	}
+	return nil
+}
+
 // Context is alias for function GetCtx.
 // This function overwrites the http.Request.Context function.
 // See GetCtx.
 func (r *Request) Context() context.Context {
 	if r.context == nil {
 		r.context = r.Request.Context()
+	}
+	// Inject Request object into context.
+	if RequestFromCtx(r.context) == nil {
+		r.context = context.WithValue(r.context, ctxKeyForRequest, r)
 	}
 	return r.context
 }

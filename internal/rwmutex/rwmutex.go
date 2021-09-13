@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -17,7 +17,7 @@ type RWMutex struct {
 }
 
 // New creates and returns a new *RWMutex.
-// The parameter <safe> is used to specify whether using this mutex in concurrent safety,
+// The parameter `safe` is used to specify whether using this mutex in concurrent safety,
 // which is false in default.
 func New(safe ...bool) *RWMutex {
 	mu := Create(safe...)
@@ -25,7 +25,7 @@ func New(safe ...bool) *RWMutex {
 }
 
 // Create creates and returns a new RWMutex object.
-// The parameter <safe> is used to specify whether using this mutex in concurrent safety,
+// The parameter `safe` is used to specify whether using this mutex in concurrent safety,
 // which is false in default.
 func Create(safe ...bool) RWMutex {
 	mu := RWMutex{}

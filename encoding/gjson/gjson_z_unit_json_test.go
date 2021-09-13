@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -61,7 +61,7 @@ func Test_MapAttributeConvert(t *testing.T) {
 			Title map[string]interface{}
 		}{}
 
-		err = j.ToStruct(&tx)
+		err = j.Struct(&tx)
 		gtest.Assert(err, nil)
 		t.Assert(tx.Title, g.Map{
 			"l1": "标签1", "l2": "标签2",
@@ -76,7 +76,7 @@ func Test_MapAttributeConvert(t *testing.T) {
 			Title map[string]string
 		}{}
 
-		err = j.ToStruct(&tx)
+		err = j.Struct(&tx)
 		gtest.Assert(err, nil)
 		t.Assert(tx.Title, g.Map{
 			"l1": "标签1", "l2": "标签2",

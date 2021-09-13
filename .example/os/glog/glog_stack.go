@@ -2,15 +2,11 @@ package main
 
 import (
 	"fmt"
-
-	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/frame/g"
 )
 
 func main() {
+	g.Log().PrintStack()
 
-	glog.PrintStack()
-	glog.New().PrintStack()
-
-	fmt.Println(glog.GetStack())
-	fmt.Println(glog.New().GetStack())
+	fmt.Println(g.Log().GetStack())
 }

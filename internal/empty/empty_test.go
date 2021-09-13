@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -106,5 +106,24 @@ func TestIsEmpty(t *testing.T) {
 		t.Assert(empty.IsEmpty(tmpF4), false)
 		t.Assert(empty.IsEmpty(tmpF5), false)
 		t.Assert(empty.IsEmpty(tmpF6), false)
+	})
+}
+
+func TestIsNil(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(empty.IsNil(nil), true)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var i int
+		t.Assert(empty.IsNil(i), false)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var i *int
+		t.Assert(empty.IsNil(i), true)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var i *int
+		t.Assert(empty.IsNil(&i), false)
+		t.Assert(empty.IsNil(&i, true), true)
 	})
 }

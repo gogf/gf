@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,9 +7,12 @@
 package gredis
 
 import (
-	"errors"
+	"context"
 	"github.com/gogf/gf/container/gvar"
+	"github.com/gogf/gf/errors/gcode"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/json"
+	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gomodule/redigo/redis"
 	"reflect"
@@ -48,11 +51,28 @@ func (c *Conn) do(timeout time.Duration, commandName string, args ...interface{}
 	if timeout > 0 {
 		conn, ok := c.Conn.(redis.ConnWithTimeout)
 		if !ok {
-			return gvar.New(nil), errors.New(`current connection does not support "ConnWithTimeout"`)
+			return gvar.New(nil), gerror.NewCode(gcode.CodeNotSupported, `current connection does not support "ConnWithTimeout"`)
 		}
 		return conn.DoWithTimeout(timeout, commandName, args...)
 	}
-	return c.Conn.Do(commandName, args...)
+	timestampMilli1 := gtime.TimestampMilli()
+	reply, err = c.Conn.Do(commandName, args...)
+	timestampMilli2 := gtime.TimestampMilli()
+
+	// Tracing.
+	c.addTracingItem(&tracingItem{
+		err:         err,
+		commandName: commandName,
+		arguments:   args,
+		costMilli:   timestampMilli2 - timestampMilli1,
+	})
+	return
+}
+
+// Ctx is a channing function which sets the context for next operation.
+func (c *Conn) Ctx(ctx context.Context) *Conn {
+	c.ctx = ctx
+	return c
 }
 
 // Do sends a command to the server and returns the received reply.
@@ -88,7 +108,7 @@ func (c *Conn) ReceiveVar() (*gvar.Var, error) {
 func (c *Conn) ReceiveVarWithTimeout(timeout time.Duration) (*gvar.Var, error) {
 	conn, ok := c.Conn.(redis.ConnWithTimeout)
 	if !ok {
-		return gvar.New(nil), errors.New(`current connection does not support "ConnWithTimeout"`)
+		return gvar.New(nil), gerror.NewCode(gcode.CodeNotSupported, `current connection does not support "ConnWithTimeout"`)
 	}
 	return resultToVar(conn.ReceiveWithTimeout(timeout))
 }

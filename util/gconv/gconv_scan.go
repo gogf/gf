@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,38 +7,78 @@
 package gconv
 
 import (
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"reflect"
 )
 
-// Scan automatically calls Struct or Structs function according to the type of parameter
-// <pointer> to implement the converting.
-// It calls function Struct if <pointer> is type of *struct/**struct to do the converting.
-// It calls function Structs if <pointer> is type of *[]struct/*[]*struct to do the converting.
+// Scan automatically checks the type of `pointer` and converts `params` to `pointer`. It supports `pointer`
+// with type of `*map/*[]map/*[]*map/*struct/**struct/*[]struct/*[]*struct` for converting.
+//
+// It calls function `doMapToMap`  internally if `pointer` is type of *map                 for converting.
+// It calls function `doMapToMaps` internally if `pointer` is type of *[]map/*[]*map       for converting.
+// It calls function `doStruct`    internally if `pointer` is type of *struct/**struct     for converting.
+// It calls function `doStructs`   internally if `pointer` is type of *[]struct/*[]*struct for converting.
 func Scan(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
-	t := reflect.TypeOf(pointer)
-	k := t.Kind()
-	if k != reflect.Ptr {
-		return gerror.Newf("params should be type of pointer, but got: %v", k)
+	var (
+		pointerType reflect.Type
+		pointerKind reflect.Kind
+	)
+	if v, ok := pointer.(reflect.Value); ok {
+		pointerType = v.Type()
+	} else {
+		pointerType = reflect.TypeOf(pointer)
 	}
-	switch t.Elem().Kind() {
+	if pointerType == nil {
+		return gerror.NewCode(gcode.CodeInvalidParameter, "parameter pointer should not be nil")
+	}
+	pointerKind = pointerType.Kind()
+	if pointerKind != reflect.Ptr {
+		return gerror.NewCodef(gcode.CodeInvalidParameter, "params should be type of pointer, but got type: %v", pointerKind)
+	}
+	var (
+		pointerElem               = pointerType.Elem()
+		pointerElemKind           = pointerElem.Kind()
+		keyToAttributeNameMapping map[string]string
+	)
+	if len(mapping) > 0 {
+		keyToAttributeNameMapping = mapping[0]
+	}
+	switch pointerElemKind {
+	case reflect.Map:
+		return doMapToMap(params, pointer, mapping...)
+
 	case reflect.Array, reflect.Slice:
-		return Structs(params, pointer, mapping...)
+		var (
+			sliceElem     = pointerElem.Elem()
+			sliceElemKind = sliceElem.Kind()
+		)
+		for sliceElemKind == reflect.Ptr {
+			sliceElem = sliceElem.Elem()
+			sliceElemKind = sliceElem.Kind()
+		}
+		if sliceElemKind == reflect.Map {
+			return doMapToMaps(params, pointer, mapping...)
+		}
+		return doStructs(params, pointer, keyToAttributeNameMapping, "")
+
 	default:
-		return Struct(params, pointer, mapping...)
+
+		return doStruct(params, pointer, keyToAttributeNameMapping, "")
 	}
 }
 
 // ScanDeep automatically calls StructDeep or StructsDeep function according to the type of
-// parameter <pointer> to implement the converting..
-// It calls function StructDeep if <pointer> is type of *struct/**struct to do the converting.
-// It calls function StructsDeep if <pointer> is type of *[]struct/*[]*struct to do the converting.
+// parameter `pointer` to implement the converting.
+//
+// It calls function StructDeep if `pointer` is type of *struct/**struct to do the converting.
+// It calls function StructsDeep if `pointer` is type of *[]struct/*[]*struct to do the converting.
 // Deprecated, use Scan instead.
 func ScanDeep(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
 	t := reflect.TypeOf(pointer)
 	k := t.Kind()
 	if k != reflect.Ptr {
-		return gerror.Newf("params should be type of pointer, but got: %v", k)
+		return gerror.NewCodef(gcode.CodeInvalidParameter, "params should be type of pointer, but got: %v", k)
 	}
 	switch t.Elem().Kind() {
 	case reflect.Array, reflect.Slice:

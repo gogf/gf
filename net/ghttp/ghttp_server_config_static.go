@@ -1,10 +1,10 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// 静态文件搜索优先级: Resource > ServerPaths > ServerRoot > SearchPath
+// Static Searching Priority: Resource > ServerPaths > ServerRoot > SearchPath
 
 package ghttp
 
@@ -53,12 +53,12 @@ func (s *Server) SetServerRoot(root string) {
 	realPath := root
 	if !gres.Contains(realPath) {
 		if p, err := gfile.Search(root); err != nil {
-			s.Logger().Fatal(fmt.Sprintf(`[ghttp] SetServerRoot failed: %v`, err))
+			s.Logger().Fatal(fmt.Sprintf(`SetServerRoot failed: %v`, err))
 		} else {
 			realPath = p
 		}
 	}
-	s.Logger().Debug("[ghttp] SetServerRoot path:", realPath)
+	s.Logger().Debug("SetServerRoot path:", realPath)
 	s.config.SearchPaths = []string{strings.TrimRight(realPath, gfile.Separator)}
 	s.config.FileServerEnabled = true
 }
@@ -68,7 +68,7 @@ func (s *Server) AddSearchPath(path string) {
 	realPath := path
 	if !gres.Contains(realPath) {
 		if p, err := gfile.Search(path); err != nil {
-			s.Logger().Fatal(fmt.Sprintf(`[ghttp] AddSearchPath failed: %v`, err))
+			s.Logger().Fatal(fmt.Sprintf(`AddSearchPath failed: %v`, err))
 		} else {
 			realPath = p
 		}
@@ -82,7 +82,7 @@ func (s *Server) AddStaticPath(prefix string, path string) {
 	realPath := path
 	if !gres.Contains(realPath) {
 		if p, err := gfile.Search(path); err != nil {
-			s.Logger().Fatal(fmt.Sprintf(`[ghttp] AddStaticPath failed: %v`, err))
+			s.Logger().Fatal(fmt.Sprintf(`AddStaticPath failed: %v`, err))
 		} else {
 			realPath = p
 		}

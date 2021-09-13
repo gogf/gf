@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -24,17 +24,30 @@ func Server(name ...interface{}) *ghttp.Server {
 		s := ghttp.GetServer(name...)
 		// To avoid file no found error while it's not necessary.
 		if Config().Available() {
-			var m map[string]interface{}
+			var (
+				serverConfigMap       map[string]interface{}
+				serverLoggerConfigMap map[string]interface{}
+			)
 			nodeKey, _ := gutil.MapPossibleItemByKey(Config().GetMap("."), configNodeNameServer)
 			if nodeKey == "" {
 				nodeKey = configNodeNameServer
 			}
-			m = Config().GetMap(fmt.Sprintf(`%s.%s`, nodeKey, s.GetName()))
-			if len(m) == 0 {
-				m = Config().GetMap(nodeKey)
+			// Server configuration.
+			serverConfigMap = Config().GetMap(fmt.Sprintf(`%s.%s`, nodeKey, s.GetName()))
+			if len(serverConfigMap) == 0 {
+				serverConfigMap = Config().GetMap(nodeKey)
 			}
-			if len(m) > 0 {
-				if err := s.SetConfigWithMap(m); err != nil {
+			if len(serverConfigMap) > 0 {
+				if err := s.SetConfigWithMap(serverConfigMap); err != nil {
+					panic(err)
+				}
+			}
+			// Server logger configuration.
+			serverLoggerConfigMap = Config().GetMap(
+				fmt.Sprintf(`%s.%s.%s`, nodeKey, s.GetName(), configNodeNameLogger),
+			)
+			if len(serverLoggerConfigMap) > 0 {
+				if err := s.Logger().SetConfigWithMap(serverLoggerConfigMap); err != nil {
 					panic(err)
 				}
 			}

@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -19,16 +19,16 @@ import (
 )
 
 type (
-	// Server wraps the http.Server and provides more feature.
+	// Server wraps the http.Server and provides more rich features.
 	Server struct {
 		name             string                           // Unique name for instance management.
 		config           ServerConfig                     // Configuration.
-		plugins          []Plugin                         // Plugin array.
+		plugins          []Plugin                         // Plugin array to extend server functionality.
 		servers          []*gracefulServer                // Underlying http.Server array.
 		serverCount      *gtype.Int                       // Underlying http.Server count.
 		closeChan        chan struct{}                    // Used for underlying server closing event notification.
 		serveTree        map[string]interface{}           // The route map tree.
-		serveCache       *gcache.Cache                    // Server cache for internal usage.
+		serveCache       *gcache.Cache                    // Server caches for internal usage.
 		routesMap        map[string][]registeredRouteItem // Route map mainly for route dumps and repeated route checks.
 		statusHandlerMap map[string][]HandlerFunc         // Custom status handler map.
 		sessionManager   *gsession.Manager                // Session manager.
@@ -44,7 +44,7 @@ type (
 		Priority int      // Just for reference.
 	}
 
-	// Router item just for route dumps.
+	// RouterItem is just for route dumps.
 	RouterItem struct {
 		Server           string       // Server name.
 		Address          string       // Listening address.
@@ -58,38 +58,41 @@ type (
 		handler          *handlerItem // The handler.
 	}
 
+	// HandlerFunc is request handler function.
+	HandlerFunc = func(r *Request)
+
+	// handlerFuncInfo contains the HandlerFunc address and its reflect type.
+	handlerFuncInfo struct {
+		Func  HandlerFunc   // Handler function address.
+		Type  reflect.Type  // Reflect type information for current handler, which is used for extension of handler feature.
+		Value reflect.Value // Reflect value information for current handler, which is used for extension of handler feature.
+	}
+
 	// handlerItem is the registered handler for route handling,
 	// including middleware and hook functions.
 	handlerItem struct {
-		itemId     int                // Unique handler item id mark.
-		itemName   string             // Handler name, which is automatically retrieved from runtime stack when registered.
-		itemType   int                // Handler type: object/handler/controller/middleware/hook.
-		itemFunc   HandlerFunc        // Handler address.
-		initFunc   HandlerFunc        // Initialization function when request enters the object(only available for object register type).
-		shutFunc   HandlerFunc        // Shutdown function when request leaves out the object(only available for object register type).
-		middleware []HandlerFunc      // Bound middleware array.
-		ctrlInfo   *handlerController // Controller information for reflect usage.
-		hookName   string             // Hook type name.
-		router     *Router            // Router object.
-		source     string             // Source file path:line when registering.
+		Id         int             // Unique handler item id mark.
+		Name       string          // Handler name, which is automatically retrieved from runtime stack when registered.
+		Type       int             // Handler type: object/handler/controller/middleware/hook.
+		Info       handlerFuncInfo // Handler function information.
+		InitFunc   HandlerFunc     // Initialization function when request enters the object (only available for object register type).
+		ShutFunc   HandlerFunc     // Shutdown function when request leaves out the object (only available for object register type).
+		Middleware []HandlerFunc   // Bound middleware array.
+		HookName   string          // Hook type name, only available for hook type.
+		Router     *Router         // Router object.
+		Source     string          // Registering source file `path:line`.
 	}
 
 	// handlerParsedItem is the item parsed from URL.Path.
 	handlerParsedItem struct {
-		handler *handlerItem      // Handler information.
-		values  map[string]string // Router values parsed from URL.Path.
-	}
-
-	// handlerController is the controller information used for reflect.
-	handlerController struct {
-		name    string       // Handler method name.
-		reflect reflect.Type // Reflect type of the controller.
+		Handler *handlerItem      // Handler information.
+		Values  map[string]string // Router values parsed from URL.Path.
 	}
 
 	// registeredRouteItem stores the information of the router and is used for route map.
 	registeredRouteItem struct {
-		source  string       // Source file path and its line number.
-		handler *handlerItem // Handler object.
+		Source  string       // Source file path and its line number.
+		Handler *handlerItem // Handler object.
 	}
 
 	// errorStack is the interface for Stack feature.
@@ -98,26 +101,19 @@ type (
 		Stack() string
 	}
 
-	// Request handler function.
-	HandlerFunc = func(r *Request)
-
 	// Listening file descriptor mapping.
 	// The key is either "http" or "https" and the value is its FD.
 	listenerFdMap = map[string]string
 )
 
 const (
-	HOOK_BEFORE_SERVE     = "HOOK_BEFORE_SERVE"  // Deprecated, use HookBeforeServe instead.
-	HOOK_AFTER_SERVE      = "HOOK_AFTER_SERVE"   // Deprecated, use HookAfterServe instead.
-	HOOK_BEFORE_OUTPUT    = "HOOK_BEFORE_OUTPUT" // Deprecated, use HookBeforeOutput instead.
-	HOOK_AFTER_OUTPUT     = "HOOK_AFTER_OUTPUT"  // Deprecated, use HookAfterOutput instead.
 	HookBeforeServe       = "HOOK_BEFORE_SERVE"
 	HookAfterServe        = "HOOK_AFTER_SERVE"
 	HookBeforeOutput      = "HOOK_BEFORE_OUTPUT"
 	HookAfterOutput       = "HOOK_AFTER_OUTPUT"
 	ServerStatusStopped   = 0
 	ServerStatusRunning   = 1
-	SupportedHttpMethods  = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
+	supportedHttpMethods  = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
 	defaultServerName     = "default"
 	defaultDomainName     = "default"
 	defaultMethod         = "ALL"
@@ -130,6 +126,10 @@ const (
 	exceptionExitAll      = "exit_all"
 	exceptionExitHook     = "exit_hook"
 	routeCacheDuration    = time.Hour
+	methodNameInit        = "Init"
+	methodNameShut        = "Shut"
+	methodNameExit        = "Exit"
+	ctxKeyForRequest      = "gHttpRequestObject"
 )
 
 var (
@@ -142,7 +142,7 @@ var (
 	serverMapping = gmap.NewStrAnyMap(true)
 
 	// serverRunning marks the running server count.
-	// If there no successful server running or all servers shutdown, this value is 0.
+	// If there is no successful server running or all servers' shutdown, this value is 0.
 	serverRunning = gtype.NewInt()
 
 	// wsUpGrader is the default up-grader configuration for websocket.

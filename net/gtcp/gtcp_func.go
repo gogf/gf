@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -16,9 +16,9 @@ import (
 )
 
 const (
-	gDEFAULT_CONN_TIMEOUT     = 30 * time.Second       // Default connection timeout.
-	gDEFAULT_RETRY_INTERVAL   = 100 * time.Millisecond // Default retry interval.
-	gDEFAULT_READ_BUFFER_SIZE = 128                    // (Byte) Buffer size for reading.
+	defaultConnTimeout    = 30 * time.Second       // Default connection timeout.
+	defaultRetryInternal  = 100 * time.Millisecond // Default retry interval.
+	defaultReadBufferSize = 128                    // (Byte) Buffer size for reading.
 )
 
 type Retry struct {
@@ -29,7 +29,7 @@ type Retry struct {
 // NewNetConn creates and returns a net.Conn with given address like "127.0.0.1:80".
 // The optional parameter <timeout> specifies the timeout for dialing connection.
 func NewNetConn(addr string, timeout ...time.Duration) (net.Conn, error) {
-	d := gDEFAULT_CONN_TIMEOUT
+	d := defaultConnTimeout
 	if len(timeout) > 0 {
 		d = timeout[0]
 	}
@@ -40,7 +40,7 @@ func NewNetConn(addr string, timeout ...time.Duration) (net.Conn, error) {
 // The optional parameter <timeout> specifies the timeout for dialing connection.
 func NewNetConnTLS(addr string, tlsConfig *tls.Config, timeout ...time.Duration) (net.Conn, error) {
 	dialer := &net.Dialer{
-		Timeout: gDEFAULT_CONN_TIMEOUT,
+		Timeout: defaultConnTimeout,
 	}
 	if len(timeout) > 0 {
 		dialer.Timeout = timeout[0]

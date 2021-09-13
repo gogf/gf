@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -129,6 +129,8 @@ func Test_StackWithFilter(t *testing.T) {
 		t.Assert(gstr.Count(content, defaultLevelPrefixes[LEVEL_ERRO]), 1)
 		t.Assert(gstr.Count(content, "1 2 3"), 1)
 		t.Assert(gstr.Count(content, "Stack"), 1)
+		fmt.Println("Content:")
+		fmt.Println(content)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		path := gfile.TempDir(gtime.TimestampNanoStr())
@@ -138,11 +140,13 @@ func Test_StackWithFilter(t *testing.T) {
 		t.Assert(err, nil)
 		defer gfile.Remove(path)
 
-		Path(path).File(file).StackWithFilter("gogf").Stdout(false).Error(1, 2, 3)
+		Path(path).File(file).StackWithFilter("/gf/").Stdout(false).Error(1, 2, 3)
 		content := gfile.GetContents(gfile.Join(path, file))
 		t.Assert(gstr.Count(content, defaultLevelPrefixes[LEVEL_ERRO]), 1)
 		t.Assert(gstr.Count(content, "1 2 3"), 1)
 		t.Assert(gstr.Count(content, "Stack"), 0)
+		fmt.Println("Content:")
+		fmt.Println(content)
 	})
 }
 

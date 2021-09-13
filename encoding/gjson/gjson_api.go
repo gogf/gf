@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -18,10 +18,21 @@ import (
 )
 
 // Value returns the json value.
+// Deprecated, use Interface instead.
 func (j *Json) Value() interface{} {
+	return j.Interface()
+}
+
+// Interface returns the json value.
+func (j *Json) Interface() interface{} {
 	j.mu.RLock()
 	defer j.mu.RUnlock()
 	return *(j.p)
+}
+
+// Var returns the json value as *gvar.Var.
+func (j *Json) Var() *gvar.Var {
+	return gvar.New(j.Value())
 }
 
 // IsNil checks whether the value pointed by <j> is nil.
@@ -314,21 +325,9 @@ func (j *Json) GetStruct(pattern string, pointer interface{}, mapping ...map[str
 	return gconv.Struct(j.Get(pattern), pointer, mapping...)
 }
 
-// GetStructDeep does GetStruct recursively.
-// Deprecated, use GetStruct instead.
-func (j *Json) GetStructDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
-	return gconv.StructDeep(j.Get(pattern), pointer, mapping...)
-}
-
 // GetStructs converts any slice to given struct slice.
 func (j *Json) GetStructs(pattern string, pointer interface{}, mapping ...map[string]string) error {
 	return gconv.Structs(j.Get(pattern), pointer, mapping...)
-}
-
-// GetStructsDeep converts any slice to given struct slice recursively.
-// Deprecated, use GetStructs instead.
-func (j *Json) GetStructsDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
-	return gconv.StructsDeep(j.Get(pattern), pointer, mapping...)
 }
 
 // GetScan automatically calls Struct or Structs function according to the type of parameter
@@ -347,13 +346,6 @@ func (j *Json) GetScanDeep(pattern string, pointer interface{}, mapping ...map[s
 // See gconv.MapToMap.
 func (j *Json) GetMapToMap(pattern string, pointer interface{}, mapping ...map[string]string) error {
 	return gconv.MapToMap(j.Get(pattern), pointer, mapping...)
-}
-
-// GetMapToMapDeep retrieves the value by specified <pattern> and converts it to specified map
-// variable recursively.
-// See gconv.MapToMapDeep.
-func (j *Json) GetMapToMapDeep(pattern string, pointer interface{}, mapping ...map[string]string) error {
-	return gconv.MapToMapDeep(j.Get(pattern), pointer, mapping...)
 }
 
 // GetMapToMaps retrieves the value by specified <pattern> and converts it to specified map slice

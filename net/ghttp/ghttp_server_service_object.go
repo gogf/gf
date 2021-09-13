@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -46,10 +46,7 @@ func (s *Server) BindObjectRest(pattern string, object interface{}) {
 	s.doBindObjectRest(pattern, object, nil, "")
 }
 
-func (s *Server) doBindObject(
-	pattern string, object interface{}, method string,
-	middleware []HandlerFunc, source string,
-) {
+func (s *Server) doBindObject(pattern string, object interface{}, method string, middleware []HandlerFunc, source string) {
 	// Convert input method to map for convenience and high performance searching purpose.
 	var methodMap map[string]bool
 	if len(method) > 0 {
@@ -58,7 +55,8 @@ func (s *Server) doBindObject(
 			methodMap[strings.TrimSpace(v)] = true
 		}
 	}
-	// 当pattern中的method为all时，去掉该method，以便于后续方法判断
+	// If the `method` in `pattern` is `defaultMethod`,
+	// it removes for convenience for next statement control.
 	domain, method, path, err := s.parsePattern(pattern)
 	if err != nil {
 		s.Logger().Fatal(err)
@@ -67,11 +65,21 @@ func (s *Server) doBindObject(
 	if strings.EqualFold(method, defaultMethod) {
 		pattern = s.serveHandlerKey("", path, domain)
 	}
-	m := make(map[string]*handlerItem)
-	v := reflect.ValueOf(object)
-	t := v.Type()
-	initFunc := (func(*Request))(nil)
-	shutFunc := (func(*Request))(nil)
+	var (
+		m        = make(map[string]*handlerItem)
+		v        = reflect.ValueOf(object)
+		t        = v.Type()
+		initFunc func(*Request)
+		shutFunc func(*Request)
+	)
+	// If given `object` is not pointer, it then creates a temporary one,
+	// of which the value is `v`.
+	if v.Kind() == reflect.Struct {
+		newValue := reflect.New(t)
+		newValue.Elem().Set(v)
+		v = newValue
+		t = v.Type()
+	}
 	structName := t.Elem().Name()
 	if v.MethodByName("Init").IsValid() {
 		initFunc = v.MethodByName("Init").Interface().(func(*Request))
@@ -93,30 +101,22 @@ func (s *Server) doBindObject(
 		if objName[0] == '*' {
 			objName = fmt.Sprintf(`(%s)`, objName)
 		}
-		itemFunc, ok := v.Method(i).Interface().(func(*Request))
-		if !ok {
-			if len(methodMap) > 0 {
-				s.Logger().Errorf(
-					`invalid route method: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" is required for object registry`,
-					pkgPath, objName, methodName, v.Method(i).Type().String(),
-				)
-			} else {
-				s.Logger().Debugf(
-					`ignore route method: %s.%s.%s defined as "%s", no match "func(*ghttp.Request)" for object registry`,
-					pkgPath, objName, methodName, v.Method(i).Type().String(),
-				)
-			}
-			continue
+
+		funcInfo, err := s.checkAndCreateFuncInfo(v.Method(i).Interface(), pkgPath, objName, methodName)
+		if err != nil {
+			s.Logger().Error(err.Error())
+			return
 		}
+
 		key := s.mergeBuildInNameToPattern(pattern, structName, methodName, true)
 		m[key] = &handlerItem{
-			itemName:   fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, methodName),
-			itemType:   handlerTypeObject,
-			itemFunc:   itemFunc,
-			initFunc:   initFunc,
-			shutFunc:   shutFunc,
-			middleware: middleware,
-			source:     source,
+			Name:       fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, methodName),
+			Type:       handlerTypeObject,
+			Info:       funcInfo,
+			InitFunc:   initFunc,
+			ShutFunc:   shutFunc,
+			Middleware: middleware,
+			Source:     source,
 		}
 		// If there's "Index" method, then an additional route is automatically added
 		// to match the main URI, for example:
@@ -132,26 +132,35 @@ func (s *Server) doBindObject(
 				k = "/" + k
 			}
 			m[k] = &handlerItem{
-				itemName:   fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, methodName),
-				itemType:   handlerTypeObject,
-				itemFunc:   itemFunc,
-				initFunc:   initFunc,
-				shutFunc:   shutFunc,
-				middleware: middleware,
-				source:     source,
+				Name:       fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, methodName),
+				Type:       handlerTypeObject,
+				Info:       funcInfo,
+				InitFunc:   initFunc,
+				ShutFunc:   shutFunc,
+				Middleware: middleware,
+				Source:     source,
 			}
 		}
 	}
 	s.bindHandlerByMap(m)
 }
 
-func (s *Server) doBindObjectMethod(
-	pattern string, object interface{}, method string,
-	middleware []HandlerFunc, source string,
-) {
-	m := make(map[string]*handlerItem)
-	v := reflect.ValueOf(object)
-	t := v.Type()
+func (s *Server) doBindObjectMethod(pattern string, object interface{}, method string, middleware []HandlerFunc, source string) {
+	var (
+		m        = make(map[string]*handlerItem)
+		v        = reflect.ValueOf(object)
+		t        = v.Type()
+		initFunc func(*Request)
+		shutFunc func(*Request)
+	)
+	// If given `object` is not pointer, it then creates a temporary one,
+	// of which the value is `v`.
+	if v.Kind() == reflect.Struct {
+		newValue := reflect.New(t)
+		newValue.Elem().Set(v)
+		v = newValue
+		t = v.Type()
+	}
 	structName := t.Elem().Name()
 	methodName := strings.TrimSpace(method)
 	methodValue := v.MethodByName(methodName)
@@ -159,8 +168,6 @@ func (s *Server) doBindObjectMethod(
 		s.Logger().Fatal("invalid method name: " + methodName)
 		return
 	}
-	initFunc := (func(*Request))(nil)
-	shutFunc := (func(*Request))(nil)
 	if v.MethodByName("Init").IsValid() {
 		initFunc = v.MethodByName("Init").Interface().(func(*Request))
 	}
@@ -173,43 +180,49 @@ func (s *Server) doBindObjectMethod(
 	if objName[0] == '*' {
 		objName = fmt.Sprintf(`(%s)`, objName)
 	}
-	itemFunc, ok := methodValue.Interface().(func(*Request))
-	if !ok {
-		s.Logger().Errorf(
-			`invalid route method: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" is required for object registry`,
-			pkgPath, objName, methodName, methodValue.Type().String(),
-		)
+
+	funcInfo, err := s.checkAndCreateFuncInfo(methodValue.Interface(), pkgPath, objName, methodName)
+	if err != nil {
+		s.Logger().Error(err.Error())
 		return
 	}
+
 	key := s.mergeBuildInNameToPattern(pattern, structName, methodName, false)
 	m[key] = &handlerItem{
-		itemName:   fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, methodName),
-		itemType:   handlerTypeObject,
-		itemFunc:   itemFunc,
-		initFunc:   initFunc,
-		shutFunc:   shutFunc,
-		middleware: middleware,
-		source:     source,
+		Name:       fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, methodName),
+		Type:       handlerTypeObject,
+		Info:       funcInfo,
+		InitFunc:   initFunc,
+		ShutFunc:   shutFunc,
+		Middleware: middleware,
+		Source:     source,
 	}
 
 	s.bindHandlerByMap(m)
 }
 
-func (s *Server) doBindObjectRest(
-	pattern string, object interface{},
-	middleware []HandlerFunc, source string,
-) {
-	m := make(map[string]*handlerItem)
-	v := reflect.ValueOf(object)
-	t := v.Type()
-	initFunc := (func(*Request))(nil)
-	shutFunc := (func(*Request))(nil)
-	structName := t.Elem().Name()
-	if v.MethodByName("Init").IsValid() {
-		initFunc = v.MethodByName("Init").Interface().(func(*Request))
+func (s *Server) doBindObjectRest(pattern string, object interface{}, middleware []HandlerFunc, source string) {
+	var (
+		m        = make(map[string]*handlerItem)
+		v        = reflect.ValueOf(object)
+		t        = v.Type()
+		initFunc func(*Request)
+		shutFunc func(*Request)
+	)
+	// If given `object` is not pointer, it then creates a temporary one,
+	// of which the value is `v`.
+	if v.Kind() == reflect.Struct {
+		newValue := reflect.New(t)
+		newValue.Elem().Set(v)
+		v = newValue
+		t = v.Type()
 	}
-	if v.MethodByName("Shut").IsValid() {
-		shutFunc = v.MethodByName("Shut").Interface().(func(*Request))
+	structName := t.Elem().Name()
+	if v.MethodByName(methodNameInit).IsValid() {
+		initFunc = v.MethodByName(methodNameInit).Interface().(func(*Request))
+	}
+	if v.MethodByName(methodNameShut).IsValid() {
+		shutFunc = v.MethodByName(methodNameShut).Interface().(func(*Request))
 	}
 	pkgPath := t.Elem().PkgPath()
 	for i := 0; i < v.NumMethod(); i++ {
@@ -222,23 +235,22 @@ func (s *Server) doBindObjectRest(
 		if objName[0] == '*' {
 			objName = fmt.Sprintf(`(%s)`, objName)
 		}
-		itemFunc, ok := v.Method(i).Interface().(func(*Request))
-		if !ok {
-			s.Logger().Errorf(
-				`invalid route method: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" is required for object registry`,
-				pkgPath, objName, methodName, v.Method(i).Type().String(),
-			)
-			continue
+
+		funcInfo, err := s.checkAndCreateFuncInfo(v.Method(i).Interface(), pkgPath, objName, methodName)
+		if err != nil {
+			s.Logger().Error(err.Error())
+			return
 		}
+
 		key := s.mergeBuildInNameToPattern(methodName+":"+pattern, structName, methodName, false)
 		m[key] = &handlerItem{
-			itemName:   fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, methodName),
-			itemType:   handlerTypeObject,
-			itemFunc:   itemFunc,
-			initFunc:   initFunc,
-			shutFunc:   shutFunc,
-			middleware: middleware,
-			source:     source,
+			Name:       fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, methodName),
+			Type:       handlerTypeObject,
+			Info:       funcInfo,
+			InitFunc:   initFunc,
+			ShutFunc:   shutFunc,
+			Middleware: middleware,
+			Source:     source,
 		}
 	}
 	s.bindHandlerByMap(m)

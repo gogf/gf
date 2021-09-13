@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -8,12 +8,16 @@
 package gsession
 
 import (
-	"errors"
+	"github.com/gogf/gf/errors/gcode"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/util/guid"
 )
 
 var (
-	ErrorDisabled = errors.New("this feature is disabled in this storage")
+	ErrorDisabled = gerror.NewOption(gerror.Option{
+		Text: "this feature is disabled in this storage",
+		Code: gcode.CodeNotSupported,
+	})
 )
 
 // NewSessionId creates and returns a new and unique session id string,

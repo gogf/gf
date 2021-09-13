@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,13 +7,13 @@
 package gi18n
 
 import (
-	"errors"
+	"context"
 	"fmt"
+	"github.com/gogf/gf/errors/gcode"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 	"strings"
 	"sync"
-
-	"github.com/gogf/gf/os/glog"
 
 	"github.com/gogf/gf/os/gfsnotify"
 
@@ -27,7 +27,7 @@ import (
 	"github.com/gogf/gf/os/gres"
 )
 
-// Manager, it is concurrent safe, supporting hot reload.
+// Manager for i18n contents, it is concurrent safe, supporting hot reload.
 type Manager struct {
 	mu      sync.RWMutex
 	data    map[string]map[string]string // Translating map.
@@ -38,13 +38,13 @@ type Manager struct {
 // Options is used for i18n object configuration.
 type Options struct {
 	Path       string   // I18n files storage path.
-	Language   string   // Local language.
+	Language   string   // Default local language.
 	Delimiters []string // Delimiters for variable parsing.
 }
 
 var (
-	// defaultDelimiters defines the default key variable delimiters.
-	defaultDelimiters = []string{"{#", "}"}
+	defaultLanguage   = "en"                // defaultDelimiters defines the default language if user does not specified in options.
+	defaultDelimiters = []string{"{#", "}"} // defaultDelimiters defines the default key variable delimiters.
 )
 
 // New creates and returns a new i18n manager.
@@ -57,6 +57,9 @@ func New(options ...Options) *Manager {
 	} else {
 		opts = DefaultOptions()
 	}
+	if len(opts.Language) == 0 {
+		opts.Language = defaultLanguage
+	}
 	if len(opts.Delimiters) == 0 {
 		opts.Delimiters = defaultDelimiters
 	}
@@ -68,7 +71,7 @@ func New(options ...Options) *Manager {
 			gregex.Quote(opts.Delimiters[1]),
 		),
 	}
-	intlog.Printf(`New: %#v`, m)
+	intlog.Printf(context.TODO(), `New: %#v`, m)
 	return m
 }
 
@@ -99,66 +102,50 @@ func (m *Manager) SetPath(path string) error {
 	} else {
 		realPath, _ := gfile.Search(path)
 		if realPath == "" {
-			return errors.New(fmt.Sprintf(`%s does not exist`, path))
+			return gerror.NewCodef(gcode.CodeInvalidParameter, `%s does not exist`, path)
 		}
 		m.options.Path = realPath
 	}
-	intlog.Printf(`SetPath: %s`, m.options.Path)
+	intlog.Printf(context.TODO(), `SetPath: %s`, m.options.Path)
 	return nil
 }
 
 // SetLanguage sets the language for translator.
 func (m *Manager) SetLanguage(language string) {
 	m.options.Language = language
-	intlog.Printf(`SetLanguage: %s`, m.options.Language)
+	intlog.Printf(context.TODO(), `SetLanguage: %s`, m.options.Language)
 }
 
 // SetDelimiters sets the delimiters for translator.
 func (m *Manager) SetDelimiters(left, right string) {
 	m.pattern = fmt.Sprintf(`%s(\w+)%s`, gregex.Quote(left), gregex.Quote(right))
-	intlog.Printf(`SetDelimiters: %v`, m.pattern)
+	intlog.Printf(context.TODO(), `SetDelimiters: %v`, m.pattern)
 }
 
 // T is alias of Translate for convenience.
-func (m *Manager) T(content string, language ...string) string {
-	return m.Translate(content, language...)
+func (m *Manager) T(ctx context.Context, content string) string {
+	return m.Translate(ctx, content)
 }
 
 // Tf is alias of TranslateFormat for convenience.
-func (m *Manager) Tf(format string, values ...interface{}) string {
-	return m.TranslateFormat(format, values...)
-}
-
-// Tfl is alias of TranslateFormatLang for convenience.
-func (m *Manager) Tfl(language string, format string, values ...interface{}) string {
-	return m.TranslateFormatLang(language, format, values...)
+func (m *Manager) Tf(ctx context.Context, format string, values ...interface{}) string {
+	return m.TranslateFormat(ctx, format, values...)
 }
 
 // TranslateFormat translates, formats and returns the <format> with configured language
 // and given <values>.
-func (m *Manager) TranslateFormat(format string, values ...interface{}) string {
-	return fmt.Sprintf(m.Translate(format), values...)
-}
-
-// TranslateFormatLang translates, formats and returns the <format> with configured language
-// and given <values>. The parameter <language> specifies custom translation language ignoring
-// configured language. If <language> is given empty string, it uses the default configured
-// language for the translation.
-func (m *Manager) TranslateFormatLang(language string, format string, values ...interface{}) string {
-	return fmt.Sprintf(m.Translate(format, language), values...)
+func (m *Manager) TranslateFormat(ctx context.Context, format string, values ...interface{}) string {
+	return fmt.Sprintf(m.Translate(ctx, format), values...)
 }
 
 // Translate translates <content> with configured language.
-// The parameter <language> specifies custom translation language ignoring configured language.
-func (m *Manager) Translate(content string, language ...string) string {
-	m.init()
+func (m *Manager) Translate(ctx context.Context, content string) string {
+	m.init(ctx)
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	transLang := m.options.Language
-	if len(language) > 0 && language[0] != "" {
-		transLang = language[0]
-	} else {
-		transLang = m.options.Language
+	if lang := LanguageFromCtx(ctx); lang != "" {
+		transLang = lang
 	}
 	data := m.data[transLang]
 	if data == nil {
@@ -177,21 +164,19 @@ func (m *Manager) Translate(content string, language ...string) string {
 			}
 			return match[0]
 		})
-	intlog.Printf(`Translate for language: %s`, transLang)
+	intlog.Printf(ctx, `Translate for language: %s`, transLang)
 	return result
 }
 
-// GetValue retrieves and returns the configured content for given key and specified language.
+// GetContent retrieves and returns the configured content for given key and specified language.
 // It returns an empty string if not found.
-func (m *Manager) GetContent(key string, language ...string) string {
-	m.init()
+func (m *Manager) GetContent(ctx context.Context, key string) string {
+	m.init(ctx)
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	transLang := m.options.Language
-	if len(language) > 0 && language[0] != "" {
-		transLang = language[0]
-	} else {
-		transLang = m.options.Language
+	if lang := LanguageFromCtx(ctx); lang != "" {
+		transLang = lang
 	}
 	if data, ok := m.data[transLang]; ok {
 		return data[key]
@@ -201,7 +186,7 @@ func (m *Manager) GetContent(key string, language ...string) string {
 
 // init initializes the manager for lazy initialization design.
 // The i18n manager is only initialized once.
-func (m *Manager) init() {
+func (m *Manager) init(ctx context.Context) {
 	m.mu.RLock()
 	// If the data is not nil, means it's already initialized.
 	if m.data != nil {
@@ -235,21 +220,17 @@ func (m *Manager) init() {
 					m.data[lang] = make(map[string]string)
 				}
 				if j, err := gjson.LoadContent(file.Content()); err == nil {
-					for k, v := range j.ToMap() {
+					for k, v := range j.Map() {
 						m.data[lang][k] = gconv.String(v)
 					}
 				} else {
-					glog.Errorf("load i18n file '%s' failed: %v", name, err)
+					intlog.Errorf(ctx, "load i18n file '%s' failed: %v", name, err)
 				}
 			}
 		}
 	} else if m.options.Path != "" {
 		files, _ := gfile.ScanDirFile(m.options.Path, "*.*", true)
 		if len(files) == 0 {
-			//intlog.Printf(
-			//	"no i18n files found in configured directory: %s",
-			//	m.options.Path,
-			//)
 			return
 		}
 		var (
@@ -270,11 +251,11 @@ func (m *Manager) init() {
 				m.data[lang] = make(map[string]string)
 			}
 			if j, err := gjson.LoadContent(gfile.GetBytes(file)); err == nil {
-				for k, v := range j.ToMap() {
+				for k, v := range j.Map() {
 					m.data[lang][k] = gconv.String(v)
 				}
 			} else {
-				glog.Errorf("load i18n file '%s' failed: %v", file, err)
+				intlog.Errorf(ctx, "load i18n file '%s' failed: %v", file, err)
 			}
 		}
 		// Monitor changes of i18n files for hot reload feature.

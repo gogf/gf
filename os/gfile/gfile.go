@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -59,10 +59,9 @@ func init() {
 }
 
 // Mkdir creates directories recursively with given <path>.
-// The parameter <path> is suggested to be absolute path.
+// The parameter <path> is suggested to be an absolute path instead of relative one.
 func Mkdir(path string) error {
-	err := os.MkdirAll(path, os.ModePerm)
-	if err != nil {
+	if err := os.MkdirAll(path, os.ModePerm); err != nil {
 		return err
 	}
 	return nil
@@ -344,10 +343,14 @@ func Name(path string) string {
 // Dir returns all but the last element of path, typically the path's directory.
 // After dropping the final element, Dir calls Clean on the path and trailing
 // slashes are removed.
-// If the path is empty, Dir returns ".".
-// If the path consists entirely of separators, Dir returns a single separator.
+// If the `path` is empty, Dir returns ".".
+// If the `path` is ".", Dir treats the path as current working directory.
+// If the `path` consists entirely of separators, Dir returns a single separator.
 // The returned path does not end in a separator unless it is the root directory.
 func Dir(path string) string {
+	if path == "." {
+		return filepath.Dir(RealPath(path))
+	}
 	return filepath.Dir(path)
 }
 

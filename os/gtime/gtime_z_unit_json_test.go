@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -50,7 +50,7 @@ func Test_Json_Pointer(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var t1 gtime.Time
 		s := []byte(`"2006-01-02 15:04:05"`)
-		err := json.Unmarshal(s, &t1)
+		err := json.UnmarshalUseNumber(s, &t1)
 		t.Assert(err, nil)
 		t.Assert(t1.String(), "2006-01-02 15:04:05")
 	})

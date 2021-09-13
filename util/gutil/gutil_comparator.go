@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -77,12 +77,28 @@ func ComparatorUint64(a, b interface{}) int {
 
 // ComparatorFloat32 provides a basic comparison on float32.
 func ComparatorFloat32(a, b interface{}) int {
-	return int(gconv.Float32(a) - gconv.Float32(b))
+	aFloat := gconv.Float32(a)
+	bFloat := gconv.Float32(b)
+	if aFloat == bFloat {
+		return 0
+	}
+	if aFloat > bFloat {
+		return 1
+	}
+	return -1
 }
 
 // ComparatorFloat64 provides a basic comparison on float64.
 func ComparatorFloat64(a, b interface{}) int {
-	return int(gconv.Float64(a) - gconv.Float64(b))
+	aFloat := gconv.Float64(a)
+	bFloat := gconv.Float64(b)
+	if aFloat == bFloat {
+		return 0
+	}
+	if aFloat > bFloat {
+		return 1
+	}
+	return -1
 }
 
 // ComparatorByte provides a basic comparison on byte.

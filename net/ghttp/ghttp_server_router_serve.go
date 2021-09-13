@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -8,6 +8,8 @@ package ghttp
 
 import (
 	"fmt"
+	"github.com/gogf/gf/errors/gcode"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/json"
 	"strings"
 
@@ -141,42 +143,42 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 				item := e.Value.(*handlerItem)
 				// Filter repeated handler item, especially the middleware and hook handlers.
 				// It is necessary, do not remove this checks logic unless you really know how it is necessary.
-				if _, ok := repeatHandlerCheckMap[item.itemId]; ok {
+				if _, ok := repeatHandlerCheckMap[item.Id]; ok {
 					continue
 				} else {
-					repeatHandlerCheckMap[item.itemId] = struct{}{}
+					repeatHandlerCheckMap[item.Id] = struct{}{}
 				}
 				// Serving handler can only be added to the handler array just once.
 				if hasServe {
-					switch item.itemType {
+					switch item.Type {
 					case handlerTypeHandler, handlerTypeObject, handlerTypeController:
 						continue
 					}
 				}
-				if item.router.Method == defaultMethod || item.router.Method == method {
+				if item.Router.Method == defaultMethod || item.Router.Method == method {
 					// Note the rule having no fuzzy rules: len(match) == 1
-					if match, err := gregex.MatchString(item.router.RegRule, path); err == nil && len(match) > 0 {
+					if match, err := gregex.MatchString(item.Router.RegRule, path); err == nil && len(match) > 0 {
 						parsedItem := &handlerParsedItem{item, nil}
 						// If the rule contains fuzzy names,
 						// it needs paring the URL to retrieve the values for the names.
-						if len(item.router.RegNames) > 0 {
-							if len(match) > len(item.router.RegNames) {
-								parsedItem.values = make(map[string]string)
+						if len(item.Router.RegNames) > 0 {
+							if len(match) > len(item.Router.RegNames) {
+								parsedItem.Values = make(map[string]string)
 								// It there repeated names, it just overwrites the same one.
-								for i, name := range item.router.RegNames {
-									parsedItem.values[name] = match[i+1]
+								for i, name := range item.Router.RegNames {
+									parsedItem.Values[name] = match[i+1]
 								}
 							}
 						}
-						switch item.itemType {
+						switch item.Type {
 						// The serving handler can be only added just once.
 						case handlerTypeHandler, handlerTypeObject, handlerTypeController:
 							hasServe = true
 							parsedItemList.PushBack(parsedItem)
 
 						// The middleware is inserted before the serving handler.
-						// If there're multiple middleware, they're inserted into the result list by their registering order.
-						// The middleware are also executed by their registered order.
+						// If there are multiple middleware, they're inserted into the result list by their registering order.
+						// The middleware is also executed by their registered order.
 						case handlerTypeMiddleware:
 							if lastMiddlewareElem == nil {
 								lastMiddlewareElem = parsedItemList.PushFront(parsedItem)
@@ -190,7 +192,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 							parsedItemList.PushBack(parsedItem)
 
 						default:
-							panic(fmt.Sprintf(`invalid handler type %d`, item.itemType))
+							panic(gerror.NewCodef(gcode.CodeInternalError, `invalid handler type %d`, item.Type))
 						}
 					}
 				}
@@ -210,33 +212,33 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (item *handlerItem) MarshalJSON() ([]byte, error) {
-	switch item.itemType {
+	switch item.Type {
 	case handlerTypeHook:
 		return json.Marshal(
 			fmt.Sprintf(
 				`%s %s:%s (%s)`,
-				item.router.Uri,
-				item.router.Domain,
-				item.router.Method,
-				item.hookName,
+				item.Router.Uri,
+				item.Router.Domain,
+				item.Router.Method,
+				item.HookName,
 			),
 		)
 	case handlerTypeMiddleware:
 		return json.Marshal(
 			fmt.Sprintf(
 				`%s %s:%s (MIDDLEWARE)`,
-				item.router.Uri,
-				item.router.Domain,
-				item.router.Method,
+				item.Router.Uri,
+				item.Router.Domain,
+				item.Router.Method,
 			),
 		)
 	default:
 		return json.Marshal(
 			fmt.Sprintf(
 				`%s %s:%s`,
-				item.router.Uri,
-				item.router.Domain,
-				item.router.Method,
+				item.Router.Uri,
+				item.Router.Domain,
+				item.Router.Method,
 			),
 		)
 	}
@@ -244,5 +246,5 @@ func (item *handlerItem) MarshalJSON() ([]byte, error) {
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (item *handlerParsedItem) MarshalJSON() ([]byte, error) {
-	return json.Marshal(item.handler)
+	return json.Marshal(item.Handler)
 }

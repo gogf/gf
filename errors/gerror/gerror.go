@@ -1,10 +1,10 @@
-// Copyright GoFrame gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame gf Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package errors provides simple functions to manipulate errors.
+// Package gerror provides simple functions to manipulate errors.
 //
 // Very note that, this package is quite a base package, which should not import extra
 // packages except standard packages, to avoid cycle imports.
@@ -12,35 +12,36 @@ package gerror
 
 import (
 	"fmt"
+	"github.com/gogf/gf/errors/gcode"
 )
 
 // apiCode is the interface for Code feature.
 type apiCode interface {
-	Error() string // It should be an error.
-	Code() int
+	Error() string
+	Code() gcode.Code
 }
 
 // apiStack is the interface for Stack feature.
 type apiStack interface {
-	Error() string // It should be an error.
+	Error() string
 	Stack() string
 }
 
 // apiCause is the interface for Cause feature.
 type apiCause interface {
-	Error() string // It should be an error.
+	Error() string
 	Cause() error
 }
 
 // apiCurrent is the interface for Current feature.
 type apiCurrent interface {
-	Error() string // It should be an error.
+	Error() string
 	Current() error
 }
 
 // apiNext is the interface for Next feature.
 type apiNext interface {
-	Error() string // It should be an error.
+	Error() string
 	Next() error
 }
 
@@ -49,7 +50,7 @@ func New(text string) error {
 	return &Error{
 		stack: callers(),
 		text:  text,
-		code:  -1,
+		code:  gcode.CodeNil,
 	}
 }
 
@@ -58,7 +59,7 @@ func Newf(format string, args ...interface{}) error {
 	return &Error{
 		stack: callers(),
 		text:  fmt.Sprintf(format, args...),
-		code:  -1,
+		code:  gcode.CodeNil,
 	}
 }
 
@@ -68,7 +69,7 @@ func NewSkip(skip int, text string) error {
 	return &Error{
 		stack: callers(skip),
 		text:  text,
-		code:  -1,
+		code:  gcode.CodeNil,
 	}
 }
 
@@ -78,7 +79,7 @@ func NewSkipf(skip int, format string, args ...interface{}) error {
 	return &Error{
 		stack: callers(skip),
 		text:  fmt.Sprintf(format, args...),
-		code:  -1,
+		code:  gcode.CodeNil,
 	}
 }
 
@@ -92,7 +93,7 @@ func Wrap(err error, text string) error {
 		error: err,
 		stack: callers(),
 		text:  text,
-		code:  -1,
+		code:  Code(err),
 	}
 }
 
@@ -107,21 +108,55 @@ func Wrapf(err error, format string, args ...interface{}) error {
 		error: err,
 		stack: callers(),
 		text:  fmt.Sprintf(format, args...),
-		code:  -1,
+		code:  Code(err),
+	}
+}
+
+// WrapSkip wraps error with text.
+// It returns nil if given err is nil.
+// The parameter <skip> specifies the stack callers skipped amount.
+func WrapSkip(skip int, err error, text string) error {
+	if err == nil {
+		return nil
+	}
+	return &Error{
+		error: err,
+		stack: callers(skip),
+		text:  text,
+		code:  Code(err),
+	}
+}
+
+// WrapSkipf wraps error with text that is formatted with given format and args.
+// It returns nil if given err is nil.
+// The parameter <skip> specifies the stack callers skipped amount.
+func WrapSkipf(skip int, err error, format string, args ...interface{}) error {
+	if err == nil {
+		return nil
+	}
+	return &Error{
+		error: err,
+		stack: callers(skip),
+		text:  fmt.Sprintf(format, args...),
+		code:  Code(err),
 	}
 }
 
 // NewCode creates and returns an error that has error code and given text.
-func NewCode(code int, text string) error {
+func NewCode(code gcode.Code, text ...string) error {
+	errText := ""
+	if len(text) > 0 {
+		errText = text[0]
+	}
 	return &Error{
 		stack: callers(),
-		text:  text,
+		text:  errText,
 		code:  code,
 	}
 }
 
 // NewCodef returns an error that has error code and formats as the given format and args.
-func NewCodef(code int, format string, args ...interface{}) error {
+func NewCodef(code gcode.Code, format string, args ...interface{}) error {
 	return &Error{
 		stack: callers(),
 		text:  fmt.Sprintf(format, args...),
@@ -131,17 +166,21 @@ func NewCodef(code int, format string, args ...interface{}) error {
 
 // NewCodeSkip creates and returns an error which has error code and is formatted from given text.
 // The parameter <skip> specifies the stack callers skipped amount.
-func NewCodeSkip(code, skip int, text string) error {
+func NewCodeSkip(code gcode.Code, skip int, text ...string) error {
+	errText := ""
+	if len(text) > 0 {
+		errText = text[0]
+	}
 	return &Error{
 		stack: callers(skip),
-		text:  text,
+		text:  errText,
 		code:  code,
 	}
 }
 
 // NewCodeSkipf returns an error that has error code and formats as the given format and args.
 // The parameter <skip> specifies the stack callers skipped amount.
-func NewCodeSkipf(code, skip int, format string, args ...interface{}) error {
+func NewCodeSkipf(code gcode.Code, skip int, format string, args ...interface{}) error {
 	return &Error{
 		stack: callers(skip),
 		text:  fmt.Sprintf(format, args...),
@@ -151,21 +190,25 @@ func NewCodeSkipf(code, skip int, format string, args ...interface{}) error {
 
 // WrapCode wraps error with code and text.
 // It returns nil if given err is nil.
-func WrapCode(code int, err error, text string) error {
+func WrapCode(code gcode.Code, err error, text ...string) error {
 	if err == nil {
 		return nil
+	}
+	errText := ""
+	if len(text) > 0 {
+		errText = text[0]
 	}
 	return &Error{
 		error: err,
 		stack: callers(),
-		text:  text,
+		text:  errText,
 		code:  code,
 	}
 }
 
 // WrapCodef wraps error with code and format specifier.
 // It returns nil if given <err> is nil.
-func WrapCodef(code int, err error, format string, args ...interface{}) error {
+func WrapCodef(code gcode.Code, err error, format string, args ...interface{}) error {
 	if err == nil {
 		return nil
 	}
@@ -177,15 +220,49 @@ func WrapCodef(code int, err error, format string, args ...interface{}) error {
 	}
 }
 
-// Cause returns the error code of current error.
-// It returns -1 if it has no error code or it does not implements interface Code.
-func Code(err error) int {
+// WrapCodeSkip wraps error with code and text.
+// It returns nil if given err is nil.
+// The parameter <skip> specifies the stack callers skipped amount.
+func WrapCodeSkip(code gcode.Code, skip int, err error, text ...string) error {
+	if err == nil {
+		return nil
+	}
+	errText := ""
+	if len(text) > 0 {
+		errText = text[0]
+	}
+	return &Error{
+		error: err,
+		stack: callers(skip),
+		text:  errText,
+		code:  code,
+	}
+}
+
+// WrapCodeSkipf wraps error with code and text that is formatted with given format and args.
+// It returns nil if given err is nil.
+// The parameter <skip> specifies the stack callers skipped amount.
+func WrapCodeSkipf(code gcode.Code, skip int, err error, format string, args ...interface{}) error {
+	if err == nil {
+		return nil
+	}
+	return &Error{
+		error: err,
+		stack: callers(skip),
+		text:  fmt.Sprintf(format, args...),
+		code:  code,
+	}
+}
+
+// Code returns the error code of current error.
+// It returns CodeNil if it has no error code or it does not implements interface Code.
+func Code(err error) gcode.Code {
 	if err != nil {
 		if e, ok := err.(apiCode); ok {
 			return e.Code()
 		}
 	}
-	return -1
+	return gcode.CodeNil
 }
 
 // Cause returns the root cause error of <err>.
@@ -199,7 +276,7 @@ func Cause(err error) error {
 }
 
 // Stack returns the stack callers as string.
-// It returns an empty string if the <err> does not support stacks.
+// It returns the error string directly if the <err> does not support stacks.
 func Stack(err error) string {
 	if err == nil {
 		return ""
@@ -207,7 +284,7 @@ func Stack(err error) string {
 	if e, ok := err.(apiStack); ok {
 		return e.Stack()
 	}
-	return ""
+	return err.Error()
 }
 
 // Current creates and returns the current level error.

@@ -1,4 +1,4 @@
-// Copyright 2017-2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with gm file,
@@ -243,7 +243,7 @@ func Test_StrAnyMap_Json(t *testing.T) {
 		t.Assert(err, nil)
 
 		m := gmap.NewStrAnyMap()
-		err = json.Unmarshal(b, m)
+		err = json.UnmarshalUseNumber(b, m)
 		t.Assert(err, nil)
 		t.Assert(m.Get("k1"), data["k1"])
 		t.Assert(m.Get("k2"), data["k2"])
@@ -257,7 +257,7 @@ func Test_StrAnyMap_Json(t *testing.T) {
 		t.Assert(err, nil)
 
 		var m gmap.StrAnyMap
-		err = json.Unmarshal(b, &m)
+		err = json.UnmarshalUseNumber(b, &m)
 		t.Assert(err, nil)
 		t.Assert(m.Get("k1"), data["k1"])
 		t.Assert(m.Get("k2"), data["k2"])

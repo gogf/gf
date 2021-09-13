@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -41,6 +41,13 @@ type (
 		source   string        // Handler is register at certain source file path:line.
 		bound    bool          // Is this item bound to server.
 	}
+)
+
+const (
+	groupBindTypeHandler    = "HANDLER"
+	groupBindTypeRest       = "REST"
+	groupBindTypeHook       = "HOOK"
+	groupBindTypeMiddleware = "MIDDLEWARE"
 )
 
 var (
@@ -153,10 +160,12 @@ func (g *RouterGroup) Bind(items []GroupItem) *RouterGroup {
 		}
 		bindType := gstr.ToUpper(gconv.String(item[0]))
 		switch bindType {
-		case "REST":
-			group.preBindToLocalArray("REST", gconv.String(item[0])+":"+gconv.String(item[1]), item[2])
-		case "MIDDLEWARE":
-			group.preBindToLocalArray("MIDDLEWARE", gconv.String(item[0])+":"+gconv.String(item[1]), item[2])
+		case groupBindTypeRest:
+			group.preBindToLocalArray(groupBindTypeRest, gconv.String(item[0])+":"+gconv.String(item[1]), item[2])
+
+		case groupBindTypeMiddleware:
+			group.preBindToLocalArray(groupBindTypeMiddleware, gconv.String(item[0])+":"+gconv.String(item[1]), item[2])
+
 		default:
 			if strings.EqualFold(bindType, "ALL") {
 				bindType = ""
@@ -164,9 +173,9 @@ func (g *RouterGroup) Bind(items []GroupItem) *RouterGroup {
 				bindType += ":"
 			}
 			if len(item) > 3 {
-				group.preBindToLocalArray("HANDLER", bindType+gconv.String(item[1]), item[2], item[3])
+				group.preBindToLocalArray(groupBindTypeHandler, bindType+gconv.String(item[1]), item[2], item[3])
 			} else {
-				group.preBindToLocalArray("HANDLER", bindType+gconv.String(item[1]), item[2])
+				group.preBindToLocalArray(groupBindTypeHandler, bindType+gconv.String(item[1]), item[2])
 			}
 		}
 	}
@@ -175,71 +184,76 @@ func (g *RouterGroup) Bind(items []GroupItem) *RouterGroup {
 
 // ALL registers a http handler to given route pattern and all http methods.
 func (g *RouterGroup) ALL(pattern string, object interface{}, params ...interface{}) *RouterGroup {
-	return g.Clone().preBindToLocalArray("HANDLER", defaultMethod+":"+pattern, object, params...)
+	return g.Clone().preBindToLocalArray(groupBindTypeHandler, defaultMethod+":"+pattern, object, params...)
 }
 
 // ALLMap registers http handlers for http methods using map.
-func (g *RouterGroup) ALLMap(m map[string]interface{}) *RouterGroup {
-	var group *RouterGroup
+func (g *RouterGroup) ALLMap(m map[string]interface{}) {
 	for pattern, object := range m {
-		group = g.ALL(pattern, object)
+		g.ALL(pattern, object)
 	}
-	return group
+}
+
+// Map registers http handlers for http methods using map.
+func (g *RouterGroup) Map(m map[string]interface{}) {
+	for pattern, object := range m {
+		g.preBindToLocalArray(groupBindTypeHandler, pattern, object)
+	}
 }
 
 // GET registers a http handler to given route pattern and http method: GET.
 func (g *RouterGroup) GET(pattern string, object interface{}, params ...interface{}) *RouterGroup {
-	return g.Clone().preBindToLocalArray("HANDLER", "GET:"+pattern, object, params...)
+	return g.Clone().preBindToLocalArray(groupBindTypeHandler, "GET:"+pattern, object, params...)
 }
 
 // PUT registers a http handler to given route pattern and http method: PUT.
 func (g *RouterGroup) PUT(pattern string, object interface{}, params ...interface{}) *RouterGroup {
-	return g.Clone().preBindToLocalArray("HANDLER", "PUT:"+pattern, object, params...)
+	return g.Clone().preBindToLocalArray(groupBindTypeHandler, "PUT:"+pattern, object, params...)
 }
 
 // POST registers a http handler to given route pattern and http method: POST.
 func (g *RouterGroup) POST(pattern string, object interface{}, params ...interface{}) *RouterGroup {
-	return g.Clone().preBindToLocalArray("HANDLER", "POST:"+pattern, object, params...)
+	return g.Clone().preBindToLocalArray(groupBindTypeHandler, "POST:"+pattern, object, params...)
 }
 
 // DELETE registers a http handler to given route pattern and http method: DELETE.
 func (g *RouterGroup) DELETE(pattern string, object interface{}, params ...interface{}) *RouterGroup {
-	return g.Clone().preBindToLocalArray("HANDLER", "DELETE:"+pattern, object, params...)
+	return g.Clone().preBindToLocalArray(groupBindTypeHandler, "DELETE:"+pattern, object, params...)
 }
 
 // PATCH registers a http handler to given route pattern and http method: PATCH.
 func (g *RouterGroup) PATCH(pattern string, object interface{}, params ...interface{}) *RouterGroup {
-	return g.Clone().preBindToLocalArray("HANDLER", "PATCH:"+pattern, object, params...)
+	return g.Clone().preBindToLocalArray(groupBindTypeHandler, "PATCH:"+pattern, object, params...)
 }
 
 // HEAD registers a http handler to given route pattern and http method: HEAD.
 func (g *RouterGroup) HEAD(pattern string, object interface{}, params ...interface{}) *RouterGroup {
-	return g.Clone().preBindToLocalArray("HANDLER", "HEAD:"+pattern, object, params...)
+	return g.Clone().preBindToLocalArray(groupBindTypeHandler, "HEAD:"+pattern, object, params...)
 }
 
 // CONNECT registers a http handler to given route pattern and http method: CONNECT.
 func (g *RouterGroup) CONNECT(pattern string, object interface{}, params ...interface{}) *RouterGroup {
-	return g.Clone().preBindToLocalArray("HANDLER", "CONNECT:"+pattern, object, params...)
+	return g.Clone().preBindToLocalArray(groupBindTypeHandler, "CONNECT:"+pattern, object, params...)
 }
 
 // OPTIONS registers a http handler to given route pattern and http method: OPTIONS.
 func (g *RouterGroup) OPTIONS(pattern string, object interface{}, params ...interface{}) *RouterGroup {
-	return g.Clone().preBindToLocalArray("HANDLER", "OPTIONS:"+pattern, object, params...)
+	return g.Clone().preBindToLocalArray(groupBindTypeHandler, "OPTIONS:"+pattern, object, params...)
 }
 
 // TRACE registers a http handler to given route pattern and http method: TRACE.
 func (g *RouterGroup) TRACE(pattern string, object interface{}, params ...interface{}) *RouterGroup {
-	return g.Clone().preBindToLocalArray("HANDLER", "TRACE:"+pattern, object, params...)
+	return g.Clone().preBindToLocalArray(groupBindTypeHandler, "TRACE:"+pattern, object, params...)
 }
 
 // REST registers a http handler to given route pattern according to REST rule.
 func (g *RouterGroup) REST(pattern string, object interface{}) *RouterGroup {
-	return g.Clone().preBindToLocalArray("REST", pattern, object)
+	return g.Clone().preBindToLocalArray(groupBindTypeRest, pattern, object)
 }
 
 // Hook registers a hook to given route pattern.
 func (g *RouterGroup) Hook(pattern string, hook string, handler HandlerFunc) *RouterGroup {
-	return g.Clone().preBindToLocalArray("HANDLER", pattern, handler, hook)
+	return g.Clone().preBindToLocalArray(groupBindTypeHandler, pattern, handler, hook)
 }
 
 // Middleware binds one or more middleware to the router group.
@@ -250,7 +264,7 @@ func (g *RouterGroup) Middleware(handlers ...HandlerFunc) *RouterGroup {
 
 // preBindToLocalArray adds the route registering parameters to internal variable array for lazily registering feature.
 func (g *RouterGroup) preBindToLocalArray(bindType string, pattern string, object interface{}, params ...interface{}) *RouterGroup {
-	_, file, line := gdebug.CallerWithFilter(gFILTER_KEY)
+	_, file, line := gdebug.CallerWithFilter(stackFilterKey)
 	preBindItems = append(preBindItems, &preBindItem{
 		group:    g,
 		bindType: bindType,
@@ -273,7 +287,7 @@ func (g *RouterGroup) getPrefix() string {
 	return prefix
 }
 
-// doBindRoutersToServer does really registering for the group.
+// doBindRoutersToServer does really register for the group.
 func (g *RouterGroup) doBindRoutersToServer(item *preBindItem) *RouterGroup {
 	var (
 		bindType = item.bindType
@@ -289,11 +303,11 @@ func (g *RouterGroup) doBindRoutersToServer(item *preBindItem) *RouterGroup {
 		if err != nil {
 			g.server.Logger().Fatalf("invalid pattern: %s", pattern)
 		}
-		// If there'a already a domain, unset the domain field in the pattern.
+		// If there is already a domain, unset the domain field in the pattern.
 		if g.domain != nil {
 			domain = ""
 		}
-		if bindType == "REST" {
+		if bindType == groupBindTypeRest {
 			pattern = prefix + "/" + strings.TrimLeft(path, "/")
 		} else {
 			pattern = g.server.serveHandlerKey(
@@ -303,53 +317,26 @@ func (g *RouterGroup) doBindRoutersToServer(item *preBindItem) *RouterGroup {
 	}
 	// Filter repeated char '/'.
 	pattern = gstr.Replace(pattern, "//", "/")
+
 	// Convert params to string array.
 	extras := gconv.Strings(params)
+
 	// Check whether it's a hook handler.
 	if _, ok := object.(HandlerFunc); ok && len(extras) > 0 {
-		bindType = "HOOK"
+		bindType = groupBindTypeHook
 	}
 	switch bindType {
-	case "HANDLER":
-		if h, ok := object.(HandlerFunc); ok {
-			if g.server != nil {
-				g.server.doBindHandler(pattern, h, g.middleware, source)
-			} else {
-				g.domain.doBindHandler(pattern, h, g.middleware, source)
+	case groupBindTypeHandler:
+		if reflect.ValueOf(object).Kind() == reflect.Func {
+			funcInfo, err := g.server.checkAndCreateFuncInfo(object, "", "", "")
+			if err != nil {
+				g.server.Logger().Error(err.Error())
+				return g
 			}
-		} else if g.isController(object) {
-			if len(extras) > 0 {
-				if g.server != nil {
-					if gstr.Contains(extras[0], ",") {
-						g.server.doBindController(
-							pattern, object.(Controller), extras[0], g.middleware, source,
-						)
-					} else {
-						g.server.doBindControllerMethod(
-							pattern, object.(Controller), extras[0], g.middleware, source,
-						)
-					}
-				} else {
-					if gstr.Contains(extras[0], ",") {
-						g.domain.doBindController(
-							pattern, object.(Controller), extras[0], g.middleware, source,
-						)
-					} else {
-						g.domain.doBindControllerMethod(
-							pattern, object.(Controller), extras[0], g.middleware, source,
-						)
-					}
-				}
+			if g.server != nil {
+				g.server.doBindHandler(pattern, funcInfo, g.middleware, source)
 			} else {
-				if g.server != nil {
-					g.server.doBindController(
-						pattern, object.(Controller), "", g.middleware, source,
-					)
-				} else {
-					g.domain.doBindController(
-						pattern, object.(Controller), "", g.middleware, source,
-					)
-				}
+				g.domain.doBindHandler(pattern, funcInfo, g.middleware, source)
 			}
 		} else {
 			if len(extras) > 0 {
@@ -375,6 +362,7 @@ func (g *RouterGroup) doBindRoutersToServer(item *preBindItem) *RouterGroup {
 					}
 				}
 			} else {
+				// At last, it treats the `object` as Object registering type.
 				if g.server != nil {
 					g.server.doBindObject(pattern, object, "", g.middleware, source)
 				} else {
@@ -382,25 +370,15 @@ func (g *RouterGroup) doBindRoutersToServer(item *preBindItem) *RouterGroup {
 				}
 			}
 		}
-	case "REST":
-		if g.isController(object) {
-			if g.server != nil {
-				g.server.doBindControllerRest(
-					pattern, object.(Controller), g.middleware, source,
-				)
-			} else {
-				g.domain.doBindControllerRest(
-					pattern, object.(Controller), g.middleware, source,
-				)
-			}
+
+	case groupBindTypeRest:
+		if g.server != nil {
+			g.server.doBindObjectRest(pattern, object, g.middleware, source)
 		} else {
-			if g.server != nil {
-				g.server.doBindObjectRest(pattern, object, g.middleware, source)
-			} else {
-				g.domain.doBindObjectRest(pattern, object, g.middleware, source)
-			}
+			g.domain.doBindObjectRest(pattern, object, g.middleware, source)
 		}
-	case "HOOK":
+
+	case groupBindTypeHook:
 		if h, ok := object.(HandlerFunc); ok {
 			if g.server != nil {
 				g.server.doBindHookHandler(pattern, extras[0], h, source)
@@ -412,27 +390,4 @@ func (g *RouterGroup) doBindRoutersToServer(item *preBindItem) *RouterGroup {
 		}
 	}
 	return g
-}
-
-// isController checks and returns whether given <value> is a controller.
-// A controller should contains attributes: Request/Response/Server/Cookie/Session/View.
-func (g *RouterGroup) isController(value interface{}) bool {
-	// Whether implements interface Controller.
-	if _, ok := value.(Controller); !ok {
-		return false
-	}
-	// Check the necessary attributes.
-	v := reflect.ValueOf(value)
-	if v.Kind() == reflect.Ptr {
-		v = v.Elem()
-	}
-	if v.FieldByName("Request").IsValid() &&
-		v.FieldByName("Response").IsValid() &&
-		v.FieldByName("Server").IsValid() &&
-		v.FieldByName("Cookie").IsValid() &&
-		v.FieldByName("Session").IsValid() &&
-		v.FieldByName("View").IsValid() {
-		return true
-	}
-	return false
 }

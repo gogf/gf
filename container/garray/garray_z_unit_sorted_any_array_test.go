@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -656,11 +656,11 @@ func TestSortedArray_Json(t *testing.T) {
 		t.Assert(err1, err2)
 
 		a2 := garray.NewSortedArray(gutil.ComparatorString)
-		err1 = json.Unmarshal(b2, &a2)
+		err1 = json.UnmarshalUseNumber(b2, &a2)
 		t.Assert(a2.Slice(), s2)
 
 		var a3 garray.SortedArray
-		err := json.Unmarshal(b2, &a3)
+		err := json.UnmarshalUseNumber(b2, &a3)
 		t.Assert(err, nil)
 		t.Assert(a3.Slice(), s1)
 		t.Assert(a3.Interfaces(), s1)
@@ -676,11 +676,11 @@ func TestSortedArray_Json(t *testing.T) {
 		t.Assert(err1, err2)
 
 		a2 := garray.NewSortedArray(gutil.ComparatorString)
-		err1 = json.Unmarshal(b2, &a2)
+		err1 = json.UnmarshalUseNumber(b2, &a2)
 		t.Assert(a2.Slice(), s2)
 
 		var a3 garray.SortedArray
-		err := json.Unmarshal(b2, &a3)
+		err := json.UnmarshalUseNumber(b2, &a3)
 		t.Assert(err, nil)
 		t.Assert(a3.Slice(), s1)
 		t.Assert(a3.Interfaces(), s1)
@@ -699,7 +699,7 @@ func TestSortedArray_Json(t *testing.T) {
 		t.Assert(err, nil)
 
 		user := new(User)
-		err = json.Unmarshal(b, user)
+		err = json.UnmarshalUseNumber(b, user)
 		t.Assert(err, nil)
 		t.Assert(user.Name, data["Name"])
 		t.AssertNE(user.Scores, nil)
@@ -735,7 +735,7 @@ func TestSortedArray_Json(t *testing.T) {
 		t.Assert(err, nil)
 
 		user := new(User)
-		err = json.Unmarshal(b, user)
+		err = json.UnmarshalUseNumber(b, user)
 		t.Assert(err, nil)
 		t.Assert(user.Name, data["Name"])
 		t.AssertNE(user.Scores, nil)

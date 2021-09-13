@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,7 +7,8 @@
 package gudp
 
 import (
-	"errors"
+	"github.com/gogf/gf/errors/gcode"
+	"github.com/gogf/gf/errors/gerror"
 	"net"
 
 	"github.com/gogf/gf/container/gmap"
@@ -16,7 +17,7 @@ import (
 )
 
 const (
-	gDEFAULT_SERVER = "default"
+	defaultServer = "default"
 )
 
 // Server is the UDP server.
@@ -33,7 +34,7 @@ var (
 
 // GetServer creates and returns a UDP server instance with given name.
 func GetServer(name ...interface{}) *Server {
-	serverName := gDEFAULT_SERVER
+	serverName := defaultServer
 	if len(name) > 0 && name[0] != "" {
 		serverName = gconv.String(name[0])
 	}
@@ -78,7 +79,7 @@ func (s *Server) Close() error {
 // Run starts listening UDP connection.
 func (s *Server) Run() error {
 	if s.handler == nil {
-		err := errors.New("start running failed: socket handler not defined")
+		err := gerror.NewCode(gcode.CodeMissingConfiguration, "start running failed: socket handler not defined")
 		glog.Error(err)
 		return err
 	}

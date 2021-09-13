@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -196,13 +196,18 @@ func (r *Request) GetQueryMapStrVar(kvMap ...map[string]interface{}) map[string]
 // to the struct object. The optional parameter <mapping> is used to specify the key to
 // attribute mapping.
 func (r *Request) GetQueryStruct(pointer interface{}, mapping ...map[string]string) error {
+	_, err := r.doGetQueryStruct(pointer, mapping...)
+	return err
+}
+
+func (r *Request) doGetQueryStruct(pointer interface{}, mapping ...map[string]string) (data map[string]interface{}, err error) {
 	r.parseQuery()
-	data := r.GetQueryMap()
+	data = r.GetQueryMap()
 	if data == nil {
 		data = map[string]interface{}{}
 	}
 	if err := r.mergeDefaultStructValue(data, pointer); err != nil {
-		return nil
+		return data, nil
 	}
-	return gconv.Struct(data, pointer, mapping...)
+	return data, gconv.Struct(data, pointer, mapping...)
 }

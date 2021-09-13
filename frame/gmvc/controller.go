@@ -1,10 +1,11 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package gmvc provides basic object classes for MVC.
+// Deprecated, no longer suggested.
 package gmvc
 
 import (
@@ -12,6 +13,7 @@ import (
 )
 
 // Controller is used for controller register of ghttp.Server.
+// Deprecated, no longer suggested.
 type Controller struct {
 	Request  *ghttp.Request
 	Response *ghttp.Response

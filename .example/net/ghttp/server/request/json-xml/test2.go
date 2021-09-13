@@ -25,7 +25,7 @@ func main() {
 		//fmt.Println(r.GetBody())
 		if err := r.Parse(&req); err != nil {
 			// Validation error.
-			if v, ok := err.(*gvalid.Error); ok {
+			if v, ok := err.(gvalid.Error); ok {
 				r.Response.WriteJsonExit(RegisterRes{
 					Code:  1,
 					Error: v.FirstString(),

@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -71,7 +71,7 @@ func (r *Response) WritefExit(format string, params ...interface{}) {
 	r.Request.Exit()
 }
 
-// Writef writes the response with <content> and new line.
+// Writeln writes the response with <content> and new line.
 func (r *Response) Writeln(content ...interface{}) {
 	if len(content) == 0 {
 		r.Write("\n")

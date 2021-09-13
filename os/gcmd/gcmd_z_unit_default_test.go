@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -59,12 +59,12 @@ func Test_GetWithEnv(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		genv.Set("TEST", "1")
 		defer genv.Remove("TEST")
-		t.Assert(gcmd.GetWithEnv("test"), 1)
+		t.Assert(gcmd.GetOptWithEnv("test"), 1)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		genv.Set("TEST", "1")
 		defer genv.Remove("TEST")
 		gcmd.Init("-test", "2")
-		t.Assert(gcmd.GetWithEnv("test"), 2)
+		t.Assert(gcmd.GetOptWithEnv("test"), 2)
 	})
 }

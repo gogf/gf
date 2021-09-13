@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,7 +7,9 @@
 package gview_test
 
 import (
+	"context"
 	"github.com/gogf/gf/encoding/ghtml"
+	"github.com/gogf/gf/os/gctx"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/util/gconv"
 	"io/ioutil"
@@ -39,18 +41,18 @@ func Test_Basic(t *testing.T) {
 		view.Assigns(g.Map{"version": "1.7.0"})
 		view.BindFunc("GetName", func() string { return "gf" })
 		view.BindFuncMap(gview.FuncMap{"GetVersion": func() string { return "1.7.0" }})
-		result, err := view.ParseContent(str, g.Map{"other": "that's all"})
+		result, err := view.ParseContent(context.TODO(), str, g.Map{"other": "that's all"})
 		t.Assert(err != nil, false)
 		t.Assert(result, "hello gf,version:1.7.0;hello gf,version:1.7.0;that's all")
 
 		//测试api方法
 		str = `hello {{.name}}`
-		result, err = gview.ParseContent(str, g.Map{"name": "gf"})
+		result, err = gview.ParseContent(context.TODO(), str, g.Map{"name": "gf"})
 		t.Assert(err != nil, false)
 		t.Assert(result, "hello gf")
 
 		//测试instance方法
-		result, err = gview.Instance().ParseContent(str, g.Map{"name": "gf"})
+		result, err = gview.Instance().ParseContent(context.TODO(), str, g.Map{"name": "gf"})
 		t.Assert(err != nil, false)
 		t.Assert(result, "hello gf")
 	})
@@ -59,128 +61,141 @@ func Test_Basic(t *testing.T) {
 func Test_Func(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		str := `{{eq 1 1}};{{eq 1 2}};{{eq "A" "B"}}`
-		result, err := gview.ParseContent(str, nil)
+		result, err := gview.ParseContent(context.TODO(), str, nil)
 		t.Assert(err != nil, false)
 		t.Assert(result, `true;false;false`)
 
 		str = `{{ne 1 2}};{{ne 1 1}};{{ne "A" "B"}}`
-		result, err = gview.ParseContent(str, nil)
+		result, err = gview.ParseContent(context.TODO(), str, nil)
 		t.Assert(err != nil, false)
 		t.Assert(result, `true;false;true`)
 
 		str = `{{lt 1 2}};{{lt 1 1}};{{lt 1 0}};{{lt "A" "B"}}`
-		result, err = gview.ParseContent(str, nil)
+		result, err = gview.ParseContent(context.TODO(), str, nil)
 		t.Assert(err != nil, false)
 		t.Assert(result, `true;false;false;true`)
 
 		str = `{{le 1 2}};{{le 1 1}};{{le 1 0}};{{le "A" "B"}}`
-		result, err = gview.ParseContent(str, nil)
+		result, err = gview.ParseContent(context.TODO(), str, nil)
 		t.Assert(err != nil, false)
 		t.Assert(result, `true;true;false;true`)
 
 		str = `{{gt 1 2}};{{gt 1 1}};{{gt 1 0}};{{gt "A" "B"}}`
-		result, err = gview.ParseContent(str, nil)
+		result, err = gview.ParseContent(context.TODO(), str, nil)
 		t.Assert(err != nil, false)
 		t.Assert(result, `false;false;true;false`)
 
 		str = `{{ge 1 2}};{{ge 1 1}};{{ge 1 0}};{{ge "A" "B"}}`
-		result, err = gview.ParseContent(str, nil)
+		result, err = gview.ParseContent(context.TODO(), str, nil)
 		t.Assert(err != nil, false)
 		t.Assert(result, `false;true;true;false`)
 
 		str = `{{"<div>测试</div>"|text}}`
-		result, err = gview.ParseContent(str, nil)
+		result, err = gview.ParseContent(context.TODO(), str, nil)
 		t.Assert(err != nil, false)
 		t.Assert(result, `测试`)
 
 		str = `{{"<div>测试</div>"|html}}`
-		result, err = gview.ParseContent(str, nil)
+		result, err = gview.ParseContent(context.TODO(), str, nil)
 		t.Assert(err != nil, false)
 		t.Assert(result, `&lt;div&gt;测试&lt;/div&gt;`)
 
 		str = `{{"<div>测试</div>"|htmlencode}}`
-		result, err = gview.ParseContent(str, nil)
+		result, err = gview.ParseContent(context.TODO(), str, nil)
 		t.Assert(err != nil, false)
 		t.Assert(result, `&lt;div&gt;测试&lt;/div&gt;`)
 
 		str = `{{"&lt;div&gt;测试&lt;/div&gt;"|htmldecode}}`
-		result, err = gview.ParseContent(str, nil)
+		result, err = gview.ParseContent(context.TODO(), str, nil)
 		t.Assert(err != nil, false)
 		t.Assert(result, `<div>测试</div>`)
 
 		str = `{{"https://goframe.org"|url}}`
-		result, err = gview.ParseContent(str, nil)
+		result, err = gview.ParseContent(context.TODO(), str, nil)
 		t.Assert(err != nil, false)
 		t.Assert(result, `https%3A%2F%2Fgoframe.org`)
 
 		str = `{{"https://goframe.org"|urlencode}}`
-		result, err = gview.ParseContent(str, nil)
+		result, err = gview.ParseContent(context.TODO(), str, nil)
 		t.Assert(err != nil, false)
 		t.Assert(result, `https%3A%2F%2Fgoframe.org`)
 
 		str = `{{"https%3A%2F%2Fgoframe.org"|urldecode}}`
-		result, err = gview.ParseContent(str, nil)
+		result, err = gview.ParseContent(context.TODO(), str, nil)
 		t.Assert(err != nil, false)
 		t.Assert(result, `https://goframe.org`)
 		str = `{{"https%3NA%2F%2Fgoframe.org"|urldecode}}`
-		result, err = gview.ParseContent(str, nil)
+		result, err = gview.ParseContent(context.TODO(), str, nil)
 		t.Assert(err != nil, false)
 		t.Assert(gstr.Contains(result, "invalid URL escape"), true)
 
 		str = `{{1540822968 | date "Y-m-d"}}`
-		result, err = gview.ParseContent(str, nil)
+		result, err = gview.ParseContent(context.TODO(), str, nil)
 		t.Assert(err != nil, false)
 		t.Assert(result, `2018-10-29`)
 		str = `{{date "Y-m-d"}}`
-		result, err = gview.ParseContent(str, nil)
+		result, err = gview.ParseContent(context.TODO(), str, nil)
 		t.Assert(err != nil, false)
 
 		str = `{{"我是中国人" | substr 2 -1}};{{"我是中国人" | substr 2  2}}`
-		result, err = gview.ParseContent(str, nil)
+		result, err = gview.ParseContent(context.TODO(), str, nil)
 		t.Assert(err != nil, false)
 		t.Assert(result, `中国人;中国`)
 
 		str = `{{"我是中国人" | strlimit 2  "..."}}`
-		result, err = gview.ParseContent(str, nil)
+		result, err = gview.ParseContent(context.TODO(), str, nil)
 		t.Assert(err != nil, false)
 		t.Assert(result, `我是...`)
 
 		str = `{{"I'm中国人" | replace "I'm" "我是"}}`
-		result, err = gview.ParseContent(str, nil)
+		result, err = gview.ParseContent(context.TODO(), str, nil)
 		t.Assert(err != nil, false)
 		t.Assert(result, `我是中国人`)
 
 		str = `{{compare "A" "B"}};{{compare "1" "2"}};{{compare 2 1}};{{compare 1 1}}`
-		result, err = gview.ParseContent(str, nil)
+		result, err = gview.ParseContent(context.TODO(), str, nil)
 		t.Assert(err != nil, false)
 		t.Assert(result, `-1;-1;1;0`)
 
 		str = `{{"热爱GF热爱生活" | hidestr 20  "*"}};{{"热爱GF热爱生活" | hidestr 50  "*"}}`
-		result, err = gview.ParseContent(str, nil)
+		result, err = gview.ParseContent(context.TODO(), str, nil)
 		t.Assert(err != nil, false)
 		t.Assert(result, `热爱GF*爱生活;热爱****生活`)
 
 		str = `{{"热爱GF热爱生活" | highlight "GF" "red"}}`
-		result, err = gview.ParseContent(str, nil)
+		result, err = gview.ParseContent(context.TODO(), str, nil)
 		t.Assert(err != nil, false)
 		t.Assert(result, `热爱<span style="color:red;">GF</span>热爱生活`)
 
 		str = `{{"gf" | toupper}};{{"GF" | tolower}}`
-		result, err = gview.ParseContent(str, nil)
+		result, err = gview.ParseContent(context.TODO(), str, nil)
 		t.Assert(err != nil, false)
 		t.Assert(result, `GF;gf`)
 
 		str = `{{concat "I" "Love" "GoFrame"}}`
-		result, err = gview.ParseContent(str, nil)
+		result, err = gview.ParseContent(context.TODO(), str, nil)
 		t.Assert(err, nil)
 		t.Assert(result, `ILoveGoFrame`)
+	})
+	// eq: multiple values.
+	gtest.C(t, func(t *gtest.T) {
+		str := `{{eq 1 2 1 3 4 5}}`
+		result, err := gview.ParseContent(context.TODO(), str, nil)
+		t.Assert(err != nil, false)
+		t.Assert(result, `true`)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		str := `{{eq 6 2 1 3 4 5}}`
+		result, err := gview.ParseContent(context.TODO(), str, nil)
+		t.Assert(err != nil, false)
+		t.Assert(result, `false`)
 	})
 }
 
 func Test_FuncNl2Br(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		str := `{{"Go\nFrame" | nl2br}}`
-		result, err := gview.ParseContent(str, nil)
+		result, err := gview.ParseContent(context.TODO(), str, nil)
 		t.Assert(err, nil)
 		t.Assert(result, `Go<br>Frame`)
 	})
@@ -190,7 +205,7 @@ func Test_FuncNl2Br(t *testing.T) {
 			s += "Go\nFrame\n中文"
 		}
 		str := `{{.content | nl2br}}`
-		result, err := gview.ParseContent(str, g.Map{
+		result, err := gview.ParseContent(context.TODO(), str, g.Map{
 			"content": s,
 		})
 		t.Assert(err, nil)
@@ -218,10 +233,10 @@ func Test_FuncInclude(t *testing.T) {
 		ioutil.WriteFile(templatePath+gfile.Separator+"footer.html", []byte(footer), 0644)
 		ioutil.WriteFile(templatePath+gfile.Separator+"layout.html", []byte(layout), 0644)
 		view := gview.New(templatePath)
-		result, err := view.Parse("notfound.html")
+		result, err := view.Parse(context.TODO(), "notfound.html")
 		t.Assert(err != nil, true)
 		t.Assert(result, ``)
-		result, err = view.Parse("layout.html")
+		result, err = view.Parse(context.TODO(), "layout.html")
 		t.Assert(err != nil, false)
 		t.Assert(result, `<h1>HEADER</h1>
 <h1>hello gf</h1>
@@ -230,7 +245,7 @@ func Test_FuncInclude(t *testing.T) {
 		gfile.Mkdir(templatePath + gfile.Separator + "template")
 		gfile.Create(notfoundPath)
 		ioutil.WriteFile(notfoundPath, []byte("notfound"), 0644)
-		result, err = view.Parse("notfound.html")
+		result, err = view.Parse(context.TODO(), "notfound.html")
 		t.Assert(err != nil, true)
 		t.Assert(result, ``)
 	})
@@ -270,7 +285,7 @@ func Test_ParseContent(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		str := `{{.name}}`
 		view := gview.New()
-		result, err := view.ParseContent(str, g.Map{"name": func() {}})
+		result, err := view.ParseContent(context.TODO(), str, g.Map{"name": func() {}})
 		t.Assert(err != nil, true)
 		t.Assert(result, ``)
 	})
@@ -293,7 +308,7 @@ func Test_HotReload(t *testing.T) {
 		view := gview.New(dirPath)
 
 		time.Sleep(100 * time.Millisecond)
-		result, err := view.Parse("test.html", g.Map{
+		result, err := view.Parse(context.TODO(), "test.html", g.Map{
 			"var": "1",
 		})
 		t.Assert(err, nil)
@@ -304,7 +319,7 @@ func Test_HotReload(t *testing.T) {
 		t.Assert(err, nil)
 
 		time.Sleep(100 * time.Millisecond)
-		result, err = view.Parse("test.html", g.Map{
+		result, err = view.Parse(context.TODO(), "test.html", g.Map{
 			"var": "2",
 		})
 		t.Assert(err, nil)
@@ -316,7 +331,7 @@ func Test_XSS(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New()
 		s := "<br>"
-		r, err := v.ParseContent("{{.v}}", g.Map{
+		r, err := v.ParseContent(context.TODO(), "{{.v}}", g.Map{
 			"v": s,
 		})
 		t.Assert(err, nil)
@@ -326,7 +341,7 @@ func Test_XSS(t *testing.T) {
 		v := gview.New()
 		v.SetAutoEncode(true)
 		s := "<br>"
-		r, err := v.ParseContent("{{.v}}", g.Map{
+		r, err := v.ParseContent(context.TODO(), "{{.v}}", g.Map{
 			"v": s,
 		})
 		t.Assert(err, nil)
@@ -337,7 +352,7 @@ func Test_XSS(t *testing.T) {
 		v := gview.New()
 		v.SetAutoEncode(true)
 		s := "<br>"
-		r, err := v.ParseContent("{{if eq 1 1}}{{.v}}{{end}}", g.Map{
+		r, err := v.ParseContent(context.TODO(), "{{if eq 1 1}}{{.v}}{{end}}", g.Map{
 			"v": s,
 		})
 		t.Assert(err, nil)
@@ -358,7 +373,7 @@ func Test_BuildInFuncMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New()
 		v.Assign("v", new(TypeForBuildInFuncMap))
-		r, err := v.ParseContent("{{range $k, $v := map .v.Test}} {{$k}}:{{$v}} {{end}}")
+		r, err := v.ParseContent(context.TODO(), "{{range $k, $v := map .v.Test}} {{$k}}:{{$v}} {{end}}")
 		t.Assert(err, nil)
 		t.Assert(gstr.Contains(r, "Name:john"), true)
 		t.Assert(gstr.Contains(r, "Score:99.9"), true)
@@ -381,7 +396,7 @@ func Test_BuildInFuncMaps(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		v := gview.New()
 		v.Assign("v", new(TypeForBuildInFuncMaps))
-		r, err := v.ParseContent("{{range $k, $v := maps .v.Test}} {{$k}}:{{$v.Name}} {{$v.Score}} {{end}}")
+		r, err := v.ParseContent(context.TODO(), "{{range $k, $v := maps .v.Test}} {{$k}}:{{$v.Name}} {{$v.Score}} {{end}}")
 		t.Assert(err, nil)
 		t.Assert(r, ` 0:john 99.9  1:smith 100 `)
 	})
@@ -394,7 +409,7 @@ func Test_BuildInFuncDump(t *testing.T) {
 			"name":  "john",
 			"score": 100,
 		})
-		r, err := v.ParseContent("{{dump .}}")
+		r, err := v.ParseContent(context.TODO(), "{{dump .}}")
 		t.Assert(err, nil)
 		t.Assert(gstr.Contains(r, `"name": "john"`), true)
 		t.Assert(gstr.Contains(r, `"score": 100`), true)
@@ -407,8 +422,44 @@ func Test_BuildInFuncJson(t *testing.T) {
 		v.Assign("v", g.Map{
 			"name": "john",
 		})
-		r, err := v.ParseContent("{{json .v}}")
+		r, err := v.ParseContent(context.TODO(), "{{json .v}}")
 		t.Assert(err, nil)
 		t.Assert(r, `{"name":"john"}`)
+	})
+}
+
+func Test_BuildInFuncPlus(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		v := gview.New()
+		r, err := v.ParseContent(gctx.New(), "{{plus 1 2 3}}")
+		t.Assert(err, nil)
+		t.Assert(r, `6`)
+	})
+}
+
+func Test_BuildInFuncMinus(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		v := gview.New()
+		r, err := v.ParseContent(gctx.New(), "{{minus 1 2 3}}")
+		t.Assert(err, nil)
+		t.Assert(r, `-4`)
+	})
+}
+
+func Test_BuildInFuncTimes(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		v := gview.New()
+		r, err := v.ParseContent(gctx.New(), "{{times 1 2 3 4}}")
+		t.Assert(err, nil)
+		t.Assert(r, `24`)
+	})
+}
+
+func Test_BuildInFuncDivide(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		v := gview.New()
+		r, err := v.ParseContent(gctx.New(), "{{divide 8 2 2}}")
+		t.Assert(err, nil)
+		t.Assert(r, `2`)
 	})
 }

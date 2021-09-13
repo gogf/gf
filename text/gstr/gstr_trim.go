@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,51 +7,33 @@
 package gstr
 
 import (
+	"github.com/gogf/gf/internal/utils"
 	"strings"
-)
-
-var (
-	// defaultTrimChars are the characters which are stripped by Trim* functions in default.
-	defaultTrimChars = string([]byte{
-		'\t', // Tab.
-		'\v', // Vertical tab.
-		'\n', // New line (line feed).
-		'\r', // Carriage return.
-		'\f', // New page.
-		' ',  // Ordinary space.
-		0x00, // NUL-byte.
-		0x85, // Delete.
-		0xA0, // Non-breaking space.
-	})
 )
 
 // Trim strips whitespace (or other characters) from the beginning and end of a string.
 // The optional parameter <characterMask> specifies the additional stripped characters.
 func Trim(str string, characterMask ...string) string {
-	if len(characterMask) == 0 {
-		return strings.Trim(str, defaultTrimChars)
-	} else {
-		return strings.Trim(str, defaultTrimChars+characterMask[0])
-	}
+	return utils.Trim(str, characterMask...)
 }
 
-// TrimStr strips all of the given <cut> string from the beginning and end of a string.
-// Note that it does not strips the whitespaces of its beginning or end.
+// TrimStr strips all the given <cut> string from the beginning and end of a string.
+// Note that it does not strip the whitespaces of its beginning or end.
 func TrimStr(str string, cut string, count ...int) string {
 	return TrimLeftStr(TrimRightStr(str, cut, count...), cut, count...)
 }
 
 // TrimLeft strips whitespace (or other characters) from the beginning of a string.
 func TrimLeft(str string, characterMask ...string) string {
-	if len(characterMask) == 0 {
-		return strings.TrimLeft(str, defaultTrimChars)
-	} else {
-		return strings.TrimLeft(str, defaultTrimChars+characterMask[0])
+	trimChars := utils.DefaultTrimChars
+	if len(characterMask) > 0 {
+		trimChars += characterMask[0]
 	}
+	return strings.TrimLeft(str, trimChars)
 }
 
-// TrimLeftStr strips all of the given <cut> string from the beginning of a string.
-// Note that it does not strips the whitespaces of its beginning.
+// TrimLeftStr strips all the given <cut> string from the beginning of a string.
+// Note that it does not strip the whitespaces of its beginning.
 func TrimLeftStr(str string, cut string, count ...int) string {
 	var (
 		lenCut   = len(cut)
@@ -69,15 +51,15 @@ func TrimLeftStr(str string, cut string, count ...int) string {
 
 // TrimRight strips whitespace (or other characters) from the end of a string.
 func TrimRight(str string, characterMask ...string) string {
-	if len(characterMask) == 0 {
-		return strings.TrimRight(str, defaultTrimChars)
-	} else {
-		return strings.TrimRight(str, defaultTrimChars+characterMask[0])
+	trimChars := utils.DefaultTrimChars
+	if len(characterMask) > 0 {
+		trimChars += characterMask[0]
 	}
+	return strings.TrimRight(str, trimChars)
 }
 
-// TrimRightStr strips all of the given <cut> string from the end of a string.
-// Note that it does not strips the whitespaces of its end.
+// TrimRightStr strips all the given <cut> string from the end of a string.
+// Note that it does not strip the whitespaces of its end.
 func TrimRightStr(str string, cut string, count ...int) string {
 	var (
 		lenStr   = len(str)
@@ -93,4 +75,29 @@ func TrimRightStr(str string, cut string, count ...int) string {
 		}
 	}
 	return str
+}
+
+// TrimAll trims all characters in string `str`.
+func TrimAll(str string, characterMask ...string) string {
+	trimChars := utils.DefaultTrimChars
+	if len(characterMask) > 0 {
+		trimChars += characterMask[0]
+	}
+	var (
+		filtered bool
+		slice    = make([]rune, 0, len(str))
+	)
+	for _, char := range str {
+		filtered = false
+		for _, trimChar := range trimChars {
+			if char == trimChar {
+				filtered = true
+				break
+			}
+		}
+		if !filtered {
+			slice = append(slice, char)
+		}
+	}
+	return string(slice)
 }

@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -90,22 +90,27 @@ func TestSPath_Basic(t *testing.T) {
 		realPath, err = gsp.Add("gf_tmp1")
 		t.Assert(err != nil, false)
 		t.Assert(realPath, gfile.Join(root, "gf_tmp1"))
+
 		realPath, err = gsp.Add("gf_tmp3")
 		t.Assert(err != nil, true)
 		t.Assert(realPath, "")
+
 		gsp.Remove(gfile.Join(root, "gf_tmp"))
 		gsp.Remove(gfile.Join(root, "gf_tmp1"))
 		gsp.Remove(gfile.Join(root, "gf_tmp3"))
 		t.Assert(gsp.Size(), 3)
 		t.Assert(len(gsp.Paths()), 3)
+
 		gsp.AllPaths()
 		gsp.Set(root)
 		fp, isDir = gsp.Search("gf_tmp")
 		t.Assert(fp, gfile.Join(root, "gf_tmp"))
 		t.Assert(isDir, true)
+
 		fp, isDir = gsp.Search("gf_tmp", "gf.txt")
 		t.Assert(fp, gfile.Join(root, "gf_tmp", "gf.txt"))
 		t.Assert(isDir, false)
+
 		fp, isDir = gsp.Search("/", "gf.txt")
 		t.Assert(fp, pwd)
 		t.Assert(isDir, true)

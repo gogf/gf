@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -8,8 +8,10 @@ package ghttp
 
 import (
 	"bytes"
-	"errors"
+	"context"
 	"fmt"
+	"github.com/gogf/gf/errors/gcode"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/text/gstr"
 	"os"
@@ -51,7 +53,7 @@ var serverProcessStatus = gtype.NewInt()
 // The optional parameter <newExeFilePath> specifies the new binary file for creating process.
 func RestartAllServer(newExeFilePath ...string) error {
 	if !gracefulEnabled {
-		return errors.New("graceful reload feature is disabled")
+		return gerror.NewCode(gcode.CodeInvalidOperation, "graceful reload feature is disabled")
 	}
 	serverActionLocker.Lock()
 	defer serverActionLocker.Unlock()
@@ -84,9 +86,10 @@ func checkProcessStatus() error {
 	if status > 0 {
 		switch status {
 		case adminActionRestarting:
-			return errors.New("server is restarting")
+			return gerror.NewCode(gcode.CodeInvalidOperation, "server is restarting")
+
 		case adminActionShuttingDown:
-			return errors.New("server is shutting down")
+			return gerror.NewCode(gcode.CodeInvalidOperation, "server is shutting down")
 		}
 	}
 	return nil
@@ -97,7 +100,11 @@ func checkProcessStatus() error {
 func checkActionFrequency() error {
 	interval := gtime.TimestampMilli() - serverActionLastTime.Val()
 	if interval < adminActionIntervalLimit {
-		return errors.New(fmt.Sprintf("too frequent action, please retry in %d ms", adminActionIntervalLimit-interval))
+		return gerror.NewCodef(
+			gcode.CodeInvalidOperation,
+			"too frequent action, please retry in %d ms",
+			adminActionIntervalLimit-interval,
+		)
 	}
 	serverActionLastTime.Set(gtime.TimestampMilli())
 	return nil
@@ -173,7 +180,7 @@ func bufferToServerFdMap(buffer []byte) map[string]listenerFdMap {
 	sfm := make(map[string]listenerFdMap)
 	if len(buffer) > 0 {
 		j, _ := gjson.LoadContent(buffer)
-		for k, _ := range j.ToMap() {
+		for k, _ := range j.Map() {
 			m := make(map[string]string)
 			for k, v := range j.GetMap(k) {
 				m[k] = gconv.String(v)
@@ -233,8 +240,13 @@ func shutdownWebServers(signal ...string) {
 	}
 }
 
-// gracefulShutdownWebServers gracefully shuts down all servers.
-func gracefulShutdownWebServers() {
+// shutdownWebServersGracefully gracefully shuts down all servers.
+func shutdownWebServersGracefully(signal ...string) {
+	if len(signal) > 0 {
+		glog.Printf("%d: server gracefully shutting down by signal: %s", gproc.Pid(), signal[0])
+	} else {
+		glog.Printf("%d: server gracefully shutting down by api", gproc.Pid())
+	}
 	serverMapping.RLockFunc(func(m map[string]interface{}) {
 		for _, v := range m {
 			for _, s := range v.(*Server).servers {
@@ -261,10 +273,10 @@ func handleProcessMessage() {
 	for {
 		if msg := gproc.Receive(adminGProcCommGroup); msg != nil {
 			if bytes.EqualFold(msg.Data, []byte("exit")) {
-				intlog.Printf("%d: process message: exit", gproc.Pid())
-				gracefulShutdownWebServers()
+				intlog.Printf(context.TODO(), "%d: process message: exit", gproc.Pid())
+				shutdownWebServersGracefully()
 				allDoneChan <- struct{}{}
-				intlog.Printf("%d: process message: exit done", gproc.Pid())
+				intlog.Printf(context.TODO(), "%d: process message: exit done", gproc.Pid())
 				return
 			}
 		}

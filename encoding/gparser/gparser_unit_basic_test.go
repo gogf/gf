@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -230,14 +230,14 @@ func Test_Convert(t *testing.T) {
 		err := p.GetStruct("person", &name)
 		t.Assert(err, nil)
 		t.Assert(name.Name, "gf")
-		t.Assert(p.ToMap()["name"], "gf")
-		err = p.ToStruct(&name)
+		t.Assert(p.Map()["name"], "gf")
+		err = p.Struct(&name)
 		t.Assert(err, nil)
 		t.Assert(name.Name, "gf")
 		//p.Dump()
 
 		p = gparser.New(`[0,1,2]`)
-		t.Assert(p.ToArray()[0], 0)
+		t.Assert(p.Array()[0], 0)
 	})
 }
 

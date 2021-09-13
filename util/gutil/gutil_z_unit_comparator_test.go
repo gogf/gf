@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -158,5 +158,22 @@ func Test_ComparatorTime(t *testing.T) {
 
 		l := gutil.ComparatorTime("2019-06-13", "2019-06-14")
 		t.Assert(l, -1)
+	})
+}
+
+func Test_ComparatorFloat32OfFixed(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gutil.ComparatorFloat32(0.1, 0.1), 0)
+		t.Assert(gutil.ComparatorFloat32(1.1, 2.1), -1)
+		t.Assert(gutil.ComparatorFloat32(2.1, 1.1), 1)
+	})
+}
+
+func Test_ComparatorFloat64OfFixed(t *testing.T) {
+
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gutil.ComparatorFloat64(0.1, 0.1), 0)
+		t.Assert(gutil.ComparatorFloat64(1.1, 2.1), -1)
+		t.Assert(gutil.ComparatorFloat64(2.1, 1.1), 1)
 	})
 }
