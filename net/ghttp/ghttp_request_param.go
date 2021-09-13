@@ -70,7 +70,8 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 		reflectKind1 = reflectVal1.Kind()
 	)
 	if reflectKind1 != reflect.Ptr {
-		return fmt.Errorf(
+		return gerror.NewCodef(
+			gcode.CodeInvalidParameter,
 			"parameter should be type of *struct/**struct/*[]struct/*[]*struct, but got: %v",
 			reflectKind1,
 		)

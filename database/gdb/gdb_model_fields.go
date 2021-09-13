@@ -9,6 +9,8 @@ package gdb
 import (
 	"fmt"
 	"github.com/gogf/gf/container/gset"
+	"github.com/gogf/gf/errors/gcode"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/gutil"
@@ -247,7 +249,7 @@ func (m *Model) HasField(field string) (bool, error) {
 		return false, err
 	}
 	if len(tableFields) == 0 {
-		return false, fmt.Errorf(`empty table fields for table "%s"`, m.tables)
+		return false, gerror.NewCodef(gcode.CodeNotFound, `empty table fields for table "%s"`, m.tables)
 	}
 	fieldsArray := make([]string, len(tableFields))
 	for k, v := range tableFields {

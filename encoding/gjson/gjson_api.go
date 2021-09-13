@@ -8,6 +8,8 @@ package gjson
 
 import (
 	"fmt"
+	"github.com/gogf/gf/errors/gcode"
+	"github.com/gogf/gf/errors/gerror"
 	"time"
 
 	"github.com/gogf/gf/util/gutil"
@@ -57,11 +59,6 @@ func (j *Json) Get(pattern string, def ...interface{}) interface{} {
 	// It returns nil if pattern is empty.
 	if pattern == "" {
 		return nil
-	}
-
-	// It returns all if pattern is ".".
-	if pattern == "." {
-		return *j.p
 	}
 
 	var result *interface{}
@@ -309,14 +306,20 @@ func (j *Json) Len(pattern string) int {
 // The target value by <pattern> should be type of slice.
 func (j *Json) Append(pattern string, value interface{}) error {
 	p := j.getPointerByPattern(pattern)
-	if p == nil {
+	if p == nil || *p == nil {
+		if pattern == "." {
+			return j.Set("0", value)
+		}
 		return j.Set(fmt.Sprintf("%s.0", pattern), value)
 	}
 	switch (*p).(type) {
 	case []interface{}:
+		if pattern == "." {
+			return j.Set(fmt.Sprintf("%d", len((*p).([]interface{}))), value)
+		}
 		return j.Set(fmt.Sprintf("%s.%d", pattern, len((*p).([]interface{}))), value)
 	}
-	return fmt.Errorf("invalid variable type of %s", pattern)
+	return gerror.NewCodef(gcode.CodeInvalidParameter, "invalid variable type of %s", pattern)
 }
 
 // GetStruct retrieves the value by specified <pattern> and converts it to specified object

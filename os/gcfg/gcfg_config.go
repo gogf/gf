@@ -151,7 +151,11 @@ func (c *Config) SetPath(path string) error {
 	}
 	// Should be a directory.
 	if !isDir {
-		err := fmt.Errorf(`[gcfg] SetPath failed: path "%s" should be directory type`, path)
+		err := gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			`[gcfg] SetPath failed: path "%s" should be directory type`,
+			path,
+		)
 		if errorPrint() {
 			glog.Error(err)
 		}

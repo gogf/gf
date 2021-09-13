@@ -9,7 +9,8 @@ package gdb
 import (
 	"context"
 	"database/sql"
-	"fmt"
+	"github.com/gogf/gf/errors/gcode"
+	"github.com/gogf/gf/errors/gerror"
 	"reflect"
 
 	"github.com/gogf/gf/container/gtype"
@@ -117,8 +118,12 @@ func (c *Core) Transaction(ctx context.Context, f func(ctx context.Context, tx *
 	tx.ctx = WithTX(tx.ctx, tx)
 	defer func() {
 		if err == nil {
-			if e := recover(); e != nil {
-				err = fmt.Errorf("%v", e)
+			if exception := recover(); exception != nil {
+				if v, ok := exception.(error); ok {
+					err = v
+				} else {
+					err = gerror.NewCodef(gcode.CodeInternalError, "%v", v)
+				}
 			}
 		}
 		if err != nil {
@@ -307,8 +312,12 @@ func (tx *TX) Transaction(ctx context.Context, f func(ctx context.Context, tx *T
 	}
 	defer func() {
 		if err == nil {
-			if e := recover(); e != nil {
-				err = fmt.Errorf("%v", e)
+			if exception := recover(); exception != nil {
+				if v, ok := exception.(error); ok {
+					err = v
+				} else {
+					err = gerror.NewCodef(gcode.CodeInternalError, "%v", v)
+				}
 			}
 		}
 		if err != nil {
@@ -398,21 +407,21 @@ func (tx *TX) GetScan(pointer interface{}, sql string, args ...interface{}) erro
 	t := reflect.TypeOf(pointer)
 	k := t.Kind()
 	if k != reflect.Ptr {
-		return fmt.Errorf("params should be type of pointer, but got: %v", k)
+		return gerror.NewCodef(gcode.CodeInvalidParameter, "params should be type of pointer, but got: %v", k)
 	}
 	k = t.Elem().Kind()
 	switch k {
 	case reflect.Array, reflect.Slice:
 		return tx.GetStructs(pointer, sql, args...)
+
 	case reflect.Struct:
 		return tx.GetStruct(pointer, sql, args...)
-	default:
-		return fmt.Errorf("element type should be type of struct/slice, unsupported: %v", k)
 	}
+	return gerror.NewCodef(gcode.CodeInvalidParameter, "element type should be type of struct/slice, unsupported: %v", k)
 }
 
 // GetValue queries and returns the field value from database.
-// The sql should queries only one field from database, or else it returns only one
+// The sql should query only one field from database, or else it returns only one
 // field of the result.
 func (tx *TX) GetValue(sql string, args ...interface{}) (Value, error) {
 	one, err := tx.GetOne(sql, args...)

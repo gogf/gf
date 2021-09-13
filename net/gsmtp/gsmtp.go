@@ -14,6 +14,8 @@ package gsmtp
 import (
 	"encoding/base64"
 	"fmt"
+	"github.com/gogf/gf/errors/gcode"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/util/gconv"
 	"net/smtp"
 	"strings"
@@ -53,13 +55,21 @@ func (s *SMTP) SendMail(from, tos, subject, body string, contentType ...string) 
 		hp      = strings.Split(s.Address, ":")
 	)
 	if s.Address == "" || len(hp) > 2 {
-		return fmt.Errorf("server address is either empty or incorrect: %s", s.Address)
+		return gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			"server address is either empty or incorrect: %s",
+			s.Address,
+		)
 	} else if len(hp) == 1 {
 		server = s.Address
 		address = server + ":25"
 	} else if len(hp) == 2 {
 		if (hp[0] == "") || (hp[1] == "") {
-			return fmt.Errorf("server address is either empty or incorrect: %s", s.Address)
+			return gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				"server address is either empty or incorrect: %s",
+				s.Address,
+			)
 		}
 		server = hp[0]
 		address = s.Address
@@ -75,11 +85,11 @@ func (s *SMTP) SendMail(from, tos, subject, body string, contentType ...string) 
 		}
 	}
 	if len(tosArr) == 0 {
-		return fmt.Errorf("tos if invalid: %s", tos)
+		return gerror.NewCodef(gcode.CodeInvalidParameter, `invalid parameter "tos": %s`, tos)
 	}
 
 	if !strings.Contains(from, "@") {
-		return fmt.Errorf("from is invalid: %s", from)
+		return gerror.NewCodef(gcode.CodeInvalidParameter, `invalid parameter "from": %s`, from)
 	}
 
 	header := map[string]string{
