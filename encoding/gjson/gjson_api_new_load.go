@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -8,8 +8,9 @@ package gjson
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
+	"github.com/gogf/gf/errors/gcode"
+	"github.com/gogf/gf/errors/gerror"
 	"reflect"
 
 	"github.com/gogf/gf/internal/json"
@@ -42,15 +43,27 @@ func New(data interface{}, safe ...bool) *Json {
 // The parameter <safe> specifies whether using this Json object in concurrent-safe context, which
 // is false in default.
 func NewWithTag(data interface{}, tags string, safe ...bool) *Json {
-	j := (*Json)(nil)
+	option := Options{
+		Tags: tags,
+	}
+	if len(safe) > 0 && safe[0] {
+		option.Safe = true
+	}
+	return NewWithOptions(data, option)
+}
+
+// NewWithOptions creates a Json object with any variable type of <data>, but <data> should be a map
+// or slice for data access reason, or it will make no sense.
+func NewWithOptions(data interface{}, options Options) *Json {
+	var j *Json
 	switch data.(type) {
 	case string, []byte:
-		if r, err := LoadContent(gconv.Bytes(data)); err == nil {
+		if r, err := loadContentWithOptions(data, options); err == nil {
 			j = r
 		} else {
 			j = &Json{
 				p:  &data,
-				c:  byte(gDEFAULT_SPLIT_CHAR),
+				c:  byte(defaultSplitChar),
 				vc: false,
 			}
 		}
@@ -69,26 +82,26 @@ func NewWithTag(data interface{}, tags string, safe ...bool) *Json {
 			i = gconv.Interfaces(data)
 			j = &Json{
 				p:  &i,
-				c:  byte(gDEFAULT_SPLIT_CHAR),
+				c:  byte(defaultSplitChar),
 				vc: false,
 			}
 		case reflect.Map, reflect.Struct:
 			i := interface{}(nil)
-			i = gconv.MapDeep(data, tags)
+			i = gconv.MapDeep(data, options.Tags)
 			j = &Json{
 				p:  &i,
-				c:  byte(gDEFAULT_SPLIT_CHAR),
+				c:  byte(defaultSplitChar),
 				vc: false,
 			}
 		default:
 			j = &Json{
 				p:  &data,
-				c:  byte(gDEFAULT_SPLIT_CHAR),
+				c:  byte(defaultSplitChar),
 				vc: false,
 			}
 		}
 	}
-	j.mu = rwmutex.New(safe...)
+	j.mu = rwmutex.New(options.Safe)
 	return j
 }
 
@@ -99,42 +112,133 @@ func Load(path string, safe ...bool) (*Json, error) {
 	} else {
 		path = p
 	}
-	return doLoadContent(gfile.Ext(path), gfile.GetBytesWithCache(path), safe...)
+	option := Options{}
+	if len(safe) > 0 && safe[0] {
+		option.Safe = true
+	}
+	return doLoadContentWithOptions(gfile.Ext(path), gfile.GetBytesWithCache(path), option)
 }
 
 // LoadJson creates a Json object from given JSON format content.
 func LoadJson(data interface{}, safe ...bool) (*Json, error) {
-	return doLoadContent("json", gconv.Bytes(data), safe...)
+	option := Options{}
+	if len(safe) > 0 && safe[0] {
+		option.Safe = true
+	}
+	return doLoadContentWithOptions("json", gconv.Bytes(data), option)
 }
 
 // LoadXml creates a Json object from given XML format content.
 func LoadXml(data interface{}, safe ...bool) (*Json, error) {
-	return doLoadContent("xml", gconv.Bytes(data), safe...)
+	option := Options{}
+	if len(safe) > 0 && safe[0] {
+		option.Safe = true
+	}
+	return doLoadContentWithOptions("xml", gconv.Bytes(data), option)
 }
 
 // LoadIni creates a Json object from given INI format content.
 func LoadIni(data interface{}, safe ...bool) (*Json, error) {
-	return doLoadContent("ini", gconv.Bytes(data), safe...)
+	option := Options{}
+	if len(safe) > 0 && safe[0] {
+		option.Safe = true
+	}
+	return doLoadContentWithOptions("ini", gconv.Bytes(data), option)
 }
 
 // LoadYaml creates a Json object from given YAML format content.
 func LoadYaml(data interface{}, safe ...bool) (*Json, error) {
-	return doLoadContent("yaml", gconv.Bytes(data), safe...)
+	option := Options{}
+	if len(safe) > 0 && safe[0] {
+		option.Safe = true
+	}
+	return doLoadContentWithOptions("yaml", gconv.Bytes(data), option)
 }
 
 // LoadToml creates a Json object from given TOML format content.
 func LoadToml(data interface{}, safe ...bool) (*Json, error) {
-	return doLoadContent("toml", gconv.Bytes(data), safe...)
+	option := Options{}
+	if len(safe) > 0 && safe[0] {
+		option.Safe = true
+	}
+	return doLoadContentWithOptions("toml", gconv.Bytes(data), option)
+}
+
+// LoadContent creates a Json object from given content, it checks the data type of <content>
+// automatically, supporting data content type as follows:
+// JSON, XML, INI, YAML and TOML.
+func LoadContent(data interface{}, safe ...bool) (*Json, error) {
+	content := gconv.Bytes(data)
+	if len(content) == 0 {
+		return New(nil, safe...), nil
+	}
+	return LoadContentType(checkDataType(content), content, safe...)
+}
+
+// LoadContentType creates a Json object from given type and content,
+// supporting data content type as follows:
+// JSON, XML, INI, YAML and TOML.
+func LoadContentType(dataType string, data interface{}, safe ...bool) (*Json, error) {
+	content := gconv.Bytes(data)
+	if len(content) == 0 {
+		return New(nil, safe...), nil
+	}
+	//ignore UTF8-BOM
+	if content[0] == 0xEF && content[1] == 0xBB && content[2] == 0xBF {
+		content = content[3:]
+	}
+	option := Options{}
+	if len(safe) > 0 && safe[0] {
+		option.Safe = true
+	}
+	return doLoadContentWithOptions(dataType, content, option)
+}
+
+// IsValidDataType checks and returns whether given <dataType> a valid data type for loading.
+func IsValidDataType(dataType string) bool {
+	if dataType == "" {
+		return false
+	}
+	if dataType[0] == '.' {
+		dataType = dataType[1:]
+	}
+	switch dataType {
+	case "json", "js", "xml", "yaml", "yml", "toml", "ini":
+		return true
+	}
+	return false
+}
+
+func loadContentWithOptions(data interface{}, options Options) (*Json, error) {
+	content := gconv.Bytes(data)
+	if len(content) == 0 {
+		return NewWithOptions(nil, options), nil
+	}
+	return loadContentTypeWithOptions(checkDataType(content), content, options)
+}
+
+func loadContentTypeWithOptions(dataType string, data interface{}, options Options) (*Json, error) {
+	content := gconv.Bytes(data)
+	if len(content) == 0 {
+		return NewWithOptions(nil, options), nil
+	}
+	//ignore UTF8-BOM
+	if content[0] == 0xEF && content[1] == 0xBB && content[2] == 0xBF {
+		content = content[3:]
+	}
+	return doLoadContentWithOptions(dataType, content, options)
 }
 
 // doLoadContent creates a Json object from given content.
 // It supports data content type as follows:
 // JSON, XML, INI, YAML and TOML.
-func doLoadContent(dataType string, data []byte, safe ...bool) (*Json, error) {
-	var err error
-	var result interface{}
+func doLoadContentWithOptions(dataType string, data []byte, options Options) (*Json, error) {
+	var (
+		err    error
+		result interface{}
+	)
 	if len(data) == 0 {
-		return New(nil, safe...), nil
+		return NewWithOptions(nil, options), nil
 	}
 	if dataType == "" {
 		dataType = checkDataType(data)
@@ -161,16 +265,15 @@ func doLoadContent(dataType string, data []byte, safe ...bool) (*Json, error) {
 			return nil, err
 		}
 	default:
-		err = errors.New("unsupported type for loading")
+		err = gerror.NewCode(gcode.CodeInvalidParameter, "unsupported type for loading")
 	}
 	if err != nil {
 		return nil, err
 	}
 	decoder := json.NewDecoder(bytes.NewReader(data))
-	// Do not use number, it converts float64 to json.Number type,
-	// which actually a string type. It causes converting issue for other data formats,
-	// for example: yaml.
-	//decoder.UseNumber()
+	if options.StrNumber {
+		decoder.UseNumber()
+	}
 	if err := decoder.Decode(&result); err != nil {
 		return nil, err
 	}
@@ -178,48 +281,7 @@ func doLoadContent(dataType string, data []byte, safe ...bool) (*Json, error) {
 	case string, []byte:
 		return nil, fmt.Errorf(`json decoding failed for content: %s`, string(data))
 	}
-	return New(result, safe...), nil
-}
-
-// LoadContent creates a Json object from given content, it checks the data type of <content>
-// automatically, supporting data content type as follows:
-// JSON, XML, INI, YAML and TOML.
-func LoadContent(data interface{}, safe ...bool) (*Json, error) {
-	content := gconv.Bytes(data)
-	if len(content) == 0 {
-		return New(nil, safe...), nil
-	}
-	return LoadContentType(checkDataType(content), content, safe...)
-}
-
-// LoadContentType creates a Json object from given type and content,
-// supporting data content type as follows:
-// JSON, XML, INI, YAML and TOML.
-func LoadContentType(dataType string, data interface{}, safe ...bool) (*Json, error) {
-	content := gconv.Bytes(data)
-	if len(content) == 0 {
-		return New(nil, safe...), nil
-	}
-	//ignore UTF8-BOM
-	if content[0] == 0xEF && content[1] == 0xBB && content[2] == 0xBF {
-		content = content[3:]
-	}
-	return doLoadContent(dataType, content, safe...)
-}
-
-// IsValidDataType checks and returns whether given <dataType> a valid data type for loading.
-func IsValidDataType(dataType string) bool {
-	if dataType == "" {
-		return false
-	}
-	if dataType[0] == '.' {
-		dataType = dataType[1:]
-	}
-	switch dataType {
-	case "json", "js", "xml", "yaml", "yml", "toml", "ini":
-		return true
-	}
-	return false
+	return NewWithOptions(result, options), nil
 }
 
 // checkDataType automatically checks and returns the data type for <content>.
@@ -230,7 +292,8 @@ func checkDataType(content []byte) string {
 		return "json"
 	} else if gregex.IsMatch(`^<.+>[\S\s]+<.+>\s*$`, content) {
 		return "xml"
-	} else if !gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*"""[\s\S]+"""`, content) && !gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*'''[\s\S]+'''`, content) &&
+	} else if !gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*"""[\s\S]+"""`, content) &&
+		!gregex.IsMatch(`[\n\r]*[\s\t\w\-\."]+\s*=\s*'''[\s\S]+'''`, content) &&
 		((gregex.IsMatch(`^[\n\r]*[\w\-\s\t]+\s*:\s*".+"`, content) || gregex.IsMatch(`^[\n\r]*[\w\-\s\t]+\s*:\s*\w+`, content)) ||
 			(gregex.IsMatch(`[\n\r]+[\w\-\s\t]+\s*:\s*".+"`, content) || gregex.IsMatch(`[\n\r]+[\w\-\s\t]+\s*:\s*\w+`, content))) {
 		return "yml"

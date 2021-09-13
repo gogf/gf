@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -13,6 +13,8 @@ import (
 	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/encoding/gurl"
 	"github.com/gogf/gf/encoding/gxml"
+	"github.com/gogf/gf/errors/gcode"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/internal/utils"
 	"github.com/gogf/gf/text/gregex"
@@ -82,24 +84,27 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 	// 1. {"id":1, "name":"john"}
 	// 2. ?id=1&name=john
 	case reflect.Ptr, reflect.Struct:
+		var (
+			err  error
+			data map[string]interface{}
+		)
 		// Converting.
 		switch requestType {
 		case parseTypeQuery:
-			if err := r.GetQueryStruct(pointer); err != nil {
+			if data, err = r.doGetQueryStruct(pointer); err != nil {
 				return err
 			}
 		case parseTypeForm:
-			if err := r.GetFormStruct(pointer); err != nil {
+			if data, err = r.doGetFormStruct(pointer); err != nil {
 				return err
 			}
 		default:
-			if err := r.GetStruct(pointer); err != nil {
+			if data, err = r.doGetRequestStruct(pointer); err != nil {
 				return err
 			}
 		}
-
 		// Validation.
-		if err := gvalid.CheckStruct(pointer, nil); err != nil {
+		if err := gvalid.CheckStructWithData(r.Context(), pointer, data, nil); err != nil {
 			return err
 		}
 
@@ -107,7 +112,7 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 	// [{"id":1, "name":"john"}, {"id":, "name":"smith"}]
 	case reflect.Array, reflect.Slice:
 		// If struct slice conversion, it might post JSON/XML content,
-		// so it uses gjson for the conversion.
+		// so it uses `gjson` for the conversion.
 		j, err := gjson.LoadContent(r.GetBody())
 		if err != nil {
 			return err
@@ -116,7 +121,12 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 			return err
 		}
 		for i := 0; i < reflectVal2.Len(); i++ {
-			if err := gvalid.CheckStruct(reflectVal2.Index(i), nil); err != nil {
+			if err := gvalid.CheckStructWithData(
+				r.Context(),
+				reflectVal2.Index(i),
+				j.GetMap(gconv.String(i)),
+				nil,
+			); err != nil {
 				return err
 			}
 		}
@@ -139,14 +149,14 @@ func (r *Request) GetVar(key string, def ...interface{}) *gvar.Var {
 
 // GetRaw is alias of GetBody.
 // See GetBody.
-// Deprecated.
+// Deprecated, use GetBody instead.
 func (r *Request) GetRaw() []byte {
 	return r.GetBody()
 }
 
 // GetRawString is alias of GetBodyString.
 // See GetBodyString.
-// Deprecated.
+// Deprecated, use GetBodyString instead.
 func (r *Request) GetRawString() string {
 	return r.GetBodyString()
 }
@@ -291,7 +301,7 @@ func (r *Request) parseQuery() {
 		var err error
 		r.queryMap, err = gstr.Parse(r.URL.RawQuery)
 		if err != nil {
-			panic(err)
+			panic(gerror.WrapCode(gcode.CodeInvalidParameter, err, ""))
 		}
 	}
 }
@@ -312,7 +322,7 @@ func (r *Request) parseBody() {
 		body = bytes.TrimSpace(body)
 		// JSON format checks.
 		if body[0] == '{' && body[len(body)-1] == '}' {
-			_ = json.Unmarshal(body, &r.bodyMap)
+			_ = json.UnmarshalUseNumber(body, &r.bodyMap)
 		}
 		// XML format checks.
 		if len(body) > 5 && bytes.EqualFold(body[:5], xmlHeaderBytes) {
@@ -346,12 +356,12 @@ func (r *Request) parseForm() {
 		if gstr.Contains(contentType, "multipart/") {
 			// multipart/form-data, multipart/mixed
 			if err = r.ParseMultipartForm(r.Server.config.FormParsingMemory); err != nil {
-				panic(err)
+				panic(gerror.WrapCode(gcode.CodeInvalidRequest, err, ""))
 			}
 		} else if gstr.Contains(contentType, "form") {
 			// application/x-www-form-urlencoded
 			if err = r.Request.ParseForm(); err != nil {
-				panic(err)
+				panic(gerror.WrapCode(gcode.CodeInvalidRequest, err, ""))
 			}
 		}
 		if len(r.PostForm) > 0 {
@@ -394,7 +404,7 @@ func (r *Request) parseForm() {
 			}
 			if params != "" {
 				if r.formMap, err = gstr.Parse(params); err != nil {
-					panic(err)
+					panic(gerror.WrapCode(gcode.CodeInvalidParameter, err, ""))
 				}
 			}
 		}

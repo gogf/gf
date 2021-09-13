@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -29,6 +29,25 @@ func Test_Size(t *testing.T) {
 
 		sizes = gfile.Size("")
 		t.Assert(sizes, 0)
+
+	})
+}
+
+func Test_SizeFormat(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			paths1 = "/testfile_t1.txt"
+			sizes  string
+		)
+
+		createTestFile(paths1, "abcdefghijklmn")
+		defer delTestFiles(paths1)
+
+		sizes = gfile.SizeFormat(testpath() + paths1)
+		t.Assert(sizes, "14.00B")
+
+		sizes = gfile.SizeFormat("")
+		t.Assert(sizes, "0.00B")
 
 	})
 }

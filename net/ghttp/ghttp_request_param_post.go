@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -18,7 +18,7 @@ import (
 // Note that if there're multiple parameters with the same name, the parameters are retrieved
 // and overwrote in order of priority: form > body.
 //
-// Deprecated.
+// Deprecated, use GetForm instead.
 func (r *Request) GetPost(key string, def ...interface{}) interface{} {
 	r.parseForm()
 	if len(r.formMap) > 0 {
@@ -38,82 +38,82 @@ func (r *Request) GetPost(key string, def ...interface{}) interface{} {
 	return nil
 }
 
-// Deprecated.
+// Deprecated, use GetFormVar instead.
 func (r *Request) GetPostVar(key string, def ...interface{}) *gvar.Var {
 	return gvar.New(r.GetPost(key, def...))
 }
 
-// Deprecated.
+// Deprecated, use GetFormString instead.
 func (r *Request) GetPostString(key string, def ...interface{}) string {
 	return r.GetPostVar(key, def...).String()
 }
 
-// Deprecated.
+// Deprecated, use GetFormBool instead.
 func (r *Request) GetPostBool(key string, def ...interface{}) bool {
 	return r.GetPostVar(key, def...).Bool()
 }
 
-// Deprecated.
+// Deprecated, use GetFormInt instead.
 func (r *Request) GetPostInt(key string, def ...interface{}) int {
 	return r.GetPostVar(key, def...).Int()
 }
 
-// Deprecated.
+// Deprecated, use GetFormInt32 instead.
 func (r *Request) GetPostInt32(key string, def ...interface{}) int32 {
 	return r.GetPostVar(key, def...).Int32()
 }
 
-// Deprecated.
+// Deprecated, use GetFormInt64 instead.
 func (r *Request) GetPostInt64(key string, def ...interface{}) int64 {
 	return r.GetPostVar(key, def...).Int64()
 }
 
-// Deprecated.
+// Deprecated, use GetFormInts instead.
 func (r *Request) GetPostInts(key string, def ...interface{}) []int {
 	return r.GetPostVar(key, def...).Ints()
 }
 
-// Deprecated.
+// Deprecated, use GetFormUint instead.
 func (r *Request) GetPostUint(key string, def ...interface{}) uint {
 	return r.GetPostVar(key, def...).Uint()
 }
 
-// Deprecated.
+// Deprecated, use GetFormUint32 instead.
 func (r *Request) GetPostUint32(key string, def ...interface{}) uint32 {
 	return r.GetPostVar(key, def...).Uint32()
 }
 
-// Deprecated.
+// Deprecated, use GetFormUint64 instead.
 func (r *Request) GetPostUint64(key string, def ...interface{}) uint64 {
 	return r.GetPostVar(key, def...).Uint64()
 }
 
-// Deprecated.
+// Deprecated, use GetFormFloat32 instead.
 func (r *Request) GetPostFloat32(key string, def ...interface{}) float32 {
 	return r.GetPostVar(key, def...).Float32()
 }
 
-// Deprecated.
+// Deprecated, use GetFormFloat64 instead.
 func (r *Request) GetPostFloat64(key string, def ...interface{}) float64 {
 	return r.GetPostVar(key, def...).Float64()
 }
 
-// Deprecated.
+// Deprecated, use GetFormFloats instead.
 func (r *Request) GetPostFloats(key string, def ...interface{}) []float64 {
 	return r.GetPostVar(key, def...).Floats()
 }
 
-// Deprecated.
+// Deprecated, use GetFormArray instead.
 func (r *Request) GetPostArray(key string, def ...interface{}) []string {
 	return r.GetPostVar(key, def...).Strings()
 }
 
-// Deprecated.
+// Deprecated, use GetFormStrings instead.
 func (r *Request) GetPostStrings(key string, def ...interface{}) []string {
 	return r.GetPostVar(key, def...).Strings()
 }
 
-// Deprecated.
+// Deprecated, use GetFormInterfaces instead.
 func (r *Request) GetPostInterfaces(key string, def ...interface{}) []interface{} {
 	return r.GetPostVar(key, def...).Interfaces()
 }

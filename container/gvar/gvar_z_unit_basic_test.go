@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -221,62 +221,6 @@ func Test_Float64(t *testing.T) {
 	})
 }
 
-func Test_Ints(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		var arr = []int{1, 2, 3, 4, 5}
-		objOne := gvar.New(arr, true)
-		t.Assert(objOne.Ints()[0], arr[0])
-	})
-}
-func Test_Floats(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		var arr = []float64{1, 2, 3, 4, 5}
-		objOne := gvar.New(arr, true)
-		t.Assert(objOne.Floats()[0], arr[0])
-	})
-}
-func Test_Strings(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		var arr = []string{"hello", "world"}
-		objOne := gvar.New(arr, true)
-		t.Assert(objOne.Strings()[0], arr[0])
-	})
-}
-
-func Test_Interfaces(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		var arr = []int{1, 2, 3, 4, 5}
-		objOne := gvar.New(arr, true)
-		t.Assert(objOne.Interfaces(), arr)
-	})
-}
-
-func Test_Slice(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		var arr = []int{1, 2, 3, 4, 5}
-		objOne := gvar.New(arr, true)
-		t.Assert(objOne.Slice(), arr)
-	})
-}
-
-func Test_Array(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		var arr = []int{1, 2, 3, 4, 5}
-		objOne := gvar.New(arr, false)
-		t.Assert(objOne.Array(), arr)
-	})
-}
-
-func Test_Vars(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		var arr = []int{1, 2, 3, 4, 5}
-		objOne := gvar.New(arr, false)
-		t.Assert(len(objOne.Vars()), 5)
-		t.Assert(objOne.Vars()[0].Int(), 1)
-		t.Assert(objOne.Vars()[4].Int(), 5)
-	})
-}
-
 func Test_Time(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var timeUnix int64 = 1556242660
@@ -301,12 +245,57 @@ func Test_Duration(t *testing.T) {
 	})
 }
 
-func Test_UnmarshalValue(t *testing.T) {
-	type V struct {
-		Name string
-		Var  *gvar.Var
-	}
+func Test_UnmarshalJson(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
+		type V struct {
+			Name string
+			Var  *gvar.Var
+		}
+		var v *V
+		err := gconv.Struct(map[string]interface{}{
+			"name": "john",
+			"var":  "v",
+		}, &v)
+		t.Assert(err, nil)
+		t.Assert(v.Name, "john")
+		t.Assert(v.Var.String(), "v")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type V struct {
+			Name string
+			Var  gvar.Var
+		}
+		var v *V
+		err := gconv.Struct(map[string]interface{}{
+			"name": "john",
+			"var":  "v",
+		}, &v)
+		t.Assert(err, nil)
+		t.Assert(v.Name, "john")
+		t.Assert(v.Var.String(), "v")
+	})
+}
+
+func Test_UnmarshalValue(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type V struct {
+			Name string
+			Var  *gvar.Var
+		}
+		var v *V
+		err := gconv.Struct(map[string]interface{}{
+			"name": "john",
+			"var":  "v",
+		}, &v)
+		t.Assert(err, nil)
+		t.Assert(v.Name, "john")
+		t.Assert(v.Var.String(), "v")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type V struct {
+			Name string
+			Var  gvar.Var
+		}
 		var v *V
 		err := gconv.Struct(map[string]interface{}{
 			"name": "john",

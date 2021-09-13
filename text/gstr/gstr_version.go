@@ -1,4 +1,4 @@
-// Copyright 2020 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -24,10 +24,10 @@ import (
 // 10.2.0
 // etc.
 func CompareVersion(a, b string) int {
-	if a[0] == 'v' {
+	if a != "" && a[0] == 'v' {
 		a = a[1:]
 	}
-	if b[0] == 'v' {
+	if b != "" && b[0] == 'v' {
 		b = b[1:]
 	}
 	var (
@@ -71,10 +71,10 @@ func CompareVersion(a, b string) int {
 // v4.20.0+incompatible
 // etc.
 func CompareVersionGo(a, b string) int {
-	if a[0] == 'v' {
+	if a != "" && a[0] == 'v' {
 		a = a[1:]
 	}
-	if b[0] == 'v' {
+	if b != "" && b[0] == 'v' {
 		b = b[1:]
 	}
 	if Count(a, "-") > 1 {

@@ -1,11 +1,10 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gtimer implements Hierarchical Timing Wheel for interval/delayed jobs
-// running and management.
+// Package gtimer implements timer for interval/delayed jobs running and management.
 //
 // This package is designed for management for millions of timing jobs. The differences
 // between gtimer and gcron are as follows:
@@ -20,33 +19,48 @@
 package gtimer
 
 import (
-	"fmt"
-	"math"
+	"github.com/gogf/gf/container/gtype"
+	"sync"
 	"time"
 
 	"github.com/gogf/gf/os/gcmd"
 )
 
+// Timer is the timer manager, which uses ticks to calculate the timing interval.
+type Timer struct {
+	mu      sync.RWMutex
+	queue   *priorityQueue // queue is a priority queue based on heap structure.
+	status  *gtype.Int     // status is the current timer status.
+	ticks   *gtype.Int64   // ticks is the proceeded interval number by the timer.
+	options TimerOptions   // timer options is used for timer configuration.
+}
+
+// TimerOptions is the configuration object for Timer.
+type TimerOptions struct {
+	Interval time.Duration // Interval is the interval escaped of the timer.
+}
+
 const (
-	StatusReady          = 0             // Job is ready for running.
-	StatusRunning        = 1             // Job is already running.
-	StatusStopped        = 2             // Job is stopped.
-	StatusReset          = 3             // Job is reset.
-	StatusClosed         = -1            // Job is closed and waiting to be deleted.
-	panicExit            = "exit"        // Internal usage for custom job exit function with panic.
-	defaultTimes         = math.MaxInt32 // Default limit running times, a big number.
-	defaultSlotNumber    = 10            // Default slot number.
-	defaultWheelInterval = 50            // Default wheel interval.
-	defaultWheelLevel    = 5             // Default wheel level.
-	cmdEnvKey            = "gf.gtimer"   // Configuration key for command argument or environment.
+	StatusReady              = 0                    // Job or Timer is ready for running.
+	StatusRunning            = 1                    // Job or Timer is already running.
+	StatusStopped            = 2                    // Job or Timer is stopped.
+	StatusClosed             = -1                   // Job or Timer is closed and waiting to be deleted.
+	panicExit                = "exit"               // panicExit is used for custom job exit with panic.
+	defaultTimerInterval     = 100                  // defaultTimerInterval is the default timer interval in milliseconds.
+	commandEnvKeyForInterval = "gf.gtimer.interval" // commandEnvKeyForInterval is the key for command argument or environment configuring default interval duration for timer.
 )
 
 var (
-	defaultSlots    = gcmd.GetWithEnv(fmt.Sprintf("%s.slots", cmdEnvKey), defaultSlotNumber).Int()
-	defaultLevel    = gcmd.GetWithEnv(fmt.Sprintf("%s.level", cmdEnvKey), defaultWheelLevel).Int()
-	defaultInterval = gcmd.GetWithEnv(fmt.Sprintf("%s.interval", cmdEnvKey), defaultWheelInterval).Duration() * time.Millisecond
-	defaultTimer    = New(defaultSlots, defaultInterval, defaultLevel)
+	defaultTimer    = New()
+	defaultInterval = gcmd.GetOptWithEnv(commandEnvKeyForInterval, defaultTimerInterval).Duration() * time.Millisecond
 )
+
+// DefaultOptions creates and returns a default options object for Timer creation.
+func DefaultOptions() TimerOptions {
+	return TimerOptions{
+		Interval: defaultInterval,
+	}
+}
 
 // SetTimeout runs the job once after duration of <delay>.
 // It is like the one in javascript.

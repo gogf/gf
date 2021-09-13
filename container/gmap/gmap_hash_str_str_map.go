@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with gm file,
@@ -449,7 +449,7 @@ func (m *StrStrMap) UnmarshalJSON(b []byte) error {
 	if m.data == nil {
 		m.data = make(map[string]string)
 	}
-	if err := json.Unmarshal(b, &m.data); err != nil {
+	if err := json.UnmarshalUseNumber(b, &m.data); err != nil {
 		return err
 	}
 	return nil

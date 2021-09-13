@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -31,8 +31,8 @@ func GetPath() string {
 	return logger.GetPath()
 }
 
-// SetFile sets the file name <pattern> for file logging.
-// Datetime pattern can be used in <pattern>, eg: access-{Ymd}.log.
+// SetFile sets the file name `pattern` for file logging.
+// Datetime pattern can be used in `pattern`, eg: access-{Ymd}.log.
 // The default file name pattern is: Y-m-d.log, eg: 2018-01-01.log
 func SetFile(pattern string) {
 	logger.SetFile(pattern)
@@ -48,9 +48,9 @@ func GetLevel() int {
 	return logger.GetLevel()
 }
 
-// SetWriter sets the customized logging <writer> for logging.
-// The <writer> object should implements the io.Writer interface.
-// Developer can use customized logging <writer> to redirect logging output to another service,
+// SetWriter sets the customized logging `writer` for logging.
+// The `writer` object should implements the io.Writer interface.
+// Developer can use customized logging `writer` to redirect logging output to another service,
 // eg: kafka, mysql, mongodb, etc.
 func SetWriter(writer io.Writer) {
 	logger.SetWriter(writer)
@@ -113,13 +113,13 @@ func GetCtxKeys() []interface{} {
 }
 
 // PrintStack prints the caller stack,
-// the optional parameter <skip> specify the skipped stack offset from the end point.
+// the optional parameter `skip` specify the skipped stack offset from the end point.
 func PrintStack(skip ...int) {
 	logger.PrintStack(skip...)
 }
 
 // GetStack returns the caller stack content,
-// the optional parameter <skip> specify the skipped stack offset from the end point.
+// the optional parameter `skip` specify the skipped stack offset from the end point.
 func GetStack(skip ...int) string {
 	return logger.GetStack(skip...)
 }
@@ -147,4 +147,14 @@ func SetLevelPrefixes(prefixes map[int]string) {
 // GetLevelPrefix returns the prefix string for specified level.
 func GetLevelPrefix(level int) string {
 	return logger.GetLevelPrefix(level)
+}
+
+// SetHandlers sets the logging handlers for default logger.
+func SetHandlers(handlers ...Handler) {
+	logger.SetHandlers(handlers...)
+}
+
+//SetWriterColorEnable sets the file logging with color
+func SetWriterColorEnable(enabled bool) {
+	logger.SetWriterColorEnable(enabled)
 }

@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,20 +7,23 @@
 package gsession
 
 import (
-	"errors"
+	"context"
+	"github.com/gogf/gf/errors/gcode"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 	"time"
 
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/util/gconv"
 )
 
-// Session struct for storing single session data,
-// which is bound to a single request.
+// Session struct for storing single session data, which is bound to a single request.
+// The Session struct is the interface with user, but the Storage is the underlying adapter designed interface
+// for functionality implements.
 type Session struct {
 	id      string          // Session id.
+	ctx     context.Context // Context for current session, note that: one session one context.
 	data    *gmap.StrAnyMap // Session data.
 	dirty   bool            // Used to mark session is modified.
 	start   bool            // Used to mark session is started.
@@ -37,17 +40,18 @@ func (s *Session) init() {
 	if s.start {
 		return
 	}
+	var err error
 	if s.id != "" {
-		var err error
 		// Retrieve memory session data from manager.
 		if r, _ := s.manager.sessionData.Get(s.id); r != nil {
 			s.data = r.(*gmap.StrAnyMap)
-			intlog.Print("session init data:", s.data)
+			intlog.Print(s.ctx, "session init data:", s.data)
 		}
 		// Retrieve stored session data from storage.
 		if s.manager.storage != nil {
-			if s.data, err = s.manager.storage.GetSession(s.id, s.manager.ttl, s.data); err != nil {
-				intlog.Errorf("session restoring failed for id '%s': %v", s.id, err)
+			if s.data, err = s.manager.storage.GetSession(s.ctx, s.id, s.manager.ttl, s.data); err != nil && err != ErrorDisabled {
+				intlog.Errorf(s.ctx, "session restoring failed for id '%s': %v", s.id, err)
+				panic(err)
 			}
 		}
 	}
@@ -57,7 +61,11 @@ func (s *Session) init() {
 	}
 	// Use default session id creating function of storage.
 	if s.id == "" {
-		s.id = s.manager.storage.New(s.manager.ttl)
+		s.id, err = s.manager.storage.New(s.ctx, s.manager.ttl)
+		if err != nil && err != ErrorDisabled {
+			intlog.Errorf(s.ctx, "create session id failed: %v", err)
+			panic(err)
+		}
 	}
 	// Use default session id creating function.
 	if s.id == "" {
@@ -67,6 +75,7 @@ func (s *Session) init() {
 		s.data = gmap.NewStrAnyMap(true)
 	}
 	s.start = true
+
 }
 
 // Close closes current session and updates its ttl in the session manager.
@@ -78,11 +87,11 @@ func (s *Session) Close() {
 		size := s.data.Size()
 		if s.manager.storage != nil {
 			if s.dirty {
-				if err := s.manager.storage.SetSession(s.id, s.data, s.manager.ttl); err != nil {
+				if err := s.manager.storage.SetSession(s.ctx, s.id, s.data, s.manager.ttl); err != nil {
 					panic(err)
 				}
 			} else if size > 0 {
-				if err := s.manager.storage.UpdateTTL(s.id, s.manager.ttl); err != nil {
+				if err := s.manager.storage.UpdateTTL(s.ctx, s.id, s.manager.ttl); err != nil {
 					panic(err)
 				}
 			}
@@ -96,7 +105,7 @@ func (s *Session) Close() {
 // Set sets key-value pair to this session.
 func (s *Session) Set(key string, value interface{}) error {
 	s.init()
-	if err := s.manager.storage.Set(s.id, key, value, s.manager.ttl); err != nil {
+	if err := s.manager.storage.Set(s.ctx, s.id, key, value, s.manager.ttl); err != nil {
 		if err == ErrorDisabled {
 			s.data.Set(key, value)
 		} else {
@@ -116,7 +125,7 @@ func (s *Session) Sets(data map[string]interface{}) error {
 // SetMap batch sets the session using map.
 func (s *Session) SetMap(data map[string]interface{}) error {
 	s.init()
-	if err := s.manager.storage.SetMap(s.id, data, s.manager.ttl); err != nil {
+	if err := s.manager.storage.SetMap(s.ctx, s.id, data, s.manager.ttl); err != nil {
 		if err == ErrorDisabled {
 			s.data.Sets(data)
 		} else {
@@ -134,7 +143,7 @@ func (s *Session) Remove(keys ...string) error {
 	}
 	s.init()
 	for _, key := range keys {
-		if err := s.manager.storage.Remove(s.id, key); err != nil {
+		if err := s.manager.storage.Remove(s.ctx, s.id, key); err != nil {
 			if err == ErrorDisabled {
 				s.data.Remove(key)
 			} else {
@@ -157,7 +166,7 @@ func (s *Session) RemoveAll() error {
 		return nil
 	}
 	s.init()
-	if err := s.manager.storage.RemoveAll(s.id); err != nil {
+	if err := s.manager.storage.RemoveAll(s.ctx, s.id); err != nil {
 		if err == ErrorDisabled {
 			s.data.Clear()
 		} else {
@@ -169,7 +178,7 @@ func (s *Session) RemoveAll() error {
 }
 
 // Id returns the session id for this session.
-// It create and returns a new session id if the session id is not passed in initialization.
+// It creates and returns a new session id if the session id is not passed in initialization.
 func (s *Session) Id() string {
 	s.init()
 	return s.id
@@ -179,7 +188,7 @@ func (s *Session) Id() string {
 // It returns error if it is called after session starts.
 func (s *Session) SetId(id string) error {
 	if s.start {
-		return errors.New("session already started")
+		return gerror.NewCode(gcode.CodeInvalidOperation, "session already started")
 	}
 	s.id = id
 	return nil
@@ -189,7 +198,7 @@ func (s *Session) SetId(id string) error {
 // It returns error if it is called after session starts.
 func (s *Session) SetIdFunc(f func(ttl time.Duration) string) error {
 	if s.start {
-		return errors.New("session already started")
+		return gerror.NewCode(gcode.CodeInvalidOperation, "session already started")
 	}
 	s.idFunc = f
 	return nil
@@ -200,7 +209,11 @@ func (s *Session) SetIdFunc(f func(ttl time.Duration) string) error {
 func (s *Session) Map() map[string]interface{} {
 	if s.id != "" {
 		s.init()
-		if data := s.manager.storage.GetMap(s.id); data != nil {
+		data, err := s.manager.storage.GetMap(s.ctx, s.id)
+		if err != nil && err != ErrorDisabled {
+			intlog.Error(s.ctx, err)
+		}
+		if data != nil {
 			return data
 		}
 		return s.data.Map()
@@ -212,7 +225,11 @@ func (s *Session) Map() map[string]interface{} {
 func (s *Session) Size() int {
 	if s.id != "" {
 		s.init()
-		if size := s.manager.storage.GetSize(s.id); size >= 0 {
+		size, err := s.manager.storage.GetSize(s.ctx, s.id)
+		if err != nil && err != ErrorDisabled {
+			intlog.Error(s.ctx, err)
+		}
+		if size >= 0 {
 			return size
 		}
 		return s.data.Size()
@@ -232,14 +249,18 @@ func (s *Session) IsDirty() bool {
 }
 
 // Get retrieves session value with given key.
-// It returns <def> if the key does not exist in the session if <def> is given,
-// or else it return nil.
+// It returns `def` if the key does not exist in the session if `def` is given,
+// or else it returns nil.
 func (s *Session) Get(key string, def ...interface{}) interface{} {
 	if s.id == "" {
 		return nil
 	}
 	s.init()
-	if v := s.manager.storage.Get(s.id, key); v != nil {
+	v, err := s.manager.storage.Get(s.ctx, s.id, key)
+	if err != nil && err != ErrorDisabled {
+		intlog.Error(s.ctx, err)
+	}
+	if v != nil {
 		return v
 	}
 	if v := s.data.Get(key); v != nil {
@@ -256,123 +277,113 @@ func (s *Session) GetVar(key string, def ...interface{}) *gvar.Var {
 }
 
 func (s *Session) GetString(key string, def ...interface{}) string {
-	return gconv.String(s.Get(key, def...))
+	return s.GetVar(key, def...).String()
 }
 
 func (s *Session) GetBool(key string, def ...interface{}) bool {
-	return gconv.Bool(s.Get(key, def...))
+	return s.GetVar(key, def...).Bool()
 }
 
 func (s *Session) GetInt(key string, def ...interface{}) int {
-	return gconv.Int(s.Get(key, def...))
+	return s.GetVar(key, def...).Int()
 }
 
 func (s *Session) GetInt8(key string, def ...interface{}) int8 {
-	return gconv.Int8(s.Get(key, def...))
+	return s.GetVar(key, def...).Int8()
 }
 
 func (s *Session) GetInt16(key string, def ...interface{}) int16 {
-	return gconv.Int16(s.Get(key, def...))
+	return s.GetVar(key, def...).Int16()
 }
 
 func (s *Session) GetInt32(key string, def ...interface{}) int32 {
-	return gconv.Int32(s.Get(key, def...))
+	return s.GetVar(key, def...).Int32()
 }
 
 func (s *Session) GetInt64(key string, def ...interface{}) int64 {
-	return gconv.Int64(s.Get(key, def...))
+	return s.GetVar(key, def...).Int64()
 }
 
 func (s *Session) GetUint(key string, def ...interface{}) uint {
-	return gconv.Uint(s.Get(key, def...))
+	return s.GetVar(key, def...).Uint()
 }
 
 func (s *Session) GetUint8(key string, def ...interface{}) uint8 {
-	return gconv.Uint8(s.Get(key, def...))
+	return s.GetVar(key, def...).Uint8()
 }
 
 func (s *Session) GetUint16(key string, def ...interface{}) uint16 {
-	return gconv.Uint16(s.Get(key, def...))
+	return s.GetVar(key, def...).Uint16()
 }
 
 func (s *Session) GetUint32(key string, def ...interface{}) uint32 {
-	return gconv.Uint32(s.Get(key, def...))
+	return s.GetVar(key, def...).Uint32()
 }
 
 func (s *Session) GetUint64(key string, def ...interface{}) uint64 {
-	return gconv.Uint64(s.Get(key, def...))
+	return s.GetVar(key, def...).Uint64()
 }
 
 func (s *Session) GetFloat32(key string, def ...interface{}) float32 {
-	return gconv.Float32(s.Get(key, def...))
+	return s.GetVar(key, def...).Float32()
 }
 
 func (s *Session) GetFloat64(key string, def ...interface{}) float64 {
-	return gconv.Float64(s.Get(key, def...))
+	return s.GetVar(key, def...).Float64()
 }
 
 func (s *Session) GetBytes(key string, def ...interface{}) []byte {
-	return gconv.Bytes(s.Get(key, def...))
+	return s.GetVar(key, def...).Bytes()
 }
 
 func (s *Session) GetInts(key string, def ...interface{}) []int {
-	return gconv.Ints(s.Get(key, def...))
+	return s.GetVar(key, def...).Ints()
 }
 
 func (s *Session) GetFloats(key string, def ...interface{}) []float64 {
-	return gconv.Floats(s.Get(key, def...))
+	return s.GetVar(key, def...).Floats()
 }
 
 func (s *Session) GetStrings(key string, def ...interface{}) []string {
-	return gconv.Strings(s.Get(key, def...))
+	return s.GetVar(key, def...).Strings()
 }
 
 func (s *Session) GetInterfaces(key string, def ...interface{}) []interface{} {
-	return gconv.Interfaces(s.Get(key, def...))
+	return s.GetVar(key, def...).Interfaces()
 }
 
 func (s *Session) GetTime(key string, format ...string) time.Time {
-	return gconv.Time(s.Get(key), format...)
+	return s.GetVar(key).Time(format...)
 }
 
 func (s *Session) GetGTime(key string, format ...string) *gtime.Time {
-	return gconv.GTime(s.Get(key), format...)
+	return s.GetVar(key).GTime(format...)
 }
 
 func (s *Session) GetDuration(key string, def ...interface{}) time.Duration {
-	return gconv.Duration(s.Get(key, def...))
+	return s.GetVar(key, def...).Duration()
 }
 
 func (s *Session) GetMap(key string, tags ...string) map[string]interface{} {
-	return gconv.Map(s.Get(key), tags...)
+	return s.GetVar(key).Map(tags...)
 }
 
 func (s *Session) GetMapDeep(key string, tags ...string) map[string]interface{} {
-	return gconv.MapDeep(s.Get(key), tags...)
+	return s.GetVar(key).MapDeep(tags...)
 }
 
 func (s *Session) GetMaps(key string, tags ...string) []map[string]interface{} {
-	return gconv.Maps(s.Get(key), tags...)
+	return s.GetVar(key).Maps(tags...)
 }
 
 func (s *Session) GetMapsDeep(key string, tags ...string) []map[string]interface{} {
-	return gconv.MapsDeep(s.Get(key), tags...)
+	return s.GetVar(key).MapsDeep(tags...)
 }
 
 func (s *Session) GetStruct(key string, pointer interface{}, mapping ...map[string]string) error {
-	return gconv.Struct(s.Get(key), pointer, mapping...)
-}
-
-// Deprecated, use GetStruct instead.
-func (s *Session) GetStructDeep(key string, pointer interface{}, mapping ...map[string]string) error {
-	return gconv.StructDeep(s.Get(key), pointer, mapping...)
+	return s.GetVar(key).Struct(pointer, mapping...)
 }
 
 func (s *Session) GetStructs(key string, pointer interface{}, mapping ...map[string]string) error {
-	return gconv.Structs(s.Get(key), pointer, mapping...)
-}
-
-// Deprecated, use GetStructs instead.
-func (s *Session) GetStructsDeep(key string, pointer interface{}, mapping ...map[string]string) error {
-	return gconv.StructsDeep(s.Get(key), pointer, mapping...)
+	return s.GetVar(key).Structs(pointer, mapping...)
 }

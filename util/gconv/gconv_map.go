@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,7 +7,6 @@
 package gconv
 
 import (
-	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/json"
 	"reflect"
 	"strings"
@@ -16,17 +15,17 @@ import (
 	"github.com/gogf/gf/internal/utils"
 )
 
-// Map converts any variable <value> to map[string]interface{}. If the parameter <value> is not a
+// Map converts any variable `value` to map[string]interface{}. If the parameter `value` is not a
 // map/struct/*struct type, then the conversion will fail and returns nil.
 //
-// If <value> is a struct/*struct object, the second parameter <tags> specifies the most priority
+// If `value` is a struct/*struct object, the second parameter `tags` specifies the most priority
 // tags that will be detected, otherwise it detects the tags in order of:
 // gconv, json, field name.
 func Map(value interface{}, tags ...string) map[string]interface{} {
 	return doMapConvert(value, false, tags...)
 }
 
-// MapDeep does Map function recursively, which means if the attribute of <value>
+// MapDeep does Map function recursively, which means if the attribute of `value`
 // is also a struct/*struct, calls Map function on this attribute converting it to
 // a map[string]interface{} type variable.
 // Also see Map.
@@ -35,7 +34,7 @@ func MapDeep(value interface{}, tags ...string) map[string]interface{} {
 }
 
 // doMapConvert implements the map converting.
-// It automatically checks and converts json string to map if <value> is string/[]byte.
+// It automatically checks and converts json string to map if `value` is string/[]byte.
 //
 // TODO completely implement the recursive converting for all types, especially the map.
 func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]interface{} {
@@ -45,7 +44,7 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 	newTags := StructTagPriority
 	switch len(tags) {
 	case 0:
-		// No need handle.
+		// No need handling.
 	case 1:
 		newTags = append(strings.Split(tags[0], ","), StructTagPriority...)
 	default:
@@ -57,7 +56,7 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 	case string:
 		// If it is a JSON string, automatically unmarshal it!
 		if len(r) > 0 && r[0] == '{' && r[len(r)-1] == '}' {
-			if err := json.Unmarshal([]byte(r), &dataMap); err != nil {
+			if err := json.UnmarshalUseNumber([]byte(r), &dataMap); err != nil {
 				return nil
 			}
 		} else {
@@ -66,7 +65,7 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 	case []byte:
 		// If it is a JSON string, automatically unmarshal it!
 		if len(r) > 0 && r[0] == '{' && r[len(r)-1] == '}' {
-			if err := json.Unmarshal(r, &dataMap); err != nil {
+			if err := json.UnmarshalUseNumber(r, &dataMap); err != nil {
 				return nil
 			}
 		} else {
@@ -154,7 +153,7 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 			reflectKind = reflectValue.Kind()
 		}
 		switch reflectKind {
-		// If <value> is type of array, it converts the value of even number index as its key and
+		// If `value` is type of array, it converts the value of even number index as its key and
 		// the value of odd number index as its corresponding value, for example:
 		// []string{"k1","v1","k2","v2"} => map[string]interface{}{"k1":"v1", "k2":"v2"}
 		// []string{"k1","v1","k2"}      => map[string]interface{}{"k1":"v1", "k2":nil}
@@ -167,7 +166,7 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 					dataMap[String(reflectValue.Index(i).Interface())] = nil
 				}
 			}
-		case reflect.Map, reflect.Struct:
+		case reflect.Map, reflect.Struct, reflect.Interface:
 			convertedValue := doMapConvertForMapOrStructValue(true, value, recursive, newTags...)
 			if m, ok := convertedValue.(map[string]interface{}); ok {
 				return m
@@ -232,7 +231,7 @@ func doMapConvertForMapOrStructValue(isRoot bool, value interface{}, recursive b
 			rvField     reflect.Value
 			dataMap     = make(map[string]interface{}) // result map.
 			reflectType = reflectValue.Type()          // attribute value type.
-			name        = ""                           // name may be the tag name or the struct attribute name.
+			mapKey      = ""                           // mapKey may be the tag name or the struct attribute name.
 		)
 		for i := 0; i < reflectValue.NumField(); i++ {
 			rtField = reflectType.Field(i)
@@ -242,32 +241,32 @@ func doMapConvertForMapOrStructValue(isRoot bool, value interface{}, recursive b
 			if !utils.IsLetterUpper(fieldName[0]) {
 				continue
 			}
-			name = ""
+			mapKey = ""
 			fieldTag := rtField.Tag
 			for _, tag := range tags {
-				if name = fieldTag.Get(tag); name != "" {
+				if mapKey = fieldTag.Get(tag); mapKey != "" {
 					break
 				}
 			}
-			if name == "" {
-				name = fieldName
+			if mapKey == "" {
+				mapKey = fieldName
 			} else {
 				// Support json tag feature: -, omitempty
-				name = strings.TrimSpace(name)
-				if name == "-" {
+				mapKey = strings.TrimSpace(mapKey)
+				if mapKey == "-" {
 					continue
 				}
-				array := strings.Split(name, ",")
+				array := strings.Split(mapKey, ",")
 				if len(array) > 1 {
 					switch strings.TrimSpace(array[1]) {
 					case "omitempty":
 						if empty.IsEmpty(rvField.Interface()) {
 							continue
 						} else {
-							name = strings.TrimSpace(array[0])
+							mapKey = strings.TrimSpace(array[0])
 						}
 					default:
-						name = strings.TrimSpace(array[0])
+						mapKey = strings.TrimSpace(array[0])
 					}
 				}
 			}
@@ -284,7 +283,7 @@ func doMapConvertForMapOrStructValue(isRoot bool, value interface{}, recursive b
 				switch rvAttrKind {
 				case reflect.Struct:
 					var (
-						hasNoTag        = name == fieldName
+						hasNoTag        = mapKey == fieldName
 						rvAttrInterface = rvAttrField.Interface()
 					)
 					if hasNoTag && rtField.Anonymous {
@@ -296,41 +295,41 @@ func doMapConvertForMapOrStructValue(isRoot bool, value interface{}, recursive b
 								dataMap[k] = v
 							}
 						} else {
-							dataMap[name] = rvAttrInterface
+							dataMap[mapKey] = rvAttrInterface
 						}
 					} else if !hasNoTag && rtField.Anonymous {
 						// It means this attribute field has desired tag.
-						dataMap[name] = doMapConvertForMapOrStructValue(false, rvAttrInterface, true, tags...)
+						dataMap[mapKey] = doMapConvertForMapOrStructValue(false, rvAttrInterface, true, tags...)
 					} else {
-						dataMap[name] = doMapConvertForMapOrStructValue(false, rvAttrInterface, false, tags...)
+						dataMap[mapKey] = doMapConvertForMapOrStructValue(false, rvAttrInterface, recursive, tags...)
 					}
 
 				// The struct attribute is type of slice.
 				case reflect.Array, reflect.Slice:
 					length := rvField.Len()
 					if length == 0 {
-						dataMap[name] = rvField.Interface()
+						dataMap[mapKey] = rvField.Interface()
 						break
 					}
 					array := make([]interface{}, length)
 					for i := 0; i < length; i++ {
 						array[i] = doMapConvertForMapOrStructValue(false, rvField.Index(i), recursive, tags...)
 					}
-					dataMap[name] = array
+					dataMap[mapKey] = array
 
 				default:
 					if rvField.IsValid() {
-						dataMap[name] = reflectValue.Field(i).Interface()
+						dataMap[mapKey] = reflectValue.Field(i).Interface()
 					} else {
-						dataMap[name] = nil
+						dataMap[mapKey] = nil
 					}
 				}
 			} else {
 				// No recursive map value converting
 				if rvField.IsValid() {
-					dataMap[name] = reflectValue.Field(i).Interface()
+					dataMap[mapKey] = reflectValue.Field(i).Interface()
 				} else {
-					dataMap[name] = nil
+					dataMap[mapKey] = nil
 				}
 			}
 		}
@@ -354,7 +353,7 @@ func doMapConvertForMapOrStructValue(isRoot bool, value interface{}, recursive b
 	return value
 }
 
-// MapStrStr converts <value> to map[string]string.
+// MapStrStr converts `value` to map[string]string.
 // Note that there might be data copy for this map type converting.
 func MapStrStr(value interface{}, tags ...string) map[string]string {
 	if r, ok := value.(map[string]string); ok {
@@ -371,7 +370,7 @@ func MapStrStr(value interface{}, tags ...string) map[string]string {
 	return nil
 }
 
-// MapStrStrDeep converts <value> to map[string]string recursively.
+// MapStrStrDeep converts `value` to map[string]string recursively.
 // Note that there might be data copy for this map type converting.
 func MapStrStrDeep(value interface{}, tags ...string) map[string]string {
 	if r, ok := value.(map[string]string); ok {
@@ -385,190 +384,5 @@ func MapStrStrDeep(value interface{}, tags ...string) map[string]string {
 		}
 		return vMap
 	}
-	return nil
-}
-
-// MapToMap converts any map type variable <params> to another map type variable <pointer>
-// using reflect.
-// See doMapToMap.
-func MapToMap(params interface{}, pointer interface{}, mapping ...map[string]string) error {
-	return doMapToMap(params, pointer, mapping...)
-}
-
-// MapToMapDeep converts any map type variable <params> to another map type variable <pointer>
-// using reflect recursively.
-// Deprecated, use MapToMap instead.
-func MapToMapDeep(params interface{}, pointer interface{}, mapping ...map[string]string) error {
-	return doMapToMap(params, pointer, mapping...)
-}
-
-// doMapToMap converts any map type variable <params> to another map type variable <pointer>.
-//
-// The parameter <params> can be any type of map, like:
-// map[string]string, map[string]struct, , map[string]*struct, etc.
-//
-// The parameter <pointer> should be type of *map, like:
-// map[int]string, map[string]struct, , map[string]*struct, etc.
-//
-// The optional parameter <mapping> is used for struct attribute to map key mapping, which makes
-// sense only if the items of original map <params> is type struct.
-func doMapToMap(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
-	var (
-		paramsRv   = reflect.ValueOf(params)
-		paramsKind = paramsRv.Kind()
-	)
-	if paramsKind == reflect.Ptr {
-		paramsRv = paramsRv.Elem()
-		paramsKind = paramsRv.Kind()
-	}
-	if paramsKind != reflect.Map {
-		return gerror.New("params should be type of map")
-	}
-	// Empty params map, no need continue.
-	if paramsRv.Len() == 0 {
-		return nil
-	}
-	var pointerRv reflect.Value
-	if v, ok := pointer.(reflect.Value); ok {
-		pointerRv = v
-	} else {
-		pointerRv = reflect.ValueOf(pointer)
-	}
-	pointerKind := pointerRv.Kind()
-	for pointerKind == reflect.Ptr {
-		pointerRv = pointerRv.Elem()
-		pointerKind = pointerRv.Kind()
-	}
-	if pointerKind != reflect.Map {
-		return gerror.New("pointer should be type of *map")
-	}
-	defer func() {
-		// Catch the panic, especially the reflect operation panics.
-		if e := recover(); e != nil {
-			err = gerror.NewSkipf(1, "%v", e)
-		}
-	}()
-	var (
-		paramsKeys       = paramsRv.MapKeys()
-		pointerKeyType   = pointerRv.Type().Key()
-		pointerValueType = pointerRv.Type().Elem()
-		pointerValueKind = pointerValueType.Kind()
-		dataMap          = reflect.MakeMapWithSize(pointerRv.Type(), len(paramsKeys))
-	)
-	// Retrieve the true element type of target map.
-	if pointerValueKind == reflect.Ptr {
-		pointerValueKind = pointerValueType.Elem().Kind()
-	}
-	for _, key := range paramsKeys {
-		e := reflect.New(pointerValueType).Elem()
-		switch pointerValueKind {
-		case reflect.Map, reflect.Struct:
-			if err = Struct(paramsRv.MapIndex(key).Interface(), e, mapping...); err != nil {
-				return err
-			}
-		default:
-			e.Set(
-				reflect.ValueOf(
-					Convert(
-						paramsRv.MapIndex(key).Interface(),
-						pointerValueType.String(),
-					),
-				),
-			)
-		}
-		dataMap.SetMapIndex(
-			reflect.ValueOf(
-				Convert(
-					key.Interface(),
-					pointerKeyType.Name(),
-				),
-			),
-			e,
-		)
-	}
-	pointerRv.Set(dataMap)
-	return nil
-}
-
-// MapToMaps converts any map type variable <params> to another map type variable <pointer>.
-// See doMapToMaps.
-func MapToMaps(params interface{}, pointer interface{}, mapping ...map[string]string) error {
-	return doMapToMaps(params, pointer, mapping...)
-}
-
-// MapToMapsDeep converts any map type variable <params> to another map type variable
-// <pointer> recursively.
-// Deprecated, use MapToMaps instead.
-func MapToMapsDeep(params interface{}, pointer interface{}, mapping ...map[string]string) error {
-	return doMapToMaps(params, pointer, mapping...)
-}
-
-// doMapToMaps converts any map type variable <params> to another map type variable <pointer>.
-//
-// The parameter <params> can be any type of map, of which the item type is slice map, like:
-// map[int][]map, map[string][]map.
-//
-// The parameter <pointer> should be type of *map, of which the item type is slice map, like:
-// map[string][]struct, map[string][]*struct.
-//
-// The optional parameter <mapping> is used for struct attribute to map key mapping, which makes
-// sense only if the items of original map is type struct.
-//
-// TODO it's supposed supporting target type <pointer> like: map[int][]map, map[string][]map.
-func doMapToMaps(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
-	var (
-		paramsRv   = reflect.ValueOf(params)
-		paramsKind = paramsRv.Kind()
-	)
-	if paramsKind == reflect.Ptr {
-		paramsRv = paramsRv.Elem()
-		paramsKind = paramsRv.Kind()
-	}
-	if paramsKind != reflect.Map {
-		return gerror.New("params should be type of map")
-	}
-	// Empty params map, no need continue.
-	if paramsRv.Len() == 0 {
-		return nil
-	}
-	var (
-		pointerRv   = reflect.ValueOf(pointer)
-		pointerKind = pointerRv.Kind()
-	)
-	for pointerKind == reflect.Ptr {
-		pointerRv = pointerRv.Elem()
-		pointerKind = pointerRv.Kind()
-	}
-	if pointerKind != reflect.Map {
-		return gerror.New("pointer should be type of *map/**map")
-	}
-	defer func() {
-		// Catch the panic, especially the reflect operation panics.
-		if e := recover(); e != nil {
-			err = gerror.NewSkipf(1, "%v", e)
-		}
-	}()
-	var (
-		paramsKeys       = paramsRv.MapKeys()
-		pointerKeyType   = pointerRv.Type().Key()
-		pointerValueType = pointerRv.Type().Elem()
-		dataMap          = reflect.MakeMapWithSize(pointerRv.Type(), len(paramsKeys))
-	)
-	for _, key := range paramsKeys {
-		e := reflect.New(pointerValueType).Elem()
-		if err = Structs(paramsRv.MapIndex(key).Interface(), e.Addr(), mapping...); err != nil {
-			return err
-		}
-		dataMap.SetMapIndex(
-			reflect.ValueOf(
-				Convert(
-					key.Interface(),
-					pointerKeyType.Name(),
-				),
-			),
-			e,
-		)
-	}
-	pointerRv.Set(dataMap)
 	return nil
 }

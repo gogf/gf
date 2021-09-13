@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -9,6 +9,7 @@ package gcompress
 import (
 	"archive/zip"
 	"bytes"
+	"context"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/text/gstr"
@@ -92,7 +93,7 @@ func doZipPathWriter(path string, exclude string, zipWriter *zip.Writer, prefix 
 	headerPrefix = strings.Replace(headerPrefix, "//", "/", -1)
 	for _, file := range files {
 		if exclude == file {
-			intlog.Printf(`exclude file path: %s`, file)
+			intlog.Printf(context.TODO(), `exclude file path: %s`, file)
 			continue
 		}
 		dir := gfile.Dir(file[len(path):])

@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"context"
 	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/os/gctx"
 	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/test/gtest"
 	"github.com/gogf/gf/text/gstr"
@@ -25,9 +26,7 @@ func Test_Ctx(t *testing.T) {
 		ctx = context.WithValue(ctx, "Span-Id", "abcdefg")
 
 		l.Ctx(ctx).Print(1, 2, 3)
-		t.Assert(gstr.Count(w.String(), "Trace-Id"), 1)
 		t.Assert(gstr.Count(w.String(), "1234567890"), 1)
-		t.Assert(gstr.Count(w.String(), "Span-Id"), 1)
 		t.Assert(gstr.Count(w.String(), "abcdefg"), 1)
 		t.Assert(gstr.Count(w.String(), "1 2 3"), 1)
 	})
@@ -46,9 +45,17 @@ func Test_Ctx_Config(t *testing.T) {
 		ctx = context.WithValue(ctx, "Span-Id", "abcdefg")
 
 		l.Ctx(ctx).Print(1, 2, 3)
-		t.Assert(gstr.Count(w.String(), "Trace-Id"), 1)
 		t.Assert(gstr.Count(w.String(), "1234567890"), 1)
-		t.Assert(gstr.Count(w.String(), "Span-Id"), 1)
+		t.Assert(gstr.Count(w.String(), "abcdefg"), 1)
+		t.Assert(gstr.Count(w.String(), "1 2 3"), 1)
+	})
+}
+
+func Test_Ctx_CtxKey(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		w := bytes.NewBuffer(nil)
+		l := glog.NewWithWriter(w)
+		l.Ctx(gctx.WithValue(context.TODO(), "abcdefg")).Print(1, 2, 3)
 		t.Assert(gstr.Count(w.String(), "abcdefg"), 1)
 		t.Assert(gstr.Count(w.String(), "1 2 3"), 1)
 	})

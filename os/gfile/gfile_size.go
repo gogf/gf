@@ -1,4 +1,4 @@
-// Copyright 2017-2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -20,6 +20,11 @@ func Size(path string) int64 {
 		return 0
 	}
 	return s.Size()
+}
+
+// SizeFormat returns the size of file specified by <path> in format string.
+func SizeFormat(path string) string {
+	return FormatSize(Size(path))
 }
 
 // ReadableSize formats size of file given by <path>, for more human readable.

@@ -14,5 +14,6 @@ bin/
 cbuild
 **/.DS_Store
 .vscode/
-go.sum
 .example/other/
+main
+gf

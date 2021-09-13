@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,8 +7,10 @@
 package gproc
 
 import (
-	"errors"
+	"context"
 	"fmt"
+	"github.com/gogf/gf/errors/gcode"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 	"os"
 	"os/exec"
@@ -67,7 +69,7 @@ func (p *Process) Start() (int, error) {
 	if p.Process != nil {
 		return p.Pid(), nil
 	}
-	p.Env = append(p.Env, fmt.Sprintf("%s=%d", gPROC_ENV_KEY_PPID_KEY, p.PPid))
+	p.Env = append(p.Env, fmt.Sprintf("%s=%d", envKeyPPid, p.PPid))
 	if err := p.Cmd.Start(); err == nil {
 		if p.Manager != nil {
 			p.Manager.processes.Set(p.Process.Pid, p)
@@ -87,7 +89,7 @@ func (p *Process) Run() error {
 	}
 }
 
-// PID
+// Pid retrieves and returns the PID for the process.
 func (p *Process) Pid() int {
 	if p.Process != nil {
 		return p.Process.Pid
@@ -95,12 +97,12 @@ func (p *Process) Pid() int {
 	return 0
 }
 
-// Send send custom data to the process.
+// Send sends custom data to the process.
 func (p *Process) Send(data []byte) error {
 	if p.Process != nil {
 		return Send(p.Process.Pid, data)
 	}
-	return errors.New("invalid process")
+	return gerror.NewCode(gcode.CodeInvalidParameter, "invalid process")
 }
 
 // Release releases any resources associated with the Process p,
@@ -118,12 +120,11 @@ func (p *Process) Kill() error {
 		}
 		if runtime.GOOS != "windows" {
 			if err = p.Process.Release(); err != nil {
-				intlog.Error(err)
-				//return err
+				intlog.Error(context.TODO(), err)
 			}
 		}
 		_, err = p.Process.Wait()
-		intlog.Error(err)
+		intlog.Error(context.TODO(), err)
 		//return err
 		return nil
 	} else {

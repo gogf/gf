@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -17,6 +17,9 @@ import (
 
 func Test_CompareVersion(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
+		t.AssertEQ(gstr.CompareVersion("1", ""), 1)
+		t.AssertEQ(gstr.CompareVersion("", ""), 0)
+		t.AssertEQ(gstr.CompareVersion("", "v0.1"), -1)
 		t.AssertEQ(gstr.CompareVersion("1", "v0.99"), 1)
 		t.AssertEQ(gstr.CompareVersion("v1.0", "v0.99"), 1)
 		t.AssertEQ(gstr.CompareVersion("v1.0.1", "v1.1.0"), -1)
@@ -28,6 +31,9 @@ func Test_CompareVersion(t *testing.T) {
 
 func Test_CompareVersionGo(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
+		t.AssertEQ(gstr.CompareVersionGo("1", ""), 1)
+		t.AssertEQ(gstr.CompareVersionGo("", ""), 0)
+		t.AssertEQ(gstr.CompareVersionGo("", "v0.1"), -1)
 		t.AssertEQ(gstr.CompareVersionGo("v1.0.1", "v1.1.0"), -1)
 		t.AssertEQ(gstr.CompareVersionGo("1.0.1", "v1.1.0"), -1)
 		t.AssertEQ(gstr.CompareVersionGo("1.0.0", "v0.1.0"), 1)

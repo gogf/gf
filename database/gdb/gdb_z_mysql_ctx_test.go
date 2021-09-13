@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -17,7 +17,7 @@ import (
 func Test_Ctx(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		db, err := gdb.Instance()
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		err1 := db.PingMaster()
 		err2 := db.PingSlave()
@@ -60,5 +60,25 @@ func Test_Ctx_Model(t *testing.T) {
 		db.SetDebug(true)
 		defer db.SetDebug(false)
 		db.Model(table).All()
+	})
+}
+
+func Test_Ctx_Strict(t *testing.T) {
+	table := createInitTableWithDb(dbCtxStrict)
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		_, err := dbCtxStrict.Query("select 1")
+		t.AssertNE(err, nil)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		r, err := dbCtxStrict.Model(table).All()
+		t.AssertNE(err, nil)
+		t.Assert(len(r), 0)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		r, err := dbCtxStrict.Model(table).Ctx(context.TODO()).All()
+		t.AssertNil(err)
+		t.Assert(len(r), TableSize)
 	})
 }

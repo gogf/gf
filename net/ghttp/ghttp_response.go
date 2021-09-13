@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -41,32 +41,36 @@ func newResponse(s *Server, w http.ResponseWriter) *Response {
 
 // ServeFile serves the file to the response.
 func (r *Response) ServeFile(path string, allowIndex ...bool) {
-	serveFile := (*StaticFile)(nil)
+	var (
+		serveFile *staticFile
+	)
 	if file := gres.Get(path); file != nil {
-		serveFile = &StaticFile{
+		serveFile = &staticFile{
 			File:  file,
 			IsDir: file.FileInfo().IsDir(),
 		}
 	} else {
-		path = gfile.RealPath(path)
+		path, _ = gfile.Search(path)
 		if path == "" {
 			r.WriteStatus(http.StatusNotFound)
 			return
 		}
-		serveFile = &StaticFile{Path: path}
+		serveFile = &staticFile{Path: path}
 	}
 	r.Server.serveFile(r.Request, serveFile, allowIndex...)
 }
 
 // ServeFileDownload serves file downloading to the response.
 func (r *Response) ServeFileDownload(path string, name ...string) {
-	serveFile := (*StaticFile)(nil)
+	var (
+		serveFile *staticFile
+	)
 	downloadName := ""
 	if len(name) > 0 {
 		downloadName = name[0]
 	}
 	if file := gres.Get(path); file != nil {
-		serveFile = &StaticFile{
+		serveFile = &staticFile{
 			File:  file,
 			IsDir: file.FileInfo().IsDir(),
 		}
@@ -74,12 +78,12 @@ func (r *Response) ServeFileDownload(path string, name ...string) {
 			downloadName = gfile.Basename(file.Name())
 		}
 	} else {
-		path = gfile.RealPath(path)
+		path, _ = gfile.Search(path)
 		if path == "" {
 			r.WriteStatus(http.StatusNotFound)
 			return
 		}
-		serveFile = &StaticFile{Path: path}
+		serveFile = &staticFile{Path: path}
 		if downloadName == "" {
 			downloadName = gfile.Basename(path)
 		}
@@ -110,7 +114,7 @@ func (r *Response) RedirectBack(code ...int) {
 	r.RedirectTo(r.Request.GetReferer(), code...)
 }
 
-// BufferString returns the buffered content as []byte.
+// Buffer returns the buffered content as []byte.
 func (r *Response) Buffer() []byte {
 	return r.buffer.Bytes()
 }
@@ -136,7 +140,7 @@ func (r *Response) ClearBuffer() {
 	r.buffer.Reset()
 }
 
-// Output outputs the buffer content to the client and clears the buffer.
+// Flush outputs the buffer content to the client and clears the buffer.
 func (r *Response) Flush() {
 	if r.Server.config.ServerAgent != "" {
 		r.Header().Set("Server", r.Server.config.ServerAgent)

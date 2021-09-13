@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -20,7 +20,7 @@ func TestJson_UnmarshalJSON(t *testing.T) {
 	data := []byte(`{"n":123456789, "m":{"k":"v"}, "a":[1,2,3]}`)
 	gtest.C(t, func(t *gtest.T) {
 		j := gjson.New(nil)
-		err := json.Unmarshal(data, j)
+		err := json.UnmarshalUseNumber(data, j)
 		t.Assert(err, nil)
 		t.Assert(j.Get("n"), "123456789")
 		t.Assert(j.Get("m"), g.Map{"k": "v"})

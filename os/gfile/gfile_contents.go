@@ -1,4 +1,4 @@
-// Copyright 2017-2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	// Buffer size for reading file content.
+	// DefaultReadBuffer is the buffer size for reading file content.
 	DefaultReadBuffer = 1024
 )
 

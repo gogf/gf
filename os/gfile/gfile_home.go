@@ -1,4 +1,4 @@
-// Copyright 2020 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -8,7 +8,8 @@ package gfile
 
 import (
 	"bytes"
-	"errors"
+	"github.com/gogf/gf/errors/gcode"
+	"github.com/gogf/gf/errors/gerror"
 	"os"
 	"os/exec"
 	"os/user"
@@ -56,7 +57,7 @@ func homeUnix() (string, error) {
 
 	result := strings.TrimSpace(stdout.String())
 	if result == "" {
-		return "", errors.New("blank output when reading home directory")
+		return "", gerror.NewCode(gcode.CodeInternalError, "blank output when reading home directory")
 	}
 
 	return result, nil
@@ -73,7 +74,7 @@ func homeWindows() (string, error) {
 		home = os.Getenv("USERPROFILE")
 	}
 	if home == "" {
-		return "", errors.New("HOMEDRIVE, HOMEPATH, and USERPROFILE are blank")
+		return "", gerror.NewCode(gcode.CodeOperationFailed, "HOMEDRIVE, HOMEPATH, and USERPROFILE are blank")
 	}
 
 	return home, nil

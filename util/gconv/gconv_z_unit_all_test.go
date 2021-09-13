@@ -1,4 +1,4 @@
-// Copyright 2019 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -38,8 +38,8 @@ func (s1 S1) Error() string {
 
 func Test_Bool_All(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var i interface{} = nil
-		t.AssertEQ(gconv.Bool(i), false)
+		var any interface{} = nil
+		t.AssertEQ(gconv.Bool(any), false)
 		t.AssertEQ(gconv.Bool(false), false)
 		t.AssertEQ(gconv.Bool(nil), false)
 		t.AssertEQ(gconv.Bool(0), false)
@@ -72,8 +72,8 @@ func Test_Bool_All(t *testing.T) {
 
 func Test_Int_All(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var i interface{} = nil
-		t.AssertEQ(gconv.Int(i), 0)
+		var any interface{} = nil
+		t.AssertEQ(gconv.Int(any), 0)
 		t.AssertEQ(gconv.Int(false), 0)
 		t.AssertEQ(gconv.Int(nil), 0)
 		t.Assert(gconv.Int(nil), 0)
@@ -107,8 +107,8 @@ func Test_Int_All(t *testing.T) {
 
 func Test_Int8_All(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var i interface{} = nil
-		t.Assert(gconv.Int8(i), int8(0))
+		var any interface{} = nil
+		t.Assert(gconv.Int8(any), int8(0))
 		t.AssertEQ(gconv.Int8(false), int8(0))
 		t.AssertEQ(gconv.Int8(nil), int8(0))
 		t.AssertEQ(gconv.Int8(0), int8(0))
@@ -141,8 +141,8 @@ func Test_Int8_All(t *testing.T) {
 
 func Test_Int16_All(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var i interface{} = nil
-		t.Assert(gconv.Int16(i), int16(0))
+		var any interface{} = nil
+		t.Assert(gconv.Int16(any), int16(0))
 		t.AssertEQ(gconv.Int16(false), int16(0))
 		t.AssertEQ(gconv.Int16(nil), int16(0))
 		t.AssertEQ(gconv.Int16(0), int16(0))
@@ -175,8 +175,8 @@ func Test_Int16_All(t *testing.T) {
 
 func Test_Int32_All(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var i interface{} = nil
-		t.Assert(gconv.Int32(i), int32(0))
+		var any interface{} = nil
+		t.Assert(gconv.Int32(any), int32(0))
 		t.AssertEQ(gconv.Int32(false), int32(0))
 		t.AssertEQ(gconv.Int32(nil), int32(0))
 		t.AssertEQ(gconv.Int32(0), int32(0))
@@ -209,11 +209,11 @@ func Test_Int32_All(t *testing.T) {
 
 func Test_Int64_All(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var i interface{} = nil
+		var any interface{} = nil
 		t.AssertEQ(gconv.Int64("0x00e"), int64(14))
 		t.Assert(gconv.Int64("022"), int64(18))
 
-		t.Assert(gconv.Int64(i), int64(0))
+		t.Assert(gconv.Int64(any), int64(0))
 		t.Assert(gconv.Int64(true), 1)
 		t.Assert(gconv.Int64("1"), int64(1))
 		t.Assert(gconv.Int64("0"), int64(0))
@@ -263,8 +263,8 @@ func Test_Int64_All(t *testing.T) {
 
 func Test_Uint_All(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var i interface{} = nil
-		t.AssertEQ(gconv.Uint(i), uint(0))
+		var any interface{} = nil
+		t.AssertEQ(gconv.Uint(any), uint(0))
 		t.AssertEQ(gconv.Uint(false), uint(0))
 		t.AssertEQ(gconv.Uint(nil), uint(0))
 		t.Assert(gconv.Uint(nil), uint(0))
@@ -298,8 +298,8 @@ func Test_Uint_All(t *testing.T) {
 
 func Test_Uint8_All(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var i interface{} = nil
-		t.Assert(gconv.Uint8(i), uint8(0))
+		var any interface{} = nil
+		t.Assert(gconv.Uint8(any), uint8(0))
 		t.AssertEQ(gconv.Uint8(uint8(1)), uint8(1))
 		t.AssertEQ(gconv.Uint8(false), uint8(0))
 		t.AssertEQ(gconv.Uint8(nil), uint8(0))
@@ -333,8 +333,8 @@ func Test_Uint8_All(t *testing.T) {
 
 func Test_Uint16_All(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var i interface{} = nil
-		t.Assert(gconv.Uint16(i), uint16(0))
+		var any interface{} = nil
+		t.Assert(gconv.Uint16(any), uint16(0))
 		t.AssertEQ(gconv.Uint16(uint16(1)), uint16(1))
 		t.AssertEQ(gconv.Uint16(false), uint16(0))
 		t.AssertEQ(gconv.Uint16(nil), uint16(0))
@@ -368,8 +368,8 @@ func Test_Uint16_All(t *testing.T) {
 
 func Test_Uint32_All(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var i interface{} = nil
-		t.Assert(gconv.Uint32(i), uint32(0))
+		var any interface{} = nil
+		t.Assert(gconv.Uint32(any), uint32(0))
 		t.AssertEQ(gconv.Uint32(uint32(1)), uint32(1))
 		t.AssertEQ(gconv.Uint32(false), uint32(0))
 		t.AssertEQ(gconv.Uint32(nil), uint32(0))
@@ -403,11 +403,11 @@ func Test_Uint32_All(t *testing.T) {
 
 func Test_Uint64_All(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var i interface{} = nil
+		var any interface{} = nil
 		t.AssertEQ(gconv.Uint64("0x00e"), uint64(14))
 		t.Assert(gconv.Uint64("022"), uint64(18))
 
-		t.AssertEQ(gconv.Uint64(i), uint64(0))
+		t.AssertEQ(gconv.Uint64(any), uint64(0))
 		t.AssertEQ(gconv.Uint64(true), uint64(1))
 		t.Assert(gconv.Uint64("1"), int64(1))
 		t.Assert(gconv.Uint64("0"), uint64(0))
@@ -457,8 +457,8 @@ func Test_Uint64_All(t *testing.T) {
 
 func Test_Float32_All(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var i interface{} = nil
-		t.Assert(gconv.Float32(i), float32(0))
+		var any interface{} = nil
+		t.Assert(gconv.Float32(any), float32(0))
 		t.AssertEQ(gconv.Float32(false), float32(0))
 		t.AssertEQ(gconv.Float32(nil), float32(0))
 		t.AssertEQ(gconv.Float32(0), float32(0))
@@ -491,8 +491,8 @@ func Test_Float32_All(t *testing.T) {
 
 func Test_Float64_All(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var i interface{} = nil
-		t.Assert(gconv.Float64(i), float64(0))
+		var any interface{} = nil
+		t.Assert(gconv.Float64(any), float64(0))
 		t.AssertEQ(gconv.Float64(false), float64(0))
 		t.AssertEQ(gconv.Float64(nil), float64(0))
 		t.AssertEQ(gconv.Float64(0), float64(0))
@@ -527,8 +527,8 @@ func Test_String_All(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var s []rune
 		t.AssertEQ(gconv.String(s), "")
-		var i interface{} = nil
-		t.AssertEQ(gconv.String(i), "")
+		var any interface{} = nil
+		t.AssertEQ(gconv.String(any), "")
 		t.AssertEQ(gconv.String("1"), "1")
 		t.AssertEQ(gconv.String("0"), string("0"))
 		t.Assert(gconv.String("X"), string("X"))
@@ -615,8 +615,8 @@ func Test_Byte_All(t *testing.T) {
 
 func Test_Convert_All(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		var i interface{} = nil
-		t.AssertEQ(gconv.Convert(i, "string"), "")
+		var any interface{} = nil
+		t.AssertEQ(gconv.Convert(any, "string"), "")
 		t.AssertEQ(gconv.Convert("1", "string"), "1")
 		t.Assert(gconv.Convert(int64(1), "int64"), int64(1))
 		t.Assert(gconv.Convert(int(0), "int"), int(0))
@@ -644,13 +644,6 @@ func Test_Convert_All(t *testing.T) {
 		t.AssertEQ(gconv.Convert(1989, "Duration"), time.Duration(int64(1989)))
 		t.AssertEQ(gconv.Convert("1989", "Duration"), time.Duration(int64(1989)))
 		t.AssertEQ(gconv.Convert("1989", ""), "1989")
-	})
-}
-
-func Test_Time_All(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		t.AssertEQ(gconv.Duration(""), time.Duration(int64(0)))
-		t.AssertEQ(gconv.GTime(""), gtime.New())
 	})
 }
 

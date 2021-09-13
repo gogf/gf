@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -11,7 +11,7 @@ import (
 	"reflect"
 )
 
-// SliceCopy does a shallow copy of slice <data> for most commonly used slice type
+// SliceCopy does a shallow copy of slice `data` for most commonly used slice type
 // []interface{}.
 func SliceCopy(data []interface{}) []interface{} {
 	newData := make([]interface{}, len(data))
@@ -19,8 +19,8 @@ func SliceCopy(data []interface{}) []interface{} {
 	return newData
 }
 
-// SliceDelete deletes an element at <index> and returns the new slice.
-// It does nothing if the given <index> is invalid.
+// SliceDelete deletes an element at `index` and returns the new slice.
+// It does nothing if the given `index` is invalid.
 func SliceDelete(data []interface{}, index int) (newSlice []interface{}) {
 	if index < 0 || index >= len(data) {
 		return data
@@ -64,4 +64,30 @@ func SliceToMap(slice interface{}) map[string]interface{} {
 		return data
 	}
 	return nil
+}
+
+// SliceToMapWithColumnAsKey converts slice type variable `slice` to `map[interface{}]interface{}`
+// The value of specified column use as the key for returned map.
+// Eg:
+// SliceToMapWithColumnAsKey([{"K1": "v1", "K2": 1}, {"K1": "v2", "K2": 2}], "K1") => {"v1": {"K1": "v1", "K2": 1}, "v2": {"K1": "v2", "K2": 2}}
+// SliceToMapWithColumnAsKey([{"K1": "v1", "K2": 1}, {"K1": "v2", "K2": 2}], "K2") => {1: {"K1": "v1", "K2": 1}, 2: {"K1": "v2", "K2": 2}}
+func SliceToMapWithColumnAsKey(slice interface{}, key interface{}) map[interface{}]interface{} {
+	var (
+		reflectValue = reflect.ValueOf(slice)
+		reflectKind  = reflectValue.Kind()
+	)
+	for reflectKind == reflect.Ptr {
+		reflectValue = reflectValue.Elem()
+		reflectKind = reflectValue.Kind()
+	}
+	data := make(map[interface{}]interface{})
+	switch reflectKind {
+	case reflect.Slice, reflect.Array:
+		for i := 0; i < reflectValue.Len(); i++ {
+			if k, ok := ItemValue(reflectValue.Index(i), key); ok {
+				data[k] = reflectValue.Index(i).Interface()
+			}
+		}
+	}
+	return data
 }

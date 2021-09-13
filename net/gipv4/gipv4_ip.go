@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -8,7 +8,8 @@
 package gipv4
 
 import (
-	"errors"
+	"github.com/gogf/gf/errors/gcode"
+	"github.com/gogf/gf/errors/gerror"
 	"net"
 	"strconv"
 	"strings"
@@ -38,7 +39,7 @@ func GetIntranetIp() (ip string, err error) {
 		return "", err
 	}
 	if len(ips) == 0 {
-		return "", errors.New("no intranet ip found")
+		return "", gerror.NewCode(gcode.CodeOperationFailed, "no intranet ip found")
 	}
 	return ips[0], nil
 }

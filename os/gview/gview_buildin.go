@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,6 +7,7 @@
 package gview
 
 import (
+	"context"
 	"fmt"
 	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/util/gutil"
@@ -51,11 +52,11 @@ func (view *View) buildInFuncMaps(value ...interface{}) []map[string]interface{}
 func (view *View) buildInFuncEq(value interface{}, others ...interface{}) bool {
 	s := gconv.String(value)
 	for _, v := range others {
-		if strings.Compare(s, gconv.String(v)) != 0 {
-			return false
+		if strings.Compare(s, gconv.String(v)) == 0 {
+			return true
 		}
 	}
-	return true
+	return false
 }
 
 // buildInFuncNe implements build-in template function: ne
@@ -115,7 +116,7 @@ func (view *View) buildInFuncInclude(file interface{}, data ...map[string]interf
 		return ""
 	}
 	// It will search the file internally.
-	content, err := view.Parse(path, m)
+	content, err := view.Parse(context.TODO(), path, m)
 	if err != nil {
 		return htmltpl.HTML(err.Error())
 	}
@@ -218,8 +219,53 @@ func (view *View) buildInFuncNl2Br(str interface{}) string {
 }
 
 // buildInFuncJson implements build-in template function: json ,
-// which encodes and returns <value> as JSON string.
+// which encodes and returns `value` as JSON string.
 func (view *View) buildInFuncJson(value interface{}) (string, error) {
 	b, err := json.Marshal(value)
 	return gconv.UnsafeBytesToStr(b), err
+}
+
+// buildInFuncPlus implements build-in template function: plus ,
+// which returns the result that pluses all `deltas` to `value`.
+func (view *View) buildInFuncPlus(value interface{}, deltas ...interface{}) string {
+	result := gconv.Float64(value)
+	for _, v := range deltas {
+		result += gconv.Float64(v)
+	}
+	return gconv.String(result)
+}
+
+// buildInFuncMinus implements build-in template function: minus ,
+// which returns the result that subtracts all `deltas` from `value`.
+func (view *View) buildInFuncMinus(value interface{}, deltas ...interface{}) string {
+	result := gconv.Float64(value)
+	for _, v := range deltas {
+		result -= gconv.Float64(v)
+	}
+	return gconv.String(result)
+}
+
+// buildInFuncTimes implements build-in template function: times ,
+// which returns the result that multiplies `value` by all of `values`.
+func (view *View) buildInFuncTimes(value interface{}, values ...interface{}) string {
+	result := gconv.Float64(value)
+	for _, v := range values {
+		result *= gconv.Float64(v)
+	}
+	return gconv.String(result)
+}
+
+// buildInFuncDivide implements build-in template function: divide ,
+// which returns the result that divides `value` by all of `values`.
+func (view *View) buildInFuncDivide(value interface{}, values ...interface{}) string {
+	result := gconv.Float64(value)
+	for _, v := range values {
+		value2Float64 := gconv.Float64(v)
+		if value2Float64 == 0 {
+			// Invalid `value2`.
+			return "0"
+		}
+		result /= value2Float64
+	}
+	return gconv.String(result)
 }

@@ -1,4 +1,4 @@
-// Copyright 2020 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -21,7 +21,7 @@ type ReadCloser struct {
 	repeatable bool
 }
 
-// NewRepeatReadCloser creates and returns a RepeatReadCloser object.
+// NewReadCloser creates and returns a RepeatReadCloser object.
 func NewReadCloser(content []byte, repeatable bool) io.ReadCloser {
 	return &ReadCloser{
 		content:    content,
@@ -29,7 +29,7 @@ func NewReadCloser(content []byte, repeatable bool) io.ReadCloser {
 	}
 }
 
-// NewRepeatReadCloserWithReadCloser creates and returns a RepeatReadCloser object
+// NewReadCloserWithReadCloser creates and returns a RepeatReadCloser object
 // with given io.ReadCloser.
 func NewReadCloserWithReadCloser(r io.ReadCloser, repeatable bool) (io.ReadCloser, error) {
 	content, err := ioutil.ReadAll(r)

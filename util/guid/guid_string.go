@@ -1,4 +1,4 @@
-// Copyright 2020 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -17,12 +17,15 @@ import (
 	"time"
 )
 
-var (
-	sequence      gtype.Uint32                             // Sequence for unique purpose of current process.
+const (
 	sequenceMax   = uint32(46655)                          // Sequence max("zzz").
 	randomStrBase = "0123456789abcdefghijklmnopqrstuvwxyz" // Random chars string(36 bytes).
-	macAddrStr    = "0000000"                              // MAC addresses hash result in 7 bytes.
-	processIdStr  = "0000"                                 // Process id in 4 bytes.
+)
+
+var (
+	sequence     gtype.Uint32 // Sequence for unique purpose of current process.
+	macAddrStr   = "0000000"  // MAC addresses hash result in 7 bytes.
+	processIdStr = "0000"     // Process id in 4 bytes.
 )
 
 // init initializes several fixed local variable.
@@ -50,11 +53,11 @@ func init() {
 
 // S creates and returns a global unique string in 32 bytes that meets most common
 // usages without strict UUID algorithm. It returns an unique string using default
-// unique algorithm if no <data> is given.
+// unique algorithm if no `data` is given.
 //
-// The specified <data> can be no more than 2 parts. No matter how long each of the
-// <data> size is, each of them will be hashed into 7 bytes as part of the result.
-// If given <data> parts is less than 2, the leftover size of the result bytes will
+// The specified `data` can be no more than 2 parts. No matter how long each of the
+// `data` size is, each of them will be hashed into 7 bytes as part of the result.
+// If given `data` parts is less than 2, the leftover size of the result bytes will
 // be token by random string.
 //
 // The returned string is composed with:
@@ -63,7 +66,7 @@ func init() {
 //
 // Note that：
 // 1. The returned length is fixed to 32 bytes for performance purpose.
-// 2. The custom parameter <data> composed should have unique attribute in your
+// 2. The custom parameter `data` composed should have unique attribute in your
 //    business situation.
 func S(data ...[]byte) string {
 	var (
@@ -103,7 +106,7 @@ func getSequence() []byte {
 	return b
 }
 
-// getRandomStr randomly picks and returns <n> count of chars from randomStrBase.
+// getRandomStr randomly picks and returns `n` count of chars from randomStrBase.
 func getRandomStr(n int) []byte {
 	if n <= 0 {
 		return []byte{}

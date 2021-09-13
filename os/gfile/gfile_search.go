@@ -1,4 +1,4 @@
-// Copyright 2017-2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -8,8 +8,9 @@ package gfile
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
+	"github.com/gogf/gf/errors/gcode"
+	"github.com/gogf/gf/errors/gerror"
 
 	"github.com/gogf/gf/container/garray"
 )
@@ -52,7 +53,7 @@ func Search(name string, prioritySearchPaths ...string) (realPath string, err er
 				buffer.WriteString(fmt.Sprintf("\n%d. %s", k+1, v))
 			}
 		})
-		err = errors.New(buffer.String())
+		err = gerror.NewCode(gcode.CodeOperationFailed, buffer.String())
 	}
 	return
 }

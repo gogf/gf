@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,16 +7,18 @@
 package gdb
 
 import (
-	"database/sql"
-	"fmt"
 	"github.com/gogf/gf/container/gvar"
-	"math"
-	"reflect"
-
 	"github.com/gogf/gf/encoding/gparser"
+	"github.com/gogf/gf/util/gconv"
+	"math"
 )
 
-// IsEmpty checks and returns whether <r> is empty.
+// Interface converts and returns `r` as type of interface{}.
+func (r Result) Interface() interface{} {
+	return r
+}
+
+// IsEmpty checks and returns whether `r` is empty.
 func (r Result) IsEmpty() bool {
 	return r.Len() == 0
 }
@@ -32,7 +34,7 @@ func (r Result) Size() int {
 }
 
 // Chunk splits an Result into multiple Results,
-// the size of each array is determined by <size>.
+// the size of each array is determined by `size`.
 // The last chunk may contain less than size elements.
 func (r Result) Chunk(size int) []Result {
 	if size < 1 {
@@ -52,19 +54,19 @@ func (r Result) Chunk(size int) []Result {
 	return n
 }
 
-// Json converts <r> to JSON format content.
+// Json converts `r` to JSON format content.
 func (r Result) Json() string {
 	content, _ := gparser.VarToJson(r.List())
 	return string(content)
 }
 
-// Xml converts <r> to XML format content.
+// Xml converts `r` to XML format content.
 func (r Result) Xml(rootTag ...string) string {
 	content, _ := gparser.VarToXml(r.List(), rootTag...)
 	return string(content)
 }
 
-// List converts <r> to a List.
+// List converts `r` to a List.
 func (r Result) List() List {
 	list := make(List, len(r))
 	for k, v := range r {
@@ -74,7 +76,8 @@ func (r Result) List() List {
 }
 
 // Array retrieves and returns specified column values as slice.
-// The parameter <field> is optional is the column field is only one.
+// The parameter `field` is optional is the column field is only one.
+// The default `field` is the first field name of the first item in `Result` if parameter `field` is not given.
 func (r Result) Array(field ...string) []Value {
 	array := make([]Value, len(r))
 	if len(r) == 0 {
@@ -95,7 +98,7 @@ func (r Result) Array(field ...string) []Value {
 	return array
 }
 
-// MapKeyValue converts <r> to a map[string]Value of which key is specified by <key>.
+// MapKeyValue converts `r` to a map[string]Value of which key is specified by `key`.
 // Note that the item value may be type of slice.
 func (r Result) MapKeyValue(key string) map[string]Value {
 	var (
@@ -123,7 +126,7 @@ func (r Result) MapKeyValue(key string) map[string]Value {
 	return m
 }
 
-// MapKeyStr converts <r> to a map[string]Map of which key is specified by <key>.
+// MapKeyStr converts `r` to a map[string]Map of which key is specified by `key`.
 func (r Result) MapKeyStr(key string) map[string]Map {
 	m := make(map[string]Map)
 	for _, item := range r {
@@ -134,7 +137,7 @@ func (r Result) MapKeyStr(key string) map[string]Map {
 	return m
 }
 
-// MapKeyInt converts <r> to a map[int]Map of which key is specified by <key>.
+// MapKeyInt converts `r` to a map[int]Map of which key is specified by `key`.
 func (r Result) MapKeyInt(key string) map[int]Map {
 	m := make(map[int]Map)
 	for _, item := range r {
@@ -145,7 +148,7 @@ func (r Result) MapKeyInt(key string) map[int]Map {
 	return m
 }
 
-// MapKeyUint converts <r> to a map[uint]Map of which key is specified by <key>.
+// MapKeyUint converts `r` to a map[uint]Map of which key is specified by `key`.
 func (r Result) MapKeyUint(key string) map[uint]Map {
 	m := make(map[uint]Map)
 	for _, item := range r {
@@ -156,7 +159,7 @@ func (r Result) MapKeyUint(key string) map[uint]Map {
 	return m
 }
 
-// RecordKeyInt converts <r> to a map[int]Record of which key is specified by <key>.
+// RecordKeyStr converts `r` to a map[string]Record of which key is specified by `key`.
 func (r Result) RecordKeyStr(key string) map[string]Record {
 	m := make(map[string]Record)
 	for _, item := range r {
@@ -167,7 +170,7 @@ func (r Result) RecordKeyStr(key string) map[string]Record {
 	return m
 }
 
-// RecordKeyInt converts <r> to a map[int]Record of which key is specified by <key>.
+// RecordKeyInt converts `r` to a map[int]Record of which key is specified by `key`.
 func (r Result) RecordKeyInt(key string) map[int]Record {
 	m := make(map[int]Record)
 	for _, item := range r {
@@ -178,7 +181,7 @@ func (r Result) RecordKeyInt(key string) map[int]Record {
 	return m
 }
 
-// RecordKeyUint converts <r> to a map[uint]Record of which key is specified by <key>.
+// RecordKeyUint converts `r` to a map[uint]Record of which key is specified by `key`.
 func (r Result) RecordKeyUint(key string) map[uint]Record {
 	m := make(map[uint]Record)
 	for _, item := range r {
@@ -189,52 +192,8 @@ func (r Result) RecordKeyUint(key string) map[uint]Record {
 	return m
 }
 
-// Structs converts <r> to struct slice.
-// Note that the parameter <pointer> should be type of *[]struct/*[]*struct.
+// Structs converts `r` to struct slice.
+// Note that the parameter `pointer` should be type of *[]struct/*[]*struct.
 func (r Result) Structs(pointer interface{}) (err error) {
-	var (
-		reflectValue = reflect.ValueOf(pointer)
-		reflectKind  = reflectValue.Kind()
-	)
-	if reflectKind != reflect.Ptr {
-		return fmt.Errorf("parameter should be type of *[]struct/*[]*struct, but got: %v", reflectKind)
-	}
-	reflectValue = reflectValue.Elem()
-	reflectKind = reflectValue.Kind()
-	if reflectKind != reflect.Slice && reflectKind != reflect.Array {
-		return fmt.Errorf("parameter should be type of *[]struct/*[]*struct, but got: %v", reflectKind)
-	}
-	length := len(r)
-	if length == 0 {
-		// The pointed slice is not empty.
-		if reflectValue.Len() > 0 {
-			// It here checks if it has struct item, which is already initialized.
-			// It then returns error to warn the developer its empty and no conversion.
-			if v := reflectValue.Index(0); v.Kind() != reflect.Ptr {
-				return sql.ErrNoRows
-			}
-		}
-		// Do nothing for empty struct slice.
-		return nil
-	}
-	var (
-		reflectType = reflect.TypeOf(pointer)
-		array       = reflect.MakeSlice(reflectType.Elem(), length, length)
-		itemType    = array.Index(0).Type()
-		itemKind    = itemType.Kind()
-	)
-	for i := 0; i < length; i++ {
-		var elem reflect.Value
-		if itemKind == reflect.Ptr {
-			elem = reflect.New(itemType.Elem())
-		} else {
-			elem = reflect.New(itemType).Elem()
-		}
-		if err = r[i].Struct(elem); err != nil {
-			return fmt.Errorf(`slice element conversion failed: %s`, err.Error())
-		}
-		array.Index(i).Set(elem)
-	}
-	reflect.ValueOf(pointer).Elem().Set(array)
-	return nil
+	return gconv.StructsTag(r, pointer, OrmTagForStruct)
 }

@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -19,6 +19,7 @@ func Example_conversionNormalFormats() {
             "array" : ["John", "Ming"]
         }
     }`
+
 	if j, err := gjson.DecodeToJson(data); err != nil {
 		panic(err)
 	} else {
@@ -48,8 +49,8 @@ func Example_conversionNormalFormats() {
 	// YAML:
 	// users:
 	//     array:
-	//       - John
-	//       - Ming
+	//         - John
+	//         - Ming
 	//     count: 1
 	//
 	// ======================
@@ -100,7 +101,7 @@ func Example_conversionToStruct() {
 			Array []string
 		}
 		users := new(Users)
-		if err := j.ToStruct(users); err != nil {
+		if err := j.Struct(users); err != nil {
 			panic(err)
 		}
 		fmt.Printf(`%+v`, users)

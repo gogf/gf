@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -7,8 +7,9 @@
 package gview
 
 import (
-	"errors"
-	"fmt"
+	"context"
+	"github.com/gogf/gf/errors/gcode"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/i18n/gi18n"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/os/gfile"
@@ -21,12 +22,12 @@ import (
 
 // Config is the configuration object for template engine.
 type Config struct {
-	Paths       []string               // Searching array for path, NOT concurrent-safe for performance purpose.
-	Data        map[string]interface{} // Global template variables including configuration.
-	DefaultFile string                 // Default template file for parsing.
-	Delimiters  []string               // Custom template delimiters.
-	AutoEncode  bool                   // Automatically encodes and provides safe html output, which is good for avoiding XSS.
-	I18nManager *gi18n.Manager         // I18n manager for the view.
+	Paths       []string               `json:"paths"`       // Searching array for path, NOT concurrent-safe for performance purpose.
+	Data        map[string]interface{} `json:"data"`        // Global template variables including configuration.
+	DefaultFile string                 `json:"defaultFile"` // Default template file for parsing.
+	Delimiters  []string               `json:"delimiters"`  // Custom template delimiters.
+	AutoEncode  bool                   `json:"autoEncode"`  // Automatically encodes and provides safe html output, which is good for avoiding XSS.
+	I18nManager *gi18n.Manager         `json:"-"`           // I18n manager for the view.
 }
 
 const (
@@ -67,14 +68,14 @@ func (view *View) SetConfig(config Config) error {
 	// It's just cache, do not hesitate clearing it.
 	templates.Clear()
 
-	intlog.Printf("SetConfig: %+v", view.config)
+	intlog.Printf(context.TODO(), "SetConfig: %+v", view.config)
 	return nil
 }
 
 // SetConfigWithMap set configurations with map for the view.
 func (view *View) SetConfigWithMap(m map[string]interface{}) error {
 	if m == nil || len(m) == 0 {
-		return errors.New("configuration cannot be empty")
+		return gerror.NewCode(gcode.CodeInvalidParameter, "configuration cannot be empty")
 	}
 	// The m now is a shallow copy of m.
 	// Any changes to m does not affect the original one.
@@ -94,7 +95,7 @@ func (view *View) SetConfigWithMap(m map[string]interface{}) error {
 }
 
 // SetPath sets the template directory path for template file search.
-// The parameter <path> can be absolute or relative path, but absolute path is suggested.
+// The parameter `path` can be absolute or relative path, but absolute path is suggested.
 func (view *View) SetPath(path string) error {
 	var (
 		isDir    = false
@@ -123,7 +124,7 @@ func (view *View) SetPath(path string) error {
 	}
 	// Path not exist.
 	if realPath == "" {
-		err := errors.New(fmt.Sprintf(`[gview] SetPath failed: path "%s" does not exist`, path))
+		err := gerror.NewCodef(gcode.CodeInvalidParameter, `[gview] SetPath failed: path "%s" does not exist`, path)
 		if errorPrint() {
 			glog.Error(err)
 		}
@@ -131,7 +132,7 @@ func (view *View) SetPath(path string) error {
 	}
 	// Should be a directory.
 	if !isDir {
-		err := errors.New(fmt.Sprintf(`[gview] SetPath failed: path "%s" should be directory type`, path))
+		err := gerror.NewCodef(gcode.CodeInvalidParameter, `[gview] SetPath failed: path "%s" should be directory type`, path)
 		if errorPrint() {
 			glog.Error(err)
 		}
@@ -177,7 +178,7 @@ func (view *View) AddPath(path string) error {
 	}
 	// Path not exist.
 	if realPath == "" {
-		err := errors.New(fmt.Sprintf(`[gview] AddPath failed: path "%s" does not exist`, path))
+		err := gerror.NewCodef(gcode.CodeInvalidParameter, `[gview] AddPath failed: path "%s" does not exist`, path)
 		if errorPrint() {
 			glog.Error(err)
 		}
@@ -185,7 +186,7 @@ func (view *View) AddPath(path string) error {
 	}
 	// realPath should be type of folder.
 	if !isDir {
-		err := errors.New(fmt.Sprintf(`[gview] AddPath failed: path "%s" should be directory type`, path))
+		err := gerror.NewCodef(gcode.CodeInvalidParameter, `[gview] AddPath failed: path "%s" should be directory type`, path)
 		if errorPrint() {
 			glog.Error(err)
 		}
@@ -238,9 +239,9 @@ func (view *View) SetAutoEncode(enable bool) {
 	view.config.AutoEncode = enable
 }
 
-// BindFunc registers customized global template function named <name>
-// with given function <function> to current view object.
-// The <name> is the function name which can be called in template content.
+// BindFunc registers customized global template function named `name`
+// with given function `function` to current view object.
+// The `name` is the function name which can be called in template content.
 func (view *View) BindFunc(name string, function interface{}) {
 	view.funcMap[name] = function
 	// Clear global template object cache.

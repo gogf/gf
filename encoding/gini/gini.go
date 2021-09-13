@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -10,8 +10,9 @@ package gini
 import (
 	"bufio"
 	"bytes"
-	"errors"
 	"fmt"
+	"github.com/gogf/gf/errors/gcode"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/json"
 	"io"
 	"strings"
@@ -70,7 +71,7 @@ func Decode(data []byte) (res map[string]interface{}, err error) {
 	}
 
 	if haveSection == false {
-		return nil, errors.New("failed to parse INI file, section not found")
+		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "failed to parse INI file, section not found")
 	}
 	return res, nil
 }

@@ -1,4 +1,4 @@
-// Copyright 2017 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -76,7 +76,7 @@ func Test_GetScanDeep(t *testing.T) {
 	})
 }
 
-func Test_ToScan(t *testing.T) {
+func Test_Scan1(t *testing.T) {
 	type User struct {
 		Name  string
 		Score float64
@@ -84,7 +84,7 @@ func Test_ToScan(t *testing.T) {
 	j := gjson.New(`[{"name":"john", "score":"100"},{"name":"smith", "score":"60"}]`)
 	gtest.C(t, func(t *gtest.T) {
 		var users []User
-		err := j.ToScan(&users)
+		err := j.Scan(&users)
 		t.Assert(err, nil)
 		t.Assert(users, []User{
 			{
@@ -99,7 +99,7 @@ func Test_ToScan(t *testing.T) {
 	})
 }
 
-func Test_ToScanDeep(t *testing.T) {
+func Test_Scan2(t *testing.T) {
 	type User struct {
 		Name  string
 		Score float64
@@ -107,7 +107,7 @@ func Test_ToScanDeep(t *testing.T) {
 	j := gjson.New(`[{"name":"john", "score":"100"},{"name":"smith", "score":"60"}]`)
 	gtest.C(t, func(t *gtest.T) {
 		var users []User
-		err := j.ToScanDeep(&users)
+		err := j.Scan(&users)
 		t.Assert(err, nil)
 		t.Assert(users, []User{
 			{
@@ -122,7 +122,7 @@ func Test_ToScanDeep(t *testing.T) {
 	})
 }
 
-func Test_ToStruct1(t *testing.T) {
+func Test_Struct1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type BaseInfoItem struct {
 			IdCardNumber        string `db:"id_card_number" json:"idCardNumber" field:"id_card_number"`
@@ -198,12 +198,12 @@ func Test_ToStruct1(t *testing.T) {
 		data := new(UserCollectionAddReq)
 		j, err := gjson.LoadJson(jsonContent)
 		t.Assert(err, nil)
-		err = j.ToStruct(data)
+		err = j.Struct(data)
 		t.Assert(err, nil)
 	})
 }
 
-func Test_ToStruct(t *testing.T) {
+func Test_Struct(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type Item struct {
 			Title string `json:"title"`
@@ -231,7 +231,7 @@ func Test_ToStruct(t *testing.T) {
 		t.Assert(j.GetBool("items"), false)
 		t.Assert(j.GetArray("items"), nil)
 		m := new(M)
-		err = j.ToStruct(m)
+		err = j.Struct(m)
 		t.Assert(err, nil)
 		t.AssertNE(m.Me, nil)
 		t.Assert(m.Me["day"], "20009")
@@ -239,7 +239,7 @@ func Test_ToStruct(t *testing.T) {
 	})
 }
 
-func Test_ToStruct_Complicated(t *testing.T) {
+func Test_Struct_Complicated(t *testing.T) {
 	type CertInfo struct {
 		UserRealName        string `json:"userRealname,omitempty"`
 		IdentType           string `json:"identType,omitempty"`
@@ -290,7 +290,7 @@ func Test_ToStruct_Complicated(t *testing.T) {
 		j, err := gjson.LoadContent(jsonContent)
 		t.Assert(err, nil)
 		var response = new(Response)
-		err = j.ToStruct(response)
+		err = j.Struct(response)
 		t.Assert(err, nil)
 		t.Assert(len(response.CertList), 3)
 		t.Assert(response.CertList[0].CertID, 2023313)

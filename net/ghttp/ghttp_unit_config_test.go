@@ -1,4 +1,4 @@
-// Copyright 2018 gf Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -52,7 +52,7 @@ func Test_SetConfigWithMap(t *testing.T) {
 			"AccessLogEnabled": true,
 			"ErrorLogEnabled":  true,
 			"PProfEnabled":     true,
-			"LogPath":          "/var/log/MyServerLog",
+			"LogPath":          "/tmp/log/MyServerLog",
 			"SessionIdName":    "MySessionId",
 			"SessionPath":      "/tmp/MySessionStoragePath",
 			"SessionMaxAge":    24 * time.Hour,
@@ -152,7 +152,7 @@ func Test_ClientMaxBodySize_File(t *testing.T) {
 		defer gfile.Remove(path)
 		t.Assert(
 			gstr.Trim(c.PostContent("/", "name=john&file=@file:"+path)),
-			"http: request body too large",
+			"Invalid Request: http: request body too large",
 		)
 	})
 }

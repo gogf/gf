@@ -1,4 +1,4 @@
-// Copyright GoFrame Author(https://github.com/gogf/gf). All Rights Reserved.
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
@@ -47,7 +47,14 @@ func Redis(name ...string) *gredis.Redis {
 				panic(fmt.Sprintf(`configuration for redis not found for group "%s"`, group))
 			}
 		} else {
-			panic(fmt.Sprintf(`incomplete configuration for redis: "redis" node not found in config file "%s"`, config.FilePath()))
+			filepath, err := config.GetFilePath()
+			if err != nil {
+				panic(err)
+			}
+			panic(fmt.Sprintf(
+				`incomplete configuration for redis: "redis" node not found in config file "%s"`,
+				filepath,
+			))
 		}
 		return nil
 	})
