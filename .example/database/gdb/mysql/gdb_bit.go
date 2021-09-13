@@ -2,19 +2,23 @@ package main
 
 import (
 	"fmt"
+	"github.com/gogf/gf/os/gctx"
 
 	"github.com/gogf/gf/frame/g"
 )
 
 func main() {
-	db := g.DB()
+	var (
+		db  = g.DB()
+		ctx = gctx.New()
+	)
 	db.SetDebug(true)
 
-	r, e := db.Table("test").All()
+	r, e := db.Ctx(ctx).Model("test").All()
 	if e != nil {
 		panic(e)
 	}
 	if r != nil {
-		fmt.Println(r.ToList())
+		fmt.Println(r.List())
 	}
 }
