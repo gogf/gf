@@ -175,7 +175,7 @@ func (r *Request) GetBody() []byte {
 // GetBodyString retrieves and returns request body content as string.
 // It can be called multiple times retrieving the same body content.
 func (r *Request) GetBodyString() string {
-	return gconv.UnsafeBytesToStr(r.GetBody())
+	return string(r.GetBody())
 }
 
 // GetJson parses current request content as JSON format, and returns the JSON object.
@@ -375,7 +375,7 @@ func (r *Request) parseForm() {
 					// It might be JSON/XML content.
 					if s := gstr.Trim(name + strings.Join(values, " ")); len(s) > 0 {
 						if s[0] == '{' && s[len(s)-1] == '}' || s[0] == '<' && s[len(s)-1] == '>' {
-							r.bodyContent = gconv.UnsafeStrToBytes(s)
+							r.bodyContent = []byte(s)
 							params = ""
 							break
 						}
