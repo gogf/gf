@@ -102,7 +102,7 @@ func (p *Pool) AddWithRecover(userFunc func(), recoverFunc ...func(err error)) e
 					if v, ok := exception.(error); ok {
 						recoverFunc[0](v)
 					} else {
-						recoverFunc[0](gerror.NewCodef(gcode.CodeInternalError, `%v`, exception))
+						recoverFunc[0](gerror.NewCodef(gcode.CodeInternalError, `%+v`, exception))
 					}
 				}
 			}
