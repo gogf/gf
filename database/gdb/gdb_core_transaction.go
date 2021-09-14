@@ -122,7 +122,7 @@ func (c *Core) Transaction(ctx context.Context, f func(ctx context.Context, tx *
 				if v, ok := exception.(error); ok {
 					err = v
 				} else {
-					err = gerror.NewCodef(gcode.CodeInternalError, "%v", v)
+					err = gerror.NewCodef(gcode.CodeInternalError, "%+v", exception)
 				}
 			}
 		}
@@ -316,7 +316,7 @@ func (tx *TX) Transaction(ctx context.Context, f func(ctx context.Context, tx *T
 				if v, ok := exception.(error); ok {
 					err = v
 				} else {
-					err = gerror.NewCodef(gcode.CodeInternalError, "%v", v)
+					err = gerror.NewCodef(gcode.CodeInternalError, "%+v", exception)
 				}
 			}
 		}

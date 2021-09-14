@@ -29,7 +29,7 @@ func Try(try func()) (err error) {
 			if v, ok := exception.(error); ok {
 				err = v
 			} else {
-				err = gerror.NewCodef(gcode.CodeInternalError, `%v`, v)
+				err = gerror.NewCodef(gcode.CodeInternalError, `%+v`, exception)
 			}
 		}
 	}()
@@ -45,7 +45,7 @@ func TryCatch(try func(), catch ...func(exception error)) {
 			if v, ok := exception.(error); ok {
 				catch[0](v)
 			} else {
-				catch[0](fmt.Errorf(`%v`, exception))
+				catch[0](fmt.Errorf(`%+v`, exception))
 			}
 		}
 	}()
