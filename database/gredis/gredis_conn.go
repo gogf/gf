@@ -117,7 +117,7 @@ func (c *Conn) ReceiveVarWithTimeout(timeout time.Duration) (*gvar.Var, error) {
 func resultToVar(result interface{}, err error) (*gvar.Var, error) {
 	if err == nil {
 		if result, ok := result.([]byte); ok {
-			return gvar.New(gconv.UnsafeBytesToStr(result)), err
+			return gvar.New(string(result)), err
 		}
 		// It treats all returned slice as string slice.
 		if result, ok := result.([]interface{}); ok {

@@ -460,7 +460,7 @@ func (m *AnyAnyMap) Merge(other *AnyAnyMap) {
 // String returns the map as a string.
 func (m *AnyAnyMap) String() string {
 	b, _ := m.MarshalJSON()
-	return gconv.UnsafeBytesToStr(b)
+	return string(b)
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
