@@ -2,20 +2,24 @@ package main
 
 import (
 	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/os/gctx"
 )
 
 func main() {
-	db := g.DB()
+	var (
+		db  = g.DB()
+		ctx = gctx.New()
+	)
 	db.SetDebug(true)
 
-	tables, e := db.Tables()
+	tables, e := db.Tables(ctx)
 	if e != nil {
 		panic(e)
 	}
 	if tables != nil {
 		g.Dump(tables)
 		for _, table := range tables {
-			fields, err := db.TableFields(table)
+			fields, err := db.TableFields(ctx, table)
 			if err != nil {
 				panic(err)
 			}

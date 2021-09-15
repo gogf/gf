@@ -244,6 +244,22 @@ func Test_Append(t *testing.T) {
 	})
 }
 
+func Test_RawArray(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		j := gjson.New(nil)
+		t.AssertNil(j.Set("0", 1))
+		t.AssertNil(j.Set("1", 2))
+		t.Assert(j.MustToJsonString(), `[1,2]`)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		j := gjson.New(nil)
+		t.AssertNil(j.Append(".", 1))
+		t.AssertNil(j.Append(".", 2))
+		t.Assert(j.MustToJsonString(), `[1,2]`)
+	})
+}
+
 func TestJson_ToJson(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		p := gjson.New(1)

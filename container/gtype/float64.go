@@ -73,12 +73,12 @@ func (v *Float64) String() string {
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (v *Float64) MarshalJSON() ([]byte, error) {
-	return gconv.UnsafeStrToBytes(strconv.FormatFloat(v.Val(), 'g', -1, 64)), nil
+	return []byte(strconv.FormatFloat(v.Val(), 'g', -1, 64)), nil
 }
 
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (v *Float64) UnmarshalJSON(b []byte) error {
-	v.Set(gconv.Float64(gconv.UnsafeBytesToStr(b)))
+	v.Set(gconv.Float64(string(b)))
 	return nil
 }
 

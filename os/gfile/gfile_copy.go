@@ -7,7 +7,6 @@
 package gfile
 
 import (
-	"fmt"
 	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"io"
@@ -104,7 +103,7 @@ func CopyDir(src string, dst string) (err error) {
 		return err
 	}
 	if !si.IsDir() {
-		return fmt.Errorf("source is not a directory")
+		return gerror.NewCode(gcode.CodeInvalidParameter, "source is not a directory")
 	}
 	if !Exists(dst) {
 		err = os.MkdirAll(dst, DefaultPermCopy)

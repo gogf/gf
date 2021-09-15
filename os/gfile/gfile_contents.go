@@ -11,8 +11,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-
-	"github.com/gogf/gf/util/gconv"
 )
 
 var (
@@ -23,7 +21,7 @@ var (
 // GetContents returns the file content of <path> as string.
 // It returns en empty string if it fails reading.
 func GetContents(path string) string {
-	return gconv.UnsafeBytesToStr(GetBytes(path))
+	return string(GetBytes(path))
 }
 
 // GetBytes returns the file content of <path> as []byte.

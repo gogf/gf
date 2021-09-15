@@ -2,12 +2,18 @@ package main
 
 import (
 	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/os/gctx"
 )
 
 func main() {
-	db := g.DB()
+	var (
+		db  = g.DB()
+		ctx = gctx.New()
+	)
 
-	db.Table("user").Where("nickname like ? and passport like ?", g.Slice{"T3", "t3"}).OrderBy("id asc").All()
+	db.Ctx(ctx).Model("user").
+		Where("nickname like ? and passport like ?", g.Slice{"T3", "t3"}).
+		OrderAsc("id").All()
 
 	conditions := g.Map{
 		"nickname like ?":    "%T%",
@@ -16,8 +22,8 @@ func main() {
 		"create_time > ?":    0,
 		"id in(?)":           g.Slice{1, 2, 3},
 	}
-	db.Table("user").Where(conditions).OrderBy("id asc").All()
+	db.Ctx(ctx).Model("user").Where(conditions).OrderAsc("id").All()
 
 	var params []interface{}
-	db.Table("user").Where("1=1", params).OrderBy("id asc").All()
+	db.Ctx(ctx).Model("user").Where("1=1", params).OrderAsc("id").All()
 }

@@ -35,7 +35,7 @@ func Decode(data interface{}) (interface{}, error) {
 	}
 }
 
-// Decode decodes json format <data> to specified golang variable <v>.
+// DecodeTo decodes json format <data> to specified golang variable <v>.
 // The parameter <data> can be either bytes or string type.
 // The parameter <v> should be a pointer type.
 func DecodeTo(data interface{}, v interface{}) error {
