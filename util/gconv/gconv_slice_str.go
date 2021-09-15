@@ -6,7 +6,9 @@
 
 package gconv
 
-import "reflect"
+import (
+	"reflect"
+)
 
 // SliceStr is alias of Strings.
 func SliceStr(any interface{}) []string {
@@ -104,6 +106,11 @@ func Strings(any interface{}) []string {
 		if v, ok := any.(apiInterfaces); ok {
 			return Strings(v.Interfaces())
 		}
+		// JSON format string value converting.
+		var result []string
+		if checkJsonAndUnmarshalUseNumber(any, &result) {
+			return result
+		}
 		// Not a common type, it then uses reflection for conversion.
 		var reflectValue reflect.Value
 		if v, ok := value.(reflect.Value); ok {
@@ -128,6 +135,9 @@ func Strings(any interface{}) []string {
 			return slice
 
 		default:
+			if reflectValue.IsZero() {
+				return []string{}
+			}
 			return []string{String(any)}
 		}
 	}
