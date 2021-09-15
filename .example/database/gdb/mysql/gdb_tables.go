@@ -2,13 +2,17 @@ package main
 
 import (
 	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/os/gctx"
 )
 
 func main() {
-	db := g.DB()
+	var (
+		db  = g.DB()
+		ctx = gctx.New()
+	)
 	db.SetDebug(true)
 
-	tables, err := db.Tables()
+	tables, err := db.Tables(ctx)
 	if err != nil {
 		panic(err)
 	}

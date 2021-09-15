@@ -29,9 +29,7 @@ type Process struct {
 func NewProcess(path string, args []string, environment ...[]string) *Process {
 	env := os.Environ()
 	if len(environment) > 0 {
-		for k, v := range environment[0] {
-			env[k] = v
-		}
+		env = append(env, environment[0]...)
 	}
 	process := &Process{
 		Manager: nil,

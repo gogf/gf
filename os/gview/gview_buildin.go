@@ -222,7 +222,7 @@ func (view *View) buildInFuncNl2Br(str interface{}) string {
 // which encodes and returns `value` as JSON string.
 func (view *View) buildInFuncJson(value interface{}) (string, error) {
 	b, err := json.Marshal(value)
-	return gconv.UnsafeBytesToStr(b), err
+	return string(b), err
 }
 
 // buildInFuncPlus implements build-in template function: plus ,

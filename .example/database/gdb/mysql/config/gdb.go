@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/gogf/gf/database/gdb"
+	"github.com/gogf/gf/os/gctx"
 	"sync"
 	"time"
 )
@@ -24,13 +25,16 @@ func init() {
 }
 
 func main() {
-	wg := sync.WaitGroup{}
+	var (
+		wg  = sync.WaitGroup{}
+		ctx = gctx.New()
+	)
 	for i := 0; i < 100000; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			time.Sleep(10 * time.Second)
-			db.Table("user").Where("id=1").All()
+			db.Ctx(ctx).Model("user").Where("id=1").All()
 		}()
 	}
 	wg.Wait()
