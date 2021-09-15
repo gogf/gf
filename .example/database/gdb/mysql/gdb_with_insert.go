@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/gogf/gf/database/gdb"
 	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/os/gctx"
 	"github.com/gogf/gf/util/gmeta"
 )
 
@@ -30,13 +32,13 @@ func main() {
 	}
 
 	db := g.DB()
-	db.Transaction(func(tx *gdb.TX) error {
+	err := db.Transaction(gctx.New(), func(ctx context.Context, tx *gdb.TX) error {
 		for i := 1; i <= 5; i++ {
 			// User.
 			user := User{
 				Name: fmt.Sprintf(`name_%d`, i),
 			}
-			lastInsertId, err := db.Model(user).Data(user).OmitEmpty().InsertAndGetId()
+			lastInsertId, err := db.Ctx(ctx).Model(user).Data(user).OmitEmpty().InsertAndGetId()
 			if err != nil {
 				return err
 			}
@@ -45,7 +47,7 @@ func main() {
 				Uid:     int(lastInsertId),
 				Address: fmt.Sprintf(`address_%d`, lastInsertId),
 			}
-			_, err = db.Model(userDetail).Data(userDetail).OmitEmpty().Insert()
+			_, err = db.Ctx(ctx).Model(userDetail).Data(userDetail).OmitEmpty().Insert()
 			if err != nil {
 				return err
 			}
@@ -55,7 +57,7 @@ func main() {
 					Uid:   int(lastInsertId),
 					Score: j,
 				}
-				_, err = db.Model(userScore).Data(userScore).OmitEmpty().Insert()
+				_, err = db.Ctx(ctx).Model(userScore).Data(userScore).OmitEmpty().Insert()
 				if err != nil {
 					return err
 				}
@@ -63,4 +65,5 @@ func main() {
 		}
 		return nil
 	})
+	fmt.Println(err)
 }

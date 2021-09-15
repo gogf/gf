@@ -12,7 +12,7 @@ import (
 func main() {
 	db := g.DB()
 	table := "medicine_clinics_upload_yinchuan"
-	list, err := db.Table(table).All()
+	list, err := db.Model(table).All()
 	if err != nil && err != sql.ErrNoRows {
 		panic(err)
 	}

@@ -89,7 +89,7 @@ func DB(name ...string) gdb.DB {
 // Table is alias of Model.
 // The database component is designed not only for
 // relational databases but also for NoSQL databases in the future. The name
-// "Table" is not proper for that purpose any more.
+// "Table" is not proper for that purpose anymore.
 // Deprecated, use Model instead.
 func Table(tableNameOrStruct ...interface{}) *gdb.Model {
 	return DB().Model(tableNameOrStruct...)
@@ -98,6 +98,11 @@ func Table(tableNameOrStruct ...interface{}) *gdb.Model {
 // Model creates and returns a model based on configuration of default database group.
 func Model(tableNameOrStruct ...interface{}) *gdb.Model {
 	return DB().Model(tableNameOrStruct...)
+}
+
+// ModelRaw creates and returns a model based on a raw sql not a table.
+func ModelRaw(rawSql string, args ...interface{}) *gdb.Model {
+	return DB().Raw(rawSql, args...)
 }
 
 // Redis returns an instance of redis client with specified configuration group name.

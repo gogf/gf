@@ -60,12 +60,12 @@ func (v *Byte) String() string {
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (v *Byte) MarshalJSON() ([]byte, error) {
-	return gconv.UnsafeStrToBytes(strconv.FormatUint(uint64(v.Val()), 10)), nil
+	return []byte(strconv.FormatUint(uint64(v.Val()), 10)), nil
 }
 
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (v *Byte) UnmarshalJSON(b []byte) error {
-	v.Set(gconv.Uint8(gconv.UnsafeBytesToStr(b)))
+	v.Set(gconv.Uint8(string(b)))
 	return nil
 }
 

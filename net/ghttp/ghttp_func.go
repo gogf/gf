@@ -36,11 +36,11 @@ func niceCallFunc(f func()) {
 					// Create a new error with stack info.
 					// Note that there's a skip pointing the start stacktrace
 					// of the real error point.
-					if err, ok := exception.(error); ok {
-						if gerror.Code(err) != gcode.CodeNil {
-							panic(err)
+					if v, ok := exception.(error); ok {
+						if gerror.Code(v) != gcode.CodeNil {
+							panic(v)
 						} else {
-							panic(gerror.WrapCodeSkip(gcode.CodeInternalError, 1, err, ""))
+							panic(gerror.WrapCodeSkip(gcode.CodeInternalError, 1, v, ""))
 						}
 					} else {
 						panic(gerror.NewCodeSkipf(gcode.CodeInternalError, 1, "%+v", exception))
