@@ -59,6 +59,9 @@ func doStructWithJsonCheck(params interface{}, pointer interface{}) (err error, 
 		if json.Valid(r) {
 			if rv, ok := pointer.(reflect.Value); ok {
 				if rv.Kind() == reflect.Ptr {
+					if rv.IsNil() {
+						return nil, false
+					}
 					return json.UnmarshalUseNumber(r, rv.Interface()), true
 				} else if rv.CanAddr() {
 					return json.UnmarshalUseNumber(r, rv.Addr().Interface()), true
@@ -71,6 +74,9 @@ func doStructWithJsonCheck(params interface{}, pointer interface{}) (err error, 
 		if paramsBytes := []byte(r); json.Valid(paramsBytes) {
 			if rv, ok := pointer.(reflect.Value); ok {
 				if rv.Kind() == reflect.Ptr {
+					if rv.IsNil() {
+						return nil, false
+					}
 					return json.UnmarshalUseNumber(paramsBytes, rv.Interface()), true
 				} else if rv.CanAddr() {
 					return json.UnmarshalUseNumber(paramsBytes, rv.Addr().Interface()), true
