@@ -6,7 +6,9 @@
 
 package gconv
 
-import "reflect"
+import (
+	"reflect"
+)
 
 // SliceInt is alias of Ints.
 func SliceInt(any interface{}) []int {
@@ -18,7 +20,7 @@ func SliceInt32(any interface{}) []int32 {
 	return Int32s(any)
 }
 
-// SliceInt is alias of Int64s.
+// SliceInt64 is alias of Int64s.
 func SliceInt64(any interface{}) []int64 {
 	return Int64s(any)
 }
@@ -30,11 +32,6 @@ func Ints(any interface{}) []int {
 	}
 	var array []int
 	switch value := any.(type) {
-	case string:
-		if value == "" {
-			return []int{}
-		}
-		return []int{Int(value)}
 	case []string:
 		array = make([]int, len(value))
 		for k, v := range value {
@@ -123,6 +120,11 @@ func Ints(any interface{}) []int {
 		if v, ok := any.(apiInterfaces); ok {
 			return Ints(v.Interfaces())
 		}
+		// JSON format string value converting.
+		var result []int
+		if checkJsonAndUnmarshalUseNumber(any, &result) {
+			return result
+		}
 		// Not a common type, it then uses reflection for conversion.
 		var reflectValue reflect.Value
 		if v, ok := value.(reflect.Value); ok {
@@ -147,6 +149,9 @@ func Ints(any interface{}) []int {
 			return slice
 
 		default:
+			if reflectValue.IsZero() {
+				return []int{}
+			}
 			return []int{Int(any)}
 		}
 	}
@@ -160,11 +165,6 @@ func Int32s(any interface{}) []int32 {
 	}
 	var array []int32
 	switch value := any.(type) {
-	case string:
-		if value == "" {
-			return []int32{}
-		}
-		return []int32{Int32(value)}
 	case []string:
 		array = make([]int32, len(value))
 		for k, v := range value {
@@ -253,6 +253,11 @@ func Int32s(any interface{}) []int32 {
 		if v, ok := any.(apiInterfaces); ok {
 			return Int32s(v.Interfaces())
 		}
+		// JSON format string value converting.
+		var result []int32
+		if checkJsonAndUnmarshalUseNumber(any, &result) {
+			return result
+		}
 		// Not a common type, it then uses reflection for conversion.
 		var reflectValue reflect.Value
 		if v, ok := value.(reflect.Value); ok {
@@ -277,6 +282,9 @@ func Int32s(any interface{}) []int32 {
 			return slice
 
 		default:
+			if reflectValue.IsZero() {
+				return []int32{}
+			}
 			return []int32{Int32(any)}
 		}
 	}
@@ -290,11 +298,6 @@ func Int64s(any interface{}) []int64 {
 	}
 	var array []int64
 	switch value := any.(type) {
-	case string:
-		if value == "" {
-			return []int64{}
-		}
-		return []int64{Int64(value)}
 	case []string:
 		array = make([]int64, len(value))
 		for k, v := range value {
@@ -383,6 +386,11 @@ func Int64s(any interface{}) []int64 {
 		if v, ok := any.(apiInterfaces); ok {
 			return Int64s(v.Interfaces())
 		}
+		// JSON format string value converting.
+		var result []int64
+		if checkJsonAndUnmarshalUseNumber(any, &result) {
+			return result
+		}
 		// Not a common type, it then uses reflection for conversion.
 		var reflectValue reflect.Value
 		if v, ok := value.(reflect.Value); ok {
@@ -407,6 +415,9 @@ func Int64s(any interface{}) []int64 {
 			return slice
 
 		default:
+			if reflectValue.IsZero() {
+				return []int64{}
+			}
 			return []int64{Int64(any)}
 		}
 	}

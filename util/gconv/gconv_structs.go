@@ -62,7 +62,7 @@ func doStructs(params interface{}, pointer interface{}, mapping map[string]strin
 			if e, ok := exception.(errorStack); ok {
 				err = e
 			} else {
-				err = gerror.NewCodeSkipf(gcode.CodeInternalError, 1, "%v", exception)
+				err = gerror.NewCodeSkipf(gcode.CodeInternalError, 1, "%+v", exception)
 			}
 		}
 	}()

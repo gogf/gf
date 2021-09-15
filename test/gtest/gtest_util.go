@@ -9,7 +9,9 @@ package gtest
 import (
 	"fmt"
 	"github.com/gogf/gf/internal/empty"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 
@@ -22,7 +24,7 @@ const (
 	pathFilterKey = "/test/gtest/gtest"
 )
 
-// C creates an unit testing case.
+// C creates a unit testing case.
 // The parameter `t` is the pointer to testing.T of stdlib (*testing.T).
 // The parameter `f` is the closure function for unit testing case.
 func C(t *testing.T, f func(t *T)) {
@@ -35,7 +37,7 @@ func C(t *testing.T, f func(t *T)) {
 	f(&T{t})
 }
 
-// Case creates an unit testing case.
+// Case creates a unit testing case.
 // The parameter `t` is the pointer to testing.T of stdlib (*testing.T).
 // The parameter `f` is the closure function for unit testing case.
 // Deprecated.
@@ -356,4 +358,29 @@ func AssertNil(value interface{}) {
 		panic(fmt.Sprintf(`%+v`, err))
 	}
 	AssertNE(value, nil)
+}
+
+// TestDataPath retrieves and returns the testdata path of current package,
+// which is used for unit testing cases only.
+// The optional parameter `names` specifies the sub-folders/sub-files,
+// which will be joined with current system separator and returned with the path.
+func TestDataPath(names ...string) string {
+	_, path, _ := gdebug.CallerWithFilter(pathFilterKey)
+	path = filepath.Dir(path) + string(filepath.Separator) + "testdata"
+	for _, name := range names {
+		path += string(filepath.Separator) + name
+	}
+	return path
+}
+
+// TestDataContent retrieves and returns the file content for specified testdata path of current package
+func TestDataContent(names ...string) string {
+	path := TestDataPath(names...)
+	if path != "" {
+		data, err := ioutil.ReadFile(path)
+		if err == nil {
+			return string(data)
+		}
+	}
+	return ""
 }

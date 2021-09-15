@@ -119,6 +119,11 @@ func Uints(any interface{}) []uint {
 		if v, ok := any.(apiInterfaces); ok {
 			return Uints(v.Interfaces())
 		}
+		// JSON format string value converting.
+		var result []uint
+		if checkJsonAndUnmarshalUseNumber(any, &result) {
+			return result
+		}
 		// Not a common type, it then uses reflection for conversion.
 		var reflectValue reflect.Value
 		if v, ok := value.(reflect.Value); ok {
@@ -143,6 +148,9 @@ func Uints(any interface{}) []uint {
 			return slice
 
 		default:
+			if reflectValue.IsZero() {
+				return []uint{}
+			}
 			return []uint{Uint(any)}
 		}
 	}
@@ -244,6 +252,11 @@ func Uint32s(any interface{}) []uint32 {
 		if v, ok := any.(apiInterfaces); ok {
 			return Uint32s(v.Interfaces())
 		}
+		// JSON format string value converting.
+		var result []uint32
+		if checkJsonAndUnmarshalUseNumber(any, &result) {
+			return result
+		}
 		// Not a common type, it then uses reflection for conversion.
 		var reflectValue reflect.Value
 		if v, ok := value.(reflect.Value); ok {
@@ -268,6 +281,9 @@ func Uint32s(any interface{}) []uint32 {
 			return slice
 
 		default:
+			if reflectValue.IsZero() {
+				return []uint32{}
+			}
 			return []uint32{Uint32(any)}
 		}
 	}
@@ -369,6 +385,11 @@ func Uint64s(any interface{}) []uint64 {
 		if v, ok := any.(apiInterfaces); ok {
 			return Uint64s(v.Interfaces())
 		}
+		// JSON format string value converting.
+		var result []uint64
+		if checkJsonAndUnmarshalUseNumber(any, &result) {
+			return result
+		}
 		// Not a common type, it then uses reflection for conversion.
 		var reflectValue reflect.Value
 		if v, ok := value.(reflect.Value); ok {
@@ -393,6 +414,9 @@ func Uint64s(any interface{}) []uint64 {
 			return slice
 
 		default:
+			if reflectValue.IsZero() {
+				return []uint64{}
+			}
 			return []uint64{Uint64(any)}
 		}
 	}
