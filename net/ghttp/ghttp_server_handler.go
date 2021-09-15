@@ -67,11 +67,11 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		} else {
 			if exception := recover(); exception != nil {
 				request.Response.WriteStatus(http.StatusInternalServerError)
-				if err, ok := exception.(error); ok {
-					if code := gerror.Code(err); code != gcode.CodeNil {
-						s.handleErrorLog(err, request)
+				if v, ok := exception.(error); ok {
+					if code := gerror.Code(v); code != gcode.CodeNil {
+						s.handleErrorLog(v, request)
 					} else {
-						s.handleErrorLog(gerror.WrapCodeSkip(gcode.CodeInternalError, 1, err, ""), request)
+						s.handleErrorLog(gerror.WrapCodeSkip(gcode.CodeInternalError, 1, v, ""), request)
 					}
 				} else {
 					s.handleErrorLog(gerror.NewCodeSkipf(gcode.CodeInternalError, 1, "%+v", exception), request)

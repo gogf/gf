@@ -18,7 +18,7 @@ func main() {
 
 	db.SetDebug(true)
 
-	r, e := db.Table("user").Data(g.Map{
+	r, e := db.Model("user").Data(g.Map{
 		"create_at": "now()",
 	}).Unscoped().Insert()
 	if e != nil {
