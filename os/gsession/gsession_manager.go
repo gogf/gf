@@ -20,7 +20,7 @@ type Manager struct {
 	storage Storage       // Storage interface for session storage.
 
 	// sessionData is the memory data cache for session TTL,
-	// which is available only if the Storage does not stores any session data in synchronizing.
+	// which is available only if the Storage does not store any session data in synchronizing.
 	// Please refer to the implements of StorageFile, StorageMemory and StorageRedis.
 	sessionData *gcache.Cache
 }
