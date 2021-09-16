@@ -45,26 +45,6 @@ func TestCache_Set(t *testing.T) {
 	})
 }
 
-func TestCache_GetVar(t *testing.T) {
-	c := gcache.New()
-	defer c.Close()
-	gtest.C(t, func(t *gtest.T) {
-		t.Assert(c.Set(1, 11, 0), nil)
-		v, _ := c.Get(1)
-		t.Assert(v, 11)
-		b, _ := c.Contains(1)
-		t.Assert(b, true)
-	})
-	gtest.C(t, func(t *gtest.T) {
-		v, _ := c.GetVar(1)
-		t.Assert(v.Int(), 11)
-		v, _ = c.GetVar(2)
-		t.Assert(v.Int(), 0)
-		t.Assert(v.IsNil(), true)
-		t.Assert(v.IsEmpty(), true)
-	})
-}
-
 func TestCache_Set_Expire(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New()
@@ -103,7 +83,7 @@ func TestCache_Update(t *testing.T) {
 		t.Assert(exist, true)
 
 		expire2, _ := gcache.GetExpire(key)
-		v, _ := gcache.GetVar(key)
+		v, _ := gcache.Get(key)
 		t.Assert(v, 12)
 		t.Assert(math.Ceil(expire1.Seconds()), math.Ceil(expire2.Seconds()))
 	})
@@ -119,7 +99,7 @@ func TestCache_Update(t *testing.T) {
 
 		expire1, _ := cache.GetExpire(1)
 		expire2, _ := cache.GetExpire(1)
-		v, _ := cache.GetVar(1)
+		v, _ := cache.Get(1)
 		t.Assert(v, 12)
 		t.Assert(math.Ceil(expire1.Seconds()), math.Ceil(expire2.Seconds()))
 	})

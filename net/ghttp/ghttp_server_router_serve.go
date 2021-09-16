@@ -56,7 +56,7 @@ func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*handlerParsedI
 			return nil, nil
 		}, routeCacheDuration)
 	if value != nil {
-		item := value.(*handlerCacheItem)
+		item := value.Val().(*handlerCacheItem)
 		return item.parsedItems, item.hasHook, item.hasServe
 	}
 	return

@@ -55,7 +55,7 @@ func GetBytesWithCache(path string, duration ...time.Duration) []byte {
 		return b, nil
 	}, expire)
 	if r != nil {
-		return r.([]byte)
+		return r.Bytes()
 	}
 	return nil
 }

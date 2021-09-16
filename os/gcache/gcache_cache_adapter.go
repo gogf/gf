@@ -7,6 +7,7 @@
 package gcache
 
 import (
+	"github.com/gogf/gf/container/gvar"
 	"time"
 )
 
@@ -63,7 +64,7 @@ func (c *Cache) SetIfNotExistFuncLock(key interface{}, f func() (interface{}, er
 // Get retrieves and returns the associated value of given `key`.
 // It returns nil if it does not exist, or its value is nil, or it's expired.
 // If you would like to check if the `key` exists in the cache, it's better using function Contains.
-func (c *Cache) Get(key interface{}) (interface{}, error) {
+func (c *Cache) Get(key interface{}) (*gvar.Var, error) {
 	return c.adapter.Get(c.getCtx(), key)
 }
 
@@ -74,7 +75,7 @@ func (c *Cache) Get(key interface{}) (interface{}, error) {
 // It does not expire if `duration` == 0.
 // It deletes the `key` if `duration` < 0 or given `value` is nil, but it does nothing
 // if `value` is a function and the function result is nil.
-func (c *Cache) GetOrSet(key interface{}, value interface{}, duration time.Duration) (interface{}, error) {
+func (c *Cache) GetOrSet(key interface{}, value interface{}, duration time.Duration) (*gvar.Var, error) {
 	return c.adapter.GetOrSet(c.getCtx(), key, value, duration)
 }
 
@@ -85,7 +86,7 @@ func (c *Cache) GetOrSet(key interface{}, value interface{}, duration time.Durat
 // It does not expire if `duration` == 0.
 // It deletes the `key` if `duration` < 0 or given `value` is nil, but it does nothing
 // if `value` is a function and the function result is nil.
-func (c *Cache) GetOrSetFunc(key interface{}, f func() (interface{}, error), duration time.Duration) (interface{}, error) {
+func (c *Cache) GetOrSetFunc(key interface{}, f func() (interface{}, error), duration time.Duration) (*gvar.Var, error) {
 	return c.adapter.GetOrSetFunc(c.getCtx(), key, f, duration)
 }
 
@@ -99,7 +100,7 @@ func (c *Cache) GetOrSetFunc(key interface{}, f func() (interface{}, error), dur
 //
 // Note that it differs from function `GetOrSetFunc` is that the function `f` is executed within
 // writing mutex lock for concurrent safety purpose.
-func (c *Cache) GetOrSetFuncLock(key interface{}, f func() (interface{}, error), duration time.Duration) (interface{}, error) {
+func (c *Cache) GetOrSetFuncLock(key interface{}, f func() (interface{}, error), duration time.Duration) (*gvar.Var, error) {
 	return c.adapter.GetOrSetFuncLock(c.getCtx(), key, f, duration)
 }
 
@@ -119,7 +120,7 @@ func (c *Cache) GetExpire(key interface{}) (time.Duration, error) {
 
 // Remove deletes one or more keys from cache, and returns its value.
 // If multiple keys are given, it returns the value of the last deleted item.
-func (c *Cache) Remove(keys ...interface{}) (value interface{}, err error) {
+func (c *Cache) Remove(keys ...interface{}) (value *gvar.Var, err error) {
 	return c.adapter.Remove(c.getCtx(), keys...)
 }
 
@@ -128,7 +129,7 @@ func (c *Cache) Remove(keys ...interface{}) (value interface{}, err error) {
 //
 // It deletes the `key` if given `value` is nil.
 // It does nothing if `key` does not exist in the cache.
-func (c *Cache) Update(key interface{}, value interface{}) (oldValue interface{}, exist bool, err error) {
+func (c *Cache) Update(key interface{}, value interface{}) (oldValue *gvar.Var, exist bool, err error) {
 	return c.adapter.Update(c.getCtx(), key, value)
 }
 
