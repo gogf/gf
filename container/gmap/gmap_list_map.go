@@ -31,7 +31,7 @@ type gListMapNode struct {
 
 // NewListMap returns an empty link map.
 // ListMap is backed by a hash table to store values and doubly-linked list to store ordering.
-// The parameter <safe> is used to specify whether using map in concurrent-safety,
+// The parameter `safe` is used to specify whether using map in concurrent-safety,
 // which is false in default.
 func NewListMap(safe ...bool) *ListMap {
 	return &ListMap{
@@ -41,8 +41,8 @@ func NewListMap(safe ...bool) *ListMap {
 	}
 }
 
-// NewListMapFrom returns a link map from given map <data>.
-// Note that, the param <data> map will be set as the underlying data map(no deep copy),
+// NewListMapFrom returns a link map from given map `data`.
+// Note that, the param `data` map will be set as the underlying data map(no deep copy),
 // there might be some concurrent-safe issues when changing the map outside.
 func NewListMapFrom(data map[interface{}]interface{}, safe ...bool) *ListMap {
 	m := NewListMap(safe...)
@@ -55,8 +55,8 @@ func (m *ListMap) Iterator(f func(key, value interface{}) bool) {
 	m.IteratorAsc(f)
 }
 
-// IteratorAsc iterates the map readonly in ascending order with given callback function <f>.
-// If <f> returns true, then it continues iterating; or false to stop.
+// IteratorAsc iterates the map readonly in ascending order with given callback function `f`.
+// If `f` returns true, then it continues iterating; or false to stop.
 func (m *ListMap) IteratorAsc(f func(key interface{}, value interface{}) bool) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -69,8 +69,8 @@ func (m *ListMap) IteratorAsc(f func(key interface{}, value interface{}) bool) {
 	}
 }
 
-// IteratorDesc iterates the map readonly in descending order with given callback function <f>.
-// If <f> returns true, then it continues iterating; or false to stop.
+// IteratorDesc iterates the map readonly in descending order with given callback function `f`.
+// If `f` returns true, then it continues iterating; or false to stop.
 func (m *ListMap) IteratorDesc(f func(key interface{}, value interface{}) bool) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -96,7 +96,7 @@ func (m *ListMap) Clear() {
 	m.mu.Unlock()
 }
 
-// Replace the data of the map with given <data>.
+// Replace the data of the map with given `data`.
 func (m *ListMap) Replace(data map[interface{}]interface{}) {
 	m.mu.Lock()
 	m.data = make(map[interface{}]*glist.Element)
@@ -202,8 +202,8 @@ func (m *ListMap) Sets(data map[interface{}]interface{}) {
 	m.mu.Unlock()
 }
 
-// Search searches the map with given <key>.
-// Second return parameter <found> is true if key was found, otherwise false.
+// Search searches the map with given `key`.
+// Second return parameter `found` is true if key was found, otherwise false.
 func (m *ListMap) Search(key interface{}) (value interface{}, found bool) {
 	m.mu.RLock()
 	if m.data != nil {
@@ -216,7 +216,7 @@ func (m *ListMap) Search(key interface{}) (value interface{}, found bool) {
 	return
 }
 
-// Get returns the value by given <key>.
+// Get returns the value by given `key`.
 func (m *ListMap) Get(key interface{}) (value interface{}) {
 	m.mu.RLock()
 	if m.data != nil {
@@ -241,7 +241,7 @@ func (m *ListMap) Pop() (key, value interface{}) {
 	return
 }
 
-// Pops retrieves and deletes <size> items from the map.
+// Pops retrieves and deletes `size` items from the map.
 // It returns all items if size == -1.
 func (m *ListMap) Pops(size int) map[interface{}]interface{} {
 	m.mu.Lock()
@@ -268,14 +268,14 @@ func (m *ListMap) Pops(size int) map[interface{}]interface{} {
 }
 
 // doSetWithLockCheck checks whether value of the key exists with mutex.Lock,
-// if not exists, set value to the map with given <key>,
+// if not exists, set value to the map with given `key`,
 // or else just return the existing value.
 //
-// When setting value, if <value> is type of <func() interface {}>,
+// When setting value, if `value` is type of <func() interface {}>,
 // it will be executed with mutex.Lock of the map,
-// and its return value will be set to the map with <key>.
+// and its return value will be set to the map with `key`.
 //
-// It returns value with given <key>.
+// It returns value with given `key`.
 func (m *ListMap) doSetWithLockCheck(key interface{}, value interface{}) interface{} {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -296,7 +296,7 @@ func (m *ListMap) doSetWithLockCheck(key interface{}, value interface{}) interfa
 }
 
 // GetOrSet returns the value by key,
-// or sets value with given <value> if it does not exist and then returns this value.
+// or sets value with given `value` if it does not exist and then returns this value.
 func (m *ListMap) GetOrSet(key interface{}, value interface{}) interface{} {
 	if v, ok := m.Search(key); !ok {
 		return m.doSetWithLockCheck(key, value)
@@ -306,7 +306,7 @@ func (m *ListMap) GetOrSet(key interface{}, value interface{}) interface{} {
 }
 
 // GetOrSetFunc returns the value by key,
-// or sets value with returned value of callback function <f> if it does not exist
+// or sets value with returned value of callback function `f` if it does not exist
 // and then returns this value.
 func (m *ListMap) GetOrSetFunc(key interface{}, f func() interface{}) interface{} {
 	if v, ok := m.Search(key); !ok {
@@ -317,10 +317,10 @@ func (m *ListMap) GetOrSetFunc(key interface{}, f func() interface{}) interface{
 }
 
 // GetOrSetFuncLock returns the value by key,
-// or sets value with returned value of callback function <f> if it does not exist
+// or sets value with returned value of callback function `f` if it does not exist
 // and then returns this value.
 //
-// GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function <f>
+// GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function `f`
 // with mutex.Lock of the map.
 func (m *ListMap) GetOrSetFuncLock(key interface{}, f func() interface{}) interface{} {
 	if v, ok := m.Search(key); !ok {
@@ -330,7 +330,7 @@ func (m *ListMap) GetOrSetFuncLock(key interface{}, f func() interface{}) interf
 	}
 }
 
-// GetVar returns a Var with the value by given <key>.
+// GetVar returns a Var with the value by given `key`.
 // The returned Var is un-concurrent safe.
 func (m *ListMap) GetVar(key interface{}) *gvar.Var {
 	return gvar.New(m.Get(key))
@@ -354,8 +354,8 @@ func (m *ListMap) GetVarOrSetFuncLock(key interface{}, f func() interface{}) *gv
 	return gvar.New(m.GetOrSetFuncLock(key, f))
 }
 
-// SetIfNotExist sets <value> to the map if the <key> does not exist, and then returns true.
-// It returns false if <key> exists, and <value> would be ignored.
+// SetIfNotExist sets <value> to the map if the `key` does not exist, and then returns true.
+// It returns false if <key> exists, and `value` would be ignored.
 func (m *ListMap) SetIfNotExist(key interface{}, value interface{}) bool {
 	if !m.Contains(key) {
 		m.doSetWithLockCheck(key, value)
@@ -364,8 +364,8 @@ func (m *ListMap) SetIfNotExist(key interface{}, value interface{}) bool {
 	return false
 }
 
-// SetIfNotExistFunc sets value with return value of callback function <f>, and then returns true.
-// It returns false if <key> exists, and <value> would be ignored.
+// SetIfNotExistFunc sets value with return value of callback function `f`, and then returns true.
+// It returns false if <key> exists, and `value` would be ignored.
 func (m *ListMap) SetIfNotExistFunc(key interface{}, f func() interface{}) bool {
 	if !m.Contains(key) {
 		m.doSetWithLockCheck(key, f())
@@ -374,11 +374,11 @@ func (m *ListMap) SetIfNotExistFunc(key interface{}, f func() interface{}) bool 
 	return false
 }
 
-// SetIfNotExistFuncLock sets value with return value of callback function <f>, and then returns true.
-// It returns false if <key> exists, and <value> would be ignored.
+// SetIfNotExistFuncLock sets value with return value of callback function `f`, and then returns true.
+// It returns false if <key> exists, and `value` would be ignored.
 //
 // SetIfNotExistFuncLock differs with SetIfNotExistFunc function is that
-// it executes function <f> with mutex.Lock of the map.
+// it executes function `f` with mutex.Lock of the map.
 func (m *ListMap) SetIfNotExistFuncLock(key interface{}, f func() interface{}) bool {
 	if !m.Contains(key) {
 		m.doSetWithLockCheck(key, f)
@@ -387,7 +387,7 @@ func (m *ListMap) SetIfNotExistFuncLock(key interface{}, f func() interface{}) b
 	return false
 }
 
-// Remove deletes value from map by given <key>, and return this deleted value.
+// Remove deletes value from map by given `key`, and return this deleted value.
 func (m *ListMap) Remove(key interface{}) (value interface{}) {
 	m.mu.Lock()
 	if m.data != nil {
@@ -452,7 +452,7 @@ func (m *ListMap) Values() []interface{} {
 }
 
 // Contains checks whether a key exists.
-// It returns true if the <key> exists, or else false.
+// It returns true if the `key` exists, or else false.
 func (m *ListMap) Contains(key interface{}) (ok bool) {
 	m.mu.RLock()
 	if m.data != nil {
@@ -486,7 +486,7 @@ func (m *ListMap) Flip() {
 }
 
 // Merge merges two link maps.
-// The <other> map will be merged into the map <m>.
+// The <other> map will be merged into the map `m`.
 func (m *ListMap) Merge(other *ListMap) {
 	m.mu.Lock()
 	defer m.mu.Unlock()

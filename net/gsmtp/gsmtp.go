@@ -20,7 +20,7 @@ import (
 	"strings"
 )
 
-// SMTP is the structure for smtp connection
+// SMTP is the structure for smtp connection.
 type SMTP struct {
 	Address  string
 	Username string
@@ -42,7 +42,7 @@ var (
 )
 
 // SendMail connects to the server at addr, switches to TLS if
-// possible, authenticates with the optional mechanism a if possible,
+// possible, authenticates with the optional mechanism an if possible,
 // and then sends an email from address <from>, to addresses <to>, with
 // message msg.
 //

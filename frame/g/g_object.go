@@ -58,13 +58,13 @@ func Cfg(name ...string) *gcfg.Config {
 }
 
 // Resource returns an instance of Resource.
-// The parameter <name> is the name for the instance.
+// The parameter `name` is the name for the instance.
 func Resource(name ...string) *gres.Resource {
 	return gins.Resource(name...)
 }
 
 // I18n returns an instance of gi18n.Manager.
-// The parameter <name> is the name for the instance.
+// The parameter `name` is the name for the instance.
 func I18n(name ...string) *gi18n.Manager {
 	return gins.I18n(name...)
 }
@@ -76,7 +76,7 @@ func Res(name ...string) *gres.Resource {
 }
 
 // Log returns an instance of glog.Logger.
-// The parameter <name> is the name for the instance.
+// The parameter `name` is the name for the instance.
 func Log(name ...string) *glog.Logger {
 	return gins.Log(name...)
 }

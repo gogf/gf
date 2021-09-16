@@ -21,7 +21,7 @@ type IntIntMap struct {
 }
 
 // NewIntIntMap returns an empty IntIntMap object.
-// The parameter <safe> is used to specify whether using map in concurrent-safety,
+// The parameter `safe` is used to specify whether using map in concurrent-safety,
 // which is false in default.
 func NewIntIntMap(safe ...bool) *IntIntMap {
 	return &IntIntMap{
@@ -30,8 +30,8 @@ func NewIntIntMap(safe ...bool) *IntIntMap {
 	}
 }
 
-// NewIntIntMapFrom creates and returns a hash map from given map <data>.
-// Note that, the param <data> map will be set as the underlying data map(no deep copy),
+// NewIntIntMapFrom creates and returns a hash map from given map `data`.
+// Note that, the param `data` map will be set as the underlying data map(no deep copy),
 // there might be some concurrent-safe issues when changing the map outside.
 func NewIntIntMapFrom(data map[int]int, safe ...bool) *IntIntMap {
 	return &IntIntMap{
@@ -40,8 +40,8 @@ func NewIntIntMapFrom(data map[int]int, safe ...bool) *IntIntMap {
 	}
 }
 
-// Iterator iterates the hash map readonly with custom callback function <f>.
-// If <f> returns true, then it continues iterating; or false to stop.
+// Iterator iterates the hash map readonly with custom callback function `f`.
+// If `f` returns true, then it continues iterating; or false to stop.
 func (m *IntIntMap) Iterator(f func(k int, v int) bool) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -130,8 +130,8 @@ func (m *IntIntMap) Sets(data map[int]int) {
 	m.mu.Unlock()
 }
 
-// Search searches the map with given <key>.
-// Second return parameter <found> is true if key was found, otherwise false.
+// Search searches the map with given `key`.
+// Second return parameter `found` is true if key was found, otherwise false.
 func (m *IntIntMap) Search(key int) (value int, found bool) {
 	m.mu.RLock()
 	if m.data != nil {
@@ -141,7 +141,7 @@ func (m *IntIntMap) Search(key int) (value int, found bool) {
 	return
 }
 
-// Get returns the value by given <key>.
+// Get returns the value by given `key`.
 func (m *IntIntMap) Get(key int) (value int) {
 	m.mu.RLock()
 	if m.data != nil {
@@ -162,7 +162,7 @@ func (m *IntIntMap) Pop() (key, value int) {
 	return
 }
 
-// Pops retrieves and deletes <size> items from the map.
+// Pops retrieves and deletes `size` items from the map.
 // It returns all items if size == -1.
 func (m *IntIntMap) Pops(size int) map[int]int {
 	m.mu.Lock()
@@ -189,10 +189,10 @@ func (m *IntIntMap) Pops(size int) map[int]int {
 }
 
 // doSetWithLockCheck checks whether value of the key exists with mutex.Lock,
-// if not exists, set value to the map with given <key>,
+// if not exists, set value to the map with given `key`,
 // or else just return the existing value.
 //
-// It returns value with given <key>.
+// It returns value with given `key`.
 func (m *IntIntMap) doSetWithLockCheck(key int, value int) int {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -207,7 +207,7 @@ func (m *IntIntMap) doSetWithLockCheck(key int, value int) int {
 }
 
 // GetOrSet returns the value by key,
-// or sets value with given <value> if it does not exist and then returns this value.
+// or sets value with given `value` if it does not exist and then returns this value.
 func (m *IntIntMap) GetOrSet(key int, value int) int {
 	if v, ok := m.Search(key); !ok {
 		return m.doSetWithLockCheck(key, value)
@@ -217,7 +217,7 @@ func (m *IntIntMap) GetOrSet(key int, value int) int {
 }
 
 // GetOrSetFunc returns the value by key,
-// or sets value with returned value of callback function <f> if it does not exist and returns this value.
+// or sets value with returned value of callback function `f` if it does not exist and returns this value.
 func (m *IntIntMap) GetOrSetFunc(key int, f func() int) int {
 	if v, ok := m.Search(key); !ok {
 		return m.doSetWithLockCheck(key, f())
@@ -227,9 +227,9 @@ func (m *IntIntMap) GetOrSetFunc(key int, f func() int) int {
 }
 
 // GetOrSetFuncLock returns the value by key,
-// or sets value with returned value of callback function <f> if it does not exist and returns this value.
+// or sets value with returned value of callback function `f` if it does not exist and returns this value.
 //
-// GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function <f>
+// GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function `f`
 // with mutex.Lock of the hash map.
 func (m *IntIntMap) GetOrSetFuncLock(key int, f func() int) int {
 	if v, ok := m.Search(key); !ok {
@@ -249,8 +249,8 @@ func (m *IntIntMap) GetOrSetFuncLock(key int, f func() int) int {
 	}
 }
 
-// SetIfNotExist sets <value> to the map if the <key> does not exist, and then returns true.
-// It returns false if <key> exists, and <value> would be ignored.
+// SetIfNotExist sets <value> to the map if the `key` does not exist, and then returns true.
+// It returns false if <key> exists, and `value` would be ignored.
 func (m *IntIntMap) SetIfNotExist(key int, value int) bool {
 	if !m.Contains(key) {
 		m.doSetWithLockCheck(key, value)
@@ -259,8 +259,8 @@ func (m *IntIntMap) SetIfNotExist(key int, value int) bool {
 	return false
 }
 
-// SetIfNotExistFunc sets value with return value of callback function <f>, and then returns true.
-// It returns false if <key> exists, and <value> would be ignored.
+// SetIfNotExistFunc sets value with return value of callback function `f`, and then returns true.
+// It returns false if <key> exists, and `value` would be ignored.
 func (m *IntIntMap) SetIfNotExistFunc(key int, f func() int) bool {
 	if !m.Contains(key) {
 		m.doSetWithLockCheck(key, f())
@@ -269,11 +269,11 @@ func (m *IntIntMap) SetIfNotExistFunc(key int, f func() int) bool {
 	return false
 }
 
-// SetIfNotExistFuncLock sets value with return value of callback function <f>, and then returns true.
-// It returns false if <key> exists, and <value> would be ignored.
+// SetIfNotExistFuncLock sets value with return value of callback function `f`, and then returns true.
+// It returns false if <key> exists, and `value` would be ignored.
 //
 // SetIfNotExistFuncLock differs with SetIfNotExistFunc function is that
-// it executes function <f> with mutex.Lock of the hash map.
+// it executes function `f` with mutex.Lock of the hash map.
 func (m *IntIntMap) SetIfNotExistFuncLock(key int, f func() int) bool {
 	if !m.Contains(key) {
 		m.mu.Lock()
@@ -300,7 +300,7 @@ func (m *IntIntMap) Removes(keys []int) {
 	m.mu.Unlock()
 }
 
-// Remove deletes value from map by given <key>, and return this deleted value.
+// Remove deletes value from map by given `key`, and return this deleted value.
 func (m *IntIntMap) Remove(key int) (value int) {
 	m.mu.Lock()
 	if m.data != nil {
@@ -344,7 +344,7 @@ func (m *IntIntMap) Values() []int {
 }
 
 // Contains checks whether a key exists.
-// It returns true if the <key> exists, or else false.
+// It returns true if the `key` exists, or else false.
 func (m *IntIntMap) Contains(key int) bool {
 	var ok bool
 	m.mu.RLock()
@@ -376,21 +376,21 @@ func (m *IntIntMap) Clear() {
 	m.mu.Unlock()
 }
 
-// Replace the data of the map with given <data>.
+// Replace the data of the map with given `data`.
 func (m *IntIntMap) Replace(data map[int]int) {
 	m.mu.Lock()
 	m.data = data
 	m.mu.Unlock()
 }
 
-// LockFunc locks writing with given callback function <f> within RWMutex.Lock.
+// LockFunc locks writing with given callback function `f` within RWMutex.Lock.
 func (m *IntIntMap) LockFunc(f func(m map[int]int)) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	f(m.data)
 }
 
-// RLockFunc locks reading with given callback function <f> within RWMutex.RLock.
+// RLockFunc locks reading with given callback function `f` within RWMutex.RLock.
 func (m *IntIntMap) RLockFunc(f func(m map[int]int)) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -409,7 +409,7 @@ func (m *IntIntMap) Flip() {
 }
 
 // Merge merges two hash maps.
-// The <other> map will be merged into the map <m>.
+// The <other> map will be merged into the map `m`.
 func (m *IntIntMap) Merge(other *IntIntMap) {
 	m.mu.Lock()
 	defer m.mu.Unlock()

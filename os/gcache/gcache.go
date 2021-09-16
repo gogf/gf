@@ -5,6 +5,7 @@
 // You can obtain one at https://github.com/gogf/gf.
 
 // Package gcache provides kinds of cache management for process.
+//
 // It provides a concurrent-safe in-memory cache adapter for process in default.
 package gcache
 
@@ -24,26 +25,60 @@ func Ctx(ctx context.Context) *Cache {
 }
 
 // Set sets cache with `key`-`value` pair, which is expired after `duration`.
+//
 // It does not expire if `duration` == 0.
+// It deletes the keys of `data` if `duration` < 0 or given `value` is nil.
 func Set(key interface{}, value interface{}, duration time.Duration) error {
 	return defaultCache.Set(key, value, duration)
 }
 
-// SetIfNotExist sets cache with `key`-`value` pair if `key` does not exist in the cache,
-// which is expired after `duration`. It does not expire if `duration` == 0.
-func SetIfNotExist(key interface{}, value interface{}, duration time.Duration) (bool, error) {
-	return defaultCache.SetIfNotExist(key, value, duration)
-}
-
-// Sets batch sets cache with key-value pairs by `data`, which is expired after `duration`.
+// Sets batch sets cache with key-value pairs by `data` map, which is expired after `duration`.
 //
 // It does not expire if `duration` == 0.
+// It deletes the keys of `data` if `duration` < 0 or given `value` is nil.
 func Sets(data map[interface{}]interface{}, duration time.Duration) error {
 	return defaultCache.Sets(data, duration)
 }
 
-// Get returns the value of `key`.
-// It returns nil if it does not exist or its value is nil.
+// SetIfNotExist sets cache with `key`-`value` pair which is expired after `duration`
+// if `key` does not exist in the cache. It returns true the `key` does not exist in the
+// cache, and it sets `value` successfully to the cache, or else it returns false.
+//
+// It does not expire if `duration` == 0.
+// It deletes the `key` if `duration` < 0 or given `value` is nil.
+func SetIfNotExist(key interface{}, value interface{}, duration time.Duration) (bool, error) {
+	return defaultCache.SetIfNotExist(key, value, duration)
+}
+
+// SetIfNotExistFunc sets `key` with result of function `f` and returns true
+// if `key` does not exist in the cache, or else it does nothing and returns false if `key` already exists.
+//
+// The parameter `value` can be type of `func() interface{}`, but it does nothing if its
+// result is nil.
+//
+// It does not expire if `duration` == 0.
+// It deletes the `key` if `duration` < 0 or given `value` is nil.
+func SetIfNotExistFunc(key interface{}, f func() (interface{}, error), duration time.Duration) (bool, error) {
+	return defaultCache.SetIfNotExistFunc(key, f, duration)
+}
+
+// SetIfNotExistFuncLock sets `key` with result of function `f` and returns true
+// if `key` does not exist in the cache, or else it does nothing and returns false if `key` already exists.
+//
+// It does not expire if `duration` == 0.
+// It deletes the `key` if `duration` < 0 or given `value` is nil.
+//
+// Note that it differs from function `SetIfNotExistFunc` is that the function `f` is executed within
+// writing mutex lock for concurrent safety purpose.
+func SetIfNotExistFuncLock(key interface{}, f func() (interface{}, error), duration time.Duration) (bool, error) {
+	return defaultCache.SetIfNotExistFuncLock(key, f, duration)
+}
+
+// Get retrieves and returns the associated value of given `key`.
+// It returns nil if it does not exist, or its value is nil, or it's expired.
+// If you would like to check if the `key` exists in the cache, it's better using function Contains.
+//
+// It is suggested using GetVar instead for compatibility of different adapters purpose.
 func Get(key interface{}) (interface{}, error) {
 	return defaultCache.Get(key)
 }
@@ -53,49 +88,130 @@ func GetVar(key interface{}) (*gvar.Var, error) {
 	return defaultCache.GetVar(key)
 }
 
-// GetOrSet returns the value of `key`,
-// or sets `key`-`value` pair and returns `value` if `key` does not exist in the cache.
-// The key-value pair expires after `duration`.
+// GetOrSet retrieves and returns the value of `key`, or sets `key`-`value` pair and
+// returns `value` if `key` does not exist in the cache. The key-value pair expires
+// after `duration`.
 //
 // It does not expire if `duration` == 0.
+// It deletes the `key` if `duration` < 0 or given `value` is nil, but it does nothing
+// if `value` is a function and the function result is nil.
+//
+// It is suggested using GetVarOrSet instead for compatibility of different adapters purpose.
 func GetOrSet(key interface{}, value interface{}, duration time.Duration) (interface{}, error) {
 	return defaultCache.GetOrSet(key, value, duration)
 }
 
-// GetOrSetFunc returns the value of `key`, or sets `key` with result of function `f`
-// and returns its result if `key` does not exist in the cache. The key-value pair expires
-// after `duration`. It does not expire if `duration` == 0.
+// GetOrSetFunc retrieves and returns the value of `key`, or sets `key` with result of
+// function `f` and returns its result if `key` does not exist in the cache. The key-value
+// pair expires after `duration`.
+//
+// It does not expire if `duration` == 0.
+// It deletes the `key` if `duration` < 0 or given `value` is nil, but it does nothing
+// if `value` is a function and the function result is nil.
+//
+// It is suggested using GetVarOrSetFunc instead for compatibility of different adapters purpose.
 func GetOrSetFunc(key interface{}, f func() (interface{}, error), duration time.Duration) (interface{}, error) {
 	return defaultCache.GetOrSetFunc(key, f, duration)
 }
 
-// GetOrSetFuncLock returns the value of `key`, or sets `key` with result of function `f`
-// and returns its result if `key` does not exist in the cache. The key-value pair expires
-// after `duration`. It does not expire if `duration` == 0.
+// GetOrSetFuncLock retrieves and returns the value of `key`, or sets `key` with result of
+// function `f` and returns its result if `key` does not exist in the cache. The key-value
+// pair expires after `duration`.
 //
-// Note that the function `f` is executed within writing mutex lock.
+// It does not expire if `duration` == 0.
+// It deletes the `key` if `duration` < 0 or given `value` is nil, but it does nothing
+// if `value` is a function and the function result is nil.
+//
+// Note that it differs from function `GetOrSetFunc` is that the function `f` is executed within
+// writing mutex lock for concurrent safety purpose.
+//
+// It is suggested using GetVarOrSetFuncLock instead for compatibility of different adapters purpose.
 func GetOrSetFuncLock(key interface{}, f func() (interface{}, error), duration time.Duration) (interface{}, error) {
 	return defaultCache.GetOrSetFuncLock(key, f, duration)
 }
 
-// Contains returns true if `key` exists in the cache, or else returns false.
+// GetVarOrSet acts as function GetOrSet except it returns value as type gvar.Var.
+// Also see GetOrSet.
+func GetVarOrSet(key interface{}, value interface{}, duration time.Duration) (*gvar.Var, error) {
+	return defaultCache.GetVarOrSet(key, value, duration)
+}
+
+// GetVarOrSetFunc acts as function GetOrSetFunc except it returns value as type gvar.Var.
+// Also see GetOrSetFunc.
+func GetVarOrSetFunc(key interface{}, f func() (interface{}, error), duration time.Duration) (*gvar.Var, error) {
+	return defaultCache.GetVarOrSetFunc(key, f, duration)
+}
+
+// GetVarOrSetFuncLock acts as function GetOrSetFuncLock except it returns value as type gvar.Var.
+// Also see GetOrSetFuncLock.
+func GetVarOrSetFuncLock(key interface{}, f func() (interface{}, error), duration time.Duration) (*gvar.Var, error) {
+	return defaultCache.GetVarOrSetFunc(key, f, duration)
+}
+
+// Contains checks and returns true if `key` exists in the cache, or else returns false.
 func Contains(key interface{}) (bool, error) {
 	return defaultCache.Contains(key)
 }
 
-// Remove deletes the one or more keys from cache, and returns its value.
-// If multiple keys are given, it returns the value of the deleted last item.
+// GetExpire retrieves and returns the expiration of `key` in the cache.
+//
+// Note that,
+// It returns 0 if the `key` does not expire.
+// It returns -1 if the `key` does not exist in the cache.
+func GetExpire(key interface{}) (time.Duration, error) {
+	return defaultCache.GetExpire(key)
+}
+
+// Remove deletes one or more keys from cache, and returns its value.
+// If multiple keys are given, it returns the value of the last deleted item.
+//
+// It is suggested using RemoveVar instead for compatibility of different adapters purpose.
 func Remove(keys ...interface{}) (value interface{}, err error) {
 	return defaultCache.Remove(keys...)
 }
 
+// RemoveVar acts as function Remove except it returns value as type gvar.Var.
+// Also see Remove.
+func RemoveVar(keys ...interface{}) (*gvar.Var, error) {
+	return defaultCache.RemoveVar(keys...)
+}
+
 // Removes deletes `keys` in the cache.
-// Deprecated, use Remove instead.
-func Removes(keys []interface{}) {
-	defaultCache.Remove(keys...)
+func Removes(keys []interface{}) error {
+	return defaultCache.Removes(keys)
+}
+
+// Update updates the value of `key` without changing its expiration and returns the old value.
+// The returned value `exist` is false if the `key` does not exist in the cache.
+//
+// It deletes the `key` if given `value` is nil.
+// It does nothing if `key` does not exist in the cache.
+func Update(key interface{}, value interface{}) (oldValue interface{}, exist bool, err error) {
+	return defaultCache.Update(key, value)
+}
+
+// UpdateVar acts as function Update except it returns value as type gvar.Var.
+// Also see Update.
+func UpdateVar(key interface{}, value interface{}) (oldValue *gvar.Var, exist bool, err error) {
+	return defaultCache.UpdateVar(key, value)
+}
+
+// UpdateExpire updates the expiration of `key` and returns the old expiration duration value.
+//
+// It returns -1 and does nothing if the `key` does not exist in the cache.
+// It deletes the `key` if `duration` < 0.
+func UpdateExpire(key interface{}, duration time.Duration) (oldDuration time.Duration, err error) {
+	return defaultCache.UpdateExpire(key, duration)
+}
+
+// Size returns the number of items in the cache.
+func Size() (int, error) {
+	return defaultCache.Size()
 }
 
 // Data returns a copy of all key-value pairs in the cache as map type.
+// Note that this function may lead lots of memory usage, you can implement this function
+// if necessary.
 func Data() (map[interface{}]interface{}, error) {
 	return defaultCache.Data()
 }
@@ -113,27 +229,4 @@ func KeyStrings() ([]string, error) {
 // Values returns all values in the cache as slice.
 func Values() ([]interface{}, error) {
 	return defaultCache.Values()
-}
-
-// Size returns the size of the cache.
-func Size() (int, error) {
-	return defaultCache.Size()
-}
-
-// GetExpire retrieves and returns the expiration of `key`.
-// It returns -1 if the `key` does not exist in the cache.
-func GetExpire(key interface{}) (time.Duration, error) {
-	return defaultCache.GetExpire(key)
-}
-
-// Update updates the value of `key` without changing its expiration and returns the old value.
-// The returned `exist` value is false if the `key` does not exist in the cache.
-func Update(key interface{}, value interface{}) (oldValue interface{}, exist bool, err error) {
-	return defaultCache.Update(key, value)
-}
-
-// UpdateExpire updates the expiration of `key` and returns the old expiration duration value.
-// It returns -1 if the `key` does not exist in the cache.
-func UpdateExpire(key interface{}, duration time.Duration) (oldDuration time.Duration, err error) {
-	return defaultCache.UpdateExpire(key, duration)
 }
