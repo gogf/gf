@@ -220,11 +220,11 @@ func parsePatternItemValue(value string, itemType int) (int, error) {
 		// it converts the value to number according to predefined map.
 		switch itemType {
 		case patternItemTypeWeek:
-			if number, ok := monthMap[strings.ToLower(value)]; ok {
+			if number, ok := weekMap[strings.ToLower(value)]; ok {
 				return number, nil
 			}
 		case patternItemTypeMonth:
-			if number, ok := weekMap[strings.ToLower(value)]; ok {
+			if number, ok := monthMap[strings.ToLower(value)]; ok {
 				return number, nil
 			}
 		}
