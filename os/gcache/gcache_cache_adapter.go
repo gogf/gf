@@ -63,8 +63,6 @@ func (c *Cache) SetIfNotExistFuncLock(key interface{}, f func() (interface{}, er
 // Get retrieves and returns the associated value of given `key`.
 // It returns nil if it does not exist, or its value is nil, or it's expired.
 // If you would like to check if the `key` exists in the cache, it's better using function Contains.
-//
-// It is suggested using GetVar instead for compatibility of different adapters purpose.
 func (c *Cache) Get(key interface{}) (interface{}, error) {
 	return c.adapter.Get(c.getCtx(), key)
 }
@@ -76,8 +74,6 @@ func (c *Cache) Get(key interface{}) (interface{}, error) {
 // It does not expire if `duration` == 0.
 // It deletes the `key` if `duration` < 0 or given `value` is nil, but it does nothing
 // if `value` is a function and the function result is nil.
-//
-// It is suggested using GetVarOrSet instead for compatibility of different adapters purpose.
 func (c *Cache) GetOrSet(key interface{}, value interface{}, duration time.Duration) (interface{}, error) {
 	return c.adapter.GetOrSet(c.getCtx(), key, value, duration)
 }
@@ -89,8 +85,6 @@ func (c *Cache) GetOrSet(key interface{}, value interface{}, duration time.Durat
 // It does not expire if `duration` == 0.
 // It deletes the `key` if `duration` < 0 or given `value` is nil, but it does nothing
 // if `value` is a function and the function result is nil.
-//
-// It is suggested using GetVarOrSetFunc instead for compatibility of different adapters purpose.
 func (c *Cache) GetOrSetFunc(key interface{}, f func() (interface{}, error), duration time.Duration) (interface{}, error) {
 	return c.adapter.GetOrSetFunc(c.getCtx(), key, f, duration)
 }
@@ -105,8 +99,6 @@ func (c *Cache) GetOrSetFunc(key interface{}, f func() (interface{}, error), dur
 //
 // Note that it differs from function `GetOrSetFunc` is that the function `f` is executed within
 // writing mutex lock for concurrent safety purpose.
-//
-// It is suggested using GetVarOrSetFuncLock instead for compatibility of different adapters purpose.
 func (c *Cache) GetOrSetFuncLock(key interface{}, f func() (interface{}, error), duration time.Duration) (interface{}, error) {
 	return c.adapter.GetOrSetFuncLock(c.getCtx(), key, f, duration)
 }
@@ -127,8 +119,6 @@ func (c *Cache) GetExpire(key interface{}) (time.Duration, error) {
 
 // Remove deletes one or more keys from cache, and returns its value.
 // If multiple keys are given, it returns the value of the last deleted item.
-//
-// It is suggested using RemoveVar instead for compatibility of different adapters purpose.
 func (c *Cache) Remove(keys ...interface{}) (value interface{}, err error) {
 	return c.adapter.Remove(c.getCtx(), keys...)
 }

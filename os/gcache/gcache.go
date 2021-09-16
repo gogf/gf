@@ -77,8 +77,6 @@ func SetIfNotExistFuncLock(key interface{}, f func() (interface{}, error), durat
 // Get retrieves and returns the associated value of given `key`.
 // It returns nil if it does not exist, or its value is nil, or it's expired.
 // If you would like to check if the `key` exists in the cache, it's better using function Contains.
-//
-// It is suggested using GetVar instead for compatibility of different adapters purpose.
 func Get(key interface{}) (interface{}, error) {
 	return defaultCache.Get(key)
 }
@@ -95,8 +93,6 @@ func GetVar(key interface{}) (*gvar.Var, error) {
 // It does not expire if `duration` == 0.
 // It deletes the `key` if `duration` < 0 or given `value` is nil, but it does nothing
 // if `value` is a function and the function result is nil.
-//
-// It is suggested using GetVarOrSet instead for compatibility of different adapters purpose.
 func GetOrSet(key interface{}, value interface{}, duration time.Duration) (interface{}, error) {
 	return defaultCache.GetOrSet(key, value, duration)
 }
@@ -108,8 +104,6 @@ func GetOrSet(key interface{}, value interface{}, duration time.Duration) (inter
 // It does not expire if `duration` == 0.
 // It deletes the `key` if `duration` < 0 or given `value` is nil, but it does nothing
 // if `value` is a function and the function result is nil.
-//
-// It is suggested using GetVarOrSetFunc instead for compatibility of different adapters purpose.
 func GetOrSetFunc(key interface{}, f func() (interface{}, error), duration time.Duration) (interface{}, error) {
 	return defaultCache.GetOrSetFunc(key, f, duration)
 }
@@ -124,28 +118,8 @@ func GetOrSetFunc(key interface{}, f func() (interface{}, error), duration time.
 //
 // Note that it differs from function `GetOrSetFunc` is that the function `f` is executed within
 // writing mutex lock for concurrent safety purpose.
-//
-// It is suggested using GetVarOrSetFuncLock instead for compatibility of different adapters purpose.
 func GetOrSetFuncLock(key interface{}, f func() (interface{}, error), duration time.Duration) (interface{}, error) {
 	return defaultCache.GetOrSetFuncLock(key, f, duration)
-}
-
-// GetVarOrSet acts as function GetOrSet except it returns value as type gvar.Var.
-// Also see GetOrSet.
-func GetVarOrSet(key interface{}, value interface{}, duration time.Duration) (*gvar.Var, error) {
-	return defaultCache.GetVarOrSet(key, value, duration)
-}
-
-// GetVarOrSetFunc acts as function GetOrSetFunc except it returns value as type gvar.Var.
-// Also see GetOrSetFunc.
-func GetVarOrSetFunc(key interface{}, f func() (interface{}, error), duration time.Duration) (*gvar.Var, error) {
-	return defaultCache.GetVarOrSetFunc(key, f, duration)
-}
-
-// GetVarOrSetFuncLock acts as function GetOrSetFuncLock except it returns value as type gvar.Var.
-// Also see GetOrSetFuncLock.
-func GetVarOrSetFuncLock(key interface{}, f func() (interface{}, error), duration time.Duration) (*gvar.Var, error) {
-	return defaultCache.GetVarOrSetFunc(key, f, duration)
 }
 
 // Contains checks and returns true if `key` exists in the cache, or else returns false.
@@ -164,16 +138,8 @@ func GetExpire(key interface{}) (time.Duration, error) {
 
 // Remove deletes one or more keys from cache, and returns its value.
 // If multiple keys are given, it returns the value of the last deleted item.
-//
-// It is suggested using RemoveVar instead for compatibility of different adapters purpose.
 func Remove(keys ...interface{}) (value interface{}, err error) {
 	return defaultCache.Remove(keys...)
-}
-
-// RemoveVar acts as function Remove except it returns value as type gvar.Var.
-// Also see Remove.
-func RemoveVar(keys ...interface{}) (*gvar.Var, error) {
-	return defaultCache.RemoveVar(keys...)
 }
 
 // Removes deletes `keys` in the cache.
@@ -188,12 +154,6 @@ func Removes(keys []interface{}) error {
 // It does nothing if `key` does not exist in the cache.
 func Update(key interface{}, value interface{}) (oldValue interface{}, exist bool, err error) {
 	return defaultCache.Update(key, value)
-}
-
-// UpdateVar acts as function Update except it returns value as type gvar.Var.
-// Also see Update.
-func UpdateVar(key interface{}, value interface{}) (oldValue *gvar.Var, exist bool, err error) {
-	return defaultCache.UpdateVar(key, value)
 }
 
 // UpdateExpire updates the expiration of `key` and returns the old expiration duration value.
