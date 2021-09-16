@@ -8,7 +8,6 @@ package gcache
 
 import (
 	"context"
-	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/os/gtimer"
 	"github.com/gogf/gf/util/gconv"
 	"time"
@@ -61,12 +60,6 @@ func (c *Cache) Ctx(ctx context.Context) *Cache {
 // this setting function concurrently in multiple goroutines.
 func (c *Cache) SetAdapter(adapter Adapter) {
 	c.adapter = adapter
-}
-
-// GetVar retrieves and returns the value of `key` as gvar.Var.
-func (c *Cache) GetVar(key interface{}) (*gvar.Var, error) {
-	v, err := c.Get(key)
-	return gvar.New(v), err
 }
 
 // Removes deletes `keys` in the cache.
