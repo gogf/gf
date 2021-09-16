@@ -48,6 +48,11 @@ type apiBytes interface {
 	Bytes() []byte
 }
 
+// apiInterface is used for type assert api for Interface().
+type apiInterface interface {
+	Interface() interface{}
+}
+
 // apiInterfaces is used for type assert api for Interfaces().
 type apiInterfaces interface {
 	Interfaces() []interface{}

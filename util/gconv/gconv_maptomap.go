@@ -99,7 +99,7 @@ func doMapToMap(params interface{}, pointer interface{}, mapping ...map[string]s
 			if e, ok := exception.(errorStack); ok {
 				err = e
 			} else {
-				err = gerror.NewCodeSkipf(gcode.CodeInternalError, 1, "%v", exception)
+				err = gerror.NewCodeSkipf(gcode.CodeInternalError, 1, "%+v", exception)
 			}
 		}
 	}()
