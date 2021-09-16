@@ -53,7 +53,7 @@ func (view *View) Assign(key string, value interface{}) {
 	view.mu.Unlock()
 }
 
-// Parse parses given template file <tpl> with assigned template variables
+// Parse parses given template file `tpl` with assigned template variables
 // and returns the parsed template content.
 func (view *View) Parse(file string) (string, error) {
 	view.mu.RLock()
@@ -62,7 +62,7 @@ func (view *View) Parse(file string) (string, error) {
 	return buffer, err
 }
 
-// ParseContent parses given template file <file> with assigned template variables
+// ParseContent parses given template file `file` with assigned template variables
 // and returns the parsed template content.
 func (view *View) ParseContent(content string) (string, error) {
 	view.mu.RLock()
@@ -71,23 +71,23 @@ func (view *View) ParseContent(content string) (string, error) {
 	return buffer, err
 }
 
-// LockFunc locks writing for template variables by callback function <f>.
+// LockFunc locks writing for template variables by callback function `f`.
 func (view *View) LockFunc(f func(data gview.Params)) {
 	view.mu.Lock()
 	defer view.mu.Unlock()
 	f(view.data)
 }
 
-// RLockFunc locks reading for template variables by callback function <f>.
+// RLockFunc locks reading for template variables by callback function `f`.
 func (view *View) RLockFunc(f func(data gview.Params)) {
 	view.mu.RLock()
 	defer view.mu.RUnlock()
 	f(view.data)
 }
 
-// BindFunc registers customized template function named <name>
-// with given function <function> to current view object.
-// The <name> is the function name which can be called in template content.
+// BindFunc registers customized template function named `name`
+// with given function `function` to current view object.
+// The `name` is the function name which can be called in template content.
 func (view *View) BindFunc(name string, function interface{}) {
 	view.view.BindFunc(name, function)
 }

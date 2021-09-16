@@ -23,14 +23,21 @@ type Cache struct {
 // New creates and returns a new cache object using default memory adapter.
 // Note that the LRU feature is only available using memory adapter.
 func New(lruCap ...int) *Cache {
-	memAdapter := newAdapterMemory(lruCap...)
+	memAdapter := NewAdapterMemory(lruCap...)
 	c := &Cache{
 		adapter: memAdapter,
 	}
 	// Here may be a "timer leak" if adapter is manually changed from memory adapter.
-	// Do not worry about this, as adapter is less changed and it dose nothing if it's not used.
-	gtimer.AddSingleton(time.Second, memAdapter.syncEventAndClearExpired)
+	// Do not worry about this, as adapter is less changed, and it does nothing if it's not used.
+	gtimer.AddSingleton(time.Second, memAdapter.(*AdapterMemory).syncEventAndClearExpired)
 	return c
+}
+
+// NewWithAdapter creates and returns a Cache object with given Adapter implements.
+func NewWithAdapter(adapter Adapter) *Cache {
+	return &Cache{
+		adapter: adapter,
+	}
 }
 
 // Clone returns a shallow copy of current object.
@@ -62,11 +69,60 @@ func (c *Cache) GetVar(key interface{}) (*gvar.Var, error) {
 	return gvar.New(v), err
 }
 
+// GetVarOrSet acts as function GetOrSet except it returns value as type gvar.Var.
+// Also see GetOrSet.
+func (c *Cache) GetVarOrSet(key interface{}, value interface{}, duration time.Duration) (*gvar.Var, error) {
+	v, err := c.GetOrSet(key, value, duration)
+	if err != nil {
+		return nil, err
+	}
+	return gvar.New(v), nil
+}
+
+// GetVarOrSetFunc acts as function GetOrSetFunc except it returns value as type gvar.Var.
+// Also see GetOrSetFunc.
+func (c *Cache) GetVarOrSetFunc(key interface{}, f func() (interface{}, error), duration time.Duration) (*gvar.Var, error) {
+	v, err := c.GetOrSetFunc(key, f, duration)
+	if err != nil {
+		return nil, err
+	}
+	return gvar.New(v), nil
+}
+
+// GetVarOrSetFuncLock acts as function GetOrSetFuncLock except it returns value as type gvar.Var.
+// Also see GetOrSetFuncLock.
+func (c *Cache) GetVarOrSetFuncLock(key interface{}, f func() (interface{}, error), duration time.Duration) (*gvar.Var, error) {
+	v, err := c.GetOrSetFuncLock(key, f, duration)
+	if err != nil {
+		return nil, err
+	}
+	return gvar.New(v), nil
+}
+
+// RemoveVar acts as function Remove except it returns value as type gvar.Var.
+// Also see Remove.
+func (c *Cache) RemoveVar(keys ...interface{}) (*gvar.Var, error) {
+	v, err := c.Remove(keys...)
+	if err != nil {
+		return nil, err
+	}
+	return gvar.New(v), nil
+}
+
 // Removes deletes `keys` in the cache.
-// Deprecated, use Remove instead.
 func (c *Cache) Removes(keys []interface{}) error {
 	_, err := c.Remove(keys...)
 	return err
+}
+
+// UpdateVar acts as function Update except it returns value as type gvar.Var.
+// Also see Update.
+func (c *Cache) UpdateVar(key interface{}, value interface{}) (oldValue *gvar.Var, exist bool, err error) {
+	v, exist, err := c.Update(key, value)
+	if err != nil {
+		return nil, exist, err
+	}
+	return gvar.New(v), exist, err
 }
 
 // KeyStrings returns all keys in the cache as string slice.

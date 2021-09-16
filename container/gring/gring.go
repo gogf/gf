@@ -28,8 +28,8 @@ type internalRingItem struct {
 	Value interface{}
 }
 
-// New creates and returns a Ring structure of <cap> elements.
-// The optional parameter <safe> specifies whether using this structure in concurrent safety,
+// New creates and returns a Ring structure of `cap` elements.
+// The optional parameter `safe` specifies whether using this structure in concurrent safety,
 // which is false in default.
 func New(cap int, safe ...bool) *Ring {
 	return &Ring{

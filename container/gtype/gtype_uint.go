@@ -18,7 +18,7 @@ type Uint struct {
 }
 
 // NewUint creates and returns a concurrent-safe object for uint type,
-// with given initial value <value>.
+// with given initial value `value`.
 func NewUint(value ...uint) *Uint {
 	if len(value) > 0 {
 		return &Uint{
@@ -33,7 +33,7 @@ func (v *Uint) Clone() *Uint {
 	return NewUint(v.Val())
 }
 
-// Set atomically stores <value> into t.value and returns the previous value of t.value.
+// Set atomically stores `value` into t.value and returns the previous value of t.value.
 func (v *Uint) Set(value uint) (old uint) {
 	return uint(atomic.SwapUint64(&v.value, uint64(value)))
 }
@@ -43,7 +43,7 @@ func (v *Uint) Val() uint {
 	return uint(atomic.LoadUint64(&v.value))
 }
 
-// Add atomically adds <delta> to t.value and returns the new value.
+// Add atomically adds `delta` to t.value and returns the new value.
 func (v *Uint) Add(delta uint) (new uint) {
 	return uint(atomic.AddUint64(&v.value, uint64(delta)))
 }
@@ -69,7 +69,7 @@ func (v *Uint) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-// UnmarshalValue is an interface implement which sets any type of value for <v>.
+// UnmarshalValue is an interface implement which sets any type of value for `v`.
 func (v *Uint) UnmarshalValue(value interface{}) error {
 	v.Set(gconv.Uint(value))
 	return nil

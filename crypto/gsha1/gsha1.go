@@ -17,13 +17,13 @@ import (
 )
 
 // Encrypt encrypts any type of variable using SHA1 algorithms.
-// It uses gconv package to convert <v> to its bytes type.
+// It uses package gconv to convert `v` to its bytes type.
 func Encrypt(v interface{}) string {
 	r := sha1.Sum(gconv.Bytes(v))
 	return hex.EncodeToString(r[:])
 }
 
-// EncryptFile encrypts file content of <path> using SHA1 algorithms.
+// EncryptFile encrypts file content of `path` using SHA1 algorithms.
 func EncryptFile(path string) (encrypt string, err error) {
 	f, err := os.Open(path)
 	if err != nil {
@@ -38,7 +38,7 @@ func EncryptFile(path string) (encrypt string, err error) {
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
-// MustEncryptFile encrypts file content of <path> using SHA1 algorithms.
+// MustEncryptFile encrypts file content of `path` using SHA1 algorithms.
 // It panics if any error occurs.
 func MustEncryptFile(path string) string {
 	result, err := EncryptFile(path)

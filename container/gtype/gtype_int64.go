@@ -18,7 +18,7 @@ type Int64 struct {
 }
 
 // NewInt64 creates and returns a concurrent-safe object for int64 type,
-// with given initial value <value>.
+// with given initial value `value`.
 func NewInt64(value ...int64) *Int64 {
 	if len(value) > 0 {
 		return &Int64{
@@ -33,7 +33,7 @@ func (v *Int64) Clone() *Int64 {
 	return NewInt64(v.Val())
 }
 
-// Set atomically stores <value> into t.value and returns the previous value of t.value.
+// Set atomically stores `value` into t.value and returns the previous value of t.value.
 func (v *Int64) Set(value int64) (old int64) {
 	return atomic.SwapInt64(&v.value, value)
 }
@@ -43,7 +43,7 @@ func (v *Int64) Val() int64 {
 	return atomic.LoadInt64(&v.value)
 }
 
-// Add atomically adds <delta> to t.value and returns the new value.
+// Add atomically adds `delta` to t.value and returns the new value.
 func (v *Int64) Add(delta int64) (new int64) {
 	return atomic.AddInt64(&v.value, delta)
 }
@@ -69,7 +69,7 @@ func (v *Int64) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-// UnmarshalValue is an interface implement which sets any type of value for <v>.
+// UnmarshalValue is an interface implement which sets any type of value for `v`.
 func (v *Int64) UnmarshalValue(value interface{}) error {
 	v.Set(gconv.Int64(value))
 	return nil

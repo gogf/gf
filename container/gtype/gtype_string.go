@@ -18,7 +18,7 @@ type String struct {
 }
 
 // NewString creates and returns a concurrent-safe object for string type,
-// with given initial value <value>.
+// with given initial value `value`.
 func NewString(value ...string) *String {
 	t := &String{}
 	if len(value) > 0 {
@@ -32,7 +32,7 @@ func (v *String) Clone() *String {
 	return NewString(v.Val())
 }
 
-// Set atomically stores <value> into t.value and returns the previous value of t.value.
+// Set atomically stores `value` into t.value and returns the previous value of t.value.
 func (v *String) Set(value string) (old string) {
 	old = v.Val()
 	v.value.Store(value)
@@ -64,7 +64,7 @@ func (v *String) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-// UnmarshalValue is an interface implement which sets any type of value for <v>.
+// UnmarshalValue is an interface implement which sets any type of value for `v`.
 func (v *String) UnmarshalValue(value interface{}) error {
 	v.Set(gconv.String(value))
 	return nil

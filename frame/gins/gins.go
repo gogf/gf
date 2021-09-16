@@ -33,24 +33,24 @@ func GetOrSet(name string, instance interface{}) interface{} {
 }
 
 // GetOrSetFunc returns the instance by name,
-// or sets instance with returned value of callback function <f> if it does not exist
+// or sets instance with returned value of callback function `f` if it does not exist
 // and then returns this instance.
 func GetOrSetFunc(name string, f func() interface{}) interface{} {
 	return instances.GetOrSetFunc(name, f)
 }
 
 // GetOrSetFuncLock returns the instance by name,
-// or sets instance with returned value of callback function <f> if it does not exist
+// or sets instance with returned value of callback function `f` if it does not exist
 // and then returns this instance.
 //
-// GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function <f>
+// GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function `f`
 // with mutex.Lock of the hash map.
 func GetOrSetFuncLock(name string, f func() interface{}) interface{} {
 	return instances.GetOrSetFuncLock(name, f)
 }
 
-// SetIfNotExist sets <instance> to the map if the <name> does not exist, then returns true.
-// It returns false if <name> exists, and <instance> would be ignored.
+// SetIfNotExist sets <instance> to the map if the `name` does not exist, then returns true.
+// It returns false if <name> exists, and `instance` would be ignored.
 func SetIfNotExist(name string, instance interface{}) bool {
 	return instances.SetIfNotExist(name, instance)
 }
