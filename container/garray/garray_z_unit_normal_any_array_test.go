@@ -709,7 +709,7 @@ func TestArray_UnmarshalValue(t *testing.T) {
 			"name":  "john",
 			"array": []byte(`[1,2,3]`),
 		}, &v)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v.Name, "john")
 		t.Assert(v.Array.Slice(), g.Slice{1, 2, 3})
 	})

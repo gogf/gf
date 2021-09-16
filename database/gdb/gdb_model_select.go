@@ -226,7 +226,11 @@ func (m *Model) doStruct(pointer interface{}, where ...interface{}) error {
 	model := m
 	// Auto selecting fields by struct attributes.
 	if model.fieldsEx == "" && (model.fields == "" || model.fields == "*") {
-		model = m.Fields(pointer)
+		if v, ok := pointer.(reflect.Value); ok {
+			model = m.Fields(v.Interface())
+		} else {
+			model = m.Fields(pointer)
+		}
 	}
 	one, err := model.One(where...)
 	if err != nil {
@@ -267,11 +271,19 @@ func (m *Model) doStructs(pointer interface{}, where ...interface{}) error {
 	model := m
 	// Auto selecting fields by struct attributes.
 	if model.fieldsEx == "" && (model.fields == "" || model.fields == "*") {
-		model = m.Fields(
-			reflect.New(
-				reflect.ValueOf(pointer).Elem().Type().Elem(),
-			).Interface(),
-		)
+		if v, ok := pointer.(reflect.Value); ok {
+			model = m.Fields(
+				reflect.New(
+					v.Type().Elem(),
+				).Interface(),
+			)
+		} else {
+			model = m.Fields(
+				reflect.New(
+					reflect.ValueOf(pointer).Elem().Type().Elem(),
+				).Interface(),
+			)
+		}
 	}
 	all, err := model.All(where...)
 	if err != nil {
@@ -323,7 +335,6 @@ func (m *Model) Scan(pointer interface{}, where ...interface{}) error {
 		reflectValue = reflectValue.Elem()
 		reflectKind = reflectValue.Kind()
 	}
-
 	switch reflectKind {
 	case reflect.Slice, reflect.Array:
 		return m.doStructs(pointer, where...)

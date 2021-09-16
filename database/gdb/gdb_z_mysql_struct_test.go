@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
 	"reflect"
 	"testing"
@@ -478,5 +479,121 @@ func Test_Scan_AutoFilteringByStructAttributes(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(len(users), TableSize)
 		t.Assert(users[0].Id, 1)
+	})
+}
+
+func Test_Scan_JsonAttributes(t *testing.T) {
+	type GiftImage struct {
+		Uid    string `json:"uid"`
+		Url    string `json:"url"`
+		Status string `json:"status"`
+		Name   string `json:"name"`
+	}
+
+	type GiftComment struct {
+		Name     string `json:"name"`
+		Field    string `json:"field"`
+		Required bool   `json:"required"`
+	}
+
+	type Prop struct {
+		Name   string   `json:"name"`
+		Values []string `json:"values"`
+	}
+
+	type Sku struct {
+		GiftId      int64  `json:"gift_id"`
+		Name        string `json:"name"`
+		ScorePrice  int    `json:"score_price"`
+		MarketPrice int    `json:"market_price"`
+		CostPrice   int    `json:"cost_price"`
+		Stock       int    `json:"stock"`
+	}
+
+	type Covers struct {
+		List []GiftImage `json:"list"`
+	}
+
+	type GiftEntity struct {
+		Id                   int64         `json:"id"`
+		StoreId              int64         `json:"store_id"`
+		GiftType             int           `json:"gift_type"`
+		GiftName             string        `json:"gift_name"`
+		Description          string        `json:"description"`
+		Covers               Covers        `json:"covers"`
+		Cover                string        `json:"cover"`
+		GiftCategoryId       []int64       `json:"gift_category_id"`
+		HasProps             bool          `json:"has_props"`
+		OutSn                string        `json:"out_sn"`
+		IsLimitSell          bool          `json:"is_limit_sell"`
+		LimitSellType        int           `json:"limit_sell_type"`
+		LimitSellCycle       string        `json:"limit_sell_cycle"`
+		LimitSellCycleCount  int           `json:"limit_sell_cycle_count"`
+		LimitSellCustom      bool          `json:"limit_sell_custom"`   // 只允许特定会员兑换
+		LimitCustomerTags    []int64       `json:"limit_customer_tags"` // 允许兑换的成员
+		ScorePrice           int           `json:"score_price"`
+		MarketPrice          float64       `json:"market_price"`
+		CostPrice            int           `json:"cost_price"`
+		Stock                int           `json:"stock"`
+		Props                []Prop        `json:"props"`
+		Skus                 []Sku         `json:"skus"`
+		ExpressType          []string      `json:"express_type"`
+		Comments             []GiftComment `json:"comments"`
+		Content              string        `json:"content"`
+		AtLeastRechargeCount int           `json:"at_least_recharge_count"`
+		Status               int           `json:"status"`
+	}
+
+	type User struct {
+		Id       int
+		Passport string
+	}
+
+	var (
+		table = "jfy_gift"
+	)
+	array := gstr.SplitAndTrim(gtest.TestDataContent(`issue1380.sql`), ";")
+	for _, v := range array {
+		if _, err := db.Exec(v); err != nil {
+			gtest.Error(err)
+		}
+	}
+	defer dropTable(table)
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			entity = new(GiftEntity)
+			err    = db.Model(table).Where("id", 17).Scan(entity)
+		)
+		t.AssertNil(err)
+		t.Assert(len(entity.Skus), 2)
+
+		t.Assert(entity.Skus[0].Name, "red")
+		t.Assert(entity.Skus[0].Stock, 10)
+		t.Assert(entity.Skus[0].GiftId, 1)
+		t.Assert(entity.Skus[0].CostPrice, 80)
+		t.Assert(entity.Skus[0].ScorePrice, 188)
+		t.Assert(entity.Skus[0].MarketPrice, 388)
+
+		t.Assert(entity.Skus[1].Name, "blue")
+		t.Assert(entity.Skus[1].Stock, 100)
+		t.Assert(entity.Skus[1].GiftId, 2)
+		t.Assert(entity.Skus[1].CostPrice, 81)
+		t.Assert(entity.Skus[1].ScorePrice, 200)
+		t.Assert(entity.Skus[1].MarketPrice, 288)
+
+		t.Assert(entity.Id, 17)
+		t.Assert(entity.StoreId, 100004)
+		t.Assert(entity.GiftType, 1)
+		t.Assert(entity.GiftName, "GIFT")
+		t.Assert(entity.Description, "支持个性定制的父亲节老师长辈的专属礼物")
+		t.Assert(len(entity.Covers.List), 3)
+		t.Assert(entity.OutSn, "259402")
+		t.Assert(entity.LimitCustomerTags, "[]")
+		t.Assert(entity.ScorePrice, 10)
+		t.Assert(len(entity.Props), 1)
+		t.Assert(len(entity.Comments), 2)
+		t.Assert(entity.Status, 99)
+		t.Assert(entity.Content, `<p>礼品详情</p>`)
 	})
 }

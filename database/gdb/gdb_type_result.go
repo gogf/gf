@@ -13,11 +13,6 @@ import (
 	"math"
 )
 
-// Interface converts and returns `r` as type of interface{}.
-func (r Result) Interface() interface{} {
-	return r
-}
-
 // IsEmpty checks and returns whether `r` is empty.
 func (r Result) IsEmpty() bool {
 	return r.Len() == 0
@@ -33,7 +28,7 @@ func (r Result) Size() int {
 	return r.Len()
 }
 
-// Chunk splits an Result into multiple Results,
+// Chunk splits a Result into multiple Results,
 // the size of each array is determined by `size`.
 // The last chunk may contain less than size elements.
 func (r Result) Chunk(size int) []Result {
