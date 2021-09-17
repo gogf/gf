@@ -43,7 +43,7 @@ func (s *Session) init() {
 	var err error
 	if s.id != "" {
 		// Retrieve memory session data from manager.
-		if r, _ := s.manager.sessionData.Get(s.id); r != nil {
+		if r, _ := s.manager.sessionData.Get(s.ctx, s.id); r != nil {
 			s.data = r.Val().(*gmap.StrAnyMap)
 			intlog.Print(s.ctx, "session init data:", s.data)
 		}

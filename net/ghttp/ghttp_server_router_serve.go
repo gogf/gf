@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/internal/json"
 	"strings"
 
@@ -37,7 +38,10 @@ func (s *Server) serveHandlerKey(method, path, domain string) string {
 
 // getHandlersWithCache searches the router item with cache feature for given request.
 func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*handlerParsedItem, hasHook, hasServe bool) {
-	method := r.Method
+	var (
+		ctx    = r.Context()
+		method = r.Method
+	)
 	// Special http method OPTIONS handling.
 	// It searches the handler with the request method instead of OPTIONS method.
 	if method == "OPTIONS" {
@@ -46,7 +50,8 @@ func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*handlerParsedI
 		}
 	}
 	// Search and cache the router handlers.
-	value, _ := s.serveCache.GetOrSetFunc(
+	value, err := s.serveCache.GetOrSetFunc(
+		ctx,
 		s.serveHandlerKey(method, r.URL.Path, r.GetHost()),
 		func() (interface{}, error) {
 			parsedItems, hasHook, hasServe = s.searchHandlers(method, r.URL.Path, r.GetHost())
@@ -55,6 +60,9 @@ func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*handlerParsedI
 			}
 			return nil, nil
 		}, routeCacheDuration)
+	if err != nil {
+		intlog.Error(ctx, err)
+	}
 	if value != nil {
 		item := value.Val().(*handlerCacheItem)
 		return item.parsedItems, item.hasHook, item.hasServe

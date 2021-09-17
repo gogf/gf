@@ -24,7 +24,7 @@ func (w *Watcher) watchLoop() {
 			// Event listening.
 			case ev := <-w.watcher.Events:
 				// Filter the repeated event in custom duration.
-				w.cache.SetIfNotExist(ev.String(), func() (interface{}, error) {
+				w.cache.SetIfNotExist(context.Background(), ev.String(), func() (interface{}, error) {
 					w.events.Push(&Event{
 						event:   ev,
 						Path:    ev.Name,

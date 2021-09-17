@@ -9,6 +9,7 @@
 package gcache_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/gogf/gf/os/gcache"
@@ -23,7 +24,7 @@ func Benchmark_CacheSet(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		i := 0
 		for pb.Next() {
-			localCache.Set(i, i, 0)
+			localCache.Set(ctx, i, i, 0)
 			i++
 		}
 	})
@@ -33,7 +34,7 @@ func Benchmark_CacheGet(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		i := 0
 		for pb.Next() {
-			localCache.Get(i)
+			localCache.Get(ctx, i)
 			i++
 		}
 	})
@@ -43,7 +44,7 @@ func Benchmark_CacheRemove(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		i := 0
 		for pb.Next() {
-			localCache.Remove(i)
+			localCache.Remove(ctx, i)
 			i++
 		}
 	})
@@ -53,7 +54,7 @@ func Benchmark_CacheLruSet(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		i := 0
 		for pb.Next() {
-			localCacheLru.Set(i, i, 0)
+			localCacheLru.Set(ctx, i, i, 0)
 			i++
 		}
 	})
@@ -63,7 +64,7 @@ func Benchmark_CacheLruGet(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		i := 0
 		for pb.Next() {
-			localCacheLru.Get(i)
+			localCacheLru.Get(ctx, i)
 			i++
 		}
 	})
@@ -73,7 +74,7 @@ func Benchmark_CacheLruRemove(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		i := 0
 		for pb.Next() {
-			localCacheLru.Remove(i)
+			localCacheLru.Remove(context.TODO(), i)
 			i++
 		}
 	})

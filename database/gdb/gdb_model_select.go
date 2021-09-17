@@ -531,15 +531,18 @@ func (m *Model) UnionAll(unions ...*Model) *Model {
 
 // doGetAllBySql does the select statement on the database.
 func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, err error) {
-	cacheKey := ""
-	cacheObj := m.db.GetCache().Ctx(m.GetCtx())
+	var (
+		ctx      = m.GetCtx()
+		cacheKey = ""
+		cacheObj = m.db.GetCache()
+	)
 	// Retrieve from cache.
 	if m.cacheEnabled && m.tx == nil {
 		cacheKey = m.cacheName
 		if len(cacheKey) == 0 {
 			cacheKey = sql + ", @PARAMS:" + gconv.String(args)
 		}
-		if v, _ := cacheObj.Get(cacheKey); !v.IsNil() {
+		if v, _ := cacheObj.Get(ctx, cacheKey); !v.IsNil() {
 			if result, ok := v.Val().(Result); ok {
 				// In-memory cache.
 				return result, nil
@@ -560,7 +563,7 @@ func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, e
 	// Cache the result.
 	if cacheKey != "" && err == nil {
 		if m.cacheDuration < 0 {
-			if _, err := cacheObj.Remove(cacheKey); err != nil {
+			if _, err := cacheObj.Remove(ctx, cacheKey); err != nil {
 				intlog.Error(m.GetCtx(), err)
 			}
 		} else {
@@ -568,7 +571,7 @@ func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, e
 			if result == nil {
 				result = Result{}
 			}
-			if err := cacheObj.Set(cacheKey, result, m.cacheDuration); err != nil {
+			if err := cacheObj.Set(ctx, cacheKey, result, m.cacheDuration); err != nil {
 				intlog.Error(m.GetCtx(), err)
 			}
 		}
