@@ -9,6 +9,7 @@ package gsession
 import (
 	"context"
 	"github.com/gogf/gf/container/gmap"
+	"github.com/gogf/gf/internal/intlog"
 	"time"
 
 	"github.com/gogf/gf/os/gcache"
@@ -71,5 +72,9 @@ func (m *Manager) TTL() time.Duration {
 
 // UpdateSessionTTL updates the ttl for given session.
 func (m *Manager) UpdateSessionTTL(sessionId string, data *gmap.StrAnyMap) {
-	m.sessionData.Set(context.Background(), sessionId, data, m.ttl)
+	ctx := context.Background()
+	err := m.sessionData.Set(ctx, sessionId, data, m.ttl)
+	if err != nil {
+		intlog.Error(ctx, err)
+	}
 }
