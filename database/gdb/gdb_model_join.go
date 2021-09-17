@@ -97,7 +97,6 @@ func (m *Model) doJoin(operator string, table ...string) *Model {
 // StraightJoin use STRAIGHT_JOIN
 // Refer: https://stackoverflow.com/questions/512294/when-to-use-straight-join-with-mysql
 func (m *Model) StraightJoin(table ...string) *Model {
-	operator := ""
 	var (
 		model   = m.getModel()
 		joinStr = ""
@@ -114,17 +113,17 @@ func (m *Model) StraightJoin(table ...string) *Model {
 	}
 	if len(table) > 2 {
 		model.tables += fmt.Sprintf(
-			" %s STRAIGHT_JOIN %s AS %s ON (%s)",
-			operator, joinStr, m.db.GetCore().QuoteWord(table[1]), table[2],
+			" STRAIGHT_JOIN %s AS %s ON (%s)",
+			joinStr, m.db.GetCore().QuoteWord(table[1]), table[2],
 		)
 	} else if len(table) == 2 {
 		model.tables += fmt.Sprintf(
-			" %s STRAIGHT_JOIN %s ON (%s)",
-			operator, joinStr, table[1],
+			" STRAIGHT_JOIN %s ON (%s)",
+			joinStr, table[1],
 		)
 	} else if len(table) == 1 {
 		model.tables += fmt.Sprintf(
-			" %s STRAIGHT_JOIN %s", operator, joinStr,
+			" STRAIGHT_JOIN %s", joinStr,
 		)
 	}
 	return model
