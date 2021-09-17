@@ -71,5 +71,5 @@ func (m *Manager) TTL() time.Duration {
 
 // UpdateSessionTTL updates the ttl for given session.
 func (m *Manager) UpdateSessionTTL(sessionId string, data *gmap.StrAnyMap) {
-	m.sessionData.Set(sessionId, data, m.ttl)
+	m.sessionData.Set(context.Background(), sessionId, data, m.ttl)
 }
