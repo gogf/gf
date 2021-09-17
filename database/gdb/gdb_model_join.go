@@ -93,3 +93,38 @@ func (m *Model) doJoin(operator string, table ...string) *Model {
 	}
 	return model
 }
+
+// StraightJoin use STRAIGHT_JOIN
+// Refer: https://stackoverflow.com/questions/512294/when-to-use-straight-join-with-mysql
+func (m *Model) StraightJoin(operator string, table ...string) *Model {
+	var (
+		model   = m.getModel()
+		joinStr = ""
+	)
+	if len(table) > 0 {
+		if isSubQuery(table[0]) {
+			joinStr = gstr.Trim(table[0])
+			if joinStr[0] != '(' {
+				joinStr = "(" + joinStr + ")"
+			}
+		} else {
+			joinStr = m.db.GetCore().QuotePrefixTableName(table[0])
+		}
+	}
+	if len(table) > 2 {
+		model.tables += fmt.Sprintf(
+			" %s STRAIGHT_JOIN %s AS %s ON (%s)",
+			operator, joinStr, m.db.GetCore().QuoteWord(table[1]), table[2],
+		)
+	} else if len(table) == 2 {
+		model.tables += fmt.Sprintf(
+			" %s STRAIGHT_JOIN %s ON (%s)",
+			operator, joinStr, table[1],
+		)
+	} else if len(table) == 1 {
+		model.tables += fmt.Sprintf(
+			" %s STRAIGHT_JOIN %s", operator, joinStr,
+		)
+	}
+	return model
+}
