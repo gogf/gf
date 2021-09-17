@@ -96,7 +96,8 @@ func (m *Model) doJoin(operator string, table ...string) *Model {
 
 // StraightJoin use STRAIGHT_JOIN
 // Refer: https://stackoverflow.com/questions/512294/when-to-use-straight-join-with-mysql
-func (m *Model) StraightJoin(operator string, table ...string) *Model {
+func (m *Model) StraightJoin(table ...string) *Model {
+	operator := ""
 	var (
 		model   = m.getModel()
 		joinStr = ""
