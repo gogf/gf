@@ -80,7 +80,7 @@ func (err *Error) Cause() error {
 			if e, ok := loop.error.(*Error); ok {
 				// Internal Error struct.
 				loop = e
-			} else if e, ok := loop.error.(apiCause); ok {
+			} else if e, ok := loop.error.(iCause); ok {
 				// Other Error that implements ApiCause interface.
 				return e.Cause()
 			} else {

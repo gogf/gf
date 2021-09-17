@@ -319,3 +319,12 @@ func Test_Json(t *testing.T) {
 		t.Assert(string(b), `"2: 1"`)
 	})
 }
+
+func Test_HasStack(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		err1 := errors.New("1")
+		err2 := gerror.New("1")
+		t.Assert(gerror.HasStack(err1), false)
+		t.Assert(gerror.HasStack(err2), true)
+	})
+}

@@ -12,22 +12,22 @@ import (
 	"time"
 )
 
-// apiString is used for type assert api for String().
-type apiString interface {
+// iString is used for type assert api for String().
+type iString interface {
 	String() string
 }
 
-// apiInterfaces is used for type assert api for Interfaces.
-type apiInterfaces interface {
+// iInterfaces is used for type assert api for Interfaces.
+type iInterfaces interface {
 	Interfaces() []interface{}
 }
 
-// apiMapStrAny is the interface support for converting struct parameter to map.
-type apiMapStrAny interface {
+// iMapStrAny is the interface support for converting struct parameter to map.
+type iMapStrAny interface {
 	MapStrAny() map[string]interface{}
 }
 
-type apiTime interface {
+type iTime interface {
 	Date() (year int, month time.Month, day int)
 	IsZero() bool
 }
@@ -88,25 +88,25 @@ func IsEmpty(value interface{}) bool {
 		// =========================
 		// Common interfaces checks.
 		// =========================
-		if f, ok := value.(apiTime); ok {
+		if f, ok := value.(iTime); ok {
 			if f == nil {
 				return true
 			}
 			return f.IsZero()
 		}
-		if f, ok := value.(apiString); ok {
+		if f, ok := value.(iString); ok {
 			if f == nil {
 				return true
 			}
 			return f.String() == ""
 		}
-		if f, ok := value.(apiInterfaces); ok {
+		if f, ok := value.(iInterfaces); ok {
 			if f == nil {
 				return true
 			}
 			return len(f.Interfaces()) == 0
 		}
-		if f, ok := value.(apiMapStrAny); ok {
+		if f, ok := value.(iMapStrAny); ok {
 			if f == nil {
 				return true
 			}
@@ -210,25 +210,25 @@ func IsEmpty(value interface{}) bool {
 //		// =========================
 //		// Common interfaces checks.
 //		// =========================
-//		if f, ok := value.(apiTime); ok {
+//		if f, ok := value.(iTime); ok {
 //			if f == nil {
 //				return true
 //			}
 //			return f.IsZero()
 //		}
-//		if f, ok := value.(apiString); ok {
+//		if f, ok := value.(iString); ok {
 //			if f == nil {
 //				return true
 //			}
 //			return f.String() == ""
 //		}
-//		if f, ok := value.(apiInterfaces); ok {
+//		if f, ok := value.(iInterfaces); ok {
 //			if f == nil {
 //				return true
 //			}
 //			return len(f.Interfaces()) == 0
 //		}
-//		if f, ok := value.(apiMapStrAny); ok {
+//		if f, ok := value.(iMapStrAny); ok {
 //			if f == nil {
 //				return true
 //			}

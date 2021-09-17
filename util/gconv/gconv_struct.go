@@ -87,7 +87,7 @@ func doStructWithJsonCheck(params interface{}, pointer interface{}) (err error, 
 		}
 	default:
 		// The `params` might be struct that implements interface function Interface, eg: gvar.Var.
-		if v, ok := params.(apiInterface); ok {
+		if v, ok := params.(iInterface); ok {
 			return doStructWithJsonCheck(v.Interface(), pointer)
 		}
 	}
@@ -107,8 +107,8 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 	defer func() {
 		// Catch the panic, especially the reflection operation panics.
 		if exception := recover(); exception != nil {
-			if e, ok := exception.(errorStack); ok {
-				err = e
+			if v, ok := exception.(error); ok && gerror.HasStack(v) {
+				err = v
 			} else {
 				err = gerror.NewCodeSkipf(gcode.CodeInternalError, 1, "%+v", exception)
 			}
@@ -172,7 +172,7 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 			e := reflect.New(pointerElemReflectValue.Type().Elem()).Elem()
 			pointerElemReflectValue.Set(e.Addr())
 		}
-		//if v, ok := pointerElemReflectValue.Interface().(apiUnmarshalValue); ok {
+		//if v, ok := pointerElemReflectValue.Interface().(iUnmarshalValue); ok {
 		//	return v.UnmarshalValue(params)
 		//}
 		// Note that it's `pointerElemReflectValue` here not `pointerReflectValue`.
@@ -364,11 +364,11 @@ func bindVarToReflectValueWithInterfaceCheck(reflectValue reflect.Value, value i
 		pointer = reflectValue.Interface()
 	}
 	// UnmarshalValue.
-	if v, ok := pointer.(apiUnmarshalValue); ok {
+	if v, ok := pointer.(iUnmarshalValue); ok {
 		return v.UnmarshalValue(value), ok
 	}
 	// UnmarshalText.
-	if v, ok := pointer.(apiUnmarshalText); ok {
+	if v, ok := pointer.(iUnmarshalText); ok {
 		var valueBytes []byte
 		if b, ok := value.([]byte); ok {
 			valueBytes = b
@@ -380,7 +380,7 @@ func bindVarToReflectValueWithInterfaceCheck(reflectValue reflect.Value, value i
 		}
 	}
 	// UnmarshalJSON.
-	if v, ok := pointer.(apiUnmarshalJSON); ok {
+	if v, ok := pointer.(iUnmarshalJSON); ok {
 		var valueBytes []byte
 		if b, ok := value.([]byte); ok {
 			valueBytes = b
@@ -400,7 +400,7 @@ func bindVarToReflectValueWithInterfaceCheck(reflectValue reflect.Value, value i
 			return v.UnmarshalJSON(valueBytes), ok
 		}
 	}
-	if v, ok := pointer.(apiSet); ok {
+	if v, ok := pointer.(iSet); ok {
 		v.Set(value)
 		return nil, ok
 	}
@@ -428,7 +428,7 @@ func bindVarToReflectValue(structFieldValue reflect.Value, value interface{}, ma
 	switch kind {
 	case reflect.Slice, reflect.Array, reflect.Ptr, reflect.Interface:
 		if !structFieldValue.IsNil() {
-			if v, ok := structFieldValue.Interface().(apiSet); ok {
+			if v, ok := structFieldValue.Interface().(iSet); ok {
 				v.Set(value)
 				return nil
 			}

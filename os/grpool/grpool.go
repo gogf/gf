@@ -99,7 +99,7 @@ func (p *Pool) AddWithRecover(userFunc func(), recoverFunc ...func(err error)) e
 		defer func() {
 			if exception := recover(); exception != nil {
 				if len(recoverFunc) > 0 && recoverFunc[0] != nil {
-					if v, ok := exception.(error); ok {
+					if v, ok := exception.(error); ok && gerror.HasStack(v) {
 						recoverFunc[0](v)
 					} else {
 						recoverFunc[0](gerror.NewCodef(gcode.CodeInternalError, `%+v`, exception))

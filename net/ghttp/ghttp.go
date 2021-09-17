@@ -95,12 +95,6 @@ type (
 		Handler *handlerItem // Handler object.
 	}
 
-	// errorStack is the interface for Stack feature.
-	errorStack interface {
-		Error() string
-		Stack() string
-	}
-
 	// Listening file descriptor mapping.
 	// The key is either "http" or "https" and the value is its FD.
 	listenerFdMap = map[string]string

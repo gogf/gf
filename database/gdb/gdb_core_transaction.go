@@ -119,7 +119,7 @@ func (c *Core) Transaction(ctx context.Context, f func(ctx context.Context, tx *
 	defer func() {
 		if err == nil {
 			if exception := recover(); exception != nil {
-				if v, ok := exception.(error); ok {
+				if v, ok := exception.(error); ok && gerror.HasStack(v) {
 					err = v
 				} else {
 					err = gerror.NewCodef(gcode.CodeInternalError, "%+v", exception)
@@ -313,7 +313,7 @@ func (tx *TX) Transaction(ctx context.Context, f func(ctx context.Context, tx *T
 	defer func() {
 		if err == nil {
 			if exception := recover(); exception != nil {
-				if v, ok := exception.(error); ok {
+				if v, ok := exception.(error); ok && gerror.HasStack(v) {
 					err = v
 				} else {
 					err = gerror.NewCodef(gcode.CodeInternalError, "%+v", exception)

@@ -38,8 +38,8 @@ type Options struct {
 	StrNumber bool   // StrNumber causes the Decoder to unmarshal a number into an interface{} as a string instead of as a float64.
 }
 
-// apiInterface is used for type assert api for Interface().
-type apiInterface interface {
+// iInterface is used for type assert api for Interface().
+type iInterface interface {
 	Interface() interface{}
 }
 
@@ -50,7 +50,7 @@ type apiInterface interface {
 func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 	if value != nil {
 		if utils.IsStruct(value) {
-			if v, ok := value.(apiInterface); ok {
+			if v, ok := value.(iInterface); ok {
 				value = v.Interface()
 			}
 		}
