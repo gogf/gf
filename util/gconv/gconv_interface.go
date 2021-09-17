@@ -8,105 +8,105 @@ package gconv
 
 import "github.com/gogf/gf/os/gtime"
 
-// apiString is used for type assert api for String().
-type apiString interface {
+// iString is used for type assert api for String().
+type iString interface {
 	String() string
 }
 
-// apiBool is used for type assert api for Bool().
-type apiBool interface {
+// iBool is used for type assert api for Bool().
+type iBool interface {
 	Bool() bool
 }
 
-// apiInt64 is used for type assert api for Int64().
-type apiInt64 interface {
+// iInt64 is used for type assert api for Int64().
+type iInt64 interface {
 	Int64() int64
 }
 
-// apiUint64 is used for type assert api for Uint64().
-type apiUint64 interface {
+// iUint64 is used for type assert api for Uint64().
+type iUint64 interface {
 	Uint64() uint64
 }
 
-// apiFloat32 is used for type assert api for Float32().
-type apiFloat32 interface {
+// iFloat32 is used for type assert api for Float32().
+type iFloat32 interface {
 	Float32() float32
 }
 
-// apiFloat64 is used for type assert api for Float64().
-type apiFloat64 interface {
+// iFloat64 is used for type assert api for Float64().
+type iFloat64 interface {
 	Float64() float64
 }
 
-// apiError is used for type assert api for Error().
-type apiError interface {
+// iError is used for type assert api for Error().
+type iError interface {
 	Error() string
 }
 
-// apiBytes is used for type assert api for Bytes().
-type apiBytes interface {
+// iBytes is used for type assert api for Bytes().
+type iBytes interface {
 	Bytes() []byte
 }
 
-// apiInterface is used for type assert api for Interface().
-type apiInterface interface {
+// iInterface is used for type assert api for Interface().
+type iInterface interface {
 	Interface() interface{}
 }
 
-// apiInterfaces is used for type assert api for Interfaces().
-type apiInterfaces interface {
+// iInterfaces is used for type assert api for Interfaces().
+type iInterfaces interface {
 	Interfaces() []interface{}
 }
 
-// apiFloats is used for type assert api for Floats().
-type apiFloats interface {
+// iFloats is used for type assert api for Floats().
+type iFloats interface {
 	Floats() []float64
 }
 
-// apiInts is used for type assert api for Ints().
-type apiInts interface {
+// iInts is used for type assert api for Ints().
+type iInts interface {
 	Ints() []int
 }
 
-// apiStrings is used for type assert api for Strings().
-type apiStrings interface {
+// iStrings is used for type assert api for Strings().
+type iStrings interface {
 	Strings() []string
 }
 
-// apiUints is used for type assert api for Uints().
-type apiUints interface {
+// iUints is used for type assert api for Uints().
+type iUints interface {
 	Uints() []uint
 }
 
-// apiMapStrAny is the interface support for converting struct parameter to map.
-type apiMapStrAny interface {
+// iMapStrAny is the interface support for converting struct parameter to map.
+type iMapStrAny interface {
 	MapStrAny() map[string]interface{}
 }
 
-// apiUnmarshalValue is the interface for custom defined types customizing value assignment.
-// Note that only pointer can implement interface apiUnmarshalValue.
-type apiUnmarshalValue interface {
+// iUnmarshalValue is the interface for custom defined types customizing value assignment.
+// Note that only pointer can implement interface iUnmarshalValue.
+type iUnmarshalValue interface {
 	UnmarshalValue(interface{}) error
 }
 
-// apiUnmarshalText is the interface for custom defined types customizing value assignment.
-// Note that only pointer can implement interface apiUnmarshalText.
-type apiUnmarshalText interface {
+// iUnmarshalText is the interface for custom defined types customizing value assignment.
+// Note that only pointer can implement interface iUnmarshalText.
+type iUnmarshalText interface {
 	UnmarshalText(text []byte) error
 }
 
-// apiUnmarshalText is the interface for custom defined types customizing value assignment.
-// Note that only pointer can implement interface apiUnmarshalJSON.
-type apiUnmarshalJSON interface {
+// iUnmarshalText is the interface for custom defined types customizing value assignment.
+// Note that only pointer can implement interface iUnmarshalJSON.
+type iUnmarshalJSON interface {
 	UnmarshalJSON(b []byte) error
 }
 
-// apiSet is the interface for custom value assignment.
-type apiSet interface {
+// iSet is the interface for custom value assignment.
+type iSet interface {
 	Set(value interface{}) (old interface{})
 }
 
-// apiGTime is the interface for gtime.Time converting.
-type apiGTime interface {
+// iGTime is the interface for gtime.Time converting.
+type iGTime interface {
 	GTime(format ...string) *gtime.Time
 }

@@ -22,7 +22,7 @@ import (
 	"github.com/gogf/gf/util/gutil"
 )
 
-type apiTime interface {
+type iTime interface {
 	Date() (year int, month time.Month, day int)
 	IsZero() bool
 }
@@ -244,7 +244,7 @@ func (v *Validator) doCheckBuildInRules(input doCheckBuildInRulesInput) (match b
 	// Date rules.
 	case "date":
 		// support for time value, eg: gtime.Time/*gtime.Time, time.Time/*time.Time.
-		if v, ok := input.Value.(apiTime); ok {
+		if v, ok := input.Value.(iTime); ok {
 			return !v.IsZero(), nil
 		}
 		match = gregex.IsMatchString(`\d{4}[\.\-\_/]{0,1}\d{2}[\.\-\_/]{0,1}\d{2}`, valueStr)
@@ -252,7 +252,7 @@ func (v *Validator) doCheckBuildInRules(input doCheckBuildInRulesInput) (match b
 	// Date rule with specified format.
 	case "date-format":
 		// support for time value, eg: gtime.Time/*gtime.Time, time.Time/*time.Time.
-		if v, ok := input.Value.(apiTime); ok {
+		if v, ok := input.Value.(iTime); ok {
 			return !v.IsZero(), nil
 		}
 		if _, err := gtime.StrToTimeFormat(valueStr, input.RulePattern); err == nil {

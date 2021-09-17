@@ -88,7 +88,7 @@ func (m *Model) Data(data ...interface{}) *Model {
 				model.data = ConvertDataForTableRecord(data[0])
 
 			case reflect.Struct:
-				if v, ok := data[0].(apiInterfaces); ok {
+				if v, ok := data[0].(iInterfaces); ok {
 					var (
 						array = v.Interfaces()
 						list  = make(List, len(array))
@@ -265,7 +265,7 @@ func (m *Model) doInsertWithOption(insertOption int) (result sql.Result, err err
 			list = List{ConvertDataForTableRecord(value)}
 
 		case reflect.Struct:
-			if v, ok := value.(apiInterfaces); ok {
+			if v, ok := value.(iInterfaces); ok {
 				var (
 					array = v.Interfaces()
 				)

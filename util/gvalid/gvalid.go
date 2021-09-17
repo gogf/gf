@@ -74,8 +74,8 @@ type fieldRule struct {
 	Rule string // Rule string like: "max:6"
 }
 
-// apiNoValidation is an interface that marks current struct not validated by package `gvalid`.
-type apiNoValidation interface {
+// iNoValidation is an interface that marks current struct not validated by package `gvalid`.
+type iNoValidation interface {
 	NoValidation()
 }
 

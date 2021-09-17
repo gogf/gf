@@ -15,32 +15,32 @@ import (
 	"github.com/gogf/gf/errors/gcode"
 )
 
-// apiCode is the interface for Code feature.
-type apiCode interface {
+// iCode is the interface for Code feature.
+type iCode interface {
 	Error() string
 	Code() gcode.Code
 }
 
-// apiStack is the interface for Stack feature.
-type apiStack interface {
+// iStack is the interface for Stack feature.
+type iStack interface {
 	Error() string
 	Stack() string
 }
 
-// apiCause is the interface for Cause feature.
-type apiCause interface {
+// iCause is the interface for Cause feature.
+type iCause interface {
 	Error() string
 	Cause() error
 }
 
-// apiCurrent is the interface for Current feature.
-type apiCurrent interface {
+// iCurrent is the interface for Current feature.
+type iCurrent interface {
 	Error() string
 	Current() error
 }
 
-// apiNext is the interface for Next feature.
-type apiNext interface {
+// iNext is the interface for Next feature.
+type iNext interface {
 	Error() string
 	Next() error
 }
@@ -258,7 +258,7 @@ func WrapCodeSkipf(code gcode.Code, skip int, err error, format string, args ...
 // It returns CodeNil if it has no error code or it does not implements interface Code.
 func Code(err error) gcode.Code {
 	if err != nil {
-		if e, ok := err.(apiCode); ok {
+		if e, ok := err.(iCode); ok {
 			return e.Code()
 		}
 	}
@@ -268,7 +268,7 @@ func Code(err error) gcode.Code {
 // Cause returns the root cause error of `err`.
 func Cause(err error) error {
 	if err != nil {
-		if e, ok := err.(apiCause); ok {
+		if e, ok := err.(iCause); ok {
 			return e.Cause()
 		}
 	}
@@ -281,7 +281,7 @@ func Stack(err error) string {
 	if err == nil {
 		return ""
 	}
-	if e, ok := err.(apiStack); ok {
+	if e, ok := err.(iStack); ok {
 		return e.Stack()
 	}
 	return err.Error()
@@ -293,7 +293,7 @@ func Current(err error) error {
 	if err == nil {
 		return nil
 	}
-	if e, ok := err.(apiCurrent); ok {
+	if e, ok := err.(iCurrent); ok {
 		return e.Current()
 	}
 	return err
@@ -305,8 +305,14 @@ func Next(err error) error {
 	if err == nil {
 		return nil
 	}
-	if e, ok := err.(apiNext); ok {
+	if e, ok := err.(iNext); ok {
 		return e.Next()
 	}
 	return nil
+}
+
+// HasStack checks and returns whether `err` implemented interface `iStack`.
+func HasStack(err error) bool {
+	_, ok := err.(iStack)
+	return ok
 }
