@@ -7,13 +7,14 @@
 package gcron
 
 import (
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/gf/text/gregex"
-	"strconv"
-	"strings"
-	"time"
 )
 
 // cronSchedule is the schedule for cron job.
@@ -265,7 +266,7 @@ func (s *cronSchedule) meet(t time.Time) bool {
 	}
 }
 
-// 参考 robfig/cron的方法计算 github.com/robfi/cron/v3@v3.0.0/spec.go
+// inspired by robfig/cron github.com/robfi/cron/v3@v3.0.0/spec.go
 // https://github.com/robfig/cron/blob/master/spec_test.go
 func (s *cronSchedule) Next(t time.Time) time.Time {
 
