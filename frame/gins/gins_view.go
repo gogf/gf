@@ -7,6 +7,7 @@
 package gins
 
 import (
+	"context"
 	"fmt"
 	"github.com/gogf/gf/os/gview"
 	"github.com/gogf/gf/util/gutil"
@@ -19,38 +20,48 @@ const (
 
 // View returns an instance of View with default settings.
 // The parameter `name` is the name for the instance.
+// Note that it panics if any error occurs duration instance creating.
 func View(name ...string) *gview.View {
 	instanceName := gview.DefaultName
 	if len(name) > 0 && name[0] != "" {
 		instanceName = name[0]
 	}
 	instanceKey := fmt.Sprintf("%s.%s", frameCoreComponentNameViewer, instanceName)
-	return instances.GetOrSetFuncLock(instanceKey, func() interface{} {
+	return localInstances.GetOrSetFuncLock(instanceKey, func() interface{} {
 		return getViewInstance(instanceName)
 	}).(*gview.View)
 }
 
 func getViewInstance(name ...string) *gview.View {
-	instanceName := gview.DefaultName
+	var (
+		ctx          = context.Background()
+		instanceName = gview.DefaultName
+	)
 	if len(name) > 0 && name[0] != "" {
 		instanceName = name[0]
 	}
 	view := gview.Instance(instanceName)
 	// To avoid file no found error while it's not necessary.
-	if Config().Available() {
-		var m map[string]interface{}
-		nodeKey, _ := gutil.MapPossibleItemByKey(Config().GetMap("."), configNodeNameViewer)
-		if nodeKey == "" {
-			nodeKey = configNodeNameViewer
+	var (
+		configMap      map[string]interface{}
+		configNodeName = configNodeNameViewer
+	)
+	if configData, _ := Config().Data(ctx); len(configData) > 0 {
+		if v, _ := gutil.MapPossibleItemByKey(configData, configNodeNameViewer); v != "" {
+			configNodeName = v
 		}
-		m = Config().GetMap(fmt.Sprintf(`%s.%s`, nodeKey, instanceName))
-		if len(m) == 0 {
-			m = Config().GetMap(nodeKey)
+	}
+	if v, _ := Config().Get(ctx, fmt.Sprintf(`%s.%s`, configNodeName, instanceName)); !v.IsEmpty() {
+		configMap = v.Map()
+	}
+	if len(configMap) == 0 {
+		if v, _ := Config().Get(ctx, configNodeName); !v.IsEmpty() {
+			configMap = v.Map()
 		}
-		if len(m) > 0 {
-			if err := view.SetConfigWithMap(m); err != nil {
-				panic(err)
-			}
+	}
+	if len(configMap) > 0 {
+		if err := view.SetConfigWithMap(configMap); err != nil {
+			panic(err)
 		}
 	}
 	return view
