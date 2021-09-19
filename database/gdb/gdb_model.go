@@ -132,7 +132,7 @@ func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 			tableStr = c.QuotePrefixTableName(tableNames[0])
 		}
 	}
-	return &Model{
+	m := &Model{
 		db:         c.db,
 		tablesInit: tableStr,
 		tables:     tableStr,
@@ -142,6 +142,10 @@ func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 		filter:     true,
 		extraArgs:  extraArgs,
 	}
+	if defaultModelSafe {
+		m.safe = true
+	}
+	return m
 }
 
 // Raw creates and returns a model based on a raw sql not a table.
@@ -154,7 +158,7 @@ func (c *Core) Raw(rawSql string, args ...interface{}) *Model {
 	return model
 }
 
-// Raw creates and returns a model based on a raw sql not a table.
+// Raw sets current model as a raw sql model.
 // Example:
 //     db.Raw("SELECT * FROM `user` WHERE `name` = ?", "john").Scan(&result)
 // See Core.Raw.
@@ -169,7 +173,7 @@ func (tx *TX) Raw(rawSql string, args ...interface{}) *Model {
 	return tx.Model().Raw(rawSql, args...)
 }
 
-// With creates and returns an ORM model based on meta data of given object.
+// With creates and returns an ORM model based on metadata of given object.
 func (c *Core) With(objects ...interface{}) *Model {
 	return c.db.Model().With(objects...)
 }
