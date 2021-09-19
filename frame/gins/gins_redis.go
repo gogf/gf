@@ -7,8 +7,11 @@
 package gins
 
 import (
+	"context"
 	"fmt"
 	"github.com/gogf/gf/database/gredis"
+	"github.com/gogf/gf/errors/gcode"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/gutil"
 )
@@ -19,42 +22,46 @@ const (
 )
 
 // Redis returns an instance of redis client with specified configuration group name.
+// Note that it panics if any error occurs duration instance creating.
 func Redis(name ...string) *gredis.Redis {
-	config := Config()
-	group := gredis.DefaultGroupName
+	var (
+		ctx   = context.Background()
+		group = gredis.DefaultGroupName
+	)
 	if len(name) > 0 && name[0] != "" {
 		group = name[0]
 	}
 	instanceKey := fmt.Sprintf("%s.%s", frameCoreComponentNameRedis, group)
-	result := instances.GetOrSetFuncLock(instanceKey, func() interface{} {
+	result := localInstances.GetOrSetFuncLock(instanceKey, func() interface{} {
 		// If already configured, it returns the redis instance.
 		if _, ok := gredis.GetConfig(group); ok {
 			return gredis.Instance(group)
 		}
 		// Or else, it parses the default configuration file and returns a new redis instance.
-		var m map[string]interface{}
-		if _, v := gutil.MapPossibleItemByKey(Config().GetMap("."), configNodeNameRedis); v != nil {
-			m = gconv.Map(v)
+		var (
+			configMap map[string]interface{}
+		)
+
+		if configData, err := Config().Data(ctx); err != nil {
+			panic(gerror.WrapCode(gcode.CodeOperationFailed, err, `retrieving redis configuration failed`))
+		} else {
+			if _, v := gutil.MapPossibleItemByKey(configData, configNodeNameRedis); v != nil {
+				configMap = gconv.Map(v)
+			}
 		}
-		if len(m) > 0 {
-			if v, ok := m[group]; ok {
+
+		if len(configMap) > 0 {
+			if v, ok := configMap[group]; ok {
 				redisConfig, err := gredis.ConfigFromStr(gconv.String(v))
 				if err != nil {
 					panic(err)
 				}
 				return gredis.New(redisConfig)
 			} else {
-				panic(fmt.Sprintf(`configuration for redis not found for group "%s"`, group))
+				panic(fmt.Sprintf(`missing configuration for redis group "%s"`, group))
 			}
 		} else {
-			filepath, err := config.GetFilePath()
-			if err != nil {
-				panic(err)
-			}
-			panic(fmt.Sprintf(
-				`incomplete configuration for redis: "redis" node not found in config file "%s"`,
-				filepath,
-			))
+			panic(`missing configuration for redis: "redis" node not found`)
 		}
 		return nil
 	})

@@ -107,9 +107,9 @@ const (
 	HookAfterOutput       = "HOOK_AFTER_OUTPUT"
 	ServerStatusStopped   = 0
 	ServerStatusRunning   = 1
+	DefaultServerName     = "default"
+	DefaultDomainName     = "default"
 	supportedHttpMethods  = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
-	defaultServerName     = "default"
-	defaultDomainName     = "default"
 	defaultMethod         = "ALL"
 	handlerTypeHandler    = 1
 	handlerTypeObject     = 2
