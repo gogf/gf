@@ -1313,14 +1313,14 @@ func Test_Model_InnerJoin(t *testing.T) {
 
 		t.Assert(n, 5)
 
-		result, err := db.Model(table1+" u1").InnerJoin(table2+" u2", "u1.id = u2.id").OrderBy("u1.id").Select()
+		result, err := db.Model(table1+" u1").InnerJoin(table2+" u2", "u1.id = u2.id").Order("u1.id").Select()
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		t.Assert(len(result), 5)
 
-		result, err = db.Model(table1+" u1").InnerJoin(table2+" u2", "u1.id = u2.id").Where("u1.id > ?", 1).OrderBy("u1.id").Select()
+		result, err = db.Model(table1+" u1").InnerJoin(table2+" u2", "u1.id = u2.id").Where("u1.id > ?", 1).Order("u1.id").Select()
 		if err != nil {
 			t.Fatal(err)
 		}

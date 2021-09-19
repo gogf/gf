@@ -435,6 +435,7 @@ func Test_Model_Clone(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
+	db.SetDebug(true)
 	gtest.C(t, func(t *gtest.T) {
 		md := db.Model(table).Where("id IN(?)", g.Slice{1, 3})
 		count, err := md.Count()
@@ -1225,7 +1226,7 @@ func Test_Model_GroupBy(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).GroupBy("id").Select()
+		result, err := db.Model(table).Group("id").All()
 		t.AssertNil(err)
 		t.Assert(len(result), TableSize)
 		t.Assert(result[0]["nickname"].String(), "name_1")
