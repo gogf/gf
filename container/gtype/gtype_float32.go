@@ -11,7 +11,6 @@ import (
 	"math"
 	"strconv"
 	"sync/atomic"
-	"unsafe"
 )
 
 // Float32 is a struct for concurrent-safe operation for type float32.
@@ -51,7 +50,7 @@ func (v *Float32) Add(delta float32) (new float32) {
 		old := math.Float32frombits(v.value)
 		new = old + delta
 		if atomic.CompareAndSwapUint32(
-			(*uint32)(unsafe.Pointer(&v.value)),
+			&v.value,
 			math.Float32bits(old),
 			math.Float32bits(new),
 		) {
