@@ -75,7 +75,7 @@ The `Web` component performance of `GoFrame`, please refer to third-party projec
 
 # Contributors
 This project exists thanks to all the people who contribute. [[Contributors](https://github.com/gogf/gf/graphs/contributors)].
-<a href="https://github.com/gogf/gf/graphs/contributors"><img src="https://opencollective.com/goframe/contributors.svg?width=890&button=false" /></a>
+<a href="https://github.com/gogf/gf/graphs/contributors"><img src="https://contributors-img.web.app/image?repo=gogf/gf" /></a>
 
 
 # Donators
