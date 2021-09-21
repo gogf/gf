@@ -10,18 +10,20 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"github.com/gogf/gf/internal/utils"
-	"github.com/gogf/gf/net/gtrace"
-	"github.com/gogf/gf/text/gstr"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/trace"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptrace"
 	"net/textproto"
 	"strings"
 	"sync"
+
+	"github.com/gogf/gf/encoding/gjson"
+	"github.com/gogf/gf/internal/utils"
+	"github.com/gogf/gf/net/gtrace"
+	"github.com/gogf/gf/text/gstr"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type clientTracer struct {
@@ -147,8 +149,8 @@ func (ct *clientTracer) wroteRequest(info httptrace.WroteRequestInfo) {
 	}
 
 	ct.span.AddEvent(tracingEventHttpRequest, trace.WithAttributes(
-		attribute.Any(tracingEventHttpRequestHeaders, ct.headers),
-		attribute.Any(tracingEventHttpRequestBaggage, gtrace.GetBaggageMap(ct.Context)),
+		attribute.String(tracingEventHttpRequestHeaders, gjson.New(ct.headers).MustToJsonString()),
+		attribute.String(tracingEventHttpRequestBaggage, gtrace.GetBaggageMap(ct.Context).String()),
 		attribute.String(tracingEventHttpRequestBody, gstr.StrLimit(
 			string(ct.requestBody),
 			gtrace.MaxContentLogSize(),
