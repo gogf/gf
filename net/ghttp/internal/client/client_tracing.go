@@ -13,11 +13,11 @@ import (
 	"net/http/httptrace"
 
 	"github.com/gogf/gf"
-	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/internal/utils"
 	"github.com/gogf/gf/net/ghttp/internal/httputil"
 	"github.com/gogf/gf/net/gtrace"
 	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/util/gconv"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -72,7 +72,7 @@ func MiddlewareTracing(c *Client, r *http.Request) (response *Response, err erro
 	response.Body = utils.NewReadCloser(reqBodyContentBytes, false)
 
 	span.AddEvent(tracingEventHttpResponse, trace.WithAttributes(
-		attribute.String(tracingEventHttpResponseHeaders, gjson.New(httputil.HeaderToMap(response.Header)).MustToJsonString()),
+		attribute.String(tracingEventHttpResponseHeaders, gconv.String(httputil.HeaderToMap(response.Header))),
 		attribute.String(tracingEventHttpResponseBody, gstr.StrLimit(
 			string(reqBodyContentBytes),
 			gtrace.MaxContentLogSize(),

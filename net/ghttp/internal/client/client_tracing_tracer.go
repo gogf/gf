@@ -17,10 +17,10 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/internal/utils"
 	"github.com/gogf/gf/net/gtrace"
 	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/util/gconv"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
@@ -149,7 +149,7 @@ func (ct *clientTracer) wroteRequest(info httptrace.WroteRequestInfo) {
 	}
 
 	ct.span.AddEvent(tracingEventHttpRequest, trace.WithAttributes(
-		attribute.String(tracingEventHttpRequestHeaders, gjson.New(ct.headers).MustToJsonString()),
+		attribute.String(tracingEventHttpRequestHeaders, gconv.String(ct.headers)),
 		attribute.String(tracingEventHttpRequestBaggage, gtrace.GetBaggageMap(ct.Context).String()),
 		attribute.String(tracingEventHttpRequestBody, gstr.StrLimit(
 			string(ct.requestBody),

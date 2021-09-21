@@ -18,6 +18,7 @@ import (
 	"github.com/gogf/gf/net/ghttp/internal/httputil"
 	"github.com/gogf/gf/net/gtrace"
 	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/util/gconv"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -58,7 +59,7 @@ func MiddlewareServerTracing(r *Request) {
 	r.Body = utils.NewReadCloser(reqBodyContentBytes, false)
 
 	span.AddEvent(tracingEventHttpRequest, trace.WithAttributes(
-		attribute.String(tracingEventHttpRequestHeaders, gjson.New(httputil.HeaderToMap(r.Header)).MustToJsonString()),
+		attribute.String(tracingEventHttpRequestHeaders, gconv.String(httputil.HeaderToMap(r.Header))),
 		attribute.String(tracingEventHttpRequestBaggage, gtrace.GetBaggageMap(ctx).String()),
 		attribute.String(tracingEventHttpRequestBody, gstr.StrLimit(
 			string(reqBodyContentBytes),
