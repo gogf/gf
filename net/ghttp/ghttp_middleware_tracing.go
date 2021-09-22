@@ -12,7 +12,6 @@ import (
 	"net/http"
 
 	"github.com/gogf/gf"
-	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/internal/utils"
 	"github.com/gogf/gf/net/ghttp/internal/client"
 	"github.com/gogf/gf/net/ghttp/internal/httputil"
@@ -85,7 +84,7 @@ func MiddlewareServerTracing(r *Request) {
 	)
 
 	span.AddEvent(tracingEventHttpResponse, trace.WithAttributes(
-		attribute.String(tracingEventHttpResponseHeaders, gjson.New(httputil.HeaderToMap(r.Response.Header())).MustToJsonString()),
+		attribute.String(tracingEventHttpResponseHeaders, gconv.String(httputil.HeaderToMap(r.Response.Header()))),
 		attribute.String(tracingEventHttpResponseBody, resBodyContent),
 	))
 	return

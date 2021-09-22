@@ -11,6 +11,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+// Tracer .
 type Tracer struct {
 	trace.Tracer
 }
