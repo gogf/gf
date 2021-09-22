@@ -14,7 +14,7 @@ import (
 // Carrier is the storage medium used by a TextMapPropagator.
 type Carrier map[string]interface{}
 
-// NewCarrier .
+// NewCarrier creates and returns a Carrier.
 func NewCarrier(data ...map[string]interface{}) Carrier {
 	if len(data) > 0 && data[0] != nil {
 		return data[0]
@@ -50,12 +50,12 @@ func (c Carrier) MustMarshal() []byte {
 	return b
 }
 
-// String .
+// String converts and returns current Carrier as string.
 func (c Carrier) String() string {
 	return string(c.MustMarshal())
 }
 
-// UnmarshalJSON .
+// UnmarshalJSON implements interface UnmarshalJSON for package json.
 func (c Carrier) UnmarshalJSON(b []byte) error {
 	carrier := NewCarrier(nil)
 	return json.UnmarshalUseNumber(b, carrier)
