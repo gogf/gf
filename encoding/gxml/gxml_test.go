@@ -55,7 +55,7 @@ func buildXml(charset string, str string) (string, string) {
 	return srcXml, dstXml
 }
 
-//测试XML中字符集的转换
+// 测试XML中字符集的转换
 func Test_XmlToJson(t *testing.T) {
 	for _, v := range testData {
 		srcXml, dstXml := buildXml(v.otherEncoding, v.utf8)
