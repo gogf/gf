@@ -11,11 +11,12 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+// Tracer .
 type Tracer struct {
 	trace.Tracer
 }
 
-// Tracer is a short function for retrieving Tracer.
+// NewTracer Tracer is a short function for retrieving Tracer.
 func NewTracer(name ...string) *Tracer {
 	tracerName := ""
 	if len(name) > 0 {
