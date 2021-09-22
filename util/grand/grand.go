@@ -10,7 +10,6 @@ package grand
 import (
 	"encoding/binary"
 	"time"
-	"unsafe"
 )
 
 var (
@@ -20,7 +19,7 @@ var (
 	characters = letters + digits + symbols                             // 94
 )
 
-// Intn returns a int number which is between 0 and max: [0, max).
+// Intn returns an int number which is between 0 and max: [0, max).
 //
 // Note that:
 // 1. The `max` can only be greater than 0, or else it returns `max` directly;
@@ -95,7 +94,7 @@ func S(n int, symbols ...bool) string {
 			b[i] = characters[numberBytes[i]%62]
 		}
 	}
-	return *(*string)(unsafe.Pointer(&b))
+	return string(b)
 }
 
 // D returns a random time.Duration between min and max: [min, max].
@@ -147,7 +146,7 @@ func Digits(n int) string {
 	for i := range b {
 		b[i] = digits[numberBytes[i]%10]
 	}
-	return *(*string)(unsafe.Pointer(&b))
+	return string(b)
 }
 
 // Letters returns a random string which contains only letters, and its length is `n`.
@@ -162,7 +161,7 @@ func Letters(n int) string {
 	for i := range b {
 		b[i] = letters[numberBytes[i]%52]
 	}
-	return *(*string)(unsafe.Pointer(&b))
+	return string(b)
 }
 
 // Symbols returns a random string which contains only symbols, and its length is `n`.
@@ -177,7 +176,7 @@ func Symbols(n int) string {
 	for i := range b {
 		b[i] = symbols[numberBytes[i]%32]
 	}
-	return *(*string)(unsafe.Pointer(&b))
+	return string(b)
 }
 
 // Perm returns, as a slice of n int numbers, a pseudo-random permutation of the integers [0,n).
