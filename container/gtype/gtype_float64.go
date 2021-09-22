@@ -11,7 +11,6 @@ import (
 	"math"
 	"strconv"
 	"sync/atomic"
-	"unsafe"
 )
 
 // Float64 is a struct for concurrent-safe operation for type float64.
@@ -51,7 +50,7 @@ func (v *Float64) Add(delta float64) (new float64) {
 		old := math.Float64frombits(v.value)
 		new = old + delta
 		if atomic.CompareAndSwapUint64(
-			(*uint64)(unsafe.Pointer(&v.value)),
+			&v.value,
 			math.Float64bits(old),
 			math.Float64bits(new),
 		) {
