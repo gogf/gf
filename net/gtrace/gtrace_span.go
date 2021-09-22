@@ -12,7 +12,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-// Span 。
+// Span warps trace.Span for compatibility and extension.
 type Span struct {
 	trace.Span
 }
