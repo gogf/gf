@@ -14,9 +14,7 @@ import (
 
 // Adapter is the core adapter for cache features implements.
 //
-// Note that the implements should guarantee the concurrent safety calling its functions.
-// You can implement one or more functions if necessary, it is suggested returning gcode.CodeNotImplemented error
-// for those unimplemented functions.
+// Note that the implementer itself should guarantee the concurrent safety of these functions.
 type Adapter interface {
 	// Set sets cache with `key`-`value` pair, which is expired after `duration`.
 	//
