@@ -68,7 +68,7 @@ func (c *localAdapterRedisConn) Do(ctx context.Context, command string, args []i
 // Receive receives a single reply as gvar.Var from the Redis server.
 func (c *localAdapterRedisConn) Receive(ctx context.Context, option *Option) (*gvar.Var, error) {
 	if option == nil {
-		option = &Option{}
+		option = defaultOption()
 	}
 	return resultToVar(c.ReceiveWithTimeout(option.ReadTimeout))
 }

@@ -239,7 +239,7 @@ func (s *Session) Size() int {
 // Contains checks whether key exist in the session.
 func (s *Session) Contains(key string) bool {
 	s.init()
-	return s.Get(key) != nil
+	return !s.Get(key).IsNil()
 }
 
 // IsDirty checks whether there's any data changes in the session.
