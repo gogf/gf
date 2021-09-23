@@ -6,7 +6,11 @@
 
 package gredis
 
-import "github.com/gogf/gf/container/gmap"
+import (
+	"context"
+	"github.com/gogf/gf/container/gmap"
+	"github.com/gogf/gf/internal/intlog"
+)
 
 var (
 	// Instance map
@@ -23,8 +27,11 @@ func Instance(name ...string) *Redis {
 	}
 	v := instances.GetOrSetFuncLock(group, func() interface{} {
 		if config, ok := GetConfig(group); ok {
-			r := NewAdapterRedigo(config)
-			r.group = group
+			r, err := New(config)
+			if err != nil {
+				intlog.Error(context.TODO(), err)
+				return nil
+			}
 			return r
 		}
 		return nil

@@ -28,7 +28,6 @@ import (
 type AdapterRedigo struct {
 	pool   *redis.Pool // Underlying connection pool.
 	config *Config     // Configuration.
-	group  string      // Configuration group.
 }
 
 const (
@@ -86,12 +85,12 @@ func NewAdapterRedigo(config *Config) *AdapterRedigo {
 					intlog.Printf(context.TODO(), `open new connection, config:%+v`, config)
 					// AUTH
 					if len(config.Pass) > 0 {
-						if _, err := c.Do("AUTH", config.Pass); err != nil {
+						if _, err = c.Do("AUTH", config.Pass); err != nil {
 							return nil, err
 						}
 					}
 					// DB
-					if _, err := c.Do("SELECT", config.Db); err != nil {
+					if _, err = c.Do("SELECT", config.Db); err != nil {
 						return nil, err
 					}
 					return c, nil

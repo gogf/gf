@@ -11,12 +11,28 @@ import (
 	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
+	"time"
 
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
 )
+
+// Config is redis configuration.
+type Config struct {
+	Host            string        `json:"host"`
+	Port            int           `json:"port"`
+	Db              int           `json:"db"`
+	Pass            string        `json:"pass"`            // Password for AUTH.
+	MaxIdle         int           `json:"maxIdle"`         // Maximum number of connections allowed to be idle (default is 10)
+	MaxActive       int           `json:"maxActive"`       // Maximum number of connections limit (default is 0 means no limit).
+	IdleTimeout     time.Duration `json:"idleTimeout"`     // Maximum idle time for connection (default is 10 seconds, not allowed to be set to 0)
+	MaxConnLifetime time.Duration `json:"maxConnLifetime"` // Maximum lifetime of the connection (default is 30 seconds, not allowed to be set to 0)
+	ConnectTimeout  time.Duration `json:"connectTimeout"`  // Dial connection timeout.
+	TLS             bool          `json:"tls"`             // Specifies the config to use when a TLS connection is dialed.
+	TLSSkipVerify   bool          `json:"tlsSkipVerify"`   // Disables server name verification when connecting over TLS.
+}
 
 const (
 	DefaultGroupName = "default" // Default configuration group name.
