@@ -7,20 +7,28 @@
 package gredis_test
 
 import (
+	"context"
 	"github.com/gogf/gf/database/gredis"
 	"github.com/gogf/gf/test/gtest"
 	"testing"
 	"time"
 )
 
+var (
+	ctx = context.TODO()
+)
+
 func TestConn_DoWithTimeout(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		redis := gredis.New(config)
-		t.AssertNE(redis, nil)
-		conn := redis.Conn()
-		defer conn.Close()
+		redis, err := gredis.New(config)
+		t.AssertNil(err)
+		t.AssertNil(redis)
 
-		_, err := conn.DoWithTimeout(time.Second, "set", "test", "123")
+		conn, err := redis.Conn(ctx)
+		t.AssertNil(err)
+		defer conn.Close(ctx)
+
+		_, err := conn.Do(ctx, "set", "test", "123", &gredis.Option{ReadTimeout: time.Second})
 		t.Assert(err, nil)
 		defer conn.DoWithTimeout(time.Second, "del", "test")
 

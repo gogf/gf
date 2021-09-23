@@ -25,7 +25,7 @@ const (
 
 var (
 	// Configuration groups.
-	configs = gmap.NewStrAnyMap(true)
+	localConfigMap = gmap.NewStrAnyMap(true)
 )
 
 // SetConfig sets the global configuration for specified group.
@@ -35,8 +35,7 @@ func SetConfig(config *Config, name ...string) {
 	if len(name) > 0 {
 		group = name[0]
 	}
-	configs.Set(group, config)
-	instances.Remove(group)
+	localConfigMap.Set(group, config)
 
 	intlog.Printf(context.TODO(), `SetConfig for group "%s": %+v`, group, config)
 }
@@ -52,8 +51,7 @@ func SetConfigByStr(str string, name ...string) error {
 	if err != nil {
 		return err
 	}
-	configs.Set(group, config)
-	instances.Remove(group)
+	localConfigMap.Set(group, config)
 	return nil
 }
 
@@ -64,7 +62,7 @@ func GetConfig(name ...string) (config *Config, ok bool) {
 	if len(name) > 0 {
 		group = name[0]
 	}
-	if v := configs.Get(group); v != nil {
+	if v := localConfigMap.Get(group); v != nil {
 		return v.(*Config), true
 	}
 	return &Config{}, false
@@ -77,8 +75,7 @@ func RemoveConfig(name ...string) {
 	if len(name) > 0 {
 		group = name[0]
 	}
-	configs.Remove(group)
-	instances.Remove(group)
+	localConfigMap.Remove(group)
 
 	intlog.Printf(context.TODO(), `RemoveConfig: %s`, group)
 }
@@ -120,8 +117,7 @@ func ConfigFromStr(str string) (config *Config, err error) {
 	return
 }
 
-// ClearConfig removes all configurations and instances of redis.
+// ClearConfig removes all configurations of redis.
 func ClearConfig() {
-	configs.Clear()
-	instances.Clear()
+	localConfigMap.Clear()
 }
