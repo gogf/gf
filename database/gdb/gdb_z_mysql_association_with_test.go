@@ -1992,6 +1992,7 @@ PRIMARY KEY (id)
 	})
 }
 
+// https://github.com/gogf/gf/issues/1401
 func Test_With_Feature_Issue1401(t *testing.T) {
 	var (
 		table1 = "parcels"
@@ -2030,5 +2031,67 @@ func Test_With_Feature_Issue1401(t *testing.T) {
 		t.Assert(len(parcelDetail.Items), 1)
 		t.Assert(parcelDetail.Items[0].Id, 2)
 		t.Assert(parcelDetail.Items[0].ParcelId, 3)
+	})
+}
+
+// https://github.com/gogf/gf/issues/1412
+func Test_With_Feature_Issue1412(t *testing.T) {
+	var (
+		table1 = "parcels"
+		table2 = "items"
+	)
+	array := gstr.SplitAndTrim(gtest.TestDataContent(`issue1412.sql`), ";")
+	for _, v := range array {
+		if _, err := db.Exec(v); err != nil {
+			gtest.Error(err)
+		}
+	}
+	defer dropTable(table1)
+	defer dropTable(table2)
+
+	gtest.C(t, func(t *gtest.T) {
+		type Items struct {
+			gmeta.Meta `orm:"table:items"`
+			Id         int    `json:"id"`
+			Name       string `json:"name"`
+		}
+
+		type ParcelRsp struct {
+			gmeta.Meta `orm:"table:parcels"`
+			Id         int   `json:"id"`
+			ItemId     int   `json:"item_id"`
+			Items      Items `json:"items" orm:"with:Id=ItemId"`
+		}
+
+		entity := &ParcelRsp{}
+		err := db.Model("parcels").With(Items{}).Where("id=3").Scan(&entity)
+		t.AssertNil(err)
+		t.Assert(entity.Id, 3)
+		t.Assert(entity.ItemId, 0)
+		t.Assert(entity.Items.Id, 0)
+		t.Assert(entity.Items.Name, "")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		type Items struct {
+			gmeta.Meta `orm:"table:items"`
+			Id         int    `json:"id"`
+			Name       string `json:"name"`
+		}
+
+		type ParcelRsp struct {
+			gmeta.Meta `orm:"table:parcels"`
+			Id         int   `json:"id"`
+			ItemId     int   `json:"item_id"`
+			Items      Items `json:"items" orm:"with:Id=ItemId"`
+		}
+
+		entity := &ParcelRsp{}
+		err := db.Model("parcels").With(Items{}).Where("id=30000").Scan(&entity)
+		t.AssertNE(err, nil)
+		t.Assert(entity.Id, 0)
+		t.Assert(entity.ItemId, 0)
+		t.Assert(entity.Items.Id, 0)
+		t.Assert(entity.Items.Name, "")
 	})
 }
