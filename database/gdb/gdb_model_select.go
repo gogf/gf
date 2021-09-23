@@ -226,7 +226,11 @@ func (m *Model) doStruct(pointer interface{}, where ...interface{}) error {
 	model := m
 	// Auto selecting fields by struct attributes.
 	if model.fieldsEx == "" && (model.fields == "" || model.fields == "*") {
-		model = m.Fields(pointer)
+		if v, ok := pointer.(reflect.Value); ok {
+			model = m.Fields(v.Interface())
+		} else {
+			model = m.Fields(pointer)
+		}
 	}
 	one, err := model.One(where...)
 	if err != nil {
@@ -267,11 +271,19 @@ func (m *Model) doStructs(pointer interface{}, where ...interface{}) error {
 	model := m
 	// Auto selecting fields by struct attributes.
 	if model.fieldsEx == "" && (model.fields == "" || model.fields == "*") {
-		model = m.Fields(
-			reflect.New(
-				reflect.ValueOf(pointer).Elem().Type().Elem(),
-			).Interface(),
-		)
+		if v, ok := pointer.(reflect.Value); ok {
+			model = m.Fields(
+				reflect.New(
+					v.Type().Elem(),
+				).Interface(),
+			)
+		} else {
+			model = m.Fields(
+				reflect.New(
+					reflect.ValueOf(pointer).Elem().Type().Elem(),
+				).Interface(),
+			)
+		}
 	}
 	all, err := model.All(where...)
 	if err != nil {
@@ -323,7 +335,6 @@ func (m *Model) Scan(pointer interface{}, where ...interface{}) error {
 		reflectValue = reflectValue.Elem()
 		reflectKind = reflectValue.Kind()
 	}
-
 	switch reflectKind {
 	case reflect.Slice, reflect.Array:
 		return m.doStructs(pointer, where...)
@@ -520,15 +531,18 @@ func (m *Model) UnionAll(unions ...*Model) *Model {
 
 // doGetAllBySql does the select statement on the database.
 func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, err error) {
-	cacheKey := ""
-	cacheObj := m.db.GetCache().Ctx(m.GetCtx())
+	var (
+		ctx      = m.GetCtx()
+		cacheKey = ""
+		cacheObj = m.db.GetCache()
+	)
 	// Retrieve from cache.
 	if m.cacheEnabled && m.tx == nil {
 		cacheKey = m.cacheName
 		if len(cacheKey) == 0 {
 			cacheKey = sql + ", @PARAMS:" + gconv.String(args)
 		}
-		if v, _ := cacheObj.GetVar(cacheKey); !v.IsNil() {
+		if v, _ := cacheObj.Get(ctx, cacheKey); !v.IsNil() {
 			if result, ok := v.Val().(Result); ok {
 				// In-memory cache.
 				return result, nil
@@ -549,7 +563,7 @@ func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, e
 	// Cache the result.
 	if cacheKey != "" && err == nil {
 		if m.cacheDuration < 0 {
-			if _, err := cacheObj.Remove(cacheKey); err != nil {
+			if _, err := cacheObj.Remove(ctx, cacheKey); err != nil {
 				intlog.Error(m.GetCtx(), err)
 			}
 		} else {
@@ -557,7 +571,7 @@ func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, e
 			if result == nil {
 				result = Result{}
 			}
-			if err := cacheObj.Set(cacheKey, result, m.cacheDuration); err != nil {
+			if err := cacheObj.Set(ctx, cacheKey, result, m.cacheDuration); err != nil {
 				intlog.Error(m.GetCtx(), err)
 			}
 		}

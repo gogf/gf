@@ -14,7 +14,7 @@ var (
 )
 
 // Instance returns an instance of redis client with specified group.
-// The <name> param is unnecessary, if <name> is not passed,
+// The <name> param is unnecessary, if `name` is not passed,
 // it returns a redis instance with default configuration group.
 func Instance(name ...string) *Redis {
 	group := DefaultGroupName

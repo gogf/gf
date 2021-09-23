@@ -37,7 +37,7 @@ func (v *Validator) doCheckStruct(object interface{}) Error {
 	for _, field := range fieldMap {
 		if field.IsEmbedded() {
 			// No validation interface implements check.
-			if _, ok := field.Value.Interface().(apiNoValidation); ok {
+			if _, ok := field.Value.Interface().(iNoValidation); ok {
 				continue
 			}
 			if _, ok := field.TagLookup(noValidationTagName); ok {

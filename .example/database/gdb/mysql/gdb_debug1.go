@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/gogf/gf/database/gdb"
 	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/os/gctx"
 	"github.com/gogf/gf/os/glog"
 )
 
@@ -17,6 +18,9 @@ func main() {
 		Role:    "master",
 		Charset: "utf8",
 	})
+	var (
+		ctx = gctx.New()
+	)
 	db, err := gdb.New()
 	if err != nil {
 		panic(err)
@@ -27,11 +31,11 @@ func main() {
 
 	// 执行3条SQL查询
 	for i := 1; i <= 3; i++ {
-		db.Table("user").Where("uid=?", i).One()
+		db.Ctx(ctx).Model("user").Where("uid=?", i).One()
 	}
 	// 构造一条错误查询
-	db.Table("user").Where("no_such_field=?", "just_test").One()
+	db.Model("user").Where("no_such_field=?", "just_test").One()
 
-	db.Table("user").Data(g.Map{"name": "smith"}).Where("uid=?", 1).Save()
+	db.Ctx(ctx).Model("user").Data(g.Map{"name": "smith"}).Where("uid=?", 1).Save()
 
 }

@@ -9,7 +9,6 @@ package ghttp
 import (
 	"context"
 	"crypto/tls"
-	"fmt"
 	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/os/gproc"
@@ -162,19 +161,21 @@ func (s *gracefulServer) doServe() error {
 
 // getNetListener retrieves and returns the wrapped net.Listener.
 func (s *gracefulServer) getNetListener() (net.Listener, error) {
-	var ln net.Listener
-	var err error
+	var (
+		ln  net.Listener
+		err error
+	)
 	if s.fd > 0 {
 		f := os.NewFile(s.fd, "")
 		ln, err = net.FileListener(f)
 		if err != nil {
-			err = fmt.Errorf("%d: net.FileListener error: %v", gproc.Pid(), err)
+			err = gerror.WrapCodef(gcode.CodeInternalError, err, "%d: net.FileListener failed", gproc.Pid())
 			return nil, err
 		}
 	} else {
 		ln, err = net.Listen("tcp", s.httpServer.Addr)
 		if err != nil {
-			err = fmt.Errorf("%d: net.Listen error: %v", gproc.Pid(), err)
+			err = gerror.WrapCodef(gcode.CodeInternalError, err, "%d: net.Listen failed", gproc.Pid())
 		}
 	}
 	return ln, err

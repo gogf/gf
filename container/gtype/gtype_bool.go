@@ -23,7 +23,7 @@ var (
 )
 
 // NewBool creates and returns a concurrent-safe object for bool type,
-// with given initial value <value>.
+// with given initial value `value`.
 func NewBool(value ...bool) *Bool {
 	t := &Bool{}
 	if len(value) > 0 {
@@ -41,7 +41,7 @@ func (v *Bool) Clone() *Bool {
 	return NewBool(v.Val())
 }
 
-// Set atomically stores <value> into t.value and returns the previous value of t.value.
+// Set atomically stores `value` into t.value and returns the previous value of t.value.
 func (v *Bool) Set(value bool) (old bool) {
 	if value {
 		old = atomic.SwapInt32(&v.value, 1) == 1
@@ -91,7 +91,7 @@ func (v *Bool) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-// UnmarshalValue is an interface implement which sets any type of value for <v>.
+// UnmarshalValue is an interface implement which sets any type of value for `v`.
 func (v *Bool) UnmarshalValue(value interface{}) error {
 	v.Set(gconv.Bool(value))
 	return nil

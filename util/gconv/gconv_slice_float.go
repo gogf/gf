@@ -112,11 +112,16 @@ func Float32s(any interface{}) []float32 {
 			array[k] = Float32(v)
 		}
 	default:
-		if v, ok := any.(apiFloats); ok {
+		if v, ok := any.(iFloats); ok {
 			return Float32s(v.Floats())
 		}
-		if v, ok := any.(apiInterfaces); ok {
+		if v, ok := any.(iInterfaces); ok {
 			return Float32s(v.Interfaces())
+		}
+		// JSON format string value converting.
+		var result []float32
+		if checkJsonAndUnmarshalUseNumber(any, &result) {
+			return result
 		}
 		// Not a common type, it then uses reflection for conversion.
 		var reflectValue reflect.Value
@@ -142,6 +147,9 @@ func Float32s(any interface{}) []float32 {
 			return slice
 
 		default:
+			if reflectValue.IsZero() {
+				return []float32{}
+			}
 			return []float32{Float32(any)}
 		}
 	}
@@ -232,11 +240,16 @@ func Float64s(any interface{}) []float64 {
 			array[k] = Float64(v)
 		}
 	default:
-		if v, ok := any.(apiFloats); ok {
+		if v, ok := any.(iFloats); ok {
 			return v.Floats()
 		}
-		if v, ok := any.(apiInterfaces); ok {
+		if v, ok := any.(iInterfaces); ok {
 			return Floats(v.Interfaces())
+		}
+		// JSON format string value converting.
+		var result []float64
+		if checkJsonAndUnmarshalUseNumber(any, &result) {
+			return result
 		}
 		// Not a common type, it then uses reflection for conversion.
 		var reflectValue reflect.Value
@@ -262,6 +275,9 @@ func Float64s(any interface{}) []float64 {
 			return slice
 
 		default:
+			if reflectValue.IsZero() {
+				return []float64{}
+			}
 			return []float64{Float64(any)}
 		}
 	}

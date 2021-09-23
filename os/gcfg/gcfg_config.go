@@ -151,7 +151,11 @@ func (c *Config) SetPath(path string) error {
 	}
 	// Should be a directory.
 	if !isDir {
-		err := fmt.Errorf(`[gcfg] SetPath failed: path "%s" should be directory type`, path)
+		err := gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			`[gcfg] SetPath failed: path "%s" should be directory type`,
+			path,
+		)
 		if errorPrint() {
 			glog.Error(err)
 		}
@@ -173,13 +177,13 @@ func (c *Config) SetPath(path string) error {
 // It is off in default.
 //
 // Note that, turning on this feature is quite expensive, and it is not recommended
-// to allow separators in the key names. It is best to avoid this on the application side.
+// allowing separators in the key names. It is best to avoid this on the application side.
 func (c *Config) SetViolenceCheck(check bool) {
 	c.violenceCheck = check
 	c.Clear()
 }
 
-// AddPath adds a absolute or relative path to the search paths.
+// AddPath adds an absolute or relative path to the search paths.
 func (c *Config) AddPath(path string) error {
 	var (
 		isDir    = false

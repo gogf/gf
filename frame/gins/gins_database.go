@@ -77,7 +77,7 @@ func Database(name ...string) gdb.DB {
 		if len(configMap) == 0 {
 			configMap = make(map[string]interface{})
 		}
-		// Parse <m> as map-slice and adds it to gdb's global configurations.
+		// Parse `m` as map-slice and adds it to gdb's global configurations.
 		for g, groupConfig := range configMap {
 			cg := gdb.ConfigGroup{}
 			switch value := groupConfig.(type) {
@@ -102,7 +102,7 @@ func Database(name ...string) gdb.DB {
 				}
 			}
 		}
-		// Parse <m> as a single node configuration,
+		// Parse `m` as a single node configuration,
 		// which is the default group configuration.
 		if node := parseDBConfigNode(configMap); node != nil {
 			cg := gdb.ConfigGroup{}

@@ -51,7 +51,7 @@ func GTime(any interface{}, format ...string) *gtime.Time {
 	if any == nil {
 		return nil
 	}
-	if v, ok := any.(apiGTime); ok {
+	if v, ok := any.(iGTime); ok {
 		return v.GTime(format...)
 	}
 	// It's already this type.

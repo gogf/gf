@@ -29,7 +29,7 @@ var (
 )
 
 // SetConfig sets the global configuration for specified group.
-// If <name> is not passed, it sets configuration for the default group name.
+// If `name` is not passed, it sets configuration for the default group name.
 func SetConfig(config *Config, name ...string) {
 	group := DefaultGroupName
 	if len(name) > 0 {
@@ -42,7 +42,7 @@ func SetConfig(config *Config, name ...string) {
 }
 
 // SetConfigByStr sets the global configuration for specified group with string.
-// If <name> is not passed, it sets configuration for the default group name.
+// If `name` is not passed, it sets configuration for the default group name.
 func SetConfigByStr(str string, name ...string) error {
 	group := DefaultGroupName
 	if len(name) > 0 {
@@ -58,7 +58,7 @@ func SetConfigByStr(str string, name ...string) error {
 }
 
 // GetConfig returns the global configuration with specified group name.
-// If <name> is not passed, it returns configuration of the default group name.
+// If `name` is not passed, it returns configuration of the default group name.
 func GetConfig(name ...string) (config *Config, ok bool) {
 	group := DefaultGroupName
 	if len(name) > 0 {
@@ -71,7 +71,7 @@ func GetConfig(name ...string) (config *Config, ok bool) {
 }
 
 // RemoveConfig removes the global configuration with specified group.
-// If <name> is not passed, it removes configuration of the default group name.
+// If `name` is not passed, it removes configuration of the default group name.
 func RemoveConfig(name ...string) {
 	group := DefaultGroupName
 	if len(name) > 0 {

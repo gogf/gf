@@ -18,7 +18,7 @@ type Int struct {
 }
 
 // NewInt creates and returns a concurrent-safe object for int type,
-// with given initial value <value>.
+// with given initial value `value`.
 func NewInt(value ...int) *Int {
 	if len(value) > 0 {
 		return &Int{
@@ -33,7 +33,7 @@ func (v *Int) Clone() *Int {
 	return NewInt(v.Val())
 }
 
-// Set atomically stores <value> into t.value and returns the previous value of t.value.
+// Set atomically stores `value` into t.value and returns the previous value of t.value.
 func (v *Int) Set(value int) (old int) {
 	return int(atomic.SwapInt64(&v.value, int64(value)))
 }
@@ -43,7 +43,7 @@ func (v *Int) Val() int {
 	return int(atomic.LoadInt64(&v.value))
 }
 
-// Add atomically adds <delta> to t.value and returns the new value.
+// Add atomically adds `delta` to t.value and returns the new value.
 func (v *Int) Add(delta int) (new int) {
 	return int(atomic.AddInt64(&v.value, int64(delta)))
 }
@@ -60,16 +60,16 @@ func (v *Int) String() string {
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (v *Int) MarshalJSON() ([]byte, error) {
-	return gconv.UnsafeStrToBytes(strconv.Itoa(v.Val())), nil
+	return []byte(strconv.Itoa(v.Val())), nil
 }
 
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.
 func (v *Int) UnmarshalJSON(b []byte) error {
-	v.Set(gconv.Int(gconv.UnsafeBytesToStr(b)))
+	v.Set(gconv.Int(string(b)))
 	return nil
 }
 
-// UnmarshalValue is an interface implement which sets any type of value for <v>.
+// UnmarshalValue is an interface implement which sets any type of value for `v`.
 func (v *Int) UnmarshalValue(value interface{}) error {
 	v.Set(gconv.Int(value))
 	return nil

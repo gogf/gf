@@ -58,13 +58,13 @@ func Cfg(name ...string) *gcfg.Config {
 }
 
 // Resource returns an instance of Resource.
-// The parameter <name> is the name for the instance.
+// The parameter `name` is the name for the instance.
 func Resource(name ...string) *gres.Resource {
 	return gins.Resource(name...)
 }
 
 // I18n returns an instance of gi18n.Manager.
-// The parameter <name> is the name for the instance.
+// The parameter `name` is the name for the instance.
 func I18n(name ...string) *gi18n.Manager {
 	return gins.I18n(name...)
 }
@@ -76,7 +76,7 @@ func Res(name ...string) *gres.Resource {
 }
 
 // Log returns an instance of glog.Logger.
-// The parameter <name> is the name for the instance.
+// The parameter `name` is the name for the instance.
 func Log(name ...string) *glog.Logger {
 	return gins.Log(name...)
 }
@@ -89,7 +89,7 @@ func DB(name ...string) gdb.DB {
 // Table is alias of Model.
 // The database component is designed not only for
 // relational databases but also for NoSQL databases in the future. The name
-// "Table" is not proper for that purpose any more.
+// "Table" is not proper for that purpose anymore.
 // Deprecated, use Model instead.
 func Table(tableNameOrStruct ...interface{}) *gdb.Model {
 	return DB().Model(tableNameOrStruct...)
@@ -98,6 +98,11 @@ func Table(tableNameOrStruct ...interface{}) *gdb.Model {
 // Model creates and returns a model based on configuration of default database group.
 func Model(tableNameOrStruct ...interface{}) *gdb.Model {
 	return DB().Model(tableNameOrStruct...)
+}
+
+// ModelRaw creates and returns a model based on a raw sql not a table.
+func ModelRaw(rawSql string, args ...interface{}) *gdb.Model {
+	return DB().Raw(rawSql, args...)
 }
 
 // Redis returns an instance of redis client with specified configuration group name.

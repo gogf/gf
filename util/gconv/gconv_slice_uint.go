@@ -113,11 +113,16 @@ func Uints(any interface{}) []uint {
 			array[k] = Uint(v)
 		}
 	default:
-		if v, ok := any.(apiUints); ok {
+		if v, ok := any.(iUints); ok {
 			return v.Uints()
 		}
-		if v, ok := any.(apiInterfaces); ok {
+		if v, ok := any.(iInterfaces); ok {
 			return Uints(v.Interfaces())
+		}
+		// JSON format string value converting.
+		var result []uint
+		if checkJsonAndUnmarshalUseNumber(any, &result) {
+			return result
 		}
 		// Not a common type, it then uses reflection for conversion.
 		var reflectValue reflect.Value
@@ -143,6 +148,9 @@ func Uints(any interface{}) []uint {
 			return slice
 
 		default:
+			if reflectValue.IsZero() {
+				return []uint{}
+			}
 			return []uint{Uint(any)}
 		}
 	}
@@ -238,11 +246,16 @@ func Uint32s(any interface{}) []uint32 {
 			array[k] = Uint32(v)
 		}
 	default:
-		if v, ok := any.(apiUints); ok {
+		if v, ok := any.(iUints); ok {
 			return Uint32s(v.Uints())
 		}
-		if v, ok := any.(apiInterfaces); ok {
+		if v, ok := any.(iInterfaces); ok {
 			return Uint32s(v.Interfaces())
+		}
+		// JSON format string value converting.
+		var result []uint32
+		if checkJsonAndUnmarshalUseNumber(any, &result) {
+			return result
 		}
 		// Not a common type, it then uses reflection for conversion.
 		var reflectValue reflect.Value
@@ -268,6 +281,9 @@ func Uint32s(any interface{}) []uint32 {
 			return slice
 
 		default:
+			if reflectValue.IsZero() {
+				return []uint32{}
+			}
 			return []uint32{Uint32(any)}
 		}
 	}
@@ -363,11 +379,16 @@ func Uint64s(any interface{}) []uint64 {
 			array[k] = Uint64(v)
 		}
 	default:
-		if v, ok := any.(apiUints); ok {
+		if v, ok := any.(iUints); ok {
 			return Uint64s(v.Uints())
 		}
-		if v, ok := any.(apiInterfaces); ok {
+		if v, ok := any.(iInterfaces); ok {
 			return Uint64s(v.Interfaces())
+		}
+		// JSON format string value converting.
+		var result []uint64
+		if checkJsonAndUnmarshalUseNumber(any, &result) {
+			return result
 		}
 		// Not a common type, it then uses reflection for conversion.
 		var reflectValue reflect.Value
@@ -393,6 +414,9 @@ func Uint64s(any interface{}) []uint64 {
 			return slice
 
 		default:
+			if reflectValue.IsZero() {
+				return []uint64{}
+			}
 			return []uint64{Uint64(any)}
 		}
 	}
