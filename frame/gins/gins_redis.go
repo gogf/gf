@@ -56,7 +56,11 @@ func Redis(name ...string) *gredis.Redis {
 				if err != nil {
 					panic(err)
 				}
-				return gredis.New(redisConfig)
+				redisClient, err := gredis.New(redisConfig)
+				if err != nil {
+					panic(err)
+				}
+				return redisClient
 			} else {
 				panic(fmt.Sprintf(`missing configuration for redis group "%s"`, group))
 			}

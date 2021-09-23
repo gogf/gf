@@ -23,7 +23,7 @@ func Instance(name ...string) *Redis {
 	}
 	v := instances.GetOrSetFuncLock(group, func() interface{} {
 		if config, ok := GetConfig(group); ok {
-			r := New(config)
+			r := NewAdapterRedigo(config)
 			r.group = group
 			return r
 		}
