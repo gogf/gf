@@ -99,9 +99,9 @@ func (m *middleware) Next() {
 				loop = false
 			}
 		}, func(exception error) {
-			if e, ok := exception.(errorStack); ok {
+			if v, ok := exception.(error); ok && gerror.HasStack(v) {
 				// It's already an error that has stack info.
-				m.request.error = e
+				m.request.error = v
 			} else {
 				// Create a new error with stack info.
 				// Note that there's a skip pointing the start stacktrace

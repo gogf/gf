@@ -140,7 +140,7 @@ func New(config *Config) *Redis {
 
 // NewFromStr creates a redis client object with given configuration string.
 // Redis client maintains a connection pool automatically.
-// The parameter <str> like:
+// The parameter `str` like:
 // 127.0.0.1:6379,0
 // 127.0.0.1:6379,0,password
 func NewFromStr(str string) (*Redis, error) {

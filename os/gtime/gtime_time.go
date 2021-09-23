@@ -19,8 +19,8 @@ type Time struct {
 	wrapper
 }
 
-// apiUnixNano is an interface definition commonly for custom time.Time wrapper.
-type apiUnixNano interface {
+// iUnixNano is an interface definition commonly for custom time.Time wrapper.
+type iUnixNano interface {
 	UnixNano() int64
 }
 
@@ -69,7 +69,7 @@ func New(param ...interface{}) *Time {
 			return NewFromTimeStamp(r)
 
 		default:
-			if v, ok := r.(apiUnixNano); ok {
+			if v, ok := r.(iUnixNano); ok {
 				return NewFromTimeStamp(v.UnixNano())
 			}
 		}

@@ -75,8 +75,6 @@ func (sp *SPath) addToCache(filePath, rootPath string) {
 			for _, path := range files {
 				sp.cache.SetIfNotExist(sp.nameFromPath(path, rootPath), sp.makeCacheValue(path, gfile.IsDir(path)))
 			}
-		} else {
-			//fmt.Errorf(err.Error())
 		}
 	}
 }

@@ -15,7 +15,6 @@ import (
 
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/os/gtime"
 )
 
 // Session struct for storing single session data, which is bound to a single request.
@@ -23,7 +22,7 @@ import (
 // for functionality implements.
 type Session struct {
 	id      string          // Session id.
-	ctx     context.Context // Context for current session, note that: one session one context.
+	ctx     context.Context // Context for current session. Please note that, session live along with context.
 	data    *gmap.StrAnyMap // Session data.
 	dirty   bool            // Used to mark session is modified.
 	start   bool            // Used to mark session is started.
@@ -43,8 +42,8 @@ func (s *Session) init() {
 	var err error
 	if s.id != "" {
 		// Retrieve memory session data from manager.
-		if r, _ := s.manager.sessionData.Get(s.id); r != nil {
-			s.data = r.(*gmap.StrAnyMap)
+		if r, _ := s.manager.sessionData.Get(s.ctx, s.id); r != nil {
+			s.data = r.Val().(*gmap.StrAnyMap)
 			intlog.Print(s.ctx, "session init data:", s.data)
 		}
 		// Retrieve stored session data from storage.
@@ -251,7 +250,7 @@ func (s *Session) IsDirty() bool {
 // Get retrieves session value with given key.
 // It returns `def` if the key does not exist in the session if `def` is given,
 // or else it returns nil.
-func (s *Session) Get(key string, def ...interface{}) interface{} {
+func (s *Session) Get(key string, def ...interface{}) *gvar.Var {
 	if s.id == "" {
 		return nil
 	}
@@ -261,129 +260,13 @@ func (s *Session) Get(key string, def ...interface{}) interface{} {
 		intlog.Error(s.ctx, err)
 	}
 	if v != nil {
-		return v
+		return gvar.New(v)
 	}
 	if v := s.data.Get(key); v != nil {
-		return v
+		return gvar.New(v)
 	}
 	if len(def) > 0 {
-		return def[0]
+		return gvar.New(def[0])
 	}
 	return nil
-}
-
-func (s *Session) GetVar(key string, def ...interface{}) *gvar.Var {
-	return gvar.New(s.Get(key, def...), true)
-}
-
-func (s *Session) GetString(key string, def ...interface{}) string {
-	return s.GetVar(key, def...).String()
-}
-
-func (s *Session) GetBool(key string, def ...interface{}) bool {
-	return s.GetVar(key, def...).Bool()
-}
-
-func (s *Session) GetInt(key string, def ...interface{}) int {
-	return s.GetVar(key, def...).Int()
-}
-
-func (s *Session) GetInt8(key string, def ...interface{}) int8 {
-	return s.GetVar(key, def...).Int8()
-}
-
-func (s *Session) GetInt16(key string, def ...interface{}) int16 {
-	return s.GetVar(key, def...).Int16()
-}
-
-func (s *Session) GetInt32(key string, def ...interface{}) int32 {
-	return s.GetVar(key, def...).Int32()
-}
-
-func (s *Session) GetInt64(key string, def ...interface{}) int64 {
-	return s.GetVar(key, def...).Int64()
-}
-
-func (s *Session) GetUint(key string, def ...interface{}) uint {
-	return s.GetVar(key, def...).Uint()
-}
-
-func (s *Session) GetUint8(key string, def ...interface{}) uint8 {
-	return s.GetVar(key, def...).Uint8()
-}
-
-func (s *Session) GetUint16(key string, def ...interface{}) uint16 {
-	return s.GetVar(key, def...).Uint16()
-}
-
-func (s *Session) GetUint32(key string, def ...interface{}) uint32 {
-	return s.GetVar(key, def...).Uint32()
-}
-
-func (s *Session) GetUint64(key string, def ...interface{}) uint64 {
-	return s.GetVar(key, def...).Uint64()
-}
-
-func (s *Session) GetFloat32(key string, def ...interface{}) float32 {
-	return s.GetVar(key, def...).Float32()
-}
-
-func (s *Session) GetFloat64(key string, def ...interface{}) float64 {
-	return s.GetVar(key, def...).Float64()
-}
-
-func (s *Session) GetBytes(key string, def ...interface{}) []byte {
-	return s.GetVar(key, def...).Bytes()
-}
-
-func (s *Session) GetInts(key string, def ...interface{}) []int {
-	return s.GetVar(key, def...).Ints()
-}
-
-func (s *Session) GetFloats(key string, def ...interface{}) []float64 {
-	return s.GetVar(key, def...).Floats()
-}
-
-func (s *Session) GetStrings(key string, def ...interface{}) []string {
-	return s.GetVar(key, def...).Strings()
-}
-
-func (s *Session) GetInterfaces(key string, def ...interface{}) []interface{} {
-	return s.GetVar(key, def...).Interfaces()
-}
-
-func (s *Session) GetTime(key string, format ...string) time.Time {
-	return s.GetVar(key).Time(format...)
-}
-
-func (s *Session) GetGTime(key string, format ...string) *gtime.Time {
-	return s.GetVar(key).GTime(format...)
-}
-
-func (s *Session) GetDuration(key string, def ...interface{}) time.Duration {
-	return s.GetVar(key, def...).Duration()
-}
-
-func (s *Session) GetMap(key string, tags ...string) map[string]interface{} {
-	return s.GetVar(key).Map(tags...)
-}
-
-func (s *Session) GetMapDeep(key string, tags ...string) map[string]interface{} {
-	return s.GetVar(key).MapDeep(tags...)
-}
-
-func (s *Session) GetMaps(key string, tags ...string) []map[string]interface{} {
-	return s.GetVar(key).Maps(tags...)
-}
-
-func (s *Session) GetMapsDeep(key string, tags ...string) []map[string]interface{} {
-	return s.GetVar(key).MapsDeep(tags...)
-}
-
-func (s *Session) GetStruct(key string, pointer interface{}, mapping ...map[string]string) error {
-	return s.GetVar(key).Struct(pointer, mapping...)
-}
-
-func (s *Session) GetStructs(key string, pointer interface{}, mapping ...map[string]string) error {
-	return s.GetVar(key).Structs(pointer, mapping...)
 }

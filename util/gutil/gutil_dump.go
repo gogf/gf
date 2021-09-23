@@ -15,18 +15,18 @@ import (
 	"reflect"
 )
 
-// apiVal is used for type assert api for Val().
-type apiVal interface {
+// iVal is used for type assert api for Val().
+type iVal interface {
 	Val() interface{}
 }
 
-// apiString is used for type assert api for String().
-type apiString interface {
+// iString is used for type assert api for String().
+type iString interface {
 	String() string
 }
 
-// apiMapStrAny is the interface support for converting struct parameter to map.
-type apiMapStrAny interface {
+// iMapStrAny is the interface support for converting struct parameter to map.
+type iMapStrAny interface {
 	MapStrAny() map[string]interface{}
 }
 
@@ -63,14 +63,14 @@ func Export(i ...interface{}) string {
 				value = gconv.Map(value)
 			case reflect.Struct:
 				converted := false
-				if r, ok := value.(apiVal); ok {
+				if r, ok := value.(iVal); ok {
 					if result := r.Val(); result != nil {
 						value = result
 						converted = true
 					}
 				}
 				if !converted {
-					if r, ok := value.(apiMapStrAny); ok {
+					if r, ok := value.(iMapStrAny); ok {
 						if result := r.MapStrAny(); result != nil {
 							value = result
 							converted = true
@@ -78,7 +78,7 @@ func Export(i ...interface{}) string {
 					}
 				}
 				if !converted {
-					if r, ok := value.(apiString); ok {
+					if r, ok := value.(iString); ok {
 						value = r.String()
 					}
 				}

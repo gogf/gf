@@ -1991,3 +1991,44 @@ PRIMARY KEY (id)
 		t.Assert(user.UserScores[4].Score, 5)
 	})
 }
+
+func Test_With_Feature_Issue1401(t *testing.T) {
+	var (
+		table1 = "parcels"
+		table2 = "parcel_items"
+	)
+	array := gstr.SplitAndTrim(gtest.TestDataContent(`issue1401.sql`), ";")
+	for _, v := range array {
+		if _, err := db.Exec(v); err != nil {
+			gtest.Error(err)
+		}
+	}
+	defer dropTable(table1)
+	defer dropTable(table2)
+
+	gtest.C(t, func(t *gtest.T) {
+		type NItem struct {
+			Id       int `json:"id"`
+			ParcelId int `json:"parcel_id"`
+		}
+
+		type ParcelItem struct {
+			gmeta.Meta `orm:"table:parcel_items"`
+			NItem
+		}
+
+		type ParcelRsp struct {
+			gmeta.Meta `orm:"table:parcels"`
+			Id         int           `json:"id"`
+			Items      []*ParcelItem `json:"items" orm:"with:parcel_id=Id"`
+		}
+
+		parcelDetail := &ParcelRsp{}
+		err := db.Model(table1).With(parcelDetail.Items).Where("id", 3).Scan(&parcelDetail)
+		t.AssertNil(err)
+		t.Assert(parcelDetail.Id, 3)
+		t.Assert(len(parcelDetail.Items), 1)
+		t.Assert(parcelDetail.Items[0].Id, 2)
+		t.Assert(parcelDetail.Items[0].ParcelId, 3)
+	})
+}

@@ -21,7 +21,7 @@ type Set struct {
 }
 
 // New create and returns a new set, which contains un-repeated items.
-// The parameter <safe> is used to specify whether using set in concurrent-safety,
+// The parameter `safe` is used to specify whether using set in concurrent-safety,
 // which is false in default.
 func New(safe ...bool) *Set {
 	return NewSet(safe...)
@@ -35,8 +35,8 @@ func NewSet(safe ...bool) *Set {
 	}
 }
 
-// NewFrom returns a new set from <items>.
-// Parameter <items> can be either a variable of any type, or a slice.
+// NewFrom returns a new set from `items`.
+// Parameter `items` can be either a variable of any type, or a slice.
 func NewFrom(items interface{}, safe ...bool) *Set {
 	m := make(map[interface{}]struct{})
 	for _, v := range gconv.Interfaces(items) {
@@ -48,8 +48,8 @@ func NewFrom(items interface{}, safe ...bool) *Set {
 	}
 }
 
-// Iterator iterates the set readonly with given callback function <f>,
-// if <f> returns true then continue iterating; or false to stop.
+// Iterator iterates the set readonly with given callback function `f`,
+// if `f` returns true then continue iterating; or false to stop.
 func (set *Set) Iterator(f func(v interface{}) bool) {
 	set.mu.RLock()
 	defer set.mu.RUnlock()
@@ -76,7 +76,7 @@ func (set *Set) Add(items ...interface{}) {
 // it adds the item to set and returns true if it does not exists in the set,
 // or else it does nothing and returns false.
 //
-// Note that, if <item> is nil, it does nothing and returns false.
+// Note that, if `item` is nil, it does nothing and returns false.
 func (set *Set) AddIfNotExist(item interface{}) bool {
 	if item == nil {
 		return false
@@ -97,9 +97,9 @@ func (set *Set) AddIfNotExist(item interface{}) bool {
 
 // AddIfNotExistFunc checks whether item exists in the set,
 // it adds the item to set and returns true if it does not exists in the set and
-// function <f> returns true, or else it does nothing and returns false.
+// function `f` returns true, or else it does nothing and returns false.
 //
-// Note that, if <item> is nil, it does nothing and returns false. The function <f>
+// Note that, if <item> is nil, it does nothing and returns false. The function `f`
 // is executed without writing lock.
 func (set *Set) AddIfNotExistFunc(item interface{}, f func() bool) bool {
 	if item == nil {
@@ -123,9 +123,9 @@ func (set *Set) AddIfNotExistFunc(item interface{}, f func() bool) bool {
 
 // AddIfNotExistFunc checks whether item exists in the set,
 // it adds the item to set and returns true if it does not exists in the set and
-// function <f> returns true, or else it does nothing and returns false.
+// function `f` returns true, or else it does nothing and returns false.
 //
-// Note that, if <item> is nil, it does nothing and returns false. The function <f>
+// Note that, if <item> is nil, it does nothing and returns false. The function `f`
 // is executed within writing lock.
 func (set *Set) AddIfNotExistFuncLock(item interface{}, f func() bool) bool {
 	if item == nil {
@@ -147,7 +147,7 @@ func (set *Set) AddIfNotExistFuncLock(item interface{}, f func() bool) bool {
 	return false
 }
 
-// Contains checks whether the set contains <item>.
+// Contains checks whether the set contains `item`.
 func (set *Set) Contains(item interface{}) bool {
 	var ok bool
 	set.mu.RLock()
@@ -158,7 +158,7 @@ func (set *Set) Contains(item interface{}) bool {
 	return ok
 }
 
-// Remove deletes <item> from set.
+// Remove deletes `item` from set.
 func (set *Set) Remove(item interface{}) {
 	set.mu.Lock()
 	if set.data != nil {
@@ -197,7 +197,7 @@ func (set *Set) Slice() []interface{} {
 	return ret
 }
 
-// Join joins items with a string <glue>.
+// Join joins items with a string `glue`.
 func (set *Set) Join(glue string) string {
 	set.mu.RLock()
 	defer set.mu.RUnlock()
@@ -246,14 +246,14 @@ func (set *Set) String() string {
 	return buffer.String()
 }
 
-// LockFunc locks writing with callback function <f>.
+// LockFunc locks writing with callback function `f`.
 func (set *Set) LockFunc(f func(m map[interface{}]struct{})) {
 	set.mu.Lock()
 	defer set.mu.Unlock()
 	f(set.data)
 }
 
-// RLockFunc locks reading with callback function <f>.
+// RLockFunc locks reading with callback function `f`.
 func (set *Set) RLockFunc(f func(m map[interface{}]struct{})) {
 	set.mu.RLock()
 	defer set.mu.RUnlock()
@@ -280,7 +280,7 @@ func (set *Set) Equal(other *Set) bool {
 	return true
 }
 
-// IsSubsetOf checks whether the current set is a sub-set of <other>.
+// IsSubsetOf checks whether the current set is a sub-set of `other`.
 func (set *Set) IsSubsetOf(other *Set) bool {
 	if set == other {
 		return true
@@ -297,8 +297,8 @@ func (set *Set) IsSubsetOf(other *Set) bool {
 	return true
 }
 
-// Union returns a new set which is the union of <set> and <others>.
-// Which means, all the items in <newSet> are in <set> or in <others>.
+// Union returns a new set which is the union of <set> and `others`.
+// Which means, all the items in <newSet> are in <set> or in `others`.
 func (set *Set) Union(others ...*Set) (newSet *Set) {
 	newSet = NewSet()
 	set.mu.RLock()
@@ -323,8 +323,8 @@ func (set *Set) Union(others ...*Set) (newSet *Set) {
 	return
 }
 
-// Diff returns a new set which is the difference set from <set> to <others>.
-// Which means, all the items in <newSet> are in <set> but not in <others>.
+// Diff returns a new set which is the difference set from <set> to `others`.
+// Which means, all the items in <newSet> are in <set> but not in `others`.
 func (set *Set) Diff(others ...*Set) (newSet *Set) {
 	newSet = NewSet()
 	set.mu.RLock()
@@ -344,8 +344,8 @@ func (set *Set) Diff(others ...*Set) (newSet *Set) {
 	return
 }
 
-// Intersect returns a new set which is the intersection from <set> to <others>.
-// Which means, all the items in <newSet> are in <set> and also in <others>.
+// Intersect returns a new set which is the intersection from <set> to `others`.
+// Which means, all the items in <newSet> are in <set> and also in `others`.
 func (set *Set) Intersect(others ...*Set) (newSet *Set) {
 	newSet = NewSet()
 	set.mu.RLock()
@@ -366,11 +366,11 @@ func (set *Set) Intersect(others ...*Set) (newSet *Set) {
 	return
 }
 
-// Complement returns a new set which is the complement from <set> to <full>.
-// Which means, all the items in <newSet> are in <full> and not in <set>.
+// Complement returns a new set which is the complement from <set> to `full`.
+// Which means, all the items in <newSet> are in <full> and not in `set`.
 //
-// It returns the difference between <full> and <set>
-// if the given set <full> is not the full set of <set>.
+// It returns the difference between <full> and `set`
+// if the given set <full> is not the full set of `set`.
 func (set *Set) Complement(full *Set) (newSet *Set) {
 	newSet = NewSet()
 	set.mu.RLock()
@@ -387,7 +387,7 @@ func (set *Set) Complement(full *Set) (newSet *Set) {
 	return
 }
 
-// Merge adds items from <others> sets into <set>.
+// Merge adds items from <others> sets into `set`.
 func (set *Set) Merge(others ...*Set) *Set {
 	set.mu.Lock()
 	defer set.mu.Unlock()
@@ -428,7 +428,7 @@ func (set *Set) Pop() interface{} {
 	return nil
 }
 
-// Pops randomly pops <size> items from set.
+// Pops randomly pops `size` items from set.
 // It returns all items if size == -1.
 func (set *Set) Pops(size int) []interface{} {
 	set.mu.Lock()
@@ -452,7 +452,7 @@ func (set *Set) Pops(size int) []interface{} {
 	return array
 }
 
-// Walk applies a user supplied function <f> to every item of set.
+// Walk applies a user supplied function `f` to every item of set.
 func (set *Set) Walk(f func(item interface{}) interface{}) *Set {
 	set.mu.Lock()
 	defer set.mu.Unlock()

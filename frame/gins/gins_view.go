@@ -18,7 +18,7 @@ const (
 )
 
 // View returns an instance of View with default settings.
-// The parameter <name> is the name for the instance.
+// The parameter `name` is the name for the instance.
 func View(name ...string) *gview.View {
 	instanceName := gview.DefaultName
 	if len(name) > 0 && name[0] != "" {

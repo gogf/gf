@@ -22,7 +22,7 @@ func Interfaces(any interface{}) []interface{} {
 	}
 	if r, ok := any.([]interface{}); ok {
 		return r
-	} else if r, ok := any.(apiInterfaces); ok {
+	} else if r, ok := any.(iInterfaces); ok {
 		return r.Interfaces()
 	} else {
 		var array []interface{}

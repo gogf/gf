@@ -9,6 +9,7 @@ package gsession
 import (
 	"context"
 	"github.com/gogf/gf/container/gmap"
+	"github.com/gogf/gf/internal/intlog"
 	"time"
 
 	"github.com/gogf/gf/os/gcache"
@@ -20,7 +21,7 @@ type Manager struct {
 	storage Storage       // Storage interface for session storage.
 
 	// sessionData is the memory data cache for session TTL,
-	// which is available only if the Storage does not stores any session data in synchronizing.
+	// which is available only if the Storage does not store any session data in synchronizing.
 	// Please refer to the implements of StorageFile, StorageMemory and StorageRedis.
 	sessionData *gcache.Cache
 }
@@ -71,5 +72,9 @@ func (m *Manager) TTL() time.Duration {
 
 // UpdateSessionTTL updates the ttl for given session.
 func (m *Manager) UpdateSessionTTL(sessionId string, data *gmap.StrAnyMap) {
-	m.sessionData.Set(sessionId, data, m.ttl)
+	ctx := context.Background()
+	err := m.sessionData.Set(ctx, sessionId, data, m.ttl)
+	if err != nil {
+		intlog.Error(ctx, err)
+	}
 }

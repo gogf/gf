@@ -8,7 +8,6 @@ package gjson
 
 import (
 	"bytes"
-	"fmt"
 	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"reflect"
@@ -260,12 +259,14 @@ func doLoadContentWithOptions(dataType string, data []byte, options Options) (*J
 		if data, err = gtoml.ToJson(data); err != nil {
 			return nil, err
 		}
+
 	case "ini", ".ini":
 		if data, err = gini.ToJson(data); err != nil {
 			return nil, err
 		}
+
 	default:
-		err = gerror.NewCode(gcode.CodeInvalidParameter, "unsupported type for loading")
+		err = gerror.NewCodef(gcode.CodeInvalidParameter, `unsupported type "%s" for loading`, dataType)
 	}
 	if err != nil {
 		return nil, err
@@ -279,7 +280,7 @@ func doLoadContentWithOptions(dataType string, data []byte, options Options) (*J
 	}
 	switch result.(type) {
 	case string, []byte:
-		return nil, fmt.Errorf(`json decoding failed for content: %s`, string(data))
+		return nil, gerror.NewCodef(gcode.CodeInternalError, `json decoding failed for content: %s`, data)
 	}
 	return NewWithOptions(result, options), nil
 }

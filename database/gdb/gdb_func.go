@@ -31,28 +31,28 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
-// apiString is the type assert api for String.
-type apiString interface {
+// iString is the type assert api for String.
+type iString interface {
 	String() string
 }
 
-// apiIterator is the type assert api for Iterator.
-type apiIterator interface {
+// iIterator is the type assert api for Iterator.
+type iIterator interface {
 	Iterator(f func(key, value interface{}) bool)
 }
 
-// apiInterfaces is the type assert api for Interfaces.
-type apiInterfaces interface {
+// iInterfaces is the type assert api for Interfaces.
+type iInterfaces interface {
 	Interfaces() []interface{}
 }
 
-// apiMapStrAny is the interface support for converting struct parameter to map.
-type apiMapStrAny interface {
+// iMapStrAny is the interface support for converting struct parameter to map.
+type iMapStrAny interface {
 	MapStrAny() map[string]interface{}
 }
 
-// apiTableName is the interface for retrieving table name fro struct.
-type apiTableName interface {
+// iTableName is the interface for retrieving table name fro struct.
+type iTableName interface {
 	TableName() string
 }
 
@@ -104,7 +104,7 @@ func (m *Model) guessPrimaryTableName(tableStr string) string {
 func getTableNameFromOrmTag(object interface{}) string {
 	var tableName string
 	// Use the interface value.
-	if r, ok := object.(apiTableName); ok {
+	if r, ok := object.(iTableName); ok {
 		tableName = r.TableName()
 	}
 	// User meta data tag "orm".
@@ -222,7 +222,7 @@ func ConvertDataForTableRecord(value interface{}) map[string]interface{} {
 
 			default:
 				// Use string conversion in default.
-				if s, ok := v.(apiString); ok {
+				if s, ok := v.(iString); ok {
 					data[k] = s.String()
 				} else {
 					// Convert the value to JSON.
@@ -246,7 +246,7 @@ func DataToMapDeep(value interface{}) map[string]interface{} {
 
 		default:
 			// Use string conversion in default.
-			if s, ok := v.(apiString); ok {
+			if s, ok := v.(iString); ok {
 				m[k] = s.String()
 			} else {
 				m[k] = v
@@ -457,11 +457,11 @@ func formatWhere(db DB, in formatWhereInput) (newWhere string, newArgs []interfa
 		}
 
 	case reflect.Struct:
-		// If `where` struct implements apiIterator interface,
+		// If `where` struct implements iIterator interface,
 		// it then uses its Iterate function to iterate its key-value pairs.
 		// For example, ListMap and TreeMap are ordered map,
-		// which implement apiIterator interface and are index-friendly for where conditions.
-		if iterator, ok := in.Where.(apiIterator); ok {
+		// which implement iIterator interface and are index-friendly for where conditions.
+		if iterator, ok := in.Where.(iIterator); ok {
 			iterator.Iterator(func(key, value interface{}) bool {
 				ketStr := gconv.String(key)
 				if gregex.IsMatchString(regularFieldNameRegPattern, ketStr) {
@@ -764,7 +764,7 @@ func handleArguments(sql string, args []interface{}) (newSql string, newArgs []i
 				default:
 					// It converts the struct to string in default
 					// if it has implemented the String interface.
-					if v, ok := arg.(apiString); ok {
+					if v, ok := arg.(iString); ok {
 						newArgs = append(newArgs, v.String())
 						continue
 					}

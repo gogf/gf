@@ -3,26 +3,22 @@ package main
 import (
 	"fmt"
 	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/os/gctx"
 )
 
 func main() {
-	db := g.DB()
+	var (
+		db  = g.DB()
+		ctx = gctx.New()
+	)
 	// 开启调试模式，以便于记录所有执行的SQL
 	db.SetDebug(true)
 
-	r, e := db.GetAll("SELECT * from `user` where id in(?)", g.Slice{})
+	r, e := db.Ctx(ctx).GetAll("SELECT * from `user` where id in(?)", g.Slice{})
 	if e != nil {
 		fmt.Println(e)
 	}
 	if r != nil {
 		fmt.Println(r)
 	}
-	return
-	//r, e := db.Table("user").Where("id in(?)", g.Slice{}).All()
-	//if e != nil {
-	//	fmt.Println(e)
-	//}
-	//if r != nil {
-	//	fmt.Println(r.List())
-	//}
 }

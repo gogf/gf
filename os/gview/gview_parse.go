@@ -10,26 +10,23 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/encoding/ghash"
 	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/gfsnotify"
+	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/os/gmlock"
+	"github.com/gogf/gf/os/gres"
+	"github.com/gogf/gf/os/gspath"
 	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/gutil"
 	htmltpl "html/template"
 	"strconv"
 	"strings"
 	texttpl "text/template"
-
-	"github.com/gogf/gf/os/gres"
-
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/os/gspath"
 )
 
 const (
@@ -71,7 +68,7 @@ func (view *View) Parse(ctx context.Context, file string, params ...Params) (res
 			return nil
 		}
 		if resource != nil {
-			content = gconv.UnsafeBytesToStr(resource.Content())
+			content = string(resource.Content())
 		} else {
 			content = gfile.GetContentsWithCache(path)
 		}
