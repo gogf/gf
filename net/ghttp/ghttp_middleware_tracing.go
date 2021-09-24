@@ -8,19 +8,21 @@ package ghttp
 
 import (
 	"fmt"
+	"io/ioutil"
+	"net/http"
+
 	"github.com/gogf/gf"
 	"github.com/gogf/gf/internal/utils"
 	"github.com/gogf/gf/net/ghttp/internal/client"
 	"github.com/gogf/gf/net/ghttp/internal/httputil"
 	"github.com/gogf/gf/net/gtrace"
 	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/util/gconv"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
-	"io/ioutil"
-	"net/http"
 )
 
 const (
@@ -56,8 +58,8 @@ func MiddlewareServerTracing(r *Request) {
 	r.Body = utils.NewReadCloser(reqBodyContentBytes, false)
 
 	span.AddEvent(tracingEventHttpRequest, trace.WithAttributes(
-		attribute.Any(tracingEventHttpRequestHeaders, httputil.HeaderToMap(r.Header)),
-		attribute.Any(tracingEventHttpRequestBaggage, gtrace.GetBaggageMap(ctx)),
+		attribute.String(tracingEventHttpRequestHeaders, gconv.String(httputil.HeaderToMap(r.Header))),
+		attribute.String(tracingEventHttpRequestBaggage, gtrace.GetBaggageMap(ctx).String()),
 		attribute.String(tracingEventHttpRequestBody, gstr.StrLimit(
 			string(reqBodyContentBytes),
 			gtrace.MaxContentLogSize(),
@@ -82,7 +84,7 @@ func MiddlewareServerTracing(r *Request) {
 	)
 
 	span.AddEvent(tracingEventHttpResponse, trace.WithAttributes(
-		attribute.Any(tracingEventHttpResponseHeaders, httputil.HeaderToMap(r.Response.Header())),
+		attribute.String(tracingEventHttpResponseHeaders, gconv.String(httputil.HeaderToMap(r.Response.Header()))),
 		attribute.String(tracingEventHttpResponseBody, resBodyContent),
 	))
 	return

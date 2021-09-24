@@ -106,7 +106,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 	)
 
 	// Default domain has the most priority when iteration.
-	for _, domain := range []string{defaultDomainName, domain} {
+	for _, domain := range []string{DefaultDomainName, domain} {
 		p, ok := s.serveTree[domain]
 		if !ok {
 			continue

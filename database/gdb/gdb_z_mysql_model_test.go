@@ -1225,7 +1225,7 @@ func Test_Model_GroupBy(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).GroupBy("id").Select()
+		result, err := db.Model(table).Group("id").All()
 		t.AssertNil(err)
 		t.Assert(len(result), TableSize)
 		t.Assert(result[0]["nickname"].String(), "name_1")

@@ -92,8 +92,8 @@ func (r *Response) buildInVars(params ...map[string]interface{}) map[string]inte
 	})
 	// Note that it should assign no Config variable to template
 	// if there's no configuration file.
-	if c := gcfg.Instance(); c.Available() {
-		m["Config"] = c.Map()
+	if v, _ := gcfg.Instance().Data(r.Request.Context()); len(v) > 0 {
+		m["Config"] = v
 	}
 	return m
 }

@@ -9,6 +9,7 @@ package gins_test
 import (
 	"github.com/gogf/gf/debug/gdebug"
 	"github.com/gogf/gf/frame/gins"
+	"github.com/gogf/gf/os/gcfg"
 	"github.com/gogf/gf/os/gtime"
 	"testing"
 	"time"
@@ -32,10 +33,10 @@ func Test_Database(t *testing.T) {
 		err = gfile.PutContents(gfile.Join(dirPath, name), databaseContent)
 		t.Assert(err, nil)
 
-		err = gins.Config().AddPath(dirPath)
+		err = gins.Config().GetAdapter().(*gcfg.AdapterFile).AddPath(dirPath)
 		t.Assert(err, nil)
 
-		defer gins.Config().Clear()
+		defer gins.Config().GetAdapter().(*gcfg.AdapterFile).Clear()
 
 		// for gfsnotify callbacks to refresh cache of config file
 		time.Sleep(500 * time.Millisecond)

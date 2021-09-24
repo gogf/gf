@@ -32,7 +32,7 @@ func StartPProfServer(port int, pattern ...string) {
 
 // EnablePProf enables PProf feature for server.
 func (s *Server) EnablePProf(pattern ...string) {
-	s.Domain(defaultDomainName).EnablePProf(pattern...)
+	s.Domain(DefaultDomainName).EnablePProf(pattern...)
 }
 
 // EnablePProf enables PProf feature for server of specified domain.

@@ -20,7 +20,7 @@ import (
 //
 // GetRequest is one of the most commonly used functions for retrieving parameters.
 //
-// Note that if there're multiple parameters with the same name, the parameters are
+// Note that if there are multiple parameters with the same name, the parameters are
 // retrieved and overwrote in order of priority: router < query < body < form < custom.
 func (r *Request) GetRequest(key string, def ...interface{}) interface{} {
 	value := r.GetParam(key)
@@ -167,7 +167,7 @@ func (r *Request) GetRequestInterfaces(key string, def ...interface{}) []interfa
 //
 // GetRequestMap is one of the most commonly used functions for retrieving parameters.
 //
-// Note that if there're multiple parameters with the same name, the parameters are retrieved
+// Note that if there are multiple parameters with the same name, the parameters are retrieved
 // and overwrote in order of priority: router < query < body < form < custom.
 func (r *Request) GetRequestMap(kvMap ...map[string]interface{}) map[string]interface{} {
 	r.parseQuery()
