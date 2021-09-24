@@ -9,6 +9,9 @@ package gtrace
 
 import (
 	"context"
+	"os"
+	"strings"
+
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/net/gipv4"
@@ -17,8 +20,6 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
-	"os"
-	"strings"
 )
 
 const (

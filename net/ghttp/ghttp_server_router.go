@@ -39,7 +39,7 @@ func (s *Server) routerMapKey(hook, method, path, domain string) string {
 // parsePattern parses the given pattern to domain, method and path variable.
 func (s *Server) parsePattern(pattern string) (domain, method, path string, err error) {
 	path = strings.TrimSpace(pattern)
-	domain = defaultDomainName
+	domain = DefaultDomainName
 	method = defaultMethod
 	if array, err := gregex.MatchString(`([a-zA-Z]+):(.+)`, pattern); len(array) > 1 && err == nil {
 		path = strings.TrimSpace(array[2])

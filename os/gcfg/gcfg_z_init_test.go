@@ -4,11 +4,12 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gtype provides high performance and concurrent-safe basic variable types.
-package gtype
+// go test *.go -bench=".*" -benchmem
 
-// New is alias of NewInterface.
-// See NewInterface.
-func New(value ...interface{}) *Interface {
-	return NewInterface(value...)
-}
+package gcfg_test
+
+import "context"
+
+var (
+	ctx = context.TODO()
+)

@@ -95,39 +95,7 @@ func Test_Params_Basic(t *testing.T) {
 			r.Response.Write(r.GetMapStrStr()["a"])
 		}
 	})
-	// POST
-	s.BindHandler("/post", func(r *ghttp.Request) {
-		if r.GetPost("array") != nil {
-			r.Response.Write(r.GetPost("array"))
-		}
-		if r.GetPost("slice") != nil {
-			r.Response.Write(r.GetPost("slice"))
-		}
-		if r.GetPost("bool") != nil {
-			r.Response.Write(r.GetPostBool("bool"))
-		}
-		if r.GetPost("float32") != nil {
-			r.Response.Write(r.GetPostFloat32("float32"))
-		}
-		if r.GetPost("float64") != nil {
-			r.Response.Write(r.GetPostFloat64("float64"))
-		}
-		if r.GetPost("int") != nil {
-			r.Response.Write(r.GetPostInt("int"))
-		}
-		if r.GetPost("uint") != nil {
-			r.Response.Write(r.GetPostUint("uint"))
-		}
-		if r.GetPost("string") != nil {
-			r.Response.Write(r.GetPostString("string"))
-		}
-		if r.GetPost("map") != nil {
-			r.Response.Write(r.GetPostMap()["map"].(map[string]interface{})["b"])
-		}
-		if r.GetPost("a") != nil {
-			r.Response.Write(r.GetPostMapStrStr()["a"])
-		}
-	})
+
 	// DELETE
 	s.BindHandler("/delete", func(r *ghttp.Request) {
 		if r.Get("array") != nil {
@@ -330,21 +298,6 @@ func Test_Params_Basic(t *testing.T) {
 		t.Assert(client.PutContent("/put", "map[a]=1&map[b]=2"), `2`)
 		t.Assert(client.PutContent("/put", "a=1&b=2"), `1`)
 
-		// POST
-		t.Assert(client.PostContent("/post", "array[]=1&array[]=2"), `["1","2"]`)
-		t.Assert(client.PostContent("/post", "slice=1&slice=2"), `2`)
-		t.Assert(client.PostContent("/post", "bool=1"), `true`)
-		t.Assert(client.PostContent("/post", "bool=0"), `false`)
-		t.Assert(client.PostContent("/post", "float32=0.11"), `0.11`)
-		t.Assert(client.PostContent("/post", "float64=0.22"), `0.22`)
-		t.Assert(client.PostContent("/post", "int=-10000"), `-10000`)
-		t.Assert(client.PostContent("/post", "int=10000"), `10000`)
-		t.Assert(client.PostContent("/post", "uint=10000"), `10000`)
-		t.Assert(client.PostContent("/post", "uint=9"), `9`)
-		t.Assert(client.PostContent("/post", "string=key"), `key`)
-		t.Assert(client.PostContent("/post", "map[a]=1&map[b]=2"), `2`)
-		t.Assert(client.PostContent("/post", "a=1&b=2"), `1`)
-
 		// DELETE
 		t.Assert(client.DeleteContent("/delete", "array[]=1&array[]=2"), `["1","2"]`)
 		t.Assert(client.DeleteContent("/delete", "slice=1&slice=2"), `2`)
@@ -458,9 +411,6 @@ func Test_Params_Priority(t *testing.T) {
 	s.BindHandler("/query", func(r *ghttp.Request) {
 		r.Response.Write(r.GetQuery("a"))
 	})
-	s.BindHandler("/post", func(r *ghttp.Request) {
-		r.Response.Write(r.GetPost("a"))
-	})
 	s.BindHandler("/form", func(r *ghttp.Request) {
 		r.Response.Write(r.GetForm("a"))
 	})
@@ -485,7 +435,6 @@ func Test_Params_Priority(t *testing.T) {
 		client.SetPrefix(prefix)
 
 		t.Assert(client.GetContent("/query?a=1", "a=100"), "100")
-		t.Assert(client.PostContent("/post?a=1", "a=100"), "100")
 		t.Assert(client.PostContent("/form?a=1", "a=100"), "100")
 		t.Assert(client.PutContent("/form?a=1", "a=100"), "100")
 		t.Assert(client.GetContent("/request?a=1", "a=100"), "100")

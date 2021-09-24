@@ -13,9 +13,11 @@ import (
 	"github.com/gogf/gf/test/gtest"
 )
 
-var urlStr string = `https://golang.org/x/crypto?go-get=1 +`
-var urlEncode string = `https%3A%2F%2Fgolang.org%2Fx%2Fcrypto%3Fgo-get%3D1+%2B`
-var rawUrlEncode string = `https%3A%2F%2Fgolang.org%2Fx%2Fcrypto%3Fgo-get%3D1%20%2B`
+var (
+	urlStr       = `https://golang.org/x/crypto?go-get=1 +`
+	urlEncode    = `https%3A%2F%2Fgolang.org%2Fx%2Fcrypto%3Fgo-get%3D1+%2B`
+	rawUrlEncode = `https%3A%2F%2Fgolang.org%2Fx%2Fcrypto%3Fgo-get%3D1%20%2B`
+)
 
 func TestEncodeAndDecode(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {

@@ -88,7 +88,7 @@ func serverProcessInit() {
 // Note that the parameter <name> should be unique for different servers. It returns an existing
 // server instance if given <name> is already existing in the server mapping.
 func GetServer(name ...interface{}) *Server {
-	serverName := defaultServerName
+	serverName := DefaultServerName
 	if len(name) > 0 && name[0] != "" {
 		serverName = gconv.String(name[0])
 	}

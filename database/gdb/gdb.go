@@ -265,6 +265,7 @@ type (
 )
 
 const (
+	defaultModelSafe        = false
 	queryTypeNormal         = 0
 	queryTypeCount          = 1
 	unionTypeNormal         = 0

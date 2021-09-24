@@ -7,6 +7,7 @@
 package gdb
 
 import (
+	"database/sql"
 	"fmt"
 	"github.com/gogf/gf/errors/gcode"
 	"reflect"
@@ -156,7 +157,8 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 			model = model.Order(parsedTagOutput.Order)
 		}
 		err = model.Fields(fieldKeys).Where(relatedSourceName, relatedTargetValue).Scan(bindToReflectValue)
-		if err != nil {
+		// It ignores sql.ErrNoRows in with feature.
+		if err != nil && err != sql.ErrNoRows {
 			return err
 		}
 	}
@@ -265,7 +267,8 @@ func (m *Model) doWithScanStructs(pointer interface{}) error {
 		err = model.Fields(fieldKeys).
 			Where(relatedSourceName, relatedTargetValue).
 			ScanList(pointer, fieldName, parsedTagOutput.With)
-		if err != nil {
+		// It ignores sql.ErrNoRows in with feature.
+		if err != nil && err != sql.ErrNoRows {
 			return err
 		}
 	}

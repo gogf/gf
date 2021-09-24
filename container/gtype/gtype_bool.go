@@ -51,7 +51,7 @@ func (v *Bool) Set(value bool) (old bool) {
 	return
 }
 
-// Val atomically loads and returns t.valueue.
+// Val atomically loads and returns t.value.
 func (v *Bool) Val() bool {
 	return atomic.LoadInt32(&v.value) > 0
 }

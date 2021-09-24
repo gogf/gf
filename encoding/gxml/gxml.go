@@ -10,7 +10,7 @@ package gxml
 import (
 	"strings"
 
-	"github.com/clbanning/mxj"
+	"github.com/clbanning/mxj/v2"
 	"github.com/gogf/gf/encoding/gcharset"
 	"github.com/gogf/gf/text/gregex"
 )
@@ -48,7 +48,7 @@ func Encode(m map[string]interface{}, rootTag ...string) ([]byte, error) {
 	return mxj.Map(m).Xml(rootTag...)
 }
 
-// Encode encodes map <m> to a XML format content as bytes with indent.
+// EncodeWithIndent encodes map <m> to an XML format content as bytes with indent.
 // The optional parameter <rootTag> is used to specify the XML root tag.
 func EncodeWithIndent(m map[string]interface{}, rootTag ...string) ([]byte, error) {
 	return mxj.Map(m).XmlIndent("", "\t", rootTag...)
@@ -68,7 +68,7 @@ func ToJson(content []byte) ([]byte, error) {
 	}
 }
 
-// convert converts the encoding of given XML content from XML root tag into UTF-8 encoding content.
+// convert does convert the encoding of given XML content from XML root tag into UTF-8 encoding content.
 func convert(xml []byte) (res []byte, err error) {
 	patten := `<\?xml.*encoding\s*=\s*['|"](.*?)['|"].*\?>`
 	matchStr, err := gregex.MatchString(patten, string(xml))

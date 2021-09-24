@@ -25,7 +25,7 @@ func (r *Request) SetQuery(key string, value interface{}) {
 // and request body. It returns <def> if <key> does not exist in the query and <def> is given,
 // or else it returns nil.
 //
-// Note that if there're multiple parameters with the same name, the parameters are retrieved
+// Note that if there are multiple parameters with the same name, the parameters are retrieved
 // and overwrote in order of priority: query > body.
 func (r *Request) GetQuery(key string, def ...interface{}) interface{} {
 	r.parseQuery()
@@ -116,7 +116,7 @@ func (r *Request) GetQueryInterfaces(key string, def ...interface{}) []interface
 // as map. The parameter <kvMap> specifies the keys retrieving from client parameters,
 // the associated values are the default values if the client does not pass.
 //
-// Note that if there're multiple parameters with the same name, the parameters are retrieved and overwrote
+// Note that if there are multiple parameters with the same name, the parameters are retrieved and overwrote
 // in order of priority: query > body.
 func (r *Request) GetQueryMap(kvMap ...map[string]interface{}) map[string]interface{} {
 	r.parseQuery()
