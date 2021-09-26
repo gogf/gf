@@ -18,9 +18,11 @@ import (
 	"github.com/gogf/gf/errors/gerror"
 )
 
+// New creates and returns a redis client.
+// It creates a default redis adapter of go-redis.
 func New(config ...*Config) (*Redis, error) {
 	if len(config) > 0 {
-		return &Redis{adapter: NewAdapterRedigo(config[0])}, nil
+		return &Redis{adapter: NewAdapterGoRedis(config[0])}, nil
 	}
 	configFromGlobal, ok := GetConfig()
 	if !ok {
@@ -29,9 +31,10 @@ func New(config ...*Config) (*Redis, error) {
 			`configuration not found for creating Redis client`,
 		)
 	}
-	return &Redis{adapter: NewAdapterRedigo(configFromGlobal)}, nil
+	return &Redis{adapter: NewAdapterGoRedis(configFromGlobal)}, nil
 }
 
+// NewWithAdapter creates and returns a redis client with given adapter.
 func NewWithAdapter(adapter Adapter) *Redis {
 	return &Redis{adapter: adapter}
 }

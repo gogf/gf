@@ -11,7 +11,6 @@ import (
 	"github.com/gogf/gf/database/gredis"
 	"github.com/gogf/gf/test/gtest"
 	"testing"
-	"time"
 )
 
 var (
@@ -29,11 +28,11 @@ func TestConn_DoWithTimeout(t *testing.T) {
 		t.AssertNil(err)
 		defer conn.Close(ctx)
 
-		_, err = conn.Do(ctx, "set", "test", "123", &gredis.Option{ReadTimeout: time.Second})
+		_, err = conn.Do(ctx, "set", "test", "123")
 		t.Assert(err, nil)
 		defer conn.Do(ctx, "del", "test")
 
-		r, err := conn.Do(ctx, "get", "test", &gredis.Option{ReadTimeout: time.Second})
+		r, err := conn.Do(ctx, "get", "test")
 		t.Assert(err, nil)
 		t.Assert(r.String(), "123")
 	})
@@ -50,15 +49,19 @@ func TestConn_ReceiveVarWithTimeout(t *testing.T) {
 		t.AssertNil(err)
 		defer conn.Close(ctx)
 
-		_, err = conn.Do(ctx, "Subscribe", "gf", &gredis.Option{ReadTimeout: time.Second})
+		_, err = conn.Do(ctx, "Subscribe", "gf")
 		t.AssertNil(err)
 
-		v, err := redis.Do(ctx, "PUBLISH", "gf", "test", &gredis.Option{ReadTimeout: time.Second})
-		t.Assert(err, nil)
-		t.Assert(v.String(), "1")
+		v, err := redis.Do(ctx, "PUBLISH", "gf", "test")
 
-		v, _ = conn.Receive(ctx)
-		t.Assert(len(v.Strings()), 3)
-		t.Assert(v.Strings()[2], "test")
+		v, err = conn.Receive(ctx)
+		t.AssertNil(err)
+		t.Assert(v.Val().(*gredis.Subscription).Channel, "gf")
+
+		v, err = conn.Receive(ctx)
+		t.AssertNil(err)
+		t.Assert(v.Val().(*gredis.Message).Channel, "gf")
+		t.Assert(v.Val().(*gredis.Message).Payload, "test")
+
 	})
 }

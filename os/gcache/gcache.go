@@ -179,3 +179,58 @@ func KeyStrings(ctx context.Context) ([]string, error) {
 func Values(ctx context.Context) ([]interface{}, error) {
 	return defaultCache.Values(ctx)
 }
+
+// MustGet acts like Get, but it panics if any error occurs.
+func MustGet(ctx context.Context, key interface{}) *gvar.Var {
+	return defaultCache.MustGet(ctx, key)
+}
+
+// MustGetOrSet acts like GetOrSet, but it panics if any error occurs.
+func MustGetOrSet(ctx context.Context, key interface{}, value interface{}, duration time.Duration) *gvar.Var {
+	return defaultCache.MustGetOrSet(ctx, key, value, duration)
+}
+
+// MustGetOrSetFunc acts like GetOrSetFunc, but it panics if any error occurs.
+func MustGetOrSetFunc(ctx context.Context, key interface{}, f func() (interface{}, error), duration time.Duration) *gvar.Var {
+	return defaultCache.MustGetOrSet(ctx, key, f, duration)
+}
+
+// MustGetOrSetFuncLock acts like GetOrSetFuncLock, but it panics if any error occurs.
+func MustGetOrSetFuncLock(ctx context.Context, key interface{}, f func() (interface{}, error), duration time.Duration) *gvar.Var {
+	return defaultCache.MustGetOrSetFuncLock(ctx, key, f, duration)
+}
+
+// MustContains acts like Contains, but it panics if any error occurs.
+func MustContains(ctx context.Context, key interface{}) bool {
+	return defaultCache.MustContains(ctx, key)
+}
+
+// MustGetExpire acts like GetExpire, but it panics if any error occurs.
+func MustGetExpire(ctx context.Context, key interface{}) time.Duration {
+	return defaultCache.MustGetExpire(ctx, key)
+}
+
+// MustSize acts like Size, but it panics if any error occurs.
+func MustSize(ctx context.Context) int {
+	return defaultCache.MustSize(ctx)
+}
+
+// MustData acts like Data, but it panics if any error occurs.
+func MustData(ctx context.Context) map[interface{}]interface{} {
+	return defaultCache.MustData(ctx)
+}
+
+// MustKeys acts like Keys, but it panics if any error occurs.
+func MustKeys(ctx context.Context) []interface{} {
+	return defaultCache.MustKeys(ctx)
+}
+
+// MustKeyStrings acts like KeyStrings, but it panics if any error occurs.
+func MustKeyStrings(ctx context.Context) []string {
+	return defaultCache.MustKeyStrings(ctx)
+}
+
+// MustValues acts like Values, but it panics if any error occurs.
+func MustValues(ctx context.Context) []interface{} {
+	return defaultCache.MustValues(ctx)
+}
