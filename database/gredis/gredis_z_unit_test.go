@@ -23,9 +23,8 @@ import (
 
 var (
 	config = &gredis.Config{
-		Host: "127.0.0.1",
-		Port: 6379,
-		Db:   1,
+		Address: `:6379`,
+		Db:      1,
 	}
 )
 
@@ -59,40 +58,6 @@ func Test_Do(t *testing.T) {
 		r, err = redis.Do(ctx, "GET", "k")
 		t.Assert(err, nil)
 		t.Assert(r, nil)
-	})
-}
-
-func Test_Stats(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		redis, err := gredis.New(config)
-		t.AssertNil(err)
-		t.AssertNE(redis, nil)
-		defer redis.Close(ctx)
-
-		array := make([]*gredis.RedisConn, 0)
-		for i := 0; i < 10; i++ {
-			conn, err := redis.Conn(ctx)
-			t.AssertNil(err)
-			array = append(array, conn)
-		}
-		stats, err := redis.Stats(ctx)
-		t.AssertNil(err)
-		t.Assert(stats.ActiveCount(), 10)
-		t.Assert(stats.IdleCount(), 0)
-
-		for i := 0; i < 10; i++ {
-			t.AssertNil(array[i].Close(ctx))
-		}
-
-		stats, err = redis.Stats(ctx)
-		t.AssertNil(err)
-		t.Assert(stats.ActiveCount(), 10)
-		t.Assert(stats.IdleCount(), 10)
-		//time.Sleep(3000*time.Millisecond)
-		//stats  = redis.Stats()
-		//fmt.Println(stats)
-		//t.Assert(stats.ActiveCount,  0)
-		//t.Assert(stats.IdleCount,    0)
 	})
 }
 
@@ -155,10 +120,9 @@ func Test_Instance(t *testing.T) {
 func Test_Error(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		config1 := &gredis.Config{
-			Host:           "192.111.0.2",
-			Port:           6379,
-			Db:             1,
-			ConnectTimeout: time.Second,
+			Address:     "192.111.0.2:6379",
+			Db:          1,
+			DialTimeout: time.Second,
 		}
 		redis, err := gredis.New(config1)
 		t.AssertNil(err)
@@ -169,9 +133,8 @@ func Test_Error(t *testing.T) {
 		t.AssertNE(err, nil)
 
 		config1 = &gredis.Config{
-			Host: "127.0.0.1",
-			Port: 6379,
-			Db:   100,
+			Address: "127.0.0.1:6379",
+			Db:      100,
 		}
 		redis, err = gredis.New(config1)
 		t.AssertNil(err)
@@ -201,17 +164,22 @@ func Test_Error(t *testing.T) {
 		t.AssertNil(err)
 		defer conn.Close(ctx)
 		_, err = conn.Do(ctx, "SET", "k", "v")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		_, err = conn.Do(ctx, "Subscribe", "gf")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
 		_, err = redis.Do(ctx, "PUBLISH", "gf", "test")
-		t.Assert(err, nil)
+		t.AssertNil(err)
 
-		v, _ = conn.Receive(ctx)
-		t.Assert(len(v.Strings()), 3)
-		t.Assert(v.Strings()[2], "test")
+		v, err = conn.Receive(ctx)
+		t.AssertNil(err)
+		t.Assert(v.Val().(*gredis.Subscription).Channel, "gf")
+
+		v, err = conn.Receive(ctx)
+		t.AssertNil(err)
+		t.Assert(v.Val().(*gredis.Message).Channel, "gf")
+		t.Assert(v.Val().(*gredis.Message).Payload, "test")
 
 		time.Sleep(time.Second)
 	})

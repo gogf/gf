@@ -52,7 +52,7 @@ func Redis(name ...string) *gredis.Redis {
 
 		if len(configMap) > 0 {
 			if v, ok := configMap[group]; ok {
-				redisConfig, err := gredis.ConfigFromStr(gconv.String(v))
+				redisConfig, err := gredis.ConfigFromMap(gconv.Map(v))
 				if err != nil {
 					panic(err)
 				}

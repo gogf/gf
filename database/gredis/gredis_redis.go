@@ -23,6 +23,7 @@ const (
 	errorNilRedis = `the Redis object is nil`
 )
 
+// SetAdapter sets custom adapter for current redis client.
 func (r *Redis) SetAdapter(adapter Adapter) {
 	if r == nil {
 		return
@@ -30,6 +31,7 @@ func (r *Redis) SetAdapter(adapter Adapter) {
 	r.adapter = adapter
 }
 
+// GetAdapter returns the adapter that is set in current redis client.
 func (r *Redis) GetAdapter() Adapter {
 	if r == nil {
 		return nil
@@ -37,9 +39,8 @@ func (r *Redis) GetAdapter() Adapter {
 	return r.adapter
 }
 
-// Conn returns a raw underlying connection object,
-// which expose more methods to communicate with server.
-// **You should call Close function manually if you do not use this connection any further.**
+// Conn retrieves and returns a connection object for continuous operations.
+// Note that you should call Close function manually if you do not use this connection any further.
 func (r *Redis) Conn(ctx context.Context) (*RedisConn, error) {
 	if r == nil {
 		return nil, gerror.NewCode(gcode.CodeInvalidParameter, errorNilRedis)
@@ -48,20 +49,14 @@ func (r *Redis) Conn(ctx context.Context) (*RedisConn, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &RedisConn{conn: conn}, nil
-}
-
-// Stats returns pool's statistics.
-func (r *Redis) Stats(ctx context.Context) (Stats, error) {
-	if r == nil {
-		return nil, gerror.NewCode(gcode.CodeInvalidParameter, errorNilRedis)
-	}
-	return r.adapter.Stats(ctx)
+	return &RedisConn{
+		conn:  conn,
+		redis: r,
+	}, nil
 }
 
 // Do sends a command to the server and returns the received reply.
-// Do automatically get a connection from pool, and close it when the reply received.
-// It does not really "close" the connection, but drops it back to the connection pool.
+// It uses json.Marshal for struct/slice/map type values before committing them to redis.
 func (r *Redis) Do(ctx context.Context, command string, args ...interface{}) (*gvar.Var, error) {
 	if r == nil {
 		return nil, gerror.NewCode(gcode.CodeInvalidParameter, errorNilRedis)
@@ -78,6 +73,7 @@ func (r *Redis) Do(ctx context.Context, command string, args ...interface{}) (*g
 	return conn.Do(ctx, command, args...)
 }
 
+// Close closes current redis client, closes its connection pool and releases all its related resources.
 func (r *Redis) Close(ctx context.Context) error {
 	if r == nil {
 		return gerror.NewCode(gcode.CodeInvalidParameter, errorNilRedis)
