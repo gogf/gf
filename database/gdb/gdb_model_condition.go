@@ -236,27 +236,6 @@ func (m *Model) WhereOrNotNull(columns ...string) *Model {
 	return model
 }
 
-// And adds "AND" condition to the where statement.
-// Deprecated, use Where instead.
-func (m *Model) And(where interface{}, args ...interface{}) *Model {
-	model := m.getModel()
-	if model.whereHolder == nil {
-		model.whereHolder = make([]ModelWhereHolder, 0)
-	}
-	model.whereHolder = append(model.whereHolder, ModelWhereHolder{
-		Operator: whereHolderOperatorAnd,
-		Where:    where,
-		Args:     args,
-	})
-	return model
-}
-
-// Or adds "OR" condition to the where statement.
-// Deprecated, use WhereOr instead.
-func (m *Model) Or(where interface{}, args ...interface{}) *Model {
-	return m.WhereOr(where, args...)
-}
-
 // Group sets the "GROUP BY" statement for the model.
 func (m *Model) Group(groupBy ...string) *Model {
 	if len(groupBy) == 0 {
@@ -348,13 +327,6 @@ func (m *Model) Page(page, limit int) *Model {
 	model.start = (page - 1) * limit
 	model.limit = limit
 	return model
-}
-
-// ForPage is alias of Model.Page.
-// See Model.Page.
-// Deprecated, use Page instead.
-func (m *Model) ForPage(page, limit int) *Model {
-	return m.Page(page, limit)
 }
 
 // formatCondition formats where arguments of the model and returns a new condition sql and its arguments.

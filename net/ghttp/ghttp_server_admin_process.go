@@ -196,9 +196,9 @@ func bufferToServerFdMap(buffer []byte) map[string]listenerFdMap {
 	sfm := make(map[string]listenerFdMap)
 	if len(buffer) > 0 {
 		j, _ := gjson.LoadContent(buffer)
-		for k, _ := range j.Map() {
+		for k, _ := range j.Var().Map() {
 			m := make(map[string]string)
-			for k, v := range j.GetMap(k) {
+			for k, v := range j.Get(k).Map() {
 				m[k] = gconv.String(v)
 			}
 			sfm[k] = m

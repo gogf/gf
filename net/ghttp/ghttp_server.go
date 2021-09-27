@@ -41,15 +41,6 @@ func init() {
 	}
 }
 
-// SetGraceful enables/disables the graceful reload feature for server,
-// which is false in default.
-//
-// Note that this feature switch is not for single server instance but for whole process.
-// Deprecated, use configuration of ghttp.Server for controlling this feature.
-func SetGraceful(enabled bool) {
-	gracefulEnabled = enabled
-}
-
 // serverProcessInit initializes some process configurations, which can only be done once.
 func serverProcessInit() {
 	var (
@@ -505,17 +496,4 @@ func (s *Server) getListenerFdMap() map[string]string {
 		}
 	}
 	return m
-}
-
-// IsExitError checks if given error is an exit error of server.
-// This is used in old version of server for custom error handler.
-// Deprecated.
-func IsExitError(err interface{}) bool {
-	errStr := gconv.String(err)
-	if strings.EqualFold(errStr, exceptionExit) ||
-		strings.EqualFold(errStr, exceptionExitAll) ||
-		strings.EqualFold(errStr, exceptionExitHook) {
-		return true
-	}
-	return false
 }

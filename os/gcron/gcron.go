@@ -36,30 +36,6 @@ func GetLogger() *glog.Logger {
 	return defaultCron.GetLogger()
 }
 
-// SetLogPath sets the logging folder path for default cron object.
-// Deprecated, use SetLogger instead.
-func SetLogPath(path string) {
-	defaultCron.SetLogPath(path)
-}
-
-// GetLogPath returns the logging folder path of default cron object.
-// Deprecated, use GetLogger instead.
-func GetLogPath() string {
-	return defaultCron.GetLogPath()
-}
-
-// SetLogLevel sets the logging level for default cron object.
-// Deprecated, use SetLogger instead.
-func SetLogLevel(level int) {
-	defaultCron.SetLogLevel(level)
-}
-
-// GetLogLevel returns the logging level for default cron object.
-// Deprecated, use GetLogger instead.
-func GetLogLevel() int {
-	return defaultCron.GetLogLevel()
-}
-
 // Add adds a timed task to default cron object.
 // A unique `name` can be bound with the timed task.
 // It returns and error if the `name` is already used.

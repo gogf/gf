@@ -26,16 +26,6 @@ func StructsTag(params interface{}, pointer interface{}, priorityTag string) (er
 	return doStructs(params, pointer, nil, priorityTag)
 }
 
-// StructsDeep converts any slice to given struct slice recursively.
-// Deprecated, use Structs instead.
-func StructsDeep(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
-	var keyToAttributeNameMapping map[string]string
-	if len(mapping) > 0 {
-		keyToAttributeNameMapping = mapping[0]
-	}
-	return doStructs(params, pointer, keyToAttributeNameMapping, "")
-}
-
 // doStructs converts any slice to given struct slice.
 //
 // It automatically checks and converts json string to []map if `params` is string/[]byte.

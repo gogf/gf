@@ -76,13 +76,6 @@ const (
 	defaultFields            = "*"
 )
 
-// Table is alias of Core.Model.
-// See Core.Model.
-// Deprecated, use Model instead.
-func (c *Core) Table(tableNameQueryOrStruct ...interface{}) *Model {
-	return c.db.Model(tableNameQueryOrStruct...)
-}
-
 // Model creates and returns a new ORM model from given schema.
 // The parameter `tableNameQueryOrStruct` can be more than one table names, and also alias name, like:
 // 1. Model names:

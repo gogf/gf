@@ -15,14 +15,6 @@ const (
 	optionOmitNilData                // 64
 )
 
-// Option adds extra operation option for the model.
-// Deprecated, use separate operations instead.
-func (m *Model) Option(option int) *Model {
-	model := m.getModel()
-	model.option = model.option | option
-	return model
-}
-
 // OmitEmpty sets optionOmitEmpty option for the model, which automatically filers
 // the data and where parameters for `empty` values.
 func (m *Model) OmitEmpty() *Model {

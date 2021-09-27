@@ -206,7 +206,7 @@ func Test_Params_Basic(t *testing.T) {
 		}
 	})
 	s.BindHandler("/raw", func(r *ghttp.Request) {
-		r.Response.Write(r.GetRaw())
+		r.Response.Write(r.GetBody())
 	})
 	s.BindHandler("/json", func(r *ghttp.Request) {
 		j, err := r.GetJson()

@@ -25,7 +25,7 @@ func (o *NamesObject) ShowName(r *ghttp.Request) {
 func Test_NameToUri_FullName(t *testing.T) {
 	p, _ := ports.PopRand()
 	s := g.Server(p)
-	s.SetNameToUriType(ghttp.URI_TYPE_FULLNAME)
+	s.SetNameToUriType(ghttp.UriTypeFullName)
 	s.BindObject("/{.struct}/{.method}", new(NamesObject))
 	s.SetPort(p)
 	s.SetDumpRouterMap(false)
@@ -46,7 +46,7 @@ func Test_NameToUri_FullName(t *testing.T) {
 func Test_NameToUri_AllLower(t *testing.T) {
 	p, _ := ports.PopRand()
 	s := g.Server(p)
-	s.SetNameToUriType(ghttp.URI_TYPE_ALLLOWER)
+	s.SetNameToUriType(ghttp.UriTypeAllLower)
 	s.BindObject("/{.struct}/{.method}", new(NamesObject))
 	s.SetPort(p)
 	s.SetDumpRouterMap(false)
@@ -67,7 +67,7 @@ func Test_NameToUri_AllLower(t *testing.T) {
 func Test_NameToUri_Camel(t *testing.T) {
 	p, _ := ports.PopRand()
 	s := g.Server(p)
-	s.SetNameToUriType(ghttp.URI_TYPE_CAMEL)
+	s.SetNameToUriType(ghttp.UriTypeCamel)
 	s.BindObject("/{.struct}/{.method}", new(NamesObject))
 	s.SetPort(p)
 	s.SetDumpRouterMap(false)

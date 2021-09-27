@@ -150,25 +150,6 @@ func (m *Model) appendFieldsExByStr(fieldsEx string) *Model {
 	return m
 }
 
-// Filter marks filtering the fields which does not exist in the fields of the operated table.
-// Note that this function supports only single table operations.
-// Deprecated, filter feature is automatically enabled from GoFrame v1.16.0, it is so no longer used.
-func (m *Model) Filter() *Model {
-	if gstr.Contains(m.tables, " ") {
-		panic("function Filter supports only single table operations")
-	}
-	model := m.getModel()
-	model.filter = true
-	return model
-}
-
-// FieldsStr retrieves and returns all fields from the table, joined with char ','.
-// The optional parameter `prefix` specifies the prefix for each field, eg: FieldsStr("u.").
-// Deprecated, use GetFieldsStr instead.
-func (m *Model) FieldsStr(prefix ...string) string {
-	return m.GetFieldsStr(prefix...)
-}
-
 // GetFieldsStr retrieves and returns all fields from the table, joined with char ','.
 // The optional parameter `prefix` specifies the prefix for each field, eg: GetFieldsStr("u.").
 func (m *Model) GetFieldsStr(prefix ...string) string {
@@ -196,15 +177,6 @@ func (m *Model) GetFieldsStr(prefix ...string) string {
 	}
 	newFields = m.db.GetCore().QuoteString(newFields)
 	return newFields
-}
-
-// FieldsExStr retrieves and returns fields which are not in parameter `fields` from the table,
-// joined with char ','.
-// The parameter `fields` specifies the fields that are excluded.
-// The optional parameter `prefix` specifies the prefix for each field, eg: FieldsExStr("id", "u.").
-// Deprecated, use GetFieldsExStr instead.
-func (m *Model) FieldsExStr(fields string, prefix ...string) string {
-	return m.GetFieldsExStr(fields, prefix...)
 }
 
 // GetFieldsExStr retrieves and returns fields which are not in parameter `fields` from the table,
