@@ -84,7 +84,7 @@ func (v *Validator) checkRequired(value interface{}, ruleKey, rulePattern string
 			}
 		}
 
-	// Required if all of given fields are not empty.
+	// Required if all given fields are not empty.
 	// Example: required-with:id,name
 	case "required-with-all":
 		required = true
