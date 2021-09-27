@@ -35,14 +35,18 @@ type Session struct {
 
 // init does the lazy initialization for session.
 // It here initializes real session if necessary.
-func (s *Session) init() {
+func (s *Session) init() error {
 	if s.start {
-		return
+		return nil
 	}
 	var err error
 	if s.id != "" {
 		// Retrieve memory session data from manager.
-		if r, _ := s.manager.sessionData.Get(s.ctx, s.id); r != nil {
+		r, err := s.manager.sessionData.Get(s.ctx, s.id)
+		if err != nil && err != ErrorDisabled {
+			return err
+		}
+		if r != nil {
 			s.data = r.Val().(*gmap.StrAnyMap)
 			intlog.Print(s.ctx, "session init data:", s.data)
 		}
@@ -50,7 +54,7 @@ func (s *Session) init() {
 		if s.manager.storage != nil {
 			if s.data, err = s.manager.storage.GetSession(s.ctx, s.id, s.manager.ttl, s.data); err != nil && err != ErrorDisabled {
 				intlog.Errorf(s.ctx, "session restoring failed for id '%s': %v", s.id, err)
-				panic(err)
+				return err
 			}
 		}
 	}
@@ -63,7 +67,7 @@ func (s *Session) init() {
 		s.id, err = s.manager.storage.New(s.ctx, s.manager.ttl)
 		if err != nil && err != ErrorDisabled {
 			intlog.Errorf(s.ctx, "create session id failed: %v", err)
-			panic(err)
+			return err
 		}
 	}
 	// Use default session id creating function.
@@ -74,24 +78,24 @@ func (s *Session) init() {
 		s.data = gmap.NewStrAnyMap(true)
 	}
 	s.start = true
-
+	return nil
 }
 
 // Close closes current session and updates its ttl in the session manager.
 // If this session is dirty, it also exports it to storage.
 //
 // NOTE that this function must be called ever after a session request done.
-func (s *Session) Close() {
+func (s *Session) Close() error {
 	if s.start && s.id != "" {
 		size := s.data.Size()
 		if s.manager.storage != nil {
 			if s.dirty {
-				if err := s.manager.storage.SetSession(s.ctx, s.id, s.data, s.manager.ttl); err != nil {
-					panic(err)
+				if err := s.manager.storage.SetSession(s.ctx, s.id, s.data, s.manager.ttl); err != nil && err != ErrorDisabled {
+					return err
 				}
 			} else if size > 0 {
-				if err := s.manager.storage.UpdateTTL(s.ctx, s.id, s.manager.ttl); err != nil {
-					panic(err)
+				if err := s.manager.storage.UpdateTTL(s.ctx, s.id, s.manager.ttl); err != nil && err != ErrorDisabled {
+					return err
 				}
 			}
 		}
@@ -99,11 +103,14 @@ func (s *Session) Close() {
 			s.manager.UpdateSessionTTL(s.id, s.data)
 		}
 	}
+	return nil
 }
 
 // Set sets key-value pair to this session.
 func (s *Session) Set(key string, value interface{}) error {
-	s.init()
+	if err := s.init(); err != nil {
+		return err
+	}
 	if err := s.manager.storage.Set(s.ctx, s.id, key, value, s.manager.ttl); err != nil {
 		if err == ErrorDisabled {
 			s.data.Set(key, value)
@@ -115,15 +122,11 @@ func (s *Session) Set(key string, value interface{}) error {
 	return nil
 }
 
-// Sets batch sets the session using map.
-// Deprecated, use SetMap instead.
-func (s *Session) Sets(data map[string]interface{}) error {
-	return s.SetMap(data)
-}
-
 // SetMap batch sets the session using map.
 func (s *Session) SetMap(data map[string]interface{}) error {
-	s.init()
+	if err := s.init(); err != nil {
+		return err
+	}
 	if err := s.manager.storage.SetMap(s.ctx, s.id, data, s.manager.ttl); err != nil {
 		if err == ErrorDisabled {
 			s.data.Sets(data)
@@ -140,7 +143,9 @@ func (s *Session) Remove(keys ...string) error {
 	if s.id == "" {
 		return nil
 	}
-	s.init()
+	if err := s.init(); err != nil {
+		return err
+	}
 	for _, key := range keys {
 		if err := s.manager.storage.Remove(s.ctx, s.id, key); err != nil {
 			if err == ErrorDisabled {
@@ -154,17 +159,14 @@ func (s *Session) Remove(keys ...string) error {
 	return nil
 }
 
-// Clear is alias of RemoveAll.
-func (s *Session) Clear() error {
-	return s.RemoveAll()
-}
-
 // RemoveAll deletes all key-value pairs from this session.
 func (s *Session) RemoveAll() error {
 	if s.id == "" {
 		return nil
 	}
-	s.init()
+	if err := s.init(); err != nil {
+		return err
+	}
 	if err := s.manager.storage.RemoveAll(s.ctx, s.id); err != nil {
 		if err == ErrorDisabled {
 			s.data.Clear()
@@ -178,9 +180,11 @@ func (s *Session) RemoveAll() error {
 
 // Id returns the session id for this session.
 // It creates and returns a new session id if the session id is not passed in initialization.
-func (s *Session) Id() string {
-	s.init()
-	return s.id
+func (s *Session) Id() (string, error) {
+	if err := s.init(); err != nil {
+		return "", err
+	}
+	return s.id, nil
 }
 
 // SetId sets custom session before session starts.
@@ -203,43 +207,53 @@ func (s *Session) SetIdFunc(f func(ttl time.Duration) string) error {
 	return nil
 }
 
-// Map returns all data as map.
+// Data returns all data as map.
 // Note that it's using value copy internally for concurrent-safe purpose.
-func (s *Session) Map() map[string]interface{} {
+func (s *Session) Data() (map[string]interface{}, error) {
 	if s.id != "" {
-		s.init()
-		data, err := s.manager.storage.GetMap(s.ctx, s.id)
+		if err := s.init(); err != nil {
+			return nil, err
+		}
+		data, err := s.manager.storage.Data(s.ctx, s.id)
 		if err != nil && err != ErrorDisabled {
 			intlog.Error(s.ctx, err)
 		}
 		if data != nil {
-			return data
+			return data, nil
 		}
-		return s.data.Map()
+		return s.data.Map(), nil
 	}
-	return nil
+	return map[string]interface{}{}, nil
 }
 
 // Size returns the size of the session.
-func (s *Session) Size() int {
+func (s *Session) Size() (int, error) {
 	if s.id != "" {
-		s.init()
+		if err := s.init(); err != nil {
+			return 0, err
+		}
 		size, err := s.manager.storage.GetSize(s.ctx, s.id)
 		if err != nil && err != ErrorDisabled {
 			intlog.Error(s.ctx, err)
 		}
 		if size >= 0 {
-			return size
+			return size, nil
 		}
-		return s.data.Size()
+		return s.data.Size(), nil
 	}
-	return 0
+	return 0, nil
 }
 
 // Contains checks whether key exist in the session.
-func (s *Session) Contains(key string) bool {
-	s.init()
-	return s.Get(key) != nil
+func (s *Session) Contains(key string) (bool, error) {
+	if err := s.init(); err != nil {
+		return false, err
+	}
+	v, err := s.Get(key)
+	if err != nil {
+		return false, err
+	}
+	return !v.IsNil(), nil
 }
 
 // IsDirty checks whether there's any data changes in the session.
@@ -250,23 +264,71 @@ func (s *Session) IsDirty() bool {
 // Get retrieves session value with given key.
 // It returns `def` if the key does not exist in the session if `def` is given,
 // or else it returns nil.
-func (s *Session) Get(key string, def ...interface{}) *gvar.Var {
+func (s *Session) Get(key string, def ...interface{}) (*gvar.Var, error) {
 	if s.id == "" {
-		return nil
+		return nil, gerror.NewCode(gcode.CodeInvalidParameter, `session id cannot be empty`)
 	}
-	s.init()
+	if err := s.init(); err != nil {
+		return nil, err
+	}
 	v, err := s.manager.storage.Get(s.ctx, s.id, key)
 	if err != nil && err != ErrorDisabled {
 		intlog.Error(s.ctx, err)
+		return nil, err
 	}
 	if v != nil {
-		return gvar.New(v)
+		return gvar.New(v), nil
 	}
 	if v := s.data.Get(key); v != nil {
-		return gvar.New(v)
+		return gvar.New(v), nil
 	}
 	if len(def) > 0 {
-		return gvar.New(def[0])
+		return gvar.New(def[0]), nil
 	}
-	return nil
+	return nil, nil
+}
+
+// MustId performs as function Id, but it panics if any error occurs.
+func (s *Session) MustId() string {
+	id, err := s.Id()
+	if err != nil {
+		panic(err)
+	}
+	return id
+}
+
+// MustGet performs as function Get, but it panics if any error occurs.
+func (s *Session) MustGet(key string, def ...interface{}) *gvar.Var {
+	v, err := s.Get(key, def...)
+	if err != nil {
+		panic(err)
+	}
+	return v
+}
+
+// MustContains performs as function Contains, but it panics if any error occurs.
+func (s *Session) MustContains(key string) bool {
+	b, err := s.Contains(key)
+	if err != nil {
+		panic(err)
+	}
+	return b
+}
+
+// MustData performs as function Data, but it panics if any error occurs.
+func (s *Session) MustData() map[string]interface{} {
+	m, err := s.Data()
+	if err != nil {
+		panic(err)
+	}
+	return m
+}
+
+// MustSize performs as function Size, but it panics if any error occurs.
+func (s *Session) MustSize() int {
+	size, err := s.Size()
+	if err != nil {
+		panic(err)
+	}
+	return size
 }

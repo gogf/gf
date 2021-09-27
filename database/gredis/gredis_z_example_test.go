@@ -7,6 +7,7 @@
 package gredis_test
 
 import (
+	"context"
 	"fmt"
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/frame/g"
@@ -17,17 +18,18 @@ func Example_autoMarshalUnmarshalMap() {
 	var (
 		err    error
 		result *gvar.Var
+		ctx    = context.Background()
 		key    = "user"
 		data   = g.Map{
 			"id":   10000,
 			"name": "john",
 		}
 	)
-	_, err = g.Redis().Do("SET", key, data)
+	_, err = g.Redis().Do(ctx, "SET", key, data)
 	if err != nil {
 		panic(err)
 	}
-	result, err = g.Redis().DoVar("GET", key)
+	result, err = g.Redis().Do(ctx, "GET", key)
 	if err != nil {
 		panic(err)
 	}
@@ -42,6 +44,7 @@ func Example_autoMarshalUnmarshalStruct() {
 	var (
 		err    error
 		result *gvar.Var
+		ctx    = context.Background()
 		key    = "user"
 		user   = &User{
 			Id:   10000,
@@ -49,11 +52,11 @@ func Example_autoMarshalUnmarshalStruct() {
 		}
 	)
 
-	_, err = g.Redis().Do("SET", key, user)
+	_, err = g.Redis().Do(ctx, "SET", key, user)
 	if err != nil {
 		panic(err)
 	}
-	result, err = g.Redis().DoVar("GET", key)
+	result, err = g.Redis().Do(ctx, "GET", key)
 	if err != nil {
 		panic(err)
 	}
@@ -73,6 +76,7 @@ func Example_autoMarshalUnmarshalStructSlice() {
 	var (
 		err    error
 		result *gvar.Var
+		ctx    = context.Background()
 		key    = "user-slice"
 		users1 = []User{
 			{
@@ -86,11 +90,11 @@ func Example_autoMarshalUnmarshalStructSlice() {
 		}
 	)
 
-	_, err = g.Redis().Do("SET", key, users1)
+	_, err = g.Redis().Do(ctx, "SET", key, users1)
 	if err != nil {
 		panic(err)
 	}
-	result, err = g.Redis().DoVar("GET", key)
+	result, err = g.Redis().Do(ctx, "GET", key)
 	if err != nil {
 		panic(err)
 	}
@@ -106,17 +110,18 @@ func Example_hSet() {
 	var (
 		err    error
 		result *gvar.Var
+		ctx    = context.Background()
 		key    = "user"
 	)
-	_, err = g.Redis().Do("HSET", key, "id", 10000)
+	_, err = g.Redis().Do(ctx, "HSET", key, "id", 10000)
 	if err != nil {
 		panic(err)
 	}
-	_, err = g.Redis().Do("HSET", key, "name", "john")
+	_, err = g.Redis().Do(ctx, "HSET", key, "name", "john")
 	if err != nil {
 		panic(err)
 	}
-	result, err = g.Redis().DoVar("HGETALL", key)
+	result, err = g.Redis().Do(ctx, "HGETALL", key)
 	if err != nil {
 		panic(err)
 	}
@@ -128,6 +133,7 @@ func Example_hSet() {
 
 func Example_hMSet_Map() {
 	var (
+		ctx  = context.Background()
 		key  = "user_100"
 		data = g.Map{
 			"name":  "gf",
@@ -135,11 +141,11 @@ func Example_hMSet_Map() {
 			"score": 100,
 		}
 	)
-	_, err := g.Redis().Do("HMSET", append(g.Slice{key}, gutil.MapToSlice(data)...)...)
+	_, err := g.Redis().Do(ctx, "HMSET", append(g.Slice{key}, gutil.MapToSlice(data)...)...)
 	if err != nil {
 		g.Log().Fatal(err)
 	}
-	v, err := g.Redis().DoVar("HMGET", key, "name")
+	v, err := g.Redis().Do(ctx, "HMGET", key, "name")
 	if err != nil {
 		g.Log().Fatal(err)
 	}
@@ -156,6 +162,7 @@ func Example_hMSet_Struct() {
 		Score int    `json:"score"`
 	}
 	var (
+		ctx  = context.Background()
 		key  = "user_100"
 		data = &User{
 			Name:  "gf",
@@ -163,11 +170,11 @@ func Example_hMSet_Struct() {
 			Score: 100,
 		}
 	)
-	_, err := g.Redis().Do("HMSET", append(g.Slice{key}, gutil.StructToSlice(data)...)...)
+	_, err := g.Redis().Do(ctx, "HMSET", append(g.Slice{key}, gutil.StructToSlice(data)...)...)
 	if err != nil {
 		g.Log().Fatal(err)
 	}
-	v, err := g.Redis().DoVar("HMGET", key, "name")
+	v, err := g.Redis().Do(ctx, "HMGET", key, "name")
 	if err != nil {
 		g.Log().Fatal(err)
 	}

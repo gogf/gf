@@ -33,14 +33,6 @@ type DB interface {
 	// Model creation.
 	// ===========================================================================
 
-	// Table function is deprecated, use Model instead.
-	// The DB interface is designed not only for
-	// relational databases but also for NoSQL databases in the future. The name
-	// "Table" is not proper for that purpose any more.
-	// Also see Core.Table.
-	// Deprecated.
-	Table(tableNameOrStruct ...interface{}) *Model
-
 	// Model creates and returns a new ORM model from given schema.
 	// The parameter `table` can be more than one table names, and also alias name, like:
 	// 1. Model names:

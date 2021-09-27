@@ -101,12 +101,12 @@ func Test_New_HierarchicalStruct(t *testing.T) {
 func Test_NewWithOptions(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		data := []byte("[9223372036854775807, 9223372036854775806]")
-		array := gjson.New(data).Array()
+		array := gjson.New(data).Var().Array()
 		t.Assert(array, []uint64{9223372036854776000, 9223372036854776000})
 	})
 	gtest.C(t, func(t *gtest.T) {
 		data := []byte("[9223372036854775807, 9223372036854775806]")
-		array := gjson.NewWithOptions(data, gjson.Options{StrNumber: true}).Array()
+		array := gjson.NewWithOptions(data, gjson.Options{StrNumber: true}).Var().Array()
 		t.Assert(array, []uint64{9223372036854775807, 9223372036854775806})
 	})
 }

@@ -38,22 +38,22 @@ func Test_Params_Basic(t *testing.T) {
 			r.Response.Write(r.GetQuery("slice"))
 		}
 		if r.GetQuery("bool") != nil {
-			r.Response.Write(r.GetQueryBool("bool"))
+			r.Response.Write(r.GetQuery("bool").Bool())
 		}
 		if r.GetQuery("float32") != nil {
-			r.Response.Write(r.GetQueryFloat32("float32"))
+			r.Response.Write(r.GetQuery("float32").Float32())
 		}
 		if r.GetQuery("float64") != nil {
-			r.Response.Write(r.GetQueryFloat64("float64"))
+			r.Response.Write(r.GetQuery("float64").Float64())
 		}
 		if r.GetQuery("int") != nil {
-			r.Response.Write(r.GetQueryInt("int"))
+			r.Response.Write(r.GetQuery("int").Int())
 		}
 		if r.GetQuery("uint") != nil {
-			r.Response.Write(r.GetQueryUint("uint"))
+			r.Response.Write(r.GetQuery("uint").Uint())
 		}
 		if r.GetQuery("string") != nil {
-			r.Response.Write(r.GetQueryString("string"))
+			r.Response.Write(r.GetQuery("string").String())
 		}
 		if r.GetQuery("map") != nil {
 			r.Response.Write(r.GetQueryMap()["map"].(map[string]interface{})["b"])
@@ -71,22 +71,22 @@ func Test_Params_Basic(t *testing.T) {
 			r.Response.Write(r.Get("slice"))
 		}
 		if r.Get("bool") != nil {
-			r.Response.Write(r.GetBool("bool"))
+			r.Response.Write(r.Get("bool").Bool())
 		}
 		if r.Get("float32") != nil {
-			r.Response.Write(r.GetFloat32("float32"))
+			r.Response.Write(r.Get("float32").Float32())
 		}
 		if r.Get("float64") != nil {
-			r.Response.Write(r.GetFloat64("float64"))
+			r.Response.Write(r.Get("float64").Float64())
 		}
 		if r.Get("int") != nil {
-			r.Response.Write(r.GetInt("int"))
+			r.Response.Write(r.Get("int").Int())
 		}
 		if r.Get("uint") != nil {
-			r.Response.Write(r.GetUint("uint"))
+			r.Response.Write(r.Get("uint").Uint())
 		}
 		if r.Get("string") != nil {
-			r.Response.Write(r.GetString("string"))
+			r.Response.Write(r.Get("string").String())
 		}
 		if r.Get("map") != nil {
 			r.Response.Write(r.GetMap()["map"].(map[string]interface{})["b"])
@@ -105,22 +105,22 @@ func Test_Params_Basic(t *testing.T) {
 			r.Response.Write(r.Get("slice"))
 		}
 		if r.Get("bool") != nil {
-			r.Response.Write(r.GetBool("bool"))
+			r.Response.Write(r.Get("bool").Bool())
 		}
 		if r.Get("float32") != nil {
-			r.Response.Write(r.GetFloat32("float32"))
+			r.Response.Write(r.Get("float32").Float32())
 		}
 		if r.Get("float64") != nil {
-			r.Response.Write(r.GetFloat64("float64"))
+			r.Response.Write(r.Get("float64").Float64())
 		}
 		if r.Get("int") != nil {
-			r.Response.Write(r.GetInt("int"))
+			r.Response.Write(r.Get("int").Int())
 		}
 		if r.Get("uint") != nil {
-			r.Response.Write(r.GetUint("uint"))
+			r.Response.Write(r.Get("uint").Uint())
 		}
 		if r.Get("string") != nil {
-			r.Response.Write(r.GetString("string"))
+			r.Response.Write(r.Get("string").String())
 		}
 		if r.Get("map") != nil {
 			r.Response.Write(r.GetMap()["map"].(map[string]interface{})["b"])
@@ -138,22 +138,22 @@ func Test_Params_Basic(t *testing.T) {
 			r.Response.Write(r.Get("slice"))
 		}
 		if r.Get("bool") != nil {
-			r.Response.Write(r.GetBool("bool"))
+			r.Response.Write(r.Get("bool").Bool())
 		}
 		if r.Get("float32") != nil {
-			r.Response.Write(r.GetFloat32("float32"))
+			r.Response.Write(r.Get("float32").Float32())
 		}
 		if r.Get("float64") != nil {
-			r.Response.Write(r.GetFloat64("float64"))
+			r.Response.Write(r.Get("float64").Float64())
 		}
 		if r.Get("int") != nil {
-			r.Response.Write(r.GetInt("int"))
+			r.Response.Write(r.Get("int").Int())
 		}
 		if r.Get("uint") != nil {
-			r.Response.Write(r.GetUint("uint"))
+			r.Response.Write(r.Get("uint").Uint())
 		}
 		if r.Get("string") != nil {
-			r.Response.Write(r.GetString("string"))
+			r.Response.Write(r.Get("string").String())
 		}
 		if r.Get("map") != nil {
 			r.Response.Write(r.GetMap()["map"].(map[string]interface{})["b"])
@@ -171,22 +171,22 @@ func Test_Params_Basic(t *testing.T) {
 			r.Response.Write(r.GetForm("slice"))
 		}
 		if r.Get("bool") != nil {
-			r.Response.Write(r.GetFormBool("bool"))
+			r.Response.Write(r.GetForm("bool").Bool())
 		}
 		if r.Get("float32") != nil {
-			r.Response.Write(r.GetFormFloat32("float32"))
+			r.Response.Write(r.GetForm("float32").Float32())
 		}
 		if r.Get("float64") != nil {
-			r.Response.Write(r.GetFormFloat64("float64"))
+			r.Response.Write(r.GetForm("float64").Float64())
 		}
 		if r.Get("int") != nil {
-			r.Response.Write(r.GetFormInt("int"))
+			r.Response.Write(r.GetForm("int").Int())
 		}
 		if r.Get("uint") != nil {
-			r.Response.Write(r.GetFormUint("uint"))
+			r.Response.Write(r.GetForm("uint").Uint())
 		}
 		if r.Get("string") != nil {
-			r.Response.Write(r.GetFormString("string"))
+			r.Response.Write(r.GetForm("string").String())
 		}
 		if r.Get("map") != nil {
 			r.Response.Write(r.GetFormMap()["map"].(map[string]interface{})["b"])
@@ -206,7 +206,7 @@ func Test_Params_Basic(t *testing.T) {
 		}
 	})
 	s.BindHandler("/raw", func(r *ghttp.Request) {
-		r.Response.Write(r.GetRaw())
+		r.Response.Write(r.GetBody())
 	})
 	s.BindHandler("/json", func(r *ghttp.Request) {
 		j, err := r.GetJson()

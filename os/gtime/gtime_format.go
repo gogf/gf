@@ -65,7 +65,7 @@ var (
 	dayOfMonth = []int{0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334}
 )
 
-// Format formats and returns the formatted result with custom <format>.
+// Format formats and returns the formatted result with custom `format`.
 func (t *Time) Format(format string) string {
 	if t == nil {
 		return ""

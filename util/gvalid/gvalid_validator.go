@@ -63,7 +63,7 @@ func (v *Validator) Bail() *Validator {
 }
 
 // Data is a chaining operation function, which sets validation data for current operation.
-// The parameter `data` usually be type of map, which specifies the parameter map used in validation.
+// The parameter `data` is usually type of map, which specifies the parameter map used in validation.
 // Calling this function also sets `useDataInsteadOfObjectAttributes` true no mather the `data` is nil or not.
 func (v *Validator) Data(data interface{}) *Validator {
 	newValidator := v.Clone()

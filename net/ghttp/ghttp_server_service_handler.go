@@ -8,6 +8,7 @@ package ghttp
 
 import (
 	"bytes"
+	"context"
 	"github.com/gogf/gf/debug/gdebug"
 	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
@@ -25,19 +26,22 @@ import (
 // func(context.Context,TypeRequest) error
 // func(context.Context,TypeRequest)(TypeResponse,error)
 func (s *Server) BindHandler(pattern string, handler interface{}) {
+	var (
+		ctx = context.TODO()
+	)
 	funcInfo, err := s.checkAndCreateFuncInfo(handler, "", "", "")
 	if err != nil {
-		s.Logger().Error(err.Error())
+		s.Logger().Error(ctx, err.Error())
 		return
 	}
-	s.doBindHandler(pattern, funcInfo, nil, "")
+	s.doBindHandler(ctx, pattern, funcInfo, nil, "")
 }
 
 // doBindHandler registers a handler function to server with given pattern.
 // The parameter <pattern> is like:
 // /user/list, put:/user, delete:/user, post:/user@goframe.org
-func (s *Server) doBindHandler(pattern string, funcInfo handlerFuncInfo, middleware []HandlerFunc, source string) {
-	s.setHandler(pattern, &handlerItem{
+func (s *Server) doBindHandler(ctx context.Context, pattern string, funcInfo handlerFuncInfo, middleware []HandlerFunc, source string) {
+	s.setHandler(ctx, pattern, &handlerItem{
 		Name:       gdebug.FuncPath(funcInfo.Func),
 		Type:       handlerTypeHandler,
 		Info:       funcInfo,
@@ -47,9 +51,9 @@ func (s *Server) doBindHandler(pattern string, funcInfo handlerFuncInfo, middlew
 }
 
 // bindHandlerByMap registers handlers to server using map.
-func (s *Server) bindHandlerByMap(m map[string]*handlerItem) {
+func (s *Server) bindHandlerByMap(ctx context.Context, m map[string]*handlerItem) {
 	for p, h := range m {
-		s.setHandler(p, h)
+		s.setHandler(ctx, p, h)
 	}
 }
 

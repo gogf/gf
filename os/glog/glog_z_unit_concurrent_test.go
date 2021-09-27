@@ -32,7 +32,7 @@ func Test_Concurrent(t *testing.T) {
 			go func() {
 				defer wg.Done()
 				<-ch
-				l.File(f).Stdout(false).Print(s)
+				l.File(f).Stdout(false).Print(ctx, s)
 			}()
 		}
 		close(ch)

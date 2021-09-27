@@ -297,12 +297,6 @@ func WordWrap(str string, width int, br string) string {
 	return buf.String()
 }
 
-// RuneLen returns string length of unicode.
-// Deprecated, use LenRune instead.
-func RuneLen(str string) int {
-	return LenRune(str)
-}
-
 // LenRune returns string length of unicode.
 func LenRune(str string) int {
 	return utf8.RuneCountInString(str)
@@ -336,20 +330,6 @@ func SplitAndTrim(str, delimiter string, characterMask ...string) []string {
 	array := make([]string, 0)
 	for _, v := range strings.Split(str, delimiter) {
 		v = Trim(v, characterMask...)
-		if v != "" {
-			array = append(array, v)
-		}
-	}
-	return array
-}
-
-// SplitAndTrimSpace splits string `str` by a string `delimiter` to an array,
-// and calls TrimSpace to every element of this array.
-// Deprecated, use SplitAndTrim instead.
-func SplitAndTrimSpace(str, delimiter string) []string {
-	array := make([]string, 0)
-	for _, v := range strings.Split(str, delimiter) {
-		v = strings.TrimSpace(v)
 		if v != "" {
 			array = append(array, v)
 		}

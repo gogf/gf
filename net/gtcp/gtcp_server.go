@@ -7,6 +7,7 @@
 package gtcp
 
 import (
+	"context"
 	"crypto/tls"
 	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
@@ -74,7 +75,7 @@ func NewServerTLS(address string, tlsConfig *tls.Config, handler func(*Conn), na
 func NewServerKeyCrt(address, crtFile, keyFile string, handler func(*Conn), name ...string) *Server {
 	s := NewServer(address, handler, name...)
 	if err := s.SetTLSKeyCrt(crtFile, keyFile); err != nil {
-		glog.Error(err)
+		glog.Error(context.TODO(), err)
 	}
 	return s
 }
@@ -116,9 +117,12 @@ func (s *Server) Close() error {
 
 // Run starts running the TCP Server.
 func (s *Server) Run() (err error) {
+	var (
+		ctx = context.TODO()
+	)
 	if s.handler == nil {
 		err = gerror.NewCode(gcode.CodeMissingConfiguration, "start running failed: socket handler not defined")
-		glog.Error(err)
+		glog.Error(ctx, err)
 		return
 	}
 	if s.tlsConfig != nil {
@@ -127,21 +131,21 @@ func (s *Server) Run() (err error) {
 		s.listen, err = tls.Listen("tcp", s.address, s.tlsConfig)
 		s.mu.Unlock()
 		if err != nil {
-			glog.Error(err)
+			glog.Error(ctx, err)
 			return
 		}
 	} else {
 		// Normal Server
 		addr, err := net.ResolveTCPAddr("tcp", s.address)
 		if err != nil {
-			glog.Error(err)
+			glog.Error(ctx, err)
 			return err
 		}
 		s.mu.Lock()
 		s.listen, err = net.ListenTCP("tcp", addr)
 		s.mu.Unlock()
 		if err != nil {
-			glog.Error(err)
+			glog.Error(ctx, err)
 			return err
 		}
 	}

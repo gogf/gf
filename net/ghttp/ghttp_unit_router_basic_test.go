@@ -77,10 +77,10 @@ func Test_Router_Value(t *testing.T) {
 	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/{hash}", func(r *ghttp.Request) {
-		r.Response.Write(r.GetRouterString("hash"))
+		r.Response.Write(r.GetRouter("hash").String())
 	})
 	s.BindHandler("/{hash}.{type}", func(r *ghttp.Request) {
-		r.Response.Write(r.GetRouterString("type"))
+		r.Response.Write(r.GetRouter("type").String())
 	})
 	s.BindHandler("/{hash}.{type}.map", func(r *ghttp.Request) {
 		r.Response.Write(r.GetRouterMap()["type"])

@@ -19,13 +19,6 @@ func MapToMaps(params interface{}, pointer interface{}, mapping ...map[string]st
 	return doMapToMaps(params, pointer, mapping...)
 }
 
-// MapToMapsDeep converts any slice type variable `params` to another map slice type variable
-// `pointer` recursively.
-// Deprecated, use MapToMaps instead.
-func MapToMapsDeep(params interface{}, pointer interface{}, mapping ...map[string]string) error {
-	return doMapToMaps(params, pointer, mapping...)
-}
-
 // doMapToMaps converts any map type variable `params` to another map slice variable `pointer`.
 //
 // The parameter `params` can be type of []map, []*map, []struct, []*struct.

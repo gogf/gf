@@ -41,17 +41,11 @@ func init() {
 	}
 }
 
-// SetGraceful enables/disables the graceful reload feature for server,
-// which is false in default.
-//
-// Note that this feature switch is not for single server instance but for whole process.
-// Deprecated, use configuration of ghttp.Server for controlling this feature.
-func SetGraceful(enabled bool) {
-	gracefulEnabled = enabled
-}
-
 // serverProcessInit initializes some process configurations, which can only be done once.
 func serverProcessInit() {
+	var (
+		ctx = context.TODO()
+	)
 	if !serverProcessInitialized.Cas(false, true) {
 		return
 	}
@@ -62,7 +56,7 @@ func serverProcessInit() {
 			p.Kill()
 			p.Wait()
 		} else {
-			glog.Error(e)
+			glog.Error(ctx, e)
 		}
 	}
 
@@ -72,10 +66,10 @@ func serverProcessInit() {
 	// Process message handler.
 	// It's enabled only graceful feature is enabled.
 	if gracefulEnabled {
-		intlog.Printf(context.TODO(), "%d: graceful reload feature is enabled", gproc.Pid())
+		intlog.Printf(ctx, "%d: graceful reload feature is enabled", gproc.Pid())
 		go handleProcessMessage()
 	} else {
-		intlog.Printf(context.TODO(), "%d: graceful reload feature is disabled", gproc.Pid())
+		intlog.Printf(ctx, "%d: graceful reload feature is disabled", gproc.Pid())
 	}
 
 	// It's an ugly calling for better initializing the main package path
@@ -118,8 +112,12 @@ func GetServer(name ...interface{}) *Server {
 // Start starts listening on configured port.
 // This function does not block the process, you can use function Wait blocking the process.
 func (s *Server) Start() error {
+	var (
+		ctx = context.TODO()
+	)
+
 	// Register group routes.
-	s.handlePreBindItems()
+	s.handlePreBindItems(ctx)
 
 	// Server process initialization, which can only be initialized once.
 	serverProcessInit()
@@ -167,11 +165,11 @@ func (s *Server) Start() error {
 	// Install external plugins.
 	for _, p := range s.plugins {
 		if err := p.Install(s); err != nil {
-			s.Logger().Fatal(err)
+			s.Logger().Fatal(ctx, err)
 		}
 	}
 	// Check the group routes again.
-	s.handlePreBindItems()
+	s.handlePreBindItems(ctx)
 
 	// If there's no route registered  and no static service enabled,
 	// it then returns an error of invalid usage of server.
@@ -210,6 +208,9 @@ func (s *Server) Start() error {
 
 // DumpRouterMap dumps the router map to the log.
 func (s *Server) dumpRouterMap() {
+	var (
+		ctx = context.TODO()
+	)
 	if s.config.DumpRouterMap && len(s.routesMap) > 0 {
 		buffer := bytes.NewBuffer(nil)
 		table := tablewriter.NewWriter(buffer)
@@ -230,7 +231,7 @@ func (s *Server) dumpRouterMap() {
 			table.Append(data)
 		}
 		table.Render()
-		s.config.Logger.Header(false).Printf("\n%s", buffer.String())
+		s.config.Logger.Header(false).Printf(ctx, "\n%s", buffer.String())
 	}
 }
 
@@ -312,8 +313,11 @@ func (s *Server) GetRouterArray() []RouterItem {
 // Run starts server listening in blocking way.
 // It's commonly used for single server situation.
 func (s *Server) Run() {
+	var (
+		ctx = context.TODO()
+	)
 	if err := s.Start(); err != nil {
-		s.Logger().Fatal(err)
+		s.Logger().Fatal(ctx, err)
 	}
 	// Blocking using channel.
 	<-s.closeChan
@@ -326,30 +330,38 @@ func (s *Server) Run() {
 			}
 		}
 	}
-	s.Logger().Printf("%d: all servers shutdown", gproc.Pid())
+	s.Logger().Printf(ctx, "%d: all servers shutdown", gproc.Pid())
 }
 
 // Wait blocks to wait for all servers done.
 // It's commonly used in multiple servers situation.
 func Wait() {
+	var (
+		ctx = context.TODO()
+	)
 	<-allDoneChan
 	// Remove plugins.
 	serverMapping.Iterator(func(k string, v interface{}) bool {
 		s := v.(*Server)
 		if len(s.plugins) > 0 {
 			for _, p := range s.plugins {
-				intlog.Printf(context.TODO(), `remove plugin: %s`, p.Name())
-				p.Remove()
+				intlog.Printf(ctx, `remove plugin: %s`, p.Name())
+				if err := p.Remove(); err != nil {
+					intlog.Error(ctx, err)
+				}
 			}
 		}
 		return true
 	})
-	glog.Printf("%d: all servers shutdown", gproc.Pid())
+	glog.Printf(ctx, "%d: all servers shutdown", gproc.Pid())
 }
 
 // startServer starts the underlying server listening.
 func (s *Server) startServer(fdMap listenerFdMap) {
-	var httpsEnabled bool
+	var (
+		ctx          = context.TODO()
+		httpsEnabled bool
+	)
 	// HTTPS
 	if s.config.TLSConfig != nil || (s.config.HTTPSCertPath != "" && s.config.HTTPSKeyPath != "") {
 		if len(s.config.HTTPSAddr) == 0 {
@@ -376,7 +388,7 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 			array := strings.Split(v, "#")
 			if len(array) > 1 {
 				itemFunc = array[0]
-				// The windows OS does not support socket file descriptor passing
+				// The Windows OS does not support socket file descriptor passing
 				// from parent process.
 				if runtime.GOOS != "windows" {
 					fd = gconv.Int(array[1])
@@ -409,7 +421,7 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 		array := strings.Split(v, "#")
 		if len(array) > 1 {
 			itemFunc = array[0]
-			// The windows OS does not support socket file descriptor passing
+			// The Windows OS does not support socket file descriptor passing
 			// from parent process.
 			if runtime.GOOS != "windows" {
 				fd = gconv.Int(array[1])
@@ -434,7 +446,7 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 			}
 			// The process exits if the server is closed with none closing error.
 			if err != nil && !strings.EqualFold(http.ErrServerClosed.Error(), err.Error()) {
-				s.Logger().Fatal(err)
+				s.Logger().Fatal(ctx, err)
 			}
 			// If all the underlying servers shutdown, the process exits.
 			if s.serverCount.Add(-1) < 1 {
@@ -484,17 +496,4 @@ func (s *Server) getListenerFdMap() map[string]string {
 		}
 	}
 	return m
-}
-
-// IsExitError checks if given error is an exit error of server.
-// This is used in old version of server for custom error handler.
-// Deprecated.
-func IsExitError(err interface{}) bool {
-	errStr := gconv.String(err)
-	if strings.EqualFold(errStr, exceptionExit) ||
-		strings.EqualFold(errStr, exceptionExitAll) ||
-		strings.EqualFold(errStr, exceptionExitHook) {
-		return true
-	}
-	return false
 }

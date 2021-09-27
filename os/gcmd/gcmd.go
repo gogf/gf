@@ -66,12 +66,6 @@ func GetArgAll() []string {
 	return command.GetArgAll()
 }
 
-// GetWithEnv is alias of GetOptWithEnv.
-// Deprecated, use GetOptWithEnv instead.
-func GetWithEnv(key string, def ...interface{}) *gvar.Var {
-	return GetOptWithEnv(key, def...)
-}
-
 // GetOptWithEnv returns the command line argument of the specified <key>.
 // If the argument does not exist, then it returns the environment variable with specified <key>.
 // It returns the default value <def> if none of them exists.

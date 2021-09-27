@@ -44,6 +44,16 @@ func Test_GEnv_Get(t *testing.T) {
 	})
 }
 
+func Test_GEnv_GetVar(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		value := gconv.String(gtime.TimestampNano())
+		key := "TEST_ENV_" + value
+		err := os.Setenv(key, "TEST")
+		t.Assert(err, nil)
+		t.AssertEQ(genv.GetVar(key).String(), "TEST")
+	})
+}
+
 func Test_GEnv_Contains(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		value := gconv.String(gtime.TimestampNano())

@@ -156,7 +156,7 @@ func (d *adapterMemoryData) Set(key interface{}, value adapterMemoryItem) {
 //
 // It does not expire if `duration` == 0.
 // It deletes the keys of `data` if `duration` < 0 or given `value` is nil.
-func (d *adapterMemoryData) Sets(data map[interface{}]interface{}, expireTime int64) error {
+func (d *adapterMemoryData) SetMap(data map[interface{}]interface{}, expireTime int64) error {
 	d.mu.Lock()
 	for k, v := range data {
 		d.data[k] = adapterMemoryItem{

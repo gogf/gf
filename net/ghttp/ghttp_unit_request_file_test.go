@@ -30,7 +30,7 @@ func Test_Params_File_Single(t *testing.T) {
 			r.Response.WriteExit("upload file cannot be empty")
 		}
 
-		if name, err := file.Save(dstDirPath, r.GetBool("randomlyRename")); err == nil {
+		if name, err := file.Save(dstDirPath, r.Get("randomlyRename").Bool()); err == nil {
 			r.Response.WriteExit(name)
 		}
 		r.Response.WriteExit("upload failed")
@@ -84,7 +84,7 @@ func Test_Params_File_CustomName(t *testing.T) {
 			r.Response.WriteExit("upload file cannot be empty")
 		}
 		file.Filename = "my.txt"
-		if name, err := file.Save(dstDirPath, r.GetBool("randomlyRename")); err == nil {
+		if name, err := file.Save(dstDirPath, r.Get("randomlyRename").Bool()); err == nil {
 			r.Response.WriteExit(name)
 		}
 		r.Response.WriteExit("upload failed")
@@ -120,7 +120,7 @@ func Test_Params_File_Batch(t *testing.T) {
 		if files == nil {
 			r.Response.WriteExit("upload file cannot be empty")
 		}
-		if names, err := files.Save(dstDirPath, r.GetBool("randomlyRename")); err == nil {
+		if names, err := files.Save(dstDirPath, r.Get("randomlyRename").Bool()); err == nil {
 			r.Response.WriteExit(gstr.Join(names, ","))
 		}
 		r.Response.WriteExit("upload failed")
