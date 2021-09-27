@@ -73,7 +73,7 @@ func (s *gracefulServer) ListenAndServe() error {
 	}
 	s.listener = ln
 	s.rawListener = ln
-	return s.doServe()
+	return s.doServe(context.TODO())
 }
 
 // Fd retrieves and returns the file descriptor of current server.
@@ -97,7 +97,10 @@ func (s *gracefulServer) setFd(fd int) {
 // The parameter <certFile> and <keyFile> specify the necessary certification and key files for HTTPS.
 // The optional parameter <tlsConfig> specifies the custom TLS configuration.
 func (s *gracefulServer) ListenAndServeTLS(certFile, keyFile string, tlsConfig ...*tls.Config) error {
-	var config *tls.Config
+	var (
+		ctx    = context.TODO()
+		config *tls.Config
+	)
 	if len(tlsConfig) > 0 && tlsConfig[0] != nil {
 		config = tlsConfig[0]
 	} else if s.httpServer.TLSConfig != nil {
@@ -131,7 +134,7 @@ func (s *gracefulServer) ListenAndServeTLS(certFile, keyFile string, tlsConfig .
 
 	s.listener = tls.NewListener(ln, config)
 	s.rawListener = ln
-	return s.doServe()
+	return s.doServe(ctx)
 }
 
 // getProto retrieves and returns the proto string of current server.
@@ -143,13 +146,14 @@ func (s *gracefulServer) getProto() string {
 	return proto
 }
 
-// doServe does staring the serving.
-func (s *gracefulServer) doServe() error {
+// doServe starts the serving.
+func (s *gracefulServer) doServe(ctx context.Context) error {
 	action := "started"
 	if s.fd != 0 {
 		action = "reloaded"
 	}
 	s.server.Logger().Printf(
+		ctx,
 		"%d: %s server %s listening on [%s]",
 		gproc.Pid(), s.getProto(), action, s.address,
 	)
@@ -182,12 +186,13 @@ func (s *gracefulServer) getNetListener() (net.Listener, error) {
 }
 
 // shutdown shuts down the server gracefully.
-func (s *gracefulServer) shutdown() {
+func (s *gracefulServer) shutdown(ctx context.Context) {
 	if s.status == ServerStatusStopped {
 		return
 	}
 	if err := s.httpServer.Shutdown(context.Background()); err != nil {
 		s.server.Logger().Errorf(
+			ctx,
 			"%d: %s server [%s] shutdown error: %v",
 			gproc.Pid(), s.getProto(), s.address, err,
 		)
@@ -195,12 +200,13 @@ func (s *gracefulServer) shutdown() {
 }
 
 // close shuts down the server forcibly.
-func (s *gracefulServer) close() {
+func (s *gracefulServer) close(ctx context.Context) {
 	if s.status == ServerStatusStopped {
 		return
 	}
 	if err := s.httpServer.Close(); err != nil {
 		s.server.Logger().Errorf(
+			ctx,
 			"%d: %s server [%s] closed error: %v",
 			gproc.Pid(), s.getProto(), s.address, err,
 		)

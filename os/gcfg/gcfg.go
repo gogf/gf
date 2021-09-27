@@ -15,6 +15,7 @@ import (
 	"github.com/gogf/gf/internal/intlog"
 )
 
+// Config is the configuration management object.
 type Config struct {
 	adapter Adapter
 	dataMap *gmap.StrAnyMap

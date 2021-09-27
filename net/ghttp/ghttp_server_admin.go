@@ -7,6 +7,7 @@
 package ghttp
 
 import (
+	"context"
 	"github.com/gogf/gf/os/gfile"
 	"strings"
 	"time"
@@ -44,16 +45,19 @@ func (p *utilAdmin) Index(r *Request) {
 
 // Restart restarts all the servers in the process.
 func (p *utilAdmin) Restart(r *Request) {
-	var err error = nil
+	var (
+		ctx = r.Context()
+		err error
+	)
 	// Custom start binary path when this process exits.
-	path := r.GetQueryString("newExeFilePath")
+	path := r.GetQuery("newExeFilePath").String()
 	if path == "" {
 		path = gfile.SelfPath()
 	}
 	if len(path) > 0 {
-		err = RestartAllServer(path)
+		err = RestartAllServer(ctx, path)
 	} else {
-		err = RestartAllServer()
+		err = RestartAllServer(ctx)
 	}
 	if err == nil {
 		r.Response.WriteExit("server restarted")
@@ -84,10 +88,13 @@ func (s *Server) EnableAdmin(pattern ...string) {
 
 // Shutdown shuts down current server.
 func (s *Server) Shutdown() error {
+	var (
+		ctx = context.TODO()
+	)
 	// Only shut down current servers.
 	// It may have multiple underlying http servers.
 	for _, v := range s.servers {
-		v.close()
+		v.close(ctx)
 	}
 	return nil
 }

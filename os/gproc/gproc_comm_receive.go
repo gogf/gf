@@ -7,6 +7,7 @@
 package gproc
 
 import (
+	"context"
 	"fmt"
 	"github.com/gogf/gf/internal/json"
 	"net"
@@ -70,7 +71,7 @@ func receiveTcpListening() {
 	// Start listening.
 	for {
 		if conn, err := listen.Accept(); err != nil {
-			glog.Error(err)
+			glog.Error(context.TODO(), err)
 		} else if conn != nil {
 			go receiveTcpHandler(gtcp.NewConnByNetConn(conn))
 		}
@@ -80,6 +81,7 @@ func receiveTcpListening() {
 // receiveTcpHandler is the connection handler for receiving data.
 func receiveTcpHandler(conn *gtcp.Conn) {
 	var (
+		ctx      = context.TODO()
 		result   []byte
 		response MsgResponse
 	)
@@ -113,15 +115,15 @@ func receiveTcpHandler(conn *gtcp.Conn) {
 		if err == nil {
 			result, err = json.Marshal(response)
 			if err != nil {
-				glog.Error(err)
+				glog.Error(ctx, err)
 			}
 			if err := conn.SendPkg(result); err != nil {
-				glog.Error(err)
+				glog.Error(ctx, err)
 			}
 		} else {
 			// Just close the connection if any error occurs.
 			if err := conn.Close(); err != nil {
-				glog.Error(err)
+				glog.Error(ctx, err)
 			}
 			break
 		}

@@ -57,7 +57,7 @@ func (s *StorageRedisHashTable) Get(ctx context.Context, id string, key string) 
 }
 
 // GetMap retrieves all key-value pairs as map from storage.
-func (s *StorageRedisHashTable) GetMap(ctx context.Context, id string) (data map[string]interface{}, err error) {
+func (s *StorageRedisHashTable) Data(ctx context.Context, id string) (data map[string]interface{}, err error) {
 	v, err := s.redis.Do(ctx, "HGETALL", s.key(id))
 	if err != nil {
 		return nil, err

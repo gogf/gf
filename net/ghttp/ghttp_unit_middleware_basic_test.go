@@ -577,7 +577,7 @@ func Test_Hook_Middleware_Basic1(t *testing.T) {
 }
 
 func MiddlewareAuth(r *ghttp.Request) {
-	token := r.Get("token")
+	token := r.Get("token").String()
 	if token == "123456" {
 		r.Middleware.Next()
 	} else {

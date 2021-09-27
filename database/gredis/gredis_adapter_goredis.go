@@ -50,11 +50,6 @@ func NewAdapterGoRedis(config *Config) *AdapterGoRedis {
 	}
 }
 
-// Config returns the configuration that used in current redis object.
-func (r *AdapterGoRedis) Config(ctx context.Context) (config *Config, err error) {
-	return r.config, nil
-}
-
 // Close closes the redis connection pool, which will release all connections reserved by this pool.
 // It is commonly not necessary to call Close manually.
 func (r *AdapterGoRedis) Close(ctx context.Context) error {

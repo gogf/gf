@@ -17,9 +17,6 @@ type Adapter interface {
 	// Note that you should call Close function manually if you do not use this connection any further.
 	Conn(ctx context.Context) (conn Conn, err error)
 
-	// Config returns the configuration that used in current redis object.
-	Config(ctx context.Context) (config *Config, err error)
-
 	// Close closes current redis client, closes its connection pool and releases all its related resources.
 	Close(ctx context.Context) (err error)
 }

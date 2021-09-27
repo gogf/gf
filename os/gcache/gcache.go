@@ -26,12 +26,12 @@ func Set(ctx context.Context, key interface{}, value interface{}, duration time.
 	return defaultCache.Set(ctx, key, value, duration)
 }
 
-// Sets batch sets cache with key-value pairs by `data` map, which is expired after `duration`.
+// SetMap batch sets cache with key-value pairs by `data` map, which is expired after `duration`.
 //
 // It does not expire if `duration` == 0.
 // It deletes the keys of `data` if `duration` < 0 or given `value` is nil.
-func Sets(ctx context.Context, data map[interface{}]interface{}, duration time.Duration) error {
-	return defaultCache.Sets(ctx, data, duration)
+func SetMap(ctx context.Context, data map[interface{}]interface{}, duration time.Duration) error {
+	return defaultCache.SetMap(ctx, data, duration)
 }
 
 // SetIfNotExist sets cache with `key`-`value` pair which is expired after `duration`

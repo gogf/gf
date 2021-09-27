@@ -87,14 +87,14 @@ func (c *AdapterMemory) Set(ctx context.Context, key interface{}, value interfac
 	return nil
 }
 
-// Sets batch sets cache with key-value pairs by `data` map, which is expired after `duration`.
+// SetMap batch sets cache with key-value pairs by `data` map, which is expired after `duration`.
 //
 // It does not expire if `duration` == 0.
 // It deletes the keys of `data` if `duration` < 0 or given `value` is nil.
-func (c *AdapterMemory) Sets(ctx context.Context, data map[interface{}]interface{}, duration time.Duration) error {
+func (c *AdapterMemory) SetMap(ctx context.Context, data map[interface{}]interface{}, duration time.Duration) error {
 	var (
 		expireTime = c.getInternalExpire(duration)
-		err        = c.data.Sets(data, expireTime)
+		err        = c.data.SetMap(data, expireTime)
 	)
 	if err != nil {
 		return err
