@@ -20,13 +20,6 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
-// Select is alias of Model.All.
-// See Model.All.
-// Deprecated, use All instead.
-func (m *Model) Select(where ...interface{}) (Result, error) {
-	return m.All(where...)
-}
-
 // All does "SELECT FROM ..." statement for the model.
 // It retrieves the records from table and returns the result as slice type.
 // It returns nil if there's no record retrieved with the given conditions from table.
@@ -201,15 +194,6 @@ func (m *Model) Array(fieldsAndWhere ...interface{}) ([]Value, error) {
 // The parameter `pointer` should be type of *struct/**struct. If type **struct is given,
 // it can create the struct internally during converting.
 //
-// Deprecated, use Scan instead.
-func (m *Model) Struct(pointer interface{}, where ...interface{}) error {
-	return m.doStruct(pointer, where...)
-}
-
-// Struct retrieves one record from table and converts it into given struct.
-// The parameter `pointer` should be type of *struct/**struct. If type **struct is given,
-// it can create the struct internally during converting.
-//
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
 //
@@ -240,15 +224,6 @@ func (m *Model) doStruct(pointer interface{}, where ...interface{}) error {
 		return err
 	}
 	return model.doWithScanStruct(pointer)
-}
-
-// Structs retrieves records from table and converts them into given struct slice.
-// The parameter `pointer` should be type of *[]struct/*[]*struct. It can create and fill the struct
-// slice internally during converting.
-//
-// Deprecated, use Scan instead.
-func (m *Model) Structs(pointer interface{}, where ...interface{}) error {
-	return m.doStructs(pointer, where...)
 }
 
 // Structs retrieves records from table and converts them into given struct slice.

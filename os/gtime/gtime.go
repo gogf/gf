@@ -158,30 +158,6 @@ func TimestampNanoStr() string {
 	return Now().TimestampNanoStr()
 }
 
-// Second returns the timestamp in seconds.
-// Deprecated, use Timestamp instead.
-func Second() int64 {
-	return Timestamp()
-}
-
-// Millisecond returns the timestamp in milliseconds.
-// Deprecated, use TimestampMilli instead.
-func Millisecond() int64 {
-	return TimestampMilli()
-}
-
-// Microsecond returns the timestamp in microseconds.
-// Deprecated, use TimestampMicro instead.
-func Microsecond() int64 {
-	return TimestampMicro()
-}
-
-// Nanosecond returns the timestamp in nanoseconds.
-// Deprecated, use TimestampNano instead.
-func Nanosecond() int64 {
-	return TimestampNano()
-}
-
 // Date returns current date in string like "2006-01-02".
 func Date() string {
 	return time.Now().Format("2006-01-02")

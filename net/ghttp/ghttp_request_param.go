@@ -118,14 +118,14 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 		if err != nil {
 			return err
 		}
-		if err := j.GetStructs(".", pointer); err != nil {
+		if err := j.Var().Scan(pointer); err != nil {
 			return err
 		}
 		for i := 0; i < reflectVal2.Len(); i++ {
 			if err := gvalid.CheckStructWithData(
 				r.Context(),
 				reflectVal2.Index(i),
-				j.GetMap(gconv.String(i)),
+				j.Get(gconv.String(i)).Map(),
 				nil,
 			); err != nil {
 				return err
@@ -140,20 +140,6 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 // See r.GetRequest.
 func (r *Request) Get(key string, def ...interface{}) *gvar.Var {
 	return r.GetRequest(key, def...)
-}
-
-// GetRaw is alias of GetBody.
-// See GetBody.
-// Deprecated, use GetBody instead.
-func (r *Request) GetRaw() []byte {
-	return r.GetBody()
-}
-
-// GetRawString is alias of GetBodyString.
-// See GetBodyString.
-// Deprecated, use GetBodyString instead.
-func (r *Request) GetRawString() string {
-	return r.GetBodyString()
 }
 
 // GetBody retrieves and returns request body content as bytes.

@@ -146,7 +146,7 @@ func (c *AdapterFile) Data(ctx context.Context) (data map[string]interface{}, er
 		return nil, err
 	}
 	if j != nil {
-		return j.GetVar(".").Map(), nil
+		return j.Var().Map(), nil
 	}
 	return nil, nil
 }
