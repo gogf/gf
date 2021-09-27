@@ -641,7 +641,7 @@ CREATE TABLE %s (
 		n, _ := r.RowsAffected()
 		t.Assert(n, 3)
 
-		count, err := db.Model(table).Where("id", 1).Or("id", 3).Count()
+		count, err := db.Model(table).Where("id", 1).WhereOr("id", 3).Count()
 		t.AssertNil(err)
 		t.Assert(count, 0)
 	})

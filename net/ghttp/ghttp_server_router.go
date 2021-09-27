@@ -7,6 +7,7 @@
 package ghttp
 
 import (
+	"context"
 	"fmt"
 	"github.com/gogf/gf/container/gtype"
 	"github.com/gogf/gf/errors/gcode"
@@ -65,8 +66,8 @@ func (s *Server) parsePattern(pattern string) (domain, method, path string, err 
 // setHandler creates router item with given handler and pattern and registers the handler to the router tree.
 // The router tree can be treated as a multilayer hash table, please refer to the comment in following codes.
 // This function is called during server starts up, which cares little about the performance. What really cares
-// is the well designed router storage structure for router searching when the request is under serving.
-func (s *Server) setHandler(pattern string, handler *handlerItem) {
+// is the well-designed router storage structure for router searching when the request is under serving.
+func (s *Server) setHandler(ctx context.Context, pattern string, handler *handlerItem) {
 	handler.Id = handlerIdGenerator.Add(1)
 	if handler.Source == "" {
 		_, file, line := gdebug.CallerWithFilter(stackFilterKey)
@@ -74,11 +75,11 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 	}
 	domain, method, uri, err := s.parsePattern(pattern)
 	if err != nil {
-		s.Logger().Fatal("invalid pattern:", pattern, err)
+		s.Logger().Fatal(ctx, "invalid pattern:", pattern, err)
 		return
 	}
 	if len(uri) == 0 || uri[0] != '/' {
-		s.Logger().Fatal("invalid pattern:", pattern, "URI should lead with '/'")
+		s.Logger().Fatal(ctx, "invalid pattern:", pattern, "URI should lead with '/'")
 		return
 	}
 
@@ -89,6 +90,7 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 		case handlerTypeHandler, handlerTypeObject, handlerTypeController:
 			if item, ok := s.routesMap[routerKey]; ok {
 				s.Logger().Fatalf(
+					ctx,
 					`duplicated route registry "%s" at %s , already registered at %s`,
 					pattern, handler.Source, item[0].Source,
 				)

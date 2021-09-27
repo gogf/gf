@@ -9,11 +9,10 @@ package ghttp
 
 import (
 	"fmt"
+	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/internal/json"
-	"net/http"
-
-	"github.com/gogf/gf/encoding/gparser"
 	"github.com/gogf/gf/util/gconv"
+	"net/http"
 )
 
 // Write writes <content> to the response buffer.
@@ -147,7 +146,7 @@ func (r *Response) WriteJsonP(content interface{}) error {
 		return err
 	} else {
 		//r.Header().Set("Content-Type", "application/json")
-		if callback := r.Request.GetString("callback"); callback != "" {
+		if callback := r.Request.Get("callback").String(); callback != "" {
 			buffer := []byte(callback)
 			buffer = append(buffer, byte('('))
 			buffer = append(buffer, b...)
@@ -183,7 +182,7 @@ func (r *Response) WriteXml(content interface{}, rootTag ...string) error {
 		return nil
 	}
 	// Else use gparser.VarToXml function to encode the parameter.
-	if b, err := gparser.VarToXml(content, rootTag...); err != nil {
+	if b, err := gjson.New(content).ToXml(rootTag...); err != nil {
 		return err
 	} else {
 		r.Header().Set("Content-Type", "application/xml")

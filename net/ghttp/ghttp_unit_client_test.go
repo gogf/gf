@@ -42,10 +42,10 @@ func Test_Client_Basic(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(url)
 
-		t.Assert(ghttp.GetContent(""), ``)
+		t.Assert(g.Client().GetContent(""), ``)
 		t.Assert(client.GetContent("/hello"), `hello`)
 
-		_, err := ghttp.Post("")
+		_, err := g.Client().Post("")
 		t.AssertNE(err, nil)
 	})
 }

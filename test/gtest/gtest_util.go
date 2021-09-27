@@ -37,20 +37,6 @@ func C(t *testing.T, f func(t *T)) {
 	f(&T{t})
 }
 
-// Case creates a unit testing case.
-// The parameter `t` is the pointer to testing.T of stdlib (*testing.T).
-// The parameter `f` is the closure function for unit testing case.
-// Deprecated.
-func Case(t *testing.T, f func()) {
-	defer func() {
-		if err := recover(); err != nil {
-			fmt.Fprintf(os.Stderr, "%v\n%s", err, gdebug.StackWithFilter(pathFilterKey))
-			t.Fail()
-		}
-	}()
-	f()
-}
-
 // Assert checks `value` and `expect` EQUAL.
 func Assert(value, expect interface{}) {
 	rvExpect := reflect.ValueOf(expect)

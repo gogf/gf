@@ -82,7 +82,7 @@ func (r *Response) buildInVars(params ...map[string]interface{}) map[string]inte
 		gutil.MapMerge(m, params[0])
 	}
 	// Retrieve custom template variables from request object.
-	sessionMap := gconv.MapDeep(r.Request.Session.Map())
+	sessionMap := gconv.MapDeep(r.Request.Session.MustData())
 	gutil.MapMerge(m, map[string]interface{}{
 		"Form":    r.Request.GetFormMap(),
 		"Query":   r.Request.GetQueryMap(),

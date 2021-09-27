@@ -27,11 +27,11 @@ func (r *Request) SetQuery(key string, value interface{}) {
 //
 // Note that if there are multiple parameters with the same name, the parameters are retrieved
 // and overwrote in order of priority: query > body.
-func (r *Request) GetQuery(key string, def ...interface{}) interface{} {
+func (r *Request) GetQuery(key string, def ...interface{}) *gvar.Var {
 	r.parseQuery()
 	if len(r.queryMap) > 0 {
 		if v, ok := r.queryMap[key]; ok {
-			return v
+			return gvar.New(v)
 		}
 	}
 	if r.Method == "GET" {
@@ -39,77 +39,13 @@ func (r *Request) GetQuery(key string, def ...interface{}) interface{} {
 	}
 	if len(r.bodyMap) > 0 {
 		if v, ok := r.bodyMap[key]; ok {
-			return v
+			return gvar.New(v)
 		}
 	}
 	if len(def) > 0 {
-		return def[0]
+		return gvar.New(def[0])
 	}
 	return nil
-}
-
-func (r *Request) GetQueryVar(key string, def ...interface{}) *gvar.Var {
-	return gvar.New(r.GetQuery(key, def...))
-}
-
-func (r *Request) GetQueryString(key string, def ...interface{}) string {
-	return r.GetQueryVar(key, def...).String()
-}
-
-func (r *Request) GetQueryBool(key string, def ...interface{}) bool {
-	return r.GetQueryVar(key, def...).Bool()
-}
-
-func (r *Request) GetQueryInt(key string, def ...interface{}) int {
-	return r.GetQueryVar(key, def...).Int()
-}
-
-func (r *Request) GetQueryInt32(key string, def ...interface{}) int32 {
-	return r.GetQueryVar(key, def...).Int32()
-}
-
-func (r *Request) GetQueryInt64(key string, def ...interface{}) int64 {
-	return r.GetQueryVar(key, def...).Int64()
-}
-
-func (r *Request) GetQueryInts(key string, def ...interface{}) []int {
-	return r.GetQueryVar(key, def...).Ints()
-}
-
-func (r *Request) GetQueryUint(key string, def ...interface{}) uint {
-	return r.GetQueryVar(key, def...).Uint()
-}
-
-func (r *Request) GetQueryUint32(key string, def ...interface{}) uint32 {
-	return r.GetQueryVar(key, def...).Uint32()
-}
-
-func (r *Request) GetQueryUint64(key string, def ...interface{}) uint64 {
-	return r.GetQueryVar(key, def...).Uint64()
-}
-
-func (r *Request) GetQueryFloat32(key string, def ...interface{}) float32 {
-	return r.GetQueryVar(key, def...).Float32()
-}
-
-func (r *Request) GetQueryFloat64(key string, def ...interface{}) float64 {
-	return r.GetQueryVar(key, def...).Float64()
-}
-
-func (r *Request) GetQueryFloats(key string, def ...interface{}) []float64 {
-	return r.GetQueryVar(key, def...).Floats()
-}
-
-func (r *Request) GetQueryArray(key string, def ...interface{}) []string {
-	return r.GetQueryVar(key, def...).Strings()
-}
-
-func (r *Request) GetQueryStrings(key string, def ...interface{}) []string {
-	return r.GetQueryVar(key, def...).Strings()
-}
-
-func (r *Request) GetQueryInterfaces(key string, def ...interface{}) []interface{} {
-	return r.GetQueryVar(key, def...).Interfaces()
 }
 
 // GetQueryMap retrieves and returns all parameters passed from client using HTTP GET method

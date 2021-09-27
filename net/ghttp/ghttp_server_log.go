@@ -20,9 +20,10 @@ func (s *Server) handleAccessLog(r *Request) {
 	if r.TLS != nil {
 		scheme = "https"
 	}
-	s.Logger().Ctx(r.Context()).File(s.config.AccessLogPattern).
+	s.Logger().File(s.config.AccessLogPattern).
 		Stdout(s.config.LogStdout).
 		Printf(
+			r.Context(),
 			`%d "%s %s %s %s %s" %.3f, %s, "%s", "%s"`,
 			r.Response.Status,
 			r.Method, scheme, r.Host, r.URL.String(), r.Proto,
@@ -57,8 +58,7 @@ func (s *Server) handleErrorLog(err error, r *Request) {
 	} else {
 		content += ", " + err.Error()
 	}
-	s.Logger().Ctx(r.Context()).
-		File(s.config.ErrorLogPattern).
+	s.Logger().File(s.config.ErrorLogPattern).
 		Stdout(s.config.LogStdout).
-		Print(content)
+		Print(r.Context(), content)
 }

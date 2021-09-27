@@ -217,19 +217,16 @@ func (c *Core) GetGroup() string {
 }
 
 // SetDryRun enables/disables the DryRun feature.
-// Deprecated, use GetConfig instead.
 func (c *Core) SetDryRun(enabled bool) {
 	c.config.DryRun = enabled
 }
 
 // GetDryRun returns the DryRun value.
-// Deprecated, use GetConfig instead.
 func (c *Core) GetDryRun() bool {
 	return c.config.DryRun || allDryRun
 }
 
 // GetPrefix returns the table prefix string configured.
-// Deprecated, use GetConfig instead.
 func (c *Core) GetPrefix() string {
 	return c.config.Prefix
 }

@@ -98,6 +98,7 @@ func (view *View) SetConfigWithMap(m map[string]interface{}) error {
 // The parameter `path` can be absolute or relative path, but absolute path is suggested.
 func (view *View) SetPath(path string) error {
 	var (
+		ctx      = context.TODO()
 		isDir    = false
 		realPath = ""
 	)
@@ -126,7 +127,7 @@ func (view *View) SetPath(path string) error {
 	if realPath == "" {
 		err := gerror.NewCodef(gcode.CodeInvalidParameter, `[gview] SetPath failed: path "%s" does not exist`, path)
 		if errorPrint() {
-			glog.Error(err)
+			glog.Error(ctx, err)
 		}
 		return err
 	}
@@ -134,7 +135,7 @@ func (view *View) SetPath(path string) error {
 	if !isDir {
 		err := gerror.NewCodef(gcode.CodeInvalidParameter, `[gview] SetPath failed: path "%s" should be directory type`, path)
 		if errorPrint() {
-			glog.Error(err)
+			glog.Error(ctx, err)
 		}
 		return err
 	}
@@ -152,6 +153,7 @@ func (view *View) SetPath(path string) error {
 // AddPath adds a absolute or relative path to the search paths.
 func (view *View) AddPath(path string) error {
 	var (
+		ctx      = context.TODO()
 		isDir    = false
 		realPath = ""
 	)
@@ -180,7 +182,7 @@ func (view *View) AddPath(path string) error {
 	if realPath == "" {
 		err := gerror.NewCodef(gcode.CodeInvalidParameter, `[gview] AddPath failed: path "%s" does not exist`, path)
 		if errorPrint() {
-			glog.Error(err)
+			glog.Error(ctx, err)
 		}
 		return err
 	}
@@ -188,7 +190,7 @@ func (view *View) AddPath(path string) error {
 	if !isDir {
 		err := gerror.NewCodef(gcode.CodeInvalidParameter, `[gview] AddPath failed: path "%s" should be directory type`, path)
 		if errorPrint() {
-			glog.Error(err)
+			glog.Error(ctx, err)
 		}
 		return err
 	}

@@ -42,16 +42,6 @@ func StructTag(params interface{}, pointer interface{}, priorityTag string) (err
 	return doStruct(params, pointer, nil, priorityTag)
 }
 
-// StructDeep do Struct function recursively.
-// Deprecated, use Struct instead.
-func StructDeep(params interface{}, pointer interface{}, mapping ...map[string]string) error {
-	var keyToAttributeNameMapping map[string]string
-	if len(mapping) > 0 {
-		keyToAttributeNameMapping = mapping[0]
-	}
-	return doStruct(params, pointer, keyToAttributeNameMapping, "")
-}
-
 // doStructWithJsonCheck checks if given `params` is JSON, it then uses json.Unmarshal doing the converting.
 func doStructWithJsonCheck(params interface{}, pointer interface{}) (err error, ok bool) {
 	switch r := params.(type) {

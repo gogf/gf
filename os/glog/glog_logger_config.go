@@ -7,6 +7,7 @@
 package glog
 
 import (
+	"context"
 	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/os/gctx"
 	"io"
@@ -73,11 +74,11 @@ func (l *Logger) SetConfig(config Config) error {
 	// Necessary validation.
 	if config.Path != "" {
 		if err := l.SetPath(config.Path); err != nil {
-			intlog.Error(l.ctx, err)
+			intlog.Error(context.TODO(), err)
 			return err
 		}
 	}
-	intlog.Printf(l.ctx, "SetConfig: %+v", l.config)
+	intlog.Printf(context.TODO(), "SetConfig: %+v", l.config)
 	return nil
 }
 

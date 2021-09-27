@@ -21,24 +21,14 @@ type Cron struct {
 	status  *gtype.Int      // Timed task status(0: Not Start; 1: Running; 2: Stopped; -1: Closed)
 	entries *gmap.StrAnyMap // All timed task entries.
 	logger  *glog.Logger    // Logger, it is nil in default.
-
-	// Logging path(folder).
-	// Deprecated, use logger instead.
-	logPath *gtype.String
-
-	// Logging level.
-	// Deprecated, use logger instead.
-	logLevel *gtype.Int
 }
 
 // New returns a new Cron object with default settings.
 func New() *Cron {
 	return &Cron{
-		idGen:    gtype.NewInt64(),
-		status:   gtype.NewInt(StatusRunning),
-		entries:  gmap.NewStrAnyMap(true),
-		logPath:  gtype.NewString(),
-		logLevel: gtype.NewInt(glog.LEVEL_PROD),
+		idGen:   gtype.NewInt64(),
+		status:  gtype.NewInt(StatusRunning),
+		entries: gmap.NewStrAnyMap(true),
 	}
 }
 
@@ -50,30 +40,6 @@ func (c *Cron) SetLogger(logger *glog.Logger) {
 // GetLogger returns the logger in the cron.
 func (c *Cron) GetLogger() *glog.Logger {
 	return c.logger
-}
-
-// SetLogPath sets the logging folder path.
-// Deprecated, use SetLogger instead.
-func (c *Cron) SetLogPath(path string) {
-	c.logPath.Set(path)
-}
-
-// GetLogPath return the logging folder path.
-// Deprecated, use GetLogger instead.
-func (c *Cron) GetLogPath() string {
-	return c.logPath.Val()
-}
-
-// SetLogLevel sets the logging level.
-// Deprecated, use SetLogger instead.
-func (c *Cron) SetLogLevel(level int) {
-	c.logLevel.Set(level)
-}
-
-// GetLogLevel returns the logging level.
-// Deprecated, use GetLogger instead.
-func (c *Cron) GetLogLevel() int {
-	return c.logLevel.Val()
 }
 
 // AddEntry creates and returns a new Entry object.

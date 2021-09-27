@@ -220,7 +220,7 @@ func (m *Manager) init(ctx context.Context) {
 					m.data[lang] = make(map[string]string)
 				}
 				if j, err := gjson.LoadContent(file.Content()); err == nil {
-					for k, v := range j.Map() {
+					for k, v := range j.Var().Map() {
 						m.data[lang][k] = gconv.String(v)
 					}
 				} else {
@@ -251,7 +251,7 @@ func (m *Manager) init(ctx context.Context) {
 				m.data[lang] = make(map[string]string)
 			}
 			if j, err := gjson.LoadContent(gfile.GetBytes(file)); err == nil {
-				for k, v := range j.Map() {
+				for k, v := range j.Var().Map() {
 					m.data[lang][k] = gconv.String(v)
 				}
 			} else {

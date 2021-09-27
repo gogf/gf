@@ -63,7 +63,7 @@ func (view *View) Parse(ctx context.Context, file string, params ...Params) (res
 			resource *gres.File
 		)
 		// Searching the absolute file path for `file`.
-		path, folder, resource, err = view.searchFile(file)
+		path, folder, resource, err = view.searchFile(ctx, file)
 		if err != nil {
 			return nil
 		}
@@ -304,7 +304,7 @@ func (view *View) formatTemplateObjectCreatingError(filePath, tplName string, er
 // searchFile returns the found absolute path for `file` and its template folder path.
 // Note that, the returned `folder` is the template folder path, but not the folder of
 // the returned template file `path`.
-func (view *View) searchFile(file string) (path string, folder string, resource *gres.File, err error) {
+func (view *View) searchFile(ctx context.Context, file string) (path string, folder string, resource *gres.File, err error) {
 	// Firstly checking the resource manager.
 	if !gres.IsEmpty() {
 		// Try folders.
@@ -372,7 +372,7 @@ func (view *View) searchFile(file string) (path string, folder string, resource 
 			buffer.WriteString(fmt.Sprintf("[gview] cannot find template file \"%s\" with no path set/add", file))
 		}
 		if errorPrint() {
-			glog.Error(buffer.String())
+			glog.Error(ctx, buffer.String())
 		}
 		err = gerror.NewCodef(gcode.CodeInvalidParameter, `template file "%s" not found`, file)
 	}

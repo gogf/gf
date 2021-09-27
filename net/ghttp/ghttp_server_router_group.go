@@ -7,6 +7,7 @@
 package ghttp
 
 import (
+	"context"
 	"fmt"
 	"github.com/gogf/gf/debug/gdebug"
 	"reflect"
@@ -55,7 +56,7 @@ var (
 )
 
 // handlePreBindItems is called when server starts, which does really route registering to the server.
-func (s *Server) handlePreBindItems() {
+func (s *Server) handlePreBindItems(ctx context.Context) {
 	if len(preBindItems) == 0 {
 		return
 	}
@@ -70,7 +71,7 @@ func (s *Server) handlePreBindItems() {
 		if item.group.domain != nil && item.group.domain.server != s {
 			continue
 		}
-		item.group.doBindRoutersToServer(item)
+		item.group.doBindRoutersToServer(ctx, item)
 		item.bound = true
 	}
 }
@@ -153,10 +154,13 @@ func (g *RouterGroup) Clone() *RouterGroup {
 
 // Bind does batch route registering feature for router group.
 func (g *RouterGroup) Bind(items []GroupItem) *RouterGroup {
-	group := g.Clone()
+	var (
+		ctx   = context.TODO()
+		group = g.Clone()
+	)
 	for _, item := range items {
 		if len(item) < 3 {
-			g.server.Logger().Fatalf("invalid router item: %s", item)
+			g.server.Logger().Fatalf(ctx, "invalid router item: %s", item)
 		}
 		bindType := gstr.ToUpper(gconv.String(item[0]))
 		switch bindType {
@@ -288,7 +292,7 @@ func (g *RouterGroup) getPrefix() string {
 }
 
 // doBindRoutersToServer does really register for the group.
-func (g *RouterGroup) doBindRoutersToServer(item *preBindItem) *RouterGroup {
+func (g *RouterGroup) doBindRoutersToServer(ctx context.Context, item *preBindItem) *RouterGroup {
 	var (
 		bindType = item.bindType
 		pattern  = item.pattern
@@ -301,7 +305,7 @@ func (g *RouterGroup) doBindRoutersToServer(item *preBindItem) *RouterGroup {
 	if len(prefix) > 0 {
 		domain, method, path, err := g.server.parsePattern(pattern)
 		if err != nil {
-			g.server.Logger().Fatalf("invalid pattern: %s", pattern)
+			g.server.Logger().Fatalf(ctx, "invalid pattern: %s", pattern)
 		}
 		// If there is already a domain, unset the domain field in the pattern.
 		if g.domain != nil {
@@ -330,63 +334,63 @@ func (g *RouterGroup) doBindRoutersToServer(item *preBindItem) *RouterGroup {
 		if reflect.ValueOf(object).Kind() == reflect.Func {
 			funcInfo, err := g.server.checkAndCreateFuncInfo(object, "", "", "")
 			if err != nil {
-				g.server.Logger().Error(err.Error())
+				g.server.Logger().Error(ctx, err.Error())
 				return g
 			}
 			if g.server != nil {
-				g.server.doBindHandler(pattern, funcInfo, g.middleware, source)
+				g.server.doBindHandler(ctx, pattern, funcInfo, g.middleware, source)
 			} else {
-				g.domain.doBindHandler(pattern, funcInfo, g.middleware, source)
+				g.domain.doBindHandler(ctx, pattern, funcInfo, g.middleware, source)
 			}
 		} else {
 			if len(extras) > 0 {
 				if g.server != nil {
 					if gstr.Contains(extras[0], ",") {
 						g.server.doBindObject(
-							pattern, object, extras[0], g.middleware, source,
+							ctx, pattern, object, extras[0], g.middleware, source,
 						)
 					} else {
 						g.server.doBindObjectMethod(
-							pattern, object, extras[0], g.middleware, source,
+							ctx, pattern, object, extras[0], g.middleware, source,
 						)
 					}
 				} else {
 					if gstr.Contains(extras[0], ",") {
 						g.domain.doBindObject(
-							pattern, object, extras[0], g.middleware, source,
+							ctx, pattern, object, extras[0], g.middleware, source,
 						)
 					} else {
 						g.domain.doBindObjectMethod(
-							pattern, object, extras[0], g.middleware, source,
+							ctx, pattern, object, extras[0], g.middleware, source,
 						)
 					}
 				}
 			} else {
 				// At last, it treats the `object` as Object registering type.
 				if g.server != nil {
-					g.server.doBindObject(pattern, object, "", g.middleware, source)
+					g.server.doBindObject(ctx, pattern, object, "", g.middleware, source)
 				} else {
-					g.domain.doBindObject(pattern, object, "", g.middleware, source)
+					g.domain.doBindObject(ctx, pattern, object, "", g.middleware, source)
 				}
 			}
 		}
 
 	case groupBindTypeRest:
 		if g.server != nil {
-			g.server.doBindObjectRest(pattern, object, g.middleware, source)
+			g.server.doBindObjectRest(ctx, pattern, object, g.middleware, source)
 		} else {
-			g.domain.doBindObjectRest(pattern, object, g.middleware, source)
+			g.domain.doBindObjectRest(ctx, pattern, object, g.middleware, source)
 		}
 
 	case groupBindTypeHook:
 		if h, ok := object.(HandlerFunc); ok {
 			if g.server != nil {
-				g.server.doBindHookHandler(pattern, extras[0], h, source)
+				g.server.doBindHookHandler(ctx, pattern, extras[0], h, source)
 			} else {
-				g.domain.doBindHookHandler(pattern, extras[0], h, source)
+				g.domain.doBindHookHandler(ctx, pattern, extras[0], h, source)
 			}
 		} else {
-			g.server.Logger().Fatalf("invalid hook handler for pattern: %s", pattern)
+			g.server.Logger().Fatalf(ctx, "invalid hook handler for pattern: %s", pattern)
 		}
 	}
 	return g

@@ -184,8 +184,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// and SessionCookieOutput is enabled.
 	if s.config.SessionCookieOutput &&
 		request.Session.IsDirty() &&
-		request.Session.Id() != request.GetSessionId() {
-		request.Cookie.SetSessionId(request.Session.Id())
+		request.Session.MustId() != request.GetSessionId() {
+		request.Cookie.SetSessionId(request.Session.MustId())
 	}
 	// Output the cookie content to client.
 	request.Cookie.Flush()

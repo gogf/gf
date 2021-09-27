@@ -7,8 +7,8 @@ require (
 	github.com/clbanning/mxj/v2 v2.5.5
 	github.com/fatih/color v1.12.0
 	github.com/fsnotify/fsnotify v1.5.1
+	github.com/go-redis/redis/v8 v8.11.3
 	github.com/go-sql-driver/mysql v1.6.0
-	github.com/gomodule/redigo v1.8.5
 	github.com/gorilla/websocket v1.4.2
 	github.com/grokify/html-strip-tags-go v0.0.1
 	github.com/olekukonko/tablewriter v0.0.5

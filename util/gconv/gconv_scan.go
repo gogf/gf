@@ -67,23 +67,3 @@ func Scan(params interface{}, pointer interface{}, mapping ...map[string]string)
 		return doStruct(params, pointer, keyToAttributeNameMapping, "")
 	}
 }
-
-// ScanDeep automatically calls StructDeep or StructsDeep function according to the type of
-// parameter `pointer` to implement the converting.
-//
-// It calls function StructDeep if `pointer` is type of *struct/**struct to do the converting.
-// It calls function StructsDeep if `pointer` is type of *[]struct/*[]*struct to do the converting.
-// Deprecated, use Scan instead.
-func ScanDeep(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
-	t := reflect.TypeOf(pointer)
-	k := t.Kind()
-	if k != reflect.Ptr {
-		return gerror.NewCodef(gcode.CodeInvalidParameter, "params should be type of pointer, but got: %v", k)
-	}
-	switch t.Elem().Kind() {
-	case reflect.Array, reflect.Slice:
-		return StructsDeep(params, pointer, mapping...)
-	default:
-		return StructDeep(params, pointer, mapping...)
-	}
-}

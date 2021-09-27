@@ -63,6 +63,9 @@ func ParseContent(ctx context.Context, content string, params ...Params) (string
 // New returns a new view object.
 // The parameter `path` specifies the template directory path to load template files.
 func New(path ...string) *View {
+	var (
+		ctx = context.TODO()
+	)
 	view := &View{
 		paths:        garray.NewStrArray(),
 		data:         make(map[string]interface{}),
@@ -83,7 +86,7 @@ func New(path ...string) *View {
 				}
 			} else {
 				if errorPrint() {
-					glog.Errorf("Template directory path does not exist: %s", envPath)
+					glog.Errorf(ctx, "Template directory path does not exist: %s", envPath)
 				}
 			}
 		} else {

@@ -86,15 +86,6 @@ func DB(name ...string) gdb.DB {
 	return gins.Database(name...)
 }
 
-// Table is alias of Model.
-// The database component is designed not only for
-// relational databases but also for NoSQL databases in the future. The name
-// "Table" is not proper for that purpose anymore.
-// Deprecated, use Model instead.
-func Table(tableNameOrStruct ...interface{}) *gdb.Model {
-	return DB().Model(tableNameOrStruct...)
-}
-
 // Model creates and returns a model based on configuration of default database group.
 func Model(tableNameOrStruct ...interface{}) *gdb.Model {
 	return DB().Model(tableNameOrStruct...)
