@@ -181,7 +181,6 @@ func (r *Response) WriteXml(content interface{}, rootTag ...string) error {
 		r.Write(gconv.String(content))
 		return nil
 	}
-	// Else use gparser.VarToXml function to encode the parameter.
 	if b, err := gjson.New(content).ToXml(rootTag...); err != nil {
 		return err
 	} else {

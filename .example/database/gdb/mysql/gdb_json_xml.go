@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
+	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/os/gctx"
 
 	"github.com/gogf/gf/database/gdb"
-	"github.com/gogf/gf/encoding/gparser"
 	"github.com/gogf/gf/frame/g"
 )
 
@@ -34,8 +34,8 @@ func main() {
 	fmt.Println(one.Xml())
 
 	// 自定义方法方法转换为json/xml
-	jsonContent, _ := gparser.VarToJson(one.Map())
+	jsonContent, _ := gjson.New(one.Map()).ToJson()
 	fmt.Println(string(jsonContent))
-	xmlContent, _ := gparser.VarToXml(one.Map())
+	xmlContent, _ := gjson.New(one.Map()).ToJson()
 	fmt.Println(string(xmlContent))
 }
