@@ -7,31 +7,10 @@
 package glog
 
 import (
-	"context"
-	"github.com/gogf/gf/internal/intlog"
 	"io"
 
 	"github.com/gogf/gf/os/gfile"
 )
-
-// Ctx is a chaining function,
-// which sets the context for current logging.
-func (l *Logger) Ctx(ctx context.Context, keys ...interface{}) *Logger {
-	if ctx == nil {
-		return l
-	}
-	logger := (*Logger)(nil)
-	if l.parent == nil {
-		logger = l.Clone()
-	} else {
-		logger = l
-	}
-	logger.ctx = ctx
-	if len(keys) > 0 {
-		logger.SetCtxKeys(keys...)
-	}
-	return logger
-}
 
 // To is a chaining function,
 // which redirects current logging content output to the specified `writer`.
@@ -59,8 +38,7 @@ func (l *Logger) Path(path string) *Logger {
 	}
 	if path != "" {
 		if err := logger.SetPath(path); err != nil {
-			// panic(err)
-			intlog.Error(l.getCtx(), err)
+			panic(err)
 		}
 	}
 	return logger
@@ -78,8 +56,7 @@ func (l *Logger) Cat(category string) *Logger {
 	}
 	if logger.config.Path != "" {
 		if err := logger.SetPath(gfile.Join(logger.config.Path, category)); err != nil {
-			// panic(err)
-			intlog.Error(l.getCtx(), err)
+			panic(err)
 		}
 	}
 	return logger
@@ -121,8 +98,7 @@ func (l *Logger) LevelStr(levelStr string) *Logger {
 		logger = l
 	}
 	if err := logger.SetLevelStr(levelStr); err != nil {
-		// panic(err)
-		intlog.Error(l.getCtx(), err)
+		panic(err)
 	}
 	return logger
 }

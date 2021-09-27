@@ -7,6 +7,7 @@
 package ghttp
 
 import (
+	"context"
 	"github.com/gogf/gf/debug/gdebug"
 	"net/http"
 	"reflect"
@@ -14,11 +15,11 @@ import (
 
 // BindHookHandler registers handler for specified hook.
 func (s *Server) BindHookHandler(pattern string, hook string, handler HandlerFunc) {
-	s.doBindHookHandler(pattern, hook, handler, "")
+	s.doBindHookHandler(context.TODO(), pattern, hook, handler, "")
 }
 
-func (s *Server) doBindHookHandler(pattern string, hook string, handler HandlerFunc, source string) {
-	s.setHandler(pattern, &handlerItem{
+func (s *Server) doBindHookHandler(ctx context.Context, pattern string, hook string, handler HandlerFunc, source string) {
+	s.setHandler(ctx, pattern, &handlerItem{
 		Type: handlerTypeHook,
 		Name: gdebug.FuncPath(handler),
 		Info: handlerFuncInfo{

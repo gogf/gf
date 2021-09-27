@@ -67,5 +67,5 @@ func (r *Request) GetPage(totalSize, pageSize int) *gpage.Page {
 		urlTemplate += "?" + url.RawQuery
 	}
 
-	return gpage.New(totalSize, pageSize, r.GetInt(gpage.DefaultPageName), urlTemplate)
+	return gpage.New(totalSize, pageSize, r.Get(gpage.DefaultPageName).Int(), urlTemplate)
 }

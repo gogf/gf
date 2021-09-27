@@ -9,6 +9,7 @@ package gvalid
 import (
 	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/text/gstr"
 	"strconv"
 	"strings"
 	"time"
@@ -306,7 +307,7 @@ func (v *Validator) doCheckBuildInRules(input doCheckBuildInRulesInput) (match b
 
 	// Field value should be in range of.
 	case "in":
-		array := strings.Split(input.RulePattern, ",")
+		array := gstr.SplitAndTrim(input.RulePattern, ",")
 		for _, v := range array {
 			if strings.Compare(valueStr, strings.TrimSpace(v)) == 0 {
 				match = true
@@ -317,7 +318,7 @@ func (v *Validator) doCheckBuildInRules(input doCheckBuildInRulesInput) (match b
 	// Field value should not be in range of.
 	case "not-in":
 		match = true
-		array := strings.Split(input.RulePattern, ",")
+		array := gstr.SplitAndTrim(input.RulePattern, ",")
 		for _, v := range array {
 			if strings.Compare(valueStr, strings.TrimSpace(v)) == 0 {
 				match = false

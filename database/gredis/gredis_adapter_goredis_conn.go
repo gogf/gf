@@ -22,7 +22,6 @@ type localAdapterGoRedisConn struct {
 // Do sends a command to the server and returns the received reply.
 // It uses json.Marshal for struct/slice/map type values before committing them to redis.
 func (c *localAdapterGoRedisConn) Do(ctx context.Context, command string, args ...interface{}) (reply *gvar.Var, err error) {
-
 	switch gstr.ToLower(command) {
 	case `subscribe`:
 		c.ps = c.redis.client.Subscribe(ctx, gconv.Strings(args)...)

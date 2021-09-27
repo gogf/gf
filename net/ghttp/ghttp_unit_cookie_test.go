@@ -21,13 +21,13 @@ func Test_Cookie(t *testing.T) {
 	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/set", func(r *ghttp.Request) {
-		r.Cookie.Set(r.GetString("k"), r.GetString("v"))
+		r.Cookie.Set(r.Get("k").String(), r.Get("v").String())
 	})
 	s.BindHandler("/get", func(r *ghttp.Request) {
-		r.Response.Write(r.Cookie.Get(r.GetString("k")))
+		r.Response.Write(r.Cookie.Get(r.Get("k").String()))
 	})
 	s.BindHandler("/remove", func(r *ghttp.Request) {
-		r.Cookie.Remove(r.GetString("k"))
+		r.Cookie.Remove(r.Get("k").String())
 	})
 	s.SetPort(p)
 	s.SetDumpRouterMap(false)
@@ -65,15 +65,15 @@ func Test_SetHttpCookie(t *testing.T) {
 	s := g.Server(p)
 	s.BindHandler("/set", func(r *ghttp.Request) {
 		r.Cookie.SetHttpCookie(&http.Cookie{
-			Name:  r.GetString("k"),
-			Value: r.GetString("v"),
+			Name:  r.Get("k").String(),
+			Value: r.Get("v").String(),
 		})
 	})
 	s.BindHandler("/get", func(r *ghttp.Request) {
-		r.Response.Write(r.Cookie.Get(r.GetString("k")))
+		r.Response.Write(r.Cookie.Get(r.Get("k").String()))
 	})
 	s.BindHandler("/remove", func(r *ghttp.Request) {
-		r.Cookie.Remove(r.GetString("k"))
+		r.Cookie.Remove(r.Get("k").String())
 	})
 	s.SetPort(p)
 	s.SetDumpRouterMap(false)

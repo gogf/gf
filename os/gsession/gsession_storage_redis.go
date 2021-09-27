@@ -78,7 +78,7 @@ func (s *StorageRedis) Get(ctx context.Context, id string, key string) (value in
 }
 
 // GetMap retrieves all key-value pairs as map from storage.
-func (s *StorageRedis) GetMap(ctx context.Context, id string) (data map[string]interface{}, err error) {
+func (s *StorageRedis) Data(ctx context.Context, id string) (data map[string]interface{}, err error) {
 	return nil, ErrorDisabled
 }
 

@@ -8,6 +8,7 @@ package ghttp
 
 import (
 	"bytes"
+	"context"
 	"github.com/gogf/gf/os/glog"
 )
 
@@ -18,6 +19,6 @@ type errorLogger struct {
 
 // Write implements the io.Writer interface.
 func (l *errorLogger) Write(p []byte) (n int, err error) {
-	l.logger.Skip(1).Error(string(bytes.TrimRight(p, "\r\n")))
+	l.logger.Skip(1).Error(context.TODO(), string(bytes.TrimRight(p, "\r\n")))
 	return len(p), nil
 }

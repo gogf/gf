@@ -22,11 +22,11 @@ type Adapter interface {
 	// It deletes the keys of `data` if `duration` < 0 or given `value` is nil.
 	Set(ctx context.Context, key interface{}, value interface{}, duration time.Duration) error
 
-	// Sets batch sets cache with key-value pairs by `data` map, which is expired after `duration`.
+	// SetMap batch sets cache with key-value pairs by `data` map, which is expired after `duration`.
 	//
 	// It does not expire if `duration` == 0.
 	// It deletes the keys of `data` if `duration` < 0 or given `value` is nil.
-	Sets(ctx context.Context, data map[interface{}]interface{}, duration time.Duration) error
+	SetMap(ctx context.Context, data map[interface{}]interface{}, duration time.Duration) error
 
 	// SetIfNotExist sets cache with `key`-`value` pair which is expired after `duration`
 	// if `key` does not exist in the cache. It returns true the `key` does not exist in the

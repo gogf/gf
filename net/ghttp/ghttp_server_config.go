@@ -9,7 +9,6 @@ package ghttp
 import (
 	"context"
 	"crypto/tls"
-	"fmt"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/os/gres"
 	"github.com/gogf/gf/util/gutil"
@@ -388,6 +387,9 @@ func (s *Server) SetHTTPSPort(port ...int) {
 // EnableHTTPS enables HTTPS with given certification and key files for the server.
 // The optional parameter <tlsConfig> specifies custom TLS configuration.
 func (s *Server) EnableHTTPS(certFile, keyFile string, tlsConfig ...*tls.Config) {
+	var (
+		ctx = context.TODO()
+	)
 	certFileRealPath := gfile.RealPath(certFile)
 	if certFileRealPath == "" {
 		certFileRealPath = gfile.RealPath(gfile.Pwd() + gfile.Separator + certFile)
@@ -400,7 +402,7 @@ func (s *Server) EnableHTTPS(certFile, keyFile string, tlsConfig ...*tls.Config)
 		certFileRealPath = certFile
 	}
 	if certFileRealPath == "" {
-		s.Logger().Fatal(fmt.Sprintf(`EnableHTTPS failed: certFile "%s" does not exist`, certFile))
+		s.Logger().Fatalf(ctx, `EnableHTTPS failed: certFile "%s" does not exist`, certFile)
 	}
 	keyFileRealPath := gfile.RealPath(keyFile)
 	if keyFileRealPath == "" {
@@ -414,7 +416,7 @@ func (s *Server) EnableHTTPS(certFile, keyFile string, tlsConfig ...*tls.Config)
 		keyFileRealPath = keyFile
 	}
 	if keyFileRealPath == "" {
-		s.Logger().Fatal(fmt.Sprintf(`EnableHTTPS failed: keyFile "%s" does not exist`, keyFile))
+		s.Logger().Fatal(ctx, `EnableHTTPS failed: keyFile "%s" does not exist`, keyFile)
 	}
 	s.config.HTTPSCertPath = certFileRealPath
 	s.config.HTTPSKeyPath = keyFileRealPath

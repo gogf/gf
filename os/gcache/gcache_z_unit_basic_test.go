@@ -323,15 +323,15 @@ func TestCache_SetIfNotExistFuncLock(t *testing.T) {
 	})
 }
 
-func TestCache_Sets(t *testing.T) {
+func TestCache_SetMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New()
-		t.AssertNil(cache.Sets(ctx, g.MapAnyAny{1: 11, 2: 22}, 0))
+		t.AssertNil(cache.SetMap(ctx, g.MapAnyAny{1: 11, 2: 22}, 0))
 		v, _ := cache.Get(ctx, 1)
 		t.Assert(v, 11)
 
 		gcache.Remove(ctx, g.Slice{1, 2, 3}...)
-		t.AssertNil(gcache.Sets(ctx, g.MapAnyAny{1: 11, 2: 22}, 0))
+		t.AssertNil(gcache.SetMap(ctx, g.MapAnyAny{1: 11, 2: 22}, 0))
 		v, _ = cache.Get(ctx, 1)
 		t.Assert(v, 11)
 	})
@@ -438,7 +438,7 @@ func TestCache_GetOrSetFuncLock(t *testing.T) {
 func TestCache_Clear(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cache := gcache.New()
-		cache.Sets(ctx, g.MapAnyAny{1: 11, 2: 22}, 0)
+		cache.SetMap(ctx, g.MapAnyAny{1: 11, 2: 22}, 0)
 		cache.Clear(ctx)
 		n, _ := cache.Size(ctx)
 		t.Assert(n, 0)
@@ -479,7 +479,7 @@ func TestCache_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		{
 			cache := gcache.New()
-			cache.Sets(ctx, g.MapAnyAny{1: 11, 2: 22}, 0)
+			cache.SetMap(ctx, g.MapAnyAny{1: 11, 2: 22}, 0)
 			b, _ := cache.Contains(ctx, 1)
 			t.Assert(b, true)
 			v, _ := cache.Get(ctx, 1)
@@ -508,7 +508,7 @@ func TestCache_Basic(t *testing.T) {
 
 		gcache.Remove(ctx, g.Slice{1, 2, 3}...)
 		{
-			gcache.Sets(ctx, g.MapAnyAny{1: 11, 2: 22}, 0)
+			gcache.SetMap(ctx, g.MapAnyAny{1: 11, 2: 22}, 0)
 			b, _ := gcache.Contains(ctx, 1)
 			t.Assert(b, true)
 			v, _ := gcache.Get(ctx, 1)

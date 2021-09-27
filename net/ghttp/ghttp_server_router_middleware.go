@@ -7,6 +7,7 @@
 package ghttp
 
 import (
+	"context"
 	"github.com/gogf/gf/debug/gdebug"
 	"reflect"
 )
@@ -21,8 +22,11 @@ const (
 // before or after service handler. The parameter <pattern> specifies what route pattern the middleware intercepts,
 // which is usually a "fuzzy" pattern like "/:name", "/*any" or "/{field}".
 func (s *Server) BindMiddleware(pattern string, handlers ...HandlerFunc) {
+	var (
+		ctx = context.TODO()
+	)
 	for _, handler := range handlers {
-		s.setHandler(pattern, &handlerItem{
+		s.setHandler(ctx, pattern, &handlerItem{
 			Type: handlerTypeMiddleware,
 			Name: gdebug.FuncPath(handler),
 			Info: handlerFuncInfo{
@@ -37,8 +41,11 @@ func (s *Server) BindMiddleware(pattern string, handlers ...HandlerFunc) {
 // Global middleware can be used standalone without service handler, which intercepts all dynamic requests
 // before or after service handler.
 func (s *Server) BindMiddlewareDefault(handlers ...HandlerFunc) {
+	var (
+		ctx = context.TODO()
+	)
 	for _, handler := range handlers {
-		s.setHandler(defaultMiddlewarePattern, &handlerItem{
+		s.setHandler(ctx, defaultMiddlewarePattern, &handlerItem{
 			Type: handlerTypeMiddleware,
 			Name: gdebug.FuncPath(handler),
 			Info: handlerFuncInfo{

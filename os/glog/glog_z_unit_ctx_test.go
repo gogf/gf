@@ -25,7 +25,7 @@ func Test_Ctx(t *testing.T) {
 		ctx := context.WithValue(context.Background(), "Trace-Id", "1234567890")
 		ctx = context.WithValue(ctx, "Span-Id", "abcdefg")
 
-		l.Ctx(ctx).Print(1, 2, 3)
+		l.Print(ctx, 1, 2, 3)
 		t.Assert(gstr.Count(w.String(), "1234567890"), 1)
 		t.Assert(gstr.Count(w.String(), "abcdefg"), 1)
 		t.Assert(gstr.Count(w.String(), "1 2 3"), 1)
@@ -44,7 +44,7 @@ func Test_Ctx_Config(t *testing.T) {
 		ctx := context.WithValue(context.Background(), "Trace-Id", "1234567890")
 		ctx = context.WithValue(ctx, "Span-Id", "abcdefg")
 
-		l.Ctx(ctx).Print(1, 2, 3)
+		l.Print(ctx, 1, 2, 3)
 		t.Assert(gstr.Count(w.String(), "1234567890"), 1)
 		t.Assert(gstr.Count(w.String(), "abcdefg"), 1)
 		t.Assert(gstr.Count(w.String(), "1 2 3"), 1)
@@ -55,7 +55,7 @@ func Test_Ctx_CtxKey(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		w := bytes.NewBuffer(nil)
 		l := glog.NewWithWriter(w)
-		l.Ctx(gctx.WithValue(context.TODO(), "abcdefg")).Print(1, 2, 3)
+		l.Print(gctx.WithValue(context.TODO(), "abcdefg"), 1, 2, 3)
 		t.Assert(gstr.Count(w.String(), "abcdefg"), 1)
 		t.Assert(gstr.Count(w.String(), "1 2 3"), 1)
 	})

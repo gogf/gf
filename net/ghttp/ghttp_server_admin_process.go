@@ -40,18 +40,20 @@ const (
 	adminGProcCommGroup      = "GF_GPROC_HTTP_SERVER"
 )
 
-// serverActionLocker is the locker for server administration operations.
-var serverActionLocker sync.Mutex
+var (
+	// serverActionLocker is the locker for server administration operations.
+	serverActionLocker sync.Mutex
 
-// serverActionLastTime is timestamp in milliseconds of last administration operation.
-var serverActionLastTime = gtype.NewInt64(gtime.TimestampMilli())
+	// serverActionLastTime is timestamp in milliseconds of last administration operation.
+	serverActionLastTime = gtype.NewInt64(gtime.TimestampMilli())
 
-// serverProcessStatus is the server status for operation of current process.
-var serverProcessStatus = gtype.NewInt()
+	// serverProcessStatus is the server status for operation of current process.
+	serverProcessStatus = gtype.NewInt()
+)
 
 // RestartAllServer restarts all the servers of the process.
 // The optional parameter <newExeFilePath> specifies the new binary file for creating process.
-func RestartAllServer(newExeFilePath ...string) error {
+func RestartAllServer(ctx context.Context, newExeFilePath ...string) error {
 	if !gracefulEnabled {
 		return gerror.NewCode(gcode.CodeInvalidOperation, "graceful reload feature is disabled")
 	}
@@ -63,11 +65,11 @@ func RestartAllServer(newExeFilePath ...string) error {
 	if err := checkActionFrequency(); err != nil {
 		return err
 	}
-	return restartWebServers("", newExeFilePath...)
+	return restartWebServers(ctx, "", newExeFilePath...)
 }
 
 // ShutdownAllServer shuts down all servers of current process.
-func ShutdownAllServer() error {
+func ShutdownAllServer(ctx context.Context) error {
 	serverActionLocker.Lock()
 	defer serverActionLocker.Unlock()
 	if err := checkProcessStatus(); err != nil {
@@ -76,7 +78,7 @@ func ShutdownAllServer() error {
 	if err := checkActionFrequency(); err != nil {
 		return err
 	}
-	shutdownWebServers()
+	shutdownWebServers(ctx)
 	return nil
 }
 
@@ -111,8 +113,10 @@ func checkActionFrequency() error {
 }
 
 // forkReloadProcess creates a new child process and copies the fd to child process.
-func forkReloadProcess(newExeFilePath ...string) error {
-	path := os.Args[0]
+func forkReloadProcess(ctx context.Context, newExeFilePath ...string) error {
+	var (
+		path = os.Args[0]
+	)
 	if len(newExeFilePath) > 0 {
 		path = newExeFilePath[0]
 	}
@@ -141,24 +145,36 @@ func forkReloadProcess(newExeFilePath ...string) error {
 	buffer, _ := gjson.Encode(sfm)
 	p.Env = append(p.Env, adminActionReloadEnvKey+"="+string(buffer))
 	if _, err := p.Start(); err != nil {
-		glog.Errorf("%d: fork process failed, error:%s, %s", gproc.Pid(), err.Error(), string(buffer))
+		glog.Errorf(
+			ctx,
+			"%d: fork process failed, error:%s, %s",
+			gproc.Pid(), err.Error(), string(buffer),
+		)
 		return err
 	}
 	return nil
 }
 
 // forkRestartProcess creates a new server process.
-func forkRestartProcess(newExeFilePath ...string) error {
-	path := os.Args[0]
+func forkRestartProcess(ctx context.Context, newExeFilePath ...string) error {
+	var (
+		path = os.Args[0]
+	)
 	if len(newExeFilePath) > 0 {
 		path = newExeFilePath[0]
 	}
-	os.Unsetenv(adminActionReloadEnvKey)
+	if err := os.Unsetenv(adminActionReloadEnvKey); err != nil {
+		intlog.Error(ctx, err)
+	}
 	env := os.Environ()
 	env = append(env, adminActionRestartEnvKey+"=1")
 	p := gproc.NewProcess(path, os.Args, env)
 	if _, err := p.Start(); err != nil {
-		glog.Errorf(`%d: fork process failed, error:%s, are you running using "go run"?`, gproc.Pid(), err.Error())
+		glog.Errorf(
+			ctx,
+			`%d: fork process failed, error:%s, are you running using "go run"?`,
+			gproc.Pid(), err.Error(),
+		)
 		return err
 	}
 	return nil
@@ -192,76 +208,79 @@ func bufferToServerFdMap(buffer []byte) map[string]listenerFdMap {
 }
 
 // restartWebServers restarts all servers.
-func restartWebServers(signal string, newExeFilePath ...string) error {
+func restartWebServers(ctx context.Context, signal string, newExeFilePath ...string) error {
 	serverProcessStatus.Set(adminActionRestarting)
 	if runtime.GOOS == "windows" {
 		if len(signal) > 0 {
 			// Controlled by signal.
-			forceCloseWebServers()
-			forkRestartProcess(newExeFilePath...)
+			forceCloseWebServers(ctx)
+			if err := forkRestartProcess(ctx, newExeFilePath...); err != nil {
+				intlog.Error(ctx, err)
+			}
 		} else {
 			// Controlled by web page.
 			// It should ensure the response wrote to client and then close all servers gracefully.
 			gtimer.SetTimeout(time.Second, func() {
-				forceCloseWebServers()
-				forkRestartProcess(newExeFilePath...)
+				forceCloseWebServers(ctx)
+				if err := forkRestartProcess(ctx, newExeFilePath...); err != nil {
+					intlog.Error(ctx, err)
+				}
 			})
 		}
 	} else {
-		if err := forkReloadProcess(newExeFilePath...); err != nil {
-			glog.Printf("%d: server restarts failed", gproc.Pid())
+		if err := forkReloadProcess(ctx, newExeFilePath...); err != nil {
+			glog.Printf(ctx, "%d: server restarts failed", gproc.Pid())
 			serverProcessStatus.Set(adminActionNone)
 			return err
 		} else {
 			if len(signal) > 0 {
-				glog.Printf("%d: server restarting by signal: %s", gproc.Pid(), signal)
+				glog.Printf(ctx, "%d: server restarting by signal: %s", gproc.Pid(), signal)
 			} else {
-				glog.Printf("%d: server restarting by web admin", gproc.Pid())
+				glog.Printf(ctx, "%d: server restarting by web admin", gproc.Pid())
 			}
-
 		}
 	}
 	return nil
 }
 
 // shutdownWebServers shuts down all servers.
-func shutdownWebServers(signal ...string) {
+func shutdownWebServers(ctx context.Context, signal ...string) {
 	serverProcessStatus.Set(adminActionShuttingDown)
 	if len(signal) > 0 {
-		glog.Printf("%d: server shutting down by signal: %s", gproc.Pid(), signal[0])
-		forceCloseWebServers()
+		glog.Printf(ctx, "%d: server shutting down by signal: %s", gproc.Pid(), signal[0])
+		forceCloseWebServers(ctx)
 		allDoneChan <- struct{}{}
 	} else {
-		glog.Printf("%d: server shutting down by api", gproc.Pid())
+		glog.Printf(ctx, "%d: server shutting down by api", gproc.Pid())
 		gtimer.SetTimeout(time.Second, func() {
-			forceCloseWebServers()
+			forceCloseWebServers(ctx)
 			allDoneChan <- struct{}{}
 		})
 	}
 }
 
 // shutdownWebServersGracefully gracefully shuts down all servers.
-func shutdownWebServersGracefully(signal ...string) {
+func shutdownWebServersGracefully(ctx context.Context, signal ...string) {
 	if len(signal) > 0 {
-		glog.Printf("%d: server gracefully shutting down by signal: %s", gproc.Pid(), signal[0])
+		glog.Printf(ctx, "%d: server gracefully shutting down by signal: %s", gproc.Pid(), signal[0])
 	} else {
-		glog.Printf("%d: server gracefully shutting down by api", gproc.Pid())
+		glog.Printf(ctx, "%d: server gracefully shutting down by api", gproc.Pid())
 	}
 	serverMapping.RLockFunc(func(m map[string]interface{}) {
 		for _, v := range m {
 			for _, s := range v.(*Server).servers {
-				s.shutdown()
+				s.shutdown(ctx)
 			}
 		}
 	})
 }
 
 // forceCloseWebServers forced shuts down all servers.
-func forceCloseWebServers() {
+func forceCloseWebServers(ctx context.Context) {
 	serverMapping.RLockFunc(func(m map[string]interface{}) {
 		for _, v := range m {
 			for _, s := range v.(*Server).servers {
-				s.close()
+				s.close(ctx)
 			}
 		}
 	})
@@ -270,13 +289,16 @@ func forceCloseWebServers() {
 // handleProcessMessage receives and handles the message from processes,
 // which are commonly used for graceful reloading feature.
 func handleProcessMessage() {
+	var (
+		ctx = context.TODO()
+	)
 	for {
 		if msg := gproc.Receive(adminGProcCommGroup); msg != nil {
 			if bytes.EqualFold(msg.Data, []byte("exit")) {
-				intlog.Printf(context.TODO(), "%d: process message: exit", gproc.Pid())
-				shutdownWebServersGracefully()
+				intlog.Printf(ctx, "%d: process message: exit", gproc.Pid())
+				shutdownWebServersGracefully(ctx)
 				allDoneChan <- struct{}{}
-				intlog.Printf(context.TODO(), "%d: process message: exit done", gproc.Pid())
+				intlog.Printf(ctx, "%d: process message: exit done", gproc.Pid())
 				return
 			}
 		}

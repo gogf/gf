@@ -56,10 +56,10 @@ func (c *RedisConn) addTracingItem(ctx context.Context, item *tracingItem) {
 
 	span.SetAttributes(gtrace.CommonLabels()...)
 
-	if config, _ := c.redis.adapter.Config(ctx); config == nil {
+	if adapter, ok := c.redis.GetAdapter().(*AdapterGoRedis); ok {
 		span.SetAttributes(
-			attribute.String(tracingAttrRedisAddress, config.Address),
-			attribute.Int(tracingAttrRedisDb, config.Db),
+			attribute.String(tracingAttrRedisAddress, adapter.config.Address),
+			attribute.Int(tracingAttrRedisDb, adapter.config.Db),
 		)
 	}
 

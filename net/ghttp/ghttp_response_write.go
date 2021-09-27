@@ -147,7 +147,7 @@ func (r *Response) WriteJsonP(content interface{}) error {
 		return err
 	} else {
 		//r.Header().Set("Content-Type", "application/json")
-		if callback := r.Request.GetString("callback"); callback != "" {
+		if callback := r.Request.Get("callback").String(); callback != "" {
 			buffer := []byte(callback)
 			buffer = append(buffer, byte('('))
 			buffer = append(buffer, b...)

@@ -20,16 +20,16 @@ func Test_Session_Cookie(t *testing.T) {
 	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/set", func(r *ghttp.Request) {
-		r.Session.Set(r.GetString("k"), r.GetString("v"))
+		r.Session.Set(r.Get("k").String(), r.Get("v").String())
 	})
 	s.BindHandler("/get", func(r *ghttp.Request) {
-		r.Response.Write(r.Session.Get(r.GetString("k")))
+		r.Response.Write(r.Session.Get(r.Get("k").String()))
 	})
 	s.BindHandler("/remove", func(r *ghttp.Request) {
-		r.Session.Remove(r.GetString("k"))
+		r.Session.Remove(r.Get("k").String())
 	})
 	s.BindHandler("/clear", func(r *ghttp.Request) {
-		r.Session.Clear()
+		r.Session.RemoveAll()
 	})
 	s.SetPort(p)
 	s.SetDumpRouterMap(false)
@@ -67,16 +67,16 @@ func Test_Session_Header(t *testing.T) {
 	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/set", func(r *ghttp.Request) {
-		r.Session.Set(r.GetString("k"), r.GetString("v"))
+		r.Session.Set(r.Get("k").String(), r.Get("v").String())
 	})
 	s.BindHandler("/get", func(r *ghttp.Request) {
-		r.Response.Write(r.Session.Get(r.GetString("k")))
+		r.Response.Write(r.Session.Get(r.Get("k").String()))
 	})
 	s.BindHandler("/remove", func(r *ghttp.Request) {
-		r.Session.Remove(r.GetString("k"))
+		r.Session.Remove(r.Get("k").String())
 	})
 	s.BindHandler("/clear", func(r *ghttp.Request) {
-		r.Session.Clear()
+		r.Session.RemoveAll()
 	})
 	s.SetPort(p)
 	s.SetDumpRouterMap(false)
@@ -118,11 +118,11 @@ func Test_Session_StorageFile(t *testing.T) {
 	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/set", func(r *ghttp.Request) {
-		r.Session.Set(r.GetString("k"), r.GetString("v"))
-		r.Response.Write(r.GetString("k"), "=", r.GetString("v"))
+		r.Session.Set(r.Get("k").String(), r.Get("v").String())
+		r.Response.Write(r.Get("k").String(), "=", r.Get("v").String())
 	})
 	s.BindHandler("/get", func(r *ghttp.Request) {
-		r.Response.Write(r.Session.Get(r.GetString("k")))
+		r.Response.Write(r.Session.Get(r.Get("k").String()))
 	})
 	s.SetPort(p)
 	s.SetDumpRouterMap(false)
