@@ -7,10 +7,9 @@
 package gyaml_test
 
 import (
+	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/internal/json"
 	"testing"
-
-	"github.com/gogf/gf/encoding/gparser"
 
 	"github.com/gogf/gf/frame/g"
 
@@ -113,7 +112,7 @@ func Test_ToJson(t *testing.T) {
 			return
 		}
 
-		p, err := gparser.LoadContent(res)
+		p := gjson.New(res)
 		if err != nil {
 			t.Errorf("parser failed. %v", err)
 			return
