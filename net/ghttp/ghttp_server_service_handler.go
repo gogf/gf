@@ -127,7 +127,7 @@ func (s *Server) nameToUri(name string) string {
 	}
 }
 
-func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, objName, methodName string) (info handlerFuncInfo, err error) {
+func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, methodName string) (info handlerFuncInfo, err error) {
 	handlerFunc, ok := f.(HandlerFunc)
 	if !ok {
 		reflectType := reflect.TypeOf(f)
@@ -136,7 +136,7 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, objName, methodN
 				err = gerror.NewCodef(
 					gcode.CodeInvalidParameter,
 					`invalid handler: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" or "func(context.Context)/func(context.Context,Request)/func(context.Context,Request) error/func(context.Context,Request)(Response,error)" is required`,
-					pkgPath, objName, methodName, reflect.TypeOf(f).String(),
+					pkgPath, structName, methodName, reflect.TypeOf(f).String(),
 				)
 			} else {
 				err = gerror.NewCodef(

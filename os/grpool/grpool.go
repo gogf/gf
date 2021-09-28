@@ -15,7 +15,7 @@ import (
 	"github.com/gogf/gf/container/gtype"
 )
 
-// Goroutine Pool
+// Pool manages the goroutines using pool.
 type Pool struct {
 	limit  int         // Max goroutine count limit.
 	count  *gtype.Int  // Current running goroutine count.
