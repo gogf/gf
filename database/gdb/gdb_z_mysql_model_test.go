@@ -7,10 +7,13 @@
 package gdb_test
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"fmt"
 	"github.com/gogf/gf/encoding/gjson"
+	"github.com/gogf/gf/text/gstr"
+	"os"
 	"testing"
 	"time"
 
@@ -1086,35 +1089,53 @@ func Test_Model_Structs(t *testing.T) {
 	})
 }
 
-// JSON tag is only used for JSON Marshal/Unmarshal, DO NOT use it in multiple purposes!
-//func Test_Model_StructsWithJsonTag(t *testing.T) {
-//	table := createInitTable()
-//	defer dropTable(table)
-//
-//	db.SetDebug(true)
-//	gtest.C(t, func(t *gtest.T) {
-//		type User struct {
-//			Uid      int `json:"id"`
-//			Passport string
-//			Password string
-//			Name     string     `json:"nick_name"`
-//			Time     gtime.Time `json:"create_time"`
-//		}
-//		var users []User
-//		err := db.Model(table).Order("id asc").Scan(&users)
-//		if err != nil {
-//			gtest.Error(err)
-//		}
-//		t.Assert(len(users), TableSize)
-//		t.Assert(users[0].Uid, 1)
-//		t.Assert(users[1].Uid, 2)
-//		t.Assert(users[2].Uid, 3)
-//		t.Assert(users[0].Name, "name_1")
-//		t.Assert(users[1].Name, "name_2")
-//		t.Assert(users[2].Name, "name_3")
-//		t.Assert(users[0].Time.String(), "2018-10-24 10:00:00")
-//	})
-//}
+func Test_Model_StructsWithOrmTag(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	dbInvalid.SetDebug(true)
+	defer dbInvalid.SetDebug(false)
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Uid      int `orm:"id"`
+			Passport string
+			Password string     `orm:"password"`
+			Name     string     `orm:"nick_name"`
+			Time     gtime.Time `orm:"create_time"`
+		}
+		var (
+			users  []User
+			buffer = bytes.NewBuffer(nil)
+		)
+		dbInvalid.GetLogger().SetWriter(buffer)
+		defer dbInvalid.GetLogger().SetWriter(os.Stdout)
+		dbInvalid.Model(table).Order("id asc").Scan(&users)
+		t.Assert(
+			gstr.Contains(buffer.String(), "SELECT `id`,`Passport`,`password`,`nick_name`,`create_time` FROM `user"),
+			true,
+		)
+	})
+
+	//db.SetDebug(true)
+	//defer db.SetDebug(false)
+	gtest.C(t, func(t *gtest.T) {
+		type A struct {
+			Passport string
+			Password string
+		}
+		type B struct {
+			A
+			NickName string
+		}
+		one, err := db.Model(table).Fields(&B{}).Where("id", 2).One()
+		t.AssertNil(err)
+		t.Assert(len(one), 3)
+		t.Assert(one["nickname"], "name_2")
+		t.Assert(one["passport"], "user_2")
+		t.Assert(one["password"], "pass_2")
+	})
+
+}
 
 func Test_Model_Scan(t *testing.T) {
 	table := createInitTable()

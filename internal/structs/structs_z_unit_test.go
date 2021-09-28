@@ -102,6 +102,26 @@ func Test_StructOfNilPointer(t *testing.T) {
 	})
 }
 
+func Test_Fields(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id   int
+			Name string `params:"name"`
+			Pass string `my-tag1:"pass1" my-tag2:"pass2" params:"pass"`
+		}
+		var user *User
+		fields, _ := structs.Fields(user)
+		t.Assert(len(fields), 3)
+		t.Assert(fields[0].Name(), "Id")
+		t.Assert(fields[1].Name(), "Name")
+		t.Assert(fields[1].Tag("params"), "name")
+		t.Assert(fields[2].Name(), "Pass")
+		t.Assert(fields[2].Tag("my-tag1"), "pass1")
+		t.Assert(fields[2].Tag("my-tag2"), "pass2")
+		t.Assert(fields[2].Tag("params"), "pass")
+	})
+}
+
 func Test_FieldMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {

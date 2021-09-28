@@ -328,6 +328,26 @@ func doQuoteString(s, charLeft, charRight string) string {
 	return gstr.Join(array1, ",")
 }
 
+func getFieldsFromStructOrMap(structOrMap interface{}) (fields []string) {
+	fields = []string{}
+	if utils.IsStruct(structOrMap) {
+		structFields, _ := structs.Fields(structs.FieldsInput{
+			Pointer:         structOrMap,
+			RecursiveOption: structs.RecursiveOptionEmbeddedNoTag,
+		})
+		for _, structField := range structFields {
+			if tag := structField.Tag(OrmTagForStruct); tag != "" && gregex.IsMatchString(regularFieldNameRegPattern, tag) {
+				fields = append(fields, tag)
+			} else {
+				fields = append(fields, structField.Name())
+			}
+		}
+	} else {
+		fields = gutil.Keys(structOrMap)
+	}
+	return
+}
+
 // GetWhereConditionOfStruct returns the where condition sql and arguments by given struct pointer.
 // This function automatically retrieves primary or unique field and its attribute value as condition.
 func GetWhereConditionOfStruct(pointer interface{}) (where string, args []interface{}, err error) {
