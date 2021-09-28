@@ -33,6 +33,7 @@ var (
 	db          gdb.DB
 	dbPrefix    gdb.DB
 	dbCtxStrict gdb.DB
+	dbInvalid   gdb.DB
 	configNode  gdb.ConfigNode
 )
 
@@ -62,9 +63,13 @@ func init() {
 	nodeCtxStrict := configNode
 	nodeCtxStrict.CtxStrict = true
 
+	nodeInvalid := configNode
+	nodeInvalid.Port = "3307"
+
 	gdb.AddConfigNode("test", configNode)
 	gdb.AddConfigNode("prefix", nodePrefix)
 	gdb.AddConfigNode("ctxstrict", nodeCtxStrict)
+	gdb.AddConfigNode("nodeinvalid", nodeInvalid)
 	gdb.AddConfigNode(gdb.DefaultGroupName, configNode)
 
 	// Default db.
@@ -109,6 +114,14 @@ func init() {
 		gtest.Error(err)
 	}
 	dbCtxStrict.SetSchema(TestSchema1)
+
+	// Invalid db.
+	if r, err := gdb.New("nodeinvalid"); err != nil {
+		gtest.Error(err)
+	} else {
+		dbInvalid = r
+	}
+	dbInvalid.SetSchema(TestSchema1)
 }
 
 func createTable(table ...string) string {

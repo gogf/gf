@@ -13,7 +13,6 @@ import (
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
-	"github.com/gogf/gf/util/gutil"
 )
 
 // Fields appends `fieldNamesOrMapStruct` to the operation fields of the model, multiple fields joined using char ','.
@@ -43,7 +42,7 @@ func (m *Model) Fields(fieldNamesOrMapStruct ...interface{}) *Model {
 			))
 		default:
 			return m.appendFieldsByStr(gstr.Join(
-				m.mappingAndFilterToTableFields(gutil.Keys(r), true), ",",
+				m.mappingAndFilterToTableFields(getFieldsFromStructOrMap(r), true), ",",
 			))
 		}
 	}
@@ -71,7 +70,7 @@ func (m *Model) FieldsEx(fieldNamesOrMapStruct ...interface{}) *Model {
 		case []string:
 			model.fieldsEx = gstr.Join(m.mappingAndFilterToTableFields(r, true), ",")
 		default:
-			model.fieldsEx = gstr.Join(m.mappingAndFilterToTableFields(gutil.Keys(r), true), ",")
+			model.fieldsEx = gstr.Join(m.mappingAndFilterToTableFields(getFieldsFromStructOrMap(r), true), ",")
 		}
 		return model
 	}
