@@ -96,9 +96,9 @@ func TestToJson(t *testing.T) {
 		iniMap, err := gini.Decode([]byte(iniContent))
 		t.Assert(err, nil)
 
-		t.Assert(iniMap["addr"].(map[string]interface{})["ip"], json.GetString("addr.ip"))
-		t.Assert(iniMap["addr"].(map[string]interface{})["port"], json.GetString("addr.port"))
-		t.Assert(iniMap["DBINFO"].(map[string]interface{})["user"], json.GetString("DBINFO.user"))
-		t.Assert(iniMap["DBINFO"].(map[string]interface{})["type"], json.GetString("DBINFO.type"))
+		t.Assert(iniMap["addr"].(map[string]interface{})["ip"], json.Get("addr.ip").String())
+		t.Assert(iniMap["addr"].(map[string]interface{})["port"], json.Get("addr.port").String())
+		t.Assert(iniMap["DBINFO"].(map[string]interface{})["user"], json.Get("DBINFO.user").String())
+		t.Assert(iniMap["DBINFO"].(map[string]interface{})["type"], json.Get("DBINFO.type").String())
 	})
 }

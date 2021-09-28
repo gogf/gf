@@ -143,11 +143,11 @@ func Example_hMSet_Map() {
 	)
 	_, err := g.Redis().Do(ctx, "HMSET", append(g.Slice{key}, gutil.MapToSlice(data)...)...)
 	if err != nil {
-		g.Log().Fatal(err)
+		g.Log().Fatal(ctx, err)
 	}
 	v, err := g.Redis().Do(ctx, "HMGET", key, "name")
 	if err != nil {
-		g.Log().Fatal(err)
+		g.Log().Fatal(ctx, err)
 	}
 	fmt.Println(v.Slice())
 
@@ -172,11 +172,11 @@ func Example_hMSet_Struct() {
 	)
 	_, err := g.Redis().Do(ctx, "HMSET", append(g.Slice{key}, gutil.StructToSlice(data)...)...)
 	if err != nil {
-		g.Log().Fatal(err)
+		g.Log().Fatal(ctx, err)
 	}
 	v, err := g.Redis().Do(ctx, "HMGET", key, "name")
 	if err != nil {
-		g.Log().Fatal(err)
+		g.Log().Fatal(ctx, err)
 	}
 	fmt.Println(v.Slice())
 

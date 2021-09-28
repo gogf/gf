@@ -43,7 +43,7 @@ func (s *Server) BindObjectMethod(pattern string, object interface{}, method str
 	s.doBindObjectMethod(context.TODO(), pattern, object, method, nil, "")
 }
 
-// BindObjectRest registers object in REST API style to server with specified pattern.
+// BindObjectRest registers object in REST API styles to server with specified pattern.
 // Note that the route method should be defined as ghttp.HandlerFunc.
 func (s *Server) BindObjectRest(pattern string, object interface{}) {
 	s.doBindObjectRest(context.TODO(), pattern, object, nil, "")

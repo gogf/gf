@@ -7,6 +7,7 @@
 package gudp_test
 
 import (
+	"context"
 	"fmt"
 	"github.com/gogf/gf/net/gudp"
 	"github.com/gogf/gf/os/glog"
@@ -17,6 +18,9 @@ import (
 )
 
 func Test_Basic(t *testing.T) {
+	var (
+		ctx = context.TODO()
+	)
 	p, _ := ports.PopRand()
 	s := gudp.NewServer(fmt.Sprintf("127.0.0.1:%d", p), func(conn *gudp.Conn) {
 		defer conn.Close()
@@ -24,7 +28,7 @@ func Test_Basic(t *testing.T) {
 			data, err := conn.Recv(-1)
 			if len(data) > 0 {
 				if err := conn.Send(append([]byte("> "), data...)); err != nil {
-					glog.Error(err)
+					glog.Error(ctx, err)
 				}
 			}
 			if err != nil {
@@ -75,6 +79,9 @@ func Test_Basic(t *testing.T) {
 // If the read buffer size is less than the sent package size,
 // the rest data would be dropped.
 func Test_Buffer(t *testing.T) {
+	var (
+		ctx = context.TODO()
+	)
 	p, _ := ports.PopRand()
 	s := gudp.NewServer(fmt.Sprintf("127.0.0.1:%d", p), func(conn *gudp.Conn) {
 		defer conn.Close()
@@ -82,7 +89,7 @@ func Test_Buffer(t *testing.T) {
 			data, err := conn.Recv(1)
 			if len(data) > 0 {
 				if err := conn.Send(data); err != nil {
-					glog.Error(err)
+					glog.Error(ctx, err)
 				}
 			}
 			if err != nil {

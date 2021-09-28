@@ -273,10 +273,10 @@ func Test_WordWrap(t *testing.T) {
 	})
 }
 
-func Test_RuneLen(t *testing.T) {
+func Test_LenRune(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		t.Assert(gstr.RuneLen("1234"), 4)
-		t.Assert(gstr.RuneLen("我爱GoFrame"), 9)
+		t.Assert(gstr.LenRune("1234"), 4)
+		t.Assert(gstr.LenRune("我爱GoFrame"), 9)
 	})
 }
 
