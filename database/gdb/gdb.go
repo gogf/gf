@@ -77,21 +77,21 @@ type DB interface {
 	// Query APIs.
 	// ===========================================================================
 
-	Query(sql string, args ...interface{}) (*sql.Rows, error) // See Core.Query.
-	Exec(sql string, args ...interface{}) (sql.Result, error) // See Core.Exec.
-	Prepare(sql string, execOnMaster ...bool) (*Stmt, error)  // See Core.Prepare.
+	Query(ctx context.Context, sql string, args ...interface{}) (Result, error)    // See Core.Query.
+	Exec(ctx context.Context, sql string, args ...interface{}) (sql.Result, error) // See Core.Exec.
+	Prepare(ctx context.Context, sql string, execOnMaster ...bool) (*Stmt, error)  // See Core.Prepare.
 
 	// ===========================================================================
 	// Common APIs for CURD.
 	// ===========================================================================
 
-	Insert(table string, data interface{}, batch ...int) (sql.Result, error)                               // See Core.Insert.
-	InsertIgnore(table string, data interface{}, batch ...int) (sql.Result, error)                         // See Core.InsertIgnore.
-	InsertAndGetId(table string, data interface{}, batch ...int) (int64, error)                            // See Core.InsertAndGetId.
-	Replace(table string, data interface{}, batch ...int) (sql.Result, error)                              // See Core.Replace.
-	Save(table string, data interface{}, batch ...int) (sql.Result, error)                                 // See Core.Save.
-	Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error) // See Core.Update.
-	Delete(table string, condition interface{}, args ...interface{}) (sql.Result, error)                   // See Core.Delete.
+	Insert(ctx context.Context, table string, data interface{}, batch ...int) (sql.Result, error)                               // See Core.Insert.
+	InsertIgnore(ctx context.Context, table string, data interface{}, batch ...int) (sql.Result, error)                         // See Core.InsertIgnore.
+	InsertAndGetId(ctx context.Context, table string, data interface{}, batch ...int) (int64, error)                            // See Core.InsertAndGetId.
+	Replace(ctx context.Context, table string, data interface{}, batch ...int) (sql.Result, error)                              // See Core.Replace.
+	Save(ctx context.Context, table string, data interface{}, batch ...int) (sql.Result, error)                                 // See Core.Save.
+	Update(ctx context.Context, table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error) // See Core.Update.
+	Delete(ctx context.Context, table string, condition interface{}, args ...interface{}) (sql.Result, error)                   // See Core.Delete.
 
 	// ===========================================================================
 	// Internal APIs for CURD, which can be overwritten by custom CURD implements.
@@ -101,7 +101,7 @@ type DB interface {
 	DoInsert(ctx context.Context, link Link, table string, data List, option DoInsertOption) (result sql.Result, err error)                        // See Core.DoInsert.
 	DoUpdate(ctx context.Context, link Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) // See Core.DoUpdate.
 	DoDelete(ctx context.Context, link Link, table string, condition string, args ...interface{}) (result sql.Result, err error)                   // See Core.DoDelete.
-	DoQuery(ctx context.Context, link Link, sql string, args ...interface{}) (rows *sql.Rows, err error)                                           // See Core.DoQuery.
+	DoQuery(ctx context.Context, link Link, sql string, args ...interface{}) (result Result, err error)                                            // See Core.DoQuery.
 	DoExec(ctx context.Context, link Link, sql string, args ...interface{}) (result sql.Result, err error)                                         // See Core.DoExec.
 	DoCommit(ctx context.Context, link Link, sql string, args []interface{}) (newSql string, newArgs []interface{}, err error)                     // See Core.DoCommit.
 	DoPrepare(ctx context.Context, link Link, sql string) (*Stmt, error)                                                                           // See Core.DoPrepare.
@@ -110,14 +110,14 @@ type DB interface {
 	// Query APIs for convenience purpose.
 	// ===========================================================================
 
-	GetAll(sql string, args ...interface{}) (Result, error)                // See Core.GetAll.
-	GetOne(sql string, args ...interface{}) (Record, error)                // See Core.GetOne.
-	GetValue(sql string, args ...interface{}) (Value, error)               // See Core.GetValue.
-	GetArray(sql string, args ...interface{}) ([]Value, error)             // See Core.GetArray.
-	GetCount(sql string, args ...interface{}) (int, error)                 // See Core.GetCount.
-	GetScan(objPointer interface{}, sql string, args ...interface{}) error // See Core.GetScan.
-	Union(unions ...*Model) *Model                                         // See Core.Union.
-	UnionAll(unions ...*Model) *Model                                      // See Core.UnionAll.
+	GetAll(ctx context.Context, sql string, args ...interface{}) (Result, error)                // See Core.GetAll.
+	GetOne(ctx context.Context, sql string, args ...interface{}) (Record, error)                // See Core.GetOne.
+	GetValue(ctx context.Context, sql string, args ...interface{}) (Value, error)               // See Core.GetValue.
+	GetArray(ctx context.Context, sql string, args ...interface{}) ([]Value, error)             // See Core.GetArray.
+	GetCount(ctx context.Context, sql string, args ...interface{}) (int, error)                 // See Core.GetCount.
+	GetScan(ctx context.Context, objPointer interface{}, sql string, args ...interface{}) error // See Core.GetScan.
+	Union(unions ...*Model) *Model                                                              // See Core.Union.
+	UnionAll(unions ...*Model) *Model                                                           // See Core.UnionAll.
 
 	// ===========================================================================
 	// Master/Slave specification support.
@@ -137,7 +137,7 @@ type DB interface {
 	// Transaction.
 	// ===========================================================================
 
-	Begin() (*TX, error)                                                              // See Core.Begin.
+	Begin(ctx context.Context) (*TX, error)                                           // See Core.Begin.
 	Transaction(ctx context.Context, f func(ctx context.Context, tx *TX) error) error // See Core.Transaction.
 
 	// ===========================================================================
@@ -219,6 +219,7 @@ type Sql struct {
 	End           int64         // End execution timestamp in milliseconds.
 	Group         string        // Group is the group name of the configuration that the sql is executed from.
 	IsTransaction bool          // IsTransaction marks whether this sql is executed in transaction.
+	RowsAffected  int64         // RowsAffected marks retrieved or affected number with current sql statement.
 }
 
 // DoInsertOption is the input struct for function DoInsert.
@@ -274,8 +275,12 @@ const (
 	ctxTimeoutTypeQuery
 	ctxTimeoutTypePrepare
 	commandEnvKeyForDryRun = "gf.gdb.dryrun"
-	ctxStrictKeyName       = "gf.gdb.CtxStrictEnabled"
-	ctxStrictErrorStr      = "context is required for database operation, did you missing call function Ctx"
+	sqlTypeBegin           = `DB.Begin`
+	sqlTypeTXCommit        = `TX.Commit`
+	sqlTypeTXRollback      = `TX.Rollback`
+	sqlTypeQueryContext    = `DB.QueryContext`
+	sqlTypeExecContext     = `DB.ExecContext`
+	sqlTypePrepareContext  = `DB.PrepareContext`
 )
 
 var (

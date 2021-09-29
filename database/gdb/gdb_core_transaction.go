@@ -46,8 +46,8 @@ var (
 // You should call Commit or Rollback functions of the transaction object
 // if you no longer use the transaction. Commit or Rollback functions will also
 // close the transaction automatically.
-func (c *Core) Begin() (tx *TX, err error) {
-	return c.doBeginCtx(c.GetCtx())
+func (c *Core) Begin(ctx context.Context) (tx *TX, err error) {
+	return c.doBeginCtx(ctx)
 }
 
 func (c *Core) doBeginCtx(ctx context.Context) (*TX, error) {
@@ -62,7 +62,7 @@ func (c *Core) doBeginCtx(ctx context.Context) (*TX, error) {
 			mTime2     = gtime.TimestampMilli()
 			sqlObj     = &Sql{
 				Sql:           sqlStr,
-				Type:          "DB.Begin",
+				Type:          sqlTypeBegin,
 				Args:          nil,
 				Format:        sqlStr,
 				Error:         err,
@@ -209,7 +209,7 @@ func (tx *TX) Commit() error {
 		mTime2 = gtime.TimestampMilli()
 		sqlObj = &Sql{
 			Sql:           sqlStr,
-			Type:          "TX.Commit",
+			Type:          sqlTypeTXCommit,
 			Args:          nil,
 			Format:        sqlStr,
 			Error:         err,
@@ -243,7 +243,7 @@ func (tx *TX) Rollback() error {
 		mTime2 = gtime.TimestampMilli()
 		sqlObj = &Sql{
 			Sql:           sqlStr,
-			Type:          "TX.Rollback",
+			Type:          sqlTypeTXRollback,
 			Args:          nil,
 			Format:        sqlStr,
 			Error:         err,
@@ -336,7 +336,7 @@ func (tx *TX) Transaction(ctx context.Context, f func(ctx context.Context, tx *T
 
 // Query does query operation on transaction.
 // See Core.Query.
-func (tx *TX) Query(sql string, args ...interface{}) (rows *sql.Rows, err error) {
+func (tx *TX) Query(sql string, args ...interface{}) (result Result, err error) {
 	return tx.db.DoQuery(tx.ctx, &txLink{tx.tx}, sql, args...)
 }
 
@@ -357,12 +357,7 @@ func (tx *TX) Prepare(sql string) (*Stmt, error) {
 
 // GetAll queries and returns data records from database.
 func (tx *TX) GetAll(sql string, args ...interface{}) (Result, error) {
-	rows, err := tx.Query(sql, args...)
-	if err != nil || rows == nil {
-		return nil, err
-	}
-	defer rows.Close()
-	return tx.db.GetCore().convertRowsToResult(rows)
+	return tx.Query(sql, args...)
 }
 
 // GetOne queries and returns one record from database.

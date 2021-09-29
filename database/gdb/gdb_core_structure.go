@@ -109,7 +109,7 @@ func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType s
 		return t.String()
 
 	default:
-		// Auto detect field type, using key match.
+		// Auto-detect field type, using key match.
 		switch {
 		case strings.Contains(t, "text") || strings.Contains(t, "char") || strings.Contains(t, "character"):
 			return gconv.String(fieldValue)
@@ -179,17 +179,3 @@ func (c *Core) mappingAndFilterData(schema, table string, data map[string]interf
 	}
 	return data, nil
 }
-
-//// filterFields removes all key-value pairs which are not the field of given table.
-//func (c *Core) filterFields(schema, table string, data map[string]interface{}) map[string]interface{} {
-//	// It must use data copy here to avoid its changing the origin data map.
-//	newDataMap := make(map[string]interface{}, len(data))
-//	if fields, err := c.db.TableFields(table, schema); err == nil {
-//		for k, v := range data {
-//			if _, ok := fields[k]; ok {
-//				newDataMap[k] = v
-//			}
-//		}
-//	}
-//	return newDataMap
-//}

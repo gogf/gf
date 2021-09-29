@@ -36,12 +36,12 @@ func Test_Ctx_Query(t *testing.T) {
 		defer db.SetDebug(false)
 		ctx := context.WithValue(context.Background(), "TraceId", "12345678")
 		ctx = context.WithValue(ctx, "SpanId", "0.1")
-		db.Ctx(ctx).Query("select 1")
+		db.Query(ctx, "select 1")
 	})
 	gtest.C(t, func(t *gtest.T) {
 		db.SetDebug(true)
 		defer db.SetDebug(false)
-		db.Query("select 2")
+		db.Query(ctx, "select 2")
 	})
 }
 
@@ -60,25 +60,5 @@ func Test_Ctx_Model(t *testing.T) {
 		db.SetDebug(true)
 		defer db.SetDebug(false)
 		db.Model(table).All()
-	})
-}
-
-func Test_Ctx_Strict(t *testing.T) {
-	table := createInitTableWithDb(dbCtxStrict)
-	defer dropTable(table)
-
-	gtest.C(t, func(t *gtest.T) {
-		_, err := dbCtxStrict.Query("select 1")
-		t.AssertNE(err, nil)
-	})
-	gtest.C(t, func(t *gtest.T) {
-		r, err := dbCtxStrict.Model(table).All()
-		t.AssertNE(err, nil)
-		t.Assert(len(r), 0)
-	})
-	gtest.C(t, func(t *gtest.T) {
-		r, err := dbCtxStrict.Model(table).Ctx(context.TODO()).All()
-		t.AssertNil(err)
-		t.Assert(len(r), TableSize)
 	})
 }
