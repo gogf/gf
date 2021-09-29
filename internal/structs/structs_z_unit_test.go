@@ -110,7 +110,10 @@ func Test_Fields(t *testing.T) {
 			Pass string `my-tag1:"pass1" my-tag2:"pass2" params:"pass"`
 		}
 		var user *User
-		fields, _ := structs.Fields(user)
+		fields, _ := structs.Fields(structs.FieldsInput{
+			Pointer:         user,
+			RecursiveOption: 0,
+		})
 		t.Assert(len(fields), 3)
 		t.Assert(fields[0].Name(), "Id")
 		t.Assert(fields[1].Name(), "Name")
