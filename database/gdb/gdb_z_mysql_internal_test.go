@@ -7,6 +7,7 @@
 package gdb
 
 import (
+	"context"
 	"fmt"
 	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/os/gcmd"
@@ -23,6 +24,7 @@ const (
 
 var (
 	db         DB
+	ctx        = context.TODO()
 	configNode ConfigNode
 )
 
@@ -54,14 +56,14 @@ func init() {
 		db = r
 	}
 	schemaTemplate := "CREATE DATABASE IF NOT EXISTS `%s` CHARACTER SET UTF8"
-	if _, err := db.Exec(fmt.Sprintf(schemaTemplate, SCHEMA)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(schemaTemplate, SCHEMA)); err != nil {
 		gtest.Error(err)
 	}
 	db.SetSchema(SCHEMA)
 }
 
 func dropTable(table string) {
-	if _, err := db.Exec(fmt.Sprintf("DROP TABLE IF EXISTS `%s`", table)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf("DROP TABLE IF EXISTS `%s`", table)); err != nil {
 		gtest.Error(err)
 	}
 }
@@ -173,7 +175,7 @@ func Test_Func_addTablePrefix(t *testing.T) {
 
 func Test_Model_getSoftFieldName(t *testing.T) {
 	table1 := "soft_deleting_table_" + gtime.TimestampNanoStr()
-	if _, err := db.Exec(fmt.Sprintf(`
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
   id        int(11) NOT NULL,
   name      varchar(45) DEFAULT NULL,
@@ -188,7 +190,7 @@ CREATE TABLE %s (
 	defer dropTable(table1)
 
 	table2 := "soft_deleting_table_" + gtime.TimestampNanoStr()
-	if _, err := db.Exec(fmt.Sprintf(`
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
   id        int(11) NOT NULL,
   name      varchar(45) DEFAULT NULL,
@@ -212,7 +214,7 @@ CREATE TABLE %s (
 
 func Test_Model_getConditionForSoftDeleting(t *testing.T) {
 	table1 := "soft_deleting_table_" + gtime.TimestampNanoStr()
-	if _, err := db.Exec(fmt.Sprintf(`
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
   id1        int(11) NOT NULL,
   name1      varchar(45) DEFAULT NULL,
@@ -227,7 +229,7 @@ CREATE TABLE %s (
 	defer dropTable(table1)
 
 	table2 := "soft_deleting_table_" + gtime.TimestampNanoStr()
-	if _, err := db.Exec(fmt.Sprintf(`
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
   id2        int(11) NOT NULL,
   name2      varchar(45) DEFAULT NULL,

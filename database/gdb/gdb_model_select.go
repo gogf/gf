@@ -433,67 +433,6 @@ func (m *Model) Sum(column string) (float64, error) {
 	return value.Float64(), err
 }
 
-// FindOne retrieves and returns a single Record by Model.WherePri and Model.One.
-// Also see Model.WherePri and Model.One.
-func (m *Model) FindOne(where ...interface{}) (Record, error) {
-	if len(where) > 0 {
-		return m.WherePri(where[0], where[1:]...).One()
-	}
-	return m.One()
-}
-
-// FindAll retrieves and returns Result by by Model.WherePri and Model.All.
-// Also see Model.WherePri and Model.All.
-func (m *Model) FindAll(where ...interface{}) (Result, error) {
-	if len(where) > 0 {
-		return m.WherePri(where[0], where[1:]...).All()
-	}
-	return m.All()
-}
-
-// FindValue retrieves and returns single field value by Model.WherePri and Model.Value.
-// Also see Model.WherePri and Model.Value.
-func (m *Model) FindValue(fieldsAndWhere ...interface{}) (Value, error) {
-	if len(fieldsAndWhere) >= 2 {
-		return m.WherePri(fieldsAndWhere[1], fieldsAndWhere[2:]...).Fields(gconv.String(fieldsAndWhere[0])).Value()
-	}
-	if len(fieldsAndWhere) == 1 {
-		return m.Fields(gconv.String(fieldsAndWhere[0])).Value()
-	}
-	return m.Value()
-}
-
-// FindArray queries and returns data values as slice from database.
-// Note that if there are multiple columns in the result, it returns just one column values randomly.
-// Also see Model.WherePri and Model.Value.
-func (m *Model) FindArray(fieldsAndWhere ...interface{}) ([]Value, error) {
-	if len(fieldsAndWhere) >= 2 {
-		return m.WherePri(fieldsAndWhere[1], fieldsAndWhere[2:]...).Fields(gconv.String(fieldsAndWhere[0])).Array()
-	}
-	if len(fieldsAndWhere) == 1 {
-		return m.Fields(gconv.String(fieldsAndWhere[0])).Array()
-	}
-	return m.Array()
-}
-
-// FindCount retrieves and returns the record number by Model.WherePri and Model.Count.
-// Also see Model.WherePri and Model.Count.
-func (m *Model) FindCount(where ...interface{}) (int, error) {
-	if len(where) > 0 {
-		return m.WherePri(where[0], where[1:]...).Count()
-	}
-	return m.Count()
-}
-
-// FindScan retrieves and returns the record/records by Model.WherePri and Model.Scan.
-// Also see Model.WherePri and Model.Scan.
-func (m *Model) FindScan(pointer interface{}, where ...interface{}) error {
-	if len(where) > 0 {
-		return m.WherePri(where[0], where[1:]...).Scan(pointer)
-	}
-	return m.Scan(pointer)
-}
-
 // Union does "(SELECT xxx FROM xxx) UNION (SELECT xxx FROM xxx) ..." statement for the model.
 func (m *Model) Union(unions ...*Model) *Model {
 	return m.db.Union(unions...)
