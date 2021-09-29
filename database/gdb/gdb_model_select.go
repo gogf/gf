@@ -20,13 +20,6 @@ import (
 	"github.com/gogf/gf/util/gconv"
 )
 
-// Select is alias of Model.All.
-// See Model.All.
-// Deprecated, use All instead.
-func (m *Model) Select(where ...interface{}) (Result, error) {
-	return m.All(where...)
-}
-
 // All does "SELECT FROM ..." statement for the model.
 // It retrieves the records from table and returns the result as slice type.
 // It returns nil if there's no record retrieved with the given conditions from table.
@@ -201,15 +194,6 @@ func (m *Model) Array(fieldsAndWhere ...interface{}) ([]Value, error) {
 // The parameter `pointer` should be type of *struct/**struct. If type **struct is given,
 // it can create the struct internally during converting.
 //
-// Deprecated, use Scan instead.
-func (m *Model) Struct(pointer interface{}, where ...interface{}) error {
-	return m.doStruct(pointer, where...)
-}
-
-// Struct retrieves one record from table and converts it into given struct.
-// The parameter `pointer` should be type of *struct/**struct. If type **struct is given,
-// it can create the struct internally during converting.
-//
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
 //
@@ -226,7 +210,11 @@ func (m *Model) doStruct(pointer interface{}, where ...interface{}) error {
 	model := m
 	// Auto selecting fields by struct attributes.
 	if model.fieldsEx == "" && (model.fields == "" || model.fields == "*") {
-		model = m.Fields(pointer)
+		if v, ok := pointer.(reflect.Value); ok {
+			model = m.Fields(v.Interface())
+		} else {
+			model = m.Fields(pointer)
+		}
 	}
 	one, err := model.One(where...)
 	if err != nil {
@@ -236,15 +224,6 @@ func (m *Model) doStruct(pointer interface{}, where ...interface{}) error {
 		return err
 	}
 	return model.doWithScanStruct(pointer)
-}
-
-// Structs retrieves records from table and converts them into given struct slice.
-// The parameter `pointer` should be type of *[]struct/*[]*struct. It can create and fill the struct
-// slice internally during converting.
-//
-// Deprecated, use Scan instead.
-func (m *Model) Structs(pointer interface{}, where ...interface{}) error {
-	return m.doStructs(pointer, where...)
 }
 
 // Structs retrieves records from table and converts them into given struct slice.
@@ -267,11 +246,19 @@ func (m *Model) doStructs(pointer interface{}, where ...interface{}) error {
 	model := m
 	// Auto selecting fields by struct attributes.
 	if model.fieldsEx == "" && (model.fields == "" || model.fields == "*") {
-		model = m.Fields(
-			reflect.New(
-				reflect.ValueOf(pointer).Elem().Type().Elem(),
-			).Interface(),
-		)
+		if v, ok := pointer.(reflect.Value); ok {
+			model = m.Fields(
+				reflect.New(
+					v.Type().Elem(),
+				).Interface(),
+			)
+		} else {
+			model = m.Fields(
+				reflect.New(
+					reflect.ValueOf(pointer).Elem().Type().Elem(),
+				).Interface(),
+			)
+		}
 	}
 	all, err := model.All(where...)
 	if err != nil {
@@ -323,7 +310,6 @@ func (m *Model) Scan(pointer interface{}, where ...interface{}) error {
 		reflectValue = reflectValue.Elem()
 		reflectKind = reflectValue.Kind()
 	}
-
 	switch reflectKind {
 	case reflect.Slice, reflect.Array:
 		return m.doStructs(pointer, where...)
@@ -520,15 +506,18 @@ func (m *Model) UnionAll(unions ...*Model) *Model {
 
 // doGetAllBySql does the select statement on the database.
 func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, err error) {
-	cacheKey := ""
-	cacheObj := m.db.GetCache().Ctx(m.GetCtx())
+	var (
+		ctx      = m.GetCtx()
+		cacheKey = ""
+		cacheObj = m.db.GetCache()
+	)
 	// Retrieve from cache.
 	if m.cacheEnabled && m.tx == nil {
 		cacheKey = m.cacheName
 		if len(cacheKey) == 0 {
 			cacheKey = sql + ", @PARAMS:" + gconv.String(args)
 		}
-		if v, _ := cacheObj.GetVar(cacheKey); !v.IsNil() {
+		if v, _ := cacheObj.Get(ctx, cacheKey); !v.IsNil() {
 			if result, ok := v.Val().(Result); ok {
 				// In-memory cache.
 				return result, nil
@@ -549,7 +538,7 @@ func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, e
 	// Cache the result.
 	if cacheKey != "" && err == nil {
 		if m.cacheDuration < 0 {
-			if _, err := cacheObj.Remove(cacheKey); err != nil {
+			if _, err := cacheObj.Remove(ctx, cacheKey); err != nil {
 				intlog.Error(m.GetCtx(), err)
 			}
 		} else {
@@ -557,7 +546,7 @@ func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, e
 			if result == nil {
 				result = Result{}
 			}
-			if err := cacheObj.Set(cacheKey, result, m.cacheDuration); err != nil {
+			if err := cacheObj.Set(ctx, cacheKey, result, m.cacheDuration); err != nil {
 				intlog.Error(m.GetCtx(), err)
 			}
 		}

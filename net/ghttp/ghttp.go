@@ -95,12 +95,6 @@ type (
 		Handler *handlerItem // Handler object.
 	}
 
-	// errorStack is the interface for Stack feature.
-	errorStack interface {
-		Error() string
-		Stack() string
-	}
-
 	// Listening file descriptor mapping.
 	// The key is either "http" or "https" and the value is its FD.
 	listenerFdMap = map[string]string
@@ -113,9 +107,9 @@ const (
 	HookAfterOutput       = "HOOK_AFTER_OUTPUT"
 	ServerStatusStopped   = 0
 	ServerStatusRunning   = 1
+	DefaultServerName     = "default"
+	DefaultDomainName     = "default"
 	supportedHttpMethods  = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
-	defaultServerName     = "default"
-	defaultDomainName     = "default"
 	defaultMethod         = "ALL"
 	handlerTypeHandler    = 1
 	handlerTypeObject     = 2

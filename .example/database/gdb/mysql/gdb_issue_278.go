@@ -8,7 +8,7 @@ import (
 
 var (
 	tableName = "orders"
-	dao       = g.DB().Table(tableName).Safe()
+	dao       = g.DB().Model(tableName).Safe()
 )
 
 type OrderServiceEntity struct {

@@ -38,8 +38,8 @@ type Options struct {
 	StrNumber bool   // StrNumber causes the Decoder to unmarshal a number into an interface{} as a string instead of as a float64.
 }
 
-// apiInterface is used for type assert api for Interface().
-type apiInterface interface {
+// iInterface is used for type assert api for Interface().
+type iInterface interface {
 	Interface() interface{}
 }
 
@@ -50,7 +50,7 @@ type apiInterface interface {
 func (j *Json) setValue(pattern string, value interface{}, removed bool) error {
 	if value != nil {
 		if utils.IsStruct(value) {
-			if v, ok := value.(apiInterface); ok {
+			if v, ok := value.(iInterface); ok {
 				value = v.Interface()
 			}
 		}
@@ -322,17 +322,28 @@ func (j *Json) getPointerByPatternWithViolenceCheck(pattern string) *interface{}
 	if !j.vc {
 		return j.getPointerByPatternWithoutViolenceCheck(pattern)
 	}
-	index := len(pattern)
-	start := 0
-	length := 0
-	pointer := j.p
+
+	// It returns nil if pattern is empty.
+	if pattern == "" {
+		return nil
+	}
+	// It returns all if pattern is ".".
+	if pattern == "." {
+		return j.p
+	}
+
+	var (
+		index   = len(pattern)
+		start   = 0
+		length  = 0
+		pointer = j.p
+	)
 	if index == 0 {
 		return pointer
 	}
 	for {
 		if r := j.checkPatternByPointer(pattern[start:index], pointer); r != nil {
-			length += index - start
-			if start > 0 {
+			if length += index - start; start > 0 {
 				length += 1
 			}
 			start = index + 1
@@ -361,6 +372,16 @@ func (j *Json) getPointerByPatternWithoutViolenceCheck(pattern string) *interfac
 	if j.vc {
 		return j.getPointerByPatternWithViolenceCheck(pattern)
 	}
+
+	// It returns nil if pattern is empty.
+	if pattern == "" {
+		return nil
+	}
+	// It returns all if pattern is ".".
+	if pattern == "." {
+		return j.p
+	}
+
 	pointer := j.p
 	if len(pattern) == 0 {
 		return pointer

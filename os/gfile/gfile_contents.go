@@ -11,8 +11,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-
-	"github.com/gogf/gf/util/gconv"
 )
 
 var (
@@ -23,7 +21,7 @@ var (
 // GetContents returns the file content of <path> as string.
 // It returns en empty string if it fails reading.
 func GetContents(path string) string {
-	return gconv.UnsafeBytesToStr(GetBytes(path))
+	return string(GetBytes(path))
 }
 
 // GetBytes returns the file content of <path> as []byte.
@@ -183,17 +181,6 @@ func ReadLines(file string, callback func(text string) error) error {
 		}
 	}
 	return nil
-}
-
-// ReadByteLines reads file content line by line, which is passed to the callback function <callback> as []byte.
-// It matches each line of text, separated by chars '\r' or '\n', stripped any trailing end-of-line marker.
-//
-// Note that the parameter passed to callback function might be an empty value, and the last non-empty line
-// will be passed to callback function <callback> even if it has no newline marker.
-//
-// Deprecated, use ReadLinesBytes instead.
-func ReadByteLines(file string, callback func(bytes []byte) error) error {
-	return ReadLinesBytes(file, callback)
 }
 
 // ReadLinesBytes reads file content line by line, which is passed to the callback function <callback> as []byte.

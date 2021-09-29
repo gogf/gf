@@ -205,20 +205,21 @@ func (c *Core) GetScan(pointer interface{}, sql string, args ...interface{}) err
 	t := reflect.TypeOf(pointer)
 	k := t.Kind()
 	if k != reflect.Ptr {
-		return fmt.Errorf("params should be type of pointer, but got: %v", k)
+		return gerror.NewCodef(gcode.CodeInvalidParameter, "params should be type of pointer, but got: %v", k)
 	}
 	k = t.Elem().Kind()
 	switch k {
 	case reflect.Array, reflect.Slice:
 		return c.db.GetCore().GetStructs(pointer, sql, args...)
+
 	case reflect.Struct:
 		return c.db.GetCore().GetStruct(pointer, sql, args...)
 	}
-	return fmt.Errorf("element type should be type of struct/slice, unsupported: %v", k)
+	return gerror.NewCodef(gcode.CodeInvalidParameter, "element type should be type of struct/slice, unsupported: %v", k)
 }
 
 // GetValue queries and returns the field value from database.
-// The sql should queries only one field from database, or else it returns only one
+// The sql should query only one field from database, or else it returns only one
 // field of the result.
 func (c *Core) GetValue(sql string, args ...interface{}) (Value, error) {
 	one, err := c.db.GetOne(sql, args...)
@@ -392,7 +393,7 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 		params         []interface{} // Values that will be committed to underlying database driver.
 		onDuplicateStr string        // onDuplicateStr is used in "ON DUPLICATE KEY UPDATE" statement.
 	)
-	// Handle the field names and place holders.
+	// Handle the field names and placeholders.
 	for k, _ := range list[0] {
 		keys = append(keys, k)
 	}
@@ -423,7 +424,7 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 			}
 		}
 		valueHolder = append(valueHolder, "("+gstr.Join(values, ",")+")")
-		// Batch package checks: It meets the batch number or it is the last element.
+		// Batch package checks: It meets the batch number, or it is the last element.
 		if len(valueHolder) == option.BatchCount || (i == listLength-1 && len(valueHolder) > 0) {
 			r, err := c.db.DoExec(ctx, link, fmt.Sprintf(
 				"%s INTO %s(%s) VALUES%s %s",
@@ -666,7 +667,7 @@ func (c *Core) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf(`%+v`, c)), nil
 }
 
-// writeSqlToLogger outputs the sql object to logger.
+// writeSqlToLogger outputs the Sql object to logger.
 // It is enabled only if configuration "debug" is true.
 func (c *Core) writeSqlToLogger(ctx context.Context, sql *Sql) {
 	var transactionIdStr string
@@ -678,9 +679,9 @@ func (c *Core) writeSqlToLogger(ctx context.Context, sql *Sql) {
 	s := fmt.Sprintf("[%3d ms] [%s] %s%s", sql.End-sql.Start, sql.Group, transactionIdStr, sql.Format)
 	if sql.Error != nil {
 		s += "\nError: " + sql.Error.Error()
-		c.logger.Ctx(ctx).Error(s)
+		c.logger.Error(ctx, s)
 	} else {
-		c.logger.Ctx(ctx).Debug(s)
+		c.logger.Debug(ctx, s)
 	}
 }
 

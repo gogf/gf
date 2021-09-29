@@ -67,11 +67,11 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		} else {
 			if exception := recover(); exception != nil {
 				request.Response.WriteStatus(http.StatusInternalServerError)
-				if err, ok := exception.(error); ok {
-					if code := gerror.Code(err); code != gcode.CodeNil {
-						s.handleErrorLog(err, request)
+				if v, ok := exception.(error); ok {
+					if code := gerror.Code(v); code != gcode.CodeNil {
+						s.handleErrorLog(v, request)
 					} else {
-						s.handleErrorLog(gerror.WrapCodeSkip(gcode.CodeInternalError, 1, err, ""), request)
+						s.handleErrorLog(gerror.WrapCodeSkip(gcode.CodeInternalError, 1, v, ""), request)
 					}
 				} else {
 					s.handleErrorLog(gerror.NewCodeSkipf(gcode.CodeInternalError, 1, "%+v", exception), request)
@@ -184,8 +184,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// and SessionCookieOutput is enabled.
 	if s.config.SessionCookieOutput &&
 		request.Session.IsDirty() &&
-		request.Session.Id() != request.GetSessionId() {
-		request.Cookie.SetSessionId(request.Session.Id())
+		request.Session.MustId() != request.GetSessionId() {
+		request.Cookie.SetSessionId(request.Session.MustId())
 	}
 	// Output the cookie content to client.
 	request.Cookie.Flush()

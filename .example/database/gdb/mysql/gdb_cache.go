@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/gogf/gf/database/gdb"
+	"github.com/gogf/gf/os/gctx"
 	"github.com/gogf/gf/util/gutil"
 	"time"
 )
@@ -17,6 +18,9 @@ func main() {
 		Role:    "master",
 		Charset: "utf8",
 	})
+	var (
+		ctx = gctx.New()
+	)
 	db, err := gdb.New()
 	if err != nil {
 		panic(err)
@@ -27,7 +31,7 @@ func main() {
 
 	// 执行2次查询并将查询结果缓存3秒，并可执行缓存名称(可选)
 	for i := 0; i < 3; i++ {
-		r, _ := db.Table("user").Cache(3000*time.Second).Where("id=?", 1).One()
+		r, _ := db.Ctx(ctx).Model("user").Cache(3000*time.Second).Where("id=?", 1).One()
 		gutil.Dump(r.Map())
 	}
 

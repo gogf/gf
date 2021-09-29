@@ -9,7 +9,7 @@ package gyaml
 
 import (
 	"github.com/gogf/gf/internal/json"
-	"gopkg.in/yaml.v3"
+	"gopkg.in/yaml.v2"
 
 	"github.com/gogf/gf/util/gconv"
 )

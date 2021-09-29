@@ -9,6 +9,7 @@ package gvalid
 import (
 	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/text/gstr"
 	"strconv"
 	"strings"
 	"time"
@@ -22,7 +23,7 @@ import (
 	"github.com/gogf/gf/util/gutil"
 )
 
-type apiTime interface {
+type iTime interface {
 	Date() (year int, month time.Month, day int)
 	IsZero() bool
 }
@@ -244,7 +245,7 @@ func (v *Validator) doCheckBuildInRules(input doCheckBuildInRulesInput) (match b
 	// Date rules.
 	case "date":
 		// support for time value, eg: gtime.Time/*gtime.Time, time.Time/*time.Time.
-		if v, ok := input.Value.(apiTime); ok {
+		if v, ok := input.Value.(iTime); ok {
 			return !v.IsZero(), nil
 		}
 		match = gregex.IsMatchString(`\d{4}[\.\-\_/]{0,1}\d{2}[\.\-\_/]{0,1}\d{2}`, valueStr)
@@ -252,7 +253,7 @@ func (v *Validator) doCheckBuildInRules(input doCheckBuildInRulesInput) (match b
 	// Date rule with specified format.
 	case "date-format":
 		// support for time value, eg: gtime.Time/*gtime.Time, time.Time/*time.Time.
-		if v, ok := input.Value.(apiTime); ok {
+		if v, ok := input.Value.(iTime); ok {
 			return !v.IsZero(), nil
 		}
 		if _, err := gtime.StrToTimeFormat(valueStr, input.RulePattern); err == nil {
@@ -306,7 +307,7 @@ func (v *Validator) doCheckBuildInRules(input doCheckBuildInRulesInput) (match b
 
 	// Field value should be in range of.
 	case "in":
-		array := strings.Split(input.RulePattern, ",")
+		array := gstr.SplitAndTrim(input.RulePattern, ",")
 		for _, v := range array {
 			if strings.Compare(valueStr, strings.TrimSpace(v)) == 0 {
 				match = true
@@ -317,7 +318,7 @@ func (v *Validator) doCheckBuildInRules(input doCheckBuildInRulesInput) (match b
 	// Field value should not be in range of.
 	case "not-in":
 		match = true
-		array := strings.Split(input.RulePattern, ",")
+		array := gstr.SplitAndTrim(input.RulePattern, ",")
 		for _, v := range array {
 			if strings.Compare(valueStr, strings.TrimSpace(v)) == 0 {
 				match = false

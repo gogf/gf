@@ -8,11 +8,11 @@ package gxml_test
 
 import (
 	"bytes"
+	"github.com/gogf/gf/encoding/gjson"
 	"strings"
 	"testing"
 
 	"github.com/gogf/gf/encoding/gcharset"
-	"github.com/gogf/gf/encoding/gparser"
 	"github.com/gogf/gf/encoding/gxml"
 	"github.com/gogf/gf/test/gtest"
 )
@@ -35,7 +35,7 @@ func buildXml(charset string, str string) (string, string) {
 	head := `<?xml version="1.0" encoding="UTF-8"?>`
 	srcXml := strings.Replace(head, "UTF-8", charset, -1)
 
-	srcParser := gparser.New(nil)
+	srcParser := gjson.New(nil)
 	srcParser.Set("name", str)
 	srcParser.Set("age", "12")
 
@@ -55,7 +55,7 @@ func buildXml(charset string, str string) (string, string) {
 	return srcXml, dstXml
 }
 
-//测试XML中字符集的转换
+// 测试XML中字符集的转换
 func Test_XmlToJson(t *testing.T) {
 	for _, v := range testData {
 		srcXml, dstXml := buildXml(v.otherEncoding, v.utf8)

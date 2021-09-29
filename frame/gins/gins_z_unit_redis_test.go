@@ -9,6 +9,7 @@ package gins_test
 import (
 	"github.com/gogf/gf/debug/gdebug"
 	"github.com/gogf/gf/frame/gins"
+	"github.com/gogf/gf/os/gcfg"
 	"github.com/gogf/gf/os/gtime"
 	"testing"
 	"time"
@@ -33,34 +34,36 @@ func Test_Redis(t *testing.T) {
 		err = gfile.PutContents(gfile.Join(dirPath, name), redisContent)
 		t.Assert(err, nil)
 
-		err = gins.Config().AddPath(dirPath)
+		err = gins.Config().GetAdapter().(*gcfg.AdapterFile).AddPath(dirPath)
 		t.Assert(err, nil)
 
-		defer gins.Config().Clear()
+		defer gins.Config().GetAdapter().(*gcfg.AdapterFile).Clear()
 
 		// for gfsnotify callbacks to refresh cache of config file
 		time.Sleep(500 * time.Millisecond)
 
 		//fmt.Println("gins Test_Redis", Config().Get("test"))
 
-		redisDefault := gins.Redis()
-		redisCache := gins.Redis("cache")
-		redisDisk := gins.Redis("disk")
+		var (
+			redisDefault = gins.Redis()
+			redisCache   = gins.Redis("cache")
+			redisDisk    = gins.Redis("disk")
+		)
 		t.AssertNE(redisDefault, nil)
 		t.AssertNE(redisCache, nil)
 		t.AssertNE(redisDisk, nil)
 
-		r, err := redisDefault.Do("PING")
+		r, err := redisDefault.Do(ctx, "PING")
+		t.AssertNil(err)
+		t.Assert(r, "PONG")
+
+		r, err = redisCache.Do(ctx, "PING")
 		t.Assert(err, nil)
 		t.Assert(r, "PONG")
 
-		r, err = redisCache.Do("PING")
+		_, err = redisDisk.Do(ctx, "SET", "k", "v")
 		t.Assert(err, nil)
-		t.Assert(r, "PONG")
-
-		_, err = redisDisk.Do("SET", "k", "v")
-		t.Assert(err, nil)
-		r, err = redisDisk.Do("GET", "k")
+		r, err = redisDisk.Do(ctx, "GET", "k")
 		t.Assert(err, nil)
 		t.Assert(r, []byte("v"))
 	})

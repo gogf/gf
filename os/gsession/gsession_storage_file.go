@@ -117,7 +117,7 @@ func (s *StorageFile) Get(ctx context.Context, id string, key string) (value int
 }
 
 // GetMap retrieves all key-value pairs as map from storage.
-func (s *StorageFile) GetMap(ctx context.Context, id string) (data map[string]interface{}, err error) {
+func (s *StorageFile) Data(ctx context.Context, id string) (data map[string]interface{}, err error) {
 	return nil, ErrorDisabled
 }
 

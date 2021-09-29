@@ -7,6 +7,7 @@
 package gconv_test
 
 import (
+	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/test/gtest"
 	"github.com/gogf/gf/util/gconv"
@@ -191,5 +192,86 @@ func Test_Scan_Maps(t *testing.T) {
 				"k4": "v4",
 			},
 		})
+	})
+}
+
+func Test_Scan_JsonAttributes(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type Sku struct {
+			GiftId      int64  `json:"gift_id"`
+			Name        string `json:"name"`
+			ScorePrice  int    `json:"score_price"`
+			MarketPrice int    `json:"market_price"`
+			CostPrice   int    `json:"cost_price"`
+			Stock       int    `json:"stock"`
+		}
+		v := gvar.New(`
+[
+{"name": "red", "stock": 10, "gift_id": 1, "cost_price": 80, "score_price": 188, "market_price": 188}, 
+{"name": "blue", "stock": 100, "gift_id": 2, "cost_price": 81, "score_price": 200, "market_price": 288}
+]`)
+		type Product struct {
+			Skus []Sku
+		}
+		var p *Product
+		err := gconv.Scan(g.Map{
+			"Skus": v,
+		}, &p)
+		t.AssertNil(err)
+		t.Assert(len(p.Skus), 2)
+
+		t.Assert(p.Skus[0].Name, "red")
+		t.Assert(p.Skus[0].Stock, 10)
+		t.Assert(p.Skus[0].GiftId, 1)
+		t.Assert(p.Skus[0].CostPrice, 80)
+		t.Assert(p.Skus[0].ScorePrice, 188)
+		t.Assert(p.Skus[0].MarketPrice, 188)
+
+		t.Assert(p.Skus[1].Name, "blue")
+		t.Assert(p.Skus[1].Stock, 100)
+		t.Assert(p.Skus[1].GiftId, 2)
+		t.Assert(p.Skus[1].CostPrice, 81)
+		t.Assert(p.Skus[1].ScorePrice, 200)
+		t.Assert(p.Skus[1].MarketPrice, 288)
+	})
+}
+
+func Test_Scan_JsonAttributes_StringArray(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type S struct {
+			Array []string
+		}
+		var s *S
+		err := gconv.Scan(g.Map{
+			"Array": `["a", "b"]`,
+		}, &s)
+		t.AssertNil(err)
+		t.Assert(len(s.Array), 2)
+		t.Assert(s.Array[0], "a")
+		t.Assert(s.Array[1], "b")
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		type S struct {
+			Array []string
+		}
+		var s *S
+		err := gconv.Scan(g.Map{
+			"Array": `[]`,
+		}, &s)
+		t.AssertNil(err)
+		t.Assert(len(s.Array), 0)
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		type S struct {
+			Array []int64
+		}
+		var s *S
+		err := gconv.Scan(g.Map{
+			"Array": `[]`,
+		}, &s)
+		t.AssertNil(err)
+		t.Assert(len(s.Array), 0)
 	})
 }

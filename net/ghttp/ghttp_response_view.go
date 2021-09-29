@@ -82,7 +82,7 @@ func (r *Response) buildInVars(params ...map[string]interface{}) map[string]inte
 		gutil.MapMerge(m, params[0])
 	}
 	// Retrieve custom template variables from request object.
-	sessionMap := gconv.MapDeep(r.Request.Session.Map())
+	sessionMap := gconv.MapDeep(r.Request.Session.MustData())
 	gutil.MapMerge(m, map[string]interface{}{
 		"Form":    r.Request.GetFormMap(),
 		"Query":   r.Request.GetQueryMap(),
@@ -92,8 +92,8 @@ func (r *Response) buildInVars(params ...map[string]interface{}) map[string]inte
 	})
 	// Note that it should assign no Config variable to template
 	// if there's no configuration file.
-	if c := gcfg.Instance(); c.Available() {
-		m["Config"] = c.Map()
+	if v, _ := gcfg.Instance().Data(r.Request.Context()); len(v) > 0 {
+		m["Config"] = v
 	}
 	return m
 }

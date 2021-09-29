@@ -6,7 +6,7 @@ import (
 
 func main() {
 	// error!
-	r, err := g.DB().Table("user").Where(g.Map{
+	r, err := g.DB().Model("user").Where(g.Map{
 		"or": g.Map{
 			"nickname":       "jim",
 			"create_time > ": "2019-10-01",

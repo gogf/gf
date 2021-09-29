@@ -67,5 +67,7 @@ jobs:
       run: GOARCH=amd64 go test -v ./... -race -coverprofile=coverage.txt -covermode=atomic
 
     - name: Report Coverage
-      run: bash <(curl -s https://codecov.io/bash)
+      uses: codecov/codecov-action@v2
+      with:
+        flags: go-${{ matrix.go }}
 

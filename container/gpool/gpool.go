@@ -126,7 +126,7 @@ func (p *Pool) Size() int {
 	return p.list.Len()
 }
 
-// Close closes the pool. If <p> has ExpireFunc,
+// Close closes the pool. If `p` has ExpireFunc,
 // then it automatically closes all items using this function before it's closed.
 // Commonly you do not need call this function manually.
 func (p *Pool) Close() {

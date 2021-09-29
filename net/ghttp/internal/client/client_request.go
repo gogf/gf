@@ -9,6 +9,7 @@ package client
 import (
 	"bytes"
 	"context"
+	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
@@ -23,7 +24,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gogf/gf/encoding/gparser"
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
@@ -138,12 +138,13 @@ func (c *Client) prepareRequest(method, url string, data ...interface{}) (req *h
 					params = string(b)
 				}
 			}
+
 		case "application/xml":
 			switch data[0].(type) {
 			case string, []byte:
 				params = gconv.String(data[0])
 			default:
-				if b, err := gparser.VarToXml(data[0]); err != nil {
+				if b, err := gjson.New(data[0]).ToXml(); err != nil {
 					return nil, err
 				} else {
 					params = string(b)

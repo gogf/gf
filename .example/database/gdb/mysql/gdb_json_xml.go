@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
+	"github.com/gogf/gf/encoding/gjson"
+	"github.com/gogf/gf/os/gctx"
 
 	"github.com/gogf/gf/database/gdb"
-	"github.com/gogf/gf/encoding/gparser"
 	"github.com/gogf/gf/frame/g"
 )
 
@@ -19,19 +20,22 @@ func main() {
 		Role:    "master",
 		Charset: "utf8",
 	})
-	db := g.DB()
-	one, err := db.Table("user").Where("id=?", 1).One()
+	var (
+		db  = g.DB()
+		ctx = gctx.New()
+	)
+	one, err := db.Ctx(ctx).Model("user").Where("id=?", 1).One()
 	if err != nil {
 		panic(err)
 	}
 
 	// 使用内置方法转换为json/xml
-	fmt.Println(one.ToJson())
-	fmt.Println(one.ToXml())
+	fmt.Println(one.Json())
+	fmt.Println(one.Xml())
 
 	// 自定义方法方法转换为json/xml
-	jsonContent, _ := gparser.VarToJson(one.ToMap())
+	jsonContent, _ := gjson.New(one.Map()).ToJson()
 	fmt.Println(string(jsonContent))
-	xmlContent, _ := gparser.VarToXml(one.ToMap())
+	xmlContent, _ := gjson.New(one.Map()).ToJson()
 	fmt.Println(string(xmlContent))
 }

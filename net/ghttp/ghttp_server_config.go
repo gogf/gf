@@ -9,7 +9,6 @@ package ghttp
 import (
 	"context"
 	"crypto/tls"
-	"fmt"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/os/gres"
 	"github.com/gogf/gf/util/gutil"
@@ -28,16 +27,12 @@ import (
 )
 
 const (
-	defaultHttpAddr   = ":80"  // Default listening port for HTTP.
-	defaultHttpsAddr  = ":443" // Default listening port for HTTPS.
-	URI_TYPE_DEFAULT  = 0      // Deprecated, please use UriTypeDefault instead.
-	URI_TYPE_FULLNAME = 1      // Deprecated, please use UriTypeFullName instead.
-	URI_TYPE_ALLLOWER = 2      // Deprecated, please use UriTypeAllLower instead.
-	URI_TYPE_CAMEL    = 3      // Deprecated, please use UriTypeCamel instead.
-	UriTypeDefault    = 0      // Method name to URI converting type, which converts name to its lower case and joins the words using char '-'.
-	UriTypeFullName   = 1      // Method name to URI converting type, which does no converting to the method name.
-	UriTypeAllLower   = 2      // Method name to URI converting type, which converts name to its lower case.
-	UriTypeCamel      = 3      // Method name to URI converting type, which converts name to its camel case.
+	defaultHttpAddr  = ":80"  // Default listening port for HTTP.
+	defaultHttpsAddr = ":443" // Default listening port for HTTPS.
+	UriTypeDefault   = 0      // Method names to URI converting type, which converts name to its lower case and joins the words using char '-'.
+	UriTypeFullName  = 1      // Method names to URI converting type, which does no converting to the method name.
+	UriTypeAllLower  = 2      // Method names to URI converting type, which converts name to its lower case.
+	UriTypeCamel     = 3      // Method names to URI converting type, which converts name to its camel case.
 )
 
 // ServerConfig is the HTTP Server configuration manager.
@@ -228,12 +223,6 @@ type ServerConfig struct {
 	GracefulTimeout uint8 `json:"gracefulTimeout"`
 }
 
-// Config creates and returns a ServerConfig object with default configurations.
-// Deprecated. Use NewConfig instead.
-func Config() ServerConfig {
-	return NewConfig()
-}
-
 // NewConfig creates and returns a ServerConfig object with default configurations.
 // Note that, do not define this default configuration to local package variable, as there are
 // some pointer attributes that may be shared in different servers.
@@ -340,8 +329,7 @@ func (s *Server) SetConfig(c ServerConfig) error {
 	if err := s.config.Logger.SetLevelStr(s.config.LogLevel); err != nil {
 		intlog.Error(context.TODO(), err)
 	}
-
-	SetGraceful(c.Graceful)
+	gracefulEnabled = c.Graceful
 	intlog.Printf(context.TODO(), "SetConfig: %+v", s.config)
 	return nil
 }
@@ -388,6 +376,9 @@ func (s *Server) SetHTTPSPort(port ...int) {
 // EnableHTTPS enables HTTPS with given certification and key files for the server.
 // The optional parameter <tlsConfig> specifies custom TLS configuration.
 func (s *Server) EnableHTTPS(certFile, keyFile string, tlsConfig ...*tls.Config) {
+	var (
+		ctx = context.TODO()
+	)
 	certFileRealPath := gfile.RealPath(certFile)
 	if certFileRealPath == "" {
 		certFileRealPath = gfile.RealPath(gfile.Pwd() + gfile.Separator + certFile)
@@ -400,7 +391,7 @@ func (s *Server) EnableHTTPS(certFile, keyFile string, tlsConfig ...*tls.Config)
 		certFileRealPath = certFile
 	}
 	if certFileRealPath == "" {
-		s.Logger().Fatal(fmt.Sprintf(`EnableHTTPS failed: certFile "%s" does not exist`, certFile))
+		s.Logger().Fatalf(ctx, `EnableHTTPS failed: certFile "%s" does not exist`, certFile)
 	}
 	keyFileRealPath := gfile.RealPath(keyFile)
 	if keyFileRealPath == "" {
@@ -414,7 +405,7 @@ func (s *Server) EnableHTTPS(certFile, keyFile string, tlsConfig ...*tls.Config)
 		keyFileRealPath = keyFile
 	}
 	if keyFileRealPath == "" {
-		s.Logger().Fatal(fmt.Sprintf(`EnableHTTPS failed: keyFile "%s" does not exist`, keyFile))
+		s.Logger().Fatal(ctx, `EnableHTTPS failed: keyFile "%s" does not exist`, keyFile)
 	}
 	s.config.HTTPSCertPath = certFileRealPath
 	s.config.HTTPSKeyPath = keyFileRealPath

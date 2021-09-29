@@ -57,7 +57,7 @@ type Model struct {
 type ModelHandler func(m *Model) *Model
 
 // ChunkHandler is a function that is used in function Chunk, which handles given Result and error.
-// It returns true if it wants continue chunking, or else it returns false to stop chunking.
+// It returns true if it wants to continue chunking, or else it returns false to stop chunking.
 type ChunkHandler func(result Result, err error) bool
 
 // ModelWhereHolder is the holder for where condition preparing.
@@ -75,13 +75,6 @@ const (
 	whereHolderOperatorOr    = 3
 	defaultFields            = "*"
 )
-
-// Table is alias of Core.Model.
-// See Core.Model.
-// Deprecated, use Model instead.
-func (c *Core) Table(tableNameQueryOrStruct ...interface{}) *Model {
-	return c.db.Model(tableNameQueryOrStruct...)
-}
 
 // Model creates and returns a new ORM model from given schema.
 // The parameter `tableNameQueryOrStruct` can be more than one table names, and also alias name, like:
@@ -132,7 +125,7 @@ func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 			tableStr = c.QuotePrefixTableName(tableNames[0])
 		}
 	}
-	return &Model{
+	m := &Model{
 		db:         c.db,
 		tablesInit: tableStr,
 		tables:     tableStr,
@@ -142,6 +135,10 @@ func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 		filter:     true,
 		extraArgs:  extraArgs,
 	}
+	if defaultModelSafe {
+		m.safe = true
+	}
+	return m
 }
 
 // Raw creates and returns a model based on a raw sql not a table.
@@ -154,7 +151,7 @@ func (c *Core) Raw(rawSql string, args ...interface{}) *Model {
 	return model
 }
 
-// Raw creates and returns a model based on a raw sql not a table.
+// Raw sets current model as a raw sql model.
 // Example:
 //     db.Raw("SELECT * FROM `user` WHERE `name` = ?", "john").Scan(&result)
 // See Core.Raw.
@@ -169,7 +166,7 @@ func (tx *TX) Raw(rawSql string, args ...interface{}) *Model {
 	return tx.Model().Raw(rawSql, args...)
 }
 
-// With creates and returns an ORM model based on meta data of given object.
+// With creates and returns an ORM model based on metadata of given object.
 func (c *Core) With(objects ...interface{}) *Model {
 	return c.db.Model().With(objects...)
 }

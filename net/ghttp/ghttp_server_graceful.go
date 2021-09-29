@@ -9,7 +9,6 @@ package ghttp
 import (
 	"context"
 	"crypto/tls"
-	"fmt"
 	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/os/gproc"
@@ -74,7 +73,7 @@ func (s *gracefulServer) ListenAndServe() error {
 	}
 	s.listener = ln
 	s.rawListener = ln
-	return s.doServe()
+	return s.doServe(context.TODO())
 }
 
 // Fd retrieves and returns the file descriptor of current server.
@@ -98,7 +97,10 @@ func (s *gracefulServer) setFd(fd int) {
 // The parameter <certFile> and <keyFile> specify the necessary certification and key files for HTTPS.
 // The optional parameter <tlsConfig> specifies the custom TLS configuration.
 func (s *gracefulServer) ListenAndServeTLS(certFile, keyFile string, tlsConfig ...*tls.Config) error {
-	var config *tls.Config
+	var (
+		ctx    = context.TODO()
+		config *tls.Config
+	)
 	if len(tlsConfig) > 0 && tlsConfig[0] != nil {
 		config = tlsConfig[0]
 	} else if s.httpServer.TLSConfig != nil {
@@ -132,7 +134,7 @@ func (s *gracefulServer) ListenAndServeTLS(certFile, keyFile string, tlsConfig .
 
 	s.listener = tls.NewListener(ln, config)
 	s.rawListener = ln
-	return s.doServe()
+	return s.doServe(ctx)
 }
 
 // getProto retrieves and returns the proto string of current server.
@@ -144,13 +146,14 @@ func (s *gracefulServer) getProto() string {
 	return proto
 }
 
-// doServe does staring the serving.
-func (s *gracefulServer) doServe() error {
+// doServe starts the serving.
+func (s *gracefulServer) doServe(ctx context.Context) error {
 	action := "started"
 	if s.fd != 0 {
 		action = "reloaded"
 	}
 	s.server.Logger().Printf(
+		ctx,
 		"%d: %s server %s listening on [%s]",
 		gproc.Pid(), s.getProto(), action, s.address,
 	)
@@ -162,31 +165,34 @@ func (s *gracefulServer) doServe() error {
 
 // getNetListener retrieves and returns the wrapped net.Listener.
 func (s *gracefulServer) getNetListener() (net.Listener, error) {
-	var ln net.Listener
-	var err error
+	var (
+		ln  net.Listener
+		err error
+	)
 	if s.fd > 0 {
 		f := os.NewFile(s.fd, "")
 		ln, err = net.FileListener(f)
 		if err != nil {
-			err = fmt.Errorf("%d: net.FileListener error: %v", gproc.Pid(), err)
+			err = gerror.WrapCodef(gcode.CodeInternalError, err, "%d: net.FileListener failed", gproc.Pid())
 			return nil, err
 		}
 	} else {
 		ln, err = net.Listen("tcp", s.httpServer.Addr)
 		if err != nil {
-			err = fmt.Errorf("%d: net.Listen error: %v", gproc.Pid(), err)
+			err = gerror.WrapCodef(gcode.CodeInternalError, err, "%d: net.Listen failed", gproc.Pid())
 		}
 	}
 	return ln, err
 }
 
 // shutdown shuts down the server gracefully.
-func (s *gracefulServer) shutdown() {
+func (s *gracefulServer) shutdown(ctx context.Context) {
 	if s.status == ServerStatusStopped {
 		return
 	}
 	if err := s.httpServer.Shutdown(context.Background()); err != nil {
 		s.server.Logger().Errorf(
+			ctx,
 			"%d: %s server [%s] shutdown error: %v",
 			gproc.Pid(), s.getProto(), s.address, err,
 		)
@@ -194,12 +200,13 @@ func (s *gracefulServer) shutdown() {
 }
 
 // close shuts down the server forcibly.
-func (s *gracefulServer) close() {
+func (s *gracefulServer) close(ctx context.Context) {
 	if s.status == ServerStatusStopped {
 		return
 	}
 	if err := s.httpServer.Close(); err != nil {
 		s.server.Logger().Errorf(
+			ctx,
 			"%d: %s server [%s] closed error: %v",
 			gproc.Pid(), s.getProto(), s.address, err,
 		)

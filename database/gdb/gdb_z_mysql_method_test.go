@@ -10,7 +10,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/gogf/gf/container/garray"
-	"github.com/gogf/gf/encoding/gparser"
 	"github.com/gogf/gf/text/gstr"
 	"testing"
 	"time"
@@ -210,7 +209,7 @@ func Test_DB_Insert_WithStructAndSliceAttribute(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(one["passport"], data["passport"])
 		t.Assert(one["create_time"], data["create_time"])
-		t.Assert(one["nickname"], gparser.MustToJson(data["nickname"]))
+		t.Assert(one["nickname"], gjson.New(data["nickname"]).MustToJson())
 	})
 }
 
@@ -785,7 +784,7 @@ func Test_DB_ToJson(t *testing.T) {
 	gtest.AssertNil(err)
 
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).Fields("*").Where("id =? ", 1).Select()
+		result, err := db.Model(table).Fields("*").Where("id =? ", 1).All()
 		if err != nil {
 			gtest.Fatal(err)
 		}
@@ -814,11 +813,11 @@ func Test_DB_ToJson(t *testing.T) {
 			gtest.Fatal(err)
 		}
 
-		t.Assert(users[0].Id, resultJson.GetInt("0.id"))
-		t.Assert(users[0].Passport, resultJson.GetString("0.passport"))
-		t.Assert(users[0].Password, resultJson.GetString("0.password"))
-		t.Assert(users[0].NickName, resultJson.GetString("0.nickname"))
-		t.Assert(users[0].CreateTime, resultJson.GetString("0.create_time"))
+		t.Assert(users[0].Id, resultJson.Get("0.id").Int())
+		t.Assert(users[0].Passport, resultJson.Get("0.passport").String())
+		t.Assert(users[0].Password, resultJson.Get("0.password").String())
+		t.Assert(users[0].NickName, resultJson.Get("0.nickname").String())
+		t.Assert(users[0].CreateTime, resultJson.Get("0.create_time").String())
 
 		result = nil
 		err = result.Structs(&users)
@@ -925,7 +924,7 @@ func Test_DB_ToStringMap(t *testing.T) {
 	gtest.AssertNil(err)
 	gtest.C(t, func(t *gtest.T) {
 		id := "1"
-		result, err := db.Model(table).Fields("*").Where("id = ?", 1).Select()
+		result, err := db.Model(table).Fields("*").Where("id = ?", 1).All()
 		if err != nil {
 			gtest.Fatal(err)
 		}
@@ -962,7 +961,7 @@ func Test_DB_ToIntMap(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		id := 1
-		result, err := db.Model(table).Fields("*").Where("id = ?", id).Select()
+		result, err := db.Model(table).Fields("*").Where("id = ?", id).All()
 		if err != nil {
 			gtest.Fatal(err)
 		}
@@ -998,7 +997,7 @@ func Test_DB_ToUintMap(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		id := 1
-		result, err := db.Model(table).Fields("*").Where("id = ?", id).Select()
+		result, err := db.Model(table).Fields("*").Where("id = ?", id).All()
 		if err != nil {
 			gtest.Fatal(err)
 		}
@@ -1036,7 +1035,7 @@ func Test_DB_ToStringRecord(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		id := 1
 		ids := "1"
-		result, err := db.Model(table).Fields("*").Where("id = ?", id).Select()
+		result, err := db.Model(table).Fields("*").Where("id = ?", id).All()
 		if err != nil {
 			gtest.Fatal(err)
 		}
@@ -1073,7 +1072,7 @@ func Test_DB_ToIntRecord(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		id := 1
-		result, err := db.Model(table).Fields("*").Where("id = ?", id).Select()
+		result, err := db.Model(table).Fields("*").Where("id = ?", id).All()
 		if err != nil {
 			gtest.Fatal(err)
 		}
@@ -1110,7 +1109,7 @@ func Test_DB_ToUintRecord(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		id := 1
-		result, err := db.Model(table).Fields("*").Where("id = ?", id).Select()
+		result, err := db.Model(table).Fields("*").Where("id = ?", id).All()
 		if err != nil {
 			gtest.Fatal(err)
 		}
@@ -1182,7 +1181,7 @@ func Test_DB_TableField(t *testing.T) {
 		gtest.Assert(n, 1)
 	}
 
-	result, err := db.Model(name).Fields("*").Where("field_int = ?", 2).Select()
+	result, err := db.Model(name).Fields("*").Where("field_int = ?", 2).All()
 	if err != nil {
 		gtest.Fatal(err)
 	}
@@ -1313,14 +1312,14 @@ func Test_Model_InnerJoin(t *testing.T) {
 
 		t.Assert(n, 5)
 
-		result, err := db.Model(table1+" u1").InnerJoin(table2+" u2", "u1.id = u2.id").OrderBy("u1.id").Select()
+		result, err := db.Model(table1+" u1").InnerJoin(table2+" u2", "u1.id = u2.id").Order("u1.id").All()
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		t.Assert(len(result), 5)
 
-		result, err = db.Model(table1+" u1").InnerJoin(table2+" u2", "u1.id = u2.id").Where("u1.id > ?", 1).OrderBy("u1.id").Select()
+		result, err = db.Model(table1+" u1").InnerJoin(table2+" u2", "u1.id = u2.id").Where("u1.id > ?", 1).Order("u1.id").All()
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -1349,14 +1348,14 @@ func Test_Model_LeftJoin(t *testing.T) {
 			t.Assert(n, 7)
 		}
 
-		result, err := db.Model(table1+" u1").LeftJoin(table2+" u2", "u1.id = u2.id").Select()
+		result, err := db.Model(table1+" u1").LeftJoin(table2+" u2", "u1.id = u2.id").All()
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		t.Assert(len(result), 10)
 
-		result, err = db.Model(table1+" u1").LeftJoin(table2+" u2", "u1.id = u2.id").Where("u1.id > ? ", 2).Select()
+		result, err = db.Model(table1+" u1").LeftJoin(table2+" u2", "u1.id = u2.id").Where("u1.id > ? ", 2).All()
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -1385,13 +1384,13 @@ func Test_Model_RightJoin(t *testing.T) {
 
 		t.Assert(n, 7)
 
-		result, err := db.Model(table1+" u1").RightJoin(table2+" u2", "u1.id = u2.id").Select()
+		result, err := db.Model(table1+" u1").RightJoin(table2+" u2", "u1.id = u2.id").All()
 		if err != nil {
 			t.Fatal(err)
 		}
 		t.Assert(len(result), 10)
 
-		result, err = db.Model(table1+" u1").RightJoin(table2+" u2", "u1.id = u2.id").Where("u1.id > 2").Select()
+		result, err = db.Model(table1+" u1").RightJoin(table2+" u2", "u1.id = u2.id").Where("u1.id > 2").All()
 		if err != nil {
 			t.Fatal(err)
 		}
