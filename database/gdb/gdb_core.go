@@ -512,7 +512,7 @@ func (c *Core) Update(table string, data interface{}, condition interface{}, arg
 }
 
 // DoUpdate does "UPDATE ... " statement for the table.
-// This function is usually used for custom interface definition, you do not need call it manually.
+// This function is usually used for custom interface definition, you do not need to call it manually.
 func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data interface{}, condition string, args ...interface{}) (result sql.Result, err error) {
 	table = c.QuotePrefixTableName(table)
 	var (
