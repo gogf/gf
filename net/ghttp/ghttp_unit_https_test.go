@@ -45,15 +45,15 @@ func Test_HTTPS_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		t.AssertIN(gstr.Trim(c.GetContent("/")), g.Slice{"", "Client sent an HTTP request to an HTTPS server."})
-		t.AssertIN(gstr.Trim(c.GetContent("/test")), g.Slice{"", "Client sent an HTTP request to an HTTPS server."})
+		t.AssertIN(gstr.Trim(c.GetContent(ctx, "/")), g.Slice{"", "Client sent an HTTP request to an HTTPS server."})
+		t.AssertIN(gstr.Trim(c.GetContent(ctx, "/test")), g.Slice{"", "Client sent an HTTP request to an HTTPS server."})
 	})
 	// HTTPS
 	gtest.C(t, func(t *gtest.T) {
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("https://127.0.0.1:%d", p))
-		t.Assert(c.GetContent("/"), "Not Found")
-		t.Assert(c.GetContent("/test"), "test")
+		t.Assert(c.GetContent(ctx, "/"), "Not Found")
+		t.Assert(c.GetContent(ctx, "/test"), "test")
 	})
 }
 
@@ -80,15 +80,15 @@ func Test_HTTPS_Resource(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		t.AssertIN(gstr.Trim(c.GetContent("/")), g.Slice{"", "Client sent an HTTP request to an HTTPS server."})
-		t.AssertIN(gstr.Trim(c.GetContent("/test")), g.Slice{"", "Client sent an HTTP request to an HTTPS server."})
+		t.AssertIN(gstr.Trim(c.GetContent(ctx, "/")), g.Slice{"", "Client sent an HTTP request to an HTTPS server."})
+		t.AssertIN(gstr.Trim(c.GetContent(ctx, "/test")), g.Slice{"", "Client sent an HTTP request to an HTTPS server."})
 	})
 	// HTTPS
 	gtest.C(t, func(t *gtest.T) {
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("https://127.0.0.1:%d", p))
-		t.Assert(c.GetContent("/"), "Not Found")
-		t.Assert(c.GetContent("/test"), "test")
+		t.Assert(c.GetContent(ctx, "/"), "Not Found")
+		t.Assert(c.GetContent(ctx, "/test"), "test")
 	})
 }
 
@@ -119,14 +119,14 @@ func Test_HTTPS_HTTP_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", portHttp))
-		t.Assert(c.GetContent("/"), "Not Found")
-		t.Assert(c.GetContent("/test"), "test")
+		t.Assert(c.GetContent(ctx, "/"), "Not Found")
+		t.Assert(c.GetContent(ctx, "/test"), "test")
 	})
 	// HTTPS
 	gtest.C(t, func(t *gtest.T) {
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("https://127.0.0.1:%d", portHttps))
-		t.Assert(c.GetContent("/"), "Not Found")
-		t.Assert(c.GetContent("/test"), "test")
+		t.Assert(c.GetContent(ctx, "/"), "Not Found")
+		t.Assert(c.GetContent(ctx, "/test"), "test")
 	})
 }

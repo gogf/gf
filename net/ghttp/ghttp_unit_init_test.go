@@ -7,11 +7,13 @@
 package ghttp_test
 
 import (
+	"context"
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/os/genv"
 )
 
 var (
+	ctx   = context.TODO()
 	ports = garray.NewIntArray(true)
 )
 

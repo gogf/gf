@@ -54,13 +54,13 @@ func Test_Server_Wrap_Handler(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d/api", p))
 
-		response, er1 := client.Get("/wrapf")
+		response, er1 := client.Get(ctx, "/wrapf")
 		defer response.Close()
 		t.Assert(er1, nil)
 		t.Assert(response.StatusCode, http.StatusBadRequest)
 		t.Assert(response.ReadAllString(), str1)
 
-		response2, er2 := client.Post("/wraph")
+		response2, er2 := client.Post(ctx, "/wraph")
 		defer response2.Close()
 		t.Assert(er2, nil)
 		t.Assert(response2.StatusCode, http.StatusInternalServerError)

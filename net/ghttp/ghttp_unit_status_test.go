@@ -37,8 +37,8 @@ func Test_StatusHandler(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/404"), "404")
-		t.Assert(client.GetContent("/502"), "502")
+		t.Assert(client.GetContent(ctx, "/404"), "404")
+		t.Assert(client.GetContent(ctx, "/502"), "502")
 	})
 }
 
@@ -63,6 +63,6 @@ func Test_StatusHandler_Multi(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/502"), "12")
+		t.Assert(client.GetContent(ctx, "/502"), "12")
 	})
 }

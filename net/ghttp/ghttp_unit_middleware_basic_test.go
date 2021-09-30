@@ -53,9 +53,9 @@ func Test_BindMiddleware_Basic1(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "Not Found")
-		t.Assert(client.GetContent("/test"), "1342")
-		t.Assert(client.GetContent("/test/test"), "57test86")
+		t.Assert(client.GetContent(ctx, "/"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/test"), "1342")
+		t.Assert(client.GetContent(ctx, "/test/test"), "57test86")
 	})
 }
 
@@ -80,9 +80,9 @@ func Test_BindMiddleware_Basic2(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "12")
-		t.Assert(client.GetContent("/test"), "12")
-		t.Assert(client.GetContent("/test/test"), "1test2")
+		t.Assert(client.GetContent(ctx, "/"), "12")
+		t.Assert(client.GetContent(ctx, "/test"), "12")
+		t.Assert(client.GetContent(ctx, "/test/test"), "1test2")
 	})
 }
 
@@ -120,13 +120,13 @@ func Test_BindMiddleware_Basic3(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "Not Found")
-		t.Assert(client.GetContent("/test"), "Not Found")
-		t.Assert(client.PutContent("/test"), "1342")
-		t.Assert(client.PostContent("/test"), "Not Found")
-		t.Assert(client.GetContent("/test/test"), "test")
-		t.Assert(client.PutContent("/test/test"), "test")
-		t.Assert(client.PostContent("/test/test"), "57test86")
+		t.Assert(client.GetContent(ctx, "/"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/test"), "Not Found")
+		t.Assert(client.PutContent(ctx, "/test"), "1342")
+		t.Assert(client.PostContent(ctx, "/test"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/test/test"), "test")
+		t.Assert(client.PutContent(ctx, "/test/test"), "test")
+		t.Assert(client.PostContent(ctx, "/test/test"), "57test86")
 	})
 }
 
@@ -156,9 +156,9 @@ func Test_BindMiddleware_Basic4(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "Not Found")
-		t.Assert(client.GetContent("/test"), "1test2")
-		t.Assert(client.PutContent("/test/none"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/test"), "1test2")
+		t.Assert(client.PutContent(ctx, "/test/none"), "Not Found")
 	})
 }
 
@@ -185,10 +185,10 @@ func Test_Middleware_With_Static(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "index")
-		t.Assert(client.GetContent("/test.html"), "test")
-		t.Assert(client.GetContent("/none"), "Not Found")
-		t.Assert(client.GetContent("/user/list"), "1list2")
+		t.Assert(client.GetContent(ctx, "/"), "index")
+		t.Assert(client.GetContent(ctx, "/test.html"), "test")
+		t.Assert(client.GetContent(ctx, "/none"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/user/list"), "1list2")
 	})
 }
 
@@ -213,10 +213,10 @@ func Test_Middleware_Status(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "Not Found")
-		t.Assert(client.GetContent("/user/list"), "200")
+		t.Assert(client.GetContent(ctx, "/"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/user/list"), "200")
 
-		resp, err := client.Get("/")
+		resp, err := client.Get(ctx, "/")
 		defer resp.Close()
 		t.Assert(err, nil)
 		t.Assert(resp.StatusCode, 404)
@@ -259,19 +259,19 @@ func Test_Middleware_Hook_With_Static(t *testing.T) {
 
 		// The length assert sometimes fails, so I added time.Sleep here for debug purpose.
 
-		t.Assert(client.GetContent("/"), "index")
+		t.Assert(client.GetContent(ctx, "/"), "index")
 		time.Sleep(100 * time.Millisecond)
 		t.Assert(a.Len(), 2)
 
-		t.Assert(client.GetContent("/test.html"), "test")
+		t.Assert(client.GetContent(ctx, "/test.html"), "test")
 		time.Sleep(100 * time.Millisecond)
 		t.Assert(a.Len(), 4)
 
-		t.Assert(client.GetContent("/none"), "ab")
+		t.Assert(client.GetContent(ctx, "/none"), "ab")
 		time.Sleep(100 * time.Millisecond)
 		t.Assert(a.Len(), 6)
 
-		t.Assert(client.GetContent("/user/list"), "a1list2b")
+		t.Assert(client.GetContent(ctx, "/user/list"), "a1list2b")
 		time.Sleep(100 * time.Millisecond)
 		t.Assert(a.Len(), 8)
 	})
@@ -296,10 +296,10 @@ func Test_BindMiddleware_Status(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "Not Found")
-		t.Assert(client.GetContent("/test"), "Not Found")
-		t.Assert(client.GetContent("/test/test"), "test")
-		t.Assert(client.GetContent("/test/test/test"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/test"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/test/test"), "test")
+		t.Assert(client.GetContent(ctx, "/test/test/test"), "Not Found")
 	})
 }
 
@@ -329,8 +329,8 @@ func Test_BindMiddlewareDefault_Basic1(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "1342")
-		t.Assert(client.GetContent("/test/test"), "13test42")
+		t.Assert(client.GetContent(ctx, "/"), "1342")
+		t.Assert(client.GetContent(ctx, "/test/test"), "13test42")
 	})
 }
 
@@ -360,10 +360,10 @@ func Test_BindMiddlewareDefault_Basic2(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "1342")
-		t.Assert(client.PutContent("/"), "1342")
-		t.Assert(client.GetContent("/test/test"), "1342")
-		t.Assert(client.PutContent("/test/test"), "13test42")
+		t.Assert(client.GetContent(ctx, "/"), "1342")
+		t.Assert(client.PutContent(ctx, "/"), "1342")
+		t.Assert(client.GetContent(ctx, "/test/test"), "1342")
+		t.Assert(client.PutContent(ctx, "/test/test"), "13test42")
 	})
 }
 
@@ -391,8 +391,8 @@ func Test_BindMiddlewareDefault_Basic3(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "12")
-		t.Assert(client.GetContent("/test/test"), "1test2")
+		t.Assert(client.GetContent(ctx, "/"), "12")
+		t.Assert(client.GetContent(ctx, "/test/test"), "1test2")
 	})
 }
 
@@ -420,8 +420,8 @@ func Test_BindMiddlewareDefault_Basic4(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "21")
-		t.Assert(client.GetContent("/test/test"), "2test1")
+		t.Assert(client.GetContent(ctx, "/"), "21")
+		t.Assert(client.GetContent(ctx, "/test/test"), "2test1")
 	})
 }
 
@@ -449,8 +449,8 @@ func Test_BindMiddlewareDefault_Basic5(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "12")
-		t.Assert(client.GetContent("/test/test"), "12test")
+		t.Assert(client.GetContent(ctx, "/"), "12")
+		t.Assert(client.GetContent(ctx, "/test/test"), "12test")
 	})
 }
 
@@ -473,8 +473,8 @@ func Test_BindMiddlewareDefault_Status(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "Not Found")
-		t.Assert(client.GetContent("/test/test"), "test")
+		t.Assert(client.GetContent(ctx, "/"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/test/test"), "test")
 	})
 }
 
@@ -524,12 +524,12 @@ func Test_BindMiddlewareDefault_Basic6(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "13100Object Index20042")
-		t.Assert(client.GetContent("/init"), "1342")
-		t.Assert(client.GetContent("/shut"), "1342")
-		t.Assert(client.GetContent("/index"), "13100Object Index20042")
-		t.Assert(client.GetContent("/show"), "13100Object Show20042")
-		t.Assert(client.GetContent("/none-exist"), "1342")
+		t.Assert(client.GetContent(ctx, "/"), "13100Object Index20042")
+		t.Assert(client.GetContent(ctx, "/init"), "1342")
+		t.Assert(client.GetContent(ctx, "/shut"), "1342")
+		t.Assert(client.GetContent(ctx, "/index"), "13100Object Index20042")
+		t.Assert(client.GetContent(ctx, "/show"), "13100Object Show20042")
+		t.Assert(client.GetContent(ctx, "/none-exist"), "1342")
 	})
 }
 
@@ -571,8 +571,8 @@ func Test_Hook_Middleware_Basic1(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "ac1342bd")
-		t.Assert(client.GetContent("/test/test"), "ac13test42bd")
+		t.Assert(client.GetContent(ctx, "/"), "ac1342bd")
+		t.Assert(client.GetContent(ctx, "/test/test"), "ac13test42bd")
 	})
 }
 
@@ -609,13 +609,13 @@ func Test_Middleware_CORSAndAuth(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		// Common Checks.
-		t.Assert(client.GetContent("/"), "Not Found")
-		t.Assert(client.GetContent("/api.v2"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/api.v2"), "Not Found")
 		// Auth Checks.
-		t.Assert(client.PostContent("/api.v2/user/list"), "Forbidden")
-		t.Assert(client.PostContent("/api.v2/user/list", "token=123456"), "list")
+		t.Assert(client.PostContent(ctx, "/api.v2/user/list"), "Forbidden")
+		t.Assert(client.PostContent(ctx, "/api.v2/user/list", "token=123456"), "list")
 		// CORS Checks.
-		resp, err := client.Post("/api.v2/user/list", "token=123456")
+		resp, err := client.Post(ctx, "/api.v2/user/list", "token=123456")
 		t.Assert(err, nil)
 		t.Assert(len(resp.Header["Access-Control-Allow-Headers"]), 1)
 		t.Assert(resp.Header["Access-Control-Allow-Headers"][0], "Origin,Content-Type,Accept,User-Agent,Cookie,Authorization,X-Auth-Token,X-Requested-With")
@@ -674,10 +674,10 @@ func Test_Middleware_Scope(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "Not Found")
-		t.Assert(client.GetContent("/scope1"), "a1b")
-		t.Assert(client.GetContent("/scope2"), "ac2db")
-		t.Assert(client.GetContent("/scope3"), "ae3fb")
+		t.Assert(client.GetContent(ctx, "/"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/scope1"), "a1b")
+		t.Assert(client.GetContent(ctx, "/scope2"), "ac2db")
+		t.Assert(client.GetContent(ctx, "/scope3"), "ae3fb")
 	})
 }
 
@@ -709,6 +709,6 @@ func Test_Middleware_Panic(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "error")
+		t.Assert(client.GetContent(ctx, "/"), "error")
 	})
 }

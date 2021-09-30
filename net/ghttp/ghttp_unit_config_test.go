@@ -92,7 +92,7 @@ func Test_ClientMaxBodySize(t *testing.T) {
 			data[i] = 'a'
 		}
 		t.Assert(
-			gstr.Trim(c.PostContent("/", data)),
+			gstr.Trim(c.PostContent(ctx, "/", data)),
 			data[:1024],
 		)
 	})
@@ -133,7 +133,7 @@ func Test_ClientMaxBodySize_File(t *testing.T) {
 		t.Assert(gfile.PutBytes(path, data), nil)
 		defer gfile.Remove(path)
 		t.Assert(
-			gstr.Trim(c.PostContent("/", "name=john&file=@file:"+path)),
+			gstr.Trim(c.PostContent(ctx, "/", "name=john&file=@file:"+path)),
 			"ok",
 		)
 	})
@@ -151,7 +151,7 @@ func Test_ClientMaxBodySize_File(t *testing.T) {
 		t.Assert(gfile.PutBytes(path, data), nil)
 		defer gfile.Remove(path)
 		t.Assert(
-			gstr.Trim(c.PostContent("/", "name=john&file=@file:"+path)),
+			gstr.Trim(c.PostContent(ctx, "/", "name=john&file=@file:"+path)),
 			"Invalid Request: http: request body too large",
 		)
 	})

@@ -7,6 +7,7 @@
 package ghttp_test
 
 import (
+	"context"
 	"fmt"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
@@ -45,7 +46,10 @@ func ExampleUploadFile_Save() {
 }
 
 func ExampleClientResponse_RawDump() {
-	response, err := g.Client().Get("https://goframe.org")
+	var (
+		ctx = context.Background()
+	)
+	response, err := g.Client().Get(ctx, "https://goframe.org")
 	if err != nil {
 		panic(err)
 	}
@@ -61,7 +65,7 @@ func ExampleClient_SetProxy() {
 	client := g.Client()
 	client.SetProxy("http://127.0.0.1:1081")
 	client.SetTimeout(5 * time.Second) // it's suggested to set http client timeout
-	response, err := client.Get("https://api.ip.sb/ip")
+	response, err := client.Get(ctx, "https://api.ip.sb/ip")
 	if err != nil {
 		// err is not nil when your proxy server is down.
 		// eg. Get "https://api.ip.sb/ip": proxyconnect tcp: dial tcp 127.0.0.1:1087: connect: connection refused
@@ -71,7 +75,7 @@ func ExampleClient_SetProxy() {
 	// connect to a http proxy server which needs auth
 	client.SetProxy("http://user:password:127.0.0.1:1081")
 	client.SetTimeout(5 * time.Second) // it's suggested to set http client timeout
-	response, err = client.Get("https://api.ip.sb/ip")
+	response, err = client.Get(ctx, "https://api.ip.sb/ip")
 	if err != nil {
 		// err is not nil when your proxy server is down.
 		// eg. Get "https://api.ip.sb/ip": proxyconnect tcp: dial tcp 127.0.0.1:1087: connect: connection refused
@@ -82,7 +86,7 @@ func ExampleClient_SetProxy() {
 	// connect to a socks5 proxy server
 	client.SetProxy("socks5://127.0.0.1:1080")
 	client.SetTimeout(5 * time.Second) // it's suggested to set http client timeout
-	response, err = client.Get("https://api.ip.sb/ip")
+	response, err = client.Get(ctx, "https://api.ip.sb/ip")
 	if err != nil {
 		// err is not nil when your proxy server is down.
 		// eg. Get "https://api.ip.sb/ip": socks connect tcp 127.0.0.1:1087->api.ip.sb:443: dial tcp 127.0.0.1:1087: connect: connection refused
@@ -93,7 +97,7 @@ func ExampleClient_SetProxy() {
 	// connect to a socks5 proxy server which needs auth
 	client.SetProxy("socks5://user:password@127.0.0.1:1080")
 	client.SetTimeout(5 * time.Second) // it's suggested to set http client timeout
-	response, err = client.Get("https://api.ip.sb/ip")
+	response, err = client.Get(ctx, "https://api.ip.sb/ip")
 	if err != nil {
 		// err is not nil when your proxy server is down.
 		// eg. Get "https://api.ip.sb/ip": socks connect tcp 127.0.0.1:1087->api.ip.sb:443: dial tcp 127.0.0.1:1087: connect: connection refused
@@ -108,8 +112,11 @@ func ExampleClient_SetProxy() {
 // socks5 proxy server listening on `127.0.0.1:1080`
 // for more details, please refer to ExampleClient_SetProxy
 func ExampleClientChain_Proxy() {
+	var (
+		ctx = context.Background()
+	)
 	client := g.Client()
-	response, err := client.Proxy("http://127.0.0.1:1081").Get("https://api.ip.sb/ip")
+	response, err := client.Proxy("http://127.0.0.1:1081").Get(ctx, "https://api.ip.sb/ip")
 	if err != nil {
 		// err is not nil when your proxy server is down.
 		// eg. Get "https://api.ip.sb/ip": proxyconnect tcp: dial tcp 127.0.0.1:1087: connect: connection refused
@@ -118,7 +125,7 @@ func ExampleClientChain_Proxy() {
 	fmt.Println(response.RawResponse())
 
 	client2 := g.Client()
-	response, err = client2.Proxy("socks5://127.0.0.1:1080").Get("https://api.ip.sb/ip")
+	response, err = client2.Proxy("socks5://127.0.0.1:1080").Get(ctx, "https://api.ip.sb/ip")
 	if err != nil {
 		// err is not nil when your proxy server is down.
 		// eg. Get "https://api.ip.sb/ip": socks connect tcp 127.0.0.1:1087->api.ip.sb:443: dial tcp 127.0.0.1:1087: connect: connection refused

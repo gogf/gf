@@ -39,9 +39,9 @@ func Test_Router_Group_Hook1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		t.Assert(client.GetContent("/api/handler"), "012")
-		t.Assert(client.PostContent("/api/handler"), "02")
-		t.Assert(client.GetContent("/api/ThisDoesNotExist"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/api/handler"), "012")
+		t.Assert(client.PostContent(ctx, "/api/handler"), "02")
+		t.Assert(client.GetContent(ctx, "/api/ThisDoesNotExist"), "Not Found")
 	})
 }
 
@@ -68,10 +68,10 @@ func Test_Router_Group_Hook2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		t.Assert(client.GetContent("/api/handler"), "012")
-		t.Assert(client.PostContent("/api/handler"), "Not Found")
-		t.Assert(client.GetContent("/api/ThisDoesNotExist"), "02")
-		t.Assert(client.PostContent("/api/ThisDoesNotExist"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/api/handler"), "012")
+		t.Assert(client.PostContent(ctx, "/api/handler"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/api/ThisDoesNotExist"), "02")
+		t.Assert(client.PostContent(ctx, "/api/ThisDoesNotExist"), "Not Found")
 	})
 }
 
@@ -99,8 +99,8 @@ func Test_Router_Group_Hook3(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		t.Assert(client.GetContent("/api/handler"), "012")
-		t.Assert(client.PostContent("/api/handler"), "012")
-		t.Assert(client.DeleteContent("/api/ThisDoesNotExist"), "02")
+		t.Assert(client.GetContent(ctx, "/api/handler"), "012")
+		t.Assert(client.PostContent(ctx, "/api/handler"), "012")
+		t.Assert(client.DeleteContent(ctx, "/api/ThisDoesNotExist"), "02")
 	})
 }
