@@ -30,7 +30,6 @@ import (
 // Client is the HTTP client for HTTP request management.
 type Client struct {
 	http.Client                         // Underlying HTTP Client.
-	ctx               context.Context   // Context for each request.
 	dump              bool              // Mark this request will be dumped.
 	parent            *Client           // Parent http client, this is used for chaining operations.
 	header            map[string]string // Custom header map.
@@ -165,12 +164,6 @@ func (c *Client) SetTimeout(t time.Duration) *Client {
 func (c *Client) SetBasicAuth(user, pass string) *Client {
 	c.authUser = user
 	c.authPass = pass
-	return c
-}
-
-// SetCtx sets context for each request of this client.
-func (c *Client) SetCtx(ctx context.Context) *Client {
-	c.ctx = ctx
 	return c
 }
 

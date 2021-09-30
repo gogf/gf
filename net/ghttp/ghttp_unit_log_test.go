@@ -44,8 +44,8 @@ func Test_Log(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/hello"), "hello")
-		t.Assert(client.GetContent("/error"), "custom error")
+		t.Assert(client.GetContent(ctx, "/hello"), "hello")
+		t.Assert(client.GetContent(ctx, "/error"), "custom error")
 
 		logPath1 := gfile.Join(logDir, gtime.Now().Format("Y-m-d")+".log")
 		t.Assert(gstr.Contains(gfile.GetContents(logPath1), "http server started listening on"), true)

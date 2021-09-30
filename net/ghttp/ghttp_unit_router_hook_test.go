@@ -38,8 +38,8 @@ func Test_Router_Hook_Basic(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "123")
-		t.Assert(client.GetContent("/test/test"), "1test23")
+		t.Assert(client.GetContent(ctx, "/"), "123")
+		t.Assert(client.GetContent(ctx, "/test/test"), "1test23")
 	})
 }
 
@@ -79,11 +79,11 @@ func Test_Router_Hook_Fuzzy_Router(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/john"), "Not Found")
-		t.Assert(client.GetContent("/john/info"), "1000")
-		t.Assert(client.GetContent("/john/info"), "1001")
-		t.Assert(client.GetContent("/john/list/1.java"), "john&1&1002")
-		t.Assert(client.GetContent("/john/list/2.java"), "john&2&1002")
+		t.Assert(client.GetContent(ctx, "/john"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/john/info"), "1000")
+		t.Assert(client.GetContent(ctx, "/john/info"), "1001")
+		t.Assert(client.GetContent(ctx, "/john/list/1.java"), "john&1&1002")
+		t.Assert(client.GetContent(ctx, "/john/list/2.java"), "john&2&1002")
 	})
 }
 
@@ -119,10 +119,10 @@ func Test_Router_Hook_Priority(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "Not Found")
-		t.Assert(client.GetContent("/priority/show"), "312show")
-		t.Assert(client.GetContent("/priority/any/any"), "2")
-		t.Assert(client.GetContent("/priority/name"), "12")
+		t.Assert(client.GetContent(ctx, "/"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/priority/show"), "312show")
+		t.Assert(client.GetContent(ctx, "/priority/any/any"), "2")
+		t.Assert(client.GetContent(ctx, "/priority/name"), "12")
 	})
 }
 
@@ -153,8 +153,8 @@ func Test_Router_Hook_Multi(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "Not Found")
-		t.Assert(client.GetContent("/multi-hook"), "12show")
+		t.Assert(client.GetContent(ctx, "/"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/multi-hook"), "12show")
 	})
 }
 
@@ -188,7 +188,7 @@ func Test_Router_Hook_ExitAll(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/test"), "test")
-		t.Assert(client.GetContent("/hook/test"), "hook")
+		t.Assert(client.GetContent(ctx, "/test"), "test")
+		t.Assert(client.GetContent(ctx, "/hook/test"), "hook")
 	})
 }

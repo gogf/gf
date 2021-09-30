@@ -7,15 +7,20 @@
 package ghttp_test
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/gogf/gf/frame/g"
 )
 
 func ExampleClient_Get() {
-	url := "http://127.0.0.1:8999"
+	var (
+		ctx = context.Background()
+		url = "http://127.0.0.1:8999"
+	)
+
 	// Send with string parameter along with URL.
-	r1, err := g.Client().Get(url + "?id=10000&name=john")
+	r1, err := g.Client().Get(ctx, url+"?id=10000&name=john")
 	if err != nil {
 		panic(err)
 	}
@@ -23,7 +28,7 @@ func ExampleClient_Get() {
 	fmt.Println(r1.ReadAllString())
 
 	// Send with string parameter in request body.
-	r2, err := g.Client().Get(url, "id=10000&name=john")
+	r2, err := g.Client().Get(ctx, url, "id=10000&name=john")
 	if err != nil {
 		panic(err)
 	}
@@ -31,7 +36,7 @@ func ExampleClient_Get() {
 	fmt.Println(r2.ReadAllString())
 
 	// Send with map parameter.
-	r3, err := g.Client().Get(url, g.Map{
+	r3, err := g.Client().Get(ctx, url, g.Map{
 		"id":   10000,
 		"name": "john",
 	})
@@ -48,8 +53,11 @@ func ExampleClient_Get() {
 }
 
 func ExampleClient_GetBytes() {
-	url := "http://127.0.0.1:8999"
-	fmt.Println(string(g.Client().GetBytes(url, g.Map{
+	var (
+		ctx = context.Background()
+		url = "http://127.0.0.1:8999"
+	)
+	fmt.Println(string(g.Client().GetBytes(ctx, url, g.Map{
 		"id":   10000,
 		"name": "john",
 	})))
@@ -60,7 +68,7 @@ func ExampleClient_GetBytes() {
 
 func ExampleClient_GetContent() {
 	url := "http://127.0.0.1:8999"
-	fmt.Println(g.Client().GetContent(url, g.Map{
+	fmt.Println(g.Client().GetContent(ctx, url, g.Map{
 		"id":   10000,
 		"name": "john",
 	}))
@@ -76,9 +84,10 @@ func ExampleClient_GetVar() {
 	}
 	var (
 		user *User
+		ctx  = context.Background()
 		url  = "http://127.0.0.1:8999/var/json"
 	)
-	err := g.Client().GetVar(url).Scan(&user)
+	err := g.Client().GetVar(ctx, url).Scan(&user)
 	if err != nil {
 		panic(err)
 	}

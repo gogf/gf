@@ -14,7 +14,7 @@ import (
 func ExampleClient_Post() {
 	url := "http://127.0.0.1:8999"
 	// Send with string parameter in request body.
-	r1, err := g.Client().Post(url, "id=10000&name=john")
+	r1, err := g.Client().Post(ctx, url, "id=10000&name=john")
 	if err != nil {
 		panic(err)
 	}
@@ -22,7 +22,7 @@ func ExampleClient_Post() {
 	fmt.Println(r1.ReadAllString())
 
 	// Send with map parameter.
-	r2, err := g.Client().Post(url, g.Map{
+	r2, err := g.Client().Post(ctx, url, g.Map{
 		"id":   10000,
 		"name": "john",
 	})
@@ -39,7 +39,7 @@ func ExampleClient_Post() {
 
 func ExampleClient_PostBytes() {
 	url := "http://127.0.0.1:8999"
-	fmt.Println(string(g.Client().PostBytes(url, g.Map{
+	fmt.Println(string(g.Client().PostBytes(ctx, url, g.Map{
 		"id":   10000,
 		"name": "john",
 	})))
@@ -50,7 +50,7 @@ func ExampleClient_PostBytes() {
 
 func ExampleClient_PostContent() {
 	url := "http://127.0.0.1:8999"
-	fmt.Println(g.Client().PostContent(url, g.Map{
+	fmt.Println(g.Client().PostContent(ctx, url, g.Map{
 		"id":   10000,
 		"name": "john",
 	}))
@@ -68,7 +68,7 @@ func ExampleClient_PostVar() {
 		users []User
 		url   = "http://127.0.0.1:8999/var/jsons"
 	)
-	err := g.Client().PostVar(url).Scan(&users)
+	err := g.Client().PostVar(ctx, url).Scan(&users)
 	if err != nil {
 		panic(err)
 	}

@@ -43,10 +43,10 @@ func Test_Router_Basic1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		t.Assert(client.GetContent("/john"), "")
-		t.Assert(client.GetContent("/john/update"), "john")
-		t.Assert(client.GetContent("/john/edit"), "edit")
-		t.Assert(client.GetContent("/user/list/100.html"), "100")
+		t.Assert(client.GetContent(ctx, "/john"), "")
+		t.Assert(client.GetContent(ctx, "/john/update"), "john")
+		t.Assert(client.GetContent(ctx, "/john/edit"), "edit")
+		t.Assert(client.GetContent(ctx, "/user/list/100.html"), "100")
 	})
 }
 
@@ -68,8 +68,8 @@ func Test_Router_Basic2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		t.Assert(client.GetContent("/data"), "data")
-		t.Assert(client.GetContent("/data.json"), "json")
+		t.Assert(client.GetContent(ctx, "/data"), "data")
+		t.Assert(client.GetContent(ctx, "/data.json"), "json")
 	})
 }
 
@@ -94,9 +94,9 @@ func Test_Router_Value(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		t.Assert(client.GetContent("/data"), "data")
-		t.Assert(client.GetContent("/data.json"), "json")
-		t.Assert(client.GetContent("/data.json.map"), "json")
+		t.Assert(client.GetContent(ctx, "/data"), "data")
+		t.Assert(client.GetContent(ctx, "/data.json"), "json")
+		t.Assert(client.GetContent(ctx, "/data.json.map"), "json")
 	})
 }
 
@@ -120,22 +120,22 @@ func Test_Router_Method(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		resp1, err := client.Get("/get")
+		resp1, err := client.Get(ctx, "/get")
 		defer resp1.Close()
 		t.Assert(err, nil)
 		t.Assert(resp1.StatusCode, 200)
 
-		resp2, err := client.Post("/get")
+		resp2, err := client.Post(ctx, "/get")
 		defer resp2.Close()
 		t.Assert(err, nil)
 		t.Assert(resp2.StatusCode, 404)
 
-		resp3, err := client.Get("/post")
+		resp3, err := client.Get(ctx, "/post")
 		defer resp3.Close()
 		t.Assert(err, nil)
 		t.Assert(resp3.StatusCode, 404)
 
-		resp4, err := client.Post("/post")
+		resp4, err := client.Post(ctx, "/post")
 		defer resp4.Close()
 		t.Assert(err, nil)
 		t.Assert(resp4.StatusCode, 200)
@@ -161,12 +161,12 @@ func Test_Router_ExtraChar(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/api/test"), "test")
-		t.Assert(client.GetContent("/api/test/"), "test")
-		t.Assert(client.GetContent("/api/test//"), "test")
-		t.Assert(client.GetContent("//api/test//"), "test")
-		t.Assert(client.GetContent("//api//test//"), "test")
-		t.Assert(client.GetContent("///api///test///"), "test")
+		t.Assert(client.GetContent(ctx, "/api/test"), "test")
+		t.Assert(client.GetContent(ctx, "/api/test/"), "test")
+		t.Assert(client.GetContent(ctx, "/api/test//"), "test")
+		t.Assert(client.GetContent(ctx, "//api/test//"), "test")
+		t.Assert(client.GetContent(ctx, "//api//test//"), "test")
+		t.Assert(client.GetContent(ctx, "///api///test///"), "test")
 	})
 }
 
@@ -196,27 +196,27 @@ func Test_Router_Status(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		resp1, err := client.Get("/200")
+		resp1, err := client.Get(ctx, "/200")
 		defer resp1.Close()
 		t.Assert(err, nil)
 		t.Assert(resp1.StatusCode, 200)
 
-		resp2, err := client.Get("/300")
+		resp2, err := client.Get(ctx, "/300")
 		defer resp2.Close()
 		t.Assert(err, nil)
 		t.Assert(resp2.StatusCode, 300)
 
-		resp3, err := client.Get("/400")
+		resp3, err := client.Get(ctx, "/400")
 		defer resp3.Close()
 		t.Assert(err, nil)
 		t.Assert(resp3.StatusCode, 400)
 
-		resp4, err := client.Get("/500")
+		resp4, err := client.Get(ctx, "/500")
 		defer resp4.Close()
 		t.Assert(err, nil)
 		t.Assert(resp4.StatusCode, 500)
 
-		resp5, err := client.Get("/404")
+		resp5, err := client.Get(ctx, "/404")
 		defer resp5.Close()
 		t.Assert(err, nil)
 		t.Assert(resp5.StatusCode, 404)
@@ -242,8 +242,8 @@ func Test_Router_CustomStatusHandler(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "hello")
-		resp, err := client.Get("/ThisDoesNotExist")
+		t.Assert(client.GetContent(ctx, "/"), "hello")
+		resp, err := client.Get(ctx, "/ThisDoesNotExist")
 		defer resp.Close()
 		t.Assert(err, nil)
 		t.Assert(resp.StatusCode, 404)
@@ -268,8 +268,8 @@ func Test_Router_404(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "hello")
-		resp, err := client.Get("/ThisDoesNotExist")
+		t.Assert(client.GetContent(ctx, "/"), "hello")
+		resp, err := client.Get(ctx, "/ThisDoesNotExist")
 		defer resp.Close()
 		t.Assert(err, nil)
 		t.Assert(resp.StatusCode, 404)
@@ -301,9 +301,9 @@ func Test_Router_Priority(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/admin"), "admin")
-		t.Assert(client.GetContent("/admin-1"), "admin-{page}")
-		t.Assert(client.GetContent("/admin-goods"), "admin-goods")
-		t.Assert(client.GetContent("/admin-goods-2"), "admin-goods-{page}")
+		t.Assert(client.GetContent(ctx, "/admin"), "admin")
+		t.Assert(client.GetContent(ctx, "/admin-1"), "admin-{page}")
+		t.Assert(client.GetContent(ctx, "/admin-goods"), "admin-goods")
+		t.Assert(client.GetContent(ctx, "/admin-goods-2"), "admin-goods-{page}")
 	})
 }

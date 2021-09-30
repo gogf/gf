@@ -47,7 +47,7 @@ func Test_Params_File_Single(t *testing.T) {
 
 		srcPath := gdebug.TestDataPath("upload", "file1.txt")
 		dstPath := gfile.Join(dstDirPath, "file1.txt")
-		content := client.PostContent("/upload/single", g.Map{
+		content := client.PostContent(ctx, "/upload/single", g.Map{
 			"file": "@file:" + srcPath,
 		})
 		t.AssertNE(content, "")
@@ -62,7 +62,7 @@ func Test_Params_File_Single(t *testing.T) {
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		srcPath := gdebug.TestDataPath("upload", "file2.txt")
-		content := client.PostContent("/upload/single", g.Map{
+		content := client.PostContent(ctx, "/upload/single", g.Map{
 			"file":           "@file:" + srcPath,
 			"randomlyRename": true,
 		})
@@ -100,7 +100,7 @@ func Test_Params_File_CustomName(t *testing.T) {
 
 		srcPath := gdebug.TestDataPath("upload", "file1.txt")
 		dstPath := gfile.Join(dstDirPath, "my.txt")
-		content := client.PostContent("/upload/single", g.Map{
+		content := client.PostContent(ctx, "/upload/single", g.Map{
 			"file": "@file:" + srcPath,
 		})
 		t.AssertNE(content, "")
@@ -139,7 +139,7 @@ func Test_Params_File_Batch(t *testing.T) {
 		srcPath2 := gdebug.TestDataPath("upload", "file2.txt")
 		dstPath1 := gfile.Join(dstDirPath, "file1.txt")
 		dstPath2 := gfile.Join(dstDirPath, "file2.txt")
-		content := client.PostContent("/upload/batch", g.Map{
+		content := client.PostContent(ctx, "/upload/batch", g.Map{
 			"file[0]": "@file:" + srcPath1,
 			"file[1]": "@file:" + srcPath2,
 		})
@@ -157,7 +157,7 @@ func Test_Params_File_Batch(t *testing.T) {
 
 		srcPath1 := gdebug.TestDataPath("upload", "file1.txt")
 		srcPath2 := gdebug.TestDataPath("upload", "file2.txt")
-		content := client.PostContent("/upload/batch", g.Map{
+		content := client.PostContent(ctx, "/upload/batch", g.Map{
 			"file[0]":        "@file:" + srcPath1,
 			"file[1]":        "@file:" + srcPath2,
 			"randomlyRename": true,

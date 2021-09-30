@@ -37,9 +37,9 @@ func Test_NameToUri_FullName(t *testing.T) {
 		client := g.Client()
 		client.SetBrowserMode(true)
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		t.Assert(client.GetContent("/"), "Not Found")
-		t.Assert(client.GetContent("/NamesObject"), "Not Found")
-		t.Assert(client.GetContent("/NamesObject/ShowName"), "Object Show Name")
+		t.Assert(client.GetContent(ctx, "/"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/NamesObject"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/NamesObject/ShowName"), "Object Show Name")
 	})
 }
 
@@ -58,9 +58,9 @@ func Test_NameToUri_AllLower(t *testing.T) {
 		client := g.Client()
 		client.SetBrowserMode(true)
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		t.Assert(client.GetContent("/"), "Not Found")
-		t.Assert(client.GetContent("/NamesObject"), "Not Found")
-		t.Assert(client.GetContent("/namesobject/showname"), "Object Show Name")
+		t.Assert(client.GetContent(ctx, "/"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/NamesObject"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/namesobject/showname"), "Object Show Name")
 	})
 }
 
@@ -79,9 +79,9 @@ func Test_NameToUri_Camel(t *testing.T) {
 		client := g.Client()
 		client.SetBrowserMode(true)
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		t.Assert(client.GetContent("/"), "Not Found")
-		t.Assert(client.GetContent("/NamesObject"), "Not Found")
-		t.Assert(client.GetContent("/namesObject/showName"), "Object Show Name")
+		t.Assert(client.GetContent(ctx, "/"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/NamesObject"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/namesObject/showName"), "Object Show Name")
 	})
 }
 
@@ -100,8 +100,8 @@ func Test_NameToUri_Default(t *testing.T) {
 		client := g.Client()
 		client.SetBrowserMode(true)
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		t.Assert(client.GetContent("/"), "Not Found")
-		t.Assert(client.GetContent("/NamesObject"), "Not Found")
-		t.Assert(client.GetContent("/names-object/show-name"), "Object Show Name")
+		t.Assert(client.GetContent(ctx, "/"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/NamesObject"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/names-object/show-name"), "Object Show Name")
 	})
 }

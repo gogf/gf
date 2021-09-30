@@ -34,6 +34,6 @@ func Test_GetUrl(t *testing.T) {
 		client.SetBrowserMode(true)
 		client.SetPrefix(prefix)
 
-		t.Assert(client.GetContent("/url"), prefix+"/url")
+		t.Assert(client.GetContent(ctx, "/url"), prefix+"/url")
 	})
 }

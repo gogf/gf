@@ -41,6 +41,6 @@ func Test_Error_Code(t *testing.T) {
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(c.GetContent("/"), "10000")
+		t.Assert(c.GetContent(ctx, "/"), "10000")
 	})
 }

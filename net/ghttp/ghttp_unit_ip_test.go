@@ -35,7 +35,7 @@ func TestRequest_GetRemoteIp(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "127.0.0.1")
+		t.Assert(client.GetContent(ctx, "/"), "127.0.0.1")
 	})
 
 }
