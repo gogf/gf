@@ -306,14 +306,14 @@ func doMapConvertForMapOrStructValue(isRoot bool, value interface{}, recursive b
 
 				// The struct attribute is type of slice.
 				case reflect.Array, reflect.Slice:
-					length := rvField.Len()
+					length := rvAttrField.Len()
 					if length == 0 {
-						dataMap[mapKey] = rvField.Interface()
+						dataMap[mapKey] = rvAttrField.Interface()
 						break
 					}
 					array := make([]interface{}, length)
 					for i := 0; i < length; i++ {
-						array[i] = doMapConvertForMapOrStructValue(false, rvField.Index(i), recursive, tags...)
+						array[i] = doMapConvertForMapOrStructValue(false, rvAttrField.Index(i), recursive, tags...)
 					}
 					dataMap[mapKey] = array
 
