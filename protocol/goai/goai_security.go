@@ -1,4 +1,14 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package goai
+
+import (
+	"github.com/gogf/gf/internal/json"
+)
 
 type SecurityScheme struct {
 	Type             string      `json:"type,omitempty"             yaml:"type,omitempty"`
@@ -34,4 +44,11 @@ type OAuthFlow struct {
 	TokenURL         string            `json:"tokenUrl,omitempty"         yaml:"tokenUrl,omitempty"`
 	RefreshURL       string            `json:"refreshUrl,omitempty"       yaml:"refreshUrl,omitempty"`
 	Scopes           map[string]string `json:"scopes"                     yaml:"scopes"`
+}
+
+func (r SecuritySchemeRef) MarshalJSON() ([]byte, error) {
+	if r.Ref != "" {
+		return formatRefToBytes(r.Ref), nil
+	}
+	return json.Marshal(r.Value)
 }

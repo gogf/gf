@@ -1,8 +1,13 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package goai_test
 
 import (
 	"context"
-	"fmt"
 	"github.com/gogf/gf/protocol/goai"
 	"github.com/gogf/gf/test/gtest"
 	"github.com/gogf/gf/util/gmeta"
@@ -11,8 +16,8 @@ import (
 
 func Test_Basic(t *testing.T) {
 	type CommonReq struct {
-		AppId      int64  `json:"appId" v:"required" description:"应用Id"`
-		ResourceId string `json:"resourceId" description:"资源Id"`
+		AppId      int64  `json:"appId" v:"required" in:"cookie" description:"应用Id"`
+		ResourceId string `json:"resourceId" in:"query" description:"资源Id"`
 	}
 	type SetSpecInfo struct {
 		StorageType string   `v:"required|in:CLOUD_PREMIUM,CLOUD_SSD,CLOUD_HSSD" description:"StorageType"`
@@ -31,20 +36,30 @@ func Test_Basic(t *testing.T) {
 
 	gtest.C(t, func(t *gtest.T) {
 		var (
+			err error
+			oai = goai.New()
 			req = new(CreateResourceReq)
 		)
-		oai := goai.New()
-		oai.Add(goai.AddInput{
+		err = oai.Add(goai.AddInput{
 			Object: req,
 		})
-		fmt.Println(oai)
+		t.AssertNil(err)
+		// Schema asserts.
+		t.Assert(len(oai.Components.Schemas), 2)
+		t.Assert(oai.Components.Schemas[`CreateResourceReq`].Value.Type, goai.TypeObject)
+		t.Assert(len(oai.Components.Schemas[`CreateResourceReq`].Value.Properties), 7)
+		t.Assert(oai.Components.Schemas[`CreateResourceReq`].Value.Properties[`appId`].Value.Type, goai.TypeNumber)
+		t.Assert(oai.Components.Schemas[`CreateResourceReq`].Value.Properties[`resourceId`].Value.Type, goai.TypeString)
+
+		t.Assert(len(oai.Components.Schemas[`SetSpecInfo`].Value.Properties), 3)
+		t.Assert(oai.Components.Schemas[`SetSpecInfo`].Value.Properties[`Params`].Value.Type, goai.TypeArray)
 	})
 }
 
 func TestOpenApiV3_Add(t *testing.T) {
 	type CommonReq struct {
-		AppId      int64  `json:"appId" v:"required" description:"应用Id"`
-		ResourceId string `json:"resourceId" description:"资源Id"`
+		AppId      int64  `json:"appId" v:"required" in:"path" description:"应用Id"`
+		ResourceId string `json:"resourceId" in:"query" description:"资源Id"`
 	}
 	type SetSpecInfo struct {
 		StorageType string   `v:"required|in:CLOUD_PREMIUM,CLOUD_SSD,CLOUD_HSSD" description:"StorageType"`
@@ -71,12 +86,40 @@ func TestOpenApiV3_Add(t *testing.T) {
 	}
 
 	gtest.C(t, func(t *gtest.T) {
-		oai := goai.New()
-		oai.Add(goai.AddInput{
-			Path:   "/test",
-			Method: "POST",
+		var (
+			err error
+			oai = goai.New()
+		)
+		err = oai.Add(goai.AddInput{
+			Path:   "/test1/{appId}",
+			Method: goai.HttpMethodPut,
 			Object: f,
 		})
-		fmt.Println(oai)
+		t.AssertNil(err)
+
+		err = oai.Add(goai.AddInput{
+			Path:   "/test2/{appId}",
+			Method: goai.HttpMethodPost,
+			Object: f,
+		})
+		t.AssertNil(err)
+		// Schema asserts.
+		t.Assert(len(oai.Components.Schemas), 3)
+		t.Assert(oai.Components.Schemas[`CreateResourceReq`].Value.Type, goai.TypeObject)
+		t.Assert(len(oai.Components.Schemas[`CreateResourceReq`].Value.Properties), 7)
+		t.Assert(oai.Components.Schemas[`CreateResourceReq`].Value.Properties[`appId`].Value.Type, goai.TypeNumber)
+		t.Assert(oai.Components.Schemas[`CreateResourceReq`].Value.Properties[`resourceId`].Value.Type, goai.TypeString)
+
+		t.Assert(len(oai.Components.Schemas[`SetSpecInfo`].Value.Properties), 3)
+		t.Assert(oai.Components.Schemas[`SetSpecInfo`].Value.Properties[`Params`].Value.Type, goai.TypeArray)
+
+		// Paths.
+		t.Assert(len(oai.Paths), 2)
+		t.AssertNE(oai.Paths[`/test1/{appId}`].Put, nil)
+		t.Assert(len(oai.Paths[`/test1/{appId}`].Put.Tags), 1)
+		t.Assert(len(oai.Paths[`/test1/{appId}`].Put.Parameters), 2)
+		t.AssertNE(oai.Paths[`/test2/{appId}`].Post, nil)
+		t.Assert(len(oai.Paths[`/test2/{appId}`].Post.Tags), 1)
+		t.Assert(len(oai.Paths[`/test2/{appId}`].Post.Parameters), 2)
 	})
 }

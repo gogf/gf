@@ -1,7 +1,17 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
+// Package goai implements and provides document generating for OpenApi specification.
+//
+// https://editor.swagger.io/
 package goai
 
 import (
 	"context"
+	"fmt"
 	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
@@ -10,6 +20,7 @@ import (
 )
 
 // OpenApiV3 is the structure defined from:
+// https://swagger.io/specification/
 // https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.0.md
 type OpenApiV3 struct {
 	Config       Config                `json:"-"                      yaml:"-"`
@@ -21,11 +32,6 @@ type OpenApiV3 struct {
 	Servers      *Servers              `json:"servers,omitempty"      yaml:"servers,omitempty"`
 	Tags         *Tags                 `json:"tags,omitempty"         yaml:"tags,omitempty"`
 	ExternalDocs *ExternalDocs         `json:"externalDocs,omitempty" yaml:"externalDocs,omitempty"`
-}
-
-type Config struct {
-	ReadContentTypes  []string
-	WriteContentTypes []string
 }
 
 // ExternalDocs is specified by OpenAPI/Swagger standard version 3.0.
@@ -48,7 +54,6 @@ const (
 
 const (
 	TypeNumber     = `number`
-	TypeInteger    = `integer`
 	TypeBoolean    = `boolean`
 	TypeArray      = `array`
 	TypeString     = `string`
@@ -63,24 +68,40 @@ const (
 	FormatPassword = `password`
 )
 
+const (
+	ParameterInHeader = `header`
+	ParameterInPath   = `path`
+	ParameterInQuery  = `query`
+	ParameterInCookie = `cookie`
+)
+
+const (
+	TagNamePath   = `path`
+	TagNameMethod = `method`
+	TagNameIn     = `in`
+)
+
 var (
 	defaultReadContentTypes  = []string{`application/json`, `application/xml`}
 	defaultWriteContentTypes = []string{`application/json`, `application/xml`}
 )
 
+// New creates and returns a OpenApiV3 implements object.
 func New() *OpenApiV3 {
 	oai := &OpenApiV3{}
 	oai.fillWithDefaultValue()
 	return oai
 }
 
+// AddInput is the structured parameter for function OpenApiV3.Add.
 type AddInput struct {
-	Path   string
-	Method string
-	Object interface{}
+	Path   string      // Path specifies the custom path if this is not configured in Meta of struct tag.
+	Method string      // Method specifies the custom HTTP method if this is not configured in Meta of struct tag.
+	Object interface{} // Object can be an instance of struct or a route function.
 }
 
-func (oai *OpenApiV3) Add(in AddInput) {
+// Add adds an instance of struct or a route function to OpenApiV3 definition implements.
+func (oai *OpenApiV3) Add(in AddInput) error {
 	var (
 		reflectValue = reflect.ValueOf(in.Object)
 	)
@@ -89,33 +110,21 @@ func (oai *OpenApiV3) Add(in AddInput) {
 	}
 	switch reflectValue.Kind() {
 	case reflect.Struct:
-		oai.addSchema(in.Object)
+		return oai.addSchema(in.Object)
 
 	case reflect.Func:
-		oai.addPath(addPathInput{
+		return oai.addPath(addPathInput{
 			Path:     in.Path,
 			Method:   in.Method,
 			Function: in.Object,
 		})
 
 	default:
-		panic(gerror.NewCodef(
+		return gerror.NewCodef(
 			gcode.CodeInvalidParameter,
 			`unsupported parameter type "%s", only struct/function type is supported`,
 			reflect.TypeOf(in.Object).String(),
-		))
-	}
-}
-
-func (oai *OpenApiV3) fillWithDefaultValue() {
-	if oai.OpenAPI == "" {
-		oai.OpenAPI = `3.0.0`
-	}
-	if len(oai.Config.ReadContentTypes) == 0 {
-		oai.Config.ReadContentTypes = defaultReadContentTypes
-	}
-	if len(oai.Config.WriteContentTypes) == 0 {
-		oai.Config.WriteContentTypes = defaultWriteContentTypes
+		)
 	}
 }
 
@@ -125,4 +134,8 @@ func (oai OpenApiV3) String() string {
 		intlog.Error(context.TODO(), err)
 	}
 	return string(b)
+}
+
+func formatRefToBytes(ref string) []byte {
+	return []byte(fmt.Sprintf(`{"$ref":"#/components/schemas/%s"}`, ref))
 }

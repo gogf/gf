@@ -1,10 +1,15 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package goai
 
 import (
-	"context"
 	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/internal/structs"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/gmeta"
@@ -32,8 +37,6 @@ type Path struct {
 type Paths map[string]Path
 
 const (
-	tagNamePath   = `path`
-	tagNameMethod = `method`
 	responseOkKey = `200`
 )
 
@@ -43,19 +46,18 @@ type addPathInput struct {
 	Function interface{}
 }
 
-func (oai *OpenApiV3) addPath(in addPathInput) {
+func (oai *OpenApiV3) addPath(in addPathInput) error {
 	if oai.Paths == nil {
 		oai.Paths = map[string]Path{}
 	}
 
 	var (
-		ctx         = context.TODO()
 		reflectType = reflect.TypeOf(in.Function)
 	)
 	if reflectType.NumIn() != 2 || reflectType.NumOut() != 2 {
-		intlog.Printf(
-			ctx,
-			`unsupported function "%s" for OpenAPI Path register`,
+		return gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			`unsupported function "%s" for OpenAPI Path register, there should be input & output structures`,
 			reflectType.String(),
 		)
 	}
@@ -91,33 +93,36 @@ func (oai *OpenApiV3) addPath(in addPathInput) {
 		}
 	)
 	if in.Path == "" {
-		in.Path = gmeta.Get(inputObject.Interface(), tagNamePath).String()
+		in.Path = gmeta.Get(inputObject.Interface(), TagNamePath).String()
 	}
 	if in.Path == "" {
 		panic(gerror.NewCode(
 			gcode.CodeMissingParameter,
 			`missing necessary path parameter "%s" for struct "%s"`,
-			tagNamePath, inputStructTypeName,
+			TagNamePath, inputStructTypeName,
 		))
 	}
 	if in.Method == "" {
-		in.Method = gmeta.Get(inputObject.Interface(), tagNameMethod).String()
+		in.Method = gmeta.Get(inputObject.Interface(), TagNameMethod).String()
 	}
 	if in.Method == "" {
 		panic(gerror.NewCode(
 			gcode.CodeMissingParameter,
 			`missing necessary method parameter "%s" for struct "%s"`,
-			tagNamePath, inputStructTypeName,
+			TagNamePath, inputStructTypeName,
 		))
 	}
 
-	oai.addSchema(inputObject.Interface(), outputObject.Interface())
+	if err := oai.addSchema(inputObject.Interface(), outputObject.Interface()); err != nil {
+		return err
+	}
+
 	if len(inputMetaMap) > 0 {
 		if err := gconv.Struct(inputMetaMap, &path); err != nil {
-			intlog.Error(ctx, err)
+			return gerror.WrapCodef(gcode.CodeInternalError, err, `mapping struct tags to Path failed`)
 		}
 		if err := gconv.Struct(inputMetaMap, &operation); err != nil {
-			intlog.Error(ctx, err)
+			return gerror.WrapCodef(gcode.CodeInternalError, err, `mapping struct tags to Operation failed`)
 		}
 	}
 	// Request.
@@ -140,6 +145,24 @@ func (oai *OpenApiV3) addPath(in addPathInput) {
 			Value: &requestBody,
 		}
 	}
+	// Request parameters.
+	structFields, _ := structs.Fields(structs.FieldsInput{
+		Pointer:         inputObject.Interface(),
+		RecursiveOption: structs.RecursiveOptionEmbeddedNoTag,
+	})
+	for _, structField := range structFields {
+		if operation.Parameters == nil {
+			operation.Parameters = []ParameterRef{}
+		}
+		parameterRef, err := oai.newParameterRefWithStructMethod(structField)
+		if err != nil {
+			return err
+		}
+		if parameterRef != nil {
+			operation.Parameters = append(operation.Parameters, *parameterRef)
+		}
+	}
+
 	// Response.
 	if _, ok := operation.Responses[responseOkKey]; !ok {
 		var (
@@ -149,7 +172,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) {
 		)
 		if len(outputMetaMap) > 0 {
 			if err := gconv.Struct(outputMetaMap, &response); err != nil {
-				intlog.Error(ctx, err)
+				return gerror.WrapCodef(gcode.CodeInternalError, err, `mapping struct tags to Response failed`)
 			}
 		}
 		// Supported mime types of response.
@@ -162,6 +185,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) {
 		}
 		operation.Responses[responseOkKey] = ResponseRef{Value: &response}
 	}
+
 	// Assign to certain operation attribute.
 	switch gstr.ToUpper(in.Method) {
 	case HttpMethodGet:
@@ -186,4 +210,5 @@ func (oai *OpenApiV3) addPath(in addPathInput) {
 		panic(gerror.NewCode(gcode.CodeInvalidParameter, `invalid method "%s"`, in.Method))
 	}
 	oai.Paths[in.Path] = path
+	return nil
 }
