@@ -9,11 +9,13 @@ package ghttp
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"github.com/gogf/gf/debug/gdebug"
 	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/protocol/goai"
+	"github.com/gogf/gf/text/gstr"
 	"net/http"
 	"os"
 	"runtime"
@@ -53,11 +55,15 @@ func serverProcessInit() {
 	// This means it is a restart server, it should kill its parent before starting its listening,
 	// to avoid duplicated port listening in two processes.
 	if genv.Get(adminActionRestartEnvKey) != "" {
-		if p, e := os.FindProcess(gproc.PPid()); e == nil {
-			p.Kill()
-			p.Wait()
+		if p, err := os.FindProcess(gproc.PPid()); err == nil {
+			if err = p.Kill(); err != nil {
+				intlog.Error(ctx, err)
+			}
+			if _, err = p.Wait(); err != nil {
+				intlog.Error(ctx, err)
+			}
 		} else {
-			glog.Error(ctx, e)
+			glog.Error(ctx, err)
 		}
 	}
 
@@ -118,11 +124,40 @@ func (s *Server) Start() error {
 		ctx = context.TODO()
 	)
 
-	// OpenApi specification json producing handler.
-	if s.config.OpenApiPath != "" {
-		s.BindHandler(s.config.OpenApiPath, s.openapiSpecJson)
+	// Swagger UI.
+	if s.config.SwaggerPath != "" {
+		s.AddStaticPath(s.config.SwaggerPath, swaggerUIPackedPath)
+		s.BindHookHandler(s.config.SwaggerPath+"/*", HookBeforeServe, s.swaggerUI)
+		s.Logger().Debugf(
+			ctx,
+			`swagger ui is serving at address: %s%s/`,
+			s.getListenAddress(),
+			s.config.SwaggerPath,
+		)
 	}
 
+	// OpenApi specification json producing handler.
+	if s.config.OpenApiPath != "" {
+		s.BindHandler(s.config.OpenApiPath, s.openapiSpec)
+		s.Logger().Debugf(
+			ctx,
+			`openapi specification is serving at address: %s%s`,
+			s.getListenAddress(),
+			s.config.OpenApiPath,
+		)
+	} else {
+		if s.config.SwaggerPath != "" {
+			s.Logger().Notice(
+				ctx,
+				`openapi specification is disabled but swagger ui is serving, which might make no sense`,
+			)
+		} else {
+			s.Logger().Debug(
+				ctx,
+				`openapi specification is disabled`,
+			)
+		}
+	}
 	// Register group routes.
 	s.handlePreBindItems(ctx)
 
@@ -212,6 +247,21 @@ func (s *Server) Start() error {
 	s.initOpenApi()
 	s.dumpRouterMap()
 	return nil
+}
+
+func (s *Server) getListenAddress() string {
+	var (
+		array = gstr.SplitAndTrim(s.config.Address, ":")
+		host  = `127.0.0.1`
+		port  = 0
+	)
+	if len(array) > 1 {
+		host = array[0]
+		port = gconv.Int(array[1])
+	} else {
+		port = gconv.Int(array[0])
+	}
+	return fmt.Sprintf(`http://%s:%d`, host, port)
 }
 
 // DumpRouterMap dumps the router map to the log.

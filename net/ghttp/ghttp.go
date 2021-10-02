@@ -17,6 +17,8 @@ import (
 	"net/http"
 	"reflect"
 	"time"
+
+	_ "github.com/gogf/gf/net/ghttp/internal/swaggerui"
 )
 
 type (
@@ -126,6 +128,7 @@ const (
 	methodNameShut        = "Shut"
 	methodNameExit        = "Exit"
 	ctxKeyForRequest      = "gHttpRequestObject"
+	swaggerUIPackedPath   = "/goframe/swaggerui"
 )
 
 var (

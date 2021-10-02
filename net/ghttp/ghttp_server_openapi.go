@@ -12,7 +12,11 @@ import (
 	"github.com/gogf/gf/text/gstr"
 )
 
+// initOpenApi generates api specification using OpenApiV3 protocol.
 func (s *Server) initOpenApi() {
+	if s.config.OpenApiPath == "" {
+		return
+	}
 	var (
 		err    error
 		method string
@@ -35,8 +39,17 @@ func (s *Server) initOpenApi() {
 	}
 }
 
-func (s *Server) openapiSpecJson(r *Request) {
-	err := r.Response.WriteJson(s.openapi)
+// openapiSpec is a build-in handler automatic producing for openapi specification json file.
+func (s *Server) openapiSpec(r *Request) {
+	var (
+		err error
+	)
+	if s.config.OpenApiPath == "" {
+		r.Response.Write(`OpenApi specification file producing is disabled`)
+	} else {
+		err = r.Response.WriteJson(s.openapi)
+	}
+
 	if err != nil {
 		intlog.Error(r.Context(), err)
 	}

@@ -21,10 +21,7 @@ import (
 // BindHandler registers a handler function to server with given pattern.
 // The parameter `handler` can be type of:
 // func(*ghttp.Request)
-// func(context.Context)
-// func(context.Context,TypeRequest)
-// func(context.Context,TypeRequest) error
-// func(context.Context,TypeRequest)(TypeResponse,error)
+// func(context.Context, Request)(Response, error)
 func (s *Server) BindHandler(pattern string, handler interface{}) {
 	var (
 		ctx = context.TODO()
