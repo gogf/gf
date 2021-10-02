@@ -334,7 +334,7 @@ func (g *RouterGroup) doBindRoutersToServer(ctx context.Context, item *preBindIt
 		if reflect.ValueOf(object).Kind() == reflect.Func {
 			funcInfo, err := g.server.checkAndCreateFuncInfo(object, "", "", "")
 			if err != nil {
-				g.server.Logger().Error(ctx, err.Error())
+				g.server.Logger().Fatal(ctx, err.Error())
 				return g
 			}
 			if g.server != nil {

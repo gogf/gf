@@ -13,6 +13,7 @@ import (
 	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/protocol/goai"
 	"net/http"
 	"os"
 	"runtime"
@@ -99,6 +100,7 @@ func GetServer(name ...interface{}) *Server {
 		serveTree:        make(map[string]interface{}),
 		serveCache:       gcache.New(),
 		routesMap:        make(map[string][]registeredRouteItem),
+		openapi:          goai.New(),
 	}
 	// Initialize the server using default configurations.
 	if err := s.SetConfig(NewConfig()); err != nil {
@@ -115,6 +117,11 @@ func (s *Server) Start() error {
 	var (
 		ctx = context.TODO()
 	)
+
+	// OpenApi specification json producing handler.
+	if s.config.OpenApiPath != "" {
+		s.BindHandler(s.config.OpenApiPath, s.openapiSpecJson)
+	}
 
 	// Register group routes.
 	s.handlePreBindItems(ctx)
@@ -202,6 +209,7 @@ func (s *Server) Start() error {
 			}
 		})
 	}
+	s.initOpenApi()
 	s.dumpRouterMap()
 	return nil
 }
@@ -219,14 +227,14 @@ func (s *Server) dumpRouterMap() {
 		table.SetBorder(false)
 		table.SetCenterSeparator("|")
 
-		for _, item := range s.GetRouterArray() {
+		for _, item := range s.GetRoutes() {
 			data := make([]string, 7)
 			data[0] = item.Server
 			data[1] = item.Domain
 			data[2] = item.Address
 			data[3] = item.Method
 			data[4] = item.Route
-			data[5] = item.handler.Name
+			data[5] = item.Handler.Name
 			data[6] = item.Middleware
 			table.Append(data)
 		}
@@ -235,9 +243,14 @@ func (s *Server) dumpRouterMap() {
 	}
 }
 
-// GetRouterArray retrieves and returns the router array.
+// GetOpenApi returns the OpenApi specification management object of current server.
+func (s *Server) GetOpenApi() *goai.OpenApiV3 {
+	return s.openapi
+}
+
+// GetRoutes retrieves and returns the router array.
 // The key of the returned map is the domain of the server.
-func (s *Server) GetRouterArray() []RouterItem {
+func (s *Server) GetRoutes() []RouterItem {
 	m := make(map[string]*garray.SortedArray)
 	address := s.config.Address
 	if s.config.HTTPSAddr != "" {
@@ -258,16 +271,17 @@ func (s *Server) GetRouterArray() []RouterItem {
 				Method:     array[2],
 				Route:      array[3],
 				Priority:   len(registeredItems) - index - 1,
-				handler:    registeredItem.Handler,
+				Handler:    registeredItem.Handler,
 			}
-			switch item.handler.Type {
+			switch item.Handler.Type {
 			case handlerTypeController, handlerTypeObject, handlerTypeHandler:
 				item.IsServiceHandler = true
+
 			case handlerTypeMiddleware:
 				item.Middleware = "GLOBAL MIDDLEWARE"
 			}
-			if len(item.handler.Middleware) > 0 {
-				for _, v := range item.handler.Middleware {
+			if len(item.Handler.Middleware) > 0 {
+				for _, v := range item.Handler.Middleware {
 					if item.Middleware != "" {
 						item.Middleware += ","
 					}
@@ -285,9 +299,9 @@ func (s *Server) GetRouterArray() []RouterItem {
 					if r = strings.Compare(item1.Domain, item2.Domain); r == 0 {
 						if r = strings.Compare(item1.Route, item2.Route); r == 0 {
 							if r = strings.Compare(item1.Method, item2.Method); r == 0 {
-								if item1.handler.Type == handlerTypeMiddleware && item2.handler.Type != handlerTypeMiddleware {
+								if item1.Handler.Type == handlerTypeMiddleware && item2.Handler.Type != handlerTypeMiddleware {
 									return -1
-								} else if item1.handler.Type == handlerTypeMiddleware && item2.handler.Type == handlerTypeMiddleware {
+								} else if item1.Handler.Type == handlerTypeMiddleware && item2.Handler.Type == handlerTypeMiddleware {
 									return 1
 								} else if r = strings.Compare(item1.Middleware, item2.Middleware); r == 0 {
 									r = item2.Priority - item1.Priority

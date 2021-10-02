@@ -41,6 +41,7 @@ type ExternalDocs struct {
 }
 
 const (
+	HttpMethodAll     = `ALL`
 	HttpMethodGet     = `GET`
 	HttpMethodPut     = `PUT`
 	HttpMethodPost    = `POST`

@@ -12,6 +12,7 @@ import (
 	"github.com/gogf/gf/container/gtype"
 	"github.com/gogf/gf/os/gcache"
 	"github.com/gogf/gf/os/gsession"
+	"github.com/gogf/gf/protocol/goai"
 	"github.com/gorilla/websocket"
 	"net/http"
 	"reflect"
@@ -32,6 +33,7 @@ type (
 		routesMap        map[string][]registeredRouteItem // Route map mainly for route dumps and repeated route checks.
 		statusHandlerMap map[string][]HandlerFunc         // Custom status handler map.
 		sessionManager   *gsession.Manager                // Session manager.
+		openapi          *goai.OpenApiV3                  // The OpenApi specification management object.
 	}
 
 	// Router object.
@@ -46,6 +48,7 @@ type (
 
 	// RouterItem is just for route dumps.
 	RouterItem struct {
+		Handler          *handlerItem // The handler.
 		Server           string       // Server name.
 		Address          string       // Listening address.
 		Domain           string       // Bound domain.
@@ -55,13 +58,12 @@ type (
 		Route            string       // Route URI.
 		Priority         int          // Just for reference.
 		IsServiceHandler bool         // Is service handler.
-		handler          *handlerItem // The handler.
 	}
 
 	// HandlerFunc is request handler function.
 	HandlerFunc = func(r *Request)
 
-	// handlerFuncInfo contains the HandlerFunc address and its reflect type.
+	// handlerFuncInfo contains the HandlerFunc address and its reflection type.
 	handlerFuncInfo struct {
 		Func  HandlerFunc   // Handler function address.
 		Type  reflect.Type  // Reflect type information for current handler, which is used for extension of handler feature.

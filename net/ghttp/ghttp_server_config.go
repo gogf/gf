@@ -166,7 +166,7 @@ type ServerConfig struct {
 	SessionStorage gsession.Storage `json:"sessionStorage"`
 
 	// SessionCookieMaxAge specifies the cookie ttl for session id.
-	// It it is set 0, it means it expires along with browser session.
+	// If it is set 0, it means it expires along with browser session.
 	SessionCookieMaxAge time.Duration `json:"sessionCookieMaxAge"`
 
 	// SessionCookieOutput specifies whether automatic outputting session id to cookie.
@@ -197,7 +197,7 @@ type ServerConfig struct {
 
 	// ClientMaxBodySize specifies the max body size limit in bytes for client request.
 	// It can be configured in configuration file using string like: 1m, 10m, 500kb etc.
-	// It's 8MB in default.
+	// It's `8MB` in default.
 	ClientMaxBodySize int64 `json:"clientMaxBodySize"`
 
 	// FormParsingMemory specifies max memory buffer size in bytes which can be used for
@@ -221,6 +221,9 @@ type ServerConfig struct {
 
 	// GracefulTimeout set the maximum survival time (seconds) of the parent process.
 	GracefulTimeout uint8 `json:"gracefulTimeout"`
+
+	// OpenApiPath specifies the OpenApi specification file path.
+	OpenApiPath string `json:"openapiPath"`
 }
 
 // NewConfig creates and returns a ServerConfig object with default configurations.
@@ -238,7 +241,7 @@ func NewConfig() ServerConfig {
 		KeepAlive:           true,
 		IndexFiles:          []string{"index.html", "index.htm"},
 		IndexFolder:         false,
-		ServerAgent:         "GF HTTP Server",
+		ServerAgent:         "GoFrame HTTP Server",
 		ServerRoot:          "",
 		StaticPaths:         make([]staticPathItem, 0),
 		FileServerEnabled:   false,
@@ -264,6 +267,7 @@ func NewConfig() ServerConfig {
 		Rewrites:            make(map[string]string),
 		Graceful:            false,
 		GracefulTimeout:     2, // seconds
+		OpenApiPath:         `/api.json`,
 	}
 }
 
