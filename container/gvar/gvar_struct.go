@@ -21,12 +21,3 @@ func (v *Var) Struct(pointer interface{}, mapping ...map[string]string) error {
 func (v *Var) Structs(pointer interface{}, mapping ...map[string]string) error {
 	return gconv.Structs(v.Val(), pointer, mapping...)
 }
-
-// Scan automatically calls Struct or Structs function according to the type of parameter
-// `pointer` to implement the converting.
-//
-// It calls function Struct if `pointer` is type of *struct/**struct to do the converting.
-// It calls function Structs if `pointer` is type of *[]struct/*[]*struct to do the converting.
-func (v *Var) Scan(pointer interface{}, mapping ...map[string]string) error {
-	return gconv.Scan(v.Val(), pointer, mapping...)
-}
