@@ -6,12 +6,32 @@
 
 package structs
 
-import "reflect"
+import (
+	"reflect"
+	"regexp"
+	"strings"
+)
+
+const (
+	jsonTagName = `json`
+)
+
+var (
+	tagMapRegex, _ = regexp.Compile(`([\w\-]+):"(.+?)"`)
+)
 
 // Tag returns the value associated with key in the tag string. If there is no
 // such key in the tag, Tag returns the empty string.
 func (f *Field) Tag(key string) string {
 	return f.Field.Tag.Get(key)
+}
+
+// TagJsonName returns the `json` tag name string of the field.
+func (f *Field) TagJsonName() string {
+	if jsonTag := f.Tag(jsonTagName); jsonTag != "" {
+		return strings.Split(jsonTag, ",")[0]
+	}
+	return ""
 }
 
 // TagLookup returns the value associated with key in the tag string.
@@ -32,6 +52,20 @@ func (f *Field) IsEmbedded() bool {
 // TagStr returns the tag string of the field.
 func (f *Field) TagStr() string {
 	return string(f.Field.Tag)
+}
+
+// TagMap returns all the tag of the field along with its value string as map.
+func (f *Field) TagMap() map[string]string {
+	var (
+		data  = map[string]string{}
+		match = tagMapRegex.FindAllStringSubmatch(f.TagStr(), -1)
+	)
+	for _, m := range match {
+		if len(m) == 3 {
+			data[m[1]] = m[2]
+		}
+	}
+	return data
 }
 
 // IsExported returns true if the given field is exported.
@@ -107,13 +141,15 @@ func Fields(in FieldsInput) ([]*Field, error) {
 	if err != nil {
 		return nil, err
 	}
-	for i := 0; i < len(rangeFields); i++ {
-		field := rangeFields[i]
+	for index := 0; index < len(rangeFields); {
+		field := rangeFields[index]
 		if _, ok := fieldFilterMap[field.Name()]; ok {
+			index++
 			continue
 		}
 		// Only retrieve exported attributes.
 		if !field.IsExported() {
+			index++
 			continue
 		}
 		if field.IsEmbedded() {
@@ -132,13 +168,17 @@ func Fields(in FieldsInput) ([]*Field, error) {
 					if err != nil {
 						return nil, err
 					}
-					rangeFields = append(rangeFields, structFields...)
+					structFields = append(structFields, rangeFields[index+1:]...)
+					rangeFields = structFields
+					continue
 				}
 			}
+			index++
 			continue
 		}
 		fieldFilterMap[field.Name()] = struct{}{}
 		retrievedFields = append(retrievedFields, field)
+		index++
 	}
 	return retrievedFields, nil
 }

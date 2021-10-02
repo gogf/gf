@@ -125,6 +125,30 @@ func Test_Fields(t *testing.T) {
 	})
 }
 
+func Test_Fields_WithEmbedded(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type B struct {
+			Name string
+			Age  int
+		}
+		type A struct {
+			B
+			Site  string
+			Score int64
+		}
+		r, err := structs.Fields(structs.FieldsInput{
+			Pointer:         new(A),
+			RecursiveOption: structs.RecursiveOptionEmbeddedNoTag,
+		})
+		t.AssertNil(err)
+		t.Assert(len(r), 4)
+		t.Assert(r[0].Name(), `Name`)
+		t.Assert(r[1].Name(), `Age`)
+		t.Assert(r[2].Name(), `Site`)
+		t.Assert(r[3].Name(), `Score`)
+	})
+}
+
 func Test_FieldMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
@@ -272,5 +296,25 @@ func TestType_FieldKeys(t *testing.T) {
 		r, err := structs.StructType(new(A).Array)
 		t.AssertNil(err)
 		t.Assert(r.FieldKeys(), g.Slice{"Id", "Name"})
+	})
+}
+
+func TestType_TagMap(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type A struct {
+			Id   int    `d:"123" description:"I love gf"`
+			Name string `v:"required" description:"应用Id"`
+		}
+		r, err := structs.Fields(structs.FieldsInput{
+			Pointer:         new(A),
+			RecursiveOption: 0,
+		})
+		t.AssertNil(err)
+
+		t.Assert(len(r), 2)
+		t.Assert(r[0].TagMap()["d"], `123`)
+		t.Assert(r[0].TagMap()["description"], `I love gf`)
+		t.Assert(r[1].TagMap()["v"], `required`)
+		t.Assert(r[1].TagMap()["description"], `应用Id`)
 	})
 }

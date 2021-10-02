@@ -485,3 +485,39 @@ func Test_InArray(t *testing.T) {
 		t.AssertEQ(gstr.InArray(a, "d"), false)
 	})
 }
+
+func Test_SubStrFrom(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.SubStrFrom("我爱GoFrameGood", `G`), "GoFrameGood")
+		t.Assert(gstr.SubStrFrom("我爱GoFrameGood", `GG`), "")
+		t.Assert(gstr.SubStrFrom("我爱GoFrameGood", `我`), "我爱GoFrameGood")
+		t.Assert(gstr.SubStrFrom("我爱GoFrameGood", `Frame`), "FrameGood")
+	})
+}
+
+func Test_SubStrFromEx(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.SubStrFromEx("我爱GoFrameGood", `Go`), "FrameGood")
+		t.Assert(gstr.SubStrFromEx("我爱GoFrameGood", `GG`), "")
+		t.Assert(gstr.SubStrFromEx("我爱GoFrameGood", `我`), "爱GoFrameGood")
+		t.Assert(gstr.SubStrFromEx("我爱GoFrameGood", `Frame`), `Good`)
+	})
+}
+
+func Test_SubStrFromR(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.SubStrFromR("我爱GoFrameGood", `G`), "Good")
+		t.Assert(gstr.SubStrFromR("我爱GoFrameGood", `GG`), "")
+		t.Assert(gstr.SubStrFromR("我爱GoFrameGood", `我`), "我爱GoFrameGood")
+		t.Assert(gstr.SubStrFromR("我爱GoFrameGood", `Frame`), "FrameGood")
+	})
+}
+
+func Test_SubStrFromREx(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.SubStrFromREx("我爱GoFrameGood", `G`), "ood")
+		t.Assert(gstr.SubStrFromREx("我爱GoFrameGood", `GG`), "")
+		t.Assert(gstr.SubStrFromREx("我爱GoFrameGood", `我`), "爱GoFrameGood")
+		t.Assert(gstr.SubStrFromREx("我爱GoFrameGood", `Frame`), `Good`)
+	})
+}
