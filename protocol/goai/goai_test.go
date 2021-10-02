@@ -62,7 +62,8 @@ func TestOpenApiV3_Add(t *testing.T) {
 	}
 
 	type CreateResourceRes struct {
-		FlowId int64 `description:"创建实例流程id"`
+		gmeta.Meta `description:"Demo Response Struct"`
+		FlowId     int64 `description:"创建实例流程id"`
 	}
 
 	f := func(ctx context.Context, req *CreateResourceReq) (res *CreateResourceRes, err error) {

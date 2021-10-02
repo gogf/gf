@@ -95,7 +95,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) {
 	}
 	if in.Path == "" {
 		panic(gerror.NewCode(
-			gcode.CodeInvalidParameter,
+			gcode.CodeMissingParameter,
 			`missing necessary path parameter "%s" for struct "%s"`,
 			tagNamePath, inputStructTypeName,
 		))
@@ -104,8 +104,13 @@ func (oai *OpenApiV3) addPath(in addPathInput) {
 		in.Method = gmeta.Get(inputObject.Interface(), tagNameMethod).String()
 	}
 	if in.Method == "" {
-		in.Method = oai.Config.DefaultMethod
+		panic(gerror.NewCode(
+			gcode.CodeMissingParameter,
+			`missing necessary method parameter "%s" for struct "%s"`,
+			tagNamePath, inputStructTypeName,
+		))
 	}
+
 	oai.addSchema(inputObject.Interface(), outputObject.Interface())
 	if len(inputMetaMap) > 0 {
 		if err := gconv.Struct(inputMetaMap, &path); err != nil {
