@@ -1,9 +1,14 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package goai
 
 import (
-	"context"
-	"fmt"
-	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/errors/gcode"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
@@ -17,20 +22,19 @@ type SchemaRef struct {
 	Value *Schema
 }
 
-func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap map[string]string) SchemaRef {
+func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap map[string]string) (*SchemaRef, error) {
 	var (
 		oaiType   = oai.golangTypeToOAIType(golangType)
 		oaiFormat = oai.golangTypeToOAIFormat(golangType)
-		schemaRef = SchemaRef{}
+		schemaRef = &SchemaRef{}
 		schema    = &Schema{
 			Type:   oaiType,
 			Format: oaiFormat,
 		}
 	)
 	if len(tagMap) > 0 {
-		err := gconv.Struct(tagMap, schema)
-		if err != nil {
-			intlog.Error(context.TODO(), err)
+		if err := gconv.Struct(tagMap, schema); err != nil {
+			return nil, gerror.WrapCodef(gcode.CodeInternalError, err, `mapping struct tags to Schema failed`)
 		}
 	}
 	schemaRef.Value = schema
@@ -43,10 +47,11 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 
 	case
 		TypeArray:
-		var (
-			subSchemaRef = oai.newSchemaRefWithGolangType(golangType.Elem(), nil)
-		)
-		schema.Items = &subSchemaRef
+		subSchemaRef, err := oai.newSchemaRefWithGolangType(golangType.Elem(), nil)
+		if err != nil {
+			return nil, err
+		}
+		schema.Items = subSchemaRef
 
 	case
 		TypeObject:
@@ -55,25 +60,28 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 		)
 		// Specially for map type.
 		if golangType.Kind() == reflect.Map {
-			var (
-				subSchemaRef = oai.newSchemaRefWithGolangType(golangType.Elem(), nil)
-			)
-			schema.AdditionalProperties = &subSchemaRef
-			return schemaRef
+			subSchemaRef, err := oai.newSchemaRefWithGolangType(golangType.Elem(), nil)
+			if err != nil {
+				return nil, err
+			}
+			schema.AdditionalProperties = subSchemaRef
+			return schemaRef, nil
 		}
 		// Normal struct object.
 		if _, ok := oai.Components.Schemas[structTypeName]; !ok {
-			oai.addSchema(reflect.New(golangType).Interface())
+			if err := oai.addSchema(reflect.New(golangType).Interface()); err != nil {
+				return nil, err
+			}
 		}
 		schemaRef.Ref = structTypeName
 		schemaRef.Value = nil
 	}
-	return schemaRef
+	return schemaRef, nil
 }
 
 func (r SchemaRef) MarshalJSON() ([]byte, error) {
 	if r.Ref != "" {
-		return []byte(fmt.Sprintf(`{"$ref":"#/components/schemas/%s"}`, r.Ref)), nil
+		return formatRefToBytes(r.Ref), nil
 	}
 	return json.Marshal(r.Value)
 }

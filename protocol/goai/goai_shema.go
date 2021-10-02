@@ -1,3 +1,9 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package goai
 
 import (
@@ -54,13 +60,16 @@ type Discriminator struct {
 	Mapping      map[string]string `json:"mapping,omitempty" yaml:"mapping,omitempty"`
 }
 
-func (oai *OpenApiV3) addSchema(object ...interface{}) {
+func (oai *OpenApiV3) addSchema(object ...interface{}) error {
 	for _, v := range object {
-		oai.doAddSchema(v)
+		if err := oai.doAddSchemaSingle(v); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
-func (oai *OpenApiV3) doAddSchema(object interface{}) {
+func (oai *OpenApiV3) doAddSchemaSingle(object interface{}) error {
 	if oai.Components.Schemas == nil {
 		oai.Components.Schemas = map[string]SchemaRef{}
 	}
@@ -71,7 +80,7 @@ func (oai *OpenApiV3) doAddSchema(object interface{}) {
 	)
 	// Already added.
 	if _, ok := oai.Components.Schemas[structTypeName]; ok {
-		return
+		return nil
 	}
 	structFields, _ := structs.Fields(structs.FieldsInput{
 		Pointer:         object,
@@ -93,15 +102,20 @@ func (oai *OpenApiV3) doAddSchema(object interface{}) {
 		if jsonName := structField.TagJsonName(); jsonName != "" {
 			fieldName = jsonName
 		}
-		schema.Properties[fieldName] = oai.newSchemaRefWithGolangType(
+		schemaRef, err := oai.newSchemaRefWithGolangType(
 			structField.Type(),
 			structField.TagMap(),
 		)
+		if err != nil {
+			return err
+		}
+		schema.Properties[fieldName] = *schemaRef
 	}
 	oai.Components.Schemas[structTypeName] = SchemaRef{
 		Ref:   "",
 		Value: schema,
 	}
+	return nil
 }
 
 func (oai *OpenApiV3) golangTypeToOAIType(t reflect.Type) string {
