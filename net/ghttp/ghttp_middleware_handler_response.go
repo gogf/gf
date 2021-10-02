@@ -21,6 +21,12 @@ type DefaultHandlerResponse struct {
 // MiddlewareHandlerResponse is the default middleware handling handler response object and its error.
 func MiddlewareHandlerResponse(r *Request) {
 	r.Middleware.Next()
+
+	// There's custom buffer content, it then exits current handler.
+	if r.Response.BufferLength() > 0 {
+		return
+	}
+
 	var (
 		err         error
 		res         interface{}

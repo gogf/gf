@@ -31,8 +31,7 @@ func (s *Server) BindHandler(pattern string, handler interface{}) {
 	)
 	funcInfo, err := s.checkAndCreateFuncInfo(handler, "", "", "")
 	if err != nil {
-		s.Logger().Error(ctx, err.Error())
-		return
+		s.Logger().Fatal(ctx, err)
 	}
 	s.doBindHandler(ctx, pattern, funcInfo, nil, "")
 }
@@ -131,17 +130,17 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, meth
 	handlerFunc, ok := f.(HandlerFunc)
 	if !ok {
 		reflectType := reflect.TypeOf(f)
-		if reflectType.NumIn() == 0 || reflectType.NumIn() > 2 || reflectType.NumOut() > 2 {
+		if reflectType.NumIn() != 2 || reflectType.NumOut() != 2 {
 			if pkgPath != "" {
 				err = gerror.NewCodef(
 					gcode.CodeInvalidParameter,
-					`invalid handler: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" or "func(context.Context)/func(context.Context,Request)/func(context.Context,Request) error/func(context.Context,Request)(Response,error)" is required`,
+					`invalid handler: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" or "func(context.Context, Request)(Response, error)" is required`,
 					pkgPath, structName, methodName, reflect.TypeOf(f).String(),
 				)
 			} else {
 				err = gerror.NewCodef(
 					gcode.CodeInvalidParameter,
-					`invalid handler: defined as "%s", but "func(*ghttp.Request)" or "func(context.Context)/func(context.Context,Request)/func(context.Context,Request) error/func(context.Context,Request)(Response,error)" is required`,
+					`invalid handler: defined as "%s", but "func(*ghttp.Request)" or "func(context.Context, Request)(Response, error)" is required`,
 					reflect.TypeOf(f).String(),
 				)
 			}
@@ -157,7 +156,7 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, meth
 			return
 		}
 
-		if reflectType.NumOut() > 0 && reflectType.Out(reflectType.NumOut()-1).String() != "error" {
+		if reflectType.Out(1).String() != "error" {
 			err = gerror.NewCodef(
 				gcode.CodeInvalidParameter,
 				`invalid handler: defined as "%s", but the last output parameter should be type of "error"`,

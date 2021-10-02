@@ -109,8 +109,7 @@ func (s *Server) doBindObject(ctx context.Context, pattern string, object interf
 
 		funcInfo, err := s.checkAndCreateFuncInfo(v.Method(i).Interface(), pkgPath, objName, methodName)
 		if err != nil {
-			s.Logger().Error(ctx, err.Error())
-			return
+			s.Logger().Fatal(ctx, err)
 		}
 
 		key := s.mergeBuildInNameToPattern(pattern, structName, methodName, true)
@@ -188,8 +187,7 @@ func (s *Server) doBindObjectMethod(ctx context.Context, pattern string, object 
 
 	funcInfo, err := s.checkAndCreateFuncInfo(methodValue.Interface(), pkgPath, objName, methodName)
 	if err != nil {
-		s.Logger().Error(ctx, err.Error())
-		return
+		s.Logger().Fatal(ctx, err)
 	}
 
 	key := s.mergeBuildInNameToPattern(pattern, structName, methodName, false)
@@ -243,8 +241,7 @@ func (s *Server) doBindObjectRest(ctx context.Context, pattern string, object in
 
 		funcInfo, err := s.checkAndCreateFuncInfo(v.Method(i).Interface(), pkgPath, objName, methodName)
 		if err != nil {
-			s.Logger().Error(ctx, err.Error())
-			return
+			s.Logger().Fatal(ctx, err)
 		}
 
 		key := s.mergeBuildInNameToPattern(methodName+":"+pattern, structName, methodName, false)

@@ -18,27 +18,6 @@ import (
 	"github.com/gogf/gf/test/gtest"
 )
 
-func Test_Router_Handler_Extended_Handler_Basic(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
-	s.BindHandler("/test", func(ctx context.Context) {
-		r := g.RequestFromCtx(ctx)
-		r.Response.Write("test")
-	})
-	s.SetPort(p)
-	s.SetDumpRouterMap(false)
-	s.Start()
-	defer s.Shutdown()
-
-	time.Sleep(100 * time.Millisecond)
-	gtest.C(t, func(t *gtest.T) {
-		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-
-		t.Assert(client.GetContent(ctx, "/test"), "test")
-	})
-}
-
 func Test_Router_Handler_Extended_Handler_WithObject(t *testing.T) {
 	type TestReq struct {
 		Age  int

@@ -92,25 +92,27 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 			Responses: map[string]ResponseRef{},
 		}
 	)
+	// Path check.
 	if in.Path == "" {
 		in.Path = gmeta.Get(inputObject.Interface(), TagNamePath).String()
 	}
 	if in.Path == "" {
-		panic(gerror.NewCode(
+		return gerror.NewCode(
 			gcode.CodeMissingParameter,
-			`missing necessary path parameter "%s" for struct "%s"`,
+			`missing necessary path parameter "%s" for input struct "%s"`,
 			TagNamePath, inputStructTypeName,
-		))
+		)
 	}
+	// Method check.
 	if in.Method == "" {
 		in.Method = gmeta.Get(inputObject.Interface(), TagNameMethod).String()
 	}
 	if in.Method == "" {
-		panic(gerror.NewCode(
+		return gerror.NewCode(
 			gcode.CodeMissingParameter,
-			`missing necessary method parameter "%s" for struct "%s"`,
+			`missing necessary method parameter "%s" for input struct "%s"`,
 			TagNamePath, inputStructTypeName,
-		))
+		)
 	}
 
 	if err := oai.addSchema(inputObject.Interface(), outputObject.Interface()); err != nil {
@@ -189,25 +191,38 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	// Assign to certain operation attribute.
 	switch gstr.ToUpper(in.Method) {
 	case HttpMethodGet:
+		// GET operations cannot have a requestBody.
+		operation.RequestBody.Value = nil
 		path.Get = &operation
+
 	case HttpMethodPut:
 		path.Put = &operation
+
 	case HttpMethodPost:
 		path.Post = &operation
+
 	case HttpMethodDelete:
+		// DELETE operations cannot have a requestBody.
+		operation.RequestBody.Value = nil
 		path.Delete = &operation
+
 	case HttpMethodConnect:
-		path.Connect = &operation
+		// Nothing to do for Connect.
+
 	case HttpMethodHead:
 		path.Head = &operation
+
 	case HttpMethodOptions:
 		path.Options = &operation
+
 	case HttpMethodPatch:
 		path.Patch = &operation
+
 	case HttpMethodTrace:
 		path.Trace = &operation
+
 	default:
-		panic(gerror.NewCode(gcode.CodeInvalidParameter, `invalid method "%s"`, in.Method))
+		return gerror.NewCodef(gcode.CodeInvalidParameter, `invalid method "%s"`, in.Method)
 	}
 	oai.Paths[in.Path] = path
 	return nil
