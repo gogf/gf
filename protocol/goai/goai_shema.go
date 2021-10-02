@@ -133,3 +133,9 @@ func (oai *OpenApiV3) golangTypeToOAIType(t reflect.Type) string {
 		return TypeObject
 	}
 }
+
+// golangTypeToOAIFormat converts and returns OpenAPI parameter format for given golang type `t`.
+// Note that it does not return standard OpenAPI parameter format but custom format in golang type.
+func (oai *OpenApiV3) golangTypeToOAIFormat(t reflect.Type) string {
+	return t.String()
+}

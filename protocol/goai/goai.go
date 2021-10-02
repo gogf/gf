@@ -24,7 +24,6 @@ type OpenApiV3 struct {
 }
 
 type Config struct {
-	DefaultMethod     string
 	ReadContentTypes  []string
 	WriteContentTypes []string
 }
@@ -62,12 +61,11 @@ const (
 	FormatDate     = `date`
 	FormatDateTime = `date-time`
 	FormatPassword = `password`
-	defaultMethod  = `POST`
 )
 
-const (
-	defaultReadContentType  = `application/json`
-	defaultWriteContentType = `application/json`
+var (
+	defaultReadContentTypes  = []string{`application/json`, `application/xml`}
+	defaultWriteContentTypes = []string{`application/json`, `application/xml`}
 )
 
 func New() *OpenApiV3 {
@@ -113,14 +111,11 @@ func (oai *OpenApiV3) fillWithDefaultValue() {
 	if oai.OpenAPI == "" {
 		oai.OpenAPI = `3.0.0`
 	}
-	if oai.Config.DefaultMethod == "" {
-		oai.Config.DefaultMethod = defaultMethod
-	}
 	if len(oai.Config.ReadContentTypes) == 0 {
-		oai.Config.ReadContentTypes = []string{defaultReadContentType}
+		oai.Config.ReadContentTypes = defaultReadContentTypes
 	}
 	if len(oai.Config.WriteContentTypes) == 0 {
-		oai.Config.WriteContentTypes = []string{defaultWriteContentType}
+		oai.Config.WriteContentTypes = defaultWriteContentTypes
 	}
 }
 

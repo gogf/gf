@@ -20,9 +20,11 @@ type SchemaRef struct {
 func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap map[string]string) SchemaRef {
 	var (
 		oaiType   = oai.golangTypeToOAIType(golangType)
+		oaiFormat = oai.golangTypeToOAIFormat(golangType)
 		schemaRef = SchemaRef{}
 		schema    = &Schema{
-			Type: oaiType,
+			Type:   oaiType,
+			Format: oaiFormat,
 		}
 	)
 	if len(tagMap) > 0 {
