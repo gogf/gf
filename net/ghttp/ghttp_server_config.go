@@ -37,9 +37,9 @@ const (
 
 // ServerConfig is the HTTP Server configuration manager.
 type ServerConfig struct {
-	// ==================================
+	// ======================================================================================================
 	// Basic.
-	// ==================================
+	// ======================================================================================================
 
 	// Address specifies the server listening address like "port" or ":port",
 	// multiple addresses joined using ','.
@@ -106,9 +106,9 @@ type ServerConfig struct {
 	// View specifies the default template view object for the server.
 	View *gview.View `json:"view"`
 
-	// ==================================
+	// ======================================================================================================
 	// Static.
-	// ==================================
+	// ======================================================================================================
 
 	// Rewrites specifies the URI rewrite rules map.
 	Rewrites map[string]string `json:"rewrites"`
@@ -133,9 +133,9 @@ type ServerConfig struct {
 	// It is automatically set enabled if any static path is set.
 	FileServerEnabled bool `json:"fileServerEnabled"`
 
-	// ==================================
+	// ======================================================================================================
 	// Cookie.
-	// ==================================
+	// ======================================================================================================
 
 	// CookieMaxAge specifies the max TTL for cookie items.
 	CookieMaxAge time.Duration `json:"cookieMaxAge"`
@@ -148,9 +148,9 @@ type ServerConfig struct {
 	// It also affects the default storage for session id.
 	CookieDomain string `json:"cookieDomain"`
 
-	// ==================================
+	// ======================================================================================================
 	// Session.
-	// ==================================
+	// ======================================================================================================
 
 	// SessionIdName specifies the session id name.
 	SessionIdName string `json:"sessionIdName"`
@@ -172,9 +172,10 @@ type ServerConfig struct {
 	// SessionCookieOutput specifies whether automatic outputting session id to cookie.
 	SessionCookieOutput bool `json:"sessionCookieOutput"`
 
-	// ==================================
+	// ======================================================================================================
 	// Logging.
-	// ==================================
+	// ======================================================================================================
+
 	Logger           *glog.Logger `json:"logger"`           // Logger specifies the logger for server.
 	LogPath          string       `json:"logPath"`          // LogPath specifies the directory for storing logging files.
 	LogLevel         string       `json:"logLevel"`         // LogLevel specifies the logging level for logger.
@@ -185,15 +186,23 @@ type ServerConfig struct {
 	AccessLogEnabled bool         `json:"accessLogEnabled"` // AccessLogEnabled enables access logging content to files.
 	AccessLogPattern string       `json:"accessLogPattern"` // AccessLogPattern specifies the error log file pattern like: access-{Ymd}.log
 
-	// ==================================
+	// ======================================================================================================
 	// PProf.
-	// ==================================
+	// ======================================================================================================
+
 	PProfEnabled bool   `json:"pprofEnabled"` // PProfEnabled enables PProf feature.
 	PProfPattern string `json:"pprofPattern"` // PProfPattern specifies the PProf service pattern for router.
 
-	// ==================================
+	// ======================================================================================================
+	// API & Swagger.
+	// ======================================================================================================
+
+	OpenApiPath string `json:"openapiPath"` // OpenApiPath specifies the OpenApi specification file path.
+	SwaggerPath string `json:"swaggerPath"` // SwaggerPath specifies the swagger UI path for route registering.
+
+	// ======================================================================================================
 	// Other.
-	// ==================================
+	// ======================================================================================================
 
 	// ClientMaxBodySize specifies the max body size limit in bytes for client request.
 	// It can be configured in configuration file using string like: 1m, 10m, 500kb etc.
@@ -210,7 +219,7 @@ type ServerConfig struct {
 	// registering routes.
 	NameToUriType int `json:"nameToUriType"`
 
-	// RouteOverWrite allows overwrite the route if duplicated.
+	// RouteOverWrite allows to overwrite the route if duplicated.
 	RouteOverWrite bool `json:"routeOverWrite"`
 
 	// DumpRouterMap specifies whether automatically dumps router map when server starts.
@@ -221,9 +230,6 @@ type ServerConfig struct {
 
 	// GracefulTimeout set the maximum survival time (seconds) of the parent process.
 	GracefulTimeout uint8 `json:"gracefulTimeout"`
-
-	// OpenApiPath specifies the OpenApi specification file path.
-	OpenApiPath string `json:"openapiPath"`
 }
 
 // NewConfig creates and returns a ServerConfig object with default configurations.
@@ -267,7 +273,6 @@ func NewConfig() ServerConfig {
 		Rewrites:            make(map[string]string),
 		Graceful:            false,
 		GracefulTimeout:     2, // seconds
-		OpenApiPath:         `/api.json`,
 	}
 }
 

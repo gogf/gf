@@ -25,13 +25,13 @@ type Resource struct {
 }
 
 const (
-	gDEFAULT_TREE_M = 100
+	defaultTreeM = 100
 )
 
 // New creates and returns a new resource object.
 func New() *Resource {
 	return &Resource{
-		tree: gtree.NewBTree(gDEFAULT_TREE_M, func(v1, v2 interface{}) int {
+		tree: gtree.NewBTree(defaultTreeM, func(v1, v2 interface{}) int {
 			return strings.Compare(v1.(string), v2.(string))
 		}),
 	}
