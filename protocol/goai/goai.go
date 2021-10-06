@@ -80,6 +80,7 @@ const (
 	TagNamePath   = `path`
 	TagNameMethod = `method`
 	TagNameIn     = `in`
+	TagNameMime   = `mime`
 )
 
 var (

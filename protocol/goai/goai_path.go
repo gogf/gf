@@ -136,7 +136,14 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 			}
 		)
 		// Supported mime types of request.
-		for _, v := range oai.Config.ReadContentTypes {
+		var (
+			contentTypes = oai.Config.ReadContentTypes
+			tagMimeValue = gmeta.Get(inputObject.Interface(), TagNameMime).String()
+		)
+		if tagMimeValue != "" {
+			contentTypes = gstr.SplitAndTrim(tagMimeValue, ",")
+		}
+		for _, v := range contentTypes {
 			requestBody.Content[v] = MediaType{
 				Schema: &SchemaRef{
 					Ref: inputStructTypeName,
@@ -178,7 +185,14 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 			}
 		}
 		// Supported mime types of response.
-		for _, v := range oai.Config.WriteContentTypes {
+		var (
+			contentTypes = oai.Config.ReadContentTypes
+			tagMimeValue = gmeta.Get(outputObject.Interface(), TagNameMime).String()
+		)
+		if tagMimeValue != "" {
+			contentTypes = gstr.SplitAndTrim(tagMimeValue, ",")
+		}
+		for _, v := range contentTypes {
 			response.Content[v] = MediaType{
 				Schema: &SchemaRef{
 					Ref: outputStructTypeName,
