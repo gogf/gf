@@ -104,6 +104,7 @@ func TestOpenApiV3_Add(t *testing.T) {
 			Object: f,
 		})
 		t.AssertNil(err)
+		//fmt.Println(oai.String())
 		// Schema asserts.
 		t.Assert(len(oai.Components.Schemas), 3)
 		t.Assert(oai.Components.Schemas[`CreateResourceReq`].Value.Type, goai.TypeObject)

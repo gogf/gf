@@ -9,7 +9,6 @@ package goai
 import (
 	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/empty"
 	"github.com/gogf/gf/internal/structs"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
@@ -87,8 +86,8 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		path                 = Path{}
 		inputMetaMap         = gmeta.Data(inputObject.Interface())
 		outputMetaMap        = gmeta.Data(outputObject.Interface())
-		isInputStructEmpty   = empty.IsEmpty(inputObject.Interface())
-		isOutputStructEmpty  = empty.IsEmpty(outputObject.Interface())
+		isInputStructEmpty   = oai.structHasNoFields(inputObject.Interface())
+		isOutputStructEmpty  = oai.structHasNoFields(outputObject.Interface())
 		inputStructTypeName  = gstr.SubStrFromREx(inputObject.Type().String(), ".")
 		outputStructTypeName = gstr.SubStrFromREx(outputObject.Type().String(), ".")
 		operation            = Operation{
@@ -254,4 +253,12 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	}
 	oai.Paths[in.Path] = path
 	return nil
+}
+
+func (oai *OpenApiV3) structHasNoFields(s interface{}) bool {
+	structFields, _ := structs.Fields(structs.FieldsInput{
+		Pointer:         s,
+		RecursiveOption: structs.RecursiveOptionEmbeddedNoTag,
+	})
+	return len(structFields) == 0
 }
