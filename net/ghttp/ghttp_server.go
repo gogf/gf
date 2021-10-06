@@ -209,7 +209,7 @@ func (s *Server) Start() error {
 	// Install external plugins.
 	for _, p := range s.plugins {
 		if err := p.Install(s); err != nil {
-			s.Logger().Fatal(ctx, err)
+			s.Logger().Fatalf(ctx, `%+v`, err)
 		}
 	}
 	// Check the group routes again.
@@ -383,7 +383,7 @@ func (s *Server) Run() {
 		ctx = context.TODO()
 	)
 	if err := s.Start(); err != nil {
-		s.Logger().Fatal(ctx, err)
+		s.Logger().Fatalf(ctx, `%+v`, err)
 	}
 	// Blocking using channel.
 	<-s.closeChan
@@ -512,7 +512,7 @@ func (s *Server) startServer(fdMap listenerFdMap) {
 			}
 			// The process exits if the server is closed with none closing error.
 			if err != nil && !strings.EqualFold(http.ErrServerClosed.Error(), err.Error()) {
-				s.Logger().Fatal(ctx, err)
+				s.Logger().Fatalf(ctx, `%+v`, err)
 			}
 			// If all the underlying servers shutdown, the process exits.
 			if s.serverCount.Add(-1) < 1 {

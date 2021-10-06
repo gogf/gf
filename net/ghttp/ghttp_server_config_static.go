@@ -56,7 +56,7 @@ func (s *Server) SetServerRoot(root string) {
 	)
 	if !gres.Contains(realPath) {
 		if p, err := gfile.Search(root); err != nil {
-			s.Logger().Fatal(ctx, `SetServerRoot failed: %v`, err)
+			s.Logger().Fatalf(ctx, `SetServerRoot failed: %+v`, err)
 		} else {
 			realPath = p
 		}
@@ -74,7 +74,7 @@ func (s *Server) AddSearchPath(path string) {
 	)
 	if !gres.Contains(realPath) {
 		if p, err := gfile.Search(path); err != nil {
-			s.Logger().Fatalf(ctx, `AddSearchPath failed: %v`, err)
+			s.Logger().Fatalf(ctx, `AddSearchPath failed: %+v`, err)
 		} else {
 			realPath = p
 		}
@@ -91,7 +91,7 @@ func (s *Server) AddStaticPath(prefix string, path string) {
 	)
 	if !gres.Contains(realPath) {
 		if p, err := gfile.Search(path); err != nil {
-			s.Logger().Fatalf(ctx, `AddStaticPath failed: %v`, err)
+			s.Logger().Fatalf(ctx, `AddStaticPath failed: %+v`, err)
 		} else {
 			realPath = p
 		}

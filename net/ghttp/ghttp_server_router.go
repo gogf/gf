@@ -75,11 +75,11 @@ func (s *Server) setHandler(ctx context.Context, pattern string, handler *handle
 	}
 	domain, method, uri, err := s.parsePattern(pattern)
 	if err != nil {
-		s.Logger().Fatal(ctx, "invalid pattern:", pattern, err)
+		s.Logger().Fatalf(ctx, `invalid pattern "%s", %+v`, pattern, err)
 		return
 	}
 	if len(uri) == 0 || uri[0] != '/' {
-		s.Logger().Fatal(ctx, "invalid pattern:", pattern, "URI should lead with '/'")
+		s.Logger().Fatalf(ctx, `invalid pattern "%s", URI should lead with '/'`, pattern)
 		return
 	}
 

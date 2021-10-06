@@ -64,7 +64,7 @@ func (s *Server) doBindObject(ctx context.Context, pattern string, object interf
 	// it removes for convenience for next statement control.
 	domain, method, path, err := s.parsePattern(pattern)
 	if err != nil {
-		s.Logger().Fatal(ctx, err)
+		s.Logger().Fatalf(ctx, `%+v`, err)
 		return
 	}
 	if strings.EqualFold(method, defaultMethod) {
@@ -109,7 +109,7 @@ func (s *Server) doBindObject(ctx context.Context, pattern string, object interf
 
 		funcInfo, err := s.checkAndCreateFuncInfo(v.Method(i).Interface(), pkgPath, objName, methodName)
 		if err != nil {
-			s.Logger().Fatal(ctx, err)
+			s.Logger().Fatalf(ctx, `%+v`, err)
 		}
 
 		key := s.mergeBuildInNameToPattern(pattern, structName, methodName, true)
@@ -165,11 +165,13 @@ func (s *Server) doBindObjectMethod(ctx context.Context, pattern string, object 
 		v = newValue
 		t = v.Type()
 	}
-	structName := t.Elem().Name()
-	methodName := strings.TrimSpace(method)
-	methodValue := v.MethodByName(methodName)
+	var (
+		structName  = t.Elem().Name()
+		methodName  = strings.TrimSpace(method)
+		methodValue = v.MethodByName(methodName)
+	)
 	if !methodValue.IsValid() {
-		s.Logger().Fatal(ctx, "invalid method name: "+methodName)
+		s.Logger().Fatalf(ctx, "invalid method name: %s", methodName)
 		return
 	}
 	if v.MethodByName("Init").IsValid() {
@@ -178,16 +180,18 @@ func (s *Server) doBindObjectMethod(ctx context.Context, pattern string, object 
 	if v.MethodByName("Shut").IsValid() {
 		shutFunc = v.MethodByName("Shut").Interface().(func(*Request))
 	}
-	pkgPath := t.Elem().PkgPath()
-	pkgName := gfile.Basename(pkgPath)
-	objName := gstr.Replace(t.String(), fmt.Sprintf(`%s.`, pkgName), "")
+	var (
+		pkgPath = t.Elem().PkgPath()
+		pkgName = gfile.Basename(pkgPath)
+		objName = gstr.Replace(t.String(), fmt.Sprintf(`%s.`, pkgName), "")
+	)
 	if objName[0] == '*' {
 		objName = fmt.Sprintf(`(%s)`, objName)
 	}
 
 	funcInfo, err := s.checkAndCreateFuncInfo(methodValue.Interface(), pkgPath, objName, methodName)
 	if err != nil {
-		s.Logger().Fatal(ctx, err)
+		s.Logger().Fatalf(ctx, `%+v`, err)
 	}
 
 	key := s.mergeBuildInNameToPattern(pattern, structName, methodName, false)
@@ -241,7 +245,7 @@ func (s *Server) doBindObjectRest(ctx context.Context, pattern string, object in
 
 		funcInfo, err := s.checkAndCreateFuncInfo(v.Method(i).Interface(), pkgPath, objName, methodName)
 		if err != nil {
-			s.Logger().Fatal(ctx, err)
+			s.Logger().Fatalf(ctx, `%+v`, err)
 		}
 
 		key := s.mergeBuildInNameToPattern(methodName+":"+pattern, structName, methodName, false)
