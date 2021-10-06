@@ -123,3 +123,40 @@ func TestOpenApiV3_Add(t *testing.T) {
 		t.Assert(len(oai.Paths[`/test2/{appId}`].Post.Parameters), 2)
 	})
 }
+
+func TestOpenApiV3_Add_Recursive(t *testing.T) {
+	type CategoryTreeItem struct {
+		Id       uint                `json:"id"`
+		ParentId uint                `json:"parent_id"`
+		Items    []*CategoryTreeItem `json:"items,omitempty"`
+	}
+
+	type CategoryGetTreeReq struct {
+		gmeta.Meta  `path:"/category-get-tree" method:"GET" tags:"default"`
+		ContentType string `in:"query"`
+	}
+	type CategoryGetTreeRes struct {
+		List []*CategoryTreeItem
+	}
+
+	f := func(ctx context.Context, req *CategoryGetTreeReq) (res *CategoryGetTreeRes, err error) {
+		return
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err error
+			oai = goai.New()
+		)
+		err = oai.Add(goai.AddInput{
+			Path:   "/tree",
+			Object: f,
+		})
+		t.AssertNil(err)
+		t.AssertNil(err)
+		// Schema asserts.
+		t.Assert(len(oai.Components.Schemas), 3)
+		t.Assert(oai.Components.Schemas[`CategoryTreeItem`].Value.Type, goai.TypeObject)
+		t.Assert(len(oai.Components.Schemas[`CategoryTreeItem`].Value.Properties), 3)
+	})
+}
