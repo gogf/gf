@@ -9,11 +9,13 @@ package g
 import (
 	"context"
 	"github.com/gogf/gf/container/gvar"
+	"github.com/gogf/gf/util/gmeta"
 )
 
 type (
-	Var = gvar.Var        // Var is a universal variable interface, like generics.
-	Ctx = context.Context // Ctx is alias of frequently-used context.Context.
+	Var  = gvar.Var        // Var is a universal variable interface, like generics.
+	Ctx  = context.Context // Ctx is alias of frequently-used type context.Context.
+	Meta = gmeta.Meta      // Meta is alias of frequently-used type gmeta.Meta.
 )
 
 type (

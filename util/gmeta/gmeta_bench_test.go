@@ -7,11 +7,8 @@
 package gmeta_test
 
 import (
-	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/util/gmeta"
 	"testing"
-
-	"github.com/gogf/gf/test/gtest"
 )
 
 type A struct {
@@ -59,20 +56,4 @@ func Benchmark_Data_Get_Pointer2(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		gmeta.Get(&a2, "tag")
 	}
-}
-
-func TestMeta_Basic(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		a := &A{
-			Id:   100,
-			Name: "john",
-		}
-		t.Assert(len(gmeta.Data(a)), 2)
-		t.Assert(gmeta.Get(a, "tag").String(), "123")
-		t.Assert(gmeta.Get(a, "orm").String(), "456")
-
-		b, err := json.Marshal(a)
-		t.AssertNil(err)
-		t.Assert(b, `{"Id":100,"Name":"john"}`)
-	})
 }
