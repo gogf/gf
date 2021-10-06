@@ -17,8 +17,6 @@ import (
 	"net/http"
 	"reflect"
 	"time"
-
-	_ "github.com/gogf/gf/net/ghttp/internal/swaggerui"
 )
 
 type (
