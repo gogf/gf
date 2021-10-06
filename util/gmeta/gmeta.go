@@ -12,16 +12,16 @@ import (
 	"github.com/gogf/gf/internal/structs"
 )
 
-// Meta is used as an embedded attribute for struct to enabled meta data feature.
+// Meta is used as an embedded attribute for struct to enabled metadata feature.
 type Meta struct{}
 
 const (
-	// metaAttributeName is the attribute name of meta data in struct.
+	// metaAttributeName is the attribute name of metadata in struct.
 	metaAttributeName = "Meta"
 )
 
 // Data retrieves and returns all metadata from `object`.
-// It automatically parses and caches the tag string from "Mata" attribute as its meta data.
+// It automatically parses and caches the tag string from "Mata" attribute as its metadata.
 func Data(object interface{}) map[string]interface{} {
 	reflectType, err := structs.StructType(object)
 	if err != nil {
@@ -42,5 +42,9 @@ func Data(object interface{}) map[string]interface{} {
 
 // Get retrieves and returns specified metadata by `key` from `object`.
 func Get(object interface{}, key string) *gvar.Var {
-	return gvar.New(Data(object)[key])
+	v := Data(object)[key]
+	if v == nil {
+		return nil
+	}
+	return gvar.New(v)
 }
