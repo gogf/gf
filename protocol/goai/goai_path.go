@@ -97,9 +97,9 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		in.Path = gmeta.Get(inputObject.Interface(), TagNamePath).String()
 	}
 	if in.Path == "" {
-		return gerror.NewCode(
+		return gerror.NewCodef(
 			gcode.CodeMissingParameter,
-			`missing necessary path parameter "%s" for input struct "%s"`,
+			`missing necessary path parameter "%s" for input struct "%s", missing tag in attribute Meta?`,
 			TagNamePath, inputStructTypeName,
 		)
 	}
@@ -108,10 +108,10 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		in.Method = gmeta.Get(inputObject.Interface(), TagNameMethod).String()
 	}
 	if in.Method == "" {
-		return gerror.NewCode(
+		return gerror.NewCodef(
 			gcode.CodeMissingParameter,
-			`missing necessary method parameter "%s" for input struct "%s"`,
-			TagNamePath, inputStructTypeName,
+			`missing necessary method parameter "%s" for input struct "%s", missing tag in attribute Meta?`,
+			TagNameMethod, inputStructTypeName,
 		)
 	}
 
@@ -121,10 +121,10 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 
 	if len(inputMetaMap) > 0 {
 		if err := gconv.Struct(inputMetaMap, &path); err != nil {
-			return gerror.WrapCodef(gcode.CodeInternalError, err, `mapping struct tags to Path failed`)
+			return gerror.WrapCode(gcode.CodeInternalError, err, `mapping struct tags to Path failed`)
 		}
 		if err := gconv.Struct(inputMetaMap, &operation); err != nil {
-			return gerror.WrapCodef(gcode.CodeInternalError, err, `mapping struct tags to Operation failed`)
+			return gerror.WrapCode(gcode.CodeInternalError, err, `mapping struct tags to Operation failed`)
 		}
 	}
 	// Request.
@@ -174,7 +174,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		)
 		if len(outputMetaMap) > 0 {
 			if err := gconv.Struct(outputMetaMap, &response); err != nil {
-				return gerror.WrapCodef(gcode.CodeInternalError, err, `mapping struct tags to Response failed`)
+				return gerror.WrapCode(gcode.CodeInternalError, err, `mapping struct tags to Response failed`)
 			}
 		}
 		// Supported mime types of response.

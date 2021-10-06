@@ -7,6 +7,7 @@
 package ghttp
 
 import (
+	"context"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/protocol/goai"
 	"github.com/gogf/gf/text/gstr"
@@ -18,6 +19,7 @@ func (s *Server) initOpenApi() {
 		return
 	}
 	var (
+		ctx    = context.TODO()
 		err    error
 		method string
 	)
@@ -37,7 +39,7 @@ func (s *Server) initOpenApi() {
 				Object: item.Handler.Info.Value.Interface(),
 			})
 			if err != nil {
-				panic(err)
+				s.Logger().Fatalf(ctx, `%+v`, err)
 			}
 		}
 	}
