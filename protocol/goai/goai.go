@@ -16,6 +16,7 @@ import (
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
 	"github.com/gogf/gf/internal/json"
+	"github.com/gogf/gf/text/gstr"
 	"reflect"
 )
 
@@ -140,4 +141,8 @@ func (oai OpenApiV3) String() string {
 
 func formatRefToBytes(ref string) []byte {
 	return []byte(fmt.Sprintf(`{"$ref":"#/components/schemas/%s"}`, ref))
+}
+
+func golangTypeToSchemaName(t reflect.Type) string {
+	return gstr.TrimLeft(t.String(), "*")
 }

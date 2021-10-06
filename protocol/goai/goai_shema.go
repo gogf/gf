@@ -76,7 +76,7 @@ func (oai *OpenApiV3) doAddSchemaSingle(object interface{}) error {
 
 	var (
 		reflectType    = reflect.TypeOf(object)
-		structTypeName = gstr.SubStrFromREx(reflectType.String(), ".")
+		structTypeName = golangTypeToSchemaName(reflectType)
 	)
 
 	// Already added.
