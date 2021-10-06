@@ -326,10 +326,10 @@ func (s *Server) GetRoutes() []RouterItem {
 				Handler:    registeredItem.Handler,
 			}
 			switch item.Handler.Type {
-			case handlerTypeController, handlerTypeObject, handlerTypeHandler:
+			case HandlerTypeObject, HandlerTypeHandler:
 				item.IsServiceHandler = true
 
-			case handlerTypeMiddleware:
+			case HandlerTypeMiddleware:
 				item.Middleware = "GLOBAL MIDDLEWARE"
 			}
 			if len(item.Handler.Middleware) > 0 {
@@ -351,9 +351,9 @@ func (s *Server) GetRoutes() []RouterItem {
 					if r = strings.Compare(item1.Domain, item2.Domain); r == 0 {
 						if r = strings.Compare(item1.Route, item2.Route); r == 0 {
 							if r = strings.Compare(item1.Method, item2.Method); r == 0 {
-								if item1.Handler.Type == handlerTypeMiddleware && item2.Handler.Type != handlerTypeMiddleware {
+								if item1.Handler.Type == HandlerTypeMiddleware && item2.Handler.Type != HandlerTypeMiddleware {
 									return -1
-								} else if item1.Handler.Type == handlerTypeMiddleware && item2.Handler.Type == handlerTypeMiddleware {
+								} else if item1.Handler.Type == HandlerTypeMiddleware && item2.Handler.Type == HandlerTypeMiddleware {
 									return 1
 								} else if r = strings.Compare(item1.Middleware, item2.Middleware); r == 0 {
 									r = item2.Priority - item1.Priority
@@ -390,9 +390,9 @@ func (s *Server) Run() {
 	// Remove plugins.
 	if len(s.plugins) > 0 {
 		for _, p := range s.plugins {
-			intlog.Printf(context.TODO(), `remove plugin: %s`, p.Name())
+			intlog.Printf(ctx, `remove plugin: %s`, p.Name())
 			if err := p.Remove(); err != nil {
-				intlog.Errorf(context.TODO(), "%+v", err)
+				intlog.Errorf(ctx, "%+v", err)
 			}
 		}
 	}

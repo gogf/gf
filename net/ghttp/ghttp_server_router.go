@@ -87,7 +87,7 @@ func (s *Server) setHandler(ctx context.Context, pattern string, handler *handle
 	routerKey := s.routerMapKey(handler.HookName, method, uri, domain)
 	if !s.config.RouteOverWrite {
 		switch handler.Type {
-		case handlerTypeHandler, handlerTypeObject, handlerTypeController:
+		case HandlerTypeHandler, HandlerTypeObject:
 			if item, ok := s.routesMap[routerKey]; ok {
 				s.Logger().Fatalf(
 					ctx,
@@ -200,7 +200,7 @@ func (s *Server) setHandler(ctx context.Context, pattern string, handler *handle
 		Handler: handler,
 	}
 	switch handler.Type {
-	case handlerTypeHandler, handlerTypeObject, handlerTypeController:
+	case HandlerTypeHandler, HandlerTypeObject:
 		// Overwrite the route.
 		s.routesMap[routerKey] = []registeredRouteItem{routeItem}
 	default:
@@ -219,11 +219,11 @@ func (s *Server) setHandler(ctx context.Context, pattern string, handler *handle
 // 3. Route type: {xxx} > :xxx > *xxx.
 func (s *Server) compareRouterPriority(newItem *handlerItem, oldItem *handlerItem) bool {
 	// If they're all type of middleware, the priority is according their registered sequence.
-	if newItem.Type == handlerTypeMiddleware && oldItem.Type == handlerTypeMiddleware {
+	if newItem.Type == HandlerTypeMiddleware && oldItem.Type == HandlerTypeMiddleware {
 		return false
 	}
 	// The middleware has the most high priority.
-	if newItem.Type == handlerTypeMiddleware && oldItem.Type != handlerTypeMiddleware {
+	if newItem.Type == HandlerTypeMiddleware && oldItem.Type != HandlerTypeMiddleware {
 		return true
 	}
 	// URI: The deeper the higher (simply check the count of char '/' in the URI).
@@ -324,7 +324,7 @@ func (s *Server) compareRouterPriority(newItem *handlerItem, oldItem *handlerIte
 
 	// If they have different router type,
 	// the new router item has more priority than the other one.
-	if newItem.Type == handlerTypeHandler || newItem.Type == handlerTypeObject || newItem.Type == handlerTypeController {
+	if newItem.Type == HandlerTypeHandler || newItem.Type == HandlerTypeObject {
 		return true
 	}
 

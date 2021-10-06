@@ -22,6 +22,10 @@ func (s *Server) initOpenApi() {
 		method string
 	)
 	for _, item := range s.GetRoutes() {
+		switch item.Type {
+		case HandlerTypeMiddleware, HandlerTypeHook:
+			continue
+		}
 		method = item.Method
 		if gstr.Equal(method, defaultMethod) {
 			method = "POST"

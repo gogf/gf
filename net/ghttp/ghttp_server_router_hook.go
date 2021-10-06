@@ -20,7 +20,7 @@ func (s *Server) BindHookHandler(pattern string, hook string, handler HandlerFun
 
 func (s *Server) doBindHookHandler(ctx context.Context, pattern string, hook string, handler HandlerFunc, source string) {
 	s.setHandler(ctx, pattern, &handlerItem{
-		Type: handlerTypeHook,
+		Type: HandlerTypeHook,
 		Name: gdebug.FuncPath(handler),
 		Info: handlerFuncInfo{
 			Func: handler,

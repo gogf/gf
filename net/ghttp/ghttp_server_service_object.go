@@ -115,7 +115,7 @@ func (s *Server) doBindObject(ctx context.Context, pattern string, object interf
 		key := s.mergeBuildInNameToPattern(pattern, structName, methodName, true)
 		m[key] = &handlerItem{
 			Name:       fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, methodName),
-			Type:       handlerTypeObject,
+			Type:       HandlerTypeObject,
 			Info:       funcInfo,
 			InitFunc:   initFunc,
 			ShutFunc:   shutFunc,
@@ -137,7 +137,7 @@ func (s *Server) doBindObject(ctx context.Context, pattern string, object interf
 			}
 			m[k] = &handlerItem{
 				Name:       fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, methodName),
-				Type:       handlerTypeObject,
+				Type:       HandlerTypeObject,
 				Info:       funcInfo,
 				InitFunc:   initFunc,
 				ShutFunc:   shutFunc,
@@ -197,7 +197,7 @@ func (s *Server) doBindObjectMethod(ctx context.Context, pattern string, object 
 	key := s.mergeBuildInNameToPattern(pattern, structName, methodName, false)
 	m[key] = &handlerItem{
 		Name:       fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, methodName),
-		Type:       handlerTypeObject,
+		Type:       HandlerTypeObject,
 		Info:       funcInfo,
 		InitFunc:   initFunc,
 		ShutFunc:   shutFunc,
@@ -251,7 +251,7 @@ func (s *Server) doBindObjectRest(ctx context.Context, pattern string, object in
 		key := s.mergeBuildInNameToPattern(methodName+":"+pattern, structName, methodName, false)
 		m[key] = &handlerItem{
 			Name:       fmt.Sprintf(`%s.%s.%s`, pkgPath, objName, methodName),
-			Type:       handlerTypeObject,
+			Type:       HandlerTypeObject,
 			Info:       funcInfo,
 			InitFunc:   initFunc,
 			ShutFunc:   shutFunc,
