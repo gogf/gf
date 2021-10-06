@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/net/ghttp/internal/swaggerui"
 	"github.com/gogf/gf/protocol/goai"
 	"github.com/gogf/gf/text/gstr"
 	"net/http"
@@ -126,6 +127,7 @@ func (s *Server) Start() error {
 
 	// Swagger UI.
 	if s.config.SwaggerPath != "" {
+		swaggerui.InitSwaggerUI()
 		s.AddStaticPath(s.config.SwaggerPath, swaggerUIPackedPath)
 		s.BindHookHandler(s.config.SwaggerPath+"/*", HookBeforeServe, s.swaggerUI)
 		s.Logger().Debugf(
