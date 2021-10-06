@@ -159,7 +159,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 				// Serving handler can only be added to the handler array just once.
 				if hasServe {
 					switch item.Type {
-					case handlerTypeHandler, handlerTypeObject, handlerTypeController:
+					case HandlerTypeHandler, HandlerTypeObject:
 						continue
 					}
 				}
@@ -180,14 +180,14 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 						}
 						switch item.Type {
 						// The serving handler can be only added just once.
-						case handlerTypeHandler, handlerTypeObject, handlerTypeController:
+						case HandlerTypeHandler, HandlerTypeObject:
 							hasServe = true
 							parsedItemList.PushBack(parsedItem)
 
 						// The middleware is inserted before the serving handler.
 						// If there are multiple middleware, they're inserted into the result list by their registering order.
 						// The middleware is also executed by their registered order.
-						case handlerTypeMiddleware:
+						case HandlerTypeMiddleware:
 							if lastMiddlewareElem == nil {
 								lastMiddlewareElem = parsedItemList.PushFront(parsedItem)
 							} else {
@@ -195,12 +195,12 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 							}
 
 						// HOOK handler, just push it back to the list.
-						case handlerTypeHook:
+						case HandlerTypeHook:
 							hasHook = true
 							parsedItemList.PushBack(parsedItem)
 
 						default:
-							panic(gerror.NewCodef(gcode.CodeInternalError, `invalid handler type %d`, item.Type))
+							panic(gerror.NewCodef(gcode.CodeInternalError, `invalid handler type %s`, item.Type))
 						}
 					}
 				}
@@ -221,7 +221,7 @@ func (s *Server) searchHandlers(method, path, domain string) (parsedItems []*han
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (item *handlerItem) MarshalJSON() ([]byte, error) {
 	switch item.Type {
-	case handlerTypeHook:
+	case HandlerTypeHook:
 		return json.Marshal(
 			fmt.Sprintf(
 				`%s %s:%s (%s)`,
@@ -231,7 +231,7 @@ func (item *handlerItem) MarshalJSON() ([]byte, error) {
 				item.HookName,
 			),
 		)
-	case handlerTypeMiddleware:
+	case HandlerTypeMiddleware:
 		return json.Marshal(
 			fmt.Sprintf(
 				`%s %s:%s (MIDDLEWARE)`,

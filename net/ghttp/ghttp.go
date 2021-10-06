@@ -52,7 +52,7 @@ type (
 		Server           string       // Server name.
 		Address          string       // Listening address.
 		Domain           string       // Bound domain.
-		Type             int          // Router type.
+		Type             string       // Router type.
 		Middleware       string       // Bound middleware.
 		Method           string       // Handler method name.
 		Route            string       // Route URI.
@@ -75,7 +75,7 @@ type (
 	handlerItem struct {
 		Id         int             // Unique handler item id mark.
 		Name       string          // Handler name, which is automatically retrieved from runtime stack when registered.
-		Type       int             // Handler type: object/handler/controller/middleware/hook.
+		Type       string          // Handler type: object/handler/middleware/hook.
 		Info       handlerFuncInfo // Handler function information.
 		InitFunc   HandlerFunc     // Initialization function when request enters the object (only available for object register type).
 		ShutFunc   HandlerFunc     // Shutdown function when request leaves out the object (only available for object register type).
@@ -111,22 +111,24 @@ const (
 	ServerStatusRunning   = 1
 	DefaultServerName     = "default"
 	DefaultDomainName     = "default"
-	supportedHttpMethods  = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
-	defaultMethod         = "ALL"
-	handlerTypeHandler    = 1
-	handlerTypeObject     = 2
-	handlerTypeController = 3
-	handlerTypeMiddleware = 4
-	handlerTypeHook       = 5
-	exceptionExit         = "exit"
-	exceptionExitAll      = "exit_all"
-	exceptionExitHook     = "exit_hook"
-	routeCacheDuration    = time.Hour
-	methodNameInit        = "Init"
-	methodNameShut        = "Shut"
-	methodNameExit        = "Exit"
-	ctxKeyForRequest      = "gHttpRequestObject"
-	swaggerUIPackedPath   = "/goframe/swaggerui"
+	HandlerTypeHandler    = "handler"
+	HandlerTypeObject     = "object"
+	HandlerTypeMiddleware = "middleware"
+	HandlerTypeHook       = "hook"
+)
+
+const (
+	supportedHttpMethods = "GET,PUT,POST,DELETE,PATCH,HEAD,CONNECT,OPTIONS,TRACE"
+	defaultMethod        = "ALL"
+	exceptionExit        = "exit"
+	exceptionExitAll     = "exit_all"
+	exceptionExitHook    = "exit_hook"
+	routeCacheDuration   = time.Hour
+	methodNameInit       = "Init"
+	methodNameShut       = "Shut"
+	methodNameExit       = "Exit"
+	ctxKeyForRequest     = "gHttpRequestObject"
+	swaggerUIPackedPath  = "/goframe/swaggerui"
 )
 
 var (

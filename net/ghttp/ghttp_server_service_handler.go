@@ -39,7 +39,7 @@ func (s *Server) BindHandler(pattern string, handler interface{}) {
 func (s *Server) doBindHandler(ctx context.Context, pattern string, funcInfo handlerFuncInfo, middleware []HandlerFunc, source string) {
 	s.setHandler(ctx, pattern, &handlerItem{
 		Name:       gdebug.FuncPath(funcInfo.Func),
-		Type:       handlerTypeHandler,
+		Type:       HandlerTypeHandler,
 		Info:       funcInfo,
 		Middleware: middleware,
 		Source:     source,
