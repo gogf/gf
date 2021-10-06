@@ -31,18 +31,21 @@ func (m *Model) Fields(fieldNamesOrMapStruct ...interface{}) *Model {
 		))
 	// It needs type asserting.
 	case length == 1:
-		switch r := fieldNamesOrMapStruct[0].(type) {
+		structOrMap := fieldNamesOrMapStruct[0]
+		switch r := structOrMap.(type) {
 		case string:
 			return m.appendFieldsByStr(gstr.Join(
 				m.mappingAndFilterToTableFields([]string{r}, false), ",",
 			))
+
 		case []string:
 			return m.appendFieldsByStr(gstr.Join(
 				m.mappingAndFilterToTableFields(r, true), ",",
 			))
+
 		default:
 			return m.appendFieldsByStr(gstr.Join(
-				m.mappingAndFilterToTableFields(getFieldsFromStructOrMap(r), true), ",",
+				m.mappingAndFilterToTableFields(getFieldsFromStructOrMap(structOrMap), true), ",",
 			))
 		}
 	}

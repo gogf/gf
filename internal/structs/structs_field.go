@@ -116,6 +116,9 @@ type FieldsInput struct {
 	// RecursiveOption specifies the way retrieving the fields recursively if the attribute
 	// is an embedded struct. It is RecursiveOptionNone in default.
 	RecursiveOption int
+
+	// fieldFilterMap is used internally for repeated fields filtering.
+	fieldFilterMap map[string]struct{}
 }
 
 type FieldMapInput struct {
@@ -133,23 +136,23 @@ type FieldMapInput struct {
 
 // Fields retrieves and returns the fields of `pointer` as slice.
 func Fields(in FieldsInput) ([]*Field, error) {
+	if in.fieldFilterMap == nil {
+		in.fieldFilterMap = make(map[string]struct{})
+	}
 	var (
-		fieldFilterMap  = make(map[string]struct{})
 		retrievedFields = make([]*Field, 0)
 	)
 	rangeFields, err := getFieldValues(in.Pointer)
 	if err != nil {
 		return nil, err
 	}
-	for index := 0; index < len(rangeFields); {
+	for index := 0; index < len(rangeFields); index++ {
 		field := rangeFields[index]
-		if _, ok := fieldFilterMap[field.Name()]; ok {
-			index++
+		if _, ok := in.fieldFilterMap[field.Name()]; ok {
 			continue
 		}
-		// Only retrieve exported attributes.
+		// It only retrieves exported attributes.
 		if !field.IsExported() {
-			index++
 			continue
 		}
 		if field.IsEmbedded() {
@@ -164,21 +167,19 @@ func Fields(in FieldsInput) ([]*Field, error) {
 					structFields, err := Fields(FieldsInput{
 						Pointer:         field.Value,
 						RecursiveOption: in.RecursiveOption,
+						fieldFilterMap:  in.fieldFilterMap,
 					})
 					if err != nil {
 						return nil, err
 					}
-					structFields = append(structFields, rangeFields[index+1:]...)
-					rangeFields = structFields
+					retrievedFields = append(retrievedFields, structFields...)
 					continue
 				}
 			}
-			index++
 			continue
 		}
-		fieldFilterMap[field.Name()] = struct{}{}
+		in.fieldFilterMap[field.Name()] = struct{}{}
 		retrievedFields = append(retrievedFields, field)
-		index++
 	}
 	return retrievedFields, nil
 }
