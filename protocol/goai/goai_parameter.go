@@ -59,7 +59,7 @@ func (oai *OpenApiV3) newParameterRefWithStructMethod(field *structs.Field) (*Pa
 	if len(tagMap) > 0 {
 		err := gconv.Struct(tagMap, parameter)
 		if err != nil {
-			return nil, gerror.WrapCodef(gcode.CodeInternalError, err, `mapping struct tags to Parameter failed`)
+			return nil, gerror.WrapCode(gcode.CodeInternalError, err, `mapping struct tags to Parameter failed`)
 		}
 	}
 	// Required for path parameter.
