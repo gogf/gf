@@ -28,7 +28,7 @@ func (s *Server) initOpenApi() {
 		}
 		method = item.Method
 		if gstr.Equal(method, defaultMethod) {
-			method = "POST"
+			method = ""
 		}
 		if item.Handler.Info.Func == nil {
 			err = s.openapi.Add(goai.AddInput{
