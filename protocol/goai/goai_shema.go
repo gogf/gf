@@ -107,7 +107,7 @@ func (oai *OpenApiV3) doAddSchemaSingle(object interface{}) error {
 			fieldName = jsonName
 		}
 		schemaRef, err := oai.newSchemaRefWithGolangType(
-			structField.Type(),
+			structField.Type().Type,
 			structField.TagMap(),
 		)
 		if err != nil {
