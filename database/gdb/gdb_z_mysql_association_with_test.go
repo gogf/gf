@@ -1962,20 +1962,20 @@ PRIMARY KEY (id)
 	db.SetDebug(true)
 	defer db.SetDebug(false)
 
-	gtest.C(t, func(t *gtest.T) {
-		var user *User
-		err := db.Model(tableUser).WithAll().Where("id", 3).Scan(&user)
-		t.AssertNil(err)
-		t.Assert(user.ID, 3)
-		t.AssertNE(user.UserDetail, nil)
-		t.Assert(user.UserDetail.UserID, 3)
-		t.Assert(user.UserDetail.Address, `address_3`)
-		t.Assert(len(user.UserScores), 5)
-		t.Assert(user.UserScores[0].UserID, 3)
-		t.Assert(user.UserScores[0].Score, 1)
-		t.Assert(user.UserScores[4].UserID, 3)
-		t.Assert(user.UserScores[4].Score, 5)
-	})
+	//gtest.C(t, func(t *gtest.T) {
+	//	var user *User
+	//	err := db.Model(tableUser).WithAll().Where("id", 3).Scan(&user)
+	//	t.AssertNil(err)
+	//	t.Assert(user.ID, 3)
+	//	t.AssertNE(user.UserDetail, nil)
+	//	t.Assert(user.UserDetail.UserID, 3)
+	//	t.Assert(user.UserDetail.Address, `address_3`)
+	//	t.Assert(len(user.UserScores), 5)
+	//	t.Assert(user.UserScores[0].UserID, 3)
+	//	t.Assert(user.UserScores[0].Score, 1)
+	//	t.Assert(user.UserScores[4].UserID, 3)
+	//	t.Assert(user.UserScores[4].Score, 5)
+	//})
 	gtest.C(t, func(t *gtest.T) {
 		var user User
 		err := db.Model(tableUser).WithAll().Where("id", 4).Scan(&user)

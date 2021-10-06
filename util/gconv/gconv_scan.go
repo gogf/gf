@@ -40,7 +40,6 @@ func Scan(params interface{}, pointer interface{}, mapping ...map[string]string)
 	if pointerKind != reflect.Ptr {
 		return gerror.NewCodef(gcode.CodeInvalidParameter, "params should be type of pointer, but got type: %v", pointerKind)
 	}
-
 	// Direct assignment checks!
 	var (
 		paramsType  reflect.Type

@@ -132,8 +132,35 @@ func Test_Fields_WithEmbedded(t *testing.T) {
 			Age  int
 		}
 		type A struct {
-			B
 			Site  string
+			B     // Should be put here to validate its index.
+			Score int64
+		}
+		r, err := structs.Fields(structs.FieldsInput{
+			Pointer:         new(A),
+			RecursiveOption: structs.RecursiveOptionEmbeddedNoTag,
+		})
+		t.AssertNil(err)
+		t.Assert(len(r), 4)
+		t.Assert(r[0].Name(), `Site`)
+		t.Assert(r[1].Name(), `Name`)
+		t.Assert(r[2].Name(), `Age`)
+		t.Assert(r[3].Name(), `Score`)
+	})
+}
+
+// Filter repeated fields when there is embedded struct.
+func Test_Fields_WithEmbedded_Filter(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type B struct {
+			Name string
+			Age  int
+		}
+		type A struct {
+			Name  string
+			Site  string
+			Age   string
+			B     // Should be put here to validate its index.
 			Score int64
 		}
 		r, err := structs.Fields(structs.FieldsInput{
@@ -143,8 +170,8 @@ func Test_Fields_WithEmbedded(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(len(r), 4)
 		t.Assert(r[0].Name(), `Name`)
-		t.Assert(r[1].Name(), `Age`)
-		t.Assert(r[2].Name(), `Site`)
+		t.Assert(r[1].Name(), `Site`)
+		t.Assert(r[2].Name(), `Age`)
 		t.Assert(r[3].Name(), `Score`)
 	})
 }
