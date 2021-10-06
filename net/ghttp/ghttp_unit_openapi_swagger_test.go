@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/util/gmeta"
 	"testing"
 	"time"
 
@@ -21,8 +22,9 @@ import (
 
 func Test_OpenApi_Swagger(t *testing.T) {
 	type TestReq struct {
-		Age  int
-		Name string
+		gmeta.Meta `method:"get" summary:"Test summary" tags:"Test"`
+		Age        int
+		Name       string
 	}
 	type TestRes struct {
 		Id   int
