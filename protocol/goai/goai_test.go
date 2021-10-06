@@ -47,13 +47,13 @@ func Test_Basic(t *testing.T) {
 		t.AssertNil(err)
 		// Schema asserts.
 		t.Assert(len(oai.Components.Schemas), 2)
-		t.Assert(oai.Components.Schemas[`CreateResourceReq`].Value.Type, goai.TypeObject)
-		t.Assert(len(oai.Components.Schemas[`CreateResourceReq`].Value.Properties), 7)
-		t.Assert(oai.Components.Schemas[`CreateResourceReq`].Value.Properties[`appId`].Value.Type, goai.TypeNumber)
-		t.Assert(oai.Components.Schemas[`CreateResourceReq`].Value.Properties[`resourceId`].Value.Type, goai.TypeString)
+		t.Assert(oai.Components.Schemas[`goai_test.CreateResourceReq`].Value.Type, goai.TypeObject)
+		t.Assert(len(oai.Components.Schemas[`goai_test.CreateResourceReq`].Value.Properties), 7)
+		t.Assert(oai.Components.Schemas[`goai_test.CreateResourceReq`].Value.Properties[`appId`].Value.Type, goai.TypeNumber)
+		t.Assert(oai.Components.Schemas[`goai_test.CreateResourceReq`].Value.Properties[`resourceId`].Value.Type, goai.TypeString)
 
-		t.Assert(len(oai.Components.Schemas[`SetSpecInfo`].Value.Properties), 3)
-		t.Assert(oai.Components.Schemas[`SetSpecInfo`].Value.Properties[`Params`].Value.Type, goai.TypeArray)
+		t.Assert(len(oai.Components.Schemas[`goai_test.SetSpecInfo`].Value.Properties), 3)
+		t.Assert(oai.Components.Schemas[`goai_test.SetSpecInfo`].Value.Properties[`Params`].Value.Type, goai.TypeArray)
 	})
 }
 
@@ -107,13 +107,13 @@ func TestOpenApiV3_Add(t *testing.T) {
 		//fmt.Println(oai.String())
 		// Schema asserts.
 		t.Assert(len(oai.Components.Schemas), 3)
-		t.Assert(oai.Components.Schemas[`CreateResourceReq`].Value.Type, goai.TypeObject)
-		t.Assert(len(oai.Components.Schemas[`CreateResourceReq`].Value.Properties), 7)
-		t.Assert(oai.Components.Schemas[`CreateResourceReq`].Value.Properties[`appId`].Value.Type, goai.TypeNumber)
-		t.Assert(oai.Components.Schemas[`CreateResourceReq`].Value.Properties[`resourceId`].Value.Type, goai.TypeString)
+		t.Assert(oai.Components.Schemas[`goai_test.CreateResourceReq`].Value.Type, goai.TypeObject)
+		t.Assert(len(oai.Components.Schemas[`goai_test.CreateResourceReq`].Value.Properties), 7)
+		t.Assert(oai.Components.Schemas[`goai_test.CreateResourceReq`].Value.Properties[`appId`].Value.Type, goai.TypeNumber)
+		t.Assert(oai.Components.Schemas[`goai_test.CreateResourceReq`].Value.Properties[`resourceId`].Value.Type, goai.TypeString)
 
-		t.Assert(len(oai.Components.Schemas[`SetSpecInfo`].Value.Properties), 3)
-		t.Assert(oai.Components.Schemas[`SetSpecInfo`].Value.Properties[`Params`].Value.Type, goai.TypeArray)
+		t.Assert(len(oai.Components.Schemas[`goai_test.SetSpecInfo`].Value.Properties), 3)
+		t.Assert(oai.Components.Schemas[`goai_test.SetSpecInfo`].Value.Properties[`Params`].Value.Type, goai.TypeArray)
 
 		// Paths.
 		t.Assert(len(oai.Paths), 2)
@@ -157,8 +157,8 @@ func TestOpenApiV3_Add_Recursive(t *testing.T) {
 		t.AssertNil(err)
 		// Schema asserts.
 		t.Assert(len(oai.Components.Schemas), 3)
-		t.Assert(oai.Components.Schemas[`CategoryTreeItem`].Value.Type, goai.TypeObject)
-		t.Assert(len(oai.Components.Schemas[`CategoryTreeItem`].Value.Properties), 3)
+		t.Assert(oai.Components.Schemas[`goai_test.CategoryTreeItem`].Value.Type, goai.TypeObject)
+		t.Assert(len(oai.Components.Schemas[`goai_test.CategoryTreeItem`].Value.Properties), 3)
 	})
 }
 

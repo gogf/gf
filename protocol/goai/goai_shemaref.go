@@ -10,7 +10,6 @@ import (
 	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
 	"reflect"
 )
@@ -56,7 +55,7 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 	case
 		TypeObject:
 		var (
-			structTypeName = gstr.SubStrFromREx(golangType.String(), ".")
+			structTypeName = golangTypeToSchemaName(golangType)
 		)
 		// Specially for map type.
 		if golangType.Kind() == reflect.Map {
