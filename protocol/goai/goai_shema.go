@@ -78,10 +78,14 @@ func (oai *OpenApiV3) doAddSchemaSingle(object interface{}) error {
 		reflectType    = reflect.TypeOf(object)
 		structTypeName = gstr.SubStrFromREx(reflectType.String(), ".")
 	)
+
 	// Already added.
 	if _, ok := oai.Components.Schemas[structTypeName]; ok {
 		return nil
 	}
+	// Take the holder first.
+	oai.Components.Schemas[structTypeName] = SchemaRef{}
+
 	structFields, _ := structs.Fields(structs.FieldsInput{
 		Pointer:         object,
 		RecursiveOption: structs.RecursiveOptionEmbeddedNoTag,
