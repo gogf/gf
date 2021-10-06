@@ -13,7 +13,7 @@ type Operation struct {
 	Description  string                `json:"description,omitempty"  yaml:"description,omitempty"`
 	OperationID  string                `json:"operationId,omitempty"  yaml:"operationId,omitempty"`
 	Parameters   Parameters            `json:"parameters,omitempty"   yaml:"parameters,omitempty"`
-	RequestBody  RequestBodyRef        `json:"requestBody,omitempty"  yaml:"requestBody,omitempty"`
+	RequestBody  *RequestBodyRef       `json:"requestBody,omitempty"  yaml:"requestBody,omitempty"`
 	Responses    Responses             `json:"responses"              yaml:"responses"`
 	Deprecated   bool                  `json:"deprecated,omitempty"   yaml:"deprecated,omitempty"`
 	Callbacks    *Callbacks            `json:"callbacks,omitempty"    yaml:"callbacks,omitempty"`

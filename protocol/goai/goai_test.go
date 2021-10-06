@@ -8,6 +8,7 @@ package goai_test
 
 import (
 	"context"
+	"fmt"
 	"github.com/gogf/gf/protocol/goai"
 	"github.com/gogf/gf/test/gtest"
 	"github.com/gogf/gf/util/gmeta"
@@ -153,10 +154,36 @@ func TestOpenApiV3_Add_Recursive(t *testing.T) {
 			Object: f,
 		})
 		t.AssertNil(err)
-		t.AssertNil(err)
 		// Schema asserts.
 		t.Assert(len(oai.Components.Schemas), 3)
 		t.Assert(oai.Components.Schemas[`CategoryTreeItem`].Value.Type, goai.TypeObject)
 		t.Assert(len(oai.Components.Schemas[`CategoryTreeItem`].Value.Properties), 3)
+	})
+}
+
+func TestOpenApiV3_Add_EmptyReqAndRes(t *testing.T) {
+	type CaptchaIndexReq struct {
+		gmeta.Meta `method:"GET" summary:"获取默认的验证码" description:"注意直接返回的是图片二进制内容" tags:"前台-验证码"`
+	}
+	type CaptchaIndexRes struct {
+		gmeta.Meta `mime:"png" description:"验证码二进制内容" `
+	}
+
+	f := func(ctx context.Context, req *CaptchaIndexReq) (res *CaptchaIndexRes, err error) {
+		return
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err error
+			oai = goai.New()
+		)
+		err = oai.Add(goai.AddInput{
+			Path:   "/tree",
+			Object: f,
+		})
+		t.AssertNil(err)
+		// Schema asserts.
+		fmt.Println(oai.String())
 	})
 }
