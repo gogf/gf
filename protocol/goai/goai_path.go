@@ -9,6 +9,7 @@ package goai
 import (
 	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/internal/empty"
 	"github.com/gogf/gf/internal/structs"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
@@ -86,6 +87,8 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		path                 = Path{}
 		inputMetaMap         = gmeta.Data(inputObject.Interface())
 		outputMetaMap        = gmeta.Data(outputObject.Interface())
+		isInputStructEmpty   = empty.IsEmpty(inputObject.Interface())
+		isOutputStructEmpty  = empty.IsEmpty(outputObject.Interface())
 		inputStructTypeName  = gstr.SubStrFromREx(inputObject.Type().String(), ".")
 		outputStructTypeName = gstr.SubStrFromREx(outputObject.Type().String(), ".")
 		operation            = Operation{
@@ -128,6 +131,9 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		}
 	}
 	// Request.
+	if operation.RequestBody == nil {
+		operation.RequestBody = &RequestBodyRef{}
+	}
 	if operation.RequestBody.Value == nil {
 		var (
 			requestBody = RequestBody{
@@ -144,13 +150,17 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 			contentTypes = gstr.SplitAndTrim(tagMimeValue, ",")
 		}
 		for _, v := range contentTypes {
-			requestBody.Content[v] = MediaType{
-				Schema: &SchemaRef{
-					Ref: inputStructTypeName,
-				},
+			if isInputStructEmpty {
+				requestBody.Content[v] = MediaType{}
+			} else {
+				requestBody.Content[v] = MediaType{
+					Schema: &SchemaRef{
+						Ref: inputStructTypeName,
+					},
+				}
 			}
 		}
-		operation.RequestBody = RequestBodyRef{
+		operation.RequestBody = &RequestBodyRef{
 			Value: &requestBody,
 		}
 	}
@@ -193,10 +203,14 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 			contentTypes = gstr.SplitAndTrim(tagMimeValue, ",")
 		}
 		for _, v := range contentTypes {
-			response.Content[v] = MediaType{
-				Schema: &SchemaRef{
-					Ref: outputStructTypeName,
-				},
+			if isOutputStructEmpty {
+				response.Content[v] = MediaType{}
+			} else {
+				response.Content[v] = MediaType{
+					Schema: &SchemaRef{
+						Ref: outputStructTypeName,
+					},
+				}
 			}
 		}
 		operation.Responses[responseOkKey] = ResponseRef{Value: &response}
@@ -206,7 +220,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	switch gstr.ToUpper(in.Method) {
 	case HttpMethodGet:
 		// GET operations cannot have a requestBody.
-		operation.RequestBody.Value = nil
+		operation.RequestBody = nil
 		path.Get = &operation
 
 	case HttpMethodPut:
