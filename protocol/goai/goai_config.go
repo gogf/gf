@@ -8,8 +8,10 @@ package goai
 
 // Config provides extra configuration feature for OpenApiV3 implements.
 type Config struct {
-	ReadContentTypes  []string // ReadContentTypes specifies the default MIME types for consuming if MIME types are not configured.
-	WriteContentTypes []string // WriteContentTypes specifies the default MIME types for producing if MIME types are not configured.
+	CommonResponse          interface{} // Common response structure for all paths.
+	CommonResponseDataField string      // Common response field name to be replaced with certain business response structure.
+	ReadContentTypes        []string    // ReadContentTypes specifies the default MIME types for consuming if MIME types are not configured.
+	WriteContentTypes       []string    // WriteContentTypes specifies the default MIME types for producing if MIME types are not configured.
 }
 
 // fillWithDefaultValue fills configuration object of `oai` with default values if these are not configured.

@@ -87,8 +87,8 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		path                 = Path{}
 		inputMetaMap         = gmeta.Data(inputObject.Interface())
 		outputMetaMap        = gmeta.Data(outputObject.Interface())
-		isInputStructEmpty   = oai.structHasNoFields(inputObject.Interface())
-		isOutputStructEmpty  = oai.structHasNoFields(outputObject.Interface())
+		isInputStructEmpty   = oai.doesStructHasNoFields(inputObject.Interface())
+		isOutputStructEmpty  = oai.doesStructHasNoFields(outputObject.Interface())
 		inputStructTypeName  = golangTypeToSchemaName(inputObject.Type())
 		outputStructTypeName = golangTypeToSchemaName(outputObject.Type())
 		operation            = Operation{
@@ -214,10 +214,12 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 			if isOutputStructEmpty {
 				response.Content[v] = MediaType{}
 			} else {
+				schemaRef, err := oai.getResponseSchemaRef(outputStructTypeName)
+				if err != nil {
+					return err
+				}
 				response.Content[v] = MediaType{
-					Schema: &SchemaRef{
-						Ref: outputStructTypeName,
-					},
+					Schema: schemaRef,
 				}
 			}
 		}
@@ -264,10 +266,58 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	return nil
 }
 
-func (oai *OpenApiV3) structHasNoFields(s interface{}) bool {
+func (oai *OpenApiV3) doesStructHasNoFields(s interface{}) bool {
 	structFields, _ := structs.Fields(structs.FieldsInput{
 		Pointer:         s,
 		RecursiveOption: structs.RecursiveOptionEmbeddedNoTag,
 	})
 	return len(structFields) == 0
+}
+
+func (oai *OpenApiV3) getResponseSchemaRef(responseStructName string) (*SchemaRef, error) {
+	if oai.Config.CommonResponse == nil {
+		return &SchemaRef{
+			Ref: responseStructName,
+		}, nil
+	}
+
+	structFields, _ := structs.Fields(structs.FieldsInput{
+		Pointer:         oai.Config.CommonResponse,
+		RecursiveOption: structs.RecursiveOptionEmbeddedNoTag,
+	})
+	var (
+		err                        error
+		bizResponseStructSchemaRef = oai.Components.Schemas[responseStructName]
+		schema                     = &Schema{
+			Properties: map[string]SchemaRef{},
+		}
+	)
+	schema.Type = TypeObject
+	for _, structField := range structFields {
+		if !gstr.IsLetterUpper(structField.Name()[0]) {
+			continue
+		}
+		var (
+			schemaRef *SchemaRef
+			fieldName = structField.Name()
+		)
+		if jsonName := structField.TagJsonName(); jsonName != "" {
+			fieldName = jsonName
+		}
+		if structField.Name() == oai.Config.CommonResponseDataField {
+			schemaRef = &bizResponseStructSchemaRef
+		} else {
+			schemaRef, err = oai.newSchemaRefWithGolangType(
+				structField.Type().Type,
+				structField.TagMap(),
+			)
+		}
+		if err != nil {
+			return nil, err
+		}
+		schema.Properties[fieldName] = *schemaRef
+	}
+	return &SchemaRef{
+		Value: schema,
+	}, nil
 }
