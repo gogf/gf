@@ -131,6 +131,12 @@ func (oai *OpenApiV3) golangTypeToOAIType(t reflect.Type) string {
 		return TypeString
 
 	case reflect.Struct:
+		switch t.String() {
+		case
+			`time.Time`,
+			`gtime.Time`:
+			return TypeString
+		}
 		return TypeObject
 
 	case reflect.Slice, reflect.Array:

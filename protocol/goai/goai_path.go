@@ -110,6 +110,10 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		)
 	}
 
+	if v, ok := oai.Paths[in.Path]; ok {
+		path = v
+	}
+
 	// Method check.
 	if in.Method == "" {
 		in.Method = gmeta.Get(inputObject.Interface(), TagNameMethod).String()
