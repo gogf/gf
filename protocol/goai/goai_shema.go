@@ -86,6 +86,20 @@ func (oai *OpenApiV3) doAddSchemaSingle(object interface{}) error {
 	// Take the holder first.
 	oai.Components.Schemas[structTypeName] = SchemaRef{}
 
+	schema, err := oai.structToSchema(object)
+	if err != nil {
+		return err
+	}
+
+	oai.Components.Schemas[structTypeName] = SchemaRef{
+		Ref:   "",
+		Value: schema,
+	}
+	return nil
+}
+
+// structToSchema converts and returns given struct object as Schema.
+func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 	structFields, _ := structs.Fields(structs.FieldsInput{
 		Pointer:         object,
 		RecursiveOption: structs.RecursiveOptionEmbeddedNoTag,
@@ -111,13 +125,9 @@ func (oai *OpenApiV3) doAddSchemaSingle(object interface{}) error {
 			structField.TagMap(),
 		)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		schema.Properties[fieldName] = *schemaRef
 	}
-	oai.Components.Schemas[structTypeName] = SchemaRef{
-		Ref:   "",
-		Value: schema,
-	}
-	return nil
+	return schema, nil
 }
