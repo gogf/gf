@@ -41,9 +41,10 @@ const (
 )
 
 type addPathInput struct {
-	Path     string
-	Method   string
-	Function interface{}
+	Path     string      // Precise route path.
+	Prefix   string      // Route path prefix.
+	Method   string      // Route method.
+	Function interface{} // Uniformed function.
 }
 
 func (oai *OpenApiV3) addPath(in addPathInput) error {
@@ -97,6 +98,9 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	// Path check.
 	if in.Path == "" {
 		in.Path = gmeta.Get(inputObject.Interface(), TagNamePath).String()
+		if in.Prefix != "" {
+			in.Path = gstr.TrimRight(in.Prefix, "/") + "/" + gstr.TrimLeft(in.Path, "/")
+		}
 	}
 	if in.Path == "" {
 		return gerror.NewCodef(
@@ -105,6 +109,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 			TagNamePath, inputStructTypeName,
 		)
 	}
+
 	// Method check.
 	if in.Method == "" {
 		in.Method = gmeta.Get(inputObject.Interface(), TagNameMethod).String()
