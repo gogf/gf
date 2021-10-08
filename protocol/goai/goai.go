@@ -119,6 +119,7 @@ func (oai *OpenApiV3) Add(in AddInput) error {
 	case reflect.Func:
 		return oai.addPath(addPathInput{
 			Path:     in.Path,
+			Prefix:   in.Prefix,
 			Method:   in.Method,
 			Function: in.Object,
 		})
