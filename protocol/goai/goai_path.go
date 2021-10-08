@@ -88,7 +88,6 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		inputMetaMap         = gmeta.Data(inputObject.Interface())
 		outputMetaMap        = gmeta.Data(outputObject.Interface())
 		isInputStructEmpty   = oai.doesStructHasNoFields(inputObject.Interface())
-		isOutputStructEmpty  = oai.doesStructHasNoFields(outputObject.Interface())
 		inputStructTypeName  = golangTypeToSchemaName(inputObject.Type())
 		outputStructTypeName = golangTypeToSchemaName(outputObject.Type())
 		operation            = Operation{
@@ -211,16 +210,12 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 			contentTypes = gstr.SplitAndTrim(tagMimeValue, ",")
 		}
 		for _, v := range contentTypes {
-			if isOutputStructEmpty {
-				response.Content[v] = MediaType{}
-			} else {
-				schemaRef, err := oai.getResponseSchemaRef(outputStructTypeName)
-				if err != nil {
-					return err
-				}
-				response.Content[v] = MediaType{
-					Schema: schemaRef,
-				}
+			schemaRef, err := oai.getResponseSchemaRef(outputStructTypeName)
+			if err != nil {
+				return err
+			}
+			response.Content[v] = MediaType{
+				Schema: schemaRef,
 			}
 		}
 		operation.Responses[responseOkKey] = ResponseRef{Value: &response}

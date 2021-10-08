@@ -233,3 +233,42 @@ func TestOpenApiV3_CommonResponse(t *testing.T) {
 		t.Assert(len(oai.Paths["/index"].Get.Responses["200"].Value.Content["application/json"].Schema.Value.Properties), 3)
 	})
 }
+
+func TestOpenApiV3_CommonResponse_EmptyResponse(t *testing.T) {
+	type CommonResponse struct {
+		Code    int         `json:"code"    description:"Error code"`
+		Message string      `json:"message" description:"Error message"`
+		Data    interface{} `json:"data"    description:"Result data for certain request according API definition"`
+	}
+
+	type Req struct {
+		gmeta.Meta `method:"GET"`
+		Product    string `json:"product" in:"query" v:"required" description:"Unique product key"`
+		Name       string `json:"name"    in:"query"  v:"required" description:"Instance name"`
+	}
+	type Res struct{}
+
+	f := func(ctx context.Context, req *Req) (res *Res, err error) {
+		return
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err error
+			oai = goai.New()
+		)
+
+		oai.Config.CommonResponse = CommonResponse{}
+		oai.Config.CommonResponseDataField = `Data`
+
+		err = oai.Add(goai.AddInput{
+			Path:   "/index",
+			Object: f,
+		})
+		t.AssertNil(err)
+		// Schema asserts.
+		t.Assert(len(oai.Components.Schemas), 2)
+		t.Assert(len(oai.Paths), 1)
+		t.Assert(len(oai.Paths["/index"].Get.Responses["200"].Value.Content["application/json"].Schema.Value.Properties), 3)
+	})
+}
