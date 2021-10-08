@@ -80,7 +80,6 @@ const (
 const (
 	TagNamePath     = `path`
 	TagNameMethod   = `method`
-	TagNameIn       = `in`
 	TagNameMime     = `mime`
 	TagNameValidate = `v`
 )
@@ -140,6 +139,56 @@ func (oai OpenApiV3) String() string {
 		intlog.Error(context.TODO(), err)
 	}
 	return string(b)
+}
+
+func (oai *OpenApiV3) golangTypeToOAIType(t reflect.Type) string {
+	for t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	switch t.Kind() {
+	case reflect.String:
+		return TypeString
+
+	case reflect.Struct:
+		switch t.String() {
+		case `time.Time`, `gtime.Time`:
+			return TypeString
+		}
+		return TypeObject
+
+	case reflect.Slice, reflect.Array:
+		switch t.String() {
+		case `[]uint8`:
+			return TypeString
+		}
+		return TypeArray
+
+	case reflect.Bool:
+		return TypeBoolean
+
+	case
+		reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+		reflect.Float32, reflect.Float64,
+		reflect.Complex64, reflect.Complex128:
+		return TypeNumber
+
+	default:
+		return TypeObject
+	}
+}
+
+// golangTypeToOAIFormat converts and returns OpenAPI parameter format for given golang type `t`.
+// Note that it does not return standard OpenAPI parameter format but custom format in golang type.
+func (oai *OpenApiV3) golangTypeToOAIFormat(t reflect.Type) string {
+	format := t.String()
+	switch gstr.TrimLeft(format, "*") {
+	case `[]uint8`:
+		return FormatBinary
+
+	default:
+		return format
+	}
 }
 
 func formatRefToBytes(ref string) []byte {
