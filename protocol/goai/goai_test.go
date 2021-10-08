@@ -99,7 +99,7 @@ func TestOpenApiV3_Add(t *testing.T) {
 		t.AssertNil(err)
 
 		err = oai.Add(goai.AddInput{
-			Path:   "/test2/{appId}",
+			Path:   "/test1/{appId}",
 			Method: goai.HttpMethodPost,
 			Object: f,
 		})
@@ -116,13 +116,13 @@ func TestOpenApiV3_Add(t *testing.T) {
 		t.Assert(oai.Components.Schemas[`goai_test.SetSpecInfo`].Value.Properties[`Params`].Value.Type, goai.TypeArray)
 
 		// Paths.
-		t.Assert(len(oai.Paths), 2)
+		t.Assert(len(oai.Paths), 1)
 		t.AssertNE(oai.Paths[`/test1/{appId}`].Put, nil)
 		t.Assert(len(oai.Paths[`/test1/{appId}`].Put.Tags), 1)
 		t.Assert(len(oai.Paths[`/test1/{appId}`].Put.Parameters), 2)
-		t.AssertNE(oai.Paths[`/test2/{appId}`].Post, nil)
-		t.Assert(len(oai.Paths[`/test2/{appId}`].Post.Tags), 1)
-		t.Assert(len(oai.Paths[`/test2/{appId}`].Post.Parameters), 2)
+		t.AssertNE(oai.Paths[`/test1/{appId}`].Post, nil)
+		t.Assert(len(oai.Paths[`/test1/{appId}`].Post.Tags), 1)
+		t.Assert(len(oai.Paths[`/test1/{appId}`].Post.Parameters), 2)
 	})
 }
 
