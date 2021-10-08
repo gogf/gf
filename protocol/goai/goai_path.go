@@ -181,7 +181,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		if operation.Parameters == nil {
 			operation.Parameters = []ParameterRef{}
 		}
-		parameterRef, err := oai.newParameterRefWithStructMethod(structField)
+		parameterRef, err := oai.newParameterRefWithStructMethod(structField, in.Method)
 		if err != nil {
 			return err
 		}

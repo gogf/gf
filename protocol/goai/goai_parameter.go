@@ -41,12 +41,19 @@ type ParameterRef struct {
 	Value *Parameter
 }
 
-func (oai *OpenApiV3) newParameterRefWithStructMethod(field *structs.Field) (*ParameterRef, error) {
+func (oai *OpenApiV3) newParameterRefWithStructMethod(field *structs.Field, method string) (*ParameterRef, error) {
 	var (
 		inTagValue = field.Tag(TagNameIn)
 	)
 	if inTagValue == "" {
-		return nil, nil
+		// Default the parameter input to "query" if method is "GET/DELETE".
+		switch gstr.ToUpper(method) {
+		case HttpMethodGet, HttpMethodDelete:
+			inTagValue = ParameterInQuery
+
+		default:
+			return nil, nil
+		}
 	}
 	var (
 		tagMap    = field.TagMap()
