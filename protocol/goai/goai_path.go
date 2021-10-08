@@ -239,7 +239,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 
 	case HttpMethodDelete:
 		// DELETE operations cannot have a requestBody.
-		operation.RequestBody.Value = nil
+		operation.RequestBody = nil
 		path.Delete = &operation
 
 	case HttpMethodConnect:
