@@ -43,19 +43,6 @@ type ParameterRef struct {
 
 func (oai *OpenApiV3) newParameterRefWithStructMethod(field *structs.Field, method string) (*ParameterRef, error) {
 	var (
-		inTagValue = field.Tag(TagNameIn)
-	)
-	if inTagValue == "" {
-		// Default the parameter input to "query" if method is "GET/DELETE".
-		switch gstr.ToUpper(method) {
-		case HttpMethodGet, HttpMethodDelete:
-			inTagValue = ParameterInQuery
-
-		default:
-			return nil, nil
-		}
-	}
-	var (
 		tagMap    = field.TagMap()
 		parameter = &Parameter{
 			Name: field.TagJsonName(),
@@ -70,8 +57,18 @@ func (oai *OpenApiV3) newParameterRefWithStructMethod(field *structs.Field, meth
 			return nil, gerror.WrapCode(gcode.CodeInternalError, err, `mapping struct tags to Parameter failed`)
 		}
 	}
+	if parameter.In == "" {
+		// Default the parameter input to "query" if method is "GET/DELETE".
+		switch gstr.ToUpper(method) {
+		case HttpMethodGet, HttpMethodDelete:
+			parameter.In = ParameterInQuery
 
-	switch inTagValue {
+		default:
+			return nil, nil
+		}
+	}
+
+	switch parameter.In {
 	case ParameterInPath:
 		// Required for path parameter.
 		parameter.Required = true
@@ -83,7 +80,7 @@ func (oai *OpenApiV3) newParameterRefWithStructMethod(field *structs.Field, meth
 		}
 
 	default:
-		return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid tag value "%s" for In`, inTagValue)
+		return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid tag value "%s" for In`, parameter.In)
 	}
 	// Necessary schema or content.
 	schemaRef, err := oai.newSchemaRefWithGolangType(field.Type(), tagMap)
