@@ -78,10 +78,11 @@ const (
 )
 
 const (
-	TagNamePath   = `path`
-	TagNameMethod = `method`
-	TagNameIn     = `in`
-	TagNameMime   = `mime`
+	TagNamePath     = `path`
+	TagNameMethod   = `method`
+	TagNameIn       = `in`
+	TagNameMime     = `mime`
+	TagNameValidate = `v`
 )
 
 var (

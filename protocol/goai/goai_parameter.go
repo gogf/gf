@@ -11,6 +11,7 @@ import (
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/json"
 	"github.com/gogf/gf/internal/structs"
+	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
 )
 
@@ -62,12 +63,17 @@ func (oai *OpenApiV3) newParameterRefWithStructMethod(field *structs.Field) (*Pa
 			return nil, gerror.WrapCode(gcode.CodeInternalError, err, `mapping struct tags to Parameter failed`)
 		}
 	}
-	// Required for path parameter.
+
 	switch inTagValue {
 	case ParameterInPath:
+		// Required for path parameter.
 		parameter.Required = true
+
 	case ParameterInCookie, ParameterInHeader, ParameterInQuery:
-		// Nothing to do.
+		// Check validation tag.
+		if validateTagValue := field.Tag(TagNameValidate); gstr.ContainsI(validateTagValue, `required`) {
+			parameter.Required = true
+		}
 
 	default:
 		return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid tag value "%s" for In`, inTagValue)
