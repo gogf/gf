@@ -22,6 +22,7 @@ aa=bb
 ip = 127.0.0.1
 port=9001
 enable=true
+command=/bin/echo "gf=GoFrame"
 
 	[DBINFO]
 	type=mysql
@@ -40,6 +41,7 @@ func TestDecode(t *testing.T) {
 		}
 		t.Assert(res["addr"].(map[string]interface{})["ip"], "127.0.0.1")
 		t.Assert(res["addr"].(map[string]interface{})["port"], "9001")
+		t.Assert(res["addr"].(map[string]interface{})["command"], `/bin/echo "gf=GoFrame"`)
 		t.Assert(res["DBINFO"].(map[string]interface{})["user"], "root")
 		t.Assert(res["DBINFO"].(map[string]interface{})["type"], "mysql")
 		t.Assert(res["键"].(map[string]interface{})["呵呵"], "值")
