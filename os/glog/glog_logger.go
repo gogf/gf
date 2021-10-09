@@ -10,25 +10,24 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/fatih/color"
-	"github.com/gogf/gf/container/gtype"
-	"github.com/gogf/gf/internal/intlog"
-	"github.com/gogf/gf/os/gctx"
-	"github.com/gogf/gf/os/gfpool"
-	"github.com/gogf/gf/os/gmlock"
-	"github.com/gogf/gf/os/gtimer"
-	"go.opentelemetry.io/otel/trace"
 	"io"
 	"os"
 	"strings"
 	"time"
 
+	"github.com/fatih/color"
+	"github.com/gogf/gf/container/gtype"
 	"github.com/gogf/gf/debug/gdebug"
-
+	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/os/gctx"
 	"github.com/gogf/gf/os/gfile"
+	"github.com/gogf/gf/os/gfpool"
+	"github.com/gogf/gf/os/gmlock"
 	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/os/gtimer"
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/util/gconv"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Logger is the struct for logging management.
@@ -204,7 +203,7 @@ func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
 		if len(input.Content) > 0 {
 			if input.Content[len(input.Content)-1] == '\n' {
 				// Remove one blank line(\n\n).
-				if tempStr[0] == '\n' {
+				if len(tempStr) > 0 && tempStr[0] == '\n' {
 					input.Content += tempStr[1:]
 				} else {
 					input.Content += tempStr
