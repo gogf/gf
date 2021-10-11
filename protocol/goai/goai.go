@@ -85,8 +85,8 @@ const (
 )
 
 var (
-	defaultReadContentTypes  = []string{`application/json`, `application/xml`}
-	defaultWriteContentTypes = []string{`application/json`, `application/xml`}
+	defaultReadContentTypes  = []string{`application/json`}
+	defaultWriteContentTypes = []string{`application/json`}
 )
 
 // New creates and returns a OpenApiV3 implements object.
