@@ -24,14 +24,14 @@ func TestValidator_I18n(t *testing.T) {
 		validator   = gvalid.New().I18n(i18nManager)
 	)
 	gtest.C(t, func(t *gtest.T) {
-		err = validator.Rules("required").CheckValue("")
+		err = validator.Rules("required").CheckValue(ctx, "")
 		t.Assert(err.String(), "The field is required")
 
-		err = validator.Ctx(ctxCn).Rules("required").CheckValue("")
+		err = validator.Rules("required").CheckValue(ctxCn, "")
 		t.Assert(err.String(), "字段不能为空")
 	})
 	gtest.C(t, func(t *gtest.T) {
-		err = validator.Ctx(ctxCn).Rules("required").Messages("CustomMessage").CheckValue("")
+		err = validator.Rules("required").Messages("CustomMessage").CheckValue(ctxCn, "")
 		t.Assert(err.String(), "自定义错误")
 	})
 	gtest.C(t, func(t *gtest.T) {
@@ -44,7 +44,7 @@ func TestValidator_I18n(t *testing.T) {
 			Page: 1,
 			Size: 10,
 		}
-		err := validator.Ctx(ctxCn).CheckStruct(obj)
+		err = validator.CheckStruct(ctxCn, obj)
 		t.Assert(err.String(), "项目ID必须大于等于1并且要小于等于10000")
 	})
 }

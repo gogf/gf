@@ -225,7 +225,7 @@ func Test_Map_Bail(t *testing.T) {
 			"password@required|length:6,16|same:password2#密码不能为空|密码长度应当在:min到:max之间|两次密码输入不相等",
 			"password2@required|length:6,16#",
 		}
-		err := g.Validator().Bail().Rules(rules).CheckMap(params)
+		err := g.Validator().Bail().Rules(rules).CheckMap(ctx, params)
 		t.AssertNE(err, nil)
 		t.Assert(err.String(), "账号不能为空; 账号长度应当在6到16之间")
 	})
@@ -241,7 +241,7 @@ func Test_Map_Bail(t *testing.T) {
 			"password@required|length:6,16|same:password2#密码不能为空|密码长度应当在:min到:max之间|两次密码输入不相等",
 			"password2@required|length:6,16#",
 		}
-		err := g.Validator().Bail().Rules(rules).CheckMap(params)
+		err := g.Validator().Bail().Rules(rules).CheckMap(ctx, params)
 		t.AssertNE(err, nil)
 		t.Assert(err.String(), "账号不能为空")
 	})

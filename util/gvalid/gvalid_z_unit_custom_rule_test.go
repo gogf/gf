@@ -171,14 +171,17 @@ func TestValidator_RuleFunc(t *testing.T) {
 		return nil
 	}
 	gtest.C(t, func(t *gtest.T) {
-		err := g.Validator().Rules(ruleName).Messages("custom message").RuleFunc(ruleName, ruleFunc).CheckValue("123456")
+		err := g.Validator().Rules(ruleName).
+			Messages("custom message").
+			RuleFunc(ruleName, ruleFunc).
+			CheckValue(ctx, "123456")
 		t.Assert(err.String(), "custom message")
 		err = g.Validator().
 			Rules(ruleName).
 			Messages("custom message").
 			Data(g.Map{"data": "123456"}).
 			RuleFunc(ruleName, ruleFunc).
-			CheckValue("123456")
+			CheckValue(ctx, "123456")
 		t.AssertNil(err)
 	})
 	// Error with struct validation.
@@ -191,7 +194,7 @@ func TestValidator_RuleFunc(t *testing.T) {
 			Value: "123",
 			Data:  "123456",
 		}
-		err := g.Validator().RuleFunc(ruleName, ruleFunc).CheckStruct(st)
+		err := g.Validator().RuleFunc(ruleName, ruleFunc).CheckStruct(ctx, st)
 		t.Assert(err.String(), "自定义错误")
 	})
 	// No error with struct validation.
@@ -204,7 +207,7 @@ func TestValidator_RuleFunc(t *testing.T) {
 			Value: "123456",
 			Data:  "123456",
 		}
-		err := g.Validator().RuleFunc(ruleName, ruleFunc).CheckStruct(st)
+		err := g.Validator().RuleFunc(ruleName, ruleFunc).CheckStruct(ctx, st)
 		t.AssertNil(err)
 	})
 }
@@ -227,7 +230,7 @@ func TestValidator_RuleFuncMap(t *testing.T) {
 			Messages("custom message").
 			RuleFuncMap(map[string]gvalid.RuleFunc{
 				ruleName: ruleFunc,
-			}).CheckValue("123456")
+			}).CheckValue(ctx, "123456")
 		t.Assert(err.String(), "custom message")
 		err = g.Validator().
 			Rules(ruleName).
@@ -236,7 +239,7 @@ func TestValidator_RuleFuncMap(t *testing.T) {
 			RuleFuncMap(map[string]gvalid.RuleFunc{
 				ruleName: ruleFunc,
 			}).
-			CheckValue("123456")
+			CheckValue(ctx, "123456")
 		t.AssertNil(err)
 	})
 	// Error with struct validation.
@@ -252,7 +255,7 @@ func TestValidator_RuleFuncMap(t *testing.T) {
 		err := g.Validator().
 			RuleFuncMap(map[string]gvalid.RuleFunc{
 				ruleName: ruleFunc,
-			}).CheckStruct(st)
+			}).CheckStruct(ctx, st)
 		t.Assert(err.String(), "自定义错误")
 	})
 	// No error with struct validation.
@@ -268,7 +271,7 @@ func TestValidator_RuleFuncMap(t *testing.T) {
 		err := g.Validator().
 			RuleFuncMap(map[string]gvalid.RuleFunc{
 				ruleName: ruleFunc,
-			}).CheckStruct(st)
+			}).CheckStruct(ctx, st)
 		t.AssertNil(err)
 	})
 }

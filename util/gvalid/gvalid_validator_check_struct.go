@@ -7,6 +7,7 @@
 package gvalid
 
 import (
+	"context"
 	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/internal/structs"
 	"github.com/gogf/gf/util/gconv"
@@ -16,14 +17,14 @@ import (
 
 // CheckStruct validates struct and returns the error result.
 // The parameter `object` should be type of struct/*struct.
-func (v *Validator) CheckStruct(object interface{}) Error {
-	return v.doCheckStruct(object)
+func (v *Validator) CheckStruct(ctx context.Context, object interface{}) Error {
+	return v.doCheckStruct(ctx, object)
 }
 
-func (v *Validator) doCheckStruct(object interface{}) Error {
+func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error {
 	var (
 		errorMaps           = make(map[string]map[string]string) // Returning error.
-		fieldToAliasNameMap = make(map[string]string)            // Field name to alias name map.
+		fieldToAliasNameMap = make(map[string]string)            // Field names to alias name map.
 	)
 	fieldMap, err := structs.FieldMap(structs.FieldMapInput{
 		Pointer:          object,
@@ -33,7 +34,7 @@ func (v *Validator) doCheckStruct(object interface{}) Error {
 	if err != nil {
 		return newErrorStr(internalObjectErrRuleName, err.Error())
 	}
-	// It checks the struct recursively the its attribute is an embedded struct.
+	// It checks the struct recursively if its attribute is an embedded struct.
 	for _, field := range fieldMap {
 		if field.IsEmbedded() {
 			// No validation interface implements check.
@@ -43,7 +44,7 @@ func (v *Validator) doCheckStruct(object interface{}) Error {
 			if _, ok := field.TagLookup(noValidationTagName); ok {
 				continue
 			}
-			if err := v.doCheckStruct(field.Value); err != nil {
+			if err := v.doCheckStruct(ctx, field.Value); err != nil {
 				// It merges the errors into single error map.
 				for k, m := range err.(*validationError).errors {
 					errorMaps[k] = m
@@ -244,7 +245,7 @@ func (v *Validator) doCheckStruct(object interface{}) Error {
 	for _, checkRuleItem := range checkRules {
 		_, value = gutil.MapPossibleItemByKey(inputParamMap, checkRuleItem.Name)
 		// It checks each rule and its value in loop.
-		if validatedError := v.doCheckValue(doCheckValueInput{
+		if validatedError := v.doCheckValue(ctx, doCheckValueInput{
 			Name:     checkRuleItem.Name,
 			Value:    value,
 			Rule:     checkRuleItem.Rule,

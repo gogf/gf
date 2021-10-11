@@ -7,6 +7,7 @@
 package gvalid
 
 import (
+	"context"
 	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/util/gconv"
 	"strings"
@@ -14,11 +15,11 @@ import (
 
 // CheckMap validates map and returns the error result. It returns nil if with successful validation.
 // The parameter `params` should be type of map.
-func (v *Validator) CheckMap(params interface{}) Error {
-	return v.doCheckMap(params)
+func (v *Validator) CheckMap(ctx context.Context, params interface{}) Error {
+	return v.doCheckMap(ctx, params)
 }
 
-func (v *Validator) doCheckMap(params interface{}) Error {
+func (v *Validator) doCheckMap(ctx context.Context, params interface{}) Error {
 	// If there's no validation rules, it does nothing and returns quickly.
 	if params == nil || v.rules == nil {
 		return nil
@@ -105,7 +106,7 @@ func (v *Validator) doCheckMap(params interface{}) Error {
 			value = valueItem
 		}
 		// It checks each rule and its value in loop.
-		if validatedError := v.doCheckValue(doCheckValueInput{
+		if validatedError := v.doCheckValue(ctx, doCheckValueInput{
 			Name:     checkRuleItem.Name,
 			Value:    value,
 			Rule:     checkRuleItem.Rule,
