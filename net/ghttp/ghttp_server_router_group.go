@@ -9,13 +9,13 @@ package ghttp
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/debug/gdebug"
+	"github.com/gogf/gf/v2/debug/gdebug"
 	"reflect"
 	"strings"
 
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/text/gstr"
 
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 type (

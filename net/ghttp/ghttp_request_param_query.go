@@ -7,9 +7,9 @@
 package ghttp
 
 import (
-	"github.com/gogf/gf/container/gvar"
+	"github.com/gogf/gf/v2/container/gvar"
 
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // SetQuery sets custom query value with key-value pair.

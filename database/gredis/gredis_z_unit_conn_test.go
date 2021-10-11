@@ -8,8 +8,8 @@ package gredis_test
 
 import (
 	"context"
-	"github.com/gogf/gf/database/gredis"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/database/gredis"
+	"github.com/gogf/gf/v2/test/gtest"
 	"testing"
 )
 

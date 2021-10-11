@@ -11,8 +11,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gogf/gf/test/gtest"
-	"github.com/gogf/gf/util/gvalid"
+	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gvalid"
 )
 
 func Test_Map(t *testing.T) {

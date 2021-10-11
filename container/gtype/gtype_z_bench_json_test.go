@@ -9,8 +9,8 @@
 package gtype_test
 
 import (
-	"github.com/gogf/gf/container/gtype"
-	"github.com/gogf/gf/internal/json"
+	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/internal/json"
 	"testing"
 )
 

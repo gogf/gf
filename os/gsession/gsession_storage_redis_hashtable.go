@@ -10,10 +10,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/database/gredis"
-	"github.com/gogf/gf/internal/intlog"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/database/gredis"
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // StorageRedisHashTable implements the Session Storage interface with redis hash table.

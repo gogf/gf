@@ -8,10 +8,10 @@
 package gcron
 
 import (
-	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/v2/os/glog"
 	"time"
 
-	"github.com/gogf/gf/os/gtimer"
+	"github.com/gogf/gf/v2/os/gtimer"
 )
 
 const (

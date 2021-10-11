@@ -3,7 +3,7 @@ package main
 import (
 	"archive/zip"
 	"fmt"
-	"github.com/gogf/gf/encoding/gcompress"
+	"github.com/gogf/gf/v2/encoding/gcompress"
 	"io"
 	"os"
 	"path/filepath"

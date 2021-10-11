@@ -7,7 +7,7 @@
 package goai
 
 import (
-	"github.com/gogf/gf/internal/json"
+	"github.com/gogf/gf/v2/internal/json"
 )
 
 // Example is specified by OpenAPI/Swagger 3.0 standard.

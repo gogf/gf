@@ -7,9 +7,9 @@
 package gvalid
 
 import (
-	"github.com/gogf/gf/internal/empty"
-	"github.com/gogf/gf/util/gconv"
-	"github.com/gogf/gf/util/gutil"
+	"github.com/gogf/gf/v2/internal/empty"
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gutil"
 	"reflect"
 	"strings"
 )

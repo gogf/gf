@@ -11,7 +11,7 @@ package ghash_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/encoding/ghash"
+	"github.com/gogf/gf/v2/encoding/ghash"
 )
 
 var (

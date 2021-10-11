@@ -8,12 +8,12 @@ package gvalid_test
 
 import (
 	"context"
-	"github.com/gogf/gf/debug/gdebug"
-	"github.com/gogf/gf/i18n/gi18n"
-	"github.com/gogf/gf/util/gvalid"
+	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gogf/gf/v2/i18n/gi18n"
+	"github.com/gogf/gf/v2/util/gvalid"
 	"testing"
 
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func TestValidator_I18n(t *testing.T) {

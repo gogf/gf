@@ -8,10 +8,10 @@ package gview_test
 
 import (
 	"context"
-	"github.com/gogf/gf/debug/gdebug"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/gview"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gview"
+	"github.com/gogf/gf/v2/test/gtest"
 	"testing"
 )
 

@@ -1,6 +1,6 @@
 package main
 
-import "github.com/gogf/gf/frame/g"
+import "github.com/gogf/gf/v2/frame/g"
 
 // 静态文件服务器，支持自定义静态目录映射
 func main() {

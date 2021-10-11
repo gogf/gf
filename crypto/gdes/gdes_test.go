@@ -10,8 +10,8 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/gogf/gf/crypto/gdes"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/crypto/gdes"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 var (

@@ -14,8 +14,8 @@ package gsmtp
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"net/smtp"
 	"strings"
 )

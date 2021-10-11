@@ -9,15 +9,15 @@ package gdb_test
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/os/gctx"
+	"github.com/gogf/gf/v2/os/gctx"
 	"testing"
 
-	"github.com/gogf/gf/database/gdb"
-	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/errors/gerror"
 
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_TX_Query(t *testing.T) {

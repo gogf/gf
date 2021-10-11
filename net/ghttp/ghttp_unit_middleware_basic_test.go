@@ -8,15 +8,15 @@ package ghttp_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/container/garray"
-	"github.com/gogf/gf/debug/gdebug"
+	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/debug/gdebug"
 	"net/http"
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_BindMiddleware_Basic1(t *testing.T) {

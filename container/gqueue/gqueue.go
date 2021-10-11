@@ -21,8 +21,8 @@ package gqueue
 import (
 	"math"
 
-	"github.com/gogf/gf/container/glist"
-	"github.com/gogf/gf/container/gtype"
+	"github.com/gogf/gf/v2/container/glist"
+	"github.com/gogf/gf/v2/container/gtype"
 )
 
 // Queue is a concurrent-safe queue built on doubly linked list and channel.

@@ -8,13 +8,13 @@ package gsession
 
 import (
 	"context"
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/database/gredis"
-	"github.com/gogf/gf/internal/intlog"
-	"github.com/gogf/gf/internal/json"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/database/gredis"
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/internal/json"
 	"time"
 
-	"github.com/gogf/gf/os/gtimer"
+	"github.com/gogf/gf/v2/os/gtimer"
 )
 
 // StorageRedis implements the Session Storage interface with redis.

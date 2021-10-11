@@ -8,7 +8,7 @@ package gsession
 
 import (
 	"context"
-	"github.com/gogf/gf/container/gmap"
+	"github.com/gogf/gf/v2/container/gmap"
 	"time"
 )
 

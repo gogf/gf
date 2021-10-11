@@ -8,11 +8,11 @@ package gdb
 
 import (
 	"fmt"
-	"github.com/gogf/gf/container/gset"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/container/gset"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // Fields appends `fieldNamesOrMapStruct` to the operation fields of the model, multiple fields joined using char ','.

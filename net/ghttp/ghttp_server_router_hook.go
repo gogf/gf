@@ -8,7 +8,7 @@ package ghttp
 
 import (
 	"context"
-	"github.com/gogf/gf/debug/gdebug"
+	"github.com/gogf/gf/v2/debug/gdebug"
 	"net/http"
 	"reflect"
 )

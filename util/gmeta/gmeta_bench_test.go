@@ -7,7 +7,7 @@
 package gmeta_test
 
 import (
-	"github.com/gogf/gf/util/gmeta"
+	"github.com/gogf/gf/v2/util/gmeta"
 	"testing"
 )
 

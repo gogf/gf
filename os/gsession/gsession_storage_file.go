@@ -8,24 +8,24 @@ package gsession
 
 import (
 	"context"
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/intlog"
-	"github.com/gogf/gf/internal/json"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/internal/json"
 	"os"
 	"time"
 
-	"github.com/gogf/gf/crypto/gaes"
+	"github.com/gogf/gf/v2/crypto/gaes"
 
-	"github.com/gogf/gf/os/gtimer"
+	"github.com/gogf/gf/v2/os/gtimer"
 
-	"github.com/gogf/gf/container/gset"
-	"github.com/gogf/gf/encoding/gbinary"
+	"github.com/gogf/gf/v2/container/gset"
+	"github.com/gogf/gf/v2/encoding/gbinary"
 
-	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/v2/os/gtime"
 
-	"github.com/gogf/gf/os/gfile"
+	"github.com/gogf/gf/v2/os/gfile"
 )
 
 // StorageFile implements the Session Storage interface with file system.

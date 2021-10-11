@@ -8,11 +8,11 @@ package gctx_test
 
 import (
 	"context"
-	"github.com/gogf/gf/os/gctx"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v2/text/gstr"
 	"testing"
 
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_New(t *testing.T) {

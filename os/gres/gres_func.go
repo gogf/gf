@@ -11,17 +11,17 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"github.com/gogf/gf/encoding/gbase64"
-	"github.com/gogf/gf/encoding/gcompress"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/encoding/gbase64"
+	"github.com/gogf/gf/v2/encoding/gcompress"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 const (
 	packedGoSouceTemplate = `
 package %s
 
-import "github.com/gogf/gf/os/gres"
+import "github.com/gogf/gf/v2/os/gres"
 
 func init() {
 	if err := gres.Add("%s"); err != nil {

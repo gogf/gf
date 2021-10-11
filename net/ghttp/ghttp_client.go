@@ -7,7 +7,7 @@
 package ghttp
 
 import (
-	"github.com/gogf/gf/net/ghttp/internal/client"
+	"github.com/gogf/gf/v2/net/ghttp/internal/client"
 )
 
 type (

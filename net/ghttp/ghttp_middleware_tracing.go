@@ -11,13 +11,13 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/gogf/gf"
-	"github.com/gogf/gf/internal/utils"
-	"github.com/gogf/gf/net/ghttp/internal/client"
-	"github.com/gogf/gf/net/ghttp/internal/httputil"
-	"github.com/gogf/gf/net/gtrace"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2"
+	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/net/ghttp/internal/client"
+	"github.com/gogf/gf/v2/net/ghttp/internal/httputil"
+	"github.com/gogf/gf/v2/net/gtrace"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -26,7 +26,7 @@ import (
 )
 
 const (
-	tracingInstrumentName           = "github.com/gogf/gf/net/ghttp.Server"
+	tracingInstrumentName           = "github.com/gogf/gf/v2/net/ghttp.Server"
 	tracingEventHttpRequest         = "http.request"
 	tracingEventHttpRequestHeaders  = "http.request.headers"
 	tracingEventHttpRequestBaggage  = "http.request.baggage"

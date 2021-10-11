@@ -7,7 +7,7 @@
 package gtcp_test
 
 import (
-	"github.com/gogf/gf/container/garray"
+	"github.com/gogf/gf/v2/container/garray"
 )
 
 var (

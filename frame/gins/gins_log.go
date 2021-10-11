@@ -9,8 +9,8 @@ package gins
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/util/gutil"
+	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 const (

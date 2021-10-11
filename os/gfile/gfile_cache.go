@@ -8,10 +8,10 @@ package gfile
 
 import (
 	"context"
-	"github.com/gogf/gf/internal/intlog"
-	"github.com/gogf/gf/os/gcache"
-	"github.com/gogf/gf/os/gcmd"
-	"github.com/gogf/gf/os/gfsnotify"
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/os/gcache"
+	"github.com/gogf/gf/v2/os/gcmd"
+	"github.com/gogf/gf/v2/os/gfsnotify"
 	"time"
 )
 

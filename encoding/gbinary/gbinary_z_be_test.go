@@ -9,8 +9,8 @@ package gbinary_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/encoding/gbinary"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/encoding/gbinary"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_BeEncodeAndBeDecode(t *testing.T) {

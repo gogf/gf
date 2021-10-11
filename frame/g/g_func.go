@@ -8,11 +8,11 @@ package g
 
 import (
 	"context"
-	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/internal/empty"
-	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/os/gproc"
-	"github.com/gogf/gf/util/gutil"
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/internal/empty"
+	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/os/gproc"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // NewVar returns a gvar.Var.

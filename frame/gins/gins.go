@@ -8,7 +8,7 @@
 package gins
 
 import (
-	"github.com/gogf/gf/container/gmap"
+	"github.com/gogf/gf/v2/container/gmap"
 )
 
 var (

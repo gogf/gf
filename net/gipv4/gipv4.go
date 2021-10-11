@@ -11,7 +11,7 @@ package gipv4
 import (
 	"encoding/binary"
 	"fmt"
-	"github.com/gogf/gf/text/gregex"
+	"github.com/gogf/gf/v2/text/gregex"
 	"net"
 	"strconv"
 )

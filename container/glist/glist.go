@@ -11,10 +11,10 @@ package glist
 import (
 	"bytes"
 	"container/list"
-	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/util/gconv"
 
-	"github.com/gogf/gf/internal/rwmutex"
+	"github.com/gogf/gf/v2/internal/rwmutex"
 )
 
 type (

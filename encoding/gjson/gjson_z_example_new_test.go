@@ -8,7 +8,7 @@ package gjson_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/encoding/gjson"
+	"github.com/gogf/gf/v2/encoding/gjson"
 )
 
 func Example_newFromJson() {

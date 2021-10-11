@@ -9,10 +9,10 @@ package glog_test
 import (
 	"bytes"
 	"context"
-	"github.com/gogf/gf/container/garray"
-	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/test/gtest"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
 	"testing"
 )
 

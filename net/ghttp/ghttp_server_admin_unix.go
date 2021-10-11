@@ -10,7 +10,7 @@ package ghttp
 
 import (
 	"context"
-	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/v2/internal/intlog"
 	"os"
 	"os/signal"
 	"syscall"

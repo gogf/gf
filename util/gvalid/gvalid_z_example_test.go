@@ -10,14 +10,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/gogf/gf/os/gctx"
+	"github.com/gogf/gf/v2/os/gctx"
 	"math"
 	"reflect"
 
-	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/util/gconv"
-	"github.com/gogf/gf/util/gvalid"
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gvalid"
 )
 
 func ExampleCheckMap() {

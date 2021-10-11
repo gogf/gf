@@ -7,9 +7,9 @@
 package goai
 
 import (
-	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/internal/structs"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/internal/structs"
+	"github.com/gogf/gf/v2/text/gstr"
 	"reflect"
 )
 

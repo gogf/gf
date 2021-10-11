@@ -8,8 +8,8 @@ package gfile
 
 import (
 	"bytes"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"os"
 	"os/exec"
 	"os/user"

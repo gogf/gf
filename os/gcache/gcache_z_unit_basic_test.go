@@ -10,16 +10,16 @@ package gcache_test
 
 import (
 	"context"
-	"github.com/gogf/gf/util/guid"
+	"github.com/gogf/gf/v2/util/guid"
 	"math"
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/container/gset"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/gcache"
-	"github.com/gogf/gf/os/grpool"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/container/gset"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gcache"
+	"github.com/gogf/gf/v2/os/grpool"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 var (

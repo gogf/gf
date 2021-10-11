@@ -7,12 +7,12 @@
 package ghttp
 
 import (
-	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/v2/internal/intlog"
 	netpprof "net/http/pprof"
 	runpprof "runtime/pprof"
 	"strings"
 
-	"github.com/gogf/gf/os/gview"
+	"github.com/gogf/gf/v2/os/gview"
 )
 
 // utilPProf is the PProf interface implementer.

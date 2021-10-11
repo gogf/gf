@@ -7,9 +7,9 @@
 package gini_test
 
 import (
-	"github.com/gogf/gf/encoding/gini"
-	"github.com/gogf/gf/encoding/gjson"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/encoding/gini"
+	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v2/test/gtest"
 	"testing"
 )
 

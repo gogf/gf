@@ -7,14 +7,14 @@
 package gres_test
 
 import (
-	_ "github.com/gogf/gf/os/gres/testdata/data"
+	_ "github.com/gogf/gf/v2/os/gres/testdata/data"
 
 	"testing"
 
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/test/gtest"
 
-	"github.com/gogf/gf/os/gres"
+	"github.com/gogf/gf/v2/os/gres"
 )
 
 func Test_Basic(t *testing.T) {

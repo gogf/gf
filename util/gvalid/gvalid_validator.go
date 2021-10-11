@@ -7,7 +7,7 @@
 package gvalid
 
 import (
-	"github.com/gogf/gf/i18n/gi18n"
+	"github.com/gogf/gf/v2/i18n/gi18n"
 )
 
 // Validator is the validation manager for chaining operations.
