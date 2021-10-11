@@ -196,5 +196,13 @@ func formatRefToBytes(ref string) []byte {
 }
 
 func golangTypeToSchemaName(t reflect.Type) string {
-	return gstr.TrimLeft(t.String(), "*")
+	var (
+		s = gstr.TrimLeft(t.String(), "*")
+	)
+	s = gstr.ReplaceByMap(s, map[string]string{
+		` `: ``,
+		`{`: ``,
+		`}`: ``,
+	})
+	return s
 }
