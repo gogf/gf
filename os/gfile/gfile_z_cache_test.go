@@ -7,8 +7,8 @@
 package gfile_test
 
 import (
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/test/gtest"
 	"io/ioutil"
 	"os"
 	"testing"

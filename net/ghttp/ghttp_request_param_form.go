@@ -7,8 +7,8 @@
 package ghttp
 
 import (
-	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // SetForm sets custom form value with key-value pair.

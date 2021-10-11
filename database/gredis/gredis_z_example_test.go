@@ -9,9 +9,9 @@ package gredis_test
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/util/gutil"
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 func Example_autoMarshalUnmarshalMap() {

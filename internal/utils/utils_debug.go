@@ -7,7 +7,7 @@
 package utils
 
 import (
-	"github.com/gogf/gf/internal/command"
+	"github.com/gogf/gf/v2/internal/command"
 )
 
 const (

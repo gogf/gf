@@ -9,7 +9,7 @@ package gsession
 import (
 	"testing"
 
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_NewSessionId(t *testing.T) {

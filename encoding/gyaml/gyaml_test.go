@@ -7,14 +7,14 @@
 package gyaml_test
 
 import (
-	"github.com/gogf/gf/encoding/gjson"
-	"github.com/gogf/gf/internal/json"
+	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v2/internal/json"
 	"testing"
 
-	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/v2/frame/g"
 
-	"github.com/gogf/gf/encoding/gyaml"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/encoding/gyaml"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 var yamlStr string = `

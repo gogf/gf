@@ -9,9 +9,9 @@ package gredis
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf"
-	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/net/gtrace"
+	"github.com/gogf/gf/v2"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/net/gtrace"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -27,7 +27,7 @@ type tracingItem struct {
 }
 
 const (
-	tracingInstrumentName               = "github.com/gogf/gf/database/gredis"
+	tracingInstrumentName               = "github.com/gogf/gf/v2/database/gredis"
 	tracingAttrRedisAddress             = "redis.address"
 	tracingAttrRedisDb                  = "redis.db"
 	tracingEventRedisExecution          = "redis.execution"

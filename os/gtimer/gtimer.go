@@ -19,11 +19,11 @@
 package gtimer
 
 import (
-	"github.com/gogf/gf/container/gtype"
+	"github.com/gogf/gf/v2/container/gtype"
 	"sync"
 	"time"
 
-	"github.com/gogf/gf/os/gcmd"
+	"github.com/gogf/gf/v2/os/gcmd"
 )
 
 // Timer is the timer manager, which uses ticks to calculate the timing interval.

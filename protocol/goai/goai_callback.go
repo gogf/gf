@@ -7,7 +7,7 @@
 package goai
 
 import (
-	"github.com/gogf/gf/internal/json"
+	"github.com/gogf/gf/v2/internal/json"
 )
 
 // Callback is specified by OpenAPI/Swagger standard version 3.0.

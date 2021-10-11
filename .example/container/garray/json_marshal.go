@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gogf/gf/container/garray"
+	"github.com/gogf/gf/v2/container/garray"
 )
 
 func main() {

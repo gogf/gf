@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/gogf/gf/encoding/gjson"
-	"github.com/gogf/gf/os/gctx"
+	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v2/os/gctx"
 
-	"github.com/gogf/gf/database/gdb"
-	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/frame/g"
 )
 
 func main() {

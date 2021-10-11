@@ -9,7 +9,7 @@ package gtype
 import (
 	"bytes"
 	"encoding/base64"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/util/gconv"
 	"sync/atomic"
 )
 

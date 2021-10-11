@@ -10,8 +10,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/gogf/gf/database/gdb"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_Ctx(t *testing.T) {

@@ -8,8 +8,8 @@ package gcache
 
 import (
 	"context"
-	"github.com/gogf/gf/os/gtimer"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/os/gtimer"
+	"github.com/gogf/gf/v2/util/gconv"
 	"time"
 )
 

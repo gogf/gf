@@ -8,16 +8,16 @@ package gtest
 
 import (
 	"fmt"
-	"github.com/gogf/gf/internal/empty"
+	"github.com/gogf/gf/v2/internal/empty"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
 
-	"github.com/gogf/gf/debug/gdebug"
+	"github.com/gogf/gf/v2/debug/gdebug"
 
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 const (

@@ -8,11 +8,11 @@ package gsession
 
 import (
 	"context"
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/internal/intlog"
 	"time"
 
-	"github.com/gogf/gf/os/gcache"
+	"github.com/gogf/gf/v2/os/gcache"
 )
 
 // Manager for sessions.

@@ -12,7 +12,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/gogf/gf/os/gcache"
+	"github.com/gogf/gf/v2/os/gcache"
 )
 
 var (

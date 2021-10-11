@@ -9,15 +9,15 @@ package gres
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/v2/internal/intlog"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/v2/os/gtime"
 
-	"github.com/gogf/gf/container/gtree"
-	"github.com/gogf/gf/os/gfile"
+	"github.com/gogf/gf/v2/container/gtree"
+	"github.com/gogf/gf/v2/os/gfile"
 )
 
 type Resource struct {

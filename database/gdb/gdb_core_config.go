@@ -8,11 +8,11 @@ package gdb
 
 import (
 	"fmt"
-	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/v2/os/glog"
 	"sync"
 	"time"
 
-	"github.com/gogf/gf/os/gcache"
+	"github.com/gogf/gf/v2/os/gcache"
 )
 
 // Config is the configuration management object.

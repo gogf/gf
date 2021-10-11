@@ -9,9 +9,9 @@ package goai_test
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/protocol/goai"
-	"github.com/gogf/gf/test/gtest"
-	"github.com/gogf/gf/util/gmeta"
+	"github.com/gogf/gf/v2/protocol/goai"
+	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gmeta"
 	"testing"
 )
 

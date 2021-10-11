@@ -7,8 +7,8 @@
 package gmlock
 
 import (
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/os/gmutex"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/os/gmutex"
 )
 
 // Locker is a memory based locker.

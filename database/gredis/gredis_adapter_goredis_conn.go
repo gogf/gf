@@ -9,9 +9,9 @@ package gredis
 import (
 	"context"
 	"github.com/go-redis/redis/v8"
-	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 type localAdapterGoRedisConn struct {

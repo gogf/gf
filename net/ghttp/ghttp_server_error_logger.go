@@ -9,7 +9,7 @@ package ghttp
 import (
 	"bytes"
 	"context"
-	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/v2/os/glog"
 )
 
 // errorLogger is the error logging logger for underlying net/http.Server.

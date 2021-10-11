@@ -5,8 +5,8 @@ import (
 	"time"
 
 	//_ "github.com/denisenkom/go-mssqldb"
-	"github.com/gogf/gf/database/gdb"
-	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/frame/g"
 )
 
 // 本文件用于gf框架的mssql数据库操作示例，不作为单元测试使用

@@ -9,7 +9,7 @@ package gcompress
 import (
 	"bytes"
 	"compress/gzip"
-	"github.com/gogf/gf/os/gfile"
+	"github.com/gogf/gf/v2/os/gfile"
 	"io"
 )
 

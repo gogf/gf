@@ -7,7 +7,7 @@
 package gins
 
 import (
-	"github.com/gogf/gf/os/gres"
+	"github.com/gogf/gf/v2/os/gres"
 )
 
 // Resource returns an instance of Resource.

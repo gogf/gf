@@ -8,7 +8,7 @@ package gvalid
 
 import (
 	"context"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/util/gconv"
 	"strconv"
 	"strings"
 )

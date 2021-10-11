@@ -11,9 +11,9 @@ package gcrc32_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/crypto/gcrc32"
-	"github.com/gogf/gf/crypto/gmd5"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/crypto/gcrc32"
+	"github.com/gogf/gf/v2/crypto/gmd5"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func TestEncrypt(t *testing.T) {

@@ -8,13 +8,13 @@ package gxml_test
 
 import (
 	"bytes"
-	"github.com/gogf/gf/encoding/gjson"
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"strings"
 	"testing"
 
-	"github.com/gogf/gf/encoding/gcharset"
-	"github.com/gogf/gf/encoding/gxml"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/encoding/gcharset"
+	"github.com/gogf/gf/v2/encoding/gxml"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 var testData = []struct {

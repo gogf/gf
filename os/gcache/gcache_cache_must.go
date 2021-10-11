@@ -8,7 +8,7 @@ package gcache
 
 import (
 	"context"
-	"github.com/gogf/gf/container/gvar"
+	"github.com/gogf/gf/v2/container/gvar"
 	"time"
 )
 

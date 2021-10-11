@@ -8,8 +8,8 @@ package ghttp_test
 
 import (
 	"context"
-	"github.com/gogf/gf/container/garray"
-	"github.com/gogf/gf/os/genv"
+	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/os/genv"
 )
 
 var (

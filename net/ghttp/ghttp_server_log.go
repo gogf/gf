@@ -8,7 +8,7 @@ package ghttp
 
 import (
 	"fmt"
-	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
 // handleAccessLog handles the access logging for server.

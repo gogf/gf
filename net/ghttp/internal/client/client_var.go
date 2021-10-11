@@ -8,7 +8,7 @@ package client
 
 import (
 	"context"
-	"github.com/gogf/gf/container/gvar"
+	"github.com/gogf/gf/v2/container/gvar"
 )
 
 // GetVar sends a GET request, retrieves and converts the result content to specified pointer.

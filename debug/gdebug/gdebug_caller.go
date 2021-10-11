@@ -8,7 +8,7 @@ package gdebug
 
 import (
 	"fmt"
-	"github.com/gogf/gf/internal/utils"
+	"github.com/gogf/gf/v2/internal/utils"
 	"os"
 	"os/exec"
 	"path/filepath"

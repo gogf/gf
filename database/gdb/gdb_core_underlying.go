@@ -10,10 +10,10 @@ package gdb
 import (
 	"context"
 	"database/sql"
-	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/internal/intlog"
 
-	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/v2/os/gtime"
 )
 
 // Query commits one query SQL to underlying driver and returns the execution result.

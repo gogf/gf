@@ -13,14 +13,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gogf/gf/internal/intlog"
-	"github.com/gogf/gf/os/gres"
-	"github.com/gogf/gf/os/gsession"
-	"github.com/gogf/gf/os/gview"
-	"github.com/gogf/gf/util/guid"
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/os/gres"
+	"github.com/gogf/gf/v2/os/gsession"
+	"github.com/gogf/gf/v2/os/gview"
+	"github.com/gogf/gf/v2/util/guid"
 
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/text/gregex"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/text/gregex"
 )
 
 // Request is the context object for a request.

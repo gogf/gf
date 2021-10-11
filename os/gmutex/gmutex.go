@@ -11,7 +11,7 @@ import (
 	"math"
 	"runtime"
 
-	"github.com/gogf/gf/container/gtype"
+	"github.com/gogf/gf/v2/container/gtype"
 )
 
 // The high level Mutex, which implements more rich features for mutex.

@@ -11,7 +11,7 @@ package grpool_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/os/grpool"
+	"github.com/gogf/gf/v2/os/grpool"
 )
 
 var n = 500000

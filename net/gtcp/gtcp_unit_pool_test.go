@@ -8,8 +8,8 @@ package gtcp_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/net/gtcp"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/net/gtcp"
+	"github.com/gogf/gf/v2/test/gtest"
 	"testing"
 	"time"
 )

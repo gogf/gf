@@ -12,7 +12,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/gogf/gf/os/gfile"
+	"github.com/gogf/gf/v2/os/gfile"
 )
 
 const (

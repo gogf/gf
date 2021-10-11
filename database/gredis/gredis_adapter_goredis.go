@@ -9,7 +9,7 @@ package gredis
 import (
 	"context"
 	"github.com/go-redis/redis/v8"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/text/gstr"
 	"time"
 )
 

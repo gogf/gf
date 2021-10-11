@@ -21,8 +21,8 @@ package gcharset
 
 import (
 	"bytes"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"io/ioutil"
 
 	"golang.org/x/text/encoding"

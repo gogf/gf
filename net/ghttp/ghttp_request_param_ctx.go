@@ -8,7 +8,7 @@ package ghttp
 
 import (
 	"context"
-	"github.com/gogf/gf/container/gvar"
+	"github.com/gogf/gf/v2/container/gvar"
 )
 
 // RequestFromCtx retrieves and returns the Request object from context.
