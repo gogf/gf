@@ -8,6 +8,8 @@ package goai
 
 // Config provides extra configuration feature for OpenApiV3 implements.
 type Config struct {
+	CommonRequest           interface{} // Common request structure for all paths.
+	CommonRequestDataField  string      // Common request field name to be replaced with certain business request structure. Eg: `Data`, `Request.`.
 	CommonResponse          interface{} // Common response structure for all paths.
 	CommonResponseDataField string      // Common response field name to be replaced with certain business response structure. Eg: `Data`, `Response.`.
 	ReadContentTypes        []string    // ReadContentTypes specifies the default MIME types for consuming if MIME types are not configured.
