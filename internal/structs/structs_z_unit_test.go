@@ -237,7 +237,7 @@ func Test_StructType(t *testing.T) {
 		}
 		r, err := structs.StructType(new(A))
 		t.AssertNil(err)
-		t.Assert(r.Signature(), `github.com/gogf/gf/internal/structs_test/structs_test.A`)
+		t.Assert(r.Signature(), `github.com/gogf/gf/v2/internal/structs_test/structs_test.A`)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type B struct {
@@ -248,7 +248,7 @@ func Test_StructType(t *testing.T) {
 		}
 		r, err := structs.StructType(new(A).B)
 		t.AssertNil(err)
-		t.Assert(r.Signature(), `github.com/gogf/gf/internal/structs_test/structs_test.B`)
+		t.Assert(r.Signature(), `github.com/gogf/gf/v2/internal/structs_test/structs_test.B`)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type B struct {
@@ -285,7 +285,7 @@ func Test_StructTypeBySlice(t *testing.T) {
 		}
 		r, err := structs.StructType(new(A).Array)
 		t.AssertNil(err)
-		t.Assert(r.Signature(), `github.com/gogf/gf/internal/structs_test/structs_test.B`)
+		t.Assert(r.Signature(), `github.com/gogf/gf/v2/internal/structs_test/structs_test.B`)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type B struct {
@@ -296,7 +296,7 @@ func Test_StructTypeBySlice(t *testing.T) {
 		}
 		r, err := structs.StructType(new(A).Array)
 		t.AssertNil(err)
-		t.Assert(r.Signature(), `github.com/gogf/gf/internal/structs_test/structs_test.B`)
+		t.Assert(r.Signature(), `github.com/gogf/gf/v2/internal/structs_test/structs_test.B`)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type B struct {
@@ -307,7 +307,7 @@ func Test_StructTypeBySlice(t *testing.T) {
 		}
 		r, err := structs.StructType(new(A).Array)
 		t.AssertNil(err)
-		t.Assert(r.Signature(), `github.com/gogf/gf/internal/structs_test/structs_test.B`)
+		t.Assert(r.Signature(), `github.com/gogf/gf/v2/internal/structs_test/structs_test.B`)
 	})
 }
 
