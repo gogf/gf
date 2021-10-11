@@ -9,6 +9,7 @@ package gvalid
 import "context"
 
 // RuleFunc is the custom function for data validation.
+//
 // The parameter `rule` specifies the validation rule string, like "required", "between:1,100", etc.
 // The parameter `value` specifies the value for this rule to validate.
 // The parameter `message` specifies the custom error message or configured i18n message for this rule.

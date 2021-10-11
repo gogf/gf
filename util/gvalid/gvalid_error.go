@@ -182,7 +182,7 @@ func (e *validationError) FirstString() (err string) {
 	return
 }
 
-// Current is alis of FirstString, which implements interface gerror.ApiCurrent.
+// Current is alis of FirstString, which implements interface gerror.iCurrent.
 func (e *validationError) Current() error {
 	if e == nil {
 		return nil
