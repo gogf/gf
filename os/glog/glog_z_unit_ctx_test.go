@@ -55,7 +55,7 @@ func Test_Ctx_CtxKey(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		w := bytes.NewBuffer(nil)
 		l := glog.NewWithWriter(w)
-		l.Print(gctx.WithValue(context.TODO(), "abcdefg"), 1, 2, 3)
+		l.Print(gctx.WithCtxId(context.TODO(), "abcdefg"), 1, 2, 3)
 		t.Assert(gstr.Count(w.String(), "abcdefg"), 1)
 		t.Assert(gstr.Count(w.String(), "1 2 3"), 1)
 	})
