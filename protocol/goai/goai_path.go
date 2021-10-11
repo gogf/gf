@@ -210,7 +210,11 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 			contentTypes = gstr.SplitAndTrim(tagMimeValue, ",")
 		}
 		for _, v := range contentTypes {
-			schemaRef, err := oai.getResponseSchemaRef(outputStructTypeName)
+			schemaRef, err := oai.getResponseSchemaRef(getResponseSchemaRefInput{
+				BusinessStructName: outputStructTypeName,
+				ResponseObject:     oai.Config.CommonResponse,
+				ResponseDataField:  oai.Config.CommonResponseDataField,
+			})
 			if err != nil {
 				return err
 			}
@@ -269,49 +273,69 @@ func (oai *OpenApiV3) doesStructHasNoFields(s interface{}) bool {
 	return len(structFields) == 0
 }
 
-func (oai *OpenApiV3) getResponseSchemaRef(responseStructName string) (*SchemaRef, error) {
+type getResponseSchemaRefInput struct {
+	BusinessStructName string
+	ResponseObject     interface{}
+	ResponseDataField  string
+}
+
+func (oai *OpenApiV3) getResponseSchemaRef(in getResponseSchemaRefInput) (*SchemaRef, error) {
 	if oai.Config.CommonResponse == nil {
 		return &SchemaRef{
-			Ref: responseStructName,
+			Ref: in.BusinessStructName,
 		}, nil
 	}
 
-	structFields, _ := structs.Fields(structs.FieldsInput{
-		Pointer:         oai.Config.CommonResponse,
-		RecursiveOption: structs.RecursiveOptionEmbeddedNoTag,
-	})
 	var (
-		err                        error
-		bizResponseStructSchemaRef = oai.Components.Schemas[responseStructName]
-		schema                     = &Schema{
-			Properties: map[string]SchemaRef{},
-		}
+		dataFieldsPartsArray                                        = gstr.Split(in.ResponseDataField, ".")
+		bizResponseStructSchemaRef, bizResponseStructSchemaRefExist = oai.Components.Schemas[in.BusinessStructName]
+		schema, err                                                 = oai.structToSchema(in.ResponseObject)
 	)
-	schema.Type = TypeObject
-	for _, structField := range structFields {
-		if !gstr.IsLetterUpper(structField.Name()[0]) {
-			continue
-		}
-		var (
-			schemaRef *SchemaRef
-			fieldName = structField.Name()
-		)
-		if jsonName := structField.TagJsonName(); jsonName != "" {
-			fieldName = jsonName
-		}
-		if structField.Name() == oai.Config.CommonResponseDataField {
-			schemaRef = &bizResponseStructSchemaRef
-		} else {
-			schemaRef, err = oai.newSchemaRefWithGolangType(
-				structField.Type().Type,
-				structField.TagMap(),
-			)
-		}
-		if err != nil {
-			return nil, err
-		}
-		schema.Properties[fieldName] = *schemaRef
+	if err != nil {
+		return nil, err
 	}
+	if in.ResponseDataField == "" && bizResponseStructSchemaRefExist {
+		for k, v := range bizResponseStructSchemaRef.Value.Properties {
+			schema.Properties[k] = v
+		}
+	} else {
+		structFields, _ := structs.Fields(structs.FieldsInput{
+			Pointer:         in.ResponseObject,
+			RecursiveOption: structs.RecursiveOptionEmbeddedNoTag,
+		})
+		for _, structField := range structFields {
+			var (
+				fieldName = structField.Name()
+			)
+			if jsonName := structField.TagJsonName(); jsonName != "" {
+				fieldName = jsonName
+			}
+			switch len(dataFieldsPartsArray) {
+			case 1:
+				if structField.Name() == dataFieldsPartsArray[0] {
+					schema.Properties[fieldName] = bizResponseStructSchemaRef
+					break
+				}
+			default:
+				if structField.Name() == dataFieldsPartsArray[0] {
+					var (
+						structFieldInstance = reflect.New(structField.Type().Type)
+					)
+					schemaRef, err := oai.getResponseSchemaRef(getResponseSchemaRefInput{
+						BusinessStructName: in.BusinessStructName,
+						ResponseObject:     structFieldInstance,
+						ResponseDataField:  gstr.Join(dataFieldsPartsArray[1:], "."),
+					})
+					if err != nil {
+						return nil, err
+					}
+					schema.Properties[fieldName] = *schemaRef
+					break
+				}
+			}
+		}
+	}
+
 	return &SchemaRef{
 		Value: schema,
 	}, nil

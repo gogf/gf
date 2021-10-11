@@ -228,9 +228,54 @@ func TestOpenApiV3_CommonResponse(t *testing.T) {
 		})
 		t.AssertNil(err)
 		// Schema asserts.
-		t.Assert(len(oai.Components.Schemas), 2)
+		t.Assert(len(oai.Components.Schemas), 3)
 		t.Assert(len(oai.Paths), 1)
 		t.Assert(len(oai.Paths["/index"].Get.Responses["200"].Value.Content["application/json"].Schema.Value.Properties), 3)
+	})
+}
+
+func TestOpenApiV3_CommonResponse_WithoutDataField_Setting(t *testing.T) {
+	type CommonResponse struct {
+		Code    int         `json:"code"    description:"Error code"`
+		Message string      `json:"message" description:"Error message"`
+		Data    interface{} `json:"data"    description:"Result data for certain request according API definition"`
+	}
+
+	type Req struct {
+		gmeta.Meta `method:"GET"`
+		Product    string `json:"product" in:"query" v:"required" description:"Unique product key"`
+		Name       string `json:"name"    in:"query"  v:"required" description:"Instance name"`
+	}
+	type Res struct {
+		Product      string `json:"product"      v:"required" description:"Unique product key"`
+		TemplateName string `json:"templateName" v:"required" description:"Workflow template name"`
+		Version      string `json:"version"      v:"required" description:"Workflow template version"`
+		TxID         string `json:"txID"         v:"required" description:"Transaction ID for creating instance"`
+		Globals      string `json:"globals"                   description:"Globals"`
+	}
+
+	f := func(ctx context.Context, req *Req) (res *Res, err error) {
+		return
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err error
+			oai = goai.New()
+		)
+
+		oai.Config.CommonResponse = CommonResponse{}
+
+		err = oai.Add(goai.AddInput{
+			Path:   "/index",
+			Object: f,
+		})
+		t.AssertNil(err)
+		// Schema asserts.
+		fmt.Println(oai.String())
+		t.Assert(len(oai.Components.Schemas), 3)
+		t.Assert(len(oai.Paths), 1)
+		t.Assert(len(oai.Paths["/index"].Get.Responses["200"].Value.Content["application/json"].Schema.Value.Properties), 8)
 	})
 }
 
@@ -267,8 +312,65 @@ func TestOpenApiV3_CommonResponse_EmptyResponse(t *testing.T) {
 		})
 		t.AssertNil(err)
 		// Schema asserts.
-		t.Assert(len(oai.Components.Schemas), 2)
+		//fmt.Println(oai.String())
+		t.Assert(len(oai.Components.Schemas), 3)
 		t.Assert(len(oai.Paths), 1)
 		t.Assert(len(oai.Paths["/index"].Get.Responses["200"].Value.Content["application/json"].Schema.Value.Properties), 3)
+	})
+}
+
+func TestOpenApiV3_CommonResponse_SubDataField(t *testing.T) {
+	type CommonResError struct {
+		Code    string `description:"错误码"`
+		Message string `description:"错误描述"`
+	}
+
+	type CommonResResponse struct {
+		RequestId string          `description:"RequestId"`
+		Error     *CommonResError `json:",omitempty" description:"执行错误信息"`
+	}
+
+	type CommonRes struct {
+		Response CommonResResponse
+	}
+
+	type Req struct {
+		gmeta.Meta `method:"GET"`
+		Product    string `json:"product" in:"query" v:"required" description:"Unique product key"`
+		Name       string `json:"name"    in:"query"  v:"required" description:"Instance name"`
+	}
+
+	type Res struct {
+		Product      string `json:"product"      v:"required" description:"Unique product key"`
+		TemplateName string `json:"templateName" v:"required" description:"Workflow template name"`
+		Version      string `json:"version"      v:"required" description:"Workflow template version"`
+		TxID         string `json:"txID"         v:"required" description:"Transaction ID for creating instance"`
+		Globals      string `json:"globals"                   description:"Globals"`
+	}
+
+	f := func(ctx context.Context, req *Req) (res *Res, err error) {
+		return
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err error
+			oai = goai.New()
+		)
+
+		oai.Config.CommonResponse = CommonRes{}
+		oai.Config.CommonResponseDataField = `Response.`
+
+		err = oai.Add(goai.AddInput{
+			Path:   "/index",
+			Object: f,
+		})
+		t.AssertNil(err)
+		// Schema asserts.
+		//fmt.Println(oai.String())
+		t.Assert(len(oai.Components.Schemas), 4)
+		t.Assert(len(oai.Paths), 1)
+		t.Assert(len(oai.Paths["/index"].Get.Responses["200"].Value.Content["application/json"].Schema.Value.Properties), 1)
+		t.Assert(len(oai.Paths["/index"].Get.Responses["200"].Value.Content["application/json"].Schema.Value.Properties[`Response`].Value.Properties), 7)
 	})
 }
