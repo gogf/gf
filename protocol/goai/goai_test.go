@@ -164,7 +164,7 @@ func TestOpenApiV3_Add_Recursive(t *testing.T) {
 
 func TestOpenApiV3_Add_EmptyReqAndRes(t *testing.T) {
 	type CaptchaIndexReq struct {
-		gmeta.Meta `method:"GET" summary:"获取默认的验证码" description:"注意直接返回的是图片二进制内容" tags:"前台-验证码"`
+		gmeta.Meta `method:"PUT" summary:"获取默认的验证码" description:"注意直接返回的是图片二进制内容" tags:"前台-验证码"`
 	}
 	type CaptchaIndexRes struct {
 		gmeta.Meta `mime:"png" description:"验证码二进制内容" `
@@ -272,10 +272,10 @@ func TestOpenApiV3_CommonRequest_WithoutDataField_Setting(t *testing.T) {
 		})
 		t.AssertNil(err)
 		// Schema asserts.
-		fmt.Println(oai.String())
+		//fmt.Println(oai.String())
 		t.Assert(len(oai.Components.Schemas), 3)
 		t.Assert(len(oai.Paths), 1)
-		t.Assert(len(oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Value.Properties), 8)
+		t.Assert(len(oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Value.Properties), 5)
 	})
 }
 
@@ -371,7 +371,7 @@ func TestOpenApiV3_CommonRequest_SubDataField(t *testing.T) {
 		t.Assert(len(oai.Components.Schemas), 4)
 		t.Assert(len(oai.Paths), 1)
 		t.Assert(len(oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Value.Properties), 1)
-		t.Assert(len(oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Value.Properties[`Request`].Value.Properties), 7)
+		t.Assert(len(oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Value.Properties[`Request`].Value.Properties), 4)
 	})
 }
 
@@ -473,9 +473,9 @@ func TestOpenApiV3_CommonResponse_EmptyResponse(t *testing.T) {
 	}
 
 	type Req struct {
-		gmeta.Meta `method:"GET"`
-		Product    string `json:"product" in:"query" v:"required" description:"Unique product key"`
-		Name       string `json:"name"    in:"query"  v:"required" description:"Instance name"`
+		gmeta.Meta `method:"PUT"`
+		Product    string `json:"product" v:"required" description:"Unique product key"`
+		Name       string `json:"name"    v:"required" description:"Instance name"`
 	}
 	type Res struct{}
 
@@ -501,7 +501,8 @@ func TestOpenApiV3_CommonResponse_EmptyResponse(t *testing.T) {
 		//fmt.Println(oai.String())
 		t.Assert(len(oai.Components.Schemas), 3)
 		t.Assert(len(oai.Paths), 1)
-		t.Assert(len(oai.Paths["/index"].Get.Responses["200"].Value.Content["application/json"].Schema.Value.Properties), 3)
+		t.Assert(oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Ref, `goai_test.Req`)
+		t.Assert(len(oai.Paths["/index"].Put.Responses["200"].Value.Content["application/json"].Schema.Value.Properties), 3)
 	})
 }
 

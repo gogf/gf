@@ -164,7 +164,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 				requestBody.Content[v] = MediaType{}
 			} else {
 				schemaRef, err := oai.getRequestSchemaRef(getRequestSchemaRefInput{
-					BusinessStructName: outputStructTypeName,
+					BusinessStructName: inputStructTypeName,
 					RequestObject:      oai.Config.CommonRequest,
 					RequestDataField:   oai.Config.CommonRequestDataField,
 				})
