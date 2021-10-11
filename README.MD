@@ -16,16 +16,16 @@ of Golang.
 
 # Installation
 ```
-go get -u -v github.com/gogf/gf
+go get -u -v github.com/gogf/gf/v2
 ```
 suggested using `go.mod`:
 ```
-require github.com/gogf/gf latest
+require github.com/gogf/gf/v2 latest
 ```
 
 # Limitation
 ```
-golang version >= 1.11
+golang version >= 1.14
 ```
 
 # Architecture
