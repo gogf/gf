@@ -134,7 +134,7 @@ func (c *AdapterFile) Get(ctx context.Context, pattern string) (value interface{
 		return nil, err
 	}
 	if j != nil {
-		return j.Get(pattern), nil
+		return j.Get(pattern).Val(), nil
 	}
 	return nil, nil
 }
