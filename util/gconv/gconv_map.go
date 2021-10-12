@@ -282,6 +282,11 @@ func doMapConvertForMapOrStructValue(isRoot bool, value interface{}, recursive b
 				}
 				switch rvAttrKind {
 				case reflect.Struct:
+					// Embedded struct and has no fields, just ignores it.
+					// Eg: gmeta.Meta
+					if rvAttrField.Type().NumField() == 0 {
+						continue
+					}
 					var (
 						hasNoTag        = mapKey == fieldName
 						rvAttrInterface = rvAttrField.Interface()
