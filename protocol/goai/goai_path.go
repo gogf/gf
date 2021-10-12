@@ -277,9 +277,5 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 }
 
 func (oai *OpenApiV3) doesStructHasNoFields(s interface{}) bool {
-	structFields, _ := structs.Fields(structs.FieldsInput{
-		Pointer:         s,
-		RecursiveOption: structs.RecursiveOptionEmbeddedNoTag,
-	})
-	return len(structFields) == 0
+	return reflect.TypeOf(s).NumField() == 0
 }
