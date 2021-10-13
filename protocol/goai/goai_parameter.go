@@ -83,7 +83,7 @@ func (oai *OpenApiV3) newParameterRefWithStructMethod(field *structs.Field, meth
 		return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid tag value "%s" for In`, parameter.In)
 	}
 	// Necessary schema or content.
-	schemaRef, err := oai.newSchemaRefWithGolangType(field.Type(), tagMap)
+	schemaRef, err := oai.newSchemaRefWithGolangType(field.Type().Type, tagMap)
 	if err != nil {
 		return nil, err
 	}

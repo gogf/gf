@@ -44,18 +44,6 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Remove char '/' in the tail of URI.
-	if r.URL.Path != "/" {
-		for len(r.URL.Path) > 0 && r.URL.Path[len(r.URL.Path)-1] == '/' {
-			r.URL.Path = r.URL.Path[:len(r.URL.Path)-1]
-		}
-	}
-
-	// Default URI value if it's empty.
-	if r.URL.Path == "" {
-		r.URL.Path = "/"
-	}
-
 	// Create a new request object.
 	request := newRequest(s, r, w)
 
