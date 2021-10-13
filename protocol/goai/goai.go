@@ -200,7 +200,7 @@ func golangTypeToSchemaName(t reflect.Type) string {
 		s = gstr.TrimLeft(t.String(), "*")
 	)
 	if pkgPath := t.PkgPath(); pkgPath != "" && pkgPath != "." {
-		s = gstr.Replace(t.PkgPath(), `/`, `_`) + gstr.SubStrFrom(s, ".")
+		s = gstr.Replace(t.PkgPath(), `/`, `.`) + gstr.SubStrFrom(s, ".")
 	}
 	s = gstr.ReplaceByMap(s, map[string]string{
 		` `: ``,
