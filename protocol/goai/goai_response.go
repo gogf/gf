@@ -82,7 +82,7 @@ func (oai *OpenApiV3) getResponseSchemaRef(in getResponseSchemaRefInput) (*Schem
 			default:
 				if structField.Name() == dataFieldsPartsArray[0] {
 					var (
-						structFieldInstance = reflect.New(structField.Type().Type)
+						structFieldInstance = reflect.New(structField.Type().Type).Elem()
 					)
 					schemaRef, err := oai.getResponseSchemaRef(getResponseSchemaRefInput{
 						BusinessStructName: in.BusinessStructName,

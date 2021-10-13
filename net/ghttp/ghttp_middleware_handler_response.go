@@ -15,7 +15,7 @@ import (
 type DefaultHandlerResponse struct {
 	Code    int         `json:"code"`
 	Message string      `json:"message"`
-	Data    interface{} `json:"data"`
+	Data    interface{} `json:"data,omitempty"`
 }
 
 // MiddlewareHandlerResponse is the default middleware handling handler response object and its error.
@@ -30,6 +30,7 @@ func MiddlewareHandlerResponse(r *Request) {
 	var (
 		err         error
 		res         interface{}
+		ctx         = r.Context()
 		internalErr error
 	)
 	res, err = r.GetHandlerResponse()
@@ -44,7 +45,7 @@ func MiddlewareHandlerResponse(r *Request) {
 			Data:    nil,
 		})
 		if internalErr != nil {
-			intlog.Error(r.Context(), internalErr)
+			intlog.Error(ctx, internalErr)
 		}
 		return
 	}
@@ -54,6 +55,6 @@ func MiddlewareHandlerResponse(r *Request) {
 		Data:    res,
 	})
 	if internalErr != nil {
-		intlog.Error(r.Context(), internalErr)
+		intlog.Error(ctx, internalErr)
 	}
 }

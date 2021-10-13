@@ -127,7 +127,7 @@ func (s *Server) Start() error {
 
 	// Swagger UI.
 	if s.config.SwaggerPath != "" {
-		swaggerui.InitSwaggerUI()
+		swaggerui.Init()
 		s.AddStaticPath(s.config.SwaggerPath, swaggerUIPackedPath)
 		s.BindHookHandler(s.config.SwaggerPath+"/*", HookBeforeServe, s.swaggerUI)
 		s.Logger().Debugf(

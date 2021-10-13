@@ -7,5 +7,5 @@
 // Package swaggerui provides packed swagger ui static files using resource manager.
 //
 // Files from: https://github.com/swagger-api/swagger-ui
-// Pack command: gf pack swagger-ui swaggerui.go -n=swaggerui -p=/goframe/swaggerui
+// Pack command: gf pack swagger-ui swaggerui-packed.go -n=swaggerui -p=/goframe/swaggerui
 package swaggerui

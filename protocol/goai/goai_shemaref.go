@@ -68,7 +68,7 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 		}
 		// Normal struct object.
 		if _, ok := oai.Components.Schemas[structTypeName]; !ok {
-			if err := oai.addSchema(reflect.New(golangType).Interface()); err != nil {
+			if err := oai.addSchema(reflect.New(golangType).Elem().Interface()); err != nil {
 				return nil, err
 			}
 		}
