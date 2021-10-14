@@ -191,21 +191,28 @@ func (oai *OpenApiV3) golangTypeToOAIFormat(t reflect.Type) string {
 	}
 }
 
-func formatRefToBytes(ref string) []byte {
-	return []byte(fmt.Sprintf(`{"$ref":"#/components/schemas/%s"}`, ref))
-}
-
-func golangTypeToSchemaName(t reflect.Type) string {
+func (oai *OpenApiV3) golangTypeToSchemaName(t reflect.Type) string {
 	var (
-		s = gstr.TrimLeft(t.String(), "*")
+		pkgPath    = ""
+		schemaName = gstr.TrimLeft(t.String(), "*")
 	)
-	if pkgPath := t.PkgPath(); pkgPath != "" && pkgPath != "." {
-		s = gstr.Replace(t.PkgPath(), `/`, `.`) + gstr.SubStrFrom(s, ".")
+	// Pointer type has no PkgPath.
+	for t.Kind() == reflect.Ptr {
+		t = t.Elem()
 	}
-	s = gstr.ReplaceByMap(s, map[string]string{
+	if pkgPath = t.PkgPath(); pkgPath != "" && pkgPath != "." {
+		if !oai.Config.IgnorePkgPath {
+			schemaName = gstr.Replace(pkgPath, `/`, `.`) + gstr.SubStrFrom(schemaName, ".")
+		}
+	}
+	schemaName = gstr.ReplaceByMap(schemaName, map[string]string{
 		` `: ``,
 		`{`: ``,
 		`}`: ``,
 	})
-	return s
+	return schemaName
+}
+
+func formatRefToBytes(ref string) []byte {
+	return []byte(fmt.Sprintf(`{"$ref":"#/components/schemas/%s"}`, ref))
 }

@@ -54,26 +54,45 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 
 	case
 		TypeObject:
-		var (
-			structTypeName = golangTypeToSchemaName(golangType)
-		)
-		// Specially for map type.
-		if golangType.Kind() == reflect.Map {
+		for golangType.Kind() == reflect.Ptr {
+			golangType = golangType.Elem()
+		}
+		switch golangType.Kind() {
+		case reflect.Map:
+			// Specially for map type.
 			subSchemaRef, err := oai.newSchemaRefWithGolangType(golangType.Elem(), nil)
 			if err != nil {
 				return nil, err
 			}
 			schema.AdditionalProperties = subSchemaRef
 			return schemaRef, nil
-		}
-		// Normal struct object.
-		if _, ok := oai.Components.Schemas[structTypeName]; !ok {
-			if err := oai.addSchema(reflect.New(golangType).Elem().Interface()); err != nil {
-				return nil, err
+
+		case reflect.Interface:
+			// Specially for interface type.
+			var (
+				structTypeName = oai.golangTypeToSchemaName(golangType)
+			)
+			if _, ok := oai.Components.Schemas[structTypeName]; !ok {
+				if err := oai.addSchema(reflect.New(golangType).Interface()); err != nil {
+					return nil, err
+				}
 			}
+			schemaRef.Ref = structTypeName
+			schemaRef.Value = nil
+
+		default:
+			// Normal struct object.
+			var (
+				structTypeName = oai.golangTypeToSchemaName(golangType)
+			)
+			if _, ok := oai.Components.Schemas[structTypeName]; !ok {
+				if err := oai.addSchema(reflect.New(golangType).Elem().Interface()); err != nil {
+					return nil, err
+				}
+			}
+			schemaRef.Ref = structTypeName
+			schemaRef.Value = nil
 		}
-		schemaRef.Ref = structTypeName
-		schemaRef.Value = nil
 	}
 	return schemaRef, nil
 }

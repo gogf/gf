@@ -88,8 +88,8 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		inputMetaMap         = gmeta.Data(inputObject.Interface())
 		outputMetaMap        = gmeta.Data(outputObject.Interface())
 		isInputStructEmpty   = oai.doesStructHasNoFields(inputObject.Interface())
-		inputStructTypeName  = golangTypeToSchemaName(inputObject.Type())
-		outputStructTypeName = golangTypeToSchemaName(outputObject.Type())
+		inputStructTypeName  = oai.golangTypeToSchemaName(inputObject.Type())
+		outputStructTypeName = oai.golangTypeToSchemaName(outputObject.Type())
 		operation            = Operation{
 			Responses: map[string]ResponseRef{},
 		}
