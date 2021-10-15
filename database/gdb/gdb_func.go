@@ -10,25 +10,23 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
-	"github.com/gogf/gf/errors/gcode"
 	"reflect"
 	"regexp"
 	"strings"
 	"time"
 
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/internal/empty"
 	"github.com/gogf/gf/internal/json"
+	"github.com/gogf/gf/internal/structs"
 	"github.com/gogf/gf/internal/utils"
 	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/util/gmeta"
-	"github.com/gogf/gf/util/gutil"
-
-	"github.com/gogf/gf/internal/structs"
-
 	"github.com/gogf/gf/text/gregex"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/util/gmeta"
+	"github.com/gogf/gf/util/gutil"
 )
 
 // iString is the type assert api for String.
@@ -799,6 +797,10 @@ func FormatSqlWithArgs(sql string, args []interface{}) string {
 			if len(args) > index {
 				if args[index] == nil {
 					return "null"
+				}
+				// Parameters of type Raw do not require special treatment
+				if v, ok := args[index].(Raw); ok {
+					return gconv.String(v)
 				}
 				var (
 					rv   = reflect.ValueOf(args[index])
