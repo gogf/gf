@@ -50,7 +50,7 @@ func NewFrom(array []interface{}, safe ...bool) *List {
 	}
 }
 
-// PushFront inserts a new element <e> with value <v> at the front of list <l> and returns `e`.
+// PushFront inserts a new element `e` with value `v` at the front of list `l` and returns `e`.
 func (l *List) PushFront(v interface{}) (e *Element) {
 	l.mu.Lock()
 	if l.list == nil {
@@ -61,7 +61,7 @@ func (l *List) PushFront(v interface{}) (e *Element) {
 	return
 }
 
-// PushBack inserts a new element <e> with value <v> at the back of list <l> and returns `e`.
+// PushBack inserts a new element `e` with value `v` at the back of list `l` and returns `e`.
 func (l *List) PushBack(v interface{}) (e *Element) {
 	l.mu.Lock()
 	if l.list == nil {
@@ -72,7 +72,7 @@ func (l *List) PushBack(v interface{}) (e *Element) {
 	return
 }
 
-// PushFronts inserts multiple new elements with values <values> at the front of list `l`.
+// PushFronts inserts multiple new elements with values `values` at the front of list `l`.
 func (l *List) PushFronts(values []interface{}) {
 	l.mu.Lock()
 	if l.list == nil {
@@ -84,7 +84,7 @@ func (l *List) PushFronts(values []interface{}) {
 	l.mu.Unlock()
 }
 
-// PushBacks inserts multiple new elements with values <values> at the back of list `l`.
+// PushBacks inserts multiple new elements with values `values` at the back of list `l`.
 func (l *List) PushBacks(values []interface{}) {
 	l.mu.Lock()
 	if l.list == nil {
@@ -124,7 +124,7 @@ func (l *List) PopFront() (value interface{}) {
 	return
 }
 
-// PopBacks removes <max> elements from back of `l`
+// PopBacks removes `max` elements from back of `l`
 // and returns values of the removed elements as slice.
 func (l *List) PopBacks(max int) (values []interface{}) {
 	l.mu.Lock()
@@ -146,7 +146,7 @@ func (l *List) PopBacks(max int) (values []interface{}) {
 	return
 }
 
-// PopFronts removes <max> elements from front of `l`
+// PopFronts removes `max` elements from front of `l`
 // and returns values of the removed elements as slice.
 func (l *List) PopFronts(max int) (values []interface{}) {
 	l.mu.Lock()
@@ -279,8 +279,8 @@ func (l *List) Size() int {
 	return l.Len()
 }
 
-// MoveBefore moves element <e> to its new position before `p`.
-// If <e> or <p> is not an element of <l>, or <e> == `p`, the list is not modified.
+// MoveBefore moves element `e` to its new position before `p`.
+// If `e` or `p` is not an element of `l`, or `e` == `p`, the list is not modified.
 // The element and `p` must not be nil.
 func (l *List) MoveBefore(e, p *Element) {
 	l.mu.Lock()
@@ -291,8 +291,8 @@ func (l *List) MoveBefore(e, p *Element) {
 	l.list.MoveBefore(e, p)
 }
 
-// MoveAfter moves element <e> to its new position after `p`.
-// If <e> or <p> is not an element of <l>, or <e> == `p`, the list is not modified.
+// MoveAfter moves element `e` to its new position after `p`.
+// If `e` or `p` is not an element of `l`, or `e` == `p`, the list is not modified.
 // The element and `p` must not be nil.
 func (l *List) MoveAfter(e, p *Element) {
 	l.mu.Lock()
@@ -303,8 +303,8 @@ func (l *List) MoveAfter(e, p *Element) {
 	l.list.MoveAfter(e, p)
 }
 
-// MoveToFront moves element <e> to the front of list `l`.
-// If <e> is not an element of `l`, the list is not modified.
+// MoveToFront moves element `e` to the front of list `l`.
+// If `e` is not an element of `l`, the list is not modified.
 // The element must not be nil.
 func (l *List) MoveToFront(e *Element) {
 	l.mu.Lock()
@@ -315,8 +315,8 @@ func (l *List) MoveToFront(e *Element) {
 	l.list.MoveToFront(e)
 }
 
-// MoveToBack moves element <e> to the back of list `l`.
-// If <e> is not an element of `l`, the list is not modified.
+// MoveToBack moves element `e` to the back of list `l`.
+// If `e` is not an element of `l`, the list is not modified.
 // The element must not be nil.
 func (l *List) MoveToBack(e *Element) {
 	l.mu.Lock()
@@ -328,7 +328,7 @@ func (l *List) MoveToBack(e *Element) {
 }
 
 // PushBackList inserts a copy of an other list at the back of list `l`.
-// The lists <l> and `other` may be the same, but they must not be nil.
+// The lists `l` and `other` may be the same, but they must not be nil.
 func (l *List) PushBackList(other *List) {
 	if l != other {
 		other.mu.RLock()
@@ -343,7 +343,7 @@ func (l *List) PushBackList(other *List) {
 }
 
 // PushFrontList inserts a copy of an other list at the front of list `l`.
-// The lists <l> and `other` may be the same, but they must not be nil.
+// The lists `l` and `other` may be the same, but they must not be nil.
 func (l *List) PushFrontList(other *List) {
 	if l != other {
 		other.mu.RLock()
@@ -357,8 +357,8 @@ func (l *List) PushFrontList(other *List) {
 	l.list.PushFrontList(other.list)
 }
 
-// InsertAfter inserts a new element <e> with value <v> immediately after <p> and returns `e`.
-// If <p> is not an element of `l`, the list is not modified.
+// InsertAfter inserts a new element `e` with value `v` immediately after `p` and returns `e`.
+// If `p` is not an element of `l`, the list is not modified.
 // The `p` must not be nil.
 func (l *List) InsertAfter(p *Element, v interface{}) (e *Element) {
 	l.mu.Lock()
@@ -370,8 +370,8 @@ func (l *List) InsertAfter(p *Element, v interface{}) (e *Element) {
 	return
 }
 
-// InsertBefore inserts a new element <e> with value <v> immediately before <p> and returns `e`.
-// If <p> is not an element of `l`, the list is not modified.
+// InsertBefore inserts a new element `e` with value `v` immediately before `p` and returns `e`.
+// If `p` is not an element of `l`, the list is not modified.
 // The `p` must not be nil.
 func (l *List) InsertBefore(p *Element, v interface{}) (e *Element) {
 	l.mu.Lock()
@@ -383,7 +383,7 @@ func (l *List) InsertBefore(p *Element, v interface{}) (e *Element) {
 	return
 }
 
-// Remove removes <e> from <l> if <e> is an element of list `l`.
+// Remove removes `e` from `l` if `e` is an element of list `l`.
 // It returns the element value e.Value.
 // The element must not be nil.
 func (l *List) Remove(e *Element) (value interface{}) {
@@ -396,7 +396,7 @@ func (l *List) Remove(e *Element) (value interface{}) {
 	return
 }
 
-// Removes removes multiple elements <es> from <l> if <es> are elements of list `l`.
+// Removes removes multiple elements `es` from `l` if `es` are elements of list `l`.
 func (l *List) Removes(es []*Element) {
 	l.mu.Lock()
 	defer l.mu.Unlock()

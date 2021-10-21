@@ -42,7 +42,7 @@ var (
 // slice. It also automatically validates the struct or every element of the struct slice according
 // to the validation tag of the struct.
 //
-// The parameter <pointer> can be type of: *struct/**struct/*[]struct/*[]*struct.
+// The parameter `pointer` can be type of: *struct/**struct/*[]struct/*[]*struct.
 //
 // It supports single and multiple struct convertion:
 // 1. Single struct, post content like: {"id":1, "name":"john"} or ?id=1&name=john

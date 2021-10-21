@@ -44,7 +44,7 @@ func (r *Request) SetCtx(ctx context.Context) {
 }
 
 // GetCtxVar retrieves and returns a Var with given key name.
-// The optional parameter <def> specifies the default value of the Var if given <key>
+// The optional parameter `def` specifies the default value of the Var if given `key`
 // does not exist in the context.
 func (r *Request) GetCtxVar(key interface{}, def ...interface{}) *gvar.Var {
 	value := r.Context().Value(key)

@@ -383,7 +383,7 @@ func (s *Server) SetHTTPSPort(port ...int) {
 }
 
 // EnableHTTPS enables HTTPS with given certification and key files for the server.
-// The optional parameter <tlsConfig> specifies custom TLS configuration.
+// The optional parameter `tlsConfig` specifies custom TLS configuration.
 func (s *Server) EnableHTTPS(certFile, keyFile string, tlsConfig ...*tls.Config) {
 	var (
 		ctx = context.TODO()

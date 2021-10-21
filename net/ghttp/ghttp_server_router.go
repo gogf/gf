@@ -169,7 +169,7 @@ func (s *Server) setHandler(ctx context.Context, pattern string, handler *handle
 			}
 		}
 	}
-	// It iterates the list array of <lists>, compares priorities and inserts the new router item in
+	// It iterates the list array of `lists`, compares priorities and inserts the new router item in
 	// the proper position of each list. The priority of the list is ordered from high to low.
 	item := (*handlerItem)(nil)
 	for _, l := range lists {
@@ -209,8 +209,8 @@ func (s *Server) setHandler(ctx context.Context, pattern string, handler *handle
 	}
 }
 
-// compareRouterPriority compares the priority between <newItem> and <oldItem>. It returns true
-// if <newItem>'s priority is higher than <oldItem>, else it returns false. The higher priority
+// compareRouterPriority compares the priority between `newItem` and `oldItem`. It returns true
+// if `newItem`'s priority is higher than `oldItem`, else it returns false. The higher priority
 // item will be insert into the router list before the other one.
 //
 // Comparison rules:

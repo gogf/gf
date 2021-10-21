@@ -77,7 +77,7 @@ func (p *utilAdmin) Shutdown(r *Request) {
 }
 
 // EnableAdmin enables the administration feature for the process.
-// The optional parameter <pattern> specifies the URI for the administration page.
+// The optional parameter `pattern` specifies the URI for the administration page.
 func (s *Server) EnableAdmin(pattern ...string) {
 	p := "/debug/admin"
 	if len(pattern) > 0 {

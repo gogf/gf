@@ -33,7 +33,7 @@ type gracefulServer struct {
 }
 
 // newGracefulServer creates and returns a graceful http server with given address.
-// The optional parameter <fd> specifies the file descriptor which is passed from parent server.
+// The optional parameter `fd` specifies the file descriptor which is passed from parent server.
 func (s *Server) newGracefulServer(address string, fd ...int) *gracefulServer {
 	// Change port to address like: 80 -> :80
 	if gstr.IsNumeric(address) {
@@ -94,8 +94,8 @@ func (s *gracefulServer) setFd(fd int) {
 }
 
 // ListenAndServeTLS starts listening on configured address with HTTPS.
-// The parameter <certFile> and <keyFile> specify the necessary certification and key files for HTTPS.
-// The optional parameter <tlsConfig> specifies the custom TLS configuration.
+// The parameter `certFile` and `keyFile` specify the necessary certification and key files for HTTPS.
+// The optional parameter `tlsConfig` specifies the custom TLS configuration.
 func (s *gracefulServer) ListenAndServeTLS(certFile, keyFile string, tlsConfig ...*tls.Config) error {
 	var (
 		ctx    = context.TODO()

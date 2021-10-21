@@ -250,7 +250,7 @@ func (s *Server) searchStaticFile(uri string) *staticFile {
 }
 
 // serveFile serves the static file for client.
-// The optional parameter <allowIndex> specifies if allowing directory listing if <f> is directory.
+// The optional parameter `allowIndex` specifies if allowing directory listing if `f` is directory.
 func (s *Server) serveFile(r *Request, f *staticFile, allowIndex ...bool) {
 	// Use resource file from memory.
 	if f.File != nil {

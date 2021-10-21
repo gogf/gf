@@ -18,7 +18,7 @@ import (
 )
 
 // Home returns absolute path of current user's home directory.
-// The optional parameter <names> specifies the its sub-folders/sub-files,
+// The optional parameter `names` specifies the its sub-folders/sub-files,
 // which will be joined with current system separator and returned with the path.
 func Home(names ...string) (string, error) {
 	path, err := getHomePath()

@@ -19,7 +19,7 @@ type IntSet struct {
 	data map[int]struct{}
 }
 
-// New create and returns a new set, which contains un-repeated items.
+// NewIntSet create and returns a new set, which contains un-repeated items.
 // The parameter `safe` is used to specify whether using set in concurrent-safety,
 // which is false in default.
 func NewIntSet(safe ...bool) *IntSet {
@@ -107,7 +107,7 @@ func (set *IntSet) AddIfNotExistFunc(item int, f func() bool) bool {
 	return false
 }
 
-// AddIfNotExistFunc checks whether item exists in the set,
+// AddIfNotExistFuncLock checks whether item exists in the set,
 // it adds the item to set and returns true if it does not exists in the set and
 // function `f` returns true, or else it does nothing and returns false.
 //
@@ -257,8 +257,8 @@ func (set *IntSet) IsSubsetOf(other *IntSet) bool {
 	return true
 }
 
-// Union returns a new set which is the union of <set> and `other`.
-// Which means, all the items in <newSet> are in <set> or in `other`.
+// Union returns a new set which is the union of `set` and `other`.
+// Which means, all the items in `newSet` are in `set` or in `other`.
 func (set *IntSet) Union(others ...*IntSet) (newSet *IntSet) {
 	newSet = NewIntSet()
 	set.mu.RLock()
@@ -283,8 +283,8 @@ func (set *IntSet) Union(others ...*IntSet) (newSet *IntSet) {
 	return
 }
 
-// Diff returns a new set which is the difference set from <set> to `other`.
-// Which means, all the items in <newSet> are in <set> but not in `other`.
+// Diff returns a new set which is the difference set from `set` to `other`.
+// Which means, all the items in `newSet` are in `set` but not in `other`.
 func (set *IntSet) Diff(others ...*IntSet) (newSet *IntSet) {
 	newSet = NewIntSet()
 	set.mu.RLock()
@@ -304,8 +304,8 @@ func (set *IntSet) Diff(others ...*IntSet) (newSet *IntSet) {
 	return
 }
 
-// Intersect returns a new set which is the intersection from <set> to `other`.
-// Which means, all the items in <newSet> are in <set> and also in `other`.
+// Intersect returns a new set which is the intersection from `set` to `other`.
+// Which means, all the items in `newSet` are in `set` and also in `other`.
 func (set *IntSet) Intersect(others ...*IntSet) (newSet *IntSet) {
 	newSet = NewIntSet()
 	set.mu.RLock()
@@ -326,11 +326,11 @@ func (set *IntSet) Intersect(others ...*IntSet) (newSet *IntSet) {
 	return
 }
 
-// Complement returns a new set which is the complement from <set> to `full`.
-// Which means, all the items in <newSet> are in <full> and not in `set`.
+// Complement returns a new set which is the complement from `set` to `full`.
+// Which means, all the items in `newSet` are in `full` and not in `set`.
 //
-// It returns the difference between <full> and `set`
-// if the given set <full> is not the full set of `set`.
+// It returns the difference between `full` and `set`
+// if the given set `full` is not the full set of `set`.
 func (set *IntSet) Complement(full *IntSet) (newSet *IntSet) {
 	newSet = NewIntSet()
 	set.mu.RLock()
@@ -347,7 +347,7 @@ func (set *IntSet) Complement(full *IntSet) (newSet *IntSet) {
 	return
 }
 
-// Merge adds items from <others> sets into `set`.
+// Merge adds items from `others` sets into `set`.
 func (set *IntSet) Merge(others ...*IntSet) *IntSet {
 	set.mu.Lock()
 	defer set.mu.Unlock()
@@ -377,7 +377,7 @@ func (set *IntSet) Sum() (sum int) {
 	return
 }
 
-// Pops randomly pops an item from set.
+// Pop randomly pops an item from set.
 func (set *IntSet) Pop() int {
 	set.mu.Lock()
 	defer set.mu.Unlock()

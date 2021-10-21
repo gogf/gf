@@ -37,8 +37,8 @@ func New() *Resource {
 	}
 }
 
-// Add unpacks and adds the <content> into current resource object.
-// The unnecessary parameter <prefix> indicates the prefix
+// Add unpacks and adds the `content` into current resource object.
+// The unnecessary parameter `prefix` indicates the prefix
 // for each file storing into current resource object.
 func (r *Resource) Add(content string, prefix ...string) error {
 	files, err := UnpackContent(content)
@@ -58,8 +58,8 @@ func (r *Resource) Add(content string, prefix ...string) error {
 	return nil
 }
 
-// Load loads, unpacks and adds the data from <path> into current resource object.
-// The unnecessary parameter <prefix> indicates the prefix
+// Load loads, unpacks and adds the data from `path` into current resource object.
+// The unnecessary parameter `prefix` indicates the prefix
 // for each file storing into current resource object.
 func (r *Resource) Load(path string, prefix ...string) error {
 	realPath, err := gfile.Search(path)
@@ -88,7 +88,7 @@ func (r *Resource) Get(path string) *File {
 	return nil
 }
 
-// GetWithIndex searches file with <path>, if the file is directory
+// GetWithIndex searches file with `path`, if the file is directory
 // it then does index files searching under this directory.
 //
 // GetWithIndex is usually used for http static file service.
@@ -115,7 +115,7 @@ func (r *Resource) GetWithIndex(path string, indexFiles []string) *File {
 	return nil
 }
 
-// GetContent directly returns the content of <path>.
+// GetContent directly returns the content of `path`.
 func (r *Resource) GetContent(path string) []byte {
 	file := r.Get(path)
 	if file != nil {
@@ -124,7 +124,7 @@ func (r *Resource) GetContent(path string) []byte {
 	return nil
 }
 
-// Contains checks whether the <path> exists in current resource object.
+// Contains checks whether the `path` exists in current resource object.
 func (r *Resource) Contains(path string) bool {
 	return r.Get(path) != nil
 }
@@ -134,14 +134,14 @@ func (r *Resource) IsEmpty() bool {
 	return r.tree.IsEmpty()
 }
 
-// ScanDir returns the files under the given path, the parameter <path> should be a folder type.
+// ScanDir returns the files under the given path, the parameter `path` should be a folder type.
 //
-// The pattern parameter <pattern> supports multiple file name patterns,
+// The pattern parameter `pattern` supports multiple file name patterns,
 // using the ',' symbol to separate multiple patterns.
 //
-// It scans directory recursively if given parameter <recursive> is true.
+// It scans directory recursively if given parameter `recursive` is true.
 //
-// Note that the returned files does not contain given parameter <path>.
+// Note that the returned files does not contain given parameter `path`.
 func (r *Resource) ScanDir(path string, pattern string, recursive ...bool) []*File {
 	isRecursive := false
 	if len(recursive) > 0 {
@@ -150,8 +150,8 @@ func (r *Resource) ScanDir(path string, pattern string, recursive ...bool) []*Fi
 	return r.doScanDir(path, pattern, isRecursive, false)
 }
 
-// ScanDirFile returns all sub-files with absolute paths of given <path>,
-// It scans directory recursively if given parameter <recursive> is true.
+// ScanDirFile returns all sub-files with absolute paths of given `path`,
+// It scans directory recursively if given parameter `recursive` is true.
 //
 // Note that it returns only files, exclusive of directories.
 func (r *Resource) ScanDirFile(path string, pattern string, recursive ...bool) []*File {
@@ -165,10 +165,10 @@ func (r *Resource) ScanDirFile(path string, pattern string, recursive ...bool) [
 // doScanDir is an internal method which scans directory
 // and returns the absolute path list of files that are not sorted.
 //
-// The pattern parameter <pattern> supports multiple file name patterns,
+// The pattern parameter `pattern` supports multiple file name patterns,
 // using the ',' symbol to separate multiple patterns.
 //
-// It scans directory recursively if given parameter <recursive> is true.
+// It scans directory recursively if given parameter `recursive` is true.
 func (r *Resource) doScanDir(path string, pattern string, recursive bool, onlyFile bool) []*File {
 	path = strings.Replace(path, "\\", "/", -1)
 	path = strings.Replace(path, "//", "/", -1)

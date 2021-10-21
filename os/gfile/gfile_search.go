@@ -15,9 +15,9 @@ import (
 	"github.com/gogf/gf/v2/container/garray"
 )
 
-// Search searches file by name <name> in following paths with priority:
+// Search searches file by name `name` in following paths with priority:
 // prioritySearchPaths, Pwd()、SelfDir()、MainPkgPath().
-// It returns the absolute file path of <name> if found, or en empty string if not found.
+// It returns the absolute file path of `name` if found, or en empty string if not found.
 func Search(name string, prioritySearchPaths ...string) (realPath string, err error) {
 	// Check if it's a absolute path.
 	realPath = RealPath(name)

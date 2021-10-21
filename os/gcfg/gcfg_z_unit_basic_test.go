@@ -9,6 +9,8 @@
 package gcfg_test
 
 import (
+	"github.com/gogf/gf/v2/os/gcmd"
+	"github.com/gogf/gf/v2/os/genv"
 	"testing"
 
 	"github.com/gogf/gf/v2/os/gtime"
@@ -189,5 +191,54 @@ func TestCfg_Get_WrongConfigFile(t *testing.T) {
 		t.AssertNE(err, nil)
 		t.Assert(v, nil)
 		adapterFile.Clear()
+	})
+}
+
+func Test_GetWithEnv(t *testing.T) {
+	content := `
+v1    = 1
+v2    = "true"
+v3    = "off"
+v4    = "1.23"
+array = [1,2,3]
+[redis]
+    disk  = "127.0.0.1:6379,0"
+    cache = "127.0.0.1:6379,1"
+`
+	gtest.C(t, func(t *gtest.T) {
+		c, err := gcfg.New()
+		t.AssertNil(err)
+		c.GetAdapter().(*gcfg.AdapterFile).SetContent(content)
+		defer c.GetAdapter().(*gcfg.AdapterFile).ClearContent()
+		t.Assert(c.MustGet(ctx, "v1"), 1)
+		t.Assert(c.MustGetWithEnv(ctx, `redis.user`), nil)
+		t.Assert(genv.Set("REDIS_USER", `1`), nil)
+		defer genv.Remove(`REDIS_USER`)
+		t.Assert(c.MustGetWithEnv(ctx, `redis.user`), `1`)
+	})
+}
+
+func Test_GetWithCmd(t *testing.T) {
+	content := `
+v1    = 1
+v2    = "true"
+v3    = "off"
+v4    = "1.23"
+array = [1,2,3]
+[redis]
+    disk  = "127.0.0.1:6379,0"
+    cache = "127.0.0.1:6379,1"
+`
+	gtest.C(t, func(t *gtest.T) {
+
+		c, err := gcfg.New()
+		t.AssertNil(err)
+		c.GetAdapter().(*gcfg.AdapterFile).SetContent(content)
+		defer c.GetAdapter().(*gcfg.AdapterFile).ClearContent()
+		t.Assert(c.MustGet(ctx, "v1"), 1)
+		t.Assert(c.MustGetWithCmd(ctx, `redis.user`), nil)
+
+		gcmd.Init([]string{"gf", "--redis.user=2"}...)
+		t.Assert(c.MustGetWithCmd(ctx, `redis.user`), `2`)
 	})
 }

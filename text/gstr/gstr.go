@@ -402,7 +402,7 @@ func HideStr(str string, percent int, hide string) string {
 	return buffer.String()
 }
 
-// Nl2Br inserts HTML line breaks(<br>|<br />) before all newlines in a string:
+// Nl2Br inserts HTML line breaks(`br`|<br />) before all newlines in a string:
 // \n\r, \r\n, \r, \n.
 // It considers parameter `str` as unicode string.
 func Nl2Br(str string, isXhtml ...bool) string {

@@ -33,14 +33,14 @@ func Test_Parse(t *testing.T) {
 		t.Assert(p.GetArg(0), "gf")
 		t.Assert(p.GetArg(1), "remove")
 		t.Assert(p.GetArg(2), "path")
-		t.Assert(p.GetArgVar(2).String(), "path")
+		t.Assert(p.GetArg(2).String(), "path")
 
 		t.Assert(len(p.GetOptAll()), 8)
 		t.Assert(p.GetOpt("n"), "root")
 		t.Assert(p.GetOpt("name"), "root")
 		t.Assert(p.GetOpt("p"), "www")
 		t.Assert(p.GetOpt("prefix"), "www")
-		t.Assert(p.GetOptVar("prefix").String(), "www")
+		t.Assert(p.GetOpt("prefix").String(), "www")
 
 		t.Assert(p.ContainsOpt("n"), true)
 		t.Assert(p.ContainsOpt("name"), true)
@@ -69,14 +69,14 @@ func Test_ParseWithArgs(t *testing.T) {
 		t.Assert(p.GetArg(0), "gf")
 		t.Assert(p.GetArg(1), "remove")
 		t.Assert(p.GetArg(2), "path")
-		t.Assert(p.GetArgVar(2).String(), "path")
+		t.Assert(p.GetArg(2).String(), "path")
 
 		t.Assert(len(p.GetOptAll()), 8)
 		t.Assert(p.GetOpt("n"), "root")
 		t.Assert(p.GetOpt("name"), "root")
 		t.Assert(p.GetOpt("p"), "www")
 		t.Assert(p.GetOpt("prefix"), "www")
-		t.Assert(p.GetOptVar("prefix").String(), "www")
+		t.Assert(p.GetOpt("prefix").String(), "www")
 
 		t.Assert(p.ContainsOpt("n"), true)
 		t.Assert(p.ContainsOpt("name"), true)

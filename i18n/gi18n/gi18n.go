@@ -34,13 +34,13 @@ func Tf(ctx context.Context, format string, values ...interface{}) string {
 	return Instance().TranslateFormat(ctx, format, values...)
 }
 
-// TranslateFormat translates, formats and returns the <format> with configured language
-// and given <values>.
+// TranslateFormat translates, formats and returns the `format` with configured language
+// and given `values`.
 func TranslateFormat(ctx context.Context, format string, values ...interface{}) string {
 	return Instance().TranslateFormat(ctx, format, values...)
 }
 
-// Translate translates <content> with configured language and returns the translated content.
+// Translate translates `content` with configured language and returns the translated content.
 func Translate(ctx context.Context, content string) string {
 	return Instance().Translate(ctx, content)
 }

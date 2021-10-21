@@ -27,7 +27,7 @@ type Pool struct {
 var pool = New()
 
 // New creates and returns a new goroutine pool object.
-// The parameter <limit> is used to limit the max goroutine count,
+// The parameter `limit` is used to limit the max goroutine count,
 // which is not limited in default.
 func New(limit ...int) *Pool {
 	p := &Pool{
@@ -49,8 +49,8 @@ func Add(f func()) error {
 }
 
 // AddWithRecover pushes a new job to the pool with specified recover function.
-// The optional <recoverFunc> is called when any panic during executing of <userFunc>.
-// If <recoverFunc> is not passed or given nil, it ignores the panic from <userFunc>.
+// The optional `recoverFunc` is called when any panic during executing of `userFunc`.
+// If `recoverFunc` is not passed or given nil, it ignores the panic from `userFunc`.
 // The job will be executed asynchronously.
 func AddWithRecover(userFunc func(), recoverFunc ...func(err error)) error {
 	return pool.AddWithRecover(userFunc, recoverFunc...)
@@ -91,8 +91,8 @@ func (p *Pool) Add(f func()) error {
 }
 
 // AddWithRecover pushes a new job to the pool with specified recover function.
-// The optional <recoverFunc> is called when any panic during executing of <userFunc>.
-// If <recoverFunc> is not passed or given nil, it ignores the panic from <userFunc>.
+// The optional `recoverFunc` is called when any panic during executing of `userFunc`.
+// If `recoverFunc` is not passed or given nil, it ignores the panic from `userFunc`.
 // The job will be executed asynchronously.
 func (p *Pool) AddWithRecover(userFunc func(), recoverFunc ...func(err error)) error {
 	return p.Add(func() {

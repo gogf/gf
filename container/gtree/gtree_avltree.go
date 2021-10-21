@@ -195,8 +195,8 @@ func (tree *AVLTree) GetVarOrSetFuncLock(key interface{}, f func() interface{}) 
 	return gvar.New(tree.GetOrSetFuncLock(key, f))
 }
 
-// SetIfNotExist sets <value> to the map if the `key` does not exist, and then returns true.
-// It returns false if <key> exists, and `value` would be ignored.
+// SetIfNotExist sets `value` to the map if the `key` does not exist, and then returns true.
+// It returns false if `key` exists, and `value` would be ignored.
 func (tree *AVLTree) SetIfNotExist(key interface{}, value interface{}) bool {
 	if !tree.Contains(key) {
 		tree.doSetWithLockCheck(key, value)
@@ -206,7 +206,7 @@ func (tree *AVLTree) SetIfNotExist(key interface{}, value interface{}) bool {
 }
 
 // SetIfNotExistFunc sets value with return value of callback function `f`, and then returns true.
-// It returns false if <key> exists, and `value` would be ignored.
+// It returns false if `key` exists, and `value` would be ignored.
 func (tree *AVLTree) SetIfNotExistFunc(key interface{}, f func() interface{}) bool {
 	if !tree.Contains(key) {
 		tree.doSetWithLockCheck(key, f())
@@ -216,7 +216,7 @@ func (tree *AVLTree) SetIfNotExistFunc(key interface{}, f func() interface{}) bo
 }
 
 // SetIfNotExistFuncLock sets value with return value of callback function `f`, and then returns true.
-// It returns false if <key> exists, and `value` would be ignored.
+// It returns false if `key` exists, and `value` would be ignored.
 //
 // SetIfNotExistFuncLock differs with SetIfNotExistFunc function is that
 // it executes function `f` with mutex.Lock of the hash map.
@@ -474,7 +474,7 @@ func (tree *AVLTree) IteratorAsc(f func(key, value interface{}) bool) {
 }
 
 // IteratorAscFrom iterates the tree readonly in ascending order with given callback function `f`.
-// The parameter <key> specifies the start entry for iterating. The `match` specifies whether
+// The parameter `key` specifies the start entry for iterating. The `match` specifies whether
 // starting iterating if the `key` is fully matched, or else using index searching iterating.
 // If `f` returns true, then it continues iterating; or false to stop.
 func (tree *AVLTree) IteratorAscFrom(key interface{}, match bool, f func(key, value interface{}) bool) {
@@ -508,7 +508,7 @@ func (tree *AVLTree) IteratorDesc(f func(key, value interface{}) bool) {
 }
 
 // IteratorDescFrom iterates the tree readonly in descending order with given callback function `f`.
-// The parameter <key> specifies the start entry for iterating. The `match` specifies whether
+// The parameter `key` specifies the start entry for iterating. The `match` specifies whether
 // starting iterating if the `key` is fully matched, or else using index searching iterating.
 // If `f` returns true, then it continues iterating; or false to stop.
 func (tree *AVLTree) IteratorDescFrom(key interface{}, match bool, f func(key, value interface{}) bool) {

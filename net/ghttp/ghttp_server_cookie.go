@@ -91,7 +91,7 @@ func (c *Cookie) Set(key, value string) {
 }
 
 // SetCookie sets cookie item with given domain, path and expiration age.
-// The optional parameter <httpOnly> specifies if the cookie item is only available in HTTP,
+// The optional parameter `httpOnly` specifies if the cookie item is only available in HTTP,
 // which is usually empty.
 func (c *Cookie) SetCookie(key, value, domain, path string, maxAge time.Duration, httpOnly ...bool) {
 	c.init()
@@ -139,7 +139,7 @@ func (c *Cookie) SetSessionId(id string) {
 }
 
 // Get retrieves and returns the value with specified key.
-// It returns <def> if specified key does not exist and <def> is given.
+// It returns `def` if specified key does not exist and `def` is given.
 func (c *Cookie) Get(key string, def ...string) *gvar.Var {
 	c.init()
 	if r, ok := c.data[key]; ok {

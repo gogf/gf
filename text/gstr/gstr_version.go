@@ -11,10 +11,10 @@ import (
 	"strings"
 )
 
-// CompareVersion compares <a> and <b> as standard GNU version.
-// It returns  1 if <a> > <b>.
-// It returns -1 if <a> < <b>.
-// It returns  0 if <a> = <b>.
+// CompareVersion compares `a` and `b` as standard GNU version.
+// It returns  1 if `a` > `b`.
+// It returns -1 if `a` < `b`.
+// It returns  0 if `a` = `b`.
 // GNU standard version is like:
 // v1.0
 // 1
@@ -58,10 +58,10 @@ func CompareVersion(a, b string) int {
 	return 0
 }
 
-// CompareVersionGo compares <a> and <b> as standard Golang version.
-// It returns  1 if <a> > <b>.
-// It returns -1 if <a> < <b>.
-// It returns  0 if <a> = <b>.
+// CompareVersionGo compares `a` and `b` as standard Golang version.
+// It returns  1 if `a` > `b`.
+// It returns -1 if `a` < `b`.
+// It returns  0 if `a` = `b`.
 // Golang standard version is like:
 // 1.0.0
 // v1.0.1

@@ -34,7 +34,7 @@ func (s *Server) BindHandler(pattern string, handler interface{}) {
 }
 
 // doBindHandler registers a handler function to server with given pattern.
-// The parameter <pattern> is like:
+// The parameter `pattern` is like:
 // /user/list, put:/user, delete:/user, post:/user@goframe.org
 func (s *Server) doBindHandler(ctx context.Context, pattern string, funcInfo handlerFuncInfo, middleware []HandlerFunc, source string) {
 	s.setHandler(ctx, pattern, &handlerItem{
@@ -59,7 +59,7 @@ func (s *Server) bindHandlerByMap(ctx context.Context, m map[string]*handlerItem
 // Rule 2: The URI in pattern contains the {.method} keyword, it then replaces the keyword with the method name;
 // Rule 2: If Rule 1 is not met, it then adds the method name directly to the URI in the pattern;
 //
-// The parameter <allowAppend> specifies whether allowing appending method name to the tail of pattern.
+// The parameter `allowAppend` specifies whether allowing appending method name to the tail of pattern.
 func (s *Server) mergeBuildInNameToPattern(pattern string, structName, methodName string, allowAppend bool) string {
 	structName = s.nameToUri(structName)
 	methodName = s.nameToUri(methodName)

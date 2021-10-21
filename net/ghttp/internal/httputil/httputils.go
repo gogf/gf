@@ -19,10 +19,10 @@ const (
 	fileUploadingKey = "@file:"
 )
 
-// BuildParams builds the request string for the http client. The <params> can be type of:
+// BuildParams builds the request string for the http client. The `params` can be type of:
 // string/[]byte/map/struct/*struct.
 //
-// The optional parameter <noUrlEncode> specifies whether ignore the url encoding for the data.
+// The optional parameter `noUrlEncode` specifies whether ignore the url encoding for the data.
 func BuildParams(params interface{}, noUrlEncode ...bool) (encodedParamStr string) {
 	// If given string/[]byte, converts and returns it directly as string.
 	switch v := params.(type) {

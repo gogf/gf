@@ -61,7 +61,7 @@ func TryCatch(try func(), catch ...func(exception error)) {
 }
 
 // IsNil checks whether given `value` is nil.
-// Parameter <traceSource> is used for tracing to the source variable if given `value` is type
+// Parameter `traceSource` is used for tracing to the source variable if given `value` is type
 // of pinter that also points to a pointer. It returns nil if the source is nil when `traceSource`
 // is true.
 // Note that it might use reflect feature which affects performance a little.

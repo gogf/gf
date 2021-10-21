@@ -48,7 +48,7 @@ var (
 )
 
 // New creates and returns a new i18n manager.
-// The optional parameter <option> specifies the custom options for i18n manager.
+// The optional parameter `option` specifies the custom options for i18n manager.
 // It uses a default one if it's not passed.
 func New(options ...Options) *Manager {
 	var opts Options
@@ -132,13 +132,13 @@ func (m *Manager) Tf(ctx context.Context, format string, values ...interface{}) 
 	return m.TranslateFormat(ctx, format, values...)
 }
 
-// TranslateFormat translates, formats and returns the <format> with configured language
-// and given <values>.
+// TranslateFormat translates, formats and returns the `format` with configured language
+// and given `values`.
 func (m *Manager) TranslateFormat(ctx context.Context, format string, values ...interface{}) string {
 	return fmt.Sprintf(m.Translate(ctx, format), values...)
 }
 
-// Translate translates <content> with configured language.
+// Translate translates `content` with configured language.
 func (m *Manager) Translate(ctx context.Context, content string) string {
 	m.init(ctx)
 	m.mu.RLock()
