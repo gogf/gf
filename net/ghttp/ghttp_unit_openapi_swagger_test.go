@@ -61,7 +61,7 @@ func Test_OpenApi_Swagger(t *testing.T) {
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		t.Assert(c.GetContent(ctx, "/test?age=18&name=john"), `{"code":0,"message":"","data":{"Id":1,"Age":18,"Name":"john"}}`)
-		t.Assert(c.GetContent(ctx, "/test/error"), `{"code":50,"message":"error"}`)
+		t.Assert(c.GetContent(ctx, "/test/error"), `{"code":50,"message":"error","data":null}`)
 
 		t.Assert(gstr.Contains(c.GetContent(ctx, "/swagger/"), `SwaggerUIBundle`), true)
 		t.Assert(gstr.Contains(c.GetContent(ctx, "/api.json"), `/test/error`), true)
