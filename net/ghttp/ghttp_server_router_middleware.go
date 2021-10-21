@@ -19,7 +19,7 @@ const (
 
 // BindMiddleware registers one or more global middleware to the server.
 // Global middleware can be used standalone without service handler, which intercepts all dynamic requests
-// before or after service handler. The parameter <pattern> specifies what route pattern the middleware intercepts,
+// before or after service handler. The parameter `pattern` specifies what route pattern the middleware intercepts,
 // which is usually a "fuzzy" pattern like "/:name", "/*any" or "/{field}".
 func (s *Server) BindMiddleware(pattern string, handlers ...HandlerFunc) {
 	var (

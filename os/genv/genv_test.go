@@ -40,7 +40,7 @@ func Test_GEnv_Get(t *testing.T) {
 		key := "TEST_ENV_" + value
 		err := os.Setenv(key, "TEST")
 		t.Assert(err, nil)
-		t.AssertEQ(genv.Get(key), "TEST")
+		t.AssertEQ(genv.Get(key).String(), "TEST")
 	})
 }
 
@@ -50,7 +50,7 @@ func Test_GEnv_GetVar(t *testing.T) {
 		key := "TEST_ENV_" + value
 		err := os.Setenv(key, "TEST")
 		t.Assert(err, nil)
-		t.AssertEQ(genv.GetVar(key).String(), "TEST")
+		t.AssertEQ(genv.Get(key).String(), "TEST")
 	})
 }
 

@@ -129,7 +129,7 @@ func (m *Mutex) RUnlock() {
 	}
 	// Reading lock unlocks, it then only check the blocked writers.
 	// Note that it is not necessary to check the pending readers here.
-	// <n == 1> means the state of mutex comes down to zero.
+	// `n == 1` means the state of mutex comes down to zero.
 	if n == 1 {
 		if n = m.writer.Val(); n > 0 {
 			if m.writer.Cas(n, n-1) {
@@ -178,31 +178,31 @@ func (m *Mutex) IsRLocked() bool {
 	return m.state.Val() > 0
 }
 
-// LockFunc locks the mutex for writing with given callback function <f>.
+// LockFunc locks the mutex for writing with given callback function `f`.
 // If there's a write/reading lock the mutex, it will blocks until the lock is released.
 //
-// It releases the lock after <f> is executed.
+// It releases the lock after `f` is executed.
 func (m *Mutex) LockFunc(f func()) {
 	m.Lock()
 	defer m.Unlock()
 	f()
 }
 
-// RLockFunc locks the mutex for reading with given callback function <f>.
+// RLockFunc locks the mutex for reading with given callback function `f`.
 // If there's a writing lock the mutex, it will blocks until the lock is released.
 //
-// It releases the lock after <f> is executed.
+// It releases the lock after `f` is executed.
 func (m *Mutex) RLockFunc(f func()) {
 	m.RLock()
 	defer m.RUnlock()
 	f()
 }
 
-// TryLockFunc tries locking the mutex for writing with given callback function <f>.
+// TryLockFunc tries locking the mutex for writing with given callback function `f`.
 // it returns true immediately if success, or if there's a write/reading lock on the mutex,
 // it returns false immediately.
 //
-// It releases the lock after <f> is executed.
+// It releases the lock after `f` is executed.
 func (m *Mutex) TryLockFunc(f func()) (result bool) {
 	if m.TryLock() {
 		result = true
@@ -212,11 +212,11 @@ func (m *Mutex) TryLockFunc(f func()) (result bool) {
 	return
 }
 
-// TryRLockFunc tries locking the mutex for reading with given callback function <f>.
+// TryRLockFunc tries locking the mutex for reading with given callback function `f`.
 // It returns true immediately if success, or if there's a writing lock on the mutex,
 // it returns false immediately.
 //
-// It releases the lock after <f> is executed.
+// It releases the lock after `f` is executed.
 func (m *Mutex) TryRLockFunc(f func()) (result bool) {
 	if m.TryRLock() {
 		result = true

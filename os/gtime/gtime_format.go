@@ -129,7 +129,7 @@ func (t *Time) Format(format string) string {
 	return buffer.String()
 }
 
-// FormatNew formats and returns a new Time object with given custom <format>.
+// FormatNew formats and returns a new Time object with given custom `format`.
 func (t *Time) FormatNew(format string) *Time {
 	if t == nil {
 		return nil
@@ -137,7 +137,7 @@ func (t *Time) FormatNew(format string) *Time {
 	return NewFromStr(t.Format(format))
 }
 
-// FormatTo formats <t> with given custom <format>.
+// FormatTo formats `t` with given custom `format`.
 func (t *Time) FormatTo(format string) *Time {
 	if t == nil {
 		return nil
@@ -162,7 +162,7 @@ func (t *Time) LayoutNew(layout string) *Time {
 	return NewFromStr(t.Layout(layout))
 }
 
-// LayoutTo formats <t> with stdlib layout.
+// LayoutTo formats `t` with stdlib layout.
 func (t *Time) LayoutTo(layout string) *Time {
 	if t == nil {
 		return nil

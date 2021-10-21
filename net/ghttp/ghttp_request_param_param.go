@@ -16,9 +16,9 @@ func (r *Request) SetParam(key string, value interface{}) {
 	r.paramsMap[key] = value
 }
 
-// GetParam returns custom parameter with given name <key>.
-// It returns <def> if <key> does not exist.
-// It returns nil if <def> is not passed.
+// GetParam returns custom parameter with given name `key`.
+// It returns `def` if `key` does not exist.
+// It returns nil if `def` is not passed.
 func (r *Request) GetParam(key string, def ...interface{}) *gvar.Var {
 	if r.paramsMap != nil {
 		return gvar.New(r.paramsMap[key])

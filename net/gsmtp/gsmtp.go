@@ -43,10 +43,10 @@ var (
 
 // SendMail connects to the server at addr, switches to TLS if
 // possible, authenticates with the optional mechanism an if possible,
-// and then sends an email from address <from>, to addresses <to>, with
+// and then sends an email from address `from`, to addresses `to`, with
 // message msg.
 //
-// The parameter <contentType> specifies the content type of the mail, eg: html.
+// The parameter `contentType` specifies the content type of the mail, eg: html.
 func (s *SMTP) SendMail(from, tos, subject, body string, contentType ...string) error {
 	var (
 		server  = ""

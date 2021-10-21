@@ -27,7 +27,7 @@ type Retry struct {
 }
 
 // NewNetConn creates and returns a net.Conn with given address like "127.0.0.1:80".
-// The optional parameter <timeout> specifies the timeout for dialing connection.
+// The optional parameter `timeout` specifies the timeout for dialing connection.
 func NewNetConn(addr string, timeout ...time.Duration) (net.Conn, error) {
 	d := defaultConnTimeout
 	if len(timeout) > 0 {
@@ -37,7 +37,7 @@ func NewNetConn(addr string, timeout ...time.Duration) (net.Conn, error) {
 }
 
 // NewNetConnTLS creates and returns a TLS net.Conn with given address like "127.0.0.1:80".
-// The optional parameter <timeout> specifies the timeout for dialing connection.
+// The optional parameter `timeout` specifies the timeout for dialing connection.
 func NewNetConnTLS(addr string, tlsConfig *tls.Config, timeout ...time.Duration) (net.Conn, error) {
 	dialer := &net.Dialer{
 		Timeout: defaultConnTimeout,
@@ -49,7 +49,7 @@ func NewNetConnTLS(addr string, tlsConfig *tls.Config, timeout ...time.Duration)
 }
 
 // NewNetConnKeyCrt creates and returns a TLS net.Conn with given TLS certificate and key files
-// and address like "127.0.0.1:80". The optional parameter <timeout> specifies the timeout for
+// and address like "127.0.0.1:80". The optional parameter `timeout` specifies the timeout for
 // dialing connection.
 func NewNetConnKeyCrt(addr, crtFile, keyFile string, timeout ...time.Duration) (net.Conn, error) {
 	tlsConfig, err := LoadKeyCrt(crtFile, keyFile)
@@ -59,8 +59,8 @@ func NewNetConnKeyCrt(addr, crtFile, keyFile string, timeout ...time.Duration) (
 	return NewNetConnTLS(addr, tlsConfig, timeout...)
 }
 
-// Send creates connection to <address>, writes <data> to the connection and then closes the connection.
-// The optional parameter <retry> specifies the retry policy when fails in writing data.
+// Send creates connection to `address`, writes `data` to the connection and then closes the connection.
+// The optional parameter `retry` specifies the retry policy when fails in writing data.
 func Send(address string, data []byte, retry ...Retry) error {
 	conn, err := NewConn(address)
 	if err != nil {
@@ -70,13 +70,13 @@ func Send(address string, data []byte, retry ...Retry) error {
 	return conn.Send(data, retry...)
 }
 
-// SendRecv creates connection to <address>, writes <data> to the connection, receives response
+// SendRecv creates connection to `address`, writes `data` to the connection, receives response
 // and then closes the connection.
 //
-// The parameter <length> specifies the bytes count waiting to receive. It receives all buffer content
-// and returns if <length> is -1.
+// The parameter `length` specifies the bytes count waiting to receive. It receives all buffer content
+// and returns if `length` is -1.
 //
-// The optional parameter <retry> specifies the retry policy when fails in writing data.
+// The optional parameter `retry` specifies the retry policy when fails in writing data.
 func SendRecv(address string, data []byte, length int, retry ...Retry) ([]byte, error) {
 	conn, err := NewConn(address)
 	if err != nil {
@@ -106,7 +106,7 @@ func SendRecvWithTimeout(address string, data []byte, receive int, timeout time.
 	return conn.SendRecvWithTimeout(data, receive, timeout, retry...)
 }
 
-// isTimeout checks whether given <err> is a timeout error.
+// isTimeout checks whether given `err` is a timeout error.
 func isTimeout(err error) bool {
 	if err == nil {
 		return false

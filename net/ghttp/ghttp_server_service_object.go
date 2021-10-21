@@ -19,7 +19,7 @@ import (
 
 // BindObject registers object to server routes with given pattern.
 //
-// The optional parameter <method> is used to specify the method to be registered, which
+// The optional parameter `method` is used to specify the method to be registered, which
 // supports multiple method names, multiple methods are separated by char ',', case-sensitive.
 //
 // Note that the route method should be defined as ghttp.HandlerFunc.
@@ -35,7 +35,7 @@ func (s *Server) BindObject(pattern string, object interface{}, method ...string
 
 // BindObjectMethod registers specified method of object to server routes with given pattern.
 //
-// The optional parameter <method> is used to specify the method to be registered, which
+// The optional parameter `method` is used to specify the method to be registered, which
 // does not supports multiple method names but only one, case-sensitive.
 //
 // Note that the route method should be defined as ghttp.HandlerFunc.

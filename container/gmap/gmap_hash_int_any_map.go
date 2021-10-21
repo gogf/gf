@@ -205,7 +205,7 @@ func (m *IntAnyMap) Pops(size int) map[int]interface{} {
 // if not exists, set value to the map with given `key`,
 // or else just return the existing value.
 //
-// When setting value, if `value` is type of <func() interface {}>,
+// When setting value, if `value` is type of `func() interface {}`,
 // it will be executed with mutex.Lock of the hash map,
 // and its return value will be set to the map with `key`.
 //
@@ -285,8 +285,8 @@ func (m *IntAnyMap) GetVarOrSetFuncLock(key int, f func() interface{}) *gvar.Var
 	return gvar.New(m.GetOrSetFuncLock(key, f))
 }
 
-// SetIfNotExist sets <value> to the map if the `key` does not exist, and then returns true.
-// It returns false if <key> exists, and `value` would be ignored.
+// SetIfNotExist sets `value` to the map if the `key` does not exist, and then returns true.
+// It returns false if `key` exists, and `value` would be ignored.
 func (m *IntAnyMap) SetIfNotExist(key int, value interface{}) bool {
 	if !m.Contains(key) {
 		m.doSetWithLockCheck(key, value)
@@ -296,7 +296,7 @@ func (m *IntAnyMap) SetIfNotExist(key int, value interface{}) bool {
 }
 
 // SetIfNotExistFunc sets value with return value of callback function `f`, and then returns true.
-// It returns false if <key> exists, and `value` would be ignored.
+// It returns false if `key` exists, and `value` would be ignored.
 func (m *IntAnyMap) SetIfNotExistFunc(key int, f func() interface{}) bool {
 	if !m.Contains(key) {
 		m.doSetWithLockCheck(key, f())
@@ -306,7 +306,7 @@ func (m *IntAnyMap) SetIfNotExistFunc(key int, f func() interface{}) bool {
 }
 
 // SetIfNotExistFuncLock sets value with return value of callback function `f`, and then returns true.
-// It returns false if <key> exists, and `value` would be ignored.
+// It returns false if `key` exists, and `value` would be ignored.
 //
 // SetIfNotExistFuncLock differs with SetIfNotExistFunc function is that
 // it executes function `f` with mutex.Lock of the hash map.
@@ -438,7 +438,7 @@ func (m *IntAnyMap) Flip() {
 }
 
 // Merge merges two hash maps.
-// The <other> map will be merged into the map `m`.
+// The `other` map will be merged into the map `m`.
 func (m *IntAnyMap) Merge(other *IntAnyMap) {
 	m.mu.Lock()
 	defer m.mu.Unlock()

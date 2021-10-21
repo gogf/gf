@@ -154,7 +154,7 @@ func (r *Request) IsExited() bool {
 	return r.exit
 }
 
-// GetHeader retrieves and returns the header value with given <key>.
+// GetHeader retrieves and returns the header value with given `key`.
 func (r *Request) GetHeader(key string) string {
 	return r.Header.Get(key)
 }

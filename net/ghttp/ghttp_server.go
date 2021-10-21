@@ -55,7 +55,7 @@ func serverProcessInit() {
 	}
 	// This means it is a restart server, it should kill its parent before starting its listening,
 	// to avoid duplicated port listening in two processes.
-	if genv.Get(adminActionRestartEnvKey) != "" {
+	if !genv.Get(adminActionRestartEnvKey).IsEmpty() {
 		if p, err := os.FindProcess(gproc.PPid()); err == nil {
 			if err = p.Kill(); err != nil {
 				intlog.Error(ctx, err)
@@ -87,8 +87,8 @@ func serverProcessInit() {
 }
 
 // GetServer creates and returns a server instance using given name and default configurations.
-// Note that the parameter <name> should be unique for different servers. It returns an existing
-// server instance if given <name> is already existing in the server mapping.
+// Note that the parameter `name` should be unique for different servers. It returns an existing
+// server instance if given `name` is already existing in the server mapping.
 func GetServer(name ...interface{}) *Server {
 	serverName := DefaultServerName
 	if len(name) > 0 && name[0] != "" {
@@ -226,7 +226,7 @@ func (s *Server) Start() error {
 
 	// Start the HTTP server.
 	reloaded := false
-	fdMapStr := genv.Get(adminActionReloadEnvKey)
+	fdMapStr := genv.Get(adminActionReloadEnvKey).String()
 	if len(fdMapStr) > 0 {
 		sfm := bufferToServerFdMap([]byte(fdMapStr))
 		if v, ok := sfm[s.name]; ok {

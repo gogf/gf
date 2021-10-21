@@ -36,9 +36,9 @@ type Server struct {
 // Map for name to server, for singleton purpose.
 var serverMapping = gmap.NewStrAnyMap(true)
 
-// GetServer returns the TCP server with specified <name>,
-// or it returns a new normal TCP server named <name> if it does not exist.
-// The parameter <name> is used to specify the TCP server
+// GetServer returns the TCP server with specified `name`,
+// or it returns a new normal TCP server named `name` if it does not exist.
+// The parameter `name` is used to specify the TCP server
 func GetServer(name ...interface{}) *Server {
 	serverName := defaultServer
 	if len(name) > 0 && name[0] != "" {
@@ -50,7 +50,7 @@ func GetServer(name ...interface{}) *Server {
 }
 
 // NewServer creates and returns a new normal TCP server.
-// The parameter <name> is optional, which is used to specify the instance name of the server.
+// The parameter `name` is optional, which is used to specify the instance name of the server.
 func NewServer(address string, handler func(*Conn), name ...string) *Server {
 	s := &Server{
 		address: address,
@@ -63,7 +63,7 @@ func NewServer(address string, handler func(*Conn), name ...string) *Server {
 }
 
 // NewServerTLS creates and returns a new TCP server with TLS support.
-// The parameter <name> is optional, which is used to specify the instance name of the server.
+// The parameter `name` is optional, which is used to specify the instance name of the server.
 func NewServerTLS(address string, tlsConfig *tls.Config, handler func(*Conn), name ...string) *Server {
 	s := NewServer(address, handler, name...)
 	s.SetTLSConfig(tlsConfig)
@@ -71,7 +71,7 @@ func NewServerTLS(address string, tlsConfig *tls.Config, handler func(*Conn), na
 }
 
 // NewServerKeyCrt creates and returns a new TCP server with TLS support.
-// The parameter <name> is optional, which is used to specify the instance name of the server.
+// The parameter `name` is optional, which is used to specify the instance name of the server.
 func NewServerKeyCrt(address, crtFile, keyFile string, handler func(*Conn), name ...string) *Server {
 	s := NewServer(address, handler, name...)
 	if err := s.SetTLSKeyCrt(crtFile, keyFile); err != nil {

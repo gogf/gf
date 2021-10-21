@@ -13,6 +13,9 @@ import (
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/os/gcmd"
+	"github.com/gogf/gf/v2/os/genv"
 )
 
 // Config is the configuration management object.
@@ -107,11 +110,58 @@ func (c *Config) Get(ctx context.Context, pattern string, def ...interface{}) (*
 		if err != nil {
 			return nil, err
 		}
-		if value == nil && len(def) > 0 {
-			return gvar.New(def[0]), nil
+		if value == nil {
+			if len(def) > 0 {
+				return gvar.New(def[0]), nil
+			}
+			return nil, nil
 		}
 	}
 	return gvar.New(value), nil
+}
+
+// GetWithEnv returns the configuration value specified by pattern `pattern`.
+// If the configuration value does not exist, then it retrieves and returns the environment value specified by `key`.
+// It returns the default value `def` if none of them exists.
+//
+// Fetching Rules: Environment arguments are in uppercase format, eg: GF_PACKAGE_VARIABLE.
+func (c *Config) GetWithEnv(ctx context.Context, pattern string, def ...interface{}) (*gvar.Var, error) {
+	value, err := c.Get(ctx, pattern)
+	if err != nil {
+		return nil, err
+	}
+	if value == nil {
+		if v := genv.Get(utils.FormatEnvKey(pattern)); v != nil {
+			return v, nil
+		}
+		if len(def) > 0 {
+			return gvar.New(def[0]), nil
+		}
+		return nil, nil
+	}
+	return value, nil
+}
+
+// GetWithCmd returns the configuration value specified by pattern `pattern`.
+// If the configuration value does not exist, then it retrieves and returns the command line option specified by `key`.
+// It returns the default value `def` if none of them exists.
+//
+// Fetching Rules: Command line arguments are in lowercase format, eg: gf.package.variable.
+func (c *Config) GetWithCmd(ctx context.Context, pattern string, def ...interface{}) (*gvar.Var, error) {
+	value, err := c.Get(ctx, pattern)
+	if err != nil {
+		return nil, err
+	}
+	if value == nil {
+		if v := gcmd.GetOpt(utils.FormatCmdKey(pattern)); v != nil {
+			return v, nil
+		}
+		if len(def) > 0 {
+			return gvar.New(def[0]), nil
+		}
+		return nil, nil
+	}
+	return value, nil
 }
 
 // Data retrieves and returns all configuration data as map type.
@@ -137,7 +187,28 @@ func (c *Config) MustGet(ctx context.Context, pattern string, def ...interface{}
 	if err != nil {
 		panic(err)
 	}
-	return gvar.New(v)
+	if v == nil {
+		return nil
+	}
+	return v
+}
+
+// MustGetWithEnv acts as function GetWithEnv, but it panics if error occurs.
+func (c *Config) MustGetWithEnv(ctx context.Context, pattern string, def ...interface{}) *gvar.Var {
+	v, err := c.GetWithEnv(ctx, pattern, def...)
+	if err != nil {
+		panic(err)
+	}
+	return v
+}
+
+// MustGetWithCmd acts as function GetWithCmd, but it panics if error occurs.
+func (c *Config) MustGetWithCmd(ctx context.Context, pattern string, def ...interface{}) *gvar.Var {
+	v, err := c.GetWithCmd(ctx, pattern, def...)
+	if err != nil {
+		panic(err)
+	}
+	return v
 }
 
 // MustData acts as function Data, but it panics if error occurs.

@@ -86,7 +86,7 @@ func CallerWithFilter(filter string, skip ...int) (function string, path string,
 // callerFromIndex returns the caller position and according information exclusive of the
 // debug package.
 //
-// VERY NOTE THAT, the returned index value should be <index - 1> as the caller's start point.
+// VERY NOTE THAT, the returned index value should be `index - 1` as the caller's start point.
 func callerFromIndex(filters []string) (pc uintptr, file string, line int, index int) {
 	var filtered, ok bool
 	for index = 0; index < maxCallerDepth; index++ {

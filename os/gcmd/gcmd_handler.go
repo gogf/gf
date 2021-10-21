@@ -12,7 +12,7 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 )
 
-// BindHandle registers callback function <f> with <cmd>.
+// BindHandle registers callback function `f` with `cmd`.
 func BindHandle(cmd string, f func()) error {
 	if _, ok := defaultCommandFuncMap[cmd]; ok {
 		return gerror.NewCode(gcode.CodeInvalidOperation, "duplicated handle for command:"+cmd)
@@ -22,7 +22,7 @@ func BindHandle(cmd string, f func()) error {
 	return nil
 }
 
-// BindHandleMap registers callback function with map <m>.
+// BindHandleMap registers callback function with map `m`.
 func BindHandleMap(m map[string]func()) error {
 	var err error
 	for k, v := range m {
@@ -33,7 +33,7 @@ func BindHandleMap(m map[string]func()) error {
 	return err
 }
 
-// RunHandle executes the callback function registered by <cmd>.
+// RunHandle executes the callback function registered by `cmd`.
 func RunHandle(cmd string) error {
 	if handle, ok := defaultCommandFuncMap[cmd]; ok {
 		handle()
@@ -46,11 +46,11 @@ func RunHandle(cmd string) error {
 // AutoRun automatically recognizes and executes the callback function
 // by value of index 0 (the first console parameter).
 func AutoRun() error {
-	if cmd := GetArg(1); cmd != "" {
-		if handle, ok := defaultCommandFuncMap[cmd]; ok {
+	if cmd := GetArg(1); !cmd.IsEmpty() {
+		if handle, ok := defaultCommandFuncMap[cmd.String()]; ok {
 			handle()
 		} else {
-			return gerror.NewCode(gcode.CodeMissingConfiguration, "no handle found for command:"+cmd)
+			return gerror.NewCode(gcode.CodeMissingConfiguration, "no handle found for command:"+cmd.String())
 		}
 	} else {
 		return gerror.NewCode(gcode.CodeMissingParameter, "no command found")

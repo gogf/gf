@@ -107,7 +107,7 @@ func (set *StrSet) AddIfNotExistFunc(item string, f func() bool) bool {
 	return false
 }
 
-// AddIfNotExistFunc checks whether item exists in the set,
+// AddIfNotExistFuncLock checks whether item exists in the set,
 // it adds the item to set and returns true if it does not exists in the set and
 // function `f` returns true, or else it does nothing and returns false.
 //
@@ -285,8 +285,8 @@ func (set *StrSet) IsSubsetOf(other *StrSet) bool {
 	return true
 }
 
-// Union returns a new set which is the union of <set> and `other`.
-// Which means, all the items in <newSet> are in <set> or in `other`.
+// Union returns a new set which is the union of `set` and `other`.
+// Which means, all the items in `newSet` are in `set` or in `other`.
 func (set *StrSet) Union(others ...*StrSet) (newSet *StrSet) {
 	newSet = NewStrSet()
 	set.mu.RLock()
@@ -311,8 +311,8 @@ func (set *StrSet) Union(others ...*StrSet) (newSet *StrSet) {
 	return
 }
 
-// Diff returns a new set which is the difference set from <set> to `other`.
-// Which means, all the items in <newSet> are in <set> but not in `other`.
+// Diff returns a new set which is the difference set from `set` to `other`.
+// Which means, all the items in `newSet` are in `set` but not in `other`.
 func (set *StrSet) Diff(others ...*StrSet) (newSet *StrSet) {
 	newSet = NewStrSet()
 	set.mu.RLock()
@@ -332,8 +332,8 @@ func (set *StrSet) Diff(others ...*StrSet) (newSet *StrSet) {
 	return
 }
 
-// Intersect returns a new set which is the intersection from <set> to `other`.
-// Which means, all the items in <newSet> are in <set> and also in `other`.
+// Intersect returns a new set which is the intersection from `set` to `other`.
+// Which means, all the items in `newSet` are in `set` and also in `other`.
 func (set *StrSet) Intersect(others ...*StrSet) (newSet *StrSet) {
 	newSet = NewStrSet()
 	set.mu.RLock()
@@ -354,11 +354,11 @@ func (set *StrSet) Intersect(others ...*StrSet) (newSet *StrSet) {
 	return
 }
 
-// Complement returns a new set which is the complement from <set> to `full`.
-// Which means, all the items in <newSet> are in <full> and not in `set`.
+// Complement returns a new set which is the complement from `set` to `full`.
+// Which means, all the items in `newSet` are in `full` and not in `set`.
 //
-// It returns the difference between <full> and `set`
-// if the given set <full> is not the full set of `set`.
+// It returns the difference between `full` and `set`
+// if the given set `full` is not the full set of `set`.
 func (set *StrSet) Complement(full *StrSet) (newSet *StrSet) {
 	newSet = NewStrSet()
 	set.mu.RLock()
@@ -375,7 +375,7 @@ func (set *StrSet) Complement(full *StrSet) (newSet *StrSet) {
 	return
 }
 
-// Merge adds items from <others> sets into `set`.
+// Merge adds items from `others` sets into `set`.
 func (set *StrSet) Merge(others ...*StrSet) *StrSet {
 	set.mu.Lock()
 	defer set.mu.Unlock()
@@ -405,7 +405,7 @@ func (set *StrSet) Sum() (sum int) {
 	return
 }
 
-// Pops randomly pops an item from set.
+// Pop randomly pops an item from set.
 func (set *StrSet) Pop() string {
 	set.mu.Lock()
 	defer set.mu.Unlock()

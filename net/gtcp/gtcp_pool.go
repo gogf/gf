@@ -56,7 +56,7 @@ func NewPoolConn(addr string, timeout ...time.Duration) (*PoolConn, error) {
 // Close puts back the connection to the pool if it's active,
 // or closes the connection if it's not active.
 //
-// Note that, if <c> calls Close function closing itself, <c> can not
+// Note that, if `c` calls Close function closing itself, `c` can not
 // be used again.
 func (c *PoolConn) Close() error {
 	if c.pool != nil && c.status == connStatusActive {
@@ -111,8 +111,8 @@ func (c *PoolConn) RecvLine(retry ...Retry) ([]byte, error) {
 	return data, err
 }
 
-// RecvTil reads data from the connection until reads bytes <til>.
-// Note that the returned result contains the last bytes <til>.
+// RecvTil reads data from the connection until reads bytes `til`.
+// Note that the returned result contains the last bytes `til`.
 func (c *PoolConn) RecvTil(til []byte, retry ...Retry) ([]byte, error) {
 	data, err := c.Conn.RecvTil(til, retry...)
 	if err != nil {

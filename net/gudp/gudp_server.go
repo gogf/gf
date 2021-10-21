@@ -48,7 +48,7 @@ func GetServer(name ...interface{}) *Server {
 }
 
 // NewServer creates and returns a UDP server.
-// The optional parameter <name> is used to specify its name, which can be used for
+// The optional parameter `name` is used to specify its name, which can be used for
 // GetServer function to retrieve its instance.
 func NewServer(address string, handler func(*Conn), name ...string) *Server {
 	s := &Server{

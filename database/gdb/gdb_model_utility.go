@@ -225,7 +225,7 @@ func (m *Model) getPrimaryKey() string {
 	return ""
 }
 
-// mergeArguments creates and returns new arguments by merging <m.extraArgs> and given `args`.
+// mergeArguments creates and returns new arguments by merging `m.extraArgs` and given `args`.
 func (m *Model) mergeArguments(args []interface{}) []interface{} {
 	if len(m.extraArgs) > 0 {
 		newArgs := make([]interface{}, len(m.extraArgs)+len(args))

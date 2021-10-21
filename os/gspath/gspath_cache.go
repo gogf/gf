@@ -18,7 +18,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
-// updateCacheByPath adds all files under <path> recursively.
+// updateCacheByPath adds all files under `path` recursively.
 func (sp *SPath) updateCacheByPath(path string) {
 	if sp.cache == nil {
 		return
@@ -26,7 +26,7 @@ func (sp *SPath) updateCacheByPath(path string) {
 	sp.addToCache(path, path)
 }
 
-// formatCacheName formats <name> with following rules:
+// formatCacheName formats `name` with following rules:
 // 1. The separator is unified to char '/'.
 // 2. The name should be started with '/' (similar as HTTP URI).
 func (sp *SPath) formatCacheName(name string) string {
@@ -36,14 +36,14 @@ func (sp *SPath) formatCacheName(name string) string {
 	return "/" + strings.Trim(name, "./")
 }
 
-// nameFromPath converts <filePath> to cache name.
+// nameFromPath converts `filePath` to cache name.
 func (sp *SPath) nameFromPath(filePath, rootPath string) string {
 	name := gstr.Replace(filePath, rootPath, "")
 	name = sp.formatCacheName(name)
 	return name
 }
 
-// makeCacheValue formats <filePath> to cache value.
+// makeCacheValue formats `filePath` to cache value.
 func (sp *SPath) makeCacheValue(filePath string, isDir bool) string {
 	if isDir {
 		return filePath + "_D_"
@@ -60,7 +60,7 @@ func (sp *SPath) parseCacheValue(value string) (filePath string, isDir bool) {
 }
 
 // addToCache adds an item to cache.
-// If <filePath> is a directory, it also adds its all sub files/directories recursively
+// If `filePath` is a directory, it also adds its all sub files/directories recursively
 // to the cache.
 func (sp *SPath) addToCache(filePath, rootPath string) {
 	// Add itself firstly.
@@ -105,7 +105,7 @@ func (sp *SPath) addMonitorByPath(path string) {
 	}, true)
 }
 
-// removeMonitorByPath removes gfsnotify monitoring of <path> recursively.
+// removeMonitorByPath removes gfsnotify monitoring of `path` recursively.
 func (sp *SPath) removeMonitorByPath(path string) {
 	if sp.cache == nil {
 		return

@@ -27,21 +27,21 @@ func (j *Json) Var() *gvar.Var {
 	return gvar.New(j.Interface())
 }
 
-// IsNil checks whether the value pointed by <j> is nil.
+// IsNil checks whether the value pointed by `j` is nil.
 func (j *Json) IsNil() bool {
 	j.mu.RLock()
 	defer j.mu.RUnlock()
 	return j.p == nil || *(j.p) == nil
 }
 
-// Get retrieves and returns value by specified <pattern>.
-// It returns all values of current Json object if <pattern> is given empty or string ".".
-// It returns nil if no value found by <pattern>.
+// Get retrieves and returns value by specified `pattern`.
+// It returns all values of current Json object if `pattern` is given empty or string ".".
+// It returns nil if no value found by `pattern`.
 //
-// We can also access slice item by its index number in <pattern> like:
+// We can also access slice item by its index number in `pattern` like:
 // "list.10", "array.0.name", "array.0.1.id".
 //
-// It returns a default value specified by <def> if value for <pattern> is not found.
+// It returns a default value specified by `def` if value for `pattern` is not found.
 func (j *Json) Get(pattern string, def ...interface{}) *gvar.Var {
 	j.mu.RLock()
 	defer j.mu.RUnlock()
@@ -66,13 +66,13 @@ func (j *Json) Get(pattern string, def ...interface{}) *gvar.Var {
 	return nil
 }
 
-// GetJson gets the value by specified <pattern>,
+// GetJson gets the value by specified `pattern`,
 // and converts it to a un-concurrent-safe Json object.
 func (j *Json) GetJson(pattern string, def ...interface{}) *Json {
 	return New(j.Get(pattern, def...).Val())
 }
 
-// GetJsons gets the value by specified <pattern>,
+// GetJsons gets the value by specified `pattern`,
 // and converts it to a slice of un-concurrent-safe Json object.
 func (j *Json) GetJsons(pattern string, def ...interface{}) []*Json {
 	array := j.Get(pattern, def...).Array()
@@ -86,7 +86,7 @@ func (j *Json) GetJsons(pattern string, def ...interface{}) []*Json {
 	return nil
 }
 
-// GetJsonMap gets the value by specified <pattern>,
+// GetJsonMap gets the value by specified `pattern`,
 // and converts it to a map of un-concurrent-safe Json object.
 func (j *Json) GetJsonMap(pattern string, def ...interface{}) map[string]*Json {
 	m := j.Get(pattern, def...).Map()
@@ -100,25 +100,25 @@ func (j *Json) GetJsonMap(pattern string, def ...interface{}) map[string]*Json {
 	return nil
 }
 
-// Set sets value with specified <pattern>.
+// Set sets value with specified `pattern`.
 // It supports hierarchical data access by char separator, which is '.' in default.
 func (j *Json) Set(pattern string, value interface{}) error {
 	return j.setValue(pattern, value, false)
 }
 
-// Remove deletes value with specified <pattern>.
+// Remove deletes value with specified `pattern`.
 // It supports hierarchical data access by char separator, which is '.' in default.
 func (j *Json) Remove(pattern string) error {
 	return j.setValue(pattern, nil, true)
 }
 
-// Contains checks whether the value by specified <pattern> exist.
+// Contains checks whether the value by specified `pattern` exist.
 func (j *Json) Contains(pattern string) bool {
 	return j.Get(pattern) != nil
 }
 
-// Len returns the length/size of the value by specified <pattern>.
-// The target value by <pattern> should be type of slice or map.
+// Len returns the length/size of the value by specified `pattern`.
+// The target value by `pattern` should be type of slice or map.
 // It returns -1 if the target value is not found, or its type is invalid.
 func (j *Json) Len(pattern string) int {
 	p := j.getPointerByPattern(pattern)
@@ -135,8 +135,8 @@ func (j *Json) Len(pattern string) int {
 	return -1
 }
 
-// Append appends value to the value by specified <pattern>.
-// The target value by <pattern> should be type of slice.
+// Append appends value to the value by specified `pattern`.
+// The target value by `pattern` should be type of slice.
 func (j *Json) Append(pattern string, value interface{}) error {
 	p := j.getPointerByPattern(pattern)
 	if p == nil || *p == nil {
@@ -168,7 +168,7 @@ func (j *Json) Array() []interface{} {
 }
 
 // Scan automatically calls Struct or Structs function according to the type of parameter
-// <pointer> to implement the converting.
+// `pointer` to implement the converting.
 func (j *Json) Scan(pointer interface{}, mapping ...map[string]string) error {
 	return j.Var().Scan(pointer, mapping...)
 }
@@ -180,7 +180,7 @@ func (j *Json) Dump() {
 	gutil.Dump(*j.p)
 }
 
-// Export returns <j> as a string with more manually readable.
+// Export returns `j` as a string with more manually readable.
 func (j *Json) Export() string {
 	j.mu.RLock()
 	defer j.mu.RUnlock()

@@ -52,7 +52,7 @@ var (
 )
 
 // RestartAllServer restarts all the servers of the process.
-// The optional parameter <newExeFilePath> specifies the new binary file for creating process.
+// The optional parameter `newExeFilePath` specifies the new binary file for creating process.
 func RestartAllServer(ctx context.Context, newExeFilePath ...string) error {
 	if !gracefulEnabled {
 		return gerror.NewCode(gcode.CodeInvalidOperation, "graceful reload feature is disabled")
