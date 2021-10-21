@@ -34,13 +34,14 @@ func Listen() {
 }
 
 // Dump dumps a variable to stdout with more manually readable.
-func Dump(i ...interface{}) {
-	gutil.Dump(i...)
+func Dump(values ...interface{}) {
+	gutil.Dump(values...)
 }
 
-// Export exports a variable to string with more manually readable.
-func Export(i ...interface{}) string {
-	return gutil.Export(i...)
+// DumpBrief acts like Dump, but with no type information.
+// Also see Dump.
+func DumpBrief(values ...interface{}) {
+	gutil.DumpBrief(values...)
 }
 
 // Throw throws an exception, which can be caught by TryCatch function.
