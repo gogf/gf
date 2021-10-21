@@ -16,6 +16,10 @@ import (
 	"reflect"
 )
 
+const (
+	dumpIndent = `    `
+)
+
 // Throw throws out an exception, which can be caught be TryCatch or recover.
 func Throw(exception interface{}) {
 	panic(exception)

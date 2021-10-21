@@ -26,7 +26,7 @@ import (
 func (view *View) buildInFuncDump(values ...interface{}) (result string) {
 	result += "<!--\n"
 	for _, v := range values {
-		result += gutil.Export(v) + "\n"
+		result += gutil.Export(v, gutil.ExportOption{WithoutType: true}) + "\n"
 	}
 	result += "-->\n"
 	return result

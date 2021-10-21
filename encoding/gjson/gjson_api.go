@@ -184,5 +184,5 @@ func (j *Json) Dump() {
 func (j *Json) Export() string {
 	j.mu.RLock()
 	defer j.mu.RUnlock()
-	return gutil.Export(*j.p)
+	return gutil.Export(*j.p, gutil.ExportOption{})
 }
