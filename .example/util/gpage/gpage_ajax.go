@@ -11,7 +11,7 @@ func main() {
 	s.BindHandler("/page/ajax", func(r *ghttp.Request) {
 		page := r.GetPage(100, 10)
 		page.AjaxActionName = "DoAjax"
-		buffer, _ := gview.ParseContent(`
+		buffer, _ := gview.ParseContent(r.Context(), `
         <html>
             <head>
                 <style>

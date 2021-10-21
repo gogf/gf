@@ -130,10 +130,10 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	}
 
 	if len(inputMetaMap) > 0 {
-		if err := gconv.Struct(inputMetaMap, &path); err != nil {
+		if err := gconv.Struct(oai.fileMapWithShortTags(inputMetaMap), &path); err != nil {
 			return gerror.WrapCode(gcode.CodeInternalError, err, `mapping struct tags to Path failed`)
 		}
-		if err := gconv.Struct(inputMetaMap, &operation); err != nil {
+		if err := gconv.Struct(oai.fileMapWithShortTags(inputMetaMap), &operation); err != nil {
 			return gerror.WrapCode(gcode.CodeInternalError, err, `mapping struct tags to Operation failed`)
 		}
 	}
@@ -208,7 +208,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 			}
 		)
 		if len(outputMetaMap) > 0 {
-			if err := gconv.Struct(outputMetaMap, &response); err != nil {
+			if err := gconv.Struct(oai.fileMapWithShortTags(outputMetaMap), &response); err != nil {
 				return gerror.WrapCode(gcode.CodeInternalError, err, `mapping struct tags to Response failed`)
 			}
 		}

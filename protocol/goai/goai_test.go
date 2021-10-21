@@ -561,3 +561,61 @@ func TestOpenApiV3_CommonResponse_SubDataField(t *testing.T) {
 		t.Assert(len(oai.Paths["/index"].Get.Responses["200"].Value.Content["application/json"].Schema.Value.Properties[`Response`].Value.Properties), 7)
 	})
 }
+
+func TestOpenApiV3_ShortTags(t *testing.T) {
+	type CommonReq struct {
+		AppId      int64  `json:"appId" v:"required" in:"path" des:"应用Id" sum:"应用Id Summary"`
+		ResourceId string `json:"resourceId" in:"query" des:"资源Id" sum:"资源Id Summary"`
+	}
+	type SetSpecInfo struct {
+		StorageType string   `v:"required|in:CLOUD_PREMIUM,CLOUD_SSD,CLOUD_HSSD" des:"StorageType"`
+		Shards      int32    `des:"shards 分片数" sum:"Shards Summary"`
+		Params      []string `des:"默认参数(json 串-ClickHouseParams)" sum:"Params Summary"`
+	}
+	type CreateResourceReq struct {
+		CommonReq
+		gmeta.Meta `path:"/CreateResourceReq" method:"POST" tags:"default" sum:"CreateResourceReq sum"`
+		Name       string                  `des:"实例名称"`
+		Product    string                  `des:"业务类型"`
+		Region     string                  `v:"required" des:"区域"`
+		SetMap     map[string]*SetSpecInfo `v:"required" des:"配置Map"`
+		SetSlice   []SetSpecInfo           `v:"required" des:"配置Slice"`
+	}
+
+	type CreateResourceRes struct {
+		gmeta.Meta `des:"Demo Response Struct"`
+		FlowId     int64 `des:"创建实例流程id"`
+	}
+
+	f := func(ctx context.Context, req *CreateResourceReq) (res *CreateResourceRes, err error) {
+		return
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err error
+			oai = goai.New()
+		)
+		err = oai.Add(goai.AddInput{
+			Path:   "/test1/{appId}",
+			Method: goai.HttpMethodPut,
+			Object: f,
+		})
+		t.AssertNil(err)
+
+		err = oai.Add(goai.AddInput{
+			Path:   "/test1/{appId}",
+			Method: goai.HttpMethodPost,
+			Object: f,
+		})
+		t.AssertNil(err)
+		//fmt.Println(oai.String())
+		// Schema asserts.
+		t.Assert(len(oai.Components.Schemas), 3)
+		t.Assert(oai.Paths[`/test1/{appId}`].Summary, `CreateResourceReq sum`)
+		t.Assert(oai.
+			Components.
+			Schemas[`github.com.gogf.gf.v2.protocol.goai_test.CreateResourceReq`].
+			Value.Properties[`resourceId`].Value.Description, `资源Id`)
+	})
+}
