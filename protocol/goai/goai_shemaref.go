@@ -32,7 +32,7 @@ func (oai *OpenApiV3) newSchemaRefWithGolangType(golangType reflect.Type, tagMap
 		}
 	)
 	if len(tagMap) > 0 {
-		if err := gconv.Struct(tagMap, schema); err != nil {
+		if err := gconv.Struct(oai.fileMapWithShortTags(tagMap), schema); err != nil {
 			return nil, gerror.WrapCode(gcode.CodeInternalError, err, `mapping struct tags to Schema failed`)
 		}
 	}

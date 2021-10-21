@@ -161,6 +161,24 @@ func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, meth
 			)
 			return
 		}
+
+		if !gstr.HasSuffix(reflectType.In(1).String(), `Req`) {
+			err = gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				`invalid struct naming for request: defined as "%s", but it should be named with "Req" suffix like "xxxReq"`,
+				reflectType.In(1).String(),
+			)
+			return
+		}
+
+		if !gstr.HasSuffix(reflectType.Out(0).String(), `Res`) {
+			err = gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				`invalid struct naming for response: defined as "%s", but it should be named with "Res" suffix like "xxxRes"`,
+				reflectType.Out(0).String(),
+			)
+			return
+		}
 	}
 	info.Func = handlerFunc
 	info.Type = reflect.TypeOf(f)

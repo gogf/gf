@@ -87,6 +87,10 @@ const (
 var (
 	defaultReadContentTypes  = []string{`application/json`}
 	defaultWriteContentTypes = []string{`application/json`}
+	shortTypeMapForTag       = map[string]string{
+		"sum": "summary",
+		"des": "description",
+	}
 )
 
 // New creates and returns a OpenApiV3 implements object.
@@ -211,6 +215,15 @@ func (oai *OpenApiV3) golangTypeToSchemaName(t reflect.Type) string {
 		`}`: ``,
 	})
 	return schemaName
+}
+
+func (oai *OpenApiV3) fileMapWithShortTags(m map[string]string) map[string]string {
+	for k, v := range shortTypeMapForTag {
+		if m[v] == "" && m[k] != "" {
+			m[v] = m[k]
+		}
+	}
+	return m
 }
 
 func formatRefToBytes(ref string) []byte {
