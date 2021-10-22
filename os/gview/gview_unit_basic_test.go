@@ -8,6 +8,7 @@ package gview_test
 
 import (
 	"context"
+	"fmt"
 	"github.com/gogf/gf/v2/encoding/ghtml"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gtime"
@@ -411,7 +412,7 @@ func Test_BuildInFuncDump(t *testing.T) {
 		})
 		r, err := v.ParseContent(context.TODO(), "{{dump .}}")
 		t.Assert(err, nil)
-		t.Assert(gstr.Contains(r, `"name": "john"`), true)
+		t.Assert(gstr.Contains(r, `"name":  "john"`), true)
 		t.Assert(gstr.Contains(r, `"score": 100`), true)
 	})
 }
