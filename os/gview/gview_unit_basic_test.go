@@ -8,7 +8,6 @@ package gview_test
 
 import (
 	"context"
-	"fmt"
 	"github.com/gogf/gf/v2/encoding/ghtml"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gtime"
