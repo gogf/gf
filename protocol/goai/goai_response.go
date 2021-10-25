@@ -37,9 +37,9 @@ func (r ResponseRef) MarshalJSON() ([]byte, error) {
 }
 
 type getResponseSchemaRefInput struct {
-	BusinessStructName string
-	ResponseObject     interface{}
-	ResponseDataField  string
+	BusinessStructName string      // The business struct name.
+	ResponseObject     interface{} // Common response object.
+	ResponseDataField  string      // Common response data field.
 }
 
 func (oai *OpenApiV3) getResponseSchemaRef(in getResponseSchemaRefInput) (*SchemaRef, error) {
