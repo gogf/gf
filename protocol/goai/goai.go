@@ -89,7 +89,9 @@ var (
 	defaultWriteContentTypes = []string{`application/json`}
 	shortTypeMapForTag       = map[string]string{
 		"sum": "summary",
+		"sm":  "summary",
 		"des": "description",
+		"dc":  "description",
 	}
 )
 
