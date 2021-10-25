@@ -626,9 +626,9 @@ func (c *Core) writeSqlToLogger(ctx context.Context, sql *Sql) {
 	)
 	switch sql.Type {
 	case sqlTypeQueryContext:
-		sqlTypeKey = `selected`
+		sqlTypeKey = `rows`
 	default:
-		sqlTypeKey = `affected`
+		sqlTypeKey = `rows`
 	}
 	if sql.IsTransaction {
 		if v := ctx.Value(transactionIdForLoggerCtx); v != nil {
