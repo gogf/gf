@@ -7,8 +7,12 @@
 package goai
 
 import (
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/structs"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gmeta"
 	"reflect"
 )
 
@@ -105,10 +109,20 @@ func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
 		RecursiveOption: structs.RecursiveOptionEmbeddedNoTag,
 	})
 	var (
+		tagMap = gmeta.Data(object)
 		schema = &Schema{
 			Properties: map[string]SchemaRef{},
 		}
 	)
+	if len(tagMap) > 0 {
+		err := gconv.Struct(oai.fileMapWithShortTags(tagMap), schema)
+		if err != nil {
+			return nil, gerror.WrapCode(gcode.CodeInternalError, err, `mapping meta data tags to Schema failed`)
+		}
+	}
+	if schema.Type != "" && schema.Type != TypeObject {
+		return schema, nil
+	}
 	schema.Type = TypeObject
 	for _, structField := range structFields {
 		if !gstr.IsLetterUpper(structField.Name()[0]) {

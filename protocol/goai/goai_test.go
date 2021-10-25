@@ -9,6 +9,7 @@ package goai_test
 import (
 	"context"
 	"fmt"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/protocol/goai"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gmeta"
@@ -617,5 +618,35 @@ func TestOpenApiV3_ShortTags(t *testing.T) {
 			Components.
 			Schemas[`github.com.gogf.gf.v2.protocol.goai_test.CreateResourceReq`].
 			Value.Properties[`resourceId`].Value.Description, `资源Id`)
+	})
+}
+
+func TestOpenApiV3_HtmlResponse(t *testing.T) {
+	type Req struct {
+		g.Meta `path:"/test" method:"get" summary:"展示内容详情页面" tags:"内容"`
+		Id     uint `json:"id" v:"min:1#请选择查看的内容" dc:"内容id"`
+	}
+	type Res struct {
+		g.Meta `mime:"text/html" type:"string"`
+	}
+
+	f := func(ctx context.Context, req *Req) (res *Res, err error) {
+		return
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err error
+			oai = goai.New()
+		)
+		err = oai.Add(goai.AddInput{
+			Path:   "/test",
+			Method: goai.HttpMethodGet,
+			Object: f,
+		})
+		t.AssertNil(err)
+
+		//fmt.Println(oai.String())
+		t.Assert(oai.Components.Schemas[`github.com.gogf.gf.v2.protocol.goai_test.Res`].Value.Type, goai.TypeString)
 	})
 }
