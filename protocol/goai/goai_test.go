@@ -627,7 +627,7 @@ func TestOpenApiV3_HtmlResponse(t *testing.T) {
 		Id     uint `json:"id" v:"min:1#请选择查看的内容" dc:"内容id"`
 	}
 	type Res struct {
-		g.Meta `mime:"text/html" type:"string"`
+		g.Meta `mime:"text/html" type:"string" example:"<html/>"`
 	}
 
 	f := func(ctx context.Context, req *Req) (res *Res, err error) {
@@ -639,6 +639,53 @@ func TestOpenApiV3_HtmlResponse(t *testing.T) {
 			err error
 			oai = goai.New()
 		)
+		err = oai.Add(goai.AddInput{
+			Path:   "/test",
+			Method: goai.HttpMethodGet,
+			Object: f,
+		})
+		t.AssertNil(err)
+
+		//fmt.Println(oai.String())
+		t.Assert(oai.Components.Schemas[`github.com.gogf.gf.v2.protocol.goai_test.Res`].Value.Type, goai.TypeString)
+	})
+}
+
+func TestOpenApiV3_HtmlResponseWithCommonResponse(t *testing.T) {
+	type CommonResError struct {
+		Code    string `description:"错误码"`
+		Message string `description:"错误描述"`
+	}
+
+	type CommonResResponse struct {
+		RequestId string          `description:"RequestId"`
+		Error     *CommonResError `json:",omitempty" description:"执行错误信息"`
+	}
+
+	type CommonRes struct {
+		Response CommonResResponse
+	}
+
+	type Req struct {
+		g.Meta `path:"/test" method:"get" summary:"展示内容详情页面" tags:"内容"`
+		Id     uint `json:"id" v:"min:1#请选择查看的内容" dc:"内容id"`
+	}
+	type Res struct {
+		g.Meta `mime:"text/html" type:"string" example:"<html/>"`
+	}
+
+	f := func(ctx context.Context, req *Req) (res *Res, err error) {
+		return
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err error
+			oai = goai.New()
+		)
+		oai.Config.CommonResponse = CommonRes{}
+		oai.Config.CommonResponseDataField = `Response.`
+
 		err = oai.Add(goai.AddInput{
 			Path:   "/test",
 			Method: goai.HttpMethodGet,

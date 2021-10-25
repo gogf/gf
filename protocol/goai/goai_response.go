@@ -43,7 +43,7 @@ type getResponseSchemaRefInput struct {
 }
 
 func (oai *OpenApiV3) getResponseSchemaRef(in getResponseSchemaRefInput) (*SchemaRef, error) {
-	if oai.Config.CommonResponse == nil {
+	if in.ResponseObject == nil {
 		return &SchemaRef{
 			Ref: in.BusinessStructName,
 		}, nil
