@@ -125,7 +125,7 @@ func Test_Fields(t *testing.T) {
 	})
 }
 
-func Test_Fields_WithEmbedded(t *testing.T) {
+func Test_Fields_WithEmbedded1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type B struct {
 			Name string
@@ -146,6 +146,44 @@ func Test_Fields_WithEmbedded(t *testing.T) {
 		t.Assert(r[1].Name(), `Name`)
 		t.Assert(r[2].Name(), `Age`)
 		t.Assert(r[3].Name(), `Score`)
+	})
+}
+
+func Test_Fields_WithEmbedded2(t *testing.T) {
+	type MetaNode struct {
+		Id          uint   `orm:"id,primary"  description:""`
+		Capacity    string `orm:"capacity"    description:"Capacity string"`
+		Allocatable string `orm:"allocatable" description:"Allocatable string"`
+		Status      string `orm:"status"      description:"Status string"`
+	}
+	type MetaNodeZone struct {
+		Nodes    uint
+		Clusters uint
+		Disk     uint
+		Cpu      uint
+		Memory   uint
+		Zone     string
+	}
+
+	type MetaNodeItem struct {
+		MetaNode
+		Capacity    []MetaNodeZone `dc:"Capacity []MetaNodeZone"`
+		Allocatable []MetaNodeZone `dc:"Allocatable []MetaNodeZone"`
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		r, err := structs.Fields(structs.FieldsInput{
+			Pointer:         new(MetaNodeItem),
+			RecursiveOption: structs.RecursiveOptionEmbeddedNoTag,
+		})
+		t.AssertNil(err)
+		t.Assert(len(r), 4)
+		t.Assert(r[0].Name(), `Id`)
+		t.Assert(r[1].Name(), `Capacity`)
+		t.Assert(r[1].TagStr(), `dc:"Capacity []MetaNodeZone"`)
+		t.Assert(r[2].Name(), `Allocatable`)
+		t.Assert(r[2].TagStr(), `dc:"Allocatable []MetaNodeZone"`)
+		t.Assert(r[3].Name(), `Status`)
 	})
 }
 
