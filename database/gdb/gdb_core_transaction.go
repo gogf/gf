@@ -9,16 +9,16 @@ package gdb
 import (
 	"context"
 	"database/sql"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"reflect"
 
-	"github.com/gogf/gf/container/gtype"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/util/gconv"
-	"github.com/gogf/gf/util/guid"
+	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/guid"
 
-	"github.com/gogf/gf/text/gregex"
+	"github.com/gogf/gf/v2/text/gregex"
 )
 
 // TX is the struct for transaction management.
@@ -46,8 +46,8 @@ var (
 // You should call Commit or Rollback functions of the transaction object
 // if you no longer use the transaction. Commit or Rollback functions will also
 // close the transaction automatically.
-func (c *Core) Begin() (tx *TX, err error) {
-	return c.doBeginCtx(c.GetCtx())
+func (c *Core) Begin(ctx context.Context) (tx *TX, err error) {
+	return c.doBeginCtx(ctx)
 }
 
 func (c *Core) doBeginCtx(ctx context.Context) (*TX, error) {
@@ -62,7 +62,7 @@ func (c *Core) doBeginCtx(ctx context.Context) (*TX, error) {
 			mTime2     = gtime.TimestampMilli()
 			sqlObj     = &Sql{
 				Sql:           sqlStr,
-				Type:          "DB.Begin",
+				Type:          sqlTypeBegin,
 				Args:          nil,
 				Format:        sqlStr,
 				Error:         err,
@@ -119,7 +119,7 @@ func (c *Core) Transaction(ctx context.Context, f func(ctx context.Context, tx *
 	defer func() {
 		if err == nil {
 			if exception := recover(); exception != nil {
-				if v, ok := exception.(error); ok {
+				if v, ok := exception.(error); ok && gerror.HasStack(v) {
 					err = v
 				} else {
 					err = gerror.NewCodef(gcode.CodeInternalError, "%+v", exception)
@@ -209,7 +209,7 @@ func (tx *TX) Commit() error {
 		mTime2 = gtime.TimestampMilli()
 		sqlObj = &Sql{
 			Sql:           sqlStr,
-			Type:          "TX.Commit",
+			Type:          sqlTypeTXCommit,
 			Args:          nil,
 			Format:        sqlStr,
 			Error:         err,
@@ -243,7 +243,7 @@ func (tx *TX) Rollback() error {
 		mTime2 = gtime.TimestampMilli()
 		sqlObj = &Sql{
 			Sql:           sqlStr,
-			Type:          "TX.Rollback",
+			Type:          sqlTypeTXRollback,
 			Args:          nil,
 			Format:        sqlStr,
 			Error:         err,
@@ -313,7 +313,7 @@ func (tx *TX) Transaction(ctx context.Context, f func(ctx context.Context, tx *T
 	defer func() {
 		if err == nil {
 			if exception := recover(); exception != nil {
-				if v, ok := exception.(error); ok {
+				if v, ok := exception.(error); ok && gerror.HasStack(v) {
 					err = v
 				} else {
 					err = gerror.NewCodef(gcode.CodeInternalError, "%+v", exception)
@@ -336,7 +336,7 @@ func (tx *TX) Transaction(ctx context.Context, f func(ctx context.Context, tx *T
 
 // Query does query operation on transaction.
 // See Core.Query.
-func (tx *TX) Query(sql string, args ...interface{}) (rows *sql.Rows, err error) {
+func (tx *TX) Query(sql string, args ...interface{}) (result Result, err error) {
 	return tx.db.DoQuery(tx.ctx, &txLink{tx.tx}, sql, args...)
 }
 
@@ -357,12 +357,7 @@ func (tx *TX) Prepare(sql string) (*Stmt, error) {
 
 // GetAll queries and returns data records from database.
 func (tx *TX) GetAll(sql string, args ...interface{}) (Result, error) {
-	rows, err := tx.Query(sql, args...)
-	if err != nil || rows == nil {
-		return nil, err
-	}
-	defer rows.Close()
-	return tx.db.GetCore().convertRowsToResult(rows)
+	return tx.Query(sql, args...)
 }
 
 // GetOne queries and returns one record from database.

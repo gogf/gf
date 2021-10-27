@@ -8,21 +8,21 @@ package gview_test
 
 import (
 	"context"
-	"github.com/gogf/gf/encoding/ghtml"
-	"github.com/gogf/gf/os/gctx"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/encoding/ghtml"
+	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/util/gconv"
 	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/gview"
-	"github.com/gogf/gf/test/gtest"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gview"
+	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 func init() {
@@ -411,7 +411,7 @@ func Test_BuildInFuncDump(t *testing.T) {
 		})
 		r, err := v.ParseContent(context.TODO(), "{{dump .}}")
 		t.Assert(err, nil)
-		t.Assert(gstr.Contains(r, `"name": "john"`), true)
+		t.Assert(gstr.Contains(r, `"name":  "john"`), true)
 		t.Assert(gstr.Contains(r, `"score": 100`), true)
 	})
 }

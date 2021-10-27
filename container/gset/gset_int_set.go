@@ -9,9 +9,9 @@ package gset
 
 import (
 	"bytes"
-	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/internal/rwmutex"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/internal/rwmutex"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 type IntSet struct {
@@ -19,8 +19,8 @@ type IntSet struct {
 	data map[int]struct{}
 }
 
-// New create and returns a new set, which contains un-repeated items.
-// The parameter <safe> is used to specify whether using set in concurrent-safety,
+// NewIntSet create and returns a new set, which contains un-repeated items.
+// The parameter `safe` is used to specify whether using set in concurrent-safety,
 // which is false in default.
 func NewIntSet(safe ...bool) *IntSet {
 	return &IntSet{
@@ -29,7 +29,7 @@ func NewIntSet(safe ...bool) *IntSet {
 	}
 }
 
-// NewIntSetFrom returns a new set from <items>.
+// NewIntSetFrom returns a new set from `items`.
 func NewIntSetFrom(items []int, safe ...bool) *IntSet {
 	m := make(map[int]struct{})
 	for _, v := range items {
@@ -41,8 +41,8 @@ func NewIntSetFrom(items []int, safe ...bool) *IntSet {
 	}
 }
 
-// Iterator iterates the set readonly with given callback function <f>,
-// if <f> returns true then continue iterating; or false to stop.
+// Iterator iterates the set readonly with given callback function `f`,
+// if `f` returns true then continue iterating; or false to stop.
 func (set *IntSet) Iterator(f func(v int) bool) {
 	set.mu.RLock()
 	defer set.mu.RUnlock()
@@ -69,7 +69,7 @@ func (set *IntSet) Add(item ...int) {
 // it adds the item to set and returns true if it does not exists in the set,
 // or else it does nothing and returns false.
 //
-// Note that, if <item> is nil, it does nothing and returns false.
+// Note that, if `item` is nil, it does nothing and returns false.
 func (set *IntSet) AddIfNotExist(item int) bool {
 	if !set.Contains(item) {
 		set.mu.Lock()
@@ -87,9 +87,9 @@ func (set *IntSet) AddIfNotExist(item int) bool {
 
 // AddIfNotExistFunc checks whether item exists in the set,
 // it adds the item to set and returns true if it does not exists in the set and
-// function <f> returns true, or else it does nothing and returns false.
+// function `f` returns true, or else it does nothing and returns false.
 //
-// Note that, the function <f> is executed without writing lock.
+// Note that, the function `f` is executed without writing lock.
 func (set *IntSet) AddIfNotExistFunc(item int, f func() bool) bool {
 	if !set.Contains(item) {
 		if f() {
@@ -107,11 +107,11 @@ func (set *IntSet) AddIfNotExistFunc(item int, f func() bool) bool {
 	return false
 }
 
-// AddIfNotExistFunc checks whether item exists in the set,
+// AddIfNotExistFuncLock checks whether item exists in the set,
 // it adds the item to set and returns true if it does not exists in the set and
-// function <f> returns true, or else it does nothing and returns false.
+// function `f` returns true, or else it does nothing and returns false.
 //
-// Note that, the function <f> is executed without writing lock.
+// Note that, the function `f` is executed without writing lock.
 func (set *IntSet) AddIfNotExistFuncLock(item int, f func() bool) bool {
 	if !set.Contains(item) {
 		set.mu.Lock()
@@ -129,7 +129,7 @@ func (set *IntSet) AddIfNotExistFuncLock(item int, f func() bool) bool {
 	return false
 }
 
-// Contains checks whether the set contains <item>.
+// Contains checks whether the set contains `item`.
 func (set *IntSet) Contains(item int) bool {
 	var ok bool
 	set.mu.RLock()
@@ -140,7 +140,7 @@ func (set *IntSet) Contains(item int) bool {
 	return ok
 }
 
-// Remove deletes <item> from set.
+// Remove deletes `item` from set.
 func (set *IntSet) Remove(item int) {
 	set.mu.Lock()
 	if set.data != nil {
@@ -179,7 +179,7 @@ func (set *IntSet) Slice() []int {
 	return ret
 }
 
-// Join joins items with a string <glue>.
+// Join joins items with a string `glue`.
 func (set *IntSet) Join(glue string) string {
 	set.mu.RLock()
 	defer set.mu.RUnlock()
@@ -206,14 +206,14 @@ func (set *IntSet) String() string {
 	return "[" + set.Join(",") + "]"
 }
 
-// LockFunc locks writing with callback function <f>.
+// LockFunc locks writing with callback function `f`.
 func (set *IntSet) LockFunc(f func(m map[int]struct{})) {
 	set.mu.Lock()
 	defer set.mu.Unlock()
 	f(set.data)
 }
 
-// RLockFunc locks reading with callback function <f>.
+// RLockFunc locks reading with callback function `f`.
 func (set *IntSet) RLockFunc(f func(m map[int]struct{})) {
 	set.mu.RLock()
 	defer set.mu.RUnlock()
@@ -240,7 +240,7 @@ func (set *IntSet) Equal(other *IntSet) bool {
 	return true
 }
 
-// IsSubsetOf checks whether the current set is a sub-set of <other>.
+// IsSubsetOf checks whether the current set is a sub-set of `other`.
 func (set *IntSet) IsSubsetOf(other *IntSet) bool {
 	if set == other {
 		return true
@@ -257,8 +257,8 @@ func (set *IntSet) IsSubsetOf(other *IntSet) bool {
 	return true
 }
 
-// Union returns a new set which is the union of <set> and <other>.
-// Which means, all the items in <newSet> are in <set> or in <other>.
+// Union returns a new set which is the union of `set` and `other`.
+// Which means, all the items in `newSet` are in `set` or in `other`.
 func (set *IntSet) Union(others ...*IntSet) (newSet *IntSet) {
 	newSet = NewIntSet()
 	set.mu.RLock()
@@ -283,8 +283,8 @@ func (set *IntSet) Union(others ...*IntSet) (newSet *IntSet) {
 	return
 }
 
-// Diff returns a new set which is the difference set from <set> to <other>.
-// Which means, all the items in <newSet> are in <set> but not in <other>.
+// Diff returns a new set which is the difference set from `set` to `other`.
+// Which means, all the items in `newSet` are in `set` but not in `other`.
 func (set *IntSet) Diff(others ...*IntSet) (newSet *IntSet) {
 	newSet = NewIntSet()
 	set.mu.RLock()
@@ -304,8 +304,8 @@ func (set *IntSet) Diff(others ...*IntSet) (newSet *IntSet) {
 	return
 }
 
-// Intersect returns a new set which is the intersection from <set> to <other>.
-// Which means, all the items in <newSet> are in <set> and also in <other>.
+// Intersect returns a new set which is the intersection from `set` to `other`.
+// Which means, all the items in `newSet` are in `set` and also in `other`.
 func (set *IntSet) Intersect(others ...*IntSet) (newSet *IntSet) {
 	newSet = NewIntSet()
 	set.mu.RLock()
@@ -326,11 +326,11 @@ func (set *IntSet) Intersect(others ...*IntSet) (newSet *IntSet) {
 	return
 }
 
-// Complement returns a new set which is the complement from <set> to <full>.
-// Which means, all the items in <newSet> are in <full> and not in <set>.
+// Complement returns a new set which is the complement from `set` to `full`.
+// Which means, all the items in `newSet` are in `full` and not in `set`.
 //
-// It returns the difference between <full> and <set>
-// if the given set <full> is not the full set of <set>.
+// It returns the difference between `full` and `set`
+// if the given set `full` is not the full set of `set`.
 func (set *IntSet) Complement(full *IntSet) (newSet *IntSet) {
 	newSet = NewIntSet()
 	set.mu.RLock()
@@ -347,7 +347,7 @@ func (set *IntSet) Complement(full *IntSet) (newSet *IntSet) {
 	return
 }
 
-// Merge adds items from <others> sets into <set>.
+// Merge adds items from `others` sets into `set`.
 func (set *IntSet) Merge(others ...*IntSet) *IntSet {
 	set.mu.Lock()
 	defer set.mu.Unlock()
@@ -377,7 +377,7 @@ func (set *IntSet) Sum() (sum int) {
 	return
 }
 
-// Pops randomly pops an item from set.
+// Pop randomly pops an item from set.
 func (set *IntSet) Pop() int {
 	set.mu.Lock()
 	defer set.mu.Unlock()
@@ -388,7 +388,7 @@ func (set *IntSet) Pop() int {
 	return 0
 }
 
-// Pops randomly pops <size> items from set.
+// Pops randomly pops `size` items from set.
 // It returns all items if size == -1.
 func (set *IntSet) Pops(size int) []int {
 	set.mu.Lock()
@@ -412,7 +412,7 @@ func (set *IntSet) Pops(size int) []int {
 	return array
 }
 
-// Walk applies a user supplied function <f> to every item of set.
+// Walk applies a user supplied function `f` to every item of set.
 func (set *IntSet) Walk(f func(item int) int) *IntSet {
 	set.mu.Lock()
 	defer set.mu.Unlock()

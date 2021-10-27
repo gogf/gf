@@ -1,8 +1,8 @@
 package gtime_test
 
 import (
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/test/gtest"
 	"testing"
 )
 

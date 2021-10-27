@@ -8,10 +8,10 @@
 package gyaml
 
 import (
-	"github.com/gogf/gf/internal/json"
-	"gopkg.in/yaml.v3"
+	"github.com/gogf/gf/v2/internal/json"
+	"gopkg.in/yaml.v2"
 
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 func Encode(v interface{}) ([]byte, error) {

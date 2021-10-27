@@ -100,10 +100,10 @@ func Strings(any interface{}) []string {
 			array[k] = String(v)
 		}
 	default:
-		if v, ok := any.(apiStrings); ok {
+		if v, ok := any.(iStrings); ok {
 			return v.Strings()
 		}
-		if v, ok := any.(apiInterfaces); ok {
+		if v, ok := any.(iInterfaces); ok {
 			return Strings(v.Interfaces())
 		}
 		// JSON format string value converting.

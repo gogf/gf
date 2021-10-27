@@ -7,9 +7,9 @@
 package gproc
 
 import (
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/net/gtcp"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/net/gtcp"
 	"io"
 )
 

@@ -112,10 +112,10 @@ func Float32s(any interface{}) []float32 {
 			array[k] = Float32(v)
 		}
 	default:
-		if v, ok := any.(apiFloats); ok {
+		if v, ok := any.(iFloats); ok {
 			return Float32s(v.Floats())
 		}
-		if v, ok := any.(apiInterfaces); ok {
+		if v, ok := any.(iInterfaces); ok {
 			return Float32s(v.Interfaces())
 		}
 		// JSON format string value converting.
@@ -240,10 +240,10 @@ func Float64s(any interface{}) []float64 {
 			array[k] = Float64(v)
 		}
 	default:
-		if v, ok := any.(apiFloats); ok {
+		if v, ok := any.(iFloats); ok {
 			return v.Floats()
 		}
-		if v, ok := any.(apiInterfaces); ok {
+		if v, ok := any.(iInterfaces); ok {
 			return Floats(v.Interfaces())
 		}
 		// JSON format string value converting.

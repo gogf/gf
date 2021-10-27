@@ -8,18 +8,18 @@ package ghttp_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/text/gstr"
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/util/gconv"
 
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/ghttp"
 
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_ConfigFromMap(t *testing.T) {
@@ -92,7 +92,7 @@ func Test_ClientMaxBodySize(t *testing.T) {
 			data[i] = 'a'
 		}
 		t.Assert(
-			gstr.Trim(c.PostContent("/", data)),
+			gstr.Trim(c.PostContent(ctx, "/", data)),
 			data[:1024],
 		)
 	})
@@ -133,7 +133,7 @@ func Test_ClientMaxBodySize_File(t *testing.T) {
 		t.Assert(gfile.PutBytes(path, data), nil)
 		defer gfile.Remove(path)
 		t.Assert(
-			gstr.Trim(c.PostContent("/", "name=john&file=@file:"+path)),
+			gstr.Trim(c.PostContent(ctx, "/", "name=john&file=@file:"+path)),
 			"ok",
 		)
 	})
@@ -151,7 +151,7 @@ func Test_ClientMaxBodySize_File(t *testing.T) {
 		t.Assert(gfile.PutBytes(path, data), nil)
 		defer gfile.Remove(path)
 		t.Assert(
-			gstr.Trim(c.PostContent("/", "name=john&file=@file:"+path)),
+			gstr.Trim(c.PostContent(ctx, "/", "name=john&file=@file:"+path)),
 			"Invalid Request: http: request body too large",
 		)
 	})

@@ -12,8 +12,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/gogf/gf/crypto/gsha1"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/crypto/gsha1"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 type user struct {

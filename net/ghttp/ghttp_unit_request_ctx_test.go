@@ -9,9 +9,9 @@ package ghttp_test
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/test/gtest"
 	"testing"
 	"time"
 )
@@ -39,6 +39,6 @@ func Test_Request_SetCtx(t *testing.T) {
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(c.GetContent("/"), "1")
+		t.Assert(c.GetContent(ctx, "/"), "1")
 	})
 }

@@ -8,9 +8,10 @@ package gtrace
 
 import (
 	"context"
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/util/gconv"
+
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/util/gconv"
 	"go.opentelemetry.io/otel/baggage"
 )
 

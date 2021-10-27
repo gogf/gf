@@ -9,7 +9,7 @@ package gdb
 import (
 	"fmt"
 
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // isSubQuery checks and returns whether given string a sub-query sql string.

@@ -8,7 +8,7 @@ package ghttp
 
 import (
 	"context"
-	"github.com/gogf/gf/container/gvar"
+	"github.com/gogf/gf/v2/container/gvar"
 )
 
 // RequestFromCtx retrieves and returns the Request object from context.
@@ -44,7 +44,7 @@ func (r *Request) SetCtx(ctx context.Context) {
 }
 
 // GetCtxVar retrieves and returns a Var with given key name.
-// The optional parameter <def> specifies the default value of the Var if given <key>
+// The optional parameter `def` specifies the default value of the Var if given `key`
 // does not exist in the context.
 func (r *Request) GetCtxVar(key interface{}, def ...interface{}) *gvar.Var {
 	value := r.Context().Value(key)

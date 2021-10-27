@@ -9,15 +9,15 @@ package gproc
 
 import (
 	"bytes"
-	"github.com/gogf/gf/os/genv"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/os/genv"
+	"github.com/gogf/gf/v2/text/gstr"
 	"io"
 	"os"
 	"runtime"
 	"time"
 
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 const (
@@ -80,8 +80,8 @@ func Uptime() time.Duration {
 	return time.Now().Sub(processStartTime)
 }
 
-// Shell executes command <cmd> synchronously with given input pipe <in> and output pipe `out`.
-// The command <cmd> reads the input parameters from input pipe `in`, and writes its output automatically
+// Shell executes command `cmd` synchronously with given input pipe `in` and output pipe `out`.
+// The command `cmd` reads the input parameters from input pipe `in`, and writes its output automatically
 // to output pipe `out`.
 func Shell(cmd string, out io.Writer, in io.Reader) error {
 	p := NewProcess(getShell(), append([]string{getShellOption()}, parseCommand(cmd)...))
@@ -195,7 +195,7 @@ func SearchBinaryPath(file string) string {
 	array := ([]string)(nil)
 	switch runtime.GOOS {
 	case "windows":
-		envPath := genv.Get("PATH", genv.Get("Path"))
+		envPath := genv.Get("PATH", genv.Get("Path")).String()
 		if gstr.Contains(envPath, ";") {
 			array = gstr.SplitAndTrim(envPath, ";")
 		} else if gstr.Contains(envPath, ":") {
@@ -205,7 +205,7 @@ func SearchBinaryPath(file string) string {
 			file += ".exe"
 		}
 	default:
-		array = gstr.SplitAndTrim(genv.Get("PATH"), ":")
+		array = gstr.SplitAndTrim(genv.Get("PATH").String(), ":")
 	}
 	if len(array) > 0 {
 		path := ""

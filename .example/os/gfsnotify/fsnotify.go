@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/v2/os/glog"
 )
 
 func main() {

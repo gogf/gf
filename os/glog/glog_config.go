@@ -7,6 +7,7 @@
 package glog
 
 import (
+	"context"
 	"io"
 )
 
@@ -114,8 +115,8 @@ func GetCtxKeys() []interface{} {
 
 // PrintStack prints the caller stack,
 // the optional parameter `skip` specify the skipped stack offset from the end point.
-func PrintStack(skip ...int) {
-	logger.PrintStack(skip...)
+func PrintStack(ctx context.Context, skip ...int) {
+	logger.PrintStack(ctx, skip...)
 }
 
 // GetStack returns the caller stack content,

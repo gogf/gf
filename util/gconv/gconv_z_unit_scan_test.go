@@ -7,10 +7,11 @@
 package gconv_test
 
 import (
-	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/test/gtest"
-	"github.com/gogf/gf/util/gconv"
+	"fmt"
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gconv"
 	"testing"
 )
 
@@ -273,5 +274,48 @@ func Test_Scan_JsonAttributes_StringArray(t *testing.T) {
 		}, &s)
 		t.AssertNil(err)
 		t.Assert(len(s.Array), 0)
+	})
+}
+
+func Test_Scan_SameType_Just_Assign(t *testing.T) {
+	// Struct.
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Uid     int
+			Name    string
+			Pass1   string
+			Pass2   string
+			Pointer *int
+		}
+		var (
+			int1  = 1
+			int2  = 1
+			user1 = new(User)
+			user2 *User
+		)
+		user1.Pointer = &int1
+		err := gconv.Scan(user1, &user2)
+		t.AssertNil(err)
+		t.Assert(fmt.Sprintf(`%p`, user1), fmt.Sprintf(`%p`, user2))
+		t.Assert(*user1.Pointer, *user2.Pointer)
+		user1.Pointer = &int2
+		t.Assert(*user1.Pointer, *user2.Pointer)
+	})
+	// Map.
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			int1 = 1
+			int2 = 1
+			m1   = map[string]*int{
+				"int": &int1,
+			}
+			m2 map[string]*int
+		)
+		err := gconv.Scan(m1, &m2)
+		t.AssertNil(err)
+		t.Assert(fmt.Sprintf(`%p`, m1), fmt.Sprintf(`%p`, m2))
+		t.Assert(*m1["int"], *m2["int"])
+		m1["int"] = &int2
+		t.Assert(*m1["int"], *m2["int"])
 	})
 }

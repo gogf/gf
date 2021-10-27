@@ -1,14 +1,21 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
 package gfpool_test
 
 import (
+	"context"
 	"os"
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/gfpool"
-	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gfpool"
+	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 // TestOpen test open file cache
@@ -131,7 +138,7 @@ func stop(testFile string) {
 	if gfile.Exists(testFile) {
 		err := gfile.Remove(testFile)
 		if err != nil {
-			glog.Error(err)
+			glog.Error(context.TODO(), err)
 		}
 	}
 }

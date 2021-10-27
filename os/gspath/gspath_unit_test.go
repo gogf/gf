@@ -9,9 +9,9 @@ package gspath_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/gspath"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gspath"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func TestSPath_Api(t *testing.T) {

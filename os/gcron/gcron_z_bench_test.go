@@ -9,7 +9,7 @@ package gcron_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/os/gcron"
+	"github.com/gogf/gf/v2/os/gcron"
 )
 
 func Benchmark_Add(b *testing.B) {

@@ -32,7 +32,7 @@ func (r *Response) initCookie() {
 	}
 }
 
-// GetCookie retrieves and returns the cookie value of specified <key>.
+// GetCookie retrieves and returns the cookie value of specified `key`.
 func (r *Response) GetCookie(key string) string {
 	r.initCookie()
 	return r.cookies[key]

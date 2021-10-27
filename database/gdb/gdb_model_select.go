@@ -8,24 +8,17 @@ package gdb
 
 import (
 	"fmt"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"reflect"
 
-	"github.com/gogf/gf/container/gset"
-	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/internal/intlog"
-	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/container/gset"
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 )
-
-// Select is alias of Model.All.
-// See Model.All.
-// Deprecated, use All instead.
-func (m *Model) Select(where ...interface{}) (Result, error) {
-	return m.All(where...)
-}
 
 // All does "SELECT FROM ..." statement for the model.
 // It retrieves the records from table and returns the result as slice type.
@@ -201,15 +194,6 @@ func (m *Model) Array(fieldsAndWhere ...interface{}) ([]Value, error) {
 // The parameter `pointer` should be type of *struct/**struct. If type **struct is given,
 // it can create the struct internally during converting.
 //
-// Deprecated, use Scan instead.
-func (m *Model) Struct(pointer interface{}, where ...interface{}) error {
-	return m.doStruct(pointer, where...)
-}
-
-// Struct retrieves one record from table and converts it into given struct.
-// The parameter `pointer` should be type of *struct/**struct. If type **struct is given,
-// it can create the struct internally during converting.
-//
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
 //
@@ -240,15 +224,6 @@ func (m *Model) doStruct(pointer interface{}, where ...interface{}) error {
 		return err
 	}
 	return model.doWithScanStruct(pointer)
-}
-
-// Structs retrieves records from table and converts them into given struct slice.
-// The parameter `pointer` should be type of *[]struct/*[]*struct. It can create and fill the struct
-// slice internally during converting.
-//
-// Deprecated, use Scan instead.
-func (m *Model) Structs(pointer interface{}, where ...interface{}) error {
-	return m.doStructs(pointer, where...)
 }
 
 // Structs retrieves records from table and converts them into given struct slice.
@@ -458,67 +433,6 @@ func (m *Model) Sum(column string) (float64, error) {
 	return value.Float64(), err
 }
 
-// FindOne retrieves and returns a single Record by Model.WherePri and Model.One.
-// Also see Model.WherePri and Model.One.
-func (m *Model) FindOne(where ...interface{}) (Record, error) {
-	if len(where) > 0 {
-		return m.WherePri(where[0], where[1:]...).One()
-	}
-	return m.One()
-}
-
-// FindAll retrieves and returns Result by by Model.WherePri and Model.All.
-// Also see Model.WherePri and Model.All.
-func (m *Model) FindAll(where ...interface{}) (Result, error) {
-	if len(where) > 0 {
-		return m.WherePri(where[0], where[1:]...).All()
-	}
-	return m.All()
-}
-
-// FindValue retrieves and returns single field value by Model.WherePri and Model.Value.
-// Also see Model.WherePri and Model.Value.
-func (m *Model) FindValue(fieldsAndWhere ...interface{}) (Value, error) {
-	if len(fieldsAndWhere) >= 2 {
-		return m.WherePri(fieldsAndWhere[1], fieldsAndWhere[2:]...).Fields(gconv.String(fieldsAndWhere[0])).Value()
-	}
-	if len(fieldsAndWhere) == 1 {
-		return m.Fields(gconv.String(fieldsAndWhere[0])).Value()
-	}
-	return m.Value()
-}
-
-// FindArray queries and returns data values as slice from database.
-// Note that if there are multiple columns in the result, it returns just one column values randomly.
-// Also see Model.WherePri and Model.Value.
-func (m *Model) FindArray(fieldsAndWhere ...interface{}) ([]Value, error) {
-	if len(fieldsAndWhere) >= 2 {
-		return m.WherePri(fieldsAndWhere[1], fieldsAndWhere[2:]...).Fields(gconv.String(fieldsAndWhere[0])).Array()
-	}
-	if len(fieldsAndWhere) == 1 {
-		return m.Fields(gconv.String(fieldsAndWhere[0])).Array()
-	}
-	return m.Array()
-}
-
-// FindCount retrieves and returns the record number by Model.WherePri and Model.Count.
-// Also see Model.WherePri and Model.Count.
-func (m *Model) FindCount(where ...interface{}) (int, error) {
-	if len(where) > 0 {
-		return m.WherePri(where[0], where[1:]...).Count()
-	}
-	return m.Count()
-}
-
-// FindScan retrieves and returns the record/records by Model.WherePri and Model.Scan.
-// Also see Model.WherePri and Model.Scan.
-func (m *Model) FindScan(pointer interface{}, where ...interface{}) error {
-	if len(where) > 0 {
-		return m.WherePri(where[0], where[1:]...).Scan(pointer)
-	}
-	return m.Scan(pointer)
-}
-
 // Union does "(SELECT xxx FROM xxx) UNION (SELECT xxx FROM xxx) ..." statement for the model.
 func (m *Model) Union(unions ...*Model) *Model {
 	return m.db.Union(unions...)
@@ -531,15 +445,18 @@ func (m *Model) UnionAll(unions ...*Model) *Model {
 
 // doGetAllBySql does the select statement on the database.
 func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, err error) {
-	cacheKey := ""
-	cacheObj := m.db.GetCache().Ctx(m.GetCtx())
+	var (
+		ctx      = m.GetCtx()
+		cacheKey = ""
+		cacheObj = m.db.GetCache()
+	)
 	// Retrieve from cache.
 	if m.cacheEnabled && m.tx == nil {
 		cacheKey = m.cacheName
 		if len(cacheKey) == 0 {
 			cacheKey = sql + ", @PARAMS:" + gconv.String(args)
 		}
-		if v, _ := cacheObj.GetVar(cacheKey); !v.IsNil() {
+		if v, _ := cacheObj.Get(ctx, cacheKey); !v.IsNil() {
 			if result, ok := v.Val().(Result); ok {
 				// In-memory cache.
 				return result, nil
@@ -560,7 +477,7 @@ func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, e
 	// Cache the result.
 	if cacheKey != "" && err == nil {
 		if m.cacheDuration < 0 {
-			if _, err := cacheObj.Remove(cacheKey); err != nil {
+			if _, err := cacheObj.Remove(ctx, cacheKey); err != nil {
 				intlog.Error(m.GetCtx(), err)
 			}
 		} else {
@@ -568,7 +485,7 @@ func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, e
 			if result == nil {
 				result = Result{}
 			}
-			if err := cacheObj.Set(cacheKey, result, m.cacheDuration); err != nil {
+			if err := cacheObj.Set(ctx, cacheKey, result, m.cacheDuration); err != nil {
 				intlog.Error(m.GetCtx(), err)
 			}
 		}

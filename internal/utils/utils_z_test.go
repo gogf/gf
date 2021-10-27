@@ -7,8 +7,8 @@
 package utils_test
 
 import (
-	"github.com/gogf/gf/internal/utils"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/test/gtest"
 	"io/ioutil"
 	"testing"
 )

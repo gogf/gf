@@ -1,0 +1,105 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/gf.
+
+package goai
+
+import (
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/internal/structs"
+	"github.com/gogf/gf/v2/text/gstr"
+	"reflect"
+)
+
+// Response is specified by OpenAPI/Swagger 3.0 standard.
+type Response struct {
+	Description string  `json:"description"           yaml:"description"`
+	Headers     Headers `json:"headers,omitempty"     yaml:"headers,omitempty"`
+	Content     Content `json:"content,omitempty"     yaml:"content,omitempty"`
+	Links       Links   `json:"links,omitempty"       yaml:"links,omitempty"`
+}
+
+// Responses is specified by OpenAPI/Swagger 3.0 standard.
+type Responses map[string]ResponseRef
+
+type ResponseRef struct {
+	Ref   string
+	Value *Response
+}
+
+func (r ResponseRef) MarshalJSON() ([]byte, error) {
+	if r.Ref != "" {
+		return formatRefToBytes(r.Ref), nil
+	}
+	return json.Marshal(r.Value)
+}
+
+type getResponseSchemaRefInput struct {
+	BusinessStructName string
+	ResponseObject     interface{}
+	ResponseDataField  string
+}
+
+func (oai *OpenApiV3) getResponseSchemaRef(in getResponseSchemaRefInput) (*SchemaRef, error) {
+	if oai.Config.CommonResponse == nil {
+		return &SchemaRef{
+			Ref: in.BusinessStructName,
+		}, nil
+	}
+
+	var (
+		dataFieldsPartsArray                                        = gstr.Split(in.ResponseDataField, ".")
+		bizResponseStructSchemaRef, bizResponseStructSchemaRefExist = oai.Components.Schemas[in.BusinessStructName]
+		schema, err                                                 = oai.structToSchema(in.ResponseObject)
+	)
+	if err != nil {
+		return nil, err
+	}
+	if in.ResponseDataField == "" && bizResponseStructSchemaRefExist {
+		for k, v := range bizResponseStructSchemaRef.Value.Properties {
+			schema.Properties[k] = v
+		}
+	} else {
+		structFields, _ := structs.Fields(structs.FieldsInput{
+			Pointer:         in.ResponseObject,
+			RecursiveOption: structs.RecursiveOptionEmbeddedNoTag,
+		})
+		for _, structField := range structFields {
+			var (
+				fieldName = structField.Name()
+			)
+			if jsonName := structField.TagJsonName(); jsonName != "" {
+				fieldName = jsonName
+			}
+			switch len(dataFieldsPartsArray) {
+			case 1:
+				if structField.Name() == dataFieldsPartsArray[0] {
+					schema.Properties[fieldName] = bizResponseStructSchemaRef
+					break
+				}
+			default:
+				if structField.Name() == dataFieldsPartsArray[0] {
+					var (
+						structFieldInstance = reflect.New(structField.Type().Type).Elem()
+					)
+					schemaRef, err := oai.getResponseSchemaRef(getResponseSchemaRefInput{
+						BusinessStructName: in.BusinessStructName,
+						ResponseObject:     structFieldInstance,
+						ResponseDataField:  gstr.Join(dataFieldsPartsArray[1:], "."),
+					})
+					if err != nil {
+						return nil, err
+					}
+					schema.Properties[fieldName] = *schemaRef
+					break
+				}
+			}
+		}
+	}
+
+	return &SchemaRef{
+		Value: schema,
+	}, nil
+}

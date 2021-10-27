@@ -10,8 +10,8 @@ package gring
 import (
 	"container/ring"
 
-	"github.com/gogf/gf/container/gtype"
-	"github.com/gogf/gf/internal/rwmutex"
+	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/internal/rwmutex"
 )
 
 // Ring is a struct of ring structure.
@@ -28,8 +28,8 @@ type internalRingItem struct {
 	Value interface{}
 }
 
-// New creates and returns a Ring structure of <cap> elements.
-// The optional parameter <safe> specifies whether using this structure in concurrent safety,
+// New creates and returns a Ring structure of `cap` elements.
+// The optional parameter `safe` specifies whether using this structure in concurrent safety,
 // which is false in default.
 func New(cap int, safe ...bool) *Ring {
 	return &Ring{

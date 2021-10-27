@@ -16,11 +16,11 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/gogf/gf/internal/utils"
+	"github.com/gogf/gf/v2/internal/utils"
 
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/util/gconv"
 
-	"github.com/gogf/gf/util/grand"
+	"github.com/gogf/gf/v2/util/grand"
 )
 
 const (
@@ -297,12 +297,6 @@ func WordWrap(str string, width int, br string) string {
 	return buf.String()
 }
 
-// RuneLen returns string length of unicode.
-// Deprecated, use LenRune instead.
-func RuneLen(str string) int {
-	return LenRune(str)
-}
-
 // LenRune returns string length of unicode.
 func LenRune(str string) int {
 	return utf8.RuneCountInString(str)
@@ -336,20 +330,6 @@ func SplitAndTrim(str, delimiter string, characterMask ...string) []string {
 	array := make([]string, 0)
 	for _, v := range strings.Split(str, delimiter) {
 		v = Trim(v, characterMask...)
-		if v != "" {
-			array = append(array, v)
-		}
-	}
-	return array
-}
-
-// SplitAndTrimSpace splits string `str` by a string `delimiter` to an array,
-// and calls TrimSpace to every element of this array.
-// Deprecated, use SplitAndTrim instead.
-func SplitAndTrimSpace(str, delimiter string) []string {
-	array := make([]string, 0)
-	for _, v := range strings.Split(str, delimiter) {
-		v = strings.TrimSpace(v)
 		if v != "" {
 			array = append(array, v)
 		}
@@ -422,7 +402,7 @@ func HideStr(str string, percent int, hide string) string {
 	return buffer.String()
 }
 
-// Nl2Br inserts HTML line breaks(<br>|<br />) before all newlines in a string:
+// Nl2Br inserts HTML line breaks(`br`|<br />) before all newlines in a string:
 // \n\r, \r\n, \r, \n.
 // It considers parameter `str` as unicode string.
 func Nl2Br(str string, isXhtml ...bool) string {

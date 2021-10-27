@@ -7,15 +7,16 @@
 package gcron
 
 import (
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
+	"context"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"reflect"
 	"runtime"
 	"time"
 
-	"github.com/gogf/gf/container/gtype"
-	"github.com/gogf/gf/os/gtimer"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/os/gtimer"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // Entry is timing task entry.
@@ -123,13 +124,16 @@ func (entry *Entry) Close() {
 // The running times limits feature is implemented by gcron.Entry and cannot be implemented by gtimer.Entry.
 // gcron.Entry relies on gtimer to implement a scheduled task check for gcron.Entry per second.
 func (entry *Entry) check() {
+	var (
+		ctx = context.TODO()
+	)
 	if entry.schedule.meet(time.Now()) {
 		switch entry.cron.status.Val() {
 		case StatusStopped:
 			return
 
 		case StatusClosed:
-			entry.logDebugf("[gcron] %s %s removed", entry.schedule.pattern, entry.jobName)
+			entry.logDebugf(ctx, "[gcron] %s %s removed", entry.schedule.pattern, entry.jobName)
 			entry.Close()
 
 		case StatusReady:
@@ -137,9 +141,9 @@ func (entry *Entry) check() {
 		case StatusRunning:
 			defer func() {
 				if err := recover(); err != nil {
-					entry.logErrorf("[gcron] %s %s end with error: %+v", entry.schedule.pattern, entry.jobName, err)
+					entry.logErrorf(ctx, "[gcron] %s %s end with error: %+v", entry.schedule.pattern, entry.jobName, err)
 				} else {
-					entry.logDebugf("[gcron] %s %s end", entry.schedule.pattern, entry.jobName)
+					entry.logDebugf(ctx, "[gcron] %s %s end", entry.schedule.pattern, entry.jobName)
 				}
 
 				if entry.timerEntry.Status() == StatusClosed {
@@ -156,20 +160,20 @@ func (entry *Entry) check() {
 					}
 				}
 			}
-			entry.logDebugf("[gcron] %s %s start", entry.schedule.pattern, entry.jobName)
+			entry.logDebugf(ctx, "[gcron] %s %s start", entry.schedule.pattern, entry.jobName)
 
 			entry.Job()
 		}
 	}
 }
-func (entry *Entry) logDebugf(format string, v ...interface{}) {
+func (entry *Entry) logDebugf(ctx context.Context, format string, v ...interface{}) {
 	if logger := entry.cron.GetLogger(); logger != nil {
-		logger.Debugf(format, v...)
+		logger.Debugf(ctx, format, v...)
 	}
 }
 
-func (entry *Entry) logErrorf(format string, v ...interface{}) {
+func (entry *Entry) logErrorf(ctx context.Context, format string, v ...interface{}) {
 	if logger := entry.cron.GetLogger(); logger != nil {
-		logger.Errorf(format, v...)
+		logger.Errorf(ctx, format, v...)
 	}
 }

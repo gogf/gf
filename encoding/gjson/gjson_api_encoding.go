@@ -7,11 +7,11 @@
 package gjson
 
 import (
-	"github.com/gogf/gf/encoding/gini"
-	"github.com/gogf/gf/encoding/gtoml"
-	"github.com/gogf/gf/encoding/gxml"
-	"github.com/gogf/gf/encoding/gyaml"
-	"github.com/gogf/gf/internal/json"
+	"github.com/gogf/gf/v2/encoding/gini"
+	"github.com/gogf/gf/v2/encoding/gtoml"
+	"github.com/gogf/gf/v2/encoding/gxml"
+	"github.com/gogf/gf/v2/encoding/gyaml"
+	"github.com/gogf/gf/v2/internal/json"
 )
 
 // ========================================================================
@@ -69,7 +69,7 @@ func (j *Json) MustToJsonIndentString() string {
 // ========================================================================
 
 func (j *Json) ToXml(rootTag ...string) ([]byte, error) {
-	return gxml.Encode(j.Map(), rootTag...)
+	return gxml.Encode(j.Var().Map(), rootTag...)
 }
 
 func (j *Json) ToXmlString(rootTag ...string) (string, error) {
@@ -78,7 +78,7 @@ func (j *Json) ToXmlString(rootTag ...string) (string, error) {
 }
 
 func (j *Json) ToXmlIndent(rootTag ...string) ([]byte, error) {
-	return gxml.EncodeWithIndent(j.Map(), rootTag...)
+	return gxml.EncodeWithIndent(j.Var().Map(), rootTag...)
 }
 
 func (j *Json) ToXmlIndentString(rootTag ...string) (string, error) {

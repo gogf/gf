@@ -8,9 +8,9 @@
 package gfpool
 
 import (
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/container/gpool"
-	"github.com/gogf/gf/container/gtype"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/container/gpool"
+	"github.com/gogf/gf/v2/container/gtype"
 	"os"
 	"time"
 )

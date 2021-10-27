@@ -7,22 +7,15 @@
 package gconv
 
 import (
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/json"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/json"
 	"reflect"
 )
 
 // MapToMaps converts any slice type variable `params` to another map slice type variable `pointer`.
 // See doMapToMaps.
 func MapToMaps(params interface{}, pointer interface{}, mapping ...map[string]string) error {
-	return doMapToMaps(params, pointer, mapping...)
-}
-
-// MapToMapsDeep converts any slice type variable `params` to another map slice type variable
-// `pointer` recursively.
-// Deprecated, use MapToMaps instead.
-func MapToMapsDeep(params interface{}, pointer interface{}, mapping ...map[string]string) error {
 	return doMapToMaps(params, pointer, mapping...)
 }
 
@@ -114,10 +107,10 @@ func doMapToMaps(params interface{}, pointer interface{}, mapping ...map[string]
 		return gerror.NewCode(gcode.CodeInvalidParameter, "pointer element should be type of map/*map")
 	}
 	defer func() {
-		// Catch the panic, especially the reflect operation panics.
+		// Catch the panic, especially the reflection operation panics.
 		if exception := recover(); exception != nil {
-			if e, ok := exception.(errorStack); ok {
-				err = e
+			if v, ok := exception.(error); ok && gerror.HasStack(v) {
+				err = v
 			} else {
 				err = gerror.NewCodeSkipf(gcode.CodeInternalError, 1, "%+v", exception)
 			}

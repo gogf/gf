@@ -7,8 +7,8 @@
 package gtimer
 
 import (
-	"github.com/gogf/gf/container/garray"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/test/gtest"
 	"testing"
 	"time"
 )

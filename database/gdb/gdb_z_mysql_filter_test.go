@@ -8,9 +8,9 @@ package gdb_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/test/gtest"
 	"testing"
 )
 
@@ -138,7 +138,7 @@ func Test_Model_Fields_AutoFilterInJoinStatement(t *testing.T) {
 		table1 := "user"
 		table2 := "score"
 		table3 := "info"
-		if _, err := db.Exec(fmt.Sprintf(`
+		if _, err := db.Exec(ctx, fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS %s (
 		   id int(11) NOT NULL AUTO_INCREMENT,
 		   name varchar(500) NOT NULL DEFAULT '',
@@ -155,7 +155,7 @@ func Test_Model_Fields_AutoFilterInJoinStatement(t *testing.T) {
 		})
 		t.AssertNil(err)
 
-		if _, err := db.Exec(fmt.Sprintf(`
+		if _, err := db.Exec(ctx, fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS %s (
 			id int(11) NOT NULL AUTO_INCREMENT,
 			user_id int(11) NOT NULL DEFAULT 0,
@@ -174,7 +174,7 @@ func Test_Model_Fields_AutoFilterInJoinStatement(t *testing.T) {
 		})
 		t.AssertNil(err)
 
-		if _, err := db.Exec(fmt.Sprintf(`
+		if _, err := db.Exec(ctx, fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS %s (
 			id int(11) NOT NULL AUTO_INCREMENT,
 			user_id int(11) NOT NULL DEFAULT 0,

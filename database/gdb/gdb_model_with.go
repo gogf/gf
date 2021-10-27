@@ -7,15 +7,16 @@
 package gdb
 
 import (
+	"database/sql"
 	"fmt"
-	"github.com/gogf/gf/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gcode"
 	"reflect"
 
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/structs"
-	"github.com/gogf/gf/internal/utils"
-	"github.com/gogf/gf/text/gregex"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/structs"
+	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // With creates and returns an ORM model based on metadata of given object.
@@ -156,7 +157,8 @@ func (m *Model) doWithScanStruct(pointer interface{}) error {
 			model = model.Order(parsedTagOutput.Order)
 		}
 		err = model.Fields(fieldKeys).Where(relatedSourceName, relatedTargetValue).Scan(bindToReflectValue)
-		if err != nil {
+		// It ignores sql.ErrNoRows in with feature.
+		if err != nil && err != sql.ErrNoRows {
 			return err
 		}
 	}
@@ -265,7 +267,8 @@ func (m *Model) doWithScanStructs(pointer interface{}) error {
 		err = model.Fields(fieldKeys).
 			Where(relatedSourceName, relatedTargetValue).
 			ScanList(pointer, fieldName, parsedTagOutput.With)
-		if err != nil {
+		// It ignores sql.ErrNoRows in with feature.
+		if err != nil && err != sql.ErrNoRows {
 			return err
 		}
 	}

@@ -12,22 +12,22 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_Cookie(t *testing.T) {
 	p, _ := ports.PopRand()
 	s := g.Server(p)
 	s.BindHandler("/set", func(r *ghttp.Request) {
-		r.Cookie.Set(r.GetString("k"), r.GetString("v"))
+		r.Cookie.Set(r.Get("k").String(), r.Get("v").String())
 	})
 	s.BindHandler("/get", func(r *ghttp.Request) {
-		r.Response.Write(r.Cookie.Get(r.GetString("k")))
+		r.Response.Write(r.Cookie.Get(r.Get("k").String()))
 	})
 	s.BindHandler("/remove", func(r *ghttp.Request) {
-		r.Cookie.Remove(r.GetString("k"))
+		r.Cookie.Remove(r.Get("k").String())
 	})
 	s.SetPort(p)
 	s.SetDumpRouterMap(false)
@@ -39,7 +39,7 @@ func Test_Cookie(t *testing.T) {
 		client := g.Client()
 		client.SetBrowserMode(true)
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		r1, e1 := client.Get("/set?k=key1&v=100")
+		r1, e1 := client.Get(ctx, "/set?k=key1&v=100")
 		if r1 != nil {
 			defer r1.Close()
 		}
@@ -47,16 +47,16 @@ func Test_Cookie(t *testing.T) {
 		t.Assert(e1, nil)
 		t.Assert(r1.ReadAllString(), "")
 
-		t.Assert(client.GetContent("/set?k=key2&v=200"), "")
+		t.Assert(client.GetContent(ctx, "/set?k=key2&v=200"), "")
 
-		t.Assert(client.GetContent("/get?k=key1"), "100")
-		t.Assert(client.GetContent("/get?k=key2"), "200")
-		t.Assert(client.GetContent("/get?k=key3"), "")
-		t.Assert(client.GetContent("/remove?k=key1"), "")
-		t.Assert(client.GetContent("/remove?k=key3"), "")
-		t.Assert(client.GetContent("/remove?k=key4"), "")
-		t.Assert(client.GetContent("/get?k=key1"), "")
-		t.Assert(client.GetContent("/get?k=key2"), "200")
+		t.Assert(client.GetContent(ctx, "/get?k=key1"), "100")
+		t.Assert(client.GetContent(ctx, "/get?k=key2"), "200")
+		t.Assert(client.GetContent(ctx, "/get?k=key3"), "")
+		t.Assert(client.GetContent(ctx, "/remove?k=key1"), "")
+		t.Assert(client.GetContent(ctx, "/remove?k=key3"), "")
+		t.Assert(client.GetContent(ctx, "/remove?k=key4"), "")
+		t.Assert(client.GetContent(ctx, "/get?k=key1"), "")
+		t.Assert(client.GetContent(ctx, "/get?k=key2"), "200")
 	})
 }
 
@@ -65,15 +65,15 @@ func Test_SetHttpCookie(t *testing.T) {
 	s := g.Server(p)
 	s.BindHandler("/set", func(r *ghttp.Request) {
 		r.Cookie.SetHttpCookie(&http.Cookie{
-			Name:  r.GetString("k"),
-			Value: r.GetString("v"),
+			Name:  r.Get("k").String(),
+			Value: r.Get("v").String(),
 		})
 	})
 	s.BindHandler("/get", func(r *ghttp.Request) {
-		r.Response.Write(r.Cookie.Get(r.GetString("k")))
+		r.Response.Write(r.Cookie.Get(r.Get("k").String()))
 	})
 	s.BindHandler("/remove", func(r *ghttp.Request) {
-		r.Cookie.Remove(r.GetString("k"))
+		r.Cookie.Remove(r.Get("k").String())
 	})
 	s.SetPort(p)
 	s.SetDumpRouterMap(false)
@@ -85,22 +85,22 @@ func Test_SetHttpCookie(t *testing.T) {
 		client := g.Client()
 		client.SetBrowserMode(true)
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		r1, e1 := client.Get("/set?k=key1&v=100")
+		r1, e1 := client.Get(ctx, "/set?k=key1&v=100")
 		if r1 != nil {
 			defer r1.Close()
 		}
 		t.Assert(e1, nil)
 		t.Assert(r1.ReadAllString(), "")
 
-		t.Assert(client.GetContent("/set?k=key2&v=200"), "")
+		t.Assert(client.GetContent(ctx, "/set?k=key2&v=200"), "")
 
-		t.Assert(client.GetContent("/get?k=key1"), "100")
-		//t.Assert(client.GetContent("/get?k=key2"), "200")
-		//t.Assert(client.GetContent("/get?k=key3"), "")
-		//t.Assert(client.GetContent("/remove?k=key1"), "")
-		//t.Assert(client.GetContent("/remove?k=key3"), "")
-		//t.Assert(client.GetContent("/remove?k=key4"), "")
-		//t.Assert(client.GetContent("/get?k=key1"), "")
-		//t.Assert(client.GetContent("/get?k=key2"), "200")
+		t.Assert(client.GetContent(ctx, "/get?k=key1"), "100")
+		//t.Assert(client.GetContent(ctx, "/get?k=key2"), "200")
+		//t.Assert(client.GetContent(ctx, "/get?k=key3"), "")
+		//t.Assert(client.GetContent(ctx, "/remove?k=key1"), "")
+		//t.Assert(client.GetContent(ctx, "/remove?k=key3"), "")
+		//t.Assert(client.GetContent(ctx, "/remove?k=key4"), "")
+		//t.Assert(client.GetContent(ctx, "/get?k=key1"), "")
+		//t.Assert(client.GetContent(ctx, "/get?k=key2"), "200")
 	})
 }

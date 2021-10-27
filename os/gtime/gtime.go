@@ -11,16 +11,16 @@ package gtime
 
 import (
 	"fmt"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/utils"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/utils"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/gogf/gf/text/gregex"
+	"github.com/gogf/gf/v2/text/gregex"
 )
 
 const (
@@ -101,7 +101,7 @@ var (
 )
 
 // SetTimeZone sets the time zone for current whole process.
-// The parameter <zone> is an area string specifying corresponding time zone,
+// The parameter `zone` is an area string specifying corresponding time zone,
 // eg: Asia/Shanghai.
 //
 // This should be called before package "time" import.
@@ -158,30 +158,6 @@ func TimestampNanoStr() string {
 	return Now().TimestampNanoStr()
 }
 
-// Second returns the timestamp in seconds.
-// Deprecated, use Timestamp instead.
-func Second() int64 {
-	return Timestamp()
-}
-
-// Millisecond returns the timestamp in milliseconds.
-// Deprecated, use TimestampMilli instead.
-func Millisecond() int64 {
-	return TimestampMilli()
-}
-
-// Microsecond returns the timestamp in microseconds.
-// Deprecated, use TimestampMicro instead.
-func Microsecond() int64 {
-	return TimestampMicro()
-}
-
-// Nanosecond returns the timestamp in nanoseconds.
-// Deprecated, use TimestampNano instead.
-func Nanosecond() int64 {
-	return TimestampNano()
-}
-
 // Date returns current date in string like "2006-01-02".
 func Date() string {
 	return time.Now().Format("2006-01-02")
@@ -233,10 +209,10 @@ func parseDateStr(s string) (year, month, day int) {
 }
 
 // StrToTime converts string to *Time object. It also supports timestamp string.
-// The parameter <format> is unnecessary, which specifies the format for converting like "Y-m-d H:i:s".
-// If <format> is given, it acts as same as function StrToTimeFormat.
-// If <format> is not given, it converts string as a "standard" datetime string.
-// Note that, it fails and returns error if there's no date string in <str>.
+// The parameter `format` is unnecessary, which specifies the format for converting like "Y-m-d H:i:s".
+// If `format` is given, it acts as same as function StrToTimeFormat.
+// If `format` is not given, it converts string as a "standard" datetime string.
+// Note that, it fails and returns error if there's no date string in `str`.
 func StrToTime(str string, format ...string) (*Time, error) {
 	if str == "" {
 		return &Time{wrapper{time.Time{}}}, nil
@@ -360,8 +336,8 @@ func StrToTime(str string, format ...string) (*Time, error) {
 	return NewFromTime(time.Date(year, time.Month(month), day, hour, min, sec, nsec, local)), nil
 }
 
-// ConvertZone converts time in string <strTime> from <fromZone> to <toZone>.
-// The parameter <fromZone> is unnecessary, it is current time zone in default.
+// ConvertZone converts time in string `strTime` from `fromZone` to `toZone`.
+// The parameter `fromZone` is unnecessary, it is current time zone in default.
 func ConvertZone(strTime string, toZone string, fromZone ...string) (*Time, error) {
 	t, err := StrToTime(strTime)
 	if err != nil {
@@ -381,14 +357,14 @@ func ConvertZone(strTime string, toZone string, fromZone ...string) (*Time, erro
 	}
 }
 
-// StrToTimeFormat parses string <str> to *Time object with given format <format>.
-// The parameter <format> is like "Y-m-d H:i:s".
+// StrToTimeFormat parses string `str` to *Time object with given format `format`.
+// The parameter `format` is like "Y-m-d H:i:s".
 func StrToTimeFormat(str string, format string) (*Time, error) {
 	return StrToTimeLayout(str, formatToStdLayout(format))
 }
 
-// StrToTimeLayout parses string <str> to *Time object with given format <layout>.
-// The parameter <layout> is in stdlib format like "2006-01-02 15:04:05".
+// StrToTimeLayout parses string `str` to *Time object with given format `layout`.
+// The parameter `layout` is in stdlib format like "2006-01-02 15:04:05".
 func StrToTimeLayout(str string, layout string) (*Time, error) {
 	if t, err := time.ParseInLocation(layout, str, time.Local); err == nil {
 		return NewFromTime(t), nil
@@ -400,7 +376,7 @@ func StrToTimeLayout(str string, layout string) (*Time, error) {
 // ParseTimeFromContent retrieves time information for content string, it then parses and returns it
 // as *Time object.
 // It returns the first time information if there're more than one time string in the content.
-// It only retrieves and parses the time information with given <format> if it's passed.
+// It only retrieves and parses the time information with given `format` if it's passed.
 func ParseTimeFromContent(content string, format ...string) *Time {
 	if len(format) > 0 {
 		if match, err := gregex.MatchString(formatToRegexPattern(format[0]), content); err == nil && len(match) > 0 {
@@ -447,7 +423,7 @@ func ParseDuration(s string) (time.Duration, error) {
 	return time.ParseDuration(s)
 }
 
-// FuncCost calculates the cost time of function <f> in nanoseconds.
+// FuncCost calculates the cost time of function `f` in nanoseconds.
 func FuncCost(f func()) int64 {
 	t := TimestampNano()
 	f()

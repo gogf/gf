@@ -8,8 +8,8 @@ package gdb
 
 import (
 	"fmt"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 	"strings"
 )
 
@@ -238,40 +238,15 @@ func (m *Model) WhereOrNotNull(columns ...string) *Model {
 
 // Group sets the "GROUP BY" statement for the model.
 func (m *Model) Group(groupBy ...string) *Model {
-	if len(groupBy) > 0 {
-		model := m.getModel()
-		model.groupBy = m.db.GetCore().QuoteString(gstr.Join(groupBy, ","))
-		return model
+	if len(groupBy) == 0 {
+		return m
 	}
-	return m
-}
-
-// And adds "AND" condition to the where statement.
-// Deprecated, use Where instead.
-func (m *Model) And(where interface{}, args ...interface{}) *Model {
 	model := m.getModel()
-	if model.whereHolder == nil {
-		model.whereHolder = make([]ModelWhereHolder, 0)
+	if model.groupBy != "" {
+		model.groupBy += ","
 	}
-	model.whereHolder = append(model.whereHolder, ModelWhereHolder{
-		Operator: whereHolderOperatorAnd,
-		Where:    where,
-		Args:     args,
-	})
+	model.groupBy = model.db.GetCore().QuoteString(strings.Join(groupBy, ","))
 	return model
-}
-
-// Or adds "OR" condition to the where statement.
-// Deprecated, use WhereOr instead.
-func (m *Model) Or(where interface{}, args ...interface{}) *Model {
-	return m.WhereOr(where, args...)
-}
-
-// GroupBy is alias of Model.Group.
-// See Model.Group.
-// Deprecated, use Group instead.
-func (m *Model) GroupBy(groupBy string) *Model {
-	return m.Group(groupBy)
 }
 
 // Order sets the "ORDER BY" statement for the model.
@@ -283,7 +258,7 @@ func (m *Model) Order(orderBy ...string) *Model {
 	if model.orderBy != "" {
 		model.orderBy += ","
 	}
-	model.orderBy = m.db.GetCore().QuoteString(strings.Join(orderBy, " "))
+	model.orderBy = model.db.GetCore().QuoteString(strings.Join(orderBy, " "))
 	return model
 }
 
@@ -292,12 +267,7 @@ func (m *Model) OrderAsc(column string) *Model {
 	if len(column) == 0 {
 		return m
 	}
-	model := m.getModel()
-	if model.orderBy != "" {
-		model.orderBy += ","
-	}
-	model.orderBy = m.db.GetCore().QuoteWord(column) + " ASC"
-	return model
+	return m.Order(column + " ASC")
 }
 
 // OrderDesc sets the "ORDER BY xxx DESC" statement for the model.
@@ -305,12 +275,7 @@ func (m *Model) OrderDesc(column string) *Model {
 	if len(column) == 0 {
 		return m
 	}
-	model := m.getModel()
-	if model.orderBy != "" {
-		model.orderBy += ","
-	}
-	model.orderBy = m.db.GetCore().QuoteWord(column) + " DESC"
-	return model
+	return m.Order(column + " DESC")
 }
 
 // OrderRandom sets the "ORDER BY RANDOM()" statement for the model.
@@ -318,13 +283,6 @@ func (m *Model) OrderRandom() *Model {
 	model := m.getModel()
 	model.orderBy = "RAND()"
 	return model
-}
-
-// OrderBy is alias of Model.Order.
-// See Model.Order.
-// Deprecated, use Order instead.
-func (m *Model) OrderBy(orderBy string) *Model {
-	return m.Order(orderBy)
 }
 
 // Limit sets the "LIMIT" statement for the model.
@@ -369,13 +327,6 @@ func (m *Model) Page(page, limit int) *Model {
 	model.start = (page - 1) * limit
 	model.limit = limit
 	return model
-}
-
-// ForPage is alias of Model.Page.
-// See Model.Page.
-// Deprecated, use Page instead.
-func (m *Model) ForPage(page, limit int) *Model {
-	return m.Page(page, limit)
 }
 
 // formatCondition formats where arguments of the model and returns a new condition sql and its arguments.

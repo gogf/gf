@@ -8,18 +8,19 @@ package gcache
 
 import (
 	"context"
+	"github.com/gogf/gf/v2/container/gvar"
 	"math"
 	"time"
 
-	"github.com/gogf/gf/container/glist"
-	"github.com/gogf/gf/container/gset"
-	"github.com/gogf/gf/container/gtype"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/os/gtimer"
+	"github.com/gogf/gf/v2/container/glist"
+	"github.com/gogf/gf/v2/container/gset"
+	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/os/gtimer"
 )
 
-// Internal cache object.
-type adapterMemory struct {
+// AdapterMemory is an adapter implements using memory.
+type AdapterMemory struct {
 	// cap limits the size of the cache pool.
 	// If the size of the cache exceeds the cap,
 	// the cache expiration process performs according to the LRU algorithm.
@@ -52,9 +53,9 @@ const (
 	defaultMaxExpire = 9223372036854
 )
 
-// newAdapterMemory creates and returns a new memory cache object.
-func newAdapterMemory(lruCap ...int) *adapterMemory {
-	c := &adapterMemory{
+// NewAdapterMemory creates and returns a new memory cache object.
+func NewAdapterMemory(lruCap ...int) *AdapterMemory {
+	c := &AdapterMemory{
 		data:        newAdapterMemoryData(),
 		lruGetList:  glist.New(true),
 		expireTimes: newAdapterMemoryExpireTimes(),
@@ -72,8 +73,8 @@ func newAdapterMemory(lruCap ...int) *adapterMemory {
 // Set sets cache with `key`-`value` pair, which is expired after `duration`.
 //
 // It does not expire if `duration` == 0.
-// It deletes the `key` if `duration` < 0.
-func (c *adapterMemory) Set(ctx context.Context, key interface{}, value interface{}, duration time.Duration) error {
+// It deletes the keys of `data` if `duration` < 0 or given `value` is nil.
+func (c *AdapterMemory) Set(ctx context.Context, key interface{}, value interface{}, duration time.Duration) error {
 	expireTime := c.getInternalExpire(duration)
 	c.data.Set(key, adapterMemoryItem{
 		v: value,
@@ -86,76 +87,14 @@ func (c *adapterMemory) Set(ctx context.Context, key interface{}, value interfac
 	return nil
 }
 
-// Update updates the value of `key` without changing its expiration and returns the old value.
-// The returned value `exist` is false if the `key` does not exist in the cache.
-//
-// It deletes the `key` if given `value` is nil.
-// It does nothing if `key` does not exist in the cache.
-func (c *adapterMemory) Update(ctx context.Context, key interface{}, value interface{}) (oldValue interface{}, exist bool, err error) {
-	return c.data.Update(key, value)
-}
-
-// UpdateExpire updates the expiration of `key` and returns the old expiration duration value.
-//
-// It returns -1 and does nothing if the `key` does not exist in the cache.
-// It deletes the `key` if `duration` < 0.
-func (c *adapterMemory) UpdateExpire(ctx context.Context, key interface{}, duration time.Duration) (oldDuration time.Duration, err error) {
-	newExpireTime := c.getInternalExpire(duration)
-	oldDuration, err = c.data.UpdateExpire(key, newExpireTime)
-	if err != nil {
-		return
-	}
-	if oldDuration != -1 {
-		c.eventList.PushBack(&adapterMemoryEvent{
-			k: key,
-			e: newExpireTime,
-		})
-	}
-	return
-}
-
-// GetExpire retrieves and returns the expiration of `key` in the cache.
-//
-// It returns 0 if the `key` does not expire.
-// It returns -1 if the `key` does not exist in the cache.
-func (c *adapterMemory) GetExpire(ctx context.Context, key interface{}) (time.Duration, error) {
-	if item, ok := c.data.Get(key); ok {
-		return time.Duration(item.e-gtime.TimestampMilli()) * time.Millisecond, nil
-	}
-	return -1, nil
-}
-
-// SetIfNotExist sets cache with `key`-`value` pair which is expired after `duration`
-// if `key` does not exist in the cache. It returns true the `key` does not exist in the
-// cache, and it sets `value` successfully to the cache, or else it returns false.
-// The parameter `value` can be type of <func() interface{}>, but it dose nothing if its
-// result is nil.
-//
-// It does not expire if `duration` == 0.
-// It deletes the `key` if `duration` < 0 or given `value` is nil.
-func (c *adapterMemory) SetIfNotExist(ctx context.Context, key interface{}, value interface{}, duration time.Duration) (bool, error) {
-	isContained, err := c.Contains(ctx, key)
-	if err != nil {
-		return false, err
-	}
-	if !isContained {
-		_, err := c.doSetWithLockCheck(key, value, duration)
-		if err != nil {
-			return false, err
-		}
-		return true, nil
-	}
-	return false, nil
-}
-
-// Sets batch sets cache with key-value pairs by `data`, which is expired after `duration`.
+// SetMap batch sets cache with key-value pairs by `data` map, which is expired after `duration`.
 //
 // It does not expire if `duration` == 0.
 // It deletes the keys of `data` if `duration` < 0 or given `value` is nil.
-func (c *adapterMemory) Sets(ctx context.Context, data map[interface{}]interface{}, duration time.Duration) error {
+func (c *AdapterMemory) SetMap(ctx context.Context, data map[interface{}]interface{}, duration time.Duration) error {
 	var (
 		expireTime = c.getInternalExpire(duration)
-		err        = c.data.Sets(data, expireTime)
+		err        = c.data.SetMap(data, expireTime)
 	)
 	if err != nil {
 		return err
@@ -169,16 +108,85 @@ func (c *adapterMemory) Sets(ctx context.Context, data map[interface{}]interface
 	return nil
 }
 
+// SetIfNotExist sets cache with `key`-`value` pair which is expired after `duration`
+// if `key` does not exist in the cache. It returns true the `key` does not exist in the
+// cache, and it sets `value` successfully to the cache, or else it returns false.
+//
+// It does not expire if `duration` == 0.
+// It deletes the `key` if `duration` < 0 or given `value` is nil.
+func (c *AdapterMemory) SetIfNotExist(ctx context.Context, key interface{}, value interface{}, duration time.Duration) (bool, error) {
+	isContained, err := c.Contains(ctx, key)
+	if err != nil {
+		return false, err
+	}
+	if !isContained {
+		if _, err = c.doSetWithLockCheck(key, value, duration); err != nil {
+			return false, err
+		}
+		return true, nil
+	}
+	return false, nil
+}
+
+// SetIfNotExistFunc sets `key` with result of function `f` and returns true
+// if `key` does not exist in the cache, or else it does nothing and returns false if `key` already exists.
+//
+// The parameter `value` can be type of `func() interface{}`, but it does nothing if its
+// result is nil.
+//
+// It does not expire if `duration` == 0.
+// It deletes the `key` if `duration` < 0 or given `value` is nil.
+func (c *AdapterMemory) SetIfNotExistFunc(ctx context.Context, key interface{}, f func() (interface{}, error), duration time.Duration) (bool, error) {
+	isContained, err := c.Contains(ctx, key)
+	if err != nil {
+		return false, err
+	}
+	if !isContained {
+		value, err := f()
+		if err != nil {
+			return false, err
+		}
+		if _, err = c.doSetWithLockCheck(key, value, duration); err != nil {
+			return false, err
+		}
+		return true, nil
+	}
+	return false, nil
+}
+
+// SetIfNotExistFuncLock sets `key` with result of function `f` and returns true
+// if `key` does not exist in the cache, or else it does nothing and returns false if `key` already exists.
+//
+// It does not expire if `duration` == 0.
+// It deletes the `key` if `duration` < 0 or given `value` is nil.
+//
+// Note that it differs from function `SetIfNotExistFunc` is that the function `f` is executed within
+// writing mutex lock for concurrent safety purpose.
+func (c *AdapterMemory) SetIfNotExistFuncLock(ctx context.Context, key interface{}, f func() (interface{}, error), duration time.Duration) (bool, error) {
+	isContained, err := c.Contains(ctx, key)
+	if err != nil {
+		return false, err
+	}
+	if !isContained {
+		if _, err = c.doSetWithLockCheck(key, f, duration); err != nil {
+			return false, err
+		}
+		return true, nil
+	}
+	return false, nil
+}
+
 // Get retrieves and returns the associated value of given `key`.
-// It returns nil if it does not exist or its value is nil.
-func (c *adapterMemory) Get(ctx context.Context, key interface{}) (interface{}, error) {
+// It returns nil if it does not exist, or its value is nil, or it's expired.
+// If you would like to check if the `key` exists in the cache, it's better using function Contains.
+func (c *AdapterMemory) Get(ctx context.Context, key interface{}) (*gvar.Var, error) {
 	item, ok := c.data.Get(key)
 	if ok && !item.IsExpired() {
 		// Adding to LRU history if LRU feature is enabled.
 		if c.cap > 0 {
 			c.lruGetList.PushBack(key)
 		}
-		return item.v, nil
+		return gvar.New(item.v), nil
 	}
 	return nil, nil
 }
@@ -190,7 +198,7 @@ func (c *adapterMemory) Get(ctx context.Context, key interface{}) (interface{}, 
 // It does not expire if `duration` == 0.
 // It deletes the `key` if `duration` < 0 or given `value` is nil, but it does nothing
 // if `value` is a function and the function result is nil.
-func (c *adapterMemory) GetOrSet(ctx context.Context, key interface{}, value interface{}, duration time.Duration) (interface{}, error) {
+func (c *AdapterMemory) GetOrSet(ctx context.Context, key interface{}, value interface{}, duration time.Duration) (*gvar.Var, error) {
 	v, err := c.Get(ctx, key)
 	if err != nil {
 		return nil, err
@@ -209,7 +217,7 @@ func (c *adapterMemory) GetOrSet(ctx context.Context, key interface{}, value int
 // It does not expire if `duration` == 0.
 // It deletes the `key` if `duration` < 0 or given `value` is nil, but it does nothing
 // if `value` is a function and the function result is nil.
-func (c *adapterMemory) GetOrSetFunc(ctx context.Context, key interface{}, f func() (interface{}, error), duration time.Duration) (interface{}, error) {
+func (c *AdapterMemory) GetOrSetFunc(ctx context.Context, key interface{}, f func() (interface{}, error), duration time.Duration) (*gvar.Var, error) {
 	v, err := c.Get(ctx, key)
 	if err != nil {
 		return nil, err
@@ -233,11 +241,12 @@ func (c *adapterMemory) GetOrSetFunc(ctx context.Context, key interface{}, f fun
 // pair expires after `duration`.
 //
 // It does not expire if `duration` == 0.
-// It does nothing if function `f` returns nil.
+// It deletes the `key` if `duration` < 0 or given `value` is nil, but it does nothing
+// if `value` is a function and the function result is nil.
 //
-// Note that the function `f` should be executed within writing mutex lock for concurrent
-// safety purpose.
-func (c *adapterMemory) GetOrSetFuncLock(ctx context.Context, key interface{}, f func() (interface{}, error), duration time.Duration) (interface{}, error) {
+// Note that it differs from function `GetOrSetFunc` is that the function `f` is executed within
+// writing mutex lock for concurrent safety purpose.
+func (c *AdapterMemory) GetOrSetFuncLock(ctx context.Context, key interface{}, f func() (interface{}, error), duration time.Duration) (*gvar.Var, error) {
 	v, err := c.Get(ctx, key)
 	if err != nil {
 		return nil, err
@@ -249,8 +258,8 @@ func (c *adapterMemory) GetOrSetFuncLock(ctx context.Context, key interface{}, f
 	}
 }
 
-// Contains returns true if `key` exists in the cache, or else returns false.
-func (c *adapterMemory) Contains(ctx context.Context, key interface{}) (bool, error) {
+// Contains checks and returns true if `key` exists in the cache, or else returns false.
+func (c *AdapterMemory) Contains(ctx context.Context, key interface{}) (bool, error) {
 	v, err := c.Get(ctx, key)
 	if err != nil {
 		return false, err
@@ -258,13 +267,25 @@ func (c *adapterMemory) Contains(ctx context.Context, key interface{}) (bool, er
 	return v != nil, nil
 }
 
-// Remove deletes the one or more keys from cache, and returns its value.
-// If multiple keys are given, it returns the value of the deleted last item.
-func (c *adapterMemory) Remove(ctx context.Context, keys ...interface{}) (value interface{}, err error) {
+// GetExpire retrieves and returns the expiration of `key` in the cache.
+//
+// Note that,
+// It returns 0 if the `key` does not expire.
+// It returns -1 if the `key` does not exist in the cache.
+func (c *AdapterMemory) GetExpire(ctx context.Context, key interface{}) (time.Duration, error) {
+	if item, ok := c.data.Get(key); ok {
+		return time.Duration(item.e-gtime.TimestampMilli()) * time.Millisecond, nil
+	}
+	return -1, nil
+}
+
+// Remove deletes one or more keys from cache, and returns its value.
+// If multiple keys are given, it returns the value of the last deleted item.
+func (c *AdapterMemory) Remove(ctx context.Context, keys ...interface{}) (*gvar.Var, error) {
 	var removedKeys []interface{}
-	removedKeys, value, err = c.data.Remove(keys...)
+	removedKeys, value, err := c.data.Remove(keys...)
 	if err != nil {
-		return
+		return nil, err
 	}
 	for _, key := range removedKeys {
 		c.eventList.PushBack(&adapterMemoryEvent{
@@ -272,37 +293,66 @@ func (c *adapterMemory) Remove(ctx context.Context, keys ...interface{}) (value 
 			e: gtime.TimestampMilli() - 1000000,
 		})
 	}
+	return gvar.New(value), nil
+}
+
+// Update updates the value of `key` without changing its expiration and returns the old value.
+// The returned value `exist` is false if the `key` does not exist in the cache.
+//
+// It deletes the `key` if given `value` is nil.
+// It does nothing if `key` does not exist in the cache.
+func (c *AdapterMemory) Update(ctx context.Context, key interface{}, value interface{}) (oldValue *gvar.Var, exist bool, err error) {
+	v, exist, err := c.data.Update(key, value)
+	return gvar.New(v), exist, err
+}
+
+// UpdateExpire updates the expiration of `key` and returns the old expiration duration value.
+//
+// It returns -1 and does nothing if the `key` does not exist in the cache.
+// It deletes the `key` if `duration` < 0.
+func (c *AdapterMemory) UpdateExpire(ctx context.Context, key interface{}, duration time.Duration) (oldDuration time.Duration, err error) {
+	newExpireTime := c.getInternalExpire(duration)
+	oldDuration, err = c.data.UpdateExpire(key, newExpireTime)
+	if err != nil {
+		return
+	}
+	if oldDuration != -1 {
+		c.eventList.PushBack(&adapterMemoryEvent{
+			k: key,
+			e: newExpireTime,
+		})
+	}
 	return
 }
 
+// Size returns the size of the cache.
+func (c *AdapterMemory) Size(ctx context.Context) (size int, err error) {
+	return c.data.Size()
+}
+
 // Data returns a copy of all key-value pairs in the cache as map type.
-func (c *adapterMemory) Data(ctx context.Context) (map[interface{}]interface{}, error) {
+func (c *AdapterMemory) Data(ctx context.Context) (map[interface{}]interface{}, error) {
 	return c.data.Data()
 }
 
 // Keys returns all keys in the cache as slice.
-func (c *adapterMemory) Keys(ctx context.Context) ([]interface{}, error) {
+func (c *AdapterMemory) Keys(ctx context.Context) ([]interface{}, error) {
 	return c.data.Keys()
 }
 
 // Values returns all values in the cache as slice.
-func (c *adapterMemory) Values(ctx context.Context) ([]interface{}, error) {
+func (c *AdapterMemory) Values(ctx context.Context) ([]interface{}, error) {
 	return c.data.Values()
-}
-
-// Size returns the size of the cache.
-func (c *adapterMemory) Size(ctx context.Context) (size int, err error) {
-	return c.data.Size()
 }
 
 // Clear clears all data of the cache.
 // Note that this function is sensitive and should be carefully used.
-func (c *adapterMemory) Clear(ctx context.Context) error {
+func (c *AdapterMemory) Clear(ctx context.Context) error {
 	return c.data.Clear()
 }
 
 // Close closes the cache.
-func (c *adapterMemory) Close(ctx context.Context) error {
+func (c *AdapterMemory) Close(ctx context.Context) error {
 	if c.cap > 0 {
 		c.lru.Close()
 	}
@@ -314,20 +364,20 @@ func (c *adapterMemory) Close(ctx context.Context) error {
 // cache, which is expired after `duration`.
 //
 // It does not expire if `duration` == 0.
-// The parameter `value` can be type of <func() interface{}>, but it dose nothing if the
+// The parameter `value` can be type of <func() interface{}>, but it does nothing if the
 // function result is nil.
 //
 // It doubly checks the `key` whether exists in the cache using mutex writing lock
 // before setting it to the cache.
-func (c *adapterMemory) doSetWithLockCheck(key interface{}, value interface{}, duration time.Duration) (result interface{}, err error) {
+func (c *AdapterMemory) doSetWithLockCheck(key interface{}, value interface{}, duration time.Duration) (result *gvar.Var, err error) {
 	expireTimestamp := c.getInternalExpire(duration)
-	result, err = c.data.SetWithLock(key, value, expireTimestamp)
+	v, err := c.data.SetWithLock(key, value, expireTimestamp)
 	c.eventList.PushBack(&adapterMemoryEvent{k: key, e: expireTimestamp})
-	return
+	return gvar.New(v), err
 }
 
-// getInternalExpire converts and returns the expire time with given expired duration in milliseconds.
-func (c *adapterMemory) getInternalExpire(duration time.Duration) int64 {
+// getInternalExpire converts and returns the expiration time with given expired duration in milliseconds.
+func (c *AdapterMemory) getInternalExpire(duration time.Duration) int64 {
 	if duration == 0 {
 		return defaultMaxExpire
 	} else {
@@ -336,7 +386,7 @@ func (c *adapterMemory) getInternalExpire(duration time.Duration) int64 {
 }
 
 // makeExpireKey groups the `expire` in milliseconds to its according seconds.
-func (c *adapterMemory) makeExpireKey(expire int64) int64 {
+func (c *AdapterMemory) makeExpireKey(expire int64) int64 {
 	return int64(math.Ceil(float64(expire/1000)+1) * 1000)
 }
 
@@ -344,7 +394,7 @@ func (c *adapterMemory) makeExpireKey(expire int64) int64 {
 // 1. Asynchronously process the data in the event list,
 //    and synchronize the results to the `expireTimes` and `expireSets` properties.
 // 2. Clean up the expired key-value pair data.
-func (c *adapterMemory) syncEventAndClearExpired() {
+func (c *AdapterMemory) syncEventAndClearExpired() {
 	if c.closed.Val() {
 		gtimer.Exit()
 		return
@@ -365,14 +415,14 @@ func (c *adapterMemory) syncEventAndClearExpired() {
 		event = v.(*adapterMemoryEvent)
 		// Fetching the old expire set.
 		oldExpireTime = c.expireTimes.Get(event.k)
-		// Calculating the new expire set.
+		// Calculating the new expiration time set.
 		newExpireTime = c.makeExpireKey(event.e)
 		if newExpireTime != oldExpireTime {
 			c.expireSets.GetOrNew(newExpireTime).Add(event.k)
 			if oldExpireTime != 0 {
 				c.expireSets.GetOrNew(oldExpireTime).Remove(event.k)
 			}
-			// Updating the expire time for <event.k>.
+			// Updating the expired time for <event.k>.
 			c.expireTimes.Set(event.k, newExpireTime)
 		}
 		// Adding the key the LRU history by writing operations.
@@ -413,11 +463,11 @@ func (c *adapterMemory) syncEventAndClearExpired() {
 
 // clearByKey deletes the key-value pair with given `key`.
 // The parameter `force` specifies whether doing this deleting forcibly.
-func (c *adapterMemory) clearByKey(key interface{}, force ...bool) {
+func (c *AdapterMemory) clearByKey(key interface{}, force ...bool) {
 	// Doubly check before really deleting it from cache.
 	c.data.DeleteWithDoubleCheck(key, force...)
 
-	// Deleting its expire time from `expireTimes`.
+	// Deleting its expiration time from `expireTimes`.
 	c.expireTimes.Delete(key)
 
 	// Deleting it from LRU.

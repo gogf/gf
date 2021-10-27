@@ -7,13 +7,18 @@
 package gcron_test
 
 import (
-	"github.com/gogf/gf/frame/g"
+	"context"
+	"github.com/gogf/gf/v2/frame/g"
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/container/garray"
-	"github.com/gogf/gf/os/gcron"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/os/gcron"
+	"github.com/gogf/gf/v2/test/gtest"
+)
+
+var (
+	ctx = context.TODO()
 )
 
 func TestCron_Add_Close(t *testing.T) {
@@ -21,11 +26,11 @@ func TestCron_Add_Close(t *testing.T) {
 		cron := gcron.New()
 		array := garray.New(true)
 		_, err1 := cron.Add("* * * * * *", func() {
-			g.Log().Println("cron1")
+			g.Log().Println(ctx, "cron1")
 			array.Append(1)
 		})
 		_, err2 := cron.Add("* * * * * *", func() {
-			g.Log().Println("cron2")
+			g.Log().Println(ctx, "cron2")
 			array.Append(1)
 		}, "test")
 		t.Assert(err1, nil)

@@ -12,9 +12,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/container/garray"
-	"github.com/gogf/gf/os/gtimer"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/os/gtimer"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func New() *gtimer.Timer {

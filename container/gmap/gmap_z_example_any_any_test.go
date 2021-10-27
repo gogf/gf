@@ -8,9 +8,9 @@ package gmap_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/v2/frame/g"
 
-	"github.com/gogf/gf/container/gmap"
+	"github.com/gogf/gf/v2/container/gmap"
 )
 
 func ExampleNew() {
