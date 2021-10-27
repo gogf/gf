@@ -180,7 +180,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 			Value: &requestBody,
 		}
 	}
-	// Request parameters.
+	// It also sets request parameters.
 	structFields, _ := structs.Fields(structs.FieldsInput{
 		Pointer:         inputObject.Interface(),
 		RecursiveOption: structs.RecursiveOptionEmbeddedNoTag,
@@ -189,7 +189,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		if operation.Parameters == nil {
 			operation.Parameters = []ParameterRef{}
 		}
-		parameterRef, err := oai.newParameterRefWithStructMethod(structField, in.Method)
+		parameterRef, err := oai.newParameterRefWithStructMethod(structField, in.Path, in.Method)
 		if err != nil {
 			return err
 		}
