@@ -7,11 +7,12 @@
 package ghttp
 
 import (
+	"github.com/gogf/gf/v2/internal/intlog"
 	netpprof "net/http/pprof"
 	runpprof "runtime/pprof"
 	"strings"
 
-	"github.com/gogf/gf/os/gview"
+	"github.com/gogf/gf/v2/os/gview"
 )
 
 // utilPProf is the PProf interface implementer.
@@ -32,7 +33,7 @@ func StartPProfServer(port int, pattern ...string) {
 
 // EnablePProf enables PProf feature for server.
 func (s *Server) EnablePProf(pattern ...string) {
-	s.Domain(defaultDomainName).EnablePProf(pattern...)
+	s.Domain(DefaultDomainName).EnablePProf(pattern...)
 }
 
 // EnablePProf enables PProf feature for server of specified domain.
@@ -55,12 +56,15 @@ func (d *Domain) EnablePProf(pattern ...string) {
 
 // Index shows the PProf index page.
 func (p *utilPProf) Index(r *Request) {
-	profiles := runpprof.Profiles()
-	action := r.GetString("action")
-	data := map[string]interface{}{
-		"uri":      strings.TrimRight(r.URL.Path, "/") + "/",
-		"profiles": profiles,
-	}
+	var (
+		ctx      = r.Context()
+		profiles = runpprof.Profiles()
+		action   = r.Get("action").String()
+		data     = map[string]interface{}{
+			"uri":      strings.TrimRight(r.URL.Path, "/") + "/",
+			"profiles": profiles,
+		}
+	)
 	if len(action) == 0 {
 		buffer, _ := gview.ParseContent(r.Context(), `
             <html>
@@ -87,7 +91,9 @@ func (p *utilPProf) Index(r *Request) {
 	}
 	for _, p := range profiles {
 		if p.Name() == action {
-			p.WriteTo(r.Response.Writer, r.GetRequestInt("debug"))
+			if err := p.WriteTo(r.Response.Writer, r.GetRequest("debug").Int()); err != nil {
+				intlog.Error(ctx, err)
+			}
 			break
 		}
 	}

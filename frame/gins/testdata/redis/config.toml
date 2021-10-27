@@ -27,6 +27,17 @@ test = "v=3"
         priority = "1"
 # Redis数据库配置
 [redis]
-    default = "127.0.0.1:6379,7"
-    cache   = "127.0.0.1:6379,8"
-    disk    = "127.0.0.1:6379,9,?maxIdle=1&maxActive=10&idleTimeout=10&maxConnLifetime=10"
+    [redis.default]
+        address = "127.0.0.1:6379"
+        db      = 7
+    [redis.cache]
+        address = "127.0.0.1:6379"
+        db      = 8
+    [redis.disk]
+        address         = "127.0.0.1:6379"
+        db              = 9
+        maxIdle         = 1
+        maxActive       = 10
+        idleTimeout     = "10s"
+        maxConnLifetime = "10s"
+

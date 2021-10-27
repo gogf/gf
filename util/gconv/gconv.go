@@ -11,23 +11,15 @@ package gconv
 
 import (
 	"fmt"
-	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/os/gtime"
 	"math"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/gogf/gf/encoding/gbinary"
-)
-
-type (
-	// errorStack is the interface for Stack feature.
-	errorStack interface {
-		Error() string
-		Stack() string
-	}
+	"github.com/gogf/gf/v2/encoding/gbinary"
 )
 
 var (
@@ -316,7 +308,7 @@ func Bytes(any interface{}) []byte {
 	case []byte:
 		return value
 	default:
-		if f, ok := value.(apiBytes); ok {
+		if f, ok := value.(iBytes); ok {
 			return f.Bytes()
 		}
 		var (
@@ -427,12 +419,12 @@ func String(any interface{}) string {
 		if value == nil {
 			return ""
 		}
-		if f, ok := value.(apiString); ok {
+		if f, ok := value.(iString); ok {
 			// If the variable implements the String() interface,
 			// then use that interface to perform the conversion
 			return f.String()
 		}
-		if f, ok := value.(apiError); ok {
+		if f, ok := value.(iError); ok {
 			// If the variable implements the Error() interface,
 			// then use that interface to perform the conversion
 			return f.Error()
@@ -488,7 +480,7 @@ func Bool(any interface{}) bool {
 		}
 		return true
 	default:
-		if f, ok := value.(apiBool); ok {
+		if f, ok := value.(iBool); ok {
 			return f.Bool()
 		}
 		rv := reflect.ValueOf(any)
@@ -595,7 +587,7 @@ func Int64(any interface{}) int64 {
 	case []byte:
 		return gbinary.DecodeToInt64(value)
 	default:
-		if f, ok := value.(apiInt64); ok {
+		if f, ok := value.(iInt64); ok {
 			return f.Int64()
 		}
 		s := String(value)
@@ -720,7 +712,7 @@ func Uint64(any interface{}) uint64 {
 	case []byte:
 		return gbinary.DecodeToUint64(value)
 	default:
-		if f, ok := value.(apiUint64); ok {
+		if f, ok := value.(iUint64); ok {
 			return f.Uint64()
 		}
 		s := String(value)
@@ -758,7 +750,7 @@ func Float32(any interface{}) float32 {
 	case []byte:
 		return gbinary.DecodeToFloat32(value)
 	default:
-		if f, ok := value.(apiFloat32); ok {
+		if f, ok := value.(iFloat32); ok {
 			return f.Float32()
 		}
 		v, _ := strconv.ParseFloat(String(any), 64)
@@ -779,7 +771,7 @@ func Float64(any interface{}) float64 {
 	case []byte:
 		return gbinary.DecodeToFloat64(value)
 	default:
-		if f, ok := value.(apiFloat64); ok {
+		if f, ok := value.(iFloat64); ok {
 			return f.Float64()
 		}
 		v, _ := strconv.ParseFloat(String(any), 64)

@@ -30,16 +30,16 @@
 
 # 安装
 ```html
-go get -u -v github.com/gogf/gf
+go get -u -v github.com/gogf/gf/v2
 ```
 推荐使用 `go.mod`:
 ```
-require github.com/gogf/gf latest
+require github.com/gogf/gf/v2 latest
 ```
 
 # 限制
 ```shell
-golang版本 >= 1.11
+golang版本 >= 1.14
 ```
 
 
@@ -91,7 +91,7 @@ golang版本 >= 1.11
 # 贡献
 
 感谢所有参与`GoFrame`开发的贡献者。 [[贡献者列表](https://github.com/gogf/gf/graphs/contributors)].
-<a href="https://github.com/gogf/gf/graphs/contributors"><img src="https://opencollective.com/goframe/contributors.svg?width=890&button=false" /></a>
+<a href="https://github.com/gogf/gf/graphs/contributors"><img src="https://contributors-img.web.app/image?repo=gogf/gf" /></a>
 
 
 # 捐赠

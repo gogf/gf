@@ -32,8 +32,8 @@ type Retry struct {
 	Interval time.Duration // Retry interval.
 }
 
-// NewConn creates UDP connection to <remoteAddress>.
-// The optional parameter <localAddress> specifies the local address for connection.
+// NewConn creates UDP connection to `remoteAddress`.
+// The optional parameter `localAddress` specifies the local address for connection.
 func NewConn(remoteAddress string, localAddress ...string) (*Conn, error) {
 	if conn, err := NewNetConn(remoteAddress, localAddress...); err == nil {
 		return NewConnByNetConn(conn), nil
@@ -83,7 +83,7 @@ func (c *Conn) Send(data []byte, retry ...Retry) (err error) {
 }
 
 // Recv receives and returns data from remote address.
-// The parameter <buffer> is used for customizing the receiving buffer size. If <buffer> <= 0,
+// The parameter `buffer` is used for customizing the receiving buffer size. If `buffer` <= 0,
 // it uses the default buffer size, which is 1024 byte.
 //
 // There's package border in UDP protocol, we can receive a complete package if specified

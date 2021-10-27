@@ -9,22 +9,22 @@ package gi18n
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/intlog"
 	"strings"
 	"sync"
 
-	"github.com/gogf/gf/os/gfsnotify"
+	"github.com/gogf/gf/v2/os/gfsnotify"
 
-	"github.com/gogf/gf/text/gregex"
+	"github.com/gogf/gf/v2/text/gregex"
 
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/util/gconv"
 
-	"github.com/gogf/gf/encoding/gjson"
+	"github.com/gogf/gf/v2/encoding/gjson"
 
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/gres"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gres"
 )
 
 // Manager for i18n contents, it is concurrent safe, supporting hot reload.
@@ -48,7 +48,7 @@ var (
 )
 
 // New creates and returns a new i18n manager.
-// The optional parameter <option> specifies the custom options for i18n manager.
+// The optional parameter `option` specifies the custom options for i18n manager.
 // It uses a default one if it's not passed.
 func New(options ...Options) *Manager {
 	var opts Options
@@ -132,13 +132,13 @@ func (m *Manager) Tf(ctx context.Context, format string, values ...interface{}) 
 	return m.TranslateFormat(ctx, format, values...)
 }
 
-// TranslateFormat translates, formats and returns the <format> with configured language
-// and given <values>.
+// TranslateFormat translates, formats and returns the `format` with configured language
+// and given `values`.
 func (m *Manager) TranslateFormat(ctx context.Context, format string, values ...interface{}) string {
 	return fmt.Sprintf(m.Translate(ctx, format), values...)
 }
 
-// Translate translates <content> with configured language.
+// Translate translates `content` with configured language.
 func (m *Manager) Translate(ctx context.Context, content string) string {
 	m.init(ctx)
 	m.mu.RLock()
@@ -220,7 +220,7 @@ func (m *Manager) init(ctx context.Context) {
 					m.data[lang] = make(map[string]string)
 				}
 				if j, err := gjson.LoadContent(file.Content()); err == nil {
-					for k, v := range j.Map() {
+					for k, v := range j.Var().Map() {
 						m.data[lang][k] = gconv.String(v)
 					}
 				} else {
@@ -251,7 +251,7 @@ func (m *Manager) init(ctx context.Context) {
 				m.data[lang] = make(map[string]string)
 			}
 			if j, err := gjson.LoadContent(gfile.GetBytes(file)); err == nil {
-				for k, v := range j.Map() {
+				for k, v := range j.Var().Map() {
 					m.data[lang][k] = gconv.String(v)
 				}
 			} else {

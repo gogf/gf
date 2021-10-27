@@ -8,14 +8,14 @@ package gdb_test
 
 import (
 	"database/sql"
-	"github.com/gogf/gf/database/gdb"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/test/gtest"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 	"reflect"
 	"testing"
 )
@@ -114,7 +114,7 @@ func Test_Struct_Pointer_Attribute(t *testing.T) {
 	}
 
 	gtest.C(t, func(t *gtest.T) {
-		one, err := db.Model(table).FindOne(1)
+		one, err := db.Model(table).WherePri(1).One()
 		t.AssertNil(err)
 		user := new(User)
 		err = one.Struct(user)
@@ -554,7 +554,7 @@ func Test_Scan_JsonAttributes(t *testing.T) {
 	)
 	array := gstr.SplitAndTrim(gtest.TestDataContent(`issue1380.sql`), ";")
 	for _, v := range array {
-		if _, err := db.Exec(v); err != nil {
+		if _, err := db.Exec(ctx, v); err != nil {
 			gtest.Error(err)
 		}
 	}

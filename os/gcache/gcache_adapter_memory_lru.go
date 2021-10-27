@@ -9,16 +9,16 @@ package gcache
 import (
 	"time"
 
-	"github.com/gogf/gf/container/glist"
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/container/gtype"
-	"github.com/gogf/gf/os/gtimer"
+	"github.com/gogf/gf/v2/container/glist"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/os/gtimer"
 )
 
 // LRU cache object.
 // It uses list.List from stdlib for its underlying doubly linked list.
 type adapterMemoryLru struct {
-	cache   *adapterMemory // Parent cache object.
+	cache   *AdapterMemory // Parent cache object.
 	data    *gmap.Map      // Key mapping to the item of the list.
 	list    *glist.List    // Key list.
 	rawList *glist.List    // History for key adding.
@@ -26,7 +26,7 @@ type adapterMemoryLru struct {
 }
 
 // newMemCacheLru creates and returns a new LRU object.
-func newMemCacheLru(cache *adapterMemory) *adapterMemoryLru {
+func newMemCacheLru(cache *AdapterMemory) *adapterMemoryLru {
 	lru := &adapterMemoryLru{
 		cache:   cache,
 		data:    gmap.New(true),

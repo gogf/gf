@@ -7,7 +7,7 @@
 package gcache
 
 import (
-	"github.com/gogf/gf/container/gset"
+	"github.com/gogf/gf/v2/container/gset"
 	"sync"
 )
 

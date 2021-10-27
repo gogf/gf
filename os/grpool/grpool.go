@@ -8,14 +8,14 @@
 package grpool
 
 import (
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 
-	"github.com/gogf/gf/container/glist"
-	"github.com/gogf/gf/container/gtype"
+	"github.com/gogf/gf/v2/container/glist"
+	"github.com/gogf/gf/v2/container/gtype"
 )
 
-// Goroutine Pool
+// Pool manages the goroutines using pool.
 type Pool struct {
 	limit  int         // Max goroutine count limit.
 	count  *gtype.Int  // Current running goroutine count.
@@ -27,7 +27,7 @@ type Pool struct {
 var pool = New()
 
 // New creates and returns a new goroutine pool object.
-// The parameter <limit> is used to limit the max goroutine count,
+// The parameter `limit` is used to limit the max goroutine count,
 // which is not limited in default.
 func New(limit ...int) *Pool {
 	p := &Pool{
@@ -49,8 +49,8 @@ func Add(f func()) error {
 }
 
 // AddWithRecover pushes a new job to the pool with specified recover function.
-// The optional <recoverFunc> is called when any panic during executing of <userFunc>.
-// If <recoverFunc> is not passed or given nil, it ignores the panic from <userFunc>.
+// The optional `recoverFunc` is called when any panic during executing of `userFunc`.
+// If `recoverFunc` is not passed or given nil, it ignores the panic from `userFunc`.
 // The job will be executed asynchronously.
 func AddWithRecover(userFunc func(), recoverFunc ...func(err error)) error {
 	return pool.AddWithRecover(userFunc, recoverFunc...)
@@ -91,15 +91,15 @@ func (p *Pool) Add(f func()) error {
 }
 
 // AddWithRecover pushes a new job to the pool with specified recover function.
-// The optional <recoverFunc> is called when any panic during executing of <userFunc>.
-// If <recoverFunc> is not passed or given nil, it ignores the panic from <userFunc>.
+// The optional `recoverFunc` is called when any panic during executing of `userFunc`.
+// If `recoverFunc` is not passed or given nil, it ignores the panic from `userFunc`.
 // The job will be executed asynchronously.
 func (p *Pool) AddWithRecover(userFunc func(), recoverFunc ...func(err error)) error {
 	return p.Add(func() {
 		defer func() {
 			if exception := recover(); exception != nil {
 				if len(recoverFunc) > 0 && recoverFunc[0] != nil {
-					if v, ok := exception.(error); ok {
+					if v, ok := exception.(error); ok && gerror.HasStack(v) {
 						recoverFunc[0](v)
 					} else {
 						recoverFunc[0](gerror.NewCodef(gcode.CodeInternalError, `%+v`, exception))

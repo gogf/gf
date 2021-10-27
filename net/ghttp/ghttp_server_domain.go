@@ -7,6 +7,7 @@
 package ghttp
 
 import (
+	"context"
 	"strings"
 )
 
@@ -34,9 +35,9 @@ func (d *Domain) BindHandler(pattern string, handler interface{}) {
 	}
 }
 
-func (d *Domain) doBindHandler(pattern string, funcInfo handlerFuncInfo, middleware []HandlerFunc, source string) {
+func (d *Domain) doBindHandler(ctx context.Context, pattern string, funcInfo handlerFuncInfo, middleware []HandlerFunc, source string) {
 	for domain, _ := range d.domains {
-		d.server.doBindHandler(pattern+"@"+domain, funcInfo, middleware, source)
+		d.server.doBindHandler(ctx, pattern+"@"+domain, funcInfo, middleware, source)
 	}
 }
 
@@ -46,9 +47,9 @@ func (d *Domain) BindObject(pattern string, obj interface{}, methods ...string) 
 	}
 }
 
-func (d *Domain) doBindObject(pattern string, obj interface{}, methods string, middleware []HandlerFunc, source string) {
+func (d *Domain) doBindObject(ctx context.Context, pattern string, obj interface{}, methods string, middleware []HandlerFunc, source string) {
 	for domain, _ := range d.domains {
-		d.server.doBindObject(pattern+"@"+domain, obj, methods, middleware, source)
+		d.server.doBindObject(ctx, pattern+"@"+domain, obj, methods, middleware, source)
 	}
 }
 
@@ -59,11 +60,12 @@ func (d *Domain) BindObjectMethod(pattern string, obj interface{}, method string
 }
 
 func (d *Domain) doBindObjectMethod(
+	ctx context.Context,
 	pattern string, obj interface{}, method string,
 	middleware []HandlerFunc, source string,
 ) {
 	for domain, _ := range d.domains {
-		d.server.doBindObjectMethod(pattern+"@"+domain, obj, method, middleware, source)
+		d.server.doBindObjectMethod(ctx, pattern+"@"+domain, obj, method, middleware, source)
 	}
 }
 
@@ -73,9 +75,9 @@ func (d *Domain) BindObjectRest(pattern string, obj interface{}) {
 	}
 }
 
-func (d *Domain) doBindObjectRest(pattern string, obj interface{}, middleware []HandlerFunc, source string) {
+func (d *Domain) doBindObjectRest(ctx context.Context, pattern string, obj interface{}, middleware []HandlerFunc, source string) {
 	for domain, _ := range d.domains {
-		d.server.doBindObjectRest(pattern+"@"+domain, obj, middleware, source)
+		d.server.doBindObjectRest(ctx, pattern+"@"+domain, obj, middleware, source)
 	}
 }
 
@@ -85,9 +87,9 @@ func (d *Domain) BindHookHandler(pattern string, hook string, handler HandlerFun
 	}
 }
 
-func (d *Domain) doBindHookHandler(pattern string, hook string, handler HandlerFunc, source string) {
+func (d *Domain) doBindHookHandler(ctx context.Context, pattern string, hook string, handler HandlerFunc, source string) {
 	for domain, _ := range d.domains {
-		d.server.doBindHookHandler(pattern+"@"+domain, hook, handler, source)
+		d.server.doBindHookHandler(ctx, pattern+"@"+domain, hook, handler, source)
 	}
 }
 

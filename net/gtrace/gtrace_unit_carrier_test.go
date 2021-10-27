@@ -8,12 +8,12 @@ package gtrace_test
 
 import (
 	"context"
-	"github.com/gogf/gf/net/gtrace"
-	"github.com/gogf/gf/test/gtest"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/oteltest"
-	"go.opentelemetry.io/otel/trace"
 	"testing"
+
+	"github.com/gogf/gf/v2/net/gtrace"
+	"github.com/gogf/gf/v2/test/gtest"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const (
@@ -51,14 +51,15 @@ func TestNewCarrier(t *testing.T) {
 			SpanID:     spanID,
 			TraceFlags: trace.FlagsSampled,
 		}))
-		ctx, _ = oteltest.DefaultTracer().Start(ctx, "inject")
+
+		ctx, _ = otel.Tracer("").Start(ctx, "inject")
 		carrier1 := gtrace.NewCarrier()
 		otel.GetTextMapPropagator().Inject(ctx, carrier1)
-		t.Assert(carrier1.String(), `{"traceparent":"00-4bf92f3577b34da6a3ce929d0e0e4736-0000000000000002-01"}`)
+		t.Assert(carrier1.String(), `{"traceparent":"00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"}`)
 
 		ctx = otel.GetTextMapPropagator().Extract(ctx, carrier1)
 		gotSc := trace.SpanContextFromContext(ctx)
 		t.Assert(gotSc.TraceID().String(), traceID.String())
-		t.Assert(gotSc.SpanID().String(), "0000000000000002")
+		t.Assert(gotSc.SpanID().String(), "00f067aa0ba902b7")
 	})
 }

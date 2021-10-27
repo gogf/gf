@@ -12,7 +12,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/gogf/gf/text/gregex"
+	"github.com/gogf/gf/v2/text/gregex"
 )
 
 // Refer to Laravel validation:
@@ -74,8 +74,8 @@ type fieldRule struct {
 	Rule string // Rule string like: "max:6"
 }
 
-// apiNoValidation is an interface that marks current struct not validated by package `gvalid`.
-type apiNoValidation interface {
+// iNoValidation is an interface that marks current struct not validated by package `gvalid`.
+type iNoValidation interface {
 	NoValidation()
 }
 
@@ -253,7 +253,7 @@ func CheckValue(ctx context.Context, value interface{}, rules string, messages i
 	if len(params) > 0 {
 		data = params[0]
 	}
-	return defaultValidator.Ctx(ctx).Rules(rules).Data(data).Messages(messages).CheckValue(value)
+	return defaultValidator.Rules(rules).Data(data).Messages(messages).CheckValue(ctx, value)
 }
 
 // CheckMap validates map and returns the error result. It returns nil if with successful validation.
@@ -266,7 +266,7 @@ func CheckMap(ctx context.Context, params interface{}, rules interface{}, messag
 	if len(messages) > 0 {
 		customErrorMessages = messages[0]
 	}
-	return defaultValidator.Ctx(ctx).Rules(rules).Messages(customErrorMessages).CheckMap(params)
+	return defaultValidator.Rules(rules).Messages(customErrorMessages).CheckMap(ctx, params)
 }
 
 // CheckStruct validates struct and returns the error result.
@@ -280,7 +280,7 @@ func CheckStruct(ctx context.Context, object interface{}, rules interface{}, mes
 	if len(messages) > 0 {
 		customErrorMessages = messages[0]
 	}
-	return defaultValidator.Ctx(ctx).Rules(rules).Messages(customErrorMessages).CheckStruct(object)
+	return defaultValidator.Rules(rules).Messages(customErrorMessages).CheckStruct(ctx, object)
 }
 
 // CheckStructWithData validates struct with given parameter map and returns the error result.
@@ -294,7 +294,7 @@ func CheckStructWithData(ctx context.Context, object interface{}, data interface
 	if len(messages) > 0 {
 		customErrorMessages = messages[0]
 	}
-	return defaultValidator.Ctx(ctx).Data(data).Rules(rules).Messages(customErrorMessages).CheckStruct(object)
+	return defaultValidator.Data(data).Rules(rules).Messages(customErrorMessages).CheckStruct(ctx, object)
 }
 
 // parseSequenceTag parses one sequence tag to field, rule and error message.

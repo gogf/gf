@@ -8,16 +8,16 @@ package ghttp_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/debug/gdebug"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/text/gstr"
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_Params_File_Single(t *testing.T) {
@@ -30,7 +30,7 @@ func Test_Params_File_Single(t *testing.T) {
 			r.Response.WriteExit("upload file cannot be empty")
 		}
 
-		if name, err := file.Save(dstDirPath, r.GetBool("randomlyRename")); err == nil {
+		if name, err := file.Save(dstDirPath, r.Get("randomlyRename").Bool()); err == nil {
 			r.Response.WriteExit(name)
 		}
 		r.Response.WriteExit("upload failed")
@@ -47,7 +47,7 @@ func Test_Params_File_Single(t *testing.T) {
 
 		srcPath := gdebug.TestDataPath("upload", "file1.txt")
 		dstPath := gfile.Join(dstDirPath, "file1.txt")
-		content := client.PostContent("/upload/single", g.Map{
+		content := client.PostContent(ctx, "/upload/single", g.Map{
 			"file": "@file:" + srcPath,
 		})
 		t.AssertNE(content, "")
@@ -62,7 +62,7 @@ func Test_Params_File_Single(t *testing.T) {
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		srcPath := gdebug.TestDataPath("upload", "file2.txt")
-		content := client.PostContent("/upload/single", g.Map{
+		content := client.PostContent(ctx, "/upload/single", g.Map{
 			"file":           "@file:" + srcPath,
 			"randomlyRename": true,
 		})
@@ -84,7 +84,7 @@ func Test_Params_File_CustomName(t *testing.T) {
 			r.Response.WriteExit("upload file cannot be empty")
 		}
 		file.Filename = "my.txt"
-		if name, err := file.Save(dstDirPath, r.GetBool("randomlyRename")); err == nil {
+		if name, err := file.Save(dstDirPath, r.Get("randomlyRename").Bool()); err == nil {
 			r.Response.WriteExit(name)
 		}
 		r.Response.WriteExit("upload failed")
@@ -100,7 +100,7 @@ func Test_Params_File_CustomName(t *testing.T) {
 
 		srcPath := gdebug.TestDataPath("upload", "file1.txt")
 		dstPath := gfile.Join(dstDirPath, "my.txt")
-		content := client.PostContent("/upload/single", g.Map{
+		content := client.PostContent(ctx, "/upload/single", g.Map{
 			"file": "@file:" + srcPath,
 		})
 		t.AssertNE(content, "")
@@ -120,7 +120,7 @@ func Test_Params_File_Batch(t *testing.T) {
 		if files == nil {
 			r.Response.WriteExit("upload file cannot be empty")
 		}
-		if names, err := files.Save(dstDirPath, r.GetBool("randomlyRename")); err == nil {
+		if names, err := files.Save(dstDirPath, r.Get("randomlyRename").Bool()); err == nil {
 			r.Response.WriteExit(gstr.Join(names, ","))
 		}
 		r.Response.WriteExit("upload failed")
@@ -139,7 +139,7 @@ func Test_Params_File_Batch(t *testing.T) {
 		srcPath2 := gdebug.TestDataPath("upload", "file2.txt")
 		dstPath1 := gfile.Join(dstDirPath, "file1.txt")
 		dstPath2 := gfile.Join(dstDirPath, "file2.txt")
-		content := client.PostContent("/upload/batch", g.Map{
+		content := client.PostContent(ctx, "/upload/batch", g.Map{
 			"file[0]": "@file:" + srcPath1,
 			"file[1]": "@file:" + srcPath2,
 		})
@@ -157,7 +157,7 @@ func Test_Params_File_Batch(t *testing.T) {
 
 		srcPath1 := gdebug.TestDataPath("upload", "file1.txt")
 		srcPath2 := gdebug.TestDataPath("upload", "file2.txt")
-		content := client.PostContent("/upload/batch", g.Map{
+		content := client.PostContent(ctx, "/upload/batch", g.Map{
 			"file[0]":        "@file:" + srcPath1,
 			"file[1]":        "@file:" + srcPath2,
 			"randomlyRename": true,

@@ -9,18 +9,18 @@ package ghttp
 import (
 	"bytes"
 	"fmt"
-	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/encoding/gjson"
-	"github.com/gogf/gf/encoding/gurl"
-	"github.com/gogf/gf/encoding/gxml"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/internal/utils"
-	"github.com/gogf/gf/text/gregex"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
-	"github.com/gogf/gf/util/gvalid"
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v2/encoding/gurl"
+	"github.com/gogf/gf/v2/encoding/gxml"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gvalid"
 	"io/ioutil"
 	"mime/multipart"
 	"reflect"
@@ -42,7 +42,7 @@ var (
 // slice. It also automatically validates the struct or every element of the struct slice according
 // to the validation tag of the struct.
 //
-// The parameter <pointer> can be type of: *struct/**struct/*[]struct/*[]*struct.
+// The parameter `pointer` can be type of: *struct/**struct/*[]struct/*[]*struct.
 //
 // It supports single and multiple struct convertion:
 // 1. Single struct, post content like: {"id":1, "name":"john"} or ?id=1&name=john
@@ -118,14 +118,14 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 		if err != nil {
 			return err
 		}
-		if err := j.GetStructs(".", pointer); err != nil {
+		if err := j.Var().Scan(pointer); err != nil {
 			return err
 		}
 		for i := 0; i < reflectVal2.Len(); i++ {
 			if err := gvalid.CheckStructWithData(
 				r.Context(),
 				reflectVal2.Index(i),
-				j.GetMap(gconv.String(i)),
+				j.Get(gconv.String(i)).Map(),
 				nil,
 			); err != nil {
 				return err
@@ -138,28 +138,8 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 // Get is alias of GetRequest, which is one of the most commonly used functions for
 // retrieving parameter.
 // See r.GetRequest.
-func (r *Request) Get(key string, def ...interface{}) interface{} {
+func (r *Request) Get(key string, def ...interface{}) *gvar.Var {
 	return r.GetRequest(key, def...)
-}
-
-// GetVar is alis of GetRequestVar.
-// See GetRequestVar.
-func (r *Request) GetVar(key string, def ...interface{}) *gvar.Var {
-	return r.GetRequestVar(key, def...)
-}
-
-// GetRaw is alias of GetBody.
-// See GetBody.
-// Deprecated, use GetBody instead.
-func (r *Request) GetRaw() []byte {
-	return r.GetBody()
-}
-
-// GetRawString is alias of GetBodyString.
-// See GetBodyString.
-// Deprecated, use GetBodyString instead.
-func (r *Request) GetRawString() string {
-	return r.GetBodyString()
 }
 
 // GetBody retrieves and returns request body content as bytes.
@@ -182,96 +162,6 @@ func (r *Request) GetBodyString() string {
 // Note that the request content is read from request BODY, not from any field of FORM.
 func (r *Request) GetJson() (*gjson.Json, error) {
 	return gjson.LoadJson(r.GetBody())
-}
-
-// GetString is an alias and convenient function for GetRequestString.
-// See GetRequestString.
-func (r *Request) GetString(key string, def ...interface{}) string {
-	return r.GetRequestString(key, def...)
-}
-
-// GetBool is an alias and convenient function for GetRequestBool.
-// See GetRequestBool.
-func (r *Request) GetBool(key string, def ...interface{}) bool {
-	return r.GetRequestBool(key, def...)
-}
-
-// GetInt is an alias and convenient function for GetRequestInt.
-// See GetRequestInt.
-func (r *Request) GetInt(key string, def ...interface{}) int {
-	return r.GetRequestInt(key, def...)
-}
-
-// GetInt32 is an alias and convenient function for GetRequestInt32.
-// See GetRequestInt32.
-func (r *Request) GetInt32(key string, def ...interface{}) int32 {
-	return r.GetRequestInt32(key, def...)
-}
-
-// GetInt64 is an alias and convenient function for GetRequestInt64.
-// See GetRequestInt64.
-func (r *Request) GetInt64(key string, def ...interface{}) int64 {
-	return r.GetRequestInt64(key, def...)
-}
-
-// GetInts is an alias and convenient function for GetRequestInts.
-// See GetRequestInts.
-func (r *Request) GetInts(key string, def ...interface{}) []int {
-	return r.GetRequestInts(key, def...)
-}
-
-// GetUint is an alias and convenient function for GetRequestUint.
-// See GetRequestUint.
-func (r *Request) GetUint(key string, def ...interface{}) uint {
-	return r.GetRequestUint(key, def...)
-}
-
-// GetUint32 is an alias and convenient function for GetRequestUint32.
-// See GetRequestUint32.
-func (r *Request) GetUint32(key string, def ...interface{}) uint32 {
-	return r.GetRequestUint32(key, def...)
-}
-
-// GetUint64 is an alias and convenient function for GetRequestUint64.
-// See GetRequestUint64.
-func (r *Request) GetUint64(key string, def ...interface{}) uint64 {
-	return r.GetRequestUint64(key, def...)
-}
-
-// GetFloat32 is an alias and convenient function for GetRequestFloat32.
-// See GetRequestFloat32.
-func (r *Request) GetFloat32(key string, def ...interface{}) float32 {
-	return r.GetRequestFloat32(key, def...)
-}
-
-// GetFloat64 is an alias and convenient function for GetRequestFloat64.
-// See GetRequestFloat64.
-func (r *Request) GetFloat64(key string, def ...interface{}) float64 {
-	return r.GetRequestFloat64(key, def...)
-}
-
-// GetFloats is an alias and convenient function for GetRequestFloats.
-// See GetRequestFloats.
-func (r *Request) GetFloats(key string, def ...interface{}) []float64 {
-	return r.GetRequestFloats(key, def...)
-}
-
-// GetArray is an alias and convenient function for GetRequestArray.
-// See GetRequestArray.
-func (r *Request) GetArray(key string, def ...interface{}) []string {
-	return r.GetRequestArray(key, def...)
-}
-
-// GetStrings is an alias and convenient function for GetRequestStrings.
-// See GetRequestStrings.
-func (r *Request) GetStrings(key string, def ...interface{}) []string {
-	return r.GetRequestStrings(key, def...)
-}
-
-// GetInterfaces is an alias and convenient function for GetRequestInterfaces.
-// See GetRequestInterfaces.
-func (r *Request) GetInterfaces(key string, def ...interface{}) []interface{} {
-	return r.GetRequestInterfaces(key, def...)
 }
 
 // GetMap is an alias and convenient function for GetRequestMap.

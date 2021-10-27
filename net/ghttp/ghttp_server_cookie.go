@@ -7,6 +7,7 @@
 package ghttp
 
 import (
+	"github.com/gogf/gf/v2/container/gvar"
 	"net/http"
 	"time"
 )
@@ -89,8 +90,8 @@ func (c *Cookie) Set(key, value string) {
 	)
 }
 
-// SetCookie sets cookie item given given domain, path and expiration age.
-// The optional parameter <httpOnly> specifies if the cookie item is only available in HTTP,
+// SetCookie sets cookie item with given domain, path and expiration age.
+// The optional parameter `httpOnly` specifies if the cookie item is only available in HTTP,
 // which is usually empty.
 func (c *Cookie) SetCookie(key, value, domain, path string, maxAge time.Duration, httpOnly ...bool) {
 	c.init()
@@ -123,7 +124,7 @@ func (c *Cookie) SetHttpCookie(httpCookie *http.Cookie) {
 
 // GetSessionId retrieves and returns the session id from cookie.
 func (c *Cookie) GetSessionId() string {
-	return c.Get(c.server.GetSessionIdName())
+	return c.Get(c.server.GetSessionIdName()).String()
 }
 
 // SetSessionId sets session id in the cookie.
@@ -138,18 +139,18 @@ func (c *Cookie) SetSessionId(id string) {
 }
 
 // Get retrieves and returns the value with specified key.
-// It returns <def> if specified key does not exist and <def> is given.
-func (c *Cookie) Get(key string, def ...string) string {
+// It returns `def` if specified key does not exist and `def` is given.
+func (c *Cookie) Get(key string, def ...string) *gvar.Var {
 	c.init()
 	if r, ok := c.data[key]; ok {
 		if r.Expires.IsZero() || r.Expires.After(time.Now()) {
-			return r.Value
+			return gvar.New(r.Value)
 		}
 	}
 	if len(def) > 0 {
-		return def[0]
+		return gvar.New(def[0])
 	}
-	return ""
+	return nil
 }
 
 // Remove deletes specified key and its value from cookie using default domain and path.

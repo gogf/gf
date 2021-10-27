@@ -8,15 +8,20 @@ package gvalid_test
 
 import (
 	"context"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v2/os/gtime"
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/test/gtest"
-	"github.com/gogf/gf/util/gvalid"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gvalid"
+)
+
+var (
+	ctx = gctx.New()
 )
 
 func Test_Check(t *testing.T) {
@@ -1018,13 +1023,13 @@ func Test_InternalError_String(t *testing.T) {
 
 func Test_Code(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		err := g.Validator().Rules("required").CheckValue("")
+		err := g.Validator().Rules("required").CheckValue(ctx, "")
 		t.AssertNE(err, nil)
 		t.Assert(gerror.Code(err), gcode.CodeValidationFailed)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		err := g.Validator().Rules("none-exist-rule").CheckValue("")
+		err := g.Validator().Rules("none-exist-rule").CheckValue(ctx, "")
 		t.AssertNE(err, nil)
 		t.Assert(gerror.Code(err), gcode.CodeInternalError)
 	})
@@ -1036,7 +1041,7 @@ func Test_Bail(t *testing.T) {
 		err := g.Validator().
 			Rules("required|min:1|between:1,100").
 			Messages("|min number is 1|size is between 1 and 100").
-			CheckValue(-1)
+			CheckValue(ctx, -1)
 		t.AssertNE(err, nil)
 		t.Assert(err.Error(), "min number is 1; size is between 1 and 100")
 	})
@@ -1046,7 +1051,7 @@ func Test_Bail(t *testing.T) {
 		err := g.Validator().
 			Rules("bail|required|min:1|between:1,100").
 			Messages("||min number is 1|size is between 1 and 100").
-			CheckValue(-1)
+			CheckValue(ctx, -1)
 		t.AssertNE(err, nil)
 		t.Assert(err.Error(), "min number is 1")
 	})
@@ -1061,7 +1066,7 @@ func Test_Bail(t *testing.T) {
 			Page: 1,
 			Size: -1,
 		}
-		err := g.Validator().CheckStruct(obj)
+		err := g.Validator().CheckStruct(ctx, obj)
 		t.AssertNE(err, nil)
 		t.Assert(err.Error(), "min number is 1; size is between 1 and 100")
 	})
@@ -1075,7 +1080,7 @@ func Test_Bail(t *testing.T) {
 			Page: 1,
 			Size: -1,
 		}
-		err := g.Validator().CheckStruct(obj)
+		err := g.Validator().CheckStruct(ctx, obj)
 		t.AssertNE(err, nil)
 		t.Assert(err.Error(), "min number is 1")
 	})

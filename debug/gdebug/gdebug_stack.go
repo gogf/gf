@@ -9,7 +9,7 @@ package gdebug
 import (
 	"bytes"
 	"fmt"
-	"github.com/gogf/gf/internal/utils"
+	"github.com/gogf/gf/v2/internal/utils"
 	"runtime"
 	"strings"
 )

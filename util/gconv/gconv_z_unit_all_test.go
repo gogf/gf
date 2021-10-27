@@ -10,13 +10,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/test/gtest"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
-type apiString interface {
+type iString interface {
 	String() string
 }
 type S struct {
@@ -26,7 +26,7 @@ func (s S) String() string {
 	return "22222"
 }
 
-type apiError interface {
+type iError interface {
 	Error() string
 }
 type S1 struct {
@@ -570,12 +570,12 @@ func Test_String_All(t *testing.T) {
 		t.AssertEQ(gconv.String(boolStruct{}), "{}")
 		t.AssertEQ(gconv.String(&boolStruct{}), "{}")
 
-		var info apiString
+		var info iString
 		info = new(S)
 		t.AssertEQ(gconv.String(info), "22222")
-		var errinfo apiError
-		errinfo = new(S1)
-		t.AssertEQ(gconv.String(errinfo), "22222")
+		var errInfo iError
+		errInfo = new(S1)
+		t.AssertEQ(gconv.String(errInfo), "22222")
 	})
 }
 

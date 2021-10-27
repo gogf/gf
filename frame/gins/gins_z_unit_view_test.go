@@ -9,13 +9,13 @@ package gins
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/debug/gdebug"
-	"github.com/gogf/gf/os/gcfg"
+	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gogf/gf/v2/os/gcfg"
 	"testing"
 
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_View(t *testing.T) {
@@ -54,9 +54,9 @@ func Test_View_Config(t *testing.T) {
 	// view1 test1
 	gtest.C(t, func(t *gtest.T) {
 		dirPath := gdebug.TestDataPath("view1")
-		gcfg.SetContent(gfile.GetContents(gfile.Join(dirPath, "config.toml")))
-		defer gcfg.ClearContent()
-		defer instances.Clear()
+		Config().GetAdapter().(*gcfg.AdapterFile).SetContent(gfile.GetContents(gfile.Join(dirPath, "config.toml")))
+		defer Config().GetAdapter().(*gcfg.AdapterFile).ClearContent()
+		defer localInstances.Clear()
 
 		view := View("test1")
 		t.AssertNE(view, nil)
@@ -76,9 +76,9 @@ func Test_View_Config(t *testing.T) {
 	// view1 test2
 	gtest.C(t, func(t *gtest.T) {
 		dirPath := gdebug.TestDataPath("view1")
-		gcfg.SetContent(gfile.GetContents(gfile.Join(dirPath, "config.toml")))
-		defer gcfg.ClearContent()
-		defer instances.Clear()
+		Config().GetAdapter().(*gcfg.AdapterFile).SetContent(gfile.GetContents(gfile.Join(dirPath, "config.toml")))
+		defer Config().GetAdapter().(*gcfg.AdapterFile).ClearContent()
+		defer localInstances.Clear()
 
 		view := View("test2")
 		t.AssertNE(view, nil)
@@ -98,9 +98,9 @@ func Test_View_Config(t *testing.T) {
 	// view2
 	gtest.C(t, func(t *gtest.T) {
 		dirPath := gdebug.TestDataPath("view2")
-		gcfg.SetContent(gfile.GetContents(gfile.Join(dirPath, "config.toml")))
-		defer gcfg.ClearContent()
-		defer instances.Clear()
+		Config().GetAdapter().(*gcfg.AdapterFile).SetContent(gfile.GetContents(gfile.Join(dirPath, "config.toml")))
+		defer Config().GetAdapter().(*gcfg.AdapterFile).ClearContent()
+		defer localInstances.Clear()
 
 		view := View()
 		t.AssertNE(view, nil)
@@ -120,9 +120,9 @@ func Test_View_Config(t *testing.T) {
 	// view2
 	gtest.C(t, func(t *gtest.T) {
 		dirPath := gdebug.TestDataPath("view2")
-		gcfg.SetContent(gfile.GetContents(gfile.Join(dirPath, "config.toml")))
-		defer gcfg.ClearContent()
-		defer instances.Clear()
+		Config().GetAdapter().(*gcfg.AdapterFile).SetContent(gfile.GetContents(gfile.Join(dirPath, "config.toml")))
+		defer Config().GetAdapter().(*gcfg.AdapterFile).ClearContent()
+		defer localInstances.Clear()
 
 		view := View("test100")
 		t.AssertNE(view, nil)

@@ -7,16 +7,17 @@
 package gproc
 
 import (
+	"context"
 	"fmt"
-	"github.com/gogf/gf/internal/json"
+	"github.com/gogf/gf/v2/internal/json"
 	"net"
 
-	"github.com/gogf/gf/container/gqueue"
-	"github.com/gogf/gf/container/gtype"
-	"github.com/gogf/gf/net/gtcp"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/container/gqueue"
+	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/net/gtcp"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 var (
@@ -70,7 +71,7 @@ func receiveTcpListening() {
 	// Start listening.
 	for {
 		if conn, err := listen.Accept(); err != nil {
-			glog.Error(err)
+			glog.Error(context.TODO(), err)
 		} else if conn != nil {
 			go receiveTcpHandler(gtcp.NewConnByNetConn(conn))
 		}
@@ -80,6 +81,7 @@ func receiveTcpListening() {
 // receiveTcpHandler is the connection handler for receiving data.
 func receiveTcpHandler(conn *gtcp.Conn) {
 	var (
+		ctx      = context.TODO()
 		result   []byte
 		response MsgResponse
 	)
@@ -113,15 +115,15 @@ func receiveTcpHandler(conn *gtcp.Conn) {
 		if err == nil {
 			result, err = json.Marshal(response)
 			if err != nil {
-				glog.Error(err)
+				glog.Error(ctx, err)
 			}
 			if err := conn.SendPkg(result); err != nil {
-				glog.Error(err)
+				glog.Error(ctx, err)
 			}
 		} else {
 			// Just close the connection if any error occurs.
 			if err := conn.Close(); err != nil {
-				glog.Error(err)
+				glog.Error(ctx, err)
 			}
 			break
 		}

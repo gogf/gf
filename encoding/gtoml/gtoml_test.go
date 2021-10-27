@@ -6,11 +6,10 @@
 package gtoml_test
 
 import (
+	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v2/encoding/gtoml"
+	"github.com/gogf/gf/v2/test/gtest"
 	"testing"
-
-	"github.com/gogf/gf/encoding/gparser"
-	"github.com/gogf/gf/encoding/gtoml"
-	"github.com/gogf/gf/test/gtest"
 )
 
 var tomlStr string = `
@@ -43,13 +42,7 @@ func TestEncode(t *testing.T) {
 			return
 		}
 
-		p, err := gparser.LoadContent(res)
-		if err != nil {
-			t.Errorf("parser failed. %v", err)
-			return
-		}
-
-		t.Assert(p.GetString("toml"), tomlStr)
+		t.Assert(gjson.New(res).Get("toml").String(), tomlStr)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -120,11 +113,7 @@ func TestToJson(t *testing.T) {
 			return
 		}
 
-		p, err := gparser.LoadContent(res)
-		if err != nil {
-			t.Errorf("parser failed. %v", err)
-			return
-		}
+		p := gjson.New(res)
 		expectJson, err := p.ToJson()
 		if err != nil {
 			t.Errorf("parser ToJson failed. %v", err)

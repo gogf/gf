@@ -9,10 +9,10 @@
 package gmode_test
 
 import (
-	"github.com/gogf/gf/util/gmode"
+	"github.com/gogf/gf/v2/util/gmode"
 	"testing"
 
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_AutoCheckSourceCodes(t *testing.T) {

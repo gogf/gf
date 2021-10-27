@@ -7,8 +7,8 @@
 package gconv
 
 import (
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"reflect"
 )
 
@@ -21,14 +21,18 @@ import (
 // It calls function `doStructs`   internally if `pointer` is type of *[]struct/*[]*struct for converting.
 func Scan(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
 	var (
-		pointerType reflect.Type
-		pointerKind reflect.Kind
+		pointerType  reflect.Type
+		pointerKind  reflect.Kind
+		pointerValue reflect.Value
 	)
 	if v, ok := pointer.(reflect.Value); ok {
+		pointerValue = v
 		pointerType = v.Type()
 	} else {
-		pointerType = reflect.TypeOf(pointer)
+		pointerValue = reflect.ValueOf(pointer)
+		pointerType = reflect.TypeOf(pointer) // Do not use pointerValue.Type() as pointerValue might be zero.
 	}
+
 	if pointerType == nil {
 		return gerror.NewCode(gcode.CodeInvalidParameter, "parameter pointer should not be nil")
 	}
@@ -36,6 +40,29 @@ func Scan(params interface{}, pointer interface{}, mapping ...map[string]string)
 	if pointerKind != reflect.Ptr {
 		return gerror.NewCodef(gcode.CodeInvalidParameter, "params should be type of pointer, but got type: %v", pointerKind)
 	}
+	// Direct assignment checks!
+	var (
+		paramsType  reflect.Type
+		paramsValue reflect.Value
+	)
+	if v, ok := params.(reflect.Value); ok {
+		paramsValue = v
+		paramsType = paramsValue.Type()
+	} else {
+		paramsValue = reflect.ValueOf(params)
+		paramsType = reflect.TypeOf(params) // Do not use paramsValue.Type() as paramsValue might be zero.
+	}
+	// If `params` and `pointer` are the same type, the do directly assignment.
+	// For performance enhancement purpose.
+	var (
+		pointerValueElem = pointerValue.Elem()
+	)
+	if pointerValueElem.CanSet() && paramsType == pointerValueElem.Type() {
+		pointerValueElem.Set(paramsValue)
+		return nil
+	}
+
+	// Converting.
 	var (
 		pointerElem               = pointerType.Elem()
 		pointerElemKind           = pointerElem.Kind()
@@ -65,25 +92,5 @@ func Scan(params interface{}, pointer interface{}, mapping ...map[string]string)
 	default:
 
 		return doStruct(params, pointer, keyToAttributeNameMapping, "")
-	}
-}
-
-// ScanDeep automatically calls StructDeep or StructsDeep function according to the type of
-// parameter `pointer` to implement the converting.
-//
-// It calls function StructDeep if `pointer` is type of *struct/**struct to do the converting.
-// It calls function StructsDeep if `pointer` is type of *[]struct/*[]*struct to do the converting.
-// Deprecated, use Scan instead.
-func ScanDeep(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
-	t := reflect.TypeOf(pointer)
-	k := t.Kind()
-	if k != reflect.Ptr {
-		return gerror.NewCodef(gcode.CodeInvalidParameter, "params should be type of pointer, but got: %v", k)
-	}
-	switch t.Elem().Kind() {
-	case reflect.Array, reflect.Slice:
-		return StructsDeep(params, pointer, mapping...)
-	default:
-		return StructDeep(params, pointer, mapping...)
 	}
 }

@@ -8,12 +8,11 @@ package gdb
 
 import (
 	"fmt"
-	"github.com/gogf/gf/container/gset"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
-	"github.com/gogf/gf/util/gutil"
+	"github.com/gogf/gf/v2/container/gset"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // Fields appends `fieldNamesOrMapStruct` to the operation fields of the model, multiple fields joined using char ','.
@@ -32,18 +31,21 @@ func (m *Model) Fields(fieldNamesOrMapStruct ...interface{}) *Model {
 		))
 	// It needs type asserting.
 	case length == 1:
-		switch r := fieldNamesOrMapStruct[0].(type) {
+		structOrMap := fieldNamesOrMapStruct[0]
+		switch r := structOrMap.(type) {
 		case string:
 			return m.appendFieldsByStr(gstr.Join(
 				m.mappingAndFilterToTableFields([]string{r}, false), ",",
 			))
+
 		case []string:
 			return m.appendFieldsByStr(gstr.Join(
 				m.mappingAndFilterToTableFields(r, true), ",",
 			))
+
 		default:
 			return m.appendFieldsByStr(gstr.Join(
-				m.mappingAndFilterToTableFields(gutil.Keys(r), true), ",",
+				m.mappingAndFilterToTableFields(getFieldsFromStructOrMap(structOrMap), true), ",",
 			))
 		}
 	}
@@ -71,7 +73,7 @@ func (m *Model) FieldsEx(fieldNamesOrMapStruct ...interface{}) *Model {
 		case []string:
 			model.fieldsEx = gstr.Join(m.mappingAndFilterToTableFields(r, true), ",")
 		default:
-			model.fieldsEx = gstr.Join(m.mappingAndFilterToTableFields(gutil.Keys(r), true), ",")
+			model.fieldsEx = gstr.Join(m.mappingAndFilterToTableFields(getFieldsFromStructOrMap(r), true), ",")
 		}
 		return model
 	}
@@ -150,25 +152,6 @@ func (m *Model) appendFieldsExByStr(fieldsEx string) *Model {
 	return m
 }
 
-// Filter marks filtering the fields which does not exist in the fields of the operated table.
-// Note that this function supports only single table operations.
-// Deprecated, filter feature is automatically enabled from GoFrame v1.16.0, it is so no longer used.
-func (m *Model) Filter() *Model {
-	if gstr.Contains(m.tables, " ") {
-		panic("function Filter supports only single table operations")
-	}
-	model := m.getModel()
-	model.filter = true
-	return model
-}
-
-// FieldsStr retrieves and returns all fields from the table, joined with char ','.
-// The optional parameter `prefix` specifies the prefix for each field, eg: FieldsStr("u.").
-// Deprecated, use GetFieldsStr instead.
-func (m *Model) FieldsStr(prefix ...string) string {
-	return m.GetFieldsStr(prefix...)
-}
-
 // GetFieldsStr retrieves and returns all fields from the table, joined with char ','.
 // The optional parameter `prefix` specifies the prefix for each field, eg: GetFieldsStr("u.").
 func (m *Model) GetFieldsStr(prefix ...string) string {
@@ -196,15 +179,6 @@ func (m *Model) GetFieldsStr(prefix ...string) string {
 	}
 	newFields = m.db.GetCore().QuoteString(newFields)
 	return newFields
-}
-
-// FieldsExStr retrieves and returns fields which are not in parameter `fields` from the table,
-// joined with char ','.
-// The parameter `fields` specifies the fields that are excluded.
-// The optional parameter `prefix` specifies the prefix for each field, eg: FieldsExStr("id", "u.").
-// Deprecated, use GetFieldsExStr instead.
-func (m *Model) FieldsExStr(fields string, prefix ...string) string {
-	return m.GetFieldsExStr(fields, prefix...)
 }
 
 // GetFieldsExStr retrieves and returns fields which are not in parameter `fields` from the table,

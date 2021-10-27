@@ -11,10 +11,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/test/gtest"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 func Test_Client_Request_13_Dump(t *testing.T) {
@@ -37,7 +37,7 @@ func Test_Client_Request_13_Dump(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		url := fmt.Sprintf("http://127.0.0.1:%d", p)
 		client := g.Client().SetPrefix(url).ContentJson().SetDump(true)
-		r, err := client.Post("/hello", g.Map{"field": "test_for_request_body"})
+		r, err := client.Post(ctx, "/hello", g.Map{"field": "test_for_request_body"})
 		t.Assert(err, nil)
 		dumpedText := r.RawRequest()
 		t.Assert(gstr.Contains(dumpedText, "test_for_request_body"), true)
@@ -46,7 +46,7 @@ func Test_Client_Request_13_Dump(t *testing.T) {
 		t.Assert(gstr.Contains(dumpedText2, "test_for_response_body"), true)
 
 		client2 := g.Client().SetPrefix(url).ContentType("text/html")
-		r2, err := client2.Dump().Post("/hello2", g.Map{"field": "test_for_request_body"})
+		r2, err := client2.Dump().Post(ctx, "/hello2", g.Map{"field": "test_for_request_body"})
 		t.Assert(err, nil)
 		dumpedText3 := r2.RawRequest()
 		t.Assert(gstr.Contains(dumpedText3, "test_for_request_body"), true)

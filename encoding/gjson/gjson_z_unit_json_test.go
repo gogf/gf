@@ -7,10 +7,10 @@
 package gjson_test
 
 import (
-	"github.com/gogf/gf/encoding/gjson"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/test/gtest"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
 	"testing"
 )
 
@@ -61,7 +61,7 @@ func Test_MapAttributeConvert(t *testing.T) {
 			Title map[string]interface{}
 		}{}
 
-		err = j.Struct(&tx)
+		err = j.Var().Scan(&tx)
 		gtest.Assert(err, nil)
 		t.Assert(tx.Title, g.Map{
 			"l1": "标签1", "l2": "标签2",
@@ -76,7 +76,7 @@ func Test_MapAttributeConvert(t *testing.T) {
 			Title map[string]string
 		}{}
 
-		err = j.Struct(&tx)
+		err = j.Var().Scan(&tx)
 		gtest.Assert(err, nil)
 		t.Assert(tx.Title, g.Map{
 			"l1": "标签1", "l2": "标签2",

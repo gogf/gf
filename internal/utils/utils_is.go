@@ -7,7 +7,7 @@
 package utils
 
 import (
-	"github.com/gogf/gf/internal/empty"
+	"github.com/gogf/gf/v2/internal/empty"
 	"reflect"
 )
 

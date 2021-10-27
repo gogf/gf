@@ -14,13 +14,13 @@ package gsmtp
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"net/smtp"
 	"strings"
 )
 
-// SMTP is the structure for smtp connection
+// SMTP is the structure for smtp connection.
 type SMTP struct {
 	Address  string
 	Username string
@@ -42,11 +42,11 @@ var (
 )
 
 // SendMail connects to the server at addr, switches to TLS if
-// possible, authenticates with the optional mechanism a if possible,
-// and then sends an email from address <from>, to addresses <to>, with
+// possible, authenticates with the optional mechanism an if possible,
+// and then sends an email from address `from`, to addresses `to`, with
 // message msg.
 //
-// The parameter <contentType> specifies the content type of the mail, eg: html.
+// The parameter `contentType` specifies the content type of the mail, eg: html.
 func (s *SMTP) SendMail(from, tos, subject, body string, contentType ...string) error {
 	var (
 		server  = ""

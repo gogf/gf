@@ -9,16 +9,17 @@ package gtrace
 
 import (
 	"context"
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/net/gipv4"
-	"github.com/gogf/gf/os/gcmd"
+	"os"
+	"strings"
+
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/net/gipv4"
+	"github.com/gogf/gf/v2/os/gcmd"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
-	"os"
-	"strings"
 )
 
 const (

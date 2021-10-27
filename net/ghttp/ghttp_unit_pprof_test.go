@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/frame/g"
-	. "github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/frame/g"
+	. "github.com/gogf/gf/v2/test/gtest"
 )
 
 func TestServer_EnablePProf(t *testing.T) {
@@ -30,27 +30,27 @@ func TestServer_EnablePProf(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		r, err := client.Get("/pprof/index")
+		r, err := client.Get(ctx, "/pprof/index")
 		Assert(err, nil)
 		Assert(r.StatusCode, 200)
 		r.Close()
 
-		r, err = client.Get("/pprof/cmdline")
+		r, err = client.Get(ctx, "/pprof/cmdline")
 		Assert(err, nil)
 		Assert(r.StatusCode, 200)
 		r.Close()
 
-		//r, err = client.Get("/pprof/profile")
+		//r, err = client.Get(ctx, "/pprof/profile")
 		//Assert(err, nil)
 		//Assert(r.StatusCode, 200)
 		//r.Close()
 
-		r, err = client.Get("/pprof/symbol")
+		r, err = client.Get(ctx, "/pprof/symbol")
 		Assert(err, nil)
 		Assert(r.StatusCode, 200)
 		r.Close()
 
-		r, err = client.Get("/pprof/trace")
+		r, err = client.Get(ctx, "/pprof/trace")
 		Assert(err, nil)
 		Assert(r.StatusCode, 200)
 		r.Close()

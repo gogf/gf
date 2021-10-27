@@ -7,13 +7,14 @@
 package ghttp
 
 import (
-	"github.com/gogf/gf/os/gfile"
+	"context"
+	"github.com/gogf/gf/v2/os/gfile"
 	"strings"
 	"time"
 
-	"github.com/gogf/gf/os/gproc"
-	"github.com/gogf/gf/os/gtimer"
-	"github.com/gogf/gf/os/gview"
+	"github.com/gogf/gf/v2/os/gproc"
+	"github.com/gogf/gf/v2/os/gtimer"
+	"github.com/gogf/gf/v2/os/gview"
 )
 
 // utilAdmin is the controller for administration.
@@ -44,16 +45,19 @@ func (p *utilAdmin) Index(r *Request) {
 
 // Restart restarts all the servers in the process.
 func (p *utilAdmin) Restart(r *Request) {
-	var err error = nil
+	var (
+		ctx = r.Context()
+		err error
+	)
 	// Custom start binary path when this process exits.
-	path := r.GetQueryString("newExeFilePath")
+	path := r.GetQuery("newExeFilePath").String()
 	if path == "" {
 		path = gfile.SelfPath()
 	}
 	if len(path) > 0 {
-		err = RestartAllServer(path)
+		err = RestartAllServer(ctx, path)
 	} else {
-		err = RestartAllServer()
+		err = RestartAllServer(ctx)
 	}
 	if err == nil {
 		r.Response.WriteExit("server restarted")
@@ -73,7 +77,7 @@ func (p *utilAdmin) Shutdown(r *Request) {
 }
 
 // EnableAdmin enables the administration feature for the process.
-// The optional parameter <pattern> specifies the URI for the administration page.
+// The optional parameter `pattern` specifies the URI for the administration page.
 func (s *Server) EnableAdmin(pattern ...string) {
 	p := "/debug/admin"
 	if len(pattern) > 0 {
@@ -84,10 +88,13 @@ func (s *Server) EnableAdmin(pattern ...string) {
 
 // Shutdown shuts down current server.
 func (s *Server) Shutdown() error {
+	var (
+		ctx = context.TODO()
+	)
 	// Only shut down current servers.
 	// It may have multiple underlying http servers.
 	for _, v := range s.servers {
-		v.close()
+		v.close(ctx)
 	}
 	return nil
 }

@@ -12,9 +12,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/gogf/gf/os/gres"
+	"github.com/gogf/gf/v2/os/gres"
 
-	"github.com/gogf/gf/os/gfile"
+	"github.com/gogf/gf/v2/os/gfile"
 )
 
 // Response is the http response manager.
@@ -95,7 +95,7 @@ func (r *Response) ServeFileDownload(path string, name ...string) {
 }
 
 // RedirectTo redirects client to another location.
-// The optional parameter <code> specifies the http status code for redirecting,
+// The optional parameter `code` specifies the http status code for redirecting,
 // which commonly can be 301 or 302. It's 302 in default.
 func (r *Response) RedirectTo(location string, code ...int) {
 	r.Header().Set("Location", location)
@@ -108,7 +108,7 @@ func (r *Response) RedirectTo(location string, code ...int) {
 }
 
 // RedirectBack redirects client back to referer.
-// The optional parameter <code> specifies the http status code for redirecting,
+// The optional parameter `code` specifies the http status code for redirecting,
 // which commonly can be 301 or 302. It's 302 in default.
 func (r *Response) RedirectBack(code ...int) {
 	r.RedirectTo(r.Request.GetReferer(), code...)
@@ -129,7 +129,7 @@ func (r *Response) BufferLength() int {
 	return r.buffer.Len()
 }
 
-// SetBuffer overwrites the buffer with <data>.
+// SetBuffer overwrites the buffer with `data`.
 func (r *Response) SetBuffer(data []byte) {
 	r.buffer.Reset()
 	r.buffer.Write(data)

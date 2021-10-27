@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/gogf/gf/container/gring"
+	"github.com/gogf/gf/v2/container/gring"
 )
 
 func main() {

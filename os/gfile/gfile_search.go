@@ -9,15 +9,15 @@ package gfile
 import (
 	"bytes"
 	"fmt"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 
-	"github.com/gogf/gf/container/garray"
+	"github.com/gogf/gf/v2/container/garray"
 )
 
-// Search searches file by name <name> in following paths with priority:
+// Search searches file by name `name` in following paths with priority:
 // prioritySearchPaths, Pwd()、SelfDir()、MainPkgPath().
-// It returns the absolute file path of <name> if found, or en empty string if not found.
+// It returns the absolute file path of `name` if found, or en empty string if not found.
 func Search(name string, prioritySearchPaths ...string) (realPath string, err error) {
 	// Check if it's a absolute path.
 	realPath = RealPath(name)

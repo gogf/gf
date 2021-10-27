@@ -10,15 +10,15 @@ package ghttp_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/debug/gdebug"
+	"github.com/gogf/gf/v2/debug/gdebug"
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/text/gstr"
 
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_Static_ServerRoot(t *testing.T) {
@@ -37,8 +37,8 @@ func Test_Static_ServerRoot(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "index")
-		t.Assert(client.GetContent("/index.htm"), "index")
+		t.Assert(client.GetContent(ctx, "/"), "index")
+		t.Assert(client.GetContent(ctx, "/index.htm"), "index")
 	})
 
 	// SetServerRoot with relative path
@@ -56,8 +56,8 @@ func Test_Static_ServerRoot(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "index")
-		t.Assert(client.GetContent("/index.htm"), "index")
+		t.Assert(client.GetContent(ctx, "/"), "index")
+		t.Assert(client.GetContent(ctx, "/index.htm"), "index")
 	})
 }
 
@@ -73,12 +73,12 @@ func Test_Static_ServerRoot_Security(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "index")
-		t.Assert(client.GetContent("/index.htm"), "Not Found")
-		t.Assert(client.GetContent("/index.html"), "index")
-		t.Assert(client.GetContent("/test.html"), "test")
-		t.Assert(client.GetContent("/../main.html"), "Not Found")
-		t.Assert(client.GetContent("/..%2Fmain.html"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/"), "index")
+		t.Assert(client.GetContent(ctx, "/index.htm"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/index.html"), "index")
+		t.Assert(client.GetContent(ctx, "/test.html"), "test")
+		t.Assert(client.GetContent(ctx, "/../main.html"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/..%2Fmain.html"), "Not Found")
 	})
 }
 
@@ -97,9 +97,9 @@ func Test_Static_Folder_Forbidden(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "Forbidden")
-		t.Assert(client.GetContent("/index.html"), "Not Found")
-		t.Assert(client.GetContent("/test.html"), "test")
+		t.Assert(client.GetContent(ctx, "/"), "Forbidden")
+		t.Assert(client.GetContent(ctx, "/index.html"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/test.html"), "test")
 	})
 }
 
@@ -119,10 +119,10 @@ func Test_Static_IndexFolder(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.AssertNE(client.GetContent("/"), "Forbidden")
-		t.AssertNE(gstr.Pos(client.GetContent("/"), `<a href="/test.html"`), -1)
-		t.Assert(client.GetContent("/index.html"), "Not Found")
-		t.Assert(client.GetContent("/test.html"), "test")
+		t.AssertNE(client.GetContent(ctx, "/"), "Forbidden")
+		t.AssertNE(gstr.Pos(client.GetContent(ctx, "/"), `<a href="/test.html"`), -1)
+		t.Assert(client.GetContent(ctx, "/index.html"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/test.html"), "test")
 	})
 }
 
@@ -142,9 +142,9 @@ func Test_Static_IndexFiles1(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "index")
-		t.Assert(client.GetContent("/index.html"), "index")
-		t.Assert(client.GetContent("/test.html"), "test")
+		t.Assert(client.GetContent(ctx, "/"), "index")
+		t.Assert(client.GetContent(ctx, "/index.html"), "index")
+		t.Assert(client.GetContent(ctx, "/test.html"), "test")
 	})
 }
 
@@ -164,9 +164,9 @@ func Test_Static_IndexFiles2(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "test")
-		t.Assert(client.GetContent("/index.html"), "Not Found")
-		t.Assert(client.GetContent("/test.html"), "test")
+		t.Assert(client.GetContent(ctx, "/"), "test")
+		t.Assert(client.GetContent(ctx, "/index.html"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/test.html"), "test")
 	})
 }
 
@@ -188,8 +188,8 @@ func Test_Static_AddSearchPath1(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "Forbidden")
-		t.Assert(client.GetContent("/test.html"), "test")
+		t.Assert(client.GetContent(ctx, "/"), "Forbidden")
+		t.Assert(client.GetContent(ctx, "/test.html"), "test")
 	})
 }
 
@@ -212,8 +212,8 @@ func Test_Static_AddSearchPath2(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "Forbidden")
-		t.Assert(client.GetContent("/test.html"), "test1")
+		t.Assert(client.GetContent(ctx, "/"), "Forbidden")
+		t.Assert(client.GetContent(ctx, "/test.html"), "test1")
 	})
 }
 
@@ -236,9 +236,9 @@ func Test_Static_AddStaticPath(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "Forbidden")
-		t.Assert(client.GetContent("/test.html"), "test1")
-		t.Assert(client.GetContent("/my-test/test.html"), "test2")
+		t.Assert(client.GetContent(ctx, "/"), "Forbidden")
+		t.Assert(client.GetContent(ctx, "/test.html"), "test1")
+		t.Assert(client.GetContent(ctx, "/my-test/test.html"), "test2")
 	})
 }
 
@@ -261,9 +261,9 @@ func Test_Static_AddStaticPath_Priority(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "Forbidden")
-		t.Assert(client.GetContent("/test.html"), "test1")
-		t.Assert(client.GetContent("/test/test.html"), "test2")
+		t.Assert(client.GetContent(ctx, "/"), "Forbidden")
+		t.Assert(client.GetContent(ctx, "/test.html"), "test1")
+		t.Assert(client.GetContent(ctx, "/test/test.html"), "test2")
 	})
 }
 
@@ -288,11 +288,11 @@ func Test_Static_Rewrite(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "Forbidden")
-		t.Assert(client.GetContent("/test.html"), "test1")
-		t.Assert(client.GetContent("/test1.html"), "test1")
-		t.Assert(client.GetContent("/test2.html"), "test2")
-		t.Assert(client.GetContent("/my-test1"), "test1")
-		t.Assert(client.GetContent("/my-test2"), "test2")
+		t.Assert(client.GetContent(ctx, "/"), "Forbidden")
+		t.Assert(client.GetContent(ctx, "/test.html"), "test1")
+		t.Assert(client.GetContent(ctx, "/test1.html"), "test1")
+		t.Assert(client.GetContent(ctx, "/test2.html"), "test2")
+		t.Assert(client.GetContent(ctx, "/my-test1"), "test1")
+		t.Assert(client.GetContent(ctx, "/my-test2"), "test2")
 	})
 }
