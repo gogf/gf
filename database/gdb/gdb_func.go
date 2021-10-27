@@ -58,8 +58,6 @@ type iTableName interface {
 
 const (
 	OrmTagForStruct    = "orm"
-	OrmTagForUnique    = "unique"
-	OrmTagForPrimary   = "primary"
 	OrmTagForTable     = "table"
 	OrmTagForWith      = "with"
 	OrmTagForWithWhere = "where"
@@ -346,44 +344,6 @@ func getFieldsFromStructOrMap(structOrMap interface{}) (fields []string) {
 		fields = gutil.Keys(structOrMap)
 	}
 	return
-}
-
-// GetWhereConditionOfStruct returns the where condition sql and arguments by given struct pointer.
-// This function automatically retrieves primary or unique field and its attribute value as condition.
-func GetWhereConditionOfStruct(pointer interface{}) (where string, args []interface{}, err error) {
-	tagField, err := structs.TagFields(pointer, []string{OrmTagForStruct})
-	if err != nil {
-		return "", nil, err
-	}
-	array := ([]string)(nil)
-	for _, field := range tagField {
-		array = strings.Split(field.TagValue, ",")
-		if len(array) > 1 && gstr.InArray([]string{OrmTagForUnique, OrmTagForPrimary}, array[1]) {
-			return array[0], []interface{}{field.Value.Interface()}, nil
-		}
-		if len(where) > 0 {
-			where += " AND "
-		}
-		where += field.TagValue + "=?"
-		args = append(args, field.Value.Interface())
-	}
-	return
-}
-
-// GetPrimaryKey retrieves and returns primary key field name from given struct.
-func GetPrimaryKey(pointer interface{}) (string, error) {
-	tagField, err := structs.TagFields(pointer, []string{OrmTagForStruct})
-	if err != nil {
-		return "", err
-	}
-	array := ([]string)(nil)
-	for _, field := range tagField {
-		array = strings.Split(field.TagValue, ",")
-		if len(array) > 1 && array[1] == OrmTagForPrimary {
-			return array[0], nil
-		}
-	}
-	return "", nil
 }
 
 // GetPrimaryKeyCondition returns a new where condition by primary field name.
