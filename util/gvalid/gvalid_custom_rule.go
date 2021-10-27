@@ -13,7 +13,7 @@ import "context"
 // The parameter `rule` specifies the validation rule string, like "required", "between:1,100", etc.
 // The parameter `value` specifies the value for this rule to validate.
 // The parameter `message` specifies the custom error message or configured i18n message for this rule.
-// The parameter `data` specifies the `data` which is passed to the Validator. It might be type of map/struct or a nil value.
+// The parameter `data` specifies the `data` which is passed to the Validator. It might be a type of map/struct or a nil value.
 // You can ignore the parameter `data` if you do not really need it in your custom validation rule.
 type RuleFunc func(ctx context.Context, rule string, value interface{}, message string, data interface{}) error
 

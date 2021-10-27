@@ -190,6 +190,50 @@ func TestOpenApiV3_Add_EmptyReqAndRes(t *testing.T) {
 	})
 }
 
+func TestOpenApiV3_Add_AutoDetectIn(t *testing.T) {
+	type Req struct {
+		gmeta.Meta `method:"get" tags:"default"`
+		Name       string
+		Product    string
+		Region     string
+	}
+
+	type Res struct {
+		gmeta.Meta `description:"Demo Response Struct"`
+	}
+
+	f := func(ctx context.Context, req *Req) (res *Res, err error) {
+		return
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err  error
+			oai  = goai.New()
+			path = `/test/{product}/{name}`
+		)
+		err = oai.Add(goai.AddInput{
+			Path:   path,
+			Method: goai.HttpMethodGet,
+			Object: f,
+		})
+		t.AssertNil(err)
+
+		fmt.Println(oai.String())
+
+		t.Assert(len(oai.Components.Schemas), 2)
+		t.Assert(len(oai.Paths), 1)
+		t.AssertNE(oai.Paths[path].Get, nil)
+		t.Assert(len(oai.Paths[path].Get.Parameters), 3)
+		t.Assert(oai.Paths[path].Get.Parameters[0].Value.Name, `Name`)
+		t.Assert(oai.Paths[path].Get.Parameters[0].Value.In, goai.ParameterInPath)
+		t.Assert(oai.Paths[path].Get.Parameters[1].Value.Name, `Product`)
+		t.Assert(oai.Paths[path].Get.Parameters[1].Value.In, goai.ParameterInPath)
+		t.Assert(oai.Paths[path].Get.Parameters[2].Value.Name, `Region`)
+		t.Assert(oai.Paths[path].Get.Parameters[2].Value.In, goai.ParameterInQuery)
+	})
+}
+
 func TestOpenApiV3_CommonRequest(t *testing.T) {
 	type CommonRequest struct {
 		Code    int         `json:"code"    description:"Error code"`

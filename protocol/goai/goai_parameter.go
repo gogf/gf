@@ -7,6 +7,7 @@
 package goai
 
 import (
+	"fmt"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/json"
@@ -41,7 +42,7 @@ type ParameterRef struct {
 	Value *Parameter
 }
 
-func (oai *OpenApiV3) newParameterRefWithStructMethod(field *structs.Field, method string) (*ParameterRef, error) {
+func (oai *OpenApiV3) newParameterRefWithStructMethod(field *structs.Field, path, method string) (*ParameterRef, error) {
 	var (
 		tagMap    = field.TagMap()
 		parameter = &Parameter{
@@ -58,13 +59,18 @@ func (oai *OpenApiV3) newParameterRefWithStructMethod(field *structs.Field, meth
 		}
 	}
 	if parameter.In == "" {
-		// Default the parameter input to "query" if method is "GET/DELETE".
-		switch gstr.ToUpper(method) {
-		case HttpMethodGet, HttpMethodDelete:
-			parameter.In = ParameterInQuery
+		// Automatically detect its "in" attribute.
+		if gstr.ContainsI(path, fmt.Sprintf(`{%s}`, parameter.Name)) {
+			parameter.In = ParameterInPath
+		} else {
+			// Default the parameter input to "query" if method is "GET/DELETE".
+			switch gstr.ToUpper(method) {
+			case HttpMethodGet, HttpMethodDelete:
+				parameter.In = ParameterInQuery
 
-		default:
-			return nil, nil
+			default:
+				return nil, nil
+			}
 		}
 	}
 
