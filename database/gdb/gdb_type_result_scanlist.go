@@ -68,12 +68,20 @@ func doScanList(model *Model, result Result, listPointer interface{}, bindToAttr
 		reflectKind = reflectValue.Kind()
 	}
 	if reflectKind != reflect.Ptr {
-		return gerror.NewCodef(gcode.CodeInvalidParameter, "listPointer should be type of *[]struct/*[]*struct, but got: %v", reflectKind)
+		return gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			"listPointer should be type of *[]struct/*[]*struct, but got: %v",
+			reflectKind,
+		)
 	}
 	reflectValue = reflectValue.Elem()
 	reflectKind = reflectValue.Kind()
 	if reflectKind != reflect.Slice && reflectKind != reflect.Array {
-		return gerror.NewCodef(gcode.CodeInvalidParameter, "listPointer should be type of *[]struct/*[]*struct, but got: %v", reflectKind)
+		return gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			"listPointer should be type of *[]struct/*[]*struct, but got: %v",
+			reflectKind,
+		)
 	}
 	length := len(result)
 	if length == 0 {
@@ -146,14 +154,21 @@ func doScanList(model *Model, result Result, listPointer interface{}, bindToAttr
 				relationResultFieldName = key
 			}
 		} else {
-			return gerror.NewCode(gcode.CodeInvalidParameter, `parameter relationKV should be format of "ResultFieldName:BindToAttrName"`)
+			return gerror.NewCode(
+				gcode.CodeInvalidParameter,
+				`parameter relationKV should be format of "ResultFieldName:BindToAttrName"`,
+			)
 		}
 		if relationResultFieldName != "" {
 			// Note that the value might be type of slice.
 			relationDataMap = result.MapKeyValue(relationResultFieldName)
 		}
 		if len(relationDataMap) == 0 {
-			return gerror.NewCodef(gcode.CodeInvalidParameter, `cannot find the relation data map, maybe invalid relation given "%v"`, relationKV)
+			return gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				`cannot find the relation data map, maybe invalid relation given "%v"`,
+				relationKV,
+			)
 		}
 	}
 	// Bind to target attribute.

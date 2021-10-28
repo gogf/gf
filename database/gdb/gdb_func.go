@@ -58,6 +58,8 @@ type iTableName interface {
 
 const (
 	OrmTagForStruct    = "orm"
+	OrmTagForUnique    = "unique"
+	OrmTagForPrimary   = "primary"
 	OrmTagForTable     = "table"
 	OrmTagForWith      = "with"
 	OrmTagForWithWhere = "where"
@@ -400,26 +402,22 @@ func formatSql(sql string, args []interface{}) (newSql string, newArgs []interfa
 }
 
 type formatWhereInput struct {
-	Where     interface{}
-	Args      []interface{}
-	OmitNil   bool
-	OmitEmpty bool
-	Schema    string
-	Table     string
+	Where                 interface{}
+	Args                  []interface{}
+	OmitNil               bool
+	OmitEmpty             bool
+	IgnoreEmptySliceWhere bool
+	Schema                string
+	Table                 string
 }
 
 // formatWhere formats where statement and its arguments for `Where` and `Having` statements.
 func formatWhere(db DB, in formatWhereInput) (newWhere string, newArgs []interface{}) {
 	var (
-		buffer       = bytes.NewBuffer(nil)
-		reflectValue = reflect.ValueOf(in.Where)
-		reflectKind  = reflectValue.Kind()
+		buffer      = bytes.NewBuffer(nil)
+		reflectInfo = utils.OriginValueAndKind(in.Where)
 	)
-	for reflectKind == reflect.Ptr {
-		reflectValue = reflectValue.Elem()
-		reflectKind = reflectValue.Kind()
-	}
-	switch reflectKind {
+	switch reflectInfo.OriginKind {
 	case reflect.Array, reflect.Slice:
 		newArgs = formatWhereInterfaces(db, gconv.Interfaces(in.Where), buffer, newArgs)
 
@@ -433,7 +431,14 @@ func formatWhere(db DB, in formatWhereInput) (newWhere string, newArgs []interfa
 					continue
 				}
 			}
-			newArgs = formatWhereKeyValue(db, buffer, newArgs, key, value)
+			newArgs = formatWhereKeyValue(formatWhereKeyValueInput{
+				Db:                    db,
+				Buffer:                buffer,
+				Args:                  newArgs,
+				Key:                   key,
+				Value:                 value,
+				IgnoreEmptySliceWhere: in.IgnoreEmptySliceWhere,
+			})
 		}
 
 	case reflect.Struct:
@@ -452,14 +457,21 @@ func formatWhere(db DB, in formatWhereInput) (newWhere string, newArgs []interfa
 						return true
 					}
 				}
-				newArgs = formatWhereKeyValue(db, buffer, newArgs, ketStr, value)
+				newArgs = formatWhereKeyValue(formatWhereKeyValueInput{
+					Db:                    db,
+					Buffer:                buffer,
+					Args:                  newArgs,
+					Key:                   ketStr,
+					Value:                 value,
+					IgnoreEmptySliceWhere: in.IgnoreEmptySliceWhere,
+				})
 				return true
 			})
 			break
 		}
 		// Automatically mapping and filtering the struct attribute.
 		var (
-			reflectType = reflectValue.Type()
+			reflectType = reflectInfo.OriginValue.Type()
 			structField reflect.StructField
 		)
 		data := DataToMapDeep(in.Where)
@@ -477,7 +489,14 @@ func formatWhere(db DB, in formatWhereInput) (newWhere string, newArgs []interfa
 				if in.OmitEmpty && empty.IsEmpty(foundValue) {
 					continue
 				}
-				newArgs = formatWhereKeyValue(db, buffer, newArgs, foundKey, foundValue)
+				newArgs = formatWhereKeyValue(formatWhereKeyValueInput{
+					Db:                    db,
+					Buffer:                buffer,
+					Args:                  newArgs,
+					Key:                   foundKey,
+					Value:                 foundValue,
+					IgnoreEmptySliceWhere: in.IgnoreEmptySliceWhere,
+				})
 			}
 		}
 
@@ -487,6 +506,15 @@ func formatWhere(db DB, in formatWhereInput) (newWhere string, newArgs []interfa
 			i        = 0
 			whereStr = gconv.String(in.Where)
 		)
+		// Eg:
+		// Where("id", []int{}).All()                       -> SELECT xxx FROM xxx WHERE 0=1
+		// IgnoreEmptySliceWhere().Where("id", []int{}).One() -> SELECT xxx FROM xxx
+		if in.IgnoreEmptySliceWhere && len(in.Args) == 1 && utils.IsArray(in.Args[0]) {
+			if gstr.Count(whereStr, "?") == 0 && utils.IsEmpty(in.Args[0]) {
+				in.Args = in.Args[:0]
+				break
+			}
+		}
 		for {
 			if i >= len(in.Args) {
 				break
@@ -517,7 +545,9 @@ func formatWhere(db DB, in formatWhereInput) (newWhere string, newArgs []interfa
 	if buffer.Len() == 0 {
 		return "", in.Args
 	}
-	newArgs = append(newArgs, in.Args...)
+	if len(in.Args) > 0 {
+		newArgs = append(newArgs, in.Args...)
+	}
 	newWhere = buffer.String()
 	if len(newArgs) > 0 {
 		if gstr.Pos(newWhere, "?") == -1 {
@@ -577,77 +607,100 @@ func formatWhereInterfaces(db DB, where []interface{}, buffer *bytes.Buffer, new
 	return newArgs
 }
 
+type formatWhereKeyValueInput struct {
+	Db                    DB
+	Buffer                *bytes.Buffer
+	Args                  []interface{}
+	Key                   string
+	Value                 interface{}
+	IgnoreEmptySliceWhere bool
+}
+
 // formatWhereKeyValue handles each key-value pair of the parameter map.
-func formatWhereKeyValue(db DB, buffer *bytes.Buffer, newArgs []interface{}, key string, value interface{}) []interface{} {
-	quotedKey := db.GetCore().QuoteWord(key)
-	if buffer.Len() > 0 {
-		buffer.WriteString(" AND ")
-	}
+func formatWhereKeyValue(in formatWhereKeyValueInput) (newArgs []interface{}) {
+	quotedKey := in.Db.GetCore().QuoteWord(in.Key)
 	// If the value is type of slice, and there's only one '?' holder in
 	// the key string, it automatically adds '?' holder chars according to its arguments count
 	// and converts it to "IN" statement.
 	var (
-		rv   = reflect.ValueOf(value)
-		kind = rv.Kind()
+		reflectValue = reflect.ValueOf(in.Value)
+		reflectKind  = reflectValue.Kind()
 	)
-	switch kind {
+	switch reflectKind {
+	// Slice argument.
 	case reflect.Slice, reflect.Array:
 		count := gstr.Count(quotedKey, "?")
-		if count == 0 {
-			buffer.WriteString(quotedKey + " IN(?)")
-			newArgs = append(newArgs, value)
-		} else if count != rv.Len() {
-			buffer.WriteString(quotedKey)
-			newArgs = append(newArgs, value)
-		} else {
-			buffer.WriteString(quotedKey)
-			newArgs = append(newArgs, gconv.Interfaces(value)...)
+		// Eg:
+		// Where("id", []int{}).All()                       -> SELECT xxx FROM xxx WHERE 0=1
+		// IgnoreEmptySliceWhere().Where("id", []int{}).One() -> SELECT xxx FROM xxx
+		if count == 0 && reflectValue.Len() == 0 && in.IgnoreEmptySliceWhere {
+			return in.Args
 		}
+
+		if in.Buffer.Len() > 0 {
+			in.Buffer.WriteString(" AND ")
+		}
+		if count == 0 {
+			in.Buffer.WriteString(quotedKey + " IN(?)")
+			in.Args = append(in.Args, in.Value)
+		} else {
+			if count != reflectValue.Len() {
+				in.Buffer.WriteString(quotedKey)
+				in.Args = append(in.Args, in.Value)
+			} else {
+				in.Buffer.WriteString(quotedKey)
+				in.Args = append(in.Args, gconv.Interfaces(in.Value)...)
+			}
+		}
+
 	default:
-		if value == nil || empty.IsNil(rv) {
-			if gregex.IsMatchString(regularFieldNameRegPattern, key) {
+		if in.Buffer.Len() > 0 {
+			in.Buffer.WriteString(" AND ")
+		}
+		if in.Value == nil || empty.IsNil(reflectValue) {
+			if gregex.IsMatchString(regularFieldNameRegPattern, in.Key) {
 				// The key is a single field name.
-				buffer.WriteString(quotedKey + " IS NULL")
+				in.Buffer.WriteString(quotedKey + " IS NULL")
 			} else {
 				// The key may have operation chars.
-				buffer.WriteString(quotedKey)
+				in.Buffer.WriteString(quotedKey)
 			}
 		} else {
 			// It also supports "LIKE" statement, which we considers it an operator.
 			quotedKey = gstr.Trim(quotedKey)
 			if gstr.Pos(quotedKey, "?") == -1 {
-				like := " like"
+				like := " LIKE"
 				if len(quotedKey) > len(like) && gstr.Equal(quotedKey[len(quotedKey)-len(like):], like) {
 					// Eg: Where(g.Map{"name like": "john%"})
-					buffer.WriteString(quotedKey + " ?")
+					in.Buffer.WriteString(quotedKey + " ?")
 				} else if gregex.IsMatchString(lastOperatorRegPattern, quotedKey) {
 					// Eg: Where(g.Map{"age > ": 16})
-					buffer.WriteString(quotedKey + " ?")
-				} else if gregex.IsMatchString(regularFieldNameRegPattern, key) {
+					in.Buffer.WriteString(quotedKey + " ?")
+				} else if gregex.IsMatchString(regularFieldNameRegPattern, in.Key) {
 					// The key is a regular field name.
-					buffer.WriteString(quotedKey + "=?")
+					in.Buffer.WriteString(quotedKey + "=?")
 				} else {
 					// The key is not a regular field name.
 					// Eg: Where(g.Map{"age > 16": nil})
 					// Issue: https://github.com/gogf/gf/issues/765
-					if empty.IsEmpty(value) {
-						buffer.WriteString(quotedKey)
+					if empty.IsEmpty(in.Value) {
+						in.Buffer.WriteString(quotedKey)
 						break
 					} else {
-						buffer.WriteString(quotedKey + "=?")
+						in.Buffer.WriteString(quotedKey + "=?")
 					}
 				}
 			} else {
-				buffer.WriteString(quotedKey)
+				in.Buffer.WriteString(quotedKey)
 			}
-			if s, ok := value.(Raw); ok {
-				buffer.WriteString(gconv.String(s))
+			if s, ok := in.Value.(Raw); ok {
+				in.Buffer.WriteString(gconv.String(s))
 			} else {
-				newArgs = append(newArgs, value)
+				in.Args = append(in.Args, in.Value)
 			}
 		}
 	}
-	return newArgs
+	return in.Args
 }
 
 // handleArguments is an important function, which handles the sql and all its arguments
@@ -659,15 +712,8 @@ func handleArguments(sql string, args []interface{}) (newSql string, newArgs []i
 	// Handles the slice arguments.
 	if len(args) > 0 {
 		for index, arg := range args {
-			var (
-				reflectValue = reflect.ValueOf(arg)
-				reflectKind  = reflectValue.Kind()
-			)
-			for reflectKind == reflect.Ptr {
-				reflectValue = reflectValue.Elem()
-				reflectKind = reflectValue.Kind()
-			}
-			switch reflectKind {
+			reflectInfo := utils.OriginValueAndKind(arg)
+			switch reflectInfo.OriginKind {
 			case reflect.Slice, reflect.Array:
 				// It does not split the type of []byte.
 				// Eg: table.Where("name = ?", []byte("john"))
@@ -676,7 +722,7 @@ func handleArguments(sql string, args []interface{}) (newSql string, newArgs []i
 					continue
 				}
 
-				if reflectValue.Len() == 0 {
+				if reflectInfo.OriginValue.Len() == 0 {
 					// Empty slice argument, it converts the sql to a false sql.
 					// Eg:
 					// Query("select * from xxx where id in(?)", g.Slice{}) -> select * from xxx where 0=1
@@ -690,15 +736,15 @@ func handleArguments(sql string, args []interface{}) (newSql string, newArgs []i
 						}
 					}
 				} else {
-					for i := 0; i < reflectValue.Len(); i++ {
-						newArgs = append(newArgs, reflectValue.Index(i).Interface())
+					for i := 0; i < reflectInfo.OriginValue.Len(); i++ {
+						newArgs = append(newArgs, reflectInfo.OriginValue.Index(i).Interface())
 					}
 				}
 
 				// If the '?' holder count equals the length of the slice,
 				// it does not implement the arguments splitting logic.
 				// Eg: db.Query("SELECT ?+?", g.Slice{1, 2})
-				if len(args) == 1 && gstr.Count(newSql, "?") == reflectValue.Len() {
+				if len(args) == 1 && gstr.Count(newSql, "?") == reflectInfo.OriginValue.Len() {
 					break
 				}
 				// counter is used to finding the inserting position for the '?' holder.
@@ -713,8 +759,8 @@ func handleArguments(sql string, args []interface{}) (newSql string, newArgs []i
 					counter++
 					if counter == index+insertHolderCount+1 {
 						replaced = true
-						insertHolderCount += reflectValue.Len() - 1
-						return "?" + strings.Repeat(",?", reflectValue.Len()-1)
+						insertHolderCount += reflectInfo.OriginValue.Len() - 1
+						return "?" + strings.Repeat(",?", reflectInfo.OriginValue.Len()-1)
 					}
 					return s
 				})
@@ -781,17 +827,13 @@ func FormatSqlWithArgs(sql string, args []interface{}) string {
 					return "null"
 				}
 				var (
-					rv   = reflect.ValueOf(args[index])
-					kind = rv.Kind()
+					reflectInfo = utils.OriginValueAndKind(args[index])
 				)
-				if kind == reflect.Ptr {
-					if rv.IsNil() || !rv.IsValid() {
-						return "null"
-					}
-					rv = rv.Elem()
-					kind = rv.Kind()
+				if reflectInfo.OriginKind == reflect.Ptr &&
+					(reflectInfo.OriginValue.IsNil() || !reflectInfo.OriginValue.IsValid()) {
+					return "null"
 				}
-				switch kind {
+				switch reflectInfo.OriginKind {
 				case reflect.String, reflect.Map, reflect.Slice, reflect.Array:
 					return `'` + gstr.QuoteMeta(gconv.String(args[index]), `'`) + `'`
 

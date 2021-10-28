@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/utils"
 	"reflect"
 
 	"github.com/gogf/gf/v2/container/gset"
@@ -293,24 +294,15 @@ func (m *Model) doStructs(pointer interface{}, where ...interface{}) error {
 // err   := db.Model("user").Scan(&users)
 func (m *Model) Scan(pointer interface{}, where ...interface{}) error {
 	var (
-		reflectValue reflect.Value
-		reflectKind  reflect.Kind
+		reflectInfo = utils.OriginTypeAndKind(pointer)
 	)
-	if v, ok := pointer.(reflect.Value); ok {
-		reflectValue = v
-	} else {
-		reflectValue = reflect.ValueOf(pointer)
+	if reflectInfo.InputKind != reflect.Ptr {
+		return gerror.NewCode(
+			gcode.CodeInvalidParameter,
+			`the parameter "pointer" for function Scan should type of pointer`,
+		)
 	}
-
-	reflectKind = reflectValue.Kind()
-	if reflectKind != reflect.Ptr {
-		return gerror.NewCode(gcode.CodeInvalidParameter, `the parameter "pointer" for function Scan should type of pointer`)
-	}
-	for reflectKind == reflect.Ptr {
-		reflectValue = reflectValue.Elem()
-		reflectKind = reflectValue.Kind()
-	}
-	switch reflectKind {
+	switch reflectInfo.OriginKind {
 	case reflect.Slice, reflect.Array:
 		return m.doStructs(pointer, where...)
 

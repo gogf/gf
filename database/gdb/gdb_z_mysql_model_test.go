@@ -3676,6 +3676,68 @@ func Test_Model_FieldAvg(t *testing.T) {
 	})
 }
 
+func Test_Model_IgnoreEmptySliceWhere(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	// Key-Value where.
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Where("id", g.Slice{1, 2, 3}).Count()
+		t.AssertNil(err)
+		t.Assert(count, 3)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Where("id", g.Slice{}).Count()
+		t.AssertNil(err)
+		t.Assert(count, 0)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).IgnoreEmptySliceWhere().Where("id", g.Slice{}).Count()
+		t.AssertNil(err)
+		t.Assert(count, TableSize)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Where("id", g.Slice{}).IgnoreEmptySliceWhere().Count()
+		t.AssertNil(err)
+		t.Assert(count, TableSize)
+	})
+	// Struct Where.
+	gtest.C(t, func(t *gtest.T) {
+		type Input struct {
+			Id []int
+		}
+		count, err := db.Model(table).Where(Input{}).Count()
+		t.AssertNil(err)
+		t.Assert(count, 0)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Input struct {
+			Id []int
+		}
+		count, err := db.Model(table).Where(Input{}).IgnoreEmptySliceWhere().Count()
+		t.AssertNil(err)
+		t.Assert(count, TableSize)
+	})
+	// Map Where.
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Where(g.Map{
+			"id": []int{},
+		}).Count()
+		t.AssertNil(err)
+		t.Assert(count, 0)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Input struct {
+			Id []int
+		}
+		count, err := db.Model(table).Where(g.Map{
+			"id": []int{},
+		}).IgnoreEmptySliceWhere().Count()
+		t.AssertNil(err)
+		t.Assert(count, TableSize)
+	})
+}
+
 // https://github.com/gogf/gf/issues/1387
 func Test_Model_GTime_DefaultValue(t *testing.T) {
 	table := createTable()
