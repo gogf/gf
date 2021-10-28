@@ -260,7 +260,7 @@ func (j *Json) convertValue(value interface{}) interface{} {
 		return value
 	default:
 		var (
-			reflectInfo = utils.OriginTypeAndKind(value)
+			reflectInfo = utils.OriginValueAndKind(value)
 		)
 		switch reflectInfo.OriginKind {
 		case reflect.Array:

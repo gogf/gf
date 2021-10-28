@@ -69,7 +69,7 @@ func NewWithOptions(data interface{}, options Options) *Json {
 		}
 	default:
 		var (
-			reflectInfo = utils.OriginTypeAndKind(data)
+			reflectInfo = utils.OriginValueAndKind(data)
 		)
 		switch reflectInfo.OriginKind {
 		case reflect.Slice, reflect.Array:
