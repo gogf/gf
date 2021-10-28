@@ -196,20 +196,26 @@ func (c *Core) GetStructs(ctx context.Context, pointer interface{}, sql string, 
 // the conversion. If parameter `pointer` is type of slice, it calls GetStructs internally
 // for conversion.
 func (c *Core) GetScan(ctx context.Context, pointer interface{}, sql string, args ...interface{}) error {
-	t := reflect.TypeOf(pointer)
-	k := t.Kind()
-	if k != reflect.Ptr {
-		return gerror.NewCodef(gcode.CodeInvalidParameter, "params should be type of pointer, but got: %v", k)
+	reflectInfo := utils.OriginTypeAndKind(pointer)
+	if reflectInfo.InputKind != reflect.Ptr {
+		return gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			"params should be type of pointer, but got: %v",
+			reflectInfo.InputKind,
+		)
 	}
-	k = t.Elem().Kind()
-	switch k {
+	switch reflectInfo.OriginKind {
 	case reflect.Array, reflect.Slice:
 		return c.db.GetCore().GetStructs(ctx, pointer, sql, args...)
 
 	case reflect.Struct:
 		return c.db.GetCore().GetStruct(ctx, pointer, sql, args...)
 	}
-	return gerror.NewCodef(gcode.CodeInvalidParameter, "element type should be type of struct/slice, unsupported: %v", k)
+	return gerror.NewCodef(
+		gcode.CodeInvalidParameter,
+		`in valid parameter type "%v", of which element type should be type of struct/slice`,
+		reflectInfo.InputType,
+	)
 }
 
 // GetValue queries and returns the field value from database.

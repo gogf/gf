@@ -10,6 +10,7 @@ import (
 	"context"
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gtime"
 	"reflect"
 )
@@ -23,18 +24,11 @@ type RedisConn struct {
 // Do sends a command to the server and returns the received reply.
 // It uses json.Marshal for struct/slice/map type values before committing them to redis.
 func (c *RedisConn) Do(ctx context.Context, command string, args ...interface{}) (reply *gvar.Var, err error) {
-	var (
-		reflectValue reflect.Value
-		reflectKind  reflect.Kind
-	)
 	for k, v := range args {
-		reflectValue = reflect.ValueOf(v)
-		reflectKind = reflectValue.Kind()
-		if reflectKind == reflect.Ptr {
-			reflectValue = reflectValue.Elem()
-			reflectKind = reflectValue.Kind()
-		}
-		switch reflectKind {
+		var (
+			reflectInfo = utils.OriginTypeAndKind(v)
+		)
+		switch reflectInfo.OriginKind {
 		case
 			reflect.Struct,
 			reflect.Map,

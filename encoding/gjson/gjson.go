@@ -259,13 +259,10 @@ func (j *Json) convertValue(value interface{}) interface{} {
 	case []interface{}:
 		return value
 	default:
-		rv := reflect.ValueOf(value)
-		kind := rv.Kind()
-		if kind == reflect.Ptr {
-			rv = rv.Elem()
-			kind = rv.Kind()
-		}
-		switch kind {
+		var (
+			reflectInfo = utils.OriginTypeAndKind(value)
+		)
+		switch reflectInfo.OriginKind {
 		case reflect.Array:
 			return gconv.Interfaces(value)
 		case reflect.Slice:

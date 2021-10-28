@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/utils"
 	"reflect"
 
 	"github.com/gogf/gf/v2/internal/json"
@@ -68,14 +69,9 @@ func NewWithOptions(data interface{}, options Options) *Json {
 		}
 	default:
 		var (
-			rv   = reflect.ValueOf(data)
-			kind = rv.Kind()
+			reflectInfo = utils.OriginTypeAndKind(data)
 		)
-		if kind == reflect.Ptr {
-			rv = rv.Elem()
-			kind = rv.Kind()
-		}
-		switch kind {
+		switch reflectInfo.OriginKind {
 		case reflect.Slice, reflect.Array:
 			i := interface{}(nil)
 			i = gconv.Interfaces(data)

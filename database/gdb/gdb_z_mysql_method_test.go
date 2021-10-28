@@ -668,6 +668,19 @@ func Test_DB_GetScan(t *testing.T) {
 			Passport   string
 			Password   string
 			NickName   string
+			CreateTime gtime.Time
+		}
+		var user *User
+		err := db.GetScan(ctx, &user, fmt.Sprintf("SELECT * FROM %s WHERE id=?", table), 3)
+		t.AssertNil(err)
+		t.Assert(user.NickName, "name_3")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id         int
+			Passport   string
+			Password   string
+			NickName   string
 			CreateTime *gtime.Time
 		}
 		user := new(User)
