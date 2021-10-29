@@ -7,26 +7,13 @@
 package gdb
 
 const (
-	optionOmitNil               = optionOmitNilWhere | optionOmitNilData
-	optionOmitEmpty             = optionOmitEmptyWhere | optionOmitEmptyData
-	optionOmitEmptyWhere        = 1 << iota // 8
-	optionOmitEmptyData                     // 16
-	optionOmitNilWhere                      // 32
-	optionOmitNilData                       // 64
-	optionIgnoreEmptySliceWhere             // 128
+	optionOmitNil        = optionOmitNilWhere | optionOmitNilData
+	optionOmitEmpty      = optionOmitEmptyWhere | optionOmitEmptyData
+	optionOmitEmptyWhere = 1 << iota // 8
+	optionOmitEmptyData              // 16
+	optionOmitNilWhere               // 32
+	optionOmitNilData                // 64
 )
-
-// IgnoreEmptySliceWhere sets optionIgnoreEmptySliceWhere option for the model, which automatically filers
-// the where parameters for `empty` slice values.
-//
-// Eg:
-// Where("id", []int{}).All()                       -> SELECT xxx FROM xxx WHERE 0=1
-// OmitEmptyWhereSlice().Where("id", []int{}).One() -> SELECT xxx FROM xxx
-func (m *Model) IgnoreEmptySliceWhere() *Model {
-	model := m.getModel()
-	model.option = model.option | optionIgnoreEmptySliceWhere
-	return model
-}
 
 // OmitEmpty sets optionOmitEmpty option for the model, which automatically filers
 // the data and where parameters for `empty` values.
@@ -38,6 +25,12 @@ func (m *Model) OmitEmpty() *Model {
 
 // OmitEmptyWhere sets optionOmitEmptyWhere option for the model, which automatically filers
 // the Where/Having parameters for `empty` values.
+//
+// Eg:
+// Where("id", []int{}).All()             -> SELECT xxx FROM xxx WHERE 0=1
+// Where("name", "").All()                -> SELECT xxx FROM xxx WHERE `name`=''
+// OmitEmpty().Where("id", []int{}).All() -> SELECT xxx FROM xxx
+// OmitEmpty().("name", "").All()         -> SELECT xxx FROM xxx
 func (m *Model) OmitEmptyWhere() *Model {
 	model := m.getModel()
 	model.option = model.option | optionOmitEmptyWhere

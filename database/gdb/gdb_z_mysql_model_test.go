@@ -3676,11 +3676,27 @@ func Test_Model_FieldAvg(t *testing.T) {
 	})
 }
 
-func Test_Model_IgnoreEmptySliceWhere(t *testing.T) {
+func Test_Model_OmitEmptyWhere(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
 
-	// Key-Value where.
+	// Basic type where.
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Where("id", 0).Count()
+		t.AssertNil(err)
+		t.Assert(count, 0)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).OmitEmptyWhere().Where("id", 0).Count()
+		t.AssertNil(err)
+		t.Assert(count, TableSize)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).OmitEmptyWhere().Where("id", 0).Where("nickname", "").Count()
+		t.AssertNil(err)
+		t.Assert(count, TableSize)
+	})
+	// Slice where.
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).Where("id", g.Slice{1, 2, 3}).Count()
 		t.AssertNil(err)
@@ -3692,19 +3708,20 @@ func Test_Model_IgnoreEmptySliceWhere(t *testing.T) {
 		t.Assert(count, 0)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		count, err := db.Model(table).IgnoreEmptySliceWhere().Where("id", g.Slice{}).Count()
+		count, err := db.Model(table).OmitEmptyWhere().Where("id", g.Slice{}).Count()
 		t.AssertNil(err)
 		t.Assert(count, TableSize)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		count, err := db.Model(table).Where("id", g.Slice{}).IgnoreEmptySliceWhere().Count()
+		count, err := db.Model(table).Where("id", g.Slice{}).OmitEmptyWhere().Count()
 		t.AssertNil(err)
 		t.Assert(count, TableSize)
 	})
 	// Struct Where.
 	gtest.C(t, func(t *gtest.T) {
 		type Input struct {
-			Id []int
+			Id   []int
+			Name []string
 		}
 		count, err := db.Model(table).Where(Input{}).Count()
 		t.AssertNil(err)
@@ -3712,16 +3729,18 @@ func Test_Model_IgnoreEmptySliceWhere(t *testing.T) {
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type Input struct {
-			Id []int
+			Id   []int
+			Name []string
 		}
-		count, err := db.Model(table).Where(Input{}).IgnoreEmptySliceWhere().Count()
+		count, err := db.Model(table).Where(Input{}).OmitEmptyWhere().Count()
 		t.AssertNil(err)
 		t.Assert(count, TableSize)
 	})
 	// Map Where.
 	gtest.C(t, func(t *gtest.T) {
 		count, err := db.Model(table).Where(g.Map{
-			"id": []int{},
+			"id":       []int{},
+			"nickname": []string{},
 		}).Count()
 		t.AssertNil(err)
 		t.Assert(count, 0)
@@ -3732,7 +3751,7 @@ func Test_Model_IgnoreEmptySliceWhere(t *testing.T) {
 		}
 		count, err := db.Model(table).Where(g.Map{
 			"id": []int{},
-		}).IgnoreEmptySliceWhere().Count()
+		}).OmitEmptyWhere().Count()
 		t.AssertNil(err)
 		t.Assert(count, TableSize)
 	})
