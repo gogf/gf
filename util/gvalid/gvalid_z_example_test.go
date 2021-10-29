@@ -10,14 +10,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/gogf/gf/v2/os/gctx"
-	"math"
-	"reflect"
-
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gvalid"
+	"math"
+	"reflect"
 )
 
 func ExampleCheckMap() {
@@ -275,4 +274,256 @@ func ExampleValidator_CheckStruct() {
 
 	// Output:
 	// [map[Type:map[required:请选择用户类型]]]
+}
+
+func ExampleValidator_Required() {
+	type BizReq struct {
+		Id   uint   `v:"required"`
+		Name string `v:"required"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Id: 1,
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Println(err)
+	}
+
+	// Output:
+	// The Name field is required
+}
+
+func ExampleValidator_RequiredIf() {
+	type BizReq struct {
+		Id          uint   `v:"required" dc:"Your Id"`
+		Name        string `v:"required" dc:"Your name"`
+		Gender      uint   `v:"in:0,1,2" dc:"0:Secret;1:Male;2:Female"`
+		WifeName    string `v:"required-if:gender,1"`
+		HusbandName string `v:"required-if:gender,2"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Id:     1,
+			Name:   "test",
+			Gender: 1,
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Println(err)
+	}
+
+	// Output:
+	// The WifeName field is required
+}
+
+func ExampleValidator_RequiredUnless() {
+	type BizReq struct {
+		Id          uint   `v:"required" dc:"Your Id"`
+		Name        string `v:"required" dc:"Your name"`
+		Gender      uint   `v:"in:0,1,2" dc:"0:Secret;1:Male;2:Female"`
+		WifeName    string `v:"required-unless:gender,0,gender,2"`
+		HusbandName string `v:"required-unless:id,0,gender,2"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Id:     1,
+			Name:   "test",
+			Gender: 1,
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Println(err)
+	}
+
+	// Output:
+	// The WifeName field is required; The HusbandName field is required
+}
+
+func ExampleValidator_RequiredWith() {
+	type BizReq struct {
+		Id          uint   `v:"required" dc:"Your Id"`
+		Name        string `v:"required" dc:"Your name"`
+		Gender      uint   `v:"in:0,1,2" dc:"0:Secret;1:Male;2:Female"`
+		WifeName    string
+		HusbandName string `v:"required-with:WifeName"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Id:       1,
+			Name:     "test",
+			Gender:   1,
+			WifeName: "Ann",
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Println(err)
+	}
+
+	// Output:
+	// The HusbandName field is required
+}
+
+func ExampleValidator_RequiredWithAll() {
+	type BizReq struct {
+		Id          uint   `v:"required" dc:"Your Id"`
+		Name        string `v:"required" dc:"Your name"`
+		Gender      uint   `v:"in:0,1,2" dc:"0:Secret;1:Male;2:Female"`
+		WifeName    string
+		HusbandName string `v:"required-with-all:Id,Name,Gender,WifeName"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Id:       1,
+			Name:     "test",
+			Gender:   1,
+			WifeName: "Ann",
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Println(err)
+	}
+
+	// Output:
+	// The HusbandName field is required
+}
+
+func ExampleValidator_RequiredWithout() {
+	type BizReq struct {
+		Id          uint   `v:"required" dc:"Your Id"`
+		Name        string `v:"required" dc:"Your name"`
+		Gender      uint   `v:"in:0,1,2" dc:"0:Secret;1:Male;2:Female"`
+		WifeName    string
+		HusbandName string `v:"required-without:Id,WifeName"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Id:     1,
+			Name:   "test",
+			Gender: 1,
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Println(err)
+	}
+
+	// Output:
+	// The HusbandName field is required
+}
+
+func ExampleValidator_RequiredWithoutAll() {
+	type BizReq struct {
+		Id          uint   `v:"required" dc:"Your Id"`
+		Name        string `v:"required" dc:"Your name"`
+		Gender      uint   `v:"in:0,1,2" dc:"0:Secret;1:Male;2:Female"`
+		WifeName    string
+		HusbandName string `v:"required-without-all:Id,WifeName"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Name:   "test",
+			Gender: 1,
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Println(err)
+	}
+
+	// Output:
+	// The HusbandName field is required
+}
+
+func ExampleValidator_Same() {
+	type BizReq struct {
+		Name      string `v:"required"`
+		Password  string `v:"required|same:Password2"`
+		Password2 string `v:"required"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Name:      "gf",
+			Password:  "goframe.org",
+			Password2: "goframe.net",
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Println(err)
+	}
+
+	// Output:
+	// The Password value must be the same as field Password2
+}
+
+func ExampleValidator_Different() {
+	type BizReq struct {
+		Name          string `v:"required"`
+		MailAddr      string `v:"required"`
+		OtherMailAddr string `v:"required|different:MailAddr"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Name:          "gf",
+			MailAddr:      "gf@goframe.org",
+			OtherMailAddr: "gf@goframe.org",
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Println(err)
+	}
+
+	// Output:
+	// The OtherMailAddr value must be different from field MailAddr
+}
+
+func ExampleValidator_In() {
+	type BizReq struct {
+		Id     uint   `v:"required" dc:"Your Id"`
+		Name   string `v:"required" dc:"Your name"`
+		Gender uint   `v:"in:0,1,2" dc:"0:Secret;1:Male;2:Female"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Id:     1,
+			Name:   "test",
+			Gender: 3,
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Println(err)
+	}
+
+	// Output:
+	// The Gender value is not in acceptable range
+}
+
+func ExampleValidator_NotIn() {
+	type BizReq struct {
+		Id           uint   `v:"required" dc:"Your Id"`
+		Name         string `v:"required" dc:"Your name"`
+		InvalidIndex uint   `v:"not-in:-1,0,1"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Id:           1,
+			Name:         "test",
+			InvalidIndex: 1,
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Println(err)
+	}
+
+	// Output:
+	// The InvalidIndex value is not in acceptable range
 }
