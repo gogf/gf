@@ -251,6 +251,7 @@ CREATE TABLE %s (
 		model := db.Model(fmt.Sprintf(`%s as t`, table1))
 		t.Assert(model.getConditionForSoftDeleting(), "`delete_at` IS NULL")
 	})
+
 	gtest.C(t, func(t *gtest.T) {
 		model := db.Model(fmt.Sprintf(`%s, %s`, table1, table2))
 		t.Assert(model.getConditionForSoftDeleting(), fmt.Sprintf(

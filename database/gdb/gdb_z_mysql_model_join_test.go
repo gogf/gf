@@ -27,7 +27,7 @@ func Test_Model_LeftJoinOnField(t *testing.T) {
 		r, err := db.Model(table1).
 			FieldsPrefix(table1, "*").
 			LeftJoinOnField(table2, "id").
-			Where("id", g.Slice{1, 2}).
+			WhereIn("id", g.Slice{1, 2}).
 			Order("id asc").All()
 		t.AssertNil(err)
 		t.Assert(len(r), 2)
@@ -50,7 +50,7 @@ func Test_Model_RightJoinOnField(t *testing.T) {
 		r, err := db.Model(table1).
 			FieldsPrefix(table1, "*").
 			RightJoinOnField(table2, "id").
-			Where("id", g.Slice{1, 2}).
+			WhereIn("id", g.Slice{1, 2}).
 			Order("id asc").All()
 		t.AssertNil(err)
 		t.Assert(len(r), 2)
@@ -73,7 +73,7 @@ func Test_Model_InnerJoinOnField(t *testing.T) {
 		r, err := db.Model(table1).
 			FieldsPrefix(table1, "*").
 			InnerJoinOnField(table2, "id").
-			Where("id", g.Slice{1, 2}).
+			WhereIn("id", g.Slice{1, 2}).
 			Order("id asc").All()
 		t.AssertNil(err)
 		t.Assert(len(r), 2)
