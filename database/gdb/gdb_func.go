@@ -402,13 +402,12 @@ func formatSql(sql string, args []interface{}) (newSql string, newArgs []interfa
 }
 
 type formatWhereInput struct {
-	Where                 interface{}
-	Args                  []interface{}
-	OmitNil               bool
-	OmitEmpty             bool
-	IgnoreEmptySliceWhere bool
-	Schema                string
-	Table                 string
+	Where     interface{}
+	Args      []interface{}
+	OmitNil   bool
+	OmitEmpty bool
+	Schema    string
+	Table     string
 }
 
 // formatWhere formats where statement and its arguments for `Where` and `Having` statements.
@@ -432,12 +431,11 @@ func formatWhere(db DB, in formatWhereInput) (newWhere string, newArgs []interfa
 				}
 			}
 			newArgs = formatWhereKeyValue(formatWhereKeyValueInput{
-				Db:                    db,
-				Buffer:                buffer,
-				Args:                  newArgs,
-				Key:                   key,
-				Value:                 value,
-				IgnoreEmptySliceWhere: in.IgnoreEmptySliceWhere,
+				Db:     db,
+				Buffer: buffer,
+				Args:   newArgs,
+				Key:    key,
+				Value:  value,
 			})
 		}
 
@@ -458,12 +456,12 @@ func formatWhere(db DB, in formatWhereInput) (newWhere string, newArgs []interfa
 					}
 				}
 				newArgs = formatWhereKeyValue(formatWhereKeyValueInput{
-					Db:                    db,
-					Buffer:                buffer,
-					Args:                  newArgs,
-					Key:                   ketStr,
-					Value:                 value,
-					IgnoreEmptySliceWhere: in.IgnoreEmptySliceWhere,
+					Db:        db,
+					Buffer:    buffer,
+					Args:      newArgs,
+					Key:       ketStr,
+					Value:     value,
+					OmitEmpty: in.OmitEmpty,
 				})
 				return true
 			})
@@ -490,12 +488,12 @@ func formatWhere(db DB, in formatWhereInput) (newWhere string, newArgs []interfa
 					continue
 				}
 				newArgs = formatWhereKeyValue(formatWhereKeyValueInput{
-					Db:                    db,
-					Buffer:                buffer,
-					Args:                  newArgs,
-					Key:                   foundKey,
-					Value:                 foundValue,
-					IgnoreEmptySliceWhere: in.IgnoreEmptySliceWhere,
+					Db:        db,
+					Buffer:    buffer,
+					Args:      newArgs,
+					Key:       foundKey,
+					Value:     foundValue,
+					OmitEmpty: in.OmitEmpty,
 				})
 			}
 		}
@@ -507,13 +505,13 @@ func formatWhere(db DB, in formatWhereInput) (newWhere string, newArgs []interfa
 			whereStr = gconv.String(in.Where)
 		)
 		// Eg:
-		// Where("id", []int{}).All()                       -> SELECT xxx FROM xxx WHERE 0=1
-		// IgnoreEmptySliceWhere().Where("id", []int{}).One() -> SELECT xxx FROM xxx
-		if in.IgnoreEmptySliceWhere && len(in.Args) == 1 && utils.IsArray(in.Args[0]) {
-			if gstr.Count(whereStr, "?") == 0 && utils.IsEmpty(in.Args[0]) {
-				in.Args = in.Args[:0]
-				break
-			}
+		// Where("id", []int{}).All()             -> SELECT xxx FROM xxx WHERE 0=1
+		// Where("name", "").All()                -> SELECT xxx FROM xxx WHERE `name`=''
+		// OmitEmpty().Where("id", []int{}).All() -> SELECT xxx FROM xxx
+		// OmitEmpty().("name", "").All()         -> SELECT xxx FROM xxx
+		if in.OmitEmpty && len(in.Args) == 1 && gstr.Count(whereStr, "?") == 0 && utils.IsEmpty(in.Args[0]) {
+			in.Args = in.Args[:0]
+			break
 		}
 		for {
 			if i >= len(in.Args) {
@@ -608,17 +606,31 @@ func formatWhereInterfaces(db DB, where []interface{}, buffer *bytes.Buffer, new
 }
 
 type formatWhereKeyValueInput struct {
-	Db                    DB
-	Buffer                *bytes.Buffer
-	Args                  []interface{}
-	Key                   string
-	Value                 interface{}
-	IgnoreEmptySliceWhere bool
+	Db        DB
+	Buffer    *bytes.Buffer
+	Args      []interface{}
+	Key       string
+	Value     interface{}
+	OmitEmpty bool
 }
 
 // formatWhereKeyValue handles each key-value pair of the parameter map.
 func formatWhereKeyValue(in formatWhereKeyValueInput) (newArgs []interface{}) {
-	quotedKey := in.Db.GetCore().QuoteWord(in.Key)
+	var (
+		quotedKey   = in.Db.GetCore().QuoteWord(in.Key)
+		holderCount = gstr.Count(quotedKey, "?")
+	)
+	// Eg:
+	// Where("id", []int{}).All()             -> SELECT xxx FROM xxx WHERE 0=1
+	// Where("name", "").All()                -> SELECT xxx FROM xxx WHERE `name`=''
+	// OmitEmpty().Where("id", []int{}).All() -> SELECT xxx FROM xxx
+	// OmitEmpty().("name", "").All()         -> SELECT xxx FROM xxx
+	if in.OmitEmpty && holderCount == 0 && gutil.IsEmpty(in.Value) {
+		return in.Args
+	}
+	if in.Buffer.Len() > 0 {
+		in.Buffer.WriteString(" AND ")
+	}
 	// If the value is type of slice, and there's only one '?' holder in
 	// the key string, it automatically adds '?' holder chars according to its arguments count
 	// and converts it to "IN" statement.
@@ -629,22 +641,11 @@ func formatWhereKeyValue(in formatWhereKeyValueInput) (newArgs []interface{}) {
 	switch reflectKind {
 	// Slice argument.
 	case reflect.Slice, reflect.Array:
-		count := gstr.Count(quotedKey, "?")
-		// Eg:
-		// Where("id", []int{}).All()                       -> SELECT xxx FROM xxx WHERE 0=1
-		// IgnoreEmptySliceWhere().Where("id", []int{}).One() -> SELECT xxx FROM xxx
-		if count == 0 && reflectValue.Len() == 0 && in.IgnoreEmptySliceWhere {
-			return in.Args
-		}
-
-		if in.Buffer.Len() > 0 {
-			in.Buffer.WriteString(" AND ")
-		}
-		if count == 0 {
+		if holderCount == 0 {
 			in.Buffer.WriteString(quotedKey + " IN(?)")
 			in.Args = append(in.Args, in.Value)
 		} else {
-			if count != reflectValue.Len() {
+			if holderCount != reflectValue.Len() {
 				in.Buffer.WriteString(quotedKey)
 				in.Args = append(in.Args, in.Value)
 			} else {
@@ -654,9 +655,6 @@ func formatWhereKeyValue(in formatWhereKeyValueInput) (newArgs []interface{}) {
 		}
 
 	default:
-		if in.Buffer.Len() > 0 {
-			in.Buffer.WriteString(" AND ")
-		}
 		if in.Value == nil || empty.IsNil(reflectValue) {
 			if gregex.IsMatchString(regularFieldNameRegPattern, in.Key) {
 				// The key is a single field name.
