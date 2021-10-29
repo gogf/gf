@@ -2308,31 +2308,31 @@ func Test_Model_Schema2(t *testing.T) {
 	}()
 	// Schema.
 	gtest.C(t, func(t *gtest.T) {
-		v, err := db.Schema(TestSchema1).Table(table).Value("nickname", "id=2")
+		v, err := db.Schema(TestSchema1).Model(table).Value("nickname", "id=2")
 		t.AssertNil(err)
 		t.Assert(v.String(), "name_2")
 
-		r, err := db.Schema(TestSchema1).Table(table).Update(g.Map{"nickname": "name_200"}, "id=2")
+		r, err := db.Schema(TestSchema1).Model(table).Update(g.Map{"nickname": "name_200"}, "id=2")
 		t.AssertNil(err)
 		n, _ := r.RowsAffected()
 		t.Assert(n, 1)
 
-		v, err = db.Schema(TestSchema1).Table(table).Value("nickname", "id=2")
+		v, err = db.Schema(TestSchema1).Model(table).Value("nickname", "id=2")
 		t.AssertNil(err)
 		t.Assert(v.String(), "name_200")
 
-		v, err = db.Schema(TestSchema2).Table(table).Value("nickname", "id=2")
+		v, err = db.Schema(TestSchema2).Model(table).Value("nickname", "id=2")
 		t.AssertNil(err)
 		t.Assert(v.String(), "name_2")
 
-		v, err = db.Schema(TestSchema1).Table(table).Value("nickname", "id=2")
+		v, err = db.Schema(TestSchema1).Model(table).Value("nickname", "id=2")
 		t.AssertNil(err)
 		t.Assert(v.String(), "name_200")
 	})
 	// Schema.
 	gtest.C(t, func(t *gtest.T) {
 		i := 1000
-		_, err := db.Schema(TestSchema1).Table(table).Insert(g.Map{
+		_, err := db.Schema(TestSchema1).Model(table).Insert(g.Map{
 			"id":               i,
 			"passport":         fmt.Sprintf(`user_%d`, i),
 			"password":         fmt.Sprintf(`pass_%d`, i),
@@ -2342,11 +2342,11 @@ func Test_Model_Schema2(t *testing.T) {
 		})
 		t.AssertNil(err)
 
-		v, err := db.Schema(TestSchema1).Table(table).Value("nickname", "id=?", i)
+		v, err := db.Schema(TestSchema1).Model(table).Value("nickname", "id=?", i)
 		t.AssertNil(err)
 		t.Assert(v.String(), "name_1000")
 
-		v, err = db.Schema(TestSchema2).Table(table).Value("nickname", "id=?", i)
+		v, err = db.Schema(TestSchema2).Model(table).Value("nickname", "id=?", i)
 		t.AssertNil(err)
 		t.Assert(v.String(), "")
 	})

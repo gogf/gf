@@ -334,6 +334,12 @@ func (m *Model) Page(page, limit int) *Model {
 //
 // The parameter `limit1` specifies whether limits querying only one record if m.limit is not set.
 func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWhere string, conditionExtra string, conditionArgs []interface{}) {
+	var (
+		prefix = ""
+	)
+	if gstr.Contains(m.tables, " JOIN ") {
+		prefix = m.db.GetCore().QuoteWord(m.tablesInit)
+	}
 	if len(m.whereHolder) > 0 {
 		for _, v := range m.whereHolder {
 			switch v.Operator {
@@ -346,6 +352,7 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 						OmitEmpty: m.option&optionOmitEmptyWhere > 0,
 						Schema:    m.schema,
 						Table:     m.tables,
+						Prefix:    prefix,
 					})
 					if len(newWhere) > 0 {
 						conditionWhere = newWhere
@@ -363,6 +370,7 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 					OmitEmpty: m.option&optionOmitEmptyWhere > 0,
 					Schema:    m.schema,
 					Table:     m.tables,
+					Prefix:    prefix,
 				})
 				if len(newWhere) > 0 {
 					if len(conditionWhere) == 0 {
@@ -383,6 +391,7 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 					OmitEmpty: m.option&optionOmitEmptyWhere > 0,
 					Schema:    m.schema,
 					Table:     m.tables,
+					Prefix:    prefix,
 				})
 				if len(newWhere) > 0 {
 					if len(conditionWhere) == 0 {
@@ -430,6 +439,7 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 			OmitEmpty: m.option&optionOmitEmptyWhere > 0,
 			Schema:    m.schema,
 			Table:     m.tables,
+			Prefix:    prefix,
 		})
 		if len(havingStr) > 0 {
 			conditionExtra += " HAVING " + havingStr
