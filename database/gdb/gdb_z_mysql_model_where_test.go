@@ -13,7 +13,7 @@ import (
 	"testing"
 )
 
-func Test_Model_LeftJoinOnField(t *testing.T) {
+func Test_Model_WherePrefix(t *testing.T) {
 	var (
 		table1 = gtime.TimestampNanoStr() + "_table1"
 		table2 = gtime.TimestampNanoStr() + "_table2"
@@ -27,7 +27,9 @@ func Test_Model_LeftJoinOnField(t *testing.T) {
 		r, err := db.Model(table1).
 			FieldsPrefix(table1, "*").
 			LeftJoinOnField(table2, "id").
-			Where("id", g.Slice{1, 2}).
+			WherePrefix(table2, g.Map{
+				"id": g.Slice{1, 2},
+			}).
 			Order("id asc").All()
 		t.AssertNil(err)
 		t.Assert(len(r), 2)
@@ -36,7 +38,7 @@ func Test_Model_LeftJoinOnField(t *testing.T) {
 	})
 }
 
-func Test_Model_RightJoinOnField(t *testing.T) {
+func Test_Model_WhereOrPrefix(t *testing.T) {
 	var (
 		table1 = gtime.TimestampNanoStr() + "_table1"
 		table2 = gtime.TimestampNanoStr() + "_table2"
@@ -49,35 +51,20 @@ func Test_Model_RightJoinOnField(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		r, err := db.Model(table1).
 			FieldsPrefix(table1, "*").
-			RightJoinOnField(table2, "id").
-			Where("id", g.Slice{1, 2}).
+			LeftJoinOnField(table2, "id").
+			WhereOrPrefix(table1, g.Map{
+				"id": g.Slice{1, 2},
+			}).
+			WhereOrPrefix(table2, g.Map{
+				"id": g.Slice{8, 9},
+			}).
 			Order("id asc").All()
 		t.AssertNil(err)
-		t.Assert(len(r), 2)
+		t.Assert(len(r), 4)
 		t.Assert(r[0]["id"], "1")
 		t.Assert(r[1]["id"], "2")
-	})
-}
+		t.Assert(r[2]["id"], "8")
+		t.Assert(r[3]["id"], "9")
 
-func Test_Model_InnerJoinOnField(t *testing.T) {
-	var (
-		table1 = gtime.TimestampNanoStr() + "_table1"
-		table2 = gtime.TimestampNanoStr() + "_table2"
-	)
-	createInitTable(table1)
-	defer dropTable(table1)
-	createInitTable(table2)
-	defer dropTable(table2)
-
-	gtest.C(t, func(t *gtest.T) {
-		r, err := db.Model(table1).
-			FieldsPrefix(table1, "*").
-			InnerJoinOnField(table2, "id").
-			Where("id", g.Slice{1, 2}).
-			Order("id asc").All()
-		t.AssertNil(err)
-		t.Assert(len(r), 2)
-		t.Assert(r[0]["id"], "1")
-		t.Assert(r[1]["id"], "2")
 	})
 }
