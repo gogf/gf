@@ -58,8 +58,6 @@ type iTableName interface {
 
 const (
 	OrmTagForStruct    = "orm"
-	OrmTagForUnique    = "unique"
-	OrmTagForPrimary   = "primary"
 	OrmTagForTable     = "table"
 	OrmTagForWith      = "with"
 	OrmTagForWithWhere = "where"
@@ -73,32 +71,6 @@ var (
 	// Priority tags for struct converting for orm field mapping.
 	structTagPriority = append([]string{OrmTagForStruct}, gconv.StructTagPriority...)
 )
-
-// guessPrimaryTableName parses and returns the primary table name.
-func (m *Model) guessPrimaryTableName(tableStr string) string {
-	if tableStr == "" {
-		return ""
-	}
-	var (
-		guessedTableName = ""
-		array1           = gstr.SplitAndTrim(tableStr, ",")
-		array2           = gstr.SplitAndTrim(array1[0], " ")
-		array3           = gstr.SplitAndTrim(array2[0], ".")
-	)
-	if len(array3) >= 2 {
-		guessedTableName = array3[1]
-	} else {
-		guessedTableName = array3[0]
-	}
-	charL, charR := m.db.GetChars()
-	if charL != "" || charR != "" {
-		guessedTableName = gstr.Trim(guessedTableName, charL+charR)
-	}
-	if !gregex.IsMatchString(regularFieldNameRegPattern, guessedTableName) {
-		return ""
-	}
-	return guessedTableName
-}
 
 // getTableNameFromOrmTag retrieves and returns the table name from struct object.
 func getTableNameFromOrmTag(object interface{}) string {
@@ -523,6 +495,13 @@ func formatWhere(db DB, in formatWhereInput) (newWhere string, newArgs []interfa
 			})
 			in.Args = in.Args[:0]
 			break
+		}
+		// If the first part is column name, it automatically adds prefix to the column.
+		if in.Prefix != "" {
+			array := gstr.Split(whereStr, " ")
+			if ok, _ := db.GetCore().HasField(in.Table, array[0]); ok {
+				whereStr = in.Prefix + "." + whereStr
+			}
 		}
 		// Regular string and parameter place holder handling.
 		// Eg:

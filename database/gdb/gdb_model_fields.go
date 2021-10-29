@@ -9,8 +9,6 @@ package gdb
 import (
 	"fmt"
 	"github.com/gogf/gf/v2/container/gset"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -244,21 +242,5 @@ func (m *Model) GetFieldsExStr(fields string, prefix ...string) string {
 
 // HasField determine whether the field exists in the table.
 func (m *Model) HasField(field string) (bool, error) {
-	tableFields, err := m.TableFields(m.tablesInit)
-	if err != nil {
-		return false, err
-	}
-	if len(tableFields) == 0 {
-		return false, gerror.NewCodef(gcode.CodeNotFound, `empty table fields for table "%s"`, m.tables)
-	}
-	fieldsArray := make([]string, len(tableFields))
-	for k, v := range tableFields {
-		fieldsArray[v.Index] = k
-	}
-	for _, f := range fieldsArray {
-		if f == field {
-			return true, nil
-		}
-	}
-	return false, nil
+	return m.db.GetCore().HasField(m.tablesInit, field)
 }
