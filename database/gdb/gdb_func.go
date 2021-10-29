@@ -408,6 +408,7 @@ type formatWhereInput struct {
 	OmitEmpty bool
 	Schema    string
 	Table     string
+	Prefix    string // Field prefix, eg: "user.", "order.".
 }
 
 // formatWhere formats where statement and its arguments for `Where` and `Having` statements.
@@ -436,6 +437,7 @@ func formatWhere(db DB, in formatWhereInput) (newWhere string, newArgs []interfa
 				Args:   newArgs,
 				Key:    key,
 				Value:  value,
+				Prefix: in.Prefix,
 			})
 		}
 
@@ -462,6 +464,7 @@ func formatWhere(db DB, in formatWhereInput) (newWhere string, newArgs []interfa
 					Key:       ketStr,
 					Value:     value,
 					OmitEmpty: in.OmitEmpty,
+					Prefix:    in.Prefix,
 				})
 				return true
 			})
@@ -494,6 +497,7 @@ func formatWhere(db DB, in formatWhereInput) (newWhere string, newArgs []interfa
 					Key:       foundKey,
 					Value:     foundValue,
 					OmitEmpty: in.OmitEmpty,
+					Prefix:    in.Prefix,
 				})
 			}
 		}
@@ -501,18 +505,31 @@ func formatWhere(db DB, in formatWhereInput) (newWhere string, newArgs []interfa
 	default:
 		// Usually a string.
 		var (
-			i        = 0
 			whereStr = gconv.String(in.Where)
 		)
+		// Is `whereStr` a field name which composed as a key-value condition?
 		// Eg:
-		// Where("id", []int{}).All()             -> SELECT xxx FROM xxx WHERE 0=1
-		// Where("name", "").All()                -> SELECT xxx FROM xxx WHERE `name`=''
-		// OmitEmpty().Where("id", []int{}).All() -> SELECT xxx FROM xxx
-		// OmitEmpty().("name", "").All()         -> SELECT xxx FROM xxx
-		if in.OmitEmpty && len(in.Args) == 1 && gstr.Count(whereStr, "?") == 0 && utils.IsEmpty(in.Args[0]) {
+		// Where("id", 1)
+		// Where("id", g.Slice{1,2,3})
+		if gregex.IsMatchString(regularFieldNameWithoutDotRegPattern, whereStr) && len(in.Args) == 1 {
+			newArgs = formatWhereKeyValue(formatWhereKeyValueInput{
+				Db:        db,
+				Buffer:    buffer,
+				Args:      newArgs,
+				Key:       whereStr,
+				Value:     in.Args[0],
+				OmitEmpty: in.OmitEmpty,
+				Prefix:    in.Prefix,
+			})
 			in.Args = in.Args[:0]
 			break
 		}
+		// Regular string and parameter place holder handling.
+		// Eg:
+		// Where("id in(?) and name=?", g.Slice{1,2,3}, "john")
+		var (
+			i = 0
+		)
 		for {
 			if i >= len(in.Args) {
 				break
@@ -612,6 +629,7 @@ type formatWhereKeyValueInput struct {
 	Key       string
 	Value     interface{}
 	OmitEmpty bool
+	Prefix    string // Field prefix, eg: "user.", "order.".
 }
 
 // formatWhereKeyValue handles each key-value pair of the parameter map.
@@ -627,6 +645,9 @@ func formatWhereKeyValue(in formatWhereKeyValueInput) (newArgs []interface{}) {
 	// OmitEmpty().("name", "").All()         -> SELECT xxx FROM xxx
 	if in.OmitEmpty && holderCount == 0 && gutil.IsEmpty(in.Value) {
 		return in.Args
+	}
+	if in.Prefix != "" && !gstr.Contains(quotedKey, ".") {
+		quotedKey = in.Prefix + "." + quotedKey
 	}
 	if in.Buffer.Len() > 0 {
 		in.Buffer.WriteString(" AND ")
@@ -664,7 +685,7 @@ func formatWhereKeyValue(in formatWhereKeyValueInput) (newArgs []interface{}) {
 				in.Buffer.WriteString(quotedKey)
 			}
 		} else {
-			// It also supports "LIKE" statement, which we considers it an operator.
+			// It also supports "LIKE" statement, which we consider it an operator.
 			quotedKey = gstr.Trim(quotedKey)
 			if gstr.Pos(quotedKey, "?") == -1 {
 				like := " LIKE"

@@ -17,6 +17,12 @@ import (
 
 // Fields appends `fieldNamesOrMapStruct` to the operation fields of the model, multiple fields joined using char ','.
 // The parameter `fieldNamesOrMapStruct` can be type of string/map/*map/struct/*struct.
+//
+// Eg:
+// Fields("id", "name", "age")
+// Fields([]string{"id", "name", "age"})
+// Fields(map[string]interface{}{"id":1, "name":"john", "age":18})
+// Fields(User{ Id: 1, Name: "john", Age: 18})
 func (m *Model) Fields(fieldNamesOrMapStruct ...interface{}) *Model {
 	length := len(fieldNamesOrMapStruct)
 	if length == 0 {
@@ -52,10 +58,21 @@ func (m *Model) Fields(fieldNamesOrMapStruct ...interface{}) *Model {
 	return m
 }
 
+// FieldsPrefix performs as function Fields but add extra prefix for each field.
+func (m *Model) FieldsPrefix(prefix string, fieldNamesOrMapStruct ...interface{}) *Model {
+	model := m.Fields(fieldNamesOrMapStruct...)
+	array := gstr.SplitAndTrim(model.fields, ",")
+	gstr.PrefixArray(array, prefix+".")
+	model.fields = gstr.Join(array, ",")
+	return model
+}
+
 // FieldsEx appends `fieldNamesOrMapStruct` to the excluded operation fields of the model,
 // multiple fields joined using char ','.
 // Note that this function supports only single table operations.
 // The parameter `fieldNamesOrMapStruct` can be type of string/map/*map/struct/*struct.
+//
+// Also see Fields.
 func (m *Model) FieldsEx(fieldNamesOrMapStruct ...interface{}) *Model {
 	length := len(fieldNamesOrMapStruct)
 	if length == 0 {
@@ -78,6 +95,15 @@ func (m *Model) FieldsEx(fieldNamesOrMapStruct ...interface{}) *Model {
 		return model
 	}
 	return m
+}
+
+// FieldsExPrefix performs as function FieldsEx but add extra prefix for each field.
+func (m *Model) FieldsExPrefix(prefix string, fieldNamesOrMapStruct ...interface{}) *Model {
+	model := m.FieldsEx(fieldNamesOrMapStruct...)
+	array := gstr.SplitAndTrim(model.fieldsEx, ",")
+	gstr.PrefixArray(array, prefix+".")
+	model.fieldsEx = gstr.Join(array, ",")
+	return model
 }
 
 // FieldCount formats and appends commonly used field `COUNT(column)` to the select fields of model.
