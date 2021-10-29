@@ -23,7 +23,6 @@ func Test_Model_LeftJoinOnField(t *testing.T) {
 	createInitTable(table2)
 	defer dropTable(table2)
 
-	db.SetDebug(true)
 	gtest.C(t, func(t *gtest.T) {
 		r, err := db.Model(table1).
 			FieldsPrefix(table1, "*").
@@ -47,7 +46,6 @@ func Test_Model_RightJoinOnField(t *testing.T) {
 	createInitTable(table2)
 	defer dropTable(table2)
 
-	db.SetDebug(true)
 	gtest.C(t, func(t *gtest.T) {
 		r, err := db.Model(table1).
 			FieldsPrefix(table1, "*").
@@ -71,7 +69,6 @@ func Test_Model_InnerJoinOnField(t *testing.T) {
 	createInitTable(table2)
 	defer dropTable(table2)
 
-	db.SetDebug(true)
 	gtest.C(t, func(t *gtest.T) {
 		r, err := db.Model(table1).
 			FieldsPrefix(table1, "*").

@@ -37,6 +37,21 @@ func (m *Model) Where(where interface{}, args ...interface{}) *Model {
 	return model
 }
 
+// WherePrefix performs as Where, but it adds prefix to each field in where statement.
+func (m *Model) WherePrefix(prefix string, where interface{}, args ...interface{}) *Model {
+	model := m.getModel()
+	if model.whereHolder == nil {
+		model.whereHolder = make([]ModelWhereHolder, 0)
+	}
+	model.whereHolder = append(model.whereHolder, ModelWhereHolder{
+		Operator: whereHolderOperatorWhere,
+		Where:    where,
+		Args:     args,
+		Prefix:   prefix,
+	})
+	return model
+}
+
 // Having sets the having statement for the model.
 // The parameters of this function usage are as the same as function Where.
 // See Where.
@@ -155,6 +170,21 @@ func (m *Model) WhereOr(where interface{}, args ...interface{}) *Model {
 		Operator: whereHolderOperatorOr,
 		Where:    where,
 		Args:     args,
+	})
+	return model
+}
+
+// WhereOrPrefix performs as WhereOr, but it adds prefix to each field in where statement.
+func (m *Model) WhereOrPrefix(prefix string, where interface{}, args ...interface{}) *Model {
+	model := m.getModel()
+	if model.whereHolder == nil {
+		model.whereHolder = make([]ModelWhereHolder, 0)
+	}
+	model.whereHolder = append(model.whereHolder, ModelWhereHolder{
+		Operator: whereHolderOperatorOr,
+		Where:    where,
+		Args:     args,
+		Prefix:   prefix,
 	})
 	return model
 }
@@ -335,13 +365,16 @@ func (m *Model) Page(page, limit int) *Model {
 // The parameter `limit1` specifies whether limits querying only one record if m.limit is not set.
 func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWhere string, conditionExtra string, conditionArgs []interface{}) {
 	var (
-		prefix = ""
+		autoPrefix = ""
 	)
 	if gstr.Contains(m.tables, " JOIN ") {
-		prefix = m.db.GetCore().QuoteWord(m.tablesInit)
+		autoPrefix = m.db.GetCore().QuoteWord(m.tablesInit)
 	}
 	if len(m.whereHolder) > 0 {
 		for _, v := range m.whereHolder {
+			if v.Prefix == "" {
+				v.Prefix = autoPrefix
+			}
 			switch v.Operator {
 			case whereHolderOperatorWhere:
 				if conditionWhere == "" {
@@ -352,7 +385,7 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 						OmitEmpty: m.option&optionOmitEmptyWhere > 0,
 						Schema:    m.schema,
 						Table:     m.tables,
-						Prefix:    prefix,
+						Prefix:    v.Prefix,
 					})
 					if len(newWhere) > 0 {
 						conditionWhere = newWhere
@@ -370,7 +403,7 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 					OmitEmpty: m.option&optionOmitEmptyWhere > 0,
 					Schema:    m.schema,
 					Table:     m.tables,
-					Prefix:    prefix,
+					Prefix:    v.Prefix,
 				})
 				if len(newWhere) > 0 {
 					if len(conditionWhere) == 0 {
@@ -391,7 +424,7 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 					OmitEmpty: m.option&optionOmitEmptyWhere > 0,
 					Schema:    m.schema,
 					Table:     m.tables,
-					Prefix:    prefix,
+					Prefix:    v.Prefix,
 				})
 				if len(newWhere) > 0 {
 					if len(conditionWhere) == 0 {
@@ -439,7 +472,7 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 			OmitEmpty: m.option&optionOmitEmptyWhere > 0,
 			Schema:    m.schema,
 			Table:     m.tables,
-			Prefix:    prefix,
+			Prefix:    autoPrefix,
 		})
 		if len(havingStr) > 0 {
 			conditionExtra += " HAVING " + havingStr

@@ -65,6 +65,7 @@ type ModelWhereHolder struct {
 	Operator int           // Operator for this holder.
 	Where    interface{}   // Where parameter, which can commonly be type of string/map/struct.
 	Args     []interface{} // Arguments for where parameter.
+	Prefix   string        // Field prefix, eg: "user.", "order.".
 }
 
 const (
