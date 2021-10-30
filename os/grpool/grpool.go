@@ -8,12 +8,16 @@
 package grpool
 
 import (
+	"context"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 
 	"github.com/gogf/gf/v2/container/glist"
 	"github.com/gogf/gf/v2/container/gtype"
 )
+
+// Func is the pool function which contains context parameter.
+type Func func(ctx context.Context)
 
 // Pool manages the goroutines using pool.
 type Pool struct {
@@ -23,8 +27,15 @@ type Pool struct {
 	closed *gtype.Bool // Is pool closed or not.
 }
 
+type internalPoolItem struct {
+	Ctx  context.Context
+	Func Func
+}
+
 // Default goroutine pool.
-var pool = New()
+var (
+	pool = New()
+)
 
 // New creates and returns a new goroutine pool object.
 // The parameter `limit` is used to limit the max goroutine count,
@@ -44,16 +55,16 @@ func New(limit ...int) *Pool {
 
 // Add pushes a new job to the pool using default goroutine pool.
 // The job will be executed asynchronously.
-func Add(f func()) error {
-	return pool.Add(f)
+func Add(ctx context.Context, f Func) error {
+	return pool.Add(ctx, f)
 }
 
 // AddWithRecover pushes a new job to the pool with specified recover function.
 // The optional `recoverFunc` is called when any panic during executing of `userFunc`.
 // If `recoverFunc` is not passed or given nil, it ignores the panic from `userFunc`.
 // The job will be executed asynchronously.
-func AddWithRecover(userFunc func(), recoverFunc ...func(err error)) error {
-	return pool.AddWithRecover(userFunc, recoverFunc...)
+func AddWithRecover(ctx context.Context, userFunc Func, recoverFunc ...func(err error)) error {
+	return pool.AddWithRecover(ctx, userFunc, recoverFunc...)
 }
 
 // Size returns current goroutine count of default goroutine pool.
@@ -68,11 +79,14 @@ func Jobs() int {
 
 // Add pushes a new job to the pool.
 // The job will be executed asynchronously.
-func (p *Pool) Add(f func()) error {
+func (p *Pool) Add(ctx context.Context, f Func) error {
 	for p.closed.Val() {
 		return gerror.NewCode(gcode.CodeInvalidOperation, "pool closed")
 	}
-	p.list.PushFront(f)
+	p.list.PushFront(&internalPoolItem{
+		Ctx:  ctx,
+		Func: f,
+	})
 	// Check whether fork new goroutine or not.
 	var n int
 	for {
@@ -94,8 +108,8 @@ func (p *Pool) Add(f func()) error {
 // The optional `recoverFunc` is called when any panic during executing of `userFunc`.
 // If `recoverFunc` is not passed or given nil, it ignores the panic from `userFunc`.
 // The job will be executed asynchronously.
-func (p *Pool) AddWithRecover(userFunc func(), recoverFunc ...func(err error)) error {
-	return p.Add(func() {
+func (p *Pool) AddWithRecover(ctx context.Context, userFunc Func, recoverFunc ...func(err error)) error {
+	return p.Add(ctx, func(ctx context.Context) {
 		defer func() {
 			if exception := recover(); exception != nil {
 				if len(recoverFunc) > 0 && recoverFunc[0] != nil {
@@ -107,7 +121,7 @@ func (p *Pool) AddWithRecover(userFunc func(), recoverFunc ...func(err error)) e
 				}
 			}
 		}()
-		userFunc()
+		userFunc(ctx)
 	})
 }
 
@@ -135,10 +149,14 @@ func (p *Pool) fork() {
 	go func() {
 		defer p.count.Add(-1)
 
-		var job interface{}
+		var (
+			listItem interface{}
+			poolItem *internalPoolItem
+		)
 		for !p.closed.Val() {
-			if job = p.list.PopBack(); job != nil {
-				job.(func())()
+			if listItem = p.list.PopBack(); listItem != nil {
+				poolItem = listItem.(*internalPoolItem)
+				poolItem.Func(poolItem.Ctx)
 			} else {
 				return
 			}

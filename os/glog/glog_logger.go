@@ -216,7 +216,7 @@ func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
 	}
 	if l.config.Flags&F_ASYNC > 0 {
 		input.IsAsync = true
-		err := asyncPool.Add(func() {
+		err := asyncPool.Add(ctx, func(ctx context.Context) {
 			input.Next()
 		})
 		if err != nil {
