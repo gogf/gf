@@ -12,7 +12,7 @@ func MiddlewareCORS(r *ghttp.Request) {
 }
 
 func Order(r *ghttp.Request) {
-	glog.Println("order")
+	glog.Print("order")
 	r.Response.Write("GET")
 }
 

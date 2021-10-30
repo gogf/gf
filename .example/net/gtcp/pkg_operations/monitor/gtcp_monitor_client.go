@@ -35,9 +35,9 @@ func main() {
 	// 使用 SendRecvPkg 发送消息包并接受返回
 	if result, err := conn.SendRecvPkg(info); err != nil {
 		if err.Error() == "EOF" {
-			glog.Println("server closed")
+			glog.Print("server closed")
 		}
 	} else {
-		glog.Println(string(result))
+		glog.Print(string(result))
 	}
 }

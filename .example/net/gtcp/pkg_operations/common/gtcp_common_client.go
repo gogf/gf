@@ -32,7 +32,7 @@ func main() {
 		msg, err := funcs.RecvPkg(conn)
 		if err != nil {
 			if err.Error() == "EOF" {
-				glog.Println("server closed")
+				glog.Print("server closed")
 			}
 			break
 		}

@@ -24,12 +24,6 @@ func (l *Logger) Printf(ctx context.Context, format string, v ...interface{}) {
 	l.printStd(ctx, LEVEL_NONE, l.format(format, v...))
 }
 
-// Println is alias of Print.
-// See Print.
-func (l *Logger) Println(ctx context.Context, v ...interface{}) {
-	l.Print(ctx, v...)
-}
-
 // Fatal prints the logging content with [FATA] header and newline, then exit the current process.
 func (l *Logger) Fatal(ctx context.Context, v ...interface{}) {
 	l.printErr(ctx, LEVEL_FATA, v...)

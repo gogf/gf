@@ -27,5 +27,5 @@ package main
 //	g.Log().Debug("Debugging...")
 //	g.Log().Warning("It is warning info")
 //	g.Log().Error("Error occurs, please have a check")
-//	glog.Println("test log")
+//	glog.Print("test log")
 //}

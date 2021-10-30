@@ -20,12 +20,6 @@ func Printf(ctx context.Context, format string, v ...interface{}) {
 	logger.Printf(ctx, format, v...)
 }
 
-// Println is alias of Print.
-// See Print.
-func Println(ctx context.Context, v ...interface{}) {
-	logger.Println(ctx, v...)
-}
-
 // Fatal prints the logging content with [FATA] header and newline, then exit the current process.
 func Fatal(ctx context.Context, v ...interface{}) {
 	logger.Fatal(ctx, v...)
