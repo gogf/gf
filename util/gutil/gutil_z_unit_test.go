@@ -123,10 +123,10 @@ func Test_DumpBrief(t *testing.T) {
 		},
 	}
 	gtest.C(t, func(t *gtest.T) {
-		gutil.DumpBrief(map[int]int{
+		gutil.DumpWithType(map[int]int{
 			100: 100,
 		})
-		gutil.DumpBrief(req)
+		gutil.DumpWithType(req)
 	})
 }
 
