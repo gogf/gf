@@ -6,6 +6,6 @@ import (
 
 func main() {
 	g.Log().SetPrefix("[API]")
-	g.Log().Println("hello world")
+	g.Log().Print("hello world")
 	g.Log().Error("error occurred")
 }
