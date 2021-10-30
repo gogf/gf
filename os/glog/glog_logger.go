@@ -106,7 +106,7 @@ func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
 	// It just initializes once for each logger.
 	if p.config.RotateSize > 0 || p.config.RotateExpire > 0 {
 		if !p.init.Val() && p.init.Cas(false, true) {
-			gtimer.AddOnce(p.config.RotateCheckInterval, p.rotateChecksTimely)
+			gtimer.AddOnce(context.Background(), p.config.RotateCheckInterval, p.rotateChecksTimely)
 			intlog.Printf(ctx, "logger rotation initialized: every %s", p.config.RotateCheckInterval.String())
 		}
 	}

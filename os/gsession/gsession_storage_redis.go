@@ -44,7 +44,7 @@ func NewStorageRedis(redis *gredis.Redis, prefix ...string) *StorageRedis {
 		s.prefix = prefix[0]
 	}
 	// Batch updates the TTL for session ids timely.
-	gtimer.AddSingleton(DefaultStorageRedisLoopInterval, func() {
+	gtimer.AddSingleton(context.Background(), DefaultStorageRedisLoopInterval, func(ctx context.Context) {
 		intlog.Print(context.TODO(), "StorageRedis.timer start")
 		var (
 			id         string

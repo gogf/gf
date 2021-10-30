@@ -220,7 +220,7 @@ func restartWebServers(ctx context.Context, signal string, newExeFilePath ...str
 		} else {
 			// Controlled by web page.
 			// It should ensure the response wrote to client and then close all servers gracefully.
-			gtimer.SetTimeout(time.Second, func() {
+			gtimer.SetTimeout(ctx, time.Second, func(ctx context.Context) {
 				forceCloseWebServers(ctx)
 				if err := forkRestartProcess(ctx, newExeFilePath...); err != nil {
 					intlog.Error(ctx, err)
@@ -252,7 +252,7 @@ func shutdownWebServers(ctx context.Context, signal ...string) {
 		allDoneChan <- struct{}{}
 	} else {
 		glog.Printf(ctx, "%d: server shutting down by api", gproc.Pid())
-		gtimer.SetTimeout(time.Second, func() {
+		gtimer.SetTimeout(ctx, time.Second, func(ctx context.Context) {
 			forceCloseWebServers(ctx)
 			allDoneChan <- struct{}{}
 		})

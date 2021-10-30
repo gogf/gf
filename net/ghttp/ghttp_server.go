@@ -240,9 +240,9 @@ func (s *Server) Start() error {
 
 	// If this is a child process, it then notifies its parent exit.
 	if gproc.IsChild() {
-		gtimer.SetTimeout(time.Duration(s.config.GracefulTimeout)*time.Second, func() {
+		gtimer.SetTimeout(ctx, time.Duration(s.config.GracefulTimeout)*time.Second, func(ctx context.Context) {
 			if err := gproc.Send(gproc.PPid(), []byte("exit"), adminGProcCommGroup); err != nil {
-				intlog.Error(context.TODO(), "server error in process communication:", err)
+				intlog.Error(ctx, "server error in process communication:", err)
 			}
 		})
 	}

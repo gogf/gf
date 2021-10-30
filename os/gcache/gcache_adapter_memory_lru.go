@@ -7,6 +7,7 @@
 package gcache
 
 import (
+	"context"
 	"time"
 
 	"github.com/gogf/gf/v2/container/glist"
@@ -34,7 +35,7 @@ func newMemCacheLru(cache *AdapterMemory) *adapterMemoryLru {
 		rawList: glist.New(true),
 		closed:  gtype.NewBool(),
 	}
-	gtimer.AddSingleton(time.Second, lru.SyncAndClear)
+	gtimer.AddSingleton(context.Background(), time.Second, lru.SyncAndClear)
 	return lru
 }
 
@@ -80,7 +81,7 @@ func (lru *adapterMemoryLru) Pop() interface{} {
 
 // SyncAndClear synchronizes the keys from `rawList` to `list` and `data`
 // using Least Recently Used algorithm.
-func (lru *adapterMemoryLru) SyncAndClear() {
+func (lru *adapterMemoryLru) SyncAndClear(ctx context.Context) {
 	if lru.closed.Val() {
 		gtimer.Exit()
 		return
@@ -89,7 +90,7 @@ func (lru *adapterMemoryLru) SyncAndClear() {
 	for {
 		if v := lru.rawList.PopFront(); v != nil {
 			// Deleting the key from list.
-			if v := lru.data.Get(v); v != nil {
+			if v = lru.data.Get(v); v != nil {
 				lru.list.Remove(v.(*glist.Element))
 			}
 			// Pushing key to the head of the list

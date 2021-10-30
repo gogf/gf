@@ -7,6 +7,7 @@
 package gcron
 
 import (
+	"context"
 	"time"
 
 	"github.com/gogf/gf/v2/container/garray"
@@ -43,7 +44,7 @@ func (c *Cron) GetLogger() *glog.Logger {
 }
 
 // AddEntry creates and returns a new Entry object.
-func (c *Cron) AddEntry(pattern string, job func(), times int, singleton bool, name ...string) (*Entry, error) {
+func (c *Cron) AddEntry(ctx context.Context, pattern string, job JobFunc, times int, isSingleton bool, name ...string) (*Entry, error) {
 	var (
 		entryName = ""
 		infinite  = false
@@ -54,67 +55,68 @@ func (c *Cron) AddEntry(pattern string, job func(), times int, singleton bool, n
 	if times <= 0 {
 		infinite = true
 	}
-	return c.doAddEntry(addEntryInput{
-		Name:      entryName,
-		Job:       job,
-		Times:     times,
-		Pattern:   pattern,
-		Singleton: singleton,
-		Infinite:  infinite,
+	return c.doAddEntry(doAddEntryInput{
+		Name:        entryName,
+		Job:         job,
+		Ctx:         ctx,
+		Times:       times,
+		Pattern:     pattern,
+		IsSingleton: isSingleton,
+		Infinite:    infinite,
 	})
 }
 
 // Add adds a timed task.
 // A unique `name` can be bound with the timed task.
 // It returns and error if the `name` is already used.
-func (c *Cron) Add(pattern string, job func(), name ...string) (*Entry, error) {
-	return c.AddEntry(pattern, job, -1, false, name...)
+func (c *Cron) Add(ctx context.Context, pattern string, job JobFunc, name ...string) (*Entry, error) {
+	return c.AddEntry(ctx, pattern, job, -1, false, name...)
 }
 
 // AddSingleton adds a singleton timed task.
 // A singleton timed task is that can only be running one single instance at the same time.
 // A unique `name` can be bound with the timed task.
 // It returns and error if the `name` is already used.
-func (c *Cron) AddSingleton(pattern string, job func(), name ...string) (*Entry, error) {
-	return c.AddEntry(pattern, job, -1, true, name...)
+func (c *Cron) AddSingleton(ctx context.Context, pattern string, job JobFunc, name ...string) (*Entry, error) {
+	return c.AddEntry(ctx, pattern, job, -1, true, name...)
 }
 
 // AddTimes adds a timed task which can be run specified times.
 // A unique `name` can be bound with the timed task.
 // It returns and error if the `name` is already used.
-func (c *Cron) AddTimes(pattern string, times int, job func(), name ...string) (*Entry, error) {
-	return c.AddEntry(pattern, job, times, false, name...)
+func (c *Cron) AddTimes(ctx context.Context, pattern string, times int, job JobFunc, name ...string) (*Entry, error) {
+	return c.AddEntry(ctx, pattern, job, times, false, name...)
 }
 
 // AddOnce adds a timed task which can be run only once.
 // A unique `name` can be bound with the timed task.
 // It returns and error if the `name` is already used.
-func (c *Cron) AddOnce(pattern string, job func(), name ...string) (*Entry, error) {
-	return c.AddEntry(pattern, job, 1, false, name...)
+func (c *Cron) AddOnce(ctx context.Context, pattern string, job JobFunc, name ...string) (*Entry, error) {
+	return c.AddEntry(ctx, pattern, job, 1, false, name...)
 }
 
 // DelayAddEntry adds a timed task after `delay` time.
-func (c *Cron) DelayAddEntry(delay time.Duration, pattern string, job func(), times int, singleton bool, name ...string) {
-	gtimer.AddOnce(delay, func() {
-		if _, err := c.AddEntry(pattern, job, times, singleton, name...); err != nil {
+func (c *Cron) DelayAddEntry(ctx context.Context, delay time.Duration, pattern string, job JobFunc, times int, isSingleton bool, name ...string) {
+	gtimer.AddOnce(ctx, delay, func(ctx context.Context) {
+		if _, err := c.AddEntry(ctx, pattern, job, times, isSingleton, name...); err != nil {
 			panic(err)
 		}
 	})
 }
 
 // DelayAdd adds a timed task after `delay` time.
-func (c *Cron) DelayAdd(delay time.Duration, pattern string, job func(), name ...string) {
-	gtimer.AddOnce(delay, func() {
-		if _, err := c.Add(pattern, job, name...); err != nil {
+func (c *Cron) DelayAdd(ctx context.Context, delay time.Duration, pattern string, job JobFunc, name ...string) {
+	gtimer.AddOnce(ctx, delay, func(ctx context.Context) {
+		if _, err := c.Add(ctx, pattern, job, name...); err != nil {
 			panic(err)
 		}
 	})
 }
 
 // DelayAddSingleton adds a singleton timed task after `delay` time.
-func (c *Cron) DelayAddSingleton(delay time.Duration, pattern string, job func(), name ...string) {
-	gtimer.AddOnce(delay, func() {
-		if _, err := c.AddSingleton(pattern, job, name...); err != nil {
+func (c *Cron) DelayAddSingleton(ctx context.Context, delay time.Duration, pattern string, job JobFunc, name ...string) {
+	gtimer.AddOnce(ctx, delay, func(ctx context.Context) {
+		if _, err := c.AddSingleton(ctx, pattern, job, name...); err != nil {
 			panic(err)
 		}
 	})
@@ -122,9 +124,9 @@ func (c *Cron) DelayAddSingleton(delay time.Duration, pattern string, job func()
 
 // DelayAddOnce adds a timed task after `delay` time.
 // This timed task can be run only once.
-func (c *Cron) DelayAddOnce(delay time.Duration, pattern string, job func(), name ...string) {
-	gtimer.AddOnce(delay, func() {
-		if _, err := c.AddOnce(pattern, job, name...); err != nil {
+func (c *Cron) DelayAddOnce(ctx context.Context, delay time.Duration, pattern string, job JobFunc, name ...string) {
+	gtimer.AddOnce(ctx, delay, func(ctx context.Context) {
+		if _, err := c.AddOnce(ctx, pattern, job, name...); err != nil {
 			panic(err)
 		}
 	})
@@ -132,9 +134,9 @@ func (c *Cron) DelayAddOnce(delay time.Duration, pattern string, job func(), nam
 
 // DelayAddTimes adds a timed task after `delay` time.
 // This timed task can be run specified times.
-func (c *Cron) DelayAddTimes(delay time.Duration, pattern string, times int, job func(), name ...string) {
-	gtimer.AddOnce(delay, func() {
-		if _, err := c.AddTimes(pattern, times, job, name...); err != nil {
+func (c *Cron) DelayAddTimes(ctx context.Context, delay time.Duration, pattern string, times int, job JobFunc, name ...string) {
+	gtimer.AddOnce(ctx, delay, func(ctx context.Context) {
+		if _, err := c.AddTimes(ctx, pattern, times, job, name...); err != nil {
 			panic(err)
 		}
 	})
