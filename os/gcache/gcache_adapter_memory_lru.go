@@ -87,15 +87,18 @@ func (lru *adapterMemoryLru) SyncAndClear(ctx context.Context) {
 		return
 	}
 	// Data synchronization.
+	var (
+		alreadyExistItem interface{}
+	)
 	for {
-		if v := lru.rawList.PopFront(); v != nil {
+		if rawListItem := lru.rawList.PopFront(); rawListItem != nil {
 			// Deleting the key from list.
-			if v = lru.data.Get(v); v != nil {
-				lru.list.Remove(v.(*glist.Element))
+			if alreadyExistItem = lru.data.Get(rawListItem); alreadyExistItem != nil {
+				lru.list.Remove(alreadyExistItem.(*glist.Element))
 			}
 			// Pushing key to the head of the list
 			// and setting its list item to hash table for quick indexing.
-			lru.data.Set(v, lru.list.PushFront(v))
+			lru.data.Set(rawListItem, lru.list.PushFront(rawListItem))
 		} else {
 			break
 		}
