@@ -19,38 +19,23 @@ type ExportOption struct {
 	WithoutType bool // WithoutType specifies exported content has no type information.
 }
 
-// iVal is used for type assert api for Val().
-type iVal interface {
-	Val() interface{}
-}
-
-// iString is used for type assert api for String().
-type iString interface {
-	String() string
-}
-
-// iMapStrAny is the interface support for converting struct parameter to map.
-type iMapStrAny interface {
-	MapStrAny() map[string]interface{}
-}
-
 // Dump prints variables `values` to stdout with more manually readable.
 func Dump(values ...interface{}) {
 	for _, value := range values {
 		if s := Export(value, ExportOption{
-			WithoutType: false,
+			WithoutType: true,
 		}); s != "" {
 			fmt.Println(s)
 		}
 	}
 }
 
-// DumpBrief acts like Dump, but with no type information.
+// DumpWithType acts like Dump, but with type information.
 // Also see Dump.
-func DumpBrief(values ...interface{}) {
+func DumpWithType(values ...interface{}) {
 	for _, value := range values {
 		if s := Export(value, ExportOption{
-			WithoutType: true,
+			WithoutType: false,
 		}); s != "" {
 			fmt.Println(s)
 		}
