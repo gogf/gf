@@ -5,8 +5,8 @@ import (
 )
 
 func PrintLog(content string) {
-	g.Log().Skip(0).Line().Println("line number with skip:", content)
-	g.Log().Line(true).Println("line number without skip:", content)
+	g.Log().Skip(0).Line().Print("line number with skip:", content)
+	g.Log().Line(true).Print("line number without skip:", content)
 }
 
 func main() {

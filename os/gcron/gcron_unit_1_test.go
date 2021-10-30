@@ -26,11 +26,11 @@ func TestCron_Add_Close(t *testing.T) {
 		cron := gcron.New()
 		array := garray.New(true)
 		_, err1 := cron.Add(ctx, "* * * * * *", func(ctx context.Context) {
-			g.Log().Println(ctx, "cron1")
+			g.Log().Print(ctx, "cron1")
 			array.Append(1)
 		})
 		_, err2 := cron.Add(ctx, "* * * * * *", func(ctx context.Context) {
-			g.Log().Println(ctx, "cron2")
+			g.Log().Print(ctx, "cron2")
 			array.Append(1)
 		}, "test")
 		t.Assert(err1, nil)

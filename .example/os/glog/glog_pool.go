@@ -12,7 +12,7 @@ func main() {
 	path := "/Users/john/Temp/test"
 	g.Log().SetPath(path)
 	for {
-		g.Log().Println(gtime.Now().String())
+		g.Log().Print(gtime.Now().String())
 		time.Sleep(time.Second)
 	}
 }
