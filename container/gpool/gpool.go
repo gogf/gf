@@ -8,6 +8,7 @@
 package gpool
 
 import (
+	"context"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"time"
@@ -60,7 +61,7 @@ func New(ttl time.Duration, newFunc NewFunc, expireFunc ...ExpireFunc) *Pool {
 	if len(expireFunc) > 0 {
 		r.ExpireFunc = expireFunc[0]
 	}
-	gtimer.AddSingleton(time.Second, r.checkExpireItems)
+	gtimer.AddSingleton(context.Background(), time.Second, r.checkExpireItems)
 	return r
 }
 
@@ -134,7 +135,7 @@ func (p *Pool) Close() {
 }
 
 // checkExpire removes expired items from pool in every second.
-func (p *Pool) checkExpireItems() {
+func (p *Pool) checkExpireItems(ctx context.Context) {
 	if p.closed.Val() {
 		// If p has ExpireFunc,
 		// then it must close all items using this function.
@@ -157,7 +158,7 @@ func (p *Pool) checkExpireItems() {
 	var latestExpire int64 = -1
 	// Retrieve the current timestamp in milliseconds, it expires the items
 	// by comparing with this timestamp. It is not accurate comparison for
-	// every items expired, but high performance.
+	// every item expired, but high performance.
 	var timestampMilli = gtime.TimestampMilli()
 	for {
 		if latestExpire > timestampMilli {
