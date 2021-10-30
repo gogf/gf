@@ -249,7 +249,7 @@ func Test_Mutex_TryRLockFunc(t *testing.T) {
 		go func() {
 			mu.LockFunc(func() {
 				array.Append(1)
-				glog.Println(context.TODO(), "lock1 done")
+				glog.Print(context.TODO(), "lock1 done")
 				time.Sleep(2000 * time.Millisecond)
 			})
 		}()

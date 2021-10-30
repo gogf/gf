@@ -248,15 +248,15 @@ func TestTimer_AddLeveledJob1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		timer := New()
 		array := garray.New(true)
-		//glog.Println("start")
+		//glog.Print("start")
 		timer.DelayAdd(ctx, 1000*time.Millisecond, 1000*time.Millisecond, func(ctx context.Context) {
-			//glog.Println("add")
+			//glog.Print("add")
 			array.Append(1)
 		})
 		time.Sleep(1500 * time.Millisecond)
 		t.Assert(array.Len(), 0)
 		time.Sleep(1300 * time.Millisecond)
-		//glog.Println("check")
+		//glog.Print("check")
 		t.Assert(array.Len(), 1)
 	})
 }

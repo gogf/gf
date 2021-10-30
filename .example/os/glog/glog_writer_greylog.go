@@ -26,5 +26,5 @@ package main
 //			MaxChunkSizeLan : 1337,
 //		}),
 //	})
-//	glog.Println("test log")
+//	glog.Print("test log")
 //}

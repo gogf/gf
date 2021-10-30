@@ -355,9 +355,9 @@ func (l *Logger) format(format string, value ...interface{}) string {
 // the optional parameter `skip` specify the skipped stack offset from the end point.
 func (l *Logger) PrintStack(ctx context.Context, skip ...int) {
 	if s := l.GetStack(skip...); s != "" {
-		l.Println(ctx, "Stack:\n"+s)
+		l.Print(ctx, "Stack:\n"+s)
 	} else {
-		l.Println(ctx)
+		l.Print(ctx)
 	}
 }
 
