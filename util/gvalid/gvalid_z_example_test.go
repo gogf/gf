@@ -527,3 +527,28 @@ func ExampleValidator_NotIn() {
 	// Output:
 	// The InvalidIndex value is not in acceptable range
 }
+
+func ExampleValidator_Date() {
+	type BizReq struct {
+		Date1 string `v:"date"`
+		Date2 string `v:"date"`
+		Date3 string `v:"date"`
+		Date4 string `v:"date"`
+	}
+
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Date1: "2021-10-31",
+			Date2: "2021.10.31",
+			Date3: "2021 10 31",
+			Date4: "31/10/2021",
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Print(err)
+	}
+
+	// Output:
+	// The Date3 value is not a valid date; The Date4 value is not a valid date
+}
