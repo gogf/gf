@@ -16,10 +16,10 @@ func main() {
 	})
 	s.BindHookHandlerByMap(p, map[string]ghttp.HandlerFunc{
 		ghttp.HookBeforeServe: func(r *ghttp.Request) {
-			glog.To(r.Response.Writer).Print("BeforeServe")
+			glog.To(r.Response.Writer).Print(r.Context(), "BeforeServe")
 		},
 		ghttp.HookAfterServe: func(r *ghttp.Request) {
-			glog.To(r.Response.Writer).Print("AfterServe")
+			glog.To(r.Response.Writer).Print(r.Context(), "AfterServe")
 		},
 	})
 	s.SetPort(8199)
