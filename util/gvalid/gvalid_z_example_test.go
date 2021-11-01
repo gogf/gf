@@ -541,8 +541,8 @@ func ExampleValidator_Date() {
 		req = BizReq{
 			Date1: "2021-10-31",
 			Date2: "2021.10.31",
-			Date3: "2021 10 31",
-			Date4: "31/10/2021",
+			Date3: "2021-Oct-31",
+			Date4: "2021 Octa 31",
 		}
 	)
 	if err := g.Validator().CheckStruct(ctx, req); err != nil {
@@ -551,4 +551,154 @@ func ExampleValidator_Date() {
 
 	// Output:
 	// The Date3 value is not a valid date; The Date4 value is not a valid date
+}
+
+func ExampleValidator_Datetime() {
+	type BizReq struct {
+		Date1 string `v:"datetime"`
+		Date2 string `v:"datetime"`
+		Date3 string `v:"datetime"`
+		Date4 string `v:"datetime"`
+	}
+
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Date1: "2021-11-01 23:00:00",
+			Date2: "2021-11-01 23:00",     // error
+			Date3: "2021/11/01 23:00:00",  // error
+			Date4: "2021/Dec/01 23:00:00", // error
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Print(err)
+	}
+
+	// Output:
+	// The Date2 value is not a valid datetime; The Date3 value is not a valid datetime; The Date4 value is not a valid datetime
+}
+
+func ExampleValidator_DateFormat() {
+	type BizReq struct {
+		Date1 string `v:"date-format:Y-m-d"`
+		Date2 string `v:"date-format:Y-m-d"`
+		Date3 string `v:"date-format:Y-m-d H:i:s"`
+		Date4 string `v:"date-format:Y-m-d H:i:s"`
+	}
+
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Date1: "2021-11-01",
+			Date2: "2021-11-01 23:00", // error
+			Date3: "2021-11-01 23:00:00",
+			Date4: "2021-11-01 23:00", // error
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Print(err)
+	}
+
+	// Output:
+	// The Date2 value does not match the format Y-m-d; The Date4 value does not match the format Y-m-d H:i:s
+}
+
+func ExampleValidator_Email() {
+	type BizReq struct {
+		MailAddr1 string `v:"email"`
+		MailAddr2 string `v:"email"`
+		MailAddr3 string `v:"email"`
+		MailAddr4 string `v:"email"`
+	}
+
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			MailAddr1: "gf@goframe.org",
+			MailAddr2: "gf@goframe", // error
+			MailAddr3: "gf@goframe.org.cn",
+			MailAddr4: "gf#goframe.org", // error
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Print(err)
+	}
+
+	// Output:
+	// The MailAddr2 value must be a valid email address; The MailAddr4 value must be a valid email address
+}
+
+func ExampleValidator_Phone() {
+	type BizReq struct {
+		PhoneNumber1 string `v:"phone"`
+		PhoneNumber2 string `v:"phone"`
+		PhoneNumber3 string `v:"phone"`
+		PhoneNumber4 string `v:"phone"`
+	}
+
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			PhoneNumber1: "13578912345",
+			PhoneNumber2: "11578912345", // error 11x not exist
+			PhoneNumber3: "17178912345", // error 171 not exit
+			PhoneNumber4: "1357891234",  // error len must be 11
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Print(err)
+	}
+
+	// Output:
+	// The PhoneNumber2 value must be a valid phone number; The PhoneNumber3 value must be a valid phone number; The PhoneNumber4 value must be a valid phone number
+}
+
+func ExampleValidator_PhoneLoose() {
+	type BizReq struct {
+		PhoneNumber1 string `v:"phone-loose"`
+		PhoneNumber2 string `v:"phone-loose"`
+		PhoneNumber3 string `v:"phone-loose"`
+		PhoneNumber4 string `v:"phone-loose"`
+	}
+
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			PhoneNumber1: "13578912345",
+			PhoneNumber2: "11578912345", // error 11x not exist
+			PhoneNumber3: "17178912345",
+			PhoneNumber4: "1357891234", // error len must be 11
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Print(err)
+	}
+
+	// Output:
+	// The PhoneNumber2 value must be a valid phone number; The PhoneNumber4 value must be a valid phone number
+}
+
+func ExampleValidator_Telephone() {
+	type BizReq struct {
+		Telephone1 string `v:"telephone"`
+		Telephone2 string `v:"telephone"`
+		Telephone3 string `v:"telephone"`
+		Telephone4 string `v:"telephone"`
+	}
+
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Telephone1: "010-77542145",
+			Telephone2: "0571-77542145",
+			Telephone3: "20-77542145", // error
+			Telephone4: "775421451",   // error len must be 7 or 8
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Print(err)
+	}
+
+	// Output:
+	// The Telephone3 value must be a valid telephone number; The Telephone4 value must be a valid telephone number
 }
