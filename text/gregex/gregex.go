@@ -39,7 +39,7 @@ func IsMatchString(pattern string, src string) bool {
 	return IsMatch(pattern, []byte(src))
 }
 
-// MatchString return bytes slice that matched `pattern`.
+// Match return bytes slice that matched `pattern`.
 func Match(pattern string, src []byte) ([][]byte, error) {
 	if r, err := getRegexp(pattern); err == nil {
 		return r.FindSubmatch(src), nil
@@ -75,7 +75,7 @@ func MatchAllString(pattern string, src string) ([][]string, error) {
 	}
 }
 
-// ReplaceString replace all matched `pattern` in bytes `src` with bytes `replace`.
+// Replace replace all matched `pattern` in bytes `src` with bytes `replace`.
 func Replace(pattern string, replace, src []byte) ([]byte, error) {
 	if r, err := getRegexp(pattern); err == nil {
 		return r.ReplaceAll(src, replace), nil

@@ -333,8 +333,10 @@ func (r *Request) GetMultipartFiles(name string) []*multipart.FileHeader {
 		return v
 	}
 	// Support "name[0]","name[1]","name[2]", etc. as array parameter.
-	key := ""
-	files := make([]*multipart.FileHeader, 0)
+	var (
+		key   = ""
+		files = make([]*multipart.FileHeader, 0)
+	)
 	for i := 0; ; i++ {
 		key = fmt.Sprintf(`%s[%d]`, name, i)
 		if v := form.File[key]; len(v) > 0 {

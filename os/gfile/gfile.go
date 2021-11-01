@@ -25,7 +25,7 @@ var (
 	// to allow it modified by developer if necessary.
 	Separator = string(filepath.Separator)
 
-	// DefaultPerm is the default perm for file opening.
+	// DefaultPermOpen is the default perm for file opening.
 	DefaultPermOpen = os.FileMode(0666)
 
 	// DefaultPermCopy is the default perm for file/folder copy.
@@ -169,12 +169,6 @@ func IsFile(path string) bool {
 	return !s.IsDir()
 }
 
-// Alias of Stat.
-// See Stat.
-func Info(path string) (os.FileInfo, error) {
-	return Stat(path)
-}
-
 // Stat returns a FileInfo describing the named file.
 // If there is an error, it will be of type *PathError.
 func Stat(path string) (os.FileInfo, error) {
@@ -273,6 +267,7 @@ func IsWritable(path string) bool {
 	return result
 }
 
+// Chmod is alias of os.Chmod.
 // See os.Chmod.
 func Chmod(path string, mode os.FileMode) error {
 	return os.Chmod(path, mode)
@@ -401,7 +396,7 @@ func ExtName(path string) string {
 }
 
 // TempDir retrieves and returns the temporary directory of current system.
-// It return "/tmp" is current in *nix system, or else it returns os.TempDir().
+// It returns "/tmp" is current in *nix system, or else it returns os.TempDir().
 //
 // The optional parameter `names` specifies the its sub-folders/sub-files,
 // which will be joined with current system separator and returned with the path.

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -38,7 +39,7 @@ func main() {
 			fmt.Println(t.UTC().String())
 			fmt.Println(t.In(cstLocal).String())
 		} else {
-			glog.Error(s, err)
+			glog.Error(context.Background(), s, err)
 		}
 		fmt.Println()
 	}
