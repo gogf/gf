@@ -275,6 +275,7 @@ const (
 	sqlTypeQueryContext    = `DB.QueryContext`
 	sqlTypeExecContext     = `DB.ExecContext`
 	sqlTypePrepareContext  = `DB.PrepareContext`
+	modelForDaoSuffix      = `ForDao`
 )
 
 var (

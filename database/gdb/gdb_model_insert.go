@@ -51,26 +51,26 @@ func (m *Model) Data(data ...interface{}) *Model {
 			model.data = m
 		}
 	} else {
-		switch params := data[0].(type) {
+		switch value := data[0].(type) {
 		case Result:
-			model.data = params.List()
+			model.data = value.List()
 
 		case Record:
-			model.data = params.Map()
+			model.data = value.Map()
 
 		case List:
-			list := make(List, len(params))
-			for k, v := range params {
+			list := make(List, len(value))
+			for k, v := range value {
 				list[k] = gutil.MapCopy(v)
 			}
 			model.data = list
 
 		case Map:
-			model.data = gutil.MapCopy(params)
+			model.data = gutil.MapCopy(value)
 
 		default:
 			var (
-				reflectInfo = utils.OriginValueAndKind(params)
+				reflectInfo = utils.OriginValueAndKind(value)
 			)
 			switch reflectInfo.OriginKind {
 			case reflect.Slice, reflect.Array:
@@ -84,6 +84,12 @@ func (m *Model) Data(data ...interface{}) *Model {
 				model.data = ConvertDataForTableRecord(data[0])
 
 			case reflect.Struct:
+				// If the `data` parameter is defined like `xxxForDao`,
+				// it then adds `OmitNilData` option for this condition,
+				// which will filter all nil parameters in `data`.
+				if gstr.HasSuffix(reflect.TypeOf(value).String(), modelForDaoSuffix) {
+					model = model.OmitNilData()
+				}
 				if v, ok := data[0].(iInterfaces); ok {
 					var (
 						array = v.Interfaces()
