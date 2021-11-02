@@ -8,7 +8,8 @@ package gerror_test
 
 import (
 	"errors"
-	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"testing"
 )
 
@@ -55,36 +56,36 @@ func Benchmark_NewSkipf(b *testing.B) {
 
 func Benchmark_NewCode(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		gerror.NewCode(500, "test")
+		gerror.NewCode(gcode.New(500, "", nil), "test")
 	}
 }
 
 func Benchmark_NewCodef(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		gerror.NewCodef(500, "%s", "test")
+		gerror.NewCodef(gcode.New(500, "", nil), "%s", "test")
 	}
 }
 
 func Benchmark_NewCodeSkip(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		gerror.NewCodeSkip(1, 500, "test")
+		gerror.NewCodeSkip(gcode.New(1, "", nil), 500, "test")
 	}
 }
 
 func Benchmark_NewCodeSkipf(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		gerror.NewCodeSkipf(1, 500, "%s", "test")
+		gerror.NewCodeSkipf(gcode.New(1, "", nil), 500, "%s", "test")
 	}
 }
 
 func Benchmark_WrapCode(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		gerror.WrapCode(500, baseError, "test")
+		gerror.WrapCode(gcode.New(500, "", nil), baseError, "test")
 	}
 }
 
 func Benchmark_WrapCodef(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		gerror.WrapCodef(500, baseError, "test")
+		gerror.WrapCodef(gcode.New(500, "", nil), baseError, "test")
 	}
 }

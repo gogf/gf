@@ -8,6 +8,7 @@ package gdebug
 
 import (
 	"fmt"
+	"github.com/gogf/gf/v2/internal/utils"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -42,22 +43,24 @@ func init() {
 	}
 }
 
-// CallerPath returns the function name and the absolute file path along with its line
+// Caller returns the function name and the absolute file path along with its line
 // number of the caller.
 func Caller(skip ...int) (function string, path string, line int) {
 	return CallerWithFilter("", skip...)
 }
 
-// CallerPathWithFilter returns the function name and the absolute file path along with
+// CallerWithFilter returns the function name and the absolute file path along with
 // its line number of the caller.
 //
-// The parameter <filter> is used to filter the path of the caller.
+// The parameter `filter` is used to filter the path of the caller.
 func CallerWithFilter(filter string, skip ...int) (function string, path string, line int) {
-	number := 0
+	var (
+		number = 0
+		ok     = true
+	)
 	if len(skip) > 0 {
 		number = skip[0]
 	}
-	ok := true
 	pc, file, line, start := callerFromIndex([]string{filter})
 	if start != -1 {
 		for i := start + number; i < maxCallerDepth; i++ {
@@ -65,12 +68,6 @@ func CallerWithFilter(filter string, skip ...int) (function string, path string,
 				pc, file, line, ok = runtime.Caller(i)
 			}
 			if ok {
-				if filter != "" && strings.Contains(file, filter) {
-					continue
-				}
-				if strings.Contains(file, stackFilterKey) {
-					continue
-				}
 				function := ""
 				if fn := runtime.FuncForPC(pc); fn == nil {
 					function = "unknown"
@@ -89,7 +86,7 @@ func CallerWithFilter(filter string, skip ...int) (function string, path string,
 // callerFromIndex returns the caller position and according information exclusive of the
 // debug package.
 //
-// VERY NOTE THAT, the returned index value should be <index - 1> as the caller's start point.
+// VERY NOTE THAT, the returned index value should be `index - 1` as the caller's start point.
 func callerFromIndex(filters []string) (pc uintptr, file string, line int, index int) {
 	var filtered, ok bool
 	for index = 0; index < maxCallerDepth; index++ {
@@ -104,8 +101,14 @@ func callerFromIndex(filters []string) (pc uintptr, file string, line int, index
 			if filtered {
 				continue
 			}
-			if strings.Contains(file, stackFilterKey) {
-				continue
+			if !utils.IsDebugEnabled() {
+				if strings.Contains(file, utils.StackFilterKeyForGoFrame) {
+					continue
+				}
+			} else {
+				if strings.Contains(file, stackFilterKey) {
+					continue
+				}
 			}
 			if index > 0 {
 				index--
@@ -163,12 +166,12 @@ func CallerFileLineShort() string {
 	return fmt.Sprintf(`%s:%d`, filepath.Base(path), line)
 }
 
-// FuncPath returns the complete function path of given <f>.
+// FuncPath returns the complete function path of given `f`.
 func FuncPath(f interface{}) string {
 	return runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name()
 }
 
-// FuncName returns the function name of given <f>.
+// FuncName returns the function name of given `f`.
 func FuncName(f interface{}) string {
 	path := FuncPath(f)
 	if path == "" {

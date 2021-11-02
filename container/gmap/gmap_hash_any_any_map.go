@@ -7,14 +7,14 @@
 package gmap
 
 import (
-	"github.com/gogf/gf/internal/json"
+	"github.com/gogf/gf/v2/internal/json"
 
-	"github.com/gogf/gf/internal/empty"
+	"github.com/gogf/gf/v2/internal/empty"
 
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/util/gconv"
 
-	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/internal/rwmutex"
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/internal/rwmutex"
 )
 
 type AnyAnyMap struct {
@@ -23,7 +23,7 @@ type AnyAnyMap struct {
 }
 
 // NewAnyAnyMap creates and returns an empty hash map.
-// The parameter <safe> is used to specify whether using map in concurrent-safety,
+// The parameter `safe` is used to specify whether using map in concurrent-safety,
 // which is false in default.
 func NewAnyAnyMap(safe ...bool) *AnyAnyMap {
 	return &AnyAnyMap{
@@ -32,8 +32,8 @@ func NewAnyAnyMap(safe ...bool) *AnyAnyMap {
 	}
 }
 
-// NewAnyAnyMapFrom creates and returns a hash map from given map <data>.
-// Note that, the param <data> map will be set as the underlying data map(no deep copy),
+// NewAnyAnyMapFrom creates and returns a hash map from given map `data`.
+// Note that, the param `data` map will be set as the underlying data map(no deep copy),
 // there might be some concurrent-safe issues when changing the map outside.
 func NewAnyAnyMapFrom(data map[interface{}]interface{}, safe ...bool) *AnyAnyMap {
 	return &AnyAnyMap{
@@ -42,8 +42,8 @@ func NewAnyAnyMapFrom(data map[interface{}]interface{}, safe ...bool) *AnyAnyMap
 	}
 }
 
-// Iterator iterates the hash map readonly with custom callback function <f>.
-// If <f> returns true, then it continues iterating; or false to stop.
+// Iterator iterates the hash map readonly with custom callback function `f`.
+// If `f` returns true, then it continues iterating; or false to stop.
 func (m *AnyAnyMap) Iterator(f func(k interface{}, v interface{}) bool) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -143,8 +143,8 @@ func (m *AnyAnyMap) Sets(data map[interface{}]interface{}) {
 	m.mu.Unlock()
 }
 
-// Search searches the map with given <key>.
-// Second return parameter <found> is true if key was found, otherwise false.
+// Search searches the map with given `key`.
+// Second return parameter `found` is true if key was found, otherwise false.
 func (m *AnyAnyMap) Search(key interface{}) (value interface{}, found bool) {
 	m.mu.RLock()
 	if m.data != nil {
@@ -154,7 +154,7 @@ func (m *AnyAnyMap) Search(key interface{}) (value interface{}, found bool) {
 	return
 }
 
-// Get returns the value by given <key>.
+// Get returns the value by given `key`.
 func (m *AnyAnyMap) Get(key interface{}) (value interface{}) {
 	m.mu.RLock()
 	if m.data != nil {
@@ -175,7 +175,7 @@ func (m *AnyAnyMap) Pop() (key, value interface{}) {
 	return
 }
 
-// Pops retrieves and deletes <size> items from the map.
+// Pops retrieves and deletes `size` items from the map.
 // It returns all items if size == -1.
 func (m *AnyAnyMap) Pops(size int) map[interface{}]interface{} {
 	m.mu.Lock()
@@ -202,14 +202,14 @@ func (m *AnyAnyMap) Pops(size int) map[interface{}]interface{} {
 }
 
 // doSetWithLockCheck checks whether value of the key exists with mutex.Lock,
-// if not exists, set value to the map with given <key>,
+// if not exists, set value to the map with given `key`,
 // or else just return the existing value.
 //
-// When setting value, if <value> is type of <func() interface {}>,
+// When setting value, if `value` is type of `func() interface {}`,
 // it will be executed with mutex.Lock of the hash map,
-// and its return value will be set to the map with <key>.
+// and its return value will be set to the map with `key`.
 //
-// It returns value with given <key>.
+// It returns value with given `key`.
 func (m *AnyAnyMap) doSetWithLockCheck(key interface{}, value interface{}) interface{} {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -229,7 +229,7 @@ func (m *AnyAnyMap) doSetWithLockCheck(key interface{}, value interface{}) inter
 }
 
 // GetOrSet returns the value by key,
-// or sets value with given <value> if it does not exist and then returns this value.
+// or sets value with given `value` if it does not exist and then returns this value.
 func (m *AnyAnyMap) GetOrSet(key interface{}, value interface{}) interface{} {
 	if v, ok := m.Search(key); !ok {
 		return m.doSetWithLockCheck(key, value)
@@ -239,7 +239,7 @@ func (m *AnyAnyMap) GetOrSet(key interface{}, value interface{}) interface{} {
 }
 
 // GetOrSetFunc returns the value by key,
-// or sets value with returned value of callback function <f> if it does not exist
+// or sets value with returned value of callback function `f` if it does not exist
 // and then returns this value.
 func (m *AnyAnyMap) GetOrSetFunc(key interface{}, f func() interface{}) interface{} {
 	if v, ok := m.Search(key); !ok {
@@ -250,10 +250,10 @@ func (m *AnyAnyMap) GetOrSetFunc(key interface{}, f func() interface{}) interfac
 }
 
 // GetOrSetFuncLock returns the value by key,
-// or sets value with returned value of callback function <f> if it does not exist
+// or sets value with returned value of callback function `f` if it does not exist
 // and then returns this value.
 //
-// GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function <f>
+// GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function `f`
 // with mutex.Lock of the hash map.
 func (m *AnyAnyMap) GetOrSetFuncLock(key interface{}, f func() interface{}) interface{} {
 	if v, ok := m.Search(key); !ok {
@@ -263,7 +263,7 @@ func (m *AnyAnyMap) GetOrSetFuncLock(key interface{}, f func() interface{}) inte
 	}
 }
 
-// GetVar returns a Var with the value by given <key>.
+// GetVar returns a Var with the value by given `key`.
 // The returned Var is un-concurrent safe.
 func (m *AnyAnyMap) GetVar(key interface{}) *gvar.Var {
 	return gvar.New(m.Get(key))
@@ -287,8 +287,8 @@ func (m *AnyAnyMap) GetVarOrSetFuncLock(key interface{}, f func() interface{}) *
 	return gvar.New(m.GetOrSetFuncLock(key, f))
 }
 
-// SetIfNotExist sets <value> to the map if the <key> does not exist, and then returns true.
-// It returns false if <key> exists, and <value> would be ignored.
+// SetIfNotExist sets `value` to the map if the `key` does not exist, and then returns true.
+// It returns false if `key` exists, and `value` would be ignored.
 func (m *AnyAnyMap) SetIfNotExist(key interface{}, value interface{}) bool {
 	if !m.Contains(key) {
 		m.doSetWithLockCheck(key, value)
@@ -297,8 +297,8 @@ func (m *AnyAnyMap) SetIfNotExist(key interface{}, value interface{}) bool {
 	return false
 }
 
-// SetIfNotExistFunc sets value with return value of callback function <f>, and then returns true.
-// It returns false if <key> exists, and <value> would be ignored.
+// SetIfNotExistFunc sets value with return value of callback function `f`, and then returns true.
+// It returns false if `key` exists, and `value` would be ignored.
 func (m *AnyAnyMap) SetIfNotExistFunc(key interface{}, f func() interface{}) bool {
 	if !m.Contains(key) {
 		m.doSetWithLockCheck(key, f())
@@ -307,11 +307,11 @@ func (m *AnyAnyMap) SetIfNotExistFunc(key interface{}, f func() interface{}) boo
 	return false
 }
 
-// SetIfNotExistFuncLock sets value with return value of callback function <f>, and then returns true.
-// It returns false if <key> exists, and <value> would be ignored.
+// SetIfNotExistFuncLock sets value with return value of callback function `f`, and then returns true.
+// It returns false if `key` exists, and `value` would be ignored.
 //
 // SetIfNotExistFuncLock differs with SetIfNotExistFunc function is that
-// it executes function <f> with mutex.Lock of the hash map.
+// it executes function `f` with mutex.Lock of the hash map.
 func (m *AnyAnyMap) SetIfNotExistFuncLock(key interface{}, f func() interface{}) bool {
 	if !m.Contains(key) {
 		m.doSetWithLockCheck(key, f)
@@ -320,7 +320,7 @@ func (m *AnyAnyMap) SetIfNotExistFuncLock(key interface{}, f func() interface{})
 	return false
 }
 
-// Remove deletes value from map by given <key>, and return this deleted value.
+// Remove deletes value from map by given `key`, and return this deleted value.
 func (m *AnyAnyMap) Remove(key interface{}) (value interface{}) {
 	m.mu.Lock()
 	if m.data != nil {
@@ -375,7 +375,7 @@ func (m *AnyAnyMap) Values() []interface{} {
 }
 
 // Contains checks whether a key exists.
-// It returns true if the <key> exists, or else false.
+// It returns true if the `key` exists, or else false.
 func (m *AnyAnyMap) Contains(key interface{}) bool {
 	var ok bool
 	m.mu.RLock()
@@ -407,21 +407,21 @@ func (m *AnyAnyMap) Clear() {
 	m.mu.Unlock()
 }
 
-// Replace the data of the map with given <data>.
+// Replace the data of the map with given `data`.
 func (m *AnyAnyMap) Replace(data map[interface{}]interface{}) {
 	m.mu.Lock()
 	m.data = data
 	m.mu.Unlock()
 }
 
-// LockFunc locks writing with given callback function <f> within RWMutex.Lock.
+// LockFunc locks writing with given callback function `f` within RWMutex.Lock.
 func (m *AnyAnyMap) LockFunc(f func(m map[interface{}]interface{})) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	f(m.data)
 }
 
-// RLockFunc locks reading with given callback function <f> within RWMutex.RLock.
+// RLockFunc locks reading with given callback function `f` within RWMutex.RLock.
 func (m *AnyAnyMap) RLockFunc(f func(m map[interface{}]interface{})) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -440,7 +440,7 @@ func (m *AnyAnyMap) Flip() {
 }
 
 // Merge merges two hash maps.
-// The <other> map will be merged into the map <m>.
+// The `other` map will be merged into the map `m`.
 func (m *AnyAnyMap) Merge(other *AnyAnyMap) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -460,7 +460,7 @@ func (m *AnyAnyMap) Merge(other *AnyAnyMap) {
 // String returns the map as a string.
 func (m *AnyAnyMap) String() string {
 	b, _ := m.MarshalJSON()
-	return gconv.UnsafeBytesToStr(b)
+	return string(b)
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
@@ -476,7 +476,7 @@ func (m *AnyAnyMap) UnmarshalJSON(b []byte) error {
 		m.data = make(map[interface{}]interface{})
 	}
 	var data map[string]interface{}
-	if err := json.Unmarshal(b, &data); err != nil {
+	if err := json.UnmarshalUseNumber(b, &data); err != nil {
 		return err
 	}
 	for k, v := range data {

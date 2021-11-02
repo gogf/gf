@@ -3,12 +3,12 @@ package main
 import (
 	"fmt"
 
-	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/v2/frame/g"
 )
 
 var (
 	tableName = "orders"
-	dao       = g.DB().Table(tableName).Safe()
+	dao       = g.DB().Model(tableName).Safe()
 )
 
 type OrderServiceEntity struct {

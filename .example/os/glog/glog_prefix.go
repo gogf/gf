@@ -1,12 +1,11 @@
 package main
 
 import (
-	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/v2/frame/g"
 )
 
 func main() {
-	l := glog.New()
-	l.SetPrefix("[API]")
-	l.Println("hello world")
-	l.Error("error occurred")
+	g.Log().SetPrefix("[API]")
+	g.Log().Print("hello world")
+	g.Log().Error("error occurred")
 }

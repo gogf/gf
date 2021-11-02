@@ -7,20 +7,21 @@
 package g
 
 import (
-	"github.com/gogf/gf/database/gdb"
-	"github.com/gogf/gf/database/gredis"
-	"github.com/gogf/gf/frame/gins"
-	"github.com/gogf/gf/i18n/gi18n"
-	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/net/gtcp"
-	"github.com/gogf/gf/net/gudp"
-	"github.com/gogf/gf/os/gcfg"
-	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/os/gres"
-	"github.com/gogf/gf/os/gview"
+	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/database/gredis"
+	"github.com/gogf/gf/v2/frame/gins"
+	"github.com/gogf/gf/v2/i18n/gi18n"
+	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/net/gtcp"
+	"github.com/gogf/gf/v2/net/gudp"
+	"github.com/gogf/gf/v2/os/gcfg"
+	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v2/os/gres"
+	"github.com/gogf/gf/v2/os/gview"
+	"github.com/gogf/gf/v2/util/gvalid"
 )
 
-// Client is a convenience function, that creates and returns a new HTTP client.
+// Client is a convenience function, which creates and returns a new HTTP client.
 func Client() *ghttp.Client {
 	return ghttp.NewClient()
 }
@@ -57,13 +58,13 @@ func Cfg(name ...string) *gcfg.Config {
 }
 
 // Resource returns an instance of Resource.
-// The parameter <name> is the name for the instance.
+// The parameter `name` is the name for the instance.
 func Resource(name ...string) *gres.Resource {
 	return gins.Resource(name...)
 }
 
 // I18n returns an instance of gi18n.Manager.
-// The parameter <name> is the name for the instance.
+// The parameter `name` is the name for the instance.
 func I18n(name ...string) *gi18n.Manager {
 	return gins.I18n(name...)
 }
@@ -75,16 +76,9 @@ func Res(name ...string) *gres.Resource {
 }
 
 // Log returns an instance of glog.Logger.
-// The parameter <name> is the name for the instance.
+// The parameter `name` is the name for the instance.
 func Log(name ...string) *glog.Logger {
 	return gins.Log(name...)
-}
-
-// Database is alias of DB.
-// See DB.
-// Deprecated, use DB instead.
-func Database(name ...string) gdb.DB {
-	return gins.Database(name...)
 }
 
 // DB returns an instance of database ORM object with specified configuration group name.
@@ -92,21 +86,22 @@ func DB(name ...string) gdb.DB {
 	return gins.Database(name...)
 }
 
-// Table is alias of Model.
-// The database component is designed not only for
-// relational databases but also for NoSQL databases in the future. The name
-// "Table" is not proper for that purpose any more.
-// Deprecated, use Model instead.
-func Table(tableNameOrStruct ...interface{}) *gdb.Model {
-	return DB().Model(tableNameOrStruct...)
-}
-
 // Model creates and returns a model based on configuration of default database group.
 func Model(tableNameOrStruct ...interface{}) *gdb.Model {
 	return DB().Model(tableNameOrStruct...)
 }
 
+// ModelRaw creates and returns a model based on a raw sql not a table.
+func ModelRaw(rawSql string, args ...interface{}) *gdb.Model {
+	return DB().Raw(rawSql, args...)
+}
+
 // Redis returns an instance of redis client with specified configuration group name.
 func Redis(name ...string) *gredis.Redis {
 	return gins.Redis(name...)
+}
+
+// Validator is a convenience function, which creates and returns a new validation manager object.
+func Validator() *gvalid.Validator {
+	return gvalid.New()
 }

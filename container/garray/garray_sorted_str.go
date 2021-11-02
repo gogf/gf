@@ -8,15 +8,15 @@ package garray
 
 import (
 	"bytes"
-	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/text/gstr"
 	"math"
 	"sort"
 	"strings"
 
-	"github.com/gogf/gf/internal/rwmutex"
-	"github.com/gogf/gf/util/gconv"
-	"github.com/gogf/gf/util/grand"
+	"github.com/gogf/gf/v2/internal/rwmutex"
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/grand"
 )
 
 // SortedStrArray is a golang sorted string array with rich features.
@@ -32,14 +32,14 @@ type SortedStrArray struct {
 }
 
 // NewSortedStrArray creates and returns an empty sorted array.
-// The parameter <safe> is used to specify whether using array in concurrent-safety,
+// The parameter `safe` is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewSortedStrArray(safe ...bool) *SortedStrArray {
 	return NewSortedStrArraySize(0, safe...)
 }
 
 // NewSortedStrArrayComparator creates and returns an empty sorted array with specified comparator.
-// The parameter <safe> is used to specify whether using array in concurrent-safety which is false in default.
+// The parameter `safe` is used to specify whether using array in concurrent-safety which is false in default.
 func NewSortedStrArrayComparator(comparator func(a, b string) int, safe ...bool) *SortedStrArray {
 	array := NewSortedStrArray(safe...)
 	array.comparator = comparator
@@ -47,7 +47,7 @@ func NewSortedStrArrayComparator(comparator func(a, b string) int, safe ...bool)
 }
 
 // NewSortedStrArraySize create and returns an sorted array with given size and cap.
-// The parameter <safe> is used to specify whether using array in concurrent-safety,
+// The parameter `safe` is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewSortedStrArraySize(cap int, safe ...bool) *SortedStrArray {
 	return &SortedStrArray{
@@ -57,8 +57,8 @@ func NewSortedStrArraySize(cap int, safe ...bool) *SortedStrArray {
 	}
 }
 
-// NewSortedStrArrayFrom creates and returns an sorted array with given slice <array>.
-// The parameter <safe> is used to specify whether using array in concurrent-safety,
+// NewSortedStrArrayFrom creates and returns an sorted array with given slice `array`.
+// The parameter `safe` is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewSortedStrArrayFrom(array []string, safe ...bool) *SortedStrArray {
 	a := NewSortedStrArraySize(0, safe...)
@@ -67,8 +67,8 @@ func NewSortedStrArrayFrom(array []string, safe ...bool) *SortedStrArray {
 	return a
 }
 
-// NewSortedStrArrayFromCopy creates and returns an sorted array from a copy of given slice <array>.
-// The parameter <safe> is used to specify whether using array in concurrent-safety,
+// NewSortedStrArrayFromCopy creates and returns an sorted array from a copy of given slice `array`.
+// The parameter `safe` is used to specify whether using array in concurrent-safety,
 // which is false in default.
 func NewSortedStrArrayFromCopy(array []string, safe ...bool) *SortedStrArray {
 	newArray := make([]string, len(array))
@@ -76,7 +76,7 @@ func NewSortedStrArrayFromCopy(array []string, safe ...bool) *SortedStrArray {
 	return NewSortedStrArrayFrom(newArray, safe...)
 }
 
-// SetArray sets the underlying slice array with the given <array>.
+// SetArray sets the underlying slice array with the given `array`.
 func (a *SortedStrArray) SetArray(array []string) *SortedStrArray {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -85,8 +85,15 @@ func (a *SortedStrArray) SetArray(array []string) *SortedStrArray {
 	return a
 }
 
+// At returns the value by the specified index.
+// If the given `index` is out of range of the array, it returns an empty string.
+func (a *SortedStrArray) At(index int) (value string) {
+	value, _ = a.Get(index)
+	return
+}
+
 // Sort sorts the array in increasing order.
-// The parameter <reverse> controls whether sort
+// The parameter `reverse` controls whether sort
 // in increasing order(default) or decreasing order.
 func (a *SortedStrArray) Sort() *SortedStrArray {
 	a.mu.Lock()
@@ -128,7 +135,7 @@ func (a *SortedStrArray) Append(values ...string) *SortedStrArray {
 }
 
 // Get returns the value by the specified index.
-// If the given <index> is out of range of the array, the <found> is false.
+// If the given `index` is out of range of the array, the `found` is false.
 func (a *SortedStrArray) Get(index int) (value string, found bool) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
@@ -139,7 +146,7 @@ func (a *SortedStrArray) Get(index int) (value string, found bool) {
 }
 
 // Remove removes an item by index.
-// If the given <index> is out of range of the array, the <found> is false.
+// If the given `index` is out of range of the array, the `found` is false.
 func (a *SortedStrArray) Remove(index int) (value string, found bool) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -180,7 +187,7 @@ func (a *SortedStrArray) RemoveValue(value string) bool {
 }
 
 // PopLeft pops and returns an item from the beginning of array.
-// Note that if the array is empty, the <found> is false.
+// Note that if the array is empty, the `found` is false.
 func (a *SortedStrArray) PopLeft() (value string, found bool) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -193,7 +200,7 @@ func (a *SortedStrArray) PopLeft() (value string, found bool) {
 }
 
 // PopRight pops and returns an item from the end of array.
-// Note that if the array is empty, the <found> is false.
+// Note that if the array is empty, the `found` is false.
 func (a *SortedStrArray) PopRight() (value string, found bool) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -207,16 +214,16 @@ func (a *SortedStrArray) PopRight() (value string, found bool) {
 }
 
 // PopRand randomly pops and return an item out of array.
-// Note that if the array is empty, the <found> is false.
+// Note that if the array is empty, the `found` is false.
 func (a *SortedStrArray) PopRand() (value string, found bool) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	return a.doRemoveWithoutLock(grand.Intn(len(a.array)))
 }
 
-// PopRands randomly pops and returns <size> items out of array.
-// If the given <size> is greater than size of the array, it returns all elements of the array.
-// Note that if given <size> <= 0 or the array is empty, it returns nil.
+// PopRands randomly pops and returns `size` items out of array.
+// If the given `size` is greater than size of the array, it returns all elements of the array.
+// Note that if given `size` <= 0 or the array is empty, it returns nil.
 func (a *SortedStrArray) PopRands(size int) []string {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -233,9 +240,9 @@ func (a *SortedStrArray) PopRands(size int) []string {
 	return array
 }
 
-// PopLefts pops and returns <size> items from the beginning of array.
-// If the given <size> is greater than size of the array, it returns all elements of the array.
-// Note that if given <size> <= 0 or the array is empty, it returns nil.
+// PopLefts pops and returns `size` items from the beginning of array.
+// If the given `size` is greater than size of the array, it returns all elements of the array.
+// Note that if given `size` <= 0 or the array is empty, it returns nil.
 func (a *SortedStrArray) PopLefts(size int) []string {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -252,9 +259,9 @@ func (a *SortedStrArray) PopLefts(size int) []string {
 	return value
 }
 
-// PopRights pops and returns <size> items from the end of array.
-// If the given <size> is greater than size of the array, it returns all elements of the array.
-// Note that if given <size> <= 0 or the array is empty, it returns nil.
+// PopRights pops and returns `size` items from the end of array.
+// If the given `size` is greater than size of the array, it returns all elements of the array.
+// Note that if given `size` <= 0 or the array is empty, it returns nil.
 func (a *SortedStrArray) PopRights(size int) []string {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -276,8 +283,8 @@ func (a *SortedStrArray) PopRights(size int) []string {
 // Notice, if in concurrent-safe usage, it returns a copy of slice;
 // else a pointer to the underlying data.
 //
-// If <end> is negative, then the offset will start from the end of array.
-// If <end> is omitted, then the sequence will have everything from start up
+// If `end` is negative, then the offset will start from the end of array.
+// If `end` is omitted, then the sequence will have everything from start up
 // until the end of the array.
 func (a *SortedStrArray) Range(start int, end ...int) []string {
 	a.mu.RLock()
@@ -303,7 +310,7 @@ func (a *SortedStrArray) Range(start int, end ...int) []string {
 }
 
 // SubSlice returns a slice of elements from the array as specified
-// by the <offset> and <size> parameters.
+// by the `offset` and `size` parameters.
 // If in concurrent safe usage, it returns a copy of the slice; else a pointer.
 //
 // If offset is non-negative, the sequence will start at that offset in the array.
@@ -418,7 +425,7 @@ func (a *SortedStrArray) ContainsI(value string) bool {
 	return false
 }
 
-// Search searches array by <value>, returns the index of <value>,
+// Search searches array by `value`, returns the index of `value`,
 // or returns -1 if not exists.
 func (a *SortedStrArray) Search(value string) (index int) {
 	if i, r := a.binSearch(value, true); r == 0 {
@@ -429,9 +436,9 @@ func (a *SortedStrArray) Search(value string) (index int) {
 
 // Binary search.
 // It returns the last compared index and the result.
-// If <result> equals to 0, it means the value at <index> is equals to <value>.
-// If <result> lesser than 0, it means the value at <index> is lesser than <value>.
-// If <result> greater than 0, it means the value at <index> is greater than <value>.
+// If `result` equals to 0, it means the value at `index` is equals to `value`.
+// If `result` lesser than 0, it means the value at `index` is lesser than `value`.
+// If `result` greater than 0, it means the value at `index` is greater than `value`.
 func (a *SortedStrArray) binSearch(value string, lock bool) (index int, result int) {
 	if lock {
 		a.mu.RLock()
@@ -511,7 +518,7 @@ func (a *SortedStrArray) Clear() *SortedStrArray {
 	return a
 }
 
-// LockFunc locks writing by callback function <f>.
+// LockFunc locks writing by callback function `f`.
 func (a *SortedStrArray) LockFunc(f func(array []string)) *SortedStrArray {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -519,7 +526,7 @@ func (a *SortedStrArray) LockFunc(f func(array []string)) *SortedStrArray {
 	return a
 }
 
-// RLockFunc locks reading by callback function <f>.
+// RLockFunc locks reading by callback function `f`.
 func (a *SortedStrArray) RLockFunc(f func(array []string)) *SortedStrArray {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
@@ -527,8 +534,8 @@ func (a *SortedStrArray) RLockFunc(f func(array []string)) *SortedStrArray {
 	return a
 }
 
-// Merge merges <array> into current array.
-// The parameter <array> can be any garray or slice type.
+// Merge merges `array` into current array.
+// The parameter `array` can be any garray or slice type.
 // The difference between Merge and Append is Append supports only specified slice type,
 // but Merge supports more parameter types.
 func (a *SortedStrArray) Merge(array interface{}) *SortedStrArray {
@@ -536,7 +543,7 @@ func (a *SortedStrArray) Merge(array interface{}) *SortedStrArray {
 }
 
 // Chunk splits an array into multiple arrays,
-// the size of each array is determined by <size>.
+// the size of each array is determined by `size`.
 // The last chunk may contain less than size elements.
 func (a *SortedStrArray) Chunk(size int) [][]string {
 	if size < 1 {
@@ -568,7 +575,7 @@ func (a *SortedStrArray) Rand() (value string, found bool) {
 	return a.array[grand.Intn(len(a.array))], true
 }
 
-// Rands randomly returns <size> items from array(no deleting).
+// Rands randomly returns `size` items from array(no deleting).
 func (a *SortedStrArray) Rands(size int) []string {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
@@ -582,7 +589,7 @@ func (a *SortedStrArray) Rands(size int) []string {
 	return array
 }
 
-// Join joins array elements with a string <glue>.
+// Join joins array elements with a string `glue`.
 func (a *SortedStrArray) Join(glue string) string {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
@@ -615,8 +622,8 @@ func (a *SortedStrArray) Iterator(f func(k int, v string) bool) {
 	a.IteratorAsc(f)
 }
 
-// IteratorAsc iterates the array readonly in ascending order with given callback function <f>.
-// If <f> returns true, then it continues iterating; or false to stop.
+// IteratorAsc iterates the array readonly in ascending order with given callback function `f`.
+// If `f` returns true, then it continues iterating; or false to stop.
 func (a *SortedStrArray) IteratorAsc(f func(k int, v string) bool) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
@@ -627,8 +634,8 @@ func (a *SortedStrArray) IteratorAsc(f func(k int, v string) bool) {
 	}
 }
 
-// IteratorDesc iterates the array readonly in descending order with given callback function <f>.
-// If <f> returns true, then it continues iterating; or false to stop.
+// IteratorDesc iterates the array readonly in descending order with given callback function `f`.
+// If `f` returns true, then it continues iterating; or false to stop.
 func (a *SortedStrArray) IteratorDesc(f func(k int, v string) bool) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
@@ -671,7 +678,7 @@ func (a *SortedStrArray) UnmarshalJSON(b []byte) error {
 	}
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	if err := json.Unmarshal(b, &a.array); err != nil {
+	if err := json.UnmarshalUseNumber(b, &a.array); err != nil {
 		return err
 	}
 	if a.array != nil {
@@ -689,7 +696,7 @@ func (a *SortedStrArray) UnmarshalValue(value interface{}) (err error) {
 	defer a.mu.Unlock()
 	switch value.(type) {
 	case string, []byte:
-		err = json.Unmarshal(gconv.Bytes(value), &a.array)
+		err = json.UnmarshalUseNumber(gconv.Bytes(value), &a.array)
 	default:
 		a.array = gconv.SliceStr(value)
 	}
@@ -720,7 +727,7 @@ func (a *SortedStrArray) FilterEmpty() *SortedStrArray {
 	return a
 }
 
-// Walk applies a user supplied function <f> to every item of array.
+// Walk applies a user supplied function `f` to every item of array.
 func (a *SortedStrArray) Walk(f func(value string) string) *SortedStrArray {
 	a.mu.Lock()
 	defer a.mu.Unlock()

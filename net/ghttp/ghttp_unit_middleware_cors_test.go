@@ -8,9 +8,9 @@ package ghttp_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/test/gtest"
 	"testing"
 	"time"
 )
@@ -33,18 +33,18 @@ func Test_Middleware_CORS1(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		// Common Checks.
-		t.Assert(client.GetContent("/"), "Not Found")
-		t.Assert(client.GetContent("/api.v2"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/api.v2"), "Not Found")
 
 		// GET request does not any route.
-		resp, err := client.Get("/api.v2/user/list")
+		resp, err := client.Get(ctx, "/api.v2/user/list")
 		t.Assert(err, nil)
 		t.Assert(len(resp.Header["Access-Control-Allow-Headers"]), 0)
 		t.Assert(resp.StatusCode, 404)
 		resp.Close()
 
 		// POST request matches the route and CORS middleware.
-		resp, err = client.Post("/api.v2/user/list")
+		resp, err = client.Post(ctx, "/api.v2/user/list")
 		t.Assert(err, nil)
 		t.Assert(len(resp.Header["Access-Control-Allow-Headers"]), 1)
 		t.Assert(resp.Header["Access-Control-Allow-Headers"][0], "Origin,Content-Type,Accept,User-Agent,Cookie,Authorization,X-Auth-Token,X-Requested-With")
@@ -58,7 +58,7 @@ func Test_Middleware_CORS1(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		client.SetHeader("Access-Control-Request-Method", "GET")
-		resp, err := client.Options("/api.v2/user/list")
+		resp, err := client.Options(ctx, "/api.v2/user/list")
 		t.Assert(err, nil)
 		t.Assert(len(resp.Header["Access-Control-Allow-Headers"]), 0)
 		t.Assert(resp.ReadAllString(), "Not Found")
@@ -70,7 +70,7 @@ func Test_Middleware_CORS1(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		client.SetHeader("Access-Control-Request-Method", "POST")
-		resp, err := client.Options("/api.v2/user/list")
+		resp, err := client.Options(ctx, "/api.v2/user/list")
 		t.Assert(err, nil)
 		t.Assert(len(resp.Header["Access-Control-Allow-Headers"]), 1)
 		t.Assert(resp.StatusCode, 200)
@@ -96,10 +96,10 @@ func Test_Middleware_CORS2(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		// Common Checks.
-		t.Assert(client.GetContent("/"), "Not Found")
-		t.Assert(client.GetContent("/api.v2"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/api.v2"), "Not Found")
 		// Get request.
-		resp, err := client.Get("/api.v2/user/list/1")
+		resp, err := client.Get(ctx, "/api.v2/user/list/1")
 		t.Assert(err, nil)
 		t.Assert(len(resp.Header["Access-Control-Allow-Headers"]), 1)
 		t.Assert(resp.Header["Access-Control-Allow-Headers"][0], "Origin,Content-Type,Accept,User-Agent,Cookie,Authorization,X-Auth-Token,X-Requested-With")
@@ -114,7 +114,7 @@ func Test_Middleware_CORS2(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		client.SetHeader("Access-Control-Request-Method", "GET")
-		resp, err := client.Options("/api.v2/user")
+		resp, err := client.Options(ctx, "/api.v2/user")
 		t.Assert(err, nil)
 		t.Assert(len(resp.Header["Access-Control-Allow-Headers"]), 0)
 		t.Assert(resp.StatusCode, 404)
@@ -125,7 +125,7 @@ func Test_Middleware_CORS2(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		client.SetHeader("Access-Control-Request-Method", "GET")
-		resp, err := client.Options("/api.v2/user/list/1")
+		resp, err := client.Options(ctx, "/api.v2/user/list/1")
 		t.Assert(err, nil)
 		t.Assert(len(resp.Header["Access-Control-Allow-Headers"]), 1)
 		t.Assert(resp.StatusCode, 200)
@@ -136,7 +136,7 @@ func Test_Middleware_CORS2(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		client.SetHeader("Access-Control-Request-Method", "POST")
-		resp, err := client.Options("/api.v2/user/list/1")
+		resp, err := client.Options(ctx, "/api.v2/user/list/1")
 		t.Assert(err, nil)
 		t.Assert(len(resp.Header["Access-Control-Allow-Headers"]), 0)
 		t.Assert(resp.StatusCode, 404)

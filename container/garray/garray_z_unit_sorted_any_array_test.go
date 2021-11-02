@@ -9,16 +9,16 @@
 package garray_test
 
 import (
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/util/gutil"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/util/gutil"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/container/garray"
-	"github.com/gogf/gf/test/gtest"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 func TestSortedArray_NewSortedArrayFrom(t *testing.T) {
@@ -656,11 +656,11 @@ func TestSortedArray_Json(t *testing.T) {
 		t.Assert(err1, err2)
 
 		a2 := garray.NewSortedArray(gutil.ComparatorString)
-		err1 = json.Unmarshal(b2, &a2)
+		err1 = json.UnmarshalUseNumber(b2, &a2)
 		t.Assert(a2.Slice(), s2)
 
 		var a3 garray.SortedArray
-		err := json.Unmarshal(b2, &a3)
+		err := json.UnmarshalUseNumber(b2, &a3)
 		t.Assert(err, nil)
 		t.Assert(a3.Slice(), s1)
 		t.Assert(a3.Interfaces(), s1)
@@ -676,11 +676,11 @@ func TestSortedArray_Json(t *testing.T) {
 		t.Assert(err1, err2)
 
 		a2 := garray.NewSortedArray(gutil.ComparatorString)
-		err1 = json.Unmarshal(b2, &a2)
+		err1 = json.UnmarshalUseNumber(b2, &a2)
 		t.Assert(a2.Slice(), s2)
 
 		var a3 garray.SortedArray
-		err := json.Unmarshal(b2, &a3)
+		err := json.UnmarshalUseNumber(b2, &a3)
 		t.Assert(err, nil)
 		t.Assert(a3.Slice(), s1)
 		t.Assert(a3.Interfaces(), s1)
@@ -699,7 +699,7 @@ func TestSortedArray_Json(t *testing.T) {
 		t.Assert(err, nil)
 
 		user := new(User)
-		err = json.Unmarshal(b, user)
+		err = json.UnmarshalUseNumber(b, user)
 		t.Assert(err, nil)
 		t.Assert(user.Name, data["Name"])
 		t.AssertNE(user.Scores, nil)
@@ -735,7 +735,7 @@ func TestSortedArray_Json(t *testing.T) {
 		t.Assert(err, nil)
 
 		user := new(User)
-		err = json.Unmarshal(b, user)
+		err = json.UnmarshalUseNumber(b, user)
 		t.Assert(err, nil)
 		t.Assert(user.Name, data["Name"])
 		t.AssertNE(user.Scores, nil)

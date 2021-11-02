@@ -8,7 +8,8 @@ package gfile
 
 import (
 	"bytes"
-	"errors"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"os"
 	"os/exec"
 	"os/user"
@@ -17,7 +18,7 @@ import (
 )
 
 // Home returns absolute path of current user's home directory.
-// The optional parameter <names> specifies the its sub-folders/sub-files,
+// The optional parameter `names` specifies the sub-folders/sub-files,
 // which will be joined with current system separator and returned with the path.
 func Home(names ...string) (string, error) {
 	path, err := getHomePath()
@@ -56,7 +57,7 @@ func homeUnix() (string, error) {
 
 	result := strings.TrimSpace(stdout.String())
 	if result == "" {
-		return "", errors.New("blank output when reading home directory")
+		return "", gerror.NewCode(gcode.CodeInternalError, "blank output when reading home directory")
 	}
 
 	return result, nil
@@ -73,7 +74,7 @@ func homeWindows() (string, error) {
 		home = os.Getenv("USERPROFILE")
 	}
 	if home == "" {
-		return "", errors.New("HOMEDRIVE, HOMEPATH, and USERPROFILE are blank")
+		return "", gerror.NewCode(gcode.CodeOperationFailed, "HOMEDRIVE, HOMEPATH, and USERPROFILE are blank")
 	}
 
 	return home, nil

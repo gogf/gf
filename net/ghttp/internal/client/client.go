@@ -11,10 +11,11 @@ import (
 	"crypto/rand"
 	"crypto/tls"
 	"fmt"
-	"github.com/gogf/gf"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/text/gstr"
 	"golang.org/x/net/proxy"
 	"net"
 	"net/http"
@@ -23,13 +24,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gogf/gf/text/gregex"
+	"github.com/gogf/gf/v2/text/gregex"
 )
 
 // Client is the HTTP client for HTTP request management.
 type Client struct {
 	http.Client                         // Underlying HTTP Client.
-	ctx               context.Context   // Context for each request.
 	dump              bool              // Mark this request will be dumped.
 	parent            *Client           // Parent http client, this is used for chaining operations.
 	header            map[string]string // Custom header map.
@@ -154,7 +154,7 @@ func (c *Client) SetPrefix(prefix string) *Client {
 	return c
 }
 
-// SetTimeOut sets the request timeout for the client.
+// SetTimeout sets the request timeout for the client.
 func (c *Client) SetTimeout(t time.Duration) *Client {
 	c.Client.Timeout = t
 	return c
@@ -164,12 +164,6 @@ func (c *Client) SetTimeout(t time.Duration) *Client {
 func (c *Client) SetBasicAuth(user, pass string) *Client {
 	c.authUser = user
 	c.authPass = pass
-	return c
-}
-
-// SetCtx sets context for each request of this client.
-func (c *Client) SetCtx(ctx context.Context) *Client {
-	c.ctx = ctx
 	return c
 }
 
@@ -242,27 +236,27 @@ func (c *Client) SetProxy(proxyURL string) {
 	}
 }
 
-// SetTlsKeyCrt sets the certificate and key file for TLS configuration of client.
+// SetTLSKeyCrt sets the certificate and key file for TLS configuration of client.
 func (c *Client) SetTLSKeyCrt(crtFile, keyFile string) error {
 	tlsConfig, err := LoadKeyCrt(crtFile, keyFile)
 	if err != nil {
-		return err
+		return gerror.WrapCode(gcode.CodeInternalError, err, "LoadKeyCrt failed")
 	}
 	if v, ok := c.Transport.(*http.Transport); ok {
 		tlsConfig.InsecureSkipVerify = true
 		v.TLSClientConfig = tlsConfig
 		return nil
 	}
-	return gerror.New(`cannot set TLSClientConfig for custom Transport of the client`)
+	return gerror.NewCode(gcode.CodeInternalError, `cannot set TLSClientConfig for custom Transport of the client`)
 }
 
-// SetTlsConfig sets the TLS configuration of client.
+// SetTLSConfig sets the TLS configuration of client.
 func (c *Client) SetTLSConfig(tlsConfig *tls.Config) error {
 	if v, ok := c.Transport.(*http.Transport); ok {
 		v.TLSClientConfig = tlsConfig
 		return nil
 	}
-	return gerror.New(`cannot set TLSClientConfig for custom Transport of the client`)
+	return gerror.NewCode(gcode.CodeInternalError, `cannot set TLSClientConfig for custom Transport of the client`)
 }
 
 // LoadKeyCrt creates and returns a TLS configuration object with given certificate and key files.

@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
+	"github.com/gogf/gf/v2/frame/g"
 
-	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/text/gregex"
+	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v2/text/gregex"
 )
 
 type MyWriter struct {
@@ -16,7 +16,7 @@ func (w *MyWriter) Write(p []byte) (n int, err error) {
 	s := string(p)
 	if gregex.IsMatchString(`\[(PANI|FATA)\]`, s) {
 		fmt.Println("SERIOUS ISSUE OCCURRED!! I'd better tell monitor in first time!")
-		ghttp.PostContent("http://monitor.mydomain.com", s)
+		g.Client().PostContent("http://monitor.mydomain.com", s)
 	}
 	return w.logger.Write(p)
 }

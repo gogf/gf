@@ -8,8 +8,8 @@ package gtcp
 
 import "time"
 
-// SendPkg sends a package containing <data> to <address> and closes the connection.
-// The optional parameter <option> specifies the package options for sending.
+// SendPkg sends a package containing `data` to `address` and closes the connection.
+// The optional parameter `option` specifies the package options for sending.
 func SendPkg(address string, data []byte, option ...PkgOption) error {
 	conn, err := NewConn(address)
 	if err != nil {
@@ -19,8 +19,8 @@ func SendPkg(address string, data []byte, option ...PkgOption) error {
 	return conn.SendPkg(data, option...)
 }
 
-// SendRecvPkg sends a package containing <data> to <address>, receives the response
-// and closes the connection. The optional parameter <option> specifies the package options for sending.
+// SendRecvPkg sends a package containing `data` to `address`, receives the response
+// and closes the connection. The optional parameter `option` specifies the package options for sending.
 func SendRecvPkg(address string, data []byte, option ...PkgOption) ([]byte, error) {
 	conn, err := NewConn(address)
 	if err != nil {
@@ -30,8 +30,8 @@ func SendRecvPkg(address string, data []byte, option ...PkgOption) ([]byte, erro
 	return conn.SendRecvPkg(data, option...)
 }
 
-// SendPkgWithTimeout sends a package containing <data> to <address> with timeout limitation
-// and closes the connection. The optional parameter <option> specifies the package options for sending.
+// SendPkgWithTimeout sends a package containing `data` to `address` with timeout limitation
+// and closes the connection. The optional parameter `option` specifies the package options for sending.
 func SendPkgWithTimeout(address string, data []byte, timeout time.Duration, option ...PkgOption) error {
 	conn, err := NewConn(address)
 	if err != nil {
@@ -41,8 +41,8 @@ func SendPkgWithTimeout(address string, data []byte, timeout time.Duration, opti
 	return conn.SendPkgWithTimeout(data, timeout, option...)
 }
 
-// SendRecvPkgWithTimeout sends a package containing <data> to <address>, receives the response with timeout limitation
-// and closes the connection. The optional parameter <option> specifies the package options for sending.
+// SendRecvPkgWithTimeout sends a package containing `data` to `address`, receives the response with timeout limitation
+// and closes the connection. The optional parameter `option` specifies the package options for sending.
 func SendRecvPkgWithTimeout(address string, data []byte, timeout time.Duration, option ...PkgOption) ([]byte, error) {
 	conn, err := NewConn(address)
 	if err != nil {

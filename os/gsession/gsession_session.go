@@ -7,20 +7,22 @@
 package gsession
 
 import (
-	"errors"
-	"github.com/gogf/gf/internal/intlog"
+	"context"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/intlog"
 	"time"
 
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/container/gvar"
 )
 
-// Session struct for storing single session data,
-// which is bound to a single request.
+// Session struct for storing single session data, which is bound to a single request.
+// The Session struct is the interface with user, but the Storage is the underlying adapter designed interface
+// for functionality implements.
 type Session struct {
 	id      string          // Session id.
+	ctx     context.Context // Context for current session. Please note that, session live along with context.
 	data    *gmap.StrAnyMap // Session data.
 	dirty   bool            // Used to mark session is modified.
 	start   bool            // Used to mark session is started.
@@ -33,21 +35,26 @@ type Session struct {
 
 // init does the lazy initialization for session.
 // It here initializes real session if necessary.
-func (s *Session) init() {
+func (s *Session) init() error {
 	if s.start {
-		return
+		return nil
 	}
+	var err error
 	if s.id != "" {
-		var err error
 		// Retrieve memory session data from manager.
-		if r, _ := s.manager.sessionData.Get(s.id); r != nil {
-			s.data = r.(*gmap.StrAnyMap)
-			intlog.Print("session init data:", s.data)
+		r, err := s.manager.sessionData.Get(s.ctx, s.id)
+		if err != nil && err != ErrorDisabled {
+			return err
+		}
+		if r != nil {
+			s.data = r.Val().(*gmap.StrAnyMap)
+			intlog.Print(s.ctx, "session init data:", s.data)
 		}
 		// Retrieve stored session data from storage.
 		if s.manager.storage != nil {
-			if s.data, err = s.manager.storage.GetSession(s.id, s.manager.ttl, s.data); err != nil {
-				intlog.Errorf("session restoring failed for id '%s': %v", s.id, err)
+			if s.data, err = s.manager.storage.GetSession(s.ctx, s.id, s.manager.ttl, s.data); err != nil && err != ErrorDisabled {
+				intlog.Errorf(s.ctx, "session restoring failed for id '%s': %v", s.id, err)
+				return err
 			}
 		}
 	}
@@ -57,7 +64,11 @@ func (s *Session) init() {
 	}
 	// Use default session id creating function of storage.
 	if s.id == "" {
-		s.id = s.manager.storage.New(s.manager.ttl)
+		s.id, err = s.manager.storage.New(s.ctx, s.manager.ttl)
+		if err != nil && err != ErrorDisabled {
+			intlog.Errorf(s.ctx, "create session id failed: %v", err)
+			return err
+		}
 	}
 	// Use default session id creating function.
 	if s.id == "" {
@@ -67,23 +78,24 @@ func (s *Session) init() {
 		s.data = gmap.NewStrAnyMap(true)
 	}
 	s.start = true
+	return nil
 }
 
 // Close closes current session and updates its ttl in the session manager.
 // If this session is dirty, it also exports it to storage.
 //
 // NOTE that this function must be called ever after a session request done.
-func (s *Session) Close() {
+func (s *Session) Close() error {
 	if s.start && s.id != "" {
 		size := s.data.Size()
 		if s.manager.storage != nil {
 			if s.dirty {
-				if err := s.manager.storage.SetSession(s.id, s.data, s.manager.ttl); err != nil {
-					panic(err)
+				if err := s.manager.storage.SetSession(s.ctx, s.id, s.data, s.manager.ttl); err != nil && err != ErrorDisabled {
+					return err
 				}
 			} else if size > 0 {
-				if err := s.manager.storage.UpdateTTL(s.id, s.manager.ttl); err != nil {
-					panic(err)
+				if err := s.manager.storage.UpdateTTL(s.ctx, s.id, s.manager.ttl); err != nil && err != ErrorDisabled {
+					return err
 				}
 			}
 		}
@@ -91,12 +103,15 @@ func (s *Session) Close() {
 			s.manager.UpdateSessionTTL(s.id, s.data)
 		}
 	}
+	return nil
 }
 
 // Set sets key-value pair to this session.
 func (s *Session) Set(key string, value interface{}) error {
-	s.init()
-	if err := s.manager.storage.Set(s.id, key, value, s.manager.ttl); err != nil {
+	if err := s.init(); err != nil {
+		return err
+	}
+	if err := s.manager.storage.Set(s.ctx, s.id, key, value, s.manager.ttl); err != nil {
 		if err == ErrorDisabled {
 			s.data.Set(key, value)
 		} else {
@@ -107,16 +122,12 @@ func (s *Session) Set(key string, value interface{}) error {
 	return nil
 }
 
-// Sets batch sets the session using map.
-// Deprecated, use SetMap instead.
-func (s *Session) Sets(data map[string]interface{}) error {
-	return s.SetMap(data)
-}
-
 // SetMap batch sets the session using map.
 func (s *Session) SetMap(data map[string]interface{}) error {
-	s.init()
-	if err := s.manager.storage.SetMap(s.id, data, s.manager.ttl); err != nil {
+	if err := s.init(); err != nil {
+		return err
+	}
+	if err := s.manager.storage.SetMap(s.ctx, s.id, data, s.manager.ttl); err != nil {
 		if err == ErrorDisabled {
 			s.data.Sets(data)
 		} else {
@@ -132,9 +143,11 @@ func (s *Session) Remove(keys ...string) error {
 	if s.id == "" {
 		return nil
 	}
-	s.init()
+	if err := s.init(); err != nil {
+		return err
+	}
 	for _, key := range keys {
-		if err := s.manager.storage.Remove(s.id, key); err != nil {
+		if err := s.manager.storage.Remove(s.ctx, s.id, key); err != nil {
 			if err == ErrorDisabled {
 				s.data.Remove(key)
 			} else {
@@ -146,18 +159,15 @@ func (s *Session) Remove(keys ...string) error {
 	return nil
 }
 
-// Clear is alias of RemoveAll.
-func (s *Session) Clear() error {
-	return s.RemoveAll()
-}
-
 // RemoveAll deletes all key-value pairs from this session.
 func (s *Session) RemoveAll() error {
 	if s.id == "" {
 		return nil
 	}
-	s.init()
-	if err := s.manager.storage.RemoveAll(s.id); err != nil {
+	if err := s.init(); err != nil {
+		return err
+	}
+	if err := s.manager.storage.RemoveAll(s.ctx, s.id); err != nil {
 		if err == ErrorDisabled {
 			s.data.Clear()
 		} else {
@@ -169,17 +179,19 @@ func (s *Session) RemoveAll() error {
 }
 
 // Id returns the session id for this session.
-// It create and returns a new session id if the session id is not passed in initialization.
-func (s *Session) Id() string {
-	s.init()
-	return s.id
+// It creates and returns a new session id if the session id is not passed in initialization.
+func (s *Session) Id() (string, error) {
+	if err := s.init(); err != nil {
+		return "", err
+	}
+	return s.id, nil
 }
 
 // SetId sets custom session before session starts.
 // It returns error if it is called after session starts.
 func (s *Session) SetId(id string) error {
 	if s.start {
-		return errors.New("session already started")
+		return gerror.NewCode(gcode.CodeInvalidOperation, "session already started")
 	}
 	s.id = id
 	return nil
@@ -189,41 +201,59 @@ func (s *Session) SetId(id string) error {
 // It returns error if it is called after session starts.
 func (s *Session) SetIdFunc(f func(ttl time.Duration) string) error {
 	if s.start {
-		return errors.New("session already started")
+		return gerror.NewCode(gcode.CodeInvalidOperation, "session already started")
 	}
 	s.idFunc = f
 	return nil
 }
 
-// Map returns all data as map.
+// Data returns all data as map.
 // Note that it's using value copy internally for concurrent-safe purpose.
-func (s *Session) Map() map[string]interface{} {
+func (s *Session) Data() (map[string]interface{}, error) {
 	if s.id != "" {
-		s.init()
-		if data := s.manager.storage.GetMap(s.id); data != nil {
-			return data
+		if err := s.init(); err != nil {
+			return nil, err
 		}
-		return s.data.Map()
+		data, err := s.manager.storage.Data(s.ctx, s.id)
+		if err != nil && err != ErrorDisabled {
+			intlog.Error(s.ctx, err)
+		}
+		if data != nil {
+			return data, nil
+		}
+		return s.data.Map(), nil
 	}
-	return nil
+	return map[string]interface{}{}, nil
 }
 
 // Size returns the size of the session.
-func (s *Session) Size() int {
+func (s *Session) Size() (int, error) {
 	if s.id != "" {
-		s.init()
-		if size := s.manager.storage.GetSize(s.id); size >= 0 {
-			return size
+		if err := s.init(); err != nil {
+			return 0, err
 		}
-		return s.data.Size()
+		size, err := s.manager.storage.GetSize(s.ctx, s.id)
+		if err != nil && err != ErrorDisabled {
+			intlog.Error(s.ctx, err)
+		}
+		if size >= 0 {
+			return size, nil
+		}
+		return s.data.Size(), nil
 	}
-	return 0
+	return 0, nil
 }
 
 // Contains checks whether key exist in the session.
-func (s *Session) Contains(key string) bool {
-	s.init()
-	return s.Get(key) != nil
+func (s *Session) Contains(key string) (bool, error) {
+	if err := s.init(); err != nil {
+		return false, err
+	}
+	v, err := s.Get(key)
+	if err != nil {
+		return false, err
+	}
+	return !v.IsNil(), nil
 }
 
 // IsDirty checks whether there's any data changes in the session.
@@ -232,147 +262,73 @@ func (s *Session) IsDirty() bool {
 }
 
 // Get retrieves session value with given key.
-// It returns <def> if the key does not exist in the session if <def> is given,
-// or else it return nil.
-func (s *Session) Get(key string, def ...interface{}) interface{} {
+// It returns `def` if the key does not exist in the session if `def` is given,
+// or else it returns nil.
+func (s *Session) Get(key string, def ...interface{}) (*gvar.Var, error) {
 	if s.id == "" {
-		return nil
+		return nil, gerror.NewCode(gcode.CodeInvalidParameter, `session id cannot be empty`)
 	}
-	s.init()
-	if v := s.manager.storage.Get(s.id, key); v != nil {
-		return v
+	if err := s.init(); err != nil {
+		return nil, err
+	}
+	v, err := s.manager.storage.Get(s.ctx, s.id, key)
+	if err != nil && err != ErrorDisabled {
+		intlog.Error(s.ctx, err)
+		return nil, err
+	}
+	if v != nil {
+		return gvar.New(v), nil
 	}
 	if v := s.data.Get(key); v != nil {
-		return v
+		return gvar.New(v), nil
 	}
 	if len(def) > 0 {
-		return def[0]
+		return gvar.New(def[0]), nil
 	}
-	return nil
+	return nil, nil
 }
 
-func (s *Session) GetVar(key string, def ...interface{}) *gvar.Var {
-	return gvar.New(s.Get(key, def...), true)
+// MustId performs as function Id, but it panics if any error occurs.
+func (s *Session) MustId() string {
+	id, err := s.Id()
+	if err != nil {
+		panic(err)
+	}
+	return id
 }
 
-func (s *Session) GetString(key string, def ...interface{}) string {
-	return gconv.String(s.Get(key, def...))
+// MustGet performs as function Get, but it panics if any error occurs.
+func (s *Session) MustGet(key string, def ...interface{}) *gvar.Var {
+	v, err := s.Get(key, def...)
+	if err != nil {
+		panic(err)
+	}
+	return v
 }
 
-func (s *Session) GetBool(key string, def ...interface{}) bool {
-	return gconv.Bool(s.Get(key, def...))
+// MustContains performs as function Contains, but it panics if any error occurs.
+func (s *Session) MustContains(key string) bool {
+	b, err := s.Contains(key)
+	if err != nil {
+		panic(err)
+	}
+	return b
 }
 
-func (s *Session) GetInt(key string, def ...interface{}) int {
-	return gconv.Int(s.Get(key, def...))
+// MustData performs as function Data, but it panics if any error occurs.
+func (s *Session) MustData() map[string]interface{} {
+	m, err := s.Data()
+	if err != nil {
+		panic(err)
+	}
+	return m
 }
 
-func (s *Session) GetInt8(key string, def ...interface{}) int8 {
-	return gconv.Int8(s.Get(key, def...))
-}
-
-func (s *Session) GetInt16(key string, def ...interface{}) int16 {
-	return gconv.Int16(s.Get(key, def...))
-}
-
-func (s *Session) GetInt32(key string, def ...interface{}) int32 {
-	return gconv.Int32(s.Get(key, def...))
-}
-
-func (s *Session) GetInt64(key string, def ...interface{}) int64 {
-	return gconv.Int64(s.Get(key, def...))
-}
-
-func (s *Session) GetUint(key string, def ...interface{}) uint {
-	return gconv.Uint(s.Get(key, def...))
-}
-
-func (s *Session) GetUint8(key string, def ...interface{}) uint8 {
-	return gconv.Uint8(s.Get(key, def...))
-}
-
-func (s *Session) GetUint16(key string, def ...interface{}) uint16 {
-	return gconv.Uint16(s.Get(key, def...))
-}
-
-func (s *Session) GetUint32(key string, def ...interface{}) uint32 {
-	return gconv.Uint32(s.Get(key, def...))
-}
-
-func (s *Session) GetUint64(key string, def ...interface{}) uint64 {
-	return gconv.Uint64(s.Get(key, def...))
-}
-
-func (s *Session) GetFloat32(key string, def ...interface{}) float32 {
-	return gconv.Float32(s.Get(key, def...))
-}
-
-func (s *Session) GetFloat64(key string, def ...interface{}) float64 {
-	return gconv.Float64(s.Get(key, def...))
-}
-
-func (s *Session) GetBytes(key string, def ...interface{}) []byte {
-	return gconv.Bytes(s.Get(key, def...))
-}
-
-func (s *Session) GetInts(key string, def ...interface{}) []int {
-	return gconv.Ints(s.Get(key, def...))
-}
-
-func (s *Session) GetFloats(key string, def ...interface{}) []float64 {
-	return gconv.Floats(s.Get(key, def...))
-}
-
-func (s *Session) GetStrings(key string, def ...interface{}) []string {
-	return gconv.Strings(s.Get(key, def...))
-}
-
-func (s *Session) GetInterfaces(key string, def ...interface{}) []interface{} {
-	return gconv.Interfaces(s.Get(key, def...))
-}
-
-func (s *Session) GetTime(key string, format ...string) time.Time {
-	return gconv.Time(s.Get(key), format...)
-}
-
-func (s *Session) GetGTime(key string, format ...string) *gtime.Time {
-	return gconv.GTime(s.Get(key), format...)
-}
-
-func (s *Session) GetDuration(key string, def ...interface{}) time.Duration {
-	return gconv.Duration(s.Get(key, def...))
-}
-
-func (s *Session) GetMap(key string, tags ...string) map[string]interface{} {
-	return gconv.Map(s.Get(key), tags...)
-}
-
-func (s *Session) GetMapDeep(key string, tags ...string) map[string]interface{} {
-	return gconv.MapDeep(s.Get(key), tags...)
-}
-
-func (s *Session) GetMaps(key string, tags ...string) []map[string]interface{} {
-	return gconv.Maps(s.Get(key), tags...)
-}
-
-func (s *Session) GetMapsDeep(key string, tags ...string) []map[string]interface{} {
-	return gconv.MapsDeep(s.Get(key), tags...)
-}
-
-func (s *Session) GetStruct(key string, pointer interface{}, mapping ...map[string]string) error {
-	return gconv.Struct(s.Get(key), pointer, mapping...)
-}
-
-// Deprecated, use GetStruct instead.
-func (s *Session) GetStructDeep(key string, pointer interface{}, mapping ...map[string]string) error {
-	return gconv.StructDeep(s.Get(key), pointer, mapping...)
-}
-
-func (s *Session) GetStructs(key string, pointer interface{}, mapping ...map[string]string) error {
-	return gconv.Structs(s.Get(key), pointer, mapping...)
-}
-
-// Deprecated, use GetStructs instead.
-func (s *Session) GetStructsDeep(key string, pointer interface{}, mapping ...map[string]string) error {
-	return gconv.StructsDeep(s.Get(key), pointer, mapping...)
+// MustSize performs as function Size, but it panics if any error occurs.
+func (s *Session) MustSize() int {
+	size, err := s.Size()
+	if err != nil {
+		panic(err)
+	}
+	return size
 }

@@ -3,16 +3,16 @@ package main
 import (
 	"database/sql"
 
-	"github.com/gogf/gf/os/gfile"
+	"github.com/gogf/gf/v2/os/gfile"
 
-	"github.com/gogf/gf/encoding/gjson"
-	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v2/frame/g"
 )
 
 func main() {
 	db := g.DB()
 	table := "medicine_clinics_upload_yinchuan"
-	list, err := db.Table(table).All()
+	list, err := db.Model(table).All()
 	if err != nil && err != sql.ErrNoRows {
 		panic(err)
 	}

@@ -2,23 +2,20 @@ package main
 
 import (
 	"fmt"
+	"github.com/gogf/gf/v2/os/gctx"
 
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gtime"
 )
 
 func main() {
-	db := g.Database()
+	var (
+		db  = g.DB()
+		ctx = gctx.New()
+	)
 	db.SetDebug(true)
 
-	//r, err := db.Table("user").Data("create_time", gtime.Now().String()).Insert()
-	//if err == nil {
-	//    fmt.Println(r.LastInsertId())
-	//} else {
-	//    panic(err)
-	//}
-
-	r, err := db.Table("user").Data(g.Map{
+	r, err := db.Ctx(ctx).Model("user").Data(g.Map{
 		"name":        "john",
 		"create_time": gtime.Now().String(),
 	}).Insert()

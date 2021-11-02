@@ -1,15 +1,14 @@
 package main
 
 import (
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gfile"
 )
 
 func main() {
 	path := "/tmp/glog-cat"
-	glog.SetPath(path)
-	glog.Stdout(false).Cat("cat1").Cat("cat2").Println("test")
+	g.Log().SetPath(path)
+	g.Log().Stdout(false).Cat("cat1").Cat("cat2").Print("test")
 	list, err := gfile.ScanDir(path, "*", true)
 	g.Dump(err)
 	g.Dump(list)

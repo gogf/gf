@@ -3,11 +3,11 @@ package main
 import (
 	"encoding/json"
 
-	"github.com/gogf/gf/.example/net/gtcp/pkg_operations/monitor/types"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/gtcp"
-	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/v2/.example/net/gtcp/pkg_operations/monitor/types"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/gtcp"
+	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v2/os/gtime"
 )
 
 func main() {
@@ -35,9 +35,9 @@ func main() {
 	// 使用 SendRecvPkg 发送消息包并接受返回
 	if result, err := conn.SendRecvPkg(info); err != nil {
 		if err.Error() == "EOF" {
-			glog.Println("server closed")
+			glog.Print("server closed")
 		}
 	} else {
-		glog.Println(string(result))
+		glog.Print(string(result))
 	}
 }

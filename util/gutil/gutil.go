@@ -9,9 +9,15 @@ package gutil
 
 import (
 	"fmt"
-	"github.com/gogf/gf/internal/empty"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/empty"
+	"github.com/gogf/gf/v2/util/gconv"
 	"reflect"
+)
+
+const (
+	dumpIndent = `    `
 )
 
 // Throw throws out an exception, which can be caught be TryCatch or recover.
@@ -23,8 +29,12 @@ func Throw(exception interface{}) {
 // It returns error if any exception occurs, or else it returns nil.
 func Try(try func()) (err error) {
 	defer func() {
-		if e := recover(); e != nil {
-			err = fmt.Errorf(`%v`, e)
+		if exception := recover(); exception != nil {
+			if v, ok := exception.(error); ok && gerror.HasStack(v) {
+				err = v
+			} else {
+				err = gerror.NewCodef(gcode.CodeInternalError, `%+v`, exception)
+			}
 		}
 	}()
 	try()
@@ -36,10 +46,10 @@ func Try(try func()) (err error) {
 func TryCatch(try func(), catch ...func(exception error)) {
 	defer func() {
 		if exception := recover(); exception != nil && len(catch) > 0 {
-			if err, ok := exception.(error); ok {
-				catch[0](err)
+			if v, ok := exception.(error); ok && gerror.HasStack(v) {
+				catch[0](v)
 			} else {
-				catch[0](fmt.Errorf(`%v`, exception))
+				catch[0](fmt.Errorf(`%+v`, exception))
 			}
 		}
 	}()

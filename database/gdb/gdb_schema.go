@@ -30,10 +30,10 @@ func (tx *TX) Schema(schema string) *Schema {
 	}
 }
 
-// Table creates and returns a new ORM model.
+// Model creates and returns a new ORM model.
 // The parameter `tables` can be more than one table names, like :
 // "user", "user u", "user, user_detail", "user u, user_detail ud"
-func (s *Schema) Table(table string) *Model {
+func (s *Schema) Model(table string) *Model {
 	var m *Model
 	if s.tx != nil {
 		m = s.tx.Model(table)
@@ -50,10 +50,4 @@ func (s *Schema) Table(table string) *Model {
 	m.db = db
 	m.schema = s.schema
 	return m
-}
-
-// Model is alias of Core.Table.
-// See Core.Table.
-func (s *Schema) Model(table string) *Model {
-	return s.Table(table)
 }

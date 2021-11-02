@@ -7,18 +7,19 @@
 package gdb
 
 import (
-	"github.com/gogf/gf/util/gutil"
 	"strings"
 	"time"
 
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/util/gutil"
 
-	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/v2/text/gstr"
 
-	"github.com/gogf/gf/encoding/gbinary"
+	"github.com/gogf/gf/v2/os/gtime"
 
-	"github.com/gogf/gf/text/gregex"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/encoding/gbinary"
+
+	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // convertFieldValueToLocalValue automatically checks and converts field value from database type
@@ -99,7 +100,8 @@ func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType s
 
 	case
 		"datetime",
-		"timestamp":
+		"timestamp",
+		"timestamptz":
 		if t, ok := fieldValue.(time.Time); ok {
 			return gtime.NewFromTime(t)
 		}
@@ -107,7 +109,7 @@ func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType s
 		return t.String()
 
 	default:
-		// Auto detect field type, using key match.
+		// Auto-detect field type, using key match.
 		switch {
 		case strings.Contains(t, "text") || strings.Contains(t, "char") || strings.Contains(t, "character"):
 			return gconv.String(fieldValue)
@@ -149,7 +151,7 @@ func (c *Core) convertFieldValueToLocalValue(fieldValue interface{}, fieldType s
 // mappingAndFilterData automatically mappings the map key to table field and removes
 // all key-value pairs that are not the field of given table.
 func (c *Core) mappingAndFilterData(schema, table string, data map[string]interface{}, filter bool) (map[string]interface{}, error) {
-	if fieldsMap, err := c.db.TableFields(nil, table, schema); err == nil {
+	if fieldsMap, err := c.db.TableFields(c.GetCtx(), c.guessPrimaryTableName(table), schema); err == nil {
 		fieldsKeyMap := make(map[string]interface{}, len(fieldsMap))
 		for k, _ := range fieldsMap {
 			fieldsKeyMap[k] = nil
@@ -177,17 +179,3 @@ func (c *Core) mappingAndFilterData(schema, table string, data map[string]interf
 	}
 	return data, nil
 }
-
-//// filterFields removes all key-value pairs which are not the field of given table.
-//func (c *Core) filterFields(schema, table string, data map[string]interface{}) map[string]interface{} {
-//	// It must use data copy here to avoid its changing the origin data map.
-//	newDataMap := make(map[string]interface{}, len(data))
-//	if fields, err := c.db.TableFields(table, schema); err == nil {
-//		for k, v := range data {
-//			if _, ok := fields[k]; ok {
-//				newDataMap[k] = v
-//			}
-//		}
-//	}
-//	return newDataMap
-//}

@@ -7,13 +7,13 @@
 package gconv_test
 
 import (
-	"errors"
-	"github.com/gogf/gf/crypto/gcrc32"
-	"github.com/gogf/gf/encoding/gbinary"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/test/gtest"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/crypto/gcrc32"
+	"github.com/gogf/gf/v2/encoding/gbinary"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gconv"
 	"testing"
 	"time"
 )
@@ -46,7 +46,8 @@ func Test_Struct_UnmarshalValue1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		st := &MyTimeSt{}
 		err := gconv.Struct(g.Map{"ServiceDate": nil}, st)
-		t.AssertNE(err, nil)
+		t.AssertNil(err)
+		t.Assert(st.ServiceDate.Time.IsZero(), true)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		st := &MyTimeSt{}
@@ -83,16 +84,16 @@ func (p *Pkg) Marshal() []byte {
 func (p *Pkg) UnmarshalValue(v interface{}) error {
 	b := gconv.Bytes(v)
 	if len(b) < 6 {
-		return errors.New("invalid package length")
+		return gerror.New("invalid package length")
 	}
 	p.Length = gbinary.DecodeToUint16(b[:2])
 	if len(b) < int(p.Length) {
-		return errors.New("invalid data length")
+		return gerror.New("invalid data length")
 	}
 	p.Crc32 = gbinary.DecodeToUint32(b[2:6])
 	p.Data = b[6:]
 	if gcrc32.Encrypt(p.Data) != p.Crc32 {
-		return errors.New("crc32 validation failed")
+		return gerror.New("crc32 validation failed")
 	}
 	return nil
 }

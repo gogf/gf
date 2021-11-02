@@ -20,7 +20,7 @@ var (
 	argumentRegex        = regexp.MustCompile(`^\-{1,2}([\w\?\.\-]+)(=){0,1}(.*)$`)
 )
 
-// Custom initialization.
+// Init does custom initialization.
 func Init(args ...string) {
 	if len(args) == 0 {
 		if len(defaultParsedArgs) == 0 && len(defaultParsedOptions) == 0 {
@@ -107,8 +107,8 @@ func GetArgAll() []string {
 // It returns the default value `def` if none of them exists.
 //
 // Fetching Rules:
-// 1. Command line arguments are in lowercase format, eg: gf.<package name>.<variable name>;
-// 2. Environment arguments are in uppercase format, eg: GF_<package name>_<variable name>；
+// 1. Command line arguments are in lowercase format, eg: gf.package.variable;
+// 2. Environment arguments are in uppercase format, eg: GF_PACKAGE_VARIABLE；
 func GetOptWithEnv(key string, def ...string) string {
 	cmdKey := strings.ToLower(strings.Replace(key, "_", ".", -1))
 	if ContainsOpt(cmdKey) {

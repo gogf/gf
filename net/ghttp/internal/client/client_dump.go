@@ -8,12 +8,10 @@ package client
 
 import (
 	"fmt"
-	"github.com/gogf/gf/internal/utils"
+	"github.com/gogf/gf/v2/internal/utils"
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
-
-	"github.com/gogf/gf/util/gconv"
 )
 
 // dumpTextFormat is the format of the dumped raw string
@@ -31,7 +29,7 @@ func getResponseBody(res *http.Response) string {
 	}
 	bodyContent, _ := ioutil.ReadAll(res.Body)
 	res.Body = utils.NewReadCloser(bodyContent, true)
-	return gconv.UnsafeBytesToStr(bodyContent)
+	return string(bodyContent)
 }
 
 // RawRequest returns the raw content of the request.
@@ -51,7 +49,7 @@ func (r *Response) RawRequest() string {
 	return fmt.Sprintf(
 		dumpTextFormat,
 		"REQUEST ",
-		gconv.UnsafeBytesToStr(bs),
+		string(bs),
 		r.requestBody,
 	)
 }
@@ -70,7 +68,7 @@ func (r *Response) RawResponse() string {
 	return fmt.Sprintf(
 		dumpTextFormat,
 		"RESPONSE",
-		gconv.UnsafeBytesToStr(bs),
+		string(bs),
 		getResponseBody(r.Response),
 	)
 }

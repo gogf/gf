@@ -7,44 +7,78 @@
 package gtimer
 
 import (
-	"github.com/gogf/gf/container/garray"
-	"github.com/gogf/gf/container/gtype"
-	"github.com/gogf/gf/test/gtest"
+	"context"
+	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/test/gtest"
 	"testing"
 	"time"
 )
 
 func TestTimer_Proceed(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		index := gtype.NewInt()
 		array := garray.New(true)
-		timer := doNewWithoutAutoStart(10, 60*time.Millisecond, 6)
-		timer.nowFunc = func() time.Time {
-			return time.Now().Add(time.Duration(index.Add(1)) * time.Millisecond * 60)
-		}
-		timer.AddOnce(2*time.Second, func() {
+		timer := New(TimerOptions{
+			Interval: time.Hour,
+		})
+		timer.Add(ctx, 10000*time.Hour, func(ctx context.Context) {
 			array.Append(1)
 		})
-		timer.AddOnce(1*time.Minute, func() {
-			array.Append(2)
+		timer.proceed(10001)
+		time.Sleep(10 * time.Millisecond)
+		t.Assert(array.Len(), 1)
+		timer.proceed(20001)
+		time.Sleep(10 * time.Millisecond)
+		t.Assert(array.Len(), 2)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		array := garray.New(true)
+		timer := New(TimerOptions{
+			Interval: time.Millisecond * 100,
 		})
-		timer.AddOnce(5*time.Minute, func() {
-			array.Append(3)
+		timer.Add(ctx, 10000*time.Hour, func(ctx context.Context) {
+			array.Append(1)
 		})
-		timer.AddOnce(1*time.Hour, func() {
-			array.Append(4)
+		ticks := int64((10000 * time.Hour) / (time.Millisecond * 100))
+		timer.proceed(ticks + 1)
+		time.Sleep(10 * time.Millisecond)
+		t.Assert(array.Len(), 1)
+		timer.proceed(2*ticks + 1)
+		time.Sleep(10 * time.Millisecond)
+		t.Assert(array.Len(), 2)
+	})
+}
+
+func TestTimer_PriorityQueue(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		queue := newPriorityQueue()
+		queue.Push(1, 1)
+		queue.Push(4, 4)
+		queue.Push(5, 5)
+		queue.Push(2, 2)
+		queue.Push(3, 3)
+		t.Assert(queue.Pop(), 1)
+		t.Assert(queue.Pop(), 2)
+		t.Assert(queue.Pop(), 3)
+		t.Assert(queue.Pop(), 4)
+		t.Assert(queue.Pop(), 5)
+	})
+}
+
+func TestTimer_PriorityQueue_FirstOneInArrayIsTheLeast(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			size  = 1000000
+			array = garray.NewIntArrayRange(0, size, 1)
+		)
+		array.Shuffle()
+		queue := newPriorityQueue()
+		array.Iterator(func(k int, v int) bool {
+			queue.Push(v, int64(v))
+			return true
 		})
-		timer.AddOnce(100*time.Minute, func() {
-			array.Append(5)
-		})
-		timer.AddOnce(2*time.Hour, func() {
-			array.Append(6)
-		})
-		for i := 0; i < 500000; i++ {
-			timer.wheels[0].proceed()
-			time.Sleep(10 * time.Microsecond)
+		for i := 0; i < size; i++ {
+			t.Assert(queue.Pop(), i)
+			t.Assert(queue.heap.array[0].priority, i+1)
 		}
-		time.Sleep(time.Second)
-		t.Assert(array.Slice(), []int{1, 2, 3, 4, 5, 6})
 	})
 }

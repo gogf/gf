@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/v2/frame/g"
 )
 
 func main() {
@@ -17,7 +17,7 @@ func main() {
 	}
 	user := (*User)(nil)
 	fmt.Println(user)
-	err := db.Table("test").Where("id=1").Struct(&user)
+	err := db.Model("test").Where("id=1").Scan(&user)
 	fmt.Println(err)
 	fmt.Println(user)
 }

@@ -1,12 +1,12 @@
 package main
 
 import (
-	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/v2/frame/g"
 )
 
 func PrintLog(content string) {
-	glog.Skip(0).Line().Println("line number with skip:", content)
-	glog.Line(true).Println("line number without skip:", content)
+	g.Log().Skip(0).Line().Print("line number with skip:", content)
+	g.Log().Line(true).Print("line number without skip:", content)
 }
 
 func main() {

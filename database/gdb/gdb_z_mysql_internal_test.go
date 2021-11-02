@@ -7,12 +7,12 @@
 package gdb
 
 import (
+	"context"
 	"fmt"
-	"github.com/go-sql-driver/mysql"
-	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/os/gcmd"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/os/gcmd"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/test/gtest"
 	"testing"
 )
 
@@ -24,6 +24,7 @@ const (
 
 var (
 	db         DB
+	ctx        = context.TODO()
 	configNode ConfigNode
 )
 
@@ -38,8 +39,8 @@ func init() {
 		Port:             "3306",
 		User:             TestDbUser,
 		Pass:             TestDbPass,
-		Name:             parser.GetOpt("name", ""),
-		Type:             parser.GetOpt("type", "mysql"),
+		Name:             parser.GetOpt("name", "").String(),
+		Type:             parser.GetOpt("type", "mysql").String(),
 		Role:             "master",
 		Charset:          "utf8",
 		Weight:           1,
@@ -55,14 +56,14 @@ func init() {
 		db = r
 	}
 	schemaTemplate := "CREATE DATABASE IF NOT EXISTS `%s` CHARACTER SET UTF8"
-	if _, err := db.Exec(fmt.Sprintf(schemaTemplate, SCHEMA)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(schemaTemplate, SCHEMA)); err != nil {
 		gtest.Error(err)
 	}
 	db.SetSchema(SCHEMA)
 }
 
 func dropTable(table string) {
-	if _, err := db.Exec(fmt.Sprintf("DROP TABLE IF EXISTS `%s`", table)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf("DROP TABLE IF EXISTS `%s`", table)); err != nil {
 		gtest.Error(err)
 	}
 }
@@ -174,7 +175,7 @@ func Test_Func_addTablePrefix(t *testing.T) {
 
 func Test_Model_getSoftFieldName(t *testing.T) {
 	table1 := "soft_deleting_table_" + gtime.TimestampNanoStr()
-	if _, err := db.Exec(fmt.Sprintf(`
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
   id        int(11) NOT NULL,
   name      varchar(45) DEFAULT NULL,
@@ -189,7 +190,7 @@ CREATE TABLE %s (
 	defer dropTable(table1)
 
 	table2 := "soft_deleting_table_" + gtime.TimestampNanoStr()
-	if _, err := db.Exec(fmt.Sprintf(`
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
   id        int(11) NOT NULL,
   name      varchar(45) DEFAULT NULL,
@@ -213,7 +214,7 @@ CREATE TABLE %s (
 
 func Test_Model_getConditionForSoftDeleting(t *testing.T) {
 	table1 := "soft_deleting_table_" + gtime.TimestampNanoStr()
-	if _, err := db.Exec(fmt.Sprintf(`
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
   id1        int(11) NOT NULL,
   name1      varchar(45) DEFAULT NULL,
@@ -228,7 +229,7 @@ CREATE TABLE %s (
 	defer dropTable(table1)
 
 	table2 := "soft_deleting_table_" + gtime.TimestampNanoStr()
-	if _, err := db.Exec(fmt.Sprintf(`
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
   id2        int(11) NOT NULL,
   name2      varchar(45) DEFAULT NULL,
@@ -250,6 +251,7 @@ CREATE TABLE %s (
 		model := db.Model(fmt.Sprintf(`%s as t`, table1))
 		t.Assert(model.getConditionForSoftDeleting(), "`delete_at` IS NULL")
 	})
+
 	gtest.C(t, func(t *gtest.T) {
 		model := db.Model(fmt.Sprintf(`%s, %s`, table1, table2))
 		t.Assert(model.getConditionForSoftDeleting(), fmt.Sprintf(
@@ -289,19 +291,6 @@ CREATE TABLE %s (
 			model.getConditionForSoftDeleting(),
 			"`t1`.`delete_at` IS NULL AND `t2`.`deleteat` IS NULL AND `t3`.`deleteat` IS NULL",
 		)
-	})
-}
-
-// Fix issue: https://github.com/gogf/gf/issues/819
-func Test_Func_ConvertDataForTableRecord(t *testing.T) {
-	type Test struct {
-		ResetPasswordTokenAt mysql.NullTime `orm:"reset_password_token_at"`
-	}
-	gtest.C(t, func(t *gtest.T) {
-		m := ConvertDataForTableRecord(new(Test))
-		t.Assert(len(m), 1)
-		t.AssertNE(m["reset_password_token_at"], nil)
-		t.Assert(m["reset_password_token_at"], new(mysql.NullTime))
 	})
 }
 

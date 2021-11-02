@@ -7,21 +7,23 @@
 package ghttp
 
 import (
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/internal/intlog"
 	"net/http"
 	"os"
 	"sort"
 	"strings"
 
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/text/gstr"
 
-	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/v2/errors/gerror"
 
-	"github.com/gogf/gf/os/gres"
+	"github.com/gogf/gf/v2/os/gres"
 
-	"github.com/gogf/gf/encoding/ghtml"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/gspath"
-	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/v2/encoding/ghtml"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gspath"
+	"github.com/gogf/gf/v2/os/gtime"
 )
 
 // ServeHTTP is the default handler for http request.
@@ -42,18 +44,6 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Remove char '/' in the tail of URI.
-	if r.URL.Path != "/" {
-		for len(r.URL.Path) > 0 && r.URL.Path[len(r.URL.Path)-1] == '/' {
-			r.URL.Path = r.URL.Path[:len(r.URL.Path)-1]
-		}
-	}
-
-	// Default URI value if it's empty.
-	if r.URL.Path == "" {
-		r.URL.Path = "/"
-	}
-
 	// Create a new request object.
 	request := newRequest(s, r, w)
 
@@ -65,10 +55,14 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		} else {
 			if exception := recover(); exception != nil {
 				request.Response.WriteStatus(http.StatusInternalServerError)
-				if err, ok := exception.(error); ok {
-					s.handleErrorLog(gerror.Wrap(err, ""), request)
+				if v, ok := exception.(error); ok {
+					if code := gerror.Code(v); code != gcode.CodeNil {
+						s.handleErrorLog(v, request)
+					} else {
+						s.handleErrorLog(gerror.WrapCodeSkip(gcode.CodeInternalError, 1, v, ""), request)
+					}
 				} else {
-					s.handleErrorLog(gerror.Newf("%v", exception), request)
+					s.handleErrorLog(gerror.NewCodeSkipf(gcode.CodeInternalError, 1, "%+v", exception), request)
 				}
 			}
 		}
@@ -80,9 +74,15 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		// Close the request and response body
 		// to release the file descriptor in time.
-		_ = request.Request.Body.Close()
+		err := request.Request.Body.Close()
+		if err != nil {
+			intlog.Error(request.Context(), err)
+		}
 		if request.Request.Response != nil {
-			_ = request.Request.Response.Body.Close()
+			err = request.Request.Response.Body.Close()
+			if err != nil {
+				intlog.Error(request.Context(), err)
+			}
 		}
 	}()
 
@@ -172,8 +172,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// and SessionCookieOutput is enabled.
 	if s.config.SessionCookieOutput &&
 		request.Session.IsDirty() &&
-		request.Session.Id() != request.GetSessionId() {
-		request.Cookie.SetSessionId(request.Session.Id())
+		request.Session.MustId() != request.GetSessionId() {
+		request.Cookie.SetSessionId(request.Session.MustId())
 	}
 	// Output the cookie content to client.
 	request.Cookie.Flush()
@@ -188,9 +188,11 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // searchStaticFile searches the file with given URI.
 // It returns a file struct specifying the file information.
 func (s *Server) searchStaticFile(uri string) *staticFile {
-	var file *gres.File
-	var path string
-	var dir bool
+	var (
+		file *gres.File
+		path string
+		dir  bool
+	)
 	// Firstly search the StaticPaths mapping.
 	if len(s.config.StaticPaths) > 0 {
 		for _, item := range s.config.StaticPaths {
@@ -248,7 +250,7 @@ func (s *Server) searchStaticFile(uri string) *staticFile {
 }
 
 // serveFile serves the static file for client.
-// The optional parameter <allowIndex> specifies if allowing directory listing if <f> is directory.
+// The optional parameter `allowIndex` specifies if allowing directory listing if `f` is directory.
 func (s *Server) serveFile(r *Request, f *staticFile, allowIndex ...bool) {
 	// Use resource file from memory.
 	if f.File != nil {

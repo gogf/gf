@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gogf/gf/container/gpool"
-	"github.com/gogf/gf/net/gtcp"
-	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/v2/container/gpool"
+	"github.com/gogf/gf/v2/net/gtcp"
+	"github.com/gogf/gf/v2/os/glog"
 )
 
 func main() {
@@ -14,7 +14,7 @@ func main() {
 	p := gpool.New(3000*time.Millisecond, func() (interface{}, error) {
 		return gtcp.NewConn("www.baidu.com:80")
 	}, func(i interface{}) {
-		glog.Println("expired")
+		glog.Print("expired")
 		i.(*gtcp.Conn).Close()
 	})
 	conn, err := p.Get()

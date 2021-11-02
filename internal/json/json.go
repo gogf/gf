@@ -8,6 +8,7 @@
 package json
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
 )
@@ -31,6 +32,13 @@ func MarshalIndent(v interface{}, prefix, indent string) ([]byte, error) {
 // Refer to https://godoc.org/encoding/json#Unmarshal for more information.
 func Unmarshal(data []byte, v interface{}) error {
 	return json.Unmarshal(data, v)
+}
+
+// UnmarshalUseNumber decodes the json data bytes to target interface using number option.
+func UnmarshalUseNumber(data []byte, v interface{}) error {
+	decoder := NewDecoder(bytes.NewReader(data))
+	decoder.UseNumber()
+	return decoder.Decode(v)
 }
 
 // NewEncoder same as json.NewEncoder

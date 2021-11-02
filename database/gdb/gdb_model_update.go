@@ -9,12 +9,14 @@ package gdb
 import (
 	"database/sql"
 	"fmt"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
-	"github.com/gogf/gf/util/gutil"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/internal/utils"
 	"reflect"
+
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // Update does "UPDATE ... " statement for the model.
@@ -38,29 +40,21 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 		}
 	}()
 	if m.data == nil {
-		return nil, gerror.New("updating table with empty data")
+		return nil, gerror.NewCode(gcode.CodeMissingParameter, "updating table with empty data")
 	}
 	var (
 		updateData                                    = m.data
-		fieldNameCreate                               = m.getSoftFieldNameCreated()
 		fieldNameUpdate                               = m.getSoftFieldNameUpdated()
-		fieldNameDelete                               = m.getSoftFieldNameDeleted()
 		conditionWhere, conditionExtra, conditionArgs = m.formatCondition(false, false)
 	)
 	// Automatically update the record updating time.
 	if !m.unscoped && fieldNameUpdate != "" {
 		var (
-			refValue = reflect.ValueOf(m.data)
-			refKind  = refValue.Kind()
+			reflectInfo = utils.OriginTypeAndKind(m.data)
 		)
-		if refKind == reflect.Ptr {
-			refValue = refValue.Elem()
-			refKind = refValue.Kind()
-		}
-		switch refKind {
+		switch reflectInfo.OriginKind {
 		case reflect.Map, reflect.Struct:
 			dataMap := ConvertDataForTableRecord(m.data)
-			gutil.MapDelete(dataMap, fieldNameCreate, fieldNameUpdate, fieldNameDelete)
 			if fieldNameUpdate != "" {
 				dataMap[fieldNameUpdate] = gtime.Now().String()
 			}
@@ -79,9 +73,10 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 	}
 	conditionStr := conditionWhere + conditionExtra
 	if !gstr.ContainsI(conditionStr, " WHERE ") {
-		return nil, gerror.New("there should be WHERE condition statement for UPDATE operation")
+		return nil, gerror.NewCode(gcode.CodeMissingParameter, "there should be WHERE condition statement for UPDATE operation")
 	}
 	return m.db.DoUpdate(
+		m.GetCtx(),
 		m.getLink(true),
 		m.tables,
 		newData,
@@ -91,17 +86,19 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 }
 
 // Increment increments a column's value by a given amount.
-func (m *Model) Increment(column string, amount float64) (sql.Result, error) {
+// The parameter `amount` can be type of float or integer.
+func (m *Model) Increment(column string, amount interface{}) (sql.Result, error) {
 	return m.getModel().Data(column, &Counter{
 		Field: column,
-		Value: amount,
+		Value: gconv.Float64(amount),
 	}).Update()
 }
 
 // Decrement decrements a column's value by a given amount.
-func (m *Model) Decrement(column string, amount float64) (sql.Result, error) {
+// The parameter `amount` can be type of float or integer.
+func (m *Model) Decrement(column string, amount interface{}) (sql.Result, error) {
 	return m.getModel().Data(column, &Counter{
 		Field: column,
-		Value: -amount,
+		Value: -gconv.Float64(amount),
 	}).Update()
 }

@@ -9,15 +9,15 @@
 package garray_test
 
 import (
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/internal/json"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/internal/json"
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/util/gconv"
 
-	"github.com/gogf/gf/container/garray"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_IntArray_Basic(t *testing.T) {
@@ -615,11 +615,11 @@ func TestIntArray_Json(t *testing.T) {
 		t.Assert(err1, err2)
 
 		a2 := garray.NewIntArray()
-		err1 = json.Unmarshal(b2, &a2)
+		err1 = json.UnmarshalUseNumber(b2, &a2)
 		t.Assert(a2.Slice(), s1)
 
 		var a3 garray.IntArray
-		err := json.Unmarshal(b2, &a3)
+		err := json.UnmarshalUseNumber(b2, &a3)
 		t.Assert(err, nil)
 		t.Assert(a3.Slice(), s1)
 	})
@@ -633,11 +633,11 @@ func TestIntArray_Json(t *testing.T) {
 		t.Assert(err1, err2)
 
 		a2 := garray.NewIntArray()
-		err1 = json.Unmarshal(b2, &a2)
+		err1 = json.UnmarshalUseNumber(b2, &a2)
 		t.Assert(a2.Slice(), s1)
 
 		var a3 garray.IntArray
-		err := json.Unmarshal(b2, &a3)
+		err := json.UnmarshalUseNumber(b2, &a3)
 		t.Assert(err, nil)
 		t.Assert(a3.Slice(), s1)
 	})
@@ -655,7 +655,7 @@ func TestIntArray_Json(t *testing.T) {
 		t.Assert(err, nil)
 
 		user := new(User)
-		err = json.Unmarshal(b, user)
+		err = json.UnmarshalUseNumber(b, user)
 		t.Assert(err, nil)
 		t.Assert(user.Name, data["Name"])
 		t.Assert(user.Scores, data["Scores"])
@@ -674,7 +674,7 @@ func TestIntArray_Json(t *testing.T) {
 		t.Assert(err, nil)
 
 		user := new(User)
-		err = json.Unmarshal(b, user)
+		err = json.UnmarshalUseNumber(b, user)
 		t.Assert(err, nil)
 		t.Assert(user.Name, data["Name"])
 		t.Assert(user.Scores, data["Scores"])

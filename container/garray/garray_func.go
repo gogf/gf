@@ -8,8 +8,8 @@ package garray
 
 import "strings"
 
-// apiInterfaces is used for type assert api for Interfaces.
-type apiInterfaces interface {
+// iInterfaces is used for type assert api for Interfaces.
+type iInterfaces interface {
 	Interfaces() []interface{}
 }
 

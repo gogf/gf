@@ -15,6 +15,7 @@ var (
 	// locationMap is time zone name to its location object.
 	// Time zone name is like: Asia/Shanghai.
 	locationMap = make(map[string]*time.Location)
+
 	// locationMu is used for concurrent safety for `locationMap`.
 	locationMu = sync.RWMutex{}
 )

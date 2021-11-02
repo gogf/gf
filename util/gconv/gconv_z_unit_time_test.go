@@ -7,16 +7,22 @@
 package gconv_test
 
 import (
-	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/frame/g"
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/test/gtest"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 func Test_Time(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertEQ(gconv.Duration(""), time.Duration(int64(0)))
+		t.AssertEQ(gconv.GTime(""), gtime.New())
+	})
+
 	gtest.C(t, func(t *gtest.T) {
 		s := "2011-10-10 01:02:03.456"
 		t.AssertEQ(gconv.GTime(s), gtime.NewFromStr(s))
@@ -41,6 +47,15 @@ func Test_Time(t *testing.T) {
 		t.AssertEQ(gconv.GTime(s).Second(), 3)
 		t.AssertEQ(gconv.GTime(s), gtime.NewFromStr(s))
 		t.AssertEQ(gconv.Time(s), gtime.NewFromStr(s).Time)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		t1 := gtime.NewFromStr("2021-05-21 05:04:51.206547+00")
+		t2 := gconv.GTime(gvar.New(t1))
+		t3 := gvar.New(t1).GTime()
+		t.AssertEQ(t1, t2)
+		t.AssertEQ(t1.Local(), t2.Local())
+		t.AssertEQ(t1, t3)
+		t.AssertEQ(t1.Local(), t3.Local())
 	})
 }
 

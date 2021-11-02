@@ -8,7 +8,8 @@ package gtime
 
 import (
 	"bytes"
-	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"strconv"
 	"time"
 )
@@ -18,8 +19,8 @@ type Time struct {
 	wrapper
 }
 
-// apiUnixNano is an interface definition commonly for custom time.Time wrapper.
-type apiUnixNano interface {
+// iUnixNano is an interface definition commonly for custom time.Time wrapper.
+type iUnixNano interface {
 	UnixNano() int64
 }
 
@@ -32,10 +33,13 @@ func New(param ...interface{}) *Time {
 			return NewFromTime(r)
 		case *time.Time:
 			return NewFromTime(*r)
+
 		case Time:
 			return &r
+
 		case *Time:
 			return r
+
 		case string:
 			if len(param) > 1 {
 				switch t := param[1].(type) {
@@ -46,6 +50,7 @@ func New(param ...interface{}) *Time {
 				}
 			}
 			return NewFromStr(r)
+
 		case []byte:
 			if len(param) > 1 {
 				switch t := param[1].(type) {
@@ -56,12 +61,15 @@ func New(param ...interface{}) *Time {
 				}
 			}
 			return NewFromStr(string(r))
+
 		case int:
 			return NewFromTimeStamp(int64(r))
+
 		case int64:
 			return NewFromTimeStamp(r)
+
 		default:
-			if v, ok := r.(apiUnixNano); ok {
+			if v, ok := r.(iUnixNano); ok {
 				return NewFromTimeStamp(v.UnixNano())
 			}
 		}
@@ -462,5 +470,10 @@ func (t *Time) UnmarshalText(data []byte) error {
 		*t = *vTime
 		return nil
 	}
-	return gerror.Newf(`invalid time value: %s`, data)
+	return gerror.NewCodef(gcode.CodeInvalidParameter, `invalid time value: %s`, data)
+}
+
+// NoValidation marks this struct object will not be validated by package gvalid.
+func (t *Time) NoValidation() {
+
 }

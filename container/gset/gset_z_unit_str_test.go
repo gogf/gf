@@ -9,17 +9,17 @@
 package gset_test
 
 import (
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/util/gconv"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/container/garray"
-	"github.com/gogf/gf/container/gset"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/container/gset"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func TestStrSet_Var(t *testing.T) {
@@ -404,7 +404,7 @@ func TestStrSet_Json(t *testing.T) {
 		t.Assert(err1, err2)
 
 		a2 := gset.NewStrSet()
-		err2 = json.Unmarshal(b2, &a2)
+		err2 = json.UnmarshalUseNumber(b2, &a2)
 		t.Assert(err2, nil)
 		t.Assert(a2.Contains("a"), true)
 		t.Assert(a2.Contains("b"), true)
@@ -413,7 +413,7 @@ func TestStrSet_Json(t *testing.T) {
 		t.Assert(a2.Contains("e"), false)
 
 		var a3 gset.StrSet
-		err := json.Unmarshal(b2, &a3)
+		err := json.UnmarshalUseNumber(b2, &a3)
 		t.Assert(err, nil)
 		t.Assert(a3.Contains("a"), true)
 		t.Assert(a3.Contains("b"), true)

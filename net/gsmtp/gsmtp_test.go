@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gogf/gf/net/gsmtp"
+	"github.com/gogf/gf/v2/net/gsmtp"
 )
 
 func TestAddress(t *testing.T) {
@@ -34,7 +34,7 @@ func TestAddress(t *testing.T) {
 }
 
 func TestFrom(t *testing.T) {
-	errMessage := "from is invalid"
+	errMessage := `invalid parameter "from"`
 
 	errValues := []string{
 		"",
@@ -55,7 +55,7 @@ func TestFrom(t *testing.T) {
 }
 
 func TestTos(t *testing.T) {
-	errMessage := "tos if invalid"
+	errMessage := `invalid parameter "tos"`
 
 	errValues := []string{
 		"",

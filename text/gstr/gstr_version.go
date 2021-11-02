@@ -7,14 +7,14 @@
 package gstr
 
 import (
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/util/gconv"
 	"strings"
 )
 
-// CompareVersion compares <a> and <b> as standard GNU version.
-// It returns  1 if <a> > <b>.
-// It returns -1 if <a> < <b>.
-// It returns  0 if <a> = <b>.
+// CompareVersion compares `a` and `b` as standard GNU version.
+// It returns  1 if `a` > `b`.
+// It returns -1 if `a` < `b`.
+// It returns  0 if `a` = `b`.
 // GNU standard version is like:
 // v1.0
 // 1
@@ -24,10 +24,10 @@ import (
 // 10.2.0
 // etc.
 func CompareVersion(a, b string) int {
-	if a[0] == 'v' {
+	if a != "" && a[0] == 'v' {
 		a = a[1:]
 	}
-	if b[0] == 'v' {
+	if b != "" && b[0] == 'v' {
 		b = b[1:]
 	}
 	var (
@@ -58,10 +58,10 @@ func CompareVersion(a, b string) int {
 	return 0
 }
 
-// CompareVersionGo compares <a> and <b> as standard Golang version.
-// It returns  1 if <a> > <b>.
-// It returns -1 if <a> < <b>.
-// It returns  0 if <a> = <b>.
+// CompareVersionGo compares `a` and `b` as standard Golang version.
+// It returns  1 if `a` > `b`.
+// It returns -1 if `a` < `b`.
+// It returns  0 if `a` = `b`.
 // Golang standard version is like:
 // 1.0.0
 // v1.0.1
@@ -71,10 +71,10 @@ func CompareVersion(a, b string) int {
 // v4.20.0+incompatible
 // etc.
 func CompareVersionGo(a, b string) int {
-	if a[0] == 'v' {
+	if a != "" && a[0] == 'v' {
 		a = a[1:]
 	}
-	if b[0] == 'v' {
+	if b != "" && b[0] == 'v' {
 		b = b[1:]
 	}
 	if Count(a, "-") > 1 {

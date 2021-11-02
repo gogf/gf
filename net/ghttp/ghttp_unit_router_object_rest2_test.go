@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 type ObjectRest2 struct{}
@@ -56,9 +56,9 @@ func Test_Router_ObjectRest_Id(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/object/99"), "1Object Get992")
-		t.Assert(client.PutContent("/object/99"), "1Object Put992")
-		t.Assert(client.PostContent("/object/99"), "1Object Post992")
-		t.Assert(client.DeleteContent("/object/99"), "1Object Delete992")
+		t.Assert(client.GetContent(ctx, "/object/99"), "1Object Get992")
+		t.Assert(client.PutContent(ctx, "/object/99"), "1Object Put992")
+		t.Assert(client.PostContent(ctx, "/object/99"), "1Object Post992")
+		t.Assert(client.DeleteContent(ctx, "/object/99"), "1Object Delete992")
 	})
 }

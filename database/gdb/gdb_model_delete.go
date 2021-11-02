@@ -9,9 +9,11 @@ package gdb
 import (
 	"database/sql"
 	"fmt"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/errors/gcode"
+
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // Delete does "DELETE FROM ... " statement for the model.
@@ -33,16 +35,17 @@ func (m *Model) Delete(where ...interface{}) (result sql.Result, err error) {
 	// Soft deleting.
 	if !m.unscoped && fieldNameDelete != "" {
 		return m.db.DoUpdate(
+			m.GetCtx(),
 			m.getLink(true),
 			m.tables,
-			fmt.Sprintf(`%s=?`, m.db.QuoteString(fieldNameDelete)),
+			fmt.Sprintf(`%s=?`, m.db.GetCore().QuoteString(fieldNameDelete)),
 			conditionWhere+conditionExtra,
 			append([]interface{}{gtime.Now().String()}, conditionArgs...),
 		)
 	}
 	conditionStr := conditionWhere + conditionExtra
 	if !gstr.ContainsI(conditionStr, " WHERE ") {
-		return nil, gerror.New("there should be WHERE condition statement for DELETE operation")
+		return nil, gerror.NewCode(gcode.CodeMissingParameter, "there should be WHERE condition statement for DELETE operation")
 	}
-	return m.db.DoDelete(m.getLink(true), m.tables, conditionStr, conditionArgs...)
+	return m.db.DoDelete(m.GetCtx(), m.getLink(true), m.tables, conditionStr, conditionArgs...)
 }

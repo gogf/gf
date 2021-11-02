@@ -7,6 +7,7 @@
 package gdb
 
 import (
+	"github.com/gogf/gf/v2/internal/intlog"
 	"time"
 )
 
@@ -38,6 +39,10 @@ func (m *Model) Cache(duration time.Duration, name ...string) *Model {
 // cache feature is enabled.
 func (m *Model) checkAndRemoveCache() {
 	if m.cacheEnabled && m.cacheDuration < 0 && len(m.cacheName) > 0 {
-		m.db.GetCache().Ctx(m.db.GetCtx()).Remove(m.cacheName)
+		var ctx = m.GetCtx()
+		_, err := m.db.GetCache().Remove(ctx, m.cacheName)
+		if err != nil {
+			intlog.Error(ctx, err)
+		}
 	}
 }

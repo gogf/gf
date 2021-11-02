@@ -1,9 +1,10 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
-	"github.com/gogf/gf/i18n/gi18n"
+	"github.com/gogf/gf/v2/i18n/gi18n"
 )
 
 func main() {
@@ -13,6 +14,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(t.Translate(`hello`))
-	fmt.Println(t.Translate(`{#hello}{#world}!`))
+	fmt.Println(t.Translate(context.TODO(), `hello`))
+	fmt.Println(t.Translate(context.TODO(), `{#hello}{#world}!`))
 }

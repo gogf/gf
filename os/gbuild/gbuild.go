@@ -8,65 +8,56 @@
 package gbuild
 
 import (
-	"github.com/gogf/gf"
-	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/encoding/gbase64"
-	"github.com/gogf/gf/internal/intlog"
-	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/util/gconv"
+	"context"
+	"github.com/gogf/gf/v2"
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/encoding/gbase64"
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/internal/json"
 	"runtime"
 )
 
 var (
-	builtInVarStr = ""                       // Raw variable base64 string.
+	builtInVarStr = ""                       // Raw variable base64 string, which is injected by go build flags.
 	builtInVarMap = map[string]interface{}{} // Binary custom variable map decoded.
 )
 
 func init() {
+	// The `builtInVarStr` is injected by go build flags.
 	if builtInVarStr != "" {
-		err := json.Unmarshal(gbase64.MustDecodeString(builtInVarStr), &builtInVarMap)
+		err := json.UnmarshalUseNumber(gbase64.MustDecodeString(builtInVarStr), &builtInVarMap)
 		if err != nil {
-			intlog.Error(err)
+			intlog.Error(context.TODO(), err)
 		}
 		builtInVarMap["gfVersion"] = gf.VERSION
 		builtInVarMap["goVersion"] = runtime.Version()
-		intlog.Printf("build variables: %+v", builtInVarMap)
+		intlog.Printf(context.TODO(), "build variables: %+v", builtInVarMap)
 	} else {
-		intlog.Print("no build variables")
+		intlog.Print(context.TODO(), "no build variables")
 	}
 }
 
 // Info returns the basic built information of the binary as map.
 // Note that it should be used with gf-cli tool "gf build",
-// which injects necessary information into the binary.
+// which automatically injects necessary information into the binary.
 func Info() map[string]string {
 	return map[string]string{
-		"gf":   GetString("gfVersion"),
-		"go":   GetString("goVersion"),
-		"git":  GetString("builtGit"),
-		"time": GetString("builtTime"),
+		"gf":   Get("gfVersion").String(),
+		"go":   Get("goVersion").String(),
+		"git":  Get("builtGit").String(),
+		"time": Get("builtTime").String(),
 	}
 }
 
 // Get retrieves and returns the build-in binary variable with given name.
-func Get(name string, def ...interface{}) interface{} {
+func Get(name string, def ...interface{}) *gvar.Var {
 	if v, ok := builtInVarMap[name]; ok {
-		return v
+		return gvar.New(v)
 	}
 	if len(def) > 0 {
-		return def[0]
+		return gvar.New(def[0])
 	}
 	return nil
-}
-
-// GetVar retrieves and returns the build-in binary variable of given name as gvar.Var.
-func GetVar(name string, def ...interface{}) *gvar.Var {
-	return gvar.New(Get(name, def...))
-}
-
-// GetString retrieves and returns the build-in binary variable of given name as string.
-func GetString(name string, def ...interface{}) string {
-	return gconv.String(Get(name, def...))
 }
 
 // Map returns the custom build-in variable map.

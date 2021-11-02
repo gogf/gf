@@ -1,11 +1,11 @@
 package main
 
 import (
-	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/glog"
 )
 
 func main() {
-	l := glog.New()
-	l.SetLevelPrefix(glog.LEVEL_DEBU, "debug")
-	l.Debug("test")
+	g.Log().SetLevelPrefix(glog.LEVEL_DEBU, "debug")
+	g.Log().Debug("test")
 }

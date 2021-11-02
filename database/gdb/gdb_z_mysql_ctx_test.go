@@ -10,8 +10,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/gogf/gf/database/gdb"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_Ctx(t *testing.T) {
@@ -36,12 +36,12 @@ func Test_Ctx_Query(t *testing.T) {
 		defer db.SetDebug(false)
 		ctx := context.WithValue(context.Background(), "TraceId", "12345678")
 		ctx = context.WithValue(ctx, "SpanId", "0.1")
-		db.Ctx(ctx).Query("select 1")
+		db.Query(ctx, "select 1")
 	})
 	gtest.C(t, func(t *gtest.T) {
 		db.SetDebug(true)
 		defer db.SetDebug(false)
-		db.Query("select 2")
+		db.Query(ctx, "select 2")
 	})
 }
 
