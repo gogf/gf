@@ -704,3 +704,248 @@ func ExampleValidator_Telephone() {
 	// Output:
 	// The Telephone3 value must be a valid telephone number; The Telephone4 value must be a valid telephone number
 }
+
+func ExampleValidator_Passport() {
+	type BizReq struct {
+		Passport1 string `v:"passport"`
+		Passport2 string `v:"passport"`
+		Passport3 string `v:"passport"`
+		Passport4 string `v:"passport"`
+	}
+
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Passport1: "goframe",
+			Passport2: "1356666",  // error starting with letter
+			Passport3: "goframe#", // error containing only numbers or underscores
+			Passport4: "gf",       // error length between 6 and 18
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Print(err)
+	}
+
+	// Output:
+	// The Passport2 value is not a valid passport format; The Passport3 value is not a valid passport format; The Passport4 value is not a valid passport format
+}
+
+func ExampleValidator_Password() {
+	type BizReq struct {
+		Password1 string `v:"password"`
+		Password2 string `v:"password"`
+	}
+
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Password1: "goframe",
+			Password2: "gofra", // error length between 6 and 18
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Print(err)
+	}
+
+	// Output:
+	// The Password2 value is not a valid passport format
+}
+
+func ExampleValidator_Password2() {
+	type BizReq struct {
+		Password1 string `v:"password2"`
+		Password2 string `v:"password2"`
+		Password3 string `v:"password2"`
+		Password4 string `v:"password2"`
+	}
+
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Password1: "Goframe123",
+			Password2: "gofra",      // error length between 6 and 18
+			Password3: "Goframe",    // error must contain lower and upper letters and numbers.
+			Password4: "goframe123", // error must contain lower and upper letters and numbers.
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Print(err)
+	}
+
+	// Output:
+	// The Password2 value is not a valid passport format; The Password3 value is not a valid passport format; The Password4 value is not a valid passport format
+}
+
+func ExampleValidator_Password3() {
+	type BizReq struct {
+		Password1 string `v:"password3"`
+		Password2 string `v:"password3"`
+		Password3 string `v:"password3"`
+	}
+
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Password1: "Goframe123#",
+			Password2: "gofra",      // error length between 6 and 18
+			Password3: "Goframe123", // error must contain lower and upper letters, numbers and special chars.
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Print(err)
+	}
+
+	// Output:
+	// The Password2 value is not a valid passport format; The Password3 value is not a valid passport format
+}
+
+func ExampleValidator_Postcode() {
+	type BizReq struct {
+		Postcode1 string `v:"postcode"`
+		Postcode2 string `v:"postcode"`
+		Postcode3 string `v:"postcode"`
+	}
+
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Postcode1: "100000",
+			Postcode2: "10000",   // error length must be 6
+			Postcode3: "1000000", // error length must be 6
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Print(err)
+	}
+
+	// Output:
+	// The Postcode2 value is not a valid passport format; The Postcode3 value is not a valid passport format
+}
+
+func ExampleValidator_ResidentId() {
+	type BizReq struct {
+		ResidentId1 string `v:"resident-id"`
+	}
+
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			ResidentId1: "320107199506285482",
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Print(err)
+	}
+
+	// Output:
+	// The ResidentId1 value is not a valid resident id number
+}
+
+func ExampleValidator_BankCard() {
+	type BizReq struct {
+		BankCard1 string `v:"bank-card"`
+	}
+
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			BankCard1: "6225760079930218",
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Print(err)
+	}
+
+	// Output:
+	// The BankCard1 value must be a valid bank card number
+}
+
+func ExampleValidator_QQ() {
+	type BizReq struct {
+		QQ1 string `v:"qq"`
+		QQ2 string `v:"qq"`
+		QQ3 string `v:"qq"`
+	}
+
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			QQ1: "389961817",
+			QQ2: "9999",       // error >= 10000
+			QQ3: "514258412a", // error all number
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Print(err)
+	}
+
+	// Output:
+	// The QQ2 value must be a valid QQ number; The QQ3 value must be a valid QQ number
+}
+
+func ExampleValidator_IP() {
+	type BizReq struct {
+		IP1 string `v:"ip"`
+		IP2 string `v:"ip"`
+		IP3 string `v:"ip"`
+		IP4 string `v:"ip"`
+	}
+
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			IP1: "127.0.0.1",
+			IP2: "fe80::812b:1158:1f43:f0d1",
+			IP3: "520.255.255.255", // error >= 10000
+			IP4: "ze80::812b:1158:1f43:f0d1",
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Print(err)
+	}
+
+	// Output:
+	// The IP3 value must be a valid IP address; The IP4 value must be a valid IP address
+}
+
+func ExampleValidator_IPV4() {
+	type BizReq struct {
+		IP1 string `v:"ipv4"`
+		IP2 string `v:"ipv4"`
+	}
+
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			IP1: "127.0.0.1",
+			IP2: "520.255.255.255",
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Print(err)
+	}
+
+	// Output:
+	// The IP2 value must be a valid IPv4 address
+}
+
+func ExampleValidator_IPV6() {
+	type BizReq struct {
+		IP1 string `v:"ipv6"`
+		IP2 string `v:"ipv6"`
+	}
+
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			IP1: "fe80::812b:1158:1f43:f0d1",
+			IP2: "ze80::812b:1158:1f43:f0d1",
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Print(err)
+	}
+
+	// Output:
+	// The IP2 value must be a valid IPv6 address
+}
