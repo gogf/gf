@@ -414,6 +414,11 @@ func formatWhere(db DB, in formatWhereInput) (newWhere string, newArgs []interfa
 		}
 
 	case reflect.Struct:
+		// If the `where` parameter is defined like `xxxForDao`, it then adds `OmitNil` option for this condition,
+		// which will filter all nil parameters in `where`.
+		if gstr.HasSuffix(reflect.TypeOf(in.Where).String(), modelForDaoSuffix) {
+			in.OmitNil = true
+		}
 		// If `where` struct implements iIterator interface,
 		// it then uses its Iterate function to iterate its key-value pairs.
 		// For example, ListMap and TreeMap are ordered map,
