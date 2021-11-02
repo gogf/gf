@@ -534,6 +534,7 @@ func ExampleValidator_Date() {
 		Date2 string `v:"date"`
 		Date3 string `v:"date"`
 		Date4 string `v:"date"`
+		Date5 string `v:"date"`
 	}
 
 	var (
@@ -543,6 +544,7 @@ func ExampleValidator_Date() {
 			Date2: "2021.10.31",
 			Date3: "2021-Oct-31",
 			Date4: "2021 Octa 31",
+			Date5: "2021/Oct/31",
 		}
 	)
 	if err := g.Validator().CheckStruct(ctx, req); err != nil {
@@ -550,7 +552,7 @@ func ExampleValidator_Date() {
 	}
 
 	// Output:
-	// The Date3 value is not a valid date; The Date4 value is not a valid date
+	// The Date3 value is not a valid date; The Date4 value is not a valid date; The Date5 value is not a valid date
 }
 
 func ExampleValidator_Datetime() {
