@@ -9,12 +9,12 @@ package gvar_test
 import (
 	"bytes"
 	"encoding/binary"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/util/gconv"
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_Set(t *testing.T) {

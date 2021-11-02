@@ -7,10 +7,12 @@
 package gsession
 
 import (
-	"github.com/gogf/gf/container/gmap"
+	"context"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/internal/intlog"
 	"time"
 
-	"github.com/gogf/gf/os/gcache"
+	"github.com/gogf/gf/v2/os/gcache"
 )
 
 // Manager for sessions.
@@ -19,7 +21,7 @@ type Manager struct {
 	storage Storage       // Storage interface for session storage.
 
 	// sessionData is the memory data cache for session TTL,
-	// which is available only if the Storage does not stores any session data in synchronizing.
+	// which is available only if the Storage does not store any session data in synchronizing.
 	// Please refer to the implements of StorageFile, StorageMemory and StorageRedis.
 	sessionData *gcache.Cache
 }
@@ -39,15 +41,16 @@ func New(ttl time.Duration, storage ...Storage) *Manager {
 }
 
 // New creates or fetches the session for given session id.
-// The parameter <sessionId> is optional, it creates a new one if not it's passed
+// The parameter `sessionId` is optional, it creates a new one if not it's passed
 // depending on Storage.New.
-func (m *Manager) New(sessionId ...string) *Session {
+func (m *Manager) New(ctx context.Context, sessionId ...string) *Session {
 	var id string
 	if len(sessionId) > 0 && sessionId[0] != "" {
 		id = sessionId[0]
 	}
 	return &Session{
 		id:      id,
+		ctx:     ctx,
 		manager: m,
 	}
 }
@@ -69,5 +72,9 @@ func (m *Manager) TTL() time.Duration {
 
 // UpdateSessionTTL updates the ttl for given session.
 func (m *Manager) UpdateSessionTTL(sessionId string, data *gmap.StrAnyMap) {
-	m.sessionData.Set(sessionId, data, m.ttl)
+	ctx := context.Background()
+	err := m.sessionData.Set(ctx, sessionId, data, m.ttl)
+	if err != nil {
+		intlog.Error(ctx, err)
+	}
 }

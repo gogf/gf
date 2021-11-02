@@ -7,20 +7,21 @@
 package gins
 
 import (
+	"context"
 	"fmt"
-	"github.com/gogf/gf/debug/gdebug"
-	"github.com/gogf/gf/os/gcfg"
+	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gogf/gf/v2/os/gcfg"
 	"testing"
 
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_View(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.AssertNE(View(), nil)
-		b, e := View().ParseContent(`{{"我是中国人" | substr 2 -1}}`, nil)
+		b, e := View().ParseContent(context.TODO(), `{{"我是中国人" | substr 2 -1}}`, nil)
 		t.Assert(e, nil)
 		t.Assert(b, "中国人")
 	})
@@ -30,7 +31,7 @@ func Test_View(t *testing.T) {
 		t.Assert(err, nil)
 		defer gfile.Remove(tpl)
 
-		b, e := View().Parse("t.tpl", nil)
+		b, e := View().Parse(context.TODO(), "t.tpl", nil)
 		t.Assert(e, nil)
 		t.Assert(b, "中国人")
 	})
@@ -43,7 +44,7 @@ func Test_View(t *testing.T) {
 		err = View().AddPath(path)
 		t.Assert(err, nil)
 
-		b, e := View().Parse("t.tpl", nil)
+		b, e := View().Parse(context.TODO(), "t.tpl", nil)
 		t.Assert(e, nil)
 		t.Assert(b, "中国人")
 	})
@@ -53,9 +54,9 @@ func Test_View_Config(t *testing.T) {
 	// view1 test1
 	gtest.C(t, func(t *gtest.T) {
 		dirPath := gdebug.TestDataPath("view1")
-		gcfg.SetContent(gfile.GetContents(gfile.Join(dirPath, "config.toml")))
-		defer gcfg.ClearContent()
-		defer instances.Clear()
+		Config().GetAdapter().(*gcfg.AdapterFile).SetContent(gfile.GetContents(gfile.Join(dirPath, "config.toml")))
+		defer Config().GetAdapter().(*gcfg.AdapterFile).ClearContent()
+		defer localInstances.Clear()
 
 		view := View("test1")
 		t.AssertNE(view, nil)
@@ -64,20 +65,20 @@ func Test_View_Config(t *testing.T) {
 
 		str := `hello ${.name},version:${.version}`
 		view.Assigns(map[string]interface{}{"version": "1.9.0"})
-		result, err := view.ParseContent(str, nil)
+		result, err := view.ParseContent(context.TODO(), str, nil)
 		t.Assert(err, nil)
 		t.Assert(result, "hello test1,version:1.9.0")
 
-		result, err = view.ParseDefault()
+		result, err = view.ParseDefault(context.TODO())
 		t.Assert(err, nil)
 		t.Assert(result, "test1:test1")
 	})
 	// view1 test2
 	gtest.C(t, func(t *gtest.T) {
 		dirPath := gdebug.TestDataPath("view1")
-		gcfg.SetContent(gfile.GetContents(gfile.Join(dirPath, "config.toml")))
-		defer gcfg.ClearContent()
-		defer instances.Clear()
+		Config().GetAdapter().(*gcfg.AdapterFile).SetContent(gfile.GetContents(gfile.Join(dirPath, "config.toml")))
+		defer Config().GetAdapter().(*gcfg.AdapterFile).ClearContent()
+		defer localInstances.Clear()
 
 		view := View("test2")
 		t.AssertNE(view, nil)
@@ -86,20 +87,20 @@ func Test_View_Config(t *testing.T) {
 
 		str := `hello #{.name},version:#{.version}`
 		view.Assigns(map[string]interface{}{"version": "1.9.0"})
-		result, err := view.ParseContent(str, nil)
+		result, err := view.ParseContent(context.TODO(), str, nil)
 		t.Assert(err, nil)
 		t.Assert(result, "hello test2,version:1.9.0")
 
-		result, err = view.ParseDefault()
+		result, err = view.ParseDefault(context.TODO())
 		t.Assert(err, nil)
 		t.Assert(result, "test2:test2")
 	})
 	// view2
 	gtest.C(t, func(t *gtest.T) {
 		dirPath := gdebug.TestDataPath("view2")
-		gcfg.SetContent(gfile.GetContents(gfile.Join(dirPath, "config.toml")))
-		defer gcfg.ClearContent()
-		defer instances.Clear()
+		Config().GetAdapter().(*gcfg.AdapterFile).SetContent(gfile.GetContents(gfile.Join(dirPath, "config.toml")))
+		defer Config().GetAdapter().(*gcfg.AdapterFile).ClearContent()
+		defer localInstances.Clear()
 
 		view := View()
 		t.AssertNE(view, nil)
@@ -108,20 +109,20 @@ func Test_View_Config(t *testing.T) {
 
 		str := `hello {.name},version:{.version}`
 		view.Assigns(map[string]interface{}{"version": "1.9.0"})
-		result, err := view.ParseContent(str, nil)
+		result, err := view.ParseContent(context.TODO(), str, nil)
 		t.Assert(err, nil)
 		t.Assert(result, "hello test,version:1.9.0")
 
-		result, err = view.ParseDefault()
+		result, err = view.ParseDefault(context.TODO())
 		t.Assert(err, nil)
 		t.Assert(result, "test:test")
 	})
 	// view2
 	gtest.C(t, func(t *gtest.T) {
 		dirPath := gdebug.TestDataPath("view2")
-		gcfg.SetContent(gfile.GetContents(gfile.Join(dirPath, "config.toml")))
-		defer gcfg.ClearContent()
-		defer instances.Clear()
+		Config().GetAdapter().(*gcfg.AdapterFile).SetContent(gfile.GetContents(gfile.Join(dirPath, "config.toml")))
+		defer Config().GetAdapter().(*gcfg.AdapterFile).ClearContent()
+		defer localInstances.Clear()
 
 		view := View("test100")
 		t.AssertNE(view, nil)
@@ -130,11 +131,11 @@ func Test_View_Config(t *testing.T) {
 
 		str := `hello {.name},version:{.version}`
 		view.Assigns(map[string]interface{}{"version": "1.9.0"})
-		result, err := view.ParseContent(str, nil)
+		result, err := view.ParseContent(context.TODO(), str, nil)
 		t.Assert(err, nil)
 		t.Assert(result, "hello test,version:1.9.0")
 
-		result, err = view.ParseDefault()
+		result, err = view.ParseDefault(context.TODO())
 		t.Assert(err, nil)
 		t.Assert(result, "test:test")
 	})

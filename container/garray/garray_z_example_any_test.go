@@ -8,9 +8,9 @@ package garray_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/v2/frame/g"
 
-	"github.com/gogf/gf/container/garray"
+	"github.com/gogf/gf/v2/container/garray"
 )
 
 func ExampleNew() {
@@ -75,14 +75,14 @@ func ExampleNew() {
 func ExampleArray_Iterator() {
 	array := garray.NewArrayFrom(g.Slice{"a", "b", "c"})
 	// Iterator is alias of IteratorAsc, which iterates the array readonly in ascending order
-	//  with given callback function <f>.
-	// If <f> returns true, then it continues iterating; or false to stop.
+	//  with given callback function `f`.
+	// If `f` returns true, then it continues iterating; or false to stop.
 	array.Iterator(func(k int, v interface{}) bool {
 		fmt.Println(k, v)
 		return true
 	})
-	// IteratorDesc iterates the array readonly in descending order with given callback function <f>.
-	// If <f> returns true, then it continues iterating; or false to stop.
+	// IteratorDesc iterates the array readonly in descending order with given callback function `f`.
+	// If `f` returns true, then it continues iterating; or false to stop.
 	array.IteratorDesc(func(k int, v interface{}) bool {
 		fmt.Println(k, v)
 		return true
@@ -150,7 +150,7 @@ func ExampleArray_Chunk() {
 	array := garray.NewFrom(g.Slice{1, 2, 3, 4, 5, 6, 7, 8, 9})
 
 	// Chunk splits an array into multiple arrays,
-	// the size of each array is determined by <size>.
+	// the size of each array is determined by `size`.
 	// The last chunk may contain less than size elements.
 	fmt.Println(array.Chunk(2))
 

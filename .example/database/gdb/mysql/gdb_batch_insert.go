@@ -2,11 +2,15 @@ package main
 
 import (
 	"fmt"
-	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gctx"
 )
 
 func main() {
-	db := g.DB()
+	var (
+		db  = g.DB()
+		ctx = gctx.New()
+	)
 	db.SetDebug(true)
 	list := make(g.List, 0)
 	for i := 0; i < 100; i++ {
@@ -14,7 +18,7 @@ func main() {
 			"name": fmt.Sprintf(`name_%d`, i),
 		})
 	}
-	r, e := db.Table("user").Data(list).Batch(2).Insert()
+	r, e := db.Ctx(ctx).Model("user").Data(list).Batch(2).Insert()
 	if e != nil {
 		panic(e)
 	}

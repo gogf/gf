@@ -7,11 +7,12 @@
 package gview_test
 
 import (
-	"github.com/gogf/gf/debug/gdebug"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/gview"
-	"github.com/gogf/gf/test/gtest"
+	"context"
+	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gview"
+	"github.com/gogf/gf/v2/test/gtest"
 	"testing"
 )
 
@@ -20,7 +21,7 @@ func Test_Encode_Parse(t *testing.T) {
 		v := gview.New()
 		v.SetPath(gdebug.TestDataPath("tpl"))
 		v.SetAutoEncode(true)
-		result, err := v.Parse("encode.tpl", g.Map{
+		result, err := v.Parse(context.TODO(), "encode.tpl", g.Map{
 			"title": "<b>my title</b>",
 		})
 		t.Assert(err, nil)
@@ -33,7 +34,7 @@ func Test_Encode_ParseContent(t *testing.T) {
 		v := gview.New()
 		tplContent := gfile.GetContents(gdebug.TestDataPath("tpl", "encode.tpl"))
 		v.SetAutoEncode(true)
-		result, err := v.ParseContent(tplContent, g.Map{
+		result, err := v.ParseContent(context.TODO(), tplContent, g.Map{
 			"title": "<b>my title</b>",
 		})
 		t.Assert(err, nil)

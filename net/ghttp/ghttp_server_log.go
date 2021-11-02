@@ -8,14 +8,8 @@ package ghttp
 
 import (
 	"fmt"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/v2/errors/gerror"
 )
-
-// Logger returns the logger of the server.
-func (s *Server) Logger() *glog.Logger {
-	return s.config.Logger
-}
 
 // handleAccessLog handles the access logging for server.
 func (s *Server) handleAccessLog(r *Request) {
@@ -29,6 +23,7 @@ func (s *Server) handleAccessLog(r *Request) {
 	s.Logger().File(s.config.AccessLogPattern).
 		Stdout(s.config.LogStdout).
 		Printf(
+			r.Context(),
 			`%d "%s %s %s %s %s" %.3f, %s, "%s", "%s"`,
 			r.Response.Status,
 			r.Method, scheme, r.Host, r.URL.String(), r.Proto,
@@ -63,8 +58,7 @@ func (s *Server) handleErrorLog(err error, r *Request) {
 	} else {
 		content += ", " + err.Error()
 	}
-	s.config.Logger.
-		File(s.config.ErrorLogPattern).
+	s.Logger().File(s.config.ErrorLogPattern).
 		Stdout(s.config.LogStdout).
-		Print(content)
+		Print(r.Context(), content)
 }

@@ -7,22 +7,24 @@
 package gtcp
 
 import (
+	"context"
 	"crypto/tls"
-	"errors"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"net"
 	"sync"
 
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 const (
-	// Default TCP server name.
-	gDEFAULT_SERVER = "default"
+	// defaultServer is the default TCP server name.
+	defaultServer = "default"
 )
 
-// TCP Server.
+// Server is a TCP server.
 type Server struct {
 	mu        sync.Mutex   // Used for Server.listen concurrent safety.
 	listen    net.Listener // Listener.
@@ -34,11 +36,11 @@ type Server struct {
 // Map for name to server, for singleton purpose.
 var serverMapping = gmap.NewStrAnyMap(true)
 
-// GetServer returns the TCP server with specified <name>,
-// or it returns a new normal TCP server named <name> if it does not exist.
-// The parameter <name> is used to specify the TCP server
+// GetServer returns the TCP server with specified `name`,
+// or it returns a new normal TCP server named `name` if it does not exist.
+// The parameter `name` is used to specify the TCP server
 func GetServer(name ...interface{}) *Server {
-	serverName := gDEFAULT_SERVER
+	serverName := defaultServer
 	if len(name) > 0 && name[0] != "" {
 		serverName = gconv.String(name[0])
 	}
@@ -48,7 +50,7 @@ func GetServer(name ...interface{}) *Server {
 }
 
 // NewServer creates and returns a new normal TCP server.
-// The parameter <name> is optional, which is used to specify the instance name of the server.
+// The parameter `name` is optional, which is used to specify the instance name of the server.
 func NewServer(address string, handler func(*Conn), name ...string) *Server {
 	s := &Server{
 		address: address,
@@ -61,7 +63,7 @@ func NewServer(address string, handler func(*Conn), name ...string) *Server {
 }
 
 // NewServerTLS creates and returns a new TCP server with TLS support.
-// The parameter <name> is optional, which is used to specify the instance name of the server.
+// The parameter `name` is optional, which is used to specify the instance name of the server.
 func NewServerTLS(address string, tlsConfig *tls.Config, handler func(*Conn), name ...string) *Server {
 	s := NewServer(address, handler, name...)
 	s.SetTLSConfig(tlsConfig)
@@ -69,11 +71,11 @@ func NewServerTLS(address string, tlsConfig *tls.Config, handler func(*Conn), na
 }
 
 // NewServerKeyCrt creates and returns a new TCP server with TLS support.
-// The parameter <name> is optional, which is used to specify the instance name of the server.
+// The parameter `name` is optional, which is used to specify the instance name of the server.
 func NewServerKeyCrt(address, crtFile, keyFile string, handler func(*Conn), name ...string) *Server {
 	s := NewServer(address, handler, name...)
 	if err := s.SetTLSKeyCrt(crtFile, keyFile); err != nil {
-		glog.Error(err)
+		glog.Error(context.TODO(), err)
 	}
 	return s
 }
@@ -88,7 +90,7 @@ func (s *Server) SetHandler(handler func(*Conn)) {
 	s.handler = handler
 }
 
-// SetTlsKeyCrt sets the certificate and key file for TLS configuration of server.
+// SetTLSKeyCrt sets the certificate and key file for TLS configuration of server.
 func (s *Server) SetTLSKeyCrt(crtFile, keyFile string) error {
 	tlsConfig, err := LoadKeyCrt(crtFile, keyFile)
 	if err != nil {
@@ -98,7 +100,7 @@ func (s *Server) SetTLSKeyCrt(crtFile, keyFile string) error {
 	return nil
 }
 
-// SetTlsConfig sets the TLS configuration of server.
+// SetTLSConfig sets the TLS configuration of server.
 func (s *Server) SetTLSConfig(tlsConfig *tls.Config) {
 	s.tlsConfig = tlsConfig
 }
@@ -115,9 +117,12 @@ func (s *Server) Close() error {
 
 // Run starts running the TCP Server.
 func (s *Server) Run() (err error) {
+	var (
+		ctx = context.TODO()
+	)
 	if s.handler == nil {
-		err = errors.New("start running failed: socket handler not defined")
-		glog.Error(err)
+		err = gerror.NewCode(gcode.CodeMissingConfiguration, "start running failed: socket handler not defined")
+		glog.Error(ctx, err)
 		return
 	}
 	if s.tlsConfig != nil {
@@ -126,21 +131,21 @@ func (s *Server) Run() (err error) {
 		s.listen, err = tls.Listen("tcp", s.address, s.tlsConfig)
 		s.mu.Unlock()
 		if err != nil {
-			glog.Error(err)
+			glog.Error(ctx, err)
 			return
 		}
 	} else {
 		// Normal Server
 		addr, err := net.ResolveTCPAddr("tcp", s.address)
 		if err != nil {
-			glog.Error(err)
+			glog.Error(ctx, err)
 			return err
 		}
 		s.mu.Lock()
 		s.listen, err = net.ListenTCP("tcp", addr)
 		s.mu.Unlock()
 		if err != nil {
-			glog.Error(err)
+			glog.Error(ctx, err)
 			return err
 		}
 	}

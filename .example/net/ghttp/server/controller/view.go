@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/frame/gmvc"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/frame/gmvc"
 )
 
 type Controller struct {

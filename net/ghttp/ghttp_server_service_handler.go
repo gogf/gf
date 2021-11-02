@@ -8,37 +8,48 @@ package ghttp
 
 import (
 	"bytes"
-	"github.com/gogf/gf/debug/gdebug"
+	"context"
+	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"reflect"
 	"strings"
 
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // BindHandler registers a handler function to server with given pattern.
-func (s *Server) BindHandler(pattern string, handler HandlerFunc) {
-	s.doBindHandler(pattern, handler, nil, "")
+// The parameter `handler` can be type of:
+// func(*ghttp.Request)
+// func(context.Context, Request)(Response, error)
+func (s *Server) BindHandler(pattern string, handler interface{}) {
+	var (
+		ctx = context.TODO()
+	)
+	funcInfo, err := s.checkAndCreateFuncInfo(handler, "", "", "")
+	if err != nil {
+		s.Logger().Fatalf(ctx, `%+v`, err)
+	}
+	s.doBindHandler(ctx, pattern, funcInfo, nil, "")
 }
 
 // doBindHandler registers a handler function to server with given pattern.
-// The parameter <pattern> is like:
+// The parameter `pattern` is like:
 // /user/list, put:/user, delete:/user, post:/user@goframe.org
-func (s *Server) doBindHandler(
-	pattern string, handler HandlerFunc,
-	middleware []HandlerFunc, source string,
-) {
-	s.setHandler(pattern, &handlerItem{
-		itemName:   gdebug.FuncPath(handler),
-		itemType:   handlerTypeHandler,
-		itemFunc:   handler,
-		middleware: middleware,
-		source:     source,
+func (s *Server) doBindHandler(ctx context.Context, pattern string, funcInfo handlerFuncInfo, middleware []HandlerFunc, source string) {
+	s.setHandler(ctx, pattern, &handlerItem{
+		Name:       gdebug.FuncPath(funcInfo.Func),
+		Type:       HandlerTypeHandler,
+		Info:       funcInfo,
+		Middleware: middleware,
+		Source:     source,
 	})
 }
 
 // bindHandlerByMap registers handlers to server using map.
-func (s *Server) bindHandlerByMap(m map[string]*handlerItem) {
+func (s *Server) bindHandlerByMap(ctx context.Context, m map[string]*handlerItem) {
 	for p, h := range m {
-		s.setHandler(p, h)
+		s.setHandler(ctx, p, h)
 	}
 }
 
@@ -48,7 +59,7 @@ func (s *Server) bindHandlerByMap(m map[string]*handlerItem) {
 // Rule 2: The URI in pattern contains the {.method} keyword, it then replaces the keyword with the method name;
 // Rule 2: If Rule 1 is not met, it then adds the method name directly to the URI in the pattern;
 //
-// The parameter <allowAppend> specifies whether allowing appending method name to the tail of pattern.
+// The parameter `allowAppend` specifies whether allowing appending method name to the tail of pattern.
 func (s *Server) mergeBuildInNameToPattern(pattern string, structName, methodName string, allowAppend bool) string {
 	structName = s.nameToUri(structName)
 	methodName = s.nameToUri(methodName)
@@ -77,13 +88,13 @@ func (s *Server) mergeBuildInNameToPattern(pattern string, structName, methodNam
 // Rule 3: Use camel case naming.
 func (s *Server) nameToUri(name string) string {
 	switch s.config.NameToUriType {
-	case URI_TYPE_FULLNAME:
+	case UriTypeFullName:
 		return name
 
-	case URI_TYPE_ALLLOWER:
+	case UriTypeAllLower:
 		return strings.ToLower(name)
 
-	case URI_TYPE_CAMEL:
+	case UriTypeCamel:
 		part := bytes.NewBuffer(nil)
 		if gstr.IsLetterUpper(name[0]) {
 			part.WriteByte(name[0] + 32)
@@ -93,8 +104,9 @@ func (s *Server) nameToUri(name string) string {
 		part.WriteString(name[1:])
 		return part.String()
 
-	case URI_TYPE_DEFAULT:
+	case UriTypeDefault:
 		fallthrough
+
 	default:
 		part := bytes.NewBuffer(nil)
 		for i := 0; i < len(name); i++ {
@@ -109,4 +121,67 @@ func (s *Server) nameToUri(name string) string {
 		}
 		return part.String()
 	}
+}
+
+func (s *Server) checkAndCreateFuncInfo(f interface{}, pkgPath, structName, methodName string) (info handlerFuncInfo, err error) {
+	handlerFunc, ok := f.(HandlerFunc)
+	if !ok {
+		reflectType := reflect.TypeOf(f)
+		if reflectType.NumIn() != 2 || reflectType.NumOut() != 2 {
+			if pkgPath != "" {
+				err = gerror.NewCodef(
+					gcode.CodeInvalidParameter,
+					`invalid handler: %s.%s.%s defined as "%s", but "func(*ghttp.Request)" or "func(context.Context, BizRequest)(BizResponse, error)" is required`,
+					pkgPath, structName, methodName, reflect.TypeOf(f).String(),
+				)
+			} else {
+				err = gerror.NewCodef(
+					gcode.CodeInvalidParameter,
+					`invalid handler: defined as "%s", but "func(*ghttp.Request)" or "func(context.Context, BizRequest)(BizResponse, error)" is required`,
+					reflect.TypeOf(f).String(),
+				)
+			}
+			return
+		}
+
+		if reflectType.In(0).String() != "context.Context" {
+			err = gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				`invalid handler: defined as "%s", but the first input parameter should be type of "context.Context"`,
+				reflect.TypeOf(f).String(),
+			)
+			return
+		}
+
+		if reflectType.Out(1).String() != "error" {
+			err = gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				`invalid handler: defined as "%s", but the last output parameter should be type of "error"`,
+				reflect.TypeOf(f).String(),
+			)
+			return
+		}
+
+		if !gstr.HasSuffix(reflectType.In(1).String(), `Req`) {
+			err = gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				`invalid struct naming for request: defined as "%s", but it should be named with "Req" suffix like "xxxReq"`,
+				reflectType.In(1).String(),
+			)
+			return
+		}
+
+		if !gstr.HasSuffix(reflectType.Out(0).String(), `Res`) {
+			err = gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				`invalid struct naming for response: defined as "%s", but it should be named with "Res" suffix like "xxxRes"`,
+				reflectType.Out(0).String(),
+			)
+			return
+		}
+	}
+	info.Func = handlerFunc
+	info.Type = reflect.TypeOf(f)
+	info.Value = reflect.ValueOf(f)
+	return
 }

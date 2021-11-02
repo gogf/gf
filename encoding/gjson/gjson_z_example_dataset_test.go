@@ -8,7 +8,7 @@ package gjson_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/encoding/gjson"
+	"github.com/gogf/gf/v2/encoding/gjson"
 )
 
 func Example_dataSetCreate1() {
@@ -17,8 +17,8 @@ func Example_dataSetCreate1() {
 	j.Set("score", 99.5)
 	fmt.Printf(
 		"Name: %s, Score: %v\n",
-		j.GetString("name"),
-		j.GetFloat32("score"),
+		j.Get("name").String(),
+		j.Get("score").Float32(),
 	)
 	fmt.Println(j.MustToJsonString())
 
@@ -54,7 +54,7 @@ func Example_dataSetRuntimeEdit() {
 		panic(err)
 	} else {
 		j.Set("users.list.1.score", 100)
-		fmt.Println("John Score:", j.GetFloat32("users.list.1.score"))
+		fmt.Println("John Score:", j.Get("users.list.1.score").Float32())
 		fmt.Println(j.MustToJsonString())
 	}
 	// Output:

@@ -26,3 +26,13 @@ func (s *Server) SetClientMaxBodySize(maxSize int64) {
 func (s *Server) SetFormParsingMemory(maxMemory int64) {
 	s.config.FormParsingMemory = maxMemory
 }
+
+// SetSwaggerPath sets the SwaggerPath for server.
+func (s *Server) SetSwaggerPath(path string) {
+	s.config.SwaggerPath = path
+}
+
+// SetOpenApiPath sets the OpenApiPath for server.
+func (s *Server) SetOpenApiPath(path string) {
+	s.config.OpenApiPath = path
+}

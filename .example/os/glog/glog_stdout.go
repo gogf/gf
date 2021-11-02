@@ -1,22 +1,23 @@
 package main
 
 import (
+	"github.com/gogf/gf/v2/frame/g"
 	"sync"
-
-	"github.com/gogf/gf/os/glog"
 )
 
 func main() {
-	wg := sync.WaitGroup{}
-	c := make(chan struct{})
+	var (
+		wg = sync.WaitGroup{}
+		ch = make(chan struct{})
+	)
 	wg.Add(3000)
 	for i := 0; i < 3000; i++ {
 		go func() {
-			<-c
-			glog.Println("abcdefghijklmnopqrstuvwxyz1234567890")
+			<-ch
+			g.Log().Print("abcdefghijklmnopqrstuvwxyz1234567890")
 			wg.Done()
 		}()
 	}
-	close(c)
+	close(ch)
 	wg.Wait()
 }

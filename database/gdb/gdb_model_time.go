@@ -8,11 +8,11 @@ package gdb
 
 import (
 	"fmt"
-	"github.com/gogf/gf/container/garray"
-	"github.com/gogf/gf/text/gregex"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
-	"github.com/gogf/gf/util/gutil"
+	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 var (
@@ -40,7 +40,7 @@ func (m *Model) getSoftFieldNameCreated(table ...string) string {
 	if len(table) > 0 {
 		tableName = table[0]
 	} else {
-		tableName = m.getPrimaryTableName()
+		tableName = m.tablesInit
 	}
 	config := m.db.GetConfig()
 	if config.CreatedAt != "" {
@@ -61,7 +61,7 @@ func (m *Model) getSoftFieldNameUpdated(table ...string) (field string) {
 	if len(table) > 0 {
 		tableName = table[0]
 	} else {
-		tableName = m.getPrimaryTableName()
+		tableName = m.tablesInit
 	}
 	config := m.db.GetConfig()
 	if config.UpdatedAt != "" {
@@ -82,7 +82,7 @@ func (m *Model) getSoftFieldNameDeleted(table ...string) (field string) {
 	if len(table) > 0 {
 		tableName = table[0]
 	} else {
-		tableName = m.getPrimaryTableName()
+		tableName = m.tablesInit
 	}
 	config := m.db.GetConfig()
 	if config.UpdatedAt != "" {
@@ -140,7 +140,7 @@ func (m *Model) getConditionForSoftDeleting() string {
 	}
 	// Only one table.
 	if fieldName := m.getSoftFieldNameDeleted(); fieldName != "" {
-		return fmt.Sprintf(`%s IS NULL`, m.db.QuoteWord(fieldName))
+		return fmt.Sprintf(`%s IS NULL`, m.db.GetCore().QuoteWord(fieldName))
 	}
 	return ""
 }
@@ -163,21 +163,10 @@ func (m *Model) getConditionOfTableStringForSoftDeleting(s string) string {
 		return ""
 	}
 	if len(array1) >= 3 {
-		return fmt.Sprintf(`%s.%s IS NULL`, m.db.QuoteWord(array1[2]), m.db.QuoteWord(field))
+		return fmt.Sprintf(`%s.%s IS NULL`, m.db.GetCore().QuoteWord(array1[2]), m.db.GetCore().QuoteWord(field))
 	}
 	if len(array1) >= 2 {
-		return fmt.Sprintf(`%s.%s IS NULL`, m.db.QuoteWord(array1[1]), m.db.QuoteWord(field))
+		return fmt.Sprintf(`%s.%s IS NULL`, m.db.GetCore().QuoteWord(array1[1]), m.db.GetCore().QuoteWord(field))
 	}
-	return fmt.Sprintf(`%s.%s IS NULL`, m.db.QuoteWord(table), m.db.QuoteWord(field))
-}
-
-// getPrimaryTableName parses and returns the primary table name.
-func (m *Model) getPrimaryTableName() string {
-	array1 := gstr.SplitAndTrim(m.tables, ",")
-	array2 := gstr.SplitAndTrim(array1[0], " ")
-	array3 := gstr.SplitAndTrim(array2[0], ".")
-	if len(array3) >= 2 {
-		return array3[1]
-	}
-	return array3[0]
+	return fmt.Sprintf(`%s.%s IS NULL`, m.db.GetCore().QuoteWord(table), m.db.GetCore().QuoteWord(field))
 }

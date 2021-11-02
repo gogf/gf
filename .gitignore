@@ -15,3 +15,5 @@ cbuild
 **/.DS_Store
 .vscode/
 .example/other/
+main
+gf

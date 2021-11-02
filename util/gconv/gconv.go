@@ -11,22 +11,15 @@ package gconv
 
 import (
 	"fmt"
-	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/os/gtime"
+	"math"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/gogf/gf/encoding/gbinary"
-)
-
-type (
-	// errorStack is the interface for Stack feature.
-	errorStack interface {
-		Error() string
-		Stack() string
-	}
+	"github.com/gogf/gf/v2/encoding/gbinary"
 )
 
 var (
@@ -39,245 +32,264 @@ var (
 		"false": {},
 	}
 
-	// Priority tags for Map*/Struct* functions.
+	// StructTagPriority defines the default priority tags for Map*/Struct* functions.
 	// Note, the "gconv", "param", "params" tags are used by old version of package.
 	// It is strongly recommended using short tag "c" or "p" instead in the future.
 	StructTagPriority = []string{"gconv", "param", "params", "c", "p", "json"}
 )
 
-// Convert converts the variable `i` to the type `t`, the type `t` is specified by string.
-// The optional parameter `params` is used for additional necessary parameter for this conversion.
-// It supports common types conversion as its conversion based on type name string.
-func Convert(any interface{}, t string, params ...interface{}) interface{} {
-	switch t {
+type doConvertInput struct {
+	FromValue  interface{}   // Value that is converted from.
+	ToTypeName string        // Target value type name in string.
+	ReferValue interface{}   // Referred value, a value in type `ToTypeName`.
+	Extra      []interface{} // Extra values for implementing the converting.
+}
+
+// doConvert does commonly use types converting.
+func doConvert(in doConvertInput) interface{} {
+	switch in.ToTypeName {
 	case "int":
-		return Int(any)
+		return Int(in.FromValue)
 	case "*int":
-		if _, ok := any.(*int); ok {
-			return any
+		if _, ok := in.FromValue.(*int); ok {
+			return in.FromValue
 		}
-		v := Int(any)
+		v := Int(in.FromValue)
 		return &v
 
 	case "int8":
-		return Int8(any)
+		return Int8(in.FromValue)
 	case "*int8":
-		if _, ok := any.(*int8); ok {
-			return any
+		if _, ok := in.FromValue.(*int8); ok {
+			return in.FromValue
 		}
-		v := Int8(any)
+		v := Int8(in.FromValue)
 		return &v
 
 	case "int16":
-		return Int16(any)
+		return Int16(in.FromValue)
 	case "*int16":
-		if _, ok := any.(*int16); ok {
-			return any
+		if _, ok := in.FromValue.(*int16); ok {
+			return in.FromValue
 		}
-		v := Int16(any)
+		v := Int16(in.FromValue)
 		return &v
 
 	case "int32":
-		return Int32(any)
+		return Int32(in.FromValue)
 	case "*int32":
-		if _, ok := any.(*int32); ok {
-			return any
+		if _, ok := in.FromValue.(*int32); ok {
+			return in.FromValue
 		}
-		v := Int32(any)
+		v := Int32(in.FromValue)
 		return &v
 
 	case "int64":
-		return Int64(any)
+		return Int64(in.FromValue)
 	case "*int64":
-		if _, ok := any.(*int64); ok {
-			return any
+		if _, ok := in.FromValue.(*int64); ok {
+			return in.FromValue
 		}
-		v := Int64(any)
+		v := Int64(in.FromValue)
 		return &v
 
 	case "uint":
-		return Uint(any)
+		return Uint(in.FromValue)
 	case "*uint":
-		if _, ok := any.(*uint); ok {
-			return any
+		if _, ok := in.FromValue.(*uint); ok {
+			return in.FromValue
 		}
-		v := Uint(any)
+		v := Uint(in.FromValue)
 		return &v
 
 	case "uint8":
-		return Uint8(any)
+		return Uint8(in.FromValue)
 	case "*uint8":
-		if _, ok := any.(*uint8); ok {
-			return any
+		if _, ok := in.FromValue.(*uint8); ok {
+			return in.FromValue
 		}
-		v := Uint8(any)
+		v := Uint8(in.FromValue)
 		return &v
 
 	case "uint16":
-		return Uint16(any)
+		return Uint16(in.FromValue)
 	case "*uint16":
-		if _, ok := any.(*uint16); ok {
-			return any
+		if _, ok := in.FromValue.(*uint16); ok {
+			return in.FromValue
 		}
-		v := Uint16(any)
+		v := Uint16(in.FromValue)
 		return &v
 
 	case "uint32":
-		return Uint32(any)
+		return Uint32(in.FromValue)
 	case "*uint32":
-		if _, ok := any.(*uint32); ok {
-			return any
+		if _, ok := in.FromValue.(*uint32); ok {
+			return in.FromValue
 		}
-		v := Uint32(any)
+		v := Uint32(in.FromValue)
 		return &v
 
 	case "uint64":
-		return Uint64(any)
+		return Uint64(in.FromValue)
 	case "*uint64":
-		if _, ok := any.(*uint64); ok {
-			return any
+		if _, ok := in.FromValue.(*uint64); ok {
+			return in.FromValue
 		}
-		v := Uint64(any)
+		v := Uint64(in.FromValue)
 		return &v
 
 	case "float32":
-		return Float32(any)
+		return Float32(in.FromValue)
 	case "*float32":
-		if _, ok := any.(*float32); ok {
-			return any
+		if _, ok := in.FromValue.(*float32); ok {
+			return in.FromValue
 		}
-		v := Float32(any)
+		v := Float32(in.FromValue)
 		return &v
 
 	case "float64":
-		return Float64(any)
+		return Float64(in.FromValue)
 	case "*float64":
-		if _, ok := any.(*float64); ok {
-			return any
+		if _, ok := in.FromValue.(*float64); ok {
+			return in.FromValue
 		}
-		v := Float64(any)
+		v := Float64(in.FromValue)
 		return &v
 
 	case "bool":
-		return Bool(any)
+		return Bool(in.FromValue)
 	case "*bool":
-		if _, ok := any.(*bool); ok {
-			return any
+		if _, ok := in.FromValue.(*bool); ok {
+			return in.FromValue
 		}
-		v := Bool(any)
+		v := Bool(in.FromValue)
 		return &v
 
 	case "string":
-		return String(any)
+		return String(in.FromValue)
 	case "*string":
-		if _, ok := any.(*string); ok {
-			return any
+		if _, ok := in.FromValue.(*string); ok {
+			return in.FromValue
 		}
-		v := String(any)
+		v := String(in.FromValue)
 		return &v
 
 	case "[]byte":
-		return Bytes(any)
+		return Bytes(in.FromValue)
 	case "[]int":
-		return Ints(any)
+		return Ints(in.FromValue)
 	case "[]int32":
-		return Int32s(any)
+		return Int32s(in.FromValue)
 	case "[]int64":
-		return Int64s(any)
+		return Int64s(in.FromValue)
 	case "[]uint":
-		return Uints(any)
+		return Uints(in.FromValue)
+	case "[]uint8":
+		return Bytes(in.FromValue)
 	case "[]uint32":
-		return Uint32s(any)
+		return Uint32s(in.FromValue)
 	case "[]uint64":
-		return Uint64s(any)
+		return Uint64s(in.FromValue)
 	case "[]float32":
-		return Float32s(any)
+		return Float32s(in.FromValue)
 	case "[]float64":
-		return Float64s(any)
+		return Float64s(in.FromValue)
 	case "[]string":
-		return Strings(any)
+		return Strings(in.FromValue)
 
 	case "Time", "time.Time":
-		if len(params) > 0 {
-			return Time(any, String(params[0]))
+		if len(in.Extra) > 0 {
+			return Time(in.FromValue, String(in.Extra[0]))
 		}
-		return Time(any)
+		return Time(in.FromValue)
 	case "*time.Time":
 		var v interface{}
-		if len(params) > 0 {
-			v = Time(any, String(params[0]))
+		if len(in.Extra) > 0 {
+			v = Time(in.FromValue, String(in.Extra[0]))
 		} else {
-			if _, ok := any.(*time.Time); ok {
-				return any
+			if _, ok := in.FromValue.(*time.Time); ok {
+				return in.FromValue
 			}
-			v = Time(any)
+			v = Time(in.FromValue)
 		}
 		return &v
 
 	case "GTime", "gtime.Time":
-		if len(params) > 0 {
-			if v := GTime(any, String(params[0])); v != nil {
+		if len(in.Extra) > 0 {
+			if v := GTime(in.FromValue, String(in.Extra[0])); v != nil {
 				return *v
 			} else {
 				return *gtime.New()
 			}
 		}
-		if v := GTime(any); v != nil {
+		if v := GTime(in.FromValue); v != nil {
 			return *v
 		} else {
 			return *gtime.New()
 		}
 	case "*gtime.Time":
-		if len(params) > 0 {
-			if v := GTime(any, String(params[0])); v != nil {
+		if len(in.Extra) > 0 {
+			if v := GTime(in.FromValue, String(in.Extra[0])); v != nil {
 				return v
 			} else {
 				return gtime.New()
 			}
 		}
-		if v := GTime(any); v != nil {
+		if v := GTime(in.FromValue); v != nil {
 			return v
 		} else {
 			return gtime.New()
 		}
 
 	case "Duration", "time.Duration":
-		return Duration(any)
+		return Duration(in.FromValue)
 	case "*time.Duration":
-		if _, ok := any.(*time.Duration); ok {
-			return any
+		if _, ok := in.FromValue.(*time.Duration); ok {
+			return in.FromValue
 		}
-		v := Duration(any)
+		v := Duration(in.FromValue)
 		return &v
 
 	case "map[string]string":
-		return MapStrStr(any)
+		return MapStrStr(in.FromValue)
 
 	case "map[string]interface{}":
-		return Map(any)
+		return Map(in.FromValue)
 
 	case "[]map[string]interface{}":
-		return Maps(any)
-
-	//case "gvar.Var":
-	//	// TODO remove reflect usage to create gvar.Var, considering using unsafe pointer
-	//	rv := reflect.New(intstore.ReflectTypeVarImp)
-	//	ri := rv.Interface()
-	//	if v, ok := ri.(apiSet); ok {
-	//		v.Set(any)
-	//	} else if v, ok := ri.(apiUnmarshalValue); ok {
-	//		v.UnmarshalValue(any)
-	//	} else {
-	//		rv.Set(reflect.ValueOf(any))
-	//	}
-	//	return ri
+		return Maps(in.FromValue)
 
 	default:
-		return any
+		if in.ReferValue != nil {
+			var (
+				referReflectValue reflect.Value
+			)
+			if v, ok := in.ReferValue.(reflect.Value); ok {
+				referReflectValue = v
+			} else {
+				referReflectValue = reflect.ValueOf(in.ReferValue)
+			}
+			in.ToTypeName = referReflectValue.Kind().String()
+			in.ReferValue = nil
+			return reflect.ValueOf(doConvert(in)).Convert(referReflectValue.Type()).Interface()
+		}
+		return in.FromValue
 	}
 }
 
-// Byte converts `i` to byte.
+// Convert converts the variable `fromValue` to the type `toTypeName`, the type `toTypeName` is specified by string.
+// The optional parameter `extraParams` is used for additional necessary parameter for this conversion.
+// It supports common types conversion as its conversion based on type name string.
+func Convert(fromValue interface{}, toTypeName string, extraParams ...interface{}) interface{} {
+	return doConvert(doConvertInput{
+		FromValue:  fromValue,
+		ToTypeName: toTypeName,
+		ReferValue: nil,
+		Extra:      extraParams,
+	})
+}
+
+// Byte converts `any` to byte.
 func Byte(any interface{}) byte {
 	if v, ok := any.(byte); ok {
 		return v
@@ -285,7 +297,7 @@ func Byte(any interface{}) byte {
 	return Uint8(any)
 }
 
-// Bytes converts `i` to []byte.
+// Bytes converts `any` to []byte.
 func Bytes(any interface{}) []byte {
 	if any == nil {
 		return nil
@@ -296,22 +308,48 @@ func Bytes(any interface{}) []byte {
 	case []byte:
 		return value
 	default:
-		if f, ok := value.(apiBytes); ok {
+		if f, ok := value.(iBytes); ok {
 			return f.Bytes()
+		}
+		var (
+			reflectValue = reflect.ValueOf(any)
+			reflectKind  = reflectValue.Kind()
+		)
+		for reflectKind == reflect.Ptr {
+			reflectValue = reflectValue.Elem()
+			reflectKind = reflectValue.Kind()
+		}
+		switch reflectKind {
+		case reflect.Array, reflect.Slice:
+			var (
+				ok    = true
+				bytes = make([]byte, reflectValue.Len())
+			)
+			for i, _ := range bytes {
+				int32Value := Int32(reflectValue.Index(i).Interface())
+				if int32Value < 0 || int32Value > math.MaxUint8 {
+					ok = false
+					break
+				}
+				bytes[i] = byte(int32Value)
+			}
+			if ok {
+				return bytes
+			}
 		}
 		return gbinary.Encode(any)
 	}
 }
 
-// Rune converts `i` to rune.
+// Rune converts `any` to rune.
 func Rune(any interface{}) rune {
 	if v, ok := any.(rune); ok {
 		return v
 	}
-	return rune(Int32(any))
+	return Int32(any)
 }
 
-// Runes converts `i` to []rune.
+// Runes converts `any` to []rune.
 func Runes(any interface{}) []rune {
 	if v, ok := any.([]rune); ok {
 		return v
@@ -319,8 +357,8 @@ func Runes(any interface{}) []rune {
 	return []rune(String(any))
 }
 
-// String converts `i` to string.
-// It's most common used converting function.
+// String converts `any` to string.
+// It's most commonly used converting function.
 func String(any interface{}) string {
 	if any == nil {
 		return ""
@@ -381,12 +419,12 @@ func String(any interface{}) string {
 		if value == nil {
 			return ""
 		}
-		if f, ok := value.(apiString); ok {
+		if f, ok := value.(iString); ok {
 			// If the variable implements the String() interface,
 			// then use that interface to perform the conversion
 			return f.String()
 		}
-		if f, ok := value.(apiError); ok {
+		if f, ok := value.(iError); ok {
 			// If the variable implements the Error() interface,
 			// then use that interface to perform the conversion
 			return f.Error()
@@ -413,7 +451,7 @@ func String(any interface{}) string {
 		if kind == reflect.Ptr {
 			return String(rv.Elem().Interface())
 		}
-		// Finally we use json.Marshal to convert.
+		// Finally, we use json.Marshal to convert.
 		if jsonContent, err := json.Marshal(value); err != nil {
 			return fmt.Sprint(value)
 		} else {
@@ -422,8 +460,8 @@ func String(any interface{}) string {
 	}
 }
 
-// Bool converts `i` to bool.
-// It returns false if `i` is: false, "", 0, "false", "off", "no", empty slice/map.
+// Bool converts `any` to bool.
+// It returns false if `any` is: false, "", 0, "false", "off", "no", empty slice/map.
 func Bool(any interface{}) bool {
 	if any == nil {
 		return false
@@ -442,7 +480,7 @@ func Bool(any interface{}) bool {
 		}
 		return true
 	default:
-		if f, ok := value.(apiBool); ok {
+		if f, ok := value.(iBool); ok {
 			return f.Bool()
 		}
 		rv := reflect.ValueOf(any)
@@ -467,7 +505,7 @@ func Bool(any interface{}) bool {
 	}
 }
 
-// Int converts `i` to int.
+// Int converts `any` to int.
 func Int(any interface{}) int {
 	if any == nil {
 		return 0
@@ -478,7 +516,7 @@ func Int(any interface{}) int {
 	return int(Int64(any))
 }
 
-// Int8 converts `i` to int8.
+// Int8 converts `any` to int8.
 func Int8(any interface{}) int8 {
 	if any == nil {
 		return 0
@@ -489,7 +527,7 @@ func Int8(any interface{}) int8 {
 	return int8(Int64(any))
 }
 
-// Int16 converts `i` to int16.
+// Int16 converts `any` to int16.
 func Int16(any interface{}) int16 {
 	if any == nil {
 		return 0
@@ -500,7 +538,7 @@ func Int16(any interface{}) int16 {
 	return int16(Int64(any))
 }
 
-// Int32 converts `i` to int32.
+// Int32 converts `any` to int32.
 func Int32(any interface{}) int32 {
 	if any == nil {
 		return 0
@@ -511,7 +549,7 @@ func Int32(any interface{}) int32 {
 	return int32(Int64(any))
 }
 
-// Int64 converts `i` to int64.
+// Int64 converts `any` to int64.
 func Int64(any interface{}) int64 {
 	if any == nil {
 		return 0
@@ -549,7 +587,7 @@ func Int64(any interface{}) int64 {
 	case []byte:
 		return gbinary.DecodeToInt64(value)
 	default:
-		if f, ok := value.(apiInt64); ok {
+		if f, ok := value.(iInt64); ok {
 			return f.Int64()
 		}
 		s := String(value)
@@ -592,7 +630,7 @@ func Int64(any interface{}) int64 {
 	}
 }
 
-// Uint converts `i` to uint.
+// Uint converts `any` to uint.
 func Uint(any interface{}) uint {
 	if any == nil {
 		return 0
@@ -603,7 +641,7 @@ func Uint(any interface{}) uint {
 	return uint(Uint64(any))
 }
 
-// Uint8 converts `i` to uint8.
+// Uint8 converts `any` to uint8.
 func Uint8(any interface{}) uint8 {
 	if any == nil {
 		return 0
@@ -614,7 +652,7 @@ func Uint8(any interface{}) uint8 {
 	return uint8(Uint64(any))
 }
 
-// Uint16 converts `i` to uint16.
+// Uint16 converts `any` to uint16.
 func Uint16(any interface{}) uint16 {
 	if any == nil {
 		return 0
@@ -625,7 +663,7 @@ func Uint16(any interface{}) uint16 {
 	return uint16(Uint64(any))
 }
 
-// Uint32 converts `i` to uint32.
+// Uint32 converts `any` to uint32.
 func Uint32(any interface{}) uint32 {
 	if any == nil {
 		return 0
@@ -636,7 +674,7 @@ func Uint32(any interface{}) uint32 {
 	return uint32(Uint64(any))
 }
 
-// Uint64 converts `i` to uint64.
+// Uint64 converts `any` to uint64.
 func Uint64(any interface{}) uint64 {
 	if any == nil {
 		return 0
@@ -674,7 +712,7 @@ func Uint64(any interface{}) uint64 {
 	case []byte:
 		return gbinary.DecodeToUint64(value)
 	default:
-		if f, ok := value.(apiUint64); ok {
+		if f, ok := value.(iUint64); ok {
 			return f.Uint64()
 		}
 		s := String(value)
@@ -699,7 +737,7 @@ func Uint64(any interface{}) uint64 {
 	}
 }
 
-// Float32 converts `i` to float32.
+// Float32 converts `any` to float32.
 func Float32(any interface{}) float32 {
 	if any == nil {
 		return 0
@@ -712,7 +750,7 @@ func Float32(any interface{}) float32 {
 	case []byte:
 		return gbinary.DecodeToFloat32(value)
 	default:
-		if f, ok := value.(apiFloat32); ok {
+		if f, ok := value.(iFloat32); ok {
 			return f.Float32()
 		}
 		v, _ := strconv.ParseFloat(String(any), 64)
@@ -720,7 +758,7 @@ func Float32(any interface{}) float32 {
 	}
 }
 
-// Float64 converts `i` to float64.
+// Float64 converts `any` to float64.
 func Float64(any interface{}) float64 {
 	if any == nil {
 		return 0
@@ -733,10 +771,29 @@ func Float64(any interface{}) float64 {
 	case []byte:
 		return gbinary.DecodeToFloat64(value)
 	default:
-		if f, ok := value.(apiFloat64); ok {
+		if f, ok := value.(iFloat64); ok {
 			return f.Float64()
 		}
 		v, _ := strconv.ParseFloat(String(any), 64)
 		return v
 	}
+}
+
+// checkJsonAndUnmarshalUseNumber checks if given `any` is JSON formatted string value and does converting using `json.UnmarshalUseNumber`.
+func checkJsonAndUnmarshalUseNumber(any interface{}, target interface{}) bool {
+	switch r := any.(type) {
+	case []byte:
+		if json.Valid(r) {
+			_ = json.UnmarshalUseNumber(r, &target)
+			return true
+		}
+
+	case string:
+		anyAsBytes := []byte(r)
+		if json.Valid(anyAsBytes) {
+			_ = json.UnmarshalUseNumber(anyAsBytes, &target)
+			return true
+		}
+	}
+	return false
 }

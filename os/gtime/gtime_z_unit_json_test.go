@@ -7,9 +7,9 @@
 package gtime_test
 
 import (
-	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/test/gtest"
 	"testing"
 )
 
@@ -50,7 +50,7 @@ func Test_Json_Pointer(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var t1 gtime.Time
 		s := []byte(`"2006-01-02 15:04:05"`)
-		err := json.Unmarshal(s, &t1)
+		err := json.UnmarshalUseNumber(s, &t1)
 		t.Assert(err, nil)
 		t.Assert(t1.String(), "2006-01-02 15:04:05")
 	})

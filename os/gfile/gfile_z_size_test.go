@@ -7,11 +7,11 @@
 package gfile_test
 
 import (
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/util/gconv"
 	"testing"
 
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_Size(t *testing.T) {
@@ -29,6 +29,25 @@ func Test_Size(t *testing.T) {
 
 		sizes = gfile.Size("")
 		t.Assert(sizes, 0)
+
+	})
+}
+
+func Test_SizeFormat(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			paths1 = "/testfile_t1.txt"
+			sizes  string
+		)
+
+		createTestFile(paths1, "abcdefghijklmn")
+		defer delTestFiles(paths1)
+
+		sizes = gfile.SizeFormat(testpath() + paths1)
+		t.Assert(sizes, "14.00B")
+
+		sizes = gfile.SizeFormat("")
+		t.Assert(sizes, "0.00B")
 
 	})
 }

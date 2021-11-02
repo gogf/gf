@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/os/gview"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/os/gview"
 )
 
 func main() {
@@ -11,7 +11,7 @@ func main() {
 	s.BindHandler("/page/ajax", func(r *ghttp.Request) {
 		page := r.GetPage(100, 10)
 		page.AjaxActionName = "DoAjax"
-		buffer, _ := gview.ParseContent(`
+		buffer, _ := gview.ParseContent(r.Context(), `
         <html>
             <head>
                 <style>

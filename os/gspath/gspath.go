@@ -12,17 +12,18 @@
 package gspath
 
 import (
-	"errors"
-	"fmt"
-	"github.com/gogf/gf/internal/intlog"
+	"context"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/intlog"
 	"os"
 	"sort"
 	"strings"
 
-	"github.com/gogf/gf/container/garray"
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // SPath manages the path searching feature.
@@ -103,7 +104,7 @@ func (sp *SPath) Set(path string) (realPath string, err error) {
 		}
 	}
 	if realPath == "" {
-		return realPath, errors.New(fmt.Sprintf(`path "%s" does not exist`, path))
+		return realPath, gerror.NewCodef(gcode.CodeInvalidParameter, `path "%s" does not exist`, path)
 	}
 	// The set path must be a directory.
 	if gfile.IsDir(realPath) {
@@ -113,7 +114,7 @@ func (sp *SPath) Set(path string) (realPath string, err error) {
 				sp.removeMonitorByPath(v)
 			}
 		}
-		intlog.Print("paths clear:", sp.paths)
+		intlog.Print(context.TODO(), "paths clear:", sp.paths)
 		sp.paths.Clear()
 		if sp.cache != nil {
 			sp.cache.Clear()
@@ -123,7 +124,7 @@ func (sp *SPath) Set(path string) (realPath string, err error) {
 		sp.addMonitorByPath(realPath)
 		return realPath, nil
 	} else {
-		return "", errors.New(path + " should be a folder")
+		return "", gerror.NewCode(gcode.CodeInvalidParameter, path+" should be a folder")
 	}
 }
 
@@ -138,7 +139,7 @@ func (sp *SPath) Add(path string) (realPath string, err error) {
 		}
 	}
 	if realPath == "" {
-		return realPath, errors.New(fmt.Sprintf(`path "%s" does not exist`, path))
+		return realPath, gerror.NewCodef(gcode.CodeInvalidParameter, `path "%s" does not exist`, path)
 	}
 	// The added path must be a directory.
 	if gfile.IsDir(realPath) {
@@ -152,7 +153,7 @@ func (sp *SPath) Add(path string) (realPath string, err error) {
 		}
 		return realPath, nil
 	} else {
-		return "", errors.New(path + " should be a folder")
+		return "", gerror.NewCode(gcode.CodeInvalidParameter, path+" should be a folder")
 	}
 }
 

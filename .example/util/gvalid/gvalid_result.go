@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/util/gvalid"
+	"context"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/util/gvalid"
 )
 
 func main() {
@@ -18,7 +19,7 @@ func main() {
 		Pass2: "123",
 	}
 
-	e := gvalid.CheckStruct(user, nil)
+	e := gvalid.CheckStruct(context.TODO(), user, nil)
 	g.Dump(e.String())
 	g.Dump(e.FirstString())
 }

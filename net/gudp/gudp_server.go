@@ -7,16 +7,18 @@
 package gudp
 
 import (
-	"errors"
+	"context"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"net"
 
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 const (
-	gDEFAULT_SERVER = "default"
+	defaultServer = "default"
 )
 
 // Server is the UDP server.
@@ -33,7 +35,7 @@ var (
 
 // GetServer creates and returns a UDP server instance with given name.
 func GetServer(name ...interface{}) *Server {
-	serverName := gDEFAULT_SERVER
+	serverName := defaultServer
 	if len(name) > 0 && name[0] != "" {
 		serverName = gconv.String(name[0])
 	}
@@ -46,7 +48,7 @@ func GetServer(name ...interface{}) *Server {
 }
 
 // NewServer creates and returns a UDP server.
-// The optional parameter <name> is used to specify its name, which can be used for
+// The optional parameter `name` is used to specify its name, which can be used for
 // GetServer function to retrieve its instance.
 func NewServer(address string, handler func(*Conn), name ...string) *Server {
 	s := &Server{
@@ -77,19 +79,22 @@ func (s *Server) Close() error {
 
 // Run starts listening UDP connection.
 func (s *Server) Run() error {
+	var (
+		ctx = context.TODO()
+	)
 	if s.handler == nil {
-		err := errors.New("start running failed: socket handler not defined")
-		glog.Error(err)
+		err := gerror.NewCode(gcode.CodeMissingConfiguration, "start running failed: socket handler not defined")
+		glog.Error(ctx, err)
 		return err
 	}
 	addr, err := net.ResolveUDPAddr("udp", s.address)
 	if err != nil {
-		glog.Error(err)
+		glog.Error(ctx, err)
 		return err
 	}
 	conn, err := net.ListenUDP("udp", addr)
 	if err != nil {
-		glog.Error(err)
+		glog.Error(ctx, err)
 		return err
 	}
 	s.conn = NewConnByNetConn(conn)

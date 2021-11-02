@@ -7,21 +7,15 @@
 package gconv
 
 import (
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/json"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/json"
 	"reflect"
 )
 
 // MapToMaps converts any slice type variable `params` to another map slice type variable `pointer`.
 // See doMapToMaps.
 func MapToMaps(params interface{}, pointer interface{}, mapping ...map[string]string) error {
-	return doMapToMaps(params, pointer, mapping...)
-}
-
-// MapToMapsDeep converts any slice type variable `params` to another map slice type variable
-// `pointer` recursively.
-// Deprecated, use MapToMaps instead.
-func MapToMapsDeep(params interface{}, pointer interface{}, mapping ...map[string]string) error {
 	return doMapToMaps(params, pointer, mapping...)
 }
 
@@ -40,20 +34,20 @@ func doMapToMaps(params interface{}, pointer interface{}, mapping ...map[string]
 		if json.Valid(r) {
 			if rv, ok := pointer.(reflect.Value); ok {
 				if rv.Kind() == reflect.Ptr {
-					return json.Unmarshal(r, rv.Interface())
+					return json.UnmarshalUseNumber(r, rv.Interface())
 				}
 			} else {
-				return json.Unmarshal(r, pointer)
+				return json.UnmarshalUseNumber(r, pointer)
 			}
 		}
 	case string:
 		if paramsBytes := []byte(r); json.Valid(paramsBytes) {
 			if rv, ok := pointer.(reflect.Value); ok {
 				if rv.Kind() == reflect.Ptr {
-					return json.Unmarshal(paramsBytes, rv.Interface())
+					return json.UnmarshalUseNumber(paramsBytes, rv.Interface())
 				}
 			} else {
-				return json.Unmarshal(paramsBytes, pointer)
+				return json.UnmarshalUseNumber(paramsBytes, pointer)
 			}
 		}
 	}
@@ -73,7 +67,7 @@ func doMapToMaps(params interface{}, pointer interface{}, mapping ...map[string]
 		paramsKind = paramsRv.Kind()
 	}
 	if paramsKind != reflect.Array && paramsKind != reflect.Slice {
-		return gerror.New("params should be type of slice, eg: []map/[]*map/[]struct/[]*struct")
+		return gerror.NewCode(gcode.CodeInvalidParameter, "params should be type of slice, eg: []map/[]*map/[]struct/[]*struct")
 	}
 	var (
 		paramsElem     = paramsRv.Type().Elem()
@@ -84,7 +78,7 @@ func doMapToMaps(params interface{}, pointer interface{}, mapping ...map[string]
 		paramsElemKind = paramsElem.Kind()
 	}
 	if paramsElemKind != reflect.Map && paramsElemKind != reflect.Struct && paramsElemKind != reflect.Interface {
-		return gerror.Newf("params element should be type of map/*map/struct/*struct, but got: %s", paramsElemKind)
+		return gerror.NewCodef(gcode.CodeInvalidParameter, "params element should be type of map/*map/struct/*struct, but got: %s", paramsElemKind)
 	}
 	// Empty slice, no need continue.
 	if paramsRv.Len() == 0 {
@@ -100,7 +94,7 @@ func doMapToMaps(params interface{}, pointer interface{}, mapping ...map[string]
 		pointerKind = pointerRv.Kind()
 	}
 	if pointerKind != reflect.Array && pointerKind != reflect.Slice {
-		return gerror.New("pointer should be type of *[]map/*[]*map")
+		return gerror.NewCode(gcode.CodeInvalidParameter, "pointer should be type of *[]map/*[]*map")
 	}
 	var (
 		pointerElemType = pointerRv.Type().Elem()
@@ -110,15 +104,15 @@ func doMapToMaps(params interface{}, pointer interface{}, mapping ...map[string]
 		pointerElemKind = pointerElemType.Elem().Kind()
 	}
 	if pointerElemKind != reflect.Map {
-		return gerror.New("pointer element should be type of map/*map")
+		return gerror.NewCode(gcode.CodeInvalidParameter, "pointer element should be type of map/*map")
 	}
 	defer func() {
-		// Catch the panic, especially the reflect operation panics.
+		// Catch the panic, especially the reflection operation panics.
 		if exception := recover(); exception != nil {
-			if e, ok := exception.(errorStack); ok {
-				err = e
+			if v, ok := exception.(error); ok && gerror.HasStack(v) {
+				err = v
 			} else {
-				err = gerror.NewSkipf(1, "%v", exception)
+				err = gerror.NewCodeSkipf(gcode.CodeInternalError, 1, "%+v", exception)
 			}
 		}
 	}()

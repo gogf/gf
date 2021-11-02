@@ -11,11 +11,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/util/gvalid"
+	"github.com/gogf/gf/v2/util/gvalid"
 
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_Params_Parse(t *testing.T) {
@@ -42,7 +42,7 @@ func Test_Params_Parse(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		t.Assert(client.PostContent("/parse", `{"id":1,"name":"john","map":{"id":1,"score":100}}`), `1100`)
+		t.Assert(client.PostContent(ctx, "/parse", `{"id":1,"name":"john","map":{"id":1,"score":100}}`), `1100`)
 	})
 }
 
@@ -69,10 +69,10 @@ func Test_Params_ParseQuery(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		t.Assert(c.GetContent("/parse-query"), `0`)
-		t.Assert(c.GetContent("/parse-query?id=1&name=john"), `1john`)
-		t.Assert(c.PostContent("/parse-query"), `0`)
-		t.Assert(c.PostContent("/parse-query", g.Map{
+		t.Assert(c.GetContent(ctx, "/parse-query"), `0`)
+		t.Assert(c.GetContent(ctx, "/parse-query?id=1&name=john"), `1john`)
+		t.Assert(c.PostContent(ctx, "/parse-query"), `0`)
+		t.Assert(c.PostContent(ctx, "/parse-query", g.Map{
 			"id":   1,
 			"name": "john",
 		}), `0`)
@@ -102,13 +102,13 @@ func Test_Params_ParseForm(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		t.Assert(c.GetContent("/parse-form"), `0`)
-		t.Assert(c.GetContent("/parse-form", g.Map{
+		t.Assert(c.GetContent(ctx, "/parse-form"), `0`)
+		t.Assert(c.GetContent(ctx, "/parse-form", g.Map{
 			"id":   1,
 			"name": "john",
 		}), 0)
-		t.Assert(c.PostContent("/parse-form"), `0`)
-		t.Assert(c.PostContent("/parse-form", g.Map{
+		t.Assert(c.PostContent(ctx, "/parse-form"), `0`)
+		t.Assert(c.PostContent(ctx, "/parse-form", g.Map{
 			"id":   1,
 			"name": "john",
 		}), `1john`)
@@ -286,7 +286,7 @@ func Test_Params_ComplexJsonStruct(t *testing.T) {
     "version_tag": "test"
 }
 `
-		t.Assert(client.PostContent("/parse", content), `{"AppId":5,"Name":"test","Type":"test","Cluster":"test","Replicas":1,"ContainerName":"test","ContainerImage":"nginx","VersionTag":"test","Namespace":"test","Id":0,"Status":0,"Metrics":"","InitImage":"","CpuRequest":10,"CpuLimit":100,"MemRequest":100,"MemLimit":1000,"MeshEnabled":0,"ContainerPorts":[{"Port":80,"Type":"tcp","Alias":"别名","Brief":"描述"}],"Labels":[{"Key":"app","Value":"test"}],"NodeSelector":[{"Key":"group","Value":"app"}],"EnvReserve":[{"Key":"NODE_IP","Value":"status.hostIP"}],"EnvGlobal":[{"Type":"string","Key":"NUMBER","Value":"1","Brief":"数据数量"}],"EnvContainer":[{"Type":"string","Key":"NAME","Value":"john","Brief":"用户环境变量"}],"Mounts":[],"LivenessProbe":{"Type":"tcpSocket","Port":80,"Path":"","Brief":"存活探针","Period":5,"InitialDelay":10,"TimeoutSeconds":0},"ReadinessProbe":{"Type":"tcpSocket","Port":80,"Path":"","Brief":"就绪探针","Period":5,"InitialDelay":10,"TimeoutSeconds":0}}`)
+		t.Assert(client.PostContent(ctx, "/parse", content), `{"AppId":5,"Name":"test","Type":"test","Cluster":"test","Replicas":1,"ContainerName":"test","ContainerImage":"nginx","VersionTag":"test","Namespace":"test","Id":0,"Status":0,"Metrics":"","InitImage":"","CpuRequest":10,"CpuLimit":100,"MemRequest":100,"MemLimit":1000,"MeshEnabled":0,"ContainerPorts":[{"Port":80,"Type":"tcp","Alias":"别名","Brief":"描述"}],"Labels":[{"Key":"app","Value":"test"}],"NodeSelector":[{"Key":"group","Value":"app"}],"EnvReserve":[{"Key":"NODE_IP","Value":"status.hostIP"}],"EnvGlobal":[{"Type":"string","Key":"NUMBER","Value":"1","Brief":"数据数量"}],"EnvContainer":[{"Type":"string","Key":"NAME","Value":"john","Brief":"用户环境变量"}],"Mounts":[],"LivenessProbe":{"Type":"tcpSocket","Port":80,"Path":"","Brief":"存活探针","Period":5,"InitialDelay":10,"TimeoutSeconds":0},"ReadinessProbe":{"Type":"tcpSocket","Port":80,"Path":"","Brief":"就绪探针","Period":5,"InitialDelay":10,"TimeoutSeconds":0}}`)
 	})
 }
 
@@ -324,10 +324,10 @@ func Test_Params_Parse_Attr_Pointer1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		t.Assert(client.PostContent("/parse1", `{"id":1,"name":"john"}`), `1john`)
-		t.Assert(client.PostContent("/parse2", `{"id":1,"name":"john"}`), `1john`)
-		t.Assert(client.PostContent("/parse2?id=1&name=john"), `1john`)
-		t.Assert(client.PostContent("/parse2", `id=1&name=john`), `1john`)
+		t.Assert(client.PostContent(ctx, "/parse1", `{"id":1,"name":"john"}`), `1john`)
+		t.Assert(client.PostContent(ctx, "/parse2", `{"id":1,"name":"john"}`), `1john`)
+		t.Assert(client.PostContent(ctx, "/parse2?id=1&name=john"), `1john`)
+		t.Assert(client.PostContent(ctx, "/parse2", `id=1&name=john`), `1john`)
 	})
 }
 
@@ -353,8 +353,8 @@ func Test_Params_Parse_Attr_Pointer2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		t.Assert(client.PostContent("/parse"), `The Id field is required`)
-		t.Assert(client.PostContent("/parse?id=1"), `1`)
+		t.Assert(client.PostContent(ctx, "/parse"), `The Id field is required`)
+		t.Assert(client.PostContent(ctx, "/parse?id=1"), `1`)
 	})
 }
 
@@ -385,7 +385,7 @@ func Test_Params_Parse_Attr_Pointer2(t *testing.T) {
 //	gtest.C(t, func(t *gtest.T) {
 //		client := g.Client()
 //		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-//		t.Assert(client.PostContent("/parse", `{"id":1,"name":"john","scores":[[1,2,3]]}`), `1100`)
+//		t.Assert(client.PostContent(ctx, "/parse", `{"id":1,"name":"john","scores":[[1,2,3]]}`), `1100`)
 //	})
 //}
 
@@ -395,7 +395,7 @@ func Test_Params_Struct(t *testing.T) {
 		Name  string
 		Time  *time.Time
 		Pass1 string `p:"password1"`
-		Pass2 string `p:"password2" v:"passwd1 @required|length:2,20|password3#||密码强度不足"`
+		Pass2 string `p:"password2" v:"password2 @required|length:2,20|password3#||密码强度不足"`
 	}
 	p, _ := ports.PopRand()
 	s := g.Server(p)
@@ -425,7 +425,7 @@ func Test_Params_Struct(t *testing.T) {
 			if err := r.GetStruct(user); err != nil {
 				r.Response.WriteExit(err)
 			}
-			if err := gvalid.CheckStruct(user, nil); err != nil {
+			if err := gvalid.CheckStruct(r.Context(), user, nil); err != nil {
 				r.Response.WriteExit(err)
 			}
 		}
@@ -448,13 +448,13 @@ func Test_Params_Struct(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		t.Assert(client.GetContent("/struct1", `id=1&name=john&password1=123&password2=456`), `1john123456`)
-		t.Assert(client.PostContent("/struct1", `id=1&name=john&password1=123&password2=456`), `1john123456`)
-		t.Assert(client.PostContent("/struct2", `id=1&name=john&password1=123&password2=456`), `1john123456`)
-		t.Assert(client.PostContent("/struct2", ``), ``)
-		t.Assert(client.PostContent("/struct-valid", `id=1&name=john&password1=123&password2=0`), `The passwd1 value length must be between 2 and 20; 密码强度不足`)
-		t.Assert(client.PostContent("/parse", `id=1&name=john&password1=123&password2=0`), `The passwd1 value length must be between 2 and 20; 密码强度不足`)
-		t.Assert(client.PostContent("/parse", `{"id":1,"name":"john","password1":"123Abc!@#","password2":"123Abc!@#"}`), `1john123Abc!@#123Abc!@#`)
+		t.Assert(client.GetContent(ctx, "/struct1", `id=1&name=john&password1=123&password2=456`), `1john123456`)
+		t.Assert(client.PostContent(ctx, "/struct1", `id=1&name=john&password1=123&password2=456`), `1john123456`)
+		t.Assert(client.PostContent(ctx, "/struct2", `id=1&name=john&password1=123&password2=456`), `1john123456`)
+		t.Assert(client.PostContent(ctx, "/struct2", ``), ``)
+		t.Assert(client.PostContent(ctx, "/struct-valid", `id=1&name=john&password1=123&password2=0`), `The password2 value length must be between 2 and 20; 密码强度不足`)
+		t.Assert(client.PostContent(ctx, "/parse", `id=1&name=john&password1=123&password2=0`), `The password2 value length must be between 2 and 20; 密码强度不足`)
+		t.Assert(client.PostContent(ctx, "/parse", `{"id":1,"name":"john","password1":"123Abc!@#","password2":"123Abc!@#"}`), `1john123Abc!@#123Abc!@#`)
 	})
 }
 
@@ -464,7 +464,7 @@ func Test_Params_Structs(t *testing.T) {
 		Name  string
 		Time  *time.Time
 		Pass1 string `p:"password1"`
-		Pass2 string `p:"password2" v:"passwd1 @required|length:2,20|password3#||密码强度不足"`
+		Pass2 string `p:"password2" v:"password2 @required|length:2,20|password3#||密码强度不足"`
 	}
 	p, _ := ports.PopRand()
 	s := g.Server(p)
@@ -484,10 +484,46 @@ func Test_Params_Structs(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		t.Assert(client.PostContent(
+		t.Assert(client.PostContent(ctx,
 			"/parse1",
 			`[{"id":1,"name":"john","password1":"123Abc!@#","password2":"123Abc!@#"}, {"id":2,"name":"john","password1":"123Abc!@#","password2":"123Abc!@#"}]`),
 			`12`,
 		)
+	})
+}
+
+func Test_Params_Struct_Validation(t *testing.T) {
+	type User struct {
+		Id   int    `v:"required"`
+		Name string `v:"name@required-with:id"`
+	}
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.ALL("/", func(r *ghttp.Request) {
+			var (
+				err  error
+				user *User
+			)
+			err = r.Parse(&user)
+			if err != nil {
+				r.Response.WriteExit(err)
+			}
+			r.Response.WriteExit(user.Id, user.Name)
+		})
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		c := g.Client()
+		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
+		t.Assert(c.GetContent(ctx, "/", ``), `The Id field is required`)
+		t.Assert(c.GetContent(ctx, "/", `id=1&name=john`), `1john`)
+		t.Assert(c.PostContent(ctx, "/", `id=1&name=john&password1=123&password2=456`), `1john`)
+		t.Assert(c.PostContent(ctx, "/", `id=1`), `The name field is required`)
 	})
 }

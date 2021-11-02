@@ -7,15 +7,15 @@
 package genv_test
 
 import (
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/gcmd"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gcmd"
 	"os"
 	"testing"
 
-	"github.com/gogf/gf/os/genv"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/test/gtest"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/os/genv"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 func Test_GEnv_All(t *testing.T) {
@@ -40,7 +40,17 @@ func Test_GEnv_Get(t *testing.T) {
 		key := "TEST_ENV_" + value
 		err := os.Setenv(key, "TEST")
 		t.Assert(err, nil)
-		t.AssertEQ(genv.Get(key), "TEST")
+		t.AssertEQ(genv.Get(key).String(), "TEST")
+	})
+}
+
+func Test_GEnv_GetVar(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		value := gconv.String(gtime.TimestampNano())
+		key := "TEST_ENV_" + value
+		err := os.Setenv(key, "TEST")
+		t.Assert(err, nil)
+		t.AssertEQ(genv.Get(key).String(), "TEST")
 	})
 }
 

@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/v2/frame/g"
 )
 
 func main() {
-	one, err := g.DB().Table("carlist c").
+	one, err := g.Model("carlist c").
 		LeftJoin("cardetail d", "c.postid=d.carid").
 		Where("c.postid", "142039140032006").
 		Fields("c.*,d.*").One()

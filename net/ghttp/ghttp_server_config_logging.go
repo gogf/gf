@@ -6,6 +6,8 @@
 
 package ghttp
 
+import "github.com/gogf/gf/v2/os/glog"
+
 // SetLogPath sets the log path for server.
 // It logs content to file only if the log path is set.
 func (s *Server) SetLogPath(path string) error {
@@ -21,6 +23,17 @@ func (s *Server) SetLogPath(path string) error {
 		}
 	}
 	return nil
+}
+
+// SetLogger sets the logger for logging responsibility.
+// Note that it cannot be set in runtime as there may be concurrent safety issue.
+func (s *Server) SetLogger(logger *glog.Logger) {
+	s.config.Logger = logger
+}
+
+// Logger is alias of GetLogger.
+func (s *Server) Logger() *glog.Logger {
+	return s.config.Logger
 }
 
 // SetLogLevel sets logging level by level string.

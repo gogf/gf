@@ -2,11 +2,11 @@ package main
 
 import (
 	"context"
-	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/v2/frame/g"
 )
 
 func main() {
-	ctx := context.WithValue(context.Background(), "Trace-Id", "123456789")
+	ctx := context.WithValue(context.Background(), "RequestId", "123456789")
 	_, err := g.DB().Ctx(ctx).Query("SELECT 1")
 	if err != nil {
 		panic(err)

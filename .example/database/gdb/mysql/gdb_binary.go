@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
+	"github.com/gogf/gf/v2/os/gctx"
 
-	"github.com/gogf/gf/crypto/gaes"
-	"github.com/gogf/gf/database/gdb"
-	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/v2/crypto/gaes"
+	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/frame/g"
 )
 
 func main() {
@@ -19,6 +20,9 @@ func main() {
 		Role:    "master",
 		Charset: "utf8",
 	})
+	var (
+		ctx = gctx.New()
+	)
 	db, err := gdb.New()
 	if err != nil {
 		panic(err)
@@ -33,7 +37,7 @@ func main() {
 	}
 
 	// 写入
-	r, err := db.Table("user").Data(g.Map{
+	r, err := db.Ctx(ctx).Model("user").Data(g.Map{
 		"uid":  1,
 		"name": encryptedName,
 	}).Save()
@@ -43,9 +47,9 @@ func main() {
 	fmt.Println(r.RowsAffected())
 
 	// 查询
-	one, err := db.Table("user").Where("name=?", encryptedName).One()
+	one, err := db.Ctx(ctx).Model("user").Where("name=?", encryptedName).One()
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println(one.ToMap())
+	fmt.Println(one.Map())
 }

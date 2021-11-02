@@ -10,13 +10,14 @@ package ghttp_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/net/ghttp"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/net/ghttp"
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_Error_Code(t *testing.T) {
@@ -30,7 +31,7 @@ func Test_Error_Code(t *testing.T) {
 				r.Response.Write(gerror.Code(r.GetError()))
 			})
 			group.ALL("/", func(r *ghttp.Request) {
-				panic(gerror.NewCode(10000, "test error"))
+				panic(gerror.NewCode(gcode.New(10000, "", nil), "test error"))
 			})
 		})
 		s.SetPort(p)
@@ -40,6 +41,6 @@ func Test_Error_Code(t *testing.T) {
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(c.GetContent("/"), "10000")
+		t.Assert(c.GetContent(ctx, "/"), "10000")
 	})
 }

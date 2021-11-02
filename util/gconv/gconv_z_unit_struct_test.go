@@ -7,12 +7,12 @@
 package gconv_test
 
 import (
-	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/test/gtest"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gconv"
 	"testing"
 	"time"
 )
@@ -360,6 +360,45 @@ func Test_Struct_Attr_CustomType2(t *testing.T) {
 	})
 }
 
+// From: k8s.io/apimachinery@v0.22.0/pkg/apis/meta/v1/duration.go
+type MyDuration struct {
+	time.Duration
+}
+
+// UnmarshalJSON implements the json.Unmarshaller interface.
+func (d *MyDuration) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err != nil {
+		return err
+	}
+
+	pd, err := time.ParseDuration(str)
+	if err != nil {
+		return err
+	}
+	d.Duration = pd
+	return nil
+}
+
+func Test_Struct_Attr_CustomType3(t *testing.T) {
+	type Config struct {
+		D MyDuration
+	}
+	gtest.C(t, func(t *gtest.T) {
+		config := new(Config)
+		err := gconv.Struct(g.Map{"d": "15s"}, config)
+		t.AssertNil(err)
+		t.Assert(config.D, "15s")
+	})
+	gtest.C(t, func(t *gtest.T) {
+		config := new(Config)
+		err := gconv.Struct(g.Map{"d": `"15s"`}, config)
+		t.AssertNil(err)
+		t.Assert(config.D, "15s")
+	})
+}
+
 func Test_Struct_PrivateAttribute(t *testing.T) {
 	type User struct {
 		Id   int
@@ -600,6 +639,22 @@ func Test_Struct_Time(t *testing.T) {
 	})
 }
 
+func Test_Struct_GTime(t *testing.T) {
+	// https://github.com/gogf/gf/issues/1387
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Name       string
+			CreateTime *gtime.Time
+		}
+		var user *User
+		err := gconv.Struct(`{"Name":"John","CreateTime":""}`, &user)
+		t.AssertNil(err)
+		t.AssertNE(user, nil)
+		t.Assert(user.Name, `John`)
+		t.Assert(user.CreateTime, nil)
+	})
+}
+
 // Auto create struct when given pointer.
 func Test_Struct_Create(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
@@ -817,7 +872,7 @@ func Test_Struct_Complex(t *testing.T) {
     "errorMsg": null
 }`
 		m := make(g.Map)
-		err := json.Unmarshal([]byte(data), &m)
+		err := json.UnmarshalUseNumber([]byte(data), &m)
 		t.Assert(err, nil)
 
 		model := new(XinYanModel)
@@ -1163,4 +1218,29 @@ func Test_Struct_GVarAttribute(t *testing.T) {
 		t.Assert(a.Status, data["status"])
 	})
 
+}
+
+func Test_Struct_MapAttribute(t *testing.T) {
+	type NodeStatus struct {
+		ID int
+	}
+	type Nodes map[string]NodeStatus
+	type Output struct {
+		Nodes Nodes
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			out  = Output{}
+			data = g.Map{
+				"nodes": g.Map{
+					"name": g.Map{
+						"id": 10000,
+					},
+				},
+			}
+		)
+		err := gconv.Struct(data, &out)
+		t.AssertNil(err)
+	})
 }

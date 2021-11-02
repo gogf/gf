@@ -7,10 +7,11 @@
 package gview_test
 
 import (
-	"github.com/gogf/gf/debug/gdebug"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/gview"
-	"github.com/gogf/gf/test/gtest"
+	"context"
+	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gview"
+	"github.com/gogf/gf/v2/test/gtest"
 	"testing"
 )
 
@@ -30,11 +31,11 @@ func Test_Config(t *testing.T) {
 
 		str := `hello ${.name},version:${.version}`
 		view.Assigns(g.Map{"version": "1.7.0"})
-		result, err := view.ParseContent(str, nil)
+		result, err := view.ParseContent(context.TODO(), str, nil)
 		t.Assert(err, nil)
 		t.Assert(result, "hello gf,version:1.7.0")
 
-		result, err = view.ParseDefault()
+		result, err = view.ParseDefault(context.TODO())
 		t.Assert(err, nil)
 		t.Assert(result, "name:gf")
 	})
@@ -55,11 +56,11 @@ func Test_ConfigWithMap(t *testing.T) {
 
 		str := `hello ${.name},version:${.version}`
 		view.Assigns(g.Map{"version": "1.7.0"})
-		result, err := view.ParseContent(str, nil)
+		result, err := view.ParseContent(context.TODO(), str, nil)
 		t.Assert(err, nil)
 		t.Assert(result, "hello gf,version:1.7.0")
 
-		result, err = view.ParseDefault()
+		result, err = view.ParseDefault(context.TODO())
 		t.Assert(err, nil)
 		t.Assert(result, "name:gf")
 	})

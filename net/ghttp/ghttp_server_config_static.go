@@ -9,14 +9,14 @@
 package ghttp
 
 import (
-	"fmt"
+	"context"
 	"strings"
 
-	"github.com/gogf/gf/os/gres"
+	"github.com/gogf/gf/v2/os/gres"
 
-	"github.com/gogf/gf/container/garray"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // staticPathItem is the item struct for static path configuration.
@@ -50,25 +50,31 @@ func (s *Server) SetFileServerEnabled(enabled bool) {
 
 // SetServerRoot sets the document root for static service.
 func (s *Server) SetServerRoot(root string) {
-	realPath := root
+	var (
+		ctx      = context.TODO()
+		realPath = root
+	)
 	if !gres.Contains(realPath) {
 		if p, err := gfile.Search(root); err != nil {
-			s.Logger().Fatal(fmt.Sprintf(`SetServerRoot failed: %v`, err))
+			s.Logger().Fatalf(ctx, `SetServerRoot failed: %+v`, err)
 		} else {
 			realPath = p
 		}
 	}
-	s.Logger().Debug("SetServerRoot path:", realPath)
+	s.Logger().Debug(ctx, "SetServerRoot path:", realPath)
 	s.config.SearchPaths = []string{strings.TrimRight(realPath, gfile.Separator)}
 	s.config.FileServerEnabled = true
 }
 
 // AddSearchPath add searching directory path for static file service.
 func (s *Server) AddSearchPath(path string) {
-	realPath := path
+	var (
+		ctx      = context.TODO()
+		realPath = path
+	)
 	if !gres.Contains(realPath) {
 		if p, err := gfile.Search(path); err != nil {
-			s.Logger().Fatal(fmt.Sprintf(`AddSearchPath failed: %v`, err))
+			s.Logger().Fatalf(ctx, `AddSearchPath failed: %+v`, err)
 		} else {
 			realPath = p
 		}
@@ -79,10 +85,13 @@ func (s *Server) AddSearchPath(path string) {
 
 // AddStaticPath sets the uri to static directory path mapping for static file service.
 func (s *Server) AddStaticPath(prefix string, path string) {
-	realPath := path
+	var (
+		ctx      = context.TODO()
+		realPath = path
+	)
 	if !gres.Contains(realPath) {
 		if p, err := gfile.Search(path); err != nil {
-			s.Logger().Fatal(fmt.Sprintf(`AddStaticPath failed: %v`, err))
+			s.Logger().Fatalf(ctx, `AddStaticPath failed: %+v`, err)
 		} else {
 			realPath = p
 		}

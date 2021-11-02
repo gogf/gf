@@ -7,18 +7,19 @@
 package gcache
 
 import (
+	"context"
 	"time"
 
-	"github.com/gogf/gf/container/glist"
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/container/gtype"
-	"github.com/gogf/gf/os/gtimer"
+	"github.com/gogf/gf/v2/container/glist"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/os/gtimer"
 )
 
 // LRU cache object.
 // It uses list.List from stdlib for its underlying doubly linked list.
 type adapterMemoryLru struct {
-	cache   *adapterMemory // Parent cache object.
+	cache   *AdapterMemory // Parent cache object.
 	data    *gmap.Map      // Key mapping to the item of the list.
 	list    *glist.List    // Key list.
 	rawList *glist.List    // History for key adding.
@@ -26,7 +27,7 @@ type adapterMemoryLru struct {
 }
 
 // newMemCacheLru creates and returns a new LRU object.
-func newMemCacheLru(cache *adapterMemory) *adapterMemoryLru {
+func newMemCacheLru(cache *AdapterMemory) *adapterMemoryLru {
 	lru := &adapterMemoryLru{
 		cache:   cache,
 		data:    gmap.New(true),
@@ -34,7 +35,7 @@ func newMemCacheLru(cache *adapterMemory) *adapterMemoryLru {
 		rawList: glist.New(true),
 		closed:  gtype.NewBool(),
 	}
-	gtimer.AddSingleton(time.Second, lru.SyncAndClear)
+	gtimer.AddSingleton(context.Background(), time.Second, lru.SyncAndClear)
 	return lru
 }
 
@@ -43,7 +44,7 @@ func (lru *adapterMemoryLru) Close() {
 	lru.closed.Set(true)
 }
 
-// Remove deletes the <key> FROM <lru>.
+// Remove deletes the `key` FROM `lru`.
 func (lru *adapterMemoryLru) Remove(key interface{}) {
 	if v := lru.data.Get(key); v != nil {
 		lru.data.Remove(key)
@@ -51,17 +52,17 @@ func (lru *adapterMemoryLru) Remove(key interface{}) {
 	}
 }
 
-// Size returns the size of <lru>.
+// Size returns the size of `lru`.
 func (lru *adapterMemoryLru) Size() int {
 	return lru.data.Size()
 }
 
-// Push pushes <key> to the tail of <lru>.
+// Push pushes `key` to the tail of `lru`.
 func (lru *adapterMemoryLru) Push(key interface{}) {
 	lru.rawList.PushBack(key)
 }
 
-// Pop deletes and returns the key from tail of <lru>.
+// Pop deletes and returns the key from tail of `lru`.
 func (lru *adapterMemoryLru) Pop() interface{} {
 	if v := lru.list.PopBack(); v != nil {
 		lru.data.Remove(v)
@@ -78,23 +79,26 @@ func (lru *adapterMemoryLru) Pop() interface{} {
 //    fmt.Println()
 //}
 
-// SyncAndClear synchronizes the keys from <rawList> to <list> and <data>
+// SyncAndClear synchronizes the keys from `rawList` to `list` and `data`
 // using Least Recently Used algorithm.
-func (lru *adapterMemoryLru) SyncAndClear() {
+func (lru *adapterMemoryLru) SyncAndClear(ctx context.Context) {
 	if lru.closed.Val() {
 		gtimer.Exit()
 		return
 	}
 	// Data synchronization.
+	var (
+		alreadyExistItem interface{}
+	)
 	for {
-		if v := lru.rawList.PopFront(); v != nil {
+		if rawListItem := lru.rawList.PopFront(); rawListItem != nil {
 			// Deleting the key from list.
-			if v := lru.data.Get(v); v != nil {
-				lru.list.Remove(v.(*glist.Element))
+			if alreadyExistItem = lru.data.Get(rawListItem); alreadyExistItem != nil {
+				lru.list.Remove(alreadyExistItem.(*glist.Element))
 			}
 			// Pushing key to the head of the list
 			// and setting its list item to hash table for quick indexing.
-			lru.data.Set(v, lru.list.PushFront(v))
+			lru.data.Set(rawListItem, lru.list.PushFront(rawListItem))
 		} else {
 			break
 		}

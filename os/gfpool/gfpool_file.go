@@ -7,8 +7,9 @@
 package gfpool
 
 import (
-	"errors"
 	"fmt"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"os"
 	"time"
 )
@@ -41,7 +42,7 @@ func Open(path string, flag int, perm os.FileMode, ttl ...time.Duration) (file *
 // Stat returns the FileInfo structure describing file.
 func (f *File) Stat() (os.FileInfo, error) {
 	if f.stat == nil {
-		return nil, errors.New("file stat is empty")
+		return nil, gerror.NewCode(gcode.CodeInternalError, "file stat is empty")
 	}
 	return f.stat, nil
 }

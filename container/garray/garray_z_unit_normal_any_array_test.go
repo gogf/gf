@@ -9,14 +9,14 @@
 package garray_test
 
 import (
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/internal/json"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/internal/json"
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/container/garray"
-	"github.com/gogf/gf/test/gtest"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 func Test_Array_Basic(t *testing.T) {
@@ -570,12 +570,12 @@ func TestArray_Json(t *testing.T) {
 		t.Assert(err1, err2)
 
 		a2 := garray.New()
-		err2 = json.Unmarshal(b2, &a2)
+		err2 = json.UnmarshalUseNumber(b2, &a2)
 		t.Assert(err2, nil)
 		t.Assert(a2.Slice(), s1)
 
 		var a3 garray.Array
-		err := json.Unmarshal(b2, &a3)
+		err := json.UnmarshalUseNumber(b2, &a3)
 		t.Assert(err, nil)
 		t.Assert(a3.Slice(), s1)
 	})
@@ -589,12 +589,12 @@ func TestArray_Json(t *testing.T) {
 		t.Assert(err1, err2)
 
 		a2 := garray.New()
-		err2 = json.Unmarshal(b2, &a2)
+		err2 = json.UnmarshalUseNumber(b2, &a2)
 		t.Assert(err2, nil)
 		t.Assert(a2.Slice(), s1)
 
 		var a3 garray.Array
-		err := json.Unmarshal(b2, &a3)
+		err := json.UnmarshalUseNumber(b2, &a3)
 		t.Assert(err, nil)
 		t.Assert(a3.Slice(), s1)
 	})
@@ -612,7 +612,7 @@ func TestArray_Json(t *testing.T) {
 		t.Assert(err, nil)
 
 		user := new(User)
-		err = json.Unmarshal(b, user)
+		err = json.UnmarshalUseNumber(b, user)
 		t.Assert(err, nil)
 		t.Assert(user.Name, data["Name"])
 		t.Assert(user.Scores, data["Scores"])
@@ -631,7 +631,7 @@ func TestArray_Json(t *testing.T) {
 		t.Assert(err, nil)
 
 		user := new(User)
-		err = json.Unmarshal(b, user)
+		err = json.UnmarshalUseNumber(b, user)
 		t.Assert(err, nil)
 		t.Assert(user.Name, data["Name"])
 		t.Assert(user.Scores, data["Scores"])
@@ -709,7 +709,7 @@ func TestArray_UnmarshalValue(t *testing.T) {
 			"name":  "john",
 			"array": []byte(`[1,2,3]`),
 		}, &v)
-		t.Assert(err, nil)
+		t.AssertNil(err)
 		t.Assert(v.Name, "john")
 		t.Assert(v.Array.Slice(), g.Slice{1, 2, 3})
 	})

@@ -8,22 +8,22 @@ package gdb
 
 import (
 	"database/sql"
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/encoding/gparser"
-	"github.com/gogf/gf/internal/empty"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v2/internal/empty"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // Json converts `r` to JSON format content.
 func (r Record) Json() string {
-	content, _ := gparser.VarToJson(r.Map())
-	return gconv.UnsafeBytesToStr(content)
+	content, _ := gjson.New(r.Map()).ToJsonString()
+	return content
 }
 
 // Xml converts `r` to XML format content.
 func (r Record) Xml(rootTag ...string) string {
-	content, _ := gparser.VarToXml(r.Map(), rootTag...)
-	return gconv.UnsafeBytesToStr(content)
+	content, _ := gjson.New(r.Map()).ToXmlString(rootTag...)
+	return content
 }
 
 // Map converts `r` to map[string]interface{}.
@@ -52,7 +52,7 @@ func (r Record) Struct(pointer interface{}) error {
 		}
 		return nil
 	}
-	return gconv.StructTag(r.Map(), pointer, OrmTagForStruct)
+	return gconv.StructTag(r, pointer, OrmTagForStruct)
 }
 
 // IsEmpty checks and returns whether `r` is empty.

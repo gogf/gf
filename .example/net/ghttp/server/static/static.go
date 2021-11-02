@@ -1,6 +1,6 @@
 package main
 
-import "github.com/gogf/gf/frame/g"
+import "github.com/gogf/gf/v2/frame/g"
 
 // 静态文件服务器基本使用
 func main() {

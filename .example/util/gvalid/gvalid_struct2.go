@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/util/gvalid"
+	"context"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/util/gvalid"
 )
 
 // string默认值校验
@@ -13,5 +14,5 @@ func main() {
 
 	user := &User{}
 
-	g.Dump(gvalid.CheckStruct(user, nil))
+	g.Dump(gvalid.CheckStruct(context.TODO(), user, nil))
 }

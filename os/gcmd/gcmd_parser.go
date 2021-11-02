@@ -8,18 +8,17 @@
 package gcmd
 
 import (
-	"fmt"
-	"github.com/gogf/gf/internal/json"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/json"
 	"os"
 	"strings"
 
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/text/gstr"
 
-	"errors"
+	"github.com/gogf/gf/v2/container/gvar"
 
-	"github.com/gogf/gf/container/gvar"
-
-	"github.com/gogf/gf/text/gregex"
+	"github.com/gogf/gf/v2/text/gregex"
 )
 
 // Parser for arguments.
@@ -34,20 +33,20 @@ type Parser struct {
 
 // Parse creates and returns a new Parser with os.Args and supported options.
 //
-// Note that the parameter <supportedOptions> is as [option name: need argument], which means
-// the value item of <supportedOptions> indicates whether corresponding option name needs argument or not.
+// Note that the parameter `supportedOptions` is as [option name: need argument], which means
+// the value item of `supportedOptions` indicates whether corresponding option name needs argument or not.
 //
-// The optional parameter <strict> specifies whether stops parsing and returns error if invalid option passed.
+// The optional parameter `strict` specifies whether stops parsing and returns error if invalid option passed.
 func Parse(supportedOptions map[string]bool, strict ...bool) (*Parser, error) {
 	return ParseWithArgs(os.Args, supportedOptions, strict...)
 }
 
 // ParseWithArgs creates and returns a new Parser with given arguments and supported options.
 //
-// Note that the parameter <supportedOptions> is as [option name: need argument], which means
-// the value item of <supportedOptions> indicates whether corresponding option name needs argument or not.
+// Note that the parameter `supportedOptions` is as [option name: need argument], which means
+// the value item of `supportedOptions` indicates whether corresponding option name needs argument or not.
 //
-// The optional parameter <strict> specifies whether stops parsing and returns error if invalid option passed.
+// The optional parameter `strict` specifies whether stops parsing and returns error if invalid option passed.
 func ParseWithArgs(args []string, supportedOptions map[string]bool, strict ...bool) (*Parser, error) {
 	strictParsing := false
 	if len(strict) > 0 {
@@ -96,7 +95,7 @@ func ParseWithArgs(args []string, supportedOptions map[string]bool, strict ...bo
 						i++
 						continue
 					} else if parser.strict {
-						return nil, errors.New(fmt.Sprintf(`invalid option '%s'`, args[i]))
+						return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid option '%s'`, args[i])
 					}
 				}
 			}
@@ -159,26 +158,15 @@ func (p *Parser) setOptionValue(name, value string) {
 	}
 }
 
-// GetOpt returns the option value named <name>.
-func (p *Parser) GetOpt(name string, def ...string) string {
+// GetOpt returns the option value named `name` as gvar.Var.
+func (p *Parser) GetOpt(name string, def ...interface{}) *gvar.Var {
 	if v, ok := p.parsedOptions[name]; ok {
-		return v
-	}
-	if len(def) > 0 {
-		return def[0]
-	}
-	return ""
-}
-
-// GetOptVar returns the option value named <name> as gvar.Var.
-func (p *Parser) GetOptVar(name string, def ...interface{}) *gvar.Var {
-	if p.ContainsOpt(name) {
-		return gvar.New(p.GetOpt(name))
+		return gvar.New(v)
 	}
 	if len(def) > 0 {
 		return gvar.New(def[0])
 	}
-	return gvar.New(nil)
+	return nil
 }
 
 // GetOptAll returns all parsed options.
@@ -186,26 +174,21 @@ func (p *Parser) GetOptAll() map[string]string {
 	return p.parsedOptions
 }
 
-// ContainsOpt checks whether option named <name> exist in the arguments.
+// ContainsOpt checks whether option named `name` exist in the arguments.
 func (p *Parser) ContainsOpt(name string) bool {
 	_, ok := p.parsedOptions[name]
 	return ok
 }
 
-// GetArg returns the argument at <index>.
-func (p *Parser) GetArg(index int, def ...string) string {
+// GetArg returns the argument at `index` as gvar.Var.
+func (p *Parser) GetArg(index int, def ...string) *gvar.Var {
 	if index < len(p.parsedArgs) {
-		return p.parsedArgs[index]
+		return gvar.New(p.parsedArgs[index])
 	}
 	if len(def) > 0 {
-		return def[0]
+		return gvar.New(def[0])
 	}
-	return ""
-}
-
-// GetArgVar returns the argument at <index> as gvar.Var.
-func (p *Parser) GetArgVar(index int, def ...string) *gvar.Var {
-	return gvar.New(p.GetArg(index, def...))
+	return nil
 }
 
 // GetArgAll returns all parsed arguments.

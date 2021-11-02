@@ -7,42 +7,34 @@
 package glog
 
 import (
-	"context"
 	"io"
 )
 
-// Expose returns the default logger of glog.
+// Expose returns the default logger of package glog.
 func Expose() *Logger {
 	return logger
 }
 
-// Ctx is a chaining function,
-// which sets the context for current logging.
-// The parameter <keys> specifies the context keys for retrieving values.
-func Ctx(ctx context.Context, keys ...interface{}) *Logger {
-	return logger.Ctx(ctx, keys...)
-}
-
 // To is a chaining function,
-// which redirects current logging content output to the sepecified <writer>.
+// which redirects current logging content output to the sepecified `writer`.
 func To(writer io.Writer) *Logger {
 	return logger.To(writer)
 }
 
 // Path is a chaining function,
-// which sets the directory path to <path> for current logging content output.
+// which sets the directory path to `path` for current logging content output.
 func Path(path string) *Logger {
 	return logger.Path(path)
 }
 
 // Cat is a chaining function,
-// which sets the category to <category> for current logging content output.
+// which sets the category to `category` for current logging content output.
 func Cat(category string) *Logger {
 	return logger.Cat(category)
 }
 
 // File is a chaining function,
-// which sets file name <pattern> for the current logging content output.
+// which sets file name `pattern` for the current logging content output.
 func File(pattern string) *Logger {
 	return logger.File(pattern)
 }
@@ -78,7 +70,7 @@ func StackWithFilter(filter string) *Logger {
 	return logger.StackWithFilter(filter)
 }
 
-// StdPrint is a chaining function,
+// Stdout is a chaining function,
 // which enables/disables stdout for the current logging content output.
 // It's enabled in default.
 func Stdout(enabled ...bool) *Logger {
@@ -94,7 +86,7 @@ func Header(enabled ...bool) *Logger {
 
 // Line is a chaining function,
 // which enables/disables printing its caller file along with its line number.
-// The parameter <long> specified whether print the long absolute file path, eg: /a/b/c/d.go:23.
+// The parameter `long` specified whether print the long absolute file path, eg: /a/b/c/d.go:23.
 func Line(long ...bool) *Logger {
 	return logger.Line(long...)
 }

@@ -11,12 +11,15 @@ package gstr_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/test/gtest"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 func Test_CompareVersion(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
+		t.AssertEQ(gstr.CompareVersion("1", ""), 1)
+		t.AssertEQ(gstr.CompareVersion("", ""), 0)
+		t.AssertEQ(gstr.CompareVersion("", "v0.1"), -1)
 		t.AssertEQ(gstr.CompareVersion("1", "v0.99"), 1)
 		t.AssertEQ(gstr.CompareVersion("v1.0", "v0.99"), 1)
 		t.AssertEQ(gstr.CompareVersion("v1.0.1", "v1.1.0"), -1)
@@ -28,6 +31,9 @@ func Test_CompareVersion(t *testing.T) {
 
 func Test_CompareVersionGo(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
+		t.AssertEQ(gstr.CompareVersionGo("1", ""), 1)
+		t.AssertEQ(gstr.CompareVersionGo("", ""), 0)
+		t.AssertEQ(gstr.CompareVersionGo("", "v0.1"), -1)
 		t.AssertEQ(gstr.CompareVersionGo("v1.0.1", "v1.1.0"), -1)
 		t.AssertEQ(gstr.CompareVersionGo("1.0.1", "v1.1.0"), -1)
 		t.AssertEQ(gstr.CompareVersionGo("1.0.0", "v0.1.0"), 1)

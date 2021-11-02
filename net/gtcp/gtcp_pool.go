@@ -9,24 +9,23 @@ package gtcp
 import (
 	"time"
 
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/container/gpool"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/container/gpool"
 )
 
 // PoolConn is a connection with pool feature for TCP.
-// Note that it is NOT a pool or connection manager,
-// it is just a TCP connection object.
+// Note that it is NOT a pool or connection manager, it is just a TCP connection object.
 type PoolConn struct {
 	*Conn              // Underlying connection object.
-	pool   *gpool.Pool // Connection pool, which is not a really connection pool, but a connection reusable pool.
+	pool   *gpool.Pool // Connection pool, which is not a real connection pool, but a connection reusable pool.
 	status int         // Status of current connection, which is used to mark this connection usable or not.
 }
 
 const (
-	gDEFAULT_POOL_EXPIRE = 10 * time.Second // Default TTL for connection in the pool.
-	gCONN_STATUS_UNKNOWN = 0                // Means it is unknown it's connective or not.
-	gCONN_STATUS_ACTIVE  = 1                // Means it is now connective.
-	gCONN_STATUS_ERROR   = 2                // Means it should be closed and removed from pool.
+	defaultPoolExpire = 10 * time.Second // Default TTL for connection in the pool.
+	connStatusUnknown = 0                // Means it is unknown it's connective or not.
+	connStatusActive  = 1                // Means it is now connective.
+	connStatusError   = 2                // Means it should be closed and removed from pool.
 )
 
 var (
@@ -38,9 +37,9 @@ var (
 func NewPoolConn(addr string, timeout ...time.Duration) (*PoolConn, error) {
 	v := addressPoolMap.GetOrSetFuncLock(addr, func() interface{} {
 		var pool *gpool.Pool
-		pool = gpool.New(gDEFAULT_POOL_EXPIRE, func() (interface{}, error) {
+		pool = gpool.New(defaultPoolExpire, func() (interface{}, error) {
 			if conn, err := NewConn(addr, timeout...); err == nil {
-				return &PoolConn{conn, pool, gCONN_STATUS_ACTIVE}, nil
+				return &PoolConn{conn, pool, connStatusActive}, nil
 			} else {
 				return nil, err
 			}
@@ -57,11 +56,11 @@ func NewPoolConn(addr string, timeout ...time.Duration) (*PoolConn, error) {
 // Close puts back the connection to the pool if it's active,
 // or closes the connection if it's not active.
 //
-// Note that, if <c> calls Close function closing itself, <c> can not
+// Note that, if `c` calls Close function closing itself, `c` can not
 // be used again.
 func (c *PoolConn) Close() error {
-	if c.pool != nil && c.status == gCONN_STATUS_ACTIVE {
-		c.status = gCONN_STATUS_UNKNOWN
+	if c.pool != nil && c.status == connStatusActive {
+		c.status = connStatusUnknown
 		c.pool.Put(c)
 	} else {
 		return c.Conn.Close()
@@ -73,7 +72,7 @@ func (c *PoolConn) Close() error {
 // writing data.
 func (c *PoolConn) Send(data []byte, retry ...Retry) error {
 	err := c.Conn.Send(data, retry...)
-	if err != nil && c.status == gCONN_STATUS_UNKNOWN {
+	if err != nil && c.status == connStatusUnknown {
 		if v, e := c.pool.Get(); e == nil {
 			c.Conn = v.(*PoolConn).Conn
 			err = c.Send(data, retry...)
@@ -82,9 +81,9 @@ func (c *PoolConn) Send(data []byte, retry ...Retry) error {
 		}
 	}
 	if err != nil {
-		c.status = gCONN_STATUS_ERROR
+		c.status = connStatusError
 	} else {
-		c.status = gCONN_STATUS_ACTIVE
+		c.status = connStatusActive
 	}
 	return err
 }
@@ -93,9 +92,9 @@ func (c *PoolConn) Send(data []byte, retry ...Retry) error {
 func (c *PoolConn) Recv(length int, retry ...Retry) ([]byte, error) {
 	data, err := c.Conn.Recv(length, retry...)
 	if err != nil {
-		c.status = gCONN_STATUS_ERROR
+		c.status = connStatusError
 	} else {
-		c.status = gCONN_STATUS_ACTIVE
+		c.status = connStatusActive
 	}
 	return data, err
 }
@@ -105,31 +104,31 @@ func (c *PoolConn) Recv(length int, retry ...Retry) ([]byte, error) {
 func (c *PoolConn) RecvLine(retry ...Retry) ([]byte, error) {
 	data, err := c.Conn.RecvLine(retry...)
 	if err != nil {
-		c.status = gCONN_STATUS_ERROR
+		c.status = connStatusError
 	} else {
-		c.status = gCONN_STATUS_ACTIVE
+		c.status = connStatusActive
 	}
 	return data, err
 }
 
-// RecvTil reads data from the connection until reads bytes <til>.
-// Note that the returned result contains the last bytes <til>.
+// RecvTil reads data from the connection until reads bytes `til`.
+// Note that the returned result contains the last bytes `til`.
 func (c *PoolConn) RecvTil(til []byte, retry ...Retry) ([]byte, error) {
 	data, err := c.Conn.RecvTil(til, retry...)
 	if err != nil {
-		c.status = gCONN_STATUS_ERROR
+		c.status = connStatusError
 	} else {
-		c.status = gCONN_STATUS_ACTIVE
+		c.status = connStatusActive
 	}
 	return data, err
 }
 
 // RecvWithTimeout reads data from the connection with timeout.
 func (c *PoolConn) RecvWithTimeout(length int, timeout time.Duration, retry ...Retry) (data []byte, err error) {
-	if err := c.SetRecvDeadline(time.Now().Add(timeout)); err != nil {
+	if err := c.SetreceiveDeadline(time.Now().Add(timeout)); err != nil {
 		return nil, err
 	}
-	defer c.SetRecvDeadline(time.Time{})
+	defer c.SetreceiveDeadline(time.Time{})
 	data, err = c.Recv(length, retry...)
 	return
 }

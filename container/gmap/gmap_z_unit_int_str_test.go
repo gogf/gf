@@ -7,14 +7,14 @@
 package gmap_test
 
 import (
-	"github.com/gogf/gf/container/garray"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/util/gconv"
 	"testing"
 
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func getStr() string {
@@ -249,7 +249,7 @@ func Test_IntStrMap_Json(t *testing.T) {
 		t.Assert(err, nil)
 
 		m := gmap.NewIntStrMap()
-		err = json.Unmarshal(b, m)
+		err = json.UnmarshalUseNumber(b, m)
 		t.Assert(err, nil)
 		t.Assert(m.Get(1), data[1])
 		t.Assert(m.Get(2), data[2])

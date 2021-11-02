@@ -1,9 +1,10 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
-	"github.com/gogf/gf/util/gvalid"
+	"github.com/gogf/gf/v2/util/gvalid"
 )
 
 func main() {
@@ -17,7 +18,7 @@ func main() {
 		"password@required|length:6,16|same:password2#密码不能为空}|两次密码输入不相等",
 		"password2@required|length:6,16#",
 	}
-	if e := gvalid.CheckMap(params, rules); e != nil {
+	if e := gvalid.CheckMap(context.TODO(), params, rules); e != nil {
 		fmt.Println(e.Map())
 		fmt.Println(e.FirstItem())
 		fmt.Println(e.FirstString())

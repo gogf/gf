@@ -7,6 +7,8 @@
 // Package gi18n implements internationalization and localization.
 package gi18n
 
+import "context"
+
 // SetPath sets the directory path storing i18n files.
 func SetPath(path string) error {
 	return Instance().SetPath(path)
@@ -23,42 +25,28 @@ func SetDelimiters(left, right string) {
 }
 
 // T is alias of Translate for convenience.
-func T(content string, language ...string) string {
-	return Instance().T(content, language...)
+func T(ctx context.Context, content string) string {
+	return Instance().T(ctx, content)
 }
 
 // Tf is alias of TranslateFormat for convenience.
-func Tf(format string, values ...interface{}) string {
-	return Instance().TranslateFormat(format, values...)
+func Tf(ctx context.Context, format string, values ...interface{}) string {
+	return Instance().TranslateFormat(ctx, format, values...)
 }
 
-// Tfl is alias of TranslateFormatLang for convenience.
-func Tfl(language string, format string, values ...interface{}) string {
-	return Instance().TranslateFormatLang(language, format, values...)
+// TranslateFormat translates, formats and returns the `format` with configured language
+// and given `values`.
+func TranslateFormat(ctx context.Context, format string, values ...interface{}) string {
+	return Instance().TranslateFormat(ctx, format, values...)
 }
 
-// TranslateFormat translates, formats and returns the <format> with configured language
-// and given <values>.
-func TranslateFormat(format string, values ...interface{}) string {
-	return Instance().TranslateFormat(format, values...)
+// Translate translates `content` with configured language and returns the translated content.
+func Translate(ctx context.Context, content string) string {
+	return Instance().Translate(ctx, content)
 }
 
-// TranslateFormatLang translates, formats and returns the <format> with configured language
-// and given <values>. The parameter <language> specifies custom translation language ignoring
-// configured language. If <language> is given empty string, it uses the default configured
-// language for the translation.
-func TranslateFormatLang(language string, format string, values ...interface{}) string {
-	return Instance().TranslateFormatLang(language, format, values...)
-}
-
-// Translate translates <content> with configured language and returns the translated content.
-// The parameter <language> specifies custom translation language ignoring configured language.
-func Translate(content string, language ...string) string {
-	return Instance().Translate(content, language...)
-}
-
-// GetValue retrieves and returns the configured content for given key and specified language.
+// GetContent retrieves and returns the configured content for given key and specified language.
 // It returns an empty string if not found.
-func GetContent(key string, language ...string) string {
-	return Instance().GetContent(key, language...)
+func GetContent(ctx context.Context, key string) string {
+	return Instance().GetContent(ctx, key)
 }

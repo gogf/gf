@@ -7,11 +7,12 @@
 package ghttp
 
 import (
-	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"net/http"
 	"reflect"
 
-	"github.com/gogf/gf/util/gutil"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // middleware is the plugin for request workflow management.
@@ -34,20 +35,20 @@ func (m *middleware) Next() {
 		}
 		item = m.request.handlers[m.handlerIndex]
 		// Filter the HOOK handlers, which are designed to be called in another standalone procedure.
-		if item.handler.itemType == handlerTypeHook {
+		if item.Handler.Type == HandlerTypeHook {
 			m.handlerIndex++
 			continue
 		}
 		// Current router switching.
-		m.request.Router = item.handler.router
+		m.request.Router = item.Handler.Router
 
 		// Router values switching.
-		m.request.routerMap = item.values
+		m.request.routerMap = item.Values
 
 		gutil.TryCatch(func() {
 			// Execute bound middleware array of the item if it's not empty.
-			if m.handlerMDIndex < len(item.handler.middleware) {
-				md := item.handler.middleware[m.handlerMDIndex]
+			if m.handlerMDIndex < len(item.Handler.Middleware) {
+				md := item.Handler.Middleware[m.handlerMDIndex]
 				m.handlerMDIndex++
 				niceCallFunc(func() {
 					md(m.request)
@@ -57,78 +58,55 @@ func (m *middleware) Next() {
 			}
 			m.handlerIndex++
 
-			switch item.handler.itemType {
-			// Service controller.
-			case handlerTypeController:
-				m.served = true
-				if m.request.IsExited() {
-					break
-				}
-				c := reflect.New(item.handler.ctrlInfo.reflect)
-				niceCallFunc(func() {
-					c.MethodByName("Init").Call([]reflect.Value{reflect.ValueOf(m.request)})
-				})
-				if !m.request.IsExited() {
-					niceCallFunc(func() {
-						c.MethodByName(item.handler.ctrlInfo.name).Call(nil)
-					})
-				}
-				if !m.request.IsExited() {
-					niceCallFunc(func() {
-						c.MethodByName("Shut").Call(nil)
-					})
-				}
-
+			switch item.Handler.Type {
 			// Service object.
-			case handlerTypeObject:
+			case HandlerTypeObject:
 				m.served = true
 				if m.request.IsExited() {
 					break
 				}
-				if item.handler.initFunc != nil {
+				if item.Handler.InitFunc != nil {
 					niceCallFunc(func() {
-						item.handler.initFunc(m.request)
+						item.Handler.InitFunc(m.request)
 					})
 				}
 				if !m.request.IsExited() {
-					niceCallFunc(func() {
-						item.handler.itemFunc(m.request)
-					})
+					m.callHandlerFunc(item.Handler.Info)
 				}
-				if !m.request.IsExited() && item.handler.shutFunc != nil {
+				if !m.request.IsExited() && item.Handler.ShutFunc != nil {
 					niceCallFunc(func() {
-						item.handler.shutFunc(m.request)
+						item.Handler.ShutFunc(m.request)
 					})
 				}
 
 			// Service handler.
-			case handlerTypeHandler:
+			case HandlerTypeHandler:
 				m.served = true
 				if m.request.IsExited() {
 					break
 				}
 				niceCallFunc(func() {
-					item.handler.itemFunc(m.request)
+					m.callHandlerFunc(item.Handler.Info)
 				})
 
 			// Global middleware array.
-			case handlerTypeMiddleware:
+			case HandlerTypeMiddleware:
 				niceCallFunc(func() {
-					item.handler.itemFunc(m.request)
+					item.Handler.Info.Func(m.request)
 				})
 				// It does not continue calling next middleware after another middleware done.
 				// There should be a "Next" function to be called in the middleware in order to manage the workflow.
 				loop = false
 			}
 		}, func(exception error) {
-			if e, ok := exception.(errorStack); ok {
+			if v, ok := exception.(error); ok && gerror.HasStack(v) {
 				// It's already an error that has stack info.
-				m.request.error = e
+				m.request.error = v
 			} else {
 				// Create a new error with stack info.
 				// Note that there's a skip pointing the start stacktrace
 				// of the real error point.
-				m.request.error = gerror.WrapSkip(1, exception, "")
+				m.request.error = gerror.WrapCodeSkip(gcode.CodeInternalError, 1, exception, "")
 			}
 			m.request.Response.WriteStatus(http.StatusInternalServerError, exception)
 			loop = false
@@ -144,4 +122,51 @@ func (m *middleware) Next() {
 			}
 		}
 	}
+}
+
+func (m *middleware) callHandlerFunc(funcInfo handlerFuncInfo) {
+	niceCallFunc(func() {
+		if funcInfo.Func != nil {
+			funcInfo.Func(m.request)
+		} else {
+			var inputValues = []reflect.Value{
+				reflect.ValueOf(m.request.Context()),
+			}
+			if funcInfo.Type.NumIn() == 2 {
+				var (
+					inputObject reflect.Value
+				)
+				if funcInfo.Type.In(1).Kind() == reflect.Ptr {
+					inputObject = reflect.New(funcInfo.Type.In(1).Elem())
+					m.request.handlerResponse.Error = m.request.Parse(inputObject.Interface())
+				} else {
+					inputObject = reflect.New(funcInfo.Type.In(1).Elem()).Elem()
+					m.request.handlerResponse.Error = m.request.Parse(inputObject.Addr().Interface())
+				}
+				if m.request.handlerResponse.Error != nil {
+					return
+				}
+				inputValues = append(inputValues, inputObject)
+			}
+
+			// Call handler with dynamic created parameter values.
+			results := funcInfo.Value.Call(inputValues)
+			switch len(results) {
+			case 1:
+				if !results[0].IsNil() {
+					if err, ok := results[0].Interface().(error); ok {
+						m.request.handlerResponse.Error = err
+					}
+				}
+
+			case 2:
+				m.request.handlerResponse.Object = results[0].Interface()
+				if !results[1].IsNil() {
+					if err, ok := results[1].Interface().(error); ok {
+						m.request.handlerResponse.Error = err
+					}
+				}
+			}
+		}
+	})
 }

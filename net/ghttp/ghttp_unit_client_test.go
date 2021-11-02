@@ -15,14 +15,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/debug/gdebug"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/util/guid"
+	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/util/guid"
 
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_Client_Basic(t *testing.T) {
@@ -42,10 +42,10 @@ func Test_Client_Basic(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(url)
 
-		t.Assert(ghttp.GetContent(""), ``)
-		t.Assert(client.GetContent("/hello"), `hello`)
+		t.Assert(g.Client().GetContent(ctx, ""), ``)
+		t.Assert(client.GetContent(ctx, "/hello"), `hello`)
 
-		_, err := ghttp.Post("")
+		_, err := g.Client().Post(ctx, "")
 		t.AssertNE(err, nil)
 	})
 }
@@ -69,8 +69,8 @@ func Test_Client_BasicAuth(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		t.Assert(c.BasicAuth("admin", "123").GetContent("/auth"), "0")
-		t.Assert(c.BasicAuth("admin", "admin").GetContent("/auth"), "1")
+		t.Assert(c.BasicAuth("admin", "123").GetContent(ctx, "/auth"), "0")
+		t.Assert(c.BasicAuth("admin", "admin").GetContent(ctx, "/auth"), "1")
 	})
 }
 
@@ -91,7 +91,7 @@ func Test_Client_Cookie(t *testing.T) {
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		c.SetCookie("test", "0123456789")
-		t.Assert(c.PostContent("/cookie"), "0123456789")
+		t.Assert(c.PostContent(ctx, "/cookie"), "0123456789")
 	})
 }
 
@@ -111,7 +111,7 @@ func Test_Client_MapParam(t *testing.T) {
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(c.GetContent("/map", g.Map{"test": "1234567890"}), "1234567890")
+		t.Assert(c.GetContent(ctx, "/map", g.Map{"test": "1234567890"}), "1234567890")
 	})
 }
 
@@ -133,7 +133,7 @@ func Test_Client_Cookies(t *testing.T) {
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		resp, err := c.Get("/cookie")
+		resp, err := c.Get(ctx, "/cookie")
 		t.Assert(err, nil)
 		defer resp.Close()
 
@@ -167,9 +167,9 @@ func Test_Client_Chain_Header(t *testing.T) {
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(c.Header(g.MapStrStr{"test1": "1234567890"}).GetContent("/header1"), "1234567890")
-		t.Assert(c.HeaderRaw("test1: 1234567890\ntest2: abcdefg").GetContent("/header1"), "1234567890")
-		t.Assert(c.HeaderRaw("test1: 1234567890\ntest2: abcdefg").GetContent("/header2"), "abcdefg")
+		t.Assert(c.Header(g.MapStrStr{"test1": "1234567890"}).GetContent(ctx, "/header1"), "1234567890")
+		t.Assert(c.HeaderRaw("test1: 1234567890\ntest2: abcdefg").GetContent(ctx, "/header1"), "1234567890")
+		t.Assert(c.HeaderRaw("test1: 1234567890\ntest2: abcdefg").GetContent(ctx, "/header2"), "abcdefg")
 	})
 }
 
@@ -191,10 +191,10 @@ func Test_Client_Chain_Context(t *testing.T) {
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		ctx, _ := context.WithTimeout(context.Background(), 100*time.Millisecond)
-		t.Assert(c.Ctx(ctx).GetContent("/context"), "")
+		t.Assert(c.GetContent(ctx, "/context"), "")
 
 		ctx, _ = context.WithTimeout(context.Background(), 2000*time.Millisecond)
-		t.Assert(c.Ctx(ctx).GetContent("/context"), "ok")
+		t.Assert(c.GetContent(ctx, "/context"), "ok")
 	})
 }
 
@@ -214,8 +214,8 @@ func Test_Client_Chain_Timeout(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		t.Assert(c.Timeout(100*time.Millisecond).GetContent("/timeout"), "")
-		t.Assert(c.Timeout(2000*time.Millisecond).GetContent("/timeout"), "ok")
+		t.Assert(c.Timeout(100*time.Millisecond).GetContent(ctx, "/timeout"), "")
+		t.Assert(c.Timeout(2000*time.Millisecond).GetContent(ctx, "/timeout"), "ok")
 	})
 }
 
@@ -234,17 +234,17 @@ func Test_Client_Chain_ContentJson(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		t.Assert(c.ContentJson().PostContent("/json", g.Map{
+		t.Assert(c.ContentJson().PostContent(ctx, "/json", g.Map{
 			"name":  "john",
 			"score": 100,
 		}), "john100")
-		t.Assert(c.ContentJson().PostContent("/json", `{"name":"john", "score":100}`), "john100")
+		t.Assert(c.ContentJson().PostContent(ctx, "/json", `{"name":"john", "score":100}`), "john100")
 
 		type User struct {
 			Name  string `json:"name"`
 			Score int    `json:"score"`
 		}
-		t.Assert(c.ContentJson().PostContent("/json", User{"john", 100}), "john100")
+		t.Assert(c.ContentJson().PostContent(ctx, "/json", User{"john", 100}), "john100")
 	})
 }
 
@@ -263,17 +263,17 @@ func Test_Client_Chain_ContentXml(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		t.Assert(c.ContentXml().PostContent("/xml", g.Map{
+		t.Assert(c.ContentXml().PostContent(ctx, "/xml", g.Map{
 			"name":  "john",
 			"score": 100,
 		}), "john100")
-		t.Assert(c.ContentXml().PostContent("/xml", `{"name":"john", "score":100}`), "john100")
+		t.Assert(c.ContentXml().PostContent(ctx, "/xml", `{"name":"john", "score":100}`), "john100")
 
 		type User struct {
 			Name  string `json:"name"`
 			Score int    `json:"score"`
 		}
-		t.Assert(c.ContentXml().PostContent("/xml", User{"john", 100}), "john100")
+		t.Assert(c.ContentXml().PostContent(ctx, "/xml", User{"john", 100}), "john100")
 	})
 }
 
@@ -292,8 +292,8 @@ func Test_Client_Param_Containing_Special_Char(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		t.Assert(c.PostContent("/", "k1=MTIxMg==&k2=100"), "k1=MTIxMg==&k2=100")
-		t.Assert(c.PostContent("/", g.Map{
+		t.Assert(c.PostContent(ctx, "/", "k1=MTIxMg==&k2=100"), "k1=MTIxMg==&k2=100")
+		t.Assert(c.PostContent(ctx, "/", g.Map{
 			"k1": "MTIxMg==",
 			"k2": 100,
 		}), "k1=MTIxMg==&k2=100")
@@ -334,7 +334,7 @@ func Test_Client_File_And_Param(t *testing.T) {
 		}
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		t.Assert(c.PostContent("/", data), data["json"].(string)+gfile.GetContents(path))
+		t.Assert(c.PostContent(ctx, "/", data), data["json"].(string)+gfile.GetContents(path))
 	})
 }
 
@@ -386,7 +386,7 @@ func Test_Client_Middleware(t *testing.T) {
 			str1 += "f"
 			return
 		})
-		resp, err := c.Get("/")
+		resp, err := c.Get(ctx, "/")
 		t.Assert(str1, "acefdb")
 		t.Assert(err, nil)
 		t.Assert(resp.ReadAllString(), str2)
@@ -415,7 +415,7 @@ func Test_Client_Middleware(t *testing.T) {
 			str3 += "g"
 			return
 		})
-		resp, err = c.Get("/")
+		resp, err = c.Get(ctx, "/")
 		t.Assert(err, abortStr)
 		t.Assert(str3, "acb")
 		t.Assert(resp, nil)
@@ -438,6 +438,6 @@ func Test_Client_Agent(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		c := g.Client().SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		c.SetAgent("test")
-		t.Assert(c.GetContent("/"), "test")
+		t.Assert(c.GetContent(ctx, "/"), "test")
 	})
 }

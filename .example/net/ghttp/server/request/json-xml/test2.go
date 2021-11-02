@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/util/gvalid"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/util/gvalid"
 )
 
 type RegisterReq struct {
@@ -25,7 +25,7 @@ func main() {
 		//fmt.Println(r.GetBody())
 		if err := r.Parse(&req); err != nil {
 			// Validation error.
-			if v, ok := err.(*gvalid.Error); ok {
+			if v, ok := err.(gvalid.Error); ok {
 				r.Response.WriteJsonExit(RegisterRes{
 					Code:  1,
 					Error: v.FirstString(),

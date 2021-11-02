@@ -7,15 +7,16 @@
 package gfsnotify_test
 
 import (
+	"github.com/gogf/gf/v2/container/garray"
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/container/gtype"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/gfsnotify"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/test/gtest"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gfsnotify"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 func TestWatcher_AddOnce(t *testing.T) {
@@ -189,5 +190,31 @@ func TestWatcher_Callback2(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
 		t.Assert(v1.Val(), 3)
 		t.Assert(v2.Val(), 2)
+	})
+}
+
+func TestWatcher_WatchFolderWithoutRecursively(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err     error
+			array   = garray.New(true)
+			dirPath = gfile.TempDir(gtime.TimestampNanoStr())
+		)
+		err = gfile.Mkdir(dirPath)
+		t.AssertNil(err)
+
+		_, err = gfsnotify.Add(dirPath, func(event *gfsnotify.Event) {
+			//fmt.Println(event.String())
+			array.Append(1)
+		}, false)
+		t.AssertNil(err)
+		time.Sleep(time.Millisecond * 100)
+		t.Assert(array.Len(), 0)
+
+		f, err := gfile.Create(gfile.Join(dirPath, "1"))
+		t.AssertNil(err)
+		t.AssertNil(f.Close())
+		time.Sleep(time.Millisecond * 100)
+		t.Assert(array.Len(), 1)
 	})
 }
