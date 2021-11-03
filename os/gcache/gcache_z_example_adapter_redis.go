@@ -19,7 +19,6 @@ func NewRedis(redis *gredis.Redis) Adapter {
 	}
 }
 
-
 // Set sets cache with `key`-`value` pair, which is expired after `duration`.
 //
 // It does not expire if `duration` == 0.
@@ -27,12 +26,12 @@ func NewRedis(redis *gredis.Redis) Adapter {
 func (r Redis) Set(ctx context.Context, key interface{}, value interface{}, duration time.Duration) error {
 	var err error
 	if value == nil || duration < 0 {
-		_, err = r.redis.Do(ctx,"DEL", key)
+		_, err = r.redis.Do(ctx, "DEL", key)
 	} else {
 		if duration == 0 {
-			_, err = r.redis.Do(ctx,"SET", key, value)
+			_, err = r.redis.Do(ctx, "SET", key, value)
 		} else {
-			_, err = r.redis.Do(ctx,"SETEX", key, uint64(duration.Seconds()), value)
+			_, err = r.redis.Do(ctx, "SETEX", key, uint64(duration.Seconds()), value)
 		}
 	}
 	return err
@@ -46,7 +45,6 @@ func (r Redis) SetMap(ctx context.Context, data map[interface{}]interface{}, dur
 	panic("implement me")
 }
 
-
 // SetIfNotExist sets cache with `key`-`value` pair which is expired after `duration`
 // if `key` does not exist in the cache. It returns true the `key` does not exist in the
 // cache, and it sets `value` successfully to the cache, or else it returns false.
@@ -56,7 +54,6 @@ func (r Redis) SetMap(ctx context.Context, data map[interface{}]interface{}, dur
 func (r Redis) SetIfNotExist(ctx context.Context, key interface{}, value interface{}, duration time.Duration) (ok bool, err error) {
 	panic("implement me")
 }
-
 
 // SetIfNotExistFunc sets `key` with result of function `f` and returns true
 // if `key` does not exist in the cache, or else it does nothing and returns false if `key` already exists.
@@ -86,7 +83,7 @@ func (r Redis) SetIfNotExistFuncLock(ctx context.Context, key interface{}, f fun
 // It returns nil if it does not exist, or its value is nil, or it's expired.
 // If you would like to check if the `key` exists in the cache, it's better using function Contains.
 func (r Redis) Get(ctx context.Context, key interface{}) (*gvar.Var, error) {
-	v, err := r.redis.Do(ctx,"GET", key)
+	v, err := r.redis.Do(ctx, "GET", key)
 	if err != nil {
 		return nil, err
 	}
@@ -166,12 +163,11 @@ func (r Redis) Update(ctx context.Context, key interface{}, value interface{}) (
 	panic("implement me")
 }
 
-
 // UpdateExpire updates the expiration of `key` and returns the old expiration duration value.
 //
 // It returns -1 and does nothing if the `key` does not exist in the cache.
 // It deletes the `key` if `duration` < 0.
-func  (r Redis) UpdateExpire(ctx context.Context, key interface{}, duration time.Duration) (oldDuration time.Duration, err error) {
+func (r Redis) UpdateExpire(ctx context.Context, key interface{}, duration time.Duration) (oldDuration time.Duration, err error) {
 	return defaultCache.UpdateExpire(ctx, key, duration)
 }
 
@@ -200,6 +196,3 @@ func (r Redis) Clear(ctx context.Context) error {
 func (r Redis) Close(ctx context.Context) error {
 	panic("implement me")
 }
-
-
-
