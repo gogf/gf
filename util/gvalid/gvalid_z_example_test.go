@@ -440,94 +440,6 @@ func ExampleValidator_RequiredWithoutAll() {
 	// The HusbandName field is required
 }
 
-func ExampleValidator_Same() {
-	type BizReq struct {
-		Name      string `v:"required"`
-		Password  string `v:"required|same:Password2"`
-		Password2 string `v:"required"`
-	}
-	var (
-		ctx = context.Background()
-		req = BizReq{
-			Name:      "gf",
-			Password:  "goframe.org",
-			Password2: "goframe.net",
-		}
-	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
-		fmt.Println(err)
-	}
-
-	// Output:
-	// The Password value must be the same as field Password2
-}
-
-func ExampleValidator_Different() {
-	type BizReq struct {
-		Name          string `v:"required"`
-		MailAddr      string `v:"required"`
-		OtherMailAddr string `v:"required|different:MailAddr"`
-	}
-	var (
-		ctx = context.Background()
-		req = BizReq{
-			Name:          "gf",
-			MailAddr:      "gf@goframe.org",
-			OtherMailAddr: "gf@goframe.org",
-		}
-	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
-		fmt.Println(err)
-	}
-
-	// Output:
-	// The OtherMailAddr value must be different from field MailAddr
-}
-
-func ExampleValidator_In() {
-	type BizReq struct {
-		Id     uint   `v:"required" dc:"Your Id"`
-		Name   string `v:"required" dc:"Your name"`
-		Gender uint   `v:"in:0,1,2" dc:"0:Secret;1:Male;2:Female"`
-	}
-	var (
-		ctx = context.Background()
-		req = BizReq{
-			Id:     1,
-			Name:   "test",
-			Gender: 3,
-		}
-	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
-		fmt.Println(err)
-	}
-
-	// Output:
-	// The Gender value is not in acceptable range
-}
-
-func ExampleValidator_NotIn() {
-	type BizReq struct {
-		Id           uint   `v:"required" dc:"Your Id"`
-		Name         string `v:"required" dc:"Your name"`
-		InvalidIndex uint   `v:"not-in:-1,0,1"`
-	}
-	var (
-		ctx = context.Background()
-		req = BizReq{
-			Id:           1,
-			Name:         "test",
-			InvalidIndex: 1,
-		}
-	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
-		fmt.Println(err)
-	}
-
-	// Output:
-	// The InvalidIndex value is not in acceptable range
-}
-
 func ExampleValidator_Date() {
 	type BizReq struct {
 		Date1 string `v:"date"`
@@ -948,4 +860,438 @@ func ExampleValidator_IPV6() {
 
 	// Output:
 	// The IP2 value must be a valid IPv6 address
+}
+
+func ExampleValidator_Mac() {
+	type BizReq struct {
+		Mac1 string `v:"mac"`
+		Mac2 string `v:"mac"`
+	}
+
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Mac1: "4C-CC-6A-D6-B1-1A",
+			Mac2: "Z0-CC-6A-D6-B1-1A",
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Print(err)
+	}
+
+	// Output:
+	// The Mac2 value must be a valid MAC address
+}
+
+func ExampleValidator_Url() {
+	type BizReq struct {
+		Url1 string `v:"url"`
+		Url2 string `v:"url"`
+		Url3 string `v:"url"`
+	}
+
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Url1: "http://goframe.org",
+			Url2: "ftp://goframe.org",
+			Url3: "ws://goframe.org",
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Print(err)
+	}
+
+	// Output:
+	// The Url3 value must be a valid URL address
+}
+
+func ExampleValidator_Domain() {
+	type BizReq struct {
+		Domain1 string `v:"domain"`
+		Domain2 string `v:"domain"`
+		Domain3 string `v:"domain"`
+		Domain4 string `v:"domain"`
+	}
+
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Domain1: "goframe.org",
+			Domain2: "a.b",
+			Domain3: "goframe#org",
+			Domain4: "1a.2b",
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Print(err)
+	}
+
+	// Output:
+	// The Domain3 value must be a valid domain format; The Domain4 value must be a valid domain format
+}
+
+func ExampleValidator_Size() {
+	type BizReq struct {
+		Size1 string `v:"size:10"`
+		Size2 string `v:"size:5"`
+	}
+
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Size1: "goframe欢迎你",
+			Size2: "goframe",
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Print(err)
+	}
+
+	// Output:
+	// The Size2 value length must be 5
+}
+
+func ExampleValidator_Length() {
+	type BizReq struct {
+		Length1 string `v:"length:5,10"`
+		Length2 string `v:"length:10,15"`
+	}
+
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Length1: "goframe欢迎你",
+			Length2: "goframe",
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Print(err)
+	}
+
+	// Output:
+	// The Length2 value length must be between 10 and 15
+}
+
+func ExampleValidator_MinLength() {
+	type BizReq struct {
+		MinLength1 string `v:"min-length:10"`
+		MinLength2 string `v:"min-length:8"`
+	}
+
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			MinLength1: "goframe欢迎你",
+			MinLength2: "goframe",
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Print(err)
+	}
+
+	// Output:
+	// The MinLength2 value length must be equal or greater than 8
+}
+
+func ExampleValidator_MaxLength() {
+	type BizReq struct {
+		MaxLength1 string `v:"max-length:10"`
+		MaxLength2 string `v:"max-length:5"`
+	}
+
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			MaxLength1: "goframe欢迎你",
+			MaxLength2: "goframe",
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Print(err)
+	}
+
+	// Output:
+	// The MaxLength2 value length must be equal or lesser than 5
+}
+
+func ExampleValidator_Between() {
+	type BizReq struct {
+		Age1   int     `v:"between:1,100"`
+		Age2   int     `v:"between:1,100"`
+		Score1 float32 `v:"between:0.0,10.0"`
+		Score2 float32 `v:"between:0.0,10.0"`
+	}
+
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Age1:   50,
+			Age2:   101,
+			Score1: 9.8,
+			Score2: -0.5,
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Print(err)
+	}
+
+	// Output:
+	// The Age2 value must be between 1 and 100; The Score2 value must be between 0 and 10
+}
+
+func ExampleValidator_Min() {
+	type BizReq struct {
+		Age1   int     `v:"min:100"`
+		Age2   int     `v:"min:100"`
+		Score1 float32 `v:"min:10.0"`
+		Score2 float32 `v:"min:10.0"`
+	}
+
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Age1:   50,
+			Age2:   101,
+			Score1: 9.8,
+			Score2: 10.1,
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Print(err)
+	}
+
+	// Output:
+	// The Age1 value must be equal or greater than 100; The Score1 value must be equal or greater than 10
+}
+
+func ExampleValidator_Max() {
+	type BizReq struct {
+		Age1   int     `v:"max:100"`
+		Age2   int     `v:"max:100"`
+		Score1 float32 `v:"max:10.0"`
+		Score2 float32 `v:"max:10.0"`
+	}
+
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Age1:   99,
+			Age2:   101,
+			Score1: 9.9,
+			Score2: 10.1,
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Print(err)
+	}
+
+	// Output:
+	// The Age2 value must be equal or lesser than 100; The Score2 value must be equal or lesser than 10
+}
+
+func ExampleValidator_Json() {
+	type BizReq struct {
+		Json1 string `v:"json"`
+		Json2 string `v:"json"`
+	}
+
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Json1: "{\"name\":\"goframe\",\"author\":\"郭强\"}",
+			Json2: "{\"name\":\"goframe\",\"author\":\"郭强\",\"test\"}",
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Print(err)
+	}
+
+	// Output:
+	// The Json2 value must be a valid JSON string
+}
+
+func ExampleValidator_Integer() {
+	type BizReq struct {
+		Integer string `v:"integer"`
+		Float   string `v:"integer"`
+		Str     string `v:"integer"`
+	}
+
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Integer: "100",
+			Float:   "10.0",
+			Str:     "goframe",
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Print(err)
+	}
+
+	// Output:
+	// The Float value must be an integer; The Str value must be an integer
+}
+
+func ExampleValidator_Float() {
+	type BizReq struct {
+		Integer string `v:"float"`
+		Float   string `v:"float"`
+		Str     string `v:"float"`
+	}
+
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Integer: "100",
+			Float:   "10.0",
+			Str:     "goframe",
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Print(err)
+	}
+
+	// Output:
+	// The Str value must be a float
+}
+
+func ExampleValidator_Boolean() {
+	type BizReq struct {
+		Boolean bool    `v:"boolean"`
+		Integer int     `v:"boolean"`
+		Float   float32 `v:"boolean"`
+		Str1    string  `v:"boolean"`
+		Str2    string  `v:"boolean"`
+		Str3    string  `v:"boolean"`
+	}
+
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Boolean: true,
+			Integer: 1,
+			Float:   10.0,
+			Str1:    "on",
+			Str2:    "",
+			Str3:    "goframe",
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Print(err)
+	}
+
+	// Output:
+	// The Float value field must be true or false; The Str3 value field must be true or false
+}
+
+func ExampleValidator_Same() {
+	type BizReq struct {
+		Name      string `v:"required"`
+		Password  string `v:"required|same:Password2"`
+		Password2 string `v:"required"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Name:      "gf",
+			Password:  "goframe.org",
+			Password2: "goframe.net",
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Println(err)
+	}
+
+	// Output:
+	// The Password value must be the same as field Password2
+}
+
+func ExampleValidator_Different() {
+	type BizReq struct {
+		Name          string `v:"required"`
+		MailAddr      string `v:"required"`
+		OtherMailAddr string `v:"required|different:MailAddr"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Name:          "gf",
+			MailAddr:      "gf@goframe.org",
+			OtherMailAddr: "gf@goframe.org",
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Println(err)
+	}
+
+	// Output:
+	// The OtherMailAddr value must be different from field MailAddr
+}
+
+func ExampleValidator_In() {
+	type BizReq struct {
+		Id     uint   `v:"required" dc:"Your Id"`
+		Name   string `v:"required" dc:"Your name"`
+		Gender uint   `v:"in:0,1,2" dc:"0:Secret;1:Male;2:Female"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Id:     1,
+			Name:   "test",
+			Gender: 3,
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Println(err)
+	}
+
+	// Output:
+	// The Gender value is not in acceptable range
+}
+
+func ExampleValidator_NotIn() {
+	type BizReq struct {
+		Id           uint   `v:"required" dc:"Your Id"`
+		Name         string `v:"required" dc:"Your name"`
+		InvalidIndex uint   `v:"not-in:-1,0,1"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Id:           1,
+			Name:         "test",
+			InvalidIndex: 1,
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Println(err)
+	}
+
+	// Output:
+	// The InvalidIndex value is not in acceptable range
+}
+
+func ExampleValidator_Regex() {
+	type BizReq struct {
+		Regex1 string `v:"regex:[1-9][0-9]{4,14}"`
+		Regex2 string `v:"regex:[1-9][0-9]{4,14}"`
+		Regex3 string `v:"regex:[1-9][0-9]{4,14}"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Regex1: "1234",
+			Regex2: "01234",
+			Regex3: "10000",
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Println(err)
+	}
+
+	// Output:
+	// The Regex1 value is invalid; The Regex2 value is invalid
 }
