@@ -8,7 +8,7 @@ import (
 func main() {
 	path := "/tmp/glog-cat"
 	g.Log().SetPath(path)
-	g.Log().Stdout(false).Cat("cat1").Cat("cat2").Println("test")
+	g.Log().Stdout(false).Cat("cat1").Cat("cat2").Print("test")
 	list, err := gfile.ScanDir(path, "*", true)
 	g.Dump(err)
 	g.Dump(list)

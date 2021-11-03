@@ -14,7 +14,7 @@ func main() {
 	p := gpool.New(3000*time.Millisecond, func() (interface{}, error) {
 		return gtcp.NewConn("www.baidu.com:80")
 	}, func(i interface{}) {
-		glog.Println("expired")
+		glog.Print("expired")
 		i.(*gtcp.Conn).Close()
 	})
 	conn, err := p.Get()

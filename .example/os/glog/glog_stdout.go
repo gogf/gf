@@ -14,7 +14,7 @@ func main() {
 	for i := 0; i < 3000; i++ {
 		go func() {
 			<-ch
-			g.Log().Println("abcdefghijklmnopqrstuvwxyz1234567890")
+			g.Log().Print("abcdefghijklmnopqrstuvwxyz1234567890")
 			wg.Done()
 		}()
 	}

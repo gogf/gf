@@ -18,7 +18,7 @@ func main() {
 		wg.Add(1)
 		go func(i int) {
 			gmlock.Lock(key)
-			glog.Println(i)
+			glog.Print(i)
 			time.Sleep(time.Second)
 			gmlock.Unlock(key)
 			wg.Done()

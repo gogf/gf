@@ -10,7 +10,7 @@ import (
 func main() {
 	interval := time.Second
 	gtimer.AddSingleton(interval, func() {
-		glog.Println("doing")
+		glog.Print("doing")
 		time.Sleep(5 * time.Second)
 	})
 

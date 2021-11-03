@@ -10,7 +10,7 @@ import (
 func main() {
 	gcron.SetLogLevel(glog.LEVEL_ALL)
 	gcron.Add("* * * * * ?", func() {
-		glog.Println("test")
+		glog.Print("test")
 	})
 	time.Sleep(3 * time.Second)
 }

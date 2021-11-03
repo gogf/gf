@@ -451,7 +451,7 @@ func TestCache_SetConcurrency(t *testing.T) {
 		pool := grpool.New(4)
 		go func() {
 			for {
-				pool.Add(func() {
+				pool.Add(ctx, func(ctx context.Context) {
 					cache.SetIfNotExist(ctx, 1, 11, 10)
 				})
 			}
@@ -463,7 +463,7 @@ func TestCache_SetConcurrency(t *testing.T) {
 
 		go func() {
 			for {
-				pool.Add(func() {
+				pool.Add(ctx, func(ctx context.Context) {
 					cache.SetIfNotExist(ctx, 1, nil, 10)
 				})
 			}

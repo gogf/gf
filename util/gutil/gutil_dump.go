@@ -12,6 +12,7 @@ import (
 	"github.com/gogf/gf/v2/internal/structs"
 	"github.com/gogf/gf/v2/text/gstr"
 	"reflect"
+	"strings"
 )
 
 // ExportOption specifies the behavior of function Export.
@@ -19,38 +20,23 @@ type ExportOption struct {
 	WithoutType bool // WithoutType specifies exported content has no type information.
 }
 
-// iVal is used for type assert api for Val().
-type iVal interface {
-	Val() interface{}
-}
-
-// iString is used for type assert api for String().
-type iString interface {
-	String() string
-}
-
-// iMapStrAny is the interface support for converting struct parameter to map.
-type iMapStrAny interface {
-	MapStrAny() map[string]interface{}
-}
-
 // Dump prints variables `values` to stdout with more manually readable.
 func Dump(values ...interface{}) {
 	for _, value := range values {
 		if s := Export(value, ExportOption{
-			WithoutType: false,
+			WithoutType: true,
 		}); s != "" {
 			fmt.Println(s)
 		}
 	}
 }
 
-// DumpBrief acts like Dump, but with no type information.
+// DumpWithType acts like Dump, but with type information.
 // Also see Dump.
-func DumpBrief(values ...interface{}) {
+func DumpWithType(values ...interface{}) {
 	for _, value := range values {
 		if s := Export(value, ExportOption{
-			WithoutType: true,
+			WithoutType: false,
 		}); s != "" {
 			fmt.Println(s)
 		}
@@ -71,12 +57,17 @@ type doExportOption struct {
 }
 
 func doExport(value interface{}, indent string, buffer *bytes.Buffer, option doExportOption) {
+	if value == nil {
+		buffer.WriteString(`<nil>`)
+		return
+	}
 	var (
 		reflectValue    = reflect.ValueOf(value)
 		reflectKind     = reflectValue.Kind()
-		reflectTypeName = reflectValue.Type().String()
+		reflectTypeName = reflect.TypeOf(value).String()
 		newIndent       = indent + dumpIndent
 	)
+	reflectTypeName = strings.ReplaceAll(reflectTypeName, `[]uint8`, `[]byte`)
 	if option.WithoutType {
 		reflectTypeName = ""
 	}
@@ -88,10 +79,10 @@ func doExport(value interface{}, indent string, buffer *bytes.Buffer, option doE
 	case reflect.Slice, reflect.Array:
 		if _, ok := value.([]byte); ok {
 			if option.WithoutType {
-				buffer.WriteString(fmt.Sprintf("\"%v\"\n", value))
+				buffer.WriteString(fmt.Sprintf(`"%s"`, value))
 			} else {
 				buffer.WriteString(fmt.Sprintf(
-					"%s(%d) \"%v\"\n",
+					`%s(%d) "%s"`,
 					reflectTypeName,
 					len(reflectValue.String()),
 					value,

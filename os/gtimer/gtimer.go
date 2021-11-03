@@ -19,6 +19,7 @@
 package gtimer
 
 import (
+	"context"
 	"github.com/gogf/gf/v2/container/gtype"
 	"sync"
 	"time"
@@ -64,19 +65,19 @@ func DefaultOptions() TimerOptions {
 
 // SetTimeout runs the job once after duration of `delay`.
 // It is like the one in javascript.
-func SetTimeout(delay time.Duration, job JobFunc) {
-	AddOnce(delay, job)
+func SetTimeout(ctx context.Context, delay time.Duration, job JobFunc) {
+	AddOnce(ctx, delay, job)
 }
 
 // SetInterval runs the job every duration of `delay`.
 // It is like the one in javascript.
-func SetInterval(interval time.Duration, job JobFunc) {
-	Add(interval, job)
+func SetInterval(ctx context.Context, interval time.Duration, job JobFunc) {
+	Add(ctx, interval, job)
 }
 
 // Add adds a timing job to the default timer, which runs in interval of `interval`.
-func Add(interval time.Duration, job JobFunc) *Entry {
-	return defaultTimer.Add(interval, job)
+func Add(ctx context.Context, interval time.Duration, job JobFunc) *Entry {
+	return defaultTimer.Add(ctx, interval, job)
 }
 
 // AddEntry adds a timing job to the default timer with detailed parameters.
@@ -90,53 +91,53 @@ func Add(interval time.Duration, job JobFunc) *Entry {
 // exits if its run times exceeds the `times`.
 //
 // The parameter `status` specifies the job status when it's firstly added to the timer.
-func AddEntry(interval time.Duration, job JobFunc, singleton bool, times int, status int) *Entry {
-	return defaultTimer.AddEntry(interval, job, singleton, times, status)
+func AddEntry(ctx context.Context, interval time.Duration, job JobFunc, isSingleton bool, times int, status int) *Entry {
+	return defaultTimer.AddEntry(ctx, interval, job, isSingleton, times, status)
 }
 
 // AddSingleton is a convenience function for add singleton mode job.
-func AddSingleton(interval time.Duration, job JobFunc) *Entry {
-	return defaultTimer.AddSingleton(interval, job)
+func AddSingleton(ctx context.Context, interval time.Duration, job JobFunc) *Entry {
+	return defaultTimer.AddSingleton(ctx, interval, job)
 }
 
 // AddOnce is a convenience function for adding a job which only runs once and then exits.
-func AddOnce(interval time.Duration, job JobFunc) *Entry {
-	return defaultTimer.AddOnce(interval, job)
+func AddOnce(ctx context.Context, interval time.Duration, job JobFunc) *Entry {
+	return defaultTimer.AddOnce(ctx, interval, job)
 }
 
 // AddTimes is a convenience function for adding a job which is limited running times.
-func AddTimes(interval time.Duration, times int, job JobFunc) *Entry {
-	return defaultTimer.AddTimes(interval, times, job)
+func AddTimes(ctx context.Context, interval time.Duration, times int, job JobFunc) *Entry {
+	return defaultTimer.AddTimes(ctx, interval, times, job)
 }
 
 // DelayAdd adds a timing job after delay of `interval` duration.
 // Also see Add.
-func DelayAdd(delay time.Duration, interval time.Duration, job JobFunc) {
-	defaultTimer.DelayAdd(delay, interval, job)
+func DelayAdd(ctx context.Context, delay time.Duration, interval time.Duration, job JobFunc) {
+	defaultTimer.DelayAdd(ctx, delay, interval, job)
 }
 
 // DelayAddEntry adds a timing job after delay of `interval` duration.
 // Also see AddEntry.
-func DelayAddEntry(delay time.Duration, interval time.Duration, job JobFunc, singleton bool, times int, status int) {
-	defaultTimer.DelayAddEntry(delay, interval, job, singleton, times, status)
+func DelayAddEntry(ctx context.Context, delay time.Duration, interval time.Duration, job JobFunc, isSingleton bool, times int, status int) {
+	defaultTimer.DelayAddEntry(ctx, delay, interval, job, isSingleton, times, status)
 }
 
 // DelayAddSingleton adds a timing job after delay of `interval` duration.
 // Also see AddSingleton.
-func DelayAddSingleton(delay time.Duration, interval time.Duration, job JobFunc) {
-	defaultTimer.DelayAddSingleton(delay, interval, job)
+func DelayAddSingleton(ctx context.Context, delay time.Duration, interval time.Duration, job JobFunc) {
+	defaultTimer.DelayAddSingleton(ctx, delay, interval, job)
 }
 
 // DelayAddOnce adds a timing job after delay of `interval` duration.
 // Also see AddOnce.
-func DelayAddOnce(delay time.Duration, interval time.Duration, job JobFunc) {
-	defaultTimer.DelayAddOnce(delay, interval, job)
+func DelayAddOnce(ctx context.Context, delay time.Duration, interval time.Duration, job JobFunc) {
+	defaultTimer.DelayAddOnce(ctx, delay, interval, job)
 }
 
 // DelayAddTimes adds a timing job after delay of `interval` duration.
 // Also see AddTimes.
-func DelayAddTimes(delay time.Duration, interval time.Duration, times int, job JobFunc) {
-	defaultTimer.DelayAddTimes(delay, interval, times, job)
+func DelayAddTimes(ctx context.Context, delay time.Duration, interval time.Duration, times int, job JobFunc) {
+	defaultTimer.DelayAddTimes(ctx, delay, interval, times, job)
 }
 
 // Exit is used in timing job internally, which exits and marks it closed from timer.

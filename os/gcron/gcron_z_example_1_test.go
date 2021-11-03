@@ -15,8 +15,8 @@ import (
 )
 
 func Example_cronAddSingleton() {
-	gcron.AddSingleton("* * * * * *", func() {
-		glog.Println(context.TODO(), "doing")
+	gcron.AddSingleton(ctx, "* * * * * *", func(ctx context.Context) {
+		glog.Print(context.TODO(), "doing")
 		time.Sleep(2 * time.Second)
 	})
 	select {}

@@ -25,7 +25,7 @@ func MiddlewareCORS(r *ghttp.Request) {
 
 func MiddlewareLog(r *ghttp.Request) {
 	r.Middleware.Next()
-	g.Log().Println(r.Response.Status, r.URL.Path)
+	g.Log().Print(r.Response.Status, r.URL.Path)
 }
 
 func main() {

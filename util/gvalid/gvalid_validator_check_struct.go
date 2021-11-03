@@ -44,7 +44,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 			if _, ok := field.TagLookup(noValidationTagName); ok {
 				continue
 			}
-			if err := v.doCheckStruct(ctx, field.Value); err != nil {
+			if err = v.doCheckStruct(ctx, field.Value); err != nil {
 				// It merges the errors into single error map.
 				for k, m := range err.(*validationError).errors {
 					errorMaps[k] = m

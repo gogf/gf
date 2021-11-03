@@ -17,6 +17,6 @@ func Error2() error {
 }
 
 func main() {
-	glog.Println(Error1())
-	glog.Println(Error2())
+	glog.Print(Error1())
+	glog.Print(Error2())
 }

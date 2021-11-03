@@ -23,10 +23,9 @@ func Test_Print(t *testing.T) {
 		w := bytes.NewBuffer(nil)
 		l := NewWithWriter(w)
 		l.Print(ctx, 1, 2, 3)
-		l.Println(ctx, 1, 2, 3)
 		l.Printf(ctx, "%d %d %d", 1, 2, 3)
 		t.Assert(gstr.Count(w.String(), "["), 0)
-		t.Assert(gstr.Count(w.String(), "1 2 3"), 3)
+		t.Assert(gstr.Count(w.String(), "1 2 3"), 2)
 	})
 }
 

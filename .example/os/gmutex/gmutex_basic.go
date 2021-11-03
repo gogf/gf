@@ -13,7 +13,7 @@ func main() {
 		go func(n int) {
 			mu.Lock()
 			defer mu.Unlock()
-			glog.Println("Lock:", n)
+			glog.Print("Lock:", n)
 			time.Sleep(time.Second)
 		}(i)
 	}
@@ -21,7 +21,7 @@ func main() {
 		go func(n int) {
 			mu.RLock()
 			defer mu.RUnlock()
-			glog.Println("RLock:", n)
+			glog.Print("RLock:", n)
 			time.Sleep(time.Second)
 		}(i)
 	}

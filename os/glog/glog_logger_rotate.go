@@ -106,12 +106,9 @@ func (l *Logger) doRotateFile(ctx context.Context, filePath string) error {
 }
 
 // rotateChecksTimely timely checks the backups expiration and the compression.
-func (l *Logger) rotateChecksTimely() {
-	defer gtimer.AddOnce(l.config.RotateCheckInterval, l.rotateChecksTimely)
+func (l *Logger) rotateChecksTimely(ctx context.Context) {
+	defer gtimer.AddOnce(ctx, l.config.RotateCheckInterval, l.rotateChecksTimely)
 
-	var (
-		ctx = context.TODO()
-	)
 	// Checks whether file rotation not enabled.
 	if l.config.RotateSize <= 0 && l.config.RotateExpire == 0 {
 		intlog.Printf(
