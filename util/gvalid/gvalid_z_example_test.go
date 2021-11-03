@@ -278,13 +278,13 @@ func ExampleValidator_CheckStruct() {
 
 func ExampleValidator_Required() {
 	type BizReq struct {
-		Id   uint   `v:"required"`
+		ID   uint   `v:"required"`
 		Name string `v:"required"`
 	}
 	var (
 		ctx = context.Background()
 		req = BizReq{
-			Id: 1,
+			ID: 1,
 		}
 	)
 	if err := g.Validator().CheckStruct(ctx, req); err != nil {
@@ -297,7 +297,7 @@ func ExampleValidator_Required() {
 
 func ExampleValidator_RequiredIf() {
 	type BizReq struct {
-		Id          uint   `v:"required" dc:"Your Id"`
+		ID          uint   `v:"required" dc:"Your ID"`
 		Name        string `v:"required" dc:"Your name"`
 		Gender      uint   `v:"in:0,1,2" dc:"0:Secret;1:Male;2:Female"`
 		WifeName    string `v:"required-if:gender,1"`
@@ -306,7 +306,7 @@ func ExampleValidator_RequiredIf() {
 	var (
 		ctx = context.Background()
 		req = BizReq{
-			Id:     1,
+			ID:     1,
 			Name:   "test",
 			Gender: 1,
 		}
@@ -321,7 +321,7 @@ func ExampleValidator_RequiredIf() {
 
 func ExampleValidator_RequiredUnless() {
 	type BizReq struct {
-		Id          uint   `v:"required" dc:"Your Id"`
+		ID          uint   `v:"required" dc:"Your ID"`
 		Name        string `v:"required" dc:"Your name"`
 		Gender      uint   `v:"in:0,1,2" dc:"0:Secret;1:Male;2:Female"`
 		WifeName    string `v:"required-unless:gender,0,gender,2"`
@@ -330,7 +330,7 @@ func ExampleValidator_RequiredUnless() {
 	var (
 		ctx = context.Background()
 		req = BizReq{
-			Id:     1,
+			ID:     1,
 			Name:   "test",
 			Gender: 1,
 		}
@@ -345,7 +345,7 @@ func ExampleValidator_RequiredUnless() {
 
 func ExampleValidator_RequiredWith() {
 	type BizReq struct {
-		Id          uint   `v:"required" dc:"Your Id"`
+		ID          uint   `v:"required" dc:"Your ID"`
 		Name        string `v:"required" dc:"Your name"`
 		Gender      uint   `v:"in:0,1,2" dc:"0:Secret;1:Male;2:Female"`
 		WifeName    string
@@ -354,7 +354,7 @@ func ExampleValidator_RequiredWith() {
 	var (
 		ctx = context.Background()
 		req = BizReq{
-			Id:       1,
+			ID:       1,
 			Name:     "test",
 			Gender:   1,
 			WifeName: "Ann",
@@ -370,7 +370,7 @@ func ExampleValidator_RequiredWith() {
 
 func ExampleValidator_RequiredWithAll() {
 	type BizReq struct {
-		Id          uint   `v:"required" dc:"Your Id"`
+		ID          uint   `v:"required" dc:"Your ID"`
 		Name        string `v:"required" dc:"Your name"`
 		Gender      uint   `v:"in:0,1,2" dc:"0:Secret;1:Male;2:Female"`
 		WifeName    string
@@ -379,7 +379,7 @@ func ExampleValidator_RequiredWithAll() {
 	var (
 		ctx = context.Background()
 		req = BizReq{
-			Id:       1,
+			ID:       1,
 			Name:     "test",
 			Gender:   1,
 			WifeName: "Ann",
@@ -395,7 +395,7 @@ func ExampleValidator_RequiredWithAll() {
 
 func ExampleValidator_RequiredWithout() {
 	type BizReq struct {
-		Id          uint   `v:"required" dc:"Your Id"`
+		ID          uint   `v:"required" dc:"Your ID"`
 		Name        string `v:"required" dc:"Your name"`
 		Gender      uint   `v:"in:0,1,2" dc:"0:Secret;1:Male;2:Female"`
 		WifeName    string
@@ -404,7 +404,7 @@ func ExampleValidator_RequiredWithout() {
 	var (
 		ctx = context.Background()
 		req = BizReq{
-			Id:     1,
+			ID:     1,
 			Name:   "test",
 			Gender: 1,
 		}
@@ -419,7 +419,7 @@ func ExampleValidator_RequiredWithout() {
 
 func ExampleValidator_RequiredWithoutAll() {
 	type BizReq struct {
-		Id          uint   `v:"required" dc:"Your Id"`
+		ID          uint   `v:"required" dc:"Your ID"`
 		Name        string `v:"required" dc:"Your name"`
 		Gender      uint   `v:"in:0,1,2" dc:"0:Secret;1:Male;2:Female"`
 		WifeName    string
@@ -736,13 +736,13 @@ func ExampleValidator_Postcode() {
 
 func ExampleValidator_ResidentId() {
 	type BizReq struct {
-		ResidentId1 string `v:"resident-id"`
+		ResidentID1 string `v:"resident-id"`
 	}
 
 	var (
 		ctx = context.Background()
 		req = BizReq{
-			ResidentId1: "320107199506285482",
+			ResidentID1: "320107199506285482",
 		}
 	)
 	if err := g.Validator().CheckStruct(ctx, req); err != nil {
@@ -750,7 +750,7 @@ func ExampleValidator_ResidentId() {
 	}
 
 	// Output:
-	// The ResidentId1 value is not a valid resident id number
+	// The ResidentID1 value is not a valid resident id number
 }
 
 func ExampleValidator_BankCard() {
@@ -885,17 +885,17 @@ func ExampleValidator_Mac() {
 
 func ExampleValidator_Url() {
 	type BizReq struct {
-		Url1 string `v:"url"`
-		Url2 string `v:"url"`
-		Url3 string `v:"url"`
+		URL1 string `v:"url"`
+		URL2 string `v:"url"`
+		URL3 string `v:"url"`
 	}
 
 	var (
 		ctx = context.Background()
 		req = BizReq{
-			Url1: "http://goframe.org",
-			Url2: "ftp://goframe.org",
-			Url3: "ws://goframe.org",
+			URL1: "http://goframe.org",
+			URL2: "ftp://goframe.org",
+			URL3: "ws://goframe.org",
 		}
 	)
 	if err := g.Validator().CheckStruct(ctx, req); err != nil {
@@ -903,7 +903,7 @@ func ExampleValidator_Url() {
 	}
 
 	// Output:
-	// The Url3 value must be a valid URL address
+	// The URL3 value must be a valid URL address
 }
 
 func ExampleValidator_Domain() {
@@ -1092,15 +1092,15 @@ func ExampleValidator_Max() {
 
 func ExampleValidator_Json() {
 	type BizReq struct {
-		Json1 string `v:"json"`
-		Json2 string `v:"json"`
+		JSON1 string `v:"json"`
+		JSON2 string `v:"json"`
 	}
 
 	var (
 		ctx = context.Background()
 		req = BizReq{
-			Json1: "{\"name\":\"goframe\",\"author\":\"郭强\"}",
-			Json2: "{\"name\":\"goframe\",\"author\":\"郭强\",\"test\"}",
+			JSON1: "{\"name\":\"goframe\",\"author\":\"郭强\"}",
+			JSON2: "{\"name\":\"goframe\",\"author\":\"郭强\",\"test\"}",
 		}
 	)
 	if err := g.Validator().CheckStruct(ctx, req); err != nil {
@@ -1108,7 +1108,7 @@ func ExampleValidator_Json() {
 	}
 
 	// Output:
-	// The Json2 value must be a valid JSON string
+	// The JSON2 value must be a valid JSON string
 }
 
 func ExampleValidator_Integer() {
@@ -1232,14 +1232,14 @@ func ExampleValidator_Different() {
 
 func ExampleValidator_In() {
 	type BizReq struct {
-		Id     uint   `v:"required" dc:"Your Id"`
+		ID     uint   `v:"required" dc:"Your Id"`
 		Name   string `v:"required" dc:"Your name"`
 		Gender uint   `v:"in:0,1,2" dc:"0:Secret;1:Male;2:Female"`
 	}
 	var (
 		ctx = context.Background()
 		req = BizReq{
-			Id:     1,
+			ID:     1,
 			Name:   "test",
 			Gender: 3,
 		}
@@ -1254,14 +1254,14 @@ func ExampleValidator_In() {
 
 func ExampleValidator_NotIn() {
 	type BizReq struct {
-		Id           uint   `v:"required" dc:"Your Id"`
+		ID           uint   `v:"required" dc:"Your Id"`
 		Name         string `v:"required" dc:"Your name"`
 		InvalidIndex uint   `v:"not-in:-1,0,1"`
 	}
 	var (
 		ctx = context.Background()
 		req = BizReq{
-			Id:           1,
+			ID:           1,
 			Name:         "test",
 			InvalidIndex: 1,
 		}
