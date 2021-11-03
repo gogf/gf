@@ -5,8 +5,8 @@ import (
 	"time"
 
 	//_ "github.com/mattn/go-oci8"
-	"github.com/gogf/gf/database/gdb"
-	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/frame/g"
 )
 
 // 本文件用于gf框架的mysql数据库操作示例，不作为单元测试使用

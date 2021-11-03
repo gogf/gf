@@ -7,9 +7,9 @@
 package gdb
 
 import (
-	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/encoding/gparser"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v2/util/gconv"
 	"math"
 )
 
@@ -51,14 +51,14 @@ func (r Result) Chunk(size int) []Result {
 
 // Json converts `r` to JSON format content.
 func (r Result) Json() string {
-	content, _ := gparser.VarToJson(r.List())
-	return string(content)
+	content, _ := gjson.New(r.List()).ToJsonString()
+	return content
 }
 
 // Xml converts `r` to XML format content.
 func (r Result) Xml(rootTag ...string) string {
-	content, _ := gparser.VarToXml(r.List(), rootTag...)
-	return string(content)
+	content, _ := gjson.New(r.List()).ToXmlString(rootTag...)
+	return content
 }
 
 // List converts `r` to a List.

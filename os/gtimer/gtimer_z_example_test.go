@@ -7,16 +7,20 @@
 package gtimer_test
 
 import (
+	"context"
 	"fmt"
 	"time"
 
-	"github.com/gogf/gf/os/gtimer"
+	"github.com/gogf/gf/v2/os/gtimer"
 )
 
 func Example_add() {
-	now := time.Now()
-	interval := 1400 * time.Millisecond
-	gtimer.Add(interval, func() {
+	var (
+		ctx      = context.Background()
+		now      = time.Now()
+		interval = 1400 * time.Millisecond
+	)
+	gtimer.Add(ctx, interval, func(ctx context.Context) {
 		fmt.Println(time.Now(), time.Duration(time.Now().UnixNano()-now.UnixNano()))
 		now = time.Now()
 	})

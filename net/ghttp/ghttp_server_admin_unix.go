@@ -10,7 +10,7 @@ package ghttp
 
 import (
 	"context"
-	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/v2/internal/intlog"
 	"os"
 	"os/signal"
 	"syscall"
@@ -21,7 +21,10 @@ var procSignalChan = make(chan os.Signal)
 
 // handleProcessSignal handles all signal from system.
 func handleProcessSignal() {
-	var sig os.Signal
+	var (
+		ctx = context.TODO()
+		sig os.Signal
+	)
 	signal.Notify(
 		procSignalChan,
 		syscall.SIGINT,
@@ -34,23 +37,23 @@ func handleProcessSignal() {
 	)
 	for {
 		sig = <-procSignalChan
-		intlog.Printf(context.TODO(), `signal received: %s`, sig.String())
+		intlog.Printf(ctx, `signal received: %s`, sig.String())
 		switch sig {
 		// Shutdown the servers.
 		case syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGABRT:
-			shutdownWebServers(sig.String())
+			shutdownWebServers(ctx, sig.String())
 			return
 
 		// Shutdown the servers gracefully.
 		// Especially from K8S when running server in POD.
 		case syscall.SIGTERM:
-			shutdownWebServersGracefully(sig.String())
+			shutdownWebServersGracefully(ctx, sig.String())
 			return
 
 		// Restart the servers.
 		case syscall.SIGUSR1:
-			if err := restartWebServers(sig.String()); err != nil {
-				intlog.Error(context.TODO(), err)
+			if err := restartWebServers(ctx, sig.String()); err != nil {
+				intlog.Error(ctx, err)
 			}
 			return
 

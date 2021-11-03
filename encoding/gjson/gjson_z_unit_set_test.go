@@ -8,12 +8,12 @@ package gjson_test
 
 import (
 	"bytes"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/test/gtest"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
 	"testing"
 
-	"github.com/gogf/gf/encoding/gjson"
+	"github.com/gogf/gf/v2/encoding/gjson"
 )
 
 func Test_Set1(t *testing.T) {

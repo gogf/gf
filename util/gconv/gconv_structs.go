@@ -7,9 +7,9 @@
 package gconv
 
 import (
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/json"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/json"
 	"reflect"
 )
 
@@ -24,16 +24,6 @@ func Structs(params interface{}, pointer interface{}, mapping ...map[string]stri
 // The parameter `priorityTag` supports multiple tags that can be joined with char ','.
 func StructsTag(params interface{}, pointer interface{}, priorityTag string) (err error) {
 	return doStructs(params, pointer, nil, priorityTag)
-}
-
-// StructsDeep converts any slice to given struct slice recursively.
-// Deprecated, use Structs instead.
-func StructsDeep(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
-	var keyToAttributeNameMapping map[string]string
-	if len(mapping) > 0 {
-		keyToAttributeNameMapping = mapping[0]
-	}
-	return doStructs(params, pointer, keyToAttributeNameMapping, "")
 }
 
 // doStructs converts any slice to given struct slice.

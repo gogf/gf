@@ -7,7 +7,7 @@
 package gdb
 
 import (
-	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/v2/internal/intlog"
 	"time"
 )
 

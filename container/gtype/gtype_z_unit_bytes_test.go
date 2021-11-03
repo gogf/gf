@@ -7,12 +7,12 @@
 package gtype_test
 
 import (
-	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/util/gconv"
 	"testing"
 
-	"github.com/gogf/gf/container/gtype"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_Bytes(t *testing.T) {

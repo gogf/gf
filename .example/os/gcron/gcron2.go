@@ -3,12 +3,12 @@ package main
 import (
 	"time"
 
-	"github.com/gogf/gf/os/gcron"
-	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/v2/os/gcron"
+	"github.com/gogf/gf/v2/os/glog"
 )
 
 func test() {
-	glog.Println(111)
+	glog.Print(111)
 }
 
 func main() {

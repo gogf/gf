@@ -9,12 +9,12 @@ package gerror_test
 import (
 	"errors"
 	"fmt"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/internal/json"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/internal/json"
 	"testing"
 
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func nilError() error {

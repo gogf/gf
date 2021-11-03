@@ -7,15 +7,16 @@
 package gtcp
 
 import (
+	"context"
 	"crypto/tls"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"net"
 	"sync"
 
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 const (
@@ -35,9 +36,9 @@ type Server struct {
 // Map for name to server, for singleton purpose.
 var serverMapping = gmap.NewStrAnyMap(true)
 
-// GetServer returns the TCP server with specified <name>,
-// or it returns a new normal TCP server named <name> if it does not exist.
-// The parameter <name> is used to specify the TCP server
+// GetServer returns the TCP server with specified `name`,
+// or it returns a new normal TCP server named `name` if it does not exist.
+// The parameter `name` is used to specify the TCP server
 func GetServer(name ...interface{}) *Server {
 	serverName := defaultServer
 	if len(name) > 0 && name[0] != "" {
@@ -49,7 +50,7 @@ func GetServer(name ...interface{}) *Server {
 }
 
 // NewServer creates and returns a new normal TCP server.
-// The parameter <name> is optional, which is used to specify the instance name of the server.
+// The parameter `name` is optional, which is used to specify the instance name of the server.
 func NewServer(address string, handler func(*Conn), name ...string) *Server {
 	s := &Server{
 		address: address,
@@ -62,7 +63,7 @@ func NewServer(address string, handler func(*Conn), name ...string) *Server {
 }
 
 // NewServerTLS creates and returns a new TCP server with TLS support.
-// The parameter <name> is optional, which is used to specify the instance name of the server.
+// The parameter `name` is optional, which is used to specify the instance name of the server.
 func NewServerTLS(address string, tlsConfig *tls.Config, handler func(*Conn), name ...string) *Server {
 	s := NewServer(address, handler, name...)
 	s.SetTLSConfig(tlsConfig)
@@ -70,11 +71,11 @@ func NewServerTLS(address string, tlsConfig *tls.Config, handler func(*Conn), na
 }
 
 // NewServerKeyCrt creates and returns a new TCP server with TLS support.
-// The parameter <name> is optional, which is used to specify the instance name of the server.
+// The parameter `name` is optional, which is used to specify the instance name of the server.
 func NewServerKeyCrt(address, crtFile, keyFile string, handler func(*Conn), name ...string) *Server {
 	s := NewServer(address, handler, name...)
 	if err := s.SetTLSKeyCrt(crtFile, keyFile); err != nil {
-		glog.Error(err)
+		glog.Error(context.TODO(), err)
 	}
 	return s
 }
@@ -116,9 +117,12 @@ func (s *Server) Close() error {
 
 // Run starts running the TCP Server.
 func (s *Server) Run() (err error) {
+	var (
+		ctx = context.TODO()
+	)
 	if s.handler == nil {
 		err = gerror.NewCode(gcode.CodeMissingConfiguration, "start running failed: socket handler not defined")
-		glog.Error(err)
+		glog.Error(ctx, err)
 		return
 	}
 	if s.tlsConfig != nil {
@@ -127,21 +131,21 @@ func (s *Server) Run() (err error) {
 		s.listen, err = tls.Listen("tcp", s.address, s.tlsConfig)
 		s.mu.Unlock()
 		if err != nil {
-			glog.Error(err)
+			glog.Error(ctx, err)
 			return
 		}
 	} else {
 		// Normal Server
 		addr, err := net.ResolveTCPAddr("tcp", s.address)
 		if err != nil {
-			glog.Error(err)
+			glog.Error(ctx, err)
 			return err
 		}
 		s.mu.Lock()
 		s.listen, err = net.ListenTCP("tcp", addr)
 		s.mu.Unlock()
 		if err != nil {
-			glog.Error(err)
+			glog.Error(ctx, err)
 			return err
 		}
 	}

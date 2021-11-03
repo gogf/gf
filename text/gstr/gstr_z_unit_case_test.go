@@ -7,10 +7,10 @@
 package gstr_test
 
 import (
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/test/gtest"
 	"testing"
 
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 func Test_CaseCamel(t *testing.T) {

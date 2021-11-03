@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/gogf/gf/container/gset"
+	"github.com/gogf/gf/v2/container/gset"
 )
 
 var intSet = gset.NewIntSet(true)

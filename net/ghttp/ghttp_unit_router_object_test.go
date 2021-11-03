@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 type Object struct{}
@@ -53,19 +53,19 @@ func Test_Router_Object1(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "1Object Index2")
-		t.Assert(client.GetContent("/init"), "Not Found")
-		t.Assert(client.GetContent("/shut"), "Not Found")
-		t.Assert(client.GetContent("/index"), "1Object Index2")
-		t.Assert(client.GetContent("/show"), "1Object Show2")
+		t.Assert(client.GetContent(ctx, "/"), "1Object Index2")
+		t.Assert(client.GetContent(ctx, "/init"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/shut"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/index"), "1Object Index2")
+		t.Assert(client.GetContent(ctx, "/show"), "1Object Show2")
 
-		t.Assert(client.GetContent("/object"), "Not Found")
-		t.Assert(client.GetContent("/object/init"), "Not Found")
-		t.Assert(client.GetContent("/object/shut"), "Not Found")
-		t.Assert(client.GetContent("/object/index"), "1Object Index2")
-		t.Assert(client.GetContent("/object/show"), "1Object Show2")
+		t.Assert(client.GetContent(ctx, "/object"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/object/init"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/object/shut"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/object/index"), "1Object Index2")
+		t.Assert(client.GetContent(ctx, "/object/show"), "1Object Show2")
 
-		t.Assert(client.GetContent("/none-exist"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/none-exist"), "Not Found")
 	})
 }
 
@@ -83,15 +83,15 @@ func Test_Router_Object2(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "Not Found")
-		t.Assert(client.GetContent("/object"), "Not Found")
-		t.Assert(client.GetContent("/object/init"), "Not Found")
-		t.Assert(client.GetContent("/object/shut"), "Not Found")
-		t.Assert(client.GetContent("/object/index"), "Not Found")
-		t.Assert(client.GetContent("/object/show"), "1Object Show2")
-		t.Assert(client.GetContent("/object/info"), "1Object Info2")
+		t.Assert(client.GetContent(ctx, "/"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/object"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/object/init"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/object/shut"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/object/index"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/object/show"), "1Object Show2")
+		t.Assert(client.GetContent(ctx, "/object/info"), "1Object Info2")
 
-		t.Assert(client.GetContent("/none-exist"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/none-exist"), "Not Found")
 	})
 }
 
@@ -109,15 +109,15 @@ func Test_Router_ObjectMethod(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "Not Found")
-		t.Assert(client.GetContent("/object"), "Not Found")
-		t.Assert(client.GetContent("/object/init"), "Not Found")
-		t.Assert(client.GetContent("/object/shut"), "Not Found")
-		t.Assert(client.GetContent("/object/index"), "Not Found")
-		t.Assert(client.GetContent("/object/show"), "Not Found")
-		t.Assert(client.GetContent("/object/info"), "Not Found")
-		t.Assert(client.GetContent("/object-info"), "1Object Info2")
+		t.Assert(client.GetContent(ctx, "/"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/object"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/object/init"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/object/shut"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/object/index"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/object/show"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/object/info"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/object-info"), "1Object Info2")
 
-		t.Assert(client.GetContent("/none-exist"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/none-exist"), "Not Found")
 	})
 }

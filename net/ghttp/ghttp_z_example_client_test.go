@@ -9,7 +9,7 @@ package ghttp_test
 import (
 	"fmt"
 
-	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/v2/frame/g"
 )
 
 func ExampleClient_Header() {
@@ -20,7 +20,7 @@ func ExampleClient_Header() {
 			"Trace-Id": "123456789",
 		}
 	)
-	content := g.Client().Header(header).PostContent(url, g.Map{
+	content := g.Client().Header(header).PostContent(ctx, url, g.Map{
 		"id":   10000,
 		"name": "john",
 	})
@@ -39,7 +39,7 @@ Span-Id: 0.1
 Trace-Id: 123456789
 `
 	)
-	content := g.Client().HeaderRaw(headerRaw).PostContent(url, g.Map{
+	content := g.Client().HeaderRaw(headerRaw).PostContent(ctx, url, g.Map{
 		"id":   10000,
 		"name": "john",
 	})
@@ -56,7 +56,7 @@ func ExampleClient_Cookie() {
 			"SessionId": "123",
 		}
 	)
-	content := g.Client().Cookie(cookie).PostContent(url, g.Map{
+	content := g.Client().Cookie(cookie).PostContent(ctx, url, g.Map{
 		"id":   10000,
 		"name": "john",
 	})
@@ -76,9 +76,9 @@ func ExampleClient_ContentJson() {
 		}
 	)
 	// Post using JSON string.
-	fmt.Println(g.Client().ContentJson().PostContent(url, jsonStr))
+	fmt.Println(g.Client().ContentJson().PostContent(ctx, url, jsonStr))
 	// Post using JSON map.
-	fmt.Println(g.Client().ContentJson().PostContent(url, jsonMap))
+	fmt.Println(g.Client().ContentJson().PostContent(ctx, url, jsonMap))
 
 	// Output:
 	// Content-Type: application/json, id: 10000

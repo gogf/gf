@@ -8,7 +8,7 @@ package gsession
 
 import (
 	"context"
-	"github.com/gogf/gf/container/gmap"
+	"github.com/gogf/gf/v2/container/gmap"
 	"time"
 )
 
@@ -22,11 +22,11 @@ type Storage interface {
 	// It returns nil if the key does not exist in the session.
 	Get(ctx context.Context, id string, key string) (value interface{}, err error)
 
-	// GetMap retrieves all key-value pairs as map from storage.
-	GetMap(ctx context.Context, id string) (data map[string]interface{}, err error)
-
 	// GetSize retrieves and returns the size of key-value pairs from storage.
 	GetSize(ctx context.Context, id string) (size int, err error)
+
+	// Data retrieves all key-value pairs as map from storage.
+	Data(ctx context.Context, id string) (data map[string]interface{}, err error)
 
 	// Set sets one key-value session pair to the storage.
 	// The parameter `ttl` specifies the TTL for the session id.

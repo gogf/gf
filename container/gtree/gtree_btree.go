@@ -9,13 +9,13 @@ package gtree
 import (
 	"bytes"
 	"fmt"
-	"github.com/gogf/gf/internal/json"
+	"github.com/gogf/gf/v2/internal/json"
 	"strings"
 
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/util/gconv"
 
-	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/internal/rwmutex"
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/internal/rwmutex"
 )
 
 // BTree holds elements of the B-tree.
@@ -193,8 +193,8 @@ func (tree *BTree) GetVarOrSetFuncLock(key interface{}, f func() interface{}) *g
 	return gvar.New(tree.GetOrSetFuncLock(key, f))
 }
 
-// SetIfNotExist sets <value> to the map if the `key` does not exist, and then returns true.
-// It returns false if <key> exists, and `value` would be ignored.
+// SetIfNotExist sets `value` to the map if the `key` does not exist, and then returns true.
+// It returns false if `key` exists, and `value` would be ignored.
 func (tree *BTree) SetIfNotExist(key interface{}, value interface{}) bool {
 	if !tree.Contains(key) {
 		tree.doSetWithLockCheck(key, value)
@@ -204,7 +204,7 @@ func (tree *BTree) SetIfNotExist(key interface{}, value interface{}) bool {
 }
 
 // SetIfNotExistFunc sets value with return value of callback function `f`, and then returns true.
-// It returns false if <key> exists, and `value` would be ignored.
+// It returns false if `key` exists, and `value` would be ignored.
 func (tree *BTree) SetIfNotExistFunc(key interface{}, f func() interface{}) bool {
 	if !tree.Contains(key) {
 		tree.doSetWithLockCheck(key, f())
@@ -214,7 +214,7 @@ func (tree *BTree) SetIfNotExistFunc(key interface{}, f func() interface{}) bool
 }
 
 // SetIfNotExistFuncLock sets value with return value of callback function `f`, and then returns true.
-// It returns false if <key> exists, and `value` would be ignored.
+// It returns false if `key` exists, and `value` would be ignored.
 //
 // SetIfNotExistFuncLock differs with SetIfNotExistFunc function is that
 // it executes function `f` with mutex.Lock of the hash map.
@@ -419,7 +419,7 @@ func (tree *BTree) IteratorAsc(f func(key, value interface{}) bool) {
 }
 
 // IteratorAscFrom iterates the tree readonly in ascending order with given callback function `f`.
-// The parameter <key> specifies the start entry for iterating. The `match` specifies whether
+// The parameter `key` specifies the start entry for iterating. The `match` specifies whether
 // starting iterating if the `key` is fully matched, or else using index searching iterating.
 // If `f` returns true, then it continues iterating; or false to stop.
 func (tree *BTree) IteratorAscFrom(key interface{}, match bool, f func(key, value interface{}) bool) {
@@ -494,7 +494,7 @@ func (tree *BTree) IteratorDesc(f func(key, value interface{}) bool) {
 }
 
 // IteratorDescFrom iterates the tree readonly in descending order with given callback function `f`.
-// The parameter <key> specifies the start entry for iterating. The `match` specifies whether
+// The parameter `key` specifies the start entry for iterating. The `match` specifies whether
 // starting iterating if the `key` is fully matched, or else using index searching iterating.
 // If `f` returns true, then it continues iterating; or false to stop.
 func (tree *BTree) IteratorDescFrom(key interface{}, match bool, f func(key, value interface{}) bool) {

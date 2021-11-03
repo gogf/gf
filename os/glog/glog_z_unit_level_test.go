@@ -8,8 +8,8 @@ package glog
 
 import (
 	"bytes"
-	"github.com/gogf/gf/test/gtest"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
 	"testing"
 )
 
@@ -38,13 +38,13 @@ func Test_LevelPrefix(t *testing.T) {
 		buffer := bytes.NewBuffer(nil)
 		l := New()
 		l.SetWriter(buffer)
-		l.Debug("test1")
+		l.Debug(ctx, "test1")
 		t.Assert(gstr.Contains(buffer.String(), defaultLevelPrefixes[LEVEL_DEBU]), true)
 
 		buffer.Reset()
 
 		l.SetLevelPrefix(LEVEL_DEBU, "debug")
-		l.Debug("test2")
+		l.Debug(ctx, "test2")
 		t.Assert(gstr.Contains(buffer.String(), defaultLevelPrefixes[LEVEL_DEBU]), false)
 		t.Assert(gstr.Contains(buffer.String(), "debug"), true)
 
@@ -52,7 +52,7 @@ func Test_LevelPrefix(t *testing.T) {
 		l.SetLevelPrefixes(map[int]string{
 			LEVEL_ERRO: "error",
 		})
-		l.Error("test3")
+		l.Error(ctx, "test3")
 		t.Assert(gstr.Contains(buffer.String(), defaultLevelPrefixes[LEVEL_ERRO]), false)
 		t.Assert(gstr.Contains(buffer.String(), "error"), true)
 	})

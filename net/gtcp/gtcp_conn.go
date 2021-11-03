@@ -127,7 +127,7 @@ func (c *Conn) Recv(length int, retry ...Retry) ([]byte, error) {
 		if size > 0 {
 			index += size
 			if length > 0 {
-				// It reads til <length> size if <length> is specified.
+				// It reads til `length` size if `length` is specified.
 				if index == length {
 					break
 				}
@@ -201,8 +201,8 @@ func (c *Conn) RecvLine(retry ...Retry) ([]byte, error) {
 	return data, err
 }
 
-// RecvTil reads data from the connection until reads bytes <til>.
-// Note that the returned result contains the last bytes <til>.
+// RecvTil reads data from the connection until reads bytes `til`.
+// Note that the returned result contains the last bytes `til`.
 func (c *Conn) RecvTil(til []byte, retry ...Retry) ([]byte, error) {
 	var err error
 	var buffer []byte

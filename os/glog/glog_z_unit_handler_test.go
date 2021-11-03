@@ -9,10 +9,10 @@ package glog_test
 import (
 	"bytes"
 	"context"
-	"github.com/gogf/gf/container/garray"
-	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/test/gtest"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
 	"testing"
 )
 
@@ -32,7 +32,7 @@ func TestLogger_SetHandlers1(t *testing.T) {
 		ctx := context.WithValue(context.Background(), "Trace-Id", "1234567890")
 		ctx = context.WithValue(ctx, "Span-Id", "abcdefg")
 
-		l.Ctx(ctx).Print(1, 2, 3)
+		l.Print(ctx, 1, 2, 3)
 		t.Assert(gstr.Count(w.String(), "1234567890"), 1)
 		t.Assert(gstr.Count(w.String(), "abcdefg"), 1)
 		t.Assert(gstr.Count(w.String(), "1 2 3"), 1)
@@ -59,7 +59,7 @@ func TestLogger_SetHandlers2(t *testing.T) {
 		ctx := context.WithValue(context.Background(), "Trace-Id", "1234567890")
 		ctx = context.WithValue(ctx, "Span-Id", "abcdefg")
 
-		l.Ctx(ctx).Print(1, 2, 3)
+		l.Print(ctx, 1, 2, 3)
 		t.Assert(gstr.Count(w.String(), "1234567890"), 0)
 		t.Assert(gstr.Count(w.String(), "abcdefg"), 0)
 		t.Assert(gstr.Count(w.String(), "1 2 3"), 0)

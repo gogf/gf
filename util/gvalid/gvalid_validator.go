@@ -7,13 +7,11 @@
 package gvalid
 
 import (
-	"context"
-	"github.com/gogf/gf/i18n/gi18n"
+	"github.com/gogf/gf/v2/i18n/gi18n"
 )
 
 // Validator is the validation manager for chaining operations.
 type Validator struct {
-	ctx                              context.Context     // Context containing custom context variables.
 	i18nManager                      *gi18n.Manager      // I18n manager for error message translation.
 	key                              string              // Single validation key.
 	value                            interface{}         // Single validation value.
@@ -28,7 +26,6 @@ type Validator struct {
 // New creates and returns a new Validator.
 func New() *Validator {
 	return &Validator{
-		ctx:         context.TODO(),            // Initialize an empty context.
 		i18nManager: gi18n.Instance(),          // Use default i18n manager.
 		ruleFuncMap: make(map[string]RuleFunc), // Custom rule function storing map.
 	}
@@ -48,13 +45,6 @@ func (v *Validator) I18n(i18nManager *gi18n.Manager) *Validator {
 	return newValidator
 }
 
-// Ctx is a chaining operation function, which sets the context for next validation.
-func (v *Validator) Ctx(ctx context.Context) *Validator {
-	newValidator := v.Clone()
-	newValidator.ctx = ctx
-	return newValidator
-}
-
 // Bail sets the mark for stopping validation after the first validation error.
 func (v *Validator) Bail() *Validator {
 	newValidator := v.Clone()
@@ -63,7 +53,7 @@ func (v *Validator) Bail() *Validator {
 }
 
 // Data is a chaining operation function, which sets validation data for current operation.
-// The parameter `data` usually be type of map, which specifies the parameter map used in validation.
+// The parameter `data` is usually type of map, which specifies the parameter map used in validation.
 // Calling this function also sets `useDataInsteadOfObjectAttributes` true no mather the `data` is nil or not.
 func (v *Validator) Data(data interface{}) *Validator {
 	newValidator := v.Clone()

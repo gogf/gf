@@ -8,12 +8,12 @@ package gvalid_test
 
 import (
 	"context"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/frame/g"
 	"testing"
 
-	"github.com/gogf/gf/test/gtest"
-	"github.com/gogf/gf/util/gvalid"
+	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gvalid"
 )
 
 func Test_CheckMap1(t *testing.T) {
@@ -225,7 +225,7 @@ func Test_Map_Bail(t *testing.T) {
 			"password@required|length:6,16|same:password2#密码不能为空|密码长度应当在:min到:max之间|两次密码输入不相等",
 			"password2@required|length:6,16#",
 		}
-		err := g.Validator().Bail().Rules(rules).CheckMap(params)
+		err := g.Validator().Bail().Rules(rules).CheckMap(ctx, params)
 		t.AssertNE(err, nil)
 		t.Assert(err.String(), "账号不能为空; 账号长度应当在6到16之间")
 	})
@@ -241,7 +241,7 @@ func Test_Map_Bail(t *testing.T) {
 			"password@required|length:6,16|same:password2#密码不能为空|密码长度应当在:min到:max之间|两次密码输入不相等",
 			"password2@required|length:6,16#",
 		}
-		err := g.Validator().Bail().Rules(rules).CheckMap(params)
+		err := g.Validator().Bail().Rules(rules).CheckMap(ctx, params)
 		t.AssertNE(err, nil)
 		t.Assert(err.String(), "账号不能为空")
 	})

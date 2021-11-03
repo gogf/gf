@@ -9,47 +9,41 @@ package gdb_test
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/os/gctx"
+	"github.com/gogf/gf/v2/os/gctx"
 	"testing"
 
-	"github.com/gogf/gf/database/gdb"
-	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/errors/gerror"
 
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_TX_Query(t *testing.T) {
-	tx, err := db.Begin()
+	tx, err := db.Begin(ctx)
 	if err != nil {
 		gtest.Error(err)
 	}
-	if rows, err := tx.Query("SELECT ?", 1); err != nil {
+	if _, err = tx.Query("SELECT ?", 1); err != nil {
 		gtest.Error(err)
-	} else {
-		rows.Close()
 	}
-	if rows, err := tx.Query("SELECT ?+?", 1, 2); err != nil {
+	if _, err = tx.Query("SELECT ?+?", 1, 2); err != nil {
 		gtest.Error(err)
-	} else {
-		rows.Close()
 	}
-	if rows, err := tx.Query("SELECT ?+?", g.Slice{1, 2}); err != nil {
+	if _, err = tx.Query("SELECT ?+?", g.Slice{1, 2}); err != nil {
 		gtest.Error(err)
-	} else {
-		rows.Close()
 	}
-	if _, err := tx.Query("ERROR"); err == nil {
+	if _, err = tx.Query("ERROR"); err == nil {
 		gtest.Error("FAIL")
 	}
-	if err := tx.Commit(); err != nil {
+	if err = tx.Commit(); err != nil {
 		gtest.Error(err)
 	}
 }
 
 func Test_TX_Exec(t *testing.T) {
-	tx, err := db.Begin()
+	tx, err := db.Begin(ctx)
 	if err != nil {
 		gtest.Error(err)
 	}
@@ -71,7 +65,7 @@ func Test_TX_Exec(t *testing.T) {
 }
 
 func Test_TX_Commit(t *testing.T) {
-	tx, err := db.Begin()
+	tx, err := db.Begin(ctx)
 	if err != nil {
 		gtest.Error(err)
 	}
@@ -81,7 +75,7 @@ func Test_TX_Commit(t *testing.T) {
 }
 
 func Test_TX_Rollback(t *testing.T) {
-	tx, err := db.Begin()
+	tx, err := db.Begin(ctx)
 	if err != nil {
 		gtest.Error(err)
 	}
@@ -92,7 +86,7 @@ func Test_TX_Rollback(t *testing.T) {
 
 func Test_TX_Prepare(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		tx, err := db.Begin()
+		tx, err := db.Begin(ctx)
 		t.AssertNil(err)
 
 		st, err := tx.Prepare("SELECT 100")
@@ -118,7 +112,7 @@ func Test_TX_Insert(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, err := db.Begin()
+		tx, err := db.Begin(ctx)
 		if err != nil {
 			gtest.Error(err)
 		}
@@ -160,7 +154,7 @@ func Test_TX_BatchInsert(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, err := db.Begin()
+		tx, err := db.Begin(ctx)
 		if err != nil {
 			gtest.Error(err)
 		}
@@ -198,7 +192,7 @@ func Test_TX_BatchReplace(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, err := db.Begin()
+		tx, err := db.Begin(ctx)
 		if err != nil {
 			gtest.Error(err)
 		}
@@ -241,7 +235,7 @@ func Test_TX_BatchSave(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, err := db.Begin()
+		tx, err := db.Begin(ctx)
 		if err != nil {
 			gtest.Error(err)
 		}
@@ -279,7 +273,7 @@ func Test_TX_Replace(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, err := db.Begin()
+		tx, err := db.Begin(ctx)
 		if err != nil {
 			gtest.Error(err)
 		}
@@ -308,7 +302,7 @@ func Test_TX_Save(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, err := db.Begin()
+		tx, err := db.Begin(ctx)
 		if err != nil {
 			gtest.Error(err)
 		}
@@ -337,7 +331,7 @@ func Test_TX_Update(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, err := db.Begin()
+		tx, err := db.Begin(ctx)
 		if err != nil {
 			gtest.Error(err)
 		}
@@ -366,7 +360,7 @@ func Test_TX_GetAll(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, err := db.Begin()
+		tx, err := db.Begin(ctx)
 		if err != nil {
 			gtest.Error(err)
 		}
@@ -386,7 +380,7 @@ func Test_TX_GetOne(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, err := db.Begin()
+		tx, err := db.Begin(ctx)
 		if err != nil {
 			gtest.Error(err)
 		}
@@ -409,7 +403,7 @@ func Test_TX_GetValue(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, err := db.Begin()
+		tx, err := db.Begin(ctx)
 		if err != nil {
 			gtest.Error(err)
 		}
@@ -430,7 +424,7 @@ func Test_TX_GetCount(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, err := db.Begin()
+		tx, err := db.Begin(ctx)
 		if err != nil {
 			gtest.Error(err)
 		}
@@ -450,7 +444,7 @@ func Test_TX_GetStruct(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, err := db.Begin()
+		tx, err := db.Begin(ctx)
 		if err != nil {
 			gtest.Error(err)
 		}
@@ -472,7 +466,7 @@ func Test_TX_GetStruct(t *testing.T) {
 		}
 	})
 	gtest.C(t, func(t *gtest.T) {
-		tx, err := db.Begin()
+		tx, err := db.Begin(ctx)
 		if err != nil {
 			gtest.Error(err)
 		}
@@ -500,7 +494,7 @@ func Test_TX_GetStructs(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, err := db.Begin()
+		tx, err := db.Begin(ctx)
 		if err != nil {
 			gtest.Error(err)
 		}
@@ -529,7 +523,7 @@ func Test_TX_GetStructs(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, err := db.Begin()
+		tx, err := db.Begin(ctx)
 		if err != nil {
 			gtest.Error(err)
 		}
@@ -563,7 +557,7 @@ func Test_TX_GetScan(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, err := db.Begin()
+		tx, err := db.Begin(ctx)
 		if err != nil {
 			gtest.Error(err)
 		}
@@ -585,7 +579,7 @@ func Test_TX_GetScan(t *testing.T) {
 		}
 	})
 	gtest.C(t, func(t *gtest.T) {
-		tx, err := db.Begin()
+		tx, err := db.Begin(ctx)
 		if err != nil {
 			gtest.Error(err)
 		}
@@ -608,7 +602,7 @@ func Test_TX_GetScan(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, err := db.Begin()
+		tx, err := db.Begin(ctx)
 		if err != nil {
 			gtest.Error(err)
 		}
@@ -637,7 +631,7 @@ func Test_TX_GetScan(t *testing.T) {
 	})
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, err := db.Begin()
+		tx, err := db.Begin(ctx)
 		if err != nil {
 			gtest.Error(err)
 		}
@@ -670,7 +664,7 @@ func Test_TX_Delete(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		table := createInitTable()
 		defer dropTable(table)
-		tx, err := db.Begin()
+		tx, err := db.Begin(ctx)
 		if err != nil {
 			gtest.Error(err)
 		}
@@ -692,7 +686,7 @@ func Test_TX_Delete(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		table := createInitTable()
 		defer dropTable(table)
-		tx, err := db.Begin()
+		tx, err := db.Begin(ctx)
 		if err != nil {
 			gtest.Error(err)
 		}
@@ -804,7 +798,7 @@ func Test_Transaction_Nested_Begin_Rollback_Commit(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, err := db.Begin()
+		tx, err := db.Begin(ctx)
 		t.AssertNil(err)
 		// tx begin.
 		err = tx.Begin()
@@ -1086,7 +1080,7 @@ func Test_Transaction_Nested_SavePoint_RollbackTo(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		tx, err := db.Begin()
+		tx, err := db.Begin(ctx)
 		t.AssertNil(err)
 		// tx save point.
 		_, err = tx.Model(table).Data(g.Map{
@@ -1134,7 +1128,7 @@ func Test_Transaction_Method(t *testing.T) {
 			}).Insert()
 			t.AssertNil(err)
 
-			_, err = db.Ctx(ctx).Exec(fmt.Sprintf(
+			_, err = db.Ctx(ctx).Exec(ctx, fmt.Sprintf(
 				"insert into %s(`passport`,`password`,`nickname`,`create_time`,`id`) "+
 					"VALUES('t2','25d55ad283aa400af464c76d713c07ad','T2','2021-08-25 21:53:00',2) ",
 				table))

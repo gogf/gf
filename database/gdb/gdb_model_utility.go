@@ -9,12 +9,12 @@ package gdb
 import (
 	"time"
 
-	"github.com/gogf/gf/container/gset"
-	"github.com/gogf/gf/internal/empty"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/text/gregex"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gutil"
+	"github.com/gogf/gf/v2/container/gset"
+	"github.com/gogf/gf/v2/internal/empty"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // TableFields retrieves and returns the fields information of specified table of current
@@ -26,7 +26,11 @@ func (m *Model) TableFields(tableStr string, schema ...string) (fields map[strin
 	if len(schema) > 0 && schema[0] != "" {
 		useSchema = schema[0]
 	}
-	return m.db.TableFields(m.GetCtx(), m.guessPrimaryTableName(tableStr), useSchema)
+	return m.db.TableFields(
+		m.GetCtx(),
+		m.db.GetCore().guessPrimaryTableName(tableStr),
+		useSchema,
+	)
 }
 
 // getModel creates and returns a cloned model of current model if `safe` is true, or else it returns
@@ -104,7 +108,7 @@ func (m *Model) filterDataForInsertOrUpdate(data interface{}) (interface{}, erro
 func (m *Model) doMappingAndFilterForInsertOrUpdateDataMap(data Map, allowOmitEmpty bool) (Map, error) {
 	var err error
 	data, err = m.db.GetCore().mappingAndFilterData(
-		m.schema, m.guessPrimaryTableName(m.tablesInit), data, m.filter,
+		m.schema, m.tablesInit, data, m.filter,
 	)
 	if err != nil {
 		return nil, err
@@ -225,7 +229,7 @@ func (m *Model) getPrimaryKey() string {
 	return ""
 }
 
-// mergeArguments creates and returns new arguments by merging <m.extraArgs> and given `args`.
+// mergeArguments creates and returns new arguments by merging `m.extraArgs` and given `args`.
 func (m *Model) mergeArguments(args []interface{}) []interface{} {
 	if len(m.extraArgs) > 0 {
 		newArgs := make([]interface{}, len(m.extraArgs)+len(args))

@@ -8,13 +8,13 @@ package ghttp_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/internal/json"
+	"github.com/gogf/gf/v2/internal/json"
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_Params_Json_Request(t *testing.T) {
@@ -54,10 +54,10 @@ func Test_Params_Json_Request(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/get", `{"id":1,"name":"john","password1":"123Abc!@#","password2":"123Abc!@#"}`), ``)
-		t.Assert(client.GetContent("/map", `{"id":1,"name":"john","password1":"123Abc!@#","password2":"123Abc!@#"}`), ``)
-		t.Assert(client.PostContent("/parse", `{"id":1,"name":"john","password1":"123Abc!@#","password2":"123Abc!@#"}`), `1john123Abc!@#123Abc!@#`)
-		t.Assert(client.PostContent("/parse", `{"id":1,"name":"john","password1":"123Abc!@#","password2":"123"}`), `密码强度不足; 两次密码不一致`)
+		t.Assert(client.GetContent(ctx, "/get", `{"id":1,"name":"john","password1":"123Abc!@#","password2":"123Abc!@#"}`), ``)
+		t.Assert(client.GetContent(ctx, "/map", `{"id":1,"name":"john","password1":"123Abc!@#","password2":"123Abc!@#"}`), ``)
+		t.Assert(client.PostContent(ctx, "/parse", `{"id":1,"name":"john","password1":"123Abc!@#","password2":"123Abc!@#"}`), `1john123Abc!@#123Abc!@#`)
+		t.Assert(client.PostContent(ctx, "/parse", `{"id":1,"name":"john","password1":"123Abc!@#","password2":"123"}`), `密码强度不足; 两次密码不一致`)
 	})
 }
 
@@ -144,7 +144,7 @@ func Test_Params_Json_Response(t *testing.T) {
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
 		map1 := make(map[string]interface{})
-		err1 := json.UnmarshalUseNumber([]byte(client.GetContent("/json1")), &map1)
+		err1 := json.UnmarshalUseNumber([]byte(client.GetContent(ctx, "/json1")), &map1)
 		t.Assert(err1, nil)
 		t.Assert(len(map1), 4)
 		t.Assert(map1["Name"], "john")
@@ -153,7 +153,7 @@ func Test_Params_Json_Response(t *testing.T) {
 		t.Assert(map1["password2"], "456")
 
 		map2 := make(map[string]interface{})
-		err2 := json.UnmarshalUseNumber([]byte(client.GetContent("/json2")), &map2)
+		err2 := json.UnmarshalUseNumber([]byte(client.GetContent(ctx, "/json2")), &map2)
 		t.Assert(err2, nil)
 		t.Assert(len(map2), 4)
 		t.Assert(map2["Name"], "john")
@@ -162,14 +162,14 @@ func Test_Params_Json_Response(t *testing.T) {
 		t.Assert(map2["password2"], "456")
 
 		map3 := make(map[string]interface{})
-		err3 := json.UnmarshalUseNumber([]byte(client.GetContent("/json3")), &map3)
+		err3 := json.UnmarshalUseNumber([]byte(client.GetContent(ctx, "/json3")), &map3)
 		t.Assert(err3, nil)
 		t.Assert(len(map3), 2)
 		t.Assert(map3["success"], "true")
 		t.Assert(map3["message"], g.Map{"body": "测试", "code": 3, "error": "error"})
 
 		map4 := make(map[string]interface{})
-		err4 := json.UnmarshalUseNumber([]byte(client.GetContent("/json4")), &map4)
+		err4 := json.UnmarshalUseNumber([]byte(client.GetContent(ctx, "/json4")), &map4)
 		t.Assert(err4, nil)
 		t.Assert(len(map4), 2)
 		t.Assert(map4["success"], "true")

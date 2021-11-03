@@ -12,7 +12,7 @@ package gerror
 
 import (
 	"fmt"
-	"github.com/gogf/gf/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gcode"
 )
 
 // iCode is the interface for Code feature.

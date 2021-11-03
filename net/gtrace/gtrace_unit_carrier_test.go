@@ -10,8 +10,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/gogf/gf/net/gtrace"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/net/gtrace"
+	"github.com/gogf/gf/v2/test/gtest"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 )

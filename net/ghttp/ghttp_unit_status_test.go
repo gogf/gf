@@ -13,9 +13,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_StatusHandler(t *testing.T) {
@@ -37,8 +37,8 @@ func Test_StatusHandler(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/404"), "404")
-		t.Assert(client.GetContent("/502"), "502")
+		t.Assert(client.GetContent(ctx, "/404"), "404")
+		t.Assert(client.GetContent(ctx, "/502"), "502")
 	})
 }
 
@@ -63,6 +63,6 @@ func Test_StatusHandler_Multi(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/502"), "12")
+		t.Assert(client.GetContent(ctx, "/502"), "12")
 	})
 }

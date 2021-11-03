@@ -8,18 +8,18 @@ package gdb_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/v2/os/gtime"
 	"testing"
 
-	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/v2/frame/g"
 
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 // All types testing.
 func Test_Types(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		if _, err := db.Exec(fmt.Sprintf(`
+		if _, err := db.Exec(ctx, fmt.Sprintf(`
     CREATE TABLE IF NOT EXISTS types (
         id int(10) unsigned NOT NULL AUTO_INCREMENT,
         %s blob NOT NULL,

@@ -7,15 +7,20 @@
 package glog_test
 
 import (
+	"context"
 	"fmt"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/test/gtest"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
 	"testing"
 	"time"
+)
+
+var (
+	ctx = context.TODO()
 )
 
 func Test_Rotate_Size(t *testing.T) {
@@ -37,8 +42,8 @@ func Test_Rotate_Size(t *testing.T) {
 
 		s := "1234567890abcdefg"
 		for i := 0; i < 10; i++ {
-			fmt.Println("logging content index:", i)
-			l.Print(s)
+			fmt.Println(ctx, "logging content index:", i)
+			l.Print(ctx, s)
 		}
 
 		time.Sleep(time.Second * 3)
@@ -76,7 +81,7 @@ func Test_Rotate_Expire(t *testing.T) {
 
 		s := "1234567890abcdefg"
 		for i := 0; i < 10; i++ {
-			l.Print(s)
+			l.Print(ctx, s)
 		}
 
 		files, err := gfile.ScanDirFile(p, "*.gz")
