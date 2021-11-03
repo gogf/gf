@@ -94,11 +94,14 @@ func ExampleQueue_Close() {
 		q.Push(i)
 	}
 
+	time.Sleep(time.Millisecond)
 	q.Close()
 
+	fmt.Println(q.Len())
 	fmt.Println(q.Pop())
 
 	// Output:
+	// 0
 	// <nil>
 }
 
@@ -108,8 +111,13 @@ func ExampleQueue_Len() {
 	q.Push(1)
 	q.Push(2)
 
+	time.Sleep(time.Millisecond)
+	fmt.Println(q.Len())
+	q.Pop()
+	q.Close()
 	fmt.Println(q.Len())
 
 	// Output:
 	// 2
+	// 0
 }
