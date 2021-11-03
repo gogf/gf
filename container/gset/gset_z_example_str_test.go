@@ -359,7 +359,7 @@ func ExampleStrSet_String() {
 	s1.Add([]string{"a", "b", "c", "d"}...)
 	fmt.Println(s1.String())
 
-	// Output:
+	// May Output:
 	// "a","b","c","d"
 }
 
