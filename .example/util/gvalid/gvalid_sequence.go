@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gogf/gf/util/gvalid"
+	"github.com/gogf/gf/v2/util/gvalid"
 )
 
 func main() {

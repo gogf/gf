@@ -9,42 +9,37 @@ package ghttp
 import (
 	"context"
 	"crypto/tls"
-	"fmt"
-	"github.com/gogf/gf/internal/intlog"
-	"github.com/gogf/gf/os/gres"
-	"github.com/gogf/gf/util/gutil"
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/os/gres"
+	"github.com/gogf/gf/v2/util/gutil"
 	"net/http"
 	"strconv"
 	"time"
 
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/util/gconv"
 
-	"github.com/gogf/gf/os/gsession"
+	"github.com/gogf/gf/v2/os/gsession"
 
-	"github.com/gogf/gf/os/gview"
+	"github.com/gogf/gf/v2/os/gview"
 
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/glog"
 )
 
 const (
-	defaultHttpAddr   = ":80"  // Default listening port for HTTP.
-	defaultHttpsAddr  = ":443" // Default listening port for HTTPS.
-	URI_TYPE_DEFAULT  = 0      // Deprecated, please use UriTypeDefault instead.
-	URI_TYPE_FULLNAME = 1      // Deprecated, please use UriTypeFullName instead.
-	URI_TYPE_ALLLOWER = 2      // Deprecated, please use UriTypeAllLower instead.
-	URI_TYPE_CAMEL    = 3      // Deprecated, please use UriTypeCamel instead.
-	UriTypeDefault    = 0      // Method name to URI converting type, which converts name to its lower case and joins the words using char '-'.
-	UriTypeFullName   = 1      // Method name to URI converting type, which does no converting to the method name.
-	UriTypeAllLower   = 2      // Method name to URI converting type, which converts name to its lower case.
-	UriTypeCamel      = 3      // Method name to URI converting type, which converts name to its camel case.
+	defaultHttpAddr  = ":80"  // Default listening port for HTTP.
+	defaultHttpsAddr = ":443" // Default listening port for HTTPS.
+	UriTypeDefault   = 0      // Method names to URI converting type, which converts name to its lower case and joins the words using char '-'.
+	UriTypeFullName  = 1      // Method names to URI converting type, which does no converting to the method name.
+	UriTypeAllLower  = 2      // Method names to URI converting type, which converts name to its lower case.
+	UriTypeCamel     = 3      // Method names to URI converting type, which converts name to its camel case.
 )
 
 // ServerConfig is the HTTP Server configuration manager.
 type ServerConfig struct {
-	// ==================================
+	// ======================================================================================================
 	// Basic.
-	// ==================================
+	// ======================================================================================================
 
 	// Address specifies the server listening address like "port" or ":port",
 	// multiple addresses joined using ','.
@@ -111,9 +106,9 @@ type ServerConfig struct {
 	// View specifies the default template view object for the server.
 	View *gview.View `json:"view"`
 
-	// ==================================
+	// ======================================================================================================
 	// Static.
-	// ==================================
+	// ======================================================================================================
 
 	// Rewrites specifies the URI rewrite rules map.
 	Rewrites map[string]string `json:"rewrites"`
@@ -138,9 +133,9 @@ type ServerConfig struct {
 	// It is automatically set enabled if any static path is set.
 	FileServerEnabled bool `json:"fileServerEnabled"`
 
-	// ==================================
+	// ======================================================================================================
 	// Cookie.
-	// ==================================
+	// ======================================================================================================
 
 	// CookieMaxAge specifies the max TTL for cookie items.
 	CookieMaxAge time.Duration `json:"cookieMaxAge"`
@@ -153,9 +148,9 @@ type ServerConfig struct {
 	// It also affects the default storage for session id.
 	CookieDomain string `json:"cookieDomain"`
 
-	// ==================================
+	// ======================================================================================================
 	// Session.
-	// ==================================
+	// ======================================================================================================
 
 	// SessionIdName specifies the session id name.
 	SessionIdName string `json:"sessionIdName"`
@@ -171,15 +166,16 @@ type ServerConfig struct {
 	SessionStorage gsession.Storage `json:"sessionStorage"`
 
 	// SessionCookieMaxAge specifies the cookie ttl for session id.
-	// It it is set 0, it means it expires along with browser session.
+	// If it is set 0, it means it expires along with browser session.
 	SessionCookieMaxAge time.Duration `json:"sessionCookieMaxAge"`
 
 	// SessionCookieOutput specifies whether automatic outputting session id to cookie.
 	SessionCookieOutput bool `json:"sessionCookieOutput"`
 
-	// ==================================
+	// ======================================================================================================
 	// Logging.
-	// ==================================
+	// ======================================================================================================
+
 	Logger           *glog.Logger `json:"logger"`           // Logger specifies the logger for server.
 	LogPath          string       `json:"logPath"`          // LogPath specifies the directory for storing logging files.
 	LogLevel         string       `json:"logLevel"`         // LogLevel specifies the logging level for logger.
@@ -190,19 +186,27 @@ type ServerConfig struct {
 	AccessLogEnabled bool         `json:"accessLogEnabled"` // AccessLogEnabled enables access logging content to files.
 	AccessLogPattern string       `json:"accessLogPattern"` // AccessLogPattern specifies the error log file pattern like: access-{Ymd}.log
 
-	// ==================================
+	// ======================================================================================================
 	// PProf.
-	// ==================================
+	// ======================================================================================================
+
 	PProfEnabled bool   `json:"pprofEnabled"` // PProfEnabled enables PProf feature.
 	PProfPattern string `json:"pprofPattern"` // PProfPattern specifies the PProf service pattern for router.
 
-	// ==================================
+	// ======================================================================================================
+	// API & Swagger.
+	// ======================================================================================================
+
+	OpenApiPath string `json:"openapiPath"` // OpenApiPath specifies the OpenApi specification file path.
+	SwaggerPath string `json:"swaggerPath"` // SwaggerPath specifies the swagger UI path for route registering.
+
+	// ======================================================================================================
 	// Other.
-	// ==================================
+	// ======================================================================================================
 
 	// ClientMaxBodySize specifies the max body size limit in bytes for client request.
 	// It can be configured in configuration file using string like: 1m, 10m, 500kb etc.
-	// It's 8MB in default.
+	// It's `8MB` in default.
 	ClientMaxBodySize int64 `json:"clientMaxBodySize"`
 
 	// FormParsingMemory specifies max memory buffer size in bytes which can be used for
@@ -215,7 +219,7 @@ type ServerConfig struct {
 	// registering routes.
 	NameToUriType int `json:"nameToUriType"`
 
-	// RouteOverWrite allows overwrite the route if duplicated.
+	// RouteOverWrite allows to overwrite the route if duplicated.
 	RouteOverWrite bool `json:"routeOverWrite"`
 
 	// DumpRouterMap specifies whether automatically dumps router map when server starts.
@@ -226,12 +230,6 @@ type ServerConfig struct {
 
 	// GracefulTimeout set the maximum survival time (seconds) of the parent process.
 	GracefulTimeout uint8 `json:"gracefulTimeout"`
-}
-
-// Config creates and returns a ServerConfig object with default configurations.
-// Deprecated. Use NewConfig instead.
-func Config() ServerConfig {
-	return NewConfig()
 }
 
 // NewConfig creates and returns a ServerConfig object with default configurations.
@@ -249,7 +247,7 @@ func NewConfig() ServerConfig {
 		KeepAlive:           true,
 		IndexFiles:          []string{"index.html", "index.htm"},
 		IndexFolder:         false,
-		ServerAgent:         "GF HTTP Server",
+		ServerAgent:         "GoFrame HTTP Server",
 		ServerRoot:          "",
 		StaticPaths:         make([]staticPathItem, 0),
 		FileServerEnabled:   false,
@@ -340,8 +338,7 @@ func (s *Server) SetConfig(c ServerConfig) error {
 	if err := s.config.Logger.SetLevelStr(s.config.LogLevel); err != nil {
 		intlog.Error(context.TODO(), err)
 	}
-
-	SetGraceful(c.Graceful)
+	gracefulEnabled = c.Graceful
 	intlog.Printf(context.TODO(), "SetConfig: %+v", s.config)
 	return nil
 }
@@ -386,8 +383,11 @@ func (s *Server) SetHTTPSPort(port ...int) {
 }
 
 // EnableHTTPS enables HTTPS with given certification and key files for the server.
-// The optional parameter <tlsConfig> specifies custom TLS configuration.
+// The optional parameter `tlsConfig` specifies custom TLS configuration.
 func (s *Server) EnableHTTPS(certFile, keyFile string, tlsConfig ...*tls.Config) {
+	var (
+		ctx = context.TODO()
+	)
 	certFileRealPath := gfile.RealPath(certFile)
 	if certFileRealPath == "" {
 		certFileRealPath = gfile.RealPath(gfile.Pwd() + gfile.Separator + certFile)
@@ -400,7 +400,7 @@ func (s *Server) EnableHTTPS(certFile, keyFile string, tlsConfig ...*tls.Config)
 		certFileRealPath = certFile
 	}
 	if certFileRealPath == "" {
-		s.Logger().Fatal(fmt.Sprintf(`EnableHTTPS failed: certFile "%s" does not exist`, certFile))
+		s.Logger().Fatalf(ctx, `EnableHTTPS failed: certFile "%s" does not exist`, certFile)
 	}
 	keyFileRealPath := gfile.RealPath(keyFile)
 	if keyFileRealPath == "" {
@@ -414,7 +414,7 @@ func (s *Server) EnableHTTPS(certFile, keyFile string, tlsConfig ...*tls.Config)
 		keyFileRealPath = keyFile
 	}
 	if keyFileRealPath == "" {
-		s.Logger().Fatal(fmt.Sprintf(`EnableHTTPS failed: keyFile "%s" does not exist`, keyFile))
+		s.Logger().Fatal(ctx, `EnableHTTPS failed: keyFile "%s" does not exist`, keyFile)
 	}
 	s.config.HTTPSCertPath = certFileRealPath
 	s.config.HTTPSKeyPath = keyFileRealPath

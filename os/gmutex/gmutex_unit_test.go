@@ -7,13 +7,14 @@
 package gmutex_test
 
 import (
-	"github.com/gogf/gf/os/glog"
+	"context"
+	"github.com/gogf/gf/v2/os/glog"
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/container/garray"
-	"github.com/gogf/gf/os/gmutex"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/os/gmutex"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_Mutex_RUnlock(t *testing.T) {
@@ -248,7 +249,7 @@ func Test_Mutex_TryRLockFunc(t *testing.T) {
 		go func() {
 			mu.LockFunc(func() {
 				array.Append(1)
-				glog.Println("lock1 done")
+				glog.Print(context.TODO(), "lock1 done")
 				time.Sleep(2000 * time.Millisecond)
 			})
 		}()

@@ -7,9 +7,9 @@
 package ghttp
 
 import (
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/intlog"
 )
 
 type DefaultHandlerResponse struct {
@@ -21,9 +21,16 @@ type DefaultHandlerResponse struct {
 // MiddlewareHandlerResponse is the default middleware handling handler response object and its error.
 func MiddlewareHandlerResponse(r *Request) {
 	r.Middleware.Next()
+
+	// There's custom buffer content, it then exits current handler.
+	if r.Response.BufferLength() > 0 {
+		return
+	}
+
 	var (
 		err         error
 		res         interface{}
+		ctx         = r.Context()
 		internalErr error
 	)
 	res, err = r.GetHandlerResponse()
@@ -38,7 +45,7 @@ func MiddlewareHandlerResponse(r *Request) {
 			Data:    nil,
 		})
 		if internalErr != nil {
-			intlog.Error(r.Context(), internalErr)
+			intlog.Error(ctx, internalErr)
 		}
 		return
 	}
@@ -48,6 +55,6 @@ func MiddlewareHandlerResponse(r *Request) {
 		Data:    res,
 	})
 	if internalErr != nil {
-		intlog.Error(r.Context(), internalErr)
+		intlog.Error(ctx, internalErr)
 	}
 }

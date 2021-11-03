@@ -1,10 +1,11 @@
 package main
 
 import (
+	"context"
 	"log"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/v2/os/glog"
 )
 
 func main() {
@@ -25,7 +26,7 @@ func main() {
 		for {
 			select {
 			case ev := <-watch.Events:
-				glog.Println(ev)
+				glog.Print(context.Background(), ev)
 
 			case err := <-watch.Errors:
 				log.Println("error : ", err)

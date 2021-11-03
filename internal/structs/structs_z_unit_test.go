@@ -9,11 +9,11 @@ package structs_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/internal/structs"
+	"github.com/gogf/gf/v2/internal/structs"
 
-	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/v2/frame/g"
 
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_Basic(t *testing.T) {
@@ -102,6 +102,118 @@ func Test_StructOfNilPointer(t *testing.T) {
 	})
 }
 
+func Test_Fields(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type User struct {
+			Id   int
+			Name string `params:"name"`
+			Pass string `my-tag1:"pass1" my-tag2:"pass2" params:"pass"`
+		}
+		var user *User
+		fields, _ := structs.Fields(structs.FieldsInput{
+			Pointer:         user,
+			RecursiveOption: 0,
+		})
+		t.Assert(len(fields), 3)
+		t.Assert(fields[0].Name(), "Id")
+		t.Assert(fields[1].Name(), "Name")
+		t.Assert(fields[1].Tag("params"), "name")
+		t.Assert(fields[2].Name(), "Pass")
+		t.Assert(fields[2].Tag("my-tag1"), "pass1")
+		t.Assert(fields[2].Tag("my-tag2"), "pass2")
+		t.Assert(fields[2].Tag("params"), "pass")
+	})
+}
+
+func Test_Fields_WithEmbedded1(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type B struct {
+			Name string
+			Age  int
+		}
+		type A struct {
+			Site  string
+			B     // Should be put here to validate its index.
+			Score int64
+		}
+		r, err := structs.Fields(structs.FieldsInput{
+			Pointer:         new(A),
+			RecursiveOption: structs.RecursiveOptionEmbeddedNoTag,
+		})
+		t.AssertNil(err)
+		t.Assert(len(r), 4)
+		t.Assert(r[0].Name(), `Site`)
+		t.Assert(r[1].Name(), `Name`)
+		t.Assert(r[2].Name(), `Age`)
+		t.Assert(r[3].Name(), `Score`)
+	})
+}
+
+func Test_Fields_WithEmbedded2(t *testing.T) {
+	type MetaNode struct {
+		Id          uint   `orm:"id,primary"  description:""`
+		Capacity    string `orm:"capacity"    description:"Capacity string"`
+		Allocatable string `orm:"allocatable" description:"Allocatable string"`
+		Status      string `orm:"status"      description:"Status string"`
+	}
+	type MetaNodeZone struct {
+		Nodes    uint
+		Clusters uint
+		Disk     uint
+		Cpu      uint
+		Memory   uint
+		Zone     string
+	}
+
+	type MetaNodeItem struct {
+		MetaNode
+		Capacity    []MetaNodeZone `dc:"Capacity []MetaNodeZone"`
+		Allocatable []MetaNodeZone `dc:"Allocatable []MetaNodeZone"`
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		r, err := structs.Fields(structs.FieldsInput{
+			Pointer:         new(MetaNodeItem),
+			RecursiveOption: structs.RecursiveOptionEmbeddedNoTag,
+		})
+		t.AssertNil(err)
+		t.Assert(len(r), 4)
+		t.Assert(r[0].Name(), `Id`)
+		t.Assert(r[1].Name(), `Capacity`)
+		t.Assert(r[1].TagStr(), `dc:"Capacity []MetaNodeZone"`)
+		t.Assert(r[2].Name(), `Allocatable`)
+		t.Assert(r[2].TagStr(), `dc:"Allocatable []MetaNodeZone"`)
+		t.Assert(r[3].Name(), `Status`)
+	})
+}
+
+// Filter repeated fields when there is embedded struct.
+func Test_Fields_WithEmbedded_Filter(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type B struct {
+			Name string
+			Age  int
+		}
+		type A struct {
+			Name  string
+			Site  string
+			Age   string
+			B     // Should be put here to validate its index.
+			Score int64
+		}
+		r, err := structs.Fields(structs.FieldsInput{
+			Pointer:         new(A),
+			RecursiveOption: structs.RecursiveOptionEmbeddedNoTag,
+		})
+		t.AssertNil(err)
+		t.Assert(len(r), 4)
+		t.Assert(r[0].Name(), `Name`)
+		t.Assert(r[1].Name(), `Site`)
+		t.Assert(r[2].Name(), `Age`)
+		t.Assert(r[3].Name(), `Score`)
+	})
+}
+
 func Test_FieldMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		type User struct {
@@ -163,7 +275,7 @@ func Test_StructType(t *testing.T) {
 		}
 		r, err := structs.StructType(new(A))
 		t.AssertNil(err)
-		t.Assert(r.Signature(), `github.com/gogf/gf/internal/structs_test/structs_test.A`)
+		t.Assert(r.Signature(), `github.com/gogf/gf/v2/internal/structs_test/structs_test.A`)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type B struct {
@@ -174,7 +286,7 @@ func Test_StructType(t *testing.T) {
 		}
 		r, err := structs.StructType(new(A).B)
 		t.AssertNil(err)
-		t.Assert(r.Signature(), `github.com/gogf/gf/internal/structs_test/structs_test.B`)
+		t.Assert(r.Signature(), `github.com/gogf/gf/v2/internal/structs_test/structs_test.B`)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type B struct {
@@ -211,7 +323,7 @@ func Test_StructTypeBySlice(t *testing.T) {
 		}
 		r, err := structs.StructType(new(A).Array)
 		t.AssertNil(err)
-		t.Assert(r.Signature(), `github.com/gogf/gf/internal/structs_test/structs_test.B`)
+		t.Assert(r.Signature(), `github.com/gogf/gf/v2/internal/structs_test/structs_test.B`)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type B struct {
@@ -222,7 +334,7 @@ func Test_StructTypeBySlice(t *testing.T) {
 		}
 		r, err := structs.StructType(new(A).Array)
 		t.AssertNil(err)
-		t.Assert(r.Signature(), `github.com/gogf/gf/internal/structs_test/structs_test.B`)
+		t.Assert(r.Signature(), `github.com/gogf/gf/v2/internal/structs_test/structs_test.B`)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type B struct {
@@ -233,7 +345,7 @@ func Test_StructTypeBySlice(t *testing.T) {
 		}
 		r, err := structs.StructType(new(A).Array)
 		t.AssertNil(err)
-		t.Assert(r.Signature(), `github.com/gogf/gf/internal/structs_test/structs_test.B`)
+		t.Assert(r.Signature(), `github.com/gogf/gf/v2/internal/structs_test/structs_test.B`)
 	})
 }
 
@@ -249,5 +361,25 @@ func TestType_FieldKeys(t *testing.T) {
 		r, err := structs.StructType(new(A).Array)
 		t.AssertNil(err)
 		t.Assert(r.FieldKeys(), g.Slice{"Id", "Name"})
+	})
+}
+
+func TestType_TagMap(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type A struct {
+			Id   int    `d:"123" description:"I love gf"`
+			Name string `v:"required" description:"应用Id"`
+		}
+		r, err := structs.Fields(structs.FieldsInput{
+			Pointer:         new(A),
+			RecursiveOption: 0,
+		})
+		t.AssertNil(err)
+
+		t.Assert(len(r), 2)
+		t.Assert(r[0].TagMap()["d"], `123`)
+		t.Assert(r[0].TagMap()["description"], `I love gf`)
+		t.Assert(r[1].TagMap()["v"], `required`)
+		t.Assert(r[1].TagMap()["description"], `应用Id`)
 	})
 }

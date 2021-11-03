@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/os/glog"
 )
 
 func main() {
@@ -16,10 +16,10 @@ func main() {
 	})
 	s.BindHookHandlerByMap(p, map[string]ghttp.HandlerFunc{
 		ghttp.HookBeforeServe: func(r *ghttp.Request) {
-			glog.To(r.Response.Writer).Println("BeforeServe")
+			glog.To(r.Response.Writer).Print(r.Context(), "BeforeServe")
 		},
 		ghttp.HookAfterServe: func(r *ghttp.Request) {
-			glog.To(r.Response.Writer).Println("AfterServe")
+			glog.To(r.Response.Writer).Print(r.Context(), "AfterServe")
 		},
 	})
 	s.SetPort(8199)

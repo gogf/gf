@@ -8,13 +8,13 @@ package ghttp_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/internal/intlog"
+	"github.com/gogf/gf/v2/internal/intlog"
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_Router_DomainBasic(t *testing.T) {
@@ -45,26 +45,26 @@ func Test_Router_DomainBasic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		t.Assert(client.GetContent("/john"), "Not Found")
-		t.Assert(client.GetContent("/john/update"), "Not Found")
-		t.Assert(client.GetContent("/john/edit"), "Not Found")
-		t.Assert(client.GetContent("/user/list/100.html"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/john"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/john/update"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/john/edit"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/user/list/100.html"), "Not Found")
 	})
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://localhost:%d", p))
-		t.Assert(client.GetContent("/john"), "")
-		t.Assert(client.GetContent("/john/update"), "john")
-		t.Assert(client.GetContent("/john/edit"), "edit")
-		t.Assert(client.GetContent("/user/list/100.html"), "100")
+		t.Assert(client.GetContent(ctx, "/john"), "")
+		t.Assert(client.GetContent(ctx, "/john/update"), "john")
+		t.Assert(client.GetContent(ctx, "/john/edit"), "edit")
+		t.Assert(client.GetContent(ctx, "/user/list/100.html"), "100")
 	})
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://local:%d", p))
-		t.Assert(client.GetContent("/john"), "")
-		t.Assert(client.GetContent("/john/update"), "john")
-		t.Assert(client.GetContent("/john/edit"), "edit")
-		t.Assert(client.GetContent("/user/list/100.html"), "100")
+		t.Assert(client.GetContent(ctx, "/john"), "")
+		t.Assert(client.GetContent(ctx, "/john/update"), "john")
+		t.Assert(client.GetContent(ctx, "/john/edit"), "edit")
+		t.Assert(client.GetContent(ctx, "/user/list/100.html"), "100")
 	})
 }
 
@@ -88,22 +88,22 @@ func Test_Router_DomainMethod(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		resp1, err := client.Get("/get")
+		resp1, err := client.Get(ctx, "/get")
 		defer resp1.Close()
 		t.Assert(err, nil)
 		t.Assert(resp1.StatusCode, 404)
 
-		resp2, err := client.Post("/get")
+		resp2, err := client.Post(ctx, "/get")
 		defer resp2.Close()
 		t.Assert(err, nil)
 		t.Assert(resp2.StatusCode, 404)
 
-		resp3, err := client.Get("/post")
+		resp3, err := client.Get(ctx, "/post")
 		defer resp3.Close()
 		t.Assert(err, nil)
 		t.Assert(resp3.StatusCode, 404)
 
-		resp4, err := client.Post("/post")
+		resp4, err := client.Post(ctx, "/post")
 		defer resp4.Close()
 		t.Assert(err, nil)
 		t.Assert(resp4.StatusCode, 404)
@@ -113,22 +113,22 @@ func Test_Router_DomainMethod(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://localhost:%d", p))
 
-		resp1, err := client.Get("/get")
+		resp1, err := client.Get(ctx, "/get")
 		defer resp1.Close()
 		t.Assert(err, nil)
 		t.Assert(resp1.StatusCode, 200)
 
-		resp2, err := client.Post("/get")
+		resp2, err := client.Post(ctx, "/get")
 		defer resp2.Close()
 		t.Assert(err, nil)
 		t.Assert(resp2.StatusCode, 404)
 
-		resp3, err := client.Get("/post")
+		resp3, err := client.Get(ctx, "/post")
 		defer resp3.Close()
 		t.Assert(err, nil)
 		t.Assert(resp3.StatusCode, 404)
 
-		resp4, err := client.Post("/post")
+		resp4, err := client.Post(ctx, "/post")
 		defer resp4.Close()
 		t.Assert(err, nil)
 		t.Assert(resp4.StatusCode, 200)
@@ -138,22 +138,22 @@ func Test_Router_DomainMethod(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://local:%d", p))
 
-		resp1, err := client.Get("/get")
+		resp1, err := client.Get(ctx, "/get")
 		defer resp1.Close()
 		t.Assert(err, nil)
 		t.Assert(resp1.StatusCode, 200)
 
-		resp2, err := client.Post("/get")
+		resp2, err := client.Post(ctx, "/get")
 		defer resp2.Close()
 		t.Assert(err, nil)
 		t.Assert(resp2.StatusCode, 404)
 
-		resp3, err := client.Get("/post")
+		resp3, err := client.Get(ctx, "/post")
 		defer resp3.Close()
 		t.Assert(err, nil)
 		t.Assert(resp3.StatusCode, 404)
 
-		resp4, err := client.Post("/post")
+		resp4, err := client.Post(ctx, "/post")
 		defer resp4.Close()
 		t.Assert(err, nil)
 		t.Assert(resp4.StatusCode, 200)
@@ -186,22 +186,22 @@ func Test_Router_DomainStatus(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		resp1, err := client.Get("/200")
+		resp1, err := client.Get(ctx, "/200")
 		defer resp1.Close()
 		t.Assert(err, nil)
 		t.Assert(resp1.StatusCode, 404)
 
-		resp2, err := client.Get("/300")
+		resp2, err := client.Get(ctx, "/300")
 		defer resp2.Close()
 		t.Assert(err, nil)
 		t.Assert(resp2.StatusCode, 404)
 
-		resp3, err := client.Get("/400")
+		resp3, err := client.Get(ctx, "/400")
 		defer resp3.Close()
 		t.Assert(err, nil)
 		t.Assert(resp3.StatusCode, 404)
 
-		resp4, err := client.Get("/500")
+		resp4, err := client.Get(ctx, "/500")
 		defer resp4.Close()
 		t.Assert(err, nil)
 		t.Assert(resp4.StatusCode, 404)
@@ -210,22 +210,22 @@ func Test_Router_DomainStatus(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://localhost:%d", p))
 
-		resp1, err := client.Get("/200")
+		resp1, err := client.Get(ctx, "/200")
 		defer resp1.Close()
 		t.Assert(err, nil)
 		t.Assert(resp1.StatusCode, 200)
 
-		resp2, err := client.Get("/300")
+		resp2, err := client.Get(ctx, "/300")
 		defer resp2.Close()
 		t.Assert(err, nil)
 		t.Assert(resp2.StatusCode, 300)
 
-		resp3, err := client.Get("/400")
+		resp3, err := client.Get(ctx, "/400")
 		defer resp3.Close()
 		t.Assert(err, nil)
 		t.Assert(resp3.StatusCode, 400)
 
-		resp4, err := client.Get("/500")
+		resp4, err := client.Get(ctx, "/500")
 		defer resp4.Close()
 		t.Assert(err, nil)
 		t.Assert(resp4.StatusCode, 500)
@@ -234,22 +234,22 @@ func Test_Router_DomainStatus(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://local:%d", p))
 
-		resp1, err := client.Get("/200")
+		resp1, err := client.Get(ctx, "/200")
 		defer resp1.Close()
 		t.Assert(err, nil)
 		t.Assert(resp1.StatusCode, 200)
 
-		resp2, err := client.Get("/300")
+		resp2, err := client.Get(ctx, "/300")
 		defer resp2.Close()
 		t.Assert(err, nil)
 		t.Assert(resp2.StatusCode, 300)
 
-		resp3, err := client.Get("/400")
+		resp3, err := client.Get(ctx, "/400")
 		defer resp3.Close()
 		t.Assert(err, nil)
 		t.Assert(resp3.StatusCode, 400)
 
-		resp4, err := client.Get("/500")
+		resp4, err := client.Get(ctx, "/500")
 		defer resp4.Close()
 		t.Assert(err, nil)
 		t.Assert(resp4.StatusCode, 500)
@@ -276,22 +276,22 @@ func Test_Router_DomainCustomStatusHandler(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "Not Found")
-		t.Assert(client.GetContent("/ThisDoesNotExist"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/ThisDoesNotExist"), "Not Found")
 	})
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://localhost:%d", p))
 
-		t.Assert(client.GetContent("/"), "hello")
-		t.Assert(client.GetContent("/ThisDoesNotExist"), "404 page")
+		t.Assert(client.GetContent(ctx, "/"), "hello")
+		t.Assert(client.GetContent(ctx, "/ThisDoesNotExist"), "404 page")
 	})
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://local:%d", p))
 
-		t.Assert(client.GetContent("/"), "hello")
-		t.Assert(client.GetContent("/ThisDoesNotExist"), "404 page")
+		t.Assert(client.GetContent(ctx, "/"), "hello")
+		t.Assert(client.GetContent(ctx, "/ThisDoesNotExist"), "404 page")
 	})
 }
 
@@ -312,19 +312,19 @@ func Test_Router_Domain404(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/"), "Not Found")
 	})
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://localhost:%d", p))
 
-		t.Assert(client.GetContent("/"), "hello")
+		t.Assert(client.GetContent(ctx, "/"), "hello")
 	})
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://local:%d", p))
 
-		t.Assert(client.GetContent("/"), "hello")
+		t.Assert(client.GetContent(ctx, "/"), "hello")
 	})
 }
 
@@ -361,16 +361,16 @@ func Test_Router_DomainGroup(t *testing.T) {
 		client2 := g.Client()
 		client2.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client1.GetContent("/app/t/list/2.html"), "t&2")
-		t.Assert(client2.GetContent("/app/t/list/2.html"), "Not Found")
+		t.Assert(client1.GetContent(ctx, "/app/t/list/2.html"), "t&2")
+		t.Assert(client2.GetContent(ctx, "/app/t/list/2.html"), "Not Found")
 
-		t.Assert(client1.GetContent("/app/order/info/2"), "2")
-		t.Assert(client2.GetContent("/app/order/info/2"), "Not Found")
+		t.Assert(client1.GetContent(ctx, "/app/order/info/2"), "2")
+		t.Assert(client2.GetContent(ctx, "/app/order/info/2"), "Not Found")
 
-		t.Assert(client1.GetContent("/app/comment/20"), "Not Found")
-		t.Assert(client2.GetContent("/app/comment/20"), "Not Found")
+		t.Assert(client1.GetContent(ctx, "/app/comment/20"), "Not Found")
+		t.Assert(client2.GetContent(ctx, "/app/comment/20"), "Not Found")
 
-		t.Assert(client1.DeleteContent("/app/comment/20"), "20")
-		t.Assert(client2.DeleteContent("/app/comment/20"), "Not Found")
+		t.Assert(client1.DeleteContent(ctx, "/app/comment/20"), "20")
+		t.Assert(client2.DeleteContent(ctx, "/app/comment/20"), "Not Found")
 	})
 }

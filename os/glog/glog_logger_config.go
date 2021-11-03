@@ -7,17 +7,18 @@
 package glog
 
 import (
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/os/gctx"
+	"context"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/os/gctx"
 	"io"
 	"strings"
 	"time"
 
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/intlog"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/util/gconv"
-	"github.com/gogf/gf/util/gutil"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // Config is the configuration object for logger.
@@ -73,11 +74,11 @@ func (l *Logger) SetConfig(config Config) error {
 	// Necessary validation.
 	if config.Path != "" {
 		if err := l.SetPath(config.Path); err != nil {
-			intlog.Error(l.ctx, err)
+			intlog.Error(context.TODO(), err)
 			return err
 		}
 	}
-	intlog.Printf(l.ctx, "SetConfig: %+v", l.config)
+	intlog.Printf(context.TODO(), "SetConfig: %+v", l.config)
 	return nil
 }
 

@@ -7,11 +7,11 @@
 package gmap_test
 
 import (
-	"github.com/gogf/gf/util/gutil"
+	"github.com/gogf/gf/v2/util/gutil"
 	"testing"
 
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func getValue() interface{} {

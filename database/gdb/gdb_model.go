@@ -9,12 +9,12 @@ package gdb
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/util/gconv"
 	"time"
 
-	"github.com/gogf/gf/text/gregex"
+	"github.com/gogf/gf/v2/text/gregex"
 
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // Model is core struct implementing the DAO for ORM.
@@ -65,6 +65,7 @@ type ModelWhereHolder struct {
 	Operator int           // Operator for this holder.
 	Where    interface{}   // Where parameter, which can commonly be type of string/map/struct.
 	Args     []interface{} // Arguments for where parameter.
+	Prefix   string        // Field prefix, eg: "user.", "order.".
 }
 
 const (
@@ -75,13 +76,6 @@ const (
 	whereHolderOperatorOr    = 3
 	defaultFields            = "*"
 )
-
-// Table is alias of Core.Model.
-// See Core.Model.
-// Deprecated, use Model instead.
-func (c *Core) Table(tableNameQueryOrStruct ...interface{}) *Model {
-	return c.db.Model(tableNameQueryOrStruct...)
-}
 
 // Model creates and returns a new ORM model from given schema.
 // The parameter `tableNameQueryOrStruct` can be more than one table names, and also alias name, like:

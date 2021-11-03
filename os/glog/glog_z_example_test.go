@@ -8,12 +8,12 @@ package glog_test
 
 import (
 	"context"
-	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/v2/frame/g"
 )
 
 func Example_context() {
 	ctx := context.WithValue(context.Background(), "Trace-Id", "123456789")
-	g.Log().Ctx(ctx).Error("runtime error")
+	g.Log().Error(ctx, "runtime error")
 
 	// May Output:
 	// 2020-06-08 20:17:03.630 [ERRO] {Trace-Id: 123456789} runtime error

@@ -2,8 +2,8 @@ package main
 
 //import (
 //	"context"
-//	"github.com/gogf/gf/frame/g"
-//	"github.com/gogf/gf/os/glog"
+//	"github.com/gogf/gf/v2/frame/g"
+//	"github.com/gogf/gf/v2/os/glog"
 //	"github.com/robertkowalski/graylog-golang"
 //)
 //
@@ -27,5 +27,5 @@ package main
 //	g.Log().Debug("Debugging...")
 //	g.Log().Warning("It is warning info")
 //	g.Log().Error("Error occurs, please have a check")
-//	glog.Println("test log")
+//	glog.Print("test log")
 //}

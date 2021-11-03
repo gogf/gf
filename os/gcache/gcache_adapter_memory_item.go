@@ -7,7 +7,7 @@
 package gcache
 
 import (
-	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/v2/os/gtime"
 )
 
 // IsExpired checks whether `item` is expired.

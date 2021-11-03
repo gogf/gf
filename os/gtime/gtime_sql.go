@@ -4,7 +4,7 @@ import (
 	"database/sql/driver"
 )
 
-// Scanner is an interface used by Scan in package database/sql for Scanning value
+// Scan implements interface used by Scan in package database/sql for Scanning value
 // from database to local golang variable.
 func (t *Time) Scan(value interface{}) error {
 	if t == nil {

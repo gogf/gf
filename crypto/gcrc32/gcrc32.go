@@ -10,7 +10,7 @@ package gcrc32
 import (
 	"hash/crc32"
 
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // Encrypt encrypts any type of variable using CRC32 algorithms.

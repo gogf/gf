@@ -7,15 +7,15 @@
 package gmap
 
 import (
-	"github.com/gogf/gf/internal/json"
+	"github.com/gogf/gf/v2/internal/json"
 
-	"github.com/gogf/gf/internal/empty"
+	"github.com/gogf/gf/v2/internal/empty"
 
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/util/gconv"
 
-	"github.com/gogf/gf/container/glist"
-	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/internal/rwmutex"
+	"github.com/gogf/gf/v2/container/glist"
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/internal/rwmutex"
 )
 
 type ListMap struct {
@@ -271,7 +271,7 @@ func (m *ListMap) Pops(size int) map[interface{}]interface{} {
 // if not exists, set value to the map with given `key`,
 // or else just return the existing value.
 //
-// When setting value, if `value` is type of <func() interface {}>,
+// When setting value, if `value` is type of `func() interface {}`,
 // it will be executed with mutex.Lock of the map,
 // and its return value will be set to the map with `key`.
 //
@@ -354,8 +354,8 @@ func (m *ListMap) GetVarOrSetFuncLock(key interface{}, f func() interface{}) *gv
 	return gvar.New(m.GetOrSetFuncLock(key, f))
 }
 
-// SetIfNotExist sets <value> to the map if the `key` does not exist, and then returns true.
-// It returns false if <key> exists, and `value` would be ignored.
+// SetIfNotExist sets `value` to the map if the `key` does not exist, and then returns true.
+// It returns false if `key` exists, and `value` would be ignored.
 func (m *ListMap) SetIfNotExist(key interface{}, value interface{}) bool {
 	if !m.Contains(key) {
 		m.doSetWithLockCheck(key, value)
@@ -365,7 +365,7 @@ func (m *ListMap) SetIfNotExist(key interface{}, value interface{}) bool {
 }
 
 // SetIfNotExistFunc sets value with return value of callback function `f`, and then returns true.
-// It returns false if <key> exists, and `value` would be ignored.
+// It returns false if `key` exists, and `value` would be ignored.
 func (m *ListMap) SetIfNotExistFunc(key interface{}, f func() interface{}) bool {
 	if !m.Contains(key) {
 		m.doSetWithLockCheck(key, f())
@@ -375,7 +375,7 @@ func (m *ListMap) SetIfNotExistFunc(key interface{}, f func() interface{}) bool 
 }
 
 // SetIfNotExistFuncLock sets value with return value of callback function `f`, and then returns true.
-// It returns false if <key> exists, and `value` would be ignored.
+// It returns false if `key` exists, and `value` would be ignored.
 //
 // SetIfNotExistFuncLock differs with SetIfNotExistFunc function is that
 // it executes function `f` with mutex.Lock of the map.
@@ -486,7 +486,7 @@ func (m *ListMap) Flip() {
 }
 
 // Merge merges two link maps.
-// The <other> map will be merged into the map `m`.
+// The `other` map will be merged into the map `m`.
 func (m *ListMap) Merge(other *ListMap) {
 	m.mu.Lock()
 	defer m.mu.Unlock()

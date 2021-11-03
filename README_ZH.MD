@@ -30,16 +30,16 @@
 
 # 安装
 ```html
-go get -u -v github.com/gogf/gf
+go get -u -v github.com/gogf/gf/v2
 ```
 推荐使用 `go.mod`:
 ```
-require github.com/gogf/gf latest
+require github.com/gogf/gf/v2 latest
 ```
 
 # 限制
 ```shell
-golang版本 >= 1.11
+golang版本 >= 1.14
 ```
 
 

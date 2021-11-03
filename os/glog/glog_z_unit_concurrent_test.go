@@ -7,11 +7,11 @@
 package glog_test
 
 import (
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/test/gtest"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
 	"sync"
 	"testing"
 )
@@ -32,7 +32,7 @@ func Test_Concurrent(t *testing.T) {
 			go func() {
 				defer wg.Done()
 				<-ch
-				l.File(f).Stdout(false).Print(s)
+				l.File(f).Stdout(false).Print(ctx, s)
 			}()
 		}
 		close(ch)

@@ -87,3 +87,43 @@ func StrLimitRune(str string, length int, suffix ...string) string {
 	}
 	return string(runes[0:length]) + suffixStr
 }
+
+// SubStrFrom returns a portion of string `str` starting from first occurrence of and including `need`
+// to the end of `str`.
+func SubStrFrom(str string, need string) (substr string) {
+	pos := Pos(str, need)
+	if pos < 0 {
+		return ""
+	}
+	return str[pos:]
+}
+
+// SubStrFromEx returns a portion of string `str` starting from first occurrence of and excluding `need`
+// to the end of `str`.
+func SubStrFromEx(str string, need string) (substr string) {
+	pos := Pos(str, need)
+	if pos < 0 {
+		return ""
+	}
+	return str[pos+len(need):]
+}
+
+// SubStrFromR returns a portion of string `str` starting from last occurrence of and including `need`
+// to the end of `str`.
+func SubStrFromR(str string, need string) (substr string) {
+	pos := PosR(str, need)
+	if pos < 0 {
+		return ""
+	}
+	return str[pos:]
+}
+
+// SubStrFromREx returns a portion of string `str` starting from last occurrence of and excluding `need`
+// to the end of `str`.
+func SubStrFromREx(str string, need string) (substr string) {
+	pos := PosR(str, need)
+	if pos < 0 {
+		return ""
+	}
+	return str[pos+len(need):]
+}

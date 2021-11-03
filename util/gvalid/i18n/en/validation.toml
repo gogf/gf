@@ -6,6 +6,7 @@
 "gf.gvalid.rule.required-without"     = "The :attribute field is required"
 "gf.gvalid.rule.required-without-all" = "The :attribute field is required"
 "gf.gvalid.rule.date"                 = "The :attribute value is not a valid date"
+"gf.gvalid.rule.datetime"             = "The :attribute value is not a valid datetime"
 "gf.gvalid.rule.date-format"          = "The :attribute value does not match the format :format"
 "gf.gvalid.rule.email"                = "The :attribute value must be a valid email address"
 "gf.gvalid.rule.phone"                = "The :attribute value must be a valid phone number"

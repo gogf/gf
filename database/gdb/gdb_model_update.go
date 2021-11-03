@@ -9,13 +9,14 @@ package gdb
 import (
 	"database/sql"
 	"fmt"
-	"github.com/gogf/gf/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/internal/utils"
 	"reflect"
 
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // Update does "UPDATE ... " statement for the model.
@@ -49,14 +50,9 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 	// Automatically update the record updating time.
 	if !m.unscoped && fieldNameUpdate != "" {
 		var (
-			refValue = reflect.ValueOf(m.data)
-			refKind  = refValue.Kind()
+			reflectInfo = utils.OriginTypeAndKind(m.data)
 		)
-		if refKind == reflect.Ptr {
-			refValue = refValue.Elem()
-			refKind = refValue.Kind()
-		}
-		switch refKind {
+		switch reflectInfo.OriginKind {
 		case reflect.Map, reflect.Struct:
 			dataMap := ConvertDataForTableRecord(m.data)
 			if fieldNameUpdate != "" {

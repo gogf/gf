@@ -9,18 +9,23 @@
 package gtimer_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/container/garray"
-	"github.com/gogf/gf/os/gtimer"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/os/gtimer"
+	"github.com/gogf/gf/v2/test/gtest"
+)
+
+var (
+	ctx = context.TODO()
 )
 
 func TestSetTimeout(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.New(true)
-		gtimer.SetTimeout(200*time.Millisecond, func() {
+		gtimer.SetTimeout(ctx, 200*time.Millisecond, func(ctx context.Context) {
 			array.Append(1)
 		})
 		time.Sleep(1000 * time.Millisecond)
@@ -31,7 +36,7 @@ func TestSetTimeout(t *testing.T) {
 func TestSetInterval(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.New(true)
-		gtimer.SetInterval(300*time.Millisecond, func() {
+		gtimer.SetInterval(ctx, 300*time.Millisecond, func(ctx context.Context) {
 			array.Append(1)
 		})
 		time.Sleep(1000 * time.Millisecond)
@@ -42,7 +47,7 @@ func TestSetInterval(t *testing.T) {
 func TestAddEntry(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.New(true)
-		gtimer.AddEntry(200*time.Millisecond, func() {
+		gtimer.AddEntry(ctx, 200*time.Millisecond, func(ctx context.Context) {
 			array.Append(1)
 		}, false, 2, gtimer.StatusReady)
 		time.Sleep(1100 * time.Millisecond)
@@ -53,7 +58,7 @@ func TestAddEntry(t *testing.T) {
 func TestAddSingleton(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.New(true)
-		gtimer.AddSingleton(200*time.Millisecond, func() {
+		gtimer.AddSingleton(ctx, 200*time.Millisecond, func(ctx context.Context) {
 			array.Append(1)
 			time.Sleep(10000 * time.Millisecond)
 		})
@@ -65,7 +70,7 @@ func TestAddSingleton(t *testing.T) {
 func TestAddTimes(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.New(true)
-		gtimer.AddTimes(200*time.Millisecond, 2, func() {
+		gtimer.AddTimes(ctx, 200*time.Millisecond, 2, func(ctx context.Context) {
 			array.Append(1)
 		})
 		time.Sleep(1000 * time.Millisecond)
@@ -76,7 +81,7 @@ func TestAddTimes(t *testing.T) {
 func TestDelayAdd(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.New(true)
-		gtimer.DelayAdd(500*time.Millisecond, 500*time.Millisecond, func() {
+		gtimer.DelayAdd(ctx, 500*time.Millisecond, 500*time.Millisecond, func(ctx context.Context) {
 			array.Append(1)
 		})
 		time.Sleep(600 * time.Millisecond)
@@ -89,7 +94,7 @@ func TestDelayAdd(t *testing.T) {
 func TestDelayAddEntry(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.New(true)
-		gtimer.DelayAddEntry(200*time.Millisecond, 200*time.Millisecond, func() {
+		gtimer.DelayAddEntry(ctx, 200*time.Millisecond, 200*time.Millisecond, func(ctx context.Context) {
 			array.Append(1)
 		}, false, 2, gtimer.StatusReady)
 		time.Sleep(300 * time.Millisecond)
@@ -102,7 +107,7 @@ func TestDelayAddEntry(t *testing.T) {
 func TestDelayAddSingleton(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.New(true)
-		gtimer.DelayAddSingleton(500*time.Millisecond, 500*time.Millisecond, func() {
+		gtimer.DelayAddSingleton(ctx, 500*time.Millisecond, 500*time.Millisecond, func(ctx context.Context) {
 			array.Append(1)
 			time.Sleep(10000 * time.Millisecond)
 		})
@@ -116,7 +121,7 @@ func TestDelayAddSingleton(t *testing.T) {
 func TestDelayAddOnce(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.New(true)
-		gtimer.DelayAddOnce(200*time.Millisecond, 200*time.Millisecond, func() {
+		gtimer.DelayAddOnce(ctx, 200*time.Millisecond, 200*time.Millisecond, func(ctx context.Context) {
 			array.Append(1)
 		})
 		time.Sleep(300 * time.Millisecond)
@@ -129,7 +134,7 @@ func TestDelayAddOnce(t *testing.T) {
 func TestDelayAddTimes(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.New(true)
-		gtimer.DelayAddTimes(500*time.Millisecond, 500*time.Millisecond, 2, func() {
+		gtimer.DelayAddTimes(ctx, 500*time.Millisecond, 500*time.Millisecond, 2, func(ctx context.Context) {
 			array.Append(1)
 		})
 		time.Sleep(300 * time.Millisecond)

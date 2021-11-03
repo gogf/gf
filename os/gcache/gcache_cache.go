@@ -8,8 +8,8 @@ package gcache
 
 import (
 	"context"
-	"github.com/gogf/gf/os/gtimer"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/os/gtimer"
+	"github.com/gogf/gf/v2/util/gconv"
 	"time"
 )
 
@@ -30,7 +30,7 @@ func New(lruCap ...int) *Cache {
 	}
 	// Here may be a "timer leak" if adapter is manually changed from memory adapter.
 	// Do not worry about this, as adapter is less changed, and it does nothing if it's not used.
-	gtimer.AddSingleton(time.Second, memAdapter.syncEventAndClearExpired)
+	gtimer.AddSingleton(context.Background(), time.Second, memAdapter.syncEventAndClearExpired)
 	return c
 }
 

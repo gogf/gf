@@ -8,7 +8,7 @@
 package gins
 
 import (
-	"github.com/gogf/gf/container/gmap"
+	"github.com/gogf/gf/v2/container/gmap"
 )
 
 var (
@@ -49,8 +49,8 @@ func GetOrSetFuncLock(name string, f func() interface{}) interface{} {
 	return localInstances.GetOrSetFuncLock(name, f)
 }
 
-// SetIfNotExist sets <instance> to the map if the `name` does not exist, then returns true.
-// It returns false if <name> exists, and `instance` would be ignored.
+// SetIfNotExist sets `instance` to the map if the `name` does not exist, then returns true.
+// It returns false if `name` exists, and `instance` would be ignored.
 func SetIfNotExist(name string, instance interface{}) bool {
 	return localInstances.SetIfNotExist(name, instance)
 }

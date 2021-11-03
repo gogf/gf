@@ -8,11 +8,11 @@
 package gcmd
 
 import (
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
-// BindHandle registers callback function <f> with <cmd>.
+// BindHandle registers callback function `f` with `cmd`.
 func (p *Parser) BindHandle(cmd string, f func()) error {
 	if _, ok := p.commandFuncMap[cmd]; ok {
 		return gerror.NewCode(gcode.CodeInvalidOperation, "duplicated handle for command:"+cmd)
@@ -22,7 +22,7 @@ func (p *Parser) BindHandle(cmd string, f func()) error {
 	return nil
 }
 
-// BindHandleMap registers callback function with map <m>.
+// BindHandleMap registers callback function with map `m`.
 func (p *Parser) BindHandleMap(m map[string]func()) error {
 	var err error
 	for k, v := range m {
@@ -33,7 +33,7 @@ func (p *Parser) BindHandleMap(m map[string]func()) error {
 	return err
 }
 
-// RunHandle executes the callback function registered by <cmd>.
+// RunHandle executes the callback function registered by `cmd`.
 func (p *Parser) RunHandle(cmd string) error {
 	if handle, ok := p.commandFuncMap[cmd]; ok {
 		handle()
@@ -46,11 +46,11 @@ func (p *Parser) RunHandle(cmd string) error {
 // AutoRun automatically recognizes and executes the callback function
 // by value of index 0 (the first console parameter).
 func (p *Parser) AutoRun() error {
-	if cmd := p.GetArg(1); cmd != "" {
-		if handle, ok := p.commandFuncMap[cmd]; ok {
+	if cmd := p.GetArg(1); !cmd.IsEmpty() {
+		if handle, ok := p.commandFuncMap[cmd.String()]; ok {
 			handle()
 		} else {
-			return gerror.NewCode(gcode.CodeMissingConfiguration, "no handle found for command:"+cmd)
+			return gerror.NewCode(gcode.CodeMissingConfiguration, "no handle found for command:"+cmd.String())
 		}
 	} else {
 		return gerror.NewCode(gcode.CodeMissingParameter, "no command found")

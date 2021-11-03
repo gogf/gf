@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package charset implements character-set conversion functionality.
+// Package gcharset implements character-set conversion functionality.
 //
 // Supported Character Set:
 //
@@ -21,8 +21,10 @@ package gcharset
 
 import (
 	"bytes"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
+	"context"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/intlog"
 	"io/ioutil"
 
 	"golang.org/x/text/encoding"
@@ -40,20 +42,20 @@ var (
 	}
 )
 
-// Supported returns whether charset <charset> is supported.
+// Supported returns whether charset `charset` is supported.
 func Supported(charset string) bool {
 	return getEncoding(charset) != nil
 }
 
-// Convert converts <src> charset encoding from <srcCharset> to <dstCharset>,
+// Convert converts `src` charset encoding from `srcCharset` to `dstCharset`,
 // and returns the converted string.
-// It returns <src> as <dst> if it fails converting.
+// It returns `src` as `dst` if it fails converting.
 func Convert(dstCharset string, srcCharset string, src string) (dst string, err error) {
 	if dstCharset == srcCharset {
 		return src, nil
 	}
 	dst = src
-	// Converting <src> to UTF-8.
+	// Converting `src` to UTF-8.
 	if srcCharset != "UTF-8" {
 		if e := getEncoding(srcCharset); e != nil {
 			tmp, err := ioutil.ReadAll(
@@ -67,7 +69,7 @@ func Convert(dstCharset string, srcCharset string, src string) (dst string, err 
 			return dst, gerror.NewCodef(gcode.CodeInvalidParameter, "unsupported srcCharset: %s", srcCharset)
 		}
 	}
-	// Do the converting from UTF-8 to <dstCharset>.
+	// Do the converting from UTF-8 to `dstCharset`.
 	if dstCharset != "UTF-8" {
 		if e := getEncoding(dstCharset); e != nil {
 			tmp, err := ioutil.ReadAll(
@@ -86,26 +88,27 @@ func Convert(dstCharset string, srcCharset string, src string) (dst string, err 
 	return dst, nil
 }
 
-// ToUTF8 converts <src> charset encoding from <srcCharset> to UTF-8 ,
+// ToUTF8 converts `src` charset encoding from `srcCharset` to UTF-8 ,
 // and returns the converted string.
 func ToUTF8(srcCharset string, src string) (dst string, err error) {
 	return Convert("UTF-8", srcCharset, src)
 }
 
-// UTF8To converts <src> charset encoding from UTF-8 to <dstCharset>,
+// UTF8To converts `src` charset encoding from UTF-8 to `dstCharset`,
 // and returns the converted string.
 func UTF8To(dstCharset string, src string) (dst string, err error) {
 	return Convert(dstCharset, "UTF-8", src)
 }
 
-// getEncoding returns the encoding.Encoding interface object for <charset>.
-// It returns nil if <charset> is not supported.
+// getEncoding returns the encoding.Encoding interface object for `charset`.
+// It returns nil if `charset` is not supported.
 func getEncoding(charset string) encoding.Encoding {
 	if c, ok := charsetAlias[charset]; ok {
 		charset = c
 	}
-	if e, err := ianaindex.MIB.Encoding(charset); err == nil && e != nil {
-		return e
+	enc, err := ianaindex.MIB.Encoding(charset)
+	if err != nil {
+		intlog.Error(context.TODO(), err)
 	}
-	return nil
+	return enc
 }

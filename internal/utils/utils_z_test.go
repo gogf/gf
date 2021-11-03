@@ -7,9 +7,10 @@
 package utils_test
 
 import (
-	"github.com/gogf/gf/internal/utils"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/test/gtest"
 	"io/ioutil"
+	"reflect"
 	"testing"
 )
 
@@ -67,5 +68,59 @@ func Test_ReadCloser(t *testing.T) {
 func Test_RemoveSymbols(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(utils.RemoveSymbols(`-a-b._a c1!@#$%^&*()_+:";'.,'01`), `abac101`)
+	})
+}
+
+func Test_OriginValueAndKind(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var s = "s"
+		out := utils.OriginValueAndKind(s)
+		t.Assert(out.InputKind, reflect.String)
+		t.Assert(out.OriginKind, reflect.String)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var s = "s"
+		out := utils.OriginValueAndKind(&s)
+		t.Assert(out.InputKind, reflect.Ptr)
+		t.Assert(out.OriginKind, reflect.String)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var s []int
+		out := utils.OriginValueAndKind(s)
+		t.Assert(out.InputKind, reflect.Slice)
+		t.Assert(out.OriginKind, reflect.Slice)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var s []int
+		out := utils.OriginValueAndKind(&s)
+		t.Assert(out.InputKind, reflect.Ptr)
+		t.Assert(out.OriginKind, reflect.Slice)
+	})
+}
+
+func Test_OriginTypeAndKind(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var s = "s"
+		out := utils.OriginTypeAndKind(s)
+		t.Assert(out.InputKind, reflect.String)
+		t.Assert(out.OriginKind, reflect.String)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var s = "s"
+		out := utils.OriginTypeAndKind(&s)
+		t.Assert(out.InputKind, reflect.Ptr)
+		t.Assert(out.OriginKind, reflect.String)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var s []int
+		out := utils.OriginTypeAndKind(s)
+		t.Assert(out.InputKind, reflect.Slice)
+		t.Assert(out.OriginKind, reflect.Slice)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		var s []int
+		out := utils.OriginTypeAndKind(&s)
+		t.Assert(out.InputKind, reflect.Ptr)
+		t.Assert(out.OriginKind, reflect.Slice)
 	})
 }

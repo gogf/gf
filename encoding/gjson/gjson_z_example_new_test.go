@@ -8,7 +8,7 @@ package gjson_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/encoding/gjson"
+	"github.com/gogf/gf/v2/encoding/gjson"
 )
 
 func Example_newFromJson() {
@@ -60,7 +60,7 @@ func Example_newFromStructWithTag() {
 		Score: 100,
 		Title: "engineer",
 	}
-	// The parameter <tags> specifies custom priority tags for struct conversion to map,
+	// The parameter `tags` specifies custom priority tags for struct conversion to map,
 	// multiple tags joined with char ','.
 	j := gjson.NewWithTag(me, "tag")
 	fmt.Println(j.Get("name"))

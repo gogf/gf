@@ -9,8 +9,8 @@ package gpage
 
 import (
 	"fmt"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 	"math"
 )
 

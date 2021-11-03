@@ -10,8 +10,8 @@ import (
 	"math"
 	"testing"
 
-	"github.com/gogf/gf/encoding/gbinary"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/encoding/gbinary"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 type User struct {

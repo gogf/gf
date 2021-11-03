@@ -10,10 +10,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/gogf/gf/container/gtype"
-	"github.com/gogf/gf/database/gdb"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 // MyDriver is a custom database driver, which is used for testing only.
@@ -68,7 +68,7 @@ func Test_Custom_Driver(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(latestSqlString.Val(), "")
 		sqlString := "select 10000"
-		value, err := g.DB("driver-test").GetValue(sqlString)
+		value, err := g.DB("driver-test").GetValue(ctx, sqlString)
 		t.AssertNil(err)
 		t.Assert(value, 10000)
 		t.Assert(latestSqlString.Val(), sqlString)

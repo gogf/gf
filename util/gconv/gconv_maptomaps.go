@@ -7,22 +7,15 @@
 package gconv
 
 import (
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/json"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/json"
 	"reflect"
 )
 
 // MapToMaps converts any slice type variable `params` to another map slice type variable `pointer`.
 // See doMapToMaps.
 func MapToMaps(params interface{}, pointer interface{}, mapping ...map[string]string) error {
-	return doMapToMaps(params, pointer, mapping...)
-}
-
-// MapToMapsDeep converts any slice type variable `params` to another map slice type variable
-// `pointer` recursively.
-// Deprecated, use MapToMaps instead.
-func MapToMapsDeep(params interface{}, pointer interface{}, mapping ...map[string]string) error {
 	return doMapToMaps(params, pointer, mapping...)
 }
 

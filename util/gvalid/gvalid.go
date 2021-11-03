@@ -12,7 +12,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/gogf/gf/text/gregex"
+	"github.com/gogf/gf/v2/text/gregex"
 )
 
 // Refer to Laravel validation:
@@ -29,6 +29,7 @@ import (
 // required-without-all format: required-without-all:field1,field2,...brief: Required if all given fields are empty.
 // bail                 format: bail                                  brief: Stop validating when this field's validation failed.
 // date                 format: date                                  brief: Standard date, like: 2006-01-02, 20060102, 2006.01.02
+// datetime             format: datetime                              brief: Standard datetime, like: 2006-01-02 12:00:00
 // date-format          format: date-format:format                    brief: Custom date format.
 // email                format: email                                 brief: Email address.
 // phone                format: phone                                 brief: Phone number.
@@ -133,6 +134,7 @@ var (
 		"required-without-all": {},
 		"bail":                 {},
 		"date":                 {},
+		"datetime":             {},
 		"date-format":          {},
 		"email":                {},
 		"phone":                {},
@@ -192,6 +194,7 @@ var (
 		"required-without":      "The :attribute field is required",
 		"required-without-all":  "The :attribute field is required",
 		"date":                  "The :attribute value is not a valid date",
+		"datetime":              "The :attribute value is not a valid datetime",
 		"date-format":           "The :attribute value does not match the format :format",
 		"email":                 "The :attribute value must be a valid email address",
 		"phone":                 "The :attribute value must be a valid phone number",
@@ -253,7 +256,7 @@ func CheckValue(ctx context.Context, value interface{}, rules string, messages i
 	if len(params) > 0 {
 		data = params[0]
 	}
-	return defaultValidator.Ctx(ctx).Rules(rules).Data(data).Messages(messages).CheckValue(value)
+	return defaultValidator.Rules(rules).Data(data).Messages(messages).CheckValue(ctx, value)
 }
 
 // CheckMap validates map and returns the error result. It returns nil if with successful validation.
@@ -266,7 +269,7 @@ func CheckMap(ctx context.Context, params interface{}, rules interface{}, messag
 	if len(messages) > 0 {
 		customErrorMessages = messages[0]
 	}
-	return defaultValidator.Ctx(ctx).Rules(rules).Messages(customErrorMessages).CheckMap(params)
+	return defaultValidator.Rules(rules).Messages(customErrorMessages).CheckMap(ctx, params)
 }
 
 // CheckStruct validates struct and returns the error result.
@@ -280,7 +283,7 @@ func CheckStruct(ctx context.Context, object interface{}, rules interface{}, mes
 	if len(messages) > 0 {
 		customErrorMessages = messages[0]
 	}
-	return defaultValidator.Ctx(ctx).Rules(rules).Messages(customErrorMessages).CheckStruct(object)
+	return defaultValidator.Rules(rules).Messages(customErrorMessages).CheckStruct(ctx, object)
 }
 
 // CheckStructWithData validates struct with given parameter map and returns the error result.
@@ -294,7 +297,7 @@ func CheckStructWithData(ctx context.Context, object interface{}, data interface
 	if len(messages) > 0 {
 		customErrorMessages = messages[0]
 	}
-	return defaultValidator.Ctx(ctx).Data(data).Rules(rules).Messages(customErrorMessages).CheckStruct(object)
+	return defaultValidator.Data(data).Rules(rules).Messages(customErrorMessages).CheckStruct(ctx, object)
 }
 
 // parseSequenceTag parses one sequence tag to field, rule and error message.

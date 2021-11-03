@@ -3,9 +3,9 @@ package main
 import (
 	"encoding/json"
 
-	"github.com/gogf/gf/.example/net/gtcp/pkg_operations/monitor/types"
-	"github.com/gogf/gf/net/gtcp"
-	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/v2/.example/net/gtcp/pkg_operations/monitor/types"
+	"github.com/gogf/gf/v2/net/gtcp"
+	"github.com/gogf/gf/v2/os/glog"
 )
 
 func main() {
@@ -16,7 +16,7 @@ func main() {
 			data, err := conn.RecvPkg()
 			if err != nil {
 				if err.Error() == "EOF" {
-					glog.Println("client closed")
+					glog.Print("client closed")
 				}
 				break
 			}
@@ -24,7 +24,7 @@ func main() {
 			if err := json.Unmarshal(data, info); err != nil {
 				glog.Errorf("invalid package structure: %s", err.Error())
 			} else {
-				glog.Println(info)
+				glog.Print(info)
 				conn.SendPkg([]byte("ok"))
 			}
 		}
