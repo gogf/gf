@@ -6,70 +6,101 @@
 package gregex_test
 
 import (
-	"fmt"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/text/gregex"
 )
 
 func ExampleIsMatch() {
-	var str = "hello 94 easy gf!"
 	patternStr := `[1-9]\d*`
-	fmt.Println(gregex.IsMatch(patternStr, []byte(str)))
+	g.Dump(gregex.IsMatch(patternStr, []byte("hello 94 easy gf!")))
+	g.Dump(gregex.IsMatch(patternStr, nil))
+	g.Dump(gregex.IsMatch(patternStr, []byte("hello easy gf!")))
 
 	// output
 	// true
+	// false
+	// false
 }
 
 func ExampleIsMatchString() {
-	var str = "hello 94 easy gf!"
 	patternStr := `[1-9]\d*`
-	fmt.Println(gregex.IsMatchString(patternStr, str))
+	g.Dump(gregex.IsMatchString(patternStr, "hello 94 easy gf!"))
+	g.Dump(gregex.IsMatchString(patternStr, "hello easy gf!"))
+	g.Dump(gregex.IsMatchString(patternStr, ""))
 
 	// output
 	// true
+	// false
+	// false
 }
 
 func ExampleMatch() {
-	var str = "hello 94 easy gf!"
 	patternStr := `[1-9]\d*`
-	result, err := gregex.Match(patternStr, []byte(str))
-	if err != nil {
-		fmt.Println(err.Error())
-	}
+	result, err := gregex.Match(patternStr, []byte("hello 94 98 easy gf!"))
 	g.Dump(result)
-	g.Dump(result[0])
+	g.Dump(err)
+
+	result, err = gregex.Match(patternStr, nil)
+	g.Dump(result)
+	g.Dump(err)
+
+	result, err = gregex.Match(patternStr, []byte("hello easy gf!"))
+	g.Dump(result)
+	g.Dump(err)
 
 	// output
 	// ["OTQ="]
-	// 94
+	// null
+	// []
+	// null
+	// []
+	// null
 }
 
 func ExampleMatchAll() {
-	var str = "hello 94 easy gf!"
 	patternStr := `[1-9]\d*`
-	results, err := gregex.MatchAll(patternStr, []byte(str))
-	if err != nil {
-		fmt.Println(err.Error())
-	}
+	results, err := gregex.MatchAll(patternStr, []byte("hello 94 98 easy gf!"))
 	g.Dump(results)
+	g.Dump(err)
+
+	results, err = gregex.MatchAll(patternStr, []byte("hello easy gf!"))
+	g.Dump(results)
+	g.Dump(err)
+
+	results, err = gregex.MatchAll(patternStr, nil)
+	g.Dump(results)
+	g.Dump(err)
 
 	// output
-	// [["OTQ="]]
-	//
+	// [["OTQ="],["OTg="]]
+	// null
+	// []
+	// null
+	// []
+	// null
 }
 
 func ExampleMatchAllString() {
-	var str = "hello 94 98 easy gf!"
 	patternStr := `[1-9]\d*`
-	results, err := gregex.MatchAllString(patternStr, str)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-
+	results, err := gregex.MatchAllString(patternStr, "hello 94 98 easy gf!")
 	g.Dump(results)
+	g.Dump(err)
+
+	results, err = gregex.MatchAllString(patternStr, "hello easy gf!")
+	g.Dump(results)
+	g.Dump(err)
+
+	results, err = gregex.MatchAllString(patternStr, "")
+	g.Dump(results)
+	g.Dump(err)
 
 	// output
 	// [["94"],["98"]]
+	// null
+	// []
+	// null
+	// []
+	// null
 }
 
 func ExampleMatchString() {
@@ -78,20 +109,20 @@ func ExampleMatchString() {
 
 	// if you need a greed match, should use <..all> methods
 	results, err := gregex.MatchString(patternStr, str)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
 
 	g.Dump(results)
+	g.Dump(err)
 
 	// output
 	// ["94"]
+	// null
 }
 
 func ExampleQuote() {
 	patternStr := `[1-9]\d*`
 	result := gregex.Quote(patternStr)
-	fmt.Println(result)
+
+	g.Dump(result)
 
 	// output
 	// \[1-9\]\\d\*
