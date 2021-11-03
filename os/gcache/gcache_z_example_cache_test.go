@@ -7,7 +7,6 @@ import (
 	"time"
 )
 
-
 func ExampleNew() {
 
 	//Create a cache object,
@@ -140,7 +139,6 @@ func ExampleCache_Sets() {
 
 	fmt.Println(data2, v1)
 
-
 	// Output:
 	// map[k1:v1 k2:v2 k3:v3] v1
 }
@@ -153,7 +151,7 @@ func ExampleCache_Size() {
 
 	// Add 10 elements without expiration
 	for i := 0; i < 10; i++ {
-		c.Set(ctx,i, i, 0)
+		c.Set(ctx, i, i, 0)
 	}
 
 	//Size returns the number of items in the cache.
@@ -164,7 +162,7 @@ func ExampleCache_Size() {
 	// 10
 }
 
-func ExampleCache_Update(){
+func ExampleCache_Update() {
 
 	//Create a cache object,
 	//Of course, you can also easily use the gcache package method directly
@@ -172,21 +170,20 @@ func ExampleCache_Update(){
 
 	//Sets batch sets cache with key-value pairs by `data`, which is expired after `duration`.
 	//It does not expire if `duration` == 0. It deletes the keys of `data` if `duration` < 0 or given `value` is nil.
-	c.SetMap(ctx, g.MapAnyAny{"k1": "v1","k2":"v2","k3":"v3"}, 0)
+	c.SetMap(ctx, g.MapAnyAny{"k1": "v1", "k2": "v2", "k3": "v3"}, 0)
 
 	//Print the current key value pair
 	data, _ := c.Data(ctx)
 	fmt.Println(data)
 
 	//Update updates the value of `key` without changing its expiration and returns the old value.
-	re,exist,_ := c.Update(ctx,"k1","v11")
-	fmt.Println(re,exist)
+	re, exist, _ := c.Update(ctx, "k1", "v11")
+	fmt.Println(re, exist)
 
 	//The returned value `exist` is false if the `key` does not exist in the cache.
 	//It does nothing if `key` does not exist in the cache.
-	re1,exist1,_ := c.Update(ctx,"k4","v44")
-	fmt.Println(re1,exist1)
-
+	re1, exist1, _ := c.Update(ctx, "k4", "v44")
+	fmt.Println(re1, exist1)
 
 	data1, _ := c.Data(ctx)
 	fmt.Println(data1)
@@ -197,61 +194,61 @@ func ExampleCache_Update(){
 	// map[k1:v11 k2:v2 k3:v3]
 }
 
-func ExampleCache_UpdateExpire(){
+func ExampleCache_UpdateExpire() {
 
 	//Create a cache object,
 	//Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
 
-	c.Set(ctx,"k1","v1",1000*time.Millisecond)
-	expire,_ :=	c.GetExpire(ctx,"k1")
+	c.Set(ctx, "k1", "v1", 1000*time.Millisecond)
+	expire, _ := c.GetExpire(ctx, "k1")
 	fmt.Println(expire)
 
 	//UpdateExpire updates the expiration of `key` and returns the old expiration duration value.
 	//It returns -1 and does nothing if the `key` does not exist in the cache.
-	c.UpdateExpire(ctx,"k1",500*time.Millisecond)
+	c.UpdateExpire(ctx, "k1", 500*time.Millisecond)
 
-	expire1,_ :=	c.GetExpire(ctx,"k1")
+	expire1, _ := c.GetExpire(ctx, "k1")
 	fmt.Println(expire1)
 	// Output:
 	// 1s
 	// 500ms
 }
 
-func ExampleCache_Values(){
+func ExampleCache_Values() {
 
 	//Create a cache object,
 	//Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
 
 	//Write value
-	c.Set(ctx,"k1",g.Map{"k1": "v1","k2":"v2"},0)
-	c.Set(ctx,"k2","Here is Value2",0)
-	c.Set(ctx,"k3",111,0)
+	c.Set(ctx, "k1", g.Map{"k1": "v1", "k2": "v2"}, 0)
+	c.Set(ctx, "k2", "Here is Value2", 0)
+	c.Set(ctx, "k3", 111, 0)
 
 	//Values returns all values in the cache as slice.
-	data,_ :=c.Values(ctx)
+	data, _ := c.Values(ctx)
 	fmt.Println(data)
 
 	// Output:
 	// [map[k1:v1 k2:v2] Here is Value2 111]
 }
 
-func ExampleCache_Close(){
+func ExampleCache_Close() {
 
 	//Create a cache object,
 	//Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
 
 	//Set Cache
-	c.Set(ctx,"k1","v",0)
-	data,_ := c.Get(ctx,"k1")
+	c.Set(ctx, "k1", "v", 0)
+	data, _ := c.Get(ctx, "k1")
 	fmt.Println(data)
 
 	// Close closes the cache if necessary.
 	c.Close(ctx)
 
-	data1,_ := c.Get(ctx,"k1")
+	data1, _ := c.Get(ctx, "k1")
 
 	fmt.Println(data1)
 
@@ -268,15 +265,15 @@ func ExampleCache_Contains() {
 	c := gcache.New()
 
 	//Set Cache
-	c.Set(ctx,"k","v",0)
+	c.Set(ctx, "k", "v", 0)
 
 	//Contains returns true if `key` exists in the cache, or else returns false.
 	// return true
-	data,_ 	:=	c.Contains(ctx,"k")
+	data, _ := c.Contains(ctx, "k")
 	fmt.Println(data)
 
 	// return false
-	data1,_ 	:=	c.Contains(ctx,"k1")
+	data1, _ := c.Contains(ctx, "k1")
 	fmt.Println(data1)
 
 	// Output:
@@ -291,63 +288,63 @@ func ExampleCache_Data() {
 	//Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
 
-	c.SetMap(ctx,g.MapAnyAny{"k1": "v1","k2":"v2"},0)
-	c.Set(ctx,"k5","v5",0)
+	c.SetMap(ctx, g.MapAnyAny{"k1": "v1", "k2": "v2"}, 0)
+	c.Set(ctx, "k5", "v5", 0)
 
 	//Data returns a copy of all key-value pairs in the cache as map type. Note that this function may lead lots of memory usage, you can implement this function if necessary.
-	data,_ := c.Data(ctx)
+	data, _ := c.Data(ctx)
 	fmt.Println(data)
 
 	// Output:
 	// map[k1:v1 k2:v2 k5:v5]
 }
 
-func ExampleCache_Get(){
+func ExampleCache_Get() {
 
 	//Create a cache object,
 	//Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
 
 	//Set Cache Object
-	c.Set(ctx,"k1","v1",0)
+	c.Set(ctx, "k1", "v1", 0)
 
 	//Get retrieves and returns the associated value of given `key`. It returns nil if it does not exist, its value is nil or it's expired.
-	data,_ := c.Get(ctx,"k1")
+	data, _ := c.Get(ctx, "k1")
 	fmt.Println(data)
 
 	// Output:
 	// v1
 }
 
-func ExampleCache_GetExpire(){
+func ExampleCache_GetExpire() {
 
 	//Create a cache object,
 	//Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
 
 	// Set cache without expiration
-	c.Set(ctx,"k","v",10000*time.Millisecond)
+	c.Set(ctx, "k", "v", 10000*time.Millisecond)
 
 	//GetExpire retrieves and returns the expiration of `key` in the cache.
 	//It returns 0 if the `key` does not expire. It returns -1 if the `key` does not exist in the cache.
-	data,_ := c.GetExpire(ctx,"k")
+	data, _ := c.GetExpire(ctx, "k")
 	fmt.Println(data)
 
 	// Output:
 	// 10s
 }
 
-func ExampleCache_GetOrSet(){
+func ExampleCache_GetOrSet() {
 
 	//Create a cache object,
 	//Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
 
 	//GetOrSet retrieves and returns the value of `key`, or sets `key`-`value` pair and returns `value` if `key` does not exist in the cache.
-	data,_ := c.GetOrSet(ctx,"k","v",10000*time.Millisecond)
+	data, _ := c.GetOrSet(ctx, "k", "v", 10000*time.Millisecond)
 	fmt.Println(data)
 
-	data1,_ := c.Get(ctx,"k")
+	data1, _ := c.Get(ctx, "k")
 	fmt.Println(data1)
 
 	// Output:
@@ -356,21 +353,21 @@ func ExampleCache_GetOrSet(){
 
 }
 
-func ExampleCache_GetOrSetFunc(){
+func ExampleCache_GetOrSetFunc() {
 
 	//Create a cache object,
 	//Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
 
 	//GetOrSetFunc retrieves and returns the value of `key`, or sets `key` with result of function `f` and returns its result if `key` does not exist in the cache.
-	c.GetOrSetFunc(ctx,1,func() (interface{}, error) {
+	c.GetOrSetFunc(ctx, 1, func() (interface{}, error) {
 		return 111, nil
 	}, 10000*time.Millisecond)
 	v, _ := c.Get(ctx, 1)
 	fmt.Println(v)
 
 	//but it does nothing if `value` is a function and the function result is nil.
-	c.GetOrSetFunc(ctx,2,func() (interface{}, error) {
+	c.GetOrSetFunc(ctx, 2, func() (interface{}, error) {
 		return nil, nil
 	}, 10000*time.Millisecond)
 	v1, _ := c.Get(ctx, 2)
@@ -381,7 +378,7 @@ func ExampleCache_GetOrSetFunc(){
 	//
 }
 
-func ExampleCache_GetOrSetFuncLock(){
+func ExampleCache_GetOrSetFuncLock() {
 	//Create a cache object,
 	//Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
@@ -423,12 +420,12 @@ func ExampleCache_GetOrSetFuncLock(){
 	// 111
 }
 
-func ExampleCache_Keys(){
+func ExampleCache_Keys() {
 	//Create a cache object,
 	//Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
 
-	c.SetMap(ctx,g.MapAnyAny{"k1": "v1", "k2": "v2"},0)
+	c.SetMap(ctx, g.MapAnyAny{"k1": "v1", "k2": "v2"}, 0)
 
 	//Print the current list of key values
 	keys1, _ := c.Keys(ctx)
@@ -444,10 +441,10 @@ func ExampleCache_Remove() {
 	//Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
 
-	c.SetMap(ctx,g.MapAnyAny{"k1": "v1", "k2": "v2","k3":"v3","k4":"v4"},0)
+	c.SetMap(ctx, g.MapAnyAny{"k1": "v1", "k2": "v2", "k3": "v3", "k4": "v4"}, 0)
 
 	//Remove deletes one or more keys from cache, and returns its value. If multiple keys are given, it returns the value of the last deleted item.
-	c.Remove(ctx,"k1")
+	c.Remove(ctx, "k1")
 
 	data, _ := c.Data(ctx)
 	fmt.Println(data)
@@ -456,12 +453,12 @@ func ExampleCache_Remove() {
 	// map[k2:v2 k3:v3 k4:v4]
 }
 
-func ExampleCache_Removes(){
+func ExampleCache_Removes() {
 	//Create a cache object,
 	//Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
 
-	c.SetMap(ctx,g.MapAnyAny{"k1": "v1", "k2": "v2","k3":"v3","k4":"v4"},0)
+	c.SetMap(ctx, g.MapAnyAny{"k1": "v1", "k2": "v2", "k3": "v3", "k4": "v4"}, 0)
 
 	//Remove deletes one or more keys from cache, and returns its value. If multiple keys are given, it returns the value of the last deleted item.
 	c.Removes(ctx, g.Slice{"k1", "k3"})
@@ -472,4 +469,3 @@ func ExampleCache_Removes(){
 	// Output:
 	// map[k2:v2 k4:v4]
 }
-
