@@ -33,7 +33,7 @@ func ExampleStrSet_NewStrSetFrom() {
 	strSet := gset.NewStrSetFrom([]string{"str1", "str2", "str3"}, true)
 	fmt.Println(strSet.Slice())
 
-	// Output:
+	// May Output:
 	// [str1 str2 str3]
 }
 
