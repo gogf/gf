@@ -142,7 +142,7 @@ func (r *Request) doGetQueryStruct(pointer interface{}, mapping ...map[string]st
 	if data == nil {
 		data = map[string]interface{}{}
 	}
-	if err := r.mergeDefaultStructValue(data, pointer); err != nil {
+	if err = r.mergeDefaultStructValue(data, pointer); err != nil {
 		return data, nil
 	}
 	return data, gconv.Struct(data, pointer, mapping...)
