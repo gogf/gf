@@ -642,7 +642,7 @@ func (c *Core) writeSqlToLogger(ctx context.Context, sql *Sql) {
 		}
 	}
 	s := fmt.Sprintf(
-		"[%3d ms] [%s] [%s:%d] %s%s",
+		"[%3d ms] [%s] [%s:%-3d] %s%s",
 		sql.End-sql.Start, sql.Group, sqlTypeKey, sql.RowsAffected, transactionIdStr, sql.Format,
 	)
 	if sql.Error != nil {
