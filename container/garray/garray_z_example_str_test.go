@@ -142,27 +142,21 @@ func ExampleStrArray_Sort() {
 }
 
 func ExampleStrArray_SortFunc() {
-	s := garray.NewStrArrayFrom(g.SliceStr{"a", "b", "c"})
+	s := garray.NewStrArrayFrom(g.SliceStr{"b", "c", "a"})
+	fmt.Println(s)
 	s.SortFunc(func(v1, v2 string) bool {
-		r := gstr.Compare(v1, v2)
-		if r == 1 {
-			fmt.Println("v1 > v2: v1 is " + v1 + ",v2 is " + v2)
-		}
-		if r == -1 {
-			fmt.Println("v1 < v2: v1 is " + v1 + ",v2 is " + v2)
-		}
-		if r == 0 {
-			fmt.Println("v1 = v2: v1 is " + v1 + ",v2 is " + v2)
-		}
-		return true
+		return gstr.Compare(v1, v2) > 0
+	})
+	fmt.Println(s)
+	s.SortFunc(func(v1, v2 string) bool {
+		return gstr.Compare(v1, v2) < 0
 	})
 	fmt.Println(s)
 
 	// Output:
-	// v1 > v2: v1 is b,v2 is a
-	// v1 > v2: v1 is c,v2 is a
-	// v1 > v2: v1 is c,v2 is b
+	// ["b","c","a"]
 	// ["c","b","a"]
+	// ["a","b","c"]
 }
 
 func ExampleStrArray_InsertBefore() {
