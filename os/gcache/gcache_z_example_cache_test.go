@@ -204,15 +204,15 @@ func ExampleCache_UpdateExpire(){
 	c := gcache.New()
 
 	c.Set(ctx,"k1","v1",1000*time.Millisecond)
-	k1_expire,_ :=	c.GetExpire(ctx,"k1")
-	fmt.Println(k1_expire)
+	expire,_ :=	c.GetExpire(ctx,"k1")
+	fmt.Println(expire)
 
 	//UpdateExpire updates the expiration of `key` and returns the old expiration duration value.
 	//It returns -1 and does nothing if the `key` does not exist in the cache.
 	c.UpdateExpire(ctx,"k1",500*time.Millisecond)
 
-	k1_expires,_ :=	c.GetExpire(ctx,"k1")
-	fmt.Println(k1_expires)
+	expire1,_ :=	c.GetExpire(ctx,"k1")
+	fmt.Println(expire1)
 	// Output:
 	// 1s
 	// 500ms
