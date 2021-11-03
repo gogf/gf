@@ -65,7 +65,7 @@ func Decode(data []byte) (res map[string]interface{}, err error) {
 
 		if strings.Contains(lineStr, "=") && haveSection {
 			values := strings.Split(lineStr, "=")
-			fieldMap[strings.TrimSpace(values[0])] = strings.TrimSpace(strings.Join(values[1:], ""))
+			fieldMap[strings.TrimSpace(values[0])] = strings.TrimSpace(strings.Join(values[1:], "="))
 			res[section] = fieldMap
 		}
 	}
