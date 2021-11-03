@@ -67,12 +67,12 @@ func NewStorageFile(path ...string) *StorageFile {
 		updatingIdSet: gset.NewStrSet(true),
 	}
 
-	gtimer.AddSingleton(DefaultStorageFileLoopInterval, s.updateSessionTimely)
+	gtimer.AddSingleton(context.Background(), DefaultStorageFileLoopInterval, s.updateSessionTimely)
 	return s
 }
 
 // updateSessionTimely batch updates the TTL for sessions timely.
-func (s *StorageFile) updateSessionTimely() {
+func (s *StorageFile) updateSessionTimely(ctx context.Context) {
 	var (
 		id  string
 		err error

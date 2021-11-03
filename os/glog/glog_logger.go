@@ -106,7 +106,7 @@ func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
 	// It just initializes once for each logger.
 	if p.config.RotateSize > 0 || p.config.RotateExpire > 0 {
 		if !p.init.Val() && p.init.Cas(false, true) {
-			gtimer.AddOnce(p.config.RotateCheckInterval, p.rotateChecksTimely)
+			gtimer.AddOnce(context.Background(), p.config.RotateCheckInterval, p.rotateChecksTimely)
 			intlog.Printf(ctx, "logger rotation initialized: every %s", p.config.RotateCheckInterval.String())
 		}
 	}
@@ -202,7 +202,7 @@ func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
 		if len(input.Content) > 0 {
 			if input.Content[len(input.Content)-1] == '\n' {
 				// Remove one blank line(\n\n).
-				if tempStr[0] == '\n' {
+				if len(tempStr) > 0 && tempStr[0] == '\n' {
 					input.Content += tempStr[1:]
 				} else {
 					input.Content += tempStr
@@ -216,7 +216,7 @@ func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
 	}
 	if l.config.Flags&F_ASYNC > 0 {
 		input.IsAsync = true
-		err := asyncPool.Add(func() {
+		err := asyncPool.Add(ctx, func(ctx context.Context) {
 			input.Next()
 		})
 		if err != nil {
@@ -355,9 +355,9 @@ func (l *Logger) format(format string, value ...interface{}) string {
 // the optional parameter `skip` specify the skipped stack offset from the end point.
 func (l *Logger) PrintStack(ctx context.Context, skip ...int) {
 	if s := l.GetStack(skip...); s != "" {
-		l.Println(ctx, "Stack:\n"+s)
+		l.Print(ctx, "Stack:\n"+s)
 	} else {
-		l.Println(ctx)
+		l.Print(ctx)
 	}
 }
 

@@ -202,12 +202,6 @@ type Link interface {
 	IsTransaction() bool
 }
 
-// Logger is the logging interface for DB.
-type Logger interface {
-	Error(ctx context.Context, s string)
-	Debug(ctx context.Context, s string)
-}
-
 // Sql is the sql recording struct.
 type Sql struct {
 	Sql           string        // SQL string(may contain reserved char '?').
@@ -281,6 +275,7 @@ const (
 	sqlTypeQueryContext    = `DB.QueryContext`
 	sqlTypeExecContext     = `DB.ExecContext`
 	sqlTypePrepareContext  = `DB.PrepareContext`
+	modelForDaoSuffix      = `ForDao`
 )
 
 var (

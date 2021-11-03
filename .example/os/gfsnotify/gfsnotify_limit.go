@@ -10,7 +10,7 @@ func main() {
 	path := "/Users/john/temp/log"
 	for i := 0; i < 9999999; i++ {
 		_, err := gfsnotify.Add(path, func(event *gfsnotify.Event) {
-			glog.Println(event)
+			glog.Print(event)
 		})
 		if err != nil {
 			glog.Fatal(err)

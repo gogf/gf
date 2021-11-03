@@ -73,7 +73,7 @@ func Test_Dump(t *testing.T) {
 	})
 }
 
-func Test_DumpBrief(t *testing.T) {
+func TestDumpWithType(t *testing.T) {
 	type CommonReq struct {
 		AppId      int64  `json:"appId" v:"required" in:"path" des:"应用Id" sum:"应用Id Summary"`
 		ResourceId string `json:"resourceId" in:"query" des:"资源Id" sum:"资源Id Summary"`
@@ -123,10 +123,11 @@ func Test_DumpBrief(t *testing.T) {
 		},
 	}
 	gtest.C(t, func(t *gtest.T) {
-		gutil.DumpBrief(map[int]int{
+		gutil.DumpWithType(map[int]int{
 			100: 100,
 		})
-		gutil.DumpBrief(req)
+		gutil.DumpWithType(req)
+		gutil.DumpWithType([][]byte{[]byte("hello")})
 	})
 }
 

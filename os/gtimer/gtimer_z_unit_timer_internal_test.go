@@ -7,6 +7,7 @@
 package gtimer
 
 import (
+	"context"
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/test/gtest"
 	"testing"
@@ -19,7 +20,7 @@ func TestTimer_Proceed(t *testing.T) {
 		timer := New(TimerOptions{
 			Interval: time.Hour,
 		})
-		timer.Add(10000*time.Hour, func() {
+		timer.Add(ctx, 10000*time.Hour, func(ctx context.Context) {
 			array.Append(1)
 		})
 		timer.proceed(10001)
@@ -34,7 +35,7 @@ func TestTimer_Proceed(t *testing.T) {
 		timer := New(TimerOptions{
 			Interval: time.Millisecond * 100,
 		})
-		timer.Add(10000*time.Hour, func() {
+		timer.Add(ctx, 10000*time.Hour, func(ctx context.Context) {
 			array.Append(1)
 		})
 		ticks := int64((10000 * time.Hour) / (time.Millisecond * 100))

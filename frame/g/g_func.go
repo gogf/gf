@@ -38,10 +38,10 @@ func Dump(values ...interface{}) {
 	gutil.Dump(values...)
 }
 
-// DumpBrief acts like Dump, but with no type information.
+// DumpWithType acts like Dump, but with type information.
 // Also see Dump.
-func DumpBrief(values ...interface{}) {
-	gutil.DumpBrief(values...)
+func DumpWithType(values ...interface{}) {
+	gutil.DumpWithType(values...)
 }
 
 // Throw throws an exception, which can be caught by TryCatch function.
