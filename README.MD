@@ -90,15 +90,3 @@ We appreciate any kind of sponsorship for `GF` development. If you've got some i
 # Thanks
 <a href="https://www.jetbrains.com/?from=GoFrame"><img src="https://goframe.org/download/thumbnails/1114119/jetbrains.png" height="120" alt="JetBrains"/></a>
 <a href="https://www.atlassian.com/?from=GoFrame"><img src="https://goframe.org/download/attachments/1114119/atlassian.jpg" height="120" alt="Atlassian"/></a>
-
-
-
-
-
-
-
-
-
-
-
-
