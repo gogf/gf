@@ -12,7 +12,7 @@ type Redis struct {
 	redis *gredis.Redis
 }
 
-// newAdapterMemory creates and returns a new memory cache object.
+// NewRedis creates and returns a new redis memory cache object.
 func NewRedis(redis *gredis.Redis) Adapter {
 	return &Redis{
 		redis: redis,
