@@ -143,26 +143,26 @@ func ExampleStrArray_Sort() {
 
 func ExampleStrArray_SortFunc() {
 	s := garray.NewStrArrayFrom(g.SliceStr{"a", "b", "c"})
-	s.SortFunc(func(v1,v2 string) bool{
-		r := gstr.Compare(v1,v2)
-		if r==1 {
-			fmt.Println("v1 > v2: v1 is "+v1+",v2 is "+v2)
+	s.SortFunc(func(v1, v2 string) bool {
+		r := gstr.Compare(v1, v2)
+		if r == 1 {
+			fmt.Println("v1 > v2: v1 is " + v1 + ",v2 is " + v2)
 		}
-		if r==-1 {
-			fmt.Println("v1 < v2: v1 is "+v1+",v2 is "+v2)
+		if r == -1 {
+			fmt.Println("v1 < v2: v1 is " + v1 + ",v2 is " + v2)
 		}
-		if r==0 {
-			fmt.Println("v1 = v2: v1 is "+v1+",v2 is "+v2)
+		if r == 0 {
+			fmt.Println("v1 = v2: v1 is " + v1 + ",v2 is " + v2)
 		}
 		return true
 	})
 	fmt.Println(s)
 
 	// Output:
-    // v1 > v2: v1 is b,v2 is a
-    // v1 > v2: v1 is c,v2 is a
-    // v1 > v2: v1 is c,v2 is b
-    // ["c","b","a"]
+	// v1 > v2: v1 is b,v2 is a
+	// v1 > v2: v1 is c,v2 is a
+	// v1 > v2: v1 is c,v2 is b
+	// ["c","b","a"]
 }
 
 func ExampleStrArray_InsertBefore() {
@@ -417,7 +417,7 @@ func ExampleStrArray_Unique() {
 func ExampleStrArray_LockFunc() {
 	s := garray.NewStrArrayFrom(g.SliceStr{"a", "b", "c"})
 	s.LockFunc(func(array []string) {
-		array[len(array) - 1] = "GF fans"
+		array[len(array)-1] = "GF fans"
 	})
 	fmt.Println(s)
 
@@ -428,13 +428,12 @@ func ExampleStrArray_LockFunc() {
 func ExampleStrArray_RLockFunc() {
 	s := garray.NewStrArrayFrom(g.SliceStr{"a", "b", "c"})
 	s.RLockFunc(func(array []string) {
-		fmt.Println(array[len(array) - 1])
+		fmt.Println(array[len(array)-1])
 	})
 
 	// Output:
 	// c
 }
-
 
 func ExampleStrArray_Merge() {
 	s1 := garray.NewStrArray()
@@ -510,7 +509,6 @@ func ExampleStrArray_Reverse() {
 	// ["h","g","f","e","d","c","b","a"]
 }
 
-
 func ExampleStrArray_Join() {
 	s := garray.NewStrArrayFrom(g.SliceStr{"a", "b", "c"})
 	fmt.Println(s.Join(","))
@@ -553,7 +551,6 @@ func ExampleStrArray_IteratorAsc() {
 	// 2 c
 }
 
-
 func ExampleStrArray_IteratorDesc() {
 	s := garray.NewStrArrayFrom(g.SliceStr{"a", "b", "c"})
 	s.IteratorDesc(func(k int, v string) bool {
@@ -567,7 +564,6 @@ func ExampleStrArray_IteratorDesc() {
 	// 0 a
 }
 
-
 func ExampleStrArray_String() {
 	s := garray.NewStrArrayFrom(g.SliceStr{"a", "b", "c"})
 	fmt.Println(s.String())
@@ -578,14 +574,14 @@ func ExampleStrArray_String() {
 
 func ExampleStrArray_MarshalJSON() {
 	type Student struct {
-		Id     int
-		Name   string
-		Lessons  []string
+		Id      int
+		Name    string
+		Lessons []string
 	}
 	s := Student{
-		Id:     1,
-		Name:   "john",
-		Lessons:  []string{"Math","English","Music"},
+		Id:      1,
+		Name:    "john",
+		Lessons: []string{"Math", "English", "Music"},
 	}
 	b, _ := json.Marshal(s)
 	fmt.Println(string(b))
@@ -594,12 +590,11 @@ func ExampleStrArray_MarshalJSON() {
 	// {"Id":1,"Name":"john","Lessons":["Math","English","Music"]}
 }
 
-
 func ExampleStrArray_UnmarshalJSON() {
 	b := []byte(`{"Id":1,"Name":"john","Lessons":["Math","English","Sport"]}`)
 	type Student struct {
-		Id     int
-		Name   string
+		Id      int
+		Name    string
 		Lessons *garray.StrArray
 	}
 	s := Student{}
@@ -607,25 +602,24 @@ func ExampleStrArray_UnmarshalJSON() {
 	fmt.Println(s)
 
 	// Output:
-    // {1 john ["Math","English","Sport"]}
+	// {1 john ["Math","English","Sport"]}
 }
-
 
 func ExampleStrArray_UnmarshalValue() {
 	type Student struct {
-		Name  string
+		Name    string
 		Lessons *garray.StrArray
 	}
 	var s *Student
 	gconv.Struct(g.Map{
-		"name":  "john",
+		"name":    "john",
 		"lessons": []byte(`["Math","English","Sport"]`),
-		}, &s)
+	}, &s)
 	fmt.Println(s)
 
 	var s1 *Student
 	gconv.Struct(g.Map{
-		"name":  "john",
+		"name":    "john",
 		"lessons": g.SliceStr{"Math", "English", "Sport"},
 	}, &s1)
 	fmt.Println(s1)
@@ -634,7 +628,6 @@ func ExampleStrArray_UnmarshalValue() {
 	// &{john ["Math","English","Sport"]}
 	// &{john ["Math","English","Sport"]}
 }
-
 
 func ExampleStrArray_FilterEmpty() {
 	s := garray.NewStrArrayFrom(g.SliceStr{"a", "b", "", "c", "", "", "d"})
