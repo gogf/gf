@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 // 执行对象
@@ -63,18 +63,18 @@ func Test_Router_GroupBasic1(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/api/handler"), "Handler")
+		t.Assert(client.GetContent(ctx, "/api/handler"), "Handler")
 
-		t.Assert(client.GetContent("/api/obj"), "1Object Index2")
-		t.Assert(client.GetContent("/api/obj/"), "1Object Index2")
-		t.Assert(client.GetContent("/api/obj/index"), "1Object Index2")
-		t.Assert(client.GetContent("/api/obj/delete"), "1Object Delete2")
-		t.Assert(client.GetContent("/api/obj/my-show"), "1Object Show2")
-		t.Assert(client.GetContent("/api/obj/show"), "1Object Show2")
-		t.Assert(client.DeleteContent("/api/obj/rest"), "1Object Delete2")
+		t.Assert(client.GetContent(ctx, "/api/obj"), "1Object Index2")
+		t.Assert(client.GetContent(ctx, "/api/obj/"), "1Object Index2")
+		t.Assert(client.GetContent(ctx, "/api/obj/index"), "1Object Index2")
+		t.Assert(client.GetContent(ctx, "/api/obj/delete"), "1Object Delete2")
+		t.Assert(client.GetContent(ctx, "/api/obj/my-show"), "1Object Show2")
+		t.Assert(client.GetContent(ctx, "/api/obj/show"), "1Object Show2")
+		t.Assert(client.DeleteContent(ctx, "/api/obj/rest"), "1Object Delete2")
 
-		t.Assert(client.DeleteContent("/ThisDoesNotExist"), "Not Found")
-		t.Assert(client.DeleteContent("/api/ThisDoesNotExist"), "Not Found")
+		t.Assert(client.DeleteContent(ctx, "/ThisDoesNotExist"), "Not Found")
+		t.Assert(client.DeleteContent(ctx, "/api/ThisDoesNotExist"), "Not Found")
 	})
 }
 
@@ -99,15 +99,15 @@ func Test_Router_GroupBasic2(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/api/handler"), "Handler")
+		t.Assert(client.GetContent(ctx, "/api/handler"), "Handler")
 
-		t.Assert(client.GetContent("/api/obj/delete"), "1Object Delete2")
-		t.Assert(client.GetContent("/api/obj/my-show"), "1Object Show2")
-		t.Assert(client.GetContent("/api/obj/show"), "1Object Show2")
-		t.Assert(client.DeleteContent("/api/obj/rest"), "1Object Delete2")
+		t.Assert(client.GetContent(ctx, "/api/obj/delete"), "1Object Delete2")
+		t.Assert(client.GetContent(ctx, "/api/obj/my-show"), "1Object Show2")
+		t.Assert(client.GetContent(ctx, "/api/obj/show"), "1Object Show2")
+		t.Assert(client.DeleteContent(ctx, "/api/obj/rest"), "1Object Delete2")
 
-		t.Assert(client.DeleteContent("/ThisDoesNotExist"), "Not Found")
-		t.Assert(client.DeleteContent("/api/ThisDoesNotExist"), "Not Found")
+		t.Assert(client.DeleteContent(ctx, "/ThisDoesNotExist"), "Not Found")
+		t.Assert(client.DeleteContent(ctx, "/api/ThisDoesNotExist"), "Not Found")
 	})
 }
 
@@ -128,12 +128,12 @@ func Test_Router_GroupBuildInVar(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/api/group-object/index"), "1Object Index2")
-		t.Assert(client.GetContent("/api/group-object/delete"), "1Object Delete2")
-		t.Assert(client.GetContent("/api/group-object/show"), "1Object Show2")
+		t.Assert(client.GetContent(ctx, "/api/group-object/index"), "1Object Index2")
+		t.Assert(client.GetContent(ctx, "/api/group-object/delete"), "1Object Delete2")
+		t.Assert(client.GetContent(ctx, "/api/group-object/show"), "1Object Show2")
 
-		t.Assert(client.DeleteContent("/ThisDoesNotExist"), "Not Found")
-		t.Assert(client.DeleteContent("/api/ThisDoesNotExist"), "Not Found")
+		t.Assert(client.DeleteContent(ctx, "/ThisDoesNotExist"), "Not Found")
+		t.Assert(client.DeleteContent(ctx, "/api/ThisDoesNotExist"), "Not Found")
 	})
 }
 
@@ -152,8 +152,8 @@ func Test_Router_Group_Methods(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		t.Assert(client.GetContent("/obj/show"), "1Object Show2")
-		t.Assert(client.GetContent("/obj/delete"), "1Object Delete2")
+		t.Assert(client.GetContent(ctx, "/obj/show"), "1Object Show2")
+		t.Assert(client.GetContent(ctx, "/obj/delete"), "1Object Delete2")
 	})
 }
 
@@ -187,8 +187,8 @@ func Test_Router_Group_MultiServer(t *testing.T) {
 		c1.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p1))
 		c2 := g.Client()
 		c2.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p2))
-		t.Assert(c1.PostContent("/post"), "post1")
-		t.Assert(c2.PostContent("/post"), "post2")
+		t.Assert(c1.PostContent(ctx, "/post"), "post1")
+		t.Assert(c2.PostContent(ctx, "/post"), "post2")
 	})
 }
 
@@ -217,7 +217,7 @@ func Test_Router_Group_Map(t *testing.T) {
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(c.GetContent("/test"), "get")
-		t.Assert(c.PostContent("/test"), "post")
+		t.Assert(c.GetContent(ctx, "/test"), "get")
+		t.Assert(c.PostContent(ctx, "/test"), "post")
 	})
 }

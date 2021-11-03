@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/gogf/gf/encoding/gjson"
+	"github.com/gogf/gf/v2/encoding/gjson"
 )
 
 type XinYanModel struct {

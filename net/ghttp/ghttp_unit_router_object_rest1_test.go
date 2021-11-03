@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 type ObjectRest struct{}
@@ -69,32 +69,32 @@ func Test_Router_ObjectRest(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "1Object Get2")
-		t.Assert(client.PutContent("/"), "1Object Put2")
-		t.Assert(client.PostContent("/"), "1Object Post2")
-		t.Assert(client.DeleteContent("/"), "1Object Delete2")
-		t.Assert(client.PatchContent("/"), "1Object Patch2")
-		t.Assert(client.OptionsContent("/"), "1Object Options2")
-		resp1, err := client.Head("/")
+		t.Assert(client.GetContent(ctx, "/"), "1Object Get2")
+		t.Assert(client.PutContent(ctx, "/"), "1Object Put2")
+		t.Assert(client.PostContent(ctx, "/"), "1Object Post2")
+		t.Assert(client.DeleteContent(ctx, "/"), "1Object Delete2")
+		t.Assert(client.PatchContent(ctx, "/"), "1Object Patch2")
+		t.Assert(client.OptionsContent(ctx, "/"), "1Object Options2")
+		resp1, err := client.Head(ctx, "/")
 		if err == nil {
 			defer resp1.Close()
 		}
 		t.Assert(err, nil)
 		t.Assert(resp1.Header.Get("head-ok"), "1")
 
-		t.Assert(client.GetContent("/object-rest/get"), "1Object Get2")
-		t.Assert(client.PutContent("/object-rest/put"), "1Object Put2")
-		t.Assert(client.PostContent("/object-rest/post"), "1Object Post2")
-		t.Assert(client.DeleteContent("/object-rest/delete"), "1Object Delete2")
-		t.Assert(client.PatchContent("/object-rest/patch"), "1Object Patch2")
-		t.Assert(client.OptionsContent("/object-rest/options"), "1Object Options2")
-		resp2, err := client.Head("/object-rest/head")
+		t.Assert(client.GetContent(ctx, "/object-rest/get"), "1Object Get2")
+		t.Assert(client.PutContent(ctx, "/object-rest/put"), "1Object Put2")
+		t.Assert(client.PostContent(ctx, "/object-rest/post"), "1Object Post2")
+		t.Assert(client.DeleteContent(ctx, "/object-rest/delete"), "1Object Delete2")
+		t.Assert(client.PatchContent(ctx, "/object-rest/patch"), "1Object Patch2")
+		t.Assert(client.OptionsContent(ctx, "/object-rest/options"), "1Object Options2")
+		resp2, err := client.Head(ctx, "/object-rest/head")
 		if err == nil {
 			defer resp2.Close()
 		}
 		t.Assert(err, nil)
 		t.Assert(resp2.Header.Get("head-ok"), "1")
 
-		t.Assert(client.GetContent("/none-exist"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/none-exist"), "Not Found")
 	})
 }

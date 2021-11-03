@@ -7,19 +7,21 @@
 package gvalid
 
 import (
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
+	"context"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/text/gstr"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/net/gipv4"
-	"github.com/gogf/gf/net/gipv6"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/text/gregex"
-	"github.com/gogf/gf/util/gconv"
-	"github.com/gogf/gf/util/gutil"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/net/gipv4"
+	"github.com/gogf/gf/v2/net/gipv6"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 type iTime interface {
@@ -29,8 +31,8 @@ type iTime interface {
 
 // CheckValue checks single value with specified rules.
 // It returns nil if successful validation.
-func (v *Validator) CheckValue(value interface{}) Error {
-	return v.doCheckValue(doCheckValueInput{
+func (v *Validator) CheckValue(ctx context.Context, value interface{}) Error {
+	return v.doCheckValue(ctx, doCheckValueInput{
 		Name:     "",
 		Value:    value,
 		Rule:     gconv.String(v.rules),
@@ -50,7 +52,7 @@ type doCheckValueInput struct {
 }
 
 // doCheckSingleValue does the really rules validation for single key-value.
-func (v *Validator) doCheckValue(input doCheckValueInput) Error {
+func (v *Validator) doCheckValue(ctx context.Context, input doCheckValueInput) Error {
 	// If there's no validation rules, it does nothing and returns quickly.
 	if input.Rule == "" {
 		return nil
@@ -130,8 +132,8 @@ func (v *Validator) doCheckValue(input doCheckValueInput) Error {
 		customRuleFunc = v.getRuleFunc(ruleKey)
 		if customRuleFunc != nil {
 			// It checks custom validation rules with most priority.
-			message := v.getErrorMessageByRule(ruleKey, customMsgMap)
-			if err := customRuleFunc(v.ctx, ruleItems[index], input.Value, message, input.DataRaw); err != nil {
+			message := v.getErrorMessageByRule(ctx, ruleKey, customMsgMap)
+			if err := customRuleFunc(ctx, ruleItems[index], input.Value, message, input.DataRaw); err != nil {
 				match = false
 				errorMsgArray[ruleKey] = err.Error()
 			} else {
@@ -139,15 +141,18 @@ func (v *Validator) doCheckValue(input doCheckValueInput) Error {
 			}
 		} else {
 			// It checks build-in validation rules if there's no custom rule.
-			match, err = v.doCheckBuildInRules(doCheckBuildInRulesInput{
-				Index:        index,
-				Value:        input.Value,
-				RuleKey:      ruleKey,
-				RulePattern:  rulePattern,
-				RuleItems:    ruleItems,
-				DataMap:      input.DataMap,
-				CustomMsgMap: customMsgMap,
-			})
+			match, err = v.doCheckBuildInRules(
+				ctx,
+				doCheckBuildInRulesInput{
+					Index:        index,
+					Value:        input.Value,
+					RuleKey:      ruleKey,
+					RulePattern:  rulePattern,
+					RuleItems:    ruleItems,
+					DataMap:      input.DataMap,
+					CustomMsgMap: customMsgMap,
+				},
+			)
 			if !match && err != nil {
 				errorMsgArray[ruleKey] = err.Error()
 			}
@@ -158,7 +163,7 @@ func (v *Validator) doCheckValue(input doCheckValueInput) Error {
 			// It does nothing if the error message for this rule
 			// is already set in previous validation.
 			if _, ok := errorMsgArray[ruleKey]; !ok {
-				errorMsgArray[ruleKey] = v.getErrorMessageByRule(ruleKey, customMsgMap)
+				errorMsgArray[ruleKey] = v.getErrorMessageByRule(ctx, ruleKey, customMsgMap)
 			}
 			// If it is with error and there's bail rule,
 			// it then does not continue validating for left rules.
@@ -169,9 +174,13 @@ func (v *Validator) doCheckValue(input doCheckValueInput) Error {
 		index++
 	}
 	if len(errorMsgArray) > 0 {
-		return newError(gcode.CodeValidationFailed, []fieldRule{{Name: input.Name, Rule: input.Rule}}, map[string]map[string]string{
-			input.Name: errorMsgArray,
-		})
+		return newError(
+			gcode.CodeValidationFailed,
+			[]fieldRule{{Name: input.Name, Rule: input.Rule}},
+			map[string]map[string]string{
+				input.Name: errorMsgArray,
+			},
+		)
 	}
 	return nil
 }
@@ -186,7 +195,7 @@ type doCheckBuildInRulesInput struct {
 	CustomMsgMap map[string]string
 }
 
-func (v *Validator) doCheckBuildInRules(input doCheckBuildInRulesInput) (match bool, err error) {
+func (v *Validator) doCheckBuildInRules(ctx context.Context, input doCheckBuildInRulesInput) (match bool, err error) {
 	valueStr := gconv.String(input.Value)
 	switch input.RuleKey {
 	// Required rules.
@@ -207,7 +216,7 @@ func (v *Validator) doCheckBuildInRules(input doCheckBuildInRulesInput) (match b
 		"min-length",
 		"max-length",
 		"size":
-		if msg := v.checkLength(valueStr, input.RuleKey, input.RulePattern, input.CustomMsgMap); msg != "" {
+		if msg := v.checkLength(ctx, valueStr, input.RuleKey, input.RulePattern, input.CustomMsgMap); msg != "" {
 			return match, gerror.NewOption(gerror.Option{
 				Text: msg,
 				Code: gcode.CodeValidationFailed,
@@ -221,7 +230,7 @@ func (v *Validator) doCheckBuildInRules(input doCheckBuildInRulesInput) (match b
 		"min",
 		"max",
 		"between":
-		if msg := v.checkRange(valueStr, input.RuleKey, input.RulePattern, input.CustomMsgMap); msg != "" {
+		if msg := v.checkRange(ctx, valueStr, input.RuleKey, input.RulePattern, input.CustomMsgMap); msg != "" {
 			return match, gerror.NewOption(gerror.Option{
 				Text: msg,
 				Code: gcode.CodeValidationFailed,
@@ -249,17 +258,29 @@ func (v *Validator) doCheckBuildInRules(input doCheckBuildInRulesInput) (match b
 		}
 		match = gregex.IsMatchString(`\d{4}[\.\-\_/]{0,1}\d{2}[\.\-\_/]{0,1}\d{2}`, valueStr)
 
+	// Datetime rule.
+	case "datetime":
+		// support for time value, eg: gtime.Time/*gtime.Time, time.Time/*time.Time.
+		if v, ok := input.Value.(iTime); ok {
+			return !v.IsZero(), nil
+		}
+		if _, err = gtime.StrToTimeFormat(valueStr, `Y-m-d H:i:s`); err == nil {
+			match = true
+		}
+
 	// Date rule with specified format.
 	case "date-format":
 		// support for time value, eg: gtime.Time/*gtime.Time, time.Time/*time.Time.
 		if v, ok := input.Value.(iTime); ok {
 			return !v.IsZero(), nil
 		}
-		if _, err := gtime.StrToTimeFormat(valueStr, input.RulePattern); err == nil {
+		if _, err = gtime.StrToTimeFormat(valueStr, input.RulePattern); err == nil {
 			match = true
 		} else {
-			var msg string
-			msg = v.getErrorMessageByRule(input.RuleKey, input.CustomMsgMap)
+			var (
+				msg string
+			)
+			msg = v.getErrorMessageByRule(ctx, input.RuleKey, input.CustomMsgMap)
 			msg = strings.Replace(msg, ":format", input.RulePattern, -1)
 			return match, gerror.NewOption(gerror.Option{
 				Text: msg,
@@ -277,7 +298,7 @@ func (v *Validator) doCheckBuildInRules(input doCheckBuildInRulesInput) (match b
 		}
 		if !match {
 			var msg string
-			msg = v.getErrorMessageByRule(input.RuleKey, input.CustomMsgMap)
+			msg = v.getErrorMessageByRule(ctx, input.RuleKey, input.CustomMsgMap)
 			msg = strings.Replace(msg, ":field", input.RulePattern, -1)
 			return match, gerror.NewOption(gerror.Option{
 				Text: msg,
@@ -296,7 +317,7 @@ func (v *Validator) doCheckBuildInRules(input doCheckBuildInRulesInput) (match b
 		}
 		if !match {
 			var msg string
-			msg = v.getErrorMessageByRule(input.RuleKey, input.CustomMsgMap)
+			msg = v.getErrorMessageByRule(ctx, input.RuleKey, input.CustomMsgMap)
 			msg = strings.Replace(msg, ":field", input.RulePattern, -1)
 			return match, gerror.NewOption(gerror.Option{
 				Text: msg,
@@ -306,7 +327,7 @@ func (v *Validator) doCheckBuildInRules(input doCheckBuildInRulesInput) (match b
 
 	// Field value should be in range of.
 	case "in":
-		array := strings.Split(input.RulePattern, ",")
+		array := gstr.SplitAndTrim(input.RulePattern, ",")
 		for _, v := range array {
 			if strings.Compare(valueStr, strings.TrimSpace(v)) == 0 {
 				match = true
@@ -317,7 +338,7 @@ func (v *Validator) doCheckBuildInRules(input doCheckBuildInRulesInput) (match b
 	// Field value should not be in range of.
 	case "not-in":
 		match = true
-		array := strings.Split(input.RulePattern, ",")
+		array := gstr.SplitAndTrim(input.RulePattern, ",")
 		for _, v := range array {
 			if strings.Compare(valueStr, strings.TrimSpace(v)) == 0 {
 				match = false

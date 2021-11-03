@@ -8,15 +8,15 @@
 package gfile
 
 import (
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/text/gstr"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
 
-	"github.com/gogf/gf/container/gtype"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 var (
@@ -25,7 +25,7 @@ var (
 	// to allow it modified by developer if necessary.
 	Separator = string(filepath.Separator)
 
-	// DefaultPerm is the default perm for file opening.
+	// DefaultPermOpen is the default perm for file opening.
 	DefaultPermOpen = os.FileMode(0666)
 
 	// DefaultPermCopy is the default perm for file/folder copy.
@@ -58,8 +58,8 @@ func init() {
 	}
 }
 
-// Mkdir creates directories recursively with given <path>.
-// The parameter <path> is suggested to be an absolute path instead of relative one.
+// Mkdir creates directories recursively with given `path`.
+// The parameter `path` is suggested to be an absolute path instead of relative one.
 func Mkdir(path string) error {
 	if err := os.MkdirAll(path, os.ModePerm); err != nil {
 		return err
@@ -67,8 +67,8 @@ func Mkdir(path string) error {
 	return nil
 }
 
-// Create creates file with given <path> recursively.
-// The parameter <path> is suggested to be absolute path.
+// Create creates file with given `path` recursively.
+// The parameter `path` is suggested to be absolute path.
 func Create(path string) (*os.File, error) {
 	dir := Dir(path)
 	if !Exists(dir) {
@@ -84,15 +84,15 @@ func Open(path string) (*os.File, error) {
 	return os.Open(path)
 }
 
-// OpenFile opens file/directory with custom <flag> and <perm>.
-// The parameter <flag> is like: O_RDONLY, O_RDWR, O_RDWR|O_CREATE|O_TRUNC, etc.
+// OpenFile opens file/directory with custom `flag` and `perm`.
+// The parameter `flag` is like: O_RDONLY, O_RDWR, O_RDWR|O_CREATE|O_TRUNC, etc.
 func OpenFile(path string, flag int, perm os.FileMode) (*os.File, error) {
 	return os.OpenFile(path, flag, perm)
 }
 
-// OpenWithFlag opens file/directory with default perm and custom <flag>.
-// The default <perm> is 0666.
-// The parameter <flag> is like: O_RDONLY, O_RDWR, O_RDWR|O_CREATE|O_TRUNC, etc.
+// OpenWithFlag opens file/directory with default perm and custom `flag`.
+// The default `perm` is 0666.
+// The parameter `flag` is like: O_RDONLY, O_RDWR, O_RDWR|O_CREATE|O_TRUNC, etc.
 func OpenWithFlag(path string, flag int) (*os.File, error) {
 	f, err := os.OpenFile(path, flag, DefaultPermOpen)
 	if err != nil {
@@ -101,9 +101,9 @@ func OpenWithFlag(path string, flag int) (*os.File, error) {
 	return f, nil
 }
 
-// OpenWithFlagPerm opens file/directory with custom <flag> and <perm>.
-// The parameter <flag> is like: O_RDONLY, O_RDWR, O_RDWR|O_CREATE|O_TRUNC, etc.
-// The parameter <perm> is like: 0600, 0666, 0777, etc.
+// OpenWithFlagPerm opens file/directory with custom `flag` and `perm`.
+// The parameter `flag` is like: O_RDONLY, O_RDWR, O_RDWR|O_CREATE|O_TRUNC, etc.
+// The parameter `perm` is like: 0600, 0666, 0777, etc.
 func OpenWithFlagPerm(path string, flag int, perm os.FileMode) (*os.File, error) {
 	f, err := os.OpenFile(path, flag, perm)
 	if err != nil {
@@ -124,7 +124,7 @@ func Join(paths ...string) string {
 	return s
 }
 
-// Exists checks whether given <path> exist.
+// Exists checks whether given `path` exist.
 func Exists(path string) bool {
 	if stat, err := os.Stat(path); stat != nil && !os.IsNotExist(err) {
 		return true
@@ -132,8 +132,8 @@ func Exists(path string) bool {
 	return false
 }
 
-// IsDir checks whether given <path> a directory.
-// Note that it returns false if the <path> does not exist.
+// IsDir checks whether given `path` a directory.
+// Note that it returns false if the `path` does not exist.
 func IsDir(path string) bool {
 	s, err := os.Stat(path)
 	if err != nil {
@@ -159,8 +159,8 @@ func Chdir(dir string) error {
 	return os.Chdir(dir)
 }
 
-// IsFile checks whether given <path> a file, which means it's not a directory.
-// Note that it returns false if the <path> does not exist.
+// IsFile checks whether given `path` a file, which means it's not a directory.
+// Note that it returns false if the `path` does not exist.
 func IsFile(path string) bool {
 	s, err := os.Stat(path)
 	if err != nil {
@@ -169,20 +169,14 @@ func IsFile(path string) bool {
 	return !s.IsDir()
 }
 
-// Alias of Stat.
-// See Stat.
-func Info(path string) (os.FileInfo, error) {
-	return Stat(path)
-}
-
 // Stat returns a FileInfo describing the named file.
 // If there is an error, it will be of type *PathError.
 func Stat(path string) (os.FileInfo, error) {
 	return os.Stat(path)
 }
 
-// Move renames (moves) <src> to <dst> path.
-// If <dst> already exists and is not a directory, it'll be replaced.
+// Move renames (moves) `src` to `dst` path.
+// If `dst` already exists and is not a directory, it'll be replaced.
 func Move(src string, dst string) error {
 	return os.Rename(src, dst)
 }
@@ -193,7 +187,7 @@ func Rename(src string, dst string) error {
 	return Move(src, dst)
 }
 
-// DirNames returns sub-file names of given directory <path>.
+// DirNames returns sub-file names of given directory `path`.
 // Note that the returned names are NOT absolute paths.
 func DirNames(path string) ([]string, error) {
 	f, err := os.Open(path)
@@ -231,13 +225,13 @@ func Glob(pattern string, onlyNames ...bool) ([]string, error) {
 	}
 }
 
-// Remove deletes all file/directory with <path> parameter.
-// If parameter <path> is directory, it deletes it recursively.
+// Remove deletes all file/directory with `path` parameter.
+// If parameter `path` is directory, it deletes it recursively.
 func Remove(path string) error {
 	return os.RemoveAll(path)
 }
 
-// IsReadable checks whether given <path> is readable.
+// IsReadable checks whether given `path` is readable.
 func IsReadable(path string) bool {
 	result := true
 	file, err := os.OpenFile(path, os.O_RDONLY, DefaultPermOpen)
@@ -248,7 +242,7 @@ func IsReadable(path string) bool {
 	return result
 }
 
-// IsWritable checks whether given <path> is writable.
+// IsWritable checks whether given `path` is writable.
 //
 // TODO improve performance; use golang.org/x/sys to cross-plat-form
 func IsWritable(path string) bool {
@@ -273,6 +267,7 @@ func IsWritable(path string) bool {
 	return result
 }
 
+// Chmod is alias of os.Chmod.
 // See os.Chmod.
 func Chmod(path string, mode os.FileMode) error {
 	return os.Chmod(path, mode)
@@ -288,7 +283,7 @@ func Abs(path string) string {
 	return p
 }
 
-// RealPath converts the given <path> to its absolute path
+// RealPath converts the given `path` to its absolute path
 // and checks if the file path exists.
 // If the file does not exist, return an empty string.
 func RealPath(path string) string {
@@ -354,11 +349,11 @@ func Dir(path string) string {
 	return filepath.Dir(path)
 }
 
-// IsEmpty checks whether the given <path> is empty.
-// If <path> is a folder, it checks if there's any file under it.
-// If <path> is a file, it checks if the file size is zero.
+// IsEmpty checks whether the given `path` is empty.
+// If `path` is a folder, it checks if there's any file under it.
+// If `path` is a file, it checks if the file size is zero.
 //
-// Note that it returns true if <path> does not exist.
+// Note that it returns true if `path` does not exist.
 func IsEmpty(path string) bool {
 	stat, err := Stat(path)
 	if err != nil {
@@ -401,9 +396,9 @@ func ExtName(path string) string {
 }
 
 // TempDir retrieves and returns the temporary directory of current system.
-// It return "/tmp" is current in *nix system, or else it returns os.TempDir().
+// It returns "/tmp" is current in *nix system, or else it returns os.TempDir().
 //
-// The optional parameter <names> specifies the its sub-folders/sub-files,
+// The optional parameter `names` specifies the its sub-folders/sub-files,
 // which will be joined with current system separator and returned with the path.
 func TempDir(names ...string) string {
 	path := tempDir

@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/i18n/gi18n"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/i18n/gi18n"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 func main() {

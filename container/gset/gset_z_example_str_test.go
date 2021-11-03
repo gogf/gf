@@ -8,8 +8,8 @@ package gset_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/container/gset"
-	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/v2/container/gset"
+	"github.com/gogf/gf/v2/frame/g"
 )
 
 func ExampleStrSet_Contains() {

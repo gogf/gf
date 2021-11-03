@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 type NamesObject struct{}
@@ -25,7 +25,7 @@ func (o *NamesObject) ShowName(r *ghttp.Request) {
 func Test_NameToUri_FullName(t *testing.T) {
 	p, _ := ports.PopRand()
 	s := g.Server(p)
-	s.SetNameToUriType(ghttp.URI_TYPE_FULLNAME)
+	s.SetNameToUriType(ghttp.UriTypeFullName)
 	s.BindObject("/{.struct}/{.method}", new(NamesObject))
 	s.SetPort(p)
 	s.SetDumpRouterMap(false)
@@ -37,16 +37,16 @@ func Test_NameToUri_FullName(t *testing.T) {
 		client := g.Client()
 		client.SetBrowserMode(true)
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		t.Assert(client.GetContent("/"), "Not Found")
-		t.Assert(client.GetContent("/NamesObject"), "Not Found")
-		t.Assert(client.GetContent("/NamesObject/ShowName"), "Object Show Name")
+		t.Assert(client.GetContent(ctx, "/"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/NamesObject"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/NamesObject/ShowName"), "Object Show Name")
 	})
 }
 
 func Test_NameToUri_AllLower(t *testing.T) {
 	p, _ := ports.PopRand()
 	s := g.Server(p)
-	s.SetNameToUriType(ghttp.URI_TYPE_ALLLOWER)
+	s.SetNameToUriType(ghttp.UriTypeAllLower)
 	s.BindObject("/{.struct}/{.method}", new(NamesObject))
 	s.SetPort(p)
 	s.SetDumpRouterMap(false)
@@ -58,16 +58,16 @@ func Test_NameToUri_AllLower(t *testing.T) {
 		client := g.Client()
 		client.SetBrowserMode(true)
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		t.Assert(client.GetContent("/"), "Not Found")
-		t.Assert(client.GetContent("/NamesObject"), "Not Found")
-		t.Assert(client.GetContent("/namesobject/showname"), "Object Show Name")
+		t.Assert(client.GetContent(ctx, "/"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/NamesObject"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/namesobject/showname"), "Object Show Name")
 	})
 }
 
 func Test_NameToUri_Camel(t *testing.T) {
 	p, _ := ports.PopRand()
 	s := g.Server(p)
-	s.SetNameToUriType(ghttp.URI_TYPE_CAMEL)
+	s.SetNameToUriType(ghttp.UriTypeCamel)
 	s.BindObject("/{.struct}/{.method}", new(NamesObject))
 	s.SetPort(p)
 	s.SetDumpRouterMap(false)
@@ -79,9 +79,9 @@ func Test_NameToUri_Camel(t *testing.T) {
 		client := g.Client()
 		client.SetBrowserMode(true)
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		t.Assert(client.GetContent("/"), "Not Found")
-		t.Assert(client.GetContent("/NamesObject"), "Not Found")
-		t.Assert(client.GetContent("/namesObject/showName"), "Object Show Name")
+		t.Assert(client.GetContent(ctx, "/"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/NamesObject"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/namesObject/showName"), "Object Show Name")
 	})
 }
 
@@ -100,8 +100,8 @@ func Test_NameToUri_Default(t *testing.T) {
 		client := g.Client()
 		client.SetBrowserMode(true)
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		t.Assert(client.GetContent("/"), "Not Found")
-		t.Assert(client.GetContent("/NamesObject"), "Not Found")
-		t.Assert(client.GetContent("/names-object/show-name"), "Object Show Name")
+		t.Assert(client.GetContent(ctx, "/"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/NamesObject"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/names-object/show-name"), "Object Show Name")
 	})
 }

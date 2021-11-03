@@ -9,14 +9,14 @@ package gdb
 import (
 	"database/sql"
 	"fmt"
-	"github.com/gogf/gf/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gcode"
 	"reflect"
 
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/structs"
-	"github.com/gogf/gf/internal/utils"
-	"github.com/gogf/gf/text/gregex"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/structs"
+	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // With creates and returns an ORM model based on metadata of given object.

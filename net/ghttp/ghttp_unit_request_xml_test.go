@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_Params_Xml_Request(t *testing.T) {
@@ -55,11 +55,11 @@ func Test_Params_Xml_Request(t *testing.T) {
 
 		content1 := `<doc><id>1</id><name>john</name><password1>123Abc!@#</password1><password2>123Abc!@#</password2></doc>`
 		content2 := `<doc><id>1</id><name>john</name><password1>123Abc!@#</password1><password2>123</password2></doc>`
-		t.Assert(client.GetContent("/get", content1), ``)
-		t.Assert(client.PostContent("/get", content1), `1john`)
-		t.Assert(client.GetContent("/map", content1), ``)
-		t.Assert(client.PostContent("/map", content1), `1john123Abc!@#123Abc!@#`)
-		t.Assert(client.PostContent("/parse", content1), `1john123Abc!@#123Abc!@#`)
-		t.Assert(client.PostContent("/parse", content2), `密码强度不足; 两次密码不一致`)
+		t.Assert(client.GetContent(ctx, "/get", content1), ``)
+		t.Assert(client.PostContent(ctx, "/get", content1), `1john`)
+		t.Assert(client.GetContent(ctx, "/map", content1), ``)
+		t.Assert(client.PostContent(ctx, "/map", content1), `1john123Abc!@#123Abc!@#`)
+		t.Assert(client.PostContent(ctx, "/parse", content1), `1john123Abc!@#123Abc!@#`)
+		t.Assert(client.PostContent(ctx, "/parse", content2), `密码强度不足; 两次密码不一致`)
 	})
 }

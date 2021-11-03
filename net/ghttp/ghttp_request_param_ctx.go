@@ -8,7 +8,8 @@ package ghttp
 
 import (
 	"context"
-	"github.com/gogf/gf/container/gvar"
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/os/gctx"
 )
 
 // RequestFromCtx retrieves and returns the Request object from context.
@@ -24,7 +25,10 @@ func RequestFromCtx(ctx context.Context) *Request {
 // See GetCtx.
 func (r *Request) Context() context.Context {
 	if r.context == nil {
-		r.context = r.Request.Context()
+		// DO NOT use the http context as it will be canceled after request done,
+		// which makes the asynchronous goroutine encounter "context canceled" error.
+		// r.context = r.Request.Context()
+		r.context = gctx.New()
 	}
 	// Inject Request object into context.
 	if RequestFromCtx(r.context) == nil {
@@ -44,7 +48,7 @@ func (r *Request) SetCtx(ctx context.Context) {
 }
 
 // GetCtxVar retrieves and returns a Var with given key name.
-// The optional parameter <def> specifies the default value of the Var if given <key>
+// The optional parameter `def` specifies the default value of the Var if given `key`
 // does not exist in the context.
 func (r *Request) GetCtxVar(key interface{}, def ...interface{}) *gvar.Var {
 	value := r.Context().Value(key)

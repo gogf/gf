@@ -8,11 +8,11 @@
 package gmap
 
 import (
-	"github.com/gogf/gf/internal/json"
+	"github.com/gogf/gf/v2/internal/json"
 
-	"github.com/gogf/gf/internal/empty"
-	"github.com/gogf/gf/internal/rwmutex"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/internal/empty"
+	"github.com/gogf/gf/v2/internal/rwmutex"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 type StrIntMap struct {
@@ -252,8 +252,8 @@ func (m *StrIntMap) GetOrSetFuncLock(key string, f func() int) int {
 	}
 }
 
-// SetIfNotExist sets <value> to the map if the `key` does not exist, and then returns true.
-// It returns false if <key> exists, and `value` would be ignored.
+// SetIfNotExist sets `value` to the map if the `key` does not exist, and then returns true.
+// It returns false if `key` exists, and `value` would be ignored.
 func (m *StrIntMap) SetIfNotExist(key string, value int) bool {
 	if !m.Contains(key) {
 		m.doSetWithLockCheck(key, value)
@@ -263,7 +263,7 @@ func (m *StrIntMap) SetIfNotExist(key string, value int) bool {
 }
 
 // SetIfNotExistFunc sets value with return value of callback function `f`, and then returns true.
-// It returns false if <key> exists, and `value` would be ignored.
+// It returns false if `key` exists, and `value` would be ignored.
 func (m *StrIntMap) SetIfNotExistFunc(key string, f func() int) bool {
 	if !m.Contains(key) {
 		m.doSetWithLockCheck(key, f())
@@ -273,7 +273,7 @@ func (m *StrIntMap) SetIfNotExistFunc(key string, f func() int) bool {
 }
 
 // SetIfNotExistFuncLock sets value with return value of callback function `f`, and then returns true.
-// It returns false if <key> exists, and `value` would be ignored.
+// It returns false if `key` exists, and `value` would be ignored.
 //
 // SetIfNotExistFuncLock differs with SetIfNotExistFunc function is that
 // it executes function `f` with mutex.Lock of the hash map.
@@ -412,7 +412,7 @@ func (m *StrIntMap) Flip() {
 }
 
 // Merge merges two hash maps.
-// The <other> map will be merged into the map `m`.
+// The `other` map will be merged into the map `m`.
 func (m *StrIntMap) Merge(other *StrIntMap) {
 	m.mu.Lock()
 	defer m.mu.Unlock()

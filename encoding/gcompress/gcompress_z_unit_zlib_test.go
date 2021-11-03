@@ -9,8 +9,8 @@ package gcompress_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/encoding/gcompress"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/encoding/gcompress"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_Zlib_UnZlib(t *testing.T) {

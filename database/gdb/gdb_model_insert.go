@@ -8,15 +8,16 @@ package gdb
 
 import (
 	"database/sql"
-	"github.com/gogf/gf/container/gset"
-	"github.com/gogf/gf/errors/gcode"
+	"github.com/gogf/gf/v2/container/gset"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/internal/utils"
 	"reflect"
 
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
-	"github.com/gogf/gf/util/gutil"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // Batch sets the batch operation number for the model.
@@ -50,37 +51,32 @@ func (m *Model) Data(data ...interface{}) *Model {
 			model.data = m
 		}
 	} else {
-		switch params := data[0].(type) {
+		switch value := data[0].(type) {
 		case Result:
-			model.data = params.List()
+			model.data = value.List()
 
 		case Record:
-			model.data = params.Map()
+			model.data = value.Map()
 
 		case List:
-			list := make(List, len(params))
-			for k, v := range params {
+			list := make(List, len(value))
+			for k, v := range value {
 				list[k] = gutil.MapCopy(v)
 			}
 			model.data = list
 
 		case Map:
-			model.data = gutil.MapCopy(params)
+			model.data = gutil.MapCopy(value)
 
 		default:
 			var (
-				rv   = reflect.ValueOf(params)
-				kind = rv.Kind()
+				reflectInfo = utils.OriginValueAndKind(value)
 			)
-			if kind == reflect.Ptr {
-				rv = rv.Elem()
-				kind = rv.Kind()
-			}
-			switch kind {
+			switch reflectInfo.OriginKind {
 			case reflect.Slice, reflect.Array:
-				list := make(List, rv.Len())
-				for i := 0; i < rv.Len(); i++ {
-					list[i] = ConvertDataForTableRecord(rv.Index(i).Interface())
+				list := make(List, reflectInfo.OriginValue.Len())
+				for i := 0; i < reflectInfo.OriginValue.Len(); i++ {
+					list[i] = ConvertDataForTableRecord(reflectInfo.OriginValue.Index(i).Interface())
 				}
 				model.data = list
 
@@ -88,6 +84,12 @@ func (m *Model) Data(data ...interface{}) *Model {
 				model.data = ConvertDataForTableRecord(data[0])
 
 			case reflect.Struct:
+				// If the `data` parameter is defined like `xxxForDao`,
+				// it then adds `OmitNilData` option for this condition,
+				// which will filter all nil parameters in `data`.
+				if gstr.HasSuffix(reflect.TypeOf(value).String(), modelForDaoSuffix) {
+					model = model.OmitNilData()
+				}
 				if v, ok := data[0].(iInterfaces); ok {
 					var (
 						array = v.Interfaces()
@@ -246,19 +248,14 @@ func (m *Model) doInsertWithOption(insertOption int) (result sql.Result, err err
 
 	default:
 		var (
-			rv   = reflect.ValueOf(newData)
-			kind = rv.Kind()
+			reflectInfo = utils.OriginValueAndKind(newData)
 		)
-		if kind == reflect.Ptr {
-			rv = rv.Elem()
-			kind = rv.Kind()
-		}
-		switch kind {
+		switch reflectInfo.OriginKind {
 		// If it's slice type, it then converts it to List type.
 		case reflect.Slice, reflect.Array:
-			list = make(List, rv.Len())
-			for i := 0; i < rv.Len(); i++ {
-				list[i] = ConvertDataForTableRecord(rv.Index(i).Interface())
+			list = make(List, reflectInfo.OriginValue.Len())
+			for i := 0; i < reflectInfo.OriginValue.Len(); i++ {
+				list[i] = ConvertDataForTableRecord(reflectInfo.OriginValue.Index(i).Interface())
 			}
 
 		case reflect.Map:
@@ -278,7 +275,11 @@ func (m *Model) doInsertWithOption(insertOption int) (result sql.Result, err err
 			}
 
 		default:
-			return result, gerror.NewCodef(gcode.CodeInvalidParameter, "unsupported list type:%v", kind)
+			return result, gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				"unsupported data list type: %v",
+				reflectInfo.InputValue.Type(),
+			)
 		}
 	}
 
@@ -331,17 +332,12 @@ func (m *Model) formatDoInsertOption(insertOption int, columnNames []string) (op
 
 			default:
 				var (
-					reflectValue = reflect.ValueOf(m.onDuplicate)
-					reflectKind  = reflectValue.Kind()
+					reflectInfo = utils.OriginValueAndKind(m.onDuplicate)
 				)
-				for reflectKind == reflect.Ptr {
-					reflectValue = reflectValue.Elem()
-					reflectKind = reflectValue.Kind()
-				}
-				switch reflectKind {
+				switch reflectInfo.OriginKind {
 				case reflect.String:
 					option.OnDuplicateMap = make(map[string]interface{})
-					for _, v := range gstr.SplitAndTrim(reflectValue.String(), ",") {
+					for _, v := range gstr.SplitAndTrim(reflectInfo.OriginValue.String(), ",") {
 						if onDuplicateExKeySet.Contains(v) {
 							continue
 						}
@@ -393,16 +389,11 @@ func (m *Model) formatOnDuplicateExKeys(onDuplicateEx interface{}) ([]string, er
 	}
 
 	var (
-		reflectValue = reflect.ValueOf(onDuplicateEx)
-		reflectKind  = reflectValue.Kind()
+		reflectInfo = utils.OriginValueAndKind(onDuplicateEx)
 	)
-	for reflectKind == reflect.Ptr {
-		reflectValue = reflectValue.Elem()
-		reflectKind = reflectValue.Kind()
-	}
-	switch reflectKind {
+	switch reflectInfo.OriginKind {
 	case reflect.String:
-		return gstr.SplitAndTrim(reflectValue.String(), ","), nil
+		return gstr.SplitAndTrim(reflectInfo.OriginValue.String(), ","), nil
 
 	case reflect.Map:
 		return gutil.Keys(onDuplicateEx), nil

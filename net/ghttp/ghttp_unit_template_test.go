@@ -10,15 +10,15 @@ package ghttp_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/debug/gdebug"
-	"github.com/gogf/gf/encoding/ghtml"
-	"github.com/gogf/gf/os/gview"
+	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gogf/gf/v2/encoding/ghtml"
+	"github.com/gogf/gf/v2/os/gview"
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_Template_Basic(t *testing.T) {
@@ -41,8 +41,8 @@ func Test_Template_Basic(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "Name:john")
-		t.Assert(client.GetContent("/"), "Name:john")
+		t.Assert(client.GetContent(ctx, "/"), "Name:john")
+		t.Assert(client.GetContent(ctx, "/"), "Name:john")
 	})
 }
 
@@ -67,8 +67,8 @@ func Test_Template_Encode(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "Name:john")
-		t.Assert(client.GetContent("/"), "Name:john")
+		t.Assert(client.GetContent(ctx, "/"), "Name:john")
+		t.Assert(client.GetContent(ctx, "/"), "Name:john")
 	})
 }
 
@@ -96,9 +96,9 @@ func Test_Template_Layout1(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "Not Found")
-		t.Assert(client.GetContent("/layout"), "123")
-		t.Assert(client.GetContent("/nil"), "123")
+		t.Assert(client.GetContent(ctx, "/"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/layout"), "123")
+		t.Assert(client.GetContent(ctx, "/nil"), "123")
 	})
 }
 
@@ -132,10 +132,10 @@ func Test_Template_Layout2(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), "Not Found")
-		t.Assert(client.GetContent("/main1"), "a1b")
-		t.Assert(client.GetContent("/main2"), "a2b")
-		t.Assert(client.GetContent("/nil"), "ab")
+		t.Assert(client.GetContent(ctx, "/"), "Not Found")
+		t.Assert(client.GetContent(ctx, "/main1"), "a1b")
+		t.Assert(client.GetContent(ctx, "/main2"), "a2b")
+		t.Assert(client.GetContent(ctx, "/nil"), "ab")
 	})
 }
 
@@ -155,8 +155,8 @@ func Test_Template_BuildInVarRequest(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/user/test"), "user")
-		t.Assert(client.GetContent("/order/test"), "order")
+		t.Assert(client.GetContent(ctx, "/user/test"), "user")
+		t.Assert(client.GetContent(ctx, "/order/test"), "order")
 	})
 }
 
@@ -182,6 +182,6 @@ func Test_Template_XSS(t *testing.T) {
 		client := g.Client()
 		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 
-		t.Assert(client.GetContent("/"), ghtml.Entities(c))
+		t.Assert(client.GetContent(ctx, "/"), ghtml.Entities(c))
 	})
 }

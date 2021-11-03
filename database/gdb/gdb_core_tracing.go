@@ -10,8 +10,8 @@ package gdb
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf"
-	"github.com/gogf/gf/net/gtrace"
+	"github.com/gogf/gf/v2"
+	"github.com/gogf/gf/v2/net/gtrace"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	tracingInstrumentName       = "github.com/gogf/gf/database/gdb"
+	tracingInstrumentName       = "github.com/gogf/gf/v2/database/gdb"
 	tracingAttrDbType           = "db.type"
 	tracingAttrDbHost           = "db.host"
 	tracingAttrDbPort           = "db.port"

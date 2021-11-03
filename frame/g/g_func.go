@@ -8,11 +8,11 @@ package g
 
 import (
 	"context"
-	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/internal/empty"
-	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/os/gproc"
-	"github.com/gogf/gf/util/gutil"
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/internal/empty"
+	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/os/gproc"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // NewVar returns a gvar.Var.
@@ -34,13 +34,14 @@ func Listen() {
 }
 
 // Dump dumps a variable to stdout with more manually readable.
-func Dump(i ...interface{}) {
-	gutil.Dump(i...)
+func Dump(values ...interface{}) {
+	gutil.Dump(values...)
 }
 
-// Export exports a variable to string with more manually readable.
-func Export(i ...interface{}) string {
-	return gutil.Export(i...)
+// DumpWithType acts like Dump, but with type information.
+// Also see Dump.
+func DumpWithType(values ...interface{}) {
+	gutil.DumpWithType(values...)
 }
 
 // Throw throws an exception, which can be caught by TryCatch function.
@@ -61,7 +62,7 @@ func TryCatch(try func(), catch ...func(exception error)) {
 }
 
 // IsNil checks whether given `value` is nil.
-// Parameter <traceSource> is used for tracing to the source variable if given `value` is type
+// Parameter `traceSource` is used for tracing to the source variable if given `value` is type
 // of pinter that also points to a pointer. It returns nil if the source is nil when `traceSource`
 // is true.
 // Note that it might use reflect feature which affects performance a little.

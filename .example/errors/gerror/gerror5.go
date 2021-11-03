@@ -3,9 +3,9 @@ package main
 import (
 	"errors"
 
-	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/v2/os/glog"
 
-	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
 func Error1() error {
@@ -17,6 +17,6 @@ func Error2() error {
 }
 
 func main() {
-	glog.Println(Error1())
-	glog.Println(Error2())
+	glog.Print(Error1())
+	glog.Print(Error2())
 }

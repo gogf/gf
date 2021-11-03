@@ -11,17 +11,17 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"github.com/gogf/gf/encoding/gbase64"
-	"github.com/gogf/gf/encoding/gcompress"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/encoding/gbase64"
+	"github.com/gogf/gf/v2/encoding/gcompress"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 const (
 	packedGoSouceTemplate = `
 package %s
 
-import "github.com/gogf/gf/os/gres"
+import "github.com/gogf/gf/v2/os/gres"
 
 func init() {
 	if err := gres.Add("%s"); err != nil {
@@ -31,11 +31,11 @@ func init() {
 `
 )
 
-// Pack packs the path specified by <srcPaths> into bytes.
-// The unnecessary parameter <keyPrefix> indicates the prefix for each file
+// Pack packs the path specified by `srcPaths` into bytes.
+// The unnecessary parameter `keyPrefix` indicates the prefix for each file
 // packed into the result bytes.
 //
-// Note that parameter <srcPaths> supports multiple paths join with ','.
+// Note that parameter `srcPaths` supports multiple paths join with ','.
 func Pack(srcPaths string, keyPrefix ...string) ([]byte, error) {
 	var (
 		buffer       = bytes.NewBuffer(nil)
@@ -52,11 +52,11 @@ func Pack(srcPaths string, keyPrefix ...string) ([]byte, error) {
 	return gcompress.Gzip(buffer.Bytes(), 9)
 }
 
-// PackToFile packs the path specified by <srcPaths> to target file <dstPath>.
-// The unnecessary parameter <keyPrefix> indicates the prefix for each file
+// PackToFile packs the path specified by `srcPaths` to target file `dstPath`.
+// The unnecessary parameter `keyPrefix` indicates the prefix for each file
 // packed into the result bytes.
 //
-// Note that parameter <srcPaths> supports multiple paths join with ','.
+// Note that parameter `srcPaths` supports multiple paths join with ','.
 func PackToFile(srcPaths, dstPath string, keyPrefix ...string) error {
 	data, err := Pack(srcPaths, keyPrefix...)
 	if err != nil {
@@ -65,13 +65,13 @@ func PackToFile(srcPaths, dstPath string, keyPrefix ...string) error {
 	return gfile.PutBytes(dstPath, data)
 }
 
-// PackToGoFile packs the path specified by <srcPaths> to target go file <goFilePath>
-// with given package name <pkgName>.
+// PackToGoFile packs the path specified by `srcPaths` to target go file `goFilePath`
+// with given package name `pkgName`.
 //
-// The unnecessary parameter <keyPrefix> indicates the prefix for each file
+// The unnecessary parameter `keyPrefix` indicates the prefix for each file
 // packed into the result bytes.
 //
-// Note that parameter <srcPaths> supports multiple paths join with ','.
+// Note that parameter `srcPaths` supports multiple paths join with ','.
 func PackToGoFile(srcPath, goFilePath, pkgName string, keyPrefix ...string) error {
 	data, err := Pack(srcPath, keyPrefix...)
 	if err != nil {
@@ -83,7 +83,7 @@ func PackToGoFile(srcPath, goFilePath, pkgName string, keyPrefix ...string) erro
 	)
 }
 
-// Unpack unpacks the content specified by <path> to []*File.
+// Unpack unpacks the content specified by `path` to []*File.
 func Unpack(path string) ([]*File, error) {
 	realPath, err := gfile.Search(path)
 	if err != nil {
@@ -130,8 +130,8 @@ func UnpackContent(content string) ([]*File, error) {
 	return array, nil
 }
 
-// isBase64 checks and returns whether given content <s> is base64 string.
-// It returns true if <s> is base64 string, or false if not.
+// isBase64 checks and returns whether given content `s` is base64 string.
+// It returns true if `s` is base64 string, or false if not.
 func isBase64(s string) bool {
 	var r bool
 	for i := 0; i < len(s); i++ {
@@ -147,8 +147,8 @@ func isBase64(s string) bool {
 	return true
 }
 
-// isHexStr checks and returns whether given content <s> is hex string.
-// It returns true if <s> is hex string, or false if not.
+// isHexStr checks and returns whether given content `s` is hex string.
+// It returns true if `s` is hex string, or false if not.
 func isHexStr(s string) bool {
 	var r bool
 	for i := 0; i < len(s); i++ {

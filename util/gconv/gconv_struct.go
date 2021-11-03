@@ -7,15 +7,15 @@
 package gconv
 
 import (
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/empty"
-	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/internal/structs"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/empty"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/internal/structs"
 	"reflect"
 	"strings"
 
-	"github.com/gogf/gf/internal/utils"
+	"github.com/gogf/gf/v2/internal/utils"
 )
 
 // Struct maps the params key-value pairs to the corresponding struct object's attributes.
@@ -40,16 +40,6 @@ func Struct(params interface{}, pointer interface{}, mapping ...map[string]strin
 // The parameter `priorityTag` supports multiple tags that can be joined with char ','.
 func StructTag(params interface{}, pointer interface{}, priorityTag string) (err error) {
 	return doStruct(params, pointer, nil, priorityTag)
-}
-
-// StructDeep do Struct function recursively.
-// Deprecated, use Struct instead.
-func StructDeep(params interface{}, pointer interface{}, mapping ...map[string]string) error {
-	var keyToAttributeNameMapping map[string]string
-	if len(mapping) > 0 {
-		keyToAttributeNameMapping = mapping[0]
-	}
-	return doStruct(params, pointer, keyToAttributeNameMapping, "")
 }
 
 // doStructWithJsonCheck checks if given `params` is JSON, it then uses json.Unmarshal doing the converting.

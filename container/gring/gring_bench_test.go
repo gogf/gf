@@ -11,7 +11,7 @@ package gring_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/container/gring"
+	"github.com/gogf/gf/v2/container/gring"
 )
 
 var length = 10000

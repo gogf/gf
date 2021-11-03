@@ -8,15 +8,15 @@ package gcache
 
 import (
 	"context"
-	"github.com/gogf/gf/container/gvar"
+	"github.com/gogf/gf/v2/container/gvar"
 	"math"
 	"time"
 
-	"github.com/gogf/gf/container/glist"
-	"github.com/gogf/gf/container/gset"
-	"github.com/gogf/gf/container/gtype"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/os/gtimer"
+	"github.com/gogf/gf/v2/container/glist"
+	"github.com/gogf/gf/v2/container/gset"
+	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/os/gtimer"
 )
 
 // AdapterMemory is an adapter implements using memory.
@@ -87,14 +87,14 @@ func (c *AdapterMemory) Set(ctx context.Context, key interface{}, value interfac
 	return nil
 }
 
-// Sets batch sets cache with key-value pairs by `data` map, which is expired after `duration`.
+// SetMap batch sets cache with key-value pairs by `data` map, which is expired after `duration`.
 //
 // It does not expire if `duration` == 0.
 // It deletes the keys of `data` if `duration` < 0 or given `value` is nil.
-func (c *AdapterMemory) Sets(ctx context.Context, data map[interface{}]interface{}, duration time.Duration) error {
+func (c *AdapterMemory) SetMap(ctx context.Context, data map[interface{}]interface{}, duration time.Duration) error {
 	var (
 		expireTime = c.getInternalExpire(duration)
-		err        = c.data.Sets(data, expireTime)
+		err        = c.data.SetMap(data, expireTime)
 	)
 	if err != nil {
 		return err
@@ -394,7 +394,7 @@ func (c *AdapterMemory) makeExpireKey(expire int64) int64 {
 // 1. Asynchronously process the data in the event list,
 //    and synchronize the results to the `expireTimes` and `expireSets` properties.
 // 2. Clean up the expired key-value pair data.
-func (c *AdapterMemory) syncEventAndClearExpired() {
+func (c *AdapterMemory) syncEventAndClearExpired(ctx context.Context) {
 	if c.closed.Val() {
 		gtimer.Exit()
 		return

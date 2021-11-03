@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gogf/gf/text/gregex"
+	"github.com/gogf/gf/v2/text/gregex"
 )
 
 var (
@@ -65,7 +65,7 @@ var (
 	dayOfMonth = []int{0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334}
 )
 
-// Format formats and returns the formatted result with custom <format>.
+// Format formats and returns the formatted result with custom `format`.
 func (t *Time) Format(format string) string {
 	if t == nil {
 		return ""
@@ -129,7 +129,7 @@ func (t *Time) Format(format string) string {
 	return buffer.String()
 }
 
-// FormatNew formats and returns a new Time object with given custom <format>.
+// FormatNew formats and returns a new Time object with given custom `format`.
 func (t *Time) FormatNew(format string) *Time {
 	if t == nil {
 		return nil
@@ -137,7 +137,7 @@ func (t *Time) FormatNew(format string) *Time {
 	return NewFromStr(t.Format(format))
 }
 
-// FormatTo formats <t> with given custom <format>.
+// FormatTo formats `t` with given custom `format`.
 func (t *Time) FormatTo(format string) *Time {
 	if t == nil {
 		return nil
@@ -162,7 +162,7 @@ func (t *Time) LayoutNew(layout string) *Time {
 	return NewFromStr(t.Layout(layout))
 }
 
-// LayoutTo formats <t> with stdlib layout.
+// LayoutTo formats `t` with stdlib layout.
 func (t *Time) LayoutTo(layout string) *Time {
 	if t == nil {
 		return nil

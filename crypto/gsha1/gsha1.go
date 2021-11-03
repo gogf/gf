@@ -13,7 +13,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // Encrypt encrypts any type of variable using SHA1 algorithms.

@@ -11,12 +11,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/gogf/gf/database/gdb"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/util/gconv"
 
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_Table_Relation_One(t *testing.T) {
@@ -25,7 +25,7 @@ func Test_Table_Relation_One(t *testing.T) {
 		tableUserDetail = "user_detail_" + gtime.TimestampMicroStr()
 		tableUserScores = "user_scores_" + gtime.TimestampMicroStr()
 	)
-	if _, err := db.Exec(fmt.Sprintf(`
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
   uid int(10) unsigned NOT NULL AUTO_INCREMENT,
   name varchar(45) NOT NULL,
@@ -36,7 +36,7 @@ CREATE TABLE %s (
 	}
 	defer dropTable(tableUser)
 
-	if _, err := db.Exec(fmt.Sprintf(`
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
   uid int(10) unsigned NOT NULL AUTO_INCREMENT,
   address varchar(45) NOT NULL,
@@ -47,7 +47,7 @@ CREATE TABLE %s (
 	}
 	defer dropTable(tableUserDetail)
 
-	if _, err := db.Exec(fmt.Sprintf(`
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
   id int(10) unsigned NOT NULL AUTO_INCREMENT,
   uid int(10) unsigned NOT NULL,
@@ -170,7 +170,7 @@ func Test_Table_Relation_Many(t *testing.T) {
 		tableUserDetail = "user_detail_" + gtime.TimestampMicroStr()
 		tableUserScores = "user_scores_" + gtime.TimestampMicroStr()
 	)
-	if _, err := db.Exec(fmt.Sprintf(`
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
   uid int(10) unsigned NOT NULL AUTO_INCREMENT,
   name varchar(45) NOT NULL,
@@ -181,7 +181,7 @@ CREATE TABLE %s (
 	}
 	defer dropTable(tableUser)
 
-	if _, err := db.Exec(fmt.Sprintf(`
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
   uid int(10) unsigned NOT NULL AUTO_INCREMENT,
   address varchar(45) NOT NULL,
@@ -192,7 +192,7 @@ CREATE TABLE %s (
 	}
 	defer dropTable(tableUserDetail)
 
-	if _, err := db.Exec(fmt.Sprintf(`
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
   id int(10) unsigned NOT NULL AUTO_INCREMENT,
   uid int(10) unsigned NOT NULL,
@@ -228,20 +228,20 @@ CREATE TABLE %s (
 		var err error
 		for i := 1; i <= 5; i++ {
 			// User.
-			_, err = db.Insert(tableUser, g.Map{
+			_, err = db.Insert(ctx, tableUser, g.Map{
 				"uid":  i,
 				"name": fmt.Sprintf(`name_%d`, i),
 			})
 			t.AssertNil(err)
 			// Detail.
-			_, err = db.Insert(tableUserDetail, g.Map{
+			_, err = db.Insert(ctx, tableUserDetail, g.Map{
 				"uid":     i,
 				"address": fmt.Sprintf(`address_%d`, i),
 			})
 			t.AssertNil(err)
 			// Scores.
 			for j := 1; j <= 5; j++ {
-				_, err = db.Insert(tableUserScores, g.Map{
+				_, err = db.Insert(ctx, tableUserScores, g.Map{
 					"uid":   i,
 					"score": j,
 				})
@@ -484,7 +484,7 @@ func Test_Table_Relation_Many_RelationKeyCaseInsensitive(t *testing.T) {
 		tableUserDetail = "user_detail_" + gtime.TimestampMicroStr()
 		tableUserScores = "user_scores_" + gtime.TimestampMicroStr()
 	)
-	if _, err := db.Exec(fmt.Sprintf(`
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
   uid int(10) unsigned NOT NULL AUTO_INCREMENT,
   name varchar(45) NOT NULL,
@@ -495,7 +495,7 @@ CREATE TABLE %s (
 	}
 	defer dropTable(tableUser)
 
-	if _, err := db.Exec(fmt.Sprintf(`
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
   uid int(10) unsigned NOT NULL AUTO_INCREMENT,
   address varchar(45) NOT NULL,
@@ -506,7 +506,7 @@ CREATE TABLE %s (
 	}
 	defer dropTable(tableUserDetail)
 
-	if _, err := db.Exec(fmt.Sprintf(`
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
   id int(10) unsigned NOT NULL AUTO_INCREMENT,
   uid int(10) unsigned NOT NULL,
@@ -542,20 +542,20 @@ CREATE TABLE %s (
 		var err error
 		for i := 1; i <= 5; i++ {
 			// User.
-			_, err = db.Insert(tableUser, g.Map{
+			_, err = db.Insert(ctx, tableUser, g.Map{
 				"uid":  i,
 				"name": fmt.Sprintf(`name_%d`, i),
 			})
 			t.AssertNil(err)
 			// Detail.
-			_, err = db.Insert(tableUserDetail, g.Map{
+			_, err = db.Insert(ctx, tableUserDetail, g.Map{
 				"uid":     i,
 				"address": fmt.Sprintf(`address_%d`, i),
 			})
 			t.AssertNil(err)
 			// Scores.
 			for j := 1; j <= 5; j++ {
-				_, err = db.Insert(tableUserScores, g.Map{
+				_, err = db.Insert(ctx, tableUserScores, g.Map{
 					"uid":   i,
 					"score": j,
 				})
@@ -798,7 +798,7 @@ func Test_Table_Relation_Many_TheSameRelationNames(t *testing.T) {
 		tableUserDetail = "user_detail_" + gtime.TimestampMicroStr()
 		tableUserScores = "user_scores_" + gtime.TimestampMicroStr()
 	)
-	if _, err := db.Exec(fmt.Sprintf(`
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
   uid int(10) unsigned NOT NULL AUTO_INCREMENT,
   name varchar(45) NOT NULL,
@@ -809,7 +809,7 @@ CREATE TABLE %s (
 	}
 	defer dropTable(tableUser)
 
-	if _, err := db.Exec(fmt.Sprintf(`
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
   uid int(10) unsigned NOT NULL AUTO_INCREMENT,
   address varchar(45) NOT NULL,
@@ -820,7 +820,7 @@ CREATE TABLE %s (
 	}
 	defer dropTable(tableUserDetail)
 
-	if _, err := db.Exec(fmt.Sprintf(`
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
   id int(10) unsigned NOT NULL AUTO_INCREMENT,
   uid int(10) unsigned NOT NULL,
@@ -856,20 +856,20 @@ CREATE TABLE %s (
 		var err error
 		for i := 1; i <= 5; i++ {
 			// User.
-			_, err = db.Insert(tableUser, g.Map{
+			_, err = db.Insert(ctx, tableUser, g.Map{
 				"uid":  i,
 				"name": fmt.Sprintf(`name_%d`, i),
 			})
 			t.AssertNil(err)
 			// Detail.
-			_, err = db.Insert(tableUserDetail, g.Map{
+			_, err = db.Insert(ctx, tableUserDetail, g.Map{
 				"uid":     i,
 				"address": fmt.Sprintf(`address_%d`, i),
 			})
 			t.AssertNil(err)
 			// Scores.
 			for j := 1; j <= 5; j++ {
-				_, err = db.Insert(tableUserScores, g.Map{
+				_, err = db.Insert(ctx, tableUserScores, g.Map{
 					"uid":   i,
 					"score": j,
 				})
@@ -1093,7 +1093,7 @@ func Test_Table_Relation_EmptyData(t *testing.T) {
 		tableUserDetail = "user_detail_" + gtime.TimestampMicroStr()
 		tableUserScores = "user_scores_" + gtime.TimestampMicroStr()
 	)
-	if _, err := db.Exec(fmt.Sprintf(`
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
   uid int(10) unsigned NOT NULL AUTO_INCREMENT,
   name varchar(45) NOT NULL,
@@ -1104,7 +1104,7 @@ CREATE TABLE %s (
 	}
 	defer dropTable(tableUser)
 
-	if _, err := db.Exec(fmt.Sprintf(`
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
   uid int(10) unsigned NOT NULL AUTO_INCREMENT,
   address varchar(45) NOT NULL,
@@ -1115,7 +1115,7 @@ CREATE TABLE %s (
 	}
 	defer dropTable(tableUserDetail)
 
-	if _, err := db.Exec(fmt.Sprintf(`
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
   id int(10) unsigned NOT NULL AUTO_INCREMENT,
   uid int(10) unsigned NOT NULL,
@@ -1304,7 +1304,7 @@ func Test_Table_Relation_NoneEqualDataSize(t *testing.T) {
 		tableUserDetail = "user_detail_" + gtime.TimestampMicroStr()
 		tableUserScores = "user_scores_" + gtime.TimestampMicroStr()
 	)
-	if _, err := db.Exec(fmt.Sprintf(`
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
   uid int(10) unsigned NOT NULL AUTO_INCREMENT,
   name varchar(45) NOT NULL,
@@ -1315,7 +1315,7 @@ CREATE TABLE %s (
 	}
 	defer dropTable(tableUser)
 
-	if _, err := db.Exec(fmt.Sprintf(`
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
   uid int(10) unsigned NOT NULL AUTO_INCREMENT,
   address varchar(45) NOT NULL,
@@ -1326,7 +1326,7 @@ CREATE TABLE %s (
 	}
 	defer dropTable(tableUserDetail)
 
-	if _, err := db.Exec(fmt.Sprintf(`
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
   id int(10) unsigned NOT NULL AUTO_INCREMENT,
   uid int(10) unsigned NOT NULL,
@@ -1362,20 +1362,20 @@ CREATE TABLE %s (
 		var err error
 		for i := 1; i <= 5; i++ {
 			// User.
-			_, err = db.Insert(tableUser, g.Map{
+			_, err = db.Insert(ctx, tableUser, g.Map{
 				"uid":  i,
 				"name": fmt.Sprintf(`name_%d`, i),
 			})
 			t.AssertNil(err)
 			// Detail.
-			//_, err = db.Insert(tableUserDetail, g.Map{
+			//_, err = db.Insert(ctx, tableUserDetail, g.Map{
 			//	"uid":     i,
 			//	"address": fmt.Sprintf(`address_%d`, i),
 			//})
 			//t.AssertNil(err)
 			// Scores.
 			//for j := 1; j <= 5; j++ {
-			//	_, err = db.Insert(tableUserScores, g.Map{
+			//	_, err = db.Insert(ctx, tableUserScores, g.Map{
 			//		"uid":   i,
 			//		"score": j,
 			//	})
@@ -1559,7 +1559,7 @@ func Test_Table_Relation_EmbeddedStruct(t *testing.T) {
 		tableUserDetail = "user_detail_" + gtime.TimestampMicroStr()
 		tableUserScores = "user_scores_" + gtime.TimestampMicroStr()
 	)
-	if _, err := db.Exec(fmt.Sprintf(`
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
   uid int(10) unsigned NOT NULL AUTO_INCREMENT,
   name varchar(45) NOT NULL,
@@ -1570,7 +1570,7 @@ CREATE TABLE %s (
 	}
 	defer dropTable(tableUser)
 
-	if _, err := db.Exec(fmt.Sprintf(`
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
   uid int(10) unsigned NOT NULL AUTO_INCREMENT,
   address varchar(45) NOT NULL,
@@ -1581,7 +1581,7 @@ CREATE TABLE %s (
 	}
 	defer dropTable(tableUserDetail)
 
-	if _, err := db.Exec(fmt.Sprintf(`
+	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE %s (
   id int(10) unsigned NOT NULL AUTO_INCREMENT,
   uid int(10) unsigned NOT NULL,
@@ -1615,20 +1615,20 @@ CREATE TABLE %s (
 		var err error
 		for i := 1; i <= 5; i++ {
 			// User.
-			_, err = db.Insert(tableUser, g.Map{
+			_, err = db.Insert(ctx, tableUser, g.Map{
 				"uid":  i,
 				"name": fmt.Sprintf(`name_%d`, i),
 			})
 			t.AssertNil(err)
 			// Detail.
-			_, err = db.Insert(tableUserDetail, g.Map{
+			_, err = db.Insert(ctx, tableUserDetail, g.Map{
 				"uid":     i,
 				"address": fmt.Sprintf(`address_%d`, i),
 			})
 			t.AssertNil(err)
 			// Scores.
 			for j := 1; j <= 5; j++ {
-				_, err = db.Insert(tableUserScores, g.Map{
+				_, err = db.Insert(ctx, tableUserScores, g.Map{
 					"uid":   i,
 					"score": j,
 				})
