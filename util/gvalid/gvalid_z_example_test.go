@@ -10,13 +10,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/v2/os/gctx"
 	"math"
 	"reflect"
 
-	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/util/gconv"
-	"github.com/gogf/gf/util/gvalid"
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gvalid"
 )
 
 func ExampleCheckMap() {
@@ -30,7 +31,7 @@ func ExampleCheckMap() {
 		"password@required|length:6,16|same:password2#密码不能为空|密码长度应当在:min到:max之间|两次密码输入不相等",
 		"password2@required|length:6,16#",
 	}
-	if e := gvalid.CheckMap(context.TODO(), params, rules); e != nil {
+	if e := gvalid.CheckMap(gctx.New(), params, rules); e != nil {
 		fmt.Println(e.Map())
 		fmt.Println(e.FirstItem())
 		fmt.Println(e.FirstString())
@@ -52,7 +53,7 @@ func ExampleCheckMap2() {
 		"password@required|length:6,16|same:password2#密码不能为空|密码长度应当在:min到:max之间|两次密码输入不相等",
 		"password2@required|length:6,16#",
 	}
-	if e := gvalid.CheckMap(context.TODO(), params, rules); e != nil {
+	if e := gvalid.CheckMap(gctx.New(), params, rules); e != nil {
 		fmt.Println(e.Map())
 		fmt.Println(e.FirstItem())
 		fmt.Println(e.FirstString())
@@ -74,7 +75,7 @@ func ExampleCheckStruct() {
 		Page: 1,
 		Size: 10,
 	}
-	err := gvalid.CheckStruct(context.TODO(), obj, nil)
+	err := gvalid.CheckStruct(gctx.New(), obj, nil)
 	fmt.Println(err == nil)
 	// Output:
 	// true
@@ -91,7 +92,7 @@ func ExampleCheckStruct2() {
 		Page: 1,
 		Size: 10,
 	}
-	err := gvalid.CheckStruct(context.TODO(), obj, nil)
+	err := gvalid.CheckStruct(gctx.New(), obj, nil)
 	fmt.Println(err == nil)
 	// Output:
 	// true
@@ -108,7 +109,7 @@ func ExampleCheckStruct3() {
 		Page: 1,
 		Size: 10,
 	}
-	err := gvalid.CheckStruct(context.TODO(), obj, nil)
+	err := gvalid.CheckStruct(gctx.New(), obj, nil)
 	fmt.Println(err)
 	// Output:
 	// project id must between 1, 10000
@@ -141,7 +142,7 @@ func ExampleRegisterRule() {
 		}
 		return nil
 	})
-	err := gvalid.CheckStruct(context.TODO(), user, nil)
+	err := gvalid.CheckStruct(gctx.New(), user, nil)
 	fmt.Println(err.Error())
 	// May Output:
 	// 用户名称已被占用
@@ -175,14 +176,14 @@ func ExampleRegisterRule_OverwriteRequired() {
 		}
 		return nil
 	})
-	fmt.Println(gvalid.CheckValue(context.TODO(), "", "required", "It's required"))
-	fmt.Println(gvalid.CheckValue(context.TODO(), 0, "required", "It's required"))
-	fmt.Println(gvalid.CheckValue(context.TODO(), false, "required", "It's required"))
+	fmt.Println(gvalid.CheckValue(gctx.New(), "", "required", "It's required"))
+	fmt.Println(gvalid.CheckValue(gctx.New(), 0, "required", "It's required"))
+	fmt.Println(gvalid.CheckValue(gctx.New(), false, "required", "It's required"))
 	gvalid.DeleteRule(rule)
 	fmt.Println("rule deleted")
-	fmt.Println(gvalid.CheckValue(context.TODO(), "", "required", "It's required"))
-	fmt.Println(gvalid.CheckValue(context.TODO(), 0, "required", "It's required"))
-	fmt.Println(gvalid.CheckValue(context.TODO(), false, "required", "It's required"))
+	fmt.Println(gvalid.CheckValue(gctx.New(), "", "required", "It's required"))
+	fmt.Println(gvalid.CheckValue(gctx.New(), 0, "required", "It's required"))
+	fmt.Println(gvalid.CheckValue(gctx.New(), false, "required", "It's required"))
 	// Output:
 	// It's required
 	// It's required
@@ -197,7 +198,10 @@ func ExampleValidator_Rules() {
 	data := g.Map{
 		"password": "123",
 	}
-	err := g.Validator().Data(data).Rules("required-with:password").Messages("请输入确认密码").CheckValue("")
+	err := g.Validator().Data(data).
+		Rules("required-with:password").
+		Messages("请输入确认密码").
+		CheckValue(gctx.New(), "")
 	fmt.Println(err.String())
 
 	// Output:
@@ -205,7 +209,9 @@ func ExampleValidator_Rules() {
 }
 
 func ExampleValidator_CheckValue() {
-	err := g.Validator().Rules("min:18").Messages("未成年人不允许注册哟").CheckValue(16)
+	err := g.Validator().Rules("min:18").
+		Messages("未成年人不允许注册哟").
+		CheckValue(gctx.New(), 16)
 	fmt.Println(err.String())
 
 	// Output:
@@ -230,7 +236,10 @@ func ExampleValidator_CheckMap() {
 			"same":     "两次密码输入不相等",
 		},
 	}
-	err := g.Validator().Messages(messages).Rules(rules).CheckMap(params)
+	err := g.Validator().
+		Messages(messages).
+		Rules(rules).
+		CheckMap(gctx.New(), params)
 	if err != nil {
 		g.Dump(err.Maps())
 	}
@@ -259,7 +268,7 @@ func ExampleValidator_CheckStruct() {
 	if err := gconv.Scan(data, &user); err != nil {
 		panic(err)
 	}
-	err := g.Validator().Data(data).CheckStruct(user)
+	err := g.Validator().Data(data).CheckStruct(gctx.New(), user)
 	if err != nil {
 		fmt.Println(err.Items())
 	}

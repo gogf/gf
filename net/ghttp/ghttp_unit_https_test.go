@@ -8,18 +8,18 @@ package ghttp_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/debug/gdebug"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/text/gstr"
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/test/gtest"
 
-	_ "github.com/gogf/gf/net/ghttp/testdata/https/packed"
+	_ "github.com/gogf/gf/v2/net/ghttp/testdata/https/packed"
 )
 
 func Test_HTTPS_Basic(t *testing.T) {
@@ -45,15 +45,15 @@ func Test_HTTPS_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		t.AssertIN(gstr.Trim(c.GetContent("/")), g.Slice{"", "Client sent an HTTP request to an HTTPS server."})
-		t.AssertIN(gstr.Trim(c.GetContent("/test")), g.Slice{"", "Client sent an HTTP request to an HTTPS server."})
+		t.AssertIN(gstr.Trim(c.GetContent(ctx, "/")), g.Slice{"", "Client sent an HTTP request to an HTTPS server."})
+		t.AssertIN(gstr.Trim(c.GetContent(ctx, "/test")), g.Slice{"", "Client sent an HTTP request to an HTTPS server."})
 	})
 	// HTTPS
 	gtest.C(t, func(t *gtest.T) {
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("https://127.0.0.1:%d", p))
-		t.Assert(c.GetContent("/"), "Not Found")
-		t.Assert(c.GetContent("/test"), "test")
+		t.Assert(c.GetContent(ctx, "/"), "Not Found")
+		t.Assert(c.GetContent(ctx, "/test"), "test")
 	})
 }
 
@@ -80,15 +80,15 @@ func Test_HTTPS_Resource(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		t.AssertIN(gstr.Trim(c.GetContent("/")), g.Slice{"", "Client sent an HTTP request to an HTTPS server."})
-		t.AssertIN(gstr.Trim(c.GetContent("/test")), g.Slice{"", "Client sent an HTTP request to an HTTPS server."})
+		t.AssertIN(gstr.Trim(c.GetContent(ctx, "/")), g.Slice{"", "Client sent an HTTP request to an HTTPS server."})
+		t.AssertIN(gstr.Trim(c.GetContent(ctx, "/test")), g.Slice{"", "Client sent an HTTP request to an HTTPS server."})
 	})
 	// HTTPS
 	gtest.C(t, func(t *gtest.T) {
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("https://127.0.0.1:%d", p))
-		t.Assert(c.GetContent("/"), "Not Found")
-		t.Assert(c.GetContent("/test"), "test")
+		t.Assert(c.GetContent(ctx, "/"), "Not Found")
+		t.Assert(c.GetContent(ctx, "/test"), "test")
 	})
 }
 
@@ -119,14 +119,14 @@ func Test_HTTPS_HTTP_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", portHttp))
-		t.Assert(c.GetContent("/"), "Not Found")
-		t.Assert(c.GetContent("/test"), "test")
+		t.Assert(c.GetContent(ctx, "/"), "Not Found")
+		t.Assert(c.GetContent(ctx, "/test"), "test")
 	})
 	// HTTPS
 	gtest.C(t, func(t *gtest.T) {
 		c := g.Client()
 		c.SetPrefix(fmt.Sprintf("https://127.0.0.1:%d", portHttps))
-		t.Assert(c.GetContent("/"), "Not Found")
-		t.Assert(c.GetContent("/test"), "test")
+		t.Assert(c.GetContent(ctx, "/"), "Not Found")
+		t.Assert(c.GetContent(ctx, "/test"), "test")
 	})
 }

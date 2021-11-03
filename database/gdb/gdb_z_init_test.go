@@ -9,13 +9,13 @@ package gdb_test
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/container/garray"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/gcmd"
+	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gcmd"
 
-	"github.com/gogf/gf/database/gdb"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 const (
@@ -30,10 +30,11 @@ const (
 )
 
 var (
-	db          gdb.DB
-	dbPrefix    gdb.DB
-	dbCtxStrict gdb.DB
-	configNode  gdb.ConfigNode
+	db         gdb.DB
+	dbPrefix   gdb.DB
+	dbInvalid  gdb.DB
+	configNode gdb.ConfigNode
+	ctx        = context.TODO()
 )
 
 func init() {
@@ -47,8 +48,8 @@ func init() {
 		Port:             "3306",
 		User:             TestDbUser,
 		Pass:             TestDbPass,
-		Name:             parser.GetOpt("name", ""),
-		Type:             parser.GetOpt("type", "mysql"),
+		Name:             parser.GetOpt("name", "").String(),
+		Type:             parser.GetOpt("type", "mysql").String(),
 		Role:             "master",
 		Charset:          "utf8",
 		Weight:           1,
@@ -59,12 +60,12 @@ func init() {
 	nodePrefix := configNode
 	nodePrefix.Prefix = TableNamePrefix1
 
-	nodeCtxStrict := configNode
-	nodeCtxStrict.CtxStrict = true
+	nodeInvalid := configNode
+	nodeInvalid.Port = "3307"
 
 	gdb.AddConfigNode("test", configNode)
 	gdb.AddConfigNode("prefix", nodePrefix)
-	gdb.AddConfigNode("ctxstrict", nodeCtxStrict)
+	gdb.AddConfigNode("nodeinvalid", nodeInvalid)
 	gdb.AddConfigNode(gdb.DefaultGroupName, configNode)
 
 	// Default db.
@@ -74,10 +75,10 @@ func init() {
 		db = r
 	}
 	schemaTemplate := "CREATE DATABASE IF NOT EXISTS `%s` CHARACTER SET UTF8"
-	if _, err := db.Exec(fmt.Sprintf(schemaTemplate, TestSchema1)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(schemaTemplate, TestSchema1)); err != nil {
 		gtest.Error(err)
 	}
-	if _, err := db.Exec(fmt.Sprintf(schemaTemplate, TestSchema2)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(schemaTemplate, TestSchema2)); err != nil {
 		gtest.Error(err)
 	}
 	db.SetSchema(TestSchema1)
@@ -88,27 +89,21 @@ func init() {
 	} else {
 		dbPrefix = r
 	}
-	if _, err := dbPrefix.Exec(fmt.Sprintf(schemaTemplate, TestSchema1)); err != nil {
+	if _, err := dbPrefix.Exec(ctx, fmt.Sprintf(schemaTemplate, TestSchema1)); err != nil {
 		gtest.Error(err)
 	}
-	if _, err := dbPrefix.Exec(fmt.Sprintf(schemaTemplate, TestSchema2)); err != nil {
+	if _, err := dbPrefix.Exec(ctx, fmt.Sprintf(schemaTemplate, TestSchema2)); err != nil {
 		gtest.Error(err)
 	}
 	dbPrefix.SetSchema(TestSchema1)
 
-	// CtxStrict db.
-	if r, err := gdb.New("ctxstrict"); err != nil {
+	// Invalid db.
+	if r, err := gdb.New("nodeinvalid"); err != nil {
 		gtest.Error(err)
 	} else {
-		dbCtxStrict = r
+		dbInvalid = r
 	}
-	if _, err := dbCtxStrict.Ctx(context.TODO()).Exec(fmt.Sprintf(schemaTemplate, TestSchema1)); err != nil {
-		gtest.Error(err)
-	}
-	if _, err := dbCtxStrict.Ctx(context.TODO()).Exec(fmt.Sprintf(schemaTemplate, TestSchema2)); err != nil {
-		gtest.Error(err)
-	}
-	dbCtxStrict.SetSchema(TestSchema1)
+	dbInvalid.SetSchema(TestSchema1)
 }
 
 func createTable(table ...string) string {
@@ -133,7 +128,7 @@ func createTableWithDb(db gdb.DB, table ...string) (name string) {
 
 	switch configNode.Type {
 	case "sqlite":
-		if _, err := db.Ctx(context.TODO()).Exec(fmt.Sprintf(`
+		if _, err := db.Exec(ctx, fmt.Sprintf(`
 		CREATE TABLE %s (
 		   id bigint unsigned NOT NULL AUTO_INCREMENT,
 		   passport varchar(45),
@@ -146,7 +141,7 @@ func createTableWithDb(db gdb.DB, table ...string) (name string) {
 			gtest.Fatal(err)
 		}
 	case "pgsql":
-		if _, err := db.Ctx(context.TODO()).Exec(fmt.Sprintf(`
+		if _, err := db.Exec(ctx, fmt.Sprintf(`
 		CREATE TABLE %s (
 		   id bigint  NOT NULL,
 		   passport varchar(45),
@@ -159,7 +154,7 @@ func createTableWithDb(db gdb.DB, table ...string) (name string) {
 			gtest.Fatal(err)
 		}
 	case "mssql":
-		if _, err := db.Ctx(context.TODO()).Exec(fmt.Sprintf(`
+		if _, err := db.Exec(ctx, fmt.Sprintf(`
 		IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='%s' and xtype='U')
 		CREATE TABLE %s (
 		ID numeric(10,0) NOT NULL,
@@ -173,7 +168,7 @@ func createTableWithDb(db gdb.DB, table ...string) (name string) {
 			gtest.Fatal(err)
 		}
 	case "oracle":
-		if _, err := db.Ctx(context.TODO()).Exec(fmt.Sprintf(`
+		if _, err := db.Exec(ctx, fmt.Sprintf(`
 		CREATE TABLE %s (
 		ID NUMBER(10) NOT NULL,
 		PASSPORT VARCHAR(45) NOT NULL,
@@ -186,7 +181,7 @@ func createTableWithDb(db gdb.DB, table ...string) (name string) {
 			gtest.Fatal(err)
 		}
 	case "mysql":
-		if _, err := db.Ctx(context.TODO()).Exec(fmt.Sprintf(`
+		if _, err := db.Exec(ctx, fmt.Sprintf(`
 	    CREATE TABLE %s (
 	        id          int(10) unsigned NOT NULL AUTO_INCREMENT,
 	        passport    varchar(45) NULL,
@@ -217,7 +212,7 @@ func createInitTableWithDb(db gdb.DB, table ...string) (name string) {
 		})
 	}
 
-	result, err := db.Ctx(context.TODO()).Insert(name, array.Slice())
+	result, err := db.Insert(ctx, name, array.Slice())
 	gtest.AssertNil(err)
 
 	n, e := result.RowsAffected()
@@ -227,7 +222,7 @@ func createInitTableWithDb(db gdb.DB, table ...string) (name string) {
 }
 
 func dropTableWithDb(db gdb.DB, table string) {
-	if _, err := db.Ctx(context.TODO()).Exec(fmt.Sprintf("DROP TABLE IF EXISTS `%s`", table)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf("DROP TABLE IF EXISTS `%s`", table)); err != nil {
 		gtest.Error(err)
 	}
 }

@@ -9,11 +9,15 @@ package gutil
 
 import (
 	"fmt"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/empty"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/empty"
+	"github.com/gogf/gf/v2/util/gconv"
 	"reflect"
+)
+
+const (
+	dumpIndent = `    `
 )
 
 // Throw throws out an exception, which can be caught be TryCatch or recover.

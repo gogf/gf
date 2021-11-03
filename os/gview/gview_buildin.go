@@ -9,15 +9,15 @@ package gview
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/util/gutil"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/util/gutil"
 	"strings"
 
-	"github.com/gogf/gf/encoding/ghtml"
-	"github.com/gogf/gf/encoding/gurl"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/encoding/ghtml"
+	"github.com/gogf/gf/v2/encoding/gurl"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 
 	htmltpl "html/template"
 )
@@ -26,7 +26,7 @@ import (
 func (view *View) buildInFuncDump(values ...interface{}) (result string) {
 	result += "<!--\n"
 	for _, v := range values {
-		result += gutil.Export(v) + "\n"
+		result += gutil.Export(v, gutil.ExportOption{WithoutType: true}) + "\n"
 	}
 	result += "-->\n"
 	return result

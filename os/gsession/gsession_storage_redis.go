@@ -8,13 +8,13 @@ package gsession
 
 import (
 	"context"
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/database/gredis"
-	"github.com/gogf/gf/internal/intlog"
-	"github.com/gogf/gf/internal/json"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/database/gredis"
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/internal/json"
 	"time"
 
-	"github.com/gogf/gf/os/gtimer"
+	"github.com/gogf/gf/v2/os/gtimer"
 )
 
 // StorageRedis implements the Session Storage interface with redis.
@@ -44,7 +44,7 @@ func NewStorageRedis(redis *gredis.Redis, prefix ...string) *StorageRedis {
 		s.prefix = prefix[0]
 	}
 	// Batch updates the TTL for session ids timely.
-	gtimer.AddSingleton(DefaultStorageRedisLoopInterval, func() {
+	gtimer.AddSingleton(context.Background(), DefaultStorageRedisLoopInterval, func(ctx context.Context) {
 		intlog.Print(context.TODO(), "StorageRedis.timer start")
 		var (
 			id         string
@@ -78,7 +78,7 @@ func (s *StorageRedis) Get(ctx context.Context, id string, key string) (value in
 }
 
 // GetMap retrieves all key-value pairs as map from storage.
-func (s *StorageRedis) GetMap(ctx context.Context, id string) (data map[string]interface{}, err error) {
+func (s *StorageRedis) Data(ctx context.Context, id string) (data map[string]interface{}, err error) {
 	return nil, ErrorDisabled
 }
 
@@ -118,7 +118,7 @@ func (s *StorageRedis) RemoveAll(ctx context.Context, id string) error {
 // This function is called ever when session starts.
 func (s *StorageRedis) GetSession(ctx context.Context, id string, ttl time.Duration, data *gmap.StrAnyMap) (*gmap.StrAnyMap, error) {
 	intlog.Printf(ctx, "StorageRedis.GetSession: %s, %v", id, ttl)
-	r, err := s.redis.Ctx(ctx).DoVar("GET", s.key(id))
+	r, err := s.redis.Do(ctx, "GET", s.key(id))
 	if err != nil {
 		return nil, err
 	}
@@ -150,7 +150,7 @@ func (s *StorageRedis) SetSession(ctx context.Context, id string, data *gmap.Str
 	if err != nil {
 		return err
 	}
-	_, err = s.redis.Ctx(ctx).DoVar("SETEX", s.key(id), int64(ttl.Seconds()), content)
+	_, err = s.redis.Do(ctx, "SETEX", s.key(id), int64(ttl.Seconds()), content)
 	return err
 }
 
@@ -168,7 +168,7 @@ func (s *StorageRedis) UpdateTTL(ctx context.Context, id string, ttl time.Durati
 // doUpdateTTL updates the TTL for session id.
 func (s *StorageRedis) doUpdateTTL(ctx context.Context, id string, ttlSeconds int) error {
 	intlog.Printf(ctx, "StorageRedis.doUpdateTTL: %s, %d", id, ttlSeconds)
-	_, err := s.redis.Ctx(ctx).DoVar("EXPIRE", s.key(id), ttlSeconds)
+	_, err := s.redis.Do(ctx, "EXPIRE", s.key(id), ttlSeconds)
 	return err
 }
 

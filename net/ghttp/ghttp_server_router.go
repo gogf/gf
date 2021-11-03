@@ -7,17 +7,18 @@
 package ghttp
 
 import (
+	"context"
 	"fmt"
-	"github.com/gogf/gf/container/gtype"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"strings"
 
-	"github.com/gogf/gf/debug/gdebug"
+	"github.com/gogf/gf/v2/debug/gdebug"
 
-	"github.com/gogf/gf/container/glist"
-	"github.com/gogf/gf/text/gregex"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/container/glist"
+	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 const (
@@ -65,8 +66,8 @@ func (s *Server) parsePattern(pattern string) (domain, method, path string, err 
 // setHandler creates router item with given handler and pattern and registers the handler to the router tree.
 // The router tree can be treated as a multilayer hash table, please refer to the comment in following codes.
 // This function is called during server starts up, which cares little about the performance. What really cares
-// is the well designed router storage structure for router searching when the request is under serving.
-func (s *Server) setHandler(pattern string, handler *handlerItem) {
+// is the well-designed router storage structure for router searching when the request is under serving.
+func (s *Server) setHandler(ctx context.Context, pattern string, handler *handlerItem) {
 	handler.Id = handlerIdGenerator.Add(1)
 	if handler.Source == "" {
 		_, file, line := gdebug.CallerWithFilter(stackFilterKey)
@@ -74,11 +75,11 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 	}
 	domain, method, uri, err := s.parsePattern(pattern)
 	if err != nil {
-		s.Logger().Fatal("invalid pattern:", pattern, err)
+		s.Logger().Fatalf(ctx, `invalid pattern "%s", %+v`, pattern, err)
 		return
 	}
 	if len(uri) == 0 || uri[0] != '/' {
-		s.Logger().Fatal("invalid pattern:", pattern, "URI should lead with '/'")
+		s.Logger().Fatalf(ctx, `invalid pattern "%s", URI should lead with '/'`, pattern)
 		return
 	}
 
@@ -86,9 +87,10 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 	routerKey := s.routerMapKey(handler.HookName, method, uri, domain)
 	if !s.config.RouteOverWrite {
 		switch handler.Type {
-		case handlerTypeHandler, handlerTypeObject, handlerTypeController:
+		case HandlerTypeHandler, HandlerTypeObject:
 			if item, ok := s.routesMap[routerKey]; ok {
 				s.Logger().Fatalf(
+					ctx,
 					`duplicated route registry "%s" at %s , already registered at %s`,
 					pattern, handler.Source, item[0].Source,
 				)
@@ -167,7 +169,7 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 			}
 		}
 	}
-	// It iterates the list array of <lists>, compares priorities and inserts the new router item in
+	// It iterates the list array of `lists`, compares priorities and inserts the new router item in
 	// the proper position of each list. The priority of the list is ordered from high to low.
 	item := (*handlerItem)(nil)
 	for _, l := range lists {
@@ -198,7 +200,7 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 		Handler: handler,
 	}
 	switch handler.Type {
-	case handlerTypeHandler, handlerTypeObject, handlerTypeController:
+	case HandlerTypeHandler, HandlerTypeObject:
 		// Overwrite the route.
 		s.routesMap[routerKey] = []registeredRouteItem{routeItem}
 	default:
@@ -207,8 +209,8 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 	}
 }
 
-// compareRouterPriority compares the priority between <newItem> and <oldItem>. It returns true
-// if <newItem>'s priority is higher than <oldItem>, else it returns false. The higher priority
+// compareRouterPriority compares the priority between `newItem` and `oldItem`. It returns true
+// if `newItem`'s priority is higher than `oldItem`, else it returns false. The higher priority
 // item will be insert into the router list before the other one.
 //
 // Comparison rules:
@@ -217,11 +219,11 @@ func (s *Server) setHandler(pattern string, handler *handlerItem) {
 // 3. Route type: {xxx} > :xxx > *xxx.
 func (s *Server) compareRouterPriority(newItem *handlerItem, oldItem *handlerItem) bool {
 	// If they're all type of middleware, the priority is according their registered sequence.
-	if newItem.Type == handlerTypeMiddleware && oldItem.Type == handlerTypeMiddleware {
+	if newItem.Type == HandlerTypeMiddleware && oldItem.Type == HandlerTypeMiddleware {
 		return false
 	}
 	// The middleware has the most high priority.
-	if newItem.Type == handlerTypeMiddleware && oldItem.Type != handlerTypeMiddleware {
+	if newItem.Type == HandlerTypeMiddleware && oldItem.Type != HandlerTypeMiddleware {
 		return true
 	}
 	// URI: The deeper the higher (simply check the count of char '/' in the URI).
@@ -322,7 +324,7 @@ func (s *Server) compareRouterPriority(newItem *handlerItem, oldItem *handlerIte
 
 	// If they have different router type,
 	// the new router item has more priority than the other one.
-	if newItem.Type == handlerTypeHandler || newItem.Type == handlerTypeObject || newItem.Type == handlerTypeController {
+	if newItem.Type == HandlerTypeHandler || newItem.Type == HandlerTypeObject {
 		return true
 	}
 

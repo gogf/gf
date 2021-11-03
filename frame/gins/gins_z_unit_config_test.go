@@ -9,16 +9,16 @@ package gins_test
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/debug/gdebug"
-	"github.com/gogf/gf/frame/gins"
+	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gogf/gf/v2/frame/gins"
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/os/gcfg"
+	"github.com/gogf/gf/v2/os/gcfg"
 
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 var (
@@ -57,7 +57,7 @@ func Test_Config2(t *testing.T) {
 
 		t.Assert(gins.Config().MustGet(ctx, "test"), "v=1")
 		t.Assert(gins.Config().MustGet(ctx, "database.default.1.host"), "127.0.0.1")
-		t.Assert(gins.Config().MustGet(ctx, "redis.disk"), "127.0.0.1:6379,0")
+		t.Assert(gins.Config().MustGet(ctx, "redis.disk"), `{"address":"127.0.0.1:6379","db":1}`)
 	})
 	// for gfsnotify callbacks to refresh cache of config file
 	time.Sleep(500 * time.Millisecond)
@@ -81,7 +81,7 @@ func Test_Config2(t *testing.T) {
 
 		t.Assert(gins.Config().MustGet(ctx, "test"), "v=1")
 		t.Assert(gins.Config().MustGet(ctx, "database.default.1.host"), "127.0.0.1")
-		t.Assert(gins.Config().MustGet(ctx, "redis.disk"), "127.0.0.1:6379,0")
+		t.Assert(gins.Config().MustGet(ctx, "redis.disk"), `{"address":"127.0.0.1:6379","db":1}`)
 
 		// for gfsnotify callbacks to refresh cache of config file
 		time.Sleep(500 * time.Millisecond)
@@ -108,7 +108,7 @@ func Test_Config3(t *testing.T) {
 
 		t.Assert(gins.Config("test").MustGet(ctx, "test"), "v=1")
 		t.Assert(gins.Config("test").MustGet(ctx, "database.default.1.host"), "127.0.0.1")
-		t.Assert(gins.Config("test").MustGet(ctx, "redis.disk"), "127.0.0.1:6379,0")
+		t.Assert(gins.Config("test").MustGet(ctx, "redis.disk"), `{"address":"127.0.0.1:6379","db":1}`)
 	})
 	// for gfsnotify callbacks to refresh cache of config file
 	time.Sleep(500 * time.Millisecond)
@@ -132,7 +132,7 @@ func Test_Config3(t *testing.T) {
 
 		t.Assert(gins.Config("test").MustGet(ctx, "test"), "v=1")
 		t.Assert(gins.Config("test").MustGet(ctx, "database.default.1.host"), "127.0.0.1")
-		t.Assert(gins.Config("test").MustGet(ctx, "redis.disk"), "127.0.0.1:6379,0")
+		t.Assert(gins.Config("test").MustGet(ctx, "redis.disk"), `{"address":"127.0.0.1:6379","db":1}`)
 	})
 	// for gfsnotify callbacks to refresh cache of config file for next unit testing case.
 	time.Sleep(500 * time.Millisecond)
@@ -151,7 +151,7 @@ func Test_Config4(t *testing.T) {
 		t.Assert(gins.Config().GetAdapter().(*gcfg.AdapterFile).AddPath(path), nil)
 		t.Assert(gins.Config().MustGet(ctx, "test"), "v=1")
 		t.Assert(gins.Config().MustGet(ctx, "database.default.1.host"), "127.0.0.1")
-		t.Assert(gins.Config().MustGet(ctx, "redis.disk"), "127.0.0.1:6379,0")
+		t.Assert(gins.Config().MustGet(ctx, "redis.disk"), `{"address":"127.0.0.1:6379","db":1}`)
 	})
 	time.Sleep(500 * time.Millisecond)
 
@@ -165,7 +165,7 @@ func Test_Config4(t *testing.T) {
 		t.Assert(gins.Config().GetAdapter().(*gcfg.AdapterFile).AddPath(path), nil)
 		t.Assert(gins.Config().MustGet(ctx, "test"), "v=1")
 		t.Assert(gins.Config().MustGet(ctx, "database.default.1.host"), "127.0.0.1")
-		t.Assert(gins.Config().MustGet(ctx, "redis.disk"), "127.0.0.1:6379,0")
+		t.Assert(gins.Config().MustGet(ctx, "redis.disk"), `{"address":"127.0.0.1:6379","db":1}`)
 	})
 	time.Sleep(500 * time.Millisecond)
 
@@ -180,7 +180,7 @@ func Test_Config4(t *testing.T) {
 		t.Assert(gins.Config("test").GetAdapter().(*gcfg.AdapterFile).AddPath(path), nil)
 		t.Assert(gins.Config("test").MustGet(ctx, "test"), "v=1")
 		t.Assert(gins.Config("test").MustGet(ctx, "database.default.1.host"), "127.0.0.1")
-		t.Assert(gins.Config("test").MustGet(ctx, "redis.disk"), "127.0.0.1:6379,0")
+		t.Assert(gins.Config("test").MustGet(ctx, "redis.disk"), `{"address":"127.0.0.1:6379","db":1}`)
 	})
 	time.Sleep(500 * time.Millisecond)
 
@@ -195,7 +195,7 @@ func Test_Config4(t *testing.T) {
 		t.Assert(gins.Config("test").GetAdapter().(*gcfg.AdapterFile).AddPath(path), nil)
 		t.Assert(gins.Config("test").MustGet(ctx, "test"), "v=1")
 		t.Assert(gins.Config("test").MustGet(ctx, "database.default.1.host"), "127.0.0.1")
-		t.Assert(gins.Config("test").MustGet(ctx, "redis.disk"), "127.0.0.1:6379,0")
+		t.Assert(gins.Config("test").MustGet(ctx, "redis.disk"), `{"address":"127.0.0.1:6379","db":1}`)
 	})
 }
 func Test_Basic2(t *testing.T) {

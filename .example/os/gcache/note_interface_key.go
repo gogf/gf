@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/gogf/gf/os/gcache"
-	"github.com/gogf/gf/os/gctx"
+	"github.com/gogf/gf/v2/os/gcache"
+	"github.com/gogf/gf/v2/os/gctx"
 )
 
 func main() {

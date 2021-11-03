@@ -6,7 +6,7 @@
 
 package ghttp
 
-import "github.com/gogf/gf/os/glog"
+import "github.com/gogf/gf/v2/os/glog"
 
 // SetLogPath sets the log path for server.
 // It logs content to file only if the log path is set.

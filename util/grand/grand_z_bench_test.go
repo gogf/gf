@@ -13,7 +13,7 @@ import (
 	mathRand "math/rand"
 
 	"encoding/binary"
-	"github.com/gogf/gf/util/grand"
+	"github.com/gogf/gf/v2/util/grand"
 	"testing"
 )
 

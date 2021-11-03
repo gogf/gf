@@ -7,7 +7,6 @@
 package client
 
 import (
-	"context"
 	"time"
 )
 
@@ -111,17 +110,6 @@ func (c *Client) BasicAuth(user, pass string) *Client {
 		newClient = c.Clone()
 	}
 	newClient.SetBasicAuth(user, pass)
-	return newClient
-}
-
-// Ctx is a chaining function,
-// which sets context for next request of this client.
-func (c *Client) Ctx(ctx context.Context) *Client {
-	newClient := c
-	if c.parent == nil {
-		newClient = c.Clone()
-	}
-	newClient.SetCtx(ctx)
 	return newClient
 }
 

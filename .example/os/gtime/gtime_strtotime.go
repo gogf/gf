@@ -1,11 +1,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"time"
 
-	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v2/os/gtime"
 )
 
 func main() {
@@ -38,7 +39,7 @@ func main() {
 			fmt.Println(t.UTC().String())
 			fmt.Println(t.In(cstLocal).String())
 		} else {
-			glog.Error(s, err)
+			glog.Error(context.Background(), s, err)
 		}
 		fmt.Println()
 	}

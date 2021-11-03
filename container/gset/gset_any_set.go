@@ -9,10 +9,10 @@ package gset
 
 import (
 	"bytes"
-	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/internal/rwmutex"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/internal/rwmutex"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 type Set struct {
@@ -27,7 +27,8 @@ func New(safe ...bool) *Set {
 	return NewSet(safe...)
 }
 
-// See New.
+// NewSet create and returns a new set, which contains un-repeated items.
+// Also see New.
 func NewSet(safe ...bool) *Set {
 	return &Set{
 		data: make(map[interface{}]struct{}),
@@ -99,7 +100,7 @@ func (set *Set) AddIfNotExist(item interface{}) bool {
 // it adds the item to set and returns true if it does not exists in the set and
 // function `f` returns true, or else it does nothing and returns false.
 //
-// Note that, if <item> is nil, it does nothing and returns false. The function `f`
+// Note that, if `item` is nil, it does nothing and returns false. The function `f`
 // is executed without writing lock.
 func (set *Set) AddIfNotExistFunc(item interface{}, f func() bool) bool {
 	if item == nil {
@@ -121,11 +122,11 @@ func (set *Set) AddIfNotExistFunc(item interface{}, f func() bool) bool {
 	return false
 }
 
-// AddIfNotExistFunc checks whether item exists in the set,
+// AddIfNotExistFuncLock checks whether item exists in the set,
 // it adds the item to set and returns true if it does not exists in the set and
 // function `f` returns true, or else it does nothing and returns false.
 //
-// Note that, if <item> is nil, it does nothing and returns false. The function `f`
+// Note that, if `item` is nil, it does nothing and returns false. The function `f`
 // is executed within writing lock.
 func (set *Set) AddIfNotExistFuncLock(item interface{}, f func() bool) bool {
 	if item == nil {
@@ -297,8 +298,8 @@ func (set *Set) IsSubsetOf(other *Set) bool {
 	return true
 }
 
-// Union returns a new set which is the union of <set> and `others`.
-// Which means, all the items in <newSet> are in <set> or in `others`.
+// Union returns a new set which is the union of `set` and `others`.
+// Which means, all the items in `newSet` are in `set` or in `others`.
 func (set *Set) Union(others ...*Set) (newSet *Set) {
 	newSet = NewSet()
 	set.mu.RLock()
@@ -323,8 +324,8 @@ func (set *Set) Union(others ...*Set) (newSet *Set) {
 	return
 }
 
-// Diff returns a new set which is the difference set from <set> to `others`.
-// Which means, all the items in <newSet> are in <set> but not in `others`.
+// Diff returns a new set which is the difference set from `set` to `others`.
+// Which means, all the items in `newSet` are in `set` but not in `others`.
 func (set *Set) Diff(others ...*Set) (newSet *Set) {
 	newSet = NewSet()
 	set.mu.RLock()
@@ -344,8 +345,8 @@ func (set *Set) Diff(others ...*Set) (newSet *Set) {
 	return
 }
 
-// Intersect returns a new set which is the intersection from <set> to `others`.
-// Which means, all the items in <newSet> are in <set> and also in `others`.
+// Intersect returns a new set which is the intersection from `set` to `others`.
+// Which means, all the items in `newSet` are in `set` and also in `others`.
 func (set *Set) Intersect(others ...*Set) (newSet *Set) {
 	newSet = NewSet()
 	set.mu.RLock()
@@ -366,11 +367,11 @@ func (set *Set) Intersect(others ...*Set) (newSet *Set) {
 	return
 }
 
-// Complement returns a new set which is the complement from <set> to `full`.
-// Which means, all the items in <newSet> are in <full> and not in `set`.
+// Complement returns a new set which is the complement from `set` to `full`.
+// Which means, all the items in `newSet` are in `full` and not in `set`.
 //
-// It returns the difference between <full> and `set`
-// if the given set <full> is not the full set of `set`.
+// It returns the difference between `full` and `set`
+// if the given set `full` is not the full set of `set`.
 func (set *Set) Complement(full *Set) (newSet *Set) {
 	newSet = NewSet()
 	set.mu.RLock()
@@ -387,7 +388,7 @@ func (set *Set) Complement(full *Set) (newSet *Set) {
 	return
 }
 
-// Merge adds items from <others> sets into `set`.
+// Merge adds items from `others` sets into `set`.
 func (set *Set) Merge(others ...*Set) *Set {
 	set.mu.Lock()
 	defer set.mu.Unlock()
@@ -417,7 +418,7 @@ func (set *Set) Sum() (sum int) {
 	return
 }
 
-// Pops randomly pops an item from set.
+// Pop randomly pops an item from set.
 func (set *Set) Pop() interface{} {
 	set.mu.Lock()
 	defer set.mu.Unlock()

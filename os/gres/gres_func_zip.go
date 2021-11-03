@@ -9,20 +9,20 @@ package gres
 import (
 	"archive/zip"
 	"context"
-	"github.com/gogf/gf/internal/fileinfo"
-	"github.com/gogf/gf/internal/intlog"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/text/gregex"
+	"github.com/gogf/gf/v2/internal/fileinfo"
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/text/gregex"
 	"io"
 	"os"
 	"strings"
 	"time"
 )
 
-// ZipPathWriter compresses <paths> to <writer> using zip compressing algorithm.
-// The unnecessary parameter <prefix> indicates the path prefix for zip file.
+// ZipPathWriter compresses `paths` to `writer` using zip compressing algorithm.
+// The unnecessary parameter `prefix` indicates the path prefix for zip file.
 //
-// Note that the parameter <paths> can be either a directory or a file, which
+// Note that the parameter `paths` can be either a directory or a file, which
 // supports multiple paths join with ','.
 func zipPathWriter(paths string, writer io.Writer, prefix ...string) error {
 	zipWriter := zip.NewWriter(writer)
@@ -36,10 +36,10 @@ func zipPathWriter(paths string, writer io.Writer, prefix ...string) error {
 	return nil
 }
 
-// doZipPathWriter compresses the file of given <path> and writes the content to <zipWriter>.
-// The parameter <exclude> specifies the exclusive file path that is not compressed to <zipWriter>,
+// doZipPathWriter compresses the file of given `path` and writes the content to `zipWriter`.
+// The parameter `exclude` specifies the exclusive file path that is not compressed to `zipWriter`,
 // commonly the destination zip file path.
-// The unnecessary parameter <prefix> indicates the path prefix for zip file.
+// The unnecessary parameter `prefix` indicates the path prefix for zip file.
 func doZipPathWriter(path string, exclude string, zipWriter *zip.Writer, prefix ...string) error {
 	var (
 		err   error
@@ -100,8 +100,8 @@ func doZipPathWriter(path string, exclude string, zipWriter *zip.Writer, prefix 
 	return nil
 }
 
-// zipFile compresses the file of given <path> and writes the content to <zw>.
-// The parameter <prefix> indicates the path prefix for zip file.
+// zipFile compresses the file of given `path` and writes the content to `zw`.
+// The parameter `prefix` indicates the path prefix for zip file.
 func zipFile(path string, prefix string, zw *zip.Writer) error {
 	prefix = strings.Replace(prefix, `//`, `/`, -1)
 	file, err := os.Open(path)

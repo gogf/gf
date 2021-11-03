@@ -7,10 +7,10 @@
 package gvalid
 
 import (
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/text/gregex"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/text/gstr"
 	"strings"
 )
 
@@ -182,7 +182,7 @@ func (e *validationError) FirstString() (err string) {
 	return
 }
 
-// Current is alis of FirstString, which implements interface gerror.ApiCurrent.
+// Current is alis of FirstString, which implements interface gerror.iCurrent.
 func (e *validationError) Current() error {
 	if e == nil {
 		return nil

@@ -9,11 +9,11 @@ package gins
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/database/gredis"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/util/gconv"
-	"github.com/gogf/gf/util/gutil"
+	"github.com/gogf/gf/v2/database/gredis"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 const (
@@ -52,11 +52,15 @@ func Redis(name ...string) *gredis.Redis {
 
 		if len(configMap) > 0 {
 			if v, ok := configMap[group]; ok {
-				redisConfig, err := gredis.ConfigFromStr(gconv.String(v))
+				redisConfig, err := gredis.ConfigFromMap(gconv.Map(v))
 				if err != nil {
 					panic(err)
 				}
-				return gredis.New(redisConfig)
+				redisClient, err := gredis.New(redisConfig)
+				if err != nil {
+					panic(err)
+				}
+				return redisClient
 			} else {
 				panic(fmt.Sprintf(`missing configuration for redis group "%s"`, group))
 			}

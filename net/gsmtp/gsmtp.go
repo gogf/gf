@@ -8,14 +8,14 @@
 //
 // Eg:
 // s := smtp.New("smtp.exmail.qq.com:25", "notify@a.com", "password")
-// glog.Println(s.SendMail("notify@a.com", "ulric@b.com;rain@c.com", "subject", "body, <font color=red>red</font>"))
+// glog.Print(s.SendMail("notify@a.com", "ulric@b.com;rain@c.com", "subject", "body, <font color=red>red</font>"))
 package gsmtp
 
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"net/smtp"
 	"strings"
 )
@@ -43,10 +43,10 @@ var (
 
 // SendMail connects to the server at addr, switches to TLS if
 // possible, authenticates with the optional mechanism an if possible,
-// and then sends an email from address <from>, to addresses <to>, with
+// and then sends an email from address `from`, to addresses `to`, with
 // message msg.
 //
-// The parameter <contentType> specifies the content type of the mail, eg: html.
+// The parameter `contentType` specifies the content type of the mail, eg: html.
 func (s *SMTP) SendMail(from, tos, subject, body string, contentType ...string) error {
 	var (
 		server  = ""

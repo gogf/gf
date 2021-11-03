@@ -8,8 +8,8 @@
 package glog
 
 import (
-	"github.com/gogf/gf/os/gcmd"
-	"github.com/gogf/gf/os/grpool"
+	"github.com/gogf/gf/v2/os/gcmd"
+	"github.com/gogf/gf/v2/os/grpool"
 )
 
 const (

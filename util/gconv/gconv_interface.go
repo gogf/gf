@@ -6,7 +6,7 @@
 
 package gconv
 
-import "github.com/gogf/gf/os/gtime"
+import "github.com/gogf/gf/v2/os/gtime"
 
 // iString is used for type assert api for String().
 type iString interface {

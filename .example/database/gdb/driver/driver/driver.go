@@ -3,8 +3,8 @@ package driver
 import (
 	"context"
 	"database/sql"
-	"github.com/gogf/gf/database/gdb"
-	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/os/gtime"
 )
 
 // MyDriver is a custom database driver, which is used for testing only.

@@ -10,19 +10,19 @@ import (
 	"archive/zip"
 	"bytes"
 	"context"
-	"github.com/gogf/gf/internal/intlog"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/text/gstr"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
-// ZipPath compresses <paths> to <dest> using zip compressing algorithm.
-// The unnecessary parameter <prefix> indicates the path prefix for zip file.
+// ZipPath compresses `paths` to `dest` using zip compressing algorithm.
+// The unnecessary parameter `prefix` indicates the path prefix for zip file.
 //
-// Note that the parameter <paths> can be either a directory or a file, which
+// Note that the parameter `paths` can be either a directory or a file, which
 // supports multiple paths join with ','.
 func ZipPath(paths, dest string, prefix ...string) error {
 	writer, err := os.Create(dest)
@@ -41,10 +41,10 @@ func ZipPath(paths, dest string, prefix ...string) error {
 	return nil
 }
 
-// ZipPathWriter compresses <paths> to <writer> using zip compressing algorithm.
-// The unnecessary parameter <prefix> indicates the path prefix for zip file.
+// ZipPathWriter compresses `paths` to `writer` using zip compressing algorithm.
+// The unnecessary parameter `prefix` indicates the path prefix for zip file.
 //
-// Note that the parameter <paths> can be either a directory or a file, which
+// Note that the parameter `paths` can be either a directory or a file, which
 // supports multiple paths join with ','.
 func ZipPathWriter(paths string, writer io.Writer, prefix ...string) error {
 	zipWriter := zip.NewWriter(writer)
@@ -58,10 +58,10 @@ func ZipPathWriter(paths string, writer io.Writer, prefix ...string) error {
 	return nil
 }
 
-// doZipPathWriter compresses the file of given <path> and writes the content to <zipWriter>.
-// The parameter <exclude> specifies the exclusive file path that is not compressed to <zipWriter>,
+// doZipPathWriter compresses the file of given `path` and writes the content to `zipWriter`.
+// The parameter `exclude` specifies the exclusive file path that is not compressed to `zipWriter`,
 // commonly the destination zip file path.
-// The unnecessary parameter <prefix> indicates the path prefix for zip file.
+// The unnecessary parameter `prefix` indicates the path prefix for zip file.
 func doZipPathWriter(path string, exclude string, zipWriter *zip.Writer, prefix ...string) error {
 	var err error
 	var files []string
@@ -108,11 +108,11 @@ func doZipPathWriter(path string, exclude string, zipWriter *zip.Writer, prefix 
 	return nil
 }
 
-// UnZipFile decompresses <archive> to <dest> using zip compressing algorithm.
-// The optional parameter <path> specifies the unzipped path of <archive>,
+// UnZipFile decompresses `archive` to `dest` using zip compressing algorithm.
+// The optional parameter `path` specifies the unzipped path of `archive`,
 // which can be used to specify part of the archive file to unzip.
 //
-// Note that the parameter <dest> should be a directory.
+// Note that the parameter `dest` should be a directory.
 func UnZipFile(archive, dest string, path ...string) error {
 	readerCloser, err := zip.OpenReader(archive)
 	if err != nil {
@@ -122,11 +122,11 @@ func UnZipFile(archive, dest string, path ...string) error {
 	return unZipFileWithReader(&readerCloser.Reader, dest, path...)
 }
 
-// UnZipContent decompresses <data> to <dest> using zip compressing algorithm.
-// The parameter <path> specifies the unzipped path of <archive>,
+// UnZipContent decompresses `data` to `dest` using zip compressing algorithm.
+// The parameter `path` specifies the unzipped path of `archive`,
 // which can be used to specify part of the archive file to unzip.
 //
-// Note that the parameter <dest> should be a directory.
+// Note that the parameter `dest` should be a directory.
 func UnZipContent(data []byte, dest string, path ...string) error {
 	reader, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
 	if err != nil {
@@ -186,8 +186,8 @@ func unZipFileWithReader(reader *zip.Reader, dest string, path ...string) error 
 	return nil
 }
 
-// zipFile compresses the file of given <path> and writes the content to <zw>.
-// The parameter <prefix> indicates the path prefix for zip file.
+// zipFile compresses the file of given `path` and writes the content to `zw`.
+// The parameter `prefix` indicates the path prefix for zip file.
 func zipFile(path string, prefix string, zw *zip.Writer) error {
 	file, err := os.Open(path)
 	if err != nil {

@@ -9,7 +9,7 @@ package gctx
 
 import (
 	"context"
-	"github.com/gogf/gf/util/guid"
+	"github.com/gogf/gf/v2/util/guid"
 )
 
 type (
@@ -36,20 +36,20 @@ func WithCtx(ctx context.Context) context.Context {
 // WithPrefix creates and returns a context containing context id upon given parent context `ctx`.
 // The generated context id has custom prefix string specified by parameter `prefix`.
 func WithPrefix(ctx context.Context, prefix string) context.Context {
-	return WithValue(ctx, prefix+getUniqueID())
+	return WithCtxId(ctx, prefix+getUniqueID())
 }
 
-// WithValue creates and returns a context containing context id upon given parent context `ctx`.
-// The generated context id value is specified by parameter `value`.
-func WithValue(ctx context.Context, value string) context.Context {
-	if value == "" {
+// WithCtxId creates and returns a context containing context id upon given parent context `ctx`.
+// The generated context id value is specified by parameter `id`.
+func WithCtxId(ctx context.Context, id string) context.Context {
+	if id == "" {
 		return New()
 	}
-	return context.WithValue(ctx, CtxKey, value)
+	return context.WithValue(ctx, CtxKey, id)
 }
 
-// Value retrieves and returns the context id from context.
-func Value(ctx context.Context) string {
+// CtxId retrieves and returns the context id from context.
+func CtxId(ctx context.Context) string {
 	s, _ := ctx.Value(CtxKey).(string)
 	return s
 }

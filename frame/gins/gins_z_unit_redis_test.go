@@ -7,15 +7,15 @@
 package gins_test
 
 import (
-	"github.com/gogf/gf/debug/gdebug"
-	"github.com/gogf/gf/frame/gins"
-	"github.com/gogf/gf/os/gcfg"
-	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gogf/gf/v2/frame/gins"
+	"github.com/gogf/gf/v2/os/gcfg"
+	"github.com/gogf/gf/v2/os/gtime"
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_Redis(t *testing.T) {
@@ -44,24 +44,26 @@ func Test_Redis(t *testing.T) {
 
 		//fmt.Println("gins Test_Redis", Config().Get("test"))
 
-		redisDefault := gins.Redis()
-		redisCache := gins.Redis("cache")
-		redisDisk := gins.Redis("disk")
+		var (
+			redisDefault = gins.Redis()
+			redisCache   = gins.Redis("cache")
+			redisDisk    = gins.Redis("disk")
+		)
 		t.AssertNE(redisDefault, nil)
 		t.AssertNE(redisCache, nil)
 		t.AssertNE(redisDisk, nil)
 
-		r, err := redisDefault.Do("PING")
+		r, err := redisDefault.Do(ctx, "PING")
+		t.AssertNil(err)
+		t.Assert(r, "PONG")
+
+		r, err = redisCache.Do(ctx, "PING")
 		t.Assert(err, nil)
 		t.Assert(r, "PONG")
 
-		r, err = redisCache.Do("PING")
+		_, err = redisDisk.Do(ctx, "SET", "k", "v")
 		t.Assert(err, nil)
-		t.Assert(r, "PONG")
-
-		_, err = redisDisk.Do("SET", "k", "v")
-		t.Assert(err, nil)
-		r, err = redisDisk.Do("GET", "k")
+		r, err = redisDisk.Do(ctx, "GET", "k")
 		t.Assert(err, nil)
 		t.Assert(r, []byte("v"))
 	})

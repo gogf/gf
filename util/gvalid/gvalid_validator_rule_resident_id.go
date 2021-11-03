@@ -7,7 +7,7 @@
 package gvalid
 
 import (
-	"github.com/gogf/gf/text/gregex"
+	"github.com/gogf/gf/v2/text/gregex"
 	"strconv"
 	"strings"
 )

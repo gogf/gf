@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/gogf/gf/os/gproc"
+	"github.com/gogf/gf/v2/os/gproc"
 	"os"
 	"time"
 )

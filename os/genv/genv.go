@@ -8,8 +8,9 @@
 package genv
 
 import (
-	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/os/gcmd"
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/os/gcmd"
 	"os"
 	"strings"
 )
@@ -31,28 +32,21 @@ func Map() map[string]string {
 	return m
 }
 
-// Get returns the value of the environment variable named by the <key>.
-// It returns given <def> if the variable does not exist in the environment.
-func Get(key string, def ...string) string {
-	v, ok := os.LookupEnv(key)
-	if !ok && len(def) > 0 {
-		return def[0]
-	}
-	return v
-}
-
-// GetVar creates and returns a Var with the value of the environment variable
-// named by the <key>. It uses the given <def> if the variable does not exist
+// Get creates and returns a Var with the value of the environment variable
+// named by the `key`. It uses the given `def` if the variable does not exist
 // in the environment.
-func GetVar(key string, def ...interface{}) *gvar.Var {
+func Get(key string, def ...interface{}) *gvar.Var {
 	v, ok := os.LookupEnv(key)
-	if !ok && len(def) > 0 {
-		return gvar.New(def[0])
+	if !ok {
+		if len(def) > 0 {
+			return gvar.New(def[0])
+		}
+		return nil
 	}
 	return gvar.New(v)
 }
 
-// Set sets the value of the environment variable named by the <key>.
+// Set sets the value of the environment variable named by the `key`.
 // It returns an error, if any.
 func Set(key, value string) error {
 	return os.Setenv(key, value)
@@ -68,7 +62,7 @@ func SetMap(m map[string]string) error {
 	return nil
 }
 
-// Contains checks whether the environment variable named <key> exists.
+// Contains checks whether the environment variable named `key` exists.
 func Contains(key string) bool {
 	_, ok := os.LookupEnv(key)
 	return ok
@@ -86,31 +80,29 @@ func Remove(key ...string) error {
 	return nil
 }
 
-// GetWithCmd returns the environment value specified <key>.
+// GetWithCmd returns the environment value specified `key`.
 // If the environment value does not exist, then it retrieves and returns the value from command line options.
-// It returns the default value <def> if none of them exists.
+// It returns the default value `def` if none of them exists.
 //
 // Fetching Rules:
 // 1. Environment arguments are in uppercase format, eg: GF_<package name>_<variable name>；
 // 2. Command line arguments are in lowercase format, eg: gf.<package name>.<variable name>;
 func GetWithCmd(key string, def ...interface{}) *gvar.Var {
-	value := interface{}(nil)
-	if len(def) > 0 {
-		value = def[0]
-	}
-	envKey := strings.ToUpper(strings.Replace(key, ".", "_", -1))
+	envKey := utils.FormatEnvKey(key)
 	if v := os.Getenv(envKey); v != "" {
-		value = v
-	} else {
-		cmdKey := strings.ToLower(strings.Replace(key, "_", ".", -1))
-		if v := gcmd.GetOpt(cmdKey); v != "" {
-			value = v
-		}
+		return gvar.New(v)
 	}
-	return gvar.New(value)
+	cmdKey := utils.FormatCmdKey(key)
+	if v := gcmd.GetOpt(cmdKey); !v.IsEmpty() {
+		return v
+	}
+	if len(def) > 0 {
+		return gvar.New(def[0])
+	}
+	return nil
 }
 
-// Build builds a map to a environment variable slice.
+// Build builds a map to an environment variable slice.
 func Build(m map[string]string) []string {
 	array := make([]string, len(m))
 	index := 0

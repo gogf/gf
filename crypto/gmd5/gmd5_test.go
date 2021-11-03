@@ -12,8 +12,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/gogf/gf/crypto/gmd5"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/crypto/gmd5"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 var (

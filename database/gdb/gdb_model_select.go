@@ -8,24 +8,18 @@ package gdb
 
 import (
 	"fmt"
-	"github.com/gogf/gf/errors/gcode"
-	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/utils"
 	"reflect"
 
-	"github.com/gogf/gf/container/gset"
-	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/internal/intlog"
-	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/container/gset"
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 )
-
-// Select is alias of Model.All.
-// See Model.All.
-// Deprecated, use All instead.
-func (m *Model) Select(where ...interface{}) (Result, error) {
-	return m.All(where...)
-}
 
 // All does "SELECT FROM ..." statement for the model.
 // It retrieves the records from table and returns the result as slice type.
@@ -201,15 +195,6 @@ func (m *Model) Array(fieldsAndWhere ...interface{}) ([]Value, error) {
 // The parameter `pointer` should be type of *struct/**struct. If type **struct is given,
 // it can create the struct internally during converting.
 //
-// Deprecated, use Scan instead.
-func (m *Model) Struct(pointer interface{}, where ...interface{}) error {
-	return m.doStruct(pointer, where...)
-}
-
-// Struct retrieves one record from table and converts it into given struct.
-// The parameter `pointer` should be type of *struct/**struct. If type **struct is given,
-// it can create the struct internally during converting.
-//
 // The optional parameter `where` is the same as the parameter of Model.Where function,
 // see Model.Where.
 //
@@ -240,15 +225,6 @@ func (m *Model) doStruct(pointer interface{}, where ...interface{}) error {
 		return err
 	}
 	return model.doWithScanStruct(pointer)
-}
-
-// Structs retrieves records from table and converts them into given struct slice.
-// The parameter `pointer` should be type of *[]struct/*[]*struct. It can create and fill the struct
-// slice internally during converting.
-//
-// Deprecated, use Scan instead.
-func (m *Model) Structs(pointer interface{}, where ...interface{}) error {
-	return m.doStructs(pointer, where...)
 }
 
 // Structs retrieves records from table and converts them into given struct slice.
@@ -318,24 +294,15 @@ func (m *Model) doStructs(pointer interface{}, where ...interface{}) error {
 // err   := db.Model("user").Scan(&users)
 func (m *Model) Scan(pointer interface{}, where ...interface{}) error {
 	var (
-		reflectValue reflect.Value
-		reflectKind  reflect.Kind
+		reflectInfo = utils.OriginTypeAndKind(pointer)
 	)
-	if v, ok := pointer.(reflect.Value); ok {
-		reflectValue = v
-	} else {
-		reflectValue = reflect.ValueOf(pointer)
+	if reflectInfo.InputKind != reflect.Ptr {
+		return gerror.NewCode(
+			gcode.CodeInvalidParameter,
+			`the parameter "pointer" for function Scan should type of pointer`,
+		)
 	}
-
-	reflectKind = reflectValue.Kind()
-	if reflectKind != reflect.Ptr {
-		return gerror.NewCode(gcode.CodeInvalidParameter, `the parameter "pointer" for function Scan should type of pointer`)
-	}
-	for reflectKind == reflect.Ptr {
-		reflectValue = reflectValue.Elem()
-		reflectKind = reflectValue.Kind()
-	}
-	switch reflectKind {
+	switch reflectInfo.OriginKind {
 	case reflect.Slice, reflect.Array:
 		return m.doStructs(pointer, where...)
 
@@ -456,67 +423,6 @@ func (m *Model) Sum(column string) (float64, error) {
 		return 0, err
 	}
 	return value.Float64(), err
-}
-
-// FindOne retrieves and returns a single Record by Model.WherePri and Model.One.
-// Also see Model.WherePri and Model.One.
-func (m *Model) FindOne(where ...interface{}) (Record, error) {
-	if len(where) > 0 {
-		return m.WherePri(where[0], where[1:]...).One()
-	}
-	return m.One()
-}
-
-// FindAll retrieves and returns Result by by Model.WherePri and Model.All.
-// Also see Model.WherePri and Model.All.
-func (m *Model) FindAll(where ...interface{}) (Result, error) {
-	if len(where) > 0 {
-		return m.WherePri(where[0], where[1:]...).All()
-	}
-	return m.All()
-}
-
-// FindValue retrieves and returns single field value by Model.WherePri and Model.Value.
-// Also see Model.WherePri and Model.Value.
-func (m *Model) FindValue(fieldsAndWhere ...interface{}) (Value, error) {
-	if len(fieldsAndWhere) >= 2 {
-		return m.WherePri(fieldsAndWhere[1], fieldsAndWhere[2:]...).Fields(gconv.String(fieldsAndWhere[0])).Value()
-	}
-	if len(fieldsAndWhere) == 1 {
-		return m.Fields(gconv.String(fieldsAndWhere[0])).Value()
-	}
-	return m.Value()
-}
-
-// FindArray queries and returns data values as slice from database.
-// Note that if there are multiple columns in the result, it returns just one column values randomly.
-// Also see Model.WherePri and Model.Value.
-func (m *Model) FindArray(fieldsAndWhere ...interface{}) ([]Value, error) {
-	if len(fieldsAndWhere) >= 2 {
-		return m.WherePri(fieldsAndWhere[1], fieldsAndWhere[2:]...).Fields(gconv.String(fieldsAndWhere[0])).Array()
-	}
-	if len(fieldsAndWhere) == 1 {
-		return m.Fields(gconv.String(fieldsAndWhere[0])).Array()
-	}
-	return m.Array()
-}
-
-// FindCount retrieves and returns the record number by Model.WherePri and Model.Count.
-// Also see Model.WherePri and Model.Count.
-func (m *Model) FindCount(where ...interface{}) (int, error) {
-	if len(where) > 0 {
-		return m.WherePri(where[0], where[1:]...).Count()
-	}
-	return m.Count()
-}
-
-// FindScan retrieves and returns the record/records by Model.WherePri and Model.Scan.
-// Also see Model.WherePri and Model.Scan.
-func (m *Model) FindScan(pointer interface{}, where ...interface{}) error {
-	if len(where) > 0 {
-		return m.WherePri(where[0], where[1:]...).Scan(pointer)
-	}
-	return m.Scan(pointer)
 }
 
 // Union does "(SELECT xxx FROM xxx) UNION (SELECT xxx FROM xxx) ..." statement for the model.
