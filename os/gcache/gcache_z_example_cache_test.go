@@ -451,14 +451,14 @@ func ExampleCache_Keys() {
 	// Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
 
-	c.SetMap(ctx, g.MapAnyAny{"k1": "v1", "k2": "v2"}, 0)
+	c.SetMap(ctx, g.MapAnyAny{"k1": "v1"}, 0)
 
 	// Print the current list of key values
 	keys1, _ := c.Keys(ctx)
 	fmt.Println(keys1)
 
 	// Output:
-	// [k1 k2]
+	// [k1]
 
 }
 
