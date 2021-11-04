@@ -16,7 +16,7 @@ func ExampleIsMatch() {
 	g.Dump(gregex.IsMatch(patternStr, nil))
 	g.Dump(gregex.IsMatch(patternStr, []byte("hello easy gf!")))
 
-	// output
+	// Output
 	// true
 	// false
 	// false
@@ -28,7 +28,7 @@ func ExampleIsMatchString() {
 	g.Dump(gregex.IsMatchString(patternStr, "hello easy gf!"))
 	g.Dump(gregex.IsMatchString(patternStr, ""))
 
-	// output
+	// Output
 	// true
 	// false
 	// false
@@ -48,7 +48,7 @@ func ExampleMatch() {
 	g.Dump(result)
 	g.Dump(err)
 
-	// output
+	// Output
 	// ["OTQ="]
 	// null
 	// []
@@ -71,7 +71,7 @@ func ExampleMatchAll() {
 	g.Dump(results)
 	g.Dump(err)
 
-	// output
+	// Output
 	// [["OTQ="],["OTg="]]
 	// null
 	// []
@@ -94,7 +94,7 @@ func ExampleMatchAllString() {
 	g.Dump(results)
 	g.Dump(err)
 
-	// output
+	// Output
 	// [["94"],["98"]]
 	// null
 	// []
@@ -113,7 +113,7 @@ func ExampleMatchString() {
 	g.Dump(results)
 	g.Dump(err)
 
-	// output
+	// Output
 	// ["94"]
 	// null
 }
@@ -124,7 +124,7 @@ func ExampleQuote() {
 
 	g.Dump(result)
 
-	// output
+	// Output
 	// \[1-9\]\\d\*
 }
 
@@ -137,7 +137,7 @@ func ExampleReplace() {
 	g.Dump(err)
 	g.Dump(result)
 
-	// output
+	// Output
 	// null
 	// hello gf 2021!
 }
@@ -162,7 +162,7 @@ func ExampleReplaceFunc() {
 	g.Dump(result)
 	g.Dump(err)
 
-	// output
+	// Output
 	// 2018
 	// 2020
 	// hello gf 2018~2021!
@@ -191,7 +191,7 @@ func ExampleReplaceFuncMatch() {
 	g.Dump(result)
 	g.Dump(err)
 
-	// output
+	// Output
 	// [
 	//	"MjAxOA=="
 	// ]
@@ -213,7 +213,7 @@ func ExampleReplaceString() {
 	g.Dump(result)
 	g.Dump(err)
 
-	// output
+	// Output
 	// hello gf 2021!
 	// null
 }
@@ -238,7 +238,7 @@ func ExampleReplaceStringFunc() {
 	g.Dump(result)
 	g.Dump(err)
 
-	// output
+	// Output
 	// 2018
 	// 2020
 	// hello gf 2018~2021!
@@ -267,7 +267,7 @@ func ExampleReplaceStringFuncMatch() {
 	g.Dump(result)
 	g.Dump(err)
 
-	// output
+	// Output
 	// ["2018"]
 	// ["2020"]
 	// hello gf 2018~2021!
@@ -281,7 +281,7 @@ func ExampleSplit() {
 
 	g.Dump(result)
 
-	// output
+	// Output
 	// ["hello","gf"]
 }
 
@@ -291,7 +291,7 @@ func ExampleValidate() {
 	// Mismatched statement
 	g.Dump(gregex.Validate(`[a-9]\d*`))
 
-	// output
+	// Output
 	// null
 	// {
 	//	"Code": "invalid character class range",
