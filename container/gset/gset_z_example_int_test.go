@@ -298,7 +298,7 @@ func ExampleIntSet_Remove() {
 	s1.Remove(1)
 	fmt.Println(s1.Slice())
 
-	// Output:
+	// May Output:
 	// [3 4 2]
 }
 
