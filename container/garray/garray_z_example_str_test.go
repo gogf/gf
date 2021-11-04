@@ -123,7 +123,7 @@ func ExampleStrArray_Replace() {
 
 func ExampleStrArray_Sum() {
 	s := garray.NewStrArray()
-	s.SetArray(g.SliceStr{"We", "are", "3", "GF", "5", "fans", "!", "10"})
+	s.SetArray(g.SliceStr{"3", "5", "10"})
 	a := s.Sum()
 	fmt.Println(a)
 
@@ -420,13 +420,19 @@ func ExampleStrArray_LockFunc() {
 }
 
 func ExampleStrArray_RLockFunc() {
-	s := garray.NewStrArrayFrom(g.SliceStr{"a", "b", "c"})
+	s := garray.NewStrArrayFrom(g.SliceStr{"a", "b", "c", "d", "e"})
 	s.RLockFunc(func(array []string) {
-		fmt.Println(array[len(array)-1])
+		for i := 0; i < len(array); i++ {
+			fmt.Println(array[i])
+		}
 	})
 
 	// Output:
+	// a
+	// b
 	// c
+	// d
+	// e
 }
 
 func ExampleStrArray_Merge() {
