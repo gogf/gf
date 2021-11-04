@@ -11,13 +11,12 @@ import (
 	"fmt"
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/frame/g"
-	"time"
 )
 
 // NewStrSet create and returns a new set, which contains un-repeated items.
 // The parameter `safe` is used to specify whether using set in concurrent-safety,
 // which is false in default.
-func ExampleStrSet_NewStrSet() {
+func ExampleNewStrSet() {
 	strSet := gset.NewStrSet(true)
 	strSet.Add([]string{"str1", "str2", "str3"}...)
 	fmt.Println(strSet.Slice())
@@ -27,7 +26,7 @@ func ExampleStrSet_NewStrSet() {
 }
 
 // NewStrSetFrom returns a new set from `items`.
-func ExampleStrSet_NewStrSetFrom() {
+func ExampleNewStrSetFrom() {
 	strSet := gset.NewStrSetFrom([]string{"str1", "str2", "str3"}, true)
 	fmt.Println(strSet.Slice())
 
@@ -204,6 +203,7 @@ func ExampleStrSet_Iterator() {
 		fmt.Println("Iterator", v)
 		return true
 	})
+
 	// May Output:
 	// Iterator a
 	// Iterator b
@@ -225,31 +225,14 @@ func ExampleStrSet_Join() {
 func ExampleStrSet_LockFunc() {
 	s1 := gset.NewStrSet(true)
 	s1.Add([]string{"1", "2"}...)
-	go func() {
-		s1.LockFunc(func(m map[string]struct{}) {
-			m["3"] = struct{}{}
-		})
-		fmt.Println("one:", s1.Slice())
-	}()
-	time.Sleep(time.Duration(2) * time.Second)
-	go func() {
-		s1.LockFunc(func(m map[string]struct{}) {
-			m["4"] = struct{}{}
-		})
-		fmt.Println("two:", s1.Slice())
-	}()
-	time.Sleep(time.Duration(2) * time.Second)
-	go func() {
-		s1.LockFunc(func(m map[string]struct{}) {
-			m["5"] = struct{}{}
-		})
-		fmt.Println("three:", s1.Slice())
-	}()
-	time.Sleep(time.Duration(2) * time.Second)
+	s1.LockFunc(func(m map[string]struct{}) {
+		m["3"] = struct{}{}
+	})
+	fmt.Println(s1.Slice())
+
 	// May Output
 	// [2 3 1]
-	// [1 2 3 4]
-	// [1 2 3 4 5]
+
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
@@ -365,11 +348,11 @@ func ExampleStrSet_String() {
 // or you'd get a result that you unexpected.
 func ExampleStrSet_Sum() {
 	s1 := gset.NewStrSet(true)
-	s1.Add([]string{"a", "b", "c", "d"}...)
+	s1.Add([]string{"1", "2", "3", "4"}...)
 	fmt.Println(s1.Sum())
 
 	// Output:
-	// 0
+	// 10
 }
 
 // Union returns a new set which is the union of `set` and `other`.
