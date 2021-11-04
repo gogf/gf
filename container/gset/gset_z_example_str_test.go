@@ -327,7 +327,7 @@ func ExampleStrSet_Remove() {
 	s1.Remove("a")
 	fmt.Println(s1.Slice())
 
-	// Output:
+	// May Output:
 	// [b c d]
 }
 
