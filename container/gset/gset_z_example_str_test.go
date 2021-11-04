@@ -23,9 +23,7 @@ func ExampleStrSet_NewStrSet() {
 	fmt.Println(strSet.Slice())
 
 	// May Output:
-	//Iterator  str1
-	//Iterator  str2
-	//Iterator  str3
+	// [str3 str1 str2]
 }
 
 // NewStrSetFrom returns a new set from `items`.
