@@ -1076,7 +1076,7 @@ func ExampleReplaceI() {
 	fmt.Println(rsStr)
 
 	// Output:
-	//
+	// golang_is Very Nice.to-use
 }
 
 func ExampleReplaceIByArray() {
@@ -1164,8 +1164,8 @@ func ExampleShuffle() {
 	rsStr := gstr.Shuffle(str)
 	fmt.Println(rsStr)
 
-	// Output:
-	// frg.omeie sa_cNi
+	// May Output:
+	// e giNomescraf._i
 }
 
 func ExampleSimilarText() {
@@ -1329,7 +1329,7 @@ func ExampleStripSlashes() {
 	fmt.Println(rsStr)
 
 	// Output:
-	//
+	// goframe "is" Very Nice to use
 }
 
 func ExampleSubStr() {
