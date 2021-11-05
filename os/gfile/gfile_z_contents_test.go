@@ -102,8 +102,8 @@ func Test_Truncate(t *testing.T) {
 		t.Assert(err, nil)
 
 		files, err = os.Open(testpath() + filepaths1)
-		defer files.Close()
 		t.Assert(err, nil)
+		defer files.Close()
 		fileinfo, err2 := files.Stat()
 		t.Assert(err2, nil)
 		t.Assert(fileinfo.Size(), 10)
