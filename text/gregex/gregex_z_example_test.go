@@ -127,6 +127,7 @@ func ExampleReplaceFunc() {
 	//     "2020",
 	// ]
 	// "hello gf 2018~2021!"
+	// <nil>
 }
 
 func ExampleReplaceFuncMatch() {
