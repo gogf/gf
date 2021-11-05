@@ -46,9 +46,9 @@ func ExampleMatch() {
 
 	// Output:
 	// [
-	//    "pageId=1114219",
-	//    "pageId",
-	//    "1114219",
+	//     "pageId=1114219",
+	//     "pageId",
+	//     "1114219",
 	// ]
 	// <nil>
 }
@@ -63,9 +63,9 @@ func ExampleMatchString() {
 
 	// Output:
 	// [
-	//    "pageId=1114219",
-	//    "pageId",
-	//    "1114219",
+	//     "pageId=1114219",
+	//     "pageId",
+	//     "1114219",
 	// ]
 	// <nil>
 }
@@ -78,17 +78,17 @@ func ExampleMatchAll() {
 	g.Dump(err)
 
 	// Output:
-	// [
-	//    [
-	//        "pageId=1114219",
-	//        "pageId",
-	//        "1114219",
-	//    ],
-	//    [
-	//        "searchId=8QC5D1D2E",
-	//        "searchId",
-	//        "8QC5D1D2E",
-	//    ],
+	//  [
+	//     [
+	//         "pageId=1114219",
+	//         "pageId",
+	//         "1114219",
+	//     ],
+	//     [
+	//         "searchId=8QC5D1D2E",
+	//         "searchId",
+	//         "8QC5D1D2E",
+	//     ],
 	// ]
 	// <nil>
 }
@@ -102,16 +102,16 @@ func ExampleMatchAllString() {
 
 	// Output:
 	// [
-	//    [
-	//        "pageId=1114219",
-	//        "pageId",
-	//        "1114219",
-	//    ],
-	//    [
-	//        "searchId=8QC5D1D2E",
-	//        "searchId",
-	//        "8QC5D1D2E",
-	//    ],
+	//     [
+	//         "pageId=1114219",
+	//         "pageId",
+	//         "1114219",
+	//     ],
+	//     [
+	//         "searchId=8QC5D1D2E",
+	//         "searchId",
+	//         "8QC5D1D2E",
+	//     ],
 	// ]
 	// <nil>
 }
@@ -152,9 +152,9 @@ func ExampleReplaceFunc() {
 
 	// Output:
 	// [
-	//    "2018~2020",
-	//    "2018",
-	//    "2020",
+	//     "2018~2020",
+	//     "2018",
+	//     "2020",
 	// ]
 	// "hello gf 2018~2021!"
 	// <nil>
@@ -177,9 +177,9 @@ func ExampleReplaceFuncMatch() {
 
 	// Output:
 	// [
-	//    "2018~2020",
-	//    "2018",
-	//    "2020",
+	//     "2018~2020",
+	//     "2018",
+	//     "2020",
 	// ]
 	// "hello gf 2018-2021!"
 	// <nil>
@@ -245,8 +245,8 @@ func ExampleReplaceStringFuncMatch() {
 
 	// Output:
 	// [
-	//    "Golang",
-	//    "G",
+	//     "Golang",
+	//     "G",
 	// ]
 	// "hello Gf 2018~2021!"
 	// <nil>
@@ -260,8 +260,8 @@ func ExampleSplit() {
 
 	// Output:
 	// [
-	//    "hello",
-	//    "gf",
+	//     "hello",
+	//     "gf",
 	// ]
 }
 
@@ -274,7 +274,7 @@ func ExampleValidate() {
 	// Output:
 	// <nil>
 	// {
-	//    Code: "invalid character class range",
-	//    Expr: "a-9",
+	//     Code: "invalid character class range",
+	//     Expr: "a-9",
 	// }
 }
