@@ -17,7 +17,7 @@ import (
 // The parameter `safe` is used to specify whether using set in concurrent-safety,
 // which is false in default.
 func ExampleNewIntSet() {
-	intSet := gset.NewIntSet(true)
+	intSet := gset.NewIntSet()
 	intSet.Add([]int{1, 2, 3}...)
 	fmt.Println(intSet.Slice())
 
@@ -27,7 +27,7 @@ func ExampleNewIntSet() {
 
 // NewIntSetFrom  returns a new set from `items`.
 func ExampleNewFrom() {
-	intSet := gset.NewIntSetFrom([]int{1, 2, 3}, true)
+	intSet := gset.NewIntSetFrom([]int{1, 2, 3})
 	fmt.Println(intSet.Slice())
 
 	// May Output:
@@ -36,7 +36,7 @@ func ExampleNewFrom() {
 
 // Add adds one or multiple items to the set.
 func ExampleIntSet_Add() {
-	intSet := gset.NewIntSetFrom([]int{1, 2, 3}, true)
+	intSet := gset.NewIntSetFrom([]int{1, 2, 3})
 	intSet.Add(1)
 	fmt.Println(intSet.Slice())
 	fmt.Println(intSet.AddIfNotExist(1))
@@ -50,7 +50,7 @@ func ExampleIntSet_Add() {
 // it adds the item to set and returns true if it does not exists in the set,
 // or else it does nothing and returns false.
 func ExampleIntSet_AddIfNotExist() {
-	intSet := gset.NewIntSetFrom([]int{1, 2, 3}, true)
+	intSet := gset.NewIntSetFrom([]int{1, 2, 3})
 	intSet.Add(1)
 	fmt.Println(intSet.Slice())
 	fmt.Println(intSet.AddIfNotExist(1))
@@ -65,7 +65,7 @@ func ExampleIntSet_AddIfNotExist() {
 // or else it does nothing and returns false.
 // Note that, the function `f` is executed without writing lock.
 func ExampleIntSet_AddIfNotExistFunc() {
-	intSet := gset.NewIntSetFrom([]int{1, 2, 3}, true)
+	intSet := gset.NewIntSetFrom([]int{1, 2, 3})
 	intSet.Add(1)
 	fmt.Println(intSet.Slice())
 	fmt.Println(intSet.AddIfNotExistFunc(5, func() bool {
@@ -82,7 +82,7 @@ func ExampleIntSet_AddIfNotExistFunc() {
 // or else it does nothing and returns false.
 // Note that, the function `f` is executed without writing lock.
 func ExampleIntSet_AddIfNotExistFuncLock() {
-	intSet := gset.NewIntSetFrom([]int{1, 2, 3}, true)
+	intSet := gset.NewIntSetFrom([]int{1, 2, 3})
 	intSet.Add(1)
 	fmt.Println(intSet.Slice())
 	fmt.Println(intSet.AddIfNotExistFuncLock(4, func() bool {
@@ -96,7 +96,7 @@ func ExampleIntSet_AddIfNotExistFuncLock() {
 
 // Clear deletes all items of the set.
 func ExampleIntSet_Clear() {
-	intSet := gset.NewIntSetFrom([]int{1, 2, 3}, true)
+	intSet := gset.NewIntSetFrom([]int{1, 2, 3})
 	fmt.Println(intSet.Size())
 	intSet.Clear()
 	fmt.Println(intSet.Size())
@@ -110,8 +110,8 @@ func ExampleIntSet_Clear() {
 // Which means, all the items in `newSet` are in `full` and not in `set`.
 // It returns the difference between `full` and `set` if the given set `full` is not the full set of `set`.
 func ExampleIntSet_Complement() {
-	intSet := gset.NewIntSetFrom([]int{1, 2, 3, 4, 5}, true)
-	s := gset.NewIntSetFrom([]int{1, 2, 3}, true)
+	intSet := gset.NewIntSetFrom([]int{1, 2, 3, 4, 5})
+	s := gset.NewIntSetFrom([]int{1, 2, 3})
 	fmt.Println(s.Complement(intSet).Slice())
 
 	// May Output:
@@ -136,8 +136,8 @@ func ExampleIntSet_Contains() {
 // Diff returns a new set which is the difference set from `set` to `other`.
 // Which means, all the items in `newSet` are in `set` but not in `other`.
 func ExampleIntSet_Diff() {
-	s1 := gset.NewIntSetFrom([]int{1, 2, 3}, true)
-	s2 := gset.NewIntSetFrom([]int{1, 2, 3, 4}, true)
+	s1 := gset.NewIntSetFrom([]int{1, 2, 3})
+	s2 := gset.NewIntSetFrom([]int{1, 2, 3, 4})
 	fmt.Println(s2.Diff(s1).Slice())
 
 	// Output:
@@ -146,12 +146,12 @@ func ExampleIntSet_Diff() {
 
 // Equal checks whether the two sets equal.
 func ExampleIntSet_Equal() {
-	s1 := gset.NewIntSetFrom([]int{1, 2, 3}, true)
-	s2 := gset.NewIntSetFrom([]int{1, 2, 3, 4}, true)
+	s1 := gset.NewIntSetFrom([]int{1, 2, 3})
+	s2 := gset.NewIntSetFrom([]int{1, 2, 3, 4})
 	fmt.Println(s2.Equal(s1))
 
-	s3 := gset.NewIntSetFrom([]int{1, 2, 3}, true)
-	s4 := gset.NewIntSetFrom([]int{1, 2, 3}, true)
+	s3 := gset.NewIntSetFrom([]int{1, 2, 3})
+	s4 := gset.NewIntSetFrom([]int{1, 2, 3})
 	fmt.Println(s3.Equal(s4))
 
 	// Output:
@@ -162,7 +162,7 @@ func ExampleIntSet_Equal() {
 // Intersect returns a new set which is the intersection from `set` to `other`.
 // Which means, all the items in `newSet` are in `set` and also in `other`.
 func ExampleIntSet_Intersect() {
-	s1 := gset.NewIntSet(true)
+	s1 := gset.NewIntSet()
 	s1.Add([]int{1, 2, 3}...)
 	var s2 gset.IntSet
 	s2.Add([]int{1, 2, 3, 4}...)
@@ -174,7 +174,7 @@ func ExampleIntSet_Intersect() {
 
 // IsSubsetOf checks whether the current set is a sub-set of `other`
 func ExampleIntSet_IsSubsetOf() {
-	s1 := gset.NewIntSet(true)
+	s1 := gset.NewIntSet()
 	s1.Add([]int{1, 2, 3, 4}...)
 	var s2 gset.IntSet
 	s2.Add([]int{1, 2, 4}...)
@@ -187,7 +187,7 @@ func ExampleIntSet_IsSubsetOf() {
 // Iterator iterates the set readonly with given callback function `f`,
 // if `f` returns true then continue iterating; or false to stop.
 func ExampleIntSet_Iterator() {
-	s1 := gset.NewIntSet(true)
+	s1 := gset.NewIntSet()
 	s1.Add([]int{1, 2, 3, 4}...)
 	s1.Iterator(func(v int) bool {
 		fmt.Println("Iterator", v)
@@ -202,7 +202,7 @@ func ExampleIntSet_Iterator() {
 
 // Join joins items with a string `glue`.
 func ExampleIntSet_Join() {
-	s1 := gset.NewIntSet(true)
+	s1 := gset.NewIntSet()
 	s1.Add([]int{1, 2, 3, 4}...)
 	fmt.Println(s1.Join(","))
 
@@ -212,7 +212,7 @@ func ExampleIntSet_Join() {
 
 // LockFunc locks writing with callback function `f`.
 func ExampleIntSet_LockFunc() {
-	s1 := gset.NewIntSet(true)
+	s1 := gset.NewIntSet()
 	s1.Add([]int{1, 2}...)
 	s1.LockFunc(func(m map[int]struct{}) {
 		m[3] = struct{}{}
@@ -233,7 +233,7 @@ func ExampleIntSet_MarshalJSON() {
 	s := Student{
 		Id:     1,
 		Name:   "john",
-		Scores: gset.NewIntSetFrom([]int{100, 99, 98}, true),
+		Scores: gset.NewIntSetFrom([]int{100, 99, 98}),
 	}
 	b, _ := json.Marshal(s)
 	fmt.Println(string(b))
@@ -244,10 +244,10 @@ func ExampleIntSet_MarshalJSON() {
 
 // Merge adds items from `others` sets into `set`.
 func ExampleIntSet_Merge() {
-	s1 := gset.NewIntSet(true)
+	s1 := gset.NewIntSet()
 	s1.Add([]int{1, 2, 3, 4}...)
 
-	s2 := gset.NewIntSet(true)
+	s2 := gset.NewIntSet()
 	fmt.Println(s1.Merge(s2).Slice())
 
 	// May Output:
@@ -256,7 +256,7 @@ func ExampleIntSet_Merge() {
 
 // Pops randomly pops an item from set.
 func ExampleIntSet_Pop() {
-	s1 := gset.NewIntSet(true)
+	s1 := gset.NewIntSet()
 	s1.Add([]int{1, 2, 3, 4}...)
 
 	fmt.Println(s1.Pop())
@@ -268,7 +268,7 @@ func ExampleIntSet_Pop() {
 // Pops randomly pops `size` items from set.
 // It returns all items if size == -1.
 func ExampleIntSet_Pops() {
-	s1 := gset.NewIntSet(true)
+	s1 := gset.NewIntSet()
 	s1.Add([]int{1, 2, 3, 4}...)
 	for _, v := range s1.Pops(2) {
 		fmt.Println(v)
@@ -281,7 +281,7 @@ func ExampleIntSet_Pops() {
 
 // RLockFunc locks reading with callback function `f`.
 func ExampleIntSet_RLockFunc() {
-	s1 := gset.NewIntSet(true)
+	s1 := gset.NewIntSet()
 	s1.Add([]int{1, 2, 3, 4}...)
 	s1.RLockFunc(func(m map[int]struct{}) {
 		fmt.Println(m)
@@ -293,7 +293,7 @@ func ExampleIntSet_RLockFunc() {
 
 // Remove deletes `item` from set.
 func ExampleIntSet_Remove() {
-	s1 := gset.NewIntSet(true)
+	s1 := gset.NewIntSet()
 	s1.Add([]int{1, 2, 3, 4}...)
 	s1.Remove(1)
 	fmt.Println(s1.Slice())
@@ -304,7 +304,7 @@ func ExampleIntSet_Remove() {
 
 // Size returns the size of the set.
 func ExampleIntSet_Size() {
-	s1 := gset.NewIntSet(true)
+	s1 := gset.NewIntSet()
 	s1.Add([]int{1, 2, 3, 4}...)
 	fmt.Println(s1.Size())
 
@@ -314,7 +314,7 @@ func ExampleIntSet_Size() {
 
 // Slice returns the a of items of the set as slice.
 func ExampleIntSet_Slice() {
-	s1 := gset.NewIntSet(true)
+	s1 := gset.NewIntSet()
 	s1.Add([]int{1, 2, 3, 4}...)
 	fmt.Println(s1.Slice())
 
@@ -324,7 +324,7 @@ func ExampleIntSet_Slice() {
 
 // String returns items as a string, which implements like json.Marshal does.
 func ExampleIntSet_String() {
-	s1 := gset.NewIntSet(true)
+	s1 := gset.NewIntSet()
 	s1.Add([]int{1, 2, 3, 4}...)
 	fmt.Println(s1.String())
 
@@ -335,7 +335,7 @@ func ExampleIntSet_String() {
 // Sum sums items. Note: The items should be converted to int type,
 // or you'd get a result that you unexpected.
 func ExampleIntSet_Sum() {
-	s1 := gset.NewIntSet(true)
+	s1 := gset.NewIntSet()
 	s1.Add([]int{1, 2, 3, 4}...)
 	fmt.Println(s1.Sum())
 
@@ -346,9 +346,9 @@ func ExampleIntSet_Sum() {
 // Union returns a new set which is the union of `set` and `other`.
 // Which means, all the items in `newSet` are in `set` or in `other`.
 func ExampleIntSet_Union() {
-	s1 := gset.NewIntSet(true)
+	s1 := gset.NewIntSet()
 	s1.Add([]int{1, 2, 3, 4}...)
-	s2 := gset.NewIntSet(true)
+	s2 := gset.NewIntSet()
 	s2.Add([]int{1, 2, 4}...)
 	fmt.Println(s1.Union(s2).Slice())
 
@@ -391,14 +391,14 @@ func ExampleIntSet_UnmarshalValue() {
 // Walk applies a user supplied function `f` to every item of set.
 func ExampleIntSet_Walk() {
 	var (
-		set    gset.IntSet
-		names  = g.SliceInt{1, 0}
-		prefix = 10
+		set   gset.IntSet
+		names = g.SliceInt{1, 0}
+		delta = 10
 	)
 	set.Add(names...)
 	// Add prefix for given table names.
 	set.Walk(func(item int) int {
-		return prefix + item
+		return delta + item
 	})
 	fmt.Println(set.Slice())
 
