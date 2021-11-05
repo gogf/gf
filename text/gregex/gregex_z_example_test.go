@@ -45,7 +45,11 @@ func ExampleMatch() {
 	g.Dump(err)
 
 	// Output:
-	// ["pageId=1114219","pageId","1114219"]
+	// [
+	//    "pageId=1114219",
+	//    "pageId",
+	//    "1114219",
+	// ]
 	// <nil>
 }
 
@@ -58,7 +62,11 @@ func ExampleMatchString() {
 	g.Dump(err)
 
 	// Output:
-	// ["pageId=1114219","pageId","1114219"]
+	// [
+	//    "pageId=1114219",
+	//    "pageId",
+	//    "1114219",
+	// ]
 	// <nil>
 }
 
@@ -70,7 +78,18 @@ func ExampleMatchAll() {
 	g.Dump(err)
 
 	// Output:
-	// [["pageId=1114219","pageId","1114219",],["searchId=8QC5D1D2E","searchId","8QC5D1D2E"]]
+	// [
+	//    [
+	//        "pageId=1114219",
+	//        "pageId",
+	//        "1114219",
+	//    ],
+	//    [
+	//        "searchId=8QC5D1D2E",
+	//        "searchId",
+	//        "8QC5D1D2E",
+	//    ],
+	// ]
 	// <nil>
 }
 
@@ -82,7 +101,18 @@ func ExampleMatchAllString() {
 	g.Dump(err)
 
 	// Output:
-	// [["pageId=1114219","pageId","1114219",],["searchId=8QC5D1D2E","searchId","8QC5D1D2E"]]
+	// [
+	//    [
+	//        "pageId=1114219",
+	//        "pageId",
+	//        "1114219",
+	//    ],
+	//    [
+	//        "searchId=8QC5D1D2E",
+	//        "searchId",
+	//        "8QC5D1D2E",
+	//    ],
+	// ]
 	// <nil>
 }
 
@@ -120,11 +150,11 @@ func ExampleReplaceFunc() {
 	g.Dump(result)
 	g.Dump(err)
 
-	// Output::
+	// Output:
 	// [
-	//     "2018~2020",
-	//     "2018",
-	//     "2020",
+	//    "2018~2020",
+	//    "2018",
+	//    "2020",
 	// ]
 	// "hello gf 2018~2021!"
 	// <nil>
@@ -146,7 +176,11 @@ func ExampleReplaceFuncMatch() {
 	g.Dump(err)
 
 	// Output:
-	// ["2018~2020","2018","2020"]
+	// [
+	//    "2018~2020",
+	//    "2018",
+	//    "2020",
+	// ]
 	// "hello gf 2018-2021!"
 	// <nil>
 }
@@ -210,7 +244,10 @@ func ExampleReplaceStringFuncMatch() {
 	g.Dump(err)
 
 	// Output:
-	// ["Golang","G"]
+	// [
+	//    "Golang",
+	//    "G",
+	// ]
 	// "hello Gf 2018~2021!"
 	// <nil>
 }
@@ -222,7 +259,10 @@ func ExampleSplit() {
 	g.Dump(result)
 
 	// Output:
-	// ["hello","gf"]
+	// [
+	//    "hello",
+	//    "gf",
+	// ]
 }
 
 func ExampleValidate() {
@@ -234,7 +274,7 @@ func ExampleValidate() {
 	// Output:
 	// <nil>
 	// {
-	//	"Code": "invalid character class range",
-	//	"Expr": "a-9"
+	//    Code: "invalid character class range",
+	//    Expr: "a-9",
 	// }
 }
