@@ -416,7 +416,7 @@ func (l *List) RemoveAll() {
 	l.mu.Unlock()
 }
 
-// See RemoveAll().
+// Clear is alias of RemoveAll.
 func (l *List) Clear() {
 	l.RemoveAll()
 }
