@@ -20,7 +20,7 @@ import (
 
 // Struct maps the params key-value pairs to the corresponding struct object's attributes.
 // The third parameter `mapping` is unnecessary, indicating the mapping rules between the
-// custom key name and the attribute name(case sensitive).
+// custom key name and the attribute name(case-sensitive).
 //
 // Note:
 // 1. The `params` can be any type of map/struct, usually a map.
