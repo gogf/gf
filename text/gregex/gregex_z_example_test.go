@@ -6,8 +6,10 @@
 package gregex_test
 
 import (
+	"bytes"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/text/gregex"
+	"strings"
 )
 
 func ExampleIsMatch() {
@@ -35,92 +37,57 @@ func ExampleIsMatchString() {
 }
 
 func ExampleMatch() {
-	patternStr := `[1-9]\d+`
-	result, err := gregex.Match(patternStr, []byte("hello 2022! hello gf!"))
-	g.Dump(result)
-	g.Dump(err)
-
-	result, err = gregex.Match(patternStr, nil)
-	g.Dump(result)
-	g.Dump(err)
-
-	result, err = gregex.Match(patternStr, []byte("hello easy gf!"))
+	patternStr := `(\w+)=(\w+)`
+	matchStr := "https://goframe.org/pages/viewpage.action?pageId=1114219&searchId=8QC5D1D2E!"
+	// This method looks for the first match index
+	result, err := gregex.Match(patternStr, []byte(matchStr))
 	g.Dump(result)
 	g.Dump(err)
 
 	// Output
-	// ["2022"]
-	// <nil>
-	// []
-	// <nil>
-	// []
-	// <nil>
-}
-
-func ExampleMatchAll() {
-	patternStr := `[1-9]\d+`
-	results, err := gregex.MatchAll(patternStr, []byte("goodBye 2021! hello 2022! hello gf!"))
-	g.Dump(results)
-	g.Dump(err)
-
-	results, err = gregex.MatchAll(patternStr, []byte("hello gf!"))
-	g.Dump(results)
-	g.Dump(err)
-
-	results, err = gregex.MatchAll(patternStr, nil)
-	g.Dump(results)
-	g.Dump(err)
-
-	// Output
-	// [["2021"],["2022"]]
-	// <nil>
-	// []
-	// <nil>
-	// []
-	// <nil>
-}
-
-func ExampleMatchAllString() {
-	patternStr := `[1-9]\d+`
-	results, err := gregex.MatchAllString(patternStr, "goodBye 2021! hello 2022! hello gf!")
-	g.Dump(results)
-	g.Dump(err)
-
-	results, err = gregex.MatchAllString(patternStr, "hello gf!")
-	g.Dump(results)
-	g.Dump(err)
-
-	results, err = gregex.MatchAllString(patternStr, "")
-	g.Dump(results)
-	g.Dump(err)
-
-	// Output
-	// [["2021"],["2022"]]
-	// <nil>
-	// []
-	// <nil>
-	// []
+	// ["pageId=1114219","pageId","1114219"]
 	// <nil>
 }
 
 func ExampleMatchString() {
-	var str = "goodBye 2021! hello 2022! hello gf!"
-	patternStr := `[1-9]\d+`
-	// if you need a greed match, should use <..all> methods
-	results, err := gregex.MatchString(patternStr, str)
-
-	g.Dump(results)
+	patternStr := `(\w+)=(\w+)`
+	matchStr := "https://goframe.org/pages/viewpage.action?pageId=1114219&searchId=8QC5D1D2E!"
+	// This method looks for the first match index
+	result, err := gregex.MatchString(patternStr, matchStr)
+	g.Dump(result)
 	g.Dump(err)
 
 	// Output
-	// ["2021"]
+	// ["pageId=1114219","pageId","1114219"]
+	// <nil>
+}
+
+func ExampleMatchAll() {
+	patternStr := `(\w+)=(\w+)`
+	matchStr := "https://goframe.org/pages/viewpage.action?pageId=1114219&searchId=8QC5D1D2E!"
+	result, err := gregex.MatchAll(patternStr, []byte(matchStr))
+	g.Dump(result)
+	g.Dump(err)
+
+	// Output
+	// [["pageId=1114219","pageId","1114219",],["searchId=8QC5D1D2E","searchId","8QC5D1D2E"]]
+	// <nil>
+}
+
+func ExampleMatchAllString() {
+	patternStr := `(\w+)=(\w+)`
+	matchStr := "https://goframe.org/pages/viewpage.action?pageId=1114219&searchId=8QC5D1D2E!"
+	result, err := gregex.MatchAllString(patternStr, matchStr)
+	g.Dump(result)
+	g.Dump(err)
+
+	// Output
+	// [["pageId=1114219","pageId","1114219",],["searchId=8QC5D1D2E","searchId","8QC5D1D2E"]]
 	// <nil>
 }
 
 func ExampleQuote() {
-	patternStr := `[1-9]\d+`
-	result := gregex.Quote(patternStr)
-
+	result := gregex.Quote(`[1-9]\d+`)
 	g.Dump(result)
 
 	// Output
@@ -134,7 +101,6 @@ func ExampleReplace() {
 		repStr      = "2021"
 		result, err = gregex.Replace(patternStr, []byte(repStr), []byte(str))
 	)
-
 	g.Dump(err)
 	g.Dump(result)
 
@@ -144,61 +110,43 @@ func ExampleReplace() {
 }
 
 func ExampleReplaceFunc() {
-	var (
-		patternStr    = `[1-9]\d+`
-		str           = "hello gf 2018~2020!"
-		replaceStrMap = map[string][]byte{
-			"2020": []byte("2021"),
-		}
-	)
-
-	// When the regular statement can match multiple results
-	// func can be used to further control the value that needs to be modified
-	result, err := gregex.ReplaceFunc(patternStr, []byte(str), func(b []byte) []byte {
-		g.Dump(b)
-		if replaceStr, ok := replaceStrMap[string(b)]; ok {
-			return replaceStr
-		}
-		return b
+	// In contrast to [ExampleReplaceFunc]
+	// the result contains the `pattern' of all subpattern that use the matching function
+	result, err := gregex.ReplaceFuncMatch(`(\d+)~(\d+)`, []byte("hello gf 2018~2020!"), func(match [][]byte) []byte {
+		g.Dump(match)
+		match[2] = []byte("2021")
+		return bytes.Join(match[1:], []byte("~"))
 	})
-
 	g.Dump(result)
 	g.Dump(err)
 
-	// Output
-	// "2018"
-	// "2020"
+	// Output:
+	// [
+	//     "2018~2020",
+	//     "2018",
+	//     "2020",
+	// ]
 	// "hello gf 2018~2021!"
-	// <nil>
 }
 
 func ExampleReplaceFuncMatch() {
 	var (
-		patternStr = `[1-9]\d+`
+		patternStr = `(\d+)~(\d+)`
 		str        = "hello gf 2018~2020!"
-		replaceMap = map[string][]byte{
-			"2020": []byte("2021"),
-		}
 	)
 	// In contrast to [ExampleReplaceFunc]
 	// the result contains the `pattern' of all subpatterns that use the matching function
 	result, err := gregex.ReplaceFuncMatch(patternStr, []byte(str), func(match [][]byte) []byte {
 		g.Dump(match)
-		for _, v := range match {
-			replaceStr, ok := replaceMap[string(v)]
-			if ok {
-				return replaceStr
-			}
-		}
-		return match[0]
+		match[2] = []byte("2021")
+		return bytes.Join(match[1:], []byte("-"))
 	})
 	g.Dump(result)
 	g.Dump(err)
 
 	// Output
-	// ["2018"]
-	// ["2020"]
-	// "hello gf 2018~2021!"
+	// ["2018~2020","2018","2020"]
+	// "hello gf 2018-2021!"
 	// <nil>
 }
 
@@ -217,16 +165,12 @@ func ExampleReplaceString() {
 }
 
 func ExampleReplaceStringFunc() {
-	var (
-		patternStr    = `[1-9]\d+`
-		str           = "hello gf 2018~2020!"
-		replaceStrMap = map[string]string{
-			"2020": "2021",
-		}
-	)
+	replaceStrMap := map[string]string{
+		"2020": "2021",
+	}
 	// When the regular statement can match multiple results
 	// func can be used to further control the value that needs to be modified
-	result, err := gregex.ReplaceStringFunc(patternStr, str, func(b string) string {
+	result, err := gregex.ReplaceStringFunc(`[1-9]\d+`, `hello gf 2018~2020!`, func(b string) string {
 		g.Dump(b)
 		if replaceStr, ok := replaceStrMap[b]; ok {
 			return replaceStr
@@ -236,39 +180,37 @@ func ExampleReplaceStringFunc() {
 	g.Dump(result)
 	g.Dump(err)
 
+	result, err = gregex.ReplaceStringFunc(`[a-z]*`, "gf@goframe.org", strings.ToUpper)
+	g.Dump(result)
+	g.Dump(err)
+
 	// Output
 	// "2018"
 	// "2020"
 	// "hello gf 2018~2021!"
 	// <nil>
+	// "GF@GOFRAME.ORG"
+	// <nil>
 }
 
 func ExampleReplaceStringFuncMatch() {
 	var (
-		patternStr    = `[1-9]\d+`
-		str           = "hello gf 2018~2020!"
-		replaceStrMap = map[string]string{
-			"2020": "2021",
-		}
+		patternStr = `([A-Z])\w+`
+		str        = "hello Golang 2018~2021!"
 	)
-	// When the regular statement can match multiple results
-	// func can be used to further control the value that needs to be modified
-	result, err := gregex.ReplaceStringFuncMatch(patternStr, str, func(b []string) string {
-		g.Dump(b)
-		for _, v := range b {
-			if replaceStr, ok := replaceStrMap[v]; ok {
-				return replaceStr
-			}
-		}
-		return b[0]
+	// In contrast to [ExampleReplaceFunc]
+	// the result contains the `pattern' of all subpatterns that use the matching function
+	result, err := gregex.ReplaceStringFuncMatch(patternStr, str, func(match []string) string {
+		g.Dump(match)
+		match[0] = "Gf"
+		return match[0]
 	})
 	g.Dump(result)
 	g.Dump(err)
 
 	// Output
-	// ["2018"]
-	// ["2020"]
-	// "hello gf 2018~2021!"
+	// ["Golang","G"]
+	// "hello Gf 2018~2021!"
 	// <nil>
 }
 
