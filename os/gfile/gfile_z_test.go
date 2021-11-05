@@ -191,7 +191,7 @@ func Test_OpenWithFlagPerm(t *testing.T) {
 		flags = append(flags, false)
 
 		for k, v := range files {
-			fileobj, err = gfile.OpenWithFlagPerm(testpath()+v, os.O_RDWR, 666)
+			fileobj, err = gfile.OpenWithFlagPerm(testpath()+v, os.O_RDWR, 0666)
 			fileobj.Close()
 			if flags[k] {
 				t.Assert(err, nil)

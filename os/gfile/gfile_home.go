@@ -8,13 +8,14 @@ package gfile
 
 import (
 	"bytes"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
 	"os"
 	"os/exec"
 	"os/user"
 	"runtime"
 	"strings"
+
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
 // Home returns absolute path of current user's home directory.
@@ -37,7 +38,7 @@ func getHomePath() (string, error) {
 	if nil == err {
 		return u.HomeDir, nil
 	}
-	if "windows" == runtime.GOOS {
+	if runtime.GOOS == "windows" {
 		return homeWindows()
 	}
 	return homeUnix()
