@@ -10,7 +10,7 @@ import (
 func ExampleNew() {
 
 	// Create a cache object,
-	// Of course, you can also easily use the gcache package method directly
+	// Of course, you can also easily use the gcache package method directly.
 	c := gcache.New()
 
 	// Set cache without expiration
