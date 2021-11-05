@@ -13,7 +13,7 @@ import (
 )
 
 func ExampleIsMatch() {
-	patternStr := `[1-9]\d+`
+	patternStr := `\d+`
 	g.Dump(gregex.IsMatch(patternStr, []byte("hello 2022! hello gf!")))
 	g.Dump(gregex.IsMatch(patternStr, nil))
 	g.Dump(gregex.IsMatch(patternStr, []byte("hello gf!")))
@@ -25,7 +25,7 @@ func ExampleIsMatch() {
 }
 
 func ExampleIsMatchString() {
-	patternStr := `[1-9]\d+`
+	patternStr := `\d+`
 	g.Dump(gregex.IsMatchString(patternStr, "hello 2022! hello gf!"))
 	g.Dump(gregex.IsMatchString(patternStr, "hello gf!"))
 	g.Dump(gregex.IsMatchString(patternStr, ""))
@@ -96,7 +96,7 @@ func ExampleQuote() {
 
 func ExampleReplace() {
 	var (
-		patternStr  = `[1-9]\d+`
+		patternStr  = `\d+`
 		str         = "hello gf 2020!"
 		repStr      = "2021"
 		result, err = gregex.Replace(patternStr, []byte(repStr), []byte(str))
@@ -152,7 +152,7 @@ func ExampleReplaceFuncMatch() {
 }
 
 func ExampleReplaceString() {
-	patternStr := `[1-9]\d+`
+	patternStr := `\d+`
 	str := "hello gf 2020!"
 	replaceStr := "2021"
 	result, err := gregex.ReplaceString(patternStr, replaceStr, str)
@@ -171,7 +171,7 @@ func ExampleReplaceStringFunc() {
 	}
 	// When the regular statement can match multiple results
 	// func can be used to further control the value that needs to be modified
-	result, err := gregex.ReplaceStringFunc(`[1-9]\d+`, `hello gf 2018~2020!`, func(b string) string {
+	result, err := gregex.ReplaceStringFunc(`\d+`, `hello gf 2018~2020!`, func(b string) string {
 		g.Dump(b)
 		if replaceStr, ok := replaceStrMap[b]; ok {
 			return replaceStr
@@ -216,7 +216,7 @@ func ExampleReplaceStringFuncMatch() {
 }
 
 func ExampleSplit() {
-	patternStr := `[1-9]\d+`
+	patternStr := `\d+`
 	str := "hello2020gf"
 	result := gregex.Split(patternStr, str)
 	g.Dump(result)
@@ -227,7 +227,7 @@ func ExampleSplit() {
 
 func ExampleValidate() {
 	// Valid match statement
-	g.Dump(gregex.Validate(`[1-9]\d+`))
+	g.Dump(gregex.Validate(`\d+`))
 	// Mismatched statement
 	g.Dump(gregex.Validate(`[a-9]\d+`))
 
