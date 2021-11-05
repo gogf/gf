@@ -12,6 +12,7 @@ import (
 	"github.com/gogf/gf/v2/internal/structs"
 	"github.com/gogf/gf/v2/text/gstr"
 	"reflect"
+	"strings"
 )
 
 // ExportOption specifies the behavior of function Export.
@@ -56,12 +57,17 @@ type doExportOption struct {
 }
 
 func doExport(value interface{}, indent string, buffer *bytes.Buffer, option doExportOption) {
+	if value == nil {
+		buffer.WriteString(`<nil>`)
+		return
+	}
 	var (
 		reflectValue    = reflect.ValueOf(value)
 		reflectKind     = reflectValue.Kind()
-		reflectTypeName = reflectValue.Type().String()
+		reflectTypeName = reflect.TypeOf(value).String()
 		newIndent       = indent + dumpIndent
 	)
+	reflectTypeName = strings.ReplaceAll(reflectTypeName, `[]uint8`, `[]byte`)
 	if option.WithoutType {
 		reflectTypeName = ""
 	}
@@ -73,10 +79,10 @@ func doExport(value interface{}, indent string, buffer *bytes.Buffer, option doE
 	case reflect.Slice, reflect.Array:
 		if _, ok := value.([]byte); ok {
 			if option.WithoutType {
-				buffer.WriteString(fmt.Sprintf("\"%v\"\n", value))
+				buffer.WriteString(fmt.Sprintf(`"%s"`, value))
 			} else {
 				buffer.WriteString(fmt.Sprintf(
-					"%s(%d) \"%v\"\n",
+					`%s(%d) "%s"`,
 					reflectTypeName,
 					len(reflectValue.String()),
 					value,
