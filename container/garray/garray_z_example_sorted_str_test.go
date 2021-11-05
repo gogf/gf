@@ -509,7 +509,7 @@ func ExampleSortedStrArray_MarshalJSON() {
 	fmt.Println(string(b))
 
 	// Output:
-	// {"ID":1,"Name":"john","Level":["a","b","c"]}
+	// {"ID":1,"Name":"john","Levels":["a","b","c"]}
 }
 
 func ExampleSortedStrArray_UnmarshalJSON() {
