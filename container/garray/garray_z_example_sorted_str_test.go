@@ -29,7 +29,7 @@ func ExampleSortedStrArray_Walk() {
 	// [gf_user gf_user_detail]
 }
 
-func ExampleSortedStrArray_NewSortedStrArray() {
+func ExampleNewSortedStrArray() {
 	s := garray.NewSortedStrArray()
 	s.Append("b")
 	s.Append("d")
@@ -41,7 +41,7 @@ func ExampleSortedStrArray_NewSortedStrArray() {
 	// [a b c d]
 }
 
-func ExampleSortedStrArray_NewSortedStrArraySize() {
+func ExampleNewSortedStrArraySize() {
 	s := garray.NewSortedStrArraySize(3)
 	s.SetArray([]string{"b", "d", "a", "c"})
 	fmt.Println(s.Slice(), s.Len(), cap(s.Slice()))
@@ -50,7 +50,7 @@ func ExampleSortedStrArray_NewSortedStrArraySize() {
 	// [a b c d] 4 4
 }
 
-func ExampleSortedStrArray_NewStrArrayFromCopy() {
+func ExampleNewStrArrayFromCopy() {
 	s := garray.NewSortedStrArrayFromCopy(g.SliceStr{"b", "d", "c", "a"})
 	fmt.Println(s.Slice())
 
@@ -363,9 +363,11 @@ func ExampleSortedStrArray_Search() {
 func ExampleSortedStrArray_Unique() {
 	s := garray.NewSortedStrArray()
 	s.SetArray(g.SliceStr{"a", "b", "c", "c", "c", "d", "d"})
+	fmt.Println(s)
 	fmt.Println(s.Unique())
 
 	// Output:
+	// ["a","b","c","c","c","d","d"]
 	// ["a","b","c","d"]
 }
 
@@ -493,20 +495,21 @@ func ExampleSortedStrArray_String() {
 
 func ExampleSortedStrArray_MarshalJSON() {
 	type Student struct {
-		ID      int
-		Name    string
-		Lessons []string
+		ID     int
+		Name   string
+		Levels garray.SortedStrArray
 	}
+	r := garray.NewSortedStrArrayFrom(g.SliceStr{"b", "c", "a"})
 	s := Student{
-		ID:      1,
-		Name:    "john",
-		Lessons: []string{"Math", "English", "Music"},
+		ID:     1,
+		Name:   "john",
+		Levels: *r,
 	}
 	b, _ := json.Marshal(s)
 	fmt.Println(string(b))
 
 	// Output:
-	// {"ID":1,"Name":"john","Lessons":["Math","English","Music"]}
+	// {"ID":1,"Name":"john","Level":["a","b","c"]}
 }
 
 func ExampleSortedStrArray_UnmarshalJSON() {
@@ -550,9 +553,11 @@ func ExampleSortedStrArray_UnmarshalValue() {
 
 func ExampleSortedStrArray_FilterEmpty() {
 	s := garray.NewSortedStrArrayFrom(g.SliceStr{"b", "a", "", "c", "", "", "d"})
+	fmt.Println(s)
 	fmt.Println(s.FilterEmpty())
 
 	// Output:
+	// ["","","","a","b","c","d"]
 	// ["a","b","c","d"]
 }
 
