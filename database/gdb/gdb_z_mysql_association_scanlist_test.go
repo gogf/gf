@@ -1776,7 +1776,7 @@ CREATE TABLE %s (
 		t.Assert(gconv.Map(all.MapKeyValue("uid")["3"].Slice()[4])["uid"], 3)
 		t.Assert(gconv.Map(all.MapKeyValue("uid")["3"].Slice()[4])["score"], 5)
 	})
-	db.SetDebug(true)
+
 	// Result ScanList with struct elements and pointer attributes.
 	gtest.C(t, func(t *gtest.T) {
 		var users []Entity
