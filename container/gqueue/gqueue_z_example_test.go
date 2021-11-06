@@ -111,13 +111,8 @@ func ExampleQueue_Len() {
 	q.Push(1)
 	q.Push(2)
 
-	time.Sleep(time.Millisecond)
-	fmt.Println(q.Len())
-	q.Pop()
-	q.Close()
 	fmt.Println(q.Len())
 
 	// Output:
 	// 2
-	// 0
 }
