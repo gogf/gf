@@ -66,7 +66,7 @@ func ExampleCache_SetAdapters() {
 
 	// SetAdapter changes the adapter for this cache. Be very note that, this setting function is not concurrent-safe,
 	// which means you should not call this setting function concurrently in multiple goroutines.
-	adapter := gcache.New()
+	adapter := gcache.NewTcache()
 	c.SetAdapter(adapter)
 
 	// Set cache
@@ -301,24 +301,16 @@ func ExampleCache_Data() {
 	// Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
 
-	c.SetMap(ctx, g.MapAnyAny{"k1": "v1", "k2": "v2"}, 0)
-	c.Set(ctx, "k5", "v5", 0)
+	c.SetMap(ctx, g.MapAnyAny{"k1": "v1"}, 0)
+	//c.Set(ctx, "k5", "v5", 0)
 
 	// Get retrieves and returns the associated value of given `key`.
 	// It returns nil if it does not exist, its value is nil or it's expired.
-	data, _ := c.Get(ctx, "k1")
+	data, _ := c.Data(ctx)
 	fmt.Println(data)
 
-	data1, _ := c.Get(ctx, "k2")
-	fmt.Println(data1)
-
-	data2, _ := c.Get(ctx, "k5")
-	fmt.Println(data2)
-
 	// Output:
-	// v1
-	// v2
-	// v5
+	// map[k1:v1]
 }
 
 func ExampleCache_Get() {
