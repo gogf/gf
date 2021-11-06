@@ -829,6 +829,10 @@ func FormatSqlWithArgs(sql string, args []interface{}) string {
 				if args[index] == nil {
 					return "null"
 				}
+				// Parameters of type Raw do not require special treatment
+				if v, ok := args[index].(Raw); ok {
+					return gconv.String(v)
+				}
 				var (
 					reflectInfo = utils.OriginValueAndKind(args[index])
 				)

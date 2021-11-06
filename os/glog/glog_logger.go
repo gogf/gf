@@ -202,7 +202,7 @@ func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
 		if len(input.Content) > 0 {
 			if input.Content[len(input.Content)-1] == '\n' {
 				// Remove one blank line(\n\n).
-				if tempStr[0] == '\n' {
+				if len(tempStr) > 0 && tempStr[0] == '\n' {
 					input.Content += tempStr[1:]
 				} else {
 					input.Content += tempStr
