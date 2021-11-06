@@ -10,9 +10,20 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/gogf/gf/v2/internal/structs"
+	"github.com/gogf/gf/v2/text/gstr"
 	"reflect"
 	"strings"
 )
+
+// iString is used for type assert api for String().
+type iString interface {
+	String() string
+}
+
+// iMarshalJSON is the interface for custom Json marshaling.
+type iMarshalJSON interface {
+	MarshalJSON() ([]byte, error)
+}
 
 // ExportOption specifies the behavior of function Export.
 type ExportOption struct {
@@ -172,10 +183,31 @@ func doExport(value interface{}, indent string, buffer *bytes.Buffer, option doE
 			RecursiveOption: structs.RecursiveOptionEmbeddedNoTag,
 		})
 		if len(structFields) == 0 {
-			if option.WithoutType {
-				buffer.WriteString("{}")
+			var (
+				structContentStr  = ""
+				attributeCountStr = "0"
+			)
+			if v, ok := value.(iString); ok {
+				structContentStr = v.String()
+			} else if v, ok := value.(iMarshalJSON); ok {
+				b, _ := v.MarshalJSON()
+				structContentStr = string(b)
+			}
+			if structContentStr == "" {
+				structContentStr = "{}"
 			} else {
-				buffer.WriteString(fmt.Sprintf("%s(0) {}", reflectTypeName))
+				structContentStr = fmt.Sprintf(`"%s"`, gstr.AddSlashes(structContentStr))
+				attributeCountStr = fmt.Sprintf(`%d`, len(structContentStr)-2)
+			}
+			if option.WithoutType {
+				buffer.WriteString(structContentStr)
+			} else {
+				buffer.WriteString(fmt.Sprintf(
+					"%s(%s) %s",
+					reflectTypeName,
+					attributeCountStr,
+					structContentStr,
+				))
 			}
 			return
 		}
