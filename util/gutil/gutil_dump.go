@@ -10,7 +10,6 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/gogf/gf/v2/internal/structs"
-	"github.com/gogf/gf/v2/text/gstr"
 	"reflect"
 	"strings"
 )
@@ -151,7 +150,7 @@ func doExport(value interface{}, indent string, buffer *bytes.Buffer, option doE
 					"%s%v:%s",
 					newIndent,
 					mapKeyStr,
-					gstr.Repeat(" ", maxSpaceNum-tmpSpaceNum+1),
+					strings.Repeat(" ", maxSpaceNum-tmpSpaceNum+1),
 				))
 			} else {
 				buffer.WriteString(fmt.Sprintf(
@@ -159,7 +158,7 @@ func doExport(value interface{}, indent string, buffer *bytes.Buffer, option doE
 					newIndent,
 					mapKey.Type().String(),
 					mapKeyStr,
-					gstr.Repeat(" ", maxSpaceNum-tmpSpaceNum+1),
+					strings.Repeat(" ", maxSpaceNum-tmpSpaceNum+1),
 				))
 			}
 			doExport(reflectValue.MapIndex(mapKey).Interface(), newIndent, buffer, option)
@@ -202,7 +201,7 @@ func doExport(value interface{}, indent string, buffer *bytes.Buffer, option doE
 				"%s%s:%s",
 				newIndent,
 				field.Name(),
-				gstr.Repeat(" ", maxSpaceNum-tmpSpaceNum+1),
+				strings.Repeat(" ", maxSpaceNum-tmpSpaceNum+1),
 			))
 			doExport(field.Value.Interface(), newIndent, buffer, option)
 			buffer.WriteString(",\n")
