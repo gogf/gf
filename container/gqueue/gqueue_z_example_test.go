@@ -116,3 +116,16 @@ func ExampleQueue_Len() {
 	// Output:
 	// 2
 }
+
+func ExampleQueue_Size() {
+	q := gqueue.New()
+
+	q.Push(1)
+	q.Push(2)
+
+	// Size is alias of Len.
+	fmt.Println(q.Size())
+
+	// Output:
+	// 2
+}
