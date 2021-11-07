@@ -78,39 +78,6 @@ func Test_Router_GroupBasic1(t *testing.T) {
 	})
 }
 
-func Test_Router_GroupBasic2(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
-	obj := new(GroupObject)
-	// 分组路由批量注册
-	s.Group("/api").Bind([]g.Slice{
-		{"ALL", "/handler", Handler},
-		{"ALL", "/obj", obj},
-		{"GET", "/obj/my-show", obj, "Show"},
-		{"REST", "/obj/rest", obj},
-	})
-	s.SetPort(p)
-	s.SetDumpRouterMap(false)
-	s.Start()
-	defer s.Shutdown()
-
-	time.Sleep(100 * time.Millisecond)
-	gtest.C(t, func(t *gtest.T) {
-		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-
-		t.Assert(client.GetContent(ctx, "/api/handler"), "Handler")
-
-		t.Assert(client.GetContent(ctx, "/api/obj/delete"), "1Object Delete2")
-		t.Assert(client.GetContent(ctx, "/api/obj/my-show"), "1Object Show2")
-		t.Assert(client.GetContent(ctx, "/api/obj/show"), "1Object Show2")
-		t.Assert(client.DeleteContent(ctx, "/api/obj/rest"), "1Object Delete2")
-
-		t.Assert(client.DeleteContent(ctx, "/ThisDoesNotExist"), "Not Found")
-		t.Assert(client.DeleteContent(ctx, "/api/ThisDoesNotExist"), "Not Found")
-	})
-}
-
 func Test_Router_GroupBuildInVar(t *testing.T) {
 	p, _ := ports.PopRand()
 	s := g.Server(p)

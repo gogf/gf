@@ -74,33 +74,3 @@ func Test_Router_Group_Hook2(t *testing.T) {
 		t.Assert(client.PostContent(ctx, "/api/ThisDoesNotExist"), "Not Found")
 	})
 }
-
-func Test_Router_Group_Hook3(t *testing.T) {
-	p, _ := ports.PopRand()
-	s := g.Server(p)
-	s.Group("/api").Bind([]g.Slice{
-		{"ALL", "handler", func(r *ghttp.Request) {
-			r.Response.Write("1")
-		}},
-		{"ALL", "/*", func(r *ghttp.Request) {
-			r.Response.Write("0")
-		}, ghttp.HookBeforeServe},
-		{"ALL", "/*", func(r *ghttp.Request) {
-			r.Response.Write("2")
-		}, ghttp.HookAfterServe},
-	})
-
-	s.SetPort(p)
-	s.SetDumpRouterMap(false)
-	s.Start()
-	defer s.Shutdown()
-
-	time.Sleep(100 * time.Millisecond)
-	gtest.C(t, func(t *gtest.T) {
-		client := g.Client()
-		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		t.Assert(client.GetContent(ctx, "/api/handler"), "012")
-		t.Assert(client.PostContent(ctx, "/api/handler"), "012")
-		t.Assert(client.DeleteContent(ctx, "/api/ThisDoesNotExist"), "02")
-	})
-}
