@@ -66,16 +66,16 @@ func ExampleCache_SetAdapters() {
 
 	// SetAdapter changes the adapter for this cache. Be very note that, this setting function is not concurrent-safe,
 	// which means you should not call this setting function concurrently in multiple goroutines.
-	adapter := gcache.New()
-	c.SetAdapter(adapter)
 
+	adapter := NewCache(gcache.NewAdapterMemory())
+	c.SetAdapter(adapter)
 	// Set cache
 	c.Set(ctx, "k1", g.Slice{1, 2, 3, 4, 5, 6, 7, 8, 9}, 0)
-
 	// Reverse makes array with elements in reverse order.
 	fmt.Println(c.Get(ctx, "k1"))
 
 	// Output:
+	// 111111111
 	// [1,2,3,4,5,6,7,8,9] <nil>
 }
 
@@ -472,12 +472,14 @@ func ExampleCache_Remove() {
 
 	// Remove deletes one or more keys from cache, and returns its value.
 	// If multiple keys are given, it returns the value of the last deleted item.
-	c.Remove(ctx, "k1")
+	remove, _ := c.Remove(ctx, "k1")
+	fmt.Println(remove)
 
 	data, _ := c.Data(ctx)
 	fmt.Println(data)
 
 	// Output:
+	// v1
 	// map[k2:v2]
 }
 
