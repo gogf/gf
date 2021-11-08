@@ -60,7 +60,7 @@ func Server(name ...interface{}) *ghttp.Server {
 			}
 		} else {
 			// The configuration is not necessary, so it just prints internal logs.
-			intlog.Printf(ctx, `missing configuration for HTTP server "%s"`, instanceName)
+			intlog.Printf(ctx, `missing configuration from configuration component for HTTP server "%s"`, instanceName)
 		}
 
 		// Server logger configuration checks.
