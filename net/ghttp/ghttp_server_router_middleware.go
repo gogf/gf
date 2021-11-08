@@ -26,12 +26,16 @@ func (s *Server) BindMiddleware(pattern string, handlers ...HandlerFunc) {
 		ctx = context.TODO()
 	)
 	for _, handler := range handlers {
-		s.setHandler(ctx, pattern, &handlerItem{
-			Type: HandlerTypeMiddleware,
-			Name: gdebug.FuncPath(handler),
-			Info: handlerFuncInfo{
-				Func: handler,
-				Type: reflect.TypeOf(handler),
+		s.setHandler(ctx, setHandlerInput{
+			Prefix:  "",
+			Pattern: pattern,
+			HandlerItem: &handlerItem{
+				Type: HandlerTypeMiddleware,
+				Name: gdebug.FuncPath(handler),
+				Info: handlerFuncInfo{
+					Func: handler,
+					Type: reflect.TypeOf(handler),
+				},
 			},
 		})
 	}
@@ -45,12 +49,16 @@ func (s *Server) BindMiddlewareDefault(handlers ...HandlerFunc) {
 		ctx = context.TODO()
 	)
 	for _, handler := range handlers {
-		s.setHandler(ctx, defaultMiddlewarePattern, &handlerItem{
-			Type: HandlerTypeMiddleware,
-			Name: gdebug.FuncPath(handler),
-			Info: handlerFuncInfo{
-				Func: handler,
-				Type: reflect.TypeOf(handler),
+		s.setHandler(ctx, setHandlerInput{
+			Prefix:  "",
+			Pattern: defaultMiddlewarePattern,
+			HandlerItem: &handlerItem{
+				Type: HandlerTypeMiddleware,
+				Name: gdebug.FuncPath(handler),
+				Info: handlerFuncInfo{
+					Func: handler,
+					Type: reflect.TypeOf(handler),
+				},
 			},
 		})
 	}
