@@ -315,7 +315,7 @@ func ExampleCountChars() {
 	rsStr = gstr.CountChars(str, noSpace)
 	fmt.Println(rsStr)
 
-	// Output:
+	// May Output:
 	// map[ :2 -:1 .:1 N:1 V:1 _:1 a:1 c:1 e:4 f:1 g:1 i:2 m:1 o:2 r:2 s:2 t:1 u:1 y:1]
 	// map[-:1 .:1 N:1 V:1 _:1 a:1 c:1 e:4 f:1 g:1 i:2 m:1 o:2 r:2 s:2 t:1 u:1 y:1]
 }
