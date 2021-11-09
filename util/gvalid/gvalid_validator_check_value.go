@@ -8,6 +8,7 @@ package gvalid
 
 import (
 	"context"
+	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -133,7 +134,12 @@ func (v *Validator) doCheckValue(ctx context.Context, input doCheckValueInput) E
 		if customRuleFunc != nil {
 			// It checks custom validation rules with most priority.
 			message := v.getErrorMessageByRule(ctx, ruleKey, customMsgMap)
-			if err := customRuleFunc(ctx, ruleItems[index], input.Value, message, input.DataRaw); err != nil {
+			if err := customRuleFunc(ctx, RuleFuncInput{
+				Rule:    ruleItems[index],
+				Message: message,
+				Value:   gvar.New(input.Value),
+				Data:    gvar.New(input.DataRaw),
+			}); err != nil {
 				match = false
 				errorMsgArray[ruleKey] = err.Error()
 			} else {

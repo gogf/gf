@@ -12,8 +12,6 @@ import (
 	"testing"
 
 	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/util/gconv"
-
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gvalid"
 )
@@ -22,14 +20,14 @@ func Test_CustomRule1(t *testing.T) {
 	rule := "custom"
 	err := gvalid.RegisterRule(
 		rule,
-		func(ctx context.Context, rule string, value interface{}, message string, data interface{}) error {
-			pass := gconv.String(value)
+		func(ctx context.Context, in gvalid.RuleFuncInput) error {
+			pass := in.Value.String()
 			if len(pass) != 6 {
-				return errors.New(message)
+				return errors.New(in.Message)
 			}
-			m := gconv.Map(data)
+			m := in.Data.Map()
 			if m["data"] != pass {
-				return errors.New(message)
+				return errors.New(in.Message)
 			}
 			return nil
 		},
@@ -71,10 +69,10 @@ func Test_CustomRule1(t *testing.T) {
 
 func Test_CustomRule2(t *testing.T) {
 	rule := "required-map"
-	err := gvalid.RegisterRule(rule, func(ctx context.Context, rule string, value interface{}, message string, data interface{}) error {
-		m := gconv.Map(value)
+	err := gvalid.RegisterRule(rule, func(ctx context.Context, in gvalid.RuleFuncInput) error {
+		m := in.Value.Map()
 		if len(m) == 0 {
-			return errors.New(message)
+			return errors.New(in.Message)
 		}
 		return nil
 	})
@@ -115,12 +113,12 @@ func Test_CustomRule2(t *testing.T) {
 
 func Test_CustomRule_AllowEmpty(t *testing.T) {
 	rule := "allow-empty-str"
-	err := gvalid.RegisterRule(rule, func(ctx context.Context, rule string, value interface{}, message string, data interface{}) error {
-		s := gconv.String(value)
+	err := gvalid.RegisterRule(rule, func(ctx context.Context, in gvalid.RuleFuncInput) error {
+		s := in.Value.String()
 		if len(s) == 0 || s == "gf" {
 			return nil
 		}
-		return errors.New(message)
+		return errors.New(in.Message)
 	})
 	gtest.Assert(err, nil)
 	// Check.
@@ -160,13 +158,13 @@ func Test_CustomRule_AllowEmpty(t *testing.T) {
 
 func TestValidator_RuleFunc(t *testing.T) {
 	ruleName := "custom_1"
-	ruleFunc := func(ctx context.Context, rule string, value interface{}, message string, data interface{}) error {
-		pass := gconv.String(value)
+	ruleFunc := func(ctx context.Context, in gvalid.RuleFuncInput) error {
+		pass := in.Value.String()
 		if len(pass) != 6 {
-			return errors.New(message)
+			return errors.New(in.Message)
 		}
-		if m := gconv.Map(data); m["data"] != pass {
-			return errors.New(message)
+		if m := in.Data.Map(); m["data"] != pass {
+			return errors.New(in.Message)
 		}
 		return nil
 	}
@@ -214,13 +212,13 @@ func TestValidator_RuleFunc(t *testing.T) {
 
 func TestValidator_RuleFuncMap(t *testing.T) {
 	ruleName := "custom_1"
-	ruleFunc := func(ctx context.Context, rule string, value interface{}, message string, data interface{}) error {
-		pass := gconv.String(value)
+	ruleFunc := func(ctx context.Context, in gvalid.RuleFuncInput) error {
+		pass := in.Value.String()
 		if len(pass) != 6 {
-			return errors.New(message)
+			return errors.New(in.Message)
 		}
-		if m := gconv.Map(data); m["data"] != pass {
-			return errors.New(message)
+		if m := in.Data.Map(); m["data"] != pass {
+			return errors.New(in.Message)
 		}
 		return nil
 	}
