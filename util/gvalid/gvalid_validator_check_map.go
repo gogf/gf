@@ -8,6 +8,7 @@ package gvalid
 
 import (
 	"context"
+	"errors"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/util/gconv"
 	"strings"
@@ -27,7 +28,7 @@ func (v *Validator) doCheckMap(ctx context.Context, params interface{}) Error {
 	var (
 		checkRules    = make([]fieldRule, 0)
 		customMessage = make(CustomMsg) // map[RuleKey]ErrorMsg.
-		errorMaps     = make(map[string]map[string]string)
+		errorMaps     = make(map[string]map[string]error)
 	)
 	switch assertValue := v.rules.(type) {
 	// Sequence tag: []sequence tag
@@ -80,9 +81,9 @@ func (v *Validator) doCheckMap(ctx context.Context, params interface{}) Error {
 	}
 	data := gconv.Map(params)
 	if data == nil {
-		return newErrorStr(
+		return newValidationErrorByStr(
 			internalParamsErrRuleName,
-			"invalid params type: convert to map failed",
+			errors.New("invalid params type: convert to map failed"),
 		)
 	}
 	if msg, ok := v.messages.(CustomMsg); ok && len(msg) > 0 {
@@ -139,7 +140,7 @@ func (v *Validator) doCheckMap(ctx context.Context, params interface{}) Error {
 				}
 			}
 			if _, ok := errorMaps[checkRuleItem.Name]; !ok {
-				errorMaps[checkRuleItem.Name] = make(map[string]string)
+				errorMaps[checkRuleItem.Name] = make(map[string]error)
 			}
 			for ruleKey, errorItemMsgMap := range errorItem {
 				errorMaps[checkRuleItem.Name][ruleKey] = errorItemMsgMap
@@ -150,7 +151,7 @@ func (v *Validator) doCheckMap(ctx context.Context, params interface{}) Error {
 		}
 	}
 	if len(errorMaps) > 0 {
-		return newError(gcode.CodeValidationFailed, checkRules, errorMaps)
+		return newValidationError(gcode.CodeValidationFailed, checkRules, errorMaps)
 	}
 	return nil
 }

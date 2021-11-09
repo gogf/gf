@@ -196,8 +196,12 @@ func doExport(value interface{}, indent string, buffer *bytes.Buffer, option doE
 			if structContentStr == "" {
 				structContentStr = "{}"
 			} else {
-				structContentStr = fmt.Sprintf(`"%s"`, gstr.AddSlashes(structContentStr))
-				attributeCountStr = fmt.Sprintf(`%d`, len(structContentStr)-2)
+				if strings.HasPrefix(structContentStr, `"`) && strings.HasSuffix(structContentStr, `"`) {
+					attributeCountStr = fmt.Sprintf(`%d`, len(structContentStr))
+				} else {
+					structContentStr = fmt.Sprintf(`"%s"`, gstr.AddSlashes(structContentStr))
+					attributeCountStr = fmt.Sprintf(`%d`, len(structContentStr)-2)
+				}
 			}
 			if option.WithoutType {
 				buffer.WriteString(structContentStr)
