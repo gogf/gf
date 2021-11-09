@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gfile"
 )
 
 func ExampleGetContentsWithCache() {
+	intlog.SetEnabled(false)
 	// init
 	fileName := "123.txt"
 	tempDir := gfile.TempDir("gfile_example_cache")
@@ -31,6 +33,8 @@ func ExampleGetContentsWithCache() {
 
 	// write new contents will clear its cache
 	gfile.PutContents(tempFile, "new test contents")
+
+	time.Sleep(time.Second * 1)
 
 	// read contents
 	content2 := gfile.GetContentsWithCache(tempFile)
