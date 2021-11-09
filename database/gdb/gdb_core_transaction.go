@@ -11,6 +11,7 @@ import (
 	"database/sql"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/utils"
 	"reflect"
 
 	"github.com/gogf/gf/v2/container/gtype"
@@ -399,20 +400,26 @@ func (tx *TX) GetStructs(objPointerSlice interface{}, sql string, args ...interf
 // the conversion. If parameter `pointer` is type of slice, it calls GetStructs internally
 // for conversion.
 func (tx *TX) GetScan(pointer interface{}, sql string, args ...interface{}) error {
-	t := reflect.TypeOf(pointer)
-	k := t.Kind()
-	if k != reflect.Ptr {
-		return gerror.NewCodef(gcode.CodeInvalidParameter, "params should be type of pointer, but got: %v", k)
+	reflectInfo := utils.OriginTypeAndKind(pointer)
+	if reflectInfo.InputKind != reflect.Ptr {
+		return gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			"params should be type of pointer, but got: %v",
+			reflectInfo.InputKind,
+		)
 	}
-	k = t.Elem().Kind()
-	switch k {
+	switch reflectInfo.OriginKind {
 	case reflect.Array, reflect.Slice:
 		return tx.GetStructs(pointer, sql, args...)
 
 	case reflect.Struct:
 		return tx.GetStruct(pointer, sql, args...)
 	}
-	return gerror.NewCodef(gcode.CodeInvalidParameter, "element type should be type of struct/slice, unsupported: %v", k)
+	return gerror.NewCodef(
+		gcode.CodeInvalidParameter,
+		`in valid parameter type "%v", of which element type should be type of struct/slice`,
+		reflectInfo.InputType,
+	)
 }
 
 // GetValue queries and returns the field value from database.

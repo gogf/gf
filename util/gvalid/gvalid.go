@@ -29,6 +29,7 @@ import (
 // required-without-all format: required-without-all:field1,field2,...brief: Required if all given fields are empty.
 // bail                 format: bail                                  brief: Stop validating when this field's validation failed.
 // date                 format: date                                  brief: Standard date, like: 2006-01-02, 20060102, 2006.01.02
+// datetime             format: datetime                              brief: Standard datetime, like: 2006-01-02 12:00:00
 // date-format          format: date-format:format                    brief: Custom date format.
 // email                format: email                                 brief: Email address.
 // phone                format: phone                                 brief: Phone number.
@@ -133,6 +134,7 @@ var (
 		"required-without-all": {},
 		"bail":                 {},
 		"date":                 {},
+		"datetime":             {},
 		"date-format":          {},
 		"email":                {},
 		"phone":                {},
@@ -192,6 +194,7 @@ var (
 		"required-without":      "The :attribute field is required",
 		"required-without-all":  "The :attribute field is required",
 		"date":                  "The :attribute value is not a valid date",
+		"datetime":              "The :attribute value is not a valid datetime",
 		"date-format":           "The :attribute value does not match the format :format",
 		"email":                 "The :attribute value must be a valid email address",
 		"phone":                 "The :attribute value must be a valid phone number",

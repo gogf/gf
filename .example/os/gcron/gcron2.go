@@ -8,7 +8,7 @@ import (
 )
 
 func test() {
-	glog.Println(111)
+	glog.Print(111)
 }
 
 func main() {

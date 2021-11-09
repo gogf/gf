@@ -292,7 +292,7 @@ func Test_Info(t *testing.T) {
 
 		createTestFile(paths, "")
 		defer delTestFiles(paths)
-		files, err = gfile.Info(testpath() + paths)
+		files, err = gfile.Stat(testpath() + paths)
 		t.Assert(err, nil)
 
 		files2, err = os.Stat(testpath() + paths)

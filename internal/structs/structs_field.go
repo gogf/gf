@@ -116,9 +116,6 @@ type FieldsInput struct {
 	// RecursiveOption specifies the way retrieving the fields recursively if the attribute
 	// is an embedded struct. It is RecursiveOptionNone in default.
 	RecursiveOption int
-
-	// fieldFilterMap is used internally for repeated fields filtering.
-	fieldFilterMap map[string]struct{}
 }
 
 type FieldMapInput struct {
@@ -136,19 +133,28 @@ type FieldMapInput struct {
 
 // Fields retrieves and returns the fields of `pointer` as slice.
 func Fields(in FieldsInput) ([]*Field, error) {
-	if in.fieldFilterMap == nil {
-		in.fieldFilterMap = make(map[string]struct{})
-	}
 	var (
-		retrievedFields = make([]*Field, 0)
+		ok                   bool
+		fieldFilterMap       = make(map[string]struct{})
+		retrievedFields      = make([]*Field, 0)
+		currentLevelFieldMap = make(map[string]*Field)
 	)
 	rangeFields, err := getFieldValues(in.Pointer)
 	if err != nil {
 		return nil, err
 	}
+
 	for index := 0; index < len(rangeFields); index++ {
 		field := rangeFields[index]
-		if _, ok := in.fieldFilterMap[field.Name()]; ok {
+		if !field.IsExported() {
+			continue
+		}
+		currentLevelFieldMap[field.Name()] = field
+	}
+
+	for index := 0; index < len(rangeFields); index++ {
+		field := rangeFields[index]
+		if _, ok = fieldFilterMap[field.Name()]; ok {
 			continue
 		}
 		// It only retrieves exported attributes.
@@ -167,18 +173,32 @@ func Fields(in FieldsInput) ([]*Field, error) {
 					structFields, err := Fields(FieldsInput{
 						Pointer:         field.Value,
 						RecursiveOption: in.RecursiveOption,
-						fieldFilterMap:  in.fieldFilterMap,
 					})
 					if err != nil {
 						return nil, err
 					}
-					retrievedFields = append(retrievedFields, structFields...)
+					// The current level fields can overwrite the sub-struct fields with the same name.
+					for i := 0; i < len(structFields); i++ {
+						var (
+							structField = structFields[i]
+							fieldName   = structField.Name()
+						)
+						if _, ok = fieldFilterMap[fieldName]; ok {
+							continue
+						}
+						fieldFilterMap[fieldName] = struct{}{}
+						if v := currentLevelFieldMap[fieldName]; v == nil {
+							retrievedFields = append(retrievedFields, structField)
+						} else {
+							retrievedFields = append(retrievedFields, v)
+						}
+					}
 					continue
 				}
 			}
 			continue
 		}
-		in.fieldFilterMap[field.Name()] = struct{}{}
+		fieldFilterMap[field.Name()] = struct{}{}
 		retrievedFields = append(retrievedFields, field)
 	}
 	return retrievedFields, nil

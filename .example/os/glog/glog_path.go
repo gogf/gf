@@ -9,7 +9,7 @@ import (
 func main() {
 	path := "/tmp/glog"
 	g.Log().SetPath(path)
-	g.Log().Println("日志内容")
+	g.Log().Print("日志内容")
 	list, err := gfile.ScanDir(path, "*")
 	g.Dump(err)
 	g.Dump(list)

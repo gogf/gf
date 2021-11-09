@@ -24,7 +24,7 @@ const (
 func Data(object interface{}) map[string]string {
 	reflectType, err := structs.StructType(object)
 	if err != nil {
-		panic(err)
+		return nil
 	}
 	if field, ok := reflectType.FieldByName(metaAttributeName); ok {
 		var (

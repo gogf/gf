@@ -16,7 +16,7 @@ func main() {
 			data, err := conn.RecvPkg()
 			if err != nil {
 				if err.Error() == "EOF" {
-					glog.Println("client closed")
+					glog.Print("client closed")
 				}
 				break
 			}
@@ -24,7 +24,7 @@ func main() {
 			if err := json.Unmarshal(data, info); err != nil {
 				glog.Errorf("invalid package structure: %s", err.Error())
 			} else {
-				glog.Println(info)
+				glog.Print(info)
 				conn.SendPkg([]byte("ok"))
 			}
 		}

@@ -327,14 +327,7 @@ func Split(str, delimiter string) []string {
 // and calls Trim to every element of this array. It ignores the elements
 // which are empty after Trim.
 func SplitAndTrim(str, delimiter string, characterMask ...string) []string {
-	array := make([]string, 0)
-	for _, v := range strings.Split(str, delimiter) {
-		v = Trim(v, characterMask...)
-		if v != "" {
-			array = append(array, v)
-		}
-	}
-	return array
+	return utils.SplitAndTrim(str, delimiter, characterMask...)
 }
 
 // Join concatenates the elements of `array` to create a single string. The separator string
@@ -488,21 +481,4 @@ func QuoteMeta(str string, chars ...string) string {
 		buf.WriteRune(char)
 	}
 	return buf.String()
-}
-
-// SearchArray searches string `s` in string slice `a` case-sensitively,
-// returns its index in `a`.
-// If `s` is not found in `a`, it returns -1.
-func SearchArray(a []string, s string) int {
-	for i, v := range a {
-		if s == v {
-			return i
-		}
-	}
-	return NotFoundIndex
-}
-
-// InArray checks whether string `s` in slice `a`.
-func InArray(a []string, s string) bool {
-	return SearchArray(a, s) != NotFoundIndex
 }

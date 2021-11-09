@@ -8,6 +8,7 @@ package gvalid
 
 import (
 	"context"
+	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -133,7 +134,12 @@ func (v *Validator) doCheckValue(ctx context.Context, input doCheckValueInput) E
 		if customRuleFunc != nil {
 			// It checks custom validation rules with most priority.
 			message := v.getErrorMessageByRule(ctx, ruleKey, customMsgMap)
-			if err := customRuleFunc(ctx, ruleItems[index], input.Value, message, input.DataRaw); err != nil {
+			if err := customRuleFunc(ctx, RuleFuncInput{
+				Rule:    ruleItems[index],
+				Message: message,
+				Value:   gvar.New(input.Value),
+				Data:    gvar.New(input.DataRaw),
+			}); err != nil {
 				match = false
 				errorMsgArray[ruleKey] = err.Error()
 			} else {
@@ -258,16 +264,28 @@ func (v *Validator) doCheckBuildInRules(ctx context.Context, input doCheckBuildI
 		}
 		match = gregex.IsMatchString(`\d{4}[\.\-\_/]{0,1}\d{2}[\.\-\_/]{0,1}\d{2}`, valueStr)
 
+	// Datetime rule.
+	case "datetime":
+		// support for time value, eg: gtime.Time/*gtime.Time, time.Time/*time.Time.
+		if v, ok := input.Value.(iTime); ok {
+			return !v.IsZero(), nil
+		}
+		if _, err = gtime.StrToTimeFormat(valueStr, `Y-m-d H:i:s`); err == nil {
+			match = true
+		}
+
 	// Date rule with specified format.
 	case "date-format":
 		// support for time value, eg: gtime.Time/*gtime.Time, time.Time/*time.Time.
 		if v, ok := input.Value.(iTime); ok {
 			return !v.IsZero(), nil
 		}
-		if _, err := gtime.StrToTimeFormat(valueStr, input.RulePattern); err == nil {
+		if _, err = gtime.StrToTimeFormat(valueStr, input.RulePattern); err == nil {
 			match = true
 		} else {
-			var msg string
+			var (
+				msg string
+			)
 			msg = v.getErrorMessageByRule(ctx, input.RuleKey, input.CustomMsgMap)
 			msg = strings.Replace(msg, ":format", input.RulePattern, -1)
 			return match, gerror.NewOption(gerror.Option{

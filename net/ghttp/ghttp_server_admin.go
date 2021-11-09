@@ -68,7 +68,7 @@ func (p *utilAdmin) Restart(r *Request) {
 
 // Shutdown shuts down all the servers.
 func (p *utilAdmin) Shutdown(r *Request) {
-	gtimer.SetTimeout(time.Second, func() {
+	gtimer.SetTimeout(r.Context(), time.Second, func(ctx context.Context) {
 		// It shuts down the server after 1 second, which is not triggered by system signal,
 		// to ensure the response successfully to the client.
 		_ = r.Server.Shutdown()

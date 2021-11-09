@@ -2308,31 +2308,31 @@ func Test_Model_Schema2(t *testing.T) {
 	}()
 	// Schema.
 	gtest.C(t, func(t *gtest.T) {
-		v, err := db.Schema(TestSchema1).Table(table).Value("nickname", "id=2")
+		v, err := db.Schema(TestSchema1).Model(table).Value("nickname", "id=2")
 		t.AssertNil(err)
 		t.Assert(v.String(), "name_2")
 
-		r, err := db.Schema(TestSchema1).Table(table).Update(g.Map{"nickname": "name_200"}, "id=2")
+		r, err := db.Schema(TestSchema1).Model(table).Update(g.Map{"nickname": "name_200"}, "id=2")
 		t.AssertNil(err)
 		n, _ := r.RowsAffected()
 		t.Assert(n, 1)
 
-		v, err = db.Schema(TestSchema1).Table(table).Value("nickname", "id=2")
+		v, err = db.Schema(TestSchema1).Model(table).Value("nickname", "id=2")
 		t.AssertNil(err)
 		t.Assert(v.String(), "name_200")
 
-		v, err = db.Schema(TestSchema2).Table(table).Value("nickname", "id=2")
+		v, err = db.Schema(TestSchema2).Model(table).Value("nickname", "id=2")
 		t.AssertNil(err)
 		t.Assert(v.String(), "name_2")
 
-		v, err = db.Schema(TestSchema1).Table(table).Value("nickname", "id=2")
+		v, err = db.Schema(TestSchema1).Model(table).Value("nickname", "id=2")
 		t.AssertNil(err)
 		t.Assert(v.String(), "name_200")
 	})
 	// Schema.
 	gtest.C(t, func(t *gtest.T) {
 		i := 1000
-		_, err := db.Schema(TestSchema1).Table(table).Insert(g.Map{
+		_, err := db.Schema(TestSchema1).Model(table).Insert(g.Map{
 			"id":               i,
 			"passport":         fmt.Sprintf(`user_%d`, i),
 			"password":         fmt.Sprintf(`pass_%d`, i),
@@ -2342,11 +2342,11 @@ func Test_Model_Schema2(t *testing.T) {
 		})
 		t.AssertNil(err)
 
-		v, err := db.Schema(TestSchema1).Table(table).Value("nickname", "id=?", i)
+		v, err := db.Schema(TestSchema1).Model(table).Value("nickname", "id=?", i)
 		t.AssertNil(err)
 		t.Assert(v.String(), "name_1000")
 
-		v, err = db.Schema(TestSchema2).Table(table).Value("nickname", "id=?", i)
+		v, err = db.Schema(TestSchema2).Model(table).Value("nickname", "id=?", i)
 		t.AssertNil(err)
 		t.Assert(v.String(), "")
 	})
@@ -2479,7 +2479,11 @@ func Test_Model_Cache(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		one, err := db.Model(table).Cache(time.Second, "test1").WherePri(1).One()
+		one, err := db.Model(table).Cache(gdb.CacheOption{
+			Duration: time.Second,
+			Name:     "test1",
+			Force:    false,
+		}).WherePri(1).One()
 		t.AssertNil(err)
 		t.Assert(one["passport"], "user_1")
 
@@ -2489,63 +2493,107 @@ func Test_Model_Cache(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(n, 1)
 
-		one, err = db.Model(table).Cache(time.Second, "test1").WherePri(1).One()
+		one, err = db.Model(table).Cache(gdb.CacheOption{
+			Duration: time.Second,
+			Name:     "test1",
+			Force:    false,
+		}).WherePri(1).One()
 		t.AssertNil(err)
 		t.Assert(one["passport"], "user_1")
 
 		time.Sleep(time.Second * 2)
 
-		one, err = db.Model(table).Cache(time.Second, "test1").WherePri(1).One()
+		one, err = db.Model(table).Cache(gdb.CacheOption{
+			Duration: time.Second,
+			Name:     "test1",
+			Force:    false,
+		}).WherePri(1).One()
 		t.AssertNil(err)
 		t.Assert(one["passport"], "user_100")
 	})
 	gtest.C(t, func(t *gtest.T) {
-		one, err := db.Model(table).Cache(time.Second, "test2").WherePri(2).One()
+		one, err := db.Model(table).Cache(gdb.CacheOption{
+			Duration: time.Second,
+			Name:     "test2",
+			Force:    false,
+		}).WherePri(2).One()
 		t.AssertNil(err)
 		t.Assert(one["passport"], "user_2")
 
-		r, err := db.Model(table).Data("passport", "user_200").Cache(-1, "test2").WherePri(2).Update()
+		r, err := db.Model(table).Data("passport", "user_200").Cache(gdb.CacheOption{
+			Duration: -1,
+			Name:     "test2",
+			Force:    false,
+		}).WherePri(2).Update()
 		t.AssertNil(err)
 		n, err := r.RowsAffected()
 		t.AssertNil(err)
 		t.Assert(n, 1)
 
-		one, err = db.Model(table).Cache(time.Second, "test2").WherePri(2).One()
+		one, err = db.Model(table).Cache(gdb.CacheOption{
+			Duration: time.Second,
+			Name:     "test2",
+			Force:    false,
+		}).WherePri(2).One()
 		t.AssertNil(err)
 		t.Assert(one["passport"], "user_200")
 	})
 	// transaction.
 	gtest.C(t, func(t *gtest.T) {
 		// make cache for id 3
-		one, err := db.Model(table).Cache(time.Second, "test3").WherePri(3).One()
+		one, err := db.Model(table).Cache(gdb.CacheOption{
+			Duration: time.Second,
+			Name:     "test3",
+			Force:    false,
+		}).WherePri(3).One()
 		t.AssertNil(err)
 		t.Assert(one["passport"], "user_3")
 
-		r, err := db.Model(table).Data("passport", "user_300").Cache(time.Second, "test3").WherePri(3).Update()
+		r, err := db.Model(table).Data("passport", "user_300").Cache(gdb.CacheOption{
+			Duration: time.Second,
+			Name:     "test3",
+			Force:    false,
+		}).WherePri(3).Update()
 		t.AssertNil(err)
 		n, err := r.RowsAffected()
 		t.AssertNil(err)
 		t.Assert(n, 1)
 
 		err = db.Transaction(context.TODO(), func(ctx context.Context, tx *gdb.TX) error {
-			one, err := tx.Model(table).Cache(time.Second, "test3").WherePri(3).One()
+			one, err := tx.Model(table).Cache(gdb.CacheOption{
+				Duration: time.Second,
+				Name:     "test3",
+				Force:    false,
+			}).WherePri(3).One()
 			t.AssertNil(err)
 			t.Assert(one["passport"], "user_300")
 			return nil
 		})
 		t.AssertNil(err)
 
-		one, err = db.Model(table).Cache(time.Second, "test3").WherePri(3).One()
+		one, err = db.Model(table).Cache(gdb.CacheOption{
+			Duration: time.Second,
+			Name:     "test3",
+			Force:    false,
+		}).WherePri(3).One()
 		t.AssertNil(err)
 		t.Assert(one["passport"], "user_3")
 	})
 	gtest.C(t, func(t *gtest.T) {
 		// make cache for id 4
-		one, err := db.Model(table).Cache(time.Second, "test4").WherePri(4).One()
+		one, err := db.Model(table).Cache(gdb.CacheOption{
+			Duration: time.Second,
+			Name:     "test4",
+			Force:    false,
+		}).WherePri(4).One()
 		t.AssertNil(err)
 		t.Assert(one["passport"], "user_4")
 
-		r, err := db.Model(table).Data("passport", "user_400").Cache(time.Second, "test3").WherePri(4).Update()
+		r, err := db.Model(table).Data("passport", "user_400").Cache(gdb.CacheOption{
+			Duration: time.Second,
+			Name:     "test3",
+			Force:    false,
+		}).WherePri(4).Update()
 		t.AssertNil(err)
 		n, err := r.RowsAffected()
 		t.AssertNil(err)
@@ -2553,12 +2601,20 @@ func Test_Model_Cache(t *testing.T) {
 
 		err = db.Transaction(context.TODO(), func(ctx context.Context, tx *gdb.TX) error {
 			// Cache feature disabled.
-			one, err := tx.Model(table).Cache(time.Second, "test4").WherePri(4).One()
+			one, err := tx.Model(table).Cache(gdb.CacheOption{
+				Duration: time.Second,
+				Name:     "test4",
+				Force:    false,
+			}).WherePri(4).One()
 			t.AssertNil(err)
 			t.Assert(one["passport"], "user_400")
 			// Update the cache.
 			r, err := tx.Model(table).Data("passport", "user_4000").
-				Cache(-1, "test4").WherePri(4).Update()
+				Cache(gdb.CacheOption{
+					Duration: -1,
+					Name:     "test4",
+					Force:    false,
+				}).WherePri(4).Update()
 			t.AssertNil(err)
 			n, err := r.RowsAffected()
 			t.AssertNil(err)
@@ -2567,7 +2623,11 @@ func Test_Model_Cache(t *testing.T) {
 		})
 		t.AssertNil(err)
 		// Read from db.
-		one, err = db.Model(table).Cache(time.Second, "test4").WherePri(4).One()
+		one, err = db.Model(table).Cache(gdb.CacheOption{
+			Duration: time.Second,
+			Name:     "test4",
+			Force:    false,
+		}).WherePri(4).One()
 		t.AssertNil(err)
 		t.Assert(one["passport"], "user_4000")
 	})
@@ -3673,6 +3733,87 @@ func Test_Model_FieldAvg(t *testing.T) {
 		t.Assert(len(all), TableSize)
 		t.Assert(all[0]["id"], 1)
 		t.Assert(all[0]["total"], 1)
+	})
+}
+
+func Test_Model_OmitEmptyWhere(t *testing.T) {
+	table := createInitTable()
+	defer dropTable(table)
+
+	// Basic type where.
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Where("id", 0).Count()
+		t.AssertNil(err)
+		t.Assert(count, 0)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).OmitEmptyWhere().Where("id", 0).Count()
+		t.AssertNil(err)
+		t.Assert(count, TableSize)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).OmitEmptyWhere().Where("id", 0).Where("nickname", "").Count()
+		t.AssertNil(err)
+		t.Assert(count, TableSize)
+	})
+	// Slice where.
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Where("id", g.Slice{1, 2, 3}).Count()
+		t.AssertNil(err)
+		t.Assert(count, 3)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Where("id", g.Slice{}).Count()
+		t.AssertNil(err)
+		t.Assert(count, 0)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).OmitEmptyWhere().Where("id", g.Slice{}).Count()
+		t.AssertNil(err)
+		t.Assert(count, TableSize)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Where("id", g.Slice{}).OmitEmptyWhere().Count()
+		t.AssertNil(err)
+		t.Assert(count, TableSize)
+	})
+	// Struct Where.
+	gtest.C(t, func(t *gtest.T) {
+		type Input struct {
+			Id   []int
+			Name []string
+		}
+		count, err := db.Model(table).Where(Input{}).Count()
+		t.AssertNil(err)
+		t.Assert(count, 0)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Input struct {
+			Id   []int
+			Name []string
+		}
+		count, err := db.Model(table).Where(Input{}).OmitEmptyWhere().Count()
+		t.AssertNil(err)
+		t.Assert(count, TableSize)
+	})
+	// Map Where.
+	gtest.C(t, func(t *gtest.T) {
+		count, err := db.Model(table).Where(g.Map{
+			"id":       []int{},
+			"nickname": []string{},
+		}).Count()
+		t.AssertNil(err)
+		t.Assert(count, 0)
+	})
+	gtest.C(t, func(t *gtest.T) {
+		type Input struct {
+			Id []int
+		}
+		count, err := db.Model(table).Where(g.Map{
+			"id": []int{},
+		}).OmitEmptyWhere().Count()
+		t.AssertNil(err)
+		t.Assert(count, TableSize)
 	})
 }
 

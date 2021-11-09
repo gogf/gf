@@ -134,7 +134,7 @@ func TestCache_UpdateExpire(t *testing.T) {
 		newExpire := 10 * time.Second
 		oldExpire2, err := cache.UpdateExpire(ctx, 1, newExpire)
 		t.AssertNil(err)
-		t.Assert(oldExpire2, oldExpire)
+		t.AssertIN(oldExpire2, g.Slice{oldExpire, `2.999s`})
 
 		e, _ := cache.GetExpire(ctx, 1)
 		t.AssertNE(e, oldExpire)
@@ -451,7 +451,7 @@ func TestCache_SetConcurrency(t *testing.T) {
 		pool := grpool.New(4)
 		go func() {
 			for {
-				pool.Add(func() {
+				pool.Add(ctx, func(ctx context.Context) {
 					cache.SetIfNotExist(ctx, 1, 11, 10)
 				})
 			}
@@ -463,7 +463,7 @@ func TestCache_SetConcurrency(t *testing.T) {
 
 		go func() {
 			for {
-				pool.Add(func() {
+				pool.Add(ctx, func(ctx context.Context) {
 					cache.SetIfNotExist(ctx, 1, nil, 10)
 				})
 			}

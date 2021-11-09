@@ -262,6 +262,27 @@ func Test_Date(t *testing.T) {
 	})
 }
 
+func Test_Datetime(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		m := g.MapStrBool{
+			"2010":                false,
+			"2010.11":             false,
+			"2010-11-01":          false,
+			"2010-11-01 12:00":    false,
+			"2010-11-01 12:00:00": true,
+			"2010.11.01 12:00:00": false,
+		}
+		for k, v := range m {
+			err := g.Validator().Rules(`datetime`).CheckValue(ctx, k)
+			if v {
+				t.AssertNil(err)
+			} else {
+				t.AssertNE(err, nil)
+			}
+		}
+	})
+}
+
 func Test_DateFormat(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		val1 := "2010"
