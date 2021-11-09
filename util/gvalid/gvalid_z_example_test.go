@@ -33,7 +33,7 @@ func ExampleCheckMap() {
 	if e := gvalid.CheckMap(gctx.New(), params, rules); e != nil {
 		fmt.Println(e.Map())
 		fmt.Println(e.FirstItem())
-		fmt.Println(e.FirstString())
+		fmt.Println(e.FirstError())
 	}
 	// May Output:
 	// map[required:账号不能为空 length:账号长度应当在6到16之间]
@@ -55,7 +55,7 @@ func ExampleCheckMap2() {
 	if e := gvalid.CheckMap(gctx.New(), params, rules); e != nil {
 		fmt.Println(e.Map())
 		fmt.Println(e.FirstItem())
-		fmt.Println(e.FirstString())
+		fmt.Println(e.FirstError())
 	}
 	// Output:
 	// map[same:两次密码输入不相等]

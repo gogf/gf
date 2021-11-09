@@ -8,9 +8,9 @@ package gvalid
 
 import (
 	"context"
+	"errors"
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gstr"
 	"strconv"
 	"strings"
@@ -61,7 +61,7 @@ func (v *Validator) doCheckValue(ctx context.Context, input doCheckValueInput) E
 	// It converts value to string and then does the validation.
 	var (
 		// Do not trim it as the space is also part of the value.
-		errorMsgArray = make(map[string]string)
+		ruleErrorMap = make(map[string]error)
 	)
 	// Custom error messages handling.
 	var (
@@ -87,9 +87,9 @@ func (v *Validator) doCheckValue(ctx context.Context, input doCheckValueInput) E
 				ruleItems[i-1] += "|" + ruleItems[i]
 				ruleItems = append(ruleItems[:i], ruleItems[i+1:]...)
 			} else {
-				return newErrorStr(
+				return newValidationErrorByStr(
 					internalRulesErrRuleName,
-					internalRulesErrRuleName+": "+input.Rule,
+					errors.New(internalRulesErrRuleName+": "+input.Rule),
 				)
 			}
 		} else {
@@ -141,7 +141,7 @@ func (v *Validator) doCheckValue(ctx context.Context, input doCheckValueInput) E
 				Data:    gvar.New(input.DataRaw),
 			}); err != nil {
 				match = false
-				errorMsgArray[ruleKey] = err.Error()
+				ruleErrorMap[ruleKey] = err
 			} else {
 				match = true
 			}
@@ -160,7 +160,7 @@ func (v *Validator) doCheckValue(ctx context.Context, input doCheckValueInput) E
 				},
 			)
 			if !match && err != nil {
-				errorMsgArray[ruleKey] = err.Error()
+				ruleErrorMap[ruleKey] = err
 			}
 		}
 
@@ -168,8 +168,8 @@ func (v *Validator) doCheckValue(ctx context.Context, input doCheckValueInput) E
 		if !match {
 			// It does nothing if the error message for this rule
 			// is already set in previous validation.
-			if _, ok := errorMsgArray[ruleKey]; !ok {
-				errorMsgArray[ruleKey] = v.getErrorMessageByRule(ctx, ruleKey, customMsgMap)
+			if _, ok := ruleErrorMap[ruleKey]; !ok {
+				ruleErrorMap[ruleKey] = errors.New(v.getErrorMessageByRule(ctx, ruleKey, customMsgMap))
 			}
 			// If it is with error and there's bail rule,
 			// it then does not continue validating for left rules.
@@ -179,12 +179,12 @@ func (v *Validator) doCheckValue(ctx context.Context, input doCheckValueInput) E
 		}
 		index++
 	}
-	if len(errorMsgArray) > 0 {
-		return newError(
+	if len(ruleErrorMap) > 0 {
+		return newValidationError(
 			gcode.CodeValidationFailed,
 			[]fieldRule{{Name: input.Name, Rule: input.Rule}},
-			map[string]map[string]string{
-				input.Name: errorMsgArray,
+			map[string]map[string]error{
+				input.Name: ruleErrorMap,
 			},
 		)
 	}
@@ -223,10 +223,7 @@ func (v *Validator) doCheckBuildInRules(ctx context.Context, input doCheckBuildI
 		"max-length",
 		"size":
 		if msg := v.checkLength(ctx, valueStr, input.RuleKey, input.RulePattern, input.CustomMsgMap); msg != "" {
-			return match, gerror.NewOption(gerror.Option{
-				Text: msg,
-				Code: gcode.CodeValidationFailed,
-			})
+			return match, errors.New(msg)
 		} else {
 			match = true
 		}
@@ -237,10 +234,7 @@ func (v *Validator) doCheckBuildInRules(ctx context.Context, input doCheckBuildI
 		"max",
 		"between":
 		if msg := v.checkRange(ctx, valueStr, input.RuleKey, input.RulePattern, input.CustomMsgMap); msg != "" {
-			return match, gerror.NewOption(gerror.Option{
-				Text: msg,
-				Code: gcode.CodeValidationFailed,
-			})
+			return match, errors.New(msg)
 		} else {
 			match = true
 		}
@@ -288,10 +282,7 @@ func (v *Validator) doCheckBuildInRules(ctx context.Context, input doCheckBuildI
 			)
 			msg = v.getErrorMessageByRule(ctx, input.RuleKey, input.CustomMsgMap)
 			msg = strings.Replace(msg, ":format", input.RulePattern, -1)
-			return match, gerror.NewOption(gerror.Option{
-				Text: msg,
-				Code: gcode.CodeValidationFailed,
-			})
+			return match, errors.New(msg)
 		}
 
 	// Values of two fields should be equal as string.
@@ -306,10 +297,7 @@ func (v *Validator) doCheckBuildInRules(ctx context.Context, input doCheckBuildI
 			var msg string
 			msg = v.getErrorMessageByRule(ctx, input.RuleKey, input.CustomMsgMap)
 			msg = strings.Replace(msg, ":field", input.RulePattern, -1)
-			return match, gerror.NewOption(gerror.Option{
-				Text: msg,
-				Code: gcode.CodeValidationFailed,
-			})
+			return match, errors.New(msg)
 		}
 
 	// Values of two fields should not be equal as string.
@@ -325,10 +313,7 @@ func (v *Validator) doCheckBuildInRules(ctx context.Context, input doCheckBuildI
 			var msg string
 			msg = v.getErrorMessageByRule(ctx, input.RuleKey, input.CustomMsgMap)
 			msg = strings.Replace(msg, ":field", input.RulePattern, -1)
-			return match, gerror.NewOption(gerror.Option{
-				Text: msg,
-				Code: gcode.CodeValidationFailed,
-			})
+			return match, errors.New(msg)
 		}
 
 	// Field value should be in range of.
@@ -511,10 +496,7 @@ func (v *Validator) doCheckBuildInRules(ctx context.Context, input doCheckBuildI
 		match = gregex.IsMatchString(`^([0-9A-Fa-f]{2}[\-:]){5}[0-9A-Fa-f]{2}$`, valueStr)
 
 	default:
-		return match, gerror.NewOption(gerror.Option{
-			Text: "Invalid rule name: " + input.RuleKey,
-			Code: gcode.CodeInvalidParameter,
-		})
+		return match, errors.New("Invalid rule name: " + input.RuleKey)
 	}
 	return match, nil
 }
