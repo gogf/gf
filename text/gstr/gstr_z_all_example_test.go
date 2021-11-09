@@ -2,7 +2,7 @@ package gstr_test
 
 import (
 	"fmt"
-	
+
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
@@ -22,7 +22,7 @@ func ExampleCaseCamel() {
 		rsStr = gstr.CaseCamel(str)
 	)
 	fmt.Println(rsStr)
-	
+
 	// Output:
 	// GoframeIsVeryNiceToUse
 }
@@ -318,6 +318,7 @@ func ExampleCountChars() {
 	// May Output:
 	// map[ :2 -:1 .:1 N:1 V:1 _:1 a:1 c:1 e:4 f:1 g:1 i:2 m:1 o:2 r:2 s:2 t:1 u:1 y:1]
 	// map[-:1 .:1 N:1 V:1 _:1 a:1 c:1 e:4 f:1 g:1 i:2 m:1 o:2 r:2 s:2 t:1 u:1 y:1]
+
 }
 
 func ExampleCountI() {
@@ -442,7 +443,6 @@ func ExampleHideStr() {
 	rsStr = gstr.HideStr(str, percent, hide)
 	fmt.Println(rsStr)
 
-
 	// Output:
 	// 138****8000
 	// AA@@@@@@AA
@@ -517,7 +517,7 @@ func ExampleIsNumeric() {
 	s = "aa66bb88"
 	rsStr = gstr.IsNumeric(s)
 	fmt.Println(rsStr)
-	
+
 	s = "3.1415926"
 	rsStr = gstr.IsNumeric(s)
 	fmt.Println(rsStr)
@@ -572,13 +572,12 @@ func ExampleJoinAny() {
 	arr1 := []string{"goframe", "is", "Very", "Nice", "to", "use"}
 	rsStr := gstr.JoinAny(arr1, sep)
 	fmt.Println(rsStr)
-	
-	
+
 	sep = `,`
-	arr2 := []int{ 99, 73, 85, 66 }
+	arr2 := []int{99, 73, 85, 66}
 	rsStr2 := gstr.JoinAny(arr2, sep)
 	fmt.Println(rsStr2)
-	
+
 	sep = `,`
 	arr3 := []interface{}{
 		"Mary",
@@ -591,8 +590,7 @@ func ExampleJoinAny() {
 	}
 	rsStr3 := gstr.JoinAny(arr3, sep)
 	fmt.Println(rsStr3)
-	
-	
+
 	sep = `|`
 	type StructA struct {
 		Name string
@@ -605,10 +603,7 @@ func ExampleJoinAny() {
 	}
 	rsStr = gstr.JoinAny(arr4, sep)
 	fmt.Println(rsStr)
-	
-	
-	
-	
+
 	// Output:
 	// goframe@is@Very@Nice@to@use
 	// 99,73,85,66
@@ -640,7 +635,7 @@ func ExampleLenRune() {
 	str = `123 4567 890`
 	rsStr = gstr.LenRune(str)
 	fmt.Println(rsStr)
-	
+
 	str = `Goframe是一个非常好用的Go语言框架!`
 	rsStr = gstr.LenRune(str)
 	fmt.Println(rsStr)
@@ -848,7 +843,7 @@ func ExamplePosIRune() {
 	needle = `Nice`
 	rsStr := gstr.PosIRune(haystack, needle)
 	fmt.Println(rsStr)
-	
+
 	haystack = `Goframe是个非常好用的框架.`
 	startOffset = 16
 	rsStr = gstr.PosIRune(haystack, needle, startOffset)
@@ -934,12 +929,12 @@ func ExamplePosRIRune() {
 	needle = `好用`
 	rsStr := gstr.PosRIRune(haystack, needle)
 	fmt.Println(rsStr)
-	
+
 	needle = `框架`
 	startOffset = 16
 	rsStr = gstr.PosRIRune(haystack, needle, startOffset)
 	fmt.Println(rsStr)
-	
+
 	needle = `golang`
 	startOffset = 17
 	rsStr = gstr.PosRIRune(haystack, needle, startOffset)
@@ -968,7 +963,7 @@ func ExamplePosRRune() {
 	startOffset = 16
 	rsStr = gstr.PosRRune(haystack, needle, startOffset)
 	fmt.Println(rsStr)
-	
+
 	haystack = `Goframe是中国开发者的福利.`
 	startOffset = 17
 	rsStr = gstr.PosRRune(haystack, needle, startOffset)
@@ -993,7 +988,7 @@ func ExamplePosRune() {
 	needle = `Nice`
 	rsStr := gstr.PosRune(haystack, needle)
 	fmt.Println(rsStr)
-	
+
 	haystack = `我喜欢Goframe框架`
 	needle = `框架`
 	startOffset = 16
@@ -1020,11 +1015,11 @@ func ExampleQuoteMeta() {
 	str = `.\+?[^]()`
 	rsStr := gstr.QuoteMeta(str)
 	fmt.Println(rsStr)
-	
+
 	str = `https://goframe.org/pages/viewpage.action?pageId=1114327`
 	rsStr = gstr.QuoteMeta(str)
 	fmt.Println(rsStr)
-	
+
 	// Output:
 	// \.\\\+\?\[\^\]\(\)
 	// https://goframe\.org/pages/viewpage\.action\?pageId=1114327
@@ -1109,14 +1104,14 @@ func ExampleReplaceByMap() {
 func ExampleReplaceI() {
 	var origin, search, replace string
 	var count int
-	
+
 	origin = `goframe is Very Nice to use`
 	search = `Goframe`
 	replace = `golang`
 	count = 3
 	rsStr := gstr.ReplaceI(origin, search, replace, count)
 	fmt.Println(rsStr)
-	
+
 	// Output:
 	// golang is Very Nice to use
 }
@@ -1131,7 +1126,7 @@ func ExampleReplaceIByArray() {
 			"GOOD",
 		},
 	))
-	
+
 	// Output:
 	// GoFrame is very GOOD
 }
@@ -1292,8 +1287,7 @@ func ExampleStrEx() {
 	needle = `B`
 	rsStr := gstr.StrEx(haystack, needle)
 	fmt.Println(rsStr)
-	
-	
+
 	haystack = `ABCDEFG`
 	needle = `E`
 	rsStr = gstr.StrEx(haystack, needle)
@@ -1382,14 +1376,13 @@ func ExampleStripSlashes() {
 func ExampleSubStr() {
 	var str string
 	var start, length int
-	
+
 	str = `ABCDEFGHIJK`
-	
+
 	start = 0
 	length = 2
 	subStr := gstr.SubStr(str, start, length)
 	fmt.Println(subStr)
-
 
 	start = 5
 	length = 6
