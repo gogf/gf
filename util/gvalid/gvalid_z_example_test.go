@@ -33,7 +33,7 @@ func ExampleCheckMap() {
 	if e := gvalid.CheckMap(gctx.New(), params, rules); e != nil {
 		fmt.Println(e.Map())
 		fmt.Println(e.FirstItem())
-		fmt.Println(e.FirstString())
+		fmt.Println(e.FirstError())
 	}
 	// May Output:
 	// map[required:账号不能为空 length:账号长度应当在6到16之间]
@@ -55,7 +55,7 @@ func ExampleCheckMap2() {
 	if e := gvalid.CheckMap(gctx.New(), params, rules); e != nil {
 		fmt.Println(e.Map())
 		fmt.Println(e.FirstItem())
-		fmt.Println(e.FirstString())
+		fmt.Println(e.FirstError())
 	}
 	// Output:
 	// map[same:两次密码输入不相等]
@@ -127,17 +127,17 @@ func ExampleRegisterRule() {
 	}
 
 	rule := "unique-name"
-	gvalid.RegisterRule(rule, func(ctx context.Context, rule string, value interface{}, message string, data interface{}) error {
+	gvalid.RegisterRule(rule, func(ctx context.Context, in gvalid.RuleFuncInput) error {
 		var (
-			id   = data.(*User).Id
-			name = gconv.String(value)
+			id   = in.Data.Val().(*User).Id
+			name = gconv.String(in.Value)
 		)
 		n, err := g.Model("user").Where("id != ? and name = ?", id, name).Count()
 		if err != nil {
 			return err
 		}
 		if n > 0 {
-			return errors.New(message)
+			return errors.New(in.Message)
 		}
 		return nil
 	})
@@ -149,8 +149,8 @@ func ExampleRegisterRule() {
 
 func ExampleRegisterRule_OverwriteRequired() {
 	rule := "required"
-	gvalid.RegisterRule(rule, func(ctx context.Context, rule string, value interface{}, message string, data interface{}) error {
-		reflectValue := reflect.ValueOf(value)
+	gvalid.RegisterRule(rule, func(ctx context.Context, in gvalid.RuleFuncInput) error {
+		reflectValue := reflect.ValueOf(in.Value.Val())
 		if reflectValue.Kind() == reflect.Ptr {
 			reflectValue = reflectValue.Elem()
 		}
@@ -171,7 +171,7 @@ func ExampleRegisterRule_OverwriteRequired() {
 			isEmpty = reflectValue.Len() == 0
 		}
 		if isEmpty {
-			return errors.New(message)
+			return errors.New(in.Message)
 		}
 		return nil
 	})
