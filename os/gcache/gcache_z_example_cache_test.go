@@ -58,27 +58,6 @@ func ExampleCache_Set() {
 	// [1,2,3,4,5,6,7,8,9] <nil>
 }
 
-func ExampleCache_SetAdapters() {
-
-	// Create a cache object,
-	// Of course, you can also easily use the gcache package method directly
-	c := gcache.New()
-
-	// SetAdapter changes the adapter for this cache. Be very note that, this setting function is not concurrent-safe,
-	// which means you should not call this setting function concurrently in multiple goroutines.
-
-	adapter := NewCache(gcache.NewAdapterMemory())
-	c.SetAdapter(adapter)
-	// Set cache
-	c.Set(ctx, "k1", g.Slice{1, 2, 3, 4, 5, 6, 7, 8, 9}, 0)
-	// Reverse makes array with elements in reverse order.
-	fmt.Println(c.Get(ctx, "k1"))
-
-	// Output:
-	// 111111111
-	// [1,2,3,4,5,6,7,8,9] <nil>
-}
-
 func ExampleCache_SetIfNotExist() {
 
 	// Create a cache object,
@@ -301,24 +280,19 @@ func ExampleCache_Data() {
 	// Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
 
-	c.SetMap(ctx, g.MapAnyAny{"k1": "v1", "k2": "v2"}, 0)
-	c.Set(ctx, "k5", "v5", 0)
+	c.SetMap(ctx, g.MapAnyAny{"k1": "v1"}, 0)
 
-	// Get retrieves and returns the associated value of given `key`.
-	// It returns nil if it does not exist, its value is nil or it's expired.
-	data, _ := c.Get(ctx, "k1")
+	data, _ := c.Data(ctx)
 	fmt.Println(data)
 
-	data1, _ := c.Get(ctx, "k2")
+	// Set Cache
+	c.Set(ctx, "k5", "v5", 0)
+	data1, _ := c.Get(ctx, "k1")
 	fmt.Println(data1)
 
-	data2, _ := c.Get(ctx, "k5")
-	fmt.Println(data2)
-
 	// Output:
+	// map[k1:v1]
 	// v1
-	// v2
-	// v5
 }
 
 func ExampleCache_Get() {
@@ -500,4 +474,248 @@ func ExampleCache_Removes() {
 
 	// Output:
 	// map[k4:v4]
+}
+
+func ExampleCache_MustGet() {
+	// Intercepting panic exception information
+	// err is empty, so panic is not performed
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("recover...:", r)
+		}
+	}()
+
+	// Create a cache object,
+	// Of course, you can also easily use the gcache package method directly
+	c := gcache.New()
+
+	// Set Cache Object
+	c.Set(ctx, "k1", "v1", 0)
+
+	// MustGet acts like Get, but it panics if any error occurs.
+	k2 := c.MustGet(ctx, "k2")
+	fmt.Println(k2)
+
+	//
+	k1 := c.MustGet(ctx, "k1")
+	fmt.Println(k1)
+
+	// Output:
+	// v1
+
+}
+
+func ExampleCache_MustGetOrSet() {
+
+	// Create a cache object,
+	// Of course, you can also easily use the gcache package method directly
+	c := gcache.New()
+
+	// MustGetOrSet acts like GetOrSet, but it panics if any error occurs.
+	k1 := c.MustGetOrSet(ctx, "k1", "v1", 0)
+	fmt.Println(k1)
+
+	k2 := c.MustGetOrSet(ctx, "k1", "v2", 0)
+	fmt.Println(k2)
+
+	// Output:
+	// v1
+	// v1
+
+}
+
+func ExampleCache_MustGetOrSetFunc() {
+
+	// Create a cache object,
+	// Of course, you can also easily use the gcache package method directly
+	c := gcache.New()
+
+	// MustGetOrSetFunc acts like GetOrSetFunc, but it panics if any error occurs.
+	c.MustGetOrSetFunc(ctx, 1, func() (interface{}, error) {
+		return 111, nil
+	}, 10000*time.Millisecond)
+	v := c.MustGet(ctx, 1)
+	fmt.Println(v)
+
+	c.MustGetOrSetFunc(ctx, 2, func() (interface{}, error) {
+		return nil, nil
+	}, 10000*time.Millisecond)
+	v1 := c.MustGet(ctx, 2)
+	fmt.Println(v1)
+
+	// Output:
+	// 111
+	//
+}
+
+func ExampleCache_MustGetOrSetFuncLock() {
+
+	// Create a cache object,
+	// Of course, you can also easily use the gcache package method directly
+	c := gcache.New()
+
+	// MustGetOrSetFuncLock acts like GetOrSetFuncLock, but it panics if any error occurs.
+	c.MustGetOrSetFuncLock(ctx, 1, func() (interface{}, error) {
+		return 11, nil
+	}, 0)
+	v := c.MustGet(ctx, 1)
+	fmt.Println(v)
+
+	// Modification failed
+	c.MustGetOrSetFuncLock(ctx, 1, func() (interface{}, error) {
+		return 111, nil
+	}, 0)
+	v = c.MustGet(ctx, 1)
+	fmt.Println(v)
+
+	c.Remove(ctx, g.Slice{1, 2, 3}...)
+
+	// Modify locking
+	c.MustGetOrSetFuncLock(ctx, 1, func() (interface{}, error) {
+		return 111, nil
+	}, 0)
+	v = c.MustGet(ctx, 1)
+	fmt.Println(v)
+
+	// Modification failed
+	c.MustGetOrSetFuncLock(ctx, 1, func() (interface{}, error) {
+		return 11, nil
+	}, 0)
+	v = c.MustGet(ctx, 1)
+	fmt.Println(v)
+
+	// Output:
+	// 11
+	// 11
+	// 111
+	// 111
+}
+
+func ExampleCache_MustContains() {
+
+	// Create a cache object,
+	// Of course, you can also easily use the gcache package method directly
+	c := gcache.New()
+
+	// Set Cache
+	c.Set(ctx, "k", "v", 0)
+
+	// Contains returns true if `key` exists in the cache, or else returns false.
+	// return true
+	data := c.MustContains(ctx, "k")
+	fmt.Println(data)
+
+	// return false
+	data1 := c.MustContains(ctx, "k1")
+	fmt.Println(data1)
+
+	// Output:
+	// true
+	// false
+
+}
+
+func ExampleCache_MustGetExpire() {
+
+	// Create a cache object,
+	// Of course, you can also easily use the gcache package method directly
+	c := gcache.New()
+
+	// Set cache without expiration
+	c.Set(ctx, "k", "v", 10000*time.Millisecond)
+
+	// MustGetExpire acts like GetExpire, but it panics if any error occurs.
+	expire := c.MustGetExpire(ctx, "k")
+	fmt.Println(expire)
+
+	// Output:
+	// 10s
+}
+
+func ExampleCache_MustSize() {
+
+	// Create a cache object,
+	// Of course, you can also easily use the gcache package method directly
+	c := gcache.New()
+
+	// Add 10 elements without expiration
+	for i := 0; i < 10; i++ {
+		c.Set(ctx, i, i, 0)
+	}
+
+	// Size returns the number of items in the cache.
+	n := c.MustSize(ctx)
+	fmt.Println(n)
+
+	// Output:
+	// 10
+}
+
+func ExampleCache_MustData() {
+
+	// Create a cache object,
+	// Of course, you can also easily use the gcache package method directly
+	c := gcache.New()
+
+	c.SetMap(ctx, g.MapAnyAny{"k1": "v1"}, 0)
+
+	data := c.MustData(ctx)
+	fmt.Println(data)
+
+	// Set Cache
+	c.Set(ctx, "k5", "v5", 0)
+	data1, _ := c.Get(ctx, "k1")
+	fmt.Println(data1)
+
+	// Output:
+	// map[k1:v1]
+	// v1
+}
+
+func ExampleCache_MustKeys() {
+
+	// Create a cache object,
+	// Of course, you can also easily use the gcache package method directly
+	c := gcache.New()
+
+	c.SetMap(ctx, g.MapAnyAny{"k1": "v1"}, 0)
+
+	// MustKeys acts like Keys, but it panics if any error occurs.
+	keys1, _ := c.Keys(ctx)
+	fmt.Println(keys1)
+
+	// Output:
+	// [k1]
+
+}
+
+func ExampleCache_MustKeyStrings() {
+	c := gcache.New()
+
+	c.SetMap(ctx, g.MapAnyAny{"k1": "v1"}, 0)
+
+	// MustKeyStrings returns all keys in the cache as string slice.
+	// MustKeyStrings acts like KeyStrings, but it panics if any error occurs.
+	keys := c.MustKeyStrings(ctx)
+	fmt.Println(keys)
+
+	// Output:
+	// [k1]
+}
+
+func ExampleCache_MustValues() {
+
+	// Create a cache object,
+	// Of course, you can also easily use the gcache package method directly
+	c := gcache.New()
+
+	// Write value
+	c.Set(ctx, "k1", g.Map{"k1": "v1"}, 0)
+
+	// Values returns all values in the cache as slice.
+	data := c.MustValues(ctx)
+	fmt.Println(data)
+
+	// Output:
+	// [map[k1:v1]]
 }
