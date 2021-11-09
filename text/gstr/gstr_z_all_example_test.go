@@ -356,7 +356,7 @@ func ExampleEqual() {
 	fmt.Println(rsStr)
 
 	a = `A`
-	b = `B`
+	b = `A`
 	rsStr = gstr.Equal(a, b)
 	fmt.Println(rsStr)
 
@@ -367,7 +367,7 @@ func ExampleEqual() {
 
 	// Output:
 	// true
-	// false
+	// true
 	// false
 }
 
