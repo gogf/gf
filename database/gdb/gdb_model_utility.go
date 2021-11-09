@@ -26,7 +26,11 @@ func (m *Model) TableFields(tableStr string, schema ...string) (fields map[strin
 	if len(schema) > 0 && schema[0] != "" {
 		useSchema = schema[0]
 	}
-	return m.db.TableFields(m.GetCtx(), m.guessPrimaryTableName(tableStr), useSchema)
+	return m.db.TableFields(
+		m.GetCtx(),
+		m.db.GetCore().guessPrimaryTableName(tableStr),
+		useSchema,
+	)
 }
 
 // getModel creates and returns a cloned model of current model if `safe` is true, or else it returns
@@ -104,7 +108,7 @@ func (m *Model) filterDataForInsertOrUpdate(data interface{}) (interface{}, erro
 func (m *Model) doMappingAndFilterForInsertOrUpdateDataMap(data Map, allowOmitEmpty bool) (Map, error) {
 	var err error
 	data, err = m.db.GetCore().mappingAndFilterData(
-		m.schema, m.guessPrimaryTableName(m.tablesInit), data, m.filter,
+		m.schema, m.tablesInit, data, m.filter,
 	)
 	if err != nil {
 		return nil, err

@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package charset implements character-set conversion functionality.
+// Package gcharset implements character-set conversion functionality.
 //
 // Supported Character Set:
 //
@@ -21,8 +21,10 @@ package gcharset
 
 import (
 	"bytes"
+	"context"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/intlog"
 	"io/ioutil"
 
 	"golang.org/x/text/encoding"
@@ -104,8 +106,9 @@ func getEncoding(charset string) encoding.Encoding {
 	if c, ok := charsetAlias[charset]; ok {
 		charset = c
 	}
-	if e, err := ianaindex.MIB.Encoding(charset); err == nil && e != nil {
-		return e
+	enc, err := ianaindex.MIB.Encoding(charset)
+	if err != nil {
+		intlog.Error(context.TODO(), err)
 	}
-	return nil
+	return enc
 }

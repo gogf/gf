@@ -12,45 +12,41 @@ import (
 	"github.com/gogf/gf/v2/internal/structs"
 	"github.com/gogf/gf/v2/text/gstr"
 	"reflect"
+	"strings"
 )
-
-// ExportOption specifies the behavior of function Export.
-type ExportOption struct {
-	WithoutType bool // WithoutType specifies exported content has no type information.
-}
-
-// iVal is used for type assert api for Val().
-type iVal interface {
-	Val() interface{}
-}
 
 // iString is used for type assert api for String().
 type iString interface {
 	String() string
 }
 
-// iMapStrAny is the interface support for converting struct parameter to map.
-type iMapStrAny interface {
-	MapStrAny() map[string]interface{}
+// iMarshalJSON is the interface for custom Json marshaling.
+type iMarshalJSON interface {
+	MarshalJSON() ([]byte, error)
+}
+
+// ExportOption specifies the behavior of function Export.
+type ExportOption struct {
+	WithoutType bool // WithoutType specifies exported content has no type information.
 }
 
 // Dump prints variables `values` to stdout with more manually readable.
 func Dump(values ...interface{}) {
 	for _, value := range values {
 		if s := Export(value, ExportOption{
-			WithoutType: false,
+			WithoutType: true,
 		}); s != "" {
 			fmt.Println(s)
 		}
 	}
 }
 
-// DumpBrief acts like Dump, but with no type information.
+// DumpWithType acts like Dump, but with type information.
 // Also see Dump.
-func DumpBrief(values ...interface{}) {
+func DumpWithType(values ...interface{}) {
 	for _, value := range values {
 		if s := Export(value, ExportOption{
-			WithoutType: true,
+			WithoutType: false,
 		}); s != "" {
 			fmt.Println(s)
 		}
@@ -71,12 +67,17 @@ type doExportOption struct {
 }
 
 func doExport(value interface{}, indent string, buffer *bytes.Buffer, option doExportOption) {
+	if value == nil {
+		buffer.WriteString(`<nil>`)
+		return
+	}
 	var (
 		reflectValue    = reflect.ValueOf(value)
 		reflectKind     = reflectValue.Kind()
-		reflectTypeName = reflectValue.Type().String()
+		reflectTypeName = reflect.TypeOf(value).String()
 		newIndent       = indent + dumpIndent
 	)
+	reflectTypeName = strings.ReplaceAll(reflectTypeName, `[]uint8`, `[]byte`)
 	if option.WithoutType {
 		reflectTypeName = ""
 	}
@@ -88,10 +89,10 @@ func doExport(value interface{}, indent string, buffer *bytes.Buffer, option doE
 	case reflect.Slice, reflect.Array:
 		if _, ok := value.([]byte); ok {
 			if option.WithoutType {
-				buffer.WriteString(fmt.Sprintf("\"%v\"\n", value))
+				buffer.WriteString(fmt.Sprintf(`"%s"`, value))
 			} else {
 				buffer.WriteString(fmt.Sprintf(
-					"%s(%d) \"%v\"\n",
+					`%s(%d) "%s"`,
 					reflectTypeName,
 					len(reflectValue.String()),
 					value,
@@ -160,7 +161,7 @@ func doExport(value interface{}, indent string, buffer *bytes.Buffer, option doE
 					"%s%v:%s",
 					newIndent,
 					mapKeyStr,
-					gstr.Repeat(" ", maxSpaceNum-tmpSpaceNum+1),
+					strings.Repeat(" ", maxSpaceNum-tmpSpaceNum+1),
 				))
 			} else {
 				buffer.WriteString(fmt.Sprintf(
@@ -168,7 +169,7 @@ func doExport(value interface{}, indent string, buffer *bytes.Buffer, option doE
 					newIndent,
 					mapKey.Type().String(),
 					mapKeyStr,
-					gstr.Repeat(" ", maxSpaceNum-tmpSpaceNum+1),
+					strings.Repeat(" ", maxSpaceNum-tmpSpaceNum+1),
 				))
 			}
 			doExport(reflectValue.MapIndex(mapKey).Interface(), newIndent, buffer, option)
@@ -182,10 +183,31 @@ func doExport(value interface{}, indent string, buffer *bytes.Buffer, option doE
 			RecursiveOption: structs.RecursiveOptionEmbeddedNoTag,
 		})
 		if len(structFields) == 0 {
-			if option.WithoutType {
-				buffer.WriteString("{}")
+			var (
+				structContentStr  = ""
+				attributeCountStr = "0"
+			)
+			if v, ok := value.(iString); ok {
+				structContentStr = v.String()
+			} else if v, ok := value.(iMarshalJSON); ok {
+				b, _ := v.MarshalJSON()
+				structContentStr = string(b)
+			}
+			if structContentStr == "" {
+				structContentStr = "{}"
 			} else {
-				buffer.WriteString(fmt.Sprintf("%s(0) {}", reflectTypeName))
+				structContentStr = fmt.Sprintf(`"%s"`, gstr.AddSlashes(structContentStr))
+				attributeCountStr = fmt.Sprintf(`%d`, len(structContentStr)-2)
+			}
+			if option.WithoutType {
+				buffer.WriteString(structContentStr)
+			} else {
+				buffer.WriteString(fmt.Sprintf(
+					"%s(%s) %s",
+					reflectTypeName,
+					attributeCountStr,
+					structContentStr,
+				))
 			}
 			return
 		}
@@ -211,7 +233,7 @@ func doExport(value interface{}, indent string, buffer *bytes.Buffer, option doE
 				"%s%s:%s",
 				newIndent,
 				field.Name(),
-				gstr.Repeat(" ", maxSpaceNum-tmpSpaceNum+1),
+				strings.Repeat(" ", maxSpaceNum-tmpSpaceNum+1),
 			))
 			doExport(field.Value.Interface(), newIndent, buffer, option)
 			buffer.WriteString(",\n")

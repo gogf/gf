@@ -7,23 +7,25 @@
 package gtimer
 
 import (
+	"context"
 	"github.com/gogf/gf/v2/container/gtype"
 )
 
 // Entry is the timing job.
 type Entry struct {
-	job       JobFunc      // The job function.
-	timer     *Timer       // Belonged timer.
-	ticks     int64        // The job runs every tick.
-	times     *gtype.Int   // Limit running times.
-	status    *gtype.Int   // Job status.
-	singleton *gtype.Bool  // Singleton mode.
-	nextTicks *gtype.Int64 // Next run ticks of the job.
-	infinite  *gtype.Bool  // No times limit.
+	job         JobFunc         // The job function.
+	ctx         context.Context // The context for the job.
+	timer       *Timer          // Belonged timer.
+	ticks       int64           // The job runs every tick.
+	times       *gtype.Int      // Limit running times.
+	status      *gtype.Int      // Job status.
+	isSingleton *gtype.Bool     // Singleton mode.
+	nextTicks   *gtype.Int64    // Next run ticks of the job.
+	infinite    *gtype.Bool     // No times limit.
 }
 
 // JobFunc is the job function.
-type JobFunc = func()
+type JobFunc = func(ctx context.Context)
 
 // Status returns the status of the job.
 func (entry *Entry) Status() int {
@@ -54,7 +56,7 @@ func (entry *Entry) Run() {
 				entry.SetStatus(StatusReady)
 			}
 		}()
-		entry.job()
+		entry.job(entry.ctx)
 	}()
 }
 
@@ -113,17 +115,22 @@ func (entry *Entry) Reset() {
 
 // IsSingleton checks and returns whether the job in singleton mode.
 func (entry *Entry) IsSingleton() bool {
-	return entry.singleton.Val()
+	return entry.isSingleton.Val()
 }
 
 // SetSingleton sets the job singleton mode.
 func (entry *Entry) SetSingleton(enabled bool) {
-	entry.singleton.Set(enabled)
+	entry.isSingleton.Set(enabled)
 }
 
 // Job returns the job function of this job.
 func (entry *Entry) Job() JobFunc {
 	return entry.job
+}
+
+// Ctx returns the initialized context of this job.
+func (entry *Entry) Ctx() context.Context {
+	return entry.ctx
 }
 
 // SetTimes sets the limit running times for the job.

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 
 	"github.com/fsnotify/fsnotify"
@@ -25,7 +26,7 @@ func main() {
 		for {
 			select {
 			case ev := <-watch.Events:
-				glog.Println(ev)
+				glog.Print(context.Background(), ev)
 
 			case err := <-watch.Errors:
 				log.Println("error : ", err)

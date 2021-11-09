@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/utils"
 	"reflect"
 
 	"github.com/gogf/gf/v2/container/gset"
@@ -293,24 +294,15 @@ func (m *Model) doStructs(pointer interface{}, where ...interface{}) error {
 // err   := db.Model("user").Scan(&users)
 func (m *Model) Scan(pointer interface{}, where ...interface{}) error {
 	var (
-		reflectValue reflect.Value
-		reflectKind  reflect.Kind
+		reflectInfo = utils.OriginTypeAndKind(pointer)
 	)
-	if v, ok := pointer.(reflect.Value); ok {
-		reflectValue = v
-	} else {
-		reflectValue = reflect.ValueOf(pointer)
+	if reflectInfo.InputKind != reflect.Ptr {
+		return gerror.NewCode(
+			gcode.CodeInvalidParameter,
+			`the parameter "pointer" for function Scan should type of pointer`,
+		)
 	}
-
-	reflectKind = reflectValue.Kind()
-	if reflectKind != reflect.Ptr {
-		return gerror.NewCode(gcode.CodeInvalidParameter, `the parameter "pointer" for function Scan should type of pointer`)
-	}
-	for reflectKind == reflect.Ptr {
-		reflectValue = reflectValue.Elem()
-		reflectKind = reflectValue.Kind()
-	}
-	switch reflectKind {
+	switch reflectInfo.OriginKind {
 	case reflect.Slice, reflect.Array:
 		return m.doStructs(pointer, where...)
 
@@ -327,32 +319,25 @@ func (m *Model) Scan(pointer interface{}, where ...interface{}) error {
 
 // ScanList converts `r` to struct slice which contains other complex struct attributes.
 // Note that the parameter `listPointer` should be type of *[]struct/*[]*struct.
-// Usage example:
 //
-// type Entity struct {
-// 	   User       *EntityUser
-// 	   UserDetail *EntityUserDetail
-//	   UserScores []*EntityUserScores
-// }
-// var users []*Entity
-// or
-// var users []Entity
-//
-// ScanList(&users, "User")
-// ScanList(&users, "UserDetail", "User", "uid:Uid")
-// ScanList(&users, "UserScores", "User", "uid:Uid")
-// The parameters "User"/"UserDetail"/"UserScores" in the example codes specify the target attribute struct
-// that current result will be bound to.
-// The "uid" in the example codes is the table field name of the result, and the "Uid" is the relational
-// struct attribute name. It automatically calculates the HasOne/HasMany relationship with given `relation`
-// parameter.
-// See the example or unit testing cases for clear understanding for this function.
-func (m *Model) ScanList(listPointer interface{}, attributeName string, relation ...string) (err error) {
+// See Result.ScanList.
+func (m *Model) ScanList(structSlicePointer interface{}, bindToAttrName string, relationAttrNameAndFields ...string) (err error) {
 	result, err := m.All()
 	if err != nil {
 		return err
 	}
-	return doScanList(m, result, listPointer, attributeName, relation...)
+	var (
+		relationAttrName string
+		relationFields   string
+	)
+	switch len(relationAttrNameAndFields) {
+	case 2:
+		relationAttrName = relationAttrNameAndFields[0]
+		relationFields = relationAttrNameAndFields[1]
+	case 1:
+		relationFields = relationAttrNameAndFields[0]
+	}
+	return doScanList(m, result, structSlicePointer, bindToAttrName, relationAttrName, relationFields)
 }
 
 // Count does "SELECT COUNT(x) FROM ..." statement for the model.
@@ -452,7 +437,7 @@ func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, e
 	)
 	// Retrieve from cache.
 	if m.cacheEnabled && m.tx == nil {
-		cacheKey = m.cacheName
+		cacheKey = m.cacheOption.Name
 		if len(cacheKey) == 0 {
 			cacheKey = sql + ", @PARAMS:" + gconv.String(args)
 		}
@@ -476,16 +461,16 @@ func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, e
 	)
 	// Cache the result.
 	if cacheKey != "" && err == nil {
-		if m.cacheDuration < 0 {
+		if m.cacheOption.Duration < 0 {
 			if _, err := cacheObj.Remove(ctx, cacheKey); err != nil {
 				intlog.Error(m.GetCtx(), err)
 			}
 		} else {
 			// In case of Cache Penetration.
-			if result == nil {
+			if result.IsEmpty() && m.cacheOption.Force {
 				result = Result{}
 			}
-			if err := cacheObj.Set(ctx, cacheKey, result, m.cacheDuration); err != nil {
+			if err := cacheObj.Set(ctx, cacheKey, result, m.cacheOption.Duration); err != nil {
 				intlog.Error(m.GetCtx(), err)
 			}
 		}

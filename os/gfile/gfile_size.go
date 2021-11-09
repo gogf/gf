@@ -74,7 +74,7 @@ func StrToSize(sizeStr string) int64 {
 	return -1
 }
 
-// FormatSize formats size `raw` for more human readable.
+// FormatSize formats size `raw` for more manually readable.
 func FormatSize(raw int64) string {
 	var r float64 = float64(raw)
 	var t float64 = 1024

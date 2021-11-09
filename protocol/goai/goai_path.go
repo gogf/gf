@@ -180,7 +180,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 			Value: &requestBody,
 		}
 	}
-	// Request parameters.
+	// It also sets request parameters.
 	structFields, _ := structs.Fields(structs.FieldsInput{
 		Pointer:         inputObject.Interface(),
 		RecursiveOption: structs.RecursiveOptionEmbeddedNoTag,
@@ -189,7 +189,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		if operation.Parameters == nil {
 			operation.Parameters = []ParameterRef{}
 		}
-		parameterRef, err := oai.newParameterRefWithStructMethod(structField, in.Method)
+		parameterRef, err := oai.newParameterRefWithStructMethod(structField, in.Path, in.Method)
 		if err != nil {
 			return err
 		}
@@ -216,16 +216,22 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		var (
 			contentTypes = oai.Config.ReadContentTypes
 			tagMimeValue = gmeta.Get(outputObject.Interface(), TagNameMime).String()
+			refInput     = getResponseSchemaRefInput{
+				BusinessStructName: outputStructTypeName,
+				ResponseObject:     oai.Config.CommonResponse,
+				ResponseDataField:  oai.Config.CommonResponseDataField,
+			}
 		)
 		if tagMimeValue != "" {
 			contentTypes = gstr.SplitAndTrim(tagMimeValue, ",")
 		}
 		for _, v := range contentTypes {
-			schemaRef, err := oai.getResponseSchemaRef(getResponseSchemaRefInput{
-				BusinessStructName: outputStructTypeName,
-				ResponseObject:     oai.Config.CommonResponse,
-				ResponseDataField:  oai.Config.CommonResponseDataField,
-			})
+			// If customized response mime type, it then ignores common response feature.
+			if tagMimeValue != "" {
+				refInput.ResponseObject = nil
+				refInput.ResponseDataField = ""
+			}
+			schemaRef, err := oai.getResponseSchemaRef(refInput)
 			if err != nil {
 				return err
 			}

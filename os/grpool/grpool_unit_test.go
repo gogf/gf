@@ -9,6 +9,7 @@
 package grpool_test
 
 import (
+	"context"
 	"sync"
 	"testing"
 	"time"
@@ -20,12 +21,14 @@ import (
 
 func Test_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		wg := sync.WaitGroup{}
-		array := garray.NewArray(true)
-		size := 100
+		var (
+			wg    = sync.WaitGroup{}
+			array = garray.NewArray(true)
+			size  = 100
+		)
 		wg.Add(size)
 		for i := 0; i < size; i++ {
-			grpool.Add(func() {
+			grpool.Add(ctx, func(ctx context.Context) {
 				array.Append(1)
 				wg.Done()
 			})
@@ -40,13 +43,15 @@ func Test_Basic(t *testing.T) {
 
 func Test_Limit1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		wg := sync.WaitGroup{}
-		array := garray.NewArray(true)
-		size := 100
-		pool := grpool.New(10)
+		var (
+			wg    = sync.WaitGroup{}
+			array = garray.NewArray(true)
+			size  = 100
+			pool  = grpool.New(10)
+		)
 		wg.Add(size)
 		for i := 0; i < size; i++ {
-			pool.Add(func() {
+			pool.Add(ctx, func(ctx context.Context) {
 				array.Append(1)
 				wg.Done()
 			})
@@ -66,7 +71,7 @@ func Test_Limit2(t *testing.T) {
 		)
 		wg.Add(size)
 		for i := 0; i < size; i++ {
-			pool.Add(func() {
+			pool.Add(ctx, func(ctx context.Context) {
 				defer wg.Done()
 				array.Append(1)
 			})
@@ -78,12 +83,14 @@ func Test_Limit2(t *testing.T) {
 
 func Test_Limit3(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		array := garray.NewArray(true)
-		size := 1000
-		pool := grpool.New(100)
+		var (
+			array = garray.NewArray(true)
+			size  = 1000
+			pool  = grpool.New(100)
+		)
 		t.Assert(pool.Cap(), 100)
 		for i := 0; i < size; i++ {
-			pool.Add(func() {
+			pool.Add(ctx, func(ctx context.Context) {
 				array.Append(1)
 				time.Sleep(2 * time.Second)
 			})
@@ -98,20 +105,20 @@ func Test_Limit3(t *testing.T) {
 		t.Assert(pool.Jobs(), 900)
 		t.Assert(array.Len(), 100)
 		t.Assert(pool.IsClosed(), true)
-		t.AssertNE(pool.Add(func() {}), nil)
+		t.AssertNE(pool.Add(ctx, func(ctx context.Context) {}), nil)
 	})
 }
 
 func Test_AddWithRecover(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		array := garray.NewArray(true)
-		grpool.AddWithRecover(func() {
+		grpool.AddWithRecover(ctx, func(ctx context.Context) {
 			array.Append(1)
 			panic(1)
 		}, func(err error) {
 			array.Append(1)
 		})
-		grpool.AddWithRecover(func() {
+		grpool.AddWithRecover(ctx, func(ctx context.Context) {
 			panic(1)
 			array.Append(1)
 		})

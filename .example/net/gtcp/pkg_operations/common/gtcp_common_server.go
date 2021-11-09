@@ -21,7 +21,7 @@ func main() {
 			msg, err := funcs.RecvPkg(conn)
 			if err != nil {
 				if err.Error() == "EOF" {
-					glog.Println("client closed")
+					glog.Print("client closed")
 				}
 				break
 			}

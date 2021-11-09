@@ -246,3 +246,46 @@ enable=true
 		}
 	})
 }
+
+func Test_Load_YamlWithV3(t *testing.T) {
+	content := `
+# CLI tool, only in development environment.
+# https://goframe.org/pages/viewpage.action?pageId=3673173
+gfcli:
+  gen:
+    dao:
+    - path            : "../../pkg/oss/oss/internal"
+      group           : "oss"
+      stdTime         : true
+      descriptionTag  : true
+      noJsonTag       : true
+      noModelComment  : true
+      overwriteDao    : true
+      modelFileForDao : "model_dao.go"
+      tablesEx        : |
+        bpmn_info,
+        dlocker,
+        dlocker_detail,
+        message_table,
+        monitor_data,
+        resource_param_info,
+        version_info,
+        version_topology_info,
+        work_flow,
+        work_flow_step_info,
+        work_flow_undo_step_info
+
+    - path            : "../../pkg/oss/workflow/internal"
+      group           : "workflow"
+      stdTime         : true
+      descriptionTag  : true
+      noJsonTag       : true
+      noModelComment  : true
+      overwriteDao    : true
+      modelFileForDao : "model_dao.go"
+`
+	gtest.C(t, func(t *gtest.T) {
+		_, err := gjson.LoadContent(content)
+		t.AssertNil(err)
+	})
+}

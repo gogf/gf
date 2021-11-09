@@ -8,14 +8,14 @@ import (
 )
 
 func main() {
-	gcron.Add("0 30 * * * *", func() { glog.Println("Every hour on the half hour") })
-	gcron.Add("* * * * * *", func() { glog.Println("Every second, pattern") }, "second-cron")
-	gcron.Add("*/5 * * * * *", func() { glog.Println("Every 5 seconds, pattern") })
+	gcron.Add("0 30 * * * *", func() { glog.Print("Every hour on the half hour") })
+	gcron.Add("* * * * * *", func() { glog.Print("Every second, pattern") }, "second-cron")
+	gcron.Add("*/5 * * * * *", func() { glog.Print("Every 5 seconds, pattern") })
 
-	gcron.Add("@hourly", func() { glog.Println("Every hour") })
-	gcron.Add("@every 1h30m", func() { glog.Println("Every hour thirty") })
-	gcron.Add("@every 1s", func() { glog.Println("Every 1 second") })
-	gcron.Add("@every 5s", func() { glog.Println("Every 5 seconds") })
+	gcron.Add("@hourly", func() { glog.Print("Every hour") })
+	gcron.Add("@every 1h30m", func() { glog.Print("Every hour thirty") })
+	gcron.Add("@every 1s", func() { glog.Print("Every 1 second") })
+	gcron.Add("@every 5s", func() { glog.Print("Every 5 seconds") })
 
 	time.Sleep(3 * time.Second)
 

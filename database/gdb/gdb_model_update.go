@@ -10,6 +10,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/internal/utils"
 	"reflect"
 
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -49,14 +50,9 @@ func (m *Model) Update(dataAndWhere ...interface{}) (result sql.Result, err erro
 	// Automatically update the record updating time.
 	if !m.unscoped && fieldNameUpdate != "" {
 		var (
-			refValue = reflect.ValueOf(m.data)
-			refKind  = refValue.Kind()
+			reflectInfo = utils.OriginTypeAndKind(m.data)
 		)
-		if refKind == reflect.Ptr {
-			refValue = refValue.Elem()
-			refKind = refValue.Kind()
-		}
-		switch refKind {
+		switch reflectInfo.OriginKind {
 		case reflect.Map, reflect.Struct:
 			dataMap := ConvertDataForTableRecord(m.data)
 			if fieldNameUpdate != "" {

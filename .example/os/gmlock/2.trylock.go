@@ -16,11 +16,11 @@ func main() {
 		wg.Add(1)
 		go func(i int) {
 			if gmlock.TryLock(key) {
-				glog.Println(i)
+				glog.Print(i)
 				time.Sleep(time.Second)
 				gmlock.Unlock(key)
 			} else {
-				glog.Println(false)
+				glog.Print(false)
 			}
 			wg.Done()
 		}(i)

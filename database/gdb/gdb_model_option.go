@@ -25,6 +25,12 @@ func (m *Model) OmitEmpty() *Model {
 
 // OmitEmptyWhere sets optionOmitEmptyWhere option for the model, which automatically filers
 // the Where/Having parameters for `empty` values.
+//
+// Eg:
+// Where("id", []int{}).All()             -> SELECT xxx FROM xxx WHERE 0=1
+// Where("name", "").All()                -> SELECT xxx FROM xxx WHERE `name`=''
+// OmitEmpty().Where("id", []int{}).All() -> SELECT xxx FROM xxx
+// OmitEmpty().("name", "").All()         -> SELECT xxx FROM xxx
 func (m *Model) OmitEmptyWhere() *Model {
 	model := m.getModel()
 	model.option = model.option | optionOmitEmptyWhere

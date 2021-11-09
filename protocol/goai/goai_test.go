@@ -9,6 +9,7 @@ package goai_test
 import (
 	"context"
 	"fmt"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/protocol/goai"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gmeta"
@@ -186,6 +187,50 @@ func TestOpenApiV3_Add_EmptyReqAndRes(t *testing.T) {
 		t.AssertNil(err)
 		// Schema asserts.
 		fmt.Println(oai.String())
+	})
+}
+
+func TestOpenApiV3_Add_AutoDetectIn(t *testing.T) {
+	type Req struct {
+		gmeta.Meta `method:"get" tags:"default"`
+		Name       string
+		Product    string
+		Region     string
+	}
+
+	type Res struct {
+		gmeta.Meta `description:"Demo Response Struct"`
+	}
+
+	f := func(ctx context.Context, req *Req) (res *Res, err error) {
+		return
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err  error
+			oai  = goai.New()
+			path = `/test/{product}/{name}`
+		)
+		err = oai.Add(goai.AddInput{
+			Path:   path,
+			Method: goai.HttpMethodGet,
+			Object: f,
+		})
+		t.AssertNil(err)
+
+		fmt.Println(oai.String())
+
+		t.Assert(len(oai.Components.Schemas), 2)
+		t.Assert(len(oai.Paths), 1)
+		t.AssertNE(oai.Paths[path].Get, nil)
+		t.Assert(len(oai.Paths[path].Get.Parameters), 3)
+		t.Assert(oai.Paths[path].Get.Parameters[0].Value.Name, `Name`)
+		t.Assert(oai.Paths[path].Get.Parameters[0].Value.In, goai.ParameterInPath)
+		t.Assert(oai.Paths[path].Get.Parameters[1].Value.Name, `Product`)
+		t.Assert(oai.Paths[path].Get.Parameters[1].Value.In, goai.ParameterInPath)
+		t.Assert(oai.Paths[path].Get.Parameters[2].Value.Name, `Region`)
+		t.Assert(oai.Paths[path].Get.Parameters[2].Value.In, goai.ParameterInQuery)
 	})
 }
 
@@ -617,5 +662,82 @@ func TestOpenApiV3_ShortTags(t *testing.T) {
 			Components.
 			Schemas[`github.com.gogf.gf.v2.protocol.goai_test.CreateResourceReq`].
 			Value.Properties[`resourceId`].Value.Description, `资源Id`)
+	})
+}
+
+func TestOpenApiV3_HtmlResponse(t *testing.T) {
+	type Req struct {
+		g.Meta `path:"/test" method:"get" summary:"展示内容详情页面" tags:"内容"`
+		Id     uint `json:"id" v:"min:1#请选择查看的内容" dc:"内容id"`
+	}
+	type Res struct {
+		g.Meta `mime:"text/html" type:"string" example:"<html/>"`
+	}
+
+	f := func(ctx context.Context, req *Req) (res *Res, err error) {
+		return
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err error
+			oai = goai.New()
+		)
+		err = oai.Add(goai.AddInput{
+			Path:   "/test",
+			Method: goai.HttpMethodGet,
+			Object: f,
+		})
+		t.AssertNil(err)
+
+		//fmt.Println(oai.String())
+		t.Assert(oai.Components.Schemas[`github.com.gogf.gf.v2.protocol.goai_test.Res`].Value.Type, goai.TypeString)
+	})
+}
+
+func TestOpenApiV3_HtmlResponseWithCommonResponse(t *testing.T) {
+	type CommonResError struct {
+		Code    string `description:"错误码"`
+		Message string `description:"错误描述"`
+	}
+
+	type CommonResResponse struct {
+		RequestId string          `description:"RequestId"`
+		Error     *CommonResError `json:",omitempty" description:"执行错误信息"`
+	}
+
+	type CommonRes struct {
+		Response CommonResResponse
+	}
+
+	type Req struct {
+		g.Meta `path:"/test" method:"get" summary:"展示内容详情页面" tags:"内容"`
+		Id     uint `json:"id" v:"min:1#请选择查看的内容" dc:"内容id"`
+	}
+	type Res struct {
+		g.Meta `mime:"text/html" type:"string" example:"<html/>"`
+	}
+
+	f := func(ctx context.Context, req *Req) (res *Res, err error) {
+		return
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			err error
+			oai = goai.New()
+		)
+		oai.Config.CommonResponse = CommonRes{}
+		oai.Config.CommonResponseDataField = `Response.`
+
+		err = oai.Add(goai.AddInput{
+			Path:   "/test",
+			Method: goai.HttpMethodGet,
+			Object: f,
+		})
+		t.AssertNil(err)
+
+		//fmt.Println(oai.String())
+		t.Assert(oai.Components.Schemas[`github.com.gogf.gf.v2.protocol.goai_test.Res`].Value.Type, goai.TypeString)
 	})
 }

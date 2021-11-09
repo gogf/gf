@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
-	"strings"
 )
 
 // Where sets the condition statement for the model. The parameter `where` can be type of
@@ -33,6 +32,21 @@ func (m *Model) Where(where interface{}, args ...interface{}) *Model {
 		Operator: whereHolderOperatorWhere,
 		Where:    where,
 		Args:     args,
+	})
+	return model
+}
+
+// WherePrefix performs as Where, but it adds prefix to each field in where statement.
+func (m *Model) WherePrefix(prefix string, where interface{}, args ...interface{}) *Model {
+	model := m.getModel()
+	if model.whereHolder == nil {
+		model.whereHolder = make([]ModelWhereHolder, 0)
+	}
+	model.whereHolder = append(model.whereHolder, ModelWhereHolder{
+		Operator: whereHolderOperatorWhere,
+		Where:    where,
+		Args:     args,
+		Prefix:   prefix,
 	})
 	return model
 }
@@ -159,6 +173,21 @@ func (m *Model) WhereOr(where interface{}, args ...interface{}) *Model {
 	return model
 }
 
+// WhereOrPrefix performs as WhereOr, but it adds prefix to each field in where statement.
+func (m *Model) WhereOrPrefix(prefix string, where interface{}, args ...interface{}) *Model {
+	model := m.getModel()
+	if model.whereHolder == nil {
+		model.whereHolder = make([]ModelWhereHolder, 0)
+	}
+	model.whereHolder = append(model.whereHolder, ModelWhereHolder{
+		Operator: whereHolderOperatorOr,
+		Where:    where,
+		Args:     args,
+		Prefix:   prefix,
+	})
+	return model
+}
+
 // WhereOrf builds `OR` condition string using fmt.Sprintf and arguments.
 func (m *Model) WhereOrf(format string, args ...interface{}) *Model {
 	var (
@@ -236,55 +265,6 @@ func (m *Model) WhereOrNotNull(columns ...string) *Model {
 	return model
 }
 
-// Group sets the "GROUP BY" statement for the model.
-func (m *Model) Group(groupBy ...string) *Model {
-	if len(groupBy) == 0 {
-		return m
-	}
-	model := m.getModel()
-	if model.groupBy != "" {
-		model.groupBy += ","
-	}
-	model.groupBy = model.db.GetCore().QuoteString(strings.Join(groupBy, ","))
-	return model
-}
-
-// Order sets the "ORDER BY" statement for the model.
-func (m *Model) Order(orderBy ...string) *Model {
-	if len(orderBy) == 0 {
-		return m
-	}
-	model := m.getModel()
-	if model.orderBy != "" {
-		model.orderBy += ","
-	}
-	model.orderBy = model.db.GetCore().QuoteString(strings.Join(orderBy, " "))
-	return model
-}
-
-// OrderAsc sets the "ORDER BY xxx ASC" statement for the model.
-func (m *Model) OrderAsc(column string) *Model {
-	if len(column) == 0 {
-		return m
-	}
-	return m.Order(column + " ASC")
-}
-
-// OrderDesc sets the "ORDER BY xxx DESC" statement for the model.
-func (m *Model) OrderDesc(column string) *Model {
-	if len(column) == 0 {
-		return m
-	}
-	return m.Order(column + " DESC")
-}
-
-// OrderRandom sets the "ORDER BY RANDOM()" statement for the model.
-func (m *Model) OrderRandom() *Model {
-	model := m.getModel()
-	model.orderBy = "RAND()"
-	return model
-}
-
 // Limit sets the "LIMIT" statement for the model.
 // The parameter `limit` can be either one or two number, if passed two number is passed,
 // it then sets "LIMIT limit[0],limit[1]" statement for the model, or else it sets "LIMIT limit[0]"
@@ -334,8 +314,17 @@ func (m *Model) Page(page, limit int) *Model {
 //
 // The parameter `limit1` specifies whether limits querying only one record if m.limit is not set.
 func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWhere string, conditionExtra string, conditionArgs []interface{}) {
+	var (
+		autoPrefix = ""
+	)
+	if gstr.Contains(m.tables, " JOIN ") {
+		autoPrefix = m.db.GetCore().QuoteWord(m.tablesInit)
+	}
 	if len(m.whereHolder) > 0 {
 		for _, v := range m.whereHolder {
+			if v.Prefix == "" {
+				v.Prefix = autoPrefix
+			}
 			switch v.Operator {
 			case whereHolderOperatorWhere:
 				if conditionWhere == "" {
@@ -346,6 +335,7 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 						OmitEmpty: m.option&optionOmitEmptyWhere > 0,
 						Schema:    m.schema,
 						Table:     m.tables,
+						Prefix:    v.Prefix,
 					})
 					if len(newWhere) > 0 {
 						conditionWhere = newWhere
@@ -363,6 +353,7 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 					OmitEmpty: m.option&optionOmitEmptyWhere > 0,
 					Schema:    m.schema,
 					Table:     m.tables,
+					Prefix:    v.Prefix,
 				})
 				if len(newWhere) > 0 {
 					if len(conditionWhere) == 0 {
@@ -383,6 +374,7 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 					OmitEmpty: m.option&optionOmitEmptyWhere > 0,
 					Schema:    m.schema,
 					Table:     m.tables,
+					Prefix:    v.Prefix,
 				})
 				if len(newWhere) > 0 {
 					if len(conditionWhere) == 0 {
@@ -430,6 +422,7 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 			OmitEmpty: m.option&optionOmitEmptyWhere > 0,
 			Schema:    m.schema,
 			Table:     m.tables,
+			Prefix:    autoPrefix,
 		})
 		if len(havingStr) > 0 {
 			conditionExtra += " HAVING " + havingStr

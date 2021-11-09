@@ -7,6 +7,7 @@
 package gcron_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/gogf/gf/v2/os/gcron"
@@ -14,7 +15,7 @@ import (
 
 func Benchmark_Add(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		gcron.Add("1 1 1 1 1 1", func() {
+		gcron.Add(ctx, "1 1 1 1 1 1", func(ctx context.Context) {
 
 		})
 	}

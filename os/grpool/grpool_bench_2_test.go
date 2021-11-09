@@ -19,13 +19,13 @@ var n = 500000
 func BenchmarkGrpool2(b *testing.B) {
 	b.N = n
 	for i := 0; i < b.N; i++ {
-		grpool.Add(increment)
+		grpool.Add(ctx, increment)
 	}
 }
 
 func BenchmarkGoroutine2(b *testing.B) {
 	b.N = n
 	for i := 0; i < b.N; i++ {
-		go increment()
+		go increment(ctx)
 	}
 }
