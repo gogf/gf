@@ -7,7 +7,10 @@ import (
 )
 
 func ExampleSize() {
-	tempDir := gfile.TempDir("gfile_example")
+	tempDir := gfile.TempDir("gfile_example_size0")
+	if gfile.Exists(tempDir) {
+		gfile.Remove(tempDir)
+	}
 	gfile.Mkdir(tempDir)
 	size := gfile.Size(tempDir)
 	fmt.Println(size)
@@ -17,7 +20,10 @@ func ExampleSize() {
 }
 
 func ExampleSizeFormat() {
-	tempDir := gfile.TempDir("gfile_example")
+	tempDir := gfile.TempDir("gfile_example_sizeF0B")
+	if gfile.Exists(tempDir) {
+		gfile.Remove(tempDir)
+	}
 	gfile.Mkdir(tempDir)
 	sizeStr := gfile.SizeFormat(tempDir)
 	fmt.Println(sizeStr)
@@ -27,7 +33,10 @@ func ExampleSizeFormat() {
 }
 
 func ExampleReadableSize() {
-	tempDir := gfile.TempDir("gfile_example")
+	tempDir := gfile.TempDir("gfile_example_sizeR0B")
+	if gfile.Exists(tempDir) {
+		gfile.Remove(tempDir)
+	}
 	gfile.Mkdir(tempDir)
 	sizeStr := gfile.ReadableSize(tempDir)
 	fmt.Println(sizeStr)
