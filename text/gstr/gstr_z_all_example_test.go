@@ -2,7 +2,7 @@ package gstr_test
 
 import (
 	"fmt"
-
+	
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
@@ -17,11 +17,12 @@ func ExampleAddSlashes() {
 }
 
 func ExampleCaseCamel() {
-	var str string
-	str = `goframe_is very nice.to-use`
-	rsStr := gstr.CaseCamel(str)
+	var (
+		str   = `goframe_is very nice.to-use`
+		rsStr = gstr.CaseCamel(str)
+	)
 	fmt.Println(rsStr)
-
+	
 	// Output:
 	// GoframeIsVeryNiceToUse
 }
@@ -429,9 +430,9 @@ func ExampleHideStr() {
 	var percent int
 	var hide string
 
-	str = `1234567890`
-	percent = 30
-	hide = `@`
+	str = `13800138000`
+	percent = 40
+	hide = `*`
 	rsStr := gstr.HideStr(str, percent, hide)
 	fmt.Println(rsStr)
 
@@ -441,16 +442,10 @@ func ExampleHideStr() {
 	rsStr = gstr.HideStr(str, percent, hide)
 	fmt.Println(rsStr)
 
-	str = `ABCDEFGHIJ`
-	percent = 10
-	hide = `@`
-	rsStr = gstr.HideStr(str, percent, hide)
-	fmt.Println(rsStr)
 
 	// Output:
-	// 1234@@@890
+	// 138****8000
 	// AA@@@@@@AA
-	// ABCDE@GHIJ
 }
 
 func ExampleImplode() {
@@ -522,10 +517,15 @@ func ExampleIsNumeric() {
 	s = "aa66bb88"
 	rsStr = gstr.IsNumeric(s)
 	fmt.Println(rsStr)
+	
+	s = "3.1415926"
+	rsStr = gstr.IsNumeric(s)
+	fmt.Println(rsStr)
 
 	// Output:
 	// true
 	// false
+	// true
 }
 
 func ExampleIsSubDomain() {
@@ -572,22 +572,47 @@ func ExampleJoinAny() {
 	arr1 := []string{"goframe", "is", "Very", "Nice", "to", "use"}
 	rsStr := gstr.JoinAny(arr1, sep)
 	fmt.Println(rsStr)
-
+	
+	
+	sep = `,`
+	arr2 := []int{ 99, 73, 85, 66 }
+	rsStr2 := gstr.JoinAny(arr2, sep)
+	fmt.Println(rsStr2)
+	
+	sep = `,`
+	arr3 := []interface{}{
+		"Mary",
+		18,
+		99.5,
+		"<br>",
+		"Jack",
+		19,
+		66.5,
+	}
+	rsStr3 := gstr.JoinAny(arr3, sep)
+	fmt.Println(rsStr3)
+	
+	
 	sep = `|`
 	type StructA struct {
 		Name string
 		Age  int
 	}
-	arr2 := []StructA{
+	arr4 := []StructA{
 		{"Mary", 18},
 		{"Jack", 18},
 		{"Lucy", 18},
 	}
-	rsStr = gstr.JoinAny(arr2, sep)
+	rsStr = gstr.JoinAny(arr4, sep)
 	fmt.Println(rsStr)
-
+	
+	
+	
+	
 	// Output:
 	// goframe@is@Very@Nice@to@use
+	// 99,73,85,66
+	// Mary,18,99.5,<br>,Jack,19,66.5
 	// {"Name":"Mary","Age":18}|{"Name":"Jack","Age":18}|{"Name":"Lucy","Age":18}
 }
 
@@ -615,10 +640,15 @@ func ExampleLenRune() {
 	str = `123 4567 890`
 	rsStr = gstr.LenRune(str)
 	fmt.Println(rsStr)
+	
+	str = `Goframe是一个非常好用的Go语言框架!`
+	rsStr = gstr.LenRune(str)
+	fmt.Println(rsStr)
 
 	// Output:
 	// 27
 	// 12
+	// 22
 }
 
 func ExampleLevenshtein() {
@@ -725,7 +755,7 @@ func ExampleParse() {
 	rsStr, _ = gstr.Parse(str)
 	fmt.Println(rsStr)
 
-	// 目前不支持嵌套切片。
+	// The form of nested Slice is not yet supported.
 	str = `v[][]=m&v[][]=n`
 	rsStr, err := gstr.Parse(str)
 	if err != nil {
@@ -733,7 +763,7 @@ func ExampleParse() {
 	}
 	fmt.Println(rsStr)
 
-	// 会产生错误
+	// This will produce an error.
 	str = `v=m&v[a]=n`
 	rsStr, err = gstr.Parse(str)
 	if err != nil {
@@ -818,7 +848,8 @@ func ExamplePosIRune() {
 	needle = `Nice`
 	rsStr := gstr.PosIRune(haystack, needle)
 	fmt.Println(rsStr)
-
+	
+	haystack = `Goframe是个非常好用的框架.`
 	startOffset = 16
 	rsStr = gstr.PosIRune(haystack, needle, startOffset)
 	fmt.Println(rsStr)
@@ -833,9 +864,9 @@ func ExamplePosIRune() {
 
 	// Output:
 	// 16
-	// 16
 	// -1
-	// 16
+	// -1
+	// -1
 }
 
 func ExamplePosR() {
@@ -899,28 +930,30 @@ func ExamplePosRIRune() {
 	var haystack, needle string
 	var startOffset int
 
-	haystack = `goframe_is Very Nice.to-use`
-	needle = `Nice`
+	haystack = `Goframe是个非常好用的框架`
+	needle = `好用`
 	rsStr := gstr.PosRIRune(haystack, needle)
 	fmt.Println(rsStr)
-
+	
+	needle = `框架`
 	startOffset = 16
 	rsStr = gstr.PosRIRune(haystack, needle, startOffset)
 	fmt.Println(rsStr)
-
+	
+	needle = `golang`
 	startOffset = 17
 	rsStr = gstr.PosRIRune(haystack, needle, startOffset)
 	fmt.Println(rsStr)
 
-	needle = `nice`
+	needle = `goframe`
 	rsStr = gstr.PosRIRune(haystack, needle)
 	fmt.Println(rsStr)
 
 	// Output:
-	// 16
-	// 16
+	// 11
+	// 14
 	// -1
-	// 16
+	// 0
 }
 
 func ExamplePosRRune() {
@@ -935,12 +968,13 @@ func ExamplePosRRune() {
 	startOffset = 16
 	rsStr = gstr.PosRRune(haystack, needle, startOffset)
 	fmt.Println(rsStr)
-
+	
+	haystack = `Goframe是中国开发者的福利.`
 	startOffset = 17
 	rsStr = gstr.PosRRune(haystack, needle, startOffset)
 	fmt.Println(rsStr)
 
-	needle = `nice`
+	needle = `开发者`
 	rsStr = gstr.PosRRune(haystack, needle)
 	fmt.Println(rsStr)
 
@@ -948,7 +982,7 @@ func ExamplePosRRune() {
 	// 16
 	// 16
 	// -1
-	// -1
+	// 10
 }
 
 func ExamplePosRune() {
@@ -959,7 +993,9 @@ func ExamplePosRune() {
 	needle = `Nice`
 	rsStr := gstr.PosRune(haystack, needle)
 	fmt.Println(rsStr)
-
+	
+	haystack = `我喜欢Goframe框架`
+	needle = `框架`
 	startOffset = 16
 	rsStr = gstr.PosRune(haystack, needle, startOffset)
 	fmt.Println(rsStr)
@@ -968,13 +1004,13 @@ func ExamplePosRune() {
 	rsStr = gstr.PosRune(haystack, needle, startOffset)
 	fmt.Println(rsStr)
 
-	needle = `nice`
+	needle = `goframe`
 	rsStr = gstr.PosRune(haystack, needle)
 	fmt.Println(rsStr)
 
 	// Output:
 	// 16
-	// 16
+	// 10
 	// -1
 	// -1
 }
@@ -984,9 +1020,14 @@ func ExampleQuoteMeta() {
 	str = `.\+?[^]()`
 	rsStr := gstr.QuoteMeta(str)
 	fmt.Println(rsStr)
-
+	
+	str = `https://goframe.org/pages/viewpage.action?pageId=1114327`
+	rsStr = gstr.QuoteMeta(str)
+	fmt.Println(rsStr)
+	
 	// Output:
 	// \.\\\+\?\[\^\]\(\)
+	// https://goframe\.org/pages/viewpage\.action\?pageId=1114327
 
 }
 
@@ -1068,32 +1109,31 @@ func ExampleReplaceByMap() {
 func ExampleReplaceI() {
 	var origin, search, replace string
 	var count int
-	origin = `goframe_is Very Nice.to-use`
-	search = `goframe`
+	
+	origin = `goframe is Very Nice to use`
+	search = `Goframe`
 	replace = `golang`
 	count = 3
 	rsStr := gstr.ReplaceI(origin, search, replace, count)
 	fmt.Println(rsStr)
-
+	
 	// Output:
-	// golang_is Very Nice.to-use
+	// golang is Very Nice to use
 }
 
 func ExampleReplaceIByArray() {
-	var origin string
-	var replaces []string
-	replaces = []string{
-		"frame",
-		"lang",
-		"nice",
-		"goframe",
-	}
-	origin = `goframe Nice`
-	rsStr := gstr.ReplaceIByArray(origin, replaces)
-	fmt.Println(rsStr)
-
+	fmt.Println(gstr.ReplaceIByArray(
+		`golang is very nice`,
+		[]string{
+			"Golang",
+			"GoFrame",
+			"Nice",
+			"GOOD",
+		},
+	))
+	
 	// Output:
-	// golang goframe
+	// GoFrame is very GOOD
 }
 
 func ExampleReplaceIByMap() {
@@ -1123,12 +1163,12 @@ func ExampleReplaceIByMap() {
 
 func ExampleReverse() {
 	var str string
-	str = `Goframe-Nice`
+	str = `123456`
 	rsStr := gstr.Reverse(str)
 	fmt.Println(rsStr)
 
 	// Output:
-	// eciN-emarfoG
+	// 654321
 }
 
 func ExampleSearchArray() {
@@ -1210,12 +1250,12 @@ func ExampleSoundex() {
 func ExampleSplit() {
 	var str, delimiter string
 	str = `GoFrame_Nice`
-	delimiter = `ame_N`
+	delimiter = `_`
 	rsStr := gstr.Split(str, delimiter)
 	fmt.Println(rsStr)
 
 	// Output:
-	// [GoFr ice]
+	// [GoFrame Nice]
 }
 
 func ExampleSplitAndTrim() {
@@ -1248,39 +1288,46 @@ func ExampleStr() {
 
 func ExampleStrEx() {
 	var haystack, needle string
-	haystack = `goframe_is Very Nice.to-use`
-	needle = `goframe`
+	haystack = `ABCDEFG`
+	needle = `B`
 	rsStr := gstr.StrEx(haystack, needle)
+	fmt.Println(rsStr)
+	
+	
+	haystack = `ABCDEFG`
+	needle = `E`
+	rsStr = gstr.StrEx(haystack, needle)
 	fmt.Println(rsStr)
 
 	// Output:
-	// _is Very Nice.to-use
+	// CDEFG
+	// FG
 }
 
 func ExampleStrLimit() {
 	var str, suffix string
 	var length int
-	str = `goframe_is Very Nice.to-use`
+	str = `1234567890.png`
 	length = 8
-	suffix = "suffix"
+	suffix = `.jpg`
 	rsStr := gstr.StrLimit(str, length, suffix)
 	fmt.Println(rsStr)
 
 	// Output:
-	// goframe_suffix
+	// 12345678.jpg
 }
 
 func ExampleStrLimitRune() {
 	var str, suffix string
 	var length int
-	str = `goframe_is Very Nice.to-use`
+	str = `Goframe是一个非常好用的Go语言框架.`
 	length = 7
-	suffix = "suffix"
+	suffix = "好用"
 	rsStr := gstr.StrLimitRune(str, length, suffix)
 	fmt.Println(rsStr)
 
 	// Output:
-	// goframesuffix
+	// Goframe好用
 }
 
 func ExampleStrTill() {
@@ -1307,144 +1354,141 @@ func ExampleStrTill() {
 
 func ExampleStrTillEx() {
 	var haystack, needle string
-	haystack = `goframe_is Very Nice.to-use`
-	needle = `frame`
+	haystack = `abcdefg`
+	needle = `e`
 	rsStr := gstr.StrTillEx(haystack, needle)
 	fmt.Println(rsStr)
 
-	haystack = `goframe_is Very Nice.to-use`
-	needle = `to`
+	haystack = `abcdefg`
+	needle = `de`
 	rsStr = gstr.StrTillEx(haystack, needle)
 	fmt.Println(rsStr)
 
 	// Output:
-	// go
-	// goframe_is Very Nice.
+	// abcd
+	// abc
 }
 
 func ExampleStripSlashes() {
 	var str string
-	str = `goframe "is" Very Nice to use`
+	str = `C:\\windows\\GoFrame\\test`
 	rsStr := gstr.StripSlashes(str)
 	fmt.Println(rsStr)
 
 	// Output:
-	// goframe "is" Very Nice to use
+	// C:\windows\GoFrame\test
 }
 
 func ExampleSubStr() {
 	var str string
 	var start, length int
-	str = `GoFrame Nice`
+	
+	str = `ABCDEFGHIJK`
+	
 	start = 0
 	length = 2
 	subStr := gstr.SubStr(str, start, length)
 	fmt.Println(subStr)
 
-	str = `GoFrame Nice`
+
 	start = 5
 	length = 6
 	subStr = gstr.SubStr(str, start, length)
 	fmt.Println(subStr)
 
 	// Output:
-	// Go
-	// me Nic
+	// AB
+	// FGHIJK
 }
 
 func ExampleSubStrRune() {
 	var str string
 	var start, length int
-	str = `GoFrame Nice`
+	str = `123456789`
 	start = 5
 	length = 4
 	subStr := gstr.SubStrRune(str, start, length)
 	fmt.Println(subStr)
 
 	// Output:
-	// me N
+	// 6789
 }
 
 func ExampleToLower() {
 	var s string
-	s = `GoFRAME_IS VERY NICE.TO-USE`
+	s = `GOFRAME IS VERY NICE TO USE`
 	rsStr := gstr.ToLower(s)
 	fmt.Println(rsStr)
 
 	// Output:
-	// goframe_is very nice.to-use
+	// goframe is very nice to use
 }
 
 func ExampleToUpper() {
 	var s string
-	s = `goframe_is Very Nice.to-use`
+	s = `goframe is very nice to use`
 	rsStr := gstr.ToUpper(s)
 	fmt.Println(rsStr)
 
 	// Output:
-	// GOFRAME_IS VERY NICE.TO-USE
+	// GOFRAME IS VERY NICE TO USE
 }
 
 func ExampleTrim() {
 	var str, characterMask string
-	str = `goframe_is Very Nice.to-use`
-	characterMask = "to-use"
+	str = `.abc.def..`
+	characterMask = "."
 	rsStr := gstr.Trim(str, characterMask)
 	fmt.Println(rsStr)
 
 	// Output:
-	// goframe_is Very Nice.
+	// abc.def
 }
 
 func ExampleTrimAll() {
 	var str, characterMask string
-	str = `goframe`
-	characterMask = "g o e"
+	str = `.abc.def...`
+	characterMask = "."
 	rsStr := gstr.TrimAll(str, characterMask)
 	fmt.Println(rsStr)
 
 	// Output:
-	// fram
+	// abcdef
 }
 
 func ExampleTrimLeft() {
 	var str, characterMask string
-	str = ` goframe is Very Nice to use`
-	characterMask = "goframeisVery"
+	str = `..abc.def.. `
+	characterMask = "."
 	rsStr := gstr.TrimLeft(str, characterMask)
 	fmt.Println(rsStr)
 
 	// Output:
-	// Nice to use
+	// abc.def..
 }
 
 func ExampleTrimLeftStr() {
 	var str, cut string
 	var count int
-	str = ` goframe is Very Nice.to-use`
-	cut = " go"
-	count = 1
+	str = `...abcd..efg...`
+	cut = "."
+	count = 2
 	rsStr := gstr.TrimLeftStr(str, cut, count)
 	fmt.Println(rsStr)
 
 	// Output:
-	// frame is Very Nice.to-use
+	// .abcd..efg...
 }
 
 func ExampleTrimRight() {
 	var str, characterMask string
-	str = `goframe_is Very Nice to use    `
-	rsStr := gstr.TrimRight(str)
-	fmt.Println(rsStr)
-
-	str = `goframe_is Very Nice to-use    `
-	characterMask = "to-use" // []byte{"t", "o", "-", "u", "s", "e"}
-	rsStr = gstr.TrimRight(str, characterMask)
+	str = `abcdef    `
+	characterMask = "def" // []byte{"d", "e", "f"}
+	rsStr := gstr.TrimRight(str, characterMask)
 	fmt.Println(rsStr)
 
 	// Output:
-	// goframe_is Very Nice to use
-	// goframe_is Very Nic
+	// abc
 }
 
 func ExampleTrimRightStr() {
