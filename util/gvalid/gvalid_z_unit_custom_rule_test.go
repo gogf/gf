@@ -18,7 +18,7 @@ import (
 
 func Test_CustomRule1(t *testing.T) {
 	rule := "custom"
-	err := gvalid.RegisterRule(
+	gvalid.RegisterRule(
 		rule,
 		func(ctx context.Context, in gvalid.RuleFuncInput) error {
 			pass := in.Value.String()
@@ -32,7 +32,7 @@ func Test_CustomRule1(t *testing.T) {
 			return nil
 		},
 	)
-	gtest.Assert(err, nil)
+
 	gtest.C(t, func(t *gtest.T) {
 		err := gvalid.CheckValue(context.TODO(), "123456", rule, "custom message")
 		t.Assert(err.String(), "custom message")
@@ -69,14 +69,13 @@ func Test_CustomRule1(t *testing.T) {
 
 func Test_CustomRule2(t *testing.T) {
 	rule := "required-map"
-	err := gvalid.RegisterRule(rule, func(ctx context.Context, in gvalid.RuleFuncInput) error {
+	gvalid.RegisterRule(rule, func(ctx context.Context, in gvalid.RuleFuncInput) error {
 		m := in.Value.Map()
 		if len(m) == 0 {
 			return errors.New(in.Message)
 		}
 		return nil
 	})
-	gtest.Assert(err, nil)
 	// Check.
 	gtest.C(t, func(t *gtest.T) {
 		errStr := "data map should not be empty"
@@ -113,14 +112,13 @@ func Test_CustomRule2(t *testing.T) {
 
 func Test_CustomRule_AllowEmpty(t *testing.T) {
 	rule := "allow-empty-str"
-	err := gvalid.RegisterRule(rule, func(ctx context.Context, in gvalid.RuleFuncInput) error {
+	gvalid.RegisterRule(rule, func(ctx context.Context, in gvalid.RuleFuncInput) error {
 		s := in.Value.String()
 		if len(s) == 0 || s == "gf" {
 			return nil
 		}
 		return errors.New(in.Message)
 	})
-	gtest.Assert(err, nil)
 	// Check.
 	gtest.C(t, func(t *gtest.T) {
 		errStr := "error"

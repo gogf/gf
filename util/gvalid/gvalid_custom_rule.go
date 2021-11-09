@@ -37,17 +37,15 @@ var (
 )
 
 // RegisterRule registers custom validation rule and function for package.
-func RegisterRule(rule string, f RuleFunc) error {
+func RegisterRule(rule string, f RuleFunc) {
 	customRuleFuncMap[rule] = f
-	return nil
 }
 
 // RegisterRuleByMap registers custom validation rules using map for package.
-func RegisterRuleByMap(m map[string]RuleFunc) error {
+func RegisterRuleByMap(m map[string]RuleFunc) {
 	for k, v := range m {
 		customRuleFuncMap[k] = v
 	}
-	return nil
 }
 
 // DeleteRule deletes custom defined validation one or more rules and associated functions from global package.
