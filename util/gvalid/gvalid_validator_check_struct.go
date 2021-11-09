@@ -23,8 +23,8 @@ func (v *Validator) CheckStruct(ctx context.Context, object interface{}) Error {
 
 func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error {
 	var (
-		errorMaps           = make(map[string]map[string]string) // Returning error.
-		fieldToAliasNameMap = make(map[string]string)            // Field names to alias name map.
+		errorMaps           = make(map[string]map[string]error) // Returning error.
+		fieldToAliasNameMap = make(map[string]string)           // Field names to alias name map.
 	)
 	fieldMap, err := structs.FieldMap(structs.FieldMapInput{
 		Pointer:          object,
@@ -32,7 +32,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 		RecursiveOption:  structs.RecursiveOptionEmbedded,
 	})
 	if err != nil {
-		return newErrorStr(internalObjectErrRuleName, err.Error())
+		return newValidationErrorByStr(internalObjectErrRuleName, err)
 	}
 	// It checks the struct recursively if its attribute is an embedded struct.
 	for _, field := range fieldMap {
@@ -59,7 +59,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 	// It here must use structs.TagFields not structs.FieldMap to ensure error sequence.
 	tagField, err := structs.TagFields(object, structTagPriority)
 	if err != nil {
-		return newErrorStr(internalObjectErrRuleName, err.Error())
+		return newValidationErrorByStr(internalObjectErrRuleName, err)
 	}
 	// If there's no struct tag and validation rules, it does nothing and returns quickly.
 	if len(tagField) == 0 && v.messages == nil {
@@ -278,7 +278,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 				}
 			}
 			if _, ok := errorMaps[checkRuleItem.Name]; !ok {
-				errorMaps[checkRuleItem.Name] = make(map[string]string)
+				errorMaps[checkRuleItem.Name] = make(map[string]error)
 			}
 			for ruleKey, errorItemMsgMap := range errorItem {
 				errorMaps[checkRuleItem.Name][ruleKey] = errorItemMsgMap
@@ -289,7 +289,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 		}
 	}
 	if len(errorMaps) > 0 {
-		return newError(gcode.CodeValidationFailed, checkRules, errorMaps)
+		return newValidationError(gcode.CodeValidationFailed, checkRules, errorMaps)
 	}
 	return nil
 }
