@@ -359,21 +359,21 @@ func ExampleCache_GetOrSetFunc() {
 
 	// GetOrSetFunc retrieves and returns the value of `key`, or sets `key` with result of function `f`
 	// and returns its result if `key` does not exist in the cache.
-	c.GetOrSetFunc(ctx, 1, func() (interface{}, error) {
-		return 111, nil
+	c.GetOrSetFunc(ctx, "k1", func() (interface{}, error) {
+		return "v1", nil
 	}, 10000*time.Millisecond)
-	v, _ := c.Get(ctx, 1)
+	v, _ := c.Get(ctx, "k1")
 	fmt.Println(v)
 
-	c.GetOrSetFunc(ctx, 2, func() (interface{}, error) {
+	// If func returns nil, no action is taken
+	c.GetOrSetFunc(ctx, "k2", func() (interface{}, error) {
 		return nil, nil
 	}, 10000*time.Millisecond)
-	v1, _ := c.Get(ctx, 2)
+	v1, _ := c.Get(ctx, "k2")
 	fmt.Println(v1)
 
 	// Output:
-	// 111
-	//
+	// v1
 }
 
 func ExampleCache_GetOrSetFuncLock() {
@@ -383,40 +383,24 @@ func ExampleCache_GetOrSetFuncLock() {
 	c := gcache.New()
 
 	// Modify locking Note that the function `f` should be executed within writing mutex lock for concurrent safety purpose.
-	c.GetOrSetFuncLock(ctx, 1, func() (interface{}, error) {
-		return 11, nil
+	c.GetOrSetFuncLock(ctx, "k1", func() (interface{}, error) {
+		return "v1", nil
 	}, 0)
-	v, _ := c.Get(ctx, 1)
+	v, _ := c.Get(ctx, "k1")
 	fmt.Println(v)
 
 	// Modification failed
-	c.GetOrSetFuncLock(ctx, 1, func() (interface{}, error) {
-		return 111, nil
+	c.GetOrSetFuncLock(ctx, "k1", func() (interface{}, error) {
+		return "update v1", nil
 	}, 0)
-	v, _ = c.Get(ctx, 1)
+	v, _ = c.Get(ctx, "k1")
 	fmt.Println(v)
 
-	c.Remove(ctx, g.Slice{1, 2, 3}...)
-
-	// Modify locking
-	c.GetOrSetFuncLock(ctx, 1, func() (interface{}, error) {
-		return 111, nil
-	}, 0)
-	v, _ = c.Get(ctx, 1)
-	fmt.Println(v)
-
-	// Modification failed
-	c.GetOrSetFuncLock(ctx, 1, func() (interface{}, error) {
-		return 11, nil
-	}, 0)
-	v, _ = c.Get(ctx, 1)
-	fmt.Println(v)
+	c.Remove(ctx, g.Slice{"k1"}...)
 
 	// Output:
-	// 11
-	// 11
-	// 111
-	// 111
+	// v1
+	// v1
 }
 
 func ExampleCache_Keys() {
@@ -555,40 +539,22 @@ func ExampleCache_MustGetOrSetFuncLock() {
 	c := gcache.New()
 
 	// MustGetOrSetFuncLock acts like GetOrSetFuncLock, but it panics if any error occurs.
-	c.MustGetOrSetFuncLock(ctx, 1, func() (interface{}, error) {
-		return 11, nil
+	c.MustGetOrSetFuncLock(ctx, "k1", func() (interface{}, error) {
+		return "v1", nil
 	}, 0)
-	v := c.MustGet(ctx, 1)
+	v := c.MustGet(ctx, "k1")
 	fmt.Println(v)
 
 	// Modification failed
-	c.MustGetOrSetFuncLock(ctx, 1, func() (interface{}, error) {
-		return 111, nil
+	c.MustGetOrSetFuncLock(ctx, "k1", func() (interface{}, error) {
+		return "update v1", nil
 	}, 0)
-	v = c.MustGet(ctx, 1)
-	fmt.Println(v)
-
-	c.Remove(ctx, g.Slice{1, 2, 3}...)
-
-	// Modify locking
-	c.MustGetOrSetFuncLock(ctx, 1, func() (interface{}, error) {
-		return 111, nil
-	}, 0)
-	v = c.MustGet(ctx, 1)
-	fmt.Println(v)
-
-	// Modification failed
-	c.MustGetOrSetFuncLock(ctx, 1, func() (interface{}, error) {
-		return 11, nil
-	}, 0)
-	v = c.MustGet(ctx, 1)
+	v = c.MustGet(ctx, "k1")
 	fmt.Println(v)
 
 	// Output:
-	// 11
-	// 11
-	// 111
-	// 111
+	// v1
+	// v1
 }
 
 func ExampleCache_MustContains() {
@@ -628,7 +594,7 @@ func ExampleCache_MustGetExpire() {
 	expire := c.MustGetExpire(ctx, "k")
 	fmt.Println(expire)
 
-	// Output:
+	// May Output:
 	// 10s
 }
 
@@ -678,29 +644,29 @@ func ExampleCache_MustKeys() {
 	// Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
 
-	c.SetMap(ctx, g.MapAnyAny{"k1": "v1"}, 0)
+	c.SetMap(ctx, g.MapAnyAny{"k1": "v1", "k2": "v2"}, 0)
 
 	// MustKeys acts like Keys, but it panics if any error occurs.
 	keys1, _ := c.Keys(ctx)
 	fmt.Println(keys1)
 
-	// Output:
-	// [k1]
+	// May Output:
+	// [k1 k2]
 
 }
 
 func ExampleCache_MustKeyStrings() {
 	c := gcache.New()
 
-	c.SetMap(ctx, g.MapAnyAny{"k1": "v1"}, 0)
+	c.SetMap(ctx, g.MapAnyAny{"k1": "v1", "k2": "v2"}, 0)
 
 	// MustKeyStrings returns all keys in the cache as string slice.
 	// MustKeyStrings acts like KeyStrings, but it panics if any error occurs.
 	keys := c.MustKeyStrings(ctx)
 	fmt.Println(keys)
 
-	// Output:
-	// [k1]
+	// May Output:
+	// [k1 k2]
 }
 
 func ExampleCache_MustValues() {
@@ -710,12 +676,12 @@ func ExampleCache_MustValues() {
 	c := gcache.New()
 
 	// Write value
-	c.Set(ctx, "k1", g.Map{"k1": "v1"}, 0)
+	c.Set(ctx, "k1", "v1", 0)
 
 	// Values returns all values in the cache as slice.
 	data := c.MustValues(ctx)
 	fmt.Println(data)
 
 	// Output:
-	// [map[k1:v1]]
+	// [v1]
 }
