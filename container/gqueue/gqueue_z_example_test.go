@@ -65,10 +65,14 @@ func ExampleQueue_Push() {
 		q.Push(i)
 	}
 
-	fmt.Println(q.Len())
+	fmt.Println(q.Pop())
+	fmt.Println(q.Pop())
+	fmt.Println(q.Pop())
 
 	// Output:
-	// 10
+	// 0
+	// 1
+	// 2
 }
 
 func ExampleQueue_Pop() {
@@ -113,7 +117,7 @@ func ExampleQueue_Len() {
 
 	fmt.Println(q.Len())
 
-	// Output:
+	// May Output:
 	// 2
 }
 
@@ -126,6 +130,6 @@ func ExampleQueue_Size() {
 	// Size is alias of Len.
 	fmt.Println(q.Size())
 
-	// Output:
+	// May Output:
 	// 2
 }
