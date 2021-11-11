@@ -527,16 +527,16 @@ func ExampleCache_MustGetOrSetFunc() {
 	c := gcache.New()
 
 	// MustGetOrSetFunc acts like GetOrSetFunc, but it panics if any error occurs.
-	c.MustGetOrSetFunc(ctx, 1, func() (interface{}, error) {
-		return 111, nil
+	c.MustGetOrSetFunc(ctx, "k1", func() (interface{}, error) {
+		return "v1", nil
 	}, 10000*time.Millisecond)
-	v := c.MustGet(ctx, 1)
+	v := c.MustGet(ctx, "k1")
 	fmt.Println(v)
 
-	c.MustGetOrSetFunc(ctx, 2, func() (interface{}, error) {
+	c.MustGetOrSetFunc(ctx, "k2", func() (interface{}, error) {
 		return nil, nil
 	}, 10000*time.Millisecond)
-	v1 := c.MustGet(ctx, 2)
+	v1 := c.MustGet(ctx, "k2")
 	fmt.Println(v1)
 
 	// Output:
@@ -635,19 +635,13 @@ func ExampleCache_MustData() {
 	// Of course, you can also easily use the gcache package method directly
 	c := gcache.New()
 
-	c.SetMap(ctx, g.MapAnyAny{"k1": "v1"}, 0)
+	c.SetMap(ctx, g.MapAnyAny{"k1": "v1", "k2": "v2"}, 0)
 
 	data := c.MustData(ctx)
 	fmt.Println(data)
 
-	// Set Cache
-	c.Set(ctx, "k5", "v5", 0)
-	data1, _ := c.Get(ctx, "k1")
-	fmt.Println(data1)
-
-	// Output:
-	// map[k1:v1]
-	// v1
+	// May Output:
+	// map[k1:v1 k2:v2]
 }
 
 func ExampleCache_MustKeys() {
