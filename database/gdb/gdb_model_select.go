@@ -437,7 +437,7 @@ func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, e
 	)
 	// Retrieve from cache.
 	if m.cacheEnabled && m.tx == nil {
-		cacheKey = m.cacheName
+		cacheKey = m.cacheOption.Name
 		if len(cacheKey) == 0 {
 			cacheKey = sql + ", @PARAMS:" + gconv.String(args)
 		}
@@ -461,16 +461,16 @@ func (m *Model) doGetAllBySql(sql string, args ...interface{}) (result Result, e
 	)
 	// Cache the result.
 	if cacheKey != "" && err == nil {
-		if m.cacheDuration < 0 {
+		if m.cacheOption.Duration < 0 {
 			if _, err := cacheObj.Remove(ctx, cacheKey); err != nil {
 				intlog.Error(m.GetCtx(), err)
 			}
 		} else {
 			// In case of Cache Penetration.
-			if result == nil {
+			if result.IsEmpty() && m.cacheOption.Force {
 				result = Result{}
 			}
-			if err := cacheObj.Set(ctx, cacheKey, result, m.cacheDuration); err != nil {
+			if err := cacheObj.Set(ctx, cacheKey, result, m.cacheOption.Duration); err != nil {
 				intlog.Error(m.GetCtx(), err)
 			}
 		}

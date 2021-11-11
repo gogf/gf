@@ -1037,7 +1037,7 @@ func Test_InternalError_String(t *testing.T) {
 
 		t.Assert(err.String(), "InvalidRules: hh")
 		t.Assert(err.Strings(), g.Slice{"InvalidRules: hh"})
-		t.Assert(err.FirstString(), "InvalidRules: hh")
+		t.Assert(err.FirstError(), "InvalidRules: hh")
 		t.Assert(gerror.Current(err), "InvalidRules: hh")
 	})
 }
