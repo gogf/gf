@@ -480,7 +480,6 @@ func ExampleCache_MustGet() {
 	k2 := c.MustGet(ctx, "k2")
 	fmt.Println(k2)
 
-	//
 	k1 := c.MustGet(ctx, "k1")
 	fmt.Println(k1)
 
