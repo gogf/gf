@@ -8,213 +8,191 @@ import (
 
 func ExampleGetContents() {
 	// init
-	fileName := "123.txt"
-	tempDir := gfile.TempDir("gfile_example_content")
-	tempFile := gfile.Join(tempDir, fileName)
-
-	gfile.Mkdir(tempDir)
-	gfile.Create(tempFile)
+	var (
+		fileName = "gflie_example.txt"
+		tempDir  = gfile.TempDir("gfile_example_content")
+		tempFile = gfile.Join(tempDir, fileName)
+	)
 
 	// write contents
-	gfile.PutContents(tempFile, "test contents")
+	gfile.PutContents(tempFile, "goframe example content")
 
 	// read contents
-	content := gfile.GetContents(tempFile)
-	fmt.Println(content)
+	fmt.Println(gfile.GetContents(tempFile))
 
 	// Output:
-	// test contents
+	// goframe example content
 }
 
 func ExampleGetBytes() {
 	// init
-	fileName := "123.txt"
-	tempDir := gfile.TempDir("gfile_example_content")
-	tempFile := gfile.Join(tempDir, fileName)
-
-	gfile.Mkdir(tempDir)
-	gfile.Create(tempFile)
+	var (
+		fileName = "gflie_example.txt"
+		tempDir  = gfile.TempDir("gfile_example_content")
+		tempFile = gfile.Join(tempDir, fileName)
+	)
 
 	// write contents
-	gfile.PutContents(tempFile, "test contents")
+	gfile.PutContents(tempFile, "goframe example content")
 
 	// read contents
-	content := gfile.GetBytes(tempFile)
-	fmt.Println(string(content))
+	fmt.Println(gfile.GetBytes(tempFile))
 
 	// Output:
-	// test contents
+	// [103 111 102 114 97 109 101 32 101 120 97 109 112 108 101 32 99 111 110 116 101 110 116]
 }
 
 func ExamplePutContents() {
 	// init
-	fileName := "123.txt"
-	tempDir := gfile.TempDir("gfile_example_content")
-	tempFile := gfile.Join(tempDir, fileName)
-
-	gfile.Mkdir(tempDir)
-	gfile.Create(tempFile)
+	var (
+		fileName = "gflie_example.txt"
+		tempDir  = gfile.TempDir("gfile_example_content")
+		tempFile = gfile.Join(tempDir, fileName)
+	)
 
 	// write contents
-	gfile.PutContents(tempFile, "test contents")
+	gfile.PutContents(tempFile, "goframe example content")
 
 	// read contents
-	content := gfile.GetContents(tempFile)
-	fmt.Println(content)
+	fmt.Println(gfile.GetContents(tempFile))
 
 	// Output:
-	// test contents
+	// goframe example content
 }
 
 func ExamplePutBytes() {
 	// init
-	fileName := "123.txt"
-	tempDir := gfile.TempDir("gfile_example_content")
-	tempFile := gfile.Join(tempDir, fileName)
-
-	gfile.Mkdir(tempDir)
-	gfile.Create(tempFile)
+	var (
+		fileName = "gflie_example.txt"
+		tempDir  = gfile.TempDir("gfile_example_content")
+		tempFile = gfile.Join(tempDir, fileName)
+	)
 
 	// write contents
-	gfile.PutBytes(tempFile, []byte("test contents"))
+	gfile.PutBytes(tempFile, []byte("goframe example content"))
 
 	// read contents
-	content := gfile.GetContents(tempFile)
-	fmt.Println(content)
+	fmt.Println(gfile.GetContents(tempFile))
 
 	// Output:
-	// test contents
+	// goframe example content
 }
 
 func ExamplePutContentsAppend() {
 	// init
-	fileName := "123.txt"
-	tempDir := gfile.TempDir("gfile_example_content")
-	tempFile := gfile.Join(tempDir, fileName)
-
-	gfile.Mkdir(tempDir)
-	gfile.Create(tempFile)
-
-	// write contents
-	gfile.PutContents(tempFile, "test contents")
-
-	// read contents
-	content := gfile.GetContents(tempFile)
-	fmt.Println(content)
+	var (
+		fileName = "gflie_example.txt"
+		tempDir  = gfile.TempDir("gfile_example_content")
+		tempFile = gfile.Join(tempDir, fileName)
+	)
 
 	// write contents
-	gfile.PutContentsAppend(tempFile, " append")
+	gfile.PutContents(tempFile, "goframe example content")
 
 	// read contents
-	content1 := gfile.GetContents(tempFile)
-	fmt.Println(content1)
+	fmt.Println(gfile.GetContents(tempFile))
+
+	// write contents
+	gfile.PutContentsAppend(tempFile, " append content")
+
+	// read contents
+	fmt.Println(gfile.GetContents(tempFile))
 
 	// Output:
-	// test contents
-	// test contents append
+	// goframe example content
+	// goframe example content append content
 }
 
 func ExamplePutBytesAppend() {
 	// init
-	fileName := "123.txt"
-	tempDir := gfile.TempDir("gfile_example_content")
-	tempFile := gfile.Join(tempDir, fileName)
-
-	gfile.Mkdir(tempDir)
-	gfile.Create(tempFile)
+	var (
+		fileName = "gflie_example.txt"
+		tempDir  = gfile.TempDir("gfile_example_content")
+		tempFile = gfile.Join(tempDir, fileName)
+	)
 
 	// write contents
-	gfile.PutBytes(tempFile, []byte("test contents"))
+	gfile.PutContents(tempFile, "goframe example content")
 
 	// read contents
-	content := gfile.GetContents(tempFile)
-	fmt.Println(content)
+	fmt.Println(gfile.GetContents(tempFile))
 
 	// write contents
 	gfile.PutBytesAppend(tempFile, []byte(" append"))
 
 	// read contents
-	content1 := gfile.GetContents(tempFile)
-	fmt.Println(content1)
+	fmt.Println(gfile.GetContents(tempFile))
 
 	// Output:
-	// test contents
-	// test contents append
+	// goframe example content
+	// goframe example content append
 }
 
 func ExampleGetNextCharOffsetByPath() {
 	// init
-	fileName := "123.txt"
-	tempDir := gfile.TempDir("gfile_example_content")
-	tempFile := gfile.Join(tempDir, fileName)
-
-	gfile.Mkdir(tempDir)
-	gfile.Create(tempFile)
+	var (
+		fileName = "gflie_example.txt"
+		tempDir  = gfile.TempDir("gfile_example_content")
+		tempFile = gfile.Join(tempDir, fileName)
+	)
 
 	// write contents
-	gfile.PutContents(tempFile, "test contents index")
+	gfile.PutContents(tempFile, "goframe example content")
 
 	// read contents
-	index := gfile.GetNextCharOffsetByPath(tempFile, 'i', 0)
+	index := gfile.GetNextCharOffsetByPath(tempFile, 'f', 0)
 	fmt.Println(index)
 
 	// Output:
-	// 14
+	// 2
 }
 
 func ExampleGetBytesTilCharByPath() {
 	// init
-	fileName := "123.txt"
-	tempDir := gfile.TempDir("gfile_example_content")
-	tempFile := gfile.Join(tempDir, fileName)
-
-	gfile.Mkdir(tempDir)
-	gfile.Create(tempFile)
+	var (
+		fileName = "gflie_example.txt"
+		tempDir  = gfile.TempDir("gfile_example_content")
+		tempFile = gfile.Join(tempDir, fileName)
+	)
 
 	// write contents
-	gfile.PutContents(tempFile, "test contents: hello")
+	gfile.PutContents(tempFile, "goframe example content")
 
 	// read contents
-	contents, index := gfile.GetBytesTilCharByPath(tempFile, ':', 0)
-	fmt.Println(string(contents))
-	fmt.Println(index)
+	fmt.Println(gfile.GetBytesTilCharByPath(tempFile, 'f', 0))
 
 	// Output:
-	// test contents:
-	// 13
+	// [103 111 102] 2
 }
 
 func ExampleGetBytesByTwoOffsetsByPath() {
 	// init
-	fileName := "123.txt"
-	tempDir := gfile.TempDir("gfile_example_content")
-	tempFile := gfile.Join(tempDir, fileName)
-
-	gfile.Mkdir(tempDir)
-	gfile.Create(tempFile)
+	var (
+		fileName = "gflie_example.txt"
+		tempDir  = gfile.TempDir("gfile_example_content")
+		tempFile = gfile.Join(tempDir, fileName)
+	)
 
 	// write contents
-	gfile.PutContents(tempFile, "test contents")
+	gfile.PutContents(tempFile, "goframe example content")
 
 	// read contents
-	contents := gfile.GetBytesByTwoOffsetsByPath(tempFile, 0, 4)
-	fmt.Println(string(contents))
+	fmt.Println(gfile.GetBytesByTwoOffsetsByPath(tempFile, 0, 7))
 
 	// Output:
-	// test
+	// [103 111 102 114 97 109 101]
 }
 
 func ExampleReadLines() {
 	// init
-	fileName := "123.txt"
-	tempDir := gfile.TempDir("gfile_example_content")
-	tempFile := gfile.Join(tempDir, fileName)
-
-	gfile.Mkdir(tempDir)
-	gfile.Create(tempFile)
+	var (
+		fileName = "gflie_example.txt"
+		tempDir  = gfile.TempDir("gfile_example_content")
+		tempFile = gfile.Join(tempDir, fileName)
+	)
 
 	// write contents
-	gfile.PutContents(tempFile, "test contents\ntest contents")
+	gfile.PutContents(tempFile, "L1 goframe example content\nL2 goframe example content")
 
 	// read contents
 	gfile.ReadLines(tempFile, func(text string) error {
@@ -224,30 +202,29 @@ func ExampleReadLines() {
 	})
 
 	// Output:
-	// test contents
-	// test contents
+	// L1 goframe example content
+	// L2 goframe example content
 }
 
 func ExampleReadLinesBytes() {
 	// init
-	fileName := "123.txt"
-	tempDir := gfile.TempDir("gfile_example_content")
-	tempFile := gfile.Join(tempDir, fileName)
-
-	gfile.Mkdir(tempDir)
-	gfile.Create(tempFile)
+	var (
+		fileName = "gflie_example.txt"
+		tempDir  = gfile.TempDir("gfile_example_content")
+		tempFile = gfile.Join(tempDir, fileName)
+	)
 
 	// write contents
-	gfile.PutContents(tempFile, "test contents\ntest contents")
+	gfile.PutContents(tempFile, "L1 goframe example content\nL2 goframe example content")
 
 	// read contents
 	gfile.ReadLinesBytes(tempFile, func(bytes []byte) error {
 		// Process each line
-		fmt.Println(string(bytes))
+		fmt.Println(bytes)
 		return nil
 	})
 
 	// Output:
-	// test contents
-	// test contents
+	// [76 49 32 103 111 102 114 97 109 101 32 101 120 97 109 112 108 101 32 99 111 110 116 101 110 116]
+	// [76 50 32 103 111 102 114 97 109 101 32 101 120 97 109 112 108 101 32 99 111 110 116 101 110 116]
 }

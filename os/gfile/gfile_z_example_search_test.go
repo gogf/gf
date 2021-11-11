@@ -8,16 +8,19 @@ import (
 
 func ExampleSearch() {
 	// init
-	fileName := "123.txt"
-	tempDir := gfile.TempDir("gfile_example")
-	tempFile := gfile.Join(tempDir, fileName)
-	gfile.Mkdir(tempDir)
-	gfile.Create(tempFile)
+	var (
+		fileName = "gflie_example.txt"
+		tempDir  = gfile.TempDir("gfile_example_search")
+		tempFile = gfile.Join(tempDir, fileName)
+	)
+
+	// write contents
+	gfile.PutContents(tempFile, "goframe example content")
 
 	// search file
 	realPath, _ := gfile.Search(fileName, tempDir)
 	fmt.Println(gfile.Basename(realPath))
 
 	// Output:
-	// 123.txt
+	// gflie_example.txt
 }

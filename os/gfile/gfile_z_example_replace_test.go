@@ -9,45 +9,40 @@ import (
 
 func ExampleReplaceFile() {
 	// init
-	fileName := "123.txt"
-	tempDir := gfile.TempDir("gfile_example_replace")
-	tempFile := gfile.Join(tempDir, fileName)
-
-	gfile.Mkdir(tempDir)
-	gfile.Create(tempFile)
+	var (
+		fileName = "gflie_example.txt"
+		tempDir  = gfile.TempDir("gfile_example_replace")
+		tempFile = gfile.Join(tempDir, fileName)
+	)
 
 	// write contents
-	gfile.PutContents(tempFile, "test contents")
+	gfile.PutContents(tempFile, "goframe example content")
 
 	// read contents
-	content := gfile.GetContents(tempFile)
-	fmt.Println(content)
+	fmt.Println(gfile.GetContents(tempFile))
 
-	gfile.ReplaceFile("test", "replace word", tempFile)
+	gfile.ReplaceFile("content", "replace word", tempFile)
 
-	content1 := gfile.GetContents(tempFile)
-	fmt.Println(content1)
+	fmt.Println(gfile.GetContents(tempFile))
 
 	// Output:
-	// test contents
-	// replace word contents
+	// goframe example content
+	// goframe example replace word
 }
 
 func ExampleReplaceFileFunc() {
 	// init
-	fileName := "123.txt"
-	tempDir := gfile.TempDir("gfile_example_replace")
-	tempFile := gfile.Join(tempDir, fileName)
-
-	gfile.Mkdir(tempDir)
-	gfile.Create(tempFile)
+	var (
+		fileName = "gflie_example.txt"
+		tempDir  = gfile.TempDir("gfile_example_replace")
+		tempFile = gfile.Join(tempDir, fileName)
+	)
 
 	// write contents
-	gfile.PutContents(tempFile, "666 test contents 888 a1a2a3")
+	gfile.PutContents(tempFile, "goframe example 123")
 
 	// read contents
-	content := gfile.GetContents(tempFile)
-	fmt.Println(content)
+	fmt.Println(gfile.GetContents(tempFile))
 
 	// replace by yourself
 	gfile.ReplaceFileFunc(func(path, content string) string {
@@ -56,90 +51,62 @@ func ExampleReplaceFileFunc() {
 		return reg.ReplaceAllString(content, "[num]")
 	}, tempFile)
 
-	content1 := gfile.GetContents(tempFile)
-	fmt.Println(content1)
+	fmt.Println(gfile.GetContents(tempFile))
 
 	// Output:
-	// 666 test contents 888 a1a2a3
-	// [num] test contents [num] a1a2a3
+	// goframe example 123
+	// goframe example [num]
 }
 
 func ExampleReplaceDir() {
 	// init
-	fileName := "123.txt"
-	tempDir := gfile.TempDir("gfile_example_replace")
-	tempFile := gfile.Join(tempDir, fileName)
-
-	tempSubDir := gfile.Join(tempDir, "sub_dir")
-	tempSubFile := gfile.Join(tempSubDir, fileName)
-
-	gfile.Mkdir(tempSubDir)
-	gfile.Create(tempFile)
-	gfile.Create(tempSubFile)
+	var (
+		fileName = "gflie_example.txt"
+		tempDir  = gfile.TempDir("gfile_example_replace")
+		tempFile = gfile.Join(tempDir, fileName)
+	)
 
 	// write contents
-	gfile.PutContents(tempFile, "test contents")
-	gfile.PutContents(tempSubFile, "test contents")
+	gfile.PutContents(tempFile, "goframe example content")
 
 	// read contents
-	content := gfile.GetContents(tempFile)
-	fmt.Println(content)
-	contentSub := gfile.GetContents(tempSubFile)
-	fmt.Println(contentSub)
+	fmt.Println(gfile.GetContents(tempFile))
 
-	gfile.ReplaceDir("test", "replace word", tempDir, "123.txt", true)
+	gfile.ReplaceDir("content", "replace word", tempDir, "gflie_example.txt", true)
 
 	// read contents
-	content1 := gfile.GetContents(tempFile)
-	fmt.Println(content1)
-	contentSub1 := gfile.GetContents(tempSubFile)
-	fmt.Println(contentSub1)
+	fmt.Println(gfile.GetContents(tempFile))
 
 	// Output:
-	// test contents
-	// test contents
-	// replace word contents
-	// replace word contents
+	// goframe example content
+	// goframe example replace word
 }
 
 func ExampleReplaceDirFunc() {
 	// init
-	fileName := "123.txt"
-	tempDir := gfile.TempDir("gfile_example_replace")
-	tempFile := gfile.Join(tempDir, fileName)
-
-	tempSubDir := gfile.Join(tempDir, "sub_dir")
-	tempSubFile := gfile.Join(tempSubDir, fileName)
-
-	gfile.Mkdir(tempSubDir)
-	gfile.Create(tempFile)
-	gfile.Create(tempSubFile)
+	var (
+		fileName = "gflie_example.txt"
+		tempDir  = gfile.TempDir("gfile_example_replace")
+		tempFile = gfile.Join(tempDir, fileName)
+	)
 
 	// write contents
-	gfile.PutContents(tempFile, "666 test contents 888 a1a2a3")
-	gfile.PutContents(tempSubFile, "666 test contents 888 a1a2a3")
+	gfile.PutContents(tempFile, "goframe example 123")
 
 	// read contents
-	content := gfile.GetContents(tempFile)
-	fmt.Println(content)
-	contentSub := gfile.GetContents(tempSubFile)
-	fmt.Println(contentSub)
+	fmt.Println(gfile.GetContents(tempFile))
 
+	// replace by yourself
 	gfile.ReplaceDirFunc(func(path, content string) string {
 		// Replace with regular match
 		reg, _ := regexp.Compile(`\d{3}`)
 		return reg.ReplaceAllString(content, "[num]")
-	}, tempDir, "123.txt", true)
+	}, tempDir, "gflie_example.txt", true)
 
-	// read contents
-	content1 := gfile.GetContents(tempFile)
-	fmt.Println(content1)
-	contentSub1 := gfile.GetContents(tempSubFile)
-	fmt.Println(contentSub1)
+	fmt.Println(gfile.GetContents(tempFile))
 
 	// Output:
-	// 666 test contents 888 a1a2a3
-	// 666 test contents 888 a1a2a3
-	// [num] test contents [num] a1a2a3
-	// [num] test contents [num] a1a2a3
+	// goframe example 123
+	// goframe example [num]
+
 }
