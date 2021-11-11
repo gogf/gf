@@ -540,7 +540,7 @@ func ExampleCache_MustGetOrSetFunc() {
 	fmt.Println(v1)
 
 	// Output:
-	// 111
+	// v1
 	//
 }
 
