@@ -420,6 +420,19 @@ func ExampleCache_Keys() {
 
 }
 
+func ExampleCache_KeyStrings() {
+	c := gcache.New()
+
+	c.SetMap(ctx, g.MapAnyAny{"k1": "v1", "k2": "v2"}, 0)
+
+	// KeyStrings returns all keys in the cache as string slice.
+	keys, _ := c.KeyStrings(ctx)
+	fmt.Println(keys)
+
+	// May Output:
+	// [k1 k2]
+}
+
 func ExampleCache_Remove() {
 
 	// Create a cache object,
@@ -646,7 +659,7 @@ func ExampleCache_MustKeys() {
 	c.SetMap(ctx, g.MapAnyAny{"k1": "v1", "k2": "v2"}, 0)
 
 	// MustKeys acts like Keys, but it panics if any error occurs.
-	keys1, _ := c.Keys(ctx)
+	keys1 := c.MustKeys(ctx)
 	fmt.Println(keys1)
 
 	// May Output:
