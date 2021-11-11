@@ -327,7 +327,7 @@ func ExampleCache_GetExpire() {
 	expire, _ := c.GetExpire(ctx, "k")
 	fmt.Println(expire)
 
-	// Output:
+	// May Output:
 	// 10s
 }
 
