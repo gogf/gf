@@ -333,16 +333,16 @@ func Test_Router_DomainGroup(t *testing.T) {
 	s := g.Server(p)
 	d := s.Domain("localhost, local")
 	d.Group("/", func(group *ghttp.RouterGroup) {
-		group.Group("/app", func(gApp *ghttp.RouterGroup) {
-			gApp.GET("/{table}/list/{page}.html", func(r *ghttp.Request) {
+		group.Group("/app", func(group *ghttp.RouterGroup) {
+			group.GET("/{table}/list/{page}.html", func(r *ghttp.Request) {
 				intlog.Print(r.Context(), "/{table}/list/{page}.html")
 				r.Response.Write(r.Get("table"), "&", r.Get("page"))
 			})
-			gApp.GET("/order/info/{order_id}", func(r *ghttp.Request) {
+			group.GET("/order/info/{order_id}", func(r *ghttp.Request) {
 				intlog.Print(r.Context(), "/order/info/{order_id}")
 				r.Response.Write(r.Get("order_id"))
 			})
-			gApp.DELETE("/comment/{id}", func(r *ghttp.Request) {
+			group.DELETE("/comment/{id}", func(r *ghttp.Request) {
 				intlog.Print(r.Context(), "/comment/{id}")
 				r.Response.Write(r.Get("id"))
 			})
