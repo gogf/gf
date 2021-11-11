@@ -8,71 +8,76 @@ import (
 
 func ExampleScanDir() {
 	// init
-	fileName := "123.txt"
-	tempDir := gfile.TempDir("gfile_example")
-	tempFile := gfile.Join(tempDir, fileName)
+	var (
+		fileName = "gflie_example.txt"
+		tempDir  = gfile.TempDir("gfile_example_replace")
+		tempFile = gfile.Join(tempDir, fileName)
 
-	tempSubDir := gfile.Join(tempDir, "sub_dir")
-	tempSubFile := gfile.Join(tempSubDir, fileName)
+		tempSubDir  = gfile.Join(tempDir, "sub_dir")
+		tempSubFile = gfile.Join(tempSubDir, fileName)
+	)
 
-	gfile.Mkdir(tempSubDir)
-	gfile.Create(tempFile)
-	gfile.Create(tempSubFile)
+	// write contents
+	gfile.PutContents(tempFile, "goframe example content")
+	gfile.PutContents(tempSubFile, "goframe example content")
 
 	// scans directory recursively
-	list, _ := gfile.ScanDir(tempDir, "123.txt,sub_dir", true)
+	list, _ := gfile.ScanDir(tempDir, "gflie_example.txt,sub_dir", true)
 	for _, v := range list {
 		fmt.Println(gfile.Basename(v))
 	}
 
 	// Output:
-	// 123.txt
+	// gflie_example.txt
 	// sub_dir
-	// 123.txt
+	// gflie_example.txt
 }
 
 func ExampleScanDirFile() {
 	// init
-	fileName := "123.txt"
-	tempDir := gfile.TempDir("gfile_example")
-	tempFile := gfile.Join(tempDir, fileName)
+	var (
+		fileName = "gflie_example.txt"
+		tempDir  = gfile.TempDir("gfile_example_replace")
+		tempFile = gfile.Join(tempDir, fileName)
 
-	tempSubDir := gfile.Join(tempDir, "sub_dir")
-	tempSubFile := gfile.Join(tempSubDir, fileName)
+		tempSubDir  = gfile.Join(tempDir, "sub_dir")
+		tempSubFile = gfile.Join(tempSubDir, fileName)
+	)
 
-	gfile.Mkdir(tempSubDir)
-	gfile.Create(tempFile)
-	gfile.Create(tempSubFile)
+	// write contents
+	gfile.PutContents(tempFile, "goframe example content")
+	gfile.PutContents(tempSubFile, "goframe example content")
 
 	// scans directory recursively exclusive of directories
-	list, _ := gfile.ScanDirFile(tempDir, "123.txt,sub_dir", true)
+	list, _ := gfile.ScanDirFile(tempDir, "gflie_example.txt,sub_dir", true)
 	for _, v := range list {
 		fmt.Println(gfile.Basename(v))
 	}
 
 	// Output:
-	// 123.txt
-	// 123.txt
+	// gflie_example.txt
+	// gflie_example.txt
 }
 
 func ExampleScanDirFunc() {
 	// init
-	fileName := "123.txt"
-	fileName1 := "1234.txt"
-	tempDir := gfile.TempDir("gfile_example_1")
-	tempFile := gfile.Join(tempDir, fileName)
+	var (
+		fileName = "gflie_example.txt"
+		tempDir  = gfile.TempDir("gfile_example_replace")
+		tempFile = gfile.Join(tempDir, fileName)
 
-	tempSubDir := gfile.Join(tempDir, "sub_dir")
-	tempSubFile := gfile.Join(tempSubDir, fileName1)
+		tempSubDir  = gfile.Join(tempDir, "sub_dir")
+		tempSubFile = gfile.Join(tempSubDir, fileName)
+	)
 
-	gfile.Mkdir(tempSubDir)
-	gfile.Create(tempFile)
-	gfile.Create(tempSubFile)
+	// write contents
+	gfile.PutContents(tempFile, "goframe example content")
+	gfile.PutContents(tempSubFile, "goframe example content")
 
 	// scans directory recursively
-	list, _ := gfile.ScanDirFunc(tempDir, "123.txt,1234.txt,sub_dir", true, func(path string) string {
+	list, _ := gfile.ScanDirFunc(tempDir, "gflie_example.txt,sub_dir", true, func(path string) string {
 		// ignores some files
-		if gfile.Basename(path) == "1234.txt" {
+		if gfile.Basename(path) == "gflie_example.txt" {
 			return ""
 		}
 		return path
@@ -82,28 +87,32 @@ func ExampleScanDirFunc() {
 	}
 
 	// Output:
-	// 123.txt
 	// sub_dir
 }
 
 func ExampleScanDirFileFunc() {
 	// init
-	fileName := "123.txt"
-	fileName1 := "1234.txt"
-	tempDir := gfile.TempDir("gfile_example_1")
-	tempFile := gfile.Join(tempDir, fileName)
+	var (
+		fileName = "gflie_example.txt"
+		tempDir  = gfile.TempDir("gfile_example_replace")
+		tempFile = gfile.Join(tempDir, fileName)
 
-	tempSubDir := gfile.Join(tempDir, "sub_dir")
-	tempSubFile := gfile.Join(tempSubDir, fileName1)
+		fileName1 = "gflie_example_ignores.txt"
+		tempFile1 = gfile.Join(tempDir, fileName1)
 
-	gfile.Mkdir(tempSubDir)
-	gfile.Create(tempFile)
-	gfile.Create(tempSubFile)
+		tempSubDir  = gfile.Join(tempDir, "sub_dir")
+		tempSubFile = gfile.Join(tempSubDir, fileName)
+	)
+
+	// write contents
+	gfile.PutContents(tempFile, "goframe example content")
+	gfile.PutContents(tempFile1, "goframe example content")
+	gfile.PutContents(tempSubFile, "goframe example content")
 
 	// scans directory recursively exclusive of directories
-	list, _ := gfile.ScanDirFileFunc(tempDir, "123.txt,1234.txt,sub_dir", true, func(path string) string {
+	list, _ := gfile.ScanDirFileFunc(tempDir, "gflie_example.txt,gflie_example_ignores.txt,sub_dir", true, func(path string) string {
 		// ignores some files
-		if gfile.Basename(path) == "1234.txt" {
+		if gfile.Basename(path) == "gflie_example_ignores.txt" {
 			return ""
 		}
 		return path
@@ -113,5 +122,6 @@ func ExampleScanDirFileFunc() {
 	}
 
 	// Output:
-	// 123.txt
+	// gflie_example.txt
+	// gflie_example.txt
 }
