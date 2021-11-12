@@ -247,17 +247,6 @@ func ExampleTime_WeeksOfYear() {
 	// 2
 }
 
-func ExampleTime_String() {
-	timeLayout := "2006-01-02 15:04:05"
-	timer1, _ := time.Parse(timeLayout, "2018-01-08 08:08:08")
-	gt1 := gtime.New(timer1)
-
-	fmt.Println(gt1.String())
-
-	// Output:
-	// 2018-01-08 08:08:08
-}
-
 func ExampleTime_ToZone() {
 	gt1 := gtime.Now()
 	gt2, _ := gt1.ToZone("Asia/Shanghai")
