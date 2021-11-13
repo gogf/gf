@@ -8,14 +8,14 @@ package gvalid_test
 
 import (
 	"context"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/os/gctx"
-	"github.com/gogf/gf/v2/os/gtime"
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gvalid"
 )
@@ -670,10 +670,10 @@ func Test_Domain(t *testing.T) {
 		for k, v := range m {
 			err = gvalid.CheckValue(context.TODO(), k, "domain", nil)
 			if v {
-				//fmt.Println(k)
+				// fmt.Println(k)
 				t.Assert(err, nil)
 			} else {
-				//fmt.Println(k)
+				// fmt.Println(k)
 				t.AssertNE(err, nil)
 			}
 		}

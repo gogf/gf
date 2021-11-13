@@ -9,12 +9,13 @@ package gvalid
 import (
 	"context"
 	"errors"
-	"github.com/gogf/gf/v2/container/gvar"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/text/gstr"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/text/gstr"
 
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/net/gipv4"
