@@ -8,11 +8,12 @@ package gvalid
 
 import (
 	"context"
+	"strings"
+
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/internal/structs"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
-	"strings"
 )
 
 // CheckStruct validates struct and returns the error result.

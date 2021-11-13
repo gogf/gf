@@ -8,11 +8,12 @@ package gconv
 
 import (
 	"database/sql"
+	"reflect"
+
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/structs"
 	"github.com/gogf/gf/v2/internal/utils"
-	"reflect"
 )
 
 // Scan automatically checks the type of `pointer` and converts `params` to `pointer`. It supports `pointer`
@@ -406,7 +407,7 @@ func doScanList(structSlice interface{}, structSlicePointer interface{}, bindToA
 			if len(relationDataMap) > 0 {
 				relationFromAttrField = relationFromAttrValue.FieldByName(relationBindToFieldName)
 				if relationFromAttrField.IsValid() {
-					//results := make(Result, 0)
+					// results := make(Result, 0)
 					results := make([]interface{}, 0)
 					for _, v := range SliceAny(relationDataMap[String(relationFromAttrField.Interface())]) {
 						item := v
