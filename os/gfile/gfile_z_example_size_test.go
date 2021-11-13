@@ -7,51 +7,51 @@ import (
 )
 
 func ExampleSize() {
-	tempDir := gfile.TempDir("gfile_example_size0")
-	if gfile.Exists(tempDir) {
-		gfile.Remove(tempDir)
-	}
-	gfile.Mkdir(tempDir)
-	size := gfile.Size(tempDir)
-	if size == 0 { // Why does every directory have a size 4096 bytes (4K)?
-		size = 4096
-	}
-	fmt.Println(size)
+	// init
+	var (
+		fileName = "gflie_example.txt"
+		tempDir  = gfile.TempDir("gfile_example_size")
+		tempFile = gfile.Join(tempDir, fileName)
+	)
+
+	// write contents
+	gfile.PutContents(tempFile, "0123456789")
+	fmt.Println(gfile.Size(tempFile))
 
 	// Output:
-	// 4096
+	// 10
 }
 
 func ExampleSizeFormat() {
-	tempDir := gfile.TempDir("gfile_example_sizeF0B")
-	if gfile.Exists(tempDir) {
-		gfile.Remove(tempDir)
-	}
-	gfile.Mkdir(tempDir)
-	sizeStr := gfile.SizeFormat(tempDir)
-	if sizeStr == "0.00B" { // Why does every directory have a size 4096 bytes (4K)?
-		sizeStr = "4.00K"
-	}
-	fmt.Println(sizeStr)
+	// init
+	var (
+		fileName = "gflie_example.txt"
+		tempDir  = gfile.TempDir("gfile_example_size")
+		tempFile = gfile.Join(tempDir, fileName)
+	)
+
+	// write contents
+	gfile.PutContents(tempFile, "0123456789")
+	fmt.Println(gfile.SizeFormat(tempFile))
 
 	// Output:
-	// 4.00K
+	// 10.00B
 }
 
 func ExampleReadableSize() {
-	tempDir := gfile.TempDir("gfile_example_sizeR0B")
-	if gfile.Exists(tempDir) {
-		gfile.Remove(tempDir)
-	}
-	gfile.Mkdir(tempDir)
-	sizeStr := gfile.ReadableSize(tempDir)
-	if sizeStr == "0.00B" { // Why does every directory have a size 4096 bytes (4K)?
-		sizeStr = "4.00K"
-	}
-	fmt.Println(sizeStr)
+	// init
+	var (
+		fileName = "gflie_example.txt"
+		tempDir  = gfile.TempDir("gfile_example_size")
+		tempFile = gfile.Join(tempDir, fileName)
+	)
+
+	// write contents
+	gfile.PutContents(tempFile, "01234567899876543210")
+	fmt.Println(gfile.ReadableSize(tempFile))
 
 	// Output:
-	// 4.00K
+	// 20.00B
 }
 
 func ExampleStrToSize() {
@@ -65,10 +65,13 @@ func ExampleStrToSize() {
 func ExampleFormatSize() {
 	sizeStr := gfile.FormatSize(104857600)
 	fmt.Println(sizeStr)
+	sizeStr0 := gfile.FormatSize(1024)
+	fmt.Println(sizeStr0)
 	sizeStr1 := gfile.FormatSize(999999999999999999)
 	fmt.Println(sizeStr1)
 
 	// Output:
 	// 100.00M
+	// 1.00K
 	// 888.18P
 }
