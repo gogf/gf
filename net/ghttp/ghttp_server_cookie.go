@@ -7,9 +7,10 @@
 package ghttp
 
 import (
-	"github.com/gogf/gf/v2/container/gvar"
 	"net/http"
 	"time"
+
+	"github.com/gogf/gf/v2/container/gvar"
 )
 
 // Cookie for HTTP COOKIE management.
@@ -47,9 +48,9 @@ func (c *Cookie) init() {
 	c.data = make(map[string]*cookieItem)
 	c.response = c.request.Response
 	// DO NOT ADD ANY DEFAULT COOKIE DOMAIN!
-	//if c.request.Server.GetCookieDomain() == "" {
+	// if c.request.Server.GetCookieDomain() == "" {
 	//	c.request.Server.GetCookieDomain() = c.request.GetHost()
-	//}
+	// }
 	for _, v := range c.request.Cookies() {
 		c.data[v.Name] = &cookieItem{
 			Cookie:     v,

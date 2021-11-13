@@ -8,6 +8,7 @@ package gjson
 
 import (
 	"bytes"
+
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -43,7 +44,7 @@ func DecodeTo(data interface{}, v interface{}) error {
 	// Do not use number, it converts float64 to json.Number type,
 	// which actually a string type. It causes converting issue for other data formats,
 	// for example: yaml.
-	//decoder.UseNumber()
+	// decoder.UseNumber()
 	return decoder.Decode(v)
 }
 

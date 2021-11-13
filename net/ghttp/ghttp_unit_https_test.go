@@ -8,18 +8,17 @@ package ghttp_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/v2/debug/gdebug"
-	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/text/gstr"
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/test/gtest"
-
 	_ "github.com/gogf/gf/v2/net/ghttp/testdata/https/packed"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 func Test_HTTPS_Basic(t *testing.T) {

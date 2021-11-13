@@ -8,9 +8,10 @@ package gudp
 
 import (
 	"context"
+	"net"
+
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"net"
 
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/os/glog"

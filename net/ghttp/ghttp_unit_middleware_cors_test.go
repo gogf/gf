@@ -8,11 +8,12 @@ package ghttp_test
 
 import (
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/test/gtest"
-	"testing"
-	"time"
 )
 
 func Test_Middleware_CORS1(t *testing.T) {

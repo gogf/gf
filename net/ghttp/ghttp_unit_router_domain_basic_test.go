@@ -8,11 +8,11 @@ package ghttp_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/v2/internal/intlog"
 	"testing"
 	"time"
 
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/test/gtest"
 )

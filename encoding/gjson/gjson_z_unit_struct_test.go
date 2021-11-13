@@ -7,9 +7,10 @@
 package gjson_test
 
 import (
+	"testing"
+
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/test/gtest"
-	"testing"
 )
 
 func Test_GetScan(t *testing.T) {

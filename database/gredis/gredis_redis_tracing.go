@@ -9,6 +9,7 @@ package gredis
 import (
 	"context"
 	"fmt"
+
 	"github.com/gogf/gf/v2"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/net/gtrace"

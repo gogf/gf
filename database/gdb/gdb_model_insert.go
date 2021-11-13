@@ -8,12 +8,12 @@ package gdb
 
 import (
 	"database/sql"
-	"github.com/gogf/gf/v2/container/gset"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/internal/utils"
 	"reflect"
 
+	"github.com/gogf/gf/v2/container/gset"
+	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"

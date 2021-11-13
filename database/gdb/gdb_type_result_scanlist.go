@@ -8,13 +8,14 @@ package gdb
 
 import (
 	"database/sql"
+	"reflect"
+
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/structs"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
-	"reflect"
 )
 
 // ScanList converts `r` to struct slice which contains other complex struct attributes.

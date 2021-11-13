@@ -8,6 +8,7 @@ package garray_test
 
 import (
 	"fmt"
+
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/internal/json"
@@ -144,7 +145,7 @@ func ExampleIntArray_SortFunc() {
 	s := garray.NewIntArrayFrom(g.SliceInt{10, 20, 15, 30})
 	fmt.Println(s)
 	s.SortFunc(func(v1, v2 int) bool {
-		//fmt.Println(v1,v2)
+		// fmt.Println(v1,v2)
 		return v1 > v2
 	})
 	fmt.Println(s)
