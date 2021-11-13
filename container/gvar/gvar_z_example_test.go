@@ -169,44 +169,92 @@ func ExampleVar_Bool() {
 
 // Int
 func ExampleVar_Int() {
-	var a1 = gvar.New(product1.Quantity*-1, true)
+	var a1 = gvar.New(-1000, true)
 	g.Dump(a1.Int())
-	a1.Set(-100)
-	g.Dump(a1.Int8())
-	a1.Set(-10000)
-	g.Dump(a1.Int16())
-	a1.Set(-100000000)
-	g.Dump(a1.Int32())
-	a1.Set(-10000000000)
-	g.Dump(a1.Int64())
 
 	// Output:
 	// -1000
+}
+
+// Int8
+func ExampleVar_Int8() {
+	var a1 = gvar.New(-100, true)
+	g.Dump(a1.Int8())
+
+	// Output:
 	// -100
+}
+
+// Int16
+func ExampleVar_Int16() {
+	var a1 = gvar.New(-10000, true)
+	g.Dump(a1.Int16())
+
+	// Output:
 	// -10000
-	// -100000000
+}
+
+// Int32
+func ExampleVar_Int32() {
+	var a1 = gvar.New(-10000, true)
+	g.Dump(a1.Int32())
+
+	// Output:
+	// -10000
+}
+
+// Int64
+func ExampleVar_Int64() {
+	var a1 = gvar.New(-10000000000, true)
+	g.Dump(a1.Int64())
+
+	// Output:
 	// -10000000000
 }
 
 // Uint
 func ExampleVar_Uint() {
-	var a1 = gvar.New(product1.Quantity, true)
+	var a1 = gvar.New(1000, true)
 	g.Dump(a1.Uint())
-	a1.Set(100)
-	g.Dump(a1.Uint8())
-	a1.Set(10000)
-	g.Dump(a1.Uint16())
-	a1.Set(100000000)
-	g.Dump(a1.Uint32())
-	a1.Set(10000000000)
-	g.Dump(a1.Uint64())
 
 	// Output:
 	// 1000
+}
+
+// Uint8
+func ExampleVar_Uint8() {
+	var a1 = gvar.New(100, true)
+	g.Dump(a1.Uint8())
+
+	// Output:
 	// 100
+}
+
+// Uint16
+func ExampleVar_Uint16() {
+	var a1 = gvar.New(10000, true)
+	g.Dump(a1.Uint16())
+
+	// Output:
 	// 10000
-	// 100000000
-	// 10000000000
+}
+
+// Uint32
+func ExampleVar_Uint32() {
+	var a1 = gvar.New(100000, true)
+	g.Dump(a1.Uint32())
+
+	// Output:
+	// 100000
+}
+
+// Uint64
+func ExampleVar_Uint64() {
+	var a1 = gvar.New(10000000, true)
+	g.Dump(a1.Uint64())
+
+	// Output:
+	// 10000000
 }
 
 // Float32
