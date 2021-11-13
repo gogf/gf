@@ -8,9 +8,9 @@ package garray_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/v2/frame/g"
 
 	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/frame/g"
 )
 
 func ExampleNew() {

@@ -7,15 +7,12 @@
 package gmap
 
 import (
-	"github.com/gogf/gf/v2/internal/json"
-
-	"github.com/gogf/gf/v2/internal/empty"
-
-	"github.com/gogf/gf/v2/util/gconv"
-
 	"github.com/gogf/gf/v2/container/glist"
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/internal/empty"
+	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/rwmutex"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 type ListMap struct {

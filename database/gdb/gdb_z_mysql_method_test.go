@@ -9,18 +9,17 @@ package gdb_test
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/v2/container/garray"
-	"github.com/gogf/gf/v2/text/gstr"
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/encoding/gxml"
-
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 func Test_DB_Ping(t *testing.T) {
@@ -274,7 +273,7 @@ func Test_DB_Upadte_KeyFieldNameMapping(t *testing.T) {
 }
 
 // This is no longer used as the filter feature is automatically enabled from GoFrame v1.16.0.
-//func Test_DB_Insert_KeyFieldNameMapping_Error(t *testing.T) {
+// func Test_DB_Insert_KeyFieldNameMapping_Error(t *testing.T) {
 //	table := createTable()
 //	defer dropTable(table)
 //
@@ -297,7 +296,7 @@ func Test_DB_Upadte_KeyFieldNameMapping(t *testing.T) {
 //		_, err := db.Insert(ctx, table, data)
 //		t.AssertNE(err, nil)
 //	})
-//}
+// }
 
 func Test_DB_InsertIgnore(t *testing.T) {
 	table := createInitTable()
@@ -820,7 +819,7 @@ func Test_DB_ToJson(t *testing.T) {
 			gtest.Fatal(err)
 		}
 
-		//ToJson
+		// ToJson
 		resultJson, err := gjson.LoadContent(result.Json())
 		if err != nil {
 			gtest.Fatal(err)

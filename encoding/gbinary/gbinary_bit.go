@@ -8,14 +8,18 @@ package gbinary
 
 // NOTE: THIS IS AN EXPERIMENTAL FEATURE!
 
-// 二进制位(0|1)
+// Bit Binary bit (0 | 1) 二进制位(0|1)
 type Bit int8
 
+// EncodeBits .
+// Default coding
 // 默认编码
 func EncodeBits(bits []Bit, i int, l int) []Bit {
 	return EncodeBitsWithUint(bits, uint(i), l)
 }
 
+// EncodeBitsWithUint .
+// Merge ui bitwise into the bits array and occupy the length length bits (Note: binary 0 | 1 digits are stored in the uis array)
 // 将ui按位合并到bits数组中，并占length长度位(注意：uis数组中存放的是二进制的0|1数字)
 func EncodeBitsWithUint(bits []Bit, ui uint, l int) []Bit {
 	a := make([]Bit, l)
@@ -25,11 +29,12 @@ func EncodeBitsWithUint(bits []Bit, ui uint, l int) []Bit {
 	}
 	if bits != nil {
 		return append(bits, a...)
-	} else {
-		return a
 	}
+	return a
 }
 
+// EncodeBitsToBytes .
+// Convert bits to [] byte, encode from left to right, and add less than 1 byte from 0 to the end.
 // 将bits转换为[]byte，从左至右进行编码，不足1 byte按0往末尾补充
 func EncodeBitsToBytes(bits []Bit) []byte {
 	if len(bits)%8 != 0 {
@@ -44,6 +49,8 @@ func EncodeBitsToBytes(bits []Bit) []byte {
 	return b
 }
 
+// DecodeBits .
+// Resolve to int
 // 解析为int
 func DecodeBits(bits []Bit) int {
 	v := 0
@@ -53,6 +60,8 @@ func DecodeBits(bits []Bit) int {
 	return v
 }
 
+// DecodeBitsToUint .
+// Resolve to uint
 // 解析为uint
 func DecodeBitsToUint(bits []Bit) uint {
 	v := uint(0)
@@ -62,6 +71,8 @@ func DecodeBitsToUint(bits []Bit) uint {
 	return v
 }
 
+// DecodeBytesToBits .
+// Parsing [] byte into character array [] uint8
 // 解析[]byte为字位数组[]uint8
 func DecodeBytesToBits(bs []byte) []Bit {
 	bits := make([]Bit, 0)

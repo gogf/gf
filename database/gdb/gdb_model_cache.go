@@ -7,8 +7,9 @@
 package gdb
 
 import (
-	"github.com/gogf/gf/v2/internal/intlog"
 	"time"
+
+	"github.com/gogf/gf/v2/internal/intlog"
 )
 
 type CacheOption struct {

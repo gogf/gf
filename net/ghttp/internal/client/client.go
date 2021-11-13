@@ -11,18 +11,19 @@ import (
 	"crypto/rand"
 	"crypto/tls"
 	"fmt"
-	"github.com/gogf/gf/v2"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/text/gstr"
-	"golang.org/x/net/proxy"
 	"net"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/gogf/gf/v2"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/text/gstr"
+	"golang.org/x/net/proxy"
 
 	"github.com/gogf/gf/v2/text/gregex"
 )
@@ -232,7 +233,7 @@ func (c *Client) SetProxy(proxyURL string) {
 				return dialer.Dial(network, addr)
 			}
 		}
-		//c.SetTimeout(10*time.Second)
+		// c.SetTimeout(10*time.Second)
 	}
 }
 

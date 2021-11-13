@@ -8,6 +8,7 @@ package gset_test
 
 import (
 	"fmt"
+
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/frame/g"
 )

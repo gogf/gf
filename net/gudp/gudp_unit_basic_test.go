@@ -9,12 +9,13 @@ package gudp_test
 import (
 	"context"
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/gogf/gf/v2/net/gudp"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
-	"testing"
-	"time"
 )
 
 func Test_Basic(t *testing.T) {
