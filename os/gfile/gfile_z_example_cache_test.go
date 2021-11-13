@@ -29,7 +29,7 @@ func ExampleGetContentsWithCache() {
 	// read contents
 	fmt.Println(gfile.GetContentsWithCache(tempFile))
 
-	// Output:
+	// May Output:
 	// goframe example content
 	// new goframe example content
 }
