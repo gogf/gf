@@ -22,7 +22,7 @@ func Test_Map(t *testing.T) {
 			val  = "0.0.0"
 			err  = gvalid.CheckValue(context.TODO(), val, rule, nil)
 			msg  = map[string]string{
-				"ipv4": "The value must be a valid IPv4 address",
+				"ipv4": "The value `0.0.0` is not a valid IPv4 address",
 			}
 		)
 		t.Assert(err.Map(), msg)
@@ -36,7 +36,7 @@ func Test_FirstString(t *testing.T) {
 			val  = "0.0.0"
 			err  = gvalid.CheckValue(context.TODO(), val, rule, nil)
 		)
-		t.Assert(err.FirstError(), "The value must be a valid IPv4 address")
+		t.Assert(err.FirstError(), "The value `0.0.0` is not a valid IPv4 address")
 	})
 }
 
