@@ -537,7 +537,7 @@ func Test_Params_Parse_DefaultValueTag(t *testing.T) {
 
 func Test_Params_Parse_Validation(t *testing.T) {
 	type RegisterReq struct {
-		Name  string `p:"username"  v:"required|length:6,30#请输入账号|账号长度为:min到:max位"`
+		Name  string `p:"username"  v:"required|length:6,30#请输入账号|账号长度为{min}到{max}位"`
 		Pass  string `p:"password1" v:"required|length:6,30#请输入密码|密码长度不够"`
 		Pass2 string `p:"password2" v:"required|length:6,30|same:password1#请确认密码|密码长度不够|两次密码不一致"`
 	}

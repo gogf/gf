@@ -30,7 +30,7 @@ func Test_CheckStruct(t *testing.T) {
 		msgs := map[string]interface{}{
 			"Name": map[string]string{
 				"required": "名称不能为空",
-				"length":   "名称长度为:min到:max个字符",
+				"length":   "名称长度为{min}到{max}个字符",
 			},
 			"Age": "年龄为18到30周岁",
 		}
@@ -51,7 +51,7 @@ func Test_CheckStruct(t *testing.T) {
 		msgs := map[string]interface{}{
 			"Name": map[string]string{
 				"required": "名称不能为空",
-				"length":   "名称长度为:min到:max个字符",
+				"length":   "名称长度为{min}到{max}个字符",
 			},
 			"Age": "年龄为18到30周岁",
 		}
@@ -76,7 +76,7 @@ func Test_CheckStruct(t *testing.T) {
 		msgs := map[string]interface{}{
 			"Name": map[string]string{
 				"required": "名称不能为空",
-				"length":   "名称长度为:min到:max个字符",
+				"length":   "名称长度为{min}到{max}个字符",
 			},
 			"Age": "年龄为18到30周岁",
 		}
@@ -101,7 +101,7 @@ func Test_CheckStruct(t *testing.T) {
 		msgs := map[string]interface{}{
 			"Name": map[string]string{
 				"required": "名称不能为空",
-				"length":   "名称长度为:min到:max个字符",
+				"length":   "名称长度为{min}到{max}个字符",
 			},
 			"Age": "年龄为18到30周岁",
 		}
@@ -335,7 +335,7 @@ func Test_CheckStruct_Optional(t *testing.T) {
 		type Params struct {
 			Page      int    `v:"required|min:1         # page is required"`
 			Size      int    `v:"required|between:1,100 # size is required"`
-			ProjectId string `v:"between:1,10000        # project id must between :min, :max"`
+			ProjectId string `v:"between:1,10000        # project id must between {min}, {max}"`
 		}
 		obj := &Params{
 			Page: 1,
@@ -348,7 +348,7 @@ func Test_CheckStruct_Optional(t *testing.T) {
 		type Params struct {
 			Page      int       `v:"required|min:1         # page is required"`
 			Size      int       `v:"required|between:1,100 # size is required"`
-			ProjectId *gvar.Var `v:"between:1,10000        # project id must between :min, :max"`
+			ProjectId *gvar.Var `v:"between:1,10000        # project id must between {min}, {max}"`
 		}
 		obj := &Params{
 			Page: 1,
@@ -361,7 +361,7 @@ func Test_CheckStruct_Optional(t *testing.T) {
 		type Params struct {
 			Page      int `v:"required|min:1         # page is required"`
 			Size      int `v:"required|between:1,100 # size is required"`
-			ProjectId int `v:"between:1,10000        # project id must between :min, :max"`
+			ProjectId int `v:"between:1,10000        # project id must between {min}, {max}"`
 		}
 		obj := &Params{
 			Page: 1,
