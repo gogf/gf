@@ -10,7 +10,7 @@ import "context"
 
 // getErrorMessageByRule retrieves and returns the error message for specified rule.
 // It firstly retrieves the message from custom message map, and then checks i18n manager,
-// it returns the default error message if it's not found in custom message map or i18n manager.
+// it returns the default error message if it's not found in neither custom message map nor i18n manager.
 func (v *Validator) getErrorMessageByRule(ctx context.Context, ruleKey string, customMsgMap map[string]string) string {
 	content := customMsgMap[ruleKey]
 	if content != "" {
