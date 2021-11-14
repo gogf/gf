@@ -9,7 +9,6 @@ package gvalid
 import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"strings"
 )
@@ -40,17 +39,12 @@ type validationError struct {
 
 // newValidationError creates and returns a validation error.
 func newValidationError(code gcode.Code, rules []fieldRule, fieldRuleErrorMap map[string]map[string]error) *validationError {
-	var (
-		s string
-	)
 	for field, ruleErrorMap := range fieldRuleErrorMap {
 		for rule, err := range ruleErrorMap {
 			if !gerror.HasStack(err) {
-				s = strings.Replace(err.Error(), ":attribute", field, -1)
-				s, _ = gregex.ReplaceString(`\s{2,}`, ` `, s)
 				ruleErrorMap[rule] = gerror.NewOption(gerror.Option{
 					Stack: false,
-					Text:  gstr.Trim(s),
+					Text:  gstr.Trim(err.Error()),
 					Code:  code,
 				})
 			}
