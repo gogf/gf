@@ -30,8 +30,8 @@ func Test_CheckMap1(t *testing.T) {
 			t.Error("CheckMap校验失败")
 		} else {
 			t.Assert(len(m.Maps()), 2)
-			t.Assert(m.Maps()["id"]["between"], "The id value must be between 1 and 100")
-			t.Assert(m.Maps()["name"]["length"], "The name value length must be between 6 and 16")
+			t.Assert(m.Maps()["id"]["between"], "The id value `0` must be between 1 and 100")
+			t.Assert(m.Maps()["name"]["length"], "The name value `john` length must be between 6 and 16")
 		}
 	})
 }
@@ -53,10 +53,10 @@ func Test_CheckMap2(t *testing.T) {
 		"name": "required|length:6,16",
 	}
 	msgs := gvalid.CustomMsg{
-		"id": "ID不能为空|ID范围应当为:min到:max",
+		"id": "ID不能为空|ID范围应当为{min}到{max}",
 		"name": map[string]string{
 			"required": "名称不能为空",
-			"length":   "名称长度为:min到:max个字符",
+			"length":   "名称长度为{min}到{max}个字符",
 		},
 	}
 	if m := gvalid.CheckMap(context.TODO(), kvmap, rules, msgs); m == nil {
@@ -72,10 +72,10 @@ func Test_CheckMap2(t *testing.T) {
 		"name": "required|length:4,16",
 	}
 	msgs = map[string]interface{}{
-		"id": "ID不能为空|ID范围应当为:min到:max",
+		"id": "ID不能为空|ID范围应当为{min}到{max}",
 		"name": map[string]string{
 			"required": "名称不能为空",
-			"length":   "名称长度为:min到:max个字符",
+			"length":   "名称长度为{min}到{max}个字符",
 		},
 	}
 	if m := gvalid.CheckMap(context.TODO(), kvmap, rules, msgs); m != nil {
@@ -91,10 +91,10 @@ func Test_CheckMap2(t *testing.T) {
 		"name": "",
 	}
 	msgs = map[string]interface{}{
-		"id": "ID不能为空|ID范围应当为:min到:max",
+		"id": "ID不能为空|ID范围应当为{min}到{max}",
 		"name": map[string]string{
 			"required": "名称不能为空",
-			"length":   "名称长度为:min到:max个字符",
+			"length":   "名称长度为{min}到{max}个字符",
 		},
 	}
 	if m := gvalid.CheckMap(context.TODO(), kvmap, rules, msgs); m != nil {
@@ -110,10 +110,10 @@ func Test_CheckMap2(t *testing.T) {
 		"@required|length:4,16",
 	}
 	msgs = map[string]interface{}{
-		"id": "ID不能为空|ID范围应当为:min到:max",
+		"id": "ID不能为空|ID范围应当为{min}到{max}",
 		"name": map[string]string{
 			"required": "名称不能为空",
-			"length":   "名称长度为:min到:max个字符",
+			"length":   "名称长度为{min}到{max}个字符",
 		},
 	}
 	if m := gvalid.CheckMap(context.TODO(), kvmap, rules2, msgs); m != nil {
@@ -129,10 +129,10 @@ func Test_CheckMap2(t *testing.T) {
 		"name@required|length:4,16#名称不能为空|",
 	}
 	msgs = map[string]interface{}{
-		"id": "ID不能为空|ID范围应当为:min到:max",
+		"id": "ID不能为空|ID范围应当为{min}到{max}",
 		"name": map[string]string{
 			"required": "名称不能为空",
-			"length":   "名称长度为:min到:max个字符",
+			"length":   "名称长度为{min}到{max}个字符",
 		},
 	}
 	if m := gvalid.CheckMap(context.TODO(), kvmap, rules2, msgs); m != nil {
@@ -148,10 +148,10 @@ func Test_CheckMap2(t *testing.T) {
 		"name@required|length:4,16#名称不能为空",
 	}
 	msgs = map[string]interface{}{
-		"id": "ID不能为空|ID范围应当为:min到:max",
+		"id": "ID不能为空|ID范围应当为{min}到{max}",
 		"name": map[string]string{
 			"required": "名称不能为空",
-			"length":   "名称长度为:min到:max个字符",
+			"length":   "名称长度为{min}到{max}个字符",
 		},
 	}
 	if m := gvalid.CheckMap(context.TODO(), kvmap, rules2, msgs); m != nil {
@@ -181,8 +181,8 @@ func Test_Sequence(t *testing.T) {
 			"password2": "1234567",
 		}
 		rules := []string{
-			"passport@required|length:6,16#账号不能为空|账号长度应当在:min到:max之间",
-			"password@required|length:6,16|same:password2#密码不能为空|密码长度应当在:min到:max之间|两次密码输入不相等",
+			"passport@required|length:6,16#账号不能为空|账号长度应当在{min}到{max}之间",
+			"password@required|length:6,16|same:password2#密码不能为空|密码长度应当在{min}到{max}之间|两次密码输入不相等",
 			"password2@required|length:6,16#",
 		}
 		err := gvalid.CheckMap(context.TODO(), params, rules)
@@ -221,8 +221,8 @@ func Test_Map_Bail(t *testing.T) {
 			"password2": "1234567",
 		}
 		rules := []string{
-			"passport@required|length:6,16#账号不能为空|账号长度应当在:min到:max之间",
-			"password@required|length:6,16|same:password2#密码不能为空|密码长度应当在:min到:max之间|两次密码输入不相等",
+			"passport@required|length:6,16#账号不能为空|账号长度应当在{min}到{max}之间",
+			"password@required|length:6,16|same:password2#密码不能为空|密码长度应当在{min}到{max}之间|两次密码输入不相等",
 			"password2@required|length:6,16#",
 		}
 		err := g.Validator().Bail().Rules(rules).CheckMap(ctx, params)
@@ -237,8 +237,8 @@ func Test_Map_Bail(t *testing.T) {
 			"password2": "1234567",
 		}
 		rules := []string{
-			"passport@bail|required|length:6,16#|账号不能为空|账号长度应当在:min到:max之间",
-			"password@required|length:6,16|same:password2#密码不能为空|密码长度应当在:min到:max之间|两次密码输入不相等",
+			"passport@bail|required|length:6,16#|账号不能为空|账号长度应当在{min}到{max}之间",
+			"password@required|length:6,16|same:password2#密码不能为空|密码长度应当在{min}到{max}之间|两次密码输入不相等",
 			"password2@required|length:6,16#",
 		}
 		err := g.Validator().Bail().Rules(rules).CheckMap(ctx, params)

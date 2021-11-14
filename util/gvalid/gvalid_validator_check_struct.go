@@ -179,7 +179,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 		}
 
 		if _, ok := nameToRuleMap[name]; !ok {
-			if _, ok := nameToRuleMap[fieldName]; ok {
+			if _, ok = nameToRuleMap[fieldName]; ok {
 				// If there's alias name,
 				// use alias name as its key and remove the field name key.
 				nameToRuleMap[name] = nameToRuleMap[fieldName]
@@ -255,21 +255,17 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 			DataMap:  inputParamMap,
 		}); validatedError != nil {
 			_, errorItem := validatedError.FirstItem()
-			// ===================================================================
-			// Only in map and struct validations, if value is nil or empty string
-			// and has no required* rules, it clears the error message.
-			// ===================================================================
+			// ============================================================
+			// Only in map and struct validations:
+			// If value is nil or empty string and has no required* rules,
+			// it clears the error message.
+			// ============================================================
 			if value == nil || gconv.String(value) == "" {
 				required := false
 				// rule => error
 				for ruleKey := range errorItem {
 					// Default required rules.
 					if _, ok := mustCheckRulesEvenValueEmpty[ruleKey]; ok {
-						required = true
-						break
-					}
-					// Custom rules are also required in default.
-					if f := v.getRuleFunc(ruleKey); f != nil {
 						required = true
 						break
 					}
