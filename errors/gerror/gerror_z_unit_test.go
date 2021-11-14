@@ -311,6 +311,18 @@ func Test_Code(t *testing.T) {
 	})
 }
 
+func Test_SetCode(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		err := gerror.New("123")
+		t.Assert(gerror.Code(err), -1)
+		t.Assert(err.Error(), "123")
+
+		err.(*gerror.Error).SetCode(gcode.CodeValidationFailed)
+		t.Assert(gerror.Code(err), gcode.CodeValidationFailed)
+		t.Assert(err.Error(), "123")
+	})
+}
+
 func Test_Json(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		err := gerror.Wrap(gerror.New("1"), "2")
