@@ -193,17 +193,17 @@ func (r *Ring) RLockIteratorNext(f func(value interface{}) bool) {
 	}
 }
 
-// LockIteratorPrev iterates and locks writing backward
+// RLockIteratorPrev iterates and locks writing backward
 // with given callback function `f` within RWMutex.RLock.
 // If `f` returns true, then it continues iterating; or false to stop.
-func (r *Ring) LockIteratorPrev(f func(item *ring.Ring) bool) {
+func (r *Ring) RLockIteratorPrev(f func(value interface{}) bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	if !f(r.ring) {
+	if r.ring.Value != nil && !f(r.ring.Value.(internalRingItem).Value) {
 		return
 	}
 	for p := r.ring.Prev(); p != r.ring; p = p.Prev() {
-		if !f(p) {
+		if p.Value == nil || !f(p.Value.(internalRingItem).Value) {
 			break
 		}
 	}
