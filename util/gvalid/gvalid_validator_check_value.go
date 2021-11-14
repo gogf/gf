@@ -11,6 +11,7 @@ import (
 	"errors"
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gstr"
 	"strconv"
 	"strings"
@@ -134,13 +135,23 @@ func (v *Validator) doCheckValue(ctx context.Context, input doCheckValueInput) E
 		if customRuleFunc != nil {
 			// It checks custom validation rules with most priority.
 			message := v.getErrorMessageByRule(ctx, ruleKey, customMsgMap)
-			if err := customRuleFunc(ctx, RuleFuncInput{
+			if err = customRuleFunc(ctx, RuleFuncInput{
 				Rule:    ruleItems[index],
 				Message: message,
 				Value:   gvar.New(input.Value),
 				Data:    gvar.New(input.DataRaw),
 			}); err != nil {
 				match = false
+				// The error should have stack info to indicate the error position.
+				if !gerror.HasStack(err) {
+					err = gerror.NewCodeSkip(gcode.CodeValidationFailed, 1, err.Error())
+				}
+				// The error should have error code that is `gcode.CodeValidationFailed`.
+				if gerror.Code(err) == gcode.CodeNil {
+					if e, ok := err.(*gerror.Error); ok {
+						e.SetCode(gcode.CodeValidationFailed)
+					}
+				}
 				ruleErrorMap[ruleKey] = err
 			} else {
 				match = true

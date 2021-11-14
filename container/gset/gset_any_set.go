@@ -97,7 +97,7 @@ func (set *Set) AddIfNotExist(item interface{}) bool {
 }
 
 // AddIfNotExistFunc checks whether item exists in the set,
-// it adds the item to set and returns true if it does not exists in the set and
+// it adds the item to set and returns true if it does not exist in the set and
 // function `f` returns true, or else it does nothing and returns false.
 //
 // Note that, if `item` is nil, it does nothing and returns false. The function `f`
