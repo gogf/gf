@@ -13,6 +13,7 @@ import (
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gvalid"
 	"math"
@@ -26,8 +27,8 @@ func ExampleCheckMap() {
 		"password2": "1234567",
 	}
 	rules := []string{
-		"passport@required|length:6,16#账号不能为空|账号长度应当在:min到:max之间",
-		"password@required|length:6,16|same:password2#密码不能为空|密码长度应当在:min到:max之间|两次密码输入不相等",
+		"passport@required|length:6,16#账号不能为空|账号长度应当在{min}到{max}之间",
+		"password@required|length:6,16|same{password}2#密码不能为空|密码长度应当在{min}到{max}之间|两次密码输入不相等",
 		"password2@required|length:6,16#",
 	}
 	if e := gvalid.CheckMap(gctx.New(), params, rules); e != nil {
@@ -48,8 +49,8 @@ func ExampleCheckMap2() {
 		"password2": "1234567",
 	}
 	rules := []string{
-		"passport@length:6,16#账号不能为空|账号长度应当在:min到:max之间",
-		"password@required|length:6,16|same:password2#密码不能为空|密码长度应当在:min到:max之间|两次密码输入不相等",
+		"passport@length:6,16#账号不能为空|账号长度应当在{min}到{max}之间",
+		"password@required|length:6,16|same:password2#密码不能为空|密码长度应当在{min}到{max}之间|两次密码输入不相等",
 		"password2@required|length:6,16#",
 	}
 	if e := gvalid.CheckMap(gctx.New(), params, rules); e != nil {
@@ -68,7 +69,7 @@ func ExampleCheckStruct() {
 	type Params struct {
 		Page      int    `v:"required|min:1         # page is required"`
 		Size      int    `v:"required|between:1,100 # size is required"`
-		ProjectId string `v:"between:1,10000        # project id must between :min, :max"`
+		ProjectId string `v:"between:1,10000        # project id must between {min}, {max}"`
 	}
 	obj := &Params{
 		Page: 1,
@@ -85,7 +86,7 @@ func ExampleCheckStruct2() {
 	type Params struct {
 		Page      int       `v:"required|min:1         # page is required"`
 		Size      int       `v:"required|between:1,100 # size is required"`
-		ProjectId *gvar.Var `v:"between:1,10000        # project id must between :min, :max"`
+		ProjectId *gvar.Var `v:"between:1,10000        # project id must between {min}, {max}"`
 	}
 	obj := &Params{
 		Page: 1,
@@ -102,7 +103,7 @@ func ExampleCheckStruct3() {
 	type Params struct {
 		Page      int `v:"required|min:1         # page is required"`
 		Size      int `v:"required|between:1,100 # size is required"`
-		ProjectId int `v:"between:1,10000        # project id must between :min, :max"`
+		ProjectId int `v:"between:1,10000        # project id must between {min}, {max}"`
 	}
 	obj := &Params{
 		Page: 1,
@@ -229,7 +230,7 @@ func ExampleValidator_CheckMap() {
 		"password2": "required|length:6,16",
 	}
 	messages := map[string]interface{}{
-		"passport": "账号不能为空|账号长度应当在:min到:max之间",
+		"passport": "账号不能为空|账号长度应当在{min}到{max}之间",
 		"password": map[string]string{
 			"required": "密码不能为空",
 			"same":     "两次密码输入不相等",
@@ -460,11 +461,13 @@ func ExampleValidator_Date() {
 		}
 	)
 	if err := g.Validator().CheckStruct(ctx, req); err != nil {
-		fmt.Print(err)
+		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
 	// Output:
-	// The Date3 value is not a valid date; The Date4 value is not a valid date; The Date5 value is not a valid date
+	// The Date3 value `2021-Oct-31` is not a valid date
+	// The Date4 value `2021 Octa 31` is not a valid date
+	// The Date5 value `2021/Oct/31` is not a valid date
 }
 
 func ExampleValidator_Datetime() {
@@ -485,11 +488,13 @@ func ExampleValidator_Datetime() {
 		}
 	)
 	if err := g.Validator().CheckStruct(ctx, req); err != nil {
-		fmt.Print(err)
+		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
 	// Output:
-	// The Date2 value is not a valid datetime; The Date3 value is not a valid datetime; The Date4 value is not a valid datetime
+	// The Date2 value `2021-11-01 23:00` is not a valid datetime
+	// The Date3 value `2021/11/01 23:00:00` is not a valid datetime
+	// The Date4 value `2021/Dec/01 23:00:00` is not a valid datetime
 }
 
 func ExampleValidator_DateFormat() {
@@ -510,11 +515,12 @@ func ExampleValidator_DateFormat() {
 		}
 	)
 	if err := g.Validator().CheckStruct(ctx, req); err != nil {
-		fmt.Print(err)
+		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
 	// Output:
-	// The Date2 value does not match the format Y-m-d; The Date4 value does not match the format Y-m-d H:i:s
+	// The Date2 value `2021-11-01 23:00` does not match the format: Y-m-d
+	// The Date4 value `2021-11-01 23:00` does not match the format: Y-m-d H:i:s
 }
 
 func ExampleValidator_Email() {
@@ -535,11 +541,12 @@ func ExampleValidator_Email() {
 		}
 	)
 	if err := g.Validator().CheckStruct(ctx, req); err != nil {
-		fmt.Print(err)
+		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
 	// Output:
-	// The MailAddr2 value must be a valid email address; The MailAddr4 value must be a valid email address
+	// The MailAddr2 value `gf@goframe` is not a valid email address
+	// The MailAddr4 value `gf#goframe.org` is not a valid email address
 }
 
 func ExampleValidator_Phone() {
@@ -560,11 +567,13 @@ func ExampleValidator_Phone() {
 		}
 	)
 	if err := g.Validator().CheckStruct(ctx, req); err != nil {
-		fmt.Print(err)
+		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
 	// Output:
-	// The PhoneNumber2 value must be a valid phone number; The PhoneNumber3 value must be a valid phone number; The PhoneNumber4 value must be a valid phone number
+	// The PhoneNumber2 value `11578912345` is not a valid phone number
+	// The PhoneNumber3 value `17178912345` is not a valid phone number
+	// The PhoneNumber4 value `1357891234` is not a valid phone number
 }
 
 func ExampleValidator_PhoneLoose() {
@@ -585,11 +594,12 @@ func ExampleValidator_PhoneLoose() {
 		}
 	)
 	if err := g.Validator().CheckStruct(ctx, req); err != nil {
-		fmt.Print(err)
+		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
 	// Output:
-	// The PhoneNumber2 value must be a valid phone number; The PhoneNumber4 value must be a valid phone number
+	// The PhoneNumber2 value `11578912345` is invalid
+	// The PhoneNumber4 value `1357891234` is invalid
 }
 
 func ExampleValidator_Telephone() {
@@ -610,11 +620,12 @@ func ExampleValidator_Telephone() {
 		}
 	)
 	if err := g.Validator().CheckStruct(ctx, req); err != nil {
-		fmt.Print(err)
+		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
 	// Output:
-	// The Telephone3 value must be a valid telephone number; The Telephone4 value must be a valid telephone number
+	// The Telephone3 value `20-77542145` is not a valid telephone number
+	// The Telephone4 value `775421451` is not a valid telephone number
 }
 
 func ExampleValidator_Passport() {
@@ -635,11 +646,13 @@ func ExampleValidator_Passport() {
 		}
 	)
 	if err := g.Validator().CheckStruct(ctx, req); err != nil {
-		fmt.Print(err)
+		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
 	// Output:
-	// The Passport2 value is not a valid passport format; The Passport3 value is not a valid passport format; The Passport4 value is not a valid passport format
+	// The Passport2 value `1356666` is not a valid passport format
+	// The Passport3 value `goframe#` is not a valid passport format
+	// The Passport4 value `gf` is not a valid passport format
 }
 
 func ExampleValidator_Password() {
@@ -660,7 +673,7 @@ func ExampleValidator_Password() {
 	}
 
 	// Output:
-	// The Password2 value is not a valid passport format
+	// The Password2 value `gofra` is not a valid password format
 }
 
 func ExampleValidator_Password2() {
@@ -681,11 +694,13 @@ func ExampleValidator_Password2() {
 		}
 	)
 	if err := g.Validator().CheckStruct(ctx, req); err != nil {
-		fmt.Print(err)
+		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
 	// Output:
-	// The Password2 value is not a valid passport format; The Password3 value is not a valid passport format; The Password4 value is not a valid passport format
+	// The Password2 value `gofra` is not a valid password format
+	// The Password3 value `Goframe` is not a valid password format
+	// The Password4 value `goframe123` is not a valid password format
 }
 
 func ExampleValidator_Password3() {
@@ -704,11 +719,12 @@ func ExampleValidator_Password3() {
 		}
 	)
 	if err := g.Validator().CheckStruct(ctx, req); err != nil {
-		fmt.Print(err)
+		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
 	// Output:
-	// The Password2 value is not a valid passport format; The Password3 value is not a valid passport format
+	// The Password2 value `gofra` is not a valid password format
+	// The Password3 value `Goframe123` is not a valid password format
 }
 
 func ExampleValidator_Postcode() {
@@ -727,11 +743,12 @@ func ExampleValidator_Postcode() {
 		}
 	)
 	if err := g.Validator().CheckStruct(ctx, req); err != nil {
-		fmt.Print(err)
+		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
 	// Output:
-	// The Postcode2 value is not a valid passport format; The Postcode3 value is not a valid passport format
+	// The Postcode2 value `10000` is not a valid postcode format
+	// The Postcode3 value `1000000` is not a valid postcode format
 }
 
 func ExampleValidator_ResidentId() {
@@ -750,7 +767,7 @@ func ExampleValidator_ResidentId() {
 	}
 
 	// Output:
-	// The ResidentID1 value is not a valid resident id number
+	// The ResidentID1 value `320107199506285482` is not a valid resident id number
 }
 
 func ExampleValidator_BankCard() {
@@ -769,7 +786,7 @@ func ExampleValidator_BankCard() {
 	}
 
 	// Output:
-	// The BankCard1 value must be a valid bank card number
+	// The BankCard1 value `6225760079930218` is not a valid bank card number
 }
 
 func ExampleValidator_QQ() {
@@ -788,11 +805,12 @@ func ExampleValidator_QQ() {
 		}
 	)
 	if err := g.Validator().CheckStruct(ctx, req); err != nil {
-		fmt.Print(err)
+		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
 	// Output:
-	// The QQ2 value must be a valid QQ number; The QQ3 value must be a valid QQ number
+	// The QQ2 value `9999` is not a valid QQ number
+	// The QQ3 value `514258412a` is not a valid QQ number
 }
 
 func ExampleValidator_IP() {
@@ -813,11 +831,12 @@ func ExampleValidator_IP() {
 		}
 	)
 	if err := g.Validator().CheckStruct(ctx, req); err != nil {
-		fmt.Print(err)
+		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
 	// Output:
-	// The IP3 value must be a valid IP address; The IP4 value must be a valid IP address
+	// The IP3 value `520.255.255.255` is not a valid IP address
+	// The IP4 value `ze80::812b:1158:1f43:f0d1` is not a valid IP address
 }
 
 func ExampleValidator_IPV4() {
@@ -838,7 +857,7 @@ func ExampleValidator_IPV4() {
 	}
 
 	// Output:
-	// The IP2 value must be a valid IPv4 address
+	// The IP2 value `520.255.255.255` is not a valid IPv4 address
 }
 
 func ExampleValidator_IPV6() {
@@ -859,7 +878,7 @@ func ExampleValidator_IPV6() {
 	}
 
 	// Output:
-	// The IP2 value must be a valid IPv6 address
+	// The IP2 value `ze80::812b:1158:1f43:f0d1` is not a valid IPv6 address
 }
 
 func ExampleValidator_Mac() {
@@ -880,7 +899,7 @@ func ExampleValidator_Mac() {
 	}
 
 	// Output:
-	// The Mac2 value must be a valid MAC address
+	// The Mac2 value `Z0-CC-6A-D6-B1-1A` is not a valid MAC address
 }
 
 func ExampleValidator_Url() {
@@ -903,7 +922,7 @@ func ExampleValidator_Url() {
 	}
 
 	// Output:
-	// The URL3 value must be a valid URL address
+	// The URL3 value `ws://goframe.org` is not a valid URL address
 }
 
 func ExampleValidator_Domain() {
@@ -924,11 +943,12 @@ func ExampleValidator_Domain() {
 		}
 	)
 	if err := g.Validator().CheckStruct(ctx, req); err != nil {
-		fmt.Print(err)
+		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
 	// Output:
-	// The Domain3 value must be a valid domain format; The Domain4 value must be a valid domain format
+	// The Domain3 value `goframe#org` is not a valid domain format
+	// The Domain4 value `1a.2b` is not a valid domain format
 }
 
 func ExampleValidator_Size() {
@@ -949,7 +969,7 @@ func ExampleValidator_Size() {
 	}
 
 	// Output:
-	// The Size2 value length must be 5
+	// The Size2 value `goframe` length must be 5
 }
 
 func ExampleValidator_Length() {
@@ -970,7 +990,7 @@ func ExampleValidator_Length() {
 	}
 
 	// Output:
-	// The Length2 value length must be between 10 and 15
+	// The Length2 value `goframe` length must be between 10 and 15
 }
 
 func ExampleValidator_MinLength() {
@@ -991,7 +1011,7 @@ func ExampleValidator_MinLength() {
 	}
 
 	// Output:
-	// The MinLength2 value length must be equal or greater than 8
+	// The MinLength2 value `goframe` length must be equal or greater than 8
 }
 
 func ExampleValidator_MaxLength() {
@@ -1012,7 +1032,7 @@ func ExampleValidator_MaxLength() {
 	}
 
 	// Output:
-	// The MaxLength2 value length must be equal or lesser than 5
+	// The MaxLength2 value `goframe` length must be equal or lesser than 5
 }
 
 func ExampleValidator_Between() {
@@ -1033,11 +1053,12 @@ func ExampleValidator_Between() {
 		}
 	)
 	if err := g.Validator().CheckStruct(ctx, req); err != nil {
-		fmt.Print(err)
+		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
 	// Output:
-	// The Age2 value must be between 1 and 100; The Score2 value must be between 0 and 10
+	// The Age2 value `101` must be between 1 and 100
+	// The Score2 value `-0.5` must be between 0 and 10
 }
 
 func ExampleValidator_Min() {
@@ -1058,11 +1079,12 @@ func ExampleValidator_Min() {
 		}
 	)
 	if err := g.Validator().CheckStruct(ctx, req); err != nil {
-		fmt.Print(err)
+		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
 	// Output:
-	// The Age1 value must be equal or greater than 100; The Score1 value must be equal or greater than 10
+	// The Age1 value `50` must be equal or greater than 100
+	// The Score1 value `9.8` must be equal or greater than 10
 }
 
 func ExampleValidator_Max() {
@@ -1083,11 +1105,12 @@ func ExampleValidator_Max() {
 		}
 	)
 	if err := g.Validator().CheckStruct(ctx, req); err != nil {
-		fmt.Print(err)
+		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
 	// Output:
-	// The Age2 value must be equal or lesser than 100; The Score2 value must be equal or lesser than 10
+	// The Age2 value `101` must be equal or lesser than 100
+	// The Score2 value `10.1` must be equal or lesser than 10
 }
 
 func ExampleValidator_Json() {
@@ -1108,7 +1131,7 @@ func ExampleValidator_Json() {
 	}
 
 	// Output:
-	// The JSON2 value must be a valid JSON string
+	// The JSON2 value `{"name":"goframe","author":"郭强","test"}` is not a valid JSON string
 }
 
 func ExampleValidator_Integer() {
@@ -1127,11 +1150,12 @@ func ExampleValidator_Integer() {
 		}
 	)
 	if err := g.Validator().CheckStruct(ctx, req); err != nil {
-		fmt.Print(err)
+		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
 	// Output:
-	// The Float value must be an integer; The Str value must be an integer
+	// The Float value `10.0` is not an integer
+	// The Str value `goframe` is not an integer
 }
 
 func ExampleValidator_Float() {
@@ -1154,7 +1178,7 @@ func ExampleValidator_Float() {
 	}
 
 	// Output:
-	// The Str value must be a float
+	// The Str value `goframe` is invalid
 }
 
 func ExampleValidator_Boolean() {
@@ -1179,11 +1203,12 @@ func ExampleValidator_Boolean() {
 		}
 	)
 	if err := g.Validator().CheckStruct(ctx, req); err != nil {
-		fmt.Print(err)
+		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
 	// Output:
-	// The Float value field must be true or false; The Str3 value field must be true or false
+	// The Float value `10` field must be true or false
+	// The Str3 value `goframe` field must be true or false
 }
 
 func ExampleValidator_Same() {
@@ -1205,7 +1230,7 @@ func ExampleValidator_Same() {
 	}
 
 	// Output:
-	// The Password value must be the same as field Password2
+	// The Password value `goframe.org` must be the same as field Password2
 }
 
 func ExampleValidator_Different() {
@@ -1227,7 +1252,7 @@ func ExampleValidator_Different() {
 	}
 
 	// Output:
-	// The OtherMailAddr value must be different from field MailAddr
+	// The OtherMailAddr value `gf@goframe.org` must be different from field MailAddr
 }
 
 func ExampleValidator_In() {
@@ -1249,7 +1274,7 @@ func ExampleValidator_In() {
 	}
 
 	// Output:
-	// The Gender value is not in acceptable range
+	// The Gender value `3` is not in acceptable range: 0,1,2
 }
 
 func ExampleValidator_NotIn() {
@@ -1271,7 +1296,7 @@ func ExampleValidator_NotIn() {
 	}
 
 	// Output:
-	// The InvalidIndex value is not in acceptable range
+	// The InvalidIndex value `1` must not be in range: -1,0,1
 }
 
 func ExampleValidator_Regex() {
@@ -1289,9 +1314,10 @@ func ExampleValidator_Regex() {
 		}
 	)
 	if err := g.Validator().CheckStruct(ctx, req); err != nil {
-		fmt.Println(err)
+		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
 	// Output:
-	// The Regex1 value is invalid; The Regex2 value is invalid
+	// The Regex1 value `1234` must be in regex of: [1-9][0-9]{4,14}
+	// The Regex2 value `01234` must be in regex of: [1-9][0-9]{4,14}
 }

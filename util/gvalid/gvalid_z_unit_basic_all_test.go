@@ -693,7 +693,7 @@ func Test_Length(t *testing.T) {
 func Test_MinLength(t *testing.T) {
 	rule := "min-length:6"
 	msgs := map[string]string{
-		"min-length": "地址长度至少为:min位",
+		"min-length": "地址长度至少为{min}位",
 	}
 	if m := gvalid.CheckValue(context.TODO(), "123456", rule, nil); m != nil {
 		t.Error(m)
@@ -714,7 +714,7 @@ func Test_MinLength(t *testing.T) {
 func Test_MaxLength(t *testing.T) {
 	rule := "max-length:6"
 	msgs := map[string]string{
-		"max-length": "地址长度至大为:max位",
+		"max-length": "地址长度至大为{max}位",
 	}
 	if m := gvalid.CheckValue(context.TODO(), "12345", rule, nil); m != nil {
 		t.Error(m)
