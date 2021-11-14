@@ -117,8 +117,9 @@ func (v *Validator) doCheckMap(ctx context.Context, params interface{}) Error {
 		}); validatedError != nil {
 			_, errorItem := validatedError.FirstItem()
 			// ===========================================================
-			// Only in map and struct validations, if value is nil or empty
-			// string and has no required* rules, it clears the error message.
+			// Only in map and struct validations:
+			// If value is nil or empty string and has no required* rules,
+			// it clears the error message.
 			// ===========================================================
 			if gconv.String(value) == "" {
 				required := false
@@ -126,11 +127,6 @@ func (v *Validator) doCheckMap(ctx context.Context, params interface{}) Error {
 				for ruleKey := range errorItem {
 					// Default required rules.
 					if _, ok := mustCheckRulesEvenValueEmpty[ruleKey]; ok {
-						required = true
-						break
-					}
-					// Custom rules are also required in default.
-					if f := v.getRuleFunc(ruleKey); f != nil {
 						required = true
 						break
 					}
@@ -142,8 +138,8 @@ func (v *Validator) doCheckMap(ctx context.Context, params interface{}) Error {
 			if _, ok := errorMaps[checkRuleItem.Name]; !ok {
 				errorMaps[checkRuleItem.Name] = make(map[string]error)
 			}
-			for ruleKey, errorItemMsgMap := range errorItem {
-				errorMaps[checkRuleItem.Name][ruleKey] = errorItemMsgMap
+			for ruleKey, ruleError := range errorItem {
+				errorMaps[checkRuleItem.Name][ruleKey] = ruleError
 			}
 			if v.bail {
 				break

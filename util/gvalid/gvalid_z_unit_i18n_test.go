@@ -38,7 +38,7 @@ func TestValidator_I18n(t *testing.T) {
 		type Params struct {
 			Page      int `v:"required|min:1         # page is required"`
 			Size      int `v:"required|between:1,100 # size is required"`
-			ProjectId int `v:"between:1,10000        # project id must between :min, :max"`
+			ProjectId int `v:"between:1,10000        # project id must between {min}, {max}"`
 		}
 		obj := &Params{
 			Page: 1,
