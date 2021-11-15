@@ -205,11 +205,11 @@ func ExampleVar_Int32() {
 
 // Int64
 func ExampleVar_Int64() {
-	var a1 = gvar.New(-10000000000, true)
+	var a1 = gvar.New(-100000000, true)
 	g.Dump(a1.Int64())
 
 	// Output:
-	// -10000000000
+	// -100000000
 }
 
 // Uint
