@@ -8,13 +8,14 @@ package gdb_test
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gmeta"
-	"testing"
 )
 
 /*
@@ -1675,7 +1676,7 @@ func Test_Table_Relation_With_MultipleDepends1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var tableA *TableA
 		err := db.Model("table_a").WithAll().Scan(&tableA)
-		//g.Dump(tableA)
+		// g.Dump(tableA)
 		t.AssertNil(err)
 		t.AssertNE(tableA, nil)
 		t.Assert(tableA.Id, 1)
@@ -1691,7 +1692,7 @@ func Test_Table_Relation_With_MultipleDepends1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var tableA []*TableA
 		err := db.Model("table_a").WithAll().OrderAsc("id").Scan(&tableA)
-		//g.Dump(tableA)
+		// g.Dump(tableA)
 		t.AssertNil(err)
 		t.Assert(len(tableA), 2)
 		t.AssertNE(tableA[0].TableB, nil)
@@ -1747,7 +1748,7 @@ func Test_Table_Relation_With_MultipleDepends2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var tableA *TableA
 		err := db.Model("table_a").WithAll().Scan(&tableA)
-		//g.Dump(tableA)
+		// g.Dump(tableA)
 		t.AssertNil(err)
 		t.AssertNE(tableA, nil)
 		t.Assert(tableA.Id, 1)
@@ -1770,7 +1771,7 @@ func Test_Table_Relation_With_MultipleDepends2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var tableA []*TableA
 		err := db.Model("table_a").WithAll().OrderAsc("id").Scan(&tableA)
-		//g.Dump(tableA)
+		// g.Dump(tableA)
 		t.AssertNil(err)
 		t.Assert(len(tableA), 2)
 
@@ -1834,7 +1835,7 @@ func Test_Table_Relation_With_MultipleDepends_Embedded(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var tableA *TableA
 		err := db.Model("table_a").WithAll().Scan(&tableA)
-		//g.Dump(tableA)
+		// g.Dump(tableA)
 		t.AssertNil(err)
 		t.AssertNE(tableA, nil)
 		t.Assert(tableA.Id, 1)
@@ -1850,7 +1851,7 @@ func Test_Table_Relation_With_MultipleDepends_Embedded(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var tableA []*TableA
 		err := db.Model("table_a").WithAll().OrderAsc("id").Scan(&tableA)
-		//g.Dump(tableA)
+		// g.Dump(tableA)
 		t.AssertNil(err)
 		t.Assert(len(tableA), 2)
 		t.AssertNE(tableA[0].TableB, nil)
@@ -1962,7 +1963,7 @@ PRIMARY KEY (id)
 	db.SetDebug(true)
 	defer db.SetDebug(false)
 
-	//gtest.C(t, func(t *gtest.T) {
+	// gtest.C(t, func(t *gtest.T) {
 	//	var user *User
 	//	err := db.Model(tableUser).WithAll().Where("id", 3).Scan(&user)
 	//	t.AssertNil(err)
@@ -1975,7 +1976,7 @@ PRIMARY KEY (id)
 	//	t.Assert(user.UserScores[0].Score, 1)
 	//	t.Assert(user.UserScores[4].UserID, 3)
 	//	t.Assert(user.UserScores[4].Score, 5)
-	//})
+	// })
 	gtest.C(t, func(t *gtest.T) {
 		var user User
 		err := db.Model(tableUser).WithAll().Where("id", 4).Scan(&user)

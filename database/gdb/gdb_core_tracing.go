@@ -10,6 +10,7 @@ package gdb
 import (
 	"context"
 	"fmt"
+
 	"github.com/gogf/gf/v2"
 	"github.com/gogf/gf/v2/net/gtrace"
 	"go.opentelemetry.io/otel"

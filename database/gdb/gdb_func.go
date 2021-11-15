@@ -10,25 +10,23 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
-	"github.com/gogf/gf/v2/errors/gcode"
 	"reflect"
 	"regexp"
 	"strings"
 	"time"
 
+	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/internal/structs"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/util/gmeta"
-	"github.com/gogf/gf/v2/util/gutil"
-
-	"github.com/gogf/gf/v2/internal/structs"
-
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gmeta"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // iString is the type assert api for String.
@@ -71,6 +69,11 @@ var (
 	// Priority tags for struct converting for orm field mapping.
 	structTagPriority = append([]string{OrmTagForStruct}, gconv.StructTagPriority...)
 )
+
+// isForDaoModel checks and returns whether given type is for dao model.
+func isForDaoModel(t reflect.Type) bool {
+	return gstr.HasSuffix(t.String(), modelForDaoSuffix)
+}
 
 // getTableNameFromOrmTag retrieves and returns the table name from struct object.
 func getTableNameFromOrmTag(object interface{}) string {
@@ -416,7 +419,7 @@ func formatWhere(db DB, in formatWhereInput) (newWhere string, newArgs []interfa
 	case reflect.Struct:
 		// If the `where` parameter is defined like `xxxForDao`, it then adds `OmitNil` option for this condition,
 		// which will filter all nil parameters in `where`.
-		if gstr.HasSuffix(reflect.TypeOf(in.Where).String(), modelForDaoSuffix) {
+		if isForDaoModel(reflect.TypeOf(in.Where)) {
 			in.OmitNil = true
 		}
 		// If `where` struct implements iIterator interface,

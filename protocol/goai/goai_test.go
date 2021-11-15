@@ -9,11 +9,12 @@ package goai_test
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/protocol/goai"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gmeta"
-	"testing"
 )
 
 func Test_Basic(t *testing.T) {
@@ -105,7 +106,7 @@ func TestOpenApiV3_Add(t *testing.T) {
 			Object: f,
 		})
 		t.AssertNil(err)
-		//fmt.Println(oai.String())
+		// fmt.Println(oai.String())
 		// Schema asserts.
 		t.Assert(len(oai.Components.Schemas), 3)
 		t.Assert(oai.Components.Schemas[`github.com.gogf.gf.v2.protocol.goai_test.CreateResourceReq`].Value.Type, goai.TypeObject)
@@ -317,7 +318,7 @@ func TestOpenApiV3_CommonRequest_WithoutDataField_Setting(t *testing.T) {
 		})
 		t.AssertNil(err)
 		// Schema asserts.
-		//fmt.Println(oai.String())
+		// fmt.Println(oai.String())
 		t.Assert(len(oai.Components.Schemas), 3)
 		t.Assert(len(oai.Paths), 1)
 		t.Assert(len(oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Value.Properties), 5)
@@ -357,7 +358,7 @@ func TestOpenApiV3_CommonRequest_EmptyRequest(t *testing.T) {
 		})
 		t.AssertNil(err)
 		// Schema asserts.
-		//fmt.Println(oai.String())
+		// fmt.Println(oai.String())
 		t.Assert(len(oai.Components.Schemas), 3)
 		t.Assert(len(oai.Paths), 1)
 		t.Assert(len(oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Value.Properties), 3)
@@ -412,7 +413,7 @@ func TestOpenApiV3_CommonRequest_SubDataField(t *testing.T) {
 		})
 		t.AssertNil(err)
 		// Schema asserts.
-		//fmt.Println(oai.String())
+		// fmt.Println(oai.String())
 		t.Assert(len(oai.Components.Schemas), 4)
 		t.Assert(len(oai.Paths), 1)
 		t.Assert(len(oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Value.Properties), 1)
@@ -543,7 +544,7 @@ func TestOpenApiV3_CommonResponse_EmptyResponse(t *testing.T) {
 		})
 		t.AssertNil(err)
 		// Schema asserts.
-		//fmt.Println(oai.String())
+		// fmt.Println(oai.String())
 		t.Assert(len(oai.Components.Schemas), 3)
 		t.Assert(len(oai.Paths), 1)
 		t.Assert(oai.Paths["/index"].Put.RequestBody.Value.Content["application/json"].Schema.Ref, `github.com.gogf.gf.v2.protocol.goai_test.Req`)
@@ -599,7 +600,7 @@ func TestOpenApiV3_CommonResponse_SubDataField(t *testing.T) {
 		})
 		t.AssertNil(err)
 		// Schema asserts.
-		//fmt.Println(oai.String())
+		// fmt.Println(oai.String())
 		t.Assert(len(oai.Components.Schemas), 4)
 		t.Assert(len(oai.Paths), 1)
 		t.Assert(len(oai.Paths["/index"].Get.Responses["200"].Value.Content["application/json"].Schema.Value.Properties), 1)
@@ -654,7 +655,7 @@ func TestOpenApiV3_ShortTags(t *testing.T) {
 			Object: f,
 		})
 		t.AssertNil(err)
-		//fmt.Println(oai.String())
+		// fmt.Println(oai.String())
 		// Schema asserts.
 		t.Assert(len(oai.Components.Schemas), 3)
 		t.Assert(oai.Paths[`/test1/{appId}`].Summary, `CreateResourceReq sum`)
@@ -690,7 +691,7 @@ func TestOpenApiV3_HtmlResponse(t *testing.T) {
 		})
 		t.AssertNil(err)
 
-		//fmt.Println(oai.String())
+		// fmt.Println(oai.String())
 		t.Assert(oai.Components.Schemas[`github.com.gogf.gf.v2.protocol.goai_test.Res`].Value.Type, goai.TypeString)
 	})
 }
@@ -737,7 +738,7 @@ func TestOpenApiV3_HtmlResponseWithCommonResponse(t *testing.T) {
 		})
 		t.AssertNil(err)
 
-		//fmt.Println(oai.String())
+		// fmt.Println(oai.String())
 		t.Assert(oai.Components.Schemas[`github.com.gogf.gf.v2.protocol.goai_test.Res`].Value.Type, goai.TypeString)
 	})
 }

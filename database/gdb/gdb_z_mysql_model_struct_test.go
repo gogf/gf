@@ -8,6 +8,9 @@ package gdb_test
 
 import (
 	"database/sql"
+	"reflect"
+	"testing"
+
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -16,8 +19,6 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
-	"reflect"
-	"testing"
 )
 
 func Test_Model_Embedded_Insert(t *testing.T) {
@@ -466,7 +467,7 @@ func Test_Scan_AutoFilteringByStructAttributes(t *testing.T) {
 		Id       int
 		Passport string
 	}
-	//db.SetDebug(true)
+	// db.SetDebug(true)
 	gtest.C(t, func(t *gtest.T) {
 		var user *User
 		err := db.Model(table).OrderAsc("id").Scan(&user)

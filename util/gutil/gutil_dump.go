@@ -9,10 +9,11 @@ package gutil
 import (
 	"bytes"
 	"fmt"
-	"github.com/gogf/gf/v2/internal/structs"
-	"github.com/gogf/gf/v2/text/gstr"
 	"reflect"
 	"strings"
+
+	"github.com/gogf/gf/v2/internal/structs"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // iString is used for type assert api for String().

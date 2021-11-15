@@ -7,12 +7,13 @@
 package gtype_test
 
 import (
+	"sync"
+	"testing"
+
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
-	"sync"
-	"testing"
 )
 
 func Test_Int(t *testing.T) {
@@ -33,7 +34,7 @@ func Test_Int(t *testing.T) {
 		wg.Wait()
 		t.AssertEQ(addTimes, i.Val())
 
-		//空参测试
+		// 空参测试
 		i1 := gtype.NewInt()
 		t.AssertEQ(i1.Val(), 0)
 	})
