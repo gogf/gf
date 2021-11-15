@@ -7,6 +7,7 @@
 package gdb_test
 
 import (
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
 	"testing"
 )
@@ -55,13 +56,13 @@ func Test_Model_Insert_Data_LIst_ForDao(t *testing.T) {
 			Nickname   interface{}
 			CreateTime interface{}
 		}
-		data := []UserForDao{
-			{
+		data := g.Slice{
+			UserForDao{
 				Id:       1,
 				Passport: "user_1",
 				Password: "pass_1",
 			},
-			{
+			UserForDao{
 				Id:       2,
 				Passport: "user_2",
 				Password: "pass_2",

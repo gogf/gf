@@ -78,7 +78,7 @@ func (m *Model) Data(data ...interface{}) *Model {
 					// If the `data` parameter is defined like `xxxForDao`,
 					// it then adds `OmitNilData` option for this condition,
 					// which will filter all nil parameters in `data`.
-					if isForDaoModel(reflectInfo.OriginValue.Index(0).Type()) {
+					if isForDaoModel(reflectInfo.OriginValue.Index(0).Elem().Type()) {
 						model = model.OmitNilData()
 						model.option |= optionOmitNilDataInternal
 					}
