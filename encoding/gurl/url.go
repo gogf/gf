@@ -27,14 +27,14 @@ func Decode(str string) (string, error) {
 	return url.QueryUnescape(str)
 }
 
-// RawEncode Encodes the given string according
+// RawEncode does encode the given string according
 // URL-encode according to RFC 3986.
 // See http://php.net/manual/en/function.rawurlencode.php.
 func RawEncode(str string) string {
 	return strings.Replace(url.QueryEscape(str), "+", "%20", -1)
 }
 
-// RawDecode does decode
+// RawDecode does decode the given string
 // Decode URL-encoded strings.
 // See http://php.net/manual/en/function.rawurldecode.php.
 func RawDecode(str string) (string, error) {
