@@ -9,13 +9,6 @@ package client
 import (
 	"bytes"
 	"context"
-	"github.com/gogf/gf/v2/encoding/gjson"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/internal/utils"
-	"github.com/gogf/gf/v2/net/ghttp/internal/httputil"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
@@ -24,11 +17,17 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/net/ghttp/internal/httputil"
+	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
-
-	"github.com/gogf/gf/v2/os/gfile"
 )
 
 // Get send GET request and returns the response object.
@@ -310,7 +309,7 @@ func (c *Client) callRequest(req *http.Request) (resp *Response, err error) {
 				c.retryCount--
 				time.Sleep(c.retryInterval)
 			} else {
-				//return resp, err
+				// return resp, err
 				break
 			}
 		} else {

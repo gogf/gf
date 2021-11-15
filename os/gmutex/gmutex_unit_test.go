@@ -8,11 +8,11 @@ package gmutex_test
 
 import (
 	"context"
-	"github.com/gogf/gf/v2/os/glog"
 	"testing"
 	"time"
 
 	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/os/gmutex"
 	"github.com/gogf/gf/v2/test/gtest"
 )
@@ -41,7 +41,7 @@ func Test_Mutex_RUnlock(t *testing.T) {
 
 	})
 
-	//RLock before Lock
+	// RLock before Lock
 	gtest.C(t, func(t *gtest.T) {
 		mu := gmutex.New()
 		mu.RLock()

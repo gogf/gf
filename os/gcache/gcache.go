@@ -11,8 +11,9 @@ package gcache
 
 import (
 	"context"
-	"github.com/gogf/gf/v2/container/gvar"
 	"time"
+
+	"github.com/gogf/gf/v2/container/gvar"
 )
 
 // Default cache object.

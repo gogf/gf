@@ -9,11 +9,12 @@ package ghttp_test
 import (
 	"context"
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/test/gtest"
-	"testing"
-	"time"
 )
 
 func Test_Request_SetCtx(t *testing.T) {

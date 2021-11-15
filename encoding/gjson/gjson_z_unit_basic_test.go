@@ -7,9 +7,9 @@
 package gjson_test
 
 import (
-	"github.com/gogf/gf/v2/container/gmap"
 	"testing"
 
+	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -372,7 +372,7 @@ func Test_Convert2(t *testing.T) {
 		err := j.Var().Scan(&name)
 		t.Assert(err, nil)
 		t.Assert(name.Name, "gf")
-		//j.Dump()
+		// j.Dump()
 		t.Assert(err, nil)
 
 		j = gjson.New(`{"person":{"name":"gf"}}`)
@@ -381,7 +381,7 @@ func Test_Convert2(t *testing.T) {
 		t.Assert(name.Name, "gf")
 
 		j = gjson.New(`{"name":"gf""}`)
-		//j.Dump()
+		// j.Dump()
 		t.Assert(err, nil)
 
 		j = gjson.New(`[1,2,3]`)

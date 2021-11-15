@@ -8,11 +8,11 @@ package gcron_test
 
 import (
 	"context"
-	"github.com/gogf/gf/v2/frame/g"
 	"testing"
 	"time"
 
 	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcron"
 	"github.com/gogf/gf/v2/test/gtest"
 )

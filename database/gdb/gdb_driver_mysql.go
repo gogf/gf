@@ -10,14 +10,14 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net/url"
+
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
-	"net/url"
-
-	_ "github.com/go-sql-driver/mysql"
 )
 
 // DriverMysql is the driver for mysql database.

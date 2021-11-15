@@ -7,10 +7,11 @@
 package gdb_test
 
 import (
+	"testing"
+
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
-	"testing"
 )
 
 func Test_Model_WherePrefix(t *testing.T) {

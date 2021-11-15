@@ -11,9 +11,8 @@ package gaes_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/v2/encoding/gbase64"
-
 	"github.com/gogf/gf/v2/crypto/gaes"
+	"github.com/gogf/gf/v2/encoding/gbase64"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 

@@ -16,7 +16,7 @@ import (
 )
 
 func Test_Locker_RLock(t *testing.T) {
-	//RLock before Lock
+	// RLock before Lock
 	gtest.C(t, func(t *gtest.T) {
 		key := "testRLockBeforeLock"
 		array := garray.New(true)
@@ -38,7 +38,7 @@ func Test_Locker_RLock(t *testing.T) {
 		t.Assert(array.Len(), 2)
 	})
 
-	//Lock before RLock
+	// Lock before RLock
 	gtest.C(t, func(t *gtest.T) {
 		key := "testLockBeforeRLock"
 		array := garray.New(true)
@@ -60,7 +60,7 @@ func Test_Locker_RLock(t *testing.T) {
 		t.Assert(array.Len(), 2)
 	})
 
-	//Lock before RLocks
+	// Lock before RLocks
 	gtest.C(t, func(t *gtest.T) {
 		key := "testLockBeforeRLocks"
 		array := garray.New(true)
@@ -92,7 +92,7 @@ func Test_Locker_RLock(t *testing.T) {
 }
 
 func Test_Locker_TryRLock(t *testing.T) {
-	//Lock before TryRLock
+	// Lock before TryRLock
 	gtest.C(t, func(t *gtest.T) {
 		key := "testLockBeforeTryRLock"
 		array := garray.New(true)
@@ -115,7 +115,7 @@ func Test_Locker_TryRLock(t *testing.T) {
 		t.Assert(array.Len(), 1)
 	})
 
-	//Lock before TryRLocks
+	// Lock before TryRLocks
 	gtest.C(t, func(t *gtest.T) {
 		key := "testLockBeforeTryRLocks"
 		array := garray.New(true)
@@ -147,7 +147,7 @@ func Test_Locker_TryRLock(t *testing.T) {
 }
 
 func Test_Locker_RLockFunc(t *testing.T) {
-	//RLockFunc before Lock
+	// RLockFunc before Lock
 	gtest.C(t, func(t *gtest.T) {
 		key := "testRLockFuncBeforeLock"
 		array := garray.New(true)
@@ -169,7 +169,7 @@ func Test_Locker_RLockFunc(t *testing.T) {
 		t.Assert(array.Len(), 2)
 	})
 
-	//Lock before RLockFunc
+	// Lock before RLockFunc
 	gtest.C(t, func(t *gtest.T) {
 		key := "testLockBeforeRLockFunc"
 		array := garray.New(true)
@@ -191,7 +191,7 @@ func Test_Locker_RLockFunc(t *testing.T) {
 		t.Assert(array.Len(), 2)
 	})
 
-	//Lock before RLockFuncs
+	// Lock before RLockFuncs
 	gtest.C(t, func(t *gtest.T) {
 		key := "testLockBeforeRLockFuncs"
 		array := garray.New(true)
@@ -223,7 +223,7 @@ func Test_Locker_RLockFunc(t *testing.T) {
 }
 
 func Test_Locker_TryRLockFunc(t *testing.T) {
-	//Lock before TryRLockFunc
+	// Lock before TryRLockFunc
 	gtest.C(t, func(t *gtest.T) {
 		key := "testLockBeforeTryRLockFunc"
 		array := garray.New(true)
@@ -245,7 +245,7 @@ func Test_Locker_TryRLockFunc(t *testing.T) {
 		t.Assert(array.Len(), 1)
 	})
 
-	//Lock before TryRLockFuncs
+	// Lock before TryRLockFuncs
 	gtest.C(t, func(t *gtest.T) {
 		key := "testLockBeforeTryRLockFuncs"
 		array := garray.New(true)

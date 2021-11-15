@@ -7,11 +7,11 @@
 package httputil
 
 import (
-	"github.com/gogf/gf/v2/text/gstr"
 	"net/http"
 	"strings"
 
 	"github.com/gogf/gf/v2/encoding/gurl"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 

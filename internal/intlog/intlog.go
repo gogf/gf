@@ -11,11 +11,12 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"path/filepath"
+	"time"
+
 	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/internal/utils"
 	"go.opentelemetry.io/otel/trace"
-	"path/filepath"
-	"time"
 )
 
 const (

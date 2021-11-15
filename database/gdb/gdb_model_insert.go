@@ -8,12 +8,12 @@ package gdb
 
 import (
 	"database/sql"
-	"github.com/gogf/gf/v2/container/gset"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/internal/utils"
 	"reflect"
 
+	"github.com/gogf/gf/v2/container/gset"
+	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -74,20 +74,26 @@ func (m *Model) Data(data ...interface{}) *Model {
 			)
 			switch reflectInfo.OriginKind {
 			case reflect.Slice, reflect.Array:
+				if reflectInfo.OriginValue.Len() > 0 {
+					// If the `data` parameter is defined like `xxxForDao`,
+					// it then adds `OmitNilData` option for this condition,
+					// which will filter all nil parameters in `data`.
+					if isForDaoModel(reflectInfo.OriginValue.Index(0).Elem().Type()) {
+						model = model.OmitNilData()
+						model.option |= optionOmitNilDataInternal
+					}
+				}
 				list := make(List, reflectInfo.OriginValue.Len())
 				for i := 0; i < reflectInfo.OriginValue.Len(); i++ {
 					list[i] = ConvertDataForTableRecord(reflectInfo.OriginValue.Index(i).Interface())
 				}
 				model.data = list
 
-			case reflect.Map:
-				model.data = ConvertDataForTableRecord(data[0])
-
 			case reflect.Struct:
 				// If the `data` parameter is defined like `xxxForDao`,
 				// it then adds `OmitNilData` option for this condition,
 				// which will filter all nil parameters in `data`.
-				if gstr.HasSuffix(reflect.TypeOf(value).String(), modelForDaoSuffix) {
+				if isForDaoModel(reflect.TypeOf(value)) {
 					model = model.OmitNilData()
 				}
 				if v, ok := data[0].(iInterfaces); ok {
@@ -102,6 +108,9 @@ func (m *Model) Data(data ...interface{}) *Model {
 				} else {
 					model.data = ConvertDataForTableRecord(data[0])
 				}
+
+			case reflect.Map:
+				model.data = ConvertDataForTableRecord(data[0])
 
 			default:
 				model.data = data[0]

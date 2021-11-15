@@ -7,14 +7,15 @@
 package gmap_test
 
 import (
+	"testing"
+	"time"
+
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
-	"testing"
-	"time"
 )
 
 func Test_AnyAnyMap_Var(t *testing.T) {
@@ -148,16 +149,16 @@ func Test_AnyAnyMap_Lock(t *testing.T) {
 
 func Test_AnyAnyMap_Clone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		//clone 方法是深克隆
+		// clone 方法是深克隆
 		m := gmap.NewAnyAnyMapFrom(map[interface{}]interface{}{1: 1, 2: "2"})
 
 		m_clone := m.Clone()
 		m.Remove(1)
-		//修改原 map,clone 后的 map 不影响
+		// 修改原 map,clone 后的 map 不影响
 		t.AssertIN(1, m_clone.Keys())
 
 		m_clone.Remove(2)
-		//修改clone map,原 map 不影响
+		// 修改clone map,原 map 不影响
 		t.AssertIN(2, m.Keys())
 	})
 }

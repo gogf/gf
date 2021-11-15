@@ -8,21 +8,21 @@ package gview_test
 
 import (
 	"context"
-	"github.com/gogf/gf/v2/encoding/ghtml"
-	"github.com/gogf/gf/v2/os/gctx"
-	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/util/gconv"
 	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/encoding/ghtml"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/os/gview"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 func init() {
@@ -45,13 +45,13 @@ func Test_Basic(t *testing.T) {
 		t.Assert(err != nil, false)
 		t.Assert(result, "hello gf,version:1.7.0;hello gf,version:1.7.0;that's all")
 
-		//测试api方法
+		// 测试api方法
 		str = `hello {{.name}}`
 		result, err = gview.ParseContent(context.TODO(), str, g.Map{"name": "gf"})
 		t.Assert(err != nil, false)
 		t.Assert(result, "hello gf")
 
-		//测试instance方法
+		// 测试instance方法
 		result, err = gview.Instance().ParseContent(context.TODO(), str, g.Map{"name": "gf"})
 		t.Assert(err != nil, false)
 		t.Assert(result, "hello gf")
@@ -224,7 +224,7 @@ func Test_FuncInclude(t *testing.T) {
 		templatePath := gfile.Pwd() + gfile.Separator + "template"
 		gfile.Mkdir(templatePath)
 		defer gfile.Remove(templatePath)
-		//headerFile, _ := gfile.Create(templatePath + gfile.Separator + "header.html")
+		// headerFile, _ := gfile.Create(templatePath + gfile.Separator + "header.html")
 		err := ioutil.WriteFile(templatePath+gfile.Separator+"header.html", []byte(header), 0644)
 		if err != nil {
 			t.Error(err)

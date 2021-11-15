@@ -8,11 +8,12 @@
 package gipv4
 
 import (
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
 	"net"
 	"strconv"
 	"strings"
+
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
 // GetIpArray retrieves and returns all the ip of current host.

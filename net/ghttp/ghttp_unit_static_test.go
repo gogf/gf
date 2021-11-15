@@ -10,15 +10,14 @@ package ghttp_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/v2/debug/gdebug"
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/text/gstr"
-
+	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 func Test_Static_ServerRoot(t *testing.T) {
