@@ -110,3 +110,27 @@ func ExampleNewHashMapFrom() {
 	// {"key1":"val1"}
 	// {"key1":"val1"}
 }
+
+func ExampleNewAnyAnyMap() {
+	m := gmap.NewAnyAnyMap()
+
+	m.Set("key1", "val1")
+	fmt.Println(m)
+
+	// Output:
+	// {"key1":"val1"}
+}
+
+func ExampleNewAnyAnyMapFrom() {
+	m := gmap.NewAnyAnyMap()
+
+	m.Set("key1", "val1")
+	fmt.Println(m)
+
+	n := gmap.NewAnyAnyMapFrom(m.MapCopy(), true)
+	fmt.Println(n)
+
+	// Output:
+	// {"key1":"val1"}
+	// {"key1":"val1"}
+}
