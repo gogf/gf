@@ -7,10 +7,11 @@
 package gfile_test
 
 import (
+	"testing"
+
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
-	"testing"
 )
 
 func Test_Copy(t *testing.T) {

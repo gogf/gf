@@ -9,9 +9,10 @@ package gres
 import (
 	"archive/zip"
 	"bytes"
-	"github.com/gogf/gf/v2/internal/json"
 	"io"
 	"os"
+
+	"github.com/gogf/gf/v2/internal/json"
 )
 
 type File struct {

@@ -8,9 +8,10 @@ package glog
 
 import (
 	"bytes"
+	"testing"
+
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
-	"testing"
 )
 
 func Test_LevelPrefix(t *testing.T) {
