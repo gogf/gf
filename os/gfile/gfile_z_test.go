@@ -12,11 +12,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/util/gconv"
-
 	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 func Test_IsDir(t *testing.T) {
@@ -399,7 +398,7 @@ func Test_Glob(t *testing.T) {
 			testpath() + "/testfiles/t2.txt",
 		}
 
-		//===============================构建测试文件
+		// ===============================构建测试文件
 		createDir(dirpath)
 		for _, v := range havelist1 {
 			createTestFile(dirpath+"/"+v, "")

@@ -8,11 +8,12 @@ package gfile
 
 import (
 	"context"
+	"time"
+
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/os/gfsnotify"
-	"time"
 )
 
 const (
