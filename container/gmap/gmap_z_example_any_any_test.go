@@ -74,6 +74,44 @@ func ExampleNew() {
 	// 0
 }
 
+func ExampleNewFrom() {
+	m := gmap.New()
+
+	m.Set("key1", "val1")
+	fmt.Println(m)
+
+	n := gmap.NewFrom(m.MapCopy(), true)
+	fmt.Println(n)
+
+	// Output:
+	// {"key1":"val1"}
+	// {"key1":"val1"}
+}
+
+func ExampleNewHashMap() {
+	m := gmap.New()
+
+	m.Set("key1", "val1")
+	fmt.Println(m)
+
+	// Output:
+	// {"key1":"val1"}
+}
+
+func ExampleNewHashMapFrom() {
+	m := gmap.New()
+
+	m.Set("key1", "val1")
+	fmt.Println(m)
+
+	n := gmap.NewFrom(m.MapCopy(), true)
+	fmt.Println(n)
+
+	// Output:
+	// {"key1":"val1"}
+	// {"key1":"val1"}
+}
+
 func ExampleAnyAnyMap_Keys() {
 	var m gmap.Map
 	m.Sets(g.MapAnyAny{
