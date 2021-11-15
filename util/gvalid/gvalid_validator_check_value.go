@@ -46,7 +46,7 @@ func (v *Validator) CheckValue(ctx context.Context, value interface{}) Error {
 
 type doCheckValueInput struct {
 	Name     string                 // Name specifies the name of parameter `value`.
-	Value    interface{}            // Value specifies the value for this rules to be validated.
+	Value    interface{}            // Value specifies the value for the rules to be validated.
 	Rule     string                 // Rule specifies the validation rules string, like "required", "required|between:1,100", etc.
 	Messages interface{}            // Messages specifies the custom error messages for this rule, which is usually type of map/slice.
 	DataRaw  interface{}            // DataRaw specifies the `raw data` which is passed to the Validator. It might be type of map/struct or a nil value.

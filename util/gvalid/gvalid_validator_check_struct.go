@@ -10,8 +10,10 @@ import (
 	"context"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/internal/structs"
+	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
+	"reflect"
 	"strings"
 )
 
@@ -21,10 +23,85 @@ func (v *Validator) CheckStruct(ctx context.Context, object interface{}) Error {
 	return v.doCheckStruct(ctx, object)
 }
 
+type doCheckStructRecursivelyInput struct {
+	Field               *structs.Field
+	ErrorMaps           map[string]map[string]error
+	ResultSequenceRules []fieldRule
+}
+
+func (v *Validator) doCheckStructRecursively(ctx context.Context, in doCheckStructRecursivelyInput) {
+	switch in.Field.OriginalKind() {
+	case reflect.Struct:
+		var (
+			dataValue  interface{}
+			fieldValue = in.Field.Value.Interface()
+		)
+		if v.data != nil {
+			dataMap := gconv.Map(v.data)
+			if value, ok := dataMap[in.Field.TagValue]; ok {
+				dataValue = value
+			}
+			if dataValue == nil {
+				if value, ok := dataMap[in.Field.Name()]; ok {
+					dataValue = value
+				}
+			}
+		}
+		// No validation interface implements check.
+		if _, ok := fieldValue.(iNoValidation); ok {
+			return
+		}
+		// No validation field tag check.
+		if _, ok := in.Field.TagLookup(noValidationTagName); ok {
+			return
+		}
+		// Ignore rules and messages from parent.
+		validator := v.Clone()
+		validator.rules = nil
+		validator.messages = nil
+		if err := validator.Data(dataValue).doCheckStruct(ctx, fieldValue); err != nil {
+			// It merges the errors into single error map.
+			for k, m := range err.(*validationError).errors {
+				in.ErrorMaps[k] = m
+				if rules := err.(*validationError).rules; len(rules) > 0 {
+					in.ResultSequenceRules = append(in.ResultSequenceRules, rules...)
+				}
+			}
+		}
+
+	case reflect.Map:
+
+	case reflect.Slice, reflect.Array:
+		var (
+			dataValue    interface{}
+			dataArray    = gconv.Interfaces(v.data)
+			sliceObjects = make([]interface{}, 0)
+		)
+		if in.Field.Value.Len() == 0 {
+			sliceObjects = append(sliceObjects, reflect.New(in.Field.Value.Elem().Type()))
+		} else {
+			for i := 0; i < in.Field.Value.Len(); i++ {
+				sliceObjects = append(sliceObjects, in.Field.Value.Index(i).Interface())
+			}
+		}
+		for index, obj := range sliceObjects {
+			dataValue = nil
+			if index < len(dataArray) {
+				dataValue = dataArray[index]
+			}
+			originValueAndKind := utils.OriginValueAndKind(obj)
+			switch originValueAndKind.OriginKind {
+
+			}
+		}
+	}
+}
+
 func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error {
 	var (
 		errorMaps           = make(map[string]map[string]error) // Returning error.
 		fieldToAliasNameMap = make(map[string]string)           // Field names to alias name map.
+		resultSequenceRules = make([]fieldRule, 0)
 	)
 	fieldMap, err := structs.FieldMap(structs.FieldMapInput{
 		Pointer:          object,
@@ -41,6 +118,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 			if _, ok := field.Value.Interface().(iNoValidation); ok {
 				continue
 			}
+			// No validation field tag check.
 			if _, ok := field.TagLookup(noValidationTagName); ok {
 				continue
 			}
@@ -54,6 +132,12 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 			if field.TagValue != "" {
 				fieldToAliasNameMap[field.Name()] = field.TagValue
 			}
+			// Recursively check attribute struct/[]string/map/[]map.
+			v.doCheckStructRecursively(ctx, doCheckStructRecursivelyInput{
+				Field:               field,
+				ErrorMaps:           errorMaps,
+				ResultSequenceRules: resultSequenceRules,
+			})
 		}
 	}
 	// It here must use structs.TagFields not structs.FieldMap to ensure error sequence.
@@ -285,7 +369,11 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 		}
 	}
 	if len(errorMaps) > 0 {
-		return newValidationError(gcode.CodeValidationFailed, checkRules, errorMaps)
+		return newValidationError(
+			gcode.CodeValidationFailed,
+			append(checkRules, resultSequenceRules...),
+			errorMaps,
+		)
 	}
 	return nil
 }
