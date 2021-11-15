@@ -7,9 +7,9 @@
 package gcode_test
 
 import (
-	"github.com/gogf/gf/v2/errors/gcode"
 	"testing"
 
+	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 

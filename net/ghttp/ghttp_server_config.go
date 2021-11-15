@@ -9,21 +9,18 @@ package ghttp
 import (
 	"context"
 	"crypto/tls"
-	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/os/gres"
-	"github.com/gogf/gf/v2/util/gutil"
 	"net/http"
 	"strconv"
 	"time"
 
-	"github.com/gogf/gf/v2/util/gconv"
-
-	"github.com/gogf/gf/v2/os/gsession"
-
-	"github.com/gogf/gf/v2/os/gview"
-
+	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v2/os/gres"
+	"github.com/gogf/gf/v2/os/gsession"
+	"github.com/gogf/gf/v2/os/gview"
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 const (

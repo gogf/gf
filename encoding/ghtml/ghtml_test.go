@@ -7,10 +7,10 @@
 package ghtml_test
 
 import (
-	"github.com/gogf/gf/v2/frame/g"
 	"testing"
 
 	"github.com/gogf/gf/v2/encoding/ghtml"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 

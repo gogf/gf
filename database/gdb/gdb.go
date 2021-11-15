@@ -10,20 +10,17 @@ package gdb
 import (
 	"context"
 	"database/sql"
-	"github.com/gogf/gf/v2/errors/gcode"
 	"time"
-
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/os/gcmd"
-
-	"github.com/gogf/gf/v2/container/gvar"
-	"github.com/gogf/gf/v2/internal/intlog"
-
-	"github.com/gogf/gf/v2/os/glog"
 
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gcache"
+	"github.com/gogf/gf/v2/os/gcmd"
+	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/util/grand"
 )
 
@@ -455,7 +452,7 @@ func getConfigNodeByWeight(cg ConfigGroup) *ConfigNode {
 	max := 0
 	for i := 0; i < len(cg); i++ {
 		max = min + cg[i].Weight*100
-		//fmt.Printf("r: %d, min: %d, max: %d\n", r, min, max)
+		// fmt.Printf("r: %d, min: %d, max: %d\n", r, min, max)
 		if r >= min && r < max {
 			return &cg[i]
 		} else {

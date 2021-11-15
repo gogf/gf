@@ -10,21 +10,15 @@ import (
 	"context"
 	"testing"
 
-	"github.com/gogf/gf/v2/os/gres"
-
-	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/util/gconv"
-
-	"github.com/gogf/gf/v2/frame/g"
-
-	"github.com/gogf/gf/v2/i18n/gi18n"
-
 	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/i18n/gi18n"
 	"github.com/gogf/gf/v2/os/gfile"
-
-	"github.com/gogf/gf/v2/test/gtest"
-
+	"github.com/gogf/gf/v2/os/gres"
 	_ "github.com/gogf/gf/v2/os/gres/testdata/data"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 func Test_Basic(t *testing.T) {

@@ -8,18 +8,17 @@ package gjson
 
 import (
 	"bytes"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/utils"
 	"reflect"
-
-	"github.com/gogf/gf/v2/internal/json"
 
 	"github.com/gogf/gf/v2/encoding/gini"
 	"github.com/gogf/gf/v2/encoding/gtoml"
 	"github.com/gogf/gf/v2/encoding/gxml"
 	"github.com/gogf/gf/v2/encoding/gyaml"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/rwmutex"
+	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -178,7 +177,7 @@ func LoadContentType(dataType string, data interface{}, safe ...bool) (*Json, er
 	if len(content) == 0 {
 		return New(nil, safe...), nil
 	}
-	//ignore UTF8-BOM
+	// ignore UTF8-BOM
 	if content[0] == 0xEF && content[1] == 0xBB && content[2] == 0xBF {
 		content = content[3:]
 	}
@@ -217,7 +216,7 @@ func loadContentTypeWithOptions(dataType string, data interface{}, options Optio
 	if len(content) == 0 {
 		return NewWithOptions(nil, options), nil
 	}
-	//ignore UTF8-BOM
+	// ignore UTF8-BOM
 	if content[0] == 0xEF && content[1] == 0xBB && content[2] == 0xBF {
 		content = content[3:]
 	}

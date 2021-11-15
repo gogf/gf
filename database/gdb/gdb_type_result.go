@@ -7,10 +7,11 @@
 package gdb
 
 import (
+	"math"
+
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/util/gconv"
-	"math"
 )
 
 // IsEmpty checks and returns whether `r` is empty.

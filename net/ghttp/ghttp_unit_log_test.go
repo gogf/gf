@@ -10,15 +10,15 @@ package ghttp_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/text/gstr"
 	"testing"
 	"time"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 func Test_Log(t *testing.T) {
@@ -52,11 +52,11 @@ func Test_Log(t *testing.T) {
 		t.Assert(gstr.Contains(gfile.GetContents(logPath1), "HANDLER"), true)
 
 		logPath2 := gfile.Join(logDir, "access-"+gtime.Now().Format("Ymd")+".log")
-		//fmt.Println(gfile.GetContents(logPath2))
+		// fmt.Println(gfile.GetContents(logPath2))
 		t.Assert(gstr.Contains(gfile.GetContents(logPath2), " /hello "), true)
 
 		logPath3 := gfile.Join(logDir, "error-"+gtime.Now().Format("Ymd")+".log")
-		//fmt.Println(gfile.GetContents(logPath3))
+		// fmt.Println(gfile.GetContents(logPath3))
 		t.Assert(gstr.Contains(gfile.GetContents(logPath3), "custom error"), true)
 	})
 }

@@ -8,10 +8,11 @@ package gdb_test
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
-	"testing"
 )
 
 // Using filter dose not affect the outside value inside function.
@@ -107,7 +108,7 @@ func Test_Model_Embedded_Filter(t *testing.T) {
 }
 
 // This is no longer used as the filter feature is automatically enabled from GoFrame v1.16.0.
-//func Test_Model_Insert_KeyFieldNameMapping_Error(t *testing.T) {
+// func Test_Model_Insert_KeyFieldNameMapping_Error(t *testing.T) {
 //	table := createTable()
 //	defer dropTable(table)
 //
@@ -130,7 +131,7 @@ func Test_Model_Embedded_Filter(t *testing.T) {
 //		_, err := db.Model(table).Data(data).Insert()
 //		t.AssertNE(err, nil)
 //	})
-//}
+// }
 
 func Test_Model_Fields_AutoFilterInJoinStatement(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {

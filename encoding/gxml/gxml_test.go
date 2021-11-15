@@ -8,11 +8,11 @@ package gxml_test
 
 import (
 	"bytes"
-	"github.com/gogf/gf/v2/encoding/gjson"
 	"strings"
 	"testing"
 
 	"github.com/gogf/gf/v2/encoding/gcharset"
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/encoding/gxml"
 	"github.com/gogf/gf/v2/test/gtest"
 )
@@ -146,7 +146,7 @@ func Test_Encode(t *testing.T) {
 	if err != nil {
 		t.Errorf("encode error.")
 	}
-	//t.Logf("%s\n", string(xmlStr))
+	// t.Logf("%s\n", string(xmlStr))
 
 	res := `<root><bool>true</bool><float>100.92</float><int>123</int><string>hello world</string></root>`
 	if string(xmlStr) != res {
@@ -169,7 +169,7 @@ func Test_EncodeIndent(t *testing.T) {
 		t.Errorf("encodeWithIndent error.")
 	}
 
-	//t.Logf("%s\n", string(xmlStr))
+	// t.Logf("%s\n", string(xmlStr))
 
 }
 

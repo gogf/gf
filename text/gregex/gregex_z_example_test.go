@@ -7,9 +7,10 @@ package gregex_test
 
 import (
 	"bytes"
+	"strings"
+
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/text/gregex"
-	"strings"
 )
 
 func ExampleIsMatch() {

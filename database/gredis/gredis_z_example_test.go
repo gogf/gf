@@ -9,6 +9,7 @@ package gredis_test
 import (
 	"context"
 	"fmt"
+
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/util/gutil"
