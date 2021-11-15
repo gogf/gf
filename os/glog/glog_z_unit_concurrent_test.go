@@ -7,13 +7,14 @@
 package glog_test
 
 import (
+	"sync"
+	"testing"
+
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
-	"sync"
-	"testing"
 )
 
 func Test_Concurrent(t *testing.T) {

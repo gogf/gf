@@ -7,12 +7,13 @@
 package gfile_test
 
 import (
-	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/test/gtest"
 	"io/ioutil"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_GetContentsWithCache(t *testing.T) {

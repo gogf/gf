@@ -9,13 +9,14 @@ package gproc
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/intlog"
 	"os"
 	"os/exec"
 	"runtime"
 	"strings"
+
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/intlog"
 )
 
 // Process is the struct for a single process.
@@ -123,7 +124,7 @@ func (p *Process) Kill() error {
 		}
 		_, err = p.Process.Wait()
 		intlog.Error(context.TODO(), err)
-		//return err
+		// return err
 		return nil
 	} else {
 		return err

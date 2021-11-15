@@ -7,13 +7,14 @@
 package gfpool_test
 
 import (
+	"os"
+	"testing"
+
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gfpool"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
-	"os"
-	"testing"
 )
 
 func Test_ConcurrentOS(t *testing.T) {
@@ -97,7 +98,7 @@ func Test_ConcurrentOS(t *testing.T) {
 		t.Assert(gstr.Count(gfile.GetContents(path), "@1234567890#"), 2000)
 	})
 	// DATA RACE
-	//gtest.C(t, func(t *gtest.T) {
+	// gtest.C(t, func(t *gtest.T) {
 	//	path := gfile.TempDir(gtime.TimestampNanoStr())
 	//	defer gfile.Remove(path)
 	//	f1, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0666)
@@ -131,7 +132,7 @@ func Test_ConcurrentOS(t *testing.T) {
 	//	close(ch)
 	//	wg.Wait()
 	//	t.Assert(gstr.Count(gfile.GetContents(path), "@1234567890#"), 2000)
-	//})
+	// })
 }
 
 func Test_ConcurrentGFPool(t *testing.T) {
@@ -157,7 +158,7 @@ func Test_ConcurrentGFPool(t *testing.T) {
 		t.Assert(gstr.Count(gfile.GetContents(path), "@1234567890#"), 2000)
 	})
 	// DATA RACE
-	//gtest.C(t, func(t *gtest.T) {
+	// gtest.C(t, func(t *gtest.T) {
 	//	path := gfile.TempDir(gtime.TimestampNanoStr())
 	//	defer gfile.Remove(path)
 	//	f1, err := gfpool.Open(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0666)
@@ -191,5 +192,5 @@ func Test_ConcurrentGFPool(t *testing.T) {
 	//	close(ch)
 	//	wg.Wait()
 	//	t.Assert(gstr.Count(gfile.GetContents(path), "@1234567890#"), 2000)
-	//})
+	// })
 }

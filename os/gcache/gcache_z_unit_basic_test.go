@@ -10,7 +10,6 @@ package gcache_test
 
 import (
 	"context"
-	"github.com/gogf/gf/v2/util/guid"
 	"math"
 	"testing"
 	"time"
@@ -20,6 +19,7 @@ import (
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/grpool"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/guid"
 )
 
 var (
@@ -458,7 +458,7 @@ func TestCache_SetConcurrency(t *testing.T) {
 		}()
 		select {
 		case <-time.After(2 * time.Second):
-			//t.Log("first part end")
+			// t.Log("first part end")
 		}
 
 		go func() {
@@ -470,7 +470,7 @@ func TestCache_SetConcurrency(t *testing.T) {
 		}()
 		select {
 		case <-time.After(2 * time.Second):
-			//t.Log("second part end")
+			// t.Log("second part end")
 		}
 	})
 }

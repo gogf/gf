@@ -7,11 +7,11 @@
 package gfile_test
 
 import (
-	"github.com/gogf/gf/v2/util/gconv"
 	"testing"
 
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 func Test_Size(t *testing.T) {

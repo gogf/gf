@@ -8,10 +8,11 @@ package gtime
 
 import (
 	"bytes"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
 	"strconv"
 	"time"
+
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
 // Time is a wrapper for time.Time for additional features.

@@ -8,8 +8,9 @@ package gcache
 
 import (
 	"context"
-	"github.com/gogf/gf/v2/container/gvar"
 	"time"
+
+	"github.com/gogf/gf/v2/container/gvar"
 )
 
 // MustGet acts like Get, but it panics if any error occurs.
