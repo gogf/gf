@@ -9,12 +9,13 @@ package glog
 import (
 	"bytes"
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
-	"testing"
-	"time"
 )
 
 func Test_To(t *testing.T) {

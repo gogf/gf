@@ -10,25 +10,24 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/fatih/color"
-	"github.com/gogf/gf/v2/container/gtype"
-	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/os/gctx"
-	"github.com/gogf/gf/v2/os/gfpool"
-	"github.com/gogf/gf/v2/os/gmlock"
-	"github.com/gogf/gf/v2/os/gtimer"
-	"go.opentelemetry.io/otel/trace"
 	"io"
 	"os"
 	"strings"
 	"time"
 
+	"github.com/fatih/color"
+	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/debug/gdebug"
-
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gfpool"
+	"github.com/gogf/gf/v2/os/gmlock"
 	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/os/gtimer"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/util/gconv"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Logger is the struct for logging management.

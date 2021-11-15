@@ -8,12 +8,13 @@ package gview_test
 
 import (
 	"context"
+	"testing"
+
 	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gview"
 	"github.com/gogf/gf/v2/test/gtest"
-	"testing"
 )
 
 func Test_Encode_Parse(t *testing.T) {

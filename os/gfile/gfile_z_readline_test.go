@@ -7,10 +7,10 @@
 package gfile_test
 
 import (
-	"github.com/gogf/gf/v2/debug/gdebug"
-	"github.com/gogf/gf/v2/errors/gerror"
 	"testing"
 
+	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/test/gtest"
 )

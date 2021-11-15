@@ -7,10 +7,10 @@
 package gtime_test
 
 import (
-	"github.com/gogf/gf/v2/frame/g"
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 )
@@ -18,7 +18,7 @@ import (
 func Test_SetTimeZone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		t.Assert(gtime.SetTimeZone("Asia/Shanghai"), nil)
-		//t.Assert(time.Local.String(), "Asia/Shanghai")
+		// t.Assert(time.Local.String(), "Asia/Shanghai")
 	})
 }
 
@@ -174,7 +174,7 @@ func Test_StrToTime(t *testing.T) {
 			}
 		}
 
-		//test err
+		// test err
 		_, err := gtime.StrToTime("2006-01-02 15:04:05", "aabbccdd")
 		if err == nil {
 			t.Error("test fail")
@@ -184,44 +184,44 @@ func Test_StrToTime(t *testing.T) {
 
 func Test_ConvertZone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		//现行时间
+		// 现行时间
 		nowUTC := time.Now().UTC()
 		testZone := "America/Los_Angeles"
 
-		//转换为洛杉矶时间
+		// 转换为洛杉矶时间
 		t1, err := gtime.ConvertZone(nowUTC.Format("2006-01-02 15:04:05"), testZone, "")
 		if err != nil {
 			t.Error("test fail")
 		}
 
-		//使用洛杉矶时区解析上面转换后的时间
+		// 使用洛杉矶时区解析上面转换后的时间
 		laStr := t1.Time.Format("2006-01-02 15:04:05")
 		loc, err := time.LoadLocation(testZone)
 		t2, err := time.ParseInLocation("2006-01-02 15:04:05", laStr, loc)
 
-		//判断是否与现行时间匹配
+		// 判断是否与现行时间匹配
 		t.Assert(t2.UTC().Unix(), nowUTC.Unix())
 
 	})
 
-	//test err
+	// test err
 	gtest.C(t, func(t *gtest.T) {
-		//现行时间
+		// 现行时间
 		nowUTC := time.Now().UTC()
-		//t.Log(nowUTC.Unix())
+		// t.Log(nowUTC.Unix())
 		testZone := "errZone"
 
-		//错误时间输入
+		// 错误时间输入
 		_, err := gtime.ConvertZone(nowUTC.Format("06..02 15:04:05"), testZone, "")
 		if err == nil {
 			t.Error("test fail")
 		}
-		//错误时区输入
+		// 错误时区输入
 		_, err = gtime.ConvertZone(nowUTC.Format("2006-01-02 15:04:05"), testZone, "")
 		if err == nil {
 			t.Error("test fail")
 		}
-		//错误时区输入
+		// 错误时区输入
 		_, err = gtime.ConvertZone(nowUTC.Format("2006-01-02 15:04:05"), testZone, testZone)
 		if err == nil {
 			t.Error("test fail")
@@ -269,7 +269,7 @@ func Test_ParseTimeFromContent(t *testing.T) {
 		timeTemp2 := gtime.ParseTimeFromContent("我是中文02.jan.2006 15:04:05我也是中文")
 		t.Assert(timeTemp2.Time.Format("2006-01-02 15:04:05"), "2006-01-02 15:04:05")
 
-		//test err
+		// test err
 		timeTempErr := gtime.ParseTimeFromContent("我是中文", "Y-m-d H:i:s")
 		if timeTempErr != nil {
 			t.Error("test fail")
