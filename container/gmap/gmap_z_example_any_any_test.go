@@ -13,148 +13,77 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 )
 
-func ExampleNew() {
-	m := gmap.New()
-
-	// Add data.
-	m.Set("key1", "val1")
-
-	// Print size.
-	fmt.Println(m.Size())
-
-	addMap := make(map[interface{}]interface{})
-	addMap["key2"] = "val2"
-	addMap["key3"] = "val3"
-	addMap[1] = 1
-
-	fmt.Println(m.Values())
-
-	// Batch add data.
-	m.Sets(addMap)
-
-	// Gets the value of the corresponding key.
-	fmt.Println(m.Get("key3"))
-
-	// Get the value by key, or set it with given key-value if not exist.
-	fmt.Println(m.GetOrSet("key4", "val4"))
-
-	// Set key-value if the key does not exist, then return true; or else return false.
-	fmt.Println(m.SetIfNotExist("key3", "val3"))
-
-	// Remove key
-	m.Remove("key2")
-	fmt.Println(m.Keys())
-
-	// Batch remove keys.
-	m.Removes([]interface{}{"key1", 1})
-	fmt.Println(m.Keys())
-
-	// Contains checks whether a key exists.
-	fmt.Println(m.Contains("key3"))
-
-	// Flip exchanges key-value of the map, it will change key-value to value-key.
-	m.Flip()
-	fmt.Println(m.Map())
-
-	// Clear deletes all data of the map.
-	m.Clear()
-
-	fmt.Println(m.Size())
-
-	// May Output:
-	// 1
-	// [val1]
-	// val3
-	// val4
-	// false
-	// [key4 key1 key3 1]
-	// [key4 key3]
-	// true
-	// map[val3:key3 val4:key4]
-	// 0
-}
-
-func ExampleNewFrom() {
-	m := gmap.New()
-
-	m.Set("key1", "val1")
-	fmt.Println(m)
-
-	n := gmap.NewFrom(m.MapCopy(), true)
-	fmt.Println(n)
+func ExampleAnyAnyMap_Iterator() {
 
 	// Output:
-	// {"key1":"val1"}
-	// {"key1":"val1"}
 }
 
-func ExampleNewHashMap() {
-	m := gmap.New()
-
-	m.Set("key1", "val1")
-	fmt.Println(m)
+func ExampleAnyAnyMap_Clone() {
 
 	// Output:
-	// {"key1":"val1"}
 }
 
-func ExampleNewHashMapFrom() {
-	m := gmap.New()
-
-	m.Set("key1", "val1")
-	fmt.Println(m)
-
-	n := gmap.NewFrom(m.MapCopy(), true)
-	fmt.Println(n)
+func ExampleAnyAnyMap_Map() {
 
 	// Output:
-	// {"key1":"val1"}
-	// {"key1":"val1"}
 }
 
-func ExampleAnyAnyMap_Keys() {
-	var m gmap.Map
-	m.Sets(g.MapAnyAny{
-		"k1": "v1",
-		"k2": "v2",
-		"k3": "v3",
-		"k4": "v4",
-	})
-	fmt.Println(m.Keys())
-	fmt.Println(m.Values())
+func ExampleAnyAnyMap_MapCopy() {
 
-	// May Output:
-	// [k1 k2 k3 k4]
-	// [v2 v3 v4 v1]
+	// Output:
 }
 
-func ExampleAnyAnyMap_Values() {
-	var m gmap.Map
-	m.Sets(g.MapAnyAny{
-		"k1": "v1",
-		"k2": "v2",
-		"k3": "v3",
-		"k4": "v4",
-	})
-	fmt.Println(m.Keys())
-	fmt.Println(m.Values())
+func ExampleAnyAnyMap_MapStrAny() {
 
-	// May Output:
-	// [k1 k2 k3 k4]
-	// [v2 v3 v4 v1]
+	// Output:
 }
 
-func ExampleAnyAnyMap_Flip() {
-	var m gmap.Map
-	m.Sets(g.MapAnyAny{
-		"k1": "v1",
-		"k2": "v2",
+func ExampleAnyAnyMap_FilterEmpty() {
+	m := gmap.NewFrom(g.MapAnyAny{
+		"k1": "",
+		"k2": nil,
+		"k3": 0,
+		"k4": 1,
 	})
-	m.Flip()
+	m.FilterEmpty()
 	fmt.Println(m.Map())
 
 	// May Output:
-	// map[v1:k1 v2:k2]
+	// map[k4:1]
+}
+
+func ExampleAnyAnyMap_FilterNil() {
+	m := gmap.NewFrom(g.MapAnyAny{
+		"k1": "",
+		"k2": nil,
+		"k3": 0,
+		"k4": 1,
+	})
+	m.FilterNil()
+	fmt.Println(m.Map())
+
+	// May Output:
+	// map[k1: k3:0 k4:1]
+}
+
+func ExampleAnyAnyMap_Set() {
+
+	// Output:
+}
+
+func ExampleAnyAnyMap_Sets() {
+
+	// Output:
+}
+
+func ExampleAnyAnyMap_Search() {
+
+	// Output:
+}
+
+func ExampleAnyAnyMap_Get() {
+
+	// Output:
 }
 
 func ExampleAnyAnyMap_Pop() {
@@ -193,32 +122,39 @@ func ExampleAnyAnyMap_Pops() {
 	// 1
 }
 
-func ExampleAnyAnyMap_FilterEmpty() {
-	m := gmap.NewFrom(g.MapAnyAny{
-		"k1": "",
-		"k2": nil,
-		"k3": 0,
-		"k4": 1,
-	})
-	m.FilterEmpty()
-	fmt.Println(m.Map())
+func ExampleAnyAnyMap_GetOrSet() {
 
-	// May Output:
-	// map[k4:1]
+	// Output:
 }
 
-func ExampleAnyAnyMap_FilterNil() {
-	m := gmap.NewFrom(g.MapAnyAny{
-		"k1": "",
-		"k2": nil,
-		"k3": 0,
-		"k4": 1,
-	})
-	m.FilterNil()
-	fmt.Println(m.Map())
+func ExampleAnyAnyMap_GetOrSetFunc() {
 
-	// May Output:
-	// map[k1: k3:0 k4:1]
+	// Output:
+}
+
+func ExampleAnyAnyMap_GetOrSetFuncLock() {
+
+	// Output:
+}
+
+func ExampleAnyAnyMap_GetVar() {
+
+	// Output:
+}
+
+func ExampleAnyAnyMap_GetVarOrSet() {
+
+	// Output:
+}
+
+func ExampleAnyAnyMap_GetVarOrSetFunc() {
+
+	// Output:
+}
+
+func ExampleAnyAnyMap_GetVarOrSetFuncLock() {
+
+	// Output:
 }
 
 func ExampleAnyAnyMap_SetIfNotExist() {
@@ -233,6 +169,106 @@ func ExampleAnyAnyMap_SetIfNotExist() {
 	// map[k1:v1]
 }
 
+func ExampleAnyAnyMap_SetIfNotExistFunc() {
+
+	// Output:
+}
+
+func ExampleAnyAnyMap_SetIfNotExistFuncLock() {
+
+	// Output:
+}
+
+func ExampleAnyAnyMap_Remove() {
+
+	// Output:
+}
+
+func ExampleAnyAnyMap_Removes() {
+
+	// Output:
+}
+
+func ExampleAnyAnyMap_Keys() {
+	var m gmap.Map
+	m.Sets(g.MapAnyAny{
+		"k1": "v1",
+		"k2": "v2",
+		"k3": "v3",
+		"k4": "v4",
+	})
+	fmt.Println(m.Keys())
+	fmt.Println(m.Values())
+
+	// May Output:
+	// [k1 k2 k3 k4]
+	// [v2 v3 v4 v1]
+}
+
+func ExampleAnyAnyMap_Values() {
+	var m gmap.Map
+	m.Sets(g.MapAnyAny{
+		"k1": "v1",
+		"k2": "v2",
+		"k3": "v3",
+		"k4": "v4",
+	})
+	fmt.Println(m.Keys())
+	fmt.Println(m.Values())
+
+	// May Output:
+	// [k1 k2 k3 k4]
+	// [v2 v3 v4 v1]
+}
+
+func ExampleAnyAnyMap_Contains() {
+
+	// Output:
+}
+
+func ExampleAnyAnyMap_Size() {
+
+	// Output:
+}
+
+func ExampleAnyAnyMap_IsEmpty() {
+
+	// Output:
+}
+
+func ExampleAnyAnyMap_Clear() {
+
+	// Output:
+}
+
+func ExampleAnyAnyMap_Replace() {
+
+	// Output:
+}
+
+func ExampleAnyAnyMap_LockFunc() {
+
+	// Output:
+}
+
+func ExampleAnyAnyMap_RLockFunc() {
+
+	// Output:
+}
+
+func ExampleAnyAnyMap_Flip() {
+	var m gmap.Map
+	m.Sets(g.MapAnyAny{
+		"k1": "v1",
+		"k2": "v2",
+	})
+	m.Flip()
+	fmt.Println(m.Map())
+
+	// May Output:
+	// map[v1:k1 v2:k2]
+}
+
 func ExampleAnyAnyMap_Merge() {
 	var m1, m2 gmap.Map
 	m1.Set("key1", "val1")
@@ -242,4 +278,24 @@ func ExampleAnyAnyMap_Merge() {
 
 	// May Output:
 	// map[key1:val1 key2:val2]
+}
+
+func ExampleAnyAnyMap_String() {
+
+	// Output:
+}
+
+func ExampleAnyAnyMap_MarshalJSON() {
+
+	// Output:
+}
+
+func ExampleAnyAnyMap_UnmarshalJSON() {
+
+	// Output:
+}
+
+func ExampleAnyAnyMap_UnmarshalValue() {
+
+	// Output:
 }
