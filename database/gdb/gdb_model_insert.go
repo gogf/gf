@@ -80,6 +80,7 @@ func (m *Model) Data(data ...interface{}) *Model {
 					// which will filter all nil parameters in `data`.
 					if isForDaoModel(reflectInfo.OriginValue.Index(0).Type()) {
 						model = model.OmitNilData()
+						model.option |= optionOmitNilDataInternal
 					}
 				}
 				list := make(List, reflectInfo.OriginValue.Len())

@@ -87,8 +87,14 @@ func (m *Model) filterDataForInsertOrUpdate(data interface{}) (interface{}, erro
 	var err error
 	switch value := data.(type) {
 	case List:
+		var (
+			omitEmpty bool
+		)
+		if m.option&optionOmitNilDataList > 0 {
+			omitEmpty = true
+		}
 		for k, item := range value {
-			value[k], err = m.doMappingAndFilterForInsertOrUpdateDataMap(item, false)
+			value[k], err = m.doMappingAndFilterForInsertOrUpdateDataMap(item, omitEmpty)
 			if err != nil {
 				return nil, err
 			}
