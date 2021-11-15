@@ -407,9 +407,8 @@ func (a *StrArray) SubSlice(offset int, length ...int) []string {
 		s := make([]string, size)
 		copy(s, a.array[offset:])
 		return s
-	} else {
-		return a.array[offset:end]
 	}
+	return a.array[offset:end]
 }
 
 // Append is alias of PushRight,please See PushRight.

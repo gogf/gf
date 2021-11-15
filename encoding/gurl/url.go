@@ -27,25 +27,25 @@ func Decode(str string) (string, error) {
 	return url.QueryUnescape(str)
 }
 
-// URL-encode according to RFC 3986.
+// RawEncode .URL-encode according to RFC 3986.
 // See http://php.net/manual/en/function.rawurlencode.php.
 func RawEncode(str string) string {
 	return strings.Replace(url.QueryEscape(str), "+", "%20", -1)
 }
 
-// Decode URL-encoded strings.
+// RawDecode Decode URL-encoded strings.
 // See http://php.net/manual/en/function.rawurldecode.php.
 func RawDecode(str string) (string, error) {
 	return url.QueryUnescape(strings.Replace(str, "%20", "+", -1))
 }
 
-// Generate URL-encoded query string.
+// BuildQuery Generate URL-encoded query string.
 // See http://php.net/manual/en/function.http-build-query.php.
 func BuildQuery(queryData url.Values) string {
 	return queryData.Encode()
 }
 
-// Parse a URL and return its components.
+// ParseURL Parse a URL and return its components.
 // -1: all; 1: scheme; 2: host; 4: port; 8: user; 16: pass; 32: path; 64: query; 128: fragment.
 // See http://php.net/manual/en/function.parse-url.php.
 func ParseURL(str string, component int) (map[string]string, error) {
