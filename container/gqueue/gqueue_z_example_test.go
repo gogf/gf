@@ -24,8 +24,6 @@ func ExampleNew() {
 		q.Push(i)
 	}
 
-	fmt.Println(q.Len())
-
 	// Close the queue in three seconds.
 	gtimer.SetTimeout(context.Background(), time.Second*3, func(ctx context.Context) {
 		q.Close()
@@ -55,7 +53,6 @@ func ExampleNew() {
 	}
 
 	// Output:
-	// 10
 	// 0123456789
 }
 
