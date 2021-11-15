@@ -9,9 +9,10 @@ package glog
 import (
 	"bytes"
 	"context"
+	"testing"
+
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/text/gstr"
-	"testing"
 )
 
 var (
