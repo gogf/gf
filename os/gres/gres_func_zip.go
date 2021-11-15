@@ -9,14 +9,15 @@ package gres
 import (
 	"archive/zip"
 	"context"
-	"github.com/gogf/gf/v2/internal/fileinfo"
-	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/text/gregex"
 	"io"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/gogf/gf/v2/internal/fileinfo"
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/text/gregex"
 )
 
 // ZipPathWriter compresses `paths` to `writer` using zip compressing algorithm.
