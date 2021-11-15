@@ -7,14 +7,13 @@
 package gres_test
 
 import (
-	"github.com/gogf/gf/v2/os/gtime"
 	"strings"
 	"testing"
 
-	"github.com/gogf/gf/v2/os/gfile"
-
 	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gres"
+	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
