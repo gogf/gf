@@ -11,23 +11,21 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/gogf/gf/v2/encoding/gjson"
-	"github.com/gogf/gf/v2/text/gstr"
 	"os"
 	"testing"
 	"time"
 
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
-	"github.com/gogf/gf/v2/debug/gdebug"
-	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/util/gutil"
-
 	"github.com/gogf/gf/v2/database/gdb"
-
+	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 func Test_Model_Insert(t *testing.T) {
@@ -706,16 +704,16 @@ func Test_Model_Count(t *testing.T) {
 		t.AssertNil(err)
 		t.Assert(count, TableSize)
 	})
-	//gtest.C(t, func(t *gtest.T) {
+	// gtest.C(t, func(t *gtest.T) {
 	//	count, err := db.Model(table).Fields("id myid").Where("id>8").Count()
 	//	t.AssertNil(err)
 	//	t.Assert(count, 2)
-	//})
-	//gtest.C(t, func(t *gtest.T) {
+	// })
+	// gtest.C(t, func(t *gtest.T) {
 	//	count, err := db.Model(table).As("u1").LeftJoin(table, "u2", "u2.id=u1.id").Fields("u2.id u2id").Where("u1.id>8").Count()
 	//	t.AssertNil(err)
 	//	t.Assert(count, 2)
-	//})
+	// })
 }
 
 func Test_Model_Select(t *testing.T) {
@@ -954,8 +952,8 @@ func Test_Model_StructsWithOrmTag(t *testing.T) {
 		)
 	})
 
-	//db.SetDebug(true)
-	//defer db.SetDebug(false)
+	// db.SetDebug(true)
+	// defer db.SetDebug(false)
 	gtest.C(t, func(t *gtest.T) {
 		type A struct {
 			Passport string
@@ -1302,7 +1300,7 @@ func Test_Model_Where(t *testing.T) {
 
 	// complicated where 1
 	gtest.C(t, func(t *gtest.T) {
-		//db.SetDebug(true)
+		// db.SetDebug(true)
 		conditions := g.Map{
 			"nickname like ?":    "%name%",
 			"id between ? and ?": g.Slice{1, 3},
@@ -1317,7 +1315,7 @@ func Test_Model_Where(t *testing.T) {
 	})
 	// complicated where 2
 	gtest.C(t, func(t *gtest.T) {
-		//db.SetDebug(true)
+		// db.SetDebug(true)
 		conditions := g.Map{
 			"nickname like ?":    "%name%",
 			"id between ? and ?": g.Slice{1, 3},
@@ -1390,7 +1388,7 @@ func Test_Model_Where_ISNULL_1(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		//db.SetDebug(true)
+		// db.SetDebug(true)
 		result, err := db.Model(table).Data("nickname", nil).Where("id", 2).Update()
 		t.AssertNil(err)
 		n, _ := result.RowsAffected()
@@ -1409,7 +1407,7 @@ func Test_Model_Where_ISNULL_2(t *testing.T) {
 
 	// complicated one.
 	gtest.C(t, func(t *gtest.T) {
-		//db.SetDebug(true)
+		// db.SetDebug(true)
 		conditions := g.Map{
 			"nickname like ?":    "%name%",
 			"id between ? and ?": g.Slice{1, 3},
@@ -1638,7 +1636,7 @@ func Test_Model_WherePri(t *testing.T) {
 
 	// complicated where 1
 	gtest.C(t, func(t *gtest.T) {
-		//db.SetDebug(true)
+		// db.SetDebug(true)
 		conditions := g.Map{
 			"nickname like ?":    "%name%",
 			"id between ? and ?": g.Slice{1, 3},
@@ -1653,7 +1651,7 @@ func Test_Model_WherePri(t *testing.T) {
 	})
 	// complicated where 2
 	gtest.C(t, func(t *gtest.T) {
-		//db.SetDebug(true)
+		// db.SetDebug(true)
 		conditions := g.Map{
 			"nickname like ?":    "%name%",
 			"id between ? and ?": g.Slice{1, 3},
@@ -2212,7 +2210,7 @@ func Test_Model_Prefix(t *testing.T) {
 }
 
 func Test_Model_Schema1(t *testing.T) {
-	//db.SetDebug(true)
+	// db.SetDebug(true)
 
 	db.SetSchema(TestSchema1)
 	table := fmt.Sprintf(`%s_%s`, TableName, gtime.TimestampNanoStr())
@@ -2291,7 +2289,7 @@ func Test_Model_Schema1(t *testing.T) {
 }
 
 func Test_Model_Schema2(t *testing.T) {
-	//db.SetDebug(true)
+	// db.SetDebug(true)
 
 	db.SetSchema(TestSchema1)
 	table := fmt.Sprintf(`%s_%s`, TableName, gtime.TimestampNanoStr())
@@ -2956,7 +2954,7 @@ func Test_Model_Issue1002(t *testing.T) {
 		}
 	})
 	// where + time.Time arguments, +8.
-	//gtest.C(t, func(t *gtest.T) {
+	// gtest.C(t, func(t *gtest.T) {
 	//	// Change current timezone to +8 zone.
 	//	location, err := time.LoadLocation("Asia/Shanghai")
 	//	t.AssertNil(err)
@@ -2977,7 +2975,7 @@ func Test_Model_Issue1002(t *testing.T) {
 	//		t.AssertNil(err)
 	//		t.Assert(v.Int(), 1)
 	//	}
-	//})
+	// })
 }
 
 func createTableForTimeZoneTest() string {
@@ -3190,7 +3188,7 @@ func Test_Model_WhereOrBetween(t *testing.T) {
 func Test_Model_WhereOrNotBetween(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
-	//db.SetDebug(true)
+	// db.SetDebug(true)
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Model(table).WhereOrNotBetween("id", 1, 4).WhereOrNotBetween("id", 3, 5).OrderDesc("id").All()
 		t.AssertNil(err)

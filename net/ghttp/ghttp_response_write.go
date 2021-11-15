@@ -9,10 +9,11 @@ package ghttp
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/util/gconv"
-	"net/http"
 )
 
 // Write writes `content` to the response buffer.
@@ -130,7 +131,7 @@ func (r *Response) WriteJsonExit(content interface{}) error {
 	return nil
 }
 
-// WriteJson writes `content` to the response with JSONP format.
+// WriteJsonP writes `content` to the response with JSONP format.
 //
 // Note that there should be a "callback" parameter in the request for JSONP format.
 func (r *Response) WriteJsonP(content interface{}) error {
@@ -145,7 +146,7 @@ func (r *Response) WriteJsonP(content interface{}) error {
 	if b, err := json.Marshal(content); err != nil {
 		return err
 	} else {
-		//r.Header().Set("Content-Type", "application/json")
+		// r.Header().Set("Content-Type", "application/json")
 		if callback := r.Request.Get("callback").String(); callback != "" {
 			buffer := []byte(callback)
 			buffer = append(buffer, byte('('))

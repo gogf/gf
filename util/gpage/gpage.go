@@ -9,9 +9,10 @@ package gpage
 
 import (
 	"fmt"
+	"math"
+
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
-	"math"
 )
 
 // Page is the pagination implementer.

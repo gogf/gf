@@ -50,7 +50,7 @@ func (w *ResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 	return w.writer.(http.Hijacker).Hijack()
 }
 
-// OutputBuffer outputs the buffer to client and clears the buffer.
+// Flush OutputBuffer outputs the buffer to client and clears the buffer.
 func (w *ResponseWriter) Flush() {
 	if w.hijacked {
 		return

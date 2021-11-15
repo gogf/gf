@@ -7,9 +7,9 @@
 package gins_test
 
 import (
-	"github.com/gogf/gf/v2/frame/gins"
 	"testing"
 
+	"github.com/gogf/gf/v2/frame/gins"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 

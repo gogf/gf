@@ -8,8 +8,9 @@ package ghttp
 
 import (
 	"context"
-	"github.com/gogf/gf/v2/debug/gdebug"
 	"reflect"
+
+	"github.com/gogf/gf/v2/debug/gdebug"
 )
 
 const (

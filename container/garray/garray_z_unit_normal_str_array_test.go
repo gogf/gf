@@ -9,13 +9,13 @@
 package garray_test
 
 import (
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/internal/json"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -534,16 +534,16 @@ func TestStrArray_RLockFunc(t *testing.T) {
 
 		ch1 := make(chan int64, 3)
 		ch2 := make(chan int64, 1)
-		//go1
-		go a1.RLockFunc(func(n1 []string) { //读锁
-			time.Sleep(2 * time.Second) //暂停1秒
+		// go1
+		go a1.RLockFunc(func(n1 []string) { // 读锁
+			time.Sleep(2 * time.Second) // 暂停1秒
 			n1[2] = "g"
 			ch2 <- gconv.Int64(time.Now().UnixNano() / 1000 / 1000)
 		})
 
-		//go2
+		// go2
 		go func() {
-			time.Sleep(100 * time.Millisecond) //故意暂停0.01秒,等go1执行锁后，再开始执行.
+			time.Sleep(100 * time.Millisecond) // 故意暂停0.01秒,等go1执行锁后，再开始执行.
 			ch1 <- gconv.Int64(time.Now().UnixNano() / 1000 / 1000)
 			a1.Len()
 			ch1 <- gconv.Int64(time.Now().UnixNano() / 1000 / 1000)
@@ -551,10 +551,10 @@ func TestStrArray_RLockFunc(t *testing.T) {
 
 		t1 := <-ch1
 		t2 := <-ch1
-		<-ch2 //等待go1完成
+		<-ch2 // 等待go1完成
 
 		// 防止ci抖动,以豪秒为单位
-		t.AssertLT(t2-t1, 20) //go1加的读锁，所go2读的时候，并没有阻塞。
+		t.AssertLT(t2-t1, 20) // go1加的读锁，所go2读的时候，并没有阻塞。
 		t.Assert(a1.Contains("g"), true)
 	})
 }
@@ -578,16 +578,16 @@ func TestStrArray_LockFunc(t *testing.T) {
 
 		ch1 := make(chan int64, 3)
 		ch2 := make(chan int64, 3)
-		//go1
-		go a1.LockFunc(func(n1 []string) { //读写锁
-			time.Sleep(2 * time.Second) //暂停2秒
+		// go1
+		go a1.LockFunc(func(n1 []string) { // 读写锁
+			time.Sleep(2 * time.Second) // 暂停2秒
 			n1[2] = "g"
 			ch2 <- gconv.Int64(time.Now().UnixNano() / 1000 / 1000)
 		})
 
-		//go2
+		// go2
 		go func() {
-			time.Sleep(100 * time.Millisecond) //故意暂停0.01秒,等go1执行锁后，再开始执行.
+			time.Sleep(100 * time.Millisecond) // 故意暂停0.01秒,等go1执行锁后，再开始执行.
 			ch1 <- gconv.Int64(time.Now().UnixNano() / 1000 / 1000)
 			a1.Len()
 			ch1 <- gconv.Int64(time.Now().UnixNano() / 1000 / 1000)
@@ -595,10 +595,10 @@ func TestStrArray_LockFunc(t *testing.T) {
 
 		t1 := <-ch1
 		t2 := <-ch1
-		<-ch2 //等待go1完成
+		<-ch2 // 等待go1完成
 
 		// 防止ci抖动,以豪秒为单位
-		t.AssertGT(t2-t1, 20) //go1加的读写互斥锁，所go2读的时候被阻塞。
+		t.AssertGT(t2-t1, 20) // go1加的读写互斥锁，所go2读的时候被阻塞。
 		t.Assert(a1.Contains("g"), true)
 	})
 }

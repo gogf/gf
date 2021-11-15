@@ -9,12 +9,12 @@ package ghttp
 import (
 	"bytes"
 	"context"
-	"github.com/gogf/gf/v2/debug/gdebug"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
 	"reflect"
 	"strings"
 
+	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gstr"
 )
 

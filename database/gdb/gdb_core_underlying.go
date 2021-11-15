@@ -10,9 +10,9 @@ package gdb
 import (
 	"context"
 	"database/sql"
+
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/internal/intlog"
-
 	"github.com/gogf/gf/v2/os/gtime"
 )
 

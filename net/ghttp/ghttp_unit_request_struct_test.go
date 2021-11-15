@@ -11,11 +11,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/util/gvalid"
-
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gvalid"
 )
 
 func Test_Params_Parse(t *testing.T) {
@@ -359,7 +358,7 @@ func Test_Params_Parse_Attr_Pointer2(t *testing.T) {
 }
 
 // It does not support this kind of converting yet.
-//func Test_Params_Parse_Attr_SliceSlice(t *testing.T) {
+// func Test_Params_Parse_Attr_SliceSlice(t *testing.T) {
 //	type User struct {
 //		Id     int
 //		Name   string
@@ -387,7 +386,7 @@ func Test_Params_Parse_Attr_Pointer2(t *testing.T) {
 //		client.SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 //		t.Assert(client.PostContent(ctx, "/parse", `{"id":1,"name":"john","scores":[[1,2,3]]}`), `1100`)
 //	})
-//}
+// }
 
 func Test_Params_Struct(t *testing.T) {
 	type User struct {
