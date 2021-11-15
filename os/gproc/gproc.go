@@ -9,14 +9,14 @@ package gproc
 
 import (
 	"bytes"
-	"github.com/gogf/gf/v2/os/genv"
-	"github.com/gogf/gf/v2/text/gstr"
 	"io"
 	"os"
 	"runtime"
 	"time"
 
+	"github.com/gogf/gf/v2/os/genv"
 	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 

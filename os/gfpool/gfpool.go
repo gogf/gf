@@ -8,14 +8,15 @@
 package gfpool
 
 import (
+	"os"
+	"time"
+
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gpool"
 	"github.com/gogf/gf/v2/container/gtype"
-	"os"
-	"time"
 )
 
-// File pointer pool.
+// Pool pointer pool.
 type Pool struct {
 	id   *gtype.Int    // Pool id, which is used to mark this pool whether recreated.
 	pool *gpool.Pool   // Underlying pool.

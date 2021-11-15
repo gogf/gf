@@ -8,12 +8,12 @@ package gsession
 
 import (
 	"context"
+	"time"
+
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gredis"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/internal/json"
-	"time"
-
 	"github.com/gogf/gf/v2/os/gtimer"
 )
 

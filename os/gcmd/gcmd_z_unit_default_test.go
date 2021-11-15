@@ -9,12 +9,11 @@
 package gcmd_test
 
 import (
-	"github.com/gogf/gf/v2/os/genv"
 	"testing"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcmd"
-
+	"github.com/gogf/gf/v2/os/genv"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 

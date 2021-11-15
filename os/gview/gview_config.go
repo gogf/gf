@@ -8,6 +8,7 @@ package gview
 
 import (
 	"context"
+
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/i18n/gi18n"
@@ -146,7 +147,7 @@ func (view *View) SetPath(path string) error {
 	view.paths.Clear()
 	view.paths.Append(realPath)
 	view.fileCacheMap.Clear()
-	//glog.Debug("[gview] SetPath:", realPath)
+	// glog.Debug("[gview] SetPath:", realPath)
 	return nil
 }
 

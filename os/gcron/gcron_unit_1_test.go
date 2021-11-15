@@ -8,11 +8,11 @@ package gcron_test
 
 import (
 	"context"
-	"github.com/gogf/gf/v2/frame/g"
 	"testing"
 	"time"
 
 	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcron"
 	"github.com/gogf/gf/v2/test/gtest"
 )
@@ -52,7 +52,7 @@ func TestCron_Basic(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		cron := gcron.New()
 		cron.Add(ctx, "* * * * * *", func(ctx context.Context) {}, "add")
-		//fmt.Println("start", time.Now())
+		// fmt.Println("start", time.Now())
 		cron.DelayAdd(ctx, time.Second, "* * * * * *", func(ctx context.Context) {}, "delay_add")
 		t.Assert(cron.Size(), 1)
 		time.Sleep(1200 * time.Millisecond)

@@ -8,10 +8,11 @@ package gtimer
 
 import (
 	"context"
-	"github.com/gogf/gf/v2/container/garray"
-	"github.com/gogf/gf/v2/test/gtest"
 	"testing"
 	"time"
+
+	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func TestTimer_Proceed(t *testing.T) {
