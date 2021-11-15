@@ -13,10 +13,9 @@ import (
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/util/gconv"
-
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 func Test_Table_Relation_One(t *testing.T) {
@@ -1368,19 +1367,19 @@ CREATE TABLE %s (
 			})
 			t.AssertNil(err)
 			// Detail.
-			//_, err = db.Insert(ctx, tableUserDetail, g.Map{
+			// _, err = db.Insert(ctx, tableUserDetail, g.Map{
 			//	"uid":     i,
 			//	"address": fmt.Sprintf(`address_%d`, i),
-			//})
-			//t.AssertNil(err)
+			// })
+			// t.AssertNil(err)
 			// Scores.
-			//for j := 1; j <= 5; j++ {
+			// for j := 1; j <= 5; j++ {
 			//	_, err = db.Insert(ctx, tableUserScores, g.Map{
 			//		"uid":   i,
 			//		"score": j,
 			//	})
 			//	t.AssertNil(err)
-			//}
+			// }
 		}
 	})
 

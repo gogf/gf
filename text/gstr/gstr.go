@@ -17,9 +17,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/gogf/gf/v2/internal/utils"
-
 	"github.com/gogf/gf/v2/util/gconv"
-
 	"github.com/gogf/gf/v2/util/grand"
 )
 

@@ -7,8 +7,9 @@
 package gdb_test
 
 import (
-	"github.com/gogf/gf/v2/test/gtest"
 	"testing"
+
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_Model_Insert_Data_ForDao(t *testing.T) {

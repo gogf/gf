@@ -9,8 +9,9 @@
 package guid_test
 
 import (
-	"github.com/gogf/gf/v2/util/guid"
 	"testing"
+
+	"github.com/gogf/gf/v2/util/guid"
 )
 
 func Benchmark_S(b *testing.B) {

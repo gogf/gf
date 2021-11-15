@@ -8,12 +8,11 @@ package gvalid_test
 
 import (
 	"context"
-	"github.com/gogf/gf/v2/container/gvar"
-	"github.com/gogf/gf/v2/os/gtime"
 	"testing"
 
+	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/frame/g"
-
+	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gvalid"
 )

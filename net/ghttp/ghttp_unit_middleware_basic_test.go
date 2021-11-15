@@ -8,12 +8,12 @@ package ghttp_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/v2/container/garray"
-	"github.com/gogf/gf/v2/debug/gdebug"
 	"net/http"
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/test/gtest"
