@@ -7,8 +7,9 @@
 package gutil
 
 import (
-	"github.com/gogf/gf/v2/internal/utils"
 	"reflect"
+
+	"github.com/gogf/gf/v2/internal/utils"
 )
 
 // ListItemValues retrieves and returns the elements of all item struct/map with key `key`.

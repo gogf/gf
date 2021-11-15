@@ -14,10 +14,11 @@ package gsmtp
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
 	"net/smtp"
 	"strings"
+
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
 // SMTP is the structure for smtp connection.

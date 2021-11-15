@@ -7,14 +7,14 @@
 package gins_test
 
 import (
-	"github.com/gogf/gf/v2/debug/gdebug"
-	"github.com/gogf/gf/v2/frame/gins"
-	"github.com/gogf/gf/v2/os/gcfg"
-	"github.com/gogf/gf/v2/os/gtime"
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gogf/gf/v2/frame/gins"
+	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
@@ -42,7 +42,7 @@ func Test_Redis(t *testing.T) {
 		// for gfsnotify callbacks to refresh cache of config file
 		time.Sleep(500 * time.Millisecond)
 
-		//fmt.Println("gins Test_Redis", Config().Get("test"))
+		// fmt.Println("gins Test_Redis", Config().Get("test"))
 
 		var (
 			redisDefault = gins.Redis()

@@ -7,9 +7,10 @@
 package ghttp
 
 import (
-	"github.com/gorilla/websocket"
 	"net/http"
 	"time"
+
+	"github.com/gorilla/websocket"
 )
 
 // WebSocketClient wraps the underlying websocket client connection

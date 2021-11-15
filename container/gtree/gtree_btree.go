@@ -9,13 +9,12 @@ package gtree
 import (
 	"bytes"
 	"fmt"
-	"github.com/gogf/gf/v2/internal/json"
 	"strings"
 
-	"github.com/gogf/gf/v2/util/gconv"
-
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/rwmutex"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // BTree holds elements of the B-tree.
@@ -587,9 +586,9 @@ func (tree *BTree) isLeaf(node *BTreeNode) bool {
 	return len(node.Children) == 0
 }
 
-//func (tree *BTree) isFull(node *BTreeNode) bool {
+// func (tree *BTree) isFull(node *BTreeNode) bool {
 //	return len(node.Entries) == tree.maxEntries()
-//}
+// }
 
 func (tree *BTree) shouldSplit(node *BTreeNode) bool {
 	return len(node.Entries) > tree.maxEntries()

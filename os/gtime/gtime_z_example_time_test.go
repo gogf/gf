@@ -8,9 +8,10 @@ package gtime_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/v2/os/gtime"
 	"reflect"
 	"time"
+
+	"github.com/gogf/gf/v2/os/gtime"
 )
 
 // New creates and returns a Time object with given parameter.

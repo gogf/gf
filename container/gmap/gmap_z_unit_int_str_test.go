@@ -7,14 +7,14 @@
 package gmap_test
 
 import (
-	"github.com/gogf/gf/v2/container/garray"
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/util/gconv"
 	"testing"
 
+	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 func getStr() string {
@@ -76,8 +76,8 @@ func Test_IntStrMap_Basic(t *testing.T) {
 		t.AssertIN("a", m.Values())
 		t.AssertIN("c", m.Values())
 
-		//反转之后不成为以下 map,flip 操作只是翻转原 map
-		//t.Assert(m.Map(), map[string]int{"a": 1, "c": 3})
+		// 反转之后不成为以下 map,flip 操作只是翻转原 map
+		// t.Assert(m.Map(), map[string]int{"a": 1, "c": 3})
 		m_f := gmap.NewIntStrMap()
 		m_f.Set(1, "2")
 		m_f.Flip()
@@ -155,16 +155,16 @@ func Test_IntStrMap_Lock(t *testing.T) {
 
 func Test_IntStrMap_Clone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		//clone 方法是深克隆
+		// clone 方法是深克隆
 		m := gmap.NewIntStrMapFrom(map[int]string{1: "a", 2: "b", 3: "c"})
 
 		m_clone := m.Clone()
 		m.Remove(1)
-		//修改原 map,clone 后的 map 不影响
+		// 修改原 map,clone 后的 map 不影响
 		t.AssertIN(1, m_clone.Keys())
 
 		m_clone.Remove(2)
-		//修改clone map,原 map 不影响
+		// 修改clone map,原 map 不影响
 		t.AssertIN(2, m.Keys())
 	})
 }

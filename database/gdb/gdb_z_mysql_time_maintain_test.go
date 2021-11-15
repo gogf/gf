@@ -8,12 +8,11 @@ package gdb_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/v2/os/gtime"
 	"testing"
 	"time"
 
 	"github.com/gogf/gf/v2/frame/g"
-
+	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
@@ -566,7 +565,7 @@ CREATE TABLE %s (
 	defer dropTable(table2)
 
 	gtest.C(t, func(t *gtest.T) {
-		//db.SetDebug(true)
+		// db.SetDebug(true)
 		dataInsert1 := g.Map{
 			"id":   1,
 			"name": "name_1",
@@ -620,7 +619,7 @@ CREATE TABLE %s (
 		gtest.Error(err)
 	}
 	defer dropTable(table)
-	//db.SetDebug(true)
+	// db.SetDebug(true)
 	// Add datas.
 	gtest.C(t, func(t *gtest.T) {
 		for i := 1; i <= 10; i++ {
@@ -663,8 +662,8 @@ CREATE TABLE %s (
 	}
 	defer dropTable(table)
 
-	//db.SetDebug(true)
-	//defer db.SetDebug(false)
+	// db.SetDebug(true)
+	// defer db.SetDebug(false)
 
 	type Entity struct {
 		Id       uint64      `orm:"id,primary" json:"id"`

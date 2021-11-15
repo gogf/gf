@@ -8,18 +8,16 @@ package ghttp_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/v2/os/gfile"
-	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/text/gstr"
 	"testing"
 	"time"
 
-	"github.com/gogf/gf/v2/util/gconv"
-
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
-
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 func Test_ConfigFromMap(t *testing.T) {
@@ -47,7 +45,7 @@ func Test_SetConfigWithMap(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		m := g.Map{
 			"Address": ":8199",
-			//"ServerRoot":       "/var/www/MyServerRoot",
+			// "ServerRoot":       "/var/www/MyServerRoot",
 			"IndexFiles":       g.Slice{"index.php", "main.php"},
 			"AccessLogEnabled": true,
 			"ErrorLogEnabled":  true,

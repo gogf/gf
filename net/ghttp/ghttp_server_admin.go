@@ -8,10 +8,10 @@ package ghttp
 
 import (
 	"context"
-	"github.com/gogf/gf/v2/os/gfile"
 	"strings"
 	"time"
 
+	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gproc"
 	"github.com/gogf/gf/v2/os/gtimer"
 	"github.com/gogf/gf/v2/os/gview"

@@ -9,9 +9,10 @@ package gqueue_test
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/gogf/gf/v2/container/gqueue"
 	"github.com/gogf/gf/v2/os/gtimer"
-	"time"
 )
 
 func ExampleNew() {
