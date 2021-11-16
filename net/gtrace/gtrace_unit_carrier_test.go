@@ -10,10 +10,11 @@ import (
 	"context"
 	"testing"
 
-	"github.com/gogf/gf/v2/net/gtrace"
-	"github.com/gogf/gf/v2/test/gtest"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/gogf/gf/v2/net/gtrace"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 const (

@@ -267,7 +267,7 @@ func (d *DriverOracle) DoInsert(ctx context.Context, link Link, table string, li
 		listLength  = len(list)
 		valueHolder = make([]string, 0)
 	)
-	for k, _ := range list[0] {
+	for k := range list[0] {
 		keys = append(keys, k)
 		valueHolder = append(valueHolder, "?")
 	}

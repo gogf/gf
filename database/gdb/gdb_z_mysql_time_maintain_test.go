@@ -16,7 +16,7 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-// CreateAt/UpdateAt/DeleteAt
+// CreateAt/UpdateAt/DeleteAt.
 func Test_SoftCreateUpdateDeleteTime(t *testing.T) {
 	table := "time_test_table_" + gtime.TimestampNanoStr()
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
@@ -150,7 +150,7 @@ CREATE TABLE %s (
 	})
 }
 
-// CreatedAt/UpdatedAt/DeletedAt
+// CreatedAt/UpdatedAt/DeletedAt.
 func Test_SoftCreatedUpdatedDeletedTime_Map(t *testing.T) {
 	table := "time_test_table_" + gtime.TimestampNanoStr()
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
@@ -284,7 +284,7 @@ CREATE TABLE %s (
 	})
 }
 
-// CreatedAt/UpdatedAt/DeletedAt
+// CreatedAt/UpdatedAt/DeletedAt.
 func Test_SoftCreatedUpdatedDeletedTime_Struct(t *testing.T) {
 	table := "time_test_table_" + gtime.TimestampNanoStr()
 	if _, err := db.Exec(ctx, fmt.Sprintf(`

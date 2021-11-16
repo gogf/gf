@@ -144,7 +144,6 @@ func Test_TX_Insert(t *testing.T) {
 		if err := tx.Commit(); err != nil {
 			gtest.Error(err)
 		}
-
 	})
 }
 
@@ -415,7 +414,6 @@ func Test_TX_GetValue(t *testing.T) {
 			gtest.Error(err)
 		}
 	})
-
 }
 
 func Test_TX_GetCount(t *testing.T) {

@@ -14,9 +14,10 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.opentelemetry.io/otel/trace"
+
 	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/internal/utils"
-	"go.opentelemetry.io/otel/trace"
 )
 
 const (

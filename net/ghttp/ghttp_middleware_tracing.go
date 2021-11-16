@@ -11,6 +11,12 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/trace"
+
 	"github.com/gogf/gf/v2"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/net/ghttp/internal/client"
@@ -18,11 +24,6 @@ import (
 	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/propagation"
-	"go.opentelemetry.io/otel/trace"
 )
 
 const (
