@@ -282,7 +282,7 @@ func doQuoteWord(s, charLeft, charRight string) string {
 // "user u, user_detail ut"           => "`user` u,`user_detail` ut"
 // "user.user u, user.user_detail ut" => "`user`.`user` u,`user`.`user_detail` ut"
 // "u.id, u.name, u.age"              => "`u`.`id`,`u`.`name`,`u`.`age`"
-// "u.id asc"                         => "`u`.`id` asc"
+// "u.id asc"                         => "`u`.`id` asc".
 func doQuoteString(s, charLeft, charRight string) string {
 	array1 := gstr.SplitAndTrim(s, ",")
 	for k1, v1 := range array1 {
@@ -484,9 +484,9 @@ func formatWhere(db DB, in formatWhereInput) (newWhere string, newArgs []interfa
 
 	default:
 		// Usually a string.
-		var (
-			whereStr = gconv.String(in.Where)
-		)
+
+		whereStr := gconv.String(in.Where)
+
 		// Is `whereStr` a field name which composed as a key-value condition?
 		// Eg:
 		// Where("id", 1)
@@ -514,18 +514,16 @@ func formatWhere(db DB, in formatWhereInput) (newWhere string, newArgs []interfa
 		// Regular string and parameter place holder handling.
 		// Eg:
 		// Where("id in(?) and name=?", g.Slice{1,2,3}, "john")
-		var (
-			i = 0
-		)
+
+		i := 0
+
 		for {
 			if i >= len(in.Args) {
 				break
 			}
 			// Sub query, which is always used along with a string condition.
 			if model, ok := in.Args[i].(*Model); ok {
-				var (
-					index = -1
-				)
+				index := -1
 				whereStr, _ = gregex.ReplaceStringFunc(`(\?)`, whereStr, func(s string) string {
 					index++
 					if i+len(newArgs) == index {
@@ -836,9 +834,7 @@ func FormatSqlWithArgs(sql string, args []interface{}) string {
 				if v, ok := args[index].(Raw); ok {
 					return gconv.String(v)
 				}
-				var (
-					reflectInfo = utils.OriginValueAndKind(args[index])
-				)
+				reflectInfo := utils.OriginValueAndKind(args[index])
 				if reflectInfo.OriginKind == reflect.Ptr &&
 					(reflectInfo.OriginValue.IsNil() || !reflectInfo.OriginValue.IsValid()) {
 					return "null"

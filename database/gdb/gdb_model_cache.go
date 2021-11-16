@@ -46,7 +46,7 @@ func (m *Model) Cache(option CacheOption) *Model {
 // cache feature is enabled.
 func (m *Model) checkAndRemoveCache() {
 	if m.cacheEnabled && m.cacheOption.Duration < 0 && len(m.cacheOption.Name) > 0 {
-		var ctx = m.GetCtx()
+		ctx := m.GetCtx()
 		_, err := m.db.GetCache().Remove(ctx, m.cacheOption.Name)
 		if err != nil {
 			intlog.Error(ctx, err)

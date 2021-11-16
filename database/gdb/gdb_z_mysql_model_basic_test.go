@@ -970,7 +970,6 @@ func Test_Model_StructsWithOrmTag(t *testing.T) {
 		t.Assert(one["passport"], "user_2")
 		t.Assert(one["password"], "pass_2")
 	})
-
 }
 
 func Test_Model_Scan(t *testing.T) {
@@ -1984,7 +1983,6 @@ func Test_Model_Option_List(t *testing.T) {
 		t.Assert(list[1]["nickname"].String(), "")
 		t.Assert(list[1]["passport"].String(), "")
 		t.Assert(list[1]["password"].String(), "2")
-
 	})
 }
 
@@ -2827,6 +2825,7 @@ func Test_Model_Fields_Struct(t *testing.T) {
 		t.Assert(one["nickname"], "name_2")
 	})
 }
+
 func Test_Model_NullField(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
@@ -3058,7 +3057,7 @@ func Test_Model_Fields_Map_Struct(t *testing.T) {
 			PASSPORT string
 			XXX_TYPE int
 		}
-		var a = A{}
+		a := A{}
 		err := db.Model(table).Fields(a).Where("id", 1).Scan(&a)
 		t.AssertNil(err)
 		t.Assert(a.ID, 1)

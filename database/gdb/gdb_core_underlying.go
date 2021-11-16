@@ -128,9 +128,7 @@ func (c *Core) DoExec(ctx context.Context, link Link, sql string, args ...interf
 		result = new(SqlResult)
 	}
 	mTime2 := gtime.TimestampMilli()
-	var (
-		rowsAffected int64
-	)
+	var rowsAffected int64
 	if err == nil {
 		rowsAffected, err = result.RowsAffected()
 	}

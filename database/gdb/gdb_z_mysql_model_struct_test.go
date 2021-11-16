@@ -99,7 +99,6 @@ func Test_Model_Embedded_MapToStruct(t *testing.T) {
 		t.Assert(user.Password, data["password"])
 		t.Assert(user.Nickname, data["nickname"])
 		t.Assert(user.CreateTime, data["create_time"])
-
 	})
 }
 
@@ -550,9 +549,7 @@ func Test_Scan_JsonAttributes(t *testing.T) {
 		Passport string
 	}
 
-	var (
-		table = "jfy_gift"
-	)
+	table := "jfy_gift"
 	array := gstr.SplitAndTrim(gtest.TestDataContent(`issue1380.sql`), ";")
 	for _, v := range array {
 		if _, err := db.Exec(ctx, v); err != nil {
