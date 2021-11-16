@@ -13,11 +13,11 @@ run:
   issues-exit-code: 1
 
   # include test files or not, default is true
-  tests: true
+  tests: false
 
   # list of build tags, all linters use it. Default is empty list.
   build-tags:
-    - mytag
+#    - mytag
 
   # which dirs to skip: issues from them won't be reported;
   # can use regexp here: generated.*, regexp is applied on full path;
@@ -26,9 +26,8 @@ run:
   # "/" will be replaced by current OS file path separator to properly work
   # on Windows.
   skip-dirs:
-    - packed
-    - documentation
-    - docker
+    - .example
+    - .test
 
   # default is true. Enables skipping of directories:
   #   vendor$, third_party$, testdata$, examples$, Godeps$, builtin$
@@ -41,8 +40,8 @@ run:
   # "/" will be replaced by current OS file path separator to properly work
   # on Windows.
   skip-files:
-    - ".*\\.my\\.go$"
-    - lib/bad.go
+    - ".*_test\\.go$"
+    - ".*_packed\\.go$"
 
   # by default isn't set. If set we pass it to "go list -mod={option}". From "go help modules":
   # If invoked with -mod=readonly, the go command is disallowed from the implicit
@@ -134,9 +133,9 @@ linters-settings:
     # list of functions to exclude from checking, where each entry is a single function to exclude.
     # see https://github.com/kisielk/errcheck#excluding-functions for details
     exclude-functions:
-      - io/ioutil.ReadFile
-      - io.Copy(*bytes.Buffer)
-      - io.Copy(os.Stdout)
+#      - io/ioutil.ReadFile
+#      - io.Copy(*bytes.Buffer)
+#      - io.Copy(os.Stdout)
 
   errorlint:
     # Check whether fmt.Errorf uses the %w verb for formatting errors. See the readme for caveats
@@ -164,19 +163,19 @@ linters-settings:
     # The matching patterns can use matching syntax from https://pkg.go.dev/path#Match
     # If this list is empty, all structs are tested.
     struct-patterns:
-      - '*.Test'
-      - 'example.com/package.ExampleStruct'
-      - '*.Test2'
-      - '*.Embedded'
-      - '*.External'
+#      - '*.Test'
+#      - 'example.com/package.ExampleStruct'
+#      - '*.Test2'
+#      - '*.Embedded'
+#      - '*.External'
 
   forbidigo:
     # Forbid the following identifiers (identifiers are written using regexp):
     forbid:
-      - ^print.*$
-      - 'fmt\.Print.*'
-      - fmt.Println.* # too much log noise
-      - ginkgo\\.F.* # these are used just for local development
+#      - ^print.*$
+#      - 'fmt\.Print.*'
+#      - fmt.Println.* # too much log noise
+#      - ginkgo\\.F.* # these are used just for local development
     # Exclude godoc examples from forbidigo checks.  Default is true.
     exclude_godoc_examples: false
 
@@ -200,7 +199,7 @@ linters-settings:
     # minimum occurrences of constant string count to trigger issue, 3 by default
     min-occurrences: 3
     # ignore test files, false by default
-    ignore-tests: false
+    ignore-tests: true
     # look for existing constants matching the values, true by default
     match-constant: true
     # search also for duplicated numbers, false by default
