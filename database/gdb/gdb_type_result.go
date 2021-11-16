@@ -83,7 +83,7 @@ func (r Result) Array(field ...string) []Value {
 	if len(field) > 0 && field[0] != "" {
 		key = field[0]
 	} else {
-		for k, _ := range r[0] {
+		for k := range r[0] {
 			key = k
 			break
 		}

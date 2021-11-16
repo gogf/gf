@@ -393,7 +393,7 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 		onDuplicateStr string        // onDuplicateStr is used in "ON DUPLICATE KEY UPDATE" statement.
 	)
 	// Handle the field names and placeholders.
-	for k, _ := range list[0] {
+	for k := range list[0] {
 		keys = append(keys, k)
 	}
 	// Prepare the batch result pointer.
@@ -448,9 +448,7 @@ func (c *Core) DoInsert(ctx context.Context, link Link, table string, list List,
 }
 
 func (c *Core) formatOnDuplicate(columns []string, option DoInsertOption) string {
-	var (
-		onDuplicateStr string
-	)
+	var onDuplicateStr string
 	if option.OnDuplicateStr != "" {
 		onDuplicateStr = option.OnDuplicateStr
 	} else if len(option.OnDuplicateMap) > 0 {
@@ -505,7 +503,7 @@ func (c *Core) formatOnDuplicate(columns []string, option DoInsertOption) string
 // "money>? AND name like ?", 99999, "vip_%"
 // "status IN (?)", g.Slice{1,2,3}
 // "age IN(?,?)", 18, 50
-// User{ Id : 1, UserName : "john"}
+// User{ Id : 1, UserName : "john"}.
 func (c *Core) Update(ctx context.Context, table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error) {
 	return c.Model(table).Ctx(ctx).Data(data).Where(condition, args...).Update()
 }
@@ -596,7 +594,7 @@ func (c *Core) DoUpdate(ctx context.Context, link Link, table string, data inter
 // "money>? AND name like ?", 99999, "vip_%"
 // "status IN (?)", g.Slice{1,2,3}
 // "age IN(?,?)", 18, 50
-// User{ Id : 1, UserName : "john"}
+// User{ Id : 1, UserName : "john"}.
 func (c *Core) Delete(ctx context.Context, table string, condition interface{}, args ...interface{}) (result sql.Result, err error) {
 	return c.Model(table).Ctx(ctx).Where(condition, args...).Delete()
 }

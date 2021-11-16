@@ -206,7 +206,7 @@ func (m *Model) Array(fieldsAndWhere ...interface{}) ([]Value, error) {
 // err  := db.Model("user").Where("id", 1).Scan(user)
 //
 // user := (*User)(nil)
-// err  := db.Model("user").Where("id", 1).Scan(&user)
+// err  := db.Model("user").Where("id", 1).Scan(&user).
 func (m *Model) doStruct(pointer interface{}, where ...interface{}) error {
 	model := m
 	// Auto selecting fields by struct attributes.
@@ -242,7 +242,7 @@ func (m *Model) doStruct(pointer interface{}, where ...interface{}) error {
 // err   := db.Model("user").Scan(&users)
 //
 // users := ([]*User)(nil)
-// err   := db.Model("user").Scan(&users)
+// err   := db.Model("user").Scan(&users).
 func (m *Model) doStructs(pointer interface{}, where ...interface{}) error {
 	model := m
 	// Auto selecting fields by struct attributes.
@@ -291,11 +291,9 @@ func (m *Model) doStructs(pointer interface{}, where ...interface{}) error {
 // err   := db.Model("user").Scan(&users)
 //
 // users := ([]*User)(nil)
-// err   := db.Model("user").Scan(&users)
+// err   := db.Model("user").Scan(&users).
 func (m *Model) Scan(pointer interface{}, where ...interface{}) error {
-	var (
-		reflectInfo = utils.OriginTypeAndKind(pointer)
-	)
+	reflectInfo := utils.OriginTypeAndKind(pointer)
 	if reflectInfo.InputKind != reflect.Ptr {
 		return gerror.NewCode(
 			gcode.CodeInvalidParameter,

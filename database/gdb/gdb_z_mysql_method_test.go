@@ -45,7 +45,6 @@ func Test_DB_Query(t *testing.T) {
 		_, err = db.Query(ctx, "ERROR")
 		t.AssertNE(err, nil)
 	})
-
 }
 
 func Test_DB_Exec(t *testing.T) {
@@ -56,7 +55,6 @@ func Test_DB_Exec(t *testing.T) {
 		_, err = db.Exec(ctx, "ERROR")
 		t.AssertNE(err, nil)
 	})
-
 }
 
 func Test_DB_Prepare(t *testing.T) {
@@ -391,7 +389,6 @@ func Test_DB_BatchInsert(t *testing.T) {
 		n, _ := result.RowsAffected()
 		t.Assert(n, 1)
 	})
-
 }
 
 func Test_DB_BatchInsert_Struct(t *testing.T) {
@@ -924,12 +921,10 @@ func Test_DB_ToXml(t *testing.T) {
 		} else {
 			gtest.Fatal("FAIL")
 		}
-
 	})
 }
 
 func Test_DB_ToStringMap(t *testing.T) {
-
 	table := createInitTable()
 	defer dropTable(table)
 	_, err := db.Update(ctx, table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
@@ -965,7 +960,6 @@ func Test_DB_ToStringMap(t *testing.T) {
 }
 
 func Test_DB_ToIntMap(t *testing.T) {
-
 	table := createInitTable()
 	defer dropTable(table)
 	_, err := db.Update(ctx, table, "create_time='2010-10-10 00:00:01'", "id=?", 1)
@@ -1034,7 +1028,6 @@ func Test_DB_ToUintMap(t *testing.T) {
 		t.Assert(t_users[0].Password, resultUintMap[uint(id)]["password"])
 		t.Assert(t_users[0].NickName, resultUintMap[uint(id)]["nickname"])
 		t.Assert(t_users[0].CreateTime, resultUintMap[uint(id)]["create_time"])
-
 	})
 }
 
@@ -1072,7 +1065,6 @@ func Test_DB_ToStringRecord(t *testing.T) {
 		t.Assert(t_users[0].Password, resultStringRecord[ids]["password"].String())
 		t.Assert(t_users[0].NickName, resultStringRecord[ids]["nickname"].String())
 		t.Assert(t_users[0].CreateTime, resultStringRecord[ids]["create_time"].String())
-
 	})
 }
 
@@ -1109,7 +1101,6 @@ func Test_DB_ToIntRecord(t *testing.T) {
 		t.Assert(t_users[0].Password, resultIntRecord[id]["password"].String())
 		t.Assert(t_users[0].NickName, resultIntRecord[id]["nickname"].String())
 		t.Assert(t_users[0].CreateTime, resultIntRecord[id]["create_time"].String())
-
 	})
 }
 
@@ -1301,7 +1292,6 @@ func Test_DB_Prefix(t *testing.T) {
 		t.Assert(e, nil)
 		t.Assert(n, TableSize)
 	})
-
 }
 
 func Test_Model_InnerJoin(t *testing.T) {
@@ -1420,7 +1410,7 @@ func Test_Empty_Slice_Argument(t *testing.T) {
 	})
 }
 
-// update counter test
+// update counter test.
 func Test_DB_UpdateCounter(t *testing.T) {
 	tableName := "gf_update_counter_test_" + gtime.TimestampNanoStr()
 	_, err := db.Exec(ctx, fmt.Sprintf(`

@@ -229,7 +229,7 @@ func (m *Model) doWithScanStructs(pointer interface{}) error {
 			relatedTargetValue interface{}
 		)
 		// Find the value slice of related attribute from `pointer`.
-		for attributeName, _ := range currentStructFieldMap {
+		for attributeName := range currentStructFieldMap {
 			if utils.EqualFoldWithoutChars(attributeName, relatedTargetName) {
 				relatedTargetValue = ListItemValuesUnique(pointer, attributeName)
 				break

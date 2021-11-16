@@ -301,7 +301,7 @@ var (
 	// in the field name as it conflicts with "db.table.field" pattern in SOME situations.
 	regularFieldNameWithoutDotRegPattern = `^[\w\-]+$`
 
-	// tableFieldsMap caches the table information retrived from database.
+	// tableFieldsMap caches the table information retrieved from database.
 	tableFieldsMap = gmap.New(true)
 
 	// allDryRun sets dry-run feature for all database connections.
@@ -429,7 +429,7 @@ func getConfigNodeByGroup(group string, master bool) (*ConfigNode, error) {
 // Calculation algorithm brief:
 // 1. If we have 2 nodes, and their weights are both 1, then the weight range is [0, 199];
 // 2. Node1 weight range is [0, 99], and node2 weight range is [100, 199], ratio is 1:1;
-// 3. If the random number is 99, it then chooses and returns node1;
+// 3. If the random number is 99, it then chooses and returns node1;.
 func getConfigNodeByWeight(cg ConfigGroup) *ConfigNode {
 	if len(cg) < 2 {
 		return &cg[0]
