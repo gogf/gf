@@ -38,9 +38,7 @@ const (
 	transactionIdForLoggerCtx   = "TransactionId"
 )
 
-var (
-	transactionIdGenerator = gtype.NewUint64()
-)
+var transactionIdGenerator = gtype.NewUint64()
 
 // Begin starts and returns the transaction object.
 // You should call Commit or Rollback functions of the transaction object
@@ -99,9 +97,7 @@ func (c *Core) doBeginCtx(ctx context.Context) (*TX, error) {
 // Note that, you should not Commit or Rollback the transaction in function `f`
 // as it is automatically handled by this function.
 func (c *Core) Transaction(ctx context.Context, f func(ctx context.Context, tx *TX) error) (err error) {
-	var (
-		tx *TX
-	)
+	var tx *TX
 	if ctx == nil {
 		ctx = c.GetCtx()
 	}
@@ -537,7 +533,7 @@ func (tx *TX) Save(table string, data interface{}, batch ...int) (sql.Result, er
 // "money>? AND name like ?", 99999, "vip_%"
 // "status IN (?)", g.Slice{1,2,3}
 // "age IN(?,?)", 18, 50
-// User{ Id : 1, UserName : "john"}
+// User{ Id : 1, UserName : "john"}.
 func (tx *TX) Update(table string, data interface{}, condition interface{}, args ...interface{}) (sql.Result, error) {
 	return tx.Model(table).Ctx(tx.ctx).Data(data).Where(condition, args...).Update()
 }
@@ -552,7 +548,7 @@ func (tx *TX) Update(table string, data interface{}, condition interface{}, args
 // "money>? AND name like ?", 99999, "vip_%"
 // "status IN (?)", g.Slice{1,2,3}
 // "age IN(?,?)", 18, 50
-// User{ Id : 1, UserName : "john"}
+// User{ Id : 1, UserName : "john"}.
 func (tx *TX) Delete(table string, condition interface{}, args ...interface{}) (sql.Result, error) {
 	return tx.Model(table).Ctx(tx.ctx).Where(condition, args...).Delete()
 }

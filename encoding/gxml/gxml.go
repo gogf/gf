@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/clbanning/mxj/v2"
+
 	"github.com/gogf/gf/v2/encoding/gcharset"
 	"github.com/gogf/gf/v2/text/gregex"
 )
@@ -63,9 +64,8 @@ func ToJson(content []byte) ([]byte, error) {
 	mv, err := mxj.NewMapXml(res)
 	if err == nil {
 		return mv.Json()
-	} else {
-		return nil, err
 	}
+	return nil, err
 }
 
 // convert does convert the encoding of given XML content from XML root tag into UTF-8 encoding content.
