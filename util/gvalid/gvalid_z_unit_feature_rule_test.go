@@ -361,6 +361,7 @@ func Test_PhoneLoose(t *testing.T) {
 		t.AssertNE(err6, nil)
 	})
 }
+
 func Test_Telephone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "telephone"

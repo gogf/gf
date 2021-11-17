@@ -376,7 +376,7 @@ func formatSql(sql string, args []interface{}) (newSql string, newArgs []interfa
 	return handleArguments(sql, args)
 }
 
-type formatWhereInput struct {
+type formatWhereHolderInput struct {
 	Where     interface{}
 	Args      []interface{}
 	OmitNil   bool
@@ -386,8 +386,8 @@ type formatWhereInput struct {
 	Prefix    string // Field prefix, eg: "user.", "order.".
 }
 
-// formatWhere formats where statement and its arguments for `Where` and `Having` statements.
-func formatWhere(db DB, in formatWhereInput) (newWhere string, newArgs []interface{}) {
+// formatWhereHolder formats where statement and its arguments for `Where` and `Having` statements.
+func formatWhereHolder(db DB, in formatWhereHolderInput) (newWhere string, newArgs []interface{}) {
 	var (
 		buffer      = bytes.NewBuffer(nil)
 		reflectInfo = utils.OriginValueAndKind(in.Where)
@@ -454,8 +454,8 @@ func formatWhere(db DB, in formatWhereInput) (newWhere string, newArgs []interfa
 		var (
 			reflectType = reflectInfo.OriginValue.Type()
 			structField reflect.StructField
+			data        = DataToMapDeep(in.Where)
 		)
-		data := DataToMapDeep(in.Where)
 		if in.Table != "" {
 			data, _ = db.GetCore().mappingAndFilterData(in.Schema, in.Table, data, true)
 		}
@@ -484,9 +484,7 @@ func formatWhere(db DB, in formatWhereInput) (newWhere string, newArgs []interfa
 
 	default:
 		// Usually a string.
-
 		whereStr := gconv.String(in.Where)
-
 		// Is `whereStr` a field name which composed as a key-value condition?
 		// Eg:
 		// Where("id", 1)
@@ -514,9 +512,7 @@ func formatWhere(db DB, in formatWhereInput) (newWhere string, newArgs []interfa
 		// Regular string and parameter place holder handling.
 		// Eg:
 		// Where("id in(?) and name=?", g.Slice{1,2,3}, "john")
-
 		i := 0
-
 		for {
 			if i >= len(in.Args) {
 				break
@@ -608,13 +604,13 @@ func formatWhereInterfaces(db DB, where []interface{}, buffer *bytes.Buffer, new
 }
 
 type formatWhereKeyValueInput struct {
-	Db        DB
-	Buffer    *bytes.Buffer
-	Args      []interface{}
-	Key       string
-	Value     interface{}
-	OmitEmpty bool
-	Prefix    string // Field prefix, eg: "user.", "order.".
+	Db        DB            // Db is the underlying DB object for current operation.
+	Buffer    *bytes.Buffer // Buffer is the sql statement string without Args for current operation.
+	Args      []interface{} // Args is the full arguments of current operation.
+	Key       string        // The field name, eg: "id", "name", etc.
+	Value     interface{}   // The field value, can be any types.
+	OmitEmpty bool          // Ignores current condition key if `value` is empty.
+	Prefix    string        // Field prefix, eg: "user", "order", etc.
 }
 
 // formatWhereKeyValue handles each key-value pair of the parameter map.

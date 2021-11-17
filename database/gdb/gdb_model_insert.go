@@ -235,7 +235,6 @@ func (m *Model) doInsertWithOption(insertOption int) (result sql.Result, err err
 	if err != nil {
 		return nil, err
 	}
-
 	// It converts any data to List type for inserting.
 	switch value := newData.(type) {
 	case Result:
@@ -311,7 +310,6 @@ func (m *Model) doInsertWithOption(insertOption int) (result sql.Result, err err
 	if err != nil {
 		return result, err
 	}
-
 	return m.db.DoInsert(m.GetCtx(), m.getLink(true), m.tables, list, doInsertOption)
 }
 
