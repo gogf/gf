@@ -37,21 +37,6 @@ func (m *Model) Where(where interface{}, args ...interface{}) *Model {
 	return model
 }
 
-// WherePrefix performs as Where, but it adds prefix to each field in where statement.
-func (m *Model) WherePrefix(prefix string, where interface{}, args ...interface{}) *Model {
-	model := m.getModel()
-	if model.whereHolder == nil {
-		model.whereHolder = make([]ModelWhereHolder, 0)
-	}
-	model.whereHolder = append(model.whereHolder, ModelWhereHolder{
-		Operator: whereHolderOperatorWhere,
-		Where:    where,
-		Args:     args,
-		Prefix:   prefix,
-	})
-	return model
-}
-
 // Having sets the having statement for the model.
 // The parameters of this function usage are as the same as function Where.
 // See Where.
@@ -79,6 +64,9 @@ func (m *Model) WherePri(where interface{}, args ...interface{}) *Model {
 // Wheref builds condition string using fmt.Sprintf and arguments.
 // Note that if the number of `args` is more than the placeholder in `format`,
 // the extra `args` will be used as the where condition arguments of the Model.
+// Eg:
+// Wheref(`amount<? and status=%s`, "paid", 100)  => WHERE `amount`<100 and status='paid'
+// Wheref(`amount<%d and status=%s`, 100, "paid") => WHERE `amount`<100 and status='paid'
 func (m *Model) Wheref(format string, args ...interface{}) *Model {
 	var (
 		placeHolderCount = gstr.Count(format, "?")
@@ -109,53 +97,53 @@ func (m *Model) WhereGTE(column string, value interface{}) *Model {
 
 // WhereBetween builds `column BETWEEN min AND max` statement.
 func (m *Model) WhereBetween(column string, min, max interface{}) *Model {
-	return m.Wheref(`%s BETWEEN ? AND ?`, m.db.GetCore().QuoteWord(column), min, max)
+	return m.Wheref(`%s BETWEEN ? AND ?`, m.QuoteWord(column), min, max)
 }
 
 // WhereLike builds `column LIKE like` statement.
 func (m *Model) WhereLike(column string, like interface{}) *Model {
-	return m.Wheref(`%s LIKE ?`, m.db.GetCore().QuoteWord(column), like)
+	return m.Wheref(`%s LIKE ?`, m.QuoteWord(column), like)
 }
 
 // WhereIn builds `column IN (in)` statement.
 func (m *Model) WhereIn(column string, in interface{}) *Model {
-	return m.Wheref(`%s IN (?)`, m.db.GetCore().QuoteWord(column), in)
+	return m.Wheref(`%s IN (?)`, m.QuoteWord(column), in)
 }
 
 // WhereNull builds `columns[0] IS NULL AND columns[1] IS NULL ...` statement.
 func (m *Model) WhereNull(columns ...string) *Model {
 	model := m
 	for _, column := range columns {
-		model = m.Wheref(`%s IS NULL`, m.db.GetCore().QuoteWord(column))
+		model = m.Wheref(`%s IS NULL`, m.QuoteWord(column))
 	}
 	return model
 }
 
 // WhereNotBetween builds `column NOT BETWEEN min AND max` statement.
 func (m *Model) WhereNotBetween(column string, min, max interface{}) *Model {
-	return m.Wheref(`%s NOT BETWEEN ? AND ?`, m.db.GetCore().QuoteWord(column), min, max)
+	return m.Wheref(`%s NOT BETWEEN ? AND ?`, m.QuoteWord(column), min, max)
 }
 
 // WhereNotLike builds `column NOT LIKE like` statement.
 func (m *Model) WhereNotLike(column string, like interface{}) *Model {
-	return m.Wheref(`%s NOT LIKE ?`, m.db.GetCore().QuoteWord(column), like)
+	return m.Wheref(`%s NOT LIKE ?`, m.QuoteWord(column), like)
 }
 
 // WhereNot builds `column != value` statement.
 func (m *Model) WhereNot(column string, value interface{}) *Model {
-	return m.Wheref(`%s != ?`, m.db.GetCore().QuoteWord(column), value)
+	return m.Wheref(`%s != ?`, m.QuoteWord(column), value)
 }
 
 // WhereNotIn builds `column NOT IN (in)` statement.
 func (m *Model) WhereNotIn(column string, in interface{}) *Model {
-	return m.Wheref(`%s NOT IN (?)`, m.db.GetCore().QuoteWord(column), in)
+	return m.Wheref(`%s NOT IN (?)`, m.QuoteWord(column), in)
 }
 
 // WhereNotNull builds `columns[0] IS NOT NULL AND columns[1] IS NOT NULL ...` statement.
 func (m *Model) WhereNotNull(columns ...string) *Model {
 	model := m
 	for _, column := range columns {
-		model = m.Wheref(`%s IS NOT NULL`, m.db.GetCore().QuoteWord(column))
+		model = m.Wheref(`%s IS NOT NULL`, m.QuoteWord(column))
 	}
 	return model
 }
@@ -174,22 +162,10 @@ func (m *Model) WhereOr(where interface{}, args ...interface{}) *Model {
 	return model
 }
 
-// WhereOrPrefix performs as WhereOr, but it adds prefix to each field in where statement.
-func (m *Model) WhereOrPrefix(prefix string, where interface{}, args ...interface{}) *Model {
-	model := m.getModel()
-	if model.whereHolder == nil {
-		model.whereHolder = make([]ModelWhereHolder, 0)
-	}
-	model.whereHolder = append(model.whereHolder, ModelWhereHolder{
-		Operator: whereHolderOperatorOr,
-		Where:    where,
-		Args:     args,
-		Prefix:   prefix,
-	})
-	return model
-}
-
 // WhereOrf builds `OR` condition string using fmt.Sprintf and arguments.
+// Eg:
+// WhereOrf(`amount<? and status=%s`, "paid", 100)  => WHERE xxx OR `amount`<100 and status='paid'
+// WhereOrf(`amount<%d and status=%s`, 100, "paid") => WHERE xxx OR `amount`<100 and status='paid'
 func (m *Model) WhereOrf(format string, args ...interface{}) *Model {
 	var (
 		placeHolderCount = gstr.Count(format, "?")
@@ -220,48 +196,48 @@ func (m *Model) WhereOrGTE(column string, value interface{}) *Model {
 
 // WhereOrBetween builds `column BETWEEN min AND max` statement in `OR` conditions.
 func (m *Model) WhereOrBetween(column string, min, max interface{}) *Model {
-	return m.WhereOrf(`%s BETWEEN ? AND ?`, m.db.GetCore().QuoteWord(column), min, max)
+	return m.WhereOrf(`%s BETWEEN ? AND ?`, m.QuoteWord(column), min, max)
 }
 
 // WhereOrLike builds `column LIKE like` statement in `OR` conditions.
 func (m *Model) WhereOrLike(column string, like interface{}) *Model {
-	return m.WhereOrf(`%s LIKE ?`, m.db.GetCore().QuoteWord(column), like)
+	return m.WhereOrf(`%s LIKE ?`, m.QuoteWord(column), like)
 }
 
 // WhereOrIn builds `column IN (in)` statement in `OR` conditions.
 func (m *Model) WhereOrIn(column string, in interface{}) *Model {
-	return m.WhereOrf(`%s IN (?)`, m.db.GetCore().QuoteWord(column), in)
+	return m.WhereOrf(`%s IN (?)`, m.QuoteWord(column), in)
 }
 
 // WhereOrNull builds `columns[0] IS NULL OR columns[1] IS NULL ...` statement in `OR` conditions.
 func (m *Model) WhereOrNull(columns ...string) *Model {
 	model := m
 	for _, column := range columns {
-		model = m.WhereOrf(`%s IS NULL`, m.db.GetCore().QuoteWord(column))
+		model = m.WhereOrf(`%s IS NULL`, m.QuoteWord(column))
 	}
 	return model
 }
 
 // WhereOrNotBetween builds `column NOT BETWEEN min AND max` statement in `OR` conditions.
 func (m *Model) WhereOrNotBetween(column string, min, max interface{}) *Model {
-	return m.WhereOrf(`%s NOT BETWEEN ? AND ?`, m.db.GetCore().QuoteWord(column), min, max)
+	return m.WhereOrf(`%s NOT BETWEEN ? AND ?`, m.QuoteWord(column), min, max)
 }
 
 // WhereOrNotLike builds `column NOT LIKE like` statement in `OR` conditions.
 func (m *Model) WhereOrNotLike(column string, like interface{}) *Model {
-	return m.WhereOrf(`%s NOT LIKE ?`, m.db.GetCore().QuoteWord(column), like)
+	return m.WhereOrf(`%s NOT LIKE ?`, m.QuoteWord(column), like)
 }
 
 // WhereOrNotIn builds `column NOT IN (in)` statement.
 func (m *Model) WhereOrNotIn(column string, in interface{}) *Model {
-	return m.WhereOrf(`%s NOT IN (?)`, m.db.GetCore().QuoteWord(column), in)
+	return m.WhereOrf(`%s NOT IN (?)`, m.QuoteWord(column), in)
 }
 
 // WhereOrNotNull builds `columns[0] IS NOT NULL OR columns[1] IS NOT NULL ...` statement in `OR` conditions.
 func (m *Model) WhereOrNotNull(columns ...string) *Model {
 	model := m
 	for _, column := range columns {
-		model = m.WhereOrf(`%s IS NOT NULL`, m.db.GetCore().QuoteWord(column))
+		model = m.WhereOrf(`%s IS NOT NULL`, m.QuoteWord(column))
 	}
 	return model
 }
@@ -317,7 +293,9 @@ func (m *Model) Page(page, limit int) *Model {
 func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWhere string, conditionExtra string, conditionArgs []interface{}) {
 	autoPrefix := ""
 	if gstr.Contains(m.tables, " JOIN ") {
-		autoPrefix = m.db.GetCore().QuoteWord(m.tablesInit)
+		autoPrefix = m.db.GetCore().QuoteWord(
+			m.db.GetCore().guessPrimaryTableName(m.tablesInit),
+		)
 	}
 	if len(m.whereHolder) > 0 {
 		for _, v := range m.whereHolder {
@@ -327,7 +305,7 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 			switch v.Operator {
 			case whereHolderOperatorWhere:
 				if conditionWhere == "" {
-					newWhere, newArgs := formatWhere(m.db, formatWhereInput{
+					newWhere, newArgs := formatWhereHolder(m.db, formatWhereHolderInput{
 						Where:     v.Where,
 						Args:      v.Args,
 						OmitNil:   m.option&optionOmitNilWhere > 0,
@@ -345,7 +323,7 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 				fallthrough
 
 			case whereHolderOperatorAnd:
-				newWhere, newArgs := formatWhere(m.db, formatWhereInput{
+				newWhere, newArgs := formatWhereHolder(m.db, formatWhereHolderInput{
 					Where:     v.Where,
 					Args:      v.Args,
 					OmitNil:   m.option&optionOmitNilWhere > 0,
@@ -366,7 +344,7 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 				}
 
 			case whereHolderOperatorOr:
-				newWhere, newArgs := formatWhere(m.db, formatWhereInput{
+				newWhere, newArgs := formatWhereHolder(m.db, formatWhereHolderInput{
 					Where:     v.Where,
 					Args:      v.Args,
 					OmitNil:   m.option&optionOmitNilWhere > 0,
@@ -414,7 +392,7 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 	}
 	// HAVING.
 	if len(m.having) > 0 {
-		havingStr, havingArgs := formatWhere(m.db, formatWhereInput{
+		havingStr, havingArgs := formatWhereHolder(m.db, formatWhereHolderInput{
 			Where:     m.having[0],
 			Args:      gconv.Interfaces(m.having[1]),
 			OmitNil:   m.option&optionOmitNilWhere > 0,

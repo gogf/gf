@@ -373,7 +373,7 @@ func (m *Model) Min(column string) (float64, error) {
 	if len(column) == 0 {
 		return 0, nil
 	}
-	value, err := m.Fields(fmt.Sprintf(`MIN(%s)`, m.db.GetCore().QuoteWord(column))).Value()
+	value, err := m.Fields(fmt.Sprintf(`MIN(%s)`, m.QuoteWord(column))).Value()
 	if err != nil {
 		return 0, err
 	}
@@ -385,7 +385,7 @@ func (m *Model) Max(column string) (float64, error) {
 	if len(column) == 0 {
 		return 0, nil
 	}
-	value, err := m.Fields(fmt.Sprintf(`MAX(%s)`, m.db.GetCore().QuoteWord(column))).Value()
+	value, err := m.Fields(fmt.Sprintf(`MAX(%s)`, m.QuoteWord(column))).Value()
 	if err != nil {
 		return 0, err
 	}
@@ -397,7 +397,7 @@ func (m *Model) Avg(column string) (float64, error) {
 	if len(column) == 0 {
 		return 0, nil
 	}
-	value, err := m.Fields(fmt.Sprintf(`AVG(%s)`, m.db.GetCore().QuoteWord(column))).Value()
+	value, err := m.Fields(fmt.Sprintf(`AVG(%s)`, m.QuoteWord(column))).Value()
 	if err != nil {
 		return 0, err
 	}
@@ -409,7 +409,7 @@ func (m *Model) Sum(column string) (float64, error) {
 	if len(column) == 0 {
 		return 0, nil
 	}
-	value, err := m.Fields(fmt.Sprintf(`SUM(%s)`, m.db.GetCore().QuoteWord(column))).Value()
+	value, err := m.Fields(fmt.Sprintf(`SUM(%s)`, m.QuoteWord(column))).Value()
 	if err != nil {
 		return 0, err
 	}
