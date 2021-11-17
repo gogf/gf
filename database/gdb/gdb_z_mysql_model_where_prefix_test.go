@@ -68,3 +68,31 @@ func Test_Model_WhereOrPrefix(t *testing.T) {
 		t.Assert(r[3]["id"], "9")
 	})
 }
+
+func Test_Model_WherePrefixLike(t *testing.T) {
+	var (
+		table1 = gtime.TimestampNanoStr() + "_table1"
+		table2 = gtime.TimestampNanoStr() + "_table2"
+	)
+	createInitTable(table1)
+	defer dropTable(table1)
+	createInitTable(table2)
+	defer dropTable(table2)
+	db.SetDebug(true)
+	gtest.C(t, func(t *gtest.T) {
+		r, err := db.Model(table1).
+			FieldsPrefix(table1, "*").
+			LeftJoinOnField(table2, "id").
+			WherePrefix(table1, g.Map{
+				"id": g.Slice{1, 2, 3},
+			}).
+			WherePrefix(table2, g.Map{
+				"id": g.Slice{3, 4, 5},
+			}).
+			WherePrefixLike(table2, "nickname", "name%").
+			Order("id asc").All()
+		t.AssertNil(err)
+		t.Assert(len(r), 1)
+		t.Assert(r[0]["id"], "3")
+	})
+}

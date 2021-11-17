@@ -111,7 +111,7 @@ func (m *Model) FieldCount(column string, as ...string) *Model {
 	if len(as) > 0 && as[0] != "" {
 		asStr = fmt.Sprintf(` AS %s`, m.db.GetCore().QuoteWord(as[0]))
 	}
-	return m.appendFieldsByStr(fmt.Sprintf(`COUNT(%s)%s`, m.db.GetCore().QuoteWord(column), asStr))
+	return m.appendFieldsByStr(fmt.Sprintf(`COUNT(%s)%s`, m.QuoteWord(column), asStr))
 }
 
 // FieldSum formats and appends commonly used field `SUM(column)` to the select fields of model.
@@ -120,7 +120,7 @@ func (m *Model) FieldSum(column string, as ...string) *Model {
 	if len(as) > 0 && as[0] != "" {
 		asStr = fmt.Sprintf(` AS %s`, m.db.GetCore().QuoteWord(as[0]))
 	}
-	return m.appendFieldsByStr(fmt.Sprintf(`SUM(%s)%s`, m.db.GetCore().QuoteWord(column), asStr))
+	return m.appendFieldsByStr(fmt.Sprintf(`SUM(%s)%s`, m.QuoteWord(column), asStr))
 }
 
 // FieldMin formats and appends commonly used field `MIN(column)` to the select fields of model.
@@ -129,7 +129,7 @@ func (m *Model) FieldMin(column string, as ...string) *Model {
 	if len(as) > 0 && as[0] != "" {
 		asStr = fmt.Sprintf(` AS %s`, m.db.GetCore().QuoteWord(as[0]))
 	}
-	return m.appendFieldsByStr(fmt.Sprintf(`MIN(%s)%s`, m.db.GetCore().QuoteWord(column), asStr))
+	return m.appendFieldsByStr(fmt.Sprintf(`MIN(%s)%s`, m.QuoteWord(column), asStr))
 }
 
 // FieldMax formats and appends commonly used field `MAX(column)` to the select fields of model.
@@ -138,7 +138,7 @@ func (m *Model) FieldMax(column string, as ...string) *Model {
 	if len(as) > 0 && as[0] != "" {
 		asStr = fmt.Sprintf(` AS %s`, m.db.GetCore().QuoteWord(as[0]))
 	}
-	return m.appendFieldsByStr(fmt.Sprintf(`MAX(%s)%s`, m.db.GetCore().QuoteWord(column), asStr))
+	return m.appendFieldsByStr(fmt.Sprintf(`MAX(%s)%s`, m.QuoteWord(column), asStr))
 }
 
 // FieldAvg formats and appends commonly used field `AVG(column)` to the select fields of model.
@@ -147,7 +147,7 @@ func (m *Model) FieldAvg(column string, as ...string) *Model {
 	if len(as) > 0 && as[0] != "" {
 		asStr = fmt.Sprintf(` AS %s`, m.db.GetCore().QuoteWord(as[0]))
 	}
-	return m.appendFieldsByStr(fmt.Sprintf(`AVG(%s)%s`, m.db.GetCore().QuoteWord(column), asStr))
+	return m.appendFieldsByStr(fmt.Sprintf(`AVG(%s)%s`, m.QuoteWord(column), asStr))
 }
 
 func (m *Model) appendFieldsByStr(fields string) *Model {
