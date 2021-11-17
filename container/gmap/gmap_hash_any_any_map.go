@@ -266,7 +266,7 @@ func (m *AnyAnyMap) GetVar(key interface{}) *gvar.Var {
 	return gvar.New(m.Get(key))
 }
 
-// GetVarOrSet returns a Var with result from GetVarOrSet.
+// GetVarOrSet returns a Var with result from GetOrSet.
 // The returned Var is un-concurrent safe.
 func (m *AnyAnyMap) GetVarOrSet(key interface{}, value interface{}) *gvar.Var {
 	return gvar.New(m.GetOrSet(key, value))
