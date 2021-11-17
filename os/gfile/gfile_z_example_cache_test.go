@@ -24,12 +24,14 @@ func ExampleGetContentsWithCache() {
 	// write contents
 	gfile.PutContents(tempFile, "goframe example content")
 
-	// read contents
+	// It reads the file content with cache duration of one minute,
+	// which means it reads from cache after then without any IO operations within on minute.
 	fmt.Println(gfile.GetContentsWithCache(tempFile, time.Minute))
 
 	// write new contents will clear its cache
 	gfile.PutContents(tempFile, "new goframe example content")
 
+	// There's some delay for cache clearing after file content change.
 	time.Sleep(time.Second * 1)
 
 	// read contents

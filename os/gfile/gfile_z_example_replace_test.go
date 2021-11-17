@@ -50,7 +50,7 @@ func ExampleReplaceFileFunc() {
 	// read contents
 	fmt.Println(gfile.GetContents(tempFile))
 
-	// replace by yourself
+	// It replaces content directly by file path and callback function.
 	gfile.ReplaceFileFunc(func(path, content string) string {
 		// Replace with regular match
 		reg, _ := regexp.Compile(`\d{3}`)
@@ -78,6 +78,7 @@ func ExampleReplaceDir() {
 	// read contents
 	fmt.Println(gfile.GetContents(tempFile))
 
+	// It replaces content of all files under specified directory recursively.
 	gfile.ReplaceDir("content", "replace word", tempDir, "gflie_example.txt", true)
 
 	// read contents
@@ -102,7 +103,7 @@ func ExampleReplaceDirFunc() {
 	// read contents
 	fmt.Println(gfile.GetContents(tempFile))
 
-	// replace by yourself
+	// It replaces content of all files under specified directory with custom callback function recursively.
 	gfile.ReplaceDirFunc(func(path, content string) string {
 		// Replace with regular match
 		reg, _ := regexp.Compile(`\d{3}`)
