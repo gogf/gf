@@ -13,7 +13,7 @@ import "strings"
 // Eg:
 // Order("id desc")
 // Order("id", "desc")
-// Order("id desc,name asc")
+// Order("id desc,name asc").
 func (m *Model) Order(orderBy ...string) *Model {
 	if len(orderBy) == 0 {
 		return m

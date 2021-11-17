@@ -24,12 +24,13 @@ import (
 	"context"
 	"io/ioutil"
 
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/intlog"
 	"golang.org/x/text/encoding"
 	"golang.org/x/text/encoding/ianaindex"
 	"golang.org/x/text/transform"
+
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/intlog"
 )
 
 var (
