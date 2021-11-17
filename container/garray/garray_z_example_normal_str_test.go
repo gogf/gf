@@ -31,7 +31,7 @@ func ExampleStrArray_Walk() {
 	// [gf_user gf_user_detail]
 }
 
-func ExampleStrArray_NewStrArray() {
+func ExampleNewStrArray() {
 	s := garray.NewStrArray()
 	s.Append("We")
 	s.Append("are")
@@ -43,7 +43,7 @@ func ExampleStrArray_NewStrArray() {
 	// [We are GF fans]
 }
 
-func ExampleStrArray_NewStrArraySize() {
+func ExampleNewStrArraySize() {
 	s := garray.NewStrArraySize(3, 5)
 	s.Set(0, "We")
 	s.Set(1, "are")
@@ -55,16 +55,8 @@ func ExampleStrArray_NewStrArraySize() {
 	// [We are GF] 3 5
 }
 
-func ExampleStrArray_NewStrArrayFrom() {
+func ExampleNewStrArrayFrom() {
 	s := garray.NewStrArrayFrom(g.SliceStr{"We", "are", "GF", "fans", "!"})
-	fmt.Println(s.Slice(), s.Len(), cap(s.Slice()))
-
-	// Output:
-	// [We are GF fans !] 5 5
-}
-
-func ExampleStrArray_NewStrArrayFromCopy() {
-	s := garray.NewStrArrayFromCopy(g.SliceStr{"We", "are", "GF", "fans", "!"})
 	fmt.Println(s.Slice(), s.Len(), cap(s.Slice()))
 
 	// Output:
