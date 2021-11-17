@@ -290,12 +290,10 @@ func doScanList(model *Model, result Result, structSlicePointer interface{}, bin
 		if relationFields != "" && !relationBindToFieldNameChecked {
 			relationFromAttrField = relationFromAttrValue.FieldByName(relationBindToFieldName)
 			if !relationFromAttrField.IsValid() {
-				var (
-					filedMap, _ = structs.FieldMap(structs.FieldMapInput{
-						Pointer:         relationFromAttrValue,
-						RecursiveOption: structs.RecursiveOptionEmbeddedNoTag,
-					})
-				)
+				filedMap, _ := structs.FieldMap(structs.FieldMapInput{
+					Pointer:         relationFromAttrValue,
+					RecursiveOption: structs.RecursiveOptionEmbeddedNoTag,
+				})
 				if key, _ := gutil.MapPossibleItemByKey(gconv.Map(filedMap), relationBindToFieldName); key == "" {
 					return gerror.NewCodef(
 						gcode.CodeInvalidParameter,

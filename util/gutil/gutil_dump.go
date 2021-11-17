@@ -9,6 +9,7 @@ package gutil
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"reflect"
 	"strings"
 
@@ -57,10 +58,19 @@ func DumpWithType(values ...interface{}) {
 // Export returns variables `values` as a string with more manually readable.
 func Export(value interface{}, option ExportOption) string {
 	buffer := bytes.NewBuffer(nil)
-	doExport(value, "", buffer, doExportOption{
+	ExportTo(buffer, value, ExportOption{
 		WithoutType: option.WithoutType,
 	})
 	return buffer.String()
+}
+
+// ExportTo writes variables `values` as a string in to `writer` with more manually readable
+func ExportTo(writer io.Writer, value interface{}, option ExportOption) {
+	buffer := bytes.NewBuffer(nil)
+	doExport(value, "", buffer, doExportOption{
+		WithoutType: option.WithoutType,
+	})
+	_, _ = writer.Write(buffer.Bytes())
 }
 
 type doExportOption struct {
@@ -88,15 +98,15 @@ func doExport(value interface{}, indent string, buffer *bytes.Buffer, option doE
 	}
 	switch reflectKind {
 	case reflect.Slice, reflect.Array:
-		if _, ok := value.([]byte); ok {
+		if b, ok := value.([]byte); ok {
 			if option.WithoutType {
-				buffer.WriteString(fmt.Sprintf(`"%s"`, value))
+				buffer.WriteString(fmt.Sprintf(`"%s"`, gstr.AddSlashes(string(b))))
 			} else {
 				buffer.WriteString(fmt.Sprintf(
 					`%s(%d) "%s"`,
 					reflectTypeName,
 					len(reflectValue.String()),
-					value,
+					string(b),
 				))
 			}
 			return
@@ -197,12 +207,8 @@ func doExport(value interface{}, indent string, buffer *bytes.Buffer, option doE
 			if structContentStr == "" {
 				structContentStr = "{}"
 			} else {
-				if strings.HasPrefix(structContentStr, `"`) && strings.HasSuffix(structContentStr, `"`) {
-					attributeCountStr = fmt.Sprintf(`%d`, len(structContentStr))
-				} else {
-					structContentStr = fmt.Sprintf(`"%s"`, gstr.AddSlashes(structContentStr))
-					attributeCountStr = fmt.Sprintf(`%d`, len(structContentStr)-2)
-				}
+				structContentStr = fmt.Sprintf(`"%s"`, gstr.AddSlashes(structContentStr))
+				attributeCountStr = fmt.Sprintf(`%d`, len(structContentStr)-2)
 			}
 			if option.WithoutType {
 				buffer.WriteString(structContentStr)
@@ -246,14 +252,15 @@ func doExport(value interface{}, indent string, buffer *bytes.Buffer, option doE
 		buffer.WriteString(fmt.Sprintf("%s}", indent))
 
 	case reflect.String:
+		s, _ := value.(string)
 		if option.WithoutType {
-			buffer.WriteString(fmt.Sprintf("\"%v\"", value))
+			buffer.WriteString(fmt.Sprintf(`"%v"`, gstr.AddSlashes(s)))
 		} else {
 			buffer.WriteString(fmt.Sprintf(
-				"%s(%d) \"%v\"",
+				`%s(%d) "%v"`,
 				reflectTypeName,
 				len(reflectValue.String()),
-				value,
+				gstr.AddSlashes(s),
 			))
 		}
 

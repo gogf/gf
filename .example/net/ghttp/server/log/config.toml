@@ -1,7 +1,0 @@
-[server]
-    LogPath          = "/tmp/gflog/server"
-    LogStdout        = true
-    ErrorLogEnabled  = true
-    ErrorLogPattern  = "error.log"
-    AccessLogEnabled = true
-    AccessLogPattern = "access.log"

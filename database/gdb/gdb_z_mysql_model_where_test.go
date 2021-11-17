@@ -66,6 +66,5 @@ func Test_Model_WhereOrPrefix(t *testing.T) {
 		t.Assert(r[1]["id"], "2")
 		t.Assert(r[2]["id"], "8")
 		t.Assert(r[3]["id"], "9")
-
 	})
 }

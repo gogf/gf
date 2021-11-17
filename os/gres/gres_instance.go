@@ -9,7 +9,7 @@ package gres
 import "github.com/gogf/gf/v2/container/gmap"
 
 const (
-	// DefaultName Default group name for instance usage.
+	// DefaultName default group name for instance usage.
 	DefaultName = "default"
 )
 

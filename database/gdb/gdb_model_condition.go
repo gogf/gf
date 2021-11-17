@@ -23,7 +23,7 @@ import (
 // Where("uid", 1).Where("name", "john")
 // Where("status IN (?)", g.Slice{1,2,3})
 // Where("age IN(?,?)", 18, 50)
-// Where(User{ Id : 1, UserName : "john"})
+// Where(User{ Id : 1, UserName : "john"}).
 func (m *Model) Where(where interface{}, args ...interface{}) *Model {
 	model := m.getModel()
 	if model.whereHolder == nil {
@@ -315,9 +315,7 @@ func (m *Model) Page(page, limit int) *Model {
 //
 // The parameter `limit1` specifies whether limits querying only one record if m.limit is not set.
 func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWhere string, conditionExtra string, conditionArgs []interface{}) {
-	var (
-		autoPrefix = ""
-	)
+	autoPrefix := ""
 	if gstr.Contains(m.tables, " JOIN ") {
 		autoPrefix = m.db.GetCore().QuoteWord(m.tablesInit)
 	}
