@@ -21,7 +21,7 @@ import (
 // Fields("id", "name", "age")
 // Fields([]string{"id", "name", "age"})
 // Fields(map[string]interface{}{"id":1, "name":"john", "age":18})
-// Fields(User{ Id: 1, Name: "john", Age: 18})
+// Fields(User{ Id: 1, Name: "john", Age: 18}).
 func (m *Model) Fields(fieldNamesOrMapStruct ...interface{}) *Model {
 	length := len(fieldNamesOrMapStruct)
 	if length == 0 {

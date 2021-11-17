@@ -18,42 +18,42 @@ import (
 // WriteTpl parses and responses given template file.
 // The parameter `params` specifies the template variables for parsing.
 func (r *Response) WriteTpl(tpl string, params ...gview.Params) error {
-	if b, err := r.ParseTpl(tpl, params...); err != nil {
+	b, err := r.ParseTpl(tpl, params...)
+	if err != nil {
 		if !gmode.IsProduct() {
 			r.Write("Template Parsing Error: " + err.Error())
 		}
 		return err
-	} else {
-		r.Write(b)
 	}
+	r.Write(b)
 	return nil
 }
 
 // WriteTplDefault parses and responses the default template file.
 // The parameter `params` specifies the template variables for parsing.
 func (r *Response) WriteTplDefault(params ...gview.Params) error {
-	if b, err := r.ParseTplDefault(params...); err != nil {
+	b, err := r.ParseTplDefault(params...)
+	if err != nil {
 		if !gmode.IsProduct() {
 			r.Write("Template Parsing Error: " + err.Error())
 		}
 		return err
-	} else {
-		r.Write(b)
 	}
+	r.Write(b)
 	return nil
 }
 
 // WriteTplContent parses and responses the template content.
 // The parameter `params` specifies the template variables for parsing.
 func (r *Response) WriteTplContent(content string, params ...gview.Params) error {
-	if b, err := r.ParseTplContent(content, params...); err != nil {
+	b, err := r.ParseTplContent(content, params...)
+	if err != nil {
 		if !gmode.IsProduct() {
 			r.Write("Template Parsing Error: " + err.Error())
 		}
 		return err
-	} else {
-		r.Write(b)
 	}
+	r.Write(b)
 	return nil
 }
 
