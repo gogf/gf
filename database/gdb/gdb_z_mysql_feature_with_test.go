@@ -1871,9 +1871,9 @@ func Test_Table_Relation_With_MultipleDepends_Embedded(t *testing.T) {
 
 func Test_Table_Relation_WithAll_Embedded_Meta_NameMatchingRule(t *testing.T) {
 	var (
-		tableUser       = "user1"
-		tableUserDetail = "user_detail1"
-		tableUserScores = "user_scores1"
+		tableUser       = "user100"
+		tableUserDetail = "user_detail100"
+		tableUserScores = "user_scores100"
 	)
 	if _, err := db.Exec(ctx, fmt.Sprintf(`
 CREATE TABLE IF NOT EXISTS %s (
@@ -1910,13 +1910,13 @@ PRIMARY KEY (id)
 	defer dropTable(tableUserScores)
 
 	type UserDetail struct {
-		gmeta.Meta `orm:"table:user_detail1"`
+		gmeta.Meta `orm:"table:user_detail100"`
 		UserID     int    `json:"user_id"`
 		Address    string `json:"address"`
 	}
 
 	type UserScores struct {
-		gmeta.Meta `orm:"table:user_scores1"`
+		gmeta.Meta `orm:"table:user_scores100"`
 		ID         int `json:"id"`
 		UserID     int `json:"user_id"`
 		Score      int `json:"score"`
@@ -1929,7 +1929,7 @@ PRIMARY KEY (id)
 	}
 
 	type User struct {
-		gmeta.Meta `orm:"table:user1"`
+		gmeta.Meta `orm:"table:user100"`
 		UserEmbedded
 		UserDetail UserDetail    `orm:"with:user_id=id"`
 		UserScores []*UserScores `orm:"with:user_id=id"`
@@ -1959,9 +1959,6 @@ PRIMARY KEY (id)
 			gtest.AssertNil(err)
 		}
 	}
-
-	db.SetDebug(true)
-	defer db.SetDebug(false)
 
 	// gtest.C(t, func(t *gtest.T) {
 	//	var user *User

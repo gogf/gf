@@ -159,7 +159,6 @@ func Test_CheckMap2(t *testing.T) {
 	}
 }
 
-// 如果值为nil，并且不需要require*验证时，其他验证失效
 func Test_CheckMapWithNilAndNotRequiredField(t *testing.T) {
 	data := map[string]interface{}{
 		"id": "1",

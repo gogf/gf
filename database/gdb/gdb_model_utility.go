@@ -17,6 +17,15 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
+// QuoteWord checks given string `s` a word,
+// if true it quotes `s` with security chars of the database
+// and returns the quoted string; or else it returns `s` without any change.
+//
+// The meaning of a `word` can be considered as a column name.
+func (m *Model) QuoteWord(s string) string {
+	return m.db.GetCore().QuoteWord(s)
+}
+
 // TableFields retrieves and returns the fields information of specified table of current
 // schema.
 //
