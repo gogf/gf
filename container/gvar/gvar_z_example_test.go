@@ -12,12 +12,12 @@ import (
 )
 
 type Product struct {
-	Code          string
-	Name          string
-	Quantity      int32
-	Price         float64
-	OnSale        bool
-	PromotionTime time.Time
+	Code          string    `json:"Code"`
+	Name          string    `json:"Name"`
+	Quantity      int32     `json:"Quantity"`
+	Price         float64   `json:"Price"`
+	OnSale        bool      `json:"OnSale"`
+	PromotionTime time.Time `json:"PromotionTime"`
 }
 
 var product1 = Product{
@@ -317,7 +317,7 @@ func ExampleVar_MarshalJSON() {
 	g.Dump(json)
 
 	// Output:
-	// "{"Code":"0001","Name":"Golang Book1","Quantity":1000,"Price":100,"OnSale":true,"PromotionTime":"0001-01-01T00:00:00Z"}"
+	// "{\"Code\":\"0001\",\"Name\":\"Golang Book1\",\"Quantity\":1000,\"Price\":100,\"OnSale\":true,\"PromotionTime\":\"2021-11-11T00:00:00Z\"}"
 }
 
 // UnmarshalJSON
