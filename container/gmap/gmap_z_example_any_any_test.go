@@ -347,23 +347,68 @@ func ExampleAnyAnyMap_SetIfNotExist() {
 }
 
 func ExampleAnyAnyMap_SetIfNotExistFunc() {
+	var m gmap.Map
+	fmt.Println(m.SetIfNotExistFunc("k1", func() interface{} {
+		return "v1"
+	}))
+	fmt.Println(m.SetIfNotExistFunc("k1", func() interface{} {
+		return "v1"
+	}))
+	fmt.Println(m.Map())
 
 	// Output:
+	// true
+	// false
+	// map[k1:v1]
 }
 
 func ExampleAnyAnyMap_SetIfNotExistFuncLock() {
+	var m gmap.Map
+	fmt.Println(m.SetIfNotExistFuncLock("k1", func() interface{} {
+		return "v1"
+	}))
+	fmt.Println(m.SetIfNotExistFuncLock("k1", func() interface{} {
+		return "v1"
+	}))
+	fmt.Println(m.Map())
 
 	// Output:
+	// true
+	// false
+	// map[k1:v1]
 }
 
 func ExampleAnyAnyMap_Remove() {
+	var m gmap.Map
+	m.Set("k1", "v1")
+
+	fmt.Println(m.Remove("k1"))
+	fmt.Println(m.Remove("k2"))
 
 	// Output:
+	// v1
+	// <nil>
 }
 
 func ExampleAnyAnyMap_Removes() {
+	var m gmap.Map
+	m.Sets(g.MapAnyAny{
+		"k1": "v1",
+		"k2": "v2",
+		"k3": "v3",
+		"k4": "v4",
+	})
+
+	removeList := make([]interface{}, 2)
+	removeList = append(removeList, "k1")
+	removeList = append(removeList, "k2")
+
+	m.Removes(removeList)
+
+	fmt.Println(m.Map())
 
 	// Output:
+	// map[k3:v3 k4:v4]
 }
 
 func ExampleAnyAnyMap_Keys() {
@@ -375,11 +420,9 @@ func ExampleAnyAnyMap_Keys() {
 		"k4": "v4",
 	})
 	fmt.Println(m.Keys())
-	fmt.Println(m.Values())
 
 	// May Output:
 	// [k1 k2 k3 k4]
-	// [v2 v3 v4 v1]
 }
 
 func ExampleAnyAnyMap_Values() {
@@ -390,32 +433,71 @@ func ExampleAnyAnyMap_Values() {
 		"k3": "v3",
 		"k4": "v4",
 	})
-	fmt.Println(m.Keys())
 	fmt.Println(m.Values())
 
 	// May Output:
-	// [k1 k2 k3 k4]
-	// [v2 v3 v4 v1]
+	// [v1 v2 v3 v4]
 }
 
 func ExampleAnyAnyMap_Contains() {
+	var m gmap.Map
+	m.Sets(g.MapAnyAny{
+		"k1": "v1",
+		"k2": "v2",
+		"k3": "v3",
+		"k4": "v4",
+	})
+
+	fmt.Println(m.Contains("k1"))
+	fmt.Println(m.Contains("k5"))
 
 	// Output:
+	// true
+	// false
 }
 
 func ExampleAnyAnyMap_Size() {
+	var m gmap.Map
+	m.Sets(g.MapAnyAny{
+		"k1": "v1",
+		"k2": "v2",
+		"k3": "v3",
+		"k4": "v4",
+	})
+
+	fmt.Println(m.Size())
 
 	// Output:
+	// 4
 }
 
 func ExampleAnyAnyMap_IsEmpty() {
+	var m gmap.Map
+	fmt.Println(m.IsEmpty())
+
+	m.Set("k1", "v1")
+	fmt.Println(m.IsEmpty())
 
 	// Output:
+	// true
+	// false
 }
 
 func ExampleAnyAnyMap_Clear() {
+	var m gmap.Map
+	m.Sets(g.MapAnyAny{
+		"k1": "v1",
+		"k2": "v2",
+		"k3": "v3",
+		"k4": "v4",
+	})
+
+	m.Clear()
+
+	fmt.Println(m.Map())
 
 	// Output:
+	// map[]
 }
 
 func ExampleAnyAnyMap_Replace() {
