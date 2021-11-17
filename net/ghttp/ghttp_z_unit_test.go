@@ -7,14 +7,29 @@
 package ghttp_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/os/genv"
 	"github.com/gogf/gf/v2/test/gtest"
 )
+
+var (
+	ctx   = context.TODO()
+	ports = garray.NewIntArray(true)
+)
+
+func init() {
+	genv.Set("UNDER_TEST", "1")
+	for i := 7000; i <= 8000; i++ {
+		ports.Append(i)
+	}
+}
 
 func Test_GetUrl(t *testing.T) {
 	p, _ := ports.PopRand()

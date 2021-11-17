@@ -12,11 +12,22 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/net/gudp"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
 )
+
+var (
+	ports = garray.NewIntArray(true)
+)
+
+func init() {
+	for i := 9000; i <= 10000; i++ {
+		ports.Append(i)
+	}
+}
 
 func Test_Basic(t *testing.T) {
 	var (
