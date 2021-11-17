@@ -446,6 +446,16 @@ func ExampleCountI() {
 	{
 		var (
 			s      = `goframe_is Very Nice.to-use`
+			substr = "Goframe"
+			rsStr  = gstr.CountI(s, substr)
+		)
+
+		fmt.Println(rsStr)
+	}
+
+	{
+		var (
+			s      = `Goframe_is Very Nice.to-use`
 			substr = "golang"
 			rsStr  = gstr.CountI(s, substr)
 		)
@@ -453,6 +463,7 @@ func ExampleCountI() {
 	}
 
 	// Output:
+	// 1
 	// 1
 	// 0
 }
@@ -511,10 +522,10 @@ func ExampleExplode() {
 		rsStr     = gstr.Explode(delimiter, str)
 	)
 
-	fmt.Println(rsStr)
+	fmt.Printf(`%#v`, rsStr)
 
 	// Output:
-	// [goframe is Very Nice to use]
+	// []string{"goframe", "is", "Very", "Nice", "to", "use"}
 }
 
 func ExampleFields() {
@@ -523,10 +534,10 @@ func ExampleFields() {
 		rsStr = gstr.Fields(str)
 	)
 
-	fmt.Println(rsStr)
+	fmt.Printf(`%#v`, rsStr)
 
 	// Output:
-	// [goframe is Very Nice to-use]
+	// []string{"goframe", "is", "Very", "Nice", "to-use"}
 }
 
 func ExampleHasPrefix() {
@@ -975,6 +986,7 @@ func ExampleOctStr() {
 	// 怡
 }
 
+// '103' is the 'g' in ASCII
 func ExampleOrd() {
 	var (
 		str   = `goframe`
@@ -985,6 +997,7 @@ func ExampleOrd() {
 
 	// Output:
 	// 103
+
 }
 
 func ExampleParse() {
@@ -1633,13 +1646,13 @@ func ExampleSearchArray() {
 
 func ExampleShuffle() {
 	var (
-		str   = `goframe_is Nice.`
+		str   = `abcdefg`
 		rsStr = gstr.Shuffle(str)
 	)
 	fmt.Println(rsStr)
 
 	// May Output:
-	// e giNomescraf._i
+	// efcgbda
 }
 
 func ExampleSimilarText() {
@@ -1711,10 +1724,10 @@ func ExampleSplit() {
 		delimiter = `_`
 		rsStr     = gstr.Split(str, delimiter)
 	)
-	fmt.Println(rsStr)
+	fmt.Printf(`%#v`, rsStr)
 
 	// Output:
-	// [GoFrame Nice]
+	// []string{"GoFrame", "Nice"}
 }
 
 func ExampleSplitAndTrim() {
@@ -1724,10 +1737,10 @@ func ExampleSplitAndTrim() {
 		characterMask = ` `
 		rsStr         = gstr.SplitAndTrim(str, delimiter, characterMask)
 	)
-	fmt.Println(rsStr)
+	fmt.Printf("%#v", rsStr)
 
 	// Output:
-	// [goframe is Very Nice to use]
+	// []string{"goframe", "is", "Very", "Nice", "to", "use"}
 }
 
 func ExampleStr() {
@@ -1755,29 +1768,55 @@ func ExampleStrEx() {
 }
 
 func ExampleStrLimit() {
-	var (
-		str    = `1234567890.png`
-		length = 8
-		suffix = `.jpg`
-		rsStr  = gstr.StrLimit(str, length, suffix)
-	)
-	fmt.Println(rsStr)
+	{
+		var (
+			str    = `1234567890.png`
+			length = 4
+			suffix = `.jpg`
+			rsStr  = gstr.StrLimit(str, length, suffix)
+		)
+		fmt.Println(rsStr)
+	}
+
+	{
+		var (
+			str    = `123456789`
+			length = 3
+			suffix = `...`
+			rsStr  = gstr.StrLimit(str, length, suffix)
+		)
+		fmt.Println(rsStr)
+	}
 
 	// Output:
-	// 12345678.jpg
+	// 1234.jpg
+	// 123...
 }
 
 func ExampleStrLimitRune() {
-	var (
-		str    = `123456789`
-		length = 5
-		suffix = "ABCD"
-		rsStr  = gstr.StrLimitRune(str, length, suffix)
-	)
-	fmt.Println(rsStr)
+	{
+		var (
+			str    = `123456789`
+			length = 5
+			suffix = "ABCD"
+			rsStr  = gstr.StrLimitRune(str, length, suffix)
+		)
+		fmt.Println(rsStr)
+	}
+
+	{
+		var (
+			str    = `goframe是一个好用的框架她提供了非常丰富的工具给使用者.`
+			length = 15
+			suffix = "!"
+			rsStr  = gstr.StrLimitRune(str, length, suffix)
+		)
+		fmt.Println(rsStr)
+	}
 
 	// Output:
 	// 12345ABCD
+	// goframe是一个好用的框架!
 }
 
 func ExampleStrTill() {
@@ -1792,8 +1831,8 @@ func ExampleStrTill() {
 
 	{
 		var (
-			haystack = `ABCDEFGHIJKLMN`
-			needle   = `EF`
+			haystack = `https://goframe.org/index.html?test=123456`
+			needle   = `?`
 			rsStr    = gstr.StrTill(haystack, needle)
 		)
 		fmt.Println(rsStr)
@@ -1801,14 +1840,14 @@ func ExampleStrTill() {
 
 	// Output:
 	// goframe是一个好用的框架,
-	// ABCDE
+	// https://goframe.org/index.html?
 }
 
 func ExampleStrTillEx() {
 	{
 		var (
-			haystack = `abcdefg`
-			needle   = `e`
+			haystack = `xxxx.txt`
+			needle   = `.txt`
 			rsStr    = gstr.StrTillEx(haystack, needle)
 		)
 		fmt.Println(rsStr)
@@ -1816,16 +1855,16 @@ func ExampleStrTillEx() {
 
 	{
 		var (
-			haystack = `abcdefg`
-			needle   = `de`
+			haystack = `文件名.zip`
+			needle   = `.zip`
 			rsStr    = gstr.StrTillEx(haystack, needle)
 		)
 		fmt.Println(rsStr)
 	}
 
 	// Output:
-	// abcd
-	// abc
+	// xxxx
+	// 文件名
 }
 
 func ExampleStripSlashes() {
@@ -1866,16 +1905,27 @@ func ExampleSubStr() {
 }
 
 func ExampleSubStrRune() {
-	var (
-		str    = `123456789`
-		start  = 5
-		length = 4
-		subStr = gstr.SubStrRune(str, start, length)
-	)
-	fmt.Println(subStr)
-
+	{
+		var (
+			str    = `123456789`
+			start  = 5
+			length = 4
+			subStr = gstr.SubStrRune(str, start, length)
+		)
+		fmt.Println(subStr)
+	}
+	{
+		var (
+			str    = `一二三四五六七八九零`
+			start  = 5
+			length = 4
+			subStr = gstr.SubStrRune(str, start, length)
+		)
+		fmt.Println(subStr)
+	}
 	// Output:
 	// 6789
+	// 六七八九
 }
 
 func ExampleToLower() {
