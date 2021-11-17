@@ -23,7 +23,8 @@ func ExampleGetContents() {
 	// write contents
 	gfile.PutContents(tempFile, "goframe example content")
 
-	// read contents
+	// It reads and returns the file content as string.
+	// It returns empty string if it fails reading, for example, with permission or IO error.
 	fmt.Println(gfile.GetContents(tempFile))
 
 	// Output:
@@ -41,7 +42,8 @@ func ExampleGetBytes() {
 	// write contents
 	gfile.PutContents(tempFile, "goframe example content")
 
-	// read contents
+	// It reads and returns the file content as []byte.
+	// It returns nil if it fails reading, for example, with permission or IO error.
 	fmt.Println(gfile.GetBytes(tempFile))
 
 	// Output:
@@ -56,7 +58,8 @@ func ExamplePutContents() {
 		tempFile = gfile.Join(tempDir, fileName)
 	)
 
-	// write contents
+	// It creates and puts content string into specifies file path.
+	// It automatically creates directory recursively if it does not exist.
 	gfile.PutContents(tempFile, "goframe example content")
 
 	// read contents

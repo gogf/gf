@@ -55,7 +55,7 @@ func ExampleScanDirFile() {
 	gfile.PutContents(tempSubFile, "goframe example content")
 
 	// scans directory recursively exclusive of directories
-	list, _ := gfile.ScanDirFile(tempDir, "*", true)
+	list, _ := gfile.ScanDirFile(tempDir, "*.txt", true)
 	for _, v := range list {
 		fmt.Println(gfile.Basename(v))
 	}
@@ -116,7 +116,7 @@ func ExampleScanDirFileFunc() {
 	gfile.PutContents(tempSubFile, "goframe example content")
 
 	// scans directory recursively exclusive of directories
-	list, _ := gfile.ScanDirFileFunc(tempDir, "*", true, func(path string) string {
+	list, _ := gfile.ScanDirFileFunc(tempDir, "*.txt", true, func(path string) string {
 		// ignores some files
 		if gfile.Basename(path) == "gflie_example_ignores.txt" {
 			return ""
