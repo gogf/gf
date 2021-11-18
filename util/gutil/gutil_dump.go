@@ -29,14 +29,14 @@ type iMarshalJSON interface {
 
 // DumpOption specifies the behavior of function Export.
 type DumpOption struct {
-	WithoutType bool // WithoutType specifies exported content has no type information.
+	WithType bool // WithType specifies dumping content with type information.
 }
 
 // Dump prints variables `values` to stdout with more manually readable.
 func Dump(values ...interface{}) {
 	for _, value := range values {
 		DumpWithOption(value, DumpOption{
-			WithoutType: true,
+			WithType: false,
 		})
 	}
 }
@@ -46,7 +46,7 @@ func Dump(values ...interface{}) {
 func DumpWithType(values ...interface{}) {
 	for _, value := range values {
 		DumpWithOption(value, DumpOption{
-			WithoutType: false,
+			WithType: true,
 		})
 	}
 }
@@ -55,7 +55,7 @@ func DumpWithType(values ...interface{}) {
 func DumpWithOption(value interface{}, option DumpOption) {
 	buffer := bytes.NewBuffer(nil)
 	DumpTo(buffer, value, DumpOption{
-		WithoutType: option.WithoutType,
+		WithType: option.WithType,
 	})
 	fmt.Println(buffer.String())
 }
@@ -64,13 +64,13 @@ func DumpWithOption(value interface{}, option DumpOption) {
 func DumpTo(writer io.Writer, value interface{}, option DumpOption) {
 	buffer := bytes.NewBuffer(nil)
 	doDump(value, "", buffer, doDumpOption{
-		WithoutType: option.WithoutType,
+		WithType: option.WithType,
 	})
 	_, _ = writer.Write(buffer.Bytes())
 }
 
 type doDumpOption struct {
-	WithoutType bool
+	WithType bool
 }
 
 func doDump(value interface{}, indent string, buffer *bytes.Buffer, option doDumpOption) {
@@ -85,7 +85,7 @@ func doDump(value interface{}, indent string, buffer *bytes.Buffer, option doDum
 		newIndent       = indent + dumpIndent
 	)
 	reflectTypeName = strings.ReplaceAll(reflectTypeName, `[]uint8`, `[]byte`)
-	if option.WithoutType {
+	if !option.WithType {
 		reflectTypeName = ""
 	}
 	for reflectKind == reflect.Ptr {
@@ -163,7 +163,7 @@ type doDumpInternalInput struct {
 
 func doDumpSlice(in doDumpInternalInput) {
 	if b, ok := in.Value.([]byte); ok {
-		if in.Option.WithoutType {
+		if !in.Option.WithType {
 			in.Buffer.WriteString(fmt.Sprintf(`"%s"`, addSlashesForString(string(b))))
 		} else {
 			in.Buffer.WriteString(fmt.Sprintf(
@@ -176,14 +176,14 @@ func doDumpSlice(in doDumpInternalInput) {
 		return
 	}
 	if in.ReflectValue.Len() == 0 {
-		if in.Option.WithoutType {
+		if !in.Option.WithType {
 			in.Buffer.WriteString("[]")
 		} else {
 			in.Buffer.WriteString(fmt.Sprintf("%s(0) []", in.ReflectTypeName))
 		}
 		return
 	}
-	if in.Option.WithoutType {
+	if !in.Option.WithType {
 		in.Buffer.WriteString("[\n")
 	} else {
 		in.Buffer.WriteString(fmt.Sprintf("%s(%d) [\n", in.ReflectTypeName, in.ReflectValue.Len()))
@@ -201,7 +201,7 @@ func doDumpMap(in doDumpInternalInput) {
 		mapKeys = in.ReflectValue.MapKeys()
 	)
 	if len(mapKeys) == 0 {
-		if in.Option.WithoutType {
+		if !in.Option.WithType {
 			in.Buffer.WriteString("{}")
 		} else {
 			in.Buffer.WriteString(fmt.Sprintf("%s(0) {}", in.ReflectTypeName))
@@ -219,7 +219,7 @@ func doDumpMap(in doDumpInternalInput) {
 			maxSpaceNum = tmpSpaceNum
 		}
 	}
-	if in.Option.WithoutType {
+	if !in.Option.WithType {
 		in.Buffer.WriteString("{\n")
 	} else {
 		in.Buffer.WriteString(fmt.Sprintf("%s(%d) {\n", in.ReflectTypeName, len(mapKeys)))
@@ -231,7 +231,7 @@ func doDumpMap(in doDumpInternalInput) {
 		} else {
 			mapKeyStr = fmt.Sprintf(`%v`, mapKey.Interface())
 		}
-		if in.Option.WithoutType {
+		if !in.Option.WithType {
 			in.Buffer.WriteString(fmt.Sprintf(
 				"%s%v:%s",
 				in.NewIndent,
@@ -275,7 +275,7 @@ func doDumpStruct(in doDumpInternalInput) {
 			structContentStr = fmt.Sprintf(`"%s"`, addSlashesForString(structContentStr))
 			attributeCountStr = fmt.Sprintf(`%d`, len(structContentStr)-2)
 		}
-		if in.Option.WithoutType {
+		if !in.Option.WithType {
 			in.Buffer.WriteString(structContentStr)
 		} else {
 			in.Buffer.WriteString(fmt.Sprintf(
@@ -297,7 +297,7 @@ func doDumpStruct(in doDumpInternalInput) {
 			maxSpaceNum = tmpSpaceNum
 		}
 	}
-	if in.Option.WithoutType {
+	if !in.Option.WithType {
 		in.Buffer.WriteString("{\n")
 	} else {
 		in.Buffer.WriteString(fmt.Sprintf("%s(%d) {\n", in.ReflectTypeName, len(structFields)))
@@ -319,7 +319,7 @@ func doDumpStruct(in doDumpInternalInput) {
 func doDumpNumber(in doDumpInternalInput) {
 	if v, ok := in.Value.(iString); ok {
 		s := v.String()
-		if in.Option.WithoutType {
+		if !in.Option.WithType {
 			in.Buffer.WriteString(fmt.Sprintf(`"%v"`, addSlashesForString(s)))
 		} else {
 			in.Buffer.WriteString(fmt.Sprintf(
@@ -336,7 +336,7 @@ func doDumpNumber(in doDumpInternalInput) {
 
 func doDumpString(in doDumpInternalInput) {
 	s := in.ReflectValue.String()
-	if in.Option.WithoutType {
+	if !in.Option.WithType {
 		in.Buffer.WriteString(fmt.Sprintf(`"%v"`, addSlashesForString(s)))
 	} else {
 		in.Buffer.WriteString(fmt.Sprintf(
@@ -351,7 +351,7 @@ func doDumpString(in doDumpInternalInput) {
 func doDumpDefault(in doDumpInternalInput) {
 	s := fmt.Sprintf("%v", in.Value)
 	s = gstr.Trim(s, `<>`)
-	if in.Option.WithoutType {
+	if !in.Option.WithType {
 		in.Buffer.WriteString(s)
 	} else {
 		in.Buffer.WriteString(fmt.Sprintf("%s(%s)", in.ReflectTypeName, s))
