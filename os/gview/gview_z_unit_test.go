@@ -8,6 +8,7 @@ package gview_test
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -411,6 +412,7 @@ func Test_BuildInFuncDump(t *testing.T) {
 		})
 		r, err := v.ParseContent(context.TODO(), "{{dump .}}")
 		t.Assert(err, nil)
+		fmt.Println(r)
 		t.Assert(gstr.Contains(r, `"name":  "john"`), true)
 		t.Assert(gstr.Contains(r, `"score": 100`), true)
 	})
