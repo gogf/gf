@@ -117,7 +117,7 @@ func ExampleAnyAnyMap_FilterEmpty() {
 	m.FilterEmpty()
 	fmt.Println(m.Map())
 
-	// May Output:
+	// Output:
 	// map[k4:1]
 }
 
