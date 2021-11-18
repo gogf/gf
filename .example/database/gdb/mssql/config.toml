@@ -1,3 +1,0 @@
-
-[database]
-    linkinfo = "mssql:user id=test;password=test1;server=122.152.202.91;port=1433;database=test;encrypt=disable"

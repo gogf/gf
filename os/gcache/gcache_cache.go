@@ -8,9 +8,10 @@ package gcache
 
 import (
 	"context"
+	"time"
+
 	"github.com/gogf/gf/v2/os/gtimer"
 	"github.com/gogf/gf/v2/util/gconv"
-	"time"
 )
 
 // Cache struct.

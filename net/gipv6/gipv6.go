@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// Package gipv4 provides useful API for IPv6 address handling.
+// Package gipv6 provides useful API for IPv6 address handling.
 package gipv6
 
 import "github.com/gogf/gf/v2/text/gregex"

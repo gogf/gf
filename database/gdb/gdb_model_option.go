@@ -7,12 +7,14 @@
 package gdb
 
 const (
-	optionOmitNil        = optionOmitNilWhere | optionOmitNilData
-	optionOmitEmpty      = optionOmitEmptyWhere | optionOmitEmptyData
-	optionOmitEmptyWhere = 1 << iota // 8
-	optionOmitEmptyData              // 16
-	optionOmitNilWhere               // 32
-	optionOmitNilData                // 64
+	optionOmitNil             = optionOmitNilWhere | optionOmitNilData
+	optionOmitEmpty           = optionOmitEmptyWhere | optionOmitEmptyData
+	optionOmitNilDataInternal = optionOmitNilData | optionOmitNilDataList // this option is used internally only for ForDao feature.
+	optionOmitEmptyWhere      = 1 << iota                                 // 8
+	optionOmitEmptyData                                                   // 16
+	optionOmitNilWhere                                                    // 32
+	optionOmitNilData                                                     // 64
+	optionOmitNilDataList                                                 // 128
 )
 
 // OmitEmpty sets optionOmitEmpty option for the model, which automatically filers
@@ -30,7 +32,7 @@ func (m *Model) OmitEmpty() *Model {
 // Where("id", []int{}).All()             -> SELECT xxx FROM xxx WHERE 0=1
 // Where("name", "").All()                -> SELECT xxx FROM xxx WHERE `name`=''
 // OmitEmpty().Where("id", []int{}).All() -> SELECT xxx FROM xxx
-// OmitEmpty().("name", "").All()         -> SELECT xxx FROM xxx
+// OmitEmpty().("name", "").All()         -> SELECT xxx FROM xxx.
 func (m *Model) OmitEmptyWhere() *Model {
 	model := m.getModel()
 	model.option = model.option | optionOmitEmptyWhere

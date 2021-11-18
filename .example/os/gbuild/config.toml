@@ -1,9 +1,0 @@
-
-
-# custom gf build setting.
-[compiler]
-    name = "app"
-    [compiler.varmap]
-        name      = "GoFrame"
-        version   = "1.10.1"
-        home-site = "https://goframe.org"

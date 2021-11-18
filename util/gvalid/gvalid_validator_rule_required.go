@@ -7,11 +7,12 @@
 package gvalid
 
 import (
+	"reflect"
+	"strings"
+
 	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
-	"reflect"
-	"strings"
 )
 
 // checkRequired checks `value` using required rules.

@@ -7,8 +7,9 @@
 package gcache
 
 import (
-	"github.com/gogf/gf/v2/container/gset"
 	"sync"
+
+	"github.com/gogf/gf/v2/container/gset"
 )
 
 type adapterMemoryExpireSets struct {

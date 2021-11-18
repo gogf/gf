@@ -7,13 +7,14 @@
 package guid
 
 import (
+	"os"
+	"strconv"
+	"time"
+
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/encoding/ghash"
 	"github.com/gogf/gf/v2/net/gipv4"
 	"github.com/gogf/gf/v2/util/grand"
-	"os"
-	"strconv"
-	"time"
 )
 
 const (

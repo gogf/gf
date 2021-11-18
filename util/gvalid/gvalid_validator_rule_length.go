@@ -8,9 +8,10 @@ package gvalid
 
 import (
 	"context"
-	"github.com/gogf/gf/v2/util/gconv"
 	"strconv"
 	"strings"
+
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // checkLength checks `value` using length rules.
@@ -41,8 +42,8 @@ func (v *Validator) checkLength(ctx context.Context, value, ruleKey, ruleVal str
 		}
 		if valueLen < min || valueLen > max {
 			msg = v.getErrorMessageByRule(ctx, ruleKey, customMsgMap)
-			msg = strings.Replace(msg, ":min", strconv.Itoa(min), -1)
-			msg = strings.Replace(msg, ":max", strconv.Itoa(max), -1)
+			msg = strings.Replace(msg, "{min}", strconv.Itoa(min), -1)
+			msg = strings.Replace(msg, "{max}", strconv.Itoa(max), -1)
 			return msg
 		}
 
@@ -50,21 +51,21 @@ func (v *Validator) checkLength(ctx context.Context, value, ruleKey, ruleVal str
 		min, err := strconv.Atoi(ruleVal)
 		if valueLen < min || err != nil {
 			msg = v.getErrorMessageByRule(ctx, ruleKey, customMsgMap)
-			msg = strings.Replace(msg, ":min", strconv.Itoa(min), -1)
+			msg = strings.Replace(msg, "{min}", strconv.Itoa(min), -1)
 		}
 
 	case "max-length":
 		max, err := strconv.Atoi(ruleVal)
 		if valueLen > max || err != nil {
 			msg = v.getErrorMessageByRule(ctx, ruleKey, customMsgMap)
-			msg = strings.Replace(msg, ":max", strconv.Itoa(max), -1)
+			msg = strings.Replace(msg, "{max}", strconv.Itoa(max), -1)
 		}
 
 	case "size":
 		size, err := strconv.Atoi(ruleVal)
 		if valueLen != size || err != nil {
 			msg = v.getErrorMessageByRule(ctx, ruleKey, customMsgMap)
-			msg = strings.Replace(msg, ":size", strconv.Itoa(size), -1)
+			msg = strings.Replace(msg, "{size}", strconv.Itoa(size), -1)
 		}
 	}
 	return msg

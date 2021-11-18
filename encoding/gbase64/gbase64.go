@@ -29,7 +29,7 @@ func EncodeToString(src []byte) string {
 	return string(Encode(src))
 }
 
-// EncryptFile encodes file content of `path` using BASE64 algorithms.
+// EncodeFile encodes file content of `path` using BASE64 algorithms.
 func EncodeFile(path string) ([]byte, error) {
 	content, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -99,7 +99,7 @@ func MustDecodeString(data string) []byte {
 	return result
 }
 
-// DecodeString decodes string with BASE64 algorithm.
+// DecodeToString decodes string with BASE64 algorithm.
 func DecodeToString(data string) (string, error) {
 	b, err := DecodeString(data)
 	return string(b), err
