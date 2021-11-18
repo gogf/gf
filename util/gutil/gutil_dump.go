@@ -35,11 +35,9 @@ type DumpOption struct {
 // Dump prints variables `values` to stdout with more manually readable.
 func Dump(values ...interface{}) {
 	for _, value := range values {
-		if s := DumpWithOption(value, DumpOption{
+		DumpWithOption(value, DumpOption{
 			WithoutType: true,
-		}); s != "" {
-			fmt.Println(s)
-		}
+		})
 	}
 }
 
@@ -47,21 +45,19 @@ func Dump(values ...interface{}) {
 // Also see Dump.
 func DumpWithType(values ...interface{}) {
 	for _, value := range values {
-		if s := DumpWithOption(value, DumpOption{
+		DumpWithOption(value, DumpOption{
 			WithoutType: false,
-		}); s != "" {
-			fmt.Println(s)
-		}
+		})
 	}
 }
 
 // DumpWithOption returns variables `values` as a string with more manually readable.
-func DumpWithOption(value interface{}, option DumpOption) string {
+func DumpWithOption(value interface{}, option DumpOption) {
 	buffer := bytes.NewBuffer(nil)
 	DumpTo(buffer, value, DumpOption{
 		WithoutType: option.WithoutType,
 	})
-	return buffer.String()
+	fmt.Println(buffer.String())
 }
 
 // DumpTo writes variables `values` as a string in to `writer` with more manually readable
