@@ -7,8 +7,9 @@
 package gstr
 
 import (
-	"github.com/gogf/gf/v2/util/gconv"
 	"strings"
+
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // CompareVersion compares `a` and `b` as standard GNU version.
@@ -71,12 +72,18 @@ func CompareVersion(a, b string) int {
 // v4.20.0+incompatible
 // etc.
 func CompareVersionGo(a, b string) int {
+	a = Trim(a)
+	b = Trim(b)
 	if a != "" && a[0] == 'v' {
 		a = a[1:]
 	}
 	if b != "" && b[0] == 'v' {
 		b = b[1:]
 	}
+	var (
+		rawA = a
+		rawB = b
+	)
 	if Count(a, "-") > 1 {
 		if i := PosR(a, "-"); i > 0 {
 			a = a[:i]
@@ -108,6 +115,7 @@ func CompareVersionGo(a, b string) int {
 	if len(array1) <= 3 && len(array2) > 3 {
 		return 1
 	}
+
 	diff = len(array2) - len(array1)
 	for i := 0; i < diff; i++ {
 		array1 = append(array1, "0")
@@ -127,6 +135,14 @@ func CompareVersionGo(a, b string) int {
 		if v1 < v2 {
 			return -1
 		}
+	}
+	// Specially in Golang:
+	// "v4.20.1+incompatible" < "v4.20.1"
+	if Contains(rawA, "incompatible") {
+		return -1
+	}
+	if Contains(rawB, "incompatible") {
+		return 1
 	}
 	return 0
 }
