@@ -8,6 +8,7 @@ package gmap_test
 
 import (
 	"fmt"
+	"github.com/gogf/gf/v2/util/gconv"
 
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/frame/g"
@@ -501,31 +502,82 @@ func ExampleAnyAnyMap_Clear() {
 }
 
 func ExampleAnyAnyMap_Replace() {
+	var m gmap.Map
+	m.Sets(g.MapAnyAny{
+		"k1": "v1",
+	})
+
+	var n gmap.Map
+	n.Sets(g.MapAnyAny{
+		"k2": "v2",
+	})
+
+	fmt.Println(m.Map())
+
+	m.Replace(n.Map())
+	fmt.Println(m.Map())
+
+	n.Set("k2", "v1")
+	fmt.Println(m.Map())
 
 	// Output:
+	// map[k1:v1]
+	// map[k2:v2]
+	// map[k2:v1]
 }
 
 func ExampleAnyAnyMap_LockFunc() {
+	var m gmap.Map
+	m.Sets(g.MapAnyAny{
+		"k1": 1,
+		"k2": 2,
+		"k3": 3,
+		"k4": 4,
+	})
+
+	m.LockFunc(func(m map[interface{}]interface{}) {
+		totalValue := 0
+		for _, v := range m {
+			totalValue += v.(int)
+		}
+		fmt.Println("totalValue:", totalValue)
+	})
 
 	// Output:
+	// totalValue: 10
 }
 
 func ExampleAnyAnyMap_RLockFunc() {
+	var m gmap.Map
+	m.Sets(g.MapAnyAny{
+		"k1": 1,
+		"k2": 2,
+		"k3": 3,
+		"k4": 4,
+	})
+
+	m.RLockFunc(func(m map[interface{}]interface{}) {
+		totalValue := 0
+		for _, v := range m {
+			totalValue += v.(int)
+		}
+		fmt.Println("totalValue:", totalValue)
+	})
 
 	// Output:
+	// totalValue: 10
 }
 
 func ExampleAnyAnyMap_Flip() {
 	var m gmap.Map
 	m.Sets(g.MapAnyAny{
 		"k1": "v1",
-		"k2": "v2",
 	})
 	m.Flip()
 	fmt.Println(m.Map())
 
-	// May Output:
-	// map[v1:k1 v2:k2]
+	// Output:
+	// map[v1:k1]
 }
 
 func ExampleAnyAnyMap_Merge() {
@@ -540,21 +592,69 @@ func ExampleAnyAnyMap_Merge() {
 }
 
 func ExampleAnyAnyMap_String() {
+	var m gmap.Map
+	m.Sets(g.MapAnyAny{
+		"k1": "v1",
+	})
+
+	fmt.Println(m.String())
 
 	// Output:
+	// {"k1":"v1"}
 }
 
 func ExampleAnyAnyMap_MarshalJSON() {
+	var m gmap.Map
+	m.Sets(g.MapAnyAny{
+		"k1": "v1",
+		"k2": "v2",
+		"k3": "v3",
+		"k4": "v4",
+	})
+
+	bytes, err := m.MarshalJSON()
+	if err == nil {
+		fmt.Println(gconv.String(bytes))
+	}
 
 	// Output:
+	// {"k1":"v1","k2":"v2","k3":"v3","k4":"v4"}
 }
 
 func ExampleAnyAnyMap_UnmarshalJSON() {
+	var m gmap.Map
+	m.Sets(g.MapAnyAny{
+		"k1": "v1",
+		"k2": "v2",
+		"k3": "v3",
+		"k4": "v4",
+	})
+
+	var n gmap.Map
+
+	err := n.UnmarshalJSON(gconv.Bytes(m.String()))
+	if err == nil {
+		fmt.Println(n.Map())
+	}
 
 	// Output:
+	// map[k1:v1 k2:v2 k3:v3 k4:v4]
 }
 
 func ExampleAnyAnyMap_UnmarshalValue() {
+	var m gmap.Map
+	m.Sets(g.MapAnyAny{
+		"k1": "v1",
+		"k2": "v2",
+		"k3": "v3",
+		"k4": "v4",
+	})
 
+	var n gmap.Map
+	err := n.UnmarshalValue(m.String())
+	if err == nil {
+		fmt.Println(n.Map())
+	}
 	// Output:
+	// map[k1:v1 k2:v2 k3:v3 k4:v4]
 }
