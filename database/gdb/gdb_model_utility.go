@@ -17,6 +17,15 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
+// QuoteWord checks given string `s` a word,
+// if true it quotes `s` with security chars of the database
+// and returns the quoted string; or else it returns `s` without any change.
+//
+// The meaning of a `word` can be considered as a column name.
+func (m *Model) QuoteWord(s string) string {
+	return m.db.GetCore().QuoteWord(s)
+}
+
 // TableFields retrieves and returns the fields information of specified table of current
 // schema.
 //
@@ -46,7 +55,7 @@ func (m *Model) getModel() *Model {
 // mappingAndFilterToTableFields mappings and changes given field name to really table field name.
 // Eg:
 // ID        -> id
-// NICK_Name -> nickname
+// NICK_Name -> nickname.
 func (m *Model) mappingAndFilterToTableFields(fields []string, filter bool) []string {
 	fieldsMap, err := m.TableFields(m.tablesInit)
 	if err != nil || len(fieldsMap) == 0 {
@@ -57,7 +66,7 @@ func (m *Model) mappingAndFilterToTableFields(fields []string, filter bool) []st
 		outputFieldsArray = make([]string, 0, len(inputFieldsArray))
 	)
 	fieldsKeyMap := make(map[string]interface{}, len(fieldsMap))
-	for k, _ := range fieldsMap {
+	for k := range fieldsMap {
 		fieldsKeyMap[k] = nil
 	}
 	for _, field := range inputFieldsArray {
@@ -87,8 +96,12 @@ func (m *Model) filterDataForInsertOrUpdate(data interface{}) (interface{}, erro
 	var err error
 	switch value := data.(type) {
 	case List:
+		var omitEmpty bool
+		if m.option&optionOmitNilDataList > 0 {
+			omitEmpty = true
+		}
 		for k, item := range value {
-			value[k], err = m.doMappingAndFilterForInsertOrUpdateDataMap(item, false)
+			value[k], err = m.doMappingAndFilterForInsertOrUpdateDataMap(item, omitEmpty)
 			if err != nil {
 				return nil, err
 			}

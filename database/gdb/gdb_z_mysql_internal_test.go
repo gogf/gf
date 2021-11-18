@@ -9,11 +9,12 @@ package gdb
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
-	"testing"
 )
 
 const (
@@ -497,7 +498,7 @@ func Test_ScanList_NoRecreate_SliceAttribute_Ptr(t *testing.T) {
 			},
 		}
 		err = r2.ScanList(&s, "Many", "One", "pid:Id")
-		//fmt.Printf("%+v", err)
+		// fmt.Printf("%+v", err)
 		t.AssertNil(err)
 		t.Assert(len(s), 2)
 		t.Assert(s[0].One.Name, "john")
@@ -525,7 +526,7 @@ func Test_ScanList_NoRecreate_SliceAttribute_Ptr(t *testing.T) {
 			},
 		}
 		err = r3.ScanList(&s, "Many", "One", "pid:Id")
-		//fmt.Printf("%+v", err)
+		// fmt.Printf("%+v", err)
 		t.AssertNil(err)
 		t.Assert(len(s), 2)
 		t.Assert(s[0].One.Name, "john")
@@ -601,7 +602,7 @@ func Test_ScanList_NoRecreate_SliceAttribute_Struct(t *testing.T) {
 			},
 		}
 		err = r2.ScanList(&s, "Many", "One", "pid:Id")
-		//fmt.Printf("%+v", err)
+		// fmt.Printf("%+v", err)
 		t.AssertNil(err)
 		t.Assert(len(s), 2)
 		t.Assert(s[0].One.Name, "john")
@@ -629,7 +630,7 @@ func Test_ScanList_NoRecreate_SliceAttribute_Struct(t *testing.T) {
 			},
 		}
 		err = r3.ScanList(&s, "Many", "One", "pid:Id")
-		//fmt.Printf("%+v", err)
+		// fmt.Printf("%+v", err)
 		t.AssertNil(err)
 		t.Assert(len(s), 2)
 		t.Assert(s[0].One.Name, "john")

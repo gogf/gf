@@ -8,12 +8,12 @@ package gdb
 
 import (
 	"database/sql"
-	"github.com/gogf/gf/v2/container/gset"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/internal/utils"
 	"reflect"
 
+	"github.com/gogf/gf/v2/container/gset"
+	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -36,7 +36,7 @@ func (m *Model) Batch(batch int) *Model {
 // Data("uid", 10000)
 // Data("uid=? AND name=?", 10000, "john")
 // Data(g.Map{"uid": 10000, "name":"john"})
-// Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"})
+// Data(g.Slice{g.Map{"uid": 10000, "name":"john"}, g.Map{"uid": 20000, "name":"smith"}).
 func (m *Model) Data(data ...interface{}) *Model {
 	model := m.getModel()
 	if len(data) > 1 {
@@ -69,25 +69,29 @@ func (m *Model) Data(data ...interface{}) *Model {
 			model.data = gutil.MapCopy(value)
 
 		default:
-			var (
-				reflectInfo = utils.OriginValueAndKind(value)
-			)
+			reflectInfo := utils.OriginValueAndKind(value)
 			switch reflectInfo.OriginKind {
 			case reflect.Slice, reflect.Array:
+				if reflectInfo.OriginValue.Len() > 0 {
+					// If the `data` parameter is defined like `xxxForDao`,
+					// it then adds `OmitNilData` option for this condition,
+					// which will filter all nil parameters in `data`.
+					if isForDaoModel(reflectInfo.OriginValue.Index(0).Elem().Type()) {
+						model = model.OmitNilData()
+						model.option |= optionOmitNilDataInternal
+					}
+				}
 				list := make(List, reflectInfo.OriginValue.Len())
 				for i := 0; i < reflectInfo.OriginValue.Len(); i++ {
 					list[i] = ConvertDataForTableRecord(reflectInfo.OriginValue.Index(i).Interface())
 				}
 				model.data = list
 
-			case reflect.Map:
-				model.data = ConvertDataForTableRecord(data[0])
-
 			case reflect.Struct:
 				// If the `data` parameter is defined like `xxxForDao`,
 				// it then adds `OmitNilData` option for this condition,
 				// which will filter all nil parameters in `data`.
-				if gstr.HasSuffix(reflect.TypeOf(value).String(), modelForDaoSuffix) {
+				if isForDaoModel(reflect.TypeOf(value)) {
 					model = model.OmitNilData()
 				}
 				if v, ok := data[0].(iInterfaces); ok {
@@ -102,6 +106,9 @@ func (m *Model) Data(data ...interface{}) *Model {
 				} else {
 					model.data = ConvertDataForTableRecord(data[0])
 				}
+
+			case reflect.Map:
+				model.data = ConvertDataForTableRecord(data[0])
 
 			default:
 				model.data = data[0]
@@ -122,7 +129,7 @@ func (m *Model) Data(data ...interface{}) *Model {
 // })
 // OnDuplicate(g.Map{
 //     "nickname": "passport",
-// })
+// }).
 func (m *Model) OnDuplicate(onDuplicate ...interface{}) *Model {
 	model := m.getModel()
 	if len(onDuplicate) > 1 {
@@ -142,7 +149,7 @@ func (m *Model) OnDuplicate(onDuplicate ...interface{}) *Model {
 // OnDuplicateEx(g.Map{
 //     "passport": "",
 //     "password": "",
-// })
+// }).
 func (m *Model) OnDuplicateEx(onDuplicateEx ...interface{}) *Model {
 	model := m.getModel()
 	if len(onDuplicateEx) > 1 {
@@ -228,7 +235,6 @@ func (m *Model) doInsertWithOption(insertOption int) (result sql.Result, err err
 	if err != nil {
 		return nil, err
 	}
-
 	// It converts any data to List type for inserting.
 	switch value := newData.(type) {
 	case Result:
@@ -247,9 +253,7 @@ func (m *Model) doInsertWithOption(insertOption int) (result sql.Result, err err
 		list = List{ConvertDataForTableRecord(value)}
 
 	default:
-		var (
-			reflectInfo = utils.OriginValueAndKind(newData)
-		)
+		reflectInfo := utils.OriginValueAndKind(newData)
 		switch reflectInfo.OriginKind {
 		// If it's slice type, it then converts it to List type.
 		case reflect.Slice, reflect.Array:
@@ -263,9 +267,7 @@ func (m *Model) doInsertWithOption(insertOption int) (result sql.Result, err err
 
 		case reflect.Struct:
 			if v, ok := value.(iInterfaces); ok {
-				var (
-					array = v.Interfaces()
-				)
+				array := v.Interfaces()
 				list = make(List, len(array))
 				for i := 0; i < len(array); i++ {
 					list[i] = ConvertDataForTableRecord(array[i])
@@ -301,14 +303,13 @@ func (m *Model) doInsertWithOption(insertOption int) (result sql.Result, err err
 	}
 	// Format DoInsertOption, especially for "ON DUPLICATE KEY UPDATE" statement.
 	columnNames := make([]string, 0, len(list[0]))
-	for k, _ := range list[0] {
+	for k := range list[0] {
 		columnNames = append(columnNames, k)
 	}
 	doInsertOption, err := m.formatDoInsertOption(insertOption, columnNames)
 	if err != nil {
 		return result, err
 	}
-
 	return m.db.DoInsert(m.GetCtx(), m.getLink(true), m.tables, list, doInsertOption)
 }
 
@@ -322,18 +323,14 @@ func (m *Model) formatDoInsertOption(insertOption int, columnNames []string) (op
 		if err != nil {
 			return option, err
 		}
-		var (
-			onDuplicateExKeySet = gset.NewStrSetFrom(onDuplicateExKeys)
-		)
+		onDuplicateExKeySet := gset.NewStrSetFrom(onDuplicateExKeys)
 		if m.onDuplicate != nil {
 			switch m.onDuplicate.(type) {
 			case Raw, *Raw:
 				option.OnDuplicateStr = gconv.String(m.onDuplicate)
 
 			default:
-				var (
-					reflectInfo = utils.OriginValueAndKind(m.onDuplicate)
-				)
+				reflectInfo := utils.OriginValueAndKind(m.onDuplicate)
 				switch reflectInfo.OriginKind {
 				case reflect.String:
 					option.OnDuplicateMap = make(map[string]interface{})
@@ -388,9 +385,7 @@ func (m *Model) formatOnDuplicateExKeys(onDuplicateEx interface{}) ([]string, er
 		return nil, nil
 	}
 
-	var (
-		reflectInfo = utils.OriginValueAndKind(onDuplicateEx)
-	)
+	reflectInfo := utils.OriginValueAndKind(onDuplicateEx)
 	switch reflectInfo.OriginKind {
 	case reflect.String:
 		return gstr.SplitAndTrim(reflectInfo.OriginValue.String(), ","), nil

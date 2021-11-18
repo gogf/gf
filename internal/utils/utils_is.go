@@ -7,13 +7,14 @@
 package utils
 
 import (
-	"github.com/gogf/gf/v2/internal/empty"
 	"reflect"
+
+	"github.com/gogf/gf/v2/internal/empty"
 )
 
 // IsNil checks whether `value` is nil.
 func IsNil(value interface{}) bool {
-	return value == nil
+	return empty.IsNil(value)
 }
 
 // IsEmpty checks whether `value` is empty.

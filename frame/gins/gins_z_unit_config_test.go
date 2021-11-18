@@ -9,13 +9,12 @@ package gins_test
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/v2/debug/gdebug"
-	"github.com/gogf/gf/v2/frame/gins"
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gogf/gf/v2/frame/gins"
 	"github.com/gogf/gf/v2/os/gcfg"
-
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"

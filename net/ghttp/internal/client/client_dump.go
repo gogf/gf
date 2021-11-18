@@ -8,10 +8,11 @@ package client
 
 import (
 	"fmt"
-	"github.com/gogf/gf/v2/internal/utils"
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
+
+	"github.com/gogf/gf/v2/internal/utils"
 )
 
 // dumpTextFormat is the format of the dumped raw string

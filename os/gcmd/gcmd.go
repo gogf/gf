@@ -9,10 +9,11 @@
 package gcmd
 
 import (
+	"os"
+
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/internal/command"
 	"github.com/gogf/gf/v2/internal/utils"
-	"os"
 )
 
 var (
