@@ -9,7 +9,6 @@ package gview_test
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
@@ -223,20 +222,17 @@ func Test_FuncInclude(t *testing.T) {
 			layout = `{{include "header.html" .}}
 {{include "main.html" .}}
 {{include "footer.html" .}}`
-			templatePath = gfile.Pwd() + gfile.Separator + "template"
+			templatePath = gfile.TempDir("template")
 		)
 
 		gfile.Mkdir(templatePath)
 		defer gfile.Remove(templatePath)
 
-		// headerFile, _ := gfile.Create(templatePath + gfile.Separator + "header.html")
-		err := ioutil.WriteFile(templatePath+gfile.Separator+"header.html", []byte(header), 0644)
-		if err != nil {
-			t.Error(err)
-		}
-		ioutil.WriteFile(templatePath+gfile.Separator+"main.html", []byte(main), 0644)
-		ioutil.WriteFile(templatePath+gfile.Separator+"footer.html", []byte(footer), 0644)
-		ioutil.WriteFile(templatePath+gfile.Separator+"layout.html", []byte(layout), 0644)
+		t.AssertNil(gfile.PutContents(gfile.Join(templatePath, `header.html`), header))
+		t.AssertNil(gfile.PutContents(gfile.Join(templatePath, `main.html`), main))
+		t.AssertNil(gfile.PutContents(gfile.Join(templatePath, `footer.html`), footer))
+		t.AssertNil(gfile.PutContents(gfile.Join(templatePath, `layout.html`), layout))
+
 		view := gview.New(templatePath)
 		result, err := view.Parse(context.TODO(), "notfound.html")
 		t.AssertNE(err, nil)
@@ -248,13 +244,10 @@ func Test_FuncInclude(t *testing.T) {
 <h1>hello gf</h1>
 <h1>FOOTER</h1>`)
 
-		notfoundPath := templatePath + gfile.Separator + "template" + gfile.Separator + "notfound.html"
-		gfile.Mkdir(templatePath + gfile.Separator + "template")
-		gfile.Create(notfoundPath)
-		ioutil.WriteFile(notfoundPath, []byte("notfound"), 0644)
+		t.AssertNil(gfile.PutContents(gfile.Join(templatePath, `notfound.html`), "notfound"))
 		result, err = view.Parse(context.TODO(), "notfound.html")
-		t.AssertNE(err, nil)
-		t.Assert(result, ``)
+		t.AssertNil(err)
+		t.Assert(result, `notfound`)
 	})
 }
 
