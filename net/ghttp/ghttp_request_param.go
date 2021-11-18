@@ -9,6 +9,11 @@ package ghttp
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
+	"mime/multipart"
+	"reflect"
+	"strings"
+
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/encoding/gurl"
@@ -21,10 +26,6 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gvalid"
-	"io/ioutil"
-	"mime/multipart"
-	"reflect"
-	"strings"
 )
 
 const (

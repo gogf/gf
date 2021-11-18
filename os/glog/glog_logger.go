@@ -10,23 +10,23 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/fatih/color"
-	"github.com/gogf/gf/v2/container/gtype"
-	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/os/gctx"
-	"github.com/gogf/gf/v2/os/gfpool"
-	"github.com/gogf/gf/v2/os/gmlock"
-	"github.com/gogf/gf/v2/os/gtimer"
-	"go.opentelemetry.io/otel/trace"
 	"io"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/fatih/color"
+	"go.opentelemetry.io/otel/trace"
 
+	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gfpool"
+	"github.com/gogf/gf/v2/os/gmlock"
 	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/os/gtimer"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -202,7 +202,7 @@ func (l *Logger) print(ctx context.Context, level int, values ...interface{}) {
 		if len(input.Content) > 0 {
 			if input.Content[len(input.Content)-1] == '\n' {
 				// Remove one blank line(\n\n).
-				if tempStr[0] == '\n' {
+				if len(tempStr) > 0 && tempStr[0] == '\n' {
 					input.Content += tempStr[1:]
 				} else {
 					input.Content += tempStr

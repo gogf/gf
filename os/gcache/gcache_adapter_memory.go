@@ -8,13 +8,13 @@ package gcache
 
 import (
 	"context"
-	"github.com/gogf/gf/v2/container/gvar"
 	"math"
 	"time"
 
 	"github.com/gogf/gf/v2/container/glist"
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/os/gtimer"
 )
@@ -99,7 +99,7 @@ func (c *AdapterMemory) SetMap(ctx context.Context, data map[interface{}]interfa
 	if err != nil {
 		return err
 	}
-	for k, _ := range data {
+	for k := range data {
 		c.eventList.PushBack(&adapterMemoryEvent{
 			k: k,
 			e: expireTime,

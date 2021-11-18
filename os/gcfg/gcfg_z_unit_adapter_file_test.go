@@ -9,9 +9,10 @@
 package gcfg_test
 
 import (
+	"testing"
+
 	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/test/gtest"
-	"testing"
 )
 
 func TestAdapterFile_SetPath(t *testing.T) {

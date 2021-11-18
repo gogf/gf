@@ -10,20 +10,17 @@ package gdb
 import (
 	"context"
 	"database/sql"
-	"github.com/gogf/gf/v2/errors/gcode"
 	"time"
-
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/os/gcmd"
-
-	"github.com/gogf/gf/v2/container/gvar"
-	"github.com/gogf/gf/v2/internal/intlog"
-
-	"github.com/gogf/gf/v2/os/glog"
 
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gcache"
+	"github.com/gogf/gf/v2/os/gcmd"
+	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/util/grand"
 )
 
@@ -275,6 +272,7 @@ const (
 	sqlTypeQueryContext    = `DB.QueryContext`
 	sqlTypeExecContext     = `DB.ExecContext`
 	sqlTypePrepareContext  = `DB.PrepareContext`
+	modelForDaoSuffix      = `ForDao`
 )
 
 var (
@@ -303,7 +301,7 @@ var (
 	// in the field name as it conflicts with "db.table.field" pattern in SOME situations.
 	regularFieldNameWithoutDotRegPattern = `^[\w\-]+$`
 
-	// tableFieldsMap caches the table information retrived from database.
+	// tableFieldsMap caches the table information retrieved from database.
 	tableFieldsMap = gmap.New(true)
 
 	// allDryRun sets dry-run feature for all database connections.
@@ -431,7 +429,7 @@ func getConfigNodeByGroup(group string, master bool) (*ConfigNode, error) {
 // Calculation algorithm brief:
 // 1. If we have 2 nodes, and their weights are both 1, then the weight range is [0, 199];
 // 2. Node1 weight range is [0, 99], and node2 weight range is [100, 199], ratio is 1:1;
-// 3. If the random number is 99, it then chooses and returns node1;
+// 3. If the random number is 99, it then chooses and returns node1;.
 func getConfigNodeByWeight(cg ConfigGroup) *ConfigNode {
 	if len(cg) < 2 {
 		return &cg[0]
@@ -454,7 +452,7 @@ func getConfigNodeByWeight(cg ConfigGroup) *ConfigNode {
 	max := 0
 	for i := 0; i < len(cg); i++ {
 		max = min + cg[i].Weight*100
-		//fmt.Printf("r: %d, min: %d, max: %d\n", r, min, max)
+		// fmt.Printf("r: %d, min: %d, max: %d\n", r, min, max)
 		if r >= min && r < max {
 			return &cg[i]
 		} else {

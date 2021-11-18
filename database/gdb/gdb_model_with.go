@@ -9,9 +9,9 @@ package gdb
 import (
 	"database/sql"
 	"fmt"
-	"github.com/gogf/gf/v2/errors/gcode"
 	"reflect"
 
+	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/structs"
 	"github.com/gogf/gf/v2/internal/utils"
@@ -229,7 +229,7 @@ func (m *Model) doWithScanStructs(pointer interface{}) error {
 			relatedTargetValue interface{}
 		)
 		// Find the value slice of related attribute from `pointer`.
-		for attributeName, _ := range currentStructFieldMap {
+		for attributeName := range currentStructFieldMap {
 			if utils.EqualFoldWithoutChars(attributeName, relatedTargetName) {
 				relatedTargetValue = ListItemValuesUnique(pointer, attributeName)
 				break

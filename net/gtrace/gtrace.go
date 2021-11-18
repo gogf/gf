@@ -12,14 +12,15 @@ import (
 	"os"
 	"strings"
 
-	"github.com/gogf/gf/v2/container/gmap"
-	"github.com/gogf/gf/v2/container/gvar"
-	"github.com/gogf/gf/v2/net/gipv4"
-	"github.com/gogf/gf/v2/os/gcmd"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/net/gipv4"
+	"github.com/gogf/gf/v2/os/gcmd"
 )
 
 const (
@@ -34,7 +35,7 @@ var (
 	intranetIpStr            = strings.Join(intranetIps, ",")
 	hostname, _              = os.Hostname()
 	tracingInternal          = true       // tracingInternal enables tracing for internal type spans.
-	tracingMaxContentLogSize = 256 * 1024 // Max log size for request and response body, especially for HTTP/RPC request.
+	tracingMaxContentLogSize = 512 * 1024 // Max log size for request and response body, especially for HTTP/RPC request.
 	// defaultTextMapPropagator is the default propagator for context propagation between peers.
 	defaultTextMapPropagator = propagation.NewCompositeTextMapPropagator(
 		propagation.TraceContext{},
@@ -71,7 +72,7 @@ func CommonLabels() []attribute.KeyValue {
 
 // IsActivated checks and returns if tracing feature is activated.
 func IsActivated(ctx context.Context) bool {
-	return GetTraceId(ctx) != ""
+	return GetTraceID(ctx) != ""
 }
 
 // CheckSetDefaultTextMapPropagator sets the default TextMapPropagator if it is not set previously.
@@ -87,28 +88,28 @@ func GetDefaultTextMapPropagator() propagation.TextMapPropagator {
 	return defaultTextMapPropagator
 }
 
-// GetTraceId retrieves and returns TraceId from context.
+// GetTraceID retrieves and returns TraceId from context.
 // It returns an empty string is tracing feature is not activated.
-func GetTraceId(ctx context.Context) string {
+func GetTraceID(ctx context.Context) string {
 	if ctx == nil {
 		return ""
 	}
-	traceId := trace.SpanContextFromContext(ctx).TraceID()
-	if traceId.IsValid() {
-		return traceId.String()
+	traceID := trace.SpanContextFromContext(ctx).TraceID()
+	if traceID.IsValid() {
+		return traceID.String()
 	}
 	return ""
 }
 
-// GetSpanId retrieves and returns SpanId from context.
+// GetSpanID retrieves and returns SpanId from context.
 // It returns an empty string is tracing feature is not activated.
-func GetSpanId(ctx context.Context) string {
+func GetSpanID(ctx context.Context) string {
 	if ctx == nil {
 		return ""
 	}
-	spanId := trace.SpanContextFromContext(ctx).SpanID()
-	if spanId.IsValid() {
-		return spanId.String()
+	spanID := trace.SpanContextFromContext(ctx).SpanID()
+	if spanID.IsValid() {
+		return spanID.String()
 	}
 	return ""
 }

@@ -8,11 +8,6 @@ package garray
 
 import "strings"
 
-// iInterfaces is used for type assert api for Interfaces.
-type iInterfaces interface {
-	Interfaces() []interface{}
-}
-
 // defaultComparatorInt for int comparison.
 func defaultComparatorInt(a, b int) int {
 	if a < b {

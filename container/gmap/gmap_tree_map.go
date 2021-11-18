@@ -10,7 +10,7 @@ import (
 	"github.com/gogf/gf/v2/container/gtree"
 )
 
-// Map based on red-black tree, alias of RedBlackTree.
+// TreeMap based on red-black tree, alias of RedBlackTree.
 type TreeMap = gtree.RedBlackTree
 
 // NewTreeMap instantiates a tree map with the custom comparator.

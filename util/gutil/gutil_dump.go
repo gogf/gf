@@ -9,10 +9,23 @@ package gutil
 import (
 	"bytes"
 	"fmt"
+	"io"
+	"reflect"
+	"strings"
+
 	"github.com/gogf/gf/v2/internal/structs"
 	"github.com/gogf/gf/v2/text/gstr"
-	"reflect"
 )
+
+// iString is used for type assert api for String().
+type iString interface {
+	String() string
+}
+
+// iMarshalJSON is the interface for custom Json marshaling.
+type iMarshalJSON interface {
+	MarshalJSON() ([]byte, error)
+}
 
 // ExportOption specifies the behavior of function Export.
 type ExportOption struct {
@@ -45,10 +58,19 @@ func DumpWithType(values ...interface{}) {
 // Export returns variables `values` as a string with more manually readable.
 func Export(value interface{}, option ExportOption) string {
 	buffer := bytes.NewBuffer(nil)
-	doExport(value, "", buffer, doExportOption{
+	ExportTo(buffer, value, ExportOption{
 		WithoutType: option.WithoutType,
 	})
 	return buffer.String()
+}
+
+// ExportTo writes variables `values` as a string in to `writer` with more manually readable
+func ExportTo(writer io.Writer, value interface{}, option ExportOption) {
+	buffer := bytes.NewBuffer(nil)
+	doExport(value, "", buffer, doExportOption{
+		WithoutType: option.WithoutType,
+	})
+	_, _ = writer.Write(buffer.Bytes())
 }
 
 type doExportOption struct {
@@ -56,12 +78,17 @@ type doExportOption struct {
 }
 
 func doExport(value interface{}, indent string, buffer *bytes.Buffer, option doExportOption) {
+	if value == nil {
+		buffer.WriteString(`<nil>`)
+		return
+	}
 	var (
 		reflectValue    = reflect.ValueOf(value)
 		reflectKind     = reflectValue.Kind()
-		reflectTypeName = reflectValue.Type().String()
+		reflectTypeName = reflect.TypeOf(value).String()
 		newIndent       = indent + dumpIndent
 	)
+	reflectTypeName = strings.ReplaceAll(reflectTypeName, `[]uint8`, `[]byte`)
 	if option.WithoutType {
 		reflectTypeName = ""
 	}
@@ -71,15 +98,15 @@ func doExport(value interface{}, indent string, buffer *bytes.Buffer, option doE
 	}
 	switch reflectKind {
 	case reflect.Slice, reflect.Array:
-		if _, ok := value.([]byte); ok {
+		if b, ok := value.([]byte); ok {
 			if option.WithoutType {
-				buffer.WriteString(fmt.Sprintf("\"%v\"\n", value))
+				buffer.WriteString(fmt.Sprintf(`"%s"`, gstr.AddSlashes(string(b))))
 			} else {
 				buffer.WriteString(fmt.Sprintf(
-					"%s(%d) \"%v\"\n",
+					`%s(%d) "%s"`,
 					reflectTypeName,
 					len(reflectValue.String()),
-					value,
+					string(b),
 				))
 			}
 			return
@@ -145,7 +172,7 @@ func doExport(value interface{}, indent string, buffer *bytes.Buffer, option doE
 					"%s%v:%s",
 					newIndent,
 					mapKeyStr,
-					gstr.Repeat(" ", maxSpaceNum-tmpSpaceNum+1),
+					strings.Repeat(" ", maxSpaceNum-tmpSpaceNum+1),
 				))
 			} else {
 				buffer.WriteString(fmt.Sprintf(
@@ -153,7 +180,7 @@ func doExport(value interface{}, indent string, buffer *bytes.Buffer, option doE
 					newIndent,
 					mapKey.Type().String(),
 					mapKeyStr,
-					gstr.Repeat(" ", maxSpaceNum-tmpSpaceNum+1),
+					strings.Repeat(" ", maxSpaceNum-tmpSpaceNum+1),
 				))
 			}
 			doExport(reflectValue.MapIndex(mapKey).Interface(), newIndent, buffer, option)
@@ -167,10 +194,31 @@ func doExport(value interface{}, indent string, buffer *bytes.Buffer, option doE
 			RecursiveOption: structs.RecursiveOptionEmbeddedNoTag,
 		})
 		if len(structFields) == 0 {
-			if option.WithoutType {
-				buffer.WriteString("{}")
+			var (
+				structContentStr  = ""
+				attributeCountStr = "0"
+			)
+			if v, ok := value.(iString); ok {
+				structContentStr = v.String()
+			} else if v, ok := value.(iMarshalJSON); ok {
+				b, _ := v.MarshalJSON()
+				structContentStr = string(b)
+			}
+			if structContentStr == "" {
+				structContentStr = "{}"
 			} else {
-				buffer.WriteString(fmt.Sprintf("%s(0) {}", reflectTypeName))
+				structContentStr = fmt.Sprintf(`"%s"`, gstr.AddSlashes(structContentStr))
+				attributeCountStr = fmt.Sprintf(`%d`, len(structContentStr)-2)
+			}
+			if option.WithoutType {
+				buffer.WriteString(structContentStr)
+			} else {
+				buffer.WriteString(fmt.Sprintf(
+					"%s(%s) %s",
+					reflectTypeName,
+					attributeCountStr,
+					structContentStr,
+				))
 			}
 			return
 		}
@@ -196,7 +244,7 @@ func doExport(value interface{}, indent string, buffer *bytes.Buffer, option doE
 				"%s%s:%s",
 				newIndent,
 				field.Name(),
-				gstr.Repeat(" ", maxSpaceNum-tmpSpaceNum+1),
+				strings.Repeat(" ", maxSpaceNum-tmpSpaceNum+1),
 			))
 			doExport(field.Value.Interface(), newIndent, buffer, option)
 			buffer.WriteString(",\n")
@@ -204,14 +252,15 @@ func doExport(value interface{}, indent string, buffer *bytes.Buffer, option doE
 		buffer.WriteString(fmt.Sprintf("%s}", indent))
 
 	case reflect.String:
+		s, _ := value.(string)
 		if option.WithoutType {
-			buffer.WriteString(fmt.Sprintf("\"%v\"", value))
+			buffer.WriteString(fmt.Sprintf(`"%v"`, gstr.AddSlashes(s)))
 		} else {
 			buffer.WriteString(fmt.Sprintf(
-				"%s(%d) \"%v\"",
+				`%s(%d) "%v"`,
 				reflectTypeName,
 				len(reflectValue.String()),
-				value,
+				gstr.AddSlashes(s),
 			))
 		}
 

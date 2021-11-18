@@ -7,12 +7,12 @@
 package gtype_test
 
 import (
-	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/util/gconv"
 	"testing"
 
 	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 func Test_Bool(t *testing.T) {
@@ -27,7 +27,7 @@ func Test_Bool(t *testing.T) {
 		t.AssertEQ(iClone1.Set(true), false)
 		t.AssertEQ(iClone1.Val(), true)
 
-		//空参测试
+		// 空参测试
 		i2 := gtype.NewBool()
 		t.AssertEQ(i2.Val(), false)
 	})

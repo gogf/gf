@@ -9,11 +9,11 @@
 package gtype_test
 
 import (
-	"github.com/gogf/gf/v2/container/gtype"
 	"strconv"
 	"sync/atomic"
 	"testing"
 
+	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/encoding/gbinary"
 )
 

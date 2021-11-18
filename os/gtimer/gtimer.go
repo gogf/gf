@@ -20,10 +20,10 @@ package gtimer
 
 import (
 	"context"
-	"github.com/gogf/gf/v2/container/gtype"
 	"sync"
 	"time"
 
+	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/os/gcmd"
 )
 

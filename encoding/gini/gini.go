@@ -11,11 +11,12 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"io"
+	"strings"
+
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/json"
-	"io"
-	"strings"
 )
 
 // Decode converts INI format to map.
@@ -65,7 +66,7 @@ func Decode(data []byte) (res map[string]interface{}, err error) {
 
 		if strings.Contains(lineStr, "=") && haveSection {
 			values := strings.Split(lineStr, "=")
-			fieldMap[strings.TrimSpace(values[0])] = strings.TrimSpace(strings.Join(values[1:], ""))
+			fieldMap[strings.TrimSpace(values[0])] = strings.TrimSpace(strings.Join(values[1:], "="))
 			res[section] = fieldMap
 		}
 	}

@@ -7,11 +7,12 @@
 package gvar_test
 
 import (
+	"math"
+	"testing"
+
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/test/gtest"
-	"math"
-	"testing"
 )
 
 func TestVar_Json(t *testing.T) {

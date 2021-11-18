@@ -8,11 +8,12 @@ package gvalid
 
 import (
 	"context"
+	"strings"
+
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/internal/structs"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
-	"strings"
 )
 
 // CheckStruct validates struct and returns the error result.
@@ -23,8 +24,8 @@ func (v *Validator) CheckStruct(ctx context.Context, object interface{}) Error {
 
 func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error {
 	var (
-		errorMaps           = make(map[string]map[string]string) // Returning error.
-		fieldToAliasNameMap = make(map[string]string)            // Field names to alias name map.
+		errorMaps           = make(map[string]map[string]error) // Returning error.
+		fieldToAliasNameMap = make(map[string]string)           // Field names to alias name map.
 	)
 	fieldMap, err := structs.FieldMap(structs.FieldMapInput{
 		Pointer:          object,
@@ -32,7 +33,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 		RecursiveOption:  structs.RecursiveOptionEmbedded,
 	})
 	if err != nil {
-		return newErrorStr(internalObjectErrRuleName, err.Error())
+		return newValidationErrorByStr(internalObjectErrRuleName, err)
 	}
 	// It checks the struct recursively if its attribute is an embedded struct.
 	for _, field := range fieldMap {
@@ -44,7 +45,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 			if _, ok := field.TagLookup(noValidationTagName); ok {
 				continue
 			}
-			if err := v.doCheckStruct(ctx, field.Value); err != nil {
+			if err = v.doCheckStruct(ctx, field.Value); err != nil {
 				// It merges the errors into single error map.
 				for k, m := range err.(*validationError).errors {
 					errorMaps[k] = m
@@ -59,7 +60,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 	// It here must use structs.TagFields not structs.FieldMap to ensure error sequence.
 	tagField, err := structs.TagFields(object, structTagPriority)
 	if err != nil {
-		return newErrorStr(internalObjectErrRuleName, err.Error())
+		return newValidationErrorByStr(internalObjectErrRuleName, err)
 	}
 	// If there's no struct tag and validation rules, it does nothing and returns quickly.
 	if len(tagField) == 0 && v.messages == nil {
@@ -178,7 +179,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 		}
 
 		if _, ok := nameToRuleMap[name]; !ok {
-			if _, ok := nameToRuleMap[fieldName]; ok {
+			if _, ok = nameToRuleMap[fieldName]; ok {
 				// If there's alias name,
 				// use alias name as its key and remove the field name key.
 				nameToRuleMap[name] = nameToRuleMap[fieldName]
@@ -254,10 +255,11 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 			DataMap:  inputParamMap,
 		}); validatedError != nil {
 			_, errorItem := validatedError.FirstItem()
-			// ===================================================================
-			// Only in map and struct validations, if value is nil or empty string
-			// and has no required* rules, it clears the error message.
-			// ===================================================================
+			// ============================================================
+			// Only in map and struct validations:
+			// If value is nil or empty string and has no required* rules,
+			// it clears the error message.
+			// ============================================================
 			if value == nil || gconv.String(value) == "" {
 				required := false
 				// rule => error
@@ -267,18 +269,13 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 						required = true
 						break
 					}
-					// Custom rules are also required in default.
-					if f := v.getRuleFunc(ruleKey); f != nil {
-						required = true
-						break
-					}
 				}
 				if !required {
 					continue
 				}
 			}
 			if _, ok := errorMaps[checkRuleItem.Name]; !ok {
-				errorMaps[checkRuleItem.Name] = make(map[string]string)
+				errorMaps[checkRuleItem.Name] = make(map[string]error)
 			}
 			for ruleKey, errorItemMsgMap := range errorItem {
 				errorMaps[checkRuleItem.Name][ruleKey] = errorItemMsgMap
@@ -289,7 +286,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 		}
 	}
 	if len(errorMaps) > 0 {
-		return newError(gcode.CodeValidationFailed, checkRules, errorMaps)
+		return newValidationError(gcode.CodeValidationFailed, checkRules, errorMaps)
 	}
 	return nil
 }

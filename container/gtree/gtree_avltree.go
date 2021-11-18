@@ -8,12 +8,11 @@ package gtree
 
 import (
 	"fmt"
-	"github.com/gogf/gf/v2/internal/json"
-
-	"github.com/gogf/gf/v2/util/gconv"
 
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/rwmutex"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // AVLTree holds elements of the AVL tree.
