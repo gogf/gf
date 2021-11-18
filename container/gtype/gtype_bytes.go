@@ -9,8 +9,9 @@ package gtype
 import (
 	"bytes"
 	"encoding/base64"
-	"github.com/gogf/gf/v2/util/gconv"
 	"sync/atomic"
+
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // Bytes is a struct for concurrent-safe operation for type []byte.

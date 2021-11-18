@@ -11,8 +11,6 @@ package gconv
 
 import (
 	"fmt"
-	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/os/gtime"
 	"math"
 	"reflect"
 	"strconv"
@@ -20,6 +18,8 @@ import (
 	"time"
 
 	"github.com/gogf/gf/v2/encoding/gbinary"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/os/gtime"
 )
 
 var (

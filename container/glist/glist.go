@@ -11,10 +11,10 @@ package glist
 import (
 	"bytes"
 	"container/list"
-	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/util/gconv"
 
+	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/rwmutex"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 type (
@@ -416,7 +416,7 @@ func (l *List) RemoveAll() {
 	l.mu.Unlock()
 }
 
-// See RemoveAll().
+// Clear is alias of RemoveAll.
 func (l *List) Clear() {
 	l.RemoveAll()
 }

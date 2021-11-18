@@ -7,11 +7,12 @@
 package gtype_test
 
 import (
+	"testing"
+
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
-	"testing"
 )
 
 func Test_Interface(t *testing.T) {
@@ -23,7 +24,7 @@ func Test_Interface(t *testing.T) {
 		t.AssertEQ(iClone.Set(t2), t1)
 		t.AssertEQ(iClone.Val().(Temp), t2)
 
-		//空参测试
+		// 空参测试
 		i1 := gtype.New()
 		t.AssertEQ(i1.Val(), nil)
 	})

@@ -34,8 +34,8 @@ func (v *Validator) checkRange(ctx context.Context, value, ruleKey, ruleVal stri
 		valueF, err := strconv.ParseFloat(value, 10)
 		if valueF < min || valueF > max || err != nil {
 			msg = v.getErrorMessageByRule(ctx, ruleKey, customMsgMap)
-			msg = strings.Replace(msg, ":min", strconv.FormatFloat(min, 'f', -1, 64), -1)
-			msg = strings.Replace(msg, ":max", strconv.FormatFloat(max, 'f', -1, 64), -1)
+			msg = strings.Replace(msg, "{min}", strconv.FormatFloat(min, 'f', -1, 64), -1)
+			msg = strings.Replace(msg, "{max}", strconv.FormatFloat(max, 'f', -1, 64), -1)
 		}
 
 	// Min value.
@@ -46,7 +46,7 @@ func (v *Validator) checkRange(ctx context.Context, value, ruleKey, ruleVal stri
 		)
 		if valueN < min || err1 != nil || err2 != nil {
 			msg = v.getErrorMessageByRule(ctx, ruleKey, customMsgMap)
-			msg = strings.Replace(msg, ":min", strconv.FormatFloat(min, 'f', -1, 64), -1)
+			msg = strings.Replace(msg, "{min}", strconv.FormatFloat(min, 'f', -1, 64), -1)
 		}
 
 	// Max value.
@@ -57,7 +57,7 @@ func (v *Validator) checkRange(ctx context.Context, value, ruleKey, ruleVal stri
 		)
 		if valueN > max || err1 != nil || err2 != nil {
 			msg = v.getErrorMessageByRule(ctx, ruleKey, customMsgMap)
-			msg = strings.Replace(msg, ":max", strconv.FormatFloat(max, 'f', -1, 64), -1)
+			msg = strings.Replace(msg, "{max}", strconv.FormatFloat(max, 'f', -1, 64), -1)
 		}
 
 	}

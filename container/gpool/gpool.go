@@ -9,12 +9,12 @@ package gpool
 
 import (
 	"context"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
 	"time"
 
 	"github.com/gogf/gf/v2/container/glist"
 	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/os/gtimer"
 )
@@ -38,10 +38,10 @@ type poolItem struct {
 	expireAt int64       // Expire timestamp in milliseconds.
 }
 
-// Creation function for object.
+// NewFunc Creation function for object.
 type NewFunc func() (interface{}, error)
 
-// Destruction function for object.
+// ExpireFunc Destruction function for object.
 type ExpireFunc func(interface{})
 
 // New creates and returns a new object pool.
