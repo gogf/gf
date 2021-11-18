@@ -27,15 +27,15 @@ type iMarshalJSON interface {
 	MarshalJSON() ([]byte, error)
 }
 
-// ExportOption specifies the behavior of function Export.
-type ExportOption struct {
+// DumpOption specifies the behavior of function Export.
+type DumpOption struct {
 	WithoutType bool // WithoutType specifies exported content has no type information.
 }
 
 // Dump prints variables `values` to stdout with more manually readable.
 func Dump(values ...interface{}) {
 	for _, value := range values {
-		if s := Export(value, ExportOption{
+		if s := DumpWithOption(value, DumpOption{
 			WithoutType: true,
 		}); s != "" {
 			fmt.Println(s)
@@ -47,7 +47,7 @@ func Dump(values ...interface{}) {
 // Also see Dump.
 func DumpWithType(values ...interface{}) {
 	for _, value := range values {
-		if s := Export(value, ExportOption{
+		if s := DumpWithOption(value, DumpOption{
 			WithoutType: false,
 		}); s != "" {
 			fmt.Println(s)
@@ -55,29 +55,29 @@ func DumpWithType(values ...interface{}) {
 	}
 }
 
-// Export returns variables `values` as a string with more manually readable.
-func Export(value interface{}, option ExportOption) string {
+// DumpWithOption returns variables `values` as a string with more manually readable.
+func DumpWithOption(value interface{}, option DumpOption) string {
 	buffer := bytes.NewBuffer(nil)
-	ExportTo(buffer, value, ExportOption{
+	DumpTo(buffer, value, DumpOption{
 		WithoutType: option.WithoutType,
 	})
 	return buffer.String()
 }
 
-// ExportTo writes variables `values` as a string in to `writer` with more manually readable
-func ExportTo(writer io.Writer, value interface{}, option ExportOption) {
+// DumpTo writes variables `values` as a string in to `writer` with more manually readable
+func DumpTo(writer io.Writer, value interface{}, option DumpOption) {
 	buffer := bytes.NewBuffer(nil)
-	doExport(value, "", buffer, doExportOption{
+	doDump(value, "", buffer, doDumpOption{
 		WithoutType: option.WithoutType,
 	})
 	_, _ = writer.Write(buffer.Bytes())
 }
 
-type doExportOption struct {
+type doDumpOption struct {
 	WithoutType bool
 }
 
-func doExport(value interface{}, indent string, buffer *bytes.Buffer, option doExportOption) {
+func doDump(value interface{}, indent string, buffer *bytes.Buffer, option doDumpOption) {
 	if value == nil {
 		buffer.WriteString(`<nil>`)
 		return
@@ -96,179 +96,277 @@ func doExport(value interface{}, indent string, buffer *bytes.Buffer, option doE
 		reflectValue = reflectValue.Elem()
 		reflectKind = reflectValue.Kind()
 	}
+	var (
+		exportInternalInput = doDumpInternalInput{
+			Value:           value,
+			Indent:          indent,
+			NewIndent:       newIndent,
+			Buffer:          buffer,
+			Option:          option,
+			ReflectValue:    reflectValue,
+			ReflectTypeName: reflectTypeName,
+		}
+	)
 	switch reflectKind {
 	case reflect.Slice, reflect.Array:
-		if b, ok := value.([]byte); ok {
-			if option.WithoutType {
-				buffer.WriteString(fmt.Sprintf(`"%s"`, gstr.AddSlashes(string(b))))
-			} else {
-				buffer.WriteString(fmt.Sprintf(
-					`%s(%d) "%s"`,
-					reflectTypeName,
-					len(reflectValue.String()),
-					string(b),
-				))
-			}
-			return
-		}
-		if reflectValue.Len() == 0 {
-			if option.WithoutType {
-				buffer.WriteString("[]")
-			} else {
-				buffer.WriteString(fmt.Sprintf("%s(0) []", reflectTypeName))
-			}
-			return
-		}
-		if option.WithoutType {
-			buffer.WriteString("[\n")
-		} else {
-			buffer.WriteString(fmt.Sprintf("%s(%d) [\n", reflectTypeName, reflectValue.Len()))
-		}
-		for i := 0; i < reflectValue.Len(); i++ {
-			buffer.WriteString(newIndent)
-			doExport(reflectValue.Index(i).Interface(), newIndent, buffer, option)
-			buffer.WriteString(",\n")
-		}
-		buffer.WriteString(fmt.Sprintf("%s]", indent))
+		doDumpSlice(exportInternalInput)
 
 	case reflect.Map:
-		var (
-			mapKeys = reflectValue.MapKeys()
-		)
-		if len(mapKeys) == 0 {
-			if option.WithoutType {
-				buffer.WriteString("{}")
-			} else {
-				buffer.WriteString(fmt.Sprintf("%s(0) {}", reflectTypeName))
-			}
-			return
-		}
-
-		var (
-			maxSpaceNum = 0
-			tmpSpaceNum = 0
-			mapKeyStr   = ""
-		)
-		for _, key := range mapKeys {
-			tmpSpaceNum = len(fmt.Sprintf(`%v`, key.Interface()))
-			if tmpSpaceNum > maxSpaceNum {
-				maxSpaceNum = tmpSpaceNum
-			}
-		}
-		if option.WithoutType {
-			buffer.WriteString("{\n")
-		} else {
-			buffer.WriteString(fmt.Sprintf("%s(%d) {\n", reflectTypeName, len(mapKeys)))
-		}
-		for _, mapKey := range mapKeys {
-			tmpSpaceNum = len(fmt.Sprintf(`%v`, mapKey.Interface()))
-			if mapKey.Kind() == reflect.String {
-				mapKeyStr = fmt.Sprintf(`"%v"`, mapKey.Interface())
-			} else {
-				mapKeyStr = fmt.Sprintf(`%v`, mapKey.Interface())
-			}
-			if option.WithoutType {
-				buffer.WriteString(fmt.Sprintf(
-					"%s%v:%s",
-					newIndent,
-					mapKeyStr,
-					strings.Repeat(" ", maxSpaceNum-tmpSpaceNum+1),
-				))
-			} else {
-				buffer.WriteString(fmt.Sprintf(
-					"%s%s(%v):%s",
-					newIndent,
-					mapKey.Type().String(),
-					mapKeyStr,
-					strings.Repeat(" ", maxSpaceNum-tmpSpaceNum+1),
-				))
-			}
-			doExport(reflectValue.MapIndex(mapKey).Interface(), newIndent, buffer, option)
-			buffer.WriteString(",\n")
-		}
-		buffer.WriteString(fmt.Sprintf("%s}", indent))
+		doDumpMap(exportInternalInput)
 
 	case reflect.Struct:
-		structFields, _ := structs.Fields(structs.FieldsInput{
-			Pointer:         value,
-			RecursiveOption: structs.RecursiveOptionEmbeddedNoTag,
-		})
-		if len(structFields) == 0 {
-			var (
-				structContentStr  = ""
-				attributeCountStr = "0"
-			)
-			if v, ok := value.(iString); ok {
-				structContentStr = v.String()
-			} else if v, ok := value.(iMarshalJSON); ok {
-				b, _ := v.MarshalJSON()
-				structContentStr = string(b)
-			}
-			if structContentStr == "" {
-				structContentStr = "{}"
-			} else {
-				structContentStr = fmt.Sprintf(`"%s"`, gstr.AddSlashes(structContentStr))
-				attributeCountStr = fmt.Sprintf(`%d`, len(structContentStr)-2)
-			}
-			if option.WithoutType {
-				buffer.WriteString(structContentStr)
-			} else {
-				buffer.WriteString(fmt.Sprintf(
-					"%s(%s) %s",
-					reflectTypeName,
-					attributeCountStr,
-					structContentStr,
-				))
-			}
-			return
-		}
-
-		var (
-			maxSpaceNum = 0
-			tmpSpaceNum = 0
-		)
-		for _, field := range structFields {
-			tmpSpaceNum = len(field.Name())
-			if tmpSpaceNum > maxSpaceNum {
-				maxSpaceNum = tmpSpaceNum
-			}
-		}
-		if option.WithoutType {
-			buffer.WriteString("{\n")
-		} else {
-			buffer.WriteString(fmt.Sprintf("%s(%d) {\n", reflectTypeName, len(structFields)))
-		}
-		for _, field := range structFields {
-			tmpSpaceNum = len(fmt.Sprintf(`%v`, field.Name()))
-			buffer.WriteString(fmt.Sprintf(
-				"%s%s:%s",
-				newIndent,
-				field.Name(),
-				strings.Repeat(" ", maxSpaceNum-tmpSpaceNum+1),
-			))
-			doExport(field.Value.Interface(), newIndent, buffer, option)
-			buffer.WriteString(",\n")
-		}
-		buffer.WriteString(fmt.Sprintf("%s}", indent))
+		doDumpStruct(exportInternalInput)
 
 	case reflect.String:
-		s, _ := value.(string)
-		if option.WithoutType {
-			buffer.WriteString(fmt.Sprintf(`"%v"`, gstr.AddSlashes(s)))
+		doDumpString(exportInternalInput)
+
+	case reflect.Bool:
+		if reflectValue.Bool() {
+			buffer.WriteString(`true`)
 		} else {
-			buffer.WriteString(fmt.Sprintf(
-				`%s(%d) "%v"`,
-				reflectTypeName,
-				len(reflectValue.String()),
-				gstr.AddSlashes(s),
-			))
+			buffer.WriteString(`false`)
 		}
 
+	case
+		reflect.Int,
+		reflect.Int8,
+		reflect.Int16,
+		reflect.Int32,
+		reflect.Int64,
+		reflect.Uint,
+		reflect.Uint8,
+		reflect.Uint16,
+		reflect.Uint32,
+		reflect.Uint64,
+		reflect.Float32,
+		reflect.Float64,
+		reflect.Complex64,
+		reflect.Complex128:
+		doDumpNumber(exportInternalInput)
+
+	case reflect.Chan:
+		buffer.WriteString(`<chan>`)
+
+	case reflect.Func:
+		buffer.WriteString(`<func>`)
+
 	default:
-		if option.WithoutType {
-			buffer.WriteString(fmt.Sprintf("%v", value))
+		doDumpDefault(exportInternalInput)
+	}
+}
+
+type doDumpInternalInput struct {
+	Value           interface{}
+	Indent          string
+	NewIndent       string
+	Buffer          *bytes.Buffer
+	Option          doDumpOption
+	ReflectValue    reflect.Value
+	ReflectTypeName string
+}
+
+func doDumpSlice(in doDumpInternalInput) {
+	if b, ok := in.Value.([]byte); ok {
+		if in.Option.WithoutType {
+			in.Buffer.WriteString(fmt.Sprintf(`"%s"`, addSlashesForString(string(b))))
 		} else {
-			buffer.WriteString(fmt.Sprintf("%s(%v)", reflectTypeName, value))
+			in.Buffer.WriteString(fmt.Sprintf(
+				`%s(%d) "%s"`,
+				in.ReflectTypeName,
+				len(string(b)),
+				string(b),
+			))
+		}
+		return
+	}
+	if in.ReflectValue.Len() == 0 {
+		if in.Option.WithoutType {
+			in.Buffer.WriteString("[]")
+		} else {
+			in.Buffer.WriteString(fmt.Sprintf("%s(0) []", in.ReflectTypeName))
+		}
+		return
+	}
+	if in.Option.WithoutType {
+		in.Buffer.WriteString("[\n")
+	} else {
+		in.Buffer.WriteString(fmt.Sprintf("%s(%d) [\n", in.ReflectTypeName, in.ReflectValue.Len()))
+	}
+	for i := 0; i < in.ReflectValue.Len(); i++ {
+		in.Buffer.WriteString(in.NewIndent)
+		doDump(in.ReflectValue.Index(i).Interface(), in.NewIndent, in.Buffer, in.Option)
+		in.Buffer.WriteString(",\n")
+	}
+	in.Buffer.WriteString(fmt.Sprintf("%s]", in.Indent))
+}
+
+func doDumpMap(in doDumpInternalInput) {
+	var (
+		mapKeys = in.ReflectValue.MapKeys()
+	)
+	if len(mapKeys) == 0 {
+		if in.Option.WithoutType {
+			in.Buffer.WriteString("{}")
+		} else {
+			in.Buffer.WriteString(fmt.Sprintf("%s(0) {}", in.ReflectTypeName))
+		}
+		return
+	}
+	var (
+		maxSpaceNum = 0
+		tmpSpaceNum = 0
+		mapKeyStr   = ""
+	)
+	for _, key := range mapKeys {
+		tmpSpaceNum = len(fmt.Sprintf(`%v`, key.Interface()))
+		if tmpSpaceNum > maxSpaceNum {
+			maxSpaceNum = tmpSpaceNum
 		}
 	}
+	if in.Option.WithoutType {
+		in.Buffer.WriteString("{\n")
+	} else {
+		in.Buffer.WriteString(fmt.Sprintf("%s(%d) {\n", in.ReflectTypeName, len(mapKeys)))
+	}
+	for _, mapKey := range mapKeys {
+		tmpSpaceNum = len(fmt.Sprintf(`%v`, mapKey.Interface()))
+		if mapKey.Kind() == reflect.String {
+			mapKeyStr = fmt.Sprintf(`"%v"`, mapKey.Interface())
+		} else {
+			mapKeyStr = fmt.Sprintf(`%v`, mapKey.Interface())
+		}
+		if in.Option.WithoutType {
+			in.Buffer.WriteString(fmt.Sprintf(
+				"%s%v:%s",
+				in.NewIndent,
+				mapKeyStr,
+				strings.Repeat(" ", maxSpaceNum-tmpSpaceNum+1),
+			))
+		} else {
+			in.Buffer.WriteString(fmt.Sprintf(
+				"%s%s(%v):%s",
+				in.NewIndent,
+				mapKey.Type().String(),
+				mapKeyStr,
+				strings.Repeat(" ", maxSpaceNum-tmpSpaceNum+1),
+			))
+		}
+		doDump(in.ReflectValue.MapIndex(mapKey).Interface(), in.NewIndent, in.Buffer, in.Option)
+		in.Buffer.WriteString(",\n")
+	}
+	in.Buffer.WriteString(fmt.Sprintf("%s}", in.Indent))
+}
+
+func doDumpStruct(in doDumpInternalInput) {
+	structFields, _ := structs.Fields(structs.FieldsInput{
+		Pointer:         in.Value,
+		RecursiveOption: structs.RecursiveOptionEmbedded,
+	})
+	if len(structFields) == 0 {
+		var (
+			structContentStr  = ""
+			attributeCountStr = "0"
+		)
+		if v, ok := in.Value.(iString); ok {
+			structContentStr = v.String()
+		} else if v, ok := in.Value.(iMarshalJSON); ok {
+			b, _ := v.MarshalJSON()
+			structContentStr = string(b)
+		}
+		if structContentStr == "" {
+			structContentStr = "{}"
+		} else {
+			structContentStr = fmt.Sprintf(`"%s"`, addSlashesForString(structContentStr))
+			attributeCountStr = fmt.Sprintf(`%d`, len(structContentStr)-2)
+		}
+		if in.Option.WithoutType {
+			in.Buffer.WriteString(structContentStr)
+		} else {
+			in.Buffer.WriteString(fmt.Sprintf(
+				"%s(%s) %s",
+				in.ReflectTypeName,
+				attributeCountStr,
+				structContentStr,
+			))
+		}
+		return
+	}
+	var (
+		maxSpaceNum = 0
+		tmpSpaceNum = 0
+	)
+	for _, field := range structFields {
+		tmpSpaceNum = len(field.Name())
+		if tmpSpaceNum > maxSpaceNum {
+			maxSpaceNum = tmpSpaceNum
+		}
+	}
+	if in.Option.WithoutType {
+		in.Buffer.WriteString("{\n")
+	} else {
+		in.Buffer.WriteString(fmt.Sprintf("%s(%d) {\n", in.ReflectTypeName, len(structFields)))
+	}
+	for _, field := range structFields {
+		tmpSpaceNum = len(fmt.Sprintf(`%v`, field.Name()))
+		in.Buffer.WriteString(fmt.Sprintf(
+			"%s%s:%s",
+			in.NewIndent,
+			field.Name(),
+			strings.Repeat(" ", maxSpaceNum-tmpSpaceNum+1),
+		))
+		doDump(field.Value.Interface(), in.NewIndent, in.Buffer, in.Option)
+		in.Buffer.WriteString(",\n")
+	}
+	in.Buffer.WriteString(fmt.Sprintf("%s}", in.Indent))
+}
+
+func doDumpNumber(in doDumpInternalInput) {
+	if v, ok := in.Value.(iString); ok {
+		s := v.String()
+		if in.Option.WithoutType {
+			in.Buffer.WriteString(fmt.Sprintf(`"%v"`, addSlashesForString(s)))
+		} else {
+			in.Buffer.WriteString(fmt.Sprintf(
+				`%s(%d) "%v"`,
+				in.ReflectTypeName,
+				len(s),
+				addSlashesForString(s),
+			))
+		}
+	} else {
+		doDumpDefault(in)
+	}
+}
+
+func doDumpString(in doDumpInternalInput) {
+	s := in.ReflectValue.String()
+	if in.Option.WithoutType {
+		in.Buffer.WriteString(fmt.Sprintf(`"%v"`, addSlashesForString(s)))
+	} else {
+		in.Buffer.WriteString(fmt.Sprintf(
+			`%s(%d) "%v"`,
+			in.ReflectTypeName,
+			len(s),
+			addSlashesForString(s),
+		))
+	}
+}
+
+func doDumpDefault(in doDumpInternalInput) {
+	s := fmt.Sprintf("%v", in.Value)
+	s = gstr.Trim(s, `<>`)
+	if in.Option.WithoutType {
+		in.Buffer.WriteString(s)
+	} else {
+		in.Buffer.WriteString(fmt.Sprintf("%s(%s)", in.ReflectTypeName, s))
+	}
+}
+
+func addSlashesForString(s string) string {
+	return gstr.ReplaceByMap(s, map[string]string{
+		`"`:  `\"`,
+		"\r": `\r`,
+		"\t": `\t`,
+		"\n": `\n`,
+	})
 }

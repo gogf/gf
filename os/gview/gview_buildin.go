@@ -7,6 +7,7 @@
 package gview
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	htmltpl "html/template"
@@ -23,11 +24,13 @@ import (
 
 // buildInFuncDump implements build-in template function: dump
 func (view *View) buildInFuncDump(values ...interface{}) (result string) {
-	result += "<!--\n"
+	buffer := bytes.NewBuffer(nil)
+	buffer.WriteString("<!--\n")
 	for _, v := range values {
-		result += gutil.Export(v, gutil.ExportOption{WithoutType: true}) + "\n"
+		gutil.DumpTo(buffer, v, gutil.DumpOption{WithoutType: false})
+		buffer.WriteString("\n")
 	}
-	result += "-->\n"
+	buffer.WriteString("-->\n")
 	return result
 }
 
