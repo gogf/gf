@@ -134,3 +134,27 @@ func ExampleNewAnyAnyMapFrom() {
 	// {"key1":"val1"}
 	// {"key1":"val1"}
 }
+
+func ExampleNewIntAnyMap() {
+	m := gmap.NewIntAnyMap()
+
+	m.Set(1, "val1")
+	fmt.Println(m)
+
+	// Output:
+	// {"1":"val1"}
+}
+
+func ExampleNewIntAnyMapFrom() {
+	m := gmap.NewIntAnyMap()
+
+	m.Set(1, "val1")
+	fmt.Println(m)
+
+	n := gmap.NewIntAnyMapFrom(m.MapCopy(), true)
+	fmt.Println(n)
+
+	// Output:
+	// {"1":"val1"}
+	// {"1":"val1"}
+}
