@@ -7,11 +7,12 @@
 package gredis_test
 
 import (
+	"testing"
+	"time"
+
 	"github.com/gogf/gf/v2/database/gredis"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
-	"testing"
-	"time"
 )
 
 func Test_ConfigFromMap(t *testing.T) {

@@ -8,8 +8,9 @@ package gtimer
 
 import (
 	"context"
-	"github.com/gogf/gf/v2/container/gtype"
 	"time"
+
+	"github.com/gogf/gf/v2/container/gtype"
 )
 
 func New(options ...TimerOptions) *Timer {

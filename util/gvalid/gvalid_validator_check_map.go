@@ -8,9 +8,11 @@ package gvalid
 
 import (
 	"context"
+	"errors"
+	"strings"
+
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/util/gconv"
-	"strings"
 )
 
 // CheckMap validates map and returns the error result. It returns nil if with successful validation.
@@ -27,7 +29,7 @@ func (v *Validator) doCheckMap(ctx context.Context, params interface{}) Error {
 	var (
 		checkRules    = make([]fieldRule, 0)
 		customMessage = make(CustomMsg) // map[RuleKey]ErrorMsg.
-		errorMaps     = make(map[string]map[string]string)
+		errorMaps     = make(map[string]map[string]error)
 	)
 	switch assertValue := v.rules.(type) {
 	// Sequence tag: []sequence tag
@@ -80,9 +82,9 @@ func (v *Validator) doCheckMap(ctx context.Context, params interface{}) Error {
 	}
 	data := gconv.Map(params)
 	if data == nil {
-		return newErrorStr(
+		return newValidationErrorByStr(
 			internalParamsErrRuleName,
-			"invalid params type: convert to map failed",
+			errors.New("invalid params type: convert to map failed"),
 		)
 	}
 	if msg, ok := v.messages.(CustomMsg); ok && len(msg) > 0 {
@@ -116,8 +118,9 @@ func (v *Validator) doCheckMap(ctx context.Context, params interface{}) Error {
 		}); validatedError != nil {
 			_, errorItem := validatedError.FirstItem()
 			// ===========================================================
-			// Only in map and struct validations, if value is nil or empty
-			// string and has no required* rules, it clears the error message.
+			// Only in map and struct validations:
+			// If value is nil or empty string and has no required* rules,
+			// it clears the error message.
 			// ===========================================================
 			if gconv.String(value) == "" {
 				required := false
@@ -128,21 +131,16 @@ func (v *Validator) doCheckMap(ctx context.Context, params interface{}) Error {
 						required = true
 						break
 					}
-					// Custom rules are also required in default.
-					if f := v.getRuleFunc(ruleKey); f != nil {
-						required = true
-						break
-					}
 				}
 				if !required {
 					continue
 				}
 			}
 			if _, ok := errorMaps[checkRuleItem.Name]; !ok {
-				errorMaps[checkRuleItem.Name] = make(map[string]string)
+				errorMaps[checkRuleItem.Name] = make(map[string]error)
 			}
-			for ruleKey, errorItemMsgMap := range errorItem {
-				errorMaps[checkRuleItem.Name][ruleKey] = errorItemMsgMap
+			for ruleKey, ruleError := range errorItem {
+				errorMaps[checkRuleItem.Name][ruleKey] = ruleError
 			}
 			if v.bail {
 				break
@@ -150,7 +148,7 @@ func (v *Validator) doCheckMap(ctx context.Context, params interface{}) Error {
 		}
 	}
 	if len(errorMaps) > 0 {
-		return newError(gcode.CodeValidationFailed, checkRules, errorMaps)
+		return newValidationError(gcode.CodeValidationFailed, checkRules, errorMaps)
 	}
 	return nil
 }

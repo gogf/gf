@@ -7,10 +7,8 @@
 package gmap
 
 import (
-	"github.com/gogf/gf/v2/internal/json"
-
 	"github.com/gogf/gf/v2/internal/empty"
-
+	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/rwmutex"
 	"github.com/gogf/gf/v2/util/gconv"
 )
