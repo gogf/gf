@@ -216,15 +216,19 @@ func Test_FuncNl2Br(t *testing.T) {
 
 func Test_FuncInclude(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		header := `<h1>HEADER</h1>`
-		main := `<h1>hello gf</h1>`
-		footer := `<h1>FOOTER</h1>`
-		layout := `{{include "header.html" .}}
+		var (
+			header = `<h1>HEADER</h1>`
+			main   = `<h1>hello gf</h1>`
+			footer = `<h1>FOOTER</h1>`
+			layout = `{{include "header.html" .}}
 {{include "main.html" .}}
 {{include "footer.html" .}}`
-		templatePath := gfile.Pwd() + gfile.Separator + "template"
+			templatePath = gfile.Pwd() + gfile.Separator + "template"
+		)
+
 		gfile.Mkdir(templatePath)
 		defer gfile.Remove(templatePath)
+
 		// headerFile, _ := gfile.Create(templatePath + gfile.Separator + "header.html")
 		err := ioutil.WriteFile(templatePath+gfile.Separator+"header.html", []byte(header), 0644)
 		if err != nil {
@@ -235,19 +239,21 @@ func Test_FuncInclude(t *testing.T) {
 		ioutil.WriteFile(templatePath+gfile.Separator+"layout.html", []byte(layout), 0644)
 		view := gview.New(templatePath)
 		result, err := view.Parse(context.TODO(), "notfound.html")
-		t.Assert(err != nil, true)
+		t.AssertNE(err, nil)
 		t.Assert(result, ``)
+
 		result, err = view.Parse(context.TODO(), "layout.html")
-		t.Assert(err != nil, false)
+		t.AssertNil(err)
 		t.Assert(result, `<h1>HEADER</h1>
 <h1>hello gf</h1>
 <h1>FOOTER</h1>`)
+
 		notfoundPath := templatePath + gfile.Separator + "template" + gfile.Separator + "notfound.html"
 		gfile.Mkdir(templatePath + gfile.Separator + "template")
 		gfile.Create(notfoundPath)
 		ioutil.WriteFile(notfoundPath, []byte("notfound"), 0644)
 		result, err = view.Parse(context.TODO(), "notfound.html")
-		t.Assert(err != nil, true)
+		t.AssertNE(err, nil)
 		t.Assert(result, ``)
 	})
 }
