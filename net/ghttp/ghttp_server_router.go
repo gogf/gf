@@ -9,16 +9,18 @@ package ghttp
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/v2/container/gtype"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
+	"reflect"
 	"strings"
 
-	"github.com/gogf/gf/v2/debug/gdebug"
-
 	"github.com/gogf/gf/v2/container/glist"
+	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/debug/gdebug"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/protocol/goai"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gmeta"
 )
 
 const (
@@ -63,11 +65,22 @@ func (s *Server) parsePattern(pattern string) (domain, method, path string, err 
 	return
 }
 
+type setHandlerInput struct {
+	Prefix      string
+	Pattern     string
+	HandlerItem *handlerItem
+}
+
 // setHandler creates router item with given handler and pattern and registers the handler to the router tree.
 // The router tree can be treated as a multilayer hash table, please refer to the comment in following codes.
 // This function is called during server starts up, which cares little about the performance. What really cares
 // is the well-designed router storage structure for router searching when the request is under serving.
-func (s *Server) setHandler(ctx context.Context, pattern string, handler *handlerItem) {
+func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
+	var (
+		prefix  = in.Prefix
+		pattern = in.Pattern
+		handler = in.HandlerItem
+	)
 	handler.Id = handlerIdGenerator.Add(1)
 	if handler.Source == "" {
 		_, file, line := gdebug.CallerWithFilter(stackFilterKey)
@@ -78,6 +91,28 @@ func (s *Server) setHandler(ctx context.Context, pattern string, handler *handle
 		s.Logger().Fatalf(ctx, `invalid pattern "%s", %+v`, pattern, err)
 		return
 	}
+
+	// Change the registered route according meta info from its request structure.
+	if handler.Info.Type != nil && handler.Info.Type.NumIn() == 2 {
+		var (
+			objectReq = reflect.New(handler.Info.Type.In(1))
+		)
+		if v := gmeta.Get(objectReq, goai.TagNamePath); !v.IsEmpty() {
+			uri = v.String()
+		}
+		if v := gmeta.Get(objectReq, goai.TagNameMethod); !v.IsEmpty() {
+			method = v.String()
+		}
+		if v := gmeta.Get(objectReq, goai.TagNameDomain); !v.IsEmpty() {
+			domain = v.String()
+		}
+	}
+
+	// Prefix for URI feature.
+	if prefix != "" {
+		uri = prefix + "/" + strings.TrimLeft(uri, "/")
+	}
+
 	if len(uri) == 0 || uri[0] != '/' {
 		s.Logger().Fatalf(ctx, `invalid pattern "%s", URI should lead with '/'`, pattern)
 		return
@@ -177,7 +212,7 @@ func (s *Server) setHandler(ctx context.Context, pattern string, handler *handle
 		for e := l.Front(); e != nil; e = e.Next() {
 			item = e.Value.(*handlerItem)
 			// Checks the priority whether inserting the route item before current item,
-			// which means it has more higher priority.
+			// which means it has higher priority.
 			if s.compareRouterPriority(handler, item) {
 				l.InsertBefore(e, handler)
 				pushed = true
@@ -211,11 +246,11 @@ func (s *Server) setHandler(ctx context.Context, pattern string, handler *handle
 
 // compareRouterPriority compares the priority between `newItem` and `oldItem`. It returns true
 // if `newItem`'s priority is higher than `oldItem`, else it returns false. The higher priority
-// item will be insert into the router list before the other one.
+// item will be inserted into the router list before the other one.
 //
 // Comparison rules:
 // 1. The middleware has the most high priority.
-// 2. URI: The deeper the higher (simply check the count of char '/' in the URI).
+// 2. URI: The deeper, the higher (simply check the count of char '/' in the URI).
 // 3. Route type: {xxx} > :xxx > *xxx.
 func (s *Server) compareRouterPriority(newItem *handlerItem, oldItem *handlerItem) bool {
 	// If they're all type of middleware, the priority is according their registered sequence.
@@ -226,7 +261,7 @@ func (s *Server) compareRouterPriority(newItem *handlerItem, oldItem *handlerIte
 	if newItem.Type == HandlerTypeMiddleware && oldItem.Type != HandlerTypeMiddleware {
 		return true
 	}
-	// URI: The deeper the higher (simply check the count of char '/' in the URI).
+	// URI: The deeper, the higher (simply check the count of char '/' in the URI).
 	if newItem.Router.Priority > oldItem.Router.Priority {
 		return true
 	}

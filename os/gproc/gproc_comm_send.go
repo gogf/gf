@@ -7,10 +7,11 @@
 package gproc
 
 import (
+	"io"
+
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/net/gtcp"
-	"io"
 )
 
 // Send sends data to specified process of given pid.

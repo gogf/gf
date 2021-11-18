@@ -10,18 +10,19 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/internal/utils"
 	"io"
 	"runtime"
 	"strings"
+
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/internal/utils"
 )
 
 // Error is custom error for additional features.
 type Error struct {
 	error error      // Wrapped error.
 	stack stack      // Stack array, which records the stack information when this error is created or wrapped.
-	text  string     // Error text, which is created by New* functions.
+	text  string     // Custom Error text when Error is created, might be empty when its code is not nil.
 	code  gcode.Code // Error code if necessary.
 }
 
@@ -31,8 +32,7 @@ const (
 )
 
 var (
-	// goRootForFilter is used for stack filtering purpose.
-	// Mainly for development environment.
+	// goRootForFilter is used for stack filtering in development environment purpose.
 	goRootForFilter = runtime.GOROOT()
 )
 
@@ -107,18 +107,18 @@ func (err *Error) Format(s fmt.State, verb rune) {
 		switch {
 		case s.Flag('-'):
 			if err.text != "" {
-				io.WriteString(s, err.text)
+				_, _ = io.WriteString(s, err.text)
 			} else {
-				io.WriteString(s, err.Error())
+				_, _ = io.WriteString(s, err.Error())
 			}
 		case s.Flag('+'):
 			if verb == 's' {
-				io.WriteString(s, err.Stack())
+				_, _ = io.WriteString(s, err.Stack())
 			} else {
-				io.WriteString(s, err.Error()+"\n"+err.Stack())
+				_, _ = io.WriteString(s, err.Error()+"\n"+err.Stack())
 			}
 		default:
-			io.WriteString(s, err.Error())
+			_, _ = io.WriteString(s, err.Error())
 		}
 	}
 }
@@ -174,6 +174,14 @@ func (err *Error) Next() error {
 		return nil
 	}
 	return err.error
+}
+
+// SetCode updates the internal code with given code.
+func (err *Error) SetCode(code gcode.Code) {
+	if err == nil {
+		return
+	}
+	err.code = code
 }
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.

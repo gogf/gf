@@ -8,8 +8,9 @@ package gtype
 
 import (
 	"bytes"
-	"github.com/gogf/gf/v2/util/gconv"
 	"sync/atomic"
+
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // Bool is a struct for concurrent-safe operation for type bool.
@@ -80,9 +81,8 @@ func (v *Bool) String() string {
 func (v *Bool) MarshalJSON() ([]byte, error) {
 	if v.Val() {
 		return bytesTrue, nil
-	} else {
-		return bytesFalse, nil
 	}
+	return bytesFalse, nil
 }
 
 // UnmarshalJSON implements the interface UnmarshalJSON for json.Unmarshal.

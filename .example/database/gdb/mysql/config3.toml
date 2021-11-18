@@ -1,7 +1,0 @@
-
-# MySQL数据库配置
-[database]
-    [database.default]
-        link = "mysql:root:8692651@tcp(192.168.1.11:3306)/test"
-    [database.user]
-        link = "mysql:root:8692651@tcp(192.168.1.11:3306)/test"

@@ -8,11 +8,11 @@ package glist
 
 import (
 	"container/list"
+	"testing"
+
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
-
-	"testing"
 )
 
 func checkListLen(t *gtest.T, l *List, len int) bool {
@@ -46,34 +46,34 @@ func TestVar(t *testing.T) {
 	if v := l.PopBack(); v != 1 {
 		t.Errorf("EXPECT %v, GOT %v", 1, v)
 	} else {
-		//fmt.Println(v)
+		// fmt.Println(v)
 	}
 	if v := l.PopBack(); v != 2 {
 		t.Errorf("EXPECT %v, GOT %v", 2, v)
 	} else {
-		//fmt.Println(v)
+		// fmt.Println(v)
 	}
 	if v := l.PopBack(); v != nil {
 		t.Errorf("EXPECT %v, GOT %v", nil, v)
 	} else {
-		//fmt.Println(v)
+		// fmt.Println(v)
 	}
 	l.PushBack(1)
 	l.PushBack(2)
 	if v := l.PopFront(); v != 1 {
 		t.Errorf("EXPECT %v, GOT %v", 1, v)
 	} else {
-		//fmt.Println(v)
+		// fmt.Println(v)
 	}
 	if v := l.PopFront(); v != 2 {
 		t.Errorf("EXPECT %v, GOT %v", 2, v)
 	} else {
-		//fmt.Println(v)
+		// fmt.Println(v)
 	}
 	if v := l.PopFront(); v != nil {
 		t.Errorf("EXPECT %v, GOT %v", nil, v)
 	} else {
-		//fmt.Println(v)
+		// fmt.Println(v)
 	}
 }
 
@@ -84,34 +84,34 @@ func TestBasic(t *testing.T) {
 	if v := l.PopBack(); v != 1 {
 		t.Errorf("EXPECT %v, GOT %v", 1, v)
 	} else {
-		//fmt.Println(v)
+		// fmt.Println(v)
 	}
 	if v := l.PopBack(); v != 2 {
 		t.Errorf("EXPECT %v, GOT %v", 2, v)
 	} else {
-		//fmt.Println(v)
+		// fmt.Println(v)
 	}
 	if v := l.PopBack(); v != nil {
 		t.Errorf("EXPECT %v, GOT %v", nil, v)
 	} else {
-		//fmt.Println(v)
+		// fmt.Println(v)
 	}
 	l.PushBack(1)
 	l.PushBack(2)
 	if v := l.PopFront(); v != 1 {
 		t.Errorf("EXPECT %v, GOT %v", 1, v)
 	} else {
-		//fmt.Println(v)
+		// fmt.Println(v)
 	}
 	if v := l.PopFront(); v != 2 {
 		t.Errorf("EXPECT %v, GOT %v", 2, v)
 	} else {
-		//fmt.Println(v)
+		// fmt.Println(v)
 	}
 	if v := l.PopFront(); v != nil {
 		t.Errorf("EXPECT %v, GOT %v", nil, v)
 	} else {
-		//fmt.Println(v)
+		// fmt.Println(v)
 	}
 }
 
@@ -221,13 +221,13 @@ func checkList(t *gtest.T, l *List, es []interface{}) {
 		i++
 	}
 
-	//for e := l.Front(); e != nil; e = e.Next() {
+	// for e := l.Front(); e != nil; e = e.Next() {
 	//	le := e.Value.(int)
 	//	if le != es[i] {
 	//		t.Errorf("elt[%d].Value() = %v, want %v", i, le, es[i])
 	//	}
 	//	i++
-	//}
+	// }
 }
 
 func TestExtending(t *testing.T) {
@@ -283,11 +283,11 @@ func TestRemove(t *testing.T) {
 		e1 := l.PushBack(1)
 		e2 := l.PushBack(2)
 		checkListPointers(t, l, []*Element{e1, e2})
-		//e := l.Front()
-		//l.Remove(e)
-		//checkListPointers(t, l, []*Element{e2})
-		//l.Remove(e)
-		//checkListPointers(t, l, []*Element{e2})
+		// e := l.Front()
+		// l.Remove(e)
+		// checkListPointers(t, l, []*Element{e2})
+		// l.Remove(e)
+		// checkListPointers(t, l, []*Element{e2})
 	})
 }
 
@@ -322,12 +322,12 @@ func TestIssue6349(t *testing.T) {
 	if e.Value != 1 {
 		t.Errorf("e.value = %d, want 1", e.Value)
 	}
-	//if e.Next() != nil {
+	// if e.Next() != nil {
 	//    t.Errorf("e.Next() != nil")
-	//}
-	//if e.Prev() != nil {
+	// }
+	// if e.Prev() != nil {
 	//    t.Errorf("e.Prev() != nil")
-	//}
+	// }
 }
 
 func TestMove(t *testing.T) {
@@ -474,7 +474,7 @@ func TestList_PopBacks(t *testing.T) {
 		i1 := l.PopBacks(2)
 		t.Assert(i1, []interface{}{1, 2})
 
-		l.PushBacks(a2) //4.3,a,c,b,e
+		l.PushBacks(a2) // 4.3,a,c,b,e
 		i1 = l.PopBacks(3)
 		t.Assert(i1, []interface{}{"e", "b", "c"})
 	})

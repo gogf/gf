@@ -8,15 +8,16 @@
 package ghttp
 
 import (
+	"net/http"
+	"reflect"
+	"time"
+
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/gsession"
 	"github.com/gogf/gf/v2/protocol/goai"
 	"github.com/gorilla/websocket"
-	"net/http"
-	"reflect"
-	"time"
 )
 
 type (

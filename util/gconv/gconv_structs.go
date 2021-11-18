@@ -7,10 +7,11 @@
 package gconv
 
 import (
+	"reflect"
+
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/json"
-	"reflect"
 )
 
 // Structs converts any slice to given struct slice.

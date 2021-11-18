@@ -8,7 +8,6 @@ package gtest
 
 import (
 	"fmt"
-	"github.com/gogf/gf/v2/internal/empty"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -16,7 +15,7 @@ import (
 	"testing"
 
 	"github.com/gogf/gf/v2/debug/gdebug"
-
+	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
