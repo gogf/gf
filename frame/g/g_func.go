@@ -8,6 +8,7 @@ package g
 
 import (
 	"context"
+	"io"
 
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/internal/empty"
@@ -39,10 +40,20 @@ func Dump(values ...interface{}) {
 	gutil.Dump(values...)
 }
 
+// DumpTo writes variables `values` as a string in to `writer` with more manually readable
+func DumpTo(writer io.Writer, value interface{}, option gutil.DumpOption) {
+	gutil.DumpTo(writer, value, option)
+}
+
 // DumpWithType acts like Dump, but with type information.
 // Also see Dump.
 func DumpWithType(values ...interface{}) {
 	gutil.DumpWithType(values...)
+}
+
+// DumpWithOption returns variables `values` as a string with more manually readable.
+func DumpWithOption(value interface{}, option gutil.DumpOption) {
+	gutil.DumpWithOption(value, option)
 }
 
 // Throw throws an exception, which can be caught by TryCatch function.

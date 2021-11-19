@@ -179,10 +179,3 @@ func (j *Json) Dump() {
 	defer j.mu.RUnlock()
 	gutil.Dump(*j.p)
 }
-
-// Export returns `j` as a string with more manually readable.
-func (j *Json) Export() string {
-	j.mu.RLock()
-	defer j.mu.RUnlock()
-	return gutil.Export(*j.p, gutil.ExportOption{})
-}
