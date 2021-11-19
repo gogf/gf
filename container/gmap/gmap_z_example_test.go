@@ -166,7 +166,7 @@ func ExampleNewIntIntMap() {
 	fmt.Println(m)
 
 	// Output:
-	// {"1":"1"}
+	// {"1":1}
 }
 
 func ExampleNewIntIntMapFrom() {
@@ -179,6 +179,78 @@ func ExampleNewIntIntMapFrom() {
 	fmt.Println(n)
 
 	// Output:
-	// {"1":"1"}
-	// {"1":"1"}
+	// {"1":1}
+	// {"1":1}
+}
+
+func ExampleNewStrAnyMap() {
+	m := gmap.NewStrAnyMap()
+
+	m.Set("key1", "var1")
+	fmt.Println(m)
+
+	// Output:
+	// {"key1":"var1"}
+}
+
+func ExampleNewStrAnyMapFrom() {
+	m := gmap.NewStrAnyMap()
+
+	m.Set("key1", "var1")
+	fmt.Println(m)
+
+	n := gmap.NewStrAnyMapFrom(m.MapCopy(), true)
+	fmt.Println(n)
+
+	// Output:
+	// {"key1":"var1"}
+	// {"key1":"var1"}
+}
+
+func ExampleNewStrIntMap() {
+	m := gmap.NewStrIntMap()
+
+	m.Set("key1", 1)
+	fmt.Println(m)
+
+	// Output:
+	// {"key1":1}
+}
+
+func ExampleNewStrIntMapFrom() {
+	m := gmap.NewStrIntMap()
+
+	m.Set("key1", 1)
+	fmt.Println(m)
+
+	n := gmap.NewStrIntMapFrom(m.MapCopy(), true)
+	fmt.Println(n)
+
+	// Output:
+	// {"key1":1}
+	// {"key1":1}
+}
+
+func ExampleNewStrStrMap() {
+	m := gmap.NewStrStrMap()
+
+	m.Set("key1", "var1")
+	fmt.Println(m)
+
+	// Output:
+	// {"key1":"var1"}
+}
+
+func ExampleNewStrStrMapFrom() {
+	m := gmap.NewStrStrMap()
+
+	m.Set("key1", "var1")
+	fmt.Println(m)
+
+	n := gmap.NewStrStrMapFrom(m.MapCopy(), true)
+	fmt.Println(n)
+
+	// Output:
+	// {"key1":"var1"}
+	// {"key1":"var1"}
 }
