@@ -7,6 +7,8 @@
 package gres_test
 
 import (
+	_ "github.com/gogf/gf/v2/os/gres/testdata/data"
+
 	"strings"
 	"testing"
 
@@ -20,22 +22,26 @@ import (
 
 func Test_PackToGoFile(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		srcPath := gdebug.TestDataPath("files")
-		goFilePath := gdebug.TestDataPath("testdata.go")
-		pkgName := "testdata"
-		err := gres.PackToGoFile(srcPath, goFilePath, pkgName)
+		var (
+			srcPath    = gdebug.TestDataPath("files")
+			goFilePath = gfile.TempDir(gtime.TimestampNanoStr(), "testdata.go")
+			pkgName    = "testdata"
+			err        = gres.PackToGoFile(srcPath, goFilePath, pkgName)
+		)
 		t.Assert(err, nil)
+		_ = gfile.Remove(goFilePath)
 	})
 }
 
 func Test_Pack(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		srcPath := gdebug.TestDataPath("files")
-		data, err := gres.Pack(srcPath)
+		var (
+			srcPath   = gdebug.TestDataPath("files")
+			data, err = gres.Pack(srcPath)
+		)
 		t.Assert(err, nil)
 
 		r := gres.New()
-
 		err = r.Add(string(data))
 		t.Assert(err, nil)
 		t.Assert(r.Contains("files/"), true)
@@ -44,9 +50,11 @@ func Test_Pack(t *testing.T) {
 
 func Test_PackToFile(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		srcPath := gdebug.TestDataPath("files")
-		dstPath := gfile.TempDir(gtime.TimestampNanoStr())
-		err := gres.PackToFile(srcPath, dstPath)
+		var (
+			srcPath = gdebug.TestDataPath("files")
+			dstPath = gfile.TempDir(gtime.TimestampNanoStr())
+			err     = gres.PackToFile(srcPath, dstPath)
+		)
 		t.Assert(err, nil)
 
 		defer gfile.Remove(dstPath)
@@ -60,33 +68,42 @@ func Test_PackToFile(t *testing.T) {
 
 func Test_PackMulti(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		srcPath := gdebug.TestDataPath("files")
-		goFilePath := gdebug.TestDataPath("data/data.go")
-		pkgName := "data"
-		array, err := gfile.ScanDir(srcPath, "*", false)
+		var (
+			srcPath    = gdebug.TestDataPath("files")
+			goFilePath = gfile.TempDir(gtime.TimestampNanoStr(), "data.go")
+			pkgName    = "data"
+			array, err = gfile.ScanDir(srcPath, "*", false)
+		)
 		t.Assert(err, nil)
 		err = gres.PackToGoFile(strings.Join(array, ","), goFilePath, pkgName)
 		t.Assert(err, nil)
+		_ = gfile.Remove(goFilePath)
 	})
 }
 
 func Test_PackWithPrefix1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		srcPath := gdebug.TestDataPath("files")
-		goFilePath := gfile.TempDir("testdata.go")
-		pkgName := "testdata"
-		err := gres.PackToGoFile(srcPath, goFilePath, pkgName, "www/gf-site/test")
-		t.Assert(err, nil)
+		var (
+			srcPath    = gdebug.TestDataPath("files")
+			goFilePath = gfile.TempDir(gtime.TimestampNanoStr(), "testdata.go")
+			pkgName    = "testdata"
+			err        = gres.PackToGoFile(srcPath, goFilePath, pkgName, "www/gf-site/test")
+		)
+		t.AssertNil(err)
+		_ = gfile.Remove(goFilePath)
 	})
 }
 
 func Test_PackWithPrefix2(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		srcPath := gdebug.TestDataPath("files")
-		goFilePath := gfile.TempDir("testdata.go")
-		pkgName := "testdata"
-		err := gres.PackToGoFile(srcPath, goFilePath, pkgName, "/var/www/gf-site/test")
+		var (
+			srcPath    = gdebug.TestDataPath("files")
+			goFilePath = gfile.TempDir(gtime.TimestampNanoStr(), "testdata.go")
+			pkgName    = "testdata"
+			err        = gres.PackToGoFile(srcPath, goFilePath, pkgName, "/var/www/gf-site/test")
+		)
 		t.Assert(err, nil)
+		_ = gfile.Remove(goFilePath)
 	})
 }
 
