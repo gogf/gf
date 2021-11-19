@@ -9,11 +9,12 @@ package gset
 
 import (
 	"bytes"
+	"strings"
+
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/rwmutex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
-	"strings"
 )
 
 type StrSet struct {

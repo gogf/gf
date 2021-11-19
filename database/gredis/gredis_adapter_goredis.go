@@ -8,9 +8,11 @@ package gredis
 
 import (
 	"context"
-	"github.com/go-redis/redis/v8"
-	"github.com/gogf/gf/v2/text/gstr"
 	"time"
+
+	"github.com/go-redis/redis/v8"
+
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // AdapterGoRedis is an implement of Adapter using go-redis.

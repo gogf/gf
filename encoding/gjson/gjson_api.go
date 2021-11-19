@@ -8,11 +8,11 @@ package gjson
 
 import (
 	"fmt"
+
+	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/util/gutil"
-
-	"github.com/gogf/gf/v2/container/gvar"
 )
 
 // Interface returns the json value.
@@ -178,11 +178,4 @@ func (j *Json) Dump() {
 	j.mu.RLock()
 	defer j.mu.RUnlock()
 	gutil.Dump(*j.p)
-}
-
-// Export returns `j` as a string with more manually readable.
-func (j *Json) Export() string {
-	j.mu.RLock()
-	defer j.mu.RUnlock()
-	return gutil.Export(*j.p, gutil.ExportOption{})
 }

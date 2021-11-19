@@ -8,15 +8,15 @@ package garray
 
 import (
 	"bytes"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/text/gstr"
 	"math"
 	"sort"
 	"strings"
 
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/rwmutex"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/grand"
 )
@@ -407,9 +407,8 @@ func (a *StrArray) SubSlice(offset int, length ...int) []string {
 		s := make([]string, size)
 		copy(s, a.array[offset:])
 		return s
-	} else {
-		return a.array[offset:end]
 	}
+	return a.array[offset:end]
 }
 
 // Append is alias of PushRight,please See PushRight.

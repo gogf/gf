@@ -8,12 +8,12 @@
 package gjson
 
 import (
-	"github.com/gogf/gf/v2/internal/utils"
 	"reflect"
 	"strconv"
 	"strings"
 
 	"github.com/gogf/gf/v2/internal/rwmutex"
+	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )

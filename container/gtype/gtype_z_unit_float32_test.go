@@ -7,12 +7,13 @@
 package gtype_test
 
 import (
+	"math"
+	"testing"
+
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
-	"math"
-	"testing"
 )
 
 func Test_Float32(t *testing.T) {
@@ -22,7 +23,7 @@ func Test_Float32(t *testing.T) {
 		t.AssertEQ(iClone.Set(0.1), float32(0))
 		t.AssertEQ(iClone.Val(), float32(0.1))
 
-		//空参测试
+		// 空参测试
 		i1 := gtype.NewFloat32()
 		t.AssertEQ(i1.Val(), float32(0))
 	})

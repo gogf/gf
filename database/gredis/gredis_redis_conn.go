@@ -8,11 +8,12 @@ package gredis
 
 import (
 	"context"
+	"reflect"
+
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gtime"
-	"reflect"
 )
 
 // RedisConn is a connection of redis client.

@@ -7,12 +7,12 @@
 package gutil_test
 
 import (
-	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/util/gmeta"
 	"testing"
 
+	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gmeta"
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
@@ -124,5 +124,21 @@ func TestDumpWithType(t *testing.T) {
 		})
 		gutil.DumpWithType(req)
 		gutil.DumpWithType([][]byte{[]byte("hello")})
+	})
+}
+
+func Test_Dump_Slashes(t *testing.T) {
+	type Req struct {
+		Content string
+	}
+	req := &Req{
+		Content: `{"name":"john", "age":18}`,
+	}
+	gtest.C(t, func(t *gtest.T) {
+		gutil.Dump(req)
+		gutil.Dump(req.Content)
+
+		gutil.DumpWithType(req)
+		gutil.DumpWithType(req.Content)
 	})
 }

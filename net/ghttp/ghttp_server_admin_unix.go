@@ -4,16 +4,18 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+//go:build !windows
 // +build !windows
 
 package ghttp
 
 import (
 	"context"
-	"github.com/gogf/gf/v2/internal/intlog"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/gogf/gf/v2/internal/intlog"
 )
 
 // procSignalChan is the channel for listening the signal.

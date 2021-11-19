@@ -23,13 +23,13 @@ func (v *Validator) CheckStruct(ctx context.Context, object interface{}) Error {
 	return v.doCheckStruct(ctx, object)
 }
 
-type doCheckStructRecursivelyInput struct {
+type doCheckAttributeRecursivelyInput struct {
 	Field               *structs.Field
 	ErrorMaps           map[string]map[string]error
 	ResultSequenceRules []fieldRule
 }
 
-func (v *Validator) doCheckStructRecursively(ctx context.Context, in doCheckStructRecursivelyInput) {
+func (v *Validator) doCheckAttributeRecursively(ctx context.Context, in doCheckAttributeRecursivelyInput) {
 	switch in.Field.OriginalKind() {
 	case reflect.Struct:
 		var (
@@ -133,7 +133,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 				fieldToAliasNameMap[field.Name()] = field.TagValue
 			}
 			// Recursively check attribute struct/[]string/map/[]map.
-			v.doCheckStructRecursively(ctx, doCheckStructRecursivelyInput{
+			v.doCheckAttributeRecursively(ctx, doCheckAttributeRecursivelyInput{
 				Field:               field,
 				ErrorMaps:           errorMaps,
 				ResultSequenceRules: resultSequenceRules,
