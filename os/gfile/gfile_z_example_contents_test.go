@@ -101,7 +101,8 @@ func ExamplePutContentsAppend() {
 	// read contents
 	fmt.Println(gfile.GetContents(tempFile))
 
-	// write contents
+	// It creates and append content string into specifies file path.
+	// It automatically creates directory recursively if it does not exist.
 	gfile.PutContentsAppend(tempFile, " append content")
 
 	// read contents

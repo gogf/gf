@@ -27,6 +27,7 @@ func ExampleReplaceFile() {
 	// read contents
 	fmt.Println(gfile.GetContents(tempFile))
 
+	// It replaces content directly by file path.
 	gfile.ReplaceFile("content", "replace word", tempFile)
 
 	fmt.Println(gfile.GetContents(tempFile))
