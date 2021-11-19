@@ -94,7 +94,7 @@ func CaseKebabScreaming(s string) string {
 }
 
 // CaseDelimited converts a string to snake.case.delimited.
-func CaseDelimited(s string, del uint8) string {
+func CaseDelimited(s string, del byte) string {
 	return CaseDelimitedScreaming(s, del, false)
 }
 
