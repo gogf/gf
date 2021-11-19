@@ -158,3 +158,27 @@ func ExampleNewIntAnyMapFrom() {
 	// {"1":"val1"}
 	// {"1":"val1"}
 }
+
+func ExampleNewIntIntMap() {
+	m := gmap.NewIntIntMap()
+
+	m.Set(1, 1)
+	fmt.Println(m)
+
+	// Output:
+	// {"1":"1"}
+}
+
+func ExampleNewIntIntMapFrom() {
+	m := gmap.NewIntIntMap()
+
+	m.Set(1, 1)
+	fmt.Println(m)
+
+	n := gmap.NewIntIntMapFrom(m.MapCopy(), true)
+	fmt.Println(n)
+
+	// Output:
+	// {"1":"1"}
+	// {"1":"1"}
+}

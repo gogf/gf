@@ -63,7 +63,7 @@ func ExampleIntAnyMap_Map() {
 	// concurrent-safety, copy of underlying data
 	m2 := gmap.New(true)
 	m2.Set(1, "val1")
-	fmt.Println("m1:", m2)
+	fmt.Println("m2:", m2)
 
 	n2 := m2.Map()
 	fmt.Println("before n2:", n2)
@@ -74,7 +74,7 @@ func ExampleIntAnyMap_Map() {
 	// m1: {"1":"val1"}
 	// before n1: map[1:val1]
 	// after n1: map[1:val2]
-	// m1: {"1":"val1"}
+	// m2: {"1":"val1"}
 	// before n2: map[1:val1]
 	// after n2: map[1:val1]
 }
