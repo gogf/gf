@@ -7,9 +7,11 @@ package gregex_test
 
 import (
 	"bytes"
+	"fmt"
+	"strings"
+
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/text/gregex"
-	"strings"
 )
 
 func ExampleIsMatch() {
@@ -118,10 +120,10 @@ func ExampleMatchAllString() {
 
 func ExampleQuote() {
 	result := gregex.Quote(`[1-9]\d+`)
-	g.Dump(result)
+	fmt.Println(result)
 
 	// Output:
-	// "\[1-9\]\\d\+"
+	// \[1-9\]\\d\+
 }
 
 func ExampleReplace() {
@@ -267,14 +269,11 @@ func ExampleSplit() {
 
 func ExampleValidate() {
 	// Valid match statement
-	g.Dump(gregex.Validate(`\d+`))
+	fmt.Println(gregex.Validate(`\d+`))
 	// Mismatched statement
-	g.Dump(gregex.Validate(`[a-9]\d+`))
+	fmt.Println(gregex.Validate(`[a-9]\d+`))
 
 	// Output:
 	// <nil>
-	// {
-	//     Code: "invalid character class range",
-	//     Expr: "a-9",
-	// }
+	// error parsing regexp: invalid character class range: `a-9`
 }

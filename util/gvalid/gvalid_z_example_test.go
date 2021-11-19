@@ -10,14 +10,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
+	"reflect"
+
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gvalid"
-	"math"
-	"reflect"
 )
 
 func ExampleCheckMap() {
@@ -245,15 +246,15 @@ func ExampleValidator_CheckMap() {
 	}
 
 	// May Output:
-	//{
+	// {
 	//	"passport": {
 	//	"length": "账号长度应当在6到16之间",
 	//		"required": "账号不能为空"
-	//},
+	// },
 	//	"password": {
 	//	"same": "两次密码输入不相等"
-	//}
-	//}
+	// }
+	// }
 }
 
 func ExampleValidator_CheckStruct() {

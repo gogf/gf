@@ -9,11 +9,12 @@ package gutil
 
 import (
 	"fmt"
+	"reflect"
+
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/util/gconv"
-	"reflect"
 )
 
 const (

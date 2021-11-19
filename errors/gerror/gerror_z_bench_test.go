@@ -8,9 +8,10 @@ package gerror_test
 
 import (
 	"errors"
+	"testing"
+
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"testing"
 )
 
 var (

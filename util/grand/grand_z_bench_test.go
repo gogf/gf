@@ -10,11 +10,11 @@ package grand_test
 
 import (
 	cryptoRand "crypto/rand"
-	mathRand "math/rand"
-
 	"encoding/binary"
-	"github.com/gogf/gf/v2/util/grand"
+	mathRand "math/rand"
 	"testing"
+
+	"github.com/gogf/gf/v2/util/grand"
 )
 
 var (

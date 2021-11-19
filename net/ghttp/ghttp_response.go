@@ -12,9 +12,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/gogf/gf/v2/os/gres"
-
 	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gres"
 )
 
 // Response is the http response manager.
@@ -63,9 +62,10 @@ func (r *Response) ServeFile(path string, allowIndex ...bool) {
 // ServeFileDownload serves file downloading to the response.
 func (r *Response) ServeFileDownload(path string, name ...string) {
 	var (
-		serveFile *staticFile
+		serveFile    *staticFile
+		downloadName = ""
 	)
-	downloadName := ""
+
 	if len(name) > 0 {
 		downloadName = name[0]
 	}

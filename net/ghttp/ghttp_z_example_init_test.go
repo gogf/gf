@@ -7,9 +7,10 @@
 package ghttp_test
 
 import (
+	"time"
+
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
-	"time"
 )
 
 func init() {

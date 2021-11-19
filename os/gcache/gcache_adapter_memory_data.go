@@ -7,9 +7,10 @@
 package gcache
 
 import (
-	"github.com/gogf/gf/v2/os/gtime"
 	"sync"
 	"time"
+
+	"github.com/gogf/gf/v2/os/gtime"
 )
 
 type adapterMemoryData struct {

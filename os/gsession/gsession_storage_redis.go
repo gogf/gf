@@ -8,12 +8,12 @@ package gsession
 
 import (
 	"context"
+	"time"
+
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gredis"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/internal/json"
-	"time"
-
 	"github.com/gogf/gf/v2/os/gtimer"
 )
 
@@ -77,7 +77,7 @@ func (s *StorageRedis) Get(ctx context.Context, id string, key string) (value in
 	return nil, ErrorDisabled
 }
 
-// GetMap retrieves all key-value pairs as map from storage.
+// Data retrieves all key-value pairs as map from storage.
 func (s *StorageRedis) Data(ctx context.Context, id string) (data map[string]interface{}, err error) {
 	return nil, ErrorDisabled
 }
@@ -135,9 +135,8 @@ func (s *StorageRedis) GetSession(ctx context.Context, id string, ttl time.Durat
 	}
 	if data == nil {
 		return gmap.NewStrAnyMapFrom(m, true), nil
-	} else {
-		data.Replace(m)
 	}
+	data.Replace(m)
 	return data, nil
 }
 

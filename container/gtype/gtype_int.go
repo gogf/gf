@@ -7,9 +7,10 @@
 package gtype
 
 import (
-	"github.com/gogf/gf/v2/util/gconv"
 	"strconv"
 	"sync/atomic"
+
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // Int is a struct for concurrent-safe operation for type int.

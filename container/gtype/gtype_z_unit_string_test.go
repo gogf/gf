@@ -7,11 +7,12 @@
 package gtype_test
 
 import (
+	"testing"
+
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
-	"testing"
 )
 
 func Test_String(t *testing.T) {
@@ -21,7 +22,7 @@ func Test_String(t *testing.T) {
 		t.AssertEQ(iClone.Set("123"), "abc")
 		t.AssertEQ(iClone.Val(), "123")
 
-		//空参测试
+		// 空参测试
 		i1 := gtype.NewString()
 		t.AssertEQ(i1.Val(), "")
 	})

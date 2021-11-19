@@ -9,9 +9,10 @@ package gvalid
 import (
 	"context"
 	"errors"
+	"strings"
+
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/util/gconv"
-	"strings"
 )
 
 // CheckMap validates map and returns the error result. It returns nil if with successful validation.

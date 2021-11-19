@@ -7,13 +7,13 @@
 package gtype_test
 
 import (
-	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/util/gconv"
 	"sync"
 	"testing"
 
 	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 func Test_Byte(t *testing.T) {
@@ -34,7 +34,7 @@ func Test_Byte(t *testing.T) {
 		wg.Wait()
 		t.AssertEQ(byte(addTimes), i.Val())
 
-		//空参测试
+		// 空参测试
 		i1 := gtype.NewByte()
 		t.AssertEQ(i1.Val(), byte(0))
 	})

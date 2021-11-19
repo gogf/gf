@@ -8,9 +8,10 @@ package glog
 
 import (
 	"bytes"
-	"github.com/gogf/gf/v2/test/gtest"
 	"strings"
 	"testing"
+
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_SetConfigWithMap(t *testing.T) {

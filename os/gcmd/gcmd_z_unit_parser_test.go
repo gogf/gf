@@ -13,9 +13,7 @@ import (
 	"testing"
 
 	"github.com/gogf/gf/v2/container/garray"
-
 	"github.com/gogf/gf/v2/os/gcmd"
-
 	"github.com/gogf/gf/v2/test/gtest"
 )
 

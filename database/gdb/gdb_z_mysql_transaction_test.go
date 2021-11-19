@@ -9,13 +9,12 @@ package gdb_test
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/v2/os/gctx"
 	"testing"
 
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gerror"
-
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 )
@@ -145,7 +144,6 @@ func Test_TX_Insert(t *testing.T) {
 		if err := tx.Commit(); err != nil {
 			gtest.Error(err)
 		}
-
 	})
 }
 
@@ -416,7 +414,6 @@ func Test_TX_GetValue(t *testing.T) {
 			gtest.Error(err)
 		}
 	})
-
 }
 
 func Test_TX_GetCount(t *testing.T) {
@@ -955,8 +952,8 @@ func Test_Transaction_Nested_TX_Transaction_UseDB(t *testing.T) {
 	table := createTable()
 	defer dropTable(table)
 
-	//db.SetDebug(true)
-	//defer db.SetDebug(false)
+	// db.SetDebug(true)
+	// defer db.SetDebug(false)
 
 	gtest.C(t, func(t *gtest.T) {
 		var (

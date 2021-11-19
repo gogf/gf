@@ -8,14 +8,14 @@ package glog
 
 import (
 	"context"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/os/gctx"
 	"io"
 	"strings"
 	"time"
 
+	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
@@ -255,7 +255,7 @@ func (l *Logger) SetHandlers(handlers ...Handler) {
 	l.config.Handlers = handlers
 }
 
-//SetWriterColorEnable sets the file logging with color
+// SetWriterColorEnable sets the file logging with color
 func (l *Logger) SetWriterColorEnable(enabled bool) {
 	l.config.WriterColorEnable = enabled
 }

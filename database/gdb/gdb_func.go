@@ -10,25 +10,23 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
-	"github.com/gogf/gf/v2/errors/gcode"
 	"reflect"
 	"regexp"
 	"strings"
 	"time"
 
+	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/internal/structs"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/gf/v2/util/gmeta"
-	"github.com/gogf/gf/v2/util/gutil"
-
-	"github.com/gogf/gf/v2/internal/structs"
-
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gmeta"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // iString is the type assert api for String.
@@ -71,6 +69,11 @@ var (
 	// Priority tags for struct converting for orm field mapping.
 	structTagPriority = append([]string{OrmTagForStruct}, gconv.StructTagPriority...)
 )
+
+// isForDaoModel checks and returns whether given type is for dao model.
+func isForDaoModel(t reflect.Type) bool {
+	return gstr.HasSuffix(t.String(), modelForDaoSuffix)
+}
 
 // getTableNameFromOrmTag retrieves and returns the table name from struct object.
 func getTableNameFromOrmTag(object interface{}) string {
@@ -279,7 +282,7 @@ func doQuoteWord(s, charLeft, charRight string) string {
 // "user u, user_detail ut"           => "`user` u,`user_detail` ut"
 // "user.user u, user.user_detail ut" => "`user`.`user` u,`user`.`user_detail` ut"
 // "u.id, u.name, u.age"              => "`u`.`id`,`u`.`name`,`u`.`age`"
-// "u.id asc"                         => "`u`.`id` asc"
+// "u.id asc"                         => "`u`.`id` asc".
 func doQuoteString(s, charLeft, charRight string) string {
 	array1 := gstr.SplitAndTrim(s, ",")
 	for k1, v1 := range array1 {
@@ -373,7 +376,7 @@ func formatSql(sql string, args []interface{}) (newSql string, newArgs []interfa
 	return handleArguments(sql, args)
 }
 
-type formatWhereInput struct {
+type formatWhereHolderInput struct {
 	Where     interface{}
 	Args      []interface{}
 	OmitNil   bool
@@ -383,8 +386,8 @@ type formatWhereInput struct {
 	Prefix    string // Field prefix, eg: "user.", "order.".
 }
 
-// formatWhere formats where statement and its arguments for `Where` and `Having` statements.
-func formatWhere(db DB, in formatWhereInput) (newWhere string, newArgs []interface{}) {
+// formatWhereHolder formats where statement and its arguments for `Where` and `Having` statements.
+func formatWhereHolder(db DB, in formatWhereHolderInput) (newWhere string, newArgs []interface{}) {
 	var (
 		buffer      = bytes.NewBuffer(nil)
 		reflectInfo = utils.OriginValueAndKind(in.Where)
@@ -416,7 +419,7 @@ func formatWhere(db DB, in formatWhereInput) (newWhere string, newArgs []interfa
 	case reflect.Struct:
 		// If the `where` parameter is defined like `xxxForDao`, it then adds `OmitNil` option for this condition,
 		// which will filter all nil parameters in `where`.
-		if gstr.HasSuffix(reflect.TypeOf(in.Where).String(), modelForDaoSuffix) {
+		if isForDaoModel(reflect.TypeOf(in.Where)) {
 			in.OmitNil = true
 		}
 		// If `where` struct implements iIterator interface,
@@ -451,8 +454,8 @@ func formatWhere(db DB, in formatWhereInput) (newWhere string, newArgs []interfa
 		var (
 			reflectType = reflectInfo.OriginValue.Type()
 			structField reflect.StructField
+			data        = DataToMapDeep(in.Where)
 		)
-		data := DataToMapDeep(in.Where)
 		if in.Table != "" {
 			data, _ = db.GetCore().mappingAndFilterData(in.Schema, in.Table, data, true)
 		}
@@ -481,9 +484,7 @@ func formatWhere(db DB, in formatWhereInput) (newWhere string, newArgs []interfa
 
 	default:
 		// Usually a string.
-		var (
-			whereStr = gconv.String(in.Where)
-		)
+		whereStr := gconv.String(in.Where)
 		// Is `whereStr` a field name which composed as a key-value condition?
 		// Eg:
 		// Where("id", 1)
@@ -511,18 +512,14 @@ func formatWhere(db DB, in formatWhereInput) (newWhere string, newArgs []interfa
 		// Regular string and parameter place holder handling.
 		// Eg:
 		// Where("id in(?) and name=?", g.Slice{1,2,3}, "john")
-		var (
-			i = 0
-		)
+		i := 0
 		for {
 			if i >= len(in.Args) {
 				break
 			}
 			// Sub query, which is always used along with a string condition.
 			if model, ok := in.Args[i].(*Model); ok {
-				var (
-					index = -1
-				)
+				index := -1
 				whereStr, _ = gregex.ReplaceStringFunc(`(\?)`, whereStr, func(s string) string {
 					index++
 					if i+len(newArgs) == index {
@@ -607,13 +604,13 @@ func formatWhereInterfaces(db DB, where []interface{}, buffer *bytes.Buffer, new
 }
 
 type formatWhereKeyValueInput struct {
-	Db        DB
-	Buffer    *bytes.Buffer
-	Args      []interface{}
-	Key       string
-	Value     interface{}
-	OmitEmpty bool
-	Prefix    string // Field prefix, eg: "user.", "order.".
+	Db        DB            // Db is the underlying DB object for current operation.
+	Buffer    *bytes.Buffer // Buffer is the sql statement string without Args for current operation.
+	Args      []interface{} // Args is the full arguments of current operation.
+	Key       string        // The field name, eg: "id", "name", etc.
+	Value     interface{}   // The field value, can be any types.
+	OmitEmpty bool          // Ignores current condition key if `value` is empty.
+	Prefix    string        // Field prefix, eg: "user", "order", etc.
 }
 
 // formatWhereKeyValue handles each key-value pair of the parameter map.
@@ -833,9 +830,7 @@ func FormatSqlWithArgs(sql string, args []interface{}) string {
 				if v, ok := args[index].(Raw); ok {
 					return gconv.String(v)
 				}
-				var (
-					reflectInfo = utils.OriginValueAndKind(args[index])
-				)
+				reflectInfo := utils.OriginValueAndKind(args[index])
 				if reflectInfo.OriginKind == reflect.Ptr &&
 					(reflectInfo.OriginValue.IsNil() || !reflectInfo.OriginValue.IsValid()) {
 					return "null"

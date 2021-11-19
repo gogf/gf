@@ -8,13 +8,13 @@ package ghttp
 
 import (
 	"fmt"
+	"strings"
+
+	"github.com/gogf/gf/v2/container/glist"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/internal/json"
-	"strings"
-
-	"github.com/gogf/gf/v2/container/glist"
 	"github.com/gogf/gf/v2/text/gregex"
 )
 

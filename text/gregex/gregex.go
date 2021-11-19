@@ -75,7 +75,7 @@ func MatchAllString(pattern string, src string) ([][]string, error) {
 	}
 }
 
-// Replace replace all matched `pattern` in bytes `src` with bytes `replace`.
+// Replace replaces all matched `pattern` in bytes `src` with bytes `replace`.
 func Replace(pattern string, replace, src []byte) ([]byte, error) {
 	if r, err := getRegexp(pattern); err == nil {
 		return r.ReplaceAll(src, replace), nil

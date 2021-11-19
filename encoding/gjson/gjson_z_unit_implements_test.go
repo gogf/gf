@@ -7,13 +7,13 @@
 package gjson_test
 
 import (
-	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/util/gconv"
 	"testing"
 
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 func TestJson_UnmarshalJSON(t *testing.T) {

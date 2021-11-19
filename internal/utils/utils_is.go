@@ -7,8 +7,9 @@
 package utils
 
 import (
-	"github.com/gogf/gf/v2/internal/empty"
 	"reflect"
+
+	"github.com/gogf/gf/v2/internal/empty"
 )
 
 // IsNil checks whether `value` is nil.

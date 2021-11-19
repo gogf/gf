@@ -8,12 +8,12 @@ package gcompress_test
 
 import (
 	"bytes"
+	"testing"
+
 	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/encoding/gcompress"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/os/gtime"
-	"testing"
-
 	"github.com/gogf/gf/v2/test/gtest"
 )
 

@@ -10,10 +10,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/text/gstr"
 	"os"
 	"runtime"
 	"strings"
@@ -22,10 +18,14 @@ import (
 
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/os/gproc"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/os/gtimer"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 

@@ -8,12 +8,12 @@ package gtree
 
 import (
 	"fmt"
-	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/util/gconv"
-	"github.com/gogf/gf/v2/util/gutil"
 
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/rwmutex"
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 type color bool
@@ -119,7 +119,7 @@ func (tree *RedBlackTree) doSet(key interface{}, value interface{}) {
 			compare := tree.getComparator()(key, node.Key)
 			switch {
 			case compare == 0:
-				//node.Key   = key
+				// node.Key   = key
 				node.Value = value
 				return
 			case compare < 0:

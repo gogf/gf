@@ -9,22 +9,18 @@ package gi18n
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/intlog"
 	"strings"
 	"sync"
 
-	"github.com/gogf/gf/v2/os/gfsnotify"
-
-	"github.com/gogf/gf/v2/text/gregex"
-
-	"github.com/gogf/gf/v2/util/gconv"
-
 	"github.com/gogf/gf/v2/encoding/gjson"
-
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gfsnotify"
 	"github.com/gogf/gf/v2/os/gres"
+	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // Manager for i18n contents, it is concurrent safe, supporting hot reload.

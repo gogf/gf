@@ -9,15 +9,16 @@ package ghttp
 import (
 	"context"
 	"crypto/tls"
+	"log"
+	"net"
+	"net/http"
+	"os"
+
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/os/gproc"
 	"github.com/gogf/gf/v2/os/gres"
 	"github.com/gogf/gf/v2/text/gstr"
-	"log"
-	"net"
-	"net/http"
-	"os"
 )
 
 // gracefulServer wraps the net/http.Server with graceful reload/restart feature.

@@ -9,8 +9,9 @@ package gcompress
 import (
 	"bytes"
 	"compress/gzip"
-	"github.com/gogf/gf/v2/os/gfile"
 	"io"
+
+	"github.com/gogf/gf/v2/os/gfile"
 )
 
 // Gzip compresses `data` using gzip algorithm.
@@ -91,7 +92,7 @@ func UnGzip(data []byte) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-// UnGzip decompresses file `src` to `dst` using gzip algorithm.
+// UnGzipFile decompresses file `src` to `dst` using gzip algorithm.
 func UnGzipFile(src, dst string) error {
 	srcFile, err := gfile.Open(src)
 	if err != nil {

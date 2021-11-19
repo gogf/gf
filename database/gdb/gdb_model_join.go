@@ -30,7 +30,7 @@ func isSubQuery(s string) bool {
 // Eg:
 // Model("user").LeftJoin("user_detail", "user_detail.uid=user.uid")
 // Model("user", "u").LeftJoin("user_detail", "ud", "ud.uid=u.uid")
-// Model("user", "u").LeftJoin("SELECT xxx FROM xxx AS a", "a.uid=u.uid")
+// Model("user", "u").LeftJoin("SELECT xxx FROM xxx AS a", "a.uid=u.uid").
 func (m *Model) LeftJoin(table ...string) *Model {
 	return m.doJoin("LEFT", table...)
 }
@@ -42,7 +42,7 @@ func (m *Model) LeftJoin(table ...string) *Model {
 // Eg:
 // Model("user").RightJoin("user_detail", "user_detail.uid=user.uid")
 // Model("user", "u").RightJoin("user_detail", "ud", "ud.uid=u.uid")
-// Model("user", "u").RightJoin("SELECT xxx FROM xxx AS a", "a.uid=u.uid")
+// Model("user", "u").RightJoin("SELECT xxx FROM xxx AS a", "a.uid=u.uid").
 func (m *Model) RightJoin(table ...string) *Model {
 	return m.doJoin("RIGHT", table...)
 }
@@ -54,7 +54,7 @@ func (m *Model) RightJoin(table ...string) *Model {
 // Eg:
 // Model("user").InnerJoin("user_detail", "user_detail.uid=user.uid")
 // Model("user", "u").InnerJoin("user_detail", "ud", "ud.uid=u.uid")
-// Model("user", "u").InnerJoin("SELECT xxx FROM xxx AS a", "a.uid=u.uid")
+// Model("user", "u").InnerJoin("SELECT xxx FROM xxx AS a", "a.uid=u.uid").
 func (m *Model) InnerJoin(table ...string) *Model {
 	return m.doJoin("INNER", table...)
 }
@@ -63,7 +63,7 @@ func (m *Model) InnerJoin(table ...string) *Model {
 //
 // Eg:
 // Model("order").LeftJoinOnField("user", "user_id")
-// Model("order").LeftJoinOnField("product", "product_id")
+// Model("order").LeftJoinOnField("product", "product_id").
 func (m *Model) LeftJoinOnField(table, field string) *Model {
 	return m.doJoin("LEFT", table, fmt.Sprintf(
 		`%s.%s=%s.%s`,
@@ -78,7 +78,7 @@ func (m *Model) LeftJoinOnField(table, field string) *Model {
 //
 // Eg:
 // Model("order").InnerJoinOnField("user", "user_id")
-// Model("order").InnerJoinOnField("product", "product_id")
+// Model("order").InnerJoinOnField("product", "product_id").
 func (m *Model) RightJoinOnField(table, field string) *Model {
 	return m.doJoin("RIGHT", table, fmt.Sprintf(
 		`%s.%s=%s.%s`,
@@ -93,7 +93,7 @@ func (m *Model) RightJoinOnField(table, field string) *Model {
 //
 // Eg:
 // Model("order").InnerJoinOnField("user", "user_id")
-// Model("order").InnerJoinOnField("product", "product_id")
+// Model("order").InnerJoinOnField("product", "product_id").
 func (m *Model) InnerJoinOnField(table, field string) *Model {
 	return m.doJoin("INNER", table, fmt.Sprintf(
 		`%s.%s=%s.%s`,

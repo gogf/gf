@@ -7,10 +7,11 @@
 package goai
 
 import (
+	"reflect"
+
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/structs"
 	"github.com/gogf/gf/v2/text/gstr"
-	"reflect"
 )
 
 // Response is specified by OpenAPI/Swagger 3.0 standard.

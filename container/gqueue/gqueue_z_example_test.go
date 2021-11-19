@@ -9,9 +9,10 @@ package gqueue_test
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/gogf/gf/v2/container/gqueue"
 	"github.com/gogf/gf/v2/os/gtimer"
-	"time"
 )
 
 func ExampleNew() {
@@ -22,8 +23,6 @@ func ExampleNew() {
 	for i := 0; i < n; i++ {
 		q.Push(i)
 	}
-
-	fmt.Println(q.Len())
 
 	// Close the queue in three seconds.
 	gtimer.SetTimeout(context.Background(), time.Second*3, func(ctx context.Context) {
@@ -54,7 +53,6 @@ func ExampleNew() {
 	}
 
 	// Output:
-	// 10
 	// 0123456789
 }
 

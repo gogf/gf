@@ -15,12 +15,12 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/gogf/gf/v2/errors/gcode"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/text/gregex"
@@ -98,7 +98,7 @@ func (d *DriverOracle) DoCommit(ctx context.Context, link Link, sql string, args
 		if reflect.TypeOf(v).Kind() == reflect.String {
 			valueStr := gconv.String(v)
 			if gregex.IsMatchString(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$`, valueStr) {
-				//args[i] = fmt.Sprintf(`TO_DATE('%s','yyyy-MM-dd HH:MI:SS')`, valueStr)
+				// args[i] = fmt.Sprintf(`TO_DATE('%s','yyyy-MM-dd HH:MI:SS')`, valueStr)
 				args[i], _ = time.ParseInLocation("2006-01-02 15:04:05", valueStr, time.Local)
 			}
 		}
@@ -267,7 +267,7 @@ func (d *DriverOracle) DoInsert(ctx context.Context, link Link, table string, li
 		listLength  = len(list)
 		valueHolder = make([]string, 0)
 	)
-	for k, _ := range list[0] {
+	for k := range list[0] {
 		keys = append(keys, k)
 		valueHolder = append(valueHolder, "?")
 	}

@@ -10,11 +10,12 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/internal/utils"
 	"io"
 	"runtime"
 	"strings"
+
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/internal/utils"
 )
 
 // Error is custom error for additional features.

@@ -7,8 +7,9 @@
 package gconv_test
 
 import (
-	"github.com/gogf/gf/v2/container/gvar"
 	"testing"
+
+	"github.com/gogf/gf/v2/container/gvar"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
@@ -32,6 +33,22 @@ func Test_Slice(t *testing.T) {
 			gvar.New(2),
 		}
 		t.AssertEQ(gconv.SliceInt64(s), []int64{1, 2})
+	})
+}
+
+func Test_Slice_Ints(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertEQ(gconv.Ints(nil), nil)
+		t.AssertEQ(gconv.Ints("[26, 27]"), []int{26, 27})
+		t.AssertEQ(gconv.Ints(" [26, 27] "), []int{26, 27})
+	})
+}
+
+func Test_Slice_Uint64s(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.AssertEQ(gconv.Uint64s(nil), nil)
+		t.AssertEQ(gconv.Uint64s("[26, 27]"), []uint64{26, 27})
+		t.AssertEQ(gconv.Uint64s(" [26, 27] "), []uint64{26, 27})
 	})
 }
 

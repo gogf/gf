@@ -7,8 +7,9 @@
 package gjson
 
 import (
-	"github.com/gogf/gf/v2/test/gtest"
 	"testing"
+
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_checkDataType(t *testing.T) {
@@ -80,11 +81,11 @@ dd = 11
 "gf.gvalid.rule.not-in"               = "The :attribute value is not in acceptable range"
 "gf.gvalid.rule.regex"                = "The :attribute value is invalid"
 `)
-		//fmt.Println(gregex.IsMatch(`^[\s\t\n\r]*[\w\-]+\s*:\s*".+"`, data))
-		//fmt.Println(gregex.IsMatch(`^[\s\t\n\r]*[\w\-]+\s*:\s*\w+`, data))
-		//fmt.Println(gregex.IsMatch(`[\s\t\n\r]+[\w\-]+\s*:\s*".+"`, data))
-		//fmt.Println(gregex.IsMatch(`[\n\r]+[\w\-\s\t]+\s*:\s*\w+`, data))
-		//fmt.Println(gregex.MatchString(`[\n\r]+[\w\-\s\t]+\s*:\s*\w+`, string(data)))
+		// fmt.Println(gregex.IsMatch(`^[\s\t\n\r]*[\w\-]+\s*:\s*".+"`, data))
+		// fmt.Println(gregex.IsMatch(`^[\s\t\n\r]*[\w\-]+\s*:\s*\w+`, data))
+		// fmt.Println(gregex.IsMatch(`[\s\t\n\r]+[\w\-]+\s*:\s*".+"`, data))
+		// fmt.Println(gregex.IsMatch(`[\n\r]+[\w\-\s\t]+\s*:\s*\w+`, data))
+		// fmt.Println(gregex.MatchString(`[\n\r]+[\w\-\s\t]+\s*:\s*\w+`, string(data)))
 		t.Assert(checkDataType(data), "toml")
 	})
 

@@ -32,7 +32,7 @@ func (tx *TX) Schema(schema string) *Schema {
 
 // Model creates and returns a new ORM model.
 // The parameter `tables` can be more than one table names, like :
-// "user", "user u", "user, user_detail", "user u, user_detail ud"
+// "user", "user u", "user, user_detail", "user u, user_detail ud".
 func (s *Schema) Model(table string) *Model {
 	var m *Model
 	if s.tx != nil {

@@ -9,10 +9,10 @@ package gdb
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/v2/text/gregex"
-	"github.com/gogf/gf/v2/util/gconv"
 
+	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // Model is core struct implementing the DAO for ORM.
@@ -95,7 +95,7 @@ func (c *Core) Model(tableNameQueryOrStruct ...interface{}) *Model {
 	if len(tableNameQueryOrStruct) > 1 {
 		conditionStr := gconv.String(tableNameQueryOrStruct[0])
 		if gstr.Contains(conditionStr, "?") {
-			tableStr, extraArgs = formatWhere(c.db, formatWhereInput{
+			tableStr, extraArgs = formatWhereHolder(c.db, formatWhereHolderInput{
 				Where:     conditionStr,
 				Args:      tableNameQueryOrStruct[1:],
 				OmitNil:   false,

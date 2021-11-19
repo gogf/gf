@@ -2,9 +2,10 @@ package gcache_test
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcache"
-	"time"
 )
 
 func ExampleNew() {

@@ -7,12 +7,13 @@
 package gfile
 
 import (
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
 // Copy file/directory from `src` to `dst`.

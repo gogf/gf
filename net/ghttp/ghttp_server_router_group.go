@@ -9,11 +9,11 @@ package ghttp
 import (
 	"context"
 	"fmt"
+	"reflect"
+
 	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/text/gstr"
-	"reflect"
-
 	"github.com/gogf/gf/v2/util/gconv"
 )
 

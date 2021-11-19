@@ -7,14 +7,14 @@
 package gconv
 
 import (
+	"reflect"
+	"strings"
+
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/internal/structs"
-	"reflect"
-	"strings"
-
 	"github.com/gogf/gf/v2/internal/utils"
 )
 
@@ -162,9 +162,9 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 			e := reflect.New(pointerElemReflectValue.Type().Elem()).Elem()
 			pointerElemReflectValue.Set(e.Addr())
 		}
-		//if v, ok := pointerElemReflectValue.Interface().(iUnmarshalValue); ok {
+		// if v, ok := pointerElemReflectValue.Interface().(iUnmarshalValue); ok {
 		//	return v.UnmarshalValue(params)
-		//}
+		// }
 		// Note that it's `pointerElemReflectValue` here not `pointerReflectValue`.
 		if err, ok := bindVarToReflectValueWithInterfaceCheck(pointerElemReflectValue, paramsInterface); ok {
 			return err

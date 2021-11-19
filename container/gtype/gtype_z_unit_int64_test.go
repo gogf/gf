@@ -7,13 +7,14 @@
 package gtype_test
 
 import (
+	"math"
+	"sync"
+	"testing"
+
 	"github.com/gogf/gf/v2/container/gtype"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
-	"math"
-	"sync"
-	"testing"
 )
 
 func Test_Int64(t *testing.T) {
@@ -34,7 +35,7 @@ func Test_Int64(t *testing.T) {
 		wg.Wait()
 		t.AssertEQ(int64(addTimes), i.Val())
 
-		//空参测试
+		// 空参测试
 		i1 := gtype.NewInt64()
 		t.AssertEQ(i1.Val(), int64(0))
 	})

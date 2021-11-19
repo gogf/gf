@@ -9,11 +9,11 @@ package grpool
 
 import (
 	"context"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
 
 	"github.com/gogf/gf/v2/container/glist"
 	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
 // Func is the pool function which contains context parameter.

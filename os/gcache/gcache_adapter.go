@@ -8,8 +8,9 @@ package gcache
 
 import (
 	"context"
-	"github.com/gogf/gf/v2/container/gvar"
 	"time"
+
+	"github.com/gogf/gf/v2/container/gvar"
 )
 
 // Adapter is the core adapter for cache features implements.

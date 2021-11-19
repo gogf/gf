@@ -7,8 +7,9 @@
 package gutil
 
 import (
-	"github.com/gogf/gf/v2/util/gconv"
 	"reflect"
+
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // SliceCopy does a shallow copy of slice `data` for most commonly used slice type

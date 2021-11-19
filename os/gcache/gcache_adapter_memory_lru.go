@@ -72,12 +72,12 @@ func (lru *adapterMemoryLru) Pop() interface{} {
 }
 
 // Print is used for test only.
-//func (lru *adapterMemoryLru) Print() {
+// func (lru *adapterMemoryLru) Print() {
 //    for _, v := range lru.list.FrontAll() {
 //        fmt.Printf("%v ", v)
 //    }
 //    fmt.Println()
-//}
+// }
 
 // SyncAndClear synchronizes the keys from `rawList` to `list` and `data`
 // using Least Recently Used algorithm.

@@ -12,12 +12,13 @@ package goai
 import (
 	"context"
 	"fmt"
+	"reflect"
+
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/text/gstr"
-	"reflect"
 )
 
 // OpenApiV3 is the structure defined from:

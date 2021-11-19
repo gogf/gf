@@ -7,29 +7,31 @@
 package gview
 
 import (
+	"bytes"
 	"context"
 	"fmt"
-	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/util/gutil"
+	htmltpl "html/template"
 	"strings"
 
 	"github.com/gogf/gf/v2/encoding/ghtml"
 	"github.com/gogf/gf/v2/encoding/gurl"
+	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
-
-	htmltpl "html/template"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // buildInFuncDump implements build-in template function: dump
-func (view *View) buildInFuncDump(values ...interface{}) (result string) {
-	result += "<!--\n"
+func (view *View) buildInFuncDump(values ...interface{}) string {
+	buffer := bytes.NewBuffer(nil)
+	buffer.WriteString("<!--\n")
 	for _, v := range values {
-		result += gutil.Export(v, gutil.ExportOption{WithoutType: true}) + "\n"
+		gutil.DumpTo(buffer, v, gutil.DumpOption{})
+		buffer.WriteString("\n")
 	}
-	result += "-->\n"
-	return result
+	buffer.WriteString("-->\n")
+	return buffer.String()
 }
 
 // buildInFuncMap implements build-in template function: map

@@ -9,9 +9,10 @@ package gdebug
 import (
 	"bytes"
 	"fmt"
-	"github.com/gogf/gf/v2/internal/utils"
 	"runtime"
 	"strings"
+
+	"github.com/gogf/gf/v2/internal/utils"
 )
 
 // PrintStack prints to standard error the stack trace returned by runtime.Stack.

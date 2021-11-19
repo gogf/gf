@@ -8,10 +8,11 @@ package gfpool
 
 import (
 	"fmt"
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
 	"os"
 	"time"
+
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
 // Open creates and returns a file item with given file path, flag and opening permission.
@@ -25,10 +26,10 @@ func Open(path string, flag int, perm os.FileMode, ttl ...time.Duration) (file *
 	// DO NOT search the path here wasting performance!
 	// Leave following codes just for warning you.
 	//
-	//path, err = gfile.Search(path)
-	//if err != nil {
+	// path, err = gfile.Search(path)
+	// if err != nil {
 	//	return nil, err
-	//}
+	// }
 	pool := pools.GetOrSetFuncLock(
 		fmt.Sprintf("%s&%d&%d&%d", path, flag, fpTTL, perm),
 		func() interface{} {
