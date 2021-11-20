@@ -59,7 +59,7 @@ func ExampleStrAnyMap_Map() {
 	fmt.Println("after n1:", n1)
 
 	// concurrent-safety, copy of underlying data
-	m2 := gmap.New(true)
+	m2 := gmap.NewStrAnyMap(true)
 	m2.Set("key1", "val1")
 	fmt.Println("m2:", m2)
 
