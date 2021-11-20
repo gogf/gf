@@ -254,3 +254,29 @@ func ExampleNewStrStrMapFrom() {
 	// {"key1":"var1"}
 	// {"key1":"var1"}
 }
+
+func ExampleNewListMap() {
+	m := gmap.NewListMap()
+
+	m.Set("key1", "var1")
+	m.Set("key2", "var2")
+	fmt.Println(m)
+
+	// Output:
+	// {"key1":"var1","key2":"var2"}
+}
+
+func ExampleNewListMapFrom() {
+	m := gmap.NewListMap()
+
+	m.Set("key1", "var1")
+	m.Set("key2", "var2")
+	fmt.Println(m)
+
+	n := gmap.NewListMapFrom(m.Map(), true)
+	fmt.Println(n)
+
+	// Output:
+	// {"key1":"var1","key2":"var2"}
+	// {"key1":"var1","key2":"var2"}
+}
