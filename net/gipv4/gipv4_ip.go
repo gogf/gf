@@ -8,10 +8,12 @@
 package gipv4
 
 import (
-	"errors"
 	"net"
 	"strconv"
 	"strings"
+
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
 // GetIpArray retrieves and returns all the ip of current host.
@@ -38,7 +40,7 @@ func GetIntranetIp() (ip string, err error) {
 		return "", err
 	}
 	if len(ips) == 0 {
-		return "", errors.New("no intranet ip found")
+		return "", gerror.NewCode(gcode.CodeOperationFailed, "no intranet ip found")
 	}
 	return ips[0], nil
 }

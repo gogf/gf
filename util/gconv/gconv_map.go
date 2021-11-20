@@ -7,12 +7,12 @@
 package gconv
 
 import (
-	"github.com/gogf/gf/internal/json"
 	"reflect"
 	"strings"
 
-	"github.com/gogf/gf/internal/empty"
-	"github.com/gogf/gf/internal/utils"
+	"github.com/gogf/gf/v2/internal/empty"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/internal/utils"
 )
 
 // Map converts any variable `value` to map[string]interface{}. If the parameter `value` is not a
@@ -44,7 +44,7 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 	newTags := StructTagPriority
 	switch len(tags) {
 	case 0:
-		// No need handle.
+		// No need handling.
 	case 1:
 		newTags = append(strings.Split(tags[0], ","), StructTagPriority...)
 	default:
@@ -166,7 +166,7 @@ func doMapConvert(value interface{}, recursive bool, tags ...string) map[string]
 					dataMap[String(reflectValue.Index(i).Interface())] = nil
 				}
 			}
-		case reflect.Map, reflect.Struct:
+		case reflect.Map, reflect.Struct, reflect.Interface:
 			convertedValue := doMapConvertForMapOrStructValue(true, value, recursive, newTags...)
 			if m, ok := convertedValue.(map[string]interface{}); ok {
 				return m
@@ -216,7 +216,7 @@ func doMapConvertForMapOrStructValue(isRoot bool, value interface{}, recursive b
 		return dataMap
 	case reflect.Struct:
 		// Map converting interface check.
-		if v, ok := value.(apiMapStrAny); ok {
+		if v, ok := value.(iMapStrAny); ok {
 			m := v.MapStrAny()
 			if recursive {
 				for k, v := range m {
@@ -282,6 +282,11 @@ func doMapConvertForMapOrStructValue(isRoot bool, value interface{}, recursive b
 				}
 				switch rvAttrKind {
 				case reflect.Struct:
+					// Embedded struct and has no fields, just ignores it.
+					// Eg: gmeta.Meta
+					if rvAttrField.Type().NumField() == 0 {
+						continue
+					}
 					var (
 						hasNoTag        = mapKey == fieldName
 						rvAttrInterface = rvAttrField.Interface()
@@ -301,19 +306,19 @@ func doMapConvertForMapOrStructValue(isRoot bool, value interface{}, recursive b
 						// It means this attribute field has desired tag.
 						dataMap[mapKey] = doMapConvertForMapOrStructValue(false, rvAttrInterface, true, tags...)
 					} else {
-						dataMap[mapKey] = doMapConvertForMapOrStructValue(false, rvAttrInterface, false, tags...)
+						dataMap[mapKey] = doMapConvertForMapOrStructValue(false, rvAttrInterface, recursive, tags...)
 					}
 
 				// The struct attribute is type of slice.
 				case reflect.Array, reflect.Slice:
-					length := rvField.Len()
+					length := rvAttrField.Len()
 					if length == 0 {
-						dataMap[mapKey] = rvField.Interface()
+						dataMap[mapKey] = rvAttrField.Interface()
 						break
 					}
 					array := make([]interface{}, length)
 					for i := 0; i < length; i++ {
-						array[i] = doMapConvertForMapOrStructValue(false, rvField.Index(i), recursive, tags...)
+						array[i] = doMapConvertForMapOrStructValue(false, rvAttrField.Index(i), recursive, tags...)
 					}
 					dataMap[mapKey] = array
 

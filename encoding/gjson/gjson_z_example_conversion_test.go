@@ -8,7 +8,8 @@ package gjson_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/encoding/gjson"
+
+	"github.com/gogf/gf/v2/encoding/gjson"
 )
 
 func Example_conversionNormalFormats() {
@@ -19,6 +20,7 @@ func Example_conversionNormalFormats() {
             "array" : ["John", "Ming"]
         }
     }`
+
 	if j, err := gjson.DecodeToJson(data); err != nil {
 		panic(err)
 	} else {
@@ -48,8 +50,8 @@ func Example_conversionNormalFormats() {
 	// YAML:
 	// users:
 	//     array:
-	//       - John
-	//       - Ming
+	//         - John
+	//         - Ming
 	//     count: 1
 	//
 	// ======================
@@ -75,7 +77,7 @@ func Example_conversionGetStruct() {
 			Array []string
 		}
 		users := new(Users)
-		if err := j.GetStruct("users", users); err != nil {
+		if err := j.Get("users").Scan(users); err != nil {
 			panic(err)
 		}
 		fmt.Printf(`%+v`, users)
@@ -100,7 +102,7 @@ func Example_conversionToStruct() {
 			Array []string
 		}
 		users := new(Users)
-		if err := j.ToStruct(users); err != nil {
+		if err := j.Var().Scan(users); err != nil {
 			panic(err)
 		}
 		fmt.Printf(`%+v`, users)

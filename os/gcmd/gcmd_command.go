@@ -10,10 +10,11 @@ package gcmd
 import (
 	"bytes"
 	"fmt"
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/command"
-	"github.com/gogf/gf/text/gstr"
 	"os"
+
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/command"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 type Command struct {
@@ -151,10 +152,10 @@ func (c *Command) AddOption(option ...Option) error {
 func (c *Command) Run() {
 	// Find the matched command and run it.
 	argument := GetArg(c.level + 1)
-	if argument != "" {
+	if !argument.IsEmpty() {
 		if len(c.commands) > 0 {
 			for _, cmd := range c.commands {
-				if gstr.Equal(cmd.Name, argument) {
+				if gstr.Equal(cmd.Name, argument.String()) {
 					cmd.Run()
 					return
 				}

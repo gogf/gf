@@ -7,49 +7,60 @@
 package gvalid
 
 import (
-	"github.com/gogf/gf/internal/structs"
-	"github.com/gogf/gf/util/gconv"
-	"github.com/gogf/gf/util/gutil"
+	"context"
 	"strings"
+
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/internal/structs"
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // CheckStruct validates struct and returns the error result.
 // The parameter `object` should be type of struct/*struct.
-func (v *Validator) CheckStruct(object interface{}) Error {
-	return v.doCheckStruct(object)
+func (v *Validator) CheckStruct(ctx context.Context, object interface{}) Error {
+	return v.doCheckStruct(ctx, object)
 }
 
-func (v *Validator) doCheckStruct(object interface{}) Error {
+func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error {
 	var (
-		// Returning error.
-		errorMaps = make(map[string]map[string]string)
+		errorMaps           = make(map[string]map[string]error) // Returning error.
+		fieldToAliasNameMap = make(map[string]string)           // Field names to alias name map.
 	)
-	fieldMap, err := structs.FieldMap(object, aliasNameTagPriority, true)
+	fieldMap, err := structs.FieldMap(structs.FieldMapInput{
+		Pointer:          object,
+		PriorityTagArray: aliasNameTagPriority,
+		RecursiveOption:  structs.RecursiveOptionEmbedded,
+	})
 	if err != nil {
-		return newErrorStr(internalObjectErrRuleName, err.Error())
+		return newValidationErrorByStr(internalObjectErrRuleName, err)
 	}
-	// It checks the struct recursively the its attribute is an embedded struct.
+	// It checks the struct recursively if its attribute is an embedded struct.
 	for _, field := range fieldMap {
 		if field.IsEmbedded() {
 			// No validation interface implements check.
-			if _, ok := field.Value.Interface().(apiNoValidation); ok {
+			if _, ok := field.Value.Interface().(iNoValidation); ok {
 				continue
 			}
 			if _, ok := field.TagLookup(noValidationTagName); ok {
 				continue
 			}
-			if err := v.doCheckStruct(field.Value); err != nil {
+			if err = v.doCheckStruct(ctx, field.Value); err != nil {
 				// It merges the errors into single error map.
 				for k, m := range err.(*validationError).errors {
 					errorMaps[k] = m
 				}
+			}
+		} else {
+			if field.TagValue != "" {
+				fieldToAliasNameMap[field.Name()] = field.TagValue
 			}
 		}
 	}
 	// It here must use structs.TagFields not structs.FieldMap to ensure error sequence.
 	tagField, err := structs.TagFields(object, structTagPriority)
 	if err != nil {
-		return newErrorStr(internalObjectErrRuleName, err.Error())
+		return newValidationErrorByStr(internalObjectErrRuleName, err)
 	}
 	// If there's no struct tag and validation rules, it does nothing and returns quickly.
 	if len(tagField) == 0 && v.messages == nil {
@@ -57,17 +68,20 @@ func (v *Validator) doCheckStruct(object interface{}) Error {
 	}
 
 	var (
-		inputParamMap map[string]interface{}
-		checkRules    = make(map[string]string)
-		customMessage = make(CustomMsg)
-		fieldAliases  = make(map[string]string) // Alias names for `messages` overwriting struct tag names.
-		errorRules    = make([]string, 0)       // Sequence rules.
+		inputParamMap  map[string]interface{}
+		checkRules     = make([]fieldRule, 0)
+		nameToRuleMap  = make(map[string]string) // just for internally searching index purpose.
+		customMessage  = make(CustomMsg)         // Custom rule error message map.
+		checkValueData = v.data                  // Ready to be validated data, which can be type of .
 	)
-	switch v := v.rules.(type) {
+	if checkValueData == nil {
+		checkValueData = object
+	}
+	switch assertValue := v.rules.(type) {
 	// Sequence tag: []sequence tag
 	// Sequence has order for error results.
 	case []string:
-		for _, tag := range v {
+		for _, tag := range assertValue {
 			name, rule, msg := parseSequenceTag(tag)
 			if len(name) == 0 {
 				continue
@@ -93,14 +107,23 @@ func (v *Validator) doCheckStruct(object interface{}) Error {
 					customMessage[name].(map[string]string)[strings.TrimSpace(array[0])] = strings.TrimSpace(msgArray[k])
 				}
 			}
-			checkRules[name] = rule
-			errorRules = append(errorRules, name+"@"+rule)
+			nameToRuleMap[name] = rule
+			checkRules = append(checkRules, fieldRule{
+				Name: name,
+				Rule: rule,
+			})
 		}
 
 	// Map type rules does not support sequence.
 	// Format: map[key]rule
 	case map[string]string:
-		checkRules = v
+		nameToRuleMap = assertValue
+		for name, rule := range assertValue {
+			checkRules = append(checkRules, fieldRule{
+				Name: name,
+				Rule: rule,
+			})
+		}
 	}
 	// If there's no struct tag and validation rules, it does nothing and returns quickly.
 	if len(tagField) == 0 && len(checkRules) == 0 {
@@ -121,38 +144,65 @@ func (v *Validator) doCheckStruct(object interface{}) Error {
 			}
 		}
 	}
+
 	// Merge the custom validation rules with rules in struct tag.
 	// The custom rules has the most high priority that can overwrite the struct tag rules.
 	for _, field := range tagField {
-		fieldName := field.Name()
-		// sequence tag == struct tag
-		// The name here is alias of field name.
-		name, rule, msg := parseSequenceTag(field.TagValue)
+		var (
+			fieldName       = field.Name()                     // Attribute name.
+			name, rule, msg = parseSequenceTag(field.TagValue) // The `name` is different from `attribute alias`, which is used for validation only.
+		)
 		if len(name) == 0 {
-			name = fieldName
+			if v, ok := fieldToAliasNameMap[fieldName]; ok {
+				// It uses alias name of the attribute if its alias name tag exists.
+				name = v
+			} else {
+				// It or else uses the attribute name directly.
+				name = fieldName
+			}
 		} else {
-			fieldAliases[fieldName] = name
+			// It uses the alias name from validation rule.
+			fieldToAliasNameMap[fieldName] = name
 		}
 		// It here extends the params map using alias names.
+		// Note that the variable `name` might be alias name or attribute name.
 		if _, ok := inputParamMap[name]; !ok {
 			if !v.useDataInsteadOfObjectAttributes {
 				inputParamMap[name] = field.Value.Interface()
+			} else {
+				if name != fieldName {
+					if foundKey, foundValue := gutil.MapPossibleItemByKey(inputParamMap, fieldName); foundKey != "" {
+						inputParamMap[name] = foundValue
+					}
+				}
 			}
 		}
-		if _, ok := checkRules[name]; !ok {
-			if _, ok := checkRules[fieldName]; ok {
+
+		if _, ok := nameToRuleMap[name]; !ok {
+			if _, ok = nameToRuleMap[fieldName]; ok {
 				// If there's alias name,
 				// use alias name as its key and remove the field name key.
-				checkRules[name] = checkRules[fieldName]
-				delete(checkRules, fieldName)
+				nameToRuleMap[name] = nameToRuleMap[fieldName]
+				delete(nameToRuleMap, fieldName)
+				for index, checkRuleItem := range checkRules {
+					if fieldName == checkRuleItem.Name {
+						checkRuleItem.Name = name
+						checkRules[index] = checkRuleItem
+						break
+					}
+				}
 			} else {
-				checkRules[name] = rule
+				nameToRuleMap[name] = rule
+				checkRules = append(checkRules, fieldRule{
+					Name: name,
+					Rule: rule,
+				})
 			}
-			errorRules = append(errorRules, name+"@"+rule)
 		} else {
 			// The input rules can overwrite the rules in struct tag.
 			continue
 		}
+
 		if len(msg) > 0 {
 			var (
 				msgArray  = strings.Split(msg, "|")
@@ -180,7 +230,7 @@ func (v *Validator) doCheckStruct(object interface{}) Error {
 	// which have the most priority than `rules` and struct tag.
 	if msg, ok := v.messages.(CustomMsg); ok && len(msg) > 0 {
 		for k, v := range msg {
-			if a, ok := fieldAliases[k]; ok {
+			if a, ok := fieldToAliasNameMap[k]; ok {
 				// Overwrite the key of field name.
 				customMessage[a] = v
 			} else {
@@ -189,28 +239,33 @@ func (v *Validator) doCheckStruct(object interface{}) Error {
 		}
 	}
 
-	// The following logic is the same as some of CheckMap.
-	var value interface{}
-	for key, rule := range checkRules {
-		_, value = gutil.MapPossibleItemByKey(inputParamMap, key)
+	// The following logic is the same as some of CheckMap but with sequence support.
+	var (
+		value interface{}
+	)
+	for _, checkRuleItem := range checkRules {
+		_, value = gutil.MapPossibleItemByKey(inputParamMap, checkRuleItem.Name)
 		// It checks each rule and its value in loop.
-		if e := v.doCheckValue(key, value, rule, customMessage[key], inputParamMap); e != nil {
-			_, item := e.FirstItem()
-			// ===================================================================
-			// Only in map and struct validations, if value is nil or empty string
-			// and has no required* rules, it clears the error message.
-			// ===================================================================
+		if validatedError := v.doCheckValue(ctx, doCheckValueInput{
+			Name:     checkRuleItem.Name,
+			Value:    value,
+			Rule:     checkRuleItem.Rule,
+			Messages: customMessage[checkRuleItem.Name],
+			DataRaw:  checkValueData,
+			DataMap:  inputParamMap,
+		}); validatedError != nil {
+			_, errorItem := validatedError.FirstItem()
+			// ============================================================
+			// Only in map and struct validations:
+			// If value is nil or empty string and has no required* rules,
+			// it clears the error message.
+			// ============================================================
 			if value == nil || gconv.String(value) == "" {
 				required := false
 				// rule => error
-				for k := range item {
+				for ruleKey := range errorItem {
 					// Default required rules.
-					if _, ok := mustCheckRulesEvenValueEmpty[k]; ok {
-						required = true
-						break
-					}
-					// Custom rules are also required in default.
-					if _, ok := customRuleFuncMap[k]; ok {
+					if _, ok := mustCheckRulesEvenValueEmpty[ruleKey]; ok {
 						required = true
 						break
 					}
@@ -219,16 +274,19 @@ func (v *Validator) doCheckStruct(object interface{}) Error {
 					continue
 				}
 			}
-			if _, ok := errorMaps[key]; !ok {
-				errorMaps[key] = make(map[string]string)
+			if _, ok := errorMaps[checkRuleItem.Name]; !ok {
+				errorMaps[checkRuleItem.Name] = make(map[string]error)
 			}
-			for k, v := range item {
-				errorMaps[key][k] = v
+			for ruleKey, errorItemMsgMap := range errorItem {
+				errorMaps[checkRuleItem.Name][ruleKey] = errorItemMsgMap
+			}
+			if v.bail {
+				break
 			}
 		}
 	}
 	if len(errorMaps) > 0 {
-		return newError(errorRules, errorMaps)
+		return newValidationError(gcode.CodeValidationFailed, checkRules, errorMaps)
 	}
 	return nil
 }

@@ -4,15 +4,18 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
+//go:build !windows
 // +build !windows
 
 package ghttp
 
 import (
-	"github.com/gogf/gf/internal/intlog"
+	"context"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/gogf/gf/v2/internal/intlog"
 )
 
 // procSignalChan is the channel for listening the signal.
@@ -20,7 +23,10 @@ var procSignalChan = make(chan os.Signal)
 
 // handleProcessSignal handles all signal from system.
 func handleProcessSignal() {
-	var sig os.Signal
+	var (
+		ctx = context.TODO()
+		sig os.Signal
+	)
 	signal.Notify(
 		procSignalChan,
 		syscall.SIGINT,
@@ -33,23 +39,23 @@ func handleProcessSignal() {
 	)
 	for {
 		sig = <-procSignalChan
-		intlog.Printf(`signal received: %s`, sig.String())
+		intlog.Printf(ctx, `signal received: %s`, sig.String())
 		switch sig {
 		// Shutdown the servers.
 		case syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGABRT:
-			shutdownWebServers(sig.String())
+			shutdownWebServers(ctx, sig.String())
 			return
 
 		// Shutdown the servers gracefully.
 		// Especially from K8S when running server in POD.
 		case syscall.SIGTERM:
-			shutdownWebServersGracefully(sig.String())
+			shutdownWebServersGracefully(ctx, sig.String())
 			return
 
 		// Restart the servers.
 		case syscall.SIGUSR1:
-			if err := restartWebServers(sig.String()); err != nil {
-				intlog.Error(err)
+			if err := restartWebServers(ctx, sig.String()); err != nil {
+				intlog.Error(ctx, err)
 			}
 			return
 

@@ -7,45 +7,62 @@
 package gredis_test
 
 import (
-	"github.com/gogf/gf/database/gredis"
-	"github.com/gogf/gf/test/gtest"
+	"context"
 	"testing"
-	"time"
+
+	"github.com/gogf/gf/v2/database/gredis"
+	"github.com/gogf/gf/v2/test/gtest"
+)
+
+var (
+	ctx = context.TODO()
 )
 
 func TestConn_DoWithTimeout(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		redis := gredis.New(config)
+		redis, err := gredis.New(config)
+		t.AssertNil(err)
 		t.AssertNE(redis, nil)
-		conn := redis.Conn()
-		defer conn.Close()
+		defer redis.Close(ctx)
 
-		_, err := conn.DoWithTimeout(time.Second, "set", "test", "123")
-		t.Assert(err, nil)
-		defer conn.DoWithTimeout(time.Second, "del", "test")
+		conn, err := redis.Conn(ctx)
+		t.AssertNil(err)
+		defer conn.Close(ctx)
 
-		r, err := conn.DoWithTimeout(time.Second, "get", "test")
+		_, err = conn.Do(ctx, "set", "test", "123")
 		t.Assert(err, nil)
-		t.Assert(r, "123")
+		defer conn.Do(ctx, "del", "test")
+
+		r, err := conn.Do(ctx, "get", "test")
+		t.Assert(err, nil)
+		t.Assert(r.String(), "123")
 	})
 }
 
 func TestConn_ReceiveVarWithTimeout(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		redis := gredis.New(config)
+		redis, err := gredis.New(config)
+		t.AssertNil(err)
 		t.AssertNE(redis, nil)
-		conn := redis.Conn()
-		defer conn.Close()
+		defer redis.Close(ctx)
 
-		_, err := conn.DoVarWithTimeout(time.Second, "Subscribe", "gf")
-		t.Assert(err, nil)
+		conn, err := redis.Conn(ctx)
+		t.AssertNil(err)
+		defer conn.Close(ctx)
 
-		v, err := redis.DoVarWithTimeout(time.Second, "PUBLISH", "gf", "test")
-		t.Assert(err, nil)
-		t.Assert(v.String(), "1")
+		_, err = conn.Do(ctx, "Subscribe", "gf")
+		t.AssertNil(err)
 
-		v, _ = conn.ReceiveVar()
-		t.Assert(len(v.Strings()), 3)
-		t.Assert(v.Strings()[2], "test")
+		v, err := redis.Do(ctx, "PUBLISH", "gf", "test")
+
+		v, err = conn.Receive(ctx)
+		t.AssertNil(err)
+		t.Assert(v.Val().(*gredis.Subscription).Channel, "gf")
+
+		v, err = conn.Receive(ctx)
+		t.AssertNil(err)
+		t.Assert(v.Val().(*gredis.Message).Channel, "gf")
+		t.Assert(v.Val().(*gredis.Message).Payload, "test")
+
 	})
 }

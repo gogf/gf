@@ -7,12 +7,16 @@
 package utils
 
 import (
-	"github.com/gogf/gf/internal/command"
+	"github.com/gogf/gf/v2/internal/command"
 )
 
 const (
-	debugKey                 = "gf.debug"             // Debug key for checking if in debug mode.
-	StackFilterKeyForGoFrame = "/github.com/gogf/gf/" // Stack filtering key for all GoFrame module paths.
+	// Debug key for checking if in debug mode.
+	commandEnvKeyForDebugKey = "gf.debug"
+
+	// StackFilterKeyForGoFrame is the stack filtering key for all GoFrame module paths.
+	// Eg: .../pkg/mod/github.com/gogf/gf/v2@v2.0.0-20211011134327-54dd11f51122/debug/gdebug/gdebug_caller.go
+	StackFilterKeyForGoFrame = "github.com/gogf/gf/v"
 )
 
 var (
@@ -22,7 +26,7 @@ var (
 
 func init() {
 	// Debugging configured.
-	value := command.GetOptWithEnv(debugKey)
+	value := command.GetOptWithEnv(commandEnvKeyForDebugKey)
 	if value == "" || value == "0" || value == "false" {
 		isDebugEnabled = false
 	} else {

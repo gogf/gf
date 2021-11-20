@@ -9,13 +9,12 @@ package gtree
 import (
 	"bytes"
 	"fmt"
-	"github.com/gogf/gf/internal/json"
 	"strings"
 
-	"github.com/gogf/gf/util/gconv"
-
-	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/internal/rwmutex"
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/internal/rwmutex"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // BTree holds elements of the B-tree.
@@ -40,10 +39,10 @@ type BTreeEntry struct {
 	Value interface{}
 }
 
-// NewBTree instantiates a B-tree with <m> (maximum number of children) and a custom key comparator.
-// The parameter <safe> is used to specify whether using tree in concurrent-safety,
+// NewBTree instantiates a B-tree with `m` (maximum number of children) and a custom key comparator.
+// The parameter `safe` is used to specify whether using tree in concurrent-safety,
 // which is false in default.
-// Note that the <m> must be greater or equal than 3, or else it panics.
+// Note that the `m` must be greater or equal than 3, or else it panics.
 func NewBTree(m int, comparator func(v1, v2 interface{}) int, safe ...bool) *BTree {
 	if m < 3 {
 		panic("Invalid order, should be at least 3")
@@ -55,8 +54,8 @@ func NewBTree(m int, comparator func(v1, v2 interface{}) int, safe ...bool) *BTr
 	}
 }
 
-// NewBTreeFrom instantiates a B-tree with <m> (maximum number of children), a custom key comparator and data map.
-// The parameter <safe> is used to specify whether using tree in concurrent-safety,
+// NewBTreeFrom instantiates a B-tree with `m` (maximum number of children), a custom key comparator and data map.
+// The parameter `safe` is used to specify whether using tree in concurrent-safety,
 // which is false in default.
 func NewBTreeFrom(m int, comparator func(v1, v2 interface{}) int, data map[interface{}]interface{}, safe ...bool) *BTree {
 	tree := NewBTree(m, comparator, safe...)
@@ -104,21 +103,21 @@ func (tree *BTree) Sets(data map[interface{}]interface{}) {
 	}
 }
 
-// Get searches the node in the tree by <key> and returns its value or nil if key is not found in tree.
+// Get searches the node in the tree by `key` and returns its value or nil if key is not found in tree.
 func (tree *BTree) Get(key interface{}) (value interface{}) {
 	value, _ = tree.Search(key)
 	return
 }
 
 // doSetWithLockCheck checks whether value of the key exists with mutex.Lock,
-// if not exists, set value to the map with given <key>,
+// if not exists, set value to the map with given `key`,
 // or else just return the existing value.
 //
-// When setting value, if <value> is type of <func() interface {}>,
+// When setting value, if `value` is type of <func() interface {}>,
 // it will be executed with mutex.Lock of the hash map,
-// and its return value will be set to the map with <key>.
+// and its return value will be set to the map with `key`.
 //
-// It returns value with given <key>.
+// It returns value with given `key`.
 func (tree *BTree) doSetWithLockCheck(key interface{}, value interface{}) interface{} {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
@@ -135,7 +134,7 @@ func (tree *BTree) doSetWithLockCheck(key interface{}, value interface{}) interf
 }
 
 // GetOrSet returns the value by key,
-// or sets value with given <value> if it does not exist and then returns this value.
+// or sets value with given `value` if it does not exist and then returns this value.
 func (tree *BTree) GetOrSet(key interface{}, value interface{}) interface{} {
 	if v, ok := tree.Search(key); !ok {
 		return tree.doSetWithLockCheck(key, value)
@@ -145,7 +144,7 @@ func (tree *BTree) GetOrSet(key interface{}, value interface{}) interface{} {
 }
 
 // GetOrSetFunc returns the value by key,
-// or sets value with returned value of callback function <f> if it does not exist
+// or sets value with returned value of callback function `f` if it does not exist
 // and then returns this value.
 func (tree *BTree) GetOrSetFunc(key interface{}, f func() interface{}) interface{} {
 	if v, ok := tree.Search(key); !ok {
@@ -156,10 +155,10 @@ func (tree *BTree) GetOrSetFunc(key interface{}, f func() interface{}) interface
 }
 
 // GetOrSetFuncLock returns the value by key,
-// or sets value with returned value of callback function <f> if it does not exist
+// or sets value with returned value of callback function `f` if it does not exist
 // and then returns this value.
 //
-// GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function <f>
+// GetOrSetFuncLock differs with GetOrSetFunc function is that it executes function `f`
 // with mutex.Lock of the hash map.
 func (tree *BTree) GetOrSetFuncLock(key interface{}, f func() interface{}) interface{} {
 	if v, ok := tree.Search(key); !ok {
@@ -169,7 +168,7 @@ func (tree *BTree) GetOrSetFuncLock(key interface{}, f func() interface{}) inter
 	}
 }
 
-// GetVar returns a gvar.Var with the value by given <key>.
+// GetVar returns a gvar.Var with the value by given `key`.
 // The returned gvar.Var is un-concurrent safe.
 func (tree *BTree) GetVar(key interface{}) *gvar.Var {
 	return gvar.New(tree.Get(key))
@@ -193,8 +192,8 @@ func (tree *BTree) GetVarOrSetFuncLock(key interface{}, f func() interface{}) *g
 	return gvar.New(tree.GetOrSetFuncLock(key, f))
 }
 
-// SetIfNotExist sets <value> to the map if the <key> does not exist, and then returns true.
-// It returns false if <key> exists, and <value> would be ignored.
+// SetIfNotExist sets `value` to the map if the `key` does not exist, and then returns true.
+// It returns false if `key` exists, and `value` would be ignored.
 func (tree *BTree) SetIfNotExist(key interface{}, value interface{}) bool {
 	if !tree.Contains(key) {
 		tree.doSetWithLockCheck(key, value)
@@ -203,8 +202,8 @@ func (tree *BTree) SetIfNotExist(key interface{}, value interface{}) bool {
 	return false
 }
 
-// SetIfNotExistFunc sets value with return value of callback function <f>, and then returns true.
-// It returns false if <key> exists, and <value> would be ignored.
+// SetIfNotExistFunc sets value with return value of callback function `f`, and then returns true.
+// It returns false if `key` exists, and `value` would be ignored.
 func (tree *BTree) SetIfNotExistFunc(key interface{}, f func() interface{}) bool {
 	if !tree.Contains(key) {
 		tree.doSetWithLockCheck(key, f())
@@ -213,11 +212,11 @@ func (tree *BTree) SetIfNotExistFunc(key interface{}, f func() interface{}) bool
 	return false
 }
 
-// SetIfNotExistFuncLock sets value with return value of callback function <f>, and then returns true.
-// It returns false if <key> exists, and <value> would be ignored.
+// SetIfNotExistFuncLock sets value with return value of callback function `f`, and then returns true.
+// It returns false if `key` exists, and `value` would be ignored.
 //
 // SetIfNotExistFuncLock differs with SetIfNotExistFunc function is that
-// it executes function <f> with mutex.Lock of the hash map.
+// it executes function `f` with mutex.Lock of the hash map.
 func (tree *BTree) SetIfNotExistFuncLock(key interface{}, f func() interface{}) bool {
 	if !tree.Contains(key) {
 		tree.doSetWithLockCheck(key, f)
@@ -226,7 +225,7 @@ func (tree *BTree) SetIfNotExistFuncLock(key interface{}, f func() interface{}) 
 	return false
 }
 
-// Contains checks whether <key> exists in the tree.
+// Contains checks whether `key` exists in the tree.
 func (tree *BTree) Contains(key interface{}) bool {
 	_, ok := tree.Search(key)
 	return ok
@@ -244,14 +243,14 @@ func (tree *BTree) doRemove(key interface{}) (value interface{}) {
 	return
 }
 
-// Remove removes the node from the tree by <key>.
+// Remove removes the node from the tree by `key`.
 func (tree *BTree) Remove(key interface{}) (value interface{}) {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
 	return tree.doRemove(key)
 }
 
-// Removes batch deletes values of the tree by <keys>.
+// Removes batch deletes values of the tree by `keys`.
 func (tree *BTree) Removes(keys []interface{}) {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
@@ -324,7 +323,7 @@ func (tree *BTree) Clear() {
 	tree.size = 0
 }
 
-// Replace the data of the tree with given <data>.
+// Replace the data of the tree with given `data`.
 func (tree *BTree) Replace(data map[interface{}]interface{}) {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
@@ -369,8 +368,8 @@ func (tree *BTree) String() string {
 	return buffer.String()
 }
 
-// Search searches the tree with given <key>.
-// Second return parameter <found> is true if key was found, otherwise false.
+// Search searches the tree with given `key`.
+// Second return parameter `found` is true if key was found, otherwise false.
 func (tree *BTree) Search(key interface{}) (value interface{}, found bool) {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
@@ -381,7 +380,7 @@ func (tree *BTree) Search(key interface{}) (value interface{}, found bool) {
 	return nil, false
 }
 
-// Search searches the tree with given <key> without mutex.
+// Search searches the tree with given `key` without mutex.
 // It returns the entry if found or otherwise nil.
 func (tree *BTree) doSearch(key interface{}) *BTreeEntry {
 	node, index, found := tree.searchRecursively(tree.root, key)
@@ -406,8 +405,8 @@ func (tree *BTree) IteratorFrom(key interface{}, match bool, f func(key, value i
 	tree.IteratorAscFrom(key, match, f)
 }
 
-// IteratorAsc iterates the tree readonly in ascending order with given callback function <f>.
-// If <f> returns true, then it continues iterating; or false to stop.
+// IteratorAsc iterates the tree readonly in ascending order with given callback function `f`.
+// If `f` returns true, then it continues iterating; or false to stop.
 func (tree *BTree) IteratorAsc(f func(key, value interface{}) bool) {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
@@ -418,10 +417,10 @@ func (tree *BTree) IteratorAsc(f func(key, value interface{}) bool) {
 	tree.doIteratorAsc(node, node.Entries[0], 0, f)
 }
 
-// IteratorAscFrom iterates the tree readonly in ascending order with given callback function <f>.
-// The parameter <key> specifies the start entry for iterating. The <match> specifies whether
-// starting iterating if the <key> is fully matched, or else using index searching iterating.
-// If <f> returns true, then it continues iterating; or false to stop.
+// IteratorAscFrom iterates the tree readonly in ascending order with given callback function `f`.
+// The parameter `key` specifies the start entry for iterating. The `match` specifies whether
+// starting iterating if the `key` is fully matched, or else using index searching iterating.
+// If `f` returns true, then it continues iterating; or false to stop.
 func (tree *BTree) IteratorAscFrom(key interface{}, match bool, f func(key, value interface{}) bool) {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
@@ -479,8 +478,8 @@ loop:
 	}
 }
 
-// IteratorDesc iterates the tree readonly in descending order with given callback function <f>.
-// If <f> returns true, then it continues iterating; or false to stop.
+// IteratorDesc iterates the tree readonly in descending order with given callback function `f`.
+// If `f` returns true, then it continues iterating; or false to stop.
 func (tree *BTree) IteratorDesc(f func(key, value interface{}) bool) {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
@@ -493,10 +492,10 @@ func (tree *BTree) IteratorDesc(f func(key, value interface{}) bool) {
 	tree.doIteratorDesc(node, entry, index, f)
 }
 
-// IteratorDescFrom iterates the tree readonly in descending order with given callback function <f>.
-// The parameter <key> specifies the start entry for iterating. The <match> specifies whether
-// starting iterating if the <key> is fully matched, or else using index searching iterating.
-// If <f> returns true, then it continues iterating; or false to stop.
+// IteratorDescFrom iterates the tree readonly in descending order with given callback function `f`.
+// The parameter `key` specifies the start entry for iterating. The `match` specifies whether
+// starting iterating if the `key` is fully matched, or else using index searching iterating.
+// If `f` returns true, then it continues iterating; or false to stop.
 func (tree *BTree) IteratorDescFrom(key interface{}, match bool, f func(key, value interface{}) bool) {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
@@ -510,8 +509,8 @@ func (tree *BTree) IteratorDescFrom(key interface{}, match bool, f func(key, val
 	}
 }
 
-// IteratorDesc iterates the tree readonly in descending order with given callback function <f>.
-// If <f> returns true, then it continues iterating; or false to stop.
+// IteratorDesc iterates the tree readonly in descending order with given callback function `f`.
+// If `f` returns true, then it continues iterating; or false to stop.
 func (tree *BTree) doIteratorDesc(node *BTreeNode, entry *BTreeEntry, index int, f func(key, value interface{}) bool) {
 	first := true
 loop:
@@ -587,9 +586,9 @@ func (tree *BTree) isLeaf(node *BTreeNode) bool {
 	return len(node.Children) == 0
 }
 
-//func (tree *BTree) isFull(node *BTreeNode) bool {
+// func (tree *BTree) isFull(node *BTreeNode) bool {
 //	return len(node.Entries) == tree.maxEntries()
-//}
+// }
 
 func (tree *BTree) shouldSplit(node *BTreeNode) bool {
 	return len(node.Entries) > tree.maxEntries()

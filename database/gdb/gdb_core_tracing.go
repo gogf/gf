@@ -10,17 +10,18 @@ package gdb
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf"
-	"github.com/gogf/gf/net/gtrace"
-	"github.com/gogf/gf/os/gcmd"
+
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/gogf/gf/v2"
+	"github.com/gogf/gf/v2/net/gtrace"
 )
 
 const (
-	tracingInstrumentName       = "github.com/gogf/gf/database/gdb"
+	tracingInstrumentName       = "github.com/gogf/gf/v2/database/gdb"
 	tracingAttrDbType           = "db.type"
 	tracingAttrDbHost           = "db.host"
 	tracingAttrDbPort           = "db.port"
@@ -34,19 +35,9 @@ const (
 	tracingEventDbExecutionType = "db.execution.type"
 )
 
-var (
-	// tracingInternal enables tracing for internal type spans.
-	// It's true in default.
-	tracingInternal = true
-)
-
-func init() {
-	tracingInternal = gcmd.GetOptWithEnv("gf.tracing.internal", true).Bool()
-}
-
 // addSqlToTracing adds sql information to tracer if it's enabled.
 func (c *Core) addSqlToTracing(ctx context.Context, sql *Sql) {
-	if !tracingInternal || !gtrace.IsActivated(ctx) {
+	if !gtrace.IsTracingInternal() || !gtrace.IsActivated(ctx) {
 		return
 	}
 	tr := otel.GetTracerProvider().Tracer(
@@ -76,8 +67,8 @@ func (c *Core) addSqlToTracing(ctx context.Context, sql *Sql) {
 	if c.db.GetConfig().User != "" {
 		labels = append(labels, attribute.String(tracingAttrDbUser, c.db.GetConfig().User))
 	}
-	if filteredLinkInfo := c.db.FilteredLinkInfo(); filteredLinkInfo != "" {
-		labels = append(labels, attribute.String(tracingAttrDbLink, c.db.FilteredLinkInfo()))
+	if filteredLink := c.db.FilteredLink(); filteredLink != "" {
+		labels = append(labels, attribute.String(tracingAttrDbLink, c.db.FilteredLink()))
 	}
 	if group := c.db.GetGroup(); group != "" {
 		labels = append(labels, attribute.String(tracingAttrDbGroup, group))

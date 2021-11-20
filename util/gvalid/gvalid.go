@@ -12,20 +12,24 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/gogf/gf/text/gregex"
+	"github.com/gogf/gf/v2/text/gregex"
 )
 
-// Refer to Laravel validation: https://laravel.com/docs/5.5/validation#available-validation-rules
+// Refer to Laravel validation:
+// https://laravel.com/docs/5.5/validation#available-validation-rules
+// https://learnku.com/docs/laravel/5.4/validation
 //
 // All supported rules:
 // required             format: required                              brief: Required.
 // required-if          format: required-if:field,value,...           brief: Required unless all given field and its value are equal.
 // required-unless      format: required-unless:field,value,...       brief: Required unless all given field and its value are not equal.
 // required-with        format: required-with:field1,field2,...       brief: Required if any of given fields are not empty.
-// required-with-all    format: required-with-all:field1,field2,...   brief: Required if all of given fields are not empty.
+// required-with-all    format: required-with-all:field1,field2,...   brief: Required if all given fields are not empty.
 // required-without     format: required-without:field1,field2,...    brief: Required if any of given fields are empty.
-// required-without-all format: required-without-all:field1,field2,...brief: Required if all of given fields are empty.
+// required-without-all format: required-without-all:field1,field2,...brief: Required if all given fields are empty.
+// bail                 format: bail                                  brief: Stop validating when this field's validation failed.
 // date                 format: date                                  brief: Standard date, like: 2006-01-02, 20060102, 2006.01.02
+// datetime             format: datetime                              brief: Standard datetime, like: 2006-01-02 12:00:00
 // date-format          format: date-format:format                    brief: Custom date format.
 // email                format: email                                 brief: Email address.
 // phone                format: phone                                 brief: Phone number.
@@ -47,6 +51,7 @@ import (
 // length               format: length:min,max                        brief: Length between :min and :max. The length is calculated using unicode string, which means one chinese character or letter both has the length of 1.
 // min-length           format: min-length:min                        brief: Length is equal or greater than :min. The length is calculated using unicode string, which means one chinese character or letter both has the length of 1.
 // max-length           format: max-length:max                        brief: Length is equal or lesser than :max. The length is calculated using unicode string, which means one chinese character or letter both has the length of 1.
+// size                 format: size:size							  brief: Length must be :size. The length is calculated using unicode string, which means one chinese character or letter both has the length of 1.
 // between              format: between:min,max                       brief: Range between :min and :max. It supports both integer and float.
 // min                  format: min:min                               brief: Equal or greater than :min. It supports both integer and float.
 // max                  format: max:max                               brief: Equal or lesser than :max. It supports both integer and float.
@@ -64,8 +69,14 @@ import (
 // like: map[field] => string|map[rule]string
 type CustomMsg = map[string]interface{}
 
-// apiNoValidation is an interface that marks current struct not validated by package `gvalid`.
-type apiNoValidation interface {
+// fieldRule defined the alias name and rule string for specified field.
+type fieldRule struct {
+	Name string // Alias name for the field.
+	Rule string // Rule string like: "max:6"
+}
+
+// iNoValidation is an interface that marks current struct not validated by package `gvalid`.
+type iNoValidation interface {
 	NoValidation()
 }
 
@@ -78,6 +89,7 @@ const (
 	internalDefaultRuleName   = "__default__"         // default rule name for i18n error message format if no i18n message found for specified error rule.
 	ruleMessagePrefixForI18n  = "gf.gvalid.rule."     // prefix string for each rule configuration in i18n content.
 	noValidationTagName       = "nv"                  // no validation tag name for struct attribute.
+	bailRuleName              = "bail"                // the name for rule "bail"
 )
 
 var (
@@ -120,7 +132,9 @@ var (
 		"required-with-all":    {},
 		"required-without":     {},
 		"required-without-all": {},
+		"bail":                 {},
 		"date":                 {},
+		"datetime":             {},
 		"date-format":          {},
 		"email":                {},
 		"phone":                {},
@@ -143,6 +157,7 @@ var (
 		"length":               {},
 		"min-length":           {},
 		"max-length":           {},
+		"size":                 {},
 		"between":              {},
 		"min":                  {},
 		"max":                  {},
@@ -171,50 +186,57 @@ var (
 	// defaultMessages is the default error messages.
 	// Note that these messages are synchronized from ./i18n/en/validation.toml .
 	defaultMessages = map[string]string{
-		"required":              "The :attribute field is required",
-		"required-if":           "The :attribute field is required",
-		"required-unless":       "The :attribute field is required",
-		"required-with":         "The :attribute field is required",
-		"required-with-all":     "The :attribute field is required",
-		"required-without":      "The :attribute field is required",
-		"required-without-all":  "The :attribute field is required",
-		"date":                  "The :attribute value is not a valid date",
-		"date-format":           "The :attribute value does not match the format :format",
-		"email":                 "The :attribute value must be a valid email address",
-		"phone":                 "The :attribute value must be a valid phone number",
-		"telephone":             "The :attribute value must be a valid telephone number",
-		"passport":              "The :attribute value is not a valid passport format",
-		"password":              "The :attribute value is not a valid passport format",
-		"password2":             "The :attribute value is not a valid passport format",
-		"password3":             "The :attribute value is not a valid passport format",
-		"postcode":              "The :attribute value is not a valid passport format",
-		"resident-id":           "The :attribute value is not a valid resident id number",
-		"bank-card":             "The :attribute value must be a valid bank card number",
-		"qq":                    "The :attribute value must be a valid QQ number",
-		"ip":                    "The :attribute value must be a valid IP address",
-		"ipv4":                  "The :attribute value must be a valid IPv4 address",
-		"ipv6":                  "The :attribute value must be a valid IPv6 address",
-		"mac":                   "The :attribute value must be a valid MAC address",
-		"url":                   "The :attribute value must be a valid URL address",
-		"domain":                "The :attribute value must be a valid domain format",
-		"length":                "The :attribute value length must be between :min and :max",
-		"min-length":            "The :attribute value length must be equal or greater than :min",
-		"max-length":            "The :attribute value length must be equal or lesser than :max",
-		"between":               "The :attribute value must be between :min and :max",
-		"min":                   "The :attribute value must be equal or greater than :min",
-		"max":                   "The :attribute value must be equal or lesser than :max",
-		"json":                  "The :attribute value must be a valid JSON string",
-		"xml":                   "The :attribute value must be a valid XML string",
-		"array":                 "The :attribute value must be an array",
-		"integer":               "The :attribute value must be an integer",
-		"float":                 "The :attribute value must be a float",
-		"boolean":               "The :attribute value field must be true or false",
-		"same":                  "The :attribute value must be the same as field :field",
-		"different":             "The :attribute value must be different from field :field",
-		"in":                    "The :attribute value is not in acceptable range",
-		"not-in":                "The :attribute value is not in acceptable range",
-		"regex":                 "The :attribute value is invalid",
-		internalDefaultRuleName: "The :attribute value is invalid",
+		"required":              "The {attribute} field is required",
+		"required-if":           "The {attribute} field is required",
+		"required-unless":       "The {attribute} field is required",
+		"required-with":         "The {attribute} field is required",
+		"required-with-all":     "The {attribute} field is required",
+		"required-without":      "The {attribute} field is required",
+		"required-without-all":  "The {attribute} field is required",
+		"date":                  "The {attribute} value `{value}` is not a valid date",
+		"datetime":              "The {attribute} value `{value}` is not a valid datetime",
+		"date-format":           "The {attribute} value `{value}` does not match the format: {pattern}",
+		"email":                 "The {attribute} value `{value}` is not a valid email address",
+		"phone":                 "The {attribute} value `{value}` is not a valid phone number",
+		"telephone":             "The {attribute} value `{value}` is not a valid telephone number",
+		"passport":              "The {attribute} value `{value}` is not a valid passport format",
+		"password":              "The {attribute} value `{value}` is not a valid password format",
+		"password2":             "The {attribute} value `{value}` is not a valid password format",
+		"password3":             "The {attribute} value `{value}` is not a valid password format",
+		"postcode":              "The {attribute} value `{value}` is not a valid postcode format",
+		"resident-id":           "The {attribute} value `{value}` is not a valid resident id number",
+		"bank-card":             "The {attribute} value `{value}` is not a valid bank card number",
+		"qq":                    "The {attribute} value `{value}` is not a valid QQ number",
+		"ip":                    "The {attribute} value `{value}` is not a valid IP address",
+		"ipv4":                  "The {attribute} value `{value}` is not a valid IPv4 address",
+		"ipv6":                  "The {attribute} value `{value}` is not a valid IPv6 address",
+		"mac":                   "The {attribute} value `{value}` is not a valid MAC address",
+		"url":                   "The {attribute} value `{value}` is not a valid URL address",
+		"domain":                "The {attribute} value `{value}` is not a valid domain format",
+		"length":                "The {attribute} value `{value}` length must be between {min} and {max}",
+		"min-length":            "The {attribute} value `{value}` length must be equal or greater than {min}",
+		"max-length":            "The {attribute} value `{value}` length must be equal or lesser than {max}",
+		"size":                  "The {attribute} value `{value}` length must be {size}",
+		"between":               "The {attribute} value `{value}` must be between {min} and {max}",
+		"min":                   "The {attribute} value `{value}` must be equal or greater than {min}",
+		"max":                   "The {attribute} value `{value}` must be equal or lesser than {max}",
+		"json":                  "The {attribute} value `{value}` is not a valid JSON string",
+		"xml":                   "The {attribute} value `{value}` is not a valid XML string",
+		"array":                 "The {attribute} value `{value}` is not an array",
+		"integer":               "The {attribute} value `{value}` is not an integer",
+		"boolean":               "The {attribute} value `{value}` field must be true or false",
+		"same":                  "The {attribute} value `{value}` must be the same as field {pattern}",
+		"different":             "The {attribute} value `{value}` must be different from field {pattern}",
+		"in":                    "The {attribute} value `{value}` is not in acceptable range: {pattern}",
+		"not-in":                "The {attribute} value `{value}` must not be in range: {pattern}",
+		"regex":                 "The {attribute} value `{value}` must be in regex of: {pattern}",
+		internalDefaultRuleName: "The {attribute} value `{value}` is invalid",
+	}
+	// markedRuleMap defines all rules that are just marked rules which have neither functional meaning
+	// nor error messages.
+	markedRuleMap = map[string]bool{
+		bailRuleName: true,
+		//"nullable":   true,
 	}
 )
 
@@ -233,7 +255,7 @@ func CheckValue(ctx context.Context, value interface{}, rules string, messages i
 	if len(params) > 0 {
 		data = params[0]
 	}
-	return defaultValidator.Ctx(ctx).Rules(rules).Data(data).Messages(messages).CheckValue(value)
+	return defaultValidator.Rules(rules).Data(data).Messages(messages).CheckValue(ctx, value)
 }
 
 // CheckMap validates map and returns the error result. It returns nil if with successful validation.
@@ -246,7 +268,7 @@ func CheckMap(ctx context.Context, params interface{}, rules interface{}, messag
 	if len(messages) > 0 {
 		customErrorMessages = messages[0]
 	}
-	return defaultValidator.Ctx(ctx).Rules(rules).Messages(customErrorMessages).CheckMap(params)
+	return defaultValidator.Rules(rules).Messages(customErrorMessages).CheckMap(ctx, params)
 }
 
 // CheckStruct validates struct and returns the error result.
@@ -260,7 +282,7 @@ func CheckStruct(ctx context.Context, object interface{}, rules interface{}, mes
 	if len(messages) > 0 {
 		customErrorMessages = messages[0]
 	}
-	return defaultValidator.Ctx(ctx).Rules(rules).Messages(customErrorMessages).CheckStruct(object)
+	return defaultValidator.Rules(rules).Messages(customErrorMessages).CheckStruct(ctx, object)
 }
 
 // CheckStructWithData validates struct with given parameter map and returns the error result.
@@ -274,7 +296,7 @@ func CheckStructWithData(ctx context.Context, object interface{}, data interface
 	if len(messages) > 0 {
 		customErrorMessages = messages[0]
 	}
-	return defaultValidator.Ctx(ctx).Data(data).Rules(rules).Messages(customErrorMessages).CheckStruct(object)
+	return defaultValidator.Data(data).Rules(rules).Messages(customErrorMessages).CheckStruct(ctx, object)
 }
 
 // parseSequenceTag parses one sequence tag to field, rule and error message.

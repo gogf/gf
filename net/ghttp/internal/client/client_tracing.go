@@ -8,23 +8,26 @@ package client
 
 import (
 	"fmt"
-	"github.com/gogf/gf"
-	"github.com/gogf/gf/internal/utils"
-	"github.com/gogf/gf/net/ghttp/internal/httputil"
-	"github.com/gogf/gf/net/gtrace"
-	"github.com/gogf/gf/text/gstr"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptrace"
+
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
-	"io/ioutil"
-	"net/http"
-	"net/http/httptrace"
+
+	"github.com/gogf/gf/v2"
+	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/net/ghttp/internal/httputil"
+	"github.com/gogf/gf/v2/net/gtrace"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 const (
-	tracingInstrumentName           = "github.com/gogf/gf/net/ghttp.Client"
+	tracingInstrumentName           = "github.com/gogf/gf/v2/net/ghttp.Client"
 	tracingAttrHttpAddressRemote    = "http.address.remote"
 	tracingAttrHttpAddressLocal     = "http.address.local"
 	tracingAttrHttpDnsStart         = "http.dns.start"
@@ -70,7 +73,7 @@ func MiddlewareTracing(c *Client, r *http.Request) (response *Response, err erro
 	response.Body = utils.NewReadCloser(reqBodyContentBytes, false)
 
 	span.AddEvent(tracingEventHttpResponse, trace.WithAttributes(
-		attribute.Any(tracingEventHttpResponseHeaders, httputil.HeaderToMap(response.Header)),
+		attribute.String(tracingEventHttpResponseHeaders, gconv.String(httputil.HeaderToMap(response.Header))),
 		attribute.String(tracingEventHttpResponseBody, gstr.StrLimit(
 			string(reqBodyContentBytes),
 			gtrace.MaxContentLogSize(),

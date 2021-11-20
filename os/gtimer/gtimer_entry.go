@@ -7,23 +7,26 @@
 package gtimer
 
 import (
-	"github.com/gogf/gf/container/gtype"
-	"math"
+	"context"
+
+	"github.com/gogf/gf/v2/container/gtype"
 )
 
 // Entry is the timing job.
 type Entry struct {
-	job       JobFunc      // The job function.
-	timer     *Timer       // Belonged timer.
-	ticks     int64        // The job runs every ticks.
-	times     *gtype.Int   // Limit running times.
-	status    *gtype.Int   // Job status.
-	singleton *gtype.Bool  // Singleton mode.
-	nextTicks *gtype.Int64 // Next run ticks of the job.
+	job         JobFunc         // The job function.
+	ctx         context.Context // The context for the job.
+	timer       *Timer          // Belonged timer.
+	ticks       int64           // The job runs every tick.
+	times       *gtype.Int      // Limit running times.
+	status      *gtype.Int      // Job status.
+	isSingleton *gtype.Bool     // Singleton mode.
+	nextTicks   *gtype.Int64    // Next run ticks of the job.
+	infinite    *gtype.Bool     // No times limit.
 }
 
 // JobFunc is the job function.
-type JobFunc = func()
+type JobFunc = func(ctx context.Context)
 
 // Status returns the status of the job.
 func (entry *Entry) Status() int {
@@ -32,15 +35,13 @@ func (entry *Entry) Status() int {
 
 // Run runs the timer job asynchronously.
 func (entry *Entry) Run() {
-	leftRunningTimes := entry.times.Add(-1)
-	if leftRunningTimes < 0 {
-		entry.status.Set(StatusClosed)
-		return
-	}
-	// This means it does not limit the running times.
-	// I know it's ugly, but it is surely high performance for running times limit.
-	if leftRunningTimes < 2000000000 && leftRunningTimes > 1000000000 {
-		entry.times.Set(math.MaxInt32)
+	if !entry.infinite.Val() {
+		leftRunningTimes := entry.times.Add(-1)
+		// It checks its running times exceeding.
+		if leftRunningTimes < 0 {
+			entry.status.Set(StatusClosed)
+			return
+		}
 	}
 	go func() {
 		defer func() {
@@ -56,7 +57,7 @@ func (entry *Entry) Run() {
 				entry.SetStatus(StatusReady)
 			}
 		}()
-		entry.job()
+		entry.job(entry.ctx)
 	}()
 }
 
@@ -108,19 +109,19 @@ func (entry *Entry) Close() {
 	entry.status.Set(StatusClosed)
 }
 
-// Reset reset the job, which resets its ticks for next running.
+// Reset resets the job, which resets its ticks for next running.
 func (entry *Entry) Reset() {
 	entry.nextTicks.Set(entry.timer.ticks.Val() + entry.ticks)
 }
 
 // IsSingleton checks and returns whether the job in singleton mode.
 func (entry *Entry) IsSingleton() bool {
-	return entry.singleton.Val()
+	return entry.isSingleton.Val()
 }
 
 // SetSingleton sets the job singleton mode.
 func (entry *Entry) SetSingleton(enabled bool) {
-	entry.singleton.Set(enabled)
+	entry.isSingleton.Set(enabled)
 }
 
 // Job returns the job function of this job.
@@ -128,7 +129,13 @@ func (entry *Entry) Job() JobFunc {
 	return entry.job
 }
 
+// Ctx returns the initialized context of this job.
+func (entry *Entry) Ctx() context.Context {
+	return entry.ctx
+}
+
 // SetTimes sets the limit running times for the job.
 func (entry *Entry) SetTimes(times int) {
 	entry.times.Set(times)
+	entry.infinite.Set(false)
 }

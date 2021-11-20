@@ -7,71 +7,90 @@
 package gvalid
 
 import (
-	"errors"
-	"github.com/gogf/gf/text/gregex"
-	"github.com/gogf/gf/text/gstr"
 	"strings"
+
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // Error is the validation error for validation result.
 type Error interface {
+	Code() gcode.Code
 	Current() error
 	Error() string
-	FirstItem() (key string, messages map[string]string)
-	FirstRule() (rule string, err string)
-	FirstString() (err string)
-	Items() (items []map[string]map[string]string)
-	Map() map[string]string
-	Maps() map[string]map[string]string
+	FirstItem() (key string, messages map[string]error)
+	FirstRule() (rule string, err error)
+	FirstError() (err error)
+	Items() (items []map[string]map[string]error)
+	Map() map[string]error
+	Maps() map[string]map[string]error
 	String() string
 	Strings() (errs []string)
 }
 
 // validationError is the validation error for validation result.
 type validationError struct {
-	rules     []string                     // Rules by sequence, which is used for keeping error sequence.
-	errors    map[string]map[string]string // Error map:map[field]map[rule]message
-	firstKey  string                       // The first error rule key(empty in default).
-	firstItem map[string]string            // The first error rule value(nil in default).
+	code      gcode.Code                  // Error code.
+	rules     []fieldRule                 // Rules by sequence, which is used for keeping error sequence.
+	errors    map[string]map[string]error // Error map:map[field]map[rule]message
+	firstKey  string                      // The first error rule key(empty in default).
+	firstItem map[string]error            // The first error rule value(nil in default).
 }
 
-// newError creates and returns a validation error.
-func newError(rules []string, errors map[string]map[string]string) *validationError {
-	for field, m := range errors {
-		for k, v := range m {
-			v = strings.Replace(v, ":attribute", field, -1)
-			v, _ = gregex.ReplaceString(`\s{2,}`, ` `, v)
-			v = gstr.Trim(v)
-			m[k] = v
+// newValidationError creates and returns a validation error.
+func newValidationError(code gcode.Code, rules []fieldRule, fieldRuleErrorMap map[string]map[string]error) *validationError {
+	for field, ruleErrorMap := range fieldRuleErrorMap {
+		for rule, err := range ruleErrorMap {
+			if !gerror.HasStack(err) {
+				ruleErrorMap[rule] = gerror.NewOption(gerror.Option{
+					Stack: false,
+					Text:  gstr.Trim(err.Error()),
+					Code:  code,
+				})
+			}
 		}
-		errors[field] = m
+		fieldRuleErrorMap[field] = ruleErrorMap
 	}
 	return &validationError{
+		code:   code,
 		rules:  rules,
-		errors: errors,
+		errors: fieldRuleErrorMap,
 	}
 }
 
-// newErrorStr creates and returns a validation error by string.
-func newErrorStr(key, err string) *validationError {
-	return newError(nil, map[string]map[string]string{
-		internalErrorMapKey: {
-			key: err,
+// newValidationErrorByStr creates and returns a validation error by string.
+func newValidationErrorByStr(key string, err error) *validationError {
+	return newValidationError(
+		gcode.CodeInternalError,
+		nil,
+		map[string]map[string]error{
+			internalErrorMapKey: {
+				key: err,
+			},
 		},
-	})
+	)
+}
+
+// Code returns the error code of current validation error.
+func (e *validationError) Code() gcode.Code {
+	if e == nil {
+		return gcode.CodeNil
+	}
+	return e.code
 }
 
 // Map returns the first error message as map.
-func (e *validationError) Map() map[string]string {
+func (e *validationError) Map() map[string]error {
 	if e == nil {
-		return map[string]string{}
+		return map[string]error{}
 	}
 	_, m := e.FirstItem()
 	return m
 }
 
 // Maps returns all error messages as map.
-func (e *validationError) Maps() map[string]map[string]string {
+func (e *validationError) Maps() map[string]map[string]error {
 	if e == nil {
 		return nil
 	}
@@ -80,18 +99,17 @@ func (e *validationError) Maps() map[string]map[string]string {
 
 // Items retrieves and returns error items array in sequence if possible,
 // or else it returns error items with no sequence .
-func (e *validationError) Items() (items []map[string]map[string]string) {
+func (e *validationError) Items() (items []map[string]map[string]error) {
 	if e == nil {
-		return []map[string]map[string]string{}
+		return []map[string]map[string]error{}
 	}
-	items = make([]map[string]map[string]string, 0)
+	items = make([]map[string]map[string]error, 0)
 	// By sequence.
 	if len(e.rules) > 0 {
 		for _, v := range e.rules {
-			name, _, _ := parseSequenceTag(v)
-			if errorItemMap, ok := e.errors[name]; ok {
-				items = append(items, map[string]map[string]string{
-					name: errorItemMap,
+			if errorItemMap, ok := e.errors[v.Name]; ok {
+				items = append(items, map[string]map[string]error{
+					v.Name: errorItemMap,
 				})
 			}
 		}
@@ -99,7 +117,7 @@ func (e *validationError) Items() (items []map[string]map[string]string) {
 	}
 	// No sequence.
 	for name, errorRuleMap := range e.errors {
-		items = append(items, map[string]map[string]string{
+		items = append(items, map[string]map[string]error{
 			name: errorRuleMap,
 		})
 	}
@@ -107,9 +125,9 @@ func (e *validationError) Items() (items []map[string]map[string]string) {
 }
 
 // FirstItem returns the field name and error messages for the first validation rule error.
-func (e *validationError) FirstItem() (key string, messages map[string]string) {
+func (e *validationError) FirstItem() (key string, messages map[string]error) {
 	if e == nil {
-		return "", map[string]string{}
+		return "", map[string]error{}
 	}
 	if e.firstItem != nil {
 		return e.firstKey, e.firstItem
@@ -117,11 +135,10 @@ func (e *validationError) FirstItem() (key string, messages map[string]string) {
 	// By sequence.
 	if len(e.rules) > 0 {
 		for _, v := range e.rules {
-			name, _, _ := parseSequenceTag(v)
-			if errorItemMap, ok := e.errors[name]; ok {
-				e.firstKey = name
+			if errorItemMap, ok := e.errors[v.Name]; ok {
+				e.firstKey = v.Name
 				e.firstItem = errorItemMap
-				return name, errorItemMap
+				return v.Name, errorItemMap
 			}
 		}
 	}
@@ -135,16 +152,15 @@ func (e *validationError) FirstItem() (key string, messages map[string]string) {
 }
 
 // FirstRule returns the first error rule and message string.
-func (e *validationError) FirstRule() (rule string, err string) {
+func (e *validationError) FirstRule() (rule string, err error) {
 	if e == nil {
-		return "", ""
+		return "", nil
 	}
 	// By sequence.
 	if len(e.rules) > 0 {
 		for _, v := range e.rules {
-			name, ruleStr, _ := parseSequenceTag(v)
-			if errorItemMap, ok := e.errors[name]; ok {
-				for _, ruleItem := range strings.Split(ruleStr, "|") {
+			if errorItemMap, ok := e.errors[v.Name]; ok {
+				for _, ruleItem := range strings.Split(v.Rule, "|") {
 					array := strings.Split(ruleItem, ":")
 					ruleItem = strings.TrimSpace(array[0])
 					if err, ok = errorItemMap[ruleItem]; ok {
@@ -160,26 +176,22 @@ func (e *validationError) FirstRule() (rule string, err string) {
 			return k, v
 		}
 	}
-	return "", ""
+	return "", nil
 }
 
-// FirstString returns the first error message as string.
+// FirstError returns the first error message as string.
 // Note that the returned message might be different if it has no sequence.
-func (e *validationError) FirstString() (err string) {
+func (e *validationError) FirstError() (err error) {
 	if e == nil {
-		return ""
+		return nil
 	}
 	_, err = e.FirstRule()
 	return
 }
 
-// Current is alis of FirstString, which implements interface gerror.ApiCurrent.
+// Current is alis of FirstError, which implements interface gerror.iCurrent.
 func (e *validationError) Current() error {
-	if e == nil {
-		return nil
-	}
-	_, err := e.FirstRule()
-	return errors.New(err)
+	return e.FirstError()
 }
 
 // String returns all error messages as string, multiple error messages joined using char ';'.
@@ -207,19 +219,18 @@ func (e *validationError) Strings() (errs []string) {
 	// By sequence.
 	if len(e.rules) > 0 {
 		for _, v := range e.rules {
-			name, ruleStr, _ := parseSequenceTag(v)
-			if errorItemMap, ok := e.errors[name]; ok {
+			if errorItemMap, ok := e.errors[v.Name]; ok {
 				// validation error checks.
-				for _, ruleItem := range strings.Split(ruleStr, "|") {
+				for _, ruleItem := range strings.Split(v.Rule, "|") {
 					ruleItem = strings.TrimSpace(strings.Split(ruleItem, ":")[0])
 					if err, ok := errorItemMap[ruleItem]; ok {
-						errs = append(errs, err)
+						errs = append(errs, err.Error())
 					}
 				}
 				// internal error checks.
 				for k, _ := range internalErrKeyMap {
 					if err, ok := errorItemMap[k]; ok {
-						errs = append(errs, err)
+						errs = append(errs, err.Error())
 					}
 				}
 			}
@@ -229,7 +240,7 @@ func (e *validationError) Strings() (errs []string) {
 	// No sequence.
 	for _, errorItemMap := range e.errors {
 		for _, err := range errorItemMap {
-			errs = append(errs, err)
+			errs = append(errs, err.Error())
 		}
 	}
 	return

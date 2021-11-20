@@ -9,21 +9,15 @@
 package gcfg_test
 
 import (
-	"os"
 	"testing"
 
-	"github.com/gogf/gf/os/gtime"
-
-	"github.com/gogf/gf/encoding/gjson"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/gcfg"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/gogf/gf/v2/os/gcfg"
+	"github.com/gogf/gf/v2/os/gcmd"
+	"github.com/gogf/gf/v2/os/genv"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/test/gtest"
 )
-
-func init() {
-	os.Setenv("GF_GCFG_ERRORPRINT", "false")
-}
 
 func Test_Basic1(t *testing.T) {
 	config := `
@@ -42,46 +36,10 @@ array = [1,2,3]
 		t.Assert(err, nil)
 		defer gfile.Remove(path)
 
-		c := gcfg.New()
-		t.Assert(c.Get("v1"), 1)
-		t.AssertEQ(c.GetInt("v1"), 1)
-		t.AssertEQ(c.GetInt8("v1"), int8(1))
-		t.AssertEQ(c.GetInt16("v1"), int16(1))
-		t.AssertEQ(c.GetInt32("v1"), int32(1))
-		t.AssertEQ(c.GetInt64("v1"), int64(1))
-		t.AssertEQ(c.GetUint("v1"), uint(1))
-		t.AssertEQ(c.GetUint8("v1"), uint8(1))
-		t.AssertEQ(c.GetUint16("v1"), uint16(1))
-		t.AssertEQ(c.GetUint32("v1"), uint32(1))
-		t.AssertEQ(c.GetUint64("v1"), uint64(1))
-
-		t.AssertEQ(c.GetVar("v1").String(), "1")
-		t.AssertEQ(c.GetVar("v1").Bool(), true)
-		t.AssertEQ(c.GetVar("v2").String(), "true")
-		t.AssertEQ(c.GetVar("v2").Bool(), true)
-
-		t.AssertEQ(c.GetString("v1"), "1")
-		t.AssertEQ(c.GetFloat32("v4"), float32(1.23))
-		t.AssertEQ(c.GetFloat64("v4"), float64(1.23))
-		t.AssertEQ(c.GetString("v2"), "true")
-		t.AssertEQ(c.GetBool("v2"), true)
-		t.AssertEQ(c.GetBool("v3"), false)
-
-		t.AssertEQ(c.Contains("v1"), true)
-		t.AssertEQ(c.Contains("v2"), true)
-		t.AssertEQ(c.Contains("v3"), true)
-		t.AssertEQ(c.Contains("v4"), true)
-		t.AssertEQ(c.Contains("v5"), false)
-
-		t.AssertEQ(c.GetInts("array"), []int{1, 2, 3})
-		t.AssertEQ(c.GetStrings("array"), []string{"1", "2", "3"})
-		t.AssertEQ(c.GetArray("array"), []interface{}{1, 2, 3})
-		t.AssertEQ(c.GetInterfaces("array"), []interface{}{1, 2, 3})
-		t.AssertEQ(c.GetMap("redis"), map[string]interface{}{
-			"disk":  "127.0.0.1:6379,0",
-			"cache": "127.0.0.1:6379,1",
-		})
-		filepath, _ := c.GetFilePath()
+		c, err := gcfg.New()
+		t.AssertNil(err)
+		t.Assert(c.MustGet(ctx, "v1"), 1)
+		filepath, _ := c.GetAdapter().(*gcfg.AdapterFile).GetFilePath()
 		t.AssertEQ(filepath, gfile.Pwd()+gfile.Separator+path)
 	})
 }
@@ -96,8 +54,9 @@ func Test_Basic2(t *testing.T) {
 			_ = gfile.Remove(path)
 		}()
 
-		c := gcfg.New()
-		t.Assert(c.Get("log-path"), "logs")
+		c, err := gcfg.New()
+		t.AssertNil(err)
+		t.Assert(c.MustGet(ctx, "log-path"), "logs")
 	})
 }
 
@@ -112,49 +71,12 @@ array = [1,2,3]
     disk  = "127.0.0.1:6379,0"
     cache = "127.0.0.1:6379,1"
 `
-	gcfg.SetContent(content)
-	defer gcfg.ClearContent()
-
 	gtest.C(t, func(t *gtest.T) {
-		c := gcfg.New()
-		t.Assert(c.Get("v1"), 1)
-		t.AssertEQ(c.GetInt("v1"), 1)
-		t.AssertEQ(c.GetInt8("v1"), int8(1))
-		t.AssertEQ(c.GetInt16("v1"), int16(1))
-		t.AssertEQ(c.GetInt32("v1"), int32(1))
-		t.AssertEQ(c.GetInt64("v1"), int64(1))
-		t.AssertEQ(c.GetUint("v1"), uint(1))
-		t.AssertEQ(c.GetUint8("v1"), uint8(1))
-		t.AssertEQ(c.GetUint16("v1"), uint16(1))
-		t.AssertEQ(c.GetUint32("v1"), uint32(1))
-		t.AssertEQ(c.GetUint64("v1"), uint64(1))
-
-		t.AssertEQ(c.GetVar("v1").String(), "1")
-		t.AssertEQ(c.GetVar("v1").Bool(), true)
-		t.AssertEQ(c.GetVar("v2").String(), "true")
-		t.AssertEQ(c.GetVar("v2").Bool(), true)
-
-		t.AssertEQ(c.GetString("v1"), "1")
-		t.AssertEQ(c.GetFloat32("v4"), float32(1.23))
-		t.AssertEQ(c.GetFloat64("v4"), float64(1.23))
-		t.AssertEQ(c.GetString("v2"), "true")
-		t.AssertEQ(c.GetBool("v2"), true)
-		t.AssertEQ(c.GetBool("v3"), false)
-
-		t.AssertEQ(c.Contains("v1"), true)
-		t.AssertEQ(c.Contains("v2"), true)
-		t.AssertEQ(c.Contains("v3"), true)
-		t.AssertEQ(c.Contains("v4"), true)
-		t.AssertEQ(c.Contains("v5"), false)
-
-		t.AssertEQ(c.GetInts("array"), []int{1, 2, 3})
-		t.AssertEQ(c.GetStrings("array"), []string{"1", "2", "3"})
-		t.AssertEQ(c.GetArray("array"), []interface{}{1, 2, 3})
-		t.AssertEQ(c.GetInterfaces("array"), []interface{}{1, 2, 3})
-		t.AssertEQ(c.GetMap("redis"), map[string]interface{}{
-			"disk":  "127.0.0.1:6379,0",
-			"cache": "127.0.0.1:6379,1",
-		})
+		c, err := gcfg.New()
+		t.AssertNil(err)
+		c.GetAdapter().(*gcfg.AdapterFile).SetContent(content)
+		defer c.GetAdapter().(*gcfg.AdapterFile).ClearContent()
+		t.Assert(c.MustGet(ctx, "v1"), 1)
 	})
 }
 
@@ -184,43 +106,38 @@ func Test_SetFileName(t *testing.T) {
 			_ = gfile.Remove(path)
 		}()
 
-		c := gcfg.New()
+		config, err := gcfg.New()
+		t.AssertNil(err)
+		c := config.GetAdapter().(*gcfg.AdapterFile)
 		c.SetFileName(path)
-		t.Assert(c.Get("v1"), 1)
-		t.AssertEQ(c.GetInt("v1"), 1)
-		t.AssertEQ(c.GetInt8("v1"), int8(1))
-		t.AssertEQ(c.GetInt16("v1"), int16(1))
-		t.AssertEQ(c.GetInt32("v1"), int32(1))
-		t.AssertEQ(c.GetInt64("v1"), int64(1))
-		t.AssertEQ(c.GetUint("v1"), uint(1))
-		t.AssertEQ(c.GetUint8("v1"), uint8(1))
-		t.AssertEQ(c.GetUint16("v1"), uint16(1))
-		t.AssertEQ(c.GetUint32("v1"), uint32(1))
-		t.AssertEQ(c.GetUint64("v1"), uint64(1))
+		t.Assert(c.MustGet(ctx, "v1"), 1)
+		t.AssertEQ(c.MustGet(ctx, "v1").Int(), 1)
+		t.AssertEQ(c.MustGet(ctx, "v1").Int8(), int8(1))
+		t.AssertEQ(c.MustGet(ctx, "v1").Int16(), int16(1))
+		t.AssertEQ(c.MustGet(ctx, "v1").Int32(), int32(1))
+		t.AssertEQ(c.MustGet(ctx, "v1").Int64(), int64(1))
+		t.AssertEQ(c.MustGet(ctx, "v1").Uint(), uint(1))
+		t.AssertEQ(c.MustGet(ctx, "v1").Uint8(), uint8(1))
+		t.AssertEQ(c.MustGet(ctx, "v1").Uint16(), uint16(1))
+		t.AssertEQ(c.MustGet(ctx, "v1").Uint32(), uint32(1))
+		t.AssertEQ(c.MustGet(ctx, "v1").Uint64(), uint64(1))
 
-		t.AssertEQ(c.GetVar("v1").String(), "1")
-		t.AssertEQ(c.GetVar("v1").Bool(), true)
-		t.AssertEQ(c.GetVar("v2").String(), "true")
-		t.AssertEQ(c.GetVar("v2").Bool(), true)
+		t.AssertEQ(c.MustGet(ctx, "v1").String(), "1")
+		t.AssertEQ(c.MustGet(ctx, "v1").Bool(), true)
+		t.AssertEQ(c.MustGet(ctx, "v2").String(), "true")
+		t.AssertEQ(c.MustGet(ctx, "v2").Bool(), true)
 
-		t.AssertEQ(c.GetString("v1"), "1")
-		t.AssertEQ(c.GetFloat32("v4"), float32(1.234))
-		t.AssertEQ(c.GetFloat64("v4"), float64(1.234))
-		t.AssertEQ(c.GetString("v2"), "true")
-		t.AssertEQ(c.GetBool("v2"), true)
-		t.AssertEQ(c.GetBool("v3"), false)
+		t.AssertEQ(c.MustGet(ctx, "v1").String(), "1")
+		t.AssertEQ(c.MustGet(ctx, "v4").Float32(), float32(1.234))
+		t.AssertEQ(c.MustGet(ctx, "v4").Float64(), float64(1.234))
+		t.AssertEQ(c.MustGet(ctx, "v2").String(), "true")
+		t.AssertEQ(c.MustGet(ctx, "v2").Bool(), true)
+		t.AssertEQ(c.MustGet(ctx, "v3").Bool(), false)
 
-		t.AssertEQ(c.Contains("v1"), true)
-		t.AssertEQ(c.Contains("v2"), true)
-		t.AssertEQ(c.Contains("v3"), true)
-		t.AssertEQ(c.Contains("v4"), true)
-		t.AssertEQ(c.Contains("v5"), false)
-
-		t.AssertEQ(c.GetInts("array"), []int{1, 2, 3})
-		t.AssertEQ(c.GetStrings("array"), []string{"1", "2", "3"})
-		t.AssertEQ(c.GetArray("array"), []interface{}{1, 2, 3})
-		t.AssertEQ(c.GetInterfaces("array"), []interface{}{1, 2, 3})
-		t.AssertEQ(c.GetMap("redis"), map[string]interface{}{
+		t.AssertEQ(c.MustGet(ctx, "array").Ints(), []int{1, 2, 3})
+		t.AssertEQ(c.MustGet(ctx, "array").Strings(), []string{"1", "2", "3"})
+		t.AssertEQ(c.MustGet(ctx, "array").Interfaces(), []interface{}{1, 2, 3})
+		t.AssertEQ(c.MustGet(ctx, "redis").Map(), map[string]interface{}{
 			"disk":  "127.0.0.1:6379,0",
 			"cache": "127.0.0.1:6379,1",
 		})
@@ -229,67 +146,7 @@ func Test_SetFileName(t *testing.T) {
 	})
 }
 
-func TestCfg_New(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		os.Setenv("GF_GCFG_PATH", "config")
-		c := gcfg.New("config.yml")
-		t.Assert(c.Get("name"), nil)
-		t.Assert(c.GetFileName(), "config.yml")
-
-		configPath := gfile.Pwd() + gfile.Separator + "config"
-		_ = gfile.Mkdir(configPath)
-		defer gfile.Remove(configPath)
-
-		c = gcfg.New("config.yml")
-		t.Assert(c.Get("name"), nil)
-
-		_ = os.Unsetenv("GF_GCFG_PATH")
-		c = gcfg.New("config.yml")
-		t.Assert(c.Get("name"), nil)
-	})
-}
-
-func TestCfg_SetPath(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		c := gcfg.New("config.yml")
-		err := c.SetPath("tmp")
-		t.AssertNE(err, nil)
-		err = c.SetPath("gcfg.go")
-		t.AssertNE(err, nil)
-		t.Assert(c.Get("name"), nil)
-	})
-}
-
-func TestCfg_SetViolenceCheck(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		c := gcfg.New("config.yml")
-		c.SetViolenceCheck(true)
-		t.Assert(c.Get("name"), nil)
-	})
-}
-
-func TestCfg_AddPath(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		c := gcfg.New("config.yml")
-		err := c.AddPath("tmp")
-		t.AssertNE(err, nil)
-		err = c.AddPath("gcfg.go")
-		t.AssertNE(err, nil)
-		t.Assert(c.Get("name"), nil)
-	})
-}
-
-func TestCfg_FilePath(t *testing.T) {
-	gtest.C(t, func(t *gtest.T) {
-		c := gcfg.New("config.yml")
-		path, _ := c.GetFilePath("tmp")
-		t.Assert(path, "")
-		path, _ = c.GetFilePath("tmp")
-		t.Assert(path, "")
-	})
-}
-
-func TestCfg_et(t *testing.T) {
+func TestCfg_Set(t *testing.T) {
 	config := `log-path = "logs"`
 	gtest.C(t, func(t *gtest.T) {
 		path := gcfg.DefaultConfigFile
@@ -297,16 +154,18 @@ func TestCfg_et(t *testing.T) {
 		t.Assert(err, nil)
 		defer gfile.Remove(path)
 
-		c := gcfg.New()
-		t.Assert(c.Get("log-path"), "logs")
+		adapterFile, err := gcfg.NewAdapterFile()
+		t.AssertNil(err)
+		t.Assert(adapterFile.MustGet(ctx, "log-path"), "logs")
 
-		err = c.Set("log-path", "custom-logs")
+		c := gcfg.NewWithAdapter(adapterFile)
+		c.Set(ctx, "log-path", "custom-logs")
 		t.Assert(err, nil)
-		t.Assert(c.Get("log-path"), "custom-logs")
+		t.Assert(c.MustGet(ctx, "log-path"), "custom-logs")
 	})
 }
 
-func TestCfg_Get(t *testing.T) {
+func TestCfg_Get_WrongConfigFile(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var err error
 		configPath := gfile.TempDir(gtime.TimestampNanoStr())
@@ -323,82 +182,62 @@ func TestCfg_Get(t *testing.T) {
 			"wrong config",
 		)
 		t.Assert(err, nil)
-		c := gcfg.New("config.yml")
-		t.Assert(c.Get("name"), nil)
-		t.Assert(c.GetVar("name").Val(), nil)
-		t.Assert(c.Contains("name"), false)
-		t.Assert(c.GetMap("name"), nil)
-		t.Assert(c.GetArray("name"), nil)
-		t.Assert(c.GetString("name"), "")
-		t.Assert(c.GetStrings("name"), nil)
-		t.Assert(c.GetInterfaces("name"), nil)
-		t.Assert(c.GetBool("name"), false)
-		t.Assert(c.GetFloat32("name"), 0)
-		t.Assert(c.GetFloat64("name"), 0)
-		t.Assert(c.GetFloats("name"), nil)
-		t.Assert(c.GetInt("name"), 0)
-		t.Assert(c.GetInt8("name"), 0)
-		t.Assert(c.GetInt16("name"), 0)
-		t.Assert(c.GetInt32("name"), 0)
-		t.Assert(c.GetInt64("name"), 0)
-		t.Assert(c.GetInts("name"), nil)
-		t.Assert(c.GetUint("name"), 0)
-		t.Assert(c.GetUint8("name"), 0)
-		t.Assert(c.GetUint16("name"), 0)
-		t.Assert(c.GetUint32("name"), 0)
-		t.Assert(c.GetUint64("name"), 0)
-		t.Assert(c.GetTime("name").Format("2006-01-02"), "0001-01-01")
-		t.Assert(c.GetGTime("name"), nil)
-		t.Assert(c.GetDuration("name").String(), "0s")
-		name := struct {
-			Name string
-		}{}
-		t.Assert(c.GetStruct("name", &name) == nil, false)
+		adapterFile, err := gcfg.NewAdapterFile("config.yml")
+		t.AssertNil(err)
 
-		c.Clear()
-
-		arr, _ := gjson.Encode(
-			g.Map{
-				"name":   "gf",
-				"time":   "2019-06-12",
-				"person": g.Map{"name": "gf"},
-				"floats": g.Slice{1, 2, 3},
-			},
-		)
-		err = gfile.PutBytes(
-			gfile.Join(configPath, "config.yml"),
-			arr,
-		)
-		t.Assert(err, nil)
-		t.Assert(c.GetTime("time").Format("2006-01-02"), "2019-06-12")
-		t.Assert(c.GetGTime("time").Format("Y-m-d"), "2019-06-12")
-		t.Assert(c.GetDuration("time").String(), "0s")
-
-		err = c.GetStruct("person", &name)
-		t.Assert(err, nil)
-		t.Assert(name.Name, "gf")
-		t.Assert(c.GetFloats("floats") == nil, false)
+		c := gcfg.NewWithAdapter(adapterFile)
+		v, err := c.Get(ctx, "name")
+		t.AssertNE(err, nil)
+		t.Assert(v, nil)
+		adapterFile.Clear()
 	})
 }
 
-func TestCfg_Config(t *testing.T) {
+func Test_GetWithEnv(t *testing.T) {
+	content := `
+v1    = 1
+v2    = "true"
+v3    = "off"
+v4    = "1.23"
+array = [1,2,3]
+[redis]
+    disk  = "127.0.0.1:6379,0"
+    cache = "127.0.0.1:6379,1"
+`
 	gtest.C(t, func(t *gtest.T) {
-		gcfg.SetContent("gf", "config.yml")
-		t.Assert(gcfg.GetContent("config.yml"), "gf")
-		gcfg.SetContent("gf1", "config.yml")
-		t.Assert(gcfg.GetContent("config.yml"), "gf1")
-		gcfg.RemoveContent("config.yml")
-		gcfg.ClearContent()
-		t.Assert(gcfg.GetContent("name"), "")
+		c, err := gcfg.New()
+		t.AssertNil(err)
+		c.GetAdapter().(*gcfg.AdapterFile).SetContent(content)
+		defer c.GetAdapter().(*gcfg.AdapterFile).ClearContent()
+		t.Assert(c.MustGet(ctx, "v1"), 1)
+		t.Assert(c.MustGetWithEnv(ctx, `redis.user`), nil)
+		t.Assert(genv.Set("REDIS_USER", `1`), nil)
+		defer genv.Remove(`REDIS_USER`)
+		t.Assert(c.MustGetWithEnv(ctx, `redis.user`), `1`)
 	})
 }
 
-func TestCfg_With_UTF8_BOM(t *testing.T) {
+func Test_GetWithCmd(t *testing.T) {
+	content := `
+v1    = 1
+v2    = "true"
+v3    = "off"
+v4    = "1.23"
+array = [1,2,3]
+[redis]
+    disk  = "127.0.0.1:6379,0"
+    cache = "127.0.0.1:6379,1"
+`
 	gtest.C(t, func(t *gtest.T) {
-		cfg := g.Cfg("test-cfg-with-utf8-bom")
-		t.Assert(cfg.SetPath("testdata"), nil)
-		cfg.SetFileName("cfg-with-utf8-bom.toml")
-		t.Assert(cfg.GetInt("test.testInt"), 1)
-		t.Assert(cfg.GetString("test.testStr"), "test")
+
+		c, err := gcfg.New()
+		t.AssertNil(err)
+		c.GetAdapter().(*gcfg.AdapterFile).SetContent(content)
+		defer c.GetAdapter().(*gcfg.AdapterFile).ClearContent()
+		t.Assert(c.MustGet(ctx, "v1"), 1)
+		t.Assert(c.MustGetWithCmd(ctx, `redis.user`), nil)
+
+		gcmd.Init([]string{"gf", "--redis.user=2"}...)
+		t.Assert(c.MustGetWithCmd(ctx, `redis.user`), `2`)
 	})
 }

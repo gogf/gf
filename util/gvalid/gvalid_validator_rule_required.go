@@ -7,11 +7,12 @@
 package gvalid
 
 import (
-	"github.com/gogf/gf/internal/empty"
-	"github.com/gogf/gf/util/gconv"
-	"github.com/gogf/gf/util/gutil"
 	"reflect"
 	"strings"
+
+	"github.com/gogf/gf/v2/internal/empty"
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // checkRequired checks `value` using required rules.
@@ -84,7 +85,7 @@ func (v *Validator) checkRequired(value interface{}, ruleKey, rulePattern string
 			}
 		}
 
-	// Required if all of given fields are not empty.
+	// Required if all given fields are not empty.
 	// Example: required-with:id,name
 	case "required-with-all":
 		required = true
@@ -116,7 +117,7 @@ func (v *Validator) checkRequired(value interface{}, ruleKey, rulePattern string
 			}
 		}
 
-	// Required if all of given fields are empty.
+	// Required if all given fields are empty.
 	// Example: required-with:id,name
 	case "required-without-all":
 		required = true

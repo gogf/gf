@@ -7,16 +7,17 @@
 package gproc
 
 import (
+	"context"
 	"fmt"
-	"github.com/gogf/gf/internal/json"
 	"net"
 
-	"github.com/gogf/gf/container/gqueue"
-	"github.com/gogf/gf/container/gtype"
-	"github.com/gogf/gf/net/gtcp"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/container/gqueue"
+	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/net/gtcp"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 var (
@@ -35,10 +36,10 @@ func Receive(group ...string) *MsgRequest {
 	if len(group) > 0 {
 		groupName = group[0]
 	} else {
-		groupName = gPROC_COMM_DEFAULT_GRUOP_NAME
+		groupName = defaultGroupNameForProcComm
 	}
 	queue := commReceiveQueues.GetOrSetFuncLock(groupName, func() interface{} {
-		return gqueue.New(gPROC_MSG_QUEUE_MAX_LENGTH)
+		return gqueue.New(maxLengthForProcMsgQueue)
 	}).(*gqueue.Queue)
 
 	// Blocking receiving.
@@ -52,7 +53,7 @@ func Receive(group ...string) *MsgRequest {
 func receiveTcpListening() {
 	var listen *net.TCPListener
 	// Scan the available port for listening.
-	for i := gPROC_DEFAULT_TCP_PORT; ; i++ {
+	for i := defaultTcpPortForProcComm; ; i++ {
 		addr, err := net.ResolveTCPAddr("tcp", fmt.Sprintf("127.0.0.1:%d", i))
 		if err != nil {
 			continue
@@ -70,7 +71,7 @@ func receiveTcpListening() {
 	// Start listening.
 	for {
 		if conn, err := listen.Accept(); err != nil {
-			glog.Error(err)
+			glog.Error(context.TODO(), err)
 		} else if conn != nil {
 			go receiveTcpHandler(gtcp.NewConnByNetConn(conn))
 		}
@@ -79,8 +80,11 @@ func receiveTcpListening() {
 
 // receiveTcpHandler is the connection handler for receiving data.
 func receiveTcpHandler(conn *gtcp.Conn) {
-	var result []byte
-	var response MsgResponse
+	var (
+		ctx      = context.TODO()
+		result   []byte
+		response MsgResponse
+	)
 	for {
 		response.Code = 0
 		response.Message = ""
@@ -90,7 +94,7 @@ func receiveTcpHandler(conn *gtcp.Conn) {
 			// Package decoding.
 			msg := new(MsgRequest)
 			if err := json.UnmarshalUseNumber(buffer, msg); err != nil {
-				//glog.Error(err)
+				// glog.Error(err)
 				continue
 			}
 			if msg.RecvPid != Pid() {
@@ -111,15 +115,15 @@ func receiveTcpHandler(conn *gtcp.Conn) {
 		if err == nil {
 			result, err = json.Marshal(response)
 			if err != nil {
-				glog.Error(err)
+				glog.Error(ctx, err)
 			}
 			if err := conn.SendPkg(result); err != nil {
-				glog.Error(err)
+				glog.Error(ctx, err)
 			}
 		} else {
 			// Just close the connection if any error occurs.
 			if err := conn.Close(); err != nil {
-				glog.Error(err)
+				glog.Error(ctx, err)
 			}
 			break
 		}

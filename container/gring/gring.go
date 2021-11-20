@@ -10,8 +10,8 @@ package gring
 import (
 	"container/ring"
 
-	"github.com/gogf/gf/container/gtype"
-	"github.com/gogf/gf/internal/rwmutex"
+	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/internal/rwmutex"
 )
 
 // Ring is a struct of ring structure.
@@ -23,8 +23,13 @@ type Ring struct {
 	dirty *gtype.Bool // Dirty, which means the len and cap should be recalculated. It's marked dirty when the size of ring changes.
 }
 
-// New creates and returns a Ring structure of <cap> elements.
-// The optional parameter <safe> specifies whether using this structure in concurrent safety,
+// internalRingItem stores the ring element value.
+type internalRingItem struct {
+	Value interface{}
+}
+
+// New creates and returns a Ring structure of `cap` elements.
+// The optional parameter `safe` specifies whether using this structure in concurrent safety,
 // which is false in default.
 func New(cap int, safe ...bool) *Ring {
 	return &Ring{
@@ -38,10 +43,13 @@ func New(cap int, safe ...bool) *Ring {
 
 // Val returns the item's value of current position.
 func (r *Ring) Val() interface{} {
+	var value interface{}
 	r.mu.RLock()
-	v := r.ring.Value
+	if r.ring.Value != nil {
+		value = r.ring.Value.(internalRingItem).Value
+	}
 	r.mu.RUnlock()
-	return v
+	return value
 }
 
 // Len returns the size of ring.
@@ -61,17 +69,21 @@ func (r *Ring) checkAndUpdateLenAndCap() {
 	if !r.dirty.Val() {
 		return
 	}
+	r.mu.RLock()
+	defer r.mu.RUnlock()
 	totalLen := 0
 	emptyLen := 0
 	if r.ring != nil {
-		r.mu.RLock()
+		if r.ring.Value == nil {
+			emptyLen++
+		}
+		totalLen++
 		for p := r.ring.Next(); p != r.ring; p = p.Next() {
 			if p.Value == nil {
 				emptyLen++
 			}
 			totalLen++
 		}
-		r.mu.RUnlock()
 	}
 	r.cap.Set(totalLen)
 	r.len.Set(totalLen - emptyLen)
@@ -84,18 +96,18 @@ func (r *Ring) Set(value interface{}) *Ring {
 	if r.ring.Value == nil {
 		r.len.Add(1)
 	}
-	r.ring.Value = value
+	r.ring.Value = internalRingItem{Value: value}
 	r.mu.Unlock()
 	return r
 }
 
-// Put sets <value> to current item of ring and moves position to next item.
+// Put sets `value` to current item of ring and moves position to next item.
 func (r *Ring) Put(value interface{}) *Ring {
 	r.mu.Lock()
 	if r.ring.Value == nil {
 		r.len.Add(1)
 	}
-	r.ring.Value = value
+	r.ring.Value = internalRingItem{Value: value}
 	r.ring = r.ring.Next()
 	r.mu.Unlock()
 	return r
@@ -132,8 +144,8 @@ func (r *Ring) Next() *Ring {
 //
 // If r and s point to the same ring, linking
 // them removes the elements between r and s from the ring.
-// The removed elements form a subring and the result is a
-// reference to that subring (if no elements were removed,
+// The removed elements form a sub-ring and the result is a
+// reference to that sub-ring (if no elements were removed,
 // the result is still the original value for r.Next(),
 // and not nil).
 //
@@ -155,7 +167,7 @@ func (r *Ring) Link(s *Ring) *Ring {
 
 // Unlink removes n % r.Len() elements from the ring r, starting
 // at r.Next(). If n % r.Len() == 0, r remains unchanged.
-// The result is the removed subring. r must not be empty.
+// The result is the removed sub-ring. r must not be empty.
 //
 func (r *Ring) Unlink(n int) *Ring {
 	r.mu.Lock()
@@ -166,64 +178,32 @@ func (r *Ring) Unlink(n int) *Ring {
 }
 
 // RLockIteratorNext iterates and locks reading forward
-// with given callback function <f> within RWMutex.RLock.
-// If <f> returns true, then it continues iterating; or false to stop.
+// with given callback function `f` within RWMutex.RLock.
+// If `f` returns true, then it continues iterating; or false to stop.
 func (r *Ring) RLockIteratorNext(f func(value interface{}) bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	if !f(r.ring.Value) {
+	if r.ring.Value != nil && !f(r.ring.Value.(internalRingItem).Value) {
 		return
 	}
 	for p := r.ring.Next(); p != r.ring; p = p.Next() {
-		if !f(p.Value) {
+		if p.Value == nil || !f(p.Value.(internalRingItem).Value) {
 			break
 		}
 	}
 }
 
-// RLockIteratorPrev iterates and locks reading backward
-// with given callback function <f> within RWMutex.RLock.
-// If <f> returns true, then it continues iterating; or false to stop.
+// RLockIteratorPrev iterates and locks writing backward
+// with given callback function `f` within RWMutex.RLock.
+// If `f` returns true, then it continues iterating; or false to stop.
 func (r *Ring) RLockIteratorPrev(f func(value interface{}) bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	if !f(r.ring.Value) {
+	if r.ring.Value != nil && !f(r.ring.Value.(internalRingItem).Value) {
 		return
 	}
 	for p := r.ring.Prev(); p != r.ring; p = p.Prev() {
-		if !f(p.Value) {
-			break
-		}
-	}
-}
-
-// LockIteratorNext iterates and locks writing forward
-// with given callback function <f> within RWMutex.RLock.
-// If <f> returns true, then it continues iterating; or false to stop.
-func (r *Ring) LockIteratorNext(f func(item *ring.Ring) bool) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	if !f(r.ring) {
-		return
-	}
-	for p := r.ring.Next(); p != r.ring; p = p.Next() {
-		if !f(p) {
-			break
-		}
-	}
-}
-
-// LockIteratorPrev iterates and locks writing backward
-// with given callback function <f> within RWMutex.RLock.
-// If <f> returns true, then it continues iterating; or false to stop.
-func (r *Ring) LockIteratorPrev(f func(item *ring.Ring) bool) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	if !f(r.ring) {
-		return
-	}
-	for p := r.ring.Prev(); p != r.ring; p = p.Prev() {
-		if !f(p) {
+		if p.Value == nil || !f(p.Value.(internalRingItem).Value) {
 			break
 		}
 	}
@@ -234,12 +214,13 @@ func (r *Ring) SliceNext() []interface{} {
 	s := make([]interface{}, 0)
 	r.mu.RLock()
 	if r.ring.Value != nil {
-		s = append(s, r.ring.Value)
+		s = append(s, r.ring.Value.(internalRingItem).Value)
 	}
 	for p := r.ring.Next(); p != r.ring; p = p.Next() {
-		if p.Value != nil {
-			s = append(s, p.Value)
+		if p.Value == nil {
+			break
 		}
+		s = append(s, p.Value.(internalRingItem).Value)
 	}
 	r.mu.RUnlock()
 	return s
@@ -250,12 +231,13 @@ func (r *Ring) SlicePrev() []interface{} {
 	s := make([]interface{}, 0)
 	r.mu.RLock()
 	if r.ring.Value != nil {
-		s = append(s, r.ring.Value)
+		s = append(s, r.ring.Value.(internalRingItem).Value)
 	}
 	for p := r.ring.Prev(); p != r.ring; p = p.Prev() {
-		if p.Value != nil {
-			s = append(s, p.Value)
+		if p.Value == nil {
+			break
 		}
+		s = append(s, p.Value.(internalRingItem).Value)
 	}
 	r.mu.RUnlock()
 	return s

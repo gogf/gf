@@ -8,26 +8,29 @@ package ghttp
 
 import (
 	"fmt"
-	"github.com/gogf/gf/text/gregex"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gpage"
+
+	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gpage"
 )
 
-// GetPage creates and returns the pagination object for given <totalSize> and <pageSize>.
-// NOTE THAT the page parameter name from client is constantly defined as gpage.PAGE_NAME
+// GetPage creates and returns the pagination object for given `totalSize` and `pageSize`.
+// NOTE THAT the page parameter name from client is constantly defined as gpage.DefaultPageName
 // for simplification and convenience.
 func (r *Request) GetPage(totalSize, pageSize int) *gpage.Page {
-	// It must has Router object attribute.
+	// It must have Router object attribute.
 	if r.Router == nil {
 		panic("Router object not found")
 	}
-	url := *r.URL
-	urlTemplate := url.Path
-	uriHasPageName := false
+	var (
+		url            = *r.URL
+		urlTemplate    = url.Path
+		uriHasPageName = false
+	)
 	// Check the page variable in the URI.
 	if len(r.Router.RegNames) > 0 {
 		for _, name := range r.Router.RegNames {
-			if name == gpage.PAGE_NAME {
+			if name == gpage.DefaultPageName {
 				uriHasPageName = true
 				break
 			}
@@ -38,20 +41,25 @@ func (r *Request) GetPage(totalSize, pageSize int) *gpage.Page {
 					urlTemplate = r.Router.Uri
 					for i, name := range r.Router.RegNames {
 						rule := fmt.Sprintf(`[:\*]%s|\{%s\}`, name, name)
-						if name == gpage.PAGE_NAME {
-							urlTemplate, _ = gregex.ReplaceString(rule, gpage.PAGE_PLACE_HOLDER, urlTemplate)
+						if name == gpage.DefaultPageName {
+							urlTemplate, err = gregex.ReplaceString(rule, gpage.DefaultPagePlaceHolder, urlTemplate)
 						} else {
-							urlTemplate, _ = gregex.ReplaceString(rule, match[i+1], urlTemplate)
+							urlTemplate, err = gregex.ReplaceString(rule, match[i+1], urlTemplate)
+						}
+						if err != nil {
+							panic(err)
 						}
 					}
 				}
+			} else {
+				panic(err)
 			}
 		}
 	}
 	// Check the page variable in the query string.
 	if !uriHasPageName {
 		values := url.Query()
-		values.Set(gpage.PAGE_NAME, gpage.PAGE_PLACE_HOLDER)
+		values.Set(gpage.DefaultPageName, gpage.DefaultPagePlaceHolder)
 		url.RawQuery = values.Encode()
 		// Replace the encoded "{.page}" to original "{.page}".
 		url.RawQuery = gstr.Replace(url.RawQuery, "%7B.page%7D", "{.page}")
@@ -60,5 +68,5 @@ func (r *Request) GetPage(totalSize, pageSize int) *gpage.Page {
 		urlTemplate += "?" + url.RawQuery
 	}
 
-	return gpage.New(totalSize, pageSize, r.GetInt(gpage.PAGE_NAME), urlTemplate)
+	return gpage.New(totalSize, pageSize, r.Get(gpage.DefaultPageName).Int(), urlTemplate)
 }
