@@ -468,7 +468,7 @@ func ExampleStrStrMap_LockFunc() {
 		}
 	})
 
-	// Output:
+	// May Output:
 	// key: k1  value: v1
 	// key: k2  value: v2
 	// key: k3  value: v3
@@ -490,7 +490,7 @@ func ExampleStrStrMap_RLockFunc() {
 		}
 	})
 
-	// Output:
+	// May Output:
 	// key: k1  value: v1
 	// key: k2  value: v2
 	// key: k3  value: v3
