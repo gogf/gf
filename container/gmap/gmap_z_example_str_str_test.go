@@ -176,9 +176,8 @@ func ExampleStrStrMap_Get() {
 	// key2 value:
 }
 
-/*
 func ExampleStrStrMap_Pop() {
-	var m gmap.Map
+	var m gmap.StrStrMap
 	m.Sets(g.MapStrStr{
 		"k1": "v1",
 		"k2": "v2",
@@ -193,7 +192,7 @@ func ExampleStrStrMap_Pop() {
 }
 
 func ExampleStrStrMap_Pops() {
-	var m gmap.Map
+	var m gmap.StrStrMap
 	m.Sets(g.MapStrStr{
 		"k1": "v1",
 		"k2": "v2",
@@ -263,64 +262,8 @@ func ExampleStrStrMap_GetOrSetFuncLock() {
 	// NotExistValue
 }
 
-func ExampleStrStrMap_GetVar() {
-	m := gmap.NewStrStrMap()
-	m.Set("key1", "val1")
-
-	fmt.Println(m.GetVar("key1"))
-	fmt.Println(m.GetVar("key2").IsNil())
-
-	// Output:
-	// val1
-	// true
-}
-
-func ExampleStrStrMap_GetVarOrSet() {
-	m := gmap.NewStrStrMap()
-	m.Set("key1", "val1")
-
-	fmt.Println(m.GetVarOrSet("key1", "NotExistValue"))
-	fmt.Println(m.GetVarOrSet("key2", "val2"))
-
-	// Output:
-	// val1
-	// val2
-}
-
-func ExampleStrStrMap_GetVarOrSetFunc() {
-	m := gmap.NewStrStrMap()
-	m.Set("key1", "val1")
-
-	fmt.Println(m.GetVarOrSetFunc("key1", func() string {
-		return "NotExistValue"
-	}))
-	fmt.Println(m.GetVarOrSetFunc("key2", func() string {
-		return "NotExistValue"
-	}))
-
-	// Output:
-	// val1
-	// NotExistValue
-}
-
-func ExampleStrStrMap_GetVarOrSetFuncLock() {
-	m := gmap.NewStrStrMap()
-	m.Set("key1", "val1")
-
-	fmt.Println(m.GetVarOrSetFuncLock("key1", func() string {
-		return "NotExistValue"
-	}))
-	fmt.Println(m.GetVarOrSetFuncLock("key2", func() string {
-		return "NotExistValue"
-	}))
-
-	// Output:
-	// val1
-	// NotExistValue
-}
-
 func ExampleStrStrMap_SetIfNotExist() {
-	var m gmap.Map
+	var m gmap.StrStrMap
 	fmt.Println(m.SetIfNotExist("k1", "v1"))
 	fmt.Println(m.SetIfNotExist("k1", "v1"))
 	fmt.Println(m.Map())
@@ -332,7 +275,7 @@ func ExampleStrStrMap_SetIfNotExist() {
 }
 
 func ExampleStrStrMap_SetIfNotExistFunc() {
-	var m gmap.Map
+	var m gmap.StrStrMap
 	fmt.Println(m.SetIfNotExistFunc("k1", func() string {
 		return "v1"
 	}))
@@ -348,7 +291,7 @@ func ExampleStrStrMap_SetIfNotExistFunc() {
 }
 
 func ExampleStrStrMap_SetIfNotExistFuncLock() {
-	var m gmap.Map
+	var m gmap.StrStrMap
 	fmt.Println(m.SetIfNotExistFuncLock("k1", func() string {
 		return "v1"
 	}))
@@ -364,19 +307,19 @@ func ExampleStrStrMap_SetIfNotExistFuncLock() {
 }
 
 func ExampleStrStrMap_Remove() {
-	var m gmap.Map
+	var m gmap.StrStrMap
 	m.Set("k1", "v1")
 
 	fmt.Println(m.Remove("k1"))
-	fmt.Println(m.Remove("k2"))
+	fmt.Println(len(m.Remove("k2")))
 
 	// Output:
 	// v1
-	// <nil>
+	// 0
 }
 
 func ExampleStrStrMap_Removes() {
-	var m gmap.Map
+	var m gmap.StrStrMap
 	m.Sets(g.MapStrStr{
 		"k1": "v1",
 		"k2": "v2",
@@ -397,7 +340,7 @@ func ExampleStrStrMap_Removes() {
 }
 
 func ExampleStrStrMap_Keys() {
-	var m gmap.Map
+	var m gmap.StrStrMap
 	m.Sets(g.MapStrStr{
 		"k1": "v1",
 		"k2": "v2",
@@ -411,7 +354,7 @@ func ExampleStrStrMap_Keys() {
 }
 
 func ExampleStrStrMap_Values() {
-	var m gmap.Map
+	var m gmap.StrStrMap
 	m.Sets(g.MapStrStr{
 		"k1": "v1",
 		"k2": "v2",
@@ -425,7 +368,7 @@ func ExampleStrStrMap_Values() {
 }
 
 func ExampleStrStrMap_Contains() {
-	var m gmap.Map
+	var m gmap.StrStrMap
 	m.Sets(g.MapStrStr{
 		"k1": "v1",
 		"k2": "v2",
@@ -442,7 +385,7 @@ func ExampleStrStrMap_Contains() {
 }
 
 func ExampleStrStrMap_Size() {
-	var m gmap.Map
+	var m gmap.StrStrMap
 	m.Sets(g.MapStrStr{
 		"k1": "v1",
 		"k2": "v2",
@@ -457,7 +400,7 @@ func ExampleStrStrMap_Size() {
 }
 
 func ExampleStrStrMap_IsEmpty() {
-	var m gmap.Map
+	var m gmap.StrStrMap
 	fmt.Println(m.IsEmpty())
 
 	m.Set("k1", "v1")
@@ -469,7 +412,7 @@ func ExampleStrStrMap_IsEmpty() {
 }
 
 func ExampleStrStrMap_Clear() {
-	var m gmap.Map
+	var m gmap.StrStrMap
 	m.Sets(g.MapStrStr{
 		"k1": "v1",
 		"k2": "v2",
@@ -486,12 +429,12 @@ func ExampleStrStrMap_Clear() {
 }
 
 func ExampleStrStrMap_Replace() {
-	var m gmap.Map
+	var m gmap.StrStrMap
 	m.Sets(g.MapStrStr{
 		"k1": "v1",
 	})
 
-	var n gmap.Map
+	var n gmap.StrStrMap
 	n.Sets(g.MapStrStr{
 		"k2": "v2",
 	})
@@ -511,49 +454,51 @@ func ExampleStrStrMap_Replace() {
 }
 
 func ExampleStrStrMap_LockFunc() {
-	var m gmap.Map
+	var m gmap.StrStrMap
 	m.Sets(g.MapStrStr{
-		"k1": 1,
-		"k2": 2,
-		"k3": 3,
-		"k4": 4,
+		"k1": "v1",
+		"k2": "v2",
+		"k3": "v3",
+		"k4": "v4",
 	})
 
 	m.LockFunc(func(m map[string]string) {
-		totalValue := 0
-		for _, v := range m {
-			totalValue += v.(int)
+		for k, v := range m {
+			fmt.Println("key:", k, " value:", v)
 		}
-		fmt.Println("totalValue:", totalValue)
 	})
 
 	// Output:
-	// totalValue: 10
+	// key: k1  value: v1
+	// key: k2  value: v2
+	// key: k3  value: v3
+	// key: k4  value: v4
 }
 
 func ExampleStrStrMap_RLockFunc() {
-	var m gmap.Map
+	var m gmap.StrStrMap
 	m.Sets(g.MapStrStr{
-		"k1": 1,
-		"k2": 2,
-		"k3": 3,
-		"k4": 4,
+		"k1": "v1",
+		"k2": "v2",
+		"k3": "v3",
+		"k4": "v4",
 	})
 
 	m.RLockFunc(func(m map[string]string) {
-		totalValue := 0
-		for _, v := range m {
-			totalValue += v.(int)
+		for k, v := range m {
+			fmt.Println("key:", k, " value:", v)
 		}
-		fmt.Println("totalValue:", totalValue)
 	})
 
 	// Output:
-	// totalValue: 10
+	// key: k1  value: v1
+	// key: k2  value: v2
+	// key: k3  value: v3
+	// key: k4  value: v4
 }
 
 func ExampleStrStrMap_Flip() {
-	var m gmap.Map
+	var m gmap.StrStrMap
 	m.Sets(g.MapStrStr{
 		"k1": "v1",
 	})
@@ -565,7 +510,7 @@ func ExampleStrStrMap_Flip() {
 }
 
 func ExampleStrStrMap_Merge() {
-	var m1, m2 gmap.Map
+	var m1, m2 gmap.StrStrMap
 	m1.Set("key1", "val1")
 	m2.Set("key2", "val2")
 	m1.Merge(&m2)
@@ -576,7 +521,7 @@ func ExampleStrStrMap_Merge() {
 }
 
 func ExampleStrStrMap_String() {
-	var m gmap.Map
+	var m gmap.StrStrMap
 	m.Sets(g.MapStrStr{
 		"k1": "v1",
 	})
@@ -588,7 +533,7 @@ func ExampleStrStrMap_String() {
 }
 
 func ExampleStrStrMap_MarshalJSON() {
-	var m gmap.Map
+	var m gmap.StrStrMap
 	m.Sets(g.MapStrStr{
 		"k1": "v1",
 		"k2": "v2",
@@ -606,7 +551,7 @@ func ExampleStrStrMap_MarshalJSON() {
 }
 
 func ExampleStrStrMap_UnmarshalJSON() {
-	var m gmap.Map
+	var m gmap.StrStrMap
 	m.Sets(g.MapStrStr{
 		"k1": "v1",
 		"k2": "v2",
@@ -614,7 +559,7 @@ func ExampleStrStrMap_UnmarshalJSON() {
 		"k4": "v4",
 	})
 
-	var n gmap.Map
+	var n gmap.StrStrMap
 
 	err := n.UnmarshalJSON(gconv.Bytes(m.String()))
 	if err == nil {
@@ -626,7 +571,7 @@ func ExampleStrStrMap_UnmarshalJSON() {
 }
 
 func ExampleStrStrMap_UnmarshalValue() {
-	var m gmap.Map
+	var m gmap.StrStrMap
 	m.Sets(g.MapStrStr{
 		"k1": "v1",
 		"k2": "v2",
@@ -634,7 +579,7 @@ func ExampleStrStrMap_UnmarshalValue() {
 		"k4": "v4",
 	})
 
-	var n gmap.Map
+	var n gmap.StrStrMap
 	err := n.UnmarshalValue(m.String())
 	if err == nil {
 		fmt.Println(n.Map())
@@ -642,4 +587,3 @@ func ExampleStrStrMap_UnmarshalValue() {
 	// Output:
 	// map[k1:v1 k2:v2 k3:v3 k4:v4]
 }
-*/
