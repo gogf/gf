@@ -9,8 +9,8 @@ package gutil_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/test/gtest"
-	"github.com/gogf/gf/util/gutil"
+	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 func Test_ComparatorString(t *testing.T) {
@@ -158,5 +158,22 @@ func Test_ComparatorTime(t *testing.T) {
 
 		l := gutil.ComparatorTime("2019-06-13", "2019-06-14")
 		t.Assert(l, -1)
+	})
+}
+
+func Test_ComparatorFloat32OfFixed(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gutil.ComparatorFloat32(0.1, 0.1), 0)
+		t.Assert(gutil.ComparatorFloat32(1.1, 2.1), -1)
+		t.Assert(gutil.ComparatorFloat32(2.1, 1.1), 1)
+	})
+}
+
+func Test_ComparatorFloat64OfFixed(t *testing.T) {
+
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gutil.ComparatorFloat64(0.1, 0.1), 0)
+		t.Assert(gutil.ComparatorFloat64(1.1, 2.1), -1)
+		t.Assert(gutil.ComparatorFloat64(2.1, 1.1), 1)
 	})
 }

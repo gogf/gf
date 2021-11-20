@@ -24,7 +24,7 @@ func fileDir(path string) string {
 	return filepath.Dir(path)
 }
 
-// fileRealPath converts the given <path> to its absolute path
+// fileRealPath converts the given `path` to its absolute path
 // and checks if the file path exists.
 // If the file does not exist, return an empty string.
 func fileRealPath(path string) string {
@@ -38,7 +38,7 @@ func fileRealPath(path string) string {
 	return p
 }
 
-// fileExists checks whether given <path> exist.
+// fileExists checks whether given `path` exist.
 func fileExists(path string) bool {
 	if stat, err := os.Stat(path); stat != nil && !os.IsNotExist(err) {
 		return true
@@ -46,7 +46,7 @@ func fileExists(path string) bool {
 	return false
 }
 
-// fileIsDir checks whether given <path> a directory.
+// fileIsDir checks whether given `path` a directory.
 func fileIsDir(path string) bool {
 	s, err := os.Stat(path)
 	if err != nil {
@@ -55,7 +55,7 @@ func fileIsDir(path string) bool {
 	return s.IsDir()
 }
 
-// fileAllDirs returns all sub-folders including itself of given <path> recursively.
+// fileAllDirs returns all sub-folders including itself of given `path` recursively.
 func fileAllDirs(path string) (list []string) {
 	list = []string{path}
 	file, err := os.Open(path)
@@ -78,8 +78,8 @@ func fileAllDirs(path string) (list []string) {
 	return
 }
 
-// fileScanDir returns all sub-files with absolute paths of given <path>,
-// It scans directory recursively if given parameter <recursive> is true.
+// fileScanDir returns all sub-files with absolute paths of given `path`,
+// It scans directory recursively if given parameter `recursive` is true.
 func fileScanDir(path string, pattern string, recursive ...bool) ([]string, error) {
 	list, err := doFileScanDir(path, pattern, recursive...)
 	if err != nil {
@@ -94,10 +94,10 @@ func fileScanDir(path string, pattern string, recursive ...bool) ([]string, erro
 // doFileScanDir is an internal method which scans directory
 // and returns the absolute path list of files that are not sorted.
 //
-// The pattern parameter <pattern> supports multiple file name patterns,
+// The pattern parameter `pattern` supports multiple file name patterns,
 // using the ',' symbol to separate multiple patterns.
 //
-// It scans directory recursively if given parameter <recursive> is true.
+// It scans directory recursively if given parameter `recursive` is true.
 func doFileScanDir(path string, pattern string, recursive ...bool) ([]string, error) {
 	list := ([]string)(nil)
 	file, err := os.Open(path)

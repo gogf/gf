@@ -8,16 +8,18 @@ package gtcp
 
 import (
 	"encoding/binary"
-	"fmt"
 	"time"
+
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
 const (
-	gPKG_HEADER_SIZE_DEFAULT = 2 // Header size for simple package protocol.
-	gPKG_HEADER_SIZE_MAX     = 4 // Max header size for simple package protocol.
+	pkgHeaderSizeDefault = 2 // Header size for simple package protocol.
+	pkgHeaderSizeMax     = 4 // Max header size for simple package protocol.
 )
 
-// Package option for simple protocol.
+// PkgOption is package option for simple protocol.
 type PkgOption struct {
 	// HeaderSize is used to mark the data length for next data receiving.
 	// It's 2 bytes in default, 4 bytes max, which stands for the max data length
@@ -46,15 +48,16 @@ func (c *Conn) SendPkg(data []byte, option ...PkgOption) error {
 	}
 	length := len(data)
 	if length > pkgOption.MaxDataSize {
-		return fmt.Errorf(
+		return gerror.NewCodef(
+			gcode.CodeInvalidParameter,
 			`data too long, data size %d exceeds allowed max data size %d`,
 			length, pkgOption.MaxDataSize,
 		)
 	}
-	offset := gPKG_HEADER_SIZE_MAX - pkgOption.HeaderSize
-	buffer := make([]byte, gPKG_HEADER_SIZE_MAX+len(data))
+	offset := pkgHeaderSizeMax - pkgOption.HeaderSize
+	buffer := make([]byte, pkgHeaderSizeMax+len(data))
 	binary.BigEndian.PutUint32(buffer[0:], uint32(length))
-	copy(buffer[gPKG_HEADER_SIZE_MAX:], data)
+	copy(buffer[pkgHeaderSizeMax:], data)
 	if pkgOption.Retry.Count > 0 {
 		return c.Send(buffer[offset:], pkgOption.Retry)
 	}
@@ -116,7 +119,7 @@ func (c *Conn) RecvPkg(option ...PkgOption) (result []byte, err error) {
 	// It here validates the size of the package.
 	// It clears the buffer and returns error immediately if it validates failed.
 	if length < 0 || length > pkgOption.MaxDataSize {
-		return nil, fmt.Errorf(`invalid package size %d`, length)
+		return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid package size %d`, length)
 	}
 	// Empty package.
 	if length == 0 {
@@ -128,10 +131,10 @@ func (c *Conn) RecvPkg(option ...PkgOption) (result []byte, err error) {
 
 // RecvPkgWithTimeout reads data from connection with timeout using simple package protocol.
 func (c *Conn) RecvPkgWithTimeout(timeout time.Duration, option ...PkgOption) (data []byte, err error) {
-	if err := c.SetRecvDeadline(time.Now().Add(timeout)); err != nil {
+	if err := c.SetreceiveDeadline(time.Now().Add(timeout)); err != nil {
 		return nil, err
 	}
-	defer c.SetRecvDeadline(time.Time{})
+	defer c.SetreceiveDeadline(time.Time{})
 	data, err = c.RecvPkg(option...)
 	return
 }
@@ -144,12 +147,13 @@ func getPkgOption(option ...PkgOption) (*PkgOption, error) {
 		pkgOption = option[0]
 	}
 	if pkgOption.HeaderSize == 0 {
-		pkgOption.HeaderSize = gPKG_HEADER_SIZE_DEFAULT
+		pkgOption.HeaderSize = pkgHeaderSizeDefault
 	}
-	if pkgOption.HeaderSize > gPKG_HEADER_SIZE_MAX {
-		return nil, fmt.Errorf(
+	if pkgOption.HeaderSize > pkgHeaderSizeMax {
+		return nil, gerror.NewCodef(
+			gcode.CodeInvalidParameter,
 			`package header size %d definition exceeds max header size %d`,
-			pkgOption.HeaderSize, gPKG_HEADER_SIZE_MAX,
+			pkgOption.HeaderSize, pkgHeaderSizeMax,
 		)
 	}
 	if pkgOption.MaxDataSize == 0 {
@@ -166,7 +170,8 @@ func getPkgOption(option ...PkgOption) (*PkgOption, error) {
 		}
 	}
 	if pkgOption.MaxDataSize > 0x7FFFFFFF {
-		return nil, fmt.Errorf(
+		return nil, gerror.NewCodef(
+			gcode.CodeInvalidParameter,
 			`package data size %d definition exceeds allowed max data size %d`,
 			pkgOption.MaxDataSize, 0x7FFFFFFF,
 		)

@@ -9,8 +9,8 @@ package gconv
 import (
 	"time"
 
-	"github.com/gogf/gf/internal/utils"
-	"github.com/gogf/gf/os/gtime"
+	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/os/gtime"
 )
 
 // Time converts `any` to time.Time.
@@ -51,10 +51,19 @@ func GTime(any interface{}, format ...string) *gtime.Time {
 	if any == nil {
 		return nil
 	}
+	if v, ok := any.(iGTime); ok {
+		return v.GTime(format...)
+	}
 	// It's already this type.
 	if len(format) == 0 {
 		if v, ok := any.(*gtime.Time); ok {
 			return v
+		}
+		if t, ok := any.(time.Time); ok {
+			return gtime.New(t)
+		}
+		if t, ok := any.(*time.Time); ok {
+			return gtime.New(t)
 		}
 	}
 	s := String(any)

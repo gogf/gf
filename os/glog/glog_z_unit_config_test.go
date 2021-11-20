@@ -8,9 +8,10 @@ package glog
 
 import (
 	"bytes"
-	"github.com/gogf/gf/test/gtest"
 	"strings"
 	"testing"
+
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_SetConfigWithMap(t *testing.T) {
@@ -42,8 +43,8 @@ func Test_SetConfigWithMap_LevelStr(t *testing.T) {
 
 		l.SetWriter(buffer)
 
-		l.Debug("test")
-		l.Warning("test")
+		l.Debug(ctx, "test")
+		l.Warning(ctx, "test")
 		t.Assert(strings.Contains(buffer.String(), "DEBU"), true)
 		t.Assert(strings.Contains(buffer.String(), "WARN"), true)
 	})
@@ -57,8 +58,8 @@ func Test_SetConfigWithMap_LevelStr(t *testing.T) {
 		err := l.SetConfigWithMap(m)
 		t.Assert(err, nil)
 		l.SetWriter(buffer)
-		l.Debug("test")
-		l.Warning("test")
+		l.Debug(ctx, "test")
+		l.Warning(ctx, "test")
 		t.Assert(strings.Contains(buffer.String(), "DEBU"), false)
 		t.Assert(strings.Contains(buffer.String(), "WARN"), true)
 	})

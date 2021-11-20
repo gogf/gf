@@ -7,24 +7,39 @@
 package gdb
 
 import (
-	"fmt"
 	"time"
 
-	"github.com/gogf/gf/container/gset"
-	"github.com/gogf/gf/internal/empty"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/text/gregex"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
-	"github.com/gogf/gf/util/gutil"
+	"github.com/gogf/gf/v2/container/gset"
+	"github.com/gogf/gf/v2/internal/empty"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gutil"
 )
+
+// QuoteWord checks given string `s` a word,
+// if true it quotes `s` with security chars of the database
+// and returns the quoted string; or else it returns `s` without any change.
+//
+// The meaning of a `word` can be considered as a column name.
+func (m *Model) QuoteWord(s string) string {
+	return m.db.GetCore().QuoteWord(s)
+}
 
 // TableFields retrieves and returns the fields information of specified table of current
 // schema.
 //
 // Also see DriverMysql.TableFields.
-func (m *Model) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
-	return m.db.TableFields(m.GetCtx(), m.getLink(false), table, schema...)
+func (m *Model) TableFields(tableStr string, schema ...string) (fields map[string]*TableField, err error) {
+	useSchema := m.schema
+	if len(schema) > 0 && schema[0] != "" {
+		useSchema = schema[0]
+	}
+	return m.db.TableFields(
+		m.GetCtx(),
+		m.db.GetCore().guessPrimaryTableName(tableStr),
+		useSchema,
+	)
 }
 
 // getModel creates and returns a cloned model of current model if `safe` is true, or else it returns
@@ -40,9 +55,9 @@ func (m *Model) getModel() *Model {
 // mappingAndFilterToTableFields mappings and changes given field name to really table field name.
 // Eg:
 // ID        -> id
-// NICK_Name -> nickname
+// NICK_Name -> nickname.
 func (m *Model) mappingAndFilterToTableFields(fields []string, filter bool) []string {
-	fieldsMap, err := m.TableFields(m.tables)
+	fieldsMap, err := m.TableFields(m.tablesInit)
 	if err != nil || len(fieldsMap) == 0 {
 		return fields
 	}
@@ -51,7 +66,7 @@ func (m *Model) mappingAndFilterToTableFields(fields []string, filter bool) []st
 		outputFieldsArray = make([]string, 0, len(inputFieldsArray))
 	)
 	fieldsKeyMap := make(map[string]interface{}, len(fieldsMap))
-	for k, _ := range fieldsMap {
+	for k := range fieldsMap {
 		fieldsKeyMap[k] = nil
 	}
 	for _, field := range inputFieldsArray {
@@ -81,8 +96,12 @@ func (m *Model) filterDataForInsertOrUpdate(data interface{}) (interface{}, erro
 	var err error
 	switch value := data.(type) {
 	case List:
+		var omitEmpty bool
+		if m.option&optionOmitNilDataList > 0 {
+			omitEmpty = true
+		}
 		for k, item := range value {
-			value[k], err = m.doMappingAndFilterForInsertOrUpdateDataMap(item, false)
+			value[k], err = m.doMappingAndFilterForInsertOrUpdateDataMap(item, omitEmpty)
 			if err != nil {
 				return nil, err
 			}
@@ -101,12 +120,26 @@ func (m *Model) filterDataForInsertOrUpdate(data interface{}) (interface{}, erro
 // Note that, it does not filter list item, which is also type of map, for "omit empty" feature.
 func (m *Model) doMappingAndFilterForInsertOrUpdateDataMap(data Map, allowOmitEmpty bool) (Map, error) {
 	var err error
-	data, err = m.db.GetCore().mappingAndFilterData(m.schema, m.tables, data, m.filter)
+	data, err = m.db.GetCore().mappingAndFilterData(
+		m.schema, m.tablesInit, data, m.filter,
+	)
 	if err != nil {
 		return nil, err
 	}
+	// Remove key-value pairs of which the value is nil.
+	if allowOmitEmpty && m.option&optionOmitNilData > 0 {
+		tempMap := make(Map, len(data))
+		for k, v := range data {
+			if empty.IsNil(v) {
+				continue
+			}
+			tempMap[k] = v
+		}
+		data = tempMap
+	}
+
 	// Remove key-value pairs of which the value is empty.
-	if allowOmitEmpty && m.option&OptionOmitEmpty > 0 {
+	if allowOmitEmpty && m.option&optionOmitEmptyData > 0 {
 		tempMap := make(Map, len(data))
 		for k, v := range data {
 			if empty.IsEmpty(v) {
@@ -196,7 +229,7 @@ func (m *Model) getLink(master bool) Link {
 // It parses m.tables to retrieve the primary table name, supporting m.tables like:
 // "user", "user u", "user as u, user_detail as ud".
 func (m *Model) getPrimaryKey() string {
-	table := gstr.SplitAndTrim(m.tables, " ")[0]
+	table := gstr.SplitAndTrim(m.tablesInit, " ")[0]
 	tableFields, err := m.TableFields(table)
 	if err != nil {
 		return ""
@@ -209,114 +242,7 @@ func (m *Model) getPrimaryKey() string {
 	return ""
 }
 
-// formatCondition formats where arguments of the model and returns a new condition sql and its arguments.
-// Note that this function does not change any attribute value of the `m`.
-//
-// The parameter `limit1` specifies whether limits querying only one record if m.limit is not set.
-func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWhere string, conditionExtra string, conditionArgs []interface{}) {
-	if len(m.whereHolder) > 0 {
-		for _, v := range m.whereHolder {
-			switch v.operator {
-			case whereHolderWhere:
-				if conditionWhere == "" {
-					newWhere, newArgs := formatWhere(
-						m.db, v.where, v.args, m.option&OptionOmitEmpty > 0,
-					)
-					if len(newWhere) > 0 {
-						conditionWhere = newWhere
-						conditionArgs = newArgs
-					}
-					continue
-				}
-				fallthrough
-
-			case whereHolderAnd:
-				newWhere, newArgs := formatWhere(
-					m.db, v.where, v.args, m.option&OptionOmitEmpty > 0,
-				)
-				if len(newWhere) > 0 {
-					if len(conditionWhere) == 0 {
-						conditionWhere = newWhere
-					} else if conditionWhere[0] == '(' {
-						conditionWhere = fmt.Sprintf(`%s AND (%s)`, conditionWhere, newWhere)
-					} else {
-						conditionWhere = fmt.Sprintf(`(%s) AND (%s)`, conditionWhere, newWhere)
-					}
-					conditionArgs = append(conditionArgs, newArgs...)
-				}
-
-			case whereHolderOr:
-				newWhere, newArgs := formatWhere(
-					m.db, v.where, v.args, m.option&OptionOmitEmpty > 0,
-				)
-				if len(newWhere) > 0 {
-					if len(conditionWhere) == 0 {
-						conditionWhere = newWhere
-					} else if conditionWhere[0] == '(' {
-						conditionWhere = fmt.Sprintf(`%s OR (%s)`, conditionWhere, newWhere)
-					} else {
-						conditionWhere = fmt.Sprintf(`(%s) OR (%s)`, conditionWhere, newWhere)
-					}
-					conditionArgs = append(conditionArgs, newArgs...)
-				}
-			}
-		}
-	}
-	// Soft deletion.
-	softDeletingCondition := m.getConditionForSoftDeleting()
-	if !m.unscoped && softDeletingCondition != "" {
-		if conditionWhere == "" {
-			conditionWhere = fmt.Sprintf(` WHERE %s`, softDeletingCondition)
-		} else {
-			conditionWhere = fmt.Sprintf(` WHERE (%s) AND %s`, conditionWhere, softDeletingCondition)
-		}
-	} else {
-		if conditionWhere != "" {
-			conditionWhere = " WHERE " + conditionWhere
-		}
-	}
-	// GROUP BY.
-	if m.groupBy != "" {
-		conditionExtra += " GROUP BY " + m.groupBy
-	}
-	// HAVING.
-	if len(m.having) > 0 {
-		havingStr, havingArgs := formatWhere(
-			m.db, m.having[0], gconv.Interfaces(m.having[1]), m.option&OptionOmitEmpty > 0,
-		)
-		if len(havingStr) > 0 {
-			conditionExtra += " HAVING " + havingStr
-			conditionArgs = append(conditionArgs, havingArgs...)
-		}
-	}
-	// ORDER BY.
-	if m.orderBy != "" {
-		conditionExtra += " ORDER BY " + m.orderBy
-	}
-	// LIMIT.
-	if !isCountStatement {
-		if m.limit != 0 {
-			if m.start >= 0 {
-				conditionExtra += fmt.Sprintf(" LIMIT %d,%d", m.start, m.limit)
-			} else {
-				conditionExtra += fmt.Sprintf(" LIMIT %d", m.limit)
-			}
-		} else if limit1 {
-			conditionExtra += " LIMIT 1"
-		}
-
-		if m.offset >= 0 {
-			conditionExtra += fmt.Sprintf(" OFFSET %d", m.offset)
-		}
-	}
-
-	if m.lockInfo != "" {
-		conditionExtra += " " + m.lockInfo
-	}
-	return
-}
-
-// mergeArguments creates and returns new arguments by merging <m.extraArgs> and given `args`.
+// mergeArguments creates and returns new arguments by merging `m.extraArgs` and given `args`.
 func (m *Model) mergeArguments(args []interface{}) []interface{} {
 	if len(m.extraArgs) > 0 {
 		newArgs := make([]interface{}, len(m.extraArgs)+len(args))

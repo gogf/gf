@@ -7,20 +7,24 @@
 package ghttp
 
 import (
-	"errors"
-	"github.com/gogf/gf/internal/intlog"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/util/grand"
+	"context"
 	"io"
 	"mime/multipart"
 	"strconv"
 	"strings"
+
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/util/grand"
 )
 
 // UploadFile wraps the multipart uploading file with more and convenient features.
 type UploadFile struct {
 	*multipart.FileHeader
+	ctx context.Context
 }
 
 // UploadFiles is array type for *UploadFile.
@@ -28,19 +32,22 @@ type UploadFiles []*UploadFile
 
 // Save saves the single uploading file to directory path and returns the saved file name.
 //
-// The parameter <dirPath> should be a directory path or it returns error.
+// The parameter `dirPath` should be a directory path or it returns error.
 //
 // Note that it will OVERWRITE the target file if there's already a same name file exist.
 func (f *UploadFile) Save(dirPath string, randomlyRename ...bool) (filename string, err error) {
 	if f == nil {
-		return "", errors.New("file is empty, maybe you retrieve it from invalid field name or form enctype")
+		return "", gerror.NewCode(
+			gcode.CodeMissingParameter,
+			"file is empty, maybe you retrieve it from invalid field name or form enctype",
+		)
 	}
 	if !gfile.Exists(dirPath) {
 		if err = gfile.Mkdir(dirPath); err != nil {
 			return
 		}
 	} else if !gfile.IsDir(dirPath) {
-		return "", errors.New(`parameter "dirPath" should be a directory path`)
+		return "", gerror.NewCode(gcode.CodeInvalidParameter, `parameter "dirPath" should be a directory path`)
 	}
 
 	file, err := f.Open()
@@ -60,7 +67,7 @@ func (f *UploadFile) Save(dirPath string, randomlyRename ...bool) (filename stri
 		return "", err
 	}
 	defer newFile.Close()
-	intlog.Printf(`save upload file: %s`, filePath)
+	intlog.Printf(f.ctx, `save upload file: %s`, filePath)
 	if _, err := io.Copy(newFile, file); err != nil {
 		return "", err
 	}
@@ -69,12 +76,15 @@ func (f *UploadFile) Save(dirPath string, randomlyRename ...bool) (filename stri
 
 // Save saves all uploading files to specified directory path and returns the saved file names.
 //
-// The parameter <dirPath> should be a directory path or it returns error.
+// The parameter `dirPath` should be a directory path or it returns error.
 //
-// The parameter <randomlyRename> specifies whether randomly renames all the file names.
+// The parameter `randomlyRename` specifies whether randomly renames all the file names.
 func (fs UploadFiles) Save(dirPath string, randomlyRename ...bool) (filenames []string, err error) {
 	if len(fs) == 0 {
-		return nil, errors.New("file array is empty, maybe you retrieve it from invalid field name or form enctype")
+		return nil, gerror.NewCode(
+			gcode.CodeMissingParameter,
+			"file array is empty, maybe you retrieve it from invalid field name or form enctype",
+		)
 	}
 	for _, f := range fs {
 		if filename, err := f.Save(dirPath, randomlyRename...); err != nil {
@@ -92,7 +102,7 @@ func (fs UploadFiles) Save(dirPath string, randomlyRename ...bool) (filenames []
 //
 // It returns nil if retrieving failed or no form file with given name posted.
 //
-// Note that the <name> is the file field name of the multipart form from client.
+// Note that the `name` is the file field name of the multipart form from client.
 func (r *Request) GetUploadFile(name string) *UploadFile {
 	uploadFiles := r.GetUploadFiles(name)
 	if len(uploadFiles) > 0 {
@@ -107,13 +117,14 @@ func (r *Request) GetUploadFile(name string) *UploadFile {
 //
 // It returns nil if retrieving failed or no form file with given name posted.
 //
-// Note that the <name> is the file field name of the multipart form from client.
+// Note that the `name` is the file field name of the multipart form from client.
 func (r *Request) GetUploadFiles(name string) UploadFiles {
 	multipartFiles := r.GetMultipartFiles(name)
 	if len(multipartFiles) > 0 {
 		uploadFiles := make(UploadFiles, len(multipartFiles))
 		for k, v := range multipartFiles {
 			uploadFiles[k] = &UploadFile{
+				ctx:        r.Context(),
 				FileHeader: v,
 			}
 		}

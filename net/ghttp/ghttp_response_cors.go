@@ -8,10 +8,11 @@
 package ghttp
 
 import (
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
 	"net/http"
 	"net/url"
+
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // CORSOptions is the options for CORS feature.
@@ -105,7 +106,7 @@ func (r *Response) CORS(options CORSOptions) {
 	}
 }
 
-// CORSAllowed checks whether the current request origin is allowed cross-domain.
+// CORSAllowedOrigin CORSAllowed checks whether the current request origin is allowed cross-domain.
 func (r *Response) CORSAllowedOrigin(options CORSOptions) bool {
 	if options.AllowDomain == nil {
 		return true

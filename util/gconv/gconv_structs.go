@@ -7,18 +7,17 @@
 package gconv
 
 import (
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/json"
 	"reflect"
+
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/json"
 )
 
 // Structs converts any slice to given struct slice.
+// Also see Scan, Struct.
 func Structs(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
-	var keyToAttributeNameMapping map[string]string
-	if len(mapping) > 0 {
-		keyToAttributeNameMapping = mapping[0]
-	}
-	return doStructs(params, pointer, keyToAttributeNameMapping, "")
+	return Scan(params, pointer, mapping...)
 }
 
 // StructsTag acts as Structs but also with support for priority tag feature, which retrieves the
@@ -26,16 +25,6 @@ func Structs(params interface{}, pointer interface{}, mapping ...map[string]stri
 // The parameter `priorityTag` supports multiple tags that can be joined with char ','.
 func StructsTag(params interface{}, pointer interface{}, priorityTag string) (err error) {
 	return doStructs(params, pointer, nil, priorityTag)
-}
-
-// StructsDeep converts any slice to given struct slice recursively.
-// Deprecated, use Structs instead.
-func StructsDeep(params interface{}, pointer interface{}, mapping ...map[string]string) (err error) {
-	var keyToAttributeNameMapping map[string]string
-	if len(mapping) > 0 {
-		keyToAttributeNameMapping = mapping[0]
-	}
-	return doStructs(params, pointer, keyToAttributeNameMapping, "")
 }
 
 // doStructs converts any slice to given struct slice.
@@ -51,7 +40,7 @@ func doStructs(params interface{}, pointer interface{}, mapping map[string]strin
 		return nil
 	}
 	if pointer == nil {
-		return gerror.New("object pointer cannot be nil")
+		return gerror.NewCode(gcode.CodeInvalidParameter, "object pointer cannot be nil")
 	}
 
 	if doStructsByDirectReflectSet(params, pointer) {
@@ -61,10 +50,10 @@ func doStructs(params interface{}, pointer interface{}, mapping map[string]strin
 	defer func() {
 		// Catch the panic, especially the reflect operation panics.
 		if exception := recover(); exception != nil {
-			if e, ok := exception.(errorStack); ok {
-				err = e
+			if v, ok := exception.(error); ok && gerror.HasStack(v) {
+				err = v
 			} else {
-				err = gerror.NewSkipf(1, "%v", exception)
+				err = gerror.NewCodeSkipf(gcode.CodeInternalError, 1, "%+v", exception)
 			}
 		}
 	}()
@@ -96,17 +85,38 @@ func doStructs(params interface{}, pointer interface{}, mapping map[string]strin
 	if !ok {
 		pointerRv = reflect.ValueOf(pointer)
 		if kind := pointerRv.Kind(); kind != reflect.Ptr {
-			return gerror.Newf("pointer should be type of pointer, but got: %v", kind)
+			return gerror.NewCodef(gcode.CodeInvalidParameter, "pointer should be type of pointer, but got: %v", kind)
 		}
 	}
 	// Converting `params` to map slice.
-	paramsMaps := Maps(params)
+	var (
+		paramsList []interface{}
+		paramsRv   = reflect.ValueOf(params)
+		paramsKind = paramsRv.Kind()
+	)
+	for paramsKind == reflect.Ptr {
+		paramsRv = paramsRv.Elem()
+		paramsKind = paramsRv.Kind()
+	}
+	switch paramsKind {
+	case reflect.Slice, reflect.Array:
+		paramsList = make([]interface{}, paramsRv.Len())
+		for i := 0; i < paramsRv.Len(); i++ {
+			paramsList[i] = paramsRv.Index(i)
+		}
+	default:
+		var paramsMaps = Maps(params)
+		paramsList = make([]interface{}, len(paramsMaps))
+		for i := 0; i < len(paramsMaps); i++ {
+			paramsList[i] = paramsMaps[i]
+		}
+	}
 	// If `params` is an empty slice, no conversion.
-	if len(paramsMaps) == 0 {
+	if len(paramsList) == 0 {
 		return nil
 	}
 	var (
-		reflectElemArray = reflect.MakeSlice(pointerRv.Type().Elem(), len(paramsMaps), len(paramsMaps))
+		reflectElemArray = reflect.MakeSlice(pointerRv.Type().Elem(), len(paramsList), len(paramsList))
 		itemType         = reflectElemArray.Index(0).Type()
 		itemTypeKind     = itemType.Kind()
 		pointerRvElem    = pointerRv.Elem()
@@ -114,7 +124,7 @@ func doStructs(params interface{}, pointer interface{}, mapping map[string]strin
 	)
 	if itemTypeKind == reflect.Ptr {
 		// Pointer element.
-		for i := 0; i < len(paramsMaps); i++ {
+		for i := 0; i < len(paramsList); i++ {
 			var tempReflectValue reflect.Value
 			if i < pointerRvLength {
 				// Might be nil.
@@ -123,21 +133,21 @@ func doStructs(params interface{}, pointer interface{}, mapping map[string]strin
 			if !tempReflectValue.IsValid() {
 				tempReflectValue = reflect.New(itemType.Elem()).Elem()
 			}
-			if err = doStruct(paramsMaps[i], tempReflectValue, mapping, priorityTag); err != nil {
+			if err = doStruct(paramsList[i], tempReflectValue, mapping, priorityTag); err != nil {
 				return err
 			}
 			reflectElemArray.Index(i).Set(tempReflectValue.Addr())
 		}
 	} else {
 		// Struct element.
-		for i := 0; i < len(paramsMaps); i++ {
+		for i := 0; i < len(paramsList); i++ {
 			var tempReflectValue reflect.Value
 			if i < pointerRvLength {
 				tempReflectValue = pointerRvElem.Index(i)
 			} else {
 				tempReflectValue = reflect.New(itemType).Elem()
 			}
-			if err = doStruct(paramsMaps[i], tempReflectValue, mapping, priorityTag); err != nil {
+			if err = doStruct(paramsList[i], tempReflectValue, mapping, priorityTag); err != nil {
 				return err
 			}
 			reflectElemArray.Index(i).Set(tempReflectValue)

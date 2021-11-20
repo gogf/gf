@@ -8,7 +8,8 @@ package gjson_test
 
 import (
 	"fmt"
-	"github.com/gogf/gf/encoding/gjson"
+
+	"github.com/gogf/gf/v2/encoding/gjson"
 )
 
 func Example_patternGet() {
@@ -25,7 +26,7 @@ func Example_patternGet() {
 	if j, err := gjson.DecodeToJson(data); err != nil {
 		panic(err)
 	} else {
-		fmt.Println("John Score:", j.GetFloat32("users.list.1.score"))
+		fmt.Println("John Score:", j.Get("users.list.1.score").Float32())
 	}
 	// Output:
 	// John Score: 99.5
@@ -46,7 +47,7 @@ func Example_patternCustomSplitChar() {
 		panic(err)
 	} else {
 		j.SetSplitChar('#')
-		fmt.Println("John Score:", j.GetFloat32("users#list#1#score"))
+		fmt.Println("John Score:", j.Get("users#list#1#score").Float32())
 	}
 	// Output:
 	// John Score: 99.5
@@ -64,7 +65,7 @@ func Example_patternViolenceCheck() {
 		panic(err)
 	} else {
 		j.SetViolenceCheck(true)
-		fmt.Println("Users Count:", j.GetInt("users.count"))
+		fmt.Println("Users Count:", j.Get("users.count").Int())
 	}
 	// Output:
 	// Users Count: 101
@@ -73,23 +74,23 @@ func Example_patternViolenceCheck() {
 func Example_mapSliceChange() {
 	jsonContent := `{"map":{"key":"value"}, "slice":[59,90]}`
 	j, _ := gjson.LoadJson(jsonContent)
-	m := j.GetMap("map")
+	m := j.Get("map").Map()
 	fmt.Println(m)
 
 	// Change the key-value pair.
 	m["key"] = "john"
 
 	// It changes the underlying key-value pair.
-	fmt.Println(j.GetMap("map"))
+	fmt.Println(j.Get("map").Map())
 
-	s := j.GetArray("slice")
+	s := j.Get("slice").Array()
 	fmt.Println(s)
 
 	// Change the value of specified index.
 	s[0] = 100
 
 	// It changes the underlying slice.
-	fmt.Println(j.GetArray("slice"))
+	fmt.Println(j.Get("slice").Array())
 
 	// output:
 	// map[key:value]

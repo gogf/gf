@@ -11,9 +11,9 @@ package gstr_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/test/gtest"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 func Test_Replace(t *testing.T) {
@@ -273,10 +273,10 @@ func Test_WordWrap(t *testing.T) {
 	})
 }
 
-func Test_RuneLen(t *testing.T) {
+func Test_LenRune(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		t.Assert(gstr.RuneLen("1234"), 4)
-		t.Assert(gstr.RuneLen("我爱GoFrame"), 9)
+		t.Assert(gstr.LenRune("1234"), 4)
+		t.Assert(gstr.LenRune("我爱GoFrame"), 9)
 	})
 }
 
@@ -466,22 +466,38 @@ func Test_ContainsAny(t *testing.T) {
 	})
 }
 
-func Test_SearchArray(t *testing.T) {
+func Test_SubStrFrom(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		a := g.SliceStr{"a", "b", "c"}
-		t.AssertEQ(gstr.SearchArray(a, "a"), 0)
-		t.AssertEQ(gstr.SearchArray(a, "b"), 1)
-		t.AssertEQ(gstr.SearchArray(a, "c"), 2)
-		t.AssertEQ(gstr.SearchArray(a, "d"), -1)
+		t.Assert(gstr.SubStrFrom("我爱GoFrameGood", `G`), "GoFrameGood")
+		t.Assert(gstr.SubStrFrom("我爱GoFrameGood", `GG`), "")
+		t.Assert(gstr.SubStrFrom("我爱GoFrameGood", `我`), "我爱GoFrameGood")
+		t.Assert(gstr.SubStrFrom("我爱GoFrameGood", `Frame`), "FrameGood")
 	})
 }
 
-func Test_InArray(t *testing.T) {
+func Test_SubStrFromEx(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		a := g.SliceStr{"a", "b", "c"}
-		t.AssertEQ(gstr.InArray(a, "a"), true)
-		t.AssertEQ(gstr.InArray(a, "b"), true)
-		t.AssertEQ(gstr.InArray(a, "c"), true)
-		t.AssertEQ(gstr.InArray(a, "d"), false)
+		t.Assert(gstr.SubStrFromEx("我爱GoFrameGood", `Go`), "FrameGood")
+		t.Assert(gstr.SubStrFromEx("我爱GoFrameGood", `GG`), "")
+		t.Assert(gstr.SubStrFromEx("我爱GoFrameGood", `我`), "爱GoFrameGood")
+		t.Assert(gstr.SubStrFromEx("我爱GoFrameGood", `Frame`), `Good`)
+	})
+}
+
+func Test_SubStrFromR(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.SubStrFromR("我爱GoFrameGood", `G`), "Good")
+		t.Assert(gstr.SubStrFromR("我爱GoFrameGood", `GG`), "")
+		t.Assert(gstr.SubStrFromR("我爱GoFrameGood", `我`), "我爱GoFrameGood")
+		t.Assert(gstr.SubStrFromR("我爱GoFrameGood", `Frame`), "FrameGood")
+	})
+}
+
+func Test_SubStrFromREx(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		t.Assert(gstr.SubStrFromREx("我爱GoFrameGood", `G`), "ood")
+		t.Assert(gstr.SubStrFromREx("我爱GoFrameGood", `GG`), "")
+		t.Assert(gstr.SubStrFromREx("我爱GoFrameGood", `我`), "爱GoFrameGood")
+		t.Assert(gstr.SubStrFromREx("我爱GoFrameGood", `Frame`), `Good`)
 	})
 }

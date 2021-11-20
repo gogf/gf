@@ -15,18 +15,18 @@ import (
 	"time"
 )
 
-// TCP connection object.
+// Conn is the TCP connection object.
 type Conn struct {
-	net.Conn                     // Underlying TCP connection object.
-	reader         *bufio.Reader // Buffer reader for connection.
-	recvDeadline   time.Time     // Timeout point for reading.
-	sendDeadline   time.Time     // Timeout point for writing.
-	recvBufferWait time.Duration // Interval duration for reading buffer.
+	net.Conn                        // Underlying TCP connection object.
+	reader            *bufio.Reader // Buffer reader for connection.
+	receiveDeadline   time.Time     // Timeout point for reading.
+	sendDeadline      time.Time     // Timeout point for writing.
+	receiveBufferWait time.Duration // Interval duration for reading buffer.
 }
 
 const (
 	// Default interval for reading buffer.
-	gRECV_ALL_WAIT_TIMEOUT = time.Millisecond
+	receiveAllWaitTimeout = time.Millisecond
 )
 
 // NewConn creates and returns a new connection with given address.
@@ -61,11 +61,11 @@ func NewConnKeyCrt(addr, crtFile, keyFile string) (*Conn, error) {
 // NewConnByNetConn creates and returns a TCP connection object with given net.Conn object.
 func NewConnByNetConn(conn net.Conn) *Conn {
 	return &Conn{
-		Conn:           conn,
-		reader:         bufio.NewReader(conn),
-		recvDeadline:   time.Time{},
-		sendDeadline:   time.Time{},
-		recvBufferWait: gRECV_ALL_WAIT_TIMEOUT,
+		Conn:              conn,
+		reader:            bufio.NewReader(conn),
+		receiveDeadline:   time.Time{},
+		sendDeadline:      time.Time{},
+		receiveBufferWait: receiveAllWaitTimeout,
 	}
 }
 
@@ -84,7 +84,7 @@ func (c *Conn) Send(data []byte, retry ...Retry) error {
 			if len(retry) > 0 {
 				retry[0].Count--
 				if retry[0].Interval == 0 {
-					retry[0].Interval = gDEFAULT_RETRY_INTERVAL
+					retry[0].Interval = defaultRetryInternal
 				}
 				time.Sleep(retry[0].Interval)
 			}
@@ -113,13 +113,13 @@ func (c *Conn) Recv(length int, retry ...Retry) ([]byte, error) {
 	if length > 0 {
 		buffer = make([]byte, length)
 	} else {
-		buffer = make([]byte, gDEFAULT_READ_BUFFER_SIZE)
+		buffer = make([]byte, defaultReadBufferSize)
 	}
 
 	for {
 		if length < 0 && index > 0 {
 			bufferWait = true
-			if err = c.SetReadDeadline(time.Now().Add(c.recvBufferWait)); err != nil {
+			if err = c.SetReadDeadline(time.Now().Add(c.receiveBufferWait)); err != nil {
 				return nil, err
 			}
 		}
@@ -127,14 +127,14 @@ func (c *Conn) Recv(length int, retry ...Retry) ([]byte, error) {
 		if size > 0 {
 			index += size
 			if length > 0 {
-				// It reads til <length> size if <length> is specified.
+				// It reads til `length` size if `length` is specified.
 				if index == length {
 					break
 				}
 			} else {
-				if index >= gDEFAULT_READ_BUFFER_SIZE {
+				if index >= defaultReadBufferSize {
 					// If it exceeds the buffer size, it then automatically increases its buffer size.
-					buffer = append(buffer, make([]byte, gDEFAULT_READ_BUFFER_SIZE)...)
+					buffer = append(buffer, make([]byte, defaultReadBufferSize)...)
 				} else {
 					// It returns immediately if received size is lesser than buffer size.
 					if !bufferWait {
@@ -150,7 +150,7 @@ func (c *Conn) Recv(length int, retry ...Retry) ([]byte, error) {
 			}
 			// Re-set the timeout when reading data.
 			if bufferWait && isTimeout(err) {
-				if err = c.SetReadDeadline(c.recvDeadline); err != nil {
+				if err = c.SetReadDeadline(c.receiveDeadline); err != nil {
 					return nil, err
 				}
 				err = nil
@@ -163,7 +163,7 @@ func (c *Conn) Recv(length int, retry ...Retry) ([]byte, error) {
 				}
 				retry[0].Count--
 				if retry[0].Interval == 0 {
-					retry[0].Interval = gDEFAULT_RETRY_INTERVAL
+					retry[0].Interval = defaultRetryInternal
 				}
 				time.Sleep(retry[0].Interval)
 				continue
@@ -201,8 +201,8 @@ func (c *Conn) RecvLine(retry ...Retry) ([]byte, error) {
 	return data, err
 }
 
-// RecvTil reads data from the connection until reads bytes <til>.
-// Note that the returned result contains the last bytes <til>.
+// RecvTil reads data from the connection until reads bytes `til`.
+// Note that the returned result contains the last bytes `til`.
 func (c *Conn) RecvTil(til []byte, retry ...Retry) ([]byte, error) {
 	var err error
 	var buffer []byte
@@ -230,10 +230,10 @@ func (c *Conn) RecvTil(til []byte, retry ...Retry) ([]byte, error) {
 
 // RecvWithTimeout reads data from the connection with timeout.
 func (c *Conn) RecvWithTimeout(length int, timeout time.Duration, retry ...Retry) (data []byte, err error) {
-	if err := c.SetRecvDeadline(time.Now().Add(timeout)); err != nil {
+	if err := c.SetreceiveDeadline(time.Now().Add(timeout)); err != nil {
 		return nil, err
 	}
-	defer c.SetRecvDeadline(time.Time{})
+	defer c.SetreceiveDeadline(time.Time{})
 	data, err = c.Recv(length, retry...)
 	return
 }
@@ -269,16 +269,16 @@ func (c *Conn) SendRecvWithTimeout(data []byte, length int, timeout time.Duratio
 func (c *Conn) SetDeadline(t time.Time) error {
 	err := c.Conn.SetDeadline(t)
 	if err == nil {
-		c.recvDeadline = t
+		c.receiveDeadline = t
 		c.sendDeadline = t
 	}
 	return err
 }
 
-func (c *Conn) SetRecvDeadline(t time.Time) error {
+func (c *Conn) SetreceiveDeadline(t time.Time) error {
 	err := c.SetReadDeadline(t)
 	if err == nil {
-		c.recvDeadline = t
+		c.receiveDeadline = t
 	}
 	return err
 }
@@ -291,8 +291,8 @@ func (c *Conn) SetSendDeadline(t time.Time) error {
 	return err
 }
 
-// SetRecvBufferWait sets the buffer waiting timeout when reading all data from connection.
+// SetreceiveBufferWait sets the buffer waiting timeout when reading all data from connection.
 // The waiting duration cannot be too long which might delay receiving data from remote address.
-func (c *Conn) SetRecvBufferWait(bufferWaitDuration time.Duration) {
-	c.recvBufferWait = bufferWaitDuration
+func (c *Conn) SetreceiveBufferWait(bufferWaitDuration time.Duration) {
+	c.receiveBufferWait = bufferWaitDuration
 }

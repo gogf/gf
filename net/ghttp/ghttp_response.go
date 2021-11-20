@@ -12,9 +12,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/gogf/gf/os/gres"
-
-	"github.com/gogf/gf/os/gfile"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/gres"
 )
 
 // Response is the http response manager.
@@ -41,14 +40,16 @@ func newResponse(s *Server, w http.ResponseWriter) *Response {
 
 // ServeFile serves the file to the response.
 func (r *Response) ServeFile(path string, allowIndex ...bool) {
-	serveFile := (*staticFile)(nil)
+	var (
+		serveFile *staticFile
+	)
 	if file := gres.Get(path); file != nil {
 		serveFile = &staticFile{
 			File:  file,
 			IsDir: file.FileInfo().IsDir(),
 		}
 	} else {
-		path = gfile.RealPath(path)
+		path, _ = gfile.Search(path)
 		if path == "" {
 			r.WriteStatus(http.StatusNotFound)
 			return
@@ -60,8 +61,11 @@ func (r *Response) ServeFile(path string, allowIndex ...bool) {
 
 // ServeFileDownload serves file downloading to the response.
 func (r *Response) ServeFileDownload(path string, name ...string) {
-	serveFile := (*staticFile)(nil)
-	downloadName := ""
+	var (
+		serveFile    *staticFile
+		downloadName = ""
+	)
+
 	if len(name) > 0 {
 		downloadName = name[0]
 	}
@@ -74,7 +78,7 @@ func (r *Response) ServeFileDownload(path string, name ...string) {
 			downloadName = gfile.Basename(file.Name())
 		}
 	} else {
-		path = gfile.RealPath(path)
+		path, _ = gfile.Search(path)
 		if path == "" {
 			r.WriteStatus(http.StatusNotFound)
 			return
@@ -91,7 +95,7 @@ func (r *Response) ServeFileDownload(path string, name ...string) {
 }
 
 // RedirectTo redirects client to another location.
-// The optional parameter <code> specifies the http status code for redirecting,
+// The optional parameter `code` specifies the http status code for redirecting,
 // which commonly can be 301 or 302. It's 302 in default.
 func (r *Response) RedirectTo(location string, code ...int) {
 	r.Header().Set("Location", location)
@@ -104,13 +108,13 @@ func (r *Response) RedirectTo(location string, code ...int) {
 }
 
 // RedirectBack redirects client back to referer.
-// The optional parameter <code> specifies the http status code for redirecting,
+// The optional parameter `code` specifies the http status code for redirecting,
 // which commonly can be 301 or 302. It's 302 in default.
 func (r *Response) RedirectBack(code ...int) {
 	r.RedirectTo(r.Request.GetReferer(), code...)
 }
 
-// BufferString returns the buffered content as []byte.
+// Buffer returns the buffered content as []byte.
 func (r *Response) Buffer() []byte {
 	return r.buffer.Bytes()
 }
@@ -125,7 +129,7 @@ func (r *Response) BufferLength() int {
 	return r.buffer.Len()
 }
 
-// SetBuffer overwrites the buffer with <data>.
+// SetBuffer overwrites the buffer with `data`.
 func (r *Response) SetBuffer(data []byte) {
 	r.buffer.Reset()
 	r.buffer.Write(data)
@@ -136,7 +140,7 @@ func (r *Response) ClearBuffer() {
 	r.buffer.Reset()
 }
 
-// Output outputs the buffer content to the client and clears the buffer.
+// Flush outputs the buffer content to the client and clears the buffer.
 func (r *Response) Flush() {
 	if r.Server.config.ServerAgent != "" {
 		r.Header().Set("Server", r.Server.config.ServerAgent)

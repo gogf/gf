@@ -11,7 +11,7 @@ import (
 	"os"
 )
 
-// Close implements Close interface of http.File.
+// Close implements interface of http.File.
 func (f *File) Close() error {
 	return nil
 }

@@ -7,9 +7,10 @@
 package gcache
 
 import (
-	"github.com/gogf/gf/os/gtime"
 	"sync"
 	"time"
+
+	"github.com/gogf/gf/v2/os/gtime"
 )
 
 type adapterMemoryData struct {
@@ -23,11 +24,11 @@ func newAdapterMemoryData() *adapterMemoryData {
 	}
 }
 
-// Update updates the value of <key> without changing its expiration and returns the old value.
-// The returned value <exist> is false if the <key> does not exist in the cache.
+// Update updates the value of `key` without changing its expiration and returns the old value.
+// The returned value `exist` is false if the `key` does not exist in the cache.
 //
-// It deletes the <key> if given <value> is nil.
-// It does nothing if <key> does not exist in the cache.
+// It deletes the `key` if given `value` is nil.
+// It does nothing if `key` does not exist in the cache.
 func (d *adapterMemoryData) Update(key interface{}, value interface{}) (oldValue interface{}, exist bool, err error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
@@ -41,10 +42,10 @@ func (d *adapterMemoryData) Update(key interface{}, value interface{}) (oldValue
 	return nil, false, nil
 }
 
-// UpdateExpire updates the expiration of <key> and returns the old expiration duration value.
+// UpdateExpire updates the expiration of `key` and returns the old expiration duration value.
 //
-// It returns -1 and does nothing if the <key> does not exist in the cache.
-// It deletes the <key> if <duration> < 0.
+// It returns -1 and does nothing if the `key` does not exist in the cache.
+// It deletes the `key` if `duration` < 0.
 func (d *adapterMemoryData) UpdateExpire(key interface{}, expireTime int64) (oldDuration time.Duration, err error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
@@ -152,11 +153,11 @@ func (d *adapterMemoryData) Set(key interface{}, value adapterMemoryItem) {
 	d.mu.Unlock()
 }
 
-// Sets batch sets cache with key-value pairs by <data>, which is expired after <duration>.
+// Sets batch sets cache with key-value pairs by `data`, which is expired after `duration`.
 //
-// It does not expire if <duration> == 0.
-// It deletes the keys of <data> if <duration> < 0 or given <value> is nil.
-func (d *adapterMemoryData) Sets(data map[interface{}]interface{}, expireTime int64) error {
+// It does not expire if `duration` == 0.
+// It deletes the keys of `data` if `duration` < 0 or given `value` is nil.
+func (d *adapterMemoryData) SetMap(data map[interface{}]interface{}, expireTime int64) error {
 	d.mu.Lock()
 	for k, v := range data {
 		d.data[k] = adapterMemoryItem{

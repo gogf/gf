@@ -7,12 +7,16 @@
 package gproc
 
 import (
-	"errors"
+	"context"
 	"fmt"
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/net/gtcp"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/util/gconv"
+
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/net/gtcp"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // MsgRequest is the request structure for process communication.
@@ -31,9 +35,10 @@ type MsgResponse struct {
 }
 
 const (
-	gPROC_COMM_DEFAULT_GRUOP_NAME = ""    // Default group name.
-	gPROC_DEFAULT_TCP_PORT        = 10000 // Starting port number for receiver listening.
-	gPROC_MSG_QUEUE_MAX_LENGTH    = 10000 // Max size for each message queue of the group.
+	defaultFolderNameForProcComm = "gf_pid_port_mapping" // Default folder name for storing pid to port mapping files.
+	defaultGroupNameForProcComm  = ""                    // Default group name.
+	defaultTcpPortForProcComm    = 10000                 // Starting port number for receiver listening.
+	maxLengthForProcMsgQueue     = 10000                 // Max size for each message queue of the group.
 )
 
 var (
@@ -42,17 +47,36 @@ var (
 	commReceiveQueues = gmap.NewStrAnyMap(true)
 
 	// commPidFolderPath specifies the folder path storing pid to port mapping files.
-	commPidFolderPath = gfile.TempDir("gproc")
+	commPidFolderPath string
 )
 
 func init() {
-	// Automatically create the storage folder.
-	if !gfile.Exists(commPidFolderPath) {
-		err := gfile.Mkdir(commPidFolderPath)
-		if err != nil {
-			panic(fmt.Errorf(`create gproc folder failed: %v`, err))
+	availablePaths := []string{
+		"/var/tmp",
+		"/var/run",
+	}
+	if homePath, _ := gfile.Home(); homePath != "" {
+		availablePaths = append(availablePaths, gfile.Join(homePath, ".config"))
+	}
+	availablePaths = append(availablePaths, gfile.TempDir())
+	for _, availablePath := range availablePaths {
+		checkPath := gfile.Join(availablePath, defaultFolderNameForProcComm)
+		if !gfile.Exists(checkPath) && gfile.Mkdir(checkPath) != nil {
+			continue
+		}
+		if gfile.IsWritable(checkPath) {
+			commPidFolderPath = checkPath
+			break
 		}
 	}
+	if commPidFolderPath == "" {
+		intlog.Errorf(
+			context.TODO(),
+			`cannot find available folder for storing pid to port mapping files in paths: %+v, process communication feature will fail`,
+			availablePaths,
+		)
+	}
+
 }
 
 // getConnByPid creates and returns a TCP connection for specified pid.
@@ -65,15 +89,13 @@ func getConnByPid(pid int) (*gtcp.PoolConn, error) {
 			return nil, err
 		}
 	}
-	return nil, errors.New(fmt.Sprintf("could not find port for pid: %d", pid))
+	return nil, gerror.NewCodef(gcode.CodeOperationFailed, "could not find port for pid: %d", pid)
 }
 
 // getPortByPid returns the listening port for specified pid.
 // It returns 0 if no port found for the specified pid.
 func getPortByPid(pid int) int {
-	path := getCommFilePath(pid)
-	content := gfile.GetContentsWithCache(path)
-	return gconv.Int(content)
+	return gconv.Int(gfile.GetContentsWithCache(getCommFilePath(pid)))
 }
 
 // getCommFilePath returns the pid to port mapping file path for given pid.

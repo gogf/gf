@@ -9,8 +9,10 @@ package gdb_test
 import (
 	"testing"
 
-	"github.com/gogf/gf/database/gdb"
-	"github.com/gogf/gf/test/gtest"
+	"github.com/go-sql-driver/mysql"
+
+	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/test/gtest"
 )
 
 func Test_Instance(t *testing.T) {
@@ -25,5 +27,18 @@ func Test_Instance(t *testing.T) {
 		err2 := db.PingSlave()
 		t.Assert(err1, nil)
 		t.Assert(err2, nil)
+	})
+}
+
+// Fix issue: https://github.com/gogf/gf/issues/819
+func Test_Func_ConvertDataForTableRecord(t *testing.T) {
+	type Test struct {
+		ResetPasswordTokenAt mysql.NullTime `orm:"reset_password_token_at"`
+	}
+	gtest.C(t, func(t *gtest.T) {
+		m := gdb.ConvertDataForTableRecord(new(Test))
+		t.Assert(len(m), 1)
+		t.AssertNE(m["reset_password_token_at"], nil)
+		t.Assert(m["reset_password_token_at"], new(mysql.NullTime))
 	})
 }

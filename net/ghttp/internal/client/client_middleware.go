@@ -24,8 +24,8 @@ func (c *Client) Use(handlers ...HandlerFunc) *Client {
 	return c
 }
 
-// Next calls next middleware.
-// This is should only be call in HandlerFunc.
+// Next calls the next middleware.
+// This should only be call in HandlerFunc.
 func (c *Client) Next(req *http.Request) (*Response, error) {
 	if v := req.Context().Value(clientMiddlewareKey); v != nil {
 		if m, ok := v.(*clientMiddleware); ok {
@@ -35,7 +35,7 @@ func (c *Client) Next(req *http.Request) (*Response, error) {
 	return c.callRequest(req)
 }
 
-// Next calls next middleware handler.
+// Next calls the next middleware handler.
 func (m *clientMiddleware) Next(req *http.Request) (resp *Response, err error) {
 	if m.err != nil {
 		return m.resp, m.err

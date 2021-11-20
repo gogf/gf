@@ -7,16 +7,16 @@
 package gview
 
 import (
-	"github.com/gogf/gf/os/gcmd"
+	"github.com/gogf/gf/v2/os/gcmd"
 )
 
 const (
-	// gERROR_PRINT_KEY is used to specify the key controlling error printing to stdout.
+	// commandEnvKeyForErrorPrint is used to specify the key controlling error printing to stdout.
 	// This error is designed not to be returned by functions.
-	gERROR_PRINT_KEY = "gf.gview.errorprint"
+	commandEnvKeyForErrorPrint = "gf.gview.errorprint"
 )
 
 // errorPrint checks whether printing error to stdout.
 func errorPrint() bool {
-	return gcmd.GetOptWithEnv(gERROR_PRINT_KEY, true).Bool()
+	return gcmd.GetOptWithEnv(commandEnvKeyForErrorPrint, true).Bool()
 }

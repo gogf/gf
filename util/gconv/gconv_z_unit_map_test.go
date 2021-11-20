@@ -7,12 +7,12 @@
 package gconv_test
 
 import (
-	"github.com/gogf/gf/util/gutil"
+	"github.com/gogf/gf/v2/util/gutil"
 	"testing"
 
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/test/gtest"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 func Test_Map_Basic(t *testing.T) {
@@ -314,6 +314,60 @@ func Test_MapDeep2(t *testing.T) {
 		t.Assert(gutil.MapContains(md, "I"), true)
 		t.Assert(gutil.MapContains(md, "H"), false)
 		t.Assert(gutil.MapContains(md, "G"), false)
+	})
+}
+
+func Test_MapDeep3(t *testing.T) {
+	type Base struct {
+		Id   int    `c:"id"`
+		Date string `c:"date"`
+	}
+	type User struct {
+		UserBase Base   `c:"base"`
+		Passport string `c:"passport"`
+		Password string `c:"password"`
+		Nickname string `c:"nickname"`
+	}
+
+	gtest.C(t, func(t *gtest.T) {
+		user := &User{
+			UserBase: Base{
+				Id:   1,
+				Date: "2019-10-01",
+			},
+			Passport: "john",
+			Password: "123456",
+			Nickname: "JohnGuo",
+		}
+		m := gconv.MapDeep(user)
+		t.Assert(m, g.Map{
+			"base": g.Map{
+				"id":   user.UserBase.Id,
+				"date": user.UserBase.Date,
+			},
+			"passport": user.Passport,
+			"password": user.Password,
+			"nickname": user.Nickname,
+		})
+	})
+
+	gtest.C(t, func(t *gtest.T) {
+		user := &User{
+			UserBase: Base{
+				Id:   1,
+				Date: "2019-10-01",
+			},
+			Passport: "john",
+			Password: "123456",
+			Nickname: "JohnGuo",
+		}
+		m := gconv.Map(user)
+		t.Assert(m, g.Map{
+			"base":     user.UserBase,
+			"passport": user.Passport,
+			"password": user.Password,
+			"nickname": user.Nickname,
+		})
 	})
 }
 

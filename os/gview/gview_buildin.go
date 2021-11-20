@@ -7,29 +7,31 @@
 package gview
 
 import (
+	"bytes"
 	"context"
 	"fmt"
-	"github.com/gogf/gf/internal/json"
-	"github.com/gogf/gf/util/gutil"
+	htmltpl "html/template"
 	"strings"
 
-	"github.com/gogf/gf/encoding/ghtml"
-	"github.com/gogf/gf/encoding/gurl"
-	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/gf/util/gconv"
-
-	htmltpl "html/template"
+	"github.com/gogf/gf/v2/encoding/ghtml"
+	"github.com/gogf/gf/v2/encoding/gurl"
+	"github.com/gogf/gf/v2/internal/json"
+	"github.com/gogf/gf/v2/os/gtime"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/gutil"
 )
 
 // buildInFuncDump implements build-in template function: dump
-func (view *View) buildInFuncDump(values ...interface{}) (result string) {
-	result += "<!--\n"
+func (view *View) buildInFuncDump(values ...interface{}) string {
+	buffer := bytes.NewBuffer(nil)
+	buffer.WriteString("<!--\n")
 	for _, v := range values {
-		result += gutil.Export(v) + "\n"
+		gutil.DumpTo(buffer, v, gutil.DumpOption{})
+		buffer.WriteString("\n")
 	}
-	result += "-->\n"
-	return result
+	buffer.WriteString("-->\n")
+	return buffer.String()
 }
 
 // buildInFuncMap implements build-in template function: map
@@ -219,8 +221,53 @@ func (view *View) buildInFuncNl2Br(str interface{}) string {
 }
 
 // buildInFuncJson implements build-in template function: json ,
-// which encodes and returns <value> as JSON string.
+// which encodes and returns `value` as JSON string.
 func (view *View) buildInFuncJson(value interface{}) (string, error) {
 	b, err := json.Marshal(value)
-	return gconv.UnsafeBytesToStr(b), err
+	return string(b), err
+}
+
+// buildInFuncPlus implements build-in template function: plus ,
+// which returns the result that pluses all `deltas` to `value`.
+func (view *View) buildInFuncPlus(value interface{}, deltas ...interface{}) string {
+	result := gconv.Float64(value)
+	for _, v := range deltas {
+		result += gconv.Float64(v)
+	}
+	return gconv.String(result)
+}
+
+// buildInFuncMinus implements build-in template function: minus ,
+// which returns the result that subtracts all `deltas` from `value`.
+func (view *View) buildInFuncMinus(value interface{}, deltas ...interface{}) string {
+	result := gconv.Float64(value)
+	for _, v := range deltas {
+		result -= gconv.Float64(v)
+	}
+	return gconv.String(result)
+}
+
+// buildInFuncTimes implements build-in template function: times ,
+// which returns the result that multiplies `value` by all of `values`.
+func (view *View) buildInFuncTimes(value interface{}, values ...interface{}) string {
+	result := gconv.Float64(value)
+	for _, v := range values {
+		result *= gconv.Float64(v)
+	}
+	return gconv.String(result)
+}
+
+// buildInFuncDivide implements build-in template function: divide ,
+// which returns the result that divides `value` by all of `values`.
+func (view *View) buildInFuncDivide(value interface{}, values ...interface{}) string {
+	result := gconv.Float64(value)
+	for _, v := range values {
+		value2Float64 := gconv.Float64(v)
+		if value2Float64 == 0 {
+			// Invalid `value2`.
+			return "0"
+		}
+		result /= value2Float64
+	}
+	return gconv.String(result)
 }

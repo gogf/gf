@@ -6,7 +6,7 @@
 
 package ghttp
 
-import "github.com/gogf/gf/os/gview"
+import "github.com/gogf/gf/v2/os/gview"
 
 // SetView sets template view engine object for this request.
 func (r *Request) SetView(view *gview.View) {

@@ -7,32 +7,35 @@
 package gvalid
 
 import (
-	"github.com/gogf/gf/util/gconv"
+	"context"
+	"errors"
 	"strings"
+
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // CheckMap validates map and returns the error result. It returns nil if with successful validation.
 // The parameter `params` should be type of map.
-func (v *Validator) CheckMap(params interface{}) Error {
-	return v.doCheckMap(params)
+func (v *Validator) CheckMap(ctx context.Context, params interface{}) Error {
+	return v.doCheckMap(ctx, params)
 }
 
-func (v *Validator) doCheckMap(params interface{}) Error {
+func (v *Validator) doCheckMap(ctx context.Context, params interface{}) Error {
 	// If there's no validation rules, it does nothing and returns quickly.
 	if params == nil || v.rules == nil {
 		return nil
 	}
 	var (
-		checkRules = make(map[string]string)
-		customMsgs = make(CustomMsg)
-		errorRules = make([]string, 0)
-		errorMaps  = make(map[string]map[string]string)
+		checkRules    = make([]fieldRule, 0)
+		customMessage = make(CustomMsg) // map[RuleKey]ErrorMsg.
+		errorMaps     = make(map[string]map[string]error)
 	)
-	switch v := v.rules.(type) {
+	switch assertValue := v.rules.(type) {
 	// Sequence tag: []sequence tag
 	// Sequence has order for error results.
 	case []string:
-		for _, tag := range v {
+		for _, tag := range assertValue {
 			name, rule, msg := parseSequenceTag(tag)
 			if len(name) == 0 {
 				continue
@@ -42,7 +45,7 @@ func (v *Validator) doCheckMap(params interface{}) Error {
 					msgArray  = strings.Split(msg, "|")
 					ruleArray = strings.Split(rule, "|")
 				)
-				for k, v := range ruleArray {
+				for k, ruleItem := range ruleArray {
 					// If length of custom messages is lesser than length of rules,
 					// the rest rules use the default error messages.
 					if len(msgArray) <= k {
@@ -51,20 +54,27 @@ func (v *Validator) doCheckMap(params interface{}) Error {
 					if len(msgArray[k]) == 0 {
 						continue
 					}
-					array := strings.Split(v, ":")
-					if _, ok := customMsgs[name]; !ok {
-						customMsgs[name] = make(map[string]string)
+					array := strings.Split(ruleItem, ":")
+					if _, ok := customMessage[name]; !ok {
+						customMessage[name] = make(map[string]string)
 					}
-					customMsgs[name].(map[string]string)[strings.TrimSpace(array[0])] = strings.TrimSpace(msgArray[k])
+					customMessage[name].(map[string]string)[strings.TrimSpace(array[0])] = strings.TrimSpace(msgArray[k])
 				}
 			}
-			checkRules[name] = rule
-			errorRules = append(errorRules, name+"@"+rule)
+			checkRules = append(checkRules, fieldRule{
+				Name: name,
+				Rule: rule,
+			})
 		}
 
 	// No sequence rules: map[field]rule
 	case map[string]string:
-		checkRules = v
+		for name, rule := range assertValue {
+			checkRules = append(checkRules, fieldRule{
+				Name: name,
+				Rule: rule,
+			})
+		}
 	}
 	// If there's no validation rules, it does nothing and returns quickly.
 	if len(checkRules) == 0 {
@@ -72,47 +82,52 @@ func (v *Validator) doCheckMap(params interface{}) Error {
 	}
 	data := gconv.Map(params)
 	if data == nil {
-		return newErrorStr(
+		return newValidationErrorByStr(
 			internalParamsErrRuleName,
-			"invalid params type: convert to map failed",
+			errors.New("invalid params type: convert to map failed"),
 		)
 	}
 	if msg, ok := v.messages.(CustomMsg); ok && len(msg) > 0 {
-		if len(customMsgs) > 0 {
+		if len(customMessage) > 0 {
 			for k, v := range msg {
-				customMsgs[k] = v
+				customMessage[k] = v
 			}
 		} else {
-			customMsgs = msg
+			customMessage = msg
 		}
 	}
-	var value interface{}
-	for key, rule := range checkRules {
-		if len(rule) == 0 {
+	var (
+		value interface{}
+	)
+	for _, checkRuleItem := range checkRules {
+		if len(checkRuleItem.Rule) == 0 {
 			continue
 		}
 		value = nil
-		if v, ok := data[key]; ok {
-			value = v
+		if valueItem, ok := data[checkRuleItem.Name]; ok {
+			value = valueItem
 		}
 		// It checks each rule and its value in loop.
-		if e := v.doCheckValue(key, value, rule, customMsgs[key], data); e != nil {
-			_, item := e.FirstItem()
+		if validatedError := v.doCheckValue(ctx, doCheckValueInput{
+			Name:     checkRuleItem.Name,
+			Value:    value,
+			Rule:     checkRuleItem.Rule,
+			Messages: customMessage[checkRuleItem.Name],
+			DataRaw:  params,
+			DataMap:  data,
+		}); validatedError != nil {
+			_, errorItem := validatedError.FirstItem()
 			// ===========================================================
-			// Only in map and struct validations, if value is nil or empty
-			// string and has no required* rules, it clears the error message.
+			// Only in map and struct validations:
+			// If value is nil or empty string and has no required* rules,
+			// it clears the error message.
 			// ===========================================================
 			if gconv.String(value) == "" {
 				required := false
 				// rule => error
-				for k := range item {
+				for ruleKey := range errorItem {
 					// Default required rules.
-					if _, ok := mustCheckRulesEvenValueEmpty[k]; ok {
-						required = true
-						break
-					}
-					// Custom rules are also required in default.
-					if _, ok := customRuleFuncMap[k]; ok {
+					if _, ok := mustCheckRulesEvenValueEmpty[ruleKey]; ok {
 						required = true
 						break
 					}
@@ -121,16 +136,19 @@ func (v *Validator) doCheckMap(params interface{}) Error {
 					continue
 				}
 			}
-			if _, ok := errorMaps[key]; !ok {
-				errorMaps[key] = make(map[string]string)
+			if _, ok := errorMaps[checkRuleItem.Name]; !ok {
+				errorMaps[checkRuleItem.Name] = make(map[string]error)
 			}
-			for k, v := range item {
-				errorMaps[key][k] = v
+			for ruleKey, ruleError := range errorItem {
+				errorMaps[checkRuleItem.Name][ruleKey] = ruleError
+			}
+			if v.bail {
+				break
 			}
 		}
 	}
 	if len(errorMaps) > 0 {
-		return newError(errorRules, errorMaps)
+		return newValidationError(gcode.CodeValidationFailed, checkRules, errorMaps)
 	}
 	return nil
 }

@@ -7,7 +7,8 @@
 package gstr
 
 import (
-	"fmt"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"net/url"
 	"strings"
 )
@@ -116,7 +117,11 @@ func build(result map[string]interface{}, keys []string, value interface{}) erro
 		}
 		children, ok := val.([]interface{})
 		if !ok {
-			return fmt.Errorf("expected type '[]interface{}' for key '%s', but got '%T'", key, val)
+			return gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				"expected type '[]interface{}' for key '%s', but got '%T'",
+				key, val,
+			)
 		}
 		result[key] = append(children, value)
 		return nil
@@ -131,7 +136,11 @@ func build(result map[string]interface{}, keys []string, value interface{}) erro
 		}
 		children, ok := val.([]interface{})
 		if !ok {
-			return fmt.Errorf("expected type '[]interface{}' for key '%s', but got '%T'", key, val)
+			return gerror.NewCodef(
+				gcode.CodeInvalidParameter,
+				"expected type '[]interface{}' for key '%s', but got '%T'",
+				key, val,
+			)
 		}
 		if l := len(children); l > 0 {
 			if child, ok := children[l-1].(map[string]interface{}); ok {
@@ -155,7 +164,11 @@ func build(result map[string]interface{}, keys []string, value interface{}) erro
 	}
 	children, ok := val.(map[string]interface{})
 	if !ok {
-		return fmt.Errorf("expected type 'map[string]interface{}' for key '%s', but got '%T'", key, val)
+		return gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			"expected type 'map[string]interface{}' for key '%s', but got '%T'",
+			key, val,
+		)
 	}
 	if err := build(children, keys[1:], value); err != nil {
 		return err

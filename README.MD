@@ -1,7 +1,7 @@
 # GoFrame
 
 [![Go Doc](https://godoc.org/github.com/gogf/gf?status.svg)](https://godoc.org/github.com/gogf/gf)
-[![Build Status](https://travis-ci.com/gogf/gf.svg?branch=master)](https://travis-ci.org/gogf/gf)
+[![GoFrame CI](https://github.com/gogf/gf/actions/workflows/go.yml/badge.svg)](https://github.com/gogf/gf/actions/workflows/go.yml)
 [![Go Report](https://goreportcard.com/badge/github.com/gogf/gf?v=1)](https://goreportcard.com/report/github.com/gogf/gf)
 [![Code Coverage](https://codecov.io/gh/gogf/gf/branch/master/graph/badge.svg)](https://codecov.io/gh/gogf/gf/branch/master)
 [![Production Ready](https://img.shields.io/badge/production-ready-blue.svg)](https://github.com/gogf/gf)
@@ -16,16 +16,16 @@ of Golang.
 
 # Installation
 ```
-go get -u -v github.com/gogf/gf
+go get -u -v github.com/gogf/gf/v2
 ```
 suggested using `go.mod`:
 ```
-require github.com/gogf/gf latest
+require github.com/gogf/gf/v2 latest
 ```
 
 # Limitation
 ```
-golang version >= 1.11
+golang version >= 1.14
 ```
 
 # Architecture
@@ -75,7 +75,7 @@ The `Web` component performance of `GoFrame`, please refer to third-party projec
 
 # Contributors
 This project exists thanks to all the people who contribute. [[Contributors](https://github.com/gogf/gf/graphs/contributors)].
-<a href="https://github.com/gogf/gf/graphs/contributors"><img src="https://opencollective.com/goframe/contributors.svg?width=890&button=false" /></a>
+<a href="https://github.com/gogf/gf/graphs/contributors"><img src="https://contributors-img.web.app/image?repo=gogf/gf" /></a>
 
 
 # Donators

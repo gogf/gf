@@ -7,9 +7,10 @@
 package ghttp_test
 
 import (
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
 	"time"
+
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/ghttp"
 )
 
 func init() {
@@ -20,29 +21,29 @@ func init() {
 		group.GET("/", func(r *ghttp.Request) {
 			r.Response.Writef(
 				"GET: query: %d, %s",
-				r.GetQueryInt("id"),
-				r.GetQueryString("name"),
+				r.GetQuery("id").Int(),
+				r.GetQuery("name").String(),
 			)
 		})
 		group.PUT("/", func(r *ghttp.Request) {
 			r.Response.Writef(
 				"PUT: form: %d, %s",
-				r.GetFormInt("id"),
-				r.GetFormString("name"),
+				r.GetForm("id").Int(),
+				r.GetForm("name").String(),
 			)
 		})
 		group.POST("/", func(r *ghttp.Request) {
 			r.Response.Writef(
 				"POST: form: %d, %s",
-				r.GetFormInt("id"),
-				r.GetFormString("name"),
+				r.GetForm("id").Int(),
+				r.GetForm("name").String(),
 			)
 		})
 		group.DELETE("/", func(r *ghttp.Request) {
 			r.Response.Writef(
 				"DELETE: form: %d, %s",
-				r.GetFormInt("id"),
-				r.GetFormString("name"),
+				r.GetForm("id").Int(),
+				r.GetForm("name").String(),
 			)
 		})
 		group.HEAD("/", func(r *ghttp.Request) {
@@ -71,7 +72,7 @@ func init() {
 			r.Response.Writef(
 				"Content-Type: %s, id: %d",
 				r.Header.Get("Content-Type"),
-				r.GetInt("id"),
+				r.Get("id").Int(),
 			)
 		})
 	})

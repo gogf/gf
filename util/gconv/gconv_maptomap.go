@@ -7,9 +7,11 @@
 package gconv
 
 import (
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/internal/json"
 	"reflect"
+
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/json"
 )
 
 // MapToMap converts any map type variable `params` to another map type variable `pointer`
@@ -22,10 +24,10 @@ func MapToMap(params interface{}, pointer interface{}, mapping ...map[string]str
 // doMapToMap converts any map type variable `params` to another map type variable `pointer`.
 //
 // The parameter `params` can be any type of map, like:
-// map[string]string, map[string]struct, , map[string]*struct, etc.
+// map[string]string, map[string]struct, map[string]*struct, etc.
 //
 // The parameter `pointer` should be type of *map, like:
-// map[int]string, map[string]struct, , map[string]*struct, etc.
+// map[int]string, map[string]struct, map[string]*struct, etc.
 //
 // The optional parameter `mapping` is used for struct attribute to map key mapping, which makes
 // sense only if the items of original map `params` is type struct.
@@ -54,9 +56,13 @@ func doMapToMap(params interface{}, pointer interface{}, mapping ...map[string]s
 		}
 	}
 	var (
-		paramsRv   reflect.Value
-		paramsKind reflect.Kind
+		paramsRv                  reflect.Value
+		paramsKind                reflect.Kind
+		keyToAttributeNameMapping map[string]string
 	)
+	if len(mapping) > 0 {
+		keyToAttributeNameMapping = mapping[0]
+	}
 	if v, ok := params.(reflect.Value); ok {
 		paramsRv = v
 	} else {
@@ -86,15 +92,15 @@ func doMapToMap(params interface{}, pointer interface{}, mapping ...map[string]s
 		pointerKind = pointerRv.Kind()
 	}
 	if pointerKind != reflect.Map {
-		return gerror.Newf("pointer should be type of *map, but got:%s", pointerKind)
+		return gerror.NewCodef(gcode.CodeInvalidParameter, "pointer should be type of *map, but got:%s", pointerKind)
 	}
 	defer func() {
 		// Catch the panic, especially the reflect operation panics.
 		if exception := recover(); exception != nil {
-			if e, ok := exception.(errorStack); ok {
-				err = e
+			if v, ok := exception.(error); ok && gerror.HasStack(v) {
+				err = v
 			} else {
-				err = gerror.NewSkipf(1, "%v", exception)
+				err = gerror.NewCodeSkipf(gcode.CodeInternalError, 1, "%+v", exception)
 			}
 		}
 	}()
@@ -113,7 +119,7 @@ func doMapToMap(params interface{}, pointer interface{}, mapping ...map[string]s
 		e := reflect.New(pointerValueType).Elem()
 		switch pointerValueKind {
 		case reflect.Map, reflect.Struct:
-			if err = Struct(paramsRv.MapIndex(key).Interface(), e, mapping...); err != nil {
+			if err = doStruct(paramsRv.MapIndex(key).Interface(), e, keyToAttributeNameMapping, ""); err != nil {
 				return err
 			}
 		default:

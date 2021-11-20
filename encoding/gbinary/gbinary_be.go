@@ -13,8 +13,8 @@ import (
 	"math"
 )
 
-// BeEncode encodes one or multiple <values> into bytes using BigEndian.
-// It uses type asserting checking the type of each value of <values> and internally
+// BeEncode encodes one or multiple `values` into bytes using BigEndian.
+// It uses type asserting checking the type of each value of `values` and internally
 // calls corresponding converting function do the bytes converting.
 //
 // It supports common variable type asserting, and finally it uses fmt.Sprintf converting
@@ -269,7 +269,7 @@ func BeDecodeToFloat64(b []byte) float64 {
 	return math.Float64frombits(binary.BigEndian.Uint64(BeFillUpSize(b, 8)))
 }
 
-// BeFillUpSize fills up the bytes <b> to given length <l> using big BigEndian.
+// BeFillUpSize fills up the bytes `b` to given length `l` using big BigEndian.
 //
 // Note that it creates a new bytes slice by copying the original one to avoid changing
 // the original parameter bytes.

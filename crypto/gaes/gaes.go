@@ -11,7 +11,9 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
-	"errors"
+
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
 var (
@@ -30,9 +32,9 @@ func Decrypt(cipherText []byte, key []byte, iv ...[]byte) ([]byte, error) {
 	return DecryptCBC(cipherText, key, iv...)
 }
 
-// EncryptCBC encrypts <plainText> using CBC mode.
+// EncryptCBC encrypts `plainText` using CBC mode.
 // Note that the key must be 16/24/32 bit length.
-// The parameter <iv> initialization vector is unnecessary.
+// The parameter `iv` initialization vector is unnecessary.
 func EncryptCBC(plainText []byte, key []byte, iv ...[]byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -53,9 +55,9 @@ func EncryptCBC(plainText []byte, key []byte, iv ...[]byte) ([]byte, error) {
 	return cipherText, nil
 }
 
-// DecryptCBC decrypts <cipherText> using CBC mode.
+// DecryptCBC decrypts `cipherText` using CBC mode.
 // Note that the key must be 16/24/32 bit length.
-// The parameter <iv> initialization vector is unnecessary.
+// The parameter `iv` initialization vector is unnecessary.
 func DecryptCBC(cipherText []byte, key []byte, iv ...[]byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -63,7 +65,7 @@ func DecryptCBC(cipherText []byte, key []byte, iv ...[]byte) ([]byte, error) {
 	}
 	blockSize := block.BlockSize()
 	if len(cipherText) < blockSize {
-		return nil, errors.New("cipherText too short")
+		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "cipherText too short")
 	}
 	ivValue := ([]byte)(nil)
 	if len(iv) > 0 {
@@ -72,7 +74,7 @@ func DecryptCBC(cipherText []byte, key []byte, iv ...[]byte) ([]byte, error) {
 		ivValue = []byte(IVDefaultValue)
 	}
 	if len(cipherText)%blockSize != 0 {
-		return nil, errors.New("cipherText is not a multiple of the block size")
+		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "cipherText is not a multiple of the block size")
 	}
 	blockModel := cipher.NewCBCDecrypter(block, ivValue)
 	plainText := make([]byte, len(cipherText))
@@ -93,31 +95,31 @@ func PKCS5Padding(src []byte, blockSize int) []byte {
 func PKCS5UnPadding(src []byte, blockSize int) ([]byte, error) {
 	length := len(src)
 	if blockSize <= 0 {
-		return nil, errors.New("invalid blocklen")
+		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "invalid blocklen")
 	}
 
 	if length%blockSize != 0 || length == 0 {
-		return nil, errors.New("invalid data len")
+		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "invalid data len")
 	}
 
 	unpadding := int(src[length-1])
 	if unpadding > blockSize || unpadding == 0 {
-		return nil, errors.New("invalid padding")
+		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "invalid padding")
 	}
 
 	padding := src[length-unpadding:]
 	for i := 0; i < unpadding; i++ {
 		if padding[i] != byte(unpadding) {
-			return nil, errors.New("invalid padding")
+			return nil, gerror.NewCode(gcode.CodeInvalidParameter, "invalid padding")
 		}
 	}
 
 	return src[:(length - unpadding)], nil
 }
 
-// EncryptCFB encrypts <plainText> using CFB mode.
+// EncryptCFB encrypts `plainText` using CFB mode.
 // Note that the key must be 16/24/32 bit length.
-// The parameter <iv> initialization vector is unnecessary.
+// The parameter `iv` initialization vector is unnecessary.
 func EncryptCFB(plainText []byte, key []byte, padding *int, iv ...[]byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -137,16 +139,16 @@ func EncryptCFB(plainText []byte, key []byte, padding *int, iv ...[]byte) ([]byt
 	return cipherText, nil
 }
 
-// DecryptCFB decrypts <plainText> using CFB mode.
+// DecryptCFB decrypts `plainText` using CFB mode.
 // Note that the key must be 16/24/32 bit length.
-// The parameter <iv> initialization vector is unnecessary.
+// The parameter `iv` initialization vector is unnecessary.
 func DecryptCFB(cipherText []byte, key []byte, unPadding int, iv ...[]byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
 	}
 	if len(cipherText) < aes.BlockSize {
-		return nil, errors.New("cipherText too short")
+		return nil, gerror.NewCode(gcode.CodeInvalidParameter, "cipherText too short")
 	}
 	ivValue := ([]byte)(nil)
 	if len(iv) > 0 {

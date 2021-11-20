@@ -9,15 +9,15 @@ package gproc
 
 import (
 	"bytes"
-	"github.com/gogf/gf/os/genv"
-	"github.com/gogf/gf/text/gstr"
 	"io"
 	"os"
 	"runtime"
 	"time"
 
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/v2/os/genv"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 const (
@@ -80,9 +80,9 @@ func Uptime() time.Duration {
 	return time.Now().Sub(processStartTime)
 }
 
-// Shell executes command <cmd> synchronizingly with given input pipe <in> and output pipe <out>.
-// The command <cmd> reads the input parameters from input pipe <in>, and writes its output automatically
-// to output pipe <out>.
+// Shell executes command `cmd` synchronously with given input pipe `in` and output pipe `out`.
+// The command `cmd` reads the input parameters from input pipe `in`, and writes its output automatically
+// to output pipe `out`.
 func Shell(cmd string, out io.Writer, in io.Reader) error {
 	p := NewProcess(getShell(), append([]string{getShellOption()}, parseCommand(cmd)...))
 	p.Stdin = in
@@ -90,13 +90,13 @@ func Shell(cmd string, out io.Writer, in io.Reader) error {
 	return p.Run()
 }
 
-// ShellRun executes given command <cmd> synchronizingly and outputs the command result to the stdout.
+// ShellRun executes given command `cmd` synchronously and outputs the command result to the stdout.
 func ShellRun(cmd string) error {
 	p := NewProcess(getShell(), append([]string{getShellOption()}, parseCommand(cmd)...))
 	return p.Run()
 }
 
-// ShellExec executes given command <cmd> synchronizingly and returns the command result.
+// ShellExec executes given command `cmd` synchronously and returns the command result.
 func ShellExec(cmd string, environment ...[]string) (string, error) {
 	buf := bytes.NewBuffer(nil)
 	p := NewProcess(getShell(), append([]string{getShellOption()}, parseCommand(cmd)...), environment...)
@@ -106,10 +106,10 @@ func ShellExec(cmd string, environment ...[]string) (string, error) {
 	return buf.String(), err
 }
 
-// parseCommand parses command <cmd> into slice arguments.
+// parseCommand parses command `cmd` into slice arguments.
 //
-// Note that it just parses the <cmd> for "cmd.exe" binary in windows, but it is not necessary
-// parsing the <cmd> for other systems using "bash"/"sh" binary.
+// Note that it just parses the `cmd` for "cmd.exe" binary in windows, but it is not necessary
+// parsing the `cmd` for other systems using "bash"/"sh" binary.
 func parseCommand(cmd string) (args []string) {
 	if runtime.GOOS != "windows" {
 		return []string{cmd}
@@ -170,7 +170,7 @@ func getShell() string {
 	}
 }
 
-// getShellOption returns the shell option depending on current working operation system.
+// getShellOption returns the shell option depending on current working operating system.
 // It returns "/c" for windows, and "-c" for others.
 func getShellOption() string {
 	switch runtime.GOOS {
@@ -181,7 +181,7 @@ func getShellOption() string {
 	}
 }
 
-// SearchBinary searches the binary <file> in current working folder and PATH environment.
+// SearchBinary searches the binary `file` in current working folder and PATH environment.
 func SearchBinary(file string) string {
 	// Check if it's absolute path of exists at current working directory.
 	if gfile.Exists(file) {
@@ -190,12 +190,12 @@ func SearchBinary(file string) string {
 	return SearchBinaryPath(file)
 }
 
-// SearchBinaryPath searches the binary <file> in PATH environment.
+// SearchBinaryPath searches the binary `file` in PATH environment.
 func SearchBinaryPath(file string) string {
 	array := ([]string)(nil)
 	switch runtime.GOOS {
 	case "windows":
-		envPath := genv.Get("PATH", genv.Get("Path"))
+		envPath := genv.Get("PATH", genv.Get("Path")).String()
 		if gstr.Contains(envPath, ";") {
 			array = gstr.SplitAndTrim(envPath, ";")
 		} else if gstr.Contains(envPath, ":") {
@@ -205,7 +205,7 @@ func SearchBinaryPath(file string) string {
 			file += ".exe"
 		}
 	default:
-		array = gstr.SplitAndTrim(genv.Get("PATH"), ":")
+		array = gstr.SplitAndTrim(genv.Get("PATH").String(), ":")
 	}
 	if len(array) > 0 {
 		path := ""

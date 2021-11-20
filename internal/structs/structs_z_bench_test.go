@@ -7,7 +7,7 @@
 package structs_test
 
 import (
-	"github.com/gogf/gf/internal/structs"
+	"github.com/gogf/gf/v2/internal/structs"
 	"testing"
 )
 

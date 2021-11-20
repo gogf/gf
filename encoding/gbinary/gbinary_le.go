@@ -13,8 +13,8 @@ import (
 	"math"
 )
 
-// LeEncode encodes one or multiple <values> into bytes using LittleEndian.
-// It uses type asserting checking the type of each value of <values> and internally
+// LeEncode encodes one or multiple `values` into bytes using LittleEndian.
+// It uses type asserting checking the type of each value of `values` and internally
 // calls corresponding converting function do the bytes converting.
 //
 // It supports common variable type asserting, and finally it uses fmt.Sprintf converting

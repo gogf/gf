@@ -7,37 +7,43 @@
 package ghttp
 
 import (
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/net/ghttp/internal/httputil"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/net/ghttp/internal/httputil"
 )
 
-// BuildParams builds the request string for the http client. The <params> can be type of:
+// BuildParams builds the request string for the http client. The `params` can be type of:
 // string/[]byte/map/struct/*struct.
 //
-// The optional parameter <noUrlEncode> specifies whether ignore the url encoding for the data.
+// The optional parameter `noUrlEncode` specifies whether ignore the url encoding for the data.
 func BuildParams(params interface{}, noUrlEncode ...bool) (encodedParamStr string) {
 	return httputil.BuildParams(params, noUrlEncode...)
 }
 
-// niceCallFunc calls function <f> with exception capture logic.
+// niceCallFunc calls function `f` with exception capture logic.
 func niceCallFunc(f func()) {
 	defer func() {
 		if exception := recover(); exception != nil {
 			switch exception {
 			case exceptionExit, exceptionExitAll:
 				return
+
 			default:
-				if _, ok := exception.(errorStack); ok {
+				if v, ok := exception.(error); ok && gerror.HasStack(v) {
 					// It's already an error that has stack info.
-					panic(exception)
+					panic(v)
 				} else {
 					// Create a new error with stack info.
 					// Note that there's a skip pointing the start stacktrace
 					// of the real error point.
-					if err, ok := exception.(error); ok {
-						panic(gerror.Wrap(err, ""))
+					if v, ok := exception.(error); ok {
+						if gerror.Code(v) != gcode.CodeNil {
+							panic(v)
+						} else {
+							panic(gerror.WrapCodeSkip(gcode.CodeInternalError, 1, v, ""))
+						}
 					} else {
-						panic(gerror.NewSkipf(1, "%v", exception))
+						panic(gerror.NewCodeSkipf(gcode.CodeInternalError, 1, "%+v", exception))
 					}
 				}
 			}

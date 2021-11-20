@@ -7,10 +7,11 @@
 package gdb
 
 import (
-	"github.com/gogf/gf/container/gvar"
-	"github.com/gogf/gf/encoding/gparser"
-	"github.com/gogf/gf/util/gconv"
 	"math"
+
+	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // IsEmpty checks and returns whether `r` is empty.
@@ -28,7 +29,7 @@ func (r Result) Size() int {
 	return r.Len()
 }
 
-// Chunk splits an Result into multiple Results,
+// Chunk splits a Result into multiple Results,
 // the size of each array is determined by `size`.
 // The last chunk may contain less than size elements.
 func (r Result) Chunk(size int) []Result {
@@ -51,14 +52,14 @@ func (r Result) Chunk(size int) []Result {
 
 // Json converts `r` to JSON format content.
 func (r Result) Json() string {
-	content, _ := gparser.VarToJson(r.List())
-	return string(content)
+	content, _ := gjson.New(r.List()).ToJsonString()
+	return content
 }
 
 // Xml converts `r` to XML format content.
 func (r Result) Xml(rootTag ...string) string {
-	content, _ := gparser.VarToXml(r.List(), rootTag...)
-	return string(content)
+	content, _ := gjson.New(r.List()).ToXmlString(rootTag...)
+	return content
 }
 
 // List converts `r` to a List.
@@ -72,6 +73,7 @@ func (r Result) List() List {
 
 // Array retrieves and returns specified column values as slice.
 // The parameter `field` is optional is the column field is only one.
+// The default `field` is the first field name of the first item in `Result` if parameter `field` is not given.
 func (r Result) Array(field ...string) []Value {
 	array := make([]Value, len(r))
 	if len(r) == 0 {
@@ -81,7 +83,7 @@ func (r Result) Array(field ...string) []Value {
 	if len(field) > 0 && field[0] != "" {
 		key = field[0]
 	} else {
-		for k, _ := range r[0] {
+		for k := range r[0] {
 			key = k
 			break
 		}
@@ -153,7 +155,7 @@ func (r Result) MapKeyUint(key string) map[uint]Map {
 	return m
 }
 
-// RecordKeyInt converts `r` to a map[int]Record of which key is specified by `key`.
+// RecordKeyStr converts `r` to a map[string]Record of which key is specified by `key`.
 func (r Result) RecordKeyStr(key string) map[string]Record {
 	m := make(map[string]Record)
 	for _, item := range r {
@@ -189,5 +191,5 @@ func (r Result) RecordKeyUint(key string) map[uint]Record {
 // Structs converts `r` to struct slice.
 // Note that the parameter `pointer` should be type of *[]struct/*[]*struct.
 func (r Result) Structs(pointer interface{}) (err error) {
-	return gconv.StructsTag(r.List(), pointer, OrmTagForStruct)
+	return gconv.StructsTag(r, pointer, OrmTagForStruct)
 }

@@ -7,6 +7,13 @@
 
 package gdb
 
+import (
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/text/gstr"
+)
+
 // MasterLink acts like function Master but with additional `schema` parameter specifying
 // the schema for the connection. It is defined for internal usage.
 // Also see Master.
@@ -29,8 +36,11 @@ func (c *Core) SlaveLink(schema ...string) (Link, error) {
 	return &dbLink{db}, nil
 }
 
-// QuoteWord checks given string `s` a word, if true quotes it with security chars of the database
-// and returns the quoted string; or else return `s` without any change.
+// QuoteWord checks given string `s` a word,
+// if true it quotes `s` with security chars of the database
+// and returns the quoted string; or else it returns `s` without any change.
+//
+// The meaning of a `word` can be considered as a column name.
 func (c *Core) QuoteWord(s string) string {
 	charLeft, charRight := c.db.GetChars()
 	return doQuoteWord(s, charLeft, charRight)
@@ -38,6 +48,8 @@ func (c *Core) QuoteWord(s string) string {
 
 // QuoteString quotes string with quote chars. Strings like:
 // "user", "user u", "user,user_detail", "user u, user_detail ut", "u.id asc".
+//
+// The meaning of a `string` can be considered as part of a statement string including columns.
 func (c *Core) QuoteString(s string) string {
 	charLeft, charRight := c.db.GetChars()
 	return doQuoteString(s, charLeft, charRight)
@@ -63,12 +75,6 @@ func (c *Core) GetChars() (charLeft string, charRight string) {
 	return "", ""
 }
 
-// HandleSqlBeforeCommit handles the sql before posts it to database.
-// It does nothing in default.
-func (c *Core) HandleSqlBeforeCommit(sql string) string {
-	return sql
-}
-
 // Tables retrieves and returns the tables of current schema.
 // It's mainly used in cli tool chain for automatically generating the models.
 //
@@ -87,4 +93,57 @@ func (c *Core) Tables(schema ...string) (tables []string, err error) {
 // It does nothing in default.
 func (c *Core) TableFields(table string, schema ...string) (fields map[string]*TableField, err error) {
 	return
+}
+
+// HasField determine whether the field exists in the table.
+func (c *Core) HasField(table, field string, schema ...string) (bool, error) {
+	table = c.guessPrimaryTableName(table)
+	tableFields, err := c.db.TableFields(c.GetCtx(), table, schema...)
+	if err != nil {
+		return false, err
+	}
+	if len(tableFields) == 0 {
+		return false, gerror.NewCodef(
+			gcode.CodeNotFound,
+			`empty table fields for table "%s"`, table,
+		)
+	}
+	fieldsArray := make([]string, len(tableFields))
+	for k, v := range tableFields {
+		fieldsArray[v.Index] = k
+	}
+	charLeft, charRight := c.db.GetChars()
+	field = gstr.Trim(field, charLeft+charRight)
+	for _, f := range fieldsArray {
+		if f == field {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// guessPrimaryTableName parses and returns the primary table name.
+func (c *Core) guessPrimaryTableName(tableStr string) string {
+	if tableStr == "" {
+		return ""
+	}
+	var (
+		guessedTableName = ""
+		array1           = gstr.SplitAndTrim(tableStr, ",")
+		array2           = gstr.SplitAndTrim(array1[0], " ")
+		array3           = gstr.SplitAndTrim(array2[0], ".")
+	)
+	if len(array3) >= 2 {
+		guessedTableName = array3[1]
+	} else {
+		guessedTableName = array3[0]
+	}
+	charL, charR := c.db.GetChars()
+	if charL != "" || charR != "" {
+		guessedTableName = gstr.Trim(guessedTableName, charL+charR)
+	}
+	if !gregex.IsMatchString(regularFieldNameRegPattern, guessedTableName) {
+		return ""
+	}
+	return guessedTableName
 }

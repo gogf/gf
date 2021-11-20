@@ -12,14 +12,14 @@ package gview
 
 import (
 	"context"
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/internal/intlog"
 
-	"github.com/gogf/gf"
-	"github.com/gogf/gf/container/garray"
-	"github.com/gogf/gf/os/gcmd"
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/v2"
+	"github.com/gogf/gf/v2/container/garray"
+	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/internal/intlog"
+	"github.com/gogf/gf/v2/os/gcmd"
+	"github.com/gogf/gf/v2/os/gfile"
+	"github.com/gogf/gf/v2/os/glog"
 )
 
 // View object for template engine.
@@ -34,6 +34,10 @@ type View struct {
 type (
 	Params  = map[string]interface{} // Params is type for template params.
 	FuncMap = map[string]interface{} // FuncMap is type for custom template functions.
+)
+
+const (
+	commandEnvKeyForPath = "gf.gview.path"
 )
 
 var (
@@ -57,8 +61,11 @@ func ParseContent(ctx context.Context, content string, params ...Params) (string
 }
 
 // New returns a new view object.
-// The parameter <path> specifies the template directory path to load template files.
+// The parameter `path` specifies the template directory path to load template files.
 func New(path ...string) *View {
+	var (
+		ctx = context.TODO()
+	)
 	view := &View{
 		paths:        garray.NewStrArray(),
 		data:         make(map[string]interface{}),
@@ -68,35 +75,35 @@ func New(path ...string) *View {
 	}
 	if len(path) > 0 && len(path[0]) > 0 {
 		if err := view.SetPath(path[0]); err != nil {
-			intlog.Error(err)
+			intlog.Error(context.TODO(), err)
 		}
 	} else {
 		// Customized dir path from env/cmd.
-		if envPath := gcmd.GetOptWithEnv("gf.gview.path").String(); envPath != "" {
+		if envPath := gcmd.GetOptWithEnv(commandEnvKeyForPath).String(); envPath != "" {
 			if gfile.Exists(envPath) {
 				if err := view.SetPath(envPath); err != nil {
-					intlog.Error(err)
+					intlog.Error(context.TODO(), err)
 				}
 			} else {
 				if errorPrint() {
-					glog.Errorf("Template directory path does not exist: %s", envPath)
+					glog.Errorf(ctx, "Template directory path does not exist: %s", envPath)
 				}
 			}
 		} else {
 			// Dir path of working dir.
 			if err := view.SetPath(gfile.Pwd()); err != nil {
-				intlog.Error(err)
+				intlog.Error(context.TODO(), err)
 			}
 			// Dir path of binary.
 			if selfPath := gfile.SelfDir(); selfPath != "" && gfile.Exists(selfPath) {
 				if err := view.AddPath(selfPath); err != nil {
-					intlog.Error(err)
+					intlog.Error(context.TODO(), err)
 				}
 			}
 			// Dir path of main package.
 			if mainPath := gfile.MainPkgPath(); mainPath != "" && gfile.Exists(mainPath) {
 				if err := view.AddPath(mainPath); err != nil {
-					intlog.Error(err)
+					intlog.Error(context.TODO(), err)
 				}
 			}
 		}
@@ -139,6 +146,10 @@ func New(path ...string) *View {
 		"map":        view.buildInFuncMap,
 		"maps":       view.buildInFuncMaps,
 		"json":       view.buildInFuncJson,
+		"plus":       view.buildInFuncPlus,
+		"minus":      view.buildInFuncMinus,
+		"times":      view.buildInFuncTimes,
+		"divide":     view.buildInFuncDivide,
 	})
 
 	return view
