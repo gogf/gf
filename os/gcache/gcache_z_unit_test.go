@@ -119,7 +119,7 @@ func TestCache_UpdateExpire(t *testing.T) {
 		newExpire := 10 * time.Second
 		oldExpire2, err := gcache.UpdateExpire(ctx, key, newExpire)
 		t.AssertNil(err)
-		t.Assert(oldExpire2, oldExpire)
+		t.AssertIN(oldExpire2, g.Slice{oldExpire, `2.999s`})
 
 		e, _ := gcache.GetExpire(ctx, key)
 		t.AssertNE(e, oldExpire)
