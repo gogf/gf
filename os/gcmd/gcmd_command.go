@@ -8,122 +8,51 @@
 package gcmd
 
 import (
-	"bytes"
-	"fmt"
-	"os"
+	"context"
 
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/command"
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
+// Command holds the info about an argument that can handle custom logic.
 type Command struct {
-	parent      *Command
-	commands    []Command
-	options     []Option
-	level       int
-	Name        string
-	Usage       string
-	Short       string
-	Brief       string
-	Description string
-	Func        func(parser *Parser)
-	HelpFunc    func(parser *Parser)
-	Examples    string
-	Additional  string
+	Name        string    // Command name(case-sensitive).
+	Usage       string    // A brief line description about its usage, eg: gf build main.go [OPTION]
+	Brief       string    // A brief info that describes what this command will do.
+	Description string    // A detailed description.
+	Options     []Option  // Option array, configuring how this command act.
+	Func        Function  // Custom function.
+	HelpFunc    Function  // Custom help function
+	Examples    string    // Usage examples.
+	Additional  string    // Additional custom info about this command.
+	parent      *Command  // Parent command for internal usage.
+	commands    []Command // Sub commands of this command.
 }
 
+// Function is a custom command callback function that is bound to a certain argument.
+type Function func(ctx context.Context, parser *Parser) (err error)
+
+// Option is the command value that is specified by a name or shor name.
+// An Option can have or have no value bound to it.
 type Option struct {
-	Name        string
-	Short       string
-	Brief       string
-	Description string
-	NeedValue   bool
+	Name      string // Option name.
+	Short     string // Option short.
+	Brief     string // Brief info about this Option, which is used in help info.
+	NeedValue bool   // Whether this Option having or having no value bound to it.
 }
 
-func (c *Command) Print() {
-	prefix := gstr.Repeat(" ", 4)
-	buffer := bytes.NewBuffer(nil)
-	// Usage.
-	if c.Usage != "" || c.Name != "" {
-		buffer.WriteString("USAGE\n")
-		buffer.WriteString(prefix)
-		if c.Usage != "" {
-			buffer.WriteString(c.Usage)
-		} else {
-			var (
-				p    = c
-				name = c.Name
-			)
-			for p.parent != nil {
-				name = p.parent.Name + " " + name
-				p = p.parent
-			}
-			buffer.WriteString(fmt.Sprintf(`%s ARGUMENT [OPTION]`, name))
-		}
-		buffer.WriteString("\n\n")
+var (
+	// defaultHelpOption is the default help option that will be automatically added to each command.
+	defaultHelpOption = Option{
+		Name:      `help`,
+		Short:     `h`,
+		Brief:     `more information about this command`,
+		NeedValue: false,
 	}
-	// Command.
-	if len(c.commands) > 0 {
-		buffer.WriteString("COMMAND\n")
-		maxSpaceLength := 0
-		for _, cmd := range c.commands {
-			nameStr := cmd.Name + "/" + cmd.Short
-			if len(nameStr) > maxSpaceLength {
-				maxSpaceLength = len(nameStr)
-			}
-		}
-		for _, cmd := range c.commands {
-			nameStr := cmd.Name
-			if cmd.Short != "" {
-				nameStr += "/" + cmd.Short
-			}
-			var (
-				spaceLength = maxSpaceLength - len(nameStr)
-				lineStr     = fmt.Sprintf(
-					"%s%s%s    %s\n",
-					prefix, nameStr, gstr.Repeat(" ", spaceLength), cmd.Brief,
-				)
-			)
-			lineStr = gstr.WordWrap(lineStr, maxLineChars, "\n")
-			buffer.WriteString(lineStr)
-		}
-		buffer.WriteString("\n")
-	}
+)
 
-	// Examples.
-	if c.Examples != "" {
-		buffer.WriteString("EXAMPLES\n")
-		lineStr := gstr.WordWrap(gstr.Trim(c.Examples), maxLineChars, "\n")
-		for _, line := range gstr.SplitAndTrim(lineStr, "\n") {
-			buffer.WriteString(prefix)
-			buffer.WriteString(line)
-			buffer.WriteString("\n")
-		}
-		buffer.WriteString("\n")
-	}
-	// Description.
-	if c.Description != "" {
-		buffer.WriteString("DESCRIPTION\n")
-		lineStr := gstr.WordWrap(gstr.Trim(c.Description), maxLineChars, "\n")
-		for _, line := range gstr.SplitAndTrim(lineStr, "\n") {
-			buffer.WriteString(prefix)
-			buffer.WriteString(line)
-			buffer.WriteString("\n")
-		}
-	}
-	buffer.WriteString("\n")
-	// Additional.
-	if c.Additional != "" {
-		lineStr := gstr.WordWrap(gstr.Trim(c.Additional), maxLineChars, "\n")
-		buffer.WriteString(lineStr)
-	}
-	buffer.WriteString("\n")
-	fmt.Println(buffer.String())
-}
-
-func (c *Command) AddCommand(command ...Command) error {
-	for _, cmd := range command {
+func (c *Command) Add(commands ...Command) error {
+	for _, cmd := range commands {
 		cmd.Name = gstr.Trim(cmd.Name)
 		if cmd.Name == "" {
 			return gerror.New("command name should not be empty")
@@ -132,72 +61,7 @@ func (c *Command) AddCommand(command ...Command) error {
 			return gerror.New("command function should not be empty")
 		}
 		cmd.parent = c
-		cmd.level = c.level + 1
 		c.commands = append(c.commands, cmd)
 	}
 	return nil
-}
-
-func (c *Command) AddOption(option ...Option) error {
-	for _, opt := range option {
-		opt.Name = gstr.Trim(opt.Name)
-		if opt.Name == "" {
-			return gerror.New("option name should not be empty")
-		}
-	}
-	c.options = append(c.options, option...)
-	return nil
-}
-
-func (c *Command) Run() {
-	// Find the matched command and run it.
-	argument := GetArg(c.level + 1)
-	if !argument.IsEmpty() {
-		if len(c.commands) > 0 {
-			for _, cmd := range c.commands {
-				if gstr.Equal(cmd.Name, argument.String()) {
-					cmd.Run()
-					return
-				}
-			}
-		}
-	}
-	// Run current command function.
-	var (
-		err    error
-		parser *Parser
-	)
-	if len(c.options) > 0 {
-		optionParsingMap := make(map[string]bool, 0)
-		// Add custom options to parser.
-		for _, option := range c.options {
-			optionParsingKey := option.Name
-			if option.Short != "" {
-				optionParsingKey += "," + option.Short
-			}
-			optionParsingMap[optionParsingKey] = option.NeedValue
-		}
-		// Add help option to parser.
-		optionParsingMap[helpOptionName+","+helpOptionNameShort] = false
-		parser, err = Parse(optionParsingMap)
-	} else {
-		parsedArgs, parsedOptions := command.ParseUsingDefaultAlgorithm(os.Args...)
-		parser = &Parser{
-			strict:        false,
-			parsedArgs:    parsedArgs,
-			parsedOptions: parsedOptions,
-		}
-	}
-	if err != nil {
-		fmt.Println("Error:", err)
-	}
-	if parser.ContainsOpt(helpOptionName) || parser.ContainsOpt(helpOptionNameShort) {
-		if c.HelpFunc != nil {
-			c.HelpFunc(parser)
-		} else {
-			c.Print()
-		}
-		return
-	}
-	c.Func(parser)
 }
