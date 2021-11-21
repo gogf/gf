@@ -114,14 +114,14 @@ func (c *Command) Print() {
 		buffer.WriteString(gstr.WordWrap(gstr.Trim(c.Description), maxLineChars, "\n"+prefix))
 		buffer.WriteString("\n")
 	}
-	buffer.WriteString("\n")
 
 	// Additional.
 	if c.Additional != "" {
 		lineStr := gstr.WordWrap(gstr.Trim(c.Additional), maxLineChars, "\n")
 		buffer.WriteString(lineStr)
+		buffer.WriteString("\n")
 	}
-	buffer.WriteString("\n")
+
 	fmt.Println(buffer.String())
 }
 

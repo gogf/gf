@@ -10,6 +10,7 @@ package gcmd
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/gogf/gf/v2/text/gstr"
 )
@@ -38,7 +39,11 @@ func (c *Command) Run(ctx context.Context) error {
 	}
 
 	// Print error and help command if no command found.
-	fmt.Printf("Error: command not found for \"%s\"\n\n", gstr.Join(args, " "))
+	fmt.Printf(
+		"ERROR: command \"%s\" not found for arguments \"%s\"\n",
+		gstr.Join(args, " "),
+		gstr.Join(os.Args, " "),
+	)
 	c.Print()
 
 	return nil
@@ -63,6 +68,7 @@ func (c *Command) doRun(ctx context.Context, parser *Parser) (err error) {
 	return c.Func(ctx, parser)
 }
 
+// reParse re-parses the arguments using option configuration of current command.
 func (c *Command) reParse(ctx context.Context, parser *Parser) (*Parser, error) {
 	// It seems just has built-in help option, it so does nothing.
 	if len(c.Options) == 1 {
@@ -83,6 +89,7 @@ func (c *Command) reParse(ctx context.Context, parser *Parser) (*Parser, error) 
 	return Parse(supportedOptions)
 }
 
+// searchCommand recursively searches the command according given arguments.
 func (c *Command) searchCommand(args []string) *Command {
 	if len(args) == 0 {
 		return nil
