@@ -19,11 +19,7 @@ import (
 const (
 	helpOptionName      = "help"
 	helpOptionNameShort = "h"
-	maxLineChars        = 100
-)
-
-var (
-	defaultCommandFuncMap = make(map[string]func())
+	maxLineChars        = 120
 )
 
 // Init does custom initialization.
