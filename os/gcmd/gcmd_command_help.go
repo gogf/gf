@@ -15,6 +15,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
+// Print prints help info to stdout for current command.
 func (c *Command) Print() {
 	prefix := gstr.Repeat(" ", 4)
 	buffer := bytes.NewBuffer(nil)

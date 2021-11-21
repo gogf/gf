@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
+// Run calls custom function that bound to this command.
 func (c *Command) Run(ctx context.Context) error {
 	// Parse command arguments and options using default algorithm.
 	parser, err := Parse(nil)

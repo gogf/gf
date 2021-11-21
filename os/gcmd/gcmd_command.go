@@ -51,6 +51,7 @@ var (
 	}
 )
 
+// Add adds one or more sub-commands to current command.
 func (c *Command) Add(commands ...Command) error {
 	for _, cmd := range commands {
 		cmd.Name = gstr.Trim(cmd.Name)
