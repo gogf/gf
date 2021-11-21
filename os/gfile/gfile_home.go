@@ -38,7 +38,7 @@ func getHomePath() (string, error) {
 	if nil == err {
 		return u.HomeDir, nil
 	}
-	if "windows" == runtime.GOOS {
+	if runtime.GOOS == "windows" {
 		return homeWindows()
 	}
 	return homeUnix()
