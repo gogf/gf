@@ -9,6 +9,7 @@ package gmap_test
 import (
 	"fmt"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/util/gconv"
 
 	"github.com/gogf/gf/v2/container/gmap"
@@ -98,10 +99,10 @@ func ExampleStrIntMap_MapStrAny() {
 	m.Set("key2", 2)
 
 	n := m.MapStrAny()
-	fmt.Println(n)
+	fmt.Printf("%#v", n)
 
 	// Output:
-	// map[key1:1 key2:2]
+	// map[string]interface {}{"key1":1, "key2":2}
 }
 
 func ExampleStrIntMap_FilterEmpty() {
@@ -263,7 +264,7 @@ func ExampleStrIntMap_GetOrSetFuncLock() {
 func ExampleStrIntMap_SetIfNotExist() {
 	var m gmap.StrIntMap
 	fmt.Println(m.SetIfNotExist("k1", 1))
-	fmt.Println(m.SetIfNotExist("k1", 1))
+	fmt.Println(m.SetIfNotExist("k1", 2))
 	fmt.Println(m.Map())
 
 	// Output:
@@ -278,7 +279,7 @@ func ExampleStrIntMap_SetIfNotExistFunc() {
 		return 1
 	}))
 	fmt.Println(m.SetIfNotExistFunc("k1", func() int {
-		return 1
+		return 2
 	}))
 	fmt.Println(m.Map())
 
@@ -294,7 +295,7 @@ func ExampleStrIntMap_SetIfNotExistFuncLock() {
 		return 1
 	}))
 	fmt.Println(m.SetIfNotExistFuncLock("k1", func() int {
-		return 1
+		return 2
 	}))
 	fmt.Println(m.Map())
 
@@ -310,9 +311,11 @@ func ExampleStrIntMap_Remove() {
 
 	fmt.Println(m.Remove("k1"))
 	fmt.Println(m.Remove("k2"))
+	fmt.Println(m.Size())
 
 	// Output:
 	// 1
+	// 0
 	// 0
 }
 
@@ -545,7 +548,7 @@ func ExampleStrIntMap_MarshalJSON() {
 		"k4": 4,
 	})
 
-	bytes, err := m.MarshalJSON()
+	bytes, err := json.Marshal(&m)
 	if err == nil {
 		fmt.Println(gconv.String(bytes))
 	}
@@ -565,7 +568,7 @@ func ExampleStrIntMap_UnmarshalJSON() {
 
 	var n gmap.StrIntMap
 
-	err := n.UnmarshalJSON(gconv.Bytes(m.String()))
+	err := json.Unmarshal(gconv.Bytes(m.String()), &n)
 	if err == nil {
 		fmt.Println(n.Map())
 	}
@@ -577,17 +580,17 @@ func ExampleStrIntMap_UnmarshalJSON() {
 func ExampleStrIntMap_UnmarshalValue() {
 	var m gmap.StrIntMap
 	m.Sets(g.MapStrInt{
-		"k1": 1,
-		"k2": 2,
-		"k3": 3,
-		"k4": 4,
+		"goframe": 1,
+		"gin":     2,
+		"echo":    3,
 	})
 
-	var n gmap.StrIntMap
-	err := n.UnmarshalValue(m.String())
+	var goweb map[string]int
+
+	err := gconv.Scan(m.String(), &goweb)
 	if err == nil {
-		fmt.Println(n.Map())
+		fmt.Printf("%#v", goweb)
 	}
 	// Output:
-	// map[k1:1 k2:2 k3:3 k4:4]
+	// map[string]int{"echo":3, "gin":2, "goframe":1}
 }

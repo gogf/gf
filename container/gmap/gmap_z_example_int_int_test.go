@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
@@ -100,10 +101,10 @@ func ExampleIntIntMap_MapStrAny() {
 	m.Set(1002, 2)
 
 	n := m.MapStrAny()
-	fmt.Println(n)
+	fmt.Printf("%#v", n)
 
 	// Output:
-	// map[1001:1 1002:2]
+	// map[string]interface {}{"1001":1, "1002":2}
 }
 
 func ExampleIntIntMap_FilterEmpty() {
@@ -265,7 +266,7 @@ func ExampleIntIntMap_GetOrSetFuncLock() {
 func ExampleIntIntMap_SetIfNotExist() {
 	var m gmap.IntIntMap
 	fmt.Println(m.SetIfNotExist(1, 1))
-	fmt.Println(m.SetIfNotExist(1, 1))
+	fmt.Println(m.SetIfNotExist(1, 2))
 	fmt.Println(m.Map())
 
 	// Output:
@@ -280,7 +281,7 @@ func ExampleIntIntMap_SetIfNotExistFunc() {
 		return 1
 	}))
 	fmt.Println(m.SetIfNotExistFunc(1, func() int {
-		return 1
+		return 2
 	}))
 	fmt.Println(m.Map())
 
@@ -296,7 +297,7 @@ func ExampleIntIntMap_SetIfNotExistFuncLock() {
 		return 1
 	}))
 	fmt.Println(m.SetIfNotExistFuncLock(1, func() int {
-		return 1
+		return 2
 	}))
 	fmt.Println(m.Map())
 
@@ -312,9 +313,11 @@ func ExampleIntIntMap_Remove() {
 
 	fmt.Println(m.Remove(1))
 	fmt.Println(m.Remove(2))
+	fmt.Println(m.Size())
 
 	// Output:
 	// 1
+	// 0
 	// 0
 }
 
@@ -539,7 +542,7 @@ func ExampleIntIntMap_MarshalJSON() {
 		4: 4,
 	})
 
-	bytes, err := m.MarshalJSON()
+	bytes, err := json.Marshal(&m)
 	if err == nil {
 		fmt.Println(gconv.String(bytes))
 	}
@@ -559,7 +562,7 @@ func ExampleIntIntMap_UnmarshalJSON() {
 
 	var n gmap.Map
 
-	err := n.UnmarshalJSON(gconv.Bytes(m.String()))
+	err := json.Unmarshal(gconv.Bytes(m.String()), &n)
 	if err == nil {
 		fmt.Println(n.Map())
 	}
@@ -571,17 +574,17 @@ func ExampleIntIntMap_UnmarshalJSON() {
 func ExampleIntIntMap_UnmarshalValue() {
 	var m gmap.IntIntMap
 	m.Sets(g.MapIntInt{
-		1: 1,
-		2: 2,
-		3: 3,
-		4: 4,
+		1: 1001,
+		2: 1002,
+		3: 1003,
 	})
 
-	var n gmap.Map
-	err := n.UnmarshalValue(m.String())
+	var n map[int]int
+
+	err := gconv.Scan(m.String(), &n)
 	if err == nil {
-		fmt.Println(n.Map())
+		fmt.Printf("%#v", n)
 	}
 	// Output:
-	// map[1:1 2:2 3:3 4:4]
+	// map[int]int{1:1001, 2:1002, 3:1003}
 }

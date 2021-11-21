@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
@@ -153,10 +154,10 @@ func ExampleListMap_MapStrAny() {
 	m.Set("key2", "val2")
 
 	n := m.MapStrAny()
-	fmt.Println(n)
+	fmt.Printf("%#v", n)
 
 	// Output:
-	// map[key1:val1 key2:val2]
+	// map[string]interface {}{"key1":"val1", "key2":"val2"}
 }
 
 func ExampleListMap_FilterEmpty() {
@@ -376,7 +377,7 @@ func ExampleListMap_GetVarOrSetFuncLock() {
 func ExampleListMap_SetIfNotExist() {
 	var m gmap.ListMap
 	fmt.Println(m.SetIfNotExist("k1", "v1"))
-	fmt.Println(m.SetIfNotExist("k1", "v1"))
+	fmt.Println(m.SetIfNotExist("k1", "v2"))
 	fmt.Println(m.Map())
 
 	// Output:
@@ -391,7 +392,7 @@ func ExampleListMap_SetIfNotExistFunc() {
 		return "v1"
 	}))
 	fmt.Println(m.SetIfNotExistFunc("k1", func() interface{} {
-		return "v1"
+		return "v2"
 	}))
 	fmt.Println(m.Map())
 
@@ -407,7 +408,7 @@ func ExampleListMap_SetIfNotExistFuncLock() {
 		return "v1"
 	}))
 	fmt.Println(m.SetIfNotExistFuncLock("k1", func() interface{} {
-		return "v1"
+		return "v2"
 	}))
 	fmt.Println(m.Map())
 
@@ -423,10 +424,12 @@ func ExampleListMap_Remove() {
 
 	fmt.Println(m.Remove("k1"))
 	fmt.Println(m.Remove("k2"))
+	fmt.Println(m.Size())
 
 	// Output:
 	// v1
 	// <nil>
+	// 0
 }
 
 func ExampleListMap_Removes() {
@@ -566,7 +569,7 @@ func ExampleListMap_MarshalJSON() {
 		"k4": "v4",
 	})
 
-	bytes, err := m.MarshalJSON()
+	bytes, err := json.Marshal(&m)
 	if err == nil {
 		fmt.Println(gconv.String(bytes))
 	}
@@ -586,7 +589,7 @@ func ExampleListMap_UnmarshalJSON() {
 
 	var n gmap.ListMap
 
-	err := n.UnmarshalJSON(gconv.Bytes(m.String()))
+	err := json.Unmarshal(gconv.Bytes(m.String()), &n)
 	if err == nil {
 		fmt.Println(n.Map())
 	}
@@ -596,19 +599,27 @@ func ExampleListMap_UnmarshalJSON() {
 }
 
 func ExampleListMap_UnmarshalValue() {
-	var m gmap.ListMap
-	m.Sets(g.MapAnyAny{
-		"k1": "v1",
-		"k2": "v2",
-		"k3": "v3",
-		"k4": "v4",
-	})
-
-	var n gmap.ListMap
-	err := n.UnmarshalValue(m.String())
-	if err == nil {
-		fmt.Println(n.Map())
+	type User struct {
+		Uid   int
+		Name  string
+		Pass1 string `gconv:"password1"`
+		Pass2 string `gconv:"password2"`
 	}
+
+	var (
+		user   = new(User)
+		params = g.MapAnyAny{
+			"uid":   1,
+			"name":  "john",
+			"PASS1": "123",
+			"PASS2": "456",
+		}
+	)
+	err := gconv.Scan(params, user)
+	if err == nil {
+		fmt.Printf("%#v", user)
+	}
+
 	// Output:
-	// map[k1:v1 k2:v2 k3:v3 k4:v4]
+	// &gmap_test.User{Uid:1, Name:"john", Pass1:"123", Pass2:"456"}
 }
