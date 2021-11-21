@@ -8,6 +8,7 @@ package gmap_test
 
 import (
 	"fmt"
+	"github.com/gogf/gf/v2/util/gutil"
 
 	"github.com/gogf/gf/v2/container/gmap"
 )
@@ -279,4 +280,32 @@ func ExampleNewListMapFrom() {
 	// Output:
 	// {"key1":"var1","key2":"var2"}
 	// {"key1":"var1","key2":"var2"}
+}
+
+func ExampleNewTreeMap() {
+	m := gmap.NewTreeMap(gutil.ComparatorString)
+
+	m.Set("key2", "var2")
+	m.Set("key1", "var1")
+
+	fmt.Println(m.Map())
+
+	// Output:
+	// map[key1:var1 key2:var2]
+}
+
+func ExampleNewTreeMapFrom() {
+	m := gmap.NewTreeMap(gutil.ComparatorString)
+
+	m.Set("key2", "var2")
+	m.Set("key1", "var1")
+
+	fmt.Println(m.Map())
+
+	n := gmap.NewListMapFrom(m.Map(), true)
+	fmt.Println(n.Map())
+
+	// Output:
+	// map[key1:var1 key2:var2]
+	// map[key1:var1 key2:var2]
 }
