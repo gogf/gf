@@ -8,6 +8,7 @@ package gmap_test
 
 import (
 	"fmt"
+	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/util/gconv"
 
 	"github.com/gogf/gf/v2/container/gmap"
@@ -98,10 +99,10 @@ func ExampleStrAnyMap_MapStrAny() {
 	m.Set("key2", "val2")
 
 	n := m.MapStrAny()
-	fmt.Println(n)
+	fmt.Printf("%#v", n)
 
 	// Output:
-	// map[key1:val1 key2:val2]
+	// map[string]interface {}{"key1":"val1", "key2":"val2"}
 }
 
 func ExampleStrAnyMap_FilterEmpty() {
@@ -126,10 +127,10 @@ func ExampleStrAnyMap_FilterNil() {
 		"k4": 1,
 	})
 	m.FilterNil()
-	fmt.Println(m.Map())
+	fmt.Printf("%#v", m.Map())
 
-	// May Output:
-	// map[k1: k3:0 k4:1]
+	// Output:
+	// map[string]interface {}{"k1":"", "k3":0, "k4":1}
 }
 
 func ExampleStrAnyMap_Set() {
@@ -335,7 +336,7 @@ func ExampleStrAnyMap_GetVarOrSetFuncLock() {
 func ExampleStrAnyMap_SetIfNotExist() {
 	var m gmap.StrAnyMap
 	fmt.Println(m.SetIfNotExist("k1", "v1"))
-	fmt.Println(m.SetIfNotExist("k1", "v1"))
+	fmt.Println(m.SetIfNotExist("k1", "v2"))
 	fmt.Println(m.Map())
 
 	// Output:
@@ -350,7 +351,7 @@ func ExampleStrAnyMap_SetIfNotExistFunc() {
 		return "v1"
 	}))
 	fmt.Println(m.SetIfNotExistFunc("k1", func() interface{} {
-		return "v1"
+		return "v2"
 	}))
 	fmt.Println(m.Map())
 
@@ -366,7 +367,7 @@ func ExampleStrAnyMap_SetIfNotExistFuncLock() {
 		return "v1"
 	}))
 	fmt.Println(m.SetIfNotExistFuncLock("k1", func() interface{} {
-		return "v1"
+		return "v2"
 	}))
 	fmt.Println(m.Map())
 
@@ -382,10 +383,12 @@ func ExampleStrAnyMap_Remove() {
 
 	fmt.Println(m.Remove("k1"))
 	fmt.Println(m.Remove("k2"))
+	fmt.Println(m.Size())
 
 	// Output:
 	// v1
 	// <nil>
+	// 0
 }
 
 func ExampleStrAnyMap_Removes() {
@@ -609,7 +612,7 @@ func ExampleStrAnyMap_MarshalJSON() {
 		"k4": "v4",
 	})
 
-	bytes, err := m.MarshalJSON()
+	bytes, err := json.Marshal(&m)
 	if err == nil {
 		fmt.Println(gconv.String(bytes))
 	}
@@ -629,7 +632,7 @@ func ExampleStrAnyMap_UnmarshalJSON() {
 
 	var n gmap.StrAnyMap
 
-	err := n.UnmarshalJSON(gconv.Bytes(m.String()))
+	err := json.Unmarshal(gconv.Bytes(m.String()), &n)
 	if err == nil {
 		fmt.Println(n.Map())
 	}
@@ -641,17 +644,17 @@ func ExampleStrAnyMap_UnmarshalJSON() {
 func ExampleStrAnyMap_UnmarshalValue() {
 	var m gmap.StrAnyMap
 	m.Sets(g.MapStrAny{
-		"k1": "v1",
-		"k2": "v2",
-		"k3": "v3",
-		"k4": "v4",
+		"goframe": "https://goframe.org",
+		"gin":     "https://gin-gonic.com/",
+		"echo":    "https://echo.labstack.com/",
 	})
 
-	var n gmap.StrAnyMap
-	err := n.UnmarshalValue(m.String())
+	var goweb map[string]interface{}
+
+	err := gconv.Scan(m.String(), &goweb)
 	if err == nil {
-		fmt.Println(n.Map())
+		fmt.Printf("%#v", goweb)
 	}
 	// Output:
-	// map[k1:v1 k2:v2 k3:v3 k4:v4]
+	// map[string]interface {}{"echo":"https://echo.labstack.com/", "gin":"https://gin-gonic.com/", "goframe":"https://goframe.org"}
 }
