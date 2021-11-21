@@ -33,30 +33,38 @@ func Init(args ...string) {
 		defaultParsedOptions = make(map[string]string)
 	}
 	// Parsing os.Args with default algorithm.
+	defaultParsedArgs, defaultParsedOptions = ParseUsingDefaultAlgorithm(args...)
+}
+
+// ParseUsingDefaultAlgorithm parses arguments using default algorithm.
+func ParseUsingDefaultAlgorithm(args ...string) (parsedArgs []string, parsedOptions map[string]string) {
+	parsedArgs = make([]string, 0)
+	parsedOptions = make(map[string]string)
 	for i := 0; i < len(args); {
 		array := argumentRegex.FindStringSubmatch(args[i])
 		if len(array) > 2 {
 			if array[2] == "=" {
-				defaultParsedOptions[array[1]] = array[3]
+				parsedOptions[array[1]] = array[3]
 			} else if i < len(args)-1 {
 				if len(args[i+1]) > 0 && args[i+1][0] == '-' {
 					// Eg: gf gen -d -n 1
-					defaultParsedOptions[array[1]] = array[3]
+					parsedOptions[array[1]] = array[3]
 				} else {
 					// Eg: gf gen -n 2
-					defaultParsedOptions[array[1]] = args[i+1]
+					parsedOptions[array[1]] = args[i+1]
 					i += 2
 					continue
 				}
 			} else {
 				// Eg: gf gen -h
-				defaultParsedOptions[array[1]] = array[3]
+				parsedOptions[array[1]] = array[3]
 			}
 		} else {
-			defaultParsedArgs = append(defaultParsedArgs, args[i])
+			parsedArgs = append(parsedArgs, args[i])
 		}
 		i++
 	}
+	return
 }
 
 // GetOpt returns the option value named `name`.
