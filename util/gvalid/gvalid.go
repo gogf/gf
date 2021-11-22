@@ -8,7 +8,6 @@
 package gvalid
 
 import (
-	"context"
 	"regexp"
 	"strings"
 
@@ -177,7 +176,6 @@ var (
 		"no":    {},
 	}
 
-	defaultValidator     = New()                            // defaultValidator is the default validator for package functions.
 	structTagPriority    = []string{"gvalid", "valid", "v"} // structTagPriority specifies the validation tag priority array.
 	aliasNameTagPriority = []string{"param", "params", "p"} // aliasNameTagPriority specifies the alias tag priority array.
 
@@ -198,65 +196,6 @@ var (
 		ruleNameCi:   true,
 	}
 )
-
-// CheckValue checks single value with specified rules.
-// It returns nil if successful validation.
-//
-// The parameter `value` can be any type of variable, which will be converted to string
-// for validation.
-// The parameter `rules` can be one or more rules, multiple rules joined using char '|'.
-// The parameter `messages` specifies the custom error messages, which can be type of:
-// string/map/struct/*struct.
-// The optional parameter `params` specifies the extra validation parameters for some rules
-// like: required-*、same、different, etc.
-func CheckValue(ctx context.Context, value interface{}, rules string, messages interface{}, params ...interface{}) Error {
-	var data interface{}
-	if len(params) > 0 {
-		data = params[0]
-	}
-	return defaultValidator.Rules(rules).Data(data).Messages(messages).CheckValue(ctx, value)
-}
-
-// CheckMap validates map and returns the error result. It returns nil if with successful validation.
-//
-// The parameter `rules` can be type of []string/map[string]string. It supports sequence in error result
-// if `rules` is type of []string.
-// The optional parameter `messages` specifies the custom error messages for specified keys and rules.
-func CheckMap(ctx context.Context, params interface{}, rules interface{}, messages ...CustomMsg) Error {
-	var customErrorMessages CustomMsg
-	if len(messages) > 0 {
-		customErrorMessages = messages[0]
-	}
-	return defaultValidator.Rules(rules).Messages(customErrorMessages).CheckMap(ctx, params)
-}
-
-// CheckStruct validates struct and returns the error result.
-//
-// The parameter `object` should be type of struct/*struct.
-// The parameter `rules` can be type of []string/map[string]string. It supports sequence in error result
-// if `rules` is type of []string.
-// The optional parameter `messages` specifies the custom error messages for specified keys and rules.
-func CheckStruct(ctx context.Context, object interface{}, rules interface{}, messages ...CustomMsg) Error {
-	var customErrorMessages CustomMsg
-	if len(messages) > 0 {
-		customErrorMessages = messages[0]
-	}
-	return defaultValidator.Rules(rules).Messages(customErrorMessages).CheckStruct(ctx, object)
-}
-
-// CheckStructWithData validates struct with given parameter map and returns the error result.
-//
-// The parameter `object` should be type of struct/*struct.
-// The parameter `rules` can be type of []string/map[string]string. It supports sequence in error result
-// if `rules` is type of []string.
-// The optional parameter `messages` specifies the custom error messages for specified keys and rules.
-func CheckStructWithData(ctx context.Context, object interface{}, data interface{}, rules interface{}, messages ...CustomMsg) Error {
-	var customErrorMessages CustomMsg
-	if len(messages) > 0 {
-		customErrorMessages = messages[0]
-	}
-	return defaultValidator.Data(data).Rules(rules).Messages(customErrorMessages).CheckStruct(ctx, object)
-}
 
 // parseSequenceTag parses one sequence tag to field, rule and error message.
 // The sequence tag is like: [alias@]rule[...#msg...]

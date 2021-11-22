@@ -11,20 +11,19 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/util/gvalid"
 )
 
 func Test_CI(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		err := gvalid.CheckValue(ctx, "id", "in:Id,Name", nil)
+		err := g.Validator().Data("id").Rules("in:Id,Name").Messages(nil).Run(ctx)
 		t.AssertNE(err, nil)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		err := gvalid.CheckValue(ctx, "id", "ci|in:Id,Name", nil)
+		err := g.Validator().Data("id").Rules("ci|in:Id,Name").Messages(nil).Run(ctx)
 		t.AssertNil(err)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		err := g.Validator().CaseInsensitive().Rules("in:Id,Name").CheckValue(ctx, "id")
+		err := g.Validator().CaseInsensitive().Rules("in:Id,Name").Data("id").Run(ctx)
 		t.AssertNil(err)
 	})
 }
