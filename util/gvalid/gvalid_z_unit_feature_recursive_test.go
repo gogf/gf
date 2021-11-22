@@ -12,7 +12,6 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 
 	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/util/gvalid"
 )
 
 func Test_CheckStruct_Recursive_Struct(t *testing.T) {
@@ -33,7 +32,7 @@ func Test_CheckStruct_Recursive_Struct(t *testing.T) {
 				Pass2: "2",
 			},
 		}
-		err := gvalid.CheckStruct(ctx, user, nil)
+		err := g.Validator().Data(user).Run(ctx)
 		t.AssertNE(err, nil)
 		t.Assert(err.Maps()["Name"], g.Map{"required": "The Name field is required"})
 		t.Assert(err.Maps()["Pass1"], g.Map{"same": "The Pass1 value `1` must be the same as field Pass2"})
@@ -60,7 +59,7 @@ func Test_CheckStruct_Recursive_Struct_WithData(t *testing.T) {
 				"Pass2": 200,
 			},
 		}
-		err := g.Validator().Data(data).CheckStruct(ctx, user)
+		err := g.Validator().Data(user, data).Run(ctx)
 		t.AssertNE(err, nil)
 		t.Assert(err.Maps()["Name"], nil)
 		t.Assert(err.Maps()["Pass1"], g.Map{"same": "The Pass1 value `100` must be the same as field Pass2"})
@@ -92,7 +91,7 @@ func Test_CheckStruct_Recursive_SliceStruct(t *testing.T) {
 				},
 			},
 		}
-		err := gvalid.CheckStruct(ctx, user, nil)
+		err := g.Validator().Data(user).Rules(nil).Run(ctx)
 		g.Dump(err.Items())
 		t.AssertNE(err, nil)
 		t.Assert(err.Maps()["Name"], g.Map{"required": "The Name field is required"})
@@ -125,7 +124,7 @@ func Test_CheckStruct_Recursive_SliceStruct_Bail(t *testing.T) {
 				},
 			},
 		}
-		err := g.Validator().Bail().CheckStruct(ctx, user)
+		err := g.Validator().Bail().Data(user).Run(ctx)
 		g.Dump(err.Items())
 		t.AssertNE(err, nil)
 		t.Assert(err.Maps()["Name"], nil)
@@ -146,7 +145,7 @@ func Test_CheckStruct_Recursive_SliceStruct_Required(t *testing.T) {
 			Passes []Pass
 		}
 		user := &User{}
-		err := gvalid.CheckStruct(ctx, user, nil)
+		err := g.Validator().Data(user).Rules(nil).Run(ctx)
 		g.Dump(err.Items())
 		t.AssertNE(err, nil)
 		t.Assert(err.Maps()["Name"], g.Map{"required": "The Name field is required"})
@@ -179,7 +178,7 @@ func Test_CheckStruct_Recursive_MapStruct(t *testing.T) {
 				},
 			},
 		}
-		err := gvalid.CheckStruct(ctx, user, nil)
+		err := g.Validator().Data(user).Rules(nil).Run(ctx)
 		g.Dump(err.Items())
 		t.AssertNE(err, nil)
 		t.Assert(err.Maps()["Name"], g.Map{"required": "The Name field is required"})
@@ -207,7 +206,7 @@ func Test_CheckMap_Recursive_SliceStruct(t *testing.T) {
 				},
 			},
 		}
-		err := gvalid.CheckMap(ctx, user, nil)
+		err := g.Validator().Data(user).Run(ctx)
 		g.Dump(err.Items())
 		t.AssertNE(err, nil)
 		t.Assert(err.Maps()["Name"], nil)

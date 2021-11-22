@@ -424,7 +424,7 @@ func Test_Params_Struct(t *testing.T) {
 			if err := r.GetStruct(user); err != nil {
 				r.Response.WriteExit(err)
 			}
-			if err := gvalid.CheckStruct(r.Context(), user, nil); err != nil {
+			if err := gvalid.New().Data(user).Run(r.Context()); err != nil {
 				r.Response.WriteExit(err)
 			}
 		}
