@@ -16,8 +16,10 @@ import (
 	"github.com/gogf/gf/v2/internal/utils"
 )
 
-var (
-	defaultCommandFuncMap = make(map[string]func())
+const (
+	helpOptionName      = "help"
+	helpOptionNameShort = "h"
+	maxLineChars        = 120
 )
 
 // Init does custom initialization.

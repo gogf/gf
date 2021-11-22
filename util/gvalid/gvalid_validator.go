@@ -21,6 +21,7 @@ type Validator struct {
 	ruleFuncMap                      map[string]RuleFunc // ruleFuncMap stores custom rule functions for current Validator.
 	useDataInsteadOfObjectAttributes bool                // Using `data` as its validation source instead of attribute values from `Object`.
 	bail                             bool                // Stop validation after the first validation error.
+	caseInsensitive                  bool                // Case-Insensitive configuration for those rules that need value comparison.
 }
 
 // New creates and returns a new Validator.
@@ -52,6 +53,13 @@ func (v *Validator) I18n(i18nManager *gi18n.Manager) *Validator {
 func (v *Validator) Bail() *Validator {
 	newValidator := v.Clone()
 	newValidator.bail = true
+	return newValidator
+}
+
+// CaseInsensitive sets the mark for Case-Insensitive for those rules that need value comparison.
+func (v *Validator) CaseInsensitive() *Validator {
+	newValidator := v.Clone()
+	newValidator.caseInsensitive = true
 	return newValidator
 }
 

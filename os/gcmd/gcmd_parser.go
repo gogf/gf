@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/command"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -25,7 +26,7 @@ type Parser struct {
 	parsedArgs       []string          // As name described.
 	parsedOptions    map[string]string // As name described.
 	passedOptions    map[string]bool   // User passed supported options.
-	supportedOptions map[string]bool   // Option [option name : need argument].
+	supportedOptions map[string]bool   // Option [OptionName:WhetherNeedArgument].
 	commandFuncMap   map[string]func() // Command function map for function handler.
 }
 
@@ -36,6 +37,13 @@ type Parser struct {
 //
 // The optional parameter `strict` specifies whether stops parsing and returns error if invalid option passed.
 func Parse(supportedOptions map[string]bool, strict ...bool) (*Parser, error) {
+	if supportedOptions == nil {
+		command.Init(os.Args...)
+		return &Parser{
+			parsedArgs:    GetArgAll(),
+			parsedOptions: GetOptAll(),
+		}, nil
+	}
 	return ParseWithArgs(os.Args, supportedOptions, strict...)
 }
 
@@ -46,6 +54,13 @@ func Parse(supportedOptions map[string]bool, strict ...bool) (*Parser, error) {
 //
 // The optional parameter `strict` specifies whether stops parsing and returns error if invalid option passed.
 func ParseWithArgs(args []string, supportedOptions map[string]bool, strict ...bool) (*Parser, error) {
+	if supportedOptions == nil {
+		command.Init(args...)
+		return &Parser{
+			parsedArgs:    GetArgAll(),
+			parsedOptions: GetOptAll(),
+		}, nil
+	}
 	strictParsing := false
 	if len(strict) > 0 {
 		strictParsing = strict[0]
@@ -86,7 +101,7 @@ func ParseWithArgs(args []string, supportedOptions map[string]bool, strict ...bo
 					}
 				} else {
 					// Multiple options?
-					if array := parser.parseMultiOption(option); len(array) > 0 {
+					if array = parser.parseMultiOption(option); len(array) > 0 {
 						for _, v := range array {
 							parser.setOptionValue(v, "")
 						}

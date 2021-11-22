@@ -226,7 +226,7 @@ func Test_Map_Bail(t *testing.T) {
 		}
 		err := g.Validator().Bail().Rules(rules).CheckMap(ctx, params)
 		t.AssertNE(err, nil)
-		t.Assert(err.String(), "账号不能为空; 账号长度应当在6到16之间")
+		t.Assert(err.String(), "账号不能为空")
 	})
 	// global bail with rule bail
 	gtest.C(t, func(t *gtest.T) {
