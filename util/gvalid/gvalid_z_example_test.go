@@ -458,7 +458,7 @@ func ExampleValidator_Bail() {
 			Password2: "goframe.org",
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Println(err)
 	}
 
@@ -480,7 +480,7 @@ func ExampleValidator_CaseInsensitive() {
 			Password2: "goframe.org",
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Println(err)
 	}
 
