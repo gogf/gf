@@ -84,7 +84,7 @@ func (c *Command) reParse(ctx context.Context, parser *Parser) (*Parser, error) 
 		} else {
 			optionKey = option.Name
 		}
-		supportedOptions[optionKey] = option.NeedValue
+		supportedOptions[optionKey] = !option.Orphan
 	}
 	return Parse(supportedOptions)
 }

@@ -35,24 +35,24 @@ type Function func(ctx context.Context, parser *Parser) (err error)
 // Option is the command value that is specified by a name or shor name.
 // An Option can have or have no value bound to it.
 type Option struct {
-	Name      string // Option name.
-	Short     string // Option short.
-	Brief     string // Brief info about this Option, which is used in help info.
-	NeedValue bool   // Whether this Option having or having no value bound to it.
+	Name   string // Option name.
+	Short  string // Option short.
+	Brief  string // Brief info about this Option, which is used in help info.
+	Orphan bool   // Whether this Option having or having no value bound to it.
 }
 
 var (
 	// defaultHelpOption is the default help option that will be automatically added to each command.
 	defaultHelpOption = Option{
-		Name:      `help`,
-		Short:     `h`,
-		Brief:     `more information about this command`,
-		NeedValue: false,
+		Name:   `help`,
+		Short:  `h`,
+		Brief:  `more information about this command`,
+		Orphan: true,
 	}
 )
 
-// Add adds one or more sub-commands to current command.
-func (c *Command) Add(commands ...Command) error {
+// AddCommand adds one or more sub-commands to current command.
+func (c *Command) AddCommand(commands ...Command) error {
 	for _, cmd := range commands {
 		cmd.Name = gstr.Trim(cmd.Name)
 		if cmd.Name == "" {
