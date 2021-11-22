@@ -573,17 +573,15 @@ func ExampleIntIntMap_UnmarshalJSON() {
 
 func ExampleIntIntMap_UnmarshalValue() {
 	var m gmap.IntIntMap
-	m.Sets(g.MapIntInt{
+
+	n := map[int]int{
 		1: 1001,
 		2: 1002,
 		3: 1003,
-	})
+	}
 
-	var n map[int]int
-
-	err := gconv.Scan(m.String(), &n)
-	if err == nil {
-		fmt.Printf("%#v", n)
+	if err := gconv.Scan(n, &m); err == nil {
+		fmt.Printf("%#v", m.Map())
 	}
 	// Output:
 	// map[int]int{1:1001, 2:1002, 3:1003}

@@ -575,17 +575,15 @@ func ExampleStrStrMap_UnmarshalJSON() {
 
 func ExampleStrStrMap_UnmarshalValue() {
 	var m gmap.StrStrMap
-	m.Sets(g.MapStrStr{
+
+	goWeb := map[string]string{
 		"goframe": "https://goframe.org",
 		"gin":     "https://gin-gonic.com/",
 		"echo":    "https://echo.labstack.com/",
-	})
+	}
 
-	var goweb map[string]string
-
-	err := gconv.Scan(m.String(), &goweb)
-	if err == nil {
-		fmt.Printf("%#v", goweb)
+	if err := gconv.Scan(goWeb, &m); err == nil {
+		fmt.Printf("%#v", m.Map())
 	}
 	// Output:
 	// map[string]string{"echo":"https://echo.labstack.com/", "gin":"https://gin-gonic.com/", "goframe":"https://goframe.org"}

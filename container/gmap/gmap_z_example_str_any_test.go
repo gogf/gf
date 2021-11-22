@@ -643,17 +643,15 @@ func ExampleStrAnyMap_UnmarshalJSON() {
 
 func ExampleStrAnyMap_UnmarshalValue() {
 	var m gmap.StrAnyMap
-	m.Sets(g.MapStrAny{
+
+	goWeb := map[string]interface{}{
 		"goframe": "https://goframe.org",
 		"gin":     "https://gin-gonic.com/",
 		"echo":    "https://echo.labstack.com/",
-	})
+	}
 
-	var goweb map[string]interface{}
-
-	err := gconv.Scan(m.String(), &goweb)
-	if err == nil {
-		fmt.Printf("%#v", goweb)
+	if err := gconv.Scan(goWeb, &m); err == nil {
+		fmt.Printf("%#v", m.Map())
 	}
 	// Output:
 	// map[string]interface {}{"echo":"https://echo.labstack.com/", "gin":"https://gin-gonic.com/", "goframe":"https://goframe.org"}

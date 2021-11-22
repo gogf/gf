@@ -645,18 +645,17 @@ func ExampleIntAnyMap_UnmarshalJSON() {
 
 func ExampleIntAnyMap_UnmarshalValue() {
 	var m gmap.IntAnyMap
-	m.Sets(g.MapIntAny{
+
+	goWeb := map[int]interface{}{
 		1: "goframe",
 		2: "gin",
 		3: "echo",
-	})
-
-	var goweb map[int]interface{}
-
-	err := gconv.Scan(m.String(), &goweb)
-	if err == nil {
-		fmt.Printf("%#v", goweb)
 	}
+
+	if err := gconv.Scan(goWeb, &m); err == nil {
+		fmt.Printf("%#v", m.Map())
+	}
+
 	// Output:
 	// map[int]interface {}{1:"goframe", 2:"gin", 3:"echo"}
 }
