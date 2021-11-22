@@ -32,7 +32,7 @@ func ExampleCheckMap() {
 		"password@required|length:6,16|same{password}2#密码不能为空|密码长度应当在{min}到{max}之间|两次密码输入不相等",
 		"password2@required|length:6,16#",
 	}
-	if e := gvalid.CheckMap(gctx.New(), params, rules); e != nil {
+	if e := g.Validator().Data(params).Rules(rules).Run(gctx.New()); e != nil {
 		fmt.Println(e.Map())
 		fmt.Println(e.FirstItem())
 		fmt.Println(e.FirstError())
@@ -54,7 +54,7 @@ func ExampleCheckMap2() {
 		"password@required|length:6,16|same:password2#密码不能为空|密码长度应当在{min}到{max}之间|两次密码输入不相等",
 		"password2@required|length:6,16#",
 	}
-	if e := gvalid.CheckMap(gctx.New(), params, rules); e != nil {
+	if e := g.Validator().Data(params).Rules(rules).Run(gctx.New()); e != nil {
 		fmt.Println(e.Map())
 		fmt.Println(e.FirstItem())
 		fmt.Println(e.FirstError())
@@ -76,7 +76,7 @@ func ExampleCheckStruct() {
 		Page: 1,
 		Size: 10,
 	}
-	err := gvalid.CheckStruct(gctx.New(), obj, nil)
+	err := g.Validator().Data(obj).Rules(nil).Run(gctx.New())
 	fmt.Println(err == nil)
 	// Output:
 	// true
@@ -93,7 +93,7 @@ func ExampleCheckStruct2() {
 		Page: 1,
 		Size: 10,
 	}
-	err := gvalid.CheckStruct(gctx.New(), obj, nil)
+	err := g.Validator().Data(obj).Rules(nil).Run(gctx.New())
 	fmt.Println(err == nil)
 	// Output:
 	// true
@@ -110,7 +110,7 @@ func ExampleCheckStruct3() {
 		Page: 1,
 		Size: 10,
 	}
-	err := gvalid.CheckStruct(gctx.New(), obj, nil)
+	err := g.Validator().Data(obj).Rules(nil).Run(gctx.New())
 	fmt.Println(err)
 	// Output:
 	// project id must between 1, 10000
@@ -143,7 +143,7 @@ func ExampleRegisterRule() {
 		}
 		return nil
 	})
-	err := gvalid.CheckStruct(gctx.New(), user, nil)
+	err := g.Validator().Data(user).Rules(nil).Run(gctx.New())
 	fmt.Println(err.Error())
 	// May Output:
 	// 用户名称已被占用
@@ -177,14 +177,14 @@ func ExampleRegisterRule_OverwriteRequired() {
 		}
 		return nil
 	})
-	fmt.Println(gvalid.CheckValue(gctx.New(), "", "required", "It's required"))
-	fmt.Println(gvalid.CheckValue(gctx.New(), 0, "required", "It's required"))
-	fmt.Println(gvalid.CheckValue(gctx.New(), false, "required", "It's required"))
+	fmt.Println(g.Validator().Data("").Rules("required").Messages("It's required").Run(gctx.New()))
+	fmt.Println(g.Validator().Data(0).Rules("required").Messages("It's required").Run(gctx.New()))
+	fmt.Println(g.Validator().Data(false).Rules("required").Messages("It's required").Run(gctx.New()))
 	gvalid.DeleteRule(rule)
 	fmt.Println("rule deleted")
-	fmt.Println(gvalid.CheckValue(gctx.New(), "", "required", "It's required"))
-	fmt.Println(gvalid.CheckValue(gctx.New(), 0, "required", "It's required"))
-	fmt.Println(gvalid.CheckValue(gctx.New(), false, "required", "It's required"))
+	fmt.Println(g.Validator().Data("").Rules("required").Messages("It's required").Run(gctx.New()))
+	fmt.Println(g.Validator().Data(0).Rules("required").Messages("It's required").Run(gctx.New()))
+	fmt.Println(g.Validator().Data(false).Rules("required").Messages("It's required").Run(gctx.New()))
 	// Output:
 	// It's required
 	// It's required
@@ -199,10 +199,10 @@ func ExampleValidator_Rules() {
 	data := g.Map{
 		"password": "123",
 	}
-	err := g.Validator().Data(data).
+	err := g.Validator().Data("", data).
 		Rules("required-with:password").
 		Messages("请输入确认密码").
-		CheckValue(gctx.New(), "")
+		Run(gctx.New())
 	fmt.Println(err.String())
 
 	// Output:
@@ -212,7 +212,7 @@ func ExampleValidator_Rules() {
 func ExampleValidator_CheckValue() {
 	err := g.Validator().Rules("min:18").
 		Messages("未成年人不允许注册哟").
-		CheckValue(gctx.New(), 16)
+		Data(16).Run(gctx.New())
 	fmt.Println(err.String())
 
 	// Output:
@@ -240,7 +240,7 @@ func ExampleValidator_CheckMap() {
 	err := g.Validator().
 		Messages(messages).
 		Rules(rules).
-		CheckMap(gctx.New(), params)
+		Data(params).Run(gctx.New())
 	if err != nil {
 		g.Dump(err.Maps())
 	}
@@ -269,7 +269,7 @@ func ExampleValidator_CheckStruct() {
 	if err := gconv.Scan(data, &user); err != nil {
 		panic(err)
 	}
-	err := g.Validator().Data(data).CheckStruct(gctx.New(), user)
+	err := g.Validator().Data(user, data).Run(gctx.New())
 	if err != nil {
 		fmt.Println(err.Items())
 	}
@@ -289,7 +289,7 @@ func ExampleValidator_Required() {
 			ID: 1,
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Println(err)
 	}
 
@@ -313,7 +313,7 @@ func ExampleValidator_RequiredIf() {
 			Gender: 1,
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Println(err)
 	}
 
@@ -337,7 +337,7 @@ func ExampleValidator_RequiredUnless() {
 			Gender: 1,
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Println(err)
 	}
 
@@ -362,7 +362,7 @@ func ExampleValidator_RequiredWith() {
 			WifeName: "Ann",
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Println(err)
 	}
 
@@ -387,7 +387,7 @@ func ExampleValidator_RequiredWithAll() {
 			WifeName: "Ann",
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Println(err)
 	}
 
@@ -411,7 +411,7 @@ func ExampleValidator_RequiredWithout() {
 			Gender: 1,
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Println(err)
 	}
 
@@ -434,7 +434,7 @@ func ExampleValidator_RequiredWithoutAll() {
 			Gender: 1,
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Println(err)
 	}
 
@@ -461,7 +461,7 @@ func ExampleValidator_Date() {
 			Date5: "2021/Oct/31",
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
@@ -488,7 +488,7 @@ func ExampleValidator_Datetime() {
 			Date4: "2021/Dec/01 23:00:00", // error
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
@@ -515,7 +515,7 @@ func ExampleValidator_DateFormat() {
 			Date4: "2021-11-01 23:00", // error
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
@@ -541,7 +541,7 @@ func ExampleValidator_Email() {
 			MailAddr4: "gf#goframe.org", // error
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
@@ -567,7 +567,7 @@ func ExampleValidator_Phone() {
 			PhoneNumber4: "1357891234",  // error len must be 11
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
@@ -594,7 +594,7 @@ func ExampleValidator_PhoneLoose() {
 			PhoneNumber4: "1357891234", // error len must be 11
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
@@ -620,7 +620,7 @@ func ExampleValidator_Telephone() {
 			Telephone4: "775421451",   // error len must be 7 or 8
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
@@ -646,7 +646,7 @@ func ExampleValidator_Passport() {
 			Passport4: "gf",       // error length between 6 and 18
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
@@ -669,7 +669,7 @@ func ExampleValidator_Password() {
 			Password2: "gofra", // error length between 6 and 18
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Print(err)
 	}
 
@@ -694,7 +694,7 @@ func ExampleValidator_Password2() {
 			Password4: "goframe123", // error must contain lower and upper letters and numbers.
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
@@ -719,7 +719,7 @@ func ExampleValidator_Password3() {
 			Password3: "Goframe123", // error must contain lower and upper letters, numbers and special chars.
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
@@ -743,7 +743,7 @@ func ExampleValidator_Postcode() {
 			Postcode3: "1000000", // error length must be 6
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
@@ -763,7 +763,7 @@ func ExampleValidator_ResidentId() {
 			ResidentID1: "320107199506285482",
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Print(err)
 	}
 
@@ -782,7 +782,7 @@ func ExampleValidator_BankCard() {
 			BankCard1: "6225760079930218",
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Print(err)
 	}
 
@@ -805,7 +805,7 @@ func ExampleValidator_QQ() {
 			QQ3: "514258412a", // error all number
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
@@ -831,7 +831,7 @@ func ExampleValidator_IP() {
 			IP4: "ze80::812b:1158:1f43:f0d1",
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
@@ -853,7 +853,7 @@ func ExampleValidator_IPV4() {
 			IP2: "520.255.255.255",
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Print(err)
 	}
 
@@ -874,7 +874,7 @@ func ExampleValidator_IPV6() {
 			IP2: "ze80::812b:1158:1f43:f0d1",
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Print(err)
 	}
 
@@ -895,7 +895,7 @@ func ExampleValidator_Mac() {
 			Mac2: "Z0-CC-6A-D6-B1-1A",
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Print(err)
 	}
 
@@ -918,7 +918,7 @@ func ExampleValidator_Url() {
 			URL3: "ws://goframe.org",
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Print(err)
 	}
 
@@ -943,7 +943,7 @@ func ExampleValidator_Domain() {
 			Domain4: "1a.2b",
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
@@ -965,7 +965,7 @@ func ExampleValidator_Size() {
 			Size2: "goframe",
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Print(err)
 	}
 
@@ -986,7 +986,7 @@ func ExampleValidator_Length() {
 			Length2: "goframe",
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Print(err)
 	}
 
@@ -1007,7 +1007,7 @@ func ExampleValidator_MinLength() {
 			MinLength2: "goframe",
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Print(err)
 	}
 
@@ -1028,7 +1028,7 @@ func ExampleValidator_MaxLength() {
 			MaxLength2: "goframe",
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Print(err)
 	}
 
@@ -1053,7 +1053,7 @@ func ExampleValidator_Between() {
 			Score2: -0.5,
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
@@ -1079,7 +1079,7 @@ func ExampleValidator_Min() {
 			Score2: 10.1,
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
@@ -1105,7 +1105,7 @@ func ExampleValidator_Max() {
 			Score2: 10.1,
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
@@ -1127,7 +1127,7 @@ func ExampleValidator_Json() {
 			JSON2: "{\"name\":\"goframe\",\"author\":\"郭强\",\"test\"}",
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Print(err)
 	}
 
@@ -1150,7 +1150,7 @@ func ExampleValidator_Integer() {
 			Str:     "goframe",
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
@@ -1174,7 +1174,7 @@ func ExampleValidator_Float() {
 			Str:     "goframe",
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Print(err)
 	}
 
@@ -1203,7 +1203,7 @@ func ExampleValidator_Boolean() {
 			Str3:    "goframe",
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 
@@ -1226,7 +1226,7 @@ func ExampleValidator_Same() {
 			Password2: "goframe.net",
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Println(err)
 	}
 
@@ -1248,7 +1248,7 @@ func ExampleValidator_Different() {
 			OtherMailAddr: "gf@goframe.org",
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Println(err)
 	}
 
@@ -1270,7 +1270,7 @@ func ExampleValidator_In() {
 			Gender: 3,
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Println(err)
 	}
 
@@ -1292,7 +1292,7 @@ func ExampleValidator_NotIn() {
 			InvalidIndex: 1,
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Println(err)
 	}
 
@@ -1314,7 +1314,7 @@ func ExampleValidator_Regex() {
 			Regex3: "10000",
 		}
 	)
-	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
 		fmt.Print(gstr.Join(err.Strings(), "\n"))
 	}
 

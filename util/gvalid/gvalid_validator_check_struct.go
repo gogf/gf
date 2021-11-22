@@ -17,12 +17,6 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
-// CheckStruct validates struct and returns the error result.
-// The parameter `object` should be type of struct/*struct.
-func (v *Validator) CheckStruct(ctx context.Context, object interface{}) Error {
-	return v.doCheckStruct(ctx, object)
-}
-
 func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error {
 	var (
 		errorMaps           = make(map[string]map[string]error) // Returning error.
@@ -53,7 +47,7 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 		checkRules     = make([]fieldRule, 0)
 		nameToRuleMap  = make(map[string]string) // just for internally searching index purpose.
 		customMessage  = make(CustomMsg)         // Custom rule error message map.
-		checkValueData = v.data                  // Ready to be validated data, which can be type of .
+		checkValueData = v.assoc                 // Ready to be validated data, which can be type of .
 	)
 	if checkValueData == nil {
 		checkValueData = object
@@ -111,10 +105,10 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 		return nil
 	}
 	// Input parameter map handling.
-	if v.data == nil || !v.useDataInsteadOfObjectAttributes {
+	if v.assoc == nil || !v.useDataInsteadOfObjectAttributes {
 		inputParamMap = make(map[string]interface{})
 	} else {
-		inputParamMap = gconv.Map(v.data)
+		inputParamMap = gconv.Map(v.assoc)
 	}
 	// Checks and extends the parameters map with struct alias tag.
 	if !v.useDataInsteadOfObjectAttributes {
