@@ -33,19 +33,6 @@ type iTime interface {
 	IsZero() bool
 }
 
-// CheckValue checks single value with specified rules.
-// It returns nil if successful validation.
-func (v *Validator) CheckValue(ctx context.Context, value interface{}) Error {
-	return v.doCheckValue(ctx, doCheckValueInput{
-		Name:     "",
-		Value:    value,
-		Rule:     gconv.String(v.rules),
-		Messages: v.messages,
-		DataRaw:  v.data,
-		DataMap:  gconv.Map(v.data),
-	})
-}
-
 type doCheckValueInput struct {
 	Name     string                 // Name specifies the name of parameter `value`.
 	Value    interface{}            // Value specifies the value for the rules to be validated.
@@ -563,7 +550,7 @@ func (v *Validator) doCheckValueRecursively(ctx context.Context, in doCheckValue
 		validator := v.Clone()
 		validator.rules = nil
 		validator.messages = nil
-		if err := validator.Data(in.Value).doCheckStruct(ctx, reflect.New(in.Type).Interface()); err != nil {
+		if err := validator.Data(reflect.New(in.Type).Interface(), in.Value).Run(ctx); err != nil {
 			// It merges the errors into single error map.
 			for k, m := range err.(*validationError).errors {
 				in.ErrorMaps[k] = m
@@ -575,12 +562,8 @@ func (v *Validator) doCheckValueRecursively(ctx context.Context, in doCheckValue
 
 	case reflect.Map:
 		var (
-			dataMap   = gconv.Map(in.Value)
-			validator = v.Clone()
+			dataMap = gconv.Map(in.Value)
 		)
-		// Ignore data, rules and messages from parent.
-		validator.rules = nil
-		validator.messages = nil
 		for _, item := range dataMap {
 			originTypeAndKind := utils.OriginTypeAndKind(item)
 			v.doCheckValueRecursively(ctx, doCheckValueRecursivelyInput{

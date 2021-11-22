@@ -17,12 +17,6 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-// CheckMap validates map and returns the error result. It returns nil if with successful validation.
-// The parameter `params` should be type of map.
-func (v *Validator) CheckMap(ctx context.Context, params interface{}) Error {
-	return v.doCheckMap(ctx, params)
-}
-
 func (v *Validator) doCheckMap(ctx context.Context, params interface{}) Error {
 	if params == nil {
 		return nil

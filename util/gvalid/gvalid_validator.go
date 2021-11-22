@@ -7,15 +7,20 @@
 package gvalid
 
 import (
+	"context"
+	"errors"
+	"reflect"
+
 	"github.com/gogf/gf/v2/i18n/gi18n"
+	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 // Validator is the validation manager for chaining operations.
 type Validator struct {
 	i18nManager                      *gi18n.Manager      // I18n manager for error message translation.
-	key                              string              // Single validation key.
-	value                            interface{}         // Single validation value.
-	data                             interface{}         // Validation data, which is usually a map.
+	data                             interface{}         // Validation data, which can be a map, struct or a certain value to be validated.
+	assoc                            interface{}         // Associated data, which is usually a map, for union validation.
 	rules                            interface{}         // Custom validation data.
 	messages                         interface{}         // Custom validation error messages, which can be string or type of CustomMsg.
 	ruleFuncMap                      map[string]RuleFunc // ruleFuncMap stores custom rule functions for current Validator.
@@ -30,6 +35,50 @@ func New() *Validator {
 		i18nManager: gi18n.Instance(),          // Use default i18n manager.
 		ruleFuncMap: make(map[string]RuleFunc), // Custom rule function storing map.
 	}
+}
+
+// Run starts validating the given data with rules and messages.
+func (v *Validator) Run(ctx context.Context) Error {
+	if v.data == nil {
+		return newValidationErrorByStr(
+			internalParamsErrRuleName,
+			errors.New(`no data passed for validation`),
+		)
+	}
+
+	originValueAndKind := utils.OriginValueAndKind(v.data)
+	switch originValueAndKind.OriginKind {
+	case reflect.Map:
+		isMapValidation := false
+		if v.rules == nil {
+			isMapValidation = true
+		} else if utils.IsMap(v.rules) || utils.IsSlice(v.rules) {
+			isMapValidation = true
+		}
+		if isMapValidation {
+			return v.doCheckMap(ctx, v.data)
+		}
+
+	case reflect.Struct:
+		isStructValidation := false
+		if v.rules == nil {
+			isStructValidation = true
+		} else if utils.IsMap(v.rules) || utils.IsSlice(v.rules) {
+			isStructValidation = true
+		}
+		if isStructValidation {
+			return v.doCheckStruct(ctx, v.data)
+		}
+	}
+
+	return v.doCheckValue(ctx, doCheckValueInput{
+		Name:     "",
+		Value:    v.data,
+		Rule:     gconv.String(v.rules),
+		Messages: v.messages,
+		DataRaw:  v.assoc,
+		DataMap:  gconv.Map(v.assoc),
+	})
 }
 
 // Clone creates and returns a new Validator which is a shallow copy of current one.
@@ -64,15 +113,18 @@ func (v *Validator) CaseInsensitive() *Validator {
 }
 
 // Data is a chaining operation function, which sets validation data for current operation.
-// The parameter `data` is usually type of map, which specifies the parameter map used in validation.
-// Calling this function also sets `useDataInsteadOfObjectAttributes` true no mather the `data` is nil or not.
-func (v *Validator) Data(data interface{}) *Validator {
+// The optional parameter `assoc` is usually type of map, which specifies the parameter map used in union validation.
+// Calling this function with `assoc` also sets `useDataInsteadOfObjectAttributes` true
+func (v *Validator) Data(data interface{}, assoc ...interface{}) *Validator {
 	if data == nil {
 		return v
 	}
 	newValidator := v.Clone()
 	newValidator.data = data
-	newValidator.useDataInsteadOfObjectAttributes = true
+	if len(assoc) > 0 {
+		newValidator.assoc = assoc[0]
+		newValidator.useDataInsteadOfObjectAttributes = true
+	}
 	return newValidator
 }
 
