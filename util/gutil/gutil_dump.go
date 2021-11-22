@@ -122,11 +122,7 @@ func doDump(value interface{}, indent string, buffer *bytes.Buffer, option doDum
 		doDumpString(exportInternalInput)
 
 	case reflect.Bool:
-		if reflectValue.Bool() {
-			buffer.WriteString(`true`)
-		} else {
-			buffer.WriteString(`false`)
-		}
+		doDumpBool(exportInternalInput)
 
 	case
 		reflect.Int,
@@ -355,6 +351,19 @@ func doDumpString(in doDumpInternalInput) {
 			addSlashesForString(s),
 		))
 	}
+}
+
+func doDumpBool(in doDumpInternalInput) {
+	var s string
+	if in.ReflectValue.Bool() {
+		s = `true`
+	} else {
+		s = `false`
+	}
+	if in.Option.WithType {
+		s = fmt.Sprintf(`bool(%s)`, s)
+	}
+	in.Buffer.WriteString(s)
 }
 
 func doDumpDefault(in doDumpInternalInput) {
