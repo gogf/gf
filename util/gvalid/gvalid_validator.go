@@ -63,7 +63,7 @@ func (v *Validator) Run(ctx context.Context) Error {
 		isStructValidation := false
 		if v.rules == nil {
 			isStructValidation = true
-		} else if v.rules != nil && (utils.IsMap(v.rules) || utils.IsSlice(v.rules)) {
+		} else if utils.IsMap(v.rules) || utils.IsSlice(v.rules) {
 			isStructValidation = true
 		}
 		if isStructValidation {
