@@ -22,6 +22,11 @@ type iString interface {
 	String() string
 }
 
+// iError is used for type assert api for Error().
+type iError interface {
+	Error() string
+}
+
 // iMarshalJSON is the interface for custom Json marshaling.
 type iMarshalJSON interface {
 	MarshalJSON() ([]byte, error)
@@ -231,6 +236,7 @@ func doDumpMap(in doDumpInternalInput) {
 		} else {
 			mapKeyStr = fmt.Sprintf(`%v`, mapKey.Interface())
 		}
+		// Map key and indent string dump.
 		if !in.Option.WithType {
 			in.Buffer.WriteString(fmt.Sprintf(
 				"%s%v:%s",
@@ -247,6 +253,7 @@ func doDumpMap(in doDumpInternalInput) {
 				strings.Repeat(" ", maxSpaceNum-tmpSpaceNum+1),
 			))
 		}
+		// Map value dump.
 		doDump(in.ReflectValue.MapIndex(mapKey).Interface(), in.NewIndent, in.Buffer, in.Option)
 		in.Buffer.WriteString(",\n")
 	}
@@ -265,6 +272,8 @@ func doDumpStruct(in doDumpInternalInput) {
 		)
 		if v, ok := in.Value.(iString); ok {
 			structContentStr = v.String()
+		} else if v, ok := in.Value.(iError); ok {
+			structContentStr = v.Error()
 		} else if v, ok := in.Value.(iMarshalJSON); ok {
 			b, _ := v.MarshalJSON()
 			structContentStr = string(b)
