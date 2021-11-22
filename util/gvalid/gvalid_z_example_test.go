@@ -466,6 +466,27 @@ func ExampleValidator_Bail() {
 	// The Account value `gf` length must be between 6 and 16
 }
 
+func ExampleValidator_CaseInsensitive() {
+	type BizReq struct {
+		Account   string `v:"required"`
+		Password  string `v:"required|ci|same:Password2"`
+		Password2 string `v:"required"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Account:   "gf",
+			Password:  "Goframe.org", // Diff from Password2, but because of "ci", rule check passed
+			Password2: "goframe.org",
+		}
+	)
+	if err := g.Validator().CheckStruct(ctx, req); err != nil {
+		fmt.Println(err)
+	}
+
+	// output:
+}
+
 func ExampleValidator_Date() {
 	type BizReq struct {
 		Date1 string `v:"date"`
