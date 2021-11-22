@@ -15,11 +15,19 @@ import (
 	"github.com/gogf/gf/v2/util/gutil"
 )
 
+type checkRequiredInput struct {
+	Value           interface{}            // Value to be validated.
+	RuleKey         string                 // RuleKey is like the "max" in rule "max: 6"
+	RulePattern     string                 // RulePattern is like "6" in rule:"max:6"
+	DataMap         map[string]interface{} // Parameter map.
+	CaseInsensitive bool                   // Case-Insensitive comparison.
+}
+
 // checkRequired checks `value` using required rules.
 // It also supports require checks for `value` of type: slice, map.
-func (v *Validator) checkRequired(value interface{}, ruleKey, rulePattern string, dataMap map[string]interface{}) bool {
+func (v *Validator) checkRequired(in checkRequiredInput) bool {
 	required := false
-	switch ruleKey {
+	switch in.RuleKey {
 	// Required.
 	case "required":
 		required = true
@@ -29,7 +37,7 @@ func (v *Validator) checkRequired(value interface{}, ruleKey, rulePattern string
 	case "required-if":
 		required = false
 		var (
-			array      = strings.Split(rulePattern, ",")
+			array      = strings.Split(in.RulePattern, ",")
 			foundValue interface{}
 		)
 		// It supports multiple field and value pairs.
@@ -37,9 +45,13 @@ func (v *Validator) checkRequired(value interface{}, ruleKey, rulePattern string
 			for i := 0; i < len(array); {
 				tk := array[i]
 				tv := array[i+1]
-				_, foundValue = gutil.MapPossibleItemByKey(dataMap, tk)
-				if strings.Compare(tv, gconv.String(foundValue)) == 0 {
-					required = true
+				_, foundValue = gutil.MapPossibleItemByKey(in.DataMap, tk)
+				if in.CaseInsensitive {
+					required = strings.EqualFold(tv, gconv.String(foundValue))
+				} else {
+					required = strings.Compare(tv, gconv.String(foundValue)) == 0
+				}
+				if required {
 					break
 				}
 				i += 2
@@ -51,7 +63,7 @@ func (v *Validator) checkRequired(value interface{}, ruleKey, rulePattern string
 	case "required-unless":
 		required = true
 		var (
-			array      = strings.Split(rulePattern, ",")
+			array      = strings.Split(in.RulePattern, ",")
 			foundValue interface{}
 		)
 		// It supports multiple field and value pairs.
@@ -59,12 +71,15 @@ func (v *Validator) checkRequired(value interface{}, ruleKey, rulePattern string
 			for i := 0; i < len(array); {
 				tk := array[i]
 				tv := array[i+1]
-				_, foundValue = gutil.MapPossibleItemByKey(dataMap, tk)
-				if strings.Compare(tv, gconv.String(foundValue)) == 0 {
-					required = false
+				_, foundValue = gutil.MapPossibleItemByKey(in.DataMap, tk)
+				if in.CaseInsensitive {
+					required = !strings.EqualFold(tv, gconv.String(foundValue))
+				} else {
+					required = strings.Compare(tv, gconv.String(foundValue)) != 0
+				}
+				if !required {
 					break
 				}
-
 				i += 2
 			}
 		}
@@ -74,11 +89,11 @@ func (v *Validator) checkRequired(value interface{}, ruleKey, rulePattern string
 	case "required-with":
 		required = false
 		var (
-			array      = strings.Split(rulePattern, ",")
+			array      = strings.Split(in.RulePattern, ",")
 			foundValue interface{}
 		)
 		for i := 0; i < len(array); i++ {
-			_, foundValue = gutil.MapPossibleItemByKey(dataMap, array[i])
+			_, foundValue = gutil.MapPossibleItemByKey(in.DataMap, array[i])
 			if !empty.IsEmpty(foundValue) {
 				required = true
 				break
@@ -90,11 +105,11 @@ func (v *Validator) checkRequired(value interface{}, ruleKey, rulePattern string
 	case "required-with-all":
 		required = true
 		var (
-			array      = strings.Split(rulePattern, ",")
+			array      = strings.Split(in.RulePattern, ",")
 			foundValue interface{}
 		)
 		for i := 0; i < len(array); i++ {
-			_, foundValue = gutil.MapPossibleItemByKey(dataMap, array[i])
+			_, foundValue = gutil.MapPossibleItemByKey(in.DataMap, array[i])
 			if empty.IsEmpty(foundValue) {
 				required = false
 				break
@@ -106,11 +121,11 @@ func (v *Validator) checkRequired(value interface{}, ruleKey, rulePattern string
 	case "required-without":
 		required = false
 		var (
-			array      = strings.Split(rulePattern, ",")
+			array      = strings.Split(in.RulePattern, ",")
 			foundValue interface{}
 		)
 		for i := 0; i < len(array); i++ {
-			_, foundValue = gutil.MapPossibleItemByKey(dataMap, array[i])
+			_, foundValue = gutil.MapPossibleItemByKey(in.DataMap, array[i])
 			if empty.IsEmpty(foundValue) {
 				required = true
 				break
@@ -122,11 +137,11 @@ func (v *Validator) checkRequired(value interface{}, ruleKey, rulePattern string
 	case "required-without-all":
 		required = true
 		var (
-			array      = strings.Split(rulePattern, ",")
+			array      = strings.Split(in.RulePattern, ",")
 			foundValue interface{}
 		)
 		for i := 0; i < len(array); i++ {
-			_, foundValue = gutil.MapPossibleItemByKey(dataMap, array[i])
+			_, foundValue = gutil.MapPossibleItemByKey(in.DataMap, array[i])
 			if !empty.IsEmpty(foundValue) {
 				required = false
 				break
@@ -134,7 +149,7 @@ func (v *Validator) checkRequired(value interface{}, ruleKey, rulePattern string
 		}
 	}
 	if required {
-		reflectValue := reflect.ValueOf(value)
+		reflectValue := reflect.ValueOf(in.Value)
 		for reflectValue.Kind() == reflect.Ptr {
 			reflectValue = reflectValue.Elem()
 		}
@@ -142,7 +157,7 @@ func (v *Validator) checkRequired(value interface{}, ruleKey, rulePattern string
 		case reflect.String, reflect.Map, reflect.Array, reflect.Slice:
 			return reflectValue.Len() != 0
 		}
-		return gconv.String(value) != ""
+		return gconv.String(in.Value) != ""
 	} else {
 		return true
 	}
