@@ -653,19 +653,18 @@ func ExampleAnyAnyMap_UnmarshalValue() {
 	}
 
 	var (
-		user   = new(User)
-		params = g.MapAnyAny{
-			"uid":   1,
-			"name":  "john",
-			"PASS1": "123",
-			"PASS2": "456",
+		m    gmap.AnyAnyMap
+		user = User{
+			Uid:   1,
+			Name:  "john",
+			Pass1: "123",
+			Pass2: "456",
 		}
 	)
-	err := gconv.Scan(params, user)
-	if err == nil {
-		fmt.Printf("%#v", user)
+	if err := gconv.Scan(user, &m); err == nil {
+		fmt.Printf("%#v", m.Map())
 	}
 
 	// Output:
-	// &gmap_test.User{Uid:1, Name:"john", Pass1:"123", Pass2:"456"}
+	// map[interface {}]interface {}{"Name":"john", "Uid":1, "password1":"123", "password2":"456"}
 }
