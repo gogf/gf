@@ -14,7 +14,6 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/gf/v2/util/gvalid"
 )
 
 func Test_CheckStruct(t *testing.T) {
@@ -35,7 +34,7 @@ func Test_CheckStruct(t *testing.T) {
 			"Age": "年龄为18到30周岁",
 		}
 		obj := &Object{"john", 16}
-		err := gvalid.CheckStruct(context.TODO(), obj, rules, msgs)
+		err := g.Validator().Data(obj).Rules(rules).Messages(msgs).Run(context.TODO())
 		t.Assert(err, nil)
 	})
 
@@ -56,7 +55,7 @@ func Test_CheckStruct(t *testing.T) {
 			"Age": "年龄为18到30周岁",
 		}
 		obj := &Object{"john", 16}
-		err := gvalid.CheckStruct(context.TODO(), obj, rules, msgs)
+		err := g.Validator().Data(obj).Rules(rules).Messages(msgs).Run(context.TODO())
 		t.AssertNE(err, nil)
 		t.Assert(len(err.Maps()), 2)
 		t.Assert(err.Maps()["Name"]["required"], "")
@@ -81,7 +80,7 @@ func Test_CheckStruct(t *testing.T) {
 			"Age": "年龄为18到30周岁",
 		}
 		obj := &Object{"john", 16}
-		err := gvalid.CheckStruct(context.TODO(), obj, rules, msgs)
+		err := g.Validator().Data(obj).Rules(rules).Messages(msgs).Run(context.TODO())
 		t.AssertNE(err, nil)
 		t.Assert(len(err.Maps()), 2)
 		t.Assert(err.Maps()["Name"]["required"], "")
@@ -106,7 +105,7 @@ func Test_CheckStruct(t *testing.T) {
 			"Age": "年龄为18到30周岁",
 		}
 		obj := &Object{"john", 16}
-		err := gvalid.CheckStruct(context.TODO(), obj, rules, msgs)
+		err := g.Validator().Data(obj).Rules(rules).Messages(msgs).Run(context.TODO())
 		t.AssertNE(err, nil)
 		t.Assert(len(err.Maps()), 2)
 		t.Assert(err.Maps()["Name"]["required"], "")
@@ -120,7 +119,7 @@ func Test_CheckStruct(t *testing.T) {
 			Password string `json:"password" gvalid:"password@required#登录密码不能为空"`
 		}
 		var login LoginRequest
-		err := gvalid.CheckStruct(context.TODO(), login, nil)
+		err := g.Validator().Data(login).Rules(nil).Run(context.TODO())
 		t.AssertNE(err, nil)
 		t.Assert(len(err.Maps()), 2)
 		t.Assert(err.Maps()["username"]["required"], "用户名不能为空")
@@ -133,7 +132,7 @@ func Test_CheckStruct(t *testing.T) {
 			Password string `json:"password" gvalid:"@required#登录密码不能为空"`
 		}
 		var login LoginRequest
-		err := gvalid.CheckStruct(context.TODO(), login, nil)
+		err := g.Validator().Data(login).Rules(nil).Run(context.TODO())
 		t.Assert(err, nil)
 	})
 
@@ -143,7 +142,7 @@ func Test_CheckStruct(t *testing.T) {
 			Password string `json:"password" gvalid:"password@required#登录密码不能为空"`
 		}
 		var login LoginRequest
-		err := gvalid.CheckStruct(context.TODO(), login, nil)
+		err := g.Validator().Data(login).Rules(nil).Run(context.TODO())
 		t.AssertNE(err, nil)
 		t.Assert(err.Maps()["password"]["required"], "登录密码不能为空")
 	})
@@ -161,7 +160,7 @@ func Test_CheckStruct(t *testing.T) {
 			Username: "john",
 			Password: "123456",
 		}
-		err := gvalid.CheckStruct(context.TODO(), user, nil)
+		err := g.Validator().Data(user).Rules(nil).Run(context.TODO())
 		t.AssertNE(err, nil)
 		t.Assert(len(err.Maps()), 1)
 		t.Assert(err.Maps()["uid"]["min"], "ID不能为空")
@@ -184,7 +183,7 @@ func Test_CheckStruct(t *testing.T) {
 			"username@required#用户名不能为空",
 		}
 
-		err := gvalid.CheckStruct(context.TODO(), user, rules)
+		err := g.Validator().Data(user).Rules(rules).Run(context.TODO())
 		t.AssertNE(err, nil)
 		t.Assert(len(err.Maps()), 1)
 		t.Assert(err.Maps()["uid"]["min"], "ID不能为空")
@@ -202,7 +201,7 @@ func Test_CheckStruct(t *testing.T) {
 			Username: "john",
 			Password: "123456",
 		}
-		err := gvalid.CheckStruct(context.TODO(), user, nil)
+		err := g.Validator().Data(user).Rules(nil).Run(context.TODO())
 		t.AssertNE(err, nil)
 		t.Assert(len(err.Maps()), 1)
 	})
@@ -220,7 +219,7 @@ func Test_CheckStruct(t *testing.T) {
 			Username: "john",
 			Password: "123456",
 		}
-		err := gvalid.CheckStruct(context.TODO(), user, nil)
+		err := g.Validator().Data(user).Rules(nil).Run(context.TODO())
 		t.AssertNE(err, nil)
 		t.Assert(len(err.Maps()), 1)
 		t.Assert(err.Maps()["uid"]["min"], "ID不能为空")
@@ -249,7 +248,7 @@ func Test_CheckStruct_EmbeddedObject_Attribute(t *testing.T) {
 		obj.Type = 1
 		obj.Name = "john"
 		obj.Time = gtime.Now()
-		err := gvalid.CheckStruct(context.TODO(), obj, rules, ruleMsg)
+		err := g.Validator().Data(obj).Rules(rules).Messages(ruleMsg).Run(context.TODO())
 		t.Assert(err, nil)
 	})
 	gtest.C(t, func(t *gtest.T) {
@@ -273,7 +272,7 @@ func Test_CheckStruct_EmbeddedObject_Attribute(t *testing.T) {
 		obj := &Object{}
 		obj.Type = 1
 		obj.Name = "john"
-		err := gvalid.CheckStruct(context.TODO(), obj, rules, ruleMsg)
+		err := g.Validator().Data(obj).Rules(rules).Messages(ruleMsg).Run(context.TODO())
 		t.Assert(err, nil)
 	})
 }
@@ -296,7 +295,7 @@ func Test_CheckStruct_With_EmbeddedObject(t *testing.T) {
 				Pass2: "2",
 			},
 		}
-		err := gvalid.CheckStruct(context.TODO(), user, nil)
+		err := g.Validator().Data(user).Rules(nil).Run(context.TODO())
 		t.AssertNE(err, nil)
 		t.Assert(err.Maps()["name"], g.Map{"required": "请输入您的姓名"})
 		t.Assert(err.Maps()["password1"], g.Map{"same": "您两次输入的密码不一致"})
@@ -322,7 +321,7 @@ func Test_CheckStruct_With_StructAttribute(t *testing.T) {
 				Pass2: "2",
 			},
 		}
-		err := gvalid.CheckStruct(context.TODO(), user, nil)
+		err := g.Validator().Data(user).Rules(nil).Run(context.TODO())
 		t.AssertNE(err, nil)
 		t.Assert(err.Maps()["name"], g.Map{"required": "请输入您的姓名"})
 		t.Assert(err.Maps()["password1"], g.Map{"same": "您两次输入的密码不一致"})
@@ -341,7 +340,7 @@ func Test_CheckStruct_Optional(t *testing.T) {
 			Page: 1,
 			Size: 10,
 		}
-		err := gvalid.CheckStruct(context.TODO(), obj, nil)
+		err := g.Validator().Data(obj).Rules(nil).Run(context.TODO())
 		t.Assert(err, nil)
 	})
 	gtest.C(t, func(t *gtest.T) {
@@ -354,7 +353,7 @@ func Test_CheckStruct_Optional(t *testing.T) {
 			Page: 1,
 			Size: 10,
 		}
-		err := gvalid.CheckStruct(context.TODO(), obj, nil)
+		err := g.Validator().Data(obj).Rules(nil).Run(context.TODO())
 		t.Assert(err, nil)
 	})
 	gtest.C(t, func(t *gtest.T) {
@@ -367,7 +366,7 @@ func Test_CheckStruct_Optional(t *testing.T) {
 			Page: 1,
 			Size: 10,
 		}
-		err := gvalid.CheckStruct(context.TODO(), obj, nil)
+		err := g.Validator().Data(obj).Rules(nil).Run(context.TODO())
 		t.Assert(err.String(), "project id must between 1, 10000")
 	})
 }
@@ -383,7 +382,7 @@ func Test_CheckStruct_NoTag(t *testing.T) {
 			Page: 1,
 			Size: 10,
 		}
-		err := gvalid.CheckStruct(context.TODO(), obj, nil)
+		err := g.Validator().Data(obj).Rules(nil).Run(context.TODO())
 		t.Assert(err, nil)
 	})
 }
@@ -400,7 +399,7 @@ func Test_CheckStruct_InvalidRule(t *testing.T) {
 			Age:   18,
 			Phone: "123",
 		}
-		err := gvalid.CheckStruct(context.TODO(), obj, nil)
+		err := g.Validator().Data(obj).Rules(nil).Run(context.TODO())
 		t.AssertNE(err, nil)
 	})
 }
@@ -415,7 +414,12 @@ func TestValidator_CheckStructWithData(t *testing.T) {
 			Uid:      1,
 			Nickname: "john",
 		}
-		t.Assert(gvalid.CheckStructWithData(context.TODO(), data, g.Map{"uid": 1, "nickname": "john"}, nil), nil)
+		t.Assert(
+			g.Validator().Data(data).Assoc(
+				g.Map{"uid": 1, "nickname": "john"},
+			).Run(context.TODO()),
+			nil,
+		)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type UserApiSearch struct {
@@ -423,7 +427,7 @@ func TestValidator_CheckStructWithData(t *testing.T) {
 			Nickname string `v:"required-with:uid"`
 		}
 		data := UserApiSearch{}
-		t.AssertNE(gvalid.CheckStructWithData(context.TODO(), data, g.Map{}, nil), nil)
+		t.AssertNE(g.Validator().Data(data).Assoc(g.Map{}).Run(context.TODO()), nil)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type UserApiSearch struct {
@@ -433,7 +437,7 @@ func TestValidator_CheckStructWithData(t *testing.T) {
 		data := UserApiSearch{
 			Uid: 1,
 		}
-		t.AssertNE(gvalid.CheckStructWithData(context.TODO(), data, g.Map{}, nil), nil)
+		t.AssertNE(g.Validator().Data(data).Assoc(g.Map{}).Run(context.TODO()), nil)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -447,7 +451,7 @@ func TestValidator_CheckStructWithData(t *testing.T) {
 			StartTime: nil,
 			EndTime:   nil,
 		}
-		t.Assert(gvalid.CheckStructWithData(context.TODO(), data, g.Map{}, nil), nil)
+		t.Assert(g.Validator().Data(data).Assoc(g.Map{}).Run(context.TODO()), nil)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type UserApiSearch struct {
@@ -460,6 +464,6 @@ func TestValidator_CheckStructWithData(t *testing.T) {
 			StartTime: gtime.Now(),
 			EndTime:   nil,
 		}
-		t.AssertNE(gvalid.CheckStructWithData(context.TODO(), data, g.Map{"start_time": gtime.Now()}, nil), nil)
+		t.AssertNE(g.Validator().Data(data).Assoc(g.Map{"start_time": gtime.Now()}).Run(context.TODO()), nil)
 	})
 }

@@ -107,7 +107,7 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 			}
 		}
 		// Validation.
-		if err := gvalid.CheckStructWithData(r.Context(), pointer, data, nil); err != nil {
+		if err = gvalid.New().Data(pointer).Assoc(data).Run(r.Context()); err != nil {
 			return err
 		}
 
@@ -120,16 +120,14 @@ func (r *Request) doParse(pointer interface{}, requestType int) error {
 		if err != nil {
 			return err
 		}
-		if err := j.Var().Scan(pointer); err != nil {
+		if err = j.Var().Scan(pointer); err != nil {
 			return err
 		}
 		for i := 0; i < reflectVal2.Len(); i++ {
-			if err := gvalid.CheckStructWithData(
-				r.Context(),
-				reflectVal2.Index(i),
-				j.Get(gconv.String(i)).Map(),
-				nil,
-			); err != nil {
+
+			if err = gvalid.New().
+				Data(reflectVal2.Index(i)).Assoc(j.Get(gconv.String(i)).Map()).
+				Run(r.Context()); err != nil {
 				return err
 			}
 		}
