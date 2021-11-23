@@ -199,7 +199,7 @@ func ExampleValidator_Rules() {
 	data := g.Map{
 		"password": "123",
 	}
-	err := g.Validator().Data("", data).
+	err := g.Validator().Data("").Assoc(data).
 		Rules("required-with:password").
 		Messages("请输入确认密码").
 		Run(gctx.New())
@@ -269,7 +269,7 @@ func ExampleValidator_CheckStruct() {
 	if err := gconv.Scan(data, &user); err != nil {
 		panic(err)
 	}
-	err := g.Validator().Data(user, data).Run(gctx.New())
+	err := g.Validator().Data(user).Assoc(data).Run(gctx.New())
 	if err != nil {
 		fmt.Println(err.Items())
 	}

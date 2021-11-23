@@ -23,7 +23,7 @@ func Test_CI(t *testing.T) {
 		t.AssertNil(err)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		err := g.Validator().CaseInsensitive().Rules("in:Id,Name").Data("id").Run(ctx)
+		err := g.Validator().Ci().Rules("in:Id,Name").Data("id").Run(ctx)
 		t.AssertNil(err)
 	})
 }
