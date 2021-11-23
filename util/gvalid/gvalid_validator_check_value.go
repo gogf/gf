@@ -550,7 +550,7 @@ func (v *Validator) doCheckValueRecursively(ctx context.Context, in doCheckValue
 		validator := v.Clone()
 		validator.rules = nil
 		validator.messages = nil
-		if err := validator.Data(reflect.New(in.Type).Interface(), in.Value).Run(ctx); err != nil {
+		if err := validator.Data(reflect.New(in.Type).Interface()).Assoc(in.Value).Run(ctx); err != nil {
 			// It merges the errors into single error map.
 			for k, m := range err.(*validationError).errors {
 				in.ErrorMaps[k] = m

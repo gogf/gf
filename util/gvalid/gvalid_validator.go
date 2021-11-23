@@ -105,26 +105,33 @@ func (v *Validator) Bail() *Validator {
 	return newValidator
 }
 
-// CaseInsensitive sets the mark for Case-Insensitive for those rules that need value comparison.
-func (v *Validator) CaseInsensitive() *Validator {
+// Ci sets the mark for Case-Insensitive for those rules that need value comparison.
+func (v *Validator) Ci() *Validator {
 	newValidator := v.Clone()
 	newValidator.caseInsensitive = true
 	return newValidator
 }
 
 // Data is a chaining operation function, which sets validation data for current operation.
-// The optional parameter `assoc` is usually type of map, which specifies the parameter map used in union validation.
-// Calling this function with `assoc` also sets `useDataInsteadOfObjectAttributes` true
-func (v *Validator) Data(data interface{}, assoc ...interface{}) *Validator {
+func (v *Validator) Data(data interface{}) *Validator {
 	if data == nil {
 		return v
 	}
 	newValidator := v.Clone()
 	newValidator.data = data
-	if len(assoc) > 0 {
-		newValidator.assoc = assoc[0]
-		newValidator.useDataInsteadOfObjectAttributes = true
+	return newValidator
+}
+
+// Assoc is a chaining operation function, which sets associated validation data for current operation.
+// The optional parameter `assoc` is usually type of map, which specifies the parameter map used in union validation.
+// Calling this function with `assoc` also sets `useDataInsteadOfObjectAttributes` true
+func (v *Validator) Assoc(assoc interface{}) *Validator {
+	if assoc == nil {
+		return v
 	}
+	newValidator := v.Clone()
+	newValidator.assoc = assoc
+	newValidator.useDataInsteadOfObjectAttributes = true
 	return newValidator
 }
 
