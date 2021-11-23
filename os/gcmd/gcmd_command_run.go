@@ -12,22 +12,29 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // Run calls custom function that bound to this command.
 func (c *Command) Run(ctx context.Context) error {
+	_, err := c.RunWithValue(ctx)
+	return err
+}
+
+// RunWithValue calls custom function that bound to this command with value output.
+func (c *Command) RunWithValue(ctx context.Context) (value interface{}, err error) {
 	// Parse command arguments and options using default algorithm.
 	parser, err := Parse(nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	args := parser.GetArgAll()
 	if len(args) == 1 {
 		if c.HelpFunc != nil {
-			return c.HelpFunc(ctx, parser)
+			return nil, c.HelpFunc(ctx, parser)
 		}
-		return c.defaultHelpFunc(ctx, parser)
+		return nil, c.defaultHelpFunc(ctx, parser)
 	}
 
 	// Exclude the root binary name.
@@ -46,26 +53,32 @@ func (c *Command) Run(ctx context.Context) error {
 	)
 	c.Print()
 
-	return nil
+	return nil, nil
 }
 
-func (c *Command) doRun(ctx context.Context, parser *Parser) (err error) {
+func (c *Command) doRun(ctx context.Context, parser *Parser) (value interface{}, err error) {
 	// Add built-in help option, just for info only.
 	c.Options = append(c.Options, defaultHelpOption)
 	// Check built-in help command.
 	if parser.ContainsOpt(helpOptionName) || parser.ContainsOpt(helpOptionNameShort) {
 		if c.HelpFunc != nil {
-			return c.HelpFunc(ctx, parser)
+			return nil, c.HelpFunc(ctx, parser)
 		}
-		return c.defaultHelpFunc(ctx, parser)
+		return nil, c.defaultHelpFunc(ctx, parser)
 	}
 	// Reparse the arguments for current command configuration.
 	parser, err = c.reParse(ctx, parser)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	// Registered command function calling.
-	return c.Func(ctx, parser)
+	if c.Func != nil {
+		return nil, c.Func(ctx, parser)
+	}
+	if c.FuncWithValue != nil {
+		return c.FuncWithValue(ctx, parser)
+	}
+	return nil, gerror.New(`no function registered for current command`)
 }
 
 // reParse re-parses the arguments using option configuration of current command.
@@ -80,7 +93,7 @@ func (c *Command) reParse(ctx context.Context, parser *Parser) (*Parser, error) 
 	)
 	for _, option := range c.Options {
 		if option.Short != "" {
-			optionKey = fmt.Sprintf(`%s.%s`, option.Name, option.Short)
+			optionKey = fmt.Sprintf(`%s,%s`, option.Name, option.Short)
 		} else {
 			optionKey = option.Name
 		}

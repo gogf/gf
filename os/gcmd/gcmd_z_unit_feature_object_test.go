@@ -10,7 +10,7 @@ package gcmd_test
 
 import (
 	"context"
-	"fmt"
+	"os"
 	"testing"
 
 	"github.com/gogf/gf/v2/frame/g"
@@ -22,21 +22,22 @@ import (
 type TestCmdObject struct{}
 
 type TestCmdObjectInput struct {
-	g.Meta `name:"gf" usage:"gf env/test" brief:"gf env command" dc:"description" ad:"ad"`
+	g.Meta `root:"true" name:"root" usage:"root env/test" brief:"root env command" dc:"description" ad:"ad"`
 }
 type TestCmdObjectOutput struct{}
 
 type TestCmdObjectEnvInput struct {
-	g.Meta `name:"env" usage:"gf env/test" brief:"gf env command" dc:"description" ad:"ad"`
-	Name   string `v:"required" short:"n" orphan:"false" brief:"name for command"`
+	g.Meta `name:"env" usage:"root env" brief:"root env command" dc:"root env command description" ad:"root env command ad"`
 }
 type TestCmdObjectEnvOutput struct{}
 
 type TestCmdObjectTestInput struct {
-	g.Meta `name:"test" usage:"gf env/test" brief:"gf test command" dc:"description" ad:"ad"`
-	Name   string `v:"required" short:"n" orphan:"false" brief:"name for command"`
+	g.Meta `name:"test" usage:"root test" brief:"root test command" dc:"root test command description" ad:"root test command ad"`
+	Name   string `v:"required" short:"n" orphan:"false" brief:"name for test command"`
 }
-type TestCmdObjectTestOutput struct{}
+type TestCmdObjectTestOutput struct {
+	Content string
+}
 
 func (TestCmdObject) Root(ctx context.Context, in TestCmdObjectInput) (out *TestCmdObjectOutput, err error) {
 	return
@@ -47,67 +48,42 @@ func (TestCmdObject) Env(ctx context.Context, in TestCmdObjectEnvInput) (out *Te
 }
 
 func (TestCmdObject) Test(ctx context.Context, in TestCmdObjectTestInput) (out *TestCmdObjectTestOutput, err error) {
+	out = &TestCmdObjectTestOutput{
+		Content: in.Name,
+	}
 	return
 }
 
-func Test_Command_AddObject(t *testing.T) {
-
+func Test_Command_NewFromObject(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			ctx = gctx.New()
-			err error
+			ctx      = gctx.New()
+			cmd, err = gcmd.NewFromObject(&TestCmdObject{})
 		)
-		commandRoot := &gcmd.Command{
-			Name: "gf",
-		}
-		// env
-		commandEnv := gcmd.Command{
-			Name: "env",
-			Func: func(ctx context.Context, parser *gcmd.Parser) error {
-				fmt.Println("env")
-				return nil
-			},
-		}
-		// test
-		commandTest := gcmd.Command{
-			Name:        "test",
-			Brief:       "test brief",
-			Description: "test description current Golang environment variables",
-			Examples: `
-gf get github.com/gogf/gf
-gf get github.com/gogf/gf@latest
-gf get github.com/gogf/gf@master
-gf get golang.org/x/sys
-`,
-			Options: []gcmd.Option{
-				{
-					Name:   "my-option",
-					Short:  "o",
-					Brief:  "It's my custom option",
-					Orphan: false,
-				},
-				{
-					Name:   "another",
-					Short:  "a",
-					Brief:  "It's my another custom option",
-					Orphan: false,
-				},
-			},
-			Func: func(ctx context.Context, parser *gcmd.Parser) error {
-				fmt.Println("test")
-				return nil
-			},
-		}
-		err = commandRoot.AddCommand(
-			commandEnv,
-			commandTest,
-		)
-		if err != nil {
-			g.Log().Fatal(ctx, err)
-		}
+		t.AssertNil(err)
+		t.Assert(cmd.Name, "root")
 
-		if err = commandRoot.Run(ctx); err != nil {
-			g.Log().Fatal(ctx, err)
-		}
+		os.Args = []string{"root", "test", "-n=john"}
+		value, err := cmd.RunWithValue(ctx)
+		t.AssertNil(err)
+		t.Assert(value, `{"Content":"john"}`)
+	})
+}
+
+func Test_Command_AddObject(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			ctx     = gctx.New()
+			command = gcmd.Command{
+				Name: "start",
+			}
+		)
+		err := command.AddObject(&TestCmdObject{})
+		t.AssertNil(err)
+
+		os.Args = []string{"start", "root", "test", "-n=john"}
+		value, err := command.RunWithValue(ctx)
+		t.AssertNil(err)
+		t.Assert(value, `{"Content":"john"}`)
 	})
 }
