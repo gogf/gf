@@ -442,6 +442,51 @@ func ExampleValidator_RequiredWithoutAll() {
 	// The HusbandName field is required
 }
 
+func ExampleValidator_Bail() {
+	type BizReq struct {
+		Account   string `v:"bail|required|length:6,16|same:QQ"`
+		QQ        string
+		Password  string `v:"required|same:Password2"`
+		Password2 string `v:"required"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Account:   "gf",
+			QQ:        "123456",
+			Password:  "goframe.org",
+			Password2: "goframe.org",
+		}
+	)
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
+		fmt.Println(err)
+	}
+
+	// output:
+	// The Account value `gf` length must be between 6 and 16
+}
+
+func ExampleValidator_CaseInsensitive() {
+	type BizReq struct {
+		Account   string `v:"required"`
+		Password  string `v:"required|ci|same:Password2"`
+		Password2 string `v:"required"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Account:   "gf",
+			Password:  "Goframe.org", // Diff from Password2, but because of "ci", rule check passed
+			Password2: "goframe.org",
+		}
+	)
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
+		fmt.Println(err)
+	}
+
+	// output:
+}
+
 func ExampleValidator_Date() {
 	type BizReq struct {
 		Date1 string `v:"date"`
