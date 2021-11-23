@@ -69,7 +69,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	)
 	// Create instance according input/output types.
 	if reflectType.In(1).Kind() == reflect.Ptr {
-		inputObject = reflect.New(reflectType.In(1).Elem()).Elem()
+		inputObject = reflect.New(reflectType.In(1).Elem())
 	} else {
 		inputObject = reflect.New(reflectType.In(1).Elem()).Elem()
 	}
