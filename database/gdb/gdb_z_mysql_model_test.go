@@ -719,10 +719,19 @@ func Test_Model_Count(t *testing.T) {
 func Test_Model_Select(t *testing.T) {
 	table := createInitTable()
 	defer dropTable(table)
+
+	type User struct {
+		Id         int
+		Passport   string
+		Password   string
+		NickName   string
+		CreateTime gtime.Time
+	}
 	gtest.C(t, func(t *gtest.T) {
-		result, err := db.Model(table).All()
+		var users []User
+		err := db.Model(table).Scan(&users)
 		t.AssertNil(err)
-		t.Assert(len(result), TableSize)
+		t.Assert(len(users), TableSize)
 	})
 }
 

@@ -85,6 +85,11 @@ import (
 //
 // See the example or unit testing cases for clear understanding for this function.
 func (r Result) ScanList(structSlicePointer interface{}, bindToAttrName string, relationAttrNameAndFields ...string) (err error) {
+	out, err := checkGetSliceElementInfoForScanList(structSlicePointer, bindToAttrName)
+	if err != nil {
+		return err
+	}
+
 	var (
 		relationAttrName string
 		relationFields   string
@@ -96,27 +101,32 @@ func (r Result) ScanList(structSlicePointer interface{}, bindToAttrName string, 
 	case 1:
 		relationFields = relationAttrNameAndFields[0]
 	}
-	return doScanList(nil, r, structSlicePointer, bindToAttrName, relationAttrName, relationFields)
+	return doScanList(doScanListInput{
+		Model:              nil,
+		Result:             r,
+		StructSlicePointer: structSlicePointer,
+		StructSliceValue:   out.SliceReflectValue,
+		BindToAttrName:     bindToAttrName,
+		RelationAttrName:   relationAttrName,
+		RelationFields:     relationFields,
+	})
 }
 
-// doScanList converts `result` to struct slice which contains other complex struct attributes recursively.
-// The parameter `model` is used for recursively scanning purpose, which means, it can scan the attribute struct/structs recursively,
-// but it needs the Model for database accessing.
-// Note that the parameter `structSlicePointer` should be type of *[]struct/*[]*struct.
-func doScanList(model *Model, result Result, structSlicePointer interface{}, bindToAttrName, relationAttrName, relationFields string) (err error) {
-	if result.IsEmpty() {
-		return nil
-	}
+type checkGetSliceElementInfoForScanListOutput struct {
+	SliceReflectValue reflect.Value
+	BindToAttrType    reflect.Type
+}
+
+func checkGetSliceElementInfoForScanList(structSlicePointer interface{}, bindToAttrName string) (out *checkGetSliceElementInfoForScanListOutput, err error) {
 	// Necessary checks for parameters.
+	if structSlicePointer == nil {
+		return nil, gerror.NewCode(gcode.CodeInvalidParameter, `structSlicePointer cannot be nil`)
+	}
 	if bindToAttrName == "" {
-		return gerror.NewCode(gcode.CodeInvalidParameter, `bindToAttrName should not be empty`)
+		return nil, gerror.NewCode(gcode.CodeInvalidParameter, `bindToAttrName should not be empty`)
 	}
-
-	if relationAttrName == "." {
-		relationAttrName = ""
-	}
-
 	var (
+		reflectType  reflect.Type
 		reflectValue = reflect.ValueOf(structSlicePointer)
 		reflectKind  = reflectValue.Kind()
 	)
@@ -125,28 +135,84 @@ func doScanList(model *Model, result Result, structSlicePointer interface{}, bin
 		reflectKind = reflectValue.Kind()
 	}
 	if reflectKind != reflect.Ptr {
-		return gerror.NewCodef(
+		return nil, gerror.NewCodef(
 			gcode.CodeInvalidParameter,
-			"structSlicePointer should be type of *[]struct/*[]*struct, but got: %v",
-			reflectKind,
+			"structSlicePointer should be type of *[]struct/*[]*struct, but got: %s",
+			reflect.TypeOf(structSlicePointer).String(),
 		)
 	}
-	reflectValue = reflectValue.Elem()
-	reflectKind = reflectValue.Kind()
-	if reflectKind != reflect.Slice && reflectKind != reflect.Array {
-		return gerror.NewCodef(
+	out = &checkGetSliceElementInfoForScanListOutput{
+		SliceReflectValue: reflectValue.Elem(),
+	}
+	// Find the element struct type of the slice.
+	reflectType = reflectValue.Type().Elem().Elem()
+	reflectKind = reflectType.Kind()
+	for reflectKind == reflect.Ptr {
+		reflectType = reflectType.Elem()
+		reflectKind = reflectType.Kind()
+	}
+	if reflectKind != reflect.Struct {
+		err = gerror.NewCodef(
 			gcode.CodeInvalidParameter,
-			"structSlicePointer should be type of *[]struct/*[]*struct, but got: %v",
-			reflectKind,
+			"structSlicePointer should be type of *[]struct/*[]*struct, but got: %s",
+			reflect.TypeOf(structSlicePointer).String(),
+		)
+		return
+	}
+	// Find the target field by given name.
+	structField, ok := reflectType.FieldByName(bindToAttrName)
+	if !ok {
+		return nil, gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			`field "%s" not found in element of "%s"`,
+			bindToAttrName,
+			reflect.TypeOf(structSlicePointer).String(),
 		)
 	}
-	length := len(result)
+	// Find the attribute struct type for ORM fields filtering.
+	reflectType = structField.Type
+	reflectKind = reflectType.Kind()
+	for reflectKind == reflect.Ptr {
+		reflectType = reflectType.Elem()
+		reflectKind = reflectType.Kind()
+	}
+	if reflectKind == reflect.Slice || reflectKind == reflect.Array {
+		reflectType = reflectType.Elem()
+		reflectKind = reflectType.Kind()
+	}
+	out.BindToAttrType = reflectType
+	return
+}
+
+type doScanListInput struct {
+	Model              *Model
+	Result             Result
+	StructSlicePointer interface{}
+	StructSliceValue   reflect.Value
+	BindToAttrName     string
+	RelationAttrName   string
+	RelationFields     string
+}
+
+// doScanList converts `result` to struct slice which contains other complex struct attributes recursively.
+// The parameter `model` is used for recursively scanning purpose, which means, it can scan the attribute struct/structs recursively,
+// but it needs the Model for database accessing.
+// Note that the parameter `structSlicePointer` should be type of *[]struct/*[]*struct.
+func doScanList(in doScanListInput) (err error) {
+	if in.Result.IsEmpty() {
+		return nil
+	}
+	if in.BindToAttrName == "" {
+		return gerror.NewCode(gcode.CodeInvalidParameter, `bindToAttrName should not be empty`)
+	}
+
+	length := len(in.Result)
 	if length == 0 {
 		// The pointed slice is not empty.
-		if reflectValue.Len() > 0 {
+		if in.StructSliceValue.Len() > 0 {
 			// It here checks if it has struct item, which is already initialized.
 			// It then returns error to warn the developer its empty and no conversion.
-			if v := reflectValue.Index(0); v.Kind() != reflect.Ptr {
+			if v := in.StructSliceValue.Index(0); v.Kind() != reflect.Ptr {
 				return sql.ErrNoRows
 			}
 		}
@@ -156,10 +222,10 @@ func doScanList(model *Model, result Result, structSlicePointer interface{}, bin
 	var (
 		arrayValue    reflect.Value // Like: []*Entity
 		arrayItemType reflect.Type  // Like: *Entity
-		reflectType   = reflect.TypeOf(structSlicePointer)
+		reflectType   = reflect.TypeOf(in.StructSlicePointer)
 	)
-	if reflectValue.Len() > 0 {
-		arrayValue = reflectValue
+	if in.StructSliceValue.Len() > 0 {
+		arrayValue = in.StructSliceValue
 	} else {
 		arrayValue = reflect.MakeSlice(reflectType.Elem(), length, length)
 	}
@@ -173,17 +239,17 @@ func doScanList(model *Model, result Result, structSlicePointer interface{}, bin
 		relationFromFieldName   string // Eg: relationKV: id:uid  -> id
 		relationBindToFieldName string // Eg: relationKV: id:uid  -> uid
 	)
-	if len(relationFields) > 0 {
+	if len(in.RelationFields) > 0 {
 		// The relation key string of table filed name and attribute name
 		// can be joined with char '=' or ':'.
-		array := gstr.SplitAndTrim(relationFields, "=")
+		array := gstr.SplitAndTrim(in.RelationFields, "=")
 		if len(array) == 1 {
 			// Compatible with old splitting char ':'.
-			array = gstr.SplitAndTrim(relationFields, ":")
+			array = gstr.SplitAndTrim(in.RelationFields, ":")
 		}
 		if len(array) == 1 {
 			// The relation names are the same.
-			array = []string{relationFields, relationFields}
+			array = []string{in.RelationFields, in.RelationFields}
 		}
 		if len(array) == 2 {
 			// Defined table field to relation attribute name.
@@ -192,12 +258,12 @@ func doScanList(model *Model, result Result, structSlicePointer interface{}, bin
 			// uid:UserId
 			relationFromFieldName = array[0]
 			relationBindToFieldName = array[1]
-			if key, _ := gutil.MapPossibleItemByKey(result[0].Map(), relationFromFieldName); key == "" {
+			if key, _ := gutil.MapPossibleItemByKey(in.Result[0].Map(), relationFromFieldName); key == "" {
 				return gerror.NewCodef(
 					gcode.CodeInvalidParameter,
 					`cannot find possible related table field name "%s" from given relation fields "%s"`,
 					relationFromFieldName,
-					relationFields,
+					in.RelationFields,
 				)
 			} else {
 				relationFromFieldName = key
@@ -210,13 +276,13 @@ func doScanList(model *Model, result Result, structSlicePointer interface{}, bin
 		}
 		if relationFromFieldName != "" {
 			// Note that the value might be type of slice.
-			relationDataMap = result.MapKeyValue(relationFromFieldName)
+			relationDataMap = in.Result.MapKeyValue(relationFromFieldName)
 		}
 		if len(relationDataMap) == 0 {
 			return gerror.NewCodef(
 				gcode.CodeInvalidParameter,
 				`cannot find the relation data map, maybe invalid relation fields given "%v"`,
-				relationFields,
+				in.RelationFields,
 			)
 		}
 	}
@@ -229,19 +295,19 @@ func doScanList(model *Model, result Result, structSlicePointer interface{}, bin
 		bindToAttrField reflect.StructField
 	)
 	if arrayItemType.Kind() == reflect.Ptr {
-		if bindToAttrField, ok = arrayItemType.Elem().FieldByName(bindToAttrName); !ok {
+		if bindToAttrField, ok = arrayItemType.Elem().FieldByName(in.BindToAttrName); !ok {
 			return gerror.NewCodef(
 				gcode.CodeInvalidParameter,
 				`invalid parameter bindToAttrName: cannot find attribute with name "%s" from slice element`,
-				bindToAttrName,
+				in.BindToAttrName,
 			)
 		}
 	} else {
-		if bindToAttrField, ok = arrayItemType.FieldByName(bindToAttrName); !ok {
+		if bindToAttrField, ok = arrayItemType.FieldByName(in.BindToAttrName); !ok {
 			return gerror.NewCodef(
 				gcode.CodeInvalidParameter,
 				`invalid parameter bindToAttrName: cannot find attribute with name "%s" from slice element`,
-				bindToAttrName,
+				in.BindToAttrName,
 			)
 		}
 	}
@@ -272,10 +338,10 @@ func doScanList(model *Model, result Result, structSlicePointer interface{}, bin
 		} else {
 			// Like: []Entity
 		}
-		bindToAttrValue = arrayElemValue.FieldByName(bindToAttrName)
-		if relationAttrName != "" {
+		bindToAttrValue = arrayElemValue.FieldByName(in.BindToAttrName)
+		if in.RelationAttrName != "" {
 			// Attribute value of current slice element.
-			relationFromAttrValue = arrayElemValue.FieldByName(relationAttrName)
+			relationFromAttrValue = arrayElemValue.FieldByName(in.RelationAttrName)
 			if relationFromAttrValue.Kind() == reflect.Ptr {
 				relationFromAttrValue = relationFromAttrValue.Elem()
 			}
@@ -284,10 +350,10 @@ func doScanList(model *Model, result Result, structSlicePointer interface{}, bin
 			relationFromAttrValue = arrayElemValue
 		}
 		if len(relationDataMap) > 0 && !relationFromAttrValue.IsValid() {
-			return gerror.NewCodef(gcode.CodeInvalidParameter, `invalid relation fields specified: "%v"`, relationFields)
+			return gerror.NewCodef(gcode.CodeInvalidParameter, `invalid relation fields specified: "%v"`, in.RelationFields)
 		}
 		// Check and find possible bind to attribute name.
-		if relationFields != "" && !relationBindToFieldNameChecked {
+		if in.RelationFields != "" && !relationBindToFieldNameChecked {
 			relationFromAttrField = relationFromAttrValue.FieldByName(relationBindToFieldName)
 			if !relationFromAttrField.IsValid() {
 				filedMap, _ := structs.FieldMap(structs.FieldMapInput{
@@ -299,7 +365,7 @@ func doScanList(model *Model, result Result, structSlicePointer interface{}, bin
 						gcode.CodeInvalidParameter,
 						`cannot find possible related attribute name "%s" from given relation fields "%s"`,
 						relationBindToFieldName,
-						relationFields,
+						in.RelationFields,
 					)
 				} else {
 					relationBindToFieldName = key
@@ -320,20 +386,20 @@ func doScanList(model *Model, result Result, structSlicePointer interface{}, bin
 						return err
 					}
 					// Recursively Scan.
-					if model != nil {
-						if err = model.doWithScanStructs(bindToAttrValue.Addr()); err != nil {
+					if in.Model != nil {
+						if err = in.Model.doWithScanStructs(bindToAttrValue.Addr()); err != nil {
 							return nil
 						}
 					}
 				} else {
 					// Maybe the attribute does not exist yet.
-					return gerror.NewCodef(gcode.CodeInvalidParameter, `invalid relation fields specified: "%v"`, relationFields)
+					return gerror.NewCodef(gcode.CodeInvalidParameter, `invalid relation fields specified: "%v"`, in.RelationFields)
 				}
 			} else {
 				return gerror.NewCodef(
 					gcode.CodeInvalidParameter,
 					`relationKey should not be empty as field "%s" is slice`,
-					bindToAttrName,
+					in.BindToAttrName,
 				)
 			}
 
@@ -363,14 +429,14 @@ func doScanList(model *Model, result Result, structSlicePointer interface{}, bin
 					}
 				} else {
 					// Maybe the attribute does not exist yet.
-					return gerror.NewCodef(gcode.CodeInvalidParameter, `invalid relation fields specified: "%v"`, relationFields)
+					return gerror.NewCodef(gcode.CodeInvalidParameter, `invalid relation fields specified: "%v"`, in.RelationFields)
 				}
 			} else {
-				if i >= len(result) {
+				if i >= len(in.Result) {
 					// There's no relational data.
 					continue
 				}
-				v := result[i]
+				v := in.Result[i]
 				if v == nil {
 					// There's no relational data.
 					continue
@@ -380,8 +446,8 @@ func doScanList(model *Model, result Result, structSlicePointer interface{}, bin
 				}
 			}
 			// Recursively Scan.
-			if model != nil {
-				if err = model.doWithScanStruct(element); err != nil {
+			if in.Model != nil {
+				if err = in.Model.doWithScanStruct(element); err != nil {
 					return err
 				}
 			}
@@ -407,14 +473,14 @@ func doScanList(model *Model, result Result, structSlicePointer interface{}, bin
 					}
 				} else {
 					// Maybe the attribute does not exist yet.
-					return gerror.NewCodef(gcode.CodeInvalidParameter, `invalid relation fields specified: "%v"`, relationFields)
+					return gerror.NewCodef(gcode.CodeInvalidParameter, `invalid relation fields specified: "%v"`, in.RelationFields)
 				}
 			} else {
-				if i >= len(result) {
+				if i >= len(in.Result) {
 					// There's no relational data.
 					continue
 				}
-				relationDataItem := result[i]
+				relationDataItem := in.Result[i]
 				if relationDataItem == nil {
 					// There's no relational data.
 					continue
@@ -424,8 +490,8 @@ func doScanList(model *Model, result Result, structSlicePointer interface{}, bin
 				}
 			}
 			// Recursively Scan.
-			if model != nil {
-				if err = model.doWithScanStruct(bindToAttrValue); err != nil {
+			if in.Model != nil {
+				if err = in.Model.doWithScanStruct(bindToAttrValue); err != nil {
 					return err
 				}
 			}
@@ -434,6 +500,6 @@ func doScanList(model *Model, result Result, structSlicePointer interface{}, bin
 			return gerror.NewCodef(gcode.CodeInvalidParameter, `unsupported attribute type: %s`, bindToAttrKind.String())
 		}
 	}
-	reflect.ValueOf(structSlicePointer).Elem().Set(arrayValue)
+	reflect.ValueOf(in.StructSlicePointer).Elem().Set(arrayValue)
 	return nil
 }
