@@ -414,10 +414,10 @@ func TestValidator_CheckStructWithData(t *testing.T) {
 			Uid:      1,
 			Nickname: "john",
 		}
-		t.Assert(g.Validator().Data(
-			data,
-			g.Map{"uid": 1, "nickname": "john"},
-		).Run(context.TODO()),
+		t.Assert(
+			g.Validator().Data(data).Assoc(
+				g.Map{"uid": 1, "nickname": "john"},
+			).Run(context.TODO()),
 			nil,
 		)
 	})
@@ -427,7 +427,7 @@ func TestValidator_CheckStructWithData(t *testing.T) {
 			Nickname string `v:"required-with:uid"`
 		}
 		data := UserApiSearch{}
-		t.AssertNE(g.Validator().Data(data, g.Map{}).Run(context.TODO()), nil)
+		t.AssertNE(g.Validator().Data(data).Assoc(g.Map{}).Run(context.TODO()), nil)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type UserApiSearch struct {
@@ -437,7 +437,7 @@ func TestValidator_CheckStructWithData(t *testing.T) {
 		data := UserApiSearch{
 			Uid: 1,
 		}
-		t.AssertNE(g.Validator().Data(data, g.Map{}).Run(context.TODO()), nil)
+		t.AssertNE(g.Validator().Data(data).Assoc(g.Map{}).Run(context.TODO()), nil)
 	})
 
 	gtest.C(t, func(t *gtest.T) {
@@ -451,7 +451,7 @@ func TestValidator_CheckStructWithData(t *testing.T) {
 			StartTime: nil,
 			EndTime:   nil,
 		}
-		t.Assert(g.Validator().Data(data, g.Map{}).Run(context.TODO()), nil)
+		t.Assert(g.Validator().Data(data).Assoc(g.Map{}).Run(context.TODO()), nil)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type UserApiSearch struct {
@@ -464,6 +464,6 @@ func TestValidator_CheckStructWithData(t *testing.T) {
 			StartTime: gtime.Now(),
 			EndTime:   nil,
 		}
-		t.AssertNE(g.Validator().Data(data, g.Map{"start_time": gtime.Now()}).Run(context.TODO()), nil)
+		t.AssertNE(g.Validator().Data(data).Assoc(g.Map{"start_time": gtime.Now()}).Run(context.TODO()), nil)
 	})
 }

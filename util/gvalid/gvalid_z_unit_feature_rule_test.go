@@ -44,10 +44,10 @@ func Test_Required(t *testing.T) {
 	if m := g.Validator().Data("").Rules("required").Messages(nil).Run(ctx); m == nil {
 		t.Error(m)
 	}
-	if m := g.Validator().Data("", map[string]interface{}{"id": 1, "age": 19}).Rules("required-if: id,1,age,18").Messages(nil).Run(ctx); m == nil {
+	if m := g.Validator().Data("").Assoc(map[string]interface{}{"id": 1, "age": 19}).Rules("required-if: id,1,age,18").Messages(nil).Run(ctx); m == nil {
 		t.Error("Required校验失败")
 	}
-	if m := g.Validator().Data("", map[string]interface{}{"id": 2, "age": 19}).Rules("required-if: id,1,age,18").Messages(nil).Run(ctx); m != nil {
+	if m := g.Validator().Data("").Assoc(map[string]interface{}{"id": 2, "age": 19}).Rules("required-if: id,1,age,18").Messages(nil).Run(ctx); m != nil {
 		t.Error("Required校验失败")
 	}
 }
@@ -55,20 +55,20 @@ func Test_Required(t *testing.T) {
 func Test_RequiredIf(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "required-if:id,1,age,18"
-		t.AssertNE(g.Validator().Data("", g.Map{"id": 1}).Rules(rule).Messages(nil).Run(ctx), nil)
-		t.Assert(g.Validator().Data("", g.Map{"id": 0}).Rules(rule).Messages(nil).Run(ctx), nil)
-		t.AssertNE(g.Validator().Data("", g.Map{"age": 18}).Rules(rule).Messages(nil).Run(ctx), nil)
-		t.Assert(g.Validator().Data("", g.Map{"age": 20}).Rules(rule).Messages(nil).Run(ctx), nil)
+		t.AssertNE(g.Validator().Data("").Assoc(g.Map{"id": 1}).Rules(rule).Messages(nil).Run(ctx), nil)
+		t.Assert(g.Validator().Data("").Assoc(g.Map{"id": 0}).Rules(rule).Messages(nil).Run(ctx), nil)
+		t.AssertNE(g.Validator().Data("").Assoc(g.Map{"age": 18}).Rules(rule).Messages(nil).Run(ctx), nil)
+		t.Assert(g.Validator().Data("").Assoc(g.Map{"age": 20}).Rules(rule).Messages(nil).Run(ctx), nil)
 	})
 }
 
 func Test_RequiredUnless(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "required-unless:id,1,age,18"
-		t.Assert(g.Validator().Data("", g.Map{"id": 1}).Rules(rule).Messages(nil).Run(ctx), nil)
-		t.AssertNE(g.Validator().Data("", g.Map{"id": 0}).Rules(rule).Messages(nil).Run(ctx), nil)
-		t.Assert(g.Validator().Data("", g.Map{"age": 18}).Rules(rule).Messages(nil).Run(ctx), nil)
-		t.AssertNE(g.Validator().Data("", g.Map{"age": 20}).Rules(rule).Messages(nil).Run(ctx), nil)
+		t.Assert(g.Validator().Data("").Assoc(g.Map{"id": 1}).Rules(rule).Messages(nil).Run(ctx), nil)
+		t.AssertNE(g.Validator().Data("").Assoc(g.Map{"id": 0}).Rules(rule).Messages(nil).Run(ctx), nil)
+		t.Assert(g.Validator().Data("").Assoc(g.Map{"age": 18}).Rules(rule).Messages(nil).Run(ctx), nil)
+		t.AssertNE(g.Validator().Data("").Assoc(g.Map{"age": 20}).Rules(rule).Messages(nil).Run(ctx), nil)
 	})
 }
 
@@ -86,9 +86,9 @@ func Test_RequiredWith(t *testing.T) {
 			"id":   100,
 			"name": "john",
 		}
-		err1 := g.Validator().Data(val1, params1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val1, params2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(val1, params3).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Assoc(params1).Rules(rule).Messages(nil).Run(ctx)
+		err2 := g.Validator().Data(val1).Assoc(params2).Rules(rule).Messages(nil).Run(ctx)
+		err3 := g.Validator().Data(val1).Assoc(params3).Rules(rule).Messages(nil).Run(ctx)
 		t.Assert(err1, nil)
 		t.AssertNE(err2, nil)
 		t.AssertNE(err3, nil)
@@ -106,9 +106,9 @@ func Test_RequiredWith(t *testing.T) {
 		params3 := g.Map{
 			"time": time.Time{},
 		}
-		err1 := g.Validator().Data(val1, params1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val1, params2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(val1, params3).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Assoc(params1).Rules(rule).Messages(nil).Run(ctx)
+		err2 := g.Validator().Data(val1).Assoc(params2).Rules(rule).Messages(nil).Run(ctx)
+		err3 := g.Validator().Data(val1).Assoc(params3).Rules(rule).Messages(nil).Run(ctx)
 		t.Assert(err1, nil)
 		t.AssertNE(err2, nil)
 		t.Assert(err3, nil)
@@ -125,9 +125,9 @@ func Test_RequiredWith(t *testing.T) {
 		params3 := g.Map{
 			"time": time.Now(),
 		}
-		err1 := g.Validator().Data(val1, params1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val1, params2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(val1, params3).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Assoc(params1).Rules(rule).Messages(nil).Run(ctx)
+		err2 := g.Validator().Data(val1).Assoc(params2).Rules(rule).Messages(nil).Run(ctx)
+		err3 := g.Validator().Data(val1).Assoc(params3).Rules(rule).Messages(nil).Run(ctx)
 		t.Assert(err1, nil)
 		t.AssertNE(err2, nil)
 		t.AssertNE(err3, nil)
@@ -175,9 +175,9 @@ func Test_RequiredWithAll(t *testing.T) {
 			"id":   100,
 			"name": "john",
 		}
-		err1 := g.Validator().Data(val1, params1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val1, params2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(val1, params3).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Assoc(params1).Rules(rule).Messages(nil).Run(ctx)
+		err2 := g.Validator().Data(val1).Assoc(params2).Rules(rule).Messages(nil).Run(ctx)
+		err3 := g.Validator().Data(val1).Assoc(params3).Rules(rule).Messages(nil).Run(ctx)
 		t.Assert(err1, nil)
 		t.Assert(err2, nil)
 		t.AssertNE(err3, nil)
@@ -198,9 +198,9 @@ func Test_RequiredWithOut(t *testing.T) {
 			"id":   100,
 			"name": "john",
 		}
-		err1 := g.Validator().Data(val1, params1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val1, params2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(val1, params3).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Assoc(params1).Rules(rule).Messages(nil).Run(ctx)
+		err2 := g.Validator().Data(val1).Assoc(params2).Rules(rule).Messages(nil).Run(ctx)
+		err3 := g.Validator().Data(val1).Assoc(params3).Rules(rule).Messages(nil).Run(ctx)
 		t.AssertNE(err1, nil)
 		t.AssertNE(err2, nil)
 		t.Assert(err3, nil)
@@ -221,9 +221,9 @@ func Test_RequiredWithOutAll(t *testing.T) {
 			"id":   100,
 			"name": "john",
 		}
-		err1 := g.Validator().Data(val1, params1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val1, params2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(val1, params3).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Assoc(params1).Rules(rule).Messages(nil).Run(ctx)
+		err2 := g.Validator().Data(val1).Assoc(params2).Rules(rule).Messages(nil).Run(ctx)
+		err3 := g.Validator().Data(val1).Assoc(params3).Rules(rule).Messages(nil).Run(ctx)
 		t.AssertNE(err1, nil)
 		t.Assert(err2, nil)
 		t.Assert(err3, nil)
@@ -914,9 +914,9 @@ func Test_Same(t *testing.T) {
 			"id":   100,
 			"name": "john",
 		}
-		err1 := g.Validator().Data(val1, params1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val1, params2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(val1, params3).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Assoc(params1).Rules(rule).Messages(nil).Run(ctx)
+		err2 := g.Validator().Data(val1).Assoc(params2).Rules(rule).Messages(nil).Run(ctx)
+		err3 := g.Validator().Data(val1).Assoc(params3).Rules(rule).Messages(nil).Run(ctx)
 		t.AssertNE(err1, nil)
 		t.Assert(err2, nil)
 		t.Assert(err3, nil)
@@ -937,9 +937,9 @@ func Test_Different(t *testing.T) {
 			"id":   100,
 			"name": "john",
 		}
-		err1 := g.Validator().Data(val1, params1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val1, params2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(val1, params3).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Assoc(params1).Rules(rule).Messages(nil).Run(ctx)
+		err2 := g.Validator().Data(val1).Assoc(params2).Rules(rule).Messages(nil).Run(ctx)
+		err3 := g.Validator().Data(val1).Assoc(params3).Rules(rule).Messages(nil).Run(ctx)
 		t.Assert(err1, nil)
 		t.AssertNE(err2, nil)
 		t.AssertNE(err3, nil)

@@ -36,7 +36,7 @@ func Test_CustomRule1(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		err := g.Validator().Data("123456").Rules(rule).Messages("custom message").Run(ctx)
 		t.Assert(err.String(), "custom message")
-		err = g.Validator().Data("123456", g.Map{"data": "123456"}).Rules(rule).Messages("custom message").Run(ctx)
+		err = g.Validator().Data("123456").Assoc(g.Map{"data": "123456"}).Rules(rule).Messages("custom message").Run(ctx)
 		t.Assert(err, nil)
 	})
 	// Error with struct validation.
@@ -176,7 +176,7 @@ func TestValidator_RuleFunc(t *testing.T) {
 		err = g.Validator().
 			Rules(ruleName).
 			Messages("custom message").
-			Data("123456", g.Map{"data": "123456"}).
+			Data("123456").Assoc(g.Map{"data": "123456"}).
 			RuleFunc(ruleName, ruleFunc).
 			Run(ctx)
 		t.AssertNil(err)
@@ -232,7 +232,7 @@ func TestValidator_RuleFuncMap(t *testing.T) {
 		err = g.Validator().
 			Rules(ruleName).
 			Messages("custom message").
-			Data("123456", g.Map{"data": "123456"}).
+			Data("123456").Assoc(g.Map{"data": "123456"}).
 			RuleFuncMap(map[string]gvalid.RuleFunc{
 				ruleName: ruleFunc,
 			}).Run(ctx)

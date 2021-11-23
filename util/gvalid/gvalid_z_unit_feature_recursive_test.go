@@ -59,7 +59,7 @@ func Test_CheckStruct_Recursive_Struct_WithData(t *testing.T) {
 				"Pass2": 200,
 			},
 		}
-		err := g.Validator().Data(user, data).Run(ctx)
+		err := g.Validator().Data(user).Assoc(data).Run(ctx)
 		t.AssertNE(err, nil)
 		t.Assert(err.Maps()["Name"], nil)
 		t.Assert(err.Maps()["Pass1"], g.Map{"same": "The Pass1 value `100` must be the same as field Pass2"})
