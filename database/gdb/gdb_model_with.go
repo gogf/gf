@@ -281,7 +281,7 @@ type parseWithTagInFieldStructOutput struct {
 	Order string
 }
 
-func (m *Model) parseWithTagInFieldStruct(field *structs.Field) (output parseWithTagInFieldStructOutput) {
+func (m *Model) parseWithTagInFieldStruct(field structs.Field) (output parseWithTagInFieldStructOutput) {
 	var (
 		match  []string
 		ormTag = field.Tag(OrmTagForStruct)

@@ -123,7 +123,7 @@ type FieldMapInput struct {
 	Pointer interface{}
 
 	// PriorityTagArray specifies the priority tag array for retrieving from high to low.
-	// If it's given `nil`, it returns map[name]*Field, of which the `name` is attribute name.
+	// If it's given `nil`, it returns map[name]Field, of which the `name` is attribute name.
 	PriorityTagArray []string
 
 	// RecursiveOption specifies the way retrieving the fields recursively if the attribute
@@ -132,12 +132,12 @@ type FieldMapInput struct {
 }
 
 // Fields retrieves and returns the fields of `pointer` as slice.
-func Fields(in FieldsInput) ([]*Field, error) {
+func Fields(in FieldsInput) ([]Field, error) {
 	var (
 		ok                   bool
 		fieldFilterMap       = make(map[string]struct{})
-		retrievedFields      = make([]*Field, 0)
-		currentLevelFieldMap = make(map[string]*Field)
+		retrievedFields      = make([]Field, 0)
+		currentLevelFieldMap = make(map[string]Field)
 	)
 	rangeFields, err := getFieldValues(in.Pointer)
 	if err != nil {
@@ -187,7 +187,7 @@ func Fields(in FieldsInput) ([]*Field, error) {
 							continue
 						}
 						fieldFilterMap[fieldName] = struct{}{}
-						if v := currentLevelFieldMap[fieldName]; v == nil {
+						if v, ok := currentLevelFieldMap[fieldName]; !ok {
 							retrievedFields = append(retrievedFields, structField)
 						} else {
 							retrievedFields = append(retrievedFields, v)
@@ -204,25 +204,25 @@ func Fields(in FieldsInput) ([]*Field, error) {
 	return retrievedFields, nil
 }
 
-// FieldMap retrieves and returns struct field as map[name/tag]*Field from `pointer`.
+// FieldMap retrieves and returns struct field as map[name/tag]Field from `pointer`.
 //
 // The parameter `pointer` should be type of struct/*struct.
 //
 // The parameter `priority` specifies the priority tag array for retrieving from high to low.
-// If it's given `nil`, it returns map[name]*Field, of which the `name` is attribute name.
+// If it's given `nil`, it returns map[name]Field, of which the `name` is attribute name.
 //
 // The parameter `recursive` specifies the whether retrieving the fields recursively if the attribute
 // is an embedded struct.
 //
 // Note that it only retrieves the exported attributes with first letter up-case from struct.
-func FieldMap(in FieldMapInput) (map[string]*Field, error) {
+func FieldMap(in FieldMapInput) (map[string]Field, error) {
 	fields, err := getFieldValues(in.Pointer)
 	if err != nil {
 		return nil, err
 	}
 	var (
 		tagValue = ""
-		mapField = make(map[string]*Field)
+		mapField = make(map[string]Field)
 	)
 	for _, field := range fields {
 		// Only retrieve exported attributes.

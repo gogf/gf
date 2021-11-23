@@ -65,14 +65,14 @@ func ParseTag(tag string) map[string]string {
 	return data
 }
 
-// TagFields retrieves and returns struct tags as []*Field from `pointer`.
+// TagFields retrieves and returns struct tags as []Field from `pointer`.
 //
 // The parameter `pointer` should be type of struct/*struct.
 //
 // Note that,
 // 1. It only retrieves the exported attributes with first letter up-case from struct.
 // 2. The parameter `priority` should be given, it only retrieves fields that has given tag.
-func TagFields(pointer interface{}, priority []string) ([]*Field, error) {
+func TagFields(pointer interface{}, priority []string) ([]Field, error) {
 	return getFieldValuesByTagPriority(pointer, priority, map[string]struct{}{})
 }
 
@@ -95,18 +95,18 @@ func TagMapName(pointer interface{}, priority []string) (map[string]string, erro
 	return tagMap, nil
 }
 
-// TagMapField retrieves struct tags as map[tag]*Field from `pointer`, and returns it.
+// TagMapField retrieves struct tags as map[tag]Field from `pointer`, and returns it.
 // The parameter `object` should be either type of struct/*struct/[]struct/[]*struct.
 //
 // Note that,
 // 1. It only retrieves the exported attributes with first letter up-case from struct.
 // 2. The parameter `priority` should be given, it only retrieves fields that has given tag.
-func TagMapField(object interface{}, priority []string) (map[string]*Field, error) {
+func TagMapField(object interface{}, priority []string) (map[string]Field, error) {
 	fields, err := TagFields(object, priority)
 	if err != nil {
 		return nil, err
 	}
-	tagMap := make(map[string]*Field, len(fields))
+	tagMap := make(map[string]Field, len(fields))
 	for _, field := range fields {
 		tagField := field
 		tagMap[field.TagValue] = tagField
@@ -114,7 +114,7 @@ func TagMapField(object interface{}, priority []string) (map[string]*Field, erro
 	return tagMap, nil
 }
 
-func getFieldValues(value interface{}) ([]*Field, error) {
+func getFieldValues(value interface{}) ([]Field, error) {
 	var (
 		reflectValue reflect.Value
 		reflectKind  reflect.Kind
@@ -156,10 +156,10 @@ exitLoop:
 	var (
 		structType = reflectValue.Type()
 		length     = reflectValue.NumField()
-		fields     = make([]*Field, length)
+		fields     = make([]Field, length)
 	)
 	for i := 0; i < length; i++ {
-		fields[i] = &Field{
+		fields[i] = Field{
 			Value: reflectValue.Field(i),
 			Field: structType.Field(i),
 		}
@@ -167,14 +167,14 @@ exitLoop:
 	return fields, nil
 }
 
-func getFieldValuesByTagPriority(pointer interface{}, priority []string, tagMap map[string]struct{}) ([]*Field, error) {
+func getFieldValuesByTagPriority(pointer interface{}, priority []string, tagMap map[string]struct{}) ([]Field, error) {
 	fields, err := getFieldValues(pointer)
 	if err != nil {
 		return nil, err
 	}
 	var (
 		tagValue  = ""
-		tagFields = make([]*Field, 0)
+		tagFields = make([]Field, 0)
 	)
 	for _, field := range fields {
 		// Only retrieve exported attributes.

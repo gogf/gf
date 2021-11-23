@@ -20,11 +20,12 @@ package gtimer
 
 import (
 	"context"
+	"strconv"
 	"sync"
 	"time"
 
 	"github.com/gogf/gf/v2/container/gtype"
-	"github.com/gogf/gf/v2/os/gcmd"
+	"github.com/gogf/gf/v2/internal/command"
 )
 
 // Timer is the timer manager, which uses ticks to calculate the timing interval.
@@ -47,14 +48,22 @@ const (
 	StatusStopped            = 2                    // Job or Timer is stopped.
 	StatusClosed             = -1                   // Job or Timer is closed and waiting to be deleted.
 	panicExit                = "exit"               // panicExit is used for custom job exit with panic.
-	defaultTimerInterval     = 100                  // defaultTimerInterval is the default timer interval in milliseconds.
+	defaultTimerInterval     = "100"                // defaultTimerInterval is the default timer interval in milliseconds.
 	commandEnvKeyForInterval = "gf.gtimer.interval" // commandEnvKeyForInterval is the key for command argument or environment configuring default interval duration for timer.
 )
 
 var (
+	defaultInterval = getDefaultInterval()
 	defaultTimer    = New()
-	defaultInterval = gcmd.GetOptWithEnv(commandEnvKeyForInterval, defaultTimerInterval).Duration() * time.Millisecond
 )
+
+func getDefaultInterval() time.Duration {
+	n, err := strconv.Atoi(command.GetOptWithEnv(commandEnvKeyForInterval, defaultTimerInterval))
+	if err != nil {
+		panic(err)
+	}
+	return time.Duration(n) * time.Millisecond
+}
 
 // DefaultOptions creates and returns a default options object for Timer creation.
 func DefaultOptions() TimerOptions {

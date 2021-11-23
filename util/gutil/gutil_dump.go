@@ -142,10 +142,14 @@ func doDump(value interface{}, indent string, buffer *bytes.Buffer, option doDum
 		doDumpNumber(exportInternalInput)
 
 	case reflect.Chan:
-		buffer.WriteString(`<chan>`)
+		buffer.WriteString(fmt.Sprintf(`<%s>`, reflect.TypeOf(value).String()))
 
 	case reflect.Func:
-		buffer.WriteString(`<func>`)
+		if reflectValue.IsNil() || !reflectValue.IsValid() {
+			buffer.WriteString(`<nil>`)
+		} else {
+			buffer.WriteString(fmt.Sprintf(`<%s>`, reflect.TypeOf(value).String()))
+		}
 
 	default:
 		doDumpDefault(exportInternalInput)

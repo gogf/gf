@@ -151,7 +151,7 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 	}
 
 	// Normal unmarshalling interfaces checks.
-	if err, ok := bindVarToReflectValueWithInterfaceCheck(pointerReflectValue, paramsInterface); ok {
+	if err, ok = bindVarToReflectValueWithInterfaceCheck(pointerReflectValue, paramsInterface); ok {
 		return err
 	}
 
@@ -166,7 +166,7 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 		//	return v.UnmarshalValue(params)
 		// }
 		// Note that it's `pointerElemReflectValue` here not `pointerReflectValue`.
-		if err, ok := bindVarToReflectValueWithInterfaceCheck(pointerElemReflectValue, paramsInterface); ok {
+		if err, ok = bindVarToReflectValueWithInterfaceCheck(pointerElemReflectValue, paramsInterface); ok {
 			return err
 		}
 		// Retrieve its element, may be struct at last.
@@ -177,7 +177,11 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 	// DO NOT use MapDeep here.
 	paramsMap := Map(paramsInterface)
 	if paramsMap == nil {
-		return gerror.NewCodef(gcode.CodeInvalidParameter, "convert params to map failed: %v", params)
+		return gerror.NewCodef(
+			gcode.CodeInvalidParameter,
+			`convert params "%#v" to map failed`,
+			params,
+		)
 	}
 
 	// It only performs one converting to the same attribute.
