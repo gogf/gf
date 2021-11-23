@@ -320,7 +320,12 @@ func (m *Model) Scan(pointer interface{}, where ...interface{}) error {
 //
 // See Result.ScanList.
 func (m *Model) ScanList(structSlicePointer interface{}, bindToAttrName string, relationAttrNameAndFields ...string) (err error) {
-	result, err := m.All()
+	out, err := checkGetSliceElementInfoForScanList(structSlicePointer, bindToAttrName)
+	if err != nil {
+		return err
+	}
+	// Filter fields using temporary created struct using reflect.New.
+	result, err := m.Fields(reflect.New(out.BindToAttrType).Interface()).All()
 	if err != nil {
 		return err
 	}
@@ -335,7 +340,15 @@ func (m *Model) ScanList(structSlicePointer interface{}, bindToAttrName string, 
 	case 1:
 		relationFields = relationAttrNameAndFields[0]
 	}
-	return doScanList(m, result, structSlicePointer, bindToAttrName, relationAttrName, relationFields)
+	return doScanList(doScanListInput{
+		Model:              m,
+		Result:             result,
+		StructSlicePointer: structSlicePointer,
+		StructSliceValue:   out.SliceReflectValue,
+		BindToAttrName:     bindToAttrName,
+		RelationAttrName:   relationAttrName,
+		RelationFields:     relationFields,
+	})
 }
 
 // Count does "SELECT COUNT(x) FROM ..." statement for the model.

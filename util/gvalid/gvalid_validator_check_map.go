@@ -9,21 +9,16 @@ package gvalid
 import (
 	"context"
 	"errors"
+	"reflect"
 	"strings"
 
 	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
-// CheckMap validates map and returns the error result. It returns nil if with successful validation.
-// The parameter `params` should be type of map.
-func (v *Validator) CheckMap(ctx context.Context, params interface{}) Error {
-	return v.doCheckMap(ctx, params)
-}
-
 func (v *Validator) doCheckMap(ctx context.Context, params interface{}) Error {
-	// If there's no validation rules, it does nothing and returns quickly.
-	if params == nil || v.rules == nil {
+	if params == nil {
 		return nil
 	}
 	var (
@@ -76,12 +71,8 @@ func (v *Validator) doCheckMap(ctx context.Context, params interface{}) Error {
 			})
 		}
 	}
-	// If there's no validation rules, it does nothing and returns quickly.
-	if len(checkRules) == 0 {
-		return nil
-	}
-	data := gconv.Map(params)
-	if data == nil {
+	inputParamMap := gconv.Map(params)
+	if inputParamMap == nil {
 		return newValidationErrorByStr(
 			internalParamsErrRuleName,
 			errors.New("invalid params type: convert to map failed"),
@@ -97,14 +88,41 @@ func (v *Validator) doCheckMap(ctx context.Context, params interface{}) Error {
 		}
 	}
 	var (
-		value interface{}
+		value     interface{}
+		validator = v.Clone()
 	)
+
+	// It checks the struct recursively if its attribute is an embedded struct.
+	// Ignore inputParamMap, rules and messages from parent.
+	validator.rules = nil
+	validator.messages = nil
+	for _, item := range inputParamMap {
+		originTypeAndKind := utils.OriginTypeAndKind(item)
+		switch originTypeAndKind.OriginKind {
+		case reflect.Map, reflect.Struct, reflect.Slice, reflect.Array:
+			v.doCheckValueRecursively(ctx, doCheckValueRecursivelyInput{
+				Value:      item,
+				Type:       originTypeAndKind.InputType,
+				OriginKind: originTypeAndKind.OriginKind,
+				ErrorMaps:  errorMaps,
+			})
+		}
+		// Bail feature.
+		if v.bail && len(errorMaps) > 0 {
+			break
+		}
+	}
+	if v.bail && len(errorMaps) > 0 {
+		return newValidationError(gcode.CodeValidationFailed, nil, errorMaps)
+	}
+
+	// The following logic is the same as some of CheckStruct but without sequence support.
 	for _, checkRuleItem := range checkRules {
 		if len(checkRuleItem.Rule) == 0 {
 			continue
 		}
 		value = nil
-		if valueItem, ok := data[checkRuleItem.Name]; ok {
+		if valueItem, ok := inputParamMap[checkRuleItem.Name]; ok {
 			value = valueItem
 		}
 		// It checks each rule and its value in loop.
@@ -114,7 +132,7 @@ func (v *Validator) doCheckMap(ctx context.Context, params interface{}) Error {
 			Rule:     checkRuleItem.Rule,
 			Messages: customMessage[checkRuleItem.Name],
 			DataRaw:  params,
-			DataMap:  data,
+			DataMap:  inputParamMap,
 		}); validatedError != nil {
 			_, errorItem := validatedError.FirstItem()
 			// ===========================================================
