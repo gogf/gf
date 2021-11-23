@@ -15,30 +15,27 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 )
 
-func ExampleAnyAnyMap_Iterator() {
-	m := gmap.New()
-	for i := 0; i < 10; i++ {
-		m.Set(i, i*2)
+func ExampleStrAnyMap_Iterator() {
+	m := gmap.NewStrAnyMap()
+	for i := 1; i <= 10; i++ {
+		m.Set(gconv.String(i), i*2)
 	}
 
-	var totalKey, totalValue int
-	m.Iterator(func(k interface{}, v interface{}) bool {
-		totalKey += k.(int)
+	var totalValue int
+	m.Iterator(func(k string, v interface{}) bool {
 		totalValue += v.(int)
 
-		return totalKey < 10
+		return totalValue < 50
 	})
 
-	fmt.Println("totalKey:", totalKey)
 	fmt.Println("totalValue:", totalValue)
 
 	// May Output:
-	// totalKey: 11
-	// totalValue: 22
+	// totalValue: 52
 }
 
-func ExampleAnyAnyMap_Clone() {
-	m := gmap.New()
+func ExampleStrAnyMap_Clone() {
+	m := gmap.NewStrAnyMap()
 
 	m.Set("key1", "val1")
 	fmt.Println(m)
@@ -51,9 +48,9 @@ func ExampleAnyAnyMap_Clone() {
 	// {"key1":"val1"}
 }
 
-func ExampleAnyAnyMap_Map() {
+func ExampleStrAnyMap_Map() {
 	// non concurrent-safety, a pointer to the underlying data
-	m1 := gmap.New()
+	m1 := gmap.NewStrAnyMap()
 	m1.Set("key1", "val1")
 	fmt.Println("m1:", m1)
 
@@ -63,7 +60,7 @@ func ExampleAnyAnyMap_Map() {
 	fmt.Println("after n1:", n1)
 
 	// concurrent-safety, copy of underlying data
-	m2 := gmap.New(true)
+	m2 := gmap.NewStrAnyMap(true)
 	m2.Set("key1", "val1")
 	fmt.Println("m2:", m2)
 
@@ -81,8 +78,8 @@ func ExampleAnyAnyMap_Map() {
 	// after n2: map[key1:val1]
 }
 
-func ExampleAnyAnyMap_MapCopy() {
-	m := gmap.New()
+func ExampleStrAnyMap_MapCopy() {
+	m := gmap.NewStrAnyMap()
 
 	m.Set("key1", "val1")
 	m.Set("key2", "val2")
@@ -96,20 +93,20 @@ func ExampleAnyAnyMap_MapCopy() {
 	// map[key1:val1 key2:val2]
 }
 
-func ExampleAnyAnyMap_MapStrAny() {
-	m := gmap.New()
-	m.Set(1001, "val1")
-	m.Set(1002, "val2")
+func ExampleStrAnyMap_MapStrAny() {
+	m := gmap.NewStrAnyMap()
+	m.Set("key1", "val1")
+	m.Set("key2", "val2")
 
 	n := m.MapStrAny()
 	fmt.Printf("%#v", n)
 
 	// Output:
-	// map[string]interface {}{"1001":"val1", "1002":"val2"}
+	// map[string]interface {}{"key1":"val1", "key2":"val2"}
 }
 
-func ExampleAnyAnyMap_FilterEmpty() {
-	m := gmap.NewFrom(g.MapAnyAny{
+func ExampleStrAnyMap_FilterEmpty() {
+	m := gmap.NewStrAnyMapFrom(g.MapStrAny{
 		"k1": "",
 		"k2": nil,
 		"k3": 0,
@@ -122,8 +119,8 @@ func ExampleAnyAnyMap_FilterEmpty() {
 	// map[k4:1]
 }
 
-func ExampleAnyAnyMap_FilterNil() {
-	m := gmap.NewFrom(g.MapAnyAny{
+func ExampleStrAnyMap_FilterNil() {
+	m := gmap.NewStrAnyMapFrom(g.MapStrAny{
 		"k1": "",
 		"k2": nil,
 		"k3": 0,
@@ -133,11 +130,11 @@ func ExampleAnyAnyMap_FilterNil() {
 	fmt.Printf("%#v", m.Map())
 
 	// Output:
-	// map[interface {}]interface {}{"k1":"", "k3":0, "k4":1}
+	// map[string]interface {}{"k1":"", "k3":0, "k4":1}
 }
 
-func ExampleAnyAnyMap_Set() {
-	m := gmap.New()
+func ExampleStrAnyMap_Set() {
+	m := gmap.NewStrAnyMap()
 
 	m.Set("key1", "val1")
 	fmt.Println(m)
@@ -146,10 +143,10 @@ func ExampleAnyAnyMap_Set() {
 	// {"key1":"val1"}
 }
 
-func ExampleAnyAnyMap_Sets() {
-	m := gmap.New()
+func ExampleStrAnyMap_Sets() {
+	m := gmap.NewStrAnyMap()
 
-	addMap := make(map[interface{}]interface{})
+	addMap := make(map[string]interface{})
 	addMap["key1"] = "val1"
 	addMap["key2"] = "val2"
 	addMap["key3"] = "val3"
@@ -161,8 +158,8 @@ func ExampleAnyAnyMap_Sets() {
 	// {"key1":"val1","key2":"val2","key3":"val3"}
 }
 
-func ExampleAnyAnyMap_Search() {
-	m := gmap.New()
+func ExampleStrAnyMap_Search() {
+	m := gmap.NewStrAnyMap()
 
 	m.Set("key1", "val1")
 
@@ -181,8 +178,8 @@ func ExampleAnyAnyMap_Search() {
 	// key2 not find
 }
 
-func ExampleAnyAnyMap_Get() {
-	m := gmap.New()
+func ExampleStrAnyMap_Get() {
+	m := gmap.NewStrAnyMap()
 
 	m.Set("key1", "val1")
 
@@ -194,9 +191,9 @@ func ExampleAnyAnyMap_Get() {
 	// key2 value: <nil>
 }
 
-func ExampleAnyAnyMap_Pop() {
-	var m gmap.Map
-	m.Sets(g.MapAnyAny{
+func ExampleStrAnyMap_Pop() {
+	var m gmap.StrAnyMap
+	m.Sets(g.MapStrAny{
 		"k1": "v1",
 		"k2": "v2",
 		"k3": "v3",
@@ -209,9 +206,9 @@ func ExampleAnyAnyMap_Pop() {
 	// k1 v1
 }
 
-func ExampleAnyAnyMap_Pops() {
-	var m gmap.Map
-	m.Sets(g.MapAnyAny{
+func ExampleStrAnyMap_Pops() {
+	var m gmap.StrAnyMap
+	m.Sets(g.MapStrAny{
 		"k1": "v1",
 		"k2": "v2",
 		"k3": "v3",
@@ -220,7 +217,7 @@ func ExampleAnyAnyMap_Pops() {
 	fmt.Println(m.Pops(-1))
 	fmt.Println("size:", m.Size())
 
-	m.Sets(g.MapAnyAny{
+	m.Sets(g.MapStrAny{
 		"k1": "v1",
 		"k2": "v2",
 		"k3": "v3",
@@ -236,8 +233,8 @@ func ExampleAnyAnyMap_Pops() {
 	// size: 2
 }
 
-func ExampleAnyAnyMap_GetOrSet() {
-	m := gmap.New()
+func ExampleStrAnyMap_GetOrSet() {
+	m := gmap.NewStrAnyMap()
 	m.Set("key1", "val1")
 
 	fmt.Println(m.GetOrSet("key1", "NotExistValue"))
@@ -248,8 +245,8 @@ func ExampleAnyAnyMap_GetOrSet() {
 	// val2
 }
 
-func ExampleAnyAnyMap_GetOrSetFunc() {
-	m := gmap.New()
+func ExampleStrAnyMap_GetOrSetFunc() {
+	m := gmap.NewStrAnyMap()
 	m.Set("key1", "val1")
 
 	fmt.Println(m.GetOrSetFunc("key1", func() interface{} {
@@ -264,8 +261,8 @@ func ExampleAnyAnyMap_GetOrSetFunc() {
 	// NotExistValue
 }
 
-func ExampleAnyAnyMap_GetOrSetFuncLock() {
-	m := gmap.New()
+func ExampleStrAnyMap_GetOrSetFuncLock() {
+	m := gmap.NewStrAnyMap()
 	m.Set("key1", "val1")
 
 	fmt.Println(m.GetOrSetFuncLock("key1", func() interface{} {
@@ -280,8 +277,8 @@ func ExampleAnyAnyMap_GetOrSetFuncLock() {
 	// NotExistValue
 }
 
-func ExampleAnyAnyMap_GetVar() {
-	m := gmap.New()
+func ExampleStrAnyMap_GetVar() {
+	m := gmap.NewStrAnyMap()
 	m.Set("key1", "val1")
 
 	fmt.Println(m.GetVar("key1"))
@@ -292,8 +289,8 @@ func ExampleAnyAnyMap_GetVar() {
 	// true
 }
 
-func ExampleAnyAnyMap_GetVarOrSet() {
-	m := gmap.New()
+func ExampleStrAnyMap_GetVarOrSet() {
+	m := gmap.NewStrAnyMap()
 	m.Set("key1", "val1")
 
 	fmt.Println(m.GetVarOrSet("key1", "NotExistValue"))
@@ -304,8 +301,8 @@ func ExampleAnyAnyMap_GetVarOrSet() {
 	// val2
 }
 
-func ExampleAnyAnyMap_GetVarOrSetFunc() {
-	m := gmap.New()
+func ExampleStrAnyMap_GetVarOrSetFunc() {
+	m := gmap.NewStrAnyMap()
 	m.Set("key1", "val1")
 
 	fmt.Println(m.GetVarOrSetFunc("key1", func() interface{} {
@@ -320,8 +317,8 @@ func ExampleAnyAnyMap_GetVarOrSetFunc() {
 	// NotExistValue
 }
 
-func ExampleAnyAnyMap_GetVarOrSetFuncLock() {
-	m := gmap.New()
+func ExampleStrAnyMap_GetVarOrSetFuncLock() {
+	m := gmap.NewStrAnyMap()
 	m.Set("key1", "val1")
 
 	fmt.Println(m.GetVarOrSetFuncLock("key1", func() interface{} {
@@ -336,8 +333,8 @@ func ExampleAnyAnyMap_GetVarOrSetFuncLock() {
 	// NotExistValue
 }
 
-func ExampleAnyAnyMap_SetIfNotExist() {
-	var m gmap.Map
+func ExampleStrAnyMap_SetIfNotExist() {
+	var m gmap.StrAnyMap
 	fmt.Println(m.SetIfNotExist("k1", "v1"))
 	fmt.Println(m.SetIfNotExist("k1", "v2"))
 	fmt.Println(m.Map())
@@ -348,8 +345,8 @@ func ExampleAnyAnyMap_SetIfNotExist() {
 	// map[k1:v1]
 }
 
-func ExampleAnyAnyMap_SetIfNotExistFunc() {
-	var m gmap.Map
+func ExampleStrAnyMap_SetIfNotExistFunc() {
+	var m gmap.StrAnyMap
 	fmt.Println(m.SetIfNotExistFunc("k1", func() interface{} {
 		return "v1"
 	}))
@@ -364,8 +361,8 @@ func ExampleAnyAnyMap_SetIfNotExistFunc() {
 	// map[k1:v1]
 }
 
-func ExampleAnyAnyMap_SetIfNotExistFuncLock() {
-	var m gmap.Map
+func ExampleStrAnyMap_SetIfNotExistFuncLock() {
+	var m gmap.StrAnyMap
 	fmt.Println(m.SetIfNotExistFuncLock("k1", func() interface{} {
 		return "v1"
 	}))
@@ -380,8 +377,8 @@ func ExampleAnyAnyMap_SetIfNotExistFuncLock() {
 	// map[k1:v1]
 }
 
-func ExampleAnyAnyMap_Remove() {
-	var m gmap.Map
+func ExampleStrAnyMap_Remove() {
+	var m gmap.StrAnyMap
 	m.Set("k1", "v1")
 
 	fmt.Println(m.Remove("k1"))
@@ -394,16 +391,16 @@ func ExampleAnyAnyMap_Remove() {
 	// 0
 }
 
-func ExampleAnyAnyMap_Removes() {
-	var m gmap.Map
-	m.Sets(g.MapAnyAny{
+func ExampleStrAnyMap_Removes() {
+	var m gmap.StrAnyMap
+	m.Sets(g.MapStrAny{
 		"k1": "v1",
 		"k2": "v2",
 		"k3": "v3",
 		"k4": "v4",
 	})
 
-	removeList := make([]interface{}, 2)
+	removeList := make([]string, 2)
 	removeList = append(removeList, "k1")
 	removeList = append(removeList, "k2")
 
@@ -415,9 +412,9 @@ func ExampleAnyAnyMap_Removes() {
 	// map[k3:v3 k4:v4]
 }
 
-func ExampleAnyAnyMap_Keys() {
-	var m gmap.Map
-	m.Sets(g.MapAnyAny{
+func ExampleStrAnyMap_Keys() {
+	var m gmap.StrAnyMap
+	m.Sets(g.MapStrAny{
 		"k1": "v1",
 		"k2": "v2",
 		"k3": "v3",
@@ -429,9 +426,9 @@ func ExampleAnyAnyMap_Keys() {
 	// [k1 k2 k3 k4]
 }
 
-func ExampleAnyAnyMap_Values() {
-	var m gmap.Map
-	m.Sets(g.MapAnyAny{
+func ExampleStrAnyMap_Values() {
+	var m gmap.StrAnyMap
+	m.Sets(g.MapStrAny{
 		"k1": "v1",
 		"k2": "v2",
 		"k3": "v3",
@@ -443,9 +440,9 @@ func ExampleAnyAnyMap_Values() {
 	// [v1 v2 v3 v4]
 }
 
-func ExampleAnyAnyMap_Contains() {
-	var m gmap.Map
-	m.Sets(g.MapAnyAny{
+func ExampleStrAnyMap_Contains() {
+	var m gmap.StrAnyMap
+	m.Sets(g.MapStrAny{
 		"k1": "v1",
 		"k2": "v2",
 		"k3": "v3",
@@ -460,9 +457,9 @@ func ExampleAnyAnyMap_Contains() {
 	// false
 }
 
-func ExampleAnyAnyMap_Size() {
-	var m gmap.Map
-	m.Sets(g.MapAnyAny{
+func ExampleStrAnyMap_Size() {
+	var m gmap.StrAnyMap
+	m.Sets(g.MapStrAny{
 		"k1": "v1",
 		"k2": "v2",
 		"k3": "v3",
@@ -475,8 +472,8 @@ func ExampleAnyAnyMap_Size() {
 	// 4
 }
 
-func ExampleAnyAnyMap_IsEmpty() {
-	var m gmap.Map
+func ExampleStrAnyMap_IsEmpty() {
+	var m gmap.StrAnyMap
 	fmt.Println(m.IsEmpty())
 
 	m.Set("k1", "v1")
@@ -487,9 +484,9 @@ func ExampleAnyAnyMap_IsEmpty() {
 	// false
 }
 
-func ExampleAnyAnyMap_Clear() {
-	var m gmap.Map
-	m.Sets(g.MapAnyAny{
+func ExampleStrAnyMap_Clear() {
+	var m gmap.StrAnyMap
+	m.Sets(g.MapStrAny{
 		"k1": "v1",
 		"k2": "v2",
 		"k3": "v3",
@@ -504,14 +501,14 @@ func ExampleAnyAnyMap_Clear() {
 	// map[]
 }
 
-func ExampleAnyAnyMap_Replace() {
-	var m gmap.Map
-	m.Sets(g.MapAnyAny{
+func ExampleStrAnyMap_Replace() {
+	var m gmap.StrAnyMap
+	m.Sets(g.MapStrAny{
 		"k1": "v1",
 	})
 
-	var n gmap.Map
-	n.Sets(g.MapAnyAny{
+	var n gmap.StrAnyMap
+	n.Sets(g.MapStrAny{
 		"k2": "v2",
 	})
 
@@ -529,16 +526,16 @@ func ExampleAnyAnyMap_Replace() {
 	// map[k2:v1]
 }
 
-func ExampleAnyAnyMap_LockFunc() {
-	var m gmap.Map
-	m.Sets(g.MapAnyAny{
+func ExampleStrAnyMap_LockFunc() {
+	var m gmap.StrAnyMap
+	m.Sets(g.MapStrAny{
 		"k1": 1,
 		"k2": 2,
 		"k3": 3,
 		"k4": 4,
 	})
 
-	m.LockFunc(func(m map[interface{}]interface{}) {
+	m.LockFunc(func(m map[string]interface{}) {
 		totalValue := 0
 		for _, v := range m {
 			totalValue += v.(int)
@@ -550,16 +547,16 @@ func ExampleAnyAnyMap_LockFunc() {
 	// totalValue: 10
 }
 
-func ExampleAnyAnyMap_RLockFunc() {
-	var m gmap.Map
-	m.Sets(g.MapAnyAny{
+func ExampleStrAnyMap_RLockFunc() {
+	var m gmap.StrAnyMap
+	m.Sets(g.MapStrAny{
 		"k1": 1,
 		"k2": 2,
 		"k3": 3,
 		"k4": 4,
 	})
 
-	m.RLockFunc(func(m map[interface{}]interface{}) {
+	m.RLockFunc(func(m map[string]interface{}) {
 		totalValue := 0
 		for _, v := range m {
 			totalValue += v.(int)
@@ -571,9 +568,9 @@ func ExampleAnyAnyMap_RLockFunc() {
 	// totalValue: 10
 }
 
-func ExampleAnyAnyMap_Flip() {
-	var m gmap.Map
-	m.Sets(g.MapAnyAny{
+func ExampleStrAnyMap_Flip() {
+	var m gmap.StrAnyMap
+	m.Sets(g.MapStrAny{
 		"k1": "v1",
 	})
 	m.Flip()
@@ -583,8 +580,8 @@ func ExampleAnyAnyMap_Flip() {
 	// map[v1:k1]
 }
 
-func ExampleAnyAnyMap_Merge() {
-	var m1, m2 gmap.Map
+func ExampleStrAnyMap_Merge() {
+	var m1, m2 gmap.StrAnyMap
 	m1.Set("key1", "val1")
 	m2.Set("key2", "val2")
 	m1.Merge(&m2)
@@ -594,9 +591,9 @@ func ExampleAnyAnyMap_Merge() {
 	// map[key1:val1 key2:val2]
 }
 
-func ExampleAnyAnyMap_String() {
-	var m gmap.Map
-	m.Sets(g.MapAnyAny{
+func ExampleStrAnyMap_String() {
+	var m gmap.StrAnyMap
+	m.Sets(g.MapStrAny{
 		"k1": "v1",
 	})
 
@@ -606,9 +603,9 @@ func ExampleAnyAnyMap_String() {
 	// {"k1":"v1"}
 }
 
-func ExampleAnyAnyMap_MarshalJSON() {
-	var m gmap.Map
-	m.Sets(g.MapAnyAny{
+func ExampleStrAnyMap_MarshalJSON() {
+	var m gmap.StrAnyMap
+	m.Sets(g.MapStrAny{
 		"k1": "v1",
 		"k2": "v2",
 		"k3": "v3",
@@ -624,16 +621,16 @@ func ExampleAnyAnyMap_MarshalJSON() {
 	// {"k1":"v1","k2":"v2","k3":"v3","k4":"v4"}
 }
 
-func ExampleAnyAnyMap_UnmarshalJSON() {
-	var m gmap.Map
-	m.Sets(g.MapAnyAny{
+func ExampleStrAnyMap_UnmarshalJSON() {
+	var m gmap.StrAnyMap
+	m.Sets(g.MapStrAny{
 		"k1": "v1",
 		"k2": "v2",
 		"k3": "v3",
 		"k4": "v4",
 	})
 
-	var n gmap.Map
+	var n gmap.StrAnyMap
 
 	err := json.Unmarshal(gconv.Bytes(m.String()), &n)
 	if err == nil {
@@ -644,27 +641,18 @@ func ExampleAnyAnyMap_UnmarshalJSON() {
 	// map[k1:v1 k2:v2 k3:v3 k4:v4]
 }
 
-func ExampleAnyAnyMap_UnmarshalValue() {
-	type User struct {
-		Uid   int
-		Name  string
-		Pass1 string `gconv:"password1"`
-		Pass2 string `gconv:"password2"`
+func ExampleStrAnyMap_UnmarshalValue() {
+	var m gmap.StrAnyMap
+
+	goWeb := map[string]interface{}{
+		"goframe": "https://goframe.org",
+		"gin":     "https://gin-gonic.com/",
+		"echo":    "https://echo.labstack.com/",
 	}
 
-	var (
-		m    gmap.AnyAnyMap
-		user = User{
-			Uid:   1,
-			Name:  "john",
-			Pass1: "123",
-			Pass2: "456",
-		}
-	)
-	if err := gconv.Scan(user, &m); err == nil {
+	if err := gconv.Scan(goWeb, &m); err == nil {
 		fmt.Printf("%#v", m.Map())
 	}
-
 	// Output:
-	// map[interface {}]interface {}{"Name":"john", "Uid":1, "password1":"123", "password2":"456"}
+	// map[string]interface {}{"echo":"https://echo.labstack.com/", "gin":"https://gin-gonic.com/", "goframe":"https://goframe.org"}
 }
