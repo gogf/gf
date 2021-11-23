@@ -71,7 +71,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	if reflectType.In(1).Kind() == reflect.Ptr {
 		inputObject = reflect.New(reflectType.In(1).Elem()).Elem()
 	} else {
-		inputObject = reflect.New(reflectType.In(1).Elem()).Elem()
+		inputObject = reflect.New(reflectType.In(1)).Elem()
 	}
 	if reflectType.Out(0).Kind() == reflect.Ptr {
 		outputObject = reflect.New(reflectType.Out(0).Elem()).Elem()
