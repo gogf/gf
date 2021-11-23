@@ -28,13 +28,13 @@ type TestCmdObjectOutput struct{}
 
 type TestCmdObjectEnvInput struct {
 	g.Meta `name:"env" usage:"gf env/test" brief:"gf env command" dc:"description" ad:"ad"`
-	Name   string `v:"required" name:"name" short:"n" orphan:"false" brief:"name for command"`
+	Name   string `v:"required" short:"n" orphan:"false" brief:"name for command"`
 }
 type TestCmdObjectEnvOutput struct{}
 
 type TestCmdObjectTestInput struct {
 	g.Meta `name:"test" usage:"gf env/test" brief:"gf test command" dc:"description" ad:"ad"`
-	Name   string `v:"required" name:"name" short:"n" orphan:"false" brief:"name for command"`
+	Name   string `v:"required" short:"n" orphan:"false" brief:"name for command"`
 }
 type TestCmdObjectTestOutput struct{}
 

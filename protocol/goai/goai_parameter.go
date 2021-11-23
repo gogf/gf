@@ -43,7 +43,7 @@ type ParameterRef struct {
 	Value *Parameter
 }
 
-func (oai *OpenApiV3) newParameterRefWithStructMethod(field *structs.Field, path, method string) (*ParameterRef, error) {
+func (oai *OpenApiV3) newParameterRefWithStructMethod(field structs.Field, path, method string) (*ParameterRef, error) {
 	var (
 		tagMap    = field.TagMap()
 		parameter = &Parameter{
