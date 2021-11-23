@@ -29,7 +29,6 @@ func Init(args ...string) {
 
 // GetOpt returns the option value named `name` as gvar.Var.
 func GetOpt(name string, def ...string) *gvar.Var {
-	Init()
 	if v := command.GetOpt(name, def...); v != "" {
 		return gvar.New(v)
 	}
@@ -38,19 +37,16 @@ func GetOpt(name string, def ...string) *gvar.Var {
 
 // GetOptAll returns all parsed options.
 func GetOptAll() map[string]string {
-	Init()
 	return command.GetOptAll()
 }
 
 // ContainsOpt checks whether option named `name` exist in the arguments.
 func ContainsOpt(name string) bool {
-	Init()
 	return command.ContainsOpt(name)
 }
 
 // GetArg returns the argument at `index` as gvar.Var.
 func GetArg(index int, def ...string) *gvar.Var {
-	Init()
 	if v := command.GetArg(index, def...); v != "" {
 		return gvar.New(v)
 	}
@@ -59,7 +55,6 @@ func GetArg(index int, def ...string) *gvar.Var {
 
 // GetArgAll returns all parsed arguments.
 func GetArgAll() []string {
-	Init()
 	return command.GetArgAll()
 }
 

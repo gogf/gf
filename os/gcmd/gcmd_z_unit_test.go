@@ -101,16 +101,16 @@ gf get golang.org/x/sys
 `,
 			Options: []gcmd.Option{
 				{
-					Name:      "my-option",
-					Short:     "o",
-					Brief:     "It's my custom option",
-					NeedValue: false,
+					Name:   "my-option",
+					Short:  "o",
+					Brief:  "It's my custom option",
+					Orphan: true,
 				},
 				{
-					Name:      "another",
-					Short:     "a",
-					Brief:     "It's my another custom option",
-					NeedValue: false,
+					Name:   "another",
+					Short:  "a",
+					Brief:  "It's my another custom option",
+					Orphan: true,
 				},
 			},
 			Func: func(ctx context.Context, parser *gcmd.Parser) error {
@@ -118,7 +118,7 @@ gf get golang.org/x/sys
 				return nil
 			},
 		}
-		err = commandRoot.Add(
+		err = commandRoot.AddCommand(
 			commandEnv,
 			commandTest,
 		)
@@ -153,7 +153,7 @@ Use 'gf help COMMAND' or 'gf COMMAND -h' for detail about a command, which has '
 				return nil
 			},
 		}
-		if err = c.Add(commandEnv); err != nil {
+		if err = c.AddCommand(commandEnv); err != nil {
 			g.Log().Fatal(ctx, err)
 		}
 		// get
@@ -172,7 +172,7 @@ gf get golang.org/x/sys
 				return nil
 			},
 		}
-		if err = c.Add(commandGet); err != nil {
+		if err = c.AddCommand(commandGet); err != nil {
 			g.Log().Fatal(ctx, err)
 		}
 		// build
@@ -212,7 +212,7 @@ gf build main.go -n my-app -v 1.0 -a amd64,386 -s linux,windows,darwin -p ./dock
 				return nil
 			},
 		}
-		if err = c.Add(commandBuild); err != nil {
+		if err = c.AddCommand(commandBuild); err != nil {
 			g.Log().Fatal(ctx, err)
 		}
 		c.Run(ctx)
