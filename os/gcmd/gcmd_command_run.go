@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
@@ -31,6 +30,7 @@ func (c *Command) RunWithValue(ctx context.Context) (value interface{}, err erro
 	}
 	args := parser.GetArgAll()
 	if len(args) == 1 {
+		// If no arguments passed but binary name, it then prints help.
 		if c.HelpFunc != nil {
 			return nil, c.HelpFunc(ctx, parser)
 		}
@@ -78,7 +78,11 @@ func (c *Command) doRun(ctx context.Context, parser *Parser) (value interface{},
 	if c.FuncWithValue != nil {
 		return c.FuncWithValue(ctx, parser)
 	}
-	return nil, gerror.New(`no function registered for current command`)
+	// If no function defined in current command, it then prints help.
+	if c.HelpFunc != nil {
+		return nil, c.HelpFunc(ctx, parser)
+	}
+	return nil, c.defaultHelpFunc(ctx, parser)
 }
 
 // reParse re-parses the arguments using option configuration of current command.

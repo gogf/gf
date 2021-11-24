@@ -14,8 +14,8 @@ import (
 	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/structs"
 	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gmeta"
@@ -24,9 +24,8 @@ import (
 )
 
 const (
-	tagNameDc   = `dc`
-	tagNameAd   = `ad`
-	tagNameRoot = `root`
+	tagNameDc = `dc`
+	tagNameAd = `ad`
 )
 
 var (
@@ -35,51 +34,42 @@ var (
 )
 
 // NewFromObject creates and returns a root command object using given object.
-func NewFromObject(object interface{}) (rootCmd *Command, err error) {
+func NewFromObject(object interface{}) (rootCmd Command, err error) {
 	originValueAndKind := utils.OriginValueAndKind(object)
 	if originValueAndKind.OriginKind != reflect.Struct {
-		return nil, gerror.Newf(
+		err = gerror.Newf(
 			`input object should be type of struct, but got "%s"`,
 			originValueAndKind.InputValue.Type().String(),
 		)
+		return
 	}
+	// Root command creating.
+	rootCmd, err = newCommandFromObjectMeta(object)
+	if err != nil {
+		return
+	}
+	// Sub command creating.
 	var (
 		nameSet     = gset.NewStrSet()
 		subCommands []Command
 	)
 	for i := 0; i < originValueAndKind.InputValue.NumMethod(); i++ {
 		var (
-			root          bool
 			method        = originValueAndKind.InputValue.Method(i)
 			methodCommand Command
 		)
-		methodCommand, root, err = newCommandFromMethod(object, method)
+		methodCommand, err = newCommandFromMethod(object, method)
 		if err != nil {
-			return nil, err
+			return
 		}
 		if nameSet.Contains(methodCommand.Name) {
-			return nil, gerror.Newf(
+			err = gerror.Newf(
 				`command name should be unique, found duplicated command name in method "%s"`,
 				method.Type().String(),
 			)
+			return
 		}
-		if root {
-			if rootCmd != nil {
-				return nil, gerror.Newf(
-					`there should be only one root command in object, found duplicated in method "%s"`,
-					method.Type().String(),
-				)
-			}
-			rootCmd = &methodCommand
-		} else {
-			subCommands = append(subCommands, methodCommand)
-		}
-	}
-	if rootCmd == nil {
-		return nil, gerror.Newf(
-			`there should be one root command in object when creating command from object, but found none in object "%s"`,
-			originValueAndKind.InputValue.Type().String(),
-		)
+		subCommands = append(subCommands, methodCommand)
 	}
 	if len(subCommands) > 0 {
 		err = rootCmd.AddCommand(subCommands...)
@@ -87,7 +77,38 @@ func NewFromObject(object interface{}) (rootCmd *Command, err error) {
 	return
 }
 
-func newCommandFromMethod(object interface{}, method reflect.Value) (command Command, root bool, err error) {
+func newCommandFromObjectMeta(object interface{}) (command Command, err error) {
+	var (
+		metaData = gmeta.Data(object)
+	)
+	if len(metaData) == 0 {
+		err = gerror.Newf(
+			`no meta data found in struct "%s"`,
+			reflect.TypeOf(object).String(),
+		)
+		return
+	}
+	if err = gconv.Scan(metaData, &command); err != nil {
+		return
+	}
+	// Name filed is necessary.
+	if command.Name == "" {
+		err = gerror.Newf(
+			`command name cannot be empty, "name" tag not found in meta of struct "%s"`,
+			reflect.TypeOf(object).String(),
+		)
+		return
+	}
+	if command.Description == "" {
+		command.Description = metaData[tagNameDc]
+	}
+	if command.Additional == "" {
+		command.Additional = metaData[tagNameAd]
+	}
+	return
+}
+
+func newCommandFromMethod(object interface{}, method reflect.Value) (command Command, err error) {
 	var (
 		reflectType = method.Type()
 	)
@@ -153,28 +174,11 @@ func newCommandFromMethod(object interface{}, method reflect.Value) (command Com
 	}
 
 	// Command creating.
-	var (
-		metaData = gmeta.Data(inputObject.Interface())
-	)
-	if err = gconv.Scan(metaData, &command); err != nil {
+	if command, err = newCommandFromObjectMeta(inputObject.Interface()); err != nil {
 		return
-	}
-	root = gconv.Bool(metaData[tagNameRoot])
-	// Name filed is necessary.
-	if command.Name == "" {
-		err = gerror.Newf(
-			`command name cannot be empty, "name" tag not found in struct "%s"`,
-			inputObject.Type().String(),
-		)
-		return
-	}
-	if command.Description == "" {
-		command.Description = metaData[tagNameDc]
-	}
-	if command.Additional == "" {
-		command.Additional = metaData[tagNameAd]
 	}
 
+	// Options creating.
 	if command.Options, err = newOptionsFromInput(inputObject.Interface()); err != nil {
 		return
 	}
@@ -237,7 +241,7 @@ func newCommandFromMethod(object interface{}, method reflect.Value) (command Com
 
 // mergeDefaultStructValue merges the request parameters with default values from struct tag definition.
 func mergeDefaultStructValue(data map[string]interface{}, pointer interface{}) error {
-	tagFields, err := structs.TagFields(pointer, defaultValueTags)
+	tagFields, err := gstructs.TagFields(pointer, defaultValueTags)
 	if err != nil {
 		return err
 	}
@@ -262,11 +266,11 @@ func mergeDefaultStructValue(data map[string]interface{}, pointer interface{}) e
 
 func newOptionsFromInput(object interface{}) (options []Option, err error) {
 	var (
-		fields []structs.Field
+		fields []gstructs.Field
 	)
-	fields, err = structs.Fields(structs.FieldsInput{
+	fields, err = gstructs.Fields(gstructs.FieldsInput{
 		Pointer:         object,
-		RecursiveOption: structs.RecursiveOptionEmbeddedNoTag,
+		RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
 	})
 	for _, field := range fields {
 		var (
