@@ -246,6 +246,42 @@ func newCommandFromMethod(object interface{}, method reflect.Value) (command Com
 	return
 }
 
+func newOptionsFromInput(object interface{}) (options []Option, err error) {
+	var (
+		fields []gstructs.Field
+	)
+	fields, err = gstructs.Fields(gstructs.FieldsInput{
+		Pointer:         object,
+		RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
+	})
+	for _, field := range fields {
+		var (
+			option   = Option{}
+			metaData = field.TagMap()
+		)
+		if err = gconv.Scan(metaData, &option); err != nil {
+			return nil, err
+		}
+		if option.Name == "" {
+			option.Name = field.Name()
+		}
+		if option.Name == helpOptionName {
+			return nil, gerror.Newf(
+				`option name "%s" is already token by built-in options`,
+				option.Name,
+			)
+		}
+		if option.Short == helpOptionNameShort {
+			return nil, gerror.Newf(
+				`short option name "%s" is already token by built-in options`,
+				option.Short,
+			)
+		}
+		options = append(options, option)
+	}
+	return
+}
+
 // mergeDefaultStructValue merges the request parameters with default values from struct tag definition.
 func mergeDefaultStructValue(data map[string]interface{}, pointer interface{}) error {
 	tagFields, err := gstructs.TagFields(pointer, defaultValueTags)
@@ -269,28 +305,4 @@ func mergeDefaultStructValue(data map[string]interface{}, pointer interface{}) e
 		}
 	}
 	return nil
-}
-
-func newOptionsFromInput(object interface{}) (options []Option, err error) {
-	var (
-		fields []gstructs.Field
-	)
-	fields, err = gstructs.Fields(gstructs.FieldsInput{
-		Pointer:         object,
-		RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
-	})
-	for _, field := range fields {
-		var (
-			option   = Option{}
-			metaData = field.TagMap()
-		)
-		if err = gconv.Scan(metaData, &option); err != nil {
-			return nil, err
-		}
-		if option.Name == "" {
-			option.Name = field.Name()
-		}
-		options = append(options, option)
-	}
-	return
 }
