@@ -85,10 +85,6 @@ func (c *Command) doRun(ctx context.Context, parser *Parser) (value interface{},
 
 // reParse re-parses the arguments using option configuration of current command.
 func (c *Command) reParse(ctx context.Context, parser *Parser) (*Parser, error) {
-	// It seems just has built-in help option, it so does nothing.
-	if len(c.Options) == 1 {
-		return parser, nil
-	}
 	var (
 		optionKey        string
 		supportedOptions = make(map[string]bool)
