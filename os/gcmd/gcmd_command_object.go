@@ -185,6 +185,8 @@ func newCommandFromMethod(object interface{}, method reflect.Value) (command Com
 
 	// Create function that has value return.
 	command.FuncWithValue = func(ctx context.Context, parser *Parser) (out interface{}, err error) {
+		ctx = context.WithValue(ctx, CtxKeyParser, command)
+
 		defer func() {
 			if exception := recover(); exception != nil {
 				if v, ok := exception.(error); ok && gerror.HasStack(v) {
@@ -209,8 +211,7 @@ func newCommandFromMethod(object interface{}, method reflect.Value) (command Com
 			}
 		}
 		// Default values from struct tag.
-		err = mergeDefaultStructValue(data, inputObject.Interface())
-		if err != nil {
+		if err = mergeDefaultStructValue(data, inputObject.Interface()); err != nil {
 			return nil, err
 		}
 		// Construct input parameters.

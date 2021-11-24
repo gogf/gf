@@ -14,6 +14,11 @@ import (
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/internal/command"
 	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/os/gctx"
+)
+
+const (
+	CtxKeyParser gctx.StrKey = `GoFrameCommandParser`
 )
 
 const (
