@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/internal/structs"
+	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
 )
@@ -23,17 +23,17 @@ func (v *Validator) doCheckStruct(ctx context.Context, object interface{}) Error
 		fieldToAliasNameMap = make(map[string]string)           // Field names to alias name map.
 		resultSequenceRules = make([]fieldRule, 0)
 	)
-	fieldMap, err := structs.FieldMap(structs.FieldMapInput{
+	fieldMap, err := gstructs.FieldMap(gstructs.FieldMapInput{
 		Pointer:          object,
 		PriorityTagArray: aliasNameTagPriority,
-		RecursiveOption:  structs.RecursiveOptionEmbedded,
+		RecursiveOption:  gstructs.RecursiveOptionEmbedded,
 	})
 	if err != nil {
 		return newValidationErrorByStr(internalObjectErrRuleName, err)
 	}
 
-	// It here must use structs.TagFields not structs.FieldMap to ensure error sequence.
-	tagFields, err := structs.TagFields(object, structTagPriority)
+	// It here must use gstructs.TagFields not gstructs.FieldMap to ensure error sequence.
+	tagFields, err := gstructs.TagFields(object, structTagPriority)
 	if err != nil {
 		return newValidationErrorByStr(internalObjectErrRuleName, err)
 	}

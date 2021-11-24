@@ -12,7 +12,7 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/internal/structs"
+	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
@@ -43,7 +43,7 @@ type ParameterRef struct {
 	Value *Parameter
 }
 
-func (oai *OpenApiV3) newParameterRefWithStructMethod(field structs.Field, path, method string) (*ParameterRef, error) {
+func (oai *OpenApiV3) newParameterRefWithStructMethod(field gstructs.Field, path, method string) (*ParameterRef, error) {
 	var (
 		tagMap    = field.TagMap()
 		parameter = &Parameter{

@@ -12,7 +12,7 @@ import (
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/structs"
+	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
@@ -356,9 +356,9 @@ func doScanList(in doScanListInput) (err error) {
 		if in.RelationFields != "" && !relationBindToFieldNameChecked {
 			relationFromAttrField = relationFromAttrValue.FieldByName(relationBindToFieldName)
 			if !relationFromAttrField.IsValid() {
-				filedMap, _ := structs.FieldMap(structs.FieldMapInput{
+				filedMap, _ := gstructs.FieldMap(gstructs.FieldMapInput{
 					Pointer:         relationFromAttrValue,
-					RecursiveOption: structs.RecursiveOptionEmbeddedNoTag,
+					RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
 				})
 				if key, _ := gutil.MapPossibleItemByKey(gconv.Map(filedMap), relationBindToFieldName); key == "" {
 					return gerror.NewCodef(

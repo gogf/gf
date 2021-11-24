@@ -12,8 +12,8 @@ import (
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/structs"
 	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/os/gstructs"
 )
 
 // Scan automatically checks the type of `pointer` and converts `params` to `pointer`. It supports `pointer`
@@ -384,9 +384,9 @@ func doScanList(structSlice interface{}, structSlicePointer interface{}, bindToA
 			relationFromAttrField = relationFromAttrValue.FieldByName(relationBindToFieldName)
 			if !relationFromAttrField.IsValid() {
 				var (
-					filedMap, _ = structs.FieldMap(structs.FieldMapInput{
+					filedMap, _ = gstructs.FieldMap(gstructs.FieldMapInput{
 						Pointer:         relationFromAttrValue,
-						RecursiveOption: structs.RecursiveOptionEmbeddedNoTag,
+						RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
 					})
 				)
 				if key, _ := utils.MapPossibleItemByKey(Map(filedMap), relationBindToFieldName); key == "" {
