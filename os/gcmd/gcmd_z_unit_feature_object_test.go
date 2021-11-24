@@ -19,12 +19,9 @@ import (
 	"github.com/gogf/gf/v2/test/gtest"
 )
 
-type TestCmdObject struct{}
-
-type TestCmdObjectInput struct {
-	g.Meta `root:"true" name:"root" usage:"root env/test" brief:"root env command" dc:"description" ad:"ad"`
+type TestCmdObject struct {
+	g.Meta `name:"root" usage:"root env/test" brief:"root env command" dc:"description" ad:"ad"`
 }
-type TestCmdObjectOutput struct{}
 
 type TestCmdObjectEnvInput struct {
 	g.Meta `name:"env" usage:"root env" brief:"root env command" dc:"root env command description" ad:"root env command ad"`
@@ -39,10 +36,6 @@ type TestCmdObjectTestOutput struct {
 	Content string
 }
 
-func (TestCmdObject) Root(ctx context.Context, in TestCmdObjectInput) (out *TestCmdObjectOutput, err error) {
-	return
-}
-
 func (TestCmdObject) Env(ctx context.Context, in TestCmdObjectEnvInput) (out *TestCmdObjectEnvOutput, err error) {
 	return
 }
@@ -54,7 +47,23 @@ func (TestCmdObject) Test(ctx context.Context, in TestCmdObjectTestInput) (out *
 	return
 }
 
-func Test_Command_NewFromObject(t *testing.T) {
+func Test_Command_NewFromObject_Help(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			ctx      = gctx.New()
+			cmd, err = gcmd.NewFromObject(&TestCmdObject{})
+		)
+		t.AssertNil(err)
+		t.Assert(cmd.Name, "root")
+
+		os.Args = []string{"root"}
+		value, err := cmd.RunWithValue(ctx)
+		t.AssertNil(err)
+		t.Assert(value, nil)
+	})
+}
+
+func Test_Command_NewFromObject_RunWithValue(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			ctx      = gctx.New()

@@ -4,16 +4,19 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package structs
+package gstructs
 
 import (
 	"errors"
 	"reflect"
 	"strconv"
+
+	"github.com/gogf/gf/v2/util/gtag"
 )
 
 // ParseTag parses tag string into map.
-// For example, tag ParseTag(`v:"required" p:"id" d:"1"`) => map[v:required p:id d:1].
+// For example:
+// ParseTag(`v:"required" p:"id" d:"1"`) => map[v:required p:id d:1].
 func ParseTag(tag string) map[string]string {
 	var (
 		key  string
@@ -60,7 +63,7 @@ func ParseTag(tag string) map[string]string {
 		if err != nil {
 			panic(err)
 		}
-		data[key] = value
+		data[key] = gtag.Parse(value)
 	}
 	return data
 }

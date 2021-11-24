@@ -4,12 +4,12 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package structs_test
+package gstructs_test
 
 import (
 	"testing"
 
-	"github.com/gogf/gf/v2/internal/structs"
+	"github.com/gogf/gf/v2/os/gstructs"
 
 	"github.com/gogf/gf/v2/frame/g"
 
@@ -24,16 +24,16 @@ func Test_Basic(t *testing.T) {
 			Pass string `my-tag1:"pass1" my-tag2:"pass2" params:"pass"`
 		}
 		var user User
-		m, _ := structs.TagMapName(user, []string{"params"})
+		m, _ := gstructs.TagMapName(user, []string{"params"})
 		t.Assert(m, g.Map{"name": "Name", "pass": "Pass"})
-		m, _ = structs.TagMapName(&user, []string{"params"})
+		m, _ = gstructs.TagMapName(&user, []string{"params"})
 		t.Assert(m, g.Map{"name": "Name", "pass": "Pass"})
 
-		m, _ = structs.TagMapName(&user, []string{"params", "my-tag1"})
+		m, _ = gstructs.TagMapName(&user, []string{"params", "my-tag1"})
 		t.Assert(m, g.Map{"name": "Name", "pass": "Pass"})
-		m, _ = structs.TagMapName(&user, []string{"my-tag1", "params"})
+		m, _ = gstructs.TagMapName(&user, []string{"my-tag1", "params"})
 		t.Assert(m, g.Map{"name": "Name", "pass1": "Pass"})
-		m, _ = structs.TagMapName(&user, []string{"my-tag2", "params"})
+		m, _ = gstructs.TagMapName(&user, []string{"my-tag2", "params"})
 		t.Assert(m, g.Map{"name": "Name", "pass2": "Pass"})
 	})
 
@@ -48,7 +48,7 @@ func Test_Basic(t *testing.T) {
 			Base `params:"base"`
 		}
 		user := new(UserWithBase)
-		m, _ := structs.TagMapName(user, []string{"params"})
+		m, _ := gstructs.TagMapName(user, []string{"params"})
 		t.Assert(m, g.Map{
 			"base":      "Base",
 			"password1": "Pass1",
@@ -73,9 +73,9 @@ func Test_Basic(t *testing.T) {
 		}
 		user1 := new(UserWithEmbeddedAttribute)
 		user2 := new(UserWithoutEmbeddedAttribute)
-		m, _ := structs.TagMapName(user1, []string{"params"})
+		m, _ := gstructs.TagMapName(user1, []string{"params"})
 		t.Assert(m, g.Map{"password1": "Pass1", "password2": "Pass2"})
-		m, _ = structs.TagMapName(user2, []string{"params"})
+		m, _ = gstructs.TagMapName(user2, []string{"params"})
 		t.Assert(m, g.Map{})
 	})
 }
@@ -88,16 +88,16 @@ func Test_StructOfNilPointer(t *testing.T) {
 			Pass string `my-tag1:"pass1" my-tag2:"pass2" params:"pass"`
 		}
 		var user *User
-		m, _ := structs.TagMapName(user, []string{"params"})
+		m, _ := gstructs.TagMapName(user, []string{"params"})
 		t.Assert(m, g.Map{"name": "Name", "pass": "Pass"})
-		m, _ = structs.TagMapName(&user, []string{"params"})
+		m, _ = gstructs.TagMapName(&user, []string{"params"})
 		t.Assert(m, g.Map{"name": "Name", "pass": "Pass"})
 
-		m, _ = structs.TagMapName(&user, []string{"params", "my-tag1"})
+		m, _ = gstructs.TagMapName(&user, []string{"params", "my-tag1"})
 		t.Assert(m, g.Map{"name": "Name", "pass": "Pass"})
-		m, _ = structs.TagMapName(&user, []string{"my-tag1", "params"})
+		m, _ = gstructs.TagMapName(&user, []string{"my-tag1", "params"})
 		t.Assert(m, g.Map{"name": "Name", "pass1": "Pass"})
-		m, _ = structs.TagMapName(&user, []string{"my-tag2", "params"})
+		m, _ = gstructs.TagMapName(&user, []string{"my-tag2", "params"})
 		t.Assert(m, g.Map{"name": "Name", "pass2": "Pass"})
 	})
 }
@@ -110,7 +110,7 @@ func Test_Fields(t *testing.T) {
 			Pass string `my-tag1:"pass1" my-tag2:"pass2" params:"pass"`
 		}
 		var user *User
-		fields, _ := structs.Fields(structs.FieldsInput{
+		fields, _ := gstructs.Fields(gstructs.FieldsInput{
 			Pointer:         user,
 			RecursiveOption: 0,
 		})
@@ -136,9 +136,9 @@ func Test_Fields_WithEmbedded1(t *testing.T) {
 			B     // Should be put here to validate its index.
 			Score int64
 		}
-		r, err := structs.Fields(structs.FieldsInput{
+		r, err := gstructs.Fields(gstructs.FieldsInput{
 			Pointer:         new(A),
-			RecursiveOption: structs.RecursiveOptionEmbeddedNoTag,
+			RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
 		})
 		t.AssertNil(err)
 		t.Assert(len(r), 4)
@@ -172,9 +172,9 @@ func Test_Fields_WithEmbedded2(t *testing.T) {
 	}
 
 	gtest.C(t, func(t *gtest.T) {
-		r, err := structs.Fields(structs.FieldsInput{
+		r, err := gstructs.Fields(gstructs.FieldsInput{
 			Pointer:         new(MetaNodeItem),
-			RecursiveOption: structs.RecursiveOptionEmbeddedNoTag,
+			RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
 		})
 		t.AssertNil(err)
 		t.Assert(len(r), 4)
@@ -201,9 +201,9 @@ func Test_Fields_WithEmbedded_Filter(t *testing.T) {
 			B     // Should be put here to validate its index.
 			Score int64
 		}
-		r, err := structs.Fields(structs.FieldsInput{
+		r, err := gstructs.Fields(gstructs.FieldsInput{
 			Pointer:         new(A),
-			RecursiveOption: structs.RecursiveOptionEmbeddedNoTag,
+			RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
 		})
 		t.AssertNil(err)
 		t.Assert(len(r), 4)
@@ -222,10 +222,10 @@ func Test_FieldMap(t *testing.T) {
 			Pass string `my-tag1:"pass1" my-tag2:"pass2" params:"pass"`
 		}
 		var user *User
-		m, _ := structs.FieldMap(structs.FieldMapInput{
+		m, _ := gstructs.FieldMap(gstructs.FieldMapInput{
 			Pointer:          user,
 			PriorityTagArray: []string{"params"},
-			RecursiveOption:  structs.RecursiveOptionEmbedded,
+			RecursiveOption:  gstructs.RecursiveOptionEmbedded,
 		})
 		t.Assert(len(m), 3)
 		_, ok := m["Id"]
@@ -246,10 +246,10 @@ func Test_FieldMap(t *testing.T) {
 			Pass string `my-tag1:"pass1" my-tag2:"pass2" params:"pass"`
 		}
 		var user *User
-		m, _ := structs.FieldMap(structs.FieldMapInput{
+		m, _ := gstructs.FieldMap(gstructs.FieldMapInput{
 			Pointer:          user,
 			PriorityTagArray: nil,
-			RecursiveOption:  structs.RecursiveOptionEmbedded,
+			RecursiveOption:  gstructs.RecursiveOptionEmbedded,
 		})
 		t.Assert(len(m), 3)
 		_, ok := m["Id"]
@@ -273,9 +273,9 @@ func Test_StructType(t *testing.T) {
 		type A struct {
 			B
 		}
-		r, err := structs.StructType(new(A))
+		r, err := gstructs.StructType(new(A))
 		t.AssertNil(err)
-		t.Assert(r.Signature(), `github.com/gogf/gf/v2/internal/structs_test/structs_test.A`)
+		t.Assert(r.Signature(), `github.com/gogf/gf/v2/os/gstructs_test/gstructs_test.A`)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type B struct {
@@ -284,9 +284,9 @@ func Test_StructType(t *testing.T) {
 		type A struct {
 			B
 		}
-		r, err := structs.StructType(new(A).B)
+		r, err := gstructs.StructType(new(A).B)
 		t.AssertNil(err)
-		t.Assert(r.Signature(), `github.com/gogf/gf/v2/internal/structs_test/structs_test.B`)
+		t.Assert(r.Signature(), `github.com/gogf/gf/v2/os/gstructs_test/gstructs_test.B`)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type B struct {
@@ -295,9 +295,9 @@ func Test_StructType(t *testing.T) {
 		type A struct {
 			*B
 		}
-		r, err := structs.StructType(new(A).B)
+		r, err := gstructs.StructType(new(A).B)
 		t.AssertNil(err)
-		t.Assert(r.String(), `structs_test.B`)
+		t.Assert(r.String(), `gstructs_test.B`)
 	})
 	// Error.
 	gtest.C(t, func(t *gtest.T) {
@@ -308,7 +308,7 @@ func Test_StructType(t *testing.T) {
 			*B
 			Id int
 		}
-		_, err := structs.StructType(new(A).Id)
+		_, err := gstructs.StructType(new(A).Id)
 		t.AssertNE(err, nil)
 	})
 }
@@ -321,9 +321,9 @@ func Test_StructTypeBySlice(t *testing.T) {
 		type A struct {
 			Array []*B
 		}
-		r, err := structs.StructType(new(A).Array)
+		r, err := gstructs.StructType(new(A).Array)
 		t.AssertNil(err)
-		t.Assert(r.Signature(), `github.com/gogf/gf/v2/internal/structs_test/structs_test.B`)
+		t.Assert(r.Signature(), `github.com/gogf/gf/v2/os/gstructs_test/gstructs_test.B`)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type B struct {
@@ -332,9 +332,9 @@ func Test_StructTypeBySlice(t *testing.T) {
 		type A struct {
 			Array []B
 		}
-		r, err := structs.StructType(new(A).Array)
+		r, err := gstructs.StructType(new(A).Array)
 		t.AssertNil(err)
-		t.Assert(r.Signature(), `github.com/gogf/gf/v2/internal/structs_test/structs_test.B`)
+		t.Assert(r.Signature(), `github.com/gogf/gf/v2/os/gstructs_test/gstructs_test.B`)
 	})
 	gtest.C(t, func(t *gtest.T) {
 		type B struct {
@@ -343,9 +343,9 @@ func Test_StructTypeBySlice(t *testing.T) {
 		type A struct {
 			Array *[]B
 		}
-		r, err := structs.StructType(new(A).Array)
+		r, err := gstructs.StructType(new(A).Array)
 		t.AssertNil(err)
-		t.Assert(r.Signature(), `github.com/gogf/gf/v2/internal/structs_test/structs_test.B`)
+		t.Assert(r.Signature(), `github.com/gogf/gf/v2/os/gstructs_test/gstructs_test.B`)
 	})
 }
 
@@ -358,7 +358,7 @@ func TestType_FieldKeys(t *testing.T) {
 		type A struct {
 			Array []*B
 		}
-		r, err := structs.StructType(new(A).Array)
+		r, err := gstructs.StructType(new(A).Array)
 		t.AssertNil(err)
 		t.Assert(r.FieldKeys(), g.Slice{"Id", "Name"})
 	})
@@ -370,7 +370,7 @@ func TestType_TagMap(t *testing.T) {
 			Id   int    `d:"123" description:"I love gf"`
 			Name string `v:"required" description:"应用Id"`
 		}
-		r, err := structs.Fields(structs.FieldsInput{
+		r, err := gstructs.Fields(gstructs.FieldsInput{
 			Pointer:         new(A),
 			RecursiveOption: 0,
 		})

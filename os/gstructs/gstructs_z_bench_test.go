@@ -4,11 +4,12 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package structs_test
+package gstructs_test
 
 import (
-	"github.com/gogf/gf/v2/internal/structs"
 	"testing"
+
+	"github.com/gogf/gf/v2/os/gstructs"
 )
 
 type User struct {
@@ -24,12 +25,12 @@ var (
 
 func Benchmark_TagFields(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		structs.TagFields(user, []string{"params", "my-tag1"})
+		gstructs.TagFields(user, []string{"params", "my-tag1"})
 	}
 }
 
 func Benchmark_TagFields_NilPointer(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		structs.TagFields(&userNilPointer, []string{"params", "my-tag1"})
+		gstructs.TagFields(&userNilPointer, []string{"params", "my-tag1"})
 	}
 }

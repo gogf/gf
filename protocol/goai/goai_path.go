@@ -11,7 +11,7 @@ import (
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/structs"
+	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gmeta"
@@ -71,7 +71,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	if reflectType.In(1).Kind() == reflect.Ptr {
 		inputObject = reflect.New(reflectType.In(1).Elem()).Elem()
 	} else {
-		inputObject = reflect.New(reflectType.In(1).Elem()).Elem()
+		inputObject = reflect.New(reflectType.In(1)).Elem()
 	}
 	if reflectType.Out(0).Kind() == reflect.Ptr {
 		outputObject = reflect.New(reflectType.Out(0).Elem()).Elem()
@@ -182,9 +182,9 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 		}
 	}
 	// It also sets request parameters.
-	structFields, _ := structs.Fields(structs.FieldsInput{
+	structFields, _ := gstructs.Fields(gstructs.FieldsInput{
 		Pointer:         inputObject.Interface(),
-		RecursiveOption: structs.RecursiveOptionEmbeddedNoTag,
+		RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
 	})
 	for _, structField := range structFields {
 		if operation.Parameters == nil {

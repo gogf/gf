@@ -4,12 +4,14 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package structs
+package gstructs
 
 import (
 	"reflect"
 	"regexp"
 	"strings"
+
+	"github.com/gogf/gf/v2/util/gtag"
 )
 
 const (
@@ -17,13 +19,17 @@ const (
 )
 
 var (
-	tagMapRegex, _ = regexp.Compile(`([\w\-]+):"(.+?)"`)
+	tagMapRegex = regexp.MustCompile(`([\w\-]+):"(.+?)"`)
 )
 
 // Tag returns the value associated with key in the tag string. If there is no
 // such key in the tag, Tag returns the empty string.
 func (f *Field) Tag(key string) string {
-	return f.Field.Tag.Get(key)
+	s := f.Field.Tag.Get(key)
+	if s != "" {
+		s = gtag.Parse(s)
+	}
+	return s
 }
 
 // TagJsonName returns the `json` tag name string of the field.
@@ -41,7 +47,11 @@ func (f *Field) TagJsonName() string {
 // the tag string. If the tag does not have the conventional format,
 // the value returned by Lookup is unspecified.
 func (f *Field) TagLookup(key string) (value string, ok bool) {
-	return f.Field.Tag.Lookup(key)
+	value, ok = f.Field.Tag.Lookup(key)
+	if ok && value != "" {
+		value = gtag.Parse(value)
+	}
+	return
 }
 
 // IsEmbedded returns true if the given field is an anonymous field (embedded)
@@ -62,7 +72,7 @@ func (f *Field) TagMap() map[string]string {
 	)
 	for _, m := range match {
 		if len(m) == 3 {
-			data[m[1]] = m[2]
+			data[m[1]] = gtag.Parse(m[2])
 		}
 	}
 	return data
@@ -73,12 +83,13 @@ func (f *Field) IsExported() bool {
 	return f.Field.PkgPath == ""
 }
 
-// Name returns the name of the given field
+// Name returns the name of the given field.
 func (f *Field) Name() string {
 	return f.Field.Name
 }
 
-// Type returns the type of the given field
+// Type returns the type of the given field.
+// Note that this Type is not reflect.Type. If you need reflect.Type, please use Field.Type().Type.
 func (f *Field) Type() Type {
 	return Type{
 		Type: f.Field.Type,
@@ -101,34 +112,6 @@ func (f *Field) OriginalKind() reflect.Kind {
 		kind = value.Kind()
 	}
 	return kind
-}
-
-const (
-	RecursiveOptionNone          = 0 // No recursively retrieving fields as map if the field is an embedded struct.
-	RecursiveOptionEmbedded      = 1 // Recursively retrieving fields as map if the field is an embedded struct.
-	RecursiveOptionEmbeddedNoTag = 2 // Recursively retrieving fields as map if the field is an embedded struct and the field has no tag.
-)
-
-type FieldsInput struct {
-	// Pointer should be type of struct/*struct.
-	Pointer interface{}
-
-	// RecursiveOption specifies the way retrieving the fields recursively if the attribute
-	// is an embedded struct. It is RecursiveOptionNone in default.
-	RecursiveOption int
-}
-
-type FieldMapInput struct {
-	// Pointer should be type of struct/*struct.
-	Pointer interface{}
-
-	// PriorityTagArray specifies the priority tag array for retrieving from high to low.
-	// If it's given `nil`, it returns map[name]Field, of which the `name` is attribute name.
-	PriorityTagArray []string
-
-	// RecursiveOption specifies the way retrieving the fields recursively if the attribute
-	// is an embedded struct. It is RecursiveOptionNone in default.
-	RecursiveOption int
 }
 
 // Fields retrieves and returns the fields of `pointer` as slice.
@@ -169,6 +152,7 @@ func Fields(in FieldsInput) ([]Field, error) {
 						break
 					}
 					fallthrough
+
 				case RecursiveOptionEmbedded:
 					structFields, err := Fields(FieldsInput{
 						Pointer:         field.Value,
@@ -249,6 +233,7 @@ func FieldMap(in FieldMapInput) (map[string]Field, error) {
 						break
 					}
 					fallthrough
+
 				case RecursiveOptionEmbedded:
 					m, err := FieldMap(FieldMapInput{
 						Pointer:          field.Value,

@@ -25,7 +25,7 @@ type Command struct {
 	FuncWithValue FuncWithValue // Custom function with output parameters that can interact with command caller.
 	HelpFunc      Function      // Custom help function
 	Examples      string        // Usage examples.
-	Additional    string        // Additional custom info about this command.
+	Additional    string        // Additional info about this command, which will be appended to the end of help info.
 	parent        *Command      // Parent command for internal usage.
 	commands      []Command     // Sub commands of this command.
 }
@@ -62,9 +62,6 @@ func (c *Command) AddCommand(commands ...Command) error {
 		if cmd.Name == "" {
 			return gerror.New("command name should not be empty")
 		}
-		if cmd.Func == nil && cmd.FuncWithValue == nil {
-			return gerror.New("command function should not be empty")
-		}
 		cmd.parent = c
 		c.commands = append(c.commands, cmd)
 	}
@@ -77,11 +74,11 @@ func (c *Command) AddObject(objects ...interface{}) error {
 		commands []Command
 	)
 	for _, object := range objects {
-		tempCommand, err := NewFromObject(object)
+		rootCommand, err := NewFromObject(object)
 		if err != nil {
 			return err
 		}
-		commands = append(commands, *tempCommand)
+		commands = append(commands, rootCommand)
 	}
 	return c.AddCommand(commands...)
 }

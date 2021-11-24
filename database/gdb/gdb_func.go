@@ -19,8 +19,8 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/internal/structs"
 	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -96,7 +96,7 @@ func getTableNameFromOrmTag(object interface{}) string {
 	}
 	// Use the struct name of snake case.
 	if tableName == "" {
-		if t, err := structs.StructType(object); err != nil {
+		if t, err := gstructs.StructType(object); err != nil {
 			panic(err)
 		} else {
 			tableName = gstr.CaseSnakeFirstUpper(
@@ -306,9 +306,9 @@ func doQuoteString(s, charLeft, charRight string) string {
 func getFieldsFromStructOrMap(structOrMap interface{}) (fields []string) {
 	fields = []string{}
 	if utils.IsStruct(structOrMap) {
-		structFields, _ := structs.Fields(structs.FieldsInput{
+		structFields, _ := gstructs.Fields(gstructs.FieldsInput{
 			Pointer:         structOrMap,
-			RecursiveOption: structs.RecursiveOptionEmbeddedNoTag,
+			RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
 		})
 		for _, structField := range structFields {
 			if tag := structField.Tag(OrmTagForStruct); tag != "" && gregex.IsMatchString(regularFieldNameRegPattern, tag) {

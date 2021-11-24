@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
@@ -31,6 +30,7 @@ func (c *Command) RunWithValue(ctx context.Context) (value interface{}, err erro
 	}
 	args := parser.GetArgAll()
 	if len(args) == 1 {
+		// If no arguments passed but binary name, it then prints help.
 		if c.HelpFunc != nil {
 			return nil, c.HelpFunc(ctx, parser)
 		}
@@ -57,8 +57,6 @@ func (c *Command) RunWithValue(ctx context.Context) (value interface{}, err erro
 }
 
 func (c *Command) doRun(ctx context.Context, parser *Parser) (value interface{}, err error) {
-	// Add built-in help option, just for info only.
-	c.Options = append(c.Options, defaultHelpOption)
 	// Check built-in help command.
 	if parser.ContainsOpt(helpOptionName) || parser.ContainsOpt(helpOptionNameShort) {
 		if c.HelpFunc != nil {
@@ -78,15 +76,15 @@ func (c *Command) doRun(ctx context.Context, parser *Parser) (value interface{},
 	if c.FuncWithValue != nil {
 		return c.FuncWithValue(ctx, parser)
 	}
-	return nil, gerror.New(`no function registered for current command`)
+	// If no function defined in current command, it then prints help.
+	if c.HelpFunc != nil {
+		return nil, c.HelpFunc(ctx, parser)
+	}
+	return nil, c.defaultHelpFunc(ctx, parser)
 }
 
 // reParse re-parses the arguments using option configuration of current command.
 func (c *Command) reParse(ctx context.Context, parser *Parser) (*Parser, error) {
-	// It seems just has built-in help option, it so does nothing.
-	if len(c.Options) == 1 {
-		return parser, nil
-	}
 	var (
 		optionKey        string
 		supportedOptions = make(map[string]bool)
