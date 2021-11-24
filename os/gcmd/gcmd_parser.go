@@ -8,6 +8,7 @@
 package gcmd
 
 import (
+	"context"
 	"os"
 	"strings"
 
@@ -28,6 +29,16 @@ type Parser struct {
 	passedOptions    map[string]bool   // User passed supported options.
 	supportedOptions map[string]bool   // Option [OptionName:WhetherNeedArgument].
 	commandFuncMap   map[string]func() // Command function map for function handler.
+}
+
+// ParserFromCtx retrieves and returns Parser from context.
+func ParserFromCtx(ctx context.Context) *Parser {
+	if v := ctx.Value(CtxKeyParser); v != nil {
+		if p, ok := v.(*Parser); ok {
+			return p
+		}
+	}
+	return nil
 }
 
 // Parse creates and returns a new Parser with os.Args and supported options.
