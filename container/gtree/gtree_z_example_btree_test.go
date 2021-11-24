@@ -124,50 +124,195 @@ func ExampleBTree_GetOrSetFuncLock() {
 }
 
 func ExampleBTree_GetVar() {
+	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	for i := 0; i < 6; i++ {
+		newTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+	}
 
+	fmt.Println(newTree.GetVar("key1"))
+
+	// output:
+	// val1
 }
 
 func ExampleBTree_GetVarOrSet() {
+	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	for i := 0; i < 6; i++ {
+		newTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+	}
 
+	fmt.Println(newTree.GetVarOrSet("key1", "newVal1"))
+	fmt.Println(newTree.GetVarOrSet("key6", "val6"))
+
+	// output:
+	// val1
+	// val6
 }
 
 func ExampleBTree_GetVarOrSetFunc() {
+	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	for i := 0; i < 6; i++ {
+		newTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+	}
 
+	fmt.Println(newTree.GetVarOrSetFunc("key1", func() interface{} {
+		return "newVal1"
+	}))
+	fmt.Println(newTree.GetVarOrSetFunc("key6", func() interface{} {
+		return "val6"
+	}))
+
+	// output:
+	// val1
+	// val6
 }
 
 func ExampleBTree_GetVarOrSetFuncLock() {
+	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	for i := 0; i < 6; i++ {
+		newTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+	}
 
+	fmt.Println(newTree.GetVarOrSetFuncLock("key1", func() interface{} {
+		return "newVal1"
+	}))
+	fmt.Println(newTree.GetVarOrSetFuncLock("key6", func() interface{} {
+		return "val6"
+	}))
+
+	// output:
+	// val1
+	// val6
 }
 
 func ExampleBTree_SetIfNotExist() {
+	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	for i := 0; i < 6; i++ {
+		newTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+	}
 
+	fmt.Println(newTree.SetIfNotExist("key1", "newVal1"))
+	fmt.Println(newTree.SetIfNotExist("key6", "val6"))
+
+	// output:
+	// false
+	// true
 }
 
 func ExampleBTree_SetIfNotExistFunc() {
+	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	for i := 0; i < 6; i++ {
+		newTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+	}
 
+	fmt.Println(newTree.SetIfNotExistFunc("key1", func() interface{} {
+		return "newVal1"
+	}))
+	fmt.Println(newTree.SetIfNotExistFunc("key6", func() interface{} {
+		return "val6"
+	}))
+
+	// output:
+	// false
+	// true
 }
 
 func ExampleBTree_SetIfNotExistFuncLock() {
+	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	for i := 0; i < 6; i++ {
+		newTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+	}
 
+	fmt.Println(newTree.SetIfNotExistFuncLock("key1", func() interface{} {
+		return "newVal1"
+	}))
+	fmt.Println(newTree.SetIfNotExistFuncLock("key6", func() interface{} {
+		return "val6"
+	}))
+
+	// output:
+	// false
+	// true
 }
 
 func ExampleBTree_Contains() {
+	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	for i := 0; i < 6; i++ {
+		newTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+	}
 
+	fmt.Println(newTree.Contains("key1"))
+	fmt.Println(newTree.Contains("key6"))
+
+	// output:
+	// true
+	// false
 }
-func ExampleBTree_Remove() {
 
+func ExampleBTree_Remove() {
+	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	for i := 0; i < 6; i++ {
+		newTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+	}
+
+	fmt.Println(newTree.Remove("key1"))
+	fmt.Println(newTree.Remove("key6"))
+	fmt.Println(newTree.Map())
+
+	// output:
+	// val1
+	// <nil>
+	// map[key0:val0 key2:val2 key3:val3 key4:val4 key5:val5]
 }
 
 func ExampleBTree_Removes() {
+	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	for i := 0; i < 6; i++ {
+		newTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+	}
 
+	removeKeys := make([]interface{}, 2)
+	removeKeys = append(removeKeys, "key1")
+	removeKeys = append(removeKeys, "key6")
+
+	newTree.Removes(removeKeys)
+
+	fmt.Println(newTree.Map())
+
+	// output:
+	// map[key0:val0 key2:val2 key3:val3 key4:val4 key5:val5]
 }
 
 func ExampleBTree_IsEmpty() {
+	newTree := gtree.NewBTree(3, gutil.ComparatorString)
 
+	fmt.Println(newTree.IsEmpty())
+
+	for i := 0; i < 6; i++ {
+		newTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+	}
+
+	fmt.Println(newTree.IsEmpty())
+
+	// output:
+	// true
+	// false
 }
 
 func ExampleBTree_Size() {
+	newTree := gtree.NewBTree(3, gutil.ComparatorString)
 
+	fmt.Println(newTree.Size())
+
+	for i := 0; i < 6; i++ {
+		newTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+	}
+
+	fmt.Println(newTree.Size())
+
+	// output:
+	// 0
+	// 6
 }
 
 func ExampleBTree_Keys() {
@@ -181,6 +326,7 @@ func ExampleBTree_Values() {
 func ExampleBTree_Map() {
 
 }
+
 func ExampleBTree_MapStrAny() {
 
 }
