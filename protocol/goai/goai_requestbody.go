@@ -10,7 +10,7 @@ import (
 	"reflect"
 
 	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/internal/structs"
+	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
@@ -59,9 +59,9 @@ func (oai *OpenApiV3) getRequestSchemaRef(in getRequestSchemaRefInput) (*SchemaR
 			schema.Properties[k] = v
 		}
 	} else {
-		structFields, _ := structs.Fields(structs.FieldsInput{
+		structFields, _ := gstructs.Fields(gstructs.FieldsInput{
 			Pointer:         in.RequestObject,
-			RecursiveOption: structs.RecursiveOptionEmbeddedNoTag,
+			RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
 		})
 		for _, structField := range structFields {
 			var (

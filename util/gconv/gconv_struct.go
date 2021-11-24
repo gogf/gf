@@ -14,8 +14,8 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/empty"
 	"github.com/gogf/gf/v2/internal/json"
-	"github.com/gogf/gf/v2/internal/structs"
 	"github.com/gogf/gf/v2/internal/utils"
+	"github.com/gogf/gf/v2/os/gstructs"
 )
 
 // Struct maps the params key-value pairs to the corresponding struct object's attributes.
@@ -237,7 +237,7 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 	} else {
 		priorityTagArray = StructTagPriority
 	}
-	tagToNameMap, err := structs.TagMapName(pointerElemReflectValue, priorityTagArray)
+	tagToNameMap, err := gstructs.TagMapName(pointerElemReflectValue, priorityTagArray)
 	if err != nil {
 		return err
 	}

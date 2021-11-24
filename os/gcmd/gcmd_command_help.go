@@ -126,6 +126,9 @@ func (c *Command) Print() {
 }
 
 func (c *Command) defaultHelpFunc(ctx context.Context, parser *Parser) error {
+	// Add built-in help option, just for info only.
+	c.Options = append(c.Options, defaultHelpOption)
+	// Print command help info to stdout.
 	c.Print()
 	return nil
 }

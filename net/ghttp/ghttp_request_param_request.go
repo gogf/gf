@@ -9,7 +9,7 @@ package ghttp
 import (
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/internal/empty"
-	"github.com/gogf/gf/v2/internal/structs"
+	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
 )
@@ -179,7 +179,7 @@ func (r *Request) doGetRequestStruct(pointer interface{}, mapping ...map[string]
 
 // mergeDefaultStructValue merges the request parameters with default values from struct tag definition.
 func (r *Request) mergeDefaultStructValue(data map[string]interface{}, pointer interface{}) error {
-	tagFields, err := structs.TagFields(pointer, defaultValueTags)
+	tagFields, err := gstructs.TagFields(pointer, defaultValueTags)
 	if err != nil {
 		return err
 	}

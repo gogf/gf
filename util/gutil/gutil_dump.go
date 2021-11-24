@@ -13,7 +13,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/gogf/gf/v2/internal/structs"
+	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
 )
 
@@ -261,9 +261,9 @@ func doDumpMap(in doDumpInternalInput) {
 }
 
 func doDumpStruct(in doDumpInternalInput) {
-	structFields, _ := structs.Fields(structs.FieldsInput{
+	structFields, _ := gstructs.Fields(gstructs.FieldsInput{
 		Pointer:         in.Value,
-		RecursiveOption: structs.RecursiveOptionEmbedded,
+		RecursiveOption: gstructs.RecursiveOptionEmbedded,
 	})
 	if len(structFields) == 0 {
 		var (

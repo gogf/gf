@@ -11,7 +11,7 @@ import (
 
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/internal/structs"
+	"github.com/gogf/gf/v2/os/gstructs"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gmeta"
@@ -105,9 +105,9 @@ func (oai *OpenApiV3) doAddSchemaSingle(object interface{}) error {
 
 // structToSchema converts and returns given struct object as Schema.
 func (oai *OpenApiV3) structToSchema(object interface{}) (*Schema, error) {
-	structFields, _ := structs.Fields(structs.FieldsInput{
+	structFields, _ := gstructs.Fields(gstructs.FieldsInput{
 		Pointer:         object,
-		RecursiveOption: structs.RecursiveOptionEmbeddedNoTag,
+		RecursiveOption: gstructs.RecursiveOptionEmbeddedNoTag,
 	})
 	var (
 		tagMap = gmeta.Data(object)
