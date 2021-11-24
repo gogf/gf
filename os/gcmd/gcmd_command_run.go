@@ -23,6 +23,9 @@ func (c *Command) Run(ctx context.Context) error {
 
 // RunWithValue calls custom function that bound to this command with value output.
 func (c *Command) RunWithValue(ctx context.Context) (value interface{}, err error) {
+	// Add built-in help option, just for info only.
+	c.Options = append(c.Options, defaultHelpOption)
+
 	// Parse command arguments and options using default algorithm.
 	parser, err := Parse(nil)
 	if err != nil {
@@ -57,8 +60,6 @@ func (c *Command) RunWithValue(ctx context.Context) (value interface{}, err erro
 }
 
 func (c *Command) doRun(ctx context.Context, parser *Parser) (value interface{}, err error) {
-	// Add built-in help option, just for info only.
-	c.Options = append(c.Options, defaultHelpOption)
 	// Check built-in help command.
 	if parser.ContainsOpt(helpOptionName) || parser.ContainsOpt(helpOptionNameShort) {
 		if c.HelpFunc != nil {

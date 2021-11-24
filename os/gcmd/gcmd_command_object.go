@@ -202,21 +202,27 @@ func newCommandFromMethod(object interface{}, method reflect.Value) (command Com
 		if data == nil {
 			data = map[string]interface{}{}
 		}
+		// Handle orphan options.
+		for _, option := range command.Options {
+			if option.Orphan && parser.ContainsOpt(option.Name) {
+				data[option.Name] = "true"
+			}
+		}
+		// Default values from struct tag.
 		err = mergeDefaultStructValue(data, inputObject.Interface())
 		if err != nil {
 			return nil, err
 		}
 		// Construct input parameters.
 		if len(data) > 0 {
-
-		}
-		if inputObject.Kind() == reflect.Ptr {
-			err = gconv.Scan(data, inputObject.Interface())
-		} else {
-			err = gconv.Struct(data, inputObject.Addr().Interface())
-		}
-		if err != nil {
-			return
+			if inputObject.Kind() == reflect.Ptr {
+				err = gconv.Scan(data, inputObject.Interface())
+			} else {
+				err = gconv.Struct(data, inputObject.Addr().Interface())
+			}
+			if err != nil {
+				return
+			}
 		}
 
 		// Parameters validation.
