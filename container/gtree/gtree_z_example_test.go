@@ -26,15 +26,10 @@ func ExampleNewBTree() {
 	for i := 0; i < 6; i++ {
 		bTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
-	fmt.Println(bTree)
+	fmt.Println(bTree.Map())
 
 	// output:
-	// key0
-	// key1
-	//     key2
-	// key3
-	//     key4
-	//     key5
+	// map[key0:val0 key1:val1 key2:val2 key3:val3 key4:val4 key5:val5]
 }
 
 func ExampleNewBTreeFrom() {
@@ -44,15 +39,10 @@ func ExampleNewBTreeFrom() {
 	}
 
 	otherBTree := gtree.NewBTreeFrom(3, gutil.ComparatorString, bTree.Map())
-	fmt.Println(otherBTree)
+	fmt.Println(otherBTree.Map())
 
 	// output:
-	// key0
-	// key1
-	//     key2
-	// key3
-	//     key4
-	//     key5
+	// map[key0:val0 key1:val1 key2:val2 key3:val3 key4:val4 key5:val5]
 }
 
 func ExampleNewRedBlackTree() {
