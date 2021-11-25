@@ -346,7 +346,10 @@ func (tree *BTree) Left() *BTreeEntry {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
 	node := tree.left(tree.root)
-	return node.Entries[0]
+	if node != nil {
+		return node.Entries[0]
+	}
+	return nil
 }
 
 // Right returns the right-most (max) entry or nil if tree is empty.
@@ -354,7 +357,10 @@ func (tree *BTree) Right() *BTreeEntry {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
 	node := tree.right(tree.root)
-	return node.Entries[len(node.Entries)-1]
+	if node != nil {
+		return node.Entries[len(node.Entries)-1]
+	}
+	return nil
 }
 
 // String returns a string representation of container (for debugging purposes)
@@ -931,7 +937,7 @@ func (tree *BTree) deleteChild(node *BTreeNode, index int) {
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (tree *BTree) MarshalJSON() ([]byte, error) {
-	return json.Marshal(tree.Map())
+	return json.Marshal(tree.MapStrAny())
 }
 
 // getComparator returns the comparator if it's previously set,
