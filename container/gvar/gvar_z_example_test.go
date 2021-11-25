@@ -334,12 +334,15 @@ func ExampleVar_ListItemValues() {
 
 // ListItemValuesUnique
 func ExampleVar_ListItemValuesUnique() {
-	var goods1 = g.List{
-		g.Map{"id": 1, "price": 100.00},
-		g.Map{"id": 2, "price": 100.00},
-		g.Map{"id": 3, "price": nil},
-	}
-	var v = gvar.New(goods1)
+	var (
+		goods1 = g.List{
+			g.Map{"id": 1, "price": 100.00},
+			g.Map{"id": 2, "price": 100.00},
+			g.Map{"id": 3, "price": nil},
+		}
+		v = gvar.New(goods1)
+	)
+
 	fmt.Println(v.ListItemValuesUnique("id"))
 	fmt.Println(v.ListItemValuesUnique("price"))
 
@@ -409,8 +412,11 @@ func ExampleVar_Structs() {
 
 // Ints
 func ExampleVar_Ints() {
-	var arr = []int{1, 2, 3, 4, 5}
-	var obj = gvar.New(arr)
+	var (
+		arr = []int{1, 2, 3, 4, 5}
+		obj = gvar.New(arr)
+	)
+
 	fmt.Println(obj.Ints())
 
 	// Output:
@@ -419,8 +425,11 @@ func ExampleVar_Ints() {
 
 // Int64s
 func ExampleVar_Int64s() {
-	var arr = []int64{1, 2, 3, 4, 5}
-	var obj = gvar.New(arr)
+	var (
+		arr = []int64{1, 2, 3, 4, 5}
+		obj = gvar.New(arr)
+	)
+
 	fmt.Println(obj.Int64s())
 
 	// Output:
@@ -429,8 +438,10 @@ func ExampleVar_Int64s() {
 
 // Uints
 func ExampleVar_Uints() {
-	var arr = []uint{1, 2, 3, 4, 5}
-	var obj = gvar.New(arr)
+	var (
+		arr = []uint{1, 2, 3, 4, 5}
+		obj = gvar.New(arr)
+	)
 	fmt.Println(obj.Uints())
 
 	// Output:
@@ -439,8 +450,11 @@ func ExampleVar_Uints() {
 
 // Uint64s
 func ExampleVar_Uint64s() {
-	var arr = []uint64{1, 2, 3, 4, 5}
-	var obj = gvar.New(arr)
+	var (
+		arr = []uint64{1, 2, 3, 4, 5}
+		obj = gvar.New(arr)
+	)
+
 	fmt.Println(obj.Uint64s())
 
 	// Output:
@@ -449,8 +463,11 @@ func ExampleVar_Uint64s() {
 
 // Floats
 func ExampleVar_Floats() {
-	var arr = []float64{1, 2, 3, 4, 5}
-	var obj = gvar.New(arr)
+	var (
+		arr = []float64{1, 2, 3, 4, 5}
+		obj = gvar.New(arr)
+	)
+
 	fmt.Println(obj.Floats())
 
 	// Output:
@@ -459,8 +476,11 @@ func ExampleVar_Floats() {
 
 // Float32s
 func ExampleVar_Float32s() {
-	var arr = []float32{1, 2, 3, 4, 5}
-	var obj = gvar.New(arr)
+	var (
+		arr = []float32{1, 2, 3, 4, 5}
+		obj = gvar.New(arr)
+	)
+
 	fmt.Println(obj.Float32s())
 
 	// Output:
@@ -469,8 +489,11 @@ func ExampleVar_Float32s() {
 
 // Float64s
 func ExampleVar_Float64s() {
-	var arr = []float64{1, 2, 3, 4, 5}
-	var obj = gvar.New(arr)
+	var (
+		arr = []float64{1, 2, 3, 4, 5}
+		obj = gvar.New(arr)
+	)
+
 	fmt.Println(obj.Float64s())
 
 	// Output:
@@ -479,8 +502,10 @@ func ExampleVar_Float64s() {
 
 // Strings
 func ExampleVar_Strings() {
-	var arr = []string{"GoFrame", "Golang"}
-	var obj = gvar.New(arr)
+	var (
+		arr = []string{"GoFrame", "Golang"}
+		obj = gvar.New(arr)
+	)
 	fmt.Println(obj.Strings())
 
 	// Output:
@@ -489,8 +514,11 @@ func ExampleVar_Strings() {
 
 // Interfaces
 func ExampleVar_Interfaces() {
-	var arr = []string{"GoFrame", "Golang"}
-	var obj = gvar.New(arr)
+	var (
+		arr = []string{"GoFrame", "Golang"}
+		obj = gvar.New(arr)
+	)
+
 	fmt.Println(obj.Interfaces())
 
 	// Output:
@@ -499,8 +527,11 @@ func ExampleVar_Interfaces() {
 
 // Slice
 func ExampleVar_Slice() {
-	var arr = []string{"GoFrame", "Golang"}
-	var obj = gvar.New(arr)
+	var (
+		arr = []string{"GoFrame", "Golang"}
+		obj = gvar.New(arr)
+	)
+
 	fmt.Println(obj.Slice())
 
 	// Output:
@@ -509,8 +540,10 @@ func ExampleVar_Slice() {
 
 // Array
 func ExampleVar_Array() {
-	var arr = []string{"GoFrame", "Golang"}
-	var obj = gvar.New(arr)
+	var (
+		arr = []string{"GoFrame", "Golang"}
+		obj = gvar.New(arr)
+	)
 	fmt.Println(obj.Array())
 
 	// Output:
@@ -519,8 +552,11 @@ func ExampleVar_Array() {
 
 // Vars
 func ExampleVar_Vars() {
-	var arr = []string{"GoFrame", "Golang"}
-	var obj = gvar.New(arr)
+	var (
+		arr = []string{"GoFrame", "Golang"}
+		obj = gvar.New(arr)
+	)
+
 	fmt.Println(obj.Vars())
 
 	// Output:
@@ -529,10 +565,13 @@ func ExampleVar_Vars() {
 
 // Map
 func ExampleVar_Map() {
-	var m = g.Map{"id": 1, "price": 100.00}
-	var v = gvar.New(m)
-	var b1 = v.Map()
-	fmt.Println(b1["id"], b1["price"])
+	var (
+		m   = g.Map{"id": 1, "price": 100.00}
+		v   = gvar.New(m)
+		res = v.Map()
+	)
+
+	fmt.Println(res["id"], res["price"])
 
 	// Output:
 	// 1 100
@@ -540,9 +579,12 @@ func ExampleVar_Map() {
 
 // MapStrAny
 func ExampleVar_MapStrAny() {
-	var m1 = g.Map{"id": 1, "price": 100}
-	var v = gvar.New(m1)
-	var v2 = v.MapStrAny()
+	var (
+		m1 = g.Map{"id": 1, "price": 100}
+		v  = gvar.New(m1)
+		v2 = v.MapStrAny()
+	)
+
 	fmt.Println(v2["price"], v2["id"])
 
 	// Output:
@@ -551,9 +593,12 @@ func ExampleVar_MapStrAny() {
 
 // MapStrStr
 func ExampleVar_MapStrStr() {
-	var m1 = g.Map{"id": 1, "price": 100}
-	var v = gvar.New(m1)
-	var v2 = v.MapStrStr()
+	var (
+		m1 = g.Map{"id": 1, "price": 100}
+		v  = gvar.New(m1)
+		v2 = v.MapStrStr()
+	)
+
 	fmt.Println(v2["price"] + "$")
 
 	// Output:
@@ -562,9 +607,12 @@ func ExampleVar_MapStrStr() {
 
 // MapStrVar
 func ExampleVar_MapStrVar() {
-	var m1 = g.Map{"id": 1, "price": 100}
-	var v = gvar.New(m1)
-	var v2 = v.MapStrVar()
+	var (
+		m1 = g.Map{"id": 1, "price": 100}
+		v  = gvar.New(m1)
+		v2 = v.MapStrVar()
+	)
+
 	fmt.Println(v2["price"].Float64() * 100)
 
 	// Output:
@@ -573,10 +621,13 @@ func ExampleVar_MapStrVar() {
 
 // MapDeep
 func ExampleVar_MapDeep() {
-	var m1 = g.Map{"id": 1, "price": 100}
-	var m2 = g.Map{"product": m1}
-	var v = gvar.New(m2)
-	var v2 = v.MapDeep()
+	var (
+		m1 = g.Map{"id": 1, "price": 100}
+		m2 = g.Map{"product": m1}
+		v  = gvar.New(m2)
+		v2 = v.MapDeep()
+	)
+
 	fmt.Println(v2["product"])
 
 	// Output:
@@ -585,10 +636,13 @@ func ExampleVar_MapDeep() {
 
 // MapStrStrDeep
 func ExampleVar_MapStrStrDeep() {
-	var m1 = g.Map{"id": 1, "price": 100}
-	var m2 = g.Map{"product": m1}
-	var v = gvar.New(m2)
-	var v2 = v.MapStrStrDeep()
+	var (
+		m1 = g.Map{"id": 1, "price": 100}
+		m2 = g.Map{"product": m1}
+		v  = gvar.New(m2)
+		v2 = v.MapStrStrDeep()
+	)
+
 	fmt.Println(v2["product"])
 
 	// Output:
@@ -597,10 +651,13 @@ func ExampleVar_MapStrStrDeep() {
 
 // MapStrVarDeep
 func ExampleVar_MapStrVarDeep() {
-	var m1 = g.Map{"id": 1, "price": 100}
-	var m2 = g.Map{"product": m1}
-	var v = gvar.New(m2)
-	var v2 = v.MapStrVarDeep()
+	var (
+		m1 = g.Map{"id": 1, "price": 100}
+		m2 = g.Map{"product": m1}
+		v  = gvar.New(m2)
+		v2 = v.MapStrVarDeep()
+	)
+
 	fmt.Println(v2["product"])
 
 	// Output:
@@ -618,10 +675,13 @@ func ExampleVar_Maps() {
 
 // MapsDeep
 func ExampleVar_MapsDeep() {
-	var p1 = g.MapStrAny{"product": g.Map{"id": 1, "price": 100}}
-	var p2 = g.MapStrAny{"product": g.Map{"id": 2, "price": 200}}
-	var v = gvar.New(g.ListStrAny{p1, p2})
-	var v2 = v.MapsDeep()
+	var (
+		p1 = g.MapStrAny{"product": g.Map{"id": 1, "price": 100}}
+		p2 = g.MapStrAny{"product": g.Map{"id": 2, "price": 200}}
+		v  = gvar.New(g.ListStrAny{p1, p2})
+		v2 = v.MapsDeep()
+	)
+
 	fmt.Printf("%#v", v2)
 
 	// Output:
@@ -630,8 +690,11 @@ func ExampleVar_MapsDeep() {
 
 // MapToMap
 func ExampleVar_MapToMap() {
-	var m1 = gvar.New(g.MapIntInt{0: 100, 1: 200})
-	var m2 = g.MapStrStr{}
+	var (
+		m1 = gvar.New(g.MapIntInt{0: 100, 1: 200})
+		m2 = g.MapStrStr{}
+	)
+
 	err := m1.MapToMap(&m2)
 	if err != nil {
 		panic(err)
@@ -645,10 +708,13 @@ func ExampleVar_MapToMap() {
 
 // MapToMaps
 func ExampleVar_MapToMaps() {
-	var p1 = g.MapStrAny{"product": g.Map{"id": 1, "price": 100}}
-	var p2 = g.MapStrAny{"product": g.Map{"id": 2, "price": 200}}
-	var v = gvar.New(g.ListStrAny{p1, p2})
-	var v2 []g.MapStrStr
+	var (
+		p1 = g.MapStrAny{"product": g.Map{"id": 1, "price": 100}}
+		p2 = g.MapStrAny{"product": g.Map{"id": 2, "price": 200}}
+		v  = gvar.New(g.ListStrAny{p1, p2})
+		v2 []g.MapStrStr
+	)
+
 	err := v.MapToMaps(&v2)
 	if err != nil {
 		panic(err)
@@ -661,8 +727,11 @@ func ExampleVar_MapToMaps() {
 
 // MapToMapDeep
 func ExampleVar_MapToMapDeep() {
-	var p1 = gvar.New(g.MapStrAny{"product": g.Map{"id": 1, "price": 100}})
-	var p2 = g.MapStrAny{}
+	var (
+		p1 = gvar.New(g.MapStrAny{"product": g.Map{"id": 1, "price": 100}})
+		p2 = g.MapStrAny{}
+	)
+
 	err := p1.MapToMap(&p2)
 	if err != nil {
 		panic(err)
