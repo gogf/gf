@@ -54,7 +54,10 @@ func NewWithAdapter(adapter Adapter) *Config {
 // exists in the configuration directory, it then sets it as the default configuration file. The
 // toml file type is the default configuration file type.
 func Instance(name ...string) *Config {
-	key := DefaultName
+	var (
+		ctx = context.TODO()
+		key = DefaultName
+	)
 	if len(name) > 0 && name[0] != "" {
 		key = name[0]
 	}
@@ -67,9 +70,9 @@ func Instance(name ...string) *Config {
 		// If it's not using default configuration or its configuration file is not available,
 		// it searches the possible configuration file according to the name and all supported
 		// file types.
-		if key != DefaultName || !adapter.Available() {
+		if key != DefaultName || !adapter.Available(ctx) {
 			for _, fileType := range supportedFileTypes {
-				if file := fmt.Sprintf(`%s.%s`, key, fileType); adapter.Available(file) {
+				if file := fmt.Sprintf(`%s.%s`, key, fileType); adapter.Available(ctx, file) {
 					adapter.SetFileName(file)
 					break
 				}

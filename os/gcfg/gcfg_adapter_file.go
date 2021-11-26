@@ -175,7 +175,7 @@ func (c *AdapterFile) Dump() {
 }
 
 // Available checks and returns whether configuration of given `file` is available.
-func (c *AdapterFile) Available(fileName ...string) bool {
+func (c *AdapterFile) Available(ctx context.Context, fileName ...string) bool {
 	var (
 		usedFileName string
 	)
