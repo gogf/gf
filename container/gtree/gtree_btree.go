@@ -436,7 +436,9 @@ func (tree *BTree) IteratorAscFrom(key interface{}, match bool, f func(key, valu
 			tree.doIteratorAsc(node, node.Entries[index], index, f)
 		}
 	} else {
-		tree.doIteratorAsc(node, node.Entries[index], index, f)
+		if index >= 0 && index < len(node.Entries) {
+			tree.doIteratorAsc(node, node.Entries[index], index, f)
+		}
 	}
 }
 
@@ -511,7 +513,9 @@ func (tree *BTree) IteratorDescFrom(key interface{}, match bool, f func(key, val
 			tree.doIteratorDesc(node, node.Entries[index], index, f)
 		}
 	} else {
-		tree.doIteratorDesc(node, node.Entries[index], index, f)
+		if index >= 0 && index < len(node.Entries) {
+			tree.doIteratorDesc(node, node.Entries[index], index, f)
+		}
 	}
 }
 
