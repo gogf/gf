@@ -54,7 +54,7 @@ const (
 )
 
 // NewAdapterMemory creates and returns a new memory cache object.
-func NewAdapterMemory(lruCap ...int) *AdapterMemory {
+func NewAdapterMemory(lruCap ...int) Adapter {
 	c := &AdapterMemory{
 		data:        newAdapterMemoryData(),
 		lruGetList:  glist.New(true),
