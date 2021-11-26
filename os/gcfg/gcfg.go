@@ -92,6 +92,15 @@ func (c *Config) GetAdapter() Adapter {
 	return c.adapter
 }
 
+// Available checks and returns the configuration service is available.
+// The optional parameter `pattern` specifies certain configuration resource.
+//
+// It returns true if configuration file is present in default AdapterFile, or else false.
+// Note that this function does not return error as it just does simply check for backend configuration service.
+func (c *Config) Available(ctx context.Context, resource ...string) (ok bool) {
+	return c.adapter.Available(ctx, resource...)
+}
+
 // Set sets value with specified `pattern`.
 // It supports hierarchical data access by char separator, which is '.' in default.
 // It is commonly used for updates certain configuration value in runtime.
