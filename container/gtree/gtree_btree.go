@@ -231,7 +231,7 @@ func (tree *BTree) Contains(key interface{}) bool {
 	return ok
 }
 
-// Remove remove the node from the tree by key.
+// doRemove removes the node from the tree by key.
 // Key should adhere to the comparator's type assertion, otherwise method panics.
 func (tree *BTree) doRemove(key interface{}) (value interface{}) {
 	node, index, found := tree.searchRecursively(tree.root, key)
@@ -259,7 +259,7 @@ func (tree *BTree) Removes(keys []interface{}) {
 	}
 }
 
-// Empty returns true if tree does not contain any nodes
+// IsEmpty returns true if tree does not contain any nodes
 func (tree *BTree) IsEmpty() bool {
 	return tree.Size() == 0
 }
@@ -621,11 +621,11 @@ func (tree *BTree) middle() int {
 	return (tree.m - 1) / 2
 }
 
-// search searches only within the single node among its entries
+// search does search only within the single node among its entries
 func (tree *BTree) search(node *BTreeNode, key interface{}) (index int, found bool) {
 	low, mid, high := 0, 0, len(node.Entries)-1
 	for low <= high {
-		mid = low + int((high-low)/2)
+		mid = low + (high-low)/2
 		compare := tree.getComparator()(key, node.Entries[mid].Key)
 		switch {
 		case compare > 0:
@@ -822,7 +822,7 @@ func (tree *BTree) delete(node *BTreeNode, index int) {
 	if tree.isLeaf(node) {
 		deletedKey := node.Entries[index].Key
 		tree.deleteEntry(node, index)
-		tree.rebalance(node, deletedKey)
+		tree.reBalance(node, deletedKey)
 		if len(tree.root.Entries) == 0 {
 			tree.root = nil
 		}
@@ -835,13 +835,13 @@ func (tree *BTree) delete(node *BTreeNode, index int) {
 	node.Entries[index] = leftLargestNode.Entries[leftLargestEntryIndex]
 	deletedKey := leftLargestNode.Entries[leftLargestEntryIndex].Key
 	tree.deleteEntry(leftLargestNode, leftLargestEntryIndex)
-	tree.rebalance(leftLargestNode, deletedKey)
+	tree.reBalance(leftLargestNode, deletedKey)
 }
 
-// rebalance rebalances the tree after deletion if necessary and returns true, otherwise false.
-// Note that we first delete the entry and then call rebalance, thus the passed deleted key as reference.
-func (tree *BTree) rebalance(node *BTreeNode, deletedKey interface{}) {
-	// check if rebalancing is needed
+// reBalance reBalances the tree after deletion if necessary and returns true, otherwise false.
+// Note that we first delete the entry and then call reBalance, thus the passed deleted key as reference.
+func (tree *BTree) reBalance(node *BTreeNode, deletedKey interface{}) {
+	// check if re-balancing is needed
 	if node == nil || len(node.Entries) >= tree.minEntries() {
 		return
 	}
@@ -905,8 +905,8 @@ func (tree *BTree) rebalance(node *BTreeNode, deletedKey interface{}) {
 		return
 	}
 
-	// parent might underflow, so try to rebalance if necessary
-	tree.rebalance(node.Parent, deletedKey)
+	// parent might be underflow, so try to reBalance if necessary
+	tree.reBalance(node.Parent, deletedKey)
 }
 
 func (tree *BTree) prependChildren(fromNode *BTreeNode, toNode *BTreeNode) {
