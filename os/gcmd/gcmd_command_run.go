@@ -97,7 +97,7 @@ func (c *Command) reParse(ctx context.Context, parser *Parser) (*Parser, error) 
 		}
 		supportedOptions[optionKey] = !option.Orphan
 	}
-	return Parse(supportedOptions)
+	return Parse(supportedOptions, c.Strict)
 }
 
 // searchCommand recursively searches the command according given arguments.
