@@ -28,7 +28,7 @@ func ExampleNewBTree() {
 	}
 	fmt.Println(bTree.Map())
 
-	// output:
+	// Output:
 	// map[key0:val0 key1:val1 key2:val2 key3:val3 key4:val4 key5:val5]
 }
 
@@ -41,7 +41,7 @@ func ExampleNewBTreeFrom() {
 	otherBTree := gtree.NewBTreeFrom(3, gutil.ComparatorString, bTree.Map())
 	fmt.Println(otherBTree.Map())
 
-	// output:
+	// Output:
 	// map[key0:val0 key1:val1 key2:val2 key3:val3 key4:val4 key5:val5]
 }
 

@@ -20,372 +20,372 @@ func ExampleBTree_Clone() {
 		b.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
-	newTree := b.Clone()
+	tree := b.Clone()
 
-	fmt.Println(newTree.Map())
-	fmt.Println(newTree.Size())
+	fmt.Println(tree.Map())
+	fmt.Println(tree.Size())
 
-	// output:
+	// Output:
 	// map[key0:val0 key1:val1 key2:val2 key3:val3 key4:val4 key5:val5]
 	// 6
 }
 
 func ExampleBTree_Set() {
-	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	tree := gtree.NewBTree(3, gutil.ComparatorString)
 	for i := 0; i < 6; i++ {
-		newTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+		tree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
-	fmt.Println(newTree.Map())
-	fmt.Println(newTree.Size())
+	fmt.Println(tree.Map())
+	fmt.Println(tree.Size())
 
-	// output:
+	// Output:
 	// map[key0:val0 key1:val1 key2:val2 key3:val3 key4:val4 key5:val5]
 	// 6
 }
 
 func ExampleBTree_Sets() {
-	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	tree := gtree.NewBTree(3, gutil.ComparatorString)
 
-	newTree.Sets(map[interface{}]interface{}{
+	tree.Sets(map[interface{}]interface{}{
 		"key1": "val1",
 		"key2": "val2",
 	})
 
-	fmt.Println(newTree.Map())
-	fmt.Println(newTree.Size())
+	fmt.Println(tree.Map())
+	fmt.Println(tree.Size())
 
-	// output:
+	// Output:
 	// map[key1:val1 key2:val2]
 	// 2
 }
 
 func ExampleBTree_Get() {
-	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	tree := gtree.NewBTree(3, gutil.ComparatorString)
 	for i := 0; i < 6; i++ {
-		newTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+		tree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
-	fmt.Println(newTree.Get("key1"))
-	fmt.Println(newTree.Get("key10"))
+	fmt.Println(tree.Get("key1"))
+	fmt.Println(tree.Get("key10"))
 
-	// output:
+	// Output:
 	// val1
 	// <nil>
 }
 
 func ExampleBTree_GetOrSet() {
-	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	tree := gtree.NewBTree(3, gutil.ComparatorString)
 	for i := 0; i < 6; i++ {
-		newTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+		tree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
-	fmt.Println(newTree.GetOrSet("key1", "newVal1"))
-	fmt.Println(newTree.GetOrSet("key6", "val6"))
+	fmt.Println(tree.GetOrSet("key1", "newVal1"))
+	fmt.Println(tree.GetOrSet("key6", "val6"))
 
-	// output:
+	// Output:
 	// val1
 	// val6
 }
 
 func ExampleBTree_GetOrSetFunc() {
-	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	tree := gtree.NewBTree(3, gutil.ComparatorString)
 	for i := 0; i < 6; i++ {
-		newTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+		tree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
-	fmt.Println(newTree.GetOrSetFunc("key1", func() interface{} {
+	fmt.Println(tree.GetOrSetFunc("key1", func() interface{} {
 		return "newVal1"
 	}))
-	fmt.Println(newTree.GetOrSetFunc("key6", func() interface{} {
+	fmt.Println(tree.GetOrSetFunc("key6", func() interface{} {
 		return "val6"
 	}))
 
-	// output:
+	// Output:
 	// val1
 	// val6
 }
 
 func ExampleBTree_GetOrSetFuncLock() {
-	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	tree := gtree.NewBTree(3, gutil.ComparatorString)
 	for i := 0; i < 6; i++ {
-		newTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+		tree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
-	fmt.Println(newTree.GetOrSetFuncLock("key1", func() interface{} {
+	fmt.Println(tree.GetOrSetFuncLock("key1", func() interface{} {
 		return "newVal1"
 	}))
-	fmt.Println(newTree.GetOrSetFuncLock("key6", func() interface{} {
+	fmt.Println(tree.GetOrSetFuncLock("key6", func() interface{} {
 		return "val6"
 	}))
 
-	// output:
+	// Output:
 	// val1
 	// val6
 }
 
 func ExampleBTree_GetVar() {
-	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	tree := gtree.NewBTree(3, gutil.ComparatorString)
 	for i := 0; i < 6; i++ {
-		newTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+		tree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
-	fmt.Println(newTree.GetVar("key1"))
+	fmt.Println(tree.GetVar("key1").String())
 
-	// output:
+	// Output:
 	// val1
 }
 
 func ExampleBTree_GetVarOrSet() {
-	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	tree := gtree.NewBTree(3, gutil.ComparatorString)
 	for i := 0; i < 6; i++ {
-		newTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+		tree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
-	fmt.Println(newTree.GetVarOrSet("key1", "newVal1"))
-	fmt.Println(newTree.GetVarOrSet("key6", "val6"))
+	fmt.Println(tree.GetVarOrSet("key1", "newVal1"))
+	fmt.Println(tree.GetVarOrSet("key6", "val6"))
 
-	// output:
+	// Output:
 	// val1
 	// val6
 }
 
 func ExampleBTree_GetVarOrSetFunc() {
-	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	tree := gtree.NewBTree(3, gutil.ComparatorString)
 	for i := 0; i < 6; i++ {
-		newTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+		tree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
-	fmt.Println(newTree.GetVarOrSetFunc("key1", func() interface{} {
+	fmt.Println(tree.GetVarOrSetFunc("key1", func() interface{} {
 		return "newVal1"
 	}))
-	fmt.Println(newTree.GetVarOrSetFunc("key6", func() interface{} {
+	fmt.Println(tree.GetVarOrSetFunc("key6", func() interface{} {
 		return "val6"
 	}))
 
-	// output:
+	// Output:
 	// val1
 	// val6
 }
 
 func ExampleBTree_GetVarOrSetFuncLock() {
-	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	tree := gtree.NewBTree(3, gutil.ComparatorString)
 	for i := 0; i < 6; i++ {
-		newTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+		tree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
-	fmt.Println(newTree.GetVarOrSetFuncLock("key1", func() interface{} {
+	fmt.Println(tree.GetVarOrSetFuncLock("key1", func() interface{} {
 		return "newVal1"
 	}))
-	fmt.Println(newTree.GetVarOrSetFuncLock("key6", func() interface{} {
+	fmt.Println(tree.GetVarOrSetFuncLock("key6", func() interface{} {
 		return "val6"
 	}))
 
-	// output:
+	// Output:
 	// val1
 	// val6
 }
 
 func ExampleBTree_SetIfNotExist() {
-	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	tree := gtree.NewBTree(3, gutil.ComparatorString)
 	for i := 0; i < 6; i++ {
-		newTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+		tree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
-	fmt.Println(newTree.SetIfNotExist("key1", "newVal1"))
-	fmt.Println(newTree.SetIfNotExist("key6", "val6"))
+	fmt.Println(tree.SetIfNotExist("key1", "newVal1"))
+	fmt.Println(tree.SetIfNotExist("key6", "val6"))
 
-	// output:
+	// Output:
 	// false
 	// true
 }
 
 func ExampleBTree_SetIfNotExistFunc() {
-	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	tree := gtree.NewBTree(3, gutil.ComparatorString)
 	for i := 0; i < 6; i++ {
-		newTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+		tree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
-	fmt.Println(newTree.SetIfNotExistFunc("key1", func() interface{} {
+	fmt.Println(tree.SetIfNotExistFunc("key1", func() interface{} {
 		return "newVal1"
 	}))
-	fmt.Println(newTree.SetIfNotExistFunc("key6", func() interface{} {
+	fmt.Println(tree.SetIfNotExistFunc("key6", func() interface{} {
 		return "val6"
 	}))
 
-	// output:
+	// Output:
 	// false
 	// true
 }
 
 func ExampleBTree_SetIfNotExistFuncLock() {
-	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	tree := gtree.NewBTree(3, gutil.ComparatorString)
 	for i := 0; i < 6; i++ {
-		newTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+		tree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
-	fmt.Println(newTree.SetIfNotExistFuncLock("key1", func() interface{} {
+	fmt.Println(tree.SetIfNotExistFuncLock("key1", func() interface{} {
 		return "newVal1"
 	}))
-	fmt.Println(newTree.SetIfNotExistFuncLock("key6", func() interface{} {
+	fmt.Println(tree.SetIfNotExistFuncLock("key6", func() interface{} {
 		return "val6"
 	}))
 
-	// output:
+	// Output:
 	// false
 	// true
 }
 
 func ExampleBTree_Contains() {
-	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	tree := gtree.NewBTree(3, gutil.ComparatorString)
 	for i := 0; i < 6; i++ {
-		newTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+		tree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
-	fmt.Println(newTree.Contains("key1"))
-	fmt.Println(newTree.Contains("key6"))
+	fmt.Println(tree.Contains("key1"))
+	fmt.Println(tree.Contains("key6"))
 
-	// output:
+	// Output:
 	// true
 	// false
 }
 
 func ExampleBTree_Remove() {
-	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	tree := gtree.NewBTree(3, gutil.ComparatorString)
 	for i := 0; i < 6; i++ {
-		newTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+		tree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
-	fmt.Println(newTree.Remove("key1"))
-	fmt.Println(newTree.Remove("key6"))
-	fmt.Println(newTree.Map())
+	fmt.Println(tree.Remove("key1"))
+	fmt.Println(tree.Remove("key6"))
+	fmt.Println(tree.Map())
 
-	// output:
+	// Output:
 	// val1
 	// <nil>
 	// map[key0:val0 key2:val2 key3:val3 key4:val4 key5:val5]
 }
 
 func ExampleBTree_Removes() {
-	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	tree := gtree.NewBTree(3, gutil.ComparatorString)
 	for i := 0; i < 6; i++ {
-		newTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+		tree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
 	removeKeys := make([]interface{}, 2)
 	removeKeys = append(removeKeys, "key1")
 	removeKeys = append(removeKeys, "key6")
 
-	newTree.Removes(removeKeys)
+	tree.Removes(removeKeys)
 
-	fmt.Println(newTree.Map())
+	fmt.Println(tree.Map())
 
-	// output:
+	// Output:
 	// map[key0:val0 key2:val2 key3:val3 key4:val4 key5:val5]
 }
 
 func ExampleBTree_IsEmpty() {
-	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	tree := gtree.NewBTree(3, gutil.ComparatorString)
 
-	fmt.Println(newTree.IsEmpty())
+	fmt.Println(tree.IsEmpty())
 
 	for i := 0; i < 6; i++ {
-		newTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+		tree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
-	fmt.Println(newTree.IsEmpty())
+	fmt.Println(tree.IsEmpty())
 
-	// output:
+	// Output:
 	// true
 	// false
 }
 
 func ExampleBTree_Size() {
-	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	tree := gtree.NewBTree(3, gutil.ComparatorString)
 
-	fmt.Println(newTree.Size())
+	fmt.Println(tree.Size())
 
 	for i := 0; i < 6; i++ {
-		newTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+		tree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
-	fmt.Println(newTree.Size())
+	fmt.Println(tree.Size())
 
-	// output:
+	// Output:
 	// 0
 	// 6
 }
 
 func ExampleBTree_Keys() {
-	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	tree := gtree.NewBTree(3, gutil.ComparatorString)
 	for i := 6; i > 0; i-- {
-		newTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+		tree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
-	fmt.Println(newTree.Keys())
+	fmt.Println(tree.Keys())
 
-	// output:
+	// Output:
 	// [key1 key2 key3 key4 key5 key6]
 }
 
 func ExampleBTree_Values() {
-	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	tree := gtree.NewBTree(3, gutil.ComparatorString)
 	for i := 6; i > 0; i-- {
-		newTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+		tree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
-	fmt.Println(newTree.Values())
+	fmt.Println(tree.Values())
 
-	// output:
+	// Output:
 	// [val1 val2 val3 val4 val5 val6]
 }
 
 func ExampleBTree_Map() {
-	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	tree := gtree.NewBTree(3, gutil.ComparatorString)
 	for i := 0; i < 6; i++ {
-		newTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+		tree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
-	fmt.Println(newTree.Map())
+	fmt.Println(tree.Map())
 
-	// output:
+	// Output:
 	// map[key0:val0 key1:val1 key2:val2 key3:val3 key4:val4 key5:val5]
 }
 
 func ExampleBTree_MapStrAny() {
-	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	tree := gtree.NewBTree(3, gutil.ComparatorString)
 	for i := 0; i < 6; i++ {
-		newTree.Set(1000+i, "val"+gconv.String(i))
+		tree.Set(1000+i, "val"+gconv.String(i))
 	}
 
-	fmt.Println(newTree.MapStrAny())
+	fmt.Println(tree.MapStrAny())
 
-	// output:
+	// Output:
 	// map[1000:val0 1001:val1 1002:val2 1003:val3 1004:val4 1005:val5]
 }
 
 func ExampleBTree_Clear() {
-	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	tree := gtree.NewBTree(3, gutil.ComparatorString)
 	for i := 0; i < 6; i++ {
-		newTree.Set(1000+i, "val"+gconv.String(i))
+		tree.Set(1000+i, "val"+gconv.String(i))
 	}
-	fmt.Println(newTree.Size())
+	fmt.Println(tree.Size())
 
-	newTree.Clear()
-	fmt.Println(newTree.Size())
+	tree.Clear()
+	fmt.Println(tree.Size())
 
-	// output:
+	// Output:
 	// 6
 	// 0
 }
 
 func ExampleBTree_Replace() {
-	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	tree := gtree.NewBTree(3, gutil.ComparatorString)
 	for i := 0; i < 6; i++ {
-		newTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+		tree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
-	fmt.Println(newTree.Map())
+	fmt.Println(tree.Map())
 
 	data := map[interface{}]interface{}{
 		"newKey0": "newVal0",
@@ -393,65 +393,65 @@ func ExampleBTree_Replace() {
 		"newKey2": "newVal2",
 	}
 
-	newTree.Replace(data)
+	tree.Replace(data)
 
-	fmt.Println(newTree.Map())
+	fmt.Println(tree.Map())
 
-	// output:
+	// Output:
 	// map[key0:val0 key1:val1 key2:val2 key3:val3 key4:val4 key5:val5]
 	// map[newKey0:newVal0 newKey1:newVal1 newKey2:newVal2]
 }
 
 func ExampleBTree_Height() {
-	newTree := gtree.NewBTree(3, gutil.ComparatorInt)
+	tree := gtree.NewBTree(3, gutil.ComparatorInt)
 	for i := 0; i < 100; i++ {
-		newTree.Set(i, i)
+		tree.Set(i, i)
 	}
-	fmt.Println(newTree.Height())
+	fmt.Println(tree.Height())
 
-	// output:
+	// Output:
 	// 6
 }
 
 func ExampleBTree_Left() {
-	newTree := gtree.NewBTree(3, gutil.ComparatorInt)
+	tree := gtree.NewBTree(3, gutil.ComparatorInt)
 	for i := 1; i < 100; i++ {
-		newTree.Set(i, i)
+		tree.Set(i, i)
 	}
-	fmt.Println(newTree.Left().Key, newTree.Left().Value)
+	fmt.Println(tree.Left().Key, tree.Left().Value)
 
 	emptyTree := gtree.NewBTree(3, gutil.ComparatorInt)
 	fmt.Println(emptyTree.Left())
 
-	// output:
+	// Output:
 	// 1 1
 	// <nil>
 }
 
 func ExampleBTree_Right() {
-	newTree := gtree.NewBTree(3, gutil.ComparatorInt)
+	tree := gtree.NewBTree(3, gutil.ComparatorInt)
 	for i := 1; i < 100; i++ {
-		newTree.Set(i, i)
+		tree.Set(i, i)
 	}
-	fmt.Println(newTree.Right().Key, newTree.Right().Value)
+	fmt.Println(tree.Right().Key, tree.Right().Value)
 
 	emptyTree := gtree.NewBTree(3, gutil.ComparatorInt)
 	fmt.Println(emptyTree.Left())
 
-	// output:
+	// Output:
 	// 99 99
 	// <nil>
 }
 
 func ExampleBTree_String() {
-	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	tree := gtree.NewBTree(3, gutil.ComparatorString)
 	for i := 0; i < 6; i++ {
-		newTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+		tree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
-	fmt.Println(newTree.String())
+	fmt.Println(tree.String())
 
-	// output:
+	// Output:
 	// key0
 	// key1
 	//     key2
@@ -461,28 +461,28 @@ func ExampleBTree_String() {
 }
 
 func ExampleBTree_Search() {
-	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	tree := gtree.NewBTree(3, gutil.ComparatorString)
 	for i := 0; i < 6; i++ {
-		newTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+		tree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
-	fmt.Println(newTree.Search("key0"))
-	fmt.Println(newTree.Search("key6"))
+	fmt.Println(tree.Search("key0"))
+	fmt.Println(tree.Search("key6"))
 
-	// output:
+	// Output:
 	// val0 true
 	// <nil> false
 }
 
 func ExampleBTree_Print() {
-	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	tree := gtree.NewBTree(3, gutil.ComparatorString)
 	for i := 0; i < 6; i++ {
-		newTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+		tree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
-	newTree.Print()
+	tree.Print()
 
-	// output:
+	// Output:
 	// key0
 	// key1
 	//     key2
@@ -492,13 +492,13 @@ func ExampleBTree_Print() {
 }
 
 func ExampleBTree_Iterator() {
-	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	tree := gtree.NewBTree(3, gutil.ComparatorString)
 	for i := 0; i < 10; i++ {
-		newTree.Set(i, 10-i)
+		tree.Set(i, 10-i)
 	}
 
 	var totalKey, totalValue int
-	newTree.Iterator(func(key, value interface{}) bool {
+	tree.Iterator(func(key, value interface{}) bool {
 		totalKey += key.(int)
 		totalValue += value.(int)
 
@@ -521,31 +521,25 @@ func ExampleBTree_IteratorFrom() {
 	tree := gtree.NewBTreeFrom(3, gutil.ComparatorInt, m)
 
 	tree.IteratorFrom(1, true, func(key, value interface{}) bool {
-		fmt.Println("key:", key)
-		fmt.Println("value:", value)
+		fmt.Println("key:", key, ", value:", value)
 		return true
 	})
 
 	// Output:
-	// key: 1
-	// value: 10
-	// key: 2
-	// value: 20
-	// key: 3
-	// value: 30
-	// key: 4
-	// value: 40
-	// key: 5
-	// value: 50
+	// key: 1 , value: 10
+	// key: 2 , value: 20
+	// key: 3 , value: 30
+	// key: 4 , value: 40
+	// key: 5 , value: 50
 }
 
 func ExampleBTree_IteratorAsc() {
-	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	tree := gtree.NewBTree(3, gutil.ComparatorString)
 	for i := 0; i < 10; i++ {
-		newTree.Set(i, 10-i)
+		tree.Set(i, 10-i)
 	}
 
-	newTree.IteratorAsc(func(key, value interface{}) bool {
+	tree.IteratorAsc(func(key, value interface{}) bool {
 		fmt.Println("key:", key, ", value:", value)
 		return true
 	})
@@ -619,12 +613,12 @@ func ExampleBTree_IteratorAscFrom_NoExistKeyAndMatchFalse() {
 }
 
 func ExampleBTree_IteratorDesc() {
-	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	tree := gtree.NewBTree(3, gutil.ComparatorString)
 	for i := 0; i < 10; i++ {
-		newTree.Set(i, 10-i)
+		tree.Set(i, 10-i)
 	}
 
-	newTree.IteratorDesc(func(key, value interface{}) bool {
+	tree.IteratorDesc(func(key, value interface{}) bool {
 		fmt.Println("key:", key, ", value:", value)
 		return true
 	})
@@ -663,16 +657,16 @@ func ExampleBTree_IteratorDescFrom() {
 }
 
 func ExampleBTree_MarshalJSON() {
-	newTree := gtree.NewBTree(3, gutil.ComparatorString)
+	tree := gtree.NewBTree(3, gutil.ComparatorString)
 	for i := 0; i < 6; i++ {
-		newTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+		tree.Set("key"+gconv.String(i), "val"+gconv.String(i))
 	}
 
-	bytes, err := json.Marshal(newTree)
+	bytes, err := json.Marshal(tree)
 	if err == nil {
 		fmt.Println(gconv.String(bytes))
 	}
 
-	// output:
+	// Output:
 	// {"key0":"val0","key1":"val1","key2":"val2","key3":"val3","key4":"val4","key5":"val5"}
 }
