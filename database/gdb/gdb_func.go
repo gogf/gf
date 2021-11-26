@@ -276,6 +276,7 @@ func doQuoteWord(s, charLeft, charRight string) string {
 
 // doQuoteString quotes string with quote chars.
 // For example, if quote char is '`':
+// "null"                             => "NULL"
 // "user"                             => "`user`"
 // "user u"                           => "`user` u"
 // "user,user_detail"                 => "`user`,`user_detail`"
@@ -289,7 +290,11 @@ func doQuoteString(s, charLeft, charRight string) string {
 		array2 := gstr.SplitAndTrim(v1, " ")
 		array3 := gstr.Split(gstr.Trim(array2[0]), ".")
 		if len(array3) == 1 {
-			array3[0] = doQuoteWord(array3[0], charLeft, charRight)
+			if strings.EqualFold(array3[0], "NULL") {
+				array3[0] = doQuoteWord(array3[0], "", "")
+			} else {
+				array3[0] = doQuoteWord(array3[0], charLeft, charRight)
+			}
 		} else if len(array3) >= 2 {
 			array3[0] = doQuoteWord(array3[0], charLeft, charRight)
 			// Note:
