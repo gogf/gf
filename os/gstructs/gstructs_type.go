@@ -48,10 +48,6 @@ func StructType(object interface{}) (*Type, error) {
 	}
 
 exitLoop:
-	for reflectKind == reflect.Ptr {
-		reflectValue = reflectValue.Elem()
-		reflectKind = reflectValue.Kind()
-	}
 	if reflectKind != reflect.Struct {
 		return nil, errors.New(
 			fmt.Sprintf(
