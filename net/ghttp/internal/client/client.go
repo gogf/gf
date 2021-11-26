@@ -32,7 +32,6 @@ import (
 type Client struct {
 	http.Client                         // Underlying HTTP Client.
 	dump              bool              // Mark this request will be dumped.
-	parent            *Client           // Parent http client, this is used for chaining operations.
 	header            map[string]string // Custom header map.
 	cookies           map[string]string // Custom cookie map.
 	prefix            string            // Prefix for request.
