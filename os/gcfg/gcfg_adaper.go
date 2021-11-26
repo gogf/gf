@@ -11,11 +11,11 @@ import "context"
 // Adapter is the interface for configuration retrieving.
 type Adapter interface {
 	// Available checks and returns the configuration service is available.
-	// The optional parameter `pattern` specifies certain configuration resource.
+	// The optional parameter `resource` specifies certain configuration resource.
 	//
 	// It returns true if configuration file is present in default AdapterFile, or else false.
 	// Note that this function does not return error as it just does simply check for backend configuration service.
-	Available(ctx context.Context, pattern ...string) (ok bool)
+	Available(ctx context.Context, resource ...string) (ok bool)
 
 	// Get retrieves and returns value by specified `pattern`.
 	Get(ctx context.Context, pattern string) (value interface{}, err error)
