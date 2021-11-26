@@ -1083,11 +1083,6 @@ func Test_Model_OrderBy(t *testing.T) {
 		t.Assert(len(result), TableSize)
 		t.Assert(result[0]["nickname"].String(), fmt.Sprintf("name_%d", TableSize))
 	})
-}
-
-func Test_Model_OrderBy_Null(t *testing.T) {
-	table := createInitTable()
-	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
 		result, err := db.Model(table).Order("NULL").All()
