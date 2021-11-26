@@ -78,12 +78,7 @@ func (oai *OpenApiV3) addPath(in addPathInput) error {
 	} else {
 		outputObject = reflect.New(reflectType.Out(0)).Elem()
 	}
-	for inputObject.Kind() == reflect.Ptr {
-		inputObject = inputObject.Elem()
-	}
-	for outputObject.Kind() == reflect.Ptr {
-		outputObject = outputObject.Elem()
-	}
+
 	var (
 		path                 = Path{}
 		inputMetaMap         = gmeta.Data(inputObject.Interface())

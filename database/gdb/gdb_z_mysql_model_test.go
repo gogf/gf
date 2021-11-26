@@ -1083,6 +1083,13 @@ func Test_Model_OrderBy(t *testing.T) {
 		t.Assert(len(result), TableSize)
 		t.Assert(result[0]["nickname"].String(), fmt.Sprintf("name_%d", TableSize))
 	})
+
+	gtest.C(t, func(t *gtest.T) {
+		result, err := db.Model(table).Order("NULL").All()
+		t.AssertNil(err)
+		t.Assert(len(result), TableSize)
+		t.Assert(result[0]["nickname"].String(), "name_1")
+	})
 }
 
 func Test_Model_GroupBy(t *testing.T) {
