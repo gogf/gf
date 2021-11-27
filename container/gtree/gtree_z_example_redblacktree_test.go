@@ -683,7 +683,7 @@ func ExampleRedBlackTree_String() {
 
 	fmt.Println(tree.String())
 
-	// May Output:
+	// Output:
 	// │           ┌── key5
 	// │       ┌── key4
 	// │   ┌── key3
@@ -700,7 +700,7 @@ func ExampleRedBlackTree_Print() {
 
 	tree.Print()
 
-	// May Output:
+	// Output:
 	// │           ┌── key5
 	// │       ┌── key4
 	// │   ┌── key3
