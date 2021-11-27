@@ -26,7 +26,7 @@ func (m *Model) QuoteWord(s string) string {
 	return m.db.GetCore().QuoteWord(s)
 }
 
-// TableFields retrieves and returns the fields information of specified table of current
+// TableFields retrieves and returns the fields' information of specified table of current
 // schema.
 //
 // Also see DriverMysql.TableFields.
@@ -57,8 +57,8 @@ func (m *Model) getModel() *Model {
 // ID        -> id
 // NICK_Name -> nickname.
 func (m *Model) mappingAndFilterToTableFields(fields []string, filter bool) []string {
-	fieldsMap, err := m.TableFields(m.tablesInit)
-	if err != nil || len(fieldsMap) == 0 {
+	fieldsMap, _ := m.TableFields(m.tablesInit)
+	if len(fieldsMap) == 0 {
 		return fields
 	}
 	var (

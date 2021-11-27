@@ -38,7 +38,7 @@ func (d *DriverMssql) New(core *Core, node *ConfigNode) (DB, error) {
 	}, nil
 }
 
-// Open creates and returns a underlying sql.DB object for mssql.
+// Open creates and returns an underlying sql.DB object for mssql.
 func (d *DriverMssql) Open(config *ConfigNode) (*sql.DB, error) {
 	source := ""
 	if config.Link != "" {
@@ -83,7 +83,7 @@ func (d *DriverMssql) DoCommit(ctx context.Context, link Link, sql string, args 
 		newSql, newArgs, err = d.Core.DoCommit(ctx, link, newSql, newArgs)
 	}()
 	var index int
-	// Convert place holder char '?' to string "@px".
+	// Convert placeholder char '?' to string "@px".
 	str, _ := gregex.ReplaceStringFunc("\\?", sql, func(s string) string {
 		index++
 		return fmt.Sprintf("@p%d", index)
@@ -219,19 +219,17 @@ func (d *DriverMssql) TableFields(ctx context.Context, table string, schema ...s
 	if len(schema) > 0 && schema[0] != "" {
 		useSchema = schema[0]
 	}
-	tableFieldsCacheKey := fmt.Sprintf(
-		`mssql_table_fields_%s_%s@group:%s`,
-		table, useSchema, d.GetGroup(),
-	)
-	v := tableFieldsMap.GetOrSetFuncLock(tableFieldsCacheKey, func() interface{} {
-		var (
-			result    Result
-			link, err = d.SlaveLink(useSchema)
-		)
-		if err != nil {
-			return nil
-		}
-		structureSql := fmt.Sprintf(`
+	v := tableFieldsMap.GetOrSetFuncLock(
+		fmt.Sprintf(`mssql_table_fields_%s_%s@group:%s`, table, useSchema, d.GetGroup()),
+		func() interface{} {
+			var (
+				result Result
+				link   Link
+			)
+			if link, err = d.SlaveLink(useSchema); err != nil {
+				return nil
+			}
+			structureSql := fmt.Sprintf(`
 SELECT 
 	a.name Field,
 	CASE b.name 
@@ -259,28 +257,29 @@ LEFT JOIN sys.extended_properties g ON a.id=g.major_id AND a.colid=g.minor_id
 LEFT JOIN sys.extended_properties f ON d.id=f.major_id AND f.minor_id =0
 WHERE d.name='%s'
 ORDER BY a.id,a.colorder`,
-			strings.ToUpper(table),
-		)
-		structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
-		result, err = d.DoGetAll(ctx, link, structureSql)
-		if err != nil {
-			return nil
-		}
-		fields = make(map[string]*TableField)
-		for i, m := range result {
-			fields[strings.ToLower(m["Field"].String())] = &TableField{
-				Index:   i,
-				Name:    strings.ToLower(m["Field"].String()),
-				Type:    strings.ToLower(m["Type"].String()),
-				Null:    m["Null"].Bool(),
-				Key:     m["Key"].String(),
-				Default: m["Default"].Val(),
-				Extra:   m["Extra"].String(),
-				Comment: m["Comment"].String(),
+				strings.ToUpper(table),
+			)
+			structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
+			result, err = d.DoGetAll(ctx, link, structureSql)
+			if err != nil {
+				return nil
 			}
-		}
-		return fields
-	})
+			fields = make(map[string]*TableField)
+			for i, m := range result {
+				fields[strings.ToLower(m["Field"].String())] = &TableField{
+					Index:   i,
+					Name:    strings.ToLower(m["Field"].String()),
+					Type:    strings.ToLower(m["Type"].String()),
+					Null:    m["Null"].Bool(),
+					Key:     m["Key"].String(),
+					Default: m["Default"].Val(),
+					Extra:   m["Extra"].String(),
+					Comment: m["Comment"].String(),
+				}
+			}
+			return fields
+		},
+	)
 	if v != nil {
 		fields = v.(map[string]*TableField)
 	}

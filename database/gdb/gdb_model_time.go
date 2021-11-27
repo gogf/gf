@@ -94,6 +94,7 @@ func (m *Model) getSoftFieldNameDeleted(table ...string) (field string) {
 
 // getSoftFieldName retrieves and returns the field name of the table for possible key.
 func (m *Model) getSoftFieldName(table string, keys []string) (field string) {
+	// Ignore the error from TableFields.
 	fieldsMap, _ := m.TableFields(table)
 	if len(fieldsMap) > 0 {
 		for _, key := range keys {

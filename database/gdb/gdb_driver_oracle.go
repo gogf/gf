@@ -193,15 +193,13 @@ func (d *DriverOracle) TableFields(ctx context.Context, table string, schema ...
 	if len(schema) > 0 && schema[0] != "" {
 		useSchema = schema[0]
 	}
-	tableFieldsCacheKey := fmt.Sprintf(
-		`oracle_table_fields_%s_%s@group:%s`,
-		table, useSchema, d.GetGroup(),
-	)
-	v := tableFieldsMap.GetOrSetFuncLock(tableFieldsCacheKey, func() interface{} {
-		var (
-			result       Result
-			link, err    = d.SlaveLink(useSchema)
-			structureSql = fmt.Sprintf(`
+	v := tableFieldsMap.GetOrSetFuncLock(
+		fmt.Sprintf(`oracle_table_fields_%s_%s@group:%s`, table, useSchema, d.GetGroup()),
+		func() interface{} {
+			var (
+				result       Result
+				link         Link
+				structureSql = fmt.Sprintf(`
 SELECT 
 	COLUMN_NAME AS FIELD, 
 	CASE DATA_TYPE  
@@ -209,27 +207,28 @@ SELECT
 	WHEN 'FLOAT' THEN DATA_TYPE||'('||DATA_PRECISION||','||DATA_SCALE||')' 
 	ELSE DATA_TYPE||'('||DATA_LENGTH||')' END AS TYPE  
 FROM USER_TAB_COLUMNS WHERE TABLE_NAME = '%s' ORDER BY COLUMN_ID`,
-				strings.ToUpper(table),
+					strings.ToUpper(table),
+				)
 			)
-		)
-		if err != nil {
-			return nil
-		}
-		structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
-		result, err = d.DoGetAll(ctx, link, structureSql)
-		if err != nil {
-			return nil
-		}
-		fields = make(map[string]*TableField)
-		for i, m := range result {
-			fields[strings.ToLower(m["FIELD"].String())] = &TableField{
-				Index: i,
-				Name:  strings.ToLower(m["FIELD"].String()),
-				Type:  strings.ToLower(m["TYPE"].String()),
+			if link, err = d.SlaveLink(useSchema); err != nil {
+				return nil
 			}
-		}
-		return fields
-	})
+			structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
+			result, err = d.DoGetAll(ctx, link, structureSql)
+			if err != nil {
+				return nil
+			}
+			fields = make(map[string]*TableField)
+			for i, m := range result {
+				fields[strings.ToLower(m["FIELD"].String())] = &TableField{
+					Index: i,
+					Name:  strings.ToLower(m["FIELD"].String()),
+					Type:  strings.ToLower(m["TYPE"].String()),
+				}
+			}
+			return fields
+		},
+	)
 	if v != nil {
 		fields = v.(map[string]*TableField)
 	}
