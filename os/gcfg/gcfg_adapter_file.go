@@ -37,10 +37,14 @@ const (
 )
 
 var (
-	supportedFileTypes     = []string{"toml", "yaml", "yml", "json", "ini", "xml"}         // All supported file types suffixes.
-	resourceTryFiles       = []string{"", "/", "config/", "config", "/config", "/config/"} // Prefix array for trying searching in resource manager.
-	localInstances         = gmap.NewStrAnyMap(true)                                       // Instances map containing configuration instances.
-	customConfigContentMap = gmap.NewStrStrMap(true)                                       // Customized configuration content.
+	supportedFileTypes     = []string{"toml", "yaml", "yml", "json", "ini", "xml"} // All supported file types suffixes.
+	localInstances         = gmap.NewStrAnyMap(true)                               // Instances map containing configuration instances.
+	customConfigContentMap = gmap.NewStrStrMap(true)                               // Customized configuration content.
+	// Prefix array for trying searching in resource manager.
+	resourceTryFiles = []string{
+		"", "/", "config/", "config", "/config", "/config/",
+		"manifest/config/", "manifest/config", "/manifest/config", "/manifest/config/",
+	}
 )
 
 // NewAdapterFile returns a new configuration management object.
