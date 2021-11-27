@@ -781,7 +781,7 @@ func output(node *AVLTreeNode, prefix string, isTail bool, str *string) {
 
 // MarshalJSON implements the interface MarshalJSON for json.Marshal.
 func (tree *AVLTree) MarshalJSON() ([]byte, error) {
-	return json.Marshal(tree.Map())
+	return json.Marshal(tree.MapStrAny())
 }
 
 // getComparator returns the comparator if it's previously set,

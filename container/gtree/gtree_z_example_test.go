@@ -14,11 +14,38 @@ import (
 )
 
 func ExampleNewAVLTree() {
+	avlTree := gtree.NewAVLTree(gutil.ComparatorString)
+	for i := 0; i < 6; i++ {
+		avlTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+	}
 
+	fmt.Println(avlTree)
+
+	// Output:
+	// │       ┌── key5
+	// │   ┌── key4
+	// └── key3
+	//     │   ┌── key2
+	//     └── key1
+	//         └── key0
 }
 
 func ExampleNewAVLTreeFrom() {
+	avlTree := gtree.NewAVLTree(gutil.ComparatorString)
+	for i := 0; i < 6; i++ {
+		avlTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+	}
 
+	otherAvlTree := gtree.NewAVLTreeFrom(gutil.ComparatorString, avlTree.Map())
+	fmt.Println(otherAvlTree)
+
+	// May Output:
+	// │   ┌── key5
+	// │   │   └── key4
+	// └── key3
+	//     │   ┌── key2
+	//     └── key1
+	//         └── key0
 }
 
 func ExampleNewBTree() {
@@ -46,9 +73,36 @@ func ExampleNewBTreeFrom() {
 }
 
 func ExampleNewRedBlackTree() {
+	rbTree := gtree.NewRedBlackTree(gutil.ComparatorString)
+	for i := 0; i < 6; i++ {
+		rbTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+	}
 
+	fmt.Println(rbTree)
+
+	// Output:
+	// │           ┌── key5
+	// │       ┌── key4
+	// │   ┌── key3
+	// │   │   └── key2
+	// └── key1
+	//     └── key0
 }
 
 func ExampleNewRedBlackTreeFrom() {
+	rbTree := gtree.NewRedBlackTree(gutil.ComparatorString)
+	for i := 0; i < 6; i++ {
+		rbTree.Set("key"+gconv.String(i), "val"+gconv.String(i))
+	}
 
+	otherRBTree := gtree.NewRedBlackTreeFrom(gutil.ComparatorString, rbTree.Map())
+	fmt.Println(otherRBTree)
+
+	// May Output:
+	// │           ┌── key5
+	// │       ┌── key4
+	// │   ┌── key3
+	// │   │   └── key2
+	// └── key1
+	//     └── key0
 }
