@@ -31,7 +31,7 @@ func New(lruCap ...int) *Cache {
 	}
 	// Here may be a "timer leak" if adapter is manually changed from memory adapter.
 	// Do not worry about this, as adapter is less changed, and it does nothing if it's not used.
-	gtimer.AddSingleton(context.Background(), time.Second, memAdapter.syncEventAndClearExpired)
+	gtimer.AddSingleton(context.Background(), time.Second, memAdapter.(*AdapterMemory).syncEventAndClearExpired)
 	return c
 }
 

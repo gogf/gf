@@ -12,6 +12,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/gogf/gf/v2/internal/command"
+	"github.com/gogf/gf/v2/util/gconv"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/propagation"
@@ -20,7 +22,6 @@ import (
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/net/gipv4"
-	"github.com/gogf/gf/v2/os/gcmd"
 )
 
 const (
@@ -44,8 +45,8 @@ var (
 )
 
 func init() {
-	tracingInternal = gcmd.GetOptWithEnv(commandEnvKeyForTracingInternal, true).Bool()
-	if maxContentLogSize := gcmd.GetOptWithEnv(commandEnvKeyForMaxContentLogSize).Int(); maxContentLogSize > 0 {
+	tracingInternal = gconv.Bool(command.GetOptWithEnv(commandEnvKeyForTracingInternal, "true"))
+	if maxContentLogSize := gconv.Int(command.GetOptWithEnv(commandEnvKeyForMaxContentLogSize)); maxContentLogSize > 0 {
 		tracingMaxContentLogSize = maxContentLogSize
 	}
 	CheckSetDefaultTextMapPropagator()

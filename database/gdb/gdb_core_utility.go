@@ -42,6 +42,10 @@ func (c *Core) SlaveLink(schema ...string) (Link, error) {
 //
 // The meaning of a `word` can be considered as a column name.
 func (c *Core) QuoteWord(s string) string {
+	s = gstr.Trim(s)
+	if s == "" {
+		return s
+	}
 	charLeft, charRight := c.db.GetChars()
 	return doQuoteWord(s, charLeft, charRight)
 }
@@ -83,7 +87,7 @@ func (c *Core) Tables(schema ...string) (tables []string, err error) {
 	return
 }
 
-// TableFields retrieves and returns the fields information of specified table of current schema.
+// TableFields retrieves and returns the fields' information of specified table of current schema.
 //
 // Note that it returns a map containing the field name and its corresponding fields.
 // As a map is unsorted, the TableField struct has a "Index" field marks its sequence in the fields.

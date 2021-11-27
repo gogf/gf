@@ -34,6 +34,7 @@ func (m *Model) Fields(fieldNamesOrMapStruct ...interface{}) *Model {
 			m.mappingAndFilterToTableFields(gconv.Strings(fieldNamesOrMapStruct), true),
 			",",
 		))
+
 	// It needs type asserting.
 	case length == 1:
 		structOrMap := fieldNamesOrMapStruct[0]
@@ -80,7 +81,10 @@ func (m *Model) FieldsEx(fieldNamesOrMapStruct ...interface{}) *Model {
 	model := m.getModel()
 	switch {
 	case length >= 2:
-		model.fieldsEx = gstr.Join(m.mappingAndFilterToTableFields(gconv.Strings(fieldNamesOrMapStruct), true), ",")
+		model.fieldsEx = gstr.Join(
+			m.mappingAndFilterToTableFields(gconv.Strings(fieldNamesOrMapStruct), true),
+			",",
+		)
 		return model
 	case length == 1:
 		switch r := fieldNamesOrMapStruct[0].(type) {

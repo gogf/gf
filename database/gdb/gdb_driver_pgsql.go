@@ -86,7 +86,7 @@ func (d *DriverPgsql) DoCommit(ctx context.Context, link Link, sql string, args 
 	}()
 
 	var index int
-	// Convert place holder char '?' to string "$x".
+	// Convert placeholder char '?' to string "$x".
 	sql, _ = gregex.ReplaceStringFunc("\\?", sql, func(s string) string {
 		index++
 		return fmt.Sprintf("$%d", index)
@@ -119,7 +119,7 @@ func (d *DriverPgsql) Tables(ctx context.Context, schema ...string) (tables []st
 	return
 }
 
-// TableFields retrieves and returns the fields information of specified table of current schema.
+// TableFields retrieves and returns the fields' information of specified table of current schema.
 //
 // Also see DriverMysql.TableFields.
 func (d *DriverPgsql) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*TableField, err error) {
@@ -133,15 +133,13 @@ func (d *DriverPgsql) TableFields(ctx context.Context, table string, schema ...s
 	if len(schema) > 0 && schema[0] != "" {
 		useSchema = schema[0]
 	}
-	tableFieldsCacheKey := fmt.Sprintf(
-		`pgsql_table_fields_%s_%s@group:%s`,
-		table, useSchema, d.GetGroup(),
-	)
-	v := tableFieldsMap.GetOrSetFuncLock(tableFieldsCacheKey, func() interface{} {
-		var (
-			result       Result
-			link, err    = d.SlaveLink(useSchema)
-			structureSql = fmt.Sprintf(`
+	v := tableFieldsMap.GetOrSetFuncLock(
+		fmt.Sprintf(`pgsql_table_fields_%s_%s@group:%s`, table, useSchema, d.GetGroup()),
+		func() interface{} {
+			var (
+				result       Result
+				link         Link
+				structureSql = fmt.Sprintf(`
 SELECT a.attname AS field, t.typname AS type,a.attnotnull as null,
     (case when d.contype is not null then 'pri' else '' end)  as key
       ,ic.column_default as default_value,b.description as comment
@@ -155,31 +153,32 @@ FROM pg_attribute a
          left join information_schema.columns ic on ic.column_name = a.attname and ic.table_name = c.relname
 WHERE c.relname = '%s' and a.attnum > 0
 ORDER BY a.attnum`,
-				strings.ToLower(table),
+					strings.ToLower(table),
+				)
 			)
-		)
-		if err != nil {
-			return nil
-		}
-		structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
-		result, err = d.DoGetAll(ctx, link, structureSql)
-		if err != nil {
-			return nil
-		}
-		fields = make(map[string]*TableField)
-		for i, m := range result {
-			fields[m["field"].String()] = &TableField{
-				Index:   i,
-				Name:    m["field"].String(),
-				Type:    m["type"].String(),
-				Null:    m["null"].Bool(),
-				Key:     m["key"].String(),
-				Default: m["default_value"].Val(),
-				Comment: m["comment"].String(),
+			if link, err = d.SlaveLink(useSchema); err != nil {
+				return nil
 			}
-		}
-		return fields
-	})
+			structureSql, _ = gregex.ReplaceString(`[\n\r\s]+`, " ", gstr.Trim(structureSql))
+			result, err = d.DoGetAll(ctx, link, structureSql)
+			if err != nil {
+				return nil
+			}
+			fields = make(map[string]*TableField)
+			for i, m := range result {
+				fields[m["field"].String()] = &TableField{
+					Index:   i,
+					Name:    m["field"].String(),
+					Type:    m["type"].String(),
+					Null:    m["null"].Bool(),
+					Key:     m["key"].String(),
+					Default: m["default_value"].Val(),
+					Comment: m["comment"].String(),
+				}
+			}
+			return fields
+		},
+	)
 	if v != nil {
 		fields = v.(map[string]*TableField)
 	}

@@ -227,10 +227,10 @@ type TableField struct {
 	Name    string      // Field name.
 	Type    string      // Field type.
 	Null    bool        // Field can be null or not.
-	Key     string      // The index information(empty if it's not a index).
+	Key     string      // The index information(empty if it's not an index).
 	Default interface{} // Default value for the field.
 	Extra   string      // Extra information.
-	Comment string      // Comment.
+	Comment string      // Field comment.
 }
 
 // Counter  is the type for update count.

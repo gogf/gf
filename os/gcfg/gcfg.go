@@ -54,7 +54,10 @@ func NewWithAdapter(adapter Adapter) *Config {
 // exists in the configuration directory, it then sets it as the default configuration file. The
 // toml file type is the default configuration file type.
 func Instance(name ...string) *Config {
-	key := DefaultName
+	var (
+		ctx = context.TODO()
+		key = DefaultName
+	)
 	if len(name) > 0 && name[0] != "" {
 		key = name[0]
 	}
@@ -67,9 +70,9 @@ func Instance(name ...string) *Config {
 		// If it's not using default configuration or its configuration file is not available,
 		// it searches the possible configuration file according to the name and all supported
 		// file types.
-		if key != DefaultName || !adapter.Available() {
+		if key != DefaultName || !adapter.Available(ctx) {
 			for _, fileType := range supportedFileTypes {
-				if file := fmt.Sprintf(`%s.%s`, key, fileType); adapter.Available(file) {
+				if file := fmt.Sprintf(`%s.%s`, key, fileType); adapter.Available(ctx, file) {
 					adapter.SetFileName(file)
 					break
 				}
@@ -87,6 +90,15 @@ func (c *Config) SetAdapter(adapter Adapter) {
 // GetAdapter returns the adapter of current Config object.
 func (c *Config) GetAdapter() Adapter {
 	return c.adapter
+}
+
+// Available checks and returns the configuration service is available.
+// The optional parameter `pattern` specifies certain configuration resource.
+//
+// It returns true if configuration file is present in default AdapterFile, or else false.
+// Note that this function does not return error as it just does simply check for backend configuration service.
+func (c *Config) Available(ctx context.Context, resource ...string) (ok bool) {
+	return c.adapter.Available(ctx, resource...)
 }
 
 // Set sets value with specified `pattern`.
