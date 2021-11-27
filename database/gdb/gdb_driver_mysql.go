@@ -128,37 +128,36 @@ func (d *DriverMysql) TableFields(ctx context.Context, table string, schema ...s
 	if len(schema) > 0 && schema[0] != "" {
 		useSchema = schema[0]
 	}
-	tableFieldsCacheKey := fmt.Sprintf(
-		`mysql_table_fields_%s_%s@group:%s`,
-		table, useSchema, d.GetGroup(),
-	)
-	v := tableFieldsMap.GetOrSetFuncLock(tableFieldsCacheKey, func() interface{} {
-		var (
-			result    Result
-			link, err = d.SlaveLink(useSchema)
-		)
-		if err != nil {
-			return nil
-		}
-		result, err = d.DoGetAll(ctx, link, fmt.Sprintf(`SHOW FULL COLUMNS FROM %s`, d.QuoteWord(table)))
-		if err != nil {
-			return nil
-		}
-		fields = make(map[string]*TableField)
-		for i, m := range result {
-			fields[m["Field"].String()] = &TableField{
-				Index:   i,
-				Name:    m["Field"].String(),
-				Type:    m["Type"].String(),
-				Null:    m["Null"].Bool(),
-				Key:     m["Key"].String(),
-				Default: m["Default"].Val(),
-				Extra:   m["Extra"].String(),
-				Comment: m["Comment"].String(),
+	v := tableFieldsMap.GetOrSetFuncLock(
+		fmt.Sprintf(`mysql_table_fields_%s_%s@group:%s`, table, useSchema, d.GetGroup()),
+		func() interface{} {
+			var (
+				result Result
+				link   Link
+			)
+			if link, err = d.SlaveLink(useSchema); err != nil {
+				return nil
 			}
-		}
-		return fields
-	})
+			result, err = d.DoGetAll(ctx, link, fmt.Sprintf(`SHOW FULL COLUMNS FROM %s`, d.QuoteWord(table)))
+			if err != nil {
+				return nil
+			}
+			fields = make(map[string]*TableField)
+			for i, m := range result {
+				fields[m["Field"].String()] = &TableField{
+					Index:   i,
+					Name:    m["Field"].String(),
+					Type:    m["Type"].String(),
+					Null:    m["Null"].Bool(),
+					Key:     m["Key"].String(),
+					Default: m["Default"].Val(),
+					Extra:   m["Extra"].String(),
+					Comment: m["Comment"].String(),
+				}
+			}
+			return fields
+		},
+	)
 	if v != nil {
 		fields = v.(map[string]*TableField)
 	}

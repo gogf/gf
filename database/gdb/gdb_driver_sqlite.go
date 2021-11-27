@@ -93,7 +93,7 @@ func (d *DriverSqlite) Tables(ctx context.Context, schema ...string) (tables []s
 	return
 }
 
-// TableFields retrieves and returns the fields information of specified table of current schema.
+// TableFields retrieves and returns the fields' information of specified table of current schema.
 //
 // Also see DriverMysql.TableFields.
 func (d *DriverSqlite) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*TableField, err error) {
@@ -106,32 +106,31 @@ func (d *DriverSqlite) TableFields(ctx context.Context, table string, schema ...
 	if len(schema) > 0 && schema[0] != "" {
 		useSchema = schema[0]
 	}
-	tableFieldsCacheKey := fmt.Sprintf(
-		`sqlite_table_fields_%s_%s@group:%s`,
-		table, useSchema, d.GetGroup(),
-	)
-	v := tableFieldsMap.GetOrSetFuncLock(tableFieldsCacheKey, func() interface{} {
-		var (
-			result    Result
-			link, err = d.SlaveLink(useSchema)
-		)
-		if err != nil {
-			return nil
-		}
-		result, err = d.DoGetAll(ctx, link, fmt.Sprintf(`PRAGMA TABLE_INFO(%s)`, table))
-		if err != nil {
-			return nil
-		}
-		fields = make(map[string]*TableField)
-		for i, m := range result {
-			fields[strings.ToLower(m["name"].String())] = &TableField{
-				Index: i,
-				Name:  strings.ToLower(m["name"].String()),
-				Type:  strings.ToLower(m["type"].String()),
+	v := tableFieldsMap.GetOrSetFuncLock(
+		fmt.Sprintf(`sqlite_table_fields_%s_%s@group:%s`, table, useSchema, d.GetGroup()),
+		func() interface{} {
+			var (
+				result Result
+				link   Link
+			)
+			if link, err = d.SlaveLink(useSchema); err != nil {
+				return nil
 			}
-		}
-		return fields
-	})
+			result, err = d.DoGetAll(ctx, link, fmt.Sprintf(`PRAGMA TABLE_INFO(%s)`, table))
+			if err != nil {
+				return nil
+			}
+			fields = make(map[string]*TableField)
+			for i, m := range result {
+				fields[strings.ToLower(m["name"].String())] = &TableField{
+					Index: i,
+					Name:  strings.ToLower(m["name"].String()),
+					Type:  strings.ToLower(m["type"].String()),
+				}
+			}
+			return fields
+		},
+	)
 	if v != nil {
 		fields = v.(map[string]*TableField)
 	}

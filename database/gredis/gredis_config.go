@@ -20,7 +20,7 @@ import (
 
 // Config is redis configuration.
 type Config struct {
-	Address         string        `json:"address"`         // It supports single and cluster redis server. Multiple addresses joined with char ','.
+	Address         string        `json:"address"`         // It supports single and cluster redis server. Multiple addresses joined with char ','. Eg: 192.168.1.1:6379, 192.168.1.2:6379.
 	Db              int           `json:"db"`              // Redis db.
 	Pass            string        `json:"pass"`            // Password for AUTH.
 	MinIdle         int           `json:"minIdle"`         // Minimum number of connections allowed to be idle (default is 0)
