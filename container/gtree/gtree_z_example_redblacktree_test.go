@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with gm file,
-// You can obtain one at https://github.com/Agogf/gf.
+// You can obtain one at https://github.com/gogf/gf.
 
 package gtree_test
 
@@ -543,7 +543,7 @@ func ExampleRedBlackTree_IteratorAsc() {
 	// key: 9 , value: 1
 }
 
-func ExampleRedBlackTree_IteratorAscFrom_normal() {
+func ExampleRedBlackTree_IteratorAscFrom_Normal() {
 	m := make(map[interface{}]interface{})
 	for i := 1; i <= 5; i++ {
 		m[i] = i * 10
@@ -563,7 +563,7 @@ func ExampleRedBlackTree_IteratorAscFrom_normal() {
 	// key: 5 , value: 50
 }
 
-func ExampleRedBlackTree_IteratorAscFrom_noExistKey() {
+func ExampleRedBlackTree_IteratorAscFrom_NoExistKey() {
 	m := make(map[interface{}]interface{})
 	for i := 1; i <= 5; i++ {
 		m[i] = i * 10
@@ -578,7 +578,7 @@ func ExampleRedBlackTree_IteratorAscFrom_noExistKey() {
 	// Output:
 }
 
-func ExampleRedBlackTree_IteratorAscFrom_noExistKeyAndMatchFalse() {
+func ExampleRedBlackTree_IteratorAscFrom_NoExistKeyAndMatchFalse() {
 	m := make(map[interface{}]interface{})
 	for i := 1; i <= 5; i++ {
 		m[i] = i * 10
