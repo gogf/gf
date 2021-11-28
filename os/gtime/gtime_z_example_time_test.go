@@ -468,8 +468,8 @@ func ExampleTime_EndOfYear() {
 
 func ExampleTime_MarshalJSON() {
 	type Person struct {
-		Name string		`json:"name"`
-		Birthday *gtime.Time	`json:"birthday"`
+		Name     string      `json:"name"`
+		Birthday *gtime.Time `json:"birthday"`
 	}
 	p := new(Person)
 	p.Name = "goframe"
@@ -483,8 +483,8 @@ func ExampleTime_MarshalJSON() {
 
 func ExampleTime_UnmarshalJSON() {
 	type Person struct {
-		Name string		`json:"name"`
-		Birthday *gtime.Time	`json:"birthday"`
+		Name     string      `json:"name"`
+		Birthday *gtime.Time `json:"birthday"`
 	}
 	p := new(Person)
 	src := `{"name":"goframe","birthday":"2018-08-08 08:08:08"}`
