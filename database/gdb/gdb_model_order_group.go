@@ -30,8 +30,8 @@ func (m *Model) Order(orderBy ...string) *Model {
 //
 // Eg:
 // OrderRaw("NULL")
-// OrderRaw("field(id, 3,2,1)")
-// OrderRaw("a + b desc")
+// OrderRaw("FIELD(id, 3,2,1)")
+// OrderRaw("a + b DESC")
 func (m *Model) OrderRaw(orderBy string) *Model {
 	if len(orderBy) == 0 {
 		return m
