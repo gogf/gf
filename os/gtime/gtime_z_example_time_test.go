@@ -8,7 +8,7 @@ package gtime_test
 
 import (
 	"fmt"
-	"json"
+	"encoding/json"
 	"reflect"
 	"time"
 
