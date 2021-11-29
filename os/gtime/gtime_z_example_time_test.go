@@ -479,7 +479,7 @@ func ExampleTime_MarshalJSON() {
 	fmt.Println(string(j))
 
 	// Output:
-	// {"name":"xiaoming","birthday":"2018-08-08 08:08:08"}
+	// {"name":"goframe","birthday":"2018-08-08 08:08:08"}
 }
 
 func ExampleTime_UnmarshalJSON() {
