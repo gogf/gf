@@ -26,6 +26,24 @@ func (m *Model) Order(orderBy ...string) *Model {
 	return model
 }
 
+// OrderRaw sets the "ORDER BY" statement for the model;
+//
+// Eg:
+// OrderRaw("NULL")
+// OrderRaw("field(id, 3,2,1)")
+// OrderRaw("a + b desc")
+func (m *Model) OrderRaw(orderBy string) *Model {
+	if len(orderBy) == 0 {
+		return m
+	}
+	model := m.getModel()
+	if model.orderBy != "" {
+		model.orderBy += ","
+	}
+	model.orderBy = orderBy
+	return model
+}
+
 // OrderAsc sets the "ORDER BY xxx ASC" statement for the model.
 func (m *Model) OrderAsc(column string) *Model {
 	if len(column) == 0 {
