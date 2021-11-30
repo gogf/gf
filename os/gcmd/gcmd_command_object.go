@@ -228,7 +228,7 @@ func newCommandFromMethod(object interface{}, method reflect.Value) (command Com
 
 		// Parameters validation.
 		if err = gvalid.New().Bail().Data(inputObject.Interface()).Assoc(data).Run(ctx); err != nil {
-			err = gerror.Current(err)
+			err = gerror.Wrap(gerror.Current(err), `validation failed for command options`)
 			return
 		}
 		inputValues = append(inputValues, inputObject)
