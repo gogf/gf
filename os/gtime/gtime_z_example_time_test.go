@@ -492,6 +492,7 @@ func ExampleTime_UnmarshalJSON() {
 	json.Unmarshal([]byte(src), p)
 
 	fmt.Println(p)
+
 	// Output
 	// &{goframe 2018-08-08 08:08:08}
 }
