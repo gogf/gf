@@ -490,9 +490,8 @@ func ExampleTime_UnmarshalJSON() {
 	p := new(Person)
 	src := `{"name":"goframe","birthday":"2018-08-08 08:08:08"}`
 	json.Unmarshal([]byte(src), p)
-	js, _ := json.Marshal(p)
 
-	fmt.Println(string(js))
-	// Output:
-	// {"name":"goframe","birthday":"2018-08-08 08:08:08"}
+	fmt.Println(p)
+	// Output
+	// &{goframe 2018-08-08 08:08:08}
 }
