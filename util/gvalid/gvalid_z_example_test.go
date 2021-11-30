@@ -10,6 +10,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/v2/i18n/gi18n"
 	"math"
 	"reflect"
 
@@ -20,6 +21,161 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gvalid"
 )
+
+func ExampleNew() {
+	validator := gvalid.New()
+
+	if err := validator.Data(16).Rules("min:18").Run(context.Background()); err != nil {
+		fmt.Print(err)
+	}
+
+	// Output:
+	// The value `16` must be equal or greater than 18
+}
+
+func ExampleValidator_Run() {
+	// check value mode
+	if err := g.Validator().Data(16).Rules("min:18").Run(context.Background()); err != nil {
+		fmt.Println("check value err:", err)
+	}
+	// check map mode
+	data := map[string]interface{}{
+		"passport":  "",
+		"password":  "123456",
+		"password2": "1234567",
+	}
+	rules := map[string]string{
+		"passport":  "required|length:6,16",
+		"password":  "required|length:6,16|same:password2",
+		"password2": "required|length:6,16",
+	}
+	if err := g.Validator().Data(data).Rules(rules).Run(context.Background()); err != nil {
+		fmt.Println("check map err:", err)
+	}
+	// check struct mode
+	type Params struct {
+		Page      int    `v:"required|min:1"`
+		Size      int    `v:"required|between:1,100"`
+		ProjectId string `v:"between:1,10000"`
+	}
+	rules = map[string]string{
+		"Page":      "required|min:1",
+		"Size":      "required|between:1,100",
+		"ProjectId": "between:1,10000",
+	}
+	obj := &Params{
+		Page: 0,
+		Size: 101,
+	}
+	if err := g.Validator().Data(obj).Rules(rules).Run(context.Background()); err != nil {
+		fmt.Println("check struct err:", err)
+	}
+
+	// Output:
+	// check value err: The value `16` must be equal or greater than 18
+	// check map err: The passport field is required; The passport value `` length must be between 6 and 16; The password value `123456` must be the same as field password2
+	// check struct err: The Page value `0` must be equal or greater than 1; The Size value `101` must be between 1 and 100
+}
+
+func ExampleValidator_Clone() {
+	if err := g.Validator().Data(16).Rules("min:18").Run(context.Background()); err != nil {
+		fmt.Println(err)
+	}
+
+	if err := g.Validator().Clone().Data(20).Run(context.Background()); err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println("Check Success!")
+	}
+
+	// Output:
+	// The value `16` must be equal or greater than 18
+	// Check Success!
+}
+
+func ExampleValidator_I18n() {
+	var (
+		i18nManager = gi18n.New()
+		ctxCn       = gi18n.WithLanguage(context.Background(), "cn")
+		validator   = gvalid.New()
+	)
+
+	validator = validator.Data(16).Rules("min:18")
+
+	if err := validator.Run(context.Background()); err != nil {
+		fmt.Println(err)
+	}
+
+	if err := validator.I18n(i18nManager).Run(ctxCn); err != nil {
+		fmt.Println(err)
+	}
+
+	// Output:
+	// The value `16` must be equal or greater than 18
+	// 字段值`16`字段最小值应当为18
+}
+
+func ExampleValidator_Bail() {
+	type BizReq struct {
+		Account   string `v:"bail|required|length:6,16|same:QQ"`
+		QQ        string
+		Password  string `v:"required|same:Password2"`
+		Password2 string `v:"required"`
+	}
+	var (
+		ctx = context.Background()
+		req = BizReq{
+			Account:   "gf",
+			QQ:        "123456",
+			Password:  "goframe.org",
+			Password2: "goframe.org",
+		}
+	)
+	if err := g.Validator().Data(req).Run(ctx); err != nil {
+		fmt.Println(err)
+	}
+
+	// output:
+	// The Account value `gf` length must be between 6 and 16
+}
+
+func ExampleValidator_Ci() {
+
+}
+
+func ExampleValidator_Data() {
+
+}
+
+func ExampleValidator_Assoc() {
+
+}
+
+func ExampleValidator_Rules() {
+	data := g.Map{
+		"password": "123",
+	}
+	err := g.Validator().Data("").Assoc(data).
+		Rules("required-with:password").
+		Messages("请输入确认密码").
+		Run(gctx.New())
+	fmt.Println(err.String())
+
+	// Output:
+	// 请输入确认密码
+}
+
+func ExampleValidator_Messages() {
+
+}
+
+func ExampleValidator_RuleFunc() {
+
+}
+
+func ExampleValidator_RuleFuncMap() {
+
+}
 
 func ExampleCheckMap() {
 	params := map[string]interface{}{
@@ -193,20 +349,6 @@ func ExampleRegisterRule_OverwriteRequired() {
 	// It's required
 	// <nil>
 	// <nil>
-}
-
-func ExampleValidator_Rules() {
-	data := g.Map{
-		"password": "123",
-	}
-	err := g.Validator().Data("").Assoc(data).
-		Rules("required-with:password").
-		Messages("请输入确认密码").
-		Run(gctx.New())
-	fmt.Println(err.String())
-
-	// Output:
-	// 请输入确认密码
 }
 
 func ExampleValidator_CheckValue() {
@@ -440,30 +582,6 @@ func ExampleValidator_RequiredWithoutAll() {
 
 	// Output:
 	// The HusbandName field is required
-}
-
-func ExampleValidator_Bail() {
-	type BizReq struct {
-		Account   string `v:"bail|required|length:6,16|same:QQ"`
-		QQ        string
-		Password  string `v:"required|same:Password2"`
-		Password2 string `v:"required"`
-	}
-	var (
-		ctx = context.Background()
-		req = BizReq{
-			Account:   "gf",
-			QQ:        "123456",
-			Password:  "goframe.org",
-			Password2: "goframe.org",
-		}
-	)
-	if err := g.Validator().Data(req).Run(ctx); err != nil {
-		fmt.Println(err)
-	}
-
-	// output:
-	// The Account value `gf` length must be between 6 and 16
 }
 
 func ExampleValidator_CaseInsensitive() {
