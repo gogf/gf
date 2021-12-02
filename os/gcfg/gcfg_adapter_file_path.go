@@ -168,15 +168,18 @@ func (c *AdapterFile) GetFilePath(fileName ...string) (path string, err error) {
 		})
 	}
 	c.autoCheckAndAddMainPkgPathToSearchPaths()
-	// Searching the file system.
+	// Searching local file system.
 	c.searchPaths.RLockFunc(func(array []string) {
 		for _, prefix := range array {
 			prefix = gstr.TrimRight(prefix, `\/`)
-			if path, _ = gspath.Search(prefix, usedFileName); path != "" {
-				return
-			}
-			if path, _ = gspath.Search(prefix+gfile.Separator+"config", usedFileName); path != "" {
-				return
+			for _, tryFile := range localSystemTryFiles {
+				relativePath := gstr.TrimRight(
+					gfile.Join(tryFile, usedFileName),
+					`\/`,
+				)
+				if path, _ = gspath.Search(prefix, relativePath); path != "" {
+					return
+				}
 			}
 		}
 	})
@@ -192,12 +195,13 @@ func (c *AdapterFile) GetFilePath(fileName ...string) (path string, err error) {
 			))
 			c.searchPaths.RLockFunc(func(array []string) {
 				index := 1
-				for _, v := range array {
-					v = gstr.TrimRight(v, `\/`)
-					buffer.WriteString(fmt.Sprintf("\n%d. %s", index, v))
-					index++
-					buffer.WriteString(fmt.Sprintf("\n%d. %s", index, v+gfile.Separator+"config"))
-					index++
+				for _, prefix := range array {
+					prefix = gstr.TrimRight(prefix, `\/`)
+					for _, tryFile := range localSystemTryFiles {
+						prefixPath := gfile.Join(prefix, tryFile)
+						buffer.WriteString(fmt.Sprintf("\n%d. %s", index, prefixPath))
+						index++
+					}
 				}
 			})
 		} else {
