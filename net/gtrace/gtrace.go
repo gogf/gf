@@ -12,16 +12,17 @@ import (
 	"os"
 	"strings"
 
-	"github.com/gogf/gf/v2/internal/command"
-	"github.com/gogf/gf/v2/util/gconv"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/propagation"
+	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/internal/command"
 	"github.com/gogf/gf/v2/net/gipv4"
+	"github.com/gogf/gf/v2/util/gconv"
 )
 
 const (
@@ -68,6 +69,7 @@ func CommonLabels() []attribute.KeyValue {
 	return []attribute.KeyValue{
 		attribute.String(tracingCommonKeyIpHostname, hostname),
 		attribute.String(tracingCommonKeyIpIntranet, intranetIpStr),
+		semconv.HostNameKey.String(hostname),
 	}
 }
 
