@@ -266,12 +266,10 @@ func (s *cronSchedule) meet(t time.Time) bool {
 	}
 }
 
-// inspired by robfig/cron github.com/robfi/cron/v3@v3.0.0/spec.go
-// https://github.com/robfig/cron/blob/master/spec_test.go
+// Next returns the next time this schedule is activated, greater than the given
+// time.  If no time can be found to satisfy the schedule, return the zero time.
 func (s *cronSchedule) Next(t time.Time) time.Time {
-
 	if s.every != 0 {
-
 		diff := t.Unix() - s.create
 		cnt := diff/s.every + 1
 		return t.Add(time.Duration(cnt*s.every) * time.Second)
@@ -279,11 +277,11 @@ func (s *cronSchedule) Next(t time.Time) time.Time {
 
 	// Start at the earliest possible time (the upcoming second).
 	t = t.Add(1*time.Second - time.Duration(t.Nanosecond())*time.Nanosecond)
-
-	loc := t.Location()
-	added := false
-	yearLimit := t.Year() + 5
-	// fmt.Printf("%+v \n", s)
+	var (
+		loc       = t.Location()
+		added     = false
+		yearLimit = t.Year() + 5
+	)
 
 WRAP:
 	if t.Year() > yearLimit {
@@ -302,7 +300,7 @@ WRAP:
 		}
 	}
 
-	for !s.dayMatcher(t) {
+	for !s.dayMatches(t) {
 		if !added {
 			added = true
 			t = time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, loc)
@@ -318,13 +316,10 @@ WRAP:
 				t = t.Add(time.Duration(-t.Hour()) * time.Hour)
 			}
 		}
-
-		// fmt.Printf("%v %v\n", t, t.Weekday())
 		if t.Day() == 1 {
 			goto WRAP
 		}
 	}
-
 	for !match(s.hour, t.Hour()) {
 		if !added {
 			added = true
@@ -336,7 +331,6 @@ WRAP:
 			goto WRAP
 		}
 	}
-
 	for !match(s.minute, t.Minute()) {
 		if !added {
 			added = true
@@ -348,28 +342,24 @@ WRAP:
 			goto WRAP
 		}
 	}
-
 	for !match(s.second, t.Second()) {
 		if !added {
 			added = true
 			t = t.Truncate(time.Second)
 		}
 		t = t.Add(1 * time.Second)
-
-		// fmt.Printf("%v\n", t)
 		if t.Second() == 0 {
 			goto WRAP
 		}
 	}
 	return t.In(loc)
-
 }
 
-func (s *cronSchedule) dayMatcher(t time.Time) bool {
-
+// dayMatches returns true if the schedule's day-of-week and day-of-month
+// restrictions are satisfied by the given time.
+func (s *cronSchedule) dayMatches(t time.Time) bool {
 	_, ok1 := s.day[t.Day()]
 	_, ok2 := s.week[int(t.Weekday())]
-
 	return ok1 && ok2
 }
 
