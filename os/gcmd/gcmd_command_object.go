@@ -26,6 +26,7 @@ import (
 const (
 	tagNameDc   = `dc`
 	tagNameAd   = `ad`
+	tagNameArgs = `args`
 	tagNameRoot = `root`
 )
 
@@ -113,6 +114,9 @@ func newCommandFromObjectMeta(object interface{}) (command Command, err error) {
 		)
 		return
 	}
+	if !command.NeedArgs {
+		command.NeedArgs = gconv.Bool(metaData[tagNameArgs])
+	}
 	if command.Description == "" {
 		command.Description = metaData[tagNameDc]
 	}
@@ -199,7 +203,7 @@ func newCommandFromMethod(object interface{}, method reflect.Value) (command Com
 
 	// Create function that has value return.
 	command.FuncWithValue = func(ctx context.Context, parser *Parser) (out interface{}, err error) {
-		ctx = context.WithValue(ctx, CtxKeyParser, command)
+		ctx = context.WithValue(ctx, CtxKeyParser, parser)
 
 		defer func() {
 			if exception := recover(); exception != nil {
