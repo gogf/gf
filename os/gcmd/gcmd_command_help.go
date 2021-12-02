@@ -17,8 +17,16 @@ import (
 
 // Print prints help info to stdout for current command.
 func (c *Command) Print() {
-	prefix := gstr.Repeat(" ", 4)
-	buffer := bytes.NewBuffer(nil)
+	var (
+		prefix  = gstr.Repeat(" ", 4)
+		buffer  = bytes.NewBuffer(nil)
+		options = make([]Option, len(c.Options))
+	)
+	// Copy options for printing.
+	copy(options, c.Options)
+	// Add built-in help option, just for info only.
+	options = append(options, defaultHelpOption)
+
 	// Usage.
 	if c.Usage != "" || c.Name != "" {
 		buffer.WriteString("USAGE\n")
@@ -66,13 +74,13 @@ func (c *Command) Print() {
 	}
 
 	// Option.
-	if len(c.Options) > 0 {
+	if len(options) > 0 {
 		buffer.WriteString("OPTION\n")
 		var (
 			nameStr        string
 			maxSpaceLength = 0
 		)
-		for _, option := range c.Options {
+		for _, option := range options {
 			if option.Short != "" {
 				nameStr = fmt.Sprintf("-%s,\t--%s", option.Short, option.Name)
 			} else {
@@ -82,7 +90,7 @@ func (c *Command) Print() {
 				maxSpaceLength = len(nameStr)
 			}
 		}
-		for _, option := range c.Options {
+		for _, option := range options {
 			if option.Short != "" {
 				nameStr = fmt.Sprintf("-%s,\t--%s", option.Short, option.Name)
 			} else {
@@ -126,8 +134,6 @@ func (c *Command) Print() {
 }
 
 func (c *Command) defaultHelpFunc(ctx context.Context, parser *Parser) error {
-	// Add built-in help option, just for info only.
-	c.Options = append(c.Options, defaultHelpOption)
 	// Print command help info to stdout.
 	c.Print()
 	return nil
