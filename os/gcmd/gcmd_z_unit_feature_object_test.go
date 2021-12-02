@@ -139,3 +139,47 @@ func Test_Command_RootTag(t *testing.T) {
 		t.Assert(value, `{"Content":"john"}`)
 	})
 }
+
+type TestObjectForNeedArgs struct {
+	g.Meta `name:"root" root:"root"`
+}
+
+type TestObjectForNeedArgsEnvInput struct {
+	g.Meta `name:"env" usage:"root env" brief:"root env command" dc:"root env command description" ad:"root env command ad"`
+}
+type TestObjectForNeedArgsEnvOutput struct{}
+
+type TestObjectForNeedArgsTestInput struct {
+	g.Meta `name:"test" args:"true"`
+	Name   string `v:"required" short:"n" orphan:"false" brief:"name for test command"`
+}
+type TestObjectForNeedArgsTestOutput struct {
+	Args []string
+}
+
+func (TestObjectForNeedArgs) Env(ctx context.Context, in TestObjectForNeedArgsEnvInput) (out *TestObjectForNeedArgsEnvOutput, err error) {
+	return
+}
+
+func (TestObjectForNeedArgs) Test(ctx context.Context, in TestObjectForNeedArgsTestInput) (out *TestObjectForNeedArgsTestOutput, err error) {
+	parser := gcmd.ParserFromCtx(ctx)
+	out = &TestObjectForNeedArgsTestOutput{
+		Args: parser.GetArgAll(),
+	}
+	return
+}
+
+func Test_Command_NeedArgs(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			ctx = gctx.New()
+		)
+		cmd, err := gcmd.NewFromObject(TestObjectForNeedArgs{})
+		t.AssertNil(err)
+
+		os.Args = []string{"root", "test", "a", "b", "c", "-n=john"}
+		value, err := cmd.RunWithValue(ctx)
+		t.AssertNil(err)
+		t.Assert(value, `{"Args":["root","test","a","b","c"]}`)
+	})
+}
