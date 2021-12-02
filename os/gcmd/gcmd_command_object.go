@@ -24,8 +24,9 @@ import (
 )
 
 const (
-	tagNameDc = `dc`
-	tagNameAd = `ad`
+	tagNameDc   = `dc`
+	tagNameAd   = `ad`
+	tagNameRoot = `root`
 )
 
 var (
@@ -50,8 +51,9 @@ func NewFromObject(object interface{}) (rootCmd Command, err error) {
 	}
 	// Sub command creating.
 	var (
-		nameSet     = gset.NewStrSet()
-		subCommands []Command
+		nameSet         = gset.NewStrSet()
+		rootCommandName = gmeta.Get(object, tagNameRoot).String()
+		subCommands     []Command
 	)
 	for i := 0; i < originValueAndKind.InputValue.NumMethod(); i++ {
 		var (
@@ -69,7 +71,19 @@ func NewFromObject(object interface{}) (rootCmd Command, err error) {
 			)
 			return
 		}
-		subCommands = append(subCommands, methodCommand)
+		if rootCommandName == methodCommand.Name {
+			if rootCmd.Func == nil {
+				rootCmd.Func = methodCommand.Func
+			}
+			if rootCmd.FuncWithValue == nil {
+				rootCmd.FuncWithValue = methodCommand.FuncWithValue
+			}
+			if len(rootCmd.Options) == 0 {
+				rootCmd.Options = methodCommand.Options
+			}
+		} else {
+			subCommands = append(subCommands, methodCommand)
+		}
 	}
 	if len(subCommands) > 0 {
 		err = rootCmd.AddCommand(subCommands...)
