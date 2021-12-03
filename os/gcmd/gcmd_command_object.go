@@ -26,6 +26,7 @@ import (
 const (
 	tagNameDc   = `dc`
 	tagNameAd   = `ad`
+	tagNameEg   = `eg`
 	tagNameArgs = `args`
 	tagNameRoot = `root`
 )
@@ -119,6 +120,9 @@ func newCommandFromObjectMeta(object interface{}) (command Command, err error) {
 	}
 	if command.Description == "" {
 		command.Description = metaData[tagNameDc]
+	}
+	if command.Examples == "" {
+		command.Examples = metaData[tagNameEg]
 	}
 	if command.Additional == "" {
 		command.Additional = metaData[tagNameAd]
