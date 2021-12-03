@@ -9,7 +9,7 @@ package ghttp
 import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/net/ghttp/internal/httputil"
+	"github.com/gogf/gf/v2/internal/httputil"
 )
 
 // BuildParams builds the request string for the http client. The `params` can be type of:
