@@ -216,7 +216,7 @@ func (r *Request) GetClientIp() string {
 func (r *Request) GetRemoteIp() string {
 	array, _ := gregex.MatchString(`(.+):(\d+)`, r.RemoteAddr)
 	if len(array) > 1 {
-		return array[1]
+		return strings.Trim(array[1], "[]")
 	}
 	return r.RemoteAddr
 }
