@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package ghttp_test
+package gclient_test
 
 import (
 	"bytes"
@@ -15,14 +15,29 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/gclient"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/guid"
+	"github.com/gorilla/websocket"
 )
+
+var (
+	ctx   = context.TODO()
+	ports = garray.NewIntArray(true)
+)
+
+func init() {
+	for i := 7000; i <= 8000; i++ {
+		ports.Append(i)
+	}
+}
 
 func Test_Client_Basic(t *testing.T) {
 	p, _ := ports.PopRand()
@@ -357,7 +372,7 @@ func Test_Client_Middleware(t *testing.T) {
 			str2 = "resp body"
 		)
 		c := g.Client().SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		c.Use(func(c *ghttp.Client, r *http.Request) (resp *ghttp.ClientResponse, err error) {
+		c.Use(func(c *gclient.Client, r *http.Request) (resp *gclient.Response, err error) {
 			str1 += "a"
 			resp, err = c.Next(r)
 			if err != nil {
@@ -366,7 +381,7 @@ func Test_Client_Middleware(t *testing.T) {
 			str1 += "b"
 			return
 		})
-		c.Use(func(c *ghttp.Client, r *http.Request) (resp *ghttp.ClientResponse, err error) {
+		c.Use(func(c *gclient.Client, r *http.Request) (resp *gclient.Response, err error) {
 			str1 += "c"
 			resp, err = c.Next(r)
 			if err != nil {
@@ -375,7 +390,7 @@ func Test_Client_Middleware(t *testing.T) {
 			str1 += "d"
 			return
 		})
-		c.Use(func(c *ghttp.Client, r *http.Request) (resp *ghttp.ClientResponse, err error) {
+		c.Use(func(c *gclient.Client, r *http.Request) (resp *gclient.Response, err error) {
 			str1 += "e"
 			resp, err = c.Next(r)
 			if err != nil {
@@ -398,17 +413,17 @@ func Test_Client_Middleware(t *testing.T) {
 		)
 
 		c = g.Client().SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
-		c.Use(func(c *ghttp.Client, r *http.Request) (resp *ghttp.ClientResponse, err error) {
+		c.Use(func(c *gclient.Client, r *http.Request) (resp *gclient.Response, err error) {
 			str3 += "a"
 			resp, err = c.Next(r)
 			str3 += "b"
 			return
 		})
-		c.Use(func(c *ghttp.Client, r *http.Request) (*ghttp.ClientResponse, error) {
+		c.Use(func(c *gclient.Client, r *http.Request) (*gclient.Response, error) {
 			str3 += "c"
 			return nil, gerror.New(abortStr)
 		})
-		c.Use(func(c *ghttp.Client, r *http.Request) (resp *ghttp.ClientResponse, err error) {
+		c.Use(func(c *gclient.Client, r *http.Request) (resp *gclient.Response, err error) {
 			str3 += "f"
 			resp, err = c.Next(r)
 			str3 += "g"
@@ -438,5 +453,87 @@ func Test_Client_Agent(t *testing.T) {
 		c := g.Client().SetPrefix(fmt.Sprintf("http://127.0.0.1:%d", p))
 		c.SetAgent("test")
 		t.Assert(c.GetContent(ctx, "/"), "test")
+	})
+}
+
+func Test_Client_Request_13_Dump(t *testing.T) {
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/hello", func(r *ghttp.Request) {
+		r.Response.WriteHeader(200)
+		r.Response.WriteJson(g.Map{"field": "test_for_response_body"})
+	})
+	s.BindHandler("/hello2", func(r *ghttp.Request) {
+		r.Response.WriteHeader(200)
+		r.Response.Writeln(g.Map{"field": "test_for_response_body"})
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		url := fmt.Sprintf("http://127.0.0.1:%d", p)
+		client := g.Client().SetPrefix(url).ContentJson()
+		r, err := client.Post(ctx, "/hello", g.Map{"field": "test_for_request_body"})
+		t.Assert(err, nil)
+		dumpedText := r.RawRequest()
+		t.Assert(gstr.Contains(dumpedText, "test_for_request_body"), true)
+		dumpedText2 := r.RawResponse()
+		fmt.Println(dumpedText2)
+		t.Assert(gstr.Contains(dumpedText2, "test_for_response_body"), true)
+
+		client2 := g.Client().SetPrefix(url).ContentType("text/html")
+		r2, err := client2.Post(ctx, "/hello2", g.Map{"field": "test_for_request_body"})
+		t.Assert(err, nil)
+		dumpedText3 := r2.RawRequest()
+		t.Assert(gstr.Contains(dumpedText3, "test_for_request_body"), true)
+		dumpedText4 := r2.RawResponse()
+		t.Assert(gstr.Contains(dumpedText4, "test_for_request_body"), false)
+	})
+}
+
+func Test_WebSocketClient(t *testing.T) {
+	p, _ := ports.PopRand()
+	s := g.Server(p)
+	s.BindHandler("/ws", func(r *ghttp.Request) {
+		ws, err := r.WebSocket()
+		if err != nil {
+			r.Exit()
+		}
+		for {
+			msgType, msg, err := ws.ReadMessage()
+			if err != nil {
+				return
+			}
+			if err = ws.WriteMessage(msgType, msg); err != nil {
+				return
+			}
+		}
+	})
+	s.SetPort(p)
+	s.SetDumpRouterMap(false)
+	s.Start()
+	defer s.Shutdown()
+
+	time.Sleep(100 * time.Millisecond)
+	gtest.C(t, func(t *gtest.T) {
+		client := gclient.NewWebSocket()
+		client.Proxy = http.ProxyFromEnvironment
+		client.HandshakeTimeout = time.Minute
+
+		conn, _, err := client.Dial(fmt.Sprintf("ws://127.0.0.1:%d/ws", p), nil)
+		t.Assert(err, nil)
+		defer conn.Close()
+
+		msg := []byte("hello")
+		err = conn.WriteMessage(websocket.TextMessage, msg)
+		t.Assert(err, nil)
+
+		mt, data, err := conn.ReadMessage()
+		t.Assert(err, nil)
+		t.Assert(mt, websocket.TextMessage)
+		t.Assert(data, msg)
 	})
 }

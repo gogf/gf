@@ -1,4 +1,4 @@
-package client
+package gclient
 
 import (
 	"net/http"

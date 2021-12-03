@@ -18,9 +18,9 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/gogf/gf/v2"
+	"github.com/gogf/gf/v2/internal/httputil"
 	"github.com/gogf/gf/v2/internal/utils"
-	"github.com/gogf/gf/v2/net/ghttp/internal/client"
-	"github.com/gogf/gf/v2/net/ghttp/internal/httputil"
+	"github.com/gogf/gf/v2/net/gclient"
 	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
@@ -38,8 +38,8 @@ const (
 )
 
 // MiddlewareClientTracing is a client middleware that enables tracing feature using standards of OpenTelemetry.
-func MiddlewareClientTracing(c *Client, r *http.Request) (*ClientResponse, error) {
-	return client.MiddlewareTracing(c, r)
+func MiddlewareClientTracing(c *gclient.Client, r *http.Request) (*gclient.Response, error) {
+	return gclient.MiddlewareTracing(c, r)
 }
 
 // MiddlewareServerTracing is a serer middleware that enables tracing feature using standards of OpenTelemetry.

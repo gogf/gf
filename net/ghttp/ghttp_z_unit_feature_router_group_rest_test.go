@@ -4,7 +4,6 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-// 分组路由测试
 package ghttp_test
 
 import (
