@@ -292,11 +292,9 @@ func (c *Client) callRequest(req *http.Request) (resp *Response, err error) {
 	// Dump feature.
 	// The request body can be reused for dumping
 	// raw HTTP request-response procedure.
-	if c.dump {
-		reqBodyContent, _ := ioutil.ReadAll(req.Body)
-		resp.requestBody = reqBodyContent
-		req.Body = utils.NewReadCloser(reqBodyContent, false)
-	}
+	reqBodyContent, _ := ioutil.ReadAll(req.Body)
+	resp.requestBody = reqBodyContent
+	req.Body = utils.NewReadCloser(reqBodyContent, false)
 	for {
 		if resp.Response, err = c.Do(req); err != nil {
 			// The response might not be nil when err != nil.
