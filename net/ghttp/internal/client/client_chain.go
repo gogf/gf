@@ -94,18 +94,6 @@ func (c *Client) Retry(retryCount int, retryInterval time.Duration) *Client {
 	return newClient
 }
 
-// Dump is a chaining function,
-// which enables/disables dump feature for this request.
-func (c *Client) Dump(dump ...bool) *Client {
-	newClient := c.Clone()
-	if len(dump) > 0 {
-		newClient.SetDump(dump[0])
-	} else {
-		newClient.SetDump(true)
-	}
-	return newClient
-}
-
 // Proxy is a chaining function,
 // which sets proxy for next request.
 // Make sure you pass the correct `proxyURL`.

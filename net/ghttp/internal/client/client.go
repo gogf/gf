@@ -31,7 +31,6 @@ import (
 // Client is the HTTP client for HTTP request management.
 type Client struct {
 	http.Client                         // Underlying HTTP Client.
-	dump              bool              // Mark this request will be dumped.
 	header            map[string]string // Custom header map.
 	cookies           map[string]string // Custom cookie map.
 	prefix            string            // Prefix for request.
@@ -131,12 +130,6 @@ func (c *Client) SetHeaderRaw(headers string) *Client {
 // SetCookie sets a cookie pair for the client.
 func (c *Client) SetCookie(key, value string) *Client {
 	c.cookies[key] = value
-	return c
-}
-
-// SetDump enables/disables dump feature for this request.
-func (c *Client) SetDump(dump bool) *Client {
-	c.dump = dump
 	return c
 }
 
