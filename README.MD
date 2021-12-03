@@ -63,10 +63,12 @@ The `Web` component performance of `GoFrame`, please refer to third-party projec
 - [Tencent](https://www.tencent.com/)
 - [ZTE](https://www.zte.com.cn/china/)
 - [Ant Financial Services](https://www.antfin.com/)
-- [MedLinker](https://www.medlinker.com/)
+- [VIVO](https://www.medlinker.com/)
+- [MedLinker](https://www.vivo.com/)
 - [KuCoin](https://www.kucoin.io/)
 - [LeYouJia](https://www.leyoujia.com/)
 - [IGG](https://igg.com)
+- [37](https://www.37.com)
 - [XiMaLaYa](https://www.ximalaya.com)
 - [ZYBang](https://www.zybang.com/)
 
