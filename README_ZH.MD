@@ -72,7 +72,7 @@ golang版本 >= 1.14
 
 # 协议
 
-`GF` 使用非常友好的 [MIT](LICENSE) 开源协议进行发布，永久`100%`开源免费。
+`GoFrame` 使用非常友好的 [MIT](LICENSE) 开源协议进行发布，永久`100%`开源免费。
 
 # 用户
 
@@ -98,12 +98,12 @@ golang版本 >= 1.14
 
 # 捐赠
 
-如果您喜欢`GF`，要不给开发者 [来杯咖啡](https://goframe.org/pages/viewpage.action?pageId=1115633) 吧！
+如果您喜欢`GoFrame`，要不给开发者 [来杯咖啡](https://goframe.org/pages/viewpage.action?pageId=1115633) 吧！
 请在捐赠时备注您的`github`/`gitee`账号名称。
 
 # 赞助
 
-赞助支持`GF`框架的快速研发，如果您感兴趣，请联系 微信 `389961817` / 邮件 `john@goframe.org`。
+赞助支持`GoFrame`框架的快速研发，如果您感兴趣，请联系 微信 `389961817` / 邮件 `john@goframe.org`。
 
 # 感谢
 <a href="https://www.jetbrains.com/?from=GoFrame"><img src="https://goframe.org/download/thumbnails/1114119/jetbrains.png" height="120" alt="JetBrains"/></a>
