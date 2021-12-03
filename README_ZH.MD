@@ -79,7 +79,7 @@ golang版本 >= 1.14
 - [腾讯科技](https://www.tencent.com/)
 - [中兴通讯](https://www.zte.com.cn/china/)
 - [蚂蚁金服](https://www.antfin.com/)
-- [VIVO](https://www.medlinker.com/)
+- [VIVO](https://www.vivo.com/)
 - [医联科技](https://www.medlinker.com/)
 - [库币科技](https://www.kucoin.io/)
 - [乐有家](https://www.leyoujia.com/)
