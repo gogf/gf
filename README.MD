@@ -56,7 +56,7 @@ The `Web` component performance of `GoFrame`, please refer to third-party projec
 
 # License
 
-`GF` is licensed under the [MIT License](LICENSE), 100% free and open-source, forever.
+`GoFrame` is licensed under the [MIT License](LICENSE), 100% free and open-source, forever.
 
 # Part Of Users
 
@@ -82,10 +82,10 @@ This project exists thanks to all the people who contribute. [[Contributors](htt
 
 # Donators
 
-If you love `GF`, why not [buy developer a cup of coffee](https://goframe.org/pages/viewpage.action?pageId=1115633)?
+If you love `GoFrame`, why not [buy developer a cup of coffee](https://goframe.org/pages/viewpage.action?pageId=1115633)?
 
 # Sponsors
-We appreciate any kind of sponsorship for `GF` development. If you've got some interesting, please contact WeChat `389961817` / Email `john@goframe.org`.
+We appreciate any kind of sponsorship for `GoFrame` development. If you've got some interesting, please contact WeChat `389961817` / Email `john@goframe.org`.
 
 
 
