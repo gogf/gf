@@ -20,7 +20,7 @@ func Test_Map(t *testing.T) {
 		var (
 			rule = "ipv4"
 			val  = "0.0.0"
-			err  = g.Validator().Data(val).Rules(rule).Messages(nil).Run(context.TODO())
+			err  = g.Validator().Data(val).Rules(rule).Run(context.TODO())
 			msg  = map[string]string{
 				"ipv4": "The value `0.0.0` is not a valid IPv4 address",
 			}
@@ -34,7 +34,7 @@ func Test_FirstString(t *testing.T) {
 		var (
 			rule = "ipv4"
 			val  = "0.0.0"
-			err  = g.Validator().Data(val).Rules(rule).Messages(nil).Run(context.TODO())
+			err  = g.Validator().Data(val).Rules(rule).Run(context.TODO())
 		)
 		t.Assert(err.FirstError(), "The value `0.0.0` is not a valid IPv4 address")
 	})

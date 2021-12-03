@@ -91,7 +91,7 @@ func Test_CheckStruct_Recursive_SliceStruct(t *testing.T) {
 				},
 			},
 		}
-		err := g.Validator().Data(user).Rules(nil).Run(ctx)
+		err := g.Validator().Data(user).Run(ctx)
 		g.Dump(err.Items())
 		t.AssertNE(err, nil)
 		t.Assert(err.Maps()["Name"], g.Map{"required": "The Name field is required"})
@@ -145,7 +145,7 @@ func Test_CheckStruct_Recursive_SliceStruct_Required(t *testing.T) {
 			Passes []Pass
 		}
 		user := &User{}
-		err := g.Validator().Data(user).Rules(nil).Run(ctx)
+		err := g.Validator().Data(user).Run(ctx)
 		g.Dump(err.Items())
 		t.AssertNE(err, nil)
 		t.Assert(err.Maps()["Name"], g.Map{"required": "The Name field is required"})
@@ -178,7 +178,7 @@ func Test_CheckStruct_Recursive_MapStruct(t *testing.T) {
 				},
 			},
 		}
-		err := g.Validator().Data(user).Rules(nil).Run(ctx)
+		err := g.Validator().Data(user).Run(ctx)
 		g.Dump(err.Items())
 		t.AssertNE(err, nil)
 		t.Assert(err.Maps()["Name"], g.Map{"required": "The Name field is required"})

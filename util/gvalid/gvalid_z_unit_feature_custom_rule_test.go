@@ -49,7 +49,7 @@ func Test_CustomRule1(t *testing.T) {
 			Value: "123",
 			Data:  "123456",
 		}
-		err := g.Validator().Data(st).Rules(nil).Run(ctx)
+		err := g.Validator().Data(st).Run(ctx)
 		t.Assert(err.String(), "自定义错误")
 	})
 	// No error with struct validation.
@@ -62,7 +62,7 @@ func Test_CustomRule1(t *testing.T) {
 			Value: "123456",
 			Data:  "123456",
 		}
-		err := g.Validator().Data(st).Rules(nil).Run(ctx)
+		err := g.Validator().Data(st).Run(ctx)
 		t.Assert(err, nil)
 	})
 }
@@ -92,7 +92,7 @@ func Test_CustomRule2(t *testing.T) {
 			Value: map[string]string{},
 			Data:  "123456",
 		}
-		err := g.Validator().Data(st).Rules(nil).Run(ctx)
+		err := g.Validator().Data(st).Run(ctx)
 		t.Assert(err.String(), "自定义错误")
 	})
 	// No error with struct validation.
@@ -105,7 +105,7 @@ func Test_CustomRule2(t *testing.T) {
 			Value: map[string]string{"k": "v"},
 			Data:  "123456",
 		}
-		err := g.Validator().Data(st).Rules(nil).Run(ctx)
+		err := g.Validator().Data(st).Run(ctx)
 		t.Assert(err, nil)
 	})
 }
@@ -136,7 +136,7 @@ func Test_CustomRule_AllowEmpty(t *testing.T) {
 			Value: "",
 			Data:  "123456",
 		}
-		err := g.Validator().Data(st).Rules(nil).Run(ctx)
+		err := g.Validator().Data(st).Run(ctx)
 		t.Assert(err, nil)
 	})
 	// No error with struct validation.
@@ -149,7 +149,7 @@ func Test_CustomRule_AllowEmpty(t *testing.T) {
 			Value: "john",
 			Data:  "123456",
 		}
-		err := g.Validator().Data(st).Rules(nil).Run(ctx)
+		err := g.Validator().Data(st).Run(ctx)
 		t.Assert(err.String(), "自定义错误")
 	})
 }
