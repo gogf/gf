@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package client
+package gclient
 
 import (
 	"time"
@@ -91,18 +91,6 @@ func (c *Client) BasicAuth(user, pass string) *Client {
 func (c *Client) Retry(retryCount int, retryInterval time.Duration) *Client {
 	newClient := c.Clone()
 	newClient.SetRetry(retryCount, retryInterval)
-	return newClient
-}
-
-// Dump is a chaining function,
-// which enables/disables dump feature for this request.
-func (c *Client) Dump(dump ...bool) *Client {
-	newClient := c.Clone()
-	if len(dump) > 0 {
-		newClient.SetDump(dump[0])
-	} else {
-		newClient.SetDump(true)
-	}
 	return newClient
 }
 

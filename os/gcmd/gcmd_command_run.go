@@ -30,11 +30,7 @@ func (c *Command) RunWithValue(ctx context.Context) (value interface{}, err erro
 	}
 	args := parser.GetArgAll()
 	if len(args) == 1 {
-		// If no arguments passed but binary name, it then prints help.
-		if c.HelpFunc != nil {
-			return nil, c.HelpFunc(ctx, parser)
-		}
-		return nil, c.defaultHelpFunc(ctx, parser)
+		return c.doRun(ctx, parser)
 	}
 
 	// Exclude the root binary name.
@@ -85,6 +81,10 @@ func (c *Command) doRun(ctx context.Context, parser *Parser) (value interface{},
 
 // reParse re-parses the arguments using option configuration of current command.
 func (c *Command) reParse(ctx context.Context, parser *Parser) (*Parser, error) {
+	if len(c.Options) == 0 {
+		return parser, nil
+	}
+
 	var (
 		optionKey        string
 		supportedOptions = make(map[string]bool)
@@ -106,6 +106,12 @@ func (c *Command) searchCommand(args []string) *Command {
 		return nil
 	}
 	for _, cmd := range c.commands {
+		// If this command needs argument,
+		// it then gives all its left arguments to it.
+		if cmd.NeedArgs {
+			return &cmd
+		}
+		// Recursively searching the command.
 		if cmd.Name == args[0] {
 			leftArgs := args[1:]
 			if len(leftArgs) == 0 {

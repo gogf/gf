@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package client
+package gclient
 
 import (
 	"fmt"
@@ -19,15 +19,15 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/gogf/gf/v2"
+	"github.com/gogf/gf/v2/internal/httputil"
 	"github.com/gogf/gf/v2/internal/utils"
-	"github.com/gogf/gf/v2/net/ghttp/internal/httputil"
 	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 )
 
 const (
-	tracingInstrumentName           = "github.com/gogf/gf/v2/net/ghttp.Client"
+	tracingInstrumentName           = "github.com/gogf/gf/v2/net/gclient.Client"
 	tracingAttrHttpAddressRemote    = "http.address.remote"
 	tracingAttrHttpAddressLocal     = "http.address.local"
 	tracingAttrHttpDnsStart         = "http.dns.start"

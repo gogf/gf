@@ -189,7 +189,9 @@ func parsePatternItem(item string, min int, max int, allowQuestionMark bool) (ma
 					return nil, gerror.NewCodef(gcode.CodeInvalidParameter, `invalid pattern item: "%s"`, item)
 				} else {
 					rangeMin = number
-					rangeMax = number
+					if len(intervalArray) == 1 {
+						rangeMax = number
+					}
 				}
 			}
 			if len(rangeArray) == 2 {
@@ -262,4 +264,106 @@ func (s *cronSchedule) meet(t time.Time) bool {
 		}
 		return true
 	}
+}
+
+// Next returns the next time this schedule is activated, greater than the given
+// time.  If no time can be found to satisfy the schedule, return the zero time.
+func (s *cronSchedule) Next(t time.Time) time.Time {
+	if s.every != 0 {
+		diff := t.Unix() - s.create
+		cnt := diff/s.every + 1
+		return t.Add(time.Duration(cnt*s.every) * time.Second)
+	}
+
+	// Start at the earliest possible time (the upcoming second).
+	t = t.Add(1*time.Second - time.Duration(t.Nanosecond())*time.Nanosecond)
+	var (
+		loc       = t.Location()
+		added     = false
+		yearLimit = t.Year() + 5
+	)
+
+WRAP:
+	if t.Year() > yearLimit {
+		return t // who will care the job that run in five years later
+	}
+
+	for !match(s.month, int(t.Month())) {
+		if !added {
+			added = true
+			t = time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, loc)
+		}
+		t = t.AddDate(0, 1, 0)
+		// need recheck
+		if t.Month() == time.January {
+			goto WRAP
+		}
+	}
+
+	for !s.dayMatches(t) {
+		if !added {
+			added = true
+			t = time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, loc)
+		}
+		t = t.AddDate(0, 0, 1)
+
+		// Notice if the hour is no longer midnight due to DST.
+		// Add an hour if it's 23, subtract an hour if it's 1.
+		if t.Hour() != 0 {
+			if t.Hour() > 12 {
+				t = t.Add(time.Duration(24-t.Hour()) * time.Hour)
+			} else {
+				t = t.Add(time.Duration(-t.Hour()) * time.Hour)
+			}
+		}
+		if t.Day() == 1 {
+			goto WRAP
+		}
+	}
+	for !match(s.hour, t.Hour()) {
+		if !added {
+			added = true
+			t = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), 0, 0, 0, loc)
+		}
+		t = t.Add(time.Hour)
+		// need recheck
+		if t.Hour() == 0 {
+			goto WRAP
+		}
+	}
+	for !match(s.minute, t.Minute()) {
+		if !added {
+			added = true
+			t = t.Truncate(time.Minute)
+		}
+		t = t.Add(1 * time.Minute)
+
+		if t.Minute() == 0 {
+			goto WRAP
+		}
+	}
+	for !match(s.second, t.Second()) {
+		if !added {
+			added = true
+			t = t.Truncate(time.Second)
+		}
+		t = t.Add(1 * time.Second)
+		if t.Second() == 0 {
+			goto WRAP
+		}
+	}
+	return t.In(loc)
+}
+
+// dayMatches returns true if the schedule's day-of-week and day-of-month
+// restrictions are satisfied by the given time.
+func (s *cronSchedule) dayMatches(t time.Time) bool {
+	_, ok1 := s.day[t.Day()]
+	_, ok2 := s.week[int(t.Weekday())]
+	return ok1 && ok2
+}
+
+func match(m map[int]struct{}, key int) bool {
+	_, ok := m[key]
+	return ok
 }

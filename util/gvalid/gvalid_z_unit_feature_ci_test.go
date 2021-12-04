@@ -15,11 +15,11 @@ import (
 
 func Test_CI(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		err := g.Validator().Data("id").Rules("in:Id,Name").Messages(nil).Run(ctx)
+		err := g.Validator().Data("id").Rules("in:Id,Name").Run(ctx)
 		t.AssertNE(err, nil)
 	})
 	gtest.C(t, func(t *gtest.T) {
-		err := g.Validator().Data("id").Rules("ci|in:Id,Name").Messages(nil).Run(ctx)
+		err := g.Validator().Data("id").Rules("ci|in:Id,Name").Run(ctx)
 		t.AssertNil(err)
 	})
 	gtest.C(t, func(t *gtest.T) {

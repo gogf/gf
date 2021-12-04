@@ -24,8 +24,11 @@ import (
 )
 
 const (
-	tagNameDc = `dc`
-	tagNameAd = `ad`
+	tagNameDc   = `dc`
+	tagNameAd   = `ad`
+	tagNameEg   = `eg`
+	tagNameArgs = `args`
+	tagNameRoot = `root`
 )
 
 var (
@@ -50,8 +53,9 @@ func NewFromObject(object interface{}) (rootCmd Command, err error) {
 	}
 	// Sub command creating.
 	var (
-		nameSet     = gset.NewStrSet()
-		subCommands []Command
+		nameSet         = gset.NewStrSet()
+		rootCommandName = gmeta.Get(object, tagNameRoot).String()
+		subCommands     []Command
 	)
 	for i := 0; i < originValueAndKind.InputValue.NumMethod(); i++ {
 		var (
@@ -69,7 +73,19 @@ func NewFromObject(object interface{}) (rootCmd Command, err error) {
 			)
 			return
 		}
-		subCommands = append(subCommands, methodCommand)
+		if rootCommandName == methodCommand.Name {
+			if rootCmd.Func == nil {
+				rootCmd.Func = methodCommand.Func
+			}
+			if rootCmd.FuncWithValue == nil {
+				rootCmd.FuncWithValue = methodCommand.FuncWithValue
+			}
+			if len(rootCmd.Options) == 0 {
+				rootCmd.Options = methodCommand.Options
+			}
+		} else {
+			subCommands = append(subCommands, methodCommand)
+		}
 	}
 	if len(subCommands) > 0 {
 		err = rootCmd.AddCommand(subCommands...)
@@ -99,8 +115,14 @@ func newCommandFromObjectMeta(object interface{}) (command Command, err error) {
 		)
 		return
 	}
+	if !command.NeedArgs {
+		command.NeedArgs = gconv.Bool(metaData[tagNameArgs])
+	}
 	if command.Description == "" {
 		command.Description = metaData[tagNameDc]
+	}
+	if command.Examples == "" {
+		command.Examples = metaData[tagNameEg]
 	}
 	if command.Additional == "" {
 		command.Additional = metaData[tagNameAd]
@@ -185,7 +207,7 @@ func newCommandFromMethod(object interface{}, method reflect.Value) (command Com
 
 	// Create function that has value return.
 	command.FuncWithValue = func(ctx context.Context, parser *Parser) (out interface{}, err error) {
-		ctx = context.WithValue(ctx, CtxKeyParser, command)
+		ctx = context.WithValue(ctx, CtxKeyParser, parser)
 
 		defer func() {
 			if exception := recover(); exception != nil {

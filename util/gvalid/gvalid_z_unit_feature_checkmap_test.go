@@ -39,7 +39,7 @@ func Test_CheckMap1(t *testing.T) {
 func Test_CheckMap2(t *testing.T) {
 	var params interface{}
 	gtest.C(t, func(t *gtest.T) {
-		if err := g.Validator().Data(params).Rules(nil).Messages(nil).Run(context.TODO()); err == nil {
+		if err := g.Validator().Data(params).Run(context.TODO()); err == nil {
 			t.Assert(err, nil)
 		}
 	})

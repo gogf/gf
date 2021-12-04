@@ -80,7 +80,7 @@ func (v *Validator) doCheckValue(ctx context.Context, in doCheckValueInput) Erro
 			} else {
 				return newValidationErrorByStr(
 					internalRulesErrRuleName,
-					errors.New(internalRulesErrRuleName+": "+in.Rule),
+					errors.New(internalRulesErrRuleName+": "+ruleItems[i]),
 				)
 			}
 		} else {

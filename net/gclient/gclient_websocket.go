@@ -4,7 +4,7 @@
 // If a copy of the MIT was not distributed with this file,
 // You can obtain one at https://github.com/gogf/gf.
 
-package ghttp
+package gclient
 
 import (
 	"net/http"
@@ -19,8 +19,8 @@ type WebSocketClient struct {
 	*websocket.Dialer
 }
 
-// NewWebSocketClient New creates and returns a new WebSocketClient object.
-func NewWebSocketClient() *WebSocketClient {
+// NewWebSocket creates and returns a new WebSocketClient object.
+func NewWebSocket() *WebSocketClient {
 	return &WebSocketClient{
 		&websocket.Dialer{
 			Proxy:            http.ProxyFromEnvironment,

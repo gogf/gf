@@ -119,7 +119,7 @@ func Test_CheckStruct(t *testing.T) {
 			Password string `json:"password" gvalid:"password@required#登录密码不能为空"`
 		}
 		var login LoginRequest
-		err := g.Validator().Data(login).Rules(nil).Run(context.TODO())
+		err := g.Validator().Data(login).Run(context.TODO())
 		t.AssertNE(err, nil)
 		t.Assert(len(err.Maps()), 2)
 		t.Assert(err.Maps()["username"]["required"], "用户名不能为空")
@@ -132,7 +132,7 @@ func Test_CheckStruct(t *testing.T) {
 			Password string `json:"password" gvalid:"@required#登录密码不能为空"`
 		}
 		var login LoginRequest
-		err := g.Validator().Data(login).Rules(nil).Run(context.TODO())
+		err := g.Validator().Data(login).Run(context.TODO())
 		t.Assert(err, nil)
 	})
 
@@ -142,7 +142,7 @@ func Test_CheckStruct(t *testing.T) {
 			Password string `json:"password" gvalid:"password@required#登录密码不能为空"`
 		}
 		var login LoginRequest
-		err := g.Validator().Data(login).Rules(nil).Run(context.TODO())
+		err := g.Validator().Data(login).Run(context.TODO())
 		t.AssertNE(err, nil)
 		t.Assert(err.Maps()["password"]["required"], "登录密码不能为空")
 	})
@@ -160,7 +160,7 @@ func Test_CheckStruct(t *testing.T) {
 			Username: "john",
 			Password: "123456",
 		}
-		err := g.Validator().Data(user).Rules(nil).Run(context.TODO())
+		err := g.Validator().Data(user).Run(context.TODO())
 		t.AssertNE(err, nil)
 		t.Assert(len(err.Maps()), 1)
 		t.Assert(err.Maps()["uid"]["min"], "ID不能为空")
@@ -201,7 +201,7 @@ func Test_CheckStruct(t *testing.T) {
 			Username: "john",
 			Password: "123456",
 		}
-		err := g.Validator().Data(user).Rules(nil).Run(context.TODO())
+		err := g.Validator().Data(user).Run(context.TODO())
 		t.AssertNE(err, nil)
 		t.Assert(len(err.Maps()), 1)
 	})
@@ -219,7 +219,7 @@ func Test_CheckStruct(t *testing.T) {
 			Username: "john",
 			Password: "123456",
 		}
-		err := g.Validator().Data(user).Rules(nil).Run(context.TODO())
+		err := g.Validator().Data(user).Run(context.TODO())
 		t.AssertNE(err, nil)
 		t.Assert(len(err.Maps()), 1)
 		t.Assert(err.Maps()["uid"]["min"], "ID不能为空")
@@ -295,7 +295,7 @@ func Test_CheckStruct_With_EmbeddedObject(t *testing.T) {
 				Pass2: "2",
 			},
 		}
-		err := g.Validator().Data(user).Rules(nil).Run(context.TODO())
+		err := g.Validator().Data(user).Run(context.TODO())
 		t.AssertNE(err, nil)
 		t.Assert(err.Maps()["name"], g.Map{"required": "请输入您的姓名"})
 		t.Assert(err.Maps()["password1"], g.Map{"same": "您两次输入的密码不一致"})
@@ -321,7 +321,7 @@ func Test_CheckStruct_With_StructAttribute(t *testing.T) {
 				Pass2: "2",
 			},
 		}
-		err := g.Validator().Data(user).Rules(nil).Run(context.TODO())
+		err := g.Validator().Data(user).Run(context.TODO())
 		t.AssertNE(err, nil)
 		t.Assert(err.Maps()["name"], g.Map{"required": "请输入您的姓名"})
 		t.Assert(err.Maps()["password1"], g.Map{"same": "您两次输入的密码不一致"})
@@ -340,7 +340,7 @@ func Test_CheckStruct_Optional(t *testing.T) {
 			Page: 1,
 			Size: 10,
 		}
-		err := g.Validator().Data(obj).Rules(nil).Run(context.TODO())
+		err := g.Validator().Data(obj).Run(context.TODO())
 		t.Assert(err, nil)
 	})
 	gtest.C(t, func(t *gtest.T) {
@@ -353,7 +353,7 @@ func Test_CheckStruct_Optional(t *testing.T) {
 			Page: 1,
 			Size: 10,
 		}
-		err := g.Validator().Data(obj).Rules(nil).Run(context.TODO())
+		err := g.Validator().Data(obj).Run(context.TODO())
 		t.Assert(err, nil)
 	})
 	gtest.C(t, func(t *gtest.T) {
@@ -366,7 +366,7 @@ func Test_CheckStruct_Optional(t *testing.T) {
 			Page: 1,
 			Size: 10,
 		}
-		err := g.Validator().Data(obj).Rules(nil).Run(context.TODO())
+		err := g.Validator().Data(obj).Run(context.TODO())
 		t.Assert(err.String(), "project id must between 1, 10000")
 	})
 }
@@ -382,7 +382,7 @@ func Test_CheckStruct_NoTag(t *testing.T) {
 			Page: 1,
 			Size: 10,
 		}
-		err := g.Validator().Data(obj).Rules(nil).Run(context.TODO())
+		err := g.Validator().Data(obj).Run(context.TODO())
 		t.Assert(err, nil)
 	})
 }
@@ -399,7 +399,7 @@ func Test_CheckStruct_InvalidRule(t *testing.T) {
 			Age:   18,
 			Phone: "123",
 		}
-		err := g.Validator().Data(obj).Rules(nil).Run(context.TODO())
+		err := g.Validator().Data(obj).Run(context.TODO())
 		t.AssertNE(err, nil)
 	})
 }

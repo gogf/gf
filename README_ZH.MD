@@ -72,17 +72,19 @@ golang版本 >= 1.14
 
 # 协议
 
-`GF` 使用非常友好的 [MIT](LICENSE) 开源协议进行发布，永久`100%`开源免费。
+`GoFrame` 使用非常友好的 [MIT](LICENSE) 开源协议进行发布，永久`100%`开源免费。
 
 # 用户
 
 - [腾讯科技](https://www.tencent.com/)
 - [中兴通讯](https://www.zte.com.cn/china/)
 - [蚂蚁金服](https://www.antfin.com/)
+- [VIVO](https://www.vivo.com/)
 - [医联科技](https://www.medlinker.com/)
 - [库币科技](https://www.kucoin.io/)
 - [乐有家](https://www.leyoujia.com/)
 - [IGG](https://igg.com)
+- [三七互娱](https://www.37.com)
 - [喜马拉雅](https://www.ximalaya.com)
 - [作业帮](https://www.zybang.com/)
 
@@ -96,12 +98,12 @@ golang版本 >= 1.14
 
 # 捐赠
 
-如果您喜欢`GF`，要不给开发者 [来杯咖啡](https://goframe.org/pages/viewpage.action?pageId=1115633) 吧！
+如果您喜欢`GoFrame`，要不给开发者 [来杯咖啡](https://goframe.org/pages/viewpage.action?pageId=1115633) 吧！
 请在捐赠时备注您的`github`/`gitee`账号名称。
 
 # 赞助
 
-赞助支持`GF`框架的快速研发，如果您感兴趣，请联系 微信 `389961817` / 邮件 `john@goframe.org`。
+赞助支持`GoFrame`框架的快速研发，如果您感兴趣，请联系 微信 `389961817` / 邮件 `john@goframe.org`。
 
 # 感谢
 <a href="https://www.jetbrains.com/?from=GoFrame"><img src="https://goframe.org/download/thumbnails/1114119/jetbrains.png" height="120" alt="JetBrains"/></a>

@@ -391,7 +391,7 @@ func ExampleCheckStruct() {
 		Page: 1,
 		Size: 10,
 	}
-	err := g.Validator().Data(obj).Rules(nil).Run(gctx.New())
+	err := g.Validator().Data(obj).Run(gctx.New())
 	fmt.Println(err == nil)
 	// Output:
 	// true
@@ -408,7 +408,7 @@ func ExampleCheckStruct2() {
 		Page: 1,
 		Size: 10,
 	}
-	err := g.Validator().Data(obj).Rules(nil).Run(gctx.New())
+	err := g.Validator().Data(obj).Run(gctx.New())
 	fmt.Println(err == nil)
 	// Output:
 	// true
@@ -425,7 +425,7 @@ func ExampleCheckStruct3() {
 		Page: 1,
 		Size: 10,
 	}
-	err := g.Validator().Data(obj).Rules(nil).Run(gctx.New())
+	err := g.Validator().Data(obj).Run(gctx.New())
 	fmt.Println(err)
 	// Output:
 	// project id must between 1, 10000
@@ -458,7 +458,7 @@ func ExampleRegisterRule() {
 		}
 		return nil
 	})
-	err := g.Validator().Data(user).Rules(nil).Run(gctx.New())
+	err := g.Validator().Data(user).Run(gctx.New())
 	fmt.Println(err.Error())
 	// May Output:
 	// 用户名称已被占用
