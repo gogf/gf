@@ -8,7 +8,7 @@ on:
   pull_request:
     branches: [master, develop]
 env:
-  GF_DEBUG: 1
+  GF_DEBUG: 0
 
 jobs:
   code-test:
