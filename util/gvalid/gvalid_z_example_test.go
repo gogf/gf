@@ -25,7 +25,7 @@ func ExampleNew() {
 	validator := gvalid.New()
 
 	if err := validator.Data(16).Rules("min:18").Run(context.Background()); err != nil {
-		fmt.Print(err)
+		fmt.Println(err)
 	}
 
 	// Output:
