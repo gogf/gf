@@ -14,8 +14,6 @@ import (
 	"reflect"
 	"runtime"
 	"strings"
-
-	"github.com/gogf/gf/v2/internal/utils"
 )
 
 const (
@@ -35,7 +33,7 @@ func init() {
 		goRootForFilter = strings.Replace(goRootForFilter, "\\", "/", -1)
 	}
 	// Initialize internal package variable: selfPath.
-	selfPath, _ := exec.LookPath(os.Args[0])
+	selfPath, _ = exec.LookPath(os.Args[0])
 	if selfPath != "" {
 		selfPath, _ = filepath.Abs(selfPath)
 	}
@@ -69,7 +67,7 @@ func CallerWithFilter(filter string, skip ...int) (function string, path string,
 				pc, file, line, ok = runtime.Caller(i)
 			}
 			if ok {
-				function := ""
+				function = ""
 				if fn := runtime.FuncForPC(pc); fn == nil {
 					function = "unknown"
 				} else {
@@ -102,14 +100,8 @@ func callerFromIndex(filters []string) (pc uintptr, file string, line int, index
 			if filtered {
 				continue
 			}
-			if !utils.IsDebugEnabled() {
-				if strings.Contains(file, utils.StackFilterKeyForGoFrame) {
-					continue
-				}
-			} else {
-				if strings.Contains(file, stackFilterKey) {
-					continue
-				}
+			if strings.Contains(file, stackFilterKey) {
+				continue
 			}
 			if index > 0 {
 				index--
