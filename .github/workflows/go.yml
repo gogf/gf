@@ -7,7 +7,6 @@ on:
       - develop
   pull_request:
     branches: [master, develop]
-env:
 
 jobs:
   code-test:
