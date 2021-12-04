@@ -250,6 +250,7 @@ type (
 
 const (
 	defaultModelSafe        = false
+	defaultCharset          = `utf8`
 	queryTypeNormal         = 0
 	queryTypeCount          = 1
 	unionTypeNormal         = 0
@@ -260,8 +261,8 @@ const (
 	insertOptionIgnore      = 3
 	defaultBatchNumber      = 10               // Per count for batch insert/replace/save.
 	defaultMaxIdleConnCount = 10               // Max idle connection count in pool.
-	defaultMaxOpenConnCount = 100              // Max open connection count in pool.
-	defaultMaxConnLifeTime  = 30 * time.Second // Max life time for per connection in pool in seconds.
+	defaultMaxOpenConnCount = 0                // Max open connection count in pool. Default is no limit.
+	defaultMaxConnLifeTime  = 30 * time.Second // Max lifetime for per connection in pool in seconds.
 	ctxTimeoutTypeExec      = iota
 	ctxTimeoutTypeQuery
 	ctxTimeoutTypePrepare
@@ -409,7 +410,10 @@ func getConfigNodeByGroup(group string, master bool) (*ConfigNode, error) {
 			}
 		}
 		if len(masterList) < 1 {
-			return nil, gerror.NewCode(gcode.CodeInvalidConfiguration, "at least one master node configuration's need to make sense")
+			return nil, gerror.NewCode(
+				gcode.CodeInvalidConfiguration,
+				"at least one master node configuration's need to make sense",
+			)
 		}
 		if len(slaveList) < 1 {
 			slaveList = masterList
@@ -420,7 +424,11 @@ func getConfigNodeByGroup(group string, master bool) (*ConfigNode, error) {
 			return getConfigNodeByWeight(slaveList), nil
 		}
 	} else {
-		return nil, gerror.NewCodef(gcode.CodeInvalidConfiguration, "empty database configuration for item name '%s'", group)
+		return nil, gerror.NewCodef(
+			gcode.CodeInvalidConfiguration,
+			"empty database configuration for item name '%s'",
+			group,
+		)
 	}
 }
 
@@ -473,7 +481,7 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 	}
 	// Default value checks.
 	if node.Charset == "" {
-		node.Charset = "utf8"
+		node.Charset = defaultCharset
 	}
 	// Changes the schema.
 	nodeSchema := c.schema.Val()
@@ -521,13 +529,7 @@ func (c *Core) getSqlDb(master bool, schema ...string) (sqlDb *sql.DB, err error
 			sqlDb.SetMaxOpenConns(defaultMaxOpenConnCount)
 		}
 		if c.config.MaxConnLifeTime > 0 {
-			// Automatically checks whether MaxConnLifetime is configured using string like: "30s", "60s", etc.
-			// Or else it is configured just using number, which means value in seconds.
-			if c.config.MaxConnLifeTime > time.Second {
-				sqlDb.SetConnMaxLifetime(c.config.MaxConnLifeTime)
-			} else {
-				sqlDb.SetConnMaxLifetime(c.config.MaxConnLifeTime * time.Second)
-			}
+			sqlDb.SetConnMaxLifetime(c.config.MaxConnLifeTime)
 		} else {
 			sqlDb.SetConnMaxLifetime(defaultMaxConnLifeTime)
 		}
