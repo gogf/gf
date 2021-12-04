@@ -66,11 +66,11 @@ func ExampleValidator_Run() {
 		Page: 0,
 		Size: 101,
 	}
-	if err := g.Validator().Data(obj).Rules(rules).Run(context.Background()); err != nil {
+	if err := g.Validator().Data(obj).Run(context.Background()); err != nil {
 		fmt.Println("check struct err:", err)
 	}
 
-	// Output:
+	// May Output:
 	// check value err: The value `16` must be equal or greater than 18
 	// check map err: The passport field is required; The passport value `` length must be between 6 and 16; The password value `123456` must be the same as field password2
 	// check struct err: The Page value `0` must be equal or greater than 1; The Size value `101` must be between 1 and 100
@@ -231,20 +231,109 @@ func ExampleValidator_Rules() {
 }
 
 func ExampleValidator_Messages() {
-	if err := g.Validator().Data(16).Rules("min:18").Messages("未成年禁止注册").Run(context.Background()); err != nil {
+	if err := g.Validator().Data(16).Rules("min:18").Messages("Can not regist, Age is less then 18!").Run(context.Background()); err != nil {
 		fmt.Println(err)
 	}
 
 	// Output:
-	// 未成年禁止注册
+	// Can not regist, Age is less then 18!
 }
 
 func ExampleValidator_RuleFunc() {
+	var (
+		ctx             = context.Background()
+		lenErrRuleName  = "LenErr"
+		passErrRuleName = "PassErr"
+		lenErrRuleFunc  = func(ctx context.Context, in gvalid.RuleFuncInput) error {
+			pass := in.Value.String()
+			if len(pass) != 6 {
+				return errors.New(in.Message)
+			}
+			return nil
+		}
+		passErrRuleFunc = func(ctx context.Context, in gvalid.RuleFuncInput) error {
+			pass := in.Value.String()
+			if m := in.Data.Map(); m["data"] != pass {
+				return errors.New(in.Message)
+			}
+			return nil
+		}
+	)
 
+	type LenErrStruct struct {
+		Value string `v:"uid@LenErr#Value Length Error!"`
+		Data  string `p:"data"`
+	}
+
+	st := &LenErrStruct{
+		Value: "123",
+		Data:  "123456",
+	}
+	// single error sample
+	if err := g.Validator().RuleFunc(lenErrRuleName, lenErrRuleFunc).Data(st).Run(ctx); err != nil {
+		fmt.Println(err)
+	}
+
+	type MultiErrorStruct struct {
+		Value string `v:"uid@LenErr|PassErr#Value Length Error!|Pass is not Same!"`
+		Data  string `p:"data"`
+	}
+
+	multi := &MultiErrorStruct{
+		Value: "123",
+		Data:  "123456",
+	}
+	// multi error sample
+	if err := g.Validator().RuleFunc(lenErrRuleName, lenErrRuleFunc).RuleFunc(passErrRuleName, passErrRuleFunc).Data(multi).Run(ctx); err != nil {
+		fmt.Println(err)
+	}
+
+	// Output:
+	// Value Length Error!
+	// Value Length Error!; Pass is not Same!
 }
 
 func ExampleValidator_RuleFuncMap() {
+	var (
+		ctx             = context.Background()
+		lenErrRuleName  = "LenErr"
+		passErrRuleName = "PassErr"
+		lenErrRuleFunc  = func(ctx context.Context, in gvalid.RuleFuncInput) error {
+			pass := in.Value.String()
+			if len(pass) != 6 {
+				return errors.New(in.Message)
+			}
+			return nil
+		}
+		passErrRuleFunc = func(ctx context.Context, in gvalid.RuleFuncInput) error {
+			pass := in.Value.String()
+			if m := in.Data.Map(); m["data"] != pass {
+				return errors.New(in.Message)
+			}
+			return nil
+		}
+		ruleMap = map[string]gvalid.RuleFunc{
+			lenErrRuleName:  lenErrRuleFunc,
+			passErrRuleName: passErrRuleFunc,
+		}
+	)
 
+	type MultiErrorStruct struct {
+		Value string `v:"uid@LenErr|PassErr#Value Length Error!|Pass is not Same!"`
+		Data  string `p:"data"`
+	}
+
+	multi := &MultiErrorStruct{
+		Value: "123",
+		Data:  "123456",
+	}
+
+	if err := g.Validator().RuleFuncMap(ruleMap).Data(multi).Run(ctx); err != nil {
+		fmt.Println(err)
+	}
+
+	// Output:
+	// Value Length Error!; Pass is not Same!
 }
 
 func ExampleCheckMap() {
