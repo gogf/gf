@@ -28,9 +28,9 @@ func Test_Check(t *testing.T) {
 		val1 := 0
 		val2 := 7
 		val3 := 20
-		err1 := g.Validator().Data(val1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
 		t.Assert(err1, "InvalidRules: abc:6,16")
 		t.Assert(err2, "InvalidRules: abc:6,16")
 		t.Assert(err3, "InvalidRules: abc:6,16")
@@ -38,16 +38,16 @@ func Test_Check(t *testing.T) {
 }
 
 func Test_Required(t *testing.T) {
-	if m := g.Validator().Data("1").Rules("required").Messages(nil).Run(ctx); m != nil {
+	if m := g.Validator().Data("1").Rules("required").Run(ctx); m != nil {
 		t.Error(m)
 	}
-	if m := g.Validator().Data("").Rules("required").Messages(nil).Run(ctx); m == nil {
+	if m := g.Validator().Data("").Rules("required").Run(ctx); m == nil {
 		t.Error(m)
 	}
-	if m := g.Validator().Data("").Assoc(map[string]interface{}{"id": 1, "age": 19}).Rules("required-if: id,1,age,18").Messages(nil).Run(ctx); m == nil {
+	if m := g.Validator().Data("").Assoc(map[string]interface{}{"id": 1, "age": 19}).Rules("required-if: id,1,age,18").Run(ctx); m == nil {
 		t.Error("Required校验失败")
 	}
-	if m := g.Validator().Data("").Assoc(map[string]interface{}{"id": 2, "age": 19}).Rules("required-if: id,1,age,18").Messages(nil).Run(ctx); m != nil {
+	if m := g.Validator().Data("").Assoc(map[string]interface{}{"id": 2, "age": 19}).Rules("required-if: id,1,age,18").Run(ctx); m != nil {
 		t.Error("Required校验失败")
 	}
 }
@@ -55,20 +55,20 @@ func Test_Required(t *testing.T) {
 func Test_RequiredIf(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "required-if:id,1,age,18"
-		t.AssertNE(g.Validator().Data("").Assoc(g.Map{"id": 1}).Rules(rule).Messages(nil).Run(ctx), nil)
-		t.Assert(g.Validator().Data("").Assoc(g.Map{"id": 0}).Rules(rule).Messages(nil).Run(ctx), nil)
-		t.AssertNE(g.Validator().Data("").Assoc(g.Map{"age": 18}).Rules(rule).Messages(nil).Run(ctx), nil)
-		t.Assert(g.Validator().Data("").Assoc(g.Map{"age": 20}).Rules(rule).Messages(nil).Run(ctx), nil)
+		t.AssertNE(g.Validator().Data("").Assoc(g.Map{"id": 1}).Rules(rule).Run(ctx), nil)
+		t.Assert(g.Validator().Data("").Assoc(g.Map{"id": 0}).Rules(rule).Run(ctx), nil)
+		t.AssertNE(g.Validator().Data("").Assoc(g.Map{"age": 18}).Rules(rule).Run(ctx), nil)
+		t.Assert(g.Validator().Data("").Assoc(g.Map{"age": 20}).Rules(rule).Run(ctx), nil)
 	})
 }
 
 func Test_RequiredUnless(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		rule := "required-unless:id,1,age,18"
-		t.Assert(g.Validator().Data("").Assoc(g.Map{"id": 1}).Rules(rule).Messages(nil).Run(ctx), nil)
-		t.AssertNE(g.Validator().Data("").Assoc(g.Map{"id": 0}).Rules(rule).Messages(nil).Run(ctx), nil)
-		t.Assert(g.Validator().Data("").Assoc(g.Map{"age": 18}).Rules(rule).Messages(nil).Run(ctx), nil)
-		t.AssertNE(g.Validator().Data("").Assoc(g.Map{"age": 20}).Rules(rule).Messages(nil).Run(ctx), nil)
+		t.Assert(g.Validator().Data("").Assoc(g.Map{"id": 1}).Rules(rule).Run(ctx), nil)
+		t.AssertNE(g.Validator().Data("").Assoc(g.Map{"id": 0}).Rules(rule).Run(ctx), nil)
+		t.Assert(g.Validator().Data("").Assoc(g.Map{"age": 18}).Rules(rule).Run(ctx), nil)
+		t.AssertNE(g.Validator().Data("").Assoc(g.Map{"age": 20}).Rules(rule).Run(ctx), nil)
 	})
 }
 
@@ -86,9 +86,9 @@ func Test_RequiredWith(t *testing.T) {
 			"id":   100,
 			"name": "john",
 		}
-		err1 := g.Validator().Data(val1).Assoc(params1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val1).Assoc(params2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(val1).Assoc(params3).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Assoc(params1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val1).Assoc(params2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(val1).Assoc(params3).Rules(rule).Run(ctx)
 		t.Assert(err1, nil)
 		t.AssertNE(err2, nil)
 		t.AssertNE(err3, nil)
@@ -106,9 +106,9 @@ func Test_RequiredWith(t *testing.T) {
 		params3 := g.Map{
 			"time": time.Time{},
 		}
-		err1 := g.Validator().Data(val1).Assoc(params1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val1).Assoc(params2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(val1).Assoc(params3).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Assoc(params1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val1).Assoc(params2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(val1).Assoc(params3).Rules(rule).Run(ctx)
 		t.Assert(err1, nil)
 		t.AssertNE(err2, nil)
 		t.Assert(err3, nil)
@@ -125,9 +125,9 @@ func Test_RequiredWith(t *testing.T) {
 		params3 := g.Map{
 			"time": time.Now(),
 		}
-		err1 := g.Validator().Data(val1).Assoc(params1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val1).Assoc(params2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(val1).Assoc(params3).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Assoc(params1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val1).Assoc(params2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(val1).Assoc(params3).Rules(rule).Run(ctx)
 		t.Assert(err1, nil)
 		t.AssertNE(err2, nil)
 		t.AssertNE(err3, nil)
@@ -175,9 +175,9 @@ func Test_RequiredWithAll(t *testing.T) {
 			"id":   100,
 			"name": "john",
 		}
-		err1 := g.Validator().Data(val1).Assoc(params1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val1).Assoc(params2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(val1).Assoc(params3).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Assoc(params1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val1).Assoc(params2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(val1).Assoc(params3).Rules(rule).Run(ctx)
 		t.Assert(err1, nil)
 		t.Assert(err2, nil)
 		t.AssertNE(err3, nil)
@@ -198,9 +198,9 @@ func Test_RequiredWithOut(t *testing.T) {
 			"id":   100,
 			"name": "john",
 		}
-		err1 := g.Validator().Data(val1).Assoc(params1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val1).Assoc(params2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(val1).Assoc(params3).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Assoc(params1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val1).Assoc(params2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(val1).Assoc(params3).Rules(rule).Run(ctx)
 		t.AssertNE(err1, nil)
 		t.AssertNE(err2, nil)
 		t.Assert(err3, nil)
@@ -221,9 +221,9 @@ func Test_RequiredWithOutAll(t *testing.T) {
 			"id":   100,
 			"name": "john",
 		}
-		err1 := g.Validator().Data(val1).Assoc(params1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val1).Assoc(params2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(val1).Assoc(params3).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Assoc(params1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val1).Assoc(params2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(val1).Assoc(params3).Rules(rule).Run(ctx)
 		t.AssertNE(err1, nil)
 		t.Assert(err2, nil)
 		t.Assert(err3, nil)
@@ -241,14 +241,14 @@ func Test_Date(t *testing.T) {
 		val6 := "2010/11/01"
 		val7 := "2010=11=01"
 		val8 := "123"
-		err1 := g.Validator().Data(val1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Messages(nil).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Messages(nil).Run(ctx)
-		err5 := g.Validator().Data(val5).Rules(rule).Messages(nil).Run(ctx)
-		err6 := g.Validator().Data(val6).Rules(rule).Messages(nil).Run(ctx)
-		err7 := g.Validator().Data(val7).Rules(rule).Messages(nil).Run(ctx)
-		err8 := g.Validator().Data(val8).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
+		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
+		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
+		err6 := g.Validator().Data(val6).Rules(rule).Run(ctx)
+		err7 := g.Validator().Data(val7).Rules(rule).Run(ctx)
+		err8 := g.Validator().Data(val8).Rules(rule).Run(ctx)
 		t.AssertNE(err1, nil)
 		t.AssertNE(err2, nil)
 		t.Assert(err3, nil)
@@ -289,12 +289,12 @@ func Test_DateFormat(t *testing.T) {
 		val4 := "201011-01"
 		val5 := "2010~11~01"
 		val6 := "2010-11~01"
-		err1 := g.Validator().Data(val1).Rules("date-format:Y").Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules("date-format:Ym").Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules("date-format:Y.m").Messages(nil).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules("date-format:Ym-d").Messages(nil).Run(ctx)
-		err5 := g.Validator().Data(val5).Rules("date-format:Y~m~d").Messages(nil).Run(ctx)
-		err6 := g.Validator().Data(val6).Rules("date-format:Y~m~d").Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Rules("date-format:Y").Run(ctx)
+		err2 := g.Validator().Data(val2).Rules("date-format:Ym").Run(ctx)
+		err3 := g.Validator().Data(val3).Rules("date-format:Y.m").Run(ctx)
+		err4 := g.Validator().Data(val4).Rules("date-format:Ym-d").Run(ctx)
+		err5 := g.Validator().Data(val5).Rules("date-format:Y~m~d").Run(ctx)
+		err6 := g.Validator().Data(val6).Rules("date-format:Y~m~d").Run(ctx)
 		t.Assert(err1, nil)
 		t.Assert(err2, nil)
 		t.Assert(err3, nil)
@@ -319,10 +319,10 @@ func Test_Email(t *testing.T) {
 		value2 := "m@www@johngcn"
 		value3 := "m-m_m@mail.johng.cn"
 		value4 := "m.m-m@johng.cn"
-		err1 := g.Validator().Data(value1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(value2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(value3).Rules(rule).Messages(nil).Run(ctx)
-		err4 := g.Validator().Data(value4).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(value1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(value2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(value3).Rules(rule).Run(ctx)
+		err4 := g.Validator().Data(value4).Rules(rule).Run(ctx)
 		t.AssertNE(err1, nil)
 		t.AssertNE(err2, nil)
 		t.Assert(err3, nil)
@@ -332,10 +332,10 @@ func Test_Email(t *testing.T) {
 
 func Test_Phone(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		err1 := g.Validator().Data("1361990897").Rules("phone").Messages(nil).Run(ctx)
-		err2 := g.Validator().Data("13619908979").Rules("phone").Messages(nil).Run(ctx)
-		err3 := g.Validator().Data("16719908979").Rules("phone").Messages(nil).Run(ctx)
-		err4 := g.Validator().Data("19719908989").Rules("phone").Messages(nil).Run(ctx)
+		err1 := g.Validator().Data("1361990897").Rules("phone").Run(ctx)
+		err2 := g.Validator().Data("13619908979").Rules("phone").Run(ctx)
+		err3 := g.Validator().Data("16719908979").Rules("phone").Run(ctx)
+		err4 := g.Validator().Data("19719908989").Rules("phone").Run(ctx)
 		t.AssertNE(err1.String(), nil)
 		t.Assert(err2, nil)
 		t.Assert(err3, nil)
@@ -345,12 +345,12 @@ func Test_Phone(t *testing.T) {
 
 func Test_PhoneLoose(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
-		err1 := g.Validator().Data("13333333333").Rules("phone-loose").Messages(nil).Run(ctx)
-		err2 := g.Validator().Data("15555555555").Rules("phone-loose").Messages(nil).Run(ctx)
-		err3 := g.Validator().Data("16666666666").Rules("phone-loose").Messages(nil).Run(ctx)
-		err4 := g.Validator().Data("23333333333").Rules("phone-loose").Messages(nil).Run(ctx)
-		err5 := g.Validator().Data("1333333333").Rules("phone-loose").Messages(nil).Run(ctx)
-		err6 := g.Validator().Data("10333333333").Rules("phone-loose").Messages(nil).Run(ctx)
+		err1 := g.Validator().Data("13333333333").Rules("phone-loose").Run(ctx)
+		err2 := g.Validator().Data("15555555555").Rules("phone-loose").Run(ctx)
+		err3 := g.Validator().Data("16666666666").Rules("phone-loose").Run(ctx)
+		err4 := g.Validator().Data("23333333333").Rules("phone-loose").Run(ctx)
+		err5 := g.Validator().Data("1333333333").Rules("phone-loose").Run(ctx)
+		err6 := g.Validator().Data("10333333333").Rules("phone-loose").Run(ctx)
 		t.Assert(err1, nil)
 		t.Assert(err2, nil)
 		t.Assert(err3, nil)
@@ -368,11 +368,11 @@ func Test_Telephone(t *testing.T) {
 		val3 := "86292651"
 		val4 := "028-8692651"
 		val5 := "0830-8692651"
-		err1 := g.Validator().Data(val1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Messages(nil).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Messages(nil).Run(ctx)
-		err5 := g.Validator().Data(val5).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
+		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
+		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
 		t.AssertNE(err1, nil)
 		t.AssertNE(err2, nil)
 		t.Assert(err3, nil)
@@ -389,11 +389,11 @@ func Test_Passport(t *testing.T) {
 		val3 := "aaaaa"
 		val4 := "aaaaaa"
 		val5 := "a123_456"
-		err1 := g.Validator().Data(val1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Messages(nil).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Messages(nil).Run(ctx)
-		err5 := g.Validator().Data(val5).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
+		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
+		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
 		t.AssertNE(err1, nil)
 		t.AssertNE(err2, nil)
 		t.AssertNE(err3, nil)
@@ -410,11 +410,11 @@ func Test_Password(t *testing.T) {
 		val3 := "a12345-6"
 		val4 := ">,/;'[09-"
 		val5 := "a123_456"
-		err1 := g.Validator().Data(val1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Messages(nil).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Messages(nil).Run(ctx)
-		err5 := g.Validator().Data(val5).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
+		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
+		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
 		t.AssertNE(err1, nil)
 		t.AssertNE(err2, nil)
 		t.Assert(err3, nil)
@@ -433,13 +433,13 @@ func Test_Password2(t *testing.T) {
 		val5 := "a123_456"
 		val6 := "Nant1986"
 		val7 := "Nant1986!"
-		err1 := g.Validator().Data(val1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Messages(nil).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Messages(nil).Run(ctx)
-		err5 := g.Validator().Data(val5).Rules(rule).Messages(nil).Run(ctx)
-		err6 := g.Validator().Data(val6).Rules(rule).Messages(nil).Run(ctx)
-		err7 := g.Validator().Data(val7).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
+		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
+		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
+		err6 := g.Validator().Data(val6).Rules(rule).Run(ctx)
+		err7 := g.Validator().Data(val7).Rules(rule).Run(ctx)
 		t.AssertNE(err1, nil)
 		t.AssertNE(err2, nil)
 		t.AssertNE(err3, nil)
@@ -460,13 +460,13 @@ func Test_Password3(t *testing.T) {
 		val5 := "a123_456"
 		val6 := "Nant1986"
 		val7 := "Nant1986!"
-		err1 := g.Validator().Data(val1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Messages(nil).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Messages(nil).Run(ctx)
-		err5 := g.Validator().Data(val5).Rules(rule).Messages(nil).Run(ctx)
-		err6 := g.Validator().Data(val6).Rules(rule).Messages(nil).Run(ctx)
-		err7 := g.Validator().Data(val7).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
+		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
+		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
+		err6 := g.Validator().Data(val6).Rules(rule).Run(ctx)
+		err7 := g.Validator().Data(val7).Rules(rule).Run(ctx)
 		t.AssertNE(err1, nil)
 		t.AssertNE(err2, nil)
 		t.AssertNE(err3, nil)
@@ -482,8 +482,8 @@ func Test_Postcode(t *testing.T) {
 		rule := "postcode"
 		val1 := "12345"
 		val2 := "610036"
-		err1 := g.Validator().Data(val1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
 		t.AssertNE(err1, nil)
 		t.Assert(err2, nil)
 	})
@@ -497,11 +497,11 @@ func Test_ResidentId(t *testing.T) {
 		val3 := "311128500121201"
 		val4 := "510521198607185367"
 		val5 := "51052119860718536x"
-		err1 := g.Validator().Data(val1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Messages(nil).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Messages(nil).Run(ctx)
-		err5 := g.Validator().Data(val5).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
+		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
+		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
 		t.AssertNE(err1, nil)
 		t.AssertNE(err2, nil)
 		t.AssertNE(err3, nil)
@@ -515,8 +515,8 @@ func Test_BankCard(t *testing.T) {
 		rule := "bank-card"
 		val1 := "6230514630000424470"
 		val2 := "6230514630000424473"
-		err1 := g.Validator().Data(val1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
 		t.AssertNE(err1, nil)
 		t.Assert(err2, nil)
 	})
@@ -530,11 +530,11 @@ func Test_QQ(t *testing.T) {
 		val3 := "10000"
 		val4 := "38996181"
 		val5 := "389961817"
-		err1 := g.Validator().Data(val1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Messages(nil).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Messages(nil).Run(ctx)
-		err5 := g.Validator().Data(val5).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
+		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
+		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
 		t.AssertNE(err1, nil)
 		t.AssertNE(err2, nil)
 		t.Assert(err3, nil)
@@ -544,31 +544,31 @@ func Test_QQ(t *testing.T) {
 }
 
 func Test_Ip(t *testing.T) {
-	if m := g.Validator().Data("10.0.0.1").Rules("ip").Messages(nil).Run(ctx); m != nil {
+	if m := g.Validator().Data("10.0.0.1").Rules("ip").Run(ctx); m != nil {
 		t.Error(m)
 	}
-	if m := g.Validator().Data("10.0.0.1").Rules("ipv4").Messages(nil).Run(ctx); m != nil {
+	if m := g.Validator().Data("10.0.0.1").Rules("ipv4").Run(ctx); m != nil {
 		t.Error(m)
 	}
-	if m := g.Validator().Data("0.0.0.0").Rules("ipv4").Messages(nil).Run(ctx); m != nil {
+	if m := g.Validator().Data("0.0.0.0").Rules("ipv4").Run(ctx); m != nil {
 		t.Error(m)
 	}
-	if m := g.Validator().Data("1920.0.0.0").Rules("ipv4").Messages(nil).Run(ctx); m == nil {
+	if m := g.Validator().Data("1920.0.0.0").Rules("ipv4").Run(ctx); m == nil {
 		t.Error("ipv4校验失败")
 	}
-	if m := g.Validator().Data("1920.0.0.0").Rules("ip").Messages(nil).Run(ctx); m == nil {
+	if m := g.Validator().Data("1920.0.0.0").Rules("ip").Run(ctx); m == nil {
 		t.Error("ipv4校验失败")
 	}
-	if m := g.Validator().Data("fe80::5484:7aff:fefe:9799").Rules("ipv6").Messages(nil).Run(ctx); m != nil {
+	if m := g.Validator().Data("fe80::5484:7aff:fefe:9799").Rules("ipv6").Run(ctx); m != nil {
 		t.Error(m)
 	}
-	if m := g.Validator().Data("fe80::5484:7aff:fefe:9799123").Rules("ipv6").Messages(nil).Run(ctx); m == nil {
+	if m := g.Validator().Data("fe80::5484:7aff:fefe:9799123").Rules("ipv6").Run(ctx); m == nil {
 		t.Error(m)
 	}
-	if m := g.Validator().Data("fe80::5484:7aff:fefe:9799").Rules("ip").Messages(nil).Run(ctx); m != nil {
+	if m := g.Validator().Data("fe80::5484:7aff:fefe:9799").Rules("ip").Run(ctx); m != nil {
 		t.Error(m)
 	}
-	if m := g.Validator().Data("fe80::5484:7aff:fefe:9799123").Rules("ip").Messages(nil).Run(ctx); m == nil {
+	if m := g.Validator().Data("fe80::5484:7aff:fefe:9799123").Rules("ip").Run(ctx); m == nil {
 		t.Error(m)
 	}
 }
@@ -581,11 +581,11 @@ func Test_IPv4(t *testing.T) {
 		val3 := "1.1.1.1"
 		val4 := "255.255.255.0"
 		val5 := "127.0.0.1"
-		err1 := g.Validator().Data(val1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Messages(nil).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Messages(nil).Run(ctx)
-		err5 := g.Validator().Data(val5).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
+		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
+		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
 		t.AssertNE(err1, nil)
 		t.Assert(err2, nil)
 		t.Assert(err3, nil)
@@ -602,11 +602,11 @@ func Test_IPv6(t *testing.T) {
 		val3 := "1030::C9B4:FF12:48AA:1A2B"
 		val4 := "2000:0:0:0:0:0:0:1"
 		val5 := "0000:0000:0000:0000:0000:ffff:c0a8:5909"
-		err1 := g.Validator().Data(val1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Messages(nil).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Messages(nil).Run(ctx)
-		err5 := g.Validator().Data(val5).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
+		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
+		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
 		t.AssertNE(err1, nil)
 		t.Assert(err2, nil)
 		t.Assert(err3, nil)
@@ -621,9 +621,9 @@ func Test_MAC(t *testing.T) {
 		val1 := "192.168.1.1"
 		val2 := "44-45-53-54-00-00"
 		val3 := "01:00:5e:00:00:00"
-		err1 := g.Validator().Data(val1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
 		t.AssertNE(err1, nil)
 		t.Assert(err2, nil)
 		t.Assert(err3, nil)
@@ -637,10 +637,10 @@ func Test_URL(t *testing.T) {
 		val2 := "https://www.baidu.com"
 		val3 := "http://127.0.0.1"
 		val4 := "file:///tmp/test.txt"
-		err1 := g.Validator().Data(val1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Messages(nil).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
+		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
 		t.AssertNE(err1, nil)
 		t.Assert(err2, nil)
 		t.Assert(err3, nil)
@@ -667,7 +667,7 @@ func Test_Domain(t *testing.T) {
 		}
 		var err error
 		for k, v := range m {
-			err = g.Validator().Data(k).Rules("domain").Messages(nil).Run(ctx)
+			err = g.Validator().Data(k).Rules("domain").Run(ctx)
 			if v {
 				// fmt.Println(k)
 				t.Assert(err, nil)
@@ -681,10 +681,10 @@ func Test_Domain(t *testing.T) {
 
 func Test_Length(t *testing.T) {
 	rule := "length:6,16"
-	if m := g.Validator().Data("123456").Rules(rule).Messages(nil).Run(ctx); m != nil {
+	if m := g.Validator().Data("123456").Rules(rule).Run(ctx); m != nil {
 		t.Error(m)
 	}
-	if m := g.Validator().Data("12345").Rules(rule).Messages(nil).Run(ctx); m == nil {
+	if m := g.Validator().Data("12345").Rules(rule).Run(ctx); m == nil {
 		t.Error("长度校验失败")
 	}
 }
@@ -694,10 +694,10 @@ func Test_MinLength(t *testing.T) {
 	msgs := map[string]string{
 		"min-length": "地址长度至少为{min}位",
 	}
-	if m := g.Validator().Data("123456").Rules(rule).Messages(nil).Run(ctx); m != nil {
+	if m := g.Validator().Data("123456").Rules(rule).Run(ctx); m != nil {
 		t.Error(m)
 	}
-	if m := g.Validator().Data("12345").Rules(rule).Messages(nil).Run(ctx); m == nil {
+	if m := g.Validator().Data("12345").Rules(rule).Run(ctx); m == nil {
 		t.Error("长度校验失败")
 	}
 	if m := g.Validator().Data("12345").Rules(rule).Messages(msgs).Run(ctx); m == nil {
@@ -705,7 +705,7 @@ func Test_MinLength(t *testing.T) {
 	}
 
 	rule2 := "min-length:abc"
-	if m := g.Validator().Data("123456").Rules(rule2).Messages(nil).Run(ctx); m == nil {
+	if m := g.Validator().Data("123456").Rules(rule2).Run(ctx); m == nil {
 		t.Error("长度校验失败")
 	}
 }
@@ -715,10 +715,10 @@ func Test_MaxLength(t *testing.T) {
 	msgs := map[string]string{
 		"max-length": "地址长度至大为{max}位",
 	}
-	if m := g.Validator().Data("12345").Rules(rule).Messages(nil).Run(ctx); m != nil {
+	if m := g.Validator().Data("12345").Rules(rule).Run(ctx); m != nil {
 		t.Error(m)
 	}
-	if m := g.Validator().Data("1234567").Rules(rule).Messages(nil).Run(ctx); m == nil {
+	if m := g.Validator().Data("1234567").Rules(rule).Run(ctx); m == nil {
 		t.Error("长度校验失败")
 	}
 	if m := g.Validator().Data("1234567").Rules(rule).Messages(msgs).Run(ctx); m == nil {
@@ -726,30 +726,30 @@ func Test_MaxLength(t *testing.T) {
 	}
 
 	rule2 := "max-length:abc"
-	if m := g.Validator().Data("123456").Rules(rule2).Messages(nil).Run(ctx); m == nil {
+	if m := g.Validator().Data("123456").Rules(rule2).Run(ctx); m == nil {
 		t.Error("长度校验失败")
 	}
 }
 
 func Test_Size(t *testing.T) {
 	rule := "size:5"
-	if m := g.Validator().Data("12345").Rules(rule).Messages(nil).Run(ctx); m != nil {
+	if m := g.Validator().Data("12345").Rules(rule).Run(ctx); m != nil {
 		t.Error(m)
 	}
-	if m := g.Validator().Data("123456").Rules(rule).Messages(nil).Run(ctx); m == nil {
+	if m := g.Validator().Data("123456").Rules(rule).Run(ctx); m == nil {
 		t.Error("长度校验失败")
 	}
 }
 
 func Test_Between(t *testing.T) {
 	rule := "between:6.01, 10.01"
-	if m := g.Validator().Data(10).Rules(rule).Messages(nil).Run(ctx); m != nil {
+	if m := g.Validator().Data(10).Rules(rule).Run(ctx); m != nil {
 		t.Error(m)
 	}
-	if m := g.Validator().Data(10.02).Rules(rule).Messages(nil).Run(ctx); m == nil {
+	if m := g.Validator().Data(10.02).Rules(rule).Run(ctx); m == nil {
 		t.Error("大小范围校验失败")
 	}
-	if m := g.Validator().Data("a").Rules(rule).Messages(nil).Run(ctx); m == nil {
+	if m := g.Validator().Data("a").Rules(rule).Run(ctx); m == nil {
 		t.Error("大小范围校验失败")
 	}
 }
@@ -762,11 +762,11 @@ func Test_Min(t *testing.T) {
 		val3 := "100"
 		val4 := "1000"
 		val5 := "a"
-		err1 := g.Validator().Data(val1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Messages(nil).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Messages(nil).Run(ctx)
-		err5 := g.Validator().Data(val5).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
+		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
+		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
 		t.AssertNE(err1, nil)
 		t.AssertNE(err2, nil)
 		t.Assert(err3, nil)
@@ -774,7 +774,7 @@ func Test_Min(t *testing.T) {
 		t.AssertNE(err5, nil)
 
 		rule2 := "min:a"
-		err6 := g.Validator().Data(val1).Rules(rule2).Messages(nil).Run(ctx)
+		err6 := g.Validator().Data(val1).Rules(rule2).Run(ctx)
 		t.AssertNE(err6, nil)
 	})
 }
@@ -787,11 +787,11 @@ func Test_Max(t *testing.T) {
 		val3 := "100"
 		val4 := "1000"
 		val5 := "a"
-		err1 := g.Validator().Data(val1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Messages(nil).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Messages(nil).Run(ctx)
-		err5 := g.Validator().Data(val5).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
+		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
+		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
 		t.Assert(err1, nil)
 		t.Assert(err2, nil)
 		t.Assert(err3, nil)
@@ -799,7 +799,7 @@ func Test_Max(t *testing.T) {
 		t.AssertNE(err5, nil)
 
 		rule2 := "max:a"
-		err6 := g.Validator().Data(val1).Rules(rule2).Messages(nil).Run(ctx)
+		err6 := g.Validator().Data(val1).Rules(rule2).Run(ctx)
 		t.AssertNE(err6, nil)
 	})
 }
@@ -813,12 +813,12 @@ func Test_Json(t *testing.T) {
 		val4 := "[]"
 		val5 := "[1,2,3,4]"
 		val6 := `{"list":[1,2,3,4]}`
-		err1 := g.Validator().Data(val1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Messages(nil).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Messages(nil).Run(ctx)
-		err5 := g.Validator().Data(val5).Rules(rule).Messages(nil).Run(ctx)
-		err6 := g.Validator().Data(val6).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
+		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
+		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
+		err6 := g.Validator().Data(val6).Rules(rule).Run(ctx)
 		t.AssertNE(err1, nil)
 		t.AssertNE(err2, nil)
 		t.Assert(err3, nil)
@@ -837,12 +837,12 @@ func Test_Integer(t *testing.T) {
 		val4 := "1"
 		val5 := "100"
 		val6 := `999999999`
-		err1 := g.Validator().Data(val1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Messages(nil).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Messages(nil).Run(ctx)
-		err5 := g.Validator().Data(val5).Rules(rule).Messages(nil).Run(ctx)
-		err6 := g.Validator().Data(val6).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
+		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
+		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
+		err6 := g.Validator().Data(val6).Rules(rule).Run(ctx)
 		t.AssertNE(err1, nil)
 		t.AssertNE(err2, nil)
 		t.Assert(err3, nil)
@@ -861,12 +861,12 @@ func Test_Float(t *testing.T) {
 		val4 := "1.0"
 		val5 := "1.1"
 		val6 := `0.1`
-		err1 := g.Validator().Data(val1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Messages(nil).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Messages(nil).Run(ctx)
-		err5 := g.Validator().Data(val5).Rules(rule).Messages(nil).Run(ctx)
-		err6 := g.Validator().Data(val6).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
+		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
+		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
+		err6 := g.Validator().Data(val6).Rules(rule).Run(ctx)
 		t.AssertNE(err1, nil)
 		t.AssertNE(err2, nil)
 		t.Assert(err3, nil)
@@ -885,12 +885,12 @@ func Test_Boolean(t *testing.T) {
 		val4 := "1"
 		val5 := "true"
 		val6 := `off`
-		err1 := g.Validator().Data(val1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Messages(nil).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Messages(nil).Run(ctx)
-		err5 := g.Validator().Data(val5).Rules(rule).Messages(nil).Run(ctx)
-		err6 := g.Validator().Data(val6).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
+		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
+		err5 := g.Validator().Data(val5).Rules(rule).Run(ctx)
+		err6 := g.Validator().Data(val6).Rules(rule).Run(ctx)
 		t.AssertNE(err1, nil)
 		t.AssertNE(err2, nil)
 		t.Assert(err3, nil)
@@ -914,9 +914,9 @@ func Test_Same(t *testing.T) {
 			"id":   100,
 			"name": "john",
 		}
-		err1 := g.Validator().Data(val1).Assoc(params1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val1).Assoc(params2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(val1).Assoc(params3).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Assoc(params1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val1).Assoc(params2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(val1).Assoc(params3).Rules(rule).Run(ctx)
 		t.AssertNE(err1, nil)
 		t.Assert(err2, nil)
 		t.Assert(err3, nil)
@@ -937,9 +937,9 @@ func Test_Different(t *testing.T) {
 			"id":   100,
 			"name": "john",
 		}
-		err1 := g.Validator().Data(val1).Assoc(params1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val1).Assoc(params2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(val1).Assoc(params3).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Assoc(params1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val1).Assoc(params2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(val1).Assoc(params3).Rules(rule).Run(ctx)
 		t.Assert(err1, nil)
 		t.AssertNE(err2, nil)
 		t.AssertNE(err3, nil)
@@ -953,10 +953,10 @@ func Test_In(t *testing.T) {
 		val2 := "1"
 		val3 := "100"
 		val4 := "200"
-		err1 := g.Validator().Data(val1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Messages(nil).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
+		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
 		t.AssertNE(err1, nil)
 		t.AssertNE(err2, nil)
 		t.Assert(err3, nil)
@@ -971,10 +971,10 @@ func Test_NotIn(t *testing.T) {
 		val2 := "1"
 		val3 := "100"
 		val4 := "200"
-		err1 := g.Validator().Data(val1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Messages(nil).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
+		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
 		t.Assert(err1, nil)
 		t.Assert(err2, nil)
 		t.AssertNE(err3, nil)
@@ -986,10 +986,10 @@ func Test_NotIn(t *testing.T) {
 		val2 := "1"
 		val3 := "100"
 		val4 := "200"
-		err1 := g.Validator().Data(val1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(val2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(val3).Rules(rule).Messages(nil).Run(ctx)
-		err4 := g.Validator().Data(val4).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(val1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(val2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(val3).Rules(rule).Run(ctx)
+		err4 := g.Validator().Data(val4).Rules(rule).Run(ctx)
 		t.Assert(err1, nil)
 		t.Assert(err2, nil)
 		t.AssertNE(err3, nil)
@@ -999,10 +999,10 @@ func Test_NotIn(t *testing.T) {
 
 func Test_Regex1(t *testing.T) {
 	rule := `regex:\d{6}|\D{6}|length:6,16`
-	if m := g.Validator().Data("123456").Rules(rule).Messages(nil).Run(ctx); m != nil {
+	if m := g.Validator().Data("123456").Rules(rule).Run(ctx); m != nil {
 		t.Error(m)
 	}
-	if m := g.Validator().Data("abcde6").Rules(rule).Messages(nil).Run(ctx); m == nil {
+	if m := g.Validator().Data("abcde6").Rules(rule).Run(ctx); m == nil {
 		t.Error("校验失败")
 	}
 }
@@ -1013,9 +1013,9 @@ func Test_Regex2(t *testing.T) {
 		str1 := ""
 		str2 := "data"
 		str3 := "data:image/jpeg;base64,/9jrbattq22r"
-		err1 := g.Validator().Data(str1).Rules(rule).Messages(nil).Run(ctx)
-		err2 := g.Validator().Data(str2).Rules(rule).Messages(nil).Run(ctx)
-		err3 := g.Validator().Data(str3).Rules(rule).Messages(nil).Run(ctx)
+		err1 := g.Validator().Data(str1).Rules(rule).Run(ctx)
+		err2 := g.Validator().Data(str2).Rules(rule).Run(ctx)
+		err3 := g.Validator().Data(str3).Rules(rule).Run(ctx)
 		t.AssertNE(err1, nil)
 		t.AssertNE(err2, nil)
 		t.Assert(err3, nil)
@@ -1032,7 +1032,7 @@ func Test_InternalError_String(t *testing.T) {
 			Name string `v:"hh"`
 		}
 		aa := a{Name: "2"}
-		err := g.Validator().Data(&aa).Rules(nil).Run(ctx)
+		err := g.Validator().Data(&aa).Run(ctx)
 
 		t.Assert(err.String(), "InvalidRules: hh")
 		t.Assert(err.Strings(), g.Slice{"InvalidRules: hh"})

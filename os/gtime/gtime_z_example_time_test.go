@@ -7,6 +7,7 @@
 package gtime_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"time"
@@ -467,11 +468,31 @@ func ExampleTime_EndOfYear() {
 }
 
 func ExampleTime_MarshalJSON() {
-	gt1 := gtime.New("2018-08-08 08:08:08")
-
-	json, _ := gt1.MarshalJSON()
-	fmt.Println(string(json))
+	type Person struct {
+		Name     string      `json:"name"`
+		Birthday *gtime.Time `json:"birthday"`
+	}
+	p := new(Person)
+	p.Name = "goframe"
+	p.Birthday = gtime.New("2018-08-08 08:08:08")
+	j, _ := json.Marshal(p)
+	fmt.Println(string(j))
 
 	// Output:
-	// "2018-08-08 08:08:08"
+	// {"name":"goframe","birthday":"2018-08-08 08:08:08"}
+}
+
+func ExampleTime_UnmarshalJSON() {
+	type Person struct {
+		Name     string      `json:"name"`
+		Birthday *gtime.Time `json:"birthday"`
+	}
+	p := new(Person)
+	src := `{"name":"goframe","birthday":"2018-08-08 08:08:08"}`
+	json.Unmarshal([]byte(src), p)
+
+	fmt.Println(p)
+
+	// Output
+	// &{goframe 2018-08-08 08:08:08}
 }

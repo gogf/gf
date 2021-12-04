@@ -11,6 +11,7 @@ import (
 	"github.com/gogf/gf/v2/database/gredis"
 	"github.com/gogf/gf/v2/frame/gins"
 	"github.com/gogf/gf/v2/i18n/gi18n"
+	"github.com/gogf/gf/v2/net/gclient"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/net/gudp"
@@ -22,8 +23,8 @@ import (
 )
 
 // Client is a convenience function, which creates and returns a new HTTP client.
-func Client() *ghttp.Client {
-	return ghttp.NewClient()
+func Client() *gclient.Client {
+	return gclient.New()
 }
 
 // Server returns an instance of http server with specified name.
