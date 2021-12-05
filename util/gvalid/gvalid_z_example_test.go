@@ -21,7 +21,7 @@ import (
 	"github.com/gogf/gf/v2/util/gvalid"
 )
 
-func ExampleValidator_Rule_Required() {
+func Example_Rule_Required() {
 	type BizReq struct {
 		ID   uint   `v:"required"`
 		Name string `v:"required"`
@@ -40,7 +40,7 @@ func ExampleValidator_Rule_Required() {
 	// The Name field is required
 }
 
-func ExampleValidator_Rule_RequiredIf() {
+func Example_Rule_RequiredIf() {
 	type BizReq struct {
 		ID          uint   `v:"required" dc:"Your ID"`
 		Name        string `v:"required" dc:"Your name"`
@@ -64,7 +64,7 @@ func ExampleValidator_Rule_RequiredIf() {
 	// The WifeName field is required
 }
 
-func ExampleValidator_Rule_RequiredUnless() {
+func Example_Rule_RequiredUnless() {
 	type BizReq struct {
 		ID          uint   `v:"required" dc:"Your ID"`
 		Name        string `v:"required" dc:"Your name"`
@@ -88,7 +88,7 @@ func ExampleValidator_Rule_RequiredUnless() {
 	// The WifeName field is required; The HusbandName field is required
 }
 
-func ExampleValidator_Rule_RequiredWith() {
+func Example_Rule_RequiredWith() {
 	type BizReq struct {
 		ID          uint   `v:"required" dc:"Your ID"`
 		Name        string `v:"required" dc:"Your name"`
@@ -113,7 +113,7 @@ func ExampleValidator_Rule_RequiredWith() {
 	// The HusbandName field is required
 }
 
-func ExampleValidator_Rule_RequiredWithAll() {
+func Example_Rule_RequiredWithAll() {
 	type BizReq struct {
 		ID          uint   `v:"required" dc:"Your ID"`
 		Name        string `v:"required" dc:"Your name"`
@@ -138,7 +138,7 @@ func ExampleValidator_Rule_RequiredWithAll() {
 	// The HusbandName field is required
 }
 
-func ExampleValidator_Rule_RequiredWithout() {
+func Example_Rule_RequiredWithout() {
 	type BizReq struct {
 		ID          uint   `v:"required" dc:"Your ID"`
 		Name        string `v:"required" dc:"Your name"`
@@ -162,7 +162,7 @@ func ExampleValidator_Rule_RequiredWithout() {
 	// The HusbandName field is required
 }
 
-func ExampleValidator_Rule_RequiredWithoutAll() {
+func Example_Rule_RequiredWithoutAll() {
 	type BizReq struct {
 		ID          uint   `v:"required" dc:"Your ID"`
 		Name        string `v:"required" dc:"Your name"`
@@ -185,7 +185,7 @@ func ExampleValidator_Rule_RequiredWithoutAll() {
 	// The HusbandName field is required
 }
 
-func ExampleValidator_Rule_Bail() {
+func Example_Rule_Bail() {
 	type BizReq struct {
 		Account   string `v:"bail|required|length:6,16|same:QQ"`
 		QQ        string
@@ -209,7 +209,7 @@ func ExampleValidator_Rule_Bail() {
 	// The Account value `gf` length must be between 6 and 16
 }
 
-func ExampleValidator_Rule_CaseInsensitive() {
+func Example_Rule_CaseInsensitive() {
 	type BizReq struct {
 		Account   string `v:"required"`
 		Password  string `v:"required|ci|same:Password2"`
@@ -230,7 +230,7 @@ func ExampleValidator_Rule_CaseInsensitive() {
 	// output:
 }
 
-func ExampleValidator_Rule_Date() {
+func Example_Rule_Date() {
 	type BizReq struct {
 		Date1 string `v:"date"`
 		Date2 string `v:"date"`
@@ -259,7 +259,7 @@ func ExampleValidator_Rule_Date() {
 	// The Date5 value `2021/Oct/31` is not a valid date
 }
 
-func ExampleValidator_Rule_Datetime() {
+func Example_Rule_Datetime() {
 	type BizReq struct {
 		Date1 string `v:"datetime"`
 		Date2 string `v:"datetime"`
@@ -286,7 +286,7 @@ func ExampleValidator_Rule_Datetime() {
 	// The Date4 value `2021/Dec/01 23:00:00` is not a valid datetime
 }
 
-func ExampleValidator_Rule_DateFormat() {
+func Example_Rule_DateFormat() {
 	type BizReq struct {
 		Date1 string `v:"date-format:Y-m-d"`
 		Date2 string `v:"date-format:Y-m-d"`
@@ -312,7 +312,7 @@ func ExampleValidator_Rule_DateFormat() {
 	// The Date4 value `2021-11-01 23:00` does not match the format: Y-m-d H:i:s
 }
 
-func ExampleValidator_Rule_Email() {
+func Example_Rule_Email() {
 	type BizReq struct {
 		MailAddr1 string `v:"email"`
 		MailAddr2 string `v:"email"`
@@ -338,7 +338,7 @@ func ExampleValidator_Rule_Email() {
 	// The MailAddr4 value `gf#goframe.org` is not a valid email address
 }
 
-func ExampleValidator_Rule_Phone() {
+func Example_Rule_Phone() {
 	type BizReq struct {
 		PhoneNumber1 string `v:"phone"`
 		PhoneNumber2 string `v:"phone"`
@@ -365,7 +365,7 @@ func ExampleValidator_Rule_Phone() {
 	// The PhoneNumber4 value `1357891234` is not a valid phone number
 }
 
-func ExampleValidator_Rule_PhoneLoose() {
+func Example_Rule_PhoneLoose() {
 	type BizReq struct {
 		PhoneNumber1 string `v:"phone-loose"`
 		PhoneNumber2 string `v:"phone-loose"`
@@ -391,7 +391,7 @@ func ExampleValidator_Rule_PhoneLoose() {
 	// The PhoneNumber4 value `1357891234` is invalid
 }
 
-func ExampleValidator_Rule_Telephone() {
+func Example_Rule_Telephone() {
 	type BizReq struct {
 		Telephone1 string `v:"telephone"`
 		Telephone2 string `v:"telephone"`
@@ -417,7 +417,7 @@ func ExampleValidator_Rule_Telephone() {
 	// The Telephone4 value `775421451` is not a valid telephone number
 }
 
-func ExampleValidator_Rule_Passport() {
+func Example_Rule_Passport() {
 	type BizReq struct {
 		Passport1 string `v:"passport"`
 		Passport2 string `v:"passport"`
@@ -444,7 +444,7 @@ func ExampleValidator_Rule_Passport() {
 	// The Passport4 value `gf` is not a valid passport format
 }
 
-func ExampleValidator_Rule_Password() {
+func Example_Rule_Password() {
 	type BizReq struct {
 		Password1 string `v:"password"`
 		Password2 string `v:"password"`
@@ -465,7 +465,7 @@ func ExampleValidator_Rule_Password() {
 	// The Password2 value `gofra` is not a valid password format
 }
 
-func ExampleValidator_Rule_Password2() {
+func Example_Rule_Password2() {
 	type BizReq struct {
 		Password1 string `v:"password2"`
 		Password2 string `v:"password2"`
@@ -492,7 +492,7 @@ func ExampleValidator_Rule_Password2() {
 	// The Password4 value `goframe123` is not a valid password format
 }
 
-func ExampleValidator_Rule_Password3() {
+func Example_Rule_Password3() {
 	type BizReq struct {
 		Password1 string `v:"password3"`
 		Password2 string `v:"password3"`
@@ -516,7 +516,7 @@ func ExampleValidator_Rule_Password3() {
 	// The Password3 value `Goframe123` is not a valid password format
 }
 
-func ExampleValidator_Rule_Postcode() {
+func Example_Rule_Postcode() {
 	type BizReq struct {
 		Postcode1 string `v:"postcode"`
 		Postcode2 string `v:"postcode"`
@@ -540,7 +540,7 @@ func ExampleValidator_Rule_Postcode() {
 	// The Postcode3 value `1000000` is not a valid postcode format
 }
 
-func ExampleValidator_Rule_ResidentId() {
+func Example_Rule_ResidentId() {
 	type BizReq struct {
 		ResidentID1 string `v:"resident-id"`
 	}
@@ -559,7 +559,7 @@ func ExampleValidator_Rule_ResidentId() {
 	// The ResidentID1 value `320107199506285482` is not a valid resident id number
 }
 
-func ExampleValidator_Rule_BankCard() {
+func Example_Rule_BankCard() {
 	type BizReq struct {
 		BankCard1 string `v:"bank-card"`
 	}
@@ -578,7 +578,7 @@ func ExampleValidator_Rule_BankCard() {
 	// The BankCard1 value `6225760079930218` is not a valid bank card number
 }
 
-func ExampleValidator_Rule_QQ() {
+func Example_Rule_QQ() {
 	type BizReq struct {
 		QQ1 string `v:"qq"`
 		QQ2 string `v:"qq"`
@@ -602,7 +602,7 @@ func ExampleValidator_Rule_QQ() {
 	// The QQ3 value `514258412a` is not a valid QQ number
 }
 
-func ExampleValidator_Rule_IP() {
+func Example_Rule_IP() {
 	type BizReq struct {
 		IP1 string `v:"ip"`
 		IP2 string `v:"ip"`
@@ -628,7 +628,7 @@ func ExampleValidator_Rule_IP() {
 	// The IP4 value `ze80::812b:1158:1f43:f0d1` is not a valid IP address
 }
 
-func ExampleValidator_Rule_IPV4() {
+func Example_Rule_IPV4() {
 	type BizReq struct {
 		IP1 string `v:"ipv4"`
 		IP2 string `v:"ipv4"`
@@ -649,7 +649,7 @@ func ExampleValidator_Rule_IPV4() {
 	// The IP2 value `520.255.255.255` is not a valid IPv4 address
 }
 
-func ExampleValidator_Rule_IPV6() {
+func Example_Rule_IPV6() {
 	type BizReq struct {
 		IP1 string `v:"ipv6"`
 		IP2 string `v:"ipv6"`
@@ -670,7 +670,7 @@ func ExampleValidator_Rule_IPV6() {
 	// The IP2 value `ze80::812b:1158:1f43:f0d1` is not a valid IPv6 address
 }
 
-func ExampleValidator_Rule_Mac() {
+func Example_Rule_Mac() {
 	type BizReq struct {
 		Mac1 string `v:"mac"`
 		Mac2 string `v:"mac"`
@@ -691,7 +691,7 @@ func ExampleValidator_Rule_Mac() {
 	// The Mac2 value `Z0-CC-6A-D6-B1-1A` is not a valid MAC address
 }
 
-func ExampleValidator_Rule_Url() {
+func Example_Rule_Url() {
 	type BizReq struct {
 		URL1 string `v:"url"`
 		URL2 string `v:"url"`
@@ -714,7 +714,7 @@ func ExampleValidator_Rule_Url() {
 	// The URL3 value `ws://goframe.org` is not a valid URL address
 }
 
-func ExampleValidator_Rule_Domain() {
+func Example_Rule_Domain() {
 	type BizReq struct {
 		Domain1 string `v:"domain"`
 		Domain2 string `v:"domain"`
@@ -740,7 +740,7 @@ func ExampleValidator_Rule_Domain() {
 	// The Domain4 value `1a.2b` is not a valid domain format
 }
 
-func ExampleValidator_Rule_Size() {
+func Example_Rule_Size() {
 	type BizReq struct {
 		Size1 string `v:"size:10"`
 		Size2 string `v:"size:5"`
@@ -761,7 +761,7 @@ func ExampleValidator_Rule_Size() {
 	// The Size2 value `goframe` length must be 5
 }
 
-func ExampleValidator_Rule_Length() {
+func Example_Rule_Length() {
 	type BizReq struct {
 		Length1 string `v:"length:5,10"`
 		Length2 string `v:"length:10,15"`
@@ -782,7 +782,7 @@ func ExampleValidator_Rule_Length() {
 	// The Length2 value `goframe` length must be between 10 and 15
 }
 
-func ExampleValidator_Rule_MinLength() {
+func Example_Rule_MinLength() {
 	type BizReq struct {
 		MinLength1 string `v:"min-length:10"`
 		MinLength2 string `v:"min-length:8"`
@@ -803,7 +803,7 @@ func ExampleValidator_Rule_MinLength() {
 	// The MinLength2 value `goframe` length must be equal or greater than 8
 }
 
-func ExampleValidator_Rule_MaxLength() {
+func Example_Rule_MaxLength() {
 	type BizReq struct {
 		MaxLength1 string `v:"max-length:10"`
 		MaxLength2 string `v:"max-length:5"`
@@ -824,7 +824,7 @@ func ExampleValidator_Rule_MaxLength() {
 	// The MaxLength2 value `goframe` length must be equal or lesser than 5
 }
 
-func ExampleValidator_Rule_Between() {
+func Example_Rule_Between() {
 	type BizReq struct {
 		Age1   int     `v:"between:1,100"`
 		Age2   int     `v:"between:1,100"`
@@ -850,7 +850,7 @@ func ExampleValidator_Rule_Between() {
 	// The Score2 value `-0.5` must be between 0 and 10
 }
 
-func ExampleValidator_Rule_Min() {
+func Example_Rule_Min() {
 	type BizReq struct {
 		Age1   int     `v:"min:100"`
 		Age2   int     `v:"min:100"`
@@ -876,7 +876,7 @@ func ExampleValidator_Rule_Min() {
 	// The Score1 value `9.8` must be equal or greater than 10
 }
 
-func ExampleValidator_Rule_Max() {
+func Example_Rule_Max() {
 	type BizReq struct {
 		Age1   int     `v:"max:100"`
 		Age2   int     `v:"max:100"`
@@ -902,7 +902,7 @@ func ExampleValidator_Rule_Max() {
 	// The Score2 value `10.1` must be equal or lesser than 10
 }
 
-func ExampleValidator_Rule_Json() {
+func Example_Rule_Json() {
 	type BizReq struct {
 		JSON1 string `v:"json"`
 		JSON2 string `v:"json"`
@@ -923,7 +923,7 @@ func ExampleValidator_Rule_Json() {
 	// The JSON2 value `{"name":"goframe","author":"郭强","test"}` is not a valid JSON string
 }
 
-func ExampleValidator_Rule_Integer() {
+func Example_Rule_Integer() {
 	type BizReq struct {
 		Integer string `v:"integer"`
 		Float   string `v:"integer"`
@@ -947,7 +947,7 @@ func ExampleValidator_Rule_Integer() {
 	// The Str value `goframe` is not an integer
 }
 
-func ExampleValidator_Rule_Float() {
+func Example_Rule_Float() {
 	type BizReq struct {
 		Integer string `v:"float"`
 		Float   string `v:"float"`
@@ -970,7 +970,7 @@ func ExampleValidator_Rule_Float() {
 	// The Str value `goframe` is invalid
 }
 
-func ExampleValidator_Rule_Boolean() {
+func Example_Rule_Boolean() {
 	type BizReq struct {
 		Boolean bool    `v:"boolean"`
 		Integer int     `v:"boolean"`
@@ -1000,7 +1000,7 @@ func ExampleValidator_Rule_Boolean() {
 	// The Str3 value `goframe` field must be true or false
 }
 
-func ExampleValidator_Rule_Same() {
+func Example_Rule_Same() {
 	type BizReq struct {
 		Name      string `v:"required"`
 		Password  string `v:"required|same:Password2"`
@@ -1022,7 +1022,7 @@ func ExampleValidator_Rule_Same() {
 	// The Password value `goframe.org` must be the same as field Password2
 }
 
-func ExampleValidator_Rule_Different() {
+func Example_Rule_Different() {
 	type BizReq struct {
 		Name          string `v:"required"`
 		MailAddr      string `v:"required"`
@@ -1044,7 +1044,7 @@ func ExampleValidator_Rule_Different() {
 	// The OtherMailAddr value `gf@goframe.org` must be different from field MailAddr
 }
 
-func ExampleValidator_Rule_In() {
+func Example_Rule_In() {
 	type BizReq struct {
 		ID     uint   `v:"required" dc:"Your Id"`
 		Name   string `v:"required" dc:"Your name"`
@@ -1066,7 +1066,7 @@ func ExampleValidator_Rule_In() {
 	// The Gender value `3` is not in acceptable range: 0,1,2
 }
 
-func ExampleValidator_Rule_NotIn() {
+func Example_Rule_NotIn() {
 	type BizReq struct {
 		ID           uint   `v:"required" dc:"Your Id"`
 		Name         string `v:"required" dc:"Your name"`
@@ -1088,7 +1088,7 @@ func ExampleValidator_Rule_NotIn() {
 	// The InvalidIndex value `1` must not be in range: -1,0,1
 }
 
-func ExampleValidator_Rule_Regex() {
+func Example_Rule_Regex() {
 	type BizReq struct {
 		Regex1 string `v:"regex:[1-9][0-9]{4,14}"`
 		Regex2 string `v:"regex:[1-9][0-9]{4,14}"`
@@ -1111,7 +1111,7 @@ func ExampleValidator_Rule_Regex() {
 	// The Regex2 value `01234` must be in regex of: [1-9][0-9]{4,14}
 }
 
-func ExampleCheckMap() {
+func ExampleValidator_Data_Map1() {
 	params := map[string]interface{}{
 		"passport":  "",
 		"password":  "123456",
@@ -1133,7 +1133,7 @@ func ExampleCheckMap() {
 	// 账号不能为空
 }
 
-func ExampleCheckMap2() {
+func ExampleValidator_Data_Map2() {
 	params := map[string]interface{}{
 		"passport":  "",
 		"password":  "123456",
@@ -1156,7 +1156,7 @@ func ExampleCheckMap2() {
 }
 
 // Empty string attribute.
-func ExampleCheckStruct() {
+func ExampleValidator_Data_Struct1() {
 	type Params struct {
 		Page      int    `v:"required|min:1         # page is required"`
 		Size      int    `v:"required|between:1,100 # size is required"`
@@ -1173,7 +1173,7 @@ func ExampleCheckStruct() {
 }
 
 // Empty pointer attribute.
-func ExampleCheckStruct2() {
+func ExampleValidator_Data_Struct2() {
 	type Params struct {
 		Page      int       `v:"required|min:1         # page is required"`
 		Size      int       `v:"required|between:1,100 # size is required"`
@@ -1190,7 +1190,7 @@ func ExampleCheckStruct2() {
 }
 
 // Empty integer attribute.
-func ExampleCheckStruct3() {
+func ExampleValidator_Data_Struct3() {
 	type Params struct {
 		Page      int `v:"required|min:1         # page is required"`
 		Size      int `v:"required|between:1,100 # size is required"`
@@ -1285,7 +1285,7 @@ func ExampleRegisterRule_OverwriteRequired() {
 	// <nil>
 }
 
-func ExampleValidator_CheckValue() {
+func ExampleValidator_Data_Value() {
 	err := g.Validator().Rules("min:18").
 		Messages("未成年人不允许注册哟").
 		Data(16).Run(gctx.New())
@@ -1295,7 +1295,7 @@ func ExampleValidator_CheckValue() {
 	// 未成年人不允许注册哟
 }
 
-func ExampleValidator_CheckMap() {
+func ExampleValidator_Data_Map3() {
 	params := map[string]interface{}{
 		"passport":  "",
 		"password":  "123456",
@@ -1333,7 +1333,7 @@ func ExampleValidator_CheckMap() {
 	// }
 }
 
-func ExampleValidator_CheckStruct() {
+func ExampleValidator_Data_Struct4() {
 	type User struct {
 		Name string `v:"required#请输入用户姓名"`
 		Type int    `v:"required#请选择用户类型"`
