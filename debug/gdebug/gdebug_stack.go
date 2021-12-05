@@ -11,8 +11,6 @@ import (
 	"fmt"
 	"runtime"
 	"strings"
-
-	"github.com/gogf/gf/v2/internal/utils"
 )
 
 // PrintStack prints to standard error the stack trace returned by runtime.Stack.
@@ -82,14 +80,8 @@ func StackWithFilters(filters []string, skip ...int) string {
 				continue
 			}
 
-			if !utils.IsDebugEnabled() {
-				if strings.Contains(file, utils.StackFilterKeyForGoFrame) {
-					continue
-				}
-			} else {
-				if strings.Contains(file, stackFilterKey) {
-					continue
-				}
+			if strings.Contains(file, stackFilterKey) {
+				continue
 			}
 
 			if fn := runtime.FuncForPC(pc); fn == nil {
