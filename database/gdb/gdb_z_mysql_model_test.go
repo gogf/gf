@@ -2159,13 +2159,17 @@ func Test_Model_FieldsEx(t *testing.T) {
 }
 
 func Test_Model_FieldsEx_WithReservedWords(t *testing.T) {
-	table := "fieldsex_test_table"
-	sqlTpcPath := gdebug.TestDataPath("reservedwords_table_tpl.sql")
-	if _, err := db.Exec(ctx, fmt.Sprintf(gfile.GetContents(sqlTpcPath), table)); err != nil {
-		gtest.Error(err)
-	}
-	defer dropTable(table)
 	gtest.C(t, func(t *gtest.T) {
+		var (
+			table      = "fieldsex_test_table"
+			sqlTpcPath = gdebug.TestDataPath("reservedwords_table_tpl.sql")
+			sqlContent = gfile.GetContents(sqlTpcPath)
+		)
+		t.AssertNE(sqlContent, "")
+		if _, err := db.Exec(ctx, fmt.Sprintf(sqlContent, table)); err != nil {
+			t.AssertNil(err)
+		}
+		defer dropTable(table)
 		_, err := db.Model(table).FieldsEx("content").One()
 		t.AssertNil(err)
 	})
