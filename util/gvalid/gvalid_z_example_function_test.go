@@ -10,8 +10,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/i18n/gi18n"
+	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gvalid"
 )
@@ -187,6 +189,160 @@ func ExampleValidator_Data() {
 	// The Password2 value `gofra` is not a valid password format
 }
 
+func ExampleValidator_Data_Map1() {
+	params := map[string]interface{}{
+		"passport":  "",
+		"password":  "123456",
+		"password2": "1234567",
+	}
+	rules := []string{
+		"passport@required|length:6,16#账号不能为空|账号长度应当在{min}到{max}之间",
+		"password@required|length:6,16|same{password}2#密码不能为空|密码长度应当在{min}到{max}之间|两次密码输入不相等",
+		"password2@required|length:6,16#",
+	}
+	if e := g.Validator().Data(params).Rules(rules).Run(gctx.New()); e != nil {
+		fmt.Println(e.Map())
+		fmt.Println(e.FirstItem())
+		fmt.Println(e.FirstError())
+	}
+	// May Output:
+	// map[required:账号不能为空 length:账号长度应当在6到16之间]
+	// passport map[required:账号不能为空 length:账号长度应当在6到16之间]
+	// 账号不能为空
+}
+
+func ExampleValidator_Data_Map2() {
+	params := map[string]interface{}{
+		"passport":  "",
+		"password":  "123456",
+		"password2": "1234567",
+	}
+	rules := []string{
+		"passport@length:6,16#账号不能为空|账号长度应当在{min}到{max}之间",
+		"password@required|length:6,16|same:password2#密码不能为空|密码长度应当在{min}到{max}之间|两次密码输入不相等",
+		"password2@required|length:6,16#",
+	}
+	if e := g.Validator().Data(params).Rules(rules).Run(gctx.New()); e != nil {
+		fmt.Println(e.Map())
+		fmt.Println(e.FirstItem())
+		fmt.Println(e.FirstError())
+	}
+	// Output:
+	// map[same:两次密码输入不相等]
+	// password map[same:两次密码输入不相等]
+	// 两次密码输入不相等
+}
+
+func ExampleValidator_Data_Map3() {
+	params := map[string]interface{}{
+		"passport":  "",
+		"password":  "123456",
+		"password2": "1234567",
+	}
+	rules := map[string]string{
+		"passport":  "required|length:6,16",
+		"password":  "required|length:6,16|same:password2",
+		"password2": "required|length:6,16",
+	}
+	messages := map[string]interface{}{
+		"passport": "账号不能为空|账号长度应当在{min}到{max}之间",
+		"password": map[string]string{
+			"required": "密码不能为空",
+			"same":     "两次密码输入不相等",
+		},
+	}
+	err := g.Validator().
+		Messages(messages).
+		Rules(rules).
+		Data(params).Run(gctx.New())
+	if err != nil {
+		g.Dump(err.Maps())
+	}
+
+	// May Output:
+	// {
+	//	"passport": {
+	//	"length": "账号长度应当在6到16之间",
+	//		"required": "账号不能为空"
+	// },
+	//	"password": {
+	//	"same": "两次密码输入不相等"
+	// }
+	// }
+}
+
+// Empty string attribute.
+func ExampleValidator_Data_Struct1() {
+	type Params struct {
+		Page      int    `v:"required|min:1         # page is required"`
+		Size      int    `v:"required|between:1,100 # size is required"`
+		ProjectId string `v:"between:1,10000        # project id must between {min}, {max}"`
+	}
+	obj := &Params{
+		Page: 1,
+		Size: 10,
+	}
+	err := g.Validator().Data(obj).Run(gctx.New())
+	fmt.Println(err == nil)
+	// Output:
+	// true
+}
+
+// Empty pointer attribute.
+func ExampleValidator_Data_Struct2() {
+	type Params struct {
+		Page      int       `v:"required|min:1         # page is required"`
+		Size      int       `v:"required|between:1,100 # size is required"`
+		ProjectId *gvar.Var `v:"between:1,10000        # project id must between {min}, {max}"`
+	}
+	obj := &Params{
+		Page: 1,
+		Size: 10,
+	}
+	err := g.Validator().Data(obj).Run(gctx.New())
+	fmt.Println(err == nil)
+	// Output:
+	// true
+}
+
+// Empty integer attribute.
+func ExampleValidator_Data_Struct3() {
+	type Params struct {
+		Page      int `v:"required|min:1         # page is required"`
+		Size      int `v:"required|between:1,100 # size is required"`
+		ProjectId int `v:"between:1,10000        # project id must between {min}, {max}"`
+	}
+	obj := &Params{
+		Page: 1,
+		Size: 10,
+	}
+	err := g.Validator().Data(obj).Run(gctx.New())
+	fmt.Println(err)
+	// Output:
+	// project id must between 1, 10000
+}
+
+func ExampleValidator_Data_Struct4() {
+	type User struct {
+		Name string `v:"required#请输入用户姓名"`
+		Type int    `v:"required#请选择用户类型"`
+	}
+	data := g.Map{
+		"name": "john",
+	}
+	user := User{}
+	if err := gconv.Scan(data, &user); err != nil {
+		panic(err)
+	}
+	err := g.Validator().Data(user).Assoc(data).Run(gctx.New())
+	if err != nil {
+		fmt.Println(err.Items())
+	}
+
+	// Output:
+	// [map[Type:map[required:请选择用户类型]]]
+}
+
 func ExampleValidator_Assoc() {
 	type User struct {
 		Name string `v:"required"`
@@ -322,4 +478,47 @@ func ExampleValidator_RuleFuncMap() {
 
 	// Output:
 	// Value Length Error!; Pass is not Same!
+}
+
+func ExampleValidator_Data_Value() {
+	err := g.Validator().Rules("min:18").
+		Messages("未成年人不允许注册哟").
+		Data(16).Run(gctx.New())
+	fmt.Println(err.String())
+
+	// Output:
+	// 未成年人不允许注册哟
+}
+
+func ExampleValidator_RegisterRule() {
+	type User struct {
+		Id   int
+		Name string `v:"required|unique-name # 请输入用户名称|用户名称已被占用"`
+		Pass string `v:"required|length:6,18"`
+	}
+	user := &User{
+		Id:   1,
+		Name: "john",
+		Pass: "123456",
+	}
+
+	rule := "unique-name"
+	gvalid.RegisterRule(rule, func(ctx context.Context, in gvalid.RuleFuncInput) error {
+		var (
+			id   = in.Data.Val().(*User).Id
+			name = gconv.String(in.Value)
+		)
+		n, err := g.Model("user").Where("id != ? and name = ?", id, name).Count()
+		if err != nil {
+			return err
+		}
+		if n > 0 {
+			return errors.New(in.Message)
+		}
+		return nil
+	})
+	err := g.Validator().Data(user).Run(gctx.New())
+	fmt.Println(err.Error())
+	// May Output:
+	// 用户名称已被占用
 }
