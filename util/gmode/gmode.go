@@ -11,7 +11,7 @@ package gmode
 
 import (
 	"github.com/gogf/gf/v2/debug/gdebug"
-	"github.com/gogf/gf/v2/os/gcmd"
+	"github.com/gogf/gf/v2/internal/command"
 	"github.com/gogf/gf/v2/os/gfile"
 )
 
@@ -58,7 +58,7 @@ func SetProduct() {
 func Mode() string {
 	// If current mode is not set, do this auto check.
 	if currentMode == NOT_SET {
-		if v := gcmd.GetOptWithEnv(commandEnvKey).String(); v != "" {
+		if v := command.GetOptWithEnv(commandEnvKey); v != "" {
 			// Mode configured from command argument of environment.
 			currentMode = v
 		} else {

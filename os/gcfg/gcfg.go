@@ -13,9 +13,9 @@ import (
 
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/internal/command"
 	"github.com/gogf/gf/v2/internal/intlog"
 	"github.com/gogf/gf/v2/internal/utils"
-	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/os/genv"
 )
 
@@ -166,8 +166,8 @@ func (c *Config) GetWithCmd(ctx context.Context, pattern string, def ...interfac
 		return nil, err
 	}
 	if value == nil {
-		if v := gcmd.GetOpt(utils.FormatCmdKey(pattern)); v != nil {
-			return v, nil
+		if v := command.GetOpt(utils.FormatCmdKey(pattern)); v != "" {
+			return gvar.New(v), nil
 		}
 		if len(def) > 0 {
 			return gvar.New(def[0]), nil
