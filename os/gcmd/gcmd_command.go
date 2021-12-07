@@ -58,6 +58,16 @@ var (
 	}
 )
 
+// CommandFromCtx retrieves and returns Command from context.
+func CommandFromCtx(ctx context.Context) *Command {
+	if v := ctx.Value(CtxKeyCommand); v != nil {
+		if p, ok := v.(*Command); ok {
+			return p
+		}
+	}
+	return nil
+}
+
 // AddCommand adds one or more sub-commands to current command.
 func (c *Command) AddCommand(commands ...Command) error {
 	for _, cmd := range commands {
