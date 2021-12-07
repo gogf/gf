@@ -56,6 +56,8 @@ func (c *Command) RunWithValue(ctx context.Context) (value interface{}, err erro
 }
 
 func (c *Command) doRun(ctx context.Context, parser *Parser) (value interface{}, err error) {
+	ctx = context.WithValue(ctx, CtxKeyCommand, c)
+
 	// Check built-in help command.
 	if parser.ContainsOpt(helpOptionName) || parser.ContainsOpt(helpOptionNameShort) {
 		if c.HelpFunc != nil {

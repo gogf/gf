@@ -208,7 +208,6 @@ func newCommandFromMethod(object interface{}, method reflect.Value) (command *Co
 	// Create function that has value return.
 	command.FuncWithValue = func(ctx context.Context, parser *Parser) (out interface{}, err error) {
 		ctx = context.WithValue(ctx, CtxKeyParser, parser)
-		ctx = context.WithValue(ctx, CtxKeyCommand, command)
 
 		defer func() {
 			if exception := recover(); exception != nil {
