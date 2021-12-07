@@ -134,13 +134,13 @@ func (c *Command) searchCommand(args []string) *Command {
 		// If this command needs argument,
 		// it then gives all its left arguments to it.
 		if cmd.NeedArgs {
-			return &cmd
+			return cmd
 		}
 		// Recursively searching the command.
 		if cmd.Name == args[0] {
 			leftArgs := args[1:]
 			if len(leftArgs) == 0 {
-				return &cmd
+				return cmd
 			}
 			return cmd.searchCommand(leftArgs)
 		}
