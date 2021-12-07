@@ -81,7 +81,7 @@ func Test_Command(t *testing.T) {
 			Name: "gf",
 		}
 		// env
-		commandEnv := gcmd.Command{
+		commandEnv := &gcmd.Command{
 			Name: "env",
 			Func: func(ctx context.Context, parser *gcmd.Parser) error {
 				fmt.Println("env")
@@ -89,7 +89,7 @@ func Test_Command(t *testing.T) {
 			},
 		}
 		// test
-		commandTest := gcmd.Command{
+		commandTest := &gcmd.Command{
 			Name:        "test",
 			Brief:       "test brief",
 			Description: "test description current Golang environment variables",
@@ -145,7 +145,7 @@ func Test_Command_Print(t *testing.T) {
 Use 'gf help COMMAND' or 'gf COMMAND -h' for detail about a command, which has '...' in the tail of their comments.`,
 		}
 		// env
-		commandEnv := gcmd.Command{
+		commandEnv := &gcmd.Command{
 			Name:        "env",
 			Brief:       "show current Golang environment variables, long brief.long brief.long brief.long brief.long brief.long brief.long brief.long brief.",
 			Description: "show current Golang environment variables",
@@ -157,7 +157,7 @@ Use 'gf help COMMAND' or 'gf COMMAND -h' for detail about a command, which has '
 			g.Log().Fatal(ctx, err)
 		}
 		// get
-		commandGet := gcmd.Command{
+		commandGet := &gcmd.Command{
 			Name:        "get",
 			Brief:       "install or update GF to system in default...",
 			Description: "show current Golang environment variables",
@@ -212,7 +212,7 @@ gf build main.go -n my-app -v 1.0 -a amd64,386 -s linux,windows,darwin -p ./dock
 				return nil
 			},
 		}
-		if err = c.AddCommand(commandBuild); err != nil {
+		if err = c.AddCommand(&commandBuild); err != nil {
 			g.Log().Fatal(ctx, err)
 		}
 		c.Run(ctx)
