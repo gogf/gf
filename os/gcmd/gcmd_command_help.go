@@ -75,7 +75,7 @@ func (c *Command) Print() {
 
 	// Option.
 	if len(options) > 0 {
-		buffer.WriteString("OPTION\n")
+		buffer.WriteString("OPTIONS\n")
 		var (
 			nameStr        string
 			maxSpaceLength = 0
