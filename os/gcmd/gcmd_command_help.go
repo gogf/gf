@@ -110,16 +110,22 @@ func (c *Command) Print() {
 	// Example.
 	if c.Examples != "" {
 		buffer.WriteString("EXAMPLE\n")
-		buffer.WriteString(prefix)
-		buffer.WriteString(gstr.WordWrap(gstr.Trim(c.Examples), maxLineChars, "\n"+prefix))
+		for _, line := range gstr.SplitAndTrim(c.Examples, "\n") {
+			buffer.WriteString(prefix)
+			buffer.WriteString(gstr.WordWrap(gstr.Trim(line), maxLineChars, "\n"+prefix))
+			buffer.WriteString("\n")
+		}
 		buffer.WriteString("\n")
 	}
 
 	// Description.
 	if c.Description != "" {
 		buffer.WriteString("DESCRIPTION\n")
-		buffer.WriteString(prefix)
-		buffer.WriteString(gstr.WordWrap(gstr.Trim(c.Description), maxLineChars, "\n"+prefix))
+		for _, line := range gstr.SplitAndTrim(c.Description, "\n") {
+			buffer.WriteString(prefix)
+			buffer.WriteString(gstr.WordWrap(gstr.Trim(line), maxLineChars, "\n"+prefix))
+			buffer.WriteString("\n")
+		}
 		buffer.WriteString("\n")
 	}
 

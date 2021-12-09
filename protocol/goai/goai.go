@@ -96,6 +96,8 @@ var (
 		"sm":  "summary",
 		"des": "description",
 		"dc":  "description",
+		"eg":  "example",
+		"egs": "examples",
 	}
 )
 
