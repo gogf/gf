@@ -18,14 +18,14 @@ import (
 // Print prints help info to stdout for current command.
 func (c *Command) Print() {
 	var (
-		prefix  = gstr.Repeat(" ", 4)
-		buffer  = bytes.NewBuffer(nil)
-		options = make([]Option, len(c.Options))
+		prefix    = gstr.Repeat(" ", 4)
+		buffer    = bytes.NewBuffer(nil)
+		arguments = make([]Argument, len(c.Arguments))
 	)
 	// Copy options for printing.
-	copy(options, c.Options)
+	copy(arguments, c.Arguments)
 	// Add built-in help option, just for info only.
-	options = append(options, defaultHelpOption)
+	arguments = append(arguments, defaultHelpOption)
 
 	// Usage.
 	if c.Usage != "" || c.Name != "" {
@@ -42,7 +42,11 @@ func (c *Command) Print() {
 				name = p.parent.Name + " " + name
 				p = p.parent
 			}
-			buffer.WriteString(fmt.Sprintf(`%s ARGUMENT [OPTION]`, name))
+			if c.hasArgumentFromIndex() {
+				buffer.WriteString(fmt.Sprintf(`%s ARGUMENT [OPTION]`, name))
+			} else {
+				buffer.WriteString(fmt.Sprintf(`%s [OPTION]`, name))
+			}
 		}
 		buffer.WriteString("\n\n")
 	}
@@ -73,32 +77,67 @@ func (c *Command) Print() {
 		buffer.WriteString("\n")
 	}
 
+	// Argument.
+	if len(arguments) > 0 {
+		buffer.WriteString("ARGUMENT\n")
+		var (
+			maxSpaceLength = 0
+		)
+		for _, arg := range arguments {
+			if !arg.IsArg {
+				continue
+			}
+			if len(arg.Name) > maxSpaceLength {
+				maxSpaceLength = len(arg.Name)
+			}
+		}
+		for _, arg := range arguments {
+			if !arg.IsArg {
+				continue
+			}
+			var (
+				spaceLength    = maxSpaceLength - len(arg.Name)
+				lineStr        = fmt.Sprintf("%s%s%s%s\n", prefix, arg.Name, gstr.Repeat(" ", spaceLength+4), arg.Brief)
+				wordwrapPrefix = gstr.Repeat(" ", len(prefix+arg.Name)+spaceLength+4)
+			)
+			lineStr = gstr.WordWrap(lineStr, maxLineChars, "\n"+wordwrapPrefix)
+			buffer.WriteString(lineStr)
+		}
+		buffer.WriteString("\n")
+	}
+
 	// Option.
-	if len(options) > 0 {
+	if len(arguments) > 0 {
 		buffer.WriteString("OPTION\n")
 		var (
 			nameStr        string
 			maxSpaceLength = 0
 		)
-		for _, option := range options {
-			if option.Short != "" {
-				nameStr = fmt.Sprintf("-%s,\t--%s", option.Short, option.Name)
+		for _, arg := range arguments {
+			if arg.IsArg {
+				continue
+			}
+			if arg.Short != "" {
+				nameStr = fmt.Sprintf("-%s,\t--%s", arg.Short, arg.Name)
 			} else {
-				nameStr = fmt.Sprintf("-/--%s", option.Name)
+				nameStr = fmt.Sprintf("-/--%s", arg.Name)
 			}
 			if len(nameStr) > maxSpaceLength {
 				maxSpaceLength = len(nameStr)
 			}
 		}
-		for _, option := range options {
-			if option.Short != "" {
-				nameStr = fmt.Sprintf("-%s,\t--%s", option.Short, option.Name)
+		for _, arg := range arguments {
+			if arg.IsArg {
+				continue
+			}
+			if arg.Short != "" {
+				nameStr = fmt.Sprintf("-%s,\t--%s", arg.Short, arg.Name)
 			} else {
-				nameStr = fmt.Sprintf("-/--%s", option.Name)
+				nameStr = fmt.Sprintf("-/--%s", arg.Name)
 			}
 			var (
 				spaceLength    = maxSpaceLength - len(nameStr)
-				lineStr        = fmt.Sprintf("%s%s%s%s\n", prefix, nameStr, gstr.Repeat(" ", spaceLength+4), option.Brief)
+				lineStr        = fmt.Sprintf("%s%s%s%s\n", prefix, nameStr, gstr.Repeat(" ", spaceLength+4), arg.Brief)
 				wordwrapPrefix = gstr.Repeat(" ", len(prefix+nameStr)+spaceLength+4)
 			)
 			lineStr = gstr.WordWrap(lineStr, maxLineChars, "\n"+wordwrapPrefix)
