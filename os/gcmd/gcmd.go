@@ -18,8 +18,9 @@ import (
 )
 
 const (
-	CtxKeyParser  gctx.StrKey = `CtxKeyParser`
-	CtxKeyCommand gctx.StrKey = `CtxKeyCommand`
+	CtxKeyParser    gctx.StrKey = `CtxKeyParser`
+	CtxKeyCommand   gctx.StrKey = `CtxKeyCommand`
+	CtxKeyArguments gctx.StrKey = `CtxKeyArguments`
 )
 
 const (

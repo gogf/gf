@@ -150,7 +150,9 @@ type TestObjectForNeedArgsEnvInput struct {
 type TestObjectForNeedArgsEnvOutput struct{}
 
 type TestObjectForNeedArgsTestInput struct {
-	g.Meta `name:"test" args:"true"`
+	g.Meta `name:"test"`
+	Arg1   string `arg:"true" brief:"arg1 for test command"`
+	Arg2   string `arg:"true" brief:"arg2 for test command"`
 	Name   string `v:"required" short:"n" orphan:"false" brief:"name for test command"`
 }
 type TestObjectForNeedArgsTestOutput struct {
@@ -162,9 +164,8 @@ func (TestObjectForNeedArgs) Env(ctx context.Context, in TestObjectForNeedArgsEn
 }
 
 func (TestObjectForNeedArgs) Test(ctx context.Context, in TestObjectForNeedArgsTestInput) (out *TestObjectForNeedArgsTestOutput, err error) {
-	parser := gcmd.ParserFromCtx(ctx)
 	out = &TestObjectForNeedArgsTestOutput{
-		Args: parser.GetArgAll(),
+		Args: []string{in.Arg1, in.Arg2, in.Name},
 	}
 	return
 }
@@ -177,9 +178,13 @@ func Test_Command_NeedArgs(t *testing.T) {
 		cmd, err := gcmd.NewFromObject(TestObjectForNeedArgs{})
 		t.AssertNil(err)
 
+		//os.Args = []string{"root", "test", "a", "b", "c", "-h"}
+		//value, err := cmd.RunWithValue(ctx)
+		//t.AssertNil(err)
+
 		os.Args = []string{"root", "test", "a", "b", "c", "-n=john"}
 		value, err := cmd.RunWithValue(ctx)
 		t.AssertNil(err)
-		t.Assert(value, `{"Args":["root","test","a","b","c"]}`)
+		t.Assert(value, `{"Args":["a","b","john"]}`)
 	})
 }
