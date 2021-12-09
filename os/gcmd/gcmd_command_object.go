@@ -37,7 +37,7 @@ var (
 )
 
 // NewFromObject creates and returns a root command object using given object.
-func NewFromObject(object interface{}) (rootCmd Command, err error) {
+func NewFromObject(object interface{}) (rootCmd *Command, err error) {
 	originValueAndKind := utils.OriginValueAndKind(object)
 	if originValueAndKind.OriginKind != reflect.Struct {
 		err = gerror.Newf(
@@ -55,12 +55,12 @@ func NewFromObject(object interface{}) (rootCmd Command, err error) {
 	var (
 		nameSet         = gset.NewStrSet()
 		rootCommandName = gmeta.Get(object, tagNameRoot).String()
-		subCommands     []Command
+		subCommands     []*Command
 	)
 	for i := 0; i < originValueAndKind.InputValue.NumMethod(); i++ {
 		var (
 			method        = originValueAndKind.InputValue.Method(i)
-			methodCommand Command
+			methodCommand *Command
 		)
 		methodCommand, err = newCommandFromMethod(object, method)
 		if err != nil {
@@ -93,7 +93,7 @@ func NewFromObject(object interface{}) (rootCmd Command, err error) {
 	return
 }
 
-func newCommandFromObjectMeta(object interface{}) (command Command, err error) {
+func newCommandFromObjectMeta(object interface{}) (command *Command, err error) {
 	var (
 		metaData = gmeta.Data(object)
 	)
@@ -130,7 +130,7 @@ func newCommandFromObjectMeta(object interface{}) (command Command, err error) {
 	return
 }
 
-func newCommandFromMethod(object interface{}, method reflect.Value) (command Command, err error) {
+func newCommandFromMethod(object interface{}, method reflect.Value) (command *Command, err error) {
 	var (
 		reflectType = method.Type()
 	)

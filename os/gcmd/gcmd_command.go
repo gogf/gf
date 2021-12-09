@@ -28,8 +28,9 @@ type Command struct {
 	Additional    string        // Additional info about this command, which will be appended to the end of help info.
 	NeedArgs      bool          // NeedArgs specifies this command needs arguments.
 	Strict        bool          // Strict parsing options, which means it returns error if invalid option given.
+	Config        string        // Config node name, which also retrieves the values from config component along with command line.
 	parent        *Command      // Parent command for internal usage.
-	commands      []Command     // Sub commands of this command.
+	commands      []*Command    // Sub commands of this command.
 }
 
 // Function is a custom command callback function that is bound to a certain argument.
@@ -57,8 +58,18 @@ var (
 	}
 )
 
+// CommandFromCtx retrieves and returns Command from context.
+func CommandFromCtx(ctx context.Context) *Command {
+	if v := ctx.Value(CtxKeyCommand); v != nil {
+		if p, ok := v.(*Command); ok {
+			return p
+		}
+	}
+	return nil
+}
+
 // AddCommand adds one or more sub-commands to current command.
-func (c *Command) AddCommand(commands ...Command) error {
+func (c *Command) AddCommand(commands ...*Command) error {
 	for _, cmd := range commands {
 		cmd.Name = gstr.Trim(cmd.Name)
 		if cmd.Name == "" {
@@ -73,7 +84,7 @@ func (c *Command) AddCommand(commands ...Command) error {
 // AddObject adds one or more sub-commands to current command using struct object.
 func (c *Command) AddObject(objects ...interface{}) error {
 	var (
-		commands []Command
+		commands []*Command
 	)
 	for _, object := range objects {
 		rootCommand, err := NewFromObject(object)

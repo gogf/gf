@@ -12,8 +12,8 @@ import (
 	"strings"
 
 	"github.com/gogf/gf/v2/container/gvar"
+	"github.com/gogf/gf/v2/internal/command"
 	"github.com/gogf/gf/v2/internal/utils"
-	"github.com/gogf/gf/v2/os/gcmd"
 )
 
 // All returns a copy of strings representing the environment,
@@ -94,8 +94,8 @@ func GetWithCmd(key string, def ...interface{}) *gvar.Var {
 		return gvar.New(v)
 	}
 	cmdKey := utils.FormatCmdKey(key)
-	if v := gcmd.GetOpt(cmdKey); !v.IsEmpty() {
-		return v
+	if v := command.GetOpt(cmdKey); v != "" {
+		return gvar.New(v)
 	}
 	if len(def) > 0 {
 		return gvar.New(def[0])

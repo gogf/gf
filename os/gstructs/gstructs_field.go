@@ -8,18 +8,14 @@ package gstructs
 
 import (
 	"reflect"
-	"regexp"
 	"strings"
 
+	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/util/gtag"
 )
 
 const (
 	jsonTagName = `json`
-)
-
-var (
-	tagMapRegex = regexp.MustCompile(`([\w\-]+):"(.+?)"`)
 )
 
 // Tag returns the value associated with key in the tag string. If there is no
@@ -67,13 +63,10 @@ func (f *Field) TagStr() string {
 // TagMap returns all the tag of the field along with its value string as map.
 func (f *Field) TagMap() map[string]string {
 	var (
-		data  = map[string]string{}
-		match = tagMapRegex.FindAllStringSubmatch(f.TagStr(), -1)
+		data = ParseTag(f.TagStr())
 	)
-	for _, m := range match {
-		if len(m) == 3 {
-			data[m[1]] = gtag.Parse(m[2])
-		}
+	for k, v := range data {
+		data[k] = utils.StripSlashes(gtag.Parse(v))
 	}
 	return data
 }
