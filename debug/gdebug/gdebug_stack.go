@@ -10,9 +10,6 @@ import (
 	"bytes"
 	"fmt"
 	"runtime"
-	"strings"
-
-	"github.com/gogf/gf/v2/internal/utils"
 )
 
 // PrintStack prints to standard error the stack trace returned by runtime.Stack.
@@ -51,7 +48,6 @@ func StackWithFilters(filters []string, skip ...int) string {
 		space                 = "  "
 		index                 = 1
 		buffer                = bytes.NewBuffer(nil)
-		filtered              = false
 		ok                    = true
 		pc, file, line, start = callerFromIndex(filters)
 	)
@@ -60,36 +56,9 @@ func StackWithFilters(filters []string, skip ...int) string {
 			pc, file, line, ok = runtime.Caller(i)
 		}
 		if ok {
-			// Filter empty file.
-			if file == "" {
+			if filterFileByFilters(file, filters) {
 				continue
 			}
-			// GOROOT filter.
-			if goRootForFilter != "" &&
-				len(file) >= len(goRootForFilter) &&
-				file[0:len(goRootForFilter)] == goRootForFilter {
-				continue
-			}
-			// Custom filtering.
-			filtered = false
-			for _, filter := range filters {
-				if filter != "" && strings.Contains(file, filter) {
-					filtered = true
-					break
-				}
-			}
-			if filtered {
-				continue
-			}
-
-			if strings.Contains(file, utils.StackFilterKeyForGoFrame) {
-				continue
-			}
-
-			if strings.Contains(file, stackFilterKey) {
-				continue
-			}
-
 			if fn := runtime.FuncForPC(pc); fn == nil {
 				name = "unknown"
 			} else {
