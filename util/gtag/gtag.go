@@ -10,6 +10,7 @@
 package gtag
 
 import (
+	"fmt"
 	"regexp"
 	"sync"
 )
@@ -24,6 +25,9 @@ var (
 func Set(name, value string) {
 	mu.Lock()
 	defer mu.Unlock()
+	if _, ok := data[name]; ok {
+		panic(fmt.Sprintf(`value for tag "%s" already exists`, name))
+	}
 	data[name] = value
 }
 
@@ -32,6 +36,9 @@ func Sets(m map[string]string) {
 	mu.Lock()
 	defer mu.Unlock()
 	for k, v := range m {
+		if _, ok := data[k]; ok {
+			panic(fmt.Sprintf(`value for tag "%s" already exists`, k))
+		}
 		data[k] = v
 	}
 }
