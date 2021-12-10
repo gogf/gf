@@ -57,6 +57,9 @@ func NewFromObject(object interface{}) (rootCmd *Command, err error) {
 		rootCommandName = gmeta.Get(object, tagNameRoot).String()
 		subCommands     []*Command
 	)
+	if rootCommandName == "" {
+		rootCommandName = rootCmd.Name
+	}
 	for i := 0; i < originValueAndKind.InputValue.NumMethod(); i++ {
 		var (
 			method        = originValueAndKind.InputValue.Method(i)
