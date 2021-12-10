@@ -23,15 +23,15 @@ func PrintStack(skip ...int) {
 // Stack returns a formatted stack trace of the goroutine that calls it.
 // It calls runtime.Stack with a large enough buffer to capture the entire trace.
 func Stack(skip ...int) string {
-	return StackWithFilter("", skip...)
+	return StackWithFilter(nil, skip...)
 }
 
 // StackWithFilter returns a formatted stack trace of the goroutine that calls it.
 // It calls runtime.Stack with a large enough buffer to capture the entire trace.
 //
 // The parameter `filter` is used to filter the path of the caller.
-func StackWithFilter(filter string, skip ...int) string {
-	return StackWithFilters([]string{filter}, skip...)
+func StackWithFilter(filters []string, skip ...int) string {
+	return StackWithFilters(filters, skip...)
 }
 
 // StackWithFilters returns a formatted stack trace of the goroutine that calls it.
