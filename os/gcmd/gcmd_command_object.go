@@ -62,38 +62,63 @@ func NewFromObject(object interface{}) (rootCmd *Command, err error) {
 	}
 	for i := 0; i < originValueAndKind.InputValue.NumMethod(); i++ {
 		var (
-			method        = originValueAndKind.InputValue.Method(i)
-			methodCommand *Command
+			method    = originValueAndKind.InputValue.Method(i)
+			methodCmd *Command
 		)
-		methodCommand, err = newCommandFromMethod(object, method)
+		methodCmd, err = newCommandFromMethod(object, method)
 		if err != nil {
 			return
 		}
-		if nameSet.Contains(methodCommand.Name) {
+		if nameSet.Contains(methodCmd.Name) {
 			err = gerror.Newf(
 				`command name should be unique, found duplicated command name in method "%s"`,
 				method.Type().String(),
 			)
 			return
 		}
-		if rootCommandName == methodCommand.Name {
-			if rootCmd.Func == nil {
-				rootCmd.Func = methodCommand.Func
-			}
-			if rootCmd.FuncWithValue == nil {
-				rootCmd.FuncWithValue = methodCommand.FuncWithValue
-			}
-			if len(rootCmd.Arguments) == 0 {
-				rootCmd.Arguments = methodCommand.Arguments
-			}
+		if rootCommandName == methodCmd.Name {
+			methodToRootCmdWhenNameEqual(rootCmd, methodCmd)
 		} else {
-			subCommands = append(subCommands, methodCommand)
+			subCommands = append(subCommands, methodCmd)
 		}
 	}
 	if len(subCommands) > 0 {
 		err = rootCmd.AddCommand(subCommands...)
 	}
 	return
+}
+
+func methodToRootCmdWhenNameEqual(rootCmd *Command, methodCmd *Command) {
+	if rootCmd.Usage == "" {
+		rootCmd.Usage = methodCmd.Usage
+	}
+	if rootCmd.Brief == "" {
+		rootCmd.Brief = methodCmd.Brief
+	}
+	if rootCmd.Description == "" {
+		rootCmd.Description = methodCmd.Description
+	}
+	if rootCmd.Examples == "" {
+		rootCmd.Examples = methodCmd.Examples
+	}
+	if rootCmd.Func == nil {
+		rootCmd.Func = methodCmd.Func
+	}
+	if rootCmd.FuncWithValue == nil {
+		rootCmd.FuncWithValue = methodCmd.FuncWithValue
+	}
+	if rootCmd.HelpFunc == nil {
+		rootCmd.HelpFunc = methodCmd.HelpFunc
+	}
+	if len(rootCmd.Arguments) == 0 {
+		rootCmd.Arguments = methodCmd.Arguments
+	}
+	if !rootCmd.Strict {
+		rootCmd.Strict = methodCmd.Strict
+	}
+	if rootCmd.Config == "" {
+		rootCmd.Config = methodCmd.Config
+	}
 }
 
 func newCommandFromObjectMeta(object interface{}) (command *Command, err error) {
