@@ -164,3 +164,12 @@ func (c *Command) hasArgumentFromIndex() bool {
 	}
 	return false
 }
+
+func (c *Command) hasArgumentFromOption() bool {
+	for _, arg := range c.Arguments {
+		if !arg.IsArg {
+			return true
+		}
+	}
+	return false
+}
