@@ -12,6 +12,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/gogf/gf/v2/internal/intlog"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/propagation"
@@ -54,11 +55,13 @@ func init() {
 		tracingMaxContentLogSize = maxContentLogSize
 	}
 	CheckSetDefaultTextMapPropagator()
+	intlog.Printf(context.TODO(), `traceEnabled initialized as: %v`, traceEnabled)
 }
 
 // SetEnabled enables or disables the tracing feature.
 func SetEnabled(enabled bool) {
 	traceEnabled = enabled
+	intlog.Printf(context.TODO(), `traceEnabled SetEnabled: %v`, enabled)
 }
 
 // IsEnabled checks and returns if tracing feature is configured enabled.

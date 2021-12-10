@@ -51,7 +51,8 @@ func MiddlewareTracing(c *Client, r *http.Request) (response *Response, err erro
 	var (
 		ctx = r.Context()
 	)
-	// Mark this request is handled by server tracing middleware.
+	// Mark this request is handled by server tracing middleware,
+	// to avoid repeated handling by the same middleware.
 	if ctx.Value(tracingMiddlewareHandled) != nil {
 		return c.Next(r)
 	}
