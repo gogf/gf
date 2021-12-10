@@ -45,14 +45,14 @@ func init() {
 // Caller returns the function name and the absolute file path along with its line
 // number of the caller.
 func Caller(skip ...int) (function string, path string, line int) {
-	return CallerWithFilter("", skip...)
+	return CallerWithFilter(nil, skip...)
 }
 
 // CallerWithFilter returns the function name and the absolute file path along with
 // its line number of the caller.
 //
-// The parameter `filter` is used to filter the path of the caller.
-func CallerWithFilter(filter string, skip ...int) (function string, path string, line int) {
+// The parameter `filters` is used to filter the path of the caller.
+func CallerWithFilter(filters []string, skip ...int) (function string, path string, line int) {
 	var (
 		number = 0
 		ok     = true
@@ -60,7 +60,7 @@ func CallerWithFilter(filter string, skip ...int) (function string, path string,
 	if len(skip) > 0 {
 		number = skip[0]
 	}
-	pc, file, line, start := callerFromIndex([]string{filter})
+	pc, file, line, start := callerFromIndex(filters)
 	if start != -1 {
 		for i := start + number; i < maxCallerDepth; i++ {
 			if i != start {
