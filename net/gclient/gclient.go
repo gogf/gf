@@ -16,9 +16,11 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
+	"github.com/gogf/gf/v2/net/gtrace"
 	"golang.org/x/net/proxy"
 
 	"github.com/gogf/gf/v2"
@@ -43,12 +45,13 @@ type Client struct {
 }
 
 var (
-	defaultClientAgent = fmt.Sprintf(`GoFrameHTTPClient %s`, gf.VERSION)
+	host, _            = os.Hostname()
+	defaultClientAgent = fmt.Sprintf(`GClient %s at %s`, gf.VERSION, host)
 )
 
 // New creates and returns a new HTTP client object.
 func New() *Client {
-	client := &Client{
+	c := &Client{
 		Client: http.Client{
 			Transport: &http.Transport{
 				// No validation for https certification of the server in default.
@@ -61,8 +64,12 @@ func New() *Client {
 		header:  make(map[string]string),
 		cookies: make(map[string]string),
 	}
-	client.header["User-Agent"] = defaultClientAgent
-	return client
+	c.header["User-Agent"] = defaultClientAgent
+	// It enables OpenTelemetry for client if tracing feature is enabled.
+	if gtrace.IsEnabled() {
+		c.Use(MiddlewareTracing)
+	}
+	return c
 }
 
 // Clone deeply clones current client and returns a new one.
