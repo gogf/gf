@@ -40,8 +40,8 @@ func (c *Command) RunWithValue(ctx context.Context) (value interface{}, err erro
 	args = args[1:]
 
 	// Find the matched command and run it.
-	if subCommand := c.searchCommand(args); subCommand != nil {
-		return subCommand.doRun(ctx, parser)
+	if subCommand, newCtx := c.searchCommand(ctx, args); subCommand != nil {
+		return subCommand.doRun(newCtx, parser)
 	}
 
 	// Print error and help command if no command found.
@@ -86,20 +86,23 @@ func (c *Command) doRun(ctx context.Context, parser *Parser) (value interface{},
 
 // reParse re-parses the arguments using option configuration of current command.
 func (c *Command) reParse(ctx context.Context, parser *Parser) (*Parser, error) {
-	if len(c.Options) == 0 {
+	if len(c.Arguments) == 0 {
 		return parser, nil
 	}
 	var (
 		optionKey        string
 		supportedOptions = make(map[string]bool)
 	)
-	for _, option := range c.Options {
-		if option.Short != "" {
-			optionKey = fmt.Sprintf(`%s,%s`, option.Name, option.Short)
-		} else {
-			optionKey = option.Name
+	for _, arg := range c.Arguments {
+		if arg.IsArg {
+			continue
 		}
-		supportedOptions[optionKey] = !option.Orphan
+		if arg.Short != "" {
+			optionKey = fmt.Sprintf(`%s,%s`, arg.Name, arg.Short)
+		} else {
+			optionKey = arg.Name
+		}
+		supportedOptions[optionKey] = !arg.Orphan
 	}
 	parser, err := Parse(supportedOptions, c.Strict)
 	if err != nil {
@@ -128,24 +131,45 @@ func (c *Command) reParse(ctx context.Context, parser *Parser) (*Parser, error) 
 }
 
 // searchCommand recursively searches the command according given arguments.
-func (c *Command) searchCommand(args []string) *Command {
+func (c *Command) searchCommand(ctx context.Context, args []string) (*Command, context.Context) {
 	if len(args) == 0 {
-		return nil
+		return nil, ctx
 	}
 	for _, cmd := range c.commands {
-		// If this command needs argument,
-		// it then gives all its left arguments to it.
-		if cmd.NeedArgs {
-			return cmd
-		}
+
 		// Recursively searching the command.
 		if cmd.Name == args[0] {
 			leftArgs := args[1:]
-			if len(leftArgs) == 0 {
-				return cmd
+			// If this command needs argument,
+			// it then gives all its left arguments to it.
+			if cmd.hasArgumentFromIndex() {
+				ctx = context.WithValue(ctx, CtxKeyArguments, leftArgs)
+				return cmd, ctx
 			}
-			return cmd.searchCommand(leftArgs)
+			// Recursively searching.
+			if len(leftArgs) == 0 {
+				return cmd, ctx
+			}
+			return cmd.searchCommand(ctx, leftArgs)
 		}
 	}
-	return nil
+	return nil, ctx
+}
+
+func (c *Command) hasArgumentFromIndex() bool {
+	for _, arg := range c.Arguments {
+		if arg.IsArg {
+			return true
+		}
+	}
+	return false
+}
+
+func (c *Command) hasArgumentFromOption() bool {
+	for _, arg := range c.Arguments {
+		if !arg.IsArg {
+			return true
+		}
+	}
+	return false
 }

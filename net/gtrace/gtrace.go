@@ -12,6 +12,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/gogf/gf/v2/internal/intlog"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/propagation"
@@ -28,14 +29,16 @@ import (
 const (
 	tracingCommonKeyIpIntranet        = `ip.intranet`
 	tracingCommonKeyIpHostname        = `hostname`
-	commandEnvKeyForMaxContentLogSize = "gf.gtrace.maxcontentlogsize"
-	commandEnvKeyForTracingInternal   = "gf.gtrace.tracinginternal"
+	commandEnvKeyForTraceEnabled      = "gf.trace.enabled"               // Main switch for tracing feature.
+	commandEnvKeyForMaxContentLogSize = "gf.gtrace.max.content.log.size" // To avoid too big tracing content.
+	commandEnvKeyForTracingInternal   = "gf.gtrace.tracing.internal"     // For detailed controlling for tracing content.
 )
 
 var (
 	intranetIps, _           = gipv4.GetIntranetIpArray()
 	intranetIpStr            = strings.Join(intranetIps, ",")
 	hostname, _              = os.Hostname()
+	traceEnabled             = false      // traceEnabled enables tracing feature for all.
 	tracingInternal          = true       // tracingInternal enables tracing for internal type spans.
 	tracingMaxContentLogSize = 512 * 1024 // Max log size for request and response body, especially for HTTP/RPC request.
 	// defaultTextMapPropagator is the default propagator for context propagation between peers.
@@ -46,11 +49,29 @@ var (
 )
 
 func init() {
+	traceEnabled = gconv.Bool(command.GetOptWithEnv(commandEnvKeyForTraceEnabled, "false"))
 	tracingInternal = gconv.Bool(command.GetOptWithEnv(commandEnvKeyForTracingInternal, "true"))
 	if maxContentLogSize := gconv.Int(command.GetOptWithEnv(commandEnvKeyForMaxContentLogSize)); maxContentLogSize > 0 {
 		tracingMaxContentLogSize = maxContentLogSize
 	}
 	CheckSetDefaultTextMapPropagator()
+	intlog.Printf(context.TODO(), `traceEnabled initialized as: %v`, traceEnabled)
+}
+
+// SetEnabled enables or disables the tracing feature.
+func SetEnabled(enabled bool) {
+	traceEnabled = enabled
+	intlog.Printf(context.TODO(), `traceEnabled SetEnabled: %v`, enabled)
+}
+
+// IsEnabled checks and returns if tracing feature is configured enabled.
+func IsEnabled() bool {
+	return traceEnabled
+}
+
+// IsActivated checks given context and returns if tracing feature is actually activated in this context.
+func IsActivated(ctx context.Context) bool {
+	return GetTraceID(ctx) != ""
 }
 
 // IsTracingInternal returns whether tracing spans of internal components.
@@ -71,11 +92,6 @@ func CommonLabels() []attribute.KeyValue {
 		attribute.String(tracingCommonKeyIpIntranet, intranetIpStr),
 		semconv.HostNameKey.String(hostname),
 	}
-}
-
-// IsActivated checks and returns if tracing feature is activated.
-func IsActivated(ctx context.Context) bool {
-	return GetTraceID(ctx) != ""
 }
 
 // CheckSetDefaultTextMapPropagator sets the default TextMapPropagator if it is not set previously.
