@@ -189,6 +189,16 @@ func ExampleValidator_Data() {
 	// The Password2 value `gofra` is not a valid password format
 }
 
+func ExampleValidator_Data_Value() {
+	err := g.Validator().Rules("min:18").
+		Messages("未成年人不允许注册哟").
+		Data(16).Run(gctx.New())
+	fmt.Println(err.String())
+
+	// Output:
+	// 未成年人不允许注册哟
+}
+
 func ExampleValidator_Data_Map1() {
 	params := map[string]interface{}{
 		"passport":  "",
@@ -478,16 +488,6 @@ func ExampleValidator_RuleFuncMap() {
 
 	// Output:
 	// Value Length Error!; Pass is not Same!
-}
-
-func ExampleValidator_Data_Value() {
-	err := g.Validator().Rules("min:18").
-		Messages("未成年人不允许注册哟").
-		Data(16).Run(gctx.New())
-	fmt.Println(err.String())
-
-	// Output:
-	// 未成年人不允许注册哟
 }
 
 func ExampleValidator_RegisterRule() {
