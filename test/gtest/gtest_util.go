@@ -29,7 +29,7 @@ const (
 func C(t *testing.T, f func(t *T)) {
 	defer func() {
 		if err := recover(); err != nil {
-			fmt.Fprintf(os.Stderr, "%v\n%s", err, gdebug.StackWithFilter(pathFilterKey))
+			fmt.Fprintf(os.Stderr, "%v\n%s", err, gdebug.StackWithFilter([]string{pathFilterKey}))
 			t.Fail()
 		}
 	}()
@@ -289,7 +289,7 @@ func Error(message ...interface{}) {
 
 // Fatal prints `message` to stderr and exit the process.
 func Fatal(message ...interface{}) {
-	fmt.Fprintf(os.Stderr, "[FATAL] %s\n%s", fmt.Sprint(message...), gdebug.StackWithFilter(pathFilterKey))
+	fmt.Fprintf(os.Stderr, "[FATAL] %s\n%s", fmt.Sprint(message...), gdebug.StackWithFilter([]string{pathFilterKey}))
 	os.Exit(1)
 }
 
@@ -350,7 +350,7 @@ func AssertNil(value interface{}) {
 // The optional parameter `names` specifies the sub-folders/sub-files,
 // which will be joined with current system separator and returned with the path.
 func TestDataPath(names ...string) string {
-	_, path, _ := gdebug.CallerWithFilter(pathFilterKey)
+	_, path, _ := gdebug.CallerWithFilter([]string{pathFilterKey})
 	path = filepath.Dir(path) + string(filepath.Separator) + "testdata"
 	for _, name := range names {
 		path += string(filepath.Separator) + name

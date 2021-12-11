@@ -17,6 +17,7 @@ import (
 	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/internal/utils"
 	"github.com/gogf/gf/v2/protocol/goai"
 	"github.com/gogf/gf/v2/text/gregex"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -83,7 +84,7 @@ func (s *Server) setHandler(ctx context.Context, in setHandlerInput) {
 	)
 	handler.Id = handlerIdGenerator.Add(1)
 	if handler.Source == "" {
-		_, file, line := gdebug.CallerWithFilter(stackFilterKey)
+		_, file, line := gdebug.CallerWithFilter([]string{utils.StackFilterKeyForGoFrame})
 		handler.Source = fmt.Sprintf(`%s:%d`, file, line)
 	}
 	domain, method, uri, err := s.parsePattern(pattern)

@@ -45,14 +45,14 @@ func init() {
 // Caller returns the function name and the absolute file path along with its line
 // number of the caller.
 func Caller(skip ...int) (function string, path string, line int) {
-	return CallerWithFilter("", skip...)
+	return CallerWithFilter(nil, skip...)
 }
 
 // CallerWithFilter returns the function name and the absolute file path along with
 // its line number of the caller.
 //
-// The parameter `filter` is used to filter the path of the caller.
-func CallerWithFilter(filter string, skip ...int) (function string, path string, line int) {
+// The parameter `filters` is used to filter the path of the caller.
+func CallerWithFilter(filters []string, skip ...int) (function string, path string, line int) {
 	var (
 		number = 0
 		ok     = true
@@ -60,13 +60,16 @@ func CallerWithFilter(filter string, skip ...int) (function string, path string,
 	if len(skip) > 0 {
 		number = skip[0]
 	}
-	pc, file, line, start := callerFromIndex([]string{filter})
+	pc, file, line, start := callerFromIndex(filters)
 	if start != -1 {
 		for i := start + number; i < maxCallerDepth; i++ {
 			if i != start {
 				pc, file, line, ok = runtime.Caller(i)
 			}
 			if ok {
+				if filterFileByFilters(file, filters) {
+					continue
+				}
 				function = ""
 				if fn := runtime.FuncForPC(pc); fn == nil {
 					function = "unknown"
@@ -87,20 +90,10 @@ func CallerWithFilter(filter string, skip ...int) (function string, path string,
 //
 // VERY NOTE THAT, the returned index value should be `index - 1` as the caller's start point.
 func callerFromIndex(filters []string) (pc uintptr, file string, line int, index int) {
-	var filtered, ok bool
+	var ok bool
 	for index = 0; index < maxCallerDepth; index++ {
 		if pc, file, line, ok = runtime.Caller(index); ok {
-			filtered = false
-			for _, filter := range filters {
-				if filter != "" && strings.Contains(file, filter) {
-					filtered = true
-					break
-				}
-			}
-			if filtered {
-				continue
-			}
-			if strings.Contains(file, stackFilterKey) {
+			if filterFileByFilters(file, filters) {
 				continue
 			}
 			if index > 0 {
@@ -110,6 +103,27 @@ func callerFromIndex(filters []string) (pc uintptr, file string, line int, index
 		}
 	}
 	return 0, "", -1, -1
+}
+
+func filterFileByFilters(file string, filters []string) (filtered bool) {
+	// Filter empty file.
+	if file == "" {
+		return true
+	}
+	// Filter gdebug package callings.
+	if strings.Contains(file, stackFilterKey) {
+		return true
+	}
+	for _, filter := range filters {
+		if filter != "" && strings.Contains(file, filter) {
+			return true
+		}
+	}
+	// GOROOT filter.
+	if goRootForFilter != "" && len(file) >= len(goRootForFilter) && file[0:len(goRootForFilter)] == goRootForFilter {
+		return true
+	}
+	return false
 }
 
 // CallerPackage returns the package name of the caller.
