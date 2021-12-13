@@ -327,14 +327,14 @@ func newArgumentsFromInput(object interface{}) (args []Argument, err error) {
 		}
 		if arg.Name == helpOptionName {
 			return nil, gerror.Newf(
-				`option name "%s" is already token by built-in options`,
-				arg.Name,
+				`argument name "%s" defined in "%s.%s" is already token by built-in arguments`,
+				arg.Name, reflect.TypeOf(object).String(), field.Name(),
 			)
 		}
 		if arg.Short == helpOptionNameShort {
 			return nil, gerror.Newf(
-				`short option name "%s" is already token by built-in options`,
-				arg.Short,
+				`short argument name "%s" defined in "%s.%s" is already token by built-in arguments`,
+				arg.Short, reflect.TypeOf(object).String(), field.Name(),
 			)
 		}
 		if v, ok := metaData[tagNameArg]; ok {
