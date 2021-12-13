@@ -308,7 +308,9 @@ func newCommandFromMethod(object interface{}, method reflect.Value) (command *Co
 
 func newArgumentsFromInput(object interface{}) (args []Argument, err error) {
 	var (
-		fields []gstructs.Field
+		fields   []gstructs.Field
+		nameSet  = gset.NewStrSet()
+		shortSet = gset.NewStrSet()
 	)
 	fields, err = gstructs.Fields(gstructs.FieldsInput{
 		Pointer:         object,
@@ -340,8 +342,27 @@ func newArgumentsFromInput(object interface{}) (args []Argument, err error) {
 		if v, ok := metaData[tagNameArg]; ok {
 			arg.IsArg = gconv.Bool(v)
 		}
+		if nameSet.Contains(arg.Name) {
+			return nil, gerror.Newf(
+				`argument name "%s" defined in "%s.%s" is already token by other argument`,
+				arg.Name, reflect.TypeOf(object).String(), field.Name(),
+			)
+		}
+		nameSet.Add(arg.Name)
+
+		if arg.Short != "" {
+			if shortSet.Contains(arg.Short) {
+				return nil, gerror.Newf(
+					`short argument name "%s" defined in "%s.%s" is already token by other argument`,
+					arg.Short, reflect.TypeOf(object).String(), field.Name(),
+				)
+			}
+			shortSet.Add(arg.Short)
+		}
+
 		args = append(args, arg)
 	}
+
 	return
 }
 
