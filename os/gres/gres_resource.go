@@ -224,12 +224,38 @@ func (r *Resource) doScanDir(path string, pattern string, recursive bool, onlyFi
 	return files
 }
 
+// Export exports and saves specified path `src` and all its sub files to specified system path `dst` recursively.
+func (r *Resource) Export(src, dst string) error {
+	var (
+		err   error
+		path  string
+		files = r.doScanDir(src, "*", true, false)
+	)
+	for _, file := range files {
+		path = gfile.Join(dst, file.Name())
+		if file.FileInfo().IsDir() {
+			err = gfile.Mkdir(path)
+		} else {
+			err = gfile.PutBytes(path, file.Content())
+		}
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // Dump prints the files of current resource object.
 func (r *Resource) Dump() {
 	var info os.FileInfo
 	r.tree.Iterator(func(key, value interface{}) bool {
 		info = value.(*File).FileInfo()
-		fmt.Printf("%v %7s %s\n", gtime.New(info.ModTime()).ISO8601(), gfile.FormatSize(info.Size()), key)
+		fmt.Printf(
+			"%v %7s %s\n",
+			gtime.New(info.ModTime()).ISO8601(),
+			gfile.FormatSize(info.Size()),
+			key,
+		)
 		return true
 	})
 	fmt.Printf("TOTAL FILES: %d\n", r.tree.Size())
