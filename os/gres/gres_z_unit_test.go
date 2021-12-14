@@ -7,10 +7,10 @@
 package gres_test
 
 import (
-	_ "github.com/gogf/gf/v2/os/gres/testdata/data"
-
 	"strings"
 	"testing"
+
+	_ "github.com/gogf/gf/v2/os/gres/testdata/data"
 
 	"github.com/gogf/gf/v2/debug/gdebug"
 	"github.com/gogf/gf/v2/frame/g"
@@ -229,5 +229,24 @@ func Test_ScanDirFile(t *testing.T) {
 		t.Assert(len(files), 1)
 		t.Assert(files[0].Name(), "dir2/sub/sub-test2.txt")
 		t.Assert(files[0].Content(), "sub-test2 content")
+	})
+}
+
+func Test_Export(t *testing.T) {
+	gres.Dump()
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			src = `template`
+			dst = gfile.TempDir(gtime.TimestampNanoStr())
+			err = gres.Export(src, dst)
+		)
+		defer gfile.Remove(dst)
+		t.AssertNil(err)
+		files, err := gfile.ScanDir(dst, "*", true)
+		t.AssertNil(err)
+		t.Assert(len(files), 14)
+
+		name := `template/index.html`
+		t.Assert(gfile.GetContents(gfile.Join(dst, name)), gres.GetContent(name))
 	})
 }
