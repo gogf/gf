@@ -73,10 +73,10 @@ func (m *Model) Data(data ...interface{}) *Model {
 			switch reflectInfo.OriginKind {
 			case reflect.Slice, reflect.Array:
 				if reflectInfo.OriginValue.Len() > 0 {
-					// If the `data` parameter is defined like `xxxForDao`,
+					// If the `data` parameter is a DTO struct,
 					// it then adds `OmitNilData` option for this condition,
 					// which will filter all nil parameters in `data`.
-					if isForDaoModel(reflectInfo.OriginValue.Index(0).Elem().Type()) {
+					if isDtoStruct(reflectInfo.OriginValue.Index(0).Interface()) {
 						model = model.OmitNilData()
 						model.option |= optionOmitNilDataInternal
 					}
@@ -88,10 +88,10 @@ func (m *Model) Data(data ...interface{}) *Model {
 				model.data = list
 
 			case reflect.Struct:
-				// If the `data` parameter is defined like `xxxForDao`,
+				// If the `data` parameter is a DTO struct,
 				// it then adds `OmitNilData` option for this condition,
 				// which will filter all nil parameters in `data`.
-				if isForDaoModel(reflect.TypeOf(value)) {
+				if isDtoStruct(value) {
 					model = model.OmitNilData()
 				}
 				if v, ok := data[0].(iInterfaces); ok {
