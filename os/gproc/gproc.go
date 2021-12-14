@@ -103,7 +103,7 @@ func ShellRun(cmd string) error {
 }
 
 // ShellExec executes given command `cmd` synchronously and returns the command result.
-func ShellExec(cmd string, environment ...[]string) (string, error) {
+func ShellExec(cmd string, environment ...[]string) (result string, err error) {
 	var (
 		buf = bytes.NewBuffer(nil)
 		p   = NewProcess(
@@ -114,7 +114,9 @@ func ShellExec(cmd string, environment ...[]string) (string, error) {
 	)
 	p.Stdout = buf
 	p.Stderr = buf
-	return buf.String(), p.Run()
+	err = p.Run()
+	result = buf.String()
+	return
 }
 
 // parseCommand parses command `cmd` into slice arguments.

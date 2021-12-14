@@ -42,11 +42,14 @@ func (c *Command) Print() {
 				name = p.parent.Name + " " + name
 				p = p.parent
 			}
-			if c.hasArgumentFromIndex() {
-				buffer.WriteString(fmt.Sprintf(`%s ARGUMENT [OPTION]`, name))
-			} else {
-				buffer.WriteString(fmt.Sprintf(`%s [OPTION]`, name))
+			buffer.WriteString(name)
+			if len(c.commands) > 0 {
+				buffer.WriteString(` COMMAND`)
 			}
+			if c.hasArgumentFromIndex() {
+				buffer.WriteString(` ARGUMENT`)
+			}
+			buffer.WriteString(` [OPTION]`)
 		}
 		buffer.WriteString("\n\n")
 	}
