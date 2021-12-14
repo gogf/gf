@@ -10,6 +10,7 @@ package gcmd
 import (
 	"context"
 
+	"github.com/gogf/gf/v2/container/gset"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/text/gstr"
 )
@@ -70,13 +71,32 @@ func CommandFromCtx(ctx context.Context) *Command {
 // AddCommand adds one or more sub-commands to current command.
 func (c *Command) AddCommand(commands ...*Command) error {
 	for _, cmd := range commands {
-		cmd.Name = gstr.Trim(cmd.Name)
-		if cmd.Name == "" {
-			return gerror.New("command name should not be empty")
+		if err := c.doAddCommand(cmd); err != nil {
+			return err
 		}
-		cmd.parent = c
-		c.commands = append(c.commands, cmd)
 	}
+	return nil
+}
+
+// doAddCommand adds one sub-command to current command.
+func (c *Command) doAddCommand(command *Command) error {
+	command.Name = gstr.Trim(command.Name)
+	if command.Name == "" {
+		return gerror.New("command name should not be empty")
+	}
+	// Repeated check.
+	var (
+		commandNameSet = gset.NewStrSet()
+	)
+	for _, cmd := range c.commands {
+		commandNameSet.Add(cmd.Name)
+	}
+	if commandNameSet.Contains(command.Name) {
+		return gerror.Newf(`command "%s" is already added to command "%s"`, command.Name, c.Name)
+	}
+	// Add the given command to its sub-commands array.
+	command.parent = c
+	c.commands = append(c.commands, command)
 	return nil
 }
 
