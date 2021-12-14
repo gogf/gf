@@ -249,4 +249,22 @@ func Test_Export(t *testing.T) {
 		name := `template/index.html`
 		t.Assert(gfile.GetContents(gfile.Join(dst, name)), gres.GetContent(name))
 	})
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			src = `template`
+			dst = gfile.TempDir(gtime.TimestampNanoStr())
+			err = gres.Export(src, dst, gres.ExportOption{
+				RemovePrefix: `template`,
+			})
+		)
+		defer gfile.Remove(dst)
+		t.AssertNil(err)
+		files, err := gfile.ScanDir(dst, "*", true)
+		t.AssertNil(err)
+		t.Assert(len(files), 13)
+
+		nameInRes := `template/index.html`
+		nameInSys := `index.html`
+		t.Assert(gfile.GetContents(gfile.Join(dst, nameInSys)), gres.GetContent(nameInRes))
+	})
 }
