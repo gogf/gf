@@ -438,7 +438,7 @@ func Test_Model_Clone(t *testing.T) {
 	defer dropTable(table)
 
 	gtest.C(t, func(t *gtest.T) {
-		md := db.Model(table).Where("id IN(?)", g.Slice{1, 3})
+		md := db.Model(table).Safe(true).Where("id IN(?)", g.Slice{1, 3})
 		count, err := md.Count()
 		t.AssertNil(err)
 
