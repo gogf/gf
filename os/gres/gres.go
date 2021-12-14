@@ -78,8 +78,8 @@ func ScanDirFile(path string, pattern string, recursive ...bool) []*File {
 }
 
 // Export exports and saves specified path `src` and all its sub files to specified system path `dst` recursively.
-func Export(src, dst string) error {
-	return defaultResource.Export(src, dst)
+func Export(src, dst string, option ...ExportOption) error {
+	return defaultResource.Export(src, dst, option...)
 }
 
 // Dump prints the files of the default resource object.
