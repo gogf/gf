@@ -65,16 +65,17 @@ func (c *Command) Print() {
 			}
 		}
 		for _, cmd := range c.commands {
+			brief := gstr.Replace(cmd.Brief, "\n", "")
 			// Add "..." to brief for those commands that also have sub-commands.
 			if len(cmd.commands) > 0 {
-				cmd.Brief = gstr.TrimRight(cmd.Brief, ".") + "..."
+				brief = gstr.TrimRight(brief, ".") + "..."
 			}
 			var (
 				spaceLength    = maxSpaceLength - len(cmd.Name)
 				wordwrapPrefix = gstr.Repeat(" ", len(prefix+cmd.Name)+spaceLength+4)
 				lineStr        = fmt.Sprintf(
 					"%s%s%s%s\n",
-					prefix, cmd.Name, gstr.Repeat(" ", spaceLength+4), gstr.Trim(cmd.Brief),
+					prefix, cmd.Name, gstr.Repeat(" ", spaceLength+4), gstr.Trim(brief),
 				)
 			)
 			lineStr = gstr.WordWrap(lineStr, maxLineChars, "\n"+wordwrapPrefix)
@@ -102,11 +103,12 @@ func (c *Command) Print() {
 				continue
 			}
 			var (
+				brief          = gstr.Trim(gstr.Replace(arg.Brief, "\n", ""))
 				spaceLength    = maxSpaceLength - len(arg.Name)
 				wordwrapPrefix = gstr.Repeat(" ", len(prefix+arg.Name)+spaceLength+4)
 				lineStr        = fmt.Sprintf(
 					"%s%s%s%s\n",
-					prefix, arg.Name, gstr.Repeat(" ", spaceLength+4), gstr.Trim(arg.Brief),
+					prefix, arg.Name, gstr.Repeat(" ", spaceLength+4), brief,
 				)
 			)
 			lineStr = gstr.WordWrap(lineStr, maxLineChars, "\n"+wordwrapPrefix)
@@ -145,11 +147,12 @@ func (c *Command) Print() {
 				nameStr = fmt.Sprintf("-/--%s", arg.Name)
 			}
 			var (
+				brief          = gstr.Trim(gstr.Replace(arg.Brief, "\n", ""))
 				spaceLength    = maxSpaceLength - len(nameStr)
 				wordwrapPrefix = gstr.Repeat(" ", len(prefix+nameStr)+spaceLength+4)
 				lineStr        = fmt.Sprintf(
 					"%s%s%s%s\n",
-					prefix, nameStr, gstr.Repeat(" ", spaceLength+4), gstr.Trim(arg.Brief),
+					prefix, nameStr, gstr.Repeat(" ", spaceLength+4), brief,
 				)
 			)
 			lineStr = gstr.WordWrap(lineStr, maxLineChars, "\n"+wordwrapPrefix)
