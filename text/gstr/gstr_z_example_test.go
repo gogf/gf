@@ -506,8 +506,16 @@ func ExampleInArray() {
 }
 
 func ExamplePrefixArray() {
+	var (
+		strArray = []string{"tom", "lily", "john"}
+	)
+
+	gstr.PrefixArray(strArray, "classA_")
+
+	fmt.Println(strArray)
+
 	// Output:
-	// test
+	// [classA_tom classA_lily classA_john]
 }
 
 // case
@@ -1141,23 +1149,51 @@ func ExampleStrLimitRune() {
 }
 
 func ExampleSubStrFrom() {
+	var (
+		str  = "我爱GoFrameGood"
+		need = `爱`
+	)
+
+	fmt.Println(gstr.SubStrFrom(str, need))
+
 	// Output:
-	// test
+	// 爱GoFrameGood
 }
 
 func ExampleSubStrFromEx() {
+	var (
+		str  = "我爱GoFrameGood"
+		need = `爱`
+	)
+
+	fmt.Println(gstr.SubStrFromEx(str, need))
+
 	// Output:
-	// test
+	// GoFrameGood
 }
 
 func ExampleSubStrFromR() {
+	var (
+		str  = "我爱GoFrameGood"
+		need = `Go`
+	)
+
+	fmt.Println(gstr.SubStrFromR(str, need))
+
 	// Output:
-	// test
+	// Good
 }
 
 func ExampleSubStrFromREx() {
+	var (
+		str  = "我爱GoFrameGood"
+		need = `Go`
+	)
+
+	fmt.Println(gstr.SubStrFromREx(str, need))
+
 	// Output:
-	// test
+	// od
 }
 
 // trim
