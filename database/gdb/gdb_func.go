@@ -60,6 +60,7 @@ const (
 	OrmTagForWith      = "with"
 	OrmTagForWithWhere = "where"
 	OrmTagForWithOrder = "order"
+	OrmTagForDto       = "dto"
 )
 
 var (
@@ -70,9 +71,25 @@ var (
 	structTagPriority = append([]string{OrmTagForStruct}, gconv.StructTagPriority...)
 )
 
-// isForDaoModel checks and returns whether given type is for dao model.
-func isForDaoModel(t reflect.Type) bool {
-	return gstr.HasSuffix(t.String(), modelForDaoSuffix)
+// isDtoStruct checks and returns whether given type is a DTO struct.
+func isDtoStruct(object interface{}) bool {
+	// It checks by struct name like "XxxForDao", to be compatible with old version.
+	// TODO remove this compatible codes in future.
+	reflectType := reflect.TypeOf(object)
+	if gstr.HasSuffix(reflectType.String(), modelForDaoSuffix) {
+		return true
+	}
+	// It checks by struct meta for DTO struct in version.
+	if ormTag := gmeta.Get(object, OrmTagForStruct); !ormTag.IsEmpty() {
+		match, _ := gregex.MatchString(
+			fmt.Sprintf(`%s\s*:\s*([^,]+)`, OrmTagForDto),
+			ormTag.String(),
+		)
+		if len(match) > 1 {
+			return gconv.Bool(match[1])
+		}
+	}
+	return false
 }
 
 // getTableNameFromOrmTag retrieves and returns the table name from struct object.
@@ -424,7 +441,7 @@ func formatWhereHolder(db DB, in formatWhereHolderInput) (newWhere string, newAr
 	case reflect.Struct:
 		// If the `where` parameter is defined like `xxxForDao`, it then adds `OmitNil` option for this condition,
 		// which will filter all nil parameters in `where`.
-		if isForDaoModel(reflect.TypeOf(in.Where)) {
+		if isDtoStruct(in.Where) {
 			in.OmitNil = true
 		}
 		// If `where` struct implements iIterator interface,
