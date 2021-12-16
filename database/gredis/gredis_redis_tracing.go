@@ -40,7 +40,7 @@ const (
 
 // addTracingItem checks and adds redis tracing information to OpenTelemetry.
 func (c *RedisConn) addTracingItem(ctx context.Context, item *tracingItem) {
-	if !gtrace.IsTracingInternal() || !gtrace.IsActivated(ctx) {
+	if gtrace.IsUsingDefaultProvider() || !gtrace.IsTracingInternal() {
 		return
 	}
 	tr := otel.GetTracerProvider().Tracer(

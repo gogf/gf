@@ -15,7 +15,6 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/internal/intlog"
-	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gfile"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/gutil"
@@ -52,7 +51,7 @@ func DefaultConfig() Config {
 		File:                defaultFileFormat,
 		Flags:               F_TIME_STD,
 		Level:               LEVEL_ALL,
-		CtxKeys:             []interface{}{gctx.CtxKey},
+		CtxKeys:             []interface{}{},
 		StStatus:            1,
 		HeaderPrint:         true,
 		StdoutPrint:         true,
@@ -167,7 +166,6 @@ func (l *Logger) SetStackFilter(filter string) {
 // Note that multiple calls of this function will overwrite the previous set context keys.
 func (l *Logger) SetCtxKeys(keys ...interface{}) {
 	l.config.CtxKeys = keys
-	l.config.CtxKeys = append(l.config.CtxKeys, gctx.CtxKey)
 }
 
 // AppendCtxKeys appends extra keys to logger.

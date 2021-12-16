@@ -20,7 +20,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gogf/gf/v2/net/gtrace"
 	"golang.org/x/net/proxy"
 
 	"github.com/gogf/gf/v2"
@@ -65,10 +64,8 @@ func New() *Client {
 		cookies: make(map[string]string),
 	}
 	c.header["User-Agent"] = defaultClientAgent
-	// It enables OpenTelemetry for client if tracing feature is enabled.
-	if gtrace.IsEnabled() {
-		c.Use(MiddlewareTracing)
-	}
+	// It enables OpenTelemetry for client in default.
+	c.Use(internalMiddlewareTracing)
 	return c
 }
 

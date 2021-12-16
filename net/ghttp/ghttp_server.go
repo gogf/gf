@@ -16,7 +16,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/olekukonko/tablewriter"
 
 	"github.com/gogf/gf/v2/container/garray"
@@ -116,10 +115,8 @@ func GetServer(name ...interface{}) *Server {
 	}
 	// Record the server to internal server mapping by name.
 	serverMapping.Set(serverName, s)
-	// It enables OpenTelemetry for server if tracing feature is enabled.
-	if gtrace.IsEnabled() {
-		s.Use(MiddlewareServerTracing)
-	}
+	// It enables OpenTelemetry for server in default.
+	s.Use(internalMiddlewareServerTracing)
 	return s
 }
 

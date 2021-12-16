@@ -46,8 +46,8 @@ const (
 	tracingMiddlewareHandled        gctx.StrKey = `MiddlewareClientTracingHandled`
 )
 
-// MiddlewareTracing is a client middleware that enables tracing feature using standards of OpenTelemetry.
-func MiddlewareTracing(c *Client, r *http.Request) (response *Response, err error) {
+// internalMiddlewareTracing is a client middleware that enables tracing feature using standards of OpenTelemetry.
+func internalMiddlewareTracing(c *Client, r *http.Request) (response *Response, err error) {
 	var (
 		ctx = r.Context()
 	)
@@ -69,6 +69,12 @@ func MiddlewareTracing(c *Client, r *http.Request) (response *Response, err erro
 
 	// Inject tracing content into http header.
 	otel.GetTextMapPropagator().Inject(ctx, propagation.HeaderCarrier(r.Header))
+
+	// If it is now using default trace provider, ot then does no complex tracing jobs.
+	if gtrace.IsUsingDefaultProvider() {
+		response, err = c.Next(r)
+		return
+	}
 
 	// Continue client handler executing.
 	response, err = c.Next(
