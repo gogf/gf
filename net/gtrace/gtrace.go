@@ -143,3 +143,24 @@ func GetBaggageMap(ctx context.Context) *gmap.StrAnyMap {
 func GetBaggageVar(ctx context.Context, key string) *gvar.Var {
 	return NewBaggage(ctx).GetVar(key)
 }
+
+// SetTraceID injects custom trace id into context to propagate.
+func SetTraceID(ctx context.Context, traceID trace.TraceID) context.Context {
+	sc := trace.SpanContextFromContext(ctx)
+	if !sc.HasTraceID() {
+		var (
+			span trace.Span
+		)
+		ctx, span = NewSpan(ctx, "gtrace.SetTraceID")
+		defer span.End()
+		sc = trace.SpanContextFromContext(ctx)
+	}
+	ctx = trace.ContextWithRemoteSpanContext(ctx, trace.NewSpanContext(trace.SpanContextConfig{
+		TraceID:    traceID,
+		SpanID:     sc.SpanID(),
+		TraceFlags: sc.TraceFlags(),
+		TraceState: sc.TraceState(),
+		Remote:     sc.IsRemote(),
+	}))
+	return ctx
+}

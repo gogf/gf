@@ -7,6 +7,7 @@
 package gtrace_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -42,5 +43,31 @@ func Test_Client_Server_Tracing(t *testing.T) {
 		t.Assert(gtrace.IsUsingDefaultProvider(), true)
 		t.Assert(client.GetContent(ctx, "/"), gtrace.GetTraceID(ctx))
 		t.Assert(client.GetContent(ctx, "/"), gctx.CtxId(ctx))
+	})
+}
+
+func Test_SetTraceID(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		p := 8889
+		s := g.Server(p)
+		s.BindHandler("/", func(r *ghttp.Request) {
+			ctx := r.Context()
+			r.Response.Write(gtrace.GetTraceID(ctx))
+		})
+		s.SetPort(p)
+		s.SetDumpRouterMap(false)
+		t.AssertNil(s.Start())
+		defer s.Shutdown()
+
+		time.Sleep(100 * time.Millisecond)
+
+		ctx := gtrace.SetTraceID(context.TODO(), traceID)
+
+		prefix := fmt.Sprintf("http://127.0.0.1:%d", p)
+		client := g.Client()
+		client.SetPrefix(prefix)
+		t.Assert(gtrace.IsUsingDefaultProvider(), true)
+		t.Assert(client.GetContent(ctx, "/"), gtrace.GetTraceID(ctx))
+		t.Assert(client.GetContent(ctx, "/"), traceIDStr)
 	})
 }
