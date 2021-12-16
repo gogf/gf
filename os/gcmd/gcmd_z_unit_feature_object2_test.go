@@ -92,30 +92,44 @@ destination file path for packed file. if extension of the filename is ".go" and
 it enables packing SRC to go file, or else it packs SRC into a binary file.
 
 `
+	commandGenDaoBriefJsonCase = `
+generated json tag case for model struct, cases are as follows:
+| Case            | Example            |
+|---------------- |--------------------|
+| Camel           | AnyKindOfString    | 
+| CamelLower      | anyKindOfString    | default
+| Snake           | any_kind_of_string |
+| SnakeScreaming  | ANY_KIND_OF_STRING |
+| SnakeFirstUpper | rgb_code_md5       |
+| Kebab           | any-kind-of-string |
+| KebabScreaming  | ANY-KIND-OF-STRING |
+`
 )
 
 func init() {
 	gtag.Sets(map[string]string{
-		`commandBuildBrief`:     commandBuildBrief,
-		`commandBuildDc`:        commandBuildDc,
-		`commandBuildEg`:        commandBuildEg,
-		`commandBuildAd`:        commandBuildAd,
-		`commandBuildBriefPack`: commandBuildBriefPack,
+		`commandBuildBrief`:          commandBuildBrief,
+		`commandBuildDc`:             commandBuildDc,
+		`commandBuildEg`:             commandBuildEg,
+		`commandBuildAd`:             commandBuildAd,
+		`commandBuildBriefPack`:      commandBuildBriefPack,
+		`commandGenDaoBriefJsonCase`: commandGenDaoBriefJsonCase,
 	})
 }
 
 type commandBuildInput struct {
-	g.Meta  `name:"build" config:"gfcli.build"`
-	Name    string `short:"n" name:"name"    brief:"output binary name"`
-	Version string `short:"v" name:"version" brief:"output binary version"`
-	Arch    string `short:"a" name:"arch"    brief:"output binary architecture, multiple arch separated with ','"`
-	System  string `short:"s" name:"system"  brief:"output binary system, multiple os separated with ','"`
-	Output  string `short:"o" name:"output"  brief:"output binary path, used when building single binary file"`
-	Path    string `short:"p" name:"path"    brief:"output binary directory path, default is './bin'" d:"./bin"`
-	Extra   string `short:"e" name:"extra"   brief:"extra custom \"go build\" options"`
-	Mod     string `short:"m" name:"mod"     brief:"like \"-mod\" option of \"go build\", use \"-m none\" to disable go module"`
-	Cgo     bool   `short:"c" name:"cgo"     brief:"enable or disable cgo feature, it's disabled in default" orphan:"true"`
-	Pack    string `name:"pack" brief:"{commandBuildBriefPack}"`
+	g.Meta   `name:"build" config:"gfcli.build"`
+	Name     string `short:"n" name:"name"     brief:"output binary name"`
+	Version  string `short:"v" name:"version"  brief:"output binary version"`
+	Arch     string `short:"a" name:"arch"     brief:"output binary architecture, multiple arch separated with ','"`
+	System   string `short:"s" name:"system"   brief:"output binary system, multiple os separated with ','"`
+	Output   string `short:"o" name:"output"   brief:"output binary path, used when building single binary file"`
+	Path     string `short:"p" name:"path"     brief:"output binary directory path, default is './bin'" d:"./bin"`
+	Extra    string `short:"e" name:"extra"    brief:"extra custom \"go build\" options"`
+	Mod      string `short:"m" name:"mod"      brief:"like \"-mod\" option of \"go build\", use \"-m none\" to disable go module"`
+	Cgo      bool   `short:"c" name:"cgo"      brief:"enable or disable cgo feature, it's disabled in default" orphan:"true"`
+	JsonCase string `short:"j" name:"jsonCase" brief:"{commandGenDaoBriefJsonCase}" d:"CamelLower"`
+	Pack     string `name:"pack" brief:"{commandBuildBriefPack}"`
 }
 type commandBuildOutput struct{}
 
