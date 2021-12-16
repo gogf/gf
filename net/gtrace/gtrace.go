@@ -144,14 +144,14 @@ func GetBaggageVar(ctx context.Context, key string) *gvar.Var {
 	return NewBaggage(ctx).GetVar(key)
 }
 
-// SetTraceID injects custom trace id into context to propagate.
-func SetTraceID(ctx context.Context, traceID trace.TraceID) context.Context {
+// WithTraceID injects custom trace id into context to propagate.
+func WithTraceID(ctx context.Context, traceID trace.TraceID) context.Context {
 	sc := trace.SpanContextFromContext(ctx)
 	if !sc.HasTraceID() {
 		var (
 			span trace.Span
 		)
-		ctx, span = NewSpan(ctx, "gtrace.SetTraceID")
+		ctx, span = NewSpan(ctx, "gtrace.WithTraceID")
 		defer span.End()
 		sc = trace.SpanContextFromContext(ctx)
 	}

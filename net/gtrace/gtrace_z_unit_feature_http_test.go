@@ -46,7 +46,7 @@ func Test_Client_Server_Tracing(t *testing.T) {
 	})
 }
 
-func Test_SetTraceID(t *testing.T) {
+func Test_WithTraceID(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		p := 8889
 		s := g.Server(p)
@@ -61,7 +61,7 @@ func Test_SetTraceID(t *testing.T) {
 
 		time.Sleep(100 * time.Millisecond)
 
-		ctx := gtrace.SetTraceID(context.TODO(), traceID)
+		ctx := gtrace.WithTraceID(context.TODO(), traceID)
 
 		prefix := fmt.Sprintf("http://127.0.0.1:%d", p)
 		client := g.Client()
