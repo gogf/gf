@@ -65,21 +65,18 @@ func (c *Command) Print() {
 			}
 		}
 		for _, cmd := range c.commands {
-			brief := gstr.Replace(cmd.Brief, "\n", "")
-			// Add "..." to brief for those commands that also have sub-commands.
-			if len(cmd.commands) > 0 {
-				brief = gstr.TrimRight(brief, ".") + "..."
-			}
 			var (
 				spaceLength    = maxSpaceLength - len(cmd.Name)
 				wordwrapPrefix = gstr.Repeat(" ", len(prefix+cmd.Name)+spaceLength+4)
-				lineStr        = fmt.Sprintf(
-					"%s%s%s%s\n",
-					prefix, cmd.Name, gstr.Repeat(" ", spaceLength+4), gstr.Trim(brief),
-				)
 			)
-			lineStr = gstr.WordWrap(lineStr, maxLineChars, "\n"+wordwrapPrefix)
-			buffer.WriteString(lineStr)
+			c.printLineBrief(printLineBriefInput{
+				Buffer:         buffer,
+				Name:           cmd.Name,
+				Prefix:         prefix,
+				Brief:          gstr.Trim(cmd.Brief),
+				WordwrapPrefix: wordwrapPrefix,
+				SpaceLength:    spaceLength,
+			})
 		}
 		buffer.WriteString("\n")
 	}
@@ -103,16 +100,17 @@ func (c *Command) Print() {
 				continue
 			}
 			var (
-				brief          = gstr.Trim(gstr.Replace(arg.Brief, "\n", ""))
 				spaceLength    = maxSpaceLength - len(arg.Name)
 				wordwrapPrefix = gstr.Repeat(" ", len(prefix+arg.Name)+spaceLength+4)
-				lineStr        = fmt.Sprintf(
-					"%s%s%s%s\n",
-					prefix, arg.Name, gstr.Repeat(" ", spaceLength+4), brief,
-				)
 			)
-			lineStr = gstr.WordWrap(lineStr, maxLineChars, "\n"+wordwrapPrefix)
-			buffer.WriteString(lineStr)
+			c.printLineBrief(printLineBriefInput{
+				Buffer:         buffer,
+				Name:           arg.Name,
+				Prefix:         prefix,
+				Brief:          gstr.Trim(arg.Brief),
+				WordwrapPrefix: wordwrapPrefix,
+				SpaceLength:    spaceLength,
+			})
 		}
 		buffer.WriteString("\n")
 	}
@@ -147,16 +145,18 @@ func (c *Command) Print() {
 				nameStr = fmt.Sprintf("-/--%s", arg.Name)
 			}
 			var (
-				brief          = gstr.Trim(gstr.Replace(arg.Brief, "\n", ""))
+				brief          = gstr.Trim(arg.Brief)
 				spaceLength    = maxSpaceLength - len(nameStr)
 				wordwrapPrefix = gstr.Repeat(" ", len(prefix+nameStr)+spaceLength+4)
-				lineStr        = fmt.Sprintf(
-					"%s%s%s%s\n",
-					prefix, nameStr, gstr.Repeat(" ", spaceLength+4), brief,
-				)
 			)
-			lineStr = gstr.WordWrap(lineStr, maxLineChars, "\n"+wordwrapPrefix)
-			buffer.WriteString(lineStr)
+			c.printLineBrief(printLineBriefInput{
+				Buffer:         buffer,
+				Name:           nameStr,
+				Prefix:         prefix,
+				Brief:          brief,
+				WordwrapPrefix: wordwrapPrefix,
+				SpaceLength:    spaceLength,
+			})
 		}
 		buffer.WriteString("\n")
 	}
@@ -191,6 +191,34 @@ func (c *Command) Print() {
 	}
 
 	fmt.Println(buffer.String())
+}
+
+type printLineBriefInput struct {
+	Buffer         *bytes.Buffer
+	Name           string
+	Prefix         string
+	Brief          string
+	WordwrapPrefix string
+	SpaceLength    int
+}
+
+func (c *Command) printLineBrief(in printLineBriefInput) {
+	for i, line := range gstr.SplitAndTrim(in.Brief, "\n") {
+		var lineStr string
+		if i == 0 {
+			lineStr = fmt.Sprintf(
+				"%s%s%s%s\n",
+				in.Prefix, in.Name, gstr.Repeat(" ", in.SpaceLength+4), line,
+			)
+		} else {
+			lineStr = fmt.Sprintf(
+				"%s%s%s%s\n",
+				in.Prefix, gstr.Repeat(" ", len(in.Name)), gstr.Repeat(" ", in.SpaceLength+4), line,
+			)
+		}
+		lineStr = gstr.WordWrap(lineStr, maxLineChars, "\n"+in.WordwrapPrefix)
+		in.Buffer.WriteString(lineStr)
+	}
 }
 
 func (c *Command) defaultHelpFunc(ctx context.Context, parser *Parser) error {
