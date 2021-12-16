@@ -38,7 +38,7 @@ const (
 
 // addSqlToTracing adds sql information to tracer if it's enabled.
 func (c *Core) addSqlToTracing(ctx context.Context, sql *Sql) {
-	if !gtrace.IsTracingInternal() || !gtrace.IsActivated(ctx) {
+	if gtrace.IsUsingDefaultProvider() || !gtrace.IsTracingInternal() {
 		return
 	}
 	tr := otel.GetTracerProvider().Tracer(

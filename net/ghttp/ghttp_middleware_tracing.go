@@ -38,8 +38,8 @@ const (
 	tracingMiddlewareHandled        gctx.StrKey = `MiddlewareServerTracingHandled`
 )
 
-// MiddlewareServerTracing is a serer middleware that enables tracing feature using standards of OpenTelemetry.
-func MiddlewareServerTracing(r *Request) {
+// internalMiddlewareServerTracing is a serer middleware that enables tracing feature using standards of OpenTelemetry.
+func internalMiddlewareServerTracing(r *Request) {
 	var (
 		ctx = r.Context()
 	)
@@ -72,6 +72,12 @@ func MiddlewareServerTracing(r *Request) {
 
 	// Inject tracing context.
 	r.SetCtx(ctx)
+
+	// If it is now using default trace provider, ot then does no complex tracing jobs.
+	if gtrace.IsUsingDefaultProvider() {
+		r.Middleware.Next()
+		return
+	}
 
 	// Request content logging.
 	reqBodyContentBytes, _ := ioutil.ReadAll(r.Body)
