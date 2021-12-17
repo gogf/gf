@@ -7,10 +7,8 @@
 [![Production Ready](https://img.shields.io/badge/production-ready-blue.svg)](https://github.com/gogf/gf)
 [![License](https://img.shields.io/github/license/gogf/gf.svg?style=flat)](https://github.com/gogf/gf)
 
-English | [简体中文](README_ZH.MD)
 
-`GoFrame` is a modular, powerful, high-performance and enterprise-class application development framework 
-of Golang. 
+`GoFrame` is a modular, powerful, high-performance and enterprise-class application development framework of Golang. 
 
 > If you're a newbie to `Go`, you may consider `GoFrame` easy and great as `Laravel` in `PHP`, `SpringBoot` in `Java` or `Django` in `Python`.
 
@@ -25,7 +23,7 @@ require github.com/gogf/gf/v2 latest
 
 # Limitation
 ```
-golang version >= 1.14
+golang version >= 1.15
 ```
 
 # Architecture
