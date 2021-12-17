@@ -189,8 +189,9 @@ func (c *Command) Print() {
 		buffer.WriteString(lineStr)
 		buffer.WriteString("\n")
 	}
-
-	fmt.Println(buffer.String())
+	content := buffer.String()
+	content = gstr.Replace(content, "\t", "    ")
+	fmt.Println(content)
 }
 
 type printLineBriefInput struct {
