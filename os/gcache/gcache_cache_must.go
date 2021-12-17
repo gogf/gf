@@ -32,7 +32,7 @@ func (c *Cache) MustGetOrSet(ctx context.Context, key interface{}, value interfa
 }
 
 // MustGetOrSetFunc acts like GetOrSetFunc, but it panics if any error occurs.
-func (c *Cache) MustGetOrSetFunc(ctx context.Context, key interface{}, f func() (interface{}, error), duration time.Duration) *gvar.Var {
+func (c *Cache) MustGetOrSetFunc(ctx context.Context, key interface{}, f Func, duration time.Duration) *gvar.Var {
 	v, err := c.GetOrSetFunc(ctx, key, f, duration)
 	if err != nil {
 		panic(err)
@@ -41,7 +41,7 @@ func (c *Cache) MustGetOrSetFunc(ctx context.Context, key interface{}, f func() 
 }
 
 // MustGetOrSetFuncLock acts like GetOrSetFuncLock, but it panics if any error occurs.
-func (c *Cache) MustGetOrSetFuncLock(ctx context.Context, key interface{}, f func() (interface{}, error), duration time.Duration) *gvar.Var {
+func (c *Cache) MustGetOrSetFuncLock(ctx context.Context, key interface{}, f Func, duration time.Duration) *gvar.Var {
 	v, err := c.GetOrSetFuncLock(ctx, key, f, duration)
 	if err != nil {
 		panic(err)

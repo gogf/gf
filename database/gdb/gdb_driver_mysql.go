@@ -106,7 +106,7 @@ func (d *DriverMysql) Tables(ctx context.Context, schema ...string) (tables []st
 	return
 }
 
-// TableFields retrieves and returns the fields information of specified table of current
+// TableFields retrieves and returns the fields' information of specified table of current
 // schema.
 //
 // The parameter `link` is optional, if given nil it automatically retrieves a raw sql connection

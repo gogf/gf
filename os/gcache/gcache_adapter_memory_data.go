@@ -7,6 +7,7 @@
 package gcache
 
 import (
+	"context"
 	"sync"
 	"time"
 
@@ -153,7 +154,7 @@ func (d *adapterMemoryData) Set(key interface{}, value adapterMemoryItem) {
 	d.mu.Unlock()
 }
 
-// Sets batch sets cache with key-value pairs by `data`, which is expired after `duration`.
+// SetMap batch sets cache with key-value pairs by `data`, which is expired after `duration`.
 //
 // It does not expire if `duration` == 0.
 // It deletes the keys of `data` if `duration` < 0 or given `value` is nil.
@@ -169,14 +170,14 @@ func (d *adapterMemoryData) SetMap(data map[interface{}]interface{}, expireTime 
 	return nil
 }
 
-func (d *adapterMemoryData) SetWithLock(key interface{}, value interface{}, expireTimestamp int64) (interface{}, error) {
+func (d *adapterMemoryData) SetWithLock(ctx context.Context, key interface{}, value interface{}, expireTimestamp int64) (interface{}, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	if v, ok := d.data[key]; ok && !v.IsExpired() {
 		return v.v, nil
 	}
-	if f, ok := value.(func() (interface{}, error)); ok {
-		v, err := f()
+	if f, ok := value.(Func); ok {
+		v, err := f(ctx)
 		if err != nil {
 			return nil, err
 		}

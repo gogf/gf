@@ -45,7 +45,7 @@ type Adapter interface {
 	//
 	// It does not expire if `duration` == 0.
 	// It deletes the `key` if `duration` < 0 or given `value` is nil.
-	SetIfNotExistFunc(ctx context.Context, key interface{}, f func() (interface{}, error), duration time.Duration) (ok bool, err error)
+	SetIfNotExistFunc(ctx context.Context, key interface{}, f Func, duration time.Duration) (ok bool, err error)
 
 	// SetIfNotExistFuncLock sets `key` with result of function `f` and returns true
 	// if `key` does not exist in the cache, or else it does nothing and returns false if `key` already exists.
@@ -55,7 +55,7 @@ type Adapter interface {
 	//
 	// Note that it differs from function `SetIfNotExistFunc` is that the function `f` is executed within
 	// writing mutex lock for concurrent safety purpose.
-	SetIfNotExistFuncLock(ctx context.Context, key interface{}, f func() (interface{}, error), duration time.Duration) (ok bool, err error)
+	SetIfNotExistFuncLock(ctx context.Context, key interface{}, f Func, duration time.Duration) (ok bool, err error)
 
 	// Get retrieves and returns the associated value of given `key`.
 	// It returns nil if it does not exist, or its value is nil, or it's expired.
@@ -78,7 +78,7 @@ type Adapter interface {
 	// It does not expire if `duration` == 0.
 	// It deletes the `key` if `duration` < 0 or given `value` is nil, but it does nothing
 	// if `value` is a function and the function result is nil.
-	GetOrSetFunc(ctx context.Context, key interface{}, f func() (interface{}, error), duration time.Duration) (result *gvar.Var, err error)
+	GetOrSetFunc(ctx context.Context, key interface{}, f Func, duration time.Duration) (result *gvar.Var, err error)
 
 	// GetOrSetFuncLock retrieves and returns the value of `key`, or sets `key` with result of
 	// function `f` and returns its result if `key` does not exist in the cache. The key-value
@@ -90,7 +90,7 @@ type Adapter interface {
 	//
 	// Note that it differs from function `GetOrSetFunc` is that the function `f` is executed within
 	// writing mutex lock for concurrent safety purpose.
-	GetOrSetFuncLock(ctx context.Context, key interface{}, f func() (interface{}, error), duration time.Duration) (result *gvar.Var, err error)
+	GetOrSetFuncLock(ctx context.Context, key interface{}, f Func, duration time.Duration) (result *gvar.Var, err error)
 
 	// Contains checks and returns true if `key` exists in the cache, or else returns false.
 	Contains(ctx context.Context, key interface{}) (bool, error)

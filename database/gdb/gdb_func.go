@@ -404,7 +404,7 @@ type formatWhereHolderInput struct {
 	OmitNil   bool
 	OmitEmpty bool
 	Schema    string
-	Table     string
+	Table     string // Table is used for fields mapping and filtering internally.
 	Prefix    string // Field prefix, eg: "user.", "order.".
 }
 
@@ -439,15 +439,15 @@ func formatWhereHolder(db DB, in formatWhereHolderInput) (newWhere string, newAr
 		}
 
 	case reflect.Struct:
-		// If the `where` parameter is defined like `xxxForDao`, it then adds `OmitNil` option for this condition,
+		// If the `where` parameter is DTO struct, it then adds `OmitNil` option for this condition,
 		// which will filter all nil parameters in `where`.
 		if isDtoStruct(in.Where) {
 			in.OmitNil = true
 		}
-		// If `where` struct implements iIterator interface,
+		// If `where` struct implements `iIterator` interface,
 		// it then uses its Iterate function to iterate its key-value pairs.
 		// For example, ListMap and TreeMap are ordered map,
-		// which implement iIterator interface and are index-friendly for where conditions.
+		// which implement `iIterator` interface and are index-friendly for where conditions.
 		if iterator, ok := in.Where.(iIterator); ok {
 			iterator.Iterator(func(key, value interface{}) bool {
 				ketStr := gconv.String(key)
@@ -478,6 +478,19 @@ func formatWhereHolder(db DB, in formatWhereHolderInput) (newWhere string, newAr
 			structField reflect.StructField
 			data        = DataToMapDeep(in.Where)
 		)
+		// If `Prefix` is given, it checks and retrieves the table name.
+		if in.Prefix != "" {
+			hasTable, _ := db.GetCore().HasTable(in.Prefix)
+			if hasTable {
+				in.Table = in.Prefix
+			} else {
+				ormTagTableName := getTableNameFromOrmTag(in.Where)
+				if ormTagTableName != "" {
+					in.Table = ormTagTableName
+				}
+			}
+		}
+		// Mapping and filtering fields if `Table` is given.
 		if in.Table != "" {
 			data, _ = db.GetCore().mappingAndFilterData(in.Schema, in.Table, data, true)
 		}

@@ -7,6 +7,7 @@
 package ghttp
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -53,13 +54,14 @@ func (s *Server) getHandlersWithCache(r *Request) (parsedItems []*handlerParsedI
 	value, err := s.serveCache.GetOrSetFunc(
 		ctx,
 		s.serveHandlerKey(method, r.URL.Path, r.GetHost()),
-		func() (interface{}, error) {
+		func(ctx context.Context) (interface{}, error) {
 			parsedItems, hasHook, hasServe = s.searchHandlers(method, r.URL.Path, r.GetHost())
 			if parsedItems != nil {
 				return &handlerCacheItem{parsedItems, hasHook, hasServe}, nil
 			}
 			return nil, nil
-		}, routeCacheDuration)
+		}, routeCacheDuration,
+	)
 	if err != nil {
 		intlog.Error(ctx, err)
 	}

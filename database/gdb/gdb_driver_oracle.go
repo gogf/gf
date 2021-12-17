@@ -87,7 +87,7 @@ func (d *DriverOracle) DoCommit(ctx context.Context, link Link, sql string, args
 	}()
 
 	var index int
-	// Convert place holder char '?' to string ":vx".
+	// Convert placeholder char '?' to string ":vx".
 	newSql, _ = gregex.ReplaceStringFunc("\\?", sql, func(s string) string {
 		index++
 		return fmt.Sprintf(":v%d", index)
@@ -180,7 +180,7 @@ func (d *DriverOracle) Tables(ctx context.Context, schema ...string) (tables []s
 	return
 }
 
-// TableFields retrieves and returns the fields information of specified table of current schema.
+// TableFields retrieves and returns the fields' information of specified table of current schema.
 //
 // Also see DriverMysql.TableFields.
 func (d *DriverOracle) TableFields(ctx context.Context, table string, schema ...string) (fields map[string]*TableField, err error) {

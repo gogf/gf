@@ -652,16 +652,26 @@ func (c *Core) writeSqlToLogger(ctx context.Context, sql *Sql) {
 
 // HasTable determine whether the table name exists in the database.
 func (c *Core) HasTable(name string) (bool, error) {
-	tableList, err := c.db.Tables(c.GetCtx())
+	result, err := c.GetCache().GetOrSetFunc(
+		c.GetCtx(),
+		fmt.Sprintf(`HasTable: %s`, name),
+		func(ctx context.Context) (interface{}, error) {
+			tableList, err := c.db.Tables(ctx)
+			if err != nil {
+				return false, err
+			}
+			for _, table := range tableList {
+				if table == name {
+					return true, nil
+				}
+			}
+			return false, nil
+		}, 0,
+	)
 	if err != nil {
 		return false, err
 	}
-	for _, table := range tableList {
-		if table == name {
-			return true, nil
-		}
-	}
-	return false, nil
+	return result.Bool(), nil
 }
 
 // isSoftCreatedFieldName checks and returns whether given filed name is an automatic-filled created time.
