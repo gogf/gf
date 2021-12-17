@@ -111,7 +111,7 @@ func (view *View) SetPath(path string) error {
 		realPath = gfile.RealPath(path)
 		if realPath == "" {
 			// Relative path.
-			view.paths.RLockFunc(func(array []string) {
+			view.searchPaths.RLockFunc(func(array []string) {
 				for _, v := range array {
 					if path, _ := gspath.Search(v, path); path != "" {
 						realPath = path
@@ -141,11 +141,11 @@ func (view *View) SetPath(path string) error {
 		return err
 	}
 	// Repeated path adding check.
-	if view.paths.Search(realPath) != -1 {
+	if view.searchPaths.Search(realPath) != -1 {
 		return nil
 	}
-	view.paths.Clear()
-	view.paths.Append(realPath)
+	view.searchPaths.Clear()
+	view.searchPaths.Append(realPath)
 	view.fileCacheMap.Clear()
 	// glog.Debug("[gview] SetPath:", realPath)
 	return nil
@@ -166,7 +166,7 @@ func (view *View) AddPath(path string) error {
 		realPath = gfile.RealPath(path)
 		if realPath == "" {
 			// Relative path.
-			view.paths.RLockFunc(func(array []string) {
+			view.searchPaths.RLockFunc(func(array []string) {
 				for _, v := range array {
 					if path, _ := gspath.Search(v, path); path != "" {
 						realPath = path
@@ -196,10 +196,10 @@ func (view *View) AddPath(path string) error {
 		return err
 	}
 	// Repeated path adding check.
-	if view.paths.Search(realPath) != -1 {
+	if view.searchPaths.Search(realPath) != -1 {
 		return nil
 	}
-	view.paths.Append(realPath)
+	view.searchPaths.Append(realPath)
 	view.fileCacheMap.Clear()
 	return nil
 }

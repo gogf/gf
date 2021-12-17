@@ -12,7 +12,6 @@ import (
 	"fmt"
 	htmltpl "html/template"
 	"strconv"
-	"strings"
 	texttpl "text/template"
 
 	"github.com/gogf/gf/v2/container/gmap"
@@ -48,7 +47,13 @@ var (
 	templates = gmap.NewStrAnyMap(true)
 
 	// Try-folders for resource template file searching.
-	resourceTryFolders = []string{"template/", "template", "/template", "/template/"}
+	resourceTryFolders = []string{
+		"template/", "template", "/template", "/template/",
+		"resource/template/", "resource/template", "/resource/template", "/resource/template/",
+	}
+
+	// Prefix array for trying searching in local system.
+	localSystemTryFolders = []string{"", "template/", "resource/template"}
 )
 
 // Parse parses given template file `file` with given template variables `params`
@@ -306,29 +311,30 @@ func (view *View) formatTemplateObjectCreatingError(filePath, tplName string, er
 // Note that, the returned `folder` is the template folder path, but not the folder of
 // the returned template file `path`.
 func (view *View) searchFile(ctx context.Context, file string) (path string, folder string, resource *gres.File, err error) {
+	var (
+		tempPath string
+	)
 	// Firstly checking the resource manager.
 	if !gres.IsEmpty() {
 		// Try folders.
-		for _, folderPath := range resourceTryFolders {
-			if resource = gres.Get(folderPath + file); resource != nil {
+		for _, tryFolder := range resourceTryFolders {
+			tempPath = tryFolder + file
+			if resource = gres.Get(tempPath); resource != nil {
 				path = resource.Name()
-				folder = folderPath
+				folder = tryFolder
 				return
 			}
 		}
 		// Search folders.
-		view.paths.RLockFunc(func(array []string) {
-			for _, v := range array {
-				v = strings.TrimRight(v, "/"+gfile.Separator)
-				if resource = gres.Get(v + "/" + file); resource != nil {
-					path = resource.Name()
-					folder = v
-					break
-				}
-				if resource = gres.Get(v + "/template/" + file); resource != nil {
-					path = resource.Name()
-					folder = v + "/template"
-					break
+		view.searchPaths.RLockFunc(func(array []string) {
+			for _, searchPath := range array {
+				for _, tryFolder := range resourceTryFolders {
+					tempPath = searchPath + tryFolder + file
+					if resFile := gres.Get(tempPath); resFile != nil {
+						path = resFile.Name()
+						folder = searchPath + tryFolder
+						return
+					}
 				}
 			}
 		})
@@ -336,16 +342,18 @@ func (view *View) searchFile(ctx context.Context, file string) (path string, fol
 
 	// Secondly checking the file system.
 	if path == "" {
-		view.paths.RLockFunc(func(array []string) {
-			for _, folderPath := range array {
-				folderPath = strings.TrimRight(folderPath, gfile.Separator)
-				if path, _ = gspath.Search(folderPath, file); path != "" {
-					folder = folderPath
-					break
-				}
-				if path, _ = gspath.Search(folderPath+gfile.Separator+"template", file); path != "" {
-					folder = folderPath + gfile.Separator + "template"
-					break
+		view.searchPaths.RLockFunc(func(array []string) {
+			for _, searchPath := range array {
+				searchPath = gstr.TrimRight(searchPath, `\/`)
+				for _, tryFolder := range localSystemTryFolders {
+					relativePath := gstr.TrimRight(
+						gfile.Join(tryFolder, file),
+						`\/`,
+					)
+					if path, _ = gspath.Search(searchPath, relativePath); path != "" {
+						folder = gfile.Dir(path)
+						return
+					}
 				}
 			}
 		})
@@ -354,19 +362,19 @@ func (view *View) searchFile(ctx context.Context, file string) (path string, fol
 	// Error checking.
 	if path == "" {
 		buffer := bytes.NewBuffer(nil)
-		if view.paths.Len() > 0 {
+		if view.searchPaths.Len() > 0 {
 			buffer.WriteString(fmt.Sprintf("[gview] cannot find template file \"%s\" in following paths:", file))
-			view.paths.RLockFunc(func(array []string) {
+			view.searchPaths.RLockFunc(func(array []string) {
 				index := 1
-				for _, folderPath := range array {
-					folderPath = strings.TrimRight(folderPath, "/")
-					if folderPath == "" {
-						folderPath = "/"
+				for _, searchPath := range array {
+					searchPath = gstr.TrimRight(searchPath, `\/`)
+					for _, tryFolder := range localSystemTryFolders {
+						buffer.WriteString(fmt.Sprintf(
+							"\n%d. %s",
+							index, gfile.Join(searchPath, tryFolder),
+						))
+						index++
 					}
-					buffer.WriteString(fmt.Sprintf("\n%d. %s", index, folderPath))
-					index++
-					buffer.WriteString(fmt.Sprintf("\n%d. %s", index, strings.TrimRight(folderPath, "/")+gfile.Separator+"template"))
-					index++
 				}
 			})
 		} else {
