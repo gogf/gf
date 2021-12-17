@@ -7,14 +7,15 @@
 package gconv_test
 
 import (
+	"testing"
+	"time"
+
 	"github.com/gogf/gf/v2/container/gvar"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/internal/json"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/gogf/gf/v2/util/gconv"
-	"testing"
-	"time"
 )
 
 func Test_Struct_Basic1(t *testing.T) {
@@ -1241,6 +1242,19 @@ func Test_Struct_MapAttribute(t *testing.T) {
 			}
 		)
 		err := gconv.Struct(data, &out)
+		t.AssertNil(err)
+	})
+}
+
+func Test_Struct_Empty_MapStringString(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		type S struct {
+			Id int
+		}
+		var (
+			s   = &S{}
+			err = gconv.Struct(map[string]string{}, s)
+		)
 		t.AssertNil(err)
 	})
 }
