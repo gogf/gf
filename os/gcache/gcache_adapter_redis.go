@@ -104,8 +104,8 @@ func (c *AdapterRedis) SetIfNotExist(ctx context.Context, key interface{}, value
 		err error
 	)
 	// Execute the function and retrieve the result.
-	if f, ok := value.(func() (interface{}, error)); ok {
-		value, err = f()
+	if f, ok := value.(Func); ok {
+		value, err = f(ctx)
 		if value == nil {
 			return false, err
 		}
@@ -143,8 +143,8 @@ func (c *AdapterRedis) SetIfNotExist(ctx context.Context, key interface{}, value
 //
 // It does not expire if `duration` == 0.
 // It deletes the `key` if `duration` < 0 or given `value` is nil.
-func (c *AdapterRedis) SetIfNotExistFunc(ctx context.Context, key interface{}, f func() (interface{}, error), duration time.Duration) (ok bool, err error) {
-	value, err := f()
+func (c *AdapterRedis) SetIfNotExistFunc(ctx context.Context, key interface{}, f Func, duration time.Duration) (ok bool, err error) {
+	value, err := f(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -159,8 +159,8 @@ func (c *AdapterRedis) SetIfNotExistFunc(ctx context.Context, key interface{}, f
 //
 // Note that it differs from function `SetIfNotExistFunc` is that the function `f` is executed within
 // writing mutex lock for concurrent safety purpose.
-func (c *AdapterRedis) SetIfNotExistFuncLock(ctx context.Context, key interface{}, f func() (interface{}, error), duration time.Duration) (ok bool, err error) {
-	value, err := f()
+func (c *AdapterRedis) SetIfNotExistFuncLock(ctx context.Context, key interface{}, f Func, duration time.Duration) (ok bool, err error) {
+	value, err := f(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -198,13 +198,13 @@ func (c *AdapterRedis) GetOrSet(ctx context.Context, key interface{}, value inte
 // It does not expire if `duration` == 0.
 // It deletes the `key` if `duration` < 0 or given `value` is nil, but it does nothing
 // if `value` is a function and the function result is nil.
-func (c *AdapterRedis) GetOrSetFunc(ctx context.Context, key interface{}, f func() (interface{}, error), duration time.Duration) (result *gvar.Var, err error) {
+func (c *AdapterRedis) GetOrSetFunc(ctx context.Context, key interface{}, f Func, duration time.Duration) (result *gvar.Var, err error) {
 	v, err := c.Get(ctx, key)
 	if err != nil {
 		return nil, err
 	}
 	if v == nil {
-		value, err := f()
+		value, err := f(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -227,7 +227,7 @@ func (c *AdapterRedis) GetOrSetFunc(ctx context.Context, key interface{}, f func
 //
 // Note that it differs from function `GetOrSetFunc` is that the function `f` is executed within
 // writing mutex lock for concurrent safety purpose.
-func (c *AdapterRedis) GetOrSetFuncLock(ctx context.Context, key interface{}, f func() (interface{}, error), duration time.Duration) (result *gvar.Var, err error) {
+func (c *AdapterRedis) GetOrSetFuncLock(ctx context.Context, key interface{}, f Func, duration time.Duration) (result *gvar.Var, err error) {
 	return c.GetOrSetFunc(ctx, key, f, duration)
 }
 

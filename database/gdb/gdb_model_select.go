@@ -600,11 +600,16 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 			m.db.GetCore().guessPrimaryTableName(m.tablesInit),
 		)
 	}
+	var (
+		tableForMappingAndFiltering = m.tables
+	)
 	if len(m.whereHolder) > 0 {
 		for _, v := range m.whereHolder {
+			tableForMappingAndFiltering = m.tables
 			if v.Prefix == "" {
 				v.Prefix = autoPrefix
 			}
+
 			switch v.Operator {
 			case whereHolderOperatorWhere:
 				if conditionWhere == "" {
@@ -614,7 +619,7 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 						OmitNil:   m.option&optionOmitNilWhere > 0,
 						OmitEmpty: m.option&optionOmitEmptyWhere > 0,
 						Schema:    m.schema,
-						Table:     m.tables,
+						Table:     tableForMappingAndFiltering,
 						Prefix:    v.Prefix,
 					})
 					if len(newWhere) > 0 {
@@ -632,7 +637,7 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 					OmitNil:   m.option&optionOmitNilWhere > 0,
 					OmitEmpty: m.option&optionOmitEmptyWhere > 0,
 					Schema:    m.schema,
-					Table:     m.tables,
+					Table:     tableForMappingAndFiltering,
 					Prefix:    v.Prefix,
 				})
 				if len(newWhere) > 0 {
@@ -653,7 +658,7 @@ func (m *Model) formatCondition(limit1 bool, isCountStatement bool) (conditionWh
 					OmitNil:   m.option&optionOmitNilWhere > 0,
 					OmitEmpty: m.option&optionOmitEmptyWhere > 0,
 					Schema:    m.schema,
-					Table:     m.tables,
+					Table:     tableForMappingAndFiltering,
 					Prefix:    v.Prefix,
 				})
 				if len(newWhere) > 0 {
