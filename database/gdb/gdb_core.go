@@ -652,7 +652,7 @@ func (c *Core) writeSqlToLogger(ctx context.Context, sql *Sql) {
 
 // HasTable determine whether the table name exists in the database.
 func (c *Core) HasTable(name string) (bool, error) {
-	result, err := c.GetCache().GetOrSetFunc(
+	result, err := c.GetCache().GetOrSetFuncLock(
 		c.GetCtx(),
 		fmt.Sprintf(`HasTable: %s`, name),
 		func(ctx context.Context) (interface{}, error) {
