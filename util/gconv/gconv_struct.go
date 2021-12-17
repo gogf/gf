@@ -179,7 +179,7 @@ func doStruct(params interface{}, pointer interface{}, mapping map[string]string
 	if paramsMap == nil {
 		return gerror.NewCodef(
 			gcode.CodeInvalidParameter,
-			`convert params "%#v" to map failed`,
+			`convert params from "%#v" to "map[string]interface{}" failed`,
 			params,
 		)
 	}
