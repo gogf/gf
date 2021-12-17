@@ -143,6 +143,7 @@ func (c *AdapterFile) AddPath(path string) (err error) {
 // It returns an empty `path` string and an error if the given `file` does not exist.
 func (c *AdapterFile) GetFilePath(fileName ...string) (path string, err error) {
 	var (
+		tempPath     string
 		usedFileName = c.defaultName
 	)
 	if len(fileName) > 0 {
@@ -150,16 +151,18 @@ func (c *AdapterFile) GetFilePath(fileName ...string) (path string, err error) {
 	}
 	// Searching resource manager.
 	if !gres.IsEmpty() {
-		for _, v := range resourceTryFiles {
-			if file := gres.Get(v + usedFileName); file != nil {
+		for _, tryFolder := range resourceTryFolders {
+			tempPath = tryFolder + usedFileName
+			if file := gres.Get(tempPath); file != nil {
 				path = file.Name()
 				return
 			}
 		}
 		c.searchPaths.RLockFunc(func(array []string) {
-			for _, prefix := range array {
-				for _, v := range resourceTryFiles {
-					if file := gres.Get(prefix + v + usedFileName); file != nil {
+			for _, searchPath := range array {
+				for _, tryFolder := range resourceTryFolders {
+					tempPath = searchPath + tryFolder + usedFileName
+					if file := gres.Get(tempPath); file != nil {
 						path = file.Name()
 						return
 					}
@@ -167,17 +170,19 @@ func (c *AdapterFile) GetFilePath(fileName ...string) (path string, err error) {
 			}
 		})
 	}
+
 	c.autoCheckAndAddMainPkgPathToSearchPaths()
+
 	// Searching local file system.
 	c.searchPaths.RLockFunc(func(array []string) {
-		for _, prefix := range array {
-			prefix = gstr.TrimRight(prefix, `\/`)
-			for _, tryFile := range localSystemTryFiles {
+		for _, searchPath := range array {
+			searchPath = gstr.TrimRight(searchPath, `\/`)
+			for _, tryFolder := range localSystemTryFolders {
 				relativePath := gstr.TrimRight(
-					gfile.Join(tryFile, usedFileName),
+					gfile.Join(tryFolder, usedFileName),
 					`\/`,
 				)
-				if path, _ = gspath.Search(prefix, relativePath); path != "" {
+				if path, _ = gspath.Search(searchPath, relativePath); path != "" {
 					return
 				}
 			}
@@ -195,11 +200,13 @@ func (c *AdapterFile) GetFilePath(fileName ...string) (path string, err error) {
 			))
 			c.searchPaths.RLockFunc(func(array []string) {
 				index := 1
-				for _, prefix := range array {
-					prefix = gstr.TrimRight(prefix, `\/`)
-					for _, tryFile := range localSystemTryFiles {
-						prefixPath := gfile.Join(prefix, tryFile)
-						buffer.WriteString(fmt.Sprintf("\n%d. %s", index, prefixPath))
+				for _, searchPath := range array {
+					searchPath = gstr.TrimRight(searchPath, `\/`)
+					for _, tryFolder := range localSystemTryFolders {
+						buffer.WriteString(fmt.Sprintf(
+							"\n%d. %s",
+							index, gfile.Join(searchPath, tryFolder),
+						))
 						index++
 					}
 				}

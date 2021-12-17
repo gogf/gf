@@ -24,7 +24,7 @@ import (
 
 // View object for template engine.
 type View struct {
-	paths        *garray.StrArray       // Searching array for path, NOT concurrent-safe for performance purpose.
+	searchPaths  *garray.StrArray       // Searching array for path, NOT concurrent-safe for performance purpose.
 	data         map[string]interface{} // Global template variables.
 	funcMap      map[string]interface{} // Global template function map.
 	fileCacheMap *gmap.StrAnyMap        // File cache map.
@@ -67,7 +67,7 @@ func New(path ...string) *View {
 		ctx = context.TODO()
 	)
 	view := &View{
-		paths:        garray.NewStrArray(),
+		searchPaths:  garray.NewStrArray(),
 		data:         make(map[string]interface{}),
 		funcMap:      make(map[string]interface{}),
 		fileCacheMap: gmap.NewStrAnyMap(true),

@@ -42,13 +42,13 @@ var (
 	customConfigContentMap = gmap.NewStrStrMap(true)                               // Customized configuration content.
 
 	// Prefix array for trying searching in resource manager.
-	resourceTryFiles = []string{
+	resourceTryFolders = []string{
 		"", "/", "config/", "config", "/config", "/config/",
 		"manifest/config/", "manifest/config", "/manifest/config", "/manifest/config/",
 	}
 
 	// Prefix array for trying searching in local system.
-	localSystemTryFiles = []string{"", "config/", "manifest/config"}
+	localSystemTryFolders = []string{"", "config/", "manifest/config"}
 )
 
 // NewAdapterFile returns a new configuration management object.
