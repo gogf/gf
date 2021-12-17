@@ -173,18 +173,23 @@ func (d *adapterMemoryData) SetMap(data map[interface{}]interface{}, expireTime 
 func (d *adapterMemoryData) SetWithLock(ctx context.Context, key interface{}, value interface{}, expireTimestamp int64) (interface{}, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
+	var (
+		err error
+	)
 	if v, ok := d.data[key]; ok && !v.IsExpired() {
 		return v.v, nil
 	}
-	if f, ok := value.(Func); ok {
-		v, err := f(ctx)
-		if err != nil {
+	f, ok := value.(Func)
+	if !ok {
+		// Compatible with raw function value.
+		f, ok = value.(func(ctx context.Context) (value interface{}, err error))
+	}
+	if ok {
+		if value, err = f(ctx); err != nil {
 			return nil, err
 		}
-		if v == nil {
+		if value == nil {
 			return nil, nil
-		} else {
-			value = v
 		}
 	}
 	d.data[key] = adapterMemoryItem{v: value, e: expireTimestamp}

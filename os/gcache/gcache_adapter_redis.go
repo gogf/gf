@@ -104,9 +104,13 @@ func (c *AdapterRedis) SetIfNotExist(ctx context.Context, key interface{}, value
 		err error
 	)
 	// Execute the function and retrieve the result.
-	if f, ok := value.(Func); ok {
-		value, err = f(ctx)
-		if value == nil {
+	f, ok := value.(Func)
+	if !ok {
+		// Compatible with raw function value.
+		f, ok = value.(func(ctx context.Context) (value interface{}, err error))
+	}
+	if ok {
+		if value, err = f(ctx); err != nil {
 			return false, err
 		}
 	}
